@@ -105,6 +105,14 @@
 #     F4 sets the plaintext override · F5 parse coverage · F6 a finding that could name
 #     only a FILE and not a (command, verb) pair — the measure that must fall to zero
 #
+#   Q   the GRANT TABLES — each row paired with an allowed-tools entry, each entry with a row
+#       (group Q). A separate reader from F's TOOL-GRANT class, which classifies a body-table
+#       grant token and compares nothing
+#     Q0 a table whose header carries a Grant-stemmed column or the Use column and is not the
+#        derivation key, the key with no delimiter row, or a graded verb's allowed-tools value
+#        continued onto a following line · Q1 a grant-table row naming no allowed-tools entry
+#        of its verb · Q2 an allowed-tools entry of a graded verb that no grant-table row names
+#
 #   R   the DECLARED read-only key set and its membership-delta sentinel   (group R)
 #     R1 a fenced invocation of ANY engine script in a read-only region · R2 sentinel fired
 #        R1 carried a second, pre-execution limb until the carrier it tested was retired
@@ -337,9 +345,9 @@ md_probe() {   # md_probe <subject-fn> <assertion-fn> [args…] -> "<pass> <fail
 }
 
 # md_flips is the REGISTRATION primitive named by DER clause 6: for assertion X over
-# subject S, removing S must flip X specifically. This suite registers nothing yet — see
-# the note at the end of group MD — and it is shipped here so the first remediation calls
-# it rather than having to introduce it.
+# subject S, removing S must flip X specifically. Group Q's three verdicts are the first
+# assertions this suite registers — see the registration block at the end of group MD, which
+# also says why the pre-existing declared residual stays unregistered until it is remediated.
 md_flips() {   # md_flips <subject-fn> <id> <assertion-fn> [args…]
   local victim="$1" id="$2"; shift 2
   local out p f
@@ -2242,6 +2250,367 @@ parity_check() {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────────
+# grant_table_check <commands_dir>
+#
+# GROUP Q — THE GRANT TABLES. A verb that carries a grant table states, row by row, what each
+# of its grants is held for (ADR-007 § 2 bound 2: every command's allowed-tools is the minimum
+# for its function). Nothing graded that the table's Grant column and the frontmatter still
+# name the same set: the invocation classifier's TOOL-GRANT class classifies a body-table grant
+# token so that it is not reported as unresolved, and it compares nothing. This is a SEPARATE
+# READER. The classifier is not touched and does not read these records.
+#
+# THE DERIVATION KEY. The graded set is every verb file under the verb root that carries, at
+# fence depth 0, a table whose header row is `| Grant | The use that holds it |` with its
+# delimiter row beneath it. The header is matched STRUCTURALLY on its two column names —
+# trimmed, backtick-stripped, whitespace-collapsed and case-folded — for the reason banner rule 1
+# gives for the requirement table: a re-spacing of the row must not unhook the locator. No verb
+# is listed here, so a verb that adds such a table is graded on the next run with no edit to
+# this file. A header row that is a CANDIDATE and not the key is Q0: that table's rows would
+# otherwise be graded by nothing, and the graded set would shrink in silence. A row is a
+# candidate when, in ANY column, a cell's first word BEGINS WITH the stem `grant` — `Grant`,
+# `Grants`, `Grant:`, `Grant(s)`, `Granted …` — or a cell reads `The use that holds it`, so a
+# header renamed, re-ordered, widened, pluralized or punctuated in either column still reaches
+# Q0 through the other. The key with no delimiter row beneath it is Q0 too. Empty cells after
+# the last pipe are not columns, so trailing whitespace on a header row neither unhooks the key
+# nor reads as a near miss. What the recognizer CANNOT see is a header that renames BOTH
+# columns away from those two forms: nothing then marks the table as a grant table, its verb
+# leaves the graded set, and Q0's printed population is the only place that shows it.
+#
+# GQ_KEY_COLS is a HELD pair of column names, like REQ_COLS, and unlike the one-direction
+# holdings the banner lists it is graded both ways: a live header is compared against it, and a
+# key no live table carries any more is Q0's VACUITY rather than a pass.
+#
+# THE TWO SIDES, AND WHAT IS NOT PAIRED.
+#   a ROW   is a data row of a graded table, from the delimiter row to the first line that does
+#           not open with a pipe. Its key is the FIRST cell only, trimmed, with one enclosing
+#           code span removed. A data row's Use cell is never read, so rewriting it cannot move
+#           a verdict; the header's Use cell is read only to recognize the table (above).
+#   a GRANT is one entry of the frontmatter's allowed-tools line(s), split on commas outside
+#           parentheses, read the way group P reads the same line. A frontmatter line after
+#           it that is not blank, not a comment and opens no new key continues that value; it
+#           is NOT joined, and it is reported rather than read (below).
+#   disallowed-tools entries are DENIALS. A denial is not held for a use, the header names the
+#           use that holds a grant, and the live tables carry no row for any denial, so they are
+#           read by nothing here. A row naming a denied tool is a row that pairs with no grant,
+#           which is Q1.
+#
+# THE NORMALIZATION — stated once, here, and applied to the GRANT side only.
+#   A row pairs with a grant G when the row's key equals G exactly, OR when G is a PATH-BEARING
+#   Bash grant and the row's key equals key(G). G is path-bearing when it reads `Bash(<spec>)`
+#   and the first word of <spec>, after a trailing `:*` is removed, contains a slash. Then
+#       key(G) = <that word's last path component> [ + one space + the rest of <spec> ]
+#   so `Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh unpublish:*)` keys as
+#   `publish-trip-site.sh unpublish`: the script and its arm, the rendering both live tables
+#   use and state in their own words ("named here by script and arm, and spelled only in the
+#   frontmatter above"). The row side is NEVER normalized. That one-sidedness is load-bearing: a
+#   row spelling a held grant under a path the frontmatter does not carry — the bare
+#   `Bash(scripts/publish-trip-site.sh update:*)` cell the corrective-residuals release removed —
+#   equals neither the grant nor its key, so it is Q1 rather than silently paired. Arm GQ1 is
+#   that row. A row spelling the full rooted token pairs by exact equality, so this arm grades
+#   PAIRING and never prefers one rendering over the other.
+#
+# WHAT A GREEN DOES NOT ESTABLISH. It is a SET pairing per verb: a duplicated row, or a
+#   duplicated grant, pairs; two rows whose Grant cells are swapped pair; and whether a Use
+#   cell describes its own grant is not read at all. A row that does not open with a pipe at
+#   column 0 — indented, or in the pipe-less form — is not a row, the convention every table
+#   reader in this suite applies; the verb files carry neither form today. Two path-bearing
+#   grants that share a script file name and arm under different directories pair with one
+#   row. The allowed-tools value is read from the allowed-tools line itself, in its flow form.
+#   A continuation — a wrapped value, or the items of a YAML block sequence — is a Q0 finding
+#   and withholds Q2 rather than being read, so an entry there is reported, never paired and
+#   never silently absent; whether the harness itself honours such a line is not established
+#   here. A header renaming both columns away from the recognizer's two forms is not read as a
+#   grant table (THE DERIVATION KEY, above). The guided-entry carrier at the engine root is not
+#   a verb and declares no grant.
+# ─────────────────────────────────────────────────────────────────────────────────
+GQ_KEY_COLS=( 'grant' 'the use that holds it' )
+
+# gq_cell <raw cell> — the header-cell normalization: trimmed, backtick-stripped, whitespace
+# collapsed, case-folded. Forks twice, so it runs only on rows that already carry the word.
+gq_cell() { local s; s="$(trim "$1")"; s="${s//$BT/}"; lower "$(collapse "$s")"; }
+
+# gq_prefilter <row> — 0 when the row, its backticks removed, carries `grant` or `holds` in any
+# case. Every row gq_header_kind can call a candidate carries one of the two, so this is a
+# fork-free SUPERSET test: only a row that passes it pays for the classifier's forks.
+gq_prefilter() {
+  local r="${1//$BT/}"
+  case "$r" in *[Gg][Rr][Aa][Nn][Tt]*|*[Hh][Oo][Ll][Dd][Ss]*) return 0 ;; esac
+  return 1
+}
+
+# gq_header_kind <row> — KEY, NEAR or NONE. The row is a CANDIDATE when, in any column, a cell's
+# first word begins with the stem `grant` (grant, grants, grant:, grant(s), granted …) or a cell
+# reads `the use that holds it`, so a header renamed in EITHER column still reaches Q0 through the
+# other. A candidate is KEY only when its cells are exactly GQ_KEY_COLS, in order, and NEAR
+# otherwise. Cells after the last non-empty one are dropped, so trailing whitespace is not a column.
+gq_header_kind() {
+  local row="$1" c w i has=0 last=-1
+  local -a F=() C=()
+  if ! gq_prefilter "$row"; then printf 'NONE'; return 0; fi
+  IFS='|' read -r -a F <<< "$row"
+  for (( i=1; i<${#F[@]}; i++ )); do
+    c="$(gq_cell "${F[$i]}")"; C+=( "$c" )
+    [ -n "$c" ] && last=$(( ${#C[@]} - 1 ))
+    w="${c%% *}"
+    case "$w" in grant*) has=1 ;; esac
+    if [ "$c" = "${GQ_KEY_COLS[1]}" ]; then has=1; fi
+  done
+  if [ "$has" -eq 0 ]; then printf 'NONE'; return 0; fi
+  if [ "$last" -eq 1 ] && [ "${C[0]}" = "${GQ_KEY_COLS[0]}" ] && [ "${C[1]}" = "${GQ_KEY_COLS[1]}" ]; then
+    printf 'KEY'
+  else
+    printf 'NEAR'
+  fi
+}
+
+# gq_split_tools <value> — one entry per line; a comma inside parentheses does not split. One
+# enclosing pair of square brackets is removed first, the flow-sequence form disallowed-tools uses.
+gq_split_tools() {
+  local v cur='' ch i depth=0
+  v="$(trim "$1")"
+  case "$v" in '['*']') v="${v#\[}"; v="${v%\]}" ;; esac
+  for (( i=0; i<${#v}; i++ )); do
+    ch="${v:i:1}"
+    case "$ch" in
+      '(') depth=$((depth+1)); cur="$cur$ch" ;;
+      ')') [ "$depth" -gt 0 ] && depth=$((depth-1)); cur="$cur$ch" ;;
+      ',') if [ "$depth" -eq 0 ]; then
+             cur="$(trim "$cur")"; [ -n "$cur" ] && printf '%s\n' "$cur"; cur=''
+           else cur="$cur$ch"; fi ;;
+      *)   cur="$cur$ch" ;;
+    esac
+  done
+  cur="$(trim "$cur")"; [ -n "$cur" ] && printf '%s\n' "$cur"
+  return 0
+}
+
+# gq_key <grant> — key(G) per the banner, or nothing when G is not a path-bearing Bash grant.
+gq_key() {
+  local g="$1" spec word rest=''
+  case "$g" in 'Bash('*')') ;; *) return 0 ;; esac
+  spec="${g#Bash(}"; spec="${spec%\)}"; spec="$(trim "$spec")"; spec="${spec%:\*}"
+  word="${spec%% *}"
+  case "$word" in */*) ;; *) return 0 ;; esac
+  [ "$word" != "$spec" ] && rest="$(trim "${spec#"$word"}")"
+  word="${word##*/}"
+  if [ -n "$rest" ]; then printf '%s %s' "$word" "$rest"; else printf '%s' "$word"; fi
+}
+
+grant_table_check() {
+  local cdir="$1"
+  local f cmd line next kind cell g k i j n fd infm nfence hit ntab inat t
+  local n_files=0 n_unread=0 n_verbs=0 n_rows=0 n_grants=0 n_unrow=0 n_ungrant=0 n_near=0 n_cont=0
+  local -a L=() RK=() RL=() GE=() GK=()
+  for f in "$cdir"/*/SKILL.md; do
+    # The glob matched nothing: bash hands back the pattern itself, which is neither a file
+    # nor a link. A dangling link IS a verb entry that cannot be read, and is counted as one.
+    if [ ! -e "$f" ] && [ ! -L "$f" ]; then continue; fi
+    cmd="/$(verb_id "$f")"
+    if [ ! -r "$f" ]; then
+      n_unread=$((n_unread+1)); printf 'GQUNREAD %s\n' "$cmd"; continue
+    fi
+    n_files=$((n_files+1))
+    L=()
+    while IFS= read -r line || [ -n "$line" ]; do L+=( "$line" ); done < "$f"
+    n=${#L[@]}
+
+    # ── the rows of every graded table in this file, and the header near-misses
+    RK=(); RL=(); fd=0; ntab=0
+    for (( i=0; i<n; i++ )); do
+      line="${L[$i]}"
+      if [[ "$line" == '```'* ]]; then fd=$((1-fd)); continue; fi
+      [ "$fd" -eq 0 ] || continue
+      [[ "$line" == '|'* ]] || continue
+      # the fork-free pre-filter, so only a row carrying either word pays for the classifier
+      gq_prefilter "$line" || continue
+      kind="$(gq_header_kind "$line")"
+      [ "$kind" != 'NONE' ] || continue
+      next=''; [ $((i+1)) -lt "$n" ] && next="${L[$((i+1))]}"
+      if [ "$kind" = 'NEAR' ]; then
+        if is_sep "$next"; then
+          n_near=$((n_near+1))
+          printf 'FINDING Q0 %s:%d carries a table whose header names a Grant-stemmed column or the Use column and is not the derivation key, so its rows are graded by nothing: "%.90s"\n' "$cmd" $((i+1)) "$line"
+        fi
+        continue
+      fi
+      if ! is_sep "$next"; then
+        n_near=$((n_near+1))
+        printf 'FINDING Q0 %s:%d carries the grant-table header with no delimiter row beneath it, so no table is read and its rows are graded by nothing: "%.90s"\n' "$cmd" $((i+1)) "$line"
+        continue
+      fi
+      ntab=$((ntab+1))
+      for (( j=i+2; j<n; j++ )); do
+        [[ "${L[$j]}" == '|'* ]] || break
+        cell="${L[$j]#|}"; cell="${cell%%|*}"; cell="$(trim "$cell")"
+        case "$cell" in
+          "$BT"*"$BT") k="${cell#"$BT"}"; k="${k%"$BT"}"
+                       case "$k" in *"$BT"*) ;; *) cell="$k" ;; esac ;;
+        esac
+        RK+=( "$cell" ); RL+=( $((j+1)) )
+      done
+      i=$((j-1))
+    done
+    [ "$ntab" -gt 0 ] || continue
+    n_verbs=$((n_verbs+1))
+
+    # ── the grants: every allowed-tools line of the frontmatter, read as group P reads it. A line
+    # after one that is not blank, not a comment and opens no new key at column 0 CONTINUES that
+    # value — a wrapped line, or a YAML block sequence's items. It is NOT joined: it is Q0, and its
+    # count withholds Q2, whose grant population it leaves unfinished.
+    GE=(); GK=(); infm=0; nfence=0; inat=0
+    for (( i=0; i<n; i++ )); do
+      line="${L[$i]}"
+      if [ "$line" = '---' ]; then
+        nfence=$((nfence+1))
+        if [ "$nfence" -eq 1 ]; then infm=1; continue; fi
+        break
+      fi
+      [ "$infm" -eq 1 ] || continue
+      if [ "$inat" -eq 1 ] && ! [[ "$line" =~ ^[[:alnum:]_-]+: ]]; then
+        t="$(trim "$line")"
+        case "$t" in
+          ''|'#'*) ;;
+          *) n_cont=$((n_cont+1))
+             printf 'FINDING Q0 %s:%d continues its allowed-tools value on a following line, which this reader does not join, so a grant there is read by nothing and the grant-to-row direction is withheld: "%.90s"\n' "$cmd" $((i+1)) "$t" ;;
+        esac
+        continue
+      fi
+      inat=0
+      line="$(trim "$line")"
+      case "$line" in 'allowed-tools:'*) inat=1 ;; *) continue ;; esac
+      while IFS= read -r g || [ -n "$g" ]; do
+        [ -n "$g" ] || continue
+        GE+=( "$g" ); GK+=( "$(gq_key "$g")" )
+      done <<< "$(gq_split_tools "${line#allowed-tools:}")"
+    done
+
+    # ── Q1: every row pairs with some grant
+    for (( i=0; i<${#RK[@]}; i++ )); do
+      hit=0
+      for (( j=0; j<${#GE[@]}; j++ )); do
+        if [ "${RK[$i]}" = "${GE[$j]}" ]; then hit=1; break; fi
+        if [ -n "${GK[$j]}" ] && [ "${RK[$i]}" = "${GK[$j]}" ]; then hit=1; break; fi
+      done
+      if [ "$hit" -eq 0 ]; then
+        n_unrow=$((n_unrow+1))
+        printf 'FINDING Q1 %s:%d the grant-table row "%s" names no allowed-tools entry of this verb — a row pairs with an entry it spells exactly, or with a path-bearing Bash entry by that script'"'"'s file name and arm\n' "$cmd" "${RL[$i]}" "${RK[$i]}"
+      fi
+    done
+
+    # ── Q2: every grant pairs with some row
+    for (( j=0; j<${#GE[@]}; j++ )); do
+      hit=0
+      for (( i=0; i<${#RK[@]}; i++ )); do
+        if [ "${RK[$i]}" = "${GE[$j]}" ]; then hit=1; break; fi
+        if [ -n "${GK[$j]}" ] && [ "${RK[$i]}" = "${GK[$j]}" ]; then hit=1; break; fi
+      done
+      if [ "$hit" -eq 0 ]; then
+        n_ungrant=$((n_ungrant+1))
+        if [ -n "${GK[$j]}" ]; then
+          printf 'FINDING Q2 %s the allowed-tools entry "%s" has no grant-table row — a row naming "%s" (its script and arm) or the entry itself would pair it\n' "$cmd" "${GE[$j]}" "${GK[$j]}"
+        else
+          printf 'FINDING Q2 %s the allowed-tools entry "%s" has no grant-table row naming it\n' "$cmd" "${GE[$j]}"
+        fi
+      fi
+    done
+
+    n_rows=$((n_rows + ${#RK[@]})); n_grants=$((n_grants + ${#GE[@]}))
+    printf 'GTAB %s %d %d\n' "$cmd" "${#RK[@]}" "${#GE[@]}"
+  done
+  printf 'COUNT GQFILES %d\n' "$n_files"
+  printf 'COUNT GQUNREAD %d\n' "$n_unread"
+  printf 'COUNT GQVERBS %d\n' "$n_verbs"
+  printf 'COUNT GQROWS %d\n' "$n_rows"
+  printf 'COUNT GQGRANTS %d\n' "$n_grants"
+  printf 'COUNT GQUNROW %d\n' "$n_unrow"
+  printf 'COUNT GQUNGRANT %d\n' "$n_ungrant"
+  printf 'COUNT GQNEAR %d\n' "$n_near"
+  printf 'COUNT GQCONT %d\n' "$n_cont"
+  return 0
+}
+
+# gq_tables <grant_table_check output> — "/verb (R rows, G grants)" joined, for a PASS line.
+gq_tables() {
+  local out="$1" line t1 t2 t3 t4 acc=''
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      'GTAB '*) IFS=' ' read -r t1 t2 t3 t4 <<< "$line"; acc="${acc:+$acc, }$t2 ($t3 rows, $t4 grants)" ;;
+    esac
+  done <<< "$out"
+  printf '%s' "$acc"
+}
+
+# ── The three verdicts. Each renders EXACTLY ONE verdict and calls grant_table_check ITSELF, so
+# removing that function removes the evidence and must flip the verdict to one FAIL — the
+# property md_flips grades at the end of group MD. Every limb before the PASS is a FAIL, and
+# every PASS is gated on counts the subject produced, never on the absence of a finding.
+gq_assert_anchor() {   # Q0 — the graded set, derived from the tree
+  local out nf nu nv nn nc tabs
+  out="$(grant_table_check "$1")"
+  nf="$(getcount "$out" GQFILES)"; nu="$(getcount "$out" GQUNREAD)"
+  nv="$(getcount "$out" GQVERBS)"; nn="$(getcount "$out" GQNEAR)"; nc="$(getcount "$out" GQCONT)"
+  tabs="$(gq_tables "$out")"
+  if [ -z "$nf" ] || [ -z "$nu" ] || [ -z "$nv" ] || [ -z "$nn" ] || [ -z "$nc" ]; then
+    FAIL "Q0: NO SUBJECT — grant_table_check emitted no population count, so no verb file was read for a grant table"
+  elif [ "$nu" -ne 0 ]; then
+    FAIL "Q0: DEGRADED — ${nu} verb file(s) could not be read, so the graded set is UNMEASURED rather than derived. This is not a clean result"
+  elif [ "$nf" -le 0 ]; then
+    FAIL "Q0: VACUITY — the verb root holds no readable verb file, so no grant table can be found and neither direction below grades anything"
+  elif [ "$nn" -ne 0 ]; then
+    FAIL "Q0: ${nn} table(s) whose header carries a Grant-stemmed column or the Use column are not the derivation key, or carry no delimiter row — their rows are graded by nothing and the graded set shrinks in silence. Render the header as | Grant | The use that holds it | with its delimiter row"
+    show "$out" 'Q0'
+  elif [ "$nc" -ne 0 ]; then
+    FAIL "Q0: ${nc} frontmatter line(s) continue a graded verb's allowed-tools value past the allowed-tools line, and this reader does not join them — a grant there pairs with nothing and is checked by nothing, so Q2 is withheld. Keep each verb's allowed-tools value on its one line"
+    show "$out" 'Q0'
+  elif [ "$nv" -le 0 ]; then
+    FAIL "Q0: VACUITY — ${nf} verb file(s) read and none carries a table headed | Grant | The use that holds it |, so there is no pairing to grade. A release that retires the grant tables retires this group with them; it does not leave it reading as coverage"
+  else
+    PASS "Q0: DERIVED — ${nv} of ${nf} verb file(s) carry a table headed | Grant | The use that holds it | at fence depth 0 [ ${tabs} ]; the set is read off the tree on this run, and a verb that adds such a table is graded with no edit to this file. WHAT WAS CHECKED, AND NO MORE: at fence depth 0 no row opening with a pipe, with a delimiter row beneath it, carries a cell whose first word begins with 'grant' or a cell reading 'the use that holds it' without being the key; the key never stands without its delimiter row; and no graded verb's allowed-tools value runs onto a following line. A header renaming BOTH columns away from those two forms is not recognized as a grant table, so its verb would leave this count rather than fail it"
+  fi
+}
+
+gq_assert_rows() {     # Q1 — every row pairs with a grant
+  local out nu nv nr ng nx
+  out="$(grant_table_check "$1")"
+  nu="$(getcount "$out" GQUNREAD)"; nv="$(getcount "$out" GQVERBS)"
+  nr="$(getcount "$out" GQROWS)";   ng="$(getcount "$out" GQGRANTS)"; nx="$(getcount "$out" GQUNROW)"
+  if [ -z "$nu" ] || [ -z "$nv" ] || [ -z "$nr" ] || [ -z "$ng" ] || [ -z "$nx" ]; then
+    FAIL "Q1: NO SUBJECT — grant_table_check emitted no pairing counts, so no row was compared"
+  elif [ "$nu" -ne 0 ]; then
+    FAIL "Q1: VERDICT WITHHELD — ${nu} verb file(s) could not be read (Q0 names the cause); a pairing verdict over the readable remainder would state the clean result over an unmeasured population"
+  elif [ "$nv" -le 0 ] || [ "$nr" -le 0 ]; then
+    FAIL "Q1: VACUITY — ${nv} graded verb(s) and ${nr} grant-table row(s): the row-to-grant direction quantified over nothing"
+  elif [ "$nx" -ne 0 ]; then
+    FAIL "Q1: ${nx} of ${nr} grant-table row(s) name no allowed-tools entry of their own verb"
+    show "$out" 'Q1'
+  else
+    PASS "Q1: ROW -> GRANT — all ${nr} grant-table row(s) across ${nv} verb(s) pair with an allowed-tools entry of their own verb, against ${ng} entries read. A row pairs by exact spelling, or a path-bearing Bash grant by its script's file name and arm; the row side is never normalized. Controls: GQ1, GQ4 and GQ6 fire in group GQ, and GQ7 stays silent"
+  fi
+}
+
+gq_assert_grants() {   # Q2 — every grant pairs with a row
+  local out nu nv nr ng nx nc
+  out="$(grant_table_check "$1")"
+  nu="$(getcount "$out" GQUNREAD)"; nv="$(getcount "$out" GQVERBS)"
+  nr="$(getcount "$out" GQROWS)";   ng="$(getcount "$out" GQGRANTS)"; nx="$(getcount "$out" GQUNGRANT)"
+  nc="$(getcount "$out" GQCONT)"
+  if [ -z "$nu" ] || [ -z "$nv" ] || [ -z "$nr" ] || [ -z "$ng" ] || [ -z "$nx" ] || [ -z "$nc" ]; then
+    FAIL "Q2: NO SUBJECT — grant_table_check emitted no pairing counts, so no grant was compared"
+  elif [ "$nu" -ne 0 ]; then
+    FAIL "Q2: VERDICT WITHHELD — ${nu} verb file(s) could not be read (Q0 names the cause); a pairing verdict over the readable remainder would state the clean result over an unmeasured population"
+  elif [ "$nc" -ne 0 ]; then
+    FAIL "Q2: VERDICT WITHHELD — ${nc} line(s) continue a graded verb's allowed-tools value and are unread (Q0 names them), so the grant population is unfinished; a grant-to-row verdict over the entries that were read would state the clean result over an unmeasured one"
+  elif [ "$nv" -le 0 ] || [ "$ng" -le 0 ]; then
+    FAIL "Q2: VACUITY — ${nv} graded verb(s) and ${ng} allowed-tools entr(ies): the grant-to-row direction quantified over nothing"
+  elif [ "$nx" -ne 0 ]; then
+    FAIL "Q2: ${nx} of ${ng} allowed-tools entr(ies) of a graded verb have no grant-table row"
+    show "$out" 'Q2'
+  else
+    PASS "Q2: GRANT -> ROW — all ${ng} allowed-tools entr(ies) of ${nv} graded verb(s) are named by a row of their own verb's grant table (${nr} rows read). The grant side is read in full — every entry of every allowed-tools line, with no graded verb continuing that value onto a line this reader would not join — so a grant added with nothing removed is found. disallowed-tools entries are denials and are not paired. Controls: GQ2, GQ3, GQ4 and GQ6 fire in group GQ, GQ8 withholds, and GQ7 stays silent"
+  fi
+}
+
+# ─────────────────────────────────────────────────────────────────────────────────
 # readonly_check <records> <key...> -- <adjudicated-verb...>
 # ─────────────────────────────────────────────────────────────────────────────────
 readonly_check() {
@@ -3722,6 +4091,28 @@ else
   PASS "P3: PRIVILEGE PARITY — ${P_OBLIG} deny obligation(s) over a ${P_UNIV}-member subcommand universe, all met at the same prefix as the permit beside them. The universe is the union of what the verbs themselves name, so a subcommand entering it through one verb obliges every other verb on the next run"
 fi
 
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group Q — the grant tables: every row paired with a frontmatter grant, every grant with a row.
+#
+# THREE VERDICTS, EACH ONE ASSERTION FUNCTION, and each calls grant_table_check itself rather
+# than reading a precomputed stream. That is what lets the end of group MD register all three
+# with md_flips: removing the function removes the evidence, and each verdict must then report
+# exactly one FAIL. Every PASS here is gated on counts the subject produced, never on the
+# absence of a finding, and an unreadable verb file withholds all three rather than letting two
+# of them pass over the readable remainder. An allowed-tools value continued onto a line this
+# reader does not join fails Q0 and withholds Q2 in the same way.
+#
+# The ids are registered with group Y here and armed in group GQ below; group Y's two-direction
+# mapping covers them on the same commit that introduces them.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group Q — the grant tables: every row paired with a frontmatter grant, every grant with a row."
+# Registration only: the verdicts are count-gated, so the returned alternation is not consumed.
+surface Q0 Q1 Q2 >/dev/null
+gq_assert_anchor "$CDIR"
+gq_assert_rows   "$CDIR"
+gq_assert_grants "$CDIR"
+
 echo
 echo "── Group R — the DECLARED read-only key set and its membership-delta sentinel."
 RO_CINV="$(getcount "$R_OUT" ROCINV)"
@@ -4773,6 +5164,356 @@ else
   FAIL "GI1c: the near-miss was flagged as I1 — the assertion is matching the characters rather than the line-opening rendering: $(printf '%s' "$GI1C_OUT" | grep '^FINDING I1 ' | head -2 | tr '\n' ' ')"
 fi
 
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group GQ — control arms for the grant tables.
+#
+# Every world is rooted at $WORK, so no arm writes a tracked file and group Z grades that claim.
+# The MUST-FIRE arms run on BUILT verb files, the house rule for fixtures: gq_gen_verb writes a
+# frontmatter and a grant table that pair exactly, and each defect is a switch in the generator,
+# never a patch over a generated file. The MUST-NOT-FIRE arm and the derivation arm run on a COPY
+# of the live verb files, because what they assert is about the live tables themselves. Each arm
+# renders ONE verdict with its fixture-integrity probe folded in, so a world that was never
+# built reports as a failure rather than as a quiet green.
+#
+# The planted script name, zz-fixture.sh, exists nowhere in the repository, so the
+# normalization is exercised on a script it has never met; its grant carries the sanctioned
+# engine root, exactly as the live frontmatter does.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group GQ — control arms for the grant tables."
+
+# A grant token nothing on any surface holds. GQ1 plants it in a GRANT cell and must fire; GQ0
+# plants the same token in every USE cell, in prose and in a fenced example and must not. The
+# pair differs in the one property the arm keys on — which column the token sits in.
+GQ_UNHELD='Bash(zzq-unheld:*)'
+
+# The add-only world carries GQ_FILL further grants, each with its own row, BEFORE the appended
+# one, so a reader that samples the first N entries misses it for every N below GQ_FILL + 4.
+# That is 36 — four and a half times the longest allowed-tools line any verb carries today (8).
+GQ_FILL=32
+
+# gq_gen_verb <verb-root> <name> <defect> — one BUILT verb file. `ok` pairs three rows with three
+# grants: a plain Bash grant, a bare tool, and a path-bearing script grant named by script and arm.
+# Two denials sit beside them and have no row, so every world also shows that denials are not
+# paired. The defects, one departure each:
+#   extrarows   two rows no grant holds: the held script grant respelled under the bare path the
+#               frontmatter does not carry, and the token nothing holds       -> Q1 only
+#   droprow     the script grant's row removed                                  -> Q2 only
+#   addgrant    GQ_FILL paired grants, then a bare tool appended at the END of allowed-tools with
+#               no row, and nothing removed                                     -> Q2 only
+#   celledit    one Grant cell edited in place, so rows and grants still count 3 and 3 -> Q1 and Q2
+#   renamedhead the Use column renamed, so the header is not the key            -> Q0
+#   swappedhead the two columns swapped, so `Grant` is not the first cell       -> Q0
+#   pluralhead  the Grant column pluralized                                     -> Q0
+#   nodelim     the key with no delimiter row beneath it                        -> Q0
+#   toolhead    the Grant column renamed `Tool`: only the Use cell marks the row  -> Q0
+#   usefirst    `Tool` and the Use cell, swapped: the Use cell alone, in column 1 -> Q0
+#   colonhead   `Grant:` over a renamed Use column: the stem alone, punctuated    -> Q0
+#   parenhead   `Grant(s)` over a renamed Use column: the stem alone, bracketed   -> Q0
+#   stemlast    a renamed Use column, then `Grant`: the stem alone, in column 2   -> Q0
+#   respaced    the key re-spaced, re-cased and trailed by whitespace, which is still the key -> nothing
+#   crossverb   the Read grant and the Bash(ls:*) row both dropped, so beside an `ok` verb each is
+#               held, or named, only by the OTHER verb                           -> Q1 and Q2
+#   rootedrow   the script grant's row spelled as the full rooted token rather than by script
+#               and arm                                                          -> nothing
+#   wrapgrant   the allowed-tools value wrapped: a bare tool no row names on the indented line
+#               after it                                                         -> Q0, Q2 withheld
+gq_gen_verb() {
+  local d="$1/$2" name="$2" defect="${3:-ok}" k
+  mkdir -p "$d"
+  {
+    printf -- '---\nname: %s\ndescription: grant-pairing fixture\n' "$name"
+    if [ "$defect" = 'crossverb' ]; then
+      printf -- 'allowed-tools: Bash(ls:*), Bash(%sscripts/zz-fixture.sh arm:*)' "$ENGINE_ROOT_TOK"
+    else
+      printf -- 'allowed-tools: Bash(ls:*), Read, Bash(%sscripts/zz-fixture.sh arm:*)' "$ENGINE_ROOT_TOK"
+    fi
+    if [ "$defect" = 'addgrant' ]; then
+      for (( k=1; k<=GQ_FILL; k++ )); do printf -- ', Bash(zzq-fill-%d:*)' "$k"; done
+      printf -- ', Glob'
+    fi
+    if [ "$defect" = 'wrapgrant' ]; then printf -- ',\n  Glob\n'; else printf -- '\n'; fi
+    printf -- 'disallowed-tools: [Bash(%sscripts/zz-fixture.sh other:*), Write]\n' "$ENGINE_ROOT_TOK"
+    printf -- '---\n\n# /%s\n\n' "$name"
+    case "$defect" in
+      renamedhead) printf -- '| Grant | What each grant is used for |\n|---|---|\n' ;;
+      swappedhead) printf -- '| The use that holds it | Grant |\n|---|---|\n' ;;
+      pluralhead)  printf -- '| Grants | The use that holds it |\n|---|---|\n' ;;
+      toolhead)    printf -- '| Tool | The use that holds it |\n|---|---|\n' ;;
+      usefirst)    printf -- '| The use that holds it | Tool |\n|---|---|\n' ;;
+      colonhead)   printf -- '| Grant: | What it is for |\n|---|---|\n' ;;
+      parenhead)   printf -- '| Grant(s) | What it is for |\n|---|---|\n' ;;
+      stemlast)    printf -- '| Purpose | Grant |\n|---|---|\n' ;;
+      nodelim)     printf -- '| Grant | The use that holds it |\n' ;;
+      respaced)    printf -- '|grant|  The Use  That Holds It  |  \n| --- | :-- |\n' ;;
+      *)           printf -- '| Grant | The use that holds it |\n|---|---|\n' ;;
+    esac
+    if [ "$defect" = 'celledit' ]; then printf -- '| %sBash(ls)%s | the listing |\n' "$BT" "$BT"
+    elif [ "$defect" != 'crossverb' ]; then printf -- '| %sBash(ls:*)%s | the listing |\n' "$BT" "$BT"; fi
+    printf -- '| %sRead%s | a read |\n' "$BT" "$BT"
+    if [ "$defect" = 'rootedrow' ]; then
+      printf -- '| %sBash(%sscripts/zz-fixture.sh arm:*)%s | the single invocation of that arm, spelled in full |\n' "$BT" "$ENGINE_ROOT_TOK" "$BT"
+    elif [ "$defect" != 'droprow' ]; then
+      printf -- '| %szz-fixture.sh arm%s | the single invocation of that arm |\n' "$BT" "$BT"
+    fi
+    if [ "$defect" = 'addgrant' ]; then
+      for (( k=1; k<=GQ_FILL; k++ )); do printf -- '| %sBash(zzq-fill-%d:*)%s | a filler grant, held and named |\n' "$BT" "$k" "$BT"; done
+    fi
+    if [ "$defect" = 'extrarows' ]; then
+      printf -- '| %sBash(scripts/zz-fixture.sh arm:*)%s | a copy of a held grant under a path the frontmatter does not carry |\n' "$BT" "$BT"
+      printf -- '| %s%s%s | a grant nothing holds |\n' "$BT" "$GQ_UNHELD" "$BT"
+    fi
+    printf -- '\nProse beneath the table.\n'
+  } > "$d/SKILL.md"
+}
+
+# gq_world <id> <defect> [<extra-name> <extra-defect>]… — a verb root holding one conforming verb
+# that carries no grant table beside the graded one, so the scanned population is never the
+# graded population by accident.
+gq_world() {
+  local r="$WORK/$1/skills" defect="$2"; shift 2
+  mkdir -p "$r/zz-untabled"
+  printf -- '---\nname: zz-untabled\nallowed-tools: Read, Write\n---\n\n# /zz-untabled\n\nNo grant table here.\n' > "$r/zz-untabled/SKILL.md"
+  gq_gen_verb "$r" zz-graded "$defect"
+  while [ "$#" -ge 2 ]; do gq_gen_verb "$r" "$1" "$2"; shift 2; done
+  printf '%s' "$r"
+}
+
+# ── GQ1..GQ5 — MUST-FIRE. Each names the verb and the unpaired entry, and each is ISOLATED: the
+# direction its defect does not touch must stay silent, so an arm that fires both ids on a
+# one-sided defect, or fires the wrong one, fails here rather than passing on "a finding appeared".
+gqctl() {  # gqctl <id> <defect> <want-ids> <silent-ids> <must-name…> -- <label>
+  local id="$1" defect="$2" want="$3" silent="$4"; shift 4
+  local -a NAMES=(); local label='' w s nm r out ok=1 why=''
+  while [ "$#" -gt 0 ]; do
+    if [ "$1" = '--' ]; then shift; label="$*"; break; fi
+    NAMES+=( "$1" ); shift
+  done
+  for w in $want; do arm "$w"; done
+  r="$(gq_world "$id" "$defect")"
+  if ! grep -q '^| Grant |' "$r/zz-graded/SKILL.md"; then
+    FAIL "${id}: fixture integrity — the built verb carries no grant-table header, so a verdict here would prove nothing"; return 0
+  fi
+  out="$(grant_table_check "$r")"
+  for w in $want; do
+    grep -q "^FINDING $w /zz-graded" <<<"$out" || { ok=0; why="$why no $w naming /zz-graded;"; }
+  done
+  for s in $silent; do
+    grep -q "^FINDING $s " <<<"$out" && { ok=0; why="$why $s fired on a defect it does not own;"; }
+  done
+  for nm in "${NAMES[@]+"${NAMES[@]}"}"; do
+    grep -qF "\"$nm\"" <<<"$out" || { ok=0; why="$why the entry \"$nm\" is not named;"; }
+  done
+  grep -q '^FINDING [A-Z][0-9] /zz-untabled' <<<"$out" && { ok=0; why="$why the untabled verb was graded;"; }
+  if [ "$ok" -eq 1 ]; then
+    PASS "${id}: flagged, naming ${want} and the verb and the entry, with ${silent:-nothing} silent — ${label}"
+  else
+    FAIL "${id}: the deliberate defect was not flagged as specified (${label}):${why} First finding, if any: $(grep '^FINDING ' <<<"$out" | head -1)"
+  fi
+}
+
+gqctl GQ1 extrarows Q1 Q2 "Bash(scripts/zz-fixture.sh arm:*)" "$GQ_UNHELD" -- "a ROW WITH NO MATCHING GRANT: the held script grant respelled under the bare path the frontmatter does not carry, which a normalization applied to both sides would pair in silence, and a grant nothing holds"
+gqctl GQ2 droprow   Q2 Q1 "Bash(${ENGINE_ROOT_TOK}scripts/zz-fixture.sh arm:*)" "zz-fixture.sh arm" -- "a GRANT WITH NO ROW: the path-bearing grant's row removed, the finding naming the entry and the script-and-arm row that would pair it"
+gqctl GQ3 addgrant  Q2 Q1 "Glob" -- "the ADD-ONLY mutation: a bare tool appended at the END of a $((GQ_FILL + 4))-entry allowed-tools line and nothing removed, which a reader of Bash tokens, of script grants, or of any fewer than $((GQ_FILL + 4)) leading entries does not see"
+gqctl GQ4 celledit  "Q1 Q2" "" "Bash(ls)" "Bash(ls:*)" -- "a Grant-column edit that leaves rows and grants at 3 and 3 — the accidental edit the guard lands ahead of, which a count comparison passes"
+arm Q0
+# The shapes, one BUILT verb each, and the exact header line each must carry. The last five
+# isolate the recognizer's two limbs: `Tool` and `usefirst` carry the Use cell and no stem, in
+# either column; `Grant:`, `Grant(s)` and `stemlast` carry the stem and no Use cell, in either
+# column. So each limb, and each limb's ANY-COLUMN claim, is the only thing that can name its
+# verb, and removing either limb, or pinning it to one column, leaves a verb unnamed here.
+GQ5_V=( zz-graded zz-nodelim zz-swapped zz-plural zz-tool zz-usefirst zz-colon zz-paren zz-stemlast )
+GQ5_H=( '| Grant | What each grant is used for |' '| Grant | The use that holds it |'
+        '| The use that holds it | Grant |' '| Grants | The use that holds it |'
+        '| Tool | The use that holds it |' '| The use that holds it | Tool |'
+        '| Grant: | What it is for |' '| Grant(s) | What it is for |' '| Purpose | Grant |' )
+GQ5R="$(gq_world GQ5 renamedhead zz-nodelim nodelim zz-swapped swappedhead zz-plural pluralhead zz-tool toolhead zz-usefirst usefirst zz-colon colonhead zz-paren parenhead zz-stemlast stemlast)"
+GQ5O="$(grant_table_check "$GQ5R")"
+GQ5_S=1; GQ5_N=0; GQ5_MISS=''
+for (( gq5k=0; gq5k<${#GQ5_V[@]}; gq5k++ )); do
+  grep -qxF "${GQ5_H[$gq5k]}" "$GQ5R/${GQ5_V[$gq5k]}/SKILL.md" || GQ5_S=0
+  if grep -q "^FINDING Q0 /${GQ5_V[$gq5k]}:" <<<"$GQ5O"; then GQ5_N=$((GQ5_N+1)); else GQ5_MISS="$GQ5_MISS /${GQ5_V[$gq5k]}"; fi
+done
+grep -qF '|---|---|' "$GQ5R/zz-nodelim/SKILL.md" && GQ5_S=0
+if [ "$GQ5_S" -eq 0 ]; then
+  FAIL "GQ5: fixture integrity — a built header shape, or the missing delimiter row, is not as the arm requires, so a verdict here would prove nothing"
+elif [ "$GQ5_N" -gt 0 ] && [ "$GQ5_N" -eq "${#GQ5_V[@]}" ] && [ "$(getcount "$GQ5O" GQVERBS)" = '0' ]; then
+  PASS "GQ5: flagged, naming Q0 ${GQ5_N} times — the design's four shapes (the Use column renamed, the columns swapped, the Grant column pluralized, the key with no delimiter row) and five that isolate the recognizer's limbs: the Use cell alone under a Grant column renamed Tool, in column 2 and in column 1, and the stem alone over a renamed Use column, as Grant: and Grant(s) and in column 2. Each is named with its verb and line, and none is counted as graded (GQVERBS 0). Without Q0 each edit would drop its table out of the graded set while every direction stayed green"
+else
+  FAIL "GQ5: a table the key does not read was not flagged, or was graded anyway — ${GQ5_N} of ${#GQ5_V[@]} shape(s) named, unnamed:${GQ5_MISS:- none}; GQVERBS=$(getcount "$GQ5O" GQVERBS)"
+fi
+
+# ── GQ6 — PAIRING IS PER VERB, in both directions. Two BUILT graded verbs share Bash(ls:*) and
+# Read. The first in glob order holds each and names each; the second holds Bash(ls:*) with no
+# row for it, and names Read in a row while holding no Read grant. Each unpaired entry is paired
+# only by the OTHER verb, so a reader that pooled rows or grants across verbs would pair both and
+# report nothing, while the per-verb reader names the second verb twice and the first not at all.
+GQ6R="$(gq_world GQ6 ok zz-lacks crossverb)"
+GQ6O="$(grant_table_check "$GQ6R")"
+GQ6_S=1
+grep -qF "| ${BT}Bash(ls:*)${BT} |" "$GQ6R/zz-graded/SKILL.md" || GQ6_S=0
+grep -q '^allowed-tools: Bash(ls:\*), Read, ' "$GQ6R/zz-graded/SKILL.md" || GQ6_S=0
+grep -qF "| ${BT}Bash(ls:*)${BT} |" "$GQ6R/zz-lacks/SKILL.md" && GQ6_S=0
+grep -qF "| ${BT}Read${BT} |" "$GQ6R/zz-lacks/SKILL.md" || GQ6_S=0
+grep -q '^allowed-tools: Bash(ls:\*), Bash(' "$GQ6R/zz-lacks/SKILL.md" || GQ6_S=0
+if [ "$GQ6_S" -eq 0 ]; then
+  FAIL "GQ6: fixture integrity — the two built verbs do not share their entries as the arm requires, so a verdict here would prove nothing"
+elif grep -qF 'FINDING Q2 /zz-lacks the allowed-tools entry "Bash(ls:*)" has no grant-table row' <<<"$GQ6O" \
+     && grep -q '^FINDING Q1 /zz-lacks:[0-9][0-9]* the grant-table row "Read" ' <<<"$GQ6O" \
+     && [ "$(grep -c '^FINDING ' <<<"$GQ6O")" = '2' ] && [ "$(getcount "$GQ6O" GQVERBS)" = '2' ]; then
+  PASS "GQ6: flagged, naming Q2 and Q1 against the SECOND verb only — /zz-lacks holds Bash(ls:*) with no row and names Read with no grant, while /zz-graded, which holds and names both, is named by nothing. Each unpaired entry is paired only by the other verb, so this is the arm that tells a per-verb reader from one that pools rows or grants across verbs"
+else
+  FAIL "GQ6: pairing leaked across verbs, or the second verb was not named in both directions: $(grep '^FINDING ' <<<"$GQ6O" | head -4 | tr '\n' ' ') GQVERBS=$(getcount "$GQ6O" GQVERBS)"
+fi
+
+# ── GQ7 — MUST-NOT-FIRE: a row that spells the path-bearing grant IN FULL pairs by exact equality.
+# The normalization ACCEPTS key(G) beside G and never REQUIRES it, so a verb rendering the rooted
+# token in its Grant cell — the rendering the TOOL-GRANT class keeps its table half for — is
+# paired rather than reported. A key-only rule would read that row as unpaired (Q1) and the grant
+# as unnamed (Q2). GQ1 respells the same grant under the BARE path and fires on this run, so this
+# silence is the exact-equality limb telling the two spellings apart.
+GQ7R="$(gq_world GQ7 rootedrow)"
+GQ7O="$(grant_table_check "$GQ7R")"
+GQ7_S=1
+grep -qF "| ${BT}Bash(${ENGINE_ROOT_TOK}scripts/zz-fixture.sh arm:*)${BT} |" "$GQ7R/zz-graded/SKILL.md" || GQ7_S=0
+grep -qF "| ${BT}zz-fixture.sh arm${BT} |" "$GQ7R/zz-graded/SKILL.md" && GQ7_S=0
+if [ "$GQ7_S" -eq 0 ]; then
+  FAIL "GQ7: fixture integrity — the built verb does not name its script grant by the full rooted token alone, so a silence here would prove nothing"
+elif [ "$(getcount "$GQ7O" GQVERBS)" = '1' ] && [ "$(getcount "$GQ7O" GQROWS)" = '3' ] && [ "$(getcount "$GQ7O" GQGRANTS)" = '3' ] \
+     && [ "$(getcount "$GQ7O" GQUNROW)" = '0' ] && [ "$(getcount "$GQ7O" GQUNGRANT)" = '0' ] \
+     && [ "$(getcount "$GQ7O" GQNEAR)" = '0' ] && [ "$(getcount "$GQ7O" GQCONT)" = '0' ]; then
+  PASS "GQ7: MUST-NOT-FIRE — a verb whose script row spells the full rooted token is graded (1 verb, 3 rows, 3 grants) and every row and grant pairs: the row equals its grant exactly, so the normalization accepts the files' script-and-arm rendering beside the full token and prefers neither. GQ1 plants the same grant under the bare path and fires on this run"
+else
+  FAIL "GQ7: a row spelling the full rooted token did not pair — verbs $(getcount "$GQ7O" GQVERBS), rows $(getcount "$GQ7O" GQROWS), grants $(getcount "$GQ7O" GQGRANTS), unpaired rows $(getcount "$GQ7O" GQUNROW), unnamed grants $(getcount "$GQ7O" GQUNGRANT): $(grep '^FINDING ' <<<"$GQ7O" | head -2 | tr '\n' ' ')"
+fi
+
+# ── GQ8 — a CONTINUATION LINE is loud. The allowed-tools value is wrapped, and the indented line
+# after it carries a bare tool no row names. This reader does not join such a line, so the arm
+# must name it as Q0 and withhold Q2 — exactly one FAIL and no PASS from each — rather than grade
+# the three entries it did read and pass. GQ3 appends the same tool on the allowed-tools line
+# itself, where it IS read, and names it as Q2.
+GQ8R="$(gq_world GQ8 wrapgrant)"
+GQ8O="$(grant_table_check "$GQ8R")"
+GQ8_P0="$(md_probe zz_gq_no_such_fn gq_assert_anchor "$GQ8R")"
+GQ8_P2="$(md_probe zz_gq_no_such_fn gq_assert_grants "$GQ8R")"
+GQ8_S=1
+grep -qx '  Glob' "$GQ8R/zz-graded/SKILL.md" || GQ8_S=0
+grep -q '^allowed-tools: .*,$' "$GQ8R/zz-graded/SKILL.md" || GQ8_S=0
+if [ "$GQ8_S" -eq 0 ]; then
+  FAIL "GQ8: fixture integrity — the allowed-tools value is not wrapped onto an indented line, so a verdict here would prove nothing"
+elif grep -q '^FINDING Q0 /zz-graded:[0-9][0-9]* continues its allowed-tools value' <<<"$GQ8O" && [ "$(getcount "$GQ8O" GQCONT)" = '1' ] \
+     && [ "$GQ8_P0" = '0 1' ] && [ "$GQ8_P2" = '0 1' ] \
+     && [ "$(getcount "$GQ8O" GQVERBS)" = '1' ] && [ "$(getcount "$GQ8O" GQUNROW)" = '0' ]; then
+  PASS "GQ8: flagged, naming Q0 — an allowed-tools value wrapped onto an indented line that carries a grant no row names is reported with its verb and line, Q0 and Q2 each render exactly one FAIL and no PASS, and Q1 stays silent. Without this limb the reader graded the three entries it did read and Q2 passed, with the fourth grant absent from every count"
+else
+  FAIL "GQ8: a continuation of the allowed-tools value was not reported as Q0, or Q2 was not withheld: GQCONT=$(getcount "$GQ8O" GQCONT), Q0 probe '${GQ8_P0}', Q2 probe '${GQ8_P2}': $(grep '^FINDING ' <<<"$GQ8O" | head -2 | tr '\n' ' ')"
+fi
+
+# ── GQ0 — MUST-NOT-FIRE on a COPY of the live tables. Three near-misses, each differing from a true
+# positive in the one property the arm keys on:
+#   · every data row of every table has everything after its first cell replaced by text naming
+#     GQ_UNHELD — a Use-cell-only rewrite of the kind a body edit makes, carrying in the Use
+#     column the exact token GQ1 plants in the Grant column
+#   · a prose line after a blank line beneath every table, naming the same token
+#   · a FENCED example grant table appended to every verb file
+# The rewrite is structural — it keys on the pipe and the first cell, never on a header string or
+# on any live wording — so it survives any rewrite of the live Use cells and needs no maintenance.
+# The verdict is INVARIANCE: the counts and the finding set equal the live run's, so the arm stays
+# answerable on a tree that is already red.
+gq_copy_live() {  # gq_copy_live <dest-verb-root> — a byte copy of every live verb file
+  local f v
+  for f in "$CDIR"/*/SKILL.md; do
+    [ -e "$f" ] || continue
+    v="$(verb_id "$f")"; mkdir -p "$1/$v"; cat "$f" > "$1/$v/SKILL.md"
+  done
+}
+gq_rewrite_tables() {  # gq_rewrite_tables <file> — the three near-misses, in place on a COPY
+  # A DATA row is a pipe row below a delimiter row, up to the first line that does not open with
+  # a pipe. Keyed on the delimiter row and never on a header string, so the header of every table
+  # is left exactly as written and no live wording is needed to find a table.
+  local f="$1" line prev='' c body=0
+  {
+    while IFS= read -r line || [ -n "$line" ]; do
+      if [[ "$prev" == '|'* ]] && [[ "$line" != '|'* ]]; then
+        printf '\nProse beneath a table naming %s%s%s, which holds nothing.\n' "$BT" "$GQ_UNHELD" "$BT"
+      fi
+      if [[ "$line" != '|'* ]]; then body=0; printf '%s\n' "$line"
+      elif is_sep "$line"; then body=1; printf '%s\n' "$line"
+      elif [ "$body" -eq 1 ]; then
+        c="${line#|}"; c="${c%%|*}"
+        printf '|%s| rewritten, naming %s%s%s in the Use column |\n' "$c" "$BT" "$GQ_UNHELD" "$BT"
+      else
+        printf '%s\n' "$line"
+      fi
+      prev="$line"
+    done < "$f"
+    printf '\n```\n| Grant | The use that holds it |\n|---|---|\n| %s%s%s | an example inside a fence, which declares nothing |\n```\n' "$BT" "$GQ_UNHELD" "$BT"
+  } > "$f.new" && mv "$f.new" "$f"
+}
+GQ0D="$WORK/GQ0/skills"; mkdir -p "$GQ0D"; gq_copy_live "$GQ0D"
+for gqf in "$GQ0D"/*/SKILL.md; do [ -e "$gqf" ] && gq_rewrite_tables "$gqf"; done
+GQ0L="$(grant_table_check "$CDIR")"; GQ0C="$(grant_table_check "$GQ0D")"
+GQ0_USE=0; GQ0_FEN=0; GQ0_NV=0
+for gqf in "$GQ0D"/*/SKILL.md; do
+  [ -e "$gqf" ] || continue
+  GQ0_NV=$((GQ0_NV+1))
+  GQ0_USE=$(( GQ0_USE + $(grep -c 'in the Use column' "$gqf") ))
+  GQ0_FEN=$(( GQ0_FEN + $(grep -c 'an example inside a fence' "$gqf") ))
+done
+# Line numbers are dropped before the finding sets are compared: the prose plant shifts every
+# line beneath a table, and invariance is a property of WHAT is named, not of where it now sits.
+gq_fset() { grep '^FINDING ' <<<"$1" | sed -E 's/^(FINDING [A-Z][0-9] [^ :]+):[0-9]+ /\1 /' | sort; }
+GQ0_LF="$(gq_fset "$GQ0L")"; GQ0_CF="$(gq_fset "$GQ0C")"
+arm Q1
+if [ "${GQ0_USE:-0}" -lt "$(getcount "$GQ0L" GQROWS)" ] || [ "${GQ0_FEN:-0}" -ne "${GQ0_NV:-0}" ] || [ "${GQ0_NV:-0}" -le 0 ]; then
+  FAIL "GQ0: fixture integrity — the copy carries ${GQ0_USE:-0} rewritten row(s) and ${GQ0_FEN:-0} fenced example(s) across ${GQ0_NV:-0} verb file(s); the near-misses were not all planted, so a zero here would prove nothing"
+elif [ "$(getcount "$GQ0L" GQROWS)" -le 0 ]; then
+  FAIL "GQ0: NO SUBJECT — the live tables yield no row, so there is nothing whose invariance could be shown"
+elif [ "$(getcount "$GQ0C" GQVERBS)" = "$(getcount "$GQ0L" GQVERBS)" ] && [ "$(getcount "$GQ0C" GQROWS)" = "$(getcount "$GQ0L" GQROWS)" ] \
+     && [ "$(getcount "$GQ0C" GQGRANTS)" = "$(getcount "$GQ0L" GQGRANTS)" ] && [ "$(getcount "$GQ0C" GQNEAR)" = "$(getcount "$GQ0L" GQNEAR)" ] \
+     && [ "$GQ0_CF" = "$GQ0_LF" ]; then
+  PASS "GQ0: MUST-NOT-FIRE — on a copy of the live verb files with every table row's Use cell rewritten (${GQ0_USE} rows) to name a grant nothing holds, the same token in prose beneath every table, and a fenced example grant table in each of ${GQ0_NV} files, the arm reads the SAME $(getcount "$GQ0C" GQVERBS) verb(s), $(getcount "$GQ0C" GQROWS) row(s) and $(getcount "$GQ0C" GQGRANTS) grant(s) and the SAME finding set as on the live tree. GQ1 plants that same token in a Grant cell and fires on the same run, so this zero is the arm telling the columns apart"
+else
+  FAIL "GQ0: a Use-cell rewrite, a prose line or a fenced example moved the verdict — live verbs/rows/grants $(getcount "$GQ0L" GQVERBS)/$(getcount "$GQ0L" GQROWS)/$(getcount "$GQ0L" GQGRANTS), copy $(getcount "$GQ0C" GQVERBS)/$(getcount "$GQ0C" GQROWS)/$(getcount "$GQ0C" GQGRANTS); first new finding: $(grep '^FINDING ' <<<"$GQ0C" | head -1)"
+fi
+
+# ── GQD — DERIVED, NOT LISTED. The live copy plus one BUILT conforming verb: the graded set must
+# grow by exactly that verb and its three rows and grants, with nothing named against it. A held
+# list of verbs would read the same count as the live run.
+GQDD="$WORK/GQD/skills"; mkdir -p "$GQDD"; gq_copy_live "$GQDD"; gq_gen_verb "$GQDD" zz-joins respaced
+GQDO="$(grant_table_check "$GQDD")"
+if ! grep -q '^|grant|  The Use  That Holds It  |  $' "$GQDD/zz-joins/SKILL.md"; then
+  FAIL "GQD: fixture integrity — the joining verb carries no grant table, so a count here would prove nothing"
+elif [ "$(getcount "$GQDO" GQVERBS)" = "$(( $(getcount "$GQ0L" GQVERBS) + 1 ))" ] && [ "$(getcount "$GQDO" GQROWS)" = "$(( $(getcount "$GQ0L" GQROWS) + 3 ))" ] \
+     && [ "$(getcount "$GQDO" GQGRANTS)" = "$(( $(getcount "$GQ0L" GQGRANTS) + 3 ))" ] && ! grep -q '^FINDING [A-Z][0-9] /zz-joins' <<<"$GQDO"; then
+  PASS "GQD: DERIVED — a verb that adds a table headed | Grant | The use that holds it |, here re-spaced, re-cased and trailed by whitespace, is graded on the same run with no edit to this file: $(getcount "$GQ0L" GQVERBS) -> $(getcount "$GQDO" GQVERBS) verb(s), $(getcount "$GQ0L" GQROWS) -> $(getcount "$GQDO" GQROWS) row(s), and its path-bearing grant pairs by script and arm under a script name the repository does not carry"
+else
+  FAIL "GQD: a verb that joined with a paired grant table did not raise the graded set by exactly one verb and three rows and grants, or was named in a finding: verbs $(getcount "$GQDO" GQVERBS), rows $(getcount "$GQDO" GQROWS), grants $(getcount "$GQDO" GQGRANTS)"
+fi
+
+# ── GQV — the two degenerate populations reach FAIL, never PASS. An empty verb root, and a root
+# whose only verb file is a link to nothing: each of the three verdicts must count exactly one
+# FAIL and no PASS. md_probe is reused with a victim that does not exist, so it removes nothing
+# and only counts.
+GQV1="$WORK/GQV1/skills"; mkdir -p "$GQV1"
+GQV2="$WORK/GQV2/skills"; mkdir -p "$GQV2/zz-gone"; ln -s "$WORK/GQV2/nowhere" "$GQV2/zz-gone/SKILL.md"
+gq_gen_verb "$GQV2" zz-graded ok
+GQV_N=0; GQV_OK=0; GQV_BAD=''
+for gqa in gq_assert_anchor gq_assert_rows gq_assert_grants; do
+  for gqd in "$GQV1" "$GQV2"; do
+    GQV_N=$((GQV_N+1))
+    gqr="$(md_probe zz_gq_no_such_fn "$gqa" "$gqd")"
+    if [ "$gqr" = '0 1' ]; then GQV_OK=$((GQV_OK+1)); else GQV_BAD="$GQV_BAD$gqa over ${gqd#"$WORK"/} gave '$gqr'; "; fi
+  done
+done
+if [ -n "$(ls -A "$GQV1")" ] || [ ! -L "$GQV2/zz-gone/SKILL.md" ] || [ -e "$GQV2/zz-gone/SKILL.md" ]; then
+  FAIL "GQV: fixture integrity — the empty root is not empty or the link is not dangling, so neither degenerate population was built"
+elif [ "$GQV_N" -gt 0 ] && [ "$GQV_OK" -eq "$GQV_N" ]; then
+  PASS "GQV: VACUITY AND DEGRADATION REACH FAIL — ${GQV_OK} of ${GQV_N} probe(s): over an empty verb root, and over a root holding one conforming graded verb beside a verb file that is a link to nothing, each of Q0, Q1 and Q2 renders exactly one FAIL and no PASS. The unreadable file is counted and withholds the verdict, never skipped; a finding-absence reading would be green on both"
+else
+  FAIL "GQV: ${GQV_OK} of ${GQV_N} probe(s) reached exactly one FAIL on a degenerate population: ${GQV_BAD}"
+fi
+
 arm N1
 NEEDLES_SAVE=( "${NEEDLES[@]}" )
 NEEDLES+=( 'trailing ' )
@@ -5278,11 +6019,27 @@ else
   FAIL "MD5: CONTROL on the oracle did not fire — the planted remediated assertion returned '$MD_CS' rather than '0 1' with its subject removed. An oracle that convicts everything is as useless as one that convicts nothing"
 fi
 
-# ── No assertion in this suite is REGISTERED with md_flips yet, and that is a consequence
-# rather than an omission: registration requires the assertion to be remediated first,
-# because an oracle asked to certify a still-blind assertion turns the suite red for a
-# defect it is reporting rather than causing. The declared residual in MD2 is this suite's
-# registration queue, and every entry that leaves it gains an MD[...] arm in the same edit.
+# ── REGISTERED WITH md_flips — group Q's three verdicts, the first assertions in this suite to be
+# registered. They were written in the remediated form from the start, so they need no
+# remediation first; and they sit here, after MD4 and MD5, so every MD[Q…] verdict stands on an
+# oracle whose sensitivity and specificity were measured on this run. Each assertion calls
+# grant_table_check itself, so removing that function removes the evidence the verdict reads.
+#
+# CLAUSE 6 OPT-OUT, DECLARED RATHER THAN LEFT SILENT: the verb files those assertions read are
+# FILES, not functions, and cannot be `unset -f`. Their removal is a degenerate POPULATION, not a
+# degenerate subject. COMPENSATING POSITIVE CONTROL: GQV builds both degenerate populations — an
+# empty verb root, and a verb file that is a link to nothing — and requires exactly one FAIL and
+# no PASS from each of the three; GQ1 to GQ6 and GQ8 plant each defect in a BUILT file and
+# observe the flip by identifier.
+#
+# The declared residual in MD2 is still this suite's registration queue for every site written
+# before the rule: registration requires such an assertion to be remediated first, because an
+# oracle asked to certify a still-blind assertion turns the suite red for a defect it is
+# reporting rather than causing, and every entry that leaves MD_LEGACY gains an MD[...] arm in
+# the same edit.
+md_flips grant_table_check 'Q0' gq_assert_anchor "$CDIR"
+md_flips grant_table_check 'Q1' gq_assert_rows   "$CDIR"
+md_flips grant_table_check 'Q2' gq_assert_grants "$CDIR"
 
 # Group Z — the guard mutates none of the surfaces it reads. The watch set is those
 # surfaces plus the workflow that runs this guard — see tree_state for its derivation. It
