@@ -6356,14 +6356,25 @@ st_cf_proj_bounds_assert() {
   fi
 }
 
+# st_cf_proj_print <block> — the derived block, unindented between two banners, so the remedy is a paste.
+# <block> is printed byte for byte, its last newline included: the pasted lines are exactly the region
+# that passes. CTL-ST-CF-PROJ-PRINT reads a printed block back by the two banners, so each is one literal.
+ST_CF_PROJ_BAN0='       ----- the derived region-contract block: paste every line between these two banners -----'
+ST_CF_PROJ_BAN1='       ----- end of the derived region-contract block -----'
+st_cf_proj_print() { printf '%s\n%s%s\n' "$ST_CF_PROJ_BAN0" "$1" "$ST_CF_PROJ_BAN1"; }
+
 # st_cf_proj_assert <doc> <forms> [charter] [root] — exactly ONE verdict, ST-CF-PROJ: TOTALITY, the H5 of
 # this projection. Its limbs, in order: a derivation with no region row FAILs first — removing ft_regions
 # or st_cf_version reaches this limb, which is what group MD registers; bounds that cannot be read FAIL,
-# naming ST-CF-PROJ0; a committed block that differs from the derived one FAILs, and the derived block is
-# printed unindented between two banners, so the remedy is a paste; otherwise PASS.
+# naming ST-CF-PROJ0; a committed block that differs from the derived one FAILs; otherwise PASS. Both
+# failures over the document print the derived block — bounds that cannot be read (the file absent or
+# unreadable, its markers not one of each, or out of order) and a block that differs — so the remedy on
+# every such path is the same paste. Each side of the comparison is read through a sentinel: a command
+# substitution strips every trailing newline, and without one a region that differs from the derivation
+# only by trailing empty lines would read as equal.
 st_cf_proj_assert() {
   local doc="$1" forms="$2" chart="${3:-$ST_CF_OWN}" root="${4:-$ROOT}" want got rep nreg
-  want="$(st_cf_proj_block "$root" "$forms" "$chart")"
+  want="$(st_cf_proj_block "$root" "$forms" "$chart"; printf .)"; want="${want%.}"
   nreg="$(st_cf_proj_rows "$want")"
   if [ "${nreg:-0}" -lt 1 ]; then
     FAIL "ST-CF-PROJ: the projection derived from ft_regions over the version-2 members of the conformance population carries no region row, so the region the interviewer reads would be compared with nothing — the projection projects nothing"
@@ -6371,17 +6382,16 @@ st_cf_proj_assert() {
   fi
   rep="$(st_cf_proj_bounds "$doc")"
   if [ "$(cut -f1 <<<"$rep")" != OK ]; then
-    FAIL "ST-CF-PROJ: the committed region cannot be located — $(cut -f2 <<<"$rep") — so the ${nreg} derived region row(s) were compared with nothing. Resolve ST-CF-PROJ0 first"
+    FAIL "ST-CF-PROJ: the committed region cannot be located — $(cut -f2 <<<"$rep") — so the ${nreg} derived region row(s) were compared with nothing. Resolve ST-CF-PROJ0 first, then put the block printed below between the two markers — every line of it, and nothing else"
+    st_cf_proj_print "$want"
     return 0
   fi
-  got="$(st_cf_proj_committed "$doc" "$(cut -f2 <<<"$rep")" "$(cut -f3 <<<"$rep")")"
+  got="$(st_cf_proj_committed "$doc" "$(cut -f2 <<<"$rep")" "$(cut -f3 <<<"$rep")"; printf .)"; got="${got%.}"
   if [ "$got" = "$want" ]; then
     PASS "ST-CF-PROJ: TOTALITY — the region ${doc#"$ROOT/"} commits equals the derivation of ${nreg} region row(s) from ft_regions over every version-2 member of the conformance population and the writer table each addresses, recomputed on this commit. The interviewer reads the region contract as this suite computes it, never a second resolution of the table"
   else
     FAIL "ST-CF-PROJ: the region ${doc#"$ROOT/"} commits between its markers is not the one this run derives from ft_regions over the forms and the writer table as they stand, so the interviewer would read a stale region contract. Replace every line between the two markers with the block printed below — nothing else in that document changes"
-    printf '       ----- the derived region-contract block: paste every line between these two banners -----\n'
-    printf '%s\n' "$want"
-    printf '       ----- end of the derived region-contract block -----\n'
+    st_cf_proj_print "$want"
   fi
 }
 
@@ -7397,6 +7407,42 @@ if ! cmp -s "$ST_CF_PJ/clean.md" "$ST_CF_PJ/prose.md" && [ "$ST_CF_PJ_P" = "1 0"
 else
   FAIL "CTL-ST-CF-PROJ-PROSE: MUST NOT FIRE — a sentence of prose added outside the two markers read [$ST_CF_PJ_P] from ST-CF-PROJ, where [1 0] is owed; prose outside the region is not derived and must never be graded as if it were"
 fi
+# CTL-ST-CF-PROJ-TRAIL — MUST FIRE: one empty line added before the closing marker, and nothing else. The
+# comparison's two sides are command substitutions, which strip trailing newlines, so this is the edit a
+# comparison without its sentinels reads as the derivation.
+st_cf_proj_doc "$ST_CF_PJ/trail.md" "$ST_CF_PJ_W
+"
+ST_CF_PJ_TB="$(( $(wc -c < "$ST_CF_PJ/trail.md") - $(wc -c < "$ST_CF_PJ/clean.md") ))"
+ST_CF_PJ_T0="$(st_cf_proj_count st_cf_proj_bounds_assert "$ST_CF_PJ/trail.md")"; ST_CF_PJ_T1="$(st_cf_proj_count st_cf_proj_assert "$ST_CF_PJ/trail.md" "$ST_CF_FORMS")"
+if ! cmp -s "$ST_CF_PJ/clean.md" "$ST_CF_PJ/trail.md" && [ "$ST_CF_PJ_TB" = 1 ] && [ "$ST_CF_PJ_T0" = "1 0" ] && [ "$ST_CF_PJ_T1" = "0 1" ]; then
+  PASS "CTL-ST-CF-PROJ-TRAIL: MUST FIRE — one empty line added before the closing marker, one byte in all, turns ST-CF-PROJ to one FAIL and no PASS while ST-CF-PROJ0 still reads [$ST_CF_PJ_T0]: a trailing empty line inside the region is a difference, never a rounding the comparison may take"
+else
+  FAIL "CTL-ST-CF-PROJ-TRAIL: MUST FIRE — with one empty line added before the closing marker ($ST_CF_PJ_TB byte(s) added, where 1 is owed), ST-CF-PROJ0 read [$ST_CF_PJ_T0] where [1 0] is owed and ST-CF-PROJ read [$ST_CF_PJ_T1] where [0 1] is owed. A comparison that strips trailing newlines reads this region as the derivation"
+fi
+# CTL-ST-CF-PROJ-PRINT — MUST FIRE, and print: over a document that does not exist, one whose opening marker
+# is doubled, and one with a verdict edited by hand, ST-CF-PROJ renders one FAIL and no PASS each time AND
+# prints this run's derivation between the two banners, byte for byte; over the clean document it prints
+# nothing, so a block printed on every call cannot pass.
+# st_cf_proj_printed <doc> [args…] — what ST-CF-PROJ prints between its two banners over <doc>, nothing of
+# its verdict reaching this run, then a closing "." so the caller's command substitution keeps a trailing
+# line. Only the "." unless it printed exactly one pair of banners.
+st_cf_proj_printed() {
+  { ( PASS() { :; }; FAIL() { :; }; st_cf_proj_assert "$@" ) 2>/dev/null; } | awk -v b="$ST_CF_PROJ_BAN0" -v e="$ST_CF_PROJ_BAN1" '
+    $0 == b { nb++; p = 1; buf = ""; next }
+    $0 == e { ne++; if (p) got = buf; p = 0; next }
+    p { buf = buf $0 "\n" }
+    END { if (nb == 1 && ne == 1) printf "%s", got; printf "." }'
+}
+ST_CF_PJ_PW="$ST_CF_PJ_W
+."
+ST_CF_PJ_MP="$(st_cf_proj_count st_cf_proj_assert "$ST_CF_PJ/markers.md" "$ST_CF_FORMS")"
+ST_CF_PJ_PA="$(st_cf_proj_printed "$ST_CF_PJ_NONE" "$ST_CF_FORMS")"; ST_CF_PJ_PM="$(st_cf_proj_printed "$ST_CF_PJ/markers.md" "$ST_CF_FORMS")"
+ST_CF_PJ_PD="$(st_cf_proj_printed "$ST_CF_PJ/drift.md" "$ST_CF_FORMS")"; ST_CF_PJ_PC="$(st_cf_proj_printed "$ST_CF_PJ/clean.md" "$ST_CF_FORMS")"
+if [ "${ST_CF_PJ_N:-0}" -gt 0 ] && [ "$ST_CF_PJ_A1" = "0 1" ] && [ "$ST_CF_PJ_MP" = "0 1" ] && [ "$ST_CF_PJ_DV" = "0 1" ] && [ "$ST_CF_PJ_PA" = "$ST_CF_PJ_PW" ] && [ "$ST_CF_PJ_PM" = "$ST_CF_PJ_PW" ] && [ "$ST_CF_PJ_PD" = "$ST_CF_PJ_PW" ] && [ "$ST_CF_PJ_PC" = . ]; then
+  PASS "CTL-ST-CF-PROJ-PRINT: MUST FIRE, and print — over a document that does not exist, one whose opening marker is doubled and one with a verdict edited by hand, ST-CF-PROJ renders one FAIL and no PASS each time and prints this run's derivation of $ST_CF_PJ_N region row(s) between the two banners, byte for byte; over the clean document it prints nothing. On every failure over the document, the remedy it names is the same paste"
+else
+  FAIL "CTL-ST-CF-PROJ-PRINT: MUST FIRE, and print — ST-CF-PROJ read [$ST_CF_PJ_A1] over the absent document, [$ST_CF_PJ_MP] over the doubled marker and [$ST_CF_PJ_DV] over the hand edit, where [0 1] is owed on each; the derived block, byte for byte, was printed over the absent document: $( [ "$ST_CF_PJ_PA" = "$ST_CF_PJ_PW" ] && echo yes || echo NO ), the doubled marker: $( [ "$ST_CF_PJ_PM" = "$ST_CF_PJ_PW" ] && echo yes || echo NO ), the hand edit: $( [ "$ST_CF_PJ_PD" = "$ST_CF_PJ_PW" ] && echo yes || echo NO ); over the clean document, where nothing is owed: $( [ "$ST_CF_PJ_PC" = . ] && echo nothing || echo SOMETHING )"
+fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group PC — the interview card carries the interview's shared rules, rule for rule.
@@ -7428,12 +7474,10 @@ fi
 # section early, which turns PC red through COUNT and DIFF rather than green.
 #
 # WHAT A REWRAP REACHES. A rewrap on whitespace alone changes no rule, and PC1 reads it as
-# agreement. The controls read it the same way. PC-C2 and PC-C3 remove or plant a WHOLE item, as
-# pc_items delimits one; PC-C4 and PC-C5 edit a heading and an item's number, which such a rewrap
-# never moves; and PC-C6 rewraps narrower than the rules it is handed. PC-C1 is the one exception,
-# and it is bounded: it finds its phrase on rule 7's item line, which keeps it under a rewrap 47
-# columns wide or wider on the card as it ships. Narrower, the phrase can leave that line, and
-# PC-C1 reads "did not land" — fail-closed.
+# agreement. The controls read it the same way. PC-C1 changes one word of a WHOLE item, and PC-C2
+# and PC-C3 remove or plant a WHOLE item, each as pc_items delimits one; PC-C4 and PC-C5 edit a
+# heading and an item's number, which such a rewrap never moves; and PC-C6 rewraps narrower than
+# the rules it is handed. None of them depends on where a rewrap breaks an item's lines.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
 echo "PC — the interview card's numbered rules agree with the interview's conduct file, rule for rule"
@@ -7608,7 +7652,8 @@ PC_BASE="$(printf '%s' "$PC_BASE" | tr '\t' ' ')"
 cp "$PC_CARD" "$WORK/pc-card.md"; cp "$PC_VERB" "$WORK/pc-verb.md"
 
 # PC-C1 MUTATE — one word of rule 7 changed on a card copy.
-awk '/^7\. / && !d { sub(/Take only what they said/, "Take only what they meant"); d = 1 } { print }' "$PC_CARD" > "$WORK/pc-c1.md"
+# The word is the item's first whole "said", on whichever of the WHOLE item's lines a rewrap left it.
+awk '/^[0-9]+\. / || /^[ \t]*$/ || /^#+ / { i = ($0 ~ /^7\. /) } i && !d && match(" " $0 " ", /[^A-Za-z]said[^A-Za-z]/) { $0 = substr($0, 1, RSTART - 1) "meant" substr($0, RSTART + 4); d = 1 } { print }' "$PC_CARD" > "$WORK/pc-c1.md"
 pc_landed 'PC-C1' "$WORK/pc-c1.md" "$PC_CARD" \
   && pc_control 'PC-C1' 'DIFF 7' 'MUST FIRE — a card copy with one word of rule 7 changed' "$PC_VERB" "$WORK/pc-c1.md"
 
