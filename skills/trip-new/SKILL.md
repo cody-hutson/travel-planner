@@ -460,12 +460,16 @@ Tell the user all four of these:
    - **Fill it in themselves** — copy `templates/traveler-intake.template.md` to the path above and
      work through it. Point them at `examples/people-library-demo/travelers/noor.md` as well: it is
      the same form with answers written into it, which is the comparison a blank one cannot give.
-   - **Send it to someone who is not here** — hand them the whole template file and have them paste
-     it into any assistant with the one line the guide at the bottom gives them, then save the block
-     it returns to the path above. **Send `examples/people-library-demo/travelers/noor.md` with
-     it** — they have no repository to open, so a filled-in profile travelling beside the form is
-     the only comparison they will get. On a group trip this is how most travelers will do it, so
-     **never drop this option.**
+   - **Send it to someone who is not here** — send them three files: the form,
+     `examples/people-library-demo/travelers/noor.md` and the portable interview card,
+     `templates/interview-card.md`. They paste the form and the card into any assistant with the
+     one line the form gives them, and send back the block it returns, which is saved with
+     **`/trip-record profile <name>`**: it writes the seed at the path above where none is there
+     yet, and merges the block into it field by field. The set works on its own because it holds
+     everything the interview needs: the form carries the questions and their hints, the card how
+     to run the interview and what to give back, and `noor.md` the filled-in comparison a blank
+     form cannot give — they have no repository to open. On a group trip this is how most
+     travelers will do it, so **never drop this option.**
    - **Reference someone you have travelled with before** — if this person already has a record in
      your people library, point this trip at that record instead of answering the durable questions
      again. It is two named steps, in this order: create the profile file by any of the three routes

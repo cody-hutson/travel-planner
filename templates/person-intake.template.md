@@ -220,34 +220,34 @@ output: people/<person>.md
 > **Filling this in by hand? You're finished — everything above is your profile.** You can
 > stop here. Delete this guide or leave it; the planner ignores anything below this line.
 
+### What a filled-in one looks like
+
+A worked record ships with this engine at
+[`examples/people-library-demo/people/psn-3c7e.md`](../examples/people-library-demo/people/psn-3c7e.md).
+It carries this form's own sections and labels — the same ones, in the same order — with answers
+written into them and an em dash on every question its person skipped, and between the sections a
+few notes explaining the record, which are not part of one. Read it beside this form to see how
+long an answer needs to be, which is the one thing a blank form cannot show you. It is an invented
+example person and carries no real personal detail.
+
+**If this file reached you on its own, that path will not open** — it lives in the repository this
+form came from. Ask whoever sent you this form to send that record too: it reads on its own, and
+nothing else from the repository is needed to use it.
+
 ### Filling this out with an assistant
 
-Upload or paste **this whole file** into any assistant — Claude, ChatGPT, Gemini,
-DeepSeek, Grok, whatever you use — and say:
+**This form is handed on as three files:** this form, the filled-in record `psn-3c7e.md` named
+above, and the portable interview card, `interview-card.md`. The questions are here. How to run the
+interview, and what to give back at the end, is on the card — so if the card did not come with
+this form, ask whoever sent it to send that too before you start.
 
-> *Help me fill out this durable travel profile. Follow the guide at the bottom of the file.*
+Upload or paste **this whole file and the interview card** into any assistant — Claude, ChatGPT,
+Gemini, DeepSeek, Grok, whatever you use — and say:
 
-That is all you need to say. Everything below tells the assistant how to run it.
+> *Help me fill out this durable travel profile. Follow the interview card.*
 
-### Assistant — how to run this interview
-
-You are helping one person fill out their own durable, cross-trip record. Read the whole
-file first, then follow these rules exactly.
-
-1. **One section at a time,** in the order they appear. Never dump all the questions at
-   once, and never jump ahead to a later section before the current one is settled.
-2. **Two or three questions per section, maximum.** Ask in plain language. The bracketed
-   text in the file is a hint for you — do not read it out as a script.
-3. **Offer the choices.** Where a field lists options, or the section carries a menu, put
-   those in front of them. Recognising something is far faster than recalling it.
-4. **Do the starred fields first.** The fields marked with a star are the two-to-three
-   minute pass. When they are done, say what is left and ask whether they want to keep
-   going, stop there, or jump to a particular section. All three are fine answers.
-5. **"Skip" is always valid.** Accept it immediately and move on. Never push twice.
-6. **Never invent.** An unanswered field is a skipped field. Do not fill one in with a
-   plausible guess, and do not infer one field from another.
-7. **Keep their words.** Tighten the wording; do not rewrite the meaning. If you are not
-   sure what they meant, ask — do not paraphrase your way past it.
+That is all you need to say. The card tells the assistant how to run the interview; the notes
+below, headed *Assistant — the sections, in order*, tell it how to ask about each part of this form.
 
 ### Assistant — the sections, in order
 
@@ -271,7 +271,7 @@ trips and is **country and expiry month only — never a passport number.** If t
 give you a number, stop them. It covers **this person alone, never their party** — if the
 answer comes back party-shaped ("two of us are Canadian, one is Australian"), record only
 this person's own country and dates. This is the one field where you narrow what they said
-rather than **keeping their words** (rule 7): a second person's passport never goes on this
+rather than **keeping their words**: a second person's passport never goes on this
 line. Anyone else whose entry requirements need checking has a record of their own.
 
 ### Step 3 — Where you stay
@@ -303,36 +303,3 @@ they eat when they travel, including anything they avoid.
 
 ### Step 8 — People dynamics & togetherness
 What they would love to do on their own given the chance.
-
-### Assistant — producing the finished file
-
-When the interview is done, output **one markdown code block** containing the record and
-nothing else. No preamble, no commentary, no summary afterwards.
-
-Fence that code block with `~~~` rather than with backticks: the record carries a
-backtick-fenced `intake-form` block of its own, and a backtick fence around the record would
-end at that block's closing line, cutting the record short.
-
-- Include **everything above the `# END OF PROFILE` line**, and nothing from below it.
-- Keep every field label **exactly as written**, including the `**bold**` and the star
-  markers. Do not rename, reorder, merge, add, or drop sections or fields. **A relabelled
-  field is not a smaller error than a missing one** — a trip joins this record to its own
-  answers by matching these labels, so a renamed field simply never arrives.
-- Replace each `[bracketed placeholder]` with their answer. Nothing bracketed survives.
-- For a field they skipped, keep the line and put a single em dash where the answer
-  would go — the bullet, the bold label, then `—`. Do not leave the placeholder text
-  in, and do not delete the line. **The needs fields are the one exception**: `none` in
-  words, never an em dash, when they say they have none.
-- Under **Needs**, delete the unused repeated blocks and keep one block per real need —
-  adding more blocks if they have more.
-- Leave the `>` guidance quotes as they are.
-- Leave the frontmatter fence exactly as it stands. Its values are facts about the artifact
-  class, not answers to a question — `trip: cross-trip` in particular is a reserved value
-  and never a trip's name.
-- Put their name into the `# ` title line — the first heading, **not** the frontmatter fence
-  above it. A person's name is a body value and never a frontmatter value
-  (`reference/data-architecture.md` → "Traveler — natural key").
-
-Then tell them to save it as `people/psn-<token>.md`, where `<token>` is the four hex
-characters minted for this record. Say why, in one line: the filename carries the id every
-trip points at, so the name in the title line can change without any trip losing the link.

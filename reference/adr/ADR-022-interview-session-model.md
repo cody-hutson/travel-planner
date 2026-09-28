@@ -1,6 +1,11 @@
 # ADR-022: The interview session model — derived resumption, a three-valued read of the unanswered class, and one write per answer
 
 - **Status:** Accepted (2026-09-20)
+  **Superseded in part (2026-09-27, Sunday)** — D6.1's tier-T row, by
+  [ADR-040](ADR-040-transcript-only-return-and-save.md). This amendment records a decision taken
+  there and takes none here: the rest of D6.1, and every other decision of this record, stands. The
+  superseded row is retained as decided, with an inline marker at it pointing forward, per
+  `reference/adr/README.md` § *Convention*.
 - **Deciders:** repo maintainer
 - **Driving work:** the *interviewer becomes a component* milestone. This record is one of that
   milestone's two Wave-0 gating records, in the shape `ADR-012-people-library.md` and
@@ -708,7 +713,7 @@ path to the artifact?**
 | Tier | Predicate | Contract |
 |---|---|---|
 | **W — write-capable** | the session can read and write the target path | D1.2's seed-then-edit. The artifact **is** the session state, resumption is derived, and there is **no output act at all**, because the answers were never held in conversation. This is what route 1 becomes. |
-| **T — transcript-only** | no write path, but the channel can return text the traveller can save | the contract the forms already ship: one markdown code block carrying the profile and nothing below its end marker. This is route 3, unchanged and not dropped. |
+| **T — transcript-only** | no write path, but the channel can return text the traveller can save | the contract the forms already ship: one markdown code block carrying the profile and nothing below its end marker. This is route 3, unchanged and not dropped. *(Superseded in part (2026-09-27, Sunday) by [ADR-040](ADR-040-transcript-only-return-and-save.md).)* |
 | **refuse** | no write path **and** no text-returnable surface | **the interview does not run.** |
 
 *Rejected:* naming one output shape globally preferred. The candidate shapes are not competitors;

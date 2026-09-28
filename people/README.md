@@ -229,7 +229,8 @@ yourself. Nothing on this surface will do it for you.
 ## Filling in a record by interview
 
 **`/trip-record interview templates/person-intake.template.md <name>` asks the durable form's own
-questions and writes each answer into a new record as it is given.** A record left part-way is
+questions and writes each answer into a new record as it is settled — a field when it is answered,
+a repeat unit when it is complete.** A record left part-way is
 picked up by running it again with the record's id in place of the name — it asks only what is
 still unanswered, and never asks again a question that was answered or skipped.
 
@@ -237,6 +238,13 @@ still unanswered, and never asks again a question that was answered or skipped.
 record about a person who did not ask for one, so the interview asks before it writes anything,
 and writes nothing unless the answer is yes. An answer that belongs to one trip rather than to the
 person is named there and not recorded here.
+
+**Someone who is not here can fill one in themselves.** Send them three files — the form itself,
+the worked record `examples/people-library-demo/people/psn-3c7e.md` and the portable interview
+card, `templates/interview-card.md` — and they fill it in with any assistant, which gives the
+finished record back as one block. Saving that block here, under the id the interview names for
+them when they are not there to answer, is yours to do: it is you writing down what they told
+you, and no command writes it for you.
 
 ## Retention
 

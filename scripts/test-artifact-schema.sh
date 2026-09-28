@@ -123,6 +123,12 @@
 #        other code here — on two preconditions: ST_CF_OWN names ONE file, so that table
 #        must live in CLAUDE.md; and no other form's write-ownership anchor may lead that
 #        table's heading, token-bounded, nor may its anchor lead another's.
+#   PC   the interview card carries the interview's shared rules, rule for rule: the numbered
+#        items under "The rules every interview shares" in skills/trip-record/interview-conduct.md
+#        and in templates/interview-card.md are equal in number and byte-identical once whitespace
+#        is collapsed. The conduct file is the authored home (ADR-039) and the card a graded
+#        projection. A heading absent or repeated on either side, a side that reads no rule, a
+#        numbering gap, or a side not read to its end is a failure and never agreement.
 #   CTL  a synthetic fixture tree, built in a temp dir ON EVERY RUN, population by
 #        construction at every wave. One MUST-FIRE arm per code the validator can emit,
 #        plus the specificity arms that tell a correct implementation from a lookalike.
@@ -7155,6 +7161,268 @@ else
   fi
 fi
 
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group PC — the interview card carries the interview's shared rules, rule for rule.
+#
+# THE TWO TEXTS. skills/trip-record/interview-conduct.md is the authored home of the rules every
+# interview shares — ADR-039 places them there — and templates/interview-card.md carries them to
+# an assistant with no repository. The card is a PROJECTION, and this group is what makes it a
+# graded one: the numbered items under the ONE heading "The rules every interview shares", at any
+# level, must be equal in number and byte-identical once whitespace is collapsed. Nothing else in
+# either file is compared, and the quality of neither text is judged.
+#
+# FAIL-CLOSED ON EVERY DEGENERATE READ. A heading absent or repeated on either side, a side that
+# reads no rule, a numbering gap, and a side whose reader did not reach its closing record are
+# each a FINDING, never agreement. An empty finding list is PC1's pass condition only because each
+# of those states emits a record of its own, and PC1 separately fails a comparison that exited
+# non-zero.
+#
+# THE TWO LISTS ARRIVE AS ONE STREAM. Each side's items are multi-line text, so they reach awk as
+# ONE stdin stream separated by an FS-byte marker record — st_attrib's idiom, for st_attrib's
+# reason: awk -v ABORTS on a multi-line value ("newline in string"), the command substitution then
+# yields nothing, and nothing is exactly what PC1 would otherwise read as agreement.
+#
+# THE SIDE LABEL IS "verb". The conduct file is part of the verb — its directory is the verb — and
+# the label is the one the interface contract names, so a copy of this group keyed on
+# skills/trip-record/SKILL.md reads "HEAD verb 0" and fails closed. PC-KEY below is that copy.
+#
+# WHERE THE READER STOPS. pc_items is not fence-aware: neither file carries a fenced block today. A
+# fence carrying a "#"-led line inside the rules section would read as a heading and end the
+# section early, which turns PC red through COUNT and DIFF rather than green.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "PC — the interview card's numbered rules agree with the interview's conduct file, rule for rule"
+
+PC_HEAD='The rules every interview shares'
+PC_VERB="$ROOT/skills/trip-record/interview-conduct.md"
+PC_CARD="$ROOT/templates/interview-card.md"
+PC_COV_PROBE='ZZ-PC-COVERAGE-PROBE'
+PC_COV_PHANTOM='ZZ-PC-PHANTOM-ARM'
+PC_ARMED=""
+
+# pc_items <file> -> "<n><TAB><item, whitespace collapsed>" per numbered item under the ONE heading
+# whose text is exactly $PC_HEAD (any level), then ONE closing record "HEADS<TAB><k>" — how many such
+# headings the file carries. An item runs from a line "^[0-9]+\. " to the next item line, a blank
+# line, or a heading. $PC_HEAD is a single-line value, so -v is safe for it.
+pc_items() {
+  awk -v H="$PC_HEAD" '
+    function flush() { if (cur != "") { gsub(/[ \t]+/, " ", cur); sub(/^ /, "", cur); sub(/ $/, "", cur); printf "%s\t%s\n", num, cur; cur = "" } }
+    /^#+ / { t = $0; sub(/^#+ /, "", t); sub(/[ \t]+$/, "", t); flush(); if (t == H) { nh++; inb = 1 } else { inb = 0 } next }
+    !inb { next }
+    /^[0-9]+\. / { flush(); num = $0; sub(/\..*$/, "", num); cur = $0; next }
+    /^[ \t]*$/ { flush(); next }
+    cur != "" { cur = cur " " $0; next }
+    END { flush(); printf "HEADS\t%d\n", nh + 0 }
+  ' "$1"
+}
+
+# pc_compare <verb-items> <card-items> -> one "<CODE><TAB><detail>" record per finding, and nothing
+# when the two agree. The two lists arrive as ONE stream, split by an FS-byte marker record.
+#   READ  <side>        the side carries no HEADS record — its reader never reached its end
+#   HEAD  <side> <k>    the side carries the heading k times, not once
+#   EMPTY <side>        the side reads no rule
+#   GAP   <side> <n>    the side reads n rules whose numbers do not run 1..n
+#   COUNT <nv> <nc>     the two sides read different numbers of rules
+#   DIFF  <n>           rule n differs, or stands on one side only
+# The DIFF loop visits only numbers present on at least one side.
+pc_compare() {
+  local pcm_mark
+  pcm_mark="$(printf '\034')"
+  awk -F'\t' -v mark="$pcm_mark" '
+    BEGIN { s = "verb" }
+    $0 == mark { s = "card"; next }
+    $1 == "HEADS" { hd[s] = $2 + 0; hs[s] = 1; next }
+    $1 != "" { it[s, $1] = $2; m[s]++; if ($1 + 0 > x[s]) x[s] = $1 + 0; next }
+    END {
+      for (k = 1; k <= 2; k++) {
+        d = (k == 1) ? "verb" : "card"
+        if (!(d in hs)) printf "READ\t%s\n", d
+        else if (hd[d] != 1) printf "HEAD\t%s %d\n", d, hd[d]
+        if (m[d] + 0 == 0) printf "EMPTY\t%s\n", d
+        else if (m[d] != x[d]) printf "GAP\t%s %d\n", d, m[d]
+      }
+      if (m["verb"] + 0 != m["card"] + 0) printf "COUNT\t%d %d\n", m["verb"], m["card"]
+      top = (x["verb"] > x["card"]) ? x["verb"] : x["card"]
+      for (n = 1; n <= top; n++)
+        if ((("verb", n) in it) || (("card", n) in it))
+          if (!((("verb", n) in it) && (("card", n) in it) && it["verb", n] == it["card", n])) printf "DIFF\t%d\n", n
+    }
+  ' <<EOF
+$1
+$pcm_mark
+$2
+EOF
+}
+
+# pc_findings <conduct-file> <card> — both sides read by pc_items, then compared. A reader that
+# fails returns 2, so no caller can take an unread side for an agreeing one.
+pc_findings() {
+  local pf_v pf_c
+  pf_v="$(pc_items "$1")" || return 2
+  pf_c="$(pc_items "$2")" || return 2
+  pc_compare "$pf_v" "$pf_c"
+}
+
+# pc_assert <conduct-file> <card> — PC1's ONE verdict. It calls its own reader and comparison, so
+# md_flips can remove either and watch this verdict flip: with pc_items gone pc_findings returns 2,
+# and with pc_compare gone it returns 127 — each a FAIL, and never a PASS.
+pc_assert() {
+  local pa_f pa_rc pa_n
+  pa_f="$(pc_findings "$1" "$2")"; pa_rc=$?
+  pa_n="$(awk -F'\t' '$1 ~ /^[0-9]+$/ { n++ } END { print n + 0 }' <<<"$(pc_items "$1")")"
+  if [ "$pa_rc" -ne 0 ]; then
+    FAIL "PC1: the comparison of ${1#"$ROOT/"} with ${2#"$ROOT/"} exited $pa_rc rather than 0 — it did not run to its end, so an empty finding list here would not be agreement"
+  elif [ -n "$pa_f" ]; then
+    FAIL "PC1: the card's numbered rules do not match the conduct file's — $(printf '%s' "$pa_f" | tr '\t\n' ' ;'). The conduct file is the authored home: change the card to match it, rule for rule"
+  else
+    PASS "PC1: all $pa_n numbered rule(s) under \"$PC_HEAD\" in ${2#"$ROOT/"} are byte-identical, once whitespace is collapsed, to the $pa_n in ${1#"$ROOT/"} — the heading occurs once on each side and the numbering runs 1..$pa_n on each"
+  fi
+}
+
+# pc_minus <a> <b> — the records of A that are not records of B, in A's order. A record is a whole
+# line, compared exactly; the two sets arrive as ONE stream, split by the FS-byte marker record.
+pc_minus() {
+  local pmn_mark
+  pmn_mark="$(printf '\034')"
+  awk -v mark="$pmn_mark" '$0 == mark { s = 1; next } s == 0 { if ($0 != "") b[$0] = 1; next } $0 != "" && !($0 in b)' <<EOF
+$2
+$pmn_mark
+$1
+EOF
+}
+
+# pc_grade <id> <expected> <prose> <rc> <findings> — ONE verdict for a standing control. It grades a
+# DELTA against this run's own reading of the real texts ($PC_BASE), never a literal: the records
+# the control emitted BEYOND those the real pair emits must be exactly the expected records beyond
+# the same. On a clean tree that is the prediction itself. On a tree whose card has already
+# drifted, PC1 alone goes red and every control still measures its own mutation, rather than
+# inheriting the drift and accusing itself — cov_assert's rule, applied here. Records are written
+# "<CODE> <detail>"; an empty <expected> is the must-NOT-fire form. The codes a control ACTUALLY
+# emitted are recorded for PC-COV, so the armed set is what ran, not what an arm declared it wanted.
+pc_grade() {
+  local pg_got pg_dgot pg_dwant
+  PC_ARMED="$PC_ARMED
+$(awk -F'\t' 'NF { print $1 }' <<<"$5")"
+  pg_got="$(printf '%s' "$5" | tr '\t' ' ')"
+  pg_dgot="$(pc_minus "$pg_got" "$PC_BASE")"
+  pg_dwant="$(pc_minus "$2" "$PC_BASE")"
+  if [ "$4" -ne 0 ]; then
+    FAIL "$1: $3 — the comparison exited $4, so this control measured nothing"
+  elif [ "$pg_dgot" != "$pg_dwant" ]; then
+    FAIL "$1: $3 — predicted [$(printf '%s' "$pg_dwant" | tr '\n' ';')] beyond this run's reading of the real texts, observed [$(printf '%s' "$pg_dgot" | tr '\n' ';')]"
+  else
+    PASS "$1: $3 — observed exactly the prediction [$(printf '%s' "${pg_dwant:-no finding}" | tr '\n' ';')]"
+  fi
+}
+
+# pc_control <id> <expected> <prose> <conduct-file> <card> — pc_grade over the comparison of a pair.
+pc_control() {
+  local pc_got pc_rc
+  pc_got="$(pc_findings "$4" "$5")"; pc_rc=$?
+  pc_grade "$1" "$2" "$3" "$pc_rc" "$pc_got"
+}
+
+# pc_landed <id> <copy> <original> — the mutation changed the copy; a control over an unchanged copy
+# would grade the real files twice and prove nothing. One FAIL when it did not land; silent otherwise.
+pc_landed() {
+  if cmp -s "$2" "$3"; then
+    FAIL "$1: the mutation did not land — the copy is byte-identical to its original, so this control has no input to grade"
+    return 1
+  fi
+  return 0
+}
+
+# ── PC0 — the entry gate, read BEFORE anything rests on it: both files readable, each read to its
+# closing record, the heading once on each side, and at least one rule on each.
+PC_V_ITEMS="$(pc_items "$PC_VERB")"; PC_V_RC=$?
+PC_C_ITEMS="$(pc_items "$PC_CARD")"; PC_C_RC=$?
+PC_V_HEADS="$(awk -F'\t' '$1 == "HEADS" { print $2 }' <<<"$PC_V_ITEMS")"
+PC_C_HEADS="$(awk -F'\t' '$1 == "HEADS" { print $2 }' <<<"$PC_C_ITEMS")"
+PC_V_N="$(awk -F'\t' '$1 ~ /^[0-9]+$/ { n++ } END { print n + 0 }' <<<"$PC_V_ITEMS")"
+PC_C_N="$(awk -F'\t' '$1 ~ /^[0-9]+$/ { n++ } END { print n + 0 }' <<<"$PC_C_ITEMS")"
+if [ ! -r "$PC_VERB" ] || [ ! -r "$PC_CARD" ]; then
+  FAIL "PC0: ${PC_VERB#"$ROOT/"} or ${PC_CARD#"$ROOT/"} is not readable — the comparison has no input, and a comparison with no input is not agreement"
+elif [ "$PC_V_RC" -ne 0 ] || [ "$PC_C_RC" -ne 0 ]; then
+  FAIL "PC0: the item reader exited $PC_V_RC on the conduct file and $PC_C_RC on the card — a side not read to its end cannot be compared"
+elif [ "$PC_V_HEADS" != 1 ] || [ "$PC_C_HEADS" != 1 ]; then
+  FAIL "PC0: the heading \"$PC_HEAD\" occurs ${PC_V_HEADS:-0} time(s) in the conduct file and ${PC_C_HEADS:-0} in the card — it must occur exactly once on each side, or which list is the rules is undecided"
+elif [ "$PC_V_N" -eq 0 ] || [ "$PC_C_N" -eq 0 ]; then
+  FAIL "PC0: the conduct file reads $PC_V_N rule(s) and the card $PC_C_N — a side that reads none is a broken read, never agreement"
+else
+  PASS "PC0: both sides are readable and read to their end; the heading occurs once on each; the conduct file reads $PC_V_N rule(s) and the card $PC_C_N"
+fi
+
+# ── PC1 — the assertion.
+pc_assert "$PC_VERB" "$PC_CARD"
+# This run's own reading of the real pair: the base every control's delta is taken against.
+PC_BASE="$(pc_findings "$PC_VERB" "$PC_CARD")"
+PC_BASE="$(printf '%s' "$PC_BASE" | tr '\t' ' ')"
+
+# ── The standing controls. Each mutates a COPY under $WORK, asserts the mutation LANDED, and states
+# its prediction in the message before comparing. None writes into the tree.
+cp "$PC_CARD" "$WORK/pc-card.md"; cp "$PC_VERB" "$WORK/pc-verb.md"
+
+# PC-C1 MUTATE — one word of rule 7 changed on a card copy.
+awk '/^7\. / && !d { sub(/Take only what they said/, "Take only what they meant"); d = 1 } { print }' "$PC_CARD" > "$WORK/pc-c1.md"
+pc_landed 'PC-C1' "$WORK/pc-c1.md" "$PC_CARD" \
+  && pc_control 'PC-C1' 'DIFF 7' 'MUST FIRE — a card copy with one word of rule 7 changed' "$PC_VERB" "$WORK/pc-c1.md"
+
+# PC-C2 DROP — rule 14 removed from a card copy.
+awk '/^14\. / { next } { print }' "$PC_CARD" > "$WORK/pc-c2.md"
+pc_landed 'PC-C2' "$WORK/pc-c2.md" "$PC_CARD" \
+  && pc_control 'PC-C2' "COUNT 14 13
+DIFF 14" 'MUST FIRE — a card copy without rule 14' "$PC_VERB" "$WORK/pc-c2.md"
+
+# PC-C3 ADD — a rule 15 planted after rule 14 in a conduct-file copy.
+awk '{ print } /^14\. / { print "15. **A planted rule.** It exists only in this copy." }' "$PC_VERB" > "$WORK/pc-c3.md"
+pc_landed 'PC-C3' "$WORK/pc-c3.md" "$PC_VERB" \
+  && pc_control 'PC-C3' "COUNT 15 14
+DIFF 15" 'MUST FIRE — a conduct-file copy carrying a planted rule 15' "$WORK/pc-c3.md" "$PC_CARD"
+
+# PC-C4 NOHEAD — the card copy's heading renamed.
+awk -v H="$PC_HEAD" '{ t = $0; sub(/^#+ /, "", t); if ($0 ~ /^#+ / && t == H) sub(/shares$/, "share"); print }' "$PC_CARD" > "$WORK/pc-c4.md"
+pc_landed 'PC-C4' "$WORK/pc-c4.md" "$PC_CARD" \
+  && pc_control 'PC-C4' "HEAD card 0
+EMPTY card
+COUNT 14 0
+$(for n in 1 2 3 4 5 6 7 8 9 10 11 12 13 14; do printf 'DIFF %d\n' "$n"; done)" \
+  'MUST FIRE, fail-closed — a card copy whose heading is renamed' "$PC_VERB" "$WORK/pc-c4.md"
+
+# PC-C5 GAP — the card copy's rule 9 renumbered 19.
+awk '/^9\. / && !d { sub(/^9\. /, "19. "); d = 1 } { print }' "$PC_CARD" > "$WORK/pc-c5.md"
+pc_landed 'PC-C5' "$WORK/pc-c5.md" "$PC_CARD" \
+  && pc_control 'PC-C5' "GAP card 14
+DIFF 9
+DIFF 19" 'MUST FIRE — a card copy with rule 9 renumbered 19' "$PC_VERB" "$WORK/pc-c5.md"
+
+# PC-C6 WRAP — the card copy rewrapped at 60 columns, on whitespace only. MUST NOT FIRE. fold -s
+# breaks at a space and never inside a word, so no word changes; a hyphen-breaking wrapper would.
+fold -s -w 60 "$PC_CARD" > "$WORK/pc-c6.md"
+pc_landed 'PC-C6' "$WORK/pc-c6.md" "$PC_CARD" \
+  && pc_control 'PC-C6' '' 'MUST NOT FIRE — a card copy rewrapped at 60 columns, whitespace only' "$PC_VERB" "$WORK/pc-c6.md"
+
+# PC-C7 READ — the conduct side's closing record removed from the stream, on pc_compare directly:
+# the one state no file mutation reaches, because pc_items always closes its stream.
+PC_C7="$(pc_compare "$(awk -F'\t' '$1 != "HEADS"' <<<"$PC_V_ITEMS")" "$PC_C_ITEMS")"; PC_C7_RC=$?
+pc_grade 'PC-C7' 'READ verb' "MUST FIRE — the comparison over a stream missing the conduct side's HEADS record" "$PC_C7_RC" "$PC_C7"
+
+# PC-KEY — the re-key's must-fire proof, on the REAL command file: a comparison still keyed on
+# skills/trip-record/SKILL.md finds no rules heading there and fails closed.
+pc_control 'PC-KEY' "HEAD verb 0
+EMPTY verb
+COUNT 0 14
+$(for n in 1 2 3 4 5 6 7 8 9 10 11 12 13 14; do printf 'DIFF %d\n' "$n"; done)" \
+  'MUST FIRE, fail-closed — the comparison keyed on skills/trip-record/SKILL.md, the former home of the shared rules' \
+  "$ROOT/skills/trip-record/SKILL.md" "$PC_CARD"
+
+# ── PC-COV — every code pc_compare can emit has a must-fire control above, and every control names
+# a code it can emit. The shared comparison, not a copy of it: cov_assert reads the codes from the
+# comparison's own parsed body with st_codes, and brings its two standing controls.
+PC_BODY="$(declare -f pc_compare)"
+PC_CODES="$(st_codes "$PC_BODY")"
+cov_assert 'PC-COV' 'CTL-PC-COV' '' 'pc_compare' st_codes cov_emit_tab "$PC_BODY" \
+           "$PC_CODES" "$PC_ARMED" "$PC_COV_PROBE" "$PC_COV_PHANTOM"
+
 # ─────────────────────────────────────────────────────────────────────────────────
 echo
 echo "CTL — a synthetic fixture tree, population by construction, built fresh every run"
@@ -14144,6 +14412,11 @@ md_flips st_cf_tracked_templates 'ST-CF-POP' st_cf_pop_assert "$ST_CF_FORMS" "$S
 md_flips st_cf_version    'ST-CF-version'  st_cf_assert "$ST_CF_MD_V2" "$ST_DM"
 md_flips ft_regions       'ST-CF-regions'  st_cf_assert "$ST_CF_MD_V2" "$ST_DM"
 md_flips ft_regions       'ST-CF-PIN'      st_cf_pin_assert "$ST_CF_MD_V2"
+# ── Group PC's assertion, REGISTERED on both functions its verdict rests on — the reader and the
+# comparison. pc_assert takes its inputs as arguments and calls its own reader, so removing either
+# reaches its non-zero-exit limb rather than a verdict computed for it.
+md_flips pc_items   'PC1'         pc_assert "$PC_VERB" "$PC_CARD"
+md_flips pc_compare 'PC1-compare' pc_assert "$PC_VERB" "$PC_CARD"
 
 # ── Group CTL's coverage arm, REGISTERED on BOTH sides of what it grades — the reader and the
 # thing read. One subject alone would leave half the assertion ungraded.

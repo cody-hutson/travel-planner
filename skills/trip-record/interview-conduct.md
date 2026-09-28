@@ -10,7 +10,7 @@ The question set is the form's, so a line deleted from the file by hand never re
 
 ## The rules every interview shares
 
-These bind any channel an interview runs in, whether or not it can write the file. They are numbered so that another carrier of the same rules can be compared with them rule by rule.
+These bind any channel an interview runs in, whether or not it can write the file. They are numbered so that another carrier of the same rules can be compared with them rule by rule. `templates/interview-card.md` is that carrier: it gives these rules, word for word, to an assistant with no repository, and `scripts/test-artifact-schema.sh` group `PC` fails the moment the two texts differ.
 
 1. **One section at a time, in the form's order.** Settle the current section before the next, and never put the whole form in front of them at once. The order is a default for your next question and never a constraint on them: someone who asks to go to a named section is taken there.
 2. **Two or three questions a section at most, in plain words.** A bracketed placeholder is a hint for you, never a script to read out.

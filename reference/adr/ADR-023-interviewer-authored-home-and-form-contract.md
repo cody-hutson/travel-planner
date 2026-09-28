@@ -214,6 +214,8 @@ non-verb section in Zone A (the extension rule permits five kinds of addition an
 is none of them); a reference document (the milestone constraint, not merit — see § *Options
 considered* and R2).
 
+**Amendment (2026-09-27, Sunday) — the output contract is not the verb's, and the card carries the rules as a graded projection; this corrects a claim.** D1.1 puts the numbered conduct rules *and the output contract* in the verb's section, where they *"live there and nowhere else"*. Where the rules are authored is superseded in part by [`ADR-039`](ADR-039-interview-conduct-bundled-with-the-verb.md), whose inline marker closes this decision's first paragraph above. The output contract was never the verb's to carry: a session that can write the file writes each answer as it is given and has no output act (`ADR-022` D6.1), and D4.1 and D4.3 below already give the contract a channel with no write path needs to the portable interview card. So it lives on `templates/interview-card.md`, and only there, and what it says is [`ADR-040`](ADR-040-transcript-only-return-and-save.md)'s. The card also carries the numbered rules, as a projection of the conduct file that must match it word for word, which `scripts/test-artifact-schema.sh` group `PC` grades. This corrects where the output contract lives and which text of the rules is the copy. No decision is reversed, narrowed or re-opened: conduct is authored once, one verb is the interviewer, and the hand-off set grows by one tracked card (D4.1).
+
 **D1.2 — The new verb is also the durable form's first command surface.** No shipped verb interviews
 `templates/person-intake.template.md` today: the tracked references to that path copy it, and none
 conducts it. The durable half of intake is therefore reachable only by hand-editing or by the
@@ -535,6 +537,8 @@ numeral, the boundary and the worked-example pointer. **Keep** the *Filling this
 assistant* paste-line, retargeted from *the guide at the bottom of the file* to the portable card
 that now travels with the form.
 
+**Amendment (2026-09-27, Sunday) — where the deleted blocks go; this corrects a claim.** D3.1 deletes the numbered conduct rules and the *producing the finished file* block, *"which move to the verb"*. The rules move to the file bundled beside the verb's command file ([`ADR-039`](ADR-039-interview-conduct-bundled-with-the-verb.md)). The output contract moves to the portable interview card, per the amendment at D1.1, and D3.2's identical treatment of the durable form follows it. The form-specific lines each form's old output contract carried already have homes above that form's boundary — the save path and the stem transform (`F21`), the frontmatter instruction (`F20`), and the note on repeatable units — so none of them is relocated below the boundary. No decision is reversed, narrowed or re-opened.
+
 **D3.2 — `templates/person-intake.template.md`.** The identical treatment. The form-specific conduct
 **stays**, because it is about *these* fields and has no other home: the *Before Step 1 — their
 name* instruction, the cross-trip warning, the `Passport` narrowing rule, and the rule that this
@@ -604,6 +608,8 @@ the agreement, and gives a traveller who received the form by any other route a 
 conduct; splitting the conduct between form and skill, which is a second home and therefore the defect;
 and handing over the `SKILL.md`, which carries grant declarations and command contracts and is not a
 document for a stranger.
+
+**Amendment (2026-09-27, Sunday) — what the card authors, and what it carries; this corrects a claim.** D4.3 reads that the card is *"the authored home for conduct, not a copy of one"*. The card is the authored home of the output contract a channel with no write path needs, whose content is [`ADR-040`](ADR-040-transcript-only-return-and-save.md)'s. It carries the numbered conduct rules as a projection of the conduct file ([`ADR-039`](ADR-039-interview-conduct-bundled-with-the-verb.md)) that must match that file word for word — a tracked asset whose agreement is asserted, which is what Choice 2's P1 claimed for it. The reason this decision states is unchanged: the recipient holds the questions and their hints (the form), the conduct (the card) and a filled comparison (the worked example), and nothing in the hand-off resolves into the repository. No decision is reversed, narrowed or re-opened.
 
 ### 5. The assertion surface after the move
 
@@ -782,6 +788,8 @@ shipped forms at `edadfa9`; none is new authoring, and the contract's cost here 
 offered, that a skip-if was honoured, or that a stem transform was applied. The contract makes those
 data **locatable and single-homed**; it does not make them **asserted**. That is a non-goal of this
 record and it is stated on `ADR-013`'s own model rather than left for a reader to discover.
+
+**Amendment (2026-09-27, Sunday) — a datum the list states wrongly, and one it omits; this corrects a claim.** **`F16`** reads *"the output contract, in the verb and on the portable card, parameterised by F6 and F21"*. The verb has no output contract: a session that can write the file writes it at the path the verb resolves from `F6`, and the contract a channel with no write path needs is on the portable interview card alone, which leaves saving the returned block to whoever sent the form — for the trip form, `/trip-record profile <name>`, which applies `F20`'s substitution and `F21`'s transform as route 2 does. **`F22` — a form's per-section ask-prose, where it carries one** — is a form-side datum the interviewer reads and the list does not name: below `F4`, the block headed `### Assistant — the sections, in order`, running to the next line-initial `### Assistant —` heading or to the end of the file. An interviewer takes its form-specific conduct from that block and from no other text below the boundary: the verb reads it alone, and the card points its reader at it by the same heading. A form that carries no such block still conforms, and is conducted from its profile half alone. This corrects the list's coverage; no decision is reversed, narrowed or re-opened.
 
 ## Consequences
 
