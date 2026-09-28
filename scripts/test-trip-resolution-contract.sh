@@ -806,8 +806,12 @@ fi
 #   hs H2 (code-span HEADER depth — fires, while the same rendering in the CELL passes)
 #   mx P3 (marker specificity — a line opening with an entry's own marker is counted, and a
 #          line opening with any other code span is not, except a retired wrapper opener,
-#          which is counted by design and graded by arm wr)
+#          which is counted by design and graded by arms wr and ws. "Any other" includes a
+#          span that begins with an entry's command word but runs on into a longer word
+#          where the marker has its delimiter, and CTLmx4 grades that specimen on its own)
 #   wr P3 (a surplus copy in the retired wrapper shape is counted, not passed over)
+#   ws P3 (the same for the other retired wrapper shape, a subshell — wr's copy is a brace
+#          group, so the brace and subshell openers each have an arm of their own)
 # and CTL-e is graded LAST, so the before/after comparison it makes covers every fixture
 # above it rather than a prefix of them.
 #
@@ -816,8 +820,9 @@ fi
 # retired wrapper opener — and by nothing else. A copy of an entry that opens with neither
 # is therefore not counted at all: a non-wrapped copy whose first word differs from every
 # entry's, such as one prefixed `LC_ALL=C`, reads to the detector as prose, and P1, P2 and
-# P3 all pass over it. Arm wr covers the retired wrapped spelling, the copy a rebase is
-# likeliest to leave beside its replacement, and nothing here claims more than that.
+# P3 all pass over it. Arms wr and ws cover the retired wrapped spellings, a brace group and
+# a subshell — the copy a rebase is likeliest to leave beside its replacement — and nothing
+# here claims more than that.
 # Closing the rest would mean recognising a block by its POSITION rather than its opener,
 # which was considered and not taken.
 #
@@ -867,18 +872,28 @@ else
         fi
         i=$((i+1))
       done
-      # `markerprose` follows the prefix with two prose lines: one opening with a code span
-      # that is no entry's marker, and one opening with the first derived marker. The
-      # detector must count the second and not the first (arm mx).
+      # `markerprose` follows the prefix with three prose lines: one opening with a code span
+      # that is no entry's marker, one opening with the first derived marker, and one opening
+      # with a code span that begins with that marker's command word but runs on into a
+      # longer word where the marker has its delimiter. The detector must count the second
+      # and neither of the others (arm mx).
       if [ "$variant" = "markerprose" ]; then
         printf '%s\n\n' '`/trip status` reports where the trip stands.'
         printf '%s%s\n\n' "$MX_MARK1" 'lists the trips directory in prose rather than as an entry.'
+        printf '%s%s\n\n' "$MX_WIDE1" " names another command, one whose name only begins with an entry's command word."
       fi
       # `wrapsurplus` follows the complete prefix with a copy of E1 put back into the
       # retired wrapper shape — the transition artifact a rebase leaves when an old line
       # survives beside its replacement (arm wr).
       if [ "$variant" = "wrapsurplus" ]; then
         printf '%s\n\n' "$RETIRED1"
+      fi
+      # `wrapsurplussub` is the same artifact in the other retired wrapper shape, a subshell
+      # (arm ws). It is a variant of its own rather than a second line in `wrapsurplus`: a
+      # fixture carrying both copies would still fire P3 on whichever copy's opener stayed
+      # declared, so deleting the other opener would leave its arm green.
+      if [ "$variant" = "wrapsurplussub" ]; then
+        printf '%s\n\n' "$RETIRED1SUB"
       fi
       # contract header block. Each omission is its own variant so a defect arm removes
       # exactly one field: an arm whose fixture broke several things at once proves the
@@ -961,12 +976,24 @@ else
   MUTATED="${CANON1/ 2>&1/}"
   # Arm mx's marker, read from the derived list rather than written as a literal.
   IFS= read -r MX_MARK1 <<<"$EVID_MARKS"
+  # Arm mx's run-on specimen, built from that same derived marker and never written as a
+  # literal: the marker's command word (the marker without the delimiter it ends with) run
+  # on into a longer word and closed as a code span. It opens with the command word and not
+  # with the marker, so a matcher that keeps the delimiter reads it as prose and a matcher
+  # widened past the delimiter counts it (CTLmx4). A literal specimen would stop testing the
+  # matcher the day an entry is re-spelled.
+  MX_WORD1="${MX_MARK1% }"
+  MX_WIDE1="${MX_WORD1}of"'`'
   # Arm wr's copy: E1 put back into the retired wrapper shape, rebuilt from the extracted
   # canonical rather than written down — a literal would be the second source PIN5 forbids.
   RW_BT='`'
   RW_INNER="${CANON1#"$RW_BT"}"
   RW_INNER="${RW_INNER%"; true$RW_BT"}"
   RETIRED1="${RW_BT}{ ${RW_INNER}; } ; true${RW_BT}"
+  # Arm ws's copy: the same E1 in the other retired wrapper shape, a subshell, built from the
+  # same pieces. Arm wr's copy opens with the brace opener alone, so without this one the
+  # subshell opener could leave the declared set and no arm would turn red.
+  RETIRED1SUB="${RW_BT}( ${RW_INNER} ) ; true${RW_BT}"
 
   # Each arm gets its OWN fixture directory, so no arm ever has to clear another's —
   # a control case that deletes a tree is one bad variable away from deleting the wrong
@@ -1305,21 +1332,35 @@ else
   # own opening token, so its breadth is a property worth grading in BOTH directions: a
   # detector narrowed below the derived set stops counting a line that opens with an
   # entry's marker, and one widened into "any code span" starts counting prose that merely
-  # opens with a backtick. One fixture carries both specimens after a complete prefix, and
-  # the finding's own count says which of them the detector read.
+  # opens with a backtick. Between those sits a narrower widening, the matcher reaching past
+  # the delimiter that ends each marker: it still keys on the entry's command word, and it
+  # counts prose whose code span only BEGINS with that word. One fixture carries a specimen
+  # for each after a complete prefix. The finding's own count says how many of them the
+  # detector read, and CTLmx4 says whether the run-on one was among them.
   MX="$WORK/ctl_markerprose"; mk_tree "$MX" markerprose
-  mx_marked=0; mx_slash=0; mx_clean=0
+  mx_marked=0; mx_slash=0; mx_wide=0; mx_clean=0; MX_WIDE_LINE=""
   while IFS= read -r line || [ -n "$line" ]; do
     if is_evid_line "$line"; then mx_marked=$((mx_marked+1)); fi
     case "$line" in '`/'*) mx_slash=$((mx_slash+1)) ;; esac
+    case "$line" in "$MX_WIDE1"*) mx_wide=$((mx_wide+1)); MX_WIDE_LINE="$line" ;; esac
   done < "$MX/trip/SKILL.md"
   while IFS= read -r line || [ -n "$line" ]; do
     if is_evid_line "$line"; then mx_clean=$((mx_clean+1)); fi
   done < "$A/trip/SKILL.md"
-  if [ -n "$MX_MARK1" ] && [ "$mx_marked" -eq $((CANON_N+1)) ] && [ "$mx_slash" -eq 1 ] && [ "$mx_clean" -eq "$CANON_N" ]; then
-    PASS "CTLmx1: fixture integrity — the defective consumer carries $mx_marked marker-opened line(s), one more than its $CANON_N-entry prefix, and $mx_slash line opening with a code span that is no entry's marker; the SAME counter reads $mx_clean on the clean tree's trip. The extra marker (\"$MX_MARK1\") was read from the derived list, not written here"
+  # The run-on specimen's own construction, checked before anything reads it: it opens with
+  # a command word, and the next byte continues that word rather than being the delimiter,
+  # so it is a near miss of the marker and not the marker. Checked against the command word
+  # rather than the marker, because the marker is the value a widening mutation changes.
+  mx_spec=0
+  case "$MX_WORD1" in
+    '`'[[:lower:]]*)
+      case "$MX_WIDE1" in "$MX_WORD1"[[:alnum:]]*) mx_spec=1 ;; esac ;;
+  esac
+  if [ -n "$MX_MARK1" ] && [ "$mx_marked" -eq $((CANON_N+1)) ] && [ "$mx_slash" -eq 1 ] \
+     && [ "$mx_spec" -eq 1 ] && [ "$mx_wide" -eq 1 ] && [ "$mx_clean" -eq "$CANON_N" ]; then
+    PASS "CTLmx1: fixture integrity — the defective consumer carries $mx_marked marker-opened line(s), one more than its $CANON_N-entry prefix, $mx_slash line opening with a code span that is no entry's marker, and $mx_wide opening with \"$MX_WIDE1\", a code span that begins with the command word \"$MX_WORD1\" and runs on past it; the SAME counter reads $mx_clean on the clean tree's trip. The extra marker (\"$MX_MARK1\") and the command word were read from the derived list, not written here"
   else
-    FAIL "CTLmx1: the marker-prose fixture is not set up as claimed (marked=$mx_marked slash=$mx_slash clean=$mx_clean canonical=$CANON_N) — CTLmx2 and CTLmx3 would prove nothing"
+    FAIL "CTLmx1: the marker-prose fixture is not set up as claimed (marked=$mx_marked slash=$mx_slash runon=$mx_wide runon_built=$mx_spec clean=$mx_clean canonical=$CANON_N) — CTLmx2, CTLmx3 and CTLmx4 would prove nothing"
   fi
   MX_OUT="$(conformance_check "$MX" "$CANON_FILE" "$CITATION" "$CANON_N" "$POINTER_LINE")"; MX_RC=$?
   if [ "$MX_RC" -ne 0 ] && has_finding "$MX_OUT" 'P3'; then
@@ -1328,9 +1369,21 @@ else
     FAIL "CTLmx2: MUST-FIRE — a line opening with an entry's marker was not counted (rc=$MX_RC); the detector has narrowed below the derived marker set"
   fi
   if grep -q -F -- "but carries $((CANON_N+1))" <<<"$MX_OUT"; then
-    PASS "CTLmx3: SPECIFICITY — the finding counts $((CANON_N+1)) block(s), not $((CANON_N+2)): the line opening with a code span that is no entry's marker was not read as an evidence block, so the detector did not widen into \"any code span\""
+    PASS "CTLmx3: SPECIFICITY — the finding counts $((CANON_N+1)) block(s), not $((CANON_N+2)) or $((CANON_N+3)): neither the line opening with a code span that is no entry's marker nor the one whose code span only begins with an entry's command word was read as an evidence block, so the detector widened neither into \"any code span\" nor past the first marker's delimiter"
   else
     FAIL "CTLmx3: P3 did not count exactly $((CANON_N+1)) block(s), so the detector read a line it has no marker for: $(printf '%s' "$MX_OUT" | head -2 | tr '\n' ' ')"
+  fi
+  # CTLmx4 grades the run-on specimen on its own, because CTLmx3's count says only THAT the
+  # detector read a line it has no marker for, not WHICH line. It reads the specimen back
+  # from the fixture and puts it to the one predicate every block count in this file uses,
+  # graded on an exact status: 1 is prose, 0 is a matcher widened past the delimiter, and
+  # 127 is a predicate that is not there at all.
+  if [ "$mx_spec" -ne 1 ]; then
+    FAIL "CTLmx4: the run-on specimen was not built as claimed (\"$MX_WIDE1\" from the command word \"$MX_WORD1\"), so there is no near miss of a marker to grade"
+  elif [ "$mx_wide" -ne 1 ]; then
+    FAIL "CTLmx4: the marker-prose fixture carries $mx_wide line(s) opening with the run-on specimen (\"$MX_WIDE1\"), not 1, so there is no single line to grade"
+  else
+    expect_rc 1 "CTLmx4" "SPECIFICITY — the line opening with \"$MX_WIDE1\", a code span that begins with the command word \"$MX_WORD1\" but runs on into a longer word, is prose to the detector: the delimiter that ends the first derived marker (\"$MX_MARK1\") is part of that marker, so the match does not widen past it" -- is_evid_line "$MX_WIDE_LINE"
   fi
 
   # ── CTL-wr: a consumer carrying a complete prefix PLUS a copy in the retired wrapper
@@ -1360,6 +1413,39 @@ EOF
     PASS "CTLwr2: MUST-FIRE — a surplus copy in the retired wrapper shape is counted and caught (P3); the wrapper openers are markers too, so a stale wrapped copy cannot sit in a consumer unseen"
   else
     FAIL "CTLwr2: MUST-FIRE — a surplus copy in the retired wrapper shape passed (rc=$WR_RC); the detector keys only on the entries' own openers, so the spelling the harness refuses is invisible to P1, P2 and P3"
+  fi
+
+  # ── CTL-ws: the subshell partner of CTL-wr. There are two retired openers, a brace group
+  # and a subshell, and CTL-wr rebuilds its copy in the brace shape alone. So deleting the
+  # subshell opener from the declared set left every arm green, measured on a scratch copy
+  # before this arm existed. The brace and subshell openers now each have an arm of their
+  # own. The integrity arm also checks that this copy opens with an opener CTL-wr's copy
+  # does not, so a later edit cannot quietly make the two arms test the same opener.
+  WS="$WORK/ctl_wrapsurplussub"; mk_tree "$WS" wrapsurplussub
+  ws_open=0; ws_shared=0
+  while IFS= read -r op || [ -n "$op" ]; do
+    [ -n "$op" ] || continue
+    case "$RETIRED1SUB" in
+      "$op"*)
+        ws_open=$((ws_open+1))
+        case "$RETIRED1" in "$op"*) ws_shared=$((ws_shared+1)) ;; esac ;;
+    esac
+  done <<EOF
+$EVID_RETIRED_OPENERS
+EOF
+  if [ -n "$RETIRED1SUB" ] && [ "$RETIRED1SUB" != "$CANON1" ] && [ "$ws_open" -eq 1 ] && [ "$ws_shared" -eq 0 ] \
+     && grep -q -x -F -- "$RETIRED1SUB" "$WS/trip/SKILL.md" \
+     && grep -q -x -F -- "$CANON1" "$WS/trip/SKILL.md" \
+     && ! grep -q -x -F -- "$RETIRED1SUB" "$A/trip/SKILL.md"; then
+    PASS "CTLws1: fixture integrity — the rebuilt subshell copy differs from the canonical E1 and opens with exactly one of the declared retired wrapper openers, one that CTL-wr's brace copy does not open with; the defective consumer carries it as a whole line beside the canonical E1, and the same probe finds it absent from the clean tree"
+  else
+    FAIL "CTLws1: the retired-subshell fixture is not set up as claimed (declared openers it opens with=$ws_open, of them shared with CTL-wr's brace copy=$ws_shared) — CTLws2 would prove nothing"
+  fi
+  WS_OUT="$(conformance_check "$WS" "$CANON_FILE" "$CITATION" "$CANON_N" "$POINTER_LINE")"; WS_RC=$?
+  if [ "$WS_RC" -ne 0 ] && has_finding "$WS_OUT" 'P3'; then
+    PASS "CTLws2: MUST-FIRE — a surplus copy in the retired subshell shape is counted and caught (P3); with CTL-wr's brace copy, the brace and subshell openers are each shown to be a marker by an arm of their own"
+  else
+    FAIL "CTLws2: MUST-FIRE — a surplus copy in the retired subshell shape passed (rc=$WS_RC); the subshell opener is not counted as a marker, so a stale subshell-wrapped copy, which the harness refuses with or without grants, is invisible to P1, P2 and P3"
   fi
 
   # ── CTL-cs: a per-verb requirement table whose depth cells are rendered as CODE SPANS
