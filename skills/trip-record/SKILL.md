@@ -207,6 +207,20 @@ and it takes exactly this shape:
 2. **The repair lands in the same act as the edit that falsified it**, and the slice's own design
    names it as a Zone A repair and cites the falsifying edit. A false statement left standing for a
    later author to find is the failure this point exists to remove.
+
+   **Where that act missed it, the first slice that names it repairs it.** A clause found false
+   after the act that falsified it is repaired, on every other term of this point, in the act of a
+   slice whose own design names it as a Zone A repair and cites that edit; a slice that names it so
+   does not leave it for another. The duty above still binds every falsifying slice, and this is
+   the move left when one missed it. It reaches no further than that duty does: a clause falsified
+   by an edit to another file alone, with nothing in this file changed by that act, is outside this
+   point, late or not, and its repair takes an operator decision this point does not give, as this
+   limb's own did.
+
+   **This limb is recorded here rather than folded in:** it was added — with the term clause 4 now
+   carries for it and the qualifiers it needs elsewhere in Zone A — by an operator decision taken as
+   a decision in its own right. Clause 4 did not admit it: clause 4 admits a repair of this point,
+   and nothing that widens what may change.
 3. **The terminal disposition is conversion, not a second repair.** A statement falsified twice is
    evidence that it enumerates a set the extension points grow: it is rewritten as **the rule that
    derives the set, never the members**, and the members come out. A statement a permitted edit
@@ -227,8 +241,9 @@ and it takes exactly this shape:
    sentences are falsifiable by the same permitted edits, and a point that forbade its own repair
    would be the state the paragraph above describes reproduced one level up — licensing the edits
    that falsify it and then refusing the repair. So a repair *of* this point is admitted on exactly
-   the terms it imposes on everything else: only the falsified clause moves, in the same act, cited
-   in the slice's own design, converted rather than repaired twice. Nothing here admits a repair
+   the terms it imposes on everything else: only the falsified clause moves, in the same act or,
+   where that act missed it, in the act of the first slice that names it, cited in the slice's own
+   design, converted rather than repaired twice. Nothing here admits a repair
    that widens what may be changed elsewhere in Zone A.
 
 **The shape of a table row.**
@@ -264,7 +279,7 @@ conformance guard reads this file, not from taste.
 
 | A later slice must add | A later slice must not change |
 |---|---|
-| one requirement-table row per verb it implements, **every cell taking the value § *The shape of a table row* derives for it** — the cells are not restated here, because a second statement of them is a second source that can disagree with the first; a `**Reads:**` line at the head of each `## <verb>` section it appends, per § *What the blocks above are*; one `## <verb>` section per row, appended in Zone B below every section already there; `allowed-tools` additions only where a verb needs one and its own design names that verb; and, for a verb that changes a persist-mutable file, that file's own no-overwrite shape — read the file, change the named row, never regenerate it — stated inside that verb's own section | anything in Zone A except those table rows, that `allowed-tools` union, and a repair made under § *The repair extension point*; the header block's declaration lines; the evidence blocks; the table's five columns; § *What the blocks above are*; the refusal branches, except a repair or conversion made under that same point; and the standing clause, except under the Extension rule stated there |
+| one requirement-table row per verb it implements, **every cell taking the value § *The shape of a table row* derives for it** — the cells are not restated here, because a second statement of them is a second source that can disagree with the first; a `**Reads:**` line at the head of each `## <verb>` section it appends, per § *What the blocks above are*; one `## <verb>` section per row, appended in Zone B below every section already there; `allowed-tools` additions only where a verb needs one and its own design names that verb; and, for a verb that changes a persist-mutable file, that file's own no-overwrite shape — read the file, change the named row, never regenerate it — stated inside that verb's own section | anything in Zone A except those table rows, that `allowed-tools` union, and a repair made under § *The repair extension point*; the header block's declaration lines; the evidence blocks, except as `CLAUDE.md` § *Resolving a trip* changes what a consumer carries; the table's five columns; § *What the blocks above are*, except a repair or conversion made under that same point; the refusal branches, except a repair or conversion made under that same point; and the standing clause, except under the Extension rule stated there |
 
 **Binding on every later slice, without exception:** no line beginning with the pre-execution
 marker anywhere in the file; no sixth column; no other five-column table with a `G0`–`G8` fifth
@@ -342,7 +357,8 @@ What that line has to carry:
   change, and only under `trips/<slug>/`. A verb that declares a read of a file it does not own has
   declared a read and nothing else.
 
-**Frozen.** This section is not a later slice's to edit. A verb's read scope is declared in that
+**Frozen.** This section is not a later slice's to edit, except by a repair or conversion made
+under § *The repair extension point*. A verb's read scope is declared in that
 verb's own section.
 
 ## Standing clause — binding every verb of this command, present and future
