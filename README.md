@@ -117,8 +117,9 @@ suggest `/trip-new`.
   `travel-planner` directory itself.
 - **They appear but can't find your trips, or ask for permission to read them:** check the path in
   `~/.travel-planner/data-root` and your `additionalDirectories` entry. The error message says which:
-  a read Claude Code refused points you to step 4, and a missing or unreadable file is named by its
-  path.
+  a read Claude Code refused because the folder is outside the ones it may read points you to step 4;
+  any other refusal is passed on in Claude Code's own words, with no folder to add; and a missing or
+  unreadable file is named by its path.
 
 <details>
 <summary>Upgrading from a version that copied commands into <code>~/.claude/commands/</code></summary>

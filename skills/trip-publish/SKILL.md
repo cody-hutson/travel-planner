@@ -123,8 +123,10 @@ nothing.
 denials.** This command **dispatches no agent**: the agent-dispatch tool is neither granted
 nor denied on this surface, so the deny grammar does not reach it and no denial is claimed
 for it — the bound is that no construct below dispatches one. Likewise it runs no `date`,
-no `mkdir` and no primitive outside the grant table above: those are *unlisted*, which
-pre-approves nothing and forbids nothing, so the bound is again the file's own text.
+no `mkdir` and no primitive outside the grant table above but one — the `echo "$HOME"` this
+command issues under gate `G0-root`, to learn the home directory it substitutes into the
+pointer read, a call that reads no path: those are *unlisted*, which pre-approves nothing
+and forbids nothing, so the bound is again the file's own text.
 
 **One grant does read file contents, and this file states that rather than denying it.**
 The trip-record evidence block below greps `trip-context.md` and emits the lines it
@@ -172,8 +174,9 @@ denied by it.
 a closed grant list forbids nothing: a primitive left off it routes through the permission
 settings rather than being blocked. What the grant table delivers is a closed
 **declaration**, not a closure — every primitive this file intends to use is named there,
-so a use outside it is a departure from the file rather than something the file quietly
-permits. The grep grant, which the contract's prefix equality forces this file to hold at
+bar the one `echo "$HOME"` named under that table as its only exception, so a use outside
+them is a departure from the file rather than something the file quietly permits. The
+grep grant, which the contract's prefix equality forces this file to hold at
 its declared depth, is structurally capable of emitting a file's contents. That residual is
 bounded by a rule rather than by a denial — no construct in this file directs a
 content-emitting primitive at a passphrase path.

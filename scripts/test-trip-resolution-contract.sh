@@ -39,10 +39,12 @@
 #        branch for a read the harness refused, beside its ran-and-failed branch keyed on
 #        E1's sentinel and its canary-absent branch; G0-root carries a refused arm; and each
 #        clause that writes a refused read's remedy — those two and the refusal predicate's
-#        own remedy clause — names the allowed-directories step and no word of the
-#        forbidden-remedy class, graded as words rather than as one spelling. Every code its
-#        checker emits has a must-fire arm, built from a copy of the live charter, the wrong
-#        remedy among them paraphrased; the group's own banner carries the reasoning.
+#        own remedy clause — names the allowed-directories step, and only for a refusal of
+#        the directory class, and no word of the forbidden-remedy class, graded as words
+#        rather than as one spelling. The predicate relays a refusal of any other kind as
+#        the harness's own, with no word of a directory remedy. Every code its checker emits
+#        has a must-fire arm, built from a copy of the live charter, the wrong remedy among
+#        them paraphrased; the group's own banner carries the reasoning.
 #   Three further groups assert properties of THIS FILE rather than of the contract, and
 #   each carries its full reasoning at the group rather than here: PF, that no verdict in
 #   this file is decided by a pipeline's exit status; MD, that every PASS here requires
@@ -239,9 +241,10 @@ fence_block() {  # <file> <info> <heading>
 }
 
 # Group GD's anchors. Each is an ADDRESS — the opener of a gate bullet or of the refusal
-# predicate's paragraph, the leading words of a branch label, one of the two phrases that
-# bound the predicate's remedy clause, or a token a clause is read for — and none is a copy
-# of canonical content: GD's banner says why that distinction is the one PIN5 draws.
+# predicate's paragraph, the leading words of a branch label, one of the phrases that bound
+# the predicate's remedy clause or its disposition for a refusal of any other kind, or a
+# token a clause is read for — and none is a copy of canonical content: GD's banner says why
+# that distinction is the one PIN5 draws.
 GD_G1_OPENER='- **G1 — '
 GD_G0_OPENER='- **`G0-root` — '
 GD_PRED_OPENER='**The refusal predicate — '
@@ -255,6 +258,11 @@ GD_REMEDY='allowed-directories step'
 GD_REMEDY_SETTING='additionalDirectories'
 GD_REMEDY_FLAG='--add-dir'
 GD_CANARY_REMEDY='into place'
+GD_SCOPE='for a refusal of the directory class'
+GD_SCOPE_DEF="outside the session's allowed working directories"
+GD_OTHER_FROM='A refusal of any other kind'
+GD_OTHER_TO='names no directory to admit.'
+GD_OTHER_RELAY="relayed as the harness's own, with no directory remedy asserted"
 
 # The block of the section headed <heading> that opens with <opener> — a gate-ladder bullet,
 # or a bold-led paragraph such as the refusal predicate's: that line and any continuation
@@ -308,6 +316,19 @@ remedy_clause() {  # <paragraph-text>
   printf '%s' "$GD_REMEDY_FROM${rest%%"$GD_REMEDY_TO"*}$GD_REMEDY_TO"
 }
 
+# The refusal predicate's DISPOSITION FOR A REFUSAL OF ANY OTHER KIND inside <paragraph>:
+# from GD_OTHER_FROM through GD_OTHER_TO, cut the way remedy_clause cuts. Returns 1, emitting
+# nothing, when either bound is absent. The paragraph around it has already been read by
+# then, so an absent bound is the disposition MISSING (GN), not an unreadable declaration.
+other_clause() {  # <paragraph-text>
+  local p="$1" pre rest
+  case "$p" in *"$GD_OTHER_FROM"*) ;; *) return 1 ;; esac
+  pre="${p%%"$GD_OTHER_FROM"*}"
+  rest="${p:$(( ${#pre} + ${#GD_OTHER_FROM} ))}"
+  case "$rest" in *"$GD_OTHER_TO"*) ;; *) return 1 ;; esac
+  printf '%s' "$GD_OTHER_FROM${rest%%"$GD_OTHER_TO"*}$GD_OTHER_TO"
+}
+
 # gd_class <clause> — the words of the FORBIDDEN-REMEDY CLASS that <clause> carries, on one
 # line, space-separated; empty when it carries none. The class is AC-3's own prohibition —
 # a refused read "never names writing the pointer or copying the canary" — read as a family
@@ -334,6 +355,36 @@ gd_class() {  # <clause>
   printf '%s' "${hits% }"
 }
 
+# gd_dirclass <clause> — the words of the DIRECTORY-REMEDY CLASS that <clause> carries, on
+# one line, space-separated; empty when it carries none. The class is every way the charter
+# and the README name the fix for a directory refusal: the allowed-directories step by name,
+# its settings key `additionalDirectories`, the `add-dir` that both `--add-dir` and
+# `/add-dir` carry, and the README's own name for it, step 4. A refusal of any other kind
+# takes no word of it. Read the way gd_class reads, over the same word form, with the first
+# letter of a word in either case.
+gd_dirclass() {  # <clause>
+  local c="$1" w hits=""
+  w=" ${c//[^[:alnum:]]/ } "
+  case "$w" in *" "[Aa]"llowed directories step "*) hits="${hits}allowed-directories-step " ;; esac
+  case "$w" in *" "[Aa]"dditionalDirectories "*) hits="${hits}additionalDirectories " ;; esac
+  case "$w" in *" "[Aa]"dd dir "*) hits="${hits}add-dir " ;; esac
+  case "$w" in *" "[Ss]"tep 4 "*) hits="${hits}step-4 " ;; esac
+  printf '%s' "${hits% }"
+}
+
+# gd_scoped <clause> — 0 when <clause> gives the allowed-directories step only after the
+# scope GD_SCOPE, or names no step at all: a clause naming no step is GA's, GP's or GM's
+# finding, and a second code for the same defect would break the one-code specificity every
+# control in group GD asserts. 1 when the step stands in the clause with no scope before it
+# — the remedy then reads as the fix for any refusal, which is the one it is wrong for.
+gd_scoped() {  # <clause>
+  local cl="$1" pre
+  case "$cl" in *"$GD_REMEDY"*) ;; *) return 0 ;; esac
+  pre="${cl%%"$GD_REMEDY"*}"
+  case "$pre" in *"$GD_SCOPE"*) return 0 ;; esac
+  return 1
+}
+
 # ladder_refusal_check <charter> <e1-sentinel> — FINDING lines; returns 1 when any fired.
 #   GB  a declaration could not be read — the G1 bullet, the G0-root bullet, the refusal
 #       predicate's paragraph, or the remedy clause inside it: the declaration is
@@ -346,10 +397,17 @@ gd_class() {  # <clause>
 #   GP  G0-root carries no refused arm, or its refused arm names no allowed-directories
 #       step, or carries a word of the forbidden-remedy class
 #   GM  the refusal predicate's remedy clause names no allowed-directories step, or does
-#       not name both of its admission mechanisms, or carries a word of the forbidden-remedy
-#       class
+#       not name both of its admission mechanisms, or does not say what a refusal of the
+#       directory class is, or carries a word of the forbidden-remedy class
+#   GS  a clause that writes a refused read's remedy — G1's refused branch, G0-root's
+#       refused arm or the predicate's remedy clause — gives the allowed-directories step
+#       with no directory-class scope before it
+#   GN  the refusal predicate carries no disposition for a refusal of any other kind, or
+#       that disposition does not relay the refusal as the harness's own with no directory
+#       remedy asserted, or carries a word of the directory-remedy class or of the
+#       forbidden-remedy class
 ladder_refusal_check() {
-  local c="$1" sent="$2" g1 g0 pr rcl cl hits found=0
+  local c="$1" sent="$2" g1 g0 pr rcl ocl cl hits found=0
   g1="$(ladder_block "$c" "$SECTION_HEADING" "$GD_G1_OPENER")"
   g0="$(ladder_block "$c" "$SECTION_HEADING" "$GD_G0_OPENER")"
   pr="$(ladder_block "$c" "$SECTION_HEADING" "$GD_PRED_OPENER")"
@@ -364,6 +422,9 @@ ladder_refusal_check() {
       *"$GD_REMEDY"*) ;;
       *) printf 'FINDING GA %s G1'"'"'s refused branch names no %s\n' "${c##*/}" "$GD_REMEDY"; found=1 ;;
     esac
+    if ! gd_scoped "$cl"; then
+      printf 'FINDING GS %s G1'"'"'s refused branch gives the %s with no "%s" before it\n' "${c##*/}" "$GD_REMEDY" "$GD_SCOPE"; found=1
+    fi
     hits="$(gd_class "$cl")"
     if [ -n "$hits" ]; then
       printf 'FINDING GX %s G1'"'"'s refused branch carries the forbidden-remedy class: %s\n' "${c##*/}" "$hits"; found=1
@@ -390,6 +451,9 @@ ladder_refusal_check() {
       *"$GD_REMEDY"*) ;;
       *) printf 'FINDING GP %s G0-root'"'"'s refused arm names no %s\n' "${c##*/}" "$GD_REMEDY"; found=1 ;;
     esac
+    if ! gd_scoped "$cl"; then
+      printf 'FINDING GS %s G0-root'"'"'s refused arm gives the %s with no "%s" before it\n' "${c##*/}" "$GD_REMEDY" "$GD_SCOPE"; found=1
+    fi
     hits="$(gd_class "$cl")"
     if [ -n "$hits" ]; then
       printf 'FINDING GP %s G0-root'"'"'s refused arm carries the forbidden-remedy class: %s\n' "${c##*/}" "$hits"; found=1
@@ -409,9 +473,32 @@ ladder_refusal_check() {
     *"$GD_REMEDY_FLAG"*) ;;
     *) printf 'FINDING GM %s the refusal predicate'"'"'s remedy clause names no %s\n' "${c##*/}" "$GD_REMEDY_FLAG"; found=1 ;;
   esac
+  case "$rcl" in
+    *"$GD_SCOPE_DEF"*) ;;
+    *) printf 'FINDING GM %s the refusal predicate'"'"'s remedy clause does not say what a refusal of the directory class is: no "%s"\n' "${c##*/}" "$GD_SCOPE_DEF"; found=1 ;;
+  esac
+  if ! gd_scoped "$rcl"; then
+    printf 'FINDING GS %s the refusal predicate'"'"'s remedy clause gives the %s with no "%s" before it\n' "${c##*/}" "$GD_REMEDY" "$GD_SCOPE"; found=1
+  fi
   hits="$(gd_class "$rcl")"
   if [ -n "$hits" ]; then
     printf 'FINDING GM %s the refusal predicate'"'"'s remedy clause carries the forbidden-remedy class: %s\n' "${c##*/}" "$hits"; found=1
+  fi
+  if ocl="$(other_clause "$pr")"; then
+    case "$ocl" in
+      *"$GD_OTHER_RELAY"*) ;;
+      *) printf 'FINDING GN %s the refusal predicate'"'"'s disposition for a refusal of any other kind does not say it is "%s"\n' "${c##*/}" "$GD_OTHER_RELAY"; found=1 ;;
+    esac
+    hits="$(gd_dirclass "$ocl")"
+    if [ -n "$hits" ]; then
+      printf 'FINDING GN %s the refusal predicate'"'"'s disposition for a refusal of any other kind carries the directory-remedy class: %s\n' "${c##*/}" "$hits"; found=1
+    fi
+    hits="$(gd_class "$ocl")"
+    if [ -n "$hits" ]; then
+      printf 'FINDING GN %s the refusal predicate'"'"'s disposition for a refusal of any other kind carries the forbidden-remedy class: %s\n' "${c##*/}" "$hits"; found=1
+    fi
+  else
+    printf 'FINDING GN %s the refusal predicate carries no disposition for a refusal of any other kind, from "%s" through "%s"\n' "${c##*/}" "$GD_OTHER_FROM" "$GD_OTHER_TO"; found=1
   fi
   return "$found"
 }
@@ -1895,21 +1982,38 @@ fi
 # not a meaning. A wrong remedy written in none of them — restoring the listing file, say —
 # passes unseen here, and a reader of the clause is what grades that.
 #
+# AND THE STEP IS GIVEN ONLY FOR THE REFUSAL IT FIXES. The allowed-directories step fixes a
+# refusal of the directory class — one saying the path lies outside the session's allowed
+# working directories — and nothing else: on Claude Code 2.1.280 a read whose path carried
+# `${HOME}` unexpanded was refused whatever the directories held, and admitting its
+# directory did not lift the refusal. So each of the three clauses is also read for the
+# scope GD_SCOPE standing before the step it gives (GS); the predicate's clause for the
+# class's definition (GM); and the predicate for its disposition of a refusal of any other
+# kind (GN) — relayed as the harness's own with no directory remedy asserted, and carrying
+# no word of the directory-remedy class (gd_dirclass) or of the forbidden-remedy class. The
+# scope and the relay are read for their words, like the labels below; the two classes are
+# read as families of words, like the one above.
+#
 # THE LABELS ARE ADDRESSES, AND THEY ARE WRITTEN DOWN. Like SECTION_HEADING, a branch label
 # locates a declaration; it is not a copy of one. The group holds the leading words of each
-# label, the phrases that bound the remedy clause and the tokens it reads a clause for, and
-# nothing else, so a reworded label fails here by name rather than passing unseen. The one
-# canonical value it needs — E1's sentinel — is DERIVED from the extracted evidence list,
-# never written here, for PIN5's reason.
+# label, the phrases that bound the remedy clause and the predicate's disposition of any
+# other refusal, and the tokens it reads a clause for, and nothing else, so a reworded label
+# fails here by name rather than passing unseen. The one canonical value it needs — E1's
+# sentinel — is DERIVED from the extracted evidence list, never written here, for PIN5's
+# reason.
 #
 # EVERY CODE THE CHECKER EMITS HAS A MUST-FIRE ARM, built from the live charter at runtime:
 # each branch removed in turn (GDc1-GDc3, GDc5); the wrong remedy PARAPHRASED into each of
 # the three clauses (GDc4, GDc6-GDc8), in words written below rather than assembled from the
 # checker's own tokens, so that no control can confirm the checker merely by repeating it;
-# the refused branch left naming no step (GDc9); and a bullet whose opener no longer reads
-# (GDc10). Each fixture is asserted to have changed the charter before its verdict is read,
-# and each verdict names the ONE code it expects, so a control that fires for the wrong
-# reason is a failure too.
+# the refused branch left naming no step (GDc9); a bullet whose opener no longer reads
+# (GDc10); the directory-class scope cut from each of the three clauses (GDc11-GDc13); the
+# class's definition cut from the predicate's clause (GDc14); and the predicate's disposition
+# of any other refusal removed (GDc15), made to give a directory remedy or the wrong remedy
+# in words written below (GDc16, GDc17), and re-worded so it no longer relays the refusal
+# with no directory remedy (GDc18). Each fixture is asserted to have changed the charter
+# before its verdict is read, and each verdict names the ONE code it expects, so a control
+# that fires for the wrong reason is a failure too.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
 echo "── Group GD — the gate ladder keeps a refused read apart from a failed one."
@@ -1923,6 +2027,7 @@ else
   GD_G0="$(ladder_block "$CLAUDE_MD" "$SECTION_HEADING" "$GD_G0_OPENER")"
   GD_PR="$(ladder_block "$CLAUDE_MD" "$SECTION_HEADING" "$GD_PRED_OPENER")"
   GD_REM="$(remedy_clause "$GD_PR")"
+  GD_ON="$(other_clause "$GD_PR")"
 
   # GD1 — extraction, graded first (PV-3): an unreadable declaration is a failure, never a
   # clean read of an absent one.
@@ -1947,8 +2052,8 @@ else
   GD_OUT="$(ladder_refusal_check "$CLAUDE_MD" "$GD_SENT")"; GD_RC=$?
   GD_CR="$(branch_clause "$GD_G1" "$GD_LABEL_REFUSED")"
   GD_C0="$(branch_clause "$GD_G0" "$GD_LABEL_G0_REFUSED")"
-  expect_rc 0 "GD2" "G1 carries a refused branch, a ran-and-failed branch keyed on E1's sentinel and a canary-absent branch whose remedy puts the canary $GD_CANARY_REMEDY, and G0-root carries a refused arm; and each clause that writes a refused read's remedy — G1's refused branch (${#GD_CR} chars), G0-root's refused arm (${#GD_C0} chars) and the refusal predicate's remedy clause (${#GD_REM} chars) — names the $GD_REMEDY and carries no word of the forbidden-remedy class (the canary or README.md, copying or putting into place, writing), the predicate's clause naming $GD_REMEDY_SETTING and $GD_REMEDY_FLAG as well" -- ladder_refusal_check "$CLAUDE_MD" "$GD_SENT"
-  show "$GD_OUT" 'G[BRAXFCPM]'
+  expect_rc 0 "GD2" "G1 carries a refused branch, a ran-and-failed branch keyed on E1's sentinel and a canary-absent branch whose remedy puts the canary $GD_CANARY_REMEDY, and G0-root carries a refused arm; each clause that writes a refused read's remedy — G1's refused branch (${#GD_CR} chars), G0-root's refused arm (${#GD_C0} chars) and the refusal predicate's remedy clause (${#GD_REM} chars) — names the $GD_REMEDY with \"$GD_SCOPE\" before it and carries no word of the forbidden-remedy class (the canary or README.md, copying or putting into place, writing), the predicate's clause naming $GD_REMEDY_SETTING and $GD_REMEDY_FLAG as well and saying that class is a refusal of a path \"$GD_SCOPE_DEF\"; and the predicate's disposition of a refusal of any other kind (${#GD_ON} chars) says it is \"$GD_OTHER_RELAY\" and carries no word of the directory-remedy class (the step, $GD_REMEDY_SETTING, add-dir, step 4) or of the forbidden-remedy class" -- ladder_refusal_check "$CLAUDE_MD" "$GD_SENT"
+  show "$GD_OUT" 'G[BRAXFCPMSN]'
 
   # The controls plant ONE defect in a copy of a conformant charter. Over a non-conformant
   # one they could not isolate the defect they plant, and GD2 has already shown the checker
@@ -2024,6 +2129,44 @@ else
     gd_arm "GDc9" "$GD_FX/refused-no-step.md" "GA" "G1's refused branch left naming no step, the operator in its place"
     gd_without "$GD_FX/g1-unreadable.md" "$GD_G1_OPENER" "- **G1: "
     gd_arm "GDc10" "$GD_FX/g1-unreadable.md" "GB" "G1's bullet opener re-spelled, so the bullet no longer reads"
+
+    # gd_swap <text> <old> <new> — <text> with its first <old> read as <new>, split by length
+    # for gd_without's reason; an empty <new> cuts <old> out. It builds a whole clause, which
+    # gd_without then swaps in for the live one, so a fixture changes that clause and nothing
+    # else on its line.
+    gd_swap() {
+      local t="$1" o="$2" pre
+      case "$t" in *"$o"*) ;; *) printf '%s' "$t"; return 0 ;; esac
+      pre="${t%%"$o"*}"
+      printf '%s' "$pre$3${t:$(( ${#pre} + ${#o} ))}"
+    }
+
+    # The directory-class scope cut from each clause that gives the step, so that the step
+    # stands as the fix for any refusal — the remedy an expansion refusal was given, and the
+    # wrong one for it. And the class's definition cut from the predicate's clause, so that
+    # the scope names a class the charter no longer says anything about.
+    gd_without "$GD_FX/g1-unscoped.md" "$GD_CR" "$(gd_swap "$GD_CR" ", $GD_SCOPE," "")"
+    gd_arm "GDc11" "$GD_FX/g1-unscoped.md" "GS" "G1's refused branch left giving the step for any refusal, its directory-class scope cut"
+    gd_without "$GD_FX/g0-unscoped.md" "$GD_C0" "$(gd_swap "$GD_C0" ", $GD_SCOPE," "")"
+    gd_arm "GDc12" "$GD_FX/g0-unscoped.md" "GS" "G0-root's refused arm left giving the step for any refusal, its directory-class scope cut"
+    gd_without "$GD_FX/remedy-unscoped.md" "$GD_REM" "$(gd_swap "$GD_REM" ", $GD_SCOPE," "")"
+    gd_arm "GDc13" "$GD_FX/remedy-unscoped.md" "GS" "the refusal predicate's remedy clause left giving the step for any refusal, its directory-class scope cut"
+    gd_without "$GD_FX/remedy-undefined.md" "$GD_REM" "$(gd_swap "$GD_REM" "$GD_SCOPE_DEF" "")"
+    gd_arm "GDc14" "$GD_FX/remedy-undefined.md" "GM" "the refusal predicate's remedy clause left scoping the step to the directory class without saying what that class is"
+
+    # The predicate's disposition of a refusal of any other kind: removed; made to give a
+    # directory remedy, in a word of the directory-remedy class that is not the step's own
+    # name; made to give the wrong remedy, in the words AC-3 forbids; and re-worded so that
+    # it names no step and no key and yet no longer relays the refusal with no directory
+    # remedy — the plain-words case that only the relay's own words can catch.
+    gd_without "$GD_FX/no-other.md" "$GD_ON" ""
+    gd_arm "GDc15" "$GD_FX/no-other.md" "GN" "the refusal predicate's disposition of a refusal of any other kind removed"
+    gd_without "$GD_FX/other-lists-dir.md" "$GD_ON" "${GD_ON%"$GD_OTHER_TO"}has the operator list that directory under \`additionalDirectories\` as the fix, and $GD_OTHER_TO"
+    gd_arm "GDc16" "$GD_FX/other-lists-dir.md" "GN" "a refusal of any other kind made to have the operator list its directory under additionalDirectories as the fix"
+    gd_without "$GD_FX/other-writes-pointer.md" "$GD_ON" "${GD_ON%"$GD_OTHER_TO"}tells the operator to write the pointer again as a further fix, and $GD_OTHER_TO"
+    gd_arm "GDc17" "$GD_FX/other-writes-pointer.md" "GN" "a refusal of any other kind made to tell the operator to write the pointer again as a further fix"
+    gd_without "$GD_FX/other-not-relayed.md" "$GD_ON" "$(gd_swap "$GD_ON" "$GD_OTHER_RELAY" "relayed with the directory it names given as the one to admit")"
+    gd_arm "GDc18" "$GD_FX/other-not-relayed.md" "GN" "a refusal of any other kind re-worded to give the directory it names as the one to admit, in words of no class"
   fi
 fi
 
