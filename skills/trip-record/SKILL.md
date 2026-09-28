@@ -287,16 +287,17 @@ cell; no change to `contract-depth`; and no text below the last verb section.
 
 ## What the blocks above are
 
-The ladder the header cites is stated in one place and is not restated here. The blocks above have
-already run, and **their output is the whole of the trip state this file resolves against** — the
-population from the listing block, and the lifecycle, the mode and the destination by value from
-the record block. No verb re-runs either block, and no verb re-derives what they already carry.
+The ladder the header cites is stated in one place and is not restated here. The blocks above are
+this file's evidence entries, tool calls you issue as the data-root paragraph above directs, and
+**their output is the whole of the trip state this file resolves against** — the population from
+the listing block, and the lifecycle, the mode and the destination by value from the record block.
+No verb re-runs either block, and no verb re-derives what they already carry.
 
-Each block is a tool grant this file has to hold, and each is held for a use the requirement table
-names: the listing block for `Bash(ls:*)`, and the record block for `Bash(grep:*)`, which reads the
-lifecycle, the mode and the destination by value. Neither grant is speculative and neither is
-unused. **The header block above fixes how many pre-execution blocks this file carries, and it
-already carries all of them** — no slice adds another.
+This file's grants for the evidence entries above are its declared minimum privilege, each for a
+use the requirement table names: `Bash(ls:*)` for the listing block, and `Bash(grep:*)` for the
+record block, which reads the lifecycle, the mode and the destination by value. Neither grant is
+speculative and neither is unused. **The header block above fixes how many evidence entries this
+file carries, and it already carries all of them** — no slice adds another.
 
 **The read-scope ceiling is a principle, not a path list: every verb reads exactly what its own
 section names, and nothing else.** Silence is a prohibition here rather than a gap — a read this
