@@ -6304,7 +6304,7 @@ st_cf_proj_block() {
     ft_regions "$root/$m" "$chart" 2>/dev/null | awk -F'\t' -v form="$m" "$ST_CF_PROJ_FN"'
       $1 == "DEFAULT" { if ($2 + 0 > 0) ic = $3 }
       $1 == "ROW" { B[$2] = $10; CM[$2] = $7; CD[$2] = $8 }
-      $1 == "REGION" { n++; RL[n] = $2; RE[n] = $3; RV[n] = $4; RR[n] = $5; RH[n] = $6; RD[n] = $7; RG[n] = $8; RT[n] = $9 }
+      $1 == "REGION" { n++; RL[n] = $2; RE[n] = $3; RV[n] = $4; RR[n] = $5; RH[n] = $6; RD[n] = $7; RG[n] = $8; RTX[n] = $9 }
       END {
         for (i = 1; i <= n; i++) {
           r = RR[i]; hold = "—"
@@ -6313,7 +6313,7 @@ st_cf_proj_block() {
             for (j = 1; j <= nc; j++) if (ic != "" && cc[j] == ic) hold = hold (hold == "" ? "" : " · ") ((j > nd || dd[j] == "-" || dd[j] == "") ? "(none stated)" : esc(dd[j]))
             if (hold == "") hold = "—"
           }
-          printf "| %s | %d | %d | %s | %s | %s | %s | %s (%s) | %s |\n", span(form), RL[i], RE[i], span(substr("######", 1, RV[i]) " " RT[i]), RH[i], (r + 0 > 0) ? r : "—", (r in B) ? esc(B[r]) : "—", RD[i], RG[i], hold
+          printf "| %s | %d | %d | %s | %s | %s | %s | %s (%s) | %s |\n", span(form), RL[i], RE[i], span(substr("######", 1, RV[i]) " " RTX[i]), RH[i], (r + 0 > 0) ? r : "—", (r in B) ? esc(B[r]) : "—", RD[i], RG[i], hold
         }
       }'
   done <<<"$forms"
