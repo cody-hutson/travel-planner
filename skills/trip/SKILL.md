@@ -663,20 +663,25 @@ written because `Current mode` and `Mode notes` are replaced in one act and the 
 re-read it for the trip's mode or destination — the record block above carries both by value.
 It reads nothing under `trips/<slug>/outputs/` itself: those artifacts are read by the agents
 that consume them, and a read here would give the itinerary a second reader with no write to
-justify it. **Agent reads, attributed:** enrichment reads `trips/<slug>/travelers/*.md` and
-`trips/<slug>/trip-context.md`; each spoke reads `trips/<slug>/trip-context.md`,
-`trips/<slug>/trip-log.md` and its own accumulated output file; the hub reads the spoke
-outputs and `trips/<slug>/outputs/event-status.md`; the validator reads the itinerary the hub
-produced and `trips/<slug>/outputs/event-status.md`. **Dispatches** enrichment, the spokes
-§ *Modes* admits for the resolved mode, the hub, and the validator where that mode runs it —
-each in the role its roster row states, each writing exactly the file or files that row names
-and nothing else.
+justify it. **Agent reads, attributed:** enrichment reads `trips/<slug>/travelers/*.md`,
+`trips/<slug>/trip-context.md` and `trips/<slug>/outputs/traveler-model.md`, the model it is
+about to replace, read before it rebuilds it; each spoke reads `trips/<slug>/trip-context.md`,
+`trips/<slug>/trip-log.md`, `trips/<slug>/outputs/traveler-model.md` and its own accumulated
+output file; the hub reads the spoke outputs, `trips/<slug>/outputs/traveler-model.md` and
+`trips/<slug>/outputs/event-status.md`; the validator reads the itinerary the hub produced,
+`trips/<slug>/outputs/traveler-model.md` and `trips/<slug>/outputs/event-status.md`.
+**Dispatches** enrichment, the spokes § *Modes* admits for the resolved mode, the hub, and the
+validator where that mode runs it — each in the role or roles its roster row states, each
+writing exactly the file or files that row names and nothing else.
 
 **The chain is § *Modes*' to decide, not this section's.** Read the resolved mode's row there
 and dispatch what it says runs, in the pipeline order § *Dispatching agents* states. The
 announcement obligation in the standing clause applies to this verb: the resolved mode is the
 condition that admits each member, so the announcement names the mode, names each member, and
-names the members § *Modes* withholds at that mode.
+names the members § *Modes* withholds at that mode. Enrichment's entry names each role its
+roster row states, and names `trips/<slug>/outputs/traveler-model.md` as the file its
+reconciler role rebuilds, so a run that refreshes the traveller model says so before its first
+dispatch.
 
 **Append and replace discipline.** Each spoke appends to its own output file under a new dated
 section and rewrites, reorders and deletes nothing. Where the hub replaces
@@ -709,7 +714,8 @@ admits, so that path is entered rather than described, and the same test dispose
 that halted before the hub leg.
 
 **`outputs/event-status.md`.** This verb reads it only through the agents it dispatches — the
-hub and the validator both read it — and the hub writes it, which is the hub's write under
+hub and the validator both read it — and the hub writes it, as enrichment does once at setup
+when it seeds the initial `locked` rows its roster row names; each write is its writer's under
 *ownership follows the writer, not the caller*. **This verb writes no byte of it.** The
 per-event status bound in the standing clause is placed on the dispatch and stated in the
 announcement, because this chain reaches the hub.
@@ -729,13 +735,17 @@ from that agent's own row in `CLAUDE.md`'s roster; `trips/<slug>/trip-context.md
 `## Mode` block alone, read before it is written, for the reason `plan`'s section gives. It
 reads no other block of that file and nothing under `trips/<slug>/outputs/` itself. **Agent
 reads, attributed:** each affected spoke reads `trips/<slug>/trip-context.md`,
-`trips/<slug>/trip-log.md` and its own accumulated output file; enrichment, where a changed
-profile is what triggered the run, reads `trips/<slug>/travelers/*.md` and
-`trips/<slug>/trip-context.md`; the hub reads the spoke outputs and
-`trips/<slug>/outputs/event-status.md`; the validator reads the itinerary the hub produced and
-`trips/<slug>/outputs/event-status.md`. **Dispatches** the spokes the coupling conditions
-admit, the hub and the validator — each in the role its roster row states, each writing
-exactly the file or files that row names.
+`trips/<slug>/trip-log.md`, `trips/<slug>/outputs/traveler-model.md` and its own accumulated
+output file; enrichment, where a changed profile is what triggered the run, reads
+`trips/<slug>/travelers/*.md`, `trips/<slug>/trip-context.md` and
+`trips/<slug>/outputs/traveler-model.md`, the model it is about to replace; the hub reads the
+spoke outputs, `trips/<slug>/outputs/traveler-model.md` and
+`trips/<slug>/outputs/event-status.md`; the validator reads the itinerary the hub produced,
+`trips/<slug>/outputs/traveler-model.md` and `trips/<slug>/outputs/event-status.md`.
+**Dispatches** enrichment where a changed profile is what triggered the run, in its reconciler
+role, writing `trips/<slug>/outputs/traveler-model.md` alone; the spokes the coupling
+conditions admit, the hub and the validator — each in the role its roster row states, each
+writing exactly the file or files that row names.
 
 **What it evaluates before it dispatches anything.** Each coupling condition below, with the
 evidence that decided it, announced per the standing clause:
@@ -801,11 +811,13 @@ relations and still announces them.
 from that agent's own row in `CLAUDE.md`'s roster; `trips/<slug>/trip-context.md` — the
 `## Mode` block alone, read before it is written, for the reason `plan`'s section gives. It
 reads no other block of that file and nothing under `trips/<slug>/outputs/` itself. **Agent
-reads, attributed:** transport reads `trips/<slug>/trip-context.md` and its own accumulated
-output file; scheduling reads `trips/<slug>/trip-context.md`,
-`trips/<slug>/outputs/transport-brief.md` and its own accumulated output file; the hub reads
-`trips/<slug>/outputs/scheduling-framework.md` and `trips/<slug>/outputs/event-status.md`; the
-validator reads the itinerary the hub produced and `trips/<slug>/outputs/event-status.md`.
+reads, attributed:** transport reads `trips/<slug>/trip-context.md`,
+`trips/<slug>/outputs/traveler-model.md` and its own accumulated output file; scheduling reads
+`trips/<slug>/trip-context.md`, `trips/<slug>/outputs/transport-brief.md`,
+`trips/<slug>/outputs/traveler-model.md` and its own accumulated output file; the hub reads
+`trips/<slug>/outputs/scheduling-framework.md`, `trips/<slug>/outputs/traveler-model.md` and
+`trips/<slug>/outputs/event-status.md`; the validator reads the itinerary the hub produced,
+`trips/<slug>/outputs/traveler-model.md` and `trips/<slug>/outputs/event-status.md`.
 **Dispatches** transport, scheduling, the hub and the validator — each in the role its roster
 row states, each writing exactly the file or files that row names.
 

@@ -188,6 +188,13 @@
 #         naming a field among a cited read's purposes is not discharging it — which is
 #         the defect that paid for the group. It grades that the question is ANSWERED,
 #         never which answer is taken.
+#   J   every file an agent writes is named in its agent-roster row         (group J)
+#     J0 the join cannot be measured — the roster header, a roster row, the § 1.1 class
+#        table, its declared count or a prompt's writer id is absent, ambiguous or unread
+#     J1 a file an agent writes — as § 1.1's W column assigns it, or as the agent's own
+#        prompt declares it in a frontmatter block or an Output heading — is not named in
+#        that agent's roster row
+#     J2 a roster row joins to a writer id that no § 1.1 W cell names
 #   G   controls: must-NOT-fire arms first, the two live differential arms, one must-fire
 #       arm per emittable id, the grammar control, the derivation mutation pair, and GZV —
 #       the ZERO-VERB world, which exercises the collapse argument above and is the only
@@ -3291,6 +3298,485 @@ picker_check() {
 }
 
 # ═════════════════════════════════════════════════════════════════════════════════
+# Group J — every file an agent writes is named in that agent's roster row.
+#
+# THE PROPERTY. `CLAUDE.md` § *Dispatching agents* carries the agent roster, and `/trip`'s
+# dispatching verbs send each agent out "in the role or roles its roster row states, each
+# writing exactly the file or files that row names". That sentence is true only while every
+# file an agent writes is named in its row. This group reads what each agent writes from the
+# two places that declare it, and fails for every written file its row does not name:
+#
+#   (a) `reference/data-architecture.md` § 1.1, the W (writer) column — the one declaration of
+#       who writes each in-model class. A class is expected in a row when that row's writer id
+#       occurs in the class's W cell as a whole token. A prose cell ("hub (primary); enrichment
+#       seeds; `/trip-record event`") therefore expects the class in every row it names. A cell
+#       naming no roster writer — a sentinel (`block-owned`), a human author, an operator verb,
+#       `site-build`, or "the spoke that re-ran" — expects nothing here, and the run prints
+#       that census rather than hiding it.
+#   (b) The agent's own prompt — every `artifact:` value in a frontmatter block that the prompt
+#       emits, and every path one of its Output headings names. A block counts for the prompt's
+#       own row when it carries no `writer:` key, or when its writer (a bare id, or a bracketed
+#       list) includes the prompt's own id. A block whose writer list excludes the prompt's id
+#       is another writer's, quoted, and is skipped. An Output heading is a line at column 0
+#       and fence depth 0 that opens `### Output: `, `### File: ` or `### Pre-Work Output <N>: `.
+#       Its path is the first word after the colon, with a code span's backticks removed, and a
+#       bare file name — the Pre-Work form — names a file under `outputs/`, where the prompt's
+#       own frontmatter for that file writes it. A heading declares its own prompt's write: it
+#       carries no writer that could exclude it. Those three forms are an ENUMERATION WITH A
+#       STATED BOUNDARY, not a closed class: a heading at another depth, or one that renders an
+#       output under another label, is not read, and a fenced or indented heading is an example.
+#
+# THE JOIN, AND WHERE IT COMES FROM. A roster row names its prompt (`Prompt File`), and the
+# prompt's own frontmatter exemplars name its writer id — the same token § 1.1's W column
+# uses. No map from display name to id is held here: the id is read from the prompt, the
+# classes from § 1.1, the named files from the row. A prompt whose exemplars carry no bare
+# writer id, or more than one, cannot be joined, and that is J0 rather than a guess. A row
+# whose id no § 1.1 W cell names is J2: its § 1.1 limb would be empty, which is the silent
+# shrink this group exists to prevent.
+#
+# WHAT "NAMED" MEANS. A file is named in a row when it is the whole content of a code span in
+# that row's `Output File` cell. Prose mentions do not count — the roster renders every path
+# it names as a code span, and `/trip research`'s key filter counts paths the same way.
+#
+# ONE DIRECTION, BY DESIGN. This group asserts expected ⊆ named. It does not assert the
+# converse: the Enrichment row names `trip-context.md`, whose § 1.1 W cell is the
+# `block-owned` sentinel that § 4.4 says no tool resolves to a writer — so a converse check
+# would need an exception list, which is a second source of truth. Declared residual.
+#
+# A SPAN IS A NAME WHATEVER THE SENTENCE AROUND IT SAYS. A span inside a clause that denies
+# the write still counts: the Validator row's "reads `event-status.md`, never writes it" is
+# the live instance, and it names no expected path, because it carries no `outputs/` prefix.
+# Grading the grammar around a span is not a structural check, so this is declared here
+# rather than parsed away. Declared residual.
+#
+# A CLASS THAT LANDS BEFORE ITS WRITER IS NAMED AS DECLARED, NOT WRITTEN. From the commit that
+# adds a § 1.1 class row, limb (a) expects the file in its writer's roster row — and that row is
+# an instruction: the dispatching verbs send the agent out writing "exactly the file or files
+# that row names". So where a class lands before the agent that writes it emits it, the row
+# names it inside a clause that says so — "declares `outputs/<file>`, not written before <the
+# landing that ships its writer>" — and the landing that ships the writer rewrites that clause
+# to the verb that writes the file. J1 passes on either wording, by the residual above, and its
+# failure text states this rule where the omission is met. The rule binds every such landing,
+# not only the one that raised it; arm GJ0 keeps the declared wording passable.
+#
+# A QUOTED BLOCK CARRIES ITS WRITER IN LIST FORM. A prompt may quote another agent's frontmatter
+# block — as the contract of a file it reads, say. Such a block carries its writer as a list,
+# `writer: [enrichment]`, which is never read as the prompt's own id and, naming another id, is
+# skipped. The other two shapes are read as the prompt's own declaration, and each fails closed
+# where it is met: a bare foreign `writer:` gives the prompt two ids, which is J0, and a block
+# with no `writer:` is attributed to the prompt, which is J1. Each finding names the list form.
+# GJ0 plants the list form as a near miss; GJ6 and GJ7 build the two failing shapes.
+#
+# TWO READERS OF ONE CELL. `skills/trip/SKILL.md` § *research* derives `/trip research`'s agent
+# key from this same `Output File` cell, admitting a row only when it names exactly one path
+# under `outputs/`. This group makes that cell a complete write list, so its own remedy — name
+# the file — can take a spoke out of that key, and nothing here observes the key set. J1's
+# finding names that coupling whenever the row it flags names exactly one `outputs/` path, so
+# the key is settled in the same change; arm GJ9 holds that, both ways. Deriving the key from
+# § 1.1 rather than from a count of paths is the structural fix, and it is outside this group.
+# Declared residual.
+#
+# PORTABILITY. No awk (so mawk and gawk cannot disagree), no bash-4-only syntax, and every
+# character set is spelled out rather than written as a range, because a range is resolved
+# against the locale's collation (see scripts/validate-artifacts.sh on the same hazard).
+# ═════════════════════════════════════════════════════════════════════════════════
+RJ_COLS='agent|prompt file|output file|when to dispatch'
+RJ_ARCH_REL='reference/data-architecture.md'
+RJ_CLASS_HEAD='### 1.1 '
+RJ_DIGITS='0123456789'
+RJ_SLUGSET='abcdefghijklmnopqrstuvwxyz0123456789-'
+RJ_OUTDIR='outputs/'
+RJ_HEAD_OUT='### Output: '
+RJ_HEAD_FILE='### File: '
+RJ_HEAD_PRE='### Pre-Work Output '
+
+# rj_trimv <var> <s> — <s> with leading and trailing whitespace removed, into <var>. Fork-free:
+# every helper below writes a variable rather than printing, because a command substitution per
+# line is a fork per line, and the three inputs this reader walks are thousands of lines long.
+rj_trimv() { local _rj_t="$2"; _rj_t="${_rj_t#"${_rj_t%%[![:space:]]*}"}"; _rj_t="${_rj_t%"${_rj_t##*[![:space:]]}"}"; printf -v "$1" '%s' "$_rj_t"; }
+
+# rj_norm <cell> — code-span and bold markers removed, whitespace collapsed and trimmed,
+# lower-cased. Only header candidates reach it, so the one `tr` it costs is bounded.
+rj_norm() {
+  local s="$1"
+  s="${s//\`/}"; s="${s//\*\*/}"; s="${s//$'\t'/ }"
+  while [[ "$s" == *'  '* ]]; do s="${s//  / }"; done
+  rj_trimv s "$s"
+  lower "$s"
+}
+
+# rj_spansv <var> <text> — the content of each single-backtick code span, newline-joined, into <var>.
+rj_spansv() {
+  local _rj_s="$2" _rj_span _rj_out=''
+  while [[ "$_rj_s" == *'`'*'`'* ]]; do
+    _rj_s="${_rj_s#*\`}"; _rj_span="${_rj_s%%\`*}"; _rj_s="${_rj_s#*\`}"
+    _rj_out="$_rj_out$_rj_span"$'\n'
+  done
+  printf -v "$1" '%s' "$_rj_out"
+}
+
+# rj_tokensv <var> <text> — the maximal runs of lower-case letters, digits and '-', space-padded,
+# so a membership test is `case "$toks" in *" id "*)`. Every other character becomes a space;
+# upper case is not folded, because a writer id is a lower-case slug by § 4.4's schema.
+rj_tokensv() {
+  local _rj_k="$2"
+  _rj_k="${_rj_k//[!abcdefghijklmnopqrstuvwxyz0123456789-]/ }"
+  while [[ "$_rj_k" == *'  '* ]]; do _rj_k="${_rj_k//  / }"; done
+  rj_trimv _rj_k "$_rj_k"
+  printf -v "$1" ' %s ' "$_rj_k"
+}
+
+# rj_is_slug <s> — a bare writer id: a lower-case letter or digit, then letters, digits, '-'.
+rj_is_slug() {
+  case "$1" in
+    ''|*[!abcdefghijklmnopqrstuvwxyz0123456789-]*) return 1 ;;
+    [abcdefghijklmnopqrstuvwxyz0123456789]*) return 0 ;;
+  esac
+  return 1
+}
+
+# rj_headv <var> <line> — the path an Output heading declares, into <var>; empty when <line> is
+# not one of the three forms at column 0. The path is the first word after the colon, with a code
+# span's backticks removed, and a bare file name (the Pre-Work form) is a file under outputs/.
+rj_headv() {
+  local _rj_h="$2" _rj_n
+  case "$_rj_h" in
+    "$RJ_HEAD_OUT"*)  _rj_h="${_rj_h#"$RJ_HEAD_OUT"}" ;;
+    "$RJ_HEAD_FILE"*) _rj_h="${_rj_h#"$RJ_HEAD_FILE"}" ;;
+    "$RJ_HEAD_PRE"*': '*)
+      _rj_n="${_rj_h#"$RJ_HEAD_PRE"}"; _rj_n="${_rj_n%%:*}"
+      case "$_rj_n" in ''|*[!0123456789]*) printf -v "$1" '%s' ''; return 0 ;; esac
+      _rj_h="${_rj_h#*: }" ;;
+    *) printf -v "$1" '%s' ''; return 0 ;;
+  esac
+  rj_trimv _rj_h "$_rj_h"; _rj_h="${_rj_h%% *}"; _rj_h="${_rj_h//\`/}"
+  case "$_rj_h" in ''|*/*) ;; *) _rj_h="$RJ_OUTDIR$_rj_h" ;; esac
+  printf -v "$1" '%s' "$_rj_h"
+}
+
+# roster_write_check <root> — the subject. Emits FINDING J0|J1|J2 lines, one RJEXP line per
+# expected (row, file) pair with its sources, one RJUNJOINED census line, and the COUNT lines
+# the three assertions below read. It returns 0 always: its verdicts are carried by its output.
+roster_write_check() {
+  local root="$1" md arch lineno=0 line t depth=0 first
+  md="$root/CLAUDE.md"; arch="$root/$RJ_ARCH_REL"
+  local -a R_AGENT=() R_PROMPT=() R_OUT=() R_LINE=() R_ID=() C_N=() C_CLASS=() C_W=() C_TOK=()
+  local anchors=0 anchor_line=0 degraded=0 rows=0 classes=0 declared='' heads=0 i j k near=''
+
+  # ── 1. The roster. Anchored on its own header row, matched structurally and only at
+  # fence depth 0, so a fenced example of the table is an example and not a second anchor.
+  if [ ! -r "$md" ]; then
+    printf 'FINDING J0 CLAUDE.md is absent or unreadable — the roster cannot be read\n'
+    degraded=$((degraded+1))
+  else
+    local -a MDL=()
+    while IFS= read -r line || [ -n "$line" ]; do MDL+=("$line"); done < "$md"
+    for (( i=0; i<${#MDL[@]}; i++ )); do
+      line="${MDL[$i]}"
+      case "$line" in *'```'*|*'|'*) ;; *) continue ;; esac
+      rj_trimv t "$line"
+      case "$t" in '```'*) depth=$((1-depth)); continue ;; esac
+      [ "$depth" -eq 0 ] || continue
+      case "$t" in '|'*) ;; *) continue ;; esac
+      first="${t#|}"; first="${first%%|*}"; first="${first//\`/}"; first="${first//\*\*/}"
+      rj_trimv first "$first"
+      case "$first" in [Aa][Gg][Ee][Nn][Tt]) ;; *) continue ;; esac
+      local -a HC=(); local hn=''
+      IFS='|' read -r -a HC <<< "${t%|}"
+      for (( j=1; j<${#HC[@]}; j++ )); do hn="${hn:+$hn|}$(rj_norm "${HC[$j]}")"; done
+      if [ "$hn" = "$RJ_COLS" ]; then
+        anchors=$((anchors+1)); anchor_line=$i
+      else
+        near="${near:+$near; }line $((i+1)) reads \"$hn\""
+      fi
+    done
+    if [ "$anchors" -ne 1 ]; then
+      printf 'FINDING J0 CLAUDE.md carries %d roster header row(s) at fence depth 0, expected exactly 1 — at 0 the roster was renamed, reordered, widened or removed, at 2+ which table is the roster is ambiguous. Near misses opening with "Agent": %s\n' "$anchors" "${near:-none}"
+    else
+      i=$((anchor_line+1)); rj_trimv t "${MDL[$i]:-}"
+      if ! is_sep "$t"; then
+        printf 'FINDING J0 CLAUDE.md:%d the roster header has no delimiter row beneath it\n' "$((i+1))"
+      else
+        for (( i=anchor_line+2; i<${#MDL[@]}; i++ )); do
+          rj_trimv t "${MDL[$i]}"
+          case "$t" in '|'*) ;; *) break ;; esac
+          local -a RC=()
+          IFS='|' read -r -a RC <<< "${t%|}"
+          if [ "${#RC[@]}" -ne 5 ]; then
+            printf 'FINDING J0 CLAUDE.md:%d a roster row splits into %d cell(s), expected 4 — its files cannot be read from the right column\n' "$((i+1))" "$((${#RC[@]}-1))"
+            continue
+          fi
+          local ag pr pc=0 s sp=''
+          rj_trimv ag "${RC[1]//\*\*/}"
+          pr=''
+          rj_spansv sp "${RC[2]}"
+          while IFS= read -r s; do
+            [ -n "$s" ] || continue
+            case "$s" in agents/*.md) pc=$((pc+1)); pr="$s" ;; esac
+          done <<< "$sp"
+          if [ "$pc" -ne 1 ]; then
+            printf 'FINDING J0 CLAUDE.md:%d the roster row "%s" names %d prompt path(s) in its Prompt File cell, expected exactly one agents/<name>.md span\n' "$((i+1))" "$ag" "$pc"
+            continue
+          fi
+          R_AGENT+=("$ag"); R_PROMPT+=("$pr"); R_OUT+=("${RC[3]}"); R_LINE+=("$((i+1))")
+        done
+      fi
+    fi
+  fi
+  rows=${#R_AGENT[@]}
+  [ "$anchors" -eq 1 ] && [ "$rows" -eq 0 ] && \
+    printf 'FINDING J0 CLAUDE.md the roster header has no data rows beneath it — the population is empty\n'
+
+  # ── 2. § 1.1. The section is located by its heading's section number, not by its title or
+  # its class count, so adding a class moves nothing here; the count the heading declares is
+  # then compared with the rows read, which is what makes a partial read a finding.
+  if [ ! -r "$arch" ]; then
+    printf 'FINDING J0 %s is absent or unreadable — the writer column cannot be read\n' "$RJ_ARCH_REL"
+    degraded=$((degraded+1))
+  else
+    local inside=0 hdr='' rowre="^\\|[[:space:]]*[${RJ_DIGITS}]+[[:space:]]*\\|[[:space:]]*\`"
+    depth=0; lineno=0
+    while IFS= read -r line || [ -n "$line" ]; do
+      lineno=$((lineno+1))
+      case "$line" in *'```'*|'#'*|*'|'*) ;; *) continue ;; esac
+      rj_trimv t "$line"
+      case "$t" in '```'*) depth=$((1-depth)); continue ;; esac
+      [ "$depth" -eq 0 ] || continue
+      case "$line" in
+        "$RJ_CLASS_HEAD"*) heads=$((heads+1)); inside=1; hdr="$line"; continue ;;
+        '### '*|'## '*) inside=0; continue ;;
+      esac
+      [ "$inside" -eq 1 ] || continue
+      [[ "$line" =~ $rowre ]] || continue
+      local -a CC=()
+      IFS='|' read -r -a CC <<< "${t%|}"
+      if [ "${#CC[@]}" -ne 8 ]; then
+        printf 'FINDING J0 %s:%d a class row splits into %d cell(s), expected 7 — its writer cell cannot be read from the right column\n' "$RJ_ARCH_REL" "$lineno" "$((${#CC[@]}-1))"
+        continue
+      fi
+      local cn cl cw ctok
+      rj_trimv cn "${CC[1]}"
+      cl="${CC[2]#*\`}"; cl="${cl%%\`*}"
+      cw="${CC[3]//\*\*/}"; cw="${cw//\`/}"; rj_trimv cw "$cw"
+      rj_tokensv ctok "$cw"
+      C_N+=("$cn"); C_CLASS+=("$cl"); C_W+=("$cw"); C_TOK+=("$ctok")
+    done < "$arch"
+    classes=${#C_N[@]}
+    if [ "$heads" -ne 1 ]; then
+      printf 'FINDING J0 %s carries %d heading line(s) opening "%s" at fence depth 0, expected exactly 1\n' "$RJ_ARCH_REL" "$heads" "$RJ_CLASS_HEAD"
+    else
+      declared="${hdr##*(}"; declared="${declared%%)*}"
+      case "$declared" in
+        ''|*[!0123456789]*) printf 'FINDING J0 %s the § 1.1 heading declares no class count in a trailing "(N)"\n' "$RJ_ARCH_REL"; declared='' ;;
+        *) [ "$declared" -eq "$classes" ] || \
+             printf 'FINDING J0 %s the § 1.1 heading declares %s class(es) and %d row(s) were read — a row this reader cannot see would expect nothing anywhere\n' "$RJ_ARCH_REL" "$declared" "$classes" ;;
+      esac
+      [ "$classes" -gt 0 ] || printf 'FINDING J0 %s the § 1.1 table has no class rows — the population is empty\n' "$RJ_ARCH_REL"
+    fi
+  fi
+
+  # ── 3. Each row's prompt: its own writer id, the artifacts its own blocks declare, and the
+  # paths its Output headings declare.
+  local -a P_ART=() P_NW=() P_HEAD=()
+  for (( i=0; i<rows; i++ )); do
+    local pf="$root/${R_PROMPT[$i]}" ids='' nids=0 arts='' bw='' ba='' w m
+    local own='' nwl='' nwo='' hl='' hp pl=0 fd=0
+    if [ ! -r "$pf" ]; then
+      printf 'FINDING J0 %s the prompt the roster row "%s" names is absent or unreadable — its writer id and declared outputs are UNMEASURED, never empty\n' "${R_PROMPT[$i]}" "${R_AGENT[$i]}"
+      degraded=$((degraded+1)); R_ID+=(''); P_ART+=(''); P_NW+=(''); P_HEAD+=(''); continue
+    fi
+    # Pass 1: blocks, and headings. A block is bounded by a line whose trimmed text is `---` or
+    # opens a fence. A heading is read at column 0 and at fence depth 0 only.
+    local -a BW=() BA=(); bw=''; ba=''
+    while IFS= read -r line || [ -n "$line" ]; do
+      pl=$((pl+1))
+      case "$line" in *'---'*|*'```'*|*'writer:'*|*'artifact:'*|'### '*) ;; *) continue ;; esac
+      rj_trimv t "$line"
+      case "$t" in
+        '---'|'```'*)
+          case "$t" in '```'*) fd=$((1-fd)) ;; esac
+          BW+=("$bw"); BA+=("$ba"); bw=''; ba=''; continue ;;
+        'writer:'*) rj_trimv bw "${t#writer:}" ;;
+        'artifact:'*) rj_trimv m "${t#artifact:}"; m="${m%% *}"; ba="$ba$m"$'\n' ;;
+      esac
+      case "$line" in '### '*) ;; *) continue ;; esac
+      [ "$fd" -eq 0 ] || continue
+      rj_headv hp "$line"
+      [ -n "$hp" ] || continue
+      case $'\n'"$hl" in *$'\n'"$hp"$'\t'*) ;; *) hl="$hl$hp"$'\t'"$pl"$'\n' ;; esac
+    done < "$pf"
+    BW+=("$bw"); BA+=("$ba")
+    for (( k=0; k<${#BW[@]}; k++ )); do
+      w="${BW[$k]}"
+      rj_is_slug "$w" || continue
+      case " $ids " in *" $w "*) ;; *) ids="${ids:+$ids }$w"; nids=$((nids+1)) ;; esac
+    done
+    if [ "$nids" -ne 1 ]; then
+      if [ "$nids" -gt 1 ]; then
+        printf 'FINDING J0 %s declares %d bare writer id(s) in its frontmatter exemplars ("%s"), expected exactly one — the row "%s" cannot be joined to § 1.1. A block that quotes the artifact of another agent carries its writer in list form, writer: [<id>], which is never read as the id of this prompt\n' "${R_PROMPT[$i]}" "$nids" "$ids" "${R_AGENT[$i]}"
+      else
+        printf 'FINDING J0 %s declares %d bare writer id(s) in its frontmatter exemplars ("%s"), expected exactly one — the row "%s" cannot be joined to § 1.1\n' "${R_PROMPT[$i]}" "$nids" "$ids" "${R_AGENT[$i]}"
+      fi
+      R_ID+=(''); P_ART+=(''); P_NW+=(''); P_HEAD+=(''); continue
+    fi
+    R_ID+=("$ids")
+    # Pass 2: the blocks that are this prompt's own, de-duplicated in first-seen order. An
+    # artifact that only a block with no writer declares is remembered as such, so a finding it
+    # causes can name the list form a quoted block carries.
+    for (( k=0; k<${#BW[@]}; k++ )); do
+      [ -n "${BA[$k]}" ] || continue
+      w="${BW[$k]}"
+      if [ -n "$w" ]; then
+        w="${w#\[}"; w="${w%\]}"; w=" ${w//,/ } "
+        case "$w" in *" $ids "*) ;; *) continue ;; esac
+      fi
+      while IFS= read -r m; do
+        [ -n "$m" ] || continue
+        if [ -n "${BW[$k]}" ]; then own="$own$m"$'\n'; else nwl="$nwl$m"$'\n'; fi
+        case $'\n'"$arts" in *$'\n'"$m"$'\n'*) continue ;; esac
+        arts="$arts$m"$'\n'
+      done <<< "${BA[$k]}"
+    done
+    while IFS= read -r m; do
+      [ -n "$m" ] || continue
+      case $'\n'"$own" in *$'\n'"$m"$'\n'*) continue ;; esac
+      case $'\n'"$nwo" in *$'\n'"$m"$'\n'*) continue ;; esac
+      nwo="$nwo$m"$'\n'
+    done <<< "$nwl"
+    P_ART+=("$arts"); P_NW+=("$nwo"); P_HEAD+=("$hl")
+  done
+
+  # ── 4. The join and the comparison.
+  local exp=0 fromc=0 fromp=0 fromh=0 joined=0 unjoined='' named path srcs p m2
+  for (( j=0; j<classes; j++ )); do
+    m2=0
+    for (( i=0; i<rows; i++ )); do
+      [ -n "${R_ID[$i]}" ] || continue
+      case "${C_TOK[$j]}" in *" ${R_ID[$i]} "*) m2=1 ;; esac
+    done
+    if [ "$m2" -eq 1 ]; then joined=$((joined+1)); else unjoined="$unjoined C${C_N[$j]}"; fi
+  done
+  for (( i=0; i<rows; i++ )); do
+    [ -n "${R_ID[$i]}" ] || continue
+    rj_spansv named "${R_OUT[$i]}"
+    local want='' hits=0 nout=0 sn hint
+    while IFS= read -r sn; do case "$sn" in "$RJ_OUTDIR"*) nout=$((nout+1)) ;; esac; done <<< "$named"
+    for (( j=0; j<classes; j++ )); do
+      case "${C_TOK[$j]}" in *" ${R_ID[$i]} "*) ;; *) continue ;; esac
+      hits=$((hits+1))
+      want="$want${C_CLASS[$j]}"$'\t'"§ 1.1 C${C_N[$j]}"$'\n'
+    done
+    [ "$hits" -gt 0 ] || printf 'FINDING J2 CLAUDE.md:%s the roster row "%s" joins as writer id "%s" (read from %s), and no § 1.1 W cell names that id — its § 1.1 limb would be empty rather than checked\n' "${R_LINE[$i]}" "${R_AGENT[$i]}" "${R_ID[$i]}" "${R_PROMPT[$i]}"
+    while IFS= read -r p; do
+      [ -n "$p" ] || continue
+      case $'\n'"${P_NW[$i]}" in
+        *$'\n'"$p"$'\n'*) want="$want$p"$'\t'"the frontmatter ${R_PROMPT[$i]} emits in a block with no writer"$'\n' ;;
+        *) want="$want$p"$'\t'"the frontmatter ${R_PROMPT[$i]} emits"$'\n' ;;
+      esac
+    done <<< "${P_ART[$i]}"
+    while IFS= read -r p; do
+      [ -n "$p" ] || continue
+      want="$want${p%%$'\t'*}"$'\t'"the Output heading ${R_PROMPT[$i]}:${p#*$'\t'}"$'\n'
+    done <<< "${P_HEAD[$i]}"
+    # One line per expected path, sources merged, in first-seen order.
+    local seen=$'\n' line2 pth src
+    while IFS= read -r line2; do
+      [ -n "$line2" ] || continue
+      pth="${line2%%$'\t'*}"
+      case "$seen" in *$'\n'"$pth"$'\n'*) continue ;; esac
+      seen="$seen$pth"$'\n'
+      srcs=''
+      while IFS= read -r src; do
+        [ -n "$src" ] || continue
+        [ "${src%%$'\t'*}" = "$pth" ] || continue
+        srcs="${srcs:+$srcs; }${src#*$'\t'}"
+        case "${src#*$'\t'}" in '§ 1.1'*) fromc=$((fromc+1)) ;; 'the Output heading'*) fromh=$((fromh+1)) ;; *) fromp=$((fromp+1)) ;; esac
+      done <<< "$want"
+      exp=$((exp+1))
+      printf 'RJEXP %s\t%s\t%s\n' "${R_AGENT[$i]}" "$pth" "$srcs"
+      case $'\n'"$named" in *$'\n'"$pth"$'\n'*) continue ;; esac
+      hint=''
+      case "$srcs" in *'in a block with no writer'*) hint="$hint. If that block quotes another agent's artifact rather than declaring this one's, it carries its writer in list form, writer: [<id>], and is then not read as this agent's" ;; esac
+      [ "$nout" -eq 1 ] && hint="$hint. This row names exactly one path under outputs/, and that is the rule /trip research's agent key admits a spoke by (skills/trip/SKILL.md § research): naming a second path takes this agent out of that key, so settle the key in the same change"
+      printf 'FINDING J1 CLAUDE.md:%s the roster row "%s" does not name "%s", which that agent writes (%s) — the Output File cell names a file only as the whole content of a code span%s\n' "${R_LINE[$i]}" "${R_AGENT[$i]}" "$pth" "$srcs" "$hint"
+    done <<< "$want"
+  done
+
+  printf 'RJUNJOINED%s\n' "${unjoined:- none}"
+  printf 'COUNT J_ROWS %d\n' "$rows"
+  printf 'COUNT J_CLASSES %d\n' "$classes"
+  printf 'COUNT J_DECLARED %s\n' "${declared:-0}"
+  printf 'COUNT J_JOINED %d\n' "$joined"
+  printf 'COUNT J_EXPECTED %d\n' "$exp"
+  printf 'COUNT J_FROM_CLASS %d\n' "$fromc"
+  printf 'COUNT J_FROM_PROMPT %d\n' "$fromp"
+  printf 'COUNT J_FROM_HEADING %d\n' "$fromh"
+  printf 'COUNT J_DEGRADED %d\n' "$degraded"
+  return 0
+}
+
+# ── The three assertions. Each calls the subject itself and renders exactly one verdict, so
+# `md_flips` can remove the subject and watch the verdict turn FAIL. Every limb before a PASS
+# is a FAIL, in this order: NO SUBJECT (no census line) · DEGRADED (an input unread) ·
+# VERDICT WITHHELD (J1 and J2 only: J0 has findings, so the population may be partial) ·
+# VACUITY (an empty population) · the group's own findings. No PASS is reached on the absence
+# of a finding alone: each is gated on counts the subject produced.
+rj_counts() {  # rj_counts <out> -> sets RJ_ROWS RJ_CLASSES RJ_DECLARED RJ_JOINED RJ_EXP RJ_FC RJ_FP RJ_FH RJ_DEG RJ_N0 RJ_N1 RJ_N2
+  RJ_ROWS="$(getcount "$1" J_ROWS)"; RJ_CLASSES="$(getcount "$1" J_CLASSES)"
+  RJ_DECLARED="$(getcount "$1" J_DECLARED)"; RJ_JOINED="$(getcount "$1" J_JOINED)"
+  RJ_EXP="$(getcount "$1" J_EXPECTED)"; RJ_FC="$(getcount "$1" J_FROM_CLASS)"
+  RJ_FP="$(getcount "$1" J_FROM_PROMPT)"; RJ_FH="$(getcount "$1" J_FROM_HEADING)"
+  RJ_DEG="$(getcount "$1" J_DEGRADED)"
+  RJ_N0="$(grep -c '^FINDING J0 ' <<<"$1")"; RJ_N1="$(grep -c '^FINDING J1 ' <<<"$1")"
+  RJ_N2="$(grep -c '^FINDING J2 ' <<<"$1")"
+}
+
+rj_assert_population() {
+  local out; out="$(roster_write_check "$1" 2>/dev/null)"; rj_counts "$out"
+  if [ -z "$RJ_ROWS" ] || [ -z "$RJ_CLASSES" ] || [ -z "$RJ_EXP" ]; then
+    FAIL "J0: NO SUBJECT — the roster-write reader emitted no census, so it did not run and nothing below was measured"
+  elif [ "${RJ_DEG:-0}" -ne 0 ]; then
+    FAIL "J0: DEGRADED — ${RJ_DEG} input(s) could not be read; what they declare is UNMEASURED, not empty"; show "$out" 'J0'
+  elif [ "$RJ_N0" -ne 0 ]; then
+    FAIL "J0: ${RJ_N0} structural finding(s) — the roster, § 1.1 or a prompt could not be read into the join as written"; show "$out" 'J0'
+  elif [ "$RJ_ROWS" -eq 0 ] || [ "$RJ_CLASSES" -eq 0 ] || [ "$RJ_EXP" -eq 0 ]; then
+    FAIL "J0: VACUITY — ${RJ_ROWS} roster row(s), ${RJ_CLASSES} class row(s) and ${RJ_EXP} expected pair(s); a comparison over an empty side proves nothing"
+  else
+    PASS "J0: the join is measured — ${RJ_ROWS} roster row(s), each joined to its prompt's own writer id; ${RJ_CLASSES} § 1.1 class row(s) read, equal to the ${RJ_DECLARED} the heading declares, of which ${RJ_JOINED} name a roster writer and the rest name none ($(sed -n 's/^RJUNJOINED //p' <<<"$out")); ${RJ_EXP} expected (row, file) pair(s), ${RJ_FC} source line(s) from § 1.1, ${RJ_FP} from the prompts' own frontmatter and ${RJ_FH:-0} from their Output headings. Every figure is read from the tree on this run; none is held here"
+  fi
+}
+
+rj_assert_named() {
+  local out; out="$(roster_write_check "$1" 2>/dev/null)"; rj_counts "$out"
+  if [ -z "$RJ_ROWS" ] || [ -z "$RJ_EXP" ]; then
+    FAIL "J1: NO SUBJECT — the roster-write reader emitted no census, so no row was compared"
+  elif [ "${RJ_DEG:-0}" -ne 0 ] || [ "$RJ_N0" -ne 0 ]; then
+    FAIL "J1: VERDICT WITHHELD — J0 did not pass, so the rows and classes compared here may be a partial population. Resolve J0 first"
+  elif [ "$RJ_EXP" -eq 0 ]; then
+    FAIL "J1: VACUITY — no expected (row, file) pair was derived, so 'every file is named' would be a statement over the empty set"
+  elif [ "$RJ_N1" -ne 0 ]; then
+    FAIL "J1: ${RJ_N1} file(s) an agent writes are not named in its roster row — /trip's dispatch sentence 'each writing exactly the file or files that row names' is false for each. Name the file as a code span in the row's Output File cell, in the same change that made the agent write it. Where the file's class lands before the agent that writes it, name it in a clause that says so — declares \`outputs/<file>\`, not written before <the landing that ships its writer> — because the row is what the dispatched agent is told to write; the landing that ships the writer rewrites the clause"; show "$out" 'J1'
+  else
+    PASS "J1: all ${RJ_EXP} expected (row, file) pair(s) across ${RJ_ROWS} roster row(s) are named in their row's Output File cell — every file § 1.1's writer column assigns to a roster agent, and every file that agent's own prompt emits frontmatter for or names in an Output heading"
+  fi
+}
+
+rj_assert_join() {
+  local out; out="$(roster_write_check "$1" 2>/dev/null)"; rj_counts "$out"
+  if [ -z "$RJ_ROWS" ] || [ -z "$RJ_JOINED" ]; then
+    FAIL "J2: NO SUBJECT — the roster-write reader emitted no census, so no row was joined"
+  elif [ "${RJ_DEG:-0}" -ne 0 ] || [ "$RJ_N0" -ne 0 ]; then
+    FAIL "J2: VERDICT WITHHELD — J0 did not pass, so the join population may be partial. Resolve J0 first"
+  elif [ "$RJ_ROWS" -eq 0 ] || [ "$RJ_JOINED" -eq 0 ]; then
+    FAIL "J2: VACUITY — ${RJ_ROWS} row(s) and ${RJ_JOINED} joined class row(s); nothing was joined"
+  elif [ "$RJ_N2" -ne 0 ]; then
+    FAIL "J2: ${RJ_N2} roster row(s) join to a writer id that no § 1.1 W cell names — their § 1.1 limb is empty rather than checked"; show "$out" 'J2'
+  else
+    PASS "J2: every one of the ${RJ_ROWS} roster row(s) joins to § 1.1 — each row's prompt declares one writer id, and at least one § 1.1 W cell names it"
+  fi
+}
+
+# ═════════════════════════════════════════════════════════════════════════════════
 # The fixture world. DATA, not code: one generator emits a tree from a table of tuples,
 # so a change to the surface's shape changes the tuples and not the generator. Fixtures
 # are BUILT, never patched: a delimiter collision or a newline difference in a patch
@@ -3886,14 +4372,16 @@ DOC="$ROOT/$DOC_REL"
 CARRIER="$ROOT/SKILL.md"
 
 # The Z-group watch set: every surface this guard READS — the command reference included,
-# since group H reads it — plus the workflow that runs it —
+# since group H reads it, and the architecture document and each agent prompt, since group J
+# reads them — plus the workflow that runs it —
 # that last one because a guard editing its own trigger is the one mutation a reader would
 # least expect this group to miss. The set is those inputs and NOT the whole tree; the Z1
 # line states that scope rather than claiming a tree-wide property this does not establish.
 tree_state() {
   local p
-  for p in "$MD" "$ADR" "$PUB" "$SELF" "$WF" "$DOC" "$CARRIER"; do [ -f "$p" ] && cksum < "$p"; done
+  for p in "$MD" "$ADR" "$PUB" "$SELF" "$WF" "$DOC" "$CARRIER" "$ROOT/$RJ_ARCH_REL"; do [ -f "$p" ] && cksum < "$p"; done
   for p in "$CDIR"/*/SKILL.md; do [ -e "$p" ] && { printf '%s ' "$(verb_id "$p")"; cksum < "$p"; }; done
+  for p in "$ROOT"/agents/*.md; do [ -e "$p" ] && { printf '%s ' "${p##*/}"; cksum < "$p"; }; done
 }
 STATE_BEFORE="$(tree_state)"
 WATCHED="$(printf '%s\n' "$STATE_BEFORE" | grep -c .)"
@@ -4554,6 +5042,19 @@ elif [ -n "$TD_BAD" ]; then
 else
   PASS "TD1: all ${TD_POP} verb(s) declaring \`## Group\` as a read dispose of \`- **Total travelers:**\` in their OWN prose, outside the read declaration that raises the question. The zero is a measurement: on the same run the field matcher found the field on planted text ($TD_FSENS) and returned zero over a read line carrying it ($TD_FSPEC). This grades that the question is ANSWERED, never which answer is taken — a verb declining the field in terms passes here, and correctly"
 fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group J — every file an agent writes is named in its agent-roster row. The reader,
+# roster_write_check, and its three one-verdict assertions are defined beside the other
+# checkers; this is where they report. Its controls are group GJ, beside the other
+# control blocks, and its assertions are registered with md_flips at the end of group MD.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group J — every file an agent writes is named in its roster row, as § 1.1's writer column and the agent's own prompt declare it."
+surface J0 J1 J2 >/dev/null
+rj_assert_population "$ROOT"
+rj_assert_named "$ROOT"
+rj_assert_join "$ROOT"
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group G — controls. Fixture-driven: every fixture path below is rooted at $WORK, so no
@@ -5616,6 +6117,295 @@ else
   FAIL "GQK: over verb files that carry no grant table, Q0 did not render exactly one FAIL and no PASS from its VACUITY limb — files $(getcount "$GQKO" GQFILES) of ${GQK_NF}, unreadable $(getcount "$GQKO" GQUNREAD), graded $(getcount "$GQKO" GQVERBS), near misses $(getcount "$GQKO" GQNEAR), continued $(getcount "$GQKO" GQCONT); Q0 probe '${GQK_P0}' where '0 1' is required"
 fi
 
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group GJ — controls for group J. Every fixture is rooted at $WORK, so group Z's claim
+# covers them. The MUST-FIRE worlds are BUILT by gj_world from a defect switch — never
+# patched — and each arm checks that its defect is present before it reads a verdict. Two
+# arms use a byte copy of the live inputs, because what they assert is about those inputs:
+# GJL removes one span from the Enrichment row, and GJD adds one agent, one prompt and one
+# class. Each asserts that its edit landed before it reads anything.
+# ═════════════════════════════════════════════════════════════════════════════════
+
+# gj_world <dir> <defect> — two agents, their prompts, and a § 1.1 table carrying every writer
+# cell shape the join reads: a bare id; a prose cell naming two writers and an operator verb;
+# the block-owned sentinel; "the spoke that re-ran"; `zz-alpha-legacy`, a hyphen-extended
+# near miss that must expect nothing of `zz-alpha`; and a class whose writer does not emit it
+# yet, named in its row as declared and not yet written. The roster header is re-spaced and
+# re-cased, a fenced copy of it precedes the real one, one prompt block is indented, one
+# carries no writer, one is another pair's writer list and one quotes another agent's block in
+# list form. The prompts carry the Output headings the reader must read — a bare Pre-Work file
+# name, and a path followed by a parenthetical — beside the ones it must not: a heading with
+# no colon, a fenced heading and an indented one. Each is a shape a naive reader gets wrong.
+gj_world() {
+  local d="$1" dft="$2" hdr rowa rowb cnt=7 bid='zz-beta' qlist='[zz-alpha, zz-gamma]' pend
+  mkdir -p "$d/agents" "$d/reference"
+  pend=', declares `outputs/zz-pending.md`, not written before the landing that ships its writer'
+  hdr='|  agent|PROMPT  FILE | `Output File` |  When to  dispatch   |'
+  [ "$dft" = 'anchor0' ] && hdr='| Agent | Prompt File | Output Files | When to dispatch |'
+  rowa='| Zz Alpha | `agents/zz-alpha.md` | `outputs/zz-a.md`, its preserved `outputs/zz-a-v<N>.md`, `outputs/zz-shared.md` (primary writer), `outputs/zz-a-status.md`'"$pend"' | always |'
+  rowb='| Zz Beta | `agents/zz-beta.md` | `outputs/zz-b.md`, `outputs/zz-b-sections.md` (its sections), `outputs/zz-shared.md` (setup seed only) | always |'
+  case "$dft" in
+    rowmiss)    rowb='| Zz Beta | `agents/zz-beta.md` | `outputs/zz-b.md`, `outputs/zz-b-sections.md` (its sections) | always |' ;;
+    onespan)    rowb='| Zz Beta | `agents/zz-beta.md` | `outputs/zz-b.md` | always |' ;;
+    prose)      rowa='| Zz Alpha | `agents/zz-alpha.md` | outputs/zz-a.md, its preserved `outputs/zz-a-v<N>.md`, `outputs/zz-shared.md` (primary writer), `outputs/zz-a-status.md`'"$pend"' | always |' ;;
+    badrow)     rowb='| Zz Beta | `agents/zz-beta.md` | `outputs/zz-b.md` | always | extra |' ;;
+    badprompt)  rowb='| Zz Beta | agents/zz-beta.md | `outputs/zz-b.md`, `outputs/zz-b-sections.md`, `outputs/zz-shared.md` | always |' ;;
+    dangling)   rowb='| Zz Beta | `agents/zz-missing.md` | `outputs/zz-b.md`, `outputs/zz-b-sections.md`, `outputs/zz-shared.md` | always |' ;;
+    countdrift) cnt=8 ;;
+    noclasses)  cnt=0 ;;
+    joinmiss)   bid='zz-gamma'; qlist='[zz-alpha, zz-delta]' ;;
+  esac
+  {
+    printf '# Fixture charter\n\nA fenced example of the roster, never a second anchor:\n\n'
+    printf '```markdown\n| Agent | Prompt File | Output File | When to dispatch |\n|---|---|---|---|\n'
+    printf '| Zz Example | `agents/zz-example.md` | `outputs/zz-example.md` | never |\n```\n\n'
+    printf '**Agent roster:**\n\n%s\n|-------|------------|-------------|-----------------|\n' "$hdr"
+    [ "$dft" = 'norows' ] || printf '%s\n%s\n' "$rowa" "$rowb"
+    printf '\nAfter the table.\n'
+    [ "$dft" = 'anchor2' ] && printf '\n| Agent | Prompt File | Output File | When to dispatch |\n|---|---|---|---|\n| Zz Gamma | `agents/zz-alpha.md` | `outputs/zz-a.md` | never |\n'
+  } > "$d/CLAUDE.md"
+  {
+    printf '# Fixture architecture\n\n'
+    if [ "$dft" = 'nosection' ]; then printf '### 1.9 Something else (%d)\n\n' "$cnt"
+    else printf '### 1.1 In-model — artifact classes (%d)\n\n' "$cnt"; fi
+    printf '| C | Class | W (exactly one) | L | Prov | P | Primary entities |\n|---|---|---|---|---|---|---|\n'
+    if [ "$dft" != 'noclasses' ]; then
+      printf '| 1 | `trip-context.md` | **block-owned** (`CLAUDE.md` § *Write ownership*) | `persist-mutable` | `human` | `bound` | Trip |\n'
+      printf '| 2 | `outputs/zz-a.md` | zz-alpha | `accumulate-append` | `researched` | `internal` | Venue |\n'
+      if [ "$dft" = 'badclassrow' ]; then
+        printf '| 3 | `outputs/zz-b.md` | zz-beta | `accumulate-append` | `researched` | `internal` | Venue | extra |\n'
+      else
+        printf '| 3 | `outputs/zz-b.md` | zz-beta | `accumulate-append` | `researched` | `internal` | Venue |\n'
+      fi
+      printf '| 4 | `outputs/zz-shared.md` | zz-alpha (primary); zz-beta seeds; `/trip-record event` | `persist-mutable` | `recorded` | **`bound`** | Event |\n'
+      printf '| 5 | `outputs/<slug>.md` — targeted-research output | the spoke that re-ran | `accumulate-append` | `researched` | `internal` | Venue |\n'
+      printf '| 6 | `outputs/zz-legacy.md` | zz-alpha-legacy | `output` | `derived` | `output` | Venue |\n'
+      printf '| 7 | `outputs/zz-pending.md` | zz-alpha | `rebuilt-each-synthesis` | `derived` | `internal` | Venue |\n'
+    fi
+    printf '\n### 1.2 The next section\n\n| 8 | `outputs/zz-outside.md` | zz-alpha | x | x | x | x |\n'
+  } > "$d/reference/data-architecture.md"
+  {
+    printf '## Output Format\n\n```yaml\n---\nartifact: outputs/zz-a.md\nschema-version: 1\nwriter: zz-alpha\n---\n```\n\n'
+    printf 'When you preserve a version, change exactly these two lines:\n\n```yaml\nartifact: outputs/zz-a-v<N>.md\npublish: internal\n```\n\n'
+    printf 'The status block, as an indented code block:\n\n    ---\n    artifact: outputs/zz-a-status.md\n    writer: zz-alpha\n    ---\n'
+    printf '\nThe contract of a file this role reads, quoted in list form:\n\n```yaml\n---\nartifact: outputs/zz-b.md\nwriter: [zz-beta]\n---\n```\n'
+    printf '\n### Output Quality Standards\n\n### Pre-Work Output 1: zz-a.md\n\nA heading shown as an example, fenced:\n\n```markdown\n### Output: outputs/zz-fenced.md\n```\n\nAnd one shown indented:\n\n    ### File: outputs/zz-indented.md\n'
+    [ "$dft" = 'promptmiss' ] && printf '\n```yaml\n---\nartifact: outputs/zz-a2.md\nwriter: zz-alpha\n---\n```\n'
+    [ "$dft" = 'quotebare' ] && printf '\nThe same contract quoted with a bare writer:\n\n```yaml\n---\nartifact: outputs/zz-b.md\nwriter: zz-beta\n---\n```\n'
+    [ "$dft" = 'quotenowriter' ] && printf '\nThe same contract quoted with no writer:\n\n```yaml\n---\nartifact: outputs/zz-b.md\n---\n```\n'
+    [ "$dft" = 'headmiss' ] && printf '\n### Output: outputs/zz-a3.md (its sections)\n\nA file this role declares by its heading alone.\n'
+  } > "$d/agents/zz-alpha.md"
+  {
+    printf '## Output Format\n\n```yaml\n---\nartifact: outputs/zz-b.md\nwriter: %s\n---\n```\n\n' "$bid"
+    printf 'A section-owned block this role shares:\n\n```yaml\n---\nartifact: outputs/zz-b-sections.md\nwriter: [zz-alpha, %s]\n---\n```\n\n' "$bid"
+    printf 'Another pair'"'"'s block, quoted for reference, read and never written:\n\n```yaml\n---\nartifact: outputs/zz-quoted.md\nwriter: %s\n---\n```\n' "$qlist"
+    printf '\n### Output: outputs/zz-shared.md (its sections)\n\nThe setup seed this role writes once.\n'
+    [ "$dft" = 'idambig' ] && printf '\n```yaml\n---\nartifact: outputs/zz-b.md\nwriter: zz-alpha\n---\n```\n'
+  } > "$d/agents/zz-beta.md"
+  return 0
+}
+
+# gj_counts <out> — the per-id finding counts a control arm reads.
+gj_counts() {
+  GJ_N0="$(grep -c '^FINDING J0 ' <<<"$1")"; GJ_N1="$(grep -c '^FINDING J1 ' <<<"$1")"
+  GJ_N2="$(grep -c '^FINDING J2 ' <<<"$1")"
+}
+
+# gj_tally <assert-fn> <root> -> "<pass> <fail>" — an assertion's verdicts, counted in a
+# subshell, so a vacuity arm shows each assertion renders exactly one FAIL and no PASS.
+gj_tally() {
+  ( pass=0; fail=0
+    PASS() { pass=$((pass+1)); }; FAIL() { fail=$((fail+1)); }; show() { :; }
+    "$1" "$2" >/dev/null 2>&1
+    printf '%d %d' "$pass" "$fail" )
+}
+
+echo
+echo "── Group GJ — control arms for group J: shown failing on each defect, passing on a correct world, and deriving its population."
+GJ="$WORK/gj"; mkdir -p "$GJ"
+for gjd in ok rowmiss promptmiss prose joinmiss anchor0 anchor2 badrow badprompt idambig countdrift nosection badclassrow norows noclasses dangling quotebare quotenowriter headmiss onespan; do
+  gj_world "$GJ/$gjd" "$gjd"
+done
+
+# GJ0 — MUST NOT FIRE. Integrity first: every near-miss plant is present in the world read.
+GJ_INT=$(( $(grep -c '^    artifact: outputs/zz-a-status.md' "$GJ/ok/agents/zz-alpha.md") \
+         + $(grep -c '^publish: internal' "$GJ/ok/agents/zz-alpha.md") \
+         + $(grep -c -F 'writer: [zz-alpha, zz-gamma]' "$GJ/ok/agents/zz-beta.md") \
+         + $(grep -c -F 'zz-alpha-legacy' "$GJ/ok/reference/data-architecture.md") \
+         + $(grep -c -F '|  agent|PROMPT  FILE |' "$GJ/ok/CLAUDE.md") \
+         + $(grep -c -F '| Zz Example |' "$GJ/ok/CLAUDE.md") \
+         + $(grep -c -x -F 'writer: [zz-beta]' "$GJ/ok/agents/zz-alpha.md") \
+         + $(grep -c -x -F '### Output Quality Standards' "$GJ/ok/agents/zz-alpha.md") \
+         + $(grep -c -x -F '### Output: outputs/zz-fenced.md' "$GJ/ok/agents/zz-alpha.md") \
+         + $(grep -c -x -F '    ### File: outputs/zz-indented.md' "$GJ/ok/agents/zz-alpha.md") \
+         + $(grep -c -x -F '### Pre-Work Output 1: zz-a.md' "$GJ/ok/agents/zz-alpha.md") \
+         + $(grep -c -x -F '### Output: outputs/zz-shared.md (its sections)' "$GJ/ok/agents/zz-beta.md") \
+         + $(grep -c -F 'declares `outputs/zz-pending.md`, not written before' "$GJ/ok/CLAUDE.md") ))
+GJ_OUT="$(roster_write_check "$GJ/ok")"; gj_counts "$GJ_OUT"
+GJ_TAB=$'\t'   # the RJEXP separator, spelled rather than typed, so no copy of this line can lose it
+GJ_EXP="$(sed -n "s/^RJEXP \([^${GJ_TAB}]*\)${GJ_TAB}\([^${GJ_TAB}]*\)${GJ_TAB}.*/\1>\2/p" <<<"$GJ_OUT" | tr '\n' ' ')"
+GJ_UNJ="$(sed -n 's/^RJUNJOINED //p' <<<"$GJ_OUT")"
+if [ "$GJ_INT" -ne 13 ]; then
+  FAIL "GJ0: fixture integrity — the conforming world carries ${GJ_INT} of its 13 near-miss plants, so a silence here would prove nothing"
+elif [ "$GJ_N0" -ne 0 ] || [ "$GJ_N1" -ne 0 ] || [ "$GJ_N2" -ne 0 ]; then
+  FAIL "GJ0: MUST NOT FIRE — the conforming world raised J0=${GJ_N0} J1=${GJ_N1} J2=${GJ_N2}; a near-miss plant was read as a defect"; show "$GJ_OUT" 'J0|J1|J2'
+elif [ "$GJ_EXP" != 'Zz Alpha>outputs/zz-a.md Zz Alpha>outputs/zz-shared.md Zz Alpha>outputs/zz-pending.md Zz Alpha>outputs/zz-a-v<N>.md Zz Alpha>outputs/zz-a-status.md Zz Beta>outputs/zz-b.md Zz Beta>outputs/zz-shared.md Zz Beta>outputs/zz-b-sections.md ' ]; then
+  FAIL "GJ0: the expected set on the conforming world is '${GJ_EXP}' — a plant widened or narrowed it"
+elif [ "$GJ_UNJ" != 'C1 C5 C6' ]; then
+  FAIL "GJ0: the unjoined census is '${GJ_UNJ}', expected 'C1 C5 C6' — the hyphen-extended id zz-alpha-legacy (C6) must join nothing"
+else
+  PASS "GJ0: MUST NOT FIRE — all 13 near-miss plants present (a fenced copy of the roster header, a re-spaced and re-cased real header, an indented frontmatter block, a block with no writer, another pair's quoted writer list, a block quoting another agent's in the one-id list form, a hyphen-extended id, a class named only as declared and not yet written, a bare Pre-Work heading file name, a heading path followed by a parenthetical, and three headings that declare nothing: one with no colon, one fenced, one indented); no finding; the expected set is exactly the 8 pairs the world declares, 3 of them reachable only through the indented, writer-less and shared-list blocks and 1 named only inside its declared-not-written clause; C6 joins nothing"
+fi
+
+# gj_fire <id> <world> <want-finding-regex> <arm-id> <prose> — a MUST-FIRE arm over a BUILT
+# world: exactly one finding of <id>, matching <want>, and the other two ids silent.
+gj_fire() {
+  local id="$1" w="$2" want="$3" aid="$4" prose="$5" out nid nwant nother vt
+  out="$(roster_write_check "$GJ/$w")"; gj_counts "$out"
+  case "$id" in J0) nid="$GJ_N0"; nother=$((GJ_N1+GJ_N2)) ;; J1) nid="$GJ_N1"; nother=$((GJ_N0+GJ_N2)) ;; *) nid="$GJ_N2"; nother=$((GJ_N0+GJ_N1)) ;; esac
+  nwant="$(grep -c -E "^FINDING $id .*$want" <<<"$out")"
+  case "$id" in J0) vt="$(gj_tally rj_assert_population "$GJ/$w")" ;; J1) vt="$(gj_tally rj_assert_named "$GJ/$w")" ;; *) vt="$(gj_tally rj_assert_join "$GJ/$w")" ;; esac
+  arm "$id"
+  if [ "$vt" != '0 1' ]; then
+    FAIL "$aid: MUST FIRE — $prose: the $id assertion rendered pass/fail '$vt' over the defect, expected '0 1' — its finding limb does not turn the verdict"
+  elif [ "$nwant" -ne 1 ] || [ "$nid" -ne 1 ]; then
+    FAIL "$aid: MUST FIRE — $prose: expected exactly one $id finding matching the defect, got $nid $id finding(s) of which $nwant match"; show "$out" "$id"
+  elif [ "$nother" -ne 0 ]; then
+    FAIL "$aid: the defect leaked into another id ($nother finding(s)) — $prose is not isolated"; show "$out" 'J0|J1|J2'
+  else
+    PASS "$aid: MUST FIRE — $prose: exactly one $id finding, naming the defect; no other id raised; and the $id assertion renders one FAIL and no PASS over it"
+  fi
+}
+gj_fire J1 rowmiss    '"Zz Beta" does not name "outputs/zz-shared.md".*§ 1.1 C4'                 GJ1 'a row omits a class its writer cell assigns (a prose W cell naming two writers)'
+gj_fire J1 promptmiss '"Zz Alpha" does not name "outputs/zz-a2.md".*frontmatter agents/zz-alpha.md' GJ2 'a row omits a file its own prompt emits frontmatter for, which § 1.1 does not list'
+gj_fire J1 prose      '"Zz Alpha" does not name "outputs/zz-a.md"'                                 GJ3 'a row mentions the path in prose only — a mention outside a code span is not a name'
+gj_fire J2 joinmiss   '"Zz Beta" joins as writer id "zz-gamma"'                                    GJ4 'a prompt declares a writer id no § 1.1 W cell names'
+
+# GJ5 — MUST FIRE, one structural cause per BUILT world; J0 names the cause, and J1 and J2
+# withhold their verdicts rather than grading a partial population.
+GJ5_BAD=''; GJ5_N=0
+for gjc in 'anchor0|0 roster header row' 'anchor2|2 roster header row' 'badrow|splits into 5 cell' \
+           'badprompt|names 0 prompt path' 'idambig|declares 2 bare writer id' 'countdrift|declares 8 class' \
+           'nosection|carries 0 heading line' 'badclassrow|a class row splits into 8 cell'; do
+  gjw="${gjc%%|*}"; gjm="${gjc#*|}"; GJ5_N=$((GJ5_N+1))
+  gjo="$(roster_write_check "$GJ/$gjw")"
+  gjh="$(grep -c -F "$gjm" <<<"$gjo")"
+  gjt0="$(gj_tally rj_assert_population "$GJ/$gjw")"; gjt1="$(gj_tally rj_assert_named "$GJ/$gjw")"; gjt2="$(gj_tally rj_assert_join "$GJ/$gjw")"
+  if [ "$gjh" -lt 1 ] || [ "$gjt0" != '0 1' ] || [ "$gjt1" != '0 1' ] || [ "$gjt2" != '0 1' ]; then GJ5_BAD="$GJ5_BAD$gjw(hit=$gjh J0=$gjt0 J1=$gjt1 J2=$gjt2) "; fi
+done
+arm J0
+if [ -n "$GJ5_BAD" ]; then
+  FAIL "GJ5: MUST FIRE — a structural defect was not named by J0, or J1/J2 graded over it rather than withholding: $GJ5_BAD"
+else
+  PASS "GJ5: MUST FIRE — each of ${GJ5_N} structural defects (header renamed, header duplicated, a 5-cell row, a row with no prompt span, a prompt with 2 writer ids, a heading count off by one, the § 1.1 heading absent, an 8-cell class row) is named by J0 with its own cause, and each of the three assertions renders one FAIL and no PASS over it"
+fi
+
+# GJ6 and GJ7 — the two quoted-block shapes the list form exists to avoid, each named by its
+# finding. A bare foreign writer gives the quoting prompt a second id (J0); a block with no writer
+# is read as the quoting agent's own write (J1). The one-id list form itself is a GJ0 plant.
+gj_fire J0 quotebare     '"zz-alpha zz-beta".*writer: \[<id>\]'                                                GJ6 'a prompt quotes the frontmatter of another agent with a bare writer, so it declares two ids — the finding names the list form'
+gj_fire J1 quotenowriter '"Zz Alpha" does not name "outputs/zz-b.md".*in a block with no writer.*writer: \[<id>\]' GJ7 'a prompt quotes the frontmatter of another agent with no writer, so the quoted file reads as one the quoting agent writes — the finding names the list form'
+
+# GJ8 — the heading limb. A file declared by an Output heading alone, with no frontmatter block
+# and no § 1.1 class, is expected in its agent's row; the finding names the heading as its source.
+gj_fire J1 headmiss '"Zz Alpha" does not name "outputs/zz-a3.md".*the Output heading agents/zz-alpha.md:[0-9]+' GJ8 'a row omits a file its prompt declares only in an Output heading'
+
+# GJ9 — J1 NAMES THE /trip research KEY COUPLING, AND ONLY WHERE IT HOLDS. A row naming exactly one
+# outputs/ path is what that verb's agent key admits a spoke by, so J1's remedy would take the spoke
+# out of the key: each finding on such a row says so. On a row naming two such paths it must not.
+GJR1="$(roster_write_check "$GJ/onespan")"; gj_counts "$GJR1"
+GJR1_J1="$GJ_N1"; GJR1_OTHER=$(( GJ_N0 + GJ_N2 ))
+GJR1_NOTE="$(grep -c -E '^FINDING J1 .*"Zz Beta" .*exactly one path under outputs/.*/trip research' <<<"$GJR1")"
+GJR2="$(roster_write_check "$GJ/rowmiss")"; gj_counts "$GJR2"
+GJR2_J1="$GJ_N1"
+GJR2_NOTE="$(grep -c -E '^FINDING J1 .*/trip research' <<<"$GJR2")"
+GJR_VT="$(gj_tally rj_assert_named "$GJ/onespan")"
+GJR_INT=$(( $(grep -c -F '| Zz Beta | `agents/zz-beta.md` | `outputs/zz-b.md` | always |' "$GJ/onespan/CLAUDE.md") \
+          + $(grep -c -F '| Zz Beta | `agents/zz-beta.md` | `outputs/zz-b.md`, `outputs/zz-b-sections.md` (its sections) | always |' "$GJ/rowmiss/CLAUDE.md") ))
+arm J1
+if [ "$GJR_INT" -ne 2 ]; then
+  FAIL "GJ9: fixture integrity — the one-path row and the two-path row were not both built, so neither direction below is a measurement"
+elif [ "$GJR_VT" != '0 1' ] || [ "$GJR1_J1" -ne 2 ] || [ "$GJR1_OTHER" -ne 0 ]; then
+  FAIL "GJ9: MUST FIRE — over the one-path row J1 raised ${GJR1_J1} finding(s) where 2 are required and other ids ${GJR1_OTHER}, and the J1 assertion rendered '${GJR_VT}' where '0 1' is required"; show "$GJR1" 'J0|J1|J2'
+elif [ "$GJR1_NOTE" -ne 2 ]; then
+  FAIL "GJ9: MUST FIRE — ${GJR1_NOTE} of the 2 J1 findings on a row naming exactly one outputs/ path name the /trip research key coupling; each must, because naming the file takes that spoke out of the key"; show "$GJR1" 'J1'
+elif [ "$GJR2_J1" -ne 1 ] || [ "$GJR2_NOTE" -ne 0 ]; then
+  FAIL "GJ9: MUST NOT FIRE — over a row naming two outputs/ paths J1 raised ${GJR2_J1} finding(s), ${GJR2_NOTE} of them naming the /trip research key coupling; that row is outside the key, so the note would mislead"; show "$GJR2" 'J1'
+else
+  PASS "GJ9: J1 NAMES THE RESEARCH-KEY COUPLING WHERE IT HOLDS — over a row naming exactly one outputs/ path, both J1 findings name the one-path rule /trip research's agent key admits a spoke by, and the J1 assertion renders one FAIL and no PASS; over a row naming two such paths, its one J1 finding does not"
+fi
+
+# GJV — VACUITY and DEGRADATION: an empty roster, an empty class table, an unreadable prompt,
+# and a root carrying neither input. Each assertion renders exactly one FAIL and no PASS.
+mkdir -p "$GJ/empty"
+GJV_BAD=''; GJV_N=0
+for gjw in norows noclasses dangling empty; do
+  for gjf in rj_assert_population rj_assert_named rj_assert_join; do
+    GJV_N=$((GJV_N+1)); gjt="$(gj_tally "$gjf" "$GJ/$gjw")"
+    [ "$gjt" = '0 1' ] || GJV_BAD="$GJV_BAD$gjw/$gjf=$gjt "
+  done
+  gjdg="$(getcount "$(roster_write_check "$GJ/$gjw")" J_DEGRADED)"
+  case "$gjw" in dangling|empty) [ "${gjdg:-0}" -ge 1 ] || GJV_BAD="$GJV_BAD$gjw/degraded=${gjdg:-0} " ;; *) [ "${gjdg:-0}" -eq 0 ] || GJV_BAD="$GJV_BAD$gjw/degraded=$gjdg " ;; esac
+done
+arm J0
+if [ -n "$GJV_BAD" ]; then
+  FAIL "GJV: a degenerate world reached a PASS, or rendered more than one verdict: $GJV_BAD"
+else
+  PASS "GJV: VACUITY and DEGRADATION — over an empty roster, an empty class table, an unreadable prompt and a root with neither input, each of the three assertions renders exactly one FAIL and no PASS (${GJV_N} of ${GJV_N} probes), and an unread input is counted DEGRADED — never read as empty — while an empty-but-read input is not"
+fi
+
+# gj_live <dir> — a byte copy of the three live inputs this group reads.
+gj_live() {
+  mkdir -p "$1/agents" "$1/reference"
+  cp "$ROOT/CLAUDE.md" "$1/CLAUDE.md"; cp "$ROOT/$RJ_ARCH_REL" "$1/$RJ_ARCH_REL"
+  cp "$ROOT"/agents/*.md "$1/agents/"
+}
+
+# GJL — MUST FIRE on the live roster: the traveller model is removed from a copy of the
+# Enrichment row. The mutation is asserted to have landed before the verdict is read.
+GJL="$WORK/gjl"; gj_live "$GJL"
+GJL_BEFORE="$(grep -c -F '`outputs/traveler-model.md`' "$GJL/CLAUDE.md")"
+sed 's/^\(| Enrichment |.*\)`outputs\/traveler-model\.md`/\1outputs\/traveler-model.md/' "$GJL/CLAUDE.md" > "$GJL/CLAUDE.md.new" && mv "$GJL/CLAUDE.md.new" "$GJL/CLAUDE.md"
+GJL_AFTER="$(grep -c -F '`outputs/traveler-model.md`' "$GJL/CLAUDE.md")"
+GJL_DIFF="$(diff "$ROOT/CLAUDE.md" "$GJL/CLAUDE.md" | grep -c '^>')"
+GJL_OUT="$(roster_write_check "$GJL")"; gj_counts "$GJL_OUT"
+GJL_HIT="$(grep -c -E '^FINDING J1 .*"Enrichment" does not name "outputs/traveler-model.md".*§ 1.1 C[0-9]+; the frontmatter agents/00-enrichment.md emits' <<<"$GJL_OUT")"
+arm J1
+if [ "$GJL_DIFF" -ne 1 ] || [ "$GJL_AFTER" -ne $((GJL_BEFORE-1)) ]; then
+  FAIL "GJL: fixture integrity — the span was not removed from exactly one line of the Enrichment row (lines changed: ${GJL_DIFF}; spans ${GJL_BEFORE} -> ${GJL_AFTER}), so this arm has no defect to detect"
+elif [ "$GJ_N1" -ne 1 ] || [ "$GJL_HIT" -ne 1 ] || [ "$GJ_N0" -ne 0 ] || [ "$GJ_N2" -ne 0 ]; then
+  FAIL "GJL: MUST FIRE — with the traveller model removed from the live Enrichment row the check reported J1=${GJ_N1} (matching: ${GJL_HIT}), J0=${GJ_N0}, J2=${GJ_N2}"; show "$GJL_OUT" 'J0|J1|J2'
+else
+  PASS "GJL: MUST FIRE on the live inputs — the traveller model removed from a copy of the Enrichment row is named by exactly one J1 finding, from both sources (§ 1.1's writer column and the frontmatter agents/00-enrichment.md emits); the copy differs from the tree in that one line"
+fi
+
+# GJD — DERIVATION: one agent, its prompt and its class added to a live copy. The population
+# grows by exactly what was added and no finding appears — so nothing here is a held list.
+GJD="$WORK/gjd"; gj_live "$GJD"
+GJD_BASE="$(roster_write_check "$ROOT")"
+sed 's/^\(| Validator | .*\)$/\1\
+| Zz Derived | `agents\/zz-derived.md` | `outputs\/zz-derived.md` | never |/' "$GJD/CLAUDE.md" > "$GJD/CLAUDE.md.new" && mv "$GJD/CLAUDE.md.new" "$GJD/CLAUDE.md"
+printf '## Output\n\n```yaml\n---\nartifact: outputs/zz-derived.md\nwriter: zz-derived\n---\n```\n' > "$GJD/agents/zz-derived.md"
+gjn="$(getcount "$GJD_BASE" J_DECLARED)"
+sed -e "s/^\(### 1\.1 .*\)(${gjn})\$/\1($((gjn+1)))/" \
+    -e "/^### 1\.1 /,/^### 1\.2 /s/^\(| ${gjn} | .*\)\$/\1\\
+| $((gjn+1)) | \`outputs\/zz-derived.md\` | zz-derived | \`rebuilt-each-synthesis\` | \`derived\` | \`internal\` | Venue |/" \
+    "$GJD/$RJ_ARCH_REL" > "$GJD/arch.new" && mv "$GJD/arch.new" "$GJD/$RJ_ARCH_REL"
+GJD_OUT="$(roster_write_check "$GJD")"; gj_counts "$GJD_OUT"
+GJD_DR=$(( $(getcount "$GJD_OUT" J_ROWS) - $(getcount "$GJD_BASE" J_ROWS) ))
+GJD_DC=$(( $(getcount "$GJD_OUT" J_CLASSES) - $(getcount "$GJD_BASE" J_CLASSES) ))
+GJD_DE=$(( $(getcount "$GJD_OUT" J_EXPECTED) - $(getcount "$GJD_BASE" J_EXPECTED) ))
+GJD_BN=$(( $(grep -c '^FINDING J' <<<"$GJD_BASE") ))
+if [ "$(grep -c 'zz-derived' "$GJD/CLAUDE.md")" -ne 1 ] || [ "$(grep -c 'zz-derived' "$GJD/$RJ_ARCH_REL")" -ne 1 ]; then
+  FAIL "GJD: fixture integrity — the added agent did not land in both the roster and § 1.1 copies"
+elif [ "$GJD_DR" -ne 1 ] || [ "$GJD_DC" -ne 1 ] || [ "$GJD_DE" -ne 1 ]; then
+  FAIL "GJD: DERIVATION — adding one agent, prompt and class moved rows by ${GJD_DR}, classes by ${GJD_DC} and expected pairs by ${GJD_DE}; each must move by exactly 1"
+elif [ "$(( GJ_N0 + GJ_N1 + GJ_N2 ))" -ne "$GJD_BN" ]; then
+  FAIL "GJD: the added agent changed the finding count ($GJD_BN on the tree, $(( GJ_N0 + GJ_N1 + GJ_N2 )) with the addition) — a conforming addition must raise nothing"; show "$GJD_OUT" 'J0|J1|J2'
+else
+  PASS "GJD: DERIVATION — one agent, its prompt and its class added to a copy of the live inputs move the roster rows, the class rows and the expected pairs by exactly 1 each and raise nothing. The population is read from the tree; none of it is held here"
+fi
+
 arm N1
 NEEDLES_SAVE=( "${NEEDLES[@]}" )
 NEEDLES+=( 'trailing ' )
@@ -6144,6 +6934,13 @@ md_flips grant_table_check 'Q0' gq_assert_anchor "$CDIR"
 md_flips grant_table_check 'Q1' gq_assert_rows   "$CDIR"
 md_flips grant_table_check 'Q2' gq_assert_grants "$CDIR"
 
+# ── REGISTERED WITH md_flips — group J's three verdicts. Each assertion calls
+# roster_write_check itself, so removing that function removes the evidence, and each verdict
+# must then report exactly one FAIL and no PASS. Appended after group Q's registrations.
+md_flips roster_write_check 'J0' rj_assert_population "$ROOT"
+md_flips roster_write_check 'J1' rj_assert_named "$ROOT"
+md_flips roster_write_check 'J2' rj_assert_join "$ROOT"
+
 # Group Z — the guard mutates none of the surfaces it reads. The watch set is those
 # surfaces plus the workflow that runs this guard — see tree_state for its derivation. It
 # is NOT the whole tree, and the Z1 line states that scope rather than claiming a
@@ -6153,7 +6950,7 @@ echo
 echo "── Group Z — non-mutation over the watched surfaces."
 STATE_AFTER="$(tree_state)"
 if [ "$STATE_BEFORE" = "$STATE_AFTER" ]; then
-  PASS "Z1: the ${WATCHED} watched surfaces are byte-identical before and after this run — the charter, ADR-007, the publish script, this guard, this slice's workflow, the command reference, the guided-entry carrier at the engine root and each verb file — so every fixture was built under the temporary directory. SCOPE: the watch set is the surfaces this guard reads plus its own workflow, derived from the paths above; it is not the whole tree, and a write outside it is not observed here"
+  PASS "Z1: the ${WATCHED} watched surfaces are byte-identical before and after this run — the charter, ADR-007, the publish script, this guard, this slice's workflow, the command reference, the guided-entry carrier at the engine root, each verb file, the architecture document and each agent prompt — so every fixture was built under the temporary directory. SCOPE: the watch set is the surfaces this guard reads plus its own workflow, derived from the paths above; it is not the whole tree, and a write outside it is not observed here"
 else
   FAIL "Z1: the working tree changed during this run; a guard that mutates what it grades is not a guard"
 fi
