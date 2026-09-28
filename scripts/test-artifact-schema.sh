@@ -81,7 +81,11 @@
 #        to one row of the writer table its address names — by name, marker, parent, then the
 #        default row — through group FT's ft_regions; its fields join only in interviewable
 #        regions, and back; a region no writer owns is a declared exclusion, reported per
-#        region; and the verdict each row of that table realizes is pinned, keyed by its Block.
+#        region; the verdict each row of that table realizes is pinned, keyed by its Block; and the
+#        region contract is PROJECTED for the interviewer, which cannot run this suite — the derived
+#        region of reference/region-reference.md is recomputed from ft_regions on every run and
+#        compared with what is committed there, with no skip path (ST-CF-PROJ0 its bounds,
+#        ST-CF-PROJ its totality).
 #        NEITHER of the first two compares the count against a shipping-path producer, because
 #        the starred count has none; that boundary is stated in the group rather than left to
 #        be inferred. Every surface is found by MARKUP SHAPE and never by line number, and each
@@ -119,7 +123,8 @@
 #        presence and the second on each declaration's own text, so a new intake form costs
 #        ONE LINE in the conformance population, and one in ST_TEMPLATES where it has a
 #        starred pass. A further BLOCK-OWNED form costs its fence, its own writer table, its
-#        classification rows, that line and a pin of the verdicts its rows realize, and no
+#        classification rows, that line, a pin of the verdicts its rows realize and a paste of
+#        the projection block this suite prints for it, and no
 #        other code here — on two preconditions: ST_CF_OWN names ONE file, so that table
 #        must live in CLAUDE.md; and no other form's write-ownership anchor may lead that
 #        table's heading, token-bounded, nor may its anchor lead another's.
@@ -3407,6 +3412,14 @@ ST_CF_DECL="$ROOT/reference/adr/ADR-023-interviewer-authored-home-and-form-contr
 # THE CHARTER a version-2 form's `write-ownership:` key must address: ONE file, so a later
 # block-owned form's writer table lives in it too. The fence names it repository-relative.
 ST_CF_OWN="$ROOT/CLAUDE.md"
+# THE PROJECTION of the region contract — ONE document's derived region, where the rows ft_regions
+# computes for every version-2 member are committed for the interviewer. The interviewer cannot call
+# ft_regions — its grant disallows Bash(bash:*) and Bash(sh:*) — so it reads what this suite derives, and
+# this suite compares that region with a fresh derivation on every run (ST-CF-PROJ0, ST-CF-PROJ). Each
+# marker is a whole line, and nothing between them is maintained by hand.
+ST_CF_PROJ_DOC="$ROOT/reference/region-reference.md"
+ST_CF_PROJ_OPEN='<!-- region-contract: derived — regenerate by running scripts/test-artifact-schema.sh -->'
+ST_CF_PROJ_CLOSE='<!-- /region-contract -->'
 # THE VERSION-2 KEY SET, as a DELTA and never as a list: ADR-023's worked fence read live, with its
 # one `boundary` key exchanged IN PLACE for the address key. A block-owned form has no single-cut
 # boundary (ADR-024 § 1), and its fence gains an address pointing at the writer table (ADR-024 2D).
@@ -6254,6 +6267,124 @@ st_cf_pin_assert() {
   fi
 }
 
+# ── THE PROJECTION — ft_regions' records rendered for the interviewer, and the two verdicts on them ──
+# ST_CF_PROJ_FN — the two cell helpers every rendered cell goes through: esc() escapes a pipe, and span()
+# wraps a value in a code span whose delimiter is one backtick longer than the longest run inside it.
+ST_CF_PROJ_FN='
+function esc(s,   n, a, i, o) { n = split(s, a, "|"); o = a[1]; for (i = 2; i <= n; i++) o = o "\\|" a[i]; return o }
+function span(s,   i, c, run, best, d, pad) {
+  best = 0; run = 0
+  for (i = 1; i <= length(s); i++) { c = substr(s, i, 1); if (c == "`") { run++; if (run > best) best = run } else run = 0 }
+  d = substr("``````````", 1, best + 1); pad = (substr(s, 1, 1) == "`" || substr(s, length(s), 1) == "`") ? " " : ""
+  return d pad esc(s) pad d
+}'
+
+# st_cf_proj_block <root> <forms> [charter] — the DERIVED BLOCK: exactly the lines committed between the
+# two markers. A forms table — each version-2 member of <forms>, in list order, with the writer table its
+# address names and the command its default row names — then a blank line and a regions table, one row
+# per REGION record in record order. A CONDITIONAL region's last cell is the condition of every clause of
+# its row that names the interviewer alone, read from the ROW record's per-clause fields; every other
+# region's is a dash. Members are DISCOVERED by version and never named, and every record comes from
+# ft_regions itself, so removing that reader leaves no region row to render.
+st_cf_proj_block() {
+  local root="$1" forms="$2" chart="${3:-$ST_CF_OWN}" m
+  printf '| Form | Writer table | This command |\n|---|---|---|\n'
+  while IFS= read -r m; do
+    [ -n "$m" ] || continue
+    [ "$(st_cf_version "$root/$m" 2>/dev/null)" = 2 ] || continue
+    ft_regions "$root/$m" "$chart" 2>/dev/null | awk -F'\t' -v form="$m" "$ST_CF_PROJ_FN"'
+      $1 == "ADDRESS" { ap = $3; aa = $4 }
+      $1 == "DEFAULT" { dr = $2 + 0; dc = $3 }
+      END { printf "| %s | %s | %s |\n", span(form), (ap == "" || ap == "-") ? "—" : span(ap) " § " esc(aa), (dr > 0) ? span(dc) : "—" }'
+  done <<<"$forms"
+  printf '\n| Form | Line | Through | Region | Resolved | Row | Block | Verdict | Holds for this command |\n|---|---|---|---|---|---|---|---|---|\n'
+  while IFS= read -r m; do
+    [ -n "$m" ] || continue
+    [ "$(st_cf_version "$root/$m" 2>/dev/null)" = 2 ] || continue
+    ft_regions "$root/$m" "$chart" 2>/dev/null | awk -F'\t' -v form="$m" "$ST_CF_PROJ_FN"'
+      $1 == "DEFAULT" { if ($2 + 0 > 0) ic = $3 }
+      $1 == "ROW" { B[$2] = $10; CM[$2] = $7; CD[$2] = $8 }
+      $1 == "REGION" { n++; RL[n] = $2; RE[n] = $3; RV[n] = $4; RR[n] = $5; RH[n] = $6; RD[n] = $7; RG[n] = $8; RT[n] = $9 }
+      END {
+        for (i = 1; i <= n; i++) {
+          r = RR[i]; hold = "—"
+          if (RD[i] == "CONDITIONAL" && (r in CM)) {
+            nc = split(CM[r], cc, ";"); nd = split(CD[r], dd, "; "); hold = ""
+            for (j = 1; j <= nc; j++) if (ic != "" && cc[j] == ic) hold = hold (hold == "" ? "" : " · ") ((j > nd || dd[j] == "-" || dd[j] == "") ? "(none stated)" : esc(dd[j]))
+            if (hold == "") hold = "—"
+          }
+          printf "| %s | %d | %d | %s | %s | %s | %s | %s (%s) | %s |\n", span(form), RL[i], RE[i], span(substr("######", 1, RV[i]) " " RT[i]), RH[i], (r + 0 > 0) ? r : "—", (r in B) ? esc(B[r]) : "—", RD[i], RG[i], hold
+        }
+      }'
+  done <<<"$forms"
+}
+
+# st_cf_proj_bounds <doc> — "OK<TAB><opening line><TAB><closing line>", or "FAIL<TAB><why>". Each marker is
+# matched as a WHOLE line, a trailing CR aside, the way H4 matches the command reference's.
+st_cf_proj_bounds() {
+  if [ ! -f "$1" ] || [ ! -r "$1" ]; then printf 'FAIL\tthe document is absent or unreadable\n'; return 0; fi
+  awk -v o="$ST_CF_PROJ_OPEN" -v c="$ST_CF_PROJ_CLOSE" '
+    { t = $0; sub(/\r$/, "", t) }
+    t == o { no++; if (!fo) fo = NR }
+    t == c { nc++; if (!fc) fc = NR }
+    END {
+      if (no + 0 != 1 || nc + 0 != 1) printf "FAIL\tit carries %d opening and %d closing region-contract marker(s) as whole lines, where exactly one of each is owed\n", no, nc
+      else if (fc < fo) printf "FAIL\tit closes its derived region at line %d before it opens it at line %d\n", fc, fo
+      else printf "OK\t%d\t%d\n", fo, fc
+    }' "$1"
+}
+# st_cf_proj_committed <doc> <open> <close> — the committed lines strictly between the two markers.
+st_cf_proj_committed() { awk -v a="$2" -v b="$3" 'NR > a + 0 && NR < b + 0' "$1"; }
+# st_cf_proj_rows <block> — the region rows a block carries: a table row whose second cell is a line number.
+st_cf_proj_rows() { awk '{ s = $0; gsub(/\\\|/, "\035", s); k = split(s, f, "|"); if (k >= 11 && f[3] ~ /^[ \t]*[0-9]+[ \t]*$/) n++ } END { print n + 0 }' <<<"$1"; }
+# st_cf_proj_doc <path> <block> — a synthetic document: prose, the opening marker, <block>, the closing
+# marker, prose. The controls grade the comparator on these, whatever state the committed document is in.
+st_cf_proj_doc() {
+  mkdir -p "$(dirname "$1")"
+  { printf 'A sentence of prose above the region.\n\n%s\n' "$ST_CF_PROJ_OPEN"; printf '%s\n' "$2"; printf '%s\n\nA sentence of prose below it.\n' "$ST_CF_PROJ_CLOSE"; } > "$1"
+}
+
+# st_cf_proj_bounds_assert <doc> — exactly ONE verdict, ST-CF-PROJ0: the bounds of the region the
+# interviewer reads, the H4 of this projection. An absent document is a FAIL, never a skip.
+st_cf_proj_bounds_assert() {
+  local rep
+  rep="$(st_cf_proj_bounds "$1")"
+  if [ "$(cut -f1 <<<"$rep")" = OK ]; then
+    PASS "ST-CF-PROJ0: ${1#"$ROOT/"} is readable and carries exactly one opening and one closing region-contract marker, each a whole line, in that order (lines $(cut -f2 <<<"$rep") and $(cut -f3 <<<"$rep")) — the derived region the interviewer reads has unambiguous bounds"
+  else
+    FAIL "ST-CF-PROJ0: ${1#"$ROOT/"}: $(cut -f2 <<<"$rep"). The derived region the interviewer reads has no unambiguous bounds, so nothing can be compared with it — a FAIL, never a skip"
+  fi
+}
+
+# st_cf_proj_assert <doc> <forms> [charter] [root] — exactly ONE verdict, ST-CF-PROJ: TOTALITY, the H5 of
+# this projection. Its limbs, in order: a derivation with no region row FAILs first — removing ft_regions
+# or st_cf_version reaches this limb, which is what group MD registers; bounds that cannot be read FAIL,
+# naming ST-CF-PROJ0; a committed block that differs from the derived one FAILs, and the derived block is
+# printed unindented between two banners, so the remedy is a paste; otherwise PASS.
+st_cf_proj_assert() {
+  local doc="$1" forms="$2" chart="${3:-$ST_CF_OWN}" root="${4:-$ROOT}" want got rep nreg
+  want="$(st_cf_proj_block "$root" "$forms" "$chart")"
+  nreg="$(st_cf_proj_rows "$want")"
+  if [ "${nreg:-0}" -lt 1 ]; then
+    FAIL "ST-CF-PROJ: the projection derived from ft_regions over the version-2 members of the conformance population carries no region row, so the region the interviewer reads would be compared with nothing — the projection projects nothing"
+    return 0
+  fi
+  rep="$(st_cf_proj_bounds "$doc")"
+  if [ "$(cut -f1 <<<"$rep")" != OK ]; then
+    FAIL "ST-CF-PROJ: the committed region cannot be located — $(cut -f2 <<<"$rep") — so the ${nreg} derived region row(s) were compared with nothing. Resolve ST-CF-PROJ0 first"
+    return 0
+  fi
+  got="$(st_cf_proj_committed "$doc" "$(cut -f2 <<<"$rep")" "$(cut -f3 <<<"$rep")")"
+  if [ "$got" = "$want" ]; then
+    PASS "ST-CF-PROJ: TOTALITY — the region ${doc#"$ROOT/"} commits equals the derivation of ${nreg} region row(s) from ft_regions over every version-2 member of the conformance population and the writer table each addresses, recomputed on this commit. The interviewer reads the region contract as this suite computes it, never a second resolution of the table"
+  else
+    FAIL "ST-CF-PROJ: the region ${doc#"$ROOT/"} commits between its markers is not the one this run derives from ft_regions over the forms and the writer table as they stand, so the interviewer would read a stale region contract. Replace every line between the two markers with the block printed below — nothing else in that document changes"
+    printf '       ----- the derived region-contract block: paste every line between these two banners -----\n'
+    printf '%s\n' "$want"
+    printf '       ----- end of the derived region-contract block -----\n'
+  fi
+}
+
 # st_cf_mustfire <arm> <member> <fixture> <code> <what> [data-model] [charter] — ONE thing mutated on a
 # copy of the member, of the data model or of the charter, and the SAME evaluator must then report MORE
 # <code> findings than
@@ -6878,6 +7009,19 @@ else
   FAIL "CTL-ST-CF-CONDITION-CELL[$ST_CF_TAG]: MUST NOT FIRE — with the agent contract span moved between Condition cells on a COPY of the charter (source row ${ST_CF_AR:-none} $ST_CF_CA, target row ${ST_CF_NR:-none} $ST_CF_CN), the classes read [${ST_CF_CL1% }] against [${ST_CF_CL0% }] and the findings [${ST_CF_CT1% }] against [${ST_CF_CT0% }], where both are owed unchanged. A class read from the Condition column moves a verdict with the explanation of a row rather than its declaration"
 fi
 
+# ── CTL-ST-CF-PROJ-CONDITION-CELL — MUST NOT FIRE, the same specificity on the PROJECTION. Over the charter
+# copy the arm above built, this member's derived block is byte-identical to its block over the real
+# charter: the column that explains a row cannot move what the interviewer reads.
+ST_CF_PJC0="$(st_cf_proj_block "$ROOT" "$ST_CF_REL" "$ST_CF_OWN")"; ST_CF_PJC1="$(st_cf_proj_block "$ROOT" "$ST_CF_REL" "$ST_CF_CX")"
+ST_CF_PJCN="$(st_cf_proj_rows "$ST_CF_PJC0")"
+if [ -z "$ST_CF_AR" ] || [ -z "$ST_CF_NR" ] || [ -z "$ST_CF_AS" ]; then
+  VACUOUS "CTL-ST-CF-PROJ-CONDITION-CELL[$ST_CF_TAG]: there is no Condition-cell citation to move (CTL-ST-CF-CONDITION-CELL names why), so the projection's specificity has no input here"
+elif ! cmp -s "$ST_CF_OWN" "$ST_CF_CX" && [ "${ST_CF_PJCN:-0}" -gt 0 ] && [ "$ST_CF_PJC1" = "$ST_CF_PJC0" ]; then
+  PASS "CTL-ST-CF-PROJ-CONDITION-CELL[$ST_CF_TAG]: MUST NOT FIRE — over the charter copy whose agent contract span moved from row $ST_CF_AR's Condition cell to row $ST_CF_NR's, this member's derived region-contract block is byte-identical to its block over the real charter, over $ST_CF_PJCN region row(s). What the interviewer reads moves only with a row's Writer or Block cell"
+else
+  FAIL "CTL-ST-CF-PROJ-CONDITION-CELL[$ST_CF_TAG]: MUST NOT FIRE — with the agent contract span moved between Condition cells on a copy of the charter, this member's derived block $( [ "$ST_CF_PJC1" = "$ST_CF_PJC0" ] && echo 'stayed identical' || echo CHANGED ) over ${ST_CF_PJCN:-0} region row(s), where an identical, non-empty block is owed"
+fi
+
 # ── CTL-ST-CF-PIN-FLIP — MUST FIRE on the pin. On a COPY of the charter, the first interviewable row
 # that names a region gains a clause naming another writer at creation: its regions go from YES to
 # CONDITIONAL and no declared field is stranded, so no question the evaluator asks moves — and the pin
@@ -7159,6 +7303,99 @@ else
                "$ST_CF_SITE_KEYS" "$ST_CF_ARMED_SITES" "$ST_CF_SITE_PROBE" "$ST_CF_SITE_PHANTOM" \
                "$ST_CF_SITE_PROBE_KEY" 'emission site'
   fi
+fi
+
+# ── RUN LEVEL, after every member: the region contract PROJECTED for the interviewer — its bounds, its
+# totality over every version-2 member, and the standing controls on both. Each control grades the
+# comparator on a SYNTHETIC document built from this run's own derivation, so a committed region that is
+# already stale leaves every arm here honest rather than turning each of them red a second time.
+echo
+echo "  ── the region contract, projected into ${ST_CF_PROJ_DOC#"$ROOT/"} for the interviewer"
+st_cf_proj_bounds_assert "$ST_CF_PROJ_DOC"
+st_cf_proj_assert "$ST_CF_PROJ_DOC" "$ST_CF_FORMS"
+ST_CF_PJ="$WORK/st-cf-proj"; mkdir -p "$ST_CF_PJ"
+# st_cf_proj_count <assertion> [args…] — "<pass> <fail>" that assertion renders, counted in a subshell so
+# nothing it emits reaches this run's counters or its output (the shape CTL-ST-CF-PIN-FLIP uses).
+st_cf_proj_count() { ( pass=0; fail=0; PASS() { pass=$((pass + 1)); }; FAIL() { fail=$((fail + 1)); }; "$@" > /dev/null 2>&1; printf '%d %d' "$pass" "$fail" ); }
+ST_CF_PJ_W="$(st_cf_proj_block "$ROOT" "$ST_CF_FORMS")"; ST_CF_PJ_N="$(st_cf_proj_rows "$ST_CF_PJ_W")"
+st_cf_proj_doc "$ST_CF_PJ/clean.md" "$ST_CF_PJ_W"
+ST_CF_PJ_C0="$(st_cf_proj_count st_cf_proj_bounds_assert "$ST_CF_PJ/clean.md")"
+ST_CF_PJ_C1="$(st_cf_proj_count st_cf_proj_assert "$ST_CF_PJ/clean.md" "$ST_CF_FORMS")"
+if [ "${ST_CF_PJ_N:-0}" -gt 0 ] && [ "$ST_CF_PJ_C0" = "1 0" ] && [ "$ST_CF_PJ_C1" = "1 0" ]; then
+  PASS "CTL-ST-CF-PROJ-CLEAN: MUST NOT FIRE — a document holding exactly this run's derivation of $ST_CF_PJ_N region row(s) between the two markers passes both ST-CF-PROJ0 and ST-CF-PROJ: the baseline every arm below is a delta against"
+else
+  FAIL "CTL-ST-CF-PROJ-CLEAN: MUST NOT FIRE — a document holding this run's own derivation (${ST_CF_PJ_N:-0} region row(s)) read [$ST_CF_PJ_C0] from ST-CF-PROJ0 and [$ST_CF_PJ_C1] from ST-CF-PROJ, where [1 0] from each is owed. Every arm below is measured against this baseline, so none of them is a measurement until it holds"
+fi
+# CTL-ST-CF-PROJ-ABSENT — MUST FIRE: a document that does not exist fails both assertions, and neither skips.
+ST_CF_PJ_NONE="$ST_CF_PJ/absent/region-reference.md"
+ST_CF_PJ_A0="$(st_cf_proj_count st_cf_proj_bounds_assert "$ST_CF_PJ_NONE")"; ST_CF_PJ_A1="$(st_cf_proj_count st_cf_proj_assert "$ST_CF_PJ_NONE" "$ST_CF_FORMS")"
+if [ ! -e "$ST_CF_PJ_NONE" ] && [ "$ST_CF_PJ_A0" = "0 1" ] && [ "$ST_CF_PJ_A1" = "0 1" ]; then
+  PASS "CTL-ST-CF-PROJ-ABSENT: MUST FIRE — pointed at a document that does not exist, ST-CF-PROJ0 and ST-CF-PROJ each render exactly one FAIL and no PASS. There is no skip path: an absent projection is a red, never a quiet pass over an unshipped surface"
+else
+  FAIL "CTL-ST-CF-PROJ-ABSENT: MUST FIRE — over a document that does not exist the two assertions read [$ST_CF_PJ_A0] and [$ST_CF_PJ_A1], where [0 1] from each is owed. An absent projection that does not fail both is a skip path"
+fi
+# CTL-ST-CF-PROJ-MARKERS — MUST FIRE: the opening marker doubled.
+st_cf_proj_doc "$ST_CF_PJ/markers.md" "$ST_CF_PJ_W"
+ST_CF_PJ_OL="$(awk -v o="$ST_CF_PROJ_OPEN" '$0 == o { print NR; exit }' "$ST_CF_PJ/markers.md")"
+[ -n "$ST_CF_PJ_OL" ] && st_cf_dup_range "$ST_CF_PJ/markers.md" "$ST_CF_PJ_OL" "$ST_CF_PJ_OL"
+ST_CF_PJ_M="$(st_cf_proj_count st_cf_proj_bounds_assert "$ST_CF_PJ/markers.md")"
+if [ -n "$ST_CF_PJ_OL" ] && ! cmp -s "$ST_CF_PJ/clean.md" "$ST_CF_PJ/markers.md" && [ "$ST_CF_PJ_M" = "0 1" ]; then
+  PASS "CTL-ST-CF-PROJ-MARKERS: MUST FIRE — with the opening marker doubled (line $ST_CF_PJ_OL), ST-CF-PROJ0 renders one FAIL and no PASS, against [$ST_CF_PJ_C0] on the clean document"
+else
+  FAIL "CTL-ST-CF-PROJ-MARKERS: MUST FIRE — with the opening marker doubled (line ${ST_CF_PJ_OL:-none}) ST-CF-PROJ0 read [$ST_CF_PJ_M], where [0 1] is owed; a doubled marker leaves the region's bounds ambiguous"
+fi
+# CTL-ST-CF-PROJ-DRIFT — MUST FIRE: one verdict inside the region edited by hand.
+ST_CF_PJ_D="$(awk '!d && index($0, "| YES (interviewer) |") { p = index($0, "| YES (interviewer) |"); $0 = substr($0, 1, p - 1) "| NO (marked) |" substr($0, p + length("| YES (interviewer) |")); d = 1 } { print }' <<<"$ST_CF_PJ_W")"
+st_cf_proj_doc "$ST_CF_PJ/drift.md" "$ST_CF_PJ_D"
+ST_CF_PJ_DV="$(st_cf_proj_count st_cf_proj_assert "$ST_CF_PJ/drift.md" "$ST_CF_FORMS")"
+if [ "$ST_CF_PJ_D" != "$ST_CF_PJ_W" ] && [ "$ST_CF_PJ_DV" = "0 1" ]; then
+  PASS "CTL-ST-CF-PROJ-DRIFT: MUST FIRE — the first YES (interviewer) verdict inside the region, set to NO (marked) by hand, turns ST-CF-PROJ to one FAIL and no PASS, against [$ST_CF_PJ_C1] on the clean document: a hand edit to the region is a red"
+else
+  FAIL "CTL-ST-CF-PROJ-DRIFT: MUST FIRE — with one verdict inside the region edited by hand (landed: $( [ "$ST_CF_PJ_D" != "$ST_CF_PJ_W" ] && echo yes || echo no )) ST-CF-PROJ read [$ST_CF_PJ_DV], where [0 1] is owed"
+fi
+# CTL-ST-CF-PROJ-FLIP — MUST FIRE, then clear: on a COPY of the charter the first addressed YES row's
+# Writer cell names no writer. The block derived over that copy changes and that row's regions read
+# EXCLUDED (no-writer) in it; the region derived over the real charter FAILs against the copy, so a
+# writer-table edit is a red until the block is regenerated; and the regenerated region passes.
+ST_CF_PJ_RG="$(ft_regions "$ROOT/$ST_CF_MD_V2" "$ST_CF_OWN" 2>/dev/null)"
+ST_CF_PJ_FR="$(awk -F'\t' '$1 == "ROW" && $4 == "YES" && $5 == "addressed" { print $2; exit }' <<<"$ST_CF_PJ_RG")"
+ST_CF_PJ_FL="$(awk -F'\t' -v r="$ST_CF_PJ_FR" '$1 == "ROW" && $2 == r { print $6; exit }' <<<"$ST_CF_PJ_RG")"
+ST_CF_PJ_TH="$(awk -F'\t' '$1 == "TABLE" { print $3; exit }' <<<"$ST_CF_PJ_RG")"
+ST_CF_PJ_CX="$ST_CF_PJ/flip-charter.md"; cp "$ST_CF_OWN" "$ST_CF_PJ_CX"
+[ -n "$ST_CF_PJ_FL" ] && st_cf_cell "$ST_CF_PJ_CX" "$ST_CF_PJ_FL" "$(st_cf_col "$ST_CF_OWN" "$ST_CF_PJ_TH" Writer)" set '**no writer exists**'
+ST_CF_PJ_FW="$(st_cf_proj_block "$ROOT" "$ST_CF_FORMS" "$ST_CF_PJ_CX")"
+ST_CF_PJ_FX="$(awk -v r="$ST_CF_PJ_FR" '{ s = $0; gsub(/\\\|/, "\035", s); k = split(s, f, "|"); if (k >= 11 && f[3] ~ /^[ \t]*[0-9]+[ \t]*$/) { c = f[7]; gsub(/[ \t]/, "", c); if (c == r) { n++; if (f[9] ~ /EXCLUDED \(no-writer\)/) x++ } } } END { print n + 0, x + 0 }' <<<"$ST_CF_PJ_FW")"
+ST_CF_PJ_F0="$(st_cf_proj_count st_cf_proj_assert "$ST_CF_PJ/clean.md" "$ST_CF_FORMS" "$ST_CF_PJ_CX")"
+st_cf_proj_doc "$ST_CF_PJ/flip-regen.md" "$ST_CF_PJ_FW"
+ST_CF_PJ_F1="$(st_cf_proj_count st_cf_proj_assert "$ST_CF_PJ/flip-regen.md" "$ST_CF_FORMS" "$ST_CF_PJ_CX")"
+if [ -n "$ST_CF_PJ_FR" ] && ! cmp -s "$ST_CF_OWN" "$ST_CF_PJ_CX" && [ "$ST_CF_PJ_FW" != "$ST_CF_PJ_W" ] && [ "${ST_CF_PJ_FX%% *}" -gt 0 ] && [ "${ST_CF_PJ_FX%% *}" = "${ST_CF_PJ_FX##* }" ] && [ "$ST_CF_PJ_F0" = "0 1" ] && [ "$ST_CF_PJ_F1" = "1 0" ]; then
+  PASS "CTL-ST-CF-PROJ-FLIP: MUST FIRE — on a COPY of the charter, row $ST_CF_PJ_FR's Writer cell names no writer: its ${ST_CF_PJ_FX%% *} region row(s) read EXCLUDED (no-writer) in the block derived over the copy, the region derived over the real charter FAILs against it, and the regenerated region passes. A writer-table edit turns this suite red until the projection is regenerated, and the paste is what clears it"
+else
+  FAIL "CTL-ST-CF-PROJ-FLIP: MUST FIRE — with row ${ST_CF_PJ_FR:-none}'s Writer cell set to name no writer on a copy of the charter, the derived block $( [ "$ST_CF_PJ_FW" != "$ST_CF_PJ_W" ] && echo changed || echo 'did NOT change' ), its [region rows, EXCLUDED] read [$ST_CF_PJ_FX], the stale region read [$ST_CF_PJ_F0] where [0 1] is owed, and the regenerated one [$ST_CF_PJ_F1] where [1 0] is owed"
+fi
+# CTL-ST-CF-PROJ-FORM — MUST FIRE, then clear: on a COPY of the first version-2 member, an untagged heading
+# is inserted inside its first level-2 region. The derived block gains that region's row and every row
+# below it moves; the region derived from the real form FAILs against the copy; the regenerated one passes.
+ST_CF_PJ_R2="$ST_CF_PJ/form-root"; mkdir -p "$ST_CF_PJ_R2/$(dirname "$ST_CF_MD_V2")"; cp "$ROOT/$ST_CF_MD_V2" "$ST_CF_PJ_R2/$ST_CF_MD_V2"
+ST_CF_PJ_H2="$(awk -F'\t' '$1 == "REGION" && $4 == 2 { print $2; exit }' <<<"$ST_CF_PJ_RG")"
+[ -n "$ST_CF_PJ_H2" ] && st_cf_ins_after "$ST_CF_PJ_R2/$ST_CF_MD_V2" "$ST_CF_PJ_H2" '\n### ZZ-ST-CF-PROJ-PROBE'
+ST_CF_PJ_G0W="$(st_cf_proj_block "$ROOT" "$ST_CF_MD_V2")"; ST_CF_PJ_GW="$(st_cf_proj_block "$ST_CF_PJ_R2" "$ST_CF_MD_V2")"
+st_cf_proj_doc "$ST_CF_PJ/form-stale.md" "$ST_CF_PJ_G0W"; st_cf_proj_doc "$ST_CF_PJ/form-regen.md" "$ST_CF_PJ_GW"
+ST_CF_PJ_G0="$(st_cf_proj_count st_cf_proj_assert "$ST_CF_PJ/form-stale.md" "$ST_CF_MD_V2" "$ST_CF_OWN" "$ST_CF_PJ_R2")"
+ST_CF_PJ_G1="$(st_cf_proj_count st_cf_proj_assert "$ST_CF_PJ/form-regen.md" "$ST_CF_MD_V2" "$ST_CF_OWN" "$ST_CF_PJ_R2")"
+ST_CF_PJ_GN0="$(st_cf_proj_rows "$ST_CF_PJ_G0W")"; ST_CF_PJ_GN1="$(st_cf_proj_rows "$ST_CF_PJ_GW")"
+if [ -n "$ST_CF_PJ_H2" ] && ! cmp -s "$ROOT/$ST_CF_MD_V2" "$ST_CF_PJ_R2/$ST_CF_MD_V2" && [ "$ST_CF_PJ_GN1" -eq $((ST_CF_PJ_GN0 + 1)) ] && [ "$ST_CF_PJ_G0" = "0 1" ] && [ "$ST_CF_PJ_G1" = "1 0" ]; then
+  PASS "CTL-ST-CF-PROJ-FORM: MUST FIRE — on a COPY of $ST_CF_MD_V2, an untagged heading inserted after line $ST_CF_PJ_H2 takes the derivation from $ST_CF_PJ_GN0 to $ST_CF_PJ_GN1 region row(s); the region derived from the real form FAILs against the copy and the regenerated one passes. A form edit is a red until the projection is regenerated, exactly as a table edit is"
+else
+  FAIL "CTL-ST-CF-PROJ-FORM: MUST FIRE — with an untagged heading inserted after line ${ST_CF_PJ_H2:-none} of a copy of ${ST_CF_MD_V2:-no version-2 member}, the derivation went $ST_CF_PJ_GN0 → $ST_CF_PJ_GN1 region row(s) where one more is owed, the stale region read [$ST_CF_PJ_G0] where [0 1] is owed, and the regenerated one [$ST_CF_PJ_G1] where [1 0] is owed"
+fi
+# CTL-ST-CF-PROJ-PROSE — MUST NOT FIRE: a sentence added outside the markers changes nothing graded.
+st_cf_proj_doc "$ST_CF_PJ/prose.md" "$ST_CF_PJ_W"; printf '\nA further sentence of prose, outside the region.\n' >> "$ST_CF_PJ/prose.md"
+ST_CF_PJ_P="$(st_cf_proj_count st_cf_proj_assert "$ST_CF_PJ/prose.md" "$ST_CF_FORMS")"
+if ! cmp -s "$ST_CF_PJ/clean.md" "$ST_CF_PJ/prose.md" && [ "$ST_CF_PJ_P" = "1 0" ]; then
+  PASS "CTL-ST-CF-PROJ-PROSE: MUST NOT FIRE — a sentence of prose added outside the two markers leaves ST-CF-PROJ passing [$ST_CF_PJ_P]: only the region is derived, and the prose around it is the document's own"
+else
+  FAIL "CTL-ST-CF-PROJ-PROSE: MUST NOT FIRE — a sentence of prose added outside the two markers read [$ST_CF_PJ_P] from ST-CF-PROJ, where [1 0] is owed; prose outside the region is not derived and must never be graded as if it were"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
@@ -14412,6 +14649,11 @@ md_flips st_cf_tracked_templates 'ST-CF-POP' st_cf_pop_assert "$ST_CF_FORMS" "$S
 md_flips st_cf_version    'ST-CF-version'  st_cf_assert "$ST_CF_MD_V2" "$ST_DM"
 md_flips ft_regions       'ST-CF-regions'  st_cf_assert "$ST_CF_MD_V2" "$ST_DM"
 md_flips ft_regions       'ST-CF-PIN'      st_cf_pin_assert "$ST_CF_MD_V2"
+# The projection the interviewer reads, REGISTERED on the reader it renders and on the version reader that
+# selects its members. Removing either leaves no region row, so ST-CF-PROJ must reach its non-degeneracy
+# limb rather than compare an empty derivation with the committed region.
+md_flips ft_regions       'ST-CF-PROJ'         st_cf_proj_assert "$ST_CF_PROJ_DOC" "$ST_CF_FORMS"
+md_flips st_cf_version    'ST-CF-PROJ-version' st_cf_proj_assert "$ST_CF_PROJ_DOC" "$ST_CF_FORMS"
 # ── Group PC's assertion, REGISTERED on both functions its verdict rests on — the reader and the
 # comparison. pc_assert takes its inputs as arguments and calls its own reader, so removing either
 # reaches its non-zero-exit limb rather than a verdict computed for it.

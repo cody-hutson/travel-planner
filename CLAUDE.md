@@ -633,6 +633,7 @@ travel-planner/
 │   ├── command-reference.md       ← the whole command surface in one table (verb, arguments, required trip state)
 │   ├── data-architecture.md       ← engine-wide data architecture (artifact model, identity, serialization, publishability, lifecycle classes, schema version)
 │   ├── data-model.md              ← satisfaction-layer data architecture (storage homes, reconciliation, write ownership)
+│   ├── region-reference.md        ← every block-owned form's regions in one table, each with its writer-table row and verdict (derived — what /trip-record interview reads)
 │   ├── replan-protocol.md         ← the behaviour a replan takes when the trip is near
 │   ├── schemas/                   ← per-artifact-class schemas + the CI gate's coverage declaration
 │   └── site-layout-spec.md        ← travel-site responsive/layout specification

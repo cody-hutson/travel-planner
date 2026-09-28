@@ -91,7 +91,10 @@ name: Artifact schema
 #        row of the writer table its address names — by name, marker, parent, then the
 #        default row — its fields join only in interviewable regions, a region no writer owns
 #        is a declared exclusion reported per region, and the verdict each row of that table
-#        realizes is pinned, keyed by its Block text. Neither of the first two
+#        realizes is pinned, keyed by its Block text; and that region contract is projected
+#        for the interviewer into the derived region of reference/region-reference.md,
+#        recomputed on every run and compared with what is committed, with no skip path.
+#        Neither of the first two
 #        compares the count against a shipping-path producer, because the starred count has
 #        none. Surfaces
 #        are discovered by MARKUP SHAPE and never by line number, because the report that

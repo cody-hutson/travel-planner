@@ -235,7 +235,7 @@ Targeted research runs one agent. Keeping a trip current costs a small fraction 
 | `skills/` | The commands, one folder each |
 | `agents/` | One prompt per agent |
 | `templates/` | The blank trip context and the two traveler intake forms |
-| `reference/` | Architecture, schemas, the site design spec, the command reference, and decision records (`adr/`) |
+| `reference/` | Architecture, schemas, the site design spec, the command reference, the region reference the interviewer reads, and decision records (`adr/`) |
 | `scripts/` | The publish script, the checks `/trip site` and `/trip schema` run, and the CI test suites |
 | `examples/` | Worked examples. `tokyo-2026/` is a real trip, kept exactly as an earlier version of the engine planned it. `evening-boundary-demo/` shows how evenings are routed now |
 | `trips/`, `people/`, `groups/` | Empty skeletons that install step 3 copies into your data folder |
