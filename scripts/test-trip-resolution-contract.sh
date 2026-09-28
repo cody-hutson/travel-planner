@@ -509,13 +509,15 @@ conformance_check() {
     #
     # The comparison is an EQUALITY, graded in BOTH directions, because the contract
     # states an exact prefix and not a minimum. Carrying MORE of the list than the
-    # declared depth requires is its own defect with its own code: every block a file
-    # carries is a grant it must hold, so a G1-G2 consumer that quietly acquires E2
-    # needs `Bash(grep:*)` for a function it does not have (ADR-007 §2, bound 2) and a
-    # minimum-only check stays green while that happens. Equality also makes byte-
-    # identity TOTAL: with no remainder past `need`, EVERY block the file carries is
-    # compared against the canonical, where a minimum check left the surplus — which
-    # may be an arbitrary divergent copy — never examined at all.
+    # declared depth requires is its own defect with its own code: a file's grants for
+    # its entries are its declared minimum privilege, naming the tool each entry runs
+    # and nothing wider, so a G1-G2 consumer that quietly acquires E2 either runs a
+    # `grep` its grants do not name or declares `Bash(grep:*)` for a function it does
+    # not have (ADR-007 §2, bound 2), and a minimum-only check stays green while that
+    # happens. Equality also makes byte-identity TOTAL: with no remainder past `need`,
+    # EVERY block the file carries is compared against the canonical, where a minimum
+    # check left the surplus — which may be an arbitrary divergent copy — never
+    # examined at all.
     #
     # When the depth is absent, H2 has already fired and the requirement is underivable,
     # so neither direction is graded: reporting a prefix defect against a depth the file
@@ -1495,7 +1497,8 @@ else
   # requires MUST fire P3. This is the converse of CTL-d, and until the prefix rule was
   # an equality it had nothing to fire: the checker asserted `m >= need` and never
   # `m == need`, so a G2/CREATE consumer that quietly acquired E2 passed green while
-  # needing a `Bash(grep:*)` grant its function does not justify (ADR-007 §2, bound 2).
+  # carrying a `grep` read beyond its declared minimum privilege — one its function
+  # does not justify (ADR-007 §2, bound 2).
   # The same one-sided reasoning left a G0 consumer free to carry arbitrary DIVERGENT
   # copies of the canonical blocks with byte-identity never run on them — one defect,
   # two symptoms, and this arm is what holds the closure of both.
