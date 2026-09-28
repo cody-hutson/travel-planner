@@ -6136,6 +6136,11 @@ fi
 # list form. The prompts carry the Output headings the reader must read — a bare Pre-Work file
 # name, and a path followed by a parenthetical — beside the ones it must not: a heading with
 # no colon, a fenced heading and an indented one. Each is a shape a naive reader gets wrong.
+# Five more switches build on the conforming world. Four each append one file that a single
+# branch of the reader alone declares: a File heading, a bare Pre-Work heading, and a writer
+# list naming the prompt's own id first, with and without a space after its comma. The fifth
+# adds a third agent, its class (the heading's count moving to 8 with it) and its prompt, and
+# that agent's row names no outputs/ path. Their arms follow GJ9.
 gj_world() {
   local d="$1" dft="$2" hdr rowa rowb cnt=7 bid='zz-beta' qlist='[zz-alpha, zz-gamma]' pend
   mkdir -p "$d/agents" "$d/reference"
@@ -6154,6 +6159,7 @@ gj_world() {
     countdrift) cnt=8 ;;
     noclasses)  cnt=0 ;;
     joinmiss)   bid='zz-gamma'; qlist='[zz-alpha, zz-delta]' ;;
+    zerospan)   cnt=8 ;;
   esac
   {
     printf '# Fixture charter\n\nA fenced example of the roster, never a second anchor:\n\n'
@@ -6161,6 +6167,7 @@ gj_world() {
     printf '| Zz Example | `agents/zz-example.md` | `outputs/zz-example.md` | never |\n```\n\n'
     printf '**Agent roster:**\n\n%s\n|-------|------------|-------------|-----------------|\n' "$hdr"
     [ "$dft" = 'norows' ] || printf '%s\n%s\n' "$rowa" "$rowb"
+    [ "$dft" = 'zerospan' ] && printf '| Zz Zero | `agents/zz-zero.md` | `trip-context.md` (the block it seeds) | always |\n'
     printf '\nAfter the table.\n'
     [ "$dft" = 'anchor2' ] && printf '\n| Agent | Prompt File | Output File | When to dispatch |\n|---|---|---|---|\n| Zz Gamma | `agents/zz-alpha.md` | `outputs/zz-a.md` | never |\n'
   } > "$d/CLAUDE.md"
@@ -6181,6 +6188,7 @@ gj_world() {
       printf '| 5 | `outputs/<slug>.md` — targeted-research output | the spoke that re-ran | `accumulate-append` | `researched` | `internal` | Venue |\n'
       printf '| 6 | `outputs/zz-legacy.md` | zz-alpha-legacy | `output` | `derived` | `output` | Venue |\n'
       printf '| 7 | `outputs/zz-pending.md` | zz-alpha | `rebuilt-each-synthesis` | `derived` | `internal` | Venue |\n'
+      [ "$dft" = 'zerospan' ] && printf '| 8 | `outputs/zz-z.md` | zz-zero | `rebuilt-each-synthesis` | `derived` | `internal` | Venue |\n'
     fi
     printf '\n### 1.2 The next section\n\n| 8 | `outputs/zz-outside.md` | zz-alpha | x | x | x | x |\n'
   } > "$d/reference/data-architecture.md"
@@ -6194,6 +6202,10 @@ gj_world() {
     [ "$dft" = 'quotebare' ] && printf '\nThe same contract quoted with a bare writer:\n\n```yaml\n---\nartifact: outputs/zz-b.md\nwriter: zz-beta\n---\n```\n'
     [ "$dft" = 'quotenowriter' ] && printf '\nThe same contract quoted with no writer:\n\n```yaml\n---\nartifact: outputs/zz-b.md\n---\n```\n'
     [ "$dft" = 'headmiss' ] && printf '\n### Output: outputs/zz-a3.md (its sections)\n\nA file this role declares by its heading alone.\n'
+    [ "$dft" = 'headfile' ] && printf '\n### File: outputs/zz-f.md\n\nA file this role declares by its File heading alone.\n'
+    [ "$dft" = 'headpre' ] && printf '\n### Pre-Work Output 2: zz-p.md\n\nA file this role declares by its Pre-Work heading alone, named bare.\n'
+    [ "$dft" = 'listfirst' ] && printf '\nA block this role shares, its writer list naming this role first:\n\n```yaml\n---\nartifact: outputs/zz-l.md\nwriter: [zz-alpha, zz-beta]\n---\n```\n'
+    [ "$dft" = 'listnospace' ] && printf '\nThe same block, its writer list written with no space after the comma:\n\n```yaml\n---\nartifact: outputs/zz-l.md\nwriter: [zz-alpha,zz-beta]\n---\n```\n'
   } > "$d/agents/zz-alpha.md"
   {
     printf '## Output Format\n\n```yaml\n---\nartifact: outputs/zz-b.md\nwriter: %s\n---\n```\n\n' "$bid"
@@ -6202,6 +6214,7 @@ gj_world() {
     printf '\n### Output: outputs/zz-shared.md (its sections)\n\nThe setup seed this role writes once.\n'
     [ "$dft" = 'idambig' ] && printf '\n```yaml\n---\nartifact: outputs/zz-b.md\nwriter: zz-alpha\n---\n```\n'
   } > "$d/agents/zz-beta.md"
+  [ "$dft" = 'zerospan' ] && printf '## Output Format\n\n```yaml\n---\nartifact: outputs/zz-z.md\nwriter: zz-zero\n---\n```\n' > "$d/agents/zz-zero.md"
   return 0
 }
 
@@ -6223,7 +6236,7 @@ gj_tally() {
 echo
 echo "── Group GJ — control arms for group J: shown failing on each defect, passing on a correct world, and deriving its population."
 GJ="$WORK/gj"; mkdir -p "$GJ"
-for gjd in ok rowmiss promptmiss prose joinmiss anchor0 anchor2 badrow badprompt idambig countdrift nosection badclassrow norows noclasses dangling quotebare quotenowriter headmiss onespan; do
+for gjd in ok rowmiss promptmiss prose joinmiss anchor0 anchor2 badrow badprompt idambig countdrift nosection badclassrow norows noclasses dangling quotebare quotenowriter headmiss onespan headfile headpre listfirst listnospace zerospan; do
   gj_world "$GJ/$gjd" "$gjd"
 done
 
@@ -6334,6 +6347,75 @@ elif [ "$GJR2_J1" -ne 1 ] || [ "$GJR2_NOTE" -ne 0 ]; then
 else
   PASS "GJ9: J1 NAMES THE RESEARCH-KEY COUPLING WHERE IT HOLDS — over a row naming exactly one outputs/ path, both J1 findings name the one-path rule /trip research's agent key admits a spoke by, and the J1 assertion renders one FAIL and no PASS; over a row naming two such paths, its one J1 finding does not"
 fi
+
+# ── ONE MUST-FIRE WORLD PER READER BRANCH. GJ0 to GJ9 were built one per ratified fix, so two of
+# the heading limb's three forms and the writer list's split had no world in which removing the
+# branch leaves a written file unexpected. The Pre-Work heading stands only in GJ0's conforming
+# world, on a file other sources already expect; the File heading stands there only indented,
+# as one the reader must not read; and every list there that names the reading prompt's own id
+# names it last, after a comma and a space. Each world below declares one file by one branch
+# and nowhere else. Its arm first reads that fact back from the built files, then requires
+# exactly one J1 finding naming the row, the file and that one source — the source in its
+# parentheses, so no second source can ride along. GJN, last, holds the research-key note's
+# zero end.
+
+# gj_mentions <world> <literal> -> how many lines of the world's charter, architecture document
+# and prompts name <literal>, so an integrity limb can require that a file is declared on one
+# line alone.
+gj_mentions() {
+  local n=0 c f
+  for f in "$GJ/$1/CLAUDE.md" "$GJ/$1/$RJ_ARCH_REL" "$GJ/$1"/agents/*.md; do
+    c="$(grep -c -F -- "$2" "$f" 2>/dev/null)"; n=$((n+${c:-0}))
+  done
+  printf '%d' "$n"
+}
+
+# gj_fire_int <read> <built> <what> <id> <world> <want> <arm-id> <prose> — gj_fire behind a
+# fixture-integrity limb. <read> is the world's integrity figures as read from the built files,
+# <built> the same figures as the generator builds them, each in the order <what> names. A world
+# that does not carry them renders one FAIL, and no finding is read over it.
+gj_fire_int() {
+  local got="$1" need="$2" what="$3"; shift 3
+  if [ "$got" != "$need" ]; then
+    arm "$1"
+    FAIL "$4: fixture integrity — the $2 world reads '${got}' where '${need}' is built (${what}), so a verdict over it would not measure the branch it names"
+  else
+    gj_fire "$@"
+  fi
+}
+
+# GJF and GJP — the heading limb's other two forms, each alone. The Pre-Work form names its
+# file bare, and the finding names it under outputs/.
+GJF_INT="$(grep -c -x -F '### File: outputs/zz-f.md' "$GJ/headfile/agents/zz-alpha.md") $(gj_mentions headfile 'zz-f.md')"
+gj_fire_int "$GJF_INT" '1 1' 'the File heading line; the lines naming zz-f.md in the world' \
+  J1 headfile '"Zz Alpha" does not name "outputs/zz-f.md", which that agent writes \(the Output heading agents/zz-alpha.md:[0123456789]+\)' \
+  GJF 'a row omits a file its prompt declares only in a File heading, "### File: <path>"'
+GJP_INT="$(grep -c -x -F '### Pre-Work Output 2: zz-p.md' "$GJ/headpre/agents/zz-alpha.md") $(gj_mentions headpre 'zz-p.md')"
+gj_fire_int "$GJP_INT" '1 1' 'the Pre-Work heading line; the lines naming zz-p.md in the world' \
+  J1 headpre '"Zz Alpha" does not name "outputs/zz-p.md", which that agent writes \(the Output heading agents/zz-alpha.md:[0123456789]+\)' \
+  GJP 'a row omits a file its prompt declares only in a Pre-Work heading, "### Pre-Work Output <N>: <file>", which names the file bare'
+
+# GJW and GJC — a block whose writer list names the prompt's own id first. The list is split on
+# its commas, so the id is a member wherever it stands in the list; GJC writes the list with no
+# space after the comma. zz-beta.md's section-owned block carries GJW's list, its own id last.
+GJW_INT="$(grep -c -x -F 'writer: [zz-alpha, zz-beta]' "$GJ/listfirst/agents/zz-alpha.md") $(grep -c -x -F 'artifact: outputs/zz-l.md' "$GJ/listfirst/agents/zz-alpha.md") $(gj_mentions listfirst 'zz-l.md')"
+gj_fire_int "$GJW_INT" '1 1 1' 'the writer list line; the artifact line; the lines naming zz-l.md in the world' \
+  J1 listfirst '"Zz Alpha" does not name "outputs/zz-l.md", which that agent writes \(the frontmatter agents/zz-alpha.md emits\)' \
+  GJW 'a row omits a file its prompt declares only in a block whose writer list names that prompt first, writer: [zz-alpha, zz-beta]'
+GJC_INT="$(grep -c -x -F 'writer: [zz-alpha,zz-beta]' "$GJ/listnospace/agents/zz-alpha.md") $(grep -c -x -F 'artifact: outputs/zz-l.md' "$GJ/listnospace/agents/zz-alpha.md") $(gj_mentions listnospace 'zz-l.md')"
+gj_fire_int "$GJC_INT" '1 1 1' 'the writer list line; the artifact line; the lines naming zz-l.md in the world' \
+  J1 listnospace '"Zz Alpha" does not name "outputs/zz-l.md", which that agent writes \(the frontmatter agents/zz-alpha.md emits\)' \
+  GJC 'the same, its writer list written with no space after the comma, writer: [zz-alpha,zz-beta]'
+
+# GJN — the research-key note's zero end. A third agent's row names no outputs/ path and omits
+# the one file its class and its prompt assign it. J1 names the file, and the finding carries no
+# note: the one-path rule the note states does not hold of a row naming none. The pattern ends
+# with '$', at the last words of J1's own text, so a note appended to the finding moves the end
+# of the line and the match fails; GJ9 holds the note's one-path and two-path cases.
+GJN_INT="$(grep -c -x -F '| Zz Zero | `agents/zz-zero.md` | `trip-context.md` (the block it seeds) | always |' "$GJ/zerospan/CLAUDE.md") $(gj_mentions zerospan 'zz-z.md') $(grep -c -F 'zz-z.md' "$GJ/zerospan/CLAUDE.md")"
+gj_fire_int "$GJN_INT" '1 2 0' 'the row naming no outputs/ path; the lines naming zz-z.md in the world, its class and its prompt; those in the charter' \
+  J1 zerospan '"Zz Zero" does not name "outputs/zz-z.md", which that agent writes \(.* C8; the frontmatter agents/zz-zero.md emits\).* the whole content of a code span$' \
+  GJN 'a row naming no outputs/ path omits the one file its agent writes, and the finding carries no /trip research key note, which holds only of a row naming exactly one'
 
 # GJV — VACUITY and DEGRADATION: an empty roster, an empty class table, an unreadable prompt,
 # and a root carrying neither input. Each assertion renders exactly one FAIL and no PASS.
