@@ -69,11 +69,14 @@ undeclared. Why a particular gap exists belongs in the record that withdrew it, 
 ```adr-number-declaration
 # number  reason
 020       superseded-record-never-merged
+039       held-for-in-flight-milestone-57
+040       held-for-in-flight-milestone-57
 ```
 
-`ADR-020` is the only number declared today. It was assigned to the record `ADR-021`
+`ADR-020` is the one permanent gap declared. It was assigned to the record `ADR-021`
 supersedes, on a branch that has since been swept; `ADR-021` § *Costs and residual risks*
-carries the account.
+carries the account. `039` and `040` are held rather than lost: an in-flight release carries its
+records under those numbers, and the change that lands them removes both rows.
 
 ## Index
 
@@ -116,3 +119,4 @@ carries the account.
 | [ADR-036](ADR-036-published-artifact-model-row.md) | The published artifact takes no in-model row — `ADR-026` Finding 1 declined, in terms, and routed | Accepted |
 | [ADR-037](ADR-037-group-snapshot.md) | The group snapshot — what travellers share with the group before a plan, whose it is, who writes it, and where it shows | Accepted |
 | [ADR-038](ADR-038-contact-emergency-group-visibility.md) | Contact and emergency information on the private site — what the group sees, the emergency contact as a third party, and the carrier | Accepted |
+| [ADR-041](ADR-041-third-party-roster-standing.md) | A third-party member's roster standing — no `## Group` row, and one unnamed place in `Total travelers` | Accepted |

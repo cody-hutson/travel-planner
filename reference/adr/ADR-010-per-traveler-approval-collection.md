@@ -2,7 +2,16 @@
 
 - **Status:** Accepted (2026-09-02). Landed `Proposed` (2026-09-01) and ratified here, by the
   two-step this corpus already uses: `ADR-006` and `ADR-007` each landed `Proposed` and were
-  flipped to `Accepted` by a later ratifying commit.
+  flipped to `Accepted` by a later ratifying commit. **Superseded in part (2026-09-28)** — an
+  amendment that records a **superseding decision** rather than a defect in this document.
+  [ADR-041](ADR-041-third-party-roster-standing.md) supersedes in part, for exactly one integer,
+  § 4's reading that a signal derived from a traveller-model value is an anonymized projection
+  § 5.1 forecloses: the published `- **Total travelers:**` may count the party members the
+  operator recorded through `/trip-record person`, a count derived from
+  `outputs/traveler-model.md`. The rest of § 4 — no traveller identity at the render, not even
+  pseudonymously, and no approval attribution — and every other decision stand. The superseded
+  text is retained as decided, with an inline marker pointing forward, per
+  `reference/adr/README.md` § *Convention*.
 - **Deciders:** repo maintainer
 - **Driving work:** #88, under the group-coordination epic (#77). This record is the prerequisite
   architecture decision #88's first acceptance criterion requires, and it is that card's whole
@@ -197,7 +206,11 @@ one document's phrasing.
 **Traveler identity may therefore not reach the render even pseudonymously.** Not a name, not a
 handle, not a stable pseudonym, not a key fingerprint, and not a per-traveler approval receipt, which
 is one in substance: a receipt that lets a reader tell *which* traveler approved is an anonymized
-projection of a C12 value, and § 5.1 forecloses the anonymized projection by name.
+projection of a C12 value, and § 5.1 forecloses the anonymized projection by name. *(Superseded in
+part: [ADR-041](ADR-041-third-party-roster-standing.md) admits one integer derived from C12 to the
+render — the count of party members recorded through `/trip-record person`, as a summand of the
+published `- **Total travelers:**`; it tells a reader nothing about which traveller did anything,
+and this bar stands for every other value.)*
 
 **Any attribution model #718 or #719 adopts must survive that bound**, and it is the sharpest
 constraint on the whole problem — sharper than the one #88 wrote down. It is survivable: detectability

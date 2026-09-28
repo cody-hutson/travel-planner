@@ -1364,7 +1364,7 @@ enforcement.** What needs stating is the complement — the four cases the equal
 ### The display name has one authority — the `## Group` roster
 
 > The **`Person` cell of the `## Group` roster in `trip-context.md` is the authoritative display
-> name** for every person the model knows about. The `## <Name>` heading in
+> name** for every traveler the model knows about. The `## <Name>` heading in
 > `outputs/traveler-model.md` and the stem of `travelers/<file>.md` are both **projections** of it.
 > Where a projection disagrees with the roster, **the roster is right and the projection is the
 > defect**: the reconciler reports the divergence and never repairs it by rewriting the roster.
@@ -1376,12 +1376,19 @@ directory"* and that enrichment takes the `## Group` roster and `- **Total trave
 **denominator** for profile-gap detection"* with *"no second source for it"*.
 
 Two properties make it the only candidate that works, and neither is convenience. It is **total
-over the entry population**: the two entry classes that have no file at all — `[THIRD-PARTY]` and
-`PROFILE MISSING` — still have a roster row, and those are precisely the classes the publish guard
-is built around, whereas a profile's own title line and a filename stem both fail there. And the
-roster row is the **only surface in the engine carrying the display name (`Person`, verbatim) and
-the derived path (`Traveler file`) as a pair**, so the correspondence has exactly one checkable
-site and the check is within one row rather than a join across files.
+over the traveler population** — every entry the reconciler derives from the party, including the
+one class that has no file yet, `PROFILE MISSING`, which still has a roster row — whereas a
+profile's own title line and a filename stem both fail there. **One entry class stands outside it
+by rule: a `[THIRD-PARTY]` party member holds no roster row, though `- **Total travelers:**`
+counts them as an unnamed member, as `skills/trip-record/SKILL.md`
+§ *Roster standing of a third-party member* states.** That entry's name authority is the operator
+statement that admitted it, and its one record is its own `## <Name>` heading in
+`outputs/traveler-model.md`, carried forward verbatim and never a projection of a roster cell;
+where a roster row's key equals that heading's key, the reconciler's join in
+`agents/00-enrichment.md` § *Traveler identity* decides which record stands. And the roster row is
+the **only surface in the engine carrying the display name (`Person`, verbatim) and the derived
+path (`Traveler file`) as a pair**, so for every traveler the correspondence has exactly one
+checkable site and the check is within one row rather than a join across files.
 
 ### The four cases the correspondence does not reach
 
@@ -1399,6 +1406,15 @@ neither § 3.2 nor ADR-009 Decision 2.2 states the rule — each now names the d
 cites this case for it, which is the split those documents already take for the four cases. Without
 C2 the natural key would be neither total nor injective, and *"uniqueness is asserted over this
 key"* would be unsatisfiable at the degenerate point; C2 is what makes that assertion total.
+
+**The four cases are asserted per traveler, so none of them reaches a `[THIRD-PARTY]` entry the
+roster does not name.** Its key's emptiness (C2) and its reservation (C3) are asserted by nothing
+today — `skills/trip-record/SKILL.md` § `person` admits the name as the operator gives it, and the
+reconciler walks the roster — and each is a fail-open: an empty key and a reserved one both leave
+that entry's name outside the publish guard's non-publishable class. Its uniqueness against the
+travelers' keys is asserted only where a roster row shares its key, by the join in
+`agents/00-enrichment.md` § *Traveler identity*. That half is declared unowned here rather than
+dropped.
 
 ### Reserved keys
 
