@@ -3,6 +3,88 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [Unreleased] — 2026-09-28 — One interviewer, any conforming form
+
+Until now each guided intake form carried its own copy of the interview's rules below its
+end-of-profile line. The assisted route read the trip form's copy, asked its questions and wrote the
+profile once, at the end, so a session left half-done lost every answer, although both forms promise
+that you can come back for the rest. Nothing interviewed the durable person record, and nothing that
+interviews knew which parts of the trip file's form it may write. This release puts one interviewer
+behind all three forms.
+
+**One verb conducts any conforming form, and a session resumes.**
+`/trip-record interview <form> [<target>]` asks a form's own questions in the form's own order and
+writes each answer into the file as it is settled — a field when it is answered, a repeat unit when
+it is complete — so the file is the session. Run it again and it asks only what the file still
+leaves unanswered, never a question already answered or skipped; a repeat unit left unfinished is
+not written, and is asked again. A skip is written as the em dash and a question nobody asked keeps
+its bracket, so the two never read alike. The verb refuses a form whose declared contract version it
+does not conduct, and a finished file keeps the form's declaration, which a later session checks
+before resuming. `/trip-record profile <name>` runs the same interview on its first route and
+whenever an existing profile resumes, and its self-serve copy now has the trip's slug filled into
+its frontmatter.
+
+**The durable person record can be interviewed for the first time.**
+`/trip-record interview templates/person-intake.template.md <name>` creates a record in the people
+library and fills it as the person answers, and a record left part-way resumes by its id. It creates
+a record only for someone who is there, answering for themselves: it asks the operator every time,
+before writing anything, and writes nothing short of yes. An answer the operator relays is marked
+operator-provided, and one that belongs on another form is redirected there and not recorded. A new
+standing rule of `/trip-record` admits these writes, and no other verb may rely on it.
+
+**Someone who is not at this machine gets a set that works on its own.** The portable hand-off now
+sends the form, a filled-in example and a new portable interview card,
+`templates/interview-card.md`, which tells any assistant how to run the interview and what to give
+back: the form as a write-capable session would have left it, skips as em dashes and unasked
+questions still bracketed, sent back to whoever sent it. For a trip profile,
+`/trip-record profile <name>` saves the returned block, seeding the file if it is absent and merging
+field by field, each replaced line echoed first. A skip in the block never overwrites an answer the
+file holds, a renamed or missing label is reported rather than written, a block from another form or
+contract version is refused, and an entry added beside ones the file already holds waits for the
+operator's yes. A durable record's block is saved by the operator, at the id the interview names for
+that person; no command writes one into the people library.
+
+**The rules every interview shares are authored once**, in
+`skills/trip-record/interview-conduct.md`, beside the command they belong to. The guided forms keep
+their questions and their notes on asking each section, and no longer carry numbered rules or
+instructions for producing a finished file; each form's paste-line points at the card instead. The
+card carries the same numbered rules word for word, and a required check fails the moment the two
+texts differ. Two corrections come with the move: on a closed choice the interviewer offers only the
+members the form lists, never an example the bracket gives, and the trip form's must-haves step no
+longer says that the trip file's dietary and health section names the people it covers.
+
+**On the trip file's form, the interviewer writes only where the ownership table lets it.**
+`/trip-record interview templates/trip-context.template.md` conducts the trip's own file within the
+regions `CLAUDE.md` § *Write ownership* gives `/trip-record`, recording each answer as
+`/trip-record fact` would and leaving the destination and the group to their own verbs. It refuses
+any other answer, naming the field, its region, the table's row and the verdict, and repeating no
+value. It never creates the file, and it resolves no region itself: it reads
+`reference/region-reference.md`, which the artifact-schema suite derives from the form and the
+ownership table on every run, failing whenever the committed copy differs.
+
+**Two decision records, each superseding one part of an earlier one.** `ADR-039` places the shared
+conduct in the file beside the verb, superseding in part where `ADR-023` placed it. `ADR-040`
+decides what a channel with no write path gives back and that whoever sent the form saves it,
+superseding in part `ADR-022`'s row for that channel. Everything else in both earlier records
+stands. Each gains a dated mark where it is superseded, and dated amendments correct claims this
+release found wrong, among them that a question nobody asked is recognised by its placeholder's
+shape, not by the form's current wording.
+
+**The honest limits.** No required check runs an interview. The suites grade the texts an interview
+follows — the card against the conduct file, the region table against the ownership table it is
+derived from, each form against its declaration — and not whether a live session follows them; a
+live session is exercised for this release rather than on every change. Which regions the
+interviewer may write is asserted on every run, but that it refuses the others is conduct, and
+nothing mechanical stops a write outside them. The engine cannot see what another assistant does
+with the card: a returned trip profile is checked when `/trip-record profile <name>` saves it, one
+saved by hand keeps the trip placeholder and fails the frontmatter check, and a durable record's
+return has no merge, so nothing checks its labels but the card's instruction to keep them exactly.
+`/trip-record`'s command file grew again: its body was 3,019 lines when this release began and is
+3,230 at its end, about six and a half times the budget `CLAUDE.md` § *Verb body size* records, and
+its reduction belongs to the planned consolidation into one skill. Both new records land `Proposed`.
+The flip to `Accepted` is the maintainer's at the milestone close, and it moves each record's status
+line and its index row together.
+
 ## [0.46.1] — 2026-09-26 — A rotation revokes the passphrase it replaces
 
 This is a security release. It fixes GHSA-gmm2-v7rr-jq7r: rotating a site's passphrase could leave the
