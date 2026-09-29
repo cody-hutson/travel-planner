@@ -17,7 +17,11 @@ traveller model it rebuilds.
 user settings, with both paths absolute and the data folder's path read from the pointer, and the
 step cites `CLAUDE.md` § *Resolving a trip* for which settings files Claude Code honours rather than
 listing them. That section records the user settings as honoured in a workspace that has not been
-trusted, in print mode, measured on Claude Code 2.1.233 under the default permission mode. The
+trusted, in print mode, measured on Claude Code 2.1.233 under the default permission mode. On
+Claude Code 2.1.280, in print mode under the default permission mode, `/trip-publish`'s
+pointer read did not run while its path carried `${HOME}`, even with the entry in
+place. The verb now reads its pointer by a literal path, taking your home directory
+from `echo "$HOME"`, which reads no path; that spelling was not re-measured. The
 Windows note asks for absolute paths with every backslash doubled inside the JSON.
 
 **A read the harness refused now stops with its own remedy.** `CLAUDE.md` states once how to tell a
@@ -25,8 +29,10 @@ refused read from one that ran and failed, and that a refused read establishes n
 path it names. The resolution ladder's first gate, which reads the pointer, gains a refused arm, and
 the gate that reads the trip listing tells four outcomes apart: refused, ran and failed, ran without
 its canary, and trustworthy. Every stop names its own remedy. The stop for a refused read names the
-path, passes on the harness's text, and gives the allowed-directories step as the fix; it never
-tells you to write the pointer or copy the canary, because neither was seen to be missing. The
+path, passes on the harness's text, and gives the allowed-directories step as the
+fix only where that text says the path lies outside the session's allowed working
+directories, naming no folder to add for any other refusal; it never tells you to
+write the pointer or copy the canary, because neither was seen to be missing. The
 README's *Verify* section says which message means which fix.
 
 **The grants are stated as what they are: each verb's declared minimum privilege.** `CLAUDE.md`
@@ -72,6 +78,9 @@ code beside it does.
 contract suite fails when either gate loses its refused branch or the listing gate another stop, or
 when a clause that writes a refused read's remedy omits the allowed-directories step or uses a word
 of the pointer or canary remedy; four paraphrases of that wrong remedy are among its must-fire arms.
+The contract suite also fails when a clause gives that step without limiting it to a refusal
+saying the path lies outside the session's allowed working directories, or when the rule for any
+other refusal is missing, names a folder to add, or uses a word of the pointer or canary remedy.
 The command-taxonomy suite pairs a verb's grant table with its frontmatter in both directions, and
 fails when a file an agent writes is missing from its roster row, as the files above were before
 this release. Two edits to the evidence-marker rule that used to leave the contract suite green now
@@ -79,9 +88,14 @@ turn it red. Each new arm was shown red under the change it guards and green wit
 
 **The honest limits.** Where a read is admitted and where it is refused is Claude Code's behaviour,
 meant to be re-derived against the version in use. What this release records of it was measured on
-Claude Code 2.1.233 in print mode under the default permission mode; on a current harness the
-documented condition for the refusal is `permissions.blockReadsOutsideWorkingDirectories`,
-documented from Claude Code 2.1.257 and stated from the documentation rather than measured. No
+Claude Code 2.1.233 and again on 2.1.280, each time in print mode under the default permission
+mode; on 2.1.280 the evidence reads outside the session's allowed working directories were refused
+with `permissions.blockReadsOutsideWorkingDirectories` unset, so that setting is not what refuses
+them there, and what it added was refusing the `Read` tool's read of a pointer outside them. On
+2.1.280, in print mode under the default permission mode, no verb read `CLAUDE.md` in any run
+measured, so none rendered a stop of the resolution ladder; a verb installed by the README reading
+it, and a re-measure, are tracked. The traveller model's rebuild and `plan`'s announcement of
+it are described from the verbs' text: no live `/trip plan` run was made in this release. No
 standing check yet holds the verb bodies' zero for the retired carrier's phrasings; one is tracked.
 `/trip check` and `/trip ideas` still leave the traveller model out of their agents' reads, and the
 file tree in `CLAUDE.md` still omits the change summary; both are tracked. The refused-remedy check
