@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-09-28 — A fresh install reaches its data, and each verb says what it reads
+## [0.47.0] — 2026-09-28 — A fresh install reaches its data, and each verb says what it reads
 
 The commands run from whatever project you have open, so Claude Code needs permission to read your
 data folder and its pointer, which the README's install grants in step 4. Nothing had measured that
