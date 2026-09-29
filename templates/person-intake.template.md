@@ -283,8 +283,11 @@ happily pay up for. This is their personal lean, not any group's budget.
 
 ### Step 5 — Needs — the must-haves
 This is the important one, and it is the reason this record exists. Ask whether anything has
-to be worked around for them: heat, walking or stairs, food or allergies, rest, a spending
-ceiling, a fixed time, noise or crowds. One block per need, in their own words, as specific
+to be worked around for them, as an open question. To show them what counts, give some
+kinds of need as examples — heat, walking or stairs, food or allergies, rest, a
+spending ceiling, a fixed time, noise or crowds — and say that they are only examples,
+never a list to choose from: the answer is theirs, whether or not it names one of
+them. One block per need, in their own words, as specific
 as they can make it — one line is a complete first pass, so take what they give you rather
 than pressing for more. If nothing is a hard must, write `none` rather than leaving it
 blank — blank reads as *not answered yet*, and the planner treats an unanswered need as
