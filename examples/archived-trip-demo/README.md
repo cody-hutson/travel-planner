@@ -96,6 +96,14 @@ not reduce the party, because the person travelled. And it did not touch the
 `**Lifecycle:**` marker: the trip was never reopened, never re-concluded, and gained no
 second closing log entry.
 
+**The total counts the party as it was archived.** `per-b70d`, the party member recorded
+through the operator, is not inside that 3, although the rule now counts such a member as an
+unnamed one (`skills/trip-record/SKILL.md` § *Roster standing of a third-party member*). The
+trip was archived before that rule, and an archived trip keeps the total it was archived with:
+the verbs that write a total — `/trip-record group`, `group-expand` and
+`person` — serve only an active trip, and an archived trip receives no derivation
+(`CLAUDE.md` § *Archived trips — what the freeze binds*).
+
 ## What this fixture could not witness before, and now does
 
 Three of the erasure verb's reach rows had **nothing here to grade**. An implementation could

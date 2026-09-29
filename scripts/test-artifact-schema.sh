@@ -10081,9 +10081,10 @@ if [ "$ER_OK" -eq 1 ]; then
     FAIL "ER18: the bearer's post-state limbs read stem=$ER_ST_STEM old-path-removed=$ER_ST_OLD field-removed=$ER_ST_REM stem-restated=$ER_ST_DECL. A bearer that keeps its display-name stem converges this verb's post-state with the detach's — every composed value is byte-identical either way and nothing value-shaped detects it, so the build stays green while the detection is gone"
   fi
 
-  # ── ER19 — THE GROUP STORE'S REACH IS BULLETS-ONLY, AND THE README SAYS SO. Exactly one row
-  # of this table names `groups/`, and its Location cell scopes it to the `## Members` bullets.
-  # Nothing reaches a group record's `# <H1>` display name. That is correct — the name has to be
+  # ── ER19 — THE GROUP STORE'S REACH IS BULLETS-ONLY, AND THE README SAYS SO. Two rows of this
+  # table name `groups/`: one REACH row whose Location cell scopes it to the `## Members` bullets,
+  # and one REPORT row — row 37 — that reads each record's `# <H1>` title line and writes nothing.
+  # Nothing REACHES a group record's display name. That is correct — the name has to be
   # free text for a group to have a usable one, and a sweep that rewrote free text would take the
   # name with it — but it is a cost a reader has to be TOLD, because `groups/README.md`
   # § *What a record does not hold* deliberately routes a group's only free text INTO its name
@@ -10109,38 +10110,54 @@ if [ "$ER_OK" -eq 1 ]; then
   # over a stale disclosure. That edit contradicts `reference/schemas/group-record.md`, which
   # closes the section rather than widening reach, and group GM grades that closure — but this
   # arm does not see it, and a reader should not think it does.
+  # The reach is counted per disposition: every row naming `groups/`, the REACH rows scoped to
+  # `## Members`, the REPORT rows reading the `# <H1>` title line, and the REACH rows on that
+  # title line. "As designed" is exactly two rows — one REACH on the bullets, one REPORT on the
+  # title line — and none that reaches the title line.
   ER_GRP="$(printf '%s\n' "$ER_SEC" | awk '
     /^\|[ \t]*\*\*[0-9]+\*\*[ \t]*\|/ {
       split($0, c, "|")
-      if (index(c[3], "groups/") > 0) { g++; if (index(c[3], "## Members") > 0) s++ }
+      d = c[4]; gsub(/[^A-Za-z]/, "", d)
+      if (index(c[3], "groups/") > 0) {
+        g++
+        if (d == "REACH" && index(c[3], "## Members") > 0) rm++
+        if (d == "REPORT" && index(c[3], "# <H1>") > 0) rh++
+        if (d == "REACH" && index(c[3], "# <H1>") > 0) xh++
+      }
       if (index(c[3], "outputs/") > 0) ctl++
     }
-    END { printf "%d\t%d\t%d\n", g + 0, s + 0, ctl + 0 }')"
+    END { printf "%d\t%d\t%d\t%d\t%d\n", g + 0, rm + 0, rh + 0, xh + 0, ctl + 0 }')"
   ER_GRP_N="$(printf '%s' "$ER_GRP" | cut -f1)"
-  ER_GRP_SCOPED="$(printf '%s' "$ER_GRP" | cut -f2)"
-  ER_GRP_CTL="$(printf '%s' "$ER_GRP" | cut -f3)"
+  ER_GRP_RM="$(printf '%s' "$ER_GRP" | cut -f2)"
+  ER_GRP_RH="$(printf '%s' "$ER_GRP" | cut -f3)"
+  ER_GRP_XH="$(printf '%s' "$ER_GRP" | cut -f4)"
+  ER_GRP_CTL="$(printf '%s' "$ER_GRP" | cut -f5)"
+  ER_GRP_OK=0
+  [ "$ER_GRP_N" -eq 2 ] && [ "$ER_GRP_RM" -eq 1 ] && [ "$ER_GRP_RH" -eq 1 ] && [ "$ER_GRP_XH" -eq 0 ] && ER_GRP_OK=1
   ER_GDOC="$ROOT/groups/README.md"
   ER_GHEAD="What a record does not hold"
   ER_GSEC=""
   [ -r "$ER_GDOC" ] && ER_GSEC="$(er_section "$ER_GDOC" "$ER_GHEAD")"
   ER_GNSEC="$(printf '%s\n' "$ER_GSEC" | grep -c '[^[:space:]]' || true)"
   ER_GFLAT="$(printf '%s\n' "$ER_GSEC" | sed 's/^[[:space:]]*>[[:space:]]*//' | tr '\n\t' '  ' | tr -s ' ')"
-  ER_GDISC=0; ER_GWRAP=0
+  ER_GDISC=0; ER_GREP=0; ER_GWRAP=0
   # Here-strings rather than pipes, per group PF: a pipe into an early-exiting `grep -q`
   # reports failure on a SUCCESSFUL match under pipefail.
   grep -q "outside erasure's reach" <<<"$ER_GFLAT" && ER_GDISC=1
+  grep -q 'every group whose name carries' <<<"$ER_GFLAT" && ER_GREP=1
   grep -q 'there is nowhere here to write a note about a group' <<<"$ER_GFLAT" && ER_GWRAP=1
   if [ "$ER_GRP_CTL" -eq 0 ] || [ "$ER_GNSEC" -eq 0 ] || [ "$ER_GWRAP" -eq 0 ]; then
     FAIL "ER19: an extraction or the matcher itself came back EMPTY — the Location-cell control (\`outputs/\`) matched $ER_GRP_CTL row(s), groups/README.md § *$ER_GHEAD* yielded $ER_GNSEC non-blank line(s), and the wrap-spanning control phrase matched=$ER_GWRAP. That phrase spans a hard wrap in this section, so a zero on it means the flattening is gone and every prose verdict here would be a line-shaped zero over a hard-wrapped file. Not a skip and not a pass"
-  elif [ "$ER_GRP_N" -ne 1 ] || [ "$ER_GRP_SCOPED" -ne 1 ]; then
-    FAIL "ER19: the group-store reach has MOVED — $ER_GRP_N reach row(s) name \`groups/\` and $ER_GRP_SCOPED of them are scoped to \`## Members\` (expected 1 and 1, against a control of $ER_GRP_CTL). groups/README.md § *$ER_GHEAD* tells the reader that a group's \`# <H1>\` display name is outside this verb's reach, and that sentence is true only while the reach stops at the member bullets. Re-read the disclosure against the new reach in the SAME commit: a widened sweep leaves a reader being told a name survives that no longer does, and that is the failure direction nothing else here checks"
-  elif [ "$ER_GDISC" -eq 1 ]; then
-    PASS "ER19: the group-store reach is exactly ONE row scoped to \`## Members\` (control $ER_GRP_CTL row(s)), so a group record's \`# <H1>\` display name is unreached — and groups/README.md § *$ER_GHEAD* discloses it, matched over $ER_GNSEC extracted line(s) through the flattened stream the wrap-spanning control validated. That section routes a group's only free text into its name, which is where a person's name actually lands, so the cost is stated where the routing is and the two now move together"
+  elif [ "$ER_GRP_OK" -ne 1 ]; then
+    FAIL "ER19: the group-store reach has MOVED — $ER_GRP_N reach row(s) name \`groups/\`: $ER_GRP_RM REACH on the \`## Members\` bullets, $ER_GRP_RH REPORT on the \`# <H1>\` title line, and $ER_GRP_XH REACH on the title line (expected two rows — one REACH on the bullets, one REPORT on the title line, none reaching it — against a control of $ER_GRP_CTL). groups/README.md § *$ER_GHEAD* tells the reader that a group's \`# <H1>\` display name is outside this verb's reach and that the erase report lists every group whose name carries the person's, and both sentences are true only while the rewrite stops at the member bullets and the title line is reported. Re-read the disclosure against the new reach in the SAME commit: a widened sweep leaves a reader being told a name survives that no longer does, and that is the failure direction nothing else here checks"
+  elif [ "$ER_GDISC" -eq 1 ] && [ "$ER_GREP" -eq 1 ]; then
+    PASS "ER19: the group-store reach is one REACH row on the bullets and one REPORT row on the title line (control $ER_GRP_CTL row(s)), so a group record's \`# <H1>\` display name is reported and never rewritten — and groups/README.md § *$ER_GHEAD* discloses both halves, that the name is outside erasure's reach and that the erase report lists every group whose name carries the person's, matched over $ER_GNSEC extracted line(s) through the flattened stream the wrap-spanning control validated. That section routes a group's only free text into its name, which is where a person's name actually lands, so the cost is stated where the routing is and the two now move together"
   else
-    FAIL "ER19: the group-store reach is bullets-only ($ER_GRP_N row scoped to \`## Members\`, control $ER_GRP_CTL row(s)) but groups/README.md § *$ER_GHEAD* no longer discloses it — $ER_GNSEC line(s) extracted, the flattening confirmed by the wrap-spanning control, and nothing in them states the name is outside erasure's reach. That section tells the reader the name is where a group's meaning goes; without this sentence it never tells them that erasing a person leaves a group still named after them, which reads as anonymised when it is not"
+    FAIL "ER19: the group-store reach is as designed ($ER_GRP_RM REACH row on \`## Members\`, $ER_GRP_RH REPORT row on the title line, control $ER_GRP_CTL row(s)) but groups/README.md § *$ER_GHEAD* no longer discloses it — the name-outside-reach sentence matched=$ER_GDISC and the report sentence matched=$ER_GREP, over $ER_GNSEC line(s) extracted with the flattening confirmed by the wrap-spanning control. That section tells the reader the name is where a group's meaning goes; without both sentences it never tells them that erasing a person leaves a group still named after them, or that the report says which ones, which reads as anonymised when it is not"
   fi
 
-  # ── ER20 — THE PERSON-SIDE SURVIVOR LIST SAYS FOUR, AND THE FOURTH IS THE GROUP NAME.
+  # ── ER20 — THE PERSON-SIDE SURVIVOR LIST SAYS FIVE: THE FOURTH IS THE GROUP NAME, AND THE
+  # FIFTH A NAME STANDING IN A PLACE THE ERASURE REPORTS RATHER THAN REWRITES.
   # The same fact as ER19, read from the other side. `people/README.md` § *Deleting a person*
   # introduces its survivor list as "said plainly rather than left for you to discover" — a
   # promise to ENUMERATE what erasure cannot reach — and then states a cardinal. A group's
@@ -10150,19 +10167,20 @@ if [ "$ER_OK" -eq 1 ]; then
   # true. No reader caught it. A promise to enumerate is exactly the shape a check can hold.
   #
   # THE TWO SIDES ARE PINNED TO ONE FACT, NOT TO EACH OTHER. ER19 establishes the reach from
-  # the table above — exactly one row naming `groups/`, scoped to `## Members` — and grades
+  # the table above — one REACH row naming `groups/` scoped to `## Members`, one REPORT row on
+  # the `# <H1>` title line — and grades
   # the group-side disclosure against it. This arm re-reads that same measurement rather than
   # assuming it, and grades the person-side count against it, so a widened reach turns BOTH
   # arms red instead of leaving one side quietly describing behaviour that has changed. Two
   # disclosures grading each other would agree just as happily while both were wrong.
   #
-  # WHY THE CARDINAL IS A PINNED LITERAL rather than a tally taken from the prose. The four
+  # WHY THE CARDINAL IS A PINNED LITERAL rather than a tally taken from the prose. The five
   # survivors are not uniformly marked — three are bold verbs inside one paragraph and the
-  # fourth is a paragraph of its own, because it survives for a different reason — so any
+  # fourth and fifth are paragraphs of their own, because they survive for a different reason — so any
   # structural count would be a heuristic over formatting, and a heuristic that miscounts is
   # worse than no arm at all. The literal is a PIN on the `count-assertion-digest` model: a
-  # fifth survivor is a deliberate edit, and re-pinning this line in the same commit is the
-  # mechanism working rather than a cost it imposes.
+  # further survivor is a deliberate edit, and re-pinning this line in the same commit is the
+  # mechanism working rather than a cost it imposes — the fifth landed exactly that way.
   #
   # THE MATCHER IS FLATTENED, for the reason ER19 states and this milestone paid for four
   # times: the README is hard-wrapped, so a line-shaped probe over a multi-word phrase
@@ -10182,22 +10200,23 @@ if [ "$ER_OK" -eq 1 ]; then
   ER_PNSEC="$(printf '%s\n' "$ER_PSEC" | grep -c '[^[:space:]]' || true)"
   ER_PNCTL="$(printf '%s\n' "$ER_PCSEC" | grep -c '[^[:space:]]' || true)"
   ER_PFLAT="$(printf '%s\n' "$ER_PSEC" | sed 's/^[[:space:]]*>[[:space:]]*//' | tr '\n\t' '  ' | tr -s ' ')"
-  ER_PWRAP=0; ER_PCARD=0; ER_PID=0; ER_PSTOP=0; ER_PXREF=0
+  ER_PWRAP=0; ER_PCARD=0; ER_PID=0; ER_PFIFTH=0; ER_PSTOP=0; ER_PXREF=0
   # Here-strings rather than pipes, per group PF: a pipe into an early-exiting `grep -q`
   # reports failure on a SUCCESSFUL match under pipefail.
   grep -qF 'there is no earlier version to restore from' <<<"$ER_PFLAT" && ER_PWRAP=1
-  grep -qF 'Four things survive it' <<<"$ER_PFLAT" && ER_PCARD=1
+  grep -qF 'Five things survive it' <<<"$ER_PFLAT" && ER_PCARD=1
   grep -qF "The fourth is a reusable group's name" <<<"$ER_PFLAT" && ER_PID=1
+  grep -qF 'The fifth is a name in a place the operation reads' <<<"$ER_PFLAT" && ER_PFIFTH=1
   grep -qF 'stops at the title line on purpose' <<<"$ER_PFLAT" && ER_PSTOP=1
   grep -qF '../groups/README.md' <<<"$ER_PFLAT" && ER_PXREF=1
   if [ "$ER_PNSEC" -eq 0 ] || [ "$ER_PNCTL" -eq 0 ] || [ "$ER_PWRAP" -eq 0 ]; then
     FAIL "ER20: an extraction or the matcher itself came back EMPTY — people/README.md § *$ER_PHEAD* yielded $ER_PNSEC non-blank line(s), the control section § *$ER_PCTLH* read by the SAME extractor yielded $ER_PNCTL, and the wrap-spanning control phrase matched=$ER_PWRAP. That phrase spans a hard wrap in this section, so a zero on it means the flattening is gone and every prose verdict here would be a line-shaped zero over a hard-wrapped file. With the control section at 0 the extractor is broken; with only the subject at 0 the section has moved. Not a skip and not a pass"
-  elif [ "$ER_GRP_N" -ne 1 ] || [ "$ER_GRP_SCOPED" -ne 1 ]; then
-    FAIL "ER20: the group-store reach has MOVED — $ER_GRP_N reach row(s) name \`groups/\` and $ER_GRP_SCOPED of them are scoped to \`## Members\` (expected 1 and 1). The person-side survivor count rests on that reach: a group's name is a survivor only while the sweep stops at the member bullets, so the cardinal in people/README.md § *$ER_PHEAD* must be re-derived against the new reach in the SAME commit, alongside the group-side disclosure ER19 grades. A count that outlives the fact it counts is the defect this arm exists for"
-  elif [ "$ER_PCARD" -eq 1 ] && [ "$ER_PID" -eq 1 ] && [ "$ER_PSTOP" -eq 1 ] && [ "$ER_PXREF" -eq 1 ]; then
-    PASS "ER20: people/README.md § *$ER_PHEAD* enumerates FOUR survivors over $ER_PNSEC extracted line(s) (control section $ER_PNCTL line(s), flattening validated by the wrap-spanning control) — it states the cardinal, names a reusable group's name as the fourth, discloses that erasure reaches the group record and stops at its title line on purpose, and cites ../groups/README.md so a reader meeting either side reaches the other. The two disclosures now move with the one reach measurement instead of with each other"
+  elif [ "$ER_GRP_OK" -ne 1 ]; then
+    FAIL "ER20: the group-store reach has MOVED — $ER_GRP_N reach row(s) name \`groups/\`: $ER_GRP_RM REACH on the \`## Members\` bullets, $ER_GRP_RH REPORT on the \`# <H1>\` title line, $ER_GRP_XH REACH on the title line (expected two rows — one REACH on the bullets, one REPORT on the title line, none reaching it). The person-side survivor count rests on that reach: a group's name is a survivor only while the rewrite stops at the member bullets, so the cardinal in people/README.md § *$ER_PHEAD* must be re-derived against the new reach in the SAME commit, alongside the group-side disclosure ER19 grades. A count that outlives the fact it counts is the defect this arm exists for"
+  elif [ "$ER_PCARD" -eq 1 ] && [ "$ER_PID" -eq 1 ] && [ "$ER_PFIFTH" -eq 1 ] && [ "$ER_PSTOP" -eq 1 ] && [ "$ER_PXREF" -eq 1 ]; then
+    PASS "ER20: people/README.md § *$ER_PHEAD* enumerates FIVE survivors over $ER_PNSEC extracted line(s) (control section $ER_PNCTL line(s), flattening validated by the wrap-spanning control) — it states the cardinal, names a reusable group's name as the fourth and a name in a place the operation reads and does not rewrite as the fifth, discloses that erasure reaches the group record and stops at its title line on purpose, and cites ../groups/README.md so a reader meeting either side reaches the other. The two disclosures now move with the one reach measurement — one REACH row on the bullets and one REPORT row on the title line — instead of with each other"
   else
-    FAIL "ER20: people/README.md § *$ER_PHEAD* no longer enumerates the group name as a survivor — cardinal 'Four things survive it' matched=$ER_PCARD, the fourth named as a reusable group's name=$ER_PID, the stops-at-the-title-line disclosure=$ER_PSTOP, the cross-reference to ../groups/README.md=$ER_PXREF, over $ER_PNSEC extracted line(s) with the flattening confirmed. This section PROMISES to say plainly what erasure cannot reach, so a survivor missing from it is a false enumeration rather than an omission — and a stale cardinal is the half a reader cannot detect, because the list still reads complete. groups/README.md discloses the same reach from the other side; a release that changes one side changes both"
+    FAIL "ER20: people/README.md § *$ER_PHEAD* no longer enumerates the survivors the reach leaves — cardinal 'Five things survive it' matched=$ER_PCARD, the fourth named as a reusable group's name=$ER_PID, the fifth named as a name in a place the operation reads=$ER_PFIFTH, the stops-at-the-title-line disclosure=$ER_PSTOP, the cross-reference to ../groups/README.md=$ER_PXREF, over $ER_PNSEC extracted line(s) with the flattening confirmed. This section PROMISES to say plainly what erasure cannot reach, so a survivor missing from it is a false enumeration rather than an omission — and a stale cardinal is the half a reader cannot detect, because the list still reads complete. groups/README.md discloses the same reach from the other side; a release that changes one side changes both"
   fi
 
   # ── ER21 — EVERY SECTION OF THE TRIP FILE, AND EVERY LABELLED LINE OF § Dietary & Health, HAS
