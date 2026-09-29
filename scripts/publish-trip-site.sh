@@ -1562,7 +1562,8 @@ _GUARD_REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # operator keeps it, and after an install the engine's own `people/` is a record-free
 # skeleton of one tracked README. Resolving step 2 of the store-root rule against the
 # engine therefore returns RESOLVED on the directory and UNDETERMINED on every record,
-# which L387 of this file calls aborting every publish of that trip forever.
+# which is the outcome the RESIDUAL note in _guard_match's header states as
+# "UNDETERMINED aborts every publish of that trip forever".
 #
 # It defaults to the engine root, so a run that passes no flag behaves exactly as it did
 # before this seam existed, and it is set ONLY by an explicit `--data-root` argument —
@@ -1858,8 +1859,10 @@ nonpublishable_values() { # <trip_dir> [site_html]
       esac
       # Store root: trip-root first, then the DATA root. TWO STEPS, no upward search — an
       # upward search is non-deterministic when both roots exist. Step 2 resolves against
-      # $_GUARD_DATA_ROOT, never against the engine root: see that variable's own block
-      # above for why the two are not the same thing once this engine is installed.
+      # $_GUARD_DATA_ROOT, which defaults to the engine root unless --data-root is passed.
+      # /trip-publish always passes the flag (skills/trip-publish/SKILL.md § Invocation),
+      # so that default binds only a direct operator run. That variable's own block above
+      # says why the two roots are not the same thing once this engine is installed.
       if [ -d "$trip_dir/$_GUARD_PERSON_STORE" ]; then
         rstore="$trip_dir/$_GUARD_PERSON_STORE"
       else

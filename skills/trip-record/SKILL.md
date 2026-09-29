@@ -207,6 +207,20 @@ and it takes exactly this shape:
 2. **The repair lands in the same act as the edit that falsified it**, and the slice's own design
    names it as a Zone A repair and cites the falsifying edit. A false statement left standing for a
    later author to find is the failure this point exists to remove.
+
+   **Where that act missed it, the first slice that names it repairs it.** A clause found false
+   after the act that falsified it is repaired, on every other term of this point, in the act of a
+   slice whose own design names it as a Zone A repair and cites that edit; a slice that names it so
+   does not leave it for another. The duty above still binds every falsifying slice, and this is
+   the move left when one missed it. It reaches no further than that duty does: a clause falsified
+   by an edit to another file alone, with nothing in this file changed by that act, is outside this
+   point, late or not, and its repair takes an operator decision this point does not give, as this
+   limb's own did.
+
+   **This limb is recorded here rather than folded in:** it was added — with the term clause 4 now
+   carries for it and the qualifiers it needs elsewhere in Zone A — by an operator decision taken as
+   a decision in its own right. Clause 4 did not admit it: clause 4 admits a repair of this point,
+   and nothing that widens what may change.
 3. **The terminal disposition is conversion, not a second repair.** A statement falsified twice is
    evidence that it enumerates a set the extension points grow: it is rewritten as **the rule that
    derives the set, never the members**, and the members come out. A statement a permitted edit
@@ -227,8 +241,9 @@ and it takes exactly this shape:
    sentences are falsifiable by the same permitted edits, and a point that forbade its own repair
    would be the state the paragraph above describes reproduced one level up — licensing the edits
    that falsify it and then refusing the repair. So a repair *of* this point is admitted on exactly
-   the terms it imposes on everything else: only the falsified clause moves, in the same act, cited
-   in the slice's own design, converted rather than repaired twice. Nothing here admits a repair
+   the terms it imposes on everything else: only the falsified clause moves, in the same act or,
+   where that act missed it, in the act of the first slice that names it, cited in the slice's own
+   design, converted rather than repaired twice. Nothing here admits a repair
    that widens what may be changed elsewhere in Zone A.
 
 **The shape of a table row.**
@@ -264,7 +279,7 @@ conformance guard reads this file, not from taste.
 
 | A later slice must add | A later slice must not change |
 |---|---|
-| one requirement-table row per verb it implements, **every cell taking the value § *The shape of a table row* derives for it** — the cells are not restated here, because a second statement of them is a second source that can disagree with the first; a `**Reads:**` line at the head of each `## <verb>` section it appends, per § *What the blocks above are*; one `## <verb>` section per row, appended in Zone B below every section already there; `allowed-tools` additions only where a verb needs one and its own design names that verb; and, for a verb that changes a persist-mutable file, that file's own no-overwrite shape — read the file, change the named row, never regenerate it — stated inside that verb's own section | anything in Zone A except those table rows, that `allowed-tools` union, and a repair made under § *The repair extension point*; the header block's declaration lines; the evidence blocks; the table's five columns; § *What the blocks above are*; the refusal branches, except a repair or conversion made under that same point; and the standing clause, except under the Extension rule stated there |
+| one requirement-table row per verb it implements, **every cell taking the value § *The shape of a table row* derives for it** — the cells are not restated here, because a second statement of them is a second source that can disagree with the first; a `**Reads:**` line at the head of each `## <verb>` section it appends, per § *What the blocks above are*; one `## <verb>` section per row, appended in Zone B below every section already there; `allowed-tools` additions only where a verb needs one and its own design names that verb; and, for a verb that changes a persist-mutable file, that file's own no-overwrite shape — read the file, change the named row, never regenerate it — stated inside that verb's own section | anything in Zone A except those table rows, that `allowed-tools` union, and a repair made under § *The repair extension point*; the header block's declaration lines; the evidence blocks, except as `CLAUDE.md` § *Resolving a trip* changes what a consumer carries; the table's five columns; § *What the blocks above are*, except a repair or conversion made under that same point; the refusal branches, except a repair or conversion made under that same point; and the standing clause, except under the Extension rule stated there |
 
 **Binding on every later slice, without exception:** no line beginning with the pre-execution
 marker anywhere in the file; no sixth column; no other five-column table with a `G0`–`G8` fifth
@@ -272,16 +287,17 @@ cell; no change to `contract-depth`; and no text below the last verb section.
 
 ## What the blocks above are
 
-The ladder the header cites is stated in one place and is not restated here. The blocks above have
-already run, and **their output is the whole of the trip state this file resolves against** — the
-population from the listing block, and the lifecycle, the mode and the destination by value from
-the record block. No verb re-runs either block, and no verb re-derives what they already carry.
+The ladder the header cites is stated in one place and is not restated here. The blocks above are
+this file's evidence entries, tool calls you issue as the data-root paragraph above directs, and
+**their output is the whole of the trip state this file resolves against** — the population from
+the listing block, and the lifecycle, the mode and the destination by value from the record block.
+No verb re-runs either block, and no verb re-derives what they already carry.
 
-Each block is a tool grant this file has to hold, and each is held for a use the requirement table
-names: the listing block for `Bash(ls:*)`, and the record block for `Bash(grep:*)`, which reads the
-lifecycle, the mode and the destination by value. Neither grant is speculative and neither is
-unused. **The header block above fixes how many pre-execution blocks this file carries, and it
-already carries all of them** — no slice adds another.
+This file's grants for the evidence entries above are its declared minimum privilege, each for a
+use the requirement table names: `Bash(ls:*)` for the listing block, and `Bash(grep:*)` for the
+record block, which reads the lifecycle, the mode and the destination by value. Neither grant is
+speculative and neither is unused. **The header block above fixes how many evidence entries this
+file carries, and it already carries all of them** — no slice adds another.
 
 **The read-scope ceiling is a principle, not a path list: every verb reads exactly what its own
 section names, and nothing else.** Silence is a prohibition here rather than a gap — a read this
@@ -342,7 +358,8 @@ What that line has to carry:
   change, and only under `trips/<slug>/`. A verb that declares a read of a file it does not own has
   declared a read and nothing else.
 
-**Frozen.** This section is not a later slice's to edit. A verb's read scope is declared in that
+**Frozen.** This section is not a later slice's to edit, except by a repair or conversion made
+under § *The repair extension point*. A verb's read scope is declared in that
 verb's own section.
 
 ## Standing clause — binding every verb of this command, present and future
@@ -1840,10 +1857,10 @@ argument is not a session.
 
 **The date.** Get it by running `date +%F` as a tool call **here in the body, not as a pre-execution
 block**, and use the bare `YYYY-MM-DD` form exactly as the call returned it. The reason is the
-contract rather than style: § *What the blocks above are* fixes how many pre-execution blocks this
-file carries and it already carries all of them, so a further one is a red check on push whatever
-this section says. `Bash(date:*)` is the grant this call takes, and `/trip-new` already takes its
-own date this way for the same stated reason — a shipped convention rather than a new one.
+contract rather than style: the contract retired that carrier, and a line opening with its marker
+outside a fence fails `scripts/test-command-taxonomy.sh` group `I` on push, whatever this
+section says. `Bash(date:*)` is the grant this call takes, and `/trip-new` already takes its own
+date this way for the same stated reason — a shipped convention rather than a new one.
 
 **Precondition.** `Read` `trips/<slug>/trip-log.md`. **Absent → stop, and create nothing:** say
 which path is missing and name **`/trip-new <slug>`**, whose Resume branch is the declared repair
@@ -3098,7 +3115,7 @@ renders that field and the roster together and is where the reconcile is finishe
 
 ## history <name>
 
-**Reads:** `trips/<slug>/travelers/<file>.md` — the file-existence probe that resolves `<name>` on the resolved trip, and **its frontmatter alone, for the `person:` key**, which is the reference this verb inverts; **no body line of that file is read**, because nothing in a traveller's own answers bears on where they have already been; `people/<person-id>.md` — the file-existence probe and **its frontmatter alone**, to establish that the reference resolves and whether it is a `merged-into:` stub, and **no body line of any person record is read**; `people/` — the store listing, for the stubs that redirect to that record, which is the closure step and the only reason this verb reads the store as a whole; `trips/` — the trip listing, **which arrives from the listing block above rather than from a listing this verb takes**; and `trips/*/travelers/*.md` — **the frontmatter of every traveller file on every trip, read to the closing `---` and no further**, which is the resolution step and the only way another trip enters this verb's scope. **It opens no trip's `trip-context.md`, in either direction, its own included** — each trip's destination and lifecycle arrive by value in the record block above, which has already run, so a per-trip open would re-derive what that block already carries. **Writes nothing, anywhere, on every branch. Dispatches no agent. Performs no act whose effect lands outside the trip's own files** — every trip and every person record it reaches, it reaches read-only, and an observation is not an effect. **Takes no `Bash(ls:*)` use** — the listing block holds that grant by name, and this verb consumes its output rather than taking a listing of its own.
+**Reads:** `trips/<slug>/travelers/<file>.md` — the file-existence probe that resolves `<name>` on the resolved trip, and **its frontmatter alone, for the `person:` key**, which is the reference this verb inverts; **no body line of that file is read**, because nothing in a traveller's own answers bears on where they have already been; `people/<person-id>.md` — the file-existence probe and **its frontmatter alone**, to establish that the reference resolves and whether it is a `merged-into:` stub, and **no body line of any person record is read**; `people/` — the store listing, for the stubs that redirect to that record, which is the closure step and the only reason this verb reads the store as a whole; `trips/` — the trip listing, **which arrives from the listing block above rather than from a listing this verb takes**; and `trips/*/travelers/*.md` — **the frontmatter of every traveller file on every trip, read to the closing `---` and no further**, which is the resolution step and the only way another trip enters this verb's scope. **It opens no trip's `trip-context.md`, in either direction, its own included** — each trip's destination and lifecycle arrive by value in the record block above, which you issued during resolution, so a per-trip open would re-derive what that block already carries. **Writes nothing, anywhere, on every branch. Dispatches no agent. Performs no act whose effect lands outside the trip's own files** — every trip and every person record it reaches, it reaches read-only, and an observation is not an effect. **Takes no `Bash(ls:*)` use** — the listing block holds that grant by name, and this verb consumes its output rather than taking a listing of its own.
 
 The prior-visit verb. It answers *has this traveller been to this destination before* from the references the trips already carry, and **it answers by offering rather than by writing**: what it produces is a suggestion the traveller may take, and the answer that lands in their file is theirs.
 

@@ -3,6 +3,104 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.47.0] — 2026-09-28 — A fresh install reaches its data, and each verb says what it reads
+
+The commands run from whatever project you have open, so Claude Code needs permission to read your
+data folder and its pointer, which the README's install grants in step 4. Nothing had measured that
+step as written, and a read the harness refused still stopped with the remedy for a different
+fault: write the pointer, or copy the canary. The verbs' prose had drifted too: their bodies said
+the evidence blocks had already run, `CLAUDE.md` explained the grants as if they admitted reads, and
+`/trip plan` told its enrichment leg to write only what its roster row named, leaving out the
+traveller model it rebuilds.
+
+**Install step 4 prints the settings entry in the form that was measured.** The entry goes in your
+user settings, with both paths absolute and the data folder's path read from the pointer, and the
+step cites `CLAUDE.md` § *Resolving a trip* for which settings files Claude Code honours rather than
+listing them. That section records the user settings as honoured in a workspace that has not been
+trusted, in print mode, measured on Claude Code 2.1.233 under the default permission mode. On
+Claude Code 2.1.280, in print mode under the default permission mode, `/trip-publish`'s
+pointer read did not run while its path carried `${HOME}`, even with the entry in
+place. The verb now reads its pointer by a literal path, taking your home directory
+from `echo "$HOME"`, which reads no path; that spelling was not re-measured. The
+Windows note asks for absolute paths with every backslash doubled inside the JSON.
+
+**A read the harness refused now stops with its own remedy.** `CLAUDE.md` states once how to tell a
+refused read from one that ran and failed, and that a refused read establishes nothing about the
+path it names. The resolution ladder's first gate, which reads the pointer, gains a refused arm, and
+the gate that reads the trip listing tells four outcomes apart: refused, ran and failed, ran without
+its canary, and trustworthy. Every stop names its own remedy. The stop for a refused read names the
+path, passes on the harness's text, and gives the allowed-directories step as the
+fix only where that text says the path lies outside the session's allowed working
+directories, naming no folder to add for any other refusal; it never tells you to
+write the pointer or copy the canary, because neither was seen to be missing. The
+README's *Verify* section says which message means which fix.
+
+**The grants are stated as what they are: each verb's declared minimum privilege.** `CLAUDE.md`
+explained the `Bash(ls:*)` and `Bash(grep:*)` grants as if they decided whether a verb's evidence
+reads run. Measured on Claude Code 2.1.233, in print mode under the default permission mode, they do
+not: the session's allowed working directories decide, and inside them the evidence reads ran with
+no `Bash` grant at all. The grants are now stated as declared minimum privilege there, in `/trip`,
+`/trip-publish` and `/trip-record`, and in the trip resolution contract suite's comments. No
+sentence among them still says a grant is needed for an evidence read, and no verb's grants change.
+
+**The verb bodies describe the carrier they have.** Since the pre-execution carrier was retired, the
+evidence entries are tool calls the agent issues after resolving the data root, yet all five verb
+bodies and two cells of `CLAUDE.md`'s *Step 2* table still spoke of blocks that had already run, or
+were pre-executed. A search for those phrasings found seventeen in the verb bodies before this
+release and finds none now. Sentences that name the retired carrier only to forbid it stay, worded
+as prohibitions, and where one gives a reason it is the one that holds: a line opening with that
+carrier's marker outside a fence fails the command-taxonomy suite on push.
+
+**A frozen section of `/trip-record` is repaired, by the maintainer's decision.** The file's repair
+extension point admits a repair only in the act that falsified the clause, and retiring the carrier
+falsified three clauses of § *What the blocks above are* without repairing them. The maintainer
+first amended the point, and the file records that the amendment came from that decision, not from
+the point's own terms: the first slice whose design names such a clause and cites the falsifying
+edit now repairs it, while a clause that only another file's edit falsified stays outside the
+point. The section also opens to repair or conversion under the point. The three clauses were then
+repaired, and nothing else.
+
+**`/trip plan`, `replan` and `reorder` say what their agents write and read.** `plan` sends each
+agent out to write exactly the files its roster row names, and the roster left out five of the
+files its agents write: the traveller model enrichment rebuilds as reconciler, the event-status
+file it seeds at setup, and the hub's change summary, cost estimate and preserved earlier
+itinerary. Both rows now name them. All three verbs name `outputs/traveler-model.md` among the
+reads of every role they dispatch, since each agent's prompt reads it; a `replan` triggered by a
+changed profile sends enrichment out as reconciler alone, writing only the model; and `plan`'s
+announcement names that rebuild before its first dispatch.
+
+**Two comments in the publish script say what its code does.** One cited a line number that never
+held the statement it meant; the other said a step never resolves against the engine root, directly
+above a default that is the engine root when no `--data-root` is passed. Each now says what the
+code beside it does.
+
+**New checks hold this, in the command-taxonomy and contract suites, both required checks.** The
+contract suite fails when either gate loses its refused branch or the listing gate another stop, or
+when a clause that writes a refused read's remedy omits the allowed-directories step or uses a word
+of the pointer or canary remedy; four paraphrases of that wrong remedy are among its must-fire arms.
+The contract suite also fails when a clause gives that step without limiting it to a refusal
+saying the path lies outside the session's allowed working directories, or when the rule for any
+other refusal is missing, names a folder to add, or uses a word of the pointer or canary remedy.
+The command-taxonomy suite pairs a verb's grant table with its frontmatter in both directions, and
+fails when a file an agent writes is missing from its roster row, as the files above were before
+this release. Two edits to the evidence-marker rule that used to leave the contract suite green now
+turn it red. Each new arm was shown red under the change it guards and green without it.
+
+**The honest limits.** Where a read is admitted and where it is refused is Claude Code's behaviour,
+meant to be re-derived against the version in use. What this release records of it was measured on
+Claude Code 2.1.233 and again on 2.1.280, each time in print mode under the default permission
+mode; on 2.1.280 the evidence reads outside the session's allowed working directories were refused
+with `permissions.blockReadsOutsideWorkingDirectories` unset, so that setting is not what refuses
+them there, and what it added was refusing the `Read` tool's read of a pointer outside them. On
+2.1.280, in print mode under the default permission mode, no verb read `CLAUDE.md` in any run
+measured, so none rendered a stop of the resolution ladder; a verb installed by the README reading
+it, and a re-measure, are tracked. The traveller model's rebuild and `plan`'s announcement of
+it are described from the verbs' text: no live `/trip plan` run was made in this release. No
+standing check yet holds the verb bodies' zero for the retired carrier's phrasings; one is tracked.
+`/trip check` and `/trip ideas` still leave the traveller model out of their agents' reads, and the
+file tree in `CLAUDE.md` still omits the change summary; both are tracked. The refused-remedy check
+reads words rather than meaning, and says so.
+
 ## [0.46.1] — 2026-09-26 — A rotation revokes the passphrase it replaces
 
 This is a security release. It fixes GHSA-gmm2-v7rr-jq7r: rotating a site's passphrase could leave the
