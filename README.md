@@ -74,16 +74,18 @@ line, from inside that checkout.
 
 **4. Let Claude Code read your data folder.** The commands run from whatever project you have open,
 so Claude Code needs permission to read the data folder and the pointer. Add both to your user
-settings, `~/.claude/settings.json`. If that file already exists, add the entry to its
-`permissions` object:
+settings, `~/.claude/settings.json`, as absolute paths. This prints the entry with both paths
+filled in, taking the data folder's path from the pointer you just wrote:
 
-```json
-{
-  "permissions": {
-    "additionalDirectories": ["~/travel", "~/.travel-planner"]
-  }
-}
+```bash
+printf '{\n  "permissions": {\n    "additionalDirectories": ["%s", "%s"]\n  }\n}\n' \
+  "$(cat ~/.travel-planner/data-root)" "$HOME/.travel-planner"
 ```
+
+If `~/.claude/settings.json` doesn't exist yet, save what it prints as that file. If it does, add
+both paths to the `additionalDirectories` list in its `permissions` object. Which settings files
+Claude Code honours in a folder you haven't trusted is recorded in [`CLAUDE.md`](CLAUDE.md)
+§ *Resolving a trip*.
 
 To update the engine, run `git pull` in `~/.claude/skills/travel-planner`. If a release adds a new
 command, link it the same way as in step 2.
@@ -99,8 +101,10 @@ for %v in (trip trip-new trip-record trip-publish trip-decommission) do mklink /
 ```
 
 Then create your data folder as in step 3, and write its absolute path, on one line, to
-`%USERPROFILE%\.travel-planner\data-root`. Allow both folders as in step 4. Publishing runs a bash
-script, so use Git Bash or WSL for it.
+`%USERPROFILE%\.travel-planner\data-root`. Allow both folders as in step 4, each by its absolute
+path, with every backslash doubled inside the JSON (`C:\\Users\\you\\travel`). Step 4's `printf`
+line is for macOS and Linux, so write the entry by hand here. Publishing runs a bash script, so use
+Git Bash or WSL for it.
 
 </details>
 
@@ -112,8 +116,10 @@ suggest `/trip-new`.
 - **The commands don't appear:** `ls -l ~/.claude/skills/` should list the five links, next to the
   `travel-planner` directory itself.
 - **They appear but can't find your trips, or ask for permission to read them:** check the path in
-  `~/.travel-planner/data-root` and your `additionalDirectories` entry. The error message names the
-  file to fix.
+  `~/.travel-planner/data-root` and your `additionalDirectories` entry. The error message says which:
+  a read Claude Code refused because the folder is outside the ones it may read points you to step 4;
+  any other refusal is passed on in Claude Code's own words, with no folder to add; and a missing or
+  unreadable file is named by its path.
 
 <details>
 <summary>Upgrading from a version that copied commands into <code>~/.claude/commands/</code></summary>
