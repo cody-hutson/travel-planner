@@ -1288,7 +1288,7 @@ counts fewer people than this engine knows travel, and none counts one of them t
 | a number below the counted floor but not below the named-traveler count, where the one change was a member's needs recorded through `/trip-record person` in this act — a re-run that re-supplies them included | write the counted floor — the reconcile that recorded them wrote the count in this same act, so no roster change postdates it |
 | a number below the counted floor, after any other change | say so — the total, the named-traveler count and the outside-roster count, as numbers and never a name — and **ask**; write neither value until the user settles it |
 | a withdrawal recorded through `/trip-record person` in this act, of a member the roster does not name, and the field equalled the pre-withdrawal counted floor — the floor the reconcile leaves, plus the member it dropped | decrement it |
-| such a withdrawal, and the field exceeded that floor | leave it, and say the unnamed remainder now counts one person more than the model records |
+| such a withdrawal, and the field exceeded that floor | leave it, and say that the part of the unnamed remainder the model does not record grew by one |
 | a removal other than the stale row — someone leaving the party, a duplicate row, a row added in error — and the field equalled the pre-removal counted floor | decrement it |
 | such a removal, and the field exceeded that floor | leave it, and say the unnamed remainder grew by one |
 | a stale row removed — the second state § *Roster standing of a third-party member* names | leave it, and say the unnamed remainder grew by one: the person still travels, and is counted there now |
@@ -1319,7 +1319,7 @@ person is leaving the party or still travels, and whether their needs are record
 and is recorded there is the stale row § *Roster standing of a third-party member* takes off, and
 the table's stale-row row decides it; every other removal — a departure, a duplicate row, a row
 added in error — takes its removal rows. **Where the person leaving the party is recorded through
-`/trip-record person`, say that the decrement is not the end of it**: their entry stands, and it
+`/trip-record person`, say that the removal is not the end of it**: their entry stands, and it
 re-enters the outside-roster count at the next reconcile, once no row shares its key, until it is
 withdrawn — name `/trip-record person <name>` with the statement that they are not travelling, and
 do not run it. **Echo the whole row verbatim before writing** — the removed bytes survive in the

@@ -242,7 +242,11 @@ making rather than a tidy-up. Nothing decided above or below changes.
 class-derived for the values a group may see.** This section's bar — traveller identity may not reach
 the render even pseudonymously — derives from the class: a signal letting a reader tell which
 traveller acted is an anonymized projection of a traveller-model value, and § 5.1 forecloses that
-projection for an `internal-hard` class. [The private-site record](ADR-030-what-the-private-site-may-show.md)
+projection for an `internal-hard` class. *(Superseded in part:
+[ADR-041](ADR-041-third-party-roster-standing.md) admits one integer derived from C12 to the
+render — the count of party members recorded through `/trip-record person`, as a summand of the
+published `- **Total travelers:**`; it tells a reader nothing about which traveller did anything,
+and this bar stands for every other value.)* [The private-site record](ADR-030-what-the-private-site-may-show.md)
 keeps that class value and reads the class for the values a travel group may see on its private
 site. On the private site, rendering a filer's IN values under their roster name is admitted by that
 verdict even though it lets a reader infer who filed their own form; the engagement value itself is

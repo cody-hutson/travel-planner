@@ -703,7 +703,8 @@ Required inputs:
    count of part of the party (one stream, one day, one track) that includes
    them. Where the brief flags that the published total does not yet count them
    all, carry that flag here as a `VERIFY` with no number and no name, naming
-   `/trip-record group`. A brief with no such clause is carried as before)
+   `/trip-record group`, or `/trip-record person` withdraws a member who no
+   longer travels. A brief with no such clause is carried as before)
 6. outputs/traveler-model.md (the `[DERIVED]` per-traveler needs + desires — the
    source for the satisfaction-coverage read: anchors/wishes → covered/not,
    needs → pass/fail. Its desire-overlap signal now also carries the attention

@@ -230,8 +230,10 @@ not name, and can lag the model. A count passed down by every dispatcher widens 
   `+ <n>` line's `group-total` left whole on the `unallocated` line rather than split; the hub's
   carry rule, exercised by no run in this release; a stated total whose unnamed remainder counts
   someone else in place of such a member, which the table reads as complete; and a withdrawal whose
-  name the roster spells differently from the entry, which the withdrawal rows leave in the total
-  rather than decrement.
+  name the roster spells differently from the entry — where the total equals the floor the
+  reconcile leaves, the member is left in it, and where it exceeds that floor by one, the
+  withdrawal rows decrement it and the later removal of the member's row as a departure decrements
+  it again, so it ends one below the party's size.
 - **Reversibility: CHEAP.** Markdown and one suite group. Reverting the release restores the text of
   `ADR-011`, `ADR-010`, `ADR-025` and `ADR-030` with it.
 

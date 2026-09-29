@@ -305,7 +305,8 @@ writing any of them:
   travelers plus that count, the published total does not yet count them all, or
   this file predates a roster change: carry the count anyway, and flag it `VERIFY`
   naming nobody — `/trip-record group` brings the total up to the count, and
-  `/trip-record travelers` refreshes a file older than the roster.
+  `/trip-record travelers` refreshes a file older than the roster, or
+  `/trip-record person` withdraws a member who no longer travels.
 - **Each traveler whose own window states an arrival different from their origin's
   booking contributes a stream of their own**, at their own arrival time, into the
   same destination airport. If no leg records their flight, write the stream from
