@@ -504,6 +504,15 @@ only the verbs that existed when it was written.
     a declared table is the only confirmation shape available to an operation forbidden to name what
     it removed.**
 
+    **Against rule 2 this rule is an exception, not a widening, and it is stated as one:** every
+    write it makes to existing trip content — its substitutions and its deletion of the traveller
+    file they supersede among them — is an overwrite or a deletion that rule 2 forbids, admitted by
+    this rule rather than by its confirmation, because an erasure's whole subject is the removal a
+    person asked for, so the verbatim echo `group` gives a removed row — which `ADR-012` inverts for
+    this operation, since here it would copy the erased values into the transcript — cannot be
+    offered, and the receipt this rule makes total stands where that echo would, as it already
+    stands where rule 9's echo would.
+
     It is here rather than inside the verb section because the prohibition half binds every verb:
     **no other verb of this command may write a location this table names on the ground that erasure
     already reaches it** — a warrant is a rule of this clause deriving that verb's own target and
@@ -3108,6 +3117,8 @@ renders that field and the roster together and is where the reconcile is finishe
 **Re-expansion is idempotent by delegation, not by new logic.** A member already on the roster meets `## group`'s shipped presence probe — present → edit, absent → add. A traveller file already naming a **different** record meets `link`'s repoint branch, which echoes the outgoing id and counts the fields that stop drawing on it; that branch is not suppressed here, and a member on it surveys as `DIVERGES`. **This verb re-implements neither.**
 
 **The receipt names the group by id and by H1, the count expanded, and each excluded member with its verdict.** It is the one place the group id and the trip meet, and it is a transcript rather than an artifact.
+
+**The receipt ends as `## group [<name>]` § *After any roster change* ends a roster change — once for the whole run — after any run that wrote a member, a partial run included, because each member it wrote changed the roster, a link, or both.** Name **`/trip-record travelers`** as the reconcile, and **do not run it**; where the run added a roster row, that paragraph's staleness report comes with it **by citation rather than restated here**, so it reads whatever that paragraph reads. N runs of `## group` would each have ended on this step, and `## link <name> <person-id>` names the same reconcile after its `person:` write, so naming it once, after the last member written, is those namings collapsed — the name is the same after every one of them. **Not running it is this verb's equivalence rather than a courtesy:** an expansion that ran the reconcile would produce a state *N invocations of a shipped path* does not produce, which is the argument that makes it reconcile `- **Total travelers:**` above, read in the other direction; and it would dispatch an agent from a verb whose `Reads:` line declares that it dispatches none. A run that wrote no member — declined, or with every member excluded — names nothing, because nothing changed.
 
 **The standing rule this write is taken under is rule 5**, unwidened, and **not rule 12**. Every byte this verb writes lands under `trips/<slug>/`, so no widening is reached for and none is needed: rule 12 governs writes to a reference store, and this verb **reads** the group store and writes none of it. **Rule 2's two conditions and rule 7's append shape carry the trip-side writes**, exactly as they carry `## group`'s roster row, that verb's own edit of this same count — a field whose named lines change, which is rule 2's `Edit` condition unstretched — and `## link`'s field today. Saying so is what keeps the widening ladder honest — a verb that named a rule it did not need would make the next author reach for one too.
 
