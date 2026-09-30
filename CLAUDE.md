@@ -645,7 +645,8 @@ travel-planner/
 ├── templates/
 │   ├── trip-context.template.md
 │   ├── traveler-intake.template.md   ← the trip half of intake (blank; copied per traveler into the git-ignored trips/.../travelers/)
-│   └── person-intake.template.md     ← the durable half (blank; filled once per person into the git-ignored people/)
+│   ├── person-intake.template.md     ← the durable half (blank; filled once per person into the git-ignored people/)
+│   └── interview-card.md             ← the portable interview card (sent with an intake form and a filled-in example to someone not at this machine; tells any assistant how to run the interview and what to give back)
 └── trips/                    ← ships with README.md only; all trip content git-ignored
     ├── README.md             ← tracked signpost (the one tracked file under trips/)
     └── <destination>-<year>/ ← one folder per trip

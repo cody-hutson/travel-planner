@@ -22,7 +22,9 @@ its bracket, so the two never read alike. The verb refuses a form whose declared
 does not conduct, and a finished file keeps the form's declaration, which a later session checks
 before resuming. `/trip-record profile <name>` runs the same interview on its first route and
 whenever an existing profile resumes, and its self-serve copy now has the trip's slug filled into
-its frontmatter.
+its frontmatter. `/trip-record profile <name>` and `/trip-record interview` now take the directory
+listings their collision checks declare, so those checks run as written; a listing that cannot be
+taken stops the command before anything is written.
 
 **The durable person record can be interviewed for the first time.**
 `/trip-record interview templates/person-intake.template.md <name>` creates a record in the people
@@ -51,7 +53,9 @@ instructions for producing a finished file; each form's paste-line points at the
 card carries the same numbered rules word for word, and a required check fails the moment the two
 texts differ. Two corrections come with the move: on a closed choice the interviewer offers only the
 members the form lists, never an example the bracket gives, and the trip form's must-haves step no
-longer says that the trip file's dietary and health section names the people it covers.
+longer says that the trip file's dietary and health section names the people it covers. A third
+correction: an example given in a form's notes on asking a section may be mentioned as an example,
+never offered as a choice, and the person form's must-haves step now asks the question open.
 
 **On the trip file's form, the interviewer writes only where the ownership table lets it.**
 `/trip-record interview templates/trip-context.template.md` conducts the trip's own file within the
