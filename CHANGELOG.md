@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-09-28 — One interviewer, any conforming form
+## [0.48.0] — 2026-09-28 — One interviewer, any conforming form
 
 Until now each guided intake form carried its own copy of the interview's rules below its
 end-of-profile line. The assisted route read the trip form's copy, asked its questions and wrote the
@@ -80,8 +80,9 @@ with the card: a returned trip profile is checked when `/trip-record profile <na
 saved by hand keeps the trip placeholder and fails the frontmatter check, and a durable record's
 return has no merge, so nothing checks its labels but the card's instruction to keep them exactly.
 `/trip-record`'s command file grew again: its body was 3,019 lines when this release began and is
-3,253 at its end, about six and a half times the budget `CLAUDE.md` § *Verb body size* records, and
-its reduction belongs to the planned consolidation into one skill. Both new records land `Proposed`.
+3,253 at its end (a net 17 of the lines it gained are `0.47.0`'s, which shipped while this release
+was open), about six and a half times the budget `CLAUDE.md` § *Verb body size* records, and its
+reduction belongs to the planned consolidation into one skill. Both new records land `Proposed`.
 The flip to `Accepted` is the maintainer's at the milestone close, and it moves each record's status
 line and its index row together.
 
