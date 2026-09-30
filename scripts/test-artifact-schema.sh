@@ -10235,13 +10235,21 @@ if [ "$ER_OK" -eq 1 ]; then
   #
   # FOUR MUST-FIRE CONTROLS, each over an in-memory copy through the same instrument:
   #   (i)   a synthetic heading and a synthetic label appended to the template's lists -> +1 / +1;
-  #   (ii)  `, § *Trip Style*` appended to row 32's Location cell -> exactly 1 double;
-  #   (iii) `Allergies:` added to row 32's qualifier -> exactly 1 double (FM-4's two mutants);
+  #   (ii)  a synthetic row citing § *Trip Style* -> exactly 1 double;
+  #   (iii) a synthetic row citing § *Dietary & Health* with `Allergies:` in its qualifier ->
+  #         exactly 1 double (FM-4's two mutants);
   #   (iv)  § *Hard Constraints* cited on row 7 -> no new double, where a qualifier bound to its
   #         nearest segment alone reads one (the FM-5 join control).
-  # (ii) and (iii) mutate row 32, so they are graded once the table disposes of every heading and
-  # label: on a table without that row the finding is the undisposed list, and the arm reports it
-  # rather than a control with no subject. Every path to the PASS still requires all four.
+  # (ii) and (iii) ride two synthetic rows appended to an in-memory copy of the table, each citing
+  # its heading-and-key with the disposition the live table does NOT give it, read live. A live
+  # row cannot carry them: a mutant on a live row makes a double only while that row's
+  # disposition differs from the heading-and-key's, so the control would hang on a disposition
+  # another arm grades — with the mutants on row 32, row 32 set to REPORT silenced both and read
+  # as a BROKEN PROBE beside ER22, the arm that grades row 32. A synthetic row doubles only
+  # against a live citation, so (ii) and (iii) are graded once the table disposes of every
+  # heading and label: on a table that cites neither, the finding is the undisposed list, and the
+  # arm reports it rather than a control with no subject. Every path to the PASS still requires
+  # all four.
   ER21_TPL="$ROOT/templates/trip-context.template.md"
   ER21_H=""; ER21_L=""
   if [ -r "$ER21_TPL" ]; then
@@ -10273,14 +10281,13 @@ if [ "$ER_OK" -eq 1 ]; then
         printf "%d\t%d\t%d\t%s\t%s\t%s\n", nuh, nul, nd, uh, ul, dd
       }' <<<"$(er_cites "$3")"
   }
-  # er21_mut <rows> <row-n> <app|pre|ins> <text> — row <n>'s Location cell with <text> appended,
-  # prefixed, or inserted before its `Mobility notes:` code span. Every other row is unchanged.
+  # er21_mut <rows> <row-n> <app|pre> <text> — row <n>'s Location cell with <text> appended or
+  # prefixed. Every other row is unchanged.
   er21_mut() {
     awk -F'\t' -v OFS='\t' -v n="$2" -v m="$3" -v x="$4" '
       $1 == n {
         if (m == "app") $2 = $2 x
         else if (m == "pre") $2 = x $2
-        else if (m == "ins") { p = index($2, "`Mobility notes:`"); if (p > 0) $2 = substr($2, 1, p - 1) x substr($2, p) }
       }
       { print }' <<<"$1"
   }
@@ -10308,8 +10315,17 @@ if [ "$ER_OK" -eq 1 ]; then
   ER21_C4OK=0
   [ "$ER21_J1" -eq 1 ] && [ "$ER21_J2" -eq 1 ] && [ "$(printf '%s' "$ER21_K4" | cut -f3)" -eq "$ER21_ND" ] && ER21_C4OK=1
   # (ii) and (iii) — #1654 FM-4's two mutants, each exactly one double, on the heading-and-key named.
-  ER21_K2="$(er21_score "$ER21_HJ" "$ER21_LJ" "$(er21_mut "$ER_TROWS" 32 app ', § *Trip Style*')")"
-  ER21_K3="$(er21_score "$ER21_HJ" "$ER21_LJ" "$(er21_mut "$ER_TROWS" 32 ins '`Allergies:`, ')")"
+  # Each rides a synthetic row, numbered 0 so it is no row of the table, carrying the disposition
+  # er21_other gives: REPORT where the table's first citation of that heading-and-key reads REACH,
+  # and REACH otherwise.
+  ER21_CT="$(er_cites "$ER_TROWS")"
+  ER21_DTS="$(awk -F'\t' 'f == 0 && $1 == "Trip Style" && $2 == "*" { print $3; f = 1 }' <<<"$ER21_CT")"
+  ER21_DAL="$(awk -F'\t' 'f == 0 && $1 == "Dietary & Health" && $2 == "Allergies" { print $3; f = 1 }' <<<"$ER21_CT")"
+  er21_other() { if [ "$1" = "REACH" ]; then printf 'REPORT'; else printf 'REACH'; fi; }
+  ER21_OTS="$(er21_other "$ER21_DTS")"
+  ER21_OAL="$(er21_other "$ER21_DAL")"
+  ER21_K2="$(er21_score "$ER21_HJ" "$ER21_LJ" "$(printf '%s\n%s\t%s\t%s\n' "$ER_TROWS" 0 '§ *Trip Style*' "$ER21_OTS")")"
+  ER21_K3="$(er21_score "$ER21_HJ" "$ER21_LJ" "$(printf '%s\n%s\t%s\t%s\n' "$ER_TROWS" 0 '§ *Dietary & Health* — `Allergies:`' "$ER21_OAL")")"
   ER21_C2OK=0; ER21_C3OK=0
   case "$(printf '%s' "$ER21_K2" | cut -f6)" in *'Trip Style · * ·'*) [ "$(printf '%s' "$ER21_K2" | cut -f3)" -eq "$((ER21_ND + 1))" ] && ER21_C2OK=1 ;; esac
   case "$(printf '%s' "$ER21_K3" | cut -f6)" in *'Dietary & Health · Allergies ·'*) [ "$(printf '%s' "$ER21_K3" | cut -f3)" -eq "$((ER21_ND + 1))" ] && ER21_C3OK=1 ;; esac
@@ -10319,11 +10335,11 @@ if [ "$ER_OK" -eq 1 ]; then
   elif [ "$ER21_C1OK" -ne 1 ] || [ "$ER21_C4OK" -ne 1 ]; then
     FAIL "ER21: BROKEN PROBE — the synthetic-heading control fired=$ER21_C1OK (a heading and a label nothing cites must each read as undisposed) and the join control fired=$ER21_C4OK (row 6's qualifier must reach § *Hard Constraints* as well as § *Dietary & Health*, so row 7 citing Hard Constraints adds no double). A control that does not move makes every count below a property of the instrument"
   elif [ "$ER21_UH" -ne 0 ] || [ "$ER21_UL" -ne 0 ] || [ "$ER21_ND" -ne 0 ]; then
-    FAIL "ER21: the reach table does not dispose of every trip-context location exactly once — $ER21_UH of $ER21_NH template heading(s) are cited by no row (${ER21_UHL:-none}), $ER21_UL of $ER21_NL § Dietary & Health label(s) are in no row's qualifier (${ER21_ULL:-none}), and $ER21_ND heading-and-key(s) carry more than one disposition (${ER21_NDL:-none}). A location no row names is a place a name can sit that the receipt reads past as reached, and a location with two dispositions is one the receipt reads two ways. FM-4's row-32 mutants are graded once this list is empty"
+    FAIL "ER21: the reach table does not dispose of every trip-context location exactly once — $ER21_UH of $ER21_NH template heading(s) are cited by no row (${ER21_UHL:-none}), $ER21_UL of $ER21_NL § Dietary & Health label(s) are in no row's qualifier (${ER21_ULL:-none}), and $ER21_ND heading-and-key(s) carry more than one disposition (${ER21_NDL:-none}). A location no row names is a place a name can sit that the receipt reads past as reached, and a location with two dispositions is one the receipt reads two ways. FM-4's mutants are graded once this list is empty"
   elif [ "$ER21_C2OK" -ne 1 ] || [ "$ER21_C3OK" -ne 1 ]; then
-    FAIL "ER21: BROKEN PROBE — FM-4's mutants on row 32 did not each read as exactly one double: § *Trip Style* appended fired=$ER21_C2OK, \`Allergies:\` added to the qualifier fired=$ER21_C3OK. A uniqueness check that cannot see a heading or a label cited twice with different dispositions proves nothing by reading zero"
+    FAIL "ER21: BROKEN PROBE — FM-4's mutants did not each read as exactly one double: a synthetic row citing § *Trip Style* as $ER21_OTS fired=$ER21_C2OK, and one citing \`Allergies:\` under § *Dietary & Health* as $ER21_OAL fired=$ER21_C3OK, where the table's own first citations read ${ER21_DTS:-none} and ${ER21_DAL:-none}. A uniqueness check that cannot see a heading or a label cited twice with different dispositions proves nothing by reading zero"
   else
-    PASS "ER21: the reach table disposes of all $ER21_NH template heading(s) and all $ER21_NL § Dietary & Health label(s), each heading-and-key exactly once, and all four controls fired — a synthetic heading and label read undisposed, § *Trip Style* appended to row 32 and \`Allergies:\` added to its qualifier each read as one double, and row 7 citing § *Hard Constraints* reads none because row 6's \`Applies to:\` qualifies both headings of its join. The receipt is total over this table, and this is what makes the table total over the trip file"
+    PASS "ER21: the reach table disposes of all $ER21_NH template heading(s) and all $ER21_NL § Dietary & Health label(s), each heading-and-key exactly once, and all four controls fired — a synthetic heading and label read undisposed, synthetic rows citing § *Trip Style* as $ER21_OTS and \`Allergies:\` under § *Dietary & Health* as $ER21_OAL — the dispositions the table does not give them — each read as one double, and row 7 citing § *Hard Constraints* reads none because row 6's \`Applies to:\` qualifies both headings of its join. The receipt is total over this table, and this is what makes the table total over the trip file"
   fi
 
 fi
@@ -10629,14 +10645,19 @@ ER_R_P="$(er_rfence third-party | cut -f1)"
 # state an erasure leaves; this reads the subject's name AS THIS TRIP WRITES IT — the
 # declaration's second subject field, never the record's name, because a row on a resolved trip
 # matches the name on that trip (skills/trip-record/SKILL.md § *The name every match reads*) —
-# over the five REACH regions: § *Group*'s body; in § *Dietary & Health* the `Mobility notes:`
+# over the six REACH regions: § *Group*'s body; in § *Dietary & Health* the `Mobility notes:`
 # and `Other health notes:` bullets with the lines that continue them, and any line carrying
 # `Applies to:`; § *Hard Constraints*' `Applies to:` lines; § *Logistics*' `Primary traveler:`
-# and `Departing travelers:` lines; and the derived model's body. It requires zero there, beside
-# a survivor control that must be found in the same regions. CIAC-4's limb: the both-marks
-# entry's text carries the subject's token and not the name. The cross-check reads rows 1, 2, 3,
-# 4, 6, 32, 33, 35 and 36 as REACH, because a fixture carrying no survivor proves nothing about a
-# table that no longer reaches the place it is clean in.
+# and `Departing travelers:` lines; the derived model's body; and the model's `## ` lines that
+# carry `[ERASED]`. It requires zero there, beside a survivor control that must be found in the
+# same regions. The body leaves out every `## ` line, because another entry's heading that names
+# the subject is row 38's to report; the sixth region takes back, from the `## ` lines after the
+# frontmatter, those that carry the mark — by row 10 the subject's own entry heading, the only
+# location that takes it — so a name left there reads as a survivor, and a heading that lost the
+# mark leaves the region EMPTY. CIAC-4's limb: the both-marks entry's text carries the subject's
+# token and not the name. The cross-check reads rows 1, 2, 3, 4, 6, 10, 32, 33, 35 and 36 as
+# REACH, because a fixture carrying no survivor proves nothing about a table that no longer
+# reaches the place it is clean in.
 #
 # THREE MUST-FIRE CONTROLS, planted through er_sub1 into an in-memory copy:
 #   the name planted in the both-marks entry's need -> exactly 1;
@@ -10654,19 +10675,20 @@ er22_reg() {
     3) er_rx pick hard-constraints '' 'Applies to:' "$2" ;;
     4) er_rx pick logistics '' 'Primary traveler:|Departing travelers:' "$2" ;;
     5) er_rx body '' '' '' "$3" ;;
+    6) awk 'NR == 1 && $0 == "---" { fm = 1; next } fm { if ($0 == "---") fm = 0; next } /^## / && index($0, "[ERASED]") > 0 { print }' <<<"$3" ;;
   esac
 }
 # er22_count <word> <ctx> <model> -> `<total>\t<per-region counts>`
 er22_count() {
   local i n t=0 per=""
-  for i in 1 2 3 4 5; do
+  for i in 1 2 3 4 5 6; do
     n="$(er_wcount "$1" "$(er22_reg "$i" "$2" "$3")")"
     t=$((t + n)); per="$per$n "
   done
   printf '%d\t%s\n' "$t" "${per% }"
 }
 ER22_NLS=""; ER22_EMPTY=0
-for i in 1 2 3 4 5; do
+for i in 1 2 3 4 5 6; do
   n="$(er22_reg "$i" "$ER_R_CTX" "$ER_R_MODEL" | grep -c '[^[:space:]]' || true)"
   ER22_NLS="$ER22_NLS$n "; [ "$n" -gt 0 ] || ER22_EMPTY=$((ER22_EMPTY + 1))
 done
@@ -10690,23 +10712,23 @@ ER22_COK=0
 [ "$ER22_K1" -eq "$((ER22_N + 1))" ] && [ "$ER22_K2A" -eq "$((ER22_N + 1))" ] && [ "$ER22_K2R" -eq 0 ] && [ "$ER22_K3" -eq "$((ER22_N + 1))" ] && [ "$ER22_SURV" -ge 1 ] && ER22_COK=1
 # The cross-check: every row this fixture's regions stand for must still be REACH.
 ER22_XBAD=""
-for r in 1 2 3 4 6 32 33 35 36; do
+for r in 1 2 3 4 6 10 32 33 35 36; do
   [ "$(er_row_disp "$r")" = "REACH" ] || ER22_XBAD="$ER22_XBAD $r"
 done
 if [ "$ER22_READ" -ne 1 ]; then
   FAIL "ER22: the erasure-reach fixture or its declaration could not be read — trip-context, model, and the subject's token, name on this trip, record name, survivor and both-marks label must all be present, and one was not. Every count below would be over nothing"
 elif [ "$ER22_EMPTY" -ne 0 ] || [ "$ER22_PN" -eq 0 ]; then
-  FAIL "ER22: a REACH region came back EMPTY — non-blank lines per region (Group, Dietary & Health lines, Hard Constraints Applies-to, Logistics slots, model body) read ${ER22_NLS% } and the both-marks entry read $ER22_PN. A region that holds nothing holds no survivor for the wrong reason"
+  FAIL "ER22: a REACH region came back EMPTY — non-blank lines per region (Group, Dietary & Health lines, Hard Constraints Applies-to, Logistics slots, model body, erased entry heading) read ${ER22_NLS% } and the both-marks entry read $ER22_PN. A region that holds nothing holds no survivor for the wrong reason"
 elif [ "$ER22_COK" -ne 1 ]; then
   FAIL "ER22: BROKEN PROBE — a must-fire control did not move as predicted: the both-marks plant read $ER22_K1, the alias plant read $ER22_K2A keyed on the name on this trip and $ER22_K2R keyed on the record's name, and the nested-bullet plant read $ER22_K3 (each must be one more than the fixture's $ER22_N, and the record-keyed count 0); the survivor control read $ER22_SURV (must be at least 1). Until each fires, a zero here is the instrument's rather than the fixture's"
 elif [ -n "$ER22_XBAD" ]; then
-  FAIL "ER22: the reach table does not reach the places this fixture is clean in — row(s)${ER22_XBAD} do not read REACH (the fixture's regions stand for rows 1, 2, 3, 4, 6, 32, 33, 35 and 36; survivors in them read $ER22_N). A fixture whose post-state holds no survivor grades nothing about a table that no longer prescribes that post-state"
+  FAIL "ER22: the reach table does not reach the places this fixture is clean in — row(s)${ER22_XBAD} do not read REACH (the fixture's regions stand for rows 1, 2, 3, 4, 6, 10, 32, 33, 35 and 36; survivors in them read $ER22_N). A fixture whose post-state holds no survivor grades nothing about a table that no longer prescribes that post-state"
 elif [ "$ER22_N" -ne 0 ]; then
-  FAIL "ER22: the subject's name survives in a REACH location — $ER22_N occurrence(s), per region (Group, Dietary & Health lines, Hard Constraints Applies-to, Logistics slots, model body) ${ER22_PER}. A name left standing where the table says it is rewritten is exactly the erasure the receipt would report as total"
+  FAIL "ER22: the subject's name survives in a REACH location — $ER22_N occurrence(s), per region (Group, Dietary & Health lines, Hard Constraints Applies-to, Logistics slots, model body, erased entry heading) ${ER22_PER}. A name left standing where the table says it is rewritten is exactly the erasure the receipt would report as total"
 elif [ "$ER22_PT" -lt 1 ] || [ "$ER22_PA" -ne 0 ]; then
   FAIL "ER22: CIAC-4 — the both-marks entry's text carries the subject's token $ER22_PT time(s) and the name on this trip $ER22_PA time(s); it must carry the token at least once and the name never. Row 35 substitutes the subject's name inside that entry's text and leaves its heading and needs, which are the party member's"
 else
-  PASS "ER22: the name on this trip reads 0 across the five REACH regions (${ER22_NLS% } non-blank line(s)), the survivor control reads $ER22_SURV, the both-marks entry carries the token $ER22_PT time(s) and the name 0, and rows 1, 2, 3, 4, 6, 32, 33, 35 and 36 read REACH. All three plants fired — the both-marks need, the alias in \`Mobility notes:\` (1 on the name on this trip, 0 on the record's), and the line nested under \`Other health notes:\` — so the zero is a measurement over regions that do reach the lines they name"
+  PASS "ER22: the name on this trip reads 0 across the six REACH regions (${ER22_NLS% } non-blank line(s)), the survivor control reads $ER22_SURV, the both-marks entry carries the token $ER22_PT time(s) and the name 0, and rows 1, 2, 3, 4, 6, 10, 32, 33, 35 and 36 read REACH. All three plants fired — the both-marks need, the alias in \`Mobility notes:\` (1 on the name on this trip, 0 on the record's), and the line nested under \`Other health notes:\` — so the zero is a measurement over regions that do reach the lines they name"
 fi
 
 # ── ER23 — THE BOUNDS HOLD: NO OVER-MATCH (#1457 AC-6, R-7, CR-16). Each `keep` line declares an
