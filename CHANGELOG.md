@@ -80,7 +80,7 @@ with the card: a returned trip profile is checked when `/trip-record profile <na
 saved by hand keeps the trip placeholder and fails the frontmatter check, and a durable record's
 return has no merge, so nothing checks its labels but the card's instruction to keep them exactly.
 `/trip-record`'s command file grew again: its body was 3,019 lines when this release began and is
-3,230 at its end, about six and a half times the budget `CLAUDE.md` § *Verb body size* records, and
+3,253 at its end, about six and a half times the budget `CLAUDE.md` § *Verb body size* records, and
 its reduction belongs to the planned consolidation into one skill. Both new records land `Proposed`.
 The flip to `Accepted` is the maintainer's at the milestone close, and it moves each record's status
 line and its index row together.
