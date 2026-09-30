@@ -246,6 +246,8 @@ member of the union, so the union is unchanged. **The verb adds no `allowed-tool
 which is a stronger claim than adding one inside the union. The five sets differ from one another,
 so the read is not returning one repeated value.
 
+**Amendment (2026-09-30, Wednesday) — the grant set includes the listings the verb declares; this corrects a claim.** D1.4 reads *"The grant set the decided surface requires is `{Read, Write, Edit}`"*, and that list is short. Since commit `14c65a6`, which let the collision checks take the listings they declare, `## interview` also takes `Bash(ls:*)`, for exactly the listings its `**Reads:**` line declares — on a form whose output is the traveller file, the listing `## profile <name>` takes of the trip's `travelers/`, and on a store-rooted form, the store listing — so the set the decided surface requires is `{Read, Write, Edit, Bash(ls:*)}`. The omission predates that commit: the design declared those listings and named no tool for them. Read live at `14c65a6`, `trip-record`'s `allowed-tools` already grants `Bash(ls:*)`, so the corrected set is still a subset of `trip-record`'s own set and `trip-record` is still a member of the union: the union is unchanged, the verb still adds no `allowed-tools` line, and D1.5's independence, which rests on that subset relation, holds as stated. This corrects the list and nothing else; no decision is reversed, narrowed or re-opened.
+
 **D1.5 — The relationship to the single-trip-skill privilege record is *independent of its
 outcome*, and D1.4 is why.** That record bounds a grant union. This decision changes no grant on any
 surface, so its correctness does not turn on whether the shipped skills become one or stay as they
