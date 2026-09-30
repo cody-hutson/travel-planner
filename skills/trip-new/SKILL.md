@@ -108,9 +108,10 @@ data-root-pointer: ${HOME}/.travel-planner/data-root
 
 ## What to do with this
 
-The block above has already run and its output sits above this line. **The resolved trip population
-comes from it, as the contract states.** Do not list `trips/` again to re-derive that population, and
-do not read an existing trip's files to decide anything here.
+The block under § *Existing trips* is this file's evidence entry, a tool call you issue as the
+data-root paragraph above directs. **The resolved trip population comes from it, as the contract
+states.** Do not list `trips/` again to re-derive that population, and do not read an existing
+trip's files to decide anything here.
 
 The fenced block above is this file's contract declaration, and the requirement table that follows
 it states what each of its two branches requires. The block cites the one normative home of the
@@ -208,8 +209,8 @@ Build all nine members, in this order.
 | 9 | the traveler-intake hand-off | rendered with the resolved slug |
 
 **The date.** Member 5's entry is dated `YYYY-MM-DD`. Get it by running `date +%F` as a tool call
-here in the body, **not** as a pre-execution block: the contract header block above fixes how many
-pre-execution blocks this file carries, and it already carries all of them.
+here in the body, **not** as a pre-execution block: the contract retired that carrier, and a line
+opening with its marker outside a fence fails `scripts/test-command-taxonomy.sh` group `I` on push.
 
 Member 4 keeps **every other field of the template exactly as it ships.** A bracketed placeholder is
 a legitimate *not yet answered* — the form the user fills in through conversation — and never a gap

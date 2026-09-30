@@ -123,8 +123,10 @@ nothing.
 denials.** This command **dispatches no agent**: the agent-dispatch tool is neither granted
 nor denied on this surface, so the deny grammar does not reach it and no denial is claimed
 for it — the bound is that no construct below dispatches one. Likewise it runs no `date`,
-no `mkdir` and no primitive outside the grant table above: those are *unlisted*, which
-pre-approves nothing and forbids nothing, so the bound is again the file's own text.
+no `mkdir` and no primitive outside the grant table above but one — the `echo "$HOME"` this
+command issues under gate `G0-root`, to learn the home directory it substitutes into the
+pointer read, a call that reads no path: those are *unlisted*, which pre-approves nothing
+and forbids nothing, so the bound is again the file's own text.
 
 **One grant does read file contents, and this file states that rather than denying it.**
 The trip-record evidence block below greps `trip-context.md` and emits the lines it
@@ -172,8 +174,9 @@ denied by it.
 a closed grant list forbids nothing: a primitive left off it routes through the permission
 settings rather than being blocked. What the grant table delivers is a closed
 **declaration**, not a closure — every primitive this file intends to use is named there,
-so a use outside it is a departure from the file rather than something the file quietly
-permits. The grep grant, which the contract's prefix equality forces this file to hold at
+bar the one `echo "$HOME"` named under that table as its only exception, so a use outside
+them is a departure from the file rather than something the file quietly permits. The
+grep grant, which the contract's prefix equality forces this file to hold at
 its declared depth, is structurally capable of emitting a file's contents. That residual is
 bounded by a rule rather than by a denial — no construct in this file directs a
 content-emitting primitive at a passphrase path.
@@ -229,8 +232,9 @@ the tolerance for a code span belongs to a depth **cell** and never to this line
 header row.
 
 The ladder this cites is stated in one place and is not restated here. The blocks above
-have already run; their output is the whole of the trip state this file **resolves
-against**, and the whole of the trip state it needs. It is **not** the whole of what this
+are this file's evidence entries, tool calls you issue as the data-root paragraph above
+directs; their output is the whole of the trip state this file **resolves against**, and
+the whole of the trip state it needs. It is **not** the whole of what this
 file reads, and this file used to say that it was: `update` takes a presence-and-readability
 probe on a per-trip path, and under the definition the rest of this surface uses, that probe
 is a read. Do not read `trip-context.md` in full, and do not read `trip-log.md` or anything
@@ -273,9 +277,9 @@ The two prohibitions in the paragraph above are stated because they bind verbs w
 do not mention those files at all. How a sibling command renders its own ceiling is that
 command's to state.
 
-Each pre-executed block above is a tool grant this file has to hold, and each is held for
-a use the table above names: the listing block for `Bash(ls:*)`, and the record block for
-`Bash(grep:*)`, which reads the lifecycle, the mode and the destination by value. No grant
+This file's grants for the evidence entries above are its declared minimum privilege, each
+for a use the table above names: `Bash(ls:*)` for the listing block, and `Bash(grep:*)` for
+the record block, which reads the lifecycle, the mode and the destination by value. No grant
 here is speculative and none is unused.
 
 **`contract-depth` is the maximum depth over the table, not a per-verb claim.** `list`
@@ -626,8 +630,8 @@ commit's timestamp as a metadata residual no revert reaches.
 
 Distinct cases, and they are distinct branches.
 
-- **A G1 STOP** — the listing canary absent from the first evidence block. Render the STOP
-  and its remedy in the contract's terms for that gate. Render no inventory, render no
+- **A G1 STOP** — any of that gate's STOP branches, a refused listing among them. Render
+  the STOP and its remedy in the contract's terms for the branch that fired. Render no inventory, render no
   empty inventory, and say nothing at all about whether anything is published. A
   conclusion about publication state drawn from a directory listing that may have failed
   is the shape the contract's stop-message rule forbids by name, and a repo-wide
