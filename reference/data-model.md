@@ -614,6 +614,23 @@ A mark's payload is **well-formed** iff it matches `^[0-9]{4}-(0[1-9]|1[0-2])$`.
 
 > **Conflict detection keys on *statedness*; composition keys on *usability*.** An `EXPIRED` value is **stated** — so it is a real second owner and contests a trip-side value — and **not usable**, so it composes to `UNKNOWN` and is reported. It is never silently used, because a plan would then check entry requirements against a lapsed document, and never silently dropped, because a vanished constraint reads as compliance.
 
+### The interview's read of an unstated value — un-asked, declined, indeterminate
+
+**`ANSWERED()` above is unchanged, and it stays the predicate every consumer branches on.** One reader alone — `/trip-record interview`, resuming a form — has to tell the members of its false class apart, and it reads them as this table partitions them. `reference/adr/ADR-022-interview-session-model.md` D1.3 is authoritative for the decision; this is its live home, read at invocation and never restated in the verb.
+
+| The field's value in the file | `ANSWERED()` | The interview reads it as | And therefore |
+|---|---|---|---|
+| anything `ANSWERED()` calls true, `none` included | true | answered | never asks it again |
+| a surviving bracketed placeholder | false | un-asked | asks it |
+| exactly `—` | false | declined | never asks it again |
+| blank, or the line absent | false | indeterminate | asks it |
+
+**A surviving bracketed placeholder is recognised by its shape, and never by comparison with the form.** It is the placeholder predicate `CLAUDE.md` § *Resolving a trip* states once, field-general — a trimmed value that opens with `[` and closes with `]` — whatever the bracket holds, with or without a `closed:` or `open:` head. A comparison against the current form's own bracket would miss every file seeded before that bracket was last reworded, and would leave such a field matching no row of the table.
+
+**The shape is tested on the whole of a field's value, and a value can span lines.** A field's value is the text after its label's colon on the bullet's own line, together with the lines that continue it: each following line indented deeper than that bullet, stopping at the first line that is not, or that is itself a labelled bullet. Those are the field's lines, and they are what a write to the field changes. A bracket opened on the bullet's line and closed on a continuation line is therefore **one** placeholder, and the field reads un-asked; a reading that stopped at the bullet's own line would take the open bracket for an answer, and never ask the field.
+
+**No other reader tells these members apart, and none may start to.** The composition lattice, the extractor partition, the promotion refusal and the enrichment defaults all branch on `ANSWERED()` alone, which is what keeps this partition invisible to them. A value reaches the declined row only because someone skipped the question: the interview writes `—` for a skip it heard, and a surviving bracket is what a question nobody has asked looks like.
+
 ### The reference month — what a horizon is compared against
 
 > **`R = max(clock month, T)`.** Both terms are `YYYY-MM`. `T` is the **trip term** — the month this trip runs to — resolved from the trip's own `trips/<slug>/trip-context.md`. On a future trip `R` is that trip's own term; where no term resolves it falls back to the clock; and it is never earlier than the clock.
@@ -1340,13 +1357,15 @@ roster's `Traveler file` cell), and reused verbatim and attributed by
 > lowercase the name, replace every run of characters outside `A-Za-z0-9._-` with a single `-`,
 > then trim leading and trailing `-`.
 
-**Its restatement sites are closed, and this is the list.** Two of the three documented intake
-routes hand the saving to a person rather than to a command — the self-serve copy and the portable
-hand-off — so `templates/traveler-intake.template.md` states the transform to the human executing
-each of them, once per route, in the *"How to use it"* block and in the assistant hand-off at the
-foot of the form. Those two are guidance for a human keystroke, not a second normative home: a
-change to the rule is an edit to `skills/trip-new/SKILL.md` § *Travelers — count and names* and then to the four
-sites listed in this paragraph.
+**Its restatement sites are closed, and this is the list.** One of the three documented intake
+routes hands the saving to a person rather than to a command — the self-serve copy — so
+`templates/traveler-intake.template.md` states the transform to that person once, in its
+*"How to use it"* block. The portable hand-off does not restate it: the block its recipient sends
+back is saved by `/trip-record profile <name>`, which derives the path by the transform itself,
+and the *"How to use it"* block travels inside that block for anyone who saves one by hand. That
+block is guidance for a human keystroke, not a second normative home: a change to the rule is an
+edit to `skills/trip-new/SKILL.md` § *Travelers — count and names* and then to the three sites
+this section lists.
 
 Write `derive(P)` for that transform and `normalize(P)` for the two-step key above. Then for every
 display name `P`:
@@ -1389,7 +1408,7 @@ These four are the **complete complement** of the equality above, not a sample o
 
 | # | Case | Detected where | Disposition |
 |---|---|---|---|
-| **C1** | **Underived stem.** A profile saved by a route that never applied the transform — the self-serve copy or the portable hand-off — whose stem normalizes to something other than the roster `Person`'s key. | Reconciler, per roster row | **Report, never rename.** Name the roster `Person`, the observed file and both keys, and treat the traveler as **unresolved** — *not* as `PROFILE MISSING`. `travelers/<traveler>.md` is human-authored Layer 1 (§ *Who Writes What — Field Layering*), so renaming it is a write the reconciler does not hold. |
+| **C1** | **Underived stem.** A profile saved by hand without the transform — a self-serve copy, or a portable hand-off's returned block saved outside `/trip-record profile` — whose stem normalizes to something other than the roster `Person`'s key. | Reconciler, per roster row | **Report, never rename.** Name the roster `Person`, the observed file and both keys, and treat the traveler as **unresolved** — *not* as `PROFILE MISSING`. `travelers/<traveler>.md` is human-authored Layer 1 (§ *Who Writes What — Field Layering*), so renaming it is a write the reconciler does not hold. |
 | **C2** | **Empty key.** `normalize(P)` is the empty string — a display name carrying no ASCII alphanumerics. | Reconciler, and intake where it runs | **Hard stop, with the name quoted.** The key is not merely non-unique here, it is **absent**: two such travelers collide at `""`, and `derive(P)` is empty too, so no filename exists for the key to correspond to. The command surface already refuses an empty *derivation* on the create path; this extends the same refusal to the *key*. |
 | **C3** | **Reserved-key collision.** `normalize(P)` equals a declared reserved key (below). | Reconciler, and intake where it runs | **Hard stop at intake; refuse the entry at reconcile.** Admitting it is the fail-open: the guard's parse suppresses the entry, so its values never enter the non-publishable class at all. |
 | **C4** | **Two display names, one key.** Distinct `Person` values whose keys are equal — `Sam B.` and `Sam. B` both key to `samb`. | Reconciler only — it is a property of the **set**, and the reconciler is the one component that holds the set | **Hard stop, both names quoted; the operator disambiguates the display name.** The engine **never mints a suffix**: a minted suffix is a surrogate key wearing a natural key's clothes, and it would break the correspondence above by construction. |

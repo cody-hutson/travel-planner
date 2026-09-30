@@ -42,7 +42,9 @@ grants and the fenced invocations.
 **The frontmatter above, and what it is held for.** Each grant is held for a use a section below
 names, per `ADR-007` §2 bound 2. **Two of them are the file's own**, and their set is closed by the
 header block: `Bash(ls:*)` for the listing block and `Bash(grep:*)` for the record block, and
-nothing else in this file uses either. **Every other grant is a verb's, and the verb section that
+nothing else in this file uses `Bash(grep:*)`; outside the listing block, `Bash(ls:*)` is taken only
+by a verb section, for a listing that section's own `**Reads:**` line declares, as a tool call in
+its own body. **Every other grant is a verb's, and the verb section that
 takes it is where its use is named** — `Read` and `Edit` by each section that probes for a file or
 changes named lines in one, `Write` by each section that creates a file the trip does not have,
 `Task` by each section that dispatches an agent under standing rule 6, and `Bash(date:*)` by the
@@ -152,6 +154,7 @@ data-root-pointer: ${HOME}/.travel-planner/data-root
 | group-expand | ACTIVE | any | any | G8 |
 | history | ACTIVE | any | any | G8 |
 | .approvers | ACTIVE | any | any | G8 |
+| interview | ANY | any | any | G8 |
 
 The block above is this file's contract declaration, and the requirement table sits **below** it,
 outside the fence, so it renders as a markdown table. The fence the contract publishes names that
@@ -376,10 +379,9 @@ only the verbs that existed when it was written.
    condition — the target path does not exist. `Edit` is used on exactly one condition — the target
    path exists and only the named field's lines change. The probe that selects between them runs
    before either tool is reached.
-3. **Never invents a value.** An unanswered field is a skipped field and keeps its bracketed
-   placeholder. A field the user says does not apply takes a single em dash. Those are two different
-   states and this file never collapses them. A missing profile means *unknown*, never
-   *no constraints*.
+3. **Never invents a value.** A field nobody has asked keeps its bracketed placeholder. A field the
+   user skips, or says does not apply, takes a single em dash. Those are two different states and
+   this file never collapses them. A missing profile means *unknown*, never *no constraints*.
 4. **Never treats a placeholder as evidence, and never predicates a branch on a field's absence
    where a placeholder makes that field present.** `ADR-007` §2 bound 6, both halves.
 5. **Writes only under `trips/<slug>/`**, where `<slug>` is `trip.slug` exactly as `E1` spelled it.
@@ -513,8 +515,8 @@ only the verbs that existed when it was written.
     it was protecting is preserved and is the half that matters:** erasure's reach is not a warrant
     anyone else may borrow.
 
-11. **A record creation is the one write that may bring a durable person record into existence, and
-    it is bounded by a preview that is total over the source file's own answered set — never by a
+11. **A record creation is the one write that may bring a durable person record into existence from
+    values a filed source already holds, and it is bounded by a preview that is total over the source file's own answered set — never by a
     list of the fields someone remembered. This is a third widening of rule 5, taken under the
     Extension rule below, and rules 9 and 10 are left exactly as they stand.** Rule 9 derives a
     *target class* — one durable record, selected by an operator-supplied id — and fixes an
@@ -693,6 +695,55 @@ only the verbs that existed when it was written.
     deletion of existing trip content, each of which rules 1 and 2 above and `ADR-007` § 2 forbid
     unconditionally.
 
+15. **An interview's write into a durable person record is bounded by the form it conducts and by
+    what its subject says, and never by a list of verbs. This is a further widening of rule 5,
+    taken under the Extension rule below, and every rule above is left exactly as it stands.** Rule
+    9's operation class moves a value that already exists in this trip, and rule 11's copies values
+    a filed source already holds. An interview writes answers that exist nowhere until its subject
+    says them, so it fails rule 9 at its conditions (c) and (e) and rule 11 at its condition (c),
+    and rule 9 makes no such write available until a rule of its own derives it.
+
+    **The target class.** A path outside `trips/<slug>/` is a permitted target under this rule only
+    where it is **the durable record of the person whose own form the session is conducting**, at
+    the path `## interview <form> [<target>]` resolves for a store-rooted form, and nowhere else. On
+    the resume branch it is selected by an id the operator supplied — never by a display name,
+    never by a search, and never by any match this command computed — and a record carrying
+    `merged-into:` is never a target. On the creation branch, where no id can yet exist, it is a
+    path that does not exist whose stem is an id this run minted and rejection-sampled against the
+    store's own listing, derived exactly as rule 11 derives its own. The display name is compared
+    only to **refuse** a creation, by the store's own normalization, and no code path runs from that
+    comparison to a write on the matched record.
+
+    **The operation class.** The creation of the record, written whole before any question is
+    asked, and then writes that each carry an answer. **A write under this rule is taken on exactly
+    these conditions, all of which must hold:** **(a)** the verb's own section names the exact
+    target path; **(b)** a creation is taken only with its subject present and answering for
+    themselves, established before anything is written by asking the operator, and never from how
+    the request is worded; **(c)** every value written is taken from the subject's
+    own words in that turn, adding none, or is the un-answer those words chose — the em dash, or a
+    word the form itself declares in its place — so the write **records** and authors nothing, and
+    a value the operator relays rather than the subject saying it carries the operator-provided mark
+    and is written only where the record's class admits that mark; **(d)** a value being replaced
+    is **echoed verbatim before it goes**, and the field's current line is read again in the same
+    turn as its write, the file prevailing over what the session remembers; **(e)** the write
+    changes the lines of one field, or of one repeat unit whole, and nothing else — it creates no
+    second file, and it removes nothing but a repeat unit its subject asked to have taken out,
+    echoed verbatim first; and **(f)** the record written is the one the session's own form
+    produces — an answer that belongs on another form is named there, and never carried across.
+
+    **What (b), (c) and (e) are for.** **(b)** keeps the store's own exclusion — no record for a
+    person who did not ask for one — true by construction at the one surface that can create a
+    record from a conversation. **(c)** is the store's own write rule held at that surface: every
+    value originates from the person, a relayed value says so, and nothing is composed, inferred,
+    summarised or promoted into a record. **(e)** keeps rule 10's erasure the one write that deletes
+    a record: an interview removes at most a repeat unit its subject names, and never a record.
+
+    It is here rather than inside that verb's section because the prohibition half binds every
+    verb: **no other verb of this command may record a person's spoken answer in a durable record,
+    or create a record, on the ground that an interview does.** A bound written inside the one verb
+    that first needed it would leave the next slice free to record answers in the store with nothing
+    to satisfy.
+
 **Extension rule.** A later slice may append a numbered rule **only** where it genuinely binds every
 verb of this command, present and future, and must say in its own design that it did so and why. A
 rule that binds only that slice's own verbs goes inside those verb sections. Both failure modes are
@@ -805,9 +856,9 @@ first time a slice appends a row § *The shape of a table row* already admits �
 
 ## profile <name>
 
-**Reads:** `trips/<slug>/travelers/` — the **directory-presence probe**, taken with `Read` on the directory path itself and read only to establish whether the directory is there, which § *What the blocks above are* names as a read and requires declared; `trips/<slug>/travelers/*.md` — **the entry names alone, no file opened**, the denominator of the collision check below, named separately from the probe above because the read-scope ceiling names a glob by its directory *and* its selector and because a stem is not what a presence probe consumes; `trips/<slug>/travelers/<file>.md` — the file-existence probe that selects create from edit, the outgoing content on the edit route, **this file's frontmatter for the `person:` key** and **its body's labelled bullets**, the last two for the edit route's step-5 screen and for nothing else — named separately because purpose is the granularity this ceiling is stated at, and because `## extract` declares those same two reads of this same path; `templates/traveler-intake.template.md` — the interview script on route 1 and the copy source on route 2; `reference/data-architecture.md` — § 3.2, read at invocation for the canonical traveler key the collision check normalizes with, cited live rather than copied so that the trip side and the store side hold **one** identity relation between them; `reference/data-model.md` § *Field Scope* → *The classification* and § *`ANSWERED()`* — class and answered-ness, read live at invocation and **never re-authored here**, for the **cardinality alone** of the edit route's step-5 extraction set; it is the same live read `## extract` declares and it is declared for the same reason, that a second implementation of either predicate would be a second source of truth for what a field is. Does not read `trip-context.md`, in either direction. **Takes no `Bash(ls:*)` use:** § *The frontmatter above* closes that grant to the listing block by name, and the listing block lists `trips/` — the parent — so it observes that this trip exists and nothing about what is inside it. **Dispatches no agent.**
+**Reads:** `trips/<slug>/travelers/` — the **directory-presence probe**, taken with `Read` on the directory path itself and read only to establish whether the directory is there, which § *What the blocks above are* names as a read and requires declared; `trips/<slug>/travelers/*.md` — **the entry names alone, no file opened**, the denominator of the collision check below, named separately from the probe above because the read-scope ceiling names a glob by its directory *and* its selector and because a stem is not what a presence probe consumes; `trips/<slug>/travelers/<file>.md` — the file-existence probe that selects create from edit, the outgoing content on the edit route, **the whole file when an interview resumes over it**, because what it already answers is the resumption state, and its own `intake-form` block, compared with the form's before anything is asked, **each field's current line again in the same turn as that field is written**, because the file prevails over what the session remembers, **the whole file when a returned block is merged into it**, for which of its fields and units are answered, declined or still bracketed and which labels it holds, **this file's frontmatter for the `person:` key** and **its body's labelled bullets**, the last two for the edit route's step-5 screen and for nothing else — named separately because purpose is the granularity this ceiling is stated at, and because `## extract` declares those same two reads of this same path; `templates/traveler-intake.template.md` — the copy source of the seed routes 1 and 2 both write, and route 3's return writes where the path is absent, and, on route 1 and whenever an existing profile resumes, the form `## interview <form> [<target>]` conducts — its frontmatter, its `intake-form` block, everything above its boundary and its per-section ask-prose block, exactly as that section declares for the traveller file, cited rather than re-derived; `reference/data-architecture.md` — § 3.2, read at invocation for the canonical traveler key the collision check normalizes with, cited live rather than copied so that the trip side and the store side hold **one** identity relation between them; `reference/data-model.md` § *Field Scope* → *The classification* and § *`ANSWERED()`* — class and answered-ness, read live at invocation and **never re-authored here**, for the **cardinality alone** of the edit route's step-5 extraction set; it is the same live read `## extract` declares and it is declared for the same reason, that a second implementation of either predicate would be a second source of truth for what a field is; and, for the interview this verb runs inline, `skills/trip-record/interview-conduct.md` — the conduct it follows, read whole before the first question — the same section's § *The denominator*, the classification's `Scope` and never-asked rows, § *The interview's read of an unstated value*, and `reference/schemas/traveler-profile.md`, for where the traveller class admits the operator-provided mark — the reads `## interview <form> [<target>]` declares, cited rather than re-derived; and, when a block route 3 sent out comes back, the template's `intake-form` block and every label above its boundary, which that block is compared with before any of it is written, and the classification's `Scope` and never-asked rows, which tell a repeat unit's labels and the fields the merge never writes. Does not read `trip-context.md`, in either direction. **Takes one `Bash(ls:*)` call**, for the collision check's entry names — `ls -1 "<data-root>/trips/<slug>/travelers"`, issued in this section's body once check 1 has observed the directory; it returns the names and opens no file. The listing block lists `trips/` — the parent — so it observes that this trip exists and nothing about what is inside it. **Dispatches no agent.**
 
-The traveler-document verb. It creates a profile that does not exist and edits one that does, and
+The traveler-document verb. It creates a profile that does not exist and edits or resumes one that does, and
 the branch is selected by a probe rather than by a tool grant.
 
 **Filename.** Reuse the transform `/trip-new` already applies to the roster's `Traveler file` cell,
@@ -828,10 +879,13 @@ and this verb creates no directory.
 defeats.** The predicate is the **canonical traveler key** of `reference/data-architecture.md`
 § 3.2, **read live from that section and never re-authored here** — a second implementation of it
 would be a second source of truth for who is who, and the two would drift with nothing arbitrating.
-Compute that key over the stems of `trips/<slug>/travelers/*.md` and over the `<name>` this
-invocation was given; the check fires where a stem's key equals the name's. Reading **stems** rather
-than the files is sound by § 3.2's own filename-correspondence rule, which requires a stem's key to
-equal its entry's key, and it is what keeps this check on paths and out of profile content.
+Compute that key over the stems of `trips/<slug>/travelers/*.md` — the `.md` entry names returned
+by the listing this section takes here as a tool call, `ls -1 "<data-root>/trips/<slug>/travelers"`,
+each less its extension — and over the `<name>` this invocation was given; the check fires where a
+stem's key equals the name's. Reading **stems** rather than the files is sound by § 3.2's own
+filename-correspondence rule, which requires a stem's key to equal its entry's key, and it is what
+keeps this check on paths and out of profile content. **A listing that cannot be taken stops the
+verb** as an absent directory does — say which listing, and write nothing.
 
 **The predicate is not the filename, and that is the whole reason this check exists.** The filename
 transform above replaces a run of out-of-charset characters with a single `-`; § 3.2's key
@@ -888,25 +942,43 @@ or naming the branches without ordering them, is that same defect written in a d
 
 **Create — three routes, offered in this order. The order is the corpus's and none may be dropped.**
 
-1. **Walk through it here.** Run the interview using the template's own *Assistant — how to run this
-   interview* and *Assistant — the sections, in order* as the script; the template is the authority
-   on its own questions and this file does not restate them. About two to three minutes for the
-   starred fields. Then `Write` the file. **Only the content above the line-initial
+1. **Walk through it here.** Write the seed exactly as route 2 does, then conduct the interview over
+   it, inline and in this verb's own turn, by `## interview <form> [<target>]`'s rules for the
+   traveller file — cited, never restated, and **dispatching nothing**. Each answer is written as it
+   is settled — a field when it is answered, a repeat unit when it is complete — so a session left
+   part-way is resumed by running this verb again. About two to three minutes for the starred
+   fields. **Only the content above the line-initial
    `# END OF PROFILE` heading is the profile** — the guide below it is instructions for whoever is
-   helping, never content. Match that heading **line-initially**: the same string also appears as
-   inline code inside a bullet further down the template, and a substring match takes the wrong one.
-2. **Fill it in themselves.** `Read` the template, `Write` it to the path unmodified, then tell them
-   the path and the end-of-profile rule. A file of unfilled placeholders is a legitimate state, and
+   helping, never content. Match that heading **line-initially**: the form contract guarantees it
+   line-initially exactly once (`ADR-023` D2.6, question 2), and a substring match could take a
+   mention of it anywhere else.
+2. **Fill it in themselves.** `Read` the template and `Write` it to the path as the template ships it,
+   with the substitution the template itself asks for: `<trip-slug>` in the frontmatter becomes
+   `trip.slug`, exactly as `E1` spelled it (`ADR-022` D2.5). Nothing else changes — questions,
+   brackets and the guide below the boundary included. **This write is the seed route 1 begins
+   with.** Then tell them the path and the end-of-profile rule. A file of unfilled placeholders is a legitimate state, and
    the enrichment agent's blank-profile branch handles it exactly as it handles a missing one.
-3. **Send it to someone who is not here.** Hand them the whole template file plus the one line the
-   guide at the bottom of it gives them; they paste it into any assistant and return a block, which
-   is saved to the path. **No file is created at hand-off** — the file appears when the block
-   returns, and that return is a create if the path is absent and an edit if it is not. **Send
-   `examples/people-library-demo/travelers/noor.md` with the form** — they have no repository to
-   open, so a filled-in profile travelling beside the form is the only comparison they will get. On
-   a group trip this is how most travelers will do it, so **this route is never dropped.**
+3. **Send it to someone who is not here.** Send them three files: the form, the worked profile
+   `examples/people-library-demo/travelers/noor.md` and the portable interview card,
+   `templates/interview-card.md`. They paste the form and the card into any assistant with the one
+   line the form gives them, and send back the block it returns. **The set works without this
+   repository, and this is why:** the form holds the questions and their hints, the card holds how
+   to run the interview and what to give back, and the worked profile is the only filled-in
+   comparison they will get — and nothing in the set resolves into this repository. **No file is
+   created at hand-off.** The file appears when the block comes back and the operator hands it to
+   this verb, which seeds the path if it is absent and merges the block into it — *A returned
+   block* below. On a group trip this is how most travelers will do it, so **this route is never
+   dropped.**
 
-**Edit — an existing profile, field-scoped.**
+**Edit or resume — an existing profile.**
+
+**A named change edits; a returned block merges; anything else resumes.** Where a field is named
+as changing, steps 2 to 4 are the whole of the write — `ADR-022` D2.3's one mechanism, the same
+inside an interview and across sessions. Where the operator hands this verb a block route 3 sent
+out, it is merged by *A returned block* below, and nothing else is written. Where neither, this
+route resumes the interview inline by `## interview <form> [<target>]`'s rules, over the fields
+the file still leaves un-asked or indeterminate, and takes each answer it writes by steps 3 and 4.
+Step 5 follows each.
 
 1. `Read` the file.
 2. Name the field or fields that are changing, and **echo the outgoing value verbatim** before
@@ -936,8 +1008,53 @@ or naming the branches without ordering them, is that same defect written in a d
    the shape this file already sanctions by name; **this is the only place in this command where that
    verb is named as an offer.**
 
-An unanswered field keeps its bracketed placeholder; a field the user says does not apply takes a
-single em dash. **Never write a bracketed placeholder as though it were an answer.**
+**A returned block — route 3's return, seeded and then merged.** When the operator hands this verb
+the block route 3's recipient sent back, the ordered checks above run as for any `<name>`, and the
+block is taken in the three steps below, with nothing written before the first. **Where the block
+carries an `intake-form` block of its own, it must name the `form:` and `form-version:` the form's
+does**, or the return is refused, naming both, because it was filled from another form or contract
+version; a block carrying none, or more than one, is refused as well, because the card returns
+that block whole. **A block whose frontmatter `trip:` is not the form's `<trip-slug>` is named
+before anything is written, and none of its em dashes is written without the operator's yes:** the
+card returns that line as the form ships it, so a filled one marks a block the card did not
+produce — one filled from an older copy of the form, whose own instructions em-dashed every field
+nobody asked, or a saved profile sent back again.
+
+- **Seed, where the path is absent.** Write the seed exactly as route 2 does — the form as it
+  ships, with `<trip-slug>` becoming `trip.slug` (`ADR-022` D2.5) — and take nothing of the block
+  into it. On either branch the block's frontmatter and its `intake-form` block are never written:
+  the seed wrote the file's own, and no later write touches them.
+- **Merge, field by field, through steps 2 to 4.** A field is found by its `##` heading and its
+  label, and the title line and a section's unlabelled free-text line by their place. A field the
+  block answers or em-dashes, where that differs from the file's current line, has its current line
+  echoed verbatim and is then written under standing rule 2's second condition. **A field the block
+  em-dashes is written only where the file still leaves it un-asked or indeterminate;** where the
+  file answers it, its answer stands, and the field is named in the report. **A field the block
+  leaves bracketed is never written**, and neither is a field the classification says is never
+  asked. A run of `block`-scoped labels the form repeats under one heading is a repeat unit, merged
+  whole or not at all, as the interview writes one (`ADR-022` D2.2). A unit the block leaves wholly
+  bracketed is not written. One it leaves partly bracketed — a label the interview asks still
+  bracketed beside one answered or em-dashed — is named, and nothing of it is written. Any other
+  unit goes into the first unit under that heading the file still leaves wholly bracketed, its
+  current lines echoed and the unit then written in place under standing rule 2's second
+  condition, or, where none is left, is appended whole under standing rule 7 — except that a unit
+  the block wholly em-dashes is written only into a bracketed unit, because a declined unit adds no
+  entry. **Where the file already answers a unit under that heading, a unit the block answers is
+  placed only on the operator's yes:** one that reads, line for line and once whitespace is
+  collapsed, as a unit the file answers is named as already held and not written, and any other is
+  named beside the file's answered units and placed as above only when the operator says yes — a
+  recipient fills a blank form, so a unit carries no identity from one return to the next, and a
+  second return gives again what the first one filed. A merge never writes over a unit the file
+  answers or declines, and nothing below `# END OF PROFILE` is touched.
+- **Report every label that does not match, and write nothing for it.** A label the block carries
+  that the form lacks, a label the form carries that the block lacks, and a field whose line the
+  file does not hold are each named. The planner joins answers by label, so a renamed label is
+  reported rather than written under a label nobody asked.
+
+Step 5 follows.
+
+A field nobody has asked keeps its bracketed placeholder; a field the user skips, or says does not
+apply, takes a single em dash. **Never write a bracketed placeholder as though it were an answer.**
 
 **What this verb does not do.** It does not read `trip-context.md` and it does not write it — not
 the `## Group` roster, not `- **Total travelers:**`, in either direction. Keeping the roster in step
@@ -2484,8 +2601,9 @@ to the record's `## Needs` section by that class's own rule.
 `templates/person-intake.template.md`, replace its `[Name]` placeholder with the source's `Name`
 value, and fill the MOVES set into like-labelled bullets. **Labels stay byte-identical.** Only
 content **above the line-initial `# END OF PROFILE` heading** is written — matched line-initially,
-because that same string appears as inline code further down the template and a substring match takes
-the wrong one — and the guide below that heading is not carried into the record.
+because the form contract guarantees that heading line-initially exactly once (`ADR-023` D2.6,
+question 2) and a substring match could take a mention of it anywhere else — and the guide below
+that heading is not carried into the record.
 
 ### Refusals, in evaluation order. Every one writes nothing.
 
@@ -2968,7 +3086,7 @@ Where the target field is **unanswered** by the traveller, and only there:
 
 **This verb suggests no verb, either.** It does not offer to link a traveller, to repoint a reference, or to resolve an `UNDETERMINED`; a read verb that proposes a write is a classification with a reflexive accept.
 
-**The standing clause is taken unwidened, and no rule is appended for this verb.** Every widening in that clause — rules 9 through 13 — derives a permitted **write** target or operation, and a verb that writes nothing anywhere has nothing to derive and reaches for nothing. Saying so is what keeps the widening ladder honest: a verb naming a rule it did not need would make the next author reach for one too. **`## profile <name>`'s declared read-scope ceiling is left exactly as it stands** — this verb declares its own rather than widening that one, which is what the per-verb `**Reads:**` line is for.
+**The standing clause is taken unwidened, and no rule is appended for this verb.** Every widening of rule 5 in that clause derives a permitted **write** target or operation, and a verb that writes nothing anywhere has nothing to derive and reaches for nothing. Saying so is what keeps the widening ladder honest: a verb naming a rule it did not need would make the next author reach for one too. **`## profile <name>`'s declared read-scope ceiling is left exactly as it stands** — this verb declares its own rather than widening that one, which is what the per-verb `**Reads:**` line is for.
 
 **Reversibility: n/a — this verb writes nothing.**
 
@@ -3042,3 +3160,102 @@ before either write tool is reached. Not readable → **create** with `Write`, w
 approval. It reads no `.passphrase` and no `.approvals`, writes no path but
 `trips/<slug>/.approvers`, writes no approval record, and names no approver to any file the site
 build reads.
+
+## interview <form> [<target>]
+
+**Reads:** `<form>` — the form file this invocation names, resolved against the engine root and never against the working directory: its frontmatter, for the `trip:` value that roots the output and for the `writer:` and `artifact:` values its `intake-form` block restates; that block; every line above the literal its `boundary:` key names — the title line, the `##` sections in order, their labelled bullets, bracketed placeholders, star markers and guidance quotes, which together are the whole question set, or, on a form that declares regions rather than a boundary, every line outside its frontmatter and that block — its headings, which are its regions, and under them their labelled bullets at any indent, bracketed placeholders and guidance quotes; and, below that literal, **the block headed `### Assistant — the sections, in order` and nothing else**, for how to ask each section and for the conduct that form keeps as its own — never the form's numbered rules and never its instructions for producing a finished file; `reference/adr/ADR-023-interviewer-authored-home-and-form-contract.md` D2.1 — the keys a conforming form's `intake-form` block declares, which conformance question 1 requires the block of a form declaring `1` to carry, checked in § *The form, and the contract version this revision conducts* below before the conduct file is read — read live at invocation and **never re-authored here**, because a second list of those keys would be a second source of truth for what a form must declare to be interviewed; `skills/trip-record/interview-conduct.md` — this verb's conduct, the question set, the rules every interview shares and what only a write-capable session adds, authored there and nowhere else in this command, read whole once the form has passed § *The form, and the contract version this revision conducts* below and before the first question, because a conduct rule read in part is a rule not followed; `reference/data-model.md` § *Field Scope* → *The denominator*, for the rule that maps a `##` heading to a `Section` value, → *The classification*, the one table a form this revision conducts may name on its `classification:` key, for each field's `Scope`, its class and the rows it says are never asked, and § *`ANSWERED()`* with § *The interview's read of an unstated value* after it — read live at invocation and **never re-authored here**, because a second implementation of any of them would be a second source of truth for what a field is; **on a form whose output is the traveller file**, exactly what `## profile <name>` declares for its ordered checks, cited rather than re-derived — `trips/<slug>/travelers/`, the directory-presence probe; `trips/<slug>/travelers/*.md`, the entry names alone, no file opened; `reference/data-architecture.md` § 3.2, the canonical traveller key; and `trips/<slug>/travelers/<file>.md`, the file-existence probe that selects create from resume; **on a store-rooted form**, the store root by `reference/data-model.md`'s store-root rule, `<store-root>/people/` — the store listing, which is both the rejection set the minted id is sampled against and the denominator of the creation collision check — `<store-root>/people/*.md`, **the H1 line alone**, for that check, `reference/data-architecture.md` § 3.2, the canonical traveller key, whose normalization that check applies to the name and to each H1, and `<store-root>/people/<person-id>.md`, the file-existence probe on the resume branch and its frontmatter for `merged-into:`; `reference/schemas/traveler-profile.md` or `reference/schemas/person-record.md`, whichever is the output class's own schema, read at invocation for where that class admits the operator-provided mark, because the conduct file writes a relayed answer only there; **on a block-owned form**, `reference/region-reference.md` — the derived rows whose form is the one this invocation names, read whole at invocation: the writer table and the command they were derived against, and for each region its line and extent, its heading, the row it reached and that row's `Block` cell, its verdict, and the condition under which a `CONDITIONAL` region is this command's — read live and never re-derived here, because a second resolution of the writer table would be a second source of truth for which regions this command may write; **on a form whose output is the trip's own `trip-context.md`**, `trips/<slug>/trip-context.md`, the file-existence probe, which § *Resolving a trip*'s G3 has already passed; and on any rooting **the target file itself**, read whole when a session resumes because what the file already answers is the resumption state and its own `intake-form` block names the form it was seeded from, and each field's current line read again in the same turn as that field is written, because the file prevails over what the session remembers. **Reads a `trip-context.md` only where the form it conducts outputs one, and then only the resolved trip's own. Dispatches no agent. Takes `Bash(ls:*)` for exactly the listings it declares** — on a form whose output is the traveller file, `## profile <name>`'s, cited; on a store-rooted form, `ls -1 "<store-root>/people"`, the store listing, which returns the names alone, each record's H1 then read with `Read` — and this verb creates no directory.
+
+The interview verb. It conducts one form's interview with one person — the form's own questions, in the form's own order — and writes each answer into the file as it is settled, a single field when it is answered and a repeat unit when it is complete, so a session left part-way resumes from what the file still leaves unanswered. **Its conduct is authored in `skills/trip-record/interview-conduct.md` and nowhere else in this command** — the question set, the rules every interview shares and what only a write-capable session adds. Read that file whole before the first question and follow it. This section settles what the verb decides once per invocation, before the session runs, and the standing rule its writes are taken under; that file governs the session itself, question by question and write by write. `## profile <name>` runs this verb inline on its first route and whenever an existing profile resumes, and cites it rather than restating it. **Neither this section nor that file names a field of any form**: every field the interview touches is read from the form it is given.
+
+### The form, and the contract version this revision conducts
+
+`<form>` is the form's repository-relative path, spelled exactly as the `form:` line of its own `intake-form` block spells it, and resolved against the engine root. Read the file and find its `intake-form` block — a single fenced block, above the line its `boundary:` key names. Then read `form-version:` **before any other key**, because what every other key means depends on it:
+
+| `form-version:` the form declares | What this verb does |
+|---|---|
+| `1` | conducts the whole form, as the rest of this section states |
+| `2` | conducts the form only within the regions its writer table gives this command, as § *A block-owned form* below states |
+| any other value, or none | refuses, naming the value it read — or that none was declared — and the values the rows above conduct. It reads nothing past the block and writes nothing |
+
+**The last row stays last, and it is the only row without a literal value**, so a version this section does not conduct is refused whatever a later row adds above it.
+
+A form declaring `1` is interviewable only where its block carries every key `reference/adr/ADR-023-interviewer-authored-home-and-form-contract.md` D2.1 declares; its `form:` line names the file that was read; its frontmatter and its block both declare `writer: human`; its `output:` line names the `artifact:` value its frontmatter carries; its `classification:` key names `reference/data-model.md` § *Field Scope* → *The classification*, the one table this verb's `**Reads:**` line admits; every labelled bullet above its boundary joins exactly one row of that table on its `(section, label)` pair — a bullet joining none, or more than one, has no `Scope`, class or never-asked row to be conducted by; and the `boundary:` literal is a whole line of the file, occurring once, with the end-of-profile heading on the line immediately above it. Those are that record's conformance questions 1, 2, 3 and 5 — the ones whose answers this verb consumes. A form failing any of them is refused, and the refusal names the check, and for question 3 the bullet.
+
+### Where the file lives — rooted by the form's own frontmatter
+
+| The form's `output:`, and the frontmatter `trip:` it requires | The file is | `<target>` is | What the create branch writes into the frontmatter |
+|---|---|---|---|
+| `travelers/<traveler>.md`, with `trip:` the trip placeholder `<trip-slug>` | a traveller file under `trips/<slug>/`, named by the filename `## profile <name>` derives — the class whose rules are that section's | the traveller's display name, reached through `## profile <name>`'s ordered checks in their order | `trip.slug`, exactly as `E1` spelled it, in place of `<trip-slug>`, and nothing else |
+| `people/<person>.md`, with `trip:` the reserved sentinel `cross-trip` | a person record under the resolved store root, named by its id — the class whose rule is standing rule 15 | an existing record's id — `psn-` then four lowercase hex digits — to resume it, or any other value as the display name of a record to create | nothing: `trip: cross-trip` is left exactly as it stands |
+| `trip-context.md`, with `trip:` the trip placeholder `<trip-slug>` | the resolved trip's own `trips/<slug>/trip-context.md` — one per trip, under standing rule 5 | none: the form names one file per trip, and a `<target>` given is refused | nothing: this verb never creates this file — § *A block-owned form* |
+| any other `output:`, or a `trip:` other than the one its row requires | — | — | refused: no rule of this command's standing clause admits the write |
+
+**Rooting is read from the form and never from its path**: a form declares where its output lives by its `output:` line and by the same frontmatter `trip:` value that `reference/adr/ADR-022-interview-session-model.md` D2.5 already reads to decide what a seed substitutes, and each row above admits one class this command already has a target rule for, naming that rule. **A form whose output no row names is refused rather than written somewhere a rule does not reach.** **The display name never selects a record.** On a store-rooted form it names the record to create, and it is compared with the store only to refuse that creation.
+
+### Create, or resume — selected by a probe, never typed
+
+**The file-existence probe selects the branch, and nothing else does.** Absent → create, on a form whose rooting admits a create branch; present → resume. There is no resume flag, no abandon marker and no cursor: the file is the whole of the session's state, and a session that stops has simply stopped (ADR-022 D1.1, D1.2).
+
+**Create.** On a store-rooted form, first ask the operator whether the person the record is for is here and answering for themselves, and write nothing short of yes (§ *When the person is not here*). Then, before the first question, write the form to the target path **once, and whole** — every line the form carries, the guide below its end-of-profile heading included, exactly as `## profile <name>`'s second route writes it — with the frontmatter change the rooting table names and nothing else changed, but for one line on a store-rooted form: its seed also writes the title line, because a record's display name is its identity, the store's creation refusal keys on it, and a record never stands in the store under a placeholder name. On a trip-rooted form the title line is the session's first write, from `<target>`: a name the operator gave is an answer volunteered (ADR-022 D3.4), recorded and not asked.
+
+**Resume.** Read the file whole. Where it carries an `intake-form` block of its own, that block names the form and the contract version it was seeded from: compare both with the form's before anything is asked, and refuse on a difference (the refusal table below). A file carrying no block — seeded before forms declared one — resumes under the form given. Each field's value is read by `reference/data-model.md` § *The interview's read of an unstated value*, read live, and which fields are asked is W2 of `skills/trip-record/interview-conduct.md`, cited here and not restated. A run over a file with nothing left to ask says so and asks which field, if any, is changing.
+
+**Nothing marks a session complete.** Every field a form carries is skippable, so no predicate over the answers means *done*. The interview ends when they end it or when nothing is left to ask, and nothing here blocks on completeness.
+
+### What the finished file carries
+
+**The `intake-form` block stays.** A finished file carries the form's block exactly as the file's creation wrote it — above the first section, and no write touches it — and it records which form, at which contract version, the file was filled from, which a resume compares with the form before it asks anything. **The guide below the end-of-profile heading stays too**, exactly as the form's second route has always left it: the profile is everything above that heading, and nothing below it is content. **This verb has no output act** — the file is written as the session runs, and there is no block to return at the end (ADR-022 D6.1).
+
+### When the person is not here
+
+**A durable record is created only for a person who is here answering for themselves, and the operator is asked every time.** Before anything is written on the create branch, ask the operator once whether the person is here, answering for themselves — however the request was worded, because a request is written about its subject and establishes nothing about who is present. Short of yes, write nothing, and say what would let it proceed: the person here, answering. Until then the record is theirs to fill: they can fill in `templates/person-intake.template.md` themselves, saved in the store under an id minted for them now — rejection-sampled against the store listing as the create branch would — which this verb names and does not write. Or send them three files — the form, the worked record `examples/people-library-demo/people/psn-3c7e.md` and the portable interview card, `templates/interview-card.md` — to fill in with any assistant. The block they send back is yours to save at that same path, as you writing down what they told you: no rule of this command's standing clause admits a verb to write a returned block into the store, so this verb never does.
+
+### The durable record — the standing rule its writes are taken under is rule 15
+
+This section discharges each condition by name. **(a)** the path is named above — the minted `<store-root>/people/psn-<token>.md` on the create branch, and the operator's `<store-root>/people/<person-id>.md` on resume. **(b)** the create branch asks the operator, once and before anything is written, whether the person the record is for is here and answering for themselves — whatever the request says — and writes nothing short of yes (§ *When the person is not here*). **(c)** every value is taken under shared rules 7 and 8 of `skills/trip-record/interview-conduct.md`, or is the un-answer its shared rule 6 hears, and a relayed value is written under its W8, which reads from `reference/schemas/person-record.md` where the class admits the operator-provided mark. **(d)** its W5 and W6. **(e)** its W3 and W4. **(f)** its shared rule 11.
+
+**Who may write a record, and why this verb is inside that rule rather than beside it.** The class's own write rule is that no agent writes a value into a record, and that every value originates from the person or from the operator relaying that person's own statement. This verb is not an agent — `## promote <name> <field-label>` draws the same line for itself — and it authors nothing: every value it writes is the subject's own words, held there by the conduct file's shared rule 7 test and its shared rule 8 delete-only bound. **The create branch is the class's creation scaffold**, the member of its enumeration of permitted mechanical writes that `## extract <name>` also is, and it authors nothing either: it writes the form as it ships and the display name the operator gave for a person who is present. The answers written after it are outside that enumeration's subject matter, as `promote`'s write is: each records a person's answer at that person's direction. **The enumeration does not grow, and the class's schema is not edited.**
+
+**What consent this establishes, stated exactly and not overclaimed.** Condition (b) establishes that the subject is present, which is not the subject's consent to be recorded, and this section does not call it that. The bound is structural: a record is created only in a session its subject is answering, so the store's own exclusion — no record for a person who did not ask for one — holds by construction.
+
+### A block-owned form — the regions its writer table gives this command
+
+**A form declaring `2` is block-owned: no single writer owns it, a table does, and this verb writes only where that table gives the write to this command.** The table is the one the form's own `write-ownership:` key addresses, and this verb does not resolve it. `reference/region-reference.md` carries every region of such a form already resolved to that table's row and the verdict the row gives this command — derived by the artifact-schema suite from the form and the table, and failing that suite whenever what is committed differs — so a change to the table reaches this verb through that file and never through an edit to this section. This section settles, once per invocation and before the first question, whether the form is one this verb may conduct and whether that file covers it; `skills/trip-record/interview-conduct.md` § *On a block-owned form* is how the session then uses the file, write by write.
+
+**What such a form must carry before it is conducted.** Its block holds, once each, every key this verb reads from it — `form:`, `form-version:`, `writer:`, `write-ownership:`, `classification:` and `output:` — and sits above the form's first region, with no labelled bullet above that region either; its `form:` line names the file that was read; its frontmatter and its block both declare `writer: block-owned`; its `output:` line names the `artifact:` value its frontmatter carries; and its `classification:` key names `reference/data-model.md` § *Field Scope* → *The classification*, the one table this verb's `**Reads:**` line admits. A form failing any of these is refused, and the refusal names the check.
+
+**What the region reference must say about it.** Keep the rows of that file's derived region whose form is this form's `form:` value. The form is conducted only where the file's forms table carries exactly one row for it, whose writer table is this form's `write-ownership:` value and whose command is this command; where every region row's heading is this form's own line at that row's line number, at the same level and in the same words; and where no region row reads `UNRESOLVED`. Otherwise the form is refused, naming the first check that failed: the file is stale against the form or the table, the file itself says how it is regenerated, and nothing here edits it or conducts past it. **Every labelled bullet in a region whose row in the region reference reads `YES` or `CONDITIONAL` joins exactly one row of the classification its `classification:` key names, on its `(section, label)` pair**, because a bullet joining none, or more than one, has no `Scope`, class or never-asked row to be conducted by; a form where one does not is refused, and the refusal names the bullet.
+
+**Create.** There is no create branch on such a form, and none is reachable: § *Resolving a trip*'s G3 stops a trip whose file is missing before any verb of this command runs, and a seed would write every region of the form, the ones the region reference denies among them. The file's creation belongs to the writer the table gives it.
+
+### What it refuses, in the order it checks — each refusal writes nothing
+
+| Condition | What happens |
+|---|---|
+| `<form>` is absent | print this verb's argument shape, and stop |
+| the form cannot be read | refuse, naming the path as resolved |
+| the form carries no `intake-form` block, or more than one | refuse: it is not an interviewable form |
+| `form-version:` is a value no row of the version table conducts | the last row of that table |
+| a conformance check this verb consumes fails | refuse, naming the check — and, for question 3, the bullet |
+| **block-owned**: the region reference does not cover the form, disagrees with it, or names another command | refuse, naming what was found — § *A block-owned form* |
+| no row of the rooting table names the form's `output:`, or its frontmatter `trip:` is not the value that row requires | refuse: no rule of the standing clause admits the write |
+| `<target>` is absent where the form's rooting row takes one, or given where it takes none | print the argument shape that row admits, and stop |
+| **trip-rooted**: the resolved trip is `ARCHIVED` | refuse before reading the target: say the trip is archived and name `/trip-decommission reopen` |
+| **traveller file**: any of `## profile <name>`'s ordered checks stops | exactly what that verb does for that check, in its order |
+| **store-rooted**: the store root does not exist | refuse. This command creates no directory |
+| **store-rooted, an id**: no record carries it | refuse, and print the create shape |
+| **store-rooted, an id**: the record carries `merged-into:` | refuse, naming the id it redirects to |
+| a listing this verb declares cannot be taken | refuse, naming the listing; write nothing |
+| **store-rooted, a name**: it is a surviving bracketed placeholder, or has the shape of an erasure token (`per-` then four lowercase hex digits) | refuse, and say which |
+| **store-rooted, a name**: its normalized form equals a live record's normalized H1 | refuse, and offer the store's three remedies as this verb reads them: use that record — resume it by its id — disambiguate the name, or create anyway with the collision acknowledged. Exact equality after the store's own normalization only — no similarity and no near-match |
+| **store-rooted, create**: the operator does not answer yes to whether the person is here, answering for themselves | § *When the person is not here* |
+| **resume**: the file carries more than one `intake-form` block, or one naming a `form:` or `form-version:` other than the form's | refuse, naming both: the file was seeded from another form or contract version, and conducting this one over it would ask the wrong questions |
+| the run is non-interactive | refuse. No flag skips it |
+
+### Why the requirement-table row reads `lifecycle: ANY`
+
+**Stated here because § *The shape of a table row* requires the reason to live in the verb's own section.** On a store-rooted form this verb writes nothing under `trips/<slug>/`, so no trip lifecycle bears on it: the resolved trip is not that branch's subject, which is the reason `erase` and the `group-*` verbs declare `ANY` for theirs. **On a trip-rooted form the trip is the subject**, and an archived trip is frozen (`CLAUDE.md` § *Archived trips — what the freeze binds*), so that branch refuses an `ARCHIVED` trip before it reads the target — the render § *When the resolved state does not serve the verb* gives a lifecycle refusal, issued here from this section's refusal table because the requirement row admits `ANY`. The cell cannot carry the two lifecycles at once, and `ACTIVE` would refuse a durable interview whenever the resolved trip happens to be archived, sending the operator to reopen a concluded trip to write a record that belongs to no trip.
+
+**What this verb names, and what it runs.** After a write to a traveller file it names **`/trip-record travelers`** as the reconcile step, and does not run it; after a write to a block-owned file it names what `## fact <statement>` names after that write, and runs none of it. Beyond those, and the verb a block belongs to where it is not this one, it names no verb of this command as an offer, and standing rule 8 is why it states nothing about any other command's availability.
+
+**Reversibility: MODERATE, confidence MEDIUM.** Not CHEAP — the files it writes are git-ignored, so there is no revert, and a record it creates is read by every trip that later links it. Not IRREVERSIBLE — nothing it writes deletes an answer without an echo first, and a record it created is discarded by removing the file before any trip references it.

@@ -91,7 +91,10 @@ name: Artifact schema
 #        row of the writer table its address names — by name, marker, parent, then the
 #        default row — its fields join only in interviewable regions, a region no writer owns
 #        is a declared exclusion reported per region, and the verdict each row of that table
-#        realizes is pinned, keyed by its Block text. Neither of the first two
+#        realizes is pinned, keyed by its Block text; and that region contract is projected
+#        for the interviewer into the derived region of reference/region-reference.md,
+#        recomputed on every run and compared with what is committed, with no skip path.
+#        Neither of the first two
 #        compares the count against a shipping-path producer, because the starred count has
 #        none. Surfaces
 #        are discovered by MARKUP SHAPE and never by line number, because the report that
@@ -106,6 +109,9 @@ name: Artifact schema
 #        DIRECTION of a predicate inside a single site, and that boundary is declared in the
 #        suite rather than left to be inferred from a green. No count and no inventory is
 #        added here, for the reason the CTL line already gives
+#   PC   the interview card's numbered rules against the interview's conduct file — equal in
+#        number and byte-identical once whitespace is collapsed — so the copy that travels to an
+#        assistant with no repository cannot drift from the rules the engine runs.
 #
 # EN, CA and PB each carry their own control arms — a deliberately drifted input that the
 # same probe must FIND and FLAG, and a fabricated input it must NOT match. A zero whose
@@ -270,7 +276,7 @@ name: Artifact schema
 # commit that it is still capable of failing.
 #
 # OUT OF SCOPE — deliberately, and by name:
-#   PROSE, with ONE NAMED EXCEPTION. The schema constrains frontmatter and declared entry
+#   PROSE, with TWO NAMED EXCEPTIONS. The schema constrains frontmatter and declared entry
 #   markers. It never constrains narrative body content, and a green here still says
 #   nothing about the quality or the accuracy of any artifact's prose. The exception is
 #   group ST, and it checks the self-referential starred-field set in each intake form on
@@ -279,15 +285,18 @@ name: Artifact schema
 #   homes that agree on a wrong number — which is why the second exists: the set each form
 #   marks is also graded against the starred rows of the data model's field table, per form
 #   and across the run, in both directions. That reaches the LEVEL and not merely the
-#   agreement, and it is still the only prose this gate adjudicates: it reads one table and
+#   agreement, and, beside group PC below, it is still the only prose this gate adjudicates: it reads one table and
 #   two forms, it compares their starred sets against each other, and it says nothing about
 #   the quality or accuracy of any other narrative content anywhere in this repository. What
 #   it does NOT do is compare that set against anything the shipping path produces, because
 #   nothing there derives or consumes it. So this clause is NARROWED here rather than
-#   removed, and no other prose in any artifact is adjudicated by this gate. The same group's
+#   removed, and no other prose in any artifact is adjudicated by this gate but group PC's. The same group's
 #   conformance arm reads a form's declarative markup — its fence, its boundary, its headings,
 #   for a version-2 form the charter's writer table it addresses, its labelled bullets and the
 #   closed/open marker at the head of a bracket — and none of its narrative.
+#   Group PC is the second, narrower exception: it compares the numbered rules of
+#   templates/interview-card.md with those of skills/trip-record/interview-conduct.md, byte for
+#   byte once whitespace is collapsed, and judges the quality of neither.
 #
 #   A USER'S trips/ DIRECTORY. .gitignore carries `trips/*` with `!trips/README.md`, so a
 #   CI checkout contains no trip. Those artifacts are unreachable by construction, not by

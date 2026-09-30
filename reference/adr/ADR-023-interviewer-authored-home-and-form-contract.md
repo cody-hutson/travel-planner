@@ -1,6 +1,11 @@
 # ADR-023: The interviewer's authored home and the form contract — a declared fence, the restatement homes retired, and what the next form costs
 
 - **Status:** Accepted (2026-09-20)
+  **Superseded in part (2026-09-27, Sunday)** — D1.1, where it places the numbered conduct rules, by
+  [ADR-039](ADR-039-interview-conduct-bundled-with-the-verb.md). This amendment records a decision
+  taken there and takes none here: the rest of D1.1, and every other decision of this record, stands.
+  The superseded clause is retained as decided, with an inline marker at it pointing forward,
+  per `reference/adr/README.md` § *Convention*.
 - **Deciders:** repo maintainer
 - **Driving work:** the *interviewer becomes a component* milestone. This record is one of that
   milestone's two Wave-0 gating records, in the shape `ADR-012-people-library.md` and
@@ -199,12 +204,17 @@ Six clusters. The decision count is `5 + 7 + 4 + 3 + 6 + 3 = 28`, one series per
 conducts that form's interview. The numbered conduct rules and the output contract live there and
 nowhere else. Nothing is appended below the last verb section, and Zone A is not touched except
 through the repair extension point that the falsifying edit in D1.3 obliges.
+*(Superseded in part (2026-09-27, Sunday) by [ADR-039](ADR-039-interview-conduct-bundled-with-the-verb.md):
+where the numbered conduct rules are authored. The clause placing the output contract, and the
+rest of this decision, stand.)*
 
 *Rejected:* a new skill (the install loop names the shipped verbs literally and the documented
 upgrade is a bare `git pull`, so the command is unreachable for every existing install); a shared
 non-verb section in Zone A (the extension rule permits five kinds of addition and a shared section
 is none of them); a reference document (the milestone constraint, not merit — see § *Options
 considered* and R2).
+
+**Amendment (2026-09-27, Sunday) — the output contract is not the verb's, and the card carries the rules as a graded projection; this corrects a claim.** D1.1 puts the numbered conduct rules *and the output contract* in the verb's section, where they *"live there and nowhere else"*. Where the rules are authored is superseded in part by [`ADR-039`](ADR-039-interview-conduct-bundled-with-the-verb.md), whose inline marker closes this decision's first paragraph above. The output contract was never the verb's to carry: a session that can write the file writes each answer as it is given and has no output act (`ADR-022` D6.1), and D4.1 and D4.3 below already give the contract a channel with no write path needs to the portable interview card. So it lives on `templates/interview-card.md`, and only there, and what it says is [`ADR-040`](ADR-040-transcript-only-return-and-save.md)'s. The card also carries the numbered rules, as a projection of the conduct file that must match it word for word, which `scripts/test-artifact-schema.sh` group `PC` grades. This corrects where the output contract lives and which text of the rules is the copy. No decision is reversed, narrowed or re-opened: conduct is authored once, one verb is the interviewer, and the hand-off set grows by one tracked card (D4.1).
 
 **D1.2 — The new verb is also the durable form's first command surface.** No shipped verb interviews
 `templates/person-intake.template.md` today: the tracked references to that path copy it, and none
@@ -235,6 +245,8 @@ unchanged.** Read live from the five shipped `allowed-tools` frontmatter blocks 
 member of the union, so the union is unchanged. **The verb adds no `allowed-tools` line at all**,
 which is a stronger claim than adding one inside the union. The five sets differ from one another,
 so the read is not returning one repeated value.
+
+**Amendment (2026-09-30, Wednesday) — the grant set includes the listings the verb declares; this corrects a claim.** D1.4 reads *"The grant set the decided surface requires is `{Read, Write, Edit}`"*, and that list is short. Since commit `14c65a6`, which let the collision checks take the listings they declare, `## interview` also takes `Bash(ls:*)`, for exactly the listings its `**Reads:**` line declares — on a form whose output is the traveller file, the listing `## profile <name>` takes of the trip's `travelers/`, and on a store-rooted form, the store listing — so the set the decided surface requires is `{Read, Write, Edit, Bash(ls:*)}`. The omission predates that commit: the design declared those listings and named no tool for them. Read live at `14c65a6`, `trip-record`'s `allowed-tools` already grants `Bash(ls:*)`, so the corrected set is still a subset of `trip-record`'s own set and `trip-record` is still a member of the union: the union is unchanged, the verb still adds no `allowed-tools` line, and D1.5's independence, which rests on that subset relation, holds as stated. This corrects the list and nothing else; no decision is reversed, narrowed or re-opened.
 
 **D1.5 — The relationship to the single-trip-skill privilege record is *independent of its
 outcome*, and D1.4 is why.** That record bounds a grant union. This decision changes no grant on any
@@ -527,6 +539,8 @@ numeral, the boundary and the worked-example pointer. **Keep** the *Filling this
 assistant* paste-line, retargeted from *the guide at the bottom of the file* to the portable card
 that now travels with the form.
 
+**Amendment (2026-09-27, Sunday) — where the deleted blocks go; this corrects a claim.** D3.1 deletes the numbered conduct rules and the *producing the finished file* block, *"which move to the verb"*. The rules move to the file bundled beside the verb's command file ([`ADR-039`](ADR-039-interview-conduct-bundled-with-the-verb.md)). The output contract moves to the portable interview card, per the amendment at D1.1, and D3.2's identical treatment of the durable form follows it. The form-specific lines each form's old output contract carried already have homes above that form's boundary — the save path and the stem transform (`F21`), the frontmatter instruction (`F20`), and the note on repeatable units — so none of them is relocated below the boundary. No decision is reversed, narrowed or re-opened.
+
 **D3.2 — `templates/person-intake.template.md`.** The identical treatment. The form-specific conduct
 **stays**, because it is about *these* fields and has no other home: the *Before Step 1 — their
 name* instruction, the cross-trip warning, the `Passport` narrowing rule, and the rule that this
@@ -596,6 +610,8 @@ the agreement, and gives a traveller who received the form by any other route a 
 conduct; splitting the conduct between form and skill, which is a second home and therefore the defect;
 and handing over the `SKILL.md`, which carries grant declarations and command contracts and is not a
 document for a stranger.
+
+**Amendment (2026-09-27, Sunday) — what the card authors, and what it carries; this corrects a claim.** D4.3 reads that the card is *"the authored home for conduct, not a copy of one"*. The card is the authored home of the output contract a channel with no write path needs, whose content is [`ADR-040`](ADR-040-transcript-only-return-and-save.md)'s. It carries the numbered conduct rules as a projection of the conduct file ([`ADR-039`](ADR-039-interview-conduct-bundled-with-the-verb.md)) that must match that file word for word — a tracked asset whose agreement is asserted, which is what Choice 2's P1 claimed for it. The reason this decision states is unchanged: the recipient holds the questions and their hints (the form), the conduct (the card) and a filled comparison (the worked example), and nothing in the hand-off resolves into the repository. No decision is reversed, narrowed or re-opened.
 
 ### 5. The assertion surface after the move
 
@@ -775,6 +791,8 @@ offered, that a skip-if was honoured, or that a stem transform was applied. The 
 data **locatable and single-homed**; it does not make them **asserted**. That is a non-goal of this
 record and it is stated on `ADR-013`'s own model rather than left for a reader to discover.
 
+**Amendment (2026-09-27, Sunday) — a datum the list states wrongly, and one it omits; this corrects a claim.** **`F16`** reads *"the output contract, in the verb and on the portable card, parameterised by F6 and F21"*. The verb has no output contract: a session that can write the file writes it at the path the verb resolves from `F6`, and the contract a channel with no write path needs is on the portable interview card alone, which leaves saving the returned block to whoever sent the form — for the trip form, `/trip-record profile <name>`, which applies `F20`'s substitution and `F21`'s transform as route 2 does. **`F22` — a form's per-section ask-prose, where it carries one** — is a form-side datum the interviewer reads and the list does not name: below `F4`, the block headed `### Assistant — the sections, in order`, running to the next line-initial `### Assistant —` heading or to the end of the file. An interviewer takes its form-specific conduct from that block and from no other text below the boundary: the verb reads it alone, and the card points its reader at it by the same heading. A form that carries no such block still conforms, and is conducted from its profile half alone. This corrects the list's coverage; no decision is reversed, narrowed or re-opened.
+
 ## Consequences
 
 ### What this buys, stated as the surfaces it leaves untouched
@@ -829,10 +847,10 @@ Every residual is named with its owner. A residual with no owner is not a residu
 | # | Residual | Owner |
 |---|---|---|
 | **R1** | **`F14`, `F15`, `F18`, `F20` and `F21` stay prose, and nothing grades that a hint was offered or a transform applied.** Accepted, and stated as a non-goal rather than deferred work | **accepted**, stated by § *The seam* |
-| **R2** | **The *skill plus form* constraint was held with its cost known.** A reference document cited live at invocation is the cheapest home for conduct and matches the idiom `## profile` already uses; it is foreclosed by the constraint and not by merit, and the constraint makes one verb section the de-facto conduct library, which will read oddly at the third caller | **operator**, at milestone scope |
+| **R2** | **Lifted** — see the amendment below the table. **The *skill plus form* constraint was held with its cost known.** A reference document cited live at invocation is the cheapest home for conduct and matches the idiom `## profile` already uses; it is foreclosed by the constraint and not by merit, and the constraint makes one verb section the de-facto conduct library, which will read oddly at the third caller | **operator**, at milestone scope |
 | **R3** | `form-version:` disagreement is **detectable** and nothing acts on it in Wave 0 | the extraction slice |
 | **R4** | The `Proposed` → `Accepted` flip moves this record's `Status:` line and its index cell, and no check grades either half or their agreement | **operator**, at milestone close |
-| **R5** | **The durable form's command route needs a `CLAUDE.md` Step-1 taxonomy disposition that nobody has scoped.** `ADR-007` § 3's coverage identity requires every unit of the command surface to be covered by exactly one addressed row, and the shipped **Traveler profile** row addresses a traveller's own profile rather than a durable person record. Whether the new verb takes a new addressed row or joins the existing *whose answers* ambiguity set is a taxonomy call this record does not own. **This record edits no file but its own** | owner assigned at Wave-1 planning |
+| **R5** | **Closed** — see the amendment below the table. **The durable form's command route needs a `CLAUDE.md` Step-1 taxonomy disposition that nobody has scoped.** `ADR-007` § 3's coverage identity requires every unit of the command surface to be covered by exactly one addressed row, and the shipped **Traveler profile** row addresses a traveller's own profile rather than a durable person record. Whether the new verb takes a new addressed row or joins the existing *whose answers* ambiguity set is a taxonomy call this record does not own. **This record edits no file but its own** | owner assigned at Wave-1 planning |
 | **R6** | `templates/trip-context.template.md` remains uninterviewable, so **the contract ships unexercised on the artifact the scalability claim is usually argued from.** Its entry price is on record under D3.3 | **the first consumer slice, after this epic** |
 | **R7** | The portable interview card is a **new tracked asset with no schema class** — it is a document rather than an artifact instance, and the class enumeration does not grow for it | stated here so the absence is a decision |
 | **R8** | **The split of the guides' numbered rules is a joint act.** This record relocates the block and decides where it lands; the sibling governs the semantics of the rules it names. **Neither half is complete alone**, and this record states nothing about those semantics | **joint**, this milestone |
@@ -849,6 +867,10 @@ which names every candidate row and picks none when there is more than one. The 
 the resolver, in `FT`, not beside the arm D5.6 adds, as the row says; because question 3 reads the
 table through that resolver, the guard and the join cannot disagree. The row stays, marked closed, so
 the residual stays readable.
+
+**Amendment (2026-09-27, Sunday) — R2's constraint is lifted at the *one interviewer, any conforming form* milestone's scope; this corrects a claim.** The operator lifted it at that milestone's Collective Review, and [`ADR-039`](ADR-039-interview-conduct-bundled-with-the-verb.md) supersedes D1.1 in part accordingly: the conduct is authored in a file bundled beside the command file, so no verb section is the de-facto conduct library, and the cost R2 names goes with the constraint. The row stays, marked lifted, as the record of the constraint as it was held.
+
+**Amendment (2026-09-28, Monday) — R5 is closed; this corrects a claim.** R5 says the durable form's command route needs a `CLAUDE.md` Step-1 taxonomy disposition that nobody has scoped, and leaves its owner to be assigned at Wave-1 planning. The route is `/trip-record interview`, and commit `a869962`, which added the verb, settled its disposition in the same change: `CLAUDE.md` § *Step 1: Classify the request* covers it with a new addressed row, **Assisted interview**, and the verb joins no ambiguity set. The *whose answers* set still offers `profile` and `person` alone, because it separates who supplies the answers — the traveller or the operator — while an interview is how answers are collected, and the answers it records are the subject's own; joining that set would conflate who answers with how. So `ADR-007` § 3's coverage identity holds, with the new unit covered by exactly one addressed row. The disposition was taken in that change and not here, so this record still edits no file but its own, and no decision is reversed, narrowed or re-opened. The row stays, marked closed, so the residual stays readable.
 
 ## References
 
