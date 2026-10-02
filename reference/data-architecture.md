@@ -1468,7 +1468,7 @@ with no site carries no row.
 ```count-assertion-digest
 # sites  path
 35      CHANGELOG.md
-8       CLAUDE.md
+9       CLAUDE.md
 1       CONTRIBUTING.md
 5       SECURITY.md
 3       agents/00-enrichment.md
@@ -1510,6 +1510,7 @@ with no site carries no row.
 1       examples/single-origin-demo/trip-context.md
 3       examples/tokyo-2026/outputs/activities-list.md
 1       examples/tokyo-2026/outputs/final-itinerary.md
+1       people/README.md
 2       reference/adr/ADR-006-third-party-data-capture.md
 4       reference/adr/ADR-007-command-entry-point.md
 20      reference/adr/ADR-008-publish-content-guard.md
@@ -1528,9 +1529,11 @@ with no site carries no row.
 1       reference/schemas/trip-context.md
 1       reference/site-layout-spec.md
 4       skills/trip-decommission/SKILL.md
-6       skills/trip-new/SKILL.md
-10      skills/trip-record/SKILL.md
+7       skills/trip-new/SKILL.md
+12      skills/trip-record/SKILL.md
 6       skills/trip/SKILL.md
+1       templates/person-intake.template.md
+1       templates/traveler-intake.template.md
 1       trips/README.md
 ```
 

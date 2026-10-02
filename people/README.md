@@ -18,7 +18,8 @@ record, and the planner reads the two together — the durable record for what i
 standing, the trip file for what is true of this trip only. One source per fact.
 
 **One writer, and it is never an agent.** A record is written by the person it
-describes, or by you writing down what that person told you. No agent authors a value
+describes — in their own hand, through you writing down what they told you, or through
+`/trip-record interview` recording their answers as they give them. No agent authors a value
 in it, computes one into it, or edits one already there. Agents read it.
 
 ## Why this file is tracked and nothing beside it is
@@ -235,6 +236,26 @@ a file that reported none before. Nothing is unsafe and nothing is lost: the rep
 information, every value still composes correctly, and no line is removed from anything
 automatically. If you want them gone, delete the now-redundant lines from the trip profile
 yourself. Nothing on this surface will do it for you.
+
+## Filling in a record by interview
+
+**`/trip-record interview templates/person-intake.template.md <name>` asks the durable form's own
+questions and writes each answer into a new record as it is settled — a field when it is answered,
+a repeat unit when it is complete.** A record left part-way is
+picked up by running it again with the record's id in place of the name — it asks only what is
+still unanswered, and never asks again a question that was answered or skipped.
+
+**It creates a record only for someone who is there answering for themselves.** This store holds no
+record about a person who did not ask for one, so the interview asks before it writes anything,
+and writes nothing unless the answer is yes. An answer that belongs to one trip rather than to the
+person is named there and not recorded here.
+
+**Someone who is not here can fill one in themselves.** Send them three files — the form itself,
+the worked record `examples/people-library-demo/people/psn-3c7e.md` and the portable interview
+card, `templates/interview-card.md` — and they fill it in with any assistant, which gives the
+finished record back as one block. Saving that block here, under the id the interview names for
+them when they are not there to answer, is yours to do: it is you writing down what they told
+you, and no command writes it for you.
 
 ## Retention
 
