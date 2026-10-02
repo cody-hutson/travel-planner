@@ -476,7 +476,7 @@ ad_scan_lf() {   # the lifecycle enum, and a Superseded record naming its supers
 }
 
 ad_scan_nu() {   # contiguity, pinned in BOTH directions against the declared exemption
-  local root="$1" exempt="${2-}" recs b n lo hi i nrec=0 nums=" " dup=" " e
+  local root="$1" exempt="${2-}" recs b n lo hi i nrec=0 nums=" " dup=" "
   recs="$(ad_records "$root")"
   lo=""; hi=""
   while IFS= read -r b; do

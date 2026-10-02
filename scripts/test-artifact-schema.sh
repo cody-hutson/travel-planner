@@ -1296,6 +1296,7 @@ echo "LC — the classifying predicates are locale-invariant"
 # neighbourhood, and LC2 below is scoped to the validator for exactly that reason.
 lc_folds() {
   local LC_ALL="$1"
+  # shellcheck disable=SC2194  # the constant is the probe: whether [a-z] takes H under this LC_ALL
   case H in [a-z]) return 0 ;; *) return 1 ;; esac
 }
 
@@ -12535,7 +12536,7 @@ if [ "$HZ_OK" -eq 1 ] && [ "${HZ_NCASE:-0}" -gt 0 ]; then
     hz_hit=0
     while IFS= read -r hz_pat; do
       [ -n "$hz_pat" ] || continue
-      # shellcheck disable=SC2254
+      # shellcheck disable=SC2254  # $hz_pat is a glob read from the pattern file; quoted, it would match only its own text
       case "$hz_tk" in $hz_pat) hz_hit=1 ;; esac
     done < "$HZ_PATF"
     [ "$hz_hit" -eq 1 ] || continue
@@ -12594,7 +12595,7 @@ EOF
   printf '# Trip Context — Somewhere (Illustrative Example)\n\n- **Jul 22 (Wed):** Departure day — depart by ~9:00 AM\n' > "$HZ_SYN_NOYR"
   printf '# Trip Context — Somewhere 2026\n\n- **Jul 22 (Wed):** Departure day — depart by ~9:00 AM\n' > "$HZ_SYN_BARE"
   HZ_SNY_T="$(hz_term "$HZ_SYN_NY" | cut -f4)";    HZ_SNY_W="$(hz_term "$HZ_SYN_NY" | cut -f5)"
-  HZ_SNO_T="$(hz_term "$HZ_SYN_NORM" | cut -f4)";  HZ_SNO_W="$(hz_term "$HZ_SYN_NORM" | cut -f5)"
+  HZ_SNO_W="$(hz_term "$HZ_SYN_NORM" | cut -f5)"
   HZ_SNY_NOYR="$(hz_term "$HZ_SYN_NOYR" | cut -f4)"
   HZ_SBARE_T="$(hz_term "$HZ_SYN_BARE" | cut -f4)"
 
@@ -13270,7 +13271,6 @@ if [ "$RM_OK" -eq 1 ]; then
       RM_WV="$(rm_violations "$RM_MUT" "$RM_NREQ")"
       RM_WADD="$(rm_setdiff "$RM_WV" "$RM_BASEV")"
       RM_WGONE="$(rm_setdiff "$RM_BASEV" "$RM_WV")"
-      RM_WN="$(rm_nviol "$RM_WADD")"
       if [ -z "$RM_WADD" ] && [ -z "$RM_WGONE" ]; then
         PASS "RM6: MUST NOT FIRE — one plain sentence added to a non-declaration paragraph of the region, carrying no code span and no bolded lead-in, leaves this comparator's verdict UNCHANGED in both directions against the unmutated document's own $RM_BASEN violation(s). Editorial edits do not move this group, and that is demonstrated on the real document rather than promised: RM5 has already shown the same comparator moving, so this is specificity and not a dead reader. It is graded as a delta rather than as a zero because a zero-expectation would convict the reword for a violation that was in the document before it"
       else
@@ -13318,8 +13318,8 @@ if [ "$RM_OK" -eq 1 ]; then
       if rm_mutate "$RM_DOC" selector "$RM_RSYM" "$RM_ROP" "$RM_FL" "$RM_RLN" "$RM_WSYM" "$RM_SEL1" > "$RM_MUT" 2>/dev/null; then
         # Pre-initialised because this file runs under `set -u`: a reader that produced no
         # line would leave these unset and abort the suite rather than failing the arm.
-        RM_C10=0; RM_O10=0; RM_S10=0; RM_J10=0; RM_L10="-"
-        read -r RM_C10 RM_O10 RM_S10 RM_J10 RM_L10 <<<"$(rm_optokens "$RM_MUT")"
+        RM_S10=0
+        read -r _ _ RM_S10 _ _ <<<"$(rm_optokens "$RM_MUT")"
         if [ "${RM_S10:-0}" -gt "$RM_BADSEL" ]; then
           PASS "RM10: MUST FIRE — the reference-month declaration's SELECTOR replaced by a derived synthetic (\`${RM_SEL1}\` prefixed, a token this region argues for nowhere) moves RM9's selector limb from $RM_BADSEL to $RM_S10 failing declaration(s). Graded as a DELTA against the unmutated document, so the arm cannot pass on a failure that was there before it ran. An inverted selector takes this identical path: the limb asks whether the argument names the selector, not which selector it is"
         else
@@ -13332,8 +13332,8 @@ if [ "$RM_OK" -eq 1 ]; then
       # RM11 — the OPERAND limb, and this is the card's own worked acceptance example:
       # the reference month resolving from the WRAPPED term instead of the trip term.
       if rm_mutate "$RM_DOC" operand "$RM_RSYM" "$RM_ROP" "$RM_FL" "$RM_RLN" "$RM_WSYM" "$RM_SEL1" > "$RM_MUT" 2>/dev/null; then
-        RM_C11=0; RM_O11=0; RM_S11=0; RM_J11=0; RM_L11="-"
-        read -r RM_C11 RM_O11 RM_S11 RM_J11 RM_L11 <<<"$(rm_optokens "$RM_MUT")"
+        RM_O11=0
+        read -r _ RM_O11 _ _ _ <<<"$(rm_optokens "$RM_MUT")"
         if [ "${RM_O11:-0}" -gt "$RM_BADOP" ]; then
           PASS "RM11: MUST FIRE — the reference-month declaration rewritten to resolve from the YEAR-ADVANCING term \`$RM_WSYM\` instead of the trip term, with the selector and the first operand kept as the document states them, moves RM9's operand limb from $RM_BADOP to $RM_O11 failing declaration(s). This is the edit the card that built this group named as its own worked example, and it passed the whole suite at 406/0 before this arm existed"
         else
@@ -13348,8 +13348,8 @@ if [ "$RM_OK" -eq 1 ]; then
       # clock-bearing row rather than the first, and this is the input that proves it: an arm
       # reading only the first row would average this away and stay green.
       if rm_mutate "$RM_DOC" optadd "$RM_RSYM" "$RM_ROP" "$RM_FL" "$RM_RLN" "$RM_WSYM" "$RM_SEL1" > "$RM_MUT" 2>/dev/null; then
-        RM_C12=0; RM_O12=0; RM_S12=0; RM_J12=0; RM_L12="-"
-        read -r RM_C12 RM_O12 RM_S12 RM_J12 RM_L12 <<<"$(rm_optokens "$RM_MUT")"
+        RM_C12=0; RM_O12=0
+        read -r RM_C12 RM_O12 _ _ _ <<<"$(rm_optokens "$RM_MUT")"
         if [ "${RM_O12:-0}" -gt "$RM_BADOP" ] && [ "${RM_C12:-0}" -gt "$RM_NCLK" ]; then
           PASS "RM12: MUST FIRE, ADD-ONLY — a SECOND clock-bearing declaration resolving from the year-advancing term \`$RM_WSYM\`, appended as its own declaration block with every existing declaration left byte-intact, raises the clock-bearing population $RM_NCLK → $RM_C12 and RM9's operand limb $RM_BADOP → $RM_O12. RM9 is therefore NOT addition-blind: it grades every clock-bearing row rather than the first, which is exactly what an added contradicting declaration defeats in an arm that stops at one"
         else
@@ -13991,7 +13991,6 @@ EOF
   # implementation and the next group meets a helper rather than this decision. ce_violations and
   # CE_CODES are untouched: what moved is the arithmetic, never the derivation.
   CE_CODES="$(st_codes "$(declare -f ce_violations)")"
-  CE_NCODES="$(printf '%s\n' "$CE_CODES" | grep -c '[^[:space:]]')"
   cov_assert 'CE-COV' 'CTL-CE-COV' '' 'ce_violations' \
              st_codes cov_emit_tab "$(declare -f ce_violations)" \
              "$CE_CODES" "$CE_ARMED" "$CE_PROBE" "$CE_PHANTOM"

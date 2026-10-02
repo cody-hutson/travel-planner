@@ -1731,7 +1731,7 @@ _guard_frontmatter_key() { # <file> <key> -> one line per occurrence
 }
 
 nonpublishable_values() { # <trip_dir> [site_html]
-  local trip_dir="${1:-}" site_html="${2:-}" model out rc zprobe zout zn zwit ztab zkey zw zfound zb
+  local trip_dir="${1:-}" site_html="${2:-}" model out rc zprobe zout zn
   local model_epoch profile_epoch render_epoch pf pout prc had_profiles=0
   local decl_rows decl_n decl_cand decl_eval esel erule mfields mrules pfields prules
   local rfields rrules rout rrc recs="" rtab refs rkey rstore rfile rmerge rtarget record_epoch
@@ -1853,6 +1853,7 @@ nonpublishable_values() { # <trip_dir> [site_html]
       # The value domain, and the reason the locator below is safe to print. A key that is
       # not a minted opaque surrogate is MALFORMED and never resolves, so the only token
       # this function can ever echo is one that is named for nobody.
+      # shellcheck disable=SC2254  # the person-key glob is a pattern held in a variable; quoted, it would match only its own text
       case "$rkey" in
         $_GUARD_PERSON_KEY_GLOB) ;;
         *) warn "guard: a per-traveler profile's '$_GUARD_REF_KEY:' value is not a minted person-record id — the reference is MALFORMED, so the class is UNDETERMINED, not empty"; return 2 ;;
@@ -1888,6 +1889,7 @@ nonpublishable_values() { # <trip_dir> [site_html]
         if [ "$(awk 'NF { c++ } END { print c + 0 }' <<<"$rmerge")" -ne 1 ]; then
           warn "guard: person record $rkey carries more than one '$_GUARD_MERGE_KEY:' key — the chain is MALFORMED, so the class is UNDETERMINED, not empty"; return 2
         fi
+        # shellcheck disable=SC2254  # the person-key glob is a pattern held in a variable; quoted, it would match only its own text
         case "$rmerge" in
           $_GUARD_PERSON_KEY_GLOB) ;;
           *) warn "guard: person record $rkey names a '$_GUARD_MERGE_KEY:' target that is not a minted person-record id — the chain is MALFORMED, so the class is UNDETERMINED, not empty"; return 2 ;;
@@ -2109,7 +2111,7 @@ $rmerge	$rtarget"
 # field only. Stage 8: this is a decision, not an inconsistency to fix.
 verify_publishable_content() { # <site_html> <trip_dir>
   local site_html="${1:-}" trip_dir="${2:-}"
-  local recs rc rcv rcp rcj work rfile pfile jfile vfile n member field rule value hit=0 undet=0
+  local recs rc rcv rcp rcj work rfile pfile jfile vfile n field rule value hit=0 undet=0
   local locv="" locp="" locj="" loc="" proj=""
 
   if [ -z "$site_html" ] || [ -z "$trip_dir" ]; then
@@ -2157,7 +2159,7 @@ verify_publishable_content() { # <site_html> <trip_dir>
   # neither a passport value nor a third-party entry. Absence is not zero.
   if [ -z "$recs" ]; then rm -rf "$work"; return 0; fi
 
-  while IFS="$(printf '\t')" read -r member field rule value; do
+  while IFS="$(printf '\t')" read -r _ field rule value; do
     [ -n "${rule:-}" ] || continue
     printf '%s' "$value" | _norm_words > "$vfile"
     # _guard_match now writes the winning render position to stdout on a HIT and nothing
@@ -2327,7 +2329,7 @@ strip_md_to_text_blocks() { # <markdown_file> -> visible text with block sentine
 # second arm would be the same stream twice.
 verify_summary_content() { # <change_summary_md> <trip_dir>
   local summary_md="${1:-}" trip_dir="${2:-}"
-  local recs rc work sfile vfile n member field rule value hit=0 undet=0
+  local recs rc work sfile vfile n field rule value hit=0 undet=0
   local loc=""
 
   if [ -z "$summary_md" ] || [ -z "$trip_dir" ]; then
@@ -2361,7 +2363,7 @@ verify_summary_content() { # <change_summary_md> <trip_dir>
   # and nonpublishable_values has already returned 2 for that above. Absence is not zero.
   if [ -z "$recs" ]; then rm -rf "$work"; return 0; fi
 
-  while IFS="$(printf '\t')" read -r member field rule value; do
+  while IFS="$(printf '\t')" read -r _ field rule value; do
     [ -n "${rule:-}" ] || continue
     printf '%s' "$value" | _norm_words > "$vfile"
     loc="$(_guard_match "$rule" "$vfile" "$sfile")"; rc=$?
@@ -2991,7 +2993,7 @@ _approvals_grammar() { # <ledger_file> -> the first rule it breaks, or nothing
     if [ "${#f4}" -ne 64 ]; then printf 'its line %d does not carry a 64-character code' "$n"; return 0; fi
     case "$f4" in *[!0123456789abcdef]*) printf 'its line %d carries a code outside lowercase hex' "$n"; return 0 ;; esac
     case "$f5" in
-      $D$D$D$D-$D$D-$D$D[T]$D$D:$D$D:$D$D[Z]) ;;
+      $D$D$D$D-$D$D-$D${D}[T]$D$D:$D$D:$D${D}[Z]) ;;
       *) printf 'its line %d does not end in a YYYY-MM-DDTHH:MM:SSZ time' "$n"; return 0 ;;
     esac
   done < "$f"
@@ -3253,6 +3255,7 @@ _ledger_append() { # <trip_dir> <key> <approve|withdraw> <digest> -> 0, or non-z
 _undecided_entry() { # <trip_dir> <confirmed-value> -> 0 when the change summary holds an entry dated later
   local f="" line="" d="" c="${2:-}" D='[0123456789]'
   c="${c:0:10}"
+  # shellcheck disable=SC2254  # $D is the spelled digit set [0123456789]; quoted, the pattern would match only its own text
   case "$c" in $D$D$D$D-$D$D-$D$D) ;; *) return 1 ;; esac
   f="$(pending_change_path "$1")"
   if [ ! -f "$f" ] || [ ! -r "$f" ]; then return 1; fi

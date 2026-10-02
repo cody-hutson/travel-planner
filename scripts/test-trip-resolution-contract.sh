@@ -652,12 +652,12 @@ conformance_check() {
     # Normalising is deliberately narrower than widening the match: the pattern still
     # admits exactly G0-G8, so a backticked `G9`, `GG1` or `TBD` is still not a depth and
     # a table carrying only those still reads as declaring none.
-    local maxd=-1 rows=0 c1 c2 c3 c4 c5 rest d
+    local maxd=-1 rows=0 c1 c3 c5 rest d
     local BT='`'
     while IFS= read -r line || [ -n "$line" ]; do
       case "$line" in
         '|'*)
-          IFS='|' read -r _ c1 c2 c3 c4 c5 rest <<EOF
+          IFS='|' read -r _ c1 _ c3 _ c5 rest <<EOF
 $line
 EOF
           d="${c5// /}"; d="${d//$BT/}"

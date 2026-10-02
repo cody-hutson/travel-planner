@@ -518,12 +518,12 @@ rt_instance_walk() {   # rt_instance_walk <plan-file> <site-file> [work-dir]
     return 2
   fi
 
-  local events tracks nightlife d dstart dend
+  local events tracks nightlife d
   events="$(rt_plan_events "$plan")"
   tracks="$(rt_plan_tracks "$plan")"
   nightlife="$(rt_plan_nightlife "$plan")"
 
-  while IFS="$RT_TAB" read -r d dstart dend; do
+  while IFS="$RT_TAB" read -r d _; do
     [ -n "$d" ] || continue
     local sec="$work/day-$d.html"
     rt_site_day "$site" "$d" > "$sec"

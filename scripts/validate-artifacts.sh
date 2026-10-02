@@ -538,7 +538,7 @@ va_fm_pairs() {
       [$VA_LOWER]*) : ;;
       *) printf 'FINDING A1 %s field %s key is not kebab-case\n' "$rel" "$key"; rc=1; continue ;;
     esac
-    # shellcheck disable=SC2254
+    # shellcheck disable=SC2254  # as above: the bracket set arrives by expansion and is the class
     case "$key" in
       *[!$VA_SLUGBODY]*) printf 'FINDING A1 %s field %s key is not kebab-case\n' "$rel" "$key"; rc=1; continue ;;
     esac

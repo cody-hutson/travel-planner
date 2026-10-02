@@ -1512,7 +1512,7 @@ charter_check() {
 # ─────────────────────────────────────────────────────────────────────────────────
 coverage_check() {
   local recs="$1"
-  local rc=0 line t1 t2 t3 t4 t5
+  local rc=0 line t2 t3 t4
   local -a DK=() DKC=() FILES=() AK=() AKC=() AKV=() RG=() KEYS=()
   # The ambiguity-set channel, parallel-indexed like every other transport here: set
   # ordinal · command · verb-or-'-'. It is a SEPARATE channel from ADDRPARTS on purpose —
@@ -1532,20 +1532,20 @@ coverage_check() {
   # field that a later comparison keys on.
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
-      'DECL '*)      IFS=' ' read -r t1 t2 t3 <<< "$line"; DK+=( "$t2:$t3" ); DKC+=( "$t2" ) ;;
-      'KEY '*)       IFS=' ' read -r t1 t2 <<< "$line"; KEYS+=( "$t2" ) ;;
-      'FILE '*)      IFS=' ' read -r t1 t2 <<< "$line"; FILES+=( "$t2" ) ;;
-      'REGION '*)    IFS=' ' read -r t1 t2 t3 t4 t5 <<< "$line"; RG+=( "$t2:$t3" ) ;;
-      'ADDRPARTS '*) IFS=' ' read -r t1 t2 t3 <<< "$line"; AKC+=( "$t2" ); AKV+=( "$t3" )
+      'DECL '*)      IFS=' ' read -r _ t2 t3 <<< "$line"; DK+=( "$t2:$t3" ); DKC+=( "$t2" ) ;;
+      'KEY '*)       IFS=' ' read -r _ t2 <<< "$line"; KEYS+=( "$t2" ) ;;
+      'FILE '*)      IFS=' ' read -r _ t2 <<< "$line"; FILES+=( "$t2" ) ;;
+      'REGION '*)    IFS=' ' read -r _ t2 t3 t4 _ <<< "$line"; RG+=( "$t2:$t3" ) ;;
+      'ADDRPARTS '*) IFS=' ' read -r _ t2 t3 <<< "$line"; AKC+=( "$t2" ); AKV+=( "$t3" )
                      if [ "$t3" = '-' ]; then AK+=( "$t2" ); else AK+=( "$t2:$t3" ); fi ;;
       # Four fields, read into four variables — the transport rule this file states at
       # invocation_check: the LAST read variable absorbs the remainder, so a record read
       # into fewer variables than it has fields silently widens the last one it names.
-      'AMBPARTS '*)  IFS=' ' read -r t1 t2 t3 t4 <<< "$line"; MS+=( "$t2" ); MC+=( "$t3" ); MV+=( "$t4" ) ;;
+      'AMBPARTS '*)  IFS=' ' read -r _ t2 t3 t4 <<< "$line"; MS+=( "$t2" ); MC+=( "$t3" ); MV+=( "$t4" ) ;;
       # THREE fields read into THREE variables, and here the last one absorbing the
       # remainder is the requirement rather than the hazard: a reason may carry an internal
       # space, so the reason field is the remainder by design.
-      'DISPPARTS '*) IFS=' ' read -r t1 t2 t3 <<< "$line"; DS+=( "$t2" ); DR+=( "$t3" ) ;;
+      'DISPPARTS '*) IFS=' ' read -r _ t2 t3 <<< "$line"; DS+=( "$t2" ); DR+=( "$t3" ) ;;
     esac
   done <<< "$recs"
 
@@ -1765,12 +1765,12 @@ coverage_check() {
 # ─────────────────────────────────────────────────────────────────────────────────
 enum_agree_check() {
   local recs="$1"
-  local rc=0 line k n=0 t1 t2
+  local rc=0 line k n=0 t2
   local -a E1=() E2=()
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
-      'ADDRKEY '*) IFS=' ' read -r t1 t2 <<< "$line"; E1+=( "$t2" ) ;;
-      'S2KEY '*)   IFS=' ' read -r t1 t2 <<< "$line"; E2+=( "$t2" ) ;;
+      'ADDRKEY '*) IFS=' ' read -r _ t2 <<< "$line"; E1+=( "$t2" ) ;;
+      'S2KEY '*)   IFS=' ' read -r _ t2 <<< "$line"; E2+=( "$t2" ) ;;
     esac
   done <<< "$recs"
 
@@ -1807,13 +1807,13 @@ enum_agree_check() {
 # ─────────────────────────────────────────────────────────────────────────────────
 adr4_check() {
   local adr="$1" script="$2" recs="$3"
-  local rc=0 line t1 t2 t3
+  local rc=0 line t2 t3
   local -a SURFK=() S1K=()
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
-      'DECL '*)    IFS=' ' read -r t1 t2 t3 <<< "$line"; SURFK+=( "$t2:$t3" ) ;;
-      'FILE '*)    IFS=' ' read -r t1 t2 <<< "$line"; SURFK+=( "$t2" ) ;;
-      'ADDRKEY '*) IFS=' ' read -r t1 t2 <<< "$line"; S1K+=( "$t2" ) ;;
+      'DECL '*)    IFS=' ' read -r _ t2 t3 <<< "$line"; SURFK+=( "$t2:$t3" ) ;;
+      'FILE '*)    IFS=' ' read -r _ t2 <<< "$line"; SURFK+=( "$t2" ) ;;
+      'ADDRKEY '*) IFS=' ' read -r _ t2 <<< "$line"; S1K+=( "$t2" ) ;;
     esac
   done <<< "$recs"
 
@@ -1987,7 +1987,7 @@ invocation_check() {
     return 1
   fi
 
-  local line t1 t2 t3 t4 t5
+  local line t2 t3 t4
   local -a IL=() IO=()
   # The record's LAST read variable absorbs the whole remainder of the line, so a record
   # with N fields must be read into N variables — one more than the field you want, when
@@ -1997,7 +1997,7 @@ invocation_check() {
   # as the retired transport's defect: a field silently carrying more than it names.
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
-      'INV '*) IFS=' ' read -r t1 t2 t3 t4 t5 <<< "$line"; IL+=( "$t2:$t4" ); IO+=( "$t3" ) ;;
+      'INV '*) IFS=' ' read -r _ t2 t3 t4 _ <<< "$line"; IL+=( "$t2:$t4" ); IO+=( "$t3" ) ;;
     esac
   done <<< "$recs"
 
@@ -2538,10 +2538,10 @@ grant_table_check() {
 
 # gq_tables <grant_table_check output> — "/verb (R rows, G grants)" joined, for a PASS line.
 gq_tables() {
-  local out="$1" line t1 t2 t3 t4 acc=''
+  local out="$1" line t2 t3 t4 acc=''
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
-      'GTAB '*) IFS=' ' read -r t1 t2 t3 t4 <<< "$line"; acc="${acc:+$acc, }$t2 ($t3 rows, $t4 grants)" ;;
+      'GTAB '*) IFS=' ' read -r _ t2 t3 t4 <<< "$line"; acc="${acc:+$acc, }$t2 ($t3 rows, $t4 grants)" ;;
     esac
   done <<< "$out"
   printf '%s' "$acc"
@@ -2629,7 +2629,7 @@ readonly_check() {
     if [ "$seendash" -eq 0 ]; then KEYS+=( "$a" ); else ADJ+=( "$a" ); fi
   done
 
-  local rc=0 line k v t1 t2 t3 t4 t5
+  local rc=0 line k v t2 t3 t4
   local -a INVK=() LIVE=()
   # See the note in invocation_check: the last read variable absorbs the remainder, so an
   # invocation record must be read into one variable PER FIELD, or the owner field holds the
@@ -2641,8 +2641,8 @@ readonly_check() {
   # script through the very region this limb exists to keep clean.
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
-      'ANYINV '*) IFS=' ' read -r t1 t2 t3 t4 t5 <<< "$line"; [ "$t3" != '-' ] && INVK+=( "$t2:$t3" ) ;;
-      'DECL '*)   IFS=' ' read -r t1 t2 t3 <<< "$line"; [ "$t2" = "$READONLY_OF_COMMAND" ] && LIVE+=( "$t3" ) ;;
+      'ANYINV '*) IFS=' ' read -r _ t2 t3 t4 _ <<< "$line"; [ "$t3" != '-' ] && INVK+=( "$t2:$t3" ) ;;
+      'DECL '*)   IFS=' ' read -r _ t2 t3 <<< "$line"; [ "$t2" = "$READONLY_OF_COMMAND" ] && LIVE+=( "$t3" ) ;;
     esac
   done <<< "$recs"
 
@@ -2743,7 +2743,7 @@ preexec_check() {
 # ─────────────────────────────────────────────────────────────────────────────────
 inference_check() {
   local recs="$1" carrier="$2"
-  local rc=0 line t1 t2 t3 t4 rrec
+  local rc=0 line t2 t3 t4 rrec
   local -a NK=() NB=() GK=() GC=() PC=() PV=() CFK=() DK=() DKC=() FILES=() RLC=() RLV=() RUC=() RUT=()
   # ── The two SET channels, read here for C6 and for nothing else. They are the same records
   # coverage_check reads, off the same stream, parsed field for field the same way — the set
@@ -2756,20 +2756,20 @@ inference_check() {
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
       'RULE '*)    rrec="${line#RULE }"; RUC+=( "${rrec%% *}" ); RUT+=( "${rrec#* }" ) ;;
-      'NEG '*)     IFS=' ' read -r t1 t2 t3 t4 <<< "$line"; NK+=( "$t2:$t3" ); NB+=( "$t4" ) ;;
-      'GRADE '*)   IFS=' ' read -r t1 t2 t3 t4 <<< "$line"
+      'NEG '*)     IFS=' ' read -r _ t2 t3 t4 <<< "$line"; NK+=( "$t2:$t3" ); NB+=( "$t4" ) ;;
+      'GRADE '*)   IFS=' ' read -r _ t2 t3 t4 <<< "$line"
                    if [ "$t3" = '-' ]; then GK+=( "$t2" ); else GK+=( "$t2:$t3" ); fi; GC+=( "$t4" ) ;;
-      'POSTURE '*) IFS=' ' read -r t1 t2 t3 <<< "$line"; PC+=( "$t2" ); PV+=( "$t3" ) ;;
-      'CONFIRM '*) IFS=' ' read -r t1 t2 t3 <<< "$line"; CFK+=( "$t2:$t3" ) ;;
-      'DECL '*)    IFS=' ' read -r t1 t2 t3 <<< "$line"; DK+=( "$t2:$t3" ); DKC+=( "$t2" ) ;;
-      'FILE '*)    IFS=' ' read -r t1 t2 <<< "$line"; FILES+=( "$t2" ) ;;
-      'ROLE '*)    IFS=' ' read -r t1 t2 t3 <<< "$line"; RLC+=( "$t2" ); RLV+=( "$t3" ) ;;
+      'POSTURE '*) IFS=' ' read -r _ t2 t3 <<< "$line"; PC+=( "$t2" ); PV+=( "$t3" ) ;;
+      'CONFIRM '*) IFS=' ' read -r _ t2 t3 <<< "$line"; CFK+=( "$t2:$t3" ) ;;
+      'DECL '*)    IFS=' ' read -r _ t2 t3 <<< "$line"; DK+=( "$t2:$t3" ); DKC+=( "$t2" ) ;;
+      'FILE '*)    IFS=' ' read -r _ t2 <<< "$line"; FILES+=( "$t2" ) ;;
+      'ROLE '*)    IFS=' ' read -r _ t2 t3 <<< "$line"; RLC+=( "$t2" ); RLV+=( "$t3" ) ;;
       # Four fields into four variables, three into three — the transport rule this file states
       # at invocation_check, applied here exactly as coverage_check applies it to the same two
       # records. C6 reads a disposition member's SET ORDINAL and never its reason, so the reason
       # field is discarded rather than read into a variable that nothing consults.
-      'AMBPARTS '*)  IFS=' ' read -r t1 t2 t3 t4 <<< "$line"; MS+=( "$t2" ); MC+=( "$t3" ); MV+=( "$t4" ) ;;
-      'DISPPARTS '*) IFS=' ' read -r t1 t2 t3 <<< "$line"; DS+=( "$t2" ) ;;
+      'AMBPARTS '*)  IFS=' ' read -r _ t2 t3 t4 <<< "$line"; MS+=( "$t2" ); MC+=( "$t3" ); MV+=( "$t4" ) ;;
+      'DISPPARTS '*) IFS=' ' read -r _ t2 t3 <<< "$line"; DS+=( "$t2" ) ;;
     esac
   done <<< "$recs"
 
@@ -2804,7 +2804,7 @@ inference_check() {
   # derive the first two limbs and not the third, because an arm that never declared the effect is
   # retained under the fail-closed rule, and a recogniser admitting it is reading the superseded
   # runs-no-script predicate.
-  local sens_blk sens_bi=0 spec_blk spec_bi=0 noef_blk noef_bi=0 nb
+  local sens_blk sens_bi=0 spec_blk spec_bi=0 noef_blk noef_bi=0
   sens_blk="$(neg_norm '**Reads:** nothing. It **writes nothing**, **dispatches no agent**, and performs no act whose effect lands outside the trip own files.')"
   [[ "$sens_blk" =~ $NEG_W_RE ]] && sens_bi=$((sens_bi+4))
   [[ "$sens_blk" =~ $NEG_D_RE ]] && sens_bi=$((sens_bi+2))
@@ -2859,7 +2859,7 @@ inference_check() {
   printf 'COUNT CNOSRC %d\n' "$n_nosrc"
 
   # ── C1 — THE JOIN, as a set difference in BOTH directions.
-  local n_j1=0 n_j2=0 gi src
+  local n_j1=0 n_j2=0 src
   for (( i=0; i<${#GK[@]}; i++ )); do
     src=''
     for (( j=0; j<nblocks; j++ )); do
@@ -3033,7 +3033,7 @@ inference_check() {
     printf 'COUNT LVERBS -1\n'
     return "$rc"
   fi
-  local cline cfd=0 cnorm cverbs=0 cflag=0 cw=0 cd=0 co=0 vtok
+  local cline cnorm cverbs=0 cflag=0 cw=0 cd=0 co=0 vtok
   local -a CL=()
   while IFS= read -r cline || [ -n "$cline" ]; do CL+=( "$cline" ); done < "$carrier"
   local whole=''
@@ -3384,7 +3384,6 @@ RJ_COLS='agent|prompt file|output file|when to dispatch'
 RJ_ARCH_REL='reference/data-architecture.md'
 RJ_CLASS_HEAD='### 1.1 '
 RJ_DIGITS='0123456789'
-RJ_SLUGSET='abcdefghijklmnopqrstuvwxyz0123456789-'
 RJ_OUTDIR='outputs/'
 RJ_HEAD_OUT='### Output: '
 RJ_HEAD_FILE='### File: '
@@ -3460,7 +3459,7 @@ rj_headv() {
 roster_write_check() {
   local root="$1" md arch lineno=0 line t depth=0 first
   md="$root/CLAUDE.md"; arch="$root/$RJ_ARCH_REL"
-  local -a R_AGENT=() R_PROMPT=() R_OUT=() R_LINE=() R_ID=() C_N=() C_CLASS=() C_W=() C_TOK=()
+  local -a R_AGENT=() R_PROMPT=() R_OFILE=() R_LINE=() R_ID=() C_N=() C_CLASS=() C_W=() C_TOK=()
   local anchors=0 anchor_line=0 degraded=0 rows=0 classes=0 declared='' heads=0 i j k near=''
 
   # ── 1. The roster. Anchored on its own header row, matched structurally and only at
@@ -3518,7 +3517,7 @@ roster_write_check() {
             printf 'FINDING J0 CLAUDE.md:%d the roster row "%s" names %d prompt path(s) in its Prompt File cell, expected exactly one agents/<name>.md span\n' "$((i+1))" "$ag" "$pc"
             continue
           fi
-          R_AGENT+=("$ag"); R_PROMPT+=("$pr"); R_OUT+=("${RC[3]}"); R_LINE+=("$((i+1))")
+          R_AGENT+=("$ag"); R_PROMPT+=("$pr"); R_OFILE+=("${RC[3]}"); R_LINE+=("$((i+1))")
         done
       fi
     fi
@@ -3647,7 +3646,7 @@ roster_write_check() {
   done
 
   # ── 4. The join and the comparison.
-  local exp=0 fromc=0 fromp=0 fromh=0 joined=0 unjoined='' named path srcs p m2
+  local exp=0 fromc=0 fromp=0 fromh=0 joined=0 unjoined='' named srcs p m2
   for (( j=0; j<classes; j++ )); do
     m2=0
     for (( i=0; i<rows; i++ )); do
@@ -3658,7 +3657,7 @@ roster_write_check() {
   done
   for (( i=0; i<rows; i++ )); do
     [ -n "${R_ID[$i]}" ] || continue
-    rj_spansv named "${R_OUT[$i]}"
+    rj_spansv named "${R_OFILE[$i]}"
     local want='' hits=0 nout=0 sn hint
     while IFS= read -r sn; do case "$sn" in "$RJ_OUTDIR"*) nout=$((nout+1)) ;; esac; done <<< "$named"
     for (( j=0; j<classes; j++ )); do
@@ -3820,6 +3819,7 @@ gen_cmd() {  # gen_cmd <dir> <tuple> <defect>
   local v head paren inv i n
   local IFSSAVE="$IFS"
   IFS=','
+  # shellcheck disable=SC2206  # a deliberate split on IFS=',' (set above); callers pass literal comma-separated verb specs
   local -a VS=( $vspec )
   IFS="$IFSSAVE"
   for v in "${VS[@]}"; do
@@ -4785,7 +4785,7 @@ uw_hits() { printf '%s\n' "$1" | awk -v re="$UW_RE" '{ n += gsub(re, "") } END {
 # failure rather than as a clean file.
 uw_file() {
   local f="$1" recs="$2" base cmd regions n decl first za zal univ ro=0 rolist='' s e v w
-  local t1 t2 t3 t4
+  local t2 t3 t4
   local -a WN=()
   base="$(verb_id "$f")"; cmd="/$base"
   # Zone B's regions, from the SAME parser the rest of this guard runs on. Zone A is
@@ -4803,7 +4803,7 @@ uw_file() {
   # One NEG record per arm, from its first read-declaration block — the record C0 counts.
   while IFS= read -r w || [ -n "$w" ]; do
     case "$w" in
-      "NEG $cmd "*) IFS=' ' read -r t1 t2 t3 t4 <<< "$w"; [ $(( t4 & 4 )) -ne 0 ] && WN+=( "$t3" ) ;;
+      "NEG $cmd "*) IFS=' ' read -r _ t2 t3 t4 <<< "$w"; [ $(( t4 & 4 )) -ne 0 ] && WN+=( "$t3" ) ;;
     esac
   done <<< "$recs"
   first="$(printf '%s\n' "$regions" | awk -F'\t' 'NR == 1 { m = $1 } $1 < m { m = $1 } END { print m + 0 }')"
@@ -4821,7 +4821,7 @@ UW_FILES=0; UW_UNIV=0; UW_RO=0; UW_BOTH=""; UW_ZA_LINES=0; UW_COVER_BAD=""; UW_U
 for uwf in "$CDIR"/*/SKILL.md; do
   [ -e "$uwf" ] || continue
   UW_FILES=$((UW_FILES+1))
-  IFS=' ' read -r uwtag uwcmd uwn uwdecl uwzal uwu uwro uwrolist <<< "$(uw_file "$uwf" "$ALL")"
+  IFS=' ' read -r _ uwcmd uwn uwdecl uwzal uwu uwro uwrolist <<< "$(uw_file "$uwf" "$ALL")"
   if [ "${uwn:-0}" -eq 0 ] || [ "${uwdecl:-0}" -eq 0 ] || [ "${uwn:-0}" -ne "${uwdecl:-0}" ]; then
     UW_COVER_BAD="$UW_COVER_BAD${uwcmd:-$uwf}(walked=${uwn:-0} declared=${uwdecl:-0}) "
     continue
@@ -4843,7 +4843,7 @@ UWP_INT=1
 grep -qF 'Every verb of this command writes' "$UWP_F" || UWP_INT=0
 grep -q '^It writes nothing, dispatches no agent' "$UWP_F" || UWP_INT=0
 grep -q '^\*\*Reads:\*\*.*writes nothing' "$UWP_F" && UWP_INT=0
-IFS=' ' read -r uwptag uwpcmd uwpn uwpdecl uwpzal uwpu uwpro uwprolist <<< "$(uw_file "$UWP_F" "$(collect_records "$UWP")")"
+IFS=' ' read -r _ uwpcmd _ _ _ uwpu uwpro uwprolist <<< "$(uw_file "$UWP_F" "$(collect_records "$UWP")")"
 
 UW_SENS="$(uw_hits "$(uw_norm 'and stop. **Every verb of this
 command writes, and a write command never picks a write for you.**')")"
@@ -5412,7 +5412,7 @@ if grep -q '^KEY /a:two words$' <<<"$XS2"; then
 else FAIL "GX2a: fixture integrity — the synthetic stream was not built; GX2b would prove nothing"; fi
 
 # ── E-group arms: the ADR, the script and the record stream, each built.
-GE="$WORK/ge"; gen_tree "$GE" ok ok; GEREC="$(run_tree "$GE")"
+GE_TREE="$WORK/ge"; gen_tree "$GE_TREE" ok ok; GEREC="$(run_tree "$GE_TREE")"
 ectl() {  # ectl <id> <want> <label> <adr-defect> <script-extra> <probe>
   local id="$1" want="$2" label="$3" ad="$4" sx="$5" probe="$6"
   local d="$WORK/$id"; mkdir -p "$d"; gen_adr "$d" "$ad"; gen_script "$d/pub.sh" "$sx"

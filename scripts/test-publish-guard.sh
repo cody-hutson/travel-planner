@@ -4646,7 +4646,9 @@ fi
 # preflight still passes when perl is there.
 gh() { case "${1:-} ${2:-}" in "auth status") printf "Token scopes: 'repo'\n" ;; *) return 0 ;; esac; }
 npx() { return 0; }
+# shellcheck disable=SC2123  # PATH is cleared on purpose, inside a subshell, so that perl cannot be found
 S11_MSG_NOPERL="$( ( PATH=/nonexistent/s11-no-perl; preflight ) 2>&1 >/dev/null )"; S11_RC_NOPERL=$?
+# shellcheck disable=SC2034  # the control is shaped like the subject above it; only its status is graded
 S11_MSG_PERL="$( ( preflight ) 2>&1 >/dev/null )";                                  S11_RC_PERL=$?
 unset -f gh npx
 case "$S11_MSG_NOPERL" in *perl*) S11_NAMES_PERL=1 ;; *) S11_NAMES_PERL=0 ;; esac
@@ -4669,6 +4671,7 @@ fi
 # reaches both verdicts under a PATH carrying nothing at all. A helper that needed a stub
 # here would be a helper that had handed cmd_confirm a network dependency.
 S11H_MSG_OK="$( ( require_perl ) 2>&1 >/dev/null )";                              S11H_RC_OK=$?
+# shellcheck disable=SC2123  # PATH is cleared on purpose, inside a subshell, so that perl cannot be found
 S11H_MSG="$( ( PATH=/nonexistent/s11h-no-perl; require_perl ) 2>&1 >/dev/null )"; S11H_RC=$?
 case "$S11H_MSG" in *perl*) S11H_NAMES=1 ;; *) S11H_NAMES=0 ;; esac
 if [ "$S11H_RC_OK" -eq 0 ] && [ "$S11H_RC" -ne 0 ] && [ "$S11H_NAMES" -eq 1 ]; then
@@ -5698,10 +5701,10 @@ S15KN="$(s15k_trip s15kn "$S15K_H1" "$S_DA")"
 S15KC="$(s15k_trip s15kc "$S15K_H1" "$S_DB" "$S_DA")"
 S15KV="$(s15k_trip s15kv "$S15K_OK" "$S_DA")"
 read -r S15K_EN_ST S15K_EN_RC S15K_EN_PF S15K_EN_TF S15K_EN_PRE <<<"$(s15k_run emulated "$S15KN" "$S15KN/$S15_RENDER")"
-read -r S15K_EC_ST S15K_EC_RC S15K_EC_PF S15K_EC_TF S15K_EC_PRE <<<"$(s15k_run emulated "$S15KC" "$S15KC/$S15_RENDER")"
-read -r S15K_EV_ST S15K_EV_RC S15K_EV_PF S15K_EV_TF S15K_EV_PRE <<<"$(s15k_run emulated "$S15KV" "$S15KV/$S15_RENDER")"
-read -r S15K_RN_ST S15K_RN_RC S15K_RN_PF S15K_RN_TF S15K_RN_PRE <<<"$(s15k_run real "$S15KN" "$S15KN/$S15_RENDER")"
-read -r S15K_RC_ST S15K_RC_RC S15K_RC_PF S15K_RC_TF S15K_RC_PRE <<<"$(s15k_run real "$S15KC" "$S15KC/$S15_RENDER")"
+read -r S15K_EC_ST S15K_EC_RC S15K_EC_PF _ _ <<<"$(s15k_run emulated "$S15KC" "$S15KC/$S15_RENDER")"
+read -r S15K_EV_ST S15K_EV_RC S15K_EV_PF S15K_EV_TF _ <<<"$(s15k_run emulated "$S15KV" "$S15KV/$S15_RENDER")"
+read -r S15K_RN_ST S15K_RN_RC S15K_RN_PF S15K_RN_TF _ <<<"$(s15k_run real "$S15KN" "$S15KN/$S15_RENDER")"
+read -r S15K_RC_ST S15K_RC_RC S15K_RC_PF _ _ <<<"$(s15k_run real "$S15KC" "$S15KC/$S15_RENDER")"
 S15K_PFS="$S15K_EN_PF$S15K_EC_PF$S15K_EV_PF$S15K_RN_PF$S15K_RC_PF"
 S15K_REAL=0; [ "${S15K_RN_TF:-0}" != "0" ] && S15K_REAL=1
 S15K_REALOK=1; S15K_REALTXT='not applicable (this platform'"'"'s tr is byte-oriented)'
@@ -7354,7 +7357,7 @@ fi
 SA19A="$(sa_trip s19a 16:30 "$S_DA")"
 sa_declare "$SA19A" 1 zqa1
 SA19A_OUT="$( ( cmd_confirm "$SA19A" ) </dev/null 2>/dev/null )"; SA19A_RC=$?
-read -r SA19A_N SA19A_CODE <<<"$(sa_line_codes "$SA19A_OUT")"
+read -r SA19A_N _ <<<"$(sa_line_codes "$SA19A_OUT")"
 SA19A_NONE=0; [ ! -e "$SA19A/.approvals" ] && SA19A_NONE=1
 _confirm_has_terminal() { return 0; }
 printf '1\napprove %s\nCONFIRM\n' "$S_DB" | ( cmd_confirm "$SA19A" ) >/dev/null 2>&1; SA19A_ARC=$?
@@ -7505,10 +7508,10 @@ sa_push() { # <update|publish> <trip> -> "rc clone view create"; stderr to $WORK
 # ── S21a — update refuses a render stating another plan's approval code, before any clone.
 # CONTROL: the same render stating its OWN code reaches the clone.
 SA21A="$(sa_ptrip s21a 2 "$SA_WRONG" 16:30 "$SA_P16")"
-read -r SA21A_RC SA21A_CL SA_V SA_C <<<"$(sa_push update "$SA21A")"
+read -r SA21A_RC SA21A_CL _ _ <<<"$(sa_push update "$SA21A")"
 SA21A_MSG="$(cat "$WORK/sa_push.err")"
 SA21A2="$(sa_ptrip s21a2 2 "$SA_P16" 16:30 "$SA_P16")"
-read -r SA_RC SA21A_CCL SA_V SA_C <<<"$(sa_push update "$SA21A2")"
+read -r SA_RC SA21A_CCL _ _ <<<"$(sa_push update "$SA21A2")"
 SA21A_CODE=0; case "$SA21A_MSG" in *"approval code"*) SA21A_CODE=1 ;; esac
 if [ "$SA21A_RC" -ne 0 ] && [ "$SA21A_CL" -eq 0 ] && [ "$SA21A_CODE" -eq 1 ] && [ "$SA21A_CCL" -eq 1 ]; then
   PASS "S21a: update ABORTS on a render whose approval code is not its own plan's (rc=$SA21A_RC), before any clone, naming the code; the control — the same render stating its own code — reaches the clone"
@@ -7521,9 +7524,9 @@ fi
 SA21B1="$(sa_ptrip s21b1 2 '' 16:30 "$SA_P16")"
 SA21B2="$(sa_ptrip s21b2 '' "$SA_P16" 16:30 "$SA_P16")"
 SA21B3="$(sa_ptrip s21b3 '' '' 16:30 "$SA_P16")"
-read -r SA_B1RC SA_B1CL SA_V SA_C <<<"$(sa_push update "$SA21B1")"
-read -r SA_B2RC SA_B2CL SA_V SA_C <<<"$(sa_push update "$SA21B2")"
-read -r SA_B3RC SA_B3CL SA_V SA_C <<<"$(sa_push update "$SA21B3")"
+read -r SA_B1RC SA_B1CL _ _ <<<"$(sa_push update "$SA21B1")"
+read -r SA_B2RC SA_B2CL _ _ <<<"$(sa_push update "$SA21B2")"
+read -r _ SA_B3CL _ _ <<<"$(sa_push update "$SA21B3")"
 if [ "$SA_B1RC" -ne 0 ] && [ "$SA_B1CL" -eq 0 ] && [ "$SA_B2RC" -ne 0 ] && [ "$SA_B2CL" -eq 0 ] && [ "$SA_B3CL" -eq 1 ]; then
   PASS "S21b: a render carrying the count alone, or the code alone, is refused before any clone; a render carrying neither field reaches the clone, so an undeclared render is unaffected"
 else
@@ -7533,9 +7536,9 @@ fi
 # ── S21c — publish refuses the same mismatch before the repo is even probed. CONTROL: a render
 # carrying no approval field still reaches the existence probe, and still dies there (S9a).
 SA21C="$(sa_ptrip s21c 2 "$SA_WRONG" 16:30)"
-read -r SA21C_RC SA_CL SA21C_V SA21C_C <<<"$(sa_push publish "$SA21C")"
+read -r SA21C_RC _ SA21C_V SA21C_C <<<"$(sa_push publish "$SA21C")"
 SA21C2="$(sa_ptrip s21c2 '' '' 16:30)"
-read -r SA_RC SA_CL SA21C_CV SA_C <<<"$(sa_push publish "$SA21C2")"
+read -r SA_RC _ SA21C_CV _ <<<"$(sa_push publish "$SA21C2")"
 if [ "$SA21C_RC" -ne 0 ] && [ "$SA21C_V" -eq 0 ] && [ "$SA21C_C" -eq 0 ] && [ "$SA21C_CV" -eq 1 ]; then
   PASS "S21c: publish ABORTS on a mismatched approval code (rc=$SA21C_RC) before the repo is probed or created; the control, a render with no approval field, reaches the existence probe"
 else
@@ -7551,7 +7554,7 @@ SA21D="$(sa_ptrip s21d '' '' 16:30 "$SA_P14" pending)"
 sa_declare "$SA21D" 1 zqa1
 sa_rec "$SA21D" zqa1 approve "$SA_P16"
 SA21D_ST="$(sa_state "$SA21D")"
-read -r SA21D_RC SA21D_CL SA_V SA_C <<<"$(sa_push update "$SA21D")"
+read -r SA21D_RC SA21D_CL _ _ <<<"$(sa_push update "$SA21D")"
 SA21D_MSG="$(cat "$WORK/sa_push.err")"
 SA21D_C2=0; case "$SA21D_MSG" in *"carries no approval count or code"*confirm*) SA21D_C2=1 ;; esac
 if [ "$SA21D_ST" = confirmed ] && [ "$SA21D_RC" -ne 0 ] && [ "$SA21D_CL" -eq 0 ] && [ "$SA21D_C2" -eq 1 ]; then
@@ -7570,7 +7573,7 @@ sa_restore _confirm_has_terminal; sa_restore _iso_now
 SA21E_REC="$(cat "$SA21D/.change-confirmed" 2>/dev/null)"
 SA21E_WANT="$(printf 'digest=%s\nconfirmed=2027-06-10T09:00:00Z\napproval-count=1' "$SA_P16")"
 sa_page "$SA21D/outputs/porto-travel-site.html" 1 "$SA_P16" 16:30 updated 2027-06-10
-read -r SA21E_PRC SA21E_CL SA_V SA_C <<<"$(sa_push update "$SA21D")"
+read -r _ SA21E_CL _ _ <<<"$(sa_push update "$SA21D")"
 SA21E_NOLEDGER=0; [ "$(wc -l < "$SA21D/.approvals" | tr -d ' ')" -eq 1 ] && SA21E_NOLEDGER=1
 if [ "$SA21E_RC" -eq 0 ] && [ "$SA21E_REC" = "$SA21E_WANT" ] && [ "$SA21E_NOLEDGER" -eq 1 ] && [ "$SA21E_CL" -eq 1 ]; then
   PASS "S21e: C2's refresh — confirm at a terminal with nothing recorded writes the approval record from the verdict (the plan's code, the act's own time, the count) and adds no ledger line; the site rebuilt from it carries the pair and update reaches the clone"
@@ -7586,7 +7589,7 @@ SA21F="$(sa_ptrip s21f '' '' 16:30 "$SA_P14" none)"
 sa_declare "$SA21F" 1 zqa1
 sa_rec "$SA21F" zqa1 approve "$SA_P16"
 printf 'digest=%s\nconfirmed=2027-06-01T09:00:00Z\napproval-count=1\n' "$SA_P16" > "$SA21F/.change-confirmed"
-read -r SA21F_RC SA21F_CL SA_V SA_C <<<"$(sa_push update "$SA21F")"
+read -r SA21F_RC SA21F_CL _ _ <<<"$(sa_push update "$SA21F")"
 _confirm_has_terminal() { return 0; }
 _iso_now() { printf '2027-06-09T09:00:00Z'; }
 printf '\n' | ( cmd_confirm "$SA21F" ) >/dev/null 2>&1
@@ -7594,7 +7597,7 @@ sa_restore _confirm_has_terminal; sa_restore _iso_now
 SA21F_CONF=''
 while IFS= read -r saline; do case "$saline" in confirmed=*) SA21F_CONF="${saline#confirmed=}" ;; esac; done < "$SA21F/.change-confirmed"
 sa_page "$SA21F/outputs/porto-travel-site.html" 1 "$SA_P16" 16:30 updated 2027-06-09
-read -r SA_RC SA21F_CL2 SA_V SA_C <<<"$(sa_push update "$SA21F")"
+read -r SA_RC SA21F_CL2 _ _ <<<"$(sa_push update "$SA21F")"
 if [ "$SA21F_RC" -ne 0 ] && [ "$SA21F_CL" -eq 0 ] && [ "$SA21F_CONF" = '2027-06-09T09:00:00Z' ] && [ "$SA21F_CL2" -eq 1 ]; then
   PASS "S21f: a render built after the seven-day window closed carries no pair and update refuses it; the terminal refresh re-stamps confirmed= to its own time ($SA21F_CONF), and the render rebuilt from that record reaches the clone — the pair's window runs from the last terminal act before publication"
 else
@@ -7610,8 +7613,8 @@ SA21G2="$(sa_ptrip s21g2 '' '' 16:30 "$SA_P16" pending)"
 sa_declare "$SA21G2" 1 zqa1
 sa_rec "$SA21G2" zqa1 approve "$SA_P16"
 SA21G_ST1="$(sa_state "$SA21G1")"; SA21G_ST2="$(sa_state "$SA21G2")"
-read -r SA_RC SA21G_CL1 SA_V SA_C <<<"$(sa_push update "$SA21G1")"
-read -r SA_RC SA21G_CL2 SA_V SA_C <<<"$(sa_push update "$SA21G2")"
+read -r SA_RC SA21G_CL1 _ _ <<<"$(sa_push update "$SA21G1")"
+read -r SA_RC SA21G_CL2 _ _ <<<"$(sa_push update "$SA21G2")"
 # ARMED-RED: a presence rule that over-reached — requiring the pair on every update — refuses
 # both of these pushes, and this arm convicts it. The guard is saved, overridden and restored.
 require_render_approval_code() { # MUTANT: the pair required on every update
@@ -7620,8 +7623,8 @@ require_render_approval_code() { # MUTANT: the pair required on every update
   if [ "${3:-update}" = update ] && [ "$nc" -eq 0 ]; then die "mutant: no approval pair"; fi
   return 0
 }
-read -r SA_RC SA21G_M1 SA_V SA_C <<<"$(sa_push update "$SA21G1")"
-read -r SA_RC SA21G_M2 SA_V SA_C <<<"$(sa_push update "$SA21G2")"
+read -r SA_RC SA21G_M1 _ _ <<<"$(sa_push update "$SA21G1")"
+read -r SA_RC SA21G_M2 _ _ <<<"$(sa_push update "$SA21G2")"
 sa_restore require_render_approval_code
 if [ "$SA21G_ST1" = confirmed ] && [ "$SA21G_ST2" = none-pending ] && [ "$SA21G_CL1" -eq 1 ] && [ "$SA21G_CL2" -eq 1 ] && [ "$SA21G_M1" -eq 0 ] && [ "$SA21G_M2" -eq 0 ]; then
   PASS "S21g: CONTROL — an undeclared trip with an organizer-confirmed change, and a declaring trip republishing its unchanged plan, both reach the clone with a pair-less render: C2's presence rule binds only an approved change on a declaring trip; ARMED-RED — an over-reaching rule requiring the pair on every update refuses both"
@@ -7656,7 +7659,7 @@ SA_HMSG=0; case "$(cat "$WORK/sa_rot.err")" in *"state: unconfirmed"*) SA_HMSG=1
 SA21H2="$(sa_ptrip s21h2 1 "$SA_P16" 16:30 "$SA_P14")"
 sa_declare "$SA21H2" 1 zqa1
 sa_rec "$SA21H2" zqa1 approve "$SA_P16"
-read -r SA_RC SA_H2CL SA_CH <<<"$(sa_rotate "$SA21H2")"
+read -r SA_RC SA_H2CL _ <<<"$(sa_rotate "$SA21H2")"
 if [ "$SA_H2CL" -ne 1 ]; then
   FAIL "S21h: CONTROL — rotate on an approved declaring trip whose render carries its own pair did not reach the clone, so a refusal below would not be attributable to the state under test"
 elif [ "$SA_HRC" -ne 0 ] && [ "$SA_HCL" -eq 0 ] && [ "$SA_HMSG" -eq 1 ] && [ "$SA_HCH" -eq 0 ]; then
@@ -7741,7 +7744,7 @@ for sad in "$SA21L1" "$SA21L2"; do
   sa_declare "$sad" 1 zqa1
   sa_rec "$sad" zqa1 approve "$SA_P16"
   sast1="$(sa_build "$sad" 16:30 2027-06-10)"
-  read -r sarc1 sacl1 SA_V SA_C <<<"$(sa_push update "$sad")"
+  read -r sarc1 sacl1 _ _ <<<"$(sa_push update "$sad")"
   samsg1=0; case "$(cat "$WORK/sa_push.err")" in *"carries no approval count or code"*) samsg1=1 ;; esac
   _confirm_has_terminal() { return 0; }
   _iso_now() { printf '2027-06-10T09:00:00Z'; }
@@ -7749,7 +7752,7 @@ for sad in "$SA21L1" "$SA21L2"; do
   sa_restore _confirm_has_terminal; sa_restore _iso_now
   sast2="$(sa_build "$sad" 16:30 2027-06-10)"
   read -r sanc sank sacode <<<"$(_render_approval_pair "$sad/outputs/porto-travel-site.html")"
-  read -r sarc2 sacl2 SA_V SA_C <<<"$(sa_push update "$sad")"
+  read -r sarc2 sacl2 _ _ <<<"$(sa_push update "$sad")"
   SA21L_DETAIL="$SA21L_DETAIL [$(basename "$sad"): first build '$sast1' rc=$sarc1 clone=$sacl1 C2=$samsg1; rebuilt '$sast2' pair=$sanc/$sank code-own=$([ "$sacode" = "$SA_P16" ] && echo 1 || echo 0) rc=$sarc2 clone=$sacl2]"
   if [ "$sast1" = none ] && [ "$sarc1" -ne 0 ] && [ "$sacl1" -eq 0 ] && [ "$samsg1" -eq 1 ]; then SA21L_PRE_OK=$((SA21L_PRE_OK+1)); fi
   if [ "$sast2" = updated ] && [ "$sanc" -eq 1 ] && [ "$sank" -eq 1 ] && [ "$sacode" = "$SA_P16" ] && [ "$sacl2" -eq 1 ]; then SA21L_POST_OK=$((SA21L_POST_OK+1)); fi
@@ -7760,7 +7763,7 @@ s_record "$SA21L3/.published-itinerary" "$SA_P14" published
 s_record "$SA21L3/.change-confirmed" "$SA_P16" confirmed
 SA21L3_ST="$(sa_build "$SA21L3" 16:30 2027-06-10)"
 cp "$SA21L3/outputs/porto-travel-site.html" "$WORK/sa21l3_now.html"
-read -r SA_RC SA21L3_CL SA_V SA_C <<<"$(sa_push update "$SA21L3")"
+read -r SA_RC SA21L3_CL _ _ <<<"$(sa_push update "$SA21L3")"
 # ARMED-RED — the mapping's earlier resolver, swapped in and restored.
 SA21L_T6_SAVED="$(declare -f t6_state)"
 t6_state() { # MUTANT: t6_state's earlier body — with no entry it reads `none` before the record is read
@@ -7778,7 +7781,7 @@ t6_state() { # MUTANT: t6_state's earlier body — with no entry it reads `none`
   printf 'updated'
 }
 SA21L_MST="$(sa_build "$SA21L1" 16:30 2027-06-10)"
-read -r SA21L_MRC SA21L_MCL SA_V SA_C <<<"$(sa_push update "$SA21L1")"
+read -r SA21L_MRC SA21L_MCL _ _ <<<"$(sa_push update "$SA21L1")"
 SA21L_MMSG=0; case "$(cat "$WORK/sa_push.err")" in *"carries no approval count or code"*) SA21L_MMSG=1 ;; esac
 sa_build "$SA21L3" 16:30 2027-06-10 >/dev/null
 SA21L3_SAME=0; cmp -s "$WORK/sa21l3_now.html" "$SA21L3/outputs/porto-travel-site.html" && SA21L3_SAME=1
@@ -8085,7 +8088,7 @@ SA23I_B1="$(sa_build "$SA23I" 16:30 2027-06-11)"
 SA23I_SINCE=''
 while IFS= read -r saline; do case "$saline" in coordination-since:*) SA23I_SINCE="${saline#coordination-since: }" ;; esac; done < "$SA23I/outputs/porto-travel-site.html"
 read -r SA23I_NC SA23I_NK SA23I_CODE <<<"$(_render_approval_pair "$SA23I/outputs/porto-travel-site.html")"
-read -r SA_RC SA23I_CL SA_V SA_C <<<"$(sa_push update "$SA23I")"
+read -r SA_RC SA23I_CL _ _ <<<"$(sa_push update "$SA23I")"
 SA23I_ST1="$(sa_state "$SA23I")"
 # ARMED-RED — the writer reading no entry date, swapped in and restored.
 SA23IM="$(sa23i_fixture s23im 2027-05-30 2027-06-05)"
@@ -8278,7 +8281,7 @@ T9_LEX='travellers approved|travelers approved|approved by|have approved|has app
 t9_claims() { # <text> -> the lexicon phrases the text carries
   local t="$1" out="" w IFS='|'
   shopt -s nocasematch
-  for w in $T9_LEX; do case "$t" in *"$w"*) out="$out[$w]" ;; esac; done
+  for w in $T9_LEX; do case "$t" in *"$w"*) out="${out}[$w]" ;; esac; done
   shopt -u nocasematch
   printf '%s' "$out"
 }
@@ -8372,7 +8375,7 @@ t11_order() { # [<trip-md>] -> "confirmed-offset count-offset conditioned"
 }
 read -r T11_CONF T11_CNT T11_COND <<<"$(t11_order)"
 awk '/^## site$/ { s = 1 } s && /^\*\*Reads:\*\*/ && !d { sub(/\*\*Reads:\*\*/, "**Reads:** the `approval-count=` line first;"); d = 1 } { print }' "$T_TRIPMD" > "$T_DIR/t11_trip_mut.md"
-read -r T11_MCONF T11_MCNT T11_MCOND <<<"$(t11_order "$T_DIR/t11_trip_mut.md")"
+read -r T11_MCONF T11_MCNT _ <<<"$(t11_order "$T_DIR/t11_trip_mut.md")"
 if [ "$T11_MCNT" -ge "$T11_MCONF" ]; then
   FAIL "T11a-CTL: with approval-count= injected ahead of confirmed= in a copy, the order read count=$T11_MCNT against confirmed=$T11_MCONF — the extractor cannot see an inversion"
 elif [ "$T11_CONF" -lt "$T11_CNT" ] && [ "$T11_COND" -eq 1 ]; then
@@ -8956,6 +8959,7 @@ pp_capture_rotate() { # <trip_dir> -> the run's captured STANDARD OUTPUT
 PP_SYN='zzq-synthetic-passphrase-value'
 PP_D_HIT=0; PP_D_MISS=0
 case "prefix $PP_SYN suffix"        in *"$PP_SYN"*) PP_D_HIT=1 ;; esac
+# shellcheck disable=SC2194  # the constant is the arm: the capture that does not carry the value
 case "prefix (value absent) suffix" in *"$PP_SYN"*) PP_D_MISS=1 ;; esac
 if [ "$PP_D_HIT" -eq 1 ] && [ "$PP_D_MISS" -eq 0 ]; then
   PASS "PP0: CONTROL on the leak detector — over 2 synthetic captures it fires on the one carrying the value and stays silent on the one that does not, so both arms fired. Every absence asserted below is a measurement rather than a detector that matches nothing"
