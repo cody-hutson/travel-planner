@@ -69,14 +69,11 @@ undeclared. Why a particular gap exists belongs in the record that withdrew it, 
 ```adr-number-declaration
 # number  reason
 020       superseded-record-never-merged
-039       held-for-in-flight-milestone-57
-040       held-for-in-flight-milestone-57
 ```
 
-`ADR-020` is the one permanent gap declared. It was assigned to the record `ADR-021`
+`ADR-020` is the only number declared today. It was assigned to the record `ADR-021`
 supersedes, on a branch that has since been swept; `ADR-021` § *Costs and residual risks*
-carries the account. `039` and `040` are held rather than lost: an in-flight release carries its
-records under those numbers, and the change that lands them removes both rows.
+carries the account.
 
 ## Index
 

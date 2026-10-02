@@ -63,7 +63,7 @@
 # lines under the sentence forbidding them. They are gone rather than refreshed: a tally
 # here is a copy with no assertion behind it, and the arms below read the real set.
 #
-# ONE VALUE IS PINNED: ADR_NUM_EXEMPT, the known gaps in the sequence. It is declared HERE
+# ONE VALUE IS PINNED: ADR_NUM_EXEMPT, the known gap in the sequence. It is declared HERE
 # rather than in the index, because this card ships a mechanism and is forbidden from
 # reorganising the index. It is asserted in both directions, so the gap can neither widen
 # silently (NU2) nor close silently (NU3).
@@ -140,12 +140,9 @@ SELF="$HERE/$(basename "${BASH_SOURCE[0]}")"
 ADR_DIR='reference/adr'
 ADR_INDEX='reference/adr/README.md'
 
-# THE ONE PINNED VALUE. The known gaps in the record sequence, asserted in both directions,
-# space-separated. 20 is permanent. 39 and 40 are held, not lost: an in-flight release carries
-# its records under those numbers — the same hold the adr-number-declaration fence in
-# reference/adr/README.md declares for corpus-hygiene group D — and the change that lands them
-# removes both here, where NU3 would otherwise fire on each, as D4 would on the fence rows.
-ADR_NUM_EXEMPT='20 39 40'
+# THE ONE PINNED VALUE. The known gap in the record sequence, asserted in both directions.
+# Space-separated if it ever holds more than one.
+ADR_NUM_EXEMPT='20'
 
 # The historical witnesses. Each is a real revision of this repository.
 #   IX — a record whose file read Accepted while the index still read Proposed.
