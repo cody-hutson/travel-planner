@@ -743,12 +743,12 @@ def _untriggered(yaml, on):
     `pull_request_target` or `merge_group` alone fails closed. A `branches:` filter
     admits `main` when it names it, and one carrying a pattern is left to GitHub's
     grammar (X116). A `branches-ignore:` filter shuts `main` out when it names it,
-    unless an entry opens with `!`, which GitHub documents only for `branches:`. A
-    `types:` filter admits a push when it names `synchronize`. A `branches:` or
-    `types:` filter in a shape GitHub's schema does not give it names nothing, so it
-    admits nothing; such a `branches-ignore:` filter, or a trigger whose value is
-    neither null nor a mapping, is the schema's question, which actionlint answers in
-    this same job.
+    unless an entry opens with `!`, which can negate an earlier entry under GitHub's
+    pattern grammar. A `types:` filter admits a push when it names `synchronize`. A
+    `branches:` or `types:` filter in a shape GitHub's schema does not give it names
+    nothing, so it admits nothing; such a `branches-ignore:` filter, or a trigger
+    whose value is neither null nor a mapping, is the schema's question, which
+    actionlint answers in this same job.
     """
     if PR_TRIGGER not in _events(yaml, on):
         return "UNTRIGGERED"
