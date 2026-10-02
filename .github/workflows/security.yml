@@ -29,6 +29,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Availability probe (#1168 — throwaway; reverted by the next commit)
+        run: |
+          python3 -c "import yaml; print('PYYAML', yaml.__version__)" || echo "PYYAML absent"
+          yq --version || echo "YQ absent"
+          python3 --version
+
       # Same subject matter as actionlint — a property of the workflow YAML — so it
       # rides this job rather than adding a new check name (which would need a
       # branch-protection change). Runs BEFORE the actionlint install so a transient
