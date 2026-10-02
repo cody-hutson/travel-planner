@@ -1,0 +1,105 @@
+name: Shell lint
+
+# Runs scripts/lint-shell.sh on every push to main and every pull request into main, so the
+# shell this repository's checks are made of is linted by shellcheck rather than read by
+# whoever happens to open the file. The motivating defect was a backtick command substitution
+# inside a double-quoted FAIL message, on the limb that fires: it would have executed the
+# substitution the moment that arm went red, and nothing in CI would have reported it.
+#
+# SECURITY: no GitHub expression interpolation appears anywhere in this file, and in
+# particular in no run: step — every value below is a repo-static literal. The property is
+# stated without writing the token itself, so it stays mechanically checkable: a scan for the
+# interpolation syntax over this file must return exactly zero. There is no path for
+# attacker-controlled event data (issue titles, PR bodies, commit messages, head refs) to
+# reach a shell.
+#
+# ── WHY A SEPARATE WORKFLOW RATHER THAN A STEP IN AN EXISTING JOB ────────────────
+#   1. FAILURE ATTRIBUTION. A finding in scripts/*.sh turns THIS check red, under a name that
+#      says what failed. As a step of Workflow SAST (actionlint) it would turn a check named
+#      for workflow YAML red — the legibility trap every suite workflow's header names.
+#   2. SHARED FATE. This job downloads a pinned shellcheck. A failed download here must not
+#      take another required check down with it, and nothing another job installs may change
+#      the version this one runs.
+#   3. EVERY PULL REQUEST, NO FILTER. A required check must report on every pull request, so
+#      the pull_request trigger below carries no paths filter: one narrowed to shell files
+#      would leave every other pull request waiting on a check that never reports, and the
+#      registration census cannot see a filter.
+#
+# ── WHICH SHELLCHECK, AND WHY IT IS PINNED ───────────────────────────────────────
+# The runner image ships a shellcheck of its own, at whatever version the image carries that
+# week. Findings differ between shellcheck versions, so a required lint on that binary would go
+# red on a pull request that changed nothing. The install step downloads one upstream release
+# and refuses it unless its SHA-256 matches the digest beside the version in this job's env;
+# the lint then refuses any other version. Moving the pin is one edit to those two values
+# together, and whatever the new version reports is fixed in the same pull request.
+#
+# ── COVERAGE BOUNDARY ────────────────────────────────────────────────────────────
+# IN SCOPE: every scripts/*.sh, at severity warning, and one style rule by name — SC2006, a
+# command substitution written with backticks — because the motivating defect is reported by
+# that rule alone. Before it reads a real file, the lint runs each pass over a fixture it must
+# flag and a near-miss it must not; a control that misreads refuses the run.
+#
+# OUT OF SCOPE — deliberately, and by name:
+#   FINDINGS BELOW WARNING, other than SC2006. Most are this repository's deliberate idioms —
+#   a backtick inside single quotes is a literal, not a substitution — and grading them would
+#   mean suppressing a great many correct lines.
+#   A SHELL FILE OUTSIDE scripts/*.sh, or one without the .sh suffix. One added later is not
+#   linted here until this boundary moves with it.
+#   WORKFLOW-EMBEDDED SHELL. actionlint reads it, in .github/workflows/security.yml.
+#   WHAT A SCRIPT GRADES. A lint-clean suite can still grade the wrong thing; its own control
+#   arms are what show it can fail.
+#
+# ── ROLLING THIS GATE BACK IS TWO ORDERED STEPS, AND THE ORDER IS NOT OPTIONAL ───
+# Once the check below is registered as a required status check, a plain revert of the change
+# that introduced it is NOT a rollback and will wedge the repository: branch protection would
+# go on demanding a context no workflow produces, and every later pull request — including the
+# one trying to fix it — would block on a check that can never report.
+#
+#   STEP 1, FIRST. De-register the required status check. Remove the exact string
+#           Shell script lint (shellcheck)
+#           from the branch protection rule's required-contexts list, and read the protection
+#           settings back to confirm it is gone BEFORE going on to step 2.
+#   STEP 2. Revert the change that added this workflow and scripts/lint-shell.sh.
+#   VERIFY. The protection rule no longer names the string above; neither file is tracked;
+#           and the remaining required checks report on the revert itself.
+#
+# PREFER THE PARTIAL ROLLBACK where one finding is at fault: fix it, or suppress it in place
+# with a reason, keeping this workflow and its job name. The context keeps reporting
+# throughout, so nothing blocks and step 1 is never needed.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  # gate-efficacy: posture=required
+  shell-lint:
+    name: Shell script lint (shellcheck)
+    runs-on: ubuntu-latest
+    env:
+      # The pin: one upstream release, and the SHA-256 of its linux x86_64 tarball. Move both
+      # together.
+      SHELLCHECK_EXPECT_VERSION: '0.11.0'
+      SHELLCHECK_SHA256: 'b7af85e41cc99489dcc21d66c6d5f3685138f06d34651e6d34b42ec6d54fe6f6'
+    steps:
+      - uses: actions/checkout@v7
+
+      # No fallback to the runner's own shellcheck: a failed download fails this job rather
+      # than linting at a version the gate was not measured with.
+      - name: Install the pinned shellcheck
+        run: |
+          set -euo pipefail
+          tarball="shellcheck-v${SHELLCHECK_EXPECT_VERSION}.linux.x86_64.tar.gz"
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/$tarball" \
+            "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_EXPECT_VERSION}/$tarball"
+          printf '%s  %s\n' "$SHELLCHECK_SHA256" "$RUNNER_TEMP/$tarball" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/$tarball" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/shellcheck-v${SHELLCHECK_EXPECT_VERSION}" >> "$GITHUB_PATH"
+
+      - name: Lint scripts/*.sh
+        run: ./scripts/lint-shell.sh

@@ -95,8 +95,9 @@
 #   CI checkout contains no trip and this gate cannot reach one. Local trip validation is
 #   a separate call site that drives these same functions with --scope dir.
 #   skills/*/SKILL.md. An upstream schema this repo does not own (§ 11).
-#   THIS SCRIPT'S OWN SHELL QUALITY. No CI job shellchecks a standalone scripts/*.sh;
-#   actionlint lints workflow-embedded shell only. Stated so a green is not read as more.
+#   THIS SCRIPT'S OWN SHELL QUALITY. Not graded by this gate. Every scripts/*.sh is linted
+#   by .github/workflows/shell-lint.yml at the severity that workflow declares. Stated so a
+#   green is not read as more.
 #
 set -uo pipefail
 

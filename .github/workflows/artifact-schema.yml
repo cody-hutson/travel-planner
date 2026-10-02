@@ -306,9 +306,9 @@ name: Artifact schema
 #   cannot change. The artifact schema set does not claim them and this gate does not check
 #   them.
 #
-#   THE GUARD SCRIPTS' OWN SHELL QUALITY. actionlint lints workflow-embedded shell only, so
-#   no CI job shellchecks a standalone scripts/*.sh. This slice adds two more files to that
-#   unlinted set. Stated so a green is not read as more than it is.
+#   THE GUARD SCRIPTS' OWN SHELL QUALITY. Not graded by this check. Every scripts/*.sh is
+#   linted by .github/workflows/shell-lint.yml at the severity that workflow declares.
+#   Stated so a green is not read as more than it is.
 #
 # So a green check means: the artifact model declares one closed class enumeration, the
 # schema corpus is in bijection with it, every exclusion the gate applies is warranted by

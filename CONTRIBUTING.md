@@ -111,7 +111,7 @@ copy of something that was never at risk of being lost.
 
 **Nothing in a release is committed to `main` directly** — not the CHANGELOG, not
 anything else. A direct push to `main` skips the pull-request requirement and all
-nine required checks in a single step; see [SECURITY.md](SECURITY.md), *Branch
+ten required checks in a single step; see [SECURITY.md](SECURITY.md), *Branch
 Protection Posture*, for why that is possible and what it costs. The personal-data
 gate also runs on pushes to `main`, so such a push is scanned and reported — but
 after it has landed, not before.

@@ -2,11 +2,12 @@
 """Capture, write and assert the app-pinning of a branch's required status checks.
 
 WHAT THIS IS FOR
-    `main` requires nine status checks. Eight are bound ("pinned") to the GitHub
-    Actions app through `app_id`; one -- `Personal-data gate` -- carries
-    `app_id: null`, so a check run reporting that context NAME from any
-    integration satisfies it. This tool pins the ninth, and proves that it pinned
-    the right thing.
+    `main` requires the status checks CONTEXT_ORDER below declares, each bound
+    ("pinned") to the GitHub Actions app through `app_id`, so only a check run
+    from that app satisfies it. The tool was written when one of them --
+    `Personal-data gate` -- carried `app_id: null`, so that a check run reporting
+    that context NAME from any integration satisfied it; it pinned that context
+    and proved that it pinned the right thing.
 
 WHY A TOOL RATHER THAN A ONE-LINER
     Branch protection has no version history and no restore API. It is the only
@@ -24,15 +25,15 @@ WHY A TOOL RATHER THAN A ONE-LINER
        attempted) instead of leaving it to be read and believed.
 
     2. A DISCRIMINATING READ-BACK ASSERTION.
-       "nine contexts, zero nulls" is satisfied by three separate WRONG end
-       states: every context pinned to the WRONG app; `app_id` stored as the
-       STRING "15368"; and one context silently RENAMED. All three read nine and
-       zero. The assertion here is four conjuncts instead -- cardinality, exact
-       set equality, zero-null, and a uniform integer pin -- and `--self-test`
-       drives eleven degenerate inputs through it, each of which must fail, plus
-       one correct input which must pass. It then removes each conjunct in turn
-       and requires the arm that names it to flip to PASS, so no conjunct is
-       carried as unfalsifiable decoration.
+       "the right number of contexts, zero nulls" is satisfied by three separate
+       WRONG end states: every context pinned to the WRONG app; `app_id` stored
+       as the STRING "15368"; and one context silently RENAMED. All three read the
+       right number and zero. The assertion here is four conjuncts instead --
+       cardinality, exact set equality, zero-null, and a uniform integer pin --
+       and `--self-test` drives eleven degenerate inputs through it, each of which
+       must fail, plus one correct input which must pass. It then removes each
+       conjunct in turn and requires the arm that names it to flip to PASS, so no
+       conjunct is carried as unfalsifiable decoration.
 
     3. A NARROW ENDPOINT.
        Writes address `.../protection/required_status_checks` only. The full
@@ -98,6 +99,10 @@ MODES
         protection object. `--confirm-write` is mandatory: without it `--apply`
         runs every step up to the write and then stops, so the dangerous mode
         cannot be reached by a typo or a stale shell-history line.
+        It pins a context set that already equals CONTEXT_ORDER and never adds
+        one: a live set that differs -- a context declared and not yet
+        registered, or one retired -- stops at the drift guard (exit 4) before
+        anything is written.
 
     --restore --staging DIR --confirm-write
         Rollback. Re-applies the captured pre-change sub-resource verbatim,
@@ -160,6 +165,7 @@ CONTEXT_ORDER = (
     "Command taxonomy suite (test-command-taxonomy.sh)",
     "Trip resolution contract suite (test-trip-resolution-contract.sh)",
     "Corpus hygiene suite (test-corpus-hygiene.sh)",
+    "Shell script lint (shellcheck)",
 )
 EXPECTED_CONTEXTS = frozenset(CONTEXT_ORDER)
 EXPECTED_COUNT = len(CONTEXT_ORDER)
@@ -381,8 +387,8 @@ def evaluate(raw, disabled=frozenset()):
         lines.append("FAIL C2 context-set: missing={} unexpected={}".format(
             sorted(EXPECTED_CONTEXTS - got), sorted(got - EXPECTED_CONTEXTS)))
 
-    # C2b no duplicates. A duplicated context can hold cardinality at nine while
-    # a real required check has gone missing.
+    # C2b no duplicates. A duplicated context can hold cardinality at the expected
+    # count while a real required check has gone missing.
     if "C2b" not in disabled and len(names) != len(got):
         failed.append("C2b")
         lines.append("FAIL C2b duplicate contexts: {} entries, {} distinct".format(
@@ -1344,7 +1350,8 @@ def assertion_arms():
     """Eleven degenerate inputs that must fail, and one correct input that must pass.
 
     The first seven (S0-S6) are the canonical matrix: S4, S5 and S6 are the three
-    shapes that a weaker "nine contexts, zero nulls" check certifies as SUCCESS.
+    shapes that a weaker "the right number of contexts, zero nulls" check
+    certifies as SUCCESS.
     S7-S10 are supplementary and exist so that no conjunct the evaluator can emit
     is left unfalsifiable -- an untested conjunct is indistinguishable from a
     conjunct that cannot fail.
@@ -1356,19 +1363,19 @@ def assertion_arms():
     renamed = [(("Personal data gate" if c == "Personal-data gate" else c), a)
                for c, a in correct]
     duped = dropped + [("Personal-data gate", APP_ID)]
-    extra = correct + [("Tenth check (never declared)", APP_ID)]
+    extra = correct + [("Extra check (never declared)", APP_ID)]
 
     return [
         # id,  what it models,                                   raw,                      rc, conjuncts
         ("S0", "the live pre-change state: one context unpinned", _checks(_pre_pairs()), 1, {"C3", "C4"}),
         ("S1", "an empty checks array -- the shape a failed read produces", '{"checks": []}', 1, {"C1", "C2"}),
         ("S2", "an empty object -- the other shape a failed read produces", "{}", 2, {"C0"}),
-        ("S3", "the write dropped one context (8 contexts, 0 null)", _checks(dropped), 1, {"C1", "C2"}),
-        ("S4", "every context pinned to the WRONG app (9, 0 null)", _checks(wrong_app), 1, {"C4"}),
-        ("S5", "app_id stored as the STRING form (9, 0 null)", _checks(stringy), 1, {"C4"}),
-        ("S6", "one context RENAMED by the write (9, 0 null, right app)", _checks(renamed), 1, {"C2"}),
-        ("S7", "a context duplicated: 9 entries, 8 distinct", _checks(duped), 1, {"C2", "C2b"}),
-        ("S8", "an unexpected tenth context, all pinned", _checks(extra), 1, {"C1", "C2"}),
+        ("S3", "the write dropped one context ({} contexts, 0 null)".format(EXPECTED_COUNT - 1), _checks(dropped), 1, {"C1", "C2"}),
+        ("S4", "every context pinned to the WRONG app ({}, 0 null)".format(EXPECTED_COUNT), _checks(wrong_app), 1, {"C4"}),
+        ("S5", "app_id stored as the STRING form ({}, 0 null)".format(EXPECTED_COUNT), _checks(stringy), 1, {"C4"}),
+        ("S6", "one context RENAMED by the write ({}, 0 null, right app)".format(EXPECTED_COUNT), _checks(renamed), 1, {"C2"}),
+        ("S7", "a context duplicated: {} entries, {} distinct".format(EXPECTED_COUNT, EXPECTED_COUNT - 1), _checks(duped), 1, {"C2", "C2b"}),
+        ("S8", "an unexpected extra context, all pinned", _checks(extra), 1, {"C1", "C2"}),
         ("S9", "checks present but not an array", '{"checks": "nine"}', 2, {"C0"}),
         ("S10", "unparseable JSON", '{"checks": [', 2, {"C0"}),
     ], ("P0", "the correct post-write shape", _checks(correct), 0, set())
@@ -1416,7 +1423,7 @@ def guard_arms():
     reordered["required_status_checks"]["checks"].reverse()
     full_post_reordered = json.dumps(reordered)
 
-    drifted = _checks(_correct_pairs()[:-1] + [("Tenth check (never declared)", APP_ID)])
+    drifted = _checks(_correct_pairs()[:-1] + [("Extra check (never declared)", APP_ID)])
     full_drift = json.dumps({"required_status_checks": json.loads(drifted)})
     full_already = json.dumps({"required_status_checks": json.loads(post)})
 

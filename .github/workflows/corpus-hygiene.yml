@@ -113,9 +113,9 @@ name: Corpus hygiene
 #   A USER'S trips/ DIRECTORY. .gitignore keeps it out of a CI checkout, so those artifacts
 #   are unreachable by construction rather than by choice.
 #
-#   THE SUITE'S OWN SHELL QUALITY. actionlint lints workflow-embedded shell only, so no CI
-#   job shellchecks a standalone scripts/*.sh. This workflow adds one more file to that
-#   unlinted set. Stated so a green is not read as more than it is.
+#   THE SUITE'S OWN SHELL QUALITY. Not graded by this check. Every scripts/*.sh, this suite
+#   included, is linted by .github/workflows/shell-lint.yml at the severity that workflow
+#   declares. Stated so a green is not read as more than it is.
 #
 # ── ROLLING THIS GATE BACK IS TWO ORDERED STEPS, AND THE ORDER IS NOT OPTIONAL ───
 # Once the check below is registered as a required status check, a plain revert of the pull
