@@ -45,10 +45,17 @@ WHY A TOOL RATHER THAN A ONE-LINER
 
 MODES
     --self-test
-        Offline. No network, no `gh`, no token, no repository. Runs the assertion
-        matrix, the conjunct-removal matrix, and the orchestrator guard arms.
-        This is the arm that makes the tool trustworthy before it is ever pointed
-        at a live branch, and it is the arm to run in CI.
+        Offline. No network, no `gh`, no token. It reads exactly one file of the
+        repository this script lives in -- SECURITY.md -- to hold that file's list
+        of required checks to CONTEXT_ORDER in both directions (group F). Every
+        census arm builds and grades a synthetic tree in a temporary directory,
+        never this repository's workflows. It runs the assertion matrix, the
+        conjunct-removal matrix, the orchestrator guard arms, the census arms and
+        the SECURITY.md arm. This is the arm that makes the tool trustworthy before
+        it is ever pointed at a live branch, and it is the arm to run in CI: the
+        census step in .github/workflows/security.yml runs it ahead of the census
+        on every pull request. It needs PyYAML for the census arms; without it the
+        census group reports itself NOT-EVALUATED and the self-test fails.
 
     --census [--root DIR]
         Offline. Reads every workflow under .github/workflows through a YAML
@@ -131,10 +138,11 @@ import tempfile
 # CONTEXT_ORDER is the required-context set this tool is written against. It is
 # a constant ON PURPOSE: the write payload is composed from a LIVE read, but the
 # assertion is graded against a set that was established deliberately. If the
-# live set drifts -- a tenth check added, one retired -- the drift guard aborts
+# live set drifts -- a context added, one retired -- the drift guard aborts
 # rather than pinning whatever happens to be there, because a set that changed
 # is a set someone has to look at. SECURITY.md's Branch Protection Posture
-# record states the same nine; the two move together or neither moves.
+# record lists the same set, and the self-test's group F fails whenever the two
+# disagree, in either direction.
 # --------------------------------------------------------------------------
 APP_ID = 15368
 
@@ -151,6 +159,151 @@ CONTEXT_ORDER = (
 )
 EXPECTED_CONTEXTS = frozenset(CONTEXT_ORDER)
 EXPECTED_COUNT = len(CONTEXT_ORDER)
+
+_RE_SECURITY_HEADING = re.compile(r"^## Branch Protection Posture\s*$")
+_RE_SECURITY_ROW = re.compile(
+    "^\\|\\s*Required status checks\\s*\\|\\s*([0-9]+)\\s*\N{EM DASH}\\s*([^|]*?)\\s*\\|")
+
+# Group F's controls: (id, what it models, want_ok). Each is built in memory from
+# the live SECURITY.md row and graded against that row's own list, so a control
+# tests the reader and the grader whatever the live file says, and each first
+# asserts that its change landed.
+SECURITY_CONTROLS = (
+    ("F1", "SECURITY.md gains a name the declared list lacks, its stated count raised to match: must fail, naming that name in the SECURITY.md-only direction", False),
+    ("F2", "SECURITY.md gains a name and its stated count is left as it was: must fail on the count, the row parse's own integrity check", False),
+    ("F3", "the declared list renames one entry and SECURITY.md does not: must fail, naming a name in each direction", False),
+    ("F4", "SPECIFICITY: the row's names written in reverse order, the set unchanged: must pass", True),
+    ("F5", "the section heading renamed: must fail, the row not found, never read as an empty list", False),
+    ("F6", "the row written twice in the section: must fail, two answers", False),
+)
+
+
+def security_contexts(text):
+    """(names, problem) for the required checks SECURITY.md's posture table lists.
+
+    The list is the second cell of the one table row whose first cell is
+    `Required status checks`, inside the one `## Branch Protection Posture`
+    section, written as `N -- name, name, ...` with an em dash. N is checked against
+    the names read, so a name that itself carries a comma is caught as a mis-read
+    rather than graded as two names. `problem` is None when the row reads cleanly.
+    """
+    lines = text.split("\n")
+    heads = [i for i, line in enumerate(lines) if _RE_SECURITY_HEADING.match(line)]
+    if len(heads) != 1:
+        return None, ("the `## Branch Protection Posture` heading appears {} time(s), "
+                      "want 1".format(len(heads)))
+    start = heads[0] + 1
+    end = next((i for i in range(start, len(lines)) if lines[i].startswith("## ")),
+               len(lines))
+    rows = [m for m in (_RE_SECURITY_ROW.match(lines[i]) for i in range(start, end)) if m]
+    if len(rows) != 1:
+        return None, ("the `Required status checks` row appears {} time(s) in that "
+                      "section, want 1".format(len(rows)))
+    stated = int(rows[0].group(1))
+    names = rows[0].group(2).split(", ")
+    if stated != len(names):
+        return None, "the row states {} but lists {} name(s)".format(stated, len(names))
+    if len(set(names)) != len(names):
+        return None, "the row lists a name twice"
+    return names, None
+
+
+def security_grade(text, declared):
+    """(ok, detail): SECURITY.md's list against `declared`, in both directions."""
+    names, problem = security_contexts(text)
+    if problem:
+        return False, problem
+    listed, wanted = set(names), set(declared)
+    if listed == wanted:
+        return True, "{} listed, set-equal to the declaration in both directions".format(
+            len(listed))
+    return False, "in SECURITY.md only: {}; in the declaration only: {}".format(
+        sorted(listed - wanted), sorted(wanted - listed))
+
+
+def _security_mutants(text):
+    """(baseline, {id: (text, declared)}) for F1-F6, built from `text` in memory.
+
+    The baseline is (text, the row's own list); every control is graded against a
+    list derived from the row rather than against CONTEXT_ORDER, so a drift in the
+    live file fails F0 alone. None when the row cannot be found.
+    """
+    lines = text.split("\n")
+    at = [i for i, line in enumerate(lines) if _RE_SECURITY_ROW.match(line)]
+    if not at:
+        return None
+    i = at[0]
+    row = lines[i]
+    m = _RE_SECURITY_ROW.match(row)
+    names = tuple(m.group(2).split(", "))
+
+    def with_row(new_row, extra_after=False):
+        out = list(lines)
+        if extra_after:
+            out.insert(i + 1, new_row)
+        else:
+            out[i] = new_row
+        return "\n".join(out)
+
+    renamed = (names[0] + " RENAMED",) + names[1:]
+    return (text, names), {
+        "F1": (with_row(row[:m.start(1)] + str(len(names) + 1) + row[m.end(1):m.end(2)]
+                        + ", F1 synthetic check" + row[m.end(2):]), names),
+        "F2": (with_row(row[:m.end(2)] + ", F2 synthetic check" + row[m.end(2):]), names),
+        "F3": (text, renamed),
+        "F4": (with_row(row[:m.start(2)] + ", ".join(reversed(names)) + row[m.end(2):]),
+               names),
+        "F5": (text.replace("## Branch Protection Posture", "## Branch Protection", 1),
+               names),
+        "F6": (with_row(row, extra_after=True), names),
+    }
+
+
+def _security_group(out, failures):
+    """Group F of the self-test: SECURITY.md's required-check list against CONTEXT_ORDER.
+
+    F0 reads this repository's SECURITY.md -- the one repository file the self-test
+    reads -- and grades it against CONTEXT_ORDER in both directions. F1-F6 grade
+    copies of the row changed in memory, each against the row's own list, and each
+    first asserts its change landed. It needs no YAML parser, so it runs and
+    reports when group E cannot.
+    """
+    out("")
+    out("F -- SECURITY.md's required-check list against CONTEXT_ORDER, in both directions")
+    path = os.path.join(repo_root(), "SECURITY.md")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            text = fh.read()
+    except (OSError, UnicodeDecodeError) as exc:
+        failures.append("F0: SECURITY.md could not be read beside scripts/ ({})".format(
+            type(exc).__name__))
+        out("  FAIL F0: SECURITY.md could not be read, so the list cannot be graded")
+        return
+    ok, detail = security_grade(text, CONTEXT_ORDER)
+    if ok:
+        out("  PASS F0: SECURITY.md's Branch Protection Posture row -- {}".format(detail))
+    else:
+        failures.append("F0: SECURITY.md and CONTEXT_ORDER disagree -- {}".format(detail))
+        out("  FAIL F0: SECURITY.md and CONTEXT_ORDER disagree -- {}".format(detail))
+    built = _security_mutants(text)
+    for cid, what, want_ok in SECURITY_CONTROLS:
+        if built is None:
+            failures.append("{}: not built -- the row was not found".format(cid))
+            out("  FAIL {}: not built -- {}".format(cid, what))
+            continue
+        baseline, mutants = built
+        mtext, declared = mutants[cid]
+        if (mtext, tuple(declared)) == baseline:
+            failures.append("{}: the change did not land, so the control proves nothing".format(cid))
+            out("  FAIL {}: the change did not land -- {}".format(cid, what))
+            continue
+        got_ok, got = security_grade(mtext, declared)
+        if got_ok != want_ok:
+            failures.append("{}: graded ok={} ({}) -- want ok={}".format(cid, got_ok, got, want_ok))
+            out("  FAIL {}: graded ok={} -- {}".format(cid, got_ok, what))
+        else:
+            out("  PASS {}: {} -- {}".format(cid, "passes" if got_ok else "fails", what))
+
 
 # Every conjunct the evaluator can emit. The self-test asserts a bijection
 # between this set and the set of conjuncts the arms name, in both directions,
@@ -2452,7 +2605,6 @@ def _census_arms_parsed(base):
     ]
 
 
-
 def _materialise(files, root):
     for rel, text in files.items():
         dest = os.path.join(root, rel)
@@ -2623,7 +2775,8 @@ def self_test(stream=sys.stdout):
 
     failures = []
     out("=" * 78)
-    out("SELF-TEST -- offline. No network, no gh, no token, no repository.")
+    out("SELF-TEST -- offline. No network, no gh, no token. It reads one file of "
+        "this repository: SECURITY.md.")
     out("=" * 78)
 
     arms, positive = assertion_arms()
@@ -2751,8 +2904,8 @@ def self_test(stream=sys.stdout):
     # because each is a module constant -- REFUSAL_TEXT, REFUSAL_REMEDY,
     # NO_PARSER_REMEDY, FINDING_TEXT, MARKER_NOTE, CENSUS_PRINT, CENSUS_REMEDY --
     # rather than a string built inside a function. It goes red wherever
-    # --self-test runs, --plan and --apply included (they refuse at exit 5); CI
-    # runs --census alone, so it is not a CI gate.
+    # --self-test runs: in CI, where the census step runs it on every pull
+    # request, and in --plan and --apply, which refuse at exit 5.
     planted = ("They come apart two further ways, and naming only the first",
                "Three mechanisms for that are measured",
                "and the three classes that still escape both the reader",
@@ -2796,6 +2949,7 @@ def self_test(stream=sys.stdout):
                                      ("CENSUS_PRINT", CENSUS_PRINT))
               for key, value in sorted(entries.items())]
     texts.append(("the census remedy block", " ".join(CENSUS_REMEDY)))
+    texts += [("F control {}".format(cid), what) for cid, what, _want in SECURITY_CONTROLS]
     present = set(w for w, t in texts if t.strip())
     hollow = sorted(set(("the limit block", "the module docstring",
                          "census_scan()'s docstring")) - present)
@@ -2817,6 +2971,8 @@ def self_test(stream=sys.stdout):
             "scanned -- writes a number in front of a class, a way, a mechanism or a "
             "member".format(len(texts)))
 
+    _security_group(out, failures)
+
     out("")
     out("-" * 78)
     if failures:
@@ -2828,7 +2984,8 @@ def self_test(stream=sys.stdout):
         "conjuncts, the positive arm passed, every named conjunct is individually "
         "load-bearing, every capture failure refused the write, the registration "
         "census graded every arm the stated way with a control that reached rc 0, "
-        "and no text E9 reads counts an open set.")
+        "SECURITY.md's required-check list is set-equal to CONTEXT_ORDER in both "
+        "directions, and no text E9 reads counts an open set.")
     return 0
 
 
@@ -3013,7 +3170,8 @@ def main(argv):
         formatter_class=argparse.RawDescriptionHelpFormatter)
     mode = ap.add_mutually_exclusive_group(required=True)
     mode.add_argument("--self-test", action="store_true",
-                      help="offline validation of the assertion and the guards")
+                      help="offline validation of the assertion, the guards, the census "
+                           "and the SECURITY.md list")
     mode.add_argument("--census", action="store_true",
                       help="offline: grade the workflows against CONTEXT_ORDER")
     mode.add_argument("--assert", dest="do_assert", action="store_true",

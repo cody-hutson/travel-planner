@@ -33,16 +33,26 @@ jobs:
       # rides this job rather than adding a new check name (which would need a
       # branch-protection change). Runs BEFORE the actionlint install so a transient
       # network failure there cannot mask a real registration finding.
-      # The census reads workflows through the PyYAML the runner image carries, under
-      # the python3 found on PATH. A setup-python step added ahead of this one would
-      # put a Python without PyYAML first, and the census would then refuse at exit 2.
-      # The job is pinned to ubuntu-24.04, the image on which that PyYAML was probed,
-      # rather than to ubuntu-latest: a move to another image is then a reviewed pull
-      # request, on which this step proves the parser again. The actionlint steps
-      # below run even when this one fails, so a red census never hides actionlint's
-      # verdict; the job still fails.
+      # The self-test runs first and grades the instrument. It is offline, and the one
+      # repository file it reads is SECURITY.md, whose required-check list it holds to
+      # CONTEXT_ORDER; its census arms grade synthetic trees. Both commands always run,
+      # so a red self-test never hides the census verdict, and the step fails if either
+      # does. Both need the PyYAML the runner image carries, under the python3 found on
+      # PATH: a setup-python step added ahead of this one would put a Python without
+      # PyYAML first, and the census would then refuse at exit 2 while the self-test
+      # reported its census group NOT-EVALUATED. The job is pinned to ubuntu-24.04, the
+      # image on which that PyYAML was probed, rather than to ubuntu-latest: a move to
+      # another image is then a reviewed pull request, on which this step proves the
+      # parser again. The actionlint steps below run even when this one fails, so a red
+      # self-test or census never hides actionlint's verdict; the job still fails.
       - name: Required-check registration census
-        run: ./scripts/pin-required-checks.py --census
+        run: |
+          st=0
+          ce=0
+          ./scripts/pin-required-checks.py --self-test || st=$?
+          ./scripts/pin-required-checks.py --census || ce=$?
+          echo "self-test exit $st, census exit $ce"
+          [ "$st" -eq 0 ] && [ "$ce" -eq 0 ]
 
       - name: Install actionlint
         if: ${{ !cancelled() }}
