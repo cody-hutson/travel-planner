@@ -2732,6 +2732,15 @@ def _census_arms_parsed(base):
         ("X117", "SPECIFICITY for X114: the same job in a workflow whose `pull_request` trigger carries `branches-ignore: [develop]`, which leaves `main` in. A pull request into `main` runs it, so there is no UNTRIGGERED: CLEAN at rc 0",
          tree(drop=True, add={wf("branches-ignore-other"): "name: Synthetic\n\non:\n  pull_request:\n    branches-ignore: [develop]\n\njobs:\n" + job("hygiene-v2", tenth, "required")}),
          0, set()),
+        ("X118", "TRIGGER, the branches-ignore member beside a pattern: the same job in a workflow whose `pull_request` trigger carries `branches-ignore: [main, 'x*']`. The literal `main` shuts `main` out whatever the pattern matches, and no entry opens with `!`, so the list is not left to the pattern limit; no pull request into `main` runs it, and the census finds UNTRIGGERED",
+         tree(drop=True, add={wf("branches-ignore-pattern"): "name: Synthetic\n\non:\n  pull_request:\n    branches-ignore: [main, 'x*']\n\njobs:\n" + job("hygiene-v2", tenth, "required")}),
+         1, {"UNTRIGGERED"}),
+        ("X119", "PATTERN LIMIT, pinned as emitted, the negation member in `branches-ignore:`: the same job in a workflow whose `pull_request` trigger carries `branches-ignore: [main, '!main']`. The literal `main` would shut `main` out, but an entry that opens with `!` can negate an earlier entry under GitHub's pattern grammar, which this census does not evaluate, so it reads CLEAN at rc 0. A close decides it and must re-label it",
+         tree(drop=True, add={wf("branches-ignore-negation"): "name: Synthetic\n\non:\n  pull_request:\n    branches-ignore: [main, '!main']\n\njobs:\n" + job("hygiene-v2", tenth, "required")}),
+         0, set()),
+        ("X120", "PATTERN LIMIT, pinned as emitted, the negation member in `branches:`: the same job in a workflow whose `pull_request` trigger carries `branches: [develop, '!main']`. An entry that opens with `!` makes the list a pattern, and whether the list admits `main` turns on how GitHub's pattern grammar reads a negation against the entries before it, which this census does not evaluate, so it reads CLEAN at rc 0. A close decides it and must re-label it",
+         tree(drop=True, add={wf("branches-negation"): "name: Synthetic\n\non:\n  pull_request:\n    branches: [develop, '!main']\n\njobs:\n" + job("hygiene-v2", tenth, "required")}),
+         0, set()),
     ]
 
 
