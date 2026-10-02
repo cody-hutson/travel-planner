@@ -16,17 +16,27 @@
 # HOW IT READS. --norc, so no shellcheckrc on the reader's machine can change the verdict;
 # --external-sources with --source-path=SCRIPTDIR, so a `# shellcheck source=` directive
 # resolves to the file beside the script that carries it; --format=gcc, one line per finding.
+# --extended-analysis=false, so the linter's dataflow analysis does not run. On this
+# repository's largest suites that analysis needs more memory than a hosted runner has, and
+# the job is stopped before it reports anything. The rules that need it are therefore not
+# reported here: SC2324 (n+=1 appending where an increment was meant) and SC2320 ($? read
+# after an echo or a printf) at this gate's severity, and SC2317 (a command that cannot be
+# reached) below it. Arms C6 and C7 measure that boundary on every run.
 # The linter takes options from one more place, the environment variable SHELLCHECK_OPTS, and
 # --norc does not govern it: an exclusion set there lowers the count while every control arm
 # still passes. So the run refuses while that variable is non-empty, and prints its value.
 #
 # THE CONTROL ARMS, built in a temporary directory on every run. The C arms are graded by the
-# linter, with the same options as the real files:
+# linter, with the same options as the real files; C6 alone adds one, which turns the dataflow
+# analysis back on:
 #   C1  SC2006 pass,  must fire      a backtick substitution in a double-quoted FAIL message
 #   C2  SC2006 pass,  must not fire  the same message, with the substitution written $(...)
 #   C3  warning pass, must fire      a variable assigned and never read
 #   C4  warning pass, must not fire  the same variable, read
 #   C5  SC2006 pass,  must not fire  backticks meant as literal text, each behind a backslash
+#   C6  warning pass, must fire      with the dataflow analysis on: n+=1 meant as an increment,
+#                                    which only that analysis reports (SC2324)
+#   C7  warning pass, must not fire  the same file under this gate's own options
 # The O and D arms grade the checks this file makes itself, without the linter:
 #   O1  options check,   must fire      SHELLCHECK_OPTS carrying an exclusion
 #   O2  options check,   must not fire  the variable empty
@@ -77,7 +87,7 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)" || exit 2
 cd "$ROOT" || exit 2
 
-SC_OPTS=(--norc --external-sources --source-path=SCRIPTDIR --format=gcc)
+SC_OPTS=(--norc --external-sources --source-path=SCRIPTDIR --format=gcc --extended-analysis=false)
 PASS1=(--severity=warning)
 PASS2=(--severity=style --include=SC2006)
 
@@ -191,6 +201,12 @@ cat > "$WORK/c5.sh" <<'FIXTURE'
 FAIL() { printf 'FAIL %s\n' "$*"; }
 FAIL "C5: run \`wc -l\` on the file to count its lines"
 FIXTURE
+cat > "$WORK/c6.sh" <<'FIXTURE'
+#!/usr/bin/env bash
+c6_count=1
+c6_count+=1
+printf '%s\n' "$c6_count"
+FIXTURE
 
 # The directive fixtures are assembled as they are written, the linter's name and the word
 # under test passed as arguments. A heredoc would put each directive on a line of this file,
@@ -230,13 +246,16 @@ FIXTURE
 } > "$WORK/d4.sh"
 
 CONTROL_FAILED=0
-# control <id> <pass: 1|2> <want: fire|silent> <code> <fixture> <what it models>
+# control <id> <pass: 1|2> <want: fire|silent> <code> <fixture> <what it models> [<option>]
+# The optional last argument is one more option, given after this gate's own. The linter
+# takes the later of two settings of the same option, so an arm can differ from the real
+# reading by exactly that one.
 control() {
-  local id="$1" pass="$2" want="$3" code="$4" file="$5" what="$6" out rc n
+  local id="$1" pass="$2" want="$3" code="$4" file="$5" what="$6" more="${7:-}" out rc n
   if [ "$pass" = 1 ]; then
-    out="$(shellcheck "${SC_OPTS[@]}" "${PASS1[@]}" "$file" 2>&1)"; rc=$?
+    out="$(shellcheck "${SC_OPTS[@]}" ${more:+"$more"} "${PASS1[@]}" "$file" 2>&1)"; rc=$?
   else
-    out="$(shellcheck "${SC_OPTS[@]}" "${PASS2[@]}" "$file" 2>&1)"; rc=$?
+    out="$(shellcheck "${SC_OPTS[@]}" ${more:+"$more"} "${PASS2[@]}" "$file" 2>&1)"; rc=$?
   fi
   n="$(count_findings "$out")"
   if [ "$want" = fire ] && [ "$rc" -eq 1 ] && [ "$n" -eq 1 ] && [[ "$out" == *"[$code]"* ]]; then
@@ -284,6 +303,8 @@ control C2 2 silent SC2006 "$WORK/c2.sh" "the same message, the substitution wri
 control C3 1 fire   SC2034 "$WORK/c3.sh" "a variable assigned and never read"
 control C4 1 silent SC2034 "$WORK/c4.sh" "the same variable, read"
 control C5 2 silent SC2006 "$WORK/c5.sh" "backticks meant as literal text, each behind a backslash"
+control C6 1 fire   SC2324 "$WORK/c6.sh" "with the dataflow analysis turned back on: n+=1 meant as an increment, which only that analysis reports" --extended-analysis=true
+control C7 1 silent SC2324 "$WORK/c6.sh" "the same file under this gate's own options, which read without that analysis"
 opts_control O1 fire   '--exclude=SC2034' "SHELLCHECK_OPTS carrying an exclusion"
 opts_control O2 silent ''                 "the variable empty"
 scan_control D1 d1.sh "4 0 4 1 7" "a directive that disables every rule: on its own line, as one member of a list, after code on the same line, and quoted behind another key"

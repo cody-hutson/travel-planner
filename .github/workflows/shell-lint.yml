@@ -43,6 +43,13 @@ name: Shell lint
 #   FINDINGS BELOW WARNING, other than SC2006. Most are this repository's deliberate idioms —
 #   a backtick inside single quotes is a literal, not a substitution — and grading them would
 #   mean suppressing a great many correct lines.
+#   RULES THAT NEED THE LINTER'S DATAFLOW ANALYSIS. The lint runs with that analysis off: on
+#   this repository's largest suites it needs more memory than a hosted runner has, and the
+#   job is stopped before it reports anything. So SC2324 (n+=1 appending where an increment
+#   was meant) and SC2320 ($? read after an echo or a printf) are not reported at this
+#   check's severity, and SC2317 (a command that cannot be reached) is not reported below it.
+#   A pair of control arms measures that on every run: a file only that analysis flags must
+#   fire with it and stay silent without it.
 #   A SHELL FILE OUTSIDE scripts/*.sh, or one without the .sh suffix. One added later is not
 #   linted here until this boundary moves with it.
 #   WORKFLOW-EMBEDDED SHELL. actionlint reads it, in .github/workflows/security.yml.
