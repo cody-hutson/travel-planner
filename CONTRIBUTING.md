@@ -30,6 +30,16 @@ by invitation only.
 3. Open a PR and fill in the template. Put any `Closes #N` **only** in the *Issue References* block at the bottom of the PR body (the auto-close parser is lexical).
 4. CI must be green — the required status checks are listed in [SECURITY.md](SECURITY.md), *Branch Protection Posture*.
 
+**Adding or renaming a workflow job** meets the required-check registration census, a step
+of the `Workflow SAST (actionlint)` job that reads every workflow through a YAML parser on
+each pull request into `main` and fails it unless each job declares whether it binds, with
+exactly one `# gate-efficacy: posture=required` or `# gate-efficacy: posture=advisory` line
+as the first line of the comment block directly above its key and at the key's indentation,
+and unless each job claiming `required` reports a literal name (its `name:`, or its key
+where it has none) that no other job reports, sits in a workflow that `pull_request`
+triggers, and is listed both in `CONTEXT_ORDER` in `scripts/pin-required-checks.py` and in
+[SECURITY.md](SECURITY.md), *Branch Protection Posture*.
+
 ## Cutting a release
 
 A release is a change like any other: it follows *Making a change* above, start to
