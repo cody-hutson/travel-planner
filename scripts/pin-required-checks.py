@@ -63,9 +63,13 @@ MODES
         `# gate-efficacy: posture=required` with the CONTEXT_ORDER declaration
         below, in both directions. It also finds a declared or claimed context
         that more than one job reports, and a job claiming required in a
-        workflow no pull request triggers. It answers the question a new suite's
-        author is never asked -- does this job bind? -- at pull-request time, on
-        the author's own pull request.
+        workflow that a pull request into main, or a push to one, does not run:
+        no pull_request trigger, or a filter on it that leaves out `main` or
+        `synchronize`. It refuses a job claiming required that carries a
+        job-level `if:`, or that needs a job not claiming required, because
+        GitHub can skip such a job without its check blocking the merge. It
+        answers the question a new suite's author is never asked -- does this
+        job bind? -- at pull-request time, on the author's own pull request.
 
         It needs PyYAML and imports it only here and in the self-test. It uses
         the pure-Python SafeLoader and composes nodes without constructing
@@ -475,9 +479,20 @@ REFUSAL_CODES = (
     "NO-PARSER", "NO-WORKFLOWS", "UNREADABLE", "YAML11-BREAK", "UNPARSEABLE",
     "NOT-ONE-DOCUMENT", "NO-JOBS", "NO-JOB", "KEY-TWICE", "MERGE-KEY",
     "KEY-NOT-TEXT", "JOB-NOT-MAPPING", "NAME-NOT-TEXT",
-    "RUNTIME-NAME", "RUNTIME-MATRIX", "RUNTIME-REUSABLE")
+    "RUNTIME-NAME", "RUNTIME-MATRIX", "RUNTIME-REUSABLE",
+    "RUNTIME-CONDITION", "RUNTIME-NEEDS")
 
 PR_TRIGGER = "pull_request"
+# The branch a required check guards, and the activity type a push to an open pull
+# request arrives as. A `branches:` or `branches-ignore:` filter written as literal
+# names decides the first, and a `types:` filter decides the second.
+PR_BRANCH = "main"
+PR_PUSH_TYPE = "synchronize"
+# GitHub's filter-pattern characters: `*`, `?`, `+`, a bracket, the escaping
+# backslash, and `!` as a pattern's first character, the only place GitHub gives it
+# a meaning. A branch filter carrying one is left to GitHub's grammar (X116).
+_RE_PATTERN = re.compile(r"[*?+\[\]\\]|^!")
+_NULL_TAG = "tag:yaml.org,2002:null"
 
 _RE_MARKER = re.compile(r"^(\s*)#\s*gate-efficacy:\s*posture\s*=\s*(\S+)")
 # YAML 1.1's line breaks -- the set PyYAML's marks count -- so a line index here is
@@ -507,6 +522,8 @@ REFUSAL_TEXT = {
     "RUNTIME-NAME": "a job claiming required has a `name:` carrying an expression, so GitHub computes its context when the job runs",
     "RUNTIME-MATRIX": "a job claiming required carries a `strategy`, so GitHub extends its context with matrix values when it runs",
     "RUNTIME-REUSABLE": "a job claiming required calls a reusable workflow, so its checks report under names composed with the called workflow's jobs",
+    "RUNTIME-CONDITION": "a job claiming required carries a job-level `if:`, and GitHub documents that a job skipped by its own `if:` reports Success, so the required check could pass without the job running",
+    "RUNTIME-NEEDS": "a job claiming required `needs:` a job that does not itself claim required, and GitHub documents that a job skipped because a job it needs failed may not block the merge, so the required check could pass without the job running",
 }
 
 # NO-PARSER's remedy is not here: it turns on which interpreter failed to load the
@@ -527,6 +544,8 @@ REFUSAL_REMEDY = {
     "RUNTIME-NAME": "give a job that claims required a literal `name:`, so the context it reports is the text the declaration carries",
     "RUNTIME-MATRIX": "declare the job advisory, or split the matrix into jobs that each carry a literal `name:`",
     "RUNTIME-REUSABLE": "declare the calling job advisory; a required check on a reusable workflow is registered under the composed name the run reports, which this census does not compute",
+    "RUNTIME-CONDITION": "drop the job-level `if:`, so that the job runs whenever its workflow does, or declare the job advisory",
+    "RUNTIME-NEEDS": "have each job it needs claim required too, or drop the dependency",
 }
 
 # On the runner the census runs under the system python3, the interpreter the
@@ -552,6 +571,9 @@ FINDING_TEXT = {
     "DUPLICATE-MANY-CLAIMS": "{jobs} all report this context and more than one of them claims required. Which of their check runs GitHub counts for the context was not measured, so each shadows the others and the declaration cannot say which one binds",
     "DUPLICATE-NO-CLAIM": "{jobs} report this declared context and none of them claims required; which of their check runs GitHub counts for the context was not measured",
     "UNTRIGGERED": "claims posture=required, but its workflow has no pull_request trigger, so its check can never report on a pull request",
+    "UNTRIGGERED-BRANCHES": "claims posture=required, but the `branches:` filter on its workflow's pull_request trigger names no `main` and carries no pattern, so no pull request into `main` runs it and its check stays pending on every one",
+    "UNTRIGGERED-IGNORED": "claims posture=required, but the `branches-ignore:` filter on its workflow's pull_request trigger names `main`, so no pull request into `main` runs it and its check stays pending on every one",
+    "UNTRIGGERED-TYPES": "claims posture=required, but the `types:` filter on its workflow's pull_request trigger names no `synchronize`, so a push to a pull request starts no run on its new head commit and the check stays pending",
 }
 
 MARKER_NOTE = {
@@ -571,7 +593,7 @@ CENSUS_PRINT = {
     "REFUSED-FILE": "    {file} -- {code}: {why}{detail}",
     "REMEDY": "        Remedy: {remedy}.",
     "FAILED": "CENSUS FAILED -- {n} finding(s).",
-    "CLEAN": "CENSUS CLEAN -- every job declares a posture; the jobs claiming required are set-equal to CONTEXT_ORDER in both directions; no declared or claimed context is reported by more than one job; and a pull request triggers every workflow that holds a required job.",
+    "CLEAN": "CENSUS CLEAN -- every job declares a posture; the jobs claiming required are set-equal to CONTEXT_ORDER in both directions; no declared or claimed context is reported by more than one job; and every workflow that holds a required job runs, so far as its file decides it, on each pull request into `main` and on each push to one.",
 }
 
 CENSUS_REMEDY = (
@@ -592,9 +614,11 @@ CENSUS_REMEDY = (
     "  DUPLICATE     more than one job reports one context, and which of their",
     "                check runs GitHub counts for it was not measured. Give each",
     "                job its own name, or drop the extra job.",
-    "  UNTRIGGERED   a job claims required in a workflow that no pull request",
-    "                triggers, so its check never reports on one. Trigger the",
-    "                workflow on pull_request, or declare the job advisory.",
+    "  UNTRIGGERED   a job claims required in a workflow that a pull request into",
+    "                `main`, or a push to one, does not run: it has no",
+    "                pull_request trigger, or a filter on that trigger leaves out",
+    "                `main` or `synchronize`. Trigger the workflow on",
+    "                pull_request with no such filter, or declare the job advisory.",
 )
 
 
@@ -690,6 +714,61 @@ def _events(yaml, node):
     return {key for key, _, _ in _pairs(yaml, node, "the `on` mapping")}
 
 
+def _names(yaml, node):
+    """The texts a trigger filter or a `needs:` holds: one for a scalar, one each for
+    a sequence of scalars, the shapes GitHub's schema gives them. None for any other
+    shape -- a null, a mapping, or a sequence holding something other than text.
+    """
+    if isinstance(node, yaml.ScalarNode) and node.tag != _NULL_TAG:
+        return [node.value]
+    if isinstance(node, yaml.SequenceNode) and all(
+            isinstance(item, yaml.ScalarNode) and item.tag != _NULL_TAG
+            for item in node.value):
+        return [item.value for item in node.value]
+    return None
+
+
+def _untriggered(yaml, on):
+    """Why a pull request into `main`, or a push to one, does not run the workflow, as
+    the file decides it: a FINDING_TEXT key, or None when nothing in the file stops it.
+
+    Only `pull_request` is a trigger here, so a workflow triggered by
+    `pull_request_target` or `merge_group` alone fails closed. A `branches:` filter
+    admits `main` when it names it, and one carrying a pattern is left to GitHub's
+    grammar (X116). A `branches-ignore:` filter shuts `main` out when it names it,
+    unless an entry opens with `!`, which GitHub documents only for `branches:`. A
+    `types:` filter admits a push when it names `synchronize`. A `branches:` or
+    `types:` filter in a shape GitHub's schema does not give it names nothing, so it
+    admits nothing; such a `branches-ignore:` filter, or a trigger whose value is
+    neither null nor a mapping, is the schema's question, which actionlint answers in
+    this same job.
+    """
+    if PR_TRIGGER not in _events(yaml, on):
+        return "UNTRIGGERED"
+    if not isinstance(on, yaml.MappingNode):
+        return None
+    trigger = {key: value for key, _, value in _pairs(yaml, on, "the `on` mapping")}
+    if not isinstance(trigger[PR_TRIGGER], yaml.MappingNode):
+        return None
+    filters = {key: _names(yaml, value) for key, _, value in
+               _pairs(yaml, trigger[PR_TRIGGER], "the `pull_request` trigger")}
+    if "branches" in filters:
+        names = filters["branches"]
+        if names is None or not (PR_BRANCH in names
+                                 or any(_RE_PATTERN.search(n) for n in names)):
+            return "UNTRIGGERED-BRANCHES"
+    if "branches-ignore" in filters:
+        names = filters["branches-ignore"]
+        if names is not None and PR_BRANCH in names and \
+                not any(n.startswith("!") for n in names):
+            return "UNTRIGGERED-IGNORED"
+    if "types" in filters:
+        names = filters["types"]
+        if names is None or PR_PUSH_TYPE not in names:
+            return "UNTRIGGERED-TYPES"
+    return None
+
+
 def _bind_marker(lines, comments, key_node, keys_on_line):
     """(raw, note) for one job key. `raw` is set only by a BOUND marker.
 
@@ -759,7 +838,7 @@ def _read_workflow(yaml, rel, path):
     top = {key: value for key, _, value in _pairs(yaml, documents[0], "the top level")}
     if "jobs" not in top:
         raise CensusRefusal("NO-JOBS")
-    triggered = PR_TRIGGER in _events(yaml, top.get("on"))
+    untriggered = _untriggered(yaml, top.get("on"))
     entries = _pairs(yaml, top["jobs"], "the `jobs` mapping")
     if not entries:
         raise CensusRefusal("NO-JOB")
@@ -767,7 +846,7 @@ def _read_workflow(yaml, rel, path):
     for _, key_node, _ in entries:
         line = key_node.start_mark.line
         keys_on_line[line] = keys_on_line.get(line, 0) + 1
-    records = []
+    records, needs = [], []
     for key, key_node, value in entries:
         where = "job `{}`".format(key)
         props = {p: node for p, _, node in
@@ -787,9 +866,25 @@ def _read_workflow(yaml, rel, path):
                 raise CensusRefusal("RUNTIME-MATRIX", where)
             if "uses" in props:
                 raise CensusRefusal("RUNTIME-REUSABLE", where)
+            if "if" in props:
+                raise CensusRefusal("RUNTIME-CONDITION", where)
+            if "needs" in props:
+                needs.append((where, props["needs"]))
         records.append({"file": rel, "key": key, "name": name, "posture": posture,
                         "raw": raw, "note": note, "line": key_node.start_mark.line + 1,
-                        "triggered": triggered})
+                        "untriggered": untriggered})
+    # A required job may need a job written below it, so the jobs it needs are
+    # checked once every posture in the file is known.
+    bound = set(r["key"] for r in records if r["posture"] == "required")
+    for where, node in needs:
+        needed = _names(yaml, node)
+        if needed is None:
+            raise CensusRefusal("RUNTIME-NEEDS", "{}: its `needs:` names no job as "
+                                                 "text".format(where))
+        unbound = [n for n in needed if n not in bound]
+        if unbound:
+            raise CensusRefusal("RUNTIME-NEEDS", "{} needs {}".format(
+                where, ", ".join("`{}`".format(n) for n in unbound)))
     return records
 
 
@@ -857,9 +952,9 @@ def census_findings(jobs):
                 jobs=", ".join(_job_label(j) for j in group))
         findings.append(("DUPLICATE", group[0]["file"], ctx, why))
     for job in sorted(jobs, key=lambda j: (j["file"], j["key"])):
-        if job["posture"] == "required" and not job["triggered"]:
+        if job["posture"] == "required" and job["untriggered"]:
             findings.append(("UNTRIGGERED", job["file"], job["name"],
-                             FINDING_TEXT["UNTRIGGERED"]))
+                             FINDING_TEXT[job["untriggered"]]))
     return findings
 
 
@@ -950,11 +1045,10 @@ def run_census(root, stream=sys.stdout, load=_load_yaml):
     return rc
 
 
-# The limit block, printed on EVERY exit path. It states what this census does not
-# grade -- what a parser cannot decide, and what the document decides but this
-# census does not read -- as structural limits with the instances measured so
-# far, and it never counts them: a count of an open set goes false the moment the
-# next instance is measured. E9, in the self-test, fails on a number written in
+# The limit block, printed on EVERY exit path. It states what a parser cannot
+# decide, as structural limits with the instances measured so far, and it never
+# counts them: a count of an open set goes false the moment the next instance is
+# measured. E9, in the self-test, fails on a number written in
 # front of a class, a way, a mechanism or a member here, in any docstring in this
 # module, in any arm label and in any text the census prints; a count of a closed
 # set is written as a measured tally in numerals, as in 5 of 5.
@@ -975,33 +1069,29 @@ _CENSUS_LIMIT = (
     "",
     "WHAT A CLEAN RESULT MEANS. Every job declares a posture; the contexts of the",
     "jobs claiming required are set-equal to CONTEXT_ORDER in both directions; no",
-    "declared or claimed context is reported by more than one job; and every job",
-    "claiming required sits in a workflow that a pull request triggers.",
+    "declared or claimed context is reported by more than one job; every job",
+    "claiming required sits in a workflow that, so far as its file decides it, runs",
+    "on each pull request into `main` and on each push to one; and no job claiming",
+    "required carries a job-level `if:` or needs a job that does not itself claim",
+    "required.",
     "",
-    "WHAT THIS CENSUS DOES NOT GRADE. These are structural limits, each stated with",
-    "the instances measured so far. The list carries no count, and an instance",
-    "measured later extends it rather than contradicting it.",
-    "Whether a required job's check reports on a pull request, and with what result.",
-    "GitHub decides that when the pull request runs, and its documented outcome for",
-    "a required check turns on what stops the job. Each case below reads CLEAN here,",
-    "measured; each outcome is GitHub's documented behaviour, not measured by this",
-    "census.",
+    "WHAT A PARSER CANNOT DECIDE, so this census does not grade it. These are",
+    "structural limits, each stated with the instances measured so far. The list",
+    "carries no count, and an instance measured later extends it rather than",
+    "contradicting it.",
+    "Whether a required job runs on a given pull request, where the file alone does",
+    "not decide it. The census grades what the file decides -- the `pull_request`",
+    "trigger, its `branches:`, `branches-ignore:` and `types:` filters written as",
+    "literal names, and a required job's own `if:` and `needs:` -- and each case",
+    "below turns on something more. Each reads CLEAN here, measured; each outcome is",
+    "GitHub's documented behaviour, not measured by this census.",
     "- A `paths:` filter on the `pull_request` trigger. A pull request that touches",
     "  no matching path never runs the job, so the check stays pending and the merge",
     "  is blocked. Only each pull request's diff decides it (X96).",
-    "- A `branches:` filter on the `pull_request` trigger. It is matched against the",
-    "  branch the pull request targets, so a literal list that leaves out `main`",
-    "  leaves the check pending on every pull request into `main`. The file decides",
-    "  that for a literal list, and this census does not read the filter (X97).",
-    "- A `types:` list without `synchronize`. A new head commit then gets no run, so",
-    "  the check stays pending after a push. The file decides it, and this census",
-    "  does not read the list (X107).",
-    "- A job-level `if:`. A job skipped by its own `if:` reports Success, so the",
-    "  required check PASSES without the job running. The file shows that an `if:`",
-    "  is there; only the run decides whether it holds (X98).",
-    "- A job-level `needs:`. A job skipped because a job it needs failed may not",
-    "  block the merge. The file shows the `needs:`, and this census does not read",
-    "  it (X106).",
+    "- A pattern in a branch filter. Whether `release/**`, or any pattern, matches",
+    "  `main` is GitHub's filter grammar to decide, and this census does not",
+    "  evaluate it; a filter that leaves `main` out leaves the check pending on",
+    "  every pull request into `main` (X116).",
     "Nor does it grade a job that claims no posture of required and whose `name:` is",
     "computed at run time: that job is compared to no declared context here, so one",
     "whose expression evaluates to a declared context reads CLEAN (X105), while at",
@@ -2476,6 +2566,7 @@ def _census_arms_parsed(base):
     tenth = CONTEXT_ORDER[-1]
     prev = CONTEXT_ORDER[-2]
     last = ".github/workflows/synth-{:02d}.yml".format(len(CONTEXT_ORDER) - 1)
+    before = ".github/workflows/synth-{:02d}.yml".format(len(CONTEXT_ORDER) - 2)
     head = "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
 
     def job(key, name, posture, extra=""):
@@ -2560,12 +2651,12 @@ def _census_arms_parsed(base):
         ("X96", "RUN-TIME LIMIT, pinned as emitted, the paths member: a job claiming required under the declaration's last context whose `pull_request` trigger carries a `paths:` filter. Whether a given pull request runs it is decided when that pull request runs, so the census reads CLEAN at rc 0; a close turns this red and must re-label it",
          tree(drop=True, add={wf("paths"): "name: Synthetic\n\non:\n  pull_request:\n    paths: ['docs/**']\n\njobs:\n" + job("hygiene-v2", tenth, "required")}),
          0, set()),
-        ("X97", "RUN-TIME LIMIT, pinned as emitted, the branches member: the same job whose `pull_request` trigger carries a `branches:` filter that leaves out the protected branch: CLEAN at rc 0",
+        ("X97", "TRIGGER, the literal-branches member: a job claiming required under the declaration's last context, in a workflow whose `pull_request` trigger carries `branches: [develop]`, literal names without `main`. No pull request into `main` runs it, so its check would stay pending on every one; the census finds UNTRIGGERED. This arm read CLEAN at rc 0 until the census read the filter",
          tree(drop=True, add={wf("branches"): "name: Synthetic\n\non:\n  pull_request:\n    branches: [develop]\n\njobs:\n" + job("hygiene-v2", tenth, "required")}),
-         0, set()),
-        ("X98", "RUN-TIME LIMIT, pinned as emitted, the job-condition member: the same job carrying an `if:` that is false on a pull request: CLEAN at rc 0",
+         1, {"UNTRIGGERED"}),
+        ("X98", "RUN-TIME CONDITION, refused: a job claiming required under the declaration's last context that carries a job-level `if:`, false on a pull request. GitHub documents that a job skipped by its own `if:` reports Success, so the required check could pass without the job running; the census refuses, RUNTIME-CONDITION. This arm read CLEAN at rc 0 until the census read the `if:`",
          tree(drop=True, add={wf("job-if"): head + job("hygiene-v2", tenth, "required", "    if: github.event_name == 'push'\n")}),
-         0, set()),
+         2, set(), "RUNTIME-CONDITION"),
         ("X99", "BINDING inside a flow mapping: `jobs:` written as a multi-line flow mapping, with a marker on a comment line directly above a key that begins its line. The marker binds, and the job claims required under an undeclared name: UNREGISTERED",
          tree(add={wf("flow-marker"): "name: Synthetic\n\non:\n  pull_request:\n\njobs: {\n  # gate-efficacy: posture=required\n  new-suite: {name: " + new_suite + ", runs-on: ubuntu-latest, steps: [{run: 'true'}]}\n}\n"}),
          1, {"UNREGISTERED"}),
@@ -2587,12 +2678,12 @@ def _census_arms_parsed(base):
         ("X105", "RUN-TIME LIMIT, pinned as emitted, the advisory-expression member: an advisory job whose `name:` is an expression that evaluates to the declaration's last context, beside the job that claims it. The census compares the expression text, which matches nothing declared, so it reads CLEAN at rc 0; at run time the job reports that context, and which of the jobs' check runs GitHub counts was not measured. A close turns this red and must re-label it",
          tree(add={wf("advisory-expr"): head + job("lookalike", "${{ '" + tenth + "' }}", "advisory")}),
          0, set()),
-        ("X106", "RUN-TIME LIMIT, pinned as emitted, the needs member: a job claiming required under the declaration's last context that `needs:` an advisory job. GitHub documents that a job skipped because a job it needs failed may not block the merge; the file shows the `needs:`, and this census does not read it, so it reads CLEAN at rc 0. A close turns this red and must re-label it",
+        ("X106", "RUN-TIME NEEDS, refused: a job claiming required under the declaration's last context that `needs:` an advisory job. GitHub documents that a job skipped because a job it needs failed may not block the merge; the census refuses, RUNTIME-NEEDS. This arm read CLEAN at rc 0 until the census read the `needs:`",
          tree(drop=True, add={wf("needs"): head + job("build", "Build", "advisory") + job("hygiene-v2", tenth, "required", "    needs: build\n")}),
-         0, set()),
-        ("X107", "RUN-TIME LIMIT, pinned as emitted, the types member: the same job in a workflow whose `pull_request` trigger carries a `types:` list without `synchronize`. GitHub documents that a new head commit then gets no run, so the check stays pending; the file decides it, and this census does not read the list, so it reads CLEAN at rc 0. A close turns this red and must re-label it",
+         2, set(), "RUNTIME-NEEDS"),
+        ("X107", "TRIGGER, the types member: a job claiming required under the declaration's last context, in a workflow whose `pull_request` trigger carries `types: [opened]`, without `synchronize`. A push to a pull request then starts no run on its new head commit, so the check would stay pending; the census finds UNTRIGGERED. This arm read CLEAN at rc 0 until the census read the filter",
          tree(drop=True, add={wf("types"): "name: Synthetic\n\non:\n  pull_request:\n    types: [opened]\n\njobs:\n" + job("hygiene-v2", tenth, "required")}),
-         0, set()),
+         1, {"UNTRIGGERED"}),
         ("X108", "YAML VERSION DIVERGENCE, the LINE SEPARATOR member: a comment line carrying U+2028 directly ahead of the text of a job key `hidden`. PyYAML, a YAML 1.1 parser, ends the comment at that character and reads `hidden` as a job, where YAML 1.2 reads the character as part of the comment; the census refuses, YAML11-BREAK",
          tree(add={wf("line-sep"): head + job("a", "A", "advisory") + "  # a note\N{LINE SEPARATOR}  hidden:\n    runs-on: ubuntu-latest\n    steps:\n      - run: 'true'\n"}),
          2, set(), "YAML11-BREAK"),
@@ -2602,6 +2693,27 @@ def _census_arms_parsed(base):
         ("X110", "UNPARSEABLE, an exception outside the parser's error class: a job property holding flow sequences nested 1000 deep. Composing it exhausts the interpreter's recursion limit, which raises RecursionError rather than a YAML error; the census refuses, UNPARSEABLE, rather than leave at exit 1, the finding code",
          tree(add={wf("deep"): head + job("a", "A", "advisory", "    env:\n      DEEP: " + "[" * 1000 + "]" * 1000 + "\n")}),
          2, set(), "UNPARSEABLE"),
+        ("X111", "SPECIFICITY for X98: the same job with its `if:` on a step rather than on the job. A step-level `if:` does not skip the job, so there is no RUNTIME-CONDITION: CLEAN at rc 0",
+         tree(drop=True, add={wf("step-if"): head + "  # gate-efficacy: posture=required\n  hygiene-v2:\n    name: " + tenth + "\n    runs-on: ubuntu-latest\n    steps:\n      - if: github.event_name == 'push'\n        run: 'true'\n"}),
+         0, set()),
+        ("X112", "SPECIFICITY for X106: a job claiming required under the declaration's last context that `needs:` the job claiming the context before it, in the same file, which itself claims required. A failure there blocks the merge on that job's own check, so there is no RUNTIME-NEEDS: CLEAN at rc 0",
+         tree(drop=True, replace={before: head + job("job{:02d}".format(len(CONTEXT_ORDER) - 2), prev, "required") + job("hygiene-v2", tenth, "required", "    needs: job{:02d}\n".format(len(CONTEXT_ORDER) - 2))}),
+         0, set()),
+        ("X113", "SPECIFICITY for X97: a job claiming required under the declaration's last context, in a workflow whose `pull_request` trigger carries `branches: [main]`. A pull request into `main` runs it, so there is no UNTRIGGERED: CLEAN at rc 0",
+         tree(drop=True, add={wf("branches-main"): "name: Synthetic\n\non:\n  pull_request:\n    branches: [main]\n\njobs:\n" + job("hygiene-v2", tenth, "required")}),
+         0, set()),
+        ("X114", "TRIGGER, the branches-ignore member: the same job in a workflow whose `pull_request` trigger carries `branches-ignore: [main]`. It shuts `main` out, read by the same predicate X97's `branches:` filter is, so no pull request into `main` runs it; the census finds UNTRIGGERED",
+         tree(drop=True, add={wf("branches-ignore"): "name: Synthetic\n\non:\n  pull_request:\n    branches-ignore: [main]\n\njobs:\n" + job("hygiene-v2", tenth, "required")}),
+         1, {"UNTRIGGERED"}),
+        ("X115", "SPECIFICITY for X107: the same job in a workflow whose `pull_request` trigger carries `types: [opened, synchronize, reopened]`. A push to a pull request starts a run, so there is no UNTRIGGERED: CLEAN at rc 0",
+         tree(drop=True, add={wf("types-sync"): "name: Synthetic\n\non:\n  pull_request:\n    types: [opened, synchronize, reopened]\n\njobs:\n" + job("hygiene-v2", tenth, "required")}),
+         0, set()),
+        ("X116", "PATTERN LIMIT, pinned as emitted: the same job in a workflow whose `pull_request` trigger carries `branches: ['release/**']`, a pattern that leaves out `main` under GitHub's filter grammar. Deciding it needs that grammar, which this census does not evaluate, so it reads CLEAN at rc 0. A close turns this red and must re-label it",
+         tree(drop=True, add={wf("branches-pattern"): "name: Synthetic\n\non:\n  pull_request:\n    branches: ['release/**']\n\njobs:\n" + job("hygiene-v2", tenth, "required")}),
+         0, set()),
+        ("X117", "SPECIFICITY for X114: the same job in a workflow whose `pull_request` trigger carries `branches-ignore: [develop]`, which leaves `main` in. A pull request into `main` runs it, so there is no UNTRIGGERED: CLEAN at rc 0",
+         tree(drop=True, add={wf("branches-ignore-other"): "name: Synthetic\n\non:\n  pull_request:\n    branches-ignore: [develop]\n\njobs:\n" + job("hygiene-v2", tenth, "required")}),
+         0, set()),
     ]
 
 

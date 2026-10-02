@@ -36,9 +36,12 @@ each pull request into `main` and fails it unless each job declares whether it b
 exactly one `# gate-efficacy: posture=required` or `# gate-efficacy: posture=advisory` line
 as the first line of the comment block directly above its key and at the key's indentation,
 and unless each job claiming `required` reports a literal name (its `name:`, or its key
-where it has none) that no other job reports, sits in a workflow that `pull_request`
-triggers, and is listed both in `CONTEXT_ORDER` in `scripts/pin-required-checks.py` and in
-[SECURITY.md](SECURITY.md), *Branch Protection Posture*.
+where it has none) that no other job reports, carries no job-level `if:`, needs only jobs
+that also claim `required`, sits in a workflow that `pull_request` triggers with no literal
+`branches:` list that leaves out `main`, no literal `branches-ignore:` list that names it
+and no `types:` list that leaves out `synchronize`, and is listed both in `CONTEXT_ORDER` in
+`scripts/pin-required-checks.py` and in [SECURITY.md](SECURITY.md), *Branch Protection
+Posture*.
 
 ## Cutting a release
 
