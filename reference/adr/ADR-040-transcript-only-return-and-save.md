@@ -1,6 +1,6 @@
 # ADR-040: What a transcript-only channel returns, and who saves it — superseding ADR-022 D6.1's tier-T row in part
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-10-01)
 - **Deciders:** repo maintainer
 - **Driving work:** the *one interviewer, any conforming form* milestone. At that milestone's
   Collective Review the operator ruled that the change the milestone makes to

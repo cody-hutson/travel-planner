@@ -1,6 +1,6 @@
 # ADR-039: The interview's shared conduct is bundled with the interviewer verb — a file beside its command file, superseding ADR-023 D1.1 in part
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-10-01)
 - **Deciders:** repo maintainer
 - **Driving work:** the *one interviewer, any conforming form* milestone. At that milestone's
   Collective Review the operator decided that the interview's shared conduct is placed in a file
