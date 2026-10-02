@@ -526,7 +526,7 @@ in_list() { local n="$1"; shift; local e; for e in "$@"; do [ "$e" = "$n" ] && r
 
 is_sep() { [[ "$1" =~ ^\|[-:[:space:]|]+\|[[:space:]]*$ ]]; }
 
-getcount() { printf '%s\n' "$1" | sed -n "s/^COUNT $2 //p" | head -1; }
+getcount() { printf '%s\n' "$1" | sed -n "s/^COUNT $2 //p" | awk 'NR == 1'; }
 # ── THE HERE-STRING IS LOAD-BEARING, NOT A STYLE CHOICE. Read this before "simplifying"
 # it back into a pipeline.
 #
@@ -5073,7 +5073,7 @@ if [ -f "$G0/CLAUDE.md" ] && [ -f "$G0/skills/trip/SKILL.md" ] && [ -f "$G0/skil
   PASS "G0a: fixture integrity — the conforming tree was constructed"
   G0OUT="$(run_tree "$G0")"
   if grep -q '^FINDING ' <<<"$G0OUT"; then
-    FAIL "G0b: MUST-NOT-FIRE — the conforming tree was flagged: $(printf '%s' "$G0OUT" | grep '^FINDING ' | head -3 | tr '\n' ' ')"
+    FAIL "G0b: MUST-NOT-FIRE — the conforming tree was flagged: $(printf '%s' "$G0OUT" | grep '^FINDING ' | awk 'NR <= 3' | tr '\n' ' ')"
   else
     PASS "G0b: MUST-NOT-FIRE — a correct tree returns no finding of any id; the guard is not hard-wired red"
     # G0c-h each name a SPECIFIC SHAPE the conforming tree is supposed to carry. G0b
@@ -5198,7 +5198,7 @@ ctl() {  # ctl <id> <want> <label> <charter-defect> <cmd-defect> <integrity-prob
   local out; out="$(run_tree "$d")"
   if ! grep -q '^FINDING ' <<<"$out"; then FAIL "${id}b: the deliberate defect was NOT flagged ($label)"
   elif grep -q "^FINDING $want " <<<"$out"; then PASS "${id}b: flagged, naming $want — $label"
-  else FAIL "${id}b: flagged but not as $want ($label): $(printf '%s' "$out" | grep '^FINDING ' | head -1)"; fi
+  else FAIL "${id}b: flagged but not as $want ($label): $(printf '%s' "$out" | grep '^FINDING ' | awk 'NR == 1')"; fi
 }
 
 ctl GA0  A0 "an empty skills directory — a FAIL, not a vacuous pass"          ok        nocmds  '[ -d "$WORK/GA0/skills" ] && [ -z "$(ls -A "$WORK/GA0/skills")" ]'
@@ -5298,7 +5298,7 @@ if ! grep -qF "${AMB_MARK}${DISP_MARK}repo-creation${AMB_SEP}${BT}/trip-record p
   FAIL "GK5e: fixture integrity — the world must carry BOTH sets, same two unit members and DIFFERENT dispositions; one of them is absent, so a zero here would prove nothing"
 else
   GK5E_OUT="$(run_tree "$GK5E")"
-  GK5E_HITS="$(printf '%s\n' "$GK5E_OUT" | grep '^FINDING K5 ' | head -3 | tr '\n' ' ')"
+  GK5E_HITS="$(printf '%s\n' "$GK5E_OUT" | grep '^FINDING K5 ' | awk 'NR <= 3' | tr '\n' ' ')"
   if [ -z "$GK5E_HITS" ]; then
     PASS "GK5e: MUST-NOT-FIRE — two sets sharing both unit members and differing ONLY in their disposition member are TWO sets, and no K5 is emitted over $(getcount "$GK5E_OUT" DISPMEMBERS) live disposition member(s) in that world. The zero is a measurement: GK5d is the sensitivity arm on the same limb, over the same fixture shape with the disposition MATCHING, and fires on the same run. This arm is what makes the K5 quantifier widening evidence rather than an argument — an implementation that omits disposition members from the set identity emits a spurious K5 here while passing every must-fire arm above"
   else
@@ -5319,7 +5319,7 @@ if [ "$GB7B_S" -eq 1 ]; then
   PASS "GB7ba: fixture integrity — the world carries a MARKED excluded row, an UNMARKED excluded row and a MARKED ambiguity set, so GB7bb grades all three shapes rather than one"
   GB7B_OUT="$(run_tree "$GB7B")"
   GB7B_ADDR="$(getcount "$GB7B_OUT" S1_ADDR)"; GB7B_GRD="$(getcount "$GB7B_OUT" S1_GRADED)"
-  GB7B_HITS="$(printf '%s\n' "$GB7B_OUT" | grep '^FINDING B7 ' | head -3 | tr '\n' ' ')"
+  GB7B_HITS="$(printf '%s\n' "$GB7B_OUT" | grep '^FINDING B7 ' | awk 'NR <= 3' | tr '\n' ' ')"
   if [ -z "$GB7B_HITS" ]; then
     PASS "GB7bb: MUST-NOT-FIRE — B7's quantifier is the ADDRESSED class and nothing else: over a world carrying ${GB7B_ADDR} ADDRESSED row(s), all ${GB7B_GRD} graded, plus an EXCLUDED row and an ambiguity set that CARRY a marker and an EXCLUDED row that does not, no B7 is emitted. The zero is a measurement and not an empty scan — GB7 is the sensitivity arm on the same predicate and fires on the same run"
   else
@@ -5421,7 +5421,7 @@ ectl() {  # ectl <id> <want> <label> <adr-defect> <script-extra> <probe>
   PASS "${id}a: fixture integrity — the deliberate defect is present"
   local out; out="$(adr4_check "$d/ADR.md" "$d/pub.sh" "$GEREC")"
   if grep -q "^FINDING $want " <<<"$out"; then PASS "${id}b: flagged, naming $want — $label"
-  else FAIL "${id}b: not flagged as $want ($label): $(printf '%s' "$out" | grep '^FINDING ' | head -1)"; fi
+  else FAIL "${id}b: not flagged as $want ($label): $(printf '%s' "$out" | grep '^FINDING ' | awk 'NR == 1')"; fi
 }
 ectl GE1 E1 "a §4 row that does not parse at five columns"                    badrow       ''        'grep -qF "| 10 | ${BT}unpublish${BT} | EXCLUDED |" "$WORK/GE1/ADR.md"'
 ectl GE2 E2 "a §4 EXCLUDED form carrying no reason"                           noreason     ''        'grep -qF "| 4 | ${BT}publish${BT} | EXCLUDED | ${EMDASH} |" "$WORK/GE2/ADR.md"'
@@ -5475,7 +5475,7 @@ cctl() {  # cctl <id> <want> <label> <charter-defect> <cmd-defect> <carrier-defe
   arm "$want"
   local out; out="$(cfix "$id" "$1" "$2" "$3")"
   if grep -q "^FINDING $want " <<<"$out"; then PASS "${id}: flagged, naming $want — $label"
-  else FAIL "${id}: the deliberate defect was NOT flagged as $want ($label). First finding, if any: $(printf '%s' "$out" | grep '^FINDING ' | head -1)"; fi
+  else FAIL "${id}: the deliberate defect was NOT flagged as $want ($label). First finding, if any: $(printf '%s' "$out" | grep '^FINDING ' | awk 'NR == 1')"; fi
 }
 
 echo
@@ -5486,7 +5486,7 @@ echo "── Group GC/GL — control arms for the inference line, the confirm ob
 # declaration, and the carrier names no verb. A finding of ANY C or L id here is a false positive.
 GCOK="$(cfix GCok ok ok ok)"
 if grep -q '^FINDING ' <<<"$GCOK"; then
-  FAIL "GC0b: the CONFORMING world produced a finding — every must-not-fire arm below is reading a world that is already defective, so none of them establishes specificity: $(printf '%s' "$GCOK" | grep '^FINDING ' | head -2)"
+  FAIL "GC0b: the CONFORMING world produced a finding — every must-not-fire arm below is reading a world that is already defective, so none of them establishes specificity: $(printf '%s' "$GCOK" | grep '^FINDING ' | awk 'NR <= 2')"
 elif [ -z "$(getcount "$GCOK" CBLOCKS)" ]; then
   FAIL "GC0b: NO SUBJECT — the conforming world produced no population count, so inference_check did not run over it"
 else
@@ -5525,7 +5525,7 @@ if ! grep -qF "${AMB_MARK}${DISP_MARK}lightest-weight-action${AMB_SEP}${BT}${FIX
   FAIL "GC6b: fixture integrity — the near-miss world must carry the disposition member, the ADMITTED unit member and a RETAINED unit member beside it; that set is absent, so a zero here would prove nothing"
 else
   GC6B_OUT="$(inference_check "$(collect_records "$GC6B")" "$GC6B/SKILL.md")"
-  GC6B_HITS="$(printf '%s\n' "$GC6B_OUT" | grep '^FINDING C6 ' | head -3 | tr '\n' ' ')"
+  GC6B_HITS="$(printf '%s\n' "$GC6B_OUT" | grep '^FINDING C6 ' | awk 'NR <= 3' | tr '\n' ' ')"
   if [ -z "$GC6B_HITS" ]; then
     PASS "GC6b: MUST-NOT-FIRE — a disposition-bearing set naming ${FIXTURE_ADMIT_KEY} (admitted) BESIDE a unit member that retains declared intent yields no C6, over $(getcount "$GC6B_OUT" CDISPSETS) disposition-bearing set(s) in that world. The zero is a measurement, not an absence: GC6 is the sensitivity arm on the same predicate over the same world MINUS the retained member, and it fires on this run. This arm is what makes C6 a composition rule rather than a ban on an inference-admitted member appearing in such a set at all"
   else
@@ -5662,7 +5662,7 @@ elif [ -z "$GI1C_N" ] || [ "$GI1C_N" -eq 0 ]; then
 elif [ "$(getcount "$GI1C_OUT" PXHITS)" = '0' ]; then
   PASS "GI1c: MUST-NOT-FIRE — a backtick then a bang, in a verb region and in the carrier, is not the pre-execution rendering and yields no I1 over ${GI1C_N} fence-depth-0 line(s) scanned. GI1 and GI1b are the sensitivity arms and fire on the same run, so I1 grades the ORDER of the two characters rather than either character's presence"
 else
-  FAIL "GI1c: the near-miss was flagged as I1 — the assertion is matching the characters rather than the line-opening rendering: $(printf '%s' "$GI1C_OUT" | grep '^FINDING I1 ' | head -2 | tr '\n' ' ')"
+  FAIL "GI1c: the near-miss was flagged as I1 — the assertion is matching the characters rather than the line-opening rendering: $(printf '%s' "$GI1C_OUT" | grep '^FINDING I1 ' | awk 'NR <= 2' | tr '\n' ' ')"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
@@ -5833,7 +5833,7 @@ gqctl() {  # gqctl <id> <defect> <want-ids> <silent-ids> [--only] <must-name…>
   if [ "$ok" -eq 1 ]; then
     PASS "${id}: flagged, naming ${want} and the verb and the entry, with ${silent:-nothing} silent — ${label}"
   else
-    FAIL "${id}: the deliberate defect was not flagged as specified (${label}):${why} First finding, if any: $(grep '^FINDING ' <<<"$out" | head -1)"
+    FAIL "${id}: the deliberate defect was not flagged as specified (${label}):${why} First finding, if any: $(grep '^FINDING ' <<<"$out" | awk 'NR == 1')"
   fi
 }
 
@@ -5888,7 +5888,7 @@ elif grep -qF 'FINDING Q2 /zz-lacks the allowed-tools entry "Bash(ls:*)" has no 
      && [ "$(grep -c '^FINDING ' <<<"$GQ6O")" = '2' ] && [ "$(getcount "$GQ6O" GQVERBS)" = '2' ]; then
   PASS "GQ6: flagged, naming Q2 and Q1 against the SECOND verb only — /zz-lacks holds Bash(ls:*) with no row and names Read with no grant, while /zz-graded, which holds and names both, is named by nothing. Each unpaired entry is paired only by the other verb, so this is the arm that tells a per-verb reader from one that pools rows or grants across verbs"
 else
-  FAIL "GQ6: pairing leaked across verbs, or the second verb was not named in both directions: $(grep '^FINDING ' <<<"$GQ6O" | head -4 | tr '\n' ' ') GQVERBS=$(getcount "$GQ6O" GQVERBS)"
+  FAIL "GQ6: pairing leaked across verbs, or the second verb was not named in both directions: $(grep '^FINDING ' <<<"$GQ6O" | awk 'NR <= 4' | tr '\n' ' ') GQVERBS=$(getcount "$GQ6O" GQVERBS)"
 fi
 
 # ── GQ7 — MUST-NOT-FIRE: a row that spells the path-bearing grant IN FULL pairs by exact equality.
@@ -5909,7 +5909,7 @@ elif [ "$(getcount "$GQ7O" GQVERBS)" = '1' ] && [ "$(getcount "$GQ7O" GQROWS)" =
      && [ "$(getcount "$GQ7O" GQNEAR)" = '0' ] && [ "$(getcount "$GQ7O" GQCONT)" = '0' ]; then
   PASS "GQ7: MUST-NOT-FIRE — a verb whose script row spells the full rooted token is graded (1 verb, 3 rows, 3 grants) and every row and grant pairs: the row equals its grant exactly, so the normalization accepts the files' script-and-arm rendering beside the full token and prefers neither. GQ1 plants the same grant under the bare path and fires on this run"
 else
-  FAIL "GQ7: a row spelling the full rooted token did not pair — verbs $(getcount "$GQ7O" GQVERBS), rows $(getcount "$GQ7O" GQROWS), grants $(getcount "$GQ7O" GQGRANTS), unpaired rows $(getcount "$GQ7O" GQUNROW), unnamed grants $(getcount "$GQ7O" GQUNGRANT): $(grep '^FINDING ' <<<"$GQ7O" | head -2 | tr '\n' ' ')"
+  FAIL "GQ7: a row spelling the full rooted token did not pair — verbs $(getcount "$GQ7O" GQVERBS), rows $(getcount "$GQ7O" GQROWS), grants $(getcount "$GQ7O" GQGRANTS), unpaired rows $(getcount "$GQ7O" GQUNROW), unnamed grants $(getcount "$GQ7O" GQUNGRANT): $(grep '^FINDING ' <<<"$GQ7O" | awk 'NR <= 2' | tr '\n' ' ')"
 fi
 
 # ── GQ8 — a CONTINUATION LINE is loud. The allowed-tools value is wrapped, and the indented line
@@ -5931,7 +5931,7 @@ elif grep -q '^FINDING Q0 /zz-graded:[0-9][0-9]* continues its allowed-tools val
      && [ "$(getcount "$GQ8O" GQVERBS)" = '1' ] && [ "$(getcount "$GQ8O" GQUNROW)" = '0' ]; then
   PASS "GQ8: flagged, naming Q0 — an allowed-tools value wrapped onto an indented line that carries a grant no row names is reported with its verb and line, Q0 and Q2 each render exactly one FAIL and no PASS, and Q1 stays silent. Without this limb the reader graded the three entries it did read and Q2 passed, with the fourth grant absent from every count"
 else
-  FAIL "GQ8: a continuation of the allowed-tools value was not reported as Q0, or Q2 was not withheld: GQCONT=$(getcount "$GQ8O" GQCONT), Q0 probe '${GQ8_P0}', Q2 probe '${GQ8_P2}': $(grep '^FINDING ' <<<"$GQ8O" | head -2 | tr '\n' ' ')"
+  FAIL "GQ8: a continuation of the allowed-tools value was not reported as Q0, or Q2 was not withheld: GQCONT=$(getcount "$GQ8O" GQCONT), Q0 probe '${GQ8_P0}', Q2 probe '${GQ8_P2}': $(grep '^FINDING ' <<<"$GQ8O" | awk 'NR <= 2' | tr '\n' ' ')"
 fi
 
 # ── GQ9 — THE ROW SIDE IS READ IN FULL. Three BUILT worlds, each holding one row that no grant holds,
@@ -6048,7 +6048,7 @@ elif [ "$(getcount "$GQ0C" GQVERBS)" = "$(getcount "$GQ0L" GQVERBS)" ] && [ "$(g
      && [ "$GQ0_CF" = "$GQ0_LF" ]; then
   PASS "GQ0: MUST-NOT-FIRE — on a copy of the live verb files with every table row's Use cell rewritten (${GQ0_USE} rows) to name a grant nothing holds, the same token in prose beneath every table, and a fenced example grant table in each of ${GQ0_NV} files, the arm reads the SAME $(getcount "$GQ0C" GQVERBS) verb(s), $(getcount "$GQ0C" GQROWS) row(s) and $(getcount "$GQ0C" GQGRANTS) grant(s) and the SAME finding set as on the live tree. GQ1 plants that same token in a Grant cell and fires on the same run, so this zero is the arm telling the columns apart"
 else
-  FAIL "GQ0: a Use-cell rewrite, a prose line or a fenced example moved the verdict — live verbs/rows/grants $(getcount "$GQ0L" GQVERBS)/$(getcount "$GQ0L" GQROWS)/$(getcount "$GQ0L" GQGRANTS), copy $(getcount "$GQ0C" GQVERBS)/$(getcount "$GQ0C" GQROWS)/$(getcount "$GQ0C" GQGRANTS); first new finding: $(grep '^FINDING ' <<<"$GQ0C" | head -1)"
+  FAIL "GQ0: a Use-cell rewrite, a prose line or a fenced example moved the verdict — live verbs/rows/grants $(getcount "$GQ0L" GQVERBS)/$(getcount "$GQ0L" GQROWS)/$(getcount "$GQ0L" GQGRANTS), copy $(getcount "$GQ0C" GQVERBS)/$(getcount "$GQ0C" GQROWS)/$(getcount "$GQ0C" GQGRANTS); first new finding: $(grep '^FINDING ' <<<"$GQ0C" | awk 'NR == 1')"
 fi
 
 # ── GQD — DERIVED, NOT LISTED. The live copy plus one BUILT conforming verb: the graded set must
@@ -6536,10 +6536,10 @@ if grep -q "checkx" "$GM1/skills/trip/SKILL.md" && ! grep -q "checkx" "$GM1/CLAU
   if grep -q '^FINDING ' <<<"$M1" && grep -q 'checkx' <<<"$M1"; then
     PASS "GM-b: RED ARM — a verb renamed in a command file with the charter untouched turns the guard red and NAMES the affected key. The verb population is DERIVED, not remembered"
   else
-    FAIL "GM-b: RED ARM — a one-sided rename did NOT turn the guard red, or did not name the affected key: $(printf '%s' "$M1" | grep '^FINDING ' | head -1)"
+    FAIL "GM-b: RED ARM — a one-sided rename did NOT turn the guard red, or did not name the affected key: $(printf '%s' "$M1" | grep '^FINDING ' | awk 'NR == 1')"
   fi
   if grep -q '^FINDING ' <<<"$M2"; then
-    FAIL "GM-c: GREEN ARM — the same rename applied to BOTH surfaces was still flagged, so the red arm proves only that the guard dislikes change: $(printf '%s' "$M2" | grep '^FINDING ' | head -3 | tr '\n' ' ')"
+    FAIL "GM-c: GREEN ARM — the same rename applied to BOTH surfaces was still flagged, so the red arm proves only that the guard dislikes change: $(printf '%s' "$M2" | grep '^FINDING ' | awk 'NR <= 3' | tr '\n' ' ')"
   else
     PASS "GM-c: GREEN ARM — the same rename applied to BOTH surfaces stays green. Both arms, or neither: a green run on unchanged state does not satisfy this control; only the pair does"
   fi

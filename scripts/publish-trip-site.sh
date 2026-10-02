@@ -373,7 +373,7 @@ announce_passphrase_file() { # <label> <passphrase_file>
 # ─────────────────────────────────────────────────────────────────────────────
 resolve_site_html() { # <trip_dir>
   local trip_dir="$1" hit
-  hit=$(ls -1t "$trip_dir"/outputs/*-travel-site.html 2>/dev/null | head -1 || true)
+  hit=$(ls -1t "$trip_dir"/outputs/*-travel-site.html 2>/dev/null | awk 'NR == 1' || true)
   [ -n "$hit" ] || die "no *-travel-site.html found in $trip_dir/outputs/ — build the site first."
   printf '%s' "$hit"
 }
@@ -2451,7 +2451,7 @@ verify_ciphertext() { # <enc> <src> [boilerplate_html]
             | grep -oE '[A-Za-z0-9]{5,}' \
             | grep -ivE "$stoplist" \
             | grep -E '[A-Z0-9]' \
-            | sort -u | head -80)
+            | sort -u | awk 'NR <= 80')
   return 0
 }
 
@@ -4013,8 +4013,8 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
 # which filesystem noise satisfies, so it never caught it — see I1b.
 _epoch_of_file() { # <file> -> mtime epoch on stdout, or nothing
   local e
-  e="$(stat -f %m "$1" 2>/dev/null | head -1)"
-  case "$e" in ''|*[!0-9]*) e="$(stat -c %Y "$1" 2>/dev/null | head -1)" ;; esac
+  e="$(stat -f %m "$1" 2>/dev/null | awk 'NR == 1')"
+  case "$e" in ''|*[!0-9]*) e="$(stat -c %Y "$1" 2>/dev/null | awk 'NR == 1')" ;; esac
   case "$e" in ''|*[!0-9]*) return 0 ;; esac
   printf '%s' "$e"
 }
@@ -4061,7 +4061,7 @@ cmd_list() { # (no args, beyond the shared --data-root seam main strips)
     [ -d "$trip_dir" ] || continue
     trip_dir="${trip_dir%/}"; base="$(basename "$trip_dir")"; any=1
     slug="$(slug_for "$trip_dir" 2>/dev/null || printf '?')"
-    site="$(ls -1t "$trip_dir"/outputs/*-travel-site.html 2>/dev/null | head -1 || true)"
+    site="$(ls -1t "$trip_dir"/outputs/*-travel-site.html 2>/dev/null | awk 'NR == 1' || true)"
     edited_epoch=""; [ -n "$site" ] && edited_epoch="$(_epoch_of_file "$site")"
     status="-"; pub_epoch=""
     if [ "$online" = "1" ]; then

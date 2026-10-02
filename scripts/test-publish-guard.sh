@@ -964,8 +964,8 @@ if [ "$LRC" -eq 0 ]; then PASS "L6b: with a genuinely empty class the plaintext 
 
 # L7 — AC 1 structurally: the guard runs BEFORE anything is copied to the publish dir.
 lbody="$(declare -f cmd_publish)"
-lgline="$(printf '%s\n' "$lbody" | grep -n 'verify_publishable_content' | head -1 | cut -d: -f1)"
-lcline="$(printf '%s\n' "$lbody" | grep -nF 'cp "$site_html"'           | head -1 | cut -d: -f1)"
+lgline="$(printf '%s\n' "$lbody" | grep -n 'verify_publishable_content' | awk 'NR == 1' | cut -d: -f1)"
+lcline="$(printf '%s\n' "$lbody" | grep -nF 'cp "$site_html"'           | awk 'NR == 1' | cut -d: -f1)"
 if [ -n "$lgline" ] && [ -n "$lcline" ] && [ "$lgline" -lt "$lcline" ]; then
   PASS "L7: the content guard runs before the copy into the publish dir (guard line $lgline < copy line $lcline)"
 else

@@ -274,7 +274,7 @@ ad_status_raw() {
 
 # ── ad_status_tok <file> — its LEADING ALPHABETIC TOKEN, never a substring search ─
 ad_status_tok() {
-  ad_status_raw "$1" | awk '{ if (match($0, /^[A-Za-z]+/)) print substr($0, RSTART, RLENGTH); exit }'
+  ad_status_raw "$1" | awk 'NR == 1 { if (match($0, /^[A-Za-z]+/)) print substr($0, RSTART, RLENGTH) }'
 }
 
 # ── ad_sections <file> — every `## ` heading, normalised: lowercased, a trailing

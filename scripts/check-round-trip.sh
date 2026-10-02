@@ -652,7 +652,7 @@ rt_main() {
         rt_finding RT0 "--trip was given no slug"; return 2
       fi
       plan="$data_root/trips/$slug/outputs/final-itinerary.md"
-      site="$(ls "$data_root/trips/$slug/outputs/"*-travel-site.html 2>/dev/null | head -1)"
+      site="$(ls "$data_root/trips/$slug/outputs/"*-travel-site.html 2>/dev/null | awk 'NR == 1')"
       if [ -z "$site" ]; then
         rt_finding RT0 "no '*-travel-site.html' exists under '$data_root/trips/$slug/outputs/' — there is no site to walk the plan against"
         return 2
