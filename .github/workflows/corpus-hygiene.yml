@@ -65,6 +65,14 @@ name: Corpus hygiene
 #        outlive the gap it excepts. The scope boundary — the row's key cell, the ungraded
 #        link text, the ungraded zero-padding — is declared in the suite's class-D banner
 #        entry and is not restated here
+#   F    SHORT-CIRCUIT READERS. A pipe into a reader that can stop before end of input — head,
+#        a grep in its quiet or max-count form, a sed carrying q, an awk that exits outside
+#        END — in any tracked shell file or any workflow run: value. The reader leaves first,
+#        the writer meets a closed pipe, and under pipefail the writer's failure becomes the
+#        pipeline's status, so a successful match can read as a failure. The scan set is
+#        derived and printed on every run, a run: form the suite's line reader cannot place is
+#        refused rather than skipped, and the declared boundary — what the detector does not
+#        reach — is stated in the suite's class-F banner entry and is not restated here
 #   G    RELEASE TAGS. Every v* tag's own tree carries its own CHANGELOG heading as the newest
 #        version heading. The group runs scripts/check-release-tag.sh — the check the release
 #        procedure runs at tag time — over every tag, and asserts its failures against the
@@ -89,11 +97,12 @@ name: Corpus hygiene
 #   much weaker property. A sentence can carry a sound anchor and a wrong number and stay
 #   green. What the gate removes is the claim nobody can check without redoing the work.
 #
-#   NON-MARKDOWN SURFACES. The suite reads tracked markdown, and in group G the release tags
-#   and the CHANGELOG each tagged tree carries. Shell scripts, workflow files and issue
-#   templates are not graded, and one of the motivating recurrences lived in a
-#   workflow comment. That gap is real and is left to review; stating it is what keeps a
-#   green from being read as more than it is.
+#   NON-MARKDOWN SURFACES. The suite reads tracked markdown; in group G, the release tags
+#   and the CHANGELOG each tagged tree carries; and in class F, every tracked shell file and
+#   every workflow run: value, graded for that one class and nothing else. Issue templates,
+#   workflow comments and every other non-markdown surface are not graded, and one of the
+#   motivating recurrences lived in a workflow comment. That gap is real and is left to
+#   review; stating it is what keeps a green from being read as more than it is.
 #
 #   WHETHER AN ADR NUMBER WAS FREE WHEN IT WAS CHOSEN. Group D grades the numbering of the
 #   corpus as it stands at the merge. It cannot hold a number for a branch that has not
