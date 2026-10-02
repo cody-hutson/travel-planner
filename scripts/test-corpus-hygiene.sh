@@ -122,11 +122,32 @@
 #        THE SPAN'S FLOOR IS THE FIRST NUMBER, NOT THE LOWEST ONE OBSERVED. Anchoring the
 #        floor at the observed minimum would make a missing lowest number the one hole
 #        nothing can see, because removing it moves the floor down with it.
-#   CTL  a synthetic fixture tree, built in a temp dir ON EVERY RUN, plus one arm that
-#        replays a defect this repository actually shipped. One MUST-FIRE arm per finding
-#        code this file can emit, alongside the specificity arms that tell a correct
-#        implementation from a lookalike. A code with no arm is a check indistinguishable
-#        from one that CANNOT fire.
+#   G    RELEASE TAGS CARRY THEIR OWN CHANGELOG ENTRY. Every `v*` tag's own tree carries its
+#        `## [X.Y.Z]` heading, outside a fenced block, as the NEWEST version heading there —
+#        what CONTRIBUTING.md's release procedure exists to produce, and what its step 6 checks
+#        at tag time by running scripts/check-release-tag.sh on the new tag. This group runs
+#        THAT SAME SCRIPT over every tag and grades nothing about a tag itself: the predicate
+#        lives in the script, so the release and this gate cannot disagree about what a tag
+#        must carry. What the group asserts is the comparison. The tags that are known to fail
+#        are DECLARED in the `release-tag-declaration` fence in CONTRIBUTING.md and asserted in
+#        BOTH DIRECTIONS, on the device classes C and D use: a failing tag no row declares
+#        fails (G1), and a row naming no failing tag fails too (G2) — tags are not protected on
+#        this host, so a tag can be moved or deleted, and a declaration must not outlive the
+#        failure it excepts. A census that reads no tag, cannot read one, or disagrees with its
+#        own exit status, and a declaration that is empty while tags fail, are G0: a broken
+#        probe or a shallow checkout, never a clean history, and G0 withholds G1 and G2. So is
+#        a SHALLOW repository whose census lacks a declared tag: a depth-limited clone carries
+#        only the tags its truncated history reaches, so that census is a sample of the release
+#        history and not the whole of it. Shallowness alone is not G0 — a shallow clone can
+#        carry every tag — and in a repository that is not shallow an absent declared tag stays
+#        G2. Under G0 no line this group prints carries a count: each says NOT-EVALUATED and
+#        names the one cause, because a count beside a withheld comparison reads as a measured
+#        zero.
+#   CTL  a synthetic fixture tree, built in a temp dir ON EVERY RUN, plus the arms whose ids
+#        end -RETRO, each replaying a defect this repository actually shipped. One MUST-FIRE
+#        arm per finding code this file can emit, alongside the specificity arms that tell a
+#        correct implementation from a lookalike. A code with no arm is a check
+#        indistinguishable from one that CANNOT fire.
 #   Y    the assertion inventory, derived from this file's own emission sites and checked
 #        in BOTH DIRECTIONS: every code this file can emit has a must-fire arm behind it,
 #        and every arm names a code that some site can emit. The code set is READ FROM this
@@ -152,7 +173,7 @@
 #   twelve places" — breaks between `all` and `twelve`, so the cardinal and its noun land
 #   TOGETHER on the second line. Arm CTL-C-WRAP is that exact sentence and arm CTL-RETRO is
 #   the real historical blob that carried it. Both are worth keeping: they hold the shape
-#   the defect actually took, and CTL-RETRO is the only arm here graded against a document
+#   the defect actually took, and CTL-RETRO is the only class-C arm graded against a document
 #   this repository shipped. Neither DISCRIMINATES on the unit, and this comment previously
 #   claimed both did — a line-anchored reader finds `twelve places` intact on one line and
 #   passes them, so a green from these two says nothing about whether the unit is wrapped.
@@ -187,13 +208,17 @@
 # the out-of-scope figure beside its own verdict on every run.
 #
 # ── ONE DEPENDENCY ON REPOSITORY HISTORY, STATED ─────────────────────────────────
-# Arm CTL-RETRO reads a blob from a commit in this repository's history. It is the only arm
-# that tests the detector against a defect the repository actually shipped rather than one
-# this file wrote, and it is therefore the arm worth keeping honest. It requires history
-# deeper than a single commit, which is why .github/workflows/corpus-hygiene.yml sets
-# fetch-depth: 0 and says why. If the blob is unreachable this arm FAILS rather than
-# skipping: an unreachable regression witness is a hole, and a hole that reports green is
-# the exact failure mode this suite exists to close.
+# The suite reads this repository's history as blobs and as tags, and both arrive through the
+# same checkout. Every arm whose id ends -RETRO reads a blob from a commit in that history: it
+# is the arm that tests its class's detector against a defect the repository actually shipped
+# rather than one this file wrote, and it is therefore the arm worth keeping honest. Group G
+# reads the release tags, and its arm CTL-G-RETRO grades the release check against a tag the
+# repository actually shipped without its entry. Both need history deeper than a single commit,
+# which is why .github/workflows/corpus-hygiene.yml sets fetch-depth: 0 and says why — that
+# depth's fetch carries the tags as well as the commits. If a blob is unreachable its arm FAILS
+# rather than skipping, and if no tag is present group G FAILS on G0: an unreachable regression
+# witness is a hole, and a hole that reports green is the exact failure mode this suite exists
+# to close.
 #
 set -uo pipefail
 # Deterministic collation and byte semantics. Bracket ranges and character classes below
@@ -217,6 +242,14 @@ CH_RETRO_PATH='reference/adr/ADR-008-publish-content-guard.md'
 CH_ADR_DIR='reference/adr'
 CH_ADR_INDEX='reference/adr/README.md'
 CH_ADR_TAG='adr-number-declaration'
+# The release check group G drives, the document carrying its declaring fence, that fence's tag,
+# and the two real tags its controls read: one this repository shipped without its own entry,
+# and one that carries it. Named once.
+CH_G_SCRIPT='scripts/check-release-tag.sh'
+CH_G_DOC='CONTRIBUTING.md'
+CH_G_TAG='release-tag-declaration'
+CH_G_RETRO_FAIL='v0.34.0'
+CH_G_RETRO_PASS='v0.48.0'
 
 pass=0; fail=0; skip=0; vacuous=0; SKIPPED=""; VACUOUS_IDS=""
 PASS()    { printf '  \033[1;32mPASS\033[0m %s\n' "$*"; pass=$((pass+1)); }
@@ -812,6 +845,56 @@ function numof(b,   k) { k = b; sub(/^ADR-/, "", k); sub(/-.*$/, "", k); return 
 function pad(n) { return sprintf("%03d", n + 0) }
 AWK
 
+# ── g.awk — class G, the release check's census against the declaration ─────────────
+cat > "$WORK/g.awk" <<'AWK'
+# ARGV[1] the declaration TSV "<tag>\t<limb>:<reason>", already extracted by fence.awk — the
+# SAME reader classes C and D drive. ARGV[2] the census scripts/check-release-tag.sh printed.
+# -v RC=<that census's exit status> -v DECFILE=<path of ARGV[1]>
+# -v SHALLOW=<what `git rev-parse --is-shallow-repository` printed in that repository>
+#
+# The two inputs are split BY FILENAME, for the reason d.awk records: an empty declaration is a
+# case this group must report, and `FNR == NR` would read the whole census as declaration rows.
+#
+# Grades nothing about a tag. The verdict on each tag is the release check's own TAG line; this
+# program compares the failing ones with the declaration, in both directions, and always emits a
+# DENOM line carrying the tags the check read, the tags failing a limb and the rows declared.
+FILENAME == DECFILE {
+  split($0, d, "\t")
+  if (d[1] != "" && d[2] != "") { DECL[d[1] " " d[2]] = 1; DTAG[d[1]] = 1; ndecl++ }
+  next
+}
+$1 == "TAG" { nline++; SEEN[$2] = 1; if ($4 == "FAIL") { OBS[$2 " " $3 ":" $5] = 1; if (!($2 in FAILED)) { FAILED[$2] = 1; nfail++ } } }
+$1 == "READ" { nread = $2 + 0; sawread = 1 }
+$1 == "NOT-EVALUATED:" { notev = 1 }
+END {
+  # G0 first, and alone: a census that did not run, a declaration that is empty while tags fail,
+  # or a census that is only a sample of the tags, makes every comparison below it a statement
+  # about nothing, so only the cause is named.
+  #
+  # THE SHALLOW LIMB NEEDS BOTH CONDITIONS. SEEN holds every tag the census printed a line for,
+  # passing or failing, and nabsent counts the DECLARED tags that are not among them. In a
+  # shallow repository a declared tag that is absent was never fetched, so the census is a
+  # sample and the tag is not stale: reporting it as G2 would send the reader to remove a row
+  # the full history still needs. Shallowness alone is not the finding, because a shallow clone
+  # can carry every tag; and where the repository is NOT shallow an absent declared tag is G2,
+  # as it always was — there the tag really is gone.
+  nabsent = 0
+  for (t in DTAG) if (!(t in SEEN)) nabsent++
+  why = ""
+  if (RC != 0 && RC != 1)                 why = "the release check exited " RC (notev ? " NOT-EVALUATED" : "")
+  else if (!sawread || nread == 0 || nline == 0) why = "the release check printed no verdict for any tag"
+  else if ((RC == 1) != (nfail > 0))      why = "the release check exited " RC " against " nfail " failing tag(s)"
+  else if (ndecl == 0 && nfail > 0)       why = "the declaration fence yielded zero rows while " nfail " tag(s) fail"
+  else if (SHALLOW == "true" && nabsent > 0) why = "this repository is shallow and " nabsent " declared tag(s) are absent from the census: fetch the tags, or re-clone without --depth"
+  if (why != "") printf "FINDING G0 %s\n", why
+  else {
+    for (k in OBS)  if (!(k in DECL)) printf "FINDING G1 %s\n", k
+    for (k in DECL) if (!(k in OBS))  printf "FINDING G2 %s\n", k
+  }
+  printf "DENOM %d %d %d\n", nread + 0, nfail + 0, ndecl + 0
+}
+AWK
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # THE COMPARATOR. ONE function, driven by the real-tree arm and by every group-C control
 # arm below.
@@ -828,8 +911,8 @@ ch_scan_b() { awk -v ROOT="$1" -f "$WORK/b.awk" "$2"; }
 # knob: a gate whose strictness can be set by the caller is not a gate. It is changed by
 # editing the line below, in a diff, alongside the fence rows that change with it.
 ch_scan_c() { awk -v ROOT="$1" -v SHOW="${3:-0}" -v LOOK=2 -f "$WORK/c.awk" "$2"; }
-# The tag defaults to class C's, so every existing caller is unchanged; class D passes its
-# own. ONE fence reader serves both declaring fences — a second parser for the same on-disk
+# The tag defaults to class C's, so every existing caller is unchanged; classes D and G pass
+# their own. ONE fence reader serves every declaring fence — a second parser for the same on-disk
 # shape would be a second place for that shape to drift.
 ch_fence()  { awk -v TAG="${2:-$CH_FENCE_TAG}" -f "$WORK/fence.awk" "$1"; }
 
@@ -841,6 +924,38 @@ ch_scan_d() {
   else : > "$WORK/adrdec.tsv"; fi
   awk -v ROOT="$1" -v ADRDIR="$CH_ADR_DIR" -v INDEX="$CH_ADR_INDEX" \
     -v DECFILE="$WORK/adrdec.tsv" -f "$WORK/d.awk" "$WORK/adrdec.tsv" "$2"
+}
+
+# g_run <repo> <arg> — the release check, run in <repo> exactly as the release procedure runs
+# it. A FIXTURE repository is read with every configuration outside it switched off, so nothing
+# on the machine running the suite can change what a fixture says.
+g_run() {
+  local repo="$1"; shift
+  ( cd "$repo" || exit 2
+    case "$repo" in "$WORK"/*) export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 ;; esac
+    "$ROOT/$CH_G_SCRIPT" "$@" )
+}
+# g_shallow <repo> — what `git rev-parse --is-shallow-repository` prints in <repo>: `true` in a
+# depth-limited clone and `false` otherwise. Asked in the repository being scanned and under the
+# same isolation as the census, so a fixture answers for itself. Where git cannot answer — the
+# directory is no repository — it prints nothing, and g.awk's shallow limb stays silent: the
+# census has already said NOT-EVALUATED there, which is G0 by its exit status.
+g_shallow() {
+  ( cd "$1" 2>/dev/null || exit 0
+    case "$1" in "$WORK"/*) export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 ;; esac
+    git rev-parse --is-shallow-repository 2>/dev/null )
+}
+# ch_scan_g <root> — class G over one repository: the census by the release check itself, the
+# declaration from that repository's own CONTRIBUTING.md, whether that repository is shallow,
+# and the comparison. The real tree and every fixture arm go through this one function.
+ch_scan_g() {
+  local rc=0
+  ( cd "$1" || exit 2
+    case "$1" in "$WORK"/*) export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 ;; esac
+    "$ROOT/$CH_G_SCRIPT" --all ) > "$WORK/g.scan" 2>&1 || rc=$?
+  if [ -r "$1/$CH_G_DOC" ]; then ch_fence "$1/$CH_G_DOC" "$CH_G_TAG" > "$WORK/g.decl"
+  else : > "$WORK/g.decl"; fi
+  awk -v RC="$rc" -v SHALLOW="$(g_shallow "$1")" -v DECFILE="$WORK/g.decl" -f "$WORK/g.awk" "$WORK/g.decl" "$WORK/g.scan"
 }
 
 # ch_compare_c <root> <fence-doc-abs> <listfile> — the both-direction assertion.
@@ -1033,7 +1148,66 @@ fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
-echo "CTL — the control arms: a fixture tree built on every run, plus one real regression"
+echo "G — release tags carry their own CHANGELOG entry, graded by the check the release runs"
+# ═════════════════════════════════════════════════════════════════════════════════
+# Every ref and the working tree, read BEFORE the release check first runs on this repository.
+# Arm CTL-G-READONLY compares against this after every run of it here, so a write made by ANY
+# run is seen — a snapshot taken around one later run would miss a write an earlier run already
+# made, because the same write repeated changes nothing.
+G_REF0="$(git -C "$ROOT" for-each-ref --format='%(refname) %(objectname)')"
+G_ST0="$(git -C "$ROOT" status --porcelain=v1 --untracked-files=all)"
+G_OUT="$(ch_scan_g "$ROOT")"
+G_NREAD="$(awk '$1 == "DENOM" { print $2 }' <<<"$G_OUT")"
+G_NFAIL="$(awk '$1 == "DENOM" { print $3 }' <<<"$G_OUT")"
+G_NDECL="$(awk '$1 == "DENOM" { print $4 }' <<<"$G_OUT")"
+G_N0="$(n_code "$G_OUT" G0)"
+G_N1="$(n_code "$G_OUT" G1)"
+G_N2="$(n_code "$G_OUT" G2)"
+# THE MEASUREMENT STATE, decided ONCE and read by every line this group prints. The census is a
+# measurement only when the release check read at least one tag AND the comparator reported no
+# G0. The guard resolves an unrun census to the LOUD answer, as D0's does: an unset denominator
+# reads 0 and lands on the unmeasured side. On that side nothing below prints a count — G_WHY is
+# the one cause g.awk named, the SURFACE line and the RELEASE-TAGS summary line say NOT-EVALUATED
+# with that cause, and G1 and G2 are withheld. A counter printed beside a withheld comparison
+# reads as a measured zero, which is the one thing an unmeasured census must never be taken for.
+G_WHY="$(awk '$1 == "FINDING" && $2 == "G0" { $1 = ""; $2 = ""; sub(/^ +/, ""); print }' <<<"$G_OUT")"
+if [ "${G_NREAD:-0}" -gt 0 ] && [ "${G_N0:-1}" -eq 0 ]; then G_MEASURED=1; else G_MEASURED=0; fi
+[ -n "$G_WHY" ] || G_WHY='the comparator printed no result'
+if [ "$G_MEASURED" -eq 1 ]; then
+  printf '  SURFACE: %s release tag(s) read by %s, %s of them failing a limb, against %s row(s) declared in the `%s` fence in %s.\n' \
+    "$G_NREAD" "$CH_G_SCRIPT" "$G_NFAIL" "$G_NDECL" "$CH_G_TAG" "$CH_G_DOC"
+else
+  printf '  SURFACE: NOT-EVALUATED — %s — this is not a clean result\n' "$G_WHY"
+fi
+for c in G0 G1 G2; do echo "$c" >> "$SURF_LOG"; done
+
+if [ "$G_MEASURED" -eq 1 ]; then
+  PASS "G0: the release check read $G_NREAD tag(s) and printed a verdict for each, so every comparison below is a measurement — a census over no tag is what a checkout below fetch-depth: 0 produces, and arm CTL-G0 requires that state to fail"
+else
+  FAIL "G0: group G is NOT a measurement on this run — a zero here is a shallow checkout, an unreadable tag or an empty declaration, never a clean release history, and G1 and G2 are withheld. CI must check out with fetch-depth: 0, which is what fetches the tags:"
+  grep '^FINDING G0 ' <<<"$G_OUT" | awk '{ $1 = ""; $2 = ""; sub(/^ +/, ""); printf "      %s\n", $0 }'
+fi
+
+if [ "$G_MEASURED" -ne 1 ]; then
+  FAIL "G1/G2: withheld — G0 above names the cause, and a comparison over a census that did not run would report every declared tag as stale"
+else
+  if [ "${G_N1:-0}" -eq 0 ]; then
+    PASS "G1: every tag that fails the release check is declared — $G_NFAIL failing tag(s), each named in the \`$CH_G_TAG\` fence with the reason the check gives. The zero is a measurement: arm CTL-G1 ships a tag without its entry and requires it to be found"
+  else
+    FAIL "G1: $G_N1 tag(s) fail the release check and are not declared. If \`git ls-remote --tags origin <tag>\` prints nothing, the tag exists only in this clone — delete it locally and do not declare it. A declaration row is the remedy for a pushed tag only: a pushed tag is not rewritten, so the remedy is a row in the \`$CH_G_TAG\` fence in $CH_G_DOC, beside a sentence saying how the tag came to lack its entry — and the release procedure's step 6 is the check that should have refused it:"
+    grep '^FINDING G1 ' <<<"$G_OUT" | awk '{ printf "      %s  %s\n", $3, $4 }'
+  fi
+  if [ "${G_N2:-0}" -eq 0 ]; then
+    PASS "G2: every declared row still names a failing tag with the reason the check gives — $G_NDECL row(s), none stale. Arms CTL-G2, CTL-G2-ABSENT and CTL-G2-REASON plant a row that passes, one naming no tag and one naming the wrong reason"
+  else
+    FAIL "G2: $G_N2 declared row(s) no longer match a failing tag — the tag passes now, no longer exists, or fails for a different reason. Tags are not protected on this host; find what moved the tag, and correct or remove the row in the same change:"
+    grep '^FINDING G2 ' <<<"$G_OUT" | awk '{ printf "      %s  %s\n", $3, $4 }'
+  fi
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "CTL — the control arms: a fixture tree built on every run, plus the real regressions whose ids end -RETRO"
 # ═════════════════════════════════════════════════════════════════════════════════
 # Each arm plants ONE defect and requires the SAME extractor that graded the tree above to
 # report it. The specificity arms plant a lookalike and require silence. Without both
@@ -1361,7 +1535,7 @@ ctl_fence "$D" '0  docs/notes.md'
 O="$(ch_compare_c "$D" "$D/$CH_FENCE_DOC" "$(ctl_list "$D")")"
 ctl_mustfire "CTL-C-SEG" C1 "$O" "an anchored sentence and a basis-free one sit in the SAME paragraph — the exemption must scope to the sentence that carries it, and a paragraph-flattened reading returns clean here" 1
 
-# CTL-RETRO — the real historical blob. Every other arm tests a fixture this file wrote;
+# CTL-RETRO — the real historical blob. Every other class-C arm tests a fixture this file wrote;
 # this one tests the defect the repository actually shipped, at the commit that carried it.
 ctl_arm C1
 D="$(ctl_mk retro)"
@@ -1378,7 +1552,7 @@ else
   elif [ "$RETRO_WRAP" -eq 0 ]; then
     FAIL "CTL-RETRO: the extractor found $RETRO_N site(s) in the historical revision but NONE of them is the wrapped \"twelve places\" instance this arm exists for — it is firing on something else, so the regression is not the one being witnessed"
   else
-    PASS "CTL-RETRO: C1 fired on the real historical revision of $CH_RETRO_PATH — $RETRO_N site(s), including the wrapped \"…one way in all / twelve places\" claim that passed every required check green on the day it shipped. This is the only arm here that tests a defect the repository actually carried"
+    PASS "CTL-RETRO: C1 fired on the real historical revision of $CH_RETRO_PATH — $RETRO_N site(s), including the wrapped \"…one way in all / twelve places\" claim that passed every required check green on the day it shipped. This is the only class-C arm that tests a defect the repository actually carried"
   fi
 fi
 
@@ -1490,6 +1664,158 @@ O="$(ch_scan_d "$D" "$(ctl_list "$D")")"
 ctl_mustnot "CTL-D-SPEC" D3 "$O" "the record directory also holds its own index, a notes file and a draft carrying no number — none of the three is a record, so none may be reported as a record the index forgot"
 ctl_mustnot "CTL-D-SPEC-DUP" D1 "$O" "none of those three resolves to a number either, so none can collide with a record or with another of them"
 ctl_mustnot "CTL-D-SPEC-GAP" D2 "$O" "and none shifts the span, so none manufactures a gap under the highest number a real record carries"
+
+# ── G ────────────────────────────────────────────────────────────────────────────
+# Each fixture is a small repository with its own tags and, where the arm needs one, its own
+# declaring fence — graded by the SAME ch_scan_g, and so by the same release check, that graded
+# the real tags above. Every git call that BUILDS a fixture runs with all outside configuration
+# switched off and a synthetic identity, so no signing key, hook, default branch or address on
+# the machine running the suite can reach a fixture.
+ctl_g_git() {
+  GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 \
+  GIT_AUTHOR_NAME=fixture GIT_AUTHOR_EMAIL=fixture@example.invalid \
+  GIT_COMMITTER_NAME=fixture GIT_COMMITTER_EMAIL=fixture@example.invalid \
+    git -c init.defaultBranch=main -c commit.gpgSign=false -c tag.gpgSign=false "$@"
+}
+ctl_g_repo() {  # ctl_g_repo <name> — an empty repository; its path on stdout
+  local d="$WORK/fx/$1"
+  mkdir -p "$d" && ctl_g_git -C "$d" init -q && printf '%s\n' "$d"
+}
+ctl_g_release() {  # ctl_g_release <repo> <tag> <CHANGELOG text, or - for none> — commit, then tag
+  local d="$1" tag="$2" text="$3"
+  if [ "$text" = "-" ]; then rm -f "$d/CHANGELOG.md"; else printf '%s\n' "$text" > "$d/CHANGELOG.md"; fi
+  ctl_g_git -C "$d" add -A . && ctl_g_git -C "$d" commit -q --allow-empty -m "$tag" && ctl_g_git -C "$d" tag "$tag"
+}
+ctl_g_decl() {  # ctl_g_decl <repo> <row...> — that repository's CONTRIBUTING.md, carrying the fence
+  local d="$1"; shift
+  { printf '# Contributing\n\n### Why earlier tags look different\n\n'
+    printf '```%s\n' "$CH_G_TAG"
+    printf '# tag  limb:reason\n'
+    local r; for r in "$@"; do printf '%s\n' "$r"; done
+    printf '```\n'
+  } > "$d/$CH_G_DOC"
+}
+
+D="$(ctl_g_repo g0)"
+O="$(ch_scan_g "$D")"
+ctl_mustfire "CTL-G0" G0 "$O" "a repository carrying no v* tag — what a checkout below fetch-depth: 0 looks like to the release check, which says NOT-EVALUATED; group G must report that as no measurement, never as a clean history" 1
+
+D="$(ctl_g_repo g0decl)"
+ctl_g_release "$D" v1.0.0 '-'
+ctl_g_decl "$D"
+O="$(ch_scan_g "$D")"
+ctl_mustfire "CTL-G0-DECL" G0 "$O" "a tag fails and the declaring fence is present with ZERO rows — a declaration gone missing is reported as one cause, not as every failing tag read as a new one" 1
+
+# CTL-G0-SHALLOW and CTL-G-SPEC-SHALLOW — ONE shallow fixture, graded twice, because the limb
+# needs both of its conditions and each grading holds one of them fixed. The source repository
+# carries three tagged releases; the fixture is a depth-limited clone of it, which holds the tip
+# commit alone and so cannot carry the two older tags. The clone is made over file:// because
+# git ignores --depth for a plain local path, and with --no-tags so that the one tag it carries
+# is the one created on the next line, whatever tag-following would have brought.
+#   First grading: a declared tag is ABSENT from the census. It must be G0 and not G2 — the tag
+#   was never fetched, so the row is not stale, and removing it would turn the full-history run
+#   red.
+#   Second grading: every declared tag is PRESENT. G0 must stay silent — shallowness alone is
+#   not the finding, because a shallow clone can carry every tag.
+# The other half of the rule has its arm already: CTL-G2-ABSENT, below, is a repository that is
+# NOT shallow, and there an absent declared tag stays G2. A fixture that failed to build cannot
+# pass both gradings: no clone, no tag, or a clone that is not shallow each turns one of them red.
+S="$(ctl_g_repo gshallowsrc)"
+ctl_g_release "$S" v1.0.0 '## [1.0.0] — 2026-01-01 — first'
+ctl_g_release "$S" v1.1.0 '## [1.0.0] — 2026-01-01 — first'
+ctl_g_release "$S" v1.2.0 '-'
+D="$WORK/fx/gshallow"
+ctl_g_git clone -q --depth 1 --no-tags "file://$S" "$D"
+ctl_g_git -C "$D" tag v1.2.0
+ctl_g_decl "$D" 'v1.1.0  changelog:no-entry' 'v1.2.0  changelog:no-changelog'
+O="$(ch_scan_g "$D")"
+ctl_mustfire "CTL-G0-SHALLOW" G0 "$O" "a shallow clone whose census lacks a declared tag — a depth-limited clone carries only the tags its truncated history reaches, so that census is a sample of the release history; it is reported as no measurement, never as a stale row whose remedy would break the full-history run" 1
+ctl_g_decl "$D" 'v1.2.0  changelog:no-changelog'
+O="$(ch_scan_g "$D")"
+ctl_mustnot "CTL-G-SPEC-SHALLOW" G0 "$O" "the same shallow clone with every declared tag present — shallowness alone is not the finding, because a shallow clone can carry every tag, and a gate firing here would fire in every such clone"
+
+D="$(ctl_g_repo g1)"
+ctl_g_release "$D" v1.0.0 '## [1.0.0] — 2026-01-01 — first'
+ctl_g_release "$D" v1.1.0 '## [1.0.0] — 2026-01-01 — first'
+ctl_g_release "$D" v1.2.0 '-'
+ctl_g_decl "$D" 'v1.2.0  changelog:no-changelog'
+O="$(ch_scan_g "$D")"
+ctl_mustfire "CTL-G1" G1 "$O" "a tag was cut on a tree whose newest entry is the release before it, and nothing declares it — the shape v0.34.0 shipped in, which this group exists to catch the next time a release bypasses the check" 1
+
+D="$(ctl_g_repo g2)"
+ctl_g_release "$D" v1.0.0 '## [1.0.0] — 2026-01-01 — first'
+ctl_g_release "$D" v1.1.0 '-'
+ctl_g_decl "$D" 'v1.1.0  changelog:no-changelog' 'v1.0.0  changelog:no-entry'
+O="$(ch_scan_g "$D")"
+ctl_mustfire "CTL-G2" G2 "$O" "a row declares a tag that carries its entry — a declaration that outlived its failure is a standing exemption for that tag, which is why this direction is asserted" 1
+ctl_g_decl "$D" 'v1.1.0  changelog:no-changelog' 'v9.9.9  changelog:no-entry'
+O="$(ch_scan_g "$D")"
+ctl_mustfire "CTL-G2-ABSENT" G2 "$O" "a row names a tag the repository does not carry — moved, deleted or mistyped, and on this host nothing prevents the first two" 1
+ctl_g_decl "$D" 'v1.1.0  changelog:no-entry'
+O="$(ch_scan_g "$D")"
+ctl_mustfire "CTL-G2-REASON" G2 "$O" "a row names a failing tag with a reason the check does not give — the row and the tag disagree, so the row is stale" 1
+ctl_mustfire "CTL-G1-REASON" G1 "$O" "and the same tag's real reason is undeclared — one disagreement is reported in BOTH directions, because a row matches a tag only with its reason" 1
+
+D="$(ctl_g_repo gspec)"
+ctl_g_release "$D" v1.0.0 '## [1.0.0] — 2026-01-01 — first'
+ctl_g_release "$D" v1.1.0 '## [1.0.0] — 2026-01-01 — first'
+ctl_g_release "$D" v1.2.0 '-'
+ctl_g_decl "$D" 'v1.1.0  changelog:no-entry' 'v1.2.0  changelog:no-changelog'
+O="$(ch_scan_g "$D")"
+ctl_mustnot "CTL-G-SPEC" G1 "$O" "every failing tag is declared with the reason the check gives — the state the real history is in, so a gate firing here fires on every pull request"
+ctl_mustnot "CTL-G-SPEC-STALE" G2 "$O" "and every row still names a failing tag — a passing tag beside them is not a stale declaration"
+ctl_mustnot "CTL-G-SPEC-G0" G0 "$O" "and the census is a measurement — tags read, a verdict for each, a declaration present"
+
+# The predicate itself — the release check's own verdicts, graded by EXACT exit status. These arms
+# emit no finding code: they grade the script group G drives, not the comparison, so the group-Y
+# inventory is unchanged by them.
+D="$(ctl_g_repo gpred)"
+ctl_g_release "$D" v1.0.0 '## [1.0.0] — 2020-01-01 — dated long before its tag'
+ctl_g_release "$D" v1.1.0 "$(printf '## [Unreleased]\n\n- drafted\n\n## [1.1.0] — 2026-01-02 — second\n\n## [1.0.0] — 2020-01-01 — first')"
+ctl_g_release "$D" v1.2.0 "$(printf '## [1.3.0] — 2026-01-04 — a newer entry\n\n## [1.2.0] — 2026-01-03 — third')"
+ctl_g_release "$D" v1.3.0 "$(printf '```\n## [1.3.0] — sample text inside a fence\n```\n\n## [1.2.0] — 2026-01-03 — third')"
+ctl_g_release "$D" v0.4.0 '## [0.40.0] — 2026-01-05 — a longer version sharing the prefix'
+ctl_g_release "$D" v1.4.0 '-'
+ctl_g_git -C "$D" tag v1.5.0 "$(ctl_g_git -C "$D" rev-parse 'HEAD^{tree}')"
+expect_rc 0 "CTL-G-SPEC-DATE" "an entry dated long before its tag passes — its date is the day it was written, and the check reads the version alone" -- g_run "$D" v1.0.0
+expect_rc 0 "CTL-G-SPEC-UNRELEASED" "an Unreleased heading above the version's own entry is passed over" -- g_run "$D" v1.1.0
+expect_rc 1 "CTL-G-NEWEST" "a newer version's heading above the tag's own entry is refused — the version moved and the heading did not" -- g_run "$D" v1.2.0
+expect_rc 1 "CTL-G-FENCE" "a heading inside a fenced block is sample text, not an entry" -- g_run "$D" v1.3.0
+expect_rc 1 "CTL-G-PREFIX" "an entry for 0.40.0 does not stand in for 0.4.0" -- g_run "$D" v0.4.0
+expect_rc 1 "CTL-G-NOFILE" "a tagged tree with no CHANGELOG at all is refused" -- g_run "$D" v1.4.0
+expect_rc 1 "CTL-G-NOCOMMIT" "a tag that peels to a tree rather than a commit is refused" -- g_run "$D" v1.5.0
+expect_rc 2 "CTL-G-ABSENT" "a tag that does not exist is NOT-EVALUATED — never a finding and never a pass" -- g_run "$D" v9.9.9
+expect_rc 2 "CTL-G-NAME" "an argument that is not vX.Y.Z is NOT-EVALUATED" -- g_run "$D" next
+
+# CTL-G-RETRO — the real defect. v0.34.0 was the first release cut after the release procedure was
+# rewritten, and it was tagged on its release merge before its entry landed. This arm reads the
+# real tags, so it needs the full-history checkout, and a missing tag FAILS it rather than skipping.
+G_RO="$(g_run "$ROOT" "$CH_G_RETRO_FAIL" 2>&1)"; G_RRC=$?
+G_RWHY="$(awk -v t="$CH_G_RETRO_FAIL" '$1 == "TAG" && $2 == t && $4 == "FAIL" { print $3 ":" $5 }' <<<"$G_RO")"
+if [ "$G_RRC" -eq 1 ] && [ "$G_RWHY" = "changelog:no-entry" ]; then
+  PASS "CTL-G-RETRO: the release check refuses $CH_G_RETRO_FAIL, a tag this repository actually shipped without its own entry — exit 1, changelog:no-entry. It is the one arm that grades the check against a tag the repository published without its entry"
+else
+  FAIL "CTL-G-RETRO: MUST REFUSE $CH_G_RETRO_FAIL with exit 1 and changelog:no-entry; got exit $G_RRC and '${G_RWHY:-no verdict}'. Exit 2 means the tag is absent from this checkout — CI must check out with fetch-depth: 0"
+fi
+G_SO="$(g_run "$ROOT" "$CH_G_RETRO_PASS" 2>&1)"; G_SRC=$?
+G_SWHY="$(awk -v t="$CH_G_RETRO_PASS" '$1 == "TAG" && $2 == t { print $3 ":" $4 }' <<<"$G_SO")"
+if [ "$G_SRC" -eq 0 ] && [ "$G_SWHY" = "changelog:PASS" ]; then
+  PASS "CTL-G-SPEC-RETRO: the release check passes $CH_G_RETRO_PASS, a tag this repository shipped carrying its own entry as the newest — exit 0. Without this arm, a check that refused every tag would pass CTL-G-RETRO"
+else
+  FAIL "CTL-G-SPEC-RETRO: MUST PASS $CH_G_RETRO_PASS with exit 0; got exit $G_SRC and '${G_SWHY:-no verdict}'"
+fi
+
+# CTL-G-READONLY — the check rewrites nothing. Every ref and the working tree, read before the
+# check first ran on this repository (group G, above), must be identical after every run of it
+# here — the group's census, the two -RETRO arms and one more census — and must not be empty.
+g_run "$ROOT" --all > /dev/null 2>&1
+G_REF1="$(git -C "$ROOT" for-each-ref --format='%(refname) %(objectname)')"
+G_ST1="$(git -C "$ROOT" status --porcelain=v1 --untracked-files=all)"
+if [ -n "$G_REF0" ] && [ "$G_REF0" = "$G_REF1" ] && [ "$G_ST0" = "$G_ST1" ]; then
+  PASS "CTL-G-READONLY: every run of the release check on this repository left every ref and the working tree exactly as they were before its first run — it reads and never writes"
+else
+  FAIL "CTL-G-READONLY: the refs or the working tree differ from their state before the release check first ran here, or no ref was read — the release check must never write"
+fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
@@ -1870,6 +2196,14 @@ printf 'COUNT-ASSERTION: %s residual site(s) in %s file(s) over %s sentence(s) g
   "$C_NSITE" "$C_NDIRTY" "$C_NSENT" "$C_NROW"
 printf 'ADR-NUMBERING: %s record file(s) and %s index row(s) over a span reaching %s; %s collision(s), %s undeclared gap(s), %s index/directory disagreement(s), %s stale declaration(s); %s gap(s) held open by declaration.\n' \
   "$D_NREC" "$D_NROW" "$D_MAXN" "$D_NDUP" "$D_NGAP" "$D_NMIS" "$D_NROT" "$D_NHELD"
+# The same measurement state group G decided above: under G0 the line carries the cause and no
+# counter, so nobody reading the summary takes a withheld comparison for a measured zero.
+if [ "$G_MEASURED" -eq 1 ]; then
+  printf 'RELEASE-TAGS: %s tag(s) read by the release check, %s failing a limb; %s row(s) declared, %s undeclared failing tag(s), %s stale row(s).\n' \
+    "$G_NREAD" "$G_NFAIL" "$G_NDECL" "$G_N1" "$G_N2"
+else
+  printf 'RELEASE-TAGS: NOT-EVALUATED — %s — this is not a clean result\n' "$G_WHY"
+fi
 if [ "$vacuous" -gt 0 ]; then
   printf 'NOTE: %d assertion(s) had an EMPTY POPULATION and proved nothing about this tree: %s. Read each named arm and its own verdict above for what carries it. This line names the vacuous ARMS rather than a compensating group, because the arms that compensate are not always in the group the vacuous arm belongs to, and a hardcoded group here was a claim about a run it had not read.\n' "$vacuous" "${VACUOUS_IDS% }"
 fi

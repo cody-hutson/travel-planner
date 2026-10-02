@@ -79,11 +79,23 @@ carries no merge SHA and no tag, so nothing in it has to wait for the merge.
 5. Wait for CI, per *Making a change* step 4. The personal-data gate reads the PR's
    diff and the PR's commit messages and author identities — so the CHANGELOG entry
    is covered by it only if the entry is in the PR.
-6. Merge the PR. Tag `vX.Y.Z` on the resulting merge commit and publish the release
-   from that tag. The tag then carries its own changelog entry, which it does not if
-   the entry lands afterwards. The tag is also the step with nothing after it — which is
-   why every mutable part of this procedure, the branch name and the prose and the
-   version heading alike, is ordered before it.
+6. Merge the PR. Tag `vX.Y.Z` on the resulting merge commit — locally first — and run
+   `scripts/check-release-tag.sh vX.Y.Z` before the tag leaves your machine. The check reads
+   the tagged tree and refuses the tag unless its `CHANGELOG.md` carries `## [X.Y.Z]` as the
+   newest version heading; it changes nothing. Push the tag only when the check exits 0, then
+   publish the release from that tag. The tag then carries its own changelog entry, which it
+   does not if the entry lands afterwards. The tag is also the step with nothing after it —
+   which is why every mutable part of this procedure, the branch name and the prose and the
+   version heading alike, is ordered before it, and why the check runs before the push.
+   **If the check refuses the tag, do not push it.** Delete it locally (`git tag -d vX.Y.Z`),
+   land the missing or corrected heading through a pull request, and tag that pull request's
+   merge commit instead. A version that moved after its heading was stamped is refused the
+   same way: if another release claimed the version first and the heading was not restamped,
+   the version this tag names is not the newest entry in its own tree.
+   The same check runs over every existing tag on every push and pull request, in
+   `scripts/test-corpus-hygiene.sh` group **G**. A tag pushed without its entry turns that
+   required check red until it is declared under *Why earlier tags look different* below —
+   a pushed tag is not rewritten, so the declaration is the remedy left.
 
 **The release PR body is a summary plus links, not a second copy of the work.**
 Each stage of a release records its own detail durably, in a comment on that
@@ -126,6 +138,38 @@ The branch name has the same root. A version chosen when the branch is cut is a 
 version claimed when the branch merges is a fact — which is why step 1 leaves the version
 out of the name and step 3 stamps it last. Practice reached that answer first: no release
 branch cut since `0.23.0` has carried a version in its name.
+
+`0.9.0` through `0.11.0` and `0.34.0` also point at trees carrying no entry for their own
+version. Each of the first group's entries first appears in the next release's tagged tree;
+`0.34.0`, the first release cut after this section was written, was tagged on its release merge
+before its entry landed. `0.1.0` predates the CHANGELOG itself.
+
+The fence below declares every tag whose own tree does not carry the entry step 6 requires.
+`scripts/check-release-tag.sh --all` grades every tag, and `scripts/test-corpus-hygiene.sh`
+group **G** holds its failures against this declaration in both directions: a tag that fails
+and is not declared here fails the suite, and so does a row naming a tag that no longer fails
+for the reason given. Tags are not protected against being moved or deleted, and a declaration
+must not outlive the failure it excepts. Two columns, both required, whitespace-separated, as in
+`reference/adr/README.md` § *Number declarations*: the tag, and one token naming the check's
+limb and the reason it gives. A line whose first non-blank character is `#` is a comment.
+
+```release-tag-declaration
+# tag     limb:reason
+v0.1.0    changelog:no-changelog
+v0.9.0    changelog:no-entry
+v0.9.1    changelog:no-entry
+v0.10.0   changelog:no-entry
+v0.11.0   changelog:no-entry
+v0.24.0   changelog:no-entry
+v0.25.0   changelog:no-entry
+v0.26.0   changelog:no-entry
+v0.27.0   changelog:no-entry
+v0.28.0   changelog:no-entry
+v0.29.0   changelog:no-entry
+v0.30.0   changelog:no-entry
+v0.31.0   changelog:no-entry
+v0.34.0   changelog:no-entry
+```
 
 ## Reporting security issues
 
