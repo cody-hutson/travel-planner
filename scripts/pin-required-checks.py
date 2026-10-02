@@ -634,9 +634,10 @@ class CensusRefusal(Exception):
 def _load_yaml():
     """The YAML parser the census reads with: PyYAML, imported here and only here.
 
-    A function rather than a module-level import, so --assert, --plan and
-    --restore never need the parser, and so the self-test can hand the census a
-    loader that fails (X95) and watch it refuse.
+    A function rather than a module-level import, so --assert and --restore never
+    need the parser -- --plan and --apply run the self-test first, and its census
+    arms do -- and so the self-test can hand the census a loader that fails (X95)
+    and watch it refuse.
     """
     import yaml
     return yaml
@@ -1470,26 +1471,24 @@ def _synth_workflow(jobs, indent=2, lead=()):
 
 
 def _synth_unreadable_key(key_lines, beside=False):
-    """A workflow whose job carries a key presentation this reader misses.
+    """A workflow whose one job is written with the key presentation in `key_lines`.
 
     `key_lines` is emitted VERBATIM in place of the job key line, so an arm
     models a presentation by passing the presentation and nothing here needs to
     know how any of them is spelled.
 
     The job's real answer -- `posture=required` -- sits above its key, where a
-    contributor writes it. A SECOND marker sits directly above the job's own
-    `steps:` line, at the property indentation, and that placement is the whole
-    point of these arms: a record read off `steps:` binds a marker at `steps:`'s
-    own indentation, so this is the shape in which a missed key reaches a
-    POSTURE rather than reading UNDECLARED. The loud variant is not the
-    dangerous one and is not what these arms model.
+    contributor writes it. A SECOND marker, `posture=advisory`, sits directly
+    above the job's own `steps:` line, at the property indentation. The parser
+    reads the key as the job it names, and the second marker sits above no job
+    key, so it binds nothing. It stays for the reader these arms were written
+    against: the line reader missed each presentation and recorded a job off the
+    `steps:` line instead, where that marker bound, so a missed key reached a
+    POSTURE rather than reading UNDECLARED.
 
-    `beside` puts a job the reader DOES read ahead of the unreadable one. That
-    is not a decoration on the arm, it is the POSITION: with a readable job
-    present the file yields a genuine record, so an assertion resting only on
-    where a record came from is honestly satisfied and the missed job reaches a
-    verdict it was never graded for. Every one of these presentations sat at
-    exit 0 in this position until the file-level refusal grew its second limb.
+    `beside` puts a plainly written job ahead of the one under test, so the file
+    holds a job every reader reads. Under the line reader each presentation sat
+    at exit 0 in that position until its file-level refusal grew a second limb.
     """
     lead = ("" if not beside else
             "  # gate-efficacy: posture=advisory\n"
@@ -2324,19 +2323,28 @@ def census_arms():
                 "named `steps` which it then grades. The real job ships unregistered "
                 "under a finding that names a line of the file that is not a job",
          quoted_key, 1, {"UNREGISTERED"}),
-        ("X14", "READER: a SINGLE-QUOTED job key -- the other alternative of the "
-                "matched-quote form. Without its own arm that alternative is "
-                "unexercised, and a pattern admitting only the double quote would "
-                "pass every other arm in this list",
+        ("X14", "READER: a SINGLE-QUOTED job key, the other quoting character beside "
+                "X13's double quote. The parser reads it as the job `new-suite`, the "
+                "key E4 asserts, which claims required under a name the declaration "
+                "does not carry: UNREGISTERED. The line reader matched a quoted key "
+                "by pattern, and this arm kept a pattern admitting only the double "
+                "quote from passing",
          single_quoted, 1, {"UNREGISTERED"}),
-        ("X15", "FAIL-OPEN: a quoted key whose phantom `steps:` carries a comment "
-                "directly above it. The phantom BINDS that marker at its own "
-                "indentation, reads `advisory`, and the census reaches CLEAN at exit "
-                "0 over a job claiming to bind -- measured, not supposed",
+        ("X15", "FAIL-OPEN SHAPE, read by the parser: a quoted job key claiming "
+                "required, with an `advisory` marker on the comment line directly "
+                "above its own `steps:`. The parser reads the key as the job "
+                "`new-suite`, and the `advisory` line sits above no job key, so it "
+                "binds nothing and the job keeps its claim, under a name the "
+                "declaration does not carry: UNREGISTERED. The line reader recorded "
+                "a phantom job off that `steps:` line, bound the `advisory` marker "
+                "to it and reached CLEAN at exit 0",
          phantom_marker, 1, {"UNREGISTERED"}),
-        ("X16", "FAIL-OPEN: a quoted key whose `steps:` is a flow sequence, so the "
-                "block holds no bare `key:` line at all and the whole file is dropped "
-                "in silence. One ordinary formatting choice reaches it",
+        ("X16", "FAIL-OPEN SHAPE, read by the parser: a quoted job key claiming "
+                "required whose `steps:` is a flow sequence, so the block carries no "
+                "bare `key:` line. The parser reads the job `new-suite` all the "
+                "same, under a name the declaration does not carry: UNREGISTERED. "
+                "The line reader dropped the whole file in silence on that one "
+                "ordinary formatting choice",
          flow_steps, 1, {"UNREGISTERED"}),
         ("X17", "FILE-LEVEL, read by the parser: a flow-style `jobs: {...}` "
                 "mapping on one line, its job carrying no marker. The line reader "
@@ -2385,10 +2393,12 @@ def census_arms():
                 "the first job's name and the key as `new-suite`, a name the "
                 "declaration does not carry, so the tree gets rc 1 UNREGISTERED",
          scalar_phantom, 1, {"UNREGISTERED"}),
-        ("X35", "SPECIFICITY for X26-X34: two jobs in one file, BOTH read, the second "
-                "unregistered. Without this arm every refusal above is equally "
-                "satisfied by a reader that refuses any file holding two jobs -- the "
-                "finding must still arrive, at rc 1", two_readable, 1,
+        ("X35", "SPECIFICITY for X26-X34: the plain form of their two-job file -- two "
+                "plainly written jobs, BOTH read, the second claiming required under "
+                "a name the declaration does not carry. The parser grades it "
+                "UNREGISTERED at rc 1, as it grades each of X26-X34. Under the line "
+                "reader those arms were refusals, and this one kept a reader that "
+                "refused every file holding two jobs from passing them", two_readable, 1,
          {"UNREGISTERED"}),
         ("X36", "NEVER WALKED, read by the parser: a double-quoted scalar continued "
                 "at column zero inside the first job, ahead of a second job claiming "
@@ -2424,12 +2434,12 @@ def census_arms():
                 "closing line as the rest of the mapping, and the job, so the tree "
                 "gets rc 1 UNREGISTERED", cont_alone, 1, {"UNREGISTERED"}),
         ("X42", "SPECIFICITY for X37-X41: the X37 file with its continuation ONE "
-                "column deeper, at an indentation where no job key sits. It is graded, "
-                "never refused, and must stay so. The landing column is the only "
-                "difference from X37, so this arm confines the accepted false "
-                "refusal from the DEEPER side only. A continuation one column "
-                "SHALLOWER than the job keys is refused as well, and no arm here "
-                "confines that side",
+                "column deeper, at an indentation where no job key sits. The parser "
+                "reads the continuation as the rest of the name and grades the file "
+                "UNREGISTERED at rc 1, as it grades X37-X41 and the continuations "
+                "one column SHALLOWER than the job keys in X64 and X65. Under the "
+                "line reader X37-X41 were accepted false refusals, and this arm "
+                "confined them from the deeper side",
          cont_deeper, 1, {"UNREGISTERED"}),
         ("X43", "SPARING-READER GUARD, read by the parser: a property's double-quoted "
                 "scalar continued at the job-key indentation, then a step `name:` "
@@ -2455,13 +2465,12 @@ def census_arms():
                 "CLEAN at rc 0; the parser reads the sequence to its close, and both "
                 "jobs, so the tree gets rc 1 UNREGISTERED", trunc_seq, 1,
          {"UNREGISTERED"}),
-        ("X47", "a workflow file that is not UTF-8 at all. Every other refusal in "
-                "this list reaches an exit and prints why; this one killed the "
-                "process on an uncaught decode error before `run_census` reached any "
-                "`return` -- no census, no verdict, no limit block, and no word about "
-                "which file. It must refuse like the rest, and `_unread_reason`'s "
-                "first branch, written for exactly this and unreachable until now, is "
-                "what names it", not_utf8, 2, set(), "UNREADABLE"),
+        ("X47", "UNREADABLE: a workflow file written in Latin-1, so it is not UTF-8 "
+                "at all. The census cannot decode it, so it refuses the file, "
+                "UNREADABLE, by name, after reading every other file in the tree, "
+                "and prints the remedy and the limit block like any refusal. Under "
+                "the line reader an uncaught decode error ended the run before any "
+                "verdict, naming no file", not_utf8, 2, set(), "UNREADABLE"),
     ] + span_arms + [
         ("X64", "DISPLACED INDENTATION, read by the parser: a job property's "
                 "double-quoted scalar continued onto a key-shaped line one column "
@@ -2490,9 +2499,11 @@ def census_arms():
          {"ABSENT"}),
         ("X68", "SPANNING, outside X48-X63's family: a plain scalar INSIDE a flow "
                 "collection, continued onto a line beginning with `'`. Nothing is "
-                "open there in YAML and both parsers read two jobs, so the second "
-                "job must grade UNREGISTERED. Measured: both line-sparing readers "
-                "that pass X48-X63 lose that job here", span_flow, 1,
+                "open there in YAML: the parser reads the `'` as text and both jobs, "
+                "the second claiming required under a name the declaration does not "
+                "carry, so the tree gets rc 1 UNREGISTERED. The line-sparing "
+                "variants of the line reader measured while it shipped passed "
+                "X48-X63 and lost that job here", span_flow, 1,
          {"UNREGISTERED"}),
         ("X69", "SPAN, read by the parser: a job `name:` wrapped over three lines, "
                 "the `'` on the third, then a key with a space before its `:` "
