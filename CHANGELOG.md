@@ -61,12 +61,13 @@ required check red until it is declared, and so does a declaration that outlives
 a quiet `grep`, a `sed` that quits or an `awk` that exits leaves first, and the writer's next
 write meets a closed pipe. Under `pipefail` that failure becomes the pipeline's status, so a
 successful match can report failure, and the broken-pipe line lands in whatever captures the
-output, which is how the artifact-schema run went red. Every site the detector found now reads to
-the end of its input, and the artifact-schema suite no longer prints that line. The detector is a
-new class of the corpus-hygiene suite: it lexes every tracked shell file and every workflow `run:`
-value, prints the set it read, fails on any pipe into such a reader, and keeps no list of
-tolerated sites. The pull-request body check, which read a failed `grep` as one that matched
-nothing, now stops with an error instead of reporting a clean body.
+output, which is how the artifact-schema run went red. Every site the detector found is converted:
+a reader fed from a variable now takes a here-string, which leaves no writer to fail, and every
+other one reads to the end of its input. The artifact-schema suite no longer prints that line. The
+detector is a new class of the corpus-hygiene suite: it lexes every tracked shell file and every
+workflow `run:` value, prints the set it read, fails on any pipe into such a reader, and keeps no
+list of tolerated sites. The pull-request body check, which read a failed `grep` as one that
+matched nothing, now stops with an error instead of reporting a clean body.
 
 **A shellcheck gate lints `scripts/*.sh`.** A new check, `Shell script lint (shellcheck)`, runs
 `scripts/lint-shell.sh` on every push to `main` and every pull request into it. It installs one
@@ -74,8 +75,8 @@ pinned shellcheck release, verified by its digest, and refuses any other version
 finding at severity warning or above, and one rule below that by name: a command substitution
 written with backticks, which inside a double-quoted failure message runs the moment its arm goes
 red. Before it reads a real file it runs each pass over a fixture it must flag and a near-miss it
-must not, and a control that misreads refuses the run; so does a directive that disables every
-rule, or a non-empty `SHELLCHECK_OPTS`. Every finding it reported on the scripts as they stood is
+must not, and a control that misreads refuses the run; so does a directive whose list holds `all`,
+or a non-empty `SHELLCHECK_OPTS`. Every finding it reported on the scripts as they stood is
 fixed, or suppressed in place with its reason on the directive's own line. The job declares itself
 required, and `CONTEXT_ORDER` and `SECURITY.md` list it; it becomes a required check when the
 maintainer registers it in branch protection after the merge.
@@ -90,7 +91,8 @@ repository's largest suites that analysis needs more memory than a hosted runner
 is stopped before it reports anything. So `SC2324` and `SC2320` are not reported at the gate's
 severity, nor `SC2317` below it, and a pair of control arms shows that boundary on every run. The
 gate reports nothing else below warning, and it does not lint a shell file outside `scripts/*.sh`
-or without the `.sh` suffix, or the shell embedded in a workflow, which actionlint reads. Until
+or without the `.sh` suffix, or the shell embedded in a workflow, which actionlint reads. A
+directive naming a range of codes wide enough to cover every rule is counted and not refused. Until
 the maintainer registers it the gate reports and does not block, although `SECURITY.md` already
 lists it; once it is registered, removing it means de-registering the check before reverting the
 workflow, as the workflow's header says. The census compares committed text and cannot read branch
