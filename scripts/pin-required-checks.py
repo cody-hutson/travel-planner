@@ -82,7 +82,7 @@ MODES
         the limit block below, and is not restated here.
 
         Exit 0 clean / 1 finding(s) / 2 REFUSED -- no YAML parser, no workflow
-        file, or a workflow file this census cannot vouch it read in full; each
+        file, or a workflow file this census cannot vouch for; each
         refusal carries a code from REFUSAL_CODES and names the file.
 
     --assert --stdin | --assert --file PATH
@@ -113,9 +113,9 @@ EXIT CODES
     1  an assertion failed
     2  input was malformed or refused (a read that returned a shape with no
        checks array; for --census, a run with no YAML parser or no workflow
-       file, or a workflow file this census cannot vouch it read in full --
+       file, or a workflow file this census cannot vouch for --
        each refusal carries a code from REFUSAL_CODES and names the file.
-       "I cannot vouch I read this file" is a refusal, never a finding, so it
+       "I cannot vouch for this file" is a refusal, never a finding, so it
        never shares exit 1)
     3  CAPTURE REFUSED -- no rollback artifact, so nothing was written
     4  the live required-context set has drifted from the expected set
@@ -479,7 +479,7 @@ POSTURE_VALUES = ("required", "advisory")
 CENSUS_CODES = ("UNREGISTERED", "ABSENT", "UNDECLARED", "DUPLICATE", "UNTRIGGERED")
 
 # Every reason the census refuses. A refusal is exit 2 and never exit 1: "I cannot
-# vouch I read this" is not "the workflows and the declaration disagree". The
+# vouch for this" is not "the workflows and the declaration disagree". The
 # self-test asserts a bijection between this set and the refusals the arms name (E10).
 REFUSAL_CODES = (
     "NO-PARSER", "NO-WORKFLOWS", "UNREADABLE", "YAML11-BREAK", "UNPARSEABLE",
@@ -595,7 +595,7 @@ CENSUS_PRINT = {
     "SCANNED": "scanned {files} workflow file(s), {jobs} job(s): {required} claiming required, {advisory} advisory, {undeclared} undeclared",
     "GRADED": "graded against CONTEXT_ORDER: {declared} declared context(s)",
     "REFUSED-RUN": "REFUSED: {code} -- {why} ({detail}).",
-    "REFUSED-FILES": "REFUSED: {refused} of {files} workflow file(s) this census cannot vouch it read in full. No verdict is issued.",
+    "REFUSED-FILES": "REFUSED: {refused} of {files} workflow file(s) this census cannot vouch for. No verdict is issued.",
     "REFUSED-FILE": "    {file} -- {code}: {why}{detail}",
     "REMEDY": "        Remedy: {remedy}.",
     "FAILED": "CENSUS FAILED -- {n} finding(s).",
@@ -629,7 +629,7 @@ CENSUS_REMEDY = (
 
 
 class CensusRefusal(Exception):
-    """A workflow file, or the run, that the census cannot vouch it read in full."""
+    """A workflow file, or the run, that the census cannot vouch for."""
 
     def __init__(self, code, detail=""):
         Exception.__init__(self, code)
@@ -899,7 +899,7 @@ def census_scan(root, load=_load_yaml):
     """(records, refused) for every workflow file under `root`.
 
     Records come from the files read in full; `refused` holds (file, code, detail)
-    for each file this census cannot vouch it read. A refused file never stops the
+    for each file this census cannot vouch for. A refused file never stops the
     rest from being read, so one run names every file at fault (E11). `load`
     returns the parser; an exception from it propagates to the caller, which
     census_verdict refuses as NO-PARSER.
@@ -1070,7 +1070,7 @@ _CENSUS_LIMIT = (
     "has none), are the parser's, not a reading of lines. The posture marker is a",
     "comment, and no YAML document carries a comment, so the marker is read from",
     "the lines the parser's own scanner passed over as comments, directly above a",
-    "job key the parser located. A file this census cannot vouch it read in full is",
+    "job key the parser located. A file this census cannot vouch for is",
     "refused at exit 2 and never read as clean; each refusal names the file, its",
     "code and its remedy.",
     "",
