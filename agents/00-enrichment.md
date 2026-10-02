@@ -350,11 +350,11 @@ Trigger"), which sanctions exactly this behavior:
   `trips/<slug>/trip-context.md` — refined upward by that file's derived departure month
   where one is later in the same year — and this needs **no new read**: the reads are
   declared by the verbs that dispatch this role, `skills/trip-record/SKILL.md`
-  §§ `## person <name>` and `## travelers`, each naming that path among the reconciler's
-  reads, the whole file and no block restriction. Reading a further line of an
-  already-declared read widens nothing. `reference/data-model.md` § *The reference month
-  — what a horizon is compared against* is normative for the resolution, for the
-  unresolvable case, and for the New-Year wrapped term.
+  §§ `## person <name>`, `## travelers` and `## group [<name>]`, each naming that
+  path among the reconciler's reads, the whole file and no block restriction. Reading
+  a further line of an already-declared read widens nothing. `reference/data-model.md`
+  § *The reference month — what a horizon is compared against* is normative for the
+  resolution, for the unresolvable case, and for the New-Year wrapped term.
 
   **The composed source is a value, not a file.** It exists for the duration of a pass
   and is never written to disk. Do **not** materialise it as an `outputs/` artifact:

@@ -87,13 +87,45 @@ roster re-enters the count at the next reconcile. A stated total below the floor
 weighed: the next admission, or a go-ahead at the table's asking row, raises it back. **Chosen:**
 `## person` carries the operator's statement that a member is not travelling to the reconciler,
 whose second exit already drops the entry, and applies the table once with a withdrawal row — the
-shape it takes at admission.
+shape it takes at admission. **Where the roster names such a member and they leave the party,** the
+departure naming that withdrawal for the operator to run — weighed: until it runs, their entry
+stands, re-enters the count at the next reconcile once no row shares its key, and the next admission
+or removal judged against that count counts them again, unflagged. **Chosen:** `## group` carries
+the same statement in the act that removes their row, to a reconcile it runs once the row is off,
+and its removal rows lower the total once — the operator's choice at the briefing that settled how a
+removal is judged. Its price is a second reconcile on such a departure, and a departure answered by
+mistake drops the entry with the row.
 
 **Keeping a person the roster names out of the count.** A mark the reconciler writes on such an
 entry's heading while a roster row shares its key — chosen: the readers count marks and never
 names, and the one component that holds both sets decides. A note in the entry's body — rejected:
 the publish guard takes every body line of such an entry into its non-publishable class. A key
 comparison by each reader — rejected: it reads names, and re-implements the reconciler's join.
+
+**How the count keeps pace with a roster change.** `[ROSTERED]` is written only by a reconcile, and
+`## group` changes the roster without one, so between the two the count is a reconcile stale: one
+high after a row is added for such a member, and one low after a stale row comes off. Three
+mechanisms were weighed. The `/trip` verbs that dispatch transport running the reconcile first, as
+`/trip plan` does — weighed: it keeps transport's count fresh, but leaves a removal judged against a
+floor one off, adds a dispatch to every run of three verbs that change no roster, and alters what
+they dispatch. A name-free fingerprint of the roster, recorded in the model and compared at read
+time — rejected: a fingerprint of counts cannot tell a removal and an addition from no change, and a
+sound one tells a reader only that the model predates the roster, never which mark is stale, so
+transport could flag the gap but not size it, and a removal could only be refused. `## group`
+running the reconcile after every roster change — weighed: it closes both directions, but a
+reconcile on every row added would make N runs of `## group` do what one `## group-expand` does not
+(`ADR-016` § 4), and the one direction it closes beyond the choice below errs toward sizing a member
+twice, which transport's brief already flags. **Chosen:** a removal reconciles — before the row comes
+off, and after a stale one — because it is the one roster change whose stale count errs low. The run
+before the row comes off is the verb's own read before it judges, the shape `/trip plan` takes when
+it runs the reconcile at the head of its chain, and it precedes the change `ADR-035`'s step R0 is
+triggered by. The runs once the row is off — after a stale row, and after a departure whose
+withdrawal the verb carries — are where it takes the one supersession it needs: `ADR-035` has the
+verb that changes the roster name the reconcile for a later act and leaves automating it to the
+living-site milestone, and in those cases `## group` runs it itself (decision 4). That record's
+sentence that a refusal, a removal or a withdrawal is recorded only through a verb that runs the
+reconcile step is not read as covering them: it concerns a traveller's refusal, removal or
+withdrawal of what the private site shows, recorded by a verb `ADR-030` leaves to a later slice.
 
 **How this record meets the records that bind a model-derived value at the render.** A stated
 reading — that a count of entries is a property of the file and not a value of any entry, so none
@@ -134,11 +166,23 @@ not name, and can lag the model. A count passed down by every dispatcher widens 
    `## person` applies the table once its reconcile has recorded a member, so the total counts them
    from the act that admits them; `## group` and `## group-expand` apply it on every write. A total
    at or above the floor is left as it stands, so a member a stated total already carries is never
-   counted twice. **A counted member leaves the count the way they entered it:** `## person` carries
-   the operator's statement that they are not travelling to the reconciler, which drops their entry,
-   and applies the table once, whose withdrawal rows lower a total that equalled the floor they were
-   in. The engine lowers no total on its own — only on that statement, or on a roster row
-   `## group` removes.
+   counted twice. **A counted member leaves the count the way they entered it, on the operator's
+   statement that they are not travelling, carried to the reconciler, which drops their entry:**
+   `## person` carries it and applies the table once, whose withdrawal rows lower a total that
+   equalled the floor they were in; and where the roster names such a member and they leave the
+   party, `## group` carries it in the act that removes their row, whose removal rows lower the
+   total once. The engine lowers no total on its own — only on that statement, or on a roster row
+   `## group` removes. **A removal is judged on a fresh count:** before it judges a removal,
+   `## group` runs the reconcile as its own read, so the pre-removal floor its rows compare with is
+   the roster's own; that run precedes the change `ADR-035`'s step R0 is triggered by, and where it
+   cannot complete, nothing is removed. **Once the row is off, `## group` runs the reconcile again in
+   two cases:** a row taken off as a stale row, so the member it named is counted outside the roster
+   before the act ends; and the departure of a member recorded through `## person`, carrying the
+   statement above. **For those two runs this supersedes in part `ADR-035`'s refresh obligation, step
+   R0,** whose signal has the verb that changed the roster name `/trip-record travelers` for a later
+   act, and which leaves automating any step to the living-site milestone: in those two cases the
+   verb runs it, and names it only where that run does not complete. Every other removal still names
+   it, as R0 states; every other trigger's signal, R1 to R3, and the rest of `ADR-035` stand.
 5. **What crosses the publish boundary — a supersession in part, for exactly one integer.** One
    integer crosses from C12 (`internal-hard`) into C1 (`bound`): the outside-roster count, as a
    summand of the published total. The published `- **Total travelers:**` may therefore carry the
@@ -186,7 +230,7 @@ not name, and can lag the model. A count passed down by every dispatcher widens 
 
 | Step | Producer → consumer | What crosses | What never crosses |
 |---|---|---|---|
-| 1 | operator → `## person <name>` | a name and needs, or the statement that they are not travelling, in the session | — |
+| 1 | operator → `## person <name>`, or `## group [<name>]` when such a member the roster names leaves the party | a name and needs, or the statement that they are not travelling, in the session; `## group` carries only the second | — |
 | 2 | enrichment → `outputs/traveler-model.md` (`internal-hard`) | one `## <Name> [OPERATOR-PROVIDED] [THIRD-PARTY]` entry, carried forward verbatim, with `[ROSTERED]` on its heading while a roster row shares its key | facets, origin, any byte of `trip-context.md` |
 | 3 | model → `## person`, `## group`, `## group-expand` → `trip-context.md` (`bound`) | the outside-roster count, as a summand of `- **Total travelers:**` | a row, a name, a need, a heading, a mark |
 | 4 | model → transport § *Input* item 7 | the same count | a name or a need |
@@ -209,15 +253,28 @@ not name, and can lag the model. A count passed down by every dispatcher widens 
   that one integer and no further, and each says so where its text stands (decision 5).
 - **Where the total can still lag.** On a trip whose members were recorded before this decision,
   until its next admission or an operator's go-ahead at the table's asking row; where an asking row
-  is left unsettled; and where a count is read before the reconcile that follows a roster change,
-  while `[ROSTERED]` is a reconcile stale. Transport's brief and the itinerary flag each one, naming
-  nobody.
-- **A withdrawn member leaves the count through `## person`.** The operator's statement that a
-  member is not travelling drops their entry and lowers a total that equalled the floor they were in;
-  a total above that floor is left for the operator to restate, and a member the roster still names
-  leaves the count with their row. Removing such a person's row as a departure leaves their entry
-  standing until that statement is given, and `## group` says so rather than presenting the
-  decrement as the end of it.
+  is left unsettled; and where a count is read after a row is added to the roster and before the
+  reconcile that follows it, while `[ROSTERED]` is a reconcile stale, a count that then reads high.
+  Transport's brief and the itinerary flag each one, naming nobody. **A removal is judged on a fresh
+  count** (decision 4): `## group` runs the reconcile before every removal and removes nothing where
+  that run cannot complete, and runs it again once a stale row comes off or a member recorded
+  through `## person` leaves. So a removal leaves out no member who still travels, except where a row
+  comes off outside that verb, where the row of a member who still travels comes off on an answer
+  that they were leaving, that the row was a duplicate, or that it was added in error — one recorded
+  through `## person` and answered as leaving then loses their entry with it — or where the
+  reconcile after a stale row does not complete; and where the reconcile after a recorded member's
+  departure does not complete, their entry stands until the withdrawal the act names, and a later
+  removal or admission judged against a count that includes them again leaves the total one above
+  the party, with nothing to flag it.
+- **A withdrawn member leaves the count on the operator's statement.** `## person` carries it: it
+  drops their entry and lowers a total that equalled the floor they were in; a total above that
+  floor is left for the operator to restate, and a member the roster still names leaves the count
+  with their row. Where the roster names such a member and they leave the party, `## group` carries
+  the same statement in the act that removes their row, so their entry drops with it and the removal
+  rows lower the total once; that removal pays a second reconcile, and a departure answered by
+  mistake drops the entry with the row, which `## person` restores only once the operator restates
+  the member's needs. Where that second reconcile does not complete, `## group` says so and names the
+  withdrawal, and until it runs the entry stands.
 - **A family recording a named child third-party** sees the child leave the published roster and
   stay in the published total; the plan honors every need.
 - **The archived witness.** `examples/archived-trip-demo/` keeps the total it was archived with: the
@@ -229,11 +286,18 @@ not name, and can lag the model. A count passed down by every dispatcher widens 
   per-person third-party fare; nothing asserting C2 or C3 on an entry the roster does not name; a
   `+ <n>` line's `group-total` left whole on the `unallocated` line rather than split; the hub's
   carry rule, exercised by no run in this release; a stated total whose unnamed remainder counts
-  someone else in place of such a member, which the table reads as complete; and a withdrawal whose
+  someone else in place of such a member, which the table reads as complete; a withdrawal whose
   name the roster spells differently from the entry — where the total equals the floor the
   reconcile leaves, the member is left in it, and where it exceeds that floor by one, the
   withdrawal rows decrement it and the later removal of the member's row as a departure decrements
-  it again, so it ends one below the party's size.
+  it again, so it ends one below the party's size, a path the withdrawal `## group` carries never
+  takes, since it names the member as their row does; a removal's reconcile replacing an
+  `## Update signals` block an earlier pass left for a replan that has not yet run and, within the
+  act, a second run's block, or its absence, displaces the first run's, which then survives in the
+  transcript only; and a roster row that itself stops every reconcile — rows reducing to one
+  key, a name that reduces to nothing, or a name sharing a third-party entry's key under a different
+  display name — after which no row comes off through `## group` until it is renamed, and no text
+  states that any verb's edit reaches a roster row's `Person` cell.
 - **Reversibility: CHEAP.** Markdown and one suite group. Reverting the release restores the text of
   `ADR-011`, `ADR-010`, `ADR-025` and `ADR-030` with it.
 
@@ -255,6 +319,8 @@ not name, and can lag the model. A count passed down by every dispatcher widens 
 - [ADR-029](ADR-029-group-approval-return-and-threshold.md) — approvers declared from `Person` cells,
   which stands.
 - [ADR-030](ADR-030-what-the-private-site-may-show.md) § 2 and § 4 — superseded in part (decision 5).
+- [ADR-035](ADR-035-site-transitions-and-refresh.md) — the refresh obligation's step R0, superseded in
+  part for the reconcile `## group` runs once a row is off (decision 4).
 - `agents/04-transport.md` § *Input* item 7 · `agents/00-enrichment.md` § *Traveler identity* ·
   `reference/data-model.md` § *Traveler identity — the satisfaction-layer projection* ·
   `reference/data-architecture.md` § 5.1 and § 5.3 · `scripts/test-corpus-hygiene.sh` group `E`.
