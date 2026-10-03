@@ -750,7 +750,7 @@ echo "── Group PIN — the canonical contract, extracted from CLAUDE.md (nev
 
 PIN_OK=1
 if [ ! -r "$CLAUDE_MD" ]; then
-  FAIL "PIN0: `CLAUDE.md` is not readable — the canonical source is absent, so nothing below can be asserted"
+  FAIL "PIN0: CLAUDE.md is not readable — the canonical source is absent, so nothing below can be asserted"
   PIN_OK=0
 else
   # PIN1 — uniquely named. -x -F: a whole-line fixed-string match, so no regex dialect
