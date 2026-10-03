@@ -127,6 +127,27 @@ sentence that a refusal, a removal or a withdrawal is recorded only through a ve
 reconcile step is not read as covering them: it concerns a traveller's refusal, removal or
 withdrawal of what the private site shows, recorded by a verb `ADR-030` leaves to a later slice.
 
+**A row whose own stop holds the reconcile.** The reconcile before a removal stops on a roster row
+that reduces to nothing, that shares its key with another row, or that shares a third-party entry's
+key under a different display name; removing that row is what would clear the stop. Removing
+nothing until the stop clears — weighed: the row could then never come off through the engine, and
+where it holds a member's name under another spelling it stays in a publish-bound file until a hand
+edit. Giving the engine the rename the stop asks for — rejected: it writes the member's name into
+that file by an engine act, unguarded where the name is made only of stopwords. Removing the row
+and judging the total against the count the last completed reconcile left — rejected: a row added
+for such a member after the stopped row stood leaves that count one high, and a departure judged
+against it ends one above the party, unflagged. Removing the row, reconciling, and judging against
+the count that run leaves, plus the row — weighed: it lowers the total in the act, but adds a third
+case to the supersession of `ADR-035`'s step R0. **Chosen:** the row comes off on the operator's
+answer, and no total is judged against a count: a row the operator says is such a member's own
+comes off as a stale row does, whose disposition compares the total with no floor, and if the
+member is leaving, their withdrawal is the one `## person` carries; any other such row comes off
+with the total left as it stands, which the act says may still count it, for the operator to
+restate. Where the member has since filed their own profile, which nothing `## group` reads can
+tell, so it asks, the row is theirs: keeping it — weighed: every reconcile then stays stopped until
+a hand edit renames it; taking it off as any other such row, and naming its addition under the
+entry's name, which the join can confirm — chosen.
+
 **How this record meets the records that bind a model-derived value at the render.** A stated
 reading — that a count of entries is a property of the file and not a value of any entry, so none
 of them reaches it — weighed: `ADR-030` binds the counts derived from the leaning fields to the
@@ -170,14 +191,19 @@ not name, and can lag the model. A count passed down by every dispatcher widens 
    statement that they are not travelling, carried to the reconciler, which drops their entry:**
    `## person` carries it and applies the table once, whose withdrawal rows lower a total that
    equalled the floor they were in; and where the roster names such a member and they leave the
-   party, `## group` carries it in the act that removes their row, whose removal rows lower the
-   total once. The engine lowers no total on its own — only on that statement, or on a roster row
-   `## group` removes. **A removal is judged on a fresh count:** before it judges a removal,
-   `## group` runs the reconcile as its own read, so the pre-removal floor its rows compare with is
-   the roster's own; that run precedes the change `ADR-035`'s step R0 is triggered by, and where it
-   cannot complete, nothing is removed. **Once the row is off, `## group` runs the reconcile again in
-   two cases:** a row taken off as a stale row, so the member it named is counted outside the roster
-   before the act ends; and the departure of a member recorded through `## person`, carrying the
+   party, `## group` carries it in the act that removes their row, whose removal rows lower the total
+   once, save where a stop on their row held the reconcile before it, when `## group` names the
+   statement for `## person` to carry. The engine lowers no total on its own — only on that
+   statement, or on a roster row `## group` removes. **A removal is judged on a fresh count:** before
+   it judges a removal, `## group` runs the reconcile as its own read, so the pre-removal floor its
+   rows compare with is the roster's own; that run precedes the change `ADR-035`'s step R0 is
+   triggered by, and where it cannot complete, nothing is removed but a row one of that run's stops
+   names, which is judged against no count: a row the operator says is such a member's own, under a
+   display name the join cannot confirm, comes off as a stale row does unless the member has since
+   filed their own profile, and any other with the total left as it stands. **Once the row is off,
+   `## group` runs the reconcile again in two cases:** a row taken off as a stale row, so the member
+   it named is counted outside the roster before the act ends; and the departure of a member recorded
+   through `## person` where no stop on their row held the run before the removal, carrying the
    statement above. **For those two runs this supersedes in part `ADR-035`'s refresh obligation, step
    R0,** whose signal has the verb that changed the roster name `/trip-record travelers` for a later
    act, and which leaves automating any step to the living-site milestone: in those two cases the
@@ -257,24 +283,29 @@ not name, and can lag the model. A count passed down by every dispatcher widens 
   reconcile that follows it, while `[ROSTERED]` is a reconcile stale, a count that then reads high.
   Transport's brief and the itinerary flag each one, naming nobody. **A removal is judged on a fresh
   count** (decision 4): `## group` runs the reconcile before every removal and removes nothing where
-  that run cannot complete, and runs it again once a stale row comes off or a member recorded
-  through `## person` leaves. So a removal leaves out no member who still travels, except where a row
-  comes off outside that verb, where the row of a member who still travels comes off on an answer
-  that they were leaving, that the row was a duplicate, or that it was added in error — one recorded
-  through `## person` and answered as leaving then loses their entry with it — or where the
-  reconcile after a stale row does not complete; and where the reconcile after a recorded member's
-  departure does not complete, their entry stands until the withdrawal the act names, and a later
-  removal or admission judged against a count that includes them again leaves the total one above
-  the party, with nothing to flag it.
+  that run cannot complete but a row one of that run's stops names, which is judged against no
+  count, and runs it again once a stale row comes off or a member recorded through `## person`
+  leaves, save where a stop on their row held the first. So a removal leaves out no member who still
+  travels, except where a row comes off outside that verb, where the row of a member who still
+  travels comes off on an answer that they were leaving, that the row was a duplicate, or that it
+  was added in error — one recorded through `## person` and answered as leaving then loses their
+  entry with it, save where a stop on their row held the reconcile before the removal — or where the
+  reconcile after a stale row does not complete; where a row that reconcile stopped on comes off as
+  a departure, as a duplicate or as added in error, the total stays as it stood until the operator
+  states the party's; and where the reconcile after a recorded member's departure does not complete,
+  or a stop on their row held the one before it, their entry stands until the withdrawal the act
+  names, and a later removal or admission judged against a count that includes them again leaves the
+  total one above the party, with nothing to flag it.
 - **A withdrawn member leaves the count on the operator's statement.** `## person` carries it: it
   drops their entry and lowers a total that equalled the floor they were in; a total above that
   floor is left for the operator to restate, and a member the roster still names leaves the count
-  with their row. Where the roster names such a member and they leave the party, `## group` carries
-  the same statement in the act that removes their row, so their entry drops with it and the removal
-  rows lower the total once; that removal pays a second reconcile, and a departure answered by
-  mistake drops the entry with the row, which `## person` restores only once the operator restates
-  the member's needs. Where that second reconcile does not complete, `## group` says so and names the
-  withdrawal, and until it runs the entry stands.
+  with their row. Where the roster names such a member and they leave the party, and the reconcile
+  before the removal completes, `## group` carries the same statement in the act that removes their
+  row, so their entry drops with it and the removal rows lower the total once; that removal pays a
+  second reconcile, and a departure answered by mistake drops the entry with the row, which
+  `## person` restores only once the operator restates the member's needs. Where that second
+  reconcile does not complete, `## group` says so and names the withdrawal, as it does where a stop
+  on their row held the reconcile before the removal, and until it runs the entry stands.
 - **A family recording a named child third-party** sees the child leave the published roster and
   stay in the published total; the plan honors every need.
 - **The archived witness.** `examples/archived-trip-demo/` keeps the total it was archived with: the
@@ -294,10 +325,12 @@ not name, and can lag the model. A count passed down by every dispatcher widens 
   takes, since it names the member as their row does; a removal's reconcile replacing an
   `## Update signals` block an earlier pass left for a replan that has not yet run and, within the
   act, a second run's block, or its absence, displaces the first run's, which then survives in the
-  transcript only; and a roster row that itself stops every reconcile — rows reducing to one
-  key, a name that reduces to nothing, or a name sharing a third-party entry's key under a different
-  display name — after which no row comes off through `## group` until it is renamed, and no text
-  states that any verb's edit reaches a roster row's `Person` cell.
+  transcript only; and a roster row that itself stops every reconcile — rows reducing to one key, a
+  name that reduces to nothing, or a name sharing a third-party entry's key under a different
+  display name — which comes off through `## group` on the operator's answer, judged against no
+  count, unless it is the only place in the count of someone who still travels; that row then stays,
+  and the removal of any row no stop names waits until it is renamed, while no text states that any
+  verb's edit reaches a roster row's `Person` cell.
 - **Reversibility: CHEAP.** Markdown and one suite group. Reverting the release restores the text of
   `ADR-011`, `ADR-010`, `ADR-025` and `ADR-030` with it.
 

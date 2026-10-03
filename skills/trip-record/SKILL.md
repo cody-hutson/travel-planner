@@ -1138,7 +1138,9 @@ report the numbers, name `/trip-record group`, and write nothing. **Echo the out
 writing**, as `group` does. **That value is the one thing this verb writes in `trip-context.md`** —
 a number: it adds no row, changes no cell, and writes no name, least of all the one it was given. A
 reconcile that stopped writes no model, and then this verb writes nothing here either: stop means
-stop, and the next write of `/trip-record group` brings the total up.
+stop. What the operator stated is in no file until this verb is run again once the stop clears, and
+that run applies the table; for a stop that names a roster row, `## group` § *Removing a row* says
+how it clears.
 
 **A withdrawal — once the operator says the member is not travelling.** This verb carries that
 statement to the same reconcile, supplied as a withdrawal rather than as needs, and the reconciler's
@@ -1336,7 +1338,7 @@ test the readers.
 
 ## group [<name>]
 
-**Reads:** `trips/<slug>/trip-context.md` — the whole of `## Group`, read before it is written because the presence probe on the roster's `Person` column selects adding a row from editing one, the table's own header row fixes the shape a new row is written in, the disposition for `- **Total travelers:**` is chosen from that field's current value and the counted floor, and a row being removed is echoed verbatim before it goes; and `trips/<slug>/outputs/traveler-model.md` — for the outside-roster count and nothing else, read before that disposition is chosen because the counted floor adds it, and on a removal read only once the reconcile that runs before the row comes off has returned, counted from the marks on its `## ` headings and never from a name, and read as zero where the file is absent (§ *Roster standing of a third-party member*). Reads nothing under `trips/<slug>/travelers/` itself — the roster is the traveler denominator and a file count there is not, for the reason stated below. **On a removal, and on no other change**, dispatches `agents/00-enrichment.md` in the same reconciler role `travelers` dispatches — before the row comes off, and once more after it where the row is taken off as a stale row or the person leaving the party is recorded through `/trip-record person`, supplying for that person the statement that they are not travelling (§ *Removing a row*) — which reads `trips/<slug>/travelers/*.md`, `trips/<slug>/trip-context.md` and `trips/<slug>/outputs/traveler-model.md` — the model it is about to replace, read before that write because that read is what carries the `[THIRD-PARTY]` entry forward, and that entry has no source file to be re-derived from; and writes `outputs/traveler-model.md` alone.
+**Reads:** `trips/<slug>/trip-context.md` — the whole of `## Group`, read before it is written because the presence probe on the roster's `Person` column selects adding a row from editing one, the table's own header row fixes the shape a new row is written in, the disposition for `- **Total travelers:**` is chosen from that field's current value and the counted floor, and a row being removed is echoed verbatim before it goes; and `trips/<slug>/outputs/traveler-model.md` — for the outside-roster count and nothing else, read before that disposition is chosen because the counted floor adds it, and on a removal read only once the reconcile that runs before the row comes off has returned, counted from the marks on its `## ` headings and never from a name, and read as zero where the file is absent (§ *Roster standing of a third-party member*). Reads nothing under `trips/<slug>/travelers/` itself — the roster is the traveler denominator and a file count there is not, for the reason stated below. **On a removal, and on no other change**, dispatches `agents/00-enrichment.md` in the same reconciler role `travelers` dispatches — before the row comes off, and once more after it where the row is taken off as a stale row or the person leaving the party is recorded through `/trip-record person` and no stop on their row held the first, supplying for that person the statement that they are not travelling (§ *Removing a row*) — which reads `trips/<slug>/travelers/*.md`, `trips/<slug>/trip-context.md` and `trips/<slug>/outputs/traveler-model.md` — the model it is about to replace, read before that write because that read is what carries the `[THIRD-PARTY]` entry forward, and that entry has no source file to be re-derived from; and writes `outputs/traveler-model.md` alone.
 
 **Scope — the whole of `## Group`:** the roster table, `- **Total travelers:**`, `- **Travel
 mode:**` and `- **Subgroup notes:**`. § *Write ownership* names the roster and the traveler count on
@@ -1429,11 +1431,13 @@ reads the count as the last reconcile left it, so a row just added for someone r
 `/trip-record person` stays in the outside-roster count until `/trip-record travelers` marks their
 entry `[ROSTERED]`, and the floor reads one high until then: where the user answers that the total
 already counts the person just named, write nothing and name that reconcile. **A removal is judged
-on a fresh count:** it runs that reconcile before the row comes off, and removes nothing where that
-run cannot complete (§ *Removing a row*), so its rows compare with the roster's own floor. The user
-settles the asking row with a total at or above the floor, and never below it — a floor the user
-believes too high is a stale count, which that reconcile refreshes, or a member who no longer
-travels, whose withdrawal § *Roster standing of a third-party member* states.
+on a fresh count:** it runs that reconcile before the row comes off, and where that run cannot
+complete it removes nothing but a row one of that run's stops names, which it judges against no
+count (§ *Removing a row*), so its rows compare only with the roster's own floor. The user settles
+the asking row with a total at or above the floor, and never below it — a floor the user believes
+too high is a stale count, which that reconcile refreshes, or a row that reconcile stops on, whose
+removal here clears it, or a member who no longer travels, whose withdrawal § *Roster standing of a
+third-party member* states.
 
 **The traveler denominator is the roster and `- **Total travelers:**`, never a file count under
 `travelers/`.** That directory ships empty and stays empty until a profile is filled, so a file
@@ -1445,19 +1449,48 @@ never reported as a defect** — a stated total may carry a member the roster ha
 **Removing a row.** Only from the no-argument render, or where the user names the person and states
 that they are not travelling. **Run the reconcile `/trip-record travelers` names before anything
 else** — `agents/00-enrichment.md` in its reconciler role, dispatched as the `**Reads:**` line above
-states and never in its research role, for the reason § `travelers` gives — because every removal is
-judged against a count, and this verb otherwise reads the count as the last reconcile left it: after
-a row added for someone recorded through `/trip-record person`, the counted floor reads one high
-until a reconcile marks their entry `[ROSTERED]`, and a removal compared with that floor leaves the
-total one high with nothing to flag it. Render what that reconcile reports, and its
-`## Update signals` block by § `travelers`'s table, naming each next verb by its signal class and
+states and never in its research role, for the reason § `travelers` gives — because a removal is
+judged against a count wherever that reconcile completes, and this verb otherwise reads the count
+as the last reconcile left it: after a row added for someone recorded through
+`/trip-record person`, the counted floor reads one high until a reconcile marks their entry
+`[ROSTERED]`, and a removal compared with that floor leaves the total one high with nothing to flag
+it. Render what that reconcile reports, and its `## Update signals` block by § `travelers`'s table,
+naming each next verb by its signal class and
 running none. **Where that reconcile stops, declines its write, or reports a C4-class stop — the
-join's display-name guard or C4 itself — remove nothing, whatever the row:** report the stop and
-what it asks for — for a C4 stop that names this row and another, a display name that tells the two
-apart — and say that the removal is made once it clears, because no count this verb could judge it
-against is fresh. **Otherwise ask whatever the user has not said about whether the person is leaving
-the party or still travels** — nothing this verb reads answers that — and take whether their needs
-are recorded through `/trip-record person` from that reconcile's report, which names the row as the
+join's display-name guard or C4 itself — remove nothing, unless one of its stops names this row:**
+report the stop and what clears it — for a stop on another row, that row's removal through this
+verb, or a name for it that the reconcile can key and tell apart — and say that the removal is made
+once it clears, because no count this verb could judge it against is fresh. **Where one of its
+stops names this row** — C2 on its name, C4 on it and another row sharing its key, or the
+display-name guard on it and the `[THIRD-PARTY]` entry sharing its key — that stop is this row's
+own, so it does not hold the row's removal; no count is fresh, so no total is judged against one.
+Ask whatever the user has not said: whether the person is leaving the party or still travels, and
+whether the row duplicates another row or the member the stop pairs it with, or was added in error.
+Where they still travel and the row is none of those, it is their only place in the count: remove
+nothing, and report the name the stop asks for. A row that duplicates the member the stop pairs it
+with is that member's own under a display name the join cannot confirm; ask too, unless the user
+has said, whether the member has since filed their own profile, which nothing this verb reads
+answers. If they have, the row is theirs, as in the third state of § *Roster standing of a
+third-party member*, and it comes off as any other such row does below; where they still travel,
+name `/trip-record group` with the entry's name, which adds their row under the name the join can
+confirm, and say to run it next; where they are leaving, name `/trip-record person <name>` with the
+statement that they are not travelling, which withdraws the entry the model may still carry for
+them, and say that until it runs that entry may stand, counted outside the roster. If they have not,
+it comes off as the
+stale row does, but its second run carries no statement, since no completed report names the row as
+theirs, and nothing is asked once more; where that run does not complete, name
+`/trip-record travelers` and say, in place of the stale row's own sentence, that until a reconcile
+completes the person may be out of every count taken from the model. Where that member has not
+filed and is leaving, say, in place of the stale-row row's message, that the total it leaves is
+their withdrawal's to lower, and name where they may still appear — their entry, until
+`/trip-record person <name>` with the statement that they are not travelling withdraws it, and any
+constraint's `Applies to:` line — saying that until it runs their entry stands, counted outside the
+roster from the reconcile that runs without their row. Any other such row is echoed verbatim and
+comes off with the total left as it stands; say that the total may still count it, and name
+`/trip-record group` with the party's total once `/trip-record travelers` has run. **Where that
+reconcile completes, ask whatever the user has not said about whether the person is leaving the
+party or still travels** — nothing this verb reads answers that — and take whether their needs are
+recorded through `/trip-record person` from that reconcile's report, which names the row as the
 stale half exactly when they are and neither a profile of theirs nor their unfilled intake template
 is on file. One who still travels and whose row it names as the stale half is the stale row §
 *Roster standing of a third-party member* takes off, and the table's stale-row row decides it.
@@ -1467,14 +1500,15 @@ theirs; or their intake template sits on file unfilled, so the row stays until t
 nothing records them there, so the row is their only place in the count — unless the user states
 that the row is a duplicate or was added in error. Such a row then comes off through the removal
 rows, except one the report names as a pending profile: its person is recorded there and still
-travels, so it comes off as the stale row does. Every other removal — a departure, a duplicate row,
-a row added in error — takes its removal rows, whose pre-removal counted floor is the one that
-reconcile left. **Where the person leaving the party is recorded through `/trip-record person` — the
+travels, so it comes off as the stale row does. Every other removal on a completed reconcile
+— a departure, a duplicate row, a row added in error — takes its removal rows, whose
+pre-removal counted floor is the one that reconcile left. **Where the person leaving the
+party is recorded through `/trip-record person` — the
 report names their row as the stale half or as a pending profile — this verb carries the statement
 that they are not travelling** to the reconcile it runs once the row is off, whose exit for a fresh
 operator statement drops their entry (`agents/00-enrichment.md`), so they leave every count in the
 act that removes their row. Say so before the echo: their entry goes with the row — where the report
-said they still travel, the answer that they are leaving is what decides it — and
+said they still travel, the confirmed answer that they are leaving is what decides it — and
 `/trip-record person <name>` with their needs re-admits them. **Where the report names their row as
 the stale half, and so says they still travel, and the user says they are leaving, ask once more
 before the echo**, naming what the carry deletes — their entry, and the needs recorded for them, go
@@ -1490,7 +1524,7 @@ without their row their entry keeps `[ROSTERED]`, so neither this verb's count n
 `agents/04-transport.md` takes would hold them; a departing person's entry would otherwise stand,
 and re-enter the outside-roster count at the next reconcile once no row shares its key. That second
 run should meet no stop the first did not — a removal adds no name for C2, C4 or the display-name
-guard to meet, nor does a withdrawal, and it leaves the model at the version the first run wrote —
+guard to meet, nor does a withdrawal, and it leaves the model as the first run left it —
 but where it stops, declines its write, reports a C4-class stop, or does not complete for any other
 reason, say so: after a stale row, name `/trip-record travelers`, and say that until a reconcile
 completes the person is out of every count taken from the model; after a departure, name
@@ -1509,8 +1543,8 @@ carried, name only the second.
 and never repaired in place, and this verb writes zero bytes of it. Name **`/trip-record
 travelers`** as the reconcile, and **do not run it**: an agent dispatch on a one-line change is
 heavier than the change, which is the same call `profile` makes. **A removal is where that weight
-is paid** (§ *Removing a row*): the reconcile it runs before the row comes off judges the removal and
-leaves the model predating it, so a removal names that reconcile here like any other change — except
+is paid** (§ *Removing a row*): the reconcile it runs before the row comes off leaves the model
+predating the removal, so a removal names that reconcile here like any other change — except
 where that reconcile ran again once the row was off, after a stale row or the departure of someone
 recorded through `/trip-record person`, and completed, which names none.
 
@@ -1601,7 +1635,9 @@ it, and that verb then applies the table above once, whose withdrawal rows lower
 equalled the floor they were in and leave a total above it for the operator to restate here
 (`## person <name>` § *A withdrawal*). Where the roster names such a member and they leave the
 party, `## group` carries the same statement in the act that removes their row (the second state
-below). This engine lowers no total on its own — only on that statement, or on a row removed here.
+below), or names it for `## person <name>` where a stop on their row held the reconcile before it
+(§ *Removing a row*). This engine lowers no total on its own — only on that statement, or on a row
+removed here.
 
 **Where their record lives.** Such a member's name and needs are recorded once, in their
 carried-forward entry of `outputs/traveler-model.md`. The operator's statement is that entry's
@@ -1632,15 +1668,19 @@ each has one disposition.
   removes the row and again once the row is off**, so their entry loses `[ROSTERED]` and is counted
   outside the roster before the act that removed the row ends, and once that second reconcile
   completes no count — this verb's, or the one `agents/04-transport.md` takes — leaves them out;
-  where the first cannot complete the row waits, and where the second does not the act says so
-  (§ *Removing a row*). Between the change that makes this state and the reconcile that reports it,
-  the publish guard's refusal of a name it can key is the only catch. Where the intake template sits
+  where the first cannot complete the row waits, unless one of that reconcile's stops names it, and
+  where the second does not the act says so (§ *Removing a row*). Where the row's display name
+  differs from the entry's although their keys agree, the reconciler stops rather than joining them,
+  and the row comes off as that paragraph says of a row whose own stop holds the reconcile. Between
+  the change that makes this state and the reconcile that reports it, the publish guard's refusal of
+  a name it can key is the only catch. Where the intake template sits
   on file for them unfilled, the row is pending rather than stale: the reconciler reports a pending
   profile, and the row stays until they fill it, when the third state applies — unless the operator
   says the row was added in error, when it comes off as the stale row does. Where such a person
-  leaves the party instead, their row comes off as a departure and the table's removal rows apply,
-  and this verb carries the statement that they are not travelling to the reconcile it runs once the
-  row is off, which drops their entry, so they leave every count in that act — though where the
+  leaves the party instead and the reconcile before the removal completes, their row comes off as a
+  departure and the table's removal rows apply, and this verb carries the statement that they are
+  not travelling to the reconcile it runs once the row is off, which drops their entry, so they
+  leave every count in that act — though where the
   reconciler's report says they still travel, this verb asks once more, naming that their entry, and
   the needs recorded for them, go with the row and are kept in no file, and carries the statement
   only on a confirmed answer, the row otherwise coming off as the stale row does; where that
@@ -1661,7 +1701,8 @@ Where the user asks for someone to be added to the party who has filed nothing a
 as a traveller. Where the user says such a member no longer travels and the roster holds no row for
 them, name that verb with that statement, and do not run it either: their entry is its to withdraw.
 Where the roster holds their row, removing it is this verb's, and that removal carries the statement
-to the reconcile itself (§ *Removing a row*).
+to the reconcile itself, or names it for that verb where a stop on their row held the reconcile
+before it (§ *Removing a row*).
 
 ## fact <statement>
 

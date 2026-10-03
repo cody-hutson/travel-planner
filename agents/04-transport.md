@@ -309,10 +309,11 @@ writing any of them:
   `/trip-record person` withdraws a member who no longer travels. A file older than
   the roster can count someone twice. It leaves out someone who still travels only
   where a row came off outside `/trip-record group`, which reconciles this file in
-  the act that removes a row (`skills/trip-record/SKILL.md` § `group`, *Removing a
-  row*), or where that verb removed the row of someone who still travels on an
-  answer that they were leaving, that the row was a duplicate, or that it was added
-  in error, or did not complete the reconcile it runs after a stale row comes off.
+  the act that removes a row unless one of that reconcile's stops names the row
+  (`skills/trip-record/SKILL.md` § `group`, *Removing a row*), or where that verb
+  removed the row of someone who still travels on an answer that they were leaving,
+  that the row was a duplicate, or that it was added in error, or did not complete
+  the reconcile it runs after a stale row comes off.
 - **Each traveler whose own window states an arrival different from their origin's
   booking contributes a stream of their own**, at their own arrival time, into the
   same destination airport. If no leg records their flight, write the stream from

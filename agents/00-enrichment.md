@@ -937,15 +937,20 @@ reach. Each has exactly one disposition, and none of them is silent:
 - **C2 — the name reduces to nothing.** A `Person` value carrying no ASCII
   alphanumerics has no key and no filename. **Stop and say so**, quoting the name:
   it cannot be keyed, it cannot be told apart from a second such traveler, and no
-  file can correspond to it. Ask the operator for a name that resolves.
+  file can correspond to it. Ask the operator for a name that resolves, naming
+  `/trip-record group`, through which that row can come off instead.
 - **C3 — the name lands on a reserved key.** Refuse the entry and report it,
   quoting the name and the reserved key it collided with. Admitting it is the
   fail-open: an entry on a reserved key is dropped by the publish guard's parse,
   and its values never enter the non-publishable class.
 - **C4 — two roster names share one key.** Stop and report **both** names and the
-  shared key, and ask the operator to disambiguate the display name. **Never mint
-  a suffix** and never merge the two — the engine does not invent identity, and a
-  minted suffix would break the correspondence for both of them.
+  shared key, and ask the operator to disambiguate the display name, naming
+  `/trip-record group`, through which either row can come off instead. **Never
+  mint a suffix** and never merge the two — the engine does not invent identity,
+  and a minted suffix would break the correspondence for both of them.
+
+**A pass that stops reports every stop it meets**, not only the first: C2 and C4
+here, and the stop below where a shared key carries differing display names.
 
 **`unresolved` is a third condition, and it is not `PROFILE MISSING`.** The two
 fallbacks above are both *"no file"* — a profile not filed yet, and a party member
@@ -971,9 +976,10 @@ still travels so its removal is not a departure, and naming
 write. **Where the file whose stem reduces to that key is the intake template
 left unfilled**, the row is not stale: report a *pending profile* instead,
 naming the row and the file, and say that the row stays until the person fills
-it. **Where the display names differ although the keys agree**, a shared key is
-no proof of one person: stop and report both names and the key, as C4 does, and
-join nothing.
+it. **Where the display names differ although the keys agree**, a
+shared key is no proof of one person: stop and report both names
+and the key, as C4 does, naming `/trip-record group`, through which
+the row can come off instead, and join nothing.
 
 ### Versioned artifacts — the tolerant read, and the write you must decline
 
