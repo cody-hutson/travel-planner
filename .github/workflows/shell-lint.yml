@@ -45,9 +45,12 @@ name: Shell lint
 #   mean suppressing a great many correct lines.
 #   RULES THAT NEED THE LINTER'S DATAFLOW ANALYSIS. The lint runs with that analysis off: on
 #   this repository's largest suites it needs more memory than a hosted runner has, and the
-#   job is stopped before it reports anything. So SC2324 (n+=1 appending where an increment
-#   was meant) and SC2320 ($? read after an echo or a printf) are not reported at this
-#   check's severity, and SC2317 (a command that cannot be reached) is not reported below it.
+#   job is stopped before it reports anything. So those rules are not reported at this
+#   check's severity, among them SC2324 (n+=1 appending where an increment was meant), SC2320
+#   ($? read after an echo or a printf), SC2319 ($? read after a test has overwritten it) and
+#   SC2318 (a name assigned and read in the same declaration, such as declare or local, where
+#   the read sees the old value), and SC2317 (a command that cannot be reached) is not
+#   reported below it.
 #   A pair of control arms measures that on every run: a file only that analysis flags must
 #   fire with it and stay silent without it.
 #   A SHELL FILE OUTSIDE scripts/*.sh, or one without the .sh suffix. One added later is not

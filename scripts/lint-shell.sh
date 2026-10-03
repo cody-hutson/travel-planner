@@ -19,8 +19,10 @@
 # --extended-analysis=false, so the linter's dataflow analysis does not run. On this
 # repository's largest suites that analysis needs more memory than a hosted runner has, and
 # the job is stopped before it reports anything. The rules that need it are therefore not
-# reported here: SC2324 (n+=1 appending where an increment was meant) and SC2320 ($? read
-# after an echo or a printf) at this gate's severity, and SC2317 (a command that cannot be
+# reported here, among them SC2324 (n+=1 appending where an increment was meant), SC2320
+# ($? read after an echo or a printf), SC2319 ($? read after a test has overwritten it) and
+# SC2318 (a name assigned and read in the same declaration, such as declare or local, where
+# the read sees the old value) at this gate's severity, and SC2317 (a command that cannot be
 # reached) below it. Arms C6 and C7 measure that boundary on every run.
 # The linter takes options from one more place, the environment variable SHELLCHECK_OPTS, and
 # --norc does not govern it: an exclusion set there lowers the count while every control arm

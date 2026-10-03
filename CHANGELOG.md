@@ -88,8 +88,9 @@ the first pull request opened after this release merges.
 
 **The honest limits.** The shellcheck gate runs without shellcheck's dataflow analysis: on this
 repository's largest suites that analysis needs more memory than a hosted runner has, and the job
-is stopped before it reports anything. So `SC2324` and `SC2320` are not reported at the gate's
-severity, nor `SC2317` below it, and a pair of control arms shows that boundary on every run. The
+is stopped before it reports anything. So the rules that need that analysis are not reported,
+among them `SC2324`, `SC2320`, `SC2319` and `SC2318` at the gate's severity, nor `SC2317` below
+it, and a pair of control arms shows that boundary on every run. The
 gate reports nothing else below warning, and it does not lint a shell file outside `scripts/*.sh`
 or without the `.sh` suffix, or the shell embedded in a workflow, which actionlint reads. A
 directive naming a range of codes wide enough to cover every rule is counted and not refused. Until
