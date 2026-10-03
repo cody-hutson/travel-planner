@@ -476,20 +476,26 @@ only the verbs that existed when it was written.
 
     **The operation class.** A write is a permitted erasure write only where it is **the substitution
     of one person's identifying values with a minted per-trip token, at a location named in the
-    verb's own reach table, on a trip that table's own discovery step resolved** — plus the deletion
-    of that person's record and of the traveller file the substitution supersedes. **Substitution is
-    the whole of the mechanism; nothing here regenerates, recomposes or refreshes anything**, which
-    is what lets this rule reach an archived trip when nothing else may.
+    verb's own reach table, on a trip that table's own discovery step resolved** — plus a deletion
+    that table directs, of that person's record, of the traveller file the substitution supersedes,
+    or, under the trip directory, of a generated render, which is a sink and never a source, or of
+    the publish staging clone. **No other deletion is an erasure write.** **Substitution is the whole
+    of the mechanism; nothing here regenerates, recomposes or refreshes anything**, which is what
+    lets this rule reach an archived trip when nothing else may.
 
     **A write under this rule is taken on exactly these conditions, all of which must hold:**
     **(a)** the location is a row of the reach table in `## erase <person-id>` — a location absent
-    from that table is not reachable by omission, it is unreachable, and the receipt says so;
+    from that table is not reachable by omission, it is unreachable, and the receipt claims nothing
+    for it: the receipt is total over that table's rows and never over a location the table does
+    not list;
     **(b)** every rewritten value is replaced by the minted token or by a declared non-value, and
     **no location is emptied**; **(c)** the free-text pass is scoped to **one trip directory**, is
     word-boundary and case-sensitive, and reaches no path outside it; **(d)** the operator confirmed
     by typing the record's id at a terminal, with no flag and no non-interactive path; and
-    **(e)** every location the run touched, and every location it could not, emits exactly one
-    receipt row — so a partial run is a run that says it was partial.
+    **(e)** every REACH row and every REPORT row of that table emits exactly one receipt row on
+    every run, the rows the run touched and the rows it could not alike, and an OUT row emits none
+    because the table states its reason instead — so a partial run is a run that says it was
+    partial, and a row goes unreported only by being declared OUT.
 
     **What (b) and (e) are for, because they are what separate this from rule 9's shape.** Rule 9
     forbids removal outright, which is right for a verb that moves one field and wrong for one whose
@@ -499,6 +505,15 @@ only the verbs that existed when it was written.
     per-field echo, which cannot be offered here: the echo would be the erased value. **Totality over
     a declared table is the only confirmation shape available to an operation forbidden to name what
     it removed.**
+
+    **Against rule 2 this rule is an exception, not a widening, and it is stated as one:** every
+    write it makes to existing trip content — its substitutions and its deletion of the traveller
+    file they supersede among them — is an overwrite or a deletion that rule 2 forbids, admitted by
+    this rule rather than by its confirmation, because an erasure's whole subject is the removal a
+    person asked for, so the verbatim echo `group` gives a removed row — which `ADR-012` inverts for
+    this operation, since here it would copy the erased values into the transcript — cannot be
+    offered, and the receipt this rule makes total stands where that echo would, as it already
+    stands where rule 9's echo would.
 
     It is here rather than inside the verb section because the prohibition half binds every verb:
     **no other verb of this command may write a location this table names on the ground that erasure
@@ -1065,7 +1080,7 @@ disagreement branch with no resolution.
 
 ## person <name>
 
-**Reads:** nothing of its own. Dispatches `agents/00-enrichment.md` in the same reconciler role `travelers` dispatches, which reads `trips/<slug>/travelers/*.md`, `trips/<slug>/trip-context.md` and `trips/<slug>/outputs/traveler-model.md` — the model it is about to replace, read before that write because that read is what carries the `[THIRD-PARTY]` entry forward, and that entry has no source file to be re-derived from; and writes `outputs/traveler-model.md` alone.
+**Reads:** `trips/<slug>/trip-context.md` — the whole of `## Group`, read once the reconcile below has returned and before `- **Total travelers:**` is written, because the disposition for that field is chosen from its current value and the counted floor, which is `## group`'s read and is cited rather than re-derived, and, on a withdrawal, for the presence probe `## group` runs on that roster's `Person` column, taken for the name this verb was given, because the withdrawal rows apply only to a member the roster does not name; and `trips/<slug>/outputs/traveler-model.md` — once that reconcile has written it, for the outside-roster count and nothing else, which is `## group`'s read of that file and is cited rather than re-derived. Dispatches `agents/00-enrichment.md` in the same reconciler role `travelers` dispatches, which reads `trips/<slug>/travelers/*.md`, `trips/<slug>/trip-context.md` and `trips/<slug>/outputs/traveler-model.md` — the model it is about to replace, read before that write because that read is what carries the `[THIRD-PARTY]` entry forward, and that entry has no source file to be re-derived from; and writes `outputs/traveler-model.md` alone.
 
 The operator-provided third-party case: a party member who will never file a profile, whose needs
 the operator supplies.
@@ -1080,7 +1095,9 @@ who never asked for one; it does not claim the entry leaves no trace.
   there is no default-allow outside it. **Identity data is refused** — passport, issuing country,
   validity — which `ADR-006` types as *capture refused* rather than merely undesirable. No lifecycle
   facet is populated on their behalf, and the bound is the entry **class** rather than a field list,
-  so a facet a later release adds is bounded by it too.
+  so a facet a later release adds is bounded by it too. A **withdrawal** — the operator's statement
+  that the member is not travelling — is neither a need nor identity data: it ends the entry rather
+  than adding to it (§ *A withdrawal*, below).
 - **Two marks, answering two different questions.** `[OPERATOR-PROVIDED]` records **who supplied the
   value**; `[THIRD-PARTY]` records that **the person described is not the person who spoke**.
   `[THIRD-PARTY]` is the non-publication key every downstream guard binds to, so it is present on
@@ -1090,17 +1107,53 @@ who never asked for one; it does not claim the entry leaves no trace.
   person is never added to any constraint's `Applies to:` roster. It may link to an existing
   governing constraint; it never creates one. This is the stated exception to link-don't-copy, and
   the reason is that `trip-context.md` is publish-bound.
-- **Never published**, in attributed or in anonymized form. In a small named party, stripping the
-  name does not strip the identification.
+- **Never published**, in attributed or in anonymized form — not their name and not their needs. In
+  a small named party, stripping the name does not strip the identification. They are still counted,
+  as one unnamed member of `- **Total travelers:**` with no `## Group` roster row, which says how
+  many travel and describes nobody; this verb brings the total up to count them once its reconcile
+  has recorded them (§ *The total*, below, and `## group` § *Roster standing of a third-party
+  member*, which also says what happens where the roster already names them).
 - **Never invented.** No operator input, no entry — not a blank one, not a `PROFILE MISSING` one. A
   `Party:` string on its own yields no entry, and a nameless party value yields none either, because
-  the name arrives with the needs or there is nothing to key an entry to.
+  the name arrives with the needs or there is nothing to key an entry to. A withdrawal is operator
+  input that ends an entry, never one that makes one.
 - **Provenance-marking records that a value is second-hand. It does not establish the described
   person's consent, and is never written or described as though it does.**
 
 **How it lands.** `ADR-006` chose the option that adds no new capture surface, so this verb captures
 the needs and dispatches the enrichment reconcile named on the `Reads:` line above, supplying them
 as the operator-provided stand-in. **The enrichment agent writes the entry; this command does not.**
+
+**The total — once the reconcile has recorded them.** When the reconcile returns having written
+`outputs/traveler-model.md`, apply `## group [<name>]`'s reconciliation table to
+`- **Total travelers:**` once, from that field's current value and the counted floor, reading the
+outside-roster count the reconcile has just written; the table is applied, never restated. This is
+how such a member is counted from the act that admits them (`## group` § *Roster standing of a
+third-party member*): a total at or above the named-traveler count but below the counted floor
+becomes the floor, a total at or above the floor — one the operator stated already counting them —
+is left as it stands, and a bracketed one becomes the floor. Where the table would ask instead,
+report its numbers, name `/trip-record group`, and write nothing. Where the reconcile's report
+carries a C4-class stop — the join's display-name guard or C4 itself — apply the asking row instead:
+report the numbers, name `/trip-record group`, and write nothing. **Echo the outgoing value before
+writing**, as `group` does. **That value is the one thing this verb writes in `trip-context.md`** —
+a number: it adds no row, changes no cell, and writes no name, least of all the one it was given. A
+reconcile that stopped writes no model, and then this verb writes nothing here either: stop means
+stop. What the operator stated is in no file until this verb is run again once the stop clears, and
+that run applies the table; for a stop that names a roster row, `## group` § *Removing a row* says
+how it clears.
+
+**A withdrawal — once the operator says the member is not travelling.** This verb carries that
+statement to the same reconcile, supplied as a withdrawal rather than as needs, and the reconciler's
+second exit drops the entry (`agents/00-enrichment.md`: a fresh operator statement "that withdraws
+them drops the entry"). Where that reconcile reports the entry dropped, apply `## group [<name>]`'s
+reconciliation table once, exactly as § *The total* does, reading the outside-roster count that
+reconcile leaves: its withdrawal rows decide, and they apply only where the presence probe
+`## group` runs on the roster's `Person` column finds no row for the name given. Where it finds one,
+the member sits in the named-traveler count and leaves it with their row, so the table's other rows
+decide, and this verb names `/trip-record group` for that row's removal as a departure and does not
+run it. Where the reconcile dropped nothing, because the model held no entry under that name, write
+nothing here. What a withdrawal writes in `trip-context.md` is what § *The total* allows — one
+number, echoed before it is written, and no name.
 
 **Durability, stated rather than hidden.** The entry lives only in `outputs/traveler-model.md`,
 which is `[DERIVED]` and rebuilt from source files — with this entry class **stated as an
@@ -1285,7 +1338,7 @@ test the readers.
 
 ## group [<name>]
 
-**Reads:** `trips/<slug>/trip-context.md` — the whole of `## Group`, read before it is written because the presence probe on the roster's `Person` column selects adding a row from editing one, the table's own header row fixes the shape a new row is written in, the disposition for `- **Total travelers:**` is chosen from that field's current value, and a row being removed is echoed verbatim before it goes. Reads nothing under `trips/<slug>/travelers/` — the roster is the traveler denominator and a file count there is not, for the reason stated below. Dispatches no agent.
+**Reads:** `trips/<slug>/trip-context.md` — the whole of `## Group`, read before it is written because the presence probe on the roster's `Person` column selects adding a row from editing one, the table's own header row fixes the shape a new row is written in, the disposition for `- **Total travelers:**` is chosen from that field's current value and the counted floor, and a row being removed is echoed verbatim before it goes; and `trips/<slug>/outputs/traveler-model.md` — for the outside-roster count and nothing else, read before that disposition is chosen because the counted floor adds it, and on a removal read only once the reconcile that runs before the row comes off has returned, counted from the marks on its `## ` headings and never from a name, and read as zero where the file is absent (§ *Roster standing of a third-party member*). Reads nothing under `trips/<slug>/travelers/` itself — the roster is the traveler denominator and a file count there is not, for the reason stated below. **On a removal, and on no other change**, dispatches `agents/00-enrichment.md` in the same reconciler role `travelers` dispatches — before the row comes off, and once more after it where the row is taken off as a stale row or the person leaving the party is recorded through `/trip-record person` and no stop on their row held the first, supplying for that person the statement that they are not travelling (§ *Removing a row*) — which reads `trips/<slug>/travelers/*.md`, `trips/<slug>/trip-context.md` and `trips/<slug>/outputs/traveler-model.md` — the model it is about to replace, read before that write because that read is what carries the `[THIRD-PARTY]` entry forward, and that entry has no source file to be re-derived from; and writes `outputs/traveler-model.md` alone.
 
 **Scope — the whole of `## Group`:** the roster table, `- **Total travelers:**`, `- **Travel
 mode:**` and `- **Subgroup notes:**`. § *Write ownership* names the roster and the traveler count on
@@ -1299,6 +1352,8 @@ boundary would sit inside one section for no gain.
 - **No argument** — render the roster and `- **Total travelers:**` exactly as they stand, and ask
   what changes. **Write nothing** until the user names a change. This is the read-and-ask entry, and
   it is also the only path to a removal.
+  Render the outside-roster count beside them as a number, and where the total is below the
+  counted floor, say so with the asking row's numbers, naming nobody.
 - **A name** — a **presence probe** on the roster's `Person` column, matched trimmed and
   ASCII-case-folded, **over the named rows only**: a row whose `Person` cell is a placeholder is
   skipped before the match, per the placeholder rule below. Present → **edit that row**. Absent →
@@ -1338,24 +1393,51 @@ reason.
 whose `Person` cell is a placeholder **satisfies no presence probe** — it is never *present* for any
 name the user types, so it never selects the edit route and is never edited as though it were
 somebody's row; it **enters no count and no comparison** in the table below; and it is **never
-removed by this verb**, because removal is predicated on a named person who is not travelling and a
-placeholder names nobody. It stays exactly as it stands, which is the state `/trip-new` left and
-this verb does not own.
+removed by this verb**, because removal is predicated on a named person — one who is not
+travelling, one whose row is a duplicate or was added in error, or one § *Roster standing of a
+third-party member* below takes off the roster — and a placeholder names nobody. It stays exactly
+as it stands, which is the state `/trip-new` left and this verb does not own.
 
 **`- **Total travelers:**` reconciliation — a decision over the states the field can be in, never a
-silent adjustment.** The rules are `/trip-new`'s, carried forward: a stated total wins where one is
-given, the named-traveler count otherwise, the two may legitimately differ, and **the roster is
-never padded with placeholder rows to reach a total**, because a `[Name]` row is indistinguishable
-from a real traveler with a missing profile.
+silent adjustment.** The rules are `/trip-new`'s, carried forward, with one floor beneath them: a
+stated total at or above the counted floor wins where one is given, the counted floor otherwise,
+the two may legitimately differ, and **the roster is never padded with placeholder rows to reach a
+total**, because a `[Name]` row is indistinguishable from a real traveler with a missing profile.
+**The counted floor is the named-traveler count plus the outside-roster count** that
+§ *Roster standing of a third-party member* defines — every named traveller, and every party member
+recorded through `/trip-record person` whom the roster does not name — so no total written here
+counts fewer people than this engine knows travel, and none counts one of them twice.
 
 | State of the field after the change | Disposition |
 |---|---|
-| a bracketed placeholder | write the named-traveler count |
-| the user stated a total in this act | write the stated total |
-| a number greater than or equal to the named-traveler count | leave it — the named person was already inside the count |
-| a number less than the named-traveler count | say so and **ask**; write neither value until the user settles it |
-| a removal, and the field equalled the pre-removal named-traveler count | decrement it |
-| a removal, and the field exceeded that count | leave it, and say the unnamed remainder grew by one |
+| a bracketed placeholder | write the counted floor |
+| the user stated a total in this act | write it where it is at or above the counted floor; below it, say so and **ask**, as the asking row does |
+| a number greater than or equal to the counted floor | leave it — the named person was already inside the count, and so is every member the model records outside the roster |
+| a number below the counted floor but not below the named-traveler count, where the one change was a member's needs recorded through `/trip-record person` in this act — a re-run that re-supplies them included | write the counted floor — the reconcile that recorded them wrote the count in this same act, so no roster change postdates it |
+| a number below the counted floor, after any other change | say so — the total, the named-traveler count and the outside-roster count, as numbers and never a name — and **ask**; write neither value until the user settles it |
+| a withdrawal recorded through `/trip-record person` in this act, of a member the roster does not name, and the field equalled the pre-withdrawal counted floor — the floor the reconcile leaves, plus the member it dropped | decrement it |
+| such a withdrawal, and the field exceeded that floor | leave it, and say that the part of the unnamed remainder the model does not record grew by one |
+| a removal other than the stale row — someone leaving the party, a duplicate row, a row added in error — and the field equalled the pre-removal counted floor | decrement it |
+| such a removal, and the field exceeded that floor | leave it, and say the unnamed remainder grew by one |
+| a stale row removed — the second state § *Roster standing of a third-party member* names | leave it, and say the unnamed remainder grew by one: the person still travels, and is counted there now |
+
+**The withdrawal rows, the removal rows and the stale-row row decide the change they name where one
+of them matches, and the rows above them decide every other change** — a withdrawal or a removal
+below its pre-change floor included, and a withdrawal of a member the roster still names, whose row
+then comes off as any departure does. **A departure whose withdrawal this verb carries is one
+change, and its removal rows decide it, once** (§ *Removing a row*): the withdrawal rows are for a
+statement `/trip-record person` carries. **The asking row is where a stale count lands.** This verb
+reads the count as the last reconcile left it, so a row just added for someone recorded through
+`/trip-record person` stays in the outside-roster count until `/trip-record travelers` marks their
+entry `[ROSTERED]`, and the floor reads one high until then: where the user answers that the total
+already counts the person just named, write nothing and name that reconcile. **A removal is judged
+on a fresh count:** it runs that reconcile before the row comes off, and where that run cannot
+complete it removes nothing but a row one of that run's stops names, which it judges against no
+count (§ *Removing a row*), so its rows compare only with the roster's own floor. The user settles
+the asking row with a total at or above the floor, and never below it — a floor the user believes
+too high is a stale count, which that reconcile refreshes, or a row that reconcile stops on, whose
+removal here clears it, or a member who no longer travels, whose withdrawal § *Roster standing of a
+third-party member* states.
 
 **The traveler denominator is the roster and `- **Total travelers:**`, never a file count under
 `travelers/`.** That directory ships empty and stays empty until a profile is filled, so a file
@@ -1364,51 +1446,270 @@ MISSING` branch, `### Per-Traveler Planning Days [DERIVED]` and the satisfaction
 `- **Total travelers:**` that legitimately exceeds the named-traveler count is a real state and is
 never reported as a defect** — a stated total may carry a member the roster has no name for.
 
-**A `[THIRD-PARTY]` party member gets no roster row, and is not counted in `- **Total travelers:**`
-either.** `## Group` is publish-bound and so is every other field of `trip-context.md`, and
-`CLAUDE.md` states that a `[THIRD-PARTY]` value **never escalates into `trip-context.md`** and must
-not appear in any publish-bound artifact **in attributed *or* anonymized form**. The count is not
-the exception it looks like. Stripping the name is exactly what anonymizing is, and `person` states
-the consequence thirty lines above this one: *in a small named party, stripping the name does not
-strip the identification.* A total of five over four named rows publishes that a fifth party member
-exists and is not one of the four — an unnamed person, identified by subtraction, in the file the
-site build reads. That is the anonymized half of the bound, and it is the half `person` already
-rules out, so this verb agrees with `person` rather than rebutting it. A roster row would also
-assert a `travelers/<name>.md` for someone who has filed nothing, and the only way that file reaches
-existence for them is the **proxy-authored** profile `ADR-006` rejected — a durable identity
-artifact for a person who never asked for one. What that ADR contemplates instead is the profile
-that person files themselves, which this verb neither creates nor forecloses.
-
-**Where the honest denominator lives instead.** The party denominator needs-compliance and
-desire-coverage grade against is the entry set of `outputs/traveler-model.md`, which carries the
-`[OPERATOR-PROVIDED]` + `[THIRD-PARTY]` entry — **carried forward verbatim across a reconcile rather
-than re-derived**, which is what lets that home hold an entry with no source file, and is the same
-reading `person` § *Durability* states — which `CLAUDE.md` states the site build **excludes**, and
-which the hub applies as a hard bound before any objective. That member reaches it through
-`person`'s dispatch, not through a number in a publish-bound file — so honesty is preserved in the
-artifact that can hold it and is not bought in the one that cannot. `person` records such a member's
-needs and creates no file anywhere; this verb records roster rows and the count in `trip-context.md`.
-**They meet at exactly this cell and nowhere else**, which is why it is stated here rather than left
-to the reader: a difference between the total and the named-traveler count is never reported as a
-defect to reconcile, and **it is never produced by a `[THIRD-PARTY]` member.** Where the user asks
-for one to be added to the party, name **`/trip-record person <name>`** and **do not run it**.
-
 **Removing a row.** Only from the no-argument render, or where the user names the person and states
-that they are not travelling. **Echo the whole row verbatim before writing** — the removed bytes
+that they are not travelling. **Run the reconcile `/trip-record travelers` names before anything
+else** — `agents/00-enrichment.md` in its reconciler role, dispatched as the `**Reads:**` line above
+states and never in its research role, for the reason § `travelers` gives — because a removal is
+judged against a count wherever that reconcile completes, and this verb otherwise reads the count
+as the last reconcile left it: after a row added for someone recorded through
+`/trip-record person`, the counted floor reads one high until a reconcile marks their entry
+`[ROSTERED]`, and a removal compared with that floor leaves the total one high with nothing to flag
+it. Render what that reconcile reports, and its `## Update signals` block by § `travelers`'s table,
+naming each next verb by its signal class and
+running none. **Where that reconcile stops, declines its write, or reports a C4-class stop — the
+join's display-name guard or C4 itself — remove nothing, unless one of its stops names this row:**
+report the stop and what clears it — for a stop on another row, that row's removal through this
+verb, or a name for it that the reconcile can key and tell apart — and say that the removal is made
+once it clears, because no count this verb could judge it against is fresh. **Where one of its
+stops names this row** — C2 on its name, C4 on it and another row sharing its key, or the
+display-name guard on it and the `[THIRD-PARTY]` entry sharing its key — that stop is this row's
+own, so it does not hold the row's removal; no count is fresh, so no total is judged against one.
+Ask whatever the user has not said: whether the person is leaving the party or still travels, and
+whether the row duplicates another row or the member the stop pairs it with, or was added in error.
+Where they still travel and the row is none of those, it is their only place in the count: remove
+nothing, and report the name the stop asks for. A row that duplicates the member the stop pairs it
+with is that member's own under a display name the join cannot confirm; ask too, unless the user
+has said, whether the member has since filed their own profile, which nothing this verb reads
+answers. If they have, the row is theirs, as in the third state of § *Roster standing of a
+third-party member*, and it comes off as any other such row does below; where they still travel,
+name `/trip-record group` with the entry's name, which adds their row under the name the join can
+confirm, and say to run it next; where they are leaving, name `/trip-record person <name>` with the
+statement that they are not travelling, which withdraws the entry the model may still carry for
+them, and say that until it runs that entry may stand, counted outside the roster. If they have not,
+it comes off as the
+stale row does, but its second run carries no statement, since no completed report names the row as
+theirs, and nothing is asked once more; where that run does not complete, name
+`/trip-record travelers` and say, in place of the stale row's own sentence, that until a reconcile
+completes the person may be out of every count taken from the model. Where that member has not
+filed and is leaving, say, in place of the stale-row row's message, that the total it leaves is
+their withdrawal's to lower, and name where they may still appear — their entry, until
+`/trip-record person <name>` with the statement that they are not travelling withdraws it, and any
+constraint's `Applies to:` line — saying that until it runs their entry stands, counted outside the
+roster from the reconcile that runs without their row. Any other such row is echoed verbatim and
+comes off with the total left as it stands; say that the total may still count it, and name
+`/trip-record group` with the party's total once `/trip-record travelers` has run. **Where that
+reconcile completes, ask whatever the user has not said about whether the person is leaving the
+party or still travels** — nothing this verb reads answers that — and take whether their needs are
+recorded through `/trip-record person` from that reconcile's report, which names the row as the
+stale half exactly when they are and neither a profile of theirs nor their unfilled intake template
+is on file. One who still travels and whose row it names as the stale half is the stale row §
+*Roster standing of a third-party member* takes off, and the table's stale-row row decides it.
+**Where the person still travels and the report does not name the row as the stale half, remove
+nothing**, and say why from the report — their own profile now supersedes their entry, so the row is
+theirs; or their intake template sits on file unfilled, so the row stays until they fill it; or
+nothing records them there, so the row is their only place in the count — unless the user states
+that the row is a duplicate or was added in error. Such a row then comes off through the removal
+rows, except one the report names as a pending profile: its person is recorded there and still
+travels, so it comes off as the stale row does. Every other removal on a completed reconcile
+— a departure, a duplicate row, a row added in error — takes its removal rows, whose
+pre-removal counted floor is the one that reconcile left. **Where the person leaving the
+party is recorded through `/trip-record person` — the
+report names their row as the stale half or as a pending profile — this verb carries the statement
+that they are not travelling** to the reconcile it runs once the row is off, whose exit for a fresh
+operator statement drops their entry (`agents/00-enrichment.md`), so they leave every count in the
+act that removes their row. Say so before the echo: their entry goes with the row — where the report
+said they still travel, the confirmed answer that they are leaving is what decides it — and
+`/trip-record person <name>` with their needs re-admits them. **Where the report names their row as
+the stale half, and so says they still travel, and the user says they are leaving, ask once more
+before the echo**, naming what the carry deletes — their entry, and the needs recorded for them, go
+with the row and are kept in no file — and carry the statement only on a confirmed answer, otherwise
+treating the row as the stale row; a pending report says nothing about travel, so a pending
+departure keeps the notice alone. **Echo the whole row verbatim before writing** — the removed bytes
 survive in the transcript, which is what standing rule 2's bound asks of a write that will not
-preserve what it replaces. Remove **only that row**. **Never delete anything under `travelers/`**:
-that file is Layer-1 source and this verb has no delete path to it. Then name where the person may
-still appear, without touching either place: `outputs/traveler-model.md`, until `/trip-record
-travelers` reconciles it, and any constraint's `Applies to:` line, which is `fact`'s.
+preserve what it replaces. Remove **only that row**. **Where it came off as
+the stale row, or the person leaving is recorded there, run that reconcile once more before choosing
+its disposition**, supplying for the person leaving the statement that they are not travelling, and
+render what it reports the same way: a stale row's person still travels, and until a reconcile runs
+without their row their entry keeps `[ROSTERED]`, so neither this verb's count nor the one
+`agents/04-transport.md` takes would hold them; a departing person's entry would otherwise stand,
+and re-enter the outside-roster count at the next reconcile once no row shares its key. That second
+run should meet no stop the first did not — a removal adds no name for C2, C4 or the display-name
+guard to meet, nor does a withdrawal, and it leaves the model as the first run left it —
+but where it stops, declines its write, reports a C4-class stop, or does not complete for any other
+reason, say so: after a stale row, name `/trip-record travelers`, and say that until a reconcile
+completes the person is out of every count taken from the model; after a departure, name
+`/trip-record person <name>` with the statement that they are not travelling, and say that until it
+runs their entry stands and re-enters the outside-roster count at the next reconcile. **A departure
+whose withdrawal this verb carries is decided by its removal rows, once**, against the pre-removal
+floor the first reconcile left, whether or not that second run completes. **Never delete anything
+under `travelers/`**: that file is Layer-1 source and this verb has no delete path to it. Then, for
+a removal no second run followed, name where the person may still appear, without touching any of
+the three: `outputs/traveler-model.md`, until `/trip-record travelers` reconciles it, `## Group`'s
+prose sub-fields, where the publish guard no longer refuses their name once a withdrawal this verb
+carried drops their entry (`reference/data-architecture.md` § 5.3), and any constraint's
+`Applies to:` line, which is `fact`'s; after a departure whose withdrawal this verb carried, name
+only the last two.
 
 **After any roster change.** Report `### Per-Traveler Planning Days [DERIVED]` as **stale** and
 **name no command** — that block has no writer in § *Write ownership*, so its staleness is reported
 and never repaired in place, and this verb writes zero bytes of it. Name **`/trip-record
 travelers`** as the reconcile, and **do not run it**: an agent dispatch on a one-line change is
-heavier than the change, which is the same call `profile` makes.
+heavier than the change, which is the same call `profile` makes. **A removal is where that weight
+is paid** (§ *Removing a row*): the reconcile it runs before the row comes off leaves the model
+predating the removal, so a removal names that reconcile here like any other change — except
+where that reconcile ran again once the row was off, after a stale row or the departure of someone
+recorded through `/trip-record person`, and completed, which names none.
 
 **What it writes.** The `## Group` block of `trips/<slug>/trip-context.md`, and nothing else in that
 file or in any other. It writes no `[ENRICH]` field, no `[DERIVED]` block, and not the title line.
+`outputs/traveler-model.md`, which the reconcile a removal dispatches rewrites, is the enrichment
+agent's write and not this verb's — ownership follows the writer, not the caller (`CLAUDE.md`
+§ *Write ownership*).
+
+### Roster standing of a third-party member
+
+**A `[THIRD-PARTY]` party member holds no `## Group` roster row, and is counted in
+`- **Total travelers:**` as an unnamed member.** This sub-section is the one statement of that
+standing: every other sentence that states it carries this sub-section's name, and none may state a
+contrary standing in the lexicon `scripts/test-corpus-hygiene.sh` group `E` declares. Such a member
+is a person whose needs the operator supplied through `## person <name>`, held as the
+`[OPERATOR-PROVIDED]` + `[THIRD-PARTY]` entry in `outputs/traveler-model.md` and never through a
+file of their own. A person the roster names is a traveller, and the two meet only in the states
+below.
+
+**Why no row.** A row prints a name in the file the site build reads: `trip-context.md` is
+publish-bound, and the site renders its `## Group` (`reference/site-layout-spec.md` § 9.1).
+`CLAUDE.md` keeps every `[THIRD-PARTY]` value out of every publish-bound artifact, and the publish
+guard's non-publishable class takes every value of such an entry (`reference/data-architecture.md`
+§ 5.3) — its name among them, which the guard's parse keys as a token. That mechanical half holds
+for every name the guard can key and for no other: `reference/adr/ADR-008-publish-content-guard.md`
+§ *Coverage boundary* residual 2 declares a name made only of stopwords, such as a member named
+Will, outside its reach, and residual 8 retracts any claim that it covers this member completely.
+So a row is kept off by this rule, never left for the guard to refuse. A row would also assert a
+`travelers/<name>.md` for someone who has filed nothing, and the only way that file reaches
+existence for them is the proxy-authored profile `reference/adr/ADR-006-third-party-data-capture.md`
+rejected — a durable identity artifact for a person who never asked for one. What that ADR
+contemplates instead is the profile that person files themselves, which this verb neither creates
+nor forecloses.
+
+**Why the count, and why it names nobody.** The party's size is a fact about the trip, not a value
+of the member's entry: `- **Total travelers:**` says how many travel and nothing about who.
+`ADR-006` § *Q3* bars a third-party-sourced **constraint** from any published artifact, attributed
+or anonymized, and a headcount states no constraint, so the published total counts such a member
+and stays honest about the party's size. They sit in the total's **unnamed remainder** — the
+difference between the total and the named-traveler count — which the table above treats as a real
+state and never as a defect. What stays out of every publish-bound file is what names or describes
+them: a row, their name, any need of theirs.
+
+**The count that keeps them in it.** `outputs/traveler-model.md` records such a member as one
+`## <Name>` heading carrying both `[OPERATOR-PROVIDED]` and `[THIRD-PARTY]`. The **outside-roster
+count** is the number of that file's `## ` headings that carry both of those marks and not
+`[ROSTERED]` — the mark the reconciler writes on such an entry while a roster row shares its key
+(`agents/00-enrichment.md` § *Traveler identity*), so a person the roster already names is never
+counted twice; a file that does not exist yet counts zero. The table above adds it to the
+named-traveler count to make the **counted floor**, and this verb, § `group-expand` and § `person`
+each apply that table.
+
+**What crosses, and the read that holds it to a count.** One integer crosses from
+`outputs/traveler-model.md`, which is `internal-hard`, into this file, which is publish-bound: the
+outside-roster count, as one summand of the counted floor, reaching `- **Total travelers:**` only as
+part of the number written there. Read that file for this count and for nothing else: a heading is
+counted by the marks it carries and never by its name, no line below a heading is used, and nothing
+read there reaches anything this verb writes or says — not a name, not a need, not a heading, not a
+mark — so the count is rendered as a number that describes nobody. That bound is a rule this verb
+follows, never a property of the read: the tool that reads the file returns every byte of it, as it
+does for `agents/04-transport.md`, whose read of the same file
+`reference/adr/ADR-011-per-traveler-cost-estimation.md` bounds the same way. What stands behind it
+mechanically is the publish guard, whose non-publishable class takes every value of such an entry
+and keys its name wherever it can (`ADR-008` § *Coverage boundary*, above).
+
+**How they come to be counted.** `## person <name>` dispatches the reconcile that records such a
+member, and then applies the table above to `- **Total travelers:**` once, from the outside-roster
+count that reconcile has just written: a total at or above the named-traveler count but below the
+counted floor becomes the floor, so the total counts them from the act that admits them and the
+operator restates nothing (`## person <name>` § *The total*). A total already at or above the floor
+is left as it stands, because a total the operator stated may already carry them as a member the
+roster has no name for, and raising it would count them twice. This verb and § `group-expand`
+apply the same table on every write they make, so a total written before a member was recorded — on
+a trip that predates this rule, or after a reconcile that stopped — is brought up to the floor by
+the next of them once the operator has seen the numbers: this verb reads a count that may predate a
+roster change it made itself, so where the field is below the floor it says so and asks rather than
+raising it.
+
+**Nothing this engine does on its own takes them out of it.** The named-traveler count never holds
+such a member while they have no row, and the counted floor always does, so no disposition of the
+table above subtracts one on their account unless the operator withdraws them: a stale row coming
+off is not a departure (the second state below), and an erasure leaves the total as it stands
+(§ `erase`, reach row 5). They leave the count only as they entered it, through `## person <name>`
+and the model: the operator's statement there that they are not travelling dispatches the
+reconcile that drops their entry (`agents/00-enrichment.md`, the second exit), the floor falls with
+it, and that verb then applies the table above once, whose withdrawal rows lower the total where it
+equalled the floor they were in and leave a total above it for the operator to restate here
+(`## person <name>` § *A withdrawal*). Where the roster names such a member and they leave the
+party, `## group` carries the same statement in the act that removes their row (the second state
+below), or names it for `## person <name>` where a stop on their row held the reconcile before it
+(§ *Removing a row*). This engine lowers no total on its own — only on that statement, or on a row
+removed here.
+
+**Where their record lives.** Such a member's name and needs are recorded once, in their
+carried-forward entry of `outputs/traveler-model.md`, though an approver declaration naming their
+stale or pending row may also hold their key, as may any ledger line under that key (the second
+state below). The operator's statement is that entry's
+authority and the model is its record, **carried forward verbatim across a reconcile rather than
+re-derived** (`## person <name>` § *Durability*) — every byte of it but `[ROSTERED]`, which each
+reconcile writes afresh. The same file is the party denominator needs-compliance and desire-coverage
+grade against, which `CLAUDE.md` states the site build **excludes** and the hub applies as a hard
+bound before any objective. A consumer that sizes the party for a non-publishing purpose takes the
+outside-roster count there and never reads the total for them: the total cannot tell such a member
+from any other member the roster does not name, and it can lag the model where it was written before
+they were recorded. `agents/04-transport.md` § *Input* item 7 does exactly that.
+
+**The three states.** A person recorded through `## person <name>` is in exactly one of these, and
+each has one disposition.
+
+- **No roster row, and both marks on their entry** — the standing above. They are in the
+  outside-roster count, and nothing is due.
+- **A roster row and a both-marks entry, with no usable profile of theirs on file** — they were
+  named at scaffold, before anyone knew they would never file, or added here since. The reconciler
+  joins the two as one person and marks the entry `[ROSTERED]`, so the named-traveler count holds
+  them and the outside-roster count does not. The row is the stale half, and it comes off through
+  this verb's no-argument render, which echoes it before removing it. Until it comes off, the stale
+  row, or a pending row while it stands, holds a `Person` cell that `## .approvers` resolves, and a
+  declaration naming it outlives the row; retiring or restating it is the operator's act. The
+  removal rests on the
+  third-party recording, not on travel: they still travel, now as an unnamed member, so it is not a
+  departure — the table's stale-row row applies and its removal rows do not, and the total stands.
+  The reconciler reports this state rather than removing the row (`agents/00-enrichment.md`
+  § *Traveler identity*), and its report says the person still travels, which is the answer this
+  verb asks for before any removal from the render. **This verb runs that reconcile before it
+  removes the row and again once the row is off**, so their entry loses `[ROSTERED]` and is counted
+  outside the roster before the act that removed the row ends, and once that second reconcile
+  completes no count — this verb's, or the one `agents/04-transport.md` takes — leaves them out;
+  where the first cannot complete the row waits, unless one of that reconcile's stops names it, and
+  where the second does not the act says so (§ *Removing a row*). Where the row's display name
+  differs from the entry's although their keys agree, the reconciler stops rather than joining them,
+  and the row comes off as that paragraph says of a row whose own stop holds the reconcile. Between
+  the change that makes this state and the reconcile that reports it, the publish guard's refusal of
+  a name it can key is the only catch. Where the intake template sits
+  on file for them unfilled, the row is pending rather than stale: the reconciler reports a pending
+  profile, and the row stays until they fill it, when the third state applies — unless the operator
+  says the row was added in error, when it comes off as the stale row does. Where such a person
+  leaves the party instead and the reconcile before the removal completes, their row comes off as a
+  departure and the table's removal rows apply, and this verb carries the statement that they are
+  not travelling to the reconcile it runs once the row is off, which drops their entry, so they
+  leave every count in that act — though where the
+  reconciler's report says they still travel, this verb asks once more, naming that their entry, and
+  the needs recorded for them, go with the row and are kept in no file, and carries the statement
+  only on a confirmed answer, the row otherwise coming off as the stale row does; where that
+  reconcile does not complete, the act says so and names their withdrawal through
+  `## person <name>`, and until it runs their entry stands and re-enters the outside-roster count at
+  the next reconcile.
+- **A usable profile of theirs on file — one they have filled, not the intake template left
+  unfilled** — they filed, and the standing is over. Where the roster does not already name them,
+  add their row here first; `/trip-record travelers`, named above for after any roster change, then
+  reconciles: the profile supersedes the entry (`agents/00-enrichment.md`, *supersede, do not
+  merge*), and they are a traveller like any other. The table leaves the total alone where it
+  already counts them and asks where it does not — and until that reconcile runs, their entry still
+  counts them outside the roster, so the asking row names the reconcile rather than a new total. In
+  this state a row is never stale.
+
+Where the user asks for someone to be added to the party who has filed nothing and never will, name
+**`/trip-record person <name>`** and **do not run it**. Someone with a profile on file is added here,
+as a traveller. Where the user says such a member no longer travels and the roster holds no row for
+them, name that verb with that statement, and do not run it either: their entry is its to withdraw.
+Where the roster holds their row, removing it is this verb's, and that removal carries the statement
+to the reconcile itself, or names it for that verb where a stop on their row held the reconcile
+before it (§ *Removing a row*).
 
 ## fact <statement>
 
@@ -2301,7 +2602,7 @@ naming, in one place, is not a solicitation.
 
 ## erase <person-id>
 
-**Reads:** `people/<person-id>.md` — the file-existence probe and its frontmatter, to resolve the id and to detect a `merged-into:` stub; `people/` — the store listing, for the stub sweep in step 3 and for the collision check; `groups/` — the group-store listing, and `groups/*.md` — the `## Members` bullets of every group record, read **before they are written** because row 30 removes a bullet located by value and the receipt's occurrence count is derived from the section rather than remembered. **The group store is read in full and unconditionally, not per trip**, because a group record belongs to no trip and the discovery step below cannot reach one; `trips/` — the trip listing; `trips/*/travelers/*.md` — the frontmatter of every traveller file on every trip, which is the discovery step and the **only** way a trip enters this run's scope; and, for each trip that discovery resolved, that trip's own `trip-context.md`, `trip-log.md`, `travelers/`, `outputs/`, `.approvers` and `.approvals` in full, because a substitution has to read a value to replace it. **Reads no trip discovery did not resolve** — except the residual scan below, which reads other trips' bodies and **writes none of them**. Dispatches no agent. The erasure stands behind a typed confirmation of the id at a terminal, stated in full under § *The confirmation* below.
+**Reads:** `people/<person-id>.md` — the file-existence probe and its frontmatter, to resolve the id and to detect a `merged-into:` stub; `people/` — the store listing, for the stub sweep in step 3 and for the collision check; `groups/` — the group-store listing, and `groups/*.md` — the `## Members` bullets of every group record, read **before they are written** because row 30 removes a bullet located by value and the receipt's occurrence count is derived from the section rather than remembered, together with each record's title line, which row 37 reads and never writes. **The group store is read in full and unconditionally, not per trip**, because a group record belongs to no trip and the discovery step below cannot reach one; `trips/` — the trip listing; `trips/*/travelers/*.md` — the frontmatter of every traveller file on every trip, which is the discovery step and the **only** way a trip enters this run's scope; and, for each trip that discovery resolved, that trip's whole directory — its `trip-context.md`, `trip-log.md`, `travelers/`, `outputs/`, `.approvers` and `.approvals` among it — in full, because a substitution has to read a value to replace it and row 38 reads what no other row names. **Reads no trip discovery did not resolve** — except the residual scan below, which reads other trips' bodies and **writes none of them**. Dispatches no agent. The erasure stands behind a typed confirmation of the id at a terminal, stated in full under § *The confirmation* below.
 
 The erasure verb. A person asked to be deleted; this removes their record and the values that were copied out of it, everywhere those copies can still be found. **It is the only operation on this command surface that destroys personal data irrecoverably, and the only one that writes an archived trip.**
 
@@ -2341,7 +2642,11 @@ Erasure mints **one token per (person × trip)**, of the shape `per-<token>` whe
 | the roster row of any resolved trip already carries `per-[0-9a-f]{4}` in column 1 | **`ALREADY-ERASED`** — see idempotency below. Not a refusal, and not a second erasure |
 | `trips/` could not be listed, or the store could not be listed | refuse and write nothing. **An empty read is not an empty class**; a run that cannot enumerate its scope cannot bound its own reach |
 
-**Idempotency keys on the authority, not on the model.** The predicate is **column 1 of that trip's roster row matching `per-[0-9a-f]{4}`**. Where it holds, the person is already erased on that trip: **mint nothing, write nothing, change zero bytes**, and emit `ALREADY-ERASED` on every row of that trip's receipt. Keying the predicate on the derived model instead would re-derive it from a stale projection and mint a *second* token, leaving the roster and the model disagreeing about which tombstone is current — on a trip with nothing left to reconcile them against.
+**A `[THIRD-PARTY]` party member is never this verb's subject.** Such a member holds no person record (`reference/adr/ADR-012-people-library.md` § 5) and no roster row (`## group` § *Roster standing of a third-party member*), so no `<person-id>` resolves to one and step 2 never discovers one. Their one record is their carried-forward entry in `outputs/traveler-model.md`, and the delete path it has is a fresh operator statement that withdraws them (`agents/00-enrichment.md`, the exit a fresh operator statement opens), which a reconcile honours on an active trip and nothing honours on an archived one; an approver declaration naming their stale or pending row, and any ledger line under its key, is the operator's to retire (`## .approvers`), and neither the withdrawal nor this verb reaches that key. What this verb does reach in such an entry is **the subject's** name inside its text, by row 35.
+
+**Idempotency keys on the authority, not on the model.** The predicate is **column 1 of that trip's roster row matching `per-[0-9a-f]{4}`**, where the row is the one the discovered traveller file joins: the row whose `Traveler file` cell names that file by exact path, where the roster has that column, and otherwise the row whose `Person` cell reduces to the file's stem key. Where it holds, the trip's name authority is already erased: **mint nothing**, and emit `ALREADY-ERASED` on every REACH row of that trip's receipt but rows 2, 8 and 9. Those three are step 8's, the write the order of writes keeps for last (§ *The order of writes*), and they are the only write left: where `travelers/per-<token>.md` exists, the old file is superseded, so the run completes step 8 — the cell repointed, then the old file removed — and emits for rows 2, 8 and 9 what a first run emits; where it does not, the old file is the only carrier of the traveller's needs, so the run **writes nothing on that trip**, rows 2, 8 and 9 read `UNDETERMINED`, and the receipt names the file (§ *The receipt*). Its REPORT rows write nothing on any run, so they read and report here as on any other, under the candidate names § *The name every match reads* gives a trip whose roster already carries the token — and because the order of writes leaves the trip resolvable until its last write, this is how a run interrupted before that write shows, through row 38, each place it left the subject's name standing. Keying the predicate on the derived model instead would re-derive it from a stale projection and mint a *second* token, leaving the roster and the model disagreeing about which tombstone is current — on a trip with nothing left to reconcile them against.
+
+**A discovered traveller file that joins no roster row, on a trip whose roster carries a `per-[0-9a-f]{4}` row, is an interrupted erasure.** It is the state step 1 leaves where the roster has no `Traveler file` column, because the tombstone breaks the stem-key join, and the state a run stopped inside step 8 leaves where it has one. **Mint nothing and write nothing on that trip**: rows 8 and 9 read `UNDETERMINED`, row 2 reads `n/a` where the roster has no such column and `UNDETERMINED` where it has one, every other REACH row reads `ALREADY-ERASED`, and the REPORT rows read under candidate names. The receipt names the file by its role and its discovery key, never by a path derived from it, and says that it holds every value the traveller filed, so the remedy is removing the file (§ *The receipt*).
 
 ### Step 2 — discovery, and the residue it cannot find
 
@@ -2357,11 +2662,20 @@ Discovery is a frontmatter read of `person:` over every `trips/*/travelers/*.md`
 
 **`unlink` narrows this verb's reach, and that is a property of the two verbs rather than a defect in either.** The detach is CHEAP and reversible and writes no marker — correct for what it is — and the cost lands here. Say so in the render; do not imply the sweep was total.
 
+### The name every match reads
+
+**Every row below that matches a name, and the residual scan, match the subject's name as this block defines it — never the record's display name alone, and never a name this command computed.** The roster is the name authority on its own trip (`reference/data-model.md` § *The display name has one authority*), and a trip may name the subject differently from the record — it may say "Mom" where the record says "Pat" — so what is matched depends on where the match reads:
+
+- **on a trip this run resolved**, the subject's name is the value row 1 replaces in that trip's roster, read before step 1 writes it. **Where that roster already carries the token**, because a run was interrupted before its last write there, that value is gone and no file on the trip holds the authority: the run reads the title line of the traveller file discovery resolved there — the old file, which the order of writes removes last so that this read is still possible (§ *The order of writes*) — and the record's display name, as **candidates**, never as the trip's name: the one authority for that name was the roster cell step 1 replaced, and a profile's own title line is not one; the receipt says so (§ *The receipt*);
+- **for row 37 and the residual scan**, which read beyond any one trip, it is every name the bullet above yields on this run, candidates included, together with the record's display name.
+
+**On a resolved trip every row matches that trip's name and no other.** Where a trip names the subject otherwise, the record's display name can be another traveller's there, so no row matches it as that trip's name: row 37 and the residual scan read it, and so do the REPORT rows of a trip whose roster already carries the token, as a candidate — and none of them writes.
+
 ### Step 3 — the reach table
 
 **The receipt is total over this table.** Every **REACH** and every **REPORT** row emits **exactly one** row on every run. **OUT** rows emit none, and a caller checks "no row" against this list rather than inferring it from silence. A location can therefore only be missing from a receipt **by being missing from this table**, which moves "silently partial" from a failure the implementation can have to one only this table can have.
 
-Outcome tokens are `ERASED` · `TOMBSTONED` · `UNREACHABLE` · `ALREADY-ERASED` · `n/a` · `UNDETERMINED`. **`UNDETERMINED` is never a pass.**
+Outcome tokens are `ERASED` · `TOMBSTONED` · `REPORTED` · `UNREACHABLE` · `ALREADY-ERASED` · `n/a` · `UNDETERMINED`. **`UNDETERMINED` is never a pass.** `REPORTED` is the outcome of a REPORT row that reads for the subject's name in places this verb does not write, on every run: its count is what it found there, and `0` is a count, never a missing row.
 
 Locations are named **by path, never by an artifact-class ordinal.** That enumeration renumbered mid-milestone when a class was inserted ahead of the person store, and six ordinal citations in this milestone's own working notes came to name the wrong class — three of them across the in-model boundary. A path does not do that.
 
@@ -2370,7 +2684,7 @@ Locations are named **by path, never by an artifact-class ordinal.** That enumer
 | **1** | `trip-context.md` § *Group* — **column 1 of the roster table** | REACH | substitute the cell. **The row survives.** Written **first** — see the ordering below |
 | **2** | § *Group* roster — the traveller-file cell, **where that column exists** | REACH | repoint to `travelers/per-<token>.md`. Where the roster has no such column, emit **`n/a`** and name the column set. **Never a silent skip** |
 | **3** | § *Group* roster — **any other cell of that person's row** | REACH | **substitute the whole cell** to `—`. These are free-text descriptions *of the person*, not join keys; replacing only the name inside one leaves a description of the erased person standing under a tombstone, which reads as anonymised when it is not |
-| **4** | § *Group* — **the prose sub-fields**, whatever they are | REACH | substitute every occurrence of the subject token **between the `## Group` heading and the next `## ` heading**. Defined by **block extent, not by a field list**: nothing in the corpus enumerates these sub-fields, so any list written here is stale the first time an operator adds one |
+| **4** | § *Group* — **the prose sub-fields**, whatever they are | REACH | substitute every occurrence of the subject's name **between the `## Group` heading and the next `## ` heading**. Defined by **block extent, not by a field list**: nothing in the corpus enumerates these sub-fields, so any list written here is stale the first time an operator adds one |
 | **5** | § *Group* — `- **Total travelers:**` | REACH | **unchanged.** Erasure does not reduce the party — the person travelled |
 | **6** | § *Hard Constraints* / § *Dietary & Health* — `Applies to:` values | REACH | substitute the name. **Never empty the list** |
 | **7** | the constraint **description text** | **REPORT** | **not swept.** A trip-level fact the person does not own. Name each constraint whose only `Applies to:` was the subject, by section and heading |
@@ -2398,8 +2712,15 @@ Locations are named **by path, never by an artifact-class ordinal.** That enumer
 | **29** | `people/<person-id>.md` — the record | REACH | **delete the file.** No stub is left in the store |
 | **30** | `groups/*.md` — the `## Members` bullets naming the subject id, **and any bullet naming a `merged-into:` stub id that redirects to it** | REACH | **remove the bullet. No tombstone.** A `per-<token>` written here would be a stable **cross-trip** pseudonym surviving in a **cross-trip** store — the exact correlation the per-(person × trip) mint exists to destroy. Removal is safe because a member set is variable-length **by construction**, so a smaller set is a valid one rather than an emptied location. Where removal empties a group or leaves a single member, **the group is not deleted** — emit its id and its new count. The stub half needs no new machinery: step 2's discovery already computes the stubs that redirect to this record, and this sweep consumes that set. **This row's reach over the section is total by construction rather than by enumeration**: `reference/schemas/group-record.md` closes `## Members` to member bullets and blank lines, so the only thing the section can contain is the thing this row removes, and there is no residue of another shape for it to miss |
 | **31** | `.approvers` · `.approvals` — the approver key on every `approver=` line and in every ledger record | REACH | **substitute** the subject's canonical traveller key with the token's own key — `per` and the four hex digits, the key `per-<token>` normalizes to — wherever it is a whole key field, in both files in one write step. **No record is removed and no line is emptied**: a declared approver who is erased stays declared under the token, and every organizer-stated record stays counted under it, so the gate's verdict and the published count are unchanged by the erasure. Where the trip has neither file, emit **`n/a`** and name both files. **Never a silent skip** |
+| **32** | `trip-context.md` § *Dietary & Health* — the `Mobility notes:` and `Other health notes:` lines | REACH | substitute the subject's name inside each line's value, on an active or an archived trip alike, and change nothing else on the line. **These are the section's attribution lines**: a name there says whose need a mobility or health note describes, and the need is the plan's while the name is theirs — the rule row 6 applies to this section's `Applies to:` values. **A line is its labelled bullet together with the lines that continue it — every following line up to the next line that begins at column 0, a blank line or a heading, nested bullets included — located by label anywhere between the `## Dietary & Health` heading and the next `## ` heading.** The section's food and allergen lists, and every other line of it, are row 34's: a name there can also be a food, and a line no label here declares may be one of those lists. **Never empty a line** |
+| **33** | `trip-context.md` § *Logistics* — the value of every `Primary traveler:` line and every `Departing travelers:` line, wherever in the section it sits | REACH | substitute the subject's name inside the value and change nothing else on the line. **These are the section's traveller slots**: the template has the author write `## Group` roster names there, so each is a projection of the cell row 1 rewrites, and one left standing names, on an origin, a traveller the roster no longer carries. **Located by label anywhere between the `## Logistics` heading and the next `## ` heading, never by sub-block**, so an archived trip keeps this reach after a later release retires the block that holds one |
+| **34** | `trip-context.md` — § *Mode*, § *Destination*, § *Logistics* outside row 33's slots, § *Accommodation*, § *Soft Preferences*, § *Trip Style*, § *Budget Posture*, § *Weather Context*, § *Destination Baseline*, § *Events & Calendar*, § *Possible Day Trips*, § *Locked Elements*, § *Current Itinerary Status*, § *Validation Requirements* and § *Notes for All Agents*, each by block extent, with every `[ENRICH]` or `[DERIVED]` sub-block it holds; and § *Dietary & Health* — the `Allergies:`, `Dietary restrictions:` and `Dietary preferences:` lines, and every line of that section rows 6 and 32 do not reach | **REPORT** | **not swept.** Count the subject's name in each section and in each of those `## Dietary & Health` lines, word-boundary and case-sensitive, and name each that holds it with its count — a section by its heading, a line by its label where it has one; a `[DERIVED]` block that names the subject is also reported **stale**, the word `## group` uses for it after any roster change. **A block another writer owns is not this command's to write**: `CLAUDE.md` § *Write ownership* gives the `[ENRICH]` blocks to the enrichment agent and the `[DERIVED]` blocks to no writer at all. **The rest state facts about the trip rather than about a person** — its places, dates, bookings, venues, style, budget and planning state, and the foods and allergens its plan keeps clear of — where a display name that is also a place, a month, a venue or a food is the likeliest false match, and a substitution there would rewrite the trip's own record irreversibly: in an `Allergies:` list it would take another traveller's allergen with it, and leave a plan that grades compliant without it. **A reported name is one the operator can still remove; an over-matched rewrite is one nobody can undo**, so here the report is the cheap error |
+| **35** | `outputs/traveler-model.md` — every line of the body but a `##` heading: each entry's needs, desires, facets and `Documents:` line, each `(Applies to: …)` list and each `shared with <Name>` reference, the `## Desire overlap` block, the `## Update signals [DERIVED]` block, and the text of a carried-forward `[OPERATOR-PROVIDED]` + `[THIRD-PARTY]` entry | REACH | **substitute only — never regenerate**, every occurrence of the subject's name, by file extent, on an active or an archived trip alike. A `[THIRD-PARTY]` entry's heading and needs are that party member's and not the subject's to erase, so this row changes only the subject's name inside its text, and the next reconcile carries that text forward verbatim, because carry-forward copies the model this row wrote. **On an active trip a reconcile re-derives every other entry from its own traveller's file**, so a name whose source is another traveller's own words returns with it — row 38 names that file |
+| **36** | `outputs/traveler-model.md` — the path of the traveller file row 8 superseded, wherever the model names it | REACH | **repoint** to `travelers/per-<token>.md`, the path row 8 gives the file, as row 2 repoints the roster cell. **Located by that exact path, never by a name match** — a stem is often the name lower-cased, which a case-sensitive pass cannot see. Where the model names no such path, emit **`n/a`**. **Never a silent skip** |
+| **37** | `groups/*.md` — the `# <H1>` display name of every group record | **REPORT** | **not swept, and nothing is written.** Read each record's title line, count the subject's name in it, word-boundary and case-sensitive, and name each group whose name holds it **by id, never by its name**, with its count. The name is free text the operator wrote — the one place `groups/README.md` routes a group's meaning — and rule 13's operation class writes no value, so substituting it would need a widening that rule forbids. **A match is a candidate, not a finding**, because a group's name may use the word for something else, and renaming the group is the operator's act |
+| **38** | the rest of a resolved trip's directory, read once after the last write — every place the subject's name still stands outside what rows 16 and 34 count: another traveller's own `travelers/<traveler>.md`, a file no row of this table names, a line of a named file that no row covers — the lines of `trip-context.md` above its first `## ` heading and a section the template does not carry among them — and a REACH location a run did not finish | **REPORT** | **not swept.** Name each place with its count, word-boundary and case-sensitive, and list apart, as **candidates**, the matches that appear only when case is folded; a file this read cannot take as text is named with `UNDETERMINED`. **This row is what makes the receipt total over the trip rather than over a list**: a location nobody added to this table is reported here rather than read as reached, and a place a run interrupted before its last write on the trip left standing is reported on the next run, which still resolves the trip and reads `ALREADY-ERASED` on every REACH row but rows 2, 8 and 9 (§ *Step 1*) |
 
-**The table carries 31 rows — 22 REACH, 5 REPORT and 4 OUT — numbered contiguously.** Every row but row 29 is a location a copy of the person's data can reach; row 29 is the person's own record.
+**The table carries 38 rows — 26 REACH, 8 REPORT and 4 OUT — numbered contiguously.** Every row but row 29 is a location a copy of the person's data can reach; row 29 is the person's own record.
 
 **Row 30 is numbered after the record and written before it, and the two orders are separate on purpose.** The numbering is **append-only**, because every citation by number in the write order and in the two phase lists re-points silently under a renumbering — which is the property `ER14` grades as contiguity. The write order is stated in its own block below, where each position carries its reason; **the store is still written last, and row 30 is part of the store step rather than after it.** Deleting the record before the group sweep would strand a partial run with a member bullet naming an id nothing resolves and no record to re-derive the sweep from, which is the same argument that put row 29 last in the first place. **That accounting is graded against the table by `scripts/test-artifact-schema.sh` arm `ER14`**, in every term and in both directions, because the receipt's totality rests on this table being the whole population and a bare numeral is the one part of that claim nothing was checking: a row can be added while the figure beside it stays, and a reader checking the figure then reads a confirmation where a widening happened. Re-state the accounting in the same commit as the row. `people/README.md` is **not** a location: it is a tracked signpost carrying no person data, and keeping it that way is a property of the store rather than a thing this verb checks.
 
@@ -2419,33 +2740,37 @@ Locations are named **by path, never by an artifact-class ordinal.** That enumer
 
 ### The order of writes, and why it is not tidiness
 
-> **1.** row 1 — the roster cell. **2.** rows 2–4 — the rest of § *Group*. **3.** rows 8–9 — the traveller file and its reference field. **4.** row 6 — `Applies to:`. **5.** row 10 — the derived model — then row 31, the approval sidecars. **6.** rows 11–15, 17 — the remaining derived and accumulated artifacts. **7.** row 18 — the publish staging clone. **8.** rows 26–28 and row 30 — the merge stubs and the group store. **9.** row 29 — the person's own record, and the last write of the store.
+> **1.** row 1 — the roster cell. **2.** rows 3–4 — the rest of § *Group*. **3.** row 8 — the traveller file, written at the token's stem beside the old one. **4.** row 6 — `Applies to:` — then row 32 and row 33, the attribution lines of § *Dietary & Health* and the traveller slots of § *Logistics*. **5.** row 10 — the derived model's heading — then row 36 and row 35, the rest of the model, then row 31, the approval sidecars. **6.** rows 11–15, 17 — the remaining derived and accumulated artifacts. **7.** row 18 — the publish staging clone. **8.** rows 2, 8 and 9 — the roster's `Traveler file` cell repointed to the token's stem, then the old traveller file removed, and its `person:` key with it: the last write on the trip. **9.** rows 26–28 and row 30 — the merge stubs and the group store. **10.** row 29 — the person's own record, and the last write of the store.
 
 **The roster is written first because it is the name authority.** `agents/00-enrichment.md` § *Traveler identity* states it: the roster cell is the authoritative display name, the model heading and the traveller-file stem are **projections** of it, and where a projection disagrees *"the roster is right and the projection is the defect"* — the reconciler converges the projection onto the roster and is forbidden to repair by rewriting the roster.
 
-**So the two orders are not two implementations of one design; one of them is the resurrection bug.** A run interrupted after step 1 leaves the roster tombstoned and the projections stale, and the next pass **converges them onto the tombstone** — the run is self-healing at every row but row 31. A run interrupted under the reverse order leaves the projections tombstoned and the authority still carrying the name, and the next pass **restores the name into every projection it just cleaned**. A model-only erasure is not merely incomplete: it is undone *by instruction*.
+**So the two orders are not two implementations of one design; one of them is the resurrection bug.** A run interrupted after step 1 leaves the roster tombstoned and the derived model stale, and on an active trip the next reconcile **converges the model onto the tombstone** — the one projection a pass rewrites, because the reconciler renames no traveller file and an archived trip receives no reconcile at all. A run interrupted under the reverse order leaves the projections tombstoned and the authority still carrying the name, and the next pass **restores the name into every projection it just cleaned**. A model-only erasure is not merely incomplete: it is undone *by instruction*. **No other row heals itself**: the next run of this verb keys on the tombstoned roster cell and writes nothing on that trip but what step 8 left undone, so a row a run did not reach stays as it was until the operator changes it, and row 38 is what names, with its count, each place such a row left standing.
 
-**Row 31 is not healed by that pass, and the receipt does not show it.** The approval sidecars are not projections of the roster, so nothing converges them onto the tombstone: a run interrupted after step 1 and before step 5 reaches row 31 leaves the subject's real key on the `approver=` lines of `.approvers` and in the ledger records of `.approvals`. The next run keys on the tombstoned roster cell, emits `ALREADY-ERASED` on row 31 as on every other row, and writes nothing there — so on such a trip row 31's `ALREADY-ERASED` does not show that the sidecars were reached, and the key stays in both until it is substituted there by hand, as row 31 states — the only route left to it, because the idempotency rule has the verb write nothing on that trip again.
+**Row 31 is not healed by that pass either, and not even row 38 shows it**, because the sidecars hold the subject's key rather than their name. The approval sidecars are not projections of the roster, so nothing converges them onto the tombstone: a run interrupted after step 1 and before step 5 reaches row 31 leaves the subject's real key on the `approver=` lines of `.approvers` and in the ledger records of `.approvals`. The next run keys on the tombstoned roster cell, emits `ALREADY-ERASED` on row 31 as on every REACH row but step 8's, and writes nothing there — so on such a trip row 31's `ALREADY-ERASED` does not show that the sidecars were reached, and the key stays in both until it is substituted there by hand, as row 31 states — the only route left to it, because the idempotency rule has the verb write nothing there again.
 
-**This is also what closes the reopen path.** `/trip-decommission reopen` returns the marker to `ACTIVE` and the next pass re-enumerates the party **from the roster**. The entry class with no traveller file — a party member whose needs the operator supplied — has no source-side substitution to carry it, so a roster left un-swept resurrects them on the first pass after a reopen. **The roster write is what makes the archived erasure hold.**
+**This is also what closes the reopen path.** `/trip-decommission reopen` returns the marker to `ACTIVE` and the next pass re-enumerates the party **from the roster**. The entry class with a roster row and no traveller file — the `[OPERATOR-PROVIDED]`-alone entry, a traveller whose needs the operator supplied before they filed a profile — has no source-side substitution to carry it, so a roster left un-swept resurrects them on the first pass after a reopen. **The roster write is what makes the archived erasure hold.**
 
-**The store is written last, for the same reason inverted.** While `people/<person-id>.md` exists a re-run can re-derive the whole sweep from it. Deleting it first strands a partial run with no source of truth for what it was erasing. **That argument reaches the group store too, and is why row 30 sits inside step 8 rather than after step 9**: the group sweep is located by the subject id and by the stub set step 2 computed, and both stop being re-derivable the moment the record is gone.
+**The old traveller file is the trip's last write, because it is how the next run finds the trip.** Discovery reads its `person:` key, and where the roster has a `Traveler file` column, that cell, naming the old file by exact path, is how the next run joins the file to the subject's row and reads the token there (§ *Step 1*). So row 8 writes the token-stem file at step 3, where the model can point at it, and the cell and the old file stay until every other write on the trip is done: step 8 repoints the cell (row 2) and then removes the old file, and its key with it. A run interrupted at any earlier write leaves the trip resolvable. Where that column exists and still names the old file, it also leaves the subject's row joined, and the next run emits `ALREADY-ERASED` on its other REACH rows and completes step 8 where the token-stem file exists and writes nothing on that trip where it does not. Where the roster has no such column, or a run stopped inside step 8 after repointing the cell, the old file joins no row, and the next run meets the interrupted-erasure branch of § *Step 1* and writes nothing on that trip. On every path its REPORT rows read under candidate names, so row 38 names each place the interrupted run left the name standing. **A run interrupted after a trip's last write left nothing there unreached**; the next run does not resolve that trip, and what its REPORT rows would have named was named, under the trip's own name, by the dry-run reach report the first run printed before its confirmation (§ *The confirmation*), and reaches the next run only through the residual scan, as candidates under the names the scan reads.
+
+**Three residues this order leaves, named rather than claimed away.** Where the roster has no `Traveler file` column the join is the stem key, which step 1 breaks, so a run interrupted before step 8 leaves the old file joined to no row: the next run reads it as an interrupted erasure, writes nothing on that trip, and names the file in its receipt, where it stays until the operator removes it (§ *Step 1*). A traveller `group` took off the roster, whose file stays by that verb's own rule, on a trip carrying an earlier tombstone, meets the same branch, and is reported rather than erased. And from step 1 to step 8 the subject's row pairs the token with the old file's path, so on an active trip a reconcile run inside that window meets a file that does not correspond to its row and writes an `UNRESOLVED` note naming the old path into the derived model (`agents/00-enrichment.md` § *Traveler identity*), until a run completes step 8 and the next reconcile reads the repointed cell.
+
+**The store is written last, for the same reason inverted.** While `people/<person-id>.md` exists a re-run can re-derive the whole sweep from it. Deleting it first strands a partial run with no source of truth for what it was erasing. **That argument reaches the group store too, and is why row 30 sits inside step 9 rather than after step 10**: the group sweep is located by the subject id and by the stub set step 2 computed, and both stop being re-derivable the moment the record is gone.
 
 ### The two-phase sweep, and why a name is not a safe pattern
 
-**Phase A — structural loci.** Rows 1, 2, 3, 5, 6, 8, 9, 10, 26–31. Each is a named cell, heading, field or path, addressed **by position**. Phase A never pattern-matches a name; it rewrites a located slot. **Row 30 belongs here and not in Phase B, and the distinction is exact rather than incidental:** a member bullet is located by an **id**, matched whole against an anchored line, never by a display name — so the free-text hazards Phase B's bounds exist for do not arise, and the group store is outside Phase B's one-trip-directory scope in any case.
+**Phase A — structural loci.** Rows 1, 2, 3, 5, 6, 8, 9, 10, 26–31, 32, 33 and 36. Each is a named cell, heading, field or path, addressed **by position**. Phase A never pattern-matches a name; it rewrites a located slot. **Row 30 belongs here and not in Phase B, and the distinction is exact rather than incidental:** a member bullet is located by an **id**, matched whole against an anchored line, never by a display name — so the free-text hazards Phase B's bounds exist for do not arise, and the group store is outside Phase B's one-trip-directory scope in any case.
 
-**Phase B — bounded free-text.** Rows 4, 6, 11–15, 17. **Word-boundary, case-sensitive, and scoped to one trip directory per pass.**
+**Phase B — bounded free-text.** Rows 4, 6, 11–15, 17, 32, 33 and 35. **Word-boundary, case-sensitive, and scoped to one trip directory per pass.**
 
 > **Never repository-wide, and never case-folded.** A display name is frequently an ordinary English word. Measured on this repository's own working tree, one live four-character display name occurs **5 times inside its trip, 130 times across the repository, and 4,395 times case-folded** — and every one of those outside occurrences is legitimate prose. A repo-wide or case-insensitive replace does not fail loudly; it corrupts the corpus silently. `examples/**`, `analysis/**`, `agents/**`, `reference/**`, `scripts/**`, `templates/**` and the repository root are outside Phase B **by construction**, not by an exclusion list that a later path could slip past.
 
-**Case-sensitivity is a decision with a stated cost.** A name written by hand in a different case inside a research list is missed. That miss is **detected rather than hidden**: the residual scan reports it as a candidate.
+**Case-sensitivity is a decision with a stated cost.** A name written by hand in a different case inside a research list is missed. That miss is **detected rather than hidden**: on a trip discovery resolved, row 38 lists it as a candidate, and on any other trip the residual scan does.
 
 ### The residual scan
 
 **Run before Phase A rewrites anything**, and emitted as a distinct `CANDIDATES` block below the receipt.
 
-It scans the trip roots discovery did **not** resolve for the subject's display name, word-boundary and case-sensitive, and reports **path and occurrence count only**. **It substitutes nothing there, ever.** This is what turns the unlink residue from "somewhere" into an enumerated list.
+It scans the trip roots discovery did **not** resolve for the subject's name — the names § *The name every match reads* gives this scan — word-boundary and case-sensitive, and reports **path and occurrence count only**. **It substitutes nothing there, ever.** This is what turns the unlink residue from "somewhere" into an enumerated list.
 
 **They are candidates, not findings, and the distinction is measured rather than cautious.** A name match outside its own trip is weak evidence: the same measurement that forces Phase B's scope bound shows an ordinary-word name occurring 26 times outside its trip for every occurrence inside it. Reporting these as findings would train the operator to ignore the block.
 
@@ -2454,6 +2779,8 @@ It scans the trip roots discovery did **not** resolve for the subject's display 
 > **`erase <person-id>` → the dry-run reach report → the prompt names the record's display name and id → a typed confirmation of **the id** at a terminal → execute.**
 >
 > **There is no `--yes`. There is no non-interactive path. There is deliberately no flag to skip it.**
+
+**The dry-run reach report is the run's inventory, taken before anything is written.** It carries every REACH row and every REPORT row of the table above, each with the places it would reach or report on every trip discovery resolved and the count at each, computed with the subject's name as § *The name every match reads* gives it — on a first run, the roster's name, read before step 1 writes. Nothing an interruption does can reach it: a run stopped after a trip's last write prints no receipt for that trip, and the next run no longer resolves the trip, so this report is where that trip's REPORT places were last named under the trip's own name. Like the receipt, it names places and counts and never a value.
 
 **The prompt echoes the display name; the typed token is the id.** Those are two separate halves and they answer two different failures.
 
@@ -2475,15 +2802,15 @@ It scans the trip roots discovery did **not** resolve for the subject's display 
 
 ### The receipt
 
-One row per **REACH** and per **REPORT** location, every run: **location · disposition · outcome · occurrence count**, and for `UNREACHABLE` the concrete path or URL. **No row carries a value.** Then the `CANDIDATES` block, then the hand-off for row 19.
+One row per **REACH** and per **REPORT** location, every run: **location · disposition · outcome · occurrence count**, and for `UNREACHABLE` the concrete path or URL. **No row carries a value.** Every REPORT row that reads for the subject's name takes the outcome `REPORTED` and lists, after its count, each place it found the name — a section by its heading, a line by its label, a file by its path, a group by its id — with that place's own count, and its candidates apart; on a trip whose roster already carried the token, every place it lists is a candidate, because the trip's name could not be read there (§ *The name every match reads*). A heading or a path whose own text carries the subject's name is printed with the trip's token in the name's place — the literal `per-<token>` where no roster row of the trip joins the subject — and marked `(name masked)`, so the row names the place without carrying the value and the operator knows the bytes on disk still hold the name. **The superseded traveller file is named otherwise, wherever a run leaves it standing**: by its role and its discovery key — *the superseded traveller file, whose `person:` is `<person-id>`* — and never by its path, whose stem is the name lower-cased and whose masked form would read as the token-stem file's own path. Rows 8 and 9 read `UNDETERMINED` beside it, and the receipt says that it holds every value the traveller filed, so the remedy is removing the file, and that this receipt is the last that can name it, because the run's last write deletes the record its key names. An **OUT** row emits none. **The receipt closes on one line saying what it is total over**: its REACH and REPORT rows, by number, and the OUT rows, by number, as declared rather than reached — and never over anything else — and, for each trip whose roster already carried the token, that the trip's name could not be read there, so its REPORT rows counted candidates. Then the `CANDIDATES` block, then the hand-off for row 19.
 
 **Row 30's receipt row carries the group ids it reached and their new member counts, and that is not a value in the sense the rule above forbids.** A group id is this run's own act made auditable — it names which records changed, so an operator can see that a group they curated is now smaller — and it is neither the subject's data nor anybody else's. A row naming only an occurrence count would leave the operator unable to tell which of their groups moved, on the one location in the table whose contents they authored themselves. **The member ids that stayed are never printed**, and no display name is resolved for this row at all.
 
-**A second run emits `ALREADY-ERASED` on every row and changes zero bytes.**
+**On a trip whose roster already carries the token, a later run mints nothing, emits `ALREADY-ERASED` on every REACH row but rows 2, 8 and 9, and writes nothing there but the completion of step 8 that § *Step 1* allows**; rows 2, 8 and 9 take the outcomes that section gives them, and the REPORT rows read and report there as on any run, under candidate names.
 
 ### The standing rules this verb writes under are rules 10 and 13
 
-**Rule 10 carries every row but one.** This section discharges each of its conditions by name. **(a)** every location written is a row of the table above, and the receipt is total over it; **(b)** every rewritten value becomes the minted token or the form's declared not-answered sentinel, and **no location is emptied** — rows 5 and 6 are the two that would otherwise be, and both are pinned. Row 31's rewritten keys are the token in the sidecars' own key form — the key the tombstoned roster cell normalizes to; **(c)** Phase B is scoped to one trip directory, word-boundary and case-sensitive, and reaches no path outside it; **(d)** the operator types the record's id at a terminal, with no flag and no non-interactive path; **(e)** every location emits exactly one receipt row, including `n/a` for the absent roster column and `UNREACHABLE` for the four locations nothing local reaches.
+**Rule 10 carries every row but one** — row 37 among them, which reads the group store and writes nothing, and so needs no rule of its own. This section discharges each of its conditions by name. **(a)** every location written is a row of the table above, and the receipt is total over it; **(b)** every rewritten value becomes the minted token or the form's declared not-answered sentinel, and **no location is emptied** — rows 5 and 6 are the two that would otherwise be, and both are pinned, and row 32 and row 33 change a name inside a line rather than remove the line. Row 31's rewritten keys are the token in the sidecars' own key form — the key the tombstoned roster cell normalizes to; **(c)** Phase B is scoped to one trip directory, word-boundary and case-sensitive, and reaches no path outside it; **(d)** the operator types the record's id at a terminal, with no flag and no non-interactive path; **(e)** every REACH row and every REPORT row emits exactly one receipt row, including `n/a` for the absent roster column and for a model naming no superseded path, `REPORTED` for the places this verb reads and does not write, and `UNREACHABLE` for the four locations nothing local reaches, and an OUT row emits none.
 
 **Row 30 is rule 13's, and it is stated separately rather than folded in because rule 10 cannot carry it.** Rule 10(b) admits a rewritten value that becomes the minted token, and the minted token is the one thing that must never be written into a cross-trip store; and its *no location is emptied* clause is calibrated to a constraint roster, where empty grades as compliant, rather than to a member set whose length is variable by construction. Rule 13's five conditions are discharged here, named by letter rather than in the bracketed form rule 10's own discharge uses — that form is anchored by an arm of the schema suite at exactly one site in this section, and a second instance of it would leave the arm unable to locate the site it grades. Clause **a**: the location is row 30 of the table above and emits its receipt row like every other. Clause **b**: the bullet is matched whole, against an anchored line, by id. Clause **c**: removal leaves the record standing. Clause **d**: a group left with no members or with one is reported by id and count. Clause **e**: no group record is deleted at any count.
 
@@ -2934,7 +3261,7 @@ The group-deletion verb. **It deletes exactly one file under `groups/` and nothi
 
 ## group-expand <group-id>
 
-**Reads:** `<store-root>/groups/<group-id>.md` — the file-existence probe that gates the branch, its H1 for the render, and its `## Members` bullets, which are the whole of the member set and are read **in the file's own order** because the write order below is that order; `trips/<slug>/travelers/` — the **directory-presence probe**, taken with `Read` on the directory path itself and read only to establish whether the directory is there, in `## link`'s order and for `## link`'s reason; `trips/<slug>/trip-context.md` — the whole of `## Group`, read before it is written because the presence probe on the roster's `Person` column selects adding a row from editing one, because the table's own header row fixes the shape a new row is written in, and because the disposition for `- **Total travelers:**` is chosen from that field's current value, which is `## group`'s read and is cited rather than re-derived; and, **per member**, exactly what `## link <name> <person-id>` declares for one member — that member's `travelers/<file>.md` existence probe, frontmatter and declared body fields; that member's `people/<person-id>.md` existence probe, H1 and declared body fields; the outgoing record on the branch where the file already names a different one; and `reference/data-model.md` § *The classification* and § *The lattice*, read live for each field's class and scope and **never re-authored here**; and, **on the `NEW` branch alone**, exactly what `## profile <name>` declares for its create route — `templates/traveler-intake.template.md`, the copy source; `trips/<slug>/travelers/*.md`, **the entry names alone, no file opened**, which is that verb's collision-check denominator; and `reference/data-architecture.md` § 3.2, read live for the canonical traveller key that check normalizes with and **never re-authored here**. **Both per-member read sets are cited rather than re-derived, and neither is widened by being run N times** — `link`'s on every branch, `profile`'s create-route reads on `NEW` — because this verb re-implements neither the survey nor either predicate it rests on, and a second implementation of any of them would be a second source of truth for what a field is or for who is who. **No value read on any side is written anywhere by the survey**, which is `link`'s own minimality clause, preserved. Dispatches no agent.
+**Reads:** `<store-root>/groups/<group-id>.md` — the file-existence probe that gates the branch, its H1 for the render, and its `## Members` bullets, which are the whole of the member set and are read **in the file's own order** because the write order below is that order; `trips/<slug>/travelers/` — the **directory-presence probe**, taken with `Read` on the directory path itself and read only to establish whether the directory is there, in `## link`'s order and for `## link`'s reason; `trips/<slug>/trip-context.md` — the whole of `## Group`, read before it is written because the presence probe on the roster's `Person` column selects adding a row from editing one, because the table's own header row fixes the shape a new row is written in, and because the disposition for `- **Total travelers:**` is chosen from that field's current value and the counted floor, which is `## group`'s read and is cited rather than re-derived; `trips/<slug>/outputs/traveler-model.md` — for the outside-roster count and nothing else, which is `## group`'s read of that file and is cited rather than re-derived; and, **per member**, exactly what `## link <name> <person-id>` declares for one member — that member's `travelers/<file>.md` existence probe, frontmatter and declared body fields; that member's `people/<person-id>.md` existence probe, H1 and declared body fields; the outgoing record on the branch where the file already names a different one; and `reference/data-model.md` § *The classification* and § *The lattice*, read live for each field's class and scope and **never re-authored here**; and, **on the `NEW` branch alone**, exactly what `## profile <name>` declares for its create route — `templates/traveler-intake.template.md`, the copy source; `trips/<slug>/travelers/*.md`, **the entry names alone, no file opened**, which is that verb's collision-check denominator; and `reference/data-architecture.md` § 3.2, read live for the canonical traveller key that check normalizes with and **never re-authored here**. **Both per-member read sets are cited rather than re-derived, and neither is widened by being run N times** — `link`'s on every branch, `profile`'s create-route reads on `NEW` — because this verb re-implements neither the survey nor either predicate it rests on, and a second implementation of any of them would be a second source of truth for what a field is or for who is who. **No value read on any side is written anywhere by the survey**, which is `link`'s own minimality clause, preserved. Dispatches no agent.
 
 The expansion verb. It puts a group's members onto the resolved trip, each linked to their own record exactly as `link` would have linked them one at a time. **It is the only one of the six that requires a trip, and its requirement-table row reads `lifecycle: ACTIVE` for that reason** — it writes trip content, so rule 5's bound applies to it unchanged and the contract's declared default is the correct cell.
 
@@ -2944,8 +3271,9 @@ The expansion verb. It puts a group's members onto the resolved trip, each linke
 
 **What is reconciled: `- **Total travelers:**`, once, by `## group`'s own table.** The cited read is
 taken for **every one of its purposes that applies here**, not two of them: the disposition for that
-field is chosen from that field's current value, and `## group [<name>]`'s reconciliation table for
-it is **applied rather than restated**. The one purpose that does not apply is named rather than
+field is chosen from that field's current value and the counted floor, and `## group [<name>]`'s
+reconciliation table for it is **applied rather than restated**.
+The one purpose that does not apply is named rather than
 dropped — echoing a row that is being removed, which expansion never does. **Reconciling is not an
 extra write this verb reaches for; it is what makes the sentence above true.** `## group` run once
 per member reconciles the field on every one of those runs, so an expansion that left it alone would
@@ -2959,7 +3287,7 @@ roster beside a placeholder total. `/trip-new` states in terms why that pairing 
 naming three downstream contracts specified as if the number already existed; a verb that populated
 the roster and left the placeholder standing would be the act that hands them the state. **The
 table's own rows carry the bulk case unchanged**, its asking row included: a total below the
-named-traveler count is reported and **left unwritten** until the operator settles it, which lands on
+counted floor is reported and **left unwritten** until the operator settles it, which lands on
 the receipt rather than as a second gate.
 
 **What is referenced: everything durable.** Passport, needs, preferences, travel style — all reached through the one `person:` field at composition time. Composition reads the record and writes the trip, never the reverse.
@@ -3021,6 +3349,8 @@ renders that field and the roster together and is where the reconcile is finishe
 **Re-expansion is idempotent by delegation, not by new logic.** A member already on the roster meets `## group`'s shipped presence probe — present → edit, absent → add. A traveller file already naming a **different** record meets `link`'s repoint branch, which echoes the outgoing id and counts the fields that stop drawing on it; that branch is not suppressed here, and a member on it surveys as `DIVERGES`. **This verb re-implements neither.**
 
 **The receipt names the group by id and by H1, the count expanded, and each excluded member with its verdict.** It is the one place the group id and the trip meet, and it is a transcript rather than an artifact.
+
+**The receipt ends as `## group [<name>]` § *After any roster change* ends a roster change — once for the whole run — after any run that wrote a member, a partial run included, because each member it wrote changed the roster, a link, or both.** Name **`/trip-record travelers`** as the reconcile, and **do not run it**; where the run added a roster row, that paragraph's staleness report comes with it **by citation rather than restated here**, so it reads whatever that paragraph reads. N runs of `## group` would each have ended on this step, and `## link <name> <person-id>` names the same reconcile after its `person:` write, so naming it once, after the last member written, is those namings collapsed — the name is the same after every one of them. **Not running it is this verb's equivalence rather than a courtesy:** an expansion that ran the reconcile would produce a state *N invocations of a shipped path* does not produce, which is the argument that makes it reconcile `- **Total travelers:**` above, read in the other direction; and it would dispatch an agent from a verb whose `Reads:` line declares that it dispatches none. A run that wrote no member — declined, or with every member excluded — names nothing, because nothing changed.
 
 **The standing rule this write is taken under is rule 5**, unwidened, and **not rule 12**. Every byte this verb writes lands under `trips/<slug>/`, so no widening is reached for and none is needed: rule 12 governs writes to a reference store, and this verb **reads** the group store and writes none of it. **Rule 2's two conditions and rule 7's append shape carry the trip-side writes**, exactly as they carry `## group`'s roster row, that verb's own edit of this same count — a field whose named lines change, which is rule 2's `Edit` condition unstretched — and `## link`'s field today. Saying so is what keeps the widening ladder honest — a verb that named a rule it did not need would make the next author reach for one too.
 

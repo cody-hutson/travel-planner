@@ -71,8 +71,8 @@ it unattended; that is deliberate, and it is the only operation here that works 
 It then removes the record and walks the trips, and it prints one line per location so
 you can see what it reached and what it could not.
 
-**What it cannot reach, said plainly rather than left for you to discover.** Four things
-survive it, and the fourth survives for a different reason than the other three. A trip
+**What it cannot reach, said plainly rather than left for you to discover.** Five things
+survive it, and the last two survive for a different reason than the first three. A trip
 you had already **unlinked** this person from keeps their name in its own files —
 unlinking leaves no trace behind, so nothing connects that trip to this record any more
 and nothing can find it by id. The erase report lists such trips as *candidates*, by path
@@ -87,9 +87,20 @@ it came from. A group record erasure *does* reach: it removes this person's id f
 group they were in, and then stops at the title line on purpose. The name has to be free
 text for a group to have a usable one, and a sweep that rewrote free text would take the
 name with it — so a group called `# Priya's crew` goes on saying so after Priya has been
-erased, and clearing that is a thing you do.
+erased, and clearing that is a thing you do. The erase report names every such group by
+its id, matching their name as it is written, so you know which ones.
 [`../groups/README.md`](../groups/README.md) § *What a record does not hold* states the
 same reach from the group's side.
+
+**The fifth is a name in a place the operation reads and chooses not to rewrite.** On every
+trip it does find, it rewrites the places that name the person — the roster, their traveller
+file, the derived model, a mobility or health note, the lines saying who travels from where —
+and it reports, rather than rewrites, the places that describe the trip itself: its
+destination and dates, its bookings, style and budget, its food and allergy lists, the blocks
+another agent writes, and another traveller's own file. A person's name can also be a place,
+a month, a food or an ordinary word, and a rewrite that caught the wrong one could not be
+taken back. So a name standing in one of those places is left as it was, the report lists
+each place with its count, and removing it is yours.
 
 Deleting a record by hand still works and still does only what it used to: it removes the
 record, and every reference inside every trip stays behind pointing at nothing.

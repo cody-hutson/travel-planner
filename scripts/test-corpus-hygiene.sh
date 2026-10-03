@@ -122,11 +122,71 @@
 #        THE SPAN'S FLOOR IS THE FIRST NUMBER, NOT THE LOWEST ONE OBSERVED. Anchoring the
 #        floor at the observed minimum would make a missing lowest number the one hole
 #        nothing can see, because removing it moves the floor down with it.
-#   CTL  a synthetic fixture tree, built in a temp dir ON EVERY RUN, plus one arm that
-#        replays a defect this repository actually shipped. One MUST-FIRE arm per finding
-#        code this file can emit, alongside the specificity arms that tell a correct
-#        implementation from a lookalike. A code with no arm is a check indistinguishable
-#        from one that CANNOT fire.
+#   E    AN OWNED RULE IS STATED ONCE AND CITED. A [THIRD-PARTY] party member's standing — no
+#        `## Group` roster row, and counted in `- **Total travelers:**` as an unnamed member — is
+#        stated once, under the heading CH_E_OWNER_HEAD in CH_E_OWNER_DOC. Three surfaces once
+#        gave three different answers to it, each restating the rule rather than citing it, and
+#        every required check stayed green. The unit is group C's sentence, read by the SAME
+#        segmenter (seg.awk), over every tracked markdown file but three declared exclusions:
+#        reference/adr/ (records state and weigh answers, and a hypothetical there fires both
+#        codes), examples/ (fixtures and witnesses) and CHANGELOG.md (history).
+#
+#        A STANDING sentence carries `third-party` (T) and one of `roster row`, `total
+#        travelers`, `group roster` or `roster member` (S), as literal substrings of its
+#        normalised text, never regex. E0 — the owner heading is not present exactly once, or
+#        its region (the heading to the next heading) holds no standing sentence; an empty
+#        surface lands here too. E1 — a standing sentence outside the owner region that does
+#        not carry the heading's text. E2 — a standing sentence anywhere, the owner's own
+#        included, that states a contrary standing in the lexicon below.
+#
+#        NORMALISATION: lowercase; remove backticks, `*`, `_` and every `>`; map a typographic
+#        apostrophe to `'`; collapse whitespace. A token is a run of [a-z0-9'].
+#        QUOTE RUNS: group E's reader joins each run of consecutive `>`-led lines into one unit,
+#        the leading marker of each line after the first stripped, before calling the shared
+#        sentences(). The shared isblockstart() starts a new unit at every `>`-led line, so
+#        without this join a sentence hard-wrapped inside a blockquote reaches E as two
+#        fragments and is never a standing sentence. The join is E-local: group C's units and
+#        counts do not move. Every `>` left inside a unit is then removed by the normalization,
+#        where it carries no token.
+#
+#        THE CONTRARY LEXICON is token-based and portable — no \b and no interval expression,
+#        so it runs the same under an operator's awk and CI's. NEG is a token in {no not never
+#        nor without cannot}, or one ending in n't.
+#          CA      a verb in {has have holds hold keeps keep gets get takes take occupies occupy
+#                  carries carry retains retain}, then a determiner in {a an their its one his
+#                  her}, then `roster` followed by `row`/`rows`, starting within the next 4
+#                  tokens. Void when a NEG lies among the 3 tokens before the verb.
+#          CB'-i   a count verb {counted count counts counting included include includes
+#                  including} WITH a NEG among its 3 preceding tokens, then {in toward towards
+#                  into}, then `total travelers` starting within the next 4 tokens. The negation
+#                  is required here, not voiding. The required negation is void when a `row`
+#                  or `rows` token lies between it and the count verb: that negation belongs to
+#                  a row clause ("has no roster row, counted in …"), not to the count.
+#          CB'-ii  {excluded exclude excludes omitted omit omits}, then `from`, then `total
+#                  travelers` within 4 tokens. Void when negated.
+#          CB'-iii `no place in`, then `total travelers` within 4 tokens.
+#          CB'-iv  `left out of`, then `total travelers` within 4 tokens. Void when negated.
+#          CB'-v   `total travelers`, then within the next 4 tokens a negation followed by one
+#                  of {count counts counted include includes included}; or, within the next 2
+#                  tokens, one of {excludes omits}. No void rule: the pattern carries its own
+#                  negation.
+#          CC      {is are becomes become} [also] {a an} `roster` {member entry}. Void when
+#                  negated.
+#
+#        THE DECLARED BOUNDARY, named here so it is read as a boundary rather than found as a
+#        hole. Each FAILS OPEN: a negation more than 3 tokens back, the universal "No
+#        [THIRD-PARTY] party member is counted in …" among them; a contrary answer split across
+#        sentences; paraphrase outside the lexicon — CB'-v reaches a total-as-subject form only
+#        where it carries a count or exclusion verb, so "counts the named roster only, never a
+#        …" (its negation lies past the window), "is not part of", "stays outside" and "is not
+#        added to" stay outside it. It FAILS CLOSED on a double negation and on a hypothetical
+#        ("whether or not … counted in"), both of which fire; hypotheticals live in the decision
+#        records, which are outside the scan.
+#   CTL  a synthetic fixture tree, built in a temp dir ON EVERY RUN, plus the arms CTL-RETRO
+#        and CTL-E-RETRO, which replay defects this repository actually shipped. One
+#        MUST-FIRE arm per finding code this file can emit, alongside the specificity arms
+#        that tell a correct implementation from a lookalike. A code with no arm is a check
+#        indistinguishable from one that CANNOT fire.
 #   Y    the assertion inventory, derived from this file's own emission sites and checked
 #        in BOTH DIRECTIONS: every code this file can emit has a must-fire arm behind it,
 #        and every arm names a code that some site can emit. The code set is READ FROM this
@@ -152,7 +212,7 @@
 #   twelve places" — breaks between `all` and `twelve`, so the cardinal and its noun land
 #   TOGETHER on the second line. Arm CTL-C-WRAP is that exact sentence and arm CTL-RETRO is
 #   the real historical blob that carried it. Both are worth keeping: they hold the shape
-#   the defect actually took, and CTL-RETRO is the only arm here graded against a document
+#   the defect actually took, and CTL-RETRO is the only class-C arm graded against a document
 #   this repository shipped. Neither DISCRIMINATES on the unit, and this comment previously
 #   claimed both did — a line-anchored reader finds `twelve places` intact on one line and
 #   passes them, so a green from these two says nothing about whether the unit is wrapped.
@@ -187,11 +247,11 @@
 # the out-of-scope figure beside its own verdict on every run.
 #
 # ── ONE DEPENDENCY ON REPOSITORY HISTORY, STATED ─────────────────────────────────
-# Arm CTL-RETRO reads a blob from a commit in this repository's history. It is the only arm
-# that tests the detector against a defect the repository actually shipped rather than one
-# this file wrote, and it is therefore the arm worth keeping honest. It requires history
-# deeper than a single commit, which is why .github/workflows/corpus-hygiene.yml sets
-# fetch-depth: 0 and says why. If the blob is unreachable this arm FAILS rather than
+# Arms CTL-RETRO and CTL-E-RETRO read blobs from commits in this repository's history. Each is
+# the only arm that tests its class's detector against a defect the repository actually shipped
+# rather than one this file wrote, and each is therefore the arm worth keeping honest. They
+# require history deeper than a single commit, which is why .github/workflows/corpus-hygiene.yml
+# sets fetch-depth: 0 and says why. If a blob is unreachable the arm FAILS rather than
 # skipping: an unreachable regression witness is a hole, and a hole that reports green is
 # the exact failure mode this suite exists to close.
 #
@@ -217,6 +277,12 @@ CH_RETRO_PATH='reference/adr/ADR-008-publish-content-guard.md'
 CH_ADR_DIR='reference/adr'
 CH_ADR_INDEX='reference/adr/README.md'
 CH_ADR_TAG='adr-number-declaration'
+# Group E's owner: the document that states a [THIRD-PARTY] party member's roster standing, and
+# the heading line its statement sits under. And the revision whose blobs arm CTL-E-RETRO replays
+# — the tree on which three surfaces gave the standing three different answers. Named once.
+CH_E_OWNER_DOC='skills/trip-record/SKILL.md'
+CH_E_OWNER_HEAD='### Roster standing of a third-party member'
+CH_E_RETRO_REV='2a3e528760639840f41846ab556f712e3589e4ff'
 
 pass=0; fail=0; skip=0; vacuous=0; SKIPPED=""; VACUOUS_IDS=""
 PASS()    { printf '  \033[1;32mPASS\033[0m %s\n' "$*"; pass=$((pass+1)); }
@@ -462,6 +528,41 @@ END {
 }
 AWK
 
+# ── seg.awk — the sentence unit, shared by class C and class E ────────────────────
+# Two functions and nothing else, so it can be loaded beside either program. It holds the
+# unit the banner's measured-unit note describes; group C's arms CTL-C-WRAP, CTL-C-WRAP-PAIR
+# and CTL-RETRO are what grade it, and group E reads it rather than re-implementing it.
+cat > "$WORK/seg.awk" <<'AWK'
+# A block-level construct starts its own unit; anything else is a wrapped continuation of
+# the one above it. This is what makes the unit wrap-insensitive while keeping a table row
+# and a list item from merging into one another.
+function isblockstart(s) {
+  if (s ~ /^#+ /)          return 1
+  if (substr(s, 1, 1) == "|") return 1
+  if (s ~ /^[-*+] /)       return 1
+  if (s ~ /^[0-9]+[.)] /)  return 1
+  if (substr(s, 1, 1) == ">") return 1
+  if (s ~ /^(---|===|\*\*\*)/) return 1
+  if (substr(s, 1, 4) == "<!--") return 1
+  return 0
+}
+# sentences — cut after a terminator plus any trailing emphasis or closing markup, when
+# what follows is whitespace and a sentence-start glyph. `slots.**  Every` therefore splits,
+# and `v0.17.0` and `e.g. the` do not.
+function sentences(s, out,   n, m, sp, cut) {
+  n = 0
+  while (match(s, /[.!?][]*_`")]* +[A-Z`*_"(]/)) {
+    m = substr(s, RSTART, RLENGTH)
+    sp = index(m, " ")
+    cut = RSTART + sp - 2
+    n++; out[n] = substr(s, 1, cut)
+    s = substr(s, RSTART + RLENGTH - 1)
+  }
+  if (s ~ /[^ \t]/) { n++; out[n] = s }
+  return n
+}
+AWK
+
 # ── c.awk — class C, the basis-aware count-assertion scan ────────────────────────
 cat > "$WORK/c.awk" <<'AWK'
 # ARGV[1] newline-separated relative path list. -v ROOT=<dir> [-v SHOW=1]
@@ -508,19 +609,9 @@ END {
   }
   printf "DENOM %d %d\n", nf, nsent
 }
-# A block-level construct starts its own unit; anything else is a wrapped continuation of
-# the one above it. This is what makes the unit wrap-insensitive while keeping a table row
-# and a list item from merging into one another.
-function isblockstart(s) {
-  if (s ~ /^#+ /)          return 1
-  if (substr(s, 1, 1) == "|") return 1
-  if (s ~ /^[-*+] /)       return 1
-  if (s ~ /^[0-9]+[.)] /)  return 1
-  if (substr(s, 1, 1) == ">") return 1
-  if (s ~ /^(---|===|\*\*\*)/) return 1
-  if (substr(s, 1, 4) == "<!--") return 1
-  return 0
-}
+# The unit — isblockstart() and sentences() — lives in seg.awk, which this program is run
+# with, and group E reads the same two functions. One segmenter, so the two groups cannot
+# disagree about what a sentence is.
 # flush — split the accumulated unit into sentences and grade each. Returns the running
 # ordinal so a site can be named by the sentence it was found in rather than by a line.
 function flush(rel, b, o,   k, m, cur, nn, arr) {
@@ -528,21 +619,6 @@ function flush(rel, b, o,   k, m, cur, nn, arr) {
   nn = sentences(b, arr)
   for (k = 1; k <= nn; k++) { o++; grade(rel, arr[k], o) }
   return o
-}
-# sentences — cut after a terminator plus any trailing emphasis or closing markup, when
-# what follows is whitespace and a sentence-start glyph. `slots.**  Every` therefore splits,
-# and `v0.17.0` and `e.g. the` do not.
-function sentences(s, out,   n, m, sp, cut) {
-  n = 0
-  while (match(s, /[.!?][]*_`")]* +[A-Z`*_"(]/)) {
-    m = substr(s, RSTART, RLENGTH)
-    sp = index(m, " ")
-    cut = RSTART + sp - 2
-    n++; out[n] = substr(s, 1, cut)
-    s = substr(s, RSTART + RLENGTH - 1)
-  }
-  if (s ~ /[^ \t]/) { n++; out[n] = s }
-  return n
 }
 function has_word(pad, w) { return index(pad, " " w " ") > 0 }
 # F1 — anchored measurement. The hex arm requires at least one DIGIT: without it, ordinary
@@ -812,6 +888,143 @@ function numof(b,   k) { k = b; sub(/^ADR-/, "", k); sub(/-.*$/, "", k); return 
 function pad(n) { return sprintf("%03d", n + 0) }
 AWK
 
+# ── e.awk — class E, the owned-rule scan ─────────────────────────────────────────
+cat > "$WORK/e.awk" <<'AWK'
+# ARGV[1] newline-separated relative path list. -v ROOT=<dir> -v ODOC=<owner doc> -v OHEAD=<owner
+# heading line> [-v SHARED=1]. Run with seg.awk, whose isblockstart() and sentences() are the unit.
+# Emits one FINDING per defect and ALWAYS a DENOM carrying the files in scope, the sentences
+# graded, the standing sentences, those inside the owner region, the owner headings found and the
+# files carrying a standing sentence — the denominators that make a zero a measurement.
+# SHARED=1 turns the quote-run join off and reads units exactly as group C does. Only the
+# specificity half of CTL-E1-QUOTE-WRAP passes it; the real-tree scan passes no knob.
+BEGIN {
+  n = split("has have holds hold keeps keep gets get takes take occupies occupy carries carry retains retain", w, " ")
+  for (i = 1; i <= n; i++) CAV[w[i]] = 1
+  n = split("a an their its one his her", w, " ")
+  for (i = 1; i <= n; i++) DET[w[i]] = 1
+  n = split("counted count counts counting included include includes including", w, " ")
+  for (i = 1; i <= n; i++) CBV[w[i]] = 1
+  n = split("in toward towards into", w, " ")
+  for (i = 1; i <= n; i++) PREP[w[i]] = 1
+  n = split("excluded exclude excludes omitted omit omits", w, " ")
+  for (i = 1; i <= n; i++) EXV[w[i]] = 1
+  n = split("count counts counted include includes included", w, " ")
+  for (i = 1; i <= n; i++) SUBV[w[i]] = 1
+  n = split("excludes omits", w, " ")
+  for (i = 1; i <= n; i++) SUBX[w[i]] = 1
+  n = split("is are becomes become", w, " ")
+  for (i = 1; i <= n; i++) CCV[w[i]] = 1
+  n = split("no not never nor without cannot", w, " ")
+  for (i = 1; i <= n; i++) NEGW[w[i]] = 1
+  ANCHOR = tolower(OHEAD); sub(/^#+ +/, "", ANCHOR)
+}
+{ if ($0 != "") FILES[++nf] = $0 }
+END {
+  nscan = 0; nsent = 0; nstand = 0; nown = 0; nhead = 0; nsfile = 0
+  for (i = 1; i <= nf; i++) {
+    rel = FILES[i]
+    if (!inscope(rel)) continue
+    nscan++; f = ROOT "/" rel; isodoc = (rel == ODOC)
+    infence = 0; inderived = 0; buf = ""; ord = 0; prevq = 0; inowner = 0; uown = 0; fstand = 0
+    while ((getline line < f) > 0) {
+      t = line; sub(/^[ \t]+/, "", t); sub(/[ \t]+$/, "", t)
+      if (substr(t, 1, 3) == "```") { ord = eflush(rel, buf, ord, uown); buf = ""; prevq = 0; infence = !infence; continue }
+      if (infence) continue
+      if (t ~ /<!--[^>]*: *derived/) { ord = eflush(rel, buf, ord, uown); buf = ""; prevq = 0; inderived = 1; continue }
+      if (inderived) { if (t ~ /<!--[ \t]*\//) inderived = 0; continue }
+      if (t == "") { ord = eflush(rel, buf, ord, uown); buf = ""; prevq = 0; continue }
+      q = (substr(t, 1, 1) == ">")
+      # THE QUOTE-RUN JOIN. A `>`-led line that follows another is the same unit, its own
+      # leading marker stripped; everything else is group C's unit loop, unchanged.
+      if (q && prevq && !SHARED) { c = line; sub(/^[ \t]*>/, "", c); buf = buf " " c; continue }
+      if (isblockstart(t)) {
+        ord = eflush(rel, buf, ord, uown); buf = ""
+        # THE OWNER REGION: the owner document, from its owner heading to the next heading.
+        if (isodoc && t ~ /^#+ /) { if (t == OHEAD) { nhead++; inowner = 1 } else inowner = 0 }
+      }
+      if (buf == "") uown = inowner
+      buf = (buf == "" ? line : buf " " line)
+      prevq = q
+    }
+    close(f)
+    ord = eflush(rel, buf, ord, uown); buf = ""
+    nsent += ord
+    if (fstand > 0) nsfile++
+  }
+  # E0 is emitted BY THE EXTRACTOR, like A0 and D0: an empty surface, an owner heading that is
+  # absent or doubled, and an owner region holding no standing sentence are one answer — the
+  # owned statement has no single home to cite — and none of them may read as a clean corpus.
+  if (nscan == 0 || nsent == 0 || nhead != 1 || nown == 0)
+    printf "FINDING E0 files=%d sentences=%d heading=%d owner-standing=%d\n", nscan, nsent, nhead, nown
+  printf "DENOM %d %d %d %d %d %d\n", nscan, nsent, nstand, nown, nhead, nsfile
+}
+# The scanned surface: every tracked markdown file but three declared exclusions.
+function inscope(p) {
+  if (index(p, "reference/adr/") == 1) return 0
+  if (index(p, "examples/") == 1) return 0
+  if (p == "CHANGELOG.md") return 0
+  return 1
+}
+function eflush(rel, b, o, own,   k, nn, arr) {
+  if (b == "") return o
+  nn = sentences(b, arr)
+  for (k = 1; k <= nn; k++) { o++; egrade(rel, arr[k], o, own) }
+  return o
+}
+# The normalisation: lowercase; remove backticks, `*`, `_` and every `>`; a typographic
+# apostrophe becomes `'`; whitespace collapses. T and S are literal substrings of what is left.
+function enorm(s,   x) {
+  x = tolower(s)
+  gsub(/\342\200\231/, "'", x)
+  gsub(/[`*_>]/, "", x)
+  gsub(/[ \t]+/, " ", x)
+  return x
+}
+function egrade(rel, s, o, own,   x, raw, nr, tk, nt, k, form) {
+  x = enorm(s)
+  if (index(x, "third-party") == 0) return
+  if (index(x, "roster row") == 0 && index(x, "total travelers") == 0 && index(x, "group roster") == 0 && index(x, "roster member") == 0) return
+  nstand++; fstand++
+  if (own) nown++
+  if (!own && index(x, ANCHOR) == 0) printf "FINDING E1 %s %d %s\n", rel, o, esq(s)
+  nr = split(x, raw, /[^a-z0-9']+/); nt = 0
+  for (k = 1; k <= nr; k++) if (raw[k] != "") tk[++nt] = raw[k]
+  form = contrary(tk, nt)
+  if (form != "") printf "FINDING E2 %s %d %s %s\n", rel, o, form, esq(s)
+}
+function isneg(w) { return (w in NEGW) || (length(w) >= 3 && substr(w, length(w) - 2) == "n't") }
+function negbefore(tk, i,   m) { for (m = i - 3; m < i; m++) if (m >= 1 && isneg(tk[m])) return 1; return 0 }
+function tt(tk, nt, a, b,   k) { for (k = a; k <= b && k < nt; k++) if (tk[k] == "total" && tk[k + 1] == "travelers") return 1; return 0 }
+# THE CONTRARY LEXICON. The banner's class-E entry states each form and its boundary.
+function contrary(tk, nt,   i, j, m, r, ok) {
+  for (i = 1; i <= nt; i++) {
+    if ((tk[i] in CAV) && (tk[i + 1] in DET))
+      for (j = i + 2; j <= i + 5 && j < nt; j++)
+        if (tk[j] == "roster" && (tk[j + 1] == "row" || tk[j + 1] == "rows")) { if (!negbefore(tk, i)) return "CA"; break }
+    if ((tk[i] in CBV) && (tk[i + 1] in PREP) && tt(tk, nt, i + 2, i + 5))
+      for (m = i - 3; m < i; m++) {
+        if (m < 1 || !isneg(tk[m])) continue
+        ok = 1
+        for (r = m + 1; r < i; r++) if (tk[r] == "row" || tk[r] == "rows") ok = 0
+        if (ok) return "CB-i"
+      }
+    if ((tk[i] in EXV) && tk[i + 1] == "from" && tt(tk, nt, i + 2, i + 5) && !negbefore(tk, i)) return "CB-ii"
+    if (tk[i] == "no" && tk[i + 1] == "place" && tk[i + 2] == "in" && tt(tk, nt, i + 3, i + 6)) return "CB-iii"
+    if (tk[i] == "left" && tk[i + 1] == "out" && tk[i + 2] == "of" && tt(tk, nt, i + 3, i + 6) && !negbefore(tk, i)) return "CB-iv"
+    if (tk[i] == "total" && tk[i + 1] == "travelers") {
+      for (m = i + 2; m <= i + 5 && m < nt; m++) if (isneg(tk[m]) && (tk[m + 1] in SUBV)) return "CB-v"
+      for (m = i + 2; m <= i + 3 && m <= nt; m++) if (tk[m] in SUBX) return "CB-v"
+    }
+    if (tk[i] in CCV) {
+      j = i + 1; if (tk[j] == "also") j++
+      if ((tk[j] == "a" || tk[j] == "an") && tk[j + 1] == "roster" && (tk[j + 2] == "member" || tk[j + 2] == "entry") && !negbefore(tk, i)) return "CC"
+    }
+  }
+  return ""
+}
+function esq(s) { gsub(/[ \t]+/, " ", s); sub(/^ +/, "", s); return substr(s, 1, 140) }
+AWK
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # THE COMPARATOR. ONE function, driven by the real-tree arm and by every group-C control
 # arm below.
@@ -827,7 +1040,7 @@ ch_scan_b() { awk -v ROOT="$1" -f "$WORK/b.awk" "$2"; }
 # The governance distance is a CONSTANT of the detector, deliberately not an environment
 # knob: a gate whose strictness can be set by the caller is not a gate. It is changed by
 # editing the line below, in a diff, alongside the fence rows that change with it.
-ch_scan_c() { awk -v ROOT="$1" -v SHOW="${3:-0}" -v LOOK=2 -f "$WORK/c.awk" "$2"; }
+ch_scan_c() { awk -v ROOT="$1" -v SHOW="${3:-0}" -v LOOK=2 -f "$WORK/seg.awk" -f "$WORK/c.awk" "$2"; }
 # The tag defaults to class C's, so every existing caller is unchanged; class D passes its
 # own. ONE fence reader serves both declaring fences — a second parser for the same on-disk
 # shape would be a second place for that shape to drift.
@@ -841,6 +1054,14 @@ ch_scan_d() {
   else : > "$WORK/adrdec.tsv"; fi
   awk -v ROOT="$1" -v ADRDIR="$CH_ADR_DIR" -v INDEX="$CH_ADR_INDEX" \
     -v DECFILE="$WORK/adrdec.tsv" -f "$WORK/d.awk" "$WORK/adrdec.tsv" "$2"
+}
+
+# ch_scan_e <root> <listfile> [shared] — the class-E scan. The third argument turns the quote-run
+# join off; only the specificity half of CTL-E1-QUOTE-WRAP passes it, and the real-tree call
+# below passes nothing, for the reason ch_scan_c gives about a caller-set strictness.
+ch_scan_e() {
+  awk -v ROOT="$1" -v ODOC="$CH_E_OWNER_DOC" -v OHEAD="$CH_E_OWNER_HEAD" -v SHARED="${3:-0}" \
+    -f "$WORK/seg.awk" -f "$WORK/e.awk" "$2"
 }
 
 # ch_compare_c <root> <fence-doc-abs> <listfile> — the both-direction assertion.
@@ -1029,6 +1250,46 @@ if [ "${D_NROT:-0}" -eq 0 ]; then
 else
   FAIL "D4: $D_NROT row(s) in the \`$CH_ADR_TAG\` fence in $CH_ADR_INDEX no longer except a gap. Remove the row in the same change that filled or corrected it — do not leave it standing:"
   grep '^FINDING D4 ' <<<"$D_OUT" | awk '{ printf "      %s (%s): %s\n", $3, $4, $5 }'
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "E — an owned rule is stated once and cited: a [THIRD-PARTY] party member's roster standing"
+# ═════════════════════════════════════════════════════════════════════════════════
+E_OUT="$(ch_scan_e "$ROOT" "$WORK/list.real")"
+E_NFILE="$(awk '$1 == "DENOM" { print $2 }' <<<"$E_OUT")"
+E_NSENT="$(awk '$1 == "DENOM" { print $3 }' <<<"$E_OUT")"
+E_NSTAND="$(awk '$1 == "DENOM" { print $4 }' <<<"$E_OUT")"
+E_NOWN="$(awk '$1 == "DENOM" { print $5 }' <<<"$E_OUT")"
+E_NHEAD="$(awk '$1 == "DENOM" { print $6 }' <<<"$E_OUT")"
+E_NSFILE="$(awk '$1 == "DENOM" { print $7 }' <<<"$E_OUT")"
+E_N0="$(n_code "$E_OUT" E0)"
+E_N1="$(n_code "$E_OUT" E1)"
+E_N2="$(n_code "$E_OUT" E2)"
+printf '  SURFACE: %s markdown file(s) in scope (reference/adr/, examples/ and CHANGELOG.md declared out), %s sentence(s) graded, %s standing sentence(s) in %s file(s), %s of them in the owner region; owner heading found %s time(s) in %s.\n' \
+  "$E_NFILE" "$E_NSENT" "$E_NSTAND" "$E_NSFILE" "$E_NOWN" "$E_NHEAD" "$CH_E_OWNER_DOC"
+for c in E0 E1 E2; do echo "$c" >> "$SURF_LOG"; done
+
+# The vacuity guard resolves an unrun extractor to the LOUD answer, as D0's does: an unset
+# denominator reads 0 and lands on the FAIL limb.
+if [ "${E_N0:-0}" -eq 0 ] && [ "${E_NSENT:-0}" -gt 0 ] && [ "${E_NHEAD:-0}" -eq 1 ]; then
+  PASS "E0: the owned statement has one home — the heading \`$CH_E_OWNER_HEAD\` stands exactly once in $CH_E_OWNER_DOC, and its region holds $E_NOWN standing sentence(s), over $E_NSENT sentence(s) graded in $E_NFILE file(s). Arms CTL-E0 and CTL-E0-EMPTY remove the heading and empty the region, and require each to fail"
+else
+  FAIL "E0: the owned statement has no single home to cite (files=$E_NFILE sentences=$E_NSENT heading=$E_NHEAD owner-standing=$E_NOWN) — the heading is absent or doubled, the statement under it was deleted, or the surface came back empty. Every verdict below would be graded against an owner that is not there"
+fi
+
+if [ "${E_N1:-0}" -eq 0 ]; then
+  PASS "E1: every standing sentence outside the owner region carries the owner's name — $E_NSTAND standing sentence(s) over $E_NSENT graded, $E_NOWN of them the owner's own. The zero is a measurement: arms CTL-E1, CTL-E1-WRAP and CTL-E1-QUOTE-WRAP each plant an uncited one and require it to be found"
+else
+  FAIL "E1: $E_N1 sentence(s) state a [THIRD-PARTY] party member's roster standing outside the owner region without citing it. Cite \`$CH_E_OWNER_DOC\` § *${CH_E_OWNER_HEAD#"### "}* in the sentence, or remove the restatement:"
+  grep '^FINDING E1 ' <<<"$E_OUT" | awk '{ $1 = ""; $2 = ""; sub(/^  /, ""); printf "      %s\n", $0 }'
+fi
+
+if [ "${E_N2:-0}" -eq 0 ]; then
+  PASS "E2: no standing sentence, the owner's own included, states the contrary standing in the lexicon the banner's class-E entry declares — $E_NSTAND standing sentence(s) read. The zero is a measurement: arms CTL-E2, CTL-E2-COUNT, CTL-E2-NOPLACE and CTL-E2-TOTALSUBJ each plant a contrary form and require it to be found, and CTL-E-RETRO finds the contrary answers this repository actually shipped"
+else
+  FAIL "E2: $E_N2 standing sentence(s) state a standing contrary to the owner's — a roster row, or a place outside \`- **Total travelers:**\`. The owner sub-section is the one statement; reconcile the sentence to it:"
+  grep '^FINDING E2 ' <<<"$E_OUT" | awk '{ $1 = ""; $2 = ""; sub(/^  /, ""); printf "      %s\n", $0 }'
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
@@ -1361,7 +1622,7 @@ ctl_fence "$D" '0  docs/notes.md'
 O="$(ch_compare_c "$D" "$D/$CH_FENCE_DOC" "$(ctl_list "$D")")"
 ctl_mustfire "CTL-C-SEG" C1 "$O" "an anchored sentence and a basis-free one sit in the SAME paragraph — the exemption must scope to the sentence that carries it, and a paragraph-flattened reading returns clean here" 1
 
-# CTL-RETRO — the real historical blob. Every other arm tests a fixture this file wrote;
+# CTL-RETRO — the real historical blob. Every other class-C arm tests a fixture this file wrote;
 # this one tests the defect the repository actually shipped, at the commit that carried it.
 ctl_arm C1
 D="$(ctl_mk retro)"
@@ -1490,6 +1751,154 @@ O="$(ch_scan_d "$D" "$(ctl_list "$D")")"
 ctl_mustnot "CTL-D-SPEC" D3 "$O" "the record directory also holds its own index, a notes file and a draft carrying no number — none of the three is a record, so none may be reported as a record the index forgot"
 ctl_mustnot "CTL-D-SPEC-DUP" D1 "$O" "none of those three resolves to a number either, so none can collide with a record or with another of them"
 ctl_mustnot "CTL-D-SPEC-GAP" D2 "$O" "and none shifts the span, so none manufactures a gap under the highest number a real record carries"
+
+# ── E ────────────────────────────────────────────────────────────────────────────
+# Each fixture carries an owner document at the owner's own path and the arm's planted sentence
+# in a second document, graded by the SAME ch_scan_e that graded the tree above. The citation a
+# cited sentence carries is built from the two constants, so it cannot drift from the owner.
+CTL_E_CITE="(\`$CH_E_OWNER_DOC\` § *${CH_E_OWNER_HEAD#"### "}*)"
+CTL_E_OWN='A `[THIRD-PARTY]` party member holds no `## Group` roster row, and is counted in `- **Total travelers:**` as an unnamed member.'
+ctl_e_owner() {  # ctl_e_owner <root> [<sentence>...] — the owner doc: its heading, then each sentence
+  local d="$1"; shift
+  mkdir -p "$(dirname "$d/$CH_E_OWNER_DOC")"
+  { printf '%s\n\n' '# Fixture command' '## group' "$CH_E_OWNER_HEAD"
+    local l; for l in "$@"; do printf '%s\n\n' "$l"; done
+    printf '%s\n\n%s\n' '## fact' 'Nothing in this section states a standing.'
+  } > "$d/$CH_E_OWNER_DOC"
+}
+
+D="$(ctl_mk e0)"
+ctl_c_doc "$D" "$CH_E_OWNER_DOC" "$CTL_E_OWN"
+O="$(ch_scan_e "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-E0" E0 "$O" "the owner document carries the owning sentence but not the owner heading — an absent home, which leaves every citation of it pointing at nothing" 1
+
+D="$(ctl_mk e0empty)"
+ctl_e_owner "$D" 'Such a member is recorded once, in the derived model.'
+O="$(ch_scan_e "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-E0-EMPTY" E0 "$O" "the owner heading stands with no standing sentence under it — the statement deleted from under its heading, the second shape E0 exists for" 1
+
+D="$(ctl_mk e1)"
+ctl_e_owner "$D" "$CTL_E_OWN"
+ctl_c_doc "$D" docs/notes.md 'A `[THIRD-PARTY]` party member holds no `## Group` roster row.'
+O="$(ch_scan_e "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-E1" E1 "$O" "a standing sentence outside the owner region carries no citation — a restatement, which is how three surfaces came to give three answers" 1
+ctl_mustnot "CTL-E1-NOT-E2" E2 "$O" "the same uncited sentence states the owner's own standing, so it is E1's alone and never contrary"
+
+D="$(ctl_mk e1wrap)"
+ctl_e_owner "$D" "$CTL_E_OWN"
+{ printf '%s\n\n' '# Fixture'
+  printf '%s\n' 'A `[THIRD-PARTY]` party member holds no `## Group` roster' 'row.'
+} > "$D/docs/notes.md"
+O="$(ch_scan_e "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-E1-WRAP" E1 "$O" "the same uncited sentence hard-wrapped between \`roster\` and \`row\` — the unit is the sentence and not the line, so the break must not hide it" 1
+
+D="$(ctl_mk e1spec)"
+ctl_e_owner "$D" "$CTL_E_OWN" 'A `[THIRD-PARTY]` party member is counted in `- **Total travelers:**`.'
+ctl_c_doc "$D" docs/notes.md \
+  "A \`[THIRD-PARTY]\` party member holds no \`## Group\` roster row $CTL_E_CITE." \
+  'A `[THIRD-PARTY]` entry carries needs only.'
+O="$(ch_scan_e "$D" "$(ctl_list "$D")")"
+ctl_mustnot "CTL-E1-SPEC" E1 "$O" "the same sentence carrying the owner's name, an uncited standing sentence INSIDE the owner region, and a [THIRD-PARTY] sentence with no standing token — none of the three is a restatement"
+
+# CTL-E1-QUOTE-WRAP — a standing sentence hard-wrapped across two `>`-led lines, with the break
+# between the T token and EVERY S token, after "holds no". That wrap point is the property this
+# arm isolates: broken there, neither fragment is standing by itself, so the arm fires only when
+# the quote-run join rebuilt the sentence. The same fixture is then graded under group C's
+# shared units, where it must be silent, and must yield more units than the join does. A wrap
+# point that left a standing fragment on either line would fire both ways and tell the join
+# from its absence not at all.
+D="$(ctl_mk e1quote)"
+ctl_e_owner "$D" "$CTL_E_OWN"
+{ printf '%s\n\n' '# Fixture'
+  printf '%s\n' '> A `[THIRD-PARTY]` party member holds no' '> `## Group` roster row and is counted in `- **Total travelers:**`.'
+} > "$D/docs/notes.md"
+EQ_LIST="$(ctl_list "$D")"
+O="$(ch_scan_e "$D" "$EQ_LIST")"
+ctl_mustfire "CTL-E1-QUOTE-WRAP" E1 "$O" "the uncited sentence is hard-wrapped across two blockquote lines after \`holds no\`, and the quote-run join is what makes it one standing sentence" 1
+EQ_JOIN="$(awk '$1 == "DENOM" { print $3 }' <<<"$O")"
+O="$(ch_scan_e "$D" "$EQ_LIST" 1)"
+EQ_SHARED="$(awk '$1 == "DENOM" { print $3 }' <<<"$O")"
+EQ_SHARED_E1="$(n_code "$O" E1)"
+if [ "${EQ_SHARED_E1:-1}" -eq 0 ] && [ "${EQ_SHARED:-0}" -gt "${EQ_JOIN:-0}" ]; then
+  PASS "CTL-E1-QUOTE-WRAP-SHARED: the same fixture under group C's shared units reads $EQ_SHARED unit sentence(s) against the join's $EQ_JOIN and finds no E1 — neither fragment is standing by itself. Both halves together are the discrimination: the join fires, its absence does not"
+else
+  FAIL "CTL-E1-QUOTE-WRAP-SHARED: under shared units the fixture read $EQ_SHARED sentence(s) against the join's $EQ_JOIN and E1 fired $EQ_SHARED_E1 time(s). Unless the shared read is silent AND yields more units, the arm above cannot tell the join from its absence"
+fi
+
+D="$(ctl_mk e2)"
+ctl_e_owner "$D" "$CTL_E_OWN"
+ctl_c_doc "$D" docs/notes.md "A \`[THIRD-PARTY]\` party member holds a \`## Group\` roster row $CTL_E_CITE."
+O="$(ch_scan_e "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-E2" E2 "$O" "a CITED sentence gives such a member a roster row — form CA, the contrary standing stated under the owner's own name" 1
+ctl_mustnot "CTL-E2-CITED" E1 "$O" "that sentence cites the owner, so it is E2's alone"
+
+D="$(ctl_mk e2count)"
+ctl_e_owner "$D" "$CTL_E_OWN"
+ctl_c_doc "$D" docs/notes.md "A \`[THIRD-PARTY]\` party member is not counted in \`- **Total travelers:**\` $CTL_E_CITE."
+O="$(ch_scan_e "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-E2-COUNT" E2 "$O" "a cited sentence says such a member is not counted in the total — form CB'-i, the answer the owner sub-section gave before this group existed" 1
+ctl_mustnot "CTL-E2-COUNT-CITED" E1 "$O" "that sentence cites the owner, so it is E2's alone"
+
+D="$(ctl_mk e2noplace)"
+ctl_e_owner "$D" "$CTL_E_OWN"
+ctl_c_doc "$D" docs/notes.md "A \`[THIRD-PARTY]\` value never escalates (it triggers no new constraint, its subject is never added to a constraint's \`Applies to:\` line, and its subject holds no \`## Group\` roster row and no place in \`Total travelers\` — \`$CH_E_OWNER_DOC\` § *${CH_E_OWNER_HEAD#"### "}*)."
+O="$(ch_scan_e "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-E2-NOPLACE" E2 "$O" "a cited sentence gives such a member no place in the total — form CB'-iii, in the wording an earlier design proposed for the charter" 1
+
+D="$(ctl_mk e2totalsubj)"
+ctl_e_owner "$D" "$CTL_E_OWN"
+ctl_c_doc "$D" docs/notes.md "\`- **Total travelers:**\` does not count a \`[THIRD-PARTY]\` party member $CTL_E_CITE."
+O="$(ch_scan_e "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-E2-TOTALSUBJ" E2 "$O" "a cited sentence makes the total its subject and denies the count — form CB'-v, which the verb-first forms cannot see" 1
+ctl_mustnot "CTL-E2-TOTALSUBJ-CITED" E1 "$O" "that sentence cites the owner, so it is E2's alone"
+
+D="$(ctl_mk e2spec)"
+ctl_e_owner "$D" "$CTL_E_OWN"
+ctl_c_doc "$D" docs/notes.md \
+  "A \`[THIRD-PARTY]\` party member holds no \`## Group\` roster row $CTL_E_CITE." \
+  "A \`[THIRD-PARTY]\` party member never holds a \`## Group\` roster row $CTL_E_CITE." \
+  "A \`[THIRD-PARTY]\` party member does not hold a \`## Group\` roster row $CTL_E_CITE." \
+  "A \`[THIRD-PARTY]\` party member is counted in \`- **Total travelers:**\` $CTL_E_CITE." \
+  "A \`[THIRD-PARTY]\` party member is also counted in \`- **Total travelers:**\` $CTL_E_CITE." \
+  "A \`[THIRD-PARTY]\` party member is never excluded from \`- **Total travelers:**\` $CTL_E_CITE." \
+  "A \`[THIRD-PARTY]\` party member sits in \`- **Total travelers:**\`, and the named-traveler count never includes them $CTL_E_CITE."
+O="$(ch_scan_e "$D" "$(ctl_list "$D")")"
+ctl_mustnot "CTL-E2-SPEC" E2 "$O" "seven cited sentences each state the owner's standing, several of them with a negation or an exclusion verb beside the lexicon's tokens — a lexicon firing on any of them could not tell the answer from its contrary"
+
+D="$(ctl_mk e2rowclause)"
+ctl_e_owner "$D" "$CTL_E_OWN"
+ctl_c_doc "$D" docs/notes.md "A \`[THIRD-PARTY]\` party member has no roster row, counted in \`- **Total travelers:**\` as an unnamed member $CTL_E_CITE."
+O="$(ch_scan_e "$D" "$(ctl_list "$D")")"
+ctl_mustnot "CTL-E2-ROWCLAUSE" E2 "$O" "the negation within three tokens of the count verb belongs to a ROW clause, with \`row\` lying between them — CB'-i's row-clause void, without which the owner's own answer, written this way, reads as its contrary"
+
+# CTL-E-RETRO — the real blobs of the three surfaces that disagreed, at the revision where they
+# did. Every other E arm grades a fixture this file wrote; this one grades the contrary answers the
+# repository actually shipped. The command document's blob is placed at a NON-owner path, so its
+# sentence is graded as a restatement rather than exempted as the owner's. It needs history deeper
+# than one commit, as CTL-RETRO does, and an unreachable blob FAILS rather than skipping.
+ctl_arm E1; ctl_arm E2
+D="$(ctl_mk eretro)"
+mkdir -p "$D/agents" "$D/skills/retro"
+ER_OK=1
+git -C "$ROOT" show "$CH_E_RETRO_REV:reference/data-model.md" > "$D/reference/data-model.md" 2>/dev/null || ER_OK=0
+git -C "$ROOT" show "$CH_E_RETRO_REV:agents/04-transport.md" > "$D/agents/04-transport.md" 2>/dev/null || ER_OK=0
+git -C "$ROOT" show "$CH_E_RETRO_REV:$CH_E_OWNER_DOC" > "$D/skills/retro/SKILL.md" 2>/dev/null || ER_OK=0
+ctl_e_owner "$D" "$CTL_E_OWN"
+if [ "$ER_OK" -eq 0 ] || [ ! -s "$D/reference/data-model.md" ] || [ ! -s "$D/agents/04-transport.md" ] || [ ! -s "$D/skills/retro/SKILL.md" ]; then
+  FAIL "CTL-E-RETRO: a blob at $CH_E_RETRO_REV is unreachable, so the one E arm that grades the contrary answers this repository actually shipped did not run. This is a hole, not a skip — CI must check out with fetch-depth: 0"
+else
+  O="$(ch_scan_e "$D" "$(ctl_list "$D")")"
+  ER_DM1="$(awk '$1 == "FINDING" && $2 == "E1" && $3 == "reference/data-model.md" { n++ } END { print n + 0 }' <<<"$O")"
+  ER_DM2="$(awk '$1 == "FINDING" && $2 == "E2" && $3 == "reference/data-model.md" { n++ } END { print n + 0 }' <<<"$O")"
+  ER_TR1="$(awk '$1 == "FINDING" && $2 == "E1" && $3 == "agents/04-transport.md" { n++ } END { print n + 0 }' <<<"$O")"
+  ER_SK1="$(awk '$1 == "FINDING" && $2 == "E1" && $3 == "skills/retro/SKILL.md" { n++ } END { print n + 0 }' <<<"$O")"
+  ER_SK2="$(awk '$1 == "FINDING" && $2 == "E2" && $3 == "skills/retro/SKILL.md" { n++ } END { print n + 0 }' <<<"$O")"
+  if [ "$ER_DM1" -ge 1 ] && [ "$ER_DM2" -ge 1 ] && [ "$ER_TR1" -ge 1 ] && [ "$ER_SK1" -ge 1 ] && [ "$ER_SK2" -ge 1 ]; then
+    PASS "CTL-E-RETRO: on the real revisions at ${CH_E_RETRO_REV:0:7}, E1 fired on the data model ($ER_DM1), the transport agent ($ER_TR1) and the command document at a non-owner path ($ER_SK1), and E2 on the data model ($ER_DM2) and the command document ($ER_SK2) — the three answers this group exists to keep from diverging again"
+  else
+    FAIL "CTL-E-RETRO: MUST FIRE on the shipped disagreement — E1 on the data model $ER_DM1, the transport agent $ER_TR1 and the command document $ER_SK1, and E2 on the data model $ER_DM2 and the command document $ER_SK2; each must be at least 1. A zero on a revision known to carry the defect is a broken probe, not a clean one"
+  fi
+fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
@@ -1870,6 +2279,8 @@ printf 'COUNT-ASSERTION: %s residual site(s) in %s file(s) over %s sentence(s) g
   "$C_NSITE" "$C_NDIRTY" "$C_NSENT" "$C_NROW"
 printf 'ADR-NUMBERING: %s record file(s) and %s index row(s) over a span reaching %s; %s collision(s), %s undeclared gap(s), %s index/directory disagreement(s), %s stale declaration(s); %s gap(s) held open by declaration.\n' \
   "$D_NREC" "$D_NROW" "$D_MAXN" "$D_NDUP" "$D_NGAP" "$D_NMIS" "$D_NROT" "$D_NHELD"
+printf 'OWNED-RULE: %s standing sentence(s) in %s file(s); %s uncited; %s contrary; owner heading %s.\n' \
+  "$E_NSTAND" "$E_NSFILE" "$E_N1" "$E_N2" "$E_NHEAD"
 if [ "$vacuous" -gt 0 ]; then
   printf 'NOTE: %d assertion(s) had an EMPTY POPULATION and proved nothing about this tree: %s. Read each named arm and its own verdict above for what carries it. This line names the vacuous ARMS rather than a compensating group, because the arms that compensate are not always in the group the vacuous arm belongs to, and a hardcoded group here was a claim about a run it had not read.\n' "$vacuous" "${VACUOUS_IDS% }"
 fi

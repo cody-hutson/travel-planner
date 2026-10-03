@@ -689,7 +689,22 @@ Required inputs:
    pre-check-in and post-check-out windows in which the party is holding its
    luggage with no room to leave it in. That content belongs to the arrival and
    departure days' **Transit Notes** — it is what those days' movement actually
-   requires. It is not a new element and takes no block of its own)
+   requires. It is not a new element and takes no block of its own. **Where a
+   stream's `**Passengers:**` line ends in `+ <n> party member(s) outside the
+   roster`, what reaches this file changes, and only there.** Carry the plan that
+   line sized — mode, vehicle, times, and luggage handling as what is done with
+   the bags, never the count it was planned against — and name each booking it
+   needs, but leave each booking's quantity, the stream's bag and traveller
+   counts, and its per-person and group prices, in `outputs/transport-brief.md`,
+   and point to the brief for them. Where you state the party's size at all,
+   state `- **Total travelers:**` as it stands, a number already published that
+   counts such a member as one unnamed member (`skills/trip-record/SKILL.md`
+   § *Roster standing of a third-party member*) — never the clause, and never a
+   count of part of the party (one stream, one day, one track) that includes
+   them. Where the brief flags that the published total does not yet count them
+   all, carry that flag here as a `VERIFY` with no number and no name, naming
+   `/trip-record group`, or `/trip-record person` withdraws a member who no
+   longer travels. A brief with no such clause is carried as before)
 6. outputs/traveler-model.md (the `[DERIVED]` per-traveler needs + desires — the
    source for the satisfaction-coverage read: anchors/wishes → covered/not,
    needs → pass/fail. Its desire-overlap signal now also carries the attention
@@ -1104,7 +1119,7 @@ never a padded guess.
 |---|---|---|
 | **Currency** | § *Destination Baseline* → `**Currency:**`, which declares the rate *used for all agent cost estimates* | Totals are per-currency, one per ISO 4217 code, and **never summed across currencies**. A USD projection is rendered beside the local total **only** where a rate is declared, naming the rate and the enrichment date; otherwise it is omitted rather than computed from an invented rate |
 | **Range** | Floor from the markers — § 4.5.1 fixes `amount` as the low bound, so a marker sum is a true floor by construction. Ceiling from each joined entry's own prose money line | A point value or a non-numeric tier gives that entry a ceiling equal to its floor. Where marker and prose disagree, the marker governs the floor and the prose governs only the spread above it. **You never assert that the two correspond and never fail on a disagreement** |
-| **Allocation** | A `group-total` divides equally across **that item's own participant set** — C9's `**Passengers:**` line, or the party the plan places at a Venue item. `per-person` needs no allocation | An undeterminable participant set is **never divided by the roster**. The entry lands on a named `unallocated group-total` line |
+| **Allocation** | A `group-total` divides equally across **that item's own participant set** — C9's `**Passengers:**` line, or the party the plan places at a Venue item. `per-person` needs no allocation | An undeterminable participant set is **never divided by the roster**. The entry lands on a named `unallocated group-total` line. A `**Passengers:**` line ending in `+ <n> party member(s) outside the roster` is one: its `group-total` lands there whole, because a member that clause counts has no roster name to charge |
 | **Presence** | § *Per-Traveler Planning Days [DERIVED]* — **read, never re-derived** | A traveller is charged for an item iff the plan places it inside their own derived window and no subgroup note excludes them. Where the window's granularity leaves that undecidable on a partial arrival or departure day, the item goes to the `unallocated` line and is **named** |
 | **Preload** | § *Pass Assessment* — where its verdict recommends the pass, preload **is** the pass cost; otherwise apportioned journeys times per-journey cost, plus that traveller's share of any `cost:`-bearing fare-card-payable stream. `**Recommended:**` from § *Payment & Transit Card Setup* names the instrument | Absent or unexercised ⇒ `undetermined`, condition named. State the bound: the figure covers the legs the brief prices and the pass model, and the *Point-to-Point Transit Matrix* carries no key, so unkeyed hops are not in it |
 | **Cash** | § *Destination Baseline* → `**Payment norms:**` crossed with that traveller's category spend, plus a tipping allowance where `**Tipping culture:**` states one | No default cash figure exists. Report the **unpriced remainder** (`Q − P`) beside it as the contingency driver, **in item count** — never converted to a currency amount |

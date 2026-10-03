@@ -1,6 +1,13 @@
 # ADR-011: Per-traveler cost estimation — a new in-model class, and the one field the entry marker admits
 
-- **Status:** Accepted (2026-09-02)
+- **Status:** Accepted (2026-09-02); **amended once (2026-09-28)**. **First amendment** — it
+  records a **superseding decision** rather than a defect in this document.
+  [ADR-041](ADR-041-third-party-roster-standing.md) supersedes in part the item-7 sentence of
+  Decision 2: `agents/04-transport.md` § *Input* item 7 also reads one count from
+  `outputs/traveler-model.md` — the outside-roster count, the number of entries carrying both
+  `[OPERATOR-PROVIDED]` and `[THIRD-PARTY]` and not `[ROSTERED]` — and nothing else. The rest of
+  Decision 2 and every other decision stand. The superseded clause is retained as decided, with an
+  inline marker pointing forward, per `reference/adr/README.md` § *Convention*.
 - **Deciders:** repo maintainer
 - **Driving work:** the per-traveler cost-estimation milestone. This record is the prerequisite
   architecture decision that work's first acceptance criterion requires.
@@ -90,7 +97,10 @@ itinerary. A spoke writing it would need to read its siblings' outputs, which no
 `outputs/traveler-model.md` *for the depth signal and for nothing else*, and that narrowing is
 load-bearing: the item's own text records that a `[THIRD-PARTY]` entry carries needs only and no
 journey facet, so a wider read would let a real passenger be dropped from a stream being priced. A
-cost estimate is not a depth signal. The bound stands.
+cost estimate is not a depth signal. The bound stands. *(Superseded in part — first amendment:
+[ADR-041](ADR-041-third-party-roster-standing.md) admits one count through item 7, the
+outside-roster count, and nothing else; the bound on reading stream membership or origin from the
+model stands.)*
 
 ### 3. § 4.5 rule 2 is amended to admit one optional cost field, in the fenced form only
 
