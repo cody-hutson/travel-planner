@@ -1098,7 +1098,7 @@ _CENSUS_LIMIT = (
     "- A pattern in a branch filter. Whether `release/**`, or any pattern, matches",
     "  `main` is GitHub's filter grammar to decide, and this census does not",
     "  evaluate it; a filter that leaves `main` out leaves the check pending on",
-    "  every pull request into `main` (X116).",
+    "  every pull request into `main` (X116, X119, X120).",
     "Nor does it grade a job that claims no posture of required and whose `name:` is",
     "computed at run time: that job is compared to no declared context here, so one",
     "whose expression evaluates to a declared context reads CLEAN (X105), while at",

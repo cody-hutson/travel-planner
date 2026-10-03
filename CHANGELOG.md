@@ -31,7 +31,7 @@ without its job running. The census now refuses a job that claims required statu
 job-level `if:`, or that needs a job not itself claiming required. It fails a required job whose
 workflow does not run on every pull request into `main` and every push to one: no `pull_request`
 trigger, a literal `branches:` list that leaves `main` out, a `branches-ignore:` list that names
-it, or a `types:` list without `synchronize`. No required job carries any of these, so the census
+it and has no entry opening with `!`, or a `types:` list without `synchronize`. No required job carries any of these, so the census
 reads clean. What it does not grade is printed on every run, reduced to what a parser cannot
 decide, such as a `paths:` filter, which only a pull request's own diff settles.
 

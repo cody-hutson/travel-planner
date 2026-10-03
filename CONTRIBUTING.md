@@ -38,7 +38,7 @@ as the first line of the comment block directly above its key and at the key's i
 and unless each job claiming `required` reports a literal name (its `name:`, or its key
 where it has none) that no other job reports, carries no job-level `if:`, needs only jobs
 that also claim `required`, sits in a workflow that `pull_request` triggers with no literal
-`branches:` list that leaves out `main`, no literal `branches-ignore:` list that names it
+`branches:` list that leaves out `main`, no `branches-ignore:` list that names it unless an entry opens with `!`
 and no `types:` list that leaves out `synchronize`, and is listed both in `CONTEXT_ORDER` in
 `scripts/pin-required-checks.py` and in [SECURITY.md](SECURITY.md), *Branch Protection
 Posture*.
