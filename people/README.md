@@ -88,7 +88,7 @@ group they were in, and then stops at the title line on purpose. The name has to
 text for a group to have a usable one, and a sweep that rewrote free text would take the
 name with it — so a group called `# Priya's crew` goes on saying so after Priya has been
 erased, and clearing that is a thing you do. The erase report names every such group by
-its id, so you know which ones.
+its id, matching their name as it is written, so you know which ones.
 [`../groups/README.md`](../groups/README.md) § *What a record does not hold* states the
 same reach from the group's side.
 

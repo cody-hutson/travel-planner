@@ -68,10 +68,10 @@ bullet from every group they were in and changes no group's name — so a group 
 short here: the name has to be free text for a group to have a usable one, and a sweep that
 rewrote free text would take the name with it, so the rewrite stops at the member bullets on
 purpose. **What erasure does with the name is report it:** the erase report lists, by id and
-never by name, every group whose name carries that person's name, so you know which ones to
-change. **A group named after somebody goes on naming them, and clearing that is a thing you
-do** — the record is a file on your machine, and a group is a name and a list of ids you can make
-again.
+never by name, every group whose name carries that person's name as it is written, so you know
+which ones to change. **A group named after somebody goes on naming them, and clearing that is a
+thing you do** — the record is a file on your machine, and a group is a name and a list of ids
+you can make again.
 
 ## Privacy
 
