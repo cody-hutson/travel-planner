@@ -65,17 +65,17 @@ above bind the person most likely to touch the branch.
 | Setting | Value | What it means |
 |---------|-------|---------------|
 | Require a pull request before merging | On | A non-administrator cannot push to `main` at all. |
-| Required status checks | 9 — Workflow SAST (actionlint), Markdown link integrity (markdown-link-check), Secret scanning (gitleaks), Personal-data gate, Publish guard suite (test-publish-guard.sh), Artifact schema suite (test-artifact-schema.sh), Command taxonomy suite (test-command-taxonomy.sh), Trip resolution contract suite (test-trip-resolution-contract.sh), Corpus hygiene suite (test-corpus-hygiene.sh) | A merge is blocked until all nine pass. All nine are pinned to the GitHub Actions app, so only that app's check runs satisfy them. |
+| Required status checks | 10 — Workflow SAST (actionlint), Markdown link integrity (markdown-link-check), Secret scanning (gitleaks), Personal-data gate, Publish guard suite (test-publish-guard.sh), Artifact schema suite (test-artifact-schema.sh), Command taxonomy suite (test-command-taxonomy.sh), Trip resolution contract suite (test-trip-resolution-contract.sh), Corpus hygiene suite (test-corpus-hygiene.sh), Shell script lint (shellcheck) | A merge is blocked until all ten pass. All ten are pinned to the GitHub Actions app, so only that app's check runs satisfy them. |
 | Required approving reviews | 0 | Single-maintainer repository; there is no second reviewer to require. |
-| Include administrators (`enforce_admins`) | **false** | The maintainer can push directly to `main`, bypassing the pull-request requirement and all nine required checks in one step. |
+| Include administrators (`enforce_admins`) | **false** | The maintainer can push directly to `main`, bypassing the pull-request requirement and all ten required checks in one step. |
 
-**All nine are app-pinned.** Each required context is bound to the GitHub Actions
+**All ten are app-pinned.** Each required context is bound to the GitHub Actions
 app, so only a check run produced by that app satisfies it; a check run of the same
 name from any other integration does not count. `Personal-data gate` was the one
 exception until it was pinned — a weaker binding on one required check, never a
 known bypass, and no evidence it was exercised.
 
-**The consequence, stated plainly.** With `enforce_admins: false` the nine required
+**The consequence, stated plainly.** With `enforce_admins: false` the ten required
 checks are a *merge* gate, not a *branch* gate. An administrator pushing directly to
 `main` does not fail them — they are simply never required, so the result reads as a
 clean `main` rather than as a bypass. GitHub reports the bypass in the response to
@@ -94,11 +94,12 @@ timestamped settings change instead of a silent per-push bypass. `enforce_admins
 false` therefore buys convenience rather than capability, and it costs the only
 automated guarantee this public repository has that nothing reaches `main` unscanned.
 
-**The decision, and its mitigation.** The setting stays `false` for now. All seven
+**The decision, and its mitigation.** The setting stays `false` for now. All eight
 workflows that carry a required check — `.github/workflows/security.yml`,
 `depersonalization.yml`, `publish-guard.yml`, `artifact-schema.yml`,
-`command-taxonomy.yml`, `trip-resolution-contract.yml` and `corpus-hygiene.yml` —
-trigger on pushes to `main` as well as on pull requests, so all nine checks *run*
+`command-taxonomy.yml`, `trip-resolution-contract.yml`, `corpus-hygiene.yml` and
+`shell-lint.yml` — trigger on pushes to `main` as well as on pull requests, so all
+ten checks *run*
 against a direct push and a failure is recorded against the commit. **Running is
 not blocking.** The residual risk is therefore detection after the fact, not
 prevention: a direct push that carries personal data still lands on `main`, and

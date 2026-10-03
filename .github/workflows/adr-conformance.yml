@@ -122,9 +122,9 @@ name: ADR conformance
 #   WHETHER A RECORD SHOULD EXIST, its size, or how the index is organised. The card that
 #   ships this mechanism authors no record and reorganises no index.
 #
-#   THE SUITE'S OWN SHELL QUALITY. actionlint lints workflow-embedded shell only, so no CI
-#   job shellchecks a standalone scripts/*.sh. This workflow adds one more file to that
-#   unlinted set. Stated so a green is not read as more than it is.
+#   THE SUITE'S OWN SHELL QUALITY. Not graded by this check. Every scripts/*.sh, this suite
+#   included, is linted by .github/workflows/shell-lint.yml at the severity that workflow
+#   declares. Stated so a green is not read as more than it is.
 #
 # ── ROLLING THIS GATE BACK ───────────────────────────────────────────────────────
 # While the check is ADVISORY this is a plain revert of the pull request that added the

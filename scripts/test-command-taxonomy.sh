@@ -526,7 +526,7 @@ in_list() { local n="$1"; shift; local e; for e in "$@"; do [ "$e" = "$n" ] && r
 
 is_sep() { [[ "$1" =~ ^\|[-:[:space:]|]+\|[[:space:]]*$ ]]; }
 
-getcount() { printf '%s\n' "$1" | sed -n "s/^COUNT $2 //p" | head -1; }
+getcount() { printf '%s\n' "$1" | sed -n "s/^COUNT $2 //p" | awk 'NR == 1'; }
 # ── THE HERE-STRING IS LOAD-BEARING, NOT A STYLE CHOICE. Read this before "simplifying"
 # it back into a pipeline.
 #
@@ -1512,7 +1512,7 @@ charter_check() {
 # ─────────────────────────────────────────────────────────────────────────────────
 coverage_check() {
   local recs="$1"
-  local rc=0 line t1 t2 t3 t4 t5
+  local rc=0 line t2 t3 t4
   local -a DK=() DKC=() FILES=() AK=() AKC=() AKV=() RG=() KEYS=()
   # The ambiguity-set channel, parallel-indexed like every other transport here: set
   # ordinal · command · verb-or-'-'. It is a SEPARATE channel from ADDRPARTS on purpose —
@@ -1532,20 +1532,20 @@ coverage_check() {
   # field that a later comparison keys on.
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
-      'DECL '*)      IFS=' ' read -r t1 t2 t3 <<< "$line"; DK+=( "$t2:$t3" ); DKC+=( "$t2" ) ;;
-      'KEY '*)       IFS=' ' read -r t1 t2 <<< "$line"; KEYS+=( "$t2" ) ;;
-      'FILE '*)      IFS=' ' read -r t1 t2 <<< "$line"; FILES+=( "$t2" ) ;;
-      'REGION '*)    IFS=' ' read -r t1 t2 t3 t4 t5 <<< "$line"; RG+=( "$t2:$t3" ) ;;
-      'ADDRPARTS '*) IFS=' ' read -r t1 t2 t3 <<< "$line"; AKC+=( "$t2" ); AKV+=( "$t3" )
+      'DECL '*)      IFS=' ' read -r _ t2 t3 <<< "$line"; DK+=( "$t2:$t3" ); DKC+=( "$t2" ) ;;
+      'KEY '*)       IFS=' ' read -r _ t2 <<< "$line"; KEYS+=( "$t2" ) ;;
+      'FILE '*)      IFS=' ' read -r _ t2 <<< "$line"; FILES+=( "$t2" ) ;;
+      'REGION '*)    IFS=' ' read -r _ t2 t3 t4 _ <<< "$line"; RG+=( "$t2:$t3" ) ;;
+      'ADDRPARTS '*) IFS=' ' read -r _ t2 t3 <<< "$line"; AKC+=( "$t2" ); AKV+=( "$t3" )
                      if [ "$t3" = '-' ]; then AK+=( "$t2" ); else AK+=( "$t2:$t3" ); fi ;;
       # Four fields, read into four variables — the transport rule this file states at
       # invocation_check: the LAST read variable absorbs the remainder, so a record read
       # into fewer variables than it has fields silently widens the last one it names.
-      'AMBPARTS '*)  IFS=' ' read -r t1 t2 t3 t4 <<< "$line"; MS+=( "$t2" ); MC+=( "$t3" ); MV+=( "$t4" ) ;;
+      'AMBPARTS '*)  IFS=' ' read -r _ t2 t3 t4 <<< "$line"; MS+=( "$t2" ); MC+=( "$t3" ); MV+=( "$t4" ) ;;
       # THREE fields read into THREE variables, and here the last one absorbing the
       # remainder is the requirement rather than the hazard: a reason may carry an internal
       # space, so the reason field is the remainder by design.
-      'DISPPARTS '*) IFS=' ' read -r t1 t2 t3 <<< "$line"; DS+=( "$t2" ); DR+=( "$t3" ) ;;
+      'DISPPARTS '*) IFS=' ' read -r _ t2 t3 <<< "$line"; DS+=( "$t2" ); DR+=( "$t3" ) ;;
     esac
   done <<< "$recs"
 
@@ -1765,12 +1765,12 @@ coverage_check() {
 # ─────────────────────────────────────────────────────────────────────────────────
 enum_agree_check() {
   local recs="$1"
-  local rc=0 line k n=0 t1 t2
+  local rc=0 line k n=0 t2
   local -a E1=() E2=()
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
-      'ADDRKEY '*) IFS=' ' read -r t1 t2 <<< "$line"; E1+=( "$t2" ) ;;
-      'S2KEY '*)   IFS=' ' read -r t1 t2 <<< "$line"; E2+=( "$t2" ) ;;
+      'ADDRKEY '*) IFS=' ' read -r _ t2 <<< "$line"; E1+=( "$t2" ) ;;
+      'S2KEY '*)   IFS=' ' read -r _ t2 <<< "$line"; E2+=( "$t2" ) ;;
     esac
   done <<< "$recs"
 
@@ -1807,13 +1807,13 @@ enum_agree_check() {
 # ─────────────────────────────────────────────────────────────────────────────────
 adr4_check() {
   local adr="$1" script="$2" recs="$3"
-  local rc=0 line t1 t2 t3
+  local rc=0 line t2 t3
   local -a SURFK=() S1K=()
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
-      'DECL '*)    IFS=' ' read -r t1 t2 t3 <<< "$line"; SURFK+=( "$t2:$t3" ) ;;
-      'FILE '*)    IFS=' ' read -r t1 t2 <<< "$line"; SURFK+=( "$t2" ) ;;
-      'ADDRKEY '*) IFS=' ' read -r t1 t2 <<< "$line"; S1K+=( "$t2" ) ;;
+      'DECL '*)    IFS=' ' read -r _ t2 t3 <<< "$line"; SURFK+=( "$t2:$t3" ) ;;
+      'FILE '*)    IFS=' ' read -r _ t2 <<< "$line"; SURFK+=( "$t2" ) ;;
+      'ADDRKEY '*) IFS=' ' read -r _ t2 <<< "$line"; S1K+=( "$t2" ) ;;
     esac
   done <<< "$recs"
 
@@ -1987,7 +1987,7 @@ invocation_check() {
     return 1
   fi
 
-  local line t1 t2 t3 t4 t5
+  local line t2 t3 t4
   local -a IL=() IO=()
   # The record's LAST read variable absorbs the whole remainder of the line, so a record
   # with N fields must be read into N variables — one more than the field you want, when
@@ -1997,7 +1997,7 @@ invocation_check() {
   # as the retired transport's defect: a field silently carrying more than it names.
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
-      'INV '*) IFS=' ' read -r t1 t2 t3 t4 t5 <<< "$line"; IL+=( "$t2:$t4" ); IO+=( "$t3" ) ;;
+      'INV '*) IFS=' ' read -r _ t2 t3 t4 _ <<< "$line"; IL+=( "$t2:$t4" ); IO+=( "$t3" ) ;;
     esac
   done <<< "$recs"
 
@@ -2538,10 +2538,10 @@ grant_table_check() {
 
 # gq_tables <grant_table_check output> — "/verb (R rows, G grants)" joined, for a PASS line.
 gq_tables() {
-  local out="$1" line t1 t2 t3 t4 acc=''
+  local out="$1" line t2 t3 t4 acc=''
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
-      'GTAB '*) IFS=' ' read -r t1 t2 t3 t4 <<< "$line"; acc="${acc:+$acc, }$t2 ($t3 rows, $t4 grants)" ;;
+      'GTAB '*) IFS=' ' read -r _ t2 t3 t4 <<< "$line"; acc="${acc:+$acc, }$t2 ($t3 rows, $t4 grants)" ;;
     esac
   done <<< "$out"
   printf '%s' "$acc"
@@ -2629,7 +2629,7 @@ readonly_check() {
     if [ "$seendash" -eq 0 ]; then KEYS+=( "$a" ); else ADJ+=( "$a" ); fi
   done
 
-  local rc=0 line k v t1 t2 t3 t4 t5
+  local rc=0 line k v t2 t3 t4
   local -a INVK=() LIVE=()
   # See the note in invocation_check: the last read variable absorbs the remainder, so an
   # invocation record must be read into one variable PER FIELD, or the owner field holds the
@@ -2641,8 +2641,8 @@ readonly_check() {
   # script through the very region this limb exists to keep clean.
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
-      'ANYINV '*) IFS=' ' read -r t1 t2 t3 t4 t5 <<< "$line"; [ "$t3" != '-' ] && INVK+=( "$t2:$t3" ) ;;
-      'DECL '*)   IFS=' ' read -r t1 t2 t3 <<< "$line"; [ "$t2" = "$READONLY_OF_COMMAND" ] && LIVE+=( "$t3" ) ;;
+      'ANYINV '*) IFS=' ' read -r _ t2 t3 t4 _ <<< "$line"; [ "$t3" != '-' ] && INVK+=( "$t2:$t3" ) ;;
+      'DECL '*)   IFS=' ' read -r _ t2 t3 <<< "$line"; [ "$t2" = "$READONLY_OF_COMMAND" ] && LIVE+=( "$t3" ) ;;
     esac
   done <<< "$recs"
 
@@ -2743,7 +2743,7 @@ preexec_check() {
 # ─────────────────────────────────────────────────────────────────────────────────
 inference_check() {
   local recs="$1" carrier="$2"
-  local rc=0 line t1 t2 t3 t4 rrec
+  local rc=0 line t2 t3 t4 rrec
   local -a NK=() NB=() GK=() GC=() PC=() PV=() CFK=() DK=() DKC=() FILES=() RLC=() RLV=() RUC=() RUT=()
   # ── The two SET channels, read here for C6 and for nothing else. They are the same records
   # coverage_check reads, off the same stream, parsed field for field the same way — the set
@@ -2756,20 +2756,20 @@ inference_check() {
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
       'RULE '*)    rrec="${line#RULE }"; RUC+=( "${rrec%% *}" ); RUT+=( "${rrec#* }" ) ;;
-      'NEG '*)     IFS=' ' read -r t1 t2 t3 t4 <<< "$line"; NK+=( "$t2:$t3" ); NB+=( "$t4" ) ;;
-      'GRADE '*)   IFS=' ' read -r t1 t2 t3 t4 <<< "$line"
+      'NEG '*)     IFS=' ' read -r _ t2 t3 t4 <<< "$line"; NK+=( "$t2:$t3" ); NB+=( "$t4" ) ;;
+      'GRADE '*)   IFS=' ' read -r _ t2 t3 t4 <<< "$line"
                    if [ "$t3" = '-' ]; then GK+=( "$t2" ); else GK+=( "$t2:$t3" ); fi; GC+=( "$t4" ) ;;
-      'POSTURE '*) IFS=' ' read -r t1 t2 t3 <<< "$line"; PC+=( "$t2" ); PV+=( "$t3" ) ;;
-      'CONFIRM '*) IFS=' ' read -r t1 t2 t3 <<< "$line"; CFK+=( "$t2:$t3" ) ;;
-      'DECL '*)    IFS=' ' read -r t1 t2 t3 <<< "$line"; DK+=( "$t2:$t3" ); DKC+=( "$t2" ) ;;
-      'FILE '*)    IFS=' ' read -r t1 t2 <<< "$line"; FILES+=( "$t2" ) ;;
-      'ROLE '*)    IFS=' ' read -r t1 t2 t3 <<< "$line"; RLC+=( "$t2" ); RLV+=( "$t3" ) ;;
+      'POSTURE '*) IFS=' ' read -r _ t2 t3 <<< "$line"; PC+=( "$t2" ); PV+=( "$t3" ) ;;
+      'CONFIRM '*) IFS=' ' read -r _ t2 t3 <<< "$line"; CFK+=( "$t2:$t3" ) ;;
+      'DECL '*)    IFS=' ' read -r _ t2 t3 <<< "$line"; DK+=( "$t2:$t3" ); DKC+=( "$t2" ) ;;
+      'FILE '*)    IFS=' ' read -r _ t2 <<< "$line"; FILES+=( "$t2" ) ;;
+      'ROLE '*)    IFS=' ' read -r _ t2 t3 <<< "$line"; RLC+=( "$t2" ); RLV+=( "$t3" ) ;;
       # Four fields into four variables, three into three — the transport rule this file states
       # at invocation_check, applied here exactly as coverage_check applies it to the same two
       # records. C6 reads a disposition member's SET ORDINAL and never its reason, so the reason
       # field is discarded rather than read into a variable that nothing consults.
-      'AMBPARTS '*)  IFS=' ' read -r t1 t2 t3 t4 <<< "$line"; MS+=( "$t2" ); MC+=( "$t3" ); MV+=( "$t4" ) ;;
-      'DISPPARTS '*) IFS=' ' read -r t1 t2 t3 <<< "$line"; DS+=( "$t2" ) ;;
+      'AMBPARTS '*)  IFS=' ' read -r _ t2 t3 t4 <<< "$line"; MS+=( "$t2" ); MC+=( "$t3" ); MV+=( "$t4" ) ;;
+      'DISPPARTS '*) IFS=' ' read -r _ t2 t3 <<< "$line"; DS+=( "$t2" ) ;;
     esac
   done <<< "$recs"
 
@@ -2804,7 +2804,7 @@ inference_check() {
   # derive the first two limbs and not the third, because an arm that never declared the effect is
   # retained under the fail-closed rule, and a recogniser admitting it is reading the superseded
   # runs-no-script predicate.
-  local sens_blk sens_bi=0 spec_blk spec_bi=0 noef_blk noef_bi=0 nb
+  local sens_blk sens_bi=0 spec_blk spec_bi=0 noef_blk noef_bi=0
   sens_blk="$(neg_norm '**Reads:** nothing. It **writes nothing**, **dispatches no agent**, and performs no act whose effect lands outside the trip own files.')"
   [[ "$sens_blk" =~ $NEG_W_RE ]] && sens_bi=$((sens_bi+4))
   [[ "$sens_blk" =~ $NEG_D_RE ]] && sens_bi=$((sens_bi+2))
@@ -2859,7 +2859,7 @@ inference_check() {
   printf 'COUNT CNOSRC %d\n' "$n_nosrc"
 
   # ── C1 — THE JOIN, as a set difference in BOTH directions.
-  local n_j1=0 n_j2=0 gi src
+  local n_j1=0 n_j2=0 src
   for (( i=0; i<${#GK[@]}; i++ )); do
     src=''
     for (( j=0; j<nblocks; j++ )); do
@@ -3033,7 +3033,7 @@ inference_check() {
     printf 'COUNT LVERBS -1\n'
     return "$rc"
   fi
-  local cline cfd=0 cnorm cverbs=0 cflag=0 cw=0 cd=0 co=0 vtok
+  local cline cnorm cverbs=0 cflag=0 cw=0 cd=0 co=0 vtok
   local -a CL=()
   while IFS= read -r cline || [ -n "$cline" ]; do CL+=( "$cline" ); done < "$carrier"
   local whole=''
@@ -3384,7 +3384,6 @@ RJ_COLS='agent|prompt file|output file|when to dispatch'
 RJ_ARCH_REL='reference/data-architecture.md'
 RJ_CLASS_HEAD='### 1.1 '
 RJ_DIGITS='0123456789'
-RJ_SLUGSET='abcdefghijklmnopqrstuvwxyz0123456789-'
 RJ_OUTDIR='outputs/'
 RJ_HEAD_OUT='### Output: '
 RJ_HEAD_FILE='### File: '
@@ -3460,7 +3459,7 @@ rj_headv() {
 roster_write_check() {
   local root="$1" md arch lineno=0 line t depth=0 first
   md="$root/CLAUDE.md"; arch="$root/$RJ_ARCH_REL"
-  local -a R_AGENT=() R_PROMPT=() R_OUT=() R_LINE=() R_ID=() C_N=() C_CLASS=() C_W=() C_TOK=()
+  local -a R_AGENT=() R_PROMPT=() R_OFILE=() R_LINE=() R_ID=() C_N=() C_CLASS=() C_W=() C_TOK=()
   local anchors=0 anchor_line=0 degraded=0 rows=0 classes=0 declared='' heads=0 i j k near=''
 
   # ── 1. The roster. Anchored on its own header row, matched structurally and only at
@@ -3518,7 +3517,7 @@ roster_write_check() {
             printf 'FINDING J0 CLAUDE.md:%d the roster row "%s" names %d prompt path(s) in its Prompt File cell, expected exactly one agents/<name>.md span\n' "$((i+1))" "$ag" "$pc"
             continue
           fi
-          R_AGENT+=("$ag"); R_PROMPT+=("$pr"); R_OUT+=("${RC[3]}"); R_LINE+=("$((i+1))")
+          R_AGENT+=("$ag"); R_PROMPT+=("$pr"); R_OFILE+=("${RC[3]}"); R_LINE+=("$((i+1))")
         done
       fi
     fi
@@ -3647,7 +3646,7 @@ roster_write_check() {
   done
 
   # ── 4. The join and the comparison.
-  local exp=0 fromc=0 fromp=0 fromh=0 joined=0 unjoined='' named path srcs p m2
+  local exp=0 fromc=0 fromp=0 fromh=0 joined=0 unjoined='' named srcs p m2
   for (( j=0; j<classes; j++ )); do
     m2=0
     for (( i=0; i<rows; i++ )); do
@@ -3658,7 +3657,7 @@ roster_write_check() {
   done
   for (( i=0; i<rows; i++ )); do
     [ -n "${R_ID[$i]}" ] || continue
-    rj_spansv named "${R_OUT[$i]}"
+    rj_spansv named "${R_OFILE[$i]}"
     local want='' hits=0 nout=0 sn hint
     while IFS= read -r sn; do case "$sn" in "$RJ_OUTDIR"*) nout=$((nout+1)) ;; esac; done <<< "$named"
     for (( j=0; j<classes; j++ )); do
@@ -3820,6 +3819,7 @@ gen_cmd() {  # gen_cmd <dir> <tuple> <defect>
   local v head paren inv i n
   local IFSSAVE="$IFS"
   IFS=','
+  # shellcheck disable=SC2206  # a deliberate split on IFS=',' (set above); callers pass literal comma-separated verb specs
   local -a VS=( $vspec )
   IFS="$IFSSAVE"
   for v in "${VS[@]}"; do
@@ -4785,7 +4785,7 @@ uw_hits() { printf '%s\n' "$1" | awk -v re="$UW_RE" '{ n += gsub(re, "") } END {
 # failure rather than as a clean file.
 uw_file() {
   local f="$1" recs="$2" base cmd regions n decl first za zal univ ro=0 rolist='' s e v w
-  local t1 t2 t3 t4
+  local t2 t3 t4
   local -a WN=()
   base="$(verb_id "$f")"; cmd="/$base"
   # Zone B's regions, from the SAME parser the rest of this guard runs on. Zone A is
@@ -4803,7 +4803,7 @@ uw_file() {
   # One NEG record per arm, from its first read-declaration block — the record C0 counts.
   while IFS= read -r w || [ -n "$w" ]; do
     case "$w" in
-      "NEG $cmd "*) IFS=' ' read -r t1 t2 t3 t4 <<< "$w"; [ $(( t4 & 4 )) -ne 0 ] && WN+=( "$t3" ) ;;
+      "NEG $cmd "*) IFS=' ' read -r _ t2 t3 t4 <<< "$w"; [ $(( t4 & 4 )) -ne 0 ] && WN+=( "$t3" ) ;;
     esac
   done <<< "$recs"
   first="$(printf '%s\n' "$regions" | awk -F'\t' 'NR == 1 { m = $1 } $1 < m { m = $1 } END { print m + 0 }')"
@@ -4821,7 +4821,7 @@ UW_FILES=0; UW_UNIV=0; UW_RO=0; UW_BOTH=""; UW_ZA_LINES=0; UW_COVER_BAD=""; UW_U
 for uwf in "$CDIR"/*/SKILL.md; do
   [ -e "$uwf" ] || continue
   UW_FILES=$((UW_FILES+1))
-  IFS=' ' read -r uwtag uwcmd uwn uwdecl uwzal uwu uwro uwrolist <<< "$(uw_file "$uwf" "$ALL")"
+  IFS=' ' read -r _ uwcmd uwn uwdecl uwzal uwu uwro uwrolist <<< "$(uw_file "$uwf" "$ALL")"
   if [ "${uwn:-0}" -eq 0 ] || [ "${uwdecl:-0}" -eq 0 ] || [ "${uwn:-0}" -ne "${uwdecl:-0}" ]; then
     UW_COVER_BAD="$UW_COVER_BAD${uwcmd:-$uwf}(walked=${uwn:-0} declared=${uwdecl:-0}) "
     continue
@@ -4843,7 +4843,7 @@ UWP_INT=1
 grep -qF 'Every verb of this command writes' "$UWP_F" || UWP_INT=0
 grep -q '^It writes nothing, dispatches no agent' "$UWP_F" || UWP_INT=0
 grep -q '^\*\*Reads:\*\*.*writes nothing' "$UWP_F" && UWP_INT=0
-IFS=' ' read -r uwptag uwpcmd uwpn uwpdecl uwpzal uwpu uwpro uwprolist <<< "$(uw_file "$UWP_F" "$(collect_records "$UWP")")"
+IFS=' ' read -r _ uwpcmd _ _ _ uwpu uwpro uwprolist <<< "$(uw_file "$UWP_F" "$(collect_records "$UWP")")"
 
 UW_SENS="$(uw_hits "$(uw_norm 'and stop. **Every verb of this
 command writes, and a write command never picks a write for you.**')")"
@@ -5073,7 +5073,7 @@ if [ -f "$G0/CLAUDE.md" ] && [ -f "$G0/skills/trip/SKILL.md" ] && [ -f "$G0/skil
   PASS "G0a: fixture integrity — the conforming tree was constructed"
   G0OUT="$(run_tree "$G0")"
   if grep -q '^FINDING ' <<<"$G0OUT"; then
-    FAIL "G0b: MUST-NOT-FIRE — the conforming tree was flagged: $(printf '%s' "$G0OUT" | grep '^FINDING ' | head -3 | tr '\n' ' ')"
+    FAIL "G0b: MUST-NOT-FIRE — the conforming tree was flagged: $(printf '%s' "$G0OUT" | grep '^FINDING ' | awk 'NR <= 3' | tr '\n' ' ')"
   else
     PASS "G0b: MUST-NOT-FIRE — a correct tree returns no finding of any id; the guard is not hard-wired red"
     # G0c-h each name a SPECIFIC SHAPE the conforming tree is supposed to carry. G0b
@@ -5198,7 +5198,7 @@ ctl() {  # ctl <id> <want> <label> <charter-defect> <cmd-defect> <integrity-prob
   local out; out="$(run_tree "$d")"
   if ! grep -q '^FINDING ' <<<"$out"; then FAIL "${id}b: the deliberate defect was NOT flagged ($label)"
   elif grep -q "^FINDING $want " <<<"$out"; then PASS "${id}b: flagged, naming $want — $label"
-  else FAIL "${id}b: flagged but not as $want ($label): $(printf '%s' "$out" | grep '^FINDING ' | head -1)"; fi
+  else FAIL "${id}b: flagged but not as $want ($label): $(printf '%s' "$out" | grep '^FINDING ' | awk 'NR == 1')"; fi
 }
 
 ctl GA0  A0 "an empty skills directory — a FAIL, not a vacuous pass"          ok        nocmds  '[ -d "$WORK/GA0/skills" ] && [ -z "$(ls -A "$WORK/GA0/skills")" ]'
@@ -5298,7 +5298,7 @@ if ! grep -qF "${AMB_MARK}${DISP_MARK}repo-creation${AMB_SEP}${BT}/trip-record p
   FAIL "GK5e: fixture integrity — the world must carry BOTH sets, same two unit members and DIFFERENT dispositions; one of them is absent, so a zero here would prove nothing"
 else
   GK5E_OUT="$(run_tree "$GK5E")"
-  GK5E_HITS="$(printf '%s\n' "$GK5E_OUT" | grep '^FINDING K5 ' | head -3 | tr '\n' ' ')"
+  GK5E_HITS="$(printf '%s\n' "$GK5E_OUT" | grep '^FINDING K5 ' | awk 'NR <= 3' | tr '\n' ' ')"
   if [ -z "$GK5E_HITS" ]; then
     PASS "GK5e: MUST-NOT-FIRE — two sets sharing both unit members and differing ONLY in their disposition member are TWO sets, and no K5 is emitted over $(getcount "$GK5E_OUT" DISPMEMBERS) live disposition member(s) in that world. The zero is a measurement: GK5d is the sensitivity arm on the same limb, over the same fixture shape with the disposition MATCHING, and fires on the same run. This arm is what makes the K5 quantifier widening evidence rather than an argument — an implementation that omits disposition members from the set identity emits a spurious K5 here while passing every must-fire arm above"
   else
@@ -5319,7 +5319,7 @@ if [ "$GB7B_S" -eq 1 ]; then
   PASS "GB7ba: fixture integrity — the world carries a MARKED excluded row, an UNMARKED excluded row and a MARKED ambiguity set, so GB7bb grades all three shapes rather than one"
   GB7B_OUT="$(run_tree "$GB7B")"
   GB7B_ADDR="$(getcount "$GB7B_OUT" S1_ADDR)"; GB7B_GRD="$(getcount "$GB7B_OUT" S1_GRADED)"
-  GB7B_HITS="$(printf '%s\n' "$GB7B_OUT" | grep '^FINDING B7 ' | head -3 | tr '\n' ' ')"
+  GB7B_HITS="$(printf '%s\n' "$GB7B_OUT" | grep '^FINDING B7 ' | awk 'NR <= 3' | tr '\n' ' ')"
   if [ -z "$GB7B_HITS" ]; then
     PASS "GB7bb: MUST-NOT-FIRE — B7's quantifier is the ADDRESSED class and nothing else: over a world carrying ${GB7B_ADDR} ADDRESSED row(s), all ${GB7B_GRD} graded, plus an EXCLUDED row and an ambiguity set that CARRY a marker and an EXCLUDED row that does not, no B7 is emitted. The zero is a measurement and not an empty scan — GB7 is the sensitivity arm on the same predicate and fires on the same run"
   else
@@ -5412,7 +5412,7 @@ if grep -q '^KEY /a:two words$' <<<"$XS2"; then
 else FAIL "GX2a: fixture integrity — the synthetic stream was not built; GX2b would prove nothing"; fi
 
 # ── E-group arms: the ADR, the script and the record stream, each built.
-GE="$WORK/ge"; gen_tree "$GE" ok ok; GEREC="$(run_tree "$GE")"
+GE_TREE="$WORK/ge"; gen_tree "$GE_TREE" ok ok; GEREC="$(run_tree "$GE_TREE")"
 ectl() {  # ectl <id> <want> <label> <adr-defect> <script-extra> <probe>
   local id="$1" want="$2" label="$3" ad="$4" sx="$5" probe="$6"
   local d="$WORK/$id"; mkdir -p "$d"; gen_adr "$d" "$ad"; gen_script "$d/pub.sh" "$sx"
@@ -5421,7 +5421,7 @@ ectl() {  # ectl <id> <want> <label> <adr-defect> <script-extra> <probe>
   PASS "${id}a: fixture integrity — the deliberate defect is present"
   local out; out="$(adr4_check "$d/ADR.md" "$d/pub.sh" "$GEREC")"
   if grep -q "^FINDING $want " <<<"$out"; then PASS "${id}b: flagged, naming $want — $label"
-  else FAIL "${id}b: not flagged as $want ($label): $(printf '%s' "$out" | grep '^FINDING ' | head -1)"; fi
+  else FAIL "${id}b: not flagged as $want ($label): $(printf '%s' "$out" | grep '^FINDING ' | awk 'NR == 1')"; fi
 }
 ectl GE1 E1 "a §4 row that does not parse at five columns"                    badrow       ''        'grep -qF "| 10 | ${BT}unpublish${BT} | EXCLUDED |" "$WORK/GE1/ADR.md"'
 ectl GE2 E2 "a §4 EXCLUDED form carrying no reason"                           noreason     ''        'grep -qF "| 4 | ${BT}publish${BT} | EXCLUDED | ${EMDASH} |" "$WORK/GE2/ADR.md"'
@@ -5475,7 +5475,7 @@ cctl() {  # cctl <id> <want> <label> <charter-defect> <cmd-defect> <carrier-defe
   arm "$want"
   local out; out="$(cfix "$id" "$1" "$2" "$3")"
   if grep -q "^FINDING $want " <<<"$out"; then PASS "${id}: flagged, naming $want — $label"
-  else FAIL "${id}: the deliberate defect was NOT flagged as $want ($label). First finding, if any: $(printf '%s' "$out" | grep '^FINDING ' | head -1)"; fi
+  else FAIL "${id}: the deliberate defect was NOT flagged as $want ($label). First finding, if any: $(printf '%s' "$out" | grep '^FINDING ' | awk 'NR == 1')"; fi
 }
 
 echo
@@ -5486,7 +5486,7 @@ echo "── Group GC/GL — control arms for the inference line, the confirm ob
 # declaration, and the carrier names no verb. A finding of ANY C or L id here is a false positive.
 GCOK="$(cfix GCok ok ok ok)"
 if grep -q '^FINDING ' <<<"$GCOK"; then
-  FAIL "GC0b: the CONFORMING world produced a finding — every must-not-fire arm below is reading a world that is already defective, so none of them establishes specificity: $(printf '%s' "$GCOK" | grep '^FINDING ' | head -2)"
+  FAIL "GC0b: the CONFORMING world produced a finding — every must-not-fire arm below is reading a world that is already defective, so none of them establishes specificity: $(printf '%s' "$GCOK" | grep '^FINDING ' | awk 'NR <= 2')"
 elif [ -z "$(getcount "$GCOK" CBLOCKS)" ]; then
   FAIL "GC0b: NO SUBJECT — the conforming world produced no population count, so inference_check did not run over it"
 else
@@ -5525,7 +5525,7 @@ if ! grep -qF "${AMB_MARK}${DISP_MARK}lightest-weight-action${AMB_SEP}${BT}${FIX
   FAIL "GC6b: fixture integrity — the near-miss world must carry the disposition member, the ADMITTED unit member and a RETAINED unit member beside it; that set is absent, so a zero here would prove nothing"
 else
   GC6B_OUT="$(inference_check "$(collect_records "$GC6B")" "$GC6B/SKILL.md")"
-  GC6B_HITS="$(printf '%s\n' "$GC6B_OUT" | grep '^FINDING C6 ' | head -3 | tr '\n' ' ')"
+  GC6B_HITS="$(printf '%s\n' "$GC6B_OUT" | grep '^FINDING C6 ' | awk 'NR <= 3' | tr '\n' ' ')"
   if [ -z "$GC6B_HITS" ]; then
     PASS "GC6b: MUST-NOT-FIRE — a disposition-bearing set naming ${FIXTURE_ADMIT_KEY} (admitted) BESIDE a unit member that retains declared intent yields no C6, over $(getcount "$GC6B_OUT" CDISPSETS) disposition-bearing set(s) in that world. The zero is a measurement, not an absence: GC6 is the sensitivity arm on the same predicate over the same world MINUS the retained member, and it fires on this run. This arm is what makes C6 a composition rule rather than a ban on an inference-admitted member appearing in such a set at all"
   else
@@ -5662,7 +5662,7 @@ elif [ -z "$GI1C_N" ] || [ "$GI1C_N" -eq 0 ]; then
 elif [ "$(getcount "$GI1C_OUT" PXHITS)" = '0' ]; then
   PASS "GI1c: MUST-NOT-FIRE — a backtick then a bang, in a verb region and in the carrier, is not the pre-execution rendering and yields no I1 over ${GI1C_N} fence-depth-0 line(s) scanned. GI1 and GI1b are the sensitivity arms and fire on the same run, so I1 grades the ORDER of the two characters rather than either character's presence"
 else
-  FAIL "GI1c: the near-miss was flagged as I1 — the assertion is matching the characters rather than the line-opening rendering: $(printf '%s' "$GI1C_OUT" | grep '^FINDING I1 ' | head -2 | tr '\n' ' ')"
+  FAIL "GI1c: the near-miss was flagged as I1 — the assertion is matching the characters rather than the line-opening rendering: $(printf '%s' "$GI1C_OUT" | grep '^FINDING I1 ' | awk 'NR <= 2' | tr '\n' ' ')"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
@@ -5833,7 +5833,7 @@ gqctl() {  # gqctl <id> <defect> <want-ids> <silent-ids> [--only] <must-name…>
   if [ "$ok" -eq 1 ]; then
     PASS "${id}: flagged, naming ${want} and the verb and the entry, with ${silent:-nothing} silent — ${label}"
   else
-    FAIL "${id}: the deliberate defect was not flagged as specified (${label}):${why} First finding, if any: $(grep '^FINDING ' <<<"$out" | head -1)"
+    FAIL "${id}: the deliberate defect was not flagged as specified (${label}):${why} First finding, if any: $(grep '^FINDING ' <<<"$out" | awk 'NR == 1')"
   fi
 }
 
@@ -5888,7 +5888,7 @@ elif grep -qF 'FINDING Q2 /zz-lacks the allowed-tools entry "Bash(ls:*)" has no 
      && [ "$(grep -c '^FINDING ' <<<"$GQ6O")" = '2' ] && [ "$(getcount "$GQ6O" GQVERBS)" = '2' ]; then
   PASS "GQ6: flagged, naming Q2 and Q1 against the SECOND verb only — /zz-lacks holds Bash(ls:*) with no row and names Read with no grant, while /zz-graded, which holds and names both, is named by nothing. Each unpaired entry is paired only by the other verb, so this is the arm that tells a per-verb reader from one that pools rows or grants across verbs"
 else
-  FAIL "GQ6: pairing leaked across verbs, or the second verb was not named in both directions: $(grep '^FINDING ' <<<"$GQ6O" | head -4 | tr '\n' ' ') GQVERBS=$(getcount "$GQ6O" GQVERBS)"
+  FAIL "GQ6: pairing leaked across verbs, or the second verb was not named in both directions: $(grep '^FINDING ' <<<"$GQ6O" | awk 'NR <= 4' | tr '\n' ' ') GQVERBS=$(getcount "$GQ6O" GQVERBS)"
 fi
 
 # ── GQ7 — MUST-NOT-FIRE: a row that spells the path-bearing grant IN FULL pairs by exact equality.
@@ -5909,7 +5909,7 @@ elif [ "$(getcount "$GQ7O" GQVERBS)" = '1' ] && [ "$(getcount "$GQ7O" GQROWS)" =
      && [ "$(getcount "$GQ7O" GQNEAR)" = '0' ] && [ "$(getcount "$GQ7O" GQCONT)" = '0' ]; then
   PASS "GQ7: MUST-NOT-FIRE — a verb whose script row spells the full rooted token is graded (1 verb, 3 rows, 3 grants) and every row and grant pairs: the row equals its grant exactly, so the normalization accepts the files' script-and-arm rendering beside the full token and prefers neither. GQ1 plants the same grant under the bare path and fires on this run"
 else
-  FAIL "GQ7: a row spelling the full rooted token did not pair — verbs $(getcount "$GQ7O" GQVERBS), rows $(getcount "$GQ7O" GQROWS), grants $(getcount "$GQ7O" GQGRANTS), unpaired rows $(getcount "$GQ7O" GQUNROW), unnamed grants $(getcount "$GQ7O" GQUNGRANT): $(grep '^FINDING ' <<<"$GQ7O" | head -2 | tr '\n' ' ')"
+  FAIL "GQ7: a row spelling the full rooted token did not pair — verbs $(getcount "$GQ7O" GQVERBS), rows $(getcount "$GQ7O" GQROWS), grants $(getcount "$GQ7O" GQGRANTS), unpaired rows $(getcount "$GQ7O" GQUNROW), unnamed grants $(getcount "$GQ7O" GQUNGRANT): $(grep '^FINDING ' <<<"$GQ7O" | awk 'NR <= 2' | tr '\n' ' ')"
 fi
 
 # ── GQ8 — a CONTINUATION LINE is loud. The allowed-tools value is wrapped, and the indented line
@@ -5931,7 +5931,7 @@ elif grep -q '^FINDING Q0 /zz-graded:[0-9][0-9]* continues its allowed-tools val
      && [ "$(getcount "$GQ8O" GQVERBS)" = '1' ] && [ "$(getcount "$GQ8O" GQUNROW)" = '0' ]; then
   PASS "GQ8: flagged, naming Q0 — an allowed-tools value wrapped onto an indented line that carries a grant no row names is reported with its verb and line, Q0 and Q2 each render exactly one FAIL and no PASS, and Q1 stays silent. Without this limb the reader graded the three entries it did read and Q2 passed, with the fourth grant absent from every count"
 else
-  FAIL "GQ8: a continuation of the allowed-tools value was not reported as Q0, or Q2 was not withheld: GQCONT=$(getcount "$GQ8O" GQCONT), Q0 probe '${GQ8_P0}', Q2 probe '${GQ8_P2}': $(grep '^FINDING ' <<<"$GQ8O" | head -2 | tr '\n' ' ')"
+  FAIL "GQ8: a continuation of the allowed-tools value was not reported as Q0, or Q2 was not withheld: GQCONT=$(getcount "$GQ8O" GQCONT), Q0 probe '${GQ8_P0}', Q2 probe '${GQ8_P2}': $(grep '^FINDING ' <<<"$GQ8O" | awk 'NR <= 2' | tr '\n' ' ')"
 fi
 
 # ── GQ9 — THE ROW SIDE IS READ IN FULL. Three BUILT worlds, each holding one row that no grant holds,
@@ -6048,7 +6048,7 @@ elif [ "$(getcount "$GQ0C" GQVERBS)" = "$(getcount "$GQ0L" GQVERBS)" ] && [ "$(g
      && [ "$GQ0_CF" = "$GQ0_LF" ]; then
   PASS "GQ0: MUST-NOT-FIRE — on a copy of the live verb files with every table row's Use cell rewritten (${GQ0_USE} rows) to name a grant nothing holds, the same token in prose beneath every table, and a fenced example grant table in each of ${GQ0_NV} files, the arm reads the SAME $(getcount "$GQ0C" GQVERBS) verb(s), $(getcount "$GQ0C" GQROWS) row(s) and $(getcount "$GQ0C" GQGRANTS) grant(s) and the SAME finding set as on the live tree. GQ1 plants that same token in a Grant cell and fires on the same run, so this zero is the arm telling the columns apart"
 else
-  FAIL "GQ0: a Use-cell rewrite, a prose line or a fenced example moved the verdict — live verbs/rows/grants $(getcount "$GQ0L" GQVERBS)/$(getcount "$GQ0L" GQROWS)/$(getcount "$GQ0L" GQGRANTS), copy $(getcount "$GQ0C" GQVERBS)/$(getcount "$GQ0C" GQROWS)/$(getcount "$GQ0C" GQGRANTS); first new finding: $(grep '^FINDING ' <<<"$GQ0C" | head -1)"
+  FAIL "GQ0: a Use-cell rewrite, a prose line or a fenced example moved the verdict — live verbs/rows/grants $(getcount "$GQ0L" GQVERBS)/$(getcount "$GQ0L" GQROWS)/$(getcount "$GQ0L" GQGRANTS), copy $(getcount "$GQ0C" GQVERBS)/$(getcount "$GQ0C" GQROWS)/$(getcount "$GQ0C" GQGRANTS); first new finding: $(grep '^FINDING ' <<<"$GQ0C" | awk 'NR == 1')"
 fi
 
 # ── GQD — DERIVED, NOT LISTED. The live copy plus one BUILT conforming verb: the graded set must
@@ -6536,10 +6536,10 @@ if grep -q "checkx" "$GM1/skills/trip/SKILL.md" && ! grep -q "checkx" "$GM1/CLAU
   if grep -q '^FINDING ' <<<"$M1" && grep -q 'checkx' <<<"$M1"; then
     PASS "GM-b: RED ARM — a verb renamed in a command file with the charter untouched turns the guard red and NAMES the affected key. The verb population is DERIVED, not remembered"
   else
-    FAIL "GM-b: RED ARM — a one-sided rename did NOT turn the guard red, or did not name the affected key: $(printf '%s' "$M1" | grep '^FINDING ' | head -1)"
+    FAIL "GM-b: RED ARM — a one-sided rename did NOT turn the guard red, or did not name the affected key: $(printf '%s' "$M1" | grep '^FINDING ' | awk 'NR == 1')"
   fi
   if grep -q '^FINDING ' <<<"$M2"; then
-    FAIL "GM-c: GREEN ARM — the same rename applied to BOTH surfaces was still flagged, so the red arm proves only that the guard dislikes change: $(printf '%s' "$M2" | grep '^FINDING ' | head -3 | tr '\n' ' ')"
+    FAIL "GM-c: GREEN ARM — the same rename applied to BOTH surfaces was still flagged, so the red arm proves only that the guard dislikes change: $(printf '%s' "$M2" | grep '^FINDING ' | awk 'NR <= 3' | tr '\n' ' ')"
   else
     PASS "GM-c: GREEN ARM — the same rename applied to BOTH surfaces stays green. Both arms, or neither: a green run on unchanged state does not satisfy this control; only the pair does"
   fi

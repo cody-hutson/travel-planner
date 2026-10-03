@@ -21,19 +21,20 @@ name: Corpus hygiene
 #   2. FAILURE ATTRIBUTION. This suite goes red when someone writes a count with no basis,
 #      cites a document by bare basename, or leaves a line-number locator behind. Routing
 #      that contributor to a check named "Artifact schema suite" is a legibility trap.
-#   3. CHECKOUT DEPTH. This is the only suite in the repository that reads a blob from
-#      history, and it is therefore the only one that needs fetch-depth: 0. Adding it to an
+#   3. CHECKOUT DEPTH. This suite reads the repository's history — blobs for its -RETRO arms
+#      and every release tag for group G — so it needs fetch-depth: 0. Adding it to an
 #      existing job would impose that cost on a job that does not need it — or, worse, would
-#      leave the depth at the default and silently disarm the arm that needs it.
+#      leave the depth at the default and silently disarm the arms that need it.
 #
 # ── THE CHECKOUT DEPTH IS LOAD-BEARING, NOT A DEFAULT NOBODY CHANGED ─────────────
-# Arm CTL-RETRO replays a defect this repository actually shipped, against the revision that
-# carried it. Every other arm in the suite grades a fixture the suite's own author wrote,
-# which proves the detector does what its author expected; CTL-RETRO is the only one that
-# proves it catches what the repository actually got wrong. It needs history, so the checkout
-# below sets fetch-depth to the full history and the suite FAILS rather than skipping when
-# the blob is unreachable. Lowering the depth here disarms that arm, and the suite will say
-# so loudly rather than quietly passing without it.
+# The arms whose ids end -RETRO replay a defect this repository actually shipped, against the
+# revision that carried it, and group G reads every release tag. Every other arm in the suite
+# grades a fixture the suite's own author wrote, which proves the detector does what its author
+# expected; these are what prove it catches what the repository actually got wrong. They need
+# history, so the checkout below sets fetch-depth to the full history — whose fetch also carries
+# the tags — and the suite FAILS rather than skipping when a blob is unreachable or no tag is
+# present. Lowering the depth here disarms those arms and empties group G, and the suite will
+# say so loudly rather than quietly passing without them.
 #
 # ── COVERAGE BOUNDARY ────────────────────────────────────────────────────────────
 # What a green check here does and does not prove.
@@ -64,8 +65,21 @@ name: Corpus hygiene
 #        outlive the gap it excepts. The scope boundary — the row's key cell, the ungraded
 #        link text, the ungraded zero-padding — is declared in the suite's class-D banner
 #        entry and is not restated here
-#   CTL  a synthetic fixture tree built in a temp dir on every invocation, plus one arm that
-#        replays a real historical defect. One MUST-FIRE arm per finding code the suite can
+#   F    SHORT-CIRCUIT READERS. A pipe into a reader that can stop before end of input — head,
+#        a grep in its quiet or max-count form, a sed carrying q, an awk that exits outside
+#        END — in any tracked shell file or any workflow run: value. The reader leaves first,
+#        the writer meets a closed pipe, and under pipefail the writer's failure becomes the
+#        pipeline's status, so a successful match can read as a failure. The scan set is
+#        derived and printed on every run, a run: form the suite's line reader cannot place is
+#        refused rather than skipped, and the declared boundary — what the detector does not
+#        reach — is stated in the suite's class-F banner entry and is not restated here
+#   G    RELEASE TAGS. Every v* tag's own tree carries its own CHANGELOG heading as the newest
+#        version heading. The group runs scripts/check-release-tag.sh — the check the release
+#        procedure runs at tag time — over every tag, and asserts its failures against the
+#        release-tag-declaration fence in CONTRIBUTING.md in both directions
+#   CTL  a synthetic fixture tree built in a temp dir on every invocation, plus the arms whose
+#        ids end -RETRO, each replaying a real historical defect. One MUST-FIRE arm per finding
+#        code the suite can
 #        emit, alongside the specificity arms that tell a correct implementation from a
 #        lookalike. THE ARM INVENTORY IS NOT RESTATED HERE, deliberately — it lives in the
 #        CTL section of the suite, which is also where the invariant binding it is stated
@@ -73,8 +87,8 @@ name: Corpus hygiene
 #        code, checked in both directions. The code set is READ FROM the suite on every run
 #
 # NO POPULATION, ARM COUNT OR CODE COUNT IS WRITTEN INTO THIS FILE. Every figure the gate
-# knows is emitted at run time on its own summary lines — CITATION, LOCATOR, COUNT-ASSERTION
-# and ADR-NUMBERING — and a numeral copied here would be a copy with no assertion behind it.
+# knows is emitted at run time, on one summary line per class after the result line, and a
+# numeral copied here would be a copy with no assertion behind it.
 # That is not a stylistic preference: one of the recurrences that motivated this whole gate
 # was a stale count in a workflow comment, in a block that twice forbade exactly this.
 #
@@ -83,10 +97,12 @@ name: Corpus hygiene
 #   much weaker property. A sentence can carry a sound anchor and a wrong number and stay
 #   green. What the gate removes is the claim nobody can check without redoing the work.
 #
-#   NON-MARKDOWN SURFACES. The suite reads tracked markdown. Shell scripts, workflow files
-#   and issue templates are not graded, and one of the motivating recurrences lived in a
-#   workflow comment. That gap is real and is left to review; stating it is what keeps a
-#   green from being read as more than it is.
+#   NON-MARKDOWN SURFACES. The suite reads tracked markdown; in group G, the release tags
+#   and the CHANGELOG each tagged tree carries; and in class F, every tracked shell file and
+#   every workflow run: value, graded for that one class and nothing else. Issue templates,
+#   workflow comments and every other non-markdown surface are not graded, and one of the
+#   motivating recurrences lived in a workflow comment. That gap is real and is left to
+#   review; stating it is what keeps a green from being read as more than it is.
 #
 #   WHETHER AN ADR NUMBER WAS FREE WHEN IT WAS CHOSEN. Group D grades the numbering of the
 #   corpus as it stands at the merge. It cannot hold a number for a branch that has not
@@ -97,9 +113,9 @@ name: Corpus hygiene
 #   A USER'S trips/ DIRECTORY. .gitignore keeps it out of a CI checkout, so those artifacts
 #   are unreachable by construction rather than by choice.
 #
-#   THE SUITE'S OWN SHELL QUALITY. actionlint lints workflow-embedded shell only, so no CI
-#   job shellchecks a standalone scripts/*.sh. This workflow adds one more file to that
-#   unlinted set. Stated so a green is not read as more than it is.
+#   THE SUITE'S OWN SHELL QUALITY. Not graded by this check. Every scripts/*.sh, this suite
+#   included, is linted by .github/workflows/shell-lint.yml at the severity that workflow
+#   declares. Stated so a green is not read as more than it is.
 #
 # ── ROLLING THIS GATE BACK IS TWO ORDERED STEPS, AND THE ORDER IS NOT OPTIONAL ───
 # Once the check below is registered as a required status check, a plain revert of the pull
@@ -148,8 +164,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          # Load-bearing. Arm CTL-RETRO reads a blob from this repository's history; at the
-          # default depth of a single commit that blob is unreachable and the arm hard-fails.
+          # Load-bearing. The -RETRO arms read blobs from this repository's history, and group G
+          # reads its release tags, which this depth's fetch also carries. At the default depth of
+          # a single commit the blobs are unreachable and no tag is fetched, and both hard-fail.
           # See the checkout-depth note above before lowering this.
           fetch-depth: 0
 
