@@ -19,13 +19,14 @@ options weighed, the decision, and the consequences.
 - **Amendment — correcting an Accepted ADR without changing a decision.** An Accepted ADR
   **is** edited in place to correct a claim it got wrong, narrow a scope or coverage
   statement, or repair a citation whose target has moved. None of those is a change of
-  decision, and none needs a new ADR. The amendment travels with the document, in either of
-  the two forms already in use here: named in the `Status:` line — `amended <N> times`, then
-  a `**First/Second/… amendment**` paragraph, as `ADR-008` does — or written as a dated
-  `**Amendment (YYYY-MM-DD, Day) — …**` paragraph in the section it corrects, as `ADR-007`
-  does. Say what was corrected and why, and **correct the claim in place rather than
-  softening it**. What an amendment may never do is reverse, narrow or re-open a *decision*:
-  that is the supersession path above.
+  decision, and none needs a new ADR. The amendment travels with the document: its account takes
+  the consolidated-decision form below, and an account written before that form stands where it
+  was written — named in the `Status:` line, `amended <N> times` and then a
+  `**First/Second/… amendment**` paragraph, as `ADR-008` does, or a dated
+  `**Amendment (YYYY-MM-DD, Day) — …**` paragraph in the section it corrects, as `ADR-007` does.
+  Say what was corrected and why, and **correct the claim in place rather than softening it**.
+  What an amendment may never do is reverse, narrow or re-open a *decision*: that is the
+  supersession path above.
 - **Superseding one decision, or part of one.** Where a later record supersedes one decision of
   an Accepted ADR, or part of one, and the rest of that ADR stands, the earlier ADR is **not**
   marked `Superseded`: its `Status:` value and its index cell stay `Accepted`, because the record
@@ -38,6 +39,47 @@ options weighed, the decision, and the consequences.
   forward. The supersession is recorded when it takes effect and not before: for a rule
   implemented in code, that is the change that ships the replacement. `ADR-009`'s eighth
   amendment is the first instance of this form.
+- **Consolidated-decision form — an amended ADR reads at its current state.** This form is decided
+  by [the record on what an Accepted ADR may gain](ADR-042-accepted-record-growth.md), and every
+  amendment of an Accepted ADR made after this bullet was added takes it. The amendment's account
+  is an entry in a closing `## Amendment history` section, placed after `References`; no new
+  account is written into the `Status:` line or into a section, and the corrected claim stands
+  corrected in the sentence that makes it. An entry opens `**Amendment (YYYY-MM-DD, Day) — …**`,
+  or `**<Ordinal> amendment (YYYY-MM-DD, Day) — …**` where the amendment is cited by an ordinal.
+  It names the section it corrected, says what was corrected and why, and quotes the wording it
+  replaced where that wording still stands, in the ADR or in an earlier account. Entries stand
+  oldest first, and entries of one date in the order the amendments were made. The `Status:` line
+  carries the lifecycle value with its date, and the record of each partial supersession. An
+  account written before this form stays where it stands, in an ADR amended in either earlier form
+  or in both, until a consolidation moves it; an ADR changed with no account takes no entry for
+  that history. Consolidating is optional and nothing schedules it: one change moves every earlier
+  account of an ADR to an entry and rewrites its sections to what those amendments left in force,
+  and it changes no decision. The partial form above governs a partial supersession in every ADR,
+  consolidated or not, wherever it and this form differ, and the text a supersession retains stays
+  where it stands, with its marker. No consolidation, relocation or reduction of an ADR removes or
+  rewords a rejected alternative or the reason given for rejecting it, wherever in the ADR it
+  stands.
+- **What an amendment may add.** The bound is on what a span states, never on its size: a span an
+  amendment adds or rewrites is outside it when it states something a reader must follow that the
+  ADR did not already say — a rule, an obligation, a permitted case, an account of a mechanism the
+  ADR did not give. A new decision is a new ADR. A correction replaces a false statement with a
+  true one, and corrects only a claim the ADR already made; where the true form is settled design
+  — a table, grammar, enumeration, procedure, measured boundary or ledger — the correction is one
+  sentence naming where that shape is stated, the specification document for its subject under
+  `reference/` or the suite group that pins it, and the shape is never restated in the ADR. Inside
+  the bound by construction: an amendment's own account; a consolidation's moves; a relocation's
+  removal of settled design and its pointer to the home; a rejected alternative recorded with its
+  reason; and a removal that reverses, narrows or re-opens no decision and removes no rejected
+  alternative. A machine-readable declaration of a decision the ADR already states is admitted when
+  it restates exactly what the decision states and adds nothing a reader must follow; a declaration
+  that adds a member is a new decision. Settled design belongs in the specification document for
+  its subject, which names the ADR that decided it, as `reference/data-architecture.md` § 12 does
+  for its own. The amendment rule above, the consolidated-decision form and this bound apply to an
+  ADR from its ratification on `main`; a change made before then, while the ADR is `Proposed` or
+  accepted only on a release's branch, is revision and not amendment. The practice here is two
+  steps: an ADR lands `Proposed`, and a later change on `main` sets `Accepted` with its date in the
+  `Status:` line and the index row. An ADR that a release lands `Accepted` is ratified when that
+  release merges.
 - **When to write one:** for decisions that are cross-cutting or hard to reverse — roster
   or pipeline changes, the secret/publish model, cross-agent contracts. One-line fixes and
   ordinary feature slices do not need an ADR.
@@ -69,11 +111,13 @@ undeclared. Why a particular gap exists belongs in the record that withdrew it, 
 ```adr-number-declaration
 # number  reason
 020       superseded-record-never-merged
+041       held-for-in-flight-milestone-63
 ```
 
-`ADR-020` is the only number declared today. It was assigned to the record `ADR-021`
+`ADR-020` is the one permanent gap declared. It was assigned to the record `ADR-021`
 supersedes, on a branch that has since been swept; `ADR-021` § *Costs and residual risks*
-carries the account.
+carries the account. `041` is held rather than lost: an in-flight release carries its record
+under that number, and the change that lands it removes the row.
 
 ## Index
 
@@ -89,6 +133,7 @@ them. A new record's row goes at the foot of its group's table, so each group st
 |-----|-------|--------|
 | [ADR-013](ADR-013-count-assertion-basis.md) | Count assertions carry a re-derivable basis — the four admitted basis forms, and the declared residual | Accepted |
 | [ADR-019](ADR-019-discriminating-evidence-rule.md) | The Discriminating-Evidence Rule — an assertion's PASS must require evidence its subject could only have produced by running | Accepted |
+| [ADR-042](ADR-042-accepted-record-growth.md) | Accepted records after acceptance — what an amendment may add, the consolidated-decision form, and where settled design belongs | Proposed |
 
 ### Data architecture
 
