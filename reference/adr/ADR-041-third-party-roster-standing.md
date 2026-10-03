@@ -249,7 +249,7 @@ not name, and can lag the model. A count passed down by every dispatcher widens 
    states.
 9. **`ADR-028` and `ADR-029` stand.** The presence file never carries a `[THIRD-PARTY]` entry, and a
    count of entries is not a value on one; approvers are declared from `Person` cells, which such a
-   member does not hold once a stale row naming them is off.
+   member does not hold once no roster row names them.
 10. **Graded** by `scripts/test-corpus-hygiene.sh` group `E`.
 
 **How a third-party member's existence flows.**

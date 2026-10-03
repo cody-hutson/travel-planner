@@ -1662,8 +1662,9 @@ each has one disposition.
   joins the two as one person and marks the entry `[ROSTERED]`, so the named-traveler count holds
   them and the outside-roster count does not. The row is the stale half, and it comes off through
   this verb's no-argument render, which echoes it before removing it. Until it comes off, the stale
-  row holds a `Person` cell that `## .approvers` resolves, and a declaration naming it outlives the
-  row; retiring or restating it is the operator's act. The removal rests on the
+  row, or a pending row while it stands, holds a `Person` cell that `## .approvers` resolves, and a
+  declaration naming it outlives the row; retiring or restating it is the operator's act. The
+  removal rests on the
   third-party recording, not on travel: they still travel, now as an unnamed member, so it is not a
   departure — the table's stale-row row applies and its removal rows do not, and the total stands.
   The reconciler reports this state rather than removing the row (`agents/00-enrichment.md`
