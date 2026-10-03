@@ -161,7 +161,7 @@ found; the hits are the records whose `## Decision` section names one of the dom
 
 | Capability domain | Records hit (of 39) | Coverage, after reading each hit |
 |---|---|---|
-| Guided entry to the commands | 16 | kind-wide |
+| Guided entry to the commands | 17 | kind-wide |
 | The repository's CI and release machinery is graded | 6 | kind-wide |
 | A surface's cost is a stated property | 20 | kind-wide |
 | Governing prose has an executable assertion | 20 | rule |
@@ -217,8 +217,8 @@ Each step reads the target as it stands, and names the control that shows it rea
 3. **Bound by a rule.** For each domain nothing was decided for, look for a rule on a deliverable its own
    statement names. Where that finds none but a kind-wide one, search: read every record whose
    `## Decision` section names a file named by its epic's body or by the descriptions of the milestones
-   that are its alone — less directories, `CLAUDE.md`, `README.md`, `CONTRIBUTING.md`, `SECURITY.md` and
-   `CHANGELOG.md` — or an artifact a specification document titled for it declares. Control: the search
-   fires on a domain whose rule is known, not on a near-miss.
+   that are its alone, or placed in it — less directories, `CLAUDE.md`, `README.md`, `CONTRIBUTING.md`,
+   `SECURITY.md` and `CHANGELOG.md` — or an artifact a specification document titled for it declares.
+   Control: the search fires on a domain whose rule is known, not on a near-miss.
 4. **Anchoring.** Extract the distinct three-digit `ADR-NNN` tokens from each specification document.
    Control: the same extraction at `dc00c8e` returns 11, 4, 3 and 1, in the table's order.

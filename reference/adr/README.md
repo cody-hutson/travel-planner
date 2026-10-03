@@ -122,10 +122,11 @@ under that number, and the change that lands it removes the row.
 ## Index
 
 Each record has exactly one row below, in the group for the subsystem it was decided for — the
-capability its `Driving work` field names. The [coverage map](coverage-map.md) names the capability
-each record was decided for, the records that otherwise bind a capability nothing was decided for,
-the capabilities no record binds, and which specification documents cite the records that bind
-them. A new record's row goes at the foot of its group's table, so each group stays in number order.
+capability its `Driving work` field names. The [coverage map](coverage-map.md) names, as measured at
+`e743113`, the capability each record then present was decided for, the records that otherwise bind
+a capability nothing was decided for, the capabilities no record binds, and which specification
+documents cite the records that bind them. A new record's row goes at the foot of its group's table,
+so each group stays in number order.
 
 ### The decision tier and the repository's own rules
 
