@@ -77,36 +77,48 @@ carries the account.
 
 ## Index
 
+Each record has exactly one row below, in the group for the subsystem it was decided for — the
+capability its `Driving work` field names. The [coverage map](coverage-map.md) names the capability
+each record was decided for, the records that otherwise bind a capability nothing was decided for,
+the capabilities no record binds, and which specification documents cite the records that bind
+them. A new record's row goes at the foot of its group's table, so each group stays in number order.
+
+### The decision tier and the repository's own rules
+
+| ADR | Title | Status |
+|-----|-------|--------|
+| [ADR-013](ADR-013-count-assertion-basis.md) | Count assertions carry a re-derivable basis — the four admitted basis forms, and the declared residual | Accepted |
+| [ADR-019](ADR-019-discriminating-evidence-rule.md) | The Discriminating-Evidence Rule — an assertion's PASS must require evidence its subject could only have produced by running | Accepted |
+
+### Data architecture
+
+| ADR | Title | Status |
+|-----|-------|--------|
+| [ADR-009](ADR-009-data-architecture.md) | Data architecture — entity identity, serialization, publishability, topology, schema evolution | Accepted |
+
+### Commands, installation and the trip lifecycle
+
+| ADR | Title | Status |
+|-----|-------|--------|
+| [ADR-007](ADR-007-command-entry-point.md) | Command entry point — surface shape, privilege boundary, and taxonomy ownership | Accepted |
+| [ADR-021](ADR-021-installable-capability.md) | The trip engine is an installable capability, not a folder you open | Accepted |
+
+### Planning — research, the itinerary and its cost
+
 | ADR | Title | Status |
 |-----|-------|--------|
 | [ADR-001](ADR-001-nightlife-agent.md) | Dedicated nightlife agent — placement, boundary, coverage | Accepted |
-| [ADR-002](ADR-002-living-site-refresh.md) | Living-site refresh — secret model, client-side ambient data, 0-plaintext-leak | Accepted |
-| [ADR-003](ADR-003-group-coordination.md) | Group coordination — change representation, approval workflow, notification, privacy | Accepted |
-| [ADR-004](ADR-004-contact-emergency-privacy.md) | Traveler contact & emergency info — privacy-handling model | Accepted |
-| [ADR-005](ADR-005-location-invariant.md) | Location invariant — every itinerary event carries a standard, validator-gated map link | Accepted |
-| [ADR-006](ADR-006-third-party-data-capture.md) | Third-party data capture — consent and attribution for party members without a profile | Accepted |
-| [ADR-007](ADR-007-command-entry-point.md) | Command entry point — surface shape, privilege boundary, and taxonomy ownership | Accepted |
-| [ADR-008](ADR-008-publish-content-guard.md) | Publish-path content guard — a value-keyed predicate on the plaintext limb | Accepted |
-| [ADR-009](ADR-009-data-architecture.md) | Data architecture — entity identity, serialization, publishability, topology, schema evolution | Accepted |
-| [ADR-010](ADR-010-per-traveler-approval-collection.md) | Per-traveler approval collection — transport over server, the attestation ceiling, and the unnamed channel | Accepted |
 | [ADR-011](ADR-011-per-traveler-cost-estimation.md) | Per-traveler cost estimation — a new in-model class, and the one field the entry marker admits | Accepted |
-| [ADR-012](ADR-012-people-library.md) | People library — cross-trip person identity, merge semantics, erasure reach, and reference discovery | Accepted |
-| [ADR-013](ADR-013-count-assertion-basis.md) | Count assertions carry a re-derivable basis — the four admitted basis forms, and the declared residual | Accepted |
-| [ADR-014](ADR-014-cross-trip-consent-refusal.md) | Cross-trip consent for a party member — the mechanism space, and why the refusal closes rather than defers | Accepted |
-| [ADR-015](ADR-015-durable-field-validity-horizon.md) | The durable-field validity horizon — a trip-relative predicate, a declared axis, and no fifth write | Accepted |
-| [ADR-016](ADR-016-reusable-groups.md) | Reusable groups — a second cross-trip store, a one-directional membership edge, and an expansion that leaves no residue | Accepted |
-| [ADR-017](ADR-017-derived-trip-history.md) | Derived trip history — a resolution rather than a record, a match the operator makes, and a suggestion that is never written | Accepted |
 | [ADR-018](ADR-018-cost-estimation-method.md) | Cost estimation method — the commitment axis, the C13 read edge, and ADR-011's three deferred questions | Accepted |
-| [ADR-019](ADR-019-discriminating-evidence-rule.md) | The Discriminating-Evidence Rule — an assertion's PASS must require evidence its subject could only have produced by running | Accepted |
-| [ADR-021](ADR-021-installable-capability.md) | The trip engine is an installable capability, not a folder you open | Accepted |
-| [ADR-022](ADR-022-interview-session-model.md) | The interview session model — derived resumption, a three-valued read of the unanswered class, and one write per answer | Accepted |
-| [ADR-023](ADR-023-interviewer-authored-home-and-form-contract.md) | The interviewer's authored home and the form contract — a declared fence, the restatement homes retired, and what the next form costs | Accepted |
-| [ADR-024](ADR-024-form-contract-writer-boundary.md) | The form contract's writer boundary — the owned region as the unit, a key of region and condition, and an exclusion that executes rather than amends | Accepted |
-| [ADR-025](ADR-025-engagement-model-over-time.md) | The engagement model over time — the axis the engine already computes, what carries across a boundary, and identity continuity | Accepted |
-| [ADR-026](ADR-026-channel-architecture.md) | The channel architecture — what a channel is, the channel-set, what each may carry, and the crossing model | Accepted |
-| [ADR-027](ADR-027-post-trip-preference-memory.md) | Post-trip preference memory — outcomes resolved where they were measured, a group view over the trips the operator confirms, one durable dislike field, and no group slot | Accepted |
 | [ADR-028](ADR-028-derived-planning-day-block-owners.md) | Owners for the derived planning-day blocks — the trip window to the verb that records its inputs, and each traveller's window to a presence file the reconciler rebuilds | Accepted |
-| [ADR-029](ADR-029-group-approval-return-and-threshold.md) | Group approval — the inbound return as an operator-mediated crossing, approvals the organizer records against a declared threshold, and one decision of ADR-003 superseded in part | Accepted |
+
+### The published site and the publish path
+
+| ADR | Title | Status |
+|-----|-------|--------|
+| [ADR-002](ADR-002-living-site-refresh.md) | Living-site refresh — secret model, client-side ambient data, 0-plaintext-leak | Accepted |
+| [ADR-005](ADR-005-location-invariant.md) | Location invariant — every itinerary event carries a standard, validator-gated map link | Accepted |
+| [ADR-008](ADR-008-publish-content-guard.md) | Publish-path content guard — a value-keyed predicate on the plaintext limb | Accepted |
 | [ADR-030](ADR-030-what-the-private-site-may-show.md) | What the private trip site may show — the coordination test, the share mark, and nothing personal on a public page | Accepted |
 | [ADR-031](ADR-031-site-phase-model.md) | The site's phase model — the resolved state drives its shape through one render table, and what each state's build renders | Accepted |
 | [ADR-032](ADR-032-site-round-trip-contract.md) | The site's round-trip contract across its rendered artifacts — two grains, one render table, and a walk in three passes | Accepted |
@@ -116,5 +128,41 @@ carries the account.
 | [ADR-036](ADR-036-published-artifact-model-row.md) | The published artifact takes no in-model row — `ADR-026` Finding 1 declined, in terms, and routed | Accepted |
 | [ADR-037](ADR-037-group-snapshot.md) | The group snapshot — what travellers share with the group before a plan, whose it is, who writes it, and where it shows | Accepted |
 | [ADR-038](ADR-038-contact-emergency-group-visibility.md) | Contact and emergency information on the private site — what the group sees, the emergency contact as a third party, and the carrier | Accepted |
+
+### Group coordination and approval
+
+| ADR | Title | Status |
+|-----|-------|--------|
+| [ADR-003](ADR-003-group-coordination.md) | Group coordination — change representation, approval workflow, notification, privacy | Accepted |
+| [ADR-010](ADR-010-per-traveler-approval-collection.md) | Per-traveler approval collection — transport over server, the attestation ceiling, and the unnamed channel | Accepted |
+| [ADR-029](ADR-029-group-approval-return-and-threshold.md) | Group approval — the inbound return as an operator-mediated crossing, approvals the organizer records against a declared threshold, and one decision of ADR-003 superseded in part | Accepted |
+
+### The traveller journey
+
+| ADR | Title | Status |
+|-----|-------|--------|
+| [ADR-025](ADR-025-engagement-model-over-time.md) | The engagement model over time — the axis the engine already computes, what carries across a boundary, and identity continuity | Accepted |
+| [ADR-026](ADR-026-channel-architecture.md) | The channel architecture — what a channel is, the channel-set, what each may carry, and the crossing model | Accepted |
+
+### People and groups across trips, and what trips remember
+
+| ADR | Title | Status |
+|-----|-------|--------|
+| [ADR-012](ADR-012-people-library.md) | People library — cross-trip person identity, merge semantics, erasure reach, and reference discovery | Accepted |
+| [ADR-014](ADR-014-cross-trip-consent-refusal.md) | Cross-trip consent for a party member — the mechanism space, and why the refusal closes rather than defers | Accepted |
+| [ADR-015](ADR-015-durable-field-validity-horizon.md) | The durable-field validity horizon — a trip-relative predicate, a declared axis, and no fifth write | Accepted |
+| [ADR-016](ADR-016-reusable-groups.md) | Reusable groups — a second cross-trip store, a one-directional membership edge, and an expansion that leaves no residue | Accepted |
+| [ADR-017](ADR-017-derived-trip-history.md) | Derived trip history — a resolution rather than a record, a match the operator makes, and a suggestion that is never written | Accepted |
+| [ADR-027](ADR-027-post-trip-preference-memory.md) | Post-trip preference memory — outcomes resolved where they were measured, a group view over the trips the operator confirms, one durable dislike field, and no group slot | Accepted |
+
+### Travellers, intake and the interview
+
+| ADR | Title | Status |
+|-----|-------|--------|
+| [ADR-004](ADR-004-contact-emergency-privacy.md) | Traveler contact & emergency info — privacy-handling model | Accepted |
+| [ADR-006](ADR-006-third-party-data-capture.md) | Third-party data capture — consent and attribution for party members without a profile | Accepted |
+| [ADR-022](ADR-022-interview-session-model.md) | The interview session model — derived resumption, a three-valued read of the unanswered class, and one write per answer | Accepted |
+| [ADR-023](ADR-023-interviewer-authored-home-and-form-contract.md) | The interviewer's authored home and the form contract — a declared fence, the restatement homes retired, and what the next form costs | Accepted |
+| [ADR-024](ADR-024-form-contract-writer-boundary.md) | The form contract's writer boundary — the owned region as the unit, a key of region and condition, and an exclusion that executes rather than amends | Accepted |
 | [ADR-039](ADR-039-interview-conduct-bundled-with-the-verb.md) | The interview's shared conduct is bundled with the interviewer verb — a file beside its command file, superseding ADR-023 D1.1 in part | Accepted |
 | [ADR-040](ADR-040-transcript-only-return-and-save.md) | What a transcript-only channel returns, and who saves it — superseding ADR-022 D6.1's tier-T row in part | Accepted |
