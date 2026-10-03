@@ -1533,10 +1533,12 @@ runs their entry stands and re-enters the outside-roster count at the next recon
 whose withdrawal this verb carries is decided by its removal rows, once**, against the pre-removal
 floor the first reconcile left, whether or not that second run completes. **Never delete anything
 under `travelers/`**: that file is Layer-1 source and this verb has no delete path to it. Then, for
-a removal no second run followed, name where the person may still appear, without touching either
-place: `outputs/traveler-model.md`, until `/trip-record travelers` reconciles it, and any
-constraint's `Applies to:` line, which is `fact`'s; after a departure whose withdrawal this verb
-carried, name only the second.
+a removal no second run followed, name where the person may still appear, without touching any of
+the three: `outputs/traveler-model.md`, until `/trip-record travelers` reconciles it, `## Group`'s
+prose sub-fields, where the publish guard no longer refuses their name once a withdrawal this verb
+carried drops their entry (`reference/data-architecture.md` § 5.3), and any constraint's
+`Applies to:` line, which is `fact`'s; after a departure whose withdrawal this verb carried, name
+only the last two.
 
 **After any roster change.** Report `### Per-Traveler Planning Days [DERIVED]` as **stale** and
 **name no command** — that block has no writer in § *Write ownership*, so its staleness is reported
@@ -1659,7 +1661,9 @@ each has one disposition.
   named at scaffold, before anyone knew they would never file, or added here since. The reconciler
   joins the two as one person and marks the entry `[ROSTERED]`, so the named-traveler count holds
   them and the outside-roster count does not. The row is the stale half, and it comes off through
-  this verb's no-argument render, which echoes it before removing it. The removal rests on the
+  this verb's no-argument render, which echoes it before removing it. Until it comes off, the stale
+  row holds a `Person` cell that `## .approvers` resolves, and a declaration naming it outlives the
+  row; retiring or restating it is the operator's act. The removal rests on the
   third-party recording, not on travel: they still travel, now as an unnamed member, so it is not a
   departure — the table's stale-row row applies and its removal rows do not, and the total stands.
   The reconciler reports this state rather than removing the row (`agents/00-enrichment.md`
