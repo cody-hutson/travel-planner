@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-10-03 — Erasure reaches every name, and a third-party member holds one standing
+## [0.49.0] — 2026-10-03 — Erasure reaches every name, and a third-party member holds one standing
 
 Until now `/trip-record erase` rewrote a person's name only where its reach table pointed, and among
 the trip file's sections that table named only `Group`, `Hard Constraints` and `Dietary & Health`. A
@@ -54,9 +54,9 @@ the reach table, stands where the echo would.
 someone whose needs you supplied through `/trip-record person` and who will never file a profile of
 their own. The answer to where such a member stands now lives in one place,
 `skills/trip-record/SKILL.md` § *Roster standing of a third-party member*, with the decision behind
-it in `ADR-041`; the data model, the enrichment, transport and hub agents and `CLAUDE.md` cite it
-rather than restate it, and a required check fails when a surface it reads restates that answer
-without citing it, or states a contrary one.
+it in `ADR-041`; every other sentence that states it — in the data model, the enrichment, transport
+and hub agents and `CLAUDE.md` — carries that sub-section's name, and a required check fails when
+one does not, or states a contrary answer.
 
 **The engine keeps the count that standing gives them, and the count names nobody.**
 `/trip-record person` brings the party's total up to cover them in the act that records them, so you
