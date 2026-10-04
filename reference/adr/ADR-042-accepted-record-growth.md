@@ -1,6 +1,6 @@
 # ADR-042: Accepted records after acceptance — what an amendment may add, the consolidated-decision form, and where settled design belongs
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-10-04)
 - **Deciders:** repo maintainer
 - **Driving work:** the *A surface's cost is a stated property* milestone — its card on what
   Accepted decision records gained after acceptance (#1179), under the corpus read-cost epic
@@ -11,8 +11,8 @@
 `reference/adr/README.md` § *Convention* makes an Accepted record immutable as to its decisions, and
 has it edited in place to correct a claim, to narrow a scope or coverage statement, or to repair a
 citation. The partial-supersession form adds a fourth edit: recording a decision taken in another
-record. The convention says what kind of edit is admitted. It does not say where the account of an
-edit is put, or what a record does with text that is neither a decision nor a correction.
+record. The convention says what kind of edit is admitted. It does not fix where the account of an
+edit goes, or what a record does with text that is neither a decision nor a correction.
 
 **What that produced.** Each record was read at its first Accepted revision and again at `e743113`,
 following renames, and the lines added between the two were sorted by where they sit, by how they
@@ -221,7 +221,7 @@ rule about what a record contains.
 **Positive**
 
 - A reader of a record amended after this one finds each new amendment's account after References,
-  and a consolidated record carries nothing between its title and its Context but its status.
+  and a consolidated record carries nothing between its title and its Context but its header fields.
 - A record stops being the place a mechanism is specified, so it stops growing when the mechanism
   changes: a correction of settled design leaves a pointer, not the shape.
 - The content only a record holds — why an option was rejected — is named as the one thing no
