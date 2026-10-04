@@ -441,6 +441,11 @@ def evaluate(raw, disabled=frozenset()):
 # it is read from the lines the parser's own scanner passed over as comments,
 # directly above a job key the parser located.
 #
+# The decision record titled
+# *The required-check census reads a parsed document*, under reference/adr/,
+# says why PyYAML, why the marker stays a comment, and why a missing parser
+# refuses.
+#
 # WHAT A GREEN CENSUS DOES NOT MEAN. `GITHUB_TOKEN` cannot read the branch
 # protection API, so no check running in this repository's CI can confirm that
 # a context is REGISTERED. Registration remains an operator act outside any pull
@@ -496,7 +501,9 @@ PR_BRANCH = "main"
 PR_PUSH_TYPE = "synchronize"
 # GitHub's filter-pattern characters: `*`, `?`, `+`, a bracket, the escaping
 # backslash, and `!` as a pattern's first character, the only place GitHub gives it
-# a meaning. A branch filter carrying one is left to GitHub's grammar (X116).
+# a meaning. A `branches:` filter carrying one is left to GitHub's grammar (X116).
+# For `branches-ignore:` only an entry opening with `!` defers to that grammar
+# (X119); a literal `main` beside any other pattern still shuts `main` out (X118).
 _RE_PATTERN = re.compile(r"[*?+\[\]\\]|^!")
 _NULL_TAG = "tag:yaml.org,2002:null"
 
