@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-10-02 — The release scaffolding grades itself
+## [0.51.0] — 2026-10-02 — The release scaffolding grades itself
 
 No trip verb changes behaviour in this release. What changes is the machinery a change to this
 repository passes through, parts of which were held to their own claims by hand. The census that
