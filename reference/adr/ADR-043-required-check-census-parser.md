@@ -1,6 +1,6 @@
 # ADR-043: The required-check census reads a parsed document — PyYAML on the runner, a marker read from the comment layer, and a refusal wherever it cannot vouch
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-10-04)
 - **Deciders:** repo maintainer
 - **Driving work:** the *release scaffolding grades itself* milestone — the card that re-implements
   the registration census in `scripts/pin-required-checks.py` against a YAML parser.
