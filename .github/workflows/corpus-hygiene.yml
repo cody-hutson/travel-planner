@@ -27,13 +27,13 @@ name: Corpus hygiene
 #      leave the depth at the default and silently disarm the arm that needs it.
 #
 # ── THE CHECKOUT DEPTH IS LOAD-BEARING, NOT A DEFAULT NOBODY CHANGED ─────────────
-# Arm CTL-RETRO replays a defect this repository actually shipped, against the revision that
-# carried it. Every other arm in the suite grades a fixture the suite's own author wrote,
-# which proves the detector does what its author expected; CTL-RETRO is the only one that
-# proves it catches what the repository actually got wrong. It needs history, so the checkout
-# below sets fetch-depth to the full history and the suite FAILS rather than skipping when
-# the blob is unreachable. Lowering the depth here disarms that arm, and the suite will say
-# so loudly rather than quietly passing without it.
+# Arms CTL-RETRO and CTL-E-RETRO each replay a defect this repository actually shipped, against
+# the revision that carried it. Every other arm in the suite grades a fixture the suite's own
+# author wrote, which proves the detector does what its author expected; these arms are the only
+# ones that prove it catches what the repository actually got wrong. They need history, so the
+# checkout below sets fetch-depth to the full history and the suite FAILS rather than skipping
+# when a blob is unreachable. Lowering the depth here disarms those arms, and the suite will say
+# so loudly rather than quietly passing without them.
 #
 # ── COVERAGE BOUNDARY ────────────────────────────────────────────────────────────
 # What a green check here does and does not prove.
@@ -64,8 +64,16 @@ name: Corpus hygiene
 #        outlive the gap it excepts. The scope boundary — the row's key cell, the ungraded
 #        link text, the ungraded zero-padding — is declared in the suite's class-D banner
 #        entry and is not restated here
-#   CTL  a synthetic fixture tree built in a temp dir on every invocation, plus one arm that
-#        replays a real historical defect. One MUST-FIRE arm per finding code the suite can
+#   E    AN OWNED RULE, STATED ONCE AND CITED. A [THIRD-PARTY] party member's standing — no
+#        roster row, and counted in Total travelers as an unnamed member — is stated once, in
+#        skills/trip-record/SKILL.md § Roster standing of a third-party member. A sentence
+#        elsewhere that pairs such a member with the roster or the total must carry that
+#        sub-section's name, and no sentence anywhere may state a contrary standing. Group C's
+#        sentence is the unit; reference/adr/, examples/ and CHANGELOG.md are outside the
+#        scan, and the contrary lexicon's boundary is declared in the suite's class-E banner
+#        entry
+#   CTL  a synthetic fixture tree built in a temp dir on every invocation, plus the arms that
+#        replay real historical defects. One MUST-FIRE arm per finding code the suite can
 #        emit, alongside the specificity arms that tell a correct implementation from a
 #        lookalike. THE ARM INVENTORY IS NOT RESTATED HERE, deliberately — it lives in the
 #        CTL section of the suite, which is also where the invariant binding it is stated
@@ -148,8 +156,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          # Load-bearing. Arm CTL-RETRO reads a blob from this repository's history; at the
-          # default depth of a single commit that blob is unreachable and the arm hard-fails.
+          # Load-bearing. Arms CTL-RETRO and CTL-E-RETRO read blobs from this repository's
+          # history; at the default depth of a single commit those blobs are unreachable and
+          # the arms hard-fail.
           # See the checkout-depth note above before lowering this.
           fetch-depth: 0
 

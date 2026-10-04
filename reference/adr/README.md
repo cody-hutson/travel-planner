@@ -212,3 +212,4 @@ so each group stays in number order.
 | [ADR-024](ADR-024-form-contract-writer-boundary.md) | The form contract's writer boundary — the owned region as the unit, a key of region and condition, and an exclusion that executes rather than amends | Accepted |
 | [ADR-039](ADR-039-interview-conduct-bundled-with-the-verb.md) | The interview's shared conduct is bundled with the interviewer verb — a file beside its command file, superseding ADR-023 D1.1 in part | Accepted |
 | [ADR-040](ADR-040-transcript-only-return-and-save.md) | What a transcript-only channel returns, and who saves it — superseding ADR-022 D6.1's tier-T row in part | Accepted |
+| [ADR-041](ADR-041-third-party-roster-standing.md) | A third-party member's roster standing — no `## Group` row, and one unnamed place in `Total travelers` | Accepted |

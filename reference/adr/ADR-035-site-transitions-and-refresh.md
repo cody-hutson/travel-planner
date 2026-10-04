@@ -1,6 +1,18 @@
 # ADR-035: The site's transitions — replace, never accumulate; what a traveller was shown; and the refresh obligation
 
-- **Status:** Accepted (2026-09-27)
+- **Status:** Accepted (2026-09-27); **amended once (2026-10-02)**. **First amendment** — it
+  records a **superseding decision** rather than a defect in this document.
+  [ADR-041](ADR-041-third-party-roster-standing.md) supersedes in part the refresh obligation's step
+  R0, for one trigger, a roster row `/trip-record group` removes, in two cases: a row it takes off as
+  a stale row, and the row of a departing member recorded through `/trip-record person`. In those two
+  cases that verb runs the reconcile itself once the row is off, rather than naming
+  `/trip-record travelers` for a later act, which it still names where that run does not complete,
+  and so, for them, it automates a step this record leaves to the living-site milestone. Every other
+  removal still names it, as R0 states; the reconcile that verb runs before any removal is its own
+  read before it judges, and precedes the change R0 is triggered by. Every other trigger's signal,
+  R1 to R3, and that milestone's ownership of any other automation stand. The superseded text is
+  retained as decided, with an inline marker pointing forward, per `reference/adr/README.md` §
+  *Convention*.
 - **Deciders:** repo maintainer
 - **Driving work:** #1296, the milestone-head design gate for the epic *The site serves every phase*
   (#1241). The epic's build slices are cut only after the card's records are accepted. The card's
@@ -118,10 +130,14 @@ observation, and the `list` edit — `scripts/publish-trip-site.sh`'s `cmd_list`
 `skills/trip-publish/SKILL.md` § *list* — is Wave 1's. `list` stays read-only and never gates.
 
 **The refresh obligation.** Automating any step of it belongs to the living-site milestone.
+*(Superseded in part — first amendment: [ADR-041](ADR-041-third-party-roster-standing.md) has
+`/trip-record group` run step R0 itself once it has removed a row as a stale row, or the row of a
+departing member recorded through `/trip-record person`, and names it only where that run does not
+complete; the rest of this allocation stands.)*
 
 | Step | Trigger | Signal | Remedy |
 |---|---|---|---|
-| **R0 reconcile** | a traveller's form, a person record, the roster or a link changes | the verb that made the change names `/trip-record travelers` without running it | `/trip-record travelers` |
+| **R0 reconcile** | a traveller's form, a person record, the roster or a link changes | the verb that made the change names `/trip-record travelers` without running it *(superseded in part — first amendment: [ADR-041](ADR-041-third-party-roster-standing.md) has `/trip-record group` run it itself once it has removed a row as a stale row, or the row of a departing member recorded through `/trip-record person`, and names it only where that run does not complete; every other removal, and every other trigger, keeps this signal)* | `/trip-record travelers` |
 | **R1 rebuild** | a change of σ — the trip context written by `/trip-record mode` or `/trip-record destination` — or of an admitted input: the shortlist by `/trip ideas`, the group snapshot and the group contacts file by the reconcile step, the plan artifacts by planning | `itinerary-to-build` reads `BEHIND`, naming the leading source | `/trip site` |
 | **R2 confirm** | a rebuild that changes the visible text | the organizer-confirm gate refuses `update` | `confirm`. This is intended under `ADR-003` § *Decision* 2, not a deadlock: `confirm` is always the organizer's, and a digest-only change needs none. On a trip that declares approvers, `ADR-029` § *Decision* 3 extends the same step: the organizer records each declared approver's reply through `confirm`, and `update` proceeds once they reach the declared threshold. The exception is a change that only removes or narrows what the group sees about a person, never held for the group's approval ([the contact and emergency record](ADR-038-contact-emergency-group-visibility.md) § 4, the operator's R1): as shipped, `ADR-029`'s step 6 holds such a republish until the Wave-1 approval-gate slice lands, and from that change the contact and emergency record's § 4 exempts it, leaving `confirm` its only gate |
 | **R3 republish** | R1 and R2 done | `build-to-published` reads `BEHIND` | `/trip-publish update` |

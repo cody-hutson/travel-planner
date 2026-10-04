@@ -3,6 +3,110 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.49.0] — 2026-10-03 — Erasure reaches every name, and a third-party member holds one standing
+
+Until now `/trip-record erase` rewrote a person's name only where its reach table pointed, and among
+the trip file's sections that table named only `Group`, `Hard Constraints` and `Dietary & Health`. A
+name in a trip-style line, in a mobility or health note, in the derived model's shared desires or in
+a group's name survived the erasure unreported while the receipt read complete. A party member
+recorded only through the operator had no settled place either: the data model, `/trip-record` and
+the transport agent gave different answers to whether such a member has a row on the trip's roster,
+so a reader following any one of them reached a different party and a different passenger count.
+This release gives every place a name can sit one stated disposition, states that member's standing
+once, and closes two gaps in `/trip-record`'s own text.
+
+**Erasure now accounts for every place a name can sit on a trip.** Each location has one stated
+disposition: rewritten, reported with its count and left standing, or declared out of reach with its
+reason.
+
+- **Rewritten:** mobility and health notes, the lines saying who travels from which origin, and the
+  derived model's text — every line of its body but a heading, a party member's recorded need that
+  named the person included.
+- **Reported with a count and left standing:** the parts of the trip file that describe the trip
+  itself — its food and allergy lists among them — the blocks another writer owns, another
+  traveller's own file, and a group's name. Here the name could also be a place, a month, a food or
+  an ordinary word, and a wrong rewrite could never be undone, so removing it is yours.
+
+The receipt now closes on one line saying what it is total over: the rows of the 38-row reach table,
+never a place the table does not list. The table's last row reads the rest of a resolved trip's
+directory, so a place nobody listed is reported rather than read as reached, and a required check
+fails whenever the trip template gains a section, or its dietary and health section a labelled line,
+that the table does not dispose of. An erasure interrupted part-way leaves the trip findable until
+its last step, so re-running it names each place the interruption left the name standing, with its
+count, and clearing those is yours. Erasure matches the name a trip actually uses for the person,
+even where it differs from their record. Two cases are left out: on a trip that calls them something
+else, the name on their record is not looked for on a first run, so it is neither rewritten nor
+reported and the receipt does not say so; and a person already taken off a trip's roster is not
+cleaned from that trip. A party member recorded only through the operator is never erasure's
+subject: the verb says so, and names the way their entry is removed, a fresh statement from you
+through `/trip-record person` that they are not travelling, which a reconcile honours on an active
+trip and nothing honours on an archived one.
+
+**The erasure rule says how it relates to the rule it breaks.** The standing rule that bounds an
+erasure now says, in one sentence, that its rewriting of existing trip content — its substitutions,
+and its deletion of the traveller file — is the exception to the command's own rule that it never
+overwrites or deletes existing trip content, and why: an erasure's whole subject is the removal a
+person asked for, so it cannot echo back what it removed the way the roster verb echoes a row it
+takes off — that echo would copy the erased values into the transcript — and the receipt, total over
+the reach table, stands where the echo would.
+
+**A party member recorded only through the operator now has one standing, stated once.** That is
+someone whose needs you supplied through `/trip-record person` and who will never file a profile of
+their own. The answer to where such a member stands now lives in one place,
+`skills/trip-record/SKILL.md` § *Roster standing of a third-party member*, with the decision behind
+it in `ADR-041`; every other sentence that states it — in the data model, the enrichment, transport
+and hub agents and `CLAUDE.md` — carries that sub-section's name, and a required check fails when
+one does not, or states a contrary answer.
+
+**The engine keeps the count that standing gives them, and the count names nobody.**
+`/trip-record person` brings the party's total up to cover them in the act that records them, so you
+restate nothing, and `/trip-record group` and `group-expand` apply the same rule on every write they
+make, asking rather than writing wherever a total falls short. A total you stated is left alone
+wherever it already counts them, so nobody is counted twice, and an archived trip keeps the total it
+was archived with. The transport agent reads the same count from the traveller model, which
+publishes nothing, so no member who travels is dropped from a stream it sizes or prices; where the
+trip's total is smaller than the party it knows, its brief flags the gap without naming anyone.
+
+**Removing someone from the roster is judged on a fresh count.** `/trip-record group` now runs the
+traveller-model reconcile before it takes a row off, so it compares the total with the roster as it
+stands rather than with a model a step behind, and where that reconcile stops it removes nothing but
+a row the stop itself names. Two removals reconcile again once the row is off, instead of naming the
+reconcile for later: a stale row, which names a member recorded through `/trip-record person` who
+has filed nothing and still travels, and the departure of such a member. That departure carries
+their withdrawal, so their entry and the needs recorded for them go with the row, and
+`/trip-record person` with those needs re-admits them; where the reconcile's report says they still
+travel, the verb asks once more, naming what goes, and carries the withdrawal only on a confirmed
+answer. A row whose own stop holds the reconcile can now come off on your answer rather than waiting
+for a hand edit; where it leaves the total as it stood, the act says the total may still count that
+row and names `/trip-record group` with the party's total, and the reconciler now names
+`/trip-record group` in each of its stops that a row's removal can clear.
+
+**Expanding a group names the step its sibling names.** `/trip-record group-expand` puts a group's
+members on a trip as though each had been added one at a time, but adding one member ends by naming
+`/trip-record travelers` — the step that brings the traveller model up to date — and an expansion
+ended without it. It now ends the same way, once for the whole run: it names
+`/trip-record travelers` without running it, and where the run added someone to the roster, it
+reports what adding a member reports.
+
+**One new decision record, superseding parts of five earlier ones.** `ADR-041` records the standing,
+how the engine keeps the count and how a counted member leaves it, and lands `Accepted`. For the one
+integer a published total now carries, it supersedes in part the three records that kept a value
+derived from the traveller model off every render, `ADR-030`, `ADR-010` and `ADR-025`. It also
+supersedes in part `ADR-011`'s bound on what transport reads from that model, so transport reads the
+count too, and, for the two reconciles `/trip-record group` now runs once a row is off, `ADR-035`'s
+step that has the verb changing the roster name the reconcile rather than run it. Everything else in
+each stands, and each gains a dated mark where it is superseded.
+
+**The honest limits.** A party member recorded only through the operator who was declared an
+approver while a stale or pending roster row of theirs stood keeps their key in the trip's approver
+declaration, and in any ledger line under it, after the row comes off: neither withdrawing them nor
+erasure reaches that key, and retiring the declaration is your act (`skills/trip-record/SKILL.md`
+§ *Roster standing of a third-party member*, its second state). The check that holds the one
+statement of their standing reads words rather than meaning, and the decision records, the examples
+and this file are outside it. A transport brief's passenger count with such a member, a
+`group-expand` run's closing render and an erasure's receipt are described from the verbs' text: no
+live run of any of them was made in this release.
+
 ## [0.48.0] — 2026-09-28 — One interviewer, any conforming form
 
 Until now each guided intake form carried its own copy of the interview's rules below its
