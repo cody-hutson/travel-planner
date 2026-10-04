@@ -106,6 +106,10 @@ The satisfaction layer adds three `outputs/*.md` artifacts with their own lifecy
 
 ---
 
+## Where the append rule stops
+
+§ *Output Versioning* binds a trip's agent outputs and nothing else; to change a tracked engine file, follow § *Editing an engine file*, which reconciles where that rule appends.
+
 ## Archived trips — what the freeze binds
 
 **A trip whose `**Lifecycle:**` is `ARCHIVED` receives no derivation.** No update signal is written
@@ -615,6 +619,16 @@ One writer per block. A writer not named for a block does not write it — not "
 
 **`outputs/event-status.md` is the one file a procedure and a document edit both write.** Its lifecycle is persist-mutable: synthesis *reads* existing status and never regenerates it, so a human flip survives the next pass. The hub is its primary writer (the enrichment agent may seed initial `locked` rows once at setup; the validator reads it and never writes), and the user writes it through `/trip-record`. Every other file the pipeline produces is rebuilt, versioned or appended — a hand edit to one of those is a change with a deletion already scheduled. This is an exception the lifecycle predicts, not an exception to the rule.
 
+### Editing an engine file — reconcile, never accrete
+
+**An engine file is a claim, and a claim has one current form.** Any tracked file that states how the engine behaves is one — `CLAUDE.md` itself, a verb, an agent prompt, a reference document, a template — and an edit to it reconciles; it never accretes. § *Output Versioning* does not govern it: that rule is for a research file, which is a record, so new research is appended and old research kept. The release log and the decision records are records too, and a worked example is a specimen; each keeps its own convention. For decision records, `reference/adr/README.md` § *Convention* already says to "correct the claim in place rather than softening it" — this rule's record-scoped precedent.
+
+1. **Edit the statement; never annotate beside it.** A correction replaces the sentence it corrects and leaves no note or dated aside beside text that is no longer true. *Reviewer-checkable:* the diff shows the sentence changed, or left standing beside its correction.
+2. **Search for an existing home before adding a normative sentence.** A rule that has a home is changed or cited there, never stated twice. *Good faith:* a search leaves no trace either way, and nothing here claims it can be observed.
+3. **Declare what was removed alongside what was added**, in the change's own record — its commit message or pull request — never in the file. *Reviewer-checkable:* the declaration is there or it is not, and the diff shows whether it is true.
+
+**What enforces them.** Milestone 45 plans a byte fence on file size, which enforces none of these clauses, and an integration note on a pull request that adds much to a file and removes little, which enforces clause 3 in form only — that a note is present, never that it is true. Neither exists before that milestone ships; the rest is good faith. Every sentence left behind is paid for each time its file is read, and `reference/load-class-model.md` declares how often that is.
+
 ## File Structure
 
 ```
@@ -639,6 +653,7 @@ travel-planner/
 │   ├── command-reference.md       ← the whole command surface in one table (verb, arguments, required trip state)
 │   ├── data-architecture.md       ← engine-wide data architecture (artifact model, identity, serialization, publishability, lifecycle classes, schema version)
 │   ├── data-model.md              ← satisfaction-layer data architecture (storage homes, reconciliation, write ownership)
+│   ├── load-class-model.md        ← load-class model (what loads a file and when, the classification rule, the byte parameters a size assertion reads)
 │   ├── region-reference.md        ← every block-owned form's regions in one table, each with its writer-table row and verdict (derived — what /trip-record interview reads)
 │   ├── replan-protocol.md         ← the behaviour a replan takes when the trip is near
 │   ├── schemas/                   ← per-artifact-class schemas + the CI gate's coverage declaration
