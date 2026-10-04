@@ -3,6 +3,108 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.51.0] — 2026-10-02 — The release scaffolding grades itself
+
+No trip verb changes behaviour in this release. What changes is the machinery a change to this
+repository passes through, parts of which were held to their own claims by hand. The census that
+asks whether each required check is declared read the workflow files line by line, and
+`SECURITY.md`'s list of those checks was kept equal to the declared one by a comment asking
+whoever edited either to edit both. Nothing linted `scripts/*.sh`, where the required checks live,
+and a pipe into a reader that stops early had already turned an artifact-schema run red under
+load. A release tag's own CHANGELOG entry was checked by memory, and the tag `v0.34.0`, the first
+cut after the release procedure was rewritten, points at a tree without one. This release puts a
+parser, a linter or an assertion that can fail behind each of them.
+
+**The required-check census reads the workflows through a YAML parser.** The census runs in the
+`Workflow SAST (actionlint)` job on every pull request into `main`, and fails it unless every job
+declares whether it binds and the jobs claiming required status agree with the declared list in
+both directions. It now reads each workflow file through PyYAML, so the jobs it finds and the name
+each one reports are the parser's and not a reading of lines. Its decision record,
+`reference/adr/ADR-043-required-check-census-parser.md`, says why. Where the parser cannot be
+loaded it refuses and reads nothing, and it refuses any file it cannot vouch for, naming the
+file and the remedy; neither reads as clean. A check that more than one job reports is a finding
+that names those jobs. The job is pinned to the runner image the parser was probed on, so a move
+to another image is a reviewed pull request, on which the census proves its parser again.
+
+**It also grades what a workflow file decides about whether a required check runs.** GitHub
+documents that a job skipped by its own `if:` reports success, so a required check could pass
+without its job running. The census now refuses a job that claims required status and carries a
+job-level `if:`, or that needs a job not itself claiming required. It fails a required job whose
+workflow does not run on every pull request into `main` and every push to one: no `pull_request`
+trigger, a literal `branches:` list that leaves `main` out, a `branches-ignore:` list that names
+it and has no entry opening with `!`, or a `types:` list without `synchronize`. No required job carries any of these, so the census
+reads clean. What it does not grade is printed on every run, reduced to what a parser cannot
+decide, such as a `paths:` filter, which only a pull request's own diff settles.
+
+**`SECURITY.md`'s list of required checks is held to the declared one.** The census's self-test
+now reads `SECURITY.md` and fails unless the checks its *Branch Protection Posture* table lists
+are the same set as `CONTEXT_ORDER` in `scripts/pin-required-checks.py`, in both directions. The
+census step runs the self-test and then the census on every pull request into `main`, always
+both, so adding, removing or renaming a check in one list and not the other turns
+`Workflow SAST (actionlint)` red on the pull request that does it.
+
+**`CONTRIBUTING.md` says what the census asks, where an author will meet it.** *Making a change*
+now says that adding or renaming a workflow job meets the census, names the job it runs in, and
+states what it asks: that every job declares whether it binds, and what a job claiming required
+status must also carry, from a name no other job reports to a place in both `CONTEXT_ORDER` and
+`SECURITY.md`.
+
+**A release tag is checked before it is pushed.** `scripts/check-release-tag.sh vX.Y.Z` reads the
+tagged tree and refuses the tag unless its `CHANGELOG.md` carries the tag's own `## [X.Y.Z]`
+heading, and carries it as the newest version heading there. It reads no network and changes
+nothing. *Cutting a release* in `CONTRIBUTING.md` now runs the check on the tag while it is still
+local, and pushes the tag only when the check passes. The corpus-hygiene suite runs the same check
+over every tag on every push and pull request, and holds the tags that fail it against a
+declaration in `CONTRIBUTING.md` in both directions: a tag pushed without its entry turns that
+required check red until it is declared, and so does a declaration that outlives its failure.
+
+**Pipes into a reader that stops early are converted, and a detector keeps them out.** A `head`,
+a quiet `grep`, a `sed` that quits or an `awk` that exits leaves first, and the writer's next
+write meets a closed pipe. Under `pipefail` that failure becomes the pipeline's status, so a
+successful match can report failure, and the broken-pipe line lands in whatever captures the
+output, which is how the artifact-schema run went red. Every site the detector found is converted:
+a reader fed from a variable now takes a here-string, which leaves no writer to fail, and every
+other one reads to the end of its input. The artifact-schema suite no longer prints that line. The
+detector is a new class of the corpus-hygiene suite: it lexes every tracked shell file and every
+workflow `run:` value, prints the set it read, fails on any pipe into such a reader, and keeps no
+list of tolerated sites. The pull-request body check, which read a failed `grep` as one that
+matched nothing, now stops with an error instead of reporting a clean body.
+
+**A shellcheck gate lints `scripts/*.sh`.** A new check, `Shell script lint (shellcheck)`, runs
+`scripts/lint-shell.sh` on every push to `main` and every pull request into it. It installs one
+pinned shellcheck release, verified by its digest, and refuses any other version. It reports every
+finding at severity warning or above, and one rule below that by name: a command substitution
+written with backticks, which inside a double-quoted failure message runs the moment its arm goes
+red. Before it reads a real file it runs each pass over a fixture it must flag and a near-miss it
+must not, and a control that misreads refuses the run; so does a directive whose list holds `all`,
+or a non-empty `SHELLCHECK_OPTS`. Every finding it reported on the scripts as they stood is
+fixed, or suppressed in place with its reason on the directive's own line. The job declares itself
+required, and `CONTEXT_ORDER` and `SECURITY.md` list it; it becomes a required check when the
+maintainer registers it in branch protection after the merge.
+
+**The pull-request template says what a body is for.** Comments at the top of the template say
+that a body is a summary plus links, and that per-stage detail belongs in the stage sub-task
+comments and not in new body sections. They reach an author while the body is being written, from
+the first pull request opened after this release merges.
+
+**The honest limits.** The shellcheck gate runs without shellcheck's dataflow analysis: on this
+repository's largest suites that analysis needs more memory than a hosted runner has, and the job
+is stopped before it reports anything. So the rules that need that analysis are not reported,
+among them `SC2324`, `SC2320`, `SC2319` and `SC2318` at the gate's severity, nor `SC2317` below
+it, and a pair of control arms shows that boundary on every run. The
+gate reports nothing else below warning, and it does not lint a shell file outside `scripts/*.sh`
+or without the `.sh` suffix, or the shell embedded in a workflow, which actionlint reads. A
+directive naming a range of codes wide enough to cover every rule is counted and not refused. Until
+the maintainer registers it the gate reports and does not block, although `SECURITY.md` already
+lists it; once it is registered, removing it means de-registering the check before reverting the
+workflow, as the workflow's header says. The census compares committed text and cannot read branch
+protection, so it cannot confirm that any check is registered, and the outcomes it guards against
+are GitHub's documented behaviour, not measured by it. The short-circuit detector names the
+readers it knows, so one reached through a variable, a function or a loop passes it unseen.
+Nothing stops a release tag being pushed without its check: if its tree lacks the entry, the
+corpus-hygiene suite turns red on its next run, and declaring the tag is the remedy left. The
+template's note is advice, and nothing grades a body against it.
+
 ## [0.50.0] — 2026-10-04 — A surface's cost is a stated property
 
 Until now nothing in the repository said what a file may cost to load. A verb's file, an agent's

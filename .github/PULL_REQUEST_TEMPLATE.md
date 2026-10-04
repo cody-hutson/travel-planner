@@ -1,3 +1,6 @@
+<!-- This body is a summary plus links: say what the change does and point at its records. -->
+<!-- Per-stage detail belongs in the stage sub-task comments, not in new body sections. -->
+
 ## Summary
 
 <!-- What changed and why, in 2-3 sentences. -->

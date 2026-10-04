@@ -604,7 +604,7 @@ SC_OUT="$(va_check_corpus "$ROOT" 2>&1)"; SC_RC=$?
 if [ "$SC_RC" -eq 0 ] && [ -z "$SC_OUT" ]; then
   PASS "SC2: every schema is well-formed and the corpus is in bijection with the class enumeration — no S-class finding over $SC_NFILES schemas x $SC_NCLASS classes"
 else
-  FAIL "SC2: the schema corpus does not validate: $(printf '%s' "$SC_OUT" | head -4 | tr '\n' ' ')"
+  FAIL "SC2: the schema corpus does not validate: $(head -4 <<<"$SC_OUT" | tr '\n' ' ')"
 fi
 
 if [ "$SC_NFILES" -eq "$SC_NCLASS" ]; then
@@ -794,7 +794,7 @@ if [ "$AR_NVER" -gt 0 ]; then
   if [ "$AR_RC" -eq 0 ]; then
     PASS "AR5: $AR_NVER versioned artifact(s) validated clean"
   else
-    FAIL "AR5: $AR_NVER versioned artifact(s) and the validator reported findings: $(printf '%s' "$AR_OUT" | grep '^FINDING ' | head -3 | tr '\n' ' ')"
+    FAIL "AR5: $AR_NVER versioned artifact(s) and the validator reported findings: $(printf '%s' "$AR_OUT" | grep '^FINDING ' | awk 'NR <= 3' | tr '\n' ' ')"
   fi
 else
   VACUOUS "AR5: the VERSIONED population is 0 — $AR_NSEL files were selected and all $AR_NSKIP skipped under the tolerant read, so no artifact was validated on this commit. This is a real measurement of the tree, not a pass. This run rests on group CTL"
@@ -1051,7 +1051,7 @@ EN_TOTAL_HOMES=0
 if [ "$EN_OK" -eq 1 ]; then
   while IFS= read -r enk; do
     [ -n "$enk" ] || continue
-    encanon="$(en_canonical "$enk" | head -1)"
+    encanon="$(en_canonical "$enk" | awk 'NR == 1')"
     enhomes="$(en_probe "$enk" ${EN_FILES[@]+"${EN_FILES[@]}"})"
     enn="$(printf '%s\n' "$enhomes" | grep -c '[^[:space:]]')"
     enbad="$(printf '%s\n' "$enhomes" | awk -F'\t' -v c="$encanon" 'NF>2 && $3 != c {n++} END{print n+0}')"
@@ -1078,7 +1078,7 @@ if [ "$EN_OK" -eq 1 ]; then
   EN_CTL_FOUND=0; EN_CTL_FLAGGED=0; EN_CTL_ARMS=0; EN_CTL_MUT=0
   while IFS= read -r enk; do
     [ -n "$enk" ] || continue
-    encanon="$(en_canonical "$enk" | head -1)"
+    encanon="$(en_canonical "$enk" | awk 'NR == 1')"
     # Reorder the first two members. Asserted to have CHANGED the string before it is used:
     # a fixture that was never mutated is a green proving nothing, one level down.
     enmut="$(printf '%s' "$encanon" | awk -F'|' '{ if (NF < 2) { print; next } printf "%s|%s", $2, $1; for (i = 3; i <= NF; i++) printf "|%s", $i; printf "\n" }')"
@@ -1201,7 +1201,8 @@ if [ "$UF_OK" -eq 1 ]; then
   if [ "$UF_NMISS" -eq 0 ]; then
     PASS "UF1: all $UF_DEN (schema x universal key) pairs are declared — no class removes a universal field, which is what § 4.4 says and what nothing checked. The denominator is derived from the corpus and the document, so it grows with either"
   else
-    FAIL "UF1: $UF_NMISS of $UF_DEN (schema x universal key) pair(s) are MISSING — a schema has silently dropped a universal field: $(printf '%s' "$UF_MISS" | awk -F'\t' '{ printf "%s lacks field %s; ", $1, $2 }' | head -c 400)"
+    UF_LIST="$(printf '%s' "$UF_MISS" | awk -F'\t' '{ printf "%s lacks field %s; ", $1, $2 }')"
+    FAIL "UF1: $UF_NMISS of $UF_DEN (schema x universal key) pair(s) are MISSING — a schema has silently dropped a universal field: $(head -c 400 <<<"$UF_LIST")"
   fi
 fi
 
@@ -1211,8 +1212,8 @@ fi
 # name is pinned in this file.
 if [ "$UF_OK" -eq 1 ]; then
   UF_FX1="$WORK/uf-mut1"; uf_fx "$UF_FX1"
-  UF_TGT="$(va_schema_files "$ROOT" | head -1)"
-  UF_TKEY="$(printf '%s\n' "$UF_KEYS" | head -1)"
+  UF_TGT="$(va_schema_files "$ROOT" | awk 'NR == 1')"
+  UF_TKEY="$(head -1 <<<"$UF_KEYS")"
   awk -v k="$UF_TKEY" '$0 ~ "^field " k ":" { next } { print }' \
     "$ROOT/$UF_TGT" > "$UF_FX1/$UF_TGT.new" && mv "$UF_FX1/$UF_TGT.new" "$UF_FX1/$UF_TGT"
   UF_MUT1=0
@@ -1295,6 +1296,7 @@ echo "LC — the classifying predicates are locale-invariant"
 # neighbourhood, and LC2 below is scoped to the validator for exactly that reason.
 lc_folds() {
   local LC_ALL="$1"
+  # shellcheck disable=SC2194  # the constant is the probe: whether [a-z] takes H under this LC_ALL
   case H in [a-z]) return 0 ;; *) return 1 ;; esac
 }
 
@@ -1434,7 +1436,7 @@ echo "CA — the class-assignment homes agree (§ 1.1 · § 6 · § 9 · the wit
 
 # The canonical lifecycle members, taken from group EN's extraction so no member is spelled
 # here either. The token name is a key, not a member; the vocabulary stays extracted.
-CA_LIFE_ENUM="$(en_canonical lifecycle | head -1)"
+CA_LIFE_ENUM="$(en_canonical lifecycle | awk 'NR == 1')"
 
 # ca_members — "<class-number>\t<token>" from § 6's Members column: the inverse direction of
 # § 1.1, one row per lifecycle token listing the classes it holds.
@@ -1495,7 +1497,7 @@ CA_N="$(printf '%s\n' "$CA_ROWS" | grep -c '^[0-9]')"
 # column, so an ambiguous or absent binding is reported rather than guessed. The enums are
 # nearly disjoint (they share a single member), which is what makes containment decisive.
 ca_col_for_key() {
-  printf '%s\n' "$CA_ROWS" | awk -F'\t' -v e="$(en_canonical "$1" | head -1)" '
+  printf '%s\n' "$CA_ROWS" | awk -F'\t' -v e="$(en_canonical "$1" | awk 'NR == 1')" '
     function member(v,   i, n, A) { n = split(e, A, "|"); for (i = 1; i <= n; i++) if (v == A[i]) return 1; return 0 }
     function lead(s) { sub(/ .*$/, "", s); return s }
     NF > 5 && $1 ~ /^[0-9]+$/ { rows++; for (f = 3; f <= 6; f++) if (member(lead($f))) ok[f]++ }
@@ -1718,7 +1720,7 @@ if [ "$PB_OK" -eq 1 ]; then
     }' "$ROOT/$PB_SPEC")"
   PB_N="$(printf '%s\n' "$PB_ROWS" | grep -c '[^[:space:]]')"
   PB_PF="$(printf '%s\n' "$PB_ROWS" | grep -c '^PARSE-FAIL' || true)"
-  PB_PUBENUM="$(en_canonical publish | head -1)"
+  PB_PUBENUM="$(en_canonical publish | awk 'NR == 1')"
   # The § 1.1 publish column, taken from the binding CA0 resolved by containment. Bound by
   # NAME rather than by position for the reason CA0 states, and defaulted to a field index
   # that cannot exist so an unresolved binding yields an empty comparison rather than a
@@ -1921,7 +1923,7 @@ if [ "$FW_OK" -eq 1 ]; then
   ( cd "$ROOT" && git ls-files "$FW_ROOT" 2>/dev/null | while IFS= read -r f; do
       mkdir -p "$FW_MUT_DIR/$(dirname "$f")" && cp "$ROOT/$f" "$FW_MUT_DIR/$f"
     done )
-  FW_VICTIM="$(printf '%s\n' "$FW_DECL" | head -1)"
+  FW_VICTIM="$(head -1 <<<"$FW_DECL")"
   printf '\n' >> "$FW_MUT_DIR/$FW_VICTIM"
   FW_LANDED=0
   cmp -s "$ROOT/$FW_VICTIM" "$FW_MUT_DIR/$FW_VICTIM" || FW_LANDED=1
@@ -7920,7 +7922,7 @@ CTL_RAN=1
 if [ "$CLEAN_RC" -eq 0 ] && ! grep -q '^FINDING ' <<<"$CLEAN_OUT"; then
   PASS "CTLa: MUST NOT FIRE — a fixture root carrying this commit's real schema corpus and no artifacts validates clean (rc=0)"
 else
-  FAIL "CTLa: the clean baseline already fails, so every must-fire arm below proves nothing: $(printf '%s' "$CLEAN_OUT" | grep '^FINDING ' | head -3 | tr '\n' ' ')"
+  FAIL "CTLa: the clean baseline already fails, so every must-fire arm below proves nothing: $(printf '%s' "$CLEAN_OUT" | grep '^FINDING ' | awk 'NR <= 3' | tr '\n' ' ')"
 fi
 
 # ── C1a / C1b — the skip predicate, observed. THE POINT OF THIS SUITE.
@@ -7960,19 +7962,19 @@ A_FINDINGS="$(printf '%s\n' "$A_OUT" | grep -c '^FINDING ')"
 if [ "$A_RC" -eq 0 ] && [ "$A_FINDINGS" -eq 0 ] && [ "$A_SKIPPED" -eq 1 ]; then
   PASS "C1a: MUST NOT FIRE — an artifact carrying NO schema-version, violating its class schema three ways (required field absent, bad enum value, out-of-grammar line), is SKIPPED by path and by resolved class, contributes 0 findings and returns rc 0. An unversioned artifact cannot fail the build even when it is wrong"
 else
-  FAIL "C1a: MUST NOT FIRE — an unversioned artifact turned the gate red (rc=$A_RC, findings=$A_FINDINGS, skip-lines=$A_SKIPPED). The tolerant read's first limb is not being honoured: $(printf '%s' "$A_OUT" | grep '^FINDING ' | head -3 | tr '\n' ' ')"
+  FAIL "C1a: MUST NOT FIRE — an unversioned artifact turned the gate red (rc=$A_RC, findings=$A_FINDINGS, skip-lines=$A_SKIPPED). The tolerant read's first limb is not being honoured: $(printf '%s' "$A_OUT" | grep '^FINDING ' | awk 'NR <= 3' | tr '\n' ' ')"
 fi
 
 B_OUT="$(run_fx "$FXB")"; B_RC=$?
 if [ "$B_RC" -ne 0 ] && ctl_fired "$B_OUT" 'A3' && ctl_fired "$B_OUT" 'A4'; then
   PASS "C1b: MUST FIRE — the byte-identical fixture with 'schema-version: 1' added and nothing else changed FAILS CLOSED (rc=$B_RC), emitting A3 (required field absent) and A4 (value outside its declared enum)"
 else
-  FAIL "C1b: MUST FIRE — declaring a version did not make the same three violations fail (rc=$B_RC): $(printf '%s' "$B_OUT" | grep '^FINDING ' | head -3 | tr '\n' ' ')"
+  FAIL "C1b: MUST FIRE — declaring a version did not make the same three violations fail (rc=$B_RC): $(printf '%s' "$B_OUT" | grep '^FINDING ' | awk 'NR <= 3' | tr '\n' ' ')"
 fi
 if grep -q "^FINDING A3 examples/ctl/outputs/food-list.md field writer " <<<"$B_OUT"; then
   PASS "C1b-report: the finding names the ARTIFACT and the FIELD, not merely that validation failed — 'FINDING A3 examples/ctl/outputs/food-list.md field writer ...'"
 else
-  FAIL "C1b-report: a finding did not name both the artifact and the field: $(printf '%s' "$B_OUT" | grep '^FINDING A3' | head -1)"
+  FAIL "C1b-report: a finding did not name both the artifact and the field: $(printf '%s' "$B_OUT" | grep '^FINDING A3' | awk 'NR == 1')"
 fi
 
 # ── A1 — malformed frontmatter (duplicate key: two homes for one fact).
@@ -8066,7 +8068,7 @@ if [ -n "$NS_CID" ] && [ -n "$NS_UNCOVERED" ] && [ "$NS1_LOOKUP_BAD" -eq 1 ] && 
    && [ "$NS1_RC" -ne 0 ] && ctl_fired "$NS1_OUT" 'A2'; then
   PASS "CTL-NOSCHEMA1: MUST FIRE — a versioned artifact (${NS_WITNESS##*/}) whose class resolves to NO SCHEMA fails closed at rc=$NS1_RC with A2, and it does so for a well-formed class-id ($NS_UNCOVERED) rather than only for the literal UNKNOWN. The lookup pair is measured, not assumed: va_schema_for returns non-zero for $NS_UNCOVERED and a path for $NS_CID; and the SAME artifact under its real class returns rc=$NS1_REAL_RC with no finding, so this arm grades the class-id and not the artifact"
 else
-  FAIL "CTL-NOSCHEMA1: MUST FIRE — a class the corpus does not cover was reported validated (subject=${NS_CID:-<none>} uncovered-id=${NS_UNCOVERED:-<none>} lookup-bad=$NS1_LOOKUP_BAD lookup-ok=$NS1_LOOKUP_OK degraded-rc=$NS1_RC real-rc=$NS1_REAL_RC). subject or uncovered-id empty means the derivation found no subject and this arm measured nothing; lookup-bad=0 or lookup-ok=0 means the class-id pair is not the pair this arm claims; real-rc non-zero means the artifact itself is failing and the comparison says nothing; otherwise the gate returned rc=$NS1_RC over an artifact it graded against no schema at all — $(printf '%s' "$NS1_OUT" | head -c 120)"
+  FAIL "CTL-NOSCHEMA1: MUST FIRE — a class the corpus does not cover was reported validated (subject=${NS_CID:-<none>} uncovered-id=${NS_UNCOVERED:-<none>} lookup-bad=$NS1_LOOKUP_BAD lookup-ok=$NS1_LOOKUP_OK degraded-rc=$NS1_RC real-rc=$NS1_REAL_RC). subject or uncovered-id empty means the derivation found no subject and this arm measured nothing; lookup-bad=0 or lookup-ok=0 means the class-id pair is not the pair this arm claims; real-rc non-zero means the artifact itself is failing and the comparison says nothing; otherwise the gate returned rc=$NS1_RC over an artifact it graded against no schema at all — $(head -c 120 <<<"$NS1_OUT")"
 fi
 
 # ── CTL-NOSCHEMA2 — MUST FIRE. The schema RESOLVES and then will not read.
@@ -8293,7 +8295,7 @@ O="$(run_fx "$FX")"; R=$?
 if [ "$R" -eq 0 ] && ! grep -q 'templates/trip-context.template.md' <<<"$O"; then
   PASS "CTL-TPL: MUST NOT FIRE — this commit's REAL versioned template, copied into the fixture tree, is excluded and reaches no finding. § 11 declares it an emitter, not an instance"
 else
-  FAIL "CTL-TPL: MUST NOT FIRE — the template reached the gate (rc=$R): $(printf '%s' "$O" | grep '^FINDING ' | head -2 | tr '\n' ' ')"
+  FAIL "CTL-TPL: MUST NOT FIRE — the template reached the gate (rc=$R): $(printf '%s' "$O" | grep '^FINDING ' | awk 'NR <= 2' | tr '\n' ' ')"
 fi
 FX="$WORK/tplneg"; mk_root "$FX"
 cp "$ROOT/templates/trip-context.template.md" "$FX/examples/ctl/trip-context.md"
@@ -8314,7 +8316,7 @@ O="$(run_fx "$FX")"; R=$?
 if [ "$R" -eq 0 ]; then
   PASS "CTL-RESID: both a named class's file and a residual outputs/<slug>.md file validate under the class each SHOULD resolve to — longest-literal-pattern-wins keeps C18 from stealing every named class's file, with no precedence list to maintain"
 else
-  FAIL "CTL-RESID: residual-class precedence is wrong (rc=$R): $(printf '%s' "$O" | grep '^FINDING ' | head -2 | tr '\n' ' ')"
+  FAIL "CTL-RESID: residual-class precedence is wrong (rc=$R): $(printf '%s' "$O" | grep '^FINDING ' | awk 'NR <= 2' | tr '\n' ' ')"
 fi
 
 # ── S9's must-fire arm. XC asserts the real exclusions against the real document; this
@@ -8343,7 +8345,7 @@ fi
 if [ "$SCOPE_EMPTY_RC" -eq 0 ] && ! has_finding "$SCOPE_EMPTY_OUT" 'X2'; then
   PASS "CTL-SCOPE2: MUST NOT FIRE — a real directory that happens to hold no files is not an unreadable population, so it does not take X2. The specificity arm that keeps CTL-SCOPE1 from being an existence check that fires on everything"
 else
-  FAIL "CTL-SCOPE2: MUST NOT FIRE — an empty-but-real directory was reported as unreadable (rc=$SCOPE_EMPTY_RC): $(printf '%s' "$SCOPE_EMPTY_OUT" | grep '^FINDING ' | head -2 | tr '\n' ' ')"
+  FAIL "CTL-SCOPE2: MUST NOT FIRE — an empty-but-real directory was reported as unreadable (rc=$SCOPE_EMPTY_RC): $(printf '%s' "$SCOPE_EMPTY_OUT" | grep '^FINDING ' | awk 'NR <= 2' | tr '\n' ' ')"
 fi
 if [ "$SCOPE_MISS_OUT" != "$SCOPE_EMPTY_OUT" ]; then
   PASS "CTL-SCOPE3: the two outputs DIFFER. A path that does not exist and a directory that is merely empty are different facts, and the gate now answers them with two verdicts rather than one shared silence"
@@ -8592,7 +8594,7 @@ if [ "$DR_A_RC" -eq 0 ] && [ "$DR_A_FIND" -eq 0 ] && [ "$DR_A_VAC" -eq 0 ] \
    && [ "$DR_A_DECL" -eq 1 ]; then
   PASS "CTL-DATAROOT2: MUST NOT FIRE — with the corpus under --root and the trip under --data-root, validation selects the whole trip ($DR_A_SEL of $DR_N declaring files: $DR_A_PATH by pattern, the witness by its own declaration read from the data root), validates $DR_A_VAL, skips $DR_A_SKP, emits no finding and returns rc=0. This is the invocation /trip schema now composes, and it is clean on the trip the defect was measured on"
 else
-  FAIL "CTL-DATAROOT2: MUST NOT FIRE — the seam did not deliver the trip clean (rc=$DR_A_RC findings=$DR_A_FIND vacuous=$DR_A_VAC selected=$DR_A_SEL of $DR_N validated=$DR_A_VAL skipped=$DR_A_SKP witness-by-declared-arm=$DR_A_DECL). Either the population, the scope, the content read or the declared arm's read is not following --data-root, and every other arm's verdict is then unattributable: $(printf '%s' "$DR_A_OUT" | grep '^FINDING ' | head -3 | tr '\n' ' ')"
+  FAIL "CTL-DATAROOT2: MUST NOT FIRE — the seam did not deliver the trip clean (rc=$DR_A_RC findings=$DR_A_FIND vacuous=$DR_A_VAC selected=$DR_A_SEL of $DR_N validated=$DR_A_VAL skipped=$DR_A_SKP witness-by-declared-arm=$DR_A_DECL). Either the population, the scope, the content read or the declared arm's read is not following --data-root, and every other arm's verdict is then unattributable: $(printf '%s' "$DR_A_OUT" | grep '^FINDING ' | awk 'NR <= 3' | tr '\n' ' ')"
 fi
 
 # CTL-DATAROOT3 — MUST FIRE. The SAME engine root, the SAME trip path, the SAME scope, with
@@ -9551,7 +9553,7 @@ elif [ "$AR_NSEL" -lt 1 ]; then
 elif [ "$AR_RC" -eq 0 ] && [ "$TP_X3" -eq 0 ] && [ "$TP_CLOSES" -eq 1 ] && [ "$TP_PARTITION" -eq 1 ]; then
   PASS "CTL-VA-TOLERANCE-PRESERVED: the healthy tracked run is unmoved by the sweep — rc=0, ZERO X3 findings over $AR_NSEL selected files, selected = validated + skipped ($AR_NSEL = $AR_NVER + $AR_NSKIP), and selected + excluded + unmatched = the population ($AR_NSEL + $AR_NEXC + $AR_NUNM = $AR_NPOP). The ${TP_TOL_SITES:-0} tolerant site(s) the census counts, on ${TP_TOL_LINES:-0} marked line(s), are annotated and not adjudicated, and the empty reads a clean tree produces at them stay empty and stay green"
 else
-  FAIL "CTL-VA-TOLERANCE-PRESERVED: the sweep has moved the healthy tracked run (rc=$AR_RC x3=$TP_X3 selected=$AR_NSEL validated=$AR_NVER skipped=$AR_NSKIP excluded=$AR_NEXC unmatched=$AR_NUNM population=$AR_NPOP). An X3 on a tree with nothing wrong with it is a capture site mis-sorted out of the tolerant class — the one failure mode this design names for itself — and the finding's own label says which: $(printf '%s\n' "$AR_OUT" | awk 'index($0, "FINDING X3 ") == 1' | head -3 | tr '\n' ' ')"
+  FAIL "CTL-VA-TOLERANCE-PRESERVED: the sweep has moved the healthy tracked run (rc=$AR_RC x3=$TP_X3 selected=$AR_NSEL validated=$AR_NVER skipped=$AR_NSKIP excluded=$AR_NEXC unmatched=$AR_NUNM population=$AR_NPOP). An X3 on a tree with nothing wrong with it is a capture site mis-sorted out of the tolerant class — the one failure mode this design names for itself — and the finding's own label says which: $(printf '%s\n' "$AR_OUT" | awk 'index($0, "FINDING X3 ") == 1' | awk 'NR <= 3' | tr '\n' ' ')"
 fi
 
 # ── CTL-e: the repository was never mutated. A control that writes into the tree it is
@@ -13192,7 +13194,7 @@ if [ "$HZ_OK" -eq 1 ] && [ "${HZ_NCASE:-0}" -gt 0 ]; then
     hz_hit=0
     while IFS= read -r hz_pat; do
       [ -n "$hz_pat" ] || continue
-      # shellcheck disable=SC2254
+      # shellcheck disable=SC2254  # $hz_pat is a glob read from the pattern file; quoted, it would match only its own text
       case "$hz_tk" in $hz_pat) hz_hit=1 ;; esac
     done < "$HZ_PATF"
     [ "$hz_hit" -eq 1 ] || continue
@@ -13251,7 +13253,7 @@ EOF
   printf '# Trip Context — Somewhere (Illustrative Example)\n\n- **Jul 22 (Wed):** Departure day — depart by ~9:00 AM\n' > "$HZ_SYN_NOYR"
   printf '# Trip Context — Somewhere 2026\n\n- **Jul 22 (Wed):** Departure day — depart by ~9:00 AM\n' > "$HZ_SYN_BARE"
   HZ_SNY_T="$(hz_term "$HZ_SYN_NY" | cut -f4)";    HZ_SNY_W="$(hz_term "$HZ_SYN_NY" | cut -f5)"
-  HZ_SNO_T="$(hz_term "$HZ_SYN_NORM" | cut -f4)";  HZ_SNO_W="$(hz_term "$HZ_SYN_NORM" | cut -f5)"
+  HZ_SNO_W="$(hz_term "$HZ_SYN_NORM" | cut -f5)"
   HZ_SNY_NOYR="$(hz_term "$HZ_SYN_NOYR" | cut -f4)"
   HZ_SBARE_T="$(hz_term "$HZ_SYN_BARE" | cut -f4)"
 
@@ -13927,7 +13929,6 @@ if [ "$RM_OK" -eq 1 ]; then
       RM_WV="$(rm_violations "$RM_MUT" "$RM_NREQ")"
       RM_WADD="$(rm_setdiff "$RM_WV" "$RM_BASEV")"
       RM_WGONE="$(rm_setdiff "$RM_BASEV" "$RM_WV")"
-      RM_WN="$(rm_nviol "$RM_WADD")"
       if [ -z "$RM_WADD" ] && [ -z "$RM_WGONE" ]; then
         PASS "RM6: MUST NOT FIRE — one plain sentence added to a non-declaration paragraph of the region, carrying no code span and no bolded lead-in, leaves this comparator's verdict UNCHANGED in both directions against the unmutated document's own $RM_BASEN violation(s). Editorial edits do not move this group, and that is demonstrated on the real document rather than promised: RM5 has already shown the same comparator moving, so this is specificity and not a dead reader. It is graded as a delta rather than as a zero because a zero-expectation would convict the reword for a violation that was in the document before it"
       else
@@ -13975,8 +13976,8 @@ if [ "$RM_OK" -eq 1 ]; then
       if rm_mutate "$RM_DOC" selector "$RM_RSYM" "$RM_ROP" "$RM_FL" "$RM_RLN" "$RM_WSYM" "$RM_SEL1" > "$RM_MUT" 2>/dev/null; then
         # Pre-initialised because this file runs under `set -u`: a reader that produced no
         # line would leave these unset and abort the suite rather than failing the arm.
-        RM_C10=0; RM_O10=0; RM_S10=0; RM_J10=0; RM_L10="-"
-        read -r RM_C10 RM_O10 RM_S10 RM_J10 RM_L10 <<<"$(rm_optokens "$RM_MUT")"
+        RM_S10=0
+        read -r _ _ RM_S10 _ _ <<<"$(rm_optokens "$RM_MUT")"
         if [ "${RM_S10:-0}" -gt "$RM_BADSEL" ]; then
           PASS "RM10: MUST FIRE — the reference-month declaration's SELECTOR replaced by a derived synthetic (\`${RM_SEL1}\` prefixed, a token this region argues for nowhere) moves RM9's selector limb from $RM_BADSEL to $RM_S10 failing declaration(s). Graded as a DELTA against the unmutated document, so the arm cannot pass on a failure that was there before it ran. An inverted selector takes this identical path: the limb asks whether the argument names the selector, not which selector it is"
         else
@@ -13989,8 +13990,8 @@ if [ "$RM_OK" -eq 1 ]; then
       # RM11 — the OPERAND limb, and this is the card's own worked acceptance example:
       # the reference month resolving from the WRAPPED term instead of the trip term.
       if rm_mutate "$RM_DOC" operand "$RM_RSYM" "$RM_ROP" "$RM_FL" "$RM_RLN" "$RM_WSYM" "$RM_SEL1" > "$RM_MUT" 2>/dev/null; then
-        RM_C11=0; RM_O11=0; RM_S11=0; RM_J11=0; RM_L11="-"
-        read -r RM_C11 RM_O11 RM_S11 RM_J11 RM_L11 <<<"$(rm_optokens "$RM_MUT")"
+        RM_O11=0
+        read -r _ RM_O11 _ _ _ <<<"$(rm_optokens "$RM_MUT")"
         if [ "${RM_O11:-0}" -gt "$RM_BADOP" ]; then
           PASS "RM11: MUST FIRE — the reference-month declaration rewritten to resolve from the YEAR-ADVANCING term \`$RM_WSYM\` instead of the trip term, with the selector and the first operand kept as the document states them, moves RM9's operand limb from $RM_BADOP to $RM_O11 failing declaration(s). This is the edit the card that built this group named as its own worked example, and it passed the whole suite at 406/0 before this arm existed"
         else
@@ -14005,8 +14006,8 @@ if [ "$RM_OK" -eq 1 ]; then
       # clock-bearing row rather than the first, and this is the input that proves it: an arm
       # reading only the first row would average this away and stay green.
       if rm_mutate "$RM_DOC" optadd "$RM_RSYM" "$RM_ROP" "$RM_FL" "$RM_RLN" "$RM_WSYM" "$RM_SEL1" > "$RM_MUT" 2>/dev/null; then
-        RM_C12=0; RM_O12=0; RM_S12=0; RM_J12=0; RM_L12="-"
-        read -r RM_C12 RM_O12 RM_S12 RM_J12 RM_L12 <<<"$(rm_optokens "$RM_MUT")"
+        RM_C12=0; RM_O12=0
+        read -r RM_C12 RM_O12 _ _ _ <<<"$(rm_optokens "$RM_MUT")"
         if [ "${RM_O12:-0}" -gt "$RM_BADOP" ] && [ "${RM_C12:-0}" -gt "$RM_NCLK" ]; then
           PASS "RM12: MUST FIRE, ADD-ONLY — a SECOND clock-bearing declaration resolving from the year-advancing term \`$RM_WSYM\`, appended as its own declaration block with every existing declaration left byte-intact, raises the clock-bearing population $RM_NCLK → $RM_C12 and RM9's operand limb $RM_BADOP → $RM_O12. RM9 is therefore NOT addition-blind: it grades every clock-bearing row rather than the first, which is exactly what an added contradicting declaration defeats in an arm that stops at one"
         else
@@ -14523,7 +14524,7 @@ EOF
   # exactly ONE surface of a COPIED trip, plus two edits that MUST NOT fire. Every fixture
   # is built by copying the real tree at run time — never a literal here — so an arm cannot
   # drift away from the corpus it is meant to model.
-  CE_SRC="$(printf '%s\n' "$CE_INSTANCES" | head -1)"
+  CE_SRC="$(head -1 <<<"$CE_INSTANCES")"
   CE_STRIP="${CE_SRC%/outputs/cost-estimate.md}"
   CE_SMAP="$(printf '%s\n' "$CE_SEL" | awk -F'\t' -v p="$CE_STRIP/outputs/" '
     $1 ~ /^C[0-9]+$/ && index($3, p) == 1 { b = $3; sub(/^.*\//, "", b); print b "\t" $1 }')"
@@ -14648,7 +14649,6 @@ EOF
   # implementation and the next group meets a helper rather than this decision. ce_violations and
   # CE_CODES are untouched: what moved is the arithmetic, never the derivation.
   CE_CODES="$(st_codes "$(declare -f ce_violations)")"
-  CE_NCODES="$(printf '%s\n' "$CE_CODES" | grep -c '[^[:space:]]')"
   cov_assert 'CE-COV' 'CTL-CE-COV' '' 'ce_violations' \
              st_codes cov_emit_tab "$(declare -f ce_violations)" \
              "$CE_CODES" "$CE_ARMED" "$CE_PROBE" "$CE_PHANTOM"

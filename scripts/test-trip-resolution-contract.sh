@@ -652,12 +652,12 @@ conformance_check() {
     # Normalising is deliberately narrower than widening the match: the pattern still
     # admits exactly G0-G8, so a backticked `G9`, `GG1` or `TBD` is still not a depth and
     # a table carrying only those still reads as declaring none.
-    local maxd=-1 rows=0 c1 c2 c3 c4 c5 rest d
+    local maxd=-1 rows=0 c1 c3 c5 rest d
     local BT='`'
     while IFS= read -r line || [ -n "$line" ]; do
       case "$line" in
         '|'*)
-          IFS='|' read -r _ c1 c2 c3 c4 c5 rest <<EOF
+          IFS='|' read -r _ c1 _ c3 _ c5 rest <<EOF
 $line
 EOF
           d="${c5// /}"; d="${d//$BT/}"
@@ -720,11 +720,10 @@ EOF
 # in the taxonomy suite, which were all `if <test>; then PASS` sites. Group PF keeps it
 # closed.
 has_finding() { grep -qE "^FINDING ($2) " <<<"$1"; }
-popstat()     { printf '%s\n' "$1" | sed -n "s/^POPSTAT $2 //p" | head -1; }
-# `show` keeps its pipeline deliberately. It also ends in a command that need not read to
-# EOF, but its exit status is never consulted — it is called for its OUTPUT, so there is no
-# verdict for a spurious status to corrupt. The defect is a pipeline whose STATUS is read,
-# not a pipeline.
+popstat()     { printf '%s\n' "$1" | sed -n "s/^POPSTAT $2 //p" | awk 'NR == 1'; }
+# `show` keeps its pipeline deliberately. Its exit status is never consulted — it is called
+# for its OUTPUT, so there is no verdict for a spurious status to corrupt. The defect is a
+# pipeline whose STATUS is read, not a pipeline.
 show()        { printf '%s\n' "$1" | grep -E "^FINDING ($2) " | sed 's/^/      /'; }
 
 # A directory's content-and-layout state, as a file count plus a digest of every file
@@ -863,7 +862,7 @@ EOF
   fi
 
   # PIN4 — the header block's first line is the citation line.
-  CITATION="$(fence_block "$CLAUDE_MD" "$HEADER_FENCE" "$SECTION_HEADING" | head -1)"
+  CITATION="$(fence_block "$CLAUDE_MD" "$HEADER_FENCE" "$SECTION_HEADING" | awk 'NR == 1')"
   if [ -n "$CITATION" ]; then
     PASS "PIN4: contract header citation line extracted — \"$CITATION\""
   else
@@ -1339,7 +1338,7 @@ else
   if [ "$A_RC" -eq 0 ]; then
     PASS "CTLa2: MUST-NOT-FIRE — a conformant five-file tree returns 0; the checker is not hard-wired red"
   else
-    FAIL "CTLa2: MUST-NOT-FIRE — a conformant tree was flagged (rc=$A_RC): $(printf '%s' "$A_OUT" | head -3 | tr '\n' ' ')"
+    FAIL "CTLa2: MUST-NOT-FIRE — a conformant tree was flagged (rc=$A_RC): $(head -3 <<<"$A_OUT" | tr '\n' ' ')"
   fi
 
   # ── CTL-b: one evidence block with the stderr redirect dropped MUST fire.
@@ -1525,7 +1524,7 @@ else
   if grep -q -F -- 'verb table (G2)' <<<"$DM_OUT"; then
     PASS "CTLdm3: the finding names G2 — the MAXIMUM over the table's {G1, G2}, not the first depth cell it met; the max computation is exercised, not merely the inequality"
   else
-    FAIL "CTLdm3: D1 fired but did not name G2 as the table maximum, so the reported depth is not the maximum: $(printf '%s' "$DM_OUT" | head -2 | tr '\n' ' ')"
+    FAIL "CTLdm3: D1 fired but did not name G2 as the table maximum, so the reported depth is not the maximum: $(head -2 <<<"$DM_OUT" | tr '\n' ' ')"
   fi
 
   # ── CTL-dd: the SPECIFICITY arm for the same assertion. The checker reads the depth
@@ -1549,7 +1548,7 @@ else
   if grep -q -F -- 'verb table (G1)' <<<"$DD_OUT"; then
     PASS "CTLdd3: the finding names G1 — the depth CELL, read by field index; a row-wide matcher would have read the decoy G8, agreed with the declaration and stayed silent"
   else
-    FAIL "CTLdd3: D1 fired but named a maximum the depth column does not contain — the decoy was read as a depth: $(printf '%s' "$DD_OUT" | head -2 | tr '\n' ' ')"
+    FAIL "CTLdd3: D1 fired but named a maximum the depth column does not contain — the decoy was read as a depth: $(head -2 <<<"$DD_OUT" | tr '\n' ' ')"
   fi
 
   # ── CTL-dc: the CREATE partner of CTL-dm, and the arm that proves the widening closed
@@ -1577,7 +1576,7 @@ else
   if grep -q -F -- 'verb table (G1)' <<<"$DC_OUT"; then
     PASS "CTLdc3: the finding names G1 — the MAXIMUM over the CREATE table's {G0, G1}, so the max computation runs for this role and not merely a presence check"
   else
-    FAIL "CTLdc3: D1 fired on the CREATE consumer but did not name G1 as its table maximum: $(printf '%s' "$DC_OUT" | head -2 | tr '\n' ' ')"
+    FAIL "CTLdc3: D1 fired on the CREATE consumer but did not name G1 as its table maximum: $(head -2 <<<"$DC_OUT" | tr '\n' ' ')"
   fi
 
   # ── CTL-op: a consumer carrying MORE of the canonical list than its declared depth
@@ -1653,7 +1652,7 @@ else
   if grep -q -F -- "but carries $((CANON_N+1))" <<<"$MX_OUT"; then
     PASS "CTLmx3: SPECIFICITY — the finding counts $((CANON_N+1)) block(s), not $((CANON_N+2)) or $((CANON_N+3)): neither the line opening with a code span that is no entry's marker nor the one whose code span only begins with an entry's command word was read as an evidence block, so the detector widened neither into \"any code span\" nor past the first marker's delimiter"
   else
-    FAIL "CTLmx3: P3 did not count exactly $((CANON_N+1)) block(s), so the detector read a line it has no marker for: $(printf '%s' "$MX_OUT" | head -2 | tr '\n' ' ')"
+    FAIL "CTLmx3: P3 did not count exactly $((CANON_N+1)) block(s), so the detector read a line it has no marker for: $(head -2 <<<"$MX_OUT" | tr '\n' ' ')"
   fi
   # CTLmx4 grades the run-on specimen on its own, because CTLmx3's count says only THAT the
   # detector read a line it has no marker for, not WHICH line. It reads the specimen back
@@ -1757,7 +1756,7 @@ EOF
   if [ "$CS_RC" -eq 0 ] && ! has_finding "$CS_OUT" 'D1|D2'; then
     PASS "CTLcs2: MUST-NOT-FIRE — a table whose depth cells are code spans is read as present and its maximum is read correctly; the cell is normalised before it is matched, so the contract's own typography no longer produces a finding that names the wrong defect"
   else
-    FAIL "CTLcs2: MUST-NOT-FIRE — a table rendered the way CLAUDE.md renders its own was flagged (rc=$CS_RC): $(printf '%s' "$CS_OUT" | head -3 | tr '\n' ' ')"
+    FAIL "CTLcs2: MUST-NOT-FIRE — a table rendered the way CLAUDE.md renders its own was flagged (rc=$CS_RC): $(head -3 <<<"$CS_OUT" | tr '\n' ' ')"
   fi
 
   # ── CTL-cx: the SPECIFICITY arm for that repair. Stripping the backticks must not have
@@ -1824,7 +1823,7 @@ EOF
   if ! has_finding "$HS_OUT" 'D2'; then
     PASS "CTLhs3: the asymmetry is asserted rather than incidental — the SAME file renders its verb table's depth cells as code spans too, and D2 stayed silent, so the cell accepted precisely the rendering the header rejected"
   else
-    FAIL "CTLhs3: D2 fired on a table whose depth cells are code spans, so the two surfaces no longer differ in the direction the contract states: $(printf '%s' "$HS_OUT" | head -2 | tr '\n' ' ')"
+    FAIL "CTLhs3: D2 fired on a table whose depth cells are code spans, so the two surfaces no longer differ in the direction the contract states: $(head -2 <<<"$HS_OUT" | tr '\n' ' ')"
   fi
 
   # ── CTL-pz / CTL-ps: the two arms that give RP7 its meaning. RP7 asserts a population
@@ -1880,7 +1879,7 @@ EOF
   if has_finding "$PS_OUT" 'Q1' && grep -qF 'FINDING Q1 trip-decommission ' <<<"$PS_OUT"; then
     PASS "CTLps2: MUST-FIRE — a tree one consumer short is caught, and the finding NAMES the unanswered row (trip-decommission) rather than reporting a count disagreement"
   else
-    FAIL "CTLps2: a tree one consumer short was not caught, or the finding did not name the missing consumer: $(printf '%s' "$PS_OUT" | head -3 | tr '\n' ' ')"
+    FAIL "CTLps2: a tree one consumer short was not caught, or the finding did not name the missing consumer: $(head -3 <<<"$PS_OUT" | tr '\n' ' ')"
   fi
   if ! has_finding "$PS_OUT" 'Q2'; then
     PASS "CTLps3: SPECIFICITY — the same run emits NO Q2 on the one-short tree: every consumer file present is a row the charter declares, so Q1 and Q2 are distinguishable rather than one finding under two names"

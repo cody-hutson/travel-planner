@@ -274,7 +274,7 @@ ad_status_raw() {
 
 # ── ad_status_tok <file> — its LEADING ALPHABETIC TOKEN, never a substring search ─
 ad_status_tok() {
-  ad_status_raw "$1" | awk '{ if (match($0, /^[A-Za-z]+/)) print substr($0, RSTART, RLENGTH); exit }'
+  ad_status_raw "$1" | awk 'NR == 1 { if (match($0, /^[A-Za-z]+/)) print substr($0, RSTART, RLENGTH) }'
 }
 
 # ── ad_sections <file> — every `## ` heading, normalised: lowercased, a trailing
@@ -476,7 +476,7 @@ ad_scan_lf() {   # the lifecycle enum, and a Superseded record naming its supers
 }
 
 ad_scan_nu() {   # contiguity, pinned in BOTH directions against the declared exemption
-  local root="$1" exempt="${2-}" recs b n lo hi i nrec=0 nums=" " dup=" " e
+  local root="$1" exempt="${2-}" recs b n lo hi i nrec=0 nums=" " dup=" "
   recs="$(ad_records "$root")"
   lo=""; hi=""
   while IFS= read -r b; do

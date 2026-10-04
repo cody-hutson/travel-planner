@@ -256,8 +256,8 @@ reusing one.
 - **Not that any artifact's prose is correct.** The schema constrains frontmatter and
   declared entry markers. It never constrains narrative body content.
 - **Not that a user's trips validate.** CI cannot reach them.
-- **Not that the guard scripts themselves are lint-clean.** No CI job shellchecks a
-  standalone `scripts/*.sh`; `actionlint` lints workflow-embedded shell only.
+- **Not that the guard scripts themselves are lint-clean.** That is a separate check: every
+  `scripts/*.sh` is linted by `.github/workflows/shell-lint.yml` at the severity it declares.
 - **Not, while the split reads `0 witness`, that any real artifact was validated.** The suite
   renders `VACUOUS` rather than `PASS` in that state and says so out loud. That state is
   behind this corpus now — the live split is stated at the head of this section — but the

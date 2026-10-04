@@ -25,7 +25,7 @@ jobs:
   # gate-efficacy: posture=required
   actionlint:
     name: Workflow SAST (actionlint)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
 
@@ -33,15 +33,35 @@ jobs:
       # rides this job rather than adding a new check name (which would need a
       # branch-protection change). Runs BEFORE the actionlint install so a transient
       # network failure there cannot mask a real registration finding.
+      # The self-test runs first and grades the instrument. It is offline, and the one
+      # repository file it reads is SECURITY.md, whose required-check list it holds to
+      # CONTEXT_ORDER; its census arms grade synthetic trees. Both commands always run,
+      # so a red self-test never hides the census verdict, and the step fails if either
+      # does. Both need the PyYAML the runner image carries, under the python3 found on
+      # PATH: a setup-python step added ahead of this one would put a Python without
+      # PyYAML first, and the census would then refuse at exit 2 while the self-test
+      # reported its census group NOT-EVALUATED. The job is pinned to ubuntu-24.04, the
+      # image on which that PyYAML was probed, rather than to ubuntu-latest: a move to
+      # another image is then a reviewed pull request, on which this step proves the
+      # parser again. The actionlint steps below run even when this one fails, so a red
+      # self-test or census never hides actionlint's verdict; the job still fails.
       - name: Required-check registration census
-        run: ./scripts/pin-required-checks.py --census
+        run: |
+          st=0
+          ce=0
+          ./scripts/pin-required-checks.py --self-test || st=$?
+          ./scripts/pin-required-checks.py --census || ce=$?
+          echo "self-test exit $st, census exit $ce"
+          [ "$st" -eq 0 ] && [ "$ce" -eq 0 ]
 
       - name: Install actionlint
+        if: ${{ !cancelled() }}
         run: |
           # actionlint binary installer (upstream-recommended path)
           bash <(curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) 1.7.1
           ./actionlint -version
       - name: Run actionlint
+        if: ${{ !cancelled() }}
         # The -ignore flag suppresses shellcheck SC2016 propagation out of
         # pr-body-parser-clean.yml. The justification is structural rather than
         # provenance: that workflow echoes the override marker into the step

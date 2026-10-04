@@ -26,6 +26,13 @@ jobs:
           PR_BODY: ${{ github.event.pull_request.body }}
         run: |
           set -euo pipefail
+          # scan — grep as a pipeline stage that either RAN or stops the step. grep exits 0 on
+          # a match and 1 on none; both mean it read its input, and any other status means it
+          # did not. Under pipefail this stage's 1 becomes the capture's status, and each capture
+          # below stops the step on it instead of reading it as a clean body. `|| true` read all
+          # three alike, so a genuine error became an empty anchor (the whole body scanned) or an
+          # empty match list (a green check). The same rule as depersonalization.yml's grep_stage.
+          scan() { grep "$@" || [ "$?" -eq 1 ]; }
 
           # Handle null/empty body
           if [ -z "${PR_BODY:-}" ]; then
@@ -50,10 +57,9 @@ jobs:
           # no trace at all, and only the differential — was a marker-carrying body's
           # override honoured? — separates it. Same root cause as step 4 below; `-c`
           # reads to EOF.
-          # `|| true` absorbs grep's exit 1 on zero matches (the idiom already used
-          # for ANCHOR_COUNT).
           OVERRIDE_HITS=$(printf '%s\n' "$PR_BODY" \
-            | grep -cE '<!--[[:space:]]*pr-body-parser-clean:[[:space:]]*allow-close-keyword[[:space:]]*-->' || true)
+            | scan -cE '<!--[[:space:]]*pr-body-parser-clean:[[:space:]]*allow-close-keyword[[:space:]]*-->') \
+            || { echo "::error::the override-marker scan did not run (grep failed) — nothing was scanned"; exit 1; }
           if [ "${OVERRIDE_HITS:-0}" -gt 0 ]; then
             {
               echo "## Override active"
@@ -69,13 +75,17 @@ jobs:
             exit 0
           fi
 
-          # 2. Locate Issue References anchor (case-insensitive, H1-H6, lenient on trailing colon/whitespace)
+          # 2. Locate Issue References anchor (case-insensitive, H1-H6, lenient on trailing colon/whitespace).
+          #    `awk 'NR == 1'`, NOT `head -1`: awk reads to EOF, so the writer is never signalled,
+          #    for the same reason step 4 gives below.
           ANCHOR_LINE=$(printf '%s\n' "$PR_BODY" \
-            | grep -nE '^#{1,6}[[:space:]]+[Ii]ssue [Rr]eferences[[:space:]]*:?[[:space:]]*$' \
-            | head -1 | cut -d: -f1 || true)
+            | scan -nE '^#{1,6}[[:space:]]+[Ii]ssue [Rr]eferences[[:space:]]*:?[[:space:]]*$' \
+            | awk -F: 'NR == 1 { print $1 }') \
+            || { echo "::error::the Issue References anchor scan did not run (grep failed) — nothing was scanned"; exit 1; }
 
           ANCHOR_COUNT=$(printf '%s\n' "$PR_BODY" \
-            | grep -cE '^#{1,6}[[:space:]]+[Ii]ssue [Rr]eferences[[:space:]]*:?[[:space:]]*$' || true)
+            | scan -cE '^#{1,6}[[:space:]]+[Ii]ssue [Rr]eferences[[:space:]]*:?[[:space:]]*$') \
+            || { echo "::error::the Issue References anchor count did not run (grep failed) — nothing was scanned"; exit 1; }
 
           # 3. Defensive: warn on multiple anchors (proceed with first)
           if [ "${ANCHOR_COUNT:-0}" -gt 1 ]; then
@@ -113,7 +123,8 @@ jobs:
 
           # 5. Canonical close-keyword scan (close-family verb immediately followed by #N)
           MATCHES=$(printf '%s\n' "$OUTSIDE_BLOCK" \
-            | grep -inE '(close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved) +#?\[?[0-9]' || true)
+            | scan -inE '(close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved) +#?\[?[0-9]') \
+            || { echo "::error::the close-keyword scan did not run (grep failed) — nothing was scanned"; exit 1; }
 
           # 6. Match handling
           if [ -n "$MATCHES" ]; then
