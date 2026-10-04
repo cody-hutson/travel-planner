@@ -202,12 +202,25 @@ Read trip-context.md fully before producing output. Read in this order:
 7. `outputs/traveler-model.md` — the per-traveler `Been here before?` signal
    feeding the depth lens (first-time = lead with orientation, experienced =
    lead with what has changed). A blank or em-dashed answer is **unknown**,
-   never `never`. **Read this file for the depth signal and for nothing else.**
-   Stream membership comes from `## Logistics` and the `## Group` roster, never
-   from here: a `[THIRD-PARTY]` entry carries needs only and has no journey
-   facet by rule (`agents/00-enrichment.md` → "Resolving origin on a
-   multi-origin trip"), so an origin read off this file would silently drop a
-   real passenger from a stream you are sizing and pricing
+   never `never`. **Read this file for the depth signal and for one count, and
+   for nothing else.** Stream membership comes from `## Logistics` and the
+   `## Group` roster, never from here. A `[THIRD-PARTY]` entry carries needs only
+   and has no journey facet by rule (`agents/00-enrichment.md` → "Resolving
+   origin on a multi-origin trip"), so an origin read off this file would
+   silently drop a real passenger from a stream you are sizing and pricing.
+   **The count is how that passenger is not dropped anyway.** Take the
+   outside-roster count — this file's `## ` headings that carry both
+   `[OPERATOR-PROVIDED]` and `[THIRD-PARTY]` and not `[ROSTERED]` — and add it
+   to the anchor stream, as § *Arrival Transport* states. A heading marked
+   `[ROSTERED]` is someone the roster already names and so already places on a
+   stream; counting them here as well would size them twice. Such a member holds
+   no `## Group` roster row, and `- **Total travelers:**` counts them only as an
+   unnamed member (`skills/trip-record/SKILL.md`
+   § *Roster standing of a third-party member*, which defines this count) — so
+   the total is not this count's source: it cannot tell them from any other
+   member the roster does not name, and it can lag this file. Take the number
+   and nothing else from those headings — never a name, never a need — so
+   nothing this brief writes can carry one
 8. Mode — confirm output format, and read the **Mode Notes** for a named
    change. On `ITERATION` a note relocating an event to another day, or
    replacing its venue with one at a different address, is a **move**: take
@@ -283,7 +296,24 @@ writing any of them:
   named under `### Additional origins`** — the closed derivation
   `templates/trip-context.template.md` states there. Apply the same minus-clause to
   it. On a single-origin trip that section is absent and the anchor's passengers are
-  the whole roster.
+  the whole roster. **The anchor stream also carries § *Input* item 7's count.** A
+  `[THIRD-PARTY]` party member has no origin recorded anywhere, by rule, and a
+  sizing default is not a recorded origin, so count them here and nowhere else.
+  Where `### Additional origins` exists, mark that count `(assumed)` and flag it
+  `VERIFY`: they may be on another origin's booking, and nothing records which.
+  Where `- **Total travelers:**` is a number smaller than the roster's named
+  travelers plus that count, the published total does not yet count them all, or
+  this file predates a roster change: carry the count anyway, and flag it `VERIFY`
+  naming nobody — `/trip-record group` brings the total up to the count, and
+  `/trip-record travelers` refreshes a file older than the roster, or
+  `/trip-record person` withdraws a member who no longer travels. A file older than
+  the roster can count someone twice. It leaves out someone who still travels only
+  where a row came off outside `/trip-record group`, which reconciles this file in
+  the act that removes a row unless one of that reconcile's stops names the row
+  (`skills/trip-record/SKILL.md` § `group`, *Removing a row*), or where that verb
+  removed the row of someone who still travels on an answer that they were leaving,
+  that the row was a duplicate, or that it was added in error, or did not complete
+  the reconcile it runs after a stale row comes off.
 - **Each traveler whose own window states an arrival different from their origin's
   booking contributes a stream of their own**, at their own arrival time, into the
   same destination airport. If no leg records their flight, write the stream from
@@ -307,7 +337,7 @@ leg: leg-<token>
 cost: <amount> <currency> <basis>
 ```
 
-**Passengers:** [Travelers by their `## Group` roster name]
+**Passengers:** [Travelers by their `## Group` roster name, then — on the stream carrying item 7's count, when it is not zero — `+ <n> party member(s) outside the roster`]
 
 **Recommendation:** [Mode]
 **Rationale:** [Why this is right for this specific group]
@@ -578,7 +608,7 @@ leg: leg-<token>
 cost: <amount> <currency> <basis>
 ```
 
-**Passengers:** [Travelers by their `## Group` roster name]
+**Passengers:** [Travelers by their `## Group` roster name, then — on the stream carrying item 7's count, when it is not zero — `+ <n> party member(s) outside the roster`]
 
 **Flight:** [Departure time]
 **Recommended hotel departure:** [Time]

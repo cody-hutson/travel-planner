@@ -65,6 +65,14 @@ name: Corpus hygiene
 #        outlive the gap it excepts. The scope boundary — the row's key cell, the ungraded
 #        link text, the ungraded zero-padding — is declared in the suite's class-D banner
 #        entry and is not restated here
+#   E    AN OWNED RULE, STATED ONCE AND CITED. A [THIRD-PARTY] party member's standing — no
+#        roster row, and counted in Total travelers as an unnamed member — is stated once, in
+#        skills/trip-record/SKILL.md § Roster standing of a third-party member. A sentence
+#        elsewhere that pairs such a member with the roster or the total must carry that
+#        sub-section's name, and no sentence anywhere may state a contrary standing. Group C's
+#        sentence is the unit; reference/adr/, examples/ and CHANGELOG.md are outside the
+#        scan, and the contrary lexicon's boundary is declared in the suite's class-E banner
+#        entry
 #   F    SHORT-CIRCUIT READERS. A pipe into a reader that can stop before end of input — head,
 #        a grep in its quiet or max-count form, a sed carrying q, an awk that exits outside
 #        END — in any tracked shell file or any workflow run: value. The reader leaves first,

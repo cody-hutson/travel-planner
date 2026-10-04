@@ -700,7 +700,7 @@ C21    2026-09  2026-12    —          2027-01    required    ANSWERED         
 
 **What the discriminating cases show.** `C1` is the card in one line — a passport valid through `2026-12`, a trip in `2027-04`, today `2026-09`: silent under the clock, expired against the trip. `C2` is the boundary month. `C7` shows the ordering comparison is not gated by the axis. `C11` is the unresolvable-term case failing closed. `C15` against `C16` is the disputed-window pair, agreeing on every column but `H` — one inside the window, one above it — and disagreeing on the verdict; `C17` straddles the window from below and **agrees** with `C15`, because a horizon *at* the reference month is already the boundary case, which is why the arm that grades this rule asserts *at least one* inside-versus-above pair rather than every straddling pair. `C19` is the overtaken clock, `C20` the clock landing inside the window, and `C21` the missing-departure-month residual. The rows that agree earn their place too: `C5` is the past-dated trip where `max` keeps the clock guarantee the window alone would have withdrawn, and `C8`–`C10`, `C13` and `C14` agree by construction because they are decided by the payload-shape and absent-mark clauses rather than by the reference month — which is itself the assertion that those clauses are orthogonal to the trip term.
 
-**No cycle, and no new read.** The resolution reads the title line and one `[DERIVED]` block of `trip-context.md`; neither is derived from a person record, and composition writes neither. The reads are already declared by the verbs that dispatch the reconciler — `skills/trip-record/SKILL.md` §§ `## person <name>` and `## travelers`, each naming `trips/<slug>/trip-context.md` among its reads, the whole file and no block restriction — so reading a further line of an already-declared read widens nothing. **`skills/trip-record/SKILL.md` § `## link` is deliberately not such a consumer** — that verb answers *which record*, not *is this record usable for this trip*, and it passes the clock; the divergence is designed and is stated at both surfaces.
+**No cycle, and no new read.** The resolution reads the title line and one `[DERIVED]` block of `trip-context.md`; neither is derived from a person record, and composition writes neither. The reads are already declared by the verbs that dispatch the reconciler — `skills/trip-record/SKILL.md` §§ `## person <name>`, `## travelers` and `## group [<name>]`, each naming `trips/<slug>/trip-context.md` among its reads, the whole file and no block restriction — so reading a further line of an already-declared read widens nothing. **`skills/trip-record/SKILL.md` § `## link` is deliberately not such a consumer** — that verb answers *which record*, not *is this record usable for this trip*, and it passes the clock; the divergence is designed and is stated at both surfaces.
 
 ### The bearer states — seven, and five need no store read
 
@@ -1383,7 +1383,7 @@ enforcement.** What needs stating is the complement — the four cases the equal
 ### The display name has one authority — the `## Group` roster
 
 > The **`Person` cell of the `## Group` roster in `trip-context.md` is the authoritative display
-> name** for every person the model knows about. The `## <Name>` heading in
+> name** for every traveler the model knows about. The `## <Name>` heading in
 > `outputs/traveler-model.md` and the stem of `travelers/<file>.md` are both **projections** of it.
 > Where a projection disagrees with the roster, **the roster is right and the projection is the
 > defect**: the reconciler reports the divergence and never repairs it by rewriting the roster.
@@ -1395,12 +1395,19 @@ directory"* and that enrichment takes the `## Group` roster and `- **Total trave
 **denominator** for profile-gap detection"* with *"no second source for it"*.
 
 Two properties make it the only candidate that works, and neither is convenience. It is **total
-over the entry population**: the two entry classes that have no file at all — `[THIRD-PARTY]` and
-`PROFILE MISSING` — still have a roster row, and those are precisely the classes the publish guard
-is built around, whereas a profile's own title line and a filename stem both fail there. And the
-roster row is the **only surface in the engine carrying the display name (`Person`, verbatim) and
-the derived path (`Traveler file`) as a pair**, so the correspondence has exactly one checkable
-site and the check is within one row rather than a join across files.
+over the traveler population** — every entry the reconciler derives from the party, including the
+one class that has no file yet, `PROFILE MISSING`, which still has a roster row — whereas a
+profile's own title line and a filename stem both fail there. **One entry class stands outside it
+by rule: a `[THIRD-PARTY]` party member holds no roster row, though `- **Total travelers:**`
+counts them as an unnamed member, as `skills/trip-record/SKILL.md`
+§ *Roster standing of a third-party member* states.** That entry's name authority is the operator
+statement that admitted it, and its one record is its own `## <Name>` heading in
+`outputs/traveler-model.md`, carried forward verbatim and never a projection of a roster cell;
+where a roster row's key equals that heading's key, the reconciler's join in
+`agents/00-enrichment.md` § *Traveler identity* decides which record stands. And the roster row is
+the **only surface in the engine carrying the display name (`Person`, verbatim) and the derived
+path (`Traveler file`) as a pair**, so for every traveler the correspondence has exactly one
+checkable site and the check is within one row rather than a join across files.
 
 ### The four cases the correspondence does not reach
 
@@ -1418,6 +1425,15 @@ neither § 3.2 nor ADR-009 Decision 2.2 states the rule — each now names the d
 cites this case for it, which is the split those documents already take for the four cases. Without
 C2 the natural key would be neither total nor injective, and *"uniqueness is asserted over this
 key"* would be unsatisfiable at the degenerate point; C2 is what makes that assertion total.
+
+**The four cases are asserted per traveler, so none of them reaches a `[THIRD-PARTY]` entry the
+roster does not name.** Its key's emptiness (C2) and its reservation (C3) are asserted by nothing
+today — `skills/trip-record/SKILL.md` § `person` admits the name as the operator gives it, and the
+reconciler walks the roster — and each is a fail-open: an empty key and a reserved one both leave
+that entry's name outside the publish guard's non-publishable class. Its uniqueness against the
+travelers' keys is asserted only where a roster row shares its key, by the join in
+`agents/00-enrichment.md` § *Traveler identity*. That half is declared unowned here rather than
+dropped.
 
 ### Reserved keys
 

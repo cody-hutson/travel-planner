@@ -162,8 +162,9 @@ name: Artifact schema
 #   PF   no verdict in this suite, or in the validator it sources, is decided by a
 #        pipeline's exit status. Closed at the SHAPE rather than at any one arm, because
 #        that helper carries both polarities and the dangerous one is a silent false GREEN
-#   ER   the erasure verb's declared contract, and the two fixture properties the
-#        post-state grading of group AF cannot reach
+#   ER   the erasure verb's declared contract, its coverage of every trip-context
+#        section and derived-model block, and the fixture properties the post-state
+#        grading of group AF cannot reach
 #   RL   reconcile-on-link: the state of the two tracked witnesses the link survey is
 #        graded on — totality over the resolving pair, and the negative over the unlinked
 #        fixture, which carries no reference and no reachable store. Nothing in it is pinned

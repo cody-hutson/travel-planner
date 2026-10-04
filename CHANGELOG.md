@@ -104,6 +104,194 @@ Nothing stops a release tag being pushed without its check: if its tree lacks th
 corpus-hygiene suite turns red on its next run, and declaring the tag is the remedy left. The
 template's note is advice, and nothing grades a body against it.
 
+## [0.50.0] — 2026-10-04 — A surface's cost is a stated property
+
+Until now nothing in the repository said what a file may cost to load. A verb's file, an agent's
+prompt and a reference document each cost whatever their subject happened to require, and the one
+budget the corpus recorded said of itself that nothing enforced it. `CLAUDE.md` said an agent's
+research is appended and never deleted, and nothing said where that rule stops, so an agent editing
+one of the engine's own files could read it as a rule for every file. Accepted decision records kept
+growing after acceptance, with corrections, the accounts of amendments and whole mechanisms written
+in beside their decisions, and nothing said what an amendment may add or where its account goes.
+Nothing mapped which capabilities the decision records cover. This release states each of these
+once, on figures re-derived at a named commit before any file changed. No verb plans, records or
+publishes a trip differently: what changes is how the engine's own files are classed, edited and
+decided about.
+
+**Every tracked markdown file now has a declared load class.** `reference/load-class-model.md`
+names who loads a file and when — the harness, a verb before it acts, the session that dispatches
+an agent, a step that names a file, the guard suites, the release procedure and a person browsing —
+and the classes those edges make, from `listed` down to `browsed`. Load cost is a property of that
+edge, not of the file, so a class is never a place in the tree: a file keeps its class while the
+same consumer loads it at the same moment, and changes class when that stops being true. The rule
+that puts every file in exactly one class reads only what the tree says about the file, its own
+opening block and the files that name it. A file no clause reaches is unclassified, and that is a
+finding about the file: nothing loads it, nothing cites it, and no reader has been named for it.
+Beside each class stands its budget posture, and a parameter table carries the byte figures a size
+assertion is to read. The document declares and checks nothing, and the charter's file map lists
+it.
+
+**Editing an engine file reconciles; it never accretes.** A new § *Where the append rule stops*,
+directly after § *Output Versioning* in `CLAUDE.md`, says the append rule binds a trip's agent
+outputs and nothing else. § *Editing an engine file — reconcile, never accrete*, beside
+§ *Write ownership*, says what binds a tracked file that states how the engine behaves instead:
+edit the statement rather than annotating beside it, search for an existing home before adding a
+normative sentence, and declare what was removed beside what was added, in the change's own commit
+message or pull request rather than in the file. The release log, the decision records and the
+worked examples keep their own conventions. § *Output Versioning* itself is unchanged byte for byte,
+so `/trip research` derives the same agent keys from it as before.
+
+**What an Accepted decision record may gain after acceptance now has an answer.** `ADR-042` decides
+what an amendment may add, the form an amended record takes and where settled design belongs, and
+`reference/adr/README.md` § *Convention* states the rule an author follows. An amendment is bounded
+by what it states, never by its size: it corrects a claim the record already made, narrows a scope,
+repairs a citation or records a decision taken in another record, and adds nothing else a reader
+must follow, so a new decision is a new record. Where the corrected claim is settled design — a
+table, a grammar, a procedure, a measured boundary — the correction is a sentence naming where that
+shape is stated, in the specification document for its subject under `reference/` or in the suite
+that pins it, and the record never restates the shape. Each new amendment's account takes the
+consolidated-decision form: a dated entry in a closing `## Amendment history` section after the
+record's references, so no new account stands in the `Status:` line or in a section, and a corrected
+claim stands corrected in the sentence that makes it. Accounts written before this stay where they
+stand until a consolidation moves them, and nothing schedules one. No consolidation, relocation or
+reduction removes or rewords a rejected alternative or the reason it was rejected. The rule binds a
+record from its ratification on `main`: a change to a record that is still `Proposed`, or accepted
+only on a release's branch, is a revision and not an amendment. The new record restructures no
+existing record.
+
+**The decision records come with a map of what they cover.** `reference/adr/coverage-map.md` lists
+each capability domain the tracker declares and the records that bind it — decided for it, bound by
+a rule another record states, or reached only by a record whose scope is every capability of its
+kind — and gives each domain in that last state, or bound by none, a disposition: a record is
+warranted, or the domain is out of scope for the decision tier and its design is held elsewhere. It
+names which specification documents cite the records that bind their subject. Every binding, figure
+and verdict in it was measured at `e743113` by a method it states, so it is re-derived rather than
+kept up by hand, and a record added after that commit is found through the index. The index in
+`reference/adr/README.md` now groups its rows by subsystem, a table for each, with every record in
+the group for the subsystem whose capability its `Driving work` names, so the records that bind a
+subsystem can be found without reading all of them. A new record's row goes at the foot of its
+group's table.
+
+**The figures were measured again first.** Before any file changed, the read-cost figures this
+release's cards rest on were re-derived at a named commit, each figure that had moved by more than a
+tenth was restated on the card that carries it, and the designs were built on the re-derived
+figures. That measurement is kept with the release's records on the tracker and adds no file to the
+repository.
+
+**The honest limits.** This release adds no check. The load-class model runs nothing, and no suite
+in the repository classifies a file, so whether a newly added file resolves to a class is known only
+when someone runs the classification rule over the tree. Nothing checks a clause of `ADR-042`
+either: a reviewer applies its bound, and the consolidated-decision form is checkable by reading
+alone. No check enforces the reconcile rule: a reviewer checks its first and last clauses against
+the change, and searching for an existing home before adding a sentence leaves no trace either way.
+That `/trip research` still derives the same agent keys was shown by a run that follows the
+derivation the verb performs, not by a live run of the verb end to end. `ADR-042` lands `Proposed`,
+and a later change on `main` sets it `Accepted`.
+
+## [0.49.0] — 2026-10-03 — Erasure reaches every name, and a third-party member holds one standing
+
+Until now `/trip-record erase` rewrote a person's name only where its reach table pointed, and among
+the trip file's sections that table named only `Group`, `Hard Constraints` and `Dietary & Health`. A
+name in a trip-style line, in a mobility or health note, in the derived model's shared desires or in
+a group's name survived the erasure unreported while the receipt read complete. A party member
+recorded only through the operator had no settled place either: the data model, `/trip-record` and
+the transport agent gave different answers to whether such a member has a row on the trip's roster,
+so a reader following any one of them reached a different party and a different passenger count.
+This release gives every place a name can sit one stated disposition, states that member's standing
+once, and closes two gaps in `/trip-record`'s own text.
+
+**Erasure now accounts for every place a name can sit on a trip.** Each location has one stated
+disposition: rewritten, reported with its count and left standing, or declared out of reach with its
+reason.
+
+- **Rewritten:** mobility and health notes, the lines saying who travels from which origin, and the
+  derived model's text — every line of its body but a heading, a party member's recorded need that
+  named the person included.
+- **Reported with a count and left standing:** the parts of the trip file that describe the trip
+  itself — its food and allergy lists among them — the blocks another writer owns, another
+  traveller's own file, and a group's name. Here the name could also be a place, a month, a food or
+  an ordinary word, and a wrong rewrite could never be undone, so removing it is yours.
+
+The receipt now closes on one line saying what it is total over: the rows of the 38-row reach table,
+never a place the table does not list. The table's last row reads the rest of a resolved trip's
+directory, so a place nobody listed is reported rather than read as reached, and a required check
+fails whenever the trip template gains a section, or its dietary and health section a labelled line,
+that the table does not dispose of. An erasure interrupted part-way leaves the trip findable until
+its last step, so re-running it names each place the interruption left the name standing, with its
+count, and clearing those is yours. Erasure matches the name a trip actually uses for the person,
+even where it differs from their record. Two cases are left out: on a trip that calls them something
+else, the name on their record is not looked for on a first run, so it is neither rewritten nor
+reported and the receipt does not say so; and a person already taken off a trip's roster is not
+cleaned from that trip. A party member recorded only through the operator is never erasure's
+subject: the verb says so, and names the way their entry is removed, a fresh statement from you
+through `/trip-record person` that they are not travelling, which a reconcile honours on an active
+trip and nothing honours on an archived one.
+
+**The erasure rule says how it relates to the rule it breaks.** The standing rule that bounds an
+erasure now says, in one sentence, that its rewriting of existing trip content — its substitutions,
+and its deletion of the traveller file — is the exception to the command's own rule that it never
+overwrites or deletes existing trip content, and why: an erasure's whole subject is the removal a
+person asked for, so it cannot echo back what it removed the way the roster verb echoes a row it
+takes off — that echo would copy the erased values into the transcript — and the receipt, total over
+the reach table, stands where the echo would.
+
+**A party member recorded only through the operator now has one standing, stated once.** That is
+someone whose needs you supplied through `/trip-record person` and who will never file a profile of
+their own. The answer to where such a member stands now lives in one place,
+`skills/trip-record/SKILL.md` § *Roster standing of a third-party member*, with the decision behind
+it in `ADR-041`; every other sentence that states it — in the data model, the enrichment, transport
+and hub agents and `CLAUDE.md` — carries that sub-section's name, and a required check fails when
+one does not, or states a contrary answer.
+
+**The engine keeps the count that standing gives them, and the count names nobody.**
+`/trip-record person` brings the party's total up to cover them in the act that records them, so you
+restate nothing, and `/trip-record group` and `group-expand` apply the same rule on every write they
+make, asking rather than writing wherever a total falls short. A total you stated is left alone
+wherever it already counts them, so nobody is counted twice, and an archived trip keeps the total it
+was archived with. The transport agent reads the same count from the traveller model, which
+publishes nothing, so no member who travels is dropped from a stream it sizes or prices; where the
+trip's total is smaller than the party it knows, its brief flags the gap without naming anyone.
+
+**Removing someone from the roster is judged on a fresh count.** `/trip-record group` now runs the
+traveller-model reconcile before it takes a row off, so it compares the total with the roster as it
+stands rather than with a model a step behind, and where that reconcile stops it removes nothing but
+a row the stop itself names. Two removals reconcile again once the row is off, instead of naming the
+reconcile for later: a stale row, which names a member recorded through `/trip-record person` who
+has filed nothing and still travels, and the departure of such a member. That departure carries
+their withdrawal, so their entry and the needs recorded for them go with the row, and
+`/trip-record person` with those needs re-admits them; where the reconcile's report says they still
+travel, the verb asks once more, naming what goes, and carries the withdrawal only on a confirmed
+answer. A row whose own stop holds the reconcile can now come off on your answer rather than waiting
+for a hand edit; where it leaves the total as it stood, the act says the total may still count that
+row and names `/trip-record group` with the party's total, and the reconciler now names
+`/trip-record group` in each of its stops that a row's removal can clear.
+
+**Expanding a group names the step its sibling names.** `/trip-record group-expand` puts a group's
+members on a trip as though each had been added one at a time, but adding one member ends by naming
+`/trip-record travelers` — the step that brings the traveller model up to date — and an expansion
+ended without it. It now ends the same way, once for the whole run: it names
+`/trip-record travelers` without running it, and where the run added someone to the roster, it
+reports what adding a member reports.
+
+**One new decision record, superseding parts of five earlier ones.** `ADR-041` records the standing,
+how the engine keeps the count and how a counted member leaves it, and lands `Accepted`. For the one
+integer a published total now carries, it supersedes in part the three records that kept a value
+derived from the traveller model off every render, `ADR-030`, `ADR-010` and `ADR-025`. It also
+supersedes in part `ADR-011`'s bound on what transport reads from that model, so transport reads the
+count too, and, for the two reconciles `/trip-record group` now runs once a row is off, `ADR-035`'s
+step that has the verb changing the roster name the reconcile rather than run it. Everything else in
+each stands, and each gains a dated mark where it is superseded.
+
+**The honest limits.** A party member recorded only through the operator who was declared an
+approver while a stale or pending roster row of theirs stood keeps their key in the trip's approver
+declaration, and in any ledger line under it, after the row comes off: neither withdrawing them nor
+erasure reaches that key, and retiring the declaration is your act (`skills/trip-record/SKILL.md`
+§ *Roster standing of a third-party member*, its second state). The check that holds the one
+statement of their standing reads words rather than meaning, and the decision records, the examples
+and this file are outside it. A transport brief's passenger count with such a member, a
+`group-expand` run's closing render and an erasure's receipt are described from the verbs' text: no
+live run of any of them was made in this release.
+
 ## [0.48.0] — 2026-09-28 — One interviewer, any conforming form
 
 Until now each guided intake form carried its own copy of the interview's rules below its
