@@ -19,8 +19,9 @@ parser, a linter or an assertion that can fail behind each of them.
 `Workflow SAST (actionlint)` job on every pull request into `main`, and fails it unless every job
 declares whether it binds and the jobs claiming required status agree with the declared list in
 both directions. It now reads each workflow file through PyYAML, so the jobs it finds and the name
-each one reports are the parser's and not a reading of lines. Where the parser cannot be loaded it
-refuses and reads nothing, and it refuses any file it cannot vouch it read in full, naming the
+each one reports are the parser's and not a reading of lines. Its decision record,
+`reference/adr/ADR-043-required-check-census-parser.md`, says why. Where the parser cannot be
+loaded it refuses and reads nothing, and it refuses any file it cannot vouch for, naming the
 file and the remedy; neither reads as clean. A check that more than one job reports is a finding
 that names those jobs. The job is pinned to the runner image the parser was probed on, so a move
 to another image is a reviewed pull request, on which the census proves its parser again.
