@@ -218,7 +218,10 @@ link against. Specifically:
     own. An empty `Leaving from:` means *unknown*, never *matches the group*.
     **A `[THIRD-PARTY]` entry is out of scope: it has no journey facet to
     resolve, inherits no origin, and contributes no origin signal in either
-    direction.**
+    direction.** A consumer that must still place such a person, as transport
+    must when it sizes a stream, takes a default of its own and states it there;
+    the model records no origin for them either way (`agents/04-transport.md`
+    § *Arrival Transport*).
   - **Origin and timing are independent.** A traveler may set out from a different
     place and still arrive and leave with the group, or share the group's origin
     and travel on different dates. Never infer either from the other.
@@ -347,11 +350,11 @@ Trigger"), which sanctions exactly this behavior:
   `trips/<slug>/trip-context.md` — refined upward by that file's derived departure month
   where one is later in the same year — and this needs **no new read**: the reads are
   declared by the verbs that dispatch this role, `skills/trip-record/SKILL.md`
-  §§ `## person <name>` and `## travelers`, each naming that path among the reconciler's
-  reads, the whole file and no block restriction. Reading a further line of an
-  already-declared read widens nothing. `reference/data-model.md` § *The reference month
-  — what a horizon is compared against* is normative for the resolution, for the
-  unresolvable case, and for the New-Year wrapped term.
+  §§ `## person <name>`, `## travelers` and `## group [<name>]`, each naming that
+  path among the reconciler's reads, the whole file and no block restriction. Reading
+  a further line of an already-declared read widens nothing. `reference/data-model.md`
+  § *The reference month — what a horizon is compared against* is normative for the
+  resolution, for the unresolvable case, and for the New-Year wrapped term.
 
   **The composed source is a value, not a file.** It exists for the duration of a pass
   and is never written to disk. Do **not** materialise it as an `outputs/` artifact:
@@ -807,8 +810,11 @@ needs through the same fallback path above, admit them:
   `## <Name>` entry there carrying **both** `[OPERATOR-PROVIDED]` and
   `[THIRD-PARTY]` is carried into the newly written model **verbatim** — same name
   key, same need text, both marks — on any pass that supplies no operator input for
-  that person. This is the one entry class you **preserve** rather than regenerate,
-  and the reason is exact: that person has **no source file by design**, and ADR-006
+  that person. **The one mark such an entry never carries across is `[ROSTERED]`**:
+  § *Traveler identity* below writes it afresh on every pass where a roster row
+  shares the entry's key, and omits it where none does. This is the one entry class
+  you **preserve** rather than regenerate, and the reason is exact: that person has
+  **no source file by design**, and ADR-006
   refuses them any other durable home, so the model you last wrote is the **only
   surviving record** of what the operator stated. The operator's statement remains
   the entry's authority; the derived model is its record, never its authority. You
@@ -857,7 +863,7 @@ Their own file becomes authoritative, and the transition is a replacement:
 
 - the third-party-sourced values are **dropped** in favour of the person's own
   statements — never merged with them;
-- **both marks are removed** — the data is first-party now;
+- **both marks are removed**, and `[ROSTERED]` with them — the data is first-party now;
 - the entry count is **unchanged** — still exactly one `## <Name>`;
 - an **update signal** is emitted into the existing `## Update signals` block,
   e.g. `- Sam: profile filed; supersedes third-party-sourced entry [provenance
@@ -892,15 +898,20 @@ here, and not in the model you write. This subsection says only what *you* do
 with them.
 
 **The roster is the name authority.** The `Person` cell of the `## Group` roster
-in `trip-context.md` is the authoritative display name for every person the model
-knows about — the same roster you already take as the party and as the
-profile-gap denominator. The `## <Name>` heading you write into
-`outputs/traveler-model.md` and the stem of `travelers/<file>.md` are both
-**projections** of that cell. Where a projection disagrees with the roster, **the
-roster is right and the projection is the defect**: report the divergence, and
-never repair it by rewriting the roster. You do not rename a traveler's file
-either — `travelers/<traveler>.md` is human-authored Layer 1 and is not yours to
-write.
+in `trip-context.md` is the authoritative display name for every traveler the
+model knows about — the same roster you already take as the party and as the
+profile-gap denominator. A `[THIRD-PARTY]` entry is the one exception: it holds
+no roster row (`skills/trip-record/SKILL.md`
+§ *Roster standing of a third-party member*), so its heading is its own record,
+carried forward verbatim as the third branch above states, and the
+correspondence below reaches it only where a roster row shares its key — the
+last paragraph of this subsection says what then stands. The `## <Name>` heading
+you write into `outputs/traveler-model.md` and the stem of `travelers/<file>.md`
+are both **projections** of that cell. Where a projection disagrees with the
+roster, **the roster is right and the projection is the defect**: report the
+divergence, and never repair it by rewriting the roster. You do not rename a
+traveler's file either — `travelers/<traveler>.md` is human-authored Layer 1 and
+is not yours to write.
 
 **Assert the correspondence once per roster row, on every pass.** For any name
 the filename transform actually produced, the stem and the `Person` name reduce
@@ -926,15 +937,20 @@ reach. Each has exactly one disposition, and none of them is silent:
 - **C2 — the name reduces to nothing.** A `Person` value carrying no ASCII
   alphanumerics has no key and no filename. **Stop and say so**, quoting the name:
   it cannot be keyed, it cannot be told apart from a second such traveler, and no
-  file can correspond to it. Ask the operator for a name that resolves.
+  file can correspond to it. Ask the operator for a name that resolves, naming
+  `/trip-record group`, through which that row can come off instead.
 - **C3 — the name lands on a reserved key.** Refuse the entry and report it,
   quoting the name and the reserved key it collided with. Admitting it is the
   fail-open: an entry on a reserved key is dropped by the publish guard's parse,
   and its values never enter the non-publishable class.
 - **C4 — two roster names share one key.** Stop and report **both** names and the
-  shared key, and ask the operator to disambiguate the display name. **Never mint
-  a suffix** and never merge the two — the engine does not invent identity, and a
-  minted suffix would break the correspondence for both of them.
+  shared key, and ask the operator to disambiguate the display name, naming
+  `/trip-record group`, through which either row can come off instead. **Never
+  mint a suffix** and never merge the two — the engine does not invent identity,
+  and a minted suffix would break the correspondence for both of them.
+
+**A pass that stops reports every stop it meets**, not only the first: C2 and C4
+here, and the stop below where a shared key carries differing display names.
 
 **`unresolved` is a third condition, and it is not `PROFILE MISSING`.** The two
 fallbacks above are both *"no file"* — a profile not filed yet, and a party member
@@ -942,6 +958,28 @@ who will never file one. C1 is *"a file that does not correspond"*: the profile
 exists and you read it. Reporting it as `PROFILE MISSING` would send the operator
 to collect a profile they already have, so keep the two markers distinct and use
 the one that names what actually happened.
+
+**Where a `[THIRD-PARTY]` entry — one admitted on this pass, or one carried —
+shares its key with the roster.** Assert it on the same pass, once per such row:
+that row and that entry are one person, never a second entry, and one record
+stands. **If a usable profile — one the person has filled, not the intake
+template left unfilled — whose stem reduces to that key is on file**, it
+supersedes the entry — *supersede, do not merge*, above — and the row is that
+traveler's like any other. **If none is**, that entry is that row's one entry,
+never a `PROFILE MISSING` entry beside it, and you write **`[ROSTERED]`** on its
+heading on this pass: that mark is how the count `skills/trip-record/SKILL.md`
+§ *Roster standing of a third-party member* defines leaves out a person the
+roster already names, so no count takes them twice. The row is the stale half
+that sub-section takes off: report it, naming the row, saying that the person
+still travels so its removal is not a departure, and naming
+`/trip-record group`; never remove it yourself — the roster is not yours to
+write. **Where the file whose stem reduces to that key is the intake template
+left unfilled**, the row is not stale: report a *pending profile* instead,
+naming the row and the file, and say that the row stays until the person fills
+it. **Where the display names differ although the keys agree**, a
+shared key is no proof of one person: stop and report both names
+and the key, as C4 does, naming `/trip-record group`, through which
+the row can come off instead, and join nothing.
 
 ### Versioned artifacts — the tolerant read, and the write you must decline
 

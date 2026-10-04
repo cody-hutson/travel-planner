@@ -1,6 +1,14 @@
 # ADR-025: The engagement model over time — the axis the engine already computes, what carries across a boundary, and identity continuity
 
-- **Status:** Accepted (2026-09-23)
+- **Status:** Accepted (2026-09-23). **Superseded in part (2026-09-28)** — an amendment that
+  records a **superseding decision** rather than a defect in this document.
+  [ADR-041](ADR-041-third-party-roster-standing.md) supersedes in part, for exactly one integer,
+  never-carry 2 of § *Decision* 3 — C12 to any render, in any form including anonymized: the
+  published `- **Total travelers:**` may count the party members the operator recorded through
+  `/trip-record person`, a count derived from `outputs/traveler-model.md`. The rest of
+  never-carry 2, the other never-carries and every other decision stand. The superseded text is
+  retained as decided, with an inline marker pointing forward, per `reference/adr/README.md`
+  § *Convention*.
 - **Deciders:** repo maintainer
 - **Driving work:** the time slice of the *traveller journey* milestone. This record is that
   milestone's second head decision gate, standing beside `ADR-026` in the shape
@@ -474,7 +482,7 @@ exercise all three."* `EB-0`'s row **is** those three behaviours, never collapse
 | # | What never carries | Across | Why |
 |---|---|---|---|
 | 1 | every `rebuilt-each-synthesis` class | `EB-0` | regeneration is its declared scope; carrying it would be the shadow-state defect its own class name forecloses |
-| 2 | **C12, C14, C22 and C23** to any render, **in any form including anonymized** | every boundary | the whole of the `internal-hard` class at its live membership; C22 and C23 are the cross-trip person and group records, and omitting them would narrow a privacy rule |
+| 2 | **C12, C14, C22 and C23** to any render, **in any form including anonymized** | every boundary | the whole of the `internal-hard` class at its live membership; C22 and C23 are the cross-trip person and group records, and omitting them would narrow a privacy rule. *(Superseded in part: [ADR-041](ADR-041-third-party-roster-standing.md) carries one integer derived from C12 to the render — the count of party members recorded through `/trip-record person`, as a summand of the published `- **Total travelers:**`; the rest of this row stands.)* |
 | 3 | a `both-marks` entry | `EB-2`, **permanently** | `ADR-014`'s cross-trip consent refusal closes rather than defers |
 | 4 | a `DEST`-class field value | `EB-2` | its declared scope is one destination |
 | 5 | a value of this axis itself | every boundary | it is a **present reading**, re-derived each synthesis, never a stored state to carry |

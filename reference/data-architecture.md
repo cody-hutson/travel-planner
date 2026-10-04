@@ -1519,7 +1519,7 @@ with no site carries no row.
 30      reference/adr/ADR-012-people-library.md
 1       reference/command-reference.md
 19      reference/data-architecture.md
-11      reference/data-model.md
+10      reference/data-model.md
 1       reference/replan-protocol.md
 1       reference/schemas/README.md
 1       reference/schemas/cost-estimate.md
@@ -1530,7 +1530,7 @@ with no site carries no row.
 1       reference/site-layout-spec.md
 4       skills/trip-decommission/SKILL.md
 7       skills/trip-new/SKILL.md
-14      skills/trip-record/SKILL.md
+12      skills/trip-record/SKILL.md
 6       skills/trip/SKILL.md
 1       templates/person-intake.template.md
 1       templates/traveler-intake.template.md

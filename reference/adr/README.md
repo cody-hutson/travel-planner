@@ -118,3 +118,4 @@ carries the account.
 | [ADR-038](ADR-038-contact-emergency-group-visibility.md) | Contact and emergency information on the private site — what the group sees, the emergency contact as a third party, and the carrier | Accepted |
 | [ADR-039](ADR-039-interview-conduct-bundled-with-the-verb.md) | The interview's shared conduct is bundled with the interviewer verb — a file beside its command file, superseding ADR-023 D1.1 in part | Accepted |
 | [ADR-040](ADR-040-transcript-only-return-and-save.md) | What a transcript-only channel returns, and who saves it — superseding ADR-022 D6.1's tier-T row in part | Accepted |
+| [ADR-041](ADR-041-third-party-roster-standing.md) | A third-party member's roster standing — no `## Group` row, and one unnamed place in `Total travelers` | Accepted |

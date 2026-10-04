@@ -1,6 +1,15 @@
 # ADR-030: What the private trip site may show — the coordination test, the share mark, and nothing personal on a public page
 
-- **Status:** Accepted (2026-09-27)
+- **Status:** Accepted (2026-09-27); **amended once (2026-09-28)**. **First amendment** — it
+  records a **superseding decision** rather than a defect in this document.
+  [ADR-041](ADR-041-third-party-roster-standing.md) supersedes in part, for exactly one integer,
+  § 2's exclusion of people who did not fill in their own form, as it applies to a headcount, and
+  § 4's source binding, as it would bind that count to the traveller model's class: the published
+  `- **Total travelers:**` may count each party member the operator recorded through
+  `/trip-record person` as one unnamed member, a count derived from `outputs/traveler-model.md`.
+  Nothing else about such a person reaches any page. The rest of § 2 and § 4, and every other
+  decision, stand. The superseded text is retained as decided, with an inline marker pointing
+  forward, per `reference/adr/README.md` § *Convention*.
 - **Deciders:** repo maintainer
 - **Driving work:** #1242, one of the records of the *The site serves every phase: the founding
   decision* milestone, beside the #1296 card's records, which [the site phase-model
@@ -179,8 +188,12 @@ record's call.
 - costs and money: the cost estimate, comfort range, splurge appetite, budget caps;
 - identification: the passport field;
 - needs and must-haves (health). The plan honours them without displaying them (§ 5);
-- **people who did not fill in their own form**, including a traveller's `Party` entry. `ADR-006`
-  stands. Two readings are recorded so the lists cannot contradict each other. A roster name is
+- **people who did not fill in their own form**, including a traveller's `Party` entry. *(Superseded
+  in part — first amendment: [ADR-041](ADR-041-third-party-roster-standing.md) admits one integer,
+  the count of party members recorded through `/trip-record person`, into the published `- **Total
+  travelers:**`, one unnamed member each; nothing else about such a person reaches any page, and the
+  rest of this row stands.)* `ADR-006` stands. Two readings are recorded so the lists cannot
+  contradict each other. A roster name is
   *who is coming* for every member, so it shows for everyone and nothing else about a person who did
   not file does — the operator's decision on the site record's design sub-task, #1388. And an
   emergency contact's name, shown on the traveller's attestation that the contact agreed, is the
@@ -230,7 +243,11 @@ or `Trip vibe`, and everything the destination shortlist derives from them — c
 and lover names, vetoes, vibe lines, equity notes, coverage lines — is bound by the class of those
 fields' source of record, `outputs/traveler-model.md`, in every artifact that carries it and whichever
 file it was read from. The shortlist writer's fallback read of `travelers/<traveler>.md`, before the
-model is built, changes where the bytes come from and never the bound.
+model is built, changes where the bytes come from and never the bound. *(Superseded in part — first
+amendment: [ADR-041](ADR-041-third-party-roster-standing.md) leaves one integer outside this
+binding, the count of `outputs/traveler-model.md` headings carrying both `[OPERATOR-PROVIDED]` and
+`[THIRD-PARTY]` and not `[ROSTERED]`, which reaches the published `- **Total travelers:**` as a
+summand; every value this paragraph binds stays bound.)*
 
 **A-1 — a value from the person record, at the value level.** A value from `people/<person>.md`
 carries the person record's class, `internal-hard`, in every artifact that carries it, by union with
