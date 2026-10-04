@@ -3,6 +3,90 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.50.0] — 2026-10-04 — A surface's cost is a stated property
+
+Until now nothing in the repository said what a file may cost to load. A verb's file, an agent's
+prompt and a reference document each cost whatever their subject happened to require, and the one
+budget the corpus recorded said of itself that nothing enforced it. `CLAUDE.md` said an agent's
+research is appended and never deleted, and nothing said where that rule stops, so an agent editing
+one of the engine's own files could read it as a rule for every file. Accepted decision records kept
+growing after acceptance, with corrections, the accounts of amendments and whole mechanisms written
+in beside their decisions, and nothing said what an amendment may add or where its account goes.
+Nothing mapped which capabilities the decision records cover. This release states each of these
+once, on figures re-derived at a named commit before any file changed. No verb plans, records or
+publishes a trip differently: what changes is how the engine's own files are classed, edited and
+decided about.
+
+**Every tracked markdown file now has a declared load class.** `reference/load-class-model.md`
+names who loads a file and when — the harness, a verb before it acts, the session that dispatches
+an agent, a step that names a file, the guard suites, the release procedure and a person browsing —
+and the classes those edges make, from `listed` down to `browsed`. Load cost is a property of that
+edge, not of the file, so a class is never a place in the tree: a file keeps its class while the
+same consumer loads it at the same moment, and changes class when that stops being true. The rule
+that puts every file in exactly one class reads only what the tree says about the file, its own
+opening block and the files that name it. A file no clause reaches is unclassified, and that is a
+finding about the file: nothing loads it, nothing cites it, and no reader has been named for it.
+Beside each class stands its budget posture, and a parameter table carries the byte figures a size
+assertion is to read. The document declares and checks nothing, and the charter's file map lists
+it.
+
+**Editing an engine file reconciles; it never accretes.** A new § *Where the append rule stops*,
+directly after § *Output Versioning* in `CLAUDE.md`, says the append rule binds a trip's agent
+outputs and nothing else. § *Editing an engine file — reconcile, never accrete*, beside
+§ *Write ownership*, says what binds a tracked file that states how the engine behaves instead:
+edit the statement rather than annotating beside it, search for an existing home before adding a
+normative sentence, and declare what was removed beside what was added, in the change's own commit
+message or pull request rather than in the file. The release log, the decision records and the
+worked examples keep their own conventions. § *Output Versioning* itself is unchanged byte for byte,
+so `/trip research` derives the same agent keys from it as before.
+
+**What an Accepted decision record may gain after acceptance now has an answer.** `ADR-042` decides
+what an amendment may add, the form an amended record takes and where settled design belongs, and
+`reference/adr/README.md` § *Convention* states the rule an author follows. An amendment is bounded
+by what it states, never by its size: it corrects a claim the record already made, narrows a scope,
+repairs a citation or records a decision taken in another record, and adds nothing else a reader
+must follow, so a new decision is a new record. Where the corrected claim is settled design — a
+table, a grammar, a procedure, a measured boundary — the correction is a sentence naming where that
+shape is stated, in the specification document for its subject under `reference/` or in the suite
+that pins it, and the record never restates the shape. Each new amendment's account takes the
+consolidated-decision form: a dated entry in a closing `## Amendment history` section after the
+record's references, so no new account stands in the `Status:` line or in a section, and a corrected
+claim stands corrected in the sentence that makes it. Accounts written before this stay where they
+stand until a consolidation moves them, and nothing schedules one. No consolidation, relocation or
+reduction removes or rewords a rejected alternative or the reason it was rejected. The rule binds a
+record from its ratification on `main`: a change to a record that is still `Proposed`, or accepted
+only on a release's branch, is a revision and not an amendment. The new record restructures no
+existing record.
+
+**The decision records come with a map of what they cover.** `reference/adr/coverage-map.md` lists
+each capability domain the tracker declares and the records that bind it — decided for it, bound by
+a rule another record states, or reached only by a record whose scope is every capability of its
+kind — and gives each domain in that last state, or bound by none, a disposition: a record is
+warranted, or the domain is out of scope for the decision tier and its design is held elsewhere. It
+names which specification documents cite the records that bind their subject. Every binding, figure
+and verdict in it was measured at `e743113` by a method it states, so it is re-derived rather than
+kept up by hand, and a record added after that commit is found through the index. The index in
+`reference/adr/README.md` now groups its rows by subsystem, a table for each, with every record in
+the group for the subsystem whose capability its `Driving work` names, so the records that bind a
+subsystem can be found without reading all of them. A new record's row goes at the foot of its
+group's table.
+
+**The figures were measured again first.** Before any file changed, the read-cost figures this
+release's cards rest on were re-derived at a named commit, each figure that had moved by more than a
+tenth was restated on the card that carries it, and the designs were built on the re-derived
+figures. That measurement is kept with the release's records on the tracker and adds no file to the
+repository.
+
+**The honest limits.** This release adds no check. The load-class model runs nothing, and no suite
+in the repository classifies a file, so whether a newly added file resolves to a class is known only
+when someone runs the classification rule over the tree. Nothing checks a clause of `ADR-042`
+either: a reviewer applies its bound, and the consolidated-decision form is checkable by reading
+alone. No check enforces the reconcile rule: a reviewer checks its first and last clauses against
+the change, and searching for an existing home before adding a sentence leaves no trace either way.
+That `/trip research` still derives the same agent keys was shown by a run that follows the
+derivation the verb performs, not by a live run of the verb end to end. `ADR-042` lands `Proposed`,
+and a later change on `main` sets it `Accepted`.
+
 ## [0.49.0] — 2026-10-03 — Erasure reaches every name, and a third-party member holds one standing
 
 Until now `/trip-record erase` rewrote a person's name only where its reach table pointed, and among
