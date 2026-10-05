@@ -325,10 +325,11 @@
 #        for this group: every set is read
 #   NC   the never-carries of ADR-025 § Decision 3, graded as class facts at their live
 #        membership: a rebuilt-each-synthesis instance carrying prior passes (EB-0) — graded
-#        on tracked instances only, never on conduct that would accumulate into one; and
+#        on tracked instances only, never on conduct that would accumulate into one;
 #        both-marks values and DEST-class fields in cross-trip records, and every store
-#        writer's both-marks guard (EB-2). Every arm carries a control that must fire and
-#        one that must not
+#        writer's both-marks guard (EB-2); and the engagement axis's tokens on every
+#        stored-value surface, its carrier included. Every arm carries a control that must
+#        fire and one that must not
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -16678,6 +16679,257 @@ if [ "$NC_OK" -eq 1 ]; then
     PASS "NC3wn: MUST-NOT-FIRE — on the real verb file $NC3W_NNEAR verb(s) name a person-store record path only on a read declaration or in prose and stay outside the writer set ($(nc3w_set "$NC3W_OUT" NEAR)), and $NC3W_NTP verb(s) carry the third-party mark in a table row that is not a refusal and stay outside the guarded set ($(nc3w_set "$NC3W_OUT" TPNEAR)). Neither direction emits a finding"
   else
     FAIL "NC3wn: the real verb file emits a finding where none was expected: $(nc3w_msg "$NC3W_FIND" NC3w) $(nc3w_msg "$NC3W_FIND" NC3wg)"
+  fi
+fi
+
+# ── NC-5 — never-carry 5: a value of the engagement axis, stored anywhere ─────────────────
+#
+# The axis is a PRESENT READING, re-derived each synthesis. ADR-025 predicts this is the
+# never-carry a later slice will want to break, because a stored value is convenient. So the
+# arm does not look for a carry: it looks for the VALUE, on every surface where a stored one
+# could live — the instances, and also the emitters, the shape declarations, the conduct and
+# the executables that would produce or prescribe one.
+#
+# THE TOKENS ARE READ FROM THE DECLARING FENCE, AND THIS FILE SPELLS NONE OF THEM. That is a
+# correctness requirement as well as a principle: the executables are one of the surfaces
+# scanned, this file among them, so a token written here would be a finding against itself.
+#
+# THE MATCH is the whole token, case-sensitive, with no letter, digit, underscore or hyphen
+# on either side — never a word-boundary operator, which matches inside a longer hyphenated
+# token. Arm NC5k plants a token with a hyphenated suffix and requires silence.
+#
+# THE SURFACE IS A POSITIVE LIST, built from the tracked file list and the validator's own
+# selector, so an instance is what the selector says it is and never what a fresh glob finds:
+#   INST     every tracked file the selector resolves to a class — the instances under
+#            examples/, and a store skeleton where the selector resolves one
+#   UNM      a file under examples/ the selector neither excludes nor resolves
+#   SKEL     a store skeleton the selector does not resolve
+#   EMIT     templates/*.md          SCHEMA   reference/schemas/*.md
+#   CONDUCT  agents/*.md, every markdown file under skills/, the carrier and the charter
+#   SCRIPT   scripts/*
+# NOT SCANNED, deliberately: reference/adr/ and the top-level reference documents, where the
+# axis is DECLARED and discussed; the changelog and the repository's own front matter; and
+# the workflows. Arm NC5n1 plants a token under reference/adr/ and requires silence.
+#
+# Each finding names the class and the boundary, read from the resolved class's own row.
+NC5_SKEL='trips/README.md people/README.md groups/README.md'
+NC5_FENCE='phase-axis-declaration'
+NC5_CARRIER='C12'
+nc5_tokens() {
+  awk -v info='```'"$NC5_FENCE" '
+    $0 == info { on = 1; next }
+    on && substr($0, 1, 3) == "```" { on = 0 }
+    on { l = $0; sub(/^[ \t]+/, "", l); if (l == "" || substr(l, 1, 1) == "#") next; split(l, F, /[ \t]+/); print F[1] }' "$1"
+}
+# nc5_both <adr-025> <tokens> — the token whose row in the axis-value table gives a shipped
+# condition naming BOTH provenance marks: the value the declared carrier would hold.
+nc5_both() {
+  awk -v a="$NC_OP_MARK" -v b="$NC_TP_MARK" '
+    FILENAME == ARGV[1] { if ($1 != "") tok[$1] = 1; next }
+    /^\|/ {
+      if (split($0, F, "|") < 4) next
+      if (!(index(F[3], a) && index(F[3], b))) next
+      if (match(F[2], /`[^`]+`/)) { t = substr(F[2], RSTART + 1, RLENGTH - 2); if ((t in tok) && !n++) print t }
+    }' <(printf '%s\n' "$2") "$1"
+}
+# nc5_surface <root> <files> <selector-output> <patterns> — "<kind>\t<class>\t<path>".
+nc5_surface() {
+  {
+    printf '%s\n' "$4" | awk -F'\t' 'NF >= 4 { print "P\t" $1 "\t" $2 "\t" $4 }'
+    printf '%s\n' "$3" | awk -F'\t' 'NF == 4 { print "S\t" $1 "\t" $3 } NF == 2 && $1 == "UNMATCHED" { print "U\t" $2 }'
+    printf '%s\n' "$2" | awk 'NF { print "F\t" $0 }'
+  } | awk -F'\t' -v root="$1" -v skel=" $NC5_SKEL " '
+    function art_of(f,   line, k, v, on) {
+      on = 0; v = ""
+      while ((getline line < f) > 0) {
+        if (line == "---") { if (on) break; on = 1; continue }
+        if (!on) break
+        if (index(line, "artifact:") == 1) { v = substr(line, 10); sub(/^[ \t]+/, "", v); sub(/[ \t\r]+$/, "", v) }
+      }
+      close(f); return v
+    }
+    $1 == "P" { byschema[$4] = $2; byart[$3] = $2; next }
+    $1 == "S" { print "INST\t" $2 "\t" $3; next }
+    $1 == "U" { if (index($2, "examples/") == 1) print "UNM\t-\t" $2; else if (index(skel, " " $2 " ")) print "SKEL\t-\t" $2; next }
+    $1 == "F" {
+      p = $2
+      if (p ~ /^templates\/[^\/]+\.md$/) { a = art_of(root "/" p); c = (a in byart) ? byart[a] : "-"; print "EMIT\t" c "\t" p }
+      else if (p ~ /^reference\/schemas\/[^\/]+\.md$/) { c = (p in byschema) ? byschema[p] : "-"; print "SCHEMA\t" c "\t" p }
+      else if (p ~ /^agents\/[^\/]+\.md$/ || p ~ /^skills\/.+\.md$/ || p == "SKILL.md" || p == "CLAUDE.md") print "CONDUCT\t-\t" p
+      else if (p ~ /^scripts\/[^\/]+$/) print "SCRIPT\t-\t" p
+    }'
+}
+# nc5_scan <root> <tokens> <surface> — every whole-token occurrence, per line.
+# Records: HIT <kind> <class> <path> <line> <token> · UNREAD <path> · SCANNED <n>.
+nc5_scan() {
+  {
+    printf '%s\n' "$2" | awk 'NF { print "T\t" $1 }'
+    printf '%s\n' "$3"
+  } | awk -F'\t' -v root="$1" '
+    function hastok(line, tok,   pos, p, q, a, b) {
+      pos = 1
+      while ((p = index(substr(line, pos), tok)) > 0) {
+        q = pos + p - 1
+        a = (q == 1) ? "" : substr(line, q - 1, 1); b = substr(line, q + length(tok), 1)
+        if (a !~ /[A-Za-z0-9_-]/ && b !~ /[A-Za-z0-9_-]/) return 1
+        pos = q + 1
+      }
+      return 0
+    }
+    $1 == "T" { tok[++nt] = $2; next }
+    NF == 3 {
+      f = root "/" $3; ln = 0
+      while ((r = (getline line < f)) > 0) {
+        ln++
+        for (i = 1; i <= nt; i++) if (hastok(line, tok[i])) printf "HIT\t%s\t%s\t%s\t%d\t%s\n", $1, $2, $3, ln, tok[i]
+      }
+      close(f)
+      if (r < 0) printf "UNREAD\t%s\n", $3; else scanned++
+    }
+    END { printf "SCANNED\t%d\n", scanned }'
+}
+# nc5_msg <scan-output> <class-rows> <rebuilt-token> <eb0> <eb2> <cross-classes> <carrier>
+nc5_msg() {
+  {
+    printf '%s\n' "$2" | awk -F'\t' 'NF >= 6 && $1 ~ /^[0-9]+$/ { print "C\tC" $1 "\t" $4 "\t" $6 }'
+    printf '%s\n' "$1"
+  } | awk -F'\t' -v never="$3" -v eb0="$4" -v eb2="$5" -v cross=" $6 " -v carrier="$7" -v fence="$NC5_FENCE" '
+    $1 == "C" { L[$2] = $3; P[$2] = $4; next }
+    $1 == "HIT" {
+      n = split($4, Q, "/"); name = Q[n]; k = $2; c = $3
+      if (k == "INST") {
+        head = sprintf("NC5: token %s (engagement axis, read from ADR-025%ss %s fence) in %s:%d — an instance of ", $6, "\047", fence, name, $5)
+        if (c == carrier) printf "%s%s, the axis%ss declared carrier: never-carry 5 — a stored value of the axis, carried across %s inside a both-marks entry the carrier carries forward verbatim\n", head, c, "\047", eb0
+        else if (index(cross, " " c " ")) printf "%s%s (cross-trip): never-carry 5 — an axis value carried across %s\n", head, c, eb2
+        else {
+          b = ""
+          if (L[c] != never) b = eb0
+          if (P[c] == "bound" || P[c] == "output") b = (b == "") ? "to the render" : b " and to the render"
+          else if (b != "") b = b " (persisted across synthesis)"
+          if (b == "") b = "every boundary"
+          printf "%s%s (%s, %s): never-carry 5 — an axis value carried %s%s\n", head, c, L[c], P[c], (substr(b, 1, 3) == "to " ? "" : "across "), b
+        }
+      }
+      else if (k == "UNM")  printf "NC5: token %s (engagement axis, read from ADR-025%ss %s fence) in %s:%d — an unclassed fixture file: never-carry 5 — an axis value carried across every boundary\n", $6, "\047", fence, name, $5
+      else if (k == "EMIT")   printf "NC5s: token %s in %s:%d — an emitter of %s: never-carry 5 — a stored value of the engagement axis\n", $6, name, $5, c
+      else if (k == "SCHEMA") printf "NC5s: token %s in %s:%d — a schema declaring %s: never-carry 5 — a stored value of the engagement axis\n", $6, name, $5, c
+      else if (k == "CONDUCT") printf "NC5s: token %s in %s:%d — conduct: never-carry 5 — a stored value of the engagement axis, across every boundary\n", $6, name, $5
+      else if (k == "SCRIPT") printf "NC5s: token %s in %s:%d — a script: never-carry 5 — a stored value of the engagement axis, across every boundary\n", $6, name, $5
+      else printf "NC5s: token %s in %s:%d — a store skeleton: never-carry 5 — a stored value of the engagement axis, across every boundary\n", $6, name, $5
+    }'
+}
+
+if [ "$NC_OK" -eq 1 ]; then
+  NC5_D="$NC_W/nc5"; mkdir -p "$NC5_D"
+  NC5_TOKENS="$(nc5_tokens "$NC_ADR025" 2>/dev/null)"
+  NC5_NTOK="$(nc_count "$NC5_TOKENS")"
+  NC5_T1="$(awk 'NF && !n++ { print $1 }' <<<"$NC5_TOKENS")"
+  NC5_T2="$(awk 'NF && n++ == 1 { print $1 }' <<<"$NC5_TOKENS")"
+  NC5_TB="$(nc5_both "$NC_ADR025" "$NC5_TOKENS" 2>/dev/null)"
+  NC5_FILES="$(cd "$ROOT" && git ls-files 2>/dev/null)"
+  NC5_PATS="$(va_corpus_patterns "$ROOT" 2>/dev/null)"
+  NC5_SURF="$(nc5_surface "$ROOT" "$NC5_FILES" "$NC_SEL" "$NC5_PATS")"
+  NC5_NSURF="$(nc_count "$NC5_SURF")"
+  NC5_KINDS="$(awk -F'\t' 'NF == 3 { k[$1]++ } END { for (x in k) printf "%s %d · ", x, k[x] }' <<<"$NC5_SURF" | tr -s ' ')"
+  NC5_NEX="$(awk -F'\t' 'NF == 3 && index($3, "examples/") == 1 { n++ } END { print n + 0 }' <<<"$NC5_SURF")"
+  NC5_CROSSCLS="$(awk -F'\t' 'NF == 2 && !s[$1]++ { printf "%s ", $1 }' <<<"$NC_CROSS")"
+  NC5C_TOK="$(awk -F'\t' -v c="${NC5_CARRIER#C}" '$1 == c { print $6 }' <<<"${CA_ROWS:-}")"
+  nc5_text() { nc5_msg "$1" "${CA_ROWS:-}" "$NC1_CLASS" "$NC1_ACROSS" "$NC3_ACROSS" "$NC5_CROSSCLS" "$NC5_CARRIER"; }
+
+  NC5_OUT="$(nc5_scan "$ROOT" "$NC5_TOKENS" "$NC5_SURF")"
+  NC5_HITS="$(nc_n "$NC5_OUT" HIT)"; NC5_BAD="$(nc_n "$NC5_OUT" UNREAD)"
+  NC5_SC="$(awk -F'\t' '$1 == "SCANNED" { v = $2 } END { print v + 0 }' <<<"$NC5_OUT")"
+  NC5C_OUT="$(nc5_scan "$ROOT" "$NC5C_TOK" "$NC5_SURF")"
+  NC5C_HITS="$(nc_n "$NC5C_OUT" HIT)"
+  NC5C_FILES="$(awk -F'\t' '$1 == "HIT" && !s[$4]++ { n++ } END { print n + 0 }' <<<"$NC5C_OUT")"
+  if [ "$NC5_NTOK" -eq 0 ] || [ -z "$NC5_T1" ] || [ -z "$NC5_T2" ] || [ -z "$NC5_TB" ] || [ "$NC5_NSURF" -eq 0 ] || [ "$NC5_SC" -eq 0 ] || [ "$NC5_BAD" -gt 0 ] || [ -z "$NC5C_TOK" ]; then
+    FAIL "NC5: NOT EVALUATED — $NC5_NTOK axis token(s) read from the \`$NC5_FENCE\` fence (the both-marks value resolved: $([ -n "$NC5_TB" ] && printf yes || printf no)); $NC5_NSURF file(s) on the surface, $NC5_SC scanned, $NC5_BAD unreadable; sensitivity token '${NC5C_TOK:-<none>}'. An empty or unreadable population is a failure, never a pass"
+  elif [ "$NC5_HITS" -gt 0 ]; then
+    FAIL "$(nc5_text "$NC5_OUT" | tr '\n' ' ')"
+  elif [ "$NC5C_HITS" -eq 0 ]; then
+    FAIL "NC5: BROKEN PROBE — the sensitivity arm returned zero: the same scanner asked for \`$NC5C_TOK\` found nothing across $NC5_SC file(s), so the zero for the axis tokens is an empty scan rather than a clean tree. The probe is reported unusable, never the subject clean"
+  else
+    PASS "NC5: none of the $NC5_NTOK axis token(s), read from ADR-025's \`$NC5_FENCE\` fence and spelled nowhere in this file, occurs as a whole token on any stored-value surface — $NC5_SC file(s) scanned: $NC5_KINDS$NC5_NEX of them under examples/. Never-carry 5 holds on the tree: no instance, emitter, shape declaration, conduct file or executable carries a value of the axis. The zero is a measurement: the sensitivity arm NC5c found $NC5C_HITS occurrence(s) of another corpus token with the same scanner on the same run"
+  fi
+  if [ "$NC5C_HITS" -gt 0 ]; then
+    PASS "NC5c: SENSITIVITY — the same scanner, asked for \`$NC5C_TOK\` (the carrier class's own publish value, read from § 1.1), finds $NC5C_HITS occurrence(s) in $NC5C_FILES file(s) of the same surface. A token on this surface is something the scan sees"
+  else
+    FAIL "NC5c: SENSITIVITY returned zero for '${NC5C_TOK:-<none>}' across $NC5_SC file(s), so NC5's zero has no control behind it"
+  fi
+
+  # nc5_arm <id> <kind> <class> <file-under-NC5_D> <want-hits> <want-text> <integrity 0|1> <label>
+  nc5_arm() {
+    local id="$1" kind="$2" cls="$3" rel="$4" wanth="$5" want="$6" integ="$7" label="$8"
+    local out text hits has
+    out="$(nc5_scan "$NC5_D" "$NC5_TOKENS" "$kind$VA_TAB$cls$VA_TAB$rel")"
+    hits="$(nc_n "$out" HIT)"; text="$(nc5_text "$out")"
+    has="$(awk -v w="$want" '$0 == w { n++ } END { print n + 0 }' <<<"$text")"
+    if [ "$integ" -ne 1 ]; then
+      FAIL "$id: fixture integrity — the planted input is not what the arm names ($label), so the verdict below would prove nothing"
+    elif [ "$wanth" -eq 0 ] && [ "$hits" -eq 0 ] && [ "$(awk -F'\t' '$1 == "SCANNED" { v = $2 } END { print v + 0 }' <<<"$out")" -eq 1 ]; then
+      PASS "$id: MUST-NOT-FIRE — $label: the file is scanned and no finding is emitted"
+    elif [ "$wanth" -gt 0 ] && [ "$hits" -eq "$wanth" ] && [ "$has" -eq 1 ]; then
+      PASS "$id: MUST-FIRE — $label is flagged, in the predicted words: $want"
+    else
+      FAIL "$id: did not behave as predicted ($label) — wanted $wanth finding(s)${want:+ including '$want'}, got $hits: $(printf '%s' "$text" | tr '\n' ' ')"
+    fi
+  }
+  nc5_lines() { awk 'END { print NR }' "$1"; }
+  NC5_W1="$(awk -F'\t' '$1 == "C1" && !n++ { print $2 }' <<<"${CV_CLASS_WITNESS:-}")"
+  NC5_W12="$(awk -F'\t' -v c="$NC5_CARRIER" '$1 == c && !n++ { print $2 }' <<<"${CV_CLASS_WITNESS:-}")"
+  NC5_SRC_OK=0
+  [ -n "$NC5_W1" ] && [ -r "$ROOT/$NC5_W1" ] && [ -n "$NC5_W12" ] && [ -r "$ROOT/$NC5_W12" ] && [ -n "$NC4F_SRC" ] && [ -r "$ROOT/$NC4F_SRC" ] \
+    && [ -r "$ROOT/templates/trip-context.template.md" ] && [ -r "$ROOT/reference/schemas/trip-context.md" ] && [ -r "$ROOT/agents/05-hub-planner.md" ] && NC5_SRC_OK=1
+  if [ "$NC5_SRC_OK" -eq 1 ] && [ -n "$NC5_T1" ] && [ -n "$NC5_T2" ] && [ -n "$NC5_TB" ]; then
+    nc5_plain() { nc5_scan "$ROOT" "$NC5_TOKENS" "INST$VA_TAB-$VA_TAB$1" | awk -F'\t' '$1 == "HIT" { n++ } END { print n + 0 }'; }
+    # NC5k — the suffixed near-miss, built from a read token.
+    printf '# Zq near-miss\n\n- **Engagement:** %s-LINKED\n- **Other:** zq_%s and %s_zq\n' "$NC5_T1" "$NC5_T1" "$NC5_T1" > "$NC5_D/k.md"
+    nc5_arm NC5k INST C1 k.md 0 '' "$([ "$(grep -c -F -- "$NC5_T1" "$NC5_D/k.md")" -eq 2 ] && printf 1 || printf 0)" "a file carrying the first axis token three times, each with a hyphen or an underscore against it"
+    # NC5f1 — an instance of a bound, persisted class.
+    { cat "$ROOT/$NC5_W1"; printf -- '- **Engagement:** %s\n' "$NC5_T1"; } > "$NC5_D/f1.md"
+    nc5_arm NC5f1 INST C1 f1.md 1 "NC5: token $NC5_T1 (engagement axis, read from ADR-025's $NC5_FENCE fence) in f1.md:$(nc5_lines "$NC5_D/f1.md") — an instance of C1 ($(awk -F'\t' '$1 == 1 { print $4 ", " $6 }' <<<"${CA_ROWS:-}")): never-carry 5 — an axis value carried across $NC1_ACROSS and to the render" "$([ "$(nc5_plain "$NC5_W1")" -eq 0 ] && printf 1 || printf 0)" "a copy of C1's witness with one bullet storing the first axis token"
+    # NC5f2 — a cross-trip record.
+    { cat "$ROOT/$NC4F_SRC"; printf -- '- **Engagement:** %s\n' "$NC5_T1"; } > "$NC5_D/f2.md"
+    nc5_arm NC5f2 INST C22 f2.md 1 "NC5: token $NC5_T1 (engagement axis, read from ADR-025's $NC5_FENCE fence) in f2.md:$(nc5_lines "$NC5_D/f2.md") — an instance of C22 (cross-trip): never-carry 5 — an axis value carried across $NC3_ACROSS" "$([ "$(nc5_plain "$NC4F_SRC")" -eq 0 ] && printf 1 || printf 0)" "a copy of a cross-trip person record with the same bullet"
+    # NC5f3 / NC5n2 — the carrier. The planted block is one both-marks entry; the two copies
+    # differ in the stored-value line alone.
+    nc5_wren() {
+      printf '\n## Wren `%s` `%s`\n\n**Source:** none — no profile was filed.\n\n' "$NC_OP_MARK" "$NC_TP_MARK"
+      printf '| Need | Category | Governing constraint |\n|------|----------|---------------------|\n| zq-needs a seated rest every hour | rest | — |\n\n'
+    }
+    { cat "$ROOT/$NC5_W12"; nc5_wren; printf -- '- **Engagement:** %s\n' "$NC5_TB"; } > "$NC5_D/f3.md"
+    { cat "$ROOT/$NC5_W12"; nc5_wren; } > "$NC5_D/n2.md"
+    nc5f3_eng="$(grep -c '^- \*\*Engagement:\*\* ' "$NC5_D/f3.md" || true)"
+    nc5f3_both="$(awk -v a="$NC_OP_MARK" -v b="$NC_TP_MARK" 'substr($0, 1, 3) == "## " && index($0, a) && index($0, b) { n++ } END { print n + 0 }' "$NC5_D/f3.md")"
+    nc5_arm NC5f3 INST "$NC5_CARRIER" f3.md 1 "NC5: token $NC5_TB (engagement axis, read from ADR-025's $NC5_FENCE fence) in f3.md:$(nc5_lines "$NC5_D/f3.md") — an instance of $NC5_CARRIER, the axis's declared carrier: never-carry 5 — a stored value of the axis, carried across $NC1_ACROSS inside a both-marks entry the carrier carries forward verbatim" "$([ "$nc5f3_eng" -eq 1 ] && [ "$nc5f3_both" -eq 1 ] && [ "$(nc5_plain "$NC5_W12")" -eq 0 ] && printf 1 || printf 0)" "a copy of the carrier's witness with one both-marks entry storing the axis value its shipped condition names"
+    # NC5n1 — a token under reference/adr/, where the axis is declared: outside the surface.
+    NC5N1_R="$NC5_D/root"; mkdir -p "$NC5N1_R/reference/adr" "$NC5N1_R/examples/zq-trip"
+    cp "$NC_ADR025" "$NC5N1_R/reference/adr/ADR-099-zq-probe.md"
+    cp "$ROOT/$NC5_W1" "$NC5N1_R/examples/zq-trip/trip-context.md"
+    NC5N1_FILES="$(cd "$NC5N1_R" && find . -type f | sed 's|^\./||' | LC_ALL=C sort)"
+    NC5N1_SURF="$(nc5_surface "$NC5N1_R" "$NC5N1_FILES" "$(va_select "$ROOT" dir . "$NC5N1_R")" "$NC5_PATS")"
+    NC5N1_OUT="$(nc5_scan "$NC5N1_R" "$NC5_TOKENS" "$NC5N1_SURF")"
+    nc5n1_planted="$(grep -c -F -- "$NC5_T1" "$NC5N1_R/reference/adr/ADR-099-zq-probe.md" || true)"
+    nc5n1_in="$(awk -F'\t' 'NF == 3 && index($3, "reference/adr/") == 1 { n++ } END { print n + 0 }' <<<"$NC5N1_SURF")"
+    if [ "$nc5n1_planted" -eq 0 ] || [ "$(nc_count "$NC5N1_SURF")" -eq 0 ]; then
+      FAIL "NC5n1: fixture integrity — the copy under reference/adr/ carries the first axis token $nc5n1_planted time(s) and the fixture root yields $(nc_count "$NC5N1_SURF") surface file(s), so the silence below would prove nothing"
+    elif [ "$nc5n1_in" -eq 0 ] && [ "$(nc_n "$NC5N1_OUT" HIT)" -eq 0 ]; then
+      PASS "NC5n1: MUST-NOT-FIRE — a copy of ADR-025, carrying every axis token, placed under reference/adr/ in a fixture root is outside the surface: the surface built over that root holds $(nc_count "$NC5N1_SURF") file(s), none under reference/adr/, and the scan emits nothing. The record that declares the axis is where its tokens belong"
+    else
+      FAIL "NC5n1: a file under reference/adr/ entered the surface ($nc5n1_in) or was flagged ($(nc_n "$NC5N1_OUT" HIT) finding(s)) — the surface is no longer the positive list it declares"
+    fi
+    # NC5n2 — the carrier copy WITHOUT the stored-value line. Its third-party mark is the stem
+    # of an axis token and must not match one.
+    nc5_arm NC5n2 INST "$NC5_CARRIER" n2.md 0 '' "$([ -s "$NC5_D/n2.md" ] && [ "$(grep -c -F -- "$NC_TP_MARK" "$NC5_D/n2.md")" -ge 1 ] && [ "$(grep -c '^- \*\*Engagement:\*\* ' "$NC5_D/n2.md" || true)" -eq 0 ] && printf 1 || printf 0)" "the same carrier copy without the stored-value line, its both-marks heading present"
+    # NC5s1..s3 — the stored value on an emitter, a shape declaration and conduct.
+    { cat "$ROOT/templates/trip-context.template.md"; printf -- '- **Engagement:** [%s|%s]\n' "$NC5_T1" "$NC5_T2"; } > "$NC5_D/s1.md"
+    nc5_arm NC5s1 EMIT C1 s1.md 2 "NC5s: token $NC5_T1 in s1.md:$(nc5_lines "$NC5_D/s1.md") — an emitter of C1: never-carry 5 — a stored value of the engagement axis" 1 "a copy of the trip-context template with a field offering two axis tokens"
+    { cat "$ROOT/reference/schemas/trip-context.md"; printf 'field engagement: optional enum [%s|%s]\n' "$NC5_T1" "$NC5_T2"; } > "$NC5_D/s2.md"
+    nc5_arm NC5s2 SCHEMA C1 s2.md 2 "NC5s: token $NC5_T1 in s2.md:$(nc5_lines "$NC5_D/s2.md") — a schema declaring C1: never-carry 5 — a stored value of the engagement axis" 1 "a copy of the trip-context schema with a field enumerating two axis tokens"
+    { cat "$ROOT/agents/05-hub-planner.md"; printf '\nRecord %s in `trip-context.md` for each traveller.\n' "$NC5_T1"; } > "$NC5_D/s3.md"
+    nc5_arm NC5s3 CONDUCT - s3.md 1 "NC5s: token $NC5_T1 in s3.md:$(nc5_lines "$NC5_D/s3.md") — conduct: never-carry 5 — a stored value of the engagement axis, across every boundary" 1 "a copy of an agent prompt with a sentence instructing that an axis token be recorded"
+  else
+    FAIL "NC5k: fixture integrity — a source the NC-5 control arms copy is unreadable, or an axis token did not resolve (witnesses '${NC5_W1:-<none>}' / '${NC5_W12:-<none>}'; tokens resolved: first $([ -n "$NC5_T1" ] && printf yes || printf no), both-marks $([ -n "$NC5_TB" ] && printf yes || printf no)). None of the ten control arms of never-carry 5 was built, so NC5's verdict has no arm behind it"
   fi
 fi
 
