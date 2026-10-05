@@ -104,6 +104,7 @@
 #     F1 excluded form · F2 unpublish without the pages-only flag · F3 forbidden flag
 #     F4 sets the plaintext override · F5 parse coverage · F6 a finding that could name
 #     only a FILE and not a (command, verb) pair — the measure that must fall to zero
+#     F7 a construct directs anything but the presence probe at a passphrase home
 #
 #   Q   the GRANT TABLES — each row paired with an allowed-tools entry, each entry with a row
 #       (group Q). A separate reader from F's TOOL-GRANT class, which classifies a body-table
@@ -233,12 +234,18 @@
 #
 # ── WHERE FENCE DEPTH APPLIES, AND WHERE IT INVERTS ──────────────────────────────
 # A HEADING and a read DECLARATION are counted only at fence depth 0: inside a fence they
-# are examples. An INVOCATION is the inverse — it is recognised only INSIDE a fence,
-# because a fenced command line is the one rendering that separates use from mention on
-# this surface. A fenced block that renders a literal script invocation inside a command
-# file is therefore reported as an invocation, and that is deliberate: an "example" that
-# spells a forbidden invocation in a command body is exactly what this limb exists to
-# catch, and no reading of the bytes tells it apart from the real thing.
+# are examples. An INVOCATION is the inverse — it is recognised INSIDE a fence, because a
+# fenced command line is a rendering that separates use from mention on this surface. A
+# fenced block that renders a literal script invocation inside a command file is therefore
+# reported as an invocation, and that is deliberate: an "example" that spells a forbidden
+# invocation in a command body is exactly what this limb exists to catch, and no reading
+# of the bytes tells it apart from the real thing.
+#
+# ONE RENDERING AT FENCE DEPTH 0 IS USE AS WELL: a line that is, whole, a single code span.
+# That is the evidence-entry rendering this surface runs as a tool call — the evidence
+# entries a command file carries are written that way — so it is read like a fenced line.
+# A code span with text around it stays a mention. Arms GF3e and GF7s plant the whole-line form and require
+# a finding; the conforming world's prose mentions sit beside them and must stay silent.
 #
 # ── COVERAGE BOUNDARY ────────────────────────────────────────────────────────────
 # What a green here does and does NOT prove.
@@ -261,9 +268,16 @@
 # OUT OF SCOPE — PROSE-RENDERED INVOCATIONS. Where a command file renders an invocation
 # as prose across a hard wrap, with a forbidden flag named inside a NEGATING sentence in
 # the same paragraph, no per-line, per-paragraph or whole-section literal scan separates
-# use from mention. The flag and arm limbs reach the FENCED rendering only. That is a
-# declared uncovered region, not an omission, and this guard prints the count of
-# invocations it attributed so a reader can see what it did and did not reach.
+# use from mention. The flag and arm limbs reach the FENCED rendering and the whole-line
+# code span, and nothing else. That is a declared uncovered region, not an omission, and
+# this guard prints the count of invocations it attributed so a reader can see what it did
+# and did not reach.
+#
+# OUT OF SCOPE — A SESSION'S OWN READ OF A PASSPHRASE HOME. F7 grades CONSTRUCTS: a fenced
+# line, or a whole-line code span, that directs a command at `.passphrase` or at
+# STATICRYPT_PASSWORD. It does not grade a session's Read-tool read of that path, which is
+# a tool some verbs grant and a standing rule bounds; nothing in a command file's text
+# separates that read from any other.
 #
 # OUT OF SCOPE — PER-VERB ARM BINDING. That verb A does not invoke verb B's granted arm
 # is a rule a file follows, not a property this guard can derive: of the surfaces this
@@ -1937,6 +1951,37 @@ adr4_check() {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────────
+# regions_load <records> · region_of <cmd> <line>
+#
+# The REGION records parse_command_file emits, held as four parallel arrays, and the lookup
+# over them: region_of sets RG_OWNER to the verb whose region holds that 1-based line of the
+# VERB FILE, or to '-' where no region holds it. One reader for the two limbs that attribute
+# a line no INV record carries — the invocation limb's whole-line code spans, and every
+# construct the passphrase-value limb reads. Both run inside a command substitution, so the
+# arrays live and die with the check that loaded them.
+# ─────────────────────────────────────────────────────────────────────────────────
+RG_C=(); RG_V=(); RG_S=(); RG_E=(); RG_OWNER='-'
+regions_load() {
+  local line c v s e
+  RG_C=(); RG_V=(); RG_S=(); RG_E=()
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      'REGION '*) IFS=' ' read -r _ c v s e _ <<< "$line"; RG_C+=( "$c" ); RG_V+=( "$v" ); RG_S+=( "$s" ); RG_E+=( "$e" ) ;;
+    esac
+  done <<< "$1"
+}
+region_of() {
+  local i idx=$(( $2 - 1 ))
+  RG_OWNER='-'
+  for (( i=0; i<${#RG_C[@]}; i++ )); do
+    if [ "${RG_C[$i]}" = "$1" ] && [ "$idx" -gt "${RG_S[$i]}" ] && [ "$idx" -lt "${RG_E[$i]}" ]; then
+      RG_OWNER="${RG_V[$i]}"; return 0
+    fi
+  done
+  return 0
+}
+
+# ─────────────────────────────────────────────────────────────────────────────────
 # invocation_check <commands_dir> <records>
 #
 # Classifies EVERY mention of the publish script into exactly one class and asserts the
@@ -1947,7 +1992,9 @@ adr4_check() {
 # RED-LIGHTS CORRECT CODE, and the predictable repair under time pressure is to weaken
 # the check until it passes — which is how a guard becomes a document. The classes:
 #
-#   INVOCATION  the line sits INSIDE a fence and BEGINS with the script path, optionally
+#   INVOCATION  the line sits INSIDE a fence — or is, whole, a single code span at fence depth
+#               0, the evidence-entry rendering this surface runs as a tool call — and BEGINS
+#               with the script path, optionally
 #               prefixed by the ONE sanctioned engine-root token (see ENGINE_ROOT_TOK). The
 #               admission is a single literal and not a class of variables: the rooted form is
 #               stripped to the bare form and then parsed by the SAME code, so F1/F2/F3 still
@@ -1975,6 +2022,14 @@ adr4_check() {
 # ATTRIBUTION. Every invocation is attributed to the region containing it and every
 # finding names (command, verb). An invocation that resolves to no region is reported as
 # F6 and counted — that count is the measure that must fall to zero.
+#
+# THE FILE SET IS EVERY MARKDOWN FILE DIRECTLY UNDER A VERB DIRECTORY, not the verb file
+# alone. A verb may bundle conduct beside its command file, and conduct a session follows is
+# as much this limb's subject as the command file is: a forbidden flag or an override set
+# there reaches the same session. A bundled file has no verb regions, so a finding in one
+# names (command, file) instead, and its lines never join an INV record's key — an INV key
+# is a line of the verb file, and a bundled file's line number could otherwise collide with
+# it. Arms GF3c and GF4c plant in a bundled file and require the finding.
 # ─────────────────────────────────────────────────────────────────────────────────
 invocation_check() {
   local cdir="$1" recs="$2"
@@ -2001,12 +2056,17 @@ invocation_check() {
     esac
   done <<< "$recs"
 
-  local f base cmd fd lno t bare rest sub tok found=0 i owner
+  regions_load "$recs"
+
+  local f base cmd fname where fd lno t cand bare rest sub tok found=0 i owner
   local -a ARGV=()
-  for f in "$cdir"/*/SKILL.md; do
+  for f in "$cdir"/*/*.md; do
     [ -e "$f" ] || continue
     found=1
-    base="$(verb_id "$f")"; cmd="/$base"
+    base="$(verb_id "$f")"; cmd="/$base"; fname="${f##*/}"
+    # The verb file is named by its command alone, as it always was; a file bundled beside it
+    # is named by command AND file, so a line number is never read against the wrong file.
+    where="$cmd"; [ "$fname" = 'SKILL.md' ] || where="$cmd/$fname"
     lno=0; fd=0
     while IFS= read -r line || [ -n "$line" ]; do
       lno=$((lno+1))
@@ -2014,7 +2074,7 @@ invocation_check() {
       t="$(trim "$line")"
 
       if [[ "$line" =~ (^|[^A-Za-z0-9_])ALLOW_PLAINTEXT[[:space:]]*= ]] || [[ "$line" =~ export[[:space:]]+ALLOW_PLAINTEXT ]]; then
-        printf 'FINDING F4 %s:%d SETS the plaintext override — ADR-007 §2 forbids it in any command file\n' "$cmd" "$lno"; rc=1
+        printf 'FINDING F4 %s:%d SETS the plaintext override — ADR-007 §2 forbids it in any command file\n' "$where" "$lno"; rc=1
       fi
 
       case "$line" in *"$SCRIPT_REL"*) ;; *) continue ;; esac
@@ -2023,17 +2083,33 @@ invocation_check() {
       if [[ "$line" == *"Bash($SCRIPT_REL"* ]]; then n_grant=$((n_grant+1)); continue; fi
       if [[ "$t" == 'allowed-tools:'* ]] || [[ "$t" == 'disallowed-tools:'* ]]; then n_grant=$((n_grant+1)); continue; fi
 
-      bare="$t"; bare="${bare#\$ }"; bare="${bare#./}"; bare="$(strip_engine_root "$bare")"
-      if [ "$fd" -eq 1 ] && { [ "$bare" = "$SCRIPT_REL" ] || [[ "$bare" == "$SCRIPT_REL "* ]]; }; then
+      # The candidate command line: a fenced line as it stands, or the content of a line that
+      # is WHOLE a single code span at fence depth 0. Any other rendering yields no candidate
+      # and falls through to the PROSE test below, exactly as before.
+      cand=''
+      if [ "$fd" -eq 1 ]; then
+        cand="$t"
+      elif [ "${#t}" -gt 2 ] && [ "${t:0:1}" = "$BT" ] && [ "${t:${#t}-1:1}" = "$BT" ]; then
+        cand="${t:1:${#t}-2}"
+        case "$cand" in *"$BT"*) cand='' ;; esac
+      fi
+      bare="$cand"; bare="${bare#\$ }"; bare="${bare#./}"; bare="$(strip_engine_root "$bare")"
+      if [ -n "$cand" ] && { [ "$bare" = "$SCRIPT_REL" ] || [[ "$bare" == "$SCRIPT_REL "* ]]; }; then
         n_inv=$((n_inv+1))
         rest="$(trim "${bare#"$SCRIPT_REL"}")"
         owner='-'
-        for (( i=0; i<${#IL[@]}; i++ )); do
-          [ "${IL[$i]}" = "$cmd:$lno" ] && owner="${IO[$i]}"
-        done
+        if [ "$fname" != 'SKILL.md' ]; then
+          owner="$fname"
+        elif [ "$fd" -eq 1 ]; then
+          for (( i=0; i<${#IL[@]}; i++ )); do
+            [ "${IL[$i]}" = "$cmd:$lno" ] && owner="${IO[$i]}"
+          done
+        else
+          region_of "$cmd" "$lno"; owner="$RG_OWNER"
+        fi
         if [ "$owner" = '-' ]; then
           n_orphan=$((n_orphan+1))
-          printf 'FINDING F6 %s:%d a fenced invocation resolves to no declared verb region, so a finding on it could name only the FILE and not a (command, verb) pair\n' "$cmd" "$lno"; rc=1
+          printf 'FINDING F6 %s:%d an invocation — a fenced line or a whole-line code span — resolves to no declared verb region, so a finding on it could name only the FILE and not a (command, verb) pair\n' "$cmd" "$lno"; rc=1
         fi
         IFS=' ' read -r -a ARGV <<< "$rest"
         sub=""
@@ -2061,7 +2137,7 @@ invocation_check() {
       fi
 
       n_unc=$((n_unc+1))
-      printf 'FINDING F5 PARSE COVERAGE — %s:%d mentions the publish script in a shape this guard cannot resolve (variable, alias or heredoc?). An unresolved mention is a failure, not a skip\n' "$cmd" "$lno"; rc=1
+      printf 'FINDING F5 PARSE COVERAGE — %s:%d mentions the publish script in a shape this guard cannot resolve (variable, alias or heredoc?). An unresolved mention is a failure, not a skip\n' "$where" "$lno"; rc=1
     done < "$f"
   done
 
@@ -2078,6 +2154,132 @@ invocation_check() {
   printf 'COUNT PROSE %d\n' "$n_prose"
   printf 'COUNT UNCLASS %d\n' "$n_unc"
   printf 'COUNT ORPHANINV %d\n' "$n_orphan"
+  return "$rc"
+}
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# passvalue_check <commands_dir> <records>
+#
+# THE PASSPHRASE-VALUE LIMB, on the routes F3 does not reach. F3 grades the ARGUMENT route:
+# `--passphrase` on a publish-script invocation. A passphrase value has two other homes — the
+# trip's `.passphrase` file and the STATICRYPT_PASSWORD variable — and a command file can
+# direct a session at either without ever naming the publish script. The standing rule on
+# the passphrase value admits exactly one touch of a home: the PRESENCE PROBE, which reads
+# the path and never the value.
+#
+#   CONSTRUCT   a non-blank fenced line, or a line that is whole a single code span at fence
+#               depth 0 — the two renderings this surface treats as use (see WHERE FENCE DEPTH
+#               APPLIES). Read in every markdown file directly under a verb directory
+#   SEGMENT     a construct split at `||`, `&&`, `|`, `;`, `$(` and the backtick, so each
+#               command of a list or a substitution is graded on its own word
+#   A HOME      a segment touches one when a whitespace-delimited token, with its quotes,
+#               redirect and grouping characters peeled, ENDS in `.passphrase`, or when the
+#               segment carries STATICRYPT_PASSWORD at all — an expansion and an assignment
+#               alike
+#   THE PROBE   the segment's command word is `test`, with `-r`, `-e`, `-f` or `-s` and a
+#               `.passphrase` operand, or with `-z` or `-n` and an operand opening
+#               "${STATICRYPT_PASSWORD. Nothing else that touches a home passes
+#
+# A code span with text around it is a MENTION and is never a construct, which is what lets a
+# command file say in prose that it reads no passphrase value. Arm G0p holds that: over the
+# conforming world it requires the two sanctioned probes counted and the prose mention not.
+#
+# WHAT A GREEN DOES NOT COVER: a home reached through a variable the segment does not spell,
+# a rendering other than the two above, and a session's own Read of the path. The first two
+# are this limb's declared residual; the third is in the coverage boundary at the top.
+# ─────────────────────────────────────────────────────────────────────────────────
+passvalue_check() {
+  local cdir="$1" recs="$2"
+  local rc=0 n_files=0 n_cons=0 n_home=0 n_probe=0
+
+  if [ ! -d "$cdir" ]; then
+    printf 'FINDING A0 the commands directory does not exist\n'
+    printf 'COUNT PASSFILES 0\nCOUNT PASSCONSTRUCTS 0\nCOUNT PASSHOMES 0\nCOUNT PASSPROBES 0\n'
+    return 1
+  fi
+  regions_load "$recs"
+
+  local nl=$'\n' dp='$('
+  local f base cmd fname owner fd lno line t cons segs seg home tok word o1 o2 probe
+  local -a SW=()
+  for f in "$cdir"/*/*.md; do
+    [ -e "$f" ] || continue
+    n_files=$((n_files+1))
+    base="$(verb_id "$f")"; cmd="/$base"; fname="${f##*/}"
+    lno=0; fd=0
+    while IFS= read -r line || [ -n "$line" ]; do
+      lno=$((lno+1))
+      if [[ "$line" == '```'* ]]; then fd=$((1-fd)); continue; fi
+      # A cheap gate before the fork: outside a fence only a line carrying a backtick can be
+      # a construct at all.
+      if [ "$fd" -eq 0 ]; then
+        case "$line" in *"$BT"*) ;; *) continue ;; esac
+      fi
+      t="$(trim "$line")"
+      cons=''
+      if [ "$fd" -eq 1 ]; then
+        cons="$t"
+      elif [ "${#t}" -gt 2 ] && [ "${t:0:1}" = "$BT" ] && [ "${t:${#t}-1:1}" = "$BT" ]; then
+        cons="${t:1:${#t}-2}"
+        case "$cons" in *"$BT"*) cons='' ;; esac
+      fi
+      [ -n "$cons" ] || continue
+      n_cons=$((n_cons+1))
+      case "$cons" in *'.passphrase'*|*'STATICRYPT_PASSWORD'*) ;; *) continue ;; esac
+
+      # Unquoted on the right-hand side deliberately: an assignment is never word-split, and
+      # a quoted pattern nested inside a double-quoted expansion is not read the same way by
+      # every bash this file runs under.
+      segs=$cons
+      segs=${segs//||/$nl}; segs=${segs//&&/$nl}; segs=${segs//|/$nl}
+      segs=${segs//;/$nl}; segs=${segs//"$dp"/$nl}; segs=${segs//"$BT"/$nl}
+      while IFS= read -r seg || [ -n "$seg" ]; do
+        IFS=' ' read -r -a SW <<< "$seg"
+        [ "${#SW[@]}" -gt 0 ] || continue
+        home=''
+        for tok in "${SW[@]}"; do
+          # peel what wraps a path token: a redirect, quotes, and grouping characters
+          while :; do
+            case "$tok" in
+              '<'*|'>'*|'"'*|"'"*|'('*|'{'*) tok="${tok:1}" ;;
+              *'"'|*"'"|*')'|*'}'|*','|*';')  tok="${tok%?}" ;;
+              *) break ;;
+            esac
+          done
+          case "$tok" in *'.passphrase') home='.passphrase' ;; esac
+        done
+        if [ -z "$home" ]; then
+          case "$seg" in *'STATICRYPT_PASSWORD'*) home='STATICRYPT_PASSWORD' ;; esac
+        fi
+        [ -n "$home" ] || continue
+        n_home=$((n_home+1))
+
+        word="${SW[0]}"; o1="${SW[1]:-}"; o2="${SW[2]:-}"
+        probe=0
+        if [ "$word" = 'test' ]; then
+          case "$o1" in
+            '-r'|'-e'|'-f'|'-s') case "$o2" in *'.passphrase'|*'.passphrase"'|*".passphrase'") probe=1 ;; esac ;;
+            '-z'|'-n')           case "$o2" in '"${STATICRYPT_PASSWORD'*) probe=1 ;; esac ;;
+          esac
+        fi
+        if [ "$probe" -eq 1 ]; then n_probe=$((n_probe+1)); continue; fi
+
+        if [ "$fname" = 'SKILL.md' ]; then
+          region_of "$cmd" "$lno"; owner="$RG_OWNER"
+          [ "$owner" = '-' ] && owner="$fname"
+        else
+          owner="$fname"
+        fi
+        [[ "$word" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]] && word='an assignment'
+        printf 'FINDING F7 (%s, %s) at line %d directs %s at a passphrase home (%s) — CH-3 R-test limb (a), standing rule 4: only the presence probe may touch a passphrase value\n' "$cmd" "$owner" "$lno" "$word" "$home"; rc=1
+      done <<< "$segs"
+    done < "$f"
+  done
+
+  printf 'COUNT PASSFILES %d\n' "$n_files"
+  printf 'COUNT PASSCONSTRUCTS %d\n' "$n_cons"
+  printf 'COUNT PASSHOMES %d\n' "$n_home"
+  printf 'COUNT PASSPROBES %d\n' "$n_probe"
   return "$rc"
 }
 
@@ -4002,7 +4204,43 @@ gen_cmd() {  # gen_cmd <dir> <tuple> <defect>
           # wrongroot — a DIFFERENT variable-bearing root. It must still be an F5: the admission
           # is one literal, not the class of things that look like a rooted path.
           wrongroot)   printf -- '```\n${ZZ_OTHER_ROOT}/%s update trips/x\n```\n\n' "$SCRIPT_REL" ;;
+          # badflagyes / badflagy / badflagplain — one alternative of F3's flag set each, so
+          # that no alternative rides on the arm of another. Planted in the `update` region
+          # ALONE: every other invoking region keeps its conforming line, and the world
+          # carries exactly one defect. badflagyes is the form F2 must stay silent on — the
+          # pages-only flag is present, so the only thing wrong with it is the flag F3 grades.
+          badflagyes|badflagy|badflagplain)
+            if [ "${IDS[$i]}" = 'update' ]; then
+              case "$defect" in
+                badflagyes)   printf -- '```\n%s unpublish trips/x --disable-pages-only --yes\n```\n\n' "$SCRIPT_REL" ;;
+                badflagy)     printf -- '```\n%s update trips/x -y\n```\n\n' "$SCRIPT_REL" ;;
+                badflagplain) printf -- '```\n%s update trips/x --plaintext\n```\n\n' "$SCRIPT_REL" ;;
+              esac
+            else
+              printf -- '```\n%s update trips/x\n```\n\n' "$SCRIPT_REL"
+            fi ;;
           *)           printf -- '```\n%s update trips/x\n```\n\n' "$SCRIPT_REL" ;;
+        esac
+      fi
+      # ── The passphrase-value limb's inputs, held in ONE verb region: the publish command's
+      # `update`. EVERY world carries the conforming three — the two sanctioned presence
+      # probes, fenced, and a prose mention of the path, which is a code span with text around
+      # it and therefore a mention and never a construct. Arm G0p reads those three.
+      #   passread — a fenced read of the passphrase file
+      #   passecho — a fenced expansion of the variable into a command's arguments
+      #   passset  — a fenced assignment of the variable
+      #   passspan — the read again, as a WHOLE-LINE code span at fence depth 0
+      #   spaninv  — a publish-script invocation carrying a forbidden flag, in that same
+      #              whole-line rendering: F3's arm for the rendering, not for the flag
+      if [ "$name" = 'trip-publish' ] && [ "${IDS[$i]}" = 'update' ]; then
+        printf -- '```\ntest -r "<data-root>/trips/<slug>/.passphrase"\ntest -z "${STATICRYPT_PASSWORD:-}"\n```\n\n'
+        printf -- 'Reads no %strips/<slug>/.passphrase%s value.\n\n' "$BT" "$BT"
+        case "$defect" in
+          passread) printf -- '```\ncat "<data-root>/trips/<slug>/.passphrase"\n```\n\n' ;;
+          passecho) printf -- '```\n%s\n```\n\n' "printf ${Q}%s\\n${Q} \"\$STATICRYPT_PASSWORD\"" ;;
+          passset)  printf -- '```\nSTATICRYPT_PASSWORD=x\n```\n\n' ;;
+          passspan) printf -- '%scat <data-root>/trips/<slug>/.passphrase%s\n\n' "$BT" "$BT" ;;
+          spaninv)  printf -- '%s%s update trips/x --yes%s\n\n' "$BT" "$SCRIPT_REL" "$BT" ;;
         esac
       fi
       if [ "$defect" = 'twosections' ] && [ "$i" -eq 0 ]; then
@@ -4028,8 +4266,32 @@ gen_cmd() {  # gen_cmd <dir> <tuple> <defect>
     fi
     if [ "$defect" = 'orphaninv' ]; then printf -- '## Not a verb\n\n```\n%s update trips/x\n```\n\n' "$SCRIPT_REL"; fi
     if [ "$defect" = 'allowplain' ]; then printf -- '```\nALLOW_PLAINTEXT=1 x\n```\n\n'; fi
+    # exportplain — F4's OTHER alternative: the override exported, with no `=` anywhere on the
+    # line, so an arm over the assignment form alone would not see it. One file only.
+    if [ "$defect" = 'exportplain' ] && [ "$name" = 'trip' ]; then printf -- '```\nexport ALLOW_PLAINTEXT\n```\n\n'; fi
     if [ "$defect" = 'varmention' ]; then printf -- 'SCRIPT=%s\n\n' "$SCRIPT_REL"; fi
   } > "$f"
+
+  # ── The file BUNDLED beside the record command's verb file. Every world that builds that
+  # command carries it, with conforming text: conduct a session follows, naming the override,
+  # a forbidden flag and the passphrase path in PROSE — three mentions, none of them a use.
+  # The invocation limb and the passphrase-value limb both read every markdown file directly
+  # under a verb directory, and these three defects are what show it:
+  #   flagconduct  — a fenced publish-script invocation carrying a forbidden flag
+  #   allowconduct — a fenced line setting the plaintext override
+  #   passconduct  — a fenced read of the passphrase file
+  if [ "$name" = 'trip-record' ]; then
+    {
+      printf -- '# Interview conduct (fixture)\n\n'
+      printf -- 'Ask one question at a time, and write each answer as it is settled.\n\n'
+      printf -- 'This conduct never sets ALLOW_PLAINTEXT, passes no %s--yes%s, and reads no %strips/<slug>/.passphrase%s value.\n\n' "$BT" "$BT" "$BT" "$BT"
+      case "$defect" in
+        flagconduct)  printf -- '```\n%s update trips/x --yes\n```\n\n' "$SCRIPT_REL" ;;
+        allowconduct) printf -- '```\nALLOW_PLAINTEXT=1 x\n```\n\n' ;;
+        passconduct)  printf -- '```\ncat "<data-root>/trips/<slug>/.passphrase"\n```\n\n' ;;
+      esac
+    } > "$d/skills/$name/interview-conduct.md"
+  fi
 }
 
 # The ONE key the fixture charter marks inference-admitted, held here because gen_charter renders
@@ -4351,6 +4613,7 @@ run_tree() {
 $(coverage_check "$recs")
 $(enum_agree_check "$recs")
 $(invocation_check "$d/skills" "$recs")
+$(passvalue_check "$d/skills" "$recs")
 $(parity_check "$d/skills")
 $(picker_check "$recs" "$d/reference/command-reference.md" "$d/skills")"
   printf '%s\n' "$recs"
@@ -4380,7 +4643,10 @@ CARRIER="$ROOT/SKILL.md"
 tree_state() {
   local p
   for p in "$MD" "$ADR" "$PUB" "$SELF" "$WF" "$DOC" "$CARRIER" "$ROOT/$RJ_ARCH_REL"; do [ -f "$p" ] && cksum < "$p"; done
-  for p in "$CDIR"/*/SKILL.md; do [ -e "$p" ] && { printf '%s ' "$(verb_id "$p")"; cksum < "$p"; }; done
+  # Every markdown file directly under a verb directory, not the verb file alone: group F
+  # reads a file bundled beside a verb file, and a surface this guard reads and does not
+  # watch is an unwatched write path.
+  for p in "$CDIR"/*/*.md; do [ -e "$p" ] && { printf '%s/%s ' "$(verb_id "$p")" "${p##*/}"; cksum < "$p"; }; done
   for p in "$ROOT"/agents/*.md; do [ -e "$p" ] && { printf '%s ' "${p##*/}"; cksum < "$p"; }; done
 }
 STATE_BEFORE="$(tree_state)"
@@ -4417,6 +4683,7 @@ COV_OUT="$(coverage_check "$RECS")"
 ENUM_OUT="$(enum_agree_check "$RECS")"
 E_OUT="$(adr4_check "$ADR" "$PUB" "$RECS")"
 F_OUT="$(invocation_check "$CDIR" "$RECS")"
+PV_OUT="$(passvalue_check "$CDIR" "$RECS")"
 P_OUT="$(parity_check "$CDIR")"
 R_OUT="$(readonly_check "$RECS" "${READONLY_KEYS[@]}" -- "${READONLY_ADJUDICATED[@]}")"
 H_OUT="$(picker_check "$RECS" "$DOC" "$CDIR")"
@@ -4427,6 +4694,7 @@ $COV_OUT
 $ENUM_OUT
 $E_OUT
 $F_OUT
+$PV_OUT
 $P_OUT
 $R_OUT
 $H_OUT
@@ -4527,7 +4795,7 @@ else PASS "E5: cross-surface — all $(getcount "$E_OUT" XLINK) of $(getcount "$
 echo
 echo "── Group F — the invocation limb, verb-attributed."
 if has_finding "$ALL" "$(surface F1)"; then FAIL "F1: a command file invokes an EXCLUDED form"; show "$ALL" 'F1'
-else PASS "F1: all $(getcount "$F_OUT" INVOCATIONS) fenced invocations carry a subcommand in the allowed set"; fi
+else PASS "F1: all $(getcount "$F_OUT" INVOCATIONS) invocations — fenced lines and whole-line code spans, in every markdown file under a verb directory — carry a subcommand in the allowed set"; fi
 if has_finding "$ALL" "$(surface F2)"; then FAIL "F2: an unpublish invocation lacks the pages-only flag"; show "$ALL" 'F2'
 else PASS "F2: every unpublish invocation carries the pages-only flag on the same invocation"; fi
 if has_finding "$ALL" "$(surface F3 F4)"; then FAIL "F3: a forbidden flag is passed, or the plaintext override is set"; show "$ALL" 'F3|F4'
@@ -4536,6 +4804,17 @@ if has_finding "$ALL" "$(surface F5)"; then FAIL "F4: PARSE COVERAGE — a scrip
 else PASS "F4: parse coverage TOTAL — $(getcount "$F_OUT" MENTIONS) mentions = $(getcount "$F_OUT" INVOCATIONS) invocations + $(getcount "$F_OUT" GRANTS) tool-grants + $(getcount "$F_OUT" PROSE) prose, $(getcount "$F_OUT" UNCLASS) unresolved"; fi
 if has_finding "$ALL" "$(surface F6)"; then FAIL "F5: an invocation finding could name only a file, not a (command, verb) pair"; show "$ALL" 'F6'
 else PASS "F5: FILE-GRANULAR FINDINGS $(getcount "$F_OUT" ORPHANINV) — the measure that must FALL TO ZERO. Every attributed invocation names (command, verb)"; fi
+# F7 — the passphrase-value limb. Its PASS stands on counts passvalue_check produced, and an
+# empty file set or an empty construct set is a failure in the NOT-EVALUATED register: a scan
+# that read nothing has not found the tree clean. The zero-findings limb is graded first so a
+# finding is shown, never masked by a population message.
+PV_FILES="$(getcount "$PV_OUT" PASSFILES)"; PV_CONS="$(getcount "$PV_OUT" PASSCONSTRUCTS)"
+PV_HOMES="$(getcount "$PV_OUT" PASSHOMES)"; PV_PROBES="$(getcount "$PV_OUT" PASSPROBES)"
+F7A="$(surface F7)"
+if has_finding "$ALL" "$F7A"; then FAIL "F7: a construct directs something other than the presence probe at a passphrase home"; show "$ALL" 'F7'
+elif [ "${PV_FILES:-0}" -eq 0 ] || [ "${PV_CONS:-0}" -eq 0 ]; then FAIL "F7: NOT EVALUATED — the passphrase-value limb read ${PV_FILES:-0} file(s) and ${PV_CONS:-0} construct(s). An empty population is a failure here, never a pass: nothing was graded"
+elif [ "${PV_HOMES:-0}" -ne "${PV_PROBES:-0}" ]; then FAIL "F7: ${PV_HOMES:-0} construct segment(s) touch a passphrase home and ${PV_PROBES:-0} are the presence probe, yet no finding was emitted for the difference — the limb's own counts disagree with its findings"
+else PASS "F7: ${PV_HOMES:-0} construct segment(s) touch a passphrase home and all ${PV_PROBES:-0} of them are the presence probe — over ${PV_CONS} construct(s) (fenced lines and whole-line code spans) in ${PV_FILES} markdown file(s) under the verb directories. Graded on constructs only: a session's own Read of a passphrase home is outside this limb. Arms GF7r, GF7e, GF7a, GF7s and GF7c plant one construct each and require the finding; arm G0p requires the two sanctioned probes counted and a prose mention not"; fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group P — privilege parity over the grant DECLARATIONS.
@@ -5121,6 +5400,26 @@ if [ -f "$G0/CLAUDE.md" ] && [ -f "$G0/skills/trip/SKILL.md" ] && [ -f "$G0/skil
     grep -qF "| /trip-record profile | sig | ${GRADE_RETAIN}${GRADE_SEP}act | ex | ${BT}/trip-record profile${BT} |" "$G0/CLAUDE.md" || G0S=0
     grep -qF "| /trip-publish update | sig | ${GRADE_RETAIN}${GRADE_SEP}act | ex | ${BT}/trip-publish update${BT} |" "$G0/CLAUDE.md" || G0S=0
     g0claim "$G0S" G0j "a set carrying ONE DISPOSITION member beside unit members that each keep their own ADDRESSED row produces no finding of any id — the G0i analogue for the second member kind. The probe asserts all three shapes, so the green cannot rest on a set that was never generated or on unit members that never had their own rows"
+    # G0p — the passphrase-value limb's MUST-NOT-FIRE half, and a measurement rather than an
+    # empty scan: it requires the two sanctioned probes COUNTED as home-touching and as probes,
+    # so a limb that read nothing, or that stopped seeing a home, fails here instead of passing.
+    # The prose mentions are what make it a near-miss arm — each names the path inside a code
+    # span with text around it, in the verb file and in the bundled conduct file.
+    G0S=1
+    grep -qxF 'test -r "<data-root>/trips/<slug>/.passphrase"' "$G0/skills/trip-publish/SKILL.md" || G0S=0
+    grep -qxF 'test -z "${STATICRYPT_PASSWORD:-}"' "$G0/skills/trip-publish/SKILL.md" || G0S=0
+    grep -qxF "Reads no ${BT}trips/<slug>/.passphrase${BT} value." "$G0/skills/trip-publish/SKILL.md" || G0S=0
+    grep -qF "reads no ${BT}trips/<slug>/.passphrase${BT} value." "$G0/skills/trip-record/interview-conduct.md" || G0S=0
+    G0P_H="$(getcount "$G0OUT" PASSHOMES)"; G0P_P="$(getcount "$G0OUT" PASSPROBES)"
+    G0P_C="$(getcount "$G0OUT" PASSCONSTRUCTS)"; G0P_N="$(getcount "$G0OUT" PASSFILES)"
+    G0P_F="$(grep -c '^FINDING F7 ' <<<"$G0OUT")"
+    if [ "$G0S" -ne 1 ]; then
+      FAIL "G0p: fixture integrity — the conforming tree does not carry the two sanctioned probes and both prose mentions of the passphrase path, so a zero here would prove nothing"
+    elif [ "${G0P_H:-0}" -eq 2 ] && [ "${G0P_P:-0}" -eq 2 ] && [ "${G0P_F:-1}" -eq 0 ]; then
+      PASS "G0p: MUST-NOT-FIRE — over the conforming tree the passphrase-value limb counts exactly 2 home-touching segments, both the presence probe, and emits no F7, across ${G0P_C} construct(s) in ${G0P_N} file(s). The two prose mentions of the path are code spans with text around them and are not constructs, so they are not counted — the limb separates use from mention. Arms GF7r to GF7c are the sensitivity half on the same limb"
+    else
+      FAIL "G0p: over the conforming tree the passphrase-value limb counted ${G0P_H:-0} home-touching segment(s) and ${G0P_P:-0} presence probe(s) where 2 and 2 were required, and emitted ${G0P_F:-?} F7 finding(s) where 0 was — it is either blind to a sanctioned probe or reading a mention as a use"
+    fi
   fi
 else
   FAIL "G0a: fixture integrity — the conforming tree was not constructed; G0b-i would prove nothing"
@@ -5344,6 +5643,29 @@ ctl GF6  F6 "a fenced invocation in no verb region — a finding that could name
 # anything. Each is a MUST-FIRE arm on an id this guard already emits, so neither adds a finding
 # id and group Y's mapping is unchanged.
 ctl GF1r F1 "a SANCTIONED-root invocation of the EXCLUDED form rotate — rooting a path does not retire the privilege grading over it" ok rootrotate 'grep -qF "CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh rotate trips/x" "$WORK/GF1r/skills/trip-publish/SKILL.md"'
+# ── One arm per ALTERNATIVE of F3 and F4, and the passphrase-value limb's own. F3 fails four
+# flags and F4 two forms; until these arms each had one arm between them — GF3 plants
+# `--passphrase`, GF4 the assignment — so a regression that dropped `--yes`, `-y`, `--plaintext`
+# or the exported form left every arm green. An arm that cannot fail on the alternative it is
+# named for reproduces the gap it was built to close. None of these adds a finding id except
+# F7, so group Y's mapping gains exactly that one.
+#
+# GF3y's world is the one F2 must stay SILENT on: the unpublish form carries the pages-only
+# flag, so the only thing wrong with it is the flag F3 grades. GF3e and GF7s are the arms for
+# the WHOLE-LINE CODE SPAN rendering at fence depth 0; GF3c, GF4c and GF7c are the arms for a
+# file BUNDLED beside a verb file. Read all of them with G0p, the must-NOT-fire half.
+ctl GF3y F3 "the --yes alternative, on an unpublish that DOES carry the pages-only flag — F2 has nothing to say, so the flag is the whole defect" ok badflagyes 'grep -qxF -- "${SCRIPT_REL} unpublish trips/x --disable-pages-only --yes" "$WORK/GF3y/skills/trip-publish/SKILL.md"'
+ctl GF3s F3 "the -y alternative — the short spelling of the same flag" ok badflagy 'grep -qxF -- "${SCRIPT_REL} update trips/x -y" "$WORK/GF3s/skills/trip-publish/SKILL.md"'
+ctl GF3p F3 "the --plaintext alternative on a publish-script invocation" ok badflagplain 'grep -qxF -- "${SCRIPT_REL} update trips/x --plaintext" "$WORK/GF3p/skills/trip-publish/SKILL.md"'
+ctl GF4x F4 "the override EXPORTED with no assignment on the line — the second form F4 fails" ok exportplain 'grep -qx "export ALLOW_PLAINTEXT" "$WORK/GF4x/skills/trip/SKILL.md"'
+ctl GF3e F3 "a forbidden flag on an invocation rendered as a WHOLE-LINE CODE SPAN at fence depth 0 — the evidence-entry rendering is use, like a fenced line" ok spaninv 'grep -qxF -- "${BT}${SCRIPT_REL} update trips/x --yes${BT}" "$WORK/GF3e/skills/trip-publish/SKILL.md"'
+ctl GF3c F3 "a forbidden flag on an invocation fenced in a file BUNDLED beside a verb file" ok flagconduct 'grep -qxF -- "${SCRIPT_REL} update trips/x --yes" "$WORK/GF3c/skills/trip-record/interview-conduct.md"'
+ctl GF4c F4 "the plaintext override SET in a file bundled beside a verb file" ok allowconduct 'grep -qxF "ALLOW_PLAINTEXT=1 x" "$WORK/GF4c/skills/trip-record/interview-conduct.md"'
+ctl GF7r F7 "a fenced READ of the passphrase file in a verb region" ok passread 'grep -qxF "cat \"<data-root>/trips/<slug>/.passphrase\"" "$WORK/GF7r/skills/trip-publish/SKILL.md"'
+ctl GF7e F7 "a fenced EXPANSION of the passphrase variable into a command's arguments" ok passecho 'grep -qF "\"\$STATICRYPT_PASSWORD\"" "$WORK/GF7e/skills/trip-publish/SKILL.md"'
+ctl GF7a F7 "a fenced ASSIGNMENT of the passphrase variable" ok passset 'grep -qx "STATICRYPT_PASSWORD=x" "$WORK/GF7a/skills/trip-publish/SKILL.md"'
+ctl GF7s F7 "a read of the passphrase file rendered as a WHOLE-LINE CODE SPAN at fence depth 0" ok passspan 'grep -qxF "${BT}cat <data-root>/trips/<slug>/.passphrase${BT}" "$WORK/GF7s/skills/trip-publish/SKILL.md"'
+ctl GF7c F7 "a fenced read of the passphrase file in a file BUNDLED beside a verb file" ok passconduct 'grep -qxF "cat \"<data-root>/trips/<slug>/.passphrase\"" "$WORK/GF7c/skills/trip-record/interview-conduct.md"'
 # ── The P-group arms. Each defects the FRONTMATTER, which is the surface group P reads and
 # which parse_command_file reads nothing of — the same blind spot the H-group arms below were
 # written for. All three are MUST-FIRE, and group Y asserts the mapping in both directions, so
@@ -7032,7 +7354,7 @@ echo
 echo "── Group Z — non-mutation over the watched surfaces."
 STATE_AFTER="$(tree_state)"
 if [ "$STATE_BEFORE" = "$STATE_AFTER" ]; then
-  PASS "Z1: the ${WATCHED} watched surfaces are byte-identical before and after this run — the charter, ADR-007, the publish script, this guard, this slice's workflow, the command reference, the guided-entry carrier at the engine root, each verb file, the architecture document and each agent prompt — so every fixture was built under the temporary directory. SCOPE: the watch set is the surfaces this guard reads plus its own workflow, derived from the paths above; it is not the whole tree, and a write outside it is not observed here"
+  PASS "Z1: the ${WATCHED} watched surfaces are byte-identical before and after this run — the charter, ADR-007, the publish script, this guard, this slice's workflow, the command reference, the guided-entry carrier at the engine root, each verb file and each file bundled beside one, the architecture document and each agent prompt — so every fixture was built under the temporary directory. SCOPE: the watch set is the surfaces this guard reads plus its own workflow, derived from the paths above; it is not the whole tree, and a write outside it is not observed here"
 else
   FAIL "Z1: the working tree changed during this run; a guard that mutates what it grades is not a guard"
 fi
