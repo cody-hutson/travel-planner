@@ -326,8 +326,9 @@
 #   NC   the never-carries of ADR-025 § Decision 3, graded as class facts at their live
 #        membership: a rebuilt-each-synthesis instance carrying prior passes (EB-0) — graded
 #        on tracked instances only, never on conduct that would accumulate into one; and
-#        both-marks values and DEST-class fields in cross-trip records (EB-2). Every arm
-#        carries a control that must fire and one that must not
+#        both-marks values and DEST-class fields in cross-trip records, and every store
+#        writer's both-marks guard (EB-2). Every arm carries a control that must fire and
+#        one that must not
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -16476,6 +16477,207 @@ EOF
     PASS "NC4n: MUST-NOT-FIRE — the same bullet in a per-trip traveller file is seen by the scan and is outside the subject, because the file is not a cross-trip record; $NC4C_FILES live per-trip file(s) already carry such a bullet and none is graded. Never-carry 4 is about the boundary, not the field"
   else
     FAIL "NC4n: the per-trip near-miss resolved as a cross-trip record ('${NC4N_SYN:-no}'), or no live per-trip file carries such a bullet ($NC4C_FILES) — the subject is drawn too wide, or the near-miss is not a near-miss"
+  fi
+fi
+
+# ── NC-3, the writer half — every verb that writes the person store carries a guard ──────
+#
+# An instance scan sees a both-marks value only after it has crossed. The path it would
+# cross by is a VERB: one that writes a record under the person store. So the second half of
+# never-carry 3 is graded on the verb file — every store writer carries a both-marks guard
+# (NC3w), and every verb carrying such a guard is a store writer this derivation can see
+# (NC3wg). The second direction is what makes a NARROWING loud: a writer whose declaration
+# is reworded out of the reader's sight keeps its guard, leaves the writer set, and fails.
+#
+# THE DERIVATION, over the record command's verb file, holding no verb name:
+#   VERBS    the `verb` column of the requirement table, at fence depth 0
+#   SECTION  a `## ` heading at fence depth 0 whose first token is one of those verbs
+#   WRITER   a verb whose section carries, OUTSIDE its read declaration, a line holding a
+#            code span that IS a person-store record path, together with one of: the
+#            rule-condition label **(a)**; a table cell that is exactly a write tool or the
+#            WRITE disposition; or the lead that opens a what-it-writes statement
+#   GUARD R  a table row whose first cell names the third-party mark and whose second
+#            cell, emphasis dropped, begins `refuse`
+#   GUARD P  a table row whose first cell carries the presence question's own words
+#
+# DECLARED RESIDUAL, stated on the verdict line as well: a writer that loses its declaration
+# AND its guard in one edit leaves both sets together and is not seen; and a write declared
+# in another shape is not read. NC3w prints the writer set by name so a change is visible.
+NC3W_AWK='
+  function nc_trim(s) { sub(/^[ \t]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+  function nc_cells(s, C,   n, i) {
+    s = nc_trim(s); if (substr(s, 1, 1) != "|") return 0
+    sub(/^\|/, "", s); sub(/\|$/, "", s)
+    n = split(s, C, "|"); for (i = 1; i <= n; i++) C[i] = nc_trim(C[i])
+    return n
+  }
+  function nc_haspath(s,   t) {
+    while (match(s, /`[^`]+`/)) {
+      t = substr(s, RSTART + 1, RLENGTH - 2); s = substr(s, RSTART + RLENGTH)
+      if (t ~ /^(<store-root>\/)?people\/[^\/`]*\.md$/) return 1
+    }
+    return 0
+  }
+  function nc_isdecl(s,   C, n, i) {
+    if (index(s, "**Reads:**") == 1) return 0
+    if (!nc_haspath(s)) return 0
+    if (index(s, "**(a)**")) return 1
+    if (index(s, "**What it writes.**") == 1) return 1
+    n = nc_cells(s, C)
+    for (i = 1; i <= n; i++) if (C[i] == "`Write`" || C[i] == "`Edit`" || C[i] == "WRITE") return 1
+    return 0
+  }
+  function nc_guard(s,   C, n, c2) {
+    n = nc_cells(s, C); if (n < 1) return ""
+    if (n >= 2 && index(C[1], "[THIRD-PARTY]")) {
+      c2 = C[2]; gsub(/\*/, "", c2); c2 = tolower(nc_trim(c2))
+      if (index(c2, "refuse") == 1) return "R"
+    }
+    if (index(C[1], "answering for themselves")) return "P"
+    return ""
+  }
+  { L[NR] = $0 }
+  END {
+    fd = 0; intab = 0; nv = 0
+    for (i = 1; i <= NR; i++) {
+      if (substr(L[i], 1, 3) == "```") { fd = !fd; D[i] = 1; continue }
+      D[i] = fd
+      if (fd) continue
+      if (L[i] ~ /^\|[ \t]*verb[ \t]*\|[ \t]*lifecycle[ \t]*\|[ \t]*mode[ \t]*\|[ \t]*destination[ \t]*\|[ \t]*depth[ \t]*\|[ \t]*$/) { intab = 1; continue }
+      if (intab) {
+        if (substr(L[i], 1, 1) != "|") { intab = 0; continue }
+        n = nc_cells(L[i], C); if (n < 1 || C[1] ~ /^[-: ]+$/) continue
+        v = C[1]; gsub(/`/, "", v); sub(/[ \t].*$/, "", v)
+        if (v != "" && !(v in isverb)) { isverb[v] = 1; order[++nv] = v }
+      }
+    }
+    cur = ""
+    for (i = 1; i <= NR; i++) {
+      S[i] = ""
+      if (!D[i] && substr(L[i], 1, 3) == "## ") { t = substr(L[i], 4); sub(/[ \t].*$/, "", t); cur = (t in isverb) ? t : ""; continue }
+      S[i] = cur
+    }
+    for (i = 1; i <= NR; i++) {
+      v = S[i]; if (v == "") continue
+      if (nc_haspath(L[i])) named[v] = 1
+      if (nc_isdecl(L[i])) { W[v]++; if (!(v in wfirst)) wfirst[v] = i }
+      g = nc_guard(L[i])
+      if (g == "R") G[v] = "R"; else if (g == "P" && !(v in G)) G[v] = "P"
+      if (g == "" && index(L[i], "[THIRD-PARTY]") && nc_cells(L[i], C) > 0) tprow[v] = 1
+    }
+    if (mode == "derive") {
+      printf "VERBS\t%d\n", nv
+      for (k = 1; k <= nv; k++) {
+        v = order[k]
+        if (v in W) printf "W\t%s\t%d\n", v, W[v]
+        if (v in G) printf "G\t%s\t%s\n", v, G[v]
+        if ((v in named) && !(v in W)) printf "NEAR\t%s\n", v
+        if ((v in tprow) && !(v in G)) printf "TPNEAR\t%s\n", v
+      }
+      exit
+    }
+    # mode == "mutate": the file again, with ONE mutation. <verb> is chosen by the caller.
+    r9 = 0; r11 = 0
+    for (i = 1; i <= NR; i++) {
+      line = L[i]; v = S[i]
+      if (kind == "dropR" && v == verb && nc_guard(line) == "R") continue
+      if (kind == "dropP" && v == verb && nc_guard(line) == "P") continue
+      if (kind == "prose" && v == verb && index(line, "**(a)**") && nc_haspath(line)) gsub(/`/, "", line)
+      if (kind == "reword") {
+        if (!D[i] && !r9 && line ~ /^9\. /) { r9 = 1; sub(/ the /, " that ", line) }
+        else if (!D[i] && !r11 && line ~ /^11\. /) { r11 = 1; sub(/ the /, " that ", line) }
+        else if (v != "" && (v in G) && G[v] == "R" && wfirst[v] == i) sub(/ the /, " that ", line)
+      }
+      print line
+    }
+  }'
+nc3w_derive() { awk -v mode=derive "$NC3W_AWK" "$1"; }
+nc3w_mutate() { awk -v mode=mutate -v kind="$2" -v verb="${3:-}" "$NC3W_AWK" "$1"; }   # <file> <kind> [verb]
+# nc3w_find <derive-output> <boundary> — "<id>\t<finding>" for each direction that fails.
+nc3w_find() {
+  awk -F'\t' -v b="$2" '
+    $1 == "W" { w[$2] = 1; ow[++nw] = $2 }
+    $1 == "G" { g[$2] = $3; og[++ng] = $2 }
+    END {
+      for (k = 1; k <= nw; k++) { v = ow[k]; if (!(v in g)) printf "NC3w\tNC3w: store writer %s%s%s declares a write into people/ and carries no both-marks guard (no [THIRD-PARTY] refusal row, no presence question) — never-carry 3: a both-marks value has an open path across %s\n", "\047", v, "\047", b }
+      for (k = 1; k <= ng; k++) { v = og[k]; if (!(v in w)) printf "NC3wg\tNC3wg: %s%s%s carries a both-marks guard (%s) but no write declaration this derivation reads — the store-writer set has narrowed; restore the declared target path\n", "\047", v, "\047", (g[v] == "R" ? "refusal row" : "presence question") }
+    }' <<<"$1"
+}
+nc3w_set() { awk -F'\t' -v k="$2" '$1 == k { printf "%s%s", (n++ ? " " : ""), ($3 != "" && k == "G" ? $2 " (" $3 ")" : $2) }' <<<"$1"; }
+nc3w_first() { awk -F'\t' -v k="$2" '$1 == "G" && $3 == k && !n++ { print $2 }' <<<"$1"; }
+nc3w_msg() { awk -F'\t' -v id="$2" '$1 == id { printf "%s%s", (n++ ? " | " : ""), $2 }' <<<"$1"; }
+
+if [ "$NC_OK" -eq 1 ]; then
+  NC3W_SKILL="$ROOT/skills/trip-record/SKILL.md"
+  NC3W_D="$NC_W/nc3w"; mkdir -p "$NC3W_D"
+  NC3W_OUT="$(nc3w_derive "$NC3W_SKILL" 2>/dev/null)"
+  NC3W_NV="$(awk -F'\t' '$1 == "VERBS" { v = $2 } END { print v + 0 }' <<<"$NC3W_OUT")"
+  NC3W_NW="$(nc_n "$NC3W_OUT" W)"; NC3W_NG="$(nc_n "$NC3W_OUT" G)"
+  NC3W_NNEAR="$(nc_n "$NC3W_OUT" NEAR)"; NC3W_NTP="$(nc_n "$NC3W_OUT" TPNEAR)"
+  NC3W_WSET="$(nc3w_set "$NC3W_OUT" W)"; NC3W_GSET="$(nc3w_set "$NC3W_OUT" G)"
+  NC3W_FIND="$(nc3w_find "$NC3W_OUT" "$NC3_ACROSS")"
+  NC3W_F1="$(nc_n "$NC3W_FIND" NC3w)"; NC3W_F2="$(nc_n "$NC3W_FIND" NC3wg)"
+  if [ "$NC3W_NV" -eq 0 ] || [ "$NC3W_NW" -eq 0 ]; then
+    FAIL "NC3w: NOT EVALUATED — the derivation read $NC3W_NV verb(s) from the requirement table of ${NC3W_SKILL#"$ROOT/"} and found $NC3W_NW store writer(s). An empty population is a failure, never a pass: either the table or every write declaration has moved out of the reader's sight"
+  elif [ "$NC3W_F1" -gt 0 ]; then
+    FAIL "$(nc3w_msg "$NC3W_FIND" NC3w)"
+  else
+    PASS "NC3w: every verb that declares a write into the person store carries a both-marks guard — $NC3W_NW store writer(s) among $NC3W_NV verb(s): $NC3W_WSET; guarded: $NC3W_GSET. Never-carry 3 has no open path across $NC3_ACROSS through a declared writer. RESIDUAL, stated: a writer that loses its declaration and its guard in one edit leaves both sets together, and a write declared in another shape is not read"
+  fi
+  if [ "$NC3W_NV" -eq 0 ] || [ "$NC3W_NG" -eq 0 ]; then
+    FAIL "NC3wg: NOT EVALUATED — $NC3W_NG guarded verb(s) among $NC3W_NV. An empty population is a failure, never a pass"
+  elif [ "$NC3W_F2" -gt 0 ]; then
+    FAIL "$(nc3w_msg "$NC3W_FIND" NC3wg)"
+  else
+    PASS "NC3wg: every verb carrying a both-marks guard is a store writer this derivation reads — $NC3W_NG guarded verb(s), each with a write declaration. The writer set has not narrowed behind a guard that still stands"
+  fi
+
+  NC3W_RV="$(nc3w_first "$NC3W_OUT" R)"; NC3W_PV="$(nc3w_first "$NC3W_OUT" P)"
+  nc3w_arm() {  # nc3w_arm <id> <kind> <verb> <want-id> <want-text> <label>
+    local id="$1" kind="$2" verb="$3" wid="$4" want="$5" label="$6"
+    local f="$NC3W_D/$id.md" out find got delta
+    nc3w_mutate "$NC3W_SKILL" "$kind" "$verb" > "$f" 2>/dev/null
+    delta="$(awk 'FILENAME == ARGV[1] { a[$0]++; next } { if (a[$0] > 0) a[$0]--; else d++ } END { for (k in a) d += a[k]; print d + 0 }' "$NC3W_SKILL" "$f")"
+    out="$(nc3w_derive "$f")"; find="$(nc3w_find "$out" "$NC3_ACROSS")"; got="$(nc3w_msg "$find" "$wid")"
+    if [ -z "$verb" ] || [ "$delta" -eq 0 ]; then
+      FAIL "$id: fixture integrity — the mutation did not land (verb '${verb:-<none>}', $delta line(s) differ from the source), so the arm below would prove nothing"
+    elif [ "$got" = "$want" ] && [ "$(nc_count "$find")" -eq 1 ]; then
+      PASS "$id: MUST-FIRE — $label ($delta line(s) differ from the source) is flagged once, in the predicted words: $got"
+    else
+      FAIL "$id: MUST-FIRE did not fire as predicted ($label) — wanted '$want', got '${got:-<no finding>}' among $(nc_count "$find") finding(s)"
+    fi
+  }
+  nc3w_arm NC3wf dropR "$NC3W_RV" NC3w "NC3w: store writer '$NC3W_RV' declares a write into people/ and carries no both-marks guard (no [THIRD-PARTY] refusal row, no presence question) — never-carry 3: a both-marks value has an open path across $NC3_ACROSS" "a copy of the verb file with the refusal row deleted from the first refusal-guarded writer's section"
+  nc3w_arm NC3wf2 dropP "$NC3W_PV" NC3w "NC3w: store writer '$NC3W_PV' declares a write into people/ and carries no both-marks guard (no [THIRD-PARTY] refusal row, no presence question) — never-carry 3: a both-marks value has an open path across $NC3_ACROSS" "a copy with the presence row deleted from the presence-guarded writer's section"
+  nc3w_arm NC3wf3 prose "$NC3W_PV" NC3wg "NC3wg: '$NC3W_PV' carries a both-marks guard (presence question) but no write declaration this derivation reads — the store-writer set has narrowed; restore the declared target path" "a copy whose presence-guarded writer has its condition-(a) record paths reworded from code spans into prose"
+
+  # NC3wk — MUST HOLD. Four lines reworded in prose only: the openings of standing rules 9 and
+  # 11, and the first write declaration of each refusal-guarded writer. The structure the
+  # derivation reads is untouched, so the writer set must come back unchanged and no finding
+  # may be emitted — a reader that keyed on the prose would lose a writer here.
+  NC3WK_F="$NC3W_D/NC3wk.md"
+  nc3w_mutate "$NC3W_SKILL" reword > "$NC3WK_F" 2>/dev/null
+  NC3WK_DELTA="$(awk 'FILENAME == ARGV[1] { a[$0]++; next } { if (a[$0] > 0) a[$0]--; else d++ } END { print d + 0 }' "$NC3W_SKILL" "$NC3WK_F")"
+  NC3WK_OUT="$(nc3w_derive "$NC3WK_F")"
+  NC3WK_FIND="$(nc3w_find "$NC3WK_OUT" "$NC3_ACROSS")"
+  NC3WK_WANT=$(( 2 + $(awk -F'\t' '$1 == "G" && $3 == "R" { n++ } END { print n + 0 }' <<<"$NC3W_OUT") ))
+  if [ "$NC3WK_DELTA" -ne "$NC3WK_WANT" ]; then
+    FAIL "NC3wk: fixture integrity — $NC3WK_DELTA line(s) of the copy differ from the source where $NC3WK_WANT were to be reworded (the two rule openings and each refusal-guarded writer's first declaration), so the arm below would prove nothing"
+  elif [ "$(nc3w_set "$NC3WK_OUT" W)" = "$NC3W_WSET" ] && [ "$(nc3w_set "$NC3WK_OUT" G)" = "$NC3W_GSET" ] && [ -z "$NC3WK_FIND" ]; then
+    PASS "NC3wk: MUST-HOLD — with $NC3WK_DELTA line(s) reworded in prose only (the openings of standing rules 9 and 11, and the first write declaration of each refusal-guarded writer) the writer set is unchanged ($NC3W_WSET), the guarded set is unchanged, and no finding is emitted. The derivation reads the declared target and not the wording around it"
+  else
+    FAIL "NC3wk: a prose-only rewording of $NC3WK_DELTA line(s) moved the derivation — writers '$(nc3w_set "$NC3WK_OUT" W)' where '$NC3W_WSET' was read from the source, guarded '$(nc3w_set "$NC3WK_OUT" G)', findings: $(nc3w_msg "$NC3WK_FIND" NC3w) $(nc3w_msg "$NC3WK_FIND" NC3wg)"
+  fi
+
+  # NC3wn — MUST-NOT-FIRE, on the real tree, with its near-misses shown present: verbs that
+  # name a person-store path only on a read declaration or in prose, and verbs that carry the
+  # third-party mark in a table row that is not a refusal.
+  if [ "$NC3W_NNEAR" -eq 0 ] || [ "$NC3W_NTP" -eq 0 ]; then
+    FAIL "NC3wn: fixture integrity — the real verb file carries $NC3W_NNEAR verb(s) naming a person-store path without declaring a write, and $NC3W_NTP verb(s) carrying the third-party mark in a table row that is not a guard. A near-miss population of zero makes the silence below an empty scan"
+  elif [ -z "$NC3W_FIND" ]; then
+    PASS "NC3wn: MUST-NOT-FIRE — on the real verb file $NC3W_NNEAR verb(s) name a person-store record path only on a read declaration or in prose and stay outside the writer set ($(nc3w_set "$NC3W_OUT" NEAR)), and $NC3W_NTP verb(s) carry the third-party mark in a table row that is not a refusal and stay outside the guarded set ($(nc3w_set "$NC3W_OUT" TPNEAR)). Neither direction emits a finding"
+  else
+    FAIL "NC3wn: the real verb file emits a finding where none was expected: $(nc3w_msg "$NC3W_FIND" NC3w) $(nc3w_msg "$NC3W_FIND" NC3wg)"
   fi
 fi
 
