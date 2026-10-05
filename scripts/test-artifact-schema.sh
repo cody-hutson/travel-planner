@@ -323,13 +323,14 @@
 #        and this rule had no mechanism at all, so the prose is replaced by an executable
 #        and anchored by its consumer instead. No count is spelled anywhere in this file
 #        for this group: every set is read
-#   NC   the never-carries of ADR-025 § Decision 3, graded as class facts at their live
+#   NC   the five never-carries of ADR-025 § Decision 3, graded as class facts at their live
 #        membership: a rebuilt-each-synthesis instance carrying prior passes (EB-0) — graded
-#        on tracked instances only, never on conduct that would accumulate into one;
-#        both-marks values and DEST-class fields in cross-trip records, and every store
-#        writer's both-marks guard (EB-2); and the engagement axis's tokens on every
-#        stored-value surface, its carrier included. Every arm carries a control that must
-#        fire and one that must not
+#        on tracked instances only, never on conduct that would accumulate into one; the
+#        internal-hard class against the site build's read set, and synthetic renders through
+#        ADR-030's reading and any record superseding part of never-carry 2; both-marks values
+#        and DEST-class fields in cross-trip records, and every store writer's both-marks
+#        guard (EB-2); and the engagement axis's tokens on every stored-value surface, its
+#        carrier included. Every arm carries a control that must fire and one that must not
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -1713,8 +1714,12 @@ else
   fi
 fi
 
-if [ "$PB_OK" -eq 1 ]; then
-  PB_ROWS="$(awk -v info='```'"$PB_FENCE" '
+# pb_fence_rows <spec-file> — the fence's rows as "<artifact>\t<class>", and a row carrying
+# fewer than two fields as PARSE-FAIL. A function, taking its file as an argument, so that
+# every reader of this fence shares ONE parse: group PB reads the spec through it here, and
+# group NC reads the spec and a mutated copy of it through the same code.
+pb_fence_rows() {
+  awk -v info='```'"$PB_FENCE" '
     $0 == info { inside = 1; next }
     inside && $0 == "```" { inside = 0; next }
     inside {
@@ -1724,7 +1729,11 @@ if [ "$PB_OK" -eq 1 ]; then
       n = split(line, F, /[[:space:]]+/)
       if (n < 2) { printf "PARSE-FAIL\t%s\n", line; next }
       printf "%s\t%s\n", F[1], F[2]
-    }' "$ROOT/$PB_SPEC")"
+    }' "$1"
+}
+
+if [ "$PB_OK" -eq 1 ]; then
+  PB_ROWS="$(pb_fence_rows "$ROOT/$PB_SPEC")"
   PB_N="$(printf '%s\n' "$PB_ROWS" | grep -c '[^[:space:]]')"
   PB_PF="$(printf '%s\n' "$PB_ROWS" | grep -c '^PARSE-FAIL' || true)"
   PB_PUBENUM="$(en_canonical publish | awk 'NR == 1')"
@@ -16144,7 +16153,7 @@ NC_OP_MARK='[OPERATOR-PROVIDED]'
 
 nc_count() { printf '%s\n' "$1" | grep -c '[^[:space:]]' || true; }
 
-# nc_table <adr-025> — the never-carry table, as "<n>\t<what>\t<across>", read inside the
+# nc_table <adr-025> — the never-carry table, as "<n>\t<what>\t<across>\t<why>", read inside the
 # section that declares it and nowhere else. Cells are trimmed and their markup is kept.
 nc_table() {
   awk '
@@ -16152,8 +16161,8 @@ nc_table() {
     on && (/^### / || /^## /) { on = 0 }
     on && /^\|[ \t]*[0-9]+[ \t]*\|/ {
       if (split($0, F, "|") < 5) next
-      for (i = 2; i <= 4; i++) { gsub(/^[ \t]+|[ \t]+$/, "", F[i]) }
-      printf "%s\t%s\t%s\n", F[2], F[3], F[4]
+      for (i = 2; i <= 5; i++) { gsub(/^[ \t]+|[ \t]+$/, "", F[i]) }
+      printf "%s\t%s\t%s\t%s\n", F[2], F[3], F[4], F[5]
     }' "$1"
 }
 # nc_cell <table> <row> <field> — one cell; nc_span <text> — its first code span, bare.
@@ -16930,6 +16939,464 @@ if [ "$NC_OK" -eq 1 ]; then
     nc5_arm NC5s3 CONDUCT - s3.md 1 "NC5s: token $NC5_T1 in s3.md:$(nc5_lines "$NC5_D/s3.md") — conduct: never-carry 5 — a stored value of the engagement axis, across every boundary" 1 "a copy of an agent prompt with a sentence instructing that an axis token be recorded"
   else
     FAIL "NC5k: fixture integrity — a source the NC-5 control arms copy is unreadable, or an axis token did not resolve (witnesses '${NC5_W1:-<none>}' / '${NC5_W12:-<none>}'; tokens resolved: first $([ -n "$NC5_T1" ] && printf yes || printf no), both-marks $([ -n "$NC5_TB" ] && printf yes || printf no)). None of the ten control arms of never-carry 5 was built, so NC5's verdict has no arm behind it"
+  fi
+fi
+
+# ── NC-2 — never-carry 2: the whole of one publish class, to any render, in any form ──────
+#
+# Never-carry 2 bars a CLASS, and the record quotes that class at its live membership on
+# purpose: an arm carrying a copy of the member list grades the wrong set the moment the
+# class changes. So nothing here holds the list. The class token is read from the
+# never-carry row itself; its members are read from § 1.1's publish column; and NC2m holds
+# that column to the one sentence in § 5.1 that states the membership in words.
+#
+#   NC2   THE DECLARATION LAYER. The site build reads exactly the artifacts the spec's
+#         `publish-contract-artifacts` fence gives the read class. None of them may be a
+#         member of the barred class. The fence is read by group PB's own reader.
+#   NC2m  LIVE MEMBERSHIP. § 1.1's publish column and § 5.1's sentence name the same
+#         classes, in both directions. The sentence is anchored on its own bullet: an
+#         unanchored parse captures the read class's sentence instead, which also opens
+#         with the same word.
+NC2_READ='bound'
+nc_join() { awk '{ for (i = 1; i <= NF; i++) printf "%s%s", (n++ ? ", " : ""), $i }' <<<"$1"; }
+nc_setdiff() {  # nc_setdiff <a> <b> — members of a absent from b, in a's order
+  local x out=""
+  # shellcheck disable=SC2086  # a deliberate split: both arguments are space-delimited sets
+  for x in $1; do
+    case " $2 " in *" $x "*) ;; *) out="$out${out:+ }$x" ;; esac
+  done
+  printf '%s' "$out"
+}
+# nc2_scan <fence-rows> <class-rows> <barred-class> <read-class|ALL>
+# Records: HIT <artifact> <class-id> · ROWS <n> · READ <n> · MEMBERS <n>.
+nc2_scan() {
+  {
+    printf '%s\n' "$2" | awk -F'\t' -v d="$3" 'NF >= 6 && $1 ~ /^[0-9]+$/ && $6 == d { print "M\tC" $1 "\t" $2 }'
+    printf '%s\n' "$1"
+  } | awk -F'\t' -v rc="$4" '
+    $1 == "M" && NF == 3 { m[$3] = $2; nm++; next }
+    NF == 2 && $1 != "PARSE-FAIL" && $1 != "" {
+      rows++
+      if (rc == "ALL" || $2 == rc) { rd++; if ($1 in m) printf "HIT\t%s\t%s\n", $1, m[$1] }
+    }
+    END { printf "ROWS\t%d\nREAD\t%d\nMEMBERS\t%d\n", rows, rd, nm }'
+}
+nc2_msg() {  # nc2_msg <scan-output> <barred-class> <across>
+  awk -F'\t' -v d="$2" -v b="$3" '$1 == "HIT" { printf "NC2: %s (%s, %s) is in the site build%ss read set — never-carry 2: an %s class reaching the render across %s (CH-1, both limbs)\n", $2, $3, d, "\047", d, b }' <<<"$1"
+}
+nc_rec() { awk -F'\t' -v k="$2" '$1 == k { v = $2 } END { print v + 0 }' <<<"$1"; }
+# nc2m_members <class-rows> <barred-class> — the class ids § 1.1's publish column gives it.
+nc2m_members() { awk -F'\t' -v d="$2" 'NF >= 6 && $1 ~ /^[0-9]+$/ && $6 == d { printf "%sC%s", (n++ ? " " : ""), $1 }' <<<"$1"; }
+# nc2m_sentence <architecture-doc> <barred-class> — the class ids of § 5.1's own sentence,
+# read from the bullet that opens on the class token and from its `Exactly … .` clause.
+nc2m_sentence() {
+  awk -v d="$2" '
+    index($0, "### 5.1 ") == 1 { on = 1; next }
+    on && (/^### / || /^## /) { on = 0 }
+    on && grab && (/^- / || /^[ \t]*$/) { grab = 0 }
+    on && index($0, "- **`" d "`**") == 1 { grab = 1; buf = $0; next }
+    on && grab { buf = buf " " $0 }
+    END {
+      if (!match(buf, /Exactly [^.]*\./)) exit
+      s = substr(buf, RSTART, RLENGTH)
+      while (match(s, /C[0-9]+/)) { printf "%s%s", (n++ ? " " : ""), substr(s, RSTART, RLENGTH); s = substr(s, RSTART + RLENGTH) }
+    }' "$1"
+}
+# nc2m_find <members> <sentence> <barred-class> — the finding, or nothing when the sets agree.
+nc2m_find() {
+  local only
+  only="$(nc_setdiff "$1" "$2")"; only="$only${only:+ }$(nc_setdiff "$2" "$1")"; only="${only% }"
+  [ -n "$only" ] || return 0
+  printf 'NC2m: %s membership disagrees — § 1.1%ss publish column {%s} vs § 5.1%ss sentence {%s}; on one side only: %s\n' "$3" "'" "$(nc_join "$1")" "'" "$(nc_join "$2")" "$(nc_join "$only")"
+}
+# nc2m_mutate <architecture-doc> <kind> <barred-class> — one mutation of a copy:
+#   dropS   the last class id leaves § 5.1's sentence, and nothing else moves
+#   addrow  a synthetic row of the barred class is appended to § 1.1, numbered one past the last
+#   wcell   the W cell of § 1.1's second row gains a word — an edit unrelated to the class
+nc2m_mutate() {
+  awk -v kind="$2" -v d="$3" '
+    { L[NR] = $0 }
+    END {
+      s11 = 0; s51 = 0; last = 0; lastd = 0; grab = 0
+      for (i = 1; i <= NR; i++) {
+        if (index(L[i], "### 1.1 ") == 1) { s11 = 1; continue }
+        if (index(L[i], "### 5.1 ") == 1) { s51 = 1; s11 = 0; continue }
+        if (L[i] ~ /^### / || L[i] ~ /^## /) { s11 = 0; s51 = 0 }
+        if (s11 && L[i] ~ /^\|[ \t]*[0-9]+[ \t]*\|/) { last = i; if (index(L[i], "`" d "`")) lastd = i; if (!second && L[i] ~ /^\|[ \t]*2[ \t]*\|/) second = i }
+        if (s51 && index(L[i], "- **`" d "`**") == 1) grab = 1
+        else if (s51 && grab && (L[i] ~ /^- / || L[i] ~ /^[ \t]*$/)) grab = 0
+        if (s51 && grab && !sent && index(L[i], "Exactly ")) sent = i
+      }
+      for (i = 1; i <= NR; i++) {
+        line = L[i]
+        if (kind == "dropS" && i == sent) sub(/ and C[0-9]+\./, ".", line)
+        if (kind == "wcell" && i == second) { n = split(line, F, "|"); F[4] = F[4] "zq-reworded "; line = F[1]; for (k = 2; k <= n; k++) line = line "|" F[k] }
+        print line
+        if (kind == "addrow" && i == last && lastd) {
+          row = L[lastd]; n = split(L[last], F, "|"); num = F[2] + 1
+          n = split(row, F, "|"); F[2] = " " num " "; F[3] = " `outputs/zq-probe.md` "
+          line = F[1]; for (k = 2; k <= n; k++) line = line "|" F[k]
+          print line
+        }
+      }
+    }' "$1"
+}
+
+if [ "$NC_OK" -eq 1 ]; then
+  NC2_D="$NC_W/nc2"; mkdir -p "$NC2_D"
+  NC2_CLASS="$(nc_span "$(nc_cell "$NC_TABLE" 2 4)")"
+  NC2_ACROSS="$(nc_cell "$NC_TABLE" 2 3)"
+  NC2_SPEC="$ROOT/${PB_SPEC:-reference/site-layout-spec.md}"
+  NC2_ENUM_OK=0
+  NC2_PUBENUM="${PB_PUBENUM:-}"
+  [ -n "$NC2_PUBENUM" ] || NC2_PUBENUM="$(en_canonical publish | awk 'NR == 1')"
+  case "|$NC2_PUBENUM|" in *"|$NC2_READ|"*) nc2_e1=1 ;; *) nc2_e1=0 ;; esac
+  case "|$NC2_PUBENUM|" in *"|${NC2_CLASS:-<none>}|"*) nc2_e2=1 ;; *) nc2_e2=0 ;; esac
+  [ "$nc2_e1" -eq 1 ] && [ "$nc2_e2" -eq 1 ] && NC2_ENUM_OK=1
+  NC2_ROWS="$(pb_fence_rows "$NC2_SPEC" 2>/dev/null)"
+  NC2_OUT="$(nc2_scan "$NC2_ROWS" "${CA_ROWS:-}" "$NC2_CLASS" "$NC2_READ")"
+  NC2_ALL="$(nc2_scan "$NC2_ROWS" "${CA_ROWS:-}" "$NC2_CLASS" ALL)"
+  NC2_NROWS="$(nc_rec "$NC2_OUT" ROWS)"; NC2_NREAD="$(nc_rec "$NC2_OUT" READ)"; NC2_NMEM="$(nc_rec "$NC2_OUT" MEMBERS)"
+  NC2_HITS="$(nc_n "$NC2_OUT" HIT)"; NC2_SENS="$(nc_n "$NC2_ALL" HIT)"
+  if [ "$NC2_ENUM_OK" -ne 1 ] || [ -z "$NC2_ACROSS" ] || [ "$NC2_NROWS" -eq 0 ] || [ "$NC2_NREAD" -eq 0 ] || [ "$NC2_NMEM" -eq 0 ]; then
+    FAIL "NC2: NOT EVALUATED — the barred class read from never-carry row 2 is '${NC2_CLASS:-<none>}' and the read class is '$NC2_READ' (both members of the canonical publish enum: $NC2_ENUM_OK); the fence parsed to $NC2_NROWS row(s), $NC2_NREAD of the read class; § 1.1 gives the barred class $NC2_NMEM member(s). An empty population is a failure, never a pass"
+  elif [ "$NC2_HITS" -gt 0 ]; then
+    FAIL "$(nc2_msg "$NC2_OUT" "$NC2_CLASS" "$NC2_ACROSS" | tr '\n' ' ')"
+  elif [ "$NC2_SENS" -ne "$NC2_NMEM" ]; then
+    FAIL "NC2: BROKEN PROBE — the sensitivity arm did not return the class: the same comparison over ALL $NC2_NROWS fence row(s) finds $NC2_SENS of the $NC2_NMEM \`$NC2_CLASS\` artifact(s), so the zero over the read set is not a measurement of this fence. The probe is reported unusable, never the subject clean"
+  else
+    PASS "NC2: none of the $NC2_NREAD artifact(s) the site build reads — the fence rows of class \`$NC2_READ\` — is a member of the \`$NC2_CLASS\` class, whose $NC2_NMEM member(s) are read from § 1.1's publish column and held nowhere in this file. Never-carry 2 holds at the declaration layer across $NC2_ACROSS. The zero is a measurement: the same comparison over all $NC2_NROWS fence rows finds all $NC2_SENS of them"
+  fi
+
+  # NC2f — the carrier class's own row, moved into the read class in a COPY of the spec.
+  NC2F_ART="$(awk -F'\t' -v c="${NC5_CARRIER#C}" '$1 == c { print $2 }' <<<"${CA_ROWS:-}")"
+  NC2F_SPEC="$NC2_D/spec-moved.md"; NC2F_SAME="$NC2_D/spec-same.md"
+  NC2F_INT=0
+  if [ -r "$NC2_SPEC" ] && [ -n "$NC2F_ART" ]; then
+    cp "$NC2_SPEC" "$NC2F_SAME"
+    awk -v info='```'"${PB_FENCE:-publish-contract-artifacts}" -v a="$NC2F_ART" -v d="$NC2_CLASS" -v r="$NC2_READ" '
+      $0 == info { on = 1; print; next }
+      on && $0 == "```" { on = 0 }
+      on { t = $0; sub(/^[ \t]+/, "", t); split(t, F, /[ \t]+/); if (F[1] == a && F[2] == d) { sub(d "[ \t]*$", r); } }
+      { print }' "$NC2_SPEC" > "$NC2F_SPEC"
+    nc2f_delta="$(awk 'FILENAME == ARGV[1] { a[$0]++; next } { if (a[$0] > 0) a[$0]--; else d++ } END { print d + 0 }' "$NC2_SPEC" "$NC2F_SPEC")"
+    [ "$nc2f_delta" -eq 1 ] && NC2F_INT=1
+  fi
+  NC2F_CID="$(awk -F'\t' -v a="$NC2F_ART" '$2 == a { print "C" $1 }' <<<"${CA_ROWS:-}")"
+  NC2F_WANT="NC2: $NC2F_ART ($NC2F_CID, $NC2_CLASS) is in the site build's read set — never-carry 2: an $NC2_CLASS class reaching the render across $NC2_ACROSS (CH-1, both limbs)"
+  NC2F_GOT="$(nc2_msg "$(nc2_scan "$(pb_fence_rows "$NC2F_SPEC" 2>/dev/null)" "${CA_ROWS:-}" "$NC2_CLASS" "$NC2_READ")" "$NC2_CLASS" "$NC2_ACROSS")"
+  NC2F_NOT="$(nc_n "$(nc2_scan "$(pb_fence_rows "$NC2F_SAME" 2>/dev/null)" "${CA_ROWS:-}" "$NC2_CLASS" "$NC2_READ")" HIT)"
+  if [ "$NC2F_INT" -ne 1 ]; then
+    FAIL "NC2f: fixture integrity — the copy of the spec does not differ from it in exactly the one fence row moved into the read class (artifact '${NC2F_ART:-<none>}'), so the arm below would prove nothing"
+  elif [ "$NC2F_GOT" = "$NC2F_WANT" ] && [ "$NC2F_NOT" -eq 0 ]; then
+    PASS "NC2f: MUST-FIRE — a copy of the spec whose fence gives the carrier class's artifact the read class is flagged, in the predicted words: $NC2F_GOT. MUST-NOT-FIRE beside it: an unmodified copy of the same spec, read by the same code, emits nothing"
+  else
+    FAIL "NC2f: did not behave as predicted — wanted '$NC2F_WANT', got '${NC2F_GOT:-<no finding>}'; the unmodified copy emitted $NC2F_NOT finding(s) where 0 was required"
+  fi
+
+  # ── NC2m — the membership, in both of its homes ─────────────────────────────────────
+  NC2M_M="$(nc2m_members "${CA_ROWS:-}" "$NC2_CLASS")"
+  NC2M_S="$(nc2m_sentence "$NC_ARCH" "$NC2_CLASS" 2>/dev/null)"
+  NC2M_NM="$(mg_count "$NC2M_M")"; NC2M_NS="$(mg_count "$NC2M_S")"
+  NC2M_FIND="$(nc2m_find "$NC2M_M" "$NC2M_S" "$NC2_CLASS")"
+  if [ "$NC2M_NM" -eq 0 ] || [ "$NC2M_NS" -eq 0 ]; then
+    FAIL "NC2m: NOT EVALUATED — § 1.1's publish column gives \`$NC2_CLASS\` $NC2M_NM member(s) and § 5.1's anchored sentence $NC2M_NS. An empty side is a failure, never a pass: the comparison below would be of a set with nothing"
+  elif [ -n "$NC2M_FIND" ]; then
+    FAIL "$NC2M_FIND"
+  else
+    PASS "NC2m: the \`$NC2_CLASS\` class has $NC2M_NM member(s) at its live membership — {$(nc_join "$NC2M_M")}, read from § 1.1's publish column — and § 5.1's own sentence names the same $NC2M_NS, in both directions. Every NC-2 arm grades this set, read on this run; none grades a copy of it"
+  fi
+  # nc2m_arm <id> <kind> <want-members> <want-finding> <label>
+  nc2m_arm() {
+    local id="$1" kind="$2" wantn="$3" want="$4" label="$5"
+    local r="$NC2_D/$id" rows m s got delta
+    mkdir -p "$r/${VA_ARCH_DOC%/*}"
+    nc2m_mutate "$NC_ARCH" "$kind" "$NC2_CLASS" > "$r/$VA_ARCH_DOC" 2>/dev/null
+    delta="$(awk 'FILENAME == ARGV[1] { a[$0]++; next } { if (a[$0] > 0) a[$0]--; else d++ } END { print d + 0 }' "$NC_ARCH" "$r/$VA_ARCH_DOC")"
+    rows="$(va_class_rows "$r" 2>/dev/null)"
+    m="$(nc2m_members "$rows" "$NC2_CLASS")"; s="$(nc2m_sentence "$r/$VA_ARCH_DOC" "$NC2_CLASS" 2>/dev/null)"
+    got="$(nc2m_find "$m" "$s" "$NC2_CLASS")"
+    if [ "$delta" -ne 1 ]; then
+      FAIL "$id: fixture integrity — the copy differs from the architecture document in $delta line(s) where exactly 1 was to change ($label), so the arm below would prove nothing"
+    elif [ "$(mg_count "$m")" -eq "$wantn" ] && [ "$got" = "$want" ]; then
+      if [ -n "$want" ]; then PASS "$id: MUST-FIRE — $label: § 1.1 gives $(mg_count "$m") member(s) and the agreement fails in the predicted words: $got"
+      else PASS "$id: MUST-NOT-FIRE — $label: § 1.1 still gives $(mg_count "$m") member(s) and the two homes still agree"; fi
+    else
+      FAIL "$id: did not behave as predicted ($label) — wanted $wantn member(s) and '${want:-no finding}', got $(mg_count "$m") member(s) and '${got:-no finding}'"
+    fi
+  }
+  NC2M_LAST="${NC2M_M##* }"; NC2M_REST="${NC2M_M% *}"
+  NC2M_NEXT="C$(( $(printf '%s\n' "${CA_ROWS:-}" | awk -F'\t' '$1 ~ /^[0-9]+$/ { v = $1 } END { print v + 0 }') + 1 ))"
+  nc2m_arm NC2mf1 dropS "$NC2M_NM" "NC2m: $NC2_CLASS membership disagrees — § 1.1's publish column {$(nc_join "$NC2M_M")} vs § 5.1's sentence {$(nc_join "$NC2M_REST")}; on one side only: $NC2M_LAST" "a copy with only § 5.1's sentence edited to drop its last class"
+  nc2m_arm NC2mf2 addrow "$((NC2M_NM + 1))" "NC2m: $NC2_CLASS membership disagrees — § 1.1's publish column {$(nc_join "$NC2M_M $NC2M_NEXT")} vs § 5.1's sentence {$(nc_join "$NC2M_M")}; on one side only: $NC2M_NEXT" "a copy with one synthetic row of the class appended to § 1.1 and the sentence untouched"
+  nc2m_arm NC2mn wcell "$NC2M_NM" '' "a copy with an unrelated edit to another row of § 1.1"
+fi
+
+# ── NC-2, the supersession reader and the value branches ──────────────────────────────────
+#
+# Never-carry 2 is superseded IN PART by a later record, for exactly one integer. A record
+# superseded in part keeps its text as decided and carries the change in two places: an
+# inline marker at the superseded text, and a sentence in its own Status line. NC2s reads
+# both and requires them to name the same records. Where they do not, the supersession is
+# recorded in one place only and the exception is NOT applied — a marker nobody recorded, or
+# a Status sentence with no marker, must not widen what may reach a render.
+#
+#   MARKER SIDE  on the never-carry table's row 2: every inline `*(Superseded in part …`
+#                marker, read up to its first closing parenthesis, that ends on a link to a
+#                record file
+#   STATUS SIDE  every record linked inside a SENTENCE of the Status bullet that names
+#                never-carry 2. A Status sentence about another decision is that decision's
+#                record and is not counted — arm NC2sb plants one
+#   ADMITTED     from each superseding record's `## Decision`: the numbered decision that
+#                names never-carry 2, and only that one, yields the labels it quotes in the
+#                bullet form `- **Label:**`. A label quoted in another decision, or in
+#                another form, is not admitted — arm NC2sa plants one
+#   SCOPE        the exception admits a COUNT under an admitted label, on either limb. It
+#                admits no value
+#
+# NC2v then grades the value branches through one evaluator, on synthetic renders: a value
+# of the carrier class reaching the encrypted render is admitted only under a label ADR-030
+# puts on its IN list for that class; on the plaintext render nothing of the class is; and a
+# count derived from the class is admitted only under a label the supersession admits.
+# The IN labels here are NC2v's OWN reader of ADR-030 — § 2's code spans between its two
+# list anchors, and § 4's person-record paragraph — kept apart from any other reader of that
+# record, because which IN values the class covers and which values the site may show are two
+# questions.
+NC2S_AWK='
+  function nc_links(s, pre,   t) {       # every [ADR-NNN](ADR-NNN-slug.md) link of s, as "<pre>\t<id>\t<file>"
+    while (match(s, /\[ADR-[0-9][0-9][0-9]\]\(ADR-[0-9][0-9][0-9]-[a-z0-9-]+\.md\)/)) {
+      t = substr(s, RSTART, RLENGTH); s = substr(s, RSTART + RLENGTH)
+      printf "%s\t%s\t%s\n", pre, substr(t, 2, 7), substr(t, 11, length(t) - 11)
+    }
+  }
+  function nc_names2(s) { return (s ~ /never-carry[ -]2([^0-9]|$)/) }
+  { L[NR] = $0 }
+  END {
+    # the Status bullet, its continuation lines joined
+    st = ""
+    for (i = 1; i <= NR; i++) if (index(L[i], "- **Status:**") == 1) {
+      st = L[i]
+      for (j = i + 1; j <= NR && L[j] ~ /^[ \t]+[^ \t]/; j++) { t = L[j]; sub(/^[ \t]+/, "", t); st = st " " t }
+      break
+    }
+    ns = 0; s = st
+    while (match(s, /[.!?][ \t]+[A-Z*`[(]/)) { ns++; sent = substr(s, 1, RSTART); s = substr(s, RSTART + RLENGTH - 1); if (nc_names2(sent)) { nn++; nc_links(sent, "STATUS") } }
+    if (s ~ /[^ \t]/) { ns++; if (nc_names2(s)) { nn++; nc_links(s, "STATUS") } }
+    printf "SENTENCES\t%d\t%d\n", ns, nn
+    # row 2 of the never-carry table
+    on = 0; rows = 0
+    for (i = 1; i <= NR; i++) {
+      if (index(L[i], "### 3. Four boundaries") == 1) { on = 1; continue }
+      if (on && (L[i] ~ /^### / || L[i] ~ /^## /)) on = 0
+      if (on && L[i] ~ /^\|[ \t]*2[ \t]*\|/) {
+        rows++; s = L[i]
+        while ((p = index(s, "*(Superseded in part")) > 0) {
+          s = substr(s, p + 20); q = index(s, ")"); seg = (q > 0) ? substr(s, 1, q) : s
+          if (match(seg, /\[ADR-[0-9][0-9][0-9]\]\(ADR-[0-9][0-9][0-9]-[a-z0-9-]+\.md\)$/)) nc_links(substr(seg, RSTART), "MARK")
+        }
+      }
+    }
+    printf "ROW2\t%d\n", rows
+  }'
+nc2s_sides() { awk "$NC2S_AWK" "$1"; }
+# nc2s_labels <record-file> — the labels the decision naming never-carry 2 quotes as bullets.
+nc2s_labels() {
+  awk '
+    index($0, "## Decision") == 1 && $0 ~ /^## Decision[ \t]*$/ { on = 1; next }
+    on && /^## / { on = 0 }
+    !on { next }
+    /^[0-9]+\. / { if (u != "") U[++nu] = u; u = $0; next }
+    u != "" && (/^[ \t]/ || /^[ \t]*$/) { u = u "\n" $0; next }
+    u != "" { U[++nu] = u; u = "" }
+    END {
+      if (u != "") U[++nu] = u
+      for (k = 1; k <= nu; k++) {
+        if (U[k] !~ /never-carry[ -]2([^0-9]|$)/) continue
+        s = U[k]
+        while (match(s, /`- \*\*[^*`]+:\*\*`/)) { t = substr(s, RSTART + 5, RLENGTH - 9); s = substr(s, RSTART + RLENGTH); if (!(t in seen)) { seen[t] = 1; print "LABEL\t" t } }
+      }
+      printf "UNITS\t%d\n", nu
+    }' "$1"
+}
+# nc2s_read <adr-025> <record-directory> — both sides, the finding where they differ, and the
+# admitted labels where they agree. Records: MARK/STATUS <id> <file> · FIND <text> · LABEL <l>.
+nc2s_read() {
+  local sides marks stats only id f
+  sides="$(nc2s_sides "$1")"
+  printf '%s\n' "$sides"
+  marks="$(awk -F'\t' '$1 == "MARK" && !s[$2]++ { printf "%s ", $2 }' <<<"$sides")"
+  stats="$(awk -F'\t' '$1 == "STATUS" && !s[$2]++ { printf "%s ", $2 }' <<<"$sides")"
+  only="$(nc_setdiff "$marks" "$stats")"
+  for id in $only; do printf 'FIND\tNC2s: never-carry 2 carries a supersession marker naming %s that ADR-025%ss Status line does not record — recorded in one place only; exception not applied\n' "$id" "'"; done
+  only="$(nc_setdiff "$stats" "$marks")"
+  for id in $only; do printf 'FIND\tNC2s: never-carry 2%ss supersession by %s is recorded in ADR-025%ss Status line but carries no inline marker on row 2 — recorded in one place only; exception not applied\n' "'" "$id" "'"; done
+  [ -z "$(nc_setdiff "$marks" "$stats")$(nc_setdiff "$stats" "$marks")" ] || return 0
+  while IFS="$VA_TAB" read -r _ id f; do
+    [ -n "$f" ] || continue
+    if [ -r "$2/$f" ]; then nc2s_labels "$2/$f"; else printf 'FIND\tNC2s: the superseding record %s (%s) is not readable beside ADR-025 — exception not applied\n' "$id" "$f"; fi
+  done <<EOF
+$(awk -F'\t' '$1 == "MARK" && !s[$2]++' <<<"$sides")
+EOF
+}
+nc2s_set() { awk -F'\t' -v k="$2" '$1 == k && !s[$2]++ { printf "%s%s", (n++ ? ", " : ""), $2 }' <<<"$1"; }
+nc2s_finds() { awk -F'\t' '$1 == "FIND" { printf "%s%s", (n++ ? " | " : ""), $2 }' <<<"$1"; }
+
+# nc_c2_in_labels <adr-030> — NC2v's own IN set for the class, one label per line.
+nc_c2_in_labels() {
+  awk '
+    function spans(s,   t) { while (match(s, /`[^`]+`/)) { t = substr(s, RSTART + 1, RLENGTH - 2); s = substr(s, RSTART + RLENGTH); if (!(t in seen)) { seen[t] = 1; print t } } }
+    index($0, "**IN — may appear on the private site.**") == 1 { inlist = 1 }
+    index($0, "**OUT — never on any page.**") == 1 { inlist = 0 }
+    inlist { spans($0) }
+    index($0, "**A-1 — ") == 1 { a1 = 1; buf = "" }
+    a1 && /^[ \t]*$/ { a1 = 0; p = index(buf, " are "); if (p > 0) spans(substr(buf, p + 5)); buf = "" }
+    a1 { buf = buf " " $0 }
+    END { if (a1) { p = index(buf, " are "); if (p > 0) spans(substr(buf, p + 5)) } }' "$1"
+}
+# nc_c2_verdict <limb enc|plain> <label> <kind value|count> <adr-025> <adr-030> <data-model>
+#   rc 0 ADMIT · 1 DENY · 2 not measured (an input this evaluator needs did not read)
+nc_c2_verdict() {
+  local limb="$1" label="$2" kind="$3" adr25="$4" adr30="$5" dm="$6"
+  local ins nin nres rd
+  if [ "$kind" = count ]; then
+    rd="$(nc2s_read "$adr25" "${adr25%/*}")"
+    [ "$(nc_rec "$rd" ROW2)" -ge 1 ] || return 2
+    [ -z "$(nc2s_finds "$rd")" ] || return 1
+    awk -F'\t' -v l="$label" '$1 == "LABEL" && $2 == l { f = 1 } END { exit (f ? 0 : 1) }' <<<"$rd"
+    return $?
+  fi
+  [ "$limb" = enc ] || [ "$limb" = plain ] || return 2
+  ins="$(nc_c2_in_labels "$adr30" 2>/dev/null)"
+  nin="$(nc_count "$ins")"
+  nres="$(awk -F'\t' 'FILENAME == ARGV[1] { if ($3 != "") lab[$3] = 1; next } NF && ($0 in lab) { n++ } END { print n + 0 }' <(ft_rows "$dm" 2>/dev/null) <(printf '%s\n' "$ins"))"
+  [ "$nin" -gt 0 ] && [ "$nres" -eq "$nin" ] || return 2
+  [ "$limb" = enc ] || return 1
+  awk -v l="$label" '$0 == l { f = 1 } END { exit (f ? 0 : 1) }' <<<"$ins"
+}
+# nc2v_text <limb> <label> <kind> — the finding a DENY carries.
+nc2v_text() {
+  if [ "$3" = count ]; then
+    printf 'NC2v: a count derived from %s reaches the render under %s%s%s, which no record superseding never-carry 2 admits — never-carry 2: an anonymized form' "$NC5_CARRIER" "'" "$2" "'"
+  elif [ "$1" = enc ]; then
+    printf 'NC2v: a %s value under %s%s%s reaches the CH-1 encrypted render and is not on ADR-030 § 2%ss IN list — never-carry 2: %s to the private site outside the reading ADR-030 gives' "$NC5_CARRIER" "'" "$2" "'" "'" "$NC2_CLASS"
+  else
+    printf 'NC2v: a %s value under %s%s%s reaches the CH-1 --plaintext render — never-carry 2: on a public page no value of the %s class may appear' "$NC5_CARRIER" "'" "$2" "'" "$NC2_CLASS"
+  fi
+}
+
+if [ "$NC_OK" -eq 1 ]; then
+  NC2S_D="$NC_W/nc2s"; mkdir -p "$NC2S_D"
+  NC_ADR030="$ROOT/reference/adr/ADR-030-what-the-private-site-may-show.md"
+  NC2S_READ="$(nc2s_read "$NC_ADR025" "${NC_ADR025%/*}")"
+  NC2S_NROW="$(nc_rec "$NC2S_READ" ROW2)"
+  NC2S_NSENT="$(awk -F'\t' '$1 == "SENTENCES" { v = $2 } END { print v + 0 }' <<<"$NC2S_READ")"
+  NC2S_MARKS="$(nc2s_set "$NC2S_READ" MARK)"; NC2S_STATS="$(nc2s_set "$NC2S_READ" STATUS)"
+  NC2S_LABELS="$(nc2s_set "$NC2S_READ" LABEL)"; NC2S_FIND="$(nc2s_finds "$NC2S_READ")"
+  NC2S_FILE="$(awk -F'\t' '$1 == "MARK" && !n++ { print $3 }' <<<"$NC2S_READ")"
+  if [ "$NC2S_NROW" -ne 1 ] || [ "$NC2S_NSENT" -eq 0 ]; then
+    FAIL "NC2s: NOT EVALUATED — the never-carry table yields $NC2S_NROW row(s) numbered 2 where exactly 1 was required, and ADR-025's Status bullet splits into $NC2S_NSENT sentence(s). An unreadable side is a failure, never a pass"
+  elif [ -n "$NC2S_FIND" ]; then
+    FAIL "$NC2S_FIND"
+  else
+    PASS "NC2s: never-carry 2's supersession is recorded in both places and they agree — row 2 carries marker(s) naming {${NC2S_MARKS:-none}}, and the Status sentence(s) naming never-carry 2 link {${NC2S_STATS:-none}}, over $NC2S_NSENT Status sentence(s). The exception is applied: a count is admitted under {${NC2S_LABELS:-no label}}, the bullet-form label(s) quoted by the one decision of the superseding record that names never-carry 2, and nothing else is"
+  fi
+  # nc2s_arm <id> <kind> <want-find> <want-labels> <label> — one mutation of a copy of the
+  # record directory's two files; the reader is the same code, pointed at the copy.
+  nc2s_arm() {
+    local id="$1" kind="$2" want="$3" wantl="$4" label="$5"
+    local d="$NC2S_D/$id" a="$NC2S_D/$id/${NC_ADR025##*/}" s got gl delta
+    mkdir -p "$d"
+    cp "$NC_ADR025" "$a"; [ -n "$NC2S_FILE" ] && cp "${NC_ADR025%/*}/$NC2S_FILE" "$d/$NC2S_FILE"
+    case "$kind" in
+      dropstatus)  awk 'index($0, "- **Status:**") == 1 { st = 1 } st && /^- \*\*/ && index($0, "- **Status:**") != 1 { st = 0 } st { gsub(/never-carry 2/, "never-carry two") } { print }' "$NC_ADR025" > "$a" ;;
+      dropmarker)  awk '/^\|[ \t]*2[ \t]*\|/ && index($0, "*(Superseded in part") { p = index($0, "*(Superseded in part"); rest = substr($0, p); q = index(rest, ")*"); head = substr($0, 1, p - 1); sub(/ $/, "", head); $0 = head substr(rest, q + 2) } { print }' "$NC_ADR025" > "$a" ;;
+      otherstatus) awk 'index($0, "- **Deciders:**") == 1 && !done { print "  **Superseded in part (2001-01-02)** — an amendment that records a superseding decision. [ADR-099](ADR-099-zq-probe.md) supersedes in part § *Decision* 4" "\047" "s prohibition, as it applies to one join key. The rest stands."; done = 1 } { print }' "$NC_ADR025" > "$a" ;;
+      otherlabel)  awk '{ gsub(/`\*\*Passengers:\*\*`/, "`- **Passengers:**`") } { print }' "${NC_ADR025%/*}/$NC2S_FILE" > "$d/$NC2S_FILE" ;;
+    esac
+    delta="$(awk 'FILENAME == ARGV[1] { x[$0]++; next } { if (x[$0] > 0) x[$0]--; else n++ } END { print n + 0 }' <(cat "$NC_ADR025" "${NC_ADR025%/*}/$NC2S_FILE") <(cat "$a" "$d/$NC2S_FILE"))"
+    s="$(nc2s_read "$a" "$d")"; got="$(nc2s_finds "$s")"; gl="$(nc2s_set "$s" LABEL)"
+    if [ "$delta" -eq 0 ]; then
+      FAIL "$id: fixture integrity — the mutation did not land ($label): the copies do not differ from their sources, so the arm below would prove nothing"
+    elif [ "$got" = "$want" ] && [ "$gl" = "$wantl" ]; then
+      if [ -n "$want" ]; then PASS "$id: MUST-FIRE — $label ($delta line(s) changed) fails in the predicted words, and no label is admitted: $got"
+      else PASS "$id: MUST-NOT-FIRE — $label ($delta line(s) changed): the two sides still agree and the admitted set is still {$gl}"; fi
+    else
+      FAIL "$id: did not behave as predicted ($label) — wanted '${want:-no finding}' admitting {$wantl}, got '${got:-no finding}' admitting {$gl}"
+    fi
+  }
+  NC2S_ID="${NC2S_MARKS%%,*}"
+  nc2s_arm NC2sa otherlabel '' "$NC2S_LABELS" "a copy of the superseding record in which a label quoted by ANOTHER decision is rewritten into the bullet form"
+  nc2s_arm NC2sb otherstatus '' "$NC2S_LABELS" "a copy of ADR-025 whose Status bullet gains a supersession sentence for another decision, linking another record"
+  nc2s_arm NC2sf dropstatus "NC2s: never-carry 2 carries a supersession marker naming $NC2S_ID that ADR-025's Status line does not record — recorded in one place only; exception not applied" '' "a copy of ADR-025 with the marker kept and no Status sentence naming never-carry 2"
+  nc2s_arm NC2sf2 dropmarker "NC2s: never-carry 2's supersession by $NC2S_ID is recorded in ADR-025's Status line but carries no inline marker on row 2 — recorded in one place only; exception not applied" '' "a copy of ADR-025 with the Status sentence kept and the inline marker removed from row 2"
+
+  # ── NC2v — the value branches, on synthetic renders ─────────────────────────────────
+  NC2V_D="$NC_W/nc2v"; mkdir -p "$NC2V_D"
+  NC2V_IN="$(nc_c2_in_labels "$NC_ADR030" 2>/dev/null)"
+  NC2V_NIN="$(nc_count "$NC2V_IN")"
+  NC2V_INLBL="$(awk 'NF && !n++ { print }' <<<"$NC2V_IN")"
+  NC2V_CNTLBL="${NC2S_LABELS%%,*}"
+  # the synthetic trip: a model, a context, two renders, and a manifest naming which rendered
+  # integers derive from the model
+  {
+    printf '# Traveler model\n\n## Quinn\n\n- **%s:** zq-tidepool-walks\n- **Specific:** zq-midday-rest\n\n' "$NC2V_INLBL"
+    printf '## Wren %s %s\n\n- **Specific:** zq-a seated rest every hour\n' "$NC_OP_MARK" "$NC_TP_MARK"
+  } > "$NC2V_D/model.md"
+  printf '# Trip context\n\n## Group\n\n| Name | Role |\n|---|---|\n| Quinn | traveller |\n| Zq-second | traveller |\n\n- **%s:** 3\n' "$NC2V_CNTLBL" > "$NC2V_D/trip-context.md"
+  printf '<p>%s: zq-tidepool-walks</p>\n<p>Specific: zq-midday-rest</p>\n<p>Party needs: 1</p>\n<p>%s: 3</p>\n' "$NC2V_INLBL" "$NC2V_CNTLBL" > "$NC2V_D/enc.html"
+  printf '<p>%s: zq-tidepool-walks</p>\n<p>%s: 3</p>\n' "$NC2V_INLBL" "$NC2V_CNTLBL" > "$NC2V_D/plain.html"
+  printf 'Party needs\n%s\n' "$NC2V_CNTLBL" > "$NC2V_D/manifest.txt"
+  # nc2v_kind <render> <label> — value | count | none, from the render, the model and the manifest
+  nc2v_kind() {
+    awk -v l="$2" '
+      FILENAME == ARGV[1] { m = m "\n" $0; next }
+      FILENAME == ARGV[2] { if ($0 != "") cnt[$0] = 1; next }
+      { s = $0; gsub(/<[^>]*>/, "", s); p = index(s, l ": "); if (p != 1) next
+        v = substr(s, length(l) + 3); k = "none"
+        if ((l in cnt) && v ~ /^[0-9]+$/) k = "count"; else if (index(m, v)) k = "value"
+        print k; f = 1 }
+      END { if (!f) print "absent" }' "$NC2V_D/model.md" "$NC2V_D/manifest.txt" "$1"
+  }
+  # nc2v_arm <id> <want-rc> <limb> <label> <adr-025> <prose>
+  nc2v_arm() {
+    local id="$1" want="$2" limb="$3" label="$4" adr25="$5" prose="$6"
+    local render="$NC2V_D/$limb.html" kind got got2 text wtext
+    if [ "$limb" = both ]; then
+      # one emission, graded on each limb: the two verdicts must be the same one
+      kind="$(nc2v_kind "$NC2V_D/enc.html" "$label")"
+      [ "$(nc2v_kind "$NC2V_D/plain.html" "$label")" = "$kind" ] || kind="absent"
+      nc_c2_verdict enc "$label" "$kind" "$adr25" "$NC_ADR030" "$NC_DM" >/dev/null 2>&1; got=$?
+      nc_c2_verdict plain "$label" "$kind" "$adr25" "$NC_ADR030" "$NC_DM" >/dev/null 2>&1; got2=$?
+      [ "$got" -eq "$got2" ] || got=99
+      limb=enc
+    else
+      kind="$(nc2v_kind "$render" "$label")"
+      nc_c2_verdict "$limb" "$label" "$kind" "$adr25" "$NC_ADR030" "$NC_DM" >/dev/null 2>&1; got=$?
+    fi
+    text=""; [ "$got" -eq 1 ] && text="$(nc2v_text "$limb" "$label" "$kind")"
+    wtext=""; [ "$want" -eq 1 ] && wtext="$(nc2v_text "$limb" "$label" "$kind")"
+    if [ "$kind" != value ] && [ "$kind" != count ]; then
+      FAIL "$id: fixture integrity — the $limb render does not carry '$label' as a value of the model or a count the manifest marks (read as '$kind'), so the verdict below would prove nothing"
+    elif [ "$got" -eq 127 ]; then
+      FAIL "$id: $prose -- rc=127: the evaluator is NOT DEFINED. The subject is absent, not rejecting"
+    elif [ "$got" -eq "$want" ] && [ "$text" = "$wtext" ]; then
+      PASS "$id: $prose [a $kind under '$label' on the $limb render: rc=$got, expected $want]${text:+ — $text}"
+    else
+      FAIL "$id: $prose -- a $kind under '$label' on the $limb render: expected rc=$want, got rc=$got"
+    fi
+  }
+  if [ "$NC2V_NIN" -eq 0 ] || [ -z "$NC2V_CNTLBL" ] || [ "$NC2V_CNTLBL" = "no label" ]; then
+    FAIL "NC2v1: NOT EVALUATED — NC2v's reader of ADR-030 returns $NC2V_NIN IN label(s) and the supersession admits '${NC2V_CNTLBL:-<none>}'. The value branches have no input to grade, so none of the six arms was run"
+  else
+    cp "$NC_ADR025" "$NC2V_D/${NC_ADR025##*/}"; [ -n "$NC2S_FILE" ] && cp "${NC_ADR025%/*}/$NC2S_FILE" "$NC2V_D/$NC2S_FILE"
+    awk 'index($0, "- **Status:**") == 1 { st = 1 } st && /^- \*\*/ && index($0, "- **Status:**") != 1 { st = 0 } st { gsub(/never-carry 2/, "never-carry two") }
+         /^\|[ \t]*2[ \t]*\|/ && index($0, "*(Superseded in part") { p = index($0, "*(Superseded in part"); rest = substr($0, p); q = index(rest, ")*"); head = substr($0, 1, p - 1); sub(/ $/, "", head); $0 = head substr(rest, q + 2) } { print }' "$NC_ADR025" > "$NC2V_D/${NC_ADR025##*/}"
+    nc2v_arm NC2v1 1 enc Specific "$NC_ADR025" "MUST-FIRE — a $NC5_CARRIER value under a label ADR-030 does not put on its IN list reaches the encrypted render"
+    nc2v_arm NC2v2 1 plain "$NC2V_INLBL" "$NC_ADR025" "MUST-FIRE — a $NC5_CARRIER value under an IN label reaches the plaintext render, where nothing of the class may"
+    nc2v_arm NC2v3 1 enc 'Party needs' "$NC_ADR025" "MUST-FIRE — a count derived from $NC5_CARRIER reaches the render under a label no superseding record admits: the anonymized form"
+    nc2v_arm NC2v4 0 enc "$NC2V_INLBL" "$NC_ADR025" "MUST-NOT-FIRE — the same IN value on the encrypted render is the reading ADR-030 gives"
+    nc2v_arm NC2v5 0 both "$NC2V_CNTLBL" "$NC_ADR025" "MUST-NOT-FIRE — the one count the superseding record admits, graded on BOTH limbs, while the marker and the Status sentence stand"
+    nc2v_arm NC2v6 1 both "$NC2V_CNTLBL" "$NC2V_D/${NC_ADR025##*/}" "MUST-FIRE — the same count, on both limbs, against a copy of ADR-025 with the marker and the Status sentence removed: the exception is read from the record, not held here"
   fi
 fi
 
