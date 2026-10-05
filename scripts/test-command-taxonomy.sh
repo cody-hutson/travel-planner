@@ -106,6 +106,15 @@
 #     only a FILE and not a (command, verb) pair — the measure that must fall to zero
 #     F7 a construct directs anything but the presence probe at a passphrase home
 #
+#   W   the CH-3 W-test over the authored command and conduct text           (group W)
+#     W1 a sentence names a provenance mark ([OPERATOR-PROVIDED], [THIRD-PARTY], provenance
+#        marking) and consent, and some consent word in it carries no negation among the five
+#        words before it in its own clause, and no non- prefix — ADR-006: provenance-marking
+#        records that a value is second-hand and never establishes consent. Residual, stated:
+#        a negation inside that window that does not bind the consent word reads as negated, a
+#        paraphrase outside the lexicon is not seen, and a live session is exercised per
+#        release, not graded here
+#
 #   Q   the GRANT TABLES — each row paired with an allowed-tools entry, each entry with a row
 #       (group Q). A separate reader from F's TOOL-GRANT class, which classifies a body-table
 #       grant token and compares nothing
@@ -2284,6 +2293,142 @@ passvalue_check() {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────────
+# consentmark_check <root>
+#
+# THE CH-3 W-TEST: provenance-marking records that a value is second-hand and NEVER
+# establishes consent (ADR-006). The engine's conduct is authored text, so the test is a scan
+# of that text for a sentence that binds a provenance mark to consent without negating it.
+# Read: every markdown file directly under a verb directory, every agent prompt, the charter
+# and the guided-entry carrier — the text a session follows.
+#
+# THE PREDICATE, stated in full so it can be argued with rather than reverse-engineered:
+#
+#   1 SENTENCES  A block is a paragraph — blank-line-delimited, its lines joined — and a
+#                fenced line is its own block. A block is cut after `.`, `!` or `?`, plus any
+#                closing `*`, backtick, `)`, `"`, `'` or `]`, where whitespace and then an
+#                uppercase letter or one of `*`, backtick, `[`, `_`, `(`, `"`, `'` follows
+#   2 POPULATION a sentence carrying a mark — [OPERATOR-PROVIDED], [THIRD-PARTY], or
+#                provenance mark / marks / marking, hyphenated or spaced — AND a consent word
+#   3 TOKENS     the sentence split on every character outside letters, the apostrophe and
+#                the hyphen, compared lowercase. No word-boundary operator anywhere
+#   4 CONSENT    a token beginning `consent`, or `agree`, `agreed`, `agrees`, `agreement`. A
+#                token beginning `non-consent` is a consent word negated by its own prefix
+#   5 CLAUSES    the sentence split at `;`, `:`, a spaced em dash, a spaced en dash, a spaced
+#                hyphen, and `, so` before a word boundary
+#   6 NEGATED    one of the FIVE tokens immediately before the consent word, inside its own
+#                clause, is never, not, no, nor, cannot, can't, doesn't, isn't, without or
+#                neither — or the word carries the non- prefix
+#   7 W1         some consent word in a population sentence is not negated
+#
+# The window is five because that is what the labelled cases discriminate: at six, a negation
+# that opens a sentence about something else reaches a consent word it does not bind.
+#
+# ENGINE PARITY. The program runs under LC_ALL=C and matches the multi-byte separators and the
+# curly apostrophe as literal byte strings, never inside a bracket expression, so a byte-mode
+# awk and a locale-aware one read the same tokens. Arm GW1d plants the em dash and is the arm
+# that fails if an engine stops reading it.
+#
+# WHAT A GREEN DOES NOT COVER, stated on the verdict line as well: a negation inside the
+# window that does not bind the consent word reads as negated; a paraphrase outside the
+# lexicon is not seen; and the subject is the authored text a session follows, not a session.
+# ─────────────────────────────────────────────────────────────────────────────────
+ENDASH='–'
+# The curly apostrophe, U+2019, spelled by its bytes: written as a literal it reads to a
+# linter as a mistyped quote, and it is the one character here that must not be retyped.
+RSQUO="$(printf '\342\200\231')"
+W_WINDOW=5
+consentmark_check() {
+  local root="$1" f out line wf wl wm wt rc=0
+  local tab=$'\t'
+  local -a WFL=()
+  for f in "$root"/skills/*/*.md "$root"/agents/*.md "$root/CLAUDE.md" "$root/SKILL.md"; do
+    [ -f "$f" ] && WFL+=( "$f" )
+  done
+  # awk reads standard input when it is handed no file, so the empty set is answered here.
+  if [ "${#WFL[@]}" -eq 0 ]; then
+    printf 'COUNT WFILES 0\nCOUNT WSENT 0\nCOUNT WNEG 0\nCOUNT WSCAN 0\n'
+    return 1
+  fi
+  out="$(LC_ALL=C awk -v Q="$Q" -v EM=" $EMDASH " -v EN=" $ENDASH " -v RSQ="$RSQUO" -v WIN="$W_WINDOW" '
+    BEGIN {
+      SEP = sprintf("%c", 1)
+      SRE = "[.!?][]*`)\"" Q "]*[ \t]+[A-Z*`[_(\"" Q "]"
+      TOKRE = "[^a-z" Q "-]+"
+      n = split("never not no nor cannot can" Q "t doesn" Q "t isn" Q "t without neither", W, " ")
+      for (i = 1; i <= n; i++) NEG[W[i]] = 1
+    }
+    function trim(s) { sub(/^[ \t\r]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+    function grade(sent, ln,   mark, c, nc, C, i, t, T, nt, k, j, tok, neg, lo, any, allneg, first) {
+      mark = ""
+      if (index(sent, "[OPERATOR-PROVIDED]")) mark = "[OPERATOR-PROVIDED]"
+      else if (index(sent, "[THIRD-PARTY]")) mark = "[THIRD-PARTY]"
+      else if (sent ~ /[Pp]rovenance[- ]mark/) mark = "provenance marking"
+      if (mark == "") return
+      c = sent
+      gsub(RSQ, Q, c)
+      gsub(EM, SEP, c); gsub(EN, SEP, c); gsub(/ - /, SEP, c); gsub(/[;:]/, SEP, c)
+      while (match(c, /, so([^A-Za-z0-9_]|$)/)) c = substr(c, 1, RSTART - 1) SEP substr(c, RSTART + 4)
+      nc = split(c, C, SEP)
+      any = 0; allneg = 1; first = ""
+      for (i = 1; i <= nc; i++) {
+        t = tolower(C[i]); gsub(TOKRE, " ", t); t = trim(t)
+        nt = split(t, T, / +/)
+        for (k = 1; k <= nt; k++) {
+          tok = T[k]
+          if (!(tok ~ /^consent/ || tok ~ /^non-consent/ || tok == "agree" || tok == "agreed" || tok == "agrees" || tok == "agreement")) continue
+          any = 1
+          neg = (tok ~ /^non-/) ? 1 : 0
+          if (!neg) { lo = k - WIN; if (lo < 1) lo = 1; for (j = lo; j < k; j++) if (T[j] in NEG) neg = 1 }
+          if (!neg) { allneg = 0; if (first == "") first = tok }
+        }
+      }
+      if (!any) return
+      wsent++
+      if (allneg) wneg++
+      else printf "HIT\t%s\t%d\t%s\t%s\n", curfile, ln, mark, first
+    }
+    function emit(sent, pos,   k, ln) {
+      nsent++
+      ln = lno[1]
+      for (k = 1; k <= nl; k++) if (off[k] <= pos) ln = lno[k]
+      grade(sent, ln)
+    }
+    function flush(   s, base, m, sp, rs, rl) {
+      if (buf == "") return
+      s = buf; base = 1
+      while (match(s, SRE)) {
+        rs = RSTART; rl = RLENGTH
+        m = substr(s, rs, rl); sp = match(m, /[ \t]/)
+        emit(substr(s, 1, rs + sp - 2), base)
+        base += rs + rl - 2
+        s = substr(s, rs + rl - 1)
+      }
+      if (s ~ /[^ \t]/) emit(s, base)
+      buf = ""; nl = 0
+    }
+    FNR == 1 { flush(); infence = 0; curfile = FILENAME; nfiles++ }
+    {
+      if (substr($0, 1, 3) == "```") { flush(); infence = !infence; next }
+      t0 = trim($0)
+      if (infence) { if (t0 != "") { buf = t0; nl = 1; off[1] = 1; lno[1] = FNR; flush() } next }
+      if (t0 == "") { flush(); next }
+      if (buf == "") { buf = t0; nl = 1; off[1] = 1; lno[1] = FNR }
+      else { nl++; off[nl] = length(buf) + 2; lno[nl] = FNR; buf = buf " " t0 }
+    }
+    END { flush(); printf "COUNT WFILES %d\nCOUNT WSENT %d\nCOUNT WNEG %d\nCOUNT WSCAN %d\n", nfiles, wsent, wneg, nsent }
+  ' "${WFL[@]}")"
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      'HIT'"$tab"*)
+        IFS="$tab" read -r _ wf wl wm wt <<< "$line"
+        printf 'FINDING W1 %s:%d binds a provenance mark (%s) to consent (%s%s%s) with no negation in its clause — CH-3 W-test: provenance-marking records that a value is second-hand and never establishes consent (ADR-006)\n' "${wf#"$root"/}" "$wl" "$wm" "$Q" "$wt" "$Q"; rc=1 ;;
+      'COUNT '*) printf '%s\n' "$line" ;;
+    esac
+  done <<< "$out"
+  return "$rc"
+}
+
+# ─────────────────────────────────────────────────────────────────────────────────
 # parity_check <commands_dir>
 #
 # PRIVILEGE PARITY OVER THE GRANT DECLARATIONS. Three properties, every one of them about what
@@ -4243,6 +4388,21 @@ gen_cmd() {  # gen_cmd <dir> <tuple> <defect>
           spaninv)  printf -- '%s%s update trips/x --yes%s\n\n' "$BT" "$SCRIPT_REL" "$BT" ;;
         esac
       fi
+      # ── Group W's must-fire plants, in ONE verb region of the record command. Each binds a
+      # provenance mark to consent with nothing negating the consent word in its clause:
+      #   consentmark — the plain statement, on one line
+      #   consentwrap — the same shape hard-wrapped across two lines, so the paragraph join is
+      #                 what finds it
+      #   consenttail — a negation in the sentence, but in the NEXT clause, after `, so`
+      #   consentdash — a negation after a spaced EM DASH, and the mark spelled in words
+      if [ "$name" = 'trip-record' ] && [ "${IDS[$i]}" = 'profile' ]; then
+        case "$defect" in
+          consentmark) printf -- 'An entry marked %s[OPERATOR-PROVIDED]%s records that the person consented to keep it.\n\n' "$BT" "$BT" ;;
+          consentwrap) printf -- 'The %s[THIRD-PARTY]%s mark\nmeans the person agreed.\n\n' "$BT" "$BT" ;;
+          consenttail) printf -- 'An entry marked %s[OPERATOR-PROVIDED]%s records that the person consented to keep it, so do not ask them again.\n\n' "$BT" "$BT" ;;
+          consentdash) printf -- 'The provenance mark is the record that the person agreed %s never ask twice.\n\n' "$EMDASH" ;;
+        esac
+      fi
       if [ "$defect" = 'twosections' ] && [ "$i" -eq 0 ]; then
         printf -- '## %s <other>\n\n**Reads:** nothing.\n\n' "${IDS[$i]}"
       fi
@@ -4482,6 +4642,15 @@ gen_charter() {  # gen_charter <dir> <defect>
     printf '\n'
     printf '```\n%s publish trips/x\n%s rotate trips/x\n```\n\n' "$SCRIPT_REL" "$SCRIPT_REL"
     printf '## Next\n'
+    # ── Group W's must-NOT-fire population, carried by EVERY world: four sentences that name
+    # a provenance mark and a consent word, each negating the word a different way — `never`
+    # two words back, `never` at the far edge of the window and in the consent word's own
+    # clause after a semicolon, the non- prefix, and `not`. Arm G0w requires all four counted
+    # in the population and none flagged, so a scan that read nothing cannot pass it.
+    printf '\nProvenance-marking records that a value is second-hand and never establishes consent.\n\n'
+    printf 'A %s[THIRD-PARTY]%s mark records that a value was relayed; it never establishes that its subject agreed to it being kept.\n\n' "$BT" "$BT"
+    printf 'A value marked %s[THIRD-PARTY]%s is non-consented by construction.\n\n' "$BT" "$BT"
+    printf 'A %s[THIRD-PARTY]%s mark does not mean the subject agreed.\n' "$BT" "$BT"
   } > "$d/CLAUDE.md"
 }
 
@@ -4614,6 +4783,7 @@ $(coverage_check "$recs")
 $(enum_agree_check "$recs")
 $(invocation_check "$d/skills" "$recs")
 $(passvalue_check "$d/skills" "$recs")
+$(consentmark_check "$d")
 $(parity_check "$d/skills")
 $(picker_check "$recs" "$d/reference/command-reference.md" "$d/skills")"
   printf '%s\n' "$recs"
@@ -6929,6 +7099,80 @@ if [ "$TOKHITS" -eq 0 ] && [ "$CTLHITS" -eq 1 ]; then
 else
   FAIL "G-TOK: specificity — a per-run token resolved against $TOKHITS file(s), and the control needle resolved $CTLHITS time(s) where 1 was required"
 fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group W — the CH-3 W-test, over the authored command and conduct text.
+#
+# ADR-026 § Decision 5 gives every channel a W-test and an R-test, and states that a channel
+# with no stated test is unenforced regardless of the rule. CH-3's W-test — provenance-marking
+# never establishes consent — was prose. consentmark_check above is the predicate; this block
+# is its verdict on the real tree and the arms that keep the verdict honest.
+#
+# THE VERDICT STANDS ON COUNTS THE CHECK PRODUCED. An empty file set, or a scan that graded no
+# sentence, is a failure in the NOT-EVALUATED register and never a pass; and the population is
+# printed with the count of its sentences found negated, so a reader sees what the zero is a
+# zero over. The population on the real tree is small by nature — this is a prohibition the
+# corpus already honours — which is exactly why the arms below carry the weight.
+#
+# It runs here, after every other group and before group Y, because its arms register an id
+# and group Y reads the registrations.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group W — the CH-3 W-test over the authored command and conduct text."
+W_OUT="$(consentmark_check "$ROOT")"
+W_FILES="$(getcount "$W_OUT" WFILES)"; W_SENT="$(getcount "$W_OUT" WSENT)"
+W_NEG="$(getcount "$W_OUT" WNEG)"; W_SCAN="$(getcount "$W_OUT" WSCAN)"
+W1A="$(surface W1)"
+if has_finding "$W_OUT" "$W1A"; then FAIL "W1: a sentence in command or conduct text binds a provenance mark to consent with no negation in its clause — $(( ${W_SENT:-0} - ${W_NEG:-0} )) of ${W_SENT:-0} population sentence(s)"; show "$W_OUT" 'W1'
+elif [ "${W_FILES:-0}" -eq 0 ] || [ "${W_SCAN:-0}" -eq 0 ]; then FAIL "W1: NOT EVALUATED — the W-test read ${W_FILES:-0} file(s) and graded ${W_SCAN:-0} sentence(s). An empty population is a failure here, never a pass: nothing was graded"
+elif [ "${W_SENT:-0}" -ne "${W_NEG:-0}" ]; then FAIL "W1: ${W_SENT:-0} sentence(s) bind a provenance mark to a consent word and only ${W_NEG:-0} of them negate it, yet no finding was emitted for the difference — the check's own counts disagree with its findings"
+else PASS "W1: no sentence binds a provenance mark to consent without negating it — ${W_SENT} sentence(s) name a mark and a consent word and all ${W_NEG} negate the word within ${W_WINDOW} words before it in its own clause, or by a non- prefix, over ${W_SCAN} sentence(s) in ${W_FILES} file(s): each verb file and each file bundled beside one, each agent prompt, the charter and the guided-entry carrier. RESIDUAL, stated: a negation inside that window that does not bind the consent word reads as negated; a paraphrase outside the lexicon is not seen; and this grades the authored text a session follows, not a session. Arms GW1, GW1t, GW1n and GW1d each plant an unnegated sentence and require the finding; arm G0w requires four negated ones counted and none flagged"; fi
+
+# G0w — MUST-NOT-FIRE, over the conforming world built for G0. Every fixture charter carries
+# four sentences that name a mark and a consent word and negate the word, each a different
+# way. The arm requires all four COUNTED in the population and all four counted negated, so it
+# is a measurement: a scan that read nothing reports a population of zero and fails here.
+G0W_S=1
+if [ -f "$G0/CLAUDE.md" ]; then
+  grep -qxF 'Provenance-marking records that a value is second-hand and never establishes consent.' "$G0/CLAUDE.md" || G0W_S=0
+  grep -qxF "A ${BT}[THIRD-PARTY]${BT} mark records that a value was relayed; it never establishes that its subject agreed to it being kept." "$G0/CLAUDE.md" || G0W_S=0
+  grep -qxF "A value marked ${BT}[THIRD-PARTY]${BT} is non-consented by construction." "$G0/CLAUDE.md" || G0W_S=0
+  grep -qxF "A ${BT}[THIRD-PARTY]${BT} mark does not mean the subject agreed." "$G0/CLAUDE.md" || G0W_S=0
+else
+  G0W_S=0
+fi
+G0W_OUT="$(consentmark_check "$G0")"
+G0W_SENT="$(getcount "$G0W_OUT" WSENT)"; G0W_NEG="$(getcount "$G0W_OUT" WNEG)"
+G0W_F="$(grep -c '^FINDING W1 ' <<<"$G0W_OUT")"
+if [ "$G0W_S" -ne 1 ]; then
+  FAIL "G0w: fixture integrity — the conforming tree's charter does not carry the four negated sentences, so a zero here would prove nothing"
+elif [ "${G0W_SENT:-0}" -eq 4 ] && [ "${G0W_NEG:-0}" -eq 4 ] && [ "${G0W_F:-1}" -eq 0 ]; then
+  PASS "G0w: MUST-NOT-FIRE — over the conforming tree the W-test counts exactly 4 sentences naming a provenance mark and a consent word, finds all 4 negated, and emits no W1. The four negate differently — never two words back, never at the far edge of the window in the consent word's own clause, the non- prefix, and not — so the green rests on each route rather than on one"
+else
+  FAIL "G0w: over the conforming tree the W-test counted ${G0W_SENT:-0} population sentence(s) and ${G0W_NEG:-0} negated where 4 and 4 were required, and emitted ${G0W_F:-?} W1 finding(s) where 0 was — it is either blind to a sentence it should count or reading a negated consent word as a bound one"
+fi
+
+# wctl — the must-fire arm for W1, in ctl's shape with one thing added: the finding must NAME
+# the consent word the planted sentence carries. ctl asks only that the id fired; here the word
+# is the evidence that the predicate reached the token it was planted for and not another.
+wctl() {  # wctl <id> <cmd-defect> <consent-word> <label> <integrity-probe>
+  local id="$1" mdd="$2" word="$3" label="$4" probe="$5"
+  local d="$WORK/$id"; gen_tree "$d" ok "$mdd"
+  arm W1
+  if ! eval "$probe"; then FAIL "${id}a: fixture integrity — the deliberate defect is absent; ${id}b would prove nothing"; return; fi
+  PASS "${id}a: fixture integrity — the deliberate defect is present"
+  local out hits named
+  out="$(run_tree "$d")"
+  hits="$(grep -c '^FINDING W1 ' <<<"$out")"
+  named="$(grep -c "^FINDING W1 .*(${Q}${word}${Q})" <<<"$out")"
+  if [ "${hits:-0}" -eq 1 ] && [ "${named:-0}" -eq 1 ]; then PASS "${id}b: flagged, exactly one W1 and it names '${word}' — $label"
+  elif [ "${hits:-0}" -eq 0 ]; then FAIL "${id}b: the deliberate defect was NOT flagged ($label)"
+  else FAIL "${id}b: flagged, but ${hits} W1 finding(s) of which ${named} name '${word}' where exactly one naming it was required ($label)"; fi
+}
+wctl GW1  consentmark consented "a provenance mark stated to record that the person consented" 'grep -qxF "An entry marked ${BT}[OPERATOR-PROVIDED]${BT} records that the person consented to keep it." "$WORK/GW1/skills/trip-record/SKILL.md"'
+wctl GW1t consentwrap agreed "the same binding hard-wrapped across two lines — found by the paragraph join, not by a line scan" 'grep -qxF "The ${BT}[THIRD-PARTY]${BT} mark" "$WORK/GW1t/skills/trip-record/SKILL.md" && grep -qxF "means the person agreed." "$WORK/GW1t/skills/trip-record/SKILL.md"'
+wctl GW1n consenttail consented "a negation in the same sentence but in the NEXT clause, after a comma and so — it does not bind the consent word" 'grep -qxF "An entry marked ${BT}[OPERATOR-PROVIDED]${BT} records that the person consented to keep it, so do not ask them again." "$WORK/GW1n/skills/trip-record/SKILL.md"'
+wctl GW1d consentdash agreed "the mark spelled in words and a negation after a spaced EM DASH — the engine-parity arm for the multi-byte separator" 'grep -qxF "The provenance mark is the record that the person agreed ${EMDASH} never ask twice." "$WORK/GW1d/skills/trip-record/SKILL.md"'
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group Y — the assertion inventory, machine-checked against this file.
