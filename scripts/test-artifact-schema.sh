@@ -323,6 +323,11 @@
 #        and this rule had no mechanism at all, so the prose is replaced by an executable
 #        and anchored by its consumer instead. No count is spelled anywhere in this file
 #        for this group: every set is read
+#   NC   the never-carries of ADR-025 § Decision 3, graded as class facts at their live
+#        membership: a rebuilt-each-synthesis instance carrying prior passes (EB-0) — graded
+#        on tracked instances only, never on conduct that would accumulate into one; and
+#        both-marks values and DEST-class fields in cross-trip records (EB-2). Every arm
+#        carries a control that must fire and one that must not
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -16091,6 +16096,388 @@ md_flips rt_grammar_labels 'W1'  w1_assert  "$W_GRAMMAR" "$W_SPEC"
 md_flips rt_components     'W2'  w2_assert  "$W_SPEC"
 md_flips w_site_region     'W3'  w3_assert  "$W_VERB"
 md_flips w_site_region     'W3c' w3c_assert "$W_VERB"
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group NC — the five never-carries of ADR-025 § Decision 3, graded as class facts.
+#
+# ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
+# ADR-025 § Decision 3 states five things that never carry across a phase boundary, and it
+# states each as a fact about a CLASS rather than as a policy. Until this group shipped no
+# suite read that record at all: the prohibitions were prose in the one corpus surface a
+# guard had measured as read by nothing. A prohibition nothing can fail is a promise.
+#
+# ── EVERY CLASS AND EVERY BOUNDARY IS READ FROM THE RECORD, NOT HELD HERE ────────
+# The never-carry table is parsed where it stands. Row 1's lifecycle token, row 4's field
+# class and each row's boundary are taken from the table's own cells, and the membership of
+# each class is then read from its own home — § 6 for a lifecycle, the classification for a
+# field class, § 4.4 for the cross-trip sentinel. A copied list would grade the wrong set
+# the moment the class changed, and nothing would say so.
+#
+# ── EVERY ARM CARRIES THREE THINGS ───────────────────────────────────────────────
+# The real-tree verdict; a SENSITIVITY arm, which runs the same instrument where it must
+# find something, so a zero is a measurement and not an empty scan; and a MUST-FIRE arm
+# beside a MUST-NOT-FIRE arm, built under the temporary directory and differing in the one
+# property tested. A sensitivity arm returning zero is reported as a BROKEN PROBE on the
+# subject's own verdict line — never as the subject being clean.
+#
+# Every function below takes its input paths as ARGUMENTS, so a control arm drives the same
+# code over a copy. No tracked fixture is added, and nothing under the tree is written.
+#
+# ── WHAT THIS GROUP DOES NOT ESTABLISH ───────────────────────────────────────────
+# It grades the TREE. Never-carry 1 is graded on tracked instances only, never on conduct
+# that would accumulate into a rebuilt class; and no arm here observes an agent carrying a
+# value across a boundary at run time. Each verdict line states its own boundary.
+#
+# NC emits BEFORE group RS, and must stay there: RS reads the complete emitted set.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "NC — the five never-carries, graded as class facts at their live membership"
+
+NC_ADR025="$ROOT/reference/adr/ADR-025-engagement-model-over-time.md"
+NC_ARCH="$ROOT/$VA_ARCH_DOC"
+NC_DM="$ROOT/reference/data-model.md"
+NC_W="$WORK/nc"; mkdir -p "$NC_W"
+NC_TP_MARK='[THIRD-PARTY]'
+NC_OP_MARK='[OPERATOR-PROVIDED]'
+
+nc_count() { printf '%s\n' "$1" | grep -c '[^[:space:]]' || true; }
+
+# nc_table <adr-025> — the never-carry table, as "<n>\t<what>\t<across>", read inside the
+# section that declares it and nowhere else. Cells are trimmed and their markup is kept.
+nc_table() {
+  awk '
+    index($0, "### 3. Four boundaries") == 1 { on = 1; next }
+    on && (/^### / || /^## /) { on = 0 }
+    on && /^\|[ \t]*[0-9]+[ \t]*\|/ {
+      if (split($0, F, "|") < 5) next
+      for (i = 2; i <= 4; i++) { gsub(/^[ \t]+|[ \t]+$/, "", F[i]) }
+      printf "%s\t%s\t%s\n", F[2], F[3], F[4]
+    }' "$1"
+}
+# nc_cell <table> <row> <field> — one cell; nc_span <text> — its first code span, bare.
+nc_cell() { awk -F'\t' -v n="$2" -v f="$3" '$1 == n { print $f }' <<<"$1"; }
+nc_span() { awk '{ if (match($0, /`[^`]+`/)) print substr($0, RSTART + 1, RLENGTH - 2) }' <<<"$1"; }
+
+# nc_sentinel <architecture-doc> — the reserved `trip:` value the cross-trip classes carry,
+# read from the § 4.4 bullet that declares it.
+nc_sentinel() {
+  awk '
+    index($0, "### 4.4 ") == 1 { on = 1; next }
+    on && (/^### / || /^## /) { on = 0 }
+    on && /^- \*\*C22 / { grab = 1 }
+    on && grab && /^[ \t]*$/ { grab = 0 }
+    on && grab { buf = buf " " $0 }
+    END {
+      if (match(buf, /`trip` is `[^`]+`/)) {
+        s = substr(buf, RSTART, RLENGTH); sub(/^`trip` is `/, "", s); sub(/`$/, "", s); print s
+      }
+    }' "$1"
+}
+
+# nc_cross <root> <instances> <sentinel> — the "<class>\t<path>" instances whose frontmatter
+# `trip:` is the sentinel. The frontmatter is read by the validator's own reader.
+nc_cross() {
+  local cid p t
+  while IFS="$VA_TAB" read -r cid p; do
+    [ -n "$p" ] || continue
+    t="$(va_fm_pairs "$1" "$p" 2>/dev/null | awk -F'\t' '$1 == "trip" { v = $2 } END { print v }')"
+    [ "$t" = "$3" ] && printf '%s\t%s\n' "$cid" "$p"
+  done <<EOF
+$2
+EOF
+}
+
+# ── NC0 — the populations, each printed with its value. An empty one is a FAIL naming it.
+NC_TABLE="$(nc_table "$NC_ADR025" 2>/dev/null)"
+NC_NROWS="$(nc_count "$NC_TABLE")"
+NC1_CLASS="$(nc_span "$(nc_cell "$NC_TABLE" 1 2)")"
+NC1_ACROSS="$(nc_span "$(nc_cell "$NC_TABLE" 1 3)")"
+NC3_ACROSS="$(nc_span "$(nc_cell "$NC_TABLE" 3 3)")"
+NC4_CLASS="$(nc_span "$(nc_cell "$NC_TABLE" 4 2)")"
+NC4_ACROSS="$(nc_span "$(nc_cell "$NC_TABLE" 4 3)")"
+NC_SEL="${AR_SEL:-}"
+[ -n "$NC_SEL" ] || NC_SEL="$(va_select "$ROOT" tracked)"
+NC_INST="$(awk -F'\t' 'NF == 4 && $1 ~ /^C[0-9]+$/ { print $1 "\t" $3 }' <<<"$NC_SEL")"
+NC_NINST="$(nc_count "$NC_INST")"
+NC_NCLASS="$(printf '%s\n' "${CA_ROWS:-}" | grep -c '^[0-9]' || true)"
+NC_LIFE="$(ca_members)"
+NC_REBUILT="$(awk -F'\t' -v t="$NC1_CLASS" 'NF == 2 && $2 == t { printf "C%s ", $1 }' <<<"$NC_LIFE")"
+NC_NREBUILT="$(mg_count "$NC_REBUILT")"
+NC_NREBINST="$(awk -F'\t' -v set=" $NC_REBUILT" 'NF == 2 && index(set, " " $1 " ") { n++ } END { print n + 0 }' <<<"$NC_INST")"
+NC_SENTINEL="$(nc_sentinel "$NC_ARCH" 2>/dev/null)"
+NC_CROSS=""
+[ -n "$NC_SENTINEL" ] && NC_CROSS="$(nc_cross "$ROOT" "$NC_INST" "$NC_SENTINEL")"
+NC_NCROSS="$(nc_count "$NC_CROSS")"
+NC_DEST=""
+[ -n "$NC4_CLASS" ] && NC_DEST="$(dh_class_labels "$NC_DM" "$NC4_CLASS")"
+NC_NDEST="$(nc_count "$NC_DEST")"
+NC1_ENUM_OK=0
+case "|${CA_LIFE_ENUM:-}|" in *"|${NC1_CLASS:-<none>}|"*) NC1_ENUM_OK=1 ;; esac
+
+NC_OK=0
+if [ "$NC_NROWS" -gt 0 ] && [ -n "$NC1_CLASS" ] && [ -n "$NC1_ACROSS" ] && [ -n "$NC3_ACROSS" ] \
+   && [ -n "$NC4_CLASS" ] && [ -n "$NC4_ACROSS" ] && [ "$NC1_ENUM_OK" -eq 1 ] && [ "$NC_NCLASS" -gt 0 ] \
+   && [ "$NC_NINST" -gt 0 ] && [ "$NC_NREBUILT" -gt 0 ] && [ "$NC_NREBINST" -gt 0 ] \
+   && [ -n "$NC_SENTINEL" ] && [ "$NC_NCROSS" -gt 0 ] && [ "$NC_NDEST" -gt 0 ]; then
+  NC_OK=1
+  PASS "NC0: every population this group grades is DERIVED and came back non-empty — $NC_NROWS never-carry row(s) read from ADR-025's own table; $NC_NCLASS § 1.1 class row(s) and $NC_NINST tracked class instance(s) from the validator's selector; $NC_NREBUILT \`$NC1_CLASS\` class(es) from § 6's Members cells ($NC_REBUILT) holding $NC_NREBINST instance(s); $NC_NCROSS instance(s) whose frontmatter \`trip:\` is the sentinel \`$NC_SENTINEL\`, read from § 4.4: $(printf '%s' "$NC_CROSS" | awk -F'\t' '{ n = split($2, P, "/"); printf "%s ", P[n] }'); and $NC_NDEST \`$NC4_CLASS\`-class label(s) from the live classification: $(printf '%s' "$NC_DEST" | tr '\n' ';'). No class member, boundary or count is held in this file"
+else
+  FAIL "NC0: a population this group grades is EMPTY or unreadable — never-carry rows $NC_NROWS; row 1 class '${NC1_CLASS:-<none>}' (a member of the canonical lifecycle enum: $NC1_ENUM_OK) across '${NC1_ACROSS:-<none>}'; row 3 across '${NC3_ACROSS:-<none>}'; row 4 class '${NC4_CLASS:-<none>}' across '${NC4_ACROSS:-<none>}'; § 1.1 rows $NC_NCLASS; class instances $NC_NINST; rebuilt classes $NC_NREBUILT with $NC_NREBINST instance(s); cross-trip sentinel '${NC_SENTINEL:-<none>}' with $NC_NCROSS instance(s); field-class labels $NC_NDEST. Not a skip and not a pass: every arm below would be a statement over the empty set, and the ones that are zeroes would read as clean. The likeliest causes are a renamed heading in ADR-025 § Decision 3 or a reshaped never-carry table"
+fi
+
+if [ "$NC_OK" -eq 1 ]; then
+  # ── NC-1 — never-carry 1: an instance of a rebuilt class carrying prior passes ──────
+  # nc1_scan <root> <instances> <members> <class-token> <subject|others> — counts dated
+  # section headings, the accumulate signature CLAUDE.md § Output Versioning describes, at
+  # heading level two or three and outside a fence. `subject` grades the instances of the
+  # named lifecycle; `others` grades every other instance, which is the sensitivity arm.
+  # Records: HIT <path> <class> <lifecycle> <n> · UNREAD <path> <class> · GRADED <n>.
+  nc1_scan() {
+    {
+      printf '%s\n' "$3" | awk -F'\t' 'NF == 2 { print "M\t" $1 "\t" $2 }'
+      printf '%s\n' "$2" | awk -F'\t' 'NF == 2 { print "I\t" $1 "\t" $2 }'
+    } | awk -F'\t' -v root="$1" -v never="$4" -v mode="$5" '
+      $1 == "M" { life["C" $2] = $3; next }
+      $1 == "I" {
+        lc = life[$2]
+        if (lc == "") { printf "UNREAD\t%s\t%s\n", $3, $2; next }
+        if (mode == "subject" && lc != never) next
+        if (mode != "subject" && lc == never) next
+        f = root "/" $3; n = 0; fence = 0; got = 0
+        while ((getline line < f) > 0) {
+          got = 1
+          if (substr(line, 1, 3) == "```") { fence = !fence; continue }
+          if (fence) continue
+          if (line ~ /^###? .*\([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\)[ \t]*$/) n++
+        }
+        close(f)
+        if (!got) { printf "UNREAD\t%s\t%s\n", $3, $2; next }
+        graded++
+        if (n >= 2) printf "HIT\t%s\t%s\t%s\t%d\n", $3, $2, lc, n
+      }
+      END { printf "GRADED\t%d\n", graded }'
+  }
+  nc1_msg() {  # nc1_msg <scan-output> <boundary> — one finding line per HIT
+    awk -F'\t' -v b="$2" '$1 == "HIT" { printf "NC1: %s is an instance of %s (%s) and carries %d dated synthesis sections — never-carry 1: a %s class carried across %s (re-synthesis)\n", $2, $3, $4, $5, $4, b }' <<<"$1"
+  }
+  nc_n() { awk -F'\t' -v k="$2" '$1 == k { n++ } END { print n + 0 }' <<<"$1"; }
+  nc_graded() { awk -F'\t' '$1 == "GRADED" { v = $2 } END { print v + 0 }' <<<"$1"; }
+
+  NC1_OUT="$(nc1_scan "$ROOT" "$NC_INST" "$NC_LIFE" "$NC1_CLASS" subject)"
+  NC1_HITS="$(nc_n "$NC1_OUT" HIT)"; NC1_BAD="$(nc_n "$NC1_OUT" UNREAD)"; NC1_GR="$(nc_graded "$NC1_OUT")"
+  NC1C_OUT="$(nc1_scan "$ROOT" "$NC_INST" "$NC_LIFE" "$NC1_CLASS" others)"
+  NC1C_HITS="$(nc_n "$NC1C_OUT" HIT)"; NC1C_GR="$(nc_graded "$NC1C_OUT")"
+  NC1C_FIRST="$(awk -F'\t' '$1 == "HIT" && !n++ { print $3 "\t" $2 }' <<<"$NC1C_OUT")"
+  if [ "$NC1_GR" -eq 0 ] || [ "$NC1_BAD" -gt 0 ]; then
+    FAIL "NC1: NOT EVALUATED — $NC1_GR instance(s) of a \`$NC1_CLASS\` class were graded and $NC1_BAD could not be read or classed. An empty or unreadable population is a failure, never a pass"
+  elif [ "$NC1_HITS" -gt 0 ]; then
+    FAIL "$(nc1_msg "$NC1_OUT" "$NC1_ACROSS" | tr '\n' ' ')"
+  elif [ "$NC1C_HITS" -eq 0 ]; then
+    FAIL "NC1: BROKEN PROBE — the sensitivity arm returned zero: the same dated-section count over the $NC1C_GR instance(s) of every other lifecycle found none carrying two, so the zero over the \`$NC1_CLASS\` instances is an empty scan rather than a clean tree. The probe is reported unusable, never the subject clean"
+  else
+    PASS "NC1: none of the $NC1_GR tracked instance(s) of a \`$NC1_CLASS\` class carries two or more dated synthesis sections — never-carry 1 holds across $NC1_ACROSS on the tree. The zero is a measurement: the sensitivity arm NC1c found $NC1C_HITS instance(s) of another lifecycle carrying them on the same run. BOUNDARY, stated: graded on tracked instances only, never on conduct that would accumulate into a rebuilt class"
+  fi
+  if [ "$NC1C_HITS" -gt 0 ]; then
+    PASS "NC1c: SENSITIVITY — the same predicate over the $NC1C_GR instance(s) whose lifecycle is not \`$NC1_CLASS\` finds $NC1C_HITS carrying two or more dated sections, the first ${NC1C_FIRST##*"$VA_TAB"}. The instrument sees the accumulate signature where a class permits it"
+  else
+    FAIL "NC1c: SENSITIVITY returned zero over $NC1C_GR instance(s) of the other lifecycles — no tracked instance carries two dated sections, so NC1's zero has no control behind it"
+  fi
+
+  # NC1f / NC1n — a copy of one rebuilt class's declared witness, with two dated headings
+  # appended and then with one. The class is named; its witness path is read from the
+  # coverage declaration, and its membership of the rebuilt set is asserted, not assumed.
+  NC1F_CLASS='C11'
+  NC1F_WIT="$(awk -F'\t' -v c="$NC1F_CLASS" '$1 == c && !n++ { print $2 }' <<<"${CV_CLASS_WITNESS:-}")"
+  NC1F_D="$NC_W/nc1"; mkdir -p "$NC1F_D/two" "$NC1F_D/one"
+  NC1F_NAME="${NC1F_WIT##*/}"
+  NC1F_INT=0
+  if [ -n "$NC1F_WIT" ] && [ -r "$ROOT/$NC1F_WIT" ] && [ "${NC_REBUILT#*"$NC1F_CLASS "}" != "$NC_REBUILT" ]; then
+    { cat "$ROOT/$NC1F_WIT"; printf '\n## Venue matrix — pass 1 (2001-01-01)\n\n## Venue matrix — pass 2 (2001-01-02)\n'; } > "$NC1F_D/two/$NC1F_NAME"
+    { cat "$ROOT/$NC1F_WIT"; printf '\n## Venue matrix — pass 1 (2001-01-01)\n'; } > "$NC1F_D/one/$NC1F_NAME"
+    nc1f_base="$(grep -c '(2001-01-0[12])$' "$ROOT/$NC1F_WIT" || true)"
+    nc1f_two="$(grep -c '(2001-01-0[12])$' "$NC1F_D/two/$NC1F_NAME" || true)"
+    nc1f_one="$(grep -c '(2001-01-0[12])$' "$NC1F_D/one/$NC1F_NAME" || true)"
+    [ "$nc1f_base" -eq 0 ] && [ "$nc1f_two" -eq 2 ] && [ "$nc1f_one" -eq 1 ] && NC1F_INT=1
+  fi
+  NC1F_WANT="NC1: $NC1F_NAME is an instance of $NC1F_CLASS ($NC1_CLASS) and carries 2 dated synthesis sections — never-carry 1: a $NC1_CLASS class carried across $NC1_ACROSS (re-synthesis)"
+  NC1F_OUT="$(nc1_scan "$NC1F_D/two" "$NC1F_CLASS$VA_TAB$NC1F_NAME" "$NC_LIFE" "$NC1_CLASS" subject)"
+  NC1F_GOT="$(nc1_msg "$NC1F_OUT" "$NC1_ACROSS")"
+  if [ "$NC1F_INT" -ne 1 ]; then
+    FAIL "NC1f: fixture integrity — the copy of $NC1F_CLASS's witness does not carry exactly the two planted dated headings (witness '${NC1F_WIT:-<none>}'), so the arm below would prove nothing"
+  elif [ "$NC1F_GOT" = "$NC1F_WANT" ]; then
+    PASS "NC1f: MUST-FIRE — a copy of $NC1F_CLASS's witness carrying two planted dated headings is flagged, in the predicted words: $NC1F_GOT"
+  else
+    FAIL "NC1f: MUST-FIRE did not fire as predicted — wanted '$NC1F_WANT', got '${NC1F_GOT:-<no finding>}'"
+  fi
+  NC1N_OUT="$(nc1_scan "$NC1F_D/one" "$NC1F_CLASS$VA_TAB$NC1F_NAME" "$NC_LIFE" "$NC1_CLASS" subject)"
+  NC1N_HITS="$(nc_n "$NC1N_OUT" HIT)"; NC1N_GR="$(nc_graded "$NC1N_OUT")"
+  NC1N2_HITS=1; NC1N2_GR=1
+  if [ -n "$NC1C_FIRST" ]; then
+    NC1N2_OUT="$(nc1_scan "$ROOT" "$NC1C_FIRST" "$NC_LIFE" "$NC1_CLASS" subject)"
+    NC1N2_HITS="$(nc_n "$NC1N2_OUT" HIT)"; NC1N2_GR="$(nc_graded "$NC1N2_OUT")"
+  fi
+  if [ "$NC1F_INT" -ne 1 ] || [ -z "$NC1C_FIRST" ]; then
+    FAIL "NC1n: fixture integrity — the one-heading copy was not built, or no live instance of another lifecycle carries two dated sections, so the near-miss this arm needs is absent"
+  elif [ "$NC1N_GR" -eq 1 ] && [ "$NC1N_HITS" -eq 0 ] && [ "$NC1N2_GR" -eq 0 ] && [ "$NC1N2_HITS" -eq 0 ]; then
+    PASS "NC1n: MUST-NOT-FIRE — the same copy with ONE dated heading is graded and not flagged, and ${NC1C_FIRST##*"$VA_TAB"}, a live instance of another lifecycle that does carry two, is outside the subject population and not flagged: its class permits accumulation. The arm differs from NC1f in the count alone, and from the subject in the class alone"
+  else
+    FAIL "NC1n: a near-miss was flagged or not graded — one-heading copy graded=$NC1N_GR hits=$NC1N_HITS; the live accumulating instance graded-as-subject=$NC1N2_GR hits=$NC1N2_HITS"
+  fi
+
+  # ── NC-3 — never-carry 3: a both-marks value in a cross-trip record ────────────────
+  # nc_mark_scan <root> <instances> <mark> — every line of each instance carrying the mark.
+  # Records: HIT <path> <class> <line> · UNREAD <path> · GRADED <n>.
+  nc_mark_scan() {
+    printf '%s\n' "$2" | awk -F'\t' -v root="$1" -v mark="$3" '
+      NF == 2 {
+        f = root "/" $2; ln = 0; got = 0
+        while ((getline line < f) > 0) { got = 1; ln++; if (index(line, mark)) printf "HIT\t%s\t%s\t%d\n", $2, $1, ln }
+        close(f)
+        if (!got) { printf "UNREAD\t%s\n", $2; next }
+        graded++
+      }
+      END { printf "GRADED\t%d\n", graded }'
+  }
+  nc3_msg() {  # nc3_msg <scan-output> <sentinel> <mark> <boundary>
+    awk -F'\t' -v s="$2" -v m="$3" -v b="$4" '$1 == "HIT" { n = split($2, P, "/"); printf "NC3: %s (%s, trip: %s) carries %s at line %d — never-carry 3: a both-marks value across %s, which ADR-014%ss refusal closes permanently\n", P[n], $3, s, m, $4, b, "\047" }' <<<"$1"
+  }
+  NC3_OUT="$(nc_mark_scan "$ROOT" "$NC_CROSS" "$NC_TP_MARK")"
+  NC3_HITS="$(nc_n "$NC3_OUT" HIT)"; NC3_BAD="$(nc_n "$NC3_OUT" UNREAD)"; NC3_GR="$(nc_graded "$NC3_OUT")"
+  NC3C_OUT="$(nc_mark_scan "$ROOT" "$NC_CROSS" "$NC_OP_MARK")"
+  NC3C_HITS="$(nc_n "$NC3C_OUT" HIT)"
+  NC3C_FIRST="$(awk -F'\t' '$1 == "HIT" && !n++ { print $3 "\t" $2 "\t" $4 }' <<<"$NC3C_OUT")"
+  if [ "$NC3_GR" -eq 0 ] || [ "$NC3_BAD" -gt 0 ]; then
+    FAIL "NC3: NOT EVALUATED — $NC3_GR cross-trip instance(s) were read and $NC3_BAD could not be. An empty or unreadable population is a failure, never a pass"
+  elif [ "$NC3_HITS" -gt 0 ]; then
+    FAIL "$(nc3_msg "$NC3_OUT" "$NC_SENTINEL" "$NC_TP_MARK" "$NC3_ACROSS" | tr '\n' ' ')"
+  elif [ "$NC3C_HITS" -eq 0 ]; then
+    FAIL "NC3: BROKEN PROBE — the sensitivity arm returned zero: the same line scan for $NC_OP_MARK over the $NC3_GR cross-trip instance(s) found nothing, so the zero for $NC_TP_MARK is an empty scan rather than a clean store. The probe is reported unusable, never the subject clean"
+  else
+    PASS "NC3: none of the $NC3_GR tracked instance(s) whose \`trip:\` is \`$NC_SENTINEL\` carries $NC_TP_MARK — never-carry 3 holds across $NC3_ACROSS on the tree. The zero is a measurement: the sensitivity arm NC3c found $NC3C_HITS line(s) carrying $NC_OP_MARK in the same instances on the same run"
+  fi
+  if [ "$NC3C_HITS" -gt 0 ]; then
+    PASS "NC3c: SENSITIVITY — the same instrument, asked for $NC_OP_MARK, finds $NC3C_HITS line(s) in the cross-trip instances, the first in $(printf '%s' "$NC3C_FIRST" | awk -F'\t' '{ n = split($2, P, "/"); print P[n] }'). A provenance mark in a cross-trip record is something this scan sees"
+  else
+    FAIL "NC3c: SENSITIVITY returned zero — no cross-trip instance carries $NC_OP_MARK, so NC3's zero has no control behind it"
+  fi
+
+  # NC3f — a copy of the instance NC3c found, with the second mark appended to the line that
+  # already carries the first. NC3n — that instance as it stands, and a per-trip model that
+  # carries both marks: both are near-misses, one in the mark and one in the scope.
+  NC3F_D="$NC_W/nc3"; mkdir -p "$NC3F_D"
+  NC3F_CID="${NC3C_FIRST%%"$VA_TAB"*}"; nc3f_rest="${NC3C_FIRST#*"$VA_TAB"}"; NC3F_SRC="${nc3f_rest%%"$VA_TAB"*}"; NC3F_LINE="${nc3f_rest##*"$VA_TAB"}"
+  NC3F_NAME="${NC3F_SRC##*/}"; NC3F_INT=0
+  if [ -n "$NC3F_SRC" ] && [ -r "$ROOT/$NC3F_SRC" ]; then
+    awk -v n="$NC3F_LINE" -v m=" $NC_TP_MARK" 'NR == n { print $0 m; next } { print }' "$ROOT/$NC3F_SRC" > "$NC3F_D/$NC3F_NAME"
+    nc3f_both="$(awk -v a="$NC_OP_MARK" -v b="$NC_TP_MARK" 'index($0, a) && index($0, b) { n++ } END { print n + 0 }' "$NC3F_D/$NC3F_NAME")"
+    nc3f_src="$(awk -v b="$NC_TP_MARK" 'index($0, b) { n++ } END { print n + 0 }' "$ROOT/$NC3F_SRC")"
+    [ "$nc3f_both" -eq 1 ] && [ "$nc3f_src" -eq 0 ] && NC3F_INT=1
+  fi
+  NC3F_WANT="NC3: $NC3F_NAME ($NC3F_CID, trip: $NC_SENTINEL) carries $NC_TP_MARK at line $NC3F_LINE — never-carry 3: a both-marks value across $NC3_ACROSS, which ADR-014's refusal closes permanently"
+  NC3F_GOT="$(nc3_msg "$(nc_mark_scan "$NC3F_D" "$NC3F_CID$VA_TAB$NC3F_NAME" "$NC_TP_MARK")" "$NC_SENTINEL" "$NC_TP_MARK" "$NC3_ACROSS")"
+  if [ "$NC3F_INT" -ne 1 ]; then
+    FAIL "NC3f: fixture integrity — the copy does not carry both marks on exactly one line, or its source already carried the second, so the arm below would prove nothing"
+  elif [ "$NC3F_GOT" = "$NC3F_WANT" ]; then
+    PASS "NC3f: MUST-FIRE — a copy of a cross-trip instance with the second mark appended to the line carrying the first is flagged, in the predicted words: $NC3F_GOT"
+  else
+    FAIL "NC3f: MUST-FIRE did not fire as predicted — wanted '$NC3F_WANT', got '${NC3F_GOT:-<no finding>}'"
+  fi
+  # The per-trip near-misses: a synthetic model, and the live per-trip instances that carry
+  # both marks on one heading. Neither is a cross-trip record, so neither is in the subject.
+  printf '# Traveler model\n\n## Wren %s %s\n\n- Need → — (traveller-scoped; no trip-level constraint); specific: zq-a seated rest every hour.\n' "$NC_OP_MARK" "$NC_TP_MARK" > "$NC3F_D/model.md"
+  NC3N_LIVE="$(awk -F'\t' -v root="$ROOT" -v a="$NC_OP_MARK" -v b="$NC_TP_MARK" '
+    NF == 2 { f = root "/" $2; hit = 0
+      while ((getline line < f) > 0) if (substr(line, 1, 3) == "## " && index(line, a) && index(line, b)) hit = 1
+      close(f); if (hit) print $1 "\t" $2 }' <<<"$NC_INST")"
+  NC3N_NLIVE="$(nc_count "$NC3N_LIVE")"
+  NC3N_INSUBJ="$(awk -F'\t' 'FILENAME == ARGV[1] { c[$2] = 1; next } NF == 2 && ($2 in c) { n++ } END { print n + 0 }' <(printf '%s\n' "$NC_CROSS") <(printf '%s\n' "$NC3N_LIVE"))"
+  nc3n_model="$(awk -v a="$NC_OP_MARK" -v b="$NC_TP_MARK" 'index($0, a) && index($0, b) { n++ } END { print n + 0 }' "$NC3F_D/model.md")"
+  NC3N_SYN="$(nc_cross "$NC3F_D" "C12${VA_TAB}model.md" "$NC_SENTINEL")"
+  if [ "$nc3n_model" -ne 1 ] || [ "$NC3N_NLIVE" -eq 0 ]; then
+    FAIL "NC3n: fixture integrity — the synthetic per-trip model does not carry both marks on one line (found $nc3n_model), or no live per-trip instance carries both on a heading (found $NC3N_NLIVE), so the near-miss this arm needs is absent"
+  elif [ "$NC3N_INSUBJ" -eq 0 ] && [ -z "$NC3N_SYN" ] && [ "$NC3_HITS" -eq 0 ]; then
+    PASS "NC3n: MUST-NOT-FIRE — three near-misses stay silent. The live cross-trip line carrying $NC_OP_MARK alone is not flagged; a synthetic per-trip model whose heading carries both marks is not a cross-trip record, so it is outside the subject; and so are the $NC3N_NLIVE live per-trip instance(s) that carry both marks on a heading. Never-carry 3 is about the boundary, not the marks"
+  else
+    FAIL "NC3n: a near-miss was graded — $NC3N_INSUBJ live both-marks per-trip instance(s) sit inside the cross-trip subject, the synthetic model resolved as cross-trip ('${NC3N_SYN:-no}'), and the real tree carries $NC3_HITS finding(s)"
+  fi
+
+  # ── NC-4 — never-carry 4: a field of the destination class in a cross-trip record ───
+  # nc4_scan <root> <instances> <labels> — every labelled bullet of each instance, read
+  # through group FT's bullet reader, whose label is one of <labels>. The match is on the
+  # label ALONE: such a field in a cross-trip record is a crossing under any heading.
+  # Records: HIT <path> <class> <label> <heading> <line> · GRADED <n>.
+  nc4_scan() {
+    local cid p graded=0
+    while IFS="$VA_TAB" read -r cid p; do
+      [ -n "$p" ] || continue
+      [ -r "$1/$p" ] || { printf 'UNREAD\t%s\n' "$p"; continue; }
+      graded=$((graded+1))
+      ft_bullets "$1/$p" whole | awk -F'\t' -v p="$p" -v c="$cid" '
+        FILENAME == ARGV[1] { if ($0 != "") want[$0] = 1; next }
+        ($2 in want) { printf "HIT\t%s\t%s\t%s\t%s\t%s\n", p, c, $2, $1, $3 }' <(printf '%s\n' "$3") -
+    done <<EOF
+$2
+EOF
+    printf 'GRADED\t%d\n' "$graded"
+  }
+  nc4_msg() {  # nc4_msg <scan-output> <sentinel> <class> <boundary>
+    awk -F'\t' -v s="$2" -v k="$3" -v b="$4" '$1 == "HIT" { n = split($2, P, "/"); printf "NC4: %s (%s, trip: %s) carries the %s-class field %s%s%s — never-carry 4: a %s-class value across %s\n", P[n], $3, s, k, "\047", $4, "\047", k, b }' <<<"$1"
+  }
+  NC4_OUT="$(nc4_scan "$ROOT" "$NC_CROSS" "$NC_DEST")"
+  NC4_HITS="$(nc_n "$NC4_OUT" HIT)"; NC4_BAD="$(nc_n "$NC4_OUT" UNREAD)"; NC4_GR="$(nc_graded "$NC4_OUT")"
+  NC4C_INST="$(awk -F'\t' 'NF == 2 && $1 == "C3"' <<<"$NC_INST")"
+  NC4C_OUT="$(nc4_scan "$ROOT" "$NC4C_INST" "$NC_DEST")"
+  NC4C_HITS="$(nc_n "$NC4C_OUT" HIT)"; NC4C_GR="$(nc_graded "$NC4C_OUT")"
+  NC4C_FILES="$(awk -F'\t' '$1 == "HIT" && !s[$2]++ { n++ } END { print n + 0 }' <<<"$NC4C_OUT")"
+  if [ "$NC4_GR" -eq 0 ] || [ "$NC4_BAD" -gt 0 ]; then
+    FAIL "NC4: NOT EVALUATED — $NC4_GR cross-trip instance(s) were read and $NC4_BAD could not be. An empty or unreadable population is a failure, never a pass"
+  elif [ "$NC4_HITS" -gt 0 ]; then
+    FAIL "$(nc4_msg "$NC4_OUT" "$NC_SENTINEL" "$NC4_CLASS" "$NC4_ACROSS" | tr '\n' ' ')"
+  elif [ "$NC4C_HITS" -eq 0 ]; then
+    FAIL "NC4: BROKEN PROBE — the sensitivity arm returned zero: the same label match over the $NC4C_GR per-trip traveller instance(s) found no \`$NC4_CLASS\`-class bullet, so the zero over the cross-trip instances is an empty scan rather than a clean store. The probe is reported unusable, never the subject clean"
+  else
+    PASS "NC4: none of the $NC4_GR cross-trip instance(s) carries a bullet whose label is one of the $NC_NDEST \`$NC4_CLASS\`-class label(s) — never-carry 4 holds across $NC4_ACROSS on the tree. The zero is a measurement: the sensitivity arm NC4c found $NC4C_HITS such bullet(s) in $NC4C_FILES per-trip traveller file(s) on the same run. The emitter and schema limbs of the same prohibition stay group DH's"
+  fi
+  if [ "$NC4C_HITS" -gt 0 ]; then
+    PASS "NC4c: SENSITIVITY — the same label match over the $NC4C_GR per-trip traveller instance(s) finds $NC4C_HITS bullet(s) of the \`$NC4_CLASS\` class in $NC4C_FILES file(s). A per-trip file is where such a field belongs, and the instrument sees it there"
+  else
+    FAIL "NC4c: SENSITIVITY returned zero over $NC4C_GR per-trip traveller instance(s), so NC4's zero has no control behind it"
+  fi
+
+  # NC4f — a copy of a cross-trip person record with a destination-class bullet planted
+  # under a heading the classification gives to ANOTHER class, so the section-agnostic match
+  # is what finds it. NC4n — the same bullet in a per-trip traveller file, where it belongs.
+  NC4F_D="$NC_W/nc4"; mkdir -p "$NC4F_D"
+  NC4F_SRC="$(awk -F'\t' 'NF == 2 && $1 == "C22" { p = $2 } END { print p }' <<<"$NC_CROSS")"
+  NC4F_NAME="${NC4F_SRC##*/}"
+  NC4F_LABEL="$(awk 'NF && !n++ { print }' <<<"$NC_DEST")"
+  NC4F_INT=0
+  if [ -n "$NC4F_SRC" ] && [ -r "$ROOT/$NC4F_SRC" ] && [ -n "$NC4F_LABEL" ]; then
+    { cat "$ROOT/$NC4F_SRC"; printf '\n## Zq probe\n\n- **%s:** zq-a few times\n' "$NC4F_LABEL"; } > "$NC4F_D/$NC4F_NAME"
+    { printf '# Zq traveller\n\n## Zq probe\n\n- **%s:** zq-a few times\n' "$NC4F_LABEL"; } > "$NC4F_D/per-trip.md"
+    nc4f_n="$(grep -c -F -- "- **$NC4F_LABEL:** zq-a few times" "$NC4F_D/$NC4F_NAME" || true)"
+    nc4f_s="$(nc_n "$(nc4_scan "$ROOT" "C22$VA_TAB$NC4F_SRC" "$NC_DEST")" HIT)"
+    [ "$nc4f_n" -eq 1 ] && [ "$nc4f_s" -eq 0 ] && NC4F_INT=1
+  fi
+  NC4F_WANT="NC4: $NC4F_NAME (C22, trip: $NC_SENTINEL) carries the $NC4_CLASS-class field '$NC4F_LABEL' — never-carry 4: a $NC4_CLASS-class value across $NC4_ACROSS"
+  NC4F_GOT="$(nc4_msg "$(nc4_scan "$NC4F_D" "C22$VA_TAB$NC4F_NAME" "$NC_DEST")" "$NC_SENTINEL" "$NC4_CLASS" "$NC4_ACROSS")"
+  if [ "$NC4F_INT" -ne 1 ]; then
+    FAIL "NC4f: fixture integrity — the copy does not carry exactly the one planted bullet, or its source already carried a \`$NC4_CLASS\`-class bullet, so the arm below would prove nothing"
+  elif [ "$NC4F_GOT" = "$NC4F_WANT" ]; then
+    PASS "NC4f: MUST-FIRE — a copy of a cross-trip person record with a \`$NC4_CLASS\`-class bullet planted under a heading of its own is flagged, in the predicted words: $NC4F_GOT"
+  else
+    FAIL "NC4f: MUST-FIRE did not fire as predicted — wanted '$NC4F_WANT', got '${NC4F_GOT:-<no finding>}'"
+  fi
+  NC4N_SYN="$(nc_cross "$NC4F_D" "C3${VA_TAB}per-trip.md" "$NC_SENTINEL")"
+  NC4N_BUL="$(nc_n "$(nc4_scan "$NC4F_D" "C3${VA_TAB}per-trip.md" "$NC_DEST")" HIT)"
+  if [ "$NC4F_INT" -ne 1 ] || [ "$NC4N_BUL" -ne 1 ]; then
+    FAIL "NC4n: fixture integrity — the per-trip near-miss does not carry the planted bullet (the scan sees $NC4N_BUL), so its silence would prove nothing"
+  elif [ -z "$NC4N_SYN" ] && [ "$NC4C_FILES" -gt 0 ]; then
+    PASS "NC4n: MUST-NOT-FIRE — the same bullet in a per-trip traveller file is seen by the scan and is outside the subject, because the file is not a cross-trip record; $NC4C_FILES live per-trip file(s) already carry such a bullet and none is graded. Never-carry 4 is about the boundary, not the field"
+  else
+    FAIL "NC4n: the per-trip near-miss resolved as a cross-trip record ('${NC4N_SYN:-no}'), or no live per-trip file carries such a bullet ($NC4C_FILES) — the subject is drawn too wide, or the near-miss is not a near-miss"
+  fi
+fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RS — the group rosters that DESCRIBE this suite, asserted against the run.

@@ -247,6 +247,11 @@ name: Artifact schema
 #        declared in the suite rather than left to be inferred: no arm shows that a site
 #        build invoked the walk, and the walk grades the written site against the plan
 #        rather than the act of writing
+#   NC   the never-carries of ADR-025 § Decision 3, graded as class facts at their live
+#        membership: a rebuilt-each-synthesis instance carrying prior passes (EB-0) — graded
+#        on tracked instances only, never on conduct that would accumulate into one; and
+#        both-marks values and DEST-class fields in cross-trip records (EB-2). Every arm
+#        carries a control that must fire and one that must not
 #   RS   this coverage boundary itself, and the suite's own header roster, each set-diffed
 #        BOTH WAYS against the groups the run actually emitted. The executing set comes from
 #        the RUN, never from a static read of the suite. A group added and left undeclared
