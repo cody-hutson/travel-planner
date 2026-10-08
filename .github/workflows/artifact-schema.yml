@@ -250,7 +250,8 @@ name: Artifact schema
 #   NC   the five never-carries of ADR-025 § Decision 3, graded as class facts at their live
 #        membership: a rebuilt-each-synthesis instance carrying prior passes (EB-0) — graded
 #        on tracked instances only, never on conduct that would accumulate into one; the
-#        internal-hard class against the site build's read set, and synthetic renders through
+#        internal-hard class against the site build's read set, a C12 value with no
+#        first-party source found verbatim in a bound artifact, and synthetic renders through
 #        ADR-030's reading and any record superseding part of never-carry 2; both-marks values
 #        and DEST-class fields in cross-trip records, and every store writer's both-marks
 #        guard (EB-2); and the engagement axis's tokens on every stored-value surface, its

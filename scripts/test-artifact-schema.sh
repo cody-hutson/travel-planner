@@ -326,7 +326,8 @@
 #   NC   the five never-carries of ADR-025 § Decision 3, graded as class facts at their live
 #        membership: a rebuilt-each-synthesis instance carrying prior passes (EB-0) — graded
 #        on tracked instances only, never on conduct that would accumulate into one; the
-#        internal-hard class against the site build's read set, and synthetic renders through
+#        internal-hard class against the site build's read set, a C12 value with no
+#        first-party source found verbatim in a bound artifact, and synthetic renders through
 #        ADR-030's reading and any record superseding part of never-carry 2; both-marks values
 #        and DEST-class fields in cross-trip records, and every store writer's both-marks
 #        guard (EB-2); and the engagement axis's tokens on every stored-value surface, its
@@ -16150,6 +16151,11 @@ NC_DM="$ROOT/reference/data-model.md"
 NC_W="$WORK/nc"; mkdir -p "$NC_W"
 NC_TP_MARK='[THIRD-PARTY]'
 NC_OP_MARK='[OPERATOR-PROVIDED]'
+# The traveller model's class — never-carry 5's declared carrier, and the instance never-carry
+# 2's value layer reads — and the publish class the site build reads. Both are named ONCE, here,
+# above NC0, because NC0 prints the value layer's populations before either arm that owns one.
+NC5_CARRIER='C12'
+NC2_READ='bound'
 
 nc_count() { printf '%s\n' "$1" | grep -c '[^[:space:]]' || true; }
 
@@ -16198,6 +16204,210 @@ $2
 EOF
 }
 
+# ── NC-2, the value layer's reader — defined BEFORE NC0, which prints what it reads ───────
+#
+# The declaration layer (NC2, below) shows that the site build's read set and the barred class
+# are disjoint AS DECLARED. It cannot see a VALUE of that class copied into a file the build
+# does read. This reader can, on the tracked example trips, by provenance rather than by path:
+#
+#   POPULATION  every trip directory holding an instance of the traveller model's class,
+#               resolved by the validator's selector
+#   VALUES      inside each `## ` entry section of that instance whose KEY is not reserved:
+#               the first cell of every data row of a table whose header's first cell is
+#               `Need` or `Desire`, and the two arrow-bullet shapes — `- Need → … specific: <v>`
+#               up to its final full stop, and `- Desire (<tier>): <v>` up to ` [` or ` — `.
+#               Distinct per trip. A value under the floor below is skipped and counted
+#   SOURCES     the trip's first-party text: every file directly under its travellers
+#               directory; its log; the two constraint sections of its context, which
+#               reference/data-model.md § Composition names as the constraint half of the
+#               trip-scoped source; and every person record a traveller file's reference
+#               line names, under the trip's own store where it has one and the root's
+#               otherwise
+#   TARGETS     the trip's artifacts of the read class, from the same fence rows NC2 reads —
+#               the context among them MINUS its two constraint sections, which are a source
+#   PREDICATE   a value HAS NO SOURCE when its case-folded text is a substring of no source,
+#               and it is a FINDING when such a value is a substring of a target
+#
+# It is not an allowlist: a conformant tree is green because provenance decides, and the
+# constraint half is a source because a need the context states is first-party there.
+#
+# THE KEY IS THE SHIPPED TWO-STEP RULE of reference/data-model.md § "The key is computed in
+# two steps": clean(head), then fold and strip. clean() is TAKEN from the publish script — the
+# code that rule quotes — by sourcing it in a subshell, and is never re-typed here, because a
+# second copy is how this key would drift from the guard's. The script's own guard stops it
+# dispatching, as scripts/test-publish-guard.sh relies on. The one-step form keys
+# `## Update signals [DERIVED]` to a key that is not reserved, and would read that section
+# as a person.
+#
+# Whitespace is collapsed on both sides, so a value wrapped across two lines of a source or a
+# target is still seen. The programs run in the C locale, so the fold is the ASCII one and the
+# floor is counted in bytes on every engine.
+#
+# DECLARED RESIDUAL, stated on NC2p's verdict line as well: verbatim values only. A
+# paraphrase is not seen; nor is a value that coincides with first-party text; nor is a value
+# under the floor.
+NC2P_MIN=8
+NC2P_HOME='trip-context.md'
+NC2P_SECTIONS='Hard Constraints|Dietary & Health'
+NC2P_TRAVELERS='travelers'
+NC2P_LOG='trip-log.md'
+NC2P_STORE='people'
+NC2P_REF='person'
+NC_PUBLISH="$ROOT/scripts/publish-trip-site.sh"
+# shellcheck source=publish-trip-site.sh
+NC_CLEAN_FN="$(set +eu; source "$NC_PUBLISH" >/dev/null 2>&1; printf '%s' "${_GUARD_AWK_HELPERS:-}")"
+NC_CLEAN_OK=0
+case "$NC_CLEAN_FN" in *'function clean('*) NC_CLEAN_OK=1 ;; esac
+
+# nc2p_reserved <data-model> — the reserved keys, one per line, from the table in § Reserved keys.
+nc2p_reserved() {
+  awk '
+    index($0, "### Reserved keys") == 1 { on = 1; next }
+    on && (/^### / || /^## /) { on = 0 }
+    on && /^>?[ \t]*\|[ \t]*`[^`]+`[ \t]*\|/ { if (match($0, /`[^`]+`/)) print substr($0, RSTART + 1, RLENGTH - 2) }' "$1"
+}
+# nc2p_bound <fence-rows> <class-rows> <read-class> — "<artifact>\t<class-id>" for every fence
+# row of the read class, the class id looked up in § 1.1's rows and `-` where none names it.
+nc2p_bound() {
+  awk -F'\t' -v rc="$3" '
+    FILENAME == ARGV[1] { if ($1 ~ /^[0-9]+$/ && $2 != "") cls[$2] = "C" $1; next }
+    NF == 2 && $2 == rc { print $1 "\t" (($1 in cls) ? cls[$1] : "-") }' <(printf '%s\n' "$2") <(printf '%s\n' "$1")
+}
+# nc2p_scan <root> <files> <model-instances> <model-artifact> <bound-rows> <reserved-keys>
+# Records: TRIP <trip> <name> <values> <unsourced> <short> <sources> <targets> <entries> <constraint-home>
+#          ONLY <trip> <value> · SRCD <trip> <value> · FIND <trip> <name> <value> <artifact> <class>
+#          SKIP <trip> <name> <key> · UNREAD <path> · ODD <path>
+# The program is a literal at the pipe, after the two embedded helpers, so the short-circuit
+# reader scan in scripts/test-corpus-hygiene.sh reads it: it never leaves before end of input.
+nc2p_scan() {
+  {
+    printf '%s\n' "$6" | awk 'NF { print "R\t" $1 }'
+    printf '%s\n' "$5" | awk -F'\t' 'NF == 2 { print "B\t" $1 "\t" $2 }'
+    printf '%s\n' "$3" | awk 'NF { print "I\t" $0 }'
+    printf '%s\n' "$2" | awk 'NF { print "P\t" $0 }'
+  } | LC_ALL=C awk -v root="$1" -v art="$4" -v min="$NC2P_MIN" -v home="$NC2P_HOME" -v sections="$NC2P_SECTIONS" \
+        -v travelers="$NC2P_TRAVELERS" -v logf="$NC2P_LOG" -v store0="$NC2P_STORE" -v ref="$NC2P_REF" \
+        "$NC_CLEAN_FN$FT_LEAD_FN"'
+  function nc2p_sq(s) { gsub(/[ \t\r]+/, " ", s); sub(/^ /, "", s); sub(/ $/, "", s); return s }
+  function nc2p_con(h,   i) { for (i = 1; i <= nsec; i++) if (ft_lead(sec[i], h)) return 1; return 0 }
+  # the file as ONE case-folded, space-joined line. mode `all` keeps every line, `in` keeps
+  # the constraint sections alone and `out` drops them. NC2P_GOT says whether it was read.
+  function nc2p_text(f, mode,   line, out, incon, h) {
+    out = ""; incon = 0; NC2P_GOT = 0
+    while ((getline line < f) > 0) {
+      NC2P_GOT = 1
+      if (substr(line, 1, 3) == "## ") { h = substr(line, 4); sub(/[ \t\r]+$/, "", h); incon = nc2p_con(h) }
+      if (mode == "in" && !incon) continue
+      if (mode == "out" && incon) continue
+      out = out " " line
+    }
+    close(f)
+    return tolower(nc2p_sq(out))
+  }
+  function nc2p_ref(f,   line, on, v) {
+    on = 0; v = ""
+    while ((getline line < f) > 0) {
+      if (line == "---") { if (on) break; on = 1; continue }
+      if (!on) break
+      if (index(line, ref ":") == 1) { v = substr(line, length(ref) + 2); gsub(/^[ \t]+|[ \t\r]+$/, "", v) }
+    }
+    close(f); return v
+  }
+  function nc2p_add(v) {
+    v = nc2p_sq(v)
+    if (v == "" || (v in vseen)) return
+    vseen[v] = 1
+    if (length(v) < min) { nshort++; return }
+    val[++nval] = v
+  }
+  function nc2p_model(f,   line, inent, tab, key, c1, C, p, q, s, cut, v) {
+    nval = 0; nshort = 0; nent = 0; nskip = 0; split("", vseen); NC2P_GOT = 0; inent = 0; tab = 0
+    while ((getline line < f) > 0) {
+      NC2P_GOT = 1
+      if (substr(line, 1, 3) == "## ") {
+        key = tolower(clean(substr(line, 4))); gsub(/[^a-z0-9]/, "", key)
+        tab = 0
+        if (key in res) { inent = 0; skip[++nskip] = key } else { inent = 1; nent++ }
+        continue
+      }
+      if (!inent) continue
+      if (line ~ /^[ \t]*\|/) {
+        split(line, C, "|"); c1 = nc2p_sq(C[2])
+        if (tab == 0) { tab = (c1 == "Need" || c1 == "Desire") ? 1 : 2; continue }
+        if (tab == 1 && c1 !~ /^:?-+:?$/) nc2p_add(c1)
+        continue
+      }
+      tab = 0
+      if (line ~ /^[ \t]*- Need → /) {
+        p = index(line, "specific: "); if (!p) continue
+        v = substr(line, p + 10); q = 0; s = v
+        while ((p = index(s, ".")) > 0) { q += p; s = substr(s, p + 1) }
+        if (q > 0) v = substr(v, 1, q - 1)
+        nc2p_add(v); continue
+      }
+      if (line ~ /^[ \t]*- Desire \([^)]*\): /) {
+        v = line; sub(/^[ \t]*- Desire \([^)]*\): /, "", v)
+        p = index(v, " ["); q = index(v, " — ")
+        cut = (p && q) ? ((p < q) ? p : q) : (p ? p : q)
+        if (cut) v = substr(v, 1, cut - 1); else sub(/\.[ \t\r]*$/, "", v)
+        nc2p_add(v)
+      }
+    }
+    close(f)
+  }
+  BEGIN { FS = "\t"; nsec = split(sections, sec, "|") }
+  $1 == "R" { if ($2 != "") res[$2] = 1; next }
+  $1 == "B" { if ($2 != "") { bart[++nb] = $2; bcls[nb] = $3 }; next }
+  $1 == "I" { if ($2 != "") inst[++ni] = $2; next }
+  $1 == "P" { if ($2 != "") pop[$2] = 1; next }
+  END {
+    for (i = 1; i <= ni; i++) {
+      m = inst[i]
+      if (length(m) <= length(art) + 1 || substr(m, length(m) - length(art)) != "/" art) { print "ODD\t" m; continue }
+      trip = substr(m, 1, length(m) - length(art) - 1)
+      n = split(trip, Q, "/"); name = Q[n]
+      nc2p_model(root "/" m)
+      if (!NC2P_GOT) { print "UNREAD\t" m; continue }
+      ns = 0; store = store0
+      for (f in pop) if (index(f, trip "/" store0 "/") == 1) store = trip "/" store0
+      for (f in pop) {
+        if (index(f, trip "/" travelers "/") != 1) continue
+        rest = substr(f, length(trip) + length(travelers) + 3)
+        if (index(rest, "/") || rest !~ /\.md$/) continue
+        t = nc2p_text(root "/" f, "all"); if (NC2P_GOT) src[++ns] = t
+        id = nc2p_ref(root "/" f)
+        if (id != "" && ((store "/" id ".md") in pop)) { t = nc2p_text(root "/" store "/" id ".md", "all"); if (NC2P_GOT) src[++ns] = t }
+      }
+      if ((trip "/" logf) in pop) { t = nc2p_text(root "/" trip "/" logf, "all"); if (NC2P_GOT) src[++ns] = t }
+      ncon = 0
+      if ((trip "/" home) in pop) { t = nc2p_text(root "/" trip "/" home, "in"); if (NC2P_GOT) { src[++ns] = t; if (t != "") ncon = 1 } }
+      nt = 0
+      for (k = 1; k <= nb; k++) {
+        if (!((trip "/" bart[k]) in pop)) continue
+        t = nc2p_text(root "/" trip "/" bart[k], (bart[k] == home) ? "out" : "all")
+        if (NC2P_GOT) { nt++; tgt[nt] = t; tart[nt] = bart[k]; tcls[nt] = bcls[k] }
+      }
+      nonly = 0
+      for (j = 1; j <= nval; j++) {
+        lv = tolower(val[j]); only = 1
+        for (k = 1; k <= ns; k++) if (index(src[k], lv)) { only = 0; break }
+        if (!only) { print "SRCD\t" trip "\t" val[j]; continue }
+        nonly++; print "ONLY\t" trip "\t" val[j]
+        for (k = 1; k <= nt; k++) if (index(tgt[k], lv)) print "FIND\t" trip "\t" name "\t" val[j] "\t" tart[k] "\t" tcls[k]
+      }
+      for (j = 1; j <= nskip; j++) print "SKIP\t" trip "\t" name "\t" skip[j]
+      printf "TRIP\t%s\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", trip, name, nval, nonly, nshort, ns, nt, nent, ncon
+    }
+  }'
+}
+nc2p_sum() { awk -F'\t' -v f="$2" '$1 == "TRIP" { n += $f } END { print n + 0 }' <<<"$1"; }
+# nc2p_files <fixture-root> — every file beneath it, root-relative: a control arm's population.
+nc2p_files() { ( cd "$1" && find . -type f | sed 's|^\./||' | LC_ALL=C sort ); }
+# nc2p_msg <scan-output> <model-class> <barred-class> <read-class> — one finding line per FIND
+nc2p_msg() {
+  awk -F'\t' -v c="$2" -v d="$3" -v rc="$4" '$1 == "FIND" { printf "NC2p: %s%s%s — a value of %s%ss traveller model (%s) with no first-party source in the trip — appears in %s (%s, %s): never-carry 2: an %s value reaching the site build%ss read set verbatim\n", "\047", $4, "\047", $3, "\047", c, $5, $6, rc, d, "\047" }' <<<"$1"
+}
+
 # ── NC0 — the populations, each printed with its value. An empty one is a FAIL naming it.
 NC_TABLE="$(nc_table "$NC_ADR025" 2>/dev/null)"
 NC_NROWS="$(nc_count "$NC_TABLE")"
@@ -16224,16 +16434,38 @@ NC_DEST=""
 NC_NDEST="$(nc_count "$NC_DEST")"
 NC1_ENUM_OK=0
 case "|${CA_LIFE_ENUM:-}|" in *"|${NC1_CLASS:-<none>}|"*) NC1_ENUM_OK=1 ;; esac
+# The value layer's inputs and its real-tree scan, read HERE so that NC0 prints them. The
+# scan's verdict is NC2p's, below; what NC0 owns is that every input came back non-empty —
+# the helper that keys an entry heading first among them. A scan with no clean() would key
+# every heading wrong and read green over it, so it is not run at all without one.
+NC2P_ART="$(awk -F'\t' -v c="${NC5_CARRIER#C}" '$1 == c { print $2 }' <<<"${CA_ROWS:-}")"
+NC2P_MODELS="$(awk -F'\t' -v c="$NC5_CARRIER" 'NF == 2 && $1 == c { print $2 }' <<<"$NC_INST")"
+NC2P_RES="$(nc2p_reserved "$NC_DM" 2>/dev/null)"
+NC2P_NRES="$(nc_count "$NC2P_RES")"
+NC2P_BOUND="$(nc2p_bound "$(pb_fence_rows "$ROOT/${PB_SPEC:-reference/site-layout-spec.md}" 2>/dev/null)" "${CA_ROWS:-}" "$NC2_READ")"
+NC2P_NBOUND="$(nc_count "$NC2P_BOUND")"
+NC_FILES="$(cd "$ROOT" && git ls-files 2>/dev/null)"
+NC2P_OUT=""
+[ "$NC_CLEAN_OK" -eq 1 ] && [ -n "$NC2P_ART" ] && NC2P_OUT="$(nc2p_scan "$ROOT" "$NC_FILES" "$NC2P_MODELS" "$NC2P_ART" "$NC2P_BOUND" "$NC2P_RES" 2>/dev/null)"
+NC2P_NTRIP="$(awk -F'\t' '$1 == "TRIP" { n++ } END { print n + 0 }' <<<"$NC2P_OUT")"
+NC2P_BAD="$(awk -F'\t' '$1 == "UNREAD" || $1 == "ODD" { n++ } END { print n + 0 }' <<<"$NC2P_OUT")"
+NC2P_NVAL="$(nc2p_sum "$NC2P_OUT" 4)"; NC2P_NONLY="$(nc2p_sum "$NC2P_OUT" 5)"; NC2P_NSHORT="$(nc2p_sum "$NC2P_OUT" 6)"
+NC2P_NTGT="$(nc2p_sum "$NC2P_OUT" 8)"; NC2P_NENT="$(nc2p_sum "$NC2P_OUT" 9)"; NC2P_NCON="$(nc2p_sum "$NC2P_OUT" 10)"
+NC2P_NSKIP="$(awk -F'\t' '$1 == "SKIP" { n++ } END { print n + 0 }' <<<"$NC2P_OUT")"
+NC2P_TRIPS="$(awk -F'\t' '$1 == "TRIP" { printf "%s%s (%d value(s), %d with no source)", (n++ ? "; " : ""), $3, $4, $5 }' <<<"$NC2P_OUT")"
+NC2P_SKIPS="$(awk -F'\t' '$1 == "SKIP" { k[$3] = k[$3] " " $4; if (!s[$3]++) o[++n] = $3 } END { for (i = 1; i <= n; i++) printf "%s%s:%s", (i > 1 ? "; " : ""), o[i], k[o[i]] }' <<<"$NC2P_OUT")"
 
 NC_OK=0
 if [ "$NC_NROWS" -gt 0 ] && [ -n "$NC1_CLASS" ] && [ -n "$NC1_ACROSS" ] && [ -n "$NC3_ACROSS" ] \
    && [ -n "$NC4_CLASS" ] && [ -n "$NC4_ACROSS" ] && [ "$NC1_ENUM_OK" -eq 1 ] && [ "$NC_NCLASS" -gt 0 ] \
    && [ "$NC_NINST" -gt 0 ] && [ "$NC_NREBUILT" -gt 0 ] && [ "$NC_NREBINST" -gt 0 ] \
-   && [ -n "$NC_SENTINEL" ] && [ "$NC_NCROSS" -gt 0 ] && [ "$NC_NDEST" -gt 0 ]; then
+   && [ -n "$NC_SENTINEL" ] && [ "$NC_NCROSS" -gt 0 ] && [ "$NC_NDEST" -gt 0 ] \
+   && [ "$NC_CLEAN_OK" -eq 1 ] && [ "$NC2P_NRES" -gt 0 ] && [ "$NC2P_NBOUND" -gt 0 ] \
+   && [ "$NC2P_NTRIP" -gt 0 ] && [ "$NC2P_BAD" -eq 0 ] && [ "$NC2P_NENT" -gt 0 ]; then
   NC_OK=1
-  PASS "NC0: every population this group grades is DERIVED and came back non-empty — $NC_NROWS never-carry row(s) read from ADR-025's own table; $NC_NCLASS § 1.1 class row(s) and $NC_NINST tracked class instance(s) from the validator's selector; $NC_NREBUILT \`$NC1_CLASS\` class(es) from § 6's Members cells ($NC_REBUILT) holding $NC_NREBINST instance(s); $NC_NCROSS instance(s) whose frontmatter \`trip:\` is the sentinel \`$NC_SENTINEL\`, read from § 4.4: $(printf '%s' "$NC_CROSS" | awk -F'\t' '{ n = split($2, P, "/"); printf "%s ", P[n] }'); and $NC_NDEST \`$NC4_CLASS\`-class label(s) from the live classification: $(printf '%s' "$NC_DEST" | tr '\n' ';'). No class member, boundary or count is held in this file"
+  PASS "NC0: every population this group grades is DERIVED and came back non-empty — $NC_NROWS never-carry row(s) read from ADR-025's own table; $NC_NCLASS § 1.1 class row(s) and $NC_NINST tracked class instance(s) from the validator's selector; $NC_NREBUILT \`$NC1_CLASS\` class(es) from § 6's Members cells ($NC_REBUILT) holding $NC_NREBINST instance(s); $NC_NCROSS instance(s) whose frontmatter \`trip:\` is the sentinel \`$NC_SENTINEL\`, read from § 4.4: $(printf '%s' "$NC_CROSS" | awk -F'\t' '{ n = split($2, P, "/"); printf "%s ", P[n] }'); $NC_NDEST \`$NC4_CLASS\`-class label(s) from the live classification: $(printf '%s' "$NC_DEST" | tr '\n' ';'); and, for never-carry 2's value layer, $NC2P_NTRIP trip(s) holding a $NC5_CARRIER instance — $NC2P_TRIPS — over $NC2P_NENT entry section(s), each heading keyed in two steps with clean() taken from scripts/publish-trip-site.sh, against $NC2P_NBOUND \`$NC2_READ\` fence row(s); the $NC2P_NRES reserved key(s) read from reference/data-model.md § Reserved keys skip $NC2P_NSKIP heading(s), by key — $NC2P_SKIPS. No class member, boundary or count is held in this file"
 else
-  FAIL "NC0: a population this group grades is EMPTY or unreadable — never-carry rows $NC_NROWS; row 1 class '${NC1_CLASS:-<none>}' (a member of the canonical lifecycle enum: $NC1_ENUM_OK) across '${NC1_ACROSS:-<none>}'; row 3 across '${NC3_ACROSS:-<none>}'; row 4 class '${NC4_CLASS:-<none>}' across '${NC4_ACROSS:-<none>}'; § 1.1 rows $NC_NCLASS; class instances $NC_NINST; rebuilt classes $NC_NREBUILT with $NC_NREBINST instance(s); cross-trip sentinel '${NC_SENTINEL:-<none>}' with $NC_NCROSS instance(s); field-class labels $NC_NDEST. Not a skip and not a pass: every arm below would be a statement over the empty set, and the ones that are zeroes would read as clean. The likeliest causes are a renamed heading in ADR-025 § Decision 3 or a reshaped never-carry table"
+  FAIL "NC0: a population this group grades is EMPTY or unreadable — never-carry rows $NC_NROWS; row 1 class '${NC1_CLASS:-<none>}' (a member of the canonical lifecycle enum: $NC1_ENUM_OK) across '${NC1_ACROSS:-<none>}'; row 3 across '${NC3_ACROSS:-<none>}'; row 4 class '${NC4_CLASS:-<none>}' across '${NC4_ACROSS:-<none>}'; § 1.1 rows $NC_NCLASS; class instances $NC_NINST; rebuilt classes $NC_NREBUILT with $NC_NREBINST instance(s); cross-trip sentinel '${NC_SENTINEL:-<none>}' with $NC_NCROSS instance(s); field-class labels $NC_NDEST; the publish script's clean() helper read: $NC_CLEAN_OK; reserved keys $NC2P_NRES; \`$NC2_READ\` fence rows $NC2P_NBOUND; trips holding a $NC5_CARRIER instance $NC2P_NTRIP, with $NC2P_BAD model(s) unreadable and $NC2P_NENT entry section(s) read. Not a skip and not a pass: every arm below would be a statement over the empty set, and the ones that are zeroes would read as clean. The likeliest causes are a renamed heading in ADR-025 § Decision 3, a reshaped never-carry table, or a publish script that no longer yields its helpers when sourced"
 fi
 
 if [ "$NC_OK" -eq 1 ]; then
@@ -16723,7 +16955,6 @@ fi
 # Each finding names the class and the boundary, read from the resolved class's own row.
 NC5_SKEL='trips/README.md people/README.md groups/README.md'
 NC5_FENCE='phase-axis-declaration'
-NC5_CARRIER='C12'
 nc5_tokens() {
   awk -v info='```'"$NC5_FENCE" '
     $0 == info { on = 1; next }
@@ -16953,11 +17184,13 @@ fi
 #   NC2   THE DECLARATION LAYER. The site build reads exactly the artifacts the spec's
 #         `publish-contract-artifacts` fence gives the read class. None of them may be a
 #         member of the barred class. The fence is read by group PB's own reader.
+#   NC2p  THE VALUE LAYER, on the tracked example trips: a value of the traveller model with
+#         no first-party source in its trip, found verbatim in an artifact of the read class.
+#         Its reader is defined above NC0, which prints the populations it reads.
 #   NC2m  LIVE MEMBERSHIP. § 1.1's publish column and § 5.1's sentence name the same
 #         classes, in both directions. The sentence is anchored on its own bullet: an
 #         unanchored parse captures the read class's sentence instead, which also opens
 #         with the same word.
-NC2_READ='bound'
 nc_join() { awk '{ for (i = 1; i <= NF; i++) printf "%s%s", (n++ ? ", " : ""), $i }' <<<"$1"; }
 nc_setdiff() {  # nc_setdiff <a> <b> — members of a absent from b, in a's order
   local x out=""
@@ -17092,6 +17325,79 @@ if [ "$NC_OK" -eq 1 ]; then
     PASS "NC2f: MUST-FIRE — a copy of the spec whose fence gives the carrier class's artifact the read class is flagged, in the predicted words: $NC2F_GOT. MUST-NOT-FIRE beside it: an unmodified copy of the same spec, read by the same code, emits nothing"
   else
     FAIL "NC2f: did not behave as predicted — wanted '$NC2F_WANT', got '${NC2F_GOT:-<no finding>}'; the unmodified copy emitted $NC2F_NOT finding(s) where 0 was required"
+  fi
+
+  # ── NC2p — the value layer, on the tracked example trips ────────────────────────────
+  # The scan ran above NC0, which printed its populations. Its verdict is here.
+  NC2P_NFIND="$(nc_n "$NC2P_OUT" FIND)"
+  NC2P_FIRST="$(awk -F'\t' '$1 == "ONLY" && !n++ { print $3 }' <<<"$NC2P_OUT")"
+  if [ "$NC2P_NTRIP" -eq 0 ] || [ "$NC2P_NVAL" -eq 0 ] || [ "$NC2P_NTGT" -eq 0 ] || [ "$NC2P_BAD" -gt 0 ]; then
+    FAIL "NC2p: NOT EVALUATED — $NC2P_NTRIP trip(s) holding a $NC5_CARRIER instance were read ($NC2P_BAD unreadable) for $NC2P_NVAL value(s), against $NC2P_NTGT \`$NC2_READ\` artifact(s). An empty or unreadable population is a failure, never a pass"
+  elif [ "$NC2P_NFIND" -gt 0 ]; then
+    FAIL "$(nc2p_msg "$NC2P_OUT" "$NC5_CARRIER" "$NC2_CLASS" "$NC2_READ" | tr '\n' ' ')"
+  elif [ "$NC2P_NONLY" -eq 0 ]; then
+    FAIL "NC2p: BROKEN PROBE — the population the predicate grades is empty: none of the $NC2P_NVAL value(s) read from $NC2P_NTRIP trip(s) lacks a first-party source, so the zero below would be a statement over nothing. The probe is reported unusable, never the subject clean"
+  else
+    PASS "NC2p: none of the $NC2P_NONLY traveller-model value(s) with no first-party source in their own trip — of $NC2P_NVAL distinct value(s) read from the $NC5_CARRIER instance of $NC2P_NTRIP trip(s) — appears in any of the $NC2P_NTGT \`$NC2_READ\` artifact(s) those trips carry, the context read without its constraint sections ($NC2P_NCON trip(s) state a constraint half, which is a source). Never-carry 2 holds at the value layer on the tracked examples: no \`$NC2_CLASS\` value reaches the site build's read set verbatim. The zero is a measurement: NC2pc shows the population non-empty, and NC2pf plants one such value and requires the finding. RESIDUAL, stated: verbatim values only — a paraphrase is not seen, nor a value that coincides with first-party text, nor a value under $NC2P_MIN characters ($NC2P_NSHORT skipped on this run)"
+  fi
+  if [ "$NC2P_NONLY" -gt 0 ]; then
+    PASS "NC2pc: POPULATION — $NC2P_NONLY of the $NC2P_NVAL distinct value(s) have no first-party source in their trip ($NC2P_TRIPS), the first '$NC2P_FIRST'. The predicate above has something to grade, so its zero is not an empty scan"
+  else
+    FAIL "NC2pc: POPULATION is empty — no value of any $NC5_CARRIER instance lacks a first-party source ($NC2P_TRIPS), so NC2p's zero has nothing behind it"
+  fi
+
+  # NC2pf / NC2pn — a COPY of the trip that holds the carrier class's declared witness, with
+  # ONE line appended to the first read-class artifact that is not the constraint home. The
+  # two copies differ in the planted value alone, and both values are read from this run's own
+  # scan of that trip rather than spelled here: its LAST value with no first-party source, and
+  # its FIRST value that has one.
+  NC2P_D="$NC_W/nc2p"; mkdir -p "$NC2P_D/fire" "$NC2P_D/quiet"
+  NC2PF_WIT="$(awk -F'\t' -v c="$NC5_CARRIER" '$1 == c && !n++ { print $2 }' <<<"${CV_CLASS_WITNESS:-}")"
+  NC2PF_TRIP="${NC2PF_WIT%"/$NC2P_ART"}"
+  NC2PF_NAME="${NC2PF_TRIP##*/}"
+  NC2PF_TGT="$(awk -F'\t' -v h="$NC2P_HOME" 'NF == 2 && $1 != h && !n++ { print $1 }' <<<"$NC2P_BOUND")"
+  NC2PF_CID="$(awk -F'\t' -v a="$NC2PF_TGT" 'NF == 2 && $1 == a { print $2 }' <<<"$NC2P_BOUND")"
+  NC2PF_VAL="$(awk -F'\t' -v t="$NC2PF_TRIP" '$1 == "ONLY" && $2 == t { v = $3 } END { print v }' <<<"$NC2P_OUT")"
+  NC2PN_VAL="$(awk -F'\t' -v t="$NC2PF_TRIP" '$1 == "SRCD" && $2 == t && !n++ { print $3 }' <<<"$NC2P_OUT")"
+  NC2PF_INT=0; NC2PN_INT=0; NC2PF_OUT=""; NC2PN_OUT=""
+  if [ -n "$NC2PF_WIT" ] && [ "$NC2PF_TRIP" != "$NC2PF_WIT" ] && [ -n "$NC2PF_TGT" ] && [ -r "$ROOT/$NC2PF_TRIP/$NC2PF_TGT" ] && [ -n "$NC2PF_VAL" ] && [ -n "$NC2PN_VAL" ]; then
+    while IFS= read -r nc2p_f; do
+      case "$nc2p_f" in
+        "$NC2PF_TRIP"/*)
+          mkdir -p "$NC2P_D/fire/${nc2p_f%/*}" "$NC2P_D/quiet/${nc2p_f%/*}"
+          cp "$ROOT/$nc2p_f" "$NC2P_D/fire/$nc2p_f"; cp "$ROOT/$nc2p_f" "$NC2P_D/quiet/$nc2p_f" ;;
+      esac
+    done <<EOF
+$NC_FILES
+EOF
+    printf -- '- 14:00 %s\n' "$NC2PF_VAL" >> "$NC2P_D/fire/$NC2PF_TRIP/$NC2PF_TGT"
+    printf -- '- 14:00 %s at the market stall\n' "$NC2PN_VAL" >> "$NC2P_D/quiet/$NC2PF_TRIP/$NC2PF_TGT"
+    NC2PF_OUT="$(nc2p_scan "$NC2P_D/fire" "$(nc2p_files "$NC2P_D/fire")" "$NC2PF_WIT" "$NC2P_ART" "$NC2P_BOUND" "$NC2P_RES" 2>/dev/null)"
+    NC2PN_OUT="$(nc2p_scan "$NC2P_D/quiet" "$(nc2p_files "$NC2P_D/quiet")" "$NC2PF_WIT" "$NC2P_ART" "$NC2P_BOUND" "$NC2P_RES" 2>/dev/null)"
+    nc2pf_base="$(awk -F'\t' -v t="$NC2PF_TRIP" '$1 == "FIND" && $2 == t { n++ } END { print n + 0 }' <<<"$NC2P_OUT")"
+    nc2pf_planted="$(grep -c -x -F -- "- 14:00 $NC2PF_VAL" "$NC2P_D/fire/$NC2PF_TRIP/$NC2PF_TGT" || true)"
+    nc2pn_planted="$(grep -c -x -F -- "- 14:00 $NC2PN_VAL at the market stall" "$NC2P_D/quiet/$NC2PF_TRIP/$NC2PF_TGT" || true)"
+    nc2pf_delta="$(awk 'FILENAME == ARGV[1] { a[$0]++; next } { if (a[$0] > 0) a[$0]--; else d++ } END { print d + 0 }' "$ROOT/$NC2PF_TRIP/$NC2PF_TGT" "$NC2P_D/fire/$NC2PF_TRIP/$NC2PF_TGT")"
+    nc2pn_delta="$(awk 'FILENAME == ARGV[1] { a[$0]++; next } { if (a[$0] > 0) a[$0]--; else d++ } END { print d + 0 }' "$ROOT/$NC2PF_TRIP/$NC2PF_TGT" "$NC2P_D/quiet/$NC2PF_TRIP/$NC2PF_TGT")"
+    nc2pn_still="$(awk -F'\t' -v v="$NC2PN_VAL" '$1 == "SRCD" && $3 == v { n++ } END { print n + 0 }' <<<"$NC2PN_OUT")"
+    [ "$nc2pf_base" -eq 0 ] && [ "$nc2pf_planted" -eq 1 ] && [ "$nc2pf_delta" -eq 1 ] && [ "$(nc_n "$NC2PF_OUT" TRIP)" -eq 1 ] && NC2PF_INT=1
+    [ "$nc2pn_planted" -eq 1 ] && [ "$nc2pn_delta" -eq 1 ] && [ "$nc2pn_still" -eq 1 ] && [ "$(nc_n "$NC2PN_OUT" TRIP)" -eq 1 ] && [ "$(nc_n "$NC2PN_OUT" ONLY)" -gt 0 ] && NC2PN_INT=1
+  fi
+  NC2PF_WANT="NC2p: '$NC2PF_VAL' — a value of $NC2PF_NAME's traveller model ($NC5_CARRIER) with no first-party source in the trip — appears in $NC2PF_TGT ($NC2PF_CID, $NC2_READ): never-carry 2: an $NC2_CLASS value reaching the site build's read set verbatim"
+  NC2PF_GOT="$(nc2p_msg "$NC2PF_OUT" "$NC5_CARRIER" "$NC2_CLASS" "$NC2_READ")"
+  if [ "$NC2PF_INT" -ne 1 ]; then
+    FAIL "NC2pf: fixture integrity — the copy of the witness trip ('${NC2PF_TRIP:-<none>}') does not differ from it in exactly the one planted line appended to '${NC2PF_TGT:-<none>}', or the trip has no value with no first-party source to plant, or the real trip is already flagged — so the arm below would prove nothing"
+  elif [ "$NC2PF_GOT" = "$NC2PF_WANT" ]; then
+    PASS "NC2pf: MUST-FIRE — a copy of $NC2PF_NAME with ONE line appended to $NC2PF_TGT, carrying the last of that trip's values with no first-party source, is flagged once, in the predicted words: $NC2PF_GOT"
+  else
+    FAIL "NC2pf: MUST-FIRE did not fire as predicted — wanted '$NC2PF_WANT', got '${NC2PF_GOT:-<no finding>}'"
+  fi
+  if [ "$NC2PN_INT" -ne 1 ]; then
+    FAIL "NC2pn: fixture integrity — the second copy does not carry exactly the one planted line, or the planted value ('${NC2PN_VAL:-<none>}') is not one the copy's own scan reads as first-party-sourced, or the copy holds no unsourced value at all — so the silence below would prove nothing"
+  elif [ "$(nc_n "$NC2PN_OUT" FIND)" -eq 0 ]; then
+    PASS "NC2pn: MUST-NOT-FIRE — the same copy with the appended line carrying '$NC2PN_VAL' instead, a value of the same model that the trip's own first-party text states, emits nothing: $(nc_n "$NC2PN_OUT" ONLY) value(s) of the copy still have no source and none of them is in a target. The arm differs from NC2pf in the planted value's provenance alone"
+  else
+    FAIL "NC2pn: a first-party-sourced value planted in a read-class artifact was flagged — $(nc2p_msg "$NC2PN_OUT" "$NC5_CARRIER" "$NC2_CLASS" "$NC2_READ" | tr '\n' ' ')"
   fi
 
   # ── NC2m — the membership, in both of its homes ─────────────────────────────────────
