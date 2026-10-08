@@ -209,6 +209,58 @@ record's call.
 nothing third-party-sourced is admitted by this list, and `ADR-006`'s third-party prohibition is not
 touched by it.
 
+```private-site-field-declaration
+# restates: Decision 2 -> the IN list and the OUT list, item by item, as written
+# key: reference/data-model.md § Field Scope -> a field is its (section, label) pair
+# class        | section              | label               | as-written
+IN           | About you            | Name                | name
+IN           | About you            | Relationship        | relationship
+IN           | Destination leanings | Would love          | Would love
+IN           | Destination leanings | Rather skip         | Rather skip
+IN           | Destination leanings | Trip vibe           | Trip vibe
+IN           | —                    | —                   | the destination shortlist built from them
+IN           | Dates & availability | Can travel          | can travel
+IN           | Dates & availability | Blackout            | blackout dates
+IN           | Dates & availability | Trip length         | trip length
+IN           | Getting there & back | Arrive / leave      | arrive / leave
+IN           | Getting there & back | Leaving from        | leaving from
+IN           | Getting there & back | Journey comfort     | journey comfort
+IN           | Where you stay       | Lodging style       | lodging style
+IN           | Where you stay       | Rooming             | rooming
+IN           | Interests & tastes   | Interests           | interests
+IN           | Interests & tastes   | Cuisine appetite    | cuisine appetite
+IN           | Interests & tastes   | Been here before?   | been here before
+IN           | Interests & tastes   | Already done        | already done
+IN           | Travel style & pace  | Pace                | pace
+IN           | Travel style & pace  | Day rhythm          | day rhythm
+IN-IF-MARKED | Desires              | Desire              | desires the traveller marks as group-facing
+IN-IF-MARKED | Desires              | Priority tier       | desires the traveller marks as group-facing
+IN-IF-MARKED | Desires              | Recurrence          | desires the traveller marks as group-facing
+IN-IF-MARKED | Desires              | Theme tag(s)        | desires the traveller marks as group-facing
+IN-IF-MARKED | Desires              | Overlap             | desires the traveller marks as group-facing
+IN-IF-MARKED | Anything else        | Special occasion?   | the special occasion
+OUT          | —                    | —                   | the cost estimate
+OUT          | Budget appetite      | Comfort range       | comfort range
+OUT          | Budget appetite      | Splurge appetite    | splurge appetite
+OUT          | Getting there & back | Passport            | the passport field
+OUT          | Needs                | Category            | needs
+OUT          | Needs                | Specific            | needs
+OUT          | Needs                | Applies to          | needs
+OUT          | —                    | —                   | people who did not fill in their own form
+OUT          | About you            | Party               | Party
+OUT          | —                    | —                   | contact and emergency details
+OUT          | —                    | —                   | the trip log
+OUT          | —                    | —                   | the validation report
+OUT          | —                    | —                   | cross-trip group records
+OUT          | Travel style & pace  | Novelty vs comfort  | novelty vs comfort
+OUT          | Travel style & pace  | Planning style      | planning style
+OUT          | People dynamics      | Group time          | group time
+OUT          | People dynamics      | Whole-group moments | whole-group moments
+OUT          | People dynamics      | Solo, I'd           | solo
+OUT          | People dynamics      | Split off with      | split off with
+OUT          | —                    | —                   | satisfaction metrics
+```
+
 ### 3. The share mark, and the concealed occasion
 
 **Requirement 1 — a *share with the group* mark** on each desire and on the special occasion.
@@ -533,3 +585,25 @@ All Wave 1. **None goes live before the fix for the rotation defect tracked priv
 - Provenance: the card, #1242; its design sub-task, #1385, carrying the four passes, the four reviews,
   the operator's facts, CR-1 to CR-1d and decision Q; the joint source-binding step, #1383; decision P
   on #1546; the plan, its surface map, the fit review, CR-2 and T1 on #1369.
+
+## Amendment history
+
+**Amendment (2026-10-05, Monday) — § *Decision* 2's IN and OUT lists declared in machine-readable
+form, by a fence at the end of that section; no decision changes.** § *Decision* 1 reads that the
+encrypted limb's envelope admits the values § *Decision* 2 lists as in, and exactly those. Those
+lists are prose: some items name a field in words that are not its label, and some name things that
+are not fields at all. The `private-site-field-declaration` fence declares both lists over the field
+key of `reference/data-model.md` § *Field Scope* — a field is its `(section, label)` pair — so that
+`scripts/test-artifact-schema.sh` group `MC` reads them from the fence rather than from the prose.
+**The prose stays the decision, and the fence is its projection.** The same group holds the fence to
+the prose and fails when the fence is missing, empty or duplicated; it pins what it checks, and this
+record does not restate it. Each row restates an item as § *Decision* 2 writes it: its list, the
+field it names, and the words used. An item that names no field — an artifact, a population, or
+details another record decides — carries the em dash in place of a field. A word that only glosses
+another item has no row of its own: *health* and *must-haves* ride the needs rows, *togetherness*
+rides the fields it names, *budget caps* is a need of that category, and *personal desires
+(unmarked)* is the unmarked half of the marked desires. `IN-IF-MARKED` is § *Decision* 3's share
+mark: such a field is in when its traveller marks it, and personal otherwise. The fence places no
+field § *Decision* 2 does not name — none of the trip context's fields, which those lists do not
+name; where such a field carries an out kind of value, § *Decision* 5 binds it by value, and the
+fence does not restate § *Decision* 5. The amendment replaced no wording, so none is quoted here.
