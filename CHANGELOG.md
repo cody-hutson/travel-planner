@@ -18,7 +18,7 @@ that must not.
 
 **Each never-carry is checked by something that can fail.** Group `NC` of
 `scripts/test-artifact-schema.sh` reads the never-carry table where `ADR-025` states it and grades
-each row at its live membership, holding no copy of a class, a boundary or a count. A file rebuilt
+each row at its live membership, holding no copy of a class's membership. A file rebuilt
 on each synthesis may not carry earlier passes. The class barred from every render is held apart
 from what the site build reads: in the declaration, and on the tracked example trips by value, so
 that a traveller-model value with no first-party source in its trip may not appear where the build
@@ -40,10 +40,10 @@ declaration names, at the scope it names, and requires the publish to abort on e
 
 **The private site's lists carry a machine-readable declaration.** `ADR-030` § 2 now ends with a
 `private-site-field-declaration` fence that restates its IN and OUT lists over the field key of
-`reference/data-model.md`. Group `MC` reads the lists from the fence and holds the fence to the
-record's own prose in both directions, so the record's prose and its declaration cannot drift
-apart unseen; it fails when the fence is missing, empty or duplicated. The fence decides nothing:
-the record's closing amendment history records it as an amendment that changes no decision.
+`reference/data-model.md`. Group `MC` reads the lists from the fence and holds the fence and the
+record's own prose to each other in both directions; it fails when the fence is missing, empty or
+duplicated. The fence decides nothing: the record's closing amendment history records it as an
+amendment that changes no decision.
 
 **The command surface's tests are graded on the text a session follows.**
 `scripts/test-command-taxonomy.sh` already failed a command's text that sets `ALLOW_PLAINTEXT` or
@@ -67,10 +67,11 @@ within five words before a consent word, in its own clause, as binding it, and i
 paraphrase. The declaration places only what `ADR-030` § 2 names: on the encrypted limb the trip
 context's answers read as undetermined, and so do a desire and the occasion until the share mark
 exists; and a new item added inside one of § 2's bullets, in words that name nothing the forms
-ask, is printed rather than failed. The traveller-model check sees verbatim values only, so a
-paraphrase, a value that coincides with first-party text and a very short value all pass it.
-`ADR-030`'s reading is otherwise checked on synthetic renders until the private site it describes
-is built.
+ask, is printed rather than failed. The declaration is tied to § 2's prose by its words, so a row
+that names the wrong field inside a section of a form, and keeps a word that ties it, is not
+seen. The traveller-model check sees verbatim values only, so a paraphrase, a value that coincides
+with first-party text and a very short value all pass it. `ADR-030`'s reading is otherwise checked
+on synthetic renders until the private site it describes is built.
 
 ## [0.51.0] — 2026-10-02 — The release scaffolding grades itself
 
