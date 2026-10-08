@@ -588,7 +588,7 @@ All Wave 1. **None goes live before the fix for the rotation defect tracked priv
 
 ## Amendment history
 
-**Amendment (2026-10-05, Monday) — § *Decision* 2's IN and OUT lists declared in machine-readable
+**Amendment (2026-10-08, Thursday) — § *Decision* 2's IN and OUT lists declared in machine-readable
 form, by a fence at the end of that section; no decision changes.** § *Decision* 1 reads that the
 encrypted limb's envelope admits the values § *Decision* 2 lists as in, and exactly those. Those
 lists are prose: some items name a field in words that are not its label, and some name things that
