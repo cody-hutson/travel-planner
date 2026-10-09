@@ -80,8 +80,9 @@ check — so leave it where install put it.
 **In the engine's repository**, and only there, this file is the only tracked thing
 under `trips/`: the engine's `.gitignore` excludes that directory's *contents*
 (`trips/*`) rather than the directory itself, so every checkout carries the signpost
-and none carries a trip. None of that says anything about your data folder: whether
-it is tracked, backed up or synced is yours to decide.
+and none carries a trip. None of that is a promise about your data folder, even where
+it is an earlier checkout of the engine's repository: whether it is tracked, backed up
+or synced is yours to decide.
 
 Full structure and the agent flow: the engine's `CLAUDE.md`.
 Publishing a finished trip: the engine's `README.md`.

@@ -40,9 +40,10 @@ The engine keeps its own `trips/` and `groups/` folders the same way, for the sa
 The invariant is tested for this folder by group `U` in the engine's
 `scripts/test-publish-guard.sh`.
 
-**None of this says anything about the folder your records are in.** Nothing in the engine
-reaches into your data folder's version control, so whether that folder is tracked, backed
-up or synced is yours to decide.
+**None of this is a promise about the folder your records are in, even where that folder is
+an earlier checkout of the engine's repository.** Nothing in the engine reaches into your
+data folder's version control, so whether that folder is tracked, backed up or synced is
+yours to decide.
 
 ## Privacy
 
