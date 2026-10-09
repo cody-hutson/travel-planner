@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-10-09 — The corpus describes itself truly
+## [0.53.0] — 2026-10-09 — The corpus describes itself truly
 
 No trip verb plans, records or publishes a trip differently in this release. What changes is what
 the engine's own files say about themselves, where they said something untrue or left a reader to
