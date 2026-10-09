@@ -155,6 +155,7 @@ data-root-pointer: ${HOME}/.travel-planner/data-root
 | history | ACTIVE | any | any | G8 |
 | .approvers | ACTIVE | any | any | G8 |
 | interview | ANY | any | any | G8 |
+| past-coverage | ACTIVE | any | any | G8 |
 
 The block above is this file's contract declaration, and the requirement table sits **below** it,
 outside the fence, so it renders as a markdown table. The fence the contract publishes names that
@@ -3589,3 +3590,120 @@ This section discharges each condition by name. **(a)** the path is named above 
 **What this verb names, and what it runs.** After a write to a traveller file it names **`/trip-record travelers`** as the reconcile step, and does not run it; after a write to a block-owned file it names what `## fact <statement>` names after that write, and runs none of it. Beyond those, and the verb a block belongs to where it is not this one, it names no verb of this command as an offer, and standing rule 8 is why it states nothing about any other command's availability.
 
 **Reversibility: MODERATE, confidence MEDIUM.** Not CHEAP — the files it writes are git-ignored, so there is no revert, and a record it creates is read by every trip that later links it. Not IRREVERSIBLE — nothing it writes deletes an answer without an echo first, and a record it created is discarded by removing the file before any trip references it.
+
+## past-coverage <name>
+
+**Reads:** `trips/<slug>/travelers/<file>.md` — the file-existence probe that resolves `<name>` on the resolved trip, by the filename `## profile <name>` derives, and **its frontmatter alone, to the closing `---`, for the `person:` key**, which is the reference this verb inverts; no body line of that file is read; `trips/<slug>/people/` — the **directory-presence probe** the store-root rule's first step takes, with `Read` on the directory path itself, and nothing inside it is read by that probe; `<store-root>/people/` — the store listing, the store root being the one `reference/data-model.md`'s store-root rule yields, taken with `Bash(ls:*)` as `ls -1 "<store-root>/people"`, which returns the entry names alone; `<store-root>/people/*.md` — **the frontmatter of every record that listing names, to the closing `---`**, for `merged-into:`, which establishes whether the referenced record is live or a stub and which stubs redirect to it, and **no body line of any person record is read, its H1 included**; `trips/` — the trip listing, **which arrives from the listing block above rather than from a listing this verb takes**; `trips/<t>/travelers/` — for each trip of that population other than the resolved one, a listing of its traveller directory, taken with `Bash(ls:*)` as `ls -1 "<data-root>/trips/<t>/travelers"`; `trips/<t>/travelers/*.md` — **the frontmatter of every file those listings name, to the closing `---` and no further**, for `person:`, which is the resolution step and the only way another trip enters this verb's scope; `reference/data-model.md` § *Traveler identity* → *The key is computed in two steps* — the key a bearer's file stem and a table's traveller cell are compared under, read live at invocation and **never re-authored here**; and then, **for each reached trip and for no other** — a trip other than the resolved one, archived, and carrying the reference: `trips/<t>/outputs/satisfaction-metrics.md` — the file-existence probe, and then **the file opened whole with `Read`**, because where its `Desire-coverage` section sits is not known until the file is open and this verb takes no `Bash(grep:*)` to find it; **of what that open returns this verb uses** the section whose heading's leading segment is `Desire-coverage` — its table's header row and, from each data row, the traveller, tier and verdict cells, found by header label — **and nothing else: the `Desire` cell is never carried into anything this verb computes or prints, and no other section of the file is used, carried or printed — not needs compliance, not the agreement check, not the balance signals**; `trips/<t>/outputs/satisfaction-metrics.md`, `trips/<t>/outputs/final-itinerary.md`, `trips/<t>/outputs/traveler-model.md` and `trips/<t>/outputs/event-status.md` — **the order observation**: one newest-first listing over exactly these paths, taken with `Bash(ls:*)` as `ls -1t`, an observation of existence and order and never of content, so this verb **opens none of the last three**; and `trips/<t>/trip-context.md` — **opened whole with `Read`, for the same reason; of what that open returns this verb uses the `## Group` roster table's first column alone**, each cell tested for an erasure token's shape, and nothing a cell holds is carried or printed; **no other block of that file is used, carried or printed**, and every trip's lifecycle arrives by value in the record block above. **It reads no `trip-context.md` of the resolved trip, no group record, and nothing of a trip that does not carry the reference beyond its traveller frontmatter. Writes nothing, anywhere, on every branch. Dispatches no agent. Performs no act whose effect lands outside the trip's own files** — every trip and every record it reaches, it reaches read-only, and an observation is not an effect. **A whole-file open returns more than this verb uses; what it does not use stays in the tool result, is carried into nothing and is printed nowhere.** **Takes `Bash(ls:*)` for exactly the listings declared above** — the store listing, a traveller-directory listing per other trip, and a newest-first operand listing per reached trip — and creates no directory.
+
+The past-coverage verb. For one traveller on the resolved trip it answers *what did the plans of this person's earlier trips cover for them* — and it answers with tallies of **plan coverage as last synthesized**, never with how a trip went. It is the read `reference/adr/ADR-027-post-trip-preference-memory.md` § *Decision* 1 defines as `outcomes(p, t₀)`: the coverage rows an archived trip recorded for a person, read in place from that trip, reached through the person reference and copied nowhere.
+
+**Nothing about this is stored.** No result of this verb is written, cached or indexed anywhere, on any branch; the read runs here, on demand, and is gone when the render is. `people/README.md` § *What a record does not hold* stays true unchanged.
+
+**The requirement-table row takes the contract's declared default, and this section states no reason to serve an archived resolved trip.** This verb's row takes the header's depth, so a trip is resolved before this section runs, and the view then leaves that trip out. Were the row to admit an archived resolved trip, an operator between trips — every trip archived — would resolve one of them, and the view would leave out the trip it had just resolved as the one being planned, with nothing on the render to say so. So the row does not admit that state, and on an archived resolved trip this verb takes the render of § *When the resolved state does not serve the verb*. **That is a limit of this surface, and it is stated here:** it shows a person's past plan coverage only while a trip is being planned and that person is a traveller on it. `reference/adr/ADR-027-post-trip-preference-memory.md` § *Decision* 1 also defines this read for a point of use that resolves no trip, where leaving out the resolved trip is vacuous; a trip is always resolved before this section runs, so that point of use is not built here. What this verb *reaches* is a separate question: an archived trip is what it reads, read-only. Reading is not derivation, and `CLAUDE.md` § *Archived trips — what the freeze binds* freezes derivation; this verb composes nothing and writes nothing, so the freeze has nothing here to forbid.
+
+**The sub-headings a later verb cites are fixed once cited.** § *The outcomes, and the absences are not the same one*, § *Reading a trip's desire-coverage table*, § *The relation — `plan-to-coverage`* and § *What a render carries, and how it is worded* are citation targets: a citation resolves by heading, so none of them is renamed once a later section of this file cites it. The first is cited for its table headed *Per reached trip*, and a citation of a table resolves by that header cell, so the cell is fixed with its heading.
+
+### The resolution — `history`'s scan, then the archived trips
+
+**The scan is `## history <name>` § *The resolution*, cited and not re-authored**: resolve `<name>`; close over `merged-into:` at one hop; take the population from the listing block, less its `README.md` line, with `G1`'s canary and its forbidden conclusion inherited; read each bearer's frontmatter to the closing `---`; exclude the resolved trip. **Where this section departs from that one, it says so here.** It takes the store listing and each other trip's traveller-directory listing with `Bash(ls:*)`, as its `**Reads:**` block declares. And where that section's first step ends the `NO-REFERENCE` branch by naming nothing else and stopping, **this section's render rule governs what follows the `NO-REFERENCE` line**: § *What a render carries, and how it is worded* prints its sentences after that line, as it does after every output.
+
+A trip in the resulting set is **reached** where the record block above carries `**Lifecycle:** ARCHIVED` for it; an absent line is `ACTIVE`, by `G4`. Only a reached trip is opened beyond its traveller frontmatter. A trip with no `travelers/` directory carries no bearer, and that is a completed observation; a listing the harness refused is not, and is read by the refusal predicate `CLAUDE.md` § *Resolving a trip* states. **That exception is a traveller directory's alone.** A store that is absent is not a completed observation: with a `person:` key present, `reference/data-model.md` § *The bearer states* types a store that is absent or unlistable `STORE-UNREADABLE`, and this verb reads that as `UNDETERMINED`, saying that the store could not be listed.
+
+**Where the scan ends decides the output.** With no `person:` key there is no scan, and the output is `NO-REFERENCE`. A scan that cannot be completed ends `UNDETERMINED`. A completed scan that finds the reference on no other trip ends `NO-EDGE-FOUND`; one that finds it only on trips that are not archived ends in the plain sentence *edges exist, none archived*; and one that reaches an archived trip ends `RESOLVED(n)`.
+
+### The outcomes, and the absences are not the same one
+
+**This verb ends in exactly one of the outputs below on every branch, checked in this order, and the table is the whole set.** Each `ADR-017` token is printed only under the condition beside it; where no token's meaning fits, the output is a plain sentence.
+
+| Output | Printed when |
+|---|---|
+| `NO-REFERENCE` | the traveller file carries no `person:` key, so there is no edge to invert and **no scan runs** — the store is not listed |
+| `UNDETERMINED` | the reference is not a well-formed id, or names no record in a store that was listed; the record is a stub whose target is itself a stub; the store is absent or could not be listed; a traveller directory could not be listed for a reason other than its absence; or a bearer was present and could not be read |
+| `NO-EDGE-FOUND` | the scan completed and **no** trip other than the resolved one carries the reference |
+| *edges exist, none archived* | the scan completed, the reference sits on trips other than the resolved one, and none of them is archived. A plain sentence: never `NO-EDGE-FOUND`, and never a count of zero |
+| `RESOLVED(n)` | the scan completed and reached archived trips other than the resolved one; `n` counts those trips, and each renders one line |
+
+An absent `<name>`, or a name no traveller file on the resolved trip answers to, is a refusal before any of these: it names the argument shape and **offers no near-match**.
+
+**Each reached trip renders exactly one of these, on one line, followed by its relation verdict:**
+
+| Per reached trip | Printed when |
+|---|---|
+| tier-by-verdict tallies | the table was read and at least one row carries the bearer's key |
+| *holds no outcome record* | the coverage file is absent, or it carries no `Desire-coverage` section, or no row carries the bearer's key |
+| `UNDETERMINED` | the trip carries more than one bearer for this person, or the section could not be read as § *Reading a trip's desire-coverage table* requires |
+
+**No absence is ever rendered as `not covered`.** Those words are printed only as a tier's count of rows whose own verdict cell says so. None of these outputs reads as *nothing was planned for this person*, and an unlinked trip is invisible to this verb — the render says so.
+
+### Reading a trip's desire-coverage table
+
+**By heading and by header label, never by column position.** A later verb of this command that reads the same table cites this sub-section and restates none of it.
+
+1. **The section** is the one whose heading's leading segment is `Desire-coverage`, token-bounded. None is *holds no outcome record*. More than one is `UNDETERMINED`.
+2. **The table** is the first run of pipe rows under that heading, and its first row is the header. A section with no table is `UNDETERMINED`: there is no header to read by.
+3. **The cells** are found by comparing each header cell whole, after trimming whitespace and emphasis, with the labels this table has shipped under: the traveller cell is `Traveler` or `Traveller`; the tier cell is `Priority tier` or `Tier`; the verdict cell is `Covered?` or `Covered`. A needed label that no header cell carries, or that more than one carries, is `UNDETERMINED`, and the render names the needed cell.
+4. **The rows** are those whose traveller cell has the same key as the bearer's file stem, under the key rule the `**Reads:**` block names. Rows keyed to anyone else are not this person's and reach nothing.
+5. **A row counts** under its tier — `anchor`, `wish` or `nice-to-have`, compared after trimming and case-folding — and its verdict — `covered` or `not covered`, with emphasis stripped. Any other value in either cell of one of these rows is `UNDETERMINED` for the trip; it is never guessed and never echoed.
+6. **The tally** is, per tier in that order, the count of each verdict. A tier with no row is not printed.
+
+**The `Desire` cell is located only so that it can be skipped.** No text from it, and nothing from the per-day coverage cell, reaches a tally or the render: a desire marked `Recurrence: daily` is counted by its overall verdict cell alone. An instance whose frontmatter declares no version, or one this revision does not recognise, is read by the same steps — `reference/data-architecture.md` § 7.2's tolerant read.
+
+**This verb uses the roster's first column and nothing else in `## Group`.** The trip context is opened whole, as the `**Reads:**` block declares; within `## Group` this verb does not use `- **Total travelers:**`, compares nothing with it and prints nothing from that block.
+
+### The relation — `plan-to-coverage`
+
+**This is where the relation is declared, and it is declared once.** A later verb of this command that renders it cites this sub-section and restates no verdict and no reading.
+
+| relation | the derived side | the source side, by rule | when an operand is not observable |
+|---|---|---|---|
+| `plan-to-coverage` | `trips/<t>/outputs/satisfaction-metrics.md` | the other paths this section's `**Reads:**` block names for the order observation. They are the files of what `reference/data-model.md` § *Three metric types* says coverage is *determinable from the itinerary, the traveler model, and the per-event status*; that sentence fixes the membership, and a change to it is a change to this row | `UNDETERMINED`, naming the operand |
+
+**`t` is the trip a verdict is rendered for: an archived trip, and never the resolved one.** For this verb it is a reached trip; a later verb that cites this sub-section says in its own section which trips it renders the relation for. Because `t` is never the resolved trip, the relation is evaluated **outside `trip.freshness`**, which is a property of the resolved trip's own artifacts (`CLAUDE.md` § *Resolving a trip*, `G8`). It adds no entry to that list, and this file's contract header is unchanged.
+
+**The observation is of order, never of time, and it is the shipped one**: a newest-first listing over the operands, as `skills/trip/SKILL.md` declares for its own relations. No epoch is read and no duration is computed.
+
+- **`CURRENT`** — every operand was listed and the derived side is the first line.
+- **`BEHIND`** — every operand was listed and it is not. The verdict **names the leading source**, the operand that came out first, by its file name under `outputs/`.
+- **`UNDETERMINED`** — an operand was not listed, or the listing could not be taken. The verdict **names each operand that could not be observed**. It is never reported as `BEHIND`.
+
+The verdicts are compared by exact token equality, and every reached trip's verdict is rendered, `CURRENT` included. **A verdict belongs to the trip, taken from one listing in a render.** Wherever a render prints a trip's verdict, it prints the same token naming the same operand, and the erasure reading below is printed wherever that trip's verdict is and never apart from it. This verb prints both once, on the trip's line; a later verb whose render carries more than one line for a trip says in its own section where they are printed, inside those bounds.
+
+**What a verdict means, and nothing more.** `CURRENT` and `BEHIND` are an order among the named files, and that order is the order of the files' stamps. Neither says a plan or a status changed after the last synthesis, and neither says one did not. A hand edit to the coverage file reads `CURRENT`. **A copy, a restore or a sync that does not keep stamps resets the order**, and a verdict taken afterwards reports what that act left; no derivation rewrites an archived trip, so the verdict goes on reporting it.
+
+**Report-only, and that is a property of the relation.** A verdict may choose which sentence is printed. It never chooses whether a verb runs, what it reads, which trips it reaches, which output it ends in or what a tally says, and no verb of this command stops, refuses, redirects or writes on one. Nothing mechanical holds this; it is a rule a verb follows.
+
+**The readings a render states rather than infers:**
+
+| Reading | Printed | Why |
+|---|---|---|
+| *an order set by an erasure* | beside the verdict of a trip whose `## Group` roster table carries, in its first column, a cell that is `per-` followed by four lowercase hexadecimal digits and nothing else | erasure's own writes reorder these files, so on that trip the verdict reads as an order an erasure set, never as a plan change |
+| *an order the relation cannot interpret* | on every render, unconditionally | where a trip's last pass ran no validator after its hub — an IDEATION pass, or a remediation leg — the order that pass left is one the relation cannot interpret. **No read this verb declares can observe the shape of a pass, so it declares none and states the reading every time** |
+| *a tie* | on every render, unconditionally | two operands may share a stamp — on a filesystem with coarse stamps, or after a copy that set them together — and a listing cannot tell a tie from a lead. Where the newest stamp is shared, the listing falls back to name order among the files that share it: a tie between the coverage file and a source whose name sorts before it prints `BEHIND` naming that source, and a tie only with a source whose name sorts after it prints `CURRENT` |
+
+### What a render carries, and how it is worded
+
+**The wording rule and the transcript bound are stated here once**; a later verb of this command that renders retained coverage cites this sub-section.
+
+**Every tally is worded as plan coverage as last synthesized** — whether the plan, when it was last synthesized, covered a desire of that tier. It is never worded as what happened on a trip, what anyone enjoyed, or how a trip went. An archived coverage file is a snapshot taken at synthesis and records nothing that happened after it.
+
+**A render carries** trip slugs, the person id, tier-by-verdict tallies, relation verdicts with an operand's file name, the output token or sentence, and the sentences below. **It never carries** a display name — the argument is not echoed, and the subject is named by person id — a traveller file's stem, a desire's text, a destination string, a roster cell, or any line of a record's body. The reach table in `## erase <person-id>` types the session transcript `REPORT`, and a value echoed into one is a copy an erasure cannot reach.
+
+**The order of a render:** the person id with the output; then, under `RESOLVED(n)`, the words *plan coverage as last synthesized, on archived trips other than this one*, and a line per reached trip in the listing block's order — slug, the per-trip reading, the relation verdict with what it names, and the erasure reading where it applies. **`n` counts archived trips and no others**: a trip that carries the reference and is still being planned, or was reopened, has no line and is not counted, and the view's own sentence below says that it is not shown. Then **the shared sentences**, as written, **on every render whatever the output** — a later verb of this command that renders retained coverage prints these same sentences:
+
+> Every tally here is plan coverage as last synthesized: whether a trip's plan, when it was last synthesized, covered a desire of that tier. It says nothing about what happened on a trip.
+>
+> `plan-to-coverage` is evaluated here, outside `trip.freshness`, because the files it orders belong to other trips. It is report-only. `CURRENT` and `BEHIND` are an order among the named files' stamps and nothing more, and a copy, a restore or a sync that does not keep stamps resets that order.
+>
+> Where a trip's last pass ran no validator after its hub, the order that pass left is one this relation cannot interpret. Nothing this view reads can show whether that happened, so the caution applies to every verdict it prints.
+>
+> Two of those files can share a stamp, on a filesystem with coarse timestamps or after a copy. The listing then falls back to name order, so a tie can print `BEHIND` naming whichever tied file sorts first, and a listing cannot tell a tie from a lead.
+
+And then **this view's own sentence**, on every render as well. It is written for one subject and is not part of the shared set; a later verb words its own statement of what it does not show:
+
+> Only archived trips other than the one being planned are shown, and only where a traveller file on them carries this person's reference. A trip still being planned, or reopened, is not shown; a trip this person was never linked on, or was unlinked from, is invisible here.
+
+Under `NO-REFERENCE` the person-id position reads *this traveller references no durable record*, and nothing else is named.
+
+**This verb suggests no verb and offers no value.** It does not offer to link a traveller, to answer a field or to carry a tally into a profile. **The standing clause is taken unwidened, and no rule is appended for this verb**: it writes nothing, so it has no write to derive a rule for.
+
+**Reversibility: n/a — this verb writes nothing.**
