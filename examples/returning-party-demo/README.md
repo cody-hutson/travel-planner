@@ -43,6 +43,13 @@ that is tracked under the declared store, and that record must be live rather th
 The first archived trip writes its verdict cells in bold and the second writes them plain, so a
 reader that strips emphasis and a reader that does not disagree across the pair.
 
+**The group this set is read with is the one already tracked.**
+`../people-library-demo/groups/grp-4a81.md` names both linked travellers, so it qualifies on the
+trip being planned and both archived trips are its candidates; `/trip-record group-past-coverage`
+is exercised against it. No group record is added for this set: a second qualifying group, a
+member bullet that does not resolve and a group with too few members are composed in the exercise
+root and in the suite's own work directory, never tracked.
+
 ## What this set does not carry, and why
 
 - **No itinerary, traveller-model or event-status file.** The relation the view reports,
@@ -92,4 +99,14 @@ no-record examples/returning-party-second-demo rhian
 # token <root> <yes | no> — whether the roster's first column carries an erasure token
 token examples/returning-party-first-demo  no
 token examples/returning-party-second-demo yes
+
+# group <group-id> <member-bullets> <resolved-members> — a group record tracked under the store
+group grp-4a81 2 2
+
+# joint <root> <group-id> <members-linked> <roster-rows> — an archived trip that is a candidate for the group
+joint examples/returning-party-first-demo  grp-4a81 2 3
+joint examples/returning-party-second-demo grp-4a81 2 3
+
+# qualifies <root> <group-id> <members-linked> — a trip being planned on which the group qualifies
+qualifies examples/returning-party-demo grp-4a81 2
 ```
