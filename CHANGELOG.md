@@ -46,16 +46,17 @@ opening block already gave both routes.
 **Store-location wording names the operator's data root.** Sentences that called a real store
 ignored by git, and gave that as the reason it is untracked, cannot be restored or cannot be seen
 by a check, now name where the store is: `<data-root>` in `CLAUDE.md` and the command files, "the
-operator's data root" in other engine prose, and "your data folder" or "your data root" in text a
-person reads about their own files. The sweep reached the charter, all five of the command files
-under `skills/`, the enrichment prompt, both intake forms, `CONTRIBUTING.md` and `SECURITY.md`,
-the data architecture and four of the schema documents, comments and messages in the publish
-script, the round-trip check and the artifact-schema suite, one workflow's comments, and the three
-people-library fixtures. Where a rewritten sentence said nothing could bring a file back, it now
-says that nothing in this repository could. The sweep changed no behaviour, schema, path pattern
-or check: in the scripts every changed line is a comment or a message string, and neither
-`.gitignore` nor the suite that asserts it is touched. The limits below say which such sentences
-it left.
+operator's data root" in other engine prose (or "their data root" where a sentence is about a
+user, and "the data root" in the publish script's comments), and "your data folder" or "your data
+root" in text a person reads about their own files. The sweep reached the charter, all five of the
+command files under `skills/`, the enrichment prompt, both intake forms, `CONTRIBUTING.md` and
+`SECURITY.md`, the data architecture and four of the schema documents, comments and messages in
+the publish script, the round-trip check and the artifact-schema suite, one workflow's comments,
+and the three people-library fixtures. Where a rewritten sentence said nothing could bring a file
+back, it now says that nothing in this repository could. The sweep changed no behaviour, schema,
+path pattern or check: in the scripts every changed line is a comment or a message string, and
+neither `.gitignore` nor the suite that asserts it is touched. The limits below say which such
+sentences it left.
 
 **The three store signposts are rewritten whole.** `people/README.md`, `groups/README.md` and
 `trips/README.md` are read in the engine's own skeleton and again in every data folder that
@@ -88,17 +89,16 @@ folder again. The update replaces the engine's copies and never the ones beside 
 no other file in the repository gives this step:
 
 ```bash
-cd "$(cat ~/.travel-planner/data-root)"
-for d in trips people groups; do mkdir -p $d && cp ~/.claude/skills/travel-planner/$d/README.md $d/; done
+root="$(cat ~/.travel-planner/data-root)" && [ -n "$root" ] && cd "$root" && for d in trips people groups; do mkdir -p $d && cp ~/.claude/skills/travel-planner/$d/README.md $d/; done
 ```
 
-The second line is the one install step 3 in `README.md` runs. It writes the three signposts, and
-makes a store folder only where one is missing. What it corrects depends on the kind of data
-folder you have. In one that an earlier release's install made, the older signposts say near the
-top that everything beside them is ignored by git, and that is false of that folder until the
-files are copied again. In one that is an earlier checkout of the engine, the older signposts it
-carries say something true of that folder, by that checkout's own ignore file, and where the
-checkout carries a signpost git shows the copy there as a change to a tracked file.
+Its loop is the one install step 3 in `README.md` runs. It writes the three signposts, and makes a
+store folder only where one is missing. What it corrects depends on the kind of data folder you
+have. In one that an earlier release's install made, the older signposts say near the top that
+everything beside them is ignored by git, and that is false of that folder until the files are
+copied again. In one that is an earlier checkout of the engine, the older signposts it carries say
+something true of that folder, by that checkout's own ignore file, and where the checkout carries
+a signpost git shows the copy there as a change to a tracked file.
 
 **The honest limits.** The sweep followed one word and stopped, by decision, at the decision
 records and at this file's earlier entries. Counted over every tracked file with the pattern
@@ -108,8 +108,8 @@ sweep, and stands 92 times at `53eb700`, after it; this entry adds none. Of thos
 the reason a real store is untracked, and each is owed an amendment in the form
 `reference/adr/README.md` § *Convention* prescribes. The records are ADR-002, ADR-004, ADR-006,
 ADR-007, ADR-009, ADR-011, ADR-012, ADR-014, ADR-015, ADR-016, ADR-018, ADR-022, ADR-025, ADR-027
-and ADR-029, and no decision record carries an amendment-history section yet. Another 11, at
-`53eb700`, are in this file's earlier entries and stay as history. Two are held, at `53eb700`: the
+and ADR-029, and none of them carries an amendment-history section yet. Another 11, at `53eb700`,
+are in this file's earlier entries and stay as history. Two are held, at `53eb700`: the
 annotations on the site's source file and on the `.publish/` working copy beneath it, in the
 directory tree under § 8 of `reference/site-layout-spec.md`. ADR-026 quotes the first, so both
 wait for that record's amendment. The other 47, at `53eb700`, are left where they stand: 12 where
