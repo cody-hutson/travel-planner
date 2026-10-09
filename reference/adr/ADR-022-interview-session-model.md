@@ -6,6 +6,11 @@
   there and takes none here: the rest of D6.1, and every other decision of this record, stands. The
   superseded row is retained as decided, with an inline marker at it pointing forward, per
   `reference/adr/README.md` § *Convention*.
+  **Superseded in part (2026-10-09, Friday)** — D5.3, as far as it reaches an example, by
+  [ADR-044](ADR-044-interview-conversation-conduct.md). This amendment records a decision taken
+  there and takes none here: the rest of D5.3, and every other decision of this record, stands. The
+  supersession takes effect as that record states. The superseded text is retained as decided, with
+  an inline marker at it pointing forward, per `reference/adr/README.md` § *Convention*.
 - **Deciders:** repo maintainer
 - **Driving work:** the *interviewer becomes a component* milestone. This record is one of that
   milestone's two Wave-0 gating records, in the shape `ADR-012-people-library.md` and
@@ -658,6 +663,8 @@ instruction to *offer the choices* is bounded: **every offered option is a subst
 **The interviewer never offers an option for a field whose form carries no option list** — an open
 question stays open. An offer that paraphrases the form's options is D5.1's invention, one step
 earlier.
+*(Superseded in part (2026-10-09, Friday) by [ADR-044](ADR-044-interview-conversation-conduct.md),
+as far as this decision reaches an example; the rest of this decision stands.)*
 
 **D5.4 — Closed-enum fields: offer the members, record the member the traveller selected, and never
 map a free-form utterance onto a member.** Where the utterance names no member, say so and re-offer;
