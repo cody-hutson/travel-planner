@@ -1,6 +1,12 @@
 # ADR-040: What a transcript-only channel returns, and who saves it — superseding ADR-022 D6.1's tier-T row in part
 
 - **Status:** Accepted (2026-10-01)
+  **Superseded in part (2026-10-09, Friday)** — D1, as far as it returns nothing below the end
+  marker, by [ADR-045](ADR-045-interview-rating-and-engagement-record.md). This amendment records
+  a decision taken there and takes none here: the rest of D1, and every other decision of this
+  record, stands. The supersession takes effect as that record states. The superseded text is
+  retained as decided, with an inline marker at it pointing forward, per
+  `reference/adr/README.md` § *Convention*.
 - **Deciders:** repo maintainer
 - **Driving work:** the *one interviewer, any conforming form* milestone. At that milestone's
   Collective Review the operator ruled that the change the milestone makes to
@@ -94,6 +100,9 @@ it was given, above the end marker and nothing below it.** In particular:
 
 The shape is unchanged: one fenced block, carrying the form above its end marker and nothing below
 it, returned by a channel that holds no write path.
+*(Superseded in part (2026-10-09, Friday) by
+[ADR-045](ADR-045-interview-rating-and-engagement-record.md), as far as this decision returns
+nothing below the end marker; the rest of this decision stands.)*
 
 **D2 — The predicate reads: no write path, but the channel can return text to whoever sent the
 form, and that person saves it.** A returned trip profile is saved by
