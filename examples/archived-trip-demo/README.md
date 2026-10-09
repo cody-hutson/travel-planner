@@ -2,7 +2,7 @@
 
 > **Illustrative, sanitized example. Not a real trip and not real people.**
 
-This is the repository's **only archived trip**. Before it, no fixture carried a
+This is the **worked example of the freeze rule**. Before it, no fixture carried a
 `**Lifecycle:**` marker at all, so the rule in `CLAUDE.md` § *Archived trips — what the
 freeze binds* had no subject to be asserted against.
 
@@ -170,7 +170,7 @@ marker examples/archived-trip-demo/trip-context.md ARCHIVED
 pin 44214dbfd43a040ac05cc49fd06da4facbaac179 examples/archived-trip-demo/outputs/traveler-model.md
 pin 9ea67a3071eb0419025ca178cc9cd312ca38d5f4 examples/archived-trip-demo/travelers/dana.md
 pin 2a6594c117d1cc2c614640ad8f68fc4aaa557c35 examples/archived-trip-demo/travelers/per-4f1c.md
-pin c4201da97179b02b0128b08e76747bf643f7df85 examples/archived-trip-demo/trip-context.md
+pin c9d0cde7e2e381f6f33a4aa0fe6769e21164c995 examples/archived-trip-demo/trip-context.md
 pin 8c829bc488357ea4ec216f4d71270b83194ffc56 examples/archived-trip-demo/trip-log.md
 ```
 

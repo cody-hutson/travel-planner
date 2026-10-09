@@ -80,6 +80,7 @@ Once `trips/` holds more than one trip, every command also takes `--trip <slug>`
 | `/trip-record` | `history` | `<name>` | ACTIVE | any | any | G8 |
 | `/trip-record` | `.approvers` | `<name...> [--threshold <n>]` | ACTIVE | any | any | G8 |
 | `/trip-record` | `interview` | `<form> [<target>]` | ANY | any | any | G8 |
+| `/trip-record` | `past-coverage` | `<name>` | ACTIVE | any | any | G8 |
 <!-- /command-surface -->
 
 ## Where this fits
