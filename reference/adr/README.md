@@ -7,7 +7,8 @@ options weighed, the decision, and the consequences.
 ## Convention
 
 - **File name:** `ADR-NNN-kebab-title.md` — zero-padded 3-digit number, assigned
-  monotonically. Numbers are never reused or renumbered.
+  monotonically. Numbers are never reused or renumbered. A number is taken before its record
+  is written: § *Number declarations* states how.
 - **Sections:** Status · Context · Decision drivers · Options considered · Decision ·
   Consequences · References. A `Follow-on build slices` section is conventional where the
   decision opens downstream work. This list is the expected spine, not a closed set — a
@@ -117,6 +118,54 @@ undeclared. Why a particular gap exists belongs in the record that withdrew it, 
 supersedes, on a branch that has since been swept; `ADR-021` § *Costs and residual risks*
 carries the account.
 
+**Taking a number.** A number is taken on `main` before the record that will carry it is
+written, by a row in the fence below — the *register*. The row is the claim. It reaches `main` in
+a pull request of its own, which adds the row and nothing else, and the number is held from the
+moment that pull request merges. The number taken is the one after the register's last row. The
+left column is that number and the right column the file name the record will have — the name
+alone, in the form § *Convention* gives, with no directory before it. The row stands at the foot
+of the fence, so the rows read in number order.
+
+**What holds it.** `scripts/test-corpus-hygiene.sh` grades the register against the directory,
+in the group it calls the number register: a record numbered from the register's first row on is
+a finding unless the row for its number names that record's file. That suite is a required
+check. It grades a branch as it was pushed and, where the branch has a pull request open, that
+branch merged into `main` as `main` then stood. A record with no row is a finding on the branch
+as pushed, whether or not the branch has merged `main`; a record at a number that a row on
+`main` gives to another is a finding on the merge. Neither grading is repeated when `main`
+moves, and `.github/workflows/corpus-hygiene.yml` states what that leaves open.
+
+**When claims meet.** Rows written for one number on separate branches stand at the same place
+in this file, and the host does not merge a branch that conflicts there. The row already on
+`main` stands. The later claimant keeps that row, takes the next number, and renames its record
+if it has written one. Keeping both rows is a finding, and so is keeping the row on `main` over
+a record still filed under its number. Putting the later row in place of the earlier one is not
+a finding, because no tree records which row came first: it is what this rule forbids, and what
+a reviewer of the change looks for. A row names its record so that the claims meet at all —
+rows that said only that a number was taken would be the same line, and would merge as one.
+
+**What a row becomes.** A row is never removed. When the record lands its row stays, and stops
+being a hold. A release that renames its own record before it lands edits its own row in the
+same change. A row that names another record's file is changed only by a pull request that
+changes nothing else, so that the change is the whole of what its reviewer reads. A number whose
+record will not be written is not given back: the right column becomes a single reason token in
+place of the file name, as a gap declared above carries one. A reason token carries no `/`, does
+not end `.md` and does not carry `ADR-` in any letter case; a right column that does is taken
+for a file name written wrongly, and is a finding. Group **D** reads the register too, so a
+number taken here and not yet landed is not a gap when a later record is numbered above it.
+`ADR_NUM_EXEMPT` in `scripts/test-adr-conformance.sh` does not read it: that value has to carry
+such a number on every branch that numbers a record above it, from the commit that writes the
+record until the change that lands the held one.
+
+```adr-number-register
+# number  record
+044       ADR-044-record-number-register.md
+```
+
+Records numbered below the register's first row predate it and carry no row. Why a register,
+and what it was chosen over, is decided in
+[the record on how a number is taken](ADR-044-record-number-register.md).
+
 ## Index
 
 Each record has exactly one row below, in the group for the subsystem it was decided for — the
@@ -134,6 +183,7 @@ so each group stays in number order.
 | [ADR-019](ADR-019-discriminating-evidence-rule.md) | The Discriminating-Evidence Rule — an assertion's PASS must require evidence its subject could only have produced by running | Accepted |
 | [ADR-042](ADR-042-accepted-record-growth.md) | Accepted records after acceptance — what an amendment may add, the consolidated-decision form, and where settled design belongs | Accepted |
 | [ADR-043](ADR-043-required-check-census-parser.md) | The required-check census reads a parsed document — PyYAML on the runner, a marker read from the comment layer, and a refusal wherever it cannot vouch | Accepted |
+| [ADR-044](ADR-044-record-number-register.md) | A record's number is taken on `main` before the record is written — a register row that names its record, a required check that grades it, and the shapes it was chosen over | Proposed |
 
 ### Data architecture
 

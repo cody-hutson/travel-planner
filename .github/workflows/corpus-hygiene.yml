@@ -62,7 +62,8 @@ name: Corpus hygiene
 #        required check green, because the records' filenames differ and only the index is
 #        shared. Deliberate gaps are declared per number in the adr-number-declaration fence
 #        in reference/adr/README.md and asserted in both directions, so a declaration cannot
-#        outlive the gap it excepts. The scope boundary — the row's key cell, the ungraded
+#        outlive the gap it excepts; a number that the number register names is taken, and is
+#        not a gap. The scope boundary — the row's key cell, the ungraded
 #        link text, the ungraded zero-padding — is declared in the suite's class-D banner
 #        entry and is not restated here
 #   E    AN OWNED RULE, STATED ONCE AND CITED. A [THIRD-PARTY] party member's standing — no
@@ -85,6 +86,22 @@ name: Corpus hygiene
 #        version heading. The group runs scripts/check-release-tag.sh — the check the release
 #        procedure runs at tag time — over every tag, and asserts its failures against the
 #        release-tag-declaration fence in CONTRIBUTING.md in both directions
+#   I    THE NUMBER REGISTER. A record number is taken on the default branch before its record
+#        is written, by a row in the adr-number-register fence in reference/adr/README.md that
+#        names the record's file. A number carried by two rows, a record above the register's
+#        floor that its number's row does not name, and a row that is not the next number are
+#        each a finding. WHAT EACH RUN OF THIS JOB GRADES is stated here, because this is the
+#        group it decides most for. A push to a branch with a pull request open starts the job
+#        twice, and both runs report under the one job name. The push run grades the branch as
+#        it was pushed: a record with no row is a finding there whether or not the branch has
+#        merged the default branch. The pull_request run grades that branch merged into the
+#        default branch as the default branch stood when the run started: a record at a number
+#        the default branch has given to another is a finding there, and a branch older than
+#        the register is graded there by the default branch's copy of the suite. Where the
+#        branch conflicts with the default branch there is no such merge to grade, and neither
+#        run is started again when the default branch moves. An empty register over no record
+#        above the floor renders VACUOUS, and the floor and the declared boundary are stated in
+#        the suite's banner entry for this group
 #   CTL  a synthetic fixture tree built in a temp dir on every invocation, plus the arms whose
 #        ids end -RETRO, each replaying a real historical defect. One MUST-FIRE arm per finding
 #        code the suite can
@@ -112,11 +129,24 @@ name: Corpus hygiene
 #   motivating recurrences lived in a workflow comment. That gap is real and is left to
 #   review; stating it is what keeps a green from being read as more than it is.
 #
-#   WHETHER AN ADR NUMBER WAS FREE WHEN IT WAS CHOSEN. Group D grades the numbering of the
-#   corpus as it stands at the merge. It cannot hold a number for a branch that has not
-#   merged yet, so two concurrent branches can still each choose the same free number — what
-#   changes is that the collision is now caught at the merge instead of by hand afterwards.
-#   Reserving a number before a branch merges is a separate mechanism and is not this gate.
+#   WHETHER A HOLD IS STILL WANTED, WHICH CLAIM CAME FIRST, AND A BRANCH OLDER THAN THE
+#   REGISTER. The number-register group grades that a record lands only under the number a
+#   register row names for it, and that no number is carried by two rows. A row whose record has
+#   not landed is reported on every run and never failed: whether that record is still coming is
+#   a question about intent. Which row reached the default branch first is a question about
+#   history, and the group reads one tree. A branch that rewrites such a row to name its own
+#   record, or resolves a conflict between the rows in its own favour, passes, and the record
+#   the row used to name is the one reported afterwards. reference/adr/README.md states the
+#   rule that forbids it, and this gate does not refuse it. And a branch older than the register
+#   is graded by the group only on its merge into the default branch, at a push made after the
+#   register landed: its push run reads its own older copy of this suite, which has no such
+#   group. A release that carries its CHANGELOG entry cannot merge until it has merged the
+#   default branch, because its entry conflicts with the entry of the release that landed the
+#   register, and from then on its own copy has the group. A change that carries a record and
+#   no such entry meets no such conflict. Merged without another push it is not graded by the
+#   group at all, and a collision it lands is reported only afterwards; pushed again without
+#   merging the default branch, its two runs can disagree, and nothing here relies on which of
+#   them the branch protection reads.
 #
 #   A USER'S trips/ DIRECTORY. .gitignore keeps it out of a CI checkout, so those artifacts
 #   are unreachable by construction rather than by choice.
@@ -145,7 +175,16 @@ name: Corpus hygiene
 # PREFER THE PARTIAL ROLLBACK where only one group is at fault. Land a change that removes
 # that group and its fence, keeping this workflow and its job name. The context keeps
 # reporting throughout, so nothing blocks and step 1 is never needed. The groups share no
-# state beyond the harness precisely so that this path stays available.
+# state beyond the harness so that this path stays available — WITH ONE EXCEPTION, stated
+# here because it changes what such a change has to carry. Group D reads the number register,
+# the fence the number-register group grades, and treats a number a row there names as
+# accounted for. A change that removes the number-register group, or its fence, or that read,
+# therefore removes the read from group D in the same commit, and in that same commit declares
+# in the adr-number-declaration fence every number the register names that no record carries
+# and a record stands above — the figure group D prints as named by the register. Without that
+# declaration group D fails on each such number the moment the read is gone, on the default
+# branch and on every branch that merges it. Each row declared this way comes out again in the
+# change that lands the record it stood in for.
 #
 # ── WHY THE STRICT MODE ──────────────────────────────────────────────────────────
 # GUARD_STRICT_SKIPS=1 makes a skipped group a failure unless it is declared. This suite
