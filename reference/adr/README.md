@@ -10,9 +10,36 @@ options weighed, the decision, and the consequences.
   monotonically. Numbers are never reused or renumbered. A number is taken before its record
   is written: § *Number declarations* states how.
 - **Sections:** Status · Context · Decision drivers · Options considered · Decision ·
-  Consequences · References. A `Follow-on build slices` section is conventional where the
-  decision opens downstream work. This list is the expected spine, not a closed set — a
-  record may carry further sections, and carrying one is not a divergence to be recorded.
+  Consequences · References. Where a decision opens downstream work, *Scheduling content* below
+  says what the record states of it. This list is the expected spine, not a closed set — a record
+  may carry further sections, and carrying one is not a divergence to be recorded.
+  `scripts/test-adr-conformance.sh` reads the list from this bullet, and its banner states the
+  form the bullet has to keep.
+- **Scheduling content.** A record states what its decision makes false or necessary elsewhere, and
+  schedules none of that work. The surface a decision reaches, the change that surface then owes,
+  and a coupling the decision forces between changes — that they cannot land apart, or that one may
+  not go live before another, each with its reason — are consequences. Consequences is their usual
+  home and no rule of placement: the bound is on what a passage states, never on the heading or the
+  list it stands under. A passage is a schedule when it states work assigned to a wave, a release or
+  a milestone; work assigned to a card, a slice or a person; or an item named as a unit of the plan.
+  Work is assigned where the passage pairs a piece of it with one of those, in whatever words it
+  does so — owned by, carried by, tracked under, routed to — and a card here is any tracker item,
+  whatever its type. A wave or a card named without pairing work with it — to decline it, or as the
+  name of notes or of a record — assigns nothing. An item is named as a unit of the plan where its
+  name is that of a slice, a build or a step, and not of what changes. Not a schedule: an item that
+  names a surface and the change it owes, whatever list or heading it stands under; a pointer to
+  where the plan is kept; an item declined, with its reason; a disposition of a residual; and the
+  record, file or decision that carries an obligation. An owner assigned in a table of consequences
+  is a schedule. The owner a record names on a residual is outside this bound, whatever it names: a
+  residual is what the record itself leaves open or accepts, and its owner stays. A schedule belongs
+  to a release plan, which changes when the backlog changes. An Accepted ADR does not change with
+  it, so a schedule written into one becomes a second account of the plan, and the stale one. A
+  record's own entry into the corpus — its index row, and the change that sets its status — is not
+  work the decision opens, and this file's lifecycle and index rules govern it. Where an Accepted
+  ADR carries a schedule, removing it removes the schedule alone: the consequences and coupling
+  facts written beside it are what this bullet asks a record to state, and they stay, as they did in
+  `ADR-023` § *What this decision makes false elsewhere*. *What an amendment may add* below bounds
+  the amendment that removes it.
 - **Status lifecycle:** `Proposed` → `Accepted` → `Superseded`. An Accepted ADR is
   immutable **as to its decisions** — to change a decision, author a new ADR and mark the
   old one `Superseded by ADR-MMM` rather than editing the original; where only one decision,

@@ -829,7 +829,7 @@ ctl_index() {   # ctl_index <root> <"NNN:Status">…  — writes the convention 
   mkdir -p "$d"
   { printf '# Architecture Decision Records\n\n## Convention\n\n'
     printf -- '- **Sections:** Status \302\267 Context \302\267 Decision drivers \302\267 Options considered \302\267 Decision \302\267\n'
-    printf '  Consequences \302\267 References. A `Follow-on build slices` section is conventional.\n'
+    printf '  Consequences \302\267 References. Downstream work is stated as consequences.\n'
     printf '  This list is the expected spine, not a closed set.\n'
     printf -- '- **Status lifecycle:** `Proposed` \342\206\222 `Accepted` \342\206\222 `Superseded`.\n\n'
     printf '## Index\n\n| ADR | Title | Status |\n|-----|-------|--------|\n'
