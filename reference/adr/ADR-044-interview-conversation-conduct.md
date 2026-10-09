@@ -33,7 +33,7 @@ put in front of someone, as they read on `main`:
   form itself carries, quoted; has the interviewer offer no option for a field whose form carries
   no option list — *"an open question stays open"*; and calls an offer that paraphrases the form's
   options an invention.
-- [`ADR-026`](ADR-026-channel-architecture.md) § 5 gives the interview channel, CH-2, a W-test
+- [`ADR-026`](ADR-026-channel-architecture.md) § 5 gives the intake surface, CH-2, a W-test
   whose first sentence reads: a prompt *"may name a field and a remedy; it may **never carry,
   quote, or offer a candidate value**"*. Its second says silence is not assent in a spoken
   modality.
@@ -45,9 +45,9 @@ put in front of someone, as they read on `main`:
 **One reading of those floors was already taken, and it is the reading this record starts from.**
 Commit `14043ee` records the operator's decision on the durable form's must-haves step: the kinds
 of need that step lists may be shared as examples, never as a list to choose from, and they are
-given with the ask. It added a clause to shared rule 3 — an example the ask-prose gives for its section
-*"may still be mentioned as an example, never offered as a choice"* — and its message records two
-things this record relies on. The grading of D5.3 on that release *"read the mention as an offer"*.
+given with the ask. It added a clause to shared rule 3 — an example the ask-prose gives for its
+section *"may still be mentioned as an example, never offered as a choice"* — and its message
+records two things this record relies on. The grading of D5.3 on that release *"read the mention as an offer"*.
 And the candidate value shared rule 7 bars *"is one arrived at"*, where an example the ask-prose
 gives is the form's own text.
 
@@ -88,8 +88,9 @@ nothing by itself, and no decision here is presented as following from it.**
   that the person might adopt; several spanning the range rather than one; at most a few in a
   spoken turn; and never repeated after the person answers. The review behind it reports that
   examples may both remind people of what they would leave out and shift what they report
-  (`COR-12`). Its statement that steering is strongest where a person's own answer is weakest comes
-  from eyewitness memory under load, and applying it to preferences is a transfer (`COR-16`).
+  (`COR-12`). Eyewitnesses whose memory of an event had been weakened were more open to leading
+  questions; applying that to a person with no firm answer about their own preferences is a
+  transfer from event memory (`COR-16`).
   Options heard favour the last one heard, and a survey-design chapter expects options read to
   favour early ones (`COR-21`; grade C for the contrast). One text study, on attitudes, found that
   content a machine offered shifted people's views more as in-line suggestions than as a static
@@ -546,8 +547,8 @@ cases, its inputs, its verdicts and one worked pair, and no more.** A check's wo
 windows and engine, what separates one word from the next, how a turn's kind is derived, the labels
 a test conversation declares and the verdict for each further case are settled design (`ADR-042`
 § 3). They are written into no record, and are pinned by the suites of the cards that build the
-checks: #1353 for the text-level forms, #1769 for the transcript-level ones. Every example below is
-synthetic.
+checks: #1353 for the text-level forms, #1769 for the transcript-level ones. Every example
+exchange below is synthetic; one pair of sentences is the forms' own, and is marked as that.
 
 **The verdicts, in every form.** *Pass*. *Fail*, naming the limb and the words or the turn. *Not
 determinable*, naming the missing input — a verdict of the predicate, not a failure to give one.
@@ -634,8 +635,8 @@ names the words. *Order* and *example echo* are reported beside the verdict, as 
 - at most one turn of the kind *follow-up* puts it, and across its section the follow-ups number at
   most two;
 - no turn of any kind puts it after an uttered skip, decline or stop for it or for its section; no
-  follow-up is put after an empty answer; and none on a field the file already answered when the
-  session began;
+  follow-up is put after an empty answer; and no follow-up is put on a field the file already
+  answered when the session began;
 - a follow-up does not repeat the ask in the same words, and carries no value but the person's own
   words, the field's label and an example as D1 bounds one;
 - where the session is spoken and the field is typed `PERSON`, no follow-up puts it;
@@ -765,7 +766,7 @@ view, which stays true of that surface.
 
 | What | Tier | Why |
 |---|---|---|
-| The decisions, before the conduct is edited to them | **CHEAP** | a record, revertible in one commit; no session behaves differently yet |
+| The decisions, before the conduct is edited to them | **CHEAP** | a record and the marks that point at it, revertible together; no session behaves differently yet |
 | The example bound, the follow-up shape and the two lists a style is held to, once slices are built on them | **MODERATE** | a record superseded in part can be superseded again, but the slices built on it follow it |
 | The own-words predicate | **CHEAP** until a suite pins it, **MODERATE** after | the suite's fixtures encode it |
 | The style names | **CHEAP** | product vocabulary |
