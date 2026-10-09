@@ -254,6 +254,61 @@
 #        G2. Under G0 no line this group prints carries a counter of the comparison: each says
 #        NOT-EVALUATED and names the one cause, because a counter beside a withheld comparison
 #        reads as a measured zero.
+#   H    ONE ENUMERATION OF A DIRECTORY, BOUND TO THE TREE. The top-level entries of CH_H_DIR/
+#        are enumerated once in this repository — under the CH_H_DIR/ node of the fenced tree
+#        that follows the heading CH_H_HEAD in CH_H_DOC — and that enumeration is asserted
+#        against the tracked tree in BOTH DIRECTIONS: an entry in the tree that the fence does
+#        not name is H1, and an entry the fence names that the tree does not hold is H2. It
+#        drifted because NOTHING COMPARED IT WITH THE DIRECTORY, and that is the whole cause:
+#        the row for the same directory in CH_H_MAP is a table row outside every fenced block,
+#        every content detector above read it, and it went stale on the same revisions, with
+#        every required check green. The fence accounts for something narrower — why no content
+#        detector read this list at all: each toggles on a fence line and skips what is inside.
+#
+#        THE MAP ROW CITES AND DOES NOT ENUMERATE, and two codes hold it to that. H4 is the row
+#        without its citation — a link whose target is CH_H_DOC, and the heading's words in the
+#        row's text. H5 is H4's complement, owed because a citation that is present says nothing
+#        about what stands beside it: the row's description names a top-level entry of the
+#        directory by a path-shaped token — a file's basename, or a directory's name with its
+#        slash. A list restored next to an intact citation therefore fails. A second list beside
+#        the first is what went stale, more than once; a citation cannot.
+#
+#        THE READER IS STRUCTURAL, NEVER LINE-ANCHORED. The heading is the line equal to
+#        CH_H_HEAD outside every fenced block; the fence is the first one under it, before any
+#        later heading; the node is the root-level tree line naming the directory; an entry is
+#        a tree line one level below the node, and its name is the first token after the
+#        branch. Everything after the name is annotation and is not read, so rewording an
+#        annotation moves nothing. A line below a child is read past: it is not a top-level
+#        entry, and neither is a file inside a child directory on disk.
+#
+#        IT FAILS CLOSED, AND A FAILURE NAMES WHAT THE READER MET. H3 — a line inside the
+#        subtree that is not a tree line, a direct child that is not one path segment, or an
+#        entry named twice — is refused rather than skipped, because a line the reader passes
+#        over is an entry nothing compares. H0 — the charter or the map absent, the heading
+#        absent or doubled, no fence under it, the node absent or doubled, no entry read, no
+#        file under the directory, or the map row absent or doubled — is a broken read and never
+#        an enumeration that agrees: it emits one finding naming the cause, withholds the rest,
+#        and prints no counter beside a comparison that did not happen. Where the reader MET the
+#        thing a finding reports missing, the finding says so. An H1 entry is printed with every
+#        tree line of the fence that names it and was not taken as a direct child of the node —
+#        at the root level, below a child, or outside the subtree — because the remedy for a
+#        line that exists is to correct it, not to add a second. And an H0 that reports the
+#        heading or the row absent names the line where the heading stands inside a fenced
+#        block, or the row whose key cell holds the directory inside a link.
+#
+#        THE DECLARED BOUNDARY, named here so it is read as a boundary rather than found as a
+#        hole. Only the top level of the one directory is bound: the other nodes of the same
+#        tree, and everything below a child, are read past. An entry's trailing slash, the
+#        order of the entries and the annotation beside each are ungraded, as is any fragment on
+#        the row's link. Of the row's descriptive words H5 reads the path-shaped tokens and
+#        nothing else: an entry named with its slash or its suffix dropped, and a list written
+#        out in words, are left to review, as is whether the description is TRUE of the
+#        directory. An untracked file is not an entry, and neither is a directory that holds no
+#        tracked file. THE DIRECTORY'S NAMES ARE READ NUL-DELIMITED, never in the quoted form
+#        git prints for display, so an entry whose name git would quote is still an entry. The
+#        fence cannot name such an entry — a direct child is one segment of letters, digits,
+#        dot, underscore and hyphen — so it reads H1 until it is renamed, which is the closed
+#        direction. The one name not carried whole is a name holding a newline, read as its lines.
 #   CTL  a synthetic fixture tree, built in a temp dir ON EVERY RUN, plus the arms whose ids
 #        end -RETRO, each replaying a defect this repository actually shipped. One MUST-FIRE
 #        arm per finding code this file can emit, alongside the specificity arms that tell a
@@ -323,7 +378,9 @@
 # same checkout. Every arm whose id ends -RETRO reads a blob from a commit in that history: it
 # is the arm that tests its class's detector against a defect the repository actually shipped
 # rather than one this file wrote, and it is therefore the arm worth keeping honest. Arm
-# CTL-RETRO replays class C's shipped defect, CTL-E-RETRO class E's and CTL-F-RETRO class F's.
+# CTL-RETRO replays class C's shipped defect, CTL-E-RETRO class E's, CTL-F-RETRO class F's, and
+# CTL-H-RETRO and CTL-H5-RETRO class H's — the fence that left entries unnamed, and the map row
+# that named them. Each of those two reads its revision's tree listing as well as its blobs.
 # Group G reads the release tags, and its arm CTL-G-RETRO grades the release check against a tag
 # the repository actually shipped without its entry. Both need history deeper than a single
 # commit, which is why .github/workflows/corpus-hygiene.yml sets fetch-depth: 0 and says why —
@@ -375,6 +432,18 @@ CH_G_DOC='CONTRIBUTING.md'
 CH_G_TAG='release-tag-declaration'
 CH_G_RETRO_FAIL='v0.34.0'
 CH_G_RETRO_PASS='v0.48.0'
+# Group H's bound surface: the document that carries the one enumeration of a directory this
+# suite holds against the tree, the heading line its fence sits under, the directory it
+# enumerates, and the document whose map row cites that enumeration instead of repeating it.
+# And the two revisions its regression arms replay: the one whose tree held entries the
+# enumeration did not name (arm CTL-H-RETRO), and the one whose map row named every entry and
+# cited nothing (arm CTL-H5-RETRO). Named once, and read from nowhere else.
+CH_H_DOC='CLAUDE.md'
+CH_H_HEAD='## File Structure'
+CH_H_DIR='reference'
+CH_H_MAP='README.md'
+CH_H_RETRO_REV='54df1bfe8c7ce91cac002cb6b3c4619935c00fc1'
+CH_H_MAP_RETRO_REV='a49a66639bba0ffd60ad47d6c17aad5369ee2b52'
 
 pass=0; fail=0; skip=0; vacuous=0; SKIPPED=""; VACUOUS_IDS=""
 PASS()    { printf '  \033[1;32mPASS\033[0m %s\n' "$*"; pass=$((pass+1)); }
@@ -421,9 +490,8 @@ md_probe() {   # md_probe <subject-fn> <assertion-fn> [args…] -> "<pass> <fail
 }
 
 # md_flips is the REGISTRATION primitive named by DER clause 6: for assertion X over
-# subject S, removing S must flip X specifically. This suite registers nothing yet — see
-# the note at the end of group MD — and it is shipped here so the first remediation calls
-# it rather than having to introduce it.
+# subject S, removing S must flip X specifically. What this suite registers with it, and what
+# it opts out and why, is stated at the end of group MD, and nowhere else.
 md_flips() {   # md_flips <subject-fn> <id> <assertion-fn> [args…]
   local victim="$1" id="$2"; shift 2
   local out p f
@@ -1977,6 +2045,205 @@ END {
 }
 AWK
 
+# ── h.awk — class H, one enumeration of a directory against the tree and the map row ────
+cat > "$WORK/h.awk" <<'AWK'
+# ARGV[1] a newline-separated relative path list naming EVERY file of the tree being graded.
+# -v ROOT=<dir> -v DOC=<relpath> -v HEAD=<heading line> -v DIR=<directory> -v MAP=<relpath>
+#
+# THREE READS, ONE COMPARISON. The DIRECTORY side is the list on ARGV: every path under DIR/
+# contributes its first segment below DIR, so a directory holding many files is one entry and a
+# file two levels down is none. The ENUMERATION side is read from DOC: the line HEAD, outside
+# every fenced block, exactly once; the first fence under it, before any later heading; in that
+# fence the root-level tree line naming DIR, exactly once; and the tree lines one level below it.
+# The MAP side is the one table row of MAP whose key cell names DIR.
+#
+# THE ONE INPUT ON ARGV IS THE LIST. DOC and MAP are read with getline in END, so an empty list
+# cannot be mistaken for either of them — the trap d.awk records for a two-file ARGV.
+#
+# Emits one FINDING per defect and ALWAYS a DENOM carrying the entries enumerated, the entries in
+# the listing, the map rows found and the lines read inside the subtree:
+#   FINDING H1 <met> <name>     an entry in the listing the enumeration does not name. <met> is
+#                               every tree line of the fence that names it and was not taken as a
+#                               direct child of the node, as <line>:<where>[,<line>:<where>...],
+#                               or - when the reader met no such line. The name comes LAST,
+#                               because it is read byte-exact and may hold a space
+#   FINDING H2 <name> <line>    an enumerated entry the listing does not hold
+#   FINDING H3 <line> <why>     a line inside the subtree that is refused
+#   FINDING H4 <map> <linked|no-link> <named|not-named>   the row without its citation
+#   FINDING H5 <map> <token>    the row naming a top-level entry by a path-shaped token
+# On a surface that is not a measurement it emits EXACTLY ONE H0 naming the first cause it met
+# and no other finding, so no per-entry verdict is ever printed over a comparison that did not
+# happen.
+BEGIN {
+  # The tree-drawing bytes, written as octal because this suite runs under LC_ALL=C, where each
+  # glyph is three bytes and a bracket expression would match one of them.
+  BAR = "\342\224\202   "                             # the vertical rule and its three spaces
+  GAP = "    "                                        # the same four columns under a last branch
+  TEE = "\342\224\234\342\224\200\342\224\200 "       # a branch with a sibling below it
+  ELL = "\342\224\224\342\224\200\342\224\200 "       # the last branch of its parent
+  ARROW = "\342\206\220"                              # what opens an annotation
+  # Each width is the LENGTH OF THE CONSTANT IT MEASURES, never a literal beside it: an awk that
+  # counts characters where this one counts bytes then still steps by what it compared.
+  NBAR = length(BAR); NGAP = length(GAP); NTEE = length(TEE); NELL = length(ELL)
+  HTEXT = HEAD; sub(/^#+[ \t]+/, "", HTEXT)           # the heading's words, as a citation writes them
+}
+{
+  p = $0
+  if (index(p, DIR "/") != 1) next
+  rest = substr(p, length(DIR) + 2)
+  seg = rest; below = sub(/\/.*$/, "", seg)
+  if (seg == "") next
+  if (!(seg in ONDISK)) { ONDISK[seg] = 1; ndisk++ }
+  if (below) ISDIR[seg] = 1                           # something sits under it, so it is a directory
+}
+END {
+  # ── The enumeration. state: 0 before the heading, 1 under it and before its fence, 2 inside
+  # that fence, 3 after it, 4 a later heading arrived before any fence.
+  doc = ROOT "/" DOC
+  infence = 0; state = 0; ln = 0
+  while ((getline line < doc) > 0) {
+    ln++
+    t = line; sub(/^[ \t]+/, "", t)
+    isfence = (substr(t, 1, 3) == "```")
+    if (state == 2) {
+      if (isfence) { state = 3; continue }
+      treeline(line)
+      if (!T_OK) { if (insub) { nline++; bad(ln, "not-a-tree-line") }; continue }
+      nm = T_NAME; sub(/\/$/, "", nm)
+      if (T_LVL == 0) {                     # a root-level entry opens the subtree, or closes it
+        insub = 0
+        if (T_NAME == DIR || T_NAME == (DIR "/")) { nnode++; insub = (nnode == 1) }
+        else met(nm, ln, "at-the-root-level")
+        continue
+      }
+      if (!insub) { met(nm, ln, "outside-the-subtree"); continue }
+      nline++
+      if (T_LVL > 1) { met(nm, ln, "below-a-child"); continue }   # read past, never an entry
+      if (nm !~ /^[A-Za-z0-9._-]+$/) { bad(ln, "not-one-path-segment"); continue }
+      if (nm in ENUM) { bad(ln, "named-twice"); continue }
+      ENUM[nm] = ln; nenum++
+      continue
+    }
+    if (isfence) {
+      if (state == 1) { state = 2; continue }
+      infence = !infence; continue
+    }
+    u = line; sub(/[ \t]+$/, "", u)
+    # The heading's text inside a fenced block is not the heading. It is REMEMBERED, though: when
+    # no heading stands outside a fence, this is what the reader met where it looked for one.
+    if (infence) { if (u == HEAD && hfln == 0) hfln = ln; continue }
+    if (u == HEAD) { nhead++; if (state == 0) state = 1; continue }
+    if (state == 1 && t ~ /^#+ /) state = 4
+  }
+  close(doc)
+
+  # ── The map row: the table row whose key cell, read without its code span, is DIR/. It
+  # carries its citation when one link in it targets DOC — a fragment on that link is not read
+  # — and its text carries the heading's words. A row whose key cell holds DIR/ INSIDE A LINK is
+  # not that row, and is remembered for the same reason the fenced heading is.
+  map = ROOT "/" MAP
+  infence = 0; mln = 0
+  while ((getline line < map) > 0) {
+    mln++
+    t = line; sub(/^[ \t]+/, "", t)
+    if (substr(t, 1, 3) == "```") { infence = !infence; continue }
+    if (infence || substr(t, 1, 1) != "|") continue
+    n = split(t, c, "|")
+    key = c[2]; gsub(/[` \t]/, "", key)
+    if (key != (DIR "/")) {
+      if (rlln == 0 && index(key, "](") > 0 && index(key, DIR "/") > 0) rlln = mln
+      continue
+    }
+    nrow++
+    body = ""
+    for (i = 3; i <= n; i++) body = body "|" c[i]
+    desc = body
+    named = (index(body, HTEXT) > 0)
+    linked = 0
+    while (match(body, /\]\([^)]*\)/)) {
+      tgt = substr(body, RSTART + 2, RLENGTH - 3)
+      body = substr(body, RSTART + RLENGTH)
+      sub(/^[ \t]+/, "", tgt); sub(/[ \t].*$/, "", tgt); sub(/#.*$/, "", tgt)
+      if (tgt == DOC) linked = 1
+    }
+  }
+  close(map)
+
+  cause = ""
+  if (ln == 0)                         cause = DOC " is absent or empty"
+  else if (nhead != 1) {
+    cause = "the heading line stands " (nhead + 0) " time(s) in " DOC " outside a fenced block, not once"
+    if (nhead == 0 && hfln > 0)
+      cause = cause "; a line equal to it stands INSIDE a fenced block at line " hfln ", so a fence above it is never closed or the heading was moved into one"
+  }
+  else if (state == 1 || state == 4)   cause = "no fenced block follows the heading in " DOC " before the next heading"
+  else if (state == 2)                 cause = "the fenced block under the heading in " DOC " is never closed"
+  else if (nnode != 1)                 cause = "the fenced tree names " DIR "/ at its root level " (nnode + 0) " time(s), not once"
+  else if (nenum == 0)                 cause = "the " DIR "/ node of the fenced tree yields no entry (" (nline + 0) " line(s) read under it)"
+  else if (ndisk == 0)                 cause = "the listing holds no file under " DIR "/"
+  else if (mln == 0)                   cause = MAP " is absent or empty"
+  else if (nrow != 1) {
+    cause = MAP " holds " (nrow + 0) " table row(s) keyed " DIR "/, not one"
+    if (nrow == 0 && rlln > 0)
+      cause = cause "; the row at line " rlln " holds " DIR "/ in its key cell inside a link, and the key cell this group reads is the directory alone"
+  }
+
+  if (cause != "") {
+    printf "FINDING H0 %s\n", cause
+  } else {
+    for (nm in ONDISK) if (!(nm in ENUM))   printf "FINDING H1 %s %s\n", ((nm in MET) ? MET[nm] : "-"), nm
+    for (nm in ENUM)   if (!(nm in ONDISK)) printf "FINDING H2 %s %d\n", nm, ENUM[nm]
+    for (i = 1; i <= nbad; i++)             printf "FINDING H3 %s\n", BAD[i]
+    if (!(linked && named))
+      printf "FINDING H4 %s %s %s\n", MAP, (linked ? "linked" : "no-link"), (named ? "named" : "not-named")
+    # H5 — H4's complement. The description's path-shaped runs are cut into segments; a FILE
+    # entry is named by a segment equal to its basename, and a DIRECTORY entry by a segment equal
+    # to its name with a slash after it. A category word — the directory's name with no slash,
+    # the file's with no suffix — is not a path token, and a sentence's full stop is not part of
+    # a name. One finding per entry named, however often the row names it.
+    while (match(desc, /[A-Za-z0-9._\/-]+/)) {
+      run = substr(desc, RSTART, RLENGTH)
+      desc = substr(desc, RSTART + RLENGTH)
+      sub(/\.+$/, "", run)
+      ns = split(run, sg, "/")
+      for (i = 1; i <= ns; i++) {
+        if (!(sg[i] in ONDISK)) continue
+        if (sg[i] in ISDIR) { if (i < ns) NAMED[sg[i] "/"] = 1 }
+        else NAMED[sg[i]] = 1
+      }
+    }
+    for (tok in NAMED) printf "FINDING H5 %s %s\n", MAP, tok
+  }
+  printf "DENOM %d %d %d %d\n", nenum + 0, ndisk + 0, nrow + 0, nline + 0
+}
+function bad(n, why) { BAD[++nbad] = n " " why }
+# met — a tree line the reader read and did not take as a direct child of the node. Every such
+# line is kept under the name it carries, so an entry reported unnamed can be printed with the
+# line that names it rather than with an instruction to add one.
+function met(nm, n, where) { MET[nm] = ((nm in MET) ? MET[nm] "," : "") n ":" where }
+# treeline — is this a tree line, and if so how deep is it and what does it name. Sets T_OK,
+# T_LVL and T_NAME. The depth is the count of four-column prefix groups before the branch. The
+# name is the first whitespace-delimited token after the branch, cut where an annotation mark
+# abuts it; everything after the name is annotation and is never read, whatever introduces it.
+function treeline(s,   k, a, w) {
+  T_OK = 0; T_LVL = 0; T_NAME = ""
+  k = 1
+  while (1) {
+    if (substr(s, k, NBAR) == BAR)      { T_LVL++; k += NBAR }
+    else if (substr(s, k, NGAP) == GAP) { T_LVL++; k += NGAP }
+    else break
+  }
+  if (substr(s, k, NTEE) == TEE)      w = NTEE
+  else if (substr(s, k, NELL) == ELL) w = NELL
+  else return
+  s = substr(s, k + w)
+  sub(/[ \t].*$/, "", s)
+  a = index(s, ARROW); if (a > 0) s = substr(s, 1, a - 1)
+  if (s == "") return
+  T_OK = 1; T_NAME = s
+}
+AWK
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # THE COMPARATOR. ONE function, driven by the real-tree arm and by every group-C control
 # arm below.
@@ -2054,6 +2321,30 @@ ch_scan_g() {
   if [ -r "$1/$CH_G_DOC" ]; then ch_fence "$1/$CH_G_DOC" "$CH_G_TAG" > "$WORK/g.decl"
   else : > "$WORK/g.decl"; fi
   awk -v RC="$rc" -v SHALLOW="$(g_shallow "$1")" -v DECFILE="$WORK/g.decl" -f "$WORK/g.awk" "$WORK/g.decl" "$WORK/g.scan"
+}
+
+# Group H's listers read the tracked paths NUL-DELIMITED and write one to a line. git's default
+# listing is a DISPLAY form: a path holding a double quote, a backslash, a control byte or a byte
+# outside ASCII is printed inside quotes with escapes, so it no longer opens with its directory and
+# would be counted on NEITHER side of group H's comparison. -z never quotes. Class F's lister
+# keeps the display form because class F needs no name byte-exact; group H's unit IS the name.
+# ch_list_h_real reads the index of one tree, and ch_list_h_rev the tree of one revision, which
+# is what arms CTL-H-RETRO and CTL-H5-RETRO grade. A fixture directory is listed by
+# ch_list_f_dir, whose find prints names as they are; a fixture REPOSITORY — arm CTL-H1-QUOTED's
+# — is read by ch_list_h_real with every configuration outside it switched off, as g_run reads one.
+ch_list_h_real() {
+  ( cd "$1" || exit 2
+    case "$1" in "$WORK"/*) export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 ;; esac
+    git ls-files -z | tr '\000' '\n' )
+}
+ch_list_h_rev()  { git -C "$1" ls-tree -r --name-only -z "$2" | tr '\000' '\n'; }
+# ch_scan_h <root> <listfile> — class H over one tree, shaped like ch_scan_f: the real tree and
+# every control arm drive this one function, so an arm grades the code the tree is graded by. The
+# list names EVERY file, not only markdown: an entry under the directory is an entry whatever
+# its suffix.
+ch_scan_h() {
+  awk -v ROOT="$1" -v DOC="$CH_H_DOC" -v HEAD="$CH_H_HEAD" -v DIR="$CH_H_DIR" -v MAP="$CH_H_MAP" \
+    -f "$WORK/h.awk" "$2"
 }
 
 # ch_compare_c <root> <fence-doc-abs> <listfile> — the both-direction assertion.
@@ -2397,6 +2688,88 @@ else
     grep '^FINDING G2 ' <<<"$G_OUT" | awk '{ printf "      %s  %s\n", $3, $4 }'
   fi
 fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "H — one enumeration of the reference directory, bound to the tree in both directions, and cited from the map"
+# ═════════════════════════════════════════════════════════════════════════════════
+# h_assert <root> <listfile> — group H's verdicts over one tree. It is ONE function, and it runs
+# the extractor itself, so that group MD can register it: with ch_scan_h removed it reports
+# exactly one FAIL and no PASS. THE MEASUREMENT STATE is decided once and read by every line it
+# prints, on group G's rule: the scan is a measurement only when both sides of the comparison are
+# non-empty, the map row was found once and the extractor reported no H0. An unrun extractor
+# resolves to the LOUD answer — an unset denominator reads 0 and lands on the unmeasured side —
+# and there nothing below prints a counter. The H_* values it leaves are the summary line's; it
+# is called in this shell once, for the tracked tree, and everywhere else inside a probe subshell.
+h_assert() {
+  local out
+  out="$(ch_scan_h "$1" "$2")"
+  H_NENUM="$(awk '$1 == "DENOM" { print $2 }' <<<"$out")"
+  H_NDISK="$(awk '$1 == "DENOM" { print $3 }' <<<"$out")"
+  H_NROW="$(awk '$1 == "DENOM" { print $4 }' <<<"$out")"
+  H_NLINE="$(awk '$1 == "DENOM" { print $5 }' <<<"$out")"
+  H_N0="$(n_code "$out" H0)"; H_N1="$(n_code "$out" H1)"; H_N2="$(n_code "$out" H2)"
+  H_N3="$(n_code "$out" H3)"; H_N4="$(n_code "$out" H4)"; H_N5="$(n_code "$out" H5)"
+  H_WHY="$(awk '$1 == "FINDING" && $2 == "H0" { $1 = ""; $2 = ""; sub(/^ +/, ""); print }' <<<"$out")"
+  [ -n "$H_WHY" ] || H_WHY='the extractor printed no result'
+  if [ "${H_NENUM:-0}" -gt 0 ] && [ "${H_NDISK:-0}" -gt 0 ] && [ "${H_NROW:-0}" -eq 1 ] && [ "${H_N0:-1}" -eq 0 ]; then H_MEASURED=1; else H_MEASURED=0; fi
+
+  if [ "$H_MEASURED" -ne 1 ]; then
+    printf '  SURFACE: NOT-EVALUATED — %s — this is not a clean result\n' "$H_WHY"
+    FAIL "H0: group H is NOT a measurement on this run — $H_WHY. A zero here is a moved heading, a rewritten fence, a relocated directory or a map with no row for it, never an enumeration that agrees with the tree, so H1, H2, H3, H4 and H5 are withheld: a comparison with one side unread would report every entry as drift, or none"
+    return 0
+  fi
+
+  printf '  SURFACE: %s entr(ies) named under the %s/ node of the fence under "%s" in %s, against %s top-level entr(ies) of %s/ in the listing; %s line(s) read inside the subtree, and the %s/ row of %s found once.\n' \
+    "$H_NENUM" "$CH_H_DIR" "$CH_H_HEAD" "$CH_H_DOC" "$H_NDISK" "$CH_H_DIR" "$H_NLINE" "$CH_H_DIR" "$CH_H_MAP"
+  PASS "H0: both sides of the comparison were read and neither is empty — $H_NENUM entr(ies) from the fence under \"$CH_H_HEAD\" in $CH_H_DOC and $H_NDISK from the listing of $CH_H_DIR/ — so every verdict below is a measurement. The CTL-H0 arms remove the charter, the map, the heading, the fence, the node, every entry, the directory's files and the map row in turn, and require each to fail here"
+
+  if [ "${H_N1:-0}" -eq 0 ]; then
+    PASS "H1: every one of the $H_NDISK top-level entr(ies) of $CH_H_DIR/ is named in the enumeration. The zero is a measurement: arms CTL-H1 and CTL-H1-DIR plant a file and a directory the enumeration does not name, CTL-H1-QUOTED an entry whose name git quotes in its display listing, and CTL-H-RETRO requires the entries this repository shipped unnamed"
+  else
+    FAIL "H1: $H_N1 entr(ies) of $CH_H_DIR/ are in the tree and not in the enumeration. Add one line for each under the $CH_H_DIR/ node of the fence under \"$CH_H_HEAD\" in $CH_H_DOC, in the change that adds the entry — UNLESS the entry is printed below with a line the reader met. That line names the entry and was not read as a direct child of the node, so the line EXISTS: correct its indentation, or move it under the node, and do not add a second. Where H3 below refuses a line, repair that line first, because it may be the one naming an entry listed here:"
+    grep '^FINDING H1 ' <<<"$out" | awk -v doc="$CH_H_DOC" '{
+      m = $3; $1 = ""; $2 = ""; $3 = ""; sub(/^ +/, "")
+      if (m == "-") { printf "      %s\n", $0; next }
+      n = split(m, a, ","); s = ""
+      for (j = 1; j <= n; j++) { split(a[j], b, ":"); s = s (j > 1 ? ", " : "") "line " b[1] " (" b[2] ")" }
+      printf "      %s — the reader met it in %s and did not take it as an entry: %s\n", $0, doc, s
+    }' | sort
+  fi
+
+  if [ "${H_N2:-0}" -eq 0 ]; then
+    PASS "H2: every one of the $H_NENUM entr(ies) the enumeration names is in the tree. The zero is a measurement: arm CTL-H2 names an entry no file stands behind and requires it to be found — the direction a walk starting from the directory cannot see"
+  else
+    FAIL "H2: $H_N2 entr(ies) are named in the enumeration and absent from $CH_H_DIR/. Remove or correct the line in the change that moved or removed the entry:"
+    grep '^FINDING H2 ' <<<"$out" | awk -v doc="$CH_H_DOC" '{ printf "      %s line %s  %s\n", doc, $4, $3 }'
+  fi
+
+  if [ "${H_N3:-0}" -eq 0 ]; then
+    PASS "H3: every one of the $H_NLINE line(s) inside the subtree was read as a tree line — a direct child naming one path segment once, or a line below a child — so no line a reader takes for an entry went ungraded. Arms CTL-H3, CTL-H3-PATH and CTL-H3-DUP plant one of each refused form"
+  else
+    FAIL "H3: $H_N3 line(s) inside the $CH_H_DIR/ subtree could not be read as an entry. A line there is a branch naming one path segment, or a deeper branch under one; anything else is refused, not skipped, because a line the reader passes over is an entry nothing compares:"
+    grep '^FINDING H3 ' <<<"$out" | awk -v doc="$CH_H_DOC" '{ printf "      %s line %s  %s\n", doc, $3, $4 }'
+  fi
+
+  if [ "${H_N4:-0}" -eq 0 ]; then
+    PASS "H4: the $CH_H_DIR/ row of $CH_H_MAP carries its citation — a link to $CH_H_DOC and the words \"${CH_H_HEAD#"## "}\" — so the map points at the one enumeration this group binds. Arms CTL-H4, CTL-H4-UNNAMED, CTL-H4-UNLINKED and CTL-H4-ELSEWHERE each remove a part of it"
+  else
+    FAIL "H4: the $CH_H_DIR/ row of $CH_H_MAP does not carry its citation. The row describes the directory and cites where its entries are listed: it needs a link whose target is $CH_H_DOC and the words \"${CH_H_HEAD#"## "}\" in its text. Do not restore a list of entries to the row instead — H5 fails on one:"
+    grep '^FINDING H4 ' <<<"$out" | awk '{ printf "      %s: %s, %s\n", $3, $4, $5 }'
+  fi
+
+  if [ "${H_N5:-0}" -eq 0 ]; then
+    PASS "H5: the $CH_H_DIR/ row of $CH_H_MAP names none of the $H_NDISK top-level entr(ies) of $CH_H_DIR/ by a path-shaped token — a file's basename, or a directory's name with its slash — so no list stands beside the citation. The zero is a measurement: arms CTL-H5 and CTL-H5-BESIDE plant a named entry without and with the citation, and CTL-H5-RETRO requires the entries this repository's own row once named"
+  else
+    FAIL "H5: the $CH_H_DIR/ row of $CH_H_MAP names $H_N5 top-level entr(ies) of $CH_H_DIR/ by a path-shaped token. The row describes the directory by category and cites where its entries are listed; an entry named in the row is a second list, bound to nothing, and a second list is what went stale. Take each name below out of the row, and keep the citation — the entries are listed once, in the fence under \"$CH_H_HEAD\" in $CH_H_DOC:"
+    grep '^FINDING H5 ' <<<"$out" | awk '{ printf "      %s: %s\n", $3, $4 }' | sort
+  fi
+  return 0
+}
+
+ch_list_h_real "$ROOT" > "$WORK/list.h"
+h_assert "$ROOT" "$WORK/list.h"
+for c in H0 H1 H2 H3 H4 H5; do echo "$c" >> "$SURF_LOG"; done
 
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
@@ -3878,6 +4251,458 @@ else
   FAIL "CTL-G-READONLY: the refs or the working tree differ from their state before the release check first ran here, or no ref was read — the release check must never write"
 fi
 
+# ── H ────────────────────────────────────────────────────────────────────────────
+# Each fixture is a small tree — a charter carrying the heading and its fenced tree, a map
+# carrying the row, and the files the directory holds — graded by the SAME ch_scan_h that graded
+# the tracked tree above. The heading, the directory and the two document names come from the
+# constants, and the citation a conforming row carries is built from them, so no fixture can
+# drift from the surface the group binds. A must-not-fire arm does not rest on silence alone: it
+# requires the exact number of entries the fixture enumerates and holds, so an extractor that
+# went quiet because it read nothing reads red here and not green. And no H arm goes through the
+# must-not wrapper above, which passes on an empty output: where a code must stand ALONE, the
+# arm requires the exact number of findings and that every one of them is that code.
+H_T='├── '; H_L='└── '; H_B='│   '; H_A='←'
+CTL_H_CITE="the *${CH_H_HEAD#"## "}* section of [\`$CH_H_DOC\`]($CH_H_DOC) lists the folder's top-level entries"
+CTL_H_ROW="| \`$CH_H_DIR/\` | Reference documents, from decision records to notes. Browse them in [\`$CH_H_DIR/\`]($CH_H_DIR/); $CTL_H_CITE |"
+H_C1="${H_B}${H_T}adr/          ${H_A} decision records"
+H_C2="${H_B}${H_T}alpha.md      ${H_A} the first document"
+H_C3="${H_B}${H_L}beta.md       ${H_A} the second document"
+
+ctl_h_mk() {  # ctl_h_mk <name> — a fixture root holding the directory and nothing in it; its path on stdout
+  local d="$WORK/fx/$1"
+  mkdir -p "$d/$CH_H_DIR"
+  printf '%s\n' "$d"
+}
+ctl_h_files() {  # ctl_h_files <root> <relpath...> — one file at each path
+  local d="$1" f; shift
+  for f in "$@"; do mkdir -p "$(dirname "$d/$f")"; printf 'A fixture file.\n' > "$d/$f"; done
+}
+ctl_h_tree() {  # ctl_h_tree <node-line> <line...> — the fenced tree's lines: a root, two entries, the node, the arguments, a last entry
+  local node="$1" l; shift
+  printf 'fixture/\n%sCLAUDE.md     %s the charter\n%sagents/\n%s%s00-fixture.md\n' "$H_T" "$H_A" "$H_T" "$H_B" "$H_L"
+  printf '%s\n' "$node"
+  for l in "$@"; do printf '%s\n' "$l"; done
+  printf '%sscripts/      %s the suites\n    %sfx.sh\n' "$H_L" "$H_A" "$H_L"
+}
+ctl_h_doc() {  # ctl_h_doc <root> <line...> — the charter: the heading, then one fence whose node carries the arguments
+  local d="$1"; shift
+  { printf '# Fixture charter\n\n%s\n\n```\n' "$CH_H_HEAD"
+    ctl_h_tree "${H_T}${CH_H_DIR}/    ${H_A} reference documents" "$@"
+    printf '```\n\n### After the tree\n\nNothing below the fence is read.\n'
+  } > "$d/$CH_H_DOC"
+}
+ctl_h_map() {  # ctl_h_map <root> <row...> — the map: a table holding each argument as a row
+  local d="$1" r; shift
+  { printf '# Fixture\n\n## Repository map\n\n| Path | What is there |\n|---|---|\n| `%s` | The charter |\n' "$CH_H_DOC"
+    for r in "$@"; do printf '%s\n' "$r"; done
+    printf '| `scripts/` | The suites |\n'
+  } > "$d/$CH_H_MAP"
+}
+ctl_h_scan() { ch_list_f_dir "$1" > "$WORK/list.hfx"; ch_scan_h "$1" "$WORK/list.hfx"; }
+ctl_h_quiet() {  # ctl_h_quiet <label> <output> <enumerated> <listed> <what-was-planted>
+  local label="$1" out="$2" we="$3" wd="$4" what="$5" n e d
+  n="$(grep -c '^FINDING ' <<<"$out" || true)"
+  e="$(awk '$1 == "DENOM" { print $2 }' <<<"$out")"; d="$(awk '$1 == "DENOM" { print $3 }' <<<"$out")"
+  if [ "${n:-1}" -eq 0 ] && [ "${e:-none}" = "$we" ] && [ "${d:-none}" = "$wd" ]; then
+    PASS "$label: no code fired — $what — and the extractor read exactly $we enumerated and $wd listed entr(ies), so the silence is its verdict over what was planted"
+  else
+    FAIL "$label: MUST NOT FIRE — $what — and must read exactly $we enumerated and $wd listed entr(ies); the extractor reported ${n:-no} finding(s), ${e:-no} enumerated and ${d:-no} listed"
+  fi
+}
+# ctl_h_solely <label> <output> <code> <n> <what> [<needle> [<absent>]] — the output carries EXACTLY
+# <n> findings and every one of them is <code>. This is the predicate a WITHHELD verdict needs: a
+# must-not-fire test passes when the extractor printed nothing at all, and this one cannot. With
+# a sixth argument that code's record must carry <needle>, and with a seventh it must not carry
+# <absent> — how an arm requires a failure to name what the reader met, and only when it met it.
+ctl_h_solely() {
+  local label="$1" out="$2" code="$3" want="$4" what="$5" needle="${6:-}" absent="${7:-}" n c rec
+  ctl_arm "$code"
+  n="$(grep -c '^FINDING ' <<<"$out" || true)"
+  c="$(n_code "$out" "$code")"
+  rec="$(awk -v c="$code" '$1 == "FINDING" && $2 == c' <<<"$out")"
+  if [ "${n:-0}" -ne "$want" ] || [ "${c:-0}" -ne "$want" ]; then
+    FAIL "$label: MUST BE THE ONLY CODE — $what — and $code must be reported exactly $want time(s) with no other finding beside it; the extractor reported ${n:-no} finding(s), ${c:-0} of them $code. An extractor that printed nothing reads red here, where a must-not-fire test would have passed"
+  elif [ -n "$needle" ] && [ "${rec#*"$needle"}" = "$rec" ]; then
+    FAIL "$label: $code stood alone, and its record does not name what the reader met — $what — it must carry '$needle' and reads: $rec"
+  elif [ -n "$absent" ] && [ "${rec#*"$absent"}" != "$rec" ]; then
+    FAIL "$label: $code stood alone, and its record names something this fixture does not hold — $what — it must not carry '$absent' and reads: $rec"
+  else
+    PASS "$label: $code fired ($c) and no other code did — $what"
+  fi
+}
+# ctl_h_rec <label> <output> <record> <what> — the output carries that exact record, once. The
+# record is handed to awk through the environment, so a name holding a quote is compared as it is.
+ctl_h_rec() {
+  local label="$1" out="$2" want="$3" what="$4" n
+  ctl_arm "${want%% *}"
+  n="$(CTL_H_WANT="FINDING $want" awk '$0 == ENVIRON["CTL_H_WANT"] { n++ } END { print n + 0 }' <<<"$out")"
+  if [ "$n" -eq 1 ]; then
+    PASS "$label: the extractor printed the record '$want' — $what"
+  else
+    FAIL "$label: MUST PRINT the record '$want' exactly once — $what; the extractor printed: $(grep '^FINDING ' <<<"$out" | tr '\n' ';')"
+  fi
+}
+
+# The conformant fixture. It is also what group MD probes: the registered assertion PASSes over
+# it, so removing the extractor flips a pass and not a verdict that was already red.
+H_CLEAN="$(ctl_h_mk hclean)"
+ctl_h_doc "$H_CLEAN" "$H_C1" "$H_C2" "$H_C3"
+ctl_h_map "$H_CLEAN" "$CTL_H_ROW"
+ctl_h_files "$H_CLEAN" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+ch_list_f_dir "$H_CLEAN" > "$WORK/list.hclean"
+O="$(ch_scan_h "$H_CLEAN" "$WORK/list.hclean")"
+ctl_h_quiet "CTL-H-CLEAN" "$O" 3 3 "a charter naming a directory and two files under the node, a tree holding exactly those, and a map row that describes by category, links the directory and cites the charter by link and by section name"
+
+D="$(ctl_h_mk h1)"
+ctl_h_doc "$D" "$H_C1" "$H_C2" "$H_C3"; ctl_h_map "$D" "$CTL_H_ROW"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md" "$CH_H_DIR/gamma.md"
+O="$(ctl_h_scan "$D")"
+ctl_mustfire "CTL-H1" H1 "$O" "a file lands under the directory and the enumeration gains no line — the drift this repository shipped, where every required check stayed green because nothing compared the list with the directory" 1
+ctl_h_rec "CTL-H1-UNMET" "$O" "H1 - gamma.md" "no line of the fence names that file, so the record carries no line and the remedy printed for it is to add one: the reader claims to have met a line only where it did"
+
+D="$(ctl_h_mk h1dir)"
+ctl_h_doc "$D" "$H_C1" "$H_C2" "$H_C3"; ctl_h_map "$D" "$CTL_H_ROW"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md" "$CH_H_DIR/extra/one.md" "$CH_H_DIR/extra/two.md"
+O="$(ctl_h_scan "$D")"
+ctl_mustfire "CTL-H1-DIR" H1 "$O" "a DIRECTORY holding two files lands under the directory — the arity is the assertion: one unnamed entry, not one per file inside it" 1
+
+# CTL-H1-MET-* — the line EXISTS and the reader did not take it as an entry. One child line loses
+# its prefix group: it reads as a root-level line, which closes the subtree, so the entry below it
+# is passed over too. Reported bare, both read as lines somebody has to add; each record must
+# carry the line that names its entry and where the reader met it.
+D="$(ctl_h_mk h1metroot)"
+ctl_h_doc "$D" "$H_C1" "${H_T}alpha.md      ${H_A} this line lost its prefix group" "$H_C3"; ctl_h_map "$D" "$CTL_H_ROW"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_h_rec "CTL-H1-MET-ROOT" "$O" "H1 12:at-the-root-level alpha.md" "a child line written with no prefix group stands at the tree's root level, at the fixture charter's line 12 — the entry is named, on a line that is not a direct child of the node"
+ctl_h_rec "CTL-H1-MET-OUTSIDE" "$O" "H1 13:outside-the-subtree beta.md" "and that root-level line closed the subtree, so the intact child line below it, line 13, was read outside it — the second entry is reported with ITS line, where a bare report asks for two lines that both exist"
+
+D="$(ctl_h_mk h1metbelow)"
+ctl_h_doc "$D" "$H_C1" "${H_B}${H_B}${H_T}alpha.md      ${H_A} this line gained a prefix group" "$H_C3"; ctl_h_map "$D" "$CTL_H_ROW"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_h_rec "CTL-H1-MET-BELOW" "$O" "H1 12:below-a-child alpha.md" "a child line written one prefix group too deep is a line BELOW a child, read past by rule — its entry is reported with that line, and not as a line to add"
+
+# CTL-H1-QUOTED — the directory's names are read NUL-delimited. The fixture is a repository,
+# because the display form is git's and a plain directory listing cannot show it: one tracked
+# top-level entry carries a double quote in its name, which git prints quoted and escaped. Read
+# NUL-delimited the entry is counted and, being unnamed, is H1; read in the display form the same
+# tree holds one entry fewer and is quiet. Both halves are the assertion.
+D="$(ctl_g_repo hquoted)"
+HQ_NAME='ga"mma.md'
+ctl_h_doc "$D" "$H_C1" "$H_C2" "$H_C3"; ctl_h_map "$D" "$CTL_H_ROW"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md" "$CH_H_DIR/$HQ_NAME"
+ctl_g_git -C "$D" add -- "$CH_H_DOC" "$CH_H_MAP" "$CH_H_DIR"
+ch_list_h_real "$D" > "$WORK/list.hq"
+O="$(ch_scan_h "$D" "$WORK/list.hq")"
+ctl_h_rec "CTL-H1-QUOTED" "$O" "H1 - $HQ_NAME" "a tracked top-level entry whose name git quotes in its display listing is still an entry, and the enumeration does not name it"
+HQ_NUL="$(awk '$1 == "DENOM" { print $3 }' <<<"$O")"
+ch_list_f_real "$D" > "$WORK/list.hqd"
+O="$(ch_scan_h "$D" "$WORK/list.hqd")"
+HQ_DISP="$(awk '$1 == "DENOM" { print $3 }' <<<"$O")"
+HQ_DISP_N="$(grep -c '^FINDING ' <<<"$O" || true)"
+if [ "${HQ_NUL:-0}" -eq 4 ] && [ "${HQ_DISP:-0}" -eq 3 ] && [ "${HQ_DISP_N:-1}" -eq 0 ]; then
+  PASS "CTL-H1-QUOTED-DISPLAY: the same repository listed in git's display form holds $HQ_DISP entr(ies) to the NUL-delimited read's $HQ_NUL and fires nothing — the quoted line opens with a quote and not with the directory, so the entry falls out of the comparison without a finding. That is the read the group does not use, and the difference is what the arm above measures"
+else
+  FAIL "CTL-H1-QUOTED-DISPLAY: the NUL-delimited read must hold 4 entr(ies) and the display-form read 3, with no finding; they held ${HQ_NUL:-none} and ${HQ_DISP:-none}, and the display-form read reported ${HQ_DISP_N:-no} finding(s). Unless the two reads differ on this fixture, the arm above cannot tell the read the group uses from the one it replaced"
+fi
+
+D="$(ctl_h_mk h2)"
+ctl_h_doc "$D" "$H_C1" "$H_C2" "$H_C3"; ctl_h_map "$D" "$CTL_H_ROW"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md"
+O="$(ctl_h_scan "$D")"
+ctl_mustfire "CTL-H2" H2 "$O" "the enumeration names a file the directory does not hold — the other direction, which a walk starting from the directory cannot see at all" 1
+ctl_h_solely "CTL-H2-NOT-H1" "$O" H2 1 "every file the directory holds is named, so the missing one is H2's alone"
+
+D="$(ctl_h_mk hrename)"
+ctl_h_doc "$D" "$H_C1" "$H_C2" "$H_C3"; ctl_h_map "$D" "$CTL_H_ROW"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta-two.md"
+O="$(ctl_h_scan "$D")"
+ctl_mustfire "CTL-H-RENAME" H1 "$O" "a file is renamed and its line is not — the new name is in the tree and unnamed" 1
+ctl_mustfire "CTL-H-RENAME-LINE" H2 "$O" "and the old name is still enumerated with nothing behind it: one event, graded once in each direction" 1
+
+D="$(ctl_h_mk hannot)"
+ctl_h_doc "$D" "${H_B}${H_T}adr/   ${H_A} every decision, one file each — REWORDED, with 12 files named in passing" "${H_B}${H_T}alpha.md" "${H_B}${H_L}beta.md ${H_A} beta.md gamma.md delta/ — names inside an annotation are not entries"
+ctl_h_map "$D" "$CTL_H_ROW"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_h_quiet "CTL-H-SPEC-ANNOT" "$O" 3 3 "only the text after the annotation mark changes: one annotation is rewritten, one removed, and one names other files"
+
+D="$(ctl_h_mk hnested)"
+ctl_h_doc "$D" "$H_C1" "${H_B}${H_B}${H_T}README.md   ${H_A} the index" "${H_B}${H_B}${H_L}ADR-001-fixture.md" "$H_C2" "$H_C3"
+ctl_h_map "$D" "$CTL_H_ROW"
+ctl_h_files "$D" "$CH_H_DIR/adr/README.md" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_h_quiet "CTL-H-SPEC-NESTED" "$O" 3 3 "two lines sit BELOW a child node and two files sit inside that child on disk: a nested line is not a direct child and a nested file is not a top-level entry, so neither side's count moves"
+
+D="$(ctl_h_mk helsewhere)"
+{ printf '# Fixture charter\n\n```\n%s\n```\n\n%s\n\n```\n' "$CH_H_HEAD" "$CH_H_HEAD"
+  printf 'fixture/\n%sexamples/\n%s%s%s/\n%s    %szeta.md\n' "$H_T" "$H_B" "$H_L" "$CH_H_DIR" "$H_B" "$H_L"
+  printf '%s%s/\n%s\n%s\n%s\n%sscripts/\n```\n' "$H_T" "$CH_H_DIR" "$H_C1" "$H_C2" "$H_C3" "$H_L"
+} > "$D/$CH_H_DOC"
+ctl_h_map "$D" "$CTL_H_ROW"
+ctl_h_files "$D" "examples/$CH_H_DIR/zeta.md" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_h_quiet "CTL-H-SPEC-ELSEWHERE" "$O" 3 3 "the heading's text also stands inside an earlier fenced block, and a node of the same name sits one level down under another entry: neither is the heading nor the node, so the entries are the root-level node's alone"
+
+D="$(ctl_h_mk h3)"
+ctl_h_doc "$D" "$H_C1" "# gamma.md was added here as a note" "$H_C2" "$H_C3"; ctl_h_map "$D" "$CTL_H_ROW"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_mustfire "CTL-H3" H3 "$O" "a line inside the subtree is not a tree line — a note somebody added between two entries. It is refused rather than skipped: a skipped line that names an absent file would be an entry nothing compares" 1
+
+D="$(ctl_h_mk h3path)"
+ctl_h_doc "$D" "${H_B}${H_T}adr/README.md   ${H_A} the index" "$H_C2" "$H_C3"; ctl_h_map "$D" "$CTL_H_ROW"
+ctl_h_files "$D" "$CH_H_DIR/adr/README.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_mustfire "CTL-H3-PATH" H3 "$O" "a direct child is written as a path of two segments — it names something below the top level where a top-level entry belongs, and reading its first segment would be a guess" 1
+
+D="$(ctl_h_mk h3dup)"
+ctl_h_doc "$D" "$H_C1" "$H_C2" "${H_B}${H_T}beta.md" "$H_C3"; ctl_h_map "$D" "$CTL_H_ROW"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_mustfire "CTL-H3-DUP" H3 "$O" "one entry is named on two lines — a set comparison alone would pass it, since the set of names still equals the directory" 1
+
+D="$(ctl_h_mk h0)"
+ctl_h_doc "$D"; ctl_h_map "$D" "$CTL_H_ROW"
+O="$(ctl_h_scan "$D")"
+ctl_mustfire "CTL-H0" H0 "$O" "the node carries no entry and the directory holds no file — an empty surface, where two empty sets agree and a comparison would read clean" 1
+
+D="$(ctl_h_mk h0enum)"
+ctl_h_doc "$D"; ctl_h_map "$D" "$CTL_H_ROW"
+ctl_h_files "$D" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_mustfire "CTL-H0-ENUM" H0 "$O" "the extraction is EMPTY while the directory holds files — the state a rewritten fence produces. It is a broken read and is reported as one" 1
+ctl_h_solely "CTL-H0-ENUM-WITHHELD" "$O" H0 1 "under H0 no per-entry finding is printed: reporting every file as unnamed would be a verdict over a list that was never read"
+
+D="$(ctl_h_mk h0dir)"
+ctl_h_doc "$D" "$H_C1" "$H_C2" "$H_C3"; ctl_h_map "$D" "$CTL_H_ROW"
+O="$(ctl_h_scan "$D")"
+ctl_mustfire "CTL-H0-DIR" H0 "$O" "the enumeration names entries and the listing holds none under the directory — a relocated directory or an empty listing, never a tree every entry left" 1
+ctl_h_solely "CTL-H0-DIR-WITHHELD" "$O" H0 1 "under H0 no per-entry finding is printed in this direction either"
+
+# CTL-H0-WHOLE — the whole of the withholding, on one fixture. It plants the defect behind EVERY
+# other code this group emits, and is graded twice. Before the surface is broken, each of those
+# codes must fire once, which is what shows the fixture carries them. Then the heading is doubled,
+# and the one finding printed must be H0: an unmeasured surface reports its cause and nothing
+# else, whichever verdicts it would otherwise have reached.
+ctl_arm H0
+D="$(ctl_h_mk h0whole)"
+ctl_h_doc "$D" "$H_C1" "# a note between two entries" "$H_C2" "$H_C3"
+ctl_h_map "$D" "| \`$CH_H_DIR/\` | Decision records, in \`adr/\` |"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/gamma.md"
+O="$(ctl_h_scan "$D")"
+HW_EACH="$(n_code "$O" H1) $(n_code "$O" H2) $(n_code "$O" H3) $(n_code "$O" H4) $(n_code "$O" H5)"
+HW_ALL="$(grep -c '^FINDING ' <<<"$O" || true)"
+printf '\n%s\n\nA second section of the same name.\n' "$CH_H_HEAD" >> "$D/$CH_H_DOC"
+O="$(ctl_h_scan "$D")"
+HW_N="$(grep -c '^FINDING ' <<<"$O" || true)"
+HW_0="$(n_code "$O" H0)"
+if [ "$HW_EACH" = "1 1 1 1 1" ] && [ "${HW_ALL:-0}" -eq 5 ] && [ "${HW_N:-0}" -eq 1 ] && [ "${HW_0:-0}" -eq 1 ]; then
+  PASS "CTL-H0-WHOLE: a fixture carrying an unnamed entry, a line with nothing behind it, a refused line, a row without its citation and a row naming an entry fires H1, H2, H3, H4 and H5 once each — and with its heading doubled it prints one finding, H0, and none of the five. The empty-surface contract is asserted whole, over a fixture shown to carry every verdict it withholds"
+else
+  FAIL "CTL-H0-WHOLE: the fixture must fire H1, H2, H3, H4 and H5 once each before its heading is doubled (it fired '$HW_EACH', ${HW_ALL:-no} finding(s) in all), and exactly one finding, H0, after (it reported ${HW_N:-no} finding(s), ${HW_0:-0} of them H0). A per-entry or per-row verdict printed beside H0 is a verdict over a comparison that did not happen"
+fi
+
+D="$(ctl_h_mk h0nodoc)"
+ctl_h_map "$D" "$CTL_H_ROW"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_h_solely "CTL-H0-NODOC" "$O" H0 1 "the charter is not there at all — the file that carries the enumeration is an input, and its absence is a broken read named as one" "$CH_H_DOC is absent or empty"
+
+D="$(ctl_h_mk h0nomap)"
+ctl_h_doc "$D" "$H_C1" "$H_C2" "$H_C3"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_h_solely "CTL-H0-NOMAP" "$O" H0 1 "the map is not there at all — with no document to hold the row, the citation has no subject" "$CH_H_MAP is absent or empty"
+
+D="$(ctl_h_mk h0head)"
+{ printf '# Fixture charter\n\n## Layout\n\n```\n'; ctl_h_tree "${H_T}${CH_H_DIR}/" "$H_C1" "$H_C2" "$H_C3"; printf '```\n'; } > "$D/$CH_H_DOC"
+ctl_h_map "$D" "$CTL_H_ROW"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_h_solely "CTL-H0-HEAD" "$O" H0 1 "the tree is intact under a RENAMED heading — the anchor is gone, and a group that could not find its fence must fail rather than skip. The heading's text stands nowhere in this charter, so the cause must not claim the reader met it" "" "INSIDE a fenced block"
+
+# CTL-H0-HEAD-FENCED — the heading is THERE, and the reader could not take it. A fence opened
+# above it is never closed, so the heading line is read as fenced text and the count of headings
+# outside a fence is zero. Reported bare, that sends the reader hunting for a heading in plain
+# sight; the cause must name the line where the heading stands and say it is inside a fence.
+D="$(ctl_h_mk h0headfenced)"
+{ printf '# Fixture charter\n\n```\nA sample block whose fence is never closed.\n\n%s\n\n```\n' "$CH_H_HEAD"; ctl_h_tree "${H_T}${CH_H_DIR}/" "$H_C1" "$H_C2" "$H_C3"; printf '```\n'; } > "$D/$CH_H_DOC"
+ctl_h_map "$D" "$CTL_H_ROW"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_h_solely "CTL-H0-HEAD-FENCED" "$O" H0 1 "the heading stands once, at the fixture charter's line 6, under a fence that was opened above it and never closed — the cause names that line and says the heading is inside a fenced block, and does not only report it absent" "INSIDE a fenced block at line 6"
+
+D="$(ctl_h_mk h0head2)"
+ctl_h_doc "$D" "$H_C1" "$H_C2" "$H_C3"
+printf '\n%s\n\nA second section of the same name.\n' "$CH_H_HEAD" >> "$D/$CH_H_DOC"
+ctl_h_map "$D" "$CTL_H_ROW"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_mustfire "CTL-H0-HEAD2" H0 "$O" "the heading stands twice — which fence is the enumeration is no longer decidable, and taking the first would be a guess" 1
+
+D="$(ctl_h_mk h0fence)"
+{ printf '# Fixture charter\n\n%s\n\nThe tree was moved out of this section.\n\n### After\n\n```\n' "$CH_H_HEAD"; ctl_h_tree "${H_T}${CH_H_DIR}/" "$H_C1" "$H_C2" "$H_C3"; printf '```\n'; } > "$D/$CH_H_DOC"
+ctl_h_map "$D" "$CTL_H_ROW"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_mustfire "CTL-H0-FENCE" H0 "$O" "the heading stands with no fenced block before the next heading — a fence under a LATER heading is not this section's, however much it looks like the tree" 1
+
+D="$(ctl_h_mk h0node)"
+{ printf '# Fixture charter\n\n%s\n\n```\n' "$CH_H_HEAD"; ctl_h_tree "${H_T}${CH_H_DIR}s/" "$H_C1" "$H_C2" "$H_C3"; printf '```\n'; } > "$D/$CH_H_DOC"
+ctl_h_map "$D" "$CTL_H_ROW"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_mustfire "CTL-H0-NODE" H0 "$O" "the fenced tree names a node one character away from the directory and none that is the directory" 1
+
+D="$(ctl_h_mk h0node2)"
+ctl_h_doc "$D" "$H_C1" "$H_C2" "$H_C3" "${H_T}${CH_H_DIR}/    ${H_A} a second node of the same name" "$H_C2"
+ctl_h_map "$D" "$CTL_H_ROW"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_mustfire "CTL-H0-NODE2" H0 "$O" "the fenced tree names the directory at its root level TWICE, and the first node alone agrees with the tree — which node is the enumeration is no longer decidable, and reading the first would pass a tree whose second node says otherwise" 1
+
+D="$(ctl_h_mk h0row)"
+ctl_h_doc "$D" "$H_C1" "$H_C2" "$H_C3"; ctl_h_map "$D"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_h_solely "CTL-H0-ROW" "$O" H0 1 "the map holds no row for the directory — the citation assertion has no subject, and an absent subject must not read as a row that cites. No row here holds the directory in any form, so the cause must not claim the reader met one" "" "inside a link"
+
+# CTL-H0-ROW-LINKED — the row is THERE, and the reader could not take it: its key cell holds the
+# directory as a link, where the key this group reads is the directory alone. The cause must name
+# that row rather than report the map as having none.
+D="$(ctl_h_mk h0rowlinked)"
+ctl_h_doc "$D" "$H_C1" "$H_C2" "$H_C3"
+ctl_h_map "$D" "| [\`$CH_H_DIR/\`]($CH_H_DIR/) | Reference documents, from decision records to notes; $CTL_H_CITE |"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_h_solely "CTL-H0-ROW-LINKED" "$O" H0 1 "the row for the directory stands at the fixture map's line 8 with its key cell written as a link — the cause names that row and says the directory is inside a link, and does not only report the row absent" "the row at line 8 holds $CH_H_DIR/ in its key cell inside a link"
+
+D="$(ctl_h_mk h4)"
+ctl_h_doc "$D" "$H_C1" "$H_C2" "$H_C3"
+ctl_h_map "$D" "| \`$CH_H_DIR/\` | Reference documents: decision records, the first document and the second |"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_mustfire "CTL-H4" H4 "$O" "the row's citation is removed and a list of what the directory holds, written out in words, stands in its place" 1
+
+D="$(ctl_h_mk h4unnamed)"
+ctl_h_doc "$D" "$H_C1" "$H_C2" "$H_C3"
+ctl_h_map "$D" "| \`$CH_H_DIR/\` | Reference documents. [\`$CH_H_DOC\`]($CH_H_DOC) lists the folder's top-level entries |"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_mustfire "CTL-H4-UNNAMED" H4 "$O" "the row links the charter and does not say where in it — a link to a whole document is not a citation of the enumeration" 1
+
+D="$(ctl_h_mk h4unlinked)"
+ctl_h_doc "$D" "$H_C1" "$H_C2" "$H_C3"
+ctl_h_map "$D" "| \`$CH_H_DIR/\` | Reference documents. The *${CH_H_HEAD#"## "}* section of \`$CH_H_DOC\` lists the folder's top-level entries |"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_mustfire "CTL-H4-UNLINKED" H4 "$O" "the row names the section and the charter in a code span, with no link — nothing a reader can follow and nothing the link gate resolves" 1
+
+D="$(ctl_h_mk h4elsewhere)"
+ctl_h_doc "$D" "$H_C1" "$H_C2" "$H_C3"
+ctl_h_map "$D" "| \`$CH_H_DIR/\` | Reference documents |" "| \`templates/\` | Blank forms; $CTL_H_CITE |"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_mustfire "CTL-H4-ELSEWHERE" H4 "$O" "the whole citation stands in ANOTHER row of the same table — the row is the unit, so a citation beside it does not count as its own" 1
+
+D="$(ctl_h_mk hwords)"
+ctl_h_doc "$D" "$H_C1" "$H_C2" "$H_C3"
+ctl_h_map "$D" "| \`$CH_H_DIR/\` | Everything the 12 agents are built against, in other words entirely — see [the tree]($CH_H_DOC#file-structure \"where the top level is listed\"), under *${CH_H_HEAD#"## "}* |"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_h_quiet "CTL-H-SPEC-WORDS" "$O" 3 3 "only the row's descriptive text changes: other words, another link text, a fragment and a title on the link — the citation is still a link to the charter beside the section's name"
+
+# ── H5, the complement of H4. A citation that is present says nothing about what stands beside
+# it, so each arm below varies what the row NAMES and leaves the citation to H4.
+D="$(ctl_h_mk h5)"
+ctl_h_doc "$D" "$H_C1" "$H_C2" "$H_C3"
+ctl_h_map "$D" "| \`$CH_H_DIR/\` | Architecture, schemas, the site design spec, the command reference, the region reference the interviewer reads, and decision records (\`adr/\`) |"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_mustfire "CTL-H5" H5 "$O" "the row's words are the ones this repository's own row carried when the group was added: a description by category that still names one entry, a directory with its slash, in a code span" 1
+
+D="$(ctl_h_mk h5beside)"
+ctl_h_doc "$D" "$H_C1" "$H_C2" "$H_C3"
+ctl_h_map "$D" "| \`$CH_H_DIR/\` | Decision records in \`adr/\`, each a file under \`adr/\`, and [the first document]($CH_H_DIR/alpha.md); the *${CH_H_HEAD#"## "}* section of [\`$CH_H_DOC\`]($CH_H_DOC) lists them, and beta.md. |"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_h_solely "CTL-H5-BESIDE" "$O" H5 3 "a list of the entries is restored BESIDE an intact citation — a directory with its slash, written twice; a file reached only through a link's target path; and a file named only at a sentence's end, against its full stop. H4 is satisfied and stays silent, which is the state a citation check alone passes, and each entry is reported once however often the row names it"
+
+D="$(ctl_h_mk h5words)"
+ctl_h_doc "$D" "$H_C1" "$H_C2" "$H_C3"
+ctl_h_map "$D" "| \`$CH_H_DIR/\` | The adr records, the alpha and beta documents, and what an adr decides. The *${CH_H_HEAD#"## "}* section of [\`$CH_H_DOC\`]($CH_H_DOC) lists the folder's top-level entries |"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_h_quiet "CTL-H5-SPEC-WORDS" "$O" 3 3 "the row describes by category in words that sit one character from an entry's name — the directory's name with no slash, each file's with no suffix. A category word is not a path token"
+
+D="$(ctl_h_mk h5dirlink)"
+ctl_h_doc "$D" "$H_C1" "$H_C2" "$H_C3"
+ctl_h_map "$D" "| \`$CH_H_DIR/\` | The adr records, the alpha and beta documents, and what an adr decides. Browse them in [\`$CH_H_DIR/\`]($CH_H_DIR/). The *${CH_H_HEAD#"## "}* section of [\`$CH_H_DOC\`]($CH_H_DOC) lists the folder's top-level entries |"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_h_quiet "CTL-H5-SPEC-DIRLINK" "$O" 3 3 "the same row with a link to the directory itself — the directory is the row's subject and not an entry under it, so linking it names none"
+
+# CTL-H-RETRO — the real charter and the real tree at the revision where the directory held two
+# entries the enumeration did not name, and every required check was green. Every other H arm
+# grades a fixture this file wrote; this one grades the drift the repository actually shipped.
+# The map is the fixture's, so the only findings are the enumeration's. It needs history deeper
+# than one commit, as the other -RETRO arms do, and an unreachable revision FAILS rather than skipping.
+ctl_arm H1
+D="$(ctl_h_mk hretro)"
+HR_OK=1
+git -C "$ROOT" show "$CH_H_RETRO_REV:$CH_H_DOC" > "$D/$CH_H_DOC" 2>/dev/null || HR_OK=0
+ch_list_h_rev "$ROOT" "$CH_H_RETRO_REV" > "$WORK/list.hretro" 2>/dev/null || HR_OK=0
+ctl_h_map "$D" "$CTL_H_ROW"
+if [ "$HR_OK" -eq 0 ] || [ ! -s "$D/$CH_H_DOC" ] || [ ! -s "$WORK/list.hretro" ]; then
+  FAIL "CTL-H-RETRO: the charter or the tree at ${CH_H_RETRO_REV:0:7} is unreachable, so the one H arm that grades the drift this repository actually shipped did not run. This is a hole, not a skip — CI must check out with fetch-depth: 0"
+else
+  O="$(ch_scan_h "$D" "$WORK/list.hretro")"
+  HR_SEEN="$(awk '$1 == "FINDING" && $2 == "H1" { print $4 }' <<<"$O" | sort | tr '\n' ' ')"
+  HR_OTHER="$(awk '$1 == "FINDING" && $2 != "H1" { n++ } END { print n + 0 }' <<<"$O")"
+  if [ "$HR_SEEN" = "command-reference.md replan-protocol.md " ] && [ "$HR_OTHER" -eq 0 ]; then
+    PASS "CTL-H-RETRO: on the real charter and tree at ${CH_H_RETRO_REV:0:7}, H1 fired on exactly the two entries the directory held and the enumeration did not name (${HR_SEEN% }), and no other code fired — the drift this group exists to turn red, read from the fence as it was then written"
+  else
+    FAIL "CTL-H-RETRO: MUST FIRE on the shipped drift — H1 on command-reference.md and replan-protocol.md and nothing else; the extractor reported H1 on '${HR_SEEN% }' and $HR_OTHER other finding(s). A different answer on a revision known to carry the defect is a broken reader, not a clean one"
+  fi
+fi
+
+# CTL-H5-RETRO — the real map, the real charter and the real tree at the revision whose row named
+# every top-level entry of the directory, each by its basename or its name and slash, and cited
+# nothing. The fence agreed with the tree there, so the findings are the row's alone: H5 on each
+# entry it named, and H4 once. It is the row this repository shipped as a second list, and what
+# went stale afterwards.
+ctl_arm H5
+D="$(ctl_h_mk h5retro)"
+HM_OK=1
+git -C "$ROOT" show "$CH_H_MAP_RETRO_REV:$CH_H_DOC" > "$D/$CH_H_DOC" 2>/dev/null || HM_OK=0
+git -C "$ROOT" show "$CH_H_MAP_RETRO_REV:$CH_H_MAP" > "$D/$CH_H_MAP" 2>/dev/null || HM_OK=0
+ch_list_h_rev "$ROOT" "$CH_H_MAP_RETRO_REV" > "$WORK/list.h5retro" 2>/dev/null || HM_OK=0
+if [ "$HM_OK" -eq 0 ] || [ ! -s "$D/$CH_H_DOC" ] || [ ! -s "$D/$CH_H_MAP" ] || [ ! -s "$WORK/list.h5retro" ]; then
+  FAIL "CTL-H5-RETRO: the charter, the map or the tree at ${CH_H_MAP_RETRO_REV:0:7} is unreachable, so the one H arm that grades the row this repository actually shipped as a second list did not run. This is a hole, not a skip — CI must check out with fetch-depth: 0"
+else
+  O="$(ch_scan_h "$D" "$WORK/list.h5retro")"
+  HM_SEEN="$(awk '$1 == "FINDING" && $2 == "H5" { print $4 }' <<<"$O" | sort | tr '\n' ' ')"
+  HM_H4="$(n_code "$O" H4)"
+  HM_OTHER="$(awk '$1 == "FINDING" && $2 != "H5" && $2 != "H4" { n++ } END { print n + 0 }' <<<"$O")"
+  if [ "$HM_SEEN" = "adr/ command-reference.md data-architecture.md data-model.md replan-protocol.md schemas/ site-layout-spec.md " ] && [ "$HM_H4" -eq 1 ] && [ "$HM_OTHER" -eq 0 ]; then
+    PASS "CTL-H5-RETRO: on the real map, charter and tree at ${CH_H_MAP_RETRO_REV:0:7}, H5 fired on exactly the entries that revision's row named (${HM_SEEN% }), H4 fired once on the citation it did not carry, and no other code fired — the second list this repository shipped, read from the row as it was then written"
+  else
+    FAIL "CTL-H5-RETRO: MUST FIRE on the shipped row — H5 on adr/, command-reference.md, data-architecture.md, data-model.md, replan-protocol.md, schemas/ and site-layout-spec.md, H4 once, and nothing else; the extractor reported H5 on '${HM_SEEN% }', H4 $HM_H4 time(s) and $HM_OTHER other finding(s). A different answer on a revision known to carry the row is a broken reader, not a clean one"
+  fi
+fi
+
+# The registered assertion, run over the conformant fixture with its subject PRESENT. md_flips
+# below shows the same call reporting one FAIL once ch_scan_h is removed; this arm is the other
+# half, without which that FAIL could be a verdict the fixture already carried.
+H_PRESENT="$(md_probe zzq_h_no_such_subject h_assert "$H_CLEAN" "$WORK/list.hclean")"
+if [ -n "$H_PRESENT" ] && [ "${H_PRESENT##* }" = "0" ] && [ "${H_PRESENT%% *}" != "0" ]; then
+  PASS "CTL-H-MD-PRESENT: with its subject present the registered assertion reports pass=${H_PRESENT%% *} fail=${H_PRESENT##* } over the conformant fixture — so the single FAIL that MD[H] requires below is a flip, and not a verdict that fixture already carried"
+else
+  FAIL "CTL-H-MD-PRESENT: over the conformant fixture the registered assertion returned '${H_PRESENT:-nothing}' rather than passes and no FAIL — MD[H] below would then certify a flip from a state that was never green"
+fi
+
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
 echo "Y — the assertion inventory, derived from this file and checked in both directions"
@@ -4240,11 +5065,34 @@ else
   FAIL "MD5: CONTROL on the oracle did not fire — the planted remediated assertion returned '$MD_CS' rather than '0 1' with its subject removed. An oracle that convicts everything is as useless as one that convicts nothing"
 fi
 
-# ── No assertion in this suite is REGISTERED with md_flips yet, and that is a consequence
-# rather than an omission: registration requires the assertion to be remediated first,
-# because an oracle asked to certify a still-blind assertion turns the suite red for a
-# defect it is reporting rather than causing. The declared residual in MD2 is this suite's
-# registration queue, and every entry that leaves it gains an MD[...] arm in the same edit.
+# ── REGISTERED ASSERTIONS, AND WHAT IS NOT REGISTERED. md_flips re-runs a registered assertion
+# with its subject removed and requires exactly one FAIL and no PASS. What is registered: group
+# H's h_assert, over ch_scan_h, the function that drives its extractor. It is probed over the
+# conformant fixture the H control arms built, where it passes — arm CTL-H-MD-PRESENT is that
+# half — so what is certified is a flip, and not a verdict that was already red. The declared
+# residual in MD2 is still this suite's registration queue: every entry that leaves it gains an
+# MD[...] arm here in the same edit, and an entry cannot leave it until its assertion is
+# remediated, because an oracle asked to certify a still-blind assertion turns the suite red for
+# a defect it is reporting rather than causing.
+#
+# ── CLAUSE 6 OPT-OUT, DECLARED RATHER THAN LEFT SILENT ───────────────────────────
+# WHAT IS OPTED OUT. The subjects group H reads that are FILES AND LISTINGS, not shell functions,
+# and so cannot be `unset -f`: the charter that carries the enumeration, the map that carries the
+# row, the listing of the tree, and — for arms CTL-H-RETRO and CTL-H5-RETRO — the blobs and the
+# tree listing of a revision. REASON: each is the INPUT UNDER TEST, so its removal is a
+# degenerate POPULATION rather than a degenerate SUBJECT, and md_flips has nothing to remove.
+# COMPENSATING POSITIVE CONTROLS: H0 FAILs when any of them is absent or empty. Arms CTL-H0-NODOC
+# and CTL-H0-NOMAP remove the charter and the map; CTL-H0-HEAD, CTL-H0-FENCE, CTL-H0-NODE and
+# CTL-H0-ROW remove the heading, the fence, the node and the row from inside them; CTL-H0-ENUM
+# and CTL-H0-DIR empty the enumeration and the listing; and CTL-H0-WHOLE requires that red to be
+# the only finding printed. Both -RETRO arms FAIL loudly rather than skipping when their revision
+# is unreachable. And every must-not-fire H arm requires the exact entry counts its fixture
+# plants, so an input that vanished reads red there and not quiet. The H control arms themselves
+# stand on the ground the class-C value-token arms record above: their subject is an awk program
+# inside the GENERATED h.awk, which `unset -f` cannot remove, and what compensates is the
+# mutation of that program each arm was observed red under, recorded with the change that added
+# the group.
+md_flips ch_scan_h 'H' h_assert "$H_CLEAN" "$WORK/list.hclean"
 
 echo
 printf 'Result: \033[1;32m%d passed\033[0m, \033[1;31m%d failed\033[0m, \033[1;33m%d skipped\033[0m, \033[1;36m%d vacuous\033[0m\n' \
@@ -4273,6 +5121,13 @@ if [ "$G_MEASURED" -eq 1 ]; then
     "$G_NREAD" "$G_NFAIL" "$G_NDECL" "$G_N1" "$G_N2"
 else
   printf 'RELEASE-TAGS: NOT-EVALUATED — %s — this is not a clean result\n' "$G_WHY"
+fi
+# The measurement state group H decided above: under H0 the line carries the cause and no counter.
+if [ "$H_MEASURED" -eq 1 ]; then
+  printf 'REFERENCE-MAP: %s entr(ies) enumerated for %s/ in %s against %s in the tree; %s in the tree and not enumerated, %s enumerated and not in the tree, %s unread line(s), %s map row(s) without the citation, %s entr(ies) named in the map row.\n' \
+    "$H_NENUM" "$CH_H_DIR" "$CH_H_DOC" "$H_NDISK" "$H_N1" "$H_N2" "$H_N3" "$H_N4" "$H_N5"
+else
+  printf 'REFERENCE-MAP: NOT-EVALUATED — %s — this is not a clean result\n' "$H_WHY"
 fi
 if [ "$vacuous" -gt 0 ]; then
   printf 'NOTE: %d assertion(s) had an EMPTY POPULATION and proved nothing about this tree: %s. Read each named arm and its own verdict above for what carries it. This line names the vacuous ARMS rather than a compensating group, because the arms that compensate are not always in the group the vacuous arm belongs to, and a hardcoded group here was a claim about a run it had not read.\n' "$vacuous" "${VACUOUS_IDS% }"
