@@ -3,6 +3,139 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [Unreleased] — A returning party's past trips reach the planner
+
+Until now an archived trip's coverage record was written and never read back. Each archived trip
+keeps `outputs/satisfaction-metrics.md`, which records, per traveller and per desire, whether the
+plan as last synthesized covered it. Once the trip was archived no verb opened that file again, so
+the next trip a returning party planned started as if it were their first. This release adds two
+read-only verbs to `/trip-record` that read those records in place, one for a person and one for a
+reusable group, and it brings the tracked outcome file into the layout its writer declares, with a
+check that fails when one stops matching. You run both verbs yourself, from the command surface.
+Neither stores anything, and nothing is offered into a new plan yet.
+
+**`/trip-record past-coverage <name>` shows what the plans of a person's earlier trips covered.**
+For a traveller on the trip being planned who is linked to a durable person record, it finds the
+other trips that carry the same reference, reaches the archived ones, and prints a line for each:
+the trip's slug, and tier-by-verdict tallies of the `anchor`, `wish` and `nice-to-have` desires that
+trip's plan covered and did not cover. The traveller is named by person id and never by name. The
+coverage table is read by its heading and by header label, never by column position, under either
+spelling the table has shipped with. Every tally is worded as plan coverage as last synthesized:
+whether a trip's plan, when it was last synthesized, covered a desire of that tier. It says nothing
+about what happened on a trip.
+
+**Each kind of absence is reported as a different thing.** A traveller who carries no reference, a
+completed scan that found no other trip, trips that exist and are not archived, and a read that
+could not be completed are separate outputs, and none of them reads as *nothing was planned for this
+person*. A reached trip whose coverage file holds no row for the person *holds no outcome record*;
+it is never shown as `not covered`.
+
+**Every line carries a report-only verdict on the order of that trip's own files.**
+`plan-to-coverage` orders a trip's coverage file against that trip's itinerary, traveller model and
+event-status files by their stamps: `CURRENT` where the coverage file is the newest, `BEHIND` naming
+the file that leads it, or `UNDETERMINED` naming what could not be listed. It is declared once, in
+the person view's section, and it never decides whether a verb runs, what it reads or which trips it
+reaches. Where a trip's roster carries an erasure token, its line says that the order reads as one
+an erasure set, never as a plan change.
+
+**`/trip-record group-past-coverage [<group-id>]` shows it for a group, on the trips you confirm.**
+Given a group id, it lists the archived trips, other than the one being planned, on which at least
+two of the group's members travelled as linked travellers. Each is shown as its slug, how many of
+the group were on it and its roster size, and none is ranked or pre-selected. It then asks which of
+them were this party's trips. You confirm by naming each trip's slug, and a reply that names no
+listed slug confirms nothing. For each trip you confirm it prints a line per member who was linked
+on it: that member's own tallies under their person id, with that trip's verdict. There is no total
+across members or across trips, and no value belongs to the group. With no group named it lists the
+groups that qualify on this trip, by id and member count and never by name, and chooses none.
+
+**The group view is a view and not a memory.** The candidate list is recomputed on every run and
+your confirmation is written nowhere, so the next run asks again. No group record gains a slot and
+no trip file names a group. It is run from the command surface only: never during an interview, and
+nothing it prints is put in front of a traveller.
+
+**The decision record now says where a member's edge has to sit.** In
+`reference/adr/ADR-027-post-trip-preference-memory.md` § *Decision* 2, the *no joint archived trip*
+row required that some member's edge exists, and forbade `NO-EDGE-FOUND` while any did, without
+saying *on a trip other than the one being planned*. Read as written, a group whose members were
+linked only on the trip being planned met that row and the `NO-EDGE-FOUND` row at once. The row is
+corrected in place and a closing *Amendment history* gives the account; no decision changes. In that
+state the group view prints `NO-EDGE-FOUND`.
+
+**`/trip-record` says who takes its `grep` grant.** The paragraph above its verb sections said
+nothing else in the file uses `Bash(grep:*)`. The group view takes that grant for a single read: a
+group record's `## Members` section, from its heading to the end of the file, so the title line
+above it, which holds the group's display name, is not read. The paragraph now states for `grep` the
+rule it already stated for `ls`. No grant is added.
+
+**The tracked outcome file matches the layout its writer declares, and a check holds it there.**
+This change belongs to a different line of work from the views, the one that makes the corpus's own
+claims executable, and it ships here because the check it adds grades every tracked outcome file,
+and this release adds archived example trips that carry one.
+`examples/data-architecture-demo/outputs/satisfaction-metrics.md` carried a desire-coverage header
+its writer does not declare. It now carries the declared one, whose home is
+`reference/data-model.md`. A new group of the artifact-schema suite, `DC`, reads that header from
+its home on every run and fails when any other statement of it, or any tracked outcome file,
+differs. A statement removed whole, heading and table together, leaves the set it reads and is not
+graded.
+
+**New example roots and a suite group stand behind the views.** `examples/returning-party-demo/` is
+a trip being planned; `examples/returning-party-first-demo/` and
+`examples/returning-party-second-demo/` are archived trips its travellers came from, the second of
+them reached by an erasure. The set's README declares the states it holds, and the group it is read
+with is the one already tracked under `examples/people-library-demo/`. Suite group `RP` holds the
+files to that declaration, runs a reference reader of the coverage table and a reference computation
+of a group's candidates, holds each section's set of outputs to the decision record's, and checks
+that what the group view's section cites of the person view's resolves and is not restated.
+`examples/archived-trip-demo/` no longer calls itself the only archived trip in the repository.
+
+**Both verbs are registered where a verb is found.** Each has its routing row and its read-scope row
+in `CLAUDE.md` and its row in `reference/command-reference.md`. Both sections are added to the
+engine's largest command file, which `CLAUDE.md` § *Verb body size* already records as over its
+budget; that row is re-measured, and the reduction stays with the consolidation work the section
+names.
+
+**The honest limits.** Neither verb was run end to end. No suite executes a verb, and the exercise
+behind this release is one model's reading of each section, once, with the data root bound by
+statement: the read of the data-root pointer and the slash-command dispatch are not exercised. Suite
+group `RP` grades the tree — the fixture's declared states, each section's enumerations, a reference
+reader of the label rule and a reference computation of a group's candidates — and never a verb. No
+tracked fixture holds an order state: a checkout sets file stamps, and the example roots that may
+carry an itinerary are pinned by name. The source operands of the relation are exercise-only
+placeholders standing in for files a real archived trip carries, and as tracked both archived roots
+read `UNDETERMINED` on it. A tie is produced in the exercise by stamping the operands identically;
+it was not observed arising on its own. The order the relation reports is the files' stamps. A copy,
+a restore or a sync that does not keep stamps resets it, and no derivation rewrites an archived
+trip, so the verdict goes on reporting what that act left. Under a shared newest stamp the listing
+falls back to name order, so a tie can print `BEHIND` naming whichever tied file sorts first, or
+`CURRENT` where the coverage file sorts first among them; this was measured on macOS `/bin/ls`, and
+GNU `ls` was not measured. That the relation is report-only is held by prose: no rule in the engine
+consumes a verdict, and none asserts that none does. A reached trip's coverage file and trip context
+are opened whole. The person view uses, carries and prints only what its `**Reads:**` block names,
+but the tool results hold the whole of both — other travellers' rows, desire text, needs-compliance
+rows, the destination line — so what a session transcript can hold is wider than ids and tallies,
+and the scan made of each exercise answer grades the rendered answer, not tool results. The person
+view shows a person's past plan coverage only while a trip is being planned and that person is a
+traveller on it; the decision record's point of use that resolves no trip is not built.
+
+For the group view, the operator's replies in the exercise are scripted: each was sent to the same
+session after its first return had been read, and no person typed them. A group record's title line
+does not reach the tool result, because the record's `## Members` section is taken by its heading
+and nothing above it is returned. What does reach the tool results is the whole of each candidate's
+trip context and of each confirmed trip's coverage file, opened whole as the person view opens a
+reached trip's, and a trip context is opened for every candidate, confirmed or not. The confirmation
+rule — by slug, matched whole, nothing pre-selected — is held by prose and graded by one exercise,
+and no required case of it offers a slug that contains another. The group view shows a group's past
+plan coverage only while a trip is being planned; the decision record's point of use that resolves
+no trip is not built. No tracked fixture holds a second qualifying group, a member bullet that does
+not resolve or a group with too few members: those states are built by the suite in its own work
+directory and composed in the exercise. A trip whose `trip-context.md` yields no line in the record
+block reads as not archived and is not offered, which is the reading the resolution ladder's `G4`
+gives and the one the person view takes. That the group view is not run while a session is
+conducting an interview is held by one sentence of its section and one condition on its routing row;
+nothing mechanical holds it, and no exercise case produces the refusal. Where a confirmed trip's
+roster table is missing, the erasure reading cannot be tested: the group view's member lines say so,
+and the person view says nothing in the same state.
+
 ## [0.51.0] — 2026-10-02 — The release scaffolding grades itself
 
 No trip verb changes behaviour in this release. What changes is the machinery a change to this
