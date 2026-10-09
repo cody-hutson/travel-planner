@@ -11,6 +11,13 @@
   there and takes none here: the rest of D5.3, and every other decision of this record, stands. The
   supersession takes effect as that record states. The superseded text is retained as decided, with
   an inline marker at it pointing forward, per `reference/adr/README.md` § *Convention*.
+  **Superseded in part (2026-10-09, Friday)** — D1.1, as far as its *No new artifact class is
+  created*, and the list beneath it, reach beyond resumption state, by
+  [ADR-045](ADR-045-interview-rating-and-engagement-record.md). This amendment records a decision
+  taken there and takes none here: the rest of D1.1, and every other decision of this record,
+  stands. The supersession takes effect as that record states. The superseded text is retained as
+  decided, with an inline marker at it pointing forward, per `reference/adr/README.md`
+  § *Convention*.
 - **Deciders:** repo maintainer
 - **Driving work:** the *interviewer becomes a component* milestone. This record is one of that
   milestone's two Wave-0 gating records, in the shape `ADR-012-people-library.md` and
@@ -186,6 +193,10 @@ The derivation reads three inputs, all of which exist today:
 Nothing else is read and nothing is stored. No class id, no path pattern, no schema member, no row
 in the class enumeration, no lifecycle, no publish posture, no witness, and **no row in the `erase`
 reach table** — the receipt stays total over the table it already declares.
+*(Superseded in part (2026-10-09, Friday) by
+[ADR-045](ADR-045-interview-rating-and-engagement-record.md), as far as this decision's "No new
+artifact class is created", and the list above, reach beyond resumption state; the rest of this
+decision stands.)*
 
 *Rejected:* O2, O3 and O4, on the grounds in § *Options considered*.
 
