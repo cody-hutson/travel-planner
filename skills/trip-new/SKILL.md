@@ -36,9 +36,9 @@ human reader. The rooted spelling belongs where a path reaches a tool as written
 grants and the fenced invocations.
 
 **This command creates. It never overwrites.** Re-running it against a trip that already exists adds
-only the members that are missing and leaves every existing file exactly as it is. `trips/` is
-git-ignored, so there is no history to restore from — a rewritten `trip-context.md` or `trip-log.md`
-is gone for good. That severity is not this file's own rating:
+only the members that are missing and leaves every existing file exactly as it is. `trips/` lives
+under `<data-root>`, so nothing in this repository could restore it — a rewritten `trip-context.md`
+or `trip-log.md` is gone for good. That severity is not this file's own rating:
 `reference/adr/ADR-007-command-entry-point.md` § 2, **bound 5** — *no command may overwrite or
 delete existing trip content* — types a clobber **IRREVERSIBLE**, and names *create only what is
 missing* as the first of the three shapes that satisfy it. **This command takes that shape, and the
@@ -279,7 +279,8 @@ omits it on human-authored classes, and this class's schema types it optional fo
 Step 4 there leaves an existing `trip-log.md` alone, and that is unchanged: a log carrying no
 `schema-version` is read as version 0 under `reference/data-architecture.md` § *Tolerant read* and
 stays valid indefinitely, so there is nothing to repair. Writing one would be a rewrite of exactly
-the file the create-only rule at the top of this file exists to protect, and `trips/` is git-ignored.
+the file the create-only rule at the top of this file exists to protect, and `trips/` lives under
+`<data-root>`, where nothing in this repository could restore it.
 
 ## Resume — repair only
 
