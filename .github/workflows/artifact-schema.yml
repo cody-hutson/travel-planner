@@ -247,6 +247,12 @@ name: Artifact schema
 #        declared in the suite rather than left to be inferred: no arm shows that a site
 #        build invoked the walk, and the walk grades the written site against the plan
 #        rather than the act of writing
+#   DC   the declared desire-coverage header of C14 has ONE home — the fenced shape in
+#        reference/data-model.md § `outputs/satisfaction-metrics.md` shape — read from there on
+#        every run and never held in the suite. Every other statement of it, found by SHAPE,
+#        and every tracked C14 instance, found by the class's own selector, is byte-identical
+#        to it; an empty instance selection FAILS. Not graded: a statement removed whole,
+#        heading and table together, leaves the population
 #   RS   this coverage boundary itself, and the suite's own header roster, each set-diffed
 #        BOTH WAYS against the groups the run actually emitted. The executing set comes from
 #        the RUN, never from a static read of the suite. A group added and left undeclared

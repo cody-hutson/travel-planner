@@ -323,6 +323,12 @@
 #        and this rule had no mechanism at all, so the prose is replaced by an executable
 #        and anchored by its consumer instead. No count is spelled anywhere in this file
 #        for this group: every set is read
+#   DC   the declared desire-coverage header of C14 has ONE home — the fenced shape in
+#        reference/data-model.md § `outputs/satisfaction-metrics.md` shape — read from there on
+#        every run and never held here. Every other statement of it, found by SHAPE, and every
+#        tracked C14 instance, found by the class's own selector, is byte-identical to it; an
+#        empty instance selection FAILS. Not graded: a statement removed whole, heading and
+#        table together, leaves the population.
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -16091,6 +16097,374 @@ md_flips rt_grammar_labels 'W1'  w1_assert  "$W_GRAMMAR" "$W_SPEC"
 md_flips rt_components     'W2'  w2_assert  "$W_SPEC"
 md_flips w_site_region     'W3'  w3_assert  "$W_VERB"
 md_flips w_site_region     'W3c' w3c_assert "$W_VERB"
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group DC — the declared desire-coverage header: one home, and every other statement of it
+# and every tracked instance byte-identical to that home.
+#
+# ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
+# The class schema for outputs/satisfaction-metrics.md grades frontmatter and nothing else, so
+# the BODY shape of its desire-coverage table was held by no assertion. The class's tracked
+# witness carried a header row its writer does not declare, every required suite stayed green,
+# and a reader that takes that section by column position misreads one of the two shapes.
+#
+# ── ONE HOME, READ ON EVERY RUN AND NEVER HELD HERE ──────────────────────────────
+# The declared row lives in reference/data-model.md, in the fenced shape under the heading
+# DC_ART addresses. dc_home reads it from there on every run and no line of this file spells
+# it, for group EN's reason: a copy here would be a second source of truth, green while the
+# document it claims to enforce drifted away from it. The writers' prompts each carry the row
+# too, and they are ASSERTED identical to the home rather than turned into citations of it — a
+# prompt file is passed whole as its agent's instructions, so a writer has to carry the row it
+# emits.
+#
+# ── A STATEMENT IS FOUND BY SHAPE, AN INSTANCE BY THE CLASS'S OWN SELECTOR ────────
+# A statement site is an ATX-shaped line whose text leads, token-bounded, with DC_SEG, or a
+# line that is wholly one bold span leading with it. Its row is the first line beginning with
+# a pipe before the next ATX-shaped line. A site is never found by matching the row, which is
+# what keeps a DRIFTED statement in the population to be reported rather than letting it
+# leave. Fenced lines are READ, not skipped, because a statement may sit inside a fence — the
+# home's own does. An instance is whatever va_select resolves to the class, so a tracked
+# instance added later joins the population with no edit here, and it must carry the section
+# and the row.
+#
+# ── WHAT IS NOT GRADED, DECLARED RATHER THAN LEFT TO BE FOUND ────────────────────
+# A statement removed WHOLE — heading and table together — leaves the discovered population
+# instead of failing; one that keeps its heading and loses its table does fail. The separator
+# row under the header and any emphasis on a cell are not read at all, which DC6 shows.
+#
+# ── THE ARMS ─────────────────────────────────────────────────────────────────────
+#   DC0  the home resolves to exactly one row. Every later arm is withheld when it does not
+#   DC1  every other statement of the header, over every tracked markdown file DC2 does not
+#        select, equals the home row. A site with no row fails, and so does finding no site
+#   DC2  every tracked instance carries exactly one heading leading with DC_SEG, and its row
+#        equals the home row. An EMPTY selection is a failure, never a VACUOUS verdict
+#   DC3  MUST FIRE — a copy of an instance carrying the header this group was written against
+#   DC4  MUST FIRE — an empty instance list
+#   DC5  MUST FIRE — a statement whose row has its leading cells exchanged
+#   DC6  MUST NOT FIRE — a matching instance dashed and emphasised differently, and a file of
+#        near-misses that carries no statement site
+# Each live arm's reading is a function — dc_home, dc_statements, dc_instances — and DC3 to
+# DC6 re-run those same functions over inputs built on this run: copies under $WORK, and an
+# empty list. The arms are not registered with md_flips: what each grades is a tracked
+# document, which that primitive cannot remove, and DC3 to DC6 are its standing controls. No
+# count is spelled anywhere in this file for this group: the row, the statements and the
+# instances are all read.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "DC — the declared desire-coverage header: one home, and every other statement and every tracked instance byte-identical to it"
+
+DC_DOC="$ROOT/reference/data-model.md"
+# The class's artifact name. It is the selector's key for an instance and — as a code span
+# followed by the word `shape` — the text of the heading that opens the home's region. An
+# address, never the row.
+DC_ART='outputs/satisfaction-metrics.md'
+# The section's name: the leading segment a statement site and an instance's heading are found
+# by. Also an address.
+DC_SEG='Desire-coverage'
+mkdir -p "$WORK/dc"
+
+# dc_home <document> — the home, as TAB records. Fence state comes from the shared helper, so
+# the region is closed by the next ATX heading OUTSIDE a fence and the fenced shape's own
+# heading-shaped lines never end it.
+#   REGION <k>            unfenced ATX headings whose text is the artifact's code span, then `shape`
+#   HEAD   <k> <line>     ATX-shaped lines inside the first such region that lead with the
+#                         section's name, and the line of the first
+#   ROW    <line> <row>   the first line beginning with a pipe after that line and before the
+#                         next ATX-shaped line or fence closer, trailing whitespace trimmed.
+#                         Absent when no such line follows
+dc_home() {
+  awk -v art="$DC_ART" -v seg="$DC_SEG" "$FT_LEAD_FN""$ST_CF_FENCE_FN"'
+    function atx(s) { return (s ~ /^#+[ \t]/) }
+    function htext(s) { sub(/^#+[ \t]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+    { L[NR] = $0 }
+    END {
+      want = "`" art "` shape"
+      CF_ON = 0; nreg = 0; r0 = 0; r1 = 0
+      for (i = 1; i <= NR; i++) {
+        F[i] = cf_fence_step(L[i])
+        if (F[i] != "" || !atx(L[i])) continue
+        if (htext(L[i]) == want) { nreg++; if (nreg == 1) { r0 = i; continue } }
+        if (r0 > 0 && r1 == 0) r1 = i - 1
+      }
+      if (r1 == 0) r1 = NR
+      printf "REGION\t%d\n", nreg
+      nh = 0; h = 0
+      if (r0 > 0) for (i = r0 + 1; i <= r1; i++) if (atx(L[i]) && ft_lead(seg, htext(L[i]))) { nh++; if (nh == 1) h = i }
+      printf "HEAD\t%d\t%d\n", nh, h
+      if (h > 0) for (i = h + 1; i <= r1; i++) {
+        if (atx(L[i]) || F[i] == "C") break
+        if (substr(L[i], 1, 1) == "|") { s = L[i]; sub(/[ \t\r]+$/, "", s); printf "ROW\t%d\t%s\n", i, s; break }
+      }
+    }' "$1"
+}
+
+# dc_sites <file>… — every statement site in the files, fenced lines READ: one TAB record
+# `<file> <line> <kind> <row-line> <row>` per site, in file order. <kind> is H for an ATX-shaped
+# line whose text leads with the section's name and B for a line that is wholly one bold span
+# leading with it. The row is the first line beginning with a pipe before the next ATX-shaped
+# line, trailing whitespace trimmed; a site with none reports row-line 0 and an empty row. ONE
+# awk process over the whole population, for en_probe's reason.
+dc_sites() {
+  [ "$#" -gt 0 ] || return 0
+  awk -v seg="$DC_SEG" "$FT_LEAD_FN"'
+    function flush(   i) { for (i = 1; i <= np; i++) printf "%s\t%d\t%s\t0\t\n", pf[i], pl[i], pk[i]; np = 0 }
+    FNR == 1 { flush() }
+    {
+      s = $0; sub(/[ \t\r]+$/, "", s)
+      if ($0 ~ /^#+[ \t]/) {
+        flush()
+        t = s; sub(/^#+[ \t]+/, "", t)
+        if (ft_lead(seg, t)) { np = 1; pf[1] = FILENAME; pl[1] = FNR; pk[1] = "H" }
+        next
+      }
+      n = length(s)
+      if (n > 4 && substr(s, 1, 2) == "**" && substr(s, n - 1) == "**") {
+        t = substr(s, 3, n - 4)
+        if (index(t, "**") == 0 && ft_lead(seg, t)) { np++; pf[np] = FILENAME; pl[np] = FNR; pk[np] = "B"; next }
+      }
+      if (np > 0 && substr(s, 1, 1) == "|") {
+        for (i = 1; i <= np; i++) printf "%s\t%d\t%s\t%d\t%s\n", pf[i], pl[i], pk[i], FNR, s
+        np = 0
+      }
+    }
+    END { flush() }' "$@"
+}
+
+# dc_count <records> <code> — how many records open with <code>. Always a number, so a caller
+# that reads nothing compares a zero rather than an empty string.
+dc_count() { awk -F'\t' -v c="$2" '$1 == c { n++ } END { print n + 0 }' <<<"$1"; }
+
+# dc_statements <home-row> <skip-file> <skip-line> <file>… — DC1's reading. One TAB record per
+# statement site in the files, the site at <skip-file>:<skip-line> left out:
+#   SAME  <file> <line> <kind>
+#   DIFF  <file> <line> <kind> <row-line> <row>
+#   NOROW <file> <line> <kind>
+# then ONE closing record, COUNT <sites>, so a caller can tell "no site" from a scan that did
+# not reach its end. The comparison is string equality in the shell, never an awk -v value.
+dc_statements() {
+  local dcs_row="$1" dcs_sf="$2" dcs_sl="$3" dcs_out dcs_f dcs_l dcs_k dcs_rl dcs_r dcs_n=0
+  shift 3
+  dcs_out="$(dc_sites "$@")"
+  while IFS="$VA_TAB" read -r dcs_f dcs_l dcs_k dcs_rl dcs_r; do
+    [ -n "$dcs_f" ] || continue
+    if [ "$dcs_f" = "$dcs_sf" ] && [ "$dcs_l" = "$dcs_sl" ]; then continue; fi
+    dcs_n=$((dcs_n+1))
+    if [ "$dcs_rl" = 0 ]; then
+      printf 'NOROW\t%s\t%s\t%s\n' "$dcs_f" "$dcs_l" "$dcs_k"
+    elif [ "$dcs_r" = "$dcs_row" ]; then
+      printf 'SAME\t%s\t%s\t%s\n' "$dcs_f" "$dcs_l" "$dcs_k"
+    else
+      printf 'DIFF\t%s\t%s\t%s\t%s\t%s\n' "$dcs_f" "$dcs_l" "$dcs_k" "$dcs_rl" "$dcs_r"
+    fi
+  done <<EOF
+$dcs_out
+EOF
+  printf 'COUNT\t%s\n' "$dcs_n"
+}
+
+# dc_instances <home-row> <root> <path-list> — DC2's reading. <path-list> is one path per
+# line, each relative to <root>. One TAB record per instance:
+#   SAME   <path> <line>
+#   DIFF   <path> <line> <row-line> <row>   its row is not the home row
+#   NOROW  <path> <line>                    its heading is followed by no pipe row
+#   NOHEAD <path>                           it carries no ATX heading leading with the section's name
+#   MANY   <path> <k>                       it carries k such headings, where exactly one must lead
+#   UNREAD <path>                           it is not readable
+# and, where the list names no instance at all, the ONE record EMPTY — a selection of nothing
+# is a finding of its own, never a list of zero disagreements.
+dc_instances() {
+  local dci_row="$1" dci_root="$2" dci_p dci_recs dci_k dci_l dci_rl dci_r dci_n=0
+  while IFS= read -r dci_p; do
+    [ -n "$dci_p" ] || continue
+    dci_n=$((dci_n+1))
+    if [ ! -r "$dci_root/$dci_p" ]; then printf 'UNREAD\t%s\n' "$dci_p"; continue; fi
+    dci_recs="$(dc_sites "$dci_root/$dci_p")"
+    dci_k="$(awk -F'\t' '$3 == "H" { n++ } END { print n + 0 }' <<<"$dci_recs")"
+    if [ "$dci_k" -eq 0 ]; then printf 'NOHEAD\t%s\n' "$dci_p"; continue; fi
+    if [ "$dci_k" -ne 1 ]; then printf 'MANY\t%s\t%s\n' "$dci_p" "$dci_k"; continue; fi
+    dci_l=""; dci_rl=""; dci_r=""
+    IFS="$VA_TAB" read -r _ dci_l _ dci_rl dci_r <<<"$(awk -F'\t' '$3 == "H"' <<<"$dci_recs")"
+    if [ "$dci_rl" = 0 ]; then
+      printf 'NOROW\t%s\t%s\n' "$dci_p" "$dci_l"
+    elif [ "$dci_r" = "$dci_row" ]; then
+      printf 'SAME\t%s\t%s\n' "$dci_p" "$dci_l"
+    else
+      printf 'DIFF\t%s\t%s\t%s\t%s\n' "$dci_p" "$dci_l" "$dci_rl" "$dci_r"
+    fi
+  done <<EOF
+$3
+EOF
+  [ "$dci_n" -gt 0 ] || printf 'EMPTY\n'
+}
+
+# ── DC0 — the home, read BEFORE anything rests on it. Each way of not resolving to exactly one
+# row is its own FAIL, and every later arm is withheld: a comparison against a row that was
+# never read would agree with nothing or with everything.
+DC_OK=1
+DC_HOME="$(dc_home "$DC_DOC" 2>/dev/null)"
+DC_NREG="$(awk -F'\t' '$1 == "REGION" { n = $2 } END { print n + 0 }' <<<"$DC_HOME")"
+DC_NHEAD="$(awk -F'\t' '$1 == "HEAD" { n = $2 } END { print n + 0 }' <<<"$DC_HOME")"
+DC_HHEAD="$(awk -F'\t' '$1 == "HEAD" { n = $3 } END { print n + 0 }' <<<"$DC_HOME")"
+DC_HLINE="$(awk -F'\t' '$1 == "ROW" { n = $2 } END { print n + 0 }' <<<"$DC_HOME")"
+DC_HROW="$(awk -F'\t' '$1 == "ROW" { sub(/^[^\t]*\t[^\t]*\t/, ""); print }' <<<"$DC_HOME")"
+if [ ! -r "$DC_DOC" ]; then
+  FAIL "DC0: ${DC_DOC#"$ROOT/"} is not readable — the home of the declared desire-coverage header is absent, so nothing below can be asserted. Not a skip and not a pass"
+  DC_OK=0
+elif [ "$DC_NREG" -ne 1 ]; then
+  FAIL "DC0: ${DC_DOC#"$ROOT/"} carries $DC_NREG unfenced heading(s) whose text is the code span \`$DC_ART\` followed by 'shape', where exactly one must open the home's region — the home is absent or ambiguous, so no row was read and every later arm is withheld"
+  DC_OK=0
+elif [ "$DC_NHEAD" -ne 1 ]; then
+  FAIL "DC0: the home's region in ${DC_DOC#"$ROOT/"} carries $DC_NHEAD heading-shaped line(s) leading with '$DC_SEG', where exactly one must — which line states the header is undecided, so no row was read and every later arm is withheld"
+  DC_OK=0
+elif [ -z "$DC_HROW" ]; then
+  FAIL "DC0: no line beginning with a pipe follows the '$DC_SEG' line at ${DC_DOC#"$ROOT/"} line $DC_HHEAD before the next heading-shaped line or the closer of its fence — the home states a section and no header row, so every later arm is withheld"
+  DC_OK=0
+else
+  PASS "DC0: the declared desire-coverage header resolves at its ONE home — ${DC_DOC#"$ROOT/"} line $DC_HLINE, the first pipe row under the one heading-shaped line leading with '$DC_SEG' (line $DC_HHEAD) in the region the \`$DC_ART\` shape heading opens. It is read on this run and held nowhere in this file: [$DC_HROW]"
+fi
+
+if [ "$DC_OK" -eq 1 ]; then
+  # The instance selection, from the class's own selector: every row va_select resolves to this
+  # artifact, by either of its arms. One repository-relative path per line.
+  DC_SEL="$(va_select "$ROOT" tracked | awk -F'\t' -v a="$DC_ART" 'NF > 2 && $1 != "EXCLUDED" && $1 != "UNMATCHED" && $2 == a { print $3 }')"
+  DC_NSEL="$(awk 'NF { n++ } END { print n + 0 }' <<<"$DC_SEL")"
+
+  # ── DC1 — every OTHER statement of the header. The population is every tracked markdown file
+  # the selection does not name, and the home's own site is left out by path and line.
+  DC_FILES=(); DC_NFILES=0
+  while IFS= read -r dcf; do
+    [ -n "$dcf" ] || continue
+    case "$VA_NL$DC_SEL$VA_NL" in *"$VA_NL$dcf$VA_NL"*) continue ;; esac
+    if [ -r "$ROOT/$dcf" ]; then DC_FILES+=("$ROOT/$dcf"); DC_NFILES=$((DC_NFILES+1)); fi
+  done <<EOF
+$(cd "$ROOT" && git ls-files '*.md' 2>/dev/null)
+EOF
+  DC_ST="$(dc_statements "$DC_HROW" "$DC_DOC" "$DC_HHEAD" ${DC_FILES[@]+"${DC_FILES[@]}"})"
+  DC_ST_END="$(dc_count "$DC_ST" COUNT)"
+  DC_ST_N="$(awk -F'\t' '$1 == "COUNT" { n = $2 } END { print n + 0 }' <<<"$DC_ST")"
+  DC_ST_SAME="$(dc_count "$DC_ST" SAME)"
+  DC_ST_WHERE="$(awk -F'\t' -v r="$ROOT/" '$1 == "SAME" { p = $2; if (index(p, r) == 1) p = substr(p, length(r) + 1); printf "%s%s line %s", (n++ ? ", " : ""), p, $3 }' <<<"$DC_ST")"
+  if [ "$DC_NFILES" -eq 0 ]; then
+    FAIL "DC1: the tracked markdown population outside the instance selection is EMPTY, so no statement of the header could have been found — a scan over nothing is a broken probe, never agreement"
+  elif [ "$DC_ST_END" -ne 1 ]; then
+    FAIL "DC1: the statement scan over $DC_NFILES tracked markdown file(s) did not reach its closing record, so an empty finding list here would not be agreement"
+  elif [ "$DC_ST_N" -eq 0 ]; then
+    FAIL "DC1: no statement of the desire-coverage header other than the home was found across $DC_NFILES tracked markdown file(s). A writer's prompt carries the row it emits, so a zero here is a scan that stopped seeing the shape — or every copy removed whole, which this group declares it cannot tell from that"
+  elif [ "$DC_ST_SAME" -ne "$DC_ST_N" ]; then
+    FAIL "DC1: $((DC_ST_N - DC_ST_SAME)) of $DC_ST_N other statement(s) of the desire-coverage header do not equal the home row [$DC_HROW] at ${DC_DOC#"$ROOT/"} line $DC_HLINE. The home is the authority — change the statement to match it:"
+    awk -F'\t' -v r="$ROOT/" '
+      $1 == "DIFF" || $1 == "NOROW" {
+        p = $2; if (index(p, r) == 1) p = substr(p, length(r) + 1)
+        if ($1 == "NOROW") { printf "      %s line %s -> no pipe row before the next heading-shaped line\n", p, $3; next }
+        row = $0; sub(/^[^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t/, "", row)
+        printf "      %s line %s -> [%s]\n", p, $5, row
+      }' <<<"$DC_ST"
+  else
+    PASS "DC1: all $DC_ST_N other statement(s) of the desire-coverage header — $DC_ST_WHERE — are byte-identical to the home row, over $DC_NFILES tracked markdown file(s) the instance selection does not name. Each was found by SHAPE, fenced lines read, and never by matching the row, so a drifted statement stays in this population and is reported"
+  fi
+
+  # ── DC2 — every tracked instance. An EMPTY selection is a FAIL, never VACUOUS: the class
+  # declares a tracked witness, so nothing selected means the witness left the tree or the
+  # selector stopped reaching it.
+  DC_IN="$(dc_instances "$DC_HROW" "$ROOT" "$DC_SEL")"
+  DC_IN_EMPTY="$(dc_count "$DC_IN" EMPTY)"
+  DC_IN_SAME="$(dc_count "$DC_IN" SAME)"
+  DC_IN_ALL="$(awk 'NF { n++ } END { print n + 0 }' <<<"$DC_IN")"
+  if [ "$DC_NSEL" -eq 0 ] || [ "$DC_IN_EMPTY" -ne 0 ]; then
+    FAIL "DC2: the instance selection is EMPTY — va_select resolved no tracked file to \`$DC_ART\`. That is a failure and never a VACUOUS verdict: the class declares a tracked witness, so an empty selection means the witness left the tree or the selector stopped reaching it, and a header no instance carries is a header nothing grades"
+  elif [ "$DC_IN_SAME" -ne "$DC_NSEL" ] || [ "$DC_IN_ALL" -ne "$DC_NSEL" ]; then
+    FAIL "DC2: $((DC_NSEL - DC_IN_SAME)) of $DC_NSEL tracked instance(s) of \`$DC_ART\` do not carry the declared desire-coverage header [$DC_HROW]. Each must carry exactly one heading leading with '$DC_SEG' and, as the first pipe row under it, the home row byte for byte:"
+    awk -F'\t' -v seg="$DC_SEG" '
+      $1 == "DIFF"   { row = $0; sub(/^[^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t/, "", row); printf "      %s line %s -> [%s]\n", $2, $4, row }
+      $1 == "NOROW"  { printf "      %s line %s -> the heading is followed by no pipe row\n", $2, $3 }
+      $1 == "NOHEAD" { printf "      %s -> no heading leading with %s\n", $2, seg }
+      $1 == "MANY"   { printf "      %s -> %s headings leading with %s, where exactly one must\n", $2, $3, seg }
+      $1 == "UNREAD" { printf "      %s -> not readable\n", $2 }' <<<"$DC_IN"
+  else
+    PASS "DC2: all $DC_NSEL tracked instance(s) of \`$DC_ART\` — $(printf '%s' "$DC_SEL" | tr '\n' ' ') — carry exactly one heading leading with '$DC_SEG', and the first pipe row under it is byte-identical to the home row at ${DC_DOC#"$ROOT/"} line $DC_HLINE. The selection is the class's own, so a tracked instance added later is graded with no edit here"
+  fi
+
+  # ── DC3 — MUST FIRE. The control the gap asks for: a copy of the first selected instance
+  # whose row is replaced by the header this group was written against, graded by DC2's own
+  # function. That header is spelled HERE and nowhere else in this file; it is not the declared
+  # row, so the suite still holds no copy of that.
+  DC3_OLD='| Traveller | Desire | Tier | Covered | By |'
+  DC3_V="${DC_SEL%%"$VA_NL"*}"
+  DC3_REL='dc3-instance-under-the-old-header.md'
+  DC3_RL=0; DC3_MUT=0; DC3_AT=""; DC3_REC=""
+  if [ -n "$DC3_V" ] && [ -r "$ROOT/$DC3_V" ]; then
+    DC3_RL="$(awk -F'\t' '$3 == "H" && $4 > 0 && n == 0 { n = $4 } END { print n + 0 }' <<<"$(dc_sites "$ROOT/$DC3_V")")"
+  fi
+  if [ "$DC3_RL" -gt 0 ]; then
+    awk -v n="$DC3_RL" -v r="$DC3_OLD" 'FNR == n { print r; next } { print }' "$ROOT/$DC3_V" > "$WORK/dc/$DC3_REL"
+    cmp -s "$ROOT/$DC3_V" "$WORK/dc/$DC3_REL" || DC3_MUT=1
+    DC3_AT="$(awk -v n="$DC3_RL" 'FNR == n' "$WORK/dc/$DC3_REL")"
+    DC3_REC="$(dc_instances "$DC_HROW" "$WORK/dc" "$DC3_REL")"
+  fi
+  DC3_NDIFF="$(dc_count "$DC3_REC" DIFF)"
+  DC3_NALL="$(awk 'NF { n++ } END { print n + 0 }' <<<"$DC3_REC")"
+  DC3_ROW="$(awk -F'\t' '$1 == "DIFF" { sub(/^[^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t/, ""); print }' <<<"$DC3_REC")"
+  if [ "$DC3_RL" -eq 0 ]; then
+    FAIL "DC3: CONTROL on DC2 could not run — no selected instance carries a heading leading with '$DC_SEG' and a row under it to replace, so DC2's reading was never shown to fire"
+  elif [ "$DC3_MUT" -ne 1 ] || [ "$DC3_AT" != "$DC3_OLD" ]; then
+    FAIL "DC3: the mutation did not land — the copy of $DC3_V is byte-identical to its original, or its line $DC3_RL does not read [$DC3_OLD]. A control over an unchanged copy grades the real instance twice and proves nothing"
+  elif [ "$DC3_NDIFF" -eq 1 ] && [ "$DC3_NALL" -eq 1 ] && [ "$DC3_ROW" = "$DC3_OLD" ]; then
+    PASS "DC3: MUST FIRE — a copy of $DC3_V with its header row at line $DC3_RL replaced by [$DC3_OLD] is reported by DC2's own function as DIFFERING from the home row, and as nothing else. The mutation is asserted to have landed, so DC2's agreement above is a measurement: an instance carrying that header turns it red"
+  else
+    FAIL "DC3: CONTROL on DC2 did not fire — a copy of $DC3_V carrying [$DC3_OLD] at line $DC3_RL was graded [$(printf '%s' "$DC3_REC" | tr '\t\n' ' ;')] rather than as one differing row. DC2's clean verdict proves nothing until this control fires"
+  fi
+
+  # ── DC4 — MUST FIRE. The empty selection, on DC2's own function.
+  DC4_REC="$(dc_instances "$DC_HROW" "$ROOT" "")"
+  if [ "$DC4_REC" = "EMPTY" ]; then
+    PASS "DC4: MUST FIRE — handed an instance list naming nothing, DC2's own function returns the one EMPTY record and no agreement, so a selection of zero instances fails DC2 rather than passing over nothing"
+  else
+    FAIL "DC4: CONTROL on DC2's empty-selection limb did not fire — an empty instance list returned [$(printf '%s' "$DC4_REC" | tr '\t\n' ' ;')] rather than the one EMPTY record. A selection that reads nothing would be graded as agreement"
+  fi
+
+  # ── DC5 — MUST FIRE. A DRIFTED statement: a whole-line bold lead-in over the home row with
+  # its leading cells exchanged, built from the row read on this run, scanned by DC1's own
+  # function. The exchange is asserted to have changed the string.
+  DC5_ROW="$(awk -F'|' 'BEGIN { OFS = "|" } NF > 3 { t = $2; $2 = $3; $3 = t } { print }' <<<"$DC_HROW")"
+  DC5_FILE="$WORK/dc/dc5-drifted-statement.md"
+  printf '**%s — a statement planted in a copy, never in the tree**\n\n%s\n' "$DC_SEG" "$DC5_ROW" > "$DC5_FILE"
+  DC5_REC="$(dc_statements "$DC_HROW" "" 0 "$DC5_FILE")"
+  DC5_N="$(awk -F'\t' '$1 == "COUNT" { n = $2 } END { print n + 0 }' <<<"$DC5_REC")"
+  DC5_NDIFF="$(awk -F'\t' '$1 == "DIFF" && $4 == "B" { n++ } END { print n + 0 }' <<<"$DC5_REC")"
+  DC5_NSAME="$(dc_count "$DC5_REC" SAME)"
+  if [ "$DC5_ROW" = "$DC_HROW" ]; then
+    FAIL "DC5: the exchange did not change the row — [$DC5_ROW] is the home row itself, so this control has no drifted statement to grade"
+  elif [ "$DC5_N" -eq 1 ] && [ "$DC5_NDIFF" -eq 1 ] && [ "$DC5_NSAME" -eq 0 ]; then
+    PASS "DC5: MUST FIRE — a statement under a whole-line bold lead-in whose row is the home row with its leading cells exchanged, [$DC5_ROW], is FOUND by DC1's own function and reported as differing. The exchange is asserted to have changed the string, so DC1's agreement above is a measurement and a drifted statement does not leave the population"
+  else
+    FAIL "DC5: CONTROL on DC1 did not fire — the planted statement was graded [$(printf '%s' "$DC5_REC" | tr '\t\n' ' ;')] rather than found once and reported as differing. DC1's clean verdict proves nothing until this control fires"
+  fi
+
+  # ── DC6 — MUST NOT FIRE, on each function. An instance carrying the home row over a separator
+  # row dashed its own way and a verdict cell in bold must be graded matching by DC2's
+  # function; and a file of near-misses — a table row whose first cell is the bold token, and
+  # a prose line that opens with the bold token and goes on — must yield no statement site from
+  # DC1's. Each fixture is built from what this run read.
+  DC6_SEP="$(awk -F'|' '{ s = "|"; for (i = 2; i < NF; i++) s = s "---|"; print s }' <<<"$DC_HROW")"
+  DC6_DATA="$(awk -F'|' '{ s = "|"; for (i = 2; i < NF; i++) s = s ((i == NF - 1) ? " **covered** |" : " a fixture cell |"); print s }' <<<"$DC_HROW")"
+  DC6A_REL='dc6-matching-instance.md'
+  printf '## %s — a matching instance built in a copy, never in the tree\n\n%s\n%s\n%s\n' "$DC_SEG" "$DC_HROW" "$DC6_SEP" "$DC6_DATA" > "$WORK/dc/$DC6A_REL"
+  DC6A_REC="$(dc_instances "$DC_HROW" "$WORK/dc" "$DC6A_REL")"
+  DC6A_SAME="$(dc_count "$DC6A_REC" SAME)"
+  DC6A_ALL="$(awk 'NF { n++ } END { print n + 0 }' <<<"$DC6A_REC")"
+  DC6B_FILE="$WORK/dc/dc6-near-misses.md"
+  printf '| **%s** | a table row whose first cell is the bold token | a fixture cell |\n\n**%s** opens this prose line, and the line goes on past it.\n' "$DC_SEG" "$DC_SEG" > "$DC6B_FILE"
+  DC6B_REC="$(dc_statements "$DC_HROW" "" 0 "$DC6B_FILE")"
+  DC6B_END="$(dc_count "$DC6B_REC" COUNT)"
+  DC6B_N="$(awk -F'\t' '$1 == "COUNT" { n = $2 } END { print n + 0 }' <<<"$DC6B_REC")"
+  DC6B_ALL="$(awk 'NF { n++ } END { print n + 0 }' <<<"$DC6B_REC")"
+  DC6B_TOK="$(awk -v t="$DC_SEG" 'index($0, t) > 0 { n++ } END { print n + 0 }' "$DC6B_FILE")"
+  if [ "$DC6A_SAME" -eq 1 ] && [ "$DC6A_ALL" -eq 1 ] && [ "$DC6B_END" -eq 1 ] && [ "$DC6B_N" -eq 0 ] && [ "$DC6B_ALL" -eq 1 ] && [ "$DC6B_TOK" -gt 0 ]; then
+    PASS "DC6: MUST NOT FIRE — an instance carrying the home row over a separator row dashed its own way [$DC6_SEP] and a verdict cell in bold is graded MATCHING by DC2's function, and a file whose $DC6B_TOK line(s) each carry '$DC_SEG' as a near-miss — a table row's bold first cell, a prose line opening with the bold token — yields 0 statement sites from DC1's, which reached its closing record. Neither function matches everything: DC3 and DC5 above are what each reports when the row itself differs"
+  else
+    FAIL "DC6: specificity failed — the matching instance was graded [$(printf '%s' "$DC6A_REC" | tr '\t\n' ' ;')] where exactly one SAME record was required, or the near-miss file's $DC6B_TOK token-bearing line(s) were graded [$(printf '%s' "$DC6B_REC" | tr '\t\n' ' ;')] where a closing record counting no site was required. A reading that flags a differently dashed table, or takes a table row or a prose line for a statement, turns this group red for being right"
+  fi
+fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RS — the group rosters that DESCRIBE this suite, asserted against the run.
