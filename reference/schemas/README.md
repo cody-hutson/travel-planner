@@ -105,9 +105,11 @@ C22 `people/<person>.md` belongs to no trip, so a trip-relative anchor has nothi
 it declares `people/*.md` — the store at the repo root — and `examples/*/people/*.md` for its
 tracked witness. The rule that actually generalises is *anchor at the roots the class can occupy
 and never at `**/`*, and the trip-root pair is that rule applied to a per-trip class. Anchoring
-matters more here rather than less: the store's own contents are git-ignored, so the witness under
-`examples/` is the only instance the gate can ever reach, and a widened `**/people/*.md` would
-drop it from the index the moment `.gitignore`'s rooted rule stopped discriminating.
+matters more here rather than less: the store's own contents live under the operator's data root
+(`reference/data-model.md` § *Composition — the trip-side read of a durable record*), so the
+witness under `examples/` is the only instance the gate can ever reach, and a widened
+`**/people/*.md` would drop it from the index the moment `.gitignore`'s rooted rule stopped
+discriminating.
 
 **Two matching patterns are ranked by literal length, longest wins.** That is what lets C18
 (`outputs/<slug>.md`) ship as a genuine residual class without colliding with every named
