@@ -265,7 +265,7 @@
 #        every required check green. The fence accounts for something narrower — why no content
 #        detector read this list at all: each toggles on a fence line and skips what is inside.
 #
-#        THE MAP ROW CITES AND DOES NOT ENUMERATE, and two codes hold it to that. H4 is the row
+#        THE MAP ROW CITES AND DOES NOT ENUMERATE, and H4 and H5 hold it to that. H4 is the row
 #        without its citation — a link whose target is CH_H_DOC, and the heading's words in the
 #        row's text. H5 is H4's complement, owed because a citation that is present says nothing
 #        about what stands beside it: the row's description names a top-level entry of the
@@ -4387,24 +4387,32 @@ ctl_h_rec "CTL-H1-MET-BELOW" "$O" "H1 12:below-a-child alpha.md" "a child line w
 # because the display form is git's and a plain directory listing cannot show it: one tracked
 # top-level entry carries a double quote in its name, which git prints quoted and escaped. Read
 # NUL-delimited the entry is counted and, being unnamed, is H1; read in the display form the same
-# tree holds one entry fewer and is quiet. Both halves are the assertion.
+# tree holds one entry fewer and prints no finding for it. Both halves are the assertion.
+#
+# CTL-H1-SUFFIX — the same lister names EVERY file under the directory, not only markdown. A
+# second tracked top-level entry of that repository carries another suffix, and the enumeration
+# does not name it either. Both reads hold it and each reports it as H1; a lister narrowed to
+# markdown holds no such entry, and prints no record for it.
 D="$(ctl_g_repo hquoted)"
 HQ_NAME='ga"mma.md'
+HQ_OTHER='delta.txt'
 ctl_h_doc "$D" "$H_C1" "$H_C2" "$H_C3"; ctl_h_map "$D" "$CTL_H_ROW"
-ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md" "$CH_H_DIR/$HQ_NAME"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md" "$CH_H_DIR/$HQ_NAME" "$CH_H_DIR/$HQ_OTHER"
 ctl_g_git -C "$D" add -- "$CH_H_DOC" "$CH_H_MAP" "$CH_H_DIR"
 ch_list_h_real "$D" > "$WORK/list.hq"
 O="$(ch_scan_h "$D" "$WORK/list.hq")"
 ctl_h_rec "CTL-H1-QUOTED" "$O" "H1 - $HQ_NAME" "a tracked top-level entry whose name git quotes in its display listing is still an entry, and the enumeration does not name it"
+ctl_h_rec "CTL-H1-SUFFIX" "$O" "H1 - $HQ_OTHER" "a tracked top-level entry that is not markdown is still an entry, and the enumeration does not name it — the listing names every file under the directory whatever its suffix, and a lister narrowed to markdown would hold no such entry to report"
 HQ_NUL="$(awk '$1 == "DENOM" { print $3 }' <<<"$O")"
 ch_list_f_real "$D" > "$WORK/list.hqd"
 O="$(ch_scan_h "$D" "$WORK/list.hqd")"
 HQ_DISP="$(awk '$1 == "DENOM" { print $3 }' <<<"$O")"
 HQ_DISP_N="$(grep -c '^FINDING ' <<<"$O" || true)"
-if [ "${HQ_NUL:-0}" -eq 4 ] && [ "${HQ_DISP:-0}" -eq 3 ] && [ "${HQ_DISP_N:-1}" -eq 0 ]; then
-  PASS "CTL-H1-QUOTED-DISPLAY: the same repository listed in git's display form holds $HQ_DISP entr(ies) to the NUL-delimited read's $HQ_NUL and fires nothing — the quoted line opens with a quote and not with the directory, so the entry falls out of the comparison without a finding. That is the read the group does not use, and the difference is what the arm above measures"
+HQ_DISP_OTHER="$(CTL_H_WANT="FINDING H1 - $HQ_OTHER" awk '$0 == ENVIRON["CTL_H_WANT"] { n++ } END { print n + 0 }' <<<"$O")"
+if [ "${HQ_NUL:-0}" -eq 5 ] && [ "${HQ_DISP:-0}" -eq 4 ] && [ "${HQ_DISP_N:-0}" -eq 1 ] && [ "${HQ_DISP_OTHER:-0}" -eq 1 ]; then
+  PASS "CTL-H1-QUOTED-DISPLAY: the same repository listed in git's display form holds $HQ_DISP entr(ies) to the NUL-delimited read's $HQ_NUL, and its one finding is H1 on $HQ_OTHER, the unnamed entry git does not quote — the quoted line opens with a quote and not with the directory, so that entry falls out of the comparison without a finding. That is the read the group does not use, and the difference is what arm CTL-H1-QUOTED measures"
 else
-  FAIL "CTL-H1-QUOTED-DISPLAY: the NUL-delimited read must hold 4 entr(ies) and the display-form read 3, with no finding; they held ${HQ_NUL:-none} and ${HQ_DISP:-none}, and the display-form read reported ${HQ_DISP_N:-no} finding(s). Unless the two reads differ on this fixture, the arm above cannot tell the read the group uses from the one it replaced"
+  FAIL "CTL-H1-QUOTED-DISPLAY: the NUL-delimited read must hold 5 entr(ies) and the display-form read 4, with one finding, H1 on $HQ_OTHER; they held ${HQ_NUL:-none} and ${HQ_DISP:-none}, and the display-form read reported ${HQ_DISP_N:-no} finding(s), ${HQ_DISP_OTHER:-0} of them that record. Unless the two reads differ on this fixture by the quoted entry and nothing else, arm CTL-H1-QUOTED cannot tell the read the group uses from the one it replaced"
 fi
 
 D="$(ctl_h_mk h2)"
@@ -4486,22 +4494,47 @@ ctl_h_solely "CTL-H0-DIR-WITHHELD" "$O" H0 1 "under H0 no per-entry finding is p
 # codes must fire once, which is what shows the fixture carries them. Then the heading is doubled,
 # and the one finding printed must be H0: an unmeasured surface reports its cause and nothing
 # else, whichever verdicts it would otherwise have reached.
+#
+# CTL-H-MD-EACH and CTL-H-MD-WITHHELD — the same fixture, in both states, read by h_assert. The
+# other H arms grade the records the extractor prints, or run h_assert where nothing is wrong
+# (CTL-H-MD-PRESENT), and group MD's registration removes the extractor; these two grade what the
+# verdict function does with records that ARE there. Before the heading is doubled it must report
+# one PASS, for H0, and a FAIL for each of the other codes: a verdict that cannot fail reads here
+# as a second PASS. After, it must report no PASS and one FAIL. Both entry counts are still
+# non-zero then and the row is still found once, which the arm requires of the extractor's own
+# denominators, so the H0 the extractor reported is all that makes the surface unmeasured — and a
+# measurement state that ignored it would print a PASS for every code. Each call runs inside a
+# probe subshell, with no subject removed.
 ctl_arm H0
 D="$(ctl_h_mk h0whole)"
 ctl_h_doc "$D" "$H_C1" "# a note between two entries" "$H_C2" "$H_C3"
 ctl_h_map "$D" "| \`$CH_H_DIR/\` | Decision records, in \`adr/\` |"
 ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/gamma.md"
+ch_list_f_dir "$D" > "$WORK/list.hwhole"
 O="$(ctl_h_scan "$D")"
 HW_EACH="$(n_code "$O" H1) $(n_code "$O" H2) $(n_code "$O" H3) $(n_code "$O" H4) $(n_code "$O" H5)"
 HW_ALL="$(grep -c '^FINDING ' <<<"$O" || true)"
+HW_V_EACH="$(md_probe zzq_h_no_such_subject h_assert "$D" "$WORK/list.hwhole")"
 printf '\n%s\n\nA second section of the same name.\n' "$CH_H_HEAD" >> "$D/$CH_H_DOC"
 O="$(ctl_h_scan "$D")"
 HW_N="$(grep -c '^FINDING ' <<<"$O" || true)"
 HW_0="$(n_code "$O" H0)"
+HW_DEN="$(awk '$1 == "DENOM" { print $2, $3, $4 }' <<<"$O")"
+HW_V_HELD="$(md_probe zzq_h_no_such_subject h_assert "$D" "$WORK/list.hwhole")"
 if [ "$HW_EACH" = "1 1 1 1 1" ] && [ "${HW_ALL:-0}" -eq 5 ] && [ "${HW_N:-0}" -eq 1 ] && [ "${HW_0:-0}" -eq 1 ]; then
   PASS "CTL-H0-WHOLE: a fixture carrying an unnamed entry, a line with nothing behind it, a refused line, a row without its citation and a row naming an entry fires H1, H2, H3, H4 and H5 once each — and with its heading doubled it prints one finding, H0, and none of the five. The empty-surface contract is asserted whole, over a fixture shown to carry every verdict it withholds"
 else
   FAIL "CTL-H0-WHOLE: the fixture must fire H1, H2, H3, H4 and H5 once each before its heading is doubled (it fired '$HW_EACH', ${HW_ALL:-no} finding(s) in all), and exactly one finding, H0, after (it reported ${HW_N:-no} finding(s), ${HW_0:-0} of them H0). A per-entry or per-row verdict printed beside H0 is a verdict over a comparison that did not happen"
+fi
+if [ "$HW_V_EACH" = "1 5" ]; then
+  PASS "CTL-H-MD-EACH: over that fixture before its heading is doubled, the registered assertion reports pass=${HW_V_EACH%% *} fail=${HW_V_EACH##* } — H0 passes, because both sides were read, and H1, H2, H3, H4 and H5 each fail on the record the extractor printed for it. This is the verdict function graded over a tree that is not conformant: a verdict that could not fail would be a second PASS here, and green everywhere else"
+else
+  FAIL "CTL-H-MD-EACH: over that fixture before its heading is doubled, the registered assertion must report pass=1 fail=5 — H0 passing, and H1, H2, H3, H4 and H5 each failing on the record the extractor printed for it — and returned '${HW_V_EACH:-nothing}'. A PASS beyond the first is a verdict that did not fail on a record that was there"
+fi
+if [ "$HW_V_HELD" = "0 1" ] && [ "$HW_DEN" = "3 3 1" ]; then
+  PASS "CTL-H-MD-WITHHELD: over the same fixture with its heading doubled, the registered assertion reports pass=${HW_V_HELD%% *} fail=${HW_V_HELD##* } — one FAIL, H0, and no verdict beside it — while the extractor's denominators read '$HW_DEN': entries enumerated, entries listed and map rows found. Neither count is empty and the row stands once, so the H0 the extractor reported is all that withholds the rest, and a measurement state that ignored it would have printed a PASS for every code"
+else
+  FAIL "CTL-H-MD-WITHHELD: over the same fixture with its heading doubled, the registered assertion must report pass=0 fail=1 — H0 failing and every other verdict withheld — over denominators reading '3 3 1' (entries enumerated, entries listed, map rows found); it returned '${HW_V_HELD:-nothing}' over '${HW_DEN:-none}'. A PASS here is a verdict over a comparison the extractor refused, and denominators other than those mean the fixture no longer isolates the extractor's H0 as the one reason"
 fi
 
 D="$(ctl_h_mk h0nodoc)"
@@ -4562,6 +4595,28 @@ ctl_h_map "$D" "$CTL_H_ROW"
 ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
 O="$(ctl_h_scan "$D")"
 ctl_mustfire "CTL-H0-NODE2" H0 "$O" "the fenced tree names the directory at its root level TWICE, and the first node alone agrees with the tree — which node is the enumeration is no longer decidable, and reading the first would pass a tree whose second node says otherwise" 1
+
+# CTL-H0-FENCE-OPEN — the fence that holds the tree is opened and never closed, so the reader never
+# finds where the enumeration ends. The node and its entries are intact and agree with the
+# directory, and the map row cites: a reader that compared what it had read so far would print
+# nothing at all. The one finding must be H0, and its cause must say the fence is not closed.
+D="$(ctl_h_mk h0fenceopen)"
+{ printf '# Fixture charter\n\n%s\n\n```\n' "$CH_H_HEAD"; ctl_h_tree "${H_T}${CH_H_DIR}/    ${H_A} reference documents" "$H_C1" "$H_C2" "$H_C3"; printf '\n### After the tree\n\nThe line that closed the fence above is gone.\n'; } > "$D/$CH_H_DOC"
+ctl_h_map "$D" "$CTL_H_ROW"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_h_solely "CTL-H0-FENCE-OPEN" "$O" H0 1 "the fence that holds the tree is never closed, over a node whose entries agree with the directory and a row that cites — a list whose end the reader never found is a broken read, and comparing what was read so far would report this tree clean" "the fenced block under the heading in $CH_H_DOC is never closed"
+
+# CTL-H0-ROW2 — the map holds TWO rows keyed on the directory. The first restores a list in words
+# and cites nothing; the second is the conforming row. Which of them is the map's row is not
+# decidable, and a reader that took the last would print nothing at all over a map whose other
+# row is the defect H4 exists for. The one finding must be H0, and its cause must give the count.
+D="$(ctl_h_mk h0row2)"
+ctl_h_doc "$D" "$H_C1" "$H_C2" "$H_C3"
+ctl_h_map "$D" "| \`$CH_H_DIR/\` | Reference documents: decision records, the first document and the second |" "$CTL_H_ROW"
+ctl_h_files "$D" "$CH_H_DIR/adr/ADR-001-fixture.md" "$CH_H_DIR/alpha.md" "$CH_H_DIR/beta.md"
+O="$(ctl_h_scan "$D")"
+ctl_h_solely "CTL-H0-ROW2" "$O" H0 1 "the map holds TWO rows keyed on the directory, and the second alone carries the citation — which row is the map's is no longer decidable, and reading the last would pass a map whose first row cites nothing" "$CH_H_MAP holds 2 table row(s) keyed $CH_H_DIR/, not one"
 
 D="$(ctl_h_mk h0row)"
 ctl_h_doc "$D" "$H_C1" "$H_C2" "$H_C3"; ctl_h_map "$D"
@@ -5089,9 +5144,10 @@ fi
 # is unreachable. And every must-not-fire H arm requires the exact entry counts its fixture
 # plants, so an input that vanished reads red there and not quiet. The H control arms themselves
 # stand on the ground the class-C value-token arms record above: their subject is an awk program
-# inside the GENERATED h.awk, which `unset -f` cannot remove, and what compensates is the
-# mutation of that program each arm was observed red under, recorded with the change that added
-# the group.
+# inside the GENERATED h.awk, which `unset -f` cannot remove, or — for the arms that drive
+# h_assert or a lister — a shell function that an arm written inline cannot hand to md_flips,
+# which re-runs a function. What compensates is the mutation of its own subject each arm was
+# observed red under, recorded with the change that added the arm.
 md_flips ch_scan_h 'H' h_assert "$H_CLEAN" "$WORK/list.hclean"
 
 echo
