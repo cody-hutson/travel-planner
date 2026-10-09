@@ -16124,7 +16124,7 @@ md_flips w_site_region     'W3c' w3c_assert "$W_VERB"
 # suite read that record at all: the prohibitions were prose in the one corpus surface a
 # guard had measured as read by nothing. A prohibition nothing can fail is a promise.
 #
-# ── EVERY CLASS AND EVERY BOUNDARY IS READ FROM THE RECORD, NOT HELD HERE ────────
+# ── THE CLASSES AND BOUNDARIES THE NEVER-CARRY TABLE NAMES ARE READ FROM THE RECORD, NOT HELD HERE ──
 # The never-carry table is parsed where it stands. Row 1's lifecycle token, row 4's field
 # class and each row's boundary are taken from the table's own cells, and the membership of
 # each class is then read from its own home — § 6 for a lifecycle, the classification for a

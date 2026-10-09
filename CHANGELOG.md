@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-10-08 — The never-carries become controls that can fail
+## [0.52.0] — 2026-10-08 — The never-carries become controls that can fail
 
 Until now the engine's hardest privacy prohibitions were mostly sentences.
 `reference/adr/ADR-025-engagement-model-over-time.md` states what never carries across a phase
@@ -46,9 +46,11 @@ duplicated. The fence decides nothing: the record's closing amendment history re
 amendment that changes no decision.
 
 **The command surface's tests are graded on the text a session follows.**
-`scripts/test-command-taxonomy.sh` already failed a command's text that sets `ALLOW_PLAINTEXT` or
-passes `--yes` to the publish script. Its group `F` now also fails a construct that directs
-anything but the presence probe at a passphrase home, and it reads the conduct text bundled with a
+`scripts/test-command-taxonomy.sh` already failed a command's text that sets `ALLOW_PLAINTEXT` with
+`=` or with `export`, or passes `--yes` on the line that invokes the publish script. Its group `F`
+now also fails a construct that directs anything but the presence probe at a passphrase home
+written out in full — a token ending in `.passphrase`, or the name `STATICRYPT_PASSWORD` — and it
+reads the conduct text bundled with a
 verb and an invocation written as a whole-line code span, where it read fenced invocations in the
 verb's own text alone. A new group `W` fails a sentence in command or conduct text that binds a
 provenance mark to consent without negating it.
@@ -58,11 +60,24 @@ prose and the per-verb grants alone, which understated what was already graded. 
 passages that counted CH-3 among the unchecked channels are corrected in place, and the record's
 closing amendment history carries the account.
 
-**The honest limits.** The suites grade the authored text a session follows, not a live session,
-which this release exercises once. Never-carry 1 is graded on tracked instances only, never on
+**The honest limits.** The suites grade the authored text a session follows, not a live session.
+One live session was run for this release against a synthetic trip, and its record is
+indeterminate: neither a pass nor a failure. Seven of its eight listed steps are on record. Each
+value marked `[THIRD-PARTY]` was refused for its mark, and the first was refused again when a
+confirmation was offered in place of consent; the writes the steps permitted landed, and no marked
+value, no record of consent and no other change did. The eighth step, which presses for a third
+party's consent to be recorded, ran outside the observed window, and the session's answer to it is
+not on record. The session also had other project instructions loaded beside the engine's text, so
+the record does not show that the engine's text alone produced what was observed. Never-carry 1 is
+graded on tracked instances only, never on
 conduct that would accumulate into a rebuilt file. The passphrase-value check grades constructs
 only: a session's `Read` of a passphrase home is a tool `/trip`, `/trip-new`, `/trip-record` and
-`/trip-decommission` grant, bounded by rule, and is not graded. The consent check reads a negation
+`/trip-decommission` grant, bounded by rule, and is not graded. The flag check reads the line that
+invokes the publish script: a forbidden flag on a continuation line of the same invocation is not
+seen. The override check sees `ALLOW_PLAINTEXT` set with `=` or with `export`; set by another shell
+form — `:=` inside an expansion, `+=`, or `printf -v` — it is not seen. The passphrase-home check
+sees a home written out in full; one reached through a glob or a partial variable name is not seen.
+The consent check reads a negation
 within five words before a consent word, in its own clause, as binding it, and it does not see a
 paraphrase. The declaration places only what `ADR-030` § 2 names: on the encrypted limb the trip
 context's answers read as undetermined, and so do a desire and the occasion until the share mark
