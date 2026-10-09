@@ -29,6 +29,14 @@
 #        the match is EXACT on the normalised heading rather than a prefix: `Decision
 #        drivers` begins with `Decision`, so a prefix reader certifies a record carrying
 #        only the former. No live record has that shape; the arm is what keeps it that way.
+#        A CONVENTION SENTENCE THAT IS NOT WELL-FORMED FAILS THE GROUP, as SP2, and no
+#        record is graded against it: the read is refused. A period after a name in mid-list
+#        and a later bullet opening with the token each used to leave a shorter spine behind,
+#        and the group passed over what was left; so did a blank line inside the list, which
+#        is now read through. The parser contract below says what well-formed means, why the
+#        bullet rather than the sentence is the unit that bounds the read, and what the read
+#        DOES NOT DECIDE: a well-formed sentence that names fewer sections is read as written,
+#        and a period typed in place of the list's last separator leaves exactly that.
 #   LF   THE LIFECYCLE. A status token drawn from the lifecycle the index declares, and a
 #        Superseded record naming the record that supersedes it. The token is the value's
 #        LEADING ALPHABETIC WORD, not a substring search — three live records carry the
@@ -46,6 +54,9 @@
 #        this file can emit, each observed flipping on a mutation that is asserted to have
 #        LANDED, alongside the specificity arms that tell a correct implementation from a
 #        lookalike and the ADD-ONLY arms that close addition-blindness.
+#        The arm CTL-SP2-LIVE plants its mutation in a COPY OF THE LIVE INDEX rather than in
+#        the fixture, so the convention sentence the repository ships is graded as well as
+#        this file's own copy of it.
 #   Y    the assertion inventory, derived from this file's own emission sites and checked in
 #        BOTH DIRECTIONS. The code set is READ FROM this file on every run.
 #   PF   no verdict in this file is decided by a pipeline's exit status.
@@ -75,7 +86,7 @@
 # be IDENTICAL across all three. A reader is more likely to assume that property than to
 # check it, which is why it is an arm.
 #
-# ── THE PARSER CONTRACT — three constraints that were measured, not chosen ───────
+# ── THE PARSER CONTRACT — constraints that were measured, not chosen ─────────────
 #   1. THE HEADER BLOCK ENDS AT THE FIRST `## ` HEADING. Not a line count. Measured across
 #      the live corpus, the first heading falls anywhere from line 6 to line 169, because an
 #      amendment paragraph sits between the title and the fields. A fixed 40-line window was
@@ -89,6 +100,50 @@
 #   3. THE SPINE IS ABSENT-ONLY AND MATCHED EXACTLY. Extra sections are conventional and
 #      common; a prefix match on the spine name is satisfied by a longer heading that merely
 #      begins with it.
+#   4. THE CONVENTION SENTENCE IS READ FROM ONE BOUNDED BULLET, AND A MALFORMED ONE IS REFUSED.
+#      The spine is the first sentence of the index's `**Sections:**` bullet. The bullet is
+#      anchored on the line that OPENS it as a list item, and it is that LIST ITEM: a line
+#      indented deeper than the opening line is inside it, a blank line before it
+#      notwithstanding; a line indented no deeper ends it when it follows a blank line, opens
+#      a list item or is a heading, and continues its paragraph when it does none of those.
+#      Its list ends at the bullet's first period. It is well-formed when all of these hold:
+#        - EXACTLY ONE LINE OPENS A `**Sections:**` BULLET. The reader used to anchor on the
+#          LAST occurrence of the bare token anywhere in the text it gathered, so a later
+#          bullet opening with it moved the read — onto a shorter list that passed — and a
+#          sentence that merely mentioned it turned every record red.
+#        - THE LIST IS TERMINATED INSIDE THE BULLET. A bullet that ends before its list has
+#          reached a period states no list the reader can bound, and it does not guess one.
+#        - EVERY MIDDLE DOT IN THE BULLET STANDS BEFORE ITS FIRST PERIOD, WITH A NAME ON EACH
+#          SIDE: the names read from the first sentence are as many as the bullet's middle
+#          dots separate. A period after a name in mid-list used to end the sentence early,
+#          and the group passed over the prefix. A sentence cannot bound itself against the
+#          one character that ends it, so the BULLET bounds it — which is why a middle dot
+#          anywhere else in this one bullet is refused as well: a list resumed after a stray
+#          period and a later sentence that happens to use the separator are the same bytes.
+#          A middle dot in any OTHER bullet is outside the read and is not graded.
+#      A name therefore carries neither a period nor a middle dot. A BLANK LINE INSIDE THE
+#      LIST does not end it: the reader used to stop there and pass over the names above the
+#      break, and it now reads the list whole, as the page renders it.
+#      WHAT THIS DOES NOT DECIDE. A well-formed sentence that names fewer sections is a change
+#      to the convention, and the spine moves with it — that is the design, and the count on
+#      the CORPUS line is what keeps it visible. It stays true when the shorter sentence is
+#      what a stray period left, wherever what it left is well-formed:
+#        - A PERIOD TYPED IN PLACE OF THE LIST'S LAST SEPARATOR — ONE CHARACTER. The middle dot
+#          that would have testified against the period is the character it replaced, so the
+#          names separated and the names read agree, one short; the last name stands behind
+#          them as a sentence of its own, and the group passes without grading it. Arm
+#          CTL-SP2-NOT-LASTSEP plants exactly this and REQUIRES this verdict: the limit is
+#          asserted, not left to be discovered, and a change that closes it turns that arm
+#          over.
+#        - A PERIOD WHERE THE BULLET REALLY DOES END JUST AFTER IT, at a bullet of its own depth
+#          or at a blank line and then text at that depth: the page then states a shorter list
+#          beside a neighbour.
+#      A reader of the bullet cannot decide either. What a stray period left and what a writer
+#      shortened on purpose are the same well-formed bytes, and this file holds no count and no
+#      name to tell them by, so a reader that refused one would refuse a lawful rewrite. And a
+#      stray character that neither ends the sentence nor separates a name leaves the count
+#      alone and garbles one name, which no record then carries, so every record reads SP1:
+#      red, and for a reason one step removed.
 #
 # ── WHY THIS FILE ASSERTS NO COUNT OF ITS OWN ────────────────────────────────────
 # Every population this suite reports is EMITTED at run time from the tree it just read. No
@@ -183,8 +238,9 @@ md_probe() {   # md_probe <subject-fn> <assertion-fn> [args…] -> "<pass> <fail
 }
 
 # md_flips is the REGISTRATION primitive named by DER clause 6: for assertion X over subject
-# S, removing S must flip X specifically. This suite registers its six extractors from its
-# FIRST commit rather than shipping the empty-registration note a sibling suite still carries.
+# S, removing S must flip X specifically. This suite has registered its scanners since its
+# FIRST commit, and registers the convention reader beside them, rather than shipping the
+# empty-registration note a sibling suite still carries.
 md_flips() {   # md_flips <subject-fn> <id> <assertion-fn> [args…]
   local victim="$1" id="$2"; shift 2
   local out p f
@@ -288,31 +344,77 @@ ad_sections() {
                 print tolower(s) }' "$1"
 }
 
+# ── ad_spine_read <root> — THE CONVENTION BULLET, read once and bounded ───────────
+# Prints `SHAPE <openers> <named> <read> <terminated>` for a readable index, then EITHER one
+# `WHY <cause>` line OR the `ENTRY <name>` lines — never both. The entries are printed only
+# for a well-formed bullet, so nothing downstream can grade a record against a list this
+# reader has already refused: a caller that forgets to ask why reads an EMPTY spine, and
+# group SP's vacuity guard turns that red.
+#   <openers>     lines that open a `**Sections:**` list item, anywhere in the index
+#   <named>       the names the first such bullet separates with the middle dot, counted
+#                 over the WHOLE bullet — its middle dots, plus one
+#   <read>        the non-empty names read from its first sentence, up to its first period
+#   <terminated>  1 when the bullet carries a period at all, 0 when it does not
+# THE BULLET IS THE LIST ITEM, bounded the way the page that renders it bounds it. A line
+# indented deeper than the line that opens it is inside it, whatever it opens and whether or
+# not a blank line stands before it. A line indented no deeper ENDS it when it follows a
+# blank line, opens a list item or is a heading, and otherwise continues its paragraph. The
+# reader errs toward the WIDER bullet: text wrongly taken in can only add a middle dot or
+# garble a name — a refusal, or a red record — and text wrongly left out is how a list
+# reads short.
+# An index with no such bullet, or one that cannot be read, is `SHAPE 0 0 0 0` and nothing
+# else — ABSENT, which is SP0's to report, and not malformed. The parser contract in this
+# file's banner says why the bullet, and not the sentence, is the unit that bounds the read.
+ad_spine_read() {
+  [ -r "$1/$ADR_INDEX" ] || { printf 'SHAPE 0 0 0 0\n'; return 0; }
+  awk '
+    /^[[:space:]]*-[[:space:]]*\*\*Sections:\*\*/ {
+      openers++
+      if (openers == 1) {
+        inb = 1; gap = 0; b = $0
+        t = $0; sub(/^[[:space:]]+/, "", t); depth = length($0) - length(t)
+        next
+      }
+    }
+    inb {
+      if ($0 ~ /^[[:space:]]*$/) { gap = 1; next }
+      t = $0; sub(/^[[:space:]]+/, "", t)
+      if (length($0) - length(t) <= depth && (gap || t ~ /^-[[:space:]]/ || t ~ /^#+[[:space:]]/)) inb = 0
+      else { b = b " " $0; gap = 0 }
+    }
+    END {
+      if (openers == 0) { print "SHAPE 0 0 0 0"; exit }
+      sub(/^[[:space:]]*-[[:space:]]*\*\*Sections:\*\*/, "", b)
+      named = split(b, all, "\302\267")      # the middle dot, byte-wise under LC_ALL=C
+      p = index(b, ".")
+      s1 = (p > 0) ? substr(b, 1, p - 1) : b
+      n = split(s1, part, "\302\267"); nread = 0
+      for (i = 1; i <= n; i++) {
+        s = part[i]
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", s)
+        gsub(/[[:space:]]+/, " ", s)
+        if (s != "") ent[++nread] = tolower(s)
+      }
+      printf "SHAPE %d %d %d %d\n", openers, named, nread, (p > 0)
+      if (openers > 1)         print "WHY second-opener"
+      else if (p == 0)         print "WHY unterminated-list"
+      else if (named != nread) print "WHY entries-read-differ-from-entries-named"
+      else for (i = 1; i <= nread; i++) print "ENTRY " ent[i]
+    }' "$1/$ADR_INDEX" 2>/dev/null
+}
+
 # ── ad_spine <root> — THE EXPECTED SPINE, read from the index's own convention ────
-# The convention sentence names the sections separated by the middle dot. Read rather than
-# held, so a change to the convention moves this suite with it. Falls back to nothing —
-# group SP's vacuity guard turns an unreadable convention red rather than green.
+# The names the convention bullet's first sentence lists, less the header fields. Read rather
+# than held, so a change to the convention moves this suite with it. Prints NOTHING for a
+# bullet the reader refused or could not find: the refusal is SP2's to name and the absence
+# is SP0's, and neither is ever a shorter spine.
 ad_spine() {
   # Joined on a character no field name carries: awk's -v assignment rejects an embedded
   # newline outright, so the natural one-per-line form cannot be passed this way.
   local flds; flds="$(ad_head_fields | tr 'A-Z' 'a-z' | tr '\n' '|')"
-  awk '/\*\*Sections:\*\*/, /^$/ {
-         line = line " " $0 }
-       END {
-         if (line == "") exit
-         sub(/^.*\*\*Sections:\*\*/, "", line)
-         sub(/\..*$/, "", line)
-         n = split(line, part, "\302\267")     # the middle dot, byte-wise under LC_ALL=C
-         for (i = 1; i <= n; i++) {
-           s = part[i]
-           gsub(/^[[:space:]]+|[[:space:]]+$/, "", s)
-           gsub(/[[:space:]]+/, " ", s)
-           if (s != "") print tolower(s)
-         }
-       }' "$1/$ADR_INDEX" 2>/dev/null \
-  | awk -v f="$flds" '
+  ad_spine_read "$1" | awk -v f="$flds" '
       BEGIN { n = split(f, a, "|"); for (i = 1; i <= n; i++) if (a[i] != "") drop[a[i]] = 1 }
-      !($0 in drop) { print }'
+      $1 == "ENTRY" { s = substr($0, 7); if (!(s in drop)) print s }'
 }
 
 # ── ad_index_rows <root> — TSV "<tag>\t<link>\t<token>\t<raw>" per index row ──────
@@ -421,8 +523,17 @@ ad_scan_ix() {   # index / file agreement, both directions
 }
 
 ad_scan_sp() {   # the expected spine — ABSENT-only; an extra section must not fire
-  local root="$1" recs spine b tag f secs s nrec=0 nsec=0 nspine=0
+  local root="$1" recs raw why spine b tag f secs s nrec=0 nsec=0 nspine=0
+  local so="" sn="" sr="" st=""
   recs="$(ad_records "$root")"
+  # THE READER'S OWN VERDICT decides the measurement state, on the rule group G of
+  # test-corpus-hygiene.sh states for its own: a convention the reader refused is reported
+  # FIRST AND ALONE, as SP2 with its cause, and SP1 is withheld under it — no record is graded
+  # against a list that was not read. ad_spine prints nothing for a refused bullet, so the
+  # withholding is a property of the reader and not a branch this function has to remember.
+  raw="$(ad_spine_read "$root")"
+  why="$(awk '$1 == "WHY" { print $2 }' <<<"$raw")"
+  read -r so sn sr st <<<"$(awk '$1 == "SHAPE" { print $2, $3, $4, $5 }' <<<"$raw")"
   spine="$(ad_spine "$root")"
   while IFS= read -r s; do [ -n "$s" ] && nspine=$((nspine+1)); done <<<"$spine"
   while IFS= read -r b; do
@@ -440,9 +551,14 @@ ad_scan_sp() {   # the expected spine — ABSENT-only; an extra section must not
         || printf 'FINDING SP1 %s %s\n' "$tag" "${s// /-}"
     done <<<"$spine"
   done <<<"$recs"
-  [ "$nrec" -gt 0 ] && [ "$nsec" -gt 0 ] && [ "$nspine" -gt 0 ] \
-    || printf 'FINDING SP0 no-records-no-sections-or-no-spine\n'
-  printf 'DENOM SP %d %d %d\n' "$nrec" "$nsec" "$nspine"
+  if [ -n "$why" ]; then
+    printf 'FINDING SP2 %s openers=%s named=%s read=%s terminated=%s\n' \
+      "$why" "${so:--}" "${sn:--}" "${sr:--}" "${st:--}"
+  else
+    [ "$nrec" -gt 0 ] && [ "$nsec" -gt 0 ] && [ "$nspine" -gt 0 ] \
+      || printf 'FINDING SP0 no-records-no-sections-or-no-spine\n'
+  fi
+  printf 'DENOM SP %d %d %d %s %s\n' "$nrec" "$nsec" "$nspine" "${sn:--}" "${sr:--}"
 }
 
 ad_scan_lf() {   # the lifecycle enum, and a Superseded record naming its superseder
@@ -585,19 +701,23 @@ ad_assert_ix() {   # ad_assert_ix <root>
 }
 
 ad_assert_sp() {   # ad_assert_sp <root>
-  local out d n0 n1
+  local out d n0 n1 n2 why dr="" ds="" dp="" dn="" dd=""
   out="$(ad_scan_sp "$1")"
   if ! has_denom "$out"; then
     FAIL "SP: the spine scan produced no denominator, so it did not run — no record was graded"; return 0
   fi
   d="$(ad_denom "$out" SP)"
-  n0="$(n_code "$out" SP0)"; n1="$(n_code "$out" SP1)"
-  if [ "$n0" -gt 0 ]; then
-    FAIL "SP: the graded surface is degenerate — <records,sections,spine> = $d. A spine read as empty certifies every record trivially"
+  read -r dr ds dp dn dd <<<"$d"
+  n0="$(n_code "$out" SP0)"; n1="$(n_code "$out" SP1)"; n2="$(n_code "$out" SP2)"
+  if [ "$n2" -gt 0 ]; then
+    why="$(awk '$1 == "FINDING" && $2 == "SP2" { $1 = ""; $2 = ""; sub(/^ +/, ""); print }' <<<"$out")"
+    FAIL "SP: the spine is NOT a measurement on this run — the index's convention sentence is not well-formed ($why), so the reader refused it, no record was graded and SP1 is withheld. The bullet's middle dots separate $dn name(s) and $dd were read from its first sentence. A refused sentence is never a shorter spine: before this guard a period after a name in mid-list left a prefix behind and this group passed over it. Well-formed means exactly one line opens a Sections bullet, the list ends at a period inside that bullet, and every middle dot in the bullet stands before that period with a name on each side — the parser contract in this file's banner records why each is required"
+  elif [ "$n0" -gt 0 ]; then
+    FAIL "SP: the graded surface is degenerate — <records,sections,spine> = $dr $ds $dp. A spine read as empty certifies every record trivially"
   elif [ "$n1" -eq 0 ]; then
-    PASS "SP: every record carries every expected-spine section — <records,sections,spine-entries> = $d. Extra sections are admitted by the index's own escape hatch and are not graded"
+    PASS "SP: every record carries every expected-spine section — <records,sections,spine-entries> = $dr $ds $dp. The convention bullet's middle dots separate $dn name(s) and $dd were read from its first sentence. The names among them that are header fields are group HD's. Extra sections are admitted by the index's own escape hatch and are not graded"
   else
-    FAIL "SP: $n1 expected-spine section(s) absent over <records,sections,spine-entries> = $d — $(grep '^FINDING SP1 ' <<<"$out" | awk '{ print $3 " lacks " $4 }' | tr '\n' ';'). This is the known day-one backlog and the whole of the flip-to-enforce condition; this card ships a mechanism and may not edit a record"
+    FAIL "SP: $n1 expected-spine section(s) absent over <records,sections,spine-entries> = $dr $ds $dp — $(grep '^FINDING SP1 ' <<<"$out" | awk '{ print $3 " lacks " $4 }' | tr '\n' ';'). Each finding means one of two things: the record lacks a section the convention sentence names, or the sentence names something no record carries. Where every record lacks the same name, read the sentence before the records"
   fi
   return 0
 }
@@ -780,7 +900,7 @@ ad_assert_ix "$ROOT"
 
 echo
 echo "── Group SP — the expected spine, absent-only; an extra section is admitted."
-echo "SP0" >> "$SURF_LOG"; echo "SP1" >> "$SURF_LOG"
+for c in SP0 SP1 SP2; do echo "$c" >> "$SURF_LOG"; done
 ad_assert_sp "$ROOT"
 
 echo
@@ -929,6 +1049,357 @@ fi
 D="$WORK/sp0"; ctl_clean "$D"
 printf '# Architecture Decision Records\n\nNo convention block at all.\n' > "$D/$ADR_INDEX"
 ctl_mustfire "CTL-SP0" SP0 "$(ad_scan_sp "$D")" "the index carries no Sections convention, so the expected spine reads empty" 1
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# SP2 — THE CONVENTION SENTENCE IS REFUSED WHEN IT IS NOT WELL-FORMED.
+#
+# Every fixture arm in this block rewrites the fixture INDEX and leaves the fixture records
+# alone, so the conformant fixture's own spine scan is the reference each is read against.
+# Each MUST-FIRE arm plants one spelling the reader refuses — most of them spellings it used
+# to read short and green — and each MUST-NOT-MOVE arm plants a lawful neighbour of one and
+# requires the read to stay exactly where it was. The MUST-NOT-FIRE arms hold what the
+# refusal leaves open: a well-formed shorter list is read as written, whether its writer
+# shortened it or a period typed in place of its last separator did. The last arm plants the
+# truncating spelling in a copy of the LIVE index.
+# ═════════════════════════════════════════════════════════════════════════════════
+SP_REF="$(ad_denom "$(ad_scan_sp "$CLEAN")" SP)"
+SP_REF_NAMES="$(ad_spine "$CLEAN")"
+
+# ctl_sp_plant <root> <awk-program> — rewrite that root's index through one awk program.
+ctl_sp_plant() { awk "$2" "$1/$ADR_INDEX" > "$1/tmp" && mv "$1/tmp" "$1/$ADR_INDEX"; }
+
+# ctl_sp_refused <label> <root> <want> <what> — SP2 MUST FIRE: once, ALONE, FOR THE CAUSE
+# NAMED, and HANDING ON NO SPINE. The cause and its figures are the assertion, not merely the
+# firing: an arm that accepted any SP2 would pass when a planted period was refused for some
+# other reason, and an arm that passes for the wrong reason is indistinguishable from one that
+# tests nothing. The empty spine is asserted too, because a refusal that still printed the
+# prefix it read would leave that prefix for something to grade against.
+ctl_sp_refused() {
+  local label="$1" out got n2 nsp
+  out="$(ad_scan_sp "$2")"
+  ctl_arm SP2
+  n2="$(n_code "$out" SP2)"
+  got="$(awk '$1 == "FINDING" && $2 == "SP2" { $1 = ""; $2 = ""; sub(/^ +/, ""); print }' <<<"$out")"
+  nsp="$(awk '$1 == "DENOM" && $2 == "SP" { print $5 }' <<<"$out")"
+  if [ "$n2" -ne 1 ]; then
+    FAIL "$label: MUST FIRE once — $4, and the scan reported SP2 $n2 time(s). A convention the reader does not refuse is a convention it reads short"
+  elif [ "$got" != "$3" ]; then
+    FAIL "$label: SP2 fired for the WRONG CAUSE — $4. Wanted '$3' and read '$got', so the planted spelling is not what this arm is witnessing"
+  elif [ "$(n_code "$out" SP1)" -ne 0 ] || [ "$(n_code "$out" SP0)" -ne 0 ]; then
+    FAIL "$label: SP2 did not fire ALONE — $4, and the scan also reported SP1 $(n_code "$out" SP1) time(s) and SP0 $(n_code "$out" SP0) time(s). A record graded against a refused list is a verdict about nothing"
+  elif [ "$nsp" != "0" ]; then
+    FAIL "$label: the refused convention still handed on a spine — $4, and the scan's denominator carries '$nsp' spine entr(ies) where a refusal carries none. A prefix that leaves the reader is a prefix something will grade against"
+  else
+    PASS "$label: SP2 fired once and alone, handing on no spine ($got) — $4"
+  fi
+}
+
+# ctl_sp_holds <label> <root> <what> — THE READ DID NOT MOVE. Silence alone is not accepted as
+# a hold: the scan must have run, must report neither SP2 nor SP0, and must return the
+# conformant fixture's own denominator AND its own names — the same spine, not merely a spine
+# of the same length.
+ctl_sp_holds() {
+  local label="$1" out d names
+  out="$(ad_scan_sp "$2")"
+  if ! has_denom "$out"; then
+    FAIL "$label: the spine scan produced no denominator, so it did not run — its silence on SP2 is not a hold"; return 0
+  fi
+  d="$(ad_denom "$out" SP)"
+  names="$(ad_spine "$2")"
+  if [ -z "$SP_REF" ] || [ -z "$SP_REF_NAMES" ]; then
+    FAIL "$label: the conformant fixture's own spine read returned nothing, so there is nothing to hold this read against"
+  elif [ "$(n_code "$out" SP2)" -eq 0 ] && [ "$(n_code "$out" SP0)" -eq 0 ] && [ "$d" = "$SP_REF" ] && [ "$names" = "$SP_REF_NAMES" ]; then
+    PASS "$label: the read is unmoved — <records,sections,spine-entries,names-separated,names-read> = $d and every name equal to the conformant fixture's own — $3"
+  else
+    FAIL "$label: the read MOVED on an input it must not move on — $3. It returned <records,sections,spine-entries,names-separated,names-read> = $d against the conformant fixture's $SP_REF, and the names '$(printf '%s' "$names" | tr '\n' ';')' against '$(printf '%s' "$SP_REF_NAMES" | tr '\n' ';')': $(grep '^FINDING SP' <<<"$out" | tr '\n' ';')"
+  fi
+}
+
+# ── SP2 — a period after a name in MID-LIST. The spelling this code exists for: the reader
+#    ended the sentence there and the group passed over the names before it.
+D="$WORK/sp2trunc"; ctl_clean "$D"
+ctl_sp_plant "$D" '{ sub("Decision drivers \302\267", "Decision drivers. \302\267"); print }'
+if ctl_landed "CTL-SP2-TRUNC" "$D/$ADR_INDEX" 'Decision drivers\. '; then
+  ctl_sp_refused "CTL-SP2-TRUNC" "$D" 'entries-read-differ-from-entries-named openers=1 named=7 read=3 terminated=1' "a period was planted after 'Decision drivers', in mid-list"
+fi
+
+# ── SP2, THE VERDICT — group SP itself reads FAIL over that truncated index, and PASS over
+#    the conformant one. Every other arm in this block grades a FINDING; this one grades what
+#    the group SAYS, because the defect this code exists for was a verdict: the read came back
+#    short and the group passed. With SP1 withheld and SP0 silent under a refusal, an assertion
+#    that did not read SP2 would pass over a convention nobody read, and no finding-level arm
+#    would see it. zzq_no_subject names no function, so the oracle removes nothing here: it is
+#    used for its counting subshell alone.
+SPV_BAD="$(md_probe zzq_no_subject ad_assert_sp "$WORK/sp2trunc")"
+SPV_OK="$(md_probe zzq_no_subject ad_assert_sp "$CLEAN")"
+if [ "$SPV_BAD" = "0 1" ] && [ "$SPV_OK" = "1 0" ]; then
+  PASS "CTL-SP2-VERDICT: group SP's own assertion reports exactly one FAIL and no PASS over the index CTL-SP2-TRUNC planted its period in, and exactly one PASS and no FAIL over the conformant fixture — the refusal reaches the verdict, which is where the defect was"
+else
+  FAIL "CTL-SP2-VERDICT: group SP's own assertion returned <pass fail> = '$SPV_BAD' over the truncated index and '$SPV_OK' over the conformant one, where '0 1' and '1 0' are required — a refusal that does not reach the verdict leaves the group passing over a convention it did not read"
+fi
+
+# ── SP2 — the same period, EARLY: after the first name that is not a header field.
+D="$WORK/sp2early"; ctl_clean "$D"
+ctl_sp_plant "$D" '{ sub("Context \302\267", "Context. \302\267"); print }'
+if ctl_landed "CTL-SP2-TRUNC-EARLY" "$D/$ADR_INDEX" 'Context\. '; then
+  ctl_sp_refused "CTL-SP2-TRUNC-EARLY" "$D" 'entries-read-differ-from-entries-named openers=1 named=7 read=2 terminated=1' "a period was planted after 'Context', the first name that is not a header field"
+fi
+
+# ── SP2 — the same period, LATE: after the name before the last. The read is ONE short,
+#    which is the truncation hardest to notice in a printed count.
+D="$WORK/sp2late"; ctl_clean "$D"
+ctl_sp_plant "$D" '{ sub("Consequences \302\267", "Consequences. \302\267"); print }'
+if ctl_landed "CTL-SP2-TRUNC-LATE" "$D/$ADR_INDEX" 'Consequences\. '; then
+  ctl_sp_refused "CTL-SP2-TRUNC-LATE" "$D" 'entries-read-differ-from-entries-named openers=1 named=7 read=6 terminated=1' "a period was planted after 'Consequences', leaving the read one name short"
+fi
+
+# ── SP2 — the same period after the HEADER FIELD that opens the list. Every name the reader
+#    is left with is a header field, so the spine it would hand on is empty: this is the one
+#    spelling the vacuity guard already caught, and it is refused here for its cause instead.
+D="$WORK/sp2head"; ctl_clean "$D"
+ctl_sp_plant "$D" '{ sub("Status \302\267", "Status. \302\267"); print }'
+if ctl_landed "CTL-SP2-TRUNC-HEAD" "$D/$ADR_INDEX" 'Status\. '; then
+  ctl_sp_refused "CTL-SP2-TRUNC-HEAD" "$D" 'entries-read-differ-from-entries-named openers=1 named=7 read=1 terminated=1' "a period was planted after 'Status', the header field that opens the list"
+fi
+
+# ── SP2 — a period, then a PARAGRAPH BREAK. The names after the break are still inside the
+#    bullet: a blank line does not end a list item, and they are still indented under it. So
+#    what the period left is not a short, well-formed list. It is a list cut in two.
+D="$WORK/sp2split"; ctl_clean "$D"
+ctl_sp_plant "$D" '{ sub("Context \302\267 ", "Context.\n\n  "); print }'
+if awk 'prev ~ /Context\.$/ && $0 == "" { hit = 1 } { prev = $0 } END { exit(hit ? 0 : 1) }' "$D/$ADR_INDEX"; then
+  ctl_sp_refused "CTL-SP2-SPLIT" "$D" 'entries-read-differ-from-entries-named openers=1 named=6 read=2 terminated=1' "a period and a blank line were planted after 'Context', leaving the rest of the list in a second paragraph of the same bullet"
+else
+  FAIL "CTL-SP2-SPLIT: the mutation did not land — no line ending 'Context.' is followed by a blank line, so the verdict below would grade an unmutated index"
+fi
+
+# ── SP2 — a period, then the rest of the list as a NESTED list item. A list item indented
+#    under the bullet is inside the bullet; only one at the bullet's own depth ends it.
+D="$WORK/sp2nest"; ctl_clean "$D"
+ctl_sp_plant "$D" '{ sub("Context \302\267 ", "Context.\n  - "); print }'
+if ctl_landed "CTL-SP2-NEST" "$D/$ADR_INDEX" '^  - Decision drivers '; then
+  ctl_sp_refused "CTL-SP2-NEST" "$D" 'entries-read-differ-from-entries-named openers=1 named=6 read=2 terminated=1' "a period was planted after 'Context' and the rest of the list made a list item nested under the bullet"
+fi
+
+# ── SP2 — a period, then a LINE BREAK with nothing indented after it. A line at the
+#    bullet's own depth that follows no blank line and opens nothing continues the bullet's
+#    paragraph, so the names on it are still inside the bullet.
+D="$WORK/sp2lazy"; ctl_clean "$D"
+ctl_sp_plant "$D" '{ sub("Context \302\267 ", "Context.\n"); print }'
+if ctl_landed "CTL-SP2-LAZY" "$D/$ADR_INDEX" '^Decision drivers '; then
+  ctl_sp_refused "CTL-SP2-LAZY" "$D" 'entries-read-differ-from-entries-named openers=1 named=6 read=2 terminated=1' "a period and a line break were planted after 'Context', leaving the rest of the list on an unindented line of the same paragraph"
+fi
+
+# ── SP2 — a PARAGRAPH BREAK inside the list, and THEN a period and a line break with nothing
+#    indented after it. The blank line was answered by the indented line that followed it:
+#    that line is inside the bullet, and the bullet's paragraph resumes there. So the
+#    unindented line further down follows NO blank line. It continues the paragraph, as in
+#    CTL-SP2-LAZY, and the names on it are still inside the bullet. A reader that went on
+#    remembering the blank line would end the bullet at that line and read the names above the
+#    period as a whole, well-formed list — short, and green.
+D="$WORK/sp2reset"; ctl_clean "$D"
+ctl_sp_plant "$D" '{ sub("Context \302\267 Decision drivers \302\267 Options considered \302\267 ", "Context \302\267\n\n  Decision drivers \302\267 Options considered.\n"); print }'
+if ! awk 'prev ~ /Context [^ ]+$/ && $0 == "" { hit = 1 } { prev = $0 } END { exit(hit ? 0 : 1) }' "$D/$ADR_INDEX"; then
+  FAIL "CTL-SP2-RESET: the mutation did not land — no blank line follows a line ending at the separator after 'Context', so the verdict below would grade an unmutated index"
+elif ctl_landed "CTL-SP2-RESET" "$D/$ADR_INDEX" '^  Decision drivers [^ ][^ ] Options considered\.$' \
+     && ctl_landed "CTL-SP2-RESET" "$D/$ADR_INDEX" '^Decision [^ ][^ ]$'; then
+  ctl_sp_refused "CTL-SP2-RESET" "$D" 'entries-read-differ-from-entries-named openers=1 named=6 read=4 terminated=1' "a paragraph break was planted inside the list after 'Context', then a period after 'Options considered' and a line break, leaving the rest of the list on an unindented line of the bullet's second paragraph"
+fi
+
+# ── SP2 — the list CUT OFF by the next bullet, with no period reached. A bullet at the
+#    Sections bullet's own depth ends it, and a list that ends there has no terminator: the
+#    reader does not guess where it would have ended. The cut is made after a WHOLE name —
+#    the separator that trailed it is taken off — so the names read and the names separated
+#    AGREE, and the missing period is the only thing left to refuse it for.
+D="$WORK/sp2cut"; ctl_clean "$D"
+ctl_sp_plant "$D" '/\*\*Sections:\*\*/ { sub(" \302\267$", ""); print; print "- **Aside:** unrelated."; next } { print }'
+if ctl_landed "CTL-SP2-CUT" "$D/$ADR_INDEX" '\*\*Sections:\*\*.* Decision$' \
+   && ctl_landed "CTL-SP2-CUT" "$D/$ADR_INDEX" '^- \*\*Aside:\*\* unrelated\.$'; then
+  ctl_sp_refused "CTL-SP2-CUT" "$D" 'unterminated-list openers=1 named=5 read=5 terminated=0' "the line that opens the Sections bullet was ended after a whole name and a bullet at its own depth planted directly after it, before the list's period"
+fi
+
+# ── SP2 — a SECOND bullet opening with the token, whose own text reads as a list every
+#    fixture record satisfies. The reader used to anchor on the last token it gathered, so
+#    this moved the read onto the shorter list and the group passed.
+D="$WORK/sp2opener"; ctl_clean "$D"
+ctl_sp_plant "$D" '/\*\*Status lifecycle:\*\*/ { print "- **Sections:** Context \302\267 Decision." } { print }'
+if ctl_landed "CTL-SP2-OPENER" "$D/$ADR_INDEX" '^- \*\*Sections:\*\* Context '; then
+  ctl_sp_refused "CTL-SP2-OPENER" "$D" 'second-opener openers=2 named=7 read=7 terminated=1' "a second bullet opening with the Sections token was planted after the first, carrying a shorter list every fixture record satisfies"
+fi
+
+# ── SP2 — a middle dot in a LATER SENTENCE of the same bullet. A list resumed after a stray
+#    period and a later sentence that uses the separator are the same bytes, so the reader
+#    cannot admit one without admitting the other; it refuses both.
+D="$WORK/sp2dot"; ctl_clean "$D"
+ctl_sp_plant "$D" '/\*\*Status lifecycle:\*\*/ { print "  An aside \302\267 a remark." } { print }'
+if ctl_landed "CTL-SP2-DOT" "$D/$ADR_INDEX" '^  An aside [^ ][^ ] a remark\.$'; then
+  ctl_sp_refused "CTL-SP2-DOT" "$D" 'entries-read-differ-from-entries-named openers=1 named=8 read=7 terminated=1' "a sentence carrying a middle dot was planted as the last line of the Sections bullet, after the list's own period"
+fi
+
+# ── SP2 — a DOUBLED separator in mid-list: a name that is empty. The reader used to drop it
+#    without a word.
+D="$WORK/sp2sep"; ctl_clean "$D"
+ctl_sp_plant "$D" '{ sub("Context \302\267", "Context \302\267 \302\267"); print }'
+if ctl_landed "CTL-SP2-SEP" "$D/$ADR_INDEX" 'Context [^ ][^ ] [^ ][^ ] Decision drivers'; then
+  ctl_sp_refused "CTL-SP2-SEP" "$D" 'entries-read-differ-from-entries-named openers=1 named=8 read=7 terminated=1' "a second middle dot was planted after 'Context', leaving an empty name in mid-list"
+fi
+
+# ── SP2 MUST-NOT-MOVE — a PERIOD in the bullet's second sentence. The list has already ended;
+#    a period after it is prose, and the read must not notice.
+D="$WORK/sp2notperiod"; ctl_clean "$D"
+ctl_sp_plant "$D" '/\*\*Status lifecycle:\*\*/ { print "  See e.g. the records themselves." } { print }'
+if ctl_landed "CTL-SP2-NOT-PERIOD" "$D/$ADR_INDEX" '^  See e\.g\. the records themselves\.$'; then
+  ctl_sp_holds "CTL-SP2-NOT-PERIOD" "$D" "a sentence carrying periods of its own and no middle dot was planted as the last line of the Sections bullet"
+fi
+
+# ── SP2 MUST-NOT-MOVE — the words after the list REPLACED. What follows the list's period is
+#    free prose so long as it carries no middle dot, which is what lets a later change correct
+#    it. The arm anchors on the list's last name and on nothing the prose says, so it does not
+#    have to be edited when that prose is.
+D="$WORK/sp2notreword"; ctl_clean "$D"
+ctl_sp_plant "$D" '{ sub(/References\..*$/, "References. A record states what follows from it."); print }'
+if ctl_landed "CTL-SP2-NOT-REWORD" "$D/$ADR_INDEX" 'References\. A record states what follows from it\.$'; then
+  ctl_sp_holds "CTL-SP2-NOT-REWORD" "$D" "everything after the list's period on its own line was replaced by different words"
+fi
+
+# ── SP2 MUST-NOT-MOVE — a BLANK LINE inside the list, the rest still indented under the
+#    bullet. The list is whole, in two paragraphs of one list item, and it is read whole. The
+#    reader used to stop at the blank line and hand on the names above it.
+D="$WORK/sp2notblank"; ctl_clean "$D"
+ctl_sp_plant "$D" '{ print } /\*\*Sections:\*\*/ { print "" }'
+if awk 'prev ~ /\*\*Sections:\*\*/ && $0 == "" { hit = 1 } { prev = $0 } END { exit(hit ? 0 : 1) }' "$D/$ADR_INDEX"; then
+  ctl_sp_holds "CTL-SP2-NOT-BLANK" "$D" "a blank line was planted inside the list, after the line that opens the bullet"
+else
+  FAIL "CTL-SP2-NOT-BLANK: the mutation did not land — no blank line follows the line that opens the Sections bullet, so the verdict below would grade an unmutated index"
+fi
+
+# ── SP2 MUST-NOT-MOVE — an UNINDENTED PARAGRAPH after a blank line, carrying middle dots.
+#    A blank line followed by text at the bullet's own depth is where the bullet ends, so
+#    that paragraph is outside the read.
+D="$WORK/sp2notpara"; ctl_clean "$D"
+ctl_sp_plant "$D" '/\*\*Status lifecycle:\*\*/ { print ""; print "A paragraph of its own \302\267 with a separator \302\267 or two."; print "" } { print }'
+if ctl_landed "CTL-SP2-NOT-PARA" "$D/$ADR_INDEX" '^A paragraph of its own '; then
+  ctl_sp_holds "CTL-SP2-NOT-PARA" "$D" "an unindented paragraph carrying middle dots was planted after the Sections bullet, behind a blank line"
+fi
+
+# ── SP2 MUST-NOT-MOVE — a HEADING carrying a middle dot, directly after the bullet's last
+#    line with no blank line between. A heading at the bullet's own depth ends the bullet
+#    whether or not a blank line stands before it.
+D="$WORK/sp2notheading"; ctl_clean "$D"
+ctl_sp_plant "$D" '/\*\*Status lifecycle:\*\*/ { print "## A heading \302\267 with a separator" } { print }'
+if ctl_landed "CTL-SP2-NOT-HEADING" "$D/$ADR_INDEX" '^## A heading '; then
+  ctl_sp_holds "CTL-SP2-NOT-HEADING" "$D" "a heading carrying a middle dot was planted directly after the Sections bullet, with no blank line between them"
+fi
+
+# ── SP2 MUST-NOT-MOVE — a LATER BULLET carrying middle dots. The read is bounded by the
+#    bullet and not by the paragraph the bullets share, so a neighbour's separators are
+#    outside it: the index now carries more middle dots than the read counts.
+D="$WORK/sp2notbullet"; ctl_clean "$D"
+ctl_sp_plant "$D" '/\*\*Status lifecycle:\*\*/ { print "- **Related terms:** alpha \302\267 beta \302\267 gamma." } { print }'
+if ctl_landed "CTL-SP2-NOT-BULLET" "$D/$ADR_INDEX" '^- \*\*Related terms:\*\* alpha '; then
+  ctl_sp_holds "CTL-SP2-NOT-BULLET" "$D" "a bullet carrying two middle dots was planted directly after the Sections bullet, with no blank line between them"
+fi
+
+# ── SP2 MUST-NOT-MOVE — a later bullet that MENTIONS the token in mid-line. The anchor is
+#    the line that opens the bullet, not the bare token: the reader used to re-anchor here
+#    and turn every record red.
+D="$WORK/sp2notmention"; ctl_clean "$D"
+ctl_sp_plant "$D" '/\*\*Status lifecycle:\*\*/ { print "- **Extra sections.** The `**Sections:**` bullet above lists the spine." } { print }'
+if ctl_landed "CTL-SP2-NOT-MENTION" "$D/$ADR_INDEX" 'bullet above lists the spine'; then
+  ctl_sp_holds "CTL-SP2-NOT-MENTION" "$D" "a later bullet naming the Sections token in mid-line was planted after the Sections bullet"
+fi
+
+# ── SP2 MUST-NOT-FIRE — a WELL-FORMED SHORTER LIST. A sentence that names fewer sections and
+#    ends where it says it does is a change to the convention, not a malformed one: the spine
+#    moves with it, which is the design, and the count this run prints is what shows it. The
+#    arm is here so that boundary is asserted rather than left to be discovered — a guard that
+#    began refusing a lawful shorter list would be a held count by another name.
+D="$WORK/sp2notshorter"; ctl_clean "$D"
+ctl_sp_plant "$D" '
+  /\*\*Sections:\*\*/ { print "- **Sections:** Status \302\267 Context \302\267 Decision. This list is the whole of it."; drop = 1; next }
+  drop && /^  / { next }
+  { drop = 0; print }'
+if ctl_landed "CTL-SP2-NOT-SHORTER" "$D/$ADR_INDEX" 'Decision\. This list is the whole of it\.$'; then
+  SPS_OUT="$(ad_scan_sp "$D")"
+  SPS_NAMES="$(ad_spine "$D" | tr '\n' ';')"
+  if has_denom "$SPS_OUT" && [ "$(n_code "$SPS_OUT" SP2)" -eq 0 ] && [ "$(n_code "$SPS_OUT" SP0)" -eq 0 ] \
+     && [ "$(n_code "$SPS_OUT" SP1)" -eq 0 ] && [ "$SPS_NAMES" = "context;decision;" ]; then
+    PASS "CTL-SP2-NOT-SHORTER: a well-formed list naming fewer sections is read as written — the spine is '$SPS_NAMES' and neither SP2 nor SP0 nor SP1 fired — so the convention still moves this suite, and only a malformed sentence is refused"
+  else
+    FAIL "CTL-SP2-NOT-SHORTER: a well-formed shorter list was not read as written — the spine came back '$SPS_NAMES' where 'context;decision;' is required: $(grep '^FINDING SP' <<<"$SPS_OUT" | tr '\n' ';'). A reader that refuses a lawful change to the convention has stopped reading the convention"
+  fi
+fi
+
+# ── SP2 MUST-NOT-FIRE, A DECLARED LIMIT — a period typed IN PLACE OF THE LIST'S LAST
+#    SEPARATOR. One character. The middle dot that would have testified against the period is
+#    the character it replaced, so the bullet's middle dots separate one name fewer and exactly
+#    that many are read: a well-formed list, one name short, with the last name left behind it
+#    as a sentence of its own. The reader reads it as written and the group passes at the
+#    smaller count, which this run prints and nothing else shows. The parser contract in this
+#    file's banner declares it under WHAT THIS DOES NOT DECIDE. The arm PINS that verdict, so
+#    the limit is asserted rather than left to be discovered: a change that makes the reader
+#    refuse this input turns this arm red, and has to turn it over — into a MUST-FIRE arm —
+#    and take the limit out of the contract in the same change.
+D="$WORK/sp2notlastsep"; ctl_clean "$D"
+ctl_sp_plant "$D" '{ sub("Consequences \302\267 References", "Consequences . References"); print }'
+if ctl_landed "CTL-SP2-NOT-LASTSEP" "$D/$ADR_INDEX" 'Consequences \. References\.'; then
+  SPQ_OUT="$(ad_scan_sp "$D")"
+  SPQ_D="$(ad_denom "$SPQ_OUT" SP)"
+  SPQ_NAMES="$(ad_spine "$D" | tr '\n' ';')"
+  if has_denom "$SPQ_OUT" && [ "$(n_code "$SPQ_OUT" SP2)" -eq 0 ] && [ "$(n_code "$SPQ_OUT" SP0)" -eq 0 ] \
+     && [ "$(n_code "$SPQ_OUT" SP1)" -eq 0 ] \
+     && [ "$SPQ_NAMES" = "context;decision drivers;options considered;decision;consequences;" ]; then
+    PASS "CTL-SP2-NOT-LASTSEP: A DECLARED LIMIT, HELD — a period typed in place of the list's last separator leaves a well-formed list one name short, and it is read as written: the spine is '$SPQ_NAMES' over <records,sections,spine-entries,names-separated,names-read> = $SPQ_D, and neither SP2 nor SP0 nor SP1 fired. The name the period cut off is not graded and the group passes; the count this run prints is what shows it. The arm asserts that limit so it is not left to be discovered"
+  else
+    FAIL "CTL-SP2-NOT-LASTSEP: the DECLARED LIMIT MOVED — a period typed in place of the list's last separator is no longer read as the well-formed shorter list it leaves. The spine came back '$SPQ_NAMES' where 'context;decision drivers;options considered;decision;consequences;' is the pinned read, over <records,sections,spine-entries,names-separated,names-read> = $SPQ_D: $(grep '^FINDING SP' <<<"$SPQ_OUT" | tr '\n' ';'). If the reader now refuses this input on purpose, the limit is closed: make this a MUST-FIRE arm and take the limit out of the parser contract in the same change. If it does not, the read moved on an input this arm pins"
+  fi
+fi
+
+# ── SP2 ON THE LIVE SENTENCE — the truncating period, planted in a COPY OF THE REAL INDEX.
+# Every arm above grades the copy of the convention bullet this file writes into its own
+# fixture, and a fixture can drift from the sentence the repository ships. This arm grades
+# those bytes instead: it copies the live index, plants a period before the last middle dot
+# on the line that opens the bullet, and requires the refusal — with the names the bullet
+# separates unchanged and the names read fallen below them. The position is derived from the
+# line and no name is written here, so a change to the convention needs no edit to this arm.
+# Where the live sentence offers no such position, or is already refused, the arm is VACUOUS
+# and says which: the live verdict above and the fixture arms carry it then.
+D="$WORK/sp2live"; mkdir -p "$D/$ADR_DIR"
+SPL_NAMED=""; SPL_WHY0="unread"
+if [ -r "$ROOT/$ADR_INDEX" ]; then
+  cp "$ROOT/$ADR_INDEX" "$D/$ADR_INDEX"
+  SPL_RAW="$(ad_spine_read "$D")"
+  SPL_NAMED="$(awk '$1 == "SHAPE" { print $3 }' <<<"$SPL_RAW")"
+  SPL_WHY0="$(awk '$1 == "WHY" { print $2 }' <<<"$SPL_RAW")"
+  ctl_sp_plant "$D" '
+    /^[[:space:]]*-[[:space:]]*\*\*Sections:\*\*/ && !done {
+      n = split($0, seg, "\302\267")
+      if (n > 1) {
+        line = seg[1]
+        for (i = 2; i <= n; i++) line = line (i == n ? ".\302\267" : "\302\267") seg[i]
+        $0 = line; done = 1
+      }
+    }
+    { print }'
+fi
+if [ -n "$SPL_WHY0" ]; then
+  VACUOUS "CTL-SP2-LIVE: the live convention sentence is not a well-formed one to plant a period in ($SPL_WHY0), so this arm proved nothing about it. Group SP's own verdict above reports that sentence, and the CTL-SP2-TRUNC arms carry the firing on the fixture"
+elif cmp -s "$ROOT/$ADR_INDEX" "$D/$ADR_INDEX"; then
+  VACUOUS "CTL-SP2-LIVE: the line that opens the live Sections bullet carries no middle dot, so it offers no mid-list position to plant a period at and this arm proved nothing about it. The CTL-SP2-TRUNC arms carry the firing on the fixture"
+else
+  SPL_OUT="$(ad_scan_sp "$D")"
+  ctl_arm SP2
+  SPL_GOT="$(awk '$1 == "FINDING" && $2 == "SP2" { $1 = ""; $2 = ""; sub(/^ +/, ""); print }' <<<"$SPL_OUT")"
+  SPL_N="${SPL_GOT#*named=}"; SPL_N="${SPL_N%% *}"
+  SPL_R="${SPL_GOT#*read=}";  SPL_R="${SPL_R%% *}"
+  if [ "$(n_code "$SPL_OUT" SP2)" -ne 1 ]; then
+    FAIL "CTL-SP2-LIVE: MUST FIRE once — a period was planted before the last middle dot on the line that opens the LIVE Sections bullet, and the scan reported SP2 $(n_code "$SPL_OUT" SP2) time(s). The sentence this repository ships can be read short"
+  elif [ "${SPL_GOT%% *}" != "entries-read-differ-from-entries-named" ] || [ "$SPL_N" != "$SPL_NAMED" ]; then
+    FAIL "CTL-SP2-LIVE: SP2 fired on the planted live sentence but not as a truncation of it — read '$SPL_GOT' where the unplanted sentence separates $SPL_NAMED name(s). The names separated must be unchanged and the cause must be the mismatch"
+  else
+    PASS "CTL-SP2-LIVE: SP2 fired once on a copy of the LIVE index ($SPL_GOT) — a period planted before the last middle dot on the line that opens its Sections bullet leaves the $SPL_NAMED name(s) the bullet separates unchanged and only $SPL_R of them read, and the reader refuses it rather than handing on the prefix"
+  fi
+fi
 
 # ── LF1 — a status token outside the declared lifecycle ───────────────────────────
 D="$WORK/lf1"; ctl_clean "$D"
@@ -1266,8 +1737,9 @@ fi
 # Group MD — the Discriminating-Evidence Rule, asserted against this file's extractors.
 #
 # THIS SUITE SHIPS MD REGISTERED FROM ITS FIRST COMMIT rather than carrying the
-# empty-registration note a sibling still carries. All six extractors are registered, and
-# each is probed against the CONFORMANT FIXTURE rather than the live tree — that is what
+# empty-registration note a sibling still carries. Every scanner is registered, and the
+# convention reader beside them; each is probed against the CONFORMANT FIXTURE rather than
+# the live tree — that is what
 # makes the oracle meaningful. Over the fixture each assertion PASSes, so removing its
 # extractor flips a PASS to a FAIL; probed against the live tree a group whose verdict is
 # already FAIL would report one FAIL either way and the oracle would certify nothing.
@@ -1287,6 +1759,9 @@ echo "── Group MD — every PASS here must require evidence its subject coul
 md_flips ad_scan_hd HD ad_assert_hd "$CLEAN"
 md_flips ad_scan_ix IX ad_assert_ix "$CLEAN"
 md_flips ad_scan_sp SP ad_assert_sp "$CLEAN"
+# The convention reader is a subject of the SAME assertion: with it removed the spine reads
+# empty, and the group must go red through its vacuity guard rather than pass over nothing.
+md_flips ad_spine_read SPR ad_assert_sp "$CLEAN"
 md_flips ad_scan_lf LF ad_assert_lf "$CLEAN"
 md_flips ad_scan_nu NU ad_assert_nu "$CLEAN"
 md_flips ad_scan_lg LG ad_assert_lg "$CLEAN"
@@ -1316,10 +1791,19 @@ printf 'Result: \033[1;32m%d passed\033[0m, \033[1;31m%d failed\033[0m, \033[1;3
   "$pass" "$fail" "$skip" "$vacuous"
 AD_FINAL="$(ad_scan_hd "$ROOT"; ad_scan_ix "$ROOT"; ad_scan_sp "$ROOT"
             ad_scan_lf "$ROOT"; ad_scan_nu "$ROOT" "$ADR_NUM_EXEMPT"; ad_scan_lg "$ROOT")"
-printf 'CORPUS: %s record(s) derived from %s on this run; %s index row(s); %s expected-spine section(s); %s declared lifecycle value(s).\n' \
+# The measurement state group SP decided above, read here rather than decided again. Under SP2
+# the line carries the cause and no count, on the rule test-corpus-hygiene.sh states for its
+# own summary lines: a counter printed beside a withheld comparison reads as a measured zero.
+AD_SP_WHY="$(awk '$1 == "FINDING" && $2 == "SP2" { $1 = ""; $2 = ""; sub(/^ +/, ""); print }' <<<"$AD_FINAL")"
+if [ -z "$AD_SP_WHY" ]; then
+  AD_SPINE_PHRASE="$(ad_spine "$ROOT" | grep -c '[^[:space:]]' || true) expected-spine section(s)"
+else
+  AD_SPINE_PHRASE="expected spine NOT-EVALUATED — $AD_SP_WHY — this is not a clean result"
+fi
+printf 'CORPUS: %s record(s) derived from %s on this run; %s index row(s); %s; %s declared lifecycle value(s).\n' \
   "$(ad_records "$ROOT" | grep -c '[^[:space:]]' || true)" "$ADR_DIR" \
   "$(ad_index_rows "$ROOT" | grep -c '[^[:space:]]' || true)" \
-  "$(ad_spine "$ROOT" | grep -c '[^[:space:]]' || true)" \
+  "$AD_SPINE_PHRASE" \
   "$(ad_lifecycle "$ROOT" | grep -c '[^[:space:]]' || true)"
 printf 'NUMBERING: declared exemption(s) "%s", asserted in both directions.\n' "$ADR_NUM_EXEMPT"
 printf 'FINDINGS: %s on the live tree.\n' "$(grep -c '^FINDING ' <<<"$AD_FINAL" || true)"
