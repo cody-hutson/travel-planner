@@ -375,10 +375,10 @@ only the verbs that existed when it was written.
    sets `ALLOW_PLAINTEXT`. It never passes `--yes` to `unpublish`. Where publishing is what the user
    wants, name `/trip-publish` and stop; do not reach the script from here.
 2. **Never overwrites and never deletes existing trip content.** `ADR-007` §2 bound 5, and `trips/`
-   is git-ignored, so a clobber is recoverable from nothing. `Write` is used on exactly one
-   condition — the target path does not exist. `Edit` is used on exactly one condition — the target
-   path exists and only the named field's lines change. The probe that selects between them runs
-   before either tool is reached.
+   lives under `<data-root>`, so nothing in this repository could restore a clobber. `Write` is used
+   on exactly one condition — the target path does not exist. `Edit` is used on exactly one condition
+   — the target path exists and only the named field's lines change. The probe that selects between
+   them runs before either tool is reached.
 3. **Never invents a value.** A field nobody has asked keeps its bracketed placeholder. A field the
    user skips, or says does not apply, takes a single em dash. Those are two different states and
    this file never collapses them. A missing profile means *unknown*, never *no constraints*.
@@ -2388,8 +2388,8 @@ tempting move is the opposite one on each side.**
 > widening that is an amendment to the standing clause under the Extension rule rather than a
 > feature of this section. Trip-ward the rule 9 argument does not reach at all — that rule bounds
 > only writes outside `trips/<slug>/` — and the bar is the sharper one instead: a multi-field
-> deletion in a human-authored, git-ignored tree, where a wrong deletion is recoverable from
-> nothing while leaving a line costs one report line per pass.
+> deletion in a human-authored tree under `<data-root>`, where nothing in this repository could
+> restore a wrong deletion, while leaving a line costs one report line per pass.
 
 **The property this protects, cited as what was ratified rather than as a mechanism.**
 `reference/adr/ADR-006-third-party-data-capture.md` ratifies **attribution correctness** — a
@@ -2575,19 +2575,19 @@ trip that references the record absorbs the new value at its own next pass.
 the record agree, so that field reports as a **redundant override** on every subsequent pass until
 the operator removes the trip-side line. The verb **says so** and names the equivalence class —
 delete the line, blank it, or write a single em dash — and **does not do it.** The line is
-human-authored in a git-ignored tree, so a wrong deletion is recoverable from nothing, while leaving
-it costs one report line per pass: reporting is CHEAP and deleting is IRREVERSIBLE, and that
-asymmetry decides it.
+human-authored in a tree under `<data-root>`, so nothing in this repository could restore a wrong
+deletion, while leaving it costs one report line per pass: reporting is CHEAP and deleting is
+IRREVERSIBLE, and that asymmetry decides it.
 
 **Timestamp negative.** This verb writes **no** last-written field and takes no `Bash(date:*)` use.
 The record's dominant write path is a human editing it in an editor, which no command observes, so a
 stamp maintained only here would read as authoritative while being routinely stale.
 
 **Reversibility: MODERATE, confidence HIGH.** The outgoing record value is echoed before the write
-and can be re-entered by hand. It is not CHEAP — the store is git-ignored, so there is no revert, and
-the change is visible to every other trip referencing that record. It is not IRREVERSIBLE — nothing
-is deleted, no record ceases to exist, and no identity is destroyed, which is the line separating
-this verb from an erasure.
+and can be re-entered by hand. It is not CHEAP — the store lives under `<data-root>`, so no revert
+in this repository reaches it, and the change is visible to every other trip referencing that
+record. It is not IRREVERSIBLE — nothing is deleted, no record ceases to exist, and no identity is
+destroyed, which is the line separating this verb from an erasure.
 
 **This verb is never reached from a report, and that is a bound on every emission this command
 makes.** No rendered line — in the `## Update signals` block, in any partition of it, or anywhere
@@ -2822,7 +2822,7 @@ One row per **REACH** and per **REPORT** location, every run: **location · disp
 
 **Only this verb writes the second conjunct.** If this verb's post-state ever converges with the detach's — by dropping the roster tombstone, by removing the roster row, or by not marking the model entry — then a real erasure reads as a trip that never linked anyone, **every composed value is byte-identical either way, and nothing value-shaped detects it.** The build stays green while the detection is gone. The three properties that keep them apart are each checkable: the roster row **survives here and is removed by `group`**; the traveller-file stem is **the token here and the display name there**; and the model entry carries a mark that no other operation writes.
 
-**Reversibility: IRREVERSIBLE, confidence HIGH.** `trips/` and `people/` are git-ignored, so there is no earlier version to restore from; the `researched` artifacts hold independent state nothing upstream reconstructs; and the published surface is beyond every local act. Rollback is not merely expensive here — it does not exist, and the confirmation is shaped around that rather than around the size of the change.
+**Reversibility: IRREVERSIBLE, confidence HIGH.** `trips/` and `people/` live under `<data-root>`, so this repository holds no earlier version to restore from; the `researched` artifacts hold independent state nothing upstream reconstructs; and the published surface is beyond every local act. Rollback is not merely expensive here — it does not exist, and the confirmation is shaped around that rather than around the size of the change.
 
 ## extract <name>
 
@@ -3119,11 +3119,12 @@ than by prohibition. **That is a bound, not a consent claim.**
 `/trip-record profile`, `/trip-new`, and the reconcile route. Whether each is available is a property
 of its own file, observed there, and standing rule 8 is why this section does not state it.
 
-**Reversibility: MODERATE, confidence HIGH.** Not CHEAP — the store is git-ignored, so there is no
-revert, and the record is visible to every trip that later links it. Not IRREVERSIBLE — nothing is
-deleted, no source value is lost, and a completed extraction is undone by removing the `person:` line
-and discarding the record. That tier is a **property of the copy-never-move decision**: were this verb
-to remove the extracted bullets from the source, the tier would move with it.
+**Reversibility: MODERATE, confidence HIGH.** Not CHEAP — the store lives under `<data-root>`, so no
+revert in this repository reaches it, and the record is visible to every trip that later links it.
+Not IRREVERSIBLE — nothing is deleted, no source value is lost, and a completed extraction is undone
+by removing the `person:` line and discarding the record. That tier is a **property of the
+copy-never-move decision**: were this verb to remove the extracted bullets from the source, the tier
+would move with it.
 
 ## group-new <name>
 
@@ -3588,4 +3589,4 @@ This section discharges each condition by name. **(a)** the path is named above 
 
 **What this verb names, and what it runs.** After a write to a traveller file it names **`/trip-record travelers`** as the reconcile step, and does not run it; after a write to a block-owned file it names what `## fact <statement>` names after that write, and runs none of it. Beyond those, and the verb a block belongs to where it is not this one, it names no verb of this command as an offer, and standing rule 8 is why it states nothing about any other command's availability.
 
-**Reversibility: MODERATE, confidence MEDIUM.** Not CHEAP — the files it writes are git-ignored, so there is no revert, and a record it creates is read by every trip that later links it. Not IRREVERSIBLE — nothing it writes deletes an answer without an echo first, and a record it created is discarded by removing the file before any trip references it.
+**Reversibility: MODERATE, confidence MEDIUM.** Not CHEAP — the files it writes live under `<data-root>`, so no revert in this repository reaches them, and a record it creates is read by every trip that later links it. Not IRREVERSIBLE — nothing it writes deletes an answer without an echo first, and a record it created is discarded by removing the file before any trip references it.

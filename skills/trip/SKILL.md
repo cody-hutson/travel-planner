@@ -192,8 +192,8 @@ never sets `ALLOW_PLAINTEXT`. It never passes `--yes` to `unpublish`. Where publ
 what the user wants, name `/trip-publish` and stop; do not reach the script from here.
 
 **Never overwrites and never deletes existing trip content.** `ADR-007` §2 bound 5 holds on
-every verb here: a trip's working tree is git-ignored and carries no history, so a clobber is
-recoverable from nothing. `Write` is reached where the target path does not exist. `Edit`
+every verb here: a trip's working tree lives under `<data-root>`, so nothing in this repository
+could restore a clobber. `Write` is reached where the target path does not exist. `Edit`
 is reached where it exists — either only the named lines change, or the write adds lines that
 were not there before while changing none that were. The probe that establishes which condition holds runs before either tool is
 reached; it is a read, so the verb's `**Reads:**` line declares it. Where a derived artifact
@@ -411,7 +411,7 @@ produced, from evidence a verdict plays no part in — there is no ordering in w
 reaches one. Making such an ordering would mean rearranging the ladder, and the ladder is
 stated in exactly one place that no command file restates or amends. The declaration above has
 no field a disposition could occupy and never gains one. And every path either relation
-observes lives under `trips/<slug>/`, which is git-ignored but for its one tracked signpost —
+observes lives under `<data-root>/trips/<slug>/`, never inside the engine —
 so **a checkout contains no operand**, and a freshness gate cannot be built in the place this
 repo makes checks authoritative, there being nothing there for it to fail on. What none of that
 reaches is the sentence *"where the build is behind, stop"* written into a verb section by a
@@ -1035,10 +1035,10 @@ script the completeness check below invokes, rather than by this verb; the itine
 `trips/<slug>/outputs/<destination>-travel-site.html` — the **existence probe** that selects
 creating the site from patching it, and, on the patch route, the outgoing markup read before
 it is changed, because that read is what preserves design already approved — within this run it
-is the only copy of the outgoing markup there will be, the trip tree being git-ignored and
-carrying no history. It does **not** make the no-regenerate rule below checkable: after the
-write there is nothing left to diff the result against, so that rule stands as one this verb
-follows, not one an inspection of the tree can settle afterwards. It does not read
+is the only copy of the outgoing markup there will be, the trip tree living under `<data-root>`,
+where this repository holds no copy of it. It does **not** make the no-regenerate rule below
+checkable: after the write there is nothing left to diff the result against, so that rule stands
+as one this verb follows, not one an inspection of the tree can settle afterwards. It does not read
 `trips/<slug>/trip-log.md`: the log carries the reasoning behind choices, and the site renders
 what was chosen. **Dispatches no agent** — the site is authored directly, which is why this
 verb reaches `Write` for its own output rather than for an agent's.
@@ -1190,10 +1190,10 @@ its own and suppresses none of the script's. **Where the check does not close, s
 did not resolve and do not present the site as current.**
 
 **What the walk does not settle, so a clean run is not read as more than it is.** It grades the
-site **after** the write, never the act of writing: the trip tree is git-ignored and carries no
-history, so there is no earlier state to diff against. A clean walk says every element of the plan
-found a home in the bytes that are there now. It does not say the patch touched only what it meant
-to, and it does not make the no-regenerate rule above checkable.
+site **after** the write, never the act of writing: the trip tree lives under `<data-root>`, and
+this repository holds no earlier state of it to diff against. A clean walk says every element of
+the plan found a home in the bytes that are there now. It does not say the patch touched only what
+it meant to, and it does not make the no-regenerate rule above checkable.
 
 **It never publishes.** The standing clause binds this verb, and it binds it **as a rule this
 verb follows**. `disallowed-tools` **names** the script path, `bash` and `sh` — and what
@@ -1274,7 +1274,7 @@ while measuring two different things. The root goes in `--data-root`; the scope 
 
 **Why that script and not the guard suite.** `scripts/test-artifact-schema.sh` is the CI suite:
 it takes no arguments and grades the tracked tree, which is the half CI already reaches.
-The gap this verb closes is the other half — a trip under `trips/`, git-ignored, that no CI
+The gap this verb closes is the other half — a trip under `<data-root>/trips/` that no CI
 checkout contains and no CI job can see. `scripts/validate-artifacts.sh` is the validator that
 suite sources, and its `--scope dir` arm is declared in its own usage as the local-trip arm.
 One validator, two call sites, one definition of what conforms; this verb is the second call

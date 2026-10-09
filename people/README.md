@@ -3,9 +3,14 @@
 One durable record per person — **one file, held across trips, rather than a copy of
 the same facts inside each one.** A passport's issuing country, a standing dietary
 need, how someone travels: these do not change when the trip does, so they are
-answered once here and referenced from each trip instead of re-asked.
+answered once, in a record, and referenced from each trip instead of re-asked.
 
-Everything in here is git-ignored except this file.
+**Your records live in the `people/` folder of your data folder** — the folder
+`~/.travel-planner/data-root` names; the engine's `CLAUDE.md` § *Resolving a trip* says how
+it is found. This file is kept in both of the places it is read: beside your records
+there, and in the engine's own `people/` folder, which holds this file and never a record.
+Everything below describes the store in your data folder, except the section whose heading
+begins *The engine's copy*.
 
 ## What a record is
 
@@ -22,21 +27,27 @@ describes — in their own hand, through you writing down what they told you, or
 `/trip-record interview` recording their answers as they give them. No agent authors a value
 in it, computes one into it, or edits one already there. Agents read it.
 
-## Why this file is tracked and nothing beside it is
+## The engine's copy — why this file is tracked and nothing beside it is
 
-A clone has to show that `people/` is where person records live. This file is the only
-tracked thing under it: `.gitignore` excludes the directory's *contents* (`/people/*`)
-rather than the directory itself, so this signpost survives while every record beside
-it stays on your machine.
+**This section is about the engine's repository, and about no other folder.** The engine
+ships a `people/` folder so that a data folder can be given the same shape, and so that
+install has this file to copy into it. In the engine's repository this file is the only
+tracked thing under `people/`: the engine's `.gitignore` excludes that directory's
+*contents* (`/people/*`) rather than the directory itself, so every checkout carries the
+signpost and none carries a record.
 
-Same arrangement as [`../trips/README.md`](../trips/README.md) and
-[`../analysis/README.md`](../analysis/README.md), for the same reason. The invariant is
-tested — see group `U` in
-[`../scripts/test-publish-guard.sh`](../scripts/test-publish-guard.sh).
+The engine keeps its own `trips/` and `groups/` folders the same way, for the same reason.
+The invariant is tested for this folder by group `U` in the engine's
+`scripts/test-publish-guard.sh`.
+
+**None of this is a promise about the folder your records are in, even where that folder is
+an earlier checkout of the engine's repository.** Nothing in the engine reaches into your
+data folder's version control, so whether that folder is tracked, backed up or synced is
+yours to decide.
 
 ## Privacy
 
-**These are the most sensitive bytes in the repository, and they are durable rather
+**These are the most sensitive bytes in your data folder, and they are durable rather
 than per-trip.** A record holds a passport's issuing country and the month it is valid
 through, standing needs — including health-adjacent ones such as an allergy, a mobility
 limit or a heat ceiling — and personal preferences. A trip folder holds that kind of
@@ -45,7 +56,8 @@ trip, which is why it concentrates the risk rather than merely repeating it.
 
 Nothing here is ever published. The class is declared *never rendered, in any form,
 including anonymized* — not in a built site, not in an anonymized summary, not in an
-excerpt. Nothing here leaves your machine, and nothing here enters git history.
+excerpt. The engine moves nothing here off your machine, and nothing here is ever committed
+to the engine's repository.
 
 Ask for no more precision than the plan needs. The intake form asks for a passport's
 issuing country and validity month and says **never the number**; a durable record does
@@ -60,7 +72,8 @@ referenced it**, archived trips included — that reach is the point, and it is 
 operation that writes an archived trip at all. It does not reopen one: the trip stays
 archived, and erasure is the single exception to the rule that nothing touches it.
 
-**It cannot be undone.** Nothing under `people/` is in git, so there is no earlier
+**It cannot be undone.** The engine keeps no copy of a record, so unless you
+have kept a backup of your data folder yourself there is no earlier
 version to restore from. After a deletion, a trip that referenced that person reads
 *unknown* — never *no constraints*, and never a person with nothing on file.
 
@@ -145,8 +158,7 @@ trips that *currently* reference someone, which is not the same as everywhere th
 been — a trip they were unlinked from is invisible to it, and it never reads that
 invisibility as *has not been there*. And an erasure needs no extra step for any of it:
 deleting the references is deleting the history, because the references are all it was.
-[`../reference/adr/ADR-017-derived-trip-history.md`](../reference/adr/ADR-017-derived-trip-history.md)
-records the decision.
+The engine's `reference/adr/ADR-017-derived-trip-history.md` records the decision.
 
 ## A relayed value is not an agreed one
 
@@ -250,12 +262,12 @@ record about a person who did not ask for one, so the interview asks before it w
 and writes nothing unless the answer is yes. An answer that belongs to one trip rather than to the
 person is named there and not recorded here.
 
-**Someone who is not here can fill one in themselves.** Send them three files — the form itself,
-the worked record `examples/people-library-demo/people/psn-3c7e.md` and the portable interview
-card, `templates/interview-card.md` — and they fill it in with any assistant, which gives the
-finished record back as one block. Saving that block here, under the id the interview names for
-them when they are not there to answer, is yours to do: it is you writing down what they told
-you, and no command writes it for you.
+**Someone who is not here can fill one in themselves.** Send them three files from the engine —
+the form itself, the worked record `examples/people-library-demo/people/psn-3c7e.md` and the
+portable interview card, `templates/interview-card.md` — and they fill it in with any assistant,
+which gives the finished record back as one block. Saving that block in your `people/` folder,
+under the id the interview names for them when they are not there to answer, is yours to do: it
+is you writing down what they told you, and no command writes it for you.
 
 ## Retention
 

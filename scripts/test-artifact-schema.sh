@@ -199,8 +199,10 @@
 #   ER   the erasure verb's declared contract, its coverage of every trip-context section and
 #        derived-model block, and the fixture properties AF's post-state grading cannot reach.
 #   HZ   the validity-horizon axis and the tracked instance that exercises the mark. The real
-#        person store is git-ignored, so tracked fixtures are the only instances this gate can
-#        reach, and a mark nothing carries is a grammar nothing grades.
+#        person store lives under the operator's data root (reference/data-model.md
+#        § Composition — the trip-side read of a durable record), so tracked fixtures are the
+#        only instances this gate can reach, and a mark nothing carries is a grammar nothing
+#        grades.
 #   RM   the reference-month RULE PROSE, anchored so a prose-only revert fails a check.
 #        Group HZ grades WHERE the verdict fence lives and what its rows say; nothing
 #        graded what the rule text around it SAYS, so a rewrite of the prose left the
@@ -11945,7 +11947,7 @@ if [ "$RL_OK" -eq 1 ]; then
   if [ "$RL_SECN" -eq 0 ]; then
     FAIL "RL7: the \`## link\` section extracted to 0 lines — the region probe found nothing, so both verdicts below would be a failed parse reported as a missing rule"
   elif [ "$RL_TWOWAY" -eq 1 ] && [ "$RL_READBACK" -eq 1 ]; then
-    PASS "RL7: over $RL_SECN line(s) of the \`## link\` section, the reconciliation's prohibition is still stated in BOTH directions and the post-write read-back is still required. The first matters because the standing rule that bounds a bulk store write does not reach a trip-side deletion at all, and a trip-side deletion in a git-ignored tree is recoverable from nothing; the second because the gate moved consent in front of the one step that can still fail"
+    PASS "RL7: over $RL_SECN line(s) of the \`## link\` section, the reconciliation's prohibition is still stated in BOTH directions and the post-write read-back is still required. The first matters because the standing rule that bounds a bulk store write does not reach a trip-side deletion at all, and nothing in this repository could restore a trip-side deletion made under the operator's data root; the second because the gate moved consent in front of the one step that can still fail"
   else
     FAIL "RL7: the \`## link\` section no longer states the two-directional prohibition (found=$RL_TWOWAY) or the post-write read-back (found=$RL_READBACK). Removing either reaches a worse outcome silently — an unbounded trip-ward apply, or a failed write indistinguishable from a successful one"
   fi
@@ -12613,9 +12615,9 @@ fi
 #
 # WHAT THIS GROUP IS FOR. The `[VALID-THROUGH <YYYY-MM>]` mark shipped admissible on any
 # field bullet and required on none, and was exercised in NO tracked instance: the real
-# person store is git-ignored, so the tracked fixtures are the only instances this gate
-# can ever reach, and the original witness records the mark as "not exercised here" in its
-# own prose. A mark nothing carries is a grammar nothing grades.
+# person store lives under the operator's data root, so the tracked fixtures are the only
+# instances this gate can ever reach, and the original witness records the mark as "not
+# exercised here" in its own prose. A mark nothing carries is a grammar nothing grades.
 #
 # The classification now carries a per-field `Horizon` axis, so membership is DATA rather
 # than code: admitting a second horizon-bearing field is one cell of one table. This group
@@ -12792,7 +12794,7 @@ if [ "$HZ_OK" -eq 1 ]; then
   if [ "$HZ_DASHED" -eq 0 ]; then
     FAIL "HZ4: the control arm reached 0 \`Passport:\` bullet(s) across the tracked tree — the walk matched no such bullet at all, so a clean verdict here would certify a scan that never ran rather than a tree that is clean"
   elif [ -n "$HZ_VALUED" ]; then
-    FAIL "HZ4: tracked file(s) carrying a \`Passport:\` bullet with a real value: $HZ_VALUED — this class is publish: internal-hard and every real instance of it is git-ignored. A tracked passport value is a disclosure, and adding a horizon fixture is not a reason to introduce one. Not-a-value is the corpus's own vocabulary and nothing wider: empty, a lone em dash, a surviving bracketed placeholder (a blank form's prompt, ANSWERED()-false by the data model's predicate), or the composed sentinel UNKNOWN"
+    FAIL "HZ4: tracked file(s) carrying a \`Passport:\` bullet with a real value: $HZ_VALUED — this class is publish: internal-hard and every real instance of it lives under the operator's data root. A tracked passport value is a disclosure, and adding a horizon fixture is not a reason to introduce one. Not-a-value is the corpus's own vocabulary and nothing wider: empty, a lone em dash, a surviving bracketed placeholder (a blank form's prompt, ANSWERED()-false by the data model's predicate), or the composed sentinel UNKNOWN"
   else
     PASS "HZ4: FAIL-CLOSED — no tracked file carries a \`Passport:\` bullet with a real value, measured over the whole tracked markdown tree rather than over the fixtures alone. The control arm reached $HZ_DASHED such bullet(s) and classified every one as not-a-value, so the zero is a measurement. Not-a-value is exempted per VALUE and never per file, so this arm still fails on a real value appearing in a file that also carries an exempt one. This is what lets the horizon ship exercised: the mark is field-general, so it is demonstrated on fields that are not \`Passport\` and no passport value enters a tracked file to make that possible"
   fi
@@ -16087,7 +16089,7 @@ fi
 
 # ── The declared residual, on the ps_dne channel so it rides on EVERY run rather than sitting
 # in a comment somebody has to open this file to read.
-ps_dne "W: no arm in this group establishes that a site build INVOKED the walk. W3 grades that the verb DECLARES the invocation; whether a given run issued it is unreachable from any tree, because the trip tree is git-ignored and carries no history of the act. Nor does a clean walk establish that the site it read is the site the verb WROTE — it grades the artifact after the write. What would settle the first: a live site build against a real trip, with the walker's own output observed in that run"
+ps_dne "W: no arm in this group establishes that a site build INVOKED the walk. W3 grades that the verb DECLARES the invocation; whether a given run issued it is unreachable from any tree, because the trip tree lives under the operator's data root and this repository holds no history of the act. Nor does a clean walk establish that the site it read is the site the verb WROTE — it grades the artifact after the write. What would settle the first: a live site build against a real trip, with the walker's own output observed in that run"
 
 # ── W-OPTOUT — the control arms' subjects are FILES under $WORK, not shell functions.
 # `unset -f` cannot remove a file, so md_flips would grade the ORACLE rather than the

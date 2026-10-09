@@ -3,6 +3,157 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.53.0] — 2026-10-09 — The corpus describes itself truly
+
+No trip verb plans, records or publishes a trip differently in this release. What changes is what
+the engine's own files say about themselves, where they said something untrue or left a reader to
+guess. `README.md` and `CLAUDE.md` each listed what `reference/` holds, and the README's list had
+gone stale more than once. § 8 of `reference/data-architecture.md` declared the model elements
+that have not shipped and did not say whether anyone owns shipping them. The traveller intake form
+opened by promising to cover what a trip has to work around, which that form does not ask. And
+across the corpus, sentences gave this repository's ignore rule as the reason an operator's real
+trips, people and groups are untracked, although an installed engine keeps those stores under the
+operator's data root, a folder the engine's ignore file is no promise about. An operator meets the
+change in the three store signposts beside their data, and in three texts the publish script
+prints.
+
+**The list of what `reference/` holds is bound to the directory.** A new group in the
+corpus-hygiene suite, `H`, compares the `reference/` subtree of the fenced tree under
+§ *File Structure* in `CLAUDE.md` with the directory's tracked top-level entries, in both
+directions: an entry in the directory that the tree does not name fails, and so does a name in the
+tree that no tracked entry stands behind. `README.md`'s repository-map row for `reference/` no
+longer lists the directory. It describes it by category and cites that section, and the group
+fails when the citation is removed and when the row names a top-level entry, so a list restored
+beside the citation fails too. A top-level entry added under `reference/` now owes a line in
+`CLAUDE.md` and no edit to the README, and the suite is red until that line is there.
+
+**§ 8 of the data architecture says who owns its declared gaps.** That section of
+`reference/data-architecture.md` declares which of its model elements have not shipped, and says
+the seam they name is left open on purpose. Its last paragraph now says the rest: closing the seam
+is assigned to no work item and has no owner, and a work item is warranted when something needs an
+element the table marks as a gap, such as a consumer that needs `readers:` or a cap that needs
+`enforced-by:`. It is written as the section's standing position and not as a report on the
+backlog, so it names no release and no date.
+
+**The traveller form's opening promises only what the form asks.** The first sentence of
+`templates/traveler-intake.template.md` told the person filling it in that the profile covers what
+they need the trip to work around. The form has no needs section and says so further down, where
+it sends a need to the person profile, or to the trip's own `trip-context.md` when it binds that
+trip alone. The opening now names what the form does ask: what they would love out of the trip,
+and how they like to travel. Nothing stands in the removed clause's place, because the same
+opening block already gave both routes.
+
+**Store-location wording names the operator's data root.** Sentences that called a real store
+ignored by git, and gave that as the reason it is untracked, cannot be restored or cannot be seen
+by a check, now name where the store is: `<data-root>` in `CLAUDE.md` and the command files, "the
+operator's data root" in other engine prose (or "their data root" where a sentence is about a
+user, and "the data root" in the publish script's comments), and "your data folder" or "your data
+root" in text a person reads about their own files. The sweep reached the charter, all five of the
+command files under `skills/`, the enrichment prompt, both intake forms, `CONTRIBUTING.md` and
+`SECURITY.md`, the data architecture and four of the schema documents, comments and messages in
+the publish script, the round-trip check and the artifact-schema suite, one workflow's comments,
+and the three people-library fixtures. Where a rewritten sentence said nothing could bring a file
+back, it now says that nothing in this repository could. The sweep changed no behaviour, schema,
+path pattern or check: in the scripts every changed line is a comment or a message string, and
+neither `.gitignore` nor the suite that asserts it is touched. The limits below say which such
+sentences it left.
+
+**The three store signposts are rewritten whole.** `people/README.md`, `groups/README.md` and
+`trips/README.md` are read in the engine's own skeleton and again in every data folder that
+install copies them into, and each said near its top that everything beside it is ignored by git,
+which is false in a data folder install made. Each now opens by placing the reader's records in
+the reader's data folder, the one the pointer file names, and keeps the engine's ignore rule to a
+single passage that says it is about the engine's repository. That passage closes by saying it is
+no promise about the folder the reader's records are in, even where that folder is an earlier
+checkout of the engine's repository, and that whether the folder is tracked, backed up or synced
+is the reader's to decide. In `people/README.md` and `groups/README.md`, the statement that a
+deletion cannot be undone now rests on the engine keeping no copy and on the reader's own backup,
+and no longer on the ignore rule. Each file keeps its name and its place, so the trip commands
+still find `trips/README.md` where they look for it.
+
+**Three texts the publish script prints changed.** After a `publish` or a `rotate`,
+`scripts/publish-trip-site.sh` prints where the passphrase file is saved, and the line under that
+said the file is ignored by git. That line now opens with these words:
+"It stays under your data root and is never published." The other two are in the help text, which
+is the script's header comment as `--help` prints it: its opening paragraph now places the
+plaintext itinerary in the `trips/` working dir "under the operator's data root", and its
+passphrase paragraph says a generated passphrase is saved "under the data root, chmod 600". The
+help says "the operator's" where the notice says "your", and both name the same folder. The notice
+is still one line ending in the same `cat` command, so a wrapper that matched the old sentence by
+its words needs the new ones, and nothing else the script prints changed.
+
+**What an operator must do.** Update the installed engine once this release is on `main`, by
+running `git pull` in `~/.claude/skills/travel-planner`. Nothing here reaches an install before
+that, and the release adds no command to link. Then copy the three store signposts into your data
+folder again. The update replaces the engine's copies and never the ones beside your records, and
+no other file in the repository gives this step:
+
+```bash
+root="$(cat ~/.travel-planner/data-root)" && [ -n "$root" ] && cd "$root" && for d in trips people groups; do mkdir -p $d && cp ~/.claude/skills/travel-planner/$d/README.md $d/; done
+```
+
+Its loop is the one install step 3 in `README.md` runs. It writes the three signposts, and makes a
+store folder only where one is missing. What it corrects depends on the kind of data folder you
+have. In one that an earlier release's install made, the older signposts say near the top that
+everything beside them is ignored by git, and that is false of that folder until the files are
+copied again. In one that is an earlier checkout of the engine, the older signposts it carries say
+something true of that folder, by that checkout's own ignore file, and where the checkout carries
+a signpost git shows the copy there as a change to a tracked file.
+
+**The honest limits.** The sweep followed one word and stopped, by decision, at the decision
+records and at this file's earlier entries. Counted over every tracked file with the pattern
+`git[- ]?ignored`, read without regard to case, that word stood 162 times at `5dd71b4`, before the
+sweep, and stands 92 times at `53eb700`, after it; this entry adds none. Of those 92, at the same
+`53eb700`: 32 are sentences inside 15 Accepted decision records that still give the ignore rule as
+the reason a real store is untracked, and each is owed an amendment in the form
+`reference/adr/README.md` § *Convention* prescribes. The records are ADR-002, ADR-004, ADR-006,
+ADR-007, ADR-009, ADR-011, ADR-012, ADR-014, ADR-015, ADR-016, ADR-018, ADR-022, ADR-025, ADR-027
+and ADR-029, and none of them carries an amendment-history section yet. Another 11, at `53eb700`,
+are in this file's earlier entries and stay as history. Two are held, at `53eb700`: the
+annotations on the site's source file and on the `.publish/` working copy beneath it, in the
+directory tree under § 8 of `reference/site-layout-spec.md`. ADR-026 quotes the first, so both
+wait for that record's amendment. The other 47, at `53eb700`, are left where they stand: 12 where
+the engine's own ignore rule is the subject, 14 that quote or record what another file said, and
+21 where a schema document glosses `trips/<slug>/` in a sentence about repo-relative path
+patterns. Those 21 are left by decision and are listed for a later change.
+
+The sweep changed sentences, and what stands beside them is not all changed. ADR-016 quotes a
+sentence of `people/README.md` that no longer exists, and cites a section of that file by a title
+that is now only the tail of its heading. Files the sweep edited still hold, beside a rewritten
+sentence, an older one that places a store or its contents in the repository: the schema index and
+the person, group and cost-estimate schemas, `reference/data-architecture.md`,
+`skills/trip-new/SKILL.md`, `skills/trip-record/SKILL.md` and the publish script, whose `list`
+messages still speak of the repo root. The same claim made without the word was not the sweep's to
+find. Four conclusions that followed from the old reason still read as absolute: that an
+overwritten trip file is gone for good, in `skills/trip-new/SKILL.md`; that deleting a line is not
+reversible at all, and that a downgrade costs the operator data they cannot get back, in
+`agents/00-enrichment.md`; and that a read of the site's outgoing markup is the only copy of it
+there will be, in `skills/trip/SKILL.md`. Each is untrue where an operator keeps their own data
+folder under version control.
+
+The signposts' closing sentence is meant literally. Read from this repository's release tags, a
+checkout standing at any tag before `v0.24.0` carries no ignore rule for `people/`, and one
+standing at any tag before `v0.29.0` carries none for `groups/`, so records put beside a copied-in
+signpost there are not ignored by git. The publish notice's first clause, that the passphrase file
+stays under your data root, is true by construction on the `publish` and `rotate` lines
+`CLAUDE.md` prints and on the `publish` line in `README.md`, each of which passes `--data-root`
+and a trip directory relative to it. Run by hand without that flag, or given an absolute trip
+directory, the script uses the directory it is handed, and the clause is true only where that trip
+is under your data root.
+
+The new group binds the top level of one directory, in one list, and nothing more. The other nodes
+of that tree, everything below a child of `reference/`, and every other row of the README's map
+are read past, and no other check compares them with the directories they describe. The comparison
+is with the tracked tree, so a file that is not staged is not an entry. An entry whose name holds
+a character other than a letter, a digit, a dot, an underscore or a hyphen is still read from the
+directory, but the tree cannot name it, so the group stays red until the entry is renamed. The
+annotation beside each entry, the order of the entries and a trailing slash are not graded. Of the
+README's row the group holds the citation and refuses a path-shaped name of an entry; the row's
+words are left to review, whether they are a list written out in words, a category that has
+stopped being true or a sentence that is false. And the group's own descriptions, its entry in the
+suite's banner and its line in the workflow's roster of groups, are prose that no check compares
+with what the group does.
+
 ## [0.52.0] — 2026-10-08 — The never-carries become controls that can fail
 
 Until now the engine's hardest privacy prohibitions were mostly sentences.

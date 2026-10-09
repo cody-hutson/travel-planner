@@ -85,6 +85,19 @@ name: Corpus hygiene
 #        version heading. The group runs scripts/check-release-tag.sh — the check the release
 #        procedure runs at tag time — over every tag, and asserts its failures against the
 #        release-tag-declaration fence in CONTRIBUTING.md in both directions
+#   H    ONE ENUMERATION, BOUND AND CITED. The top-level entries of reference/ are enumerated
+#        once — under the reference/ node of the fenced tree in CLAUDE.md § File Structure —
+#        and that enumeration is asserted against the tracked tree in both directions. It
+#        drifted because nothing compared it with the directory: README.md's row for the same
+#        directory sits outside every fenced block, every content detector read it, and it
+#        went stale on the same revisions. The fence accounts only for why no content detector
+#        read this list at all. README.md's repository-map row for reference/ does not
+#        enumerate; it cites the enumeration, and the group fails when the citation is removed
+#        and when the row names a top-level entry of the directory, so a list restored beside
+#        the citation fails too. The reader is structural and fails closed — a line in the
+#        subtree it cannot read as an entry is refused, and a missing heading, fence, node or
+#        row is a failure, never a skip. The declared boundary — what is read past and what is
+#        ungraded — is stated in the suite's class-H banner entry and is not restated here
 #   CTL  a synthetic fixture tree built in a temp dir on every invocation, plus the arms whose
 #        ids end -RETRO, each replaying a real historical defect. One MUST-FIRE arm per finding
 #        code the suite can
@@ -106,11 +119,13 @@ name: Corpus hygiene
 #   green. What the gate removes is the claim nobody can check without redoing the work.
 #
 #   NON-MARKDOWN SURFACES. The suite reads tracked markdown; in group G, the release tags
-#   and the CHANGELOG each tagged tree carries; and in class F, every tracked shell file and
-#   every workflow run: value, graded for that one class and nothing else. Issue templates,
-#   workflow comments and every other non-markdown surface are not graded, and one of the
-#   motivating recurrences lived in a workflow comment. That gap is real and is left to
-#   review; stating it is what keeps a green from being read as more than it is.
+#   and the CHANGELOG each tagged tree carries; in class F, every tracked shell file and every
+#   workflow run: value, graded for that one class and nothing else; and in group H, the names
+#   of the tracked entries under reference/, read to hold one enumeration to them and for
+#   nothing else. Issue templates, workflow comments and every other non-markdown surface are
+#   not graded, and one of the motivating recurrences lived in a workflow comment. That gap is
+#   real and is left to review; stating it is what keeps a green from being read as more than
+#   it is.
 #
 #   WHETHER AN ADR NUMBER WAS FREE WHEN IT WAS CHOSEN. Group D grades the numbering of the
 #   corpus as it stands at the merge. It cannot hold a number for a branch that has not

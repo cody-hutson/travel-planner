@@ -2,29 +2,36 @@
 
 Working directories for your trips — **one folder per trip**.
 
-Everything in here is git-ignored except this file. Trip folders hold real personal
-detail (traveler profiles with passports, dates and lodging), so they never leave
-your machine and are never published.
+**Your trip folders live in the `trips/` folder of your data folder** — the folder
+`~/.travel-planner/data-root` names. This file is kept in both of the places it is
+read: beside your trip folders there, and in the engine's own `trips/` folder, which
+holds this file and never a trip. Everything below describes the folder in your data
+folder, except where § *Why this file is here* speaks of the engine's copy.
+
+Trip folders hold real personal detail (traveler profiles with passports, dates and
+lodging), so the engine never publishes them and never copies them into its own
+repository.
 
 ## Starting a trip
 
-Open the repo in Claude Code and say you want to plan a trip — the conversation
-creates the folder for you. The shape it creates:
+In Claude Code, type `/trip-new`, and the folder is created for you under the
+`trips/` folder of your data folder. The shape it creates:
 
 ```
 trips/<destination>-<year>/
 ├── trip-context.md     source of truth for the trip
 ├── trip-log.md         decision history; bridges planning sessions
-├── travelers/          one profile per person for THIS trip, copied from
+├── travelers/          one profile per person for THIS trip, copied from the engine's
 │                       templates/traveler-intake.template.md — each may carry a
 │                       person: line pointing at that person's durable record
 └── outputs/            agent artifacts, including the built travel site
 ```
 
 Intake is split, and only the trip half lands here. The answers that stay the same
-from one trip to the next are asked on `templates/person-intake.template.md` and
-held once in [`../people/`](../people/README.md), outside every trip — so a second
-trip with the same people re-asks only what is genuinely new.
+from one trip to the next are asked on the engine's
+`templates/person-intake.template.md` and held once in
+[`../people/`](../people/README.md), outside every trip — so a second trip with the
+same people re-asks only what is genuinely new.
 
 ## After a trip
 
@@ -41,7 +48,7 @@ Keep or clear per folder, because the four parts of a trip do not age the same w
 | `trip-log.md` | **keep** | Small, and the decision history is the part worth rereading when you plan the next one. |
 | `trip-context.md` | **keep** | Small, and it is the trip's shape — where you went, when, and what you booked. |
 | `outputs/` | **clear once archived** | The largest thing in the folder, and rebuildable from the two files above. |
-| `travelers/` | **clear once archived — durable answers belong in `people/`** | The most sensitive bytes in the repo — passport details, dates of birth, document expiries. **Do not copy a profile forward into the next trip.** A person's durable facts belong in `people/`, held once and referenced by each trip's `person:` line, so a trip folder is never how a person's facts survive. If someone filled a trip form before they had a record, `/trip-record extract <name>` builds the record from that profile's own answers and points the file at it — then clear. |
+| `travelers/` | **clear once archived — durable answers belong in `people/`** | The most sensitive bytes in a trip folder — passport details, dates of birth, document expiries. **Do not copy a profile forward into the next trip.** A person's durable facts belong in `people/`, held once and referenced by each trip's `person:` line, so a trip folder is never how a person's facts survive. If someone filled a trip form before they had a record, `/trip-record extract <name>` builds the record from that profile's own answers and points the file at it — then clear. |
 
 **Nothing here expires on its own.** No command deletes a trip folder, no timer runs,
 and archiving a trip does not shrink it. Clearing is a thing you do, and the point of
@@ -60,15 +67,22 @@ be made again. So clearing is still a thing you do — this is the act the engin
 it happens because someone asked, not because a folder went stale.
 
 **The privacy posture above still holds for archived trips.** An archived trip is not a
-published one — its contents remain git-ignored, remain on your machine, and remain
-outside the repo. Archiving changes what is *public*; it does not change what is *kept*.
+published one — its contents stay where they were in your data folder, and the engine
+still publishes none of them. Archiving changes what is *public*; it does not change
+what is *kept*.
 
 ## Why this file is here
 
-A clone has to show that `trips/` is where trips live. This file is the only tracked
-thing under `trips/`: `.gitignore` excludes the directory's *contents* (`trips/*`)
-rather than the directory itself, so this signpost survives while everything beside
-it stays private.
+**In your data folder**, the trip commands look for this file by name before they trust
+a listing of the folder — the engine's `CLAUDE.md` § *Resolving a trip* states that
+check — so leave it where install put it.
 
-Full structure and the agent flow: [`../CLAUDE.md`](../CLAUDE.md).
-Publishing a finished trip: [`../README.md`](../README.md).
+**In the engine's repository**, and only there, this file is the only tracked thing
+under `trips/`: the engine's `.gitignore` excludes that directory's *contents*
+(`trips/*`) rather than the directory itself, so every checkout carries the signpost
+and none carries a trip. None of that is a promise about your data folder, even where
+it is an earlier checkout of the engine's repository: whether it is tracked, backed up
+or synced is yours to decide.
+
+Full structure and the agent flow: the engine's `CLAUDE.md`.
+Publishing a finished trip: the engine's `README.md`.
