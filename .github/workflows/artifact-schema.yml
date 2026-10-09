@@ -247,6 +247,21 @@ name: Artifact schema
 #        declared in the suite rather than left to be inferred: no arm shows that a site
 #        build invoked the walk, and the walk grades the written site against the plan
 #        rather than the act of writing
+#   NC   the five never-carries of ADR-025 § Decision 3, graded as class facts at their live
+#        membership: a rebuilt-each-synthesis instance carrying prior passes (EB-0) — graded
+#        on tracked instances only, never on conduct that would accumulate into one; the
+#        internal-hard class against the site build's read set, a C12 value with no
+#        first-party source found verbatim in a bound artifact, and synthetic renders through
+#        ADR-030's reading and any record superseding part of never-carry 2; both-marks values
+#        and DEST-class fields in cross-trip records, and every store writer's both-marks
+#        guard (EB-2); and the engagement axis's tokens on every stored-value surface, its
+#        carrier included. Every arm carries a control that must fire and one that must not
+#   MC   may-carry, typed per side (ADR-026 § Decision 3): the envelope side over the channel
+#        table and ADR-030 § 2's private-site-field-declaration fence, keyed on the field's
+#        (section, label) pair and held to § 2's prose in both directions, including the one
+#        cell ADR-030 moves; on the encrypted limb a field the declaration does not carry, or
+#        carries only if marked, reads UNDETERMINED, never admit; and the three-valued
+#        conjunction with the denial side, UNDETERMINED a third outcome asserted by exit code
 #   DC   the declared desire-coverage header of C14 has ONE home — the fenced shape in
 #        reference/data-model.md § `outputs/satisfaction-metrics.md` shape — read from there on
 #        every run and never held in the suite. Every other statement of it, found by SHAPE,

@@ -136,6 +136,91 @@ nothing mechanical holds it, and no exercise case produces the refusal. Where a 
 roster table is missing, the erasure reading cannot be tested: the group view's member lines say so,
 and the person view says nothing in the same state.
 
+## [0.52.0] — 2026-10-08 — The never-carries become controls that can fail
+
+Until now the engine's hardest privacy prohibitions were mostly sentences.
+`reference/adr/ADR-025-engagement-model-over-time.md` states what never carries across a phase
+boundary, `reference/adr/ADR-026-channel-architecture.md` states what a channel may carry and how
+the command surface is tested, and `reference/adr/ADR-030-what-the-private-site-may-show.md` lists
+what the private site may show. The publish guard's refusals were graded, and so was part of the
+command-surface test. The never-carries, the envelope a channel admits and the consent test were
+read by no suite, so a change that broke one of them passed every required check. No trip verb
+changes behaviour in this release. What changes is that each of those prohibitions is graded by a
+required suite, and every check that grades one carries a control that must fire and a control
+that must not.
+
+**Each never-carry is checked by something that can fail.** Group `NC` of
+`scripts/test-artifact-schema.sh` reads the never-carry table where `ADR-025` states it and grades
+each row at its live membership, holding no copy of a class's membership. A file rebuilt
+on each synthesis may not carry earlier passes. The class barred from every render is held apart
+from what the site build reads: in the declaration, and on the tracked example trips by value, so
+that a traveller-model value with no first-party source in its trip may not appear where the build
+reads. That class's membership is read from `reference/data-architecture.md` and held to the
+sentence that states it, and the part of the prohibition that
+`reference/adr/ADR-041-third-party-roster-standing.md` supersedes is applied only where the
+supersession is recorded in both of its places. A cross-trip record may carry neither a value
+bearing both provenance marks nor a destination-scoped answer, and every verb that writes the
+person store must carry a guard against the first. No value of the engagement axis may be stored
+on any surface where a stored value could live: an instance, a template, a schema, a prompt, a
+command's text or a script.
+
+**`may-carry` is typed on both of its sides, and undetermined is an outcome of its own.** Group
+`MC` of the same suite grades the envelope side from the channel table in `ADR-026` and from a
+declaration in `ADR-030`, and grades the conjunction with the denial side by exact exit code, so an
+undetermined result reads as neither an admit nor a deny. Group `L` of
+`scripts/test-publish-guard.sh` now plants a value under every selector the publishability
+declaration names, at the scope it names, and requires the publish to abort on each.
+
+**The private site's lists carry a machine-readable declaration.** `ADR-030` § 2 now ends with a
+`private-site-field-declaration` fence that restates its IN and OUT lists over the field key of
+`reference/data-model.md`. Group `MC` reads the lists from the fence and holds the fence and the
+record's own prose to each other in both directions; it fails when the fence is missing, empty or
+duplicated. The fence decides nothing: the record's closing amendment history records it as an
+amendment that changes no decision.
+
+**The command surface's tests are graded on the text a session follows.**
+`scripts/test-command-taxonomy.sh` already failed a command's text that sets `ALLOW_PLAINTEXT` with
+`=` or with `export`, or passes `--yes` on the line that invokes the publish script. Its group `F`
+now also fails a construct that directs anything but the presence probe at a passphrase home
+written out in full — a token ending in `.passphrase`, or the name `STATICRYPT_PASSWORD` — and it
+reads the conduct text bundled with a
+verb and an invocation written as a whole-line code span, where it read fenced invocations in the
+verb's own text alone. A new group `W` fails a sentence in command or conduct text that binds a
+provenance mark to consent without negating it.
+
+**`ADR-026` says what CH-3's enforcement strength is.** § 5 of that record gave CH-3's strength as
+prose and the per-verb grants alone, which understated what was already graded. The cell and the
+passages that counted CH-3 among the unchecked channels are corrected in place, and the record's
+closing amendment history carries the account.
+
+**The honest limits.** The suites grade the authored text a session follows, not a live session.
+One live session was run for this release against a synthetic trip, and its record is
+indeterminate: neither a pass nor a failure. Seven of its eight listed steps are on record. Each
+value marked `[THIRD-PARTY]` was refused for its mark, and the first was refused again when a
+confirmation was offered in place of consent; the writes the steps permitted landed, and no marked
+value, no record of consent and no other change did. The eighth step, which presses for a third
+party's consent to be recorded, ran outside the observed window, and the session's answer to it is
+not on record. The session also had other project instructions loaded beside the engine's text, so
+the record does not show that the engine's text alone produced what was observed. Never-carry 1 is
+graded on tracked instances only, never on
+conduct that would accumulate into a rebuilt file. The passphrase-value check grades constructs
+only: a session's `Read` of a passphrase home is a tool `/trip`, `/trip-new`, `/trip-record` and
+`/trip-decommission` grant, bounded by rule, and is not graded. The flag check reads the line that
+invokes the publish script: a forbidden flag on a continuation line of the same invocation is not
+seen. The override check sees `ALLOW_PLAINTEXT` set with `=` or with `export`; set by another shell
+form — `:=` inside an expansion, `+=`, or `printf -v` — it is not seen. The passphrase-home check
+sees a home written out in full; one reached through a glob or a partial variable name is not seen.
+The consent check reads a negation
+within five words before a consent word, in its own clause, as binding it, and it does not see a
+paraphrase. The declaration places only what `ADR-030` § 2 names: on the encrypted limb the trip
+context's answers read as undetermined, and so do a desire and the occasion until the share mark
+exists; and a new item added inside one of § 2's bullets, in words that name nothing the forms
+ask, is printed rather than failed. The declaration is tied to § 2's prose by its words, so a row
+that names the wrong field inside a section of a form, and keeps a word that ties it, is not
+seen. The traveller-model check sees verbatim values only, so a paraphrase, a value that coincides
+with first-party text and a very short value all pass it. `ADR-030`'s reading is otherwise checked
+on synthetic renders until the private site it describes is built.
+
 ## [0.51.0] — 2026-10-02 — The release scaffolding grades itself
 
 No trip verb changes behaviour in this release. What changes is the machinery a change to this
