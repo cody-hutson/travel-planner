@@ -120,7 +120,8 @@
 #          one character that ends it, so the BULLET bounds it — which is why a middle dot
 #          anywhere else in this one bullet is refused as well: a list resumed after a stray
 #          period and a later sentence that happens to use the separator are the same bytes.
-#          A middle dot in any OTHER bullet is outside the read and is not graded.
+#          A middle dot in a bullet at this bullet's own depth is outside the read and is not
+#          graded; one in a list item nested under this bullet is inside the read.
 #      A name therefore carries neither a period nor a middle dot. A BLANK LINE INSIDE THE
 #      LIST does not end it: the reader used to stop there and pass over the names above the
 #      break, and it now reads the list whole, as the page renders it.
@@ -135,9 +136,9 @@
 #          CTL-SP2-NOT-LASTSEP plants exactly this and REQUIRES this verdict: the limit is
 #          asserted, not left to be discovered, and a change that closes it turns that arm
 #          over.
-#        - A PERIOD WHERE THE BULLET REALLY DOES END JUST AFTER IT, at a bullet of its own depth
-#          or at a blank line and then text at that depth: the page then states a shorter list
-#          beside a neighbour.
+#        - A PERIOD WHERE THE BULLET REALLY DOES END JUST AFTER IT, at a bullet of its own depth,
+#          at a heading, or at a blank line and then text at that depth: the page then states a
+#          shorter list beside a neighbour.
 #      A reader of the bullet cannot decide either. What a stray period left and what a writer
 #      shortened on purpose are the same well-formed bytes, and this file holds no count and no
 #      name to tell them by, so a reader that refused one would refuse a lawful rewrite. And a
