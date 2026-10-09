@@ -3,6 +3,67 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [Unreleased] — 2026-10-09 — The interviewer becomes a conversation: the founding decision
+
+This release decides and builds nothing, deliberately. The interviewer asks a form's questions
+under floors that were set on purpose: it may offer only the options the form itself carries, its
+shared rules cap how many questions a section gets, and when it finishes it gives back the profile
+and nothing else. Nothing asks the traveller how the interview went, and nothing records what the
+interviewer did. Making the interviewer a conversation crosses several accepted decision records
+and the interview's conduct at once, so a pair of decision records settle it first, before any
+slice is cut. No trip verb behaves differently, and neither the interview's conduct nor the
+interview card is edited: an interview runs after this release exactly as it ran before it.
+
+**What the interviewer may say, and how far it may go.**
+`reference/adr/ADR-044-interview-conversation-conduct.md` decides the conduct. The interviewer may
+give an example to help someone answer: two or three kinds of answer, said as an example, never a
+value the person might adopt, and never a form's placeholder example or an item of its lists. It
+may ask one further question when an answer is thin — at most one on a field and at most two
+across a section — and never after a skip, a decline, a stop or an empty answer, nor on a
+`PERSON`-class field in a spoken session. Every recorded value is made only of the answering
+person's own words; a change of word order and an echoed example are reported and fail nothing.
+And a traveller may choose an interview style — `warm` by default, `brisk` or `gentle` — which
+changes how the asking sounds and nothing else. Each rule is stated so that a check can evaluate
+it; the checks are later slices.
+
+**What comes back beside the profile.**
+`reference/adr/ADR-045-interview-rating-and-engagement-record.md` decides the return. Once the form
+has been given back, the traveller is asked to rate the interview from one to five, and may skip.
+Only the number they said is recorded, and a missing reply costs the rating and nothing else.
+Beside the rating comes an engagement record: the interviewer's own account of its turns, as
+identifiers and counts — which questions it asked, and how many further turns of each kind it took
+on each — holding no word anyone said. A section of a form that holds a `PERSON`-class question is
+kept as one pooled row. On a channel that cannot write, the engagement record rides in the one
+returned block, below the end-of-profile heading and under a tag; the save finds it by that
+tag and never by where it sits, and never touches the profile's merge on its account. The rating
+follows as a tagged line of its own. What comes back is kept as a governed class in the data model
+— one writer, a schema check, an erase row — beside the profile it belongs to, and at that
+profile's publish class. A travel manager reads a low rating there, beside the profile, and
+nothing in the engine acts on one.
+
+**Four earlier decisions gain a mark, and none is rewritten.** Where a new record supersedes part
+of an accepted one, the earlier record says so on its `Status:` line and at the superseded text,
+which is kept as decided. `ADR-022` gains a mark at its rule on what an offer may contain, as far
+as that rule reaches an example, and another at its *no new artifact class*, as far as that
+reaches beyond resumption state. `ADR-026` gains one at the first sentence of its intake surface's
+W-test, as far as it reaches an example. `ADR-040` gains one at what a channel with no write path
+returns, as to what follows the end marker. Each mark points at the new record, which states once
+when the supersession takes effect. The rest of each earlier record stands.
+
+**The honest limits.** Both new records land `Proposed`. The flip to `Accepted` is the maintainer's,
+in a later change, and it moves each record's status line and its index row together. The marks are
+recorded ahead of the changes that give them effect, by the maintainer's decision: until the conduct
+and the card are edited, the shared rules bind a session as they read, the card returns nothing from
+the end-of-profile heading down, and no such class exists. No conduct file, card, form, verb, schema
+or script changes here; those are later slices, and the records name what each must bring into line.
+Nearly every ground the records cite is an inference, or rests on one run of one voice assistant,
+and the records say so: the numbers in them — the kinds in an example, the follow-up bound, the
+rating's scale, what counts as low — are judgment, recorded as judgment. That an assistant gives
+back a tagged return and a rating's line was not measured; where it does not, the profile is saved
+as today and the traveller is asked nothing more. And a row of the engagement record is, by
+inference, an account of how a person responded at that question, which outlives the profile; the
+traveller is told of the record before the first question and may decline it.
+
 ## [0.51.0] — 2026-10-02 — The release scaffolding grades itself
 
 No trip verb changes behaviour in this release. What changes is the machinery a change to this
