@@ -721,7 +721,7 @@ the rule."*
 |---|---|---|---|
 | **CH-1** | **N/A — no inbound limb exists.** Stated as N/A rather than invented, so adding one becomes a visible change to this record | `verify_ciphertext` on the encrypted limb; `verify_publishable_content` on the `--plaintext` limb — both grading the relation between `P` and C19 | **shipped shell predicates + regression suite** |
 | **CH-2** | a prompt may name a field and a remedy; it may **never carry, quote, or offer a candidate value**. **Silence is not assent** in a spoken modality | what is said aloud is bounded — needs include medical facts, and a spoken interview is audible to a room | **prose** |
-| **CH-3** | provenance-marking records that a value is **second-hand** and **never establishes consent** (`ADR-006`) | the standing rule on the passphrase **value**; `ADR-007` § 2 — no command may set `ALLOW_PLAINTEXT`, none may pass `--yes` to `unpublish` | **prose bounds + per-verb `allowed-tools`** |
+| **CH-3** | provenance-marking records that a value is **second-hand** and **never establishes consent** (`ADR-006`) | the standing rule on the passphrase **value**; `ADR-007` § 2 — no command may set `ALLOW_PLAINTEXT`, none may pass `--yes` to `unpublish` | **shipped text predicates over the authored command and conduct text + regression suite**, with per-verb `allowed-tools`; the predicates grade that text, not a live session |
 
 **Why two rules rather than one.** `ADR-015` clause 7 sits at the intersection: a report line is an
 engine→human **emission** whose prohibition exists to protect **authorship**. That is why that
@@ -729,9 +729,11 @@ record needed a subsection titled *"Why clause 7 is not a carve-out."* A one-rul
 explain that subsection; a two-rule model predicts it.
 
 **The residual, recorded rather than smoothed over.** The three R-tests are enforced at
-**materially different strengths** — one pair of shell predicates with their own regression suite,
-and two prose. Closing that is not this record's work. Stating it is what lets a reader see that
-the claim is checked on CH-1 and unchecked on CH-2 and CH-3.
+**materially different strengths** — CH-1's pair of shell predicates over the published artifact,
+with their own regression suite; CH-3's predicates over the authored command and conduct text, in a
+required suite; and CH-2's prose. Closing CH-2's is not this record's work. Stating it is what lets
+a reader see that the claim is checked on CH-1 and CH-3 — on CH-3 against the text a session
+follows rather than the session — and unchecked on CH-2.
 
 ### 6. The names, each with its measured collision
 
@@ -819,7 +821,8 @@ read**, and each proposed zero carries a
 - **`may-carry` is three-valued, and a binary consumer of it is a defect.** Any slice grading
   against it must handle UNDETERMINED as an outcome distinct from both admit and deny. This is
   stated here because a binary reading is the easy mistake and it fails toward *admit*.
-- **Three R-tests at three enforcement strengths.** Named in § *Decision* 5, closed nowhere.
+- **Three R-tests at three enforcement strengths.** Named in § *Decision* 5. CH-3's is graded
+  against its authored text; CH-2's is closed nowhere.
 - **K4's row will still read as a defect to someone.** That is precisely why it is written down,
   split into its arms, and grounded on the one fact true of both.
 - **The record carries a finding it does not repair** — the crossing artifact's missing class. A
@@ -904,8 +907,9 @@ here.
 - **A § 1.1 row for the published artifact.** Finding 1. Owned by whichever card next amends § 1.1.
 - **A fixture that exercises the unsourced arm.** Finding 2, against `CLAUDE.md`:131-133's fixture
   completeness rule.
-- **An observable test worth the name on CH-2 and CH-3.** The § *Decision* 5 residual: two of the
-  three R-tests are prose.
+- **An observable test worth the name on CH-2.** The § *Decision* 5 residual: one of the three
+  R-tests is prose. CH-3's W-test and R-test are graded against the authored command and conduct
+  text, not against a live session.
 
 ## References
 
@@ -962,3 +966,17 @@ here.
 - `skills/trip/SKILL.md`:73 and the `update` row of the requirement table under
   `skills/trip-publish/SKILL.md` § *Contract header* — the requirement rows that
   make mode production-gating rather than reach-indexing.
+
+## Amendment history
+
+**Amendment (2026-10-05, Monday) — CH-3's enforcement strength corrected in § *Decision* 5, and
+that section's residual paragraph, the *Trade-offs* bullet on the R-tests and the *Follow-on*
+bullet on an observable test reconciled with it; no decision changes.** § *Decision* 5's table gave
+CH-3's enforcement strength as prose and the per-verb grants alone, and that understated it when it
+was written: `scripts/test-command-taxonomy.sh` group `F` already failed a command file that sets
+`ALLOW_PLAINTEXT`, and a fenced publish-script invocation that passes `--yes` or `-y`. The change
+that made this correction also raised the strength: group `F` now grades the passphrase-value limb
+beyond its argument route, and group `W` grades the W-test. Both groups pin their predicates, and
+this record does not restate them. The cell is corrected in place, and each passage that counted
+CH-3 among the unchecked channels now counts CH-2 alone. What the predicates do not reach is
+unchanged in kind: they grade the authored text a session follows, not a session.

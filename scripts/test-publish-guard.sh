@@ -27,6 +27,9 @@
 # both limbs, one of which has no backstop. L14 and L15 grade the --data-root seam: L14 on
 # the person store, L15 on the <trip-dir> argument, EXECUTING the script from a working
 # directory that is not the data root — the only shape an installed engine's verbs produce.
+# L16 is the denial side of `may-carry` (ADR-026 § Decision 3), one must-fire per declared
+# row: a value under each row's selector, planted at that row's scope, aborts as a HIT, and
+# the same trip without it publishes. The rows are read from the live declaration.
 # M = published-bytes / stoplist / freshness remediation (#123 A6.5) · N = block-scoped
 # conjunctive window (#123 PR-7) · O = the [THIRD-PARTY] class: entry denylist,
 # value-granularity mark, real derived-model shape (#123 AC 3).
@@ -1757,6 +1760,94 @@ elif [ "$l15h_pop" -gt 0 ] && [ "$l15h_ok" -eq "$l15h_pop" ] && [ "$l15h_upd" = 
   PASS "L15h: all $l15h_pop cmd_* arm(s) that refuse 'no such trip dir' call resolve_trip_dir before refusing, read from their parsed bodies — the verb-reached update and unpublish among them. The detector's control read planted late / missing bodies correctly"
 else
   FAIL "L15h: cmd_* arm(s) refuse 'no such trip dir' without resolving first: ${l15h_bad:-none} (population $l15h_pop, ok $l15h_ok, update=$l15h_upd, unpublish=$l15h_unp) — a relative <trip-dir> reaching that arm is resolved against the working directory"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# L16 — THE DENIAL SIDE OF may-carry, ONE MUST-FIRE PER DECLARED ROW.
+#
+# reference/adr/ADR-026-channel-architecture.md § Decision 3 types the denial side of
+# `may-carry` over the (limb, artifact-scope) pairs this guard queries. The cases above arm
+# that side by hand — L1 and L12 a field on the model, L2 an entry on it — and group M arms a
+# field on a traveller file and on a person record. Which ROWS were armed therefore depended
+# on which rows somebody thought to arm.
+#
+# This matrix reads the live declaration through the guard's own reader. For EVERY row whose
+# pair is queried it plants a value under that row's selector, at that row's scope, and
+# carries it into the render: the publish must abort as a HIT (rc=1). The same trip with a
+# render that does not carry the value must publish (rc=0). A row added to the fence gets
+# its must-fire on the commit that adds it, and this file still holds no row, no selector
+# and no artifact scope.
+#
+# A row whose pair is NOT queried gets no case here. That is L10c's subject (rc=2), and
+# L10d holds the shipped declaration fully queried.
+#
+# The value is built per the row's own rule, the way the cases above build theirs: a row
+# under the word-count rule takes a sentence long enough to be matched as a phrase, as L2's
+# does, and every other row a short distinctive value, as L12's does. mtimes are set with
+# touch -t, never left to write order — group M's rule — with the model newest, so no
+# freshness comparison can fire and an abort is attributable to the class alone.
+l16_rows="$(_guard_declared_rows)"
+l16_n="$(awk 'NF { c++ } END { print c + 0 }' <<<"$l16_rows")"
+l16_q="$(awk -v m="$_GUARD_DECL_ARTIFACT_MODEL" -v p="$_GUARD_DECL_ARTIFACT_PROFILE" -v r="$_GUARD_DECL_ARTIFACT_PERSON" '
+    ($1 == "entry" && $3 == m) || ($1 == "field" && ($3 == m || $3 == p || $3 == r)) { print }' <<<"$l16_rows")"
+l16_nq="$(awk 'NF { c++ } END { print c + 0 }' <<<"$l16_q")"
+l16_np="$(awk 'NF && !s[$1 " " $3]++ { c++ } END { print c + 0 }' <<<"$l16_q")"
+if [ "$l16_n" -ge 1 ] && [ "$l16_np" -ge 1 ]; then
+  PASS "L16a: the live declaration yields $l16_n row(s), $l16_nq of them on $l16_np queried (limb, artifact-scope) pair(s), read through the guard's own reader — the per-row matrix below has a population"
+else
+  FAIL "L16a: VACUOUS — the live declaration yields $l16_n row(s) and $l16_np queried pair(s), so the per-row matrix below would assert nothing"
+fi
+l16_i=0; l16_clean=0; l16_int=0
+while read -r l16_limb l16_sel l16_scope l16_rule; do
+  [ -n "$l16_limb" ] || continue
+  l16_i=$((l16_i + 1))
+  L16T="$WORK/l16_$l16_i"; mkdir -p "$L16T/outputs"
+  L16R="$WORK/l16_$l16_i.html"; L16C="$WORK/l16_${l16_i}_clean.html"
+  if [ "$l16_rule" = by-wordcount ]; then
+    l16_val="cannot stand in a queue for longer than a quarter of an hour"
+    lrender "$L16R" "Access note: one member of the party $l16_val."
+  else
+    l16_val="Kestrel Vault 41 clearance $l16_i"
+    lrender "$L16R" "Holding note: $l16_val is filed with the courier before departure."
+  fi
+  lrender "$L16C" "Evening: the riverside lantern walk, then back to the guest house."
+  l16_built=1
+  case "$l16_limb:$l16_scope" in
+    "entry:$_GUARD_DECL_ARTIFACT_MODEL")
+      printf '# Traveler Model [DERIVED]\n\n## Rowan\n- Interests: markets, museums\n\n## Quill [OPERATOR-PROVIDED] %s\n\n### Needs\n- Category: mobility\n  Specific: %s\n' "$l16_sel" "$l16_val" > "$L16T/outputs/traveler-model.md" ;;
+    "field:$_GUARD_DECL_ARTIFACT_MODEL")
+      printf '# Traveler Model [DERIVED]\n\n## Rowan\n- **%s:** %s\n' "$l16_sel" "$l16_val" > "$L16T/outputs/traveler-model.md" ;;
+    "field:$_GUARD_DECL_ARTIFACT_PROFILE")
+      mkdir -p "$L16T/travelers"
+      printf '# Traveler Model [DERIVED]\n\n## Rowan\n- Interests: markets, museums\n' > "$L16T/outputs/traveler-model.md"
+      printf '# Rowan — traveler profile\n\n## Getting there & back\n- **%s:** %s\n' "$l16_sel" "$l16_val" > "$L16T/travelers/rowan.md"
+      touch -t 202601011000 "$L16T/travelers/rowan.md" ;;
+    "field:$_GUARD_DECL_ARTIFACT_PERSON")
+      mkdir -p "$L16T/travelers" "$L16T/$_GUARD_PERSON_STORE"
+      printf '# Traveler Model [DERIVED]\n\n## Rowan\n- Interests: markets, museums\n' > "$L16T/outputs/traveler-model.md"
+      printf -- '---\nartifact: %s\nschema-version: 1\ntrip: zq-2001\nwriter: human\nlifecycle: persist-mutable\nprovenance: human\npublish: internal\n%s: psn-a1b2\n---\n\n# Rowan\n\n## Getting there & back\n- **Leaving from:** Central Station\n' "$_GUARD_DECL_ARTIFACT_PROFILE" "$_GUARD_REF_KEY" > "$L16T/travelers/rowan.md"
+      printf -- '---\nartifact: %s\nschema-version: 1\ntrip: cross-trip\nwriter: human\nlifecycle: persist-mutable\nprovenance: human\npublish: internal-hard\n---\n\n# Rowan\n\n## Getting there & back\n- **%s:** %s\n' "$_GUARD_DECL_ARTIFACT_PERSON" "$l16_sel" "$l16_val" > "$L16T/$_GUARD_PERSON_STORE/psn-a1b2.md"
+      touch -t 202601011000 "$L16T/travelers/rowan.md" "$L16T/$_GUARD_PERSON_STORE/psn-a1b2.md" ;;
+    *) l16_built=0 ;;
+  esac
+  if [ "$l16_built" -ne 1 ]; then
+    FAIL "L16b[$l16_limb,$l16_sel,$l16_scope]: NO BUILDER — the row's pair is queried and this matrix cannot plant a value at it, so the row has no must-fire. Add the scope's fixture shape here in the change that adds the pair"
+    continue
+  fi
+  touch -t 202601011100 "$L16R" "$L16C"
+  touch -t 202601011200 "$L16T/outputs/traveler-model.md"
+  l16_hit="$(grep -c -F -- "$l16_val" "$L16R" || true)"; l16_miss="$(grep -c -F -- "$l16_val" "$L16C" || true)"
+  [ "$l16_hit" -ge 1 ] && [ "$l16_miss" -eq 0 ] && l16_int=$((l16_int + 1))
+  expect_rc 1 "L16b[$l16_limb,$l16_sel,$l16_scope]" "MUST-FIRE — a value under the declared $l16_limb selector $l16_sel, planted at $l16_scope and carried by the render, aborts the publish as a HIT (rule $l16_rule)" -- verify_publishable_content "$L16R" "$L16T"
+  lguard "$L16C" "$L16T"
+  [ "$LRC" -eq 0 ] && l16_clean=$((l16_clean + 1))
+done <<EOF
+$l16_q
+EOF
+if [ "$l16_i" -ge 1 ] && [ "$l16_i" -eq "$l16_nq" ] && [ "$l16_int" -eq "$l16_i" ] && [ "$l16_clean" -eq "$l16_i" ]; then
+  PASS "L16c: CLEAN control — for all $l16_i row(s), the same trip with a render that does not carry the planted value publishes (rc=0), and each fixture pair was read back: the planted value is in the first render and absent from the second. Every abort above is caused by that value reaching the render"
+else
+  FAIL "L16c: the clean control did not hold for every row — $l16_i row(s) built of $l16_nq queried, $l16_int fixture pair(s) intact, $l16_clean clean render(s) published. A fixture that aborts without the planted value makes its row's must-fire above prove nothing"
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
