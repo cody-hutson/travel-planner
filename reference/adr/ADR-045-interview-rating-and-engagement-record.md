@@ -293,8 +293,8 @@ D1.1 in part, as to no new artifact class.** Every other decision of both record
   above its end marker *"and nothing below it"*. It says so in its lead sentence and again in the
   paragraph that closes it. **What is superseded is that phrase.** Under D3 the block carries the
   end-of-profile heading and, below it, a tagged return; and after the block the rating follows as
-  a tagged line of its own. **What stands:** that the form comes back as one fenced block, and that
-  nothing else is fenced; that above the end marker the block is what the target file would hold
+  a tagged line of its own. **What stands:** that the form comes back as one fenced block, with no
+  second block beside it; that above the end marker the block is what the target file would hold
   if each answer had been written into it as it was given; each bullet of D1; that record's D0;
   its D2, where *"a returned block"* is read as the form's block (D3), so D2 takes no mark; its D3,
   under which the return's contract goes on the card and nowhere else; and every consequence it
@@ -313,10 +313,10 @@ D1.1 in part, as to no new artifact class.** Every other decision of both record
   no class and no reach row are added are not decisions and are not marked; § *Consequences* names
   them.
 - **`ADR-022`'s write-capable row and its resumption decision stand, and are named because this
-  record sits close to both.** D6.1's row for a session that can write says *"there is no output act at
-  all, because the answers were never held in conversation"*. Its reason is about answers handed
-  back from a conversation: an entry holds no answer, is written by the session to its home, and
-  is returned to nobody. Said plainly: the session does hold its own turn counts until its ending,
+  record sits close to both.** The row D6.1 gives a session that can write says *"there is no
+  output act at all, because the answers were never held in conversation"*. Its reason is about
+  answers handed back from a conversation: an entry holds no answer, is written by the session to
+  its home, and is returned to nobody. Said plainly: the session does hold its own turn counts until its ending,
   which is the cadence that record rejected for answers. That is a choice (D3), taken so that
   nothing marks a session that was left. D1.1's *"Resumption state is DERIVED"* and D1.2's *"There
   is no abandon event and nothing marks one"* stand too: nothing of the class is ever read by the
@@ -435,7 +435,7 @@ interviewer's account of its own turns. The rating is not part of it.
    in this record, the card or the save, so a field newly typed `PERSON` is covered with no edit.
    **A section that holds any `PERSON`-class field is one row for the section, pooling every field
    of it that was put, and saying how many it pools.** Where such a section repeats a block — the
-   durable form's needs section, one block for each need — **the count is of the labels the form
+   person form's needs section, one block for each need — **the count is of the labels the form
    prints for the section, and it does not grow with the number of entries a person gave**: a
    pooled row does not show how many needs a person listed. **The pooling is the writer's act, at
    the write.** A recipient's assistant holds no classification, so the section it gives back has
@@ -476,7 +476,7 @@ interviewer's account of its own turns. The rating is not part of it.
 **Its permitted cases.** A value of the record is a member of the set its field declares, or a whole
 number; a row is a field's own row, or the one pooled row of a section that holds a `PERSON`-class
 field. Nothing else is a value or a row. **Its inputs:** the form the entry names; and, for the
-pooling, the classification, read live. **One worked example.** A session on the durable form puts
+pooling, the classification, read live. **One worked example.** A session on the person form puts
 the passport field and the other fields of its section, puts fields elsewhere, and puts nothing in
 the needs section. The entry's ledger has a row of its own for each field put elsewhere, and one
 row for the passport field's section, which says how many fields it pools and counts one silence
@@ -718,9 +718,11 @@ kinds of interviewer turn, and the closed list of those that put or concern a fi
 ask and the opening sentence put no field; that record closes only its list of the kinds that put
 or concern one, so they are this record's to name.
 
-**Read from earlier records:** *field*, *section*, *repeat unit*, *closed* (`ADR-023`); *session*,
-the tiers *W* and *T*, *spoken*, *skip* and the endings (`ADR-022`); a field's *class*
-(`reference/data-model.md`).
+**Read from earlier records:** *field*, *section*, *repeat unit*, *closed* and *guided form*
+(`ADR-023`); *block-owned form* (`ADR-024`); *session*, the tiers *W* and *T*, *spoken*, *skip* and
+the endings (`ADR-022`); a field's *class* (`reference/data-model.md`). The *trip form* and the
+*person form* are the guided forms `templates/traveler-intake.template.md` and
+`templates/person-intake.template.md`.
 
 **What the conduct record left to this one.** Its paragraph *Not this record's* says the rating's
 ask is no field of a form, so its example rule and its follow-up bound do not reach it: D1 states
@@ -808,7 +810,9 @@ it says.
 ### What is untouched
 
 **The hand-off set.** It is `ADR-023` D4.1's, and this record adds no file to it and removes none:
-the return's contract goes on the card, which is a member already.
+the return's contract goes on the card, which is a member already. Whether the set should be
+leaner — what `#1766 V-8` bears on, operator-attested and ungraded — is not decided here; it is
+#1327's to raise, from runs that start with the set.
 
 **The profile.** The same answers produce the same profile with a return and without one. Nothing
 of the return is written into the profile's file, and `reference/data-model.md`
@@ -868,7 +872,7 @@ is a residual a ruling overtook.
 | RR-19 | **Held cards quote text this record overtakes.** The build card says the rating is asked once, at the end, which differs from D1 by one further offer; that the record comes back beside the profile on the route that writes, where nothing comes back and it is written; and that the record identifies the interviewer turns behind a rating, which a pooled row does not do for its own section. The epic's eleventh criterion says no traveller answer beyond what the profile holds, which D2 reads under a stated definition | #1770, at its own planning; the operator, for the epic's criterion (#1205) |
 | RR-20 | **The status-lag report the marks cause**: `ADR-040` and `ADR-022` are Accepted and cite this record while it is `Proposed` | the operator; the change that sets this record `Accepted` clears it |
 | RR-21 | **Whether a session that ends on silence gives the form back** is not stated on the card; and a non-reply at the rating ask is a case its runs should include | #1327 |
-| RR-22 | **What the checks on this record's rules need declared**: the reply at the rating ask; a traveller who rates low; a returned block in each case of the declared outcome; and a durable-form conversation that puts a `PERSON`-class field | #1770 |
+| RR-22 | **What the checks on this record's rules need declared**: the reply at the rating ask; a traveller who rates low; a returned block in each case of the declared outcome; and a person-form conversation that puts a `PERSON`-class field | #1770 |
 | RR-23 | **An unlinked traveller's entries.** No `erase` runs; they go as the traveller file goes, by the operator's hand | the operator |
 | RR-24 | **Entries on a trip a person was unlinked from** are unreached unless the operator names the trip, and nothing shows them: the residual scan reads a name, and an entry holds a key | #1770 |
 | RR-25 | **A return carried into a file by hand.** Where a hand-save — of a person record, or of a trip profile saved outside the save — copies the tagged return in with the rest, it rests in that file unchecked and unpooled. Nothing this record decides takes it out | #1770 |
@@ -915,6 +919,8 @@ trailing newline.
   `RS-15`
 - [`ADR-023`](ADR-023-interviewer-authored-home-and-form-contract.md) — D4.1, the hand-off set; and
   the form's terms
+- [`ADR-024`](ADR-024-form-contract-writer-boundary.md) — the block-owned form, on which no rating
+  is asked and no entry is made
 - [`ADR-039`](ADR-039-interview-conduct-bundled-with-the-verb.md) — D1: where the shared conduct is
   authored
 - [`ADR-042`](ADR-042-accepted-record-growth.md) — § 3: settled design is never a record's
