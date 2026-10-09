@@ -10,8 +10,8 @@ publish: internal
 
 # Your Travel Profile — [Name]
 
-> **This is *your* profile** — what you'd love out of the trip, what you need it to
-> work around, and how you like to travel. One file per person.
+> **This is *your* profile** — what you'd love out of the trip and how you like to
+> travel. One file per person.
 >
 > **The fence above is not a field you fill in.** Replace `<trip-slug>` with the trip's
 > directory name and leave the rest exactly as it stands. **Your name does not go in it** —
