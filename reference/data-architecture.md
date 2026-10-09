@@ -1286,7 +1286,9 @@ schema-grammar addition that made any of them a required field would bump the ve
 and owe a migration for instances at version *n−1* — and § 7.5 records that those instances sit on
 a compatibility surface which is a git-ignored directory this repository cannot reach, inspect or
 repair. Weighing that change needs its own evidence; it is not a rider on a correction to this
-table. Until a slice takes it, the declaration above is the whole of the position.
+table. Closing it is assigned to no work item and has no owner; one is warranted when something
+needs an element this table marks as a gap — for instance a consumer that needs `readers:`, or a
+cap that needs `enforced-by:` — and until then the declaration above is the whole of the position.
 
 ---
 
