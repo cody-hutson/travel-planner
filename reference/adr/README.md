@@ -212,3 +212,4 @@ so each group stays in number order.
 | [ADR-039](ADR-039-interview-conduct-bundled-with-the-verb.md) | The interview's shared conduct is bundled with the interviewer verb — a file beside its command file, superseding ADR-023 D1.1 in part | Accepted |
 | [ADR-040](ADR-040-transcript-only-return-and-save.md) | What a transcript-only channel returns, and who saves it — superseding ADR-022 D6.1's tier-T row in part | Accepted |
 | [ADR-041](ADR-041-third-party-roster-standing.md) | A third-party member's roster standing — no `## Group` row, and one unnamed place in `Total travelers` | Accepted |
+| [ADR-044](ADR-044-interview-conversation-conduct.md) | The interviewer's conversation conduct — examples by kind, own words as a predicate, a follow-up bound and a chosen interview style, superseding ADR-022 D5.3 and ADR-026 § 5's CH-2 W-test in part | Proposed |
