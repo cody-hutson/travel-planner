@@ -172,8 +172,8 @@ name: Artifact schema
 #        property separating one refusal rule from its unscoped drafting, and the normative
 #        statements no behavioural witness in a tree of prompt files can reach
 #   HZ   the validity-horizon axis and the tracked instance that exercises the mark. The
-#        real store is git-ignored, so a mark no tracked fixture carries is a grammar
-#        nothing grades
+#        real store lives under the operator's data root (CLAUDE.md § Resolving a trip), so
+#        a mark no tracked fixture carries is a grammar nothing grades
 #   RM   the reference-month RULE PROSE in reference/data-model.md, anchored so a
 #        prose-only revert fails a check rather than leaving the fence intact and every
 #        arm green. The anchor is a derived declaration spine, never a pin: the expected
@@ -231,8 +231,9 @@ name: Artifact schema
 #        rendered row must name is derived from the component catalog on the same run. The
 #        INSTANCE half — per day, per split-day track, per event card — renders VACUOUS
 #        with its denominator rather than PASS, because a CI checkout contains no rendered
-#        site and cannot: the trip tree is git-ignored and the site schema's no-witness
-#        clause is terminal, naming a committed site fixture as exactly the wrong repair.
+#        site and cannot: the trip tree lives under the operator's data root and the site
+#        schema's no-witness clause is terminal, naming a committed site fixture as exactly
+#        the wrong repair.
 #        A site fixture appearing in the tree turns that arm RED rather than supplying it a
 #        population. Those codes are carried instead by standing control arms over
 #        synthetic plan and site pairs built fresh on every run — a dropped card replayed,
@@ -247,6 +248,21 @@ name: Artifact schema
 #        declared in the suite rather than left to be inferred: no arm shows that a site
 #        build invoked the walk, and the walk grades the written site against the plan
 #        rather than the act of writing
+#   NC   the five never-carries of ADR-025 § Decision 3, graded as class facts at their live
+#        membership: a rebuilt-each-synthesis instance carrying prior passes (EB-0) — graded
+#        on tracked instances only, never on conduct that would accumulate into one; the
+#        internal-hard class against the site build's read set, a C12 value with no
+#        first-party source found verbatim in a bound artifact, and synthetic renders through
+#        ADR-030's reading and any record superseding part of never-carry 2; both-marks values
+#        and DEST-class fields in cross-trip records, and every store writer's both-marks
+#        guard (EB-2); and the engagement axis's tokens on every stored-value surface, its
+#        carrier included. Every arm carries a control that must fire and one that must not
+#   MC   may-carry, typed per side (ADR-026 § Decision 3): the envelope side over the channel
+#        table and ADR-030 § 2's private-site-field-declaration fence, keyed on the field's
+#        (section, label) pair and held to § 2's prose in both directions, including the one
+#        cell ADR-030 moves; on the encrypted limb a field the declaration does not carry, or
+#        carries only if marked, reads UNDETERMINED, never admit; and the three-valued
+#        conjunction with the denial side, UNDETERMINED a third outcome asserted by exit code
 #   RS   this coverage boundary itself, and the suite's own header roster, each set-diffed
 #        BOTH WAYS against the groups the run actually emitted. The executing set comes from
 #        the RUN, never from a static read of the suite. A group added and left undeclared

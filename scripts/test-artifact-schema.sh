@@ -199,8 +199,10 @@
 #   ER   the erasure verb's declared contract, its coverage of every trip-context section and
 #        derived-model block, and the fixture properties AF's post-state grading cannot reach.
 #   HZ   the validity-horizon axis and the tracked instance that exercises the mark. The real
-#        person store is git-ignored, so tracked fixtures are the only instances this gate can
-#        reach, and a mark nothing carries is a grammar nothing grades.
+#        person store lives under the operator's data root (reference/data-model.md
+#        § Composition — the trip-side read of a durable record), so tracked fixtures are the
+#        only instances this gate can reach, and a mark nothing carries is a grammar nothing
+#        grades.
 #   RM   the reference-month RULE PROSE, anchored so a prose-only revert fails a check.
 #        Group HZ grades WHERE the verdict fence lives and what its rows say; nothing
 #        graded what the rule text around it SAYS, so a rewrite of the prose left the
@@ -323,6 +325,21 @@
 #        and this rule had no mechanism at all, so the prose is replaced by an executable
 #        and anchored by its consumer instead. No count is spelled anywhere in this file
 #        for this group: every set is read
+#   NC   the five never-carries of ADR-025 § Decision 3, graded as class facts at their live
+#        membership: a rebuilt-each-synthesis instance carrying prior passes (EB-0) — graded
+#        on tracked instances only, never on conduct that would accumulate into one; the
+#        internal-hard class against the site build's read set, a C12 value with no
+#        first-party source found verbatim in a bound artifact, and synthetic renders through
+#        ADR-030's reading and any record superseding part of never-carry 2; both-marks values
+#        and DEST-class fields in cross-trip records, and every store writer's both-marks
+#        guard (EB-2); and the engagement axis's tokens on every stored-value surface, its
+#        carrier included. Every arm carries a control that must fire and one that must not
+#   MC   may-carry, typed per side (ADR-026 § Decision 3): the envelope side over the channel
+#        table and ADR-030 § 2's private-site-field-declaration fence, keyed on the field's
+#        (section, label) pair and held to § 2's prose in both directions, including the one
+#        cell ADR-030 moves; on the encrypted limb a field the declaration does not carry, or
+#        carries only if marked, reads UNDETERMINED, never admit; and the three-valued
+#        conjunction with the denial side, UNDETERMINED a third outcome asserted by exit code
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -1706,8 +1723,12 @@ else
   fi
 fi
 
-if [ "$PB_OK" -eq 1 ]; then
-  PB_ROWS="$(awk -v info='```'"$PB_FENCE" '
+# pb_fence_rows <spec-file> — the fence's rows as "<artifact>\t<class>", and a row carrying
+# fewer than two fields as PARSE-FAIL. A function, taking its file as an argument, so that
+# every reader of this fence shares ONE parse: group PB reads the spec through it here, and
+# group NC reads the spec and a mutated copy of it through the same code.
+pb_fence_rows() {
+  awk -v info='```'"$PB_FENCE" '
     $0 == info { inside = 1; next }
     inside && $0 == "```" { inside = 0; next }
     inside {
@@ -1717,7 +1738,11 @@ if [ "$PB_OK" -eq 1 ]; then
       n = split(line, F, /[[:space:]]+/)
       if (n < 2) { printf "PARSE-FAIL\t%s\n", line; next }
       printf "%s\t%s\n", F[1], F[2]
-    }' "$ROOT/$PB_SPEC")"
+    }' "$1"
+}
+
+if [ "$PB_OK" -eq 1 ]; then
+  PB_ROWS="$(pb_fence_rows "$ROOT/$PB_SPEC")"
   PB_N="$(printf '%s\n' "$PB_ROWS" | grep -c '[^[:space:]]')"
   PB_PF="$(printf '%s\n' "$PB_ROWS" | grep -c '^PARSE-FAIL' || true)"
   PB_PUBENUM="$(en_canonical publish | awk 'NR == 1')"
@@ -11922,7 +11947,7 @@ if [ "$RL_OK" -eq 1 ]; then
   if [ "$RL_SECN" -eq 0 ]; then
     FAIL "RL7: the \`## link\` section extracted to 0 lines — the region probe found nothing, so both verdicts below would be a failed parse reported as a missing rule"
   elif [ "$RL_TWOWAY" -eq 1 ] && [ "$RL_READBACK" -eq 1 ]; then
-    PASS "RL7: over $RL_SECN line(s) of the \`## link\` section, the reconciliation's prohibition is still stated in BOTH directions and the post-write read-back is still required. The first matters because the standing rule that bounds a bulk store write does not reach a trip-side deletion at all, and a trip-side deletion in a git-ignored tree is recoverable from nothing; the second because the gate moved consent in front of the one step that can still fail"
+    PASS "RL7: over $RL_SECN line(s) of the \`## link\` section, the reconciliation's prohibition is still stated in BOTH directions and the post-write read-back is still required. The first matters because the standing rule that bounds a bulk store write does not reach a trip-side deletion at all, and nothing in this repository could restore a trip-side deletion made under the operator's data root; the second because the gate moved consent in front of the one step that can still fail"
   else
     FAIL "RL7: the \`## link\` section no longer states the two-directional prohibition (found=$RL_TWOWAY) or the post-write read-back (found=$RL_READBACK). Removing either reaches a worse outcome silently — an unbounded trip-ward apply, or a failed write indistinguishable from a successful one"
   fi
@@ -12590,9 +12615,9 @@ fi
 #
 # WHAT THIS GROUP IS FOR. The `[VALID-THROUGH <YYYY-MM>]` mark shipped admissible on any
 # field bullet and required on none, and was exercised in NO tracked instance: the real
-# person store is git-ignored, so the tracked fixtures are the only instances this gate
-# can ever reach, and the original witness records the mark as "not exercised here" in its
-# own prose. A mark nothing carries is a grammar nothing grades.
+# person store lives under the operator's data root, so the tracked fixtures are the only
+# instances this gate can ever reach, and the original witness records the mark as "not
+# exercised here" in its own prose. A mark nothing carries is a grammar nothing grades.
 #
 # The classification now carries a per-field `Horizon` axis, so membership is DATA rather
 # than code: admitting a second horizon-bearing field is one cell of one table. This group
@@ -12769,7 +12794,7 @@ if [ "$HZ_OK" -eq 1 ]; then
   if [ "$HZ_DASHED" -eq 0 ]; then
     FAIL "HZ4: the control arm reached 0 \`Passport:\` bullet(s) across the tracked tree — the walk matched no such bullet at all, so a clean verdict here would certify a scan that never ran rather than a tree that is clean"
   elif [ -n "$HZ_VALUED" ]; then
-    FAIL "HZ4: tracked file(s) carrying a \`Passport:\` bullet with a real value: $HZ_VALUED — this class is publish: internal-hard and every real instance of it is git-ignored. A tracked passport value is a disclosure, and adding a horizon fixture is not a reason to introduce one. Not-a-value is the corpus's own vocabulary and nothing wider: empty, a lone em dash, a surviving bracketed placeholder (a blank form's prompt, ANSWERED()-false by the data model's predicate), or the composed sentinel UNKNOWN"
+    FAIL "HZ4: tracked file(s) carrying a \`Passport:\` bullet with a real value: $HZ_VALUED — this class is publish: internal-hard and every real instance of it lives under the operator's data root. A tracked passport value is a disclosure, and adding a horizon fixture is not a reason to introduce one. Not-a-value is the corpus's own vocabulary and nothing wider: empty, a lone em dash, a surviving bracketed placeholder (a blank form's prompt, ANSWERED()-false by the data model's predicate), or the composed sentinel UNKNOWN"
   else
     PASS "HZ4: FAIL-CLOSED — no tracked file carries a \`Passport:\` bullet with a real value, measured over the whole tracked markdown tree rather than over the fixtures alone. The control arm reached $HZ_DASHED such bullet(s) and classified every one as not-a-value, so the zero is a measurement. Not-a-value is exempted per VALUE and never per file, so this arm still fails on a real value appearing in a file that also carries an exempt one. This is what lets the horizon ship exercised: the mark is field-general, so it is demonstrated on fields that are not \`Passport\` and no passport value enters a tracked file to make that possible"
   fi
@@ -16064,7 +16089,7 @@ fi
 
 # ── The declared residual, on the ps_dne channel so it rides on EVERY run rather than sitting
 # in a comment somebody has to open this file to read.
-ps_dne "W: no arm in this group establishes that a site build INVOKED the walk. W3 grades that the verb DECLARES the invocation; whether a given run issued it is unreachable from any tree, because the trip tree is git-ignored and carries no history of the act. Nor does a clean walk establish that the site it read is the site the verb WROTE — it grades the artifact after the write. What would settle the first: a live site build against a real trip, with the walker's own output observed in that run"
+ps_dne "W: no arm in this group establishes that a site build INVOKED the walk. W3 grades that the verb DECLARES the invocation; whether a given run issued it is unreachable from any tree, because the trip tree lives under the operator's data root and this repository holds no history of the act. Nor does a clean walk establish that the site it read is the site the verb WROTE — it grades the artifact after the write. What would settle the first: a live site build against a real trip, with the walker's own output observed in that run"
 
 # ── W-OPTOUT — the control arms' subjects are FILES under $WORK, not shell functions.
 # `unset -f` cannot remove a file, so md_flips would grade the ORACLE rather than the
@@ -16091,6 +16116,2620 @@ md_flips rt_grammar_labels 'W1'  w1_assert  "$W_GRAMMAR" "$W_SPEC"
 md_flips rt_components     'W2'  w2_assert  "$W_SPEC"
 md_flips w_site_region     'W3'  w3_assert  "$W_VERB"
 md_flips w_site_region     'W3c' w3c_assert "$W_VERB"
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group NC — the five never-carries of ADR-025 § Decision 3, graded as class facts.
+#
+# ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
+# ADR-025 § Decision 3 states five things that never carry across a phase boundary, and it
+# states each as a fact about a CLASS rather than as a policy. Until this group shipped no
+# suite read that record at all: the prohibitions were prose in the one corpus surface a
+# guard had measured as read by nothing. A prohibition nothing can fail is a promise.
+#
+# ── THE CLASSES AND BOUNDARIES THE NEVER-CARRY TABLE NAMES ARE READ FROM THE RECORD, NOT HELD HERE ──
+# The never-carry table is parsed where it stands. Row 1's lifecycle token, row 4's field
+# class and each row's boundary are taken from the table's own cells, and the membership of
+# each class is then read from its own home — § 6 for a lifecycle, the classification for a
+# field class, § 4.4 for the cross-trip sentinel. A copied list would grade the wrong set
+# the moment the class changed, and nothing would say so.
+#
+# ── EVERY ARM CARRIES THREE THINGS ───────────────────────────────────────────────
+# The real-tree verdict; a SENSITIVITY arm, which runs the same instrument where it must
+# find something, so a zero is a measurement and not an empty scan; and a MUST-FIRE arm
+# beside a MUST-NOT-FIRE arm, built under the temporary directory and differing in the one
+# property tested. A sensitivity arm returning zero is reported as a BROKEN PROBE on the
+# subject's own verdict line — never as the subject being clean.
+#
+# Every function below takes its input paths as ARGUMENTS, so a control arm drives the same
+# code over a copy. No tracked fixture is added, and nothing under the tree is written.
+#
+# ── WHAT THIS GROUP DOES NOT ESTABLISH ───────────────────────────────────────────
+# It grades the TREE. Never-carry 1 is graded on tracked instances only, never on conduct
+# that would accumulate into a rebuilt class; and no arm here observes an agent carrying a
+# value across a boundary at run time. Each verdict line states its own boundary.
+#
+# NC emits BEFORE group RS, and must stay there: RS reads the complete emitted set.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "NC — the five never-carries, graded as class facts at their live membership"
+
+NC_ADR025="$ROOT/reference/adr/ADR-025-engagement-model-over-time.md"
+NC_ARCH="$ROOT/$VA_ARCH_DOC"
+NC_DM="$ROOT/reference/data-model.md"
+NC_W="$WORK/nc"; mkdir -p "$NC_W"
+NC_TP_MARK='[THIRD-PARTY]'
+NC_OP_MARK='[OPERATOR-PROVIDED]'
+# The traveller model's class — never-carry 5's declared carrier, and the instance never-carry
+# 2's value layer reads — and the publish class the site build reads. Both are named ONCE, here,
+# above NC0, because NC0 prints the value layer's populations before either arm that owns one.
+NC5_CARRIER='C12'
+NC2_READ='bound'
+
+nc_count() { printf '%s\n' "$1" | grep -c '[^[:space:]]' || true; }
+
+# nc_table <adr-025> — the never-carry table, as "<n>\t<what>\t<across>\t<why>", read inside the
+# section that declares it and nowhere else. Cells are trimmed and their markup is kept.
+nc_table() {
+  awk '
+    index($0, "### 3. Four boundaries") == 1 { on = 1; next }
+    on && (/^### / || /^## /) { on = 0 }
+    on && /^\|[ \t]*[0-9]+[ \t]*\|/ {
+      if (split($0, F, "|") < 5) next
+      for (i = 2; i <= 5; i++) { gsub(/^[ \t]+|[ \t]+$/, "", F[i]) }
+      printf "%s\t%s\t%s\t%s\n", F[2], F[3], F[4], F[5]
+    }' "$1"
+}
+# nc_cell <table> <row> <field> — one cell; nc_span <text> — its first code span, bare.
+nc_cell() { awk -F'\t' -v n="$2" -v f="$3" '$1 == n { print $f }' <<<"$1"; }
+nc_span() { awk '{ if (match($0, /`[^`]+`/)) print substr($0, RSTART + 1, RLENGTH - 2) }' <<<"$1"; }
+
+# nc_sentinel <architecture-doc> — the reserved `trip:` value the cross-trip classes carry,
+# read from the § 4.4 bullet that declares it.
+nc_sentinel() {
+  awk '
+    index($0, "### 4.4 ") == 1 { on = 1; next }
+    on && (/^### / || /^## /) { on = 0 }
+    on && /^- \*\*C22 / { grab = 1 }
+    on && grab && /^[ \t]*$/ { grab = 0 }
+    on && grab { buf = buf " " $0 }
+    END {
+      if (match(buf, /`trip` is `[^`]+`/)) {
+        s = substr(buf, RSTART, RLENGTH); sub(/^`trip` is `/, "", s); sub(/`$/, "", s); print s
+      }
+    }' "$1"
+}
+
+# nc_cross <root> <instances> <sentinel> — the "<class>\t<path>" instances whose frontmatter
+# `trip:` is the sentinel. The frontmatter is read by the validator's own reader.
+nc_cross() {
+  local cid p t
+  while IFS="$VA_TAB" read -r cid p; do
+    [ -n "$p" ] || continue
+    t="$(va_fm_pairs "$1" "$p" 2>/dev/null | awk -F'\t' '$1 == "trip" { v = $2 } END { print v }')"
+    [ "$t" = "$3" ] && printf '%s\t%s\n' "$cid" "$p"
+  done <<EOF
+$2
+EOF
+}
+
+# ── NC-2, the value layer's reader — defined BEFORE NC0, which prints what it reads ───────
+#
+# The declaration layer (NC2, below) shows that the site build's read set and the barred class
+# are disjoint AS DECLARED. It cannot see a VALUE of that class copied into a file the build
+# does read. This reader can, on the tracked example trips, by provenance rather than by path:
+#
+#   POPULATION  every trip directory holding an instance of the traveller model's class,
+#               resolved by the validator's selector
+#   VALUES      inside each `## ` entry section of that instance whose KEY is not reserved:
+#               the first cell of every data row of a table whose header's first cell is
+#               `Need` or `Desire`, and the two arrow-bullet shapes — `- Need → … specific: <v>`
+#               up to its final full stop, and `- Desire (<tier>): <v>` up to ` [` or ` — `.
+#               Distinct per trip. A value under the floor below is skipped and counted
+#   SOURCES     the trip's first-party text: every file directly under its travellers
+#               directory; its log; the two constraint sections of its context, which
+#               reference/data-model.md § Composition names as the constraint half of the
+#               trip-scoped source; and every person record a traveller file's reference
+#               line names, under the trip's own store where it has one and the root's
+#               otherwise
+#   TARGETS     the trip's artifacts of the read class, from the same fence rows NC2 reads —
+#               the context among them MINUS its two constraint sections, which are a source
+#   PREDICATE   a value HAS NO SOURCE when its case-folded text is a substring of no source,
+#               and it is a FINDING when such a value is a substring of a target
+#
+# It is not an allowlist: a conformant tree is green because provenance decides, and the
+# constraint half is a source because a need the context states is first-party there.
+#
+# THE KEY IS THE SHIPPED TWO-STEP RULE of reference/data-model.md § "The key is computed in
+# two steps": clean(head), then fold and strip. clean() is TAKEN from the publish script — the
+# code that rule quotes — by sourcing it in a subshell, and is never re-typed here, because a
+# second copy is how this key would drift from the guard's. The script's own guard stops it
+# dispatching, as scripts/test-publish-guard.sh relies on. The one-step form keys
+# `## Update signals [DERIVED]` to a key that is not reserved, and would read that section
+# as a person.
+#
+# Whitespace is collapsed on both sides, so a value wrapped across two lines of a source or a
+# target is still seen. The programs run in the C locale, so the fold is the ASCII one and the
+# floor is counted in bytes on every engine.
+#
+# DECLARED RESIDUAL, stated on NC2p's verdict line as well: verbatim values only. A
+# paraphrase is not seen; nor is a value that coincides with first-party text; nor is a value
+# under the floor.
+NC2P_MIN=8
+NC2P_HOME='trip-context.md'
+NC2P_SECTIONS='Hard Constraints|Dietary & Health'
+NC2P_TRAVELERS='travelers'
+NC2P_LOG='trip-log.md'
+NC2P_STORE='people'
+NC2P_REF='person'
+NC_PUBLISH="$ROOT/scripts/publish-trip-site.sh"
+# shellcheck source=publish-trip-site.sh
+NC_CLEAN_FN="$(set +eu; source "$NC_PUBLISH" >/dev/null 2>&1; printf '%s' "${_GUARD_AWK_HELPERS:-}")"
+NC_CLEAN_OK=0
+case "$NC_CLEAN_FN" in *'function clean('*) NC_CLEAN_OK=1 ;; esac
+
+# nc2p_reserved <data-model> — the reserved keys, one per line, from the table in § Reserved keys.
+nc2p_reserved() {
+  awk '
+    index($0, "### Reserved keys") == 1 { on = 1; next }
+    on && (/^### / || /^## /) { on = 0 }
+    on && /^>?[ \t]*\|[ \t]*`[^`]+`[ \t]*\|/ { if (match($0, /`[^`]+`/)) print substr($0, RSTART + 1, RLENGTH - 2) }' "$1"
+}
+# nc2p_bound <fence-rows> <class-rows> <read-class> — "<artifact>\t<class-id>" for every fence
+# row of the read class, the class id looked up in § 1.1's rows and `-` where none names it.
+nc2p_bound() {
+  awk -F'\t' -v rc="$3" '
+    FILENAME == ARGV[1] { if ($1 ~ /^[0-9]+$/ && $2 != "") cls[$2] = "C" $1; next }
+    NF == 2 && $2 == rc { print $1 "\t" (($1 in cls) ? cls[$1] : "-") }' <(printf '%s\n' "$2") <(printf '%s\n' "$1")
+}
+# nc2p_scan <root> <files> <model-instances> <model-artifact> <bound-rows> <reserved-keys>
+# Records: TRIP <trip> <name> <values> <unsourced> <short> <sources> <targets> <entries> <constraint-home>
+#          ONLY <trip> <value> · SRCD <trip> <value> · FIND <trip> <name> <value> <artifact> <class>
+#          SKIP <trip> <name> <key> · UNREAD <path> · ODD <path>
+# The program is a literal at the pipe, after the two embedded helpers, so the short-circuit
+# reader scan in scripts/test-corpus-hygiene.sh reads it: it never leaves before end of input.
+nc2p_scan() {
+  {
+    printf '%s\n' "$6" | awk 'NF { print "R\t" $1 }'
+    printf '%s\n' "$5" | awk -F'\t' 'NF == 2 { print "B\t" $1 "\t" $2 }'
+    printf '%s\n' "$3" | awk 'NF { print "I\t" $0 }'
+    printf '%s\n' "$2" | awk 'NF { print "P\t" $0 }'
+  } | LC_ALL=C awk -v root="$1" -v art="$4" -v min="$NC2P_MIN" -v home="$NC2P_HOME" -v sections="$NC2P_SECTIONS" \
+        -v travelers="$NC2P_TRAVELERS" -v logf="$NC2P_LOG" -v store0="$NC2P_STORE" -v ref="$NC2P_REF" \
+        "$NC_CLEAN_FN$FT_LEAD_FN"'
+  function nc2p_sq(s) { gsub(/[ \t\r]+/, " ", s); sub(/^ /, "", s); sub(/ $/, "", s); return s }
+  function nc2p_con(h,   i) { for (i = 1; i <= nsec; i++) if (ft_lead(sec[i], h)) return 1; return 0 }
+  # the file as ONE case-folded, space-joined line. mode `all` keeps every line, `in` keeps
+  # the constraint sections alone and `out` drops them. NC2P_GOT says whether it was read.
+  function nc2p_text(f, mode,   line, out, incon, h) {
+    out = ""; incon = 0; NC2P_GOT = 0
+    while ((getline line < f) > 0) {
+      NC2P_GOT = 1
+      if (substr(line, 1, 3) == "## ") { h = substr(line, 4); sub(/[ \t\r]+$/, "", h); incon = nc2p_con(h) }
+      if (mode == "in" && !incon) continue
+      if (mode == "out" && incon) continue
+      out = out " " line
+    }
+    close(f)
+    return tolower(nc2p_sq(out))
+  }
+  function nc2p_ref(f,   line, on, v) {
+    on = 0; v = ""
+    while ((getline line < f) > 0) {
+      if (line == "---") { if (on) break; on = 1; continue }
+      if (!on) break
+      if (index(line, ref ":") == 1) { v = substr(line, length(ref) + 2); gsub(/^[ \t]+|[ \t\r]+$/, "", v) }
+    }
+    close(f); return v
+  }
+  function nc2p_add(v) {
+    v = nc2p_sq(v)
+    if (v == "" || (v in vseen)) return
+    vseen[v] = 1
+    if (length(v) < min) { nshort++; return }
+    val[++nval] = v
+  }
+  function nc2p_model(f,   line, inent, tab, key, c1, C, p, q, s, cut, v) {
+    nval = 0; nshort = 0; nent = 0; nskip = 0; split("", vseen); NC2P_GOT = 0; inent = 0; tab = 0
+    while ((getline line < f) > 0) {
+      NC2P_GOT = 1
+      if (substr(line, 1, 3) == "## ") {
+        key = tolower(clean(substr(line, 4))); gsub(/[^a-z0-9]/, "", key)
+        tab = 0
+        if (key in res) { inent = 0; skip[++nskip] = key } else { inent = 1; nent++ }
+        continue
+      }
+      if (!inent) continue
+      if (line ~ /^[ \t]*\|/) {
+        split(line, C, "|"); c1 = nc2p_sq(C[2])
+        if (tab == 0) { tab = (c1 == "Need" || c1 == "Desire") ? 1 : 2; continue }
+        if (tab == 1 && c1 !~ /^:?-+:?$/) nc2p_add(c1)
+        continue
+      }
+      tab = 0
+      if (line ~ /^[ \t]*- Need → /) {
+        p = index(line, "specific: "); if (!p) continue
+        v = substr(line, p + 10); q = 0; s = v
+        while ((p = index(s, ".")) > 0) { q += p; s = substr(s, p + 1) }
+        if (q > 0) v = substr(v, 1, q - 1)
+        nc2p_add(v); continue
+      }
+      if (line ~ /^[ \t]*- Desire \([^)]*\): /) {
+        v = line; sub(/^[ \t]*- Desire \([^)]*\): /, "", v)
+        p = index(v, " ["); q = index(v, " — ")
+        cut = (p && q) ? ((p < q) ? p : q) : (p ? p : q)
+        if (cut) v = substr(v, 1, cut - 1); else sub(/\.[ \t\r]*$/, "", v)
+        nc2p_add(v)
+      }
+    }
+    close(f)
+  }
+  BEGIN { FS = "\t"; nsec = split(sections, sec, "|") }
+  $1 == "R" { if ($2 != "") res[$2] = 1; next }
+  $1 == "B" { if ($2 != "") { bart[++nb] = $2; bcls[nb] = $3 }; next }
+  $1 == "I" { if ($2 != "") inst[++ni] = $2; next }
+  $1 == "P" { if ($2 != "") pop[$2] = 1; next }
+  END {
+    for (i = 1; i <= ni; i++) {
+      m = inst[i]
+      if (length(m) <= length(art) + 1 || substr(m, length(m) - length(art)) != "/" art) { print "ODD\t" m; continue }
+      trip = substr(m, 1, length(m) - length(art) - 1)
+      n = split(trip, Q, "/"); name = Q[n]
+      nc2p_model(root "/" m)
+      if (!NC2P_GOT) { print "UNREAD\t" m; continue }
+      ns = 0; store = store0
+      for (f in pop) if (index(f, trip "/" store0 "/") == 1) store = trip "/" store0
+      for (f in pop) {
+        if (index(f, trip "/" travelers "/") != 1) continue
+        rest = substr(f, length(trip) + length(travelers) + 3)
+        if (index(rest, "/") || rest !~ /\.md$/) continue
+        t = nc2p_text(root "/" f, "all"); if (NC2P_GOT) src[++ns] = t
+        id = nc2p_ref(root "/" f)
+        if (id != "" && ((store "/" id ".md") in pop)) { t = nc2p_text(root "/" store "/" id ".md", "all"); if (NC2P_GOT) src[++ns] = t }
+      }
+      if ((trip "/" logf) in pop) { t = nc2p_text(root "/" trip "/" logf, "all"); if (NC2P_GOT) src[++ns] = t }
+      ncon = 0
+      if ((trip "/" home) in pop) { t = nc2p_text(root "/" trip "/" home, "in"); if (NC2P_GOT) { src[++ns] = t; if (t != "") ncon = 1 } }
+      nt = 0
+      for (k = 1; k <= nb; k++) {
+        if (!((trip "/" bart[k]) in pop)) continue
+        t = nc2p_text(root "/" trip "/" bart[k], (bart[k] == home) ? "out" : "all")
+        if (NC2P_GOT) { nt++; tgt[nt] = t; tart[nt] = bart[k]; tcls[nt] = bcls[k] }
+      }
+      nonly = 0
+      for (j = 1; j <= nval; j++) {
+        lv = tolower(val[j]); only = 1
+        for (k = 1; k <= ns; k++) if (index(src[k], lv)) { only = 0; break }
+        if (!only) { print "SRCD\t" trip "\t" val[j]; continue }
+        nonly++; print "ONLY\t" trip "\t" val[j]
+        for (k = 1; k <= nt; k++) if (index(tgt[k], lv)) print "FIND\t" trip "\t" name "\t" val[j] "\t" tart[k] "\t" tcls[k]
+      }
+      for (j = 1; j <= nskip; j++) print "SKIP\t" trip "\t" name "\t" skip[j]
+      printf "TRIP\t%s\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", trip, name, nval, nonly, nshort, ns, nt, nent, ncon
+    }
+  }'
+}
+nc2p_sum() { awk -F'\t' -v f="$2" '$1 == "TRIP" { n += $f } END { print n + 0 }' <<<"$1"; }
+# nc2p_files <fixture-root> — every file beneath it, root-relative: a control arm's population.
+nc2p_files() { ( cd "$1" && find . -type f | sed 's|^\./||' | LC_ALL=C sort ); }
+# nc2p_msg <scan-output> <model-class> <barred-class> <read-class> — one finding line per FIND
+nc2p_msg() {
+  awk -F'\t' -v c="$2" -v d="$3" -v rc="$4" '$1 == "FIND" { printf "NC2p: %s%s%s — a value of %s%ss traveller model (%s) with no first-party source in the trip — appears in %s (%s, %s): never-carry 2: an %s value reaching the site build%ss read set verbatim\n", "\047", $4, "\047", $3, "\047", c, $5, $6, rc, d, "\047" }' <<<"$1"
+}
+
+# ── NC0 — the populations, each printed with its value. An empty one is a FAIL naming it.
+NC_TABLE="$(nc_table "$NC_ADR025" 2>/dev/null)"
+NC_NROWS="$(nc_count "$NC_TABLE")"
+NC1_CLASS="$(nc_span "$(nc_cell "$NC_TABLE" 1 2)")"
+NC1_ACROSS="$(nc_span "$(nc_cell "$NC_TABLE" 1 3)")"
+NC3_ACROSS="$(nc_span "$(nc_cell "$NC_TABLE" 3 3)")"
+NC4_CLASS="$(nc_span "$(nc_cell "$NC_TABLE" 4 2)")"
+NC4_ACROSS="$(nc_span "$(nc_cell "$NC_TABLE" 4 3)")"
+NC_SEL="${AR_SEL:-}"
+[ -n "$NC_SEL" ] || NC_SEL="$(va_select "$ROOT" tracked)"
+NC_INST="$(awk -F'\t' 'NF == 4 && $1 ~ /^C[0-9]+$/ { print $1 "\t" $3 }' <<<"$NC_SEL")"
+NC_NINST="$(nc_count "$NC_INST")"
+NC_NCLASS="$(printf '%s\n' "${CA_ROWS:-}" | grep -c '^[0-9]' || true)"
+NC_LIFE="$(ca_members)"
+NC_REBUILT="$(awk -F'\t' -v t="$NC1_CLASS" 'NF == 2 && $2 == t { printf "C%s ", $1 }' <<<"$NC_LIFE")"
+NC_NREBUILT="$(mg_count "$NC_REBUILT")"
+NC_NREBINST="$(awk -F'\t' -v set=" $NC_REBUILT" 'NF == 2 && index(set, " " $1 " ") { n++ } END { print n + 0 }' <<<"$NC_INST")"
+NC_SENTINEL="$(nc_sentinel "$NC_ARCH" 2>/dev/null)"
+NC_CROSS=""
+[ -n "$NC_SENTINEL" ] && NC_CROSS="$(nc_cross "$ROOT" "$NC_INST" "$NC_SENTINEL")"
+NC_NCROSS="$(nc_count "$NC_CROSS")"
+NC_DEST=""
+[ -n "$NC4_CLASS" ] && NC_DEST="$(dh_class_labels "$NC_DM" "$NC4_CLASS")"
+NC_NDEST="$(nc_count "$NC_DEST")"
+NC1_ENUM_OK=0
+case "|${CA_LIFE_ENUM:-}|" in *"|${NC1_CLASS:-<none>}|"*) NC1_ENUM_OK=1 ;; esac
+# The value layer's inputs and its real-tree scan, read HERE so that NC0 prints them. The
+# scan's verdict is NC2p's, below; what NC0 owns is that every input came back non-empty —
+# the helper that keys an entry heading first among them. A scan with no clean() would key
+# every heading wrong and read green over it, so it is not run at all without one.
+NC2P_ART="$(awk -F'\t' -v c="${NC5_CARRIER#C}" '$1 == c { print $2 }' <<<"${CA_ROWS:-}")"
+NC2P_MODELS="$(awk -F'\t' -v c="$NC5_CARRIER" 'NF == 2 && $1 == c { print $2 }' <<<"$NC_INST")"
+NC2P_RES="$(nc2p_reserved "$NC_DM" 2>/dev/null)"
+NC2P_NRES="$(nc_count "$NC2P_RES")"
+NC2P_BOUND="$(nc2p_bound "$(pb_fence_rows "$ROOT/${PB_SPEC:-reference/site-layout-spec.md}" 2>/dev/null)" "${CA_ROWS:-}" "$NC2_READ")"
+NC2P_NBOUND="$(nc_count "$NC2P_BOUND")"
+NC_FILES="$(cd "$ROOT" && git ls-files 2>/dev/null)"
+NC2P_OUT=""
+[ "$NC_CLEAN_OK" -eq 1 ] && [ -n "$NC2P_ART" ] && NC2P_OUT="$(nc2p_scan "$ROOT" "$NC_FILES" "$NC2P_MODELS" "$NC2P_ART" "$NC2P_BOUND" "$NC2P_RES" 2>/dev/null)"
+NC2P_NTRIP="$(awk -F'\t' '$1 == "TRIP" { n++ } END { print n + 0 }' <<<"$NC2P_OUT")"
+NC2P_BAD="$(awk -F'\t' '$1 == "UNREAD" || $1 == "ODD" { n++ } END { print n + 0 }' <<<"$NC2P_OUT")"
+NC2P_NVAL="$(nc2p_sum "$NC2P_OUT" 4)"; NC2P_NONLY="$(nc2p_sum "$NC2P_OUT" 5)"; NC2P_NSHORT="$(nc2p_sum "$NC2P_OUT" 6)"
+NC2P_NTGT="$(nc2p_sum "$NC2P_OUT" 8)"; NC2P_NENT="$(nc2p_sum "$NC2P_OUT" 9)"; NC2P_NCON="$(nc2p_sum "$NC2P_OUT" 10)"
+NC2P_NSKIP="$(awk -F'\t' '$1 == "SKIP" { n++ } END { print n + 0 }' <<<"$NC2P_OUT")"
+NC2P_TRIPS="$(awk -F'\t' '$1 == "TRIP" { printf "%s%s (%d value(s), %d with no source)", (n++ ? "; " : ""), $3, $4, $5 }' <<<"$NC2P_OUT")"
+NC2P_SKIPS="$(awk -F'\t' '$1 == "SKIP" { k[$3] = k[$3] " " $4; if (!s[$3]++) o[++n] = $3 } END { for (i = 1; i <= n; i++) printf "%s%s:%s", (i > 1 ? "; " : ""), o[i], k[o[i]] }' <<<"$NC2P_OUT")"
+
+NC_OK=0
+if [ "$NC_NROWS" -gt 0 ] && [ -n "$NC1_CLASS" ] && [ -n "$NC1_ACROSS" ] && [ -n "$NC3_ACROSS" ] \
+   && [ -n "$NC4_CLASS" ] && [ -n "$NC4_ACROSS" ] && [ "$NC1_ENUM_OK" -eq 1 ] && [ "$NC_NCLASS" -gt 0 ] \
+   && [ "$NC_NINST" -gt 0 ] && [ "$NC_NREBUILT" -gt 0 ] && [ "$NC_NREBINST" -gt 0 ] \
+   && [ -n "$NC_SENTINEL" ] && [ "$NC_NCROSS" -gt 0 ] && [ "$NC_NDEST" -gt 0 ] \
+   && [ "$NC_CLEAN_OK" -eq 1 ] && [ "$NC2P_NRES" -gt 0 ] && [ "$NC2P_NBOUND" -gt 0 ] \
+   && [ "$NC2P_NTRIP" -gt 0 ] && [ "$NC2P_BAD" -eq 0 ] && [ "$NC2P_NENT" -gt 0 ]; then
+  NC_OK=1
+  PASS "NC0: every population this group grades is DERIVED and came back non-empty — $NC_NROWS never-carry row(s) read from ADR-025's own table; $NC_NCLASS § 1.1 class row(s) and $NC_NINST tracked class instance(s) from the validator's selector; $NC_NREBUILT \`$NC1_CLASS\` class(es) from § 6's Members cells ($NC_REBUILT) holding $NC_NREBINST instance(s); $NC_NCROSS instance(s) whose frontmatter \`trip:\` is the sentinel \`$NC_SENTINEL\`, read from § 4.4: $(printf '%s' "$NC_CROSS" | awk -F'\t' '{ n = split($2, P, "/"); printf "%s ", P[n] }'); $NC_NDEST \`$NC4_CLASS\`-class label(s) from the live classification: $(printf '%s' "$NC_DEST" | tr '\n' ';'); and, for never-carry 2's value layer, $NC2P_NTRIP trip(s) holding a $NC5_CARRIER instance — $NC2P_TRIPS — over $NC2P_NENT entry section(s), each heading keyed in two steps with clean() taken from scripts/publish-trip-site.sh, against $NC2P_NBOUND \`$NC2_READ\` fence row(s); the $NC2P_NRES reserved key(s) read from reference/data-model.md § Reserved keys skip $NC2P_NSKIP heading(s), by key — $NC2P_SKIPS. No copy of a class's membership is held in this file"
+else
+  FAIL "NC0: a population this group grades is EMPTY or unreadable — never-carry rows $NC_NROWS; row 1 class '${NC1_CLASS:-<none>}' (a member of the canonical lifecycle enum: $NC1_ENUM_OK) across '${NC1_ACROSS:-<none>}'; row 3 across '${NC3_ACROSS:-<none>}'; row 4 class '${NC4_CLASS:-<none>}' across '${NC4_ACROSS:-<none>}'; § 1.1 rows $NC_NCLASS; class instances $NC_NINST; rebuilt classes $NC_NREBUILT with $NC_NREBINST instance(s); cross-trip sentinel '${NC_SENTINEL:-<none>}' with $NC_NCROSS instance(s); field-class labels $NC_NDEST; the publish script's clean() helper read: $NC_CLEAN_OK; reserved keys $NC2P_NRES; \`$NC2_READ\` fence rows $NC2P_NBOUND; trips holding a $NC5_CARRIER instance $NC2P_NTRIP, with $NC2P_BAD model(s) unreadable and $NC2P_NENT entry section(s) read. Not a skip and not a pass: every arm below would be a statement over the empty set, and the ones that are zeroes would read as clean. The likeliest causes are a renamed heading in ADR-025 § Decision 3, a reshaped never-carry table, or a publish script that no longer yields its helpers when sourced"
+fi
+
+if [ "$NC_OK" -eq 1 ]; then
+  # ── NC-1 — never-carry 1: an instance of a rebuilt class carrying prior passes ──────
+  # nc1_scan <root> <instances> <members> <class-token> <subject|others> — counts dated
+  # section headings, the accumulate signature CLAUDE.md § Output Versioning describes, at
+  # heading level two or three and outside a fence. `subject` grades the instances of the
+  # named lifecycle; `others` grades every other instance, which is the sensitivity arm.
+  # Records: HIT <path> <class> <lifecycle> <n> · UNREAD <path> <class> · GRADED <n>.
+  nc1_scan() {
+    {
+      printf '%s\n' "$3" | awk -F'\t' 'NF == 2 { print "M\t" $1 "\t" $2 }'
+      printf '%s\n' "$2" | awk -F'\t' 'NF == 2 { print "I\t" $1 "\t" $2 }'
+    } | awk -F'\t' -v root="$1" -v never="$4" -v mode="$5" '
+      $1 == "M" { life["C" $2] = $3; next }
+      $1 == "I" {
+        lc = life[$2]
+        if (lc == "") { printf "UNREAD\t%s\t%s\n", $3, $2; next }
+        if (mode == "subject" && lc != never) next
+        if (mode != "subject" && lc == never) next
+        f = root "/" $3; n = 0; fence = 0; got = 0
+        while ((getline line < f) > 0) {
+          got = 1
+          if (substr(line, 1, 3) == "```") { fence = !fence; continue }
+          if (fence) continue
+          if (line ~ /^###? .*\([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\)[ \t]*$/) n++
+        }
+        close(f)
+        if (!got) { printf "UNREAD\t%s\t%s\n", $3, $2; next }
+        graded++
+        if (n >= 2) printf "HIT\t%s\t%s\t%s\t%d\n", $3, $2, lc, n
+      }
+      END { printf "GRADED\t%d\n", graded }'
+  }
+  nc1_msg() {  # nc1_msg <scan-output> <boundary> — one finding line per HIT
+    awk -F'\t' -v b="$2" '$1 == "HIT" { printf "NC1: %s is an instance of %s (%s) and carries %d dated synthesis sections — never-carry 1: a %s class carried across %s (re-synthesis)\n", $2, $3, $4, $5, $4, b }' <<<"$1"
+  }
+  nc_n() { awk -F'\t' -v k="$2" '$1 == k { n++ } END { print n + 0 }' <<<"$1"; }
+  nc_graded() { awk -F'\t' '$1 == "GRADED" { v = $2 } END { print v + 0 }' <<<"$1"; }
+
+  NC1_OUT="$(nc1_scan "$ROOT" "$NC_INST" "$NC_LIFE" "$NC1_CLASS" subject)"
+  NC1_HITS="$(nc_n "$NC1_OUT" HIT)"; NC1_BAD="$(nc_n "$NC1_OUT" UNREAD)"; NC1_GR="$(nc_graded "$NC1_OUT")"
+  NC1C_OUT="$(nc1_scan "$ROOT" "$NC_INST" "$NC_LIFE" "$NC1_CLASS" others)"
+  NC1C_HITS="$(nc_n "$NC1C_OUT" HIT)"; NC1C_GR="$(nc_graded "$NC1C_OUT")"
+  NC1C_FIRST="$(awk -F'\t' '$1 == "HIT" && !n++ { print $3 "\t" $2 }' <<<"$NC1C_OUT")"
+  if [ "$NC1_GR" -eq 0 ] || [ "$NC1_BAD" -gt 0 ]; then
+    FAIL "NC1: NOT EVALUATED — $NC1_GR instance(s) of a \`$NC1_CLASS\` class were graded and $NC1_BAD could not be read or classed. An empty or unreadable population is a failure, never a pass"
+  elif [ "$NC1_HITS" -gt 0 ]; then
+    FAIL "$(nc1_msg "$NC1_OUT" "$NC1_ACROSS" | tr '\n' ' ')"
+  elif [ "$NC1C_HITS" -eq 0 ]; then
+    FAIL "NC1: BROKEN PROBE — the sensitivity arm returned zero: the same dated-section count over the $NC1C_GR instance(s) of every other lifecycle found none carrying two, so the zero over the \`$NC1_CLASS\` instances is an empty scan rather than a clean tree. The probe is reported unusable, never the subject clean"
+  else
+    PASS "NC1: none of the $NC1_GR tracked instance(s) of a \`$NC1_CLASS\` class carries two or more dated synthesis sections — never-carry 1 holds across $NC1_ACROSS on the tree. The zero is a measurement: the sensitivity arm NC1c found $NC1C_HITS instance(s) of another lifecycle carrying them on the same run. BOUNDARY, stated: graded on tracked instances only, never on conduct that would accumulate into a rebuilt class"
+  fi
+  if [ "$NC1C_HITS" -gt 0 ]; then
+    PASS "NC1c: SENSITIVITY — the same predicate over the $NC1C_GR instance(s) whose lifecycle is not \`$NC1_CLASS\` finds $NC1C_HITS carrying two or more dated sections, the first ${NC1C_FIRST##*"$VA_TAB"}. The instrument sees the accumulate signature where a class permits it"
+  else
+    FAIL "NC1c: SENSITIVITY returned zero over $NC1C_GR instance(s) of the other lifecycles — no tracked instance carries two dated sections, so NC1's zero has no control behind it"
+  fi
+
+  # NC1f / NC1n — a copy of one rebuilt class's declared witness, with two dated headings
+  # appended and then with one. The class is named; its witness path is read from the
+  # coverage declaration, and its membership of the rebuilt set is asserted, not assumed.
+  NC1F_CLASS='C11'
+  NC1F_WIT="$(awk -F'\t' -v c="$NC1F_CLASS" '$1 == c && !n++ { print $2 }' <<<"${CV_CLASS_WITNESS:-}")"
+  NC1F_D="$NC_W/nc1"; mkdir -p "$NC1F_D/two" "$NC1F_D/one"
+  NC1F_NAME="${NC1F_WIT##*/}"
+  NC1F_INT=0
+  if [ -n "$NC1F_WIT" ] && [ -r "$ROOT/$NC1F_WIT" ] && [ "${NC_REBUILT#*"$NC1F_CLASS "}" != "$NC_REBUILT" ]; then
+    { cat "$ROOT/$NC1F_WIT"; printf '\n## Venue matrix — pass 1 (2001-01-01)\n\n## Venue matrix — pass 2 (2001-01-02)\n'; } > "$NC1F_D/two/$NC1F_NAME"
+    { cat "$ROOT/$NC1F_WIT"; printf '\n## Venue matrix — pass 1 (2001-01-01)\n'; } > "$NC1F_D/one/$NC1F_NAME"
+    nc1f_base="$(grep -c '(2001-01-0[12])$' "$ROOT/$NC1F_WIT" || true)"
+    nc1f_two="$(grep -c '(2001-01-0[12])$' "$NC1F_D/two/$NC1F_NAME" || true)"
+    nc1f_one="$(grep -c '(2001-01-0[12])$' "$NC1F_D/one/$NC1F_NAME" || true)"
+    [ "$nc1f_base" -eq 0 ] && [ "$nc1f_two" -eq 2 ] && [ "$nc1f_one" -eq 1 ] && NC1F_INT=1
+  fi
+  NC1F_WANT="NC1: $NC1F_NAME is an instance of $NC1F_CLASS ($NC1_CLASS) and carries 2 dated synthesis sections — never-carry 1: a $NC1_CLASS class carried across $NC1_ACROSS (re-synthesis)"
+  NC1F_OUT="$(nc1_scan "$NC1F_D/two" "$NC1F_CLASS$VA_TAB$NC1F_NAME" "$NC_LIFE" "$NC1_CLASS" subject)"
+  NC1F_GOT="$(nc1_msg "$NC1F_OUT" "$NC1_ACROSS")"
+  if [ "$NC1F_INT" -ne 1 ]; then
+    FAIL "NC1f: fixture integrity — the copy of $NC1F_CLASS's witness does not carry exactly the two planted dated headings (witness '${NC1F_WIT:-<none>}'), so the arm below would prove nothing"
+  elif [ "$NC1F_GOT" = "$NC1F_WANT" ]; then
+    PASS "NC1f: MUST-FIRE — a copy of $NC1F_CLASS's witness carrying two planted dated headings is flagged, in the predicted words: $NC1F_GOT"
+  else
+    FAIL "NC1f: MUST-FIRE did not fire as predicted — wanted '$NC1F_WANT', got '${NC1F_GOT:-<no finding>}'"
+  fi
+  NC1N_OUT="$(nc1_scan "$NC1F_D/one" "$NC1F_CLASS$VA_TAB$NC1F_NAME" "$NC_LIFE" "$NC1_CLASS" subject)"
+  NC1N_HITS="$(nc_n "$NC1N_OUT" HIT)"; NC1N_GR="$(nc_graded "$NC1N_OUT")"
+  NC1N2_HITS=1; NC1N2_GR=1
+  if [ -n "$NC1C_FIRST" ]; then
+    NC1N2_OUT="$(nc1_scan "$ROOT" "$NC1C_FIRST" "$NC_LIFE" "$NC1_CLASS" subject)"
+    NC1N2_HITS="$(nc_n "$NC1N2_OUT" HIT)"; NC1N2_GR="$(nc_graded "$NC1N2_OUT")"
+  fi
+  if [ "$NC1F_INT" -ne 1 ] || [ -z "$NC1C_FIRST" ]; then
+    FAIL "NC1n: fixture integrity — the one-heading copy was not built, or no live instance of another lifecycle carries two dated sections, so the near-miss this arm needs is absent"
+  elif [ "$NC1N_GR" -eq 1 ] && [ "$NC1N_HITS" -eq 0 ] && [ "$NC1N2_GR" -eq 0 ] && [ "$NC1N2_HITS" -eq 0 ]; then
+    PASS "NC1n: MUST-NOT-FIRE — the same copy with ONE dated heading is graded and not flagged, and ${NC1C_FIRST##*"$VA_TAB"}, a live instance of another lifecycle that does carry two, is outside the subject population and not flagged: its class permits accumulation. The arm differs from NC1f in the count alone, and from the subject in the class alone"
+  else
+    FAIL "NC1n: a near-miss was flagged or not graded — one-heading copy graded=$NC1N_GR hits=$NC1N_HITS; the live accumulating instance graded-as-subject=$NC1N2_GR hits=$NC1N2_HITS"
+  fi
+
+  # ── NC-3 — never-carry 3: a both-marks value in a cross-trip record ────────────────
+  # nc_mark_scan <root> <instances> <mark> — every line of each instance carrying the mark.
+  # Records: HIT <path> <class> <line> · UNREAD <path> · GRADED <n>.
+  nc_mark_scan() {
+    printf '%s\n' "$2" | awk -F'\t' -v root="$1" -v mark="$3" '
+      NF == 2 {
+        f = root "/" $2; ln = 0; got = 0
+        while ((getline line < f) > 0) { got = 1; ln++; if (index(line, mark)) printf "HIT\t%s\t%s\t%d\n", $2, $1, ln }
+        close(f)
+        if (!got) { printf "UNREAD\t%s\n", $2; next }
+        graded++
+      }
+      END { printf "GRADED\t%d\n", graded }'
+  }
+  nc3_msg() {  # nc3_msg <scan-output> <sentinel> <mark> <boundary>
+    awk -F'\t' -v s="$2" -v m="$3" -v b="$4" '$1 == "HIT" { n = split($2, P, "/"); printf "NC3: %s (%s, trip: %s) carries %s at line %d — never-carry 3: a both-marks value across %s, which ADR-014%ss refusal closes permanently\n", P[n], $3, s, m, $4, b, "\047" }' <<<"$1"
+  }
+  NC3_OUT="$(nc_mark_scan "$ROOT" "$NC_CROSS" "$NC_TP_MARK")"
+  NC3_HITS="$(nc_n "$NC3_OUT" HIT)"; NC3_BAD="$(nc_n "$NC3_OUT" UNREAD)"; NC3_GR="$(nc_graded "$NC3_OUT")"
+  NC3C_OUT="$(nc_mark_scan "$ROOT" "$NC_CROSS" "$NC_OP_MARK")"
+  NC3C_HITS="$(nc_n "$NC3C_OUT" HIT)"
+  NC3C_FIRST="$(awk -F'\t' '$1 == "HIT" && !n++ { print $3 "\t" $2 "\t" $4 }' <<<"$NC3C_OUT")"
+  if [ "$NC3_GR" -eq 0 ] || [ "$NC3_BAD" -gt 0 ]; then
+    FAIL "NC3: NOT EVALUATED — $NC3_GR cross-trip instance(s) were read and $NC3_BAD could not be. An empty or unreadable population is a failure, never a pass"
+  elif [ "$NC3_HITS" -gt 0 ]; then
+    FAIL "$(nc3_msg "$NC3_OUT" "$NC_SENTINEL" "$NC_TP_MARK" "$NC3_ACROSS" | tr '\n' ' ')"
+  elif [ "$NC3C_HITS" -eq 0 ]; then
+    FAIL "NC3: BROKEN PROBE — the sensitivity arm returned zero: the same line scan for $NC_OP_MARK over the $NC3_GR cross-trip instance(s) found nothing, so the zero for $NC_TP_MARK is an empty scan rather than a clean store. The probe is reported unusable, never the subject clean"
+  else
+    PASS "NC3: none of the $NC3_GR tracked instance(s) whose \`trip:\` is \`$NC_SENTINEL\` carries $NC_TP_MARK — never-carry 3 holds across $NC3_ACROSS on the tree. The zero is a measurement: the sensitivity arm NC3c found $NC3C_HITS line(s) carrying $NC_OP_MARK in the same instances on the same run"
+  fi
+  if [ "$NC3C_HITS" -gt 0 ]; then
+    PASS "NC3c: SENSITIVITY — the same instrument, asked for $NC_OP_MARK, finds $NC3C_HITS line(s) in the cross-trip instances, the first in $(printf '%s' "$NC3C_FIRST" | awk -F'\t' '{ n = split($2, P, "/"); print P[n] }'). A provenance mark in a cross-trip record is something this scan sees"
+  else
+    FAIL "NC3c: SENSITIVITY returned zero — no cross-trip instance carries $NC_OP_MARK, so NC3's zero has no control behind it"
+  fi
+
+  # NC3f — a copy of the instance NC3c found, with the second mark appended to the line that
+  # already carries the first. NC3n — that instance as it stands, and a per-trip model that
+  # carries both marks: both are near-misses, one in the mark and one in the scope.
+  NC3F_D="$NC_W/nc3"; mkdir -p "$NC3F_D"
+  NC3F_CID="${NC3C_FIRST%%"$VA_TAB"*}"; nc3f_rest="${NC3C_FIRST#*"$VA_TAB"}"; NC3F_SRC="${nc3f_rest%%"$VA_TAB"*}"; NC3F_LINE="${nc3f_rest##*"$VA_TAB"}"
+  NC3F_NAME="${NC3F_SRC##*/}"; NC3F_INT=0
+  if [ -n "$NC3F_SRC" ] && [ -r "$ROOT/$NC3F_SRC" ]; then
+    awk -v n="$NC3F_LINE" -v m=" $NC_TP_MARK" 'NR == n { print $0 m; next } { print }' "$ROOT/$NC3F_SRC" > "$NC3F_D/$NC3F_NAME"
+    nc3f_both="$(awk -v a="$NC_OP_MARK" -v b="$NC_TP_MARK" 'index($0, a) && index($0, b) { n++ } END { print n + 0 }' "$NC3F_D/$NC3F_NAME")"
+    nc3f_src="$(awk -v b="$NC_TP_MARK" 'index($0, b) { n++ } END { print n + 0 }' "$ROOT/$NC3F_SRC")"
+    [ "$nc3f_both" -eq 1 ] && [ "$nc3f_src" -eq 0 ] && NC3F_INT=1
+  fi
+  NC3F_WANT="NC3: $NC3F_NAME ($NC3F_CID, trip: $NC_SENTINEL) carries $NC_TP_MARK at line $NC3F_LINE — never-carry 3: a both-marks value across $NC3_ACROSS, which ADR-014's refusal closes permanently"
+  NC3F_GOT="$(nc3_msg "$(nc_mark_scan "$NC3F_D" "$NC3F_CID$VA_TAB$NC3F_NAME" "$NC_TP_MARK")" "$NC_SENTINEL" "$NC_TP_MARK" "$NC3_ACROSS")"
+  if [ "$NC3F_INT" -ne 1 ]; then
+    FAIL "NC3f: fixture integrity — the copy does not carry both marks on exactly one line, or its source already carried the second, so the arm below would prove nothing"
+  elif [ "$NC3F_GOT" = "$NC3F_WANT" ]; then
+    PASS "NC3f: MUST-FIRE — a copy of a cross-trip instance with the second mark appended to the line carrying the first is flagged, in the predicted words: $NC3F_GOT"
+  else
+    FAIL "NC3f: MUST-FIRE did not fire as predicted — wanted '$NC3F_WANT', got '${NC3F_GOT:-<no finding>}'"
+  fi
+  # The per-trip near-misses: a synthetic model, and the live per-trip instances that carry
+  # both marks on one heading. Neither is a cross-trip record, so neither is in the subject.
+  printf '# Traveler model\n\n## Wren %s %s\n\n- Need → — (traveller-scoped; no trip-level constraint); specific: zq-a seated rest every hour.\n' "$NC_OP_MARK" "$NC_TP_MARK" > "$NC3F_D/model.md"
+  NC3N_LIVE="$(awk -F'\t' -v root="$ROOT" -v a="$NC_OP_MARK" -v b="$NC_TP_MARK" '
+    NF == 2 { f = root "/" $2; hit = 0
+      while ((getline line < f) > 0) if (substr(line, 1, 3) == "## " && index(line, a) && index(line, b)) hit = 1
+      close(f); if (hit) print $1 "\t" $2 }' <<<"$NC_INST")"
+  NC3N_NLIVE="$(nc_count "$NC3N_LIVE")"
+  NC3N_INSUBJ="$(awk -F'\t' 'FILENAME == ARGV[1] { c[$2] = 1; next } NF == 2 && ($2 in c) { n++ } END { print n + 0 }' <(printf '%s\n' "$NC_CROSS") <(printf '%s\n' "$NC3N_LIVE"))"
+  nc3n_model="$(awk -v a="$NC_OP_MARK" -v b="$NC_TP_MARK" 'index($0, a) && index($0, b) { n++ } END { print n + 0 }' "$NC3F_D/model.md")"
+  NC3N_SYN="$(nc_cross "$NC3F_D" "C12${VA_TAB}model.md" "$NC_SENTINEL")"
+  if [ "$nc3n_model" -ne 1 ] || [ "$NC3N_NLIVE" -eq 0 ]; then
+    FAIL "NC3n: fixture integrity — the synthetic per-trip model does not carry both marks on one line (found $nc3n_model), or no live per-trip instance carries both on a heading (found $NC3N_NLIVE), so the near-miss this arm needs is absent"
+  elif [ "$NC3N_INSUBJ" -eq 0 ] && [ -z "$NC3N_SYN" ] && [ "$NC3_HITS" -eq 0 ]; then
+    PASS "NC3n: MUST-NOT-FIRE — three near-misses stay silent. The live cross-trip line carrying $NC_OP_MARK alone is not flagged; a synthetic per-trip model whose heading carries both marks is not a cross-trip record, so it is outside the subject; and so are the $NC3N_NLIVE live per-trip instance(s) that carry both marks on a heading. Never-carry 3 is about the boundary, not the marks"
+  else
+    FAIL "NC3n: a near-miss was graded — $NC3N_INSUBJ live both-marks per-trip instance(s) sit inside the cross-trip subject, the synthetic model resolved as cross-trip ('${NC3N_SYN:-no}'), and the real tree carries $NC3_HITS finding(s)"
+  fi
+
+  # ── NC-4 — never-carry 4: a field of the destination class in a cross-trip record ───
+  # nc4_scan <root> <instances> <labels> — every labelled bullet of each instance, read
+  # through group FT's bullet reader, whose label is one of <labels>. The match is on the
+  # label ALONE: such a field in a cross-trip record is a crossing under any heading.
+  # Records: HIT <path> <class> <label> <heading> <line> · GRADED <n>.
+  nc4_scan() {
+    local cid p graded=0
+    while IFS="$VA_TAB" read -r cid p; do
+      [ -n "$p" ] || continue
+      [ -r "$1/$p" ] || { printf 'UNREAD\t%s\n' "$p"; continue; }
+      graded=$((graded+1))
+      ft_bullets "$1/$p" whole | awk -F'\t' -v p="$p" -v c="$cid" '
+        FILENAME == ARGV[1] { if ($0 != "") want[$0] = 1; next }
+        ($2 in want) { printf "HIT\t%s\t%s\t%s\t%s\t%s\n", p, c, $2, $1, $3 }' <(printf '%s\n' "$3") -
+    done <<EOF
+$2
+EOF
+    printf 'GRADED\t%d\n' "$graded"
+  }
+  nc4_msg() {  # nc4_msg <scan-output> <sentinel> <class> <boundary>
+    awk -F'\t' -v s="$2" -v k="$3" -v b="$4" '$1 == "HIT" { n = split($2, P, "/"); printf "NC4: %s (%s, trip: %s) carries the %s-class field %s%s%s — never-carry 4: a %s-class value across %s\n", P[n], $3, s, k, "\047", $4, "\047", k, b }' <<<"$1"
+  }
+  NC4_OUT="$(nc4_scan "$ROOT" "$NC_CROSS" "$NC_DEST")"
+  NC4_HITS="$(nc_n "$NC4_OUT" HIT)"; NC4_BAD="$(nc_n "$NC4_OUT" UNREAD)"; NC4_GR="$(nc_graded "$NC4_OUT")"
+  NC4C_INST="$(awk -F'\t' 'NF == 2 && $1 == "C3"' <<<"$NC_INST")"
+  NC4C_OUT="$(nc4_scan "$ROOT" "$NC4C_INST" "$NC_DEST")"
+  NC4C_HITS="$(nc_n "$NC4C_OUT" HIT)"; NC4C_GR="$(nc_graded "$NC4C_OUT")"
+  NC4C_FILES="$(awk -F'\t' '$1 == "HIT" && !s[$2]++ { n++ } END { print n + 0 }' <<<"$NC4C_OUT")"
+  if [ "$NC4_GR" -eq 0 ] || [ "$NC4_BAD" -gt 0 ]; then
+    FAIL "NC4: NOT EVALUATED — $NC4_GR cross-trip instance(s) were read and $NC4_BAD could not be. An empty or unreadable population is a failure, never a pass"
+  elif [ "$NC4_HITS" -gt 0 ]; then
+    FAIL "$(nc4_msg "$NC4_OUT" "$NC_SENTINEL" "$NC4_CLASS" "$NC4_ACROSS" | tr '\n' ' ')"
+  elif [ "$NC4C_HITS" -eq 0 ]; then
+    FAIL "NC4: BROKEN PROBE — the sensitivity arm returned zero: the same label match over the $NC4C_GR per-trip traveller instance(s) found no \`$NC4_CLASS\`-class bullet, so the zero over the cross-trip instances is an empty scan rather than a clean store. The probe is reported unusable, never the subject clean"
+  else
+    PASS "NC4: none of the $NC4_GR cross-trip instance(s) carries a bullet whose label is one of the $NC_NDEST \`$NC4_CLASS\`-class label(s) — never-carry 4 holds across $NC4_ACROSS on the tree. The zero is a measurement: the sensitivity arm NC4c found $NC4C_HITS such bullet(s) in $NC4C_FILES per-trip traveller file(s) on the same run. The emitter and schema limbs of the same prohibition stay group DH's"
+  fi
+  if [ "$NC4C_HITS" -gt 0 ]; then
+    PASS "NC4c: SENSITIVITY — the same label match over the $NC4C_GR per-trip traveller instance(s) finds $NC4C_HITS bullet(s) of the \`$NC4_CLASS\` class in $NC4C_FILES file(s). A per-trip file is where such a field belongs, and the instrument sees it there"
+  else
+    FAIL "NC4c: SENSITIVITY returned zero over $NC4C_GR per-trip traveller instance(s), so NC4's zero has no control behind it"
+  fi
+
+  # NC4f — a copy of a cross-trip person record with a destination-class bullet planted
+  # under a heading the classification gives to ANOTHER class, so the section-agnostic match
+  # is what finds it. NC4n — the same bullet in a per-trip traveller file, where it belongs.
+  NC4F_D="$NC_W/nc4"; mkdir -p "$NC4F_D"
+  NC4F_SRC="$(awk -F'\t' 'NF == 2 && $1 == "C22" { p = $2 } END { print p }' <<<"$NC_CROSS")"
+  NC4F_NAME="${NC4F_SRC##*/}"
+  NC4F_LABEL="$(awk 'NF && !n++ { print }' <<<"$NC_DEST")"
+  NC4F_INT=0
+  if [ -n "$NC4F_SRC" ] && [ -r "$ROOT/$NC4F_SRC" ] && [ -n "$NC4F_LABEL" ]; then
+    { cat "$ROOT/$NC4F_SRC"; printf '\n## Zq probe\n\n- **%s:** zq-a few times\n' "$NC4F_LABEL"; } > "$NC4F_D/$NC4F_NAME"
+    { printf '# Zq traveller\n\n## Zq probe\n\n- **%s:** zq-a few times\n' "$NC4F_LABEL"; } > "$NC4F_D/per-trip.md"
+    nc4f_n="$(grep -c -F -- "- **$NC4F_LABEL:** zq-a few times" "$NC4F_D/$NC4F_NAME" || true)"
+    nc4f_s="$(nc_n "$(nc4_scan "$ROOT" "C22$VA_TAB$NC4F_SRC" "$NC_DEST")" HIT)"
+    [ "$nc4f_n" -eq 1 ] && [ "$nc4f_s" -eq 0 ] && NC4F_INT=1
+  fi
+  NC4F_WANT="NC4: $NC4F_NAME (C22, trip: $NC_SENTINEL) carries the $NC4_CLASS-class field '$NC4F_LABEL' — never-carry 4: a $NC4_CLASS-class value across $NC4_ACROSS"
+  NC4F_GOT="$(nc4_msg "$(nc4_scan "$NC4F_D" "C22$VA_TAB$NC4F_NAME" "$NC_DEST")" "$NC_SENTINEL" "$NC4_CLASS" "$NC4_ACROSS")"
+  if [ "$NC4F_INT" -ne 1 ]; then
+    FAIL "NC4f: fixture integrity — the copy does not carry exactly the one planted bullet, or its source already carried a \`$NC4_CLASS\`-class bullet, so the arm below would prove nothing"
+  elif [ "$NC4F_GOT" = "$NC4F_WANT" ]; then
+    PASS "NC4f: MUST-FIRE — a copy of a cross-trip person record with a \`$NC4_CLASS\`-class bullet planted under a heading of its own is flagged, in the predicted words: $NC4F_GOT"
+  else
+    FAIL "NC4f: MUST-FIRE did not fire as predicted — wanted '$NC4F_WANT', got '${NC4F_GOT:-<no finding>}'"
+  fi
+  NC4N_SYN="$(nc_cross "$NC4F_D" "C3${VA_TAB}per-trip.md" "$NC_SENTINEL")"
+  NC4N_BUL="$(nc_n "$(nc4_scan "$NC4F_D" "C3${VA_TAB}per-trip.md" "$NC_DEST")" HIT)"
+  if [ "$NC4F_INT" -ne 1 ] || [ "$NC4N_BUL" -ne 1 ]; then
+    FAIL "NC4n: fixture integrity — the per-trip near-miss does not carry the planted bullet (the scan sees $NC4N_BUL), so its silence would prove nothing"
+  elif [ -z "$NC4N_SYN" ] && [ "$NC4C_FILES" -gt 0 ]; then
+    PASS "NC4n: MUST-NOT-FIRE — the same bullet in a per-trip traveller file is seen by the scan and is outside the subject, because the file is not a cross-trip record; $NC4C_FILES live per-trip file(s) already carry such a bullet and none is graded. Never-carry 4 is about the boundary, not the field"
+  else
+    FAIL "NC4n: the per-trip near-miss resolved as a cross-trip record ('${NC4N_SYN:-no}'), or no live per-trip file carries such a bullet ($NC4C_FILES) — the subject is drawn too wide, or the near-miss is not a near-miss"
+  fi
+fi
+
+# ── NC-3, the writer half — every verb that writes the person store carries a guard ──────
+#
+# An instance scan sees a both-marks value only after it has crossed. The path it would
+# cross by is a VERB: one that writes a record under the person store. So the second half of
+# never-carry 3 is graded on the verb file — every store writer carries a both-marks guard
+# (NC3w), and every verb carrying such a guard is a store writer this derivation can see
+# (NC3wg). The second direction is what makes a NARROWING loud: a writer whose declaration
+# is reworded out of the reader's sight keeps its guard, leaves the writer set, and fails.
+#
+# THE DERIVATION, over the record command's verb file, holding no verb name:
+#   VERBS    the `verb` column of the requirement table, at fence depth 0
+#   SECTION  a `## ` heading at fence depth 0 whose first token is one of those verbs
+#   WRITER   a verb whose section carries, OUTSIDE its read declaration, a line holding a
+#            code span that IS a person-store record path, together with one of: the
+#            rule-condition label **(a)**; a table cell that is exactly a write tool or the
+#            WRITE disposition; or the lead that opens a what-it-writes statement
+#   GUARD R  a table row whose first cell names the third-party mark and whose second
+#            cell, emphasis dropped, begins `refuse`
+#   GUARD P  a table row whose first cell carries the presence question's own words
+#
+# DECLARED RESIDUAL, stated on the verdict line as well: a writer that loses its declaration
+# AND its guard in one edit leaves both sets together and is not seen; and a write declared
+# in another shape is not read. NC3w prints the writer set by name so a change is visible.
+NC3W_AWK='
+  function nc_trim(s) { sub(/^[ \t]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+  function nc_cells(s, C,   n, i) {
+    s = nc_trim(s); if (substr(s, 1, 1) != "|") return 0
+    sub(/^\|/, "", s); sub(/\|$/, "", s)
+    n = split(s, C, "|"); for (i = 1; i <= n; i++) C[i] = nc_trim(C[i])
+    return n
+  }
+  function nc_haspath(s,   t) {
+    while (match(s, /`[^`]+`/)) {
+      t = substr(s, RSTART + 1, RLENGTH - 2); s = substr(s, RSTART + RLENGTH)
+      if (t ~ /^(<store-root>\/)?people\/[^\/`]*\.md$/) return 1
+    }
+    return 0
+  }
+  function nc_isdecl(s,   C, n, i) {
+    if (index(s, "**Reads:**") == 1) return 0
+    if (!nc_haspath(s)) return 0
+    if (index(s, "**(a)**")) return 1
+    if (index(s, "**What it writes.**") == 1) return 1
+    n = nc_cells(s, C)
+    for (i = 1; i <= n; i++) if (C[i] == "`Write`" || C[i] == "`Edit`" || C[i] == "WRITE") return 1
+    return 0
+  }
+  function nc_guard(s,   C, n, c2) {
+    n = nc_cells(s, C); if (n < 1) return ""
+    if (n >= 2 && index(C[1], "[THIRD-PARTY]")) {
+      c2 = C[2]; gsub(/\*/, "", c2); c2 = tolower(nc_trim(c2))
+      if (index(c2, "refuse") == 1) return "R"
+    }
+    if (index(C[1], "answering for themselves")) return "P"
+    return ""
+  }
+  { L[NR] = $0 }
+  END {
+    fd = 0; intab = 0; nv = 0
+    for (i = 1; i <= NR; i++) {
+      if (substr(L[i], 1, 3) == "```") { fd = !fd; D[i] = 1; continue }
+      D[i] = fd
+      if (fd) continue
+      if (L[i] ~ /^\|[ \t]*verb[ \t]*\|[ \t]*lifecycle[ \t]*\|[ \t]*mode[ \t]*\|[ \t]*destination[ \t]*\|[ \t]*depth[ \t]*\|[ \t]*$/) { intab = 1; continue }
+      if (intab) {
+        if (substr(L[i], 1, 1) != "|") { intab = 0; continue }
+        n = nc_cells(L[i], C); if (n < 1 || C[1] ~ /^[-: ]+$/) continue
+        v = C[1]; gsub(/`/, "", v); sub(/[ \t].*$/, "", v)
+        if (v != "" && !(v in isverb)) { isverb[v] = 1; order[++nv] = v }
+      }
+    }
+    cur = ""
+    for (i = 1; i <= NR; i++) {
+      S[i] = ""
+      if (!D[i] && substr(L[i], 1, 3) == "## ") { t = substr(L[i], 4); sub(/[ \t].*$/, "", t); cur = (t in isverb) ? t : ""; continue }
+      S[i] = cur
+    }
+    for (i = 1; i <= NR; i++) {
+      v = S[i]; if (v == "") continue
+      if (nc_haspath(L[i])) named[v] = 1
+      if (nc_isdecl(L[i])) { W[v]++; if (!(v in wfirst)) wfirst[v] = i }
+      g = nc_guard(L[i])
+      if (g == "R") G[v] = "R"; else if (g == "P" && !(v in G)) G[v] = "P"
+      if (g == "" && index(L[i], "[THIRD-PARTY]") && nc_cells(L[i], C) > 0) tprow[v] = 1
+    }
+    if (mode == "derive") {
+      printf "VERBS\t%d\n", nv
+      for (k = 1; k <= nv; k++) {
+        v = order[k]
+        if (v in W) printf "W\t%s\t%d\n", v, W[v]
+        if (v in G) printf "G\t%s\t%s\n", v, G[v]
+        if ((v in named) && !(v in W)) printf "NEAR\t%s\n", v
+        if ((v in tprow) && !(v in G)) printf "TPNEAR\t%s\n", v
+      }
+      exit
+    }
+    # mode == "mutate": the file again, with ONE mutation. <verb> is chosen by the caller.
+    r9 = 0; r11 = 0
+    for (i = 1; i <= NR; i++) {
+      line = L[i]; v = S[i]
+      if (kind == "dropR" && v == verb && nc_guard(line) == "R") continue
+      if (kind == "dropP" && v == verb && nc_guard(line) == "P") continue
+      if (kind == "prose" && v == verb && index(line, "**(a)**") && nc_haspath(line)) gsub(/`/, "", line)
+      if (kind == "reword") {
+        if (!D[i] && !r9 && line ~ /^9\. /) { r9 = 1; sub(/ the /, " that ", line) }
+        else if (!D[i] && !r11 && line ~ /^11\. /) { r11 = 1; sub(/ the /, " that ", line) }
+        else if (v != "" && (v in G) && G[v] == "R" && wfirst[v] == i) sub(/ the /, " that ", line)
+      }
+      print line
+    }
+  }'
+nc3w_derive() { awk -v mode=derive "$NC3W_AWK" "$1"; }
+nc3w_mutate() { awk -v mode=mutate -v kind="$2" -v verb="${3:-}" "$NC3W_AWK" "$1"; }   # <file> <kind> [verb]
+# nc3w_find <derive-output> <boundary> — "<id>\t<finding>" for each direction that fails.
+nc3w_find() {
+  awk -F'\t' -v b="$2" '
+    $1 == "W" { w[$2] = 1; ow[++nw] = $2 }
+    $1 == "G" { g[$2] = $3; og[++ng] = $2 }
+    END {
+      for (k = 1; k <= nw; k++) { v = ow[k]; if (!(v in g)) printf "NC3w\tNC3w: store writer %s%s%s declares a write into people/ and carries no both-marks guard (no [THIRD-PARTY] refusal row, no presence question) — never-carry 3: a both-marks value has an open path across %s\n", "\047", v, "\047", b }
+      for (k = 1; k <= ng; k++) { v = og[k]; if (!(v in w)) printf "NC3wg\tNC3wg: %s%s%s carries a both-marks guard (%s) but no write declaration this derivation reads — the store-writer set has narrowed; restore the declared target path\n", "\047", v, "\047", (g[v] == "R" ? "refusal row" : "presence question") }
+    }' <<<"$1"
+}
+nc3w_set() { awk -F'\t' -v k="$2" '$1 == k { printf "%s%s", (n++ ? " " : ""), ($3 != "" && k == "G" ? $2 " (" $3 ")" : $2) }' <<<"$1"; }
+nc3w_first() { awk -F'\t' -v k="$2" '$1 == "G" && $3 == k && !n++ { print $2 }' <<<"$1"; }
+nc3w_msg() { awk -F'\t' -v id="$2" '$1 == id { printf "%s%s", (n++ ? " | " : ""), $2 }' <<<"$1"; }
+
+if [ "$NC_OK" -eq 1 ]; then
+  NC3W_SKILL="$ROOT/skills/trip-record/SKILL.md"
+  NC3W_D="$NC_W/nc3w"; mkdir -p "$NC3W_D"
+  NC3W_OUT="$(nc3w_derive "$NC3W_SKILL" 2>/dev/null)"
+  NC3W_NV="$(awk -F'\t' '$1 == "VERBS" { v = $2 } END { print v + 0 }' <<<"$NC3W_OUT")"
+  NC3W_NW="$(nc_n "$NC3W_OUT" W)"; NC3W_NG="$(nc_n "$NC3W_OUT" G)"
+  NC3W_NNEAR="$(nc_n "$NC3W_OUT" NEAR)"; NC3W_NTP="$(nc_n "$NC3W_OUT" TPNEAR)"
+  NC3W_WSET="$(nc3w_set "$NC3W_OUT" W)"; NC3W_GSET="$(nc3w_set "$NC3W_OUT" G)"
+  NC3W_FIND="$(nc3w_find "$NC3W_OUT" "$NC3_ACROSS")"
+  NC3W_F1="$(nc_n "$NC3W_FIND" NC3w)"; NC3W_F2="$(nc_n "$NC3W_FIND" NC3wg)"
+  if [ "$NC3W_NV" -eq 0 ] || [ "$NC3W_NW" -eq 0 ]; then
+    FAIL "NC3w: NOT EVALUATED — the derivation read $NC3W_NV verb(s) from the requirement table of ${NC3W_SKILL#"$ROOT/"} and found $NC3W_NW store writer(s). An empty population is a failure, never a pass: either the table or every write declaration has moved out of the reader's sight"
+  elif [ "$NC3W_F1" -gt 0 ]; then
+    FAIL "$(nc3w_msg "$NC3W_FIND" NC3w)"
+  else
+    PASS "NC3w: every verb that declares a write into the person store carries a both-marks guard — $NC3W_NW store writer(s) among $NC3W_NV verb(s): $NC3W_WSET; guarded: $NC3W_GSET. Never-carry 3 has no open path across $NC3_ACROSS through a declared writer. RESIDUAL, stated: a writer that loses its declaration and its guard in one edit leaves both sets together, and a write declared in another shape is not read"
+  fi
+  if [ "$NC3W_NV" -eq 0 ] || [ "$NC3W_NG" -eq 0 ]; then
+    FAIL "NC3wg: NOT EVALUATED — $NC3W_NG guarded verb(s) among $NC3W_NV. An empty population is a failure, never a pass"
+  elif [ "$NC3W_F2" -gt 0 ]; then
+    FAIL "$(nc3w_msg "$NC3W_FIND" NC3wg)"
+  else
+    PASS "NC3wg: every verb carrying a both-marks guard is a store writer this derivation reads — $NC3W_NG guarded verb(s), each with a write declaration. The writer set has not narrowed behind a guard that still stands"
+  fi
+
+  NC3W_RV="$(nc3w_first "$NC3W_OUT" R)"; NC3W_PV="$(nc3w_first "$NC3W_OUT" P)"
+  nc3w_arm() {  # nc3w_arm <id> <kind> <verb> <want-id> <want-text> <label>
+    local id="$1" kind="$2" verb="$3" wid="$4" want="$5" label="$6"
+    local f="$NC3W_D/$id.md" out find got delta
+    nc3w_mutate "$NC3W_SKILL" "$kind" "$verb" > "$f" 2>/dev/null
+    delta="$(awk 'FILENAME == ARGV[1] { a[$0]++; next } { if (a[$0] > 0) a[$0]--; else d++ } END { for (k in a) d += a[k]; print d + 0 }' "$NC3W_SKILL" "$f")"
+    out="$(nc3w_derive "$f")"; find="$(nc3w_find "$out" "$NC3_ACROSS")"; got="$(nc3w_msg "$find" "$wid")"
+    if [ -z "$verb" ] || [ "$delta" -eq 0 ]; then
+      FAIL "$id: fixture integrity — the mutation did not land (verb '${verb:-<none>}', $delta line(s) differ from the source), so the arm below would prove nothing"
+    elif [ "$got" = "$want" ] && [ "$(nc_count "$find")" -eq 1 ]; then
+      PASS "$id: MUST-FIRE — $label ($delta line(s) differ from the source) is flagged once, in the predicted words: $got"
+    else
+      FAIL "$id: MUST-FIRE did not fire as predicted ($label) — wanted '$want', got '${got:-<no finding>}' among $(nc_count "$find") finding(s)"
+    fi
+  }
+  nc3w_arm NC3wf dropR "$NC3W_RV" NC3w "NC3w: store writer '$NC3W_RV' declares a write into people/ and carries no both-marks guard (no [THIRD-PARTY] refusal row, no presence question) — never-carry 3: a both-marks value has an open path across $NC3_ACROSS" "a copy of the verb file with the refusal row deleted from the first refusal-guarded writer's section"
+  nc3w_arm NC3wf2 dropP "$NC3W_PV" NC3w "NC3w: store writer '$NC3W_PV' declares a write into people/ and carries no both-marks guard (no [THIRD-PARTY] refusal row, no presence question) — never-carry 3: a both-marks value has an open path across $NC3_ACROSS" "a copy with the presence row deleted from the presence-guarded writer's section"
+  nc3w_arm NC3wf3 prose "$NC3W_PV" NC3wg "NC3wg: '$NC3W_PV' carries a both-marks guard (presence question) but no write declaration this derivation reads — the store-writer set has narrowed; restore the declared target path" "a copy whose presence-guarded writer has its condition-(a) record paths reworded from code spans into prose"
+
+  # NC3wk — MUST HOLD. Four lines reworded in prose only: the openings of standing rules 9 and
+  # 11, and the first write declaration of each refusal-guarded writer. The structure the
+  # derivation reads is untouched, so the writer set must come back unchanged and no finding
+  # may be emitted — a reader that keyed on the prose would lose a writer here.
+  NC3WK_F="$NC3W_D/NC3wk.md"
+  nc3w_mutate "$NC3W_SKILL" reword > "$NC3WK_F" 2>/dev/null
+  NC3WK_DELTA="$(awk 'FILENAME == ARGV[1] { a[$0]++; next } { if (a[$0] > 0) a[$0]--; else d++ } END { print d + 0 }' "$NC3W_SKILL" "$NC3WK_F")"
+  NC3WK_OUT="$(nc3w_derive "$NC3WK_F")"
+  NC3WK_FIND="$(nc3w_find "$NC3WK_OUT" "$NC3_ACROSS")"
+  NC3WK_WANT=$(( 2 + $(awk -F'\t' '$1 == "G" && $3 == "R" { n++ } END { print n + 0 }' <<<"$NC3W_OUT") ))
+  if [ "$NC3WK_DELTA" -ne "$NC3WK_WANT" ]; then
+    FAIL "NC3wk: fixture integrity — $NC3WK_DELTA line(s) of the copy differ from the source where $NC3WK_WANT were to be reworded (the two rule openings and each refusal-guarded writer's first declaration), so the arm below would prove nothing"
+  elif [ "$(nc3w_set "$NC3WK_OUT" W)" = "$NC3W_WSET" ] && [ "$(nc3w_set "$NC3WK_OUT" G)" = "$NC3W_GSET" ] && [ -z "$NC3WK_FIND" ]; then
+    PASS "NC3wk: MUST-HOLD — with $NC3WK_DELTA line(s) reworded in prose only (the openings of standing rules 9 and 11, and the first write declaration of each refusal-guarded writer) the writer set is unchanged ($NC3W_WSET), the guarded set is unchanged, and no finding is emitted. The derivation reads the declared target and not the wording around it"
+  else
+    FAIL "NC3wk: a prose-only rewording of $NC3WK_DELTA line(s) moved the derivation — writers '$(nc3w_set "$NC3WK_OUT" W)' where '$NC3W_WSET' was read from the source, guarded '$(nc3w_set "$NC3WK_OUT" G)', findings: $(nc3w_msg "$NC3WK_FIND" NC3w) $(nc3w_msg "$NC3WK_FIND" NC3wg)"
+  fi
+
+  # NC3wn — MUST-NOT-FIRE, on the real tree, with its near-misses shown present: verbs that
+  # name a person-store path only on a read declaration or in prose, and verbs that carry the
+  # third-party mark in a table row that is not a refusal.
+  if [ "$NC3W_NNEAR" -eq 0 ] || [ "$NC3W_NTP" -eq 0 ]; then
+    FAIL "NC3wn: fixture integrity — the real verb file carries $NC3W_NNEAR verb(s) naming a person-store path without declaring a write, and $NC3W_NTP verb(s) carrying the third-party mark in a table row that is not a guard. A near-miss population of zero makes the silence below an empty scan"
+  elif [ -z "$NC3W_FIND" ]; then
+    PASS "NC3wn: MUST-NOT-FIRE — on the real verb file $NC3W_NNEAR verb(s) name a person-store record path only on a read declaration or in prose and stay outside the writer set ($(nc3w_set "$NC3W_OUT" NEAR)), and $NC3W_NTP verb(s) carry the third-party mark in a table row that is not a refusal and stay outside the guarded set ($(nc3w_set "$NC3W_OUT" TPNEAR)). Neither direction emits a finding"
+  else
+    FAIL "NC3wn: the real verb file emits a finding where none was expected: $(nc3w_msg "$NC3W_FIND" NC3w) $(nc3w_msg "$NC3W_FIND" NC3wg)"
+  fi
+fi
+
+# ── NC-5 — never-carry 5: a value of the engagement axis, stored anywhere ─────────────────
+#
+# The axis is a PRESENT READING, re-derived each synthesis. ADR-025 predicts this is the
+# never-carry a later slice will want to break, because a stored value is convenient. So the
+# arm does not look for a carry: it looks for the VALUE, on every surface where a stored one
+# could live — the instances, and also the emitters, the shape declarations, the conduct and
+# the executables that would produce or prescribe one.
+#
+# THE TOKENS ARE READ FROM THE DECLARING FENCE, AND THIS FILE SPELLS NONE OF THEM. That is a
+# correctness requirement as well as a principle: the executables are one of the surfaces
+# scanned, this file among them, so a token written here would be a finding against itself.
+#
+# THE MATCH is the whole token, case-sensitive, with no letter, digit, underscore or hyphen
+# on either side — never a word-boundary operator, which matches inside a longer hyphenated
+# token. Arm NC5k plants a token with a hyphenated suffix and requires silence.
+#
+# THE SURFACE IS A POSITIVE LIST, built from the tracked file list and the validator's own
+# selector, so an instance is what the selector says it is and never what a fresh glob finds:
+#   INST     every tracked file the selector resolves to a class — the instances under
+#            examples/, and a store skeleton where the selector resolves one
+#   UNM      a file under examples/ the selector neither excludes nor resolves
+#   SKEL     a store skeleton the selector does not resolve
+#   EMIT     templates/*.md          SCHEMA   reference/schemas/*.md
+#   CONDUCT  agents/*.md, every markdown file under skills/, the carrier and the charter
+#   SCRIPT   scripts/*
+# NOT SCANNED, deliberately: reference/adr/ and the top-level reference documents, where the
+# axis is DECLARED and discussed; the changelog and the repository's own front matter; and
+# the workflows. Arm NC5n1 plants a token under reference/adr/ and requires silence.
+#
+# Each finding names the class and the boundary, read from the resolved class's own row.
+NC5_SKEL='trips/README.md people/README.md groups/README.md'
+NC5_FENCE='phase-axis-declaration'
+nc5_tokens() {
+  awk -v info='```'"$NC5_FENCE" '
+    $0 == info { on = 1; next }
+    on && substr($0, 1, 3) == "```" { on = 0 }
+    on { l = $0; sub(/^[ \t]+/, "", l); if (l == "" || substr(l, 1, 1) == "#") next; split(l, F, /[ \t]+/); print F[1] }' "$1"
+}
+# nc5_both <adr-025> <tokens> — the token whose row in the axis-value table gives a shipped
+# condition naming BOTH provenance marks: the value the declared carrier would hold.
+nc5_both() {
+  awk -v a="$NC_OP_MARK" -v b="$NC_TP_MARK" '
+    FILENAME == ARGV[1] { if ($1 != "") tok[$1] = 1; next }
+    /^\|/ {
+      if (split($0, F, "|") < 4) next
+      if (!(index(F[3], a) && index(F[3], b))) next
+      if (match(F[2], /`[^`]+`/)) { t = substr(F[2], RSTART + 1, RLENGTH - 2); if ((t in tok) && !n++) print t }
+    }' <(printf '%s\n' "$2") "$1"
+}
+# nc5_surface <root> <files> <selector-output> <patterns> — "<kind>\t<class>\t<path>".
+nc5_surface() {
+  {
+    printf '%s\n' "$4" | awk -F'\t' 'NF >= 4 { print "P\t" $1 "\t" $2 "\t" $4 }'
+    printf '%s\n' "$3" | awk -F'\t' 'NF == 4 { print "S\t" $1 "\t" $3 } NF == 2 && $1 == "UNMATCHED" { print "U\t" $2 }'
+    printf '%s\n' "$2" | awk 'NF { print "F\t" $0 }'
+  } | awk -F'\t' -v root="$1" -v skel=" $NC5_SKEL " '
+    function art_of(f,   line, k, v, on) {
+      on = 0; v = ""
+      while ((getline line < f) > 0) {
+        if (line == "---") { if (on) break; on = 1; continue }
+        if (!on) break
+        if (index(line, "artifact:") == 1) { v = substr(line, 10); sub(/^[ \t]+/, "", v); sub(/[ \t\r]+$/, "", v) }
+      }
+      close(f); return v
+    }
+    $1 == "P" { byschema[$4] = $2; byart[$3] = $2; next }
+    $1 == "S" { print "INST\t" $2 "\t" $3; next }
+    $1 == "U" { if (index($2, "examples/") == 1) print "UNM\t-\t" $2; else if (index(skel, " " $2 " ")) print "SKEL\t-\t" $2; next }
+    $1 == "F" {
+      p = $2
+      if (p ~ /^templates\/[^\/]+\.md$/) { a = art_of(root "/" p); c = (a in byart) ? byart[a] : "-"; print "EMIT\t" c "\t" p }
+      else if (p ~ /^reference\/schemas\/[^\/]+\.md$/) { c = (p in byschema) ? byschema[p] : "-"; print "SCHEMA\t" c "\t" p }
+      else if (p ~ /^agents\/[^\/]+\.md$/ || p ~ /^skills\/.+\.md$/ || p == "SKILL.md" || p == "CLAUDE.md") print "CONDUCT\t-\t" p
+      else if (p ~ /^scripts\/[^\/]+$/) print "SCRIPT\t-\t" p
+    }'
+}
+# nc5_scan <root> <tokens> <surface> — every whole-token occurrence, per line.
+# Records: HIT <kind> <class> <path> <line> <token> · UNREAD <path> · SCANNED <n>.
+nc5_scan() {
+  {
+    printf '%s\n' "$2" | awk 'NF { print "T\t" $1 }'
+    printf '%s\n' "$3"
+  } | awk -F'\t' -v root="$1" '
+    function hastok(line, tok,   pos, p, q, a, b) {
+      pos = 1
+      while ((p = index(substr(line, pos), tok)) > 0) {
+        q = pos + p - 1
+        a = (q == 1) ? "" : substr(line, q - 1, 1); b = substr(line, q + length(tok), 1)
+        if (a !~ /[A-Za-z0-9_-]/ && b !~ /[A-Za-z0-9_-]/) return 1
+        pos = q + 1
+      }
+      return 0
+    }
+    $1 == "T" { tok[++nt] = $2; next }
+    NF == 3 {
+      f = root "/" $3; ln = 0
+      while ((r = (getline line < f)) > 0) {
+        ln++
+        for (i = 1; i <= nt; i++) if (hastok(line, tok[i])) printf "HIT\t%s\t%s\t%s\t%d\t%s\n", $1, $2, $3, ln, tok[i]
+      }
+      close(f)
+      if (r < 0) printf "UNREAD\t%s\n", $3; else scanned++
+    }
+    END { printf "SCANNED\t%d\n", scanned }'
+}
+# nc5_msg <scan-output> <class-rows> <rebuilt-token> <eb0> <eb2> <cross-classes> <carrier>
+nc5_msg() {
+  {
+    printf '%s\n' "$2" | awk -F'\t' 'NF >= 6 && $1 ~ /^[0-9]+$/ { print "C\tC" $1 "\t" $4 "\t" $6 }'
+    printf '%s\n' "$1"
+  } | awk -F'\t' -v never="$3" -v eb0="$4" -v eb2="$5" -v cross=" $6 " -v carrier="$7" -v fence="$NC5_FENCE" '
+    $1 == "C" { L[$2] = $3; P[$2] = $4; next }
+    $1 == "HIT" {
+      n = split($4, Q, "/"); name = Q[n]; k = $2; c = $3
+      if (k == "INST") {
+        head = sprintf("NC5: token %s (engagement axis, read from ADR-025%ss %s fence) in %s:%d — an instance of ", $6, "\047", fence, name, $5)
+        if (c == carrier) printf "%s%s, the axis%ss declared carrier: never-carry 5 — a stored value of the axis, carried across %s inside a both-marks entry the carrier carries forward verbatim\n", head, c, "\047", eb0
+        else if (index(cross, " " c " ")) printf "%s%s (cross-trip): never-carry 5 — an axis value carried across %s\n", head, c, eb2
+        else {
+          b = ""
+          if (L[c] != never) b = eb0
+          if (P[c] == "bound" || P[c] == "output") b = (b == "") ? "to the render" : b " and to the render"
+          else if (b != "") b = b " (persisted across synthesis)"
+          if (b == "") b = "every boundary"
+          printf "%s%s (%s, %s): never-carry 5 — an axis value carried %s%s\n", head, c, L[c], P[c], (substr(b, 1, 3) == "to " ? "" : "across "), b
+        }
+      }
+      else if (k == "UNM")  printf "NC5: token %s (engagement axis, read from ADR-025%ss %s fence) in %s:%d — an unclassed fixture file: never-carry 5 — an axis value carried across every boundary\n", $6, "\047", fence, name, $5
+      else if (k == "EMIT")   printf "NC5s: token %s in %s:%d — an emitter of %s: never-carry 5 — a stored value of the engagement axis\n", $6, name, $5, c
+      else if (k == "SCHEMA") printf "NC5s: token %s in %s:%d — a schema declaring %s: never-carry 5 — a stored value of the engagement axis\n", $6, name, $5, c
+      else if (k == "CONDUCT") printf "NC5s: token %s in %s:%d — conduct: never-carry 5 — a stored value of the engagement axis, across every boundary\n", $6, name, $5
+      else if (k == "SCRIPT") printf "NC5s: token %s in %s:%d — a script: never-carry 5 — a stored value of the engagement axis, across every boundary\n", $6, name, $5
+      else printf "NC5s: token %s in %s:%d — a store skeleton: never-carry 5 — a stored value of the engagement axis, across every boundary\n", $6, name, $5
+    }'
+}
+
+if [ "$NC_OK" -eq 1 ]; then
+  NC5_D="$NC_W/nc5"; mkdir -p "$NC5_D"
+  NC5_TOKENS="$(nc5_tokens "$NC_ADR025" 2>/dev/null)"
+  NC5_NTOK="$(nc_count "$NC5_TOKENS")"
+  NC5_T1="$(awk 'NF && !n++ { print $1 }' <<<"$NC5_TOKENS")"
+  NC5_T2="$(awk 'NF && n++ == 1 { print $1 }' <<<"$NC5_TOKENS")"
+  NC5_TB="$(nc5_both "$NC_ADR025" "$NC5_TOKENS" 2>/dev/null)"
+  NC5_FILES="$(cd "$ROOT" && git ls-files 2>/dev/null)"
+  NC5_PATS="$(va_corpus_patterns "$ROOT" 2>/dev/null)"
+  NC5_SURF="$(nc5_surface "$ROOT" "$NC5_FILES" "$NC_SEL" "$NC5_PATS")"
+  NC5_NSURF="$(nc_count "$NC5_SURF")"
+  NC5_KINDS="$(awk -F'\t' 'NF == 3 { k[$1]++ } END { for (x in k) printf "%s %d · ", x, k[x] }' <<<"$NC5_SURF" | tr -s ' ')"
+  NC5_NEX="$(awk -F'\t' 'NF == 3 && index($3, "examples/") == 1 { n++ } END { print n + 0 }' <<<"$NC5_SURF")"
+  NC5_CROSSCLS="$(awk -F'\t' 'NF == 2 && !s[$1]++ { printf "%s ", $1 }' <<<"$NC_CROSS")"
+  NC5C_TOK="$(awk -F'\t' -v c="${NC5_CARRIER#C}" '$1 == c { print $6 }' <<<"${CA_ROWS:-}")"
+  nc5_text() { nc5_msg "$1" "${CA_ROWS:-}" "$NC1_CLASS" "$NC1_ACROSS" "$NC3_ACROSS" "$NC5_CROSSCLS" "$NC5_CARRIER"; }
+
+  NC5_OUT="$(nc5_scan "$ROOT" "$NC5_TOKENS" "$NC5_SURF")"
+  NC5_HITS="$(nc_n "$NC5_OUT" HIT)"; NC5_BAD="$(nc_n "$NC5_OUT" UNREAD)"
+  NC5_SC="$(awk -F'\t' '$1 == "SCANNED" { v = $2 } END { print v + 0 }' <<<"$NC5_OUT")"
+  NC5C_OUT="$(nc5_scan "$ROOT" "$NC5C_TOK" "$NC5_SURF")"
+  NC5C_HITS="$(nc_n "$NC5C_OUT" HIT)"
+  NC5C_FILES="$(awk -F'\t' '$1 == "HIT" && !s[$4]++ { n++ } END { print n + 0 }' <<<"$NC5C_OUT")"
+  if [ "$NC5_NTOK" -eq 0 ] || [ -z "$NC5_T1" ] || [ -z "$NC5_T2" ] || [ -z "$NC5_TB" ] || [ "$NC5_NSURF" -eq 0 ] || [ "$NC5_SC" -eq 0 ] || [ "$NC5_BAD" -gt 0 ] || [ -z "$NC5C_TOK" ]; then
+    FAIL "NC5: NOT EVALUATED — $NC5_NTOK axis token(s) read from the \`$NC5_FENCE\` fence (the both-marks value resolved: $([ -n "$NC5_TB" ] && printf yes || printf no)); $NC5_NSURF file(s) on the surface, $NC5_SC scanned, $NC5_BAD unreadable; sensitivity token '${NC5C_TOK:-<none>}'. An empty or unreadable population is a failure, never a pass"
+  elif [ "$NC5_HITS" -gt 0 ]; then
+    FAIL "$(nc5_text "$NC5_OUT" | tr '\n' ' ')"
+  elif [ "$NC5C_HITS" -eq 0 ]; then
+    FAIL "NC5: BROKEN PROBE — the sensitivity arm returned zero: the same scanner asked for \`$NC5C_TOK\` found nothing across $NC5_SC file(s), so the zero for the axis tokens is an empty scan rather than a clean tree. The probe is reported unusable, never the subject clean"
+  else
+    PASS "NC5: none of the $NC5_NTOK axis token(s), read from ADR-025's \`$NC5_FENCE\` fence and spelled nowhere in this file, occurs as a whole token on any stored-value surface — $NC5_SC file(s) scanned: $NC5_KINDS$NC5_NEX of them under examples/. Never-carry 5 holds on the tree: no instance, emitter, shape declaration, conduct file or executable carries a value of the axis. The zero is a measurement: the sensitivity arm NC5c found $NC5C_HITS occurrence(s) of another corpus token with the same scanner on the same run"
+  fi
+  if [ "$NC5C_HITS" -gt 0 ]; then
+    PASS "NC5c: SENSITIVITY — the same scanner, asked for \`$NC5C_TOK\` (the carrier class's own publish value, read from § 1.1), finds $NC5C_HITS occurrence(s) in $NC5C_FILES file(s) of the same surface. A token on this surface is something the scan sees"
+  else
+    FAIL "NC5c: SENSITIVITY returned zero for '${NC5C_TOK:-<none>}' across $NC5_SC file(s), so NC5's zero has no control behind it"
+  fi
+
+  # nc5_arm <id> <kind> <class> <file-under-NC5_D> <want-hits> <want-text> <integrity 0|1> <label>
+  nc5_arm() {
+    local id="$1" kind="$2" cls="$3" rel="$4" wanth="$5" want="$6" integ="$7" label="$8"
+    local out text hits has
+    out="$(nc5_scan "$NC5_D" "$NC5_TOKENS" "$kind$VA_TAB$cls$VA_TAB$rel")"
+    hits="$(nc_n "$out" HIT)"; text="$(nc5_text "$out")"
+    has="$(awk -v w="$want" '$0 == w { n++ } END { print n + 0 }' <<<"$text")"
+    if [ "$integ" -ne 1 ]; then
+      FAIL "$id: fixture integrity — the planted input is not what the arm names ($label), so the verdict below would prove nothing"
+    elif [ "$wanth" -eq 0 ] && [ "$hits" -eq 0 ] && [ "$(awk -F'\t' '$1 == "SCANNED" { v = $2 } END { print v + 0 }' <<<"$out")" -eq 1 ]; then
+      PASS "$id: MUST-NOT-FIRE — $label: the file is scanned and no finding is emitted"
+    elif [ "$wanth" -gt 0 ] && [ "$hits" -eq "$wanth" ] && [ "$has" -eq 1 ]; then
+      PASS "$id: MUST-FIRE — $label is flagged, in the predicted words: $want"
+    else
+      FAIL "$id: did not behave as predicted ($label) — wanted $wanth finding(s)${want:+ including '$want'}, got $hits: $(printf '%s' "$text" | tr '\n' ' ')"
+    fi
+  }
+  nc5_lines() { awk 'END { print NR }' "$1"; }
+  NC5_W1="$(awk -F'\t' '$1 == "C1" && !n++ { print $2 }' <<<"${CV_CLASS_WITNESS:-}")"
+  NC5_W12="$(awk -F'\t' -v c="$NC5_CARRIER" '$1 == c && !n++ { print $2 }' <<<"${CV_CLASS_WITNESS:-}")"
+  NC5_SRC_OK=0
+  [ -n "$NC5_W1" ] && [ -r "$ROOT/$NC5_W1" ] && [ -n "$NC5_W12" ] && [ -r "$ROOT/$NC5_W12" ] && [ -n "$NC4F_SRC" ] && [ -r "$ROOT/$NC4F_SRC" ] \
+    && [ -r "$ROOT/templates/trip-context.template.md" ] && [ -r "$ROOT/reference/schemas/trip-context.md" ] && [ -r "$ROOT/agents/05-hub-planner.md" ] && NC5_SRC_OK=1
+  if [ "$NC5_SRC_OK" -eq 1 ] && [ -n "$NC5_T1" ] && [ -n "$NC5_T2" ] && [ -n "$NC5_TB" ]; then
+    nc5_plain() { nc5_scan "$ROOT" "$NC5_TOKENS" "INST$VA_TAB-$VA_TAB$1" | awk -F'\t' '$1 == "HIT" { n++ } END { print n + 0 }'; }
+    # NC5k — the suffixed near-miss, built from a read token.
+    printf '# Zq near-miss\n\n- **Engagement:** %s-LINKED\n- **Other:** zq_%s and %s_zq\n' "$NC5_T1" "$NC5_T1" "$NC5_T1" > "$NC5_D/k.md"
+    nc5_arm NC5k INST C1 k.md 0 '' "$([ "$(grep -c -F -- "$NC5_T1" "$NC5_D/k.md")" -eq 2 ] && printf 1 || printf 0)" "a file carrying the first axis token three times, each with a hyphen or an underscore against it"
+    # NC5f1 — an instance of a bound, persisted class.
+    { cat "$ROOT/$NC5_W1"; printf -- '- **Engagement:** %s\n' "$NC5_T1"; } > "$NC5_D/f1.md"
+    nc5_arm NC5f1 INST C1 f1.md 1 "NC5: token $NC5_T1 (engagement axis, read from ADR-025's $NC5_FENCE fence) in f1.md:$(nc5_lines "$NC5_D/f1.md") — an instance of C1 ($(awk -F'\t' '$1 == 1 { print $4 ", " $6 }' <<<"${CA_ROWS:-}")): never-carry 5 — an axis value carried across $NC1_ACROSS and to the render" "$([ "$(nc5_plain "$NC5_W1")" -eq 0 ] && printf 1 || printf 0)" "a copy of C1's witness with one bullet storing the first axis token"
+    # NC5f2 — a cross-trip record.
+    { cat "$ROOT/$NC4F_SRC"; printf -- '- **Engagement:** %s\n' "$NC5_T1"; } > "$NC5_D/f2.md"
+    nc5_arm NC5f2 INST C22 f2.md 1 "NC5: token $NC5_T1 (engagement axis, read from ADR-025's $NC5_FENCE fence) in f2.md:$(nc5_lines "$NC5_D/f2.md") — an instance of C22 (cross-trip): never-carry 5 — an axis value carried across $NC3_ACROSS" "$([ "$(nc5_plain "$NC4F_SRC")" -eq 0 ] && printf 1 || printf 0)" "a copy of a cross-trip person record with the same bullet"
+    # NC5f3 / NC5n2 — the carrier. The planted block is one both-marks entry; the two copies
+    # differ in the stored-value line alone.
+    nc5_wren() {
+      printf '\n## Wren `%s` `%s`\n\n**Source:** none — no profile was filed.\n\n' "$NC_OP_MARK" "$NC_TP_MARK"
+      printf '| Need | Category | Governing constraint |\n|------|----------|---------------------|\n| zq-needs a seated rest every hour | rest | — |\n\n'
+    }
+    { cat "$ROOT/$NC5_W12"; nc5_wren; printf -- '- **Engagement:** %s\n' "$NC5_TB"; } > "$NC5_D/f3.md"
+    { cat "$ROOT/$NC5_W12"; nc5_wren; } > "$NC5_D/n2.md"
+    nc5f3_eng="$(grep -c '^- \*\*Engagement:\*\* ' "$NC5_D/f3.md" || true)"
+    nc5f3_both="$(awk -v a="$NC_OP_MARK" -v b="$NC_TP_MARK" 'substr($0, 1, 3) == "## " && index($0, a) && index($0, b) { n++ } END { print n + 0 }' "$NC5_D/f3.md")"
+    nc5_arm NC5f3 INST "$NC5_CARRIER" f3.md 1 "NC5: token $NC5_TB (engagement axis, read from ADR-025's $NC5_FENCE fence) in f3.md:$(nc5_lines "$NC5_D/f3.md") — an instance of $NC5_CARRIER, the axis's declared carrier: never-carry 5 — a stored value of the axis, carried across $NC1_ACROSS inside a both-marks entry the carrier carries forward verbatim" "$([ "$nc5f3_eng" -eq 1 ] && [ "$nc5f3_both" -eq 1 ] && [ "$(nc5_plain "$NC5_W12")" -eq 0 ] && printf 1 || printf 0)" "a copy of the carrier's witness with one both-marks entry storing the axis value its shipped condition names"
+    # NC5n1 — a token under reference/adr/, where the axis is declared: outside the surface.
+    NC5N1_R="$NC5_D/root"; mkdir -p "$NC5N1_R/reference/adr" "$NC5N1_R/examples/zq-trip"
+    cp "$NC_ADR025" "$NC5N1_R/reference/adr/ADR-099-zq-probe.md"
+    cp "$ROOT/$NC5_W1" "$NC5N1_R/examples/zq-trip/trip-context.md"
+    NC5N1_FILES="$(cd "$NC5N1_R" && find . -type f | sed 's|^\./||' | LC_ALL=C sort)"
+    NC5N1_SURF="$(nc5_surface "$NC5N1_R" "$NC5N1_FILES" "$(va_select "$ROOT" dir . "$NC5N1_R")" "$NC5_PATS")"
+    NC5N1_OUT="$(nc5_scan "$NC5N1_R" "$NC5_TOKENS" "$NC5N1_SURF")"
+    nc5n1_planted="$(grep -c -F -- "$NC5_T1" "$NC5N1_R/reference/adr/ADR-099-zq-probe.md" || true)"
+    nc5n1_in="$(awk -F'\t' 'NF == 3 && index($3, "reference/adr/") == 1 { n++ } END { print n + 0 }' <<<"$NC5N1_SURF")"
+    if [ "$nc5n1_planted" -eq 0 ] || [ "$(nc_count "$NC5N1_SURF")" -eq 0 ]; then
+      FAIL "NC5n1: fixture integrity — the copy under reference/adr/ carries the first axis token $nc5n1_planted time(s) and the fixture root yields $(nc_count "$NC5N1_SURF") surface file(s), so the silence below would prove nothing"
+    elif [ "$nc5n1_in" -eq 0 ] && [ "$(nc_n "$NC5N1_OUT" HIT)" -eq 0 ]; then
+      PASS "NC5n1: MUST-NOT-FIRE — a copy of ADR-025, carrying every axis token, placed under reference/adr/ in a fixture root is outside the surface: the surface built over that root holds $(nc_count "$NC5N1_SURF") file(s), none under reference/adr/, and the scan emits nothing. The record that declares the axis is where its tokens belong"
+    else
+      FAIL "NC5n1: a file under reference/adr/ entered the surface ($nc5n1_in) or was flagged ($(nc_n "$NC5N1_OUT" HIT) finding(s)) — the surface is no longer the positive list it declares"
+    fi
+    # NC5n2 — the carrier copy WITHOUT the stored-value line. Its third-party mark is the stem
+    # of an axis token and must not match one.
+    nc5_arm NC5n2 INST "$NC5_CARRIER" n2.md 0 '' "$([ -s "$NC5_D/n2.md" ] && [ "$(grep -c -F -- "$NC_TP_MARK" "$NC5_D/n2.md")" -ge 1 ] && [ "$(grep -c '^- \*\*Engagement:\*\* ' "$NC5_D/n2.md" || true)" -eq 0 ] && printf 1 || printf 0)" "the same carrier copy without the stored-value line, its both-marks heading present"
+    # NC5s1..s3 — the stored value on an emitter, a shape declaration and conduct.
+    { cat "$ROOT/templates/trip-context.template.md"; printf -- '- **Engagement:** [%s|%s]\n' "$NC5_T1" "$NC5_T2"; } > "$NC5_D/s1.md"
+    nc5_arm NC5s1 EMIT C1 s1.md 2 "NC5s: token $NC5_T1 in s1.md:$(nc5_lines "$NC5_D/s1.md") — an emitter of C1: never-carry 5 — a stored value of the engagement axis" 1 "a copy of the trip-context template with a field offering two axis tokens"
+    { cat "$ROOT/reference/schemas/trip-context.md"; printf 'field engagement: optional enum [%s|%s]\n' "$NC5_T1" "$NC5_T2"; } > "$NC5_D/s2.md"
+    nc5_arm NC5s2 SCHEMA C1 s2.md 2 "NC5s: token $NC5_T1 in s2.md:$(nc5_lines "$NC5_D/s2.md") — a schema declaring C1: never-carry 5 — a stored value of the engagement axis" 1 "a copy of the trip-context schema with a field enumerating two axis tokens"
+    { cat "$ROOT/agents/05-hub-planner.md"; printf '\nRecord %s in `trip-context.md` for each traveller.\n' "$NC5_T1"; } > "$NC5_D/s3.md"
+    nc5_arm NC5s3 CONDUCT - s3.md 1 "NC5s: token $NC5_T1 in s3.md:$(nc5_lines "$NC5_D/s3.md") — conduct: never-carry 5 — a stored value of the engagement axis, across every boundary" 1 "a copy of an agent prompt with a sentence instructing that an axis token be recorded"
+  else
+    FAIL "NC5k: fixture integrity — a source the NC-5 control arms copy is unreadable, or an axis token did not resolve (witnesses '${NC5_W1:-<none>}' / '${NC5_W12:-<none>}'; tokens resolved: first $([ -n "$NC5_T1" ] && printf yes || printf no), both-marks $([ -n "$NC5_TB" ] && printf yes || printf no)). None of the ten control arms of never-carry 5 was built, so NC5's verdict has no arm behind it"
+  fi
+fi
+
+# ── NC-2 — never-carry 2: the whole of one publish class, to any render, in any form ──────
+#
+# Never-carry 2 bars a CLASS, and the record quotes that class at its live membership on
+# purpose: an arm carrying a copy of the member list grades the wrong set the moment the
+# class changes. So nothing here holds the list. The class token is read from the
+# never-carry row itself; its members are read from § 1.1's publish column; and NC2m holds
+# that column to the one sentence in § 5.1 that states the membership in words.
+#
+#   NC2   THE DECLARATION LAYER. The site build reads exactly the artifacts the spec's
+#         `publish-contract-artifacts` fence gives the read class. None of them may be a
+#         member of the barred class. The fence is read by group PB's own reader.
+#   NC2p  THE VALUE LAYER, on the tracked example trips: a value of the traveller model with
+#         no first-party source in its trip, found verbatim in an artifact of the read class.
+#         Its reader is defined above NC0, which prints the populations it reads.
+#   NC2m  LIVE MEMBERSHIP. § 1.1's publish column and § 5.1's sentence name the same
+#         classes, in both directions. The sentence is anchored on its own bullet: an
+#         unanchored parse captures the read class's sentence instead, which also opens
+#         with the same word.
+nc_join() { awk '{ for (i = 1; i <= NF; i++) printf "%s%s", (n++ ? ", " : ""), $i }' <<<"$1"; }
+nc_setdiff() {  # nc_setdiff <a> <b> — members of a absent from b, in a's order
+  local x out=""
+  # shellcheck disable=SC2086  # a deliberate split: both arguments are space-delimited sets
+  for x in $1; do
+    case " $2 " in *" $x "*) ;; *) out="$out${out:+ }$x" ;; esac
+  done
+  printf '%s' "$out"
+}
+# nc2_scan <fence-rows> <class-rows> <barred-class> <read-class|ALL>
+# Records: HIT <artifact> <class-id> · ROWS <n> · READ <n> · MEMBERS <n>.
+nc2_scan() {
+  {
+    printf '%s\n' "$2" | awk -F'\t' -v d="$3" 'NF >= 6 && $1 ~ /^[0-9]+$/ && $6 == d { print "M\tC" $1 "\t" $2 }'
+    printf '%s\n' "$1"
+  } | awk -F'\t' -v rc="$4" '
+    $1 == "M" && NF == 3 { m[$3] = $2; nm++; next }
+    NF == 2 && $1 != "PARSE-FAIL" && $1 != "" {
+      rows++
+      if (rc == "ALL" || $2 == rc) { rd++; if ($1 in m) printf "HIT\t%s\t%s\n", $1, m[$1] }
+    }
+    END { printf "ROWS\t%d\nREAD\t%d\nMEMBERS\t%d\n", rows, rd, nm }'
+}
+nc2_msg() {  # nc2_msg <scan-output> <barred-class> <across>
+  awk -F'\t' -v d="$2" -v b="$3" '$1 == "HIT" { printf "NC2: %s (%s, %s) is in the site build%ss read set — never-carry 2: an %s class reaching the render across %s (CH-1, both limbs)\n", $2, $3, d, "\047", d, b }' <<<"$1"
+}
+nc_rec() { awk -F'\t' -v k="$2" '$1 == k { v = $2 } END { print v + 0 }' <<<"$1"; }
+# nc2m_members <class-rows> <barred-class> — the class ids § 1.1's publish column gives it.
+nc2m_members() { awk -F'\t' -v d="$2" 'NF >= 6 && $1 ~ /^[0-9]+$/ && $6 == d { printf "%sC%s", (n++ ? " " : ""), $1 }' <<<"$1"; }
+# nc2m_sentence <architecture-doc> <barred-class> — the class ids of § 5.1's own sentence,
+# read from the bullet that opens on the class token and from its `Exactly … .` clause.
+nc2m_sentence() {
+  awk -v d="$2" '
+    index($0, "### 5.1 ") == 1 { on = 1; next }
+    on && (/^### / || /^## /) { on = 0 }
+    on && grab && (/^- / || /^[ \t]*$/) { grab = 0 }
+    on && index($0, "- **`" d "`**") == 1 { grab = 1; buf = $0; next }
+    on && grab { buf = buf " " $0 }
+    END {
+      if (!match(buf, /Exactly [^.]*\./)) exit
+      s = substr(buf, RSTART, RLENGTH)
+      while (match(s, /C[0-9]+/)) { printf "%s%s", (n++ ? " " : ""), substr(s, RSTART, RLENGTH); s = substr(s, RSTART + RLENGTH) }
+    }' "$1"
+}
+# nc2m_find <members> <sentence> <barred-class> — the finding, or nothing when the sets agree.
+nc2m_find() {
+  local only
+  only="$(nc_setdiff "$1" "$2")"; only="$only${only:+ }$(nc_setdiff "$2" "$1")"; only="${only% }"
+  [ -n "$only" ] || return 0
+  printf 'NC2m: %s membership disagrees — § 1.1%ss publish column {%s} vs § 5.1%ss sentence {%s}; on one side only: %s\n' "$3" "'" "$(nc_join "$1")" "'" "$(nc_join "$2")" "$(nc_join "$only")"
+}
+# nc2m_mutate <architecture-doc> <kind> <barred-class> — one mutation of a copy:
+#   dropS   the last class id leaves § 5.1's sentence, and nothing else moves
+#   addrow  a synthetic row of the barred class is appended to § 1.1, numbered one past the last
+#   wcell   the W cell of § 1.1's second row gains a word — an edit unrelated to the class
+nc2m_mutate() {
+  awk -v kind="$2" -v d="$3" '
+    { L[NR] = $0 }
+    END {
+      s11 = 0; s51 = 0; last = 0; lastd = 0; grab = 0
+      for (i = 1; i <= NR; i++) {
+        if (index(L[i], "### 1.1 ") == 1) { s11 = 1; continue }
+        if (index(L[i], "### 5.1 ") == 1) { s51 = 1; s11 = 0; continue }
+        if (L[i] ~ /^### / || L[i] ~ /^## /) { s11 = 0; s51 = 0 }
+        if (s11 && L[i] ~ /^\|[ \t]*[0-9]+[ \t]*\|/) { last = i; if (index(L[i], "`" d "`")) lastd = i; if (!second && L[i] ~ /^\|[ \t]*2[ \t]*\|/) second = i }
+        if (s51 && index(L[i], "- **`" d "`**") == 1) grab = 1
+        else if (s51 && grab && (L[i] ~ /^- / || L[i] ~ /^[ \t]*$/)) grab = 0
+        if (s51 && grab && !sent && index(L[i], "Exactly ")) sent = i
+      }
+      for (i = 1; i <= NR; i++) {
+        line = L[i]
+        if (kind == "dropS" && i == sent) sub(/ and C[0-9]+\./, ".", line)
+        if (kind == "wcell" && i == second) { n = split(line, F, "|"); F[4] = F[4] "zq-reworded "; line = F[1]; for (k = 2; k <= n; k++) line = line "|" F[k] }
+        print line
+        if (kind == "addrow" && i == last && lastd) {
+          row = L[lastd]; n = split(L[last], F, "|"); num = F[2] + 1
+          n = split(row, F, "|"); F[2] = " " num " "; F[3] = " `outputs/zq-probe.md` "
+          line = F[1]; for (k = 2; k <= n; k++) line = line "|" F[k]
+          print line
+        }
+      }
+    }' "$1"
+}
+
+if [ "$NC_OK" -eq 1 ]; then
+  NC2_D="$NC_W/nc2"; mkdir -p "$NC2_D"
+  NC2_CLASS="$(nc_span "$(nc_cell "$NC_TABLE" 2 4)")"
+  NC2_ACROSS="$(nc_cell "$NC_TABLE" 2 3)"
+  NC2_SPEC="$ROOT/${PB_SPEC:-reference/site-layout-spec.md}"
+  NC2_ENUM_OK=0
+  NC2_PUBENUM="${PB_PUBENUM:-}"
+  [ -n "$NC2_PUBENUM" ] || NC2_PUBENUM="$(en_canonical publish | awk 'NR == 1')"
+  case "|$NC2_PUBENUM|" in *"|$NC2_READ|"*) nc2_e1=1 ;; *) nc2_e1=0 ;; esac
+  case "|$NC2_PUBENUM|" in *"|${NC2_CLASS:-<none>}|"*) nc2_e2=1 ;; *) nc2_e2=0 ;; esac
+  [ "$nc2_e1" -eq 1 ] && [ "$nc2_e2" -eq 1 ] && NC2_ENUM_OK=1
+  NC2_ROWS="$(pb_fence_rows "$NC2_SPEC" 2>/dev/null)"
+  NC2_OUT="$(nc2_scan "$NC2_ROWS" "${CA_ROWS:-}" "$NC2_CLASS" "$NC2_READ")"
+  NC2_ALL="$(nc2_scan "$NC2_ROWS" "${CA_ROWS:-}" "$NC2_CLASS" ALL)"
+  NC2_NROWS="$(nc_rec "$NC2_OUT" ROWS)"; NC2_NREAD="$(nc_rec "$NC2_OUT" READ)"; NC2_NMEM="$(nc_rec "$NC2_OUT" MEMBERS)"
+  NC2_HITS="$(nc_n "$NC2_OUT" HIT)"; NC2_SENS="$(nc_n "$NC2_ALL" HIT)"
+  if [ "$NC2_ENUM_OK" -ne 1 ] || [ -z "$NC2_ACROSS" ] || [ "$NC2_NROWS" -eq 0 ] || [ "$NC2_NREAD" -eq 0 ] || [ "$NC2_NMEM" -eq 0 ]; then
+    FAIL "NC2: NOT EVALUATED — the barred class read from never-carry row 2 is '${NC2_CLASS:-<none>}' and the read class is '$NC2_READ' (both members of the canonical publish enum: $NC2_ENUM_OK); the fence parsed to $NC2_NROWS row(s), $NC2_NREAD of the read class; § 1.1 gives the barred class $NC2_NMEM member(s). An empty population is a failure, never a pass"
+  elif [ "$NC2_HITS" -gt 0 ]; then
+    FAIL "$(nc2_msg "$NC2_OUT" "$NC2_CLASS" "$NC2_ACROSS" | tr '\n' ' ')"
+  elif [ "$NC2_SENS" -ne "$NC2_NMEM" ]; then
+    FAIL "NC2: BROKEN PROBE — the sensitivity arm did not return the class: the same comparison over ALL $NC2_NROWS fence row(s) finds $NC2_SENS of the $NC2_NMEM \`$NC2_CLASS\` artifact(s), so the zero over the read set is not a measurement of this fence. The probe is reported unusable, never the subject clean"
+  else
+    PASS "NC2: none of the $NC2_NREAD artifact(s) the site build reads — the fence rows of class \`$NC2_READ\` — is a member of the \`$NC2_CLASS\` class, whose $NC2_NMEM member(s) are read from § 1.1's publish column and held nowhere in this file. Never-carry 2 holds at the declaration layer across $NC2_ACROSS. The zero is a measurement: the same comparison over all $NC2_NROWS fence rows finds all $NC2_SENS of them"
+  fi
+
+  # NC2f — the carrier class's own row, moved into the read class in a COPY of the spec.
+  NC2F_ART="$(awk -F'\t' -v c="${NC5_CARRIER#C}" '$1 == c { print $2 }' <<<"${CA_ROWS:-}")"
+  NC2F_SPEC="$NC2_D/spec-moved.md"; NC2F_SAME="$NC2_D/spec-same.md"
+  NC2F_INT=0
+  if [ -r "$NC2_SPEC" ] && [ -n "$NC2F_ART" ]; then
+    cp "$NC2_SPEC" "$NC2F_SAME"
+    awk -v info='```'"${PB_FENCE:-publish-contract-artifacts}" -v a="$NC2F_ART" -v d="$NC2_CLASS" -v r="$NC2_READ" '
+      $0 == info { on = 1; print; next }
+      on && $0 == "```" { on = 0 }
+      on { t = $0; sub(/^[ \t]+/, "", t); split(t, F, /[ \t]+/); if (F[1] == a && F[2] == d) { sub(d "[ \t]*$", r); } }
+      { print }' "$NC2_SPEC" > "$NC2F_SPEC"
+    nc2f_delta="$(awk 'FILENAME == ARGV[1] { a[$0]++; next } { if (a[$0] > 0) a[$0]--; else d++ } END { print d + 0 }' "$NC2_SPEC" "$NC2F_SPEC")"
+    [ "$nc2f_delta" -eq 1 ] && NC2F_INT=1
+  fi
+  NC2F_CID="$(awk -F'\t' -v a="$NC2F_ART" '$2 == a { print "C" $1 }' <<<"${CA_ROWS:-}")"
+  NC2F_WANT="NC2: $NC2F_ART ($NC2F_CID, $NC2_CLASS) is in the site build's read set — never-carry 2: an $NC2_CLASS class reaching the render across $NC2_ACROSS (CH-1, both limbs)"
+  NC2F_GOT="$(nc2_msg "$(nc2_scan "$(pb_fence_rows "$NC2F_SPEC" 2>/dev/null)" "${CA_ROWS:-}" "$NC2_CLASS" "$NC2_READ")" "$NC2_CLASS" "$NC2_ACROSS")"
+  NC2F_NOT="$(nc_n "$(nc2_scan "$(pb_fence_rows "$NC2F_SAME" 2>/dev/null)" "${CA_ROWS:-}" "$NC2_CLASS" "$NC2_READ")" HIT)"
+  if [ "$NC2F_INT" -ne 1 ]; then
+    FAIL "NC2f: fixture integrity — the copy of the spec does not differ from it in exactly the one fence row moved into the read class (artifact '${NC2F_ART:-<none>}'), so the arm below would prove nothing"
+  elif [ "$NC2F_GOT" = "$NC2F_WANT" ] && [ "$NC2F_NOT" -eq 0 ]; then
+    PASS "NC2f: MUST-FIRE — a copy of the spec whose fence gives the carrier class's artifact the read class is flagged, in the predicted words: $NC2F_GOT. MUST-NOT-FIRE beside it: an unmodified copy of the same spec, read by the same code, emits nothing"
+  else
+    FAIL "NC2f: did not behave as predicted — wanted '$NC2F_WANT', got '${NC2F_GOT:-<no finding>}'; the unmodified copy emitted $NC2F_NOT finding(s) where 0 was required"
+  fi
+
+  # ── NC2p — the value layer, on the tracked example trips ────────────────────────────
+  # The scan ran above NC0, which printed its populations. Its verdict is here.
+  NC2P_NFIND="$(nc_n "$NC2P_OUT" FIND)"
+  NC2P_FIRST="$(awk -F'\t' '$1 == "ONLY" && !n++ { print $3 }' <<<"$NC2P_OUT")"
+  if [ "$NC2P_NTRIP" -eq 0 ] || [ "$NC2P_NVAL" -eq 0 ] || [ "$NC2P_NTGT" -eq 0 ] || [ "$NC2P_BAD" -gt 0 ]; then
+    FAIL "NC2p: NOT EVALUATED — $NC2P_NTRIP trip(s) holding a $NC5_CARRIER instance were read ($NC2P_BAD unreadable) for $NC2P_NVAL value(s), against $NC2P_NTGT \`$NC2_READ\` artifact(s). An empty or unreadable population is a failure, never a pass"
+  elif [ "$NC2P_NFIND" -gt 0 ]; then
+    FAIL "$(nc2p_msg "$NC2P_OUT" "$NC5_CARRIER" "$NC2_CLASS" "$NC2_READ" | tr '\n' ' ')"
+  elif [ "$NC2P_NONLY" -eq 0 ]; then
+    FAIL "NC2p: BROKEN PROBE — the population the predicate grades is empty: none of the $NC2P_NVAL value(s) read from $NC2P_NTRIP trip(s) lacks a first-party source, so the zero below would be a statement over nothing. The probe is reported unusable, never the subject clean"
+  else
+    PASS "NC2p: none of the $NC2P_NONLY traveller-model value(s) with no first-party source in their own trip — of $NC2P_NVAL distinct value(s) read from the $NC5_CARRIER instance of $NC2P_NTRIP trip(s) — appears in any of the $NC2P_NTGT \`$NC2_READ\` artifact(s) those trips carry, the context read without its constraint sections ($NC2P_NCON trip(s) state a constraint half, which is a source). Never-carry 2 holds at the value layer on the tracked examples: no \`$NC2_CLASS\` value reaches the site build's read set verbatim. The zero is a measurement: NC2pc shows the population non-empty, and NC2pf plants one such value and requires the finding. RESIDUAL, stated: verbatim values only — a paraphrase is not seen, nor a value that coincides with first-party text, nor a value under $NC2P_MIN characters ($NC2P_NSHORT skipped on this run)"
+  fi
+  if [ "$NC2P_NONLY" -gt 0 ]; then
+    PASS "NC2pc: POPULATION — $NC2P_NONLY of the $NC2P_NVAL distinct value(s) have no first-party source in their trip ($NC2P_TRIPS), the first '$NC2P_FIRST'. The predicate above has something to grade, so its zero is not an empty scan"
+  else
+    FAIL "NC2pc: POPULATION is empty — no value of any $NC5_CARRIER instance lacks a first-party source ($NC2P_TRIPS), so NC2p's zero has nothing behind it"
+  fi
+
+  # NC2pf / NC2pn — a COPY of the trip that holds the carrier class's declared witness, with
+  # ONE line appended to the first read-class artifact that is not the constraint home. The
+  # two copies differ in the planted value alone, and both values are read from this run's own
+  # scan of that trip rather than spelled here: its LAST value with no first-party source, and
+  # its FIRST value that has one.
+  NC2P_D="$NC_W/nc2p"; mkdir -p "$NC2P_D/fire" "$NC2P_D/quiet"
+  NC2PF_WIT="$(awk -F'\t' -v c="$NC5_CARRIER" '$1 == c && !n++ { print $2 }' <<<"${CV_CLASS_WITNESS:-}")"
+  NC2PF_TRIP="${NC2PF_WIT%"/$NC2P_ART"}"
+  NC2PF_NAME="${NC2PF_TRIP##*/}"
+  NC2PF_TGT="$(awk -F'\t' -v h="$NC2P_HOME" 'NF == 2 && $1 != h && !n++ { print $1 }' <<<"$NC2P_BOUND")"
+  NC2PF_CID="$(awk -F'\t' -v a="$NC2PF_TGT" 'NF == 2 && $1 == a { print $2 }' <<<"$NC2P_BOUND")"
+  NC2PF_VAL="$(awk -F'\t' -v t="$NC2PF_TRIP" '$1 == "ONLY" && $2 == t { v = $3 } END { print v }' <<<"$NC2P_OUT")"
+  NC2PN_VAL="$(awk -F'\t' -v t="$NC2PF_TRIP" '$1 == "SRCD" && $2 == t && !n++ { print $3 }' <<<"$NC2P_OUT")"
+  NC2PF_INT=0; NC2PN_INT=0; NC2PF_OUT=""; NC2PN_OUT=""
+  if [ -n "$NC2PF_WIT" ] && [ "$NC2PF_TRIP" != "$NC2PF_WIT" ] && [ -n "$NC2PF_TGT" ] && [ -r "$ROOT/$NC2PF_TRIP/$NC2PF_TGT" ] && [ -n "$NC2PF_VAL" ] && [ -n "$NC2PN_VAL" ]; then
+    while IFS= read -r nc2p_f; do
+      case "$nc2p_f" in
+        "$NC2PF_TRIP"/*)
+          mkdir -p "$NC2P_D/fire/${nc2p_f%/*}" "$NC2P_D/quiet/${nc2p_f%/*}"
+          cp "$ROOT/$nc2p_f" "$NC2P_D/fire/$nc2p_f"; cp "$ROOT/$nc2p_f" "$NC2P_D/quiet/$nc2p_f" ;;
+      esac
+    done <<EOF
+$NC_FILES
+EOF
+    printf -- '- 14:00 %s\n' "$NC2PF_VAL" >> "$NC2P_D/fire/$NC2PF_TRIP/$NC2PF_TGT"
+    printf -- '- 14:00 %s at the market stall\n' "$NC2PN_VAL" >> "$NC2P_D/quiet/$NC2PF_TRIP/$NC2PF_TGT"
+    NC2PF_OUT="$(nc2p_scan "$NC2P_D/fire" "$(nc2p_files "$NC2P_D/fire")" "$NC2PF_WIT" "$NC2P_ART" "$NC2P_BOUND" "$NC2P_RES" 2>/dev/null)"
+    NC2PN_OUT="$(nc2p_scan "$NC2P_D/quiet" "$(nc2p_files "$NC2P_D/quiet")" "$NC2PF_WIT" "$NC2P_ART" "$NC2P_BOUND" "$NC2P_RES" 2>/dev/null)"
+    nc2pf_base="$(awk -F'\t' -v t="$NC2PF_TRIP" '$1 == "FIND" && $2 == t { n++ } END { print n + 0 }' <<<"$NC2P_OUT")"
+    nc2pf_planted="$(grep -c -x -F -- "- 14:00 $NC2PF_VAL" "$NC2P_D/fire/$NC2PF_TRIP/$NC2PF_TGT" || true)"
+    nc2pn_planted="$(grep -c -x -F -- "- 14:00 $NC2PN_VAL at the market stall" "$NC2P_D/quiet/$NC2PF_TRIP/$NC2PF_TGT" || true)"
+    nc2pf_delta="$(awk 'FILENAME == ARGV[1] { a[$0]++; next } { if (a[$0] > 0) a[$0]--; else d++ } END { print d + 0 }' "$ROOT/$NC2PF_TRIP/$NC2PF_TGT" "$NC2P_D/fire/$NC2PF_TRIP/$NC2PF_TGT")"
+    nc2pn_delta="$(awk 'FILENAME == ARGV[1] { a[$0]++; next } { if (a[$0] > 0) a[$0]--; else d++ } END { print d + 0 }' "$ROOT/$NC2PF_TRIP/$NC2PF_TGT" "$NC2P_D/quiet/$NC2PF_TRIP/$NC2PF_TGT")"
+    nc2pn_still="$(awk -F'\t' -v v="$NC2PN_VAL" '$1 == "SRCD" && $3 == v { n++ } END { print n + 0 }' <<<"$NC2PN_OUT")"
+    [ "$nc2pf_base" -eq 0 ] && [ "$nc2pf_planted" -eq 1 ] && [ "$nc2pf_delta" -eq 1 ] && [ "$(nc_n "$NC2PF_OUT" TRIP)" -eq 1 ] && NC2PF_INT=1
+    [ "$nc2pn_planted" -eq 1 ] && [ "$nc2pn_delta" -eq 1 ] && [ "$nc2pn_still" -eq 1 ] && [ "$(nc_n "$NC2PN_OUT" TRIP)" -eq 1 ] && [ "$(nc_n "$NC2PN_OUT" ONLY)" -gt 0 ] && NC2PN_INT=1
+  fi
+  NC2PF_WANT="NC2p: '$NC2PF_VAL' — a value of $NC2PF_NAME's traveller model ($NC5_CARRIER) with no first-party source in the trip — appears in $NC2PF_TGT ($NC2PF_CID, $NC2_READ): never-carry 2: an $NC2_CLASS value reaching the site build's read set verbatim"
+  NC2PF_GOT="$(nc2p_msg "$NC2PF_OUT" "$NC5_CARRIER" "$NC2_CLASS" "$NC2_READ")"
+  if [ "$NC2PF_INT" -ne 1 ]; then
+    FAIL "NC2pf: fixture integrity — the copy of the witness trip ('${NC2PF_TRIP:-<none>}') does not differ from it in exactly the one planted line appended to '${NC2PF_TGT:-<none>}', or the trip has no value with no first-party source to plant, or the real trip is already flagged — so the arm below would prove nothing"
+  elif [ "$NC2PF_GOT" = "$NC2PF_WANT" ]; then
+    PASS "NC2pf: MUST-FIRE — a copy of $NC2PF_NAME with ONE line appended to $NC2PF_TGT, carrying the last of that trip's values with no first-party source, is flagged once, in the predicted words: $NC2PF_GOT"
+  else
+    FAIL "NC2pf: MUST-FIRE did not fire as predicted — wanted '$NC2PF_WANT', got '${NC2PF_GOT:-<no finding>}'"
+  fi
+  if [ "$NC2PN_INT" -ne 1 ]; then
+    FAIL "NC2pn: fixture integrity — the second copy does not carry exactly the one planted line, or the planted value ('${NC2PN_VAL:-<none>}') is not one the copy's own scan reads as first-party-sourced, or the copy holds no unsourced value at all — so the silence below would prove nothing"
+  elif [ "$(nc_n "$NC2PN_OUT" FIND)" -eq 0 ]; then
+    PASS "NC2pn: MUST-NOT-FIRE — the same copy with the appended line carrying '$NC2PN_VAL' instead, a value of the same model that the trip's own first-party text states, emits nothing: $(nc_n "$NC2PN_OUT" ONLY) value(s) of the copy still have no source and none of them is in a target. The arm differs from NC2pf in the planted value's provenance alone"
+  else
+    FAIL "NC2pn: a first-party-sourced value planted in a read-class artifact was flagged — $(nc2p_msg "$NC2PN_OUT" "$NC5_CARRIER" "$NC2_CLASS" "$NC2_READ" | tr '\n' ' ')"
+  fi
+
+  # ── NC2m — the membership, in both of its homes ─────────────────────────────────────
+  NC2M_M="$(nc2m_members "${CA_ROWS:-}" "$NC2_CLASS")"
+  NC2M_S="$(nc2m_sentence "$NC_ARCH" "$NC2_CLASS" 2>/dev/null)"
+  NC2M_NM="$(mg_count "$NC2M_M")"; NC2M_NS="$(mg_count "$NC2M_S")"
+  NC2M_FIND="$(nc2m_find "$NC2M_M" "$NC2M_S" "$NC2_CLASS")"
+  if [ "$NC2M_NM" -eq 0 ] || [ "$NC2M_NS" -eq 0 ]; then
+    FAIL "NC2m: NOT EVALUATED — § 1.1's publish column gives \`$NC2_CLASS\` $NC2M_NM member(s) and § 5.1's anchored sentence $NC2M_NS. An empty side is a failure, never a pass: the comparison below would be of a set with nothing"
+  elif [ -n "$NC2M_FIND" ]; then
+    FAIL "$NC2M_FIND"
+  else
+    PASS "NC2m: the \`$NC2_CLASS\` class has $NC2M_NM member(s) at its live membership — {$(nc_join "$NC2M_M")}, read from § 1.1's publish column — and § 5.1's own sentence names the same $NC2M_NS, in both directions. Every NC-2 arm grades this set, read on this run; none grades a copy of it"
+  fi
+  # nc2m_arm <id> <kind> <want-members> <want-finding> <label>
+  nc2m_arm() {
+    local id="$1" kind="$2" wantn="$3" want="$4" label="$5"
+    local r="$NC2_D/$id" rows m s got delta
+    mkdir -p "$r/${VA_ARCH_DOC%/*}"
+    nc2m_mutate "$NC_ARCH" "$kind" "$NC2_CLASS" > "$r/$VA_ARCH_DOC" 2>/dev/null
+    delta="$(awk 'FILENAME == ARGV[1] { a[$0]++; next } { if (a[$0] > 0) a[$0]--; else d++ } END { print d + 0 }' "$NC_ARCH" "$r/$VA_ARCH_DOC")"
+    rows="$(va_class_rows "$r" 2>/dev/null)"
+    m="$(nc2m_members "$rows" "$NC2_CLASS")"; s="$(nc2m_sentence "$r/$VA_ARCH_DOC" "$NC2_CLASS" 2>/dev/null)"
+    got="$(nc2m_find "$m" "$s" "$NC2_CLASS")"
+    if [ "$delta" -ne 1 ]; then
+      FAIL "$id: fixture integrity — the copy differs from the architecture document in $delta line(s) where exactly 1 was to change ($label), so the arm below would prove nothing"
+    elif [ "$(mg_count "$m")" -eq "$wantn" ] && [ "$got" = "$want" ]; then
+      if [ -n "$want" ]; then PASS "$id: MUST-FIRE — $label: § 1.1 gives $(mg_count "$m") member(s) and the agreement fails in the predicted words: $got"
+      else PASS "$id: MUST-NOT-FIRE — $label: § 1.1 still gives $(mg_count "$m") member(s) and the two homes still agree"; fi
+    else
+      FAIL "$id: did not behave as predicted ($label) — wanted $wantn member(s) and '${want:-no finding}', got $(mg_count "$m") member(s) and '${got:-no finding}'"
+    fi
+  }
+  NC2M_LAST="${NC2M_M##* }"; NC2M_REST="${NC2M_M% *}"
+  NC2M_NEXT="C$(( $(printf '%s\n' "${CA_ROWS:-}" | awk -F'\t' '$1 ~ /^[0-9]+$/ { v = $1 } END { print v + 0 }') + 1 ))"
+  nc2m_arm NC2mf1 dropS "$NC2M_NM" "NC2m: $NC2_CLASS membership disagrees — § 1.1's publish column {$(nc_join "$NC2M_M")} vs § 5.1's sentence {$(nc_join "$NC2M_REST")}; on one side only: $NC2M_LAST" "a copy with only § 5.1's sentence edited to drop its last class"
+  nc2m_arm NC2mf2 addrow "$((NC2M_NM + 1))" "NC2m: $NC2_CLASS membership disagrees — § 1.1's publish column {$(nc_join "$NC2M_M $NC2M_NEXT")} vs § 5.1's sentence {$(nc_join "$NC2M_M")}; on one side only: $NC2M_NEXT" "a copy with one synthetic row of the class appended to § 1.1 and the sentence untouched"
+  nc2m_arm NC2mn wcell "$NC2M_NM" '' "a copy with an unrelated edit to another row of § 1.1"
+fi
+
+# ── NC-2, the supersession reader and the value branches ──────────────────────────────────
+#
+# Never-carry 2 is superseded IN PART by a later record, for exactly one integer. A record
+# superseded in part keeps its text as decided and carries the change in two places: an
+# inline marker at the superseded text, and a sentence in its own Status line. NC2s reads
+# both and requires them to name the same records. Where they do not, the supersession is
+# recorded in one place only and the exception is NOT applied — a marker nobody recorded, or
+# a Status sentence with no marker, must not widen what may reach a render.
+#
+#   MARKER SIDE  on the never-carry table's row 2: every inline `*(Superseded in part …`
+#                marker, read up to its first closing parenthesis, that ends on a link to a
+#                record file
+#   STATUS SIDE  every record linked inside a SENTENCE of the Status bullet that names
+#                never-carry 2. A Status sentence about another decision is that decision's
+#                record and is not counted — arm NC2sb plants one
+#   ADMITTED     from each superseding record's `## Decision`: the numbered decision that
+#                names never-carry 2, and only that one, yields the labels it quotes in the
+#                bullet form `- **Label:**`. A label quoted in another decision, or in
+#                another form, is not admitted — arm NC2sa plants one
+#   SCOPE        the exception admits a COUNT under an admitted label, on either limb. It
+#                admits no value
+#
+# NC2v then grades the value branches through one evaluator, on synthetic renders: a value
+# of the carrier class reaching the encrypted render is admitted only under a label ADR-030
+# puts on its IN list for that class; on the plaintext render nothing of the class is; and a
+# count derived from the class is admitted only under a label the supersession admits.
+# The IN labels here are NC2v's OWN reader of ADR-030 — § 2's code spans between its two
+# list anchors, and § 4's person-record paragraph — kept apart from any other reader of that
+# record, because which IN values the class covers and which values the site may show are two
+# questions.
+NC2S_AWK='
+  function nc_links(s, pre,   t) {       # every [ADR-NNN](ADR-NNN-slug.md) link of s, as "<pre>\t<id>\t<file>"
+    while (match(s, /\[ADR-[0-9][0-9][0-9]\]\(ADR-[0-9][0-9][0-9]-[a-z0-9-]+\.md\)/)) {
+      t = substr(s, RSTART, RLENGTH); s = substr(s, RSTART + RLENGTH)
+      printf "%s\t%s\t%s\n", pre, substr(t, 2, 7), substr(t, 11, length(t) - 11)
+    }
+  }
+  function nc_names2(s) { return (s ~ /never-carry[ -]2([^0-9]|$)/) }
+  { L[NR] = $0 }
+  END {
+    # the Status bullet, its continuation lines joined
+    st = ""
+    for (i = 1; i <= NR; i++) if (index(L[i], "- **Status:**") == 1) {
+      st = L[i]
+      for (j = i + 1; j <= NR && L[j] ~ /^[ \t]+[^ \t]/; j++) { t = L[j]; sub(/^[ \t]+/, "", t); st = st " " t }
+      break
+    }
+    ns = 0; s = st
+    while (match(s, /[.!?][ \t]+[A-Z*`[(]/)) { ns++; sent = substr(s, 1, RSTART); s = substr(s, RSTART + RLENGTH - 1); if (nc_names2(sent)) { nn++; nc_links(sent, "STATUS") } }
+    if (s ~ /[^ \t]/) { ns++; if (nc_names2(s)) { nn++; nc_links(s, "STATUS") } }
+    printf "SENTENCES\t%d\t%d\n", ns, nn
+    # row 2 of the never-carry table
+    on = 0; rows = 0
+    for (i = 1; i <= NR; i++) {
+      if (index(L[i], "### 3. Four boundaries") == 1) { on = 1; continue }
+      if (on && (L[i] ~ /^### / || L[i] ~ /^## /)) on = 0
+      if (on && L[i] ~ /^\|[ \t]*2[ \t]*\|/) {
+        rows++; s = L[i]
+        while ((p = index(s, "*(Superseded in part")) > 0) {
+          s = substr(s, p + 20); q = index(s, ")"); seg = (q > 0) ? substr(s, 1, q) : s
+          if (match(seg, /\[ADR-[0-9][0-9][0-9]\]\(ADR-[0-9][0-9][0-9]-[a-z0-9-]+\.md\)$/)) nc_links(substr(seg, RSTART), "MARK")
+        }
+      }
+    }
+    printf "ROW2\t%d\n", rows
+  }'
+nc2s_sides() { awk "$NC2S_AWK" "$1"; }
+# nc2s_labels <record-file> — the labels the decision naming never-carry 2 quotes as bullets.
+nc2s_labels() {
+  awk '
+    index($0, "## Decision") == 1 && $0 ~ /^## Decision[ \t]*$/ { on = 1; next }
+    on && /^## / { on = 0 }
+    !on { next }
+    /^[0-9]+\. / { if (u != "") U[++nu] = u; u = $0; next }
+    u != "" && (/^[ \t]/ || /^[ \t]*$/) { u = u "\n" $0; next }
+    u != "" { U[++nu] = u; u = "" }
+    END {
+      if (u != "") U[++nu] = u
+      for (k = 1; k <= nu; k++) {
+        if (U[k] !~ /never-carry[ -]2([^0-9]|$)/) continue
+        s = U[k]
+        while (match(s, /`- \*\*[^*`]+:\*\*`/)) { t = substr(s, RSTART + 5, RLENGTH - 9); s = substr(s, RSTART + RLENGTH); if (!(t in seen)) { seen[t] = 1; print "LABEL\t" t } }
+      }
+      printf "UNITS\t%d\n", nu
+    }' "$1"
+}
+# nc2s_read <adr-025> <record-directory> — both sides, the finding where they differ, and the
+# admitted labels where they agree. Records: MARK/STATUS <id> <file> · FIND <text> · LABEL <l>.
+nc2s_read() {
+  local sides marks stats only id f
+  sides="$(nc2s_sides "$1")"
+  printf '%s\n' "$sides"
+  marks="$(awk -F'\t' '$1 == "MARK" && !s[$2]++ { printf "%s ", $2 }' <<<"$sides")"
+  stats="$(awk -F'\t' '$1 == "STATUS" && !s[$2]++ { printf "%s ", $2 }' <<<"$sides")"
+  only="$(nc_setdiff "$marks" "$stats")"
+  for id in $only; do printf 'FIND\tNC2s: never-carry 2 carries a supersession marker naming %s that ADR-025%ss Status line does not record — recorded in one place only; exception not applied\n' "$id" "'"; done
+  only="$(nc_setdiff "$stats" "$marks")"
+  for id in $only; do printf 'FIND\tNC2s: never-carry 2%ss supersession by %s is recorded in ADR-025%ss Status line but carries no inline marker on row 2 — recorded in one place only; exception not applied\n' "'" "$id" "'"; done
+  [ -z "$(nc_setdiff "$marks" "$stats")$(nc_setdiff "$stats" "$marks")" ] || return 0
+  while IFS="$VA_TAB" read -r _ id f; do
+    [ -n "$f" ] || continue
+    if [ -r "$2/$f" ]; then nc2s_labels "$2/$f"; else printf 'FIND\tNC2s: the superseding record %s (%s) is not readable beside ADR-025 — exception not applied\n' "$id" "$f"; fi
+  done <<EOF
+$(awk -F'\t' '$1 == "MARK" && !s[$2]++' <<<"$sides")
+EOF
+}
+nc2s_set() { awk -F'\t' -v k="$2" '$1 == k && !s[$2]++ { printf "%s%s", (n++ ? ", " : ""), $2 }' <<<"$1"; }
+nc2s_finds() { awk -F'\t' '$1 == "FIND" { printf "%s%s", (n++ ? " | " : ""), $2 }' <<<"$1"; }
+
+# nc_c2_in_labels <adr-030> — NC2v's own IN set for the class, one label per line.
+nc_c2_in_labels() {
+  awk '
+    function spans(s,   t) { while (match(s, /`[^`]+`/)) { t = substr(s, RSTART + 1, RLENGTH - 2); s = substr(s, RSTART + RLENGTH); if (!(t in seen)) { seen[t] = 1; print t } } }
+    index($0, "**IN — may appear on the private site.**") == 1 { inlist = 1 }
+    index($0, "**OUT — never on any page.**") == 1 { inlist = 0 }
+    inlist { spans($0) }
+    index($0, "**A-1 — ") == 1 { a1 = 1; buf = "" }
+    a1 && /^[ \t]*$/ { a1 = 0; p = index(buf, " are "); if (p > 0) spans(substr(buf, p + 5)); buf = "" }
+    a1 { buf = buf " " $0 }
+    END { if (a1) { p = index(buf, " are "); if (p > 0) spans(substr(buf, p + 5)) } }' "$1"
+}
+# nc_c2_verdict <limb enc|plain> <label> <kind value|count> <adr-025> <adr-030> <data-model>
+#   rc 0 ADMIT · 1 DENY · 2 not measured (an input this evaluator needs did not read)
+nc_c2_verdict() {
+  local limb="$1" label="$2" kind="$3" adr25="$4" adr30="$5" dm="$6"
+  local ins nin nres rd
+  if [ "$kind" = count ]; then
+    rd="$(nc2s_read "$adr25" "${adr25%/*}")"
+    [ "$(nc_rec "$rd" ROW2)" -ge 1 ] || return 2
+    [ -z "$(nc2s_finds "$rd")" ] || return 1
+    awk -F'\t' -v l="$label" '$1 == "LABEL" && $2 == l { f = 1 } END { exit (f ? 0 : 1) }' <<<"$rd"
+    return $?
+  fi
+  [ "$limb" = enc ] || [ "$limb" = plain ] || return 2
+  ins="$(nc_c2_in_labels "$adr30" 2>/dev/null)"
+  nin="$(nc_count "$ins")"
+  nres="$(awk -F'\t' 'FILENAME == ARGV[1] { if ($3 != "") lab[$3] = 1; next } NF && ($0 in lab) { n++ } END { print n + 0 }' <(ft_rows "$dm" 2>/dev/null) <(printf '%s\n' "$ins"))"
+  [ "$nin" -gt 0 ] && [ "$nres" -eq "$nin" ] || return 2
+  [ "$limb" = enc ] || return 1
+  awk -v l="$label" '$0 == l { f = 1 } END { exit (f ? 0 : 1) }' <<<"$ins"
+}
+# nc2v_text <limb> <label> <kind> — the finding a DENY carries.
+nc2v_text() {
+  if [ "$3" = count ]; then
+    printf 'NC2v: a count derived from %s reaches the render under %s%s%s, which no record superseding never-carry 2 admits — never-carry 2: an anonymized form' "$NC5_CARRIER" "'" "$2" "'"
+  elif [ "$1" = enc ]; then
+    printf 'NC2v: a %s value under %s%s%s reaches the CH-1 encrypted render and is not on ADR-030 § 2%ss IN list — never-carry 2: %s to the private site outside the reading ADR-030 gives' "$NC5_CARRIER" "'" "$2" "'" "'" "$NC2_CLASS"
+  else
+    printf 'NC2v: a %s value under %s%s%s reaches the CH-1 --plaintext render — never-carry 2: on a public page no value of the %s class may appear' "$NC5_CARRIER" "'" "$2" "'" "$NC2_CLASS"
+  fi
+}
+
+if [ "$NC_OK" -eq 1 ]; then
+  NC2S_D="$NC_W/nc2s"; mkdir -p "$NC2S_D"
+  NC_ADR030="$ROOT/reference/adr/ADR-030-what-the-private-site-may-show.md"
+  NC2S_READ="$(nc2s_read "$NC_ADR025" "${NC_ADR025%/*}")"
+  NC2S_NROW="$(nc_rec "$NC2S_READ" ROW2)"
+  NC2S_NSENT="$(awk -F'\t' '$1 == "SENTENCES" { v = $2 } END { print v + 0 }' <<<"$NC2S_READ")"
+  NC2S_MARKS="$(nc2s_set "$NC2S_READ" MARK)"; NC2S_STATS="$(nc2s_set "$NC2S_READ" STATUS)"
+  NC2S_LABELS="$(nc2s_set "$NC2S_READ" LABEL)"; NC2S_FIND="$(nc2s_finds "$NC2S_READ")"
+  NC2S_FILE="$(awk -F'\t' '$1 == "MARK" && !n++ { print $3 }' <<<"$NC2S_READ")"
+  if [ "$NC2S_NROW" -ne 1 ] || [ "$NC2S_NSENT" -eq 0 ]; then
+    FAIL "NC2s: NOT EVALUATED — the never-carry table yields $NC2S_NROW row(s) numbered 2 where exactly 1 was required, and ADR-025's Status bullet splits into $NC2S_NSENT sentence(s). An unreadable side is a failure, never a pass"
+  elif [ -n "$NC2S_FIND" ]; then
+    FAIL "$NC2S_FIND"
+  else
+    PASS "NC2s: never-carry 2's supersession is recorded in both places and they agree — row 2 carries marker(s) naming {${NC2S_MARKS:-none}}, and the Status sentence(s) naming never-carry 2 link {${NC2S_STATS:-none}}, over $NC2S_NSENT Status sentence(s). The exception is applied: a count is admitted under {${NC2S_LABELS:-no label}}, the bullet-form label(s) quoted by the one decision of the superseding record that names never-carry 2, and nothing else is"
+  fi
+  # nc2s_arm <id> <kind> <want-find> <want-labels> <label> — one mutation of a copy of the
+  # record directory's two files; the reader is the same code, pointed at the copy.
+  nc2s_arm() {
+    local id="$1" kind="$2" want="$3" wantl="$4" label="$5"
+    local d="$NC2S_D/$id" a="$NC2S_D/$id/${NC_ADR025##*/}" s got gl delta
+    mkdir -p "$d"
+    cp "$NC_ADR025" "$a"; [ -n "$NC2S_FILE" ] && cp "${NC_ADR025%/*}/$NC2S_FILE" "$d/$NC2S_FILE"
+    case "$kind" in
+      dropstatus)  awk 'index($0, "- **Status:**") == 1 { st = 1 } st && /^- \*\*/ && index($0, "- **Status:**") != 1 { st = 0 } st { gsub(/never-carry 2/, "never-carry two") } { print }' "$NC_ADR025" > "$a" ;;
+      dropmarker)  awk '/^\|[ \t]*2[ \t]*\|/ && index($0, "*(Superseded in part") { p = index($0, "*(Superseded in part"); rest = substr($0, p); q = index(rest, ")*"); head = substr($0, 1, p - 1); sub(/ $/, "", head); $0 = head substr(rest, q + 2) } { print }' "$NC_ADR025" > "$a" ;;
+      otherstatus) awk 'index($0, "- **Deciders:**") == 1 && !done { print "  **Superseded in part (2001-01-02)** — an amendment that records a superseding decision. [ADR-099](ADR-099-zq-probe.md) supersedes in part § *Decision* 4" "\047" "s prohibition, as it applies to one join key. The rest stands."; done = 1 } { print }' "$NC_ADR025" > "$a" ;;
+      otherlabel)  awk '{ gsub(/`\*\*Passengers:\*\*`/, "`- **Passengers:**`") } { print }' "${NC_ADR025%/*}/$NC2S_FILE" > "$d/$NC2S_FILE" ;;
+    esac
+    delta="$(awk 'FILENAME == ARGV[1] { x[$0]++; next } { if (x[$0] > 0) x[$0]--; else n++ } END { print n + 0 }' <(cat "$NC_ADR025" "${NC_ADR025%/*}/$NC2S_FILE") <(cat "$a" "$d/$NC2S_FILE"))"
+    s="$(nc2s_read "$a" "$d")"; got="$(nc2s_finds "$s")"; gl="$(nc2s_set "$s" LABEL)"
+    if [ "$delta" -eq 0 ]; then
+      FAIL "$id: fixture integrity — the mutation did not land ($label): the copies do not differ from their sources, so the arm below would prove nothing"
+    elif [ "$got" = "$want" ] && [ "$gl" = "$wantl" ]; then
+      if [ -n "$want" ]; then PASS "$id: MUST-FIRE — $label ($delta line(s) changed) fails in the predicted words, and no label is admitted: $got"
+      else PASS "$id: MUST-NOT-FIRE — $label ($delta line(s) changed): the two sides still agree and the admitted set is still {$gl}"; fi
+    else
+      FAIL "$id: did not behave as predicted ($label) — wanted '${want:-no finding}' admitting {$wantl}, got '${got:-no finding}' admitting {$gl}"
+    fi
+  }
+  NC2S_ID="${NC2S_MARKS%%,*}"
+  nc2s_arm NC2sa otherlabel '' "$NC2S_LABELS" "a copy of the superseding record in which a label quoted by ANOTHER decision is rewritten into the bullet form"
+  nc2s_arm NC2sb otherstatus '' "$NC2S_LABELS" "a copy of ADR-025 whose Status bullet gains a supersession sentence for another decision, linking another record"
+  nc2s_arm NC2sf dropstatus "NC2s: never-carry 2 carries a supersession marker naming $NC2S_ID that ADR-025's Status line does not record — recorded in one place only; exception not applied" '' "a copy of ADR-025 with the marker kept and no Status sentence naming never-carry 2"
+  nc2s_arm NC2sf2 dropmarker "NC2s: never-carry 2's supersession by $NC2S_ID is recorded in ADR-025's Status line but carries no inline marker on row 2 — recorded in one place only; exception not applied" '' "a copy of ADR-025 with the Status sentence kept and the inline marker removed from row 2"
+
+  # ── NC2v — the value branches, on synthetic renders ─────────────────────────────────
+  NC2V_D="$NC_W/nc2v"; mkdir -p "$NC2V_D"
+  NC2V_IN="$(nc_c2_in_labels "$NC_ADR030" 2>/dev/null)"
+  NC2V_NIN="$(nc_count "$NC2V_IN")"
+  NC2V_INLBL="$(awk 'NF && !n++ { print }' <<<"$NC2V_IN")"
+  NC2V_CNTLBL="${NC2S_LABELS%%,*}"
+  # the synthetic trip: a model, a context, two renders, and a manifest naming which rendered
+  # integers derive from the model
+  {
+    printf '# Traveler model\n\n## Quinn\n\n- **%s:** zq-tidepool-walks\n- **Specific:** zq-midday-rest\n\n' "$NC2V_INLBL"
+    printf '## Wren %s %s\n\n- **Specific:** zq-a seated rest every hour\n' "$NC_OP_MARK" "$NC_TP_MARK"
+  } > "$NC2V_D/model.md"
+  printf '# Trip context\n\n## Group\n\n| Name | Role |\n|---|---|\n| Quinn | traveller |\n| Zq-second | traveller |\n\n- **%s:** 3\n' "$NC2V_CNTLBL" > "$NC2V_D/trip-context.md"
+  printf '<p>%s: zq-tidepool-walks</p>\n<p>Specific: zq-midday-rest</p>\n<p>Party needs: 1</p>\n<p>%s: 3</p>\n' "$NC2V_INLBL" "$NC2V_CNTLBL" > "$NC2V_D/enc.html"
+  printf '<p>%s: zq-tidepool-walks</p>\n<p>%s: 3</p>\n' "$NC2V_INLBL" "$NC2V_CNTLBL" > "$NC2V_D/plain.html"
+  printf 'Party needs\n%s\n' "$NC2V_CNTLBL" > "$NC2V_D/manifest.txt"
+  # nc2v_kind <render> <label> — value | count | none, from the render, the model and the manifest
+  nc2v_kind() {
+    awk -v l="$2" '
+      FILENAME == ARGV[1] { m = m "\n" $0; next }
+      FILENAME == ARGV[2] { if ($0 != "") cnt[$0] = 1; next }
+      { s = $0; gsub(/<[^>]*>/, "", s); p = index(s, l ": "); if (p != 1) next
+        v = substr(s, length(l) + 3); k = "none"
+        if ((l in cnt) && v ~ /^[0-9]+$/) k = "count"; else if (index(m, v)) k = "value"
+        print k; f = 1 }
+      END { if (!f) print "absent" }' "$NC2V_D/model.md" "$NC2V_D/manifest.txt" "$1"
+  }
+  # nc2v_arm <id> <want-rc> <limb> <label> <adr-025> <prose>
+  nc2v_arm() {
+    local id="$1" want="$2" limb="$3" label="$4" adr25="$5" prose="$6"
+    local render="$NC2V_D/$limb.html" kind got got2 text wtext
+    if [ "$limb" = both ]; then
+      # one emission, graded on each limb: the two verdicts must be the same one
+      kind="$(nc2v_kind "$NC2V_D/enc.html" "$label")"
+      [ "$(nc2v_kind "$NC2V_D/plain.html" "$label")" = "$kind" ] || kind="absent"
+      nc_c2_verdict enc "$label" "$kind" "$adr25" "$NC_ADR030" "$NC_DM" >/dev/null 2>&1; got=$?
+      nc_c2_verdict plain "$label" "$kind" "$adr25" "$NC_ADR030" "$NC_DM" >/dev/null 2>&1; got2=$?
+      [ "$got" -eq "$got2" ] || got=99
+      limb=enc
+    else
+      kind="$(nc2v_kind "$render" "$label")"
+      nc_c2_verdict "$limb" "$label" "$kind" "$adr25" "$NC_ADR030" "$NC_DM" >/dev/null 2>&1; got=$?
+    fi
+    text=""; [ "$got" -eq 1 ] && text="$(nc2v_text "$limb" "$label" "$kind")"
+    wtext=""; [ "$want" -eq 1 ] && wtext="$(nc2v_text "$limb" "$label" "$kind")"
+    if [ "$kind" != value ] && [ "$kind" != count ]; then
+      FAIL "$id: fixture integrity — the $limb render does not carry '$label' as a value of the model or a count the manifest marks (read as '$kind'), so the verdict below would prove nothing"
+    elif [ "$got" -eq 127 ]; then
+      FAIL "$id: $prose -- rc=127: the evaluator is NOT DEFINED. The subject is absent, not rejecting"
+    elif [ "$got" -eq "$want" ] && [ "$text" = "$wtext" ]; then
+      PASS "$id: $prose [a $kind under '$label' on the $limb render: rc=$got, expected $want]${text:+ — $text}"
+    else
+      FAIL "$id: $prose -- a $kind under '$label' on the $limb render: expected rc=$want, got rc=$got"
+    fi
+  }
+  if [ "$NC2V_NIN" -eq 0 ] || [ -z "$NC2V_CNTLBL" ] || [ "$NC2V_CNTLBL" = "no label" ]; then
+    FAIL "NC2v1: NOT EVALUATED — NC2v's reader of ADR-030 returns $NC2V_NIN IN label(s) and the supersession admits '${NC2V_CNTLBL:-<none>}'. The value branches have no input to grade, so none of the six arms was run"
+  else
+    cp "$NC_ADR025" "$NC2V_D/${NC_ADR025##*/}"; [ -n "$NC2S_FILE" ] && cp "${NC_ADR025%/*}/$NC2S_FILE" "$NC2V_D/$NC2S_FILE"
+    awk 'index($0, "- **Status:**") == 1 { st = 1 } st && /^- \*\*/ && index($0, "- **Status:**") != 1 { st = 0 } st { gsub(/never-carry 2/, "never-carry two") }
+         /^\|[ \t]*2[ \t]*\|/ && index($0, "*(Superseded in part") { p = index($0, "*(Superseded in part"); rest = substr($0, p); q = index(rest, ")*"); head = substr($0, 1, p - 1); sub(/ $/, "", head); $0 = head substr(rest, q + 2) } { print }' "$NC_ADR025" > "$NC2V_D/${NC_ADR025##*/}"
+    nc2v_arm NC2v1 1 enc Specific "$NC_ADR025" "MUST-FIRE — a $NC5_CARRIER value under a label ADR-030 does not put on its IN list reaches the encrypted render"
+    nc2v_arm NC2v2 1 plain "$NC2V_INLBL" "$NC_ADR025" "MUST-FIRE — a $NC5_CARRIER value under an IN label reaches the plaintext render, where nothing of the class may"
+    nc2v_arm NC2v3 1 enc 'Party needs' "$NC_ADR025" "MUST-FIRE — a count derived from $NC5_CARRIER reaches the render under a label no superseding record admits: the anonymized form"
+    nc2v_arm NC2v4 0 enc "$NC2V_INLBL" "$NC_ADR025" "MUST-NOT-FIRE — the same IN value on the encrypted render is the reading ADR-030 gives"
+    nc2v_arm NC2v5 0 both "$NC2V_CNTLBL" "$NC_ADR025" "MUST-NOT-FIRE — the one count the superseding record admits, graded on BOTH limbs, while the marker and the Status sentence stand"
+    nc2v_arm NC2v6 1 both "$NC2V_CNTLBL" "$NC2V_D/${NC_ADR025##*/}" "MUST-FIRE — the same count, on both limbs, against a copy of ADR-025 with the marker and the Status sentence removed: the exception is read from the record, not held here"
+  fi
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group MC — `may-carry`, typed per side (ADR-026 § Decision 3).
+#
+# ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
+# ADR-026 § Decision 3 makes carry a RELATION — a value may cross when the denial side does
+# not deny it AND the channel's envelope admits it — and types each side over the artifacts
+# its guard actually queries. The denial side is the shipped publish guard, graded by
+# scripts/test-publish-guard.sh group L. Until this group shipped nothing graded the envelope
+# side, the conjunction, or the one cell of the channel table that ADR-030 moves.
+#
+# ── THE ENVELOPE READS A DECLARATION, AND THE DECLARATION IS HELD TO THE PROSE ───
+# ADR-030 § Decision 2 lists what may appear on the private site and what never appears on any
+# page. Those lists are prose. The record's `private-site-field-declaration` fence restates
+# them over the field key of reference/data-model.md § Field Scope — a field is its (section,
+# label) pair — and the envelope reads THE FENCE. MC5 holds the fence and the prose to each
+# other in both directions, and MC0 fails when the fence is missing, empty, duplicated or
+# unresolvable.
+#
+#   mc_decl       the fence: a whole-line opener, pipe-separated cells, each trimmed
+#   mc_place      § 2's prose, read by the grammar below — MC5's reader ONLY
+#   mc_envelope   rc 0 ADMIT · 1 DENY · 2 UNDETERMINED, from the channel table and the fence
+#   mc_may_carry  the conjunction with the denial side: Kleene's strong AND
+#
+# UNDETERMINED IS A THIRD OUTCOME, ASSERTED BY EXIT CODE. On the encrypted limb a field the
+# declaration does not carry reads UNDETERMINED, and so does a field it carries only if marked,
+# because the share mark has no representation a reader can see yet. Neither is an admit and
+# neither is a deny. A binary consumer of this relation is a defect, and it fails toward admit.
+#
+# ── THE PROSE READER'S GRAMMAR ───────────────────────────────────────────────────
+#   ANCHORS   the IN block opens at the one line beginning with the IN anchor and the OUT block
+#             at the one beginning with the OUT anchor. A block runs to the other anchor, a
+#             heading, or the first non-blank line after a bullet that is neither a bullet
+#             nor indented
+#   BULLETS   a line beginning `- ` plus every following indented line, joined by spaces
+#   MARKERS   every inline supersession marker is excised first
+#   ITEMS     every code span; then, in the bullet's FIRST SENTENCE with its markup dropped:
+#             the text after a colon that precedes any parenthesis, split at commas outside
+#             parentheses, a trailing parenthetical giving its own comma-separated items, and
+#             each item split at ` and `. A bullet whose first sentence carries a (§ N)
+#             cross-reference is mark-conditioned
+#   RESOLVE   a normalized item equal to exactly one row's label places that pair; equal to
+#             more than one it places nothing and is counted; equal to a section name it
+#             places every pair of that section; anything else is kept by its text, UNPLACED
+#
+# ── WHAT MC5 HOLDS ───────────────────────────────────────────────────────────────
+#   (i)     every pair the prose places carries a row of the same class
+#   (ii-a)  a field row the prose places is placed by ITS OWN words, in its own class
+#   (ii-b)  a field row the prose does not place cites an item the prose leaves unplaced, of
+#           its own list and its own mark condition, TIED to it: the item carries the first
+#           word of the row's label; or else of its section, and then every field of that
+#           section carries a row citing the same words
+#   (ii-c)  a row naming no field cites words a bullet of its own list carries, and those
+#           words are not a label or a section name
+#   (iii)   every bullet carries the words of at least one row of its list
+#   CD-A    every field row names a field of a guided intake form — the declaration places none
+#           of the trip context's fields, which § 2 does not name
+#   CD-B    no row naming no field stands in for a guided-form field that carries no row
+#   CD-C    the words a row cites occur in exactly one bullet of its list
+# FIRST WORD is the first run of letters, digits and apostrophes after lowercasing. CONTAINS is
+# case-folded, with no letter and no digit against either end.
+#
+# RESIDUAL, declared on MC5's verdict line as well: an item added INSIDE an existing bullet, in
+# words that name no label and no section, is printed by MC0 and not failed; a reworded cited
+# item fails closed until its row follows; a record that later supersedes part of § 2 and moves
+# a row needs its marker taught to the reader in the same change; and the tie is lexical, so a
+# mis-mapping inside one guided-form section that keeps a tying word is not seen.
+#
+# Every function takes its input paths as ARGUMENTS, so a control arm drives the same code over
+# a copy under the temporary directory. No tracked fixture is added. The programs that read
+# the record run in the C locale: the fold is the ASCII one on every engine.
+#
+# MC emits BEFORE group RS, and must stay there: RS reads the complete emitted set.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "MC — may-carry, typed per side: the envelope side and the three-valued conjunction"
+
+MC_ADR026="$ROOT/reference/adr/ADR-026-channel-architecture.md"
+MC_ADR030="$ROOT/reference/adr/ADR-030-what-the-private-site-may-show.md"
+MC_DM="$ROOT/reference/data-model.md"
+MC_FENCE='private-site-field-declaration'
+MC_EM='—'
+MC_RSQ="’"   # the typographic apostrophe, as a literal: a label may be written with either
+MC_IN_A='**IN — may appear on the private site.**'
+MC_OUT_A='**OUT — never on any page.**'
+MC_W="$WORK/mc"; mkdir -p "$MC_W"
+
+mc_n() { awk -F'\t' -v k="$2" '$1 == k { n++ } END { print n + 0 }' <<<"$1"; }
+mc_num() { awk -F'\t' -v k="$2" '$1 == k { v = $2 } END { print v + 0 }' <<<"$1"; }
+mc_lines() { printf '%s\n' "$1" | grep -c '[^[:space:]]' || true; }
+# mc_delta <a> <b> — the lines the two files do not share, counted in both directions.
+mc_delta() { awk 'FILENAME == ARGV[1] { a[$0]++; next } { if (a[$0] > 0) a[$0]--; else d++ } END { for (k in a) d += a[k]; print d + 0 }' "$1" "$2"; }
+
+# The functions every reader of the record's prose shares: embedded, never copied.
+MC_LIB='
+function mc_trim(s) { sub(/^[ \t\r]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+# NORMALIZE an item, a label or a section: the star dropped, lowercased, whitespace collapsed,
+# one leading article dropped, and a trailing run of ; . , : ? dropped.
+function mc_norm(s,   p) {
+  while ((p = index(s, star)) > 0) s = substr(s, 1, p - 1) substr(s, p + length(star))
+  s = tolower(s); gsub(/[ \t\r]+/, " ", s); s = mc_trim(s)
+  sub(/^(the|a|an) /, "", s)
+  sub(/[;.,:?]+$/, "", s)
+  return mc_trim(s)
+}
+# CONTAINS, as the tie and the bullet accounting read it: the needle occurs in the haystack
+# with no letter and no digit against either end. Both sides arrive lowercased.
+function mc_has(hay, needle,   pos, p, q, a, b) {
+  if (needle == "") return 0
+  pos = 1
+  while ((p = index(substr(hay, pos), needle)) > 0) {
+    q = pos + p - 1
+    a = (q == 1) ? "" : substr(hay, q - 1, 1); b = substr(hay, q + length(needle), 1)
+    if (a !~ /[a-z0-9]/ && b !~ /[a-z0-9]/) return 1
+    pos = q + 1
+  }
+  return 0
+}
+# FIRST WORD of a label or a section: its first run of letters, digits and apostrophes, either
+# apostrophe, after lowercasing.
+function mc_first(s,   i, c, out, started) {
+  s = tolower(s); out = ""; started = 0
+  for (i = 1; i <= length(s); i++) {
+    c = substr(s, i, 1)
+    if (c ~ /[a-z0-9]/ || c == "\047") { out = out c; started = 1; continue }
+    if (rsq != "" && substr(s, i, length(rsq)) == rsq) { out = out rsq; i += length(rsq) - 1; started = 1; continue }
+    if (started) break
+  }
+  return out
+}
+# every inline supersession marker excised: the span from its opener through the next `)*`.
+# MC_NMARK counts them.
+function mc_unmark(b,   p, r, q) {
+  while ((p = index(b, "*(Superseded in part")) > 0) {
+    r = substr(b, p); q = index(r, ")*")
+    if (q == 0) break
+    b = substr(b, 1, p - 1) substr(r, q + 2); MC_NMARK++
+  }
+  return b
+}
+# every link replaced by its text
+function mc_unlink(b,   seg) {
+  while (match(b, /\[[^]]+\]\([^)]*\)/)) {
+    seg = substr(b, RSTART, RLENGTH)
+    b = substr(b, 1, RSTART - 1) substr(seg, 2, index(seg, "](") - 2) substr(b, RSTART + RLENGTH)
+  }
+  return b
+}
+# a bullet as the containment tests read it: links to their text, emphasis and code marks
+# dropped, whitespace collapsed, lowercased. The WHOLE bullet, not its first sentence.
+function mc_clean(b) {
+  b = mc_unlink(b); gsub(/\*/, "", b); gsub(/`/, "", b); gsub(/[ \t\r]+/, " ", b)
+  return tolower(mc_trim(b))
+}
+# THE ITEMS of one bullet, its markers already excised: every code span, then the items of
+# its FIRST SENTENCE. Fills IT[1..n] and returns n; MC_COND says whether that sentence carries
+# a (§ N) cross-reference.
+function mc_items(b, IT,   n, s, p, t, ci, pi, i, ch, d, cur, np, PARTS, q, m, SUBI, inner, k, W, j, AND, x) {
+  n = 0
+  b = mc_unlink(b)
+  s = b
+  while (match(s, /`[^`]+`/)) { IT[++n] = substr(s, RSTART + 1, RLENGTH - 2); s = substr(s, RSTART + RLENGTH) }
+  p = b; gsub(/\*/, "", p); gsub(/`/, "", p)
+  if (match(p, /[a-z)]\. /)) p = substr(p, 1, RSTART); else sub(/\.+$/, "", p)
+  MC_COND = (p ~ /\(§ ?[0-9]+\)/) ? 1 : 0
+  ci = index(p, ":"); pi = index(p, "(")
+  t = (ci > 0 && (pi == 0 || ci < pi)) ? substr(p, ci + 1) : p
+  gsub(/\(§ ?[0-9]+\)/, "", t)
+  np = 0; d = 0; cur = ""
+  for (i = 1; i <= length(t); i++) {
+    ch = substr(t, i, 1)
+    if (ch == "(") d++
+    else if (ch == ")" && d > 0) d--
+    if (ch == "," && d == 0) { PARTS[++np] = cur; cur = "" } else cur = cur ch
+  }
+  PARTS[++np] = cur
+  for (i = 1; i <= np; i++) {
+    q = mc_trim(PARTS[i]); sub(/^and /, "", q)
+    m = 0
+    if (match(q, /\([^()]*\)[ \t]*$/)) {
+      inner = substr(q, RSTART + 1); sub(/\)[ \t]*$/, "", inner)
+      SUBI[++m] = mc_trim(substr(q, 1, RSTART - 1))
+      k = split(inner, W, ","); for (j = 1; j <= k; j++) SUBI[++m] = mc_trim(W[j])
+    } else SUBI[++m] = q
+    for (j = 1; j <= m; j++) {
+      k = split(SUBI[j], AND, " and ")
+      for (x = 1; x <= k; x++) if (mc_trim(AND[x]) != "") IT[++n] = mc_trim(AND[x])
+    }
+  }
+  return n
+}'
+
+# mc_decl <adr-030> <data-model> — the declaration, read from the ONE block whose opener is
+# exactly the info string. It holds no row and spells no label.
+# Records: SITES <n> · ROW <class> <section> <label> <as-written> <field-row | -> ·
+#          PARSE <line> · NONE <line> · AMBIG <line> · HALF <line> · DUP <section> <label>
+mc_decl() {
+  local raw
+  raw="$(LC_ALL=C awk -v info='```'"$MC_FENCE" -v em="$MC_EM" '
+function mc_trim(s) { sub(/^[ \t\r]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+$0 == info { sites++; if (sites == 1) on = 1; next }
+on && substr($0, 1, 3) == "```" { on = 0; next }
+on {
+  t = mc_trim($0); if (t == "" || substr(t, 1, 1) == "#") next
+  n = split(t, C, "|")
+  for (i = 1; i <= n; i++) C[i] = mc_trim(C[i])
+  gsub(/\t/, " ", t)
+  if (n != 4 || C[1] == "" || C[2] == "" || C[3] == "" || C[4] == "" || (C[1] != "IN" && C[1] != "IN-IF-MARKED" && C[1] != "OUT")) { print "PARSE\t" t; next }
+  if (C[2] == em && C[3] == em) { print "ROW\t" C[1] "\t" em "\t" em "\t" C[4] "\t-"; next }
+  if (C[2] == em || C[3] == em) { print "HALF\t" t; next }
+  print "FIELD\t" C[2] "\t" C[3] "\t" C[1] "\t" C[4] "\t" t
+}
+END { print "SITES\t" sites + 0 }' "$1" 2>/dev/null)"
+  awk -F'\t' 'NF && $1 != "FIELD"' <<<"$raw"
+  awk -F'\t' '$1 == "FIELD" { print $2 "\t" $3 "\t" $4 "\t" $5 "\t" $6 }' <<<"$raw" | ft_resolve <(ft_rows "$2") | awk -F'\t' '
+    $1 == "ONE" { if ($2 in seen) print "DUP\t" $3 "\t" $4; seen[$2] = 1; print "ROW\t" $5 "\t" $3 "\t" $4 "\t" $6 "\t" $2; next }
+    $1 == "NONE" { print "NONE\t" $7; next }
+    $1 == "AMBIG" { print "AMBIG\t" $7 }'
+}
+
+# mc_place <adr-030> <data-model> — § 2's prose, by the grammar in this group's header.
+# Records: ANCHOR <IN|OUT> <n> · ROWS <n> · MARKERS <n>
+#          BULLET <list> <k> <conditioned> <text as the containment tests read it> <text as written>
+#          PLACED <class> <section> <label> <field-row> <item> <list> <k>
+#          UNRES <class> <item> <list> <k> · AMBIGITEM <class> <item> <list> <k>
+mc_place() {
+  LC_ALL=C awk -v star="$FT_STAR" -v rsq="$MC_RSQ" -v ina="$MC_IN_A" -v outa="$MC_OUT_A" "$MC_LIB"'
+function mc_block(s, o, list,   i, l, seen, cur, k) {
+  seen = 0; cur = ""; k = 0
+  for (i = s + 1; i <= n; i++) {
+    l = L[i]
+    if (i == o || (match(l, /^#+ /) && RLENGTH <= 7)) break
+    if (substr(l, 1, 2) == "- ") {
+      if (seen) BL[list, ++k] = cur
+      seen = 1; cur = mc_trim(substr(l, 3)); continue
+    }
+    if (seen && l !~ /^[ \t\r]*$/ && substr(l, 1, 1) !~ /[ \t]/) break
+    if (seen && l ~ /^[ \t]/ && l !~ /^[ \t\r]*$/) cur = cur " " mc_trim(l)
+  }
+  if (seen) BL[list, ++k] = cur
+  NB[list] = k
+}
+function mc_emit(list,   k, u, m, j, x, cls, IT, key, raw, a, na, A) {
+  for (k = 1; k <= NB[list]; k++) {
+    u = mc_unmark(BL[list, k])
+    m = mc_items(u, IT)
+    cls = (list == "OUT") ? "OUT" : (MC_COND ? "IN-IF-MARKED" : "IN")
+    raw = BL[list, k]; gsub(/\t/, " ", raw)
+    printf "BULLET\t%s\t%d\t%d\t%s\t%s\n", list, k, MC_COND, mc_clean(u), raw
+    for (j = 1; j <= m; j++) {
+      x = mc_norm(IT[j]); if (x == "") continue
+      if (x in LC) {
+        if (LC[x] != 1) { key = cls SUBSEP x; if (!(key in AM)) { AM[key] = 1; printf "AMBIGITEM\t%s\t%s\t%s\t%d\n", cls, x, list, k }; continue }
+        na = split(LN[x], A, " ")
+      } else if (x in SN) na = split(SN[x], A, " ")
+      else { key = cls SUBSEP x; if (!(key in UN)) { UN[key] = 1; printf "UNRES\t%s\t%s\t%s\t%d\n", cls, x, list, k }; continue }
+      for (a = 1; a <= na; a++) {
+        key = cls SUBSEP A[a] SUBSEP x
+        if (key in PL) continue
+        PL[key] = 1
+        printf "PLACED\t%s\t%s\t%s\t%s\t%s\t%s\t%d\n", cls, rsec[A[a]], rlab[A[a]], rnum[A[a]], x, list, k
+      }
+    }
+  }
+}
+FILENAME == ARGV[1] {
+  nf = split($0, C, "\t")
+  if (nf >= 3 && C[3] != "") {
+    nr++; rnum[nr] = C[1]; rsec[nr] = C[2]; rlab[nr] = C[3]
+    x = mc_norm(C[3]); LN[x] = LN[x] " " nr; LC[x]++
+    x = mc_norm(C[2]); SN[x] = SN[x] " " nr
+  }
+  next
+}
+{ L[++n] = $0 }
+END {
+  nia = 0; noa = 0
+  for (i = 1; i <= n; i++) {
+    if (index(L[i], ina) == 1) { nia++; ia = i }
+    if (index(L[i], outa) == 1) { noa++; oa = i }
+  }
+  printf "ANCHOR\tIN\t%d\nANCHOR\tOUT\t%d\nROWS\t%d\n", nia, noa, nr
+  if (nia == 1 && noa == 1) {
+    mc_block(ia, oa, "IN"); mc_block(oa, ia, "OUT")
+    mc_emit("IN"); mc_emit("OUT")
+  }
+  printf "MARKERS\t%d\n", MC_NMARK + 0
+}' <(ft_rows "$2") "$1"
+}
+
+# mc_guided — the `## ` headings of the guided intake forms that carry a labelled bullet above
+# the form's boundary, read through group FT's own bullet reader. One per line.
+mc_guided() { ft_read_all "$(ft_declared | awk -F'\t' '$1 == "stop"')" | awk -F'\t' 'NF && !s[$1]++ { print $1 }'; }
+
+# mc_agree <decl-records> <place-records> <data-model> <guided-headings> — MC5's predicates.
+# Records: FIND <code> <text> · STAT <name> <n>
+mc_agree() {
+  {
+    awk 'NF { print "D\t" $0 }' <<<"$1"
+    awk 'NF { print "P\t" $0 }' <<<"$2"
+    ft_rows "$3" | awk 'NF { print "F\t" $0 }'
+    awk 'NF { print "G\t" $0 }' <<<"$4"
+  } | LC_ALL=C awk -v star="$FT_STAR" -v rsq="$MC_RSQ" -v em="$MC_EM" "$MC_LIB$FT_LEAD_FN"'
+function mc_row(r) { return rc[r] " | " rs[r] " | " rl[r] }
+function mc_list(r) { return (rc[r] == "OUT") ? "OUT" : "IN" }
+function mc_guided(sec,   k) { for (k = 1; k <= ng; k++) if (ft_lead(sec, gh[k])) return 1; return 0 }
+BEGIN { FS = "\t"; q = "\047" }
+$1 == "D" && $2 == "ROW" {
+  nr++; rc[nr] = $3; rs[nr] = $4; rl[nr] = $5; ra[nr] = $6; rx[nr] = mc_norm($6)
+  if ($4 != em) { nfr++; haspair[$4, $5] = 1; hasrow[$3, $4, $5] = 1; cite[$4, $5, rx[nr]] = 1 } else ne++
+  next
+}
+$1 == "P" && $2 == "PLACED" { np++; pc[np] = $3; ps[np] = $4; pb[np] = $5; px[np] = $7; pl[$3, $4, $5, $7] = 1; if (!(($4, $5) in anyc)) { anyc[$4, $5] = $3; anyx[$4, $5] = $7 }; next }
+$1 == "P" && $2 == "UNRES" { un[$3, $4] = 1; nun++; next }
+$1 == "P" && $2 == "BULLET" { nb++; bl[nb] = $3; bt[nb] = $6; braw[nb] = $7; next }
+$1 == "F" { if ($4 != "") { nfs++; fsec[nfs] = $3; flab[nfs] = $4 }; next }
+$1 == "G" { if ($2 != "") gh[++ng] = $2; next }
+END {
+  # (i) prose -> fence: every pair the prose places carries a row of the same class
+  for (i = 1; i <= np; i++) {
+    if ((pc[i], ps[i], pb[i]) in hasrow) continue
+    if (((pc[i], ps[i], pb[i]) in done1)) continue
+    done1[pc[i], ps[i], pb[i]] = 1
+    printf "FIND\ti\tMC5: § 2%ss prose places (%s, %s) %s, and the declaration carries no %s row for it\n", q, ps[i], pb[i], pc[i], pc[i]
+  }
+  tied = 0; other = 0; acc = 0
+  for (r = 1; r <= nr; r++) {
+    lst = mc_list(r); x = rx[r]
+    if (rs[r] == em) {
+      # (ii-c) fence -> prose, a row that names no field
+      found = 0
+      for (b = 1; b <= nb; b++) if (bl[b] == lst && mc_has(bt[b], x)) { found = 1; break }
+      if (!found) printf "FIND\tii-c\tMC5: the em-dash row %s | %s | %s | %s cites words no %s bullet of § 2 carries\n", rc[r], em, em, ra[r], lst
+      eq = 0
+      for (k = 1; k <= nfs; k++) if (x == mc_norm(flab[k]) || x == mc_norm(fsec[k])) { eq = 1; break }
+      if (eq) printf "FIND\tii-c\tMC5: an em-dash row cites words that name a field — %s%s%s equals a label or a section name\n", q, ra[r], q
+      continue
+    }
+    # CD-A: the population boundary. A field row names a field of a guided intake form
+    if (!mc_guided(rs[r])) printf "FIND\tCD-A\tMC5: the row %s names a field of no guided intake form — § 2 names none of the trip context%ss fields, and the declaration places no field § 2 does not name\n", mc_row(r), q
+    # (ii-a) fence -> prose, a row the prose reader places
+    if ((rc[r], rs[r], rl[r], x) in pl) { tied++; continue }
+    if ((rs[r], rl[r]) in anyc) {
+      printf "FIND\tii-a\tMC5: the row %s cites %s%s%s, and § 2%ss prose places that field %s by %s%s%s — the row%ss list or its words are not the ones that place it\n", mc_row(r), q, ra[r], q, q, anyc[rs[r], rl[r]], q, anyx[rs[r], rl[r]], q, q
+      continue
+    }
+    # (ii-b) fence -> prose, a row the prose reader does not place
+    other++
+    if (!((rc[r], x) in un)) {
+      printf "FIND\tii-b\tMC5: the row %s cites %s%s%s, which is not an item § 2%ss %s list leaves unplaced for a row of that class\n", mc_row(r), q, ra[r], q, q, lst
+      continue
+    }
+    if (mc_has(x, mc_first(rl[r]))) continue
+    if (mc_has(x, mc_first(rs[r]))) {
+      miss = ""
+      for (k = 1; k <= nfs; k++) if (fsec[k] == rs[r] && !((fsec[k], flab[k], x) in cite)) miss = miss (miss == "" ? "" : ", ") flab[k]
+      if (miss != "") printf "FIND\tii-b\tMC5: the row %s cites %s%s%s by its whole section, and that section%ss field(s) %s carry no row citing the same words\n", mc_row(r), q, ra[r], q, q, miss
+      continue
+    }
+    printf "FIND\tii-b\tMC5: the row %s cites %s%s%s, which names neither its label nor its whole section\n", mc_row(r), q, ra[r], q
+  }
+  # (iii) prose -> fence: every bullet is accounted for by a row of its list
+  for (b = 1; b <= nb; b++) {
+    ok = 0
+    for (r = 1; r <= nr; r++) if (mc_list(r) == bl[b] && mc_has(bt[b], rx[r])) { ok = 1; break }
+    if (ok) acc++
+    else printf "FIND\tiii\tMC5: § 2%ss %s bullet %s%s%s is accounted for by no row\n", q, bl[b], q, braw[b], q
+  }
+  # CD-B: no em-dash stand-in for a guided-form field that carries no row of its own. The tie
+  # is (ii-b)s own: the words carry the first word of the field label; or else of its section,
+  # and then no field of that section carries a row citing other words.
+  ngp = 0
+  for (k = 1; k <= nfs; k++) {
+    if (!mc_guided(fsec[k])) continue
+    ngp++
+    if ((fsec[k], flab[k]) in haspair) continue
+    for (r = 1; r <= nr; r++) {
+      if (rs[r] != em) continue
+      tie = mc_has(rx[r], mc_first(flab[k]))
+      if (!tie && mc_has(rx[r], mc_first(fsec[k]))) {
+        tie = 1
+        for (j = 1; j <= nfs; j++) if (fsec[j] == fsec[k] && ((fsec[j], flab[j]) in haspair) && !((fsec[j], flab[j], rx[r]) in cite)) { tie = 0; break }
+      }
+      if (tie) printf "FIND\tCD-B\tMC5: the em-dash row %s | %s | %s | %s stands in for the field (%s, %s), which carries no row of its own — a field § 2 names is declared by its own row\n", rc[r], em, em, ra[r], fsec[k], flab[k]
+    }
+  }
+  # CD-C: one home per citation
+  for (r = 1; r <= nr; r++) {
+    lst = mc_list(r)
+    if ((lst, rx[r]) in donec) continue
+    donec[lst, rx[r]] = 1
+    c = 0
+    for (b = 1; b <= nb; b++) if (bl[b] == lst && mc_has(bt[b], rx[r])) c++
+    if (c != 1) printf "FIND\tCD-C\tMC5: the words %s%s%s occur in %d bullets of § 2%ss %s list, where a citation has exactly one home\n", q, ra[r], q, c, q, lst
+  }
+  printf "STAT\tROWS\t%d\nSTAT\tFIELDROWS\t%d\nSTAT\tEMDASH\t%d\nSTAT\tTIED\t%d\nSTAT\tOTHER\t%d\nSTAT\tBULLETS\t%d\nSTAT\tACCOUNTED\t%d\nSTAT\tGUIDEDSECS\t%d\nSTAT\tGUIDEDPAIRS\t%d\nSTAT\tUNPLACED\t%d\n", nr, nfr, ne, tied, other, nb, acc, ng, ngp, nun
+}'
+}
+
+# mc_census <decl-records> <data-model> — the encrypted limb's verdict over every labelled pair,
+# by cause: "<pairs>\t<admit>\t<deny>\t<only-if-marked>\t<not-named>".
+mc_census() {
+  awk -F'\t' -v em="$MC_EM" '
+    FILENAME == ARGV[1] { if ($1 == "ROW" && $3 != em) cls[$3, $4] = $2; next }
+    $3 != "" { n++; c = (($2, $3) in cls) ? cls[$2, $3] : ""
+               if (c == "IN") a++; else if (c == "OUT") d++; else if (c != "") m++; else u++ }
+    END { printf "%d\t%d\t%d\t%d\t%d\n", n, a, d, m, u }' <(printf '%s\n' "$1") <(ft_rows "$2")
+}
+# mc_class <decl-records> <section> <label> — the class the declaration gives the pair, if any.
+mc_class() { awk -F'\t' -v s="$2" -v l="$3" '$1 == "ROW" && $3 == s && $4 == l { print $2 }' <<<"$1"; }
+
+# mc_channels <adr-026> — the channel table and the axis table, read INSIDE § 3 and nowhere else.
+# Records: HDR <axis-1> <axis-2> · AXIS <name> <values> · CH <key> <channel> <cell-1> <cell-2>
+#          ALL <n>, the channel-shaped rows of the WHOLE record: the bounding control
+mc_channels() {
+  awk '
+    function cell(s) { gsub(/\*\*/, "", s); gsub(/`/, "", s); gsub(/[ \t]+/, " ", s); sub(/^ /, "", s); sub(/ $/, "", s); return s }
+    /^\|[ \t]*\*\*CH-/ { all++ }
+    index($0, "### 3. ") == 1 { on = 1; next }
+    on && (/^### / || /^## /) { on = 0; tab = 0; ax = 0 }
+    !on { next }
+    /^\|/ {
+      n = split($0, C, "|"); c1 = cell(C[2])
+      if (c1 == "Axis") { ax = 1; tab = 0; next }
+      if (c1 == "Channel" && n >= 5) { tab = 1; ax = 0; print "HDR\t" cell(C[3]) "\t" cell(C[4]); next }
+      if (c1 ~ /^[-: ]+$/) next
+      if (ax && n >= 4) {
+        v = C[3]; out = ""
+        while (match(v, /`[^`]+`/)) { out = out (out == "" ? "" : " ") substr(v, RSTART + 1, RLENGTH - 2); v = substr(v, RSTART + RLENGTH) }
+        print "AXIS\t" c1 "\t" out; next
+      }
+      if (tab && n >= 5) { ch = c1; sub(/ .*$/, "", ch); print "CH\t" c1 "\t" ch "\t" cell(C[3]) "\t" cell(C[4]) }
+      next
+    }
+    { tab = 0; ax = 0 }
+    END { print "ALL\t" all + 0 }' "$1"
+}
+# mc_moved <adr-030> — the cell § 1 says this record moves, and the limb it says admits none.
+# Records: MOVED <limb> <axis> <value> · PUBLIC <limb> <axis> <value>
+mc_moved() {
+  awk '
+    index($0, "### 1. ") == 1 { on = 1; next }
+    on && (/^### / || /^## /) { on = 0 }
+    on { buf = buf " " $0 }
+    END {
+      gsub(/[ \t]+/, " ", buf)
+      p = index(buf, "this record moves"); t = (p > 0) ? substr(buf, p) : ""
+      if (match(t, /the [a-z-]+ limb.s `[a-z]+` cell, `[^`]+`/)) {
+        s = substr(t, RSTART, RLENGTH); split(s, W, " "); limb = W[2]
+        match(s, /`[a-z]+`/); axis = substr(s, RSTART + 1, RLENGTH - 2); s = substr(s, RSTART + RLENGTH)
+        match(s, /`[^`]+`/); print "MOVED\t" limb "\t" axis "\t" substr(s, RSTART + 1, RLENGTH - 2)
+      }
+      if (match(buf, /`[^`]+` limb, whose `[a-z]+` is `[^`]+`/)) {
+        s = substr(buf, RSTART, RLENGTH)
+        match(s, /`[^`]+`/); limb = substr(s, RSTART + 1, RLENGTH - 2); s = substr(s, RSTART + RLENGTH)
+        match(s, /`[a-z]+`/); axis = substr(s, RSTART + 1, RLENGTH - 2); s = substr(s, RSTART + RLENGTH)
+        match(s, /`[^`]+`/); print "PUBLIC\t" limb "\t" axis "\t" substr(s, RSTART + 1, RLENGTH - 2)
+      }
+    }' "$1"
+}
+# mc_limb <channels> <moved> <limb-key> — how the envelope treats one row of the channel table:
+#   DECL   the row ADR-030 moves a cell on, its cell reading what that record says: the
+#          declaration decides
+#   DENY   the other limb § 1 names on the same channel, its cell reading what § 1 says: it
+#          admits none
+#   UNDET  anything else — a channel the record moves no cell on, or a row whose cell no
+#          longer reads what the record says
+# One line: "<verdict>\t<row-key>\t<channel>\t<limb>\t<axis>\t<cell>".
+mc_limb() {
+  {
+    awk 'NF { print "C\t" $0 }' <<<"$1"
+    awk 'NF { print "M\t" $0 }' <<<"$2"
+  } | awk -F'\t' -v want="$3" '
+    function cellof(i, a) { return (a == h1) ? c1[i] : ((a == h2) ? c2[i] : "") }
+    function rowof(l,   i, k, f) { f = 0; k = 0; for (i = 1; i <= n; i++) if (index(key[i] " ", " " l " limb ") > 0) { k++; f = i }; return (k == 1) ? f : 0 }
+    $1 == "C" && $2 == "HDR" { h1 = $3; h2 = $4; next }
+    $1 == "C" && $2 == "CH" { n++; key[n] = $3; chan[n] = $4; c1[n] = $5; c2[n] = $6; next }
+    $1 == "M" && $2 == "MOVED" { ml = $3; ma = $4; mv = $5; next }
+    $1 == "M" && $2 == "PUBLIC" { pl = $3; pa = $4; pv = $5; next }
+    END {
+      me = 0; for (i = 1; i <= n; i++) if (key[i] == want) me = i
+      mi = (ml != "") ? rowof(ml) : 0; pi = (pl != "") ? rowof(pl) : 0
+      v = "UNDET"; lim = "-"; axis = "-"; cell = "-"
+      if (me && mi && chan[me] == chan[mi]) {
+        if (me == mi) { lim = ml; axis = ma; cell = cellof(me, ma); if (cell != "" && cell == mv) v = "DECL" }
+        else if (me == pi) { lim = pl; axis = pa; cell = cellof(me, pa); if (cell != "" && cell == pv) v = "DENY" }
+      }
+      printf "%s\t%s\t%s\t%s\t%s\t%s\n", v, (want == "" ? "-" : want), (me ? chan[me] : "-"), lim, axis, (cell == "" ? "-" : cell)
+    }'
+}
+# mc_envelope <limb-key> <section> <label> <adr-026> <adr-030> <data-model>
+#   rc 0 ADMIT · 1 DENY · 2 UNDETERMINED
+mc_envelope() {
+  local how cls
+  how="$(mc_limb "$(mc_channels "$4" 2>/dev/null)" "$(mc_moved "$5" 2>/dev/null)" "$1")"
+  case "${how%%"$VA_TAB"*}" in
+    DENY) return 1 ;;
+    DECL) ;;
+    *)    return 2 ;;
+  esac
+  cls="$(mc_class "$(mc_decl "$5" "$6" 2>/dev/null)" "$2" "$3")"
+  case "$cls" in
+    IN)  return 0 ;;
+    OUT) return 1 ;;
+    *)   return 2 ;;
+  esac
+}
+# mc_may_carry <denied-rc> <envelope-rc> — the conjunction. denied: 0 CLEAN · 1 HIT ·
+# 2 UNDETERMINED; envelope: 0 ADMIT · 1 DENY · 2 UNDETERMINED. A denial from either side is
+# dispositive; otherwise an undetermined side leaves the whole undetermined.
+mc_may_carry() {
+  case "$1:$2" in
+    1:[012]|[02]:1) return 1 ;;
+    0:0)            return 0 ;;
+    0:2|2:0|2:2)    return 2 ;;
+    *)              return 3 ;;
+  esac
+}
+# mc_sites <root> <files> — every whole-line opener of the fence in the files named, one path
+# per line, root-relative or absolute. Records: SITE <path> · UNREAD <path> · SITES <n> · FILES <n>
+mc_sites() {
+  printf '%s\n' "$2" | LC_ALL=C awk -v root="$1" -v info='```'"$MC_FENCE" '
+    NF {
+      f = (substr($0, 1, 1) == "/") ? $0 : root "/" $0
+      while ((r = (getline line < f)) > 0) if (line == info) { n++; print "SITE\t" $0 }
+      close(f)
+      if (r < 0) print "UNREAD\t" $0; else files++
+    }
+    END { printf "SITES\t%d\nFILES\t%d\n", n, files }'
+}
+# mc0_find <decl> <place> <channels> <corpus-sites> <on|off> — every reason MC0 fails, one per
+# line. `off` leaves the corpus-wide count out, for an arm that grades a copy of the record.
+mc0_find() {
+  {
+    awk 'NF { print "D\t" $0 }' <<<"$1"
+    awk 'NF { print "P\t" $0 }' <<<"$2"
+    awk 'NF { print "C\t" $0 }' <<<"$3"
+    awk 'NF { print "S\t" $0 }' <<<"$4"
+  } | awk -F'\t' -v em="$MC_EM" -v corpus="$5" '
+    $1 == "D" && $2 == "SITES" { sites = $3 + 0; next }
+    $1 == "D" && $2 == "ROW" { rows++; if ($4 != em) fr[$3]++; next }
+    $1 == "D" && $2 == "PARSE" { print "an unparseable row: " $3; next }
+    $1 == "D" && $2 == "NONE" { print "a row that resolves to no field: " $3; next }
+    $1 == "D" && $2 == "AMBIG" { print "a row that resolves to more than one field: " $3; next }
+    $1 == "D" && $2 == "HALF" { print "a row carrying the em dash in one of its two key cells only: " $3; next }
+    $1 == "D" && $2 == "DUP" { print "the pair (" $3 ", " $4 ") carries two rows"; next }
+    $1 == "P" && $2 == "ANCHOR" { anc[$3] = $4 + 0; next }
+    $1 == "P" && $2 == "PLACED" { if ($3 == "OUT") po++; else pi++; next }
+    $1 == "C" && $2 == "CH" { ch++; next }
+    $1 == "C" && $2 == "ALL" { all = $3 + 0; next }
+    $1 == "S" && $2 == "SITES" { cs = $3 + 0; next }
+    $1 == "S" && $2 == "UNREAD" { cu++; next }
+    END {
+      if (sites == 0) print "the declaration is absent — 0 sites: no line of the record is exactly the fence opener"
+      else if (sites > 1) print "the declaration is duplicated — " sites " sites inside the record"
+      else if (rows == 0) print "the declaration is empty — 0 rows"
+      else {
+        if (fr["IN"] + 0 == 0) print "the declaration carries no IN field row"
+        if (fr["OUT"] + 0 == 0) print "the declaration carries no OUT field row"
+      }
+      if (anc["IN"] + 0 != 1) print "the IN anchor of § 2 occurs " anc["IN"] + 0 " time(s), where exactly 1 is required"
+      if (anc["OUT"] + 0 != 1) print "the OUT anchor of § 2 occurs " anc["OUT"] + 0 " time(s), where exactly 1 is required"
+      if (anc["IN"] + 0 == 1 && anc["OUT"] + 0 == 1) {
+        if (pi + 0 == 0) print "the prose reader places nothing IN"
+        if (po + 0 == 0) print "the prose reader places nothing OUT"
+      }
+      if (corpus == "on") {
+        if (cu + 0 > 0) print cu " tracked markdown file(s) could not be read for the opener count"
+        if (cs + 0 != 1) print "the fence opener occurs " cs + 0 " time(s) across the tracked markdown — " cs + 0 " sites, where exactly 1 is required"
+      }
+      if (ch + 0 == 0) print "the channel table of ADR-026 § 3 reads no rows"
+      else if (ch >= all) print "the channel rows read inside § 3 (" ch ") are not fewer than those of the whole record (" all "), so the read is not region-scoped"
+    }'
+}
+# mc_mutate <file> <kind> [section] [label] [arg] [arg2] — ONE mutation of a copy, on stdout.
+#   nofence     the fence is removed whole          norows   its rows are removed, its comments kept
+#   twofences   a second copy follows the first     reverse  its rows are reversed and re-spaced
+#   droprow     the row of (section, label) is removed
+#   reclass     that row takes the class <arg>      repair   that row takes the pair (<arg>, <arg2>)
+#   relabel     that row takes the label <arg>      dropcell that row loses its last cell
+#   addrow      the line <arg> follows that row     addrows  the lines of <arg> precede that row
+#   section2em  every row of <section> is replaced by ONE row naming no field, citing their words
+#   inbullet / outbullet   the bullet <arg> is appended to the end of that list
+#   moved       § 1 names <arg> as the moved cell value
+#   a1          the A-1 paragraph of § 4 gains the code span <arg>
+#   chancell    in the channel table of § 3, the row keyed <arg> takes <arg2> as its first cell value
+mc_mutate() {
+  LC_ALL=C awk -v kind="$2" -v sec="${3:-}" -v lab="${4:-}" -v arg="${5:-}" -v arg2="${6:-}" \
+      -v info='```'"$MC_FENCE" -v em="$MC_EM" -v ina="$MC_IN_A" -v outa="$MC_OUT_A" '
+    function trim(s) { sub(/^[ \t\r]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+    function cell(s) { gsub(/\*\*/, "", s); gsub(/`/, "", s); gsub(/[ \t]+/, " ", s); return trim(s) }
+    function blockend(s, o,   i, l, seen, last) {
+      seen = 0; last = 0
+      for (i = s + 1; i <= NR; i++) {
+        l = L[i]
+        if (i == o || (match(l, /^#+ /) && RLENGTH <= 7)) break
+        if (substr(l, 1, 2) == "- ") { seen = 1; last = i; continue }
+        if (seen && l !~ /^[ \t\r]*$/ && substr(l, 1, 1) !~ /[ \t]/) break
+        if (seen && l ~ /^[ \t]/ && l !~ /^[ \t\r]*$/) last = i
+      }
+      return last
+    }
+    { L[NR] = $0 }
+    END {
+      fo = 0; fc = 0; ia = 0; oa = 0; s1 = 0; s3 = 0; a1 = 0; a1e = 0; ct = 0
+      for (i = 1; i <= NR; i++) {
+        if (!fo && L[i] == info) fo = i
+        else if (fo && !fc && substr(L[i], 1, 3) == "```") fc = i
+        if (index(L[i], ina) == 1) ia = i
+        if (index(L[i], outa) == 1) oa = i
+        if (index(L[i], "### 1. ") == 1) s1 = i; else if (s1 && !s1e && L[i] ~ /^##+ /) s1e = i
+        if (index(L[i], "### 3. ") == 1) s3 = i; else if (s3 && !s3e && L[i] ~ /^##+ /) s3e = i
+        if (index(L[i], "**A-1 ") == 1) a1 = i
+        if (a1 && !a1e && i > a1 && L[i] ~ /^[ \t\r]*$/) a1e = i - 1
+      }
+      at = 0
+      if (kind == "inbullet" && ia && oa) at = blockend(ia, oa)
+      if (kind == "outbullet" && ia && oa) at = blockend(oa, ia)
+      nrv = 0; did = 0
+      for (i = 1; i <= NR; i++) {
+        line = L[i]
+        infence = (fo && fc && i > fo && i < fc)
+        inrow = (infence && line !~ /^[ \t]*#/ && line !~ /^[ \t\r]*$/)
+        hit = 0
+        if (inrow) { n = split(line, C, "|"); for (k = 1; k <= 4; k++) T[k] = trim(C[k]); hit = (T[2] == sec && T[3] == lab) }
+        if (kind == "nofence" && fo && fc && i >= fo && i <= fc) continue
+        if (kind == "norows" && inrow) continue
+        if (kind == "droprow" && hit) continue
+        if (kind == "reverse" && infence) {
+          if (inrow) R[++nrv] = T[1] "|" T[2] "|" T[3] "|" T[4]; else print line
+          if (i == fc - 1) for (k = nrv; k >= 1; k--) print R[k]
+          continue
+        }
+        if (kind == "section2em" && inrow && T[2] == sec) { if (!did) { print T[1] " | " em " | " em " | " T[4]; did = 1 }; continue }
+        if (kind == "reclass" && hit) line = arg " | " T[2] " | " T[3] " | " T[4]
+        if (kind == "repair" && hit) line = T[1] " | " arg " | " arg2 " | " T[4]
+        if (kind == "relabel" && hit) line = T[1] " | " T[2] " | " arg " | " T[4]
+        if (kind == "dropcell" && hit) line = T[1] " | " T[2] " | " T[3]
+        if (kind == "addrows" && hit) printf "%s", arg
+        if (kind == "moved" && s1 && i > s1 && (!s1e || i < s1e) && !did && line ~ /cell, `[^`]+`/) { sub(/cell, `[^`]+`/, "cell, `" arg "`", line); did = 1 }
+        if (kind == "a1" && a1 && i == a1e) sub(/\.[ \t\r]*$/, ", and `" arg "`.", line)
+        if (kind == "chancell" && s3 && i > s3 && (!s3e || i < s3e) && line ~ /^\|/) {
+          n = split(line, C, "|")
+          if (n >= 5 && cell(C[2]) == arg) { C[3] = " `" arg2 "` "; line = C[1]; for (k = 2; k <= n; k++) line = line "|" C[k] }
+        }
+        print line
+        if (kind == "addrow" && hit) print arg
+        if (kind == "twofences" && fo && i == fc) { print ""; for (k = fo; k <= fc; k++) print L[k] }
+        if ((kind == "inbullet" || kind == "outbullet") && at && i == at) print arg
+      }
+    }' "$1"
+}
+# mc_emitted <render> <limb-key> <adr-026> <adr-030> <data-model> — every `<Label>: <value>`
+# line of a render, graded through the envelope. A label resolves through the field table's
+# own labels: carried by exactly one row it gives its pair; by none, or by more than one, it
+# reads UNDETERMINED. Records: ADMIT <label> · DENY <label> <text> · UNDET <label> <cause>
+mc_emitted() {
+  local render="$1" limb="$2" decl how verdict chan lim cellv line label pairs np sec cls rc shown
+  decl="$(mc_decl "$4" "$5" 2>/dev/null)"
+  how="$(mc_limb "$(mc_channels "$3" 2>/dev/null)" "$(mc_moved "$4" 2>/dev/null)" "$limb")"
+  IFS="$VA_TAB" read -r verdict _ chan lim _ cellv <<<"$how"
+  shown="$chan $lim"
+  while IFS= read -r line; do
+    label="$(awk '{ s = $0; gsub(/<[^>]*>/, "", s); p = index(s, ": "); if (p > 1) print substr(s, 1, p - 1) }' <<<"$line")"
+    [ -n "$label" ] || continue
+    pairs="$(ft_rows "$5" | awk -F'\t' -v l="$label" '$3 == l { print $2 }')"
+    np="$(mc_lines "$pairs")"
+    if [ "$np" -eq 0 ]; then printf 'UNDET\t%s\tthe label resolves to no field\n' "$label"; continue; fi
+    if [ "$np" -gt 1 ]; then printf 'UNDET\t%s\tthe label is carried by more than one field\n' "$label"; continue; fi
+    sec="$pairs"
+    cls="$(mc_class "$decl" "$sec" "$label")"
+    mc_envelope "$limb" "$sec" "$label" "$3" "$4" "$5"; rc=$?
+    case "$rc" in
+      0) printf 'ADMIT\t%s\n' "$label" ;;
+      1) if [ "$verdict" = DENY ] && [ "$cls" = IN ]; then
+           printf "DENY\t%s\tMC4: an ADR-030 § 2 IN value under '%s' is emitted on %s (audience %s) — carry-envelope denies: the %s limb admits none of the IN list\n" "$label" "$label" "$shown" "$cellv" "$lim"
+         elif [ "$verdict" = DENY ]; then
+           printf "DENY\t%s\tMC4: a value under '%s' is emitted on %s (audience %s) — carry-envelope denies: the %s limb admits no value of either list\n" "$label" "$label" "$shown" "$cellv" "$lim"
+         else
+           printf "DENY\t%s\tMC4: (%s, %s) is declared OUT by ADR-030 § 2's declaration and emitted on %s (audience %s) — carry-envelope denies\n" "$label" "$sec" "$label" "$shown" "$cellv"
+         fi ;;
+      *) if [ "$verdict" != DECL ]; then printf 'UNDET\t%s\tthe envelope returns no verdict on this limb\n' "$label"
+         elif [ "$cls" = IN-IF-MARKED ]; then printf 'UNDET\t%s\tadmitted only when its traveller marks it (§ 3), and no mark is readable here\n' "$label"
+         else printf 'UNDET\t%s\tADR-030 § 2 does not name this field\n' "$label"; fi ;;
+    esac
+  done < "$render"
+}
+
+# ── MC0 — the populations, and the declaration's fail-loud half ─────────────────────────
+MC_DECL="$(mc_decl "$MC_ADR030" "$MC_DM" 2>/dev/null)"
+MC_PLACE="$(mc_place "$MC_ADR030" "$MC_DM" 2>/dev/null)"
+MC_CH="$(mc_channels "$MC_ADR026" 2>/dev/null)"
+MC_MOVED="$(mc_moved "$MC_ADR030" 2>/dev/null)"
+MC_MD="$(cd "$ROOT" && git ls-files '*.md' 2>/dev/null)"
+MC_SITES="$(mc_sites "$ROOT" "$MC_MD")"
+MC_GUIDED="$(mc_guided 2>/dev/null)"
+MC0_FIND="$(mc0_find "$MC_DECL" "$MC_PLACE" "$MC_CH" "$MC_SITES" on)"
+MC_CEN="$(mc_census "$MC_DECL" "$MC_DM" 2>/dev/null)"
+IFS="$VA_TAB" read -r MC_NPAIR MC_NADMIT MC_NDENY MC_NMARK MC_NUNNAMED <<<"$MC_CEN"
+MC_NPAIR="${MC_NPAIR:-0}"; MC_NADMIT="${MC_NADMIT:-0}"; MC_NDENY="${MC_NDENY:-0}"; MC_NMARK="${MC_NMARK:-0}"; MC_NUNNAMED="${MC_NUNNAMED:-0}"
+MC_NROWS="$(mc_n "$MC_DECL" ROW)"
+mc_rows_of() { awk -F'\t' -v c="$2" -v em="$MC_EM" -v f="$3" '$1 == "ROW" && (c == "" || $2 == c) && ((f == "field") ? ($3 != em) : ($3 == em)) { n++ } END { print n + 0 }' <<<"$1"; }
+MC_FIN="$(mc_rows_of "$MC_DECL" IN field)"; MC_FMK="$(mc_rows_of "$MC_DECL" IN-IF-MARKED field)"; MC_FOUT="$(mc_rows_of "$MC_DECL" OUT field)"
+MC_NEM="$(mc_rows_of "$MC_DECL" '' none)"
+mc_pairs_of() { awk -F'\t' -v c="$2" '$1 == "PLACED" && $2 == c && !s[$3, $4]++ { n++ } END { print n + 0 }' <<<"$1"; }
+MC_PIN="$(mc_pairs_of "$MC_PLACE" IN)"; MC_PMK="$(mc_pairs_of "$MC_PLACE" IN-IF-MARKED)"; MC_POUT="$(mc_pairs_of "$MC_PLACE" OUT)"
+MC_NMARKERS="$(mc_num "$MC_PLACE" MARKERS)"
+MC_NAMBIG="$(mc_n "$MC_PLACE" AMBIGITEM)"
+MC_NAMBROW="$(mc_n "$MC_DECL" AMBIG)"   # declared rows resolving to more than one field: the census's third cause
+MC_UNPLACED="$(awk -F'\t' '$1 == "UNRES" { l = $4; n[l]++; t[l] = t[l] (t[l] == "" ? "" : "; ") $3 } END { printf "IN %d: %s · OUT %d: %s", n["IN"], t["IN"], n["OUT"], t["OUT"] }' <<<"$MC_PLACE")"
+MC_NCH="$(mc_n "$MC_CH" CH)"; MC_NCHALL="$(mc_num "$MC_CH" ALL)"
+MC_NMD="$(mc_num "$MC_SITES" FILES)"
+MC_NGUIDED="$(mc_lines "$MC_GUIDED")"
+MC_OK=0
+if [ -z "$MC0_FIND" ] && [ "$MC_NPAIR" -gt 0 ] && [ "$MC_NGUIDED" -gt 0 ] && [ "$MC_NMD" -gt 0 ]; then
+  MC_OK=1
+  PASS "MC0: every input this group reads came back non-empty and well-formed — the declaration has ONE home, the fence in ADR-030 § Decision 2 (1 whole-line opener across $MC_NMD tracked markdown file(s)), and carries $MC_NROWS row(s): $MC_FIN IN, $MC_FMK IN-IF-MARKED and $MC_FOUT OUT field row(s), each resolving to one field of reference/data-model.md § Field Scope and no pair carrying two, and $MC_NEM row(s) naming no field; § 2's prose reader places $MC_PIN pair(s) IN, $MC_PMK only if marked and $MC_POUT OUT, with $MC_NMARKERS inline supersession marker(s) excised and $MC_NAMBIG ambiguous item(s), and leaves these item(s) UNPLACED, by text — $MC_UNPLACED; ADR-026 § 3's channel table reads $MC_NCH row(s), fewer than the $MC_NCHALL channel-shaped row(s) of the whole record, so the read is region-scoped; and $MC_NGUIDED guided-form section(s) are read from the intake forms. THE CENSUS BY CAUSE over the $MC_NPAIR labelled pair(s): on the encrypted limb ADMIT $MC_NADMIT · DENY $MC_NDENY · UNDETERMINED $((MC_NMARK + MC_NUNNAMED)) ($MC_NMARK carried only if marked, $MC_NUNNAMED not named by § 2, $MC_NAMBROW ambiguous); on the public limb DENY $MC_NPAIR. An item added inside an existing bullet in words that name no field joins the unplaced list above: printed, not failed"
+else
+  FAIL "MC0: an input this group reads is missing, empty or malformed — $(printf '%s' "${MC0_FIND:-no reader reported a failure, and a population is empty}" | tr '\n' ';' ) [labelled pairs $MC_NPAIR; guided-form sections $MC_NGUIDED; tracked markdown files read $MC_NMD]. Not a skip and not a pass: the envelope would be read from a declaration that is not there, or held to prose that did not parse"
+fi
+
+# mc0_arm <id> <predicted-fragment> <label> <kind> [mutation args…] — MC0 over a COPY of the record
+mc0_arm() {
+  local id="$1" want="$2" label="$3"; shift 3
+  local f="$MC_W/$id.md" got delta hit
+  mc_mutate "$MC_ADR030" "$@" > "$f" 2>/dev/null
+  delta="$(mc_delta "$MC_ADR030" "$f")"
+  got="$(mc0_find "$(mc_decl "$f" "$MC_DM" 2>/dev/null)" "$(mc_place "$f" "$MC_DM" 2>/dev/null)" "$MC_CH" "" off)"
+  hit="$(awk -v w="$want" 'index($0, w) > 0 && !n++ { print }' <<<"$got")"
+  if [ "$delta" -eq 0 ]; then
+    FAIL "$id: fixture integrity — the mutation did not land ($label): the copy does not differ from the record, so the arm below would prove nothing"
+  elif [ -n "$hit" ]; then
+    PASS "$id: MUST-FIRE — $label ($delta line(s) differ from the record) fails MC0 in the predicted words '$want': $hit"
+  else
+    FAIL "$id: MUST-FIRE did not fire as predicted ($label) — wanted a failure carrying '$want', got '$(printf '%s' "${got:-<no failure>}" | tr '\n' ';')'"
+  fi
+}
+if [ "$MC_OK" -eq 1 ]; then
+  MC0_ROW="$(awk -F'\t' -v em="$MC_EM" '$1 == "ROW" && $3 != em { r = $0 } END { print r }' <<<"$MC_DECL")"
+  IFS="$VA_TAB" read -r _ _ MC0_SEC MC0_LAB _ _ <<<"$MC0_ROW"
+  mc0_arm MC0f1 'the declaration is absent — 0 sites' "a copy of the record with the fence deleted" nofence
+  mc0_arm MC0f2 '0 rows' "a copy with every row deleted and the fence's comments kept" norows
+  mc0_arm MC0f3 '2 sites' "a copy carrying a second copy of the fence" twofences
+  mc0_arm MC0f4 'resolves to no field' "a copy in which the label cell 'Blackout' reads 'Blackout dates', § 2's words for the field rather than its label" relabel 'Dates & availability' 'Blackout' 'Blackout dates'
+  mc0_arm MC0f5 'unparseable row' "a copy in which the last field row loses its as-written cell" dropcell "$MC0_SEC" "$MC0_LAB"
+  # MC0f6 / MC0n1 — the CORPUS-WIDE count, which a copy of the record cannot reach. One file under
+  # the temporary directory joins the tracked list: carrying a whole-line opener it must make
+  # two sites; naming the tag in running text, and behind an indent, it must leave one.
+  printf 'A second home.\n\n```%s\n# class | section | label | as-written\n```\n' "$MC_FENCE" > "$MC_W/second-home.md"
+  printf 'This names the `%s` tag in running text.\n\n    ```%s\n' "$MC_FENCE" "$MC_FENCE" > "$MC_W/mention.md"
+  MC0F6_OUT="$(mc0_find "$MC_DECL" "$MC_PLACE" "$MC_CH" "$(mc_sites "$ROOT" "$MC_MD$VA_NL$MC_W/second-home.md")" on)"
+  MC0N1_SITES="$(mc_sites "$ROOT" "$MC_MD$VA_NL$MC_W/mention.md")"
+  MC0N1_OUT="$(mc0_find "$MC_DECL" "$MC_PLACE" "$MC_CH" "$MC0N1_SITES" on)"
+  mc0f6_whole="$(grep -c -x -F -- '```'"$MC_FENCE" "$MC_W/second-home.md" || true)"
+  mc0n1_whole="$(grep -c -x -F -- '```'"$MC_FENCE" "$MC_W/mention.md" || true)"
+  mc0n1_named="$(grep -c -F -- "$MC_FENCE" "$MC_W/mention.md" || true)"
+  case "$MC0F6_OUT" in *'2 sites'*) mc0f6_hit=1 ;; *) mc0f6_hit=0 ;; esac
+  if [ "$mc0f6_whole" -ne 1 ]; then
+    FAIL "MC0f6: fixture integrity — the extra file carries $mc0f6_whole whole-line opener(s) where exactly 1 was planted, so the arm below would prove nothing"
+  elif [ "$mc0f6_hit" -eq 1 ]; then
+    PASS "MC0f6: MUST-FIRE — with ONE more file carrying a whole-line opener added to the $MC_NMD tracked markdown file(s), the corpus-wide count fails MC0 in the predicted words '2 sites': $(printf '%s' "$MC0F6_OUT" | tr '\n' ';')"
+  else
+    FAIL "MC0f6: MUST-FIRE did not fire as predicted — a second whole-line opener in another file left MC0 reporting '$(printf '%s' "${MC0F6_OUT:-<no failure>}" | tr '\n' ';')' where a failure carrying '2 sites' was required"
+  fi
+  if [ "$mc0n1_whole" -ne 0 ] || [ "$mc0n1_named" -lt 2 ]; then
+    FAIL "MC0n1: fixture integrity — the extra file names the tag on $mc0n1_named line(s), $mc0n1_whole of them a whole-line opener, where two mentions and no opener were planted, so the silence below would prove nothing"
+  elif [ -z "$MC0N1_OUT" ] && [ "$(mc_num "$MC0N1_SITES" SITES)" -eq 1 ] && [ "$(mc_num "$MC0N1_SITES" FILES)" -eq $((MC_NMD + 1)) ]; then
+    PASS "MC0n1: MUST-NOT-FIRE — the same extra file naming the tag in running text, and once more behind an indent, is read ($((MC_NMD + 1)) file(s)) and leaves the corpus-wide count at 1: a mention is never a site"
+  else
+    FAIL "MC0n1: a mention of the tag was counted as a site, or the extra file was not read — MC0 reports '$(printf '%s' "${MC0N1_OUT:-<no failure>}" | tr '\n' ';')' over $(mc_num "$MC0N1_SITES" FILES) file(s) with $(mc_num "$MC0N1_SITES" SITES) site(s)"
+  fi
+fi
+
+# ── MC1 — the two records, and the two readers of one record, agree ─────────────────────
+# mc1_find <channels> <moved> <decl> <nc2v-labels> <class-token> — one finding per line
+mc1_find() {
+  {
+    awk 'NF { print "C\t" $0 }' <<<"$1"
+    awk 'NF { print "M\t" $0 }' <<<"$2"
+    awk 'NF { print "D\t" $0 }' <<<"$3"
+    awk 'NF { print "V\t" $0 }' <<<"$4"
+  } | awk -F'\t' -v em="$MC_EM" -v hard="$5" '
+    function inset(v, set) { return index(" " set " ", " " v " ") > 0 }
+    function braces(set) { gsub(/ /, ", ", set); return "{" set "}" }
+    $1 == "C" && $2 == "HDR" { h1 = $3; h2 = $4; next }
+    $1 == "C" && $2 == "AXIS" { ax[$3] = $4; next }
+    $1 == "C" && $2 == "CH" { n++; key[n] = $3; chan[n] = $4; c1[n] = $5; c2[n] = $6; next }
+    $1 == "M" && $2 == "MOVED" { ml = $3; ma = $4; mv = $5; next }
+    $1 == "D" && $2 == "ROW" { if ($3 == "IN" && $4 != em) din[$5] = 1; next }
+    $1 == "V" { v[++nv] = $2; next }
+    END {
+      q = "\047"; bad = 0; what = ""
+      for (i = 1; i <= n; i++) {
+        if (!inset(c1[i], ax[h1])) { bad++; what = what (what == "" ? "" : "; ") chan[i] " " h1 " " q c1[i] q " is not one of " braces(ax[h1]) }
+        if (!inset(c2[i], ax[h2])) { bad++; what = what (what == "" ? "" : "; ") chan[i] " " h2 " " q c2[i] q " is not one of " braces(ax[h2]) }
+      }
+      if (bad) printf "MC1: %d cell(s) of ADR-026 § 3%ss channel table lie outside their axis%ss declared set — %s\n", bad, q, q, what
+      mi = 0; nm = 0
+      for (i = 1; i <= n; i++) if (ml != "" && index(key[i] " ", " " ml " limb ") > 0) { nm++; mi = i }
+      cell = (nm == 1) ? ((ma == h1) ? c1[mi] : ((ma == h2) ? c2[mi] : "")) : ""
+      if (ml == "") print "MC1: ADR-030 § 1 names no moved cell this reader can find"
+      else if (nm != 1) printf "MC1: ADR-030 § 1 names the %s limb, and ADR-026 § 3%ss channel table carries %d row(s) for it\n", ml, q, nm
+      else if (mv != cell) printf "MC1: ADR-030 § 1 names the moved cell%ss value %s%s%s but ADR-026 § 3%ss %s %s %s cell reads %s%s%s — the two records disagree on the one cell ADR-030 moves\n", q, q, mv, q, q, chan[mi], ml, ma, q, cell, q
+      for (i = 1; i <= nv; i++) if (!(v[i] in din)) printf "MC1: ADR-030 § 4%ss %s IN label %s%s%s is not declared IN by ADR-030 § 2%ss declaration — the two readers of one record disagree\n", q, hard, q, v[i], q, q
+    }'
+}
+if [ "$MC_OK" -eq 1 ]; then
+  MC_HARD="$(nc_span "$(nc_cell "${NC_TABLE:-}" 2 4)")"
+  MC1_V="$(nc_c2_in_labels "$MC_ADR030" 2>/dev/null)"
+  MC1_NV="$(mc_lines "$MC1_V")"
+  MC1_FIND="$(mc1_find "$MC_CH" "$MC_MOVED" "$MC_DECL" "$MC1_V" "$MC_HARD")"
+  MC1_ROWS="$(awk -F'\t' '$1 == "CH" { printf "%s(%s, %s)", (n++ ? " " : ""), $4, $5 }' <<<"$MC_CH")"
+  MC1_AXES="$(awk -F'\t' '$1 == "AXIS" { v = $3; gsub(/ /, ", ", v); printf "%s%s {%s}", (n++ ? "; " : ""), $2, v }' <<<"$MC_CH")"
+  IFS="$VA_TAB" read -r _ MC1_ML MC1_MA MC1_MV <<<"$(awk -F'\t' '$1 == "MOVED"' <<<"$MC_MOVED")"
+  if [ "$MC_NCH" -eq 0 ] || [ "$(mc_n "$MC_CH" AXIS)" -lt 2 ] || [ -z "${MC1_MV:-}" ] || [ "$MC1_NV" -eq 0 ] || [ -z "$MC_HARD" ]; then
+    FAIL "MC1: NOT EVALUATED — the channel table reads $MC_NCH row(s) and $(mc_n "$MC_CH" AXIS) axis row(s); ADR-030 § 1's moved cell reads '${MC1_MV:-<none>}'; NC2v's reader returns $MC1_NV label(s); the barred class read from never-carry row 2 is '${MC_HARD:-<none>}'. An empty side is a failure, never a pass"
+  elif [ -n "$MC1_FIND" ]; then
+    FAIL "$(printf '%s' "$MC1_FIND" | tr '\n' ' ')"
+  else
+    PASS "MC1: the records agree — ADR-026 § 3's channel table, read inside that section, carries $MC_NCH row(s), $MC1_ROWS, every cell inside its axis's declared set ($MC1_AXES); the one cell ADR-030 § 1 says it moves, the ${MC1_ML} limb's ${MC1_MA} cell, reads '$MC1_MV' in both records; and all $MC1_NV label(s) NC2v's own reader takes from ADR-030 are declared IN by the declaration ($MC1_NV within $MC_FIN). The two readers of ADR-030 answer two questions and are held to each other one way"
+  fi
+  # mc1_arm <id> <predicted-finding> <label> <which-record> <kind> [args…]
+  mc1_arm() {
+    local id="$1" want="$2" label="$3" which="$4"; shift 4
+    local f got delta src a26="$MC_ADR026" a30="$MC_ADR030"
+    if [ "$which" = adr026 ]; then src="$MC_ADR026"; f="$MC_W/$id-adr026.md"; a26="$f"; else src="$MC_ADR030"; f="$MC_W/$id-adr030.md"; a30="$f"; fi
+    mc_mutate "$src" "$@" > "$f" 2>/dev/null
+    delta="$(mc_delta "$src" "$f")"
+    got="$(mc1_find "$(mc_channels "$a26" 2>/dev/null)" "$(mc_moved "$a30" 2>/dev/null)" "$(mc_decl "$a30" "$MC_DM" 2>/dev/null)" "$(nc_c2_in_labels "$a30" 2>/dev/null)" "$MC_HARD")"
+    if [ "$delta" -eq 0 ]; then
+      FAIL "$id: fixture integrity — the mutation did not land ($label): the copy does not differ from its source, so the arm below would prove nothing"
+    elif [ "$got" = "$want" ]; then
+      PASS "$id: MUST-FIRE — $label ($delta line(s) differ from the source) is flagged once, in the predicted words: $got"
+    else
+      FAIL "$id: MUST-FIRE did not fire as predicted ($label) — wanted '$want', got '${got:-<no finding>}'"
+    fi
+  }
+  IFS="$VA_TAB" read -r _ MC1_LASTKEY MC1_LASTCH MC1_LASTC1 _ <<<"$(awk -F'\t' '$1 == "CH" { r = $0 } END { print r }' <<<"$MC_CH")"
+  IFS="$VA_TAB" read -r _ MC1_H1 _ <<<"$(awk -F'\t' '$1 == "HDR"' <<<"$MC_CH")"
+  IFS="$VA_TAB" read -r _ _ MC1_MCHAN _ <<<"$(awk -F'\t' -v l="$MC1_ML" '$1 == "CH" && index($2 " ", " " l " limb ") > 0' <<<"$MC_CH")"
+  MC1_PV="$(awk -F'\t' '$1 == "PUBLIC" { print $4 }' <<<"$MC_MOVED")"
+  MC1_AX1="$(awk -F'\t' -v h="$MC1_H1" '$1 == "AXIS" && $2 == h { v = $3; gsub(/ /, ", ", v); print v }' <<<"$MC_CH")"
+  mc1_arm MC1f1 "MC1: ADR-030 § 1 names the moved cell's value '$MC1_PV' but ADR-026 § 3's $MC1_MCHAN $MC1_ML $MC1_MA cell reads '$MC1_MV' — the two records disagree on the one cell ADR-030 moves" "a copy of ADR-030 whose § 1 names the public limb's value as the moved cell's" adr030 moved '' '' "$MC1_PV"
+  mc1_arm MC1f2 "MC1: 1 cell(s) of ADR-026 § 3's channel table lie outside their axis's declared set — $MC1_LASTCH $MC1_H1 '${MC1_LASTC1}s' is not one of {$MC1_AX1}" "a copy of ADR-026 whose last channel row takes a value its axis does not declare" adr026 chancell '' '' "$MC1_LASTKEY" "${MC1_LASTC1}s"
+  MC1F3_LAB='Passport'
+  if [ "$(awk -F'\t' -v l="$MC1F3_LAB" '$1 == "ROW" && $2 == "OUT" && $4 == l { n++ } END { print n + 0 }' <<<"$MC_DECL")" -eq 1 ]; then
+    mc1_arm MC1f3 "MC1: ADR-030 § 4's $MC_HARD IN label '$MC1F3_LAB' is not declared IN by ADR-030 § 2's declaration — the two readers of one record disagree" "a copy of ADR-030 whose A-1 paragraph gains a label the declaration gives OUT" adr030 a1 '' '' "$MC1F3_LAB"
+  else
+    FAIL "MC1f3: fixture integrity — the label the arm plants ('$MC1F3_LAB') is not the label of exactly one OUT row of the declaration, so planting it in A-1 would not be the disagreement this arm names"
+  fi
+fi
+
+# ── MC2 — the envelope, typed per side, each case by exact exit code ────────────────────
+if [ "$MC_OK" -eq 1 ]; then
+  MC_ENC="$(awk -F'\t' -v l="${MC1_ML:-}" '$1 == "CH" && l != "" && index($2 " ", " " l " limb ") > 0 { print $2 }' <<<"$MC_CH")"
+  MC_PLL="$(awk -F'\t' '$1 == "PUBLIC" { print $2 }' <<<"$MC_MOVED")"
+  MC_PLAIN="$(awk -F'\t' -v l="$MC_PLL" '$1 == "CH" && l != "" && index($2 " ", " " l " limb ") > 0 { print $2 }' <<<"$MC_CH")"
+  MC_OTHERS="$(awk -F'\t' -v c="${MC1_MCHAN:-}" '$1 == "CH" && $3 != c { print $2 }' <<<"$MC_CH")"
+  mc2_n=0
+  mc2_case() {   # mc2_case <want> <limb-key> <section> <label> <why>
+    mc2_n=$((mc2_n + 1))
+    expect_rc "$1" "MC2[$mc2_n]" "carry-envelope on $2 for ($3, $4) — $5" -- mc_envelope "$2" "$3" "$4" "$MC_ADR026" "$MC_ADR030" "$MC_DM"
+  }
+  if [ -z "$MC_ENC" ] || [ -z "$MC_PLAIN" ] || [ -z "$MC_OTHERS" ]; then
+    FAIL "MC2: NOT EVALUATED — the channel table yields the moved limb '${MC_ENC:-<none>}', the public limb '${MC_PLAIN:-<none>}' and $(mc_lines "$MC_OTHERS") row(s) on another channel. The envelope has no limb to be asked about, so none of its cases was run"
+  else
+    mc2_case 0 "$MC_ENC" 'Destination leanings' 'Would love' "declared IN, in § 2's own words"
+    mc2_case 0 "$MC_ENC" 'Interests & tastes' 'Already done' "declared IN"
+    mc2_case 0 "$MC_ENC" 'Dates & availability' 'Blackout' "declared IN: § 2 names it in words that are not its label, and the declaration places it"
+    mc2_case 2 "$MC_ENC" 'Anything else' 'Special occasion?' "carried only if marked, and no mark is readable: UNDETERMINED"
+    mc2_case 2 "$MC_ENC" 'Desires' 'Desire' "carried only if marked: UNDETERMINED"
+    mc2_case 1 "$MC_ENC" 'Getting there & back' 'Passport' "declared OUT"
+    mc2_case 1 "$MC_ENC" 'People dynamics' "Solo, I'd" "declared OUT"
+    mc2_case 1 "$MC_ENC" 'Budget appetite' 'Splurge appetite' "declared OUT"
+    mc2_case 2 "$MC_ENC" 'Accommodation' 'Check-in time' "a field § 2 does not name: UNDETERMINED, never a deny"
+    mc2_case 1 "$MC_PLAIN" 'Destination leanings' 'Would love' "the public limb admits none"
+    while IFS= read -r mc2_other; do
+      [ -n "$mc2_other" ] || continue
+      mc2_case 2 "$mc2_other" 'Destination leanings' 'Would love' "a channel with no render and no queried pair: UNDETERMINED"
+    done <<EOF
+$MC_OTHERS
+EOF
+    if [ "$MC_NADMIT" -eq "$MC_FIN" ] && [ "$MC_NDENY" -eq "$MC_FOUT" ] && [ "$MC_NMARK" -eq "$MC_FMK" ] && [ $((MC_NADMIT + MC_NDENY + MC_NMARK + MC_NUNNAMED)) -eq "$MC_NPAIR" ]; then
+      PASS "MC2: carry-envelope typed per side, read from ADR-030 § 2's declaration — on the encrypted limb ADMIT $MC_NADMIT · DENY $MC_NDENY · UNDETERMINED $((MC_NMARK + MC_NUNNAMED)) over $MC_NPAIR labelled pair(s) (IN-IF-MARKED $MC_NMARK, not named by § 2 $MC_NUNNAMED), the admitted set being exactly the declaration's $MC_FIN IN field row(s) and the denied set its $MC_FOUT OUT field row(s); on the public limb every pair is denied. On the encrypted limb a field the declaration does not carry, or carries only if marked, reads UNDETERMINED — never an admit, and never a deny; $mc2_n case(s) above assert each code exactly"
+    else
+      FAIL "MC2: the census does not equal the declaration — ADMIT $MC_NADMIT against $MC_FIN IN field row(s), DENY $MC_NDENY against $MC_FOUT OUT, only-if-marked $MC_NMARK against $MC_FMK, over $MC_NPAIR labelled pair(s) with $MC_NUNNAMED unnamed. A declared row is not reaching the pair it names"
+    fi
+  fi
+
+  # ── MC3 — the conjunction: all nine cells, each by exact exit code ──────────────────
+  # The table is written out, cell by cell, rather than computed: an expectation derived by
+  # the rule under test would agree with it by construction.
+  while read -r mc3_d mc3_e mc3_want mc3_name; do
+    [ -n "$mc3_d" ] || continue
+    expect_rc "$mc3_want" "MC3[d${mc3_d}e${mc3_e}]" "may-carry — $mc3_name" -- mc_may_carry "$mc3_d" "$mc3_e"
+  done <<'EOF'
+0 0 0 the denial side CLEAN and the envelope ADMIT: ADMIT
+0 1 1 the denial side CLEAN and the envelope DENY: DENY
+0 2 2 the denial side CLEAN and the envelope UNDETERMINED: UNDETERMINED
+1 0 1 the denial side HIT and the envelope ADMIT: DENY
+1 1 1 the denial side HIT and the envelope DENY: DENY
+1 2 1 the denial side HIT and the envelope UNDETERMINED: DENY
+2 0 2 the denial side UNDETERMINED and the envelope ADMIT: UNDETERMINED
+2 1 1 the denial side UNDETERMINED and the envelope DENY: DENY
+2 2 2 the denial side UNDETERMINED and the envelope UNDETERMINED: UNDETERMINED
+EOF
+
+  # ── MC4 / MC4u / MC4k — the emitted-value arm, on synthetic renders ─────────────────
+  printf '<p>Would love: zq-tidepool-walks</p>\n' > "$MC_W/plain.html"
+  printf '<p>Splurge appetite: zq-lavish</p>\n' > "$MC_W/enc-out.html"
+  printf '<p>Special occasion?: zq-anniversary</p>\n<p>Check-in time: zq-15:00</p>\n<p>Zq probe: zq-1</p>\n<p>Applies to: zq-everyone</p>\n' > "$MC_W/enc-undet.html"
+  printf '<p>Would love: zq-tidepool-walks</p>\n<p>Blackout: zq-2001-01-09</p>\n' > "$MC_W/enc-ok.html"
+  if [ -n "$MC_ENC" ] && [ -n "$MC_PLAIN" ]; then
+    MC4_ENCSHOW="${MC_ENC% limb}"; MC4_PLSHOW="${MC_PLAIN% limb}"
+    MC4_P="$(mc_emitted "$MC_W/plain.html" "$MC_PLAIN" "$MC_ADR026" "$MC_ADR030" "$MC_DM")"
+    MC4_O="$(mc_emitted "$MC_W/enc-out.html" "$MC_ENC" "$MC_ADR026" "$MC_ADR030" "$MC_DM")"
+    MC4_WANT_P="DENY${VA_TAB}Would love${VA_TAB}MC4: an ADR-030 § 2 IN value under 'Would love' is emitted on $MC4_PLSHOW (audience $MC1_PV) — carry-envelope denies: the $MC_PLL limb admits none of the IN list"
+    MC4_WANT_O="DENY${VA_TAB}Splurge appetite${VA_TAB}MC4: (Budget appetite, Splurge appetite) is declared OUT by ADR-030 § 2's declaration and emitted on $MC4_ENCSHOW (audience $MC1_MV) — carry-envelope denies"
+    if [ "$MC4_P" = "$MC4_WANT_P" ] && [ "$MC4_O" = "$MC4_WANT_O" ]; then
+      PASS "MC4: MUST-FIRE — both denials, in the predicted words. A render on the public limb carrying a declared IN value: ${MC4_P##*"$VA_TAB"}. A render on the encrypted limb carrying a declared OUT value: ${MC4_O##*"$VA_TAB"}"
+    else
+      FAIL "MC4: MUST-FIRE did not fire as predicted — the public limb gave '${MC4_P:-<nothing>}' where '$MC4_WANT_P' was required, and the encrypted limb gave '${MC4_O:-<nothing>}' where '$MC4_WANT_O' was required"
+    fi
+    MC4_U="$(mc_emitted "$MC_W/enc-undet.html" "$MC_ENC" "$MC_ADR026" "$MC_ADR030" "$MC_DM")"
+    MC4_WANT_U="UNDET${VA_TAB}Special occasion?${VA_TAB}admitted only when its traveller marks it (§ 3), and no mark is readable here
+UNDET${VA_TAB}Check-in time${VA_TAB}ADR-030 § 2 does not name this field
+UNDET${VA_TAB}Zq probe${VA_TAB}the label resolves to no field
+UNDET${VA_TAB}Applies to${VA_TAB}the label is carried by more than one field"
+    if [ "$MC4_U" = "$MC4_WANT_U" ]; then
+      PASS "MC4u: MUST REFUSE AS UNDETERMINED — four emissions on the encrypted limb, each refused with its own cause and none admitted or denied: $(awk -F'\t' '{ printf "%s%s%s%s — %s", (n++ ? "; " : ""), "\047", $2, "\047", $3 }' <<<"$MC4_U")"
+    else
+      FAIL "MC4u: an undetermined emission was admitted, denied, or refused for another cause — got '$(printf '%s' "${MC4_U:-<nothing>}" | tr '\n' ';')' where four UNDET records, one per cause, were required"
+    fi
+    MC4_K="$(mc_emitted "$MC_W/enc-ok.html" "$MC_ENC" "$MC_ADR026" "$MC_ADR030" "$MC_DM")"
+    if [ "$MC4_K" = "ADMIT${VA_TAB}Would love${VA_NL}ADMIT${VA_TAB}Blackout" ]; then
+      PASS "MC4k: MUST-NOT-FIRE — a render on the encrypted limb carrying 'Would love' and 'Blackout' is admitted on both lines, and nothing is denied or refused. 'Blackout' is the field § 2 names in words that are not its label: the prose reader cannot place it, and the declaration does"
+    else
+      FAIL "MC4k: a declared IN value on the encrypted limb was not admitted — got '$(printf '%s' "${MC4_K:-<nothing>}" | tr '\n' ';')' where two ADMIT records were required"
+    fi
+  else
+    FAIL "MC4: NOT EVALUATED — the channel table yields no moved limb or no public limb, so the emitted-value arm has no limb to emit on; MC4u and MC4k were not run"
+  fi
+fi
+
+# ── MC5 — the declaration agrees with § 2's prose ───────────────────────────────────────
+mc5_codes() { awk -F'\t' '$1 == "FIND" { print $2 }' <<<"$1" | LC_ALL=C sort -u | tr '\n' ' ' | awk '{ $1 = $1; print }'; }
+mc5_stat() { awk -F'\t' -v k="$2" '$1 == "STAT" && $2 == k { v = $3 } END { print v + 0 }' <<<"$1"; }
+if [ "$MC_OK" -eq 1 ]; then
+  MC5_OUT="$(mc_agree "$MC_DECL" "$MC_PLACE" "$MC_DM" "$MC_GUIDED")"
+  MC5_NFIND="$(mc_n "$MC5_OUT" FIND)"
+  MC5_TIED="$(mc5_stat "$MC5_OUT" TIED)"; MC5_OTHER="$(mc5_stat "$MC5_OUT" OTHER)"
+  MC5_NB="$(mc5_stat "$MC5_OUT" BULLETS)"; MC5_ACC="$(mc5_stat "$MC5_OUT" ACCOUNTED)"
+  MC5_GP="$(mc5_stat "$MC5_OUT" GUIDEDPAIRS)"
+  if [ "$(mc5_stat "$MC5_OUT" ROWS)" -eq 0 ] || [ "$MC5_NB" -eq 0 ] || [ "$MC5_GP" -eq 0 ]; then
+    FAIL "MC5: NOT EVALUATED — the comparison read $(mc5_stat "$MC5_OUT" ROWS) row(s), $MC5_NB bullet(s) and $MC5_GP guided-form field(s). An empty side is a failure, never a pass"
+  elif [ "$MC5_NFIND" -gt 0 ]; then
+    FAIL "$(awk -F'\t' '$1 == "FIND" { printf "%s ", $3 }' <<<"$MC5_OUT")"
+  else
+    PASS "MC5: the declaration agrees with ADR-030 § 2's prose in both directions, and stays inside the boundary it states — of $((MC5_TIED + MC5_OTHER)) field row(s), $MC5_TIED are tied by the prose reader's own placement and $MC5_OTHER by other words of § 2, each tied to its label or its whole section; $MC_NEM row(s) name no field and each cites words a bullet of its own list carries; $MC5_ACC of $MC5_NB bullet(s) are accounted for by a row; every field row names one of the $MC5_GP field(s) of the $MC_NGUIDED guided-form section(s), no row naming no field stands in for one of them, and every cited phrase has exactly one bullet as its home. RESIDUAL, stated: an item added inside an existing bullet in words that name no label and no section is printed by MC0 and not failed — $MC_UNPLACED; a reworded cited item fails closed until its row follows; a record that later supersedes part of § 2 and moves a row needs its marker taught to the reader in the same change; and the tie is lexical, so a mis-mapping inside one guided-form section that keeps a tying word is not seen"
+  fi
+
+  # mc5_arm <id> <want-codes> <want-text> <want-count-of-first-code> <label> <kind> [args…]
+  # One mutation of a COPY of the record. The codes it raises must be exactly <want-codes>;
+  # <want-text>, when given, must be one of the findings, word for word.
+  mc5_arm() {
+    local id="$1" wantc="$2" want="$3" wantn="$4" label="$5"; shift 5
+    local f="$MC_W/$id.md" out codes delta has n1
+    mc_mutate "$MC_ADR030" "$@" > "$f" 2>/dev/null
+    delta="$(mc_delta "$MC_ADR030" "$f")"
+    out="$(mc_agree "$(mc_decl "$f" "$MC_DM" 2>/dev/null)" "$(mc_place "$f" "$MC_DM" 2>/dev/null)" "$MC_DM" "$MC_GUIDED")"
+    codes="$(mc5_codes "$out")"
+    has="$(awk -F'\t' -v w="$want" '$1 == "FIND" && $3 == w { n++ } END { print n + 0 }' <<<"$out")"
+    n1="$(awk -F'\t' -v c="${wantc%% *}" '$1 == "FIND" && $2 == c { n++ } END { print n + 0 }' <<<"$out")"
+    if [ "$delta" -eq 0 ]; then
+      FAIL "$id: fixture integrity — the mutation did not land ($label): the copy does not differ from the record, so the arm below would prove nothing"
+    elif [ -z "$wantc" ] && [ -z "$codes" ] && [ "$(mc5_stat "$out" ROWS)" -eq "$MC_NROWS" ]; then
+      PASS "$id: MUST-NOT-FIRE — $label ($delta line(s) differ from the record): the same $MC_NROWS row(s) are read and no finding is raised"
+    elif [ -n "$wantc" ] && [ "$codes" = "$wantc" ] && [ "$has" -eq 1 ] && [ "$n1" -eq "$wantn" ]; then
+      PASS "$id: MUST-FIRE — $label ($delta line(s) differ from the record) raises exactly [$codes], $n1 finding(s) of the first, in the predicted words: $want"
+    else
+      FAIL "$id: did not behave as predicted ($label) — wanted exactly [${wantc:-no finding}] with $wantn finding(s) of the first and the text '$want', got [${codes:-no finding}] with $n1: $(awk -F'\t' '$1 == "FIND" { printf "%s | ", $3 }' <<<"$out")"
+    fi
+  }
+  MC5_SHORT="$(awk -F'\t' -v em="$MC_EM" '$1 == "ROW" && $2 == "IN" && $3 == em && !n++ { print $5 }' <<<"$MC_DECL")"
+  MC5_X3SEC='Destination'
+  MC5_X3LABS="$(ft_rows "$MC_DM" | awk -F'\t' -v s="$MC5_X3SEC" '$2 == s && $3 != "" { print $3 }')"
+  MC5_X3N="$(mc_lines "$MC5_X3LABS")"
+  MC5_X3FIRST="$(awk 'NF && !n++ { print }' <<<"$MC5_X3LABS")"
+  MC5_X3ROWS="$(awk -v s="$MC5_X3SEC" -v w="$MC5_SHORT" 'NF { printf "IN | %s | %s | %s\\n", s, $0, w }' <<<"$MC5_X3LABS")"
+  MC5_X1SEC='Desires'
+  MC5_X1WORDS="$(awk -F'\t' -v s="$MC5_X1SEC" '$1 == "ROW" && $3 == s && !n++ { print $5 }' <<<"$MC_DECL")"
+  MC5_X1N="$(awk -F'\t' -v s="$MC5_X1SEC" '$1 == "ROW" && $3 == s { n++ } END { print n + 0 }' <<<"$MC_DECL")"
+  MC5_X1FIRST="$(awk -F'\t' -v s="$MC5_X1SEC" '$1 == "ROW" && $3 == s && !n++ { print $4 }' <<<"$MC_DECL")"
+  mc5_arm MC5n2 '' '' 0 "a copy whose rows are reversed and re-spaced, every pipe set tight" reverse
+  mc5_arm MC5f1 'i' "MC5: § 2's prose places (Interests & tastes, Already done) IN, and the declaration carries no IN row for it" 1 "a copy with one IN row deleted" droprow 'Interests & tastes' 'Already done'
+  mc5_arm MC5f2 'i ii-a' "MC5: § 2's prose places (Anything else, Special occasion?) IN-IF-MARKED, and the declaration carries no IN-IF-MARKED row for it" 1 "a copy in which the mark-conditioned occasion row is given the unconditional class" reclass 'Anything else' 'Special occasion?' IN
+  mc5_arm MC5f3 'CD-A ii-b' "MC5: the row IN | Accommodation | Check-in time cites 'blackout dates', which names neither its label nor its whole section" 1 "a copy in which a row tied by other words is re-pointed at a trip-context field" repair 'Dates & availability' 'Blackout' 'Accommodation' 'Check-in time'
+  mc5_arm MC5f4 'iii' "MC5: § 2's OUT bullet 'spending limits on shared meals.' is accounted for by no row" 1 "a copy with one new bullet appended to the OUT list" outbullet '' '' '- spending limits on shared meals.'
+  mc5_arm MC5f5 'ii-c' "MC5: an em-dash row cites words that name a field — 'rooming' equals a label or a section name" 1 "a copy with one more row naming no field, citing a field's label" addrow 'Where you stay' 'Rooming' "IN | $MC_EM | $MC_EM | rooming"
+  mc5_arm MC5f6 'CD-C ii-a' "MC5: the row IN | Budget appetite | Splurge appetite cites 'splurge appetite', and § 2's prose places that field OUT by 'splurge appetite' — the row's list or its words are not the ones that place it" 1 "a copy in which a field the prose places OUT also carries an IN row" addrow 'Budget appetite' 'Splurge appetite' 'IN | Budget appetite | Splurge appetite | splurge appetite'
+  if [ "$MC5_X3N" -gt 0 ] && [ -n "$MC5_SHORT" ]; then
+    mc5_arm MC5f7 'CD-A' "MC5: the row IN | $MC5_X3SEC | $MC5_X3FIRST names a field of no guided intake form — § 2 names none of the trip context's fields, and the declaration places no field § 2 does not name" "$MC5_X3N" "a copy in which every field of a trip-context section is declared IN, citing an item § 2 does carry" addrows 'Dates & availability' 'Can travel' "$MC5_X3ROWS"
+  else
+    FAIL "MC5f7: fixture integrity — the trip-context section '$MC5_X3SEC' yields $MC5_X3N labelled field(s), or the declaration carries no IN row naming no field to borrow words from, so the arm has nothing to plant"
+  fi
+  if [ "$MC5_X1N" -gt 1 ] && [ -n "$MC5_X1WORDS" ]; then
+    mc5_arm MC5f8 'CD-B' "MC5: the em-dash row IN-IF-MARKED | $MC_EM | $MC_EM | $MC5_X1WORDS stands in for the field ($MC5_X1SEC, $MC5_X1FIRST), which carries no row of its own — a field § 2 names is declared by its own row" "$MC5_X1N" "a copy in which the rows of one whole guided-form section are replaced by ONE row naming no field" section2em "$MC5_X1SEC"
+  else
+    FAIL "MC5f8: fixture integrity — the section '$MC5_X1SEC' carries $MC5_X1N row(s) in the declaration, where a whole section of more than one was required"
+  fi
+  mc5_arm MC5f9 'CD-C' "MC5: the words 'pace' occur in 2 bullets of § 2's IN list, where a citation has exactly one home" 1 "a copy with one new IN bullet that reuses a word a row already cites" inbullet '' '' '- meeting points, and the pace of each day;'
+  if [ "$MC5_NFIND" -eq 0 ] && [ "$MC5_ACC" -eq "$MC5_NB" ] && [ "$MC5_NB" -gt 0 ]; then
+    PASS "MC5n1: MUST-NOT-FIRE — the real record, its fence at the end of § 2: every predicate reads it and none raises a finding, with $MC_NROWS row(s), $MC5_NB bullet(s) and $(mc_n "$MC_PLACE" UNRES) unplaced item(s) shown in the population above. Every must-fire beside this arm differs from it in ONE edit"
+  else
+    FAIL "MC5n1: the real record raises $MC5_NFIND finding(s), or $MC5_ACC of its $MC5_NB bullet(s) are accounted for — the must-not-fire the arms above are measured against does not hold"
+  fi
+fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RS — the group rosters that DESCRIBE this suite, asserted against the run.

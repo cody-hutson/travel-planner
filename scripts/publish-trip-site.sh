@@ -5,9 +5,9 @@
 # Encrypts a generated trip site with StatiCrypt (AES-256-CBC + HMAC-SHA256,
 # 600k PBKDF2-SHA256) and publishes ONLY the ciphertext to a per-trip PUBLIC repo
 # with GitHub Pages.
-# The plaintext itinerary never leaves the git-ignored trips/ working dir, and is
-# never written to the per-trip repo or its history. Because each trip is a fresh
-# repo, privacy is by construction.
+# The plaintext itinerary never leaves the trips/ working dir under the operator's data
+# root (CLAUDE.md § Resolving a trip), and is never written to the per-trip repo or its
+# history. Because each trip is a fresh repo, privacy is by construction.
 #
 # Security model (be honest about it): the published artifact is world-fetchable
 # ciphertext. Anyone can download it and attempt an OFFLINE brute force. The privacy
@@ -58,7 +58,7 @@
 #
 # Passphrase resolution for publish and update (in order): $STATICRYPT_PASSWORD, then
 # <trip-dir>/.passphrase, else a strong one is generated and saved to <trip-dir>/.passphrase
-# (git-ignored, chmod 600). When the variable is set AND the trip also has a .passphrase holding
+# (under the data root, chmod 600). When the variable is set AND the trip also has a .passphrase holding
 # a different key — or one that cannot be read as a key — publish and update REFUSE rather than
 # choose, before any network call: .passphrase is the key of record, and a silent choice between
 # two keys is how the next routine update used to undo a rotation (GHSA-gmm2-v7rr-jq7r). The only
@@ -361,7 +361,7 @@ announce_passphrase_file() { # <label> <passphrase_file>
   local label="$1" pf="$2"
   if [ -r "$pf" ]; then
     printf '\n  %s saved to: %s\n' "$label" "$pf"
-    printf '  It is git-ignored. Read it when you are ready to share it, over a private channel:  cat %s\n' "$pf"
+    printf '  It stays under your data root and is never published. Read it when you are ready to share it, over a private channel:  cat %s\n' "$pf"
   else
     printf '\n  %s: no file exists at %s, so this run stored no copy of it.\n' "$label" "$pf"
     printf '  The value you supplied is the only copy — keep it, and share it over a private channel.\n'
@@ -382,7 +382,7 @@ resolve_site_html() { # <trip_dir>
 # <basename>-trip. A .publish-slug file lets a convention-named trip dir publish to a
 # custom or pre-existing repo name (e.g. trips/tokyo-2026 -> tokyo-trip) instead of the
 # derived one. The slug names a PUBLIC repo, so it is not secret; it lives in the
-# git-ignored trips/ tree regardless. Resolved identically by publish/update/rotate.
+# trips/ tree under the data root regardless. Resolved identically by publish/update/rotate.
 slug_for() { # <trip_dir>
   local trip_dir="$1" sf="$1/.publish-slug" slug
   if [ -s "$sf" ]; then
@@ -2531,10 +2531,10 @@ verify_ciphertext() { # <enc> <src> [boilerplate_html]
 # none to be had from the published artifact: it is ciphertext by construction,
 # which is the whole point of ADR-002. Recording a fingerprint of the plaintext in
 # the per-trip PUBLIC repo would be a new disclosure surface, so it is not done.
-# The anchor is therefore a git-ignored sidecar in the trip dir, written by the
-# publish paths after a push succeeds. Absent, the gate has no anchor and the trip
-# republishes exactly as it does today — which is also the back-compat property
-# every trip published before this change relies on.
+# The anchor is therefore a local sidecar in the trip dir, under the data root,
+# written by the publish paths after a push succeeds. Absent, the gate has no anchor
+# and the trip republishes exactly as it does today — which is also the back-compat
+# property every trip published before this change relies on.
 # ═════════════════════════════════════════════════════════════════════════════
 
 # SEAM S4 (#551) — the coordination notice's identity, and the only line in this
@@ -2806,7 +2806,7 @@ change_confirmation_path() { printf '%s' "$1/.change-confirmed"; }
 # The itinerary content as of the last successful push. Written by cmd_publish and
 # cmd_update; read only here.
 published_itinerary_path() { printf '%s' "$1/.published-itinerary"; }
-# The two approval sidecars (#719, ADR-029 § Decisions 2–4), under the same git-ignored trip dir
+# The two approval sidecars (#719, ADR-029 § Decisions 2–4), under the same trip dir in the data root
 # and, like the three above, never copied into the per-trip repo. The site build reads NEITHER:
 # both hold roster keys, and the render may carry only the aggregate (ADR-029 § Decision 6).
 #   .approvers  the declaration — who approves, and how many must; written by /trip-record .approvers

@@ -10,8 +10,8 @@ publish: internal
 
 # Your Travel Profile — [Name]
 
-> **This is *your* profile** — what you'd love out of the trip, what you need it to
-> work around, and how you like to travel. One file per person.
+> **This is *your* profile** — what you'd love out of the trip and how you like to
+> travel. One file per person.
 >
 > **The fence above is not a field you fill in.** Replace `<trip-slug>` with the trip's
 > directory name and leave the rest exactly as it stands. **Your name does not go in it** —
@@ -37,7 +37,7 @@ publish: internal
 >   leading or trailing `-` — so Dana Smith saves as `dana-smith.md`. **That stem is how the
 >   planner joins your file to your roster entry**, so a name it cannot match reads as an
 >   unresolved profile rather than as yours.
-> - It lives in the git-ignored `trips/` working dir and is **private — never published**,
+> - It lives under `trips/` in your data folder and is **private — never published**,
 >   so put your real details here.
 > - **Fill in the parts that fit where your trip is right now.** If the destination
 >   isn't picked yet, the "Destination leanings" section matters most; if dates and a

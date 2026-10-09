@@ -19,8 +19,9 @@ by invitation only.
   user-home paths from entering the repo — in file content, in commit messages, and in
   commit author/committer identity.
 - **No personal data in examples.** The worked examples under `examples/` are sanitized and
-  illustrative (fixture names, representative bookings). Keep your own trip data in `trips/`,
-  which is git-ignored and never published.
+  illustrative (fixture names, representative bookings). Keep your own trip data in your data
+  folder — the one `~/.travel-planner/data-root` names (`CLAUDE.md` § *Resolving a trip*) — and
+  never in the engine's own `trips/`; it is never published.
 - **Keep links valid.** A CI gate checks markdown links; broken local links fail the build.
 
 ## Making a change
