@@ -2321,7 +2321,9 @@ passvalue_check() {
 #   7 W1         some consent word in a population sentence is not negated
 #
 # The window is five because that is what the labelled cases discriminate: at six, a negation
-# that opens a sentence about something else reaches a consent word it does not bind.
+# that opens a sentence about something else reaches a consent word it does not bind. Arm GW1e
+# plants the labelled case that tells five from six — a negation six words before the consent
+# word, in its own clause — and is the arm that fails if the window widens.
 #
 # ENGINE PARITY. The program runs under LC_ALL=C and matches the multi-byte separators and the
 # curly apostrophe as literal byte strings, never inside a bracket expression, so a byte-mode
@@ -4395,12 +4397,17 @@ gen_cmd() {  # gen_cmd <dir> <tuple> <defect>
       #                 what finds it
       #   consenttail — a negation in the sentence, but in the NEXT clause, after `, so`
       #   consentdash — a negation after a spaced EM DASH, and the mark spelled in words
+      # One more carries a negation that IS in the consent word's clause, and too far back to
+      # reach it:
+      #   consentedge — a negation SIX words before the consent word, one past the window. It
+      #                 is the plant that tells a window of five from a window of six
       if [ "$name" = 'trip-record' ] && [ "${IDS[$i]}" = 'profile' ]; then
         case "$defect" in
           consentmark) printf -- 'An entry marked %s[OPERATOR-PROVIDED]%s records that the person consented to keep it.\n\n' "$BT" "$BT" ;;
           consentwrap) printf -- 'The %s[THIRD-PARTY]%s mark\nmeans the person agreed.\n\n' "$BT" "$BT" ;;
           consenttail) printf -- 'An entry marked %s[OPERATOR-PROVIDED]%s records that the person consented to keep it, so do not ask them again.\n\n' "$BT" "$BT" ;;
           consentdash) printf -- 'The provenance mark is the record that the person agreed %s never ask twice.\n\n' "$EMDASH" ;;
+          consentedge) printf -- '[OPERATOR-PROVIDED] entries need no second check because the person agreed.\n\n' ;;
         esac
       fi
       if [ "$defect" = 'twosections' ] && [ "$i" -eq 0 ]; then
@@ -7126,7 +7133,7 @@ W1A="$(surface W1)"
 if has_finding "$W_OUT" "$W1A"; then FAIL "W1: a sentence in command or conduct text binds a provenance mark to consent with no negation in its clause — $(( ${W_SENT:-0} - ${W_NEG:-0} )) of ${W_SENT:-0} population sentence(s)"; show "$W_OUT" 'W1'
 elif [ "${W_FILES:-0}" -eq 0 ] || [ "${W_SCAN:-0}" -eq 0 ]; then FAIL "W1: NOT EVALUATED — the W-test read ${W_FILES:-0} file(s) and graded ${W_SCAN:-0} sentence(s). An empty population is a failure here, never a pass: nothing was graded"
 elif [ "${W_SENT:-0}" -ne "${W_NEG:-0}" ]; then FAIL "W1: ${W_SENT:-0} sentence(s) bind a provenance mark to a consent word and only ${W_NEG:-0} of them negate it, yet no finding was emitted for the difference — the check's own counts disagree with its findings"
-else PASS "W1: no sentence binds a provenance mark to consent without negating it — ${W_SENT} sentence(s) name a mark and a consent word and all ${W_NEG} negate the word within ${W_WINDOW} words before it in its own clause, or by a non- prefix, over ${W_SCAN} sentence(s) in ${W_FILES} file(s): each verb file and each file bundled beside one, each agent prompt, the charter and the guided-entry carrier. RESIDUAL, stated: a negation inside that window that does not bind the consent word reads as negated; a paraphrase outside the lexicon is not seen; and this grades the authored text a session follows, not a session. Arms GW1, GW1t, GW1n and GW1d each plant an unnegated sentence and require the finding; arm G0w requires four negated ones counted and none flagged"; fi
+else PASS "W1: no sentence binds a provenance mark to consent without negating it — ${W_SENT} sentence(s) name a mark and a consent word and all ${W_NEG} negate the word within ${W_WINDOW} words before it in its own clause, or by a non- prefix, over ${W_SCAN} sentence(s) in ${W_FILES} file(s): each verb file and each file bundled beside one, each agent prompt, the charter and the guided-entry carrier. RESIDUAL, stated: a negation inside that window that does not bind the consent word reads as negated; a paraphrase outside the lexicon is not seen; and this grades the authored text a session follows, not a session. Arms GW1, GW1t, GW1n and GW1d each plant an unnegated sentence and require the finding; arm GW1e plants one whose negation sits six words before the consent word, in its own clause and one word past the window, and requires the finding as well; arm G0w requires four negated ones counted and none flagged"; fi
 
 # G0w — MUST-NOT-FIRE, over the conforming world built for G0. Every fixture charter carries
 # four sentences that name a mark and a consent word and negate the word, each a different
@@ -7173,6 +7180,12 @@ wctl GW1  consentmark consented "a provenance mark stated to record that the per
 wctl GW1t consentwrap agreed "the same binding hard-wrapped across two lines — found by the paragraph join, not by a line scan" 'grep -qxF "The ${BT}[THIRD-PARTY]${BT} mark" "$WORK/GW1t/skills/trip-record/SKILL.md" && grep -qxF "means the person agreed." "$WORK/GW1t/skills/trip-record/SKILL.md"'
 wctl GW1n consenttail consented "a negation in the same sentence but in the NEXT clause, after a comma and so — it does not bind the consent word" 'grep -qxF "An entry marked ${BT}[OPERATOR-PROVIDED]${BT} records that the person consented to keep it, so do not ask them again." "$WORK/GW1n/skills/trip-record/SKILL.md"'
 wctl GW1d consentdash agreed "the mark spelled in words and a negation after a spaced EM DASH — the engine-parity arm for the multi-byte separator" 'grep -qxF "The provenance mark is the record that the person agreed ${EMDASH} never ask twice." "$WORK/GW1d/skills/trip-record/SKILL.md"'
+# GW1e pins the window from ABOVE. The four arms above carry no negation in the consent word's
+# clause at all, and the farthest negation G0w's sentences carry sits five words back — so
+# between them they hold five against four and say nothing of six. This arm plants the
+# labelled case that tells the two apart: a negation SIX words before the consent word, in its
+# own clause. It is flagged at five; at six it is read as negated, and the arm fails.
+wctl GW1e consentedge agreed "a negation six words before the consent word, in its own clause — one word past the window, so it is not read as negating it; the arm that fails if the window widens" 'grep -qxF "[OPERATOR-PROVIDED] entries need no second check because the person agreed." "$WORK/GW1e/skills/trip-record/SKILL.md"'
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group Y — the assertion inventory, machine-checked against this file.
