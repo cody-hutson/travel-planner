@@ -33,8 +33,8 @@ publish: internal-hard
 > - Copy this template to `people/psn-<token>.md`, then fill it in — or just ask, and an
 >   agent will walk you through it question by question. `<token>` is four hex characters
 >   minted once for you: **the filename carries your id, the title line carries your name.**
-> - It lives in the git-ignored `people/` store and is **never published**, so put your real
->   details here.
+> - It lives in the `people/` store of your data folder and is **never published**, so put your
+>   real details here.
 > - **This record is used by every trip and is never trip-specific.** Anything true of only
 >   one trip — your dates, what you want to do there, who you are rooming with — belongs on
 >   that trip's own form, `templates/traveler-intake.template.md`, not here.
