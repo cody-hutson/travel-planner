@@ -210,7 +210,7 @@ so each group stays in number order.
 | [ADR-019](ADR-019-discriminating-evidence-rule.md) | The Discriminating-Evidence Rule — an assertion's PASS must require evidence its subject could only have produced by running | Accepted |
 | [ADR-042](ADR-042-accepted-record-growth.md) | Accepted records after acceptance — what an amendment may add, the consolidated-decision form, and where settled design belongs | Accepted |
 | [ADR-043](ADR-043-required-check-census-parser.md) | The required-check census reads a parsed document — PyYAML on the runner, a marker read from the comment layer, and a refusal wherever it cannot vouch | Accepted |
-| [ADR-044](ADR-044-record-number-register.md) | A record's number is taken on `main` before the record is written — a register row that names its record, a required check that grades it, and the shapes it was chosen over | Proposed |
+| [ADR-044](ADR-044-record-number-register.md) | A record's number is taken on `main` before the record is written — a register row that names its record, a required check that grades it, and the shapes it was chosen over | Accepted |
 
 ### Data architecture
 

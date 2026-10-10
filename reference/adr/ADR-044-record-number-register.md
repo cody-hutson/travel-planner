@@ -1,6 +1,6 @@
 # ADR-044: A record's number is taken on `main` before the record is written — a register row that names its record, a required check that grades it, and the shapes it was chosen over
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-10-09)
 - **Deciders:** repo maintainer
 - **Driving work:** the *Decision records hold their number and their spine* milestone — its card
   on holding a record number across unmerged branches (#1363), under the decision-tier epic
