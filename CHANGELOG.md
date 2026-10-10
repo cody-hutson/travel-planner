@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-10-09 — Decision records hold their number and their spine
+## [0.54.0] — 2026-10-09 — Decision records hold their number and their spine
 
 No trip verb changes behaviour in this release. What changes is met by whoever writes or amends
 one of the engine's decision records, the files under `reference/adr/`. Until now nothing held a
