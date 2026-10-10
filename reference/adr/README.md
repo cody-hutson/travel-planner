@@ -7,11 +7,39 @@ options weighed, the decision, and the consequences.
 ## Convention
 
 - **File name:** `ADR-NNN-kebab-title.md` — zero-padded 3-digit number, assigned
-  monotonically. Numbers are never reused or renumbered.
+  monotonically. Numbers are never reused or renumbered. A number is taken before its record
+  is written: § *Number declarations* states how.
 - **Sections:** Status · Context · Decision drivers · Options considered · Decision ·
-  Consequences · References. A `Follow-on build slices` section is conventional where the
-  decision opens downstream work. This list is the expected spine, not a closed set — a
-  record may carry further sections, and carrying one is not a divergence to be recorded.
+  Consequences · References. Where a decision opens downstream work, *Scheduling content* below
+  says what the record states of it. This list is the expected spine, not a closed set — a record
+  may carry further sections, and carrying one is not a divergence to be recorded.
+  `scripts/test-adr-conformance.sh` reads the list from this bullet, and its banner states the
+  form the bullet has to keep.
+- **Scheduling content.** A record states what its decision makes false or necessary elsewhere, and
+  schedules none of that work. The surface a decision reaches, the change that surface then owes,
+  and a coupling the decision forces between changes — that they cannot land apart, or that one may
+  not go live before another, each with its reason — are consequences. Consequences is their usual
+  home and no rule of placement: the bound is on what a passage states, never on the heading or the
+  list it stands under. A passage is a schedule when it states work assigned to a wave, a release or
+  a milestone; work assigned to a card, a slice or a person; or an item named as a unit of the plan.
+  Work is assigned where the passage pairs a piece of it with one of those, in whatever words it
+  does so — owned by, carried by, tracked under, routed to — and a card here is any tracker item,
+  whatever its type. A wave or a card named without pairing work with it — to decline it, or as the
+  name of notes or of a record — assigns nothing. An item is named as a unit of the plan where its
+  name is that of a slice, a build or a step, and not of what changes. Not a schedule: an item that
+  names a surface and the change it owes, whatever list or heading it stands under; a pointer to
+  where the plan is kept; an item declined, with its reason; a disposition of a residual; and the
+  record, file or decision that carries an obligation. An owner assigned in a table of consequences
+  is a schedule. The owner a record names on a residual is outside this bound, whatever it names: a
+  residual is what the record itself leaves open or accepts, and its owner stays. A schedule belongs
+  to a release plan, which changes when the backlog changes. An Accepted ADR does not change with
+  it, so a schedule written into one becomes a second account of the plan, and the stale one. A
+  record's own entry into the corpus — its index row, and the change that sets its status — is not
+  work the decision opens, and this file's lifecycle and index rules govern it. Where an Accepted
+  ADR carries a schedule, removing it removes the schedule alone: the consequences and coupling
+  facts written beside it are what this bullet asks a record to state, and they stay, as they did in
+  `ADR-023` § *What this decision makes false elsewhere*. *What an amendment may add* below bounds
+  the amendment that removes it.
 - **Status lifecycle:** `Proposed` → `Accepted` → `Superseded`. An Accepted ADR is
   immutable **as to its decisions** — to change a decision, author a new ADR and mark the
   old one `Superseded by ADR-MMM` rather than editing the original; where only one decision,
@@ -117,6 +145,54 @@ undeclared. Why a particular gap exists belongs in the record that withdrew it, 
 supersedes, on a branch that has since been swept; `ADR-021` § *Costs and residual risks*
 carries the account.
 
+**Taking a number.** A number is taken on `main` before the record that will carry it is
+written, by a row in the fence below — the *register*. The row is the claim. It reaches `main` in
+a pull request of its own, which adds the row and nothing else, and the number is held from the
+moment that pull request merges. The number taken is the one after the register's last row. The
+left column is that number and the right column the file name the record will have — the name
+alone, in the form § *Convention* gives, with no directory before it. The row stands at the foot
+of the fence, so the rows read in number order.
+
+**What holds it.** `scripts/test-corpus-hygiene.sh` grades the register against the directory,
+in the group it calls the number register: a record numbered from the register's first row on is
+a finding unless the row for its number names that record's file. That suite is a required
+check. It grades a branch as it was pushed and, where the branch has a pull request open, that
+branch merged into `main` as `main` then stood. A record with no row is a finding on the branch
+as pushed, whether or not the branch has merged `main`; a record at a number that a row on
+`main` gives to another is a finding on the merge. Neither grading is repeated when `main`
+moves, and `.github/workflows/corpus-hygiene.yml` states what that leaves open.
+
+**When claims meet.** Rows written for one number on separate branches stand at the same place
+in this file, and the host does not merge a branch that conflicts there. The row already on
+`main` stands. The later claimant keeps that row, takes the next number, and renames its record
+if it has written one. Keeping both rows is a finding, and so is keeping the row on `main` over
+a record still filed under its number. Putting the later row in place of the earlier one is not
+a finding, because no tree records which row came first: it is what this rule forbids, and what
+a reviewer of the change looks for. A row names its record so that the claims meet at all —
+rows that said only that a number was taken would be the same line, and would merge as one.
+
+**What a row becomes.** A row is never removed. When the record lands its row stays, and stops
+being a hold. A release that renames its own record before it lands edits its own row in the
+same change. A row that names another record's file is changed only by a pull request that
+changes nothing else, so that the change is the whole of what its reviewer reads. A number whose
+record will not be written is not given back: the right column becomes a single reason token in
+place of the file name, as a gap declared above carries one. A reason token carries no `/`, does
+not end `.md` and does not carry `ADR-` in any letter case; a right column that does is taken
+for a file name written wrongly, and is a finding. Group **D** reads the register too, so a
+number taken here and not yet landed is not a gap when a later record is numbered above it.
+`ADR_NUM_EXEMPT` in `scripts/test-adr-conformance.sh` does not read it: that value has to carry
+such a number on every branch that numbers a record above it, from the commit that writes the
+record until the change that lands the held one.
+
+```adr-number-register
+# number  record
+044       ADR-044-record-number-register.md
+```
+
+Records numbered below the register's first row predate it and carry no row. Why a register,
+and what it was chosen over, is decided in
+[the record on how a number is taken](ADR-044-record-number-register.md).
+
 ## Index
 
 Each record has exactly one row below, in the group for the subsystem it was decided for — the
@@ -134,6 +210,7 @@ so each group stays in number order.
 | [ADR-019](ADR-019-discriminating-evidence-rule.md) | The Discriminating-Evidence Rule — an assertion's PASS must require evidence its subject could only have produced by running | Accepted |
 | [ADR-042](ADR-042-accepted-record-growth.md) | Accepted records after acceptance — what an amendment may add, the consolidated-decision form, and where settled design belongs | Accepted |
 | [ADR-043](ADR-043-required-check-census-parser.md) | The required-check census reads a parsed document — PyYAML on the runner, a marker read from the comment layer, and a refusal wherever it cannot vouch | Accepted |
+| [ADR-044](ADR-044-record-number-register.md) | A record's number is taken on `main` before the record is written — a register row that names its record, a required check that grades it, and the shapes it was chosen over | Proposed |
 
 ### Data architecture
 

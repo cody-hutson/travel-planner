@@ -123,6 +123,24 @@
 #        THE SPAN'S FLOOR IS THE FIRST NUMBER, NOT THE LOWEST ONE OBSERVED. Anchoring the
 #        floor at the observed minimum would make a missing lowest number the one hole
 #        nothing can see, because removing it moves the floor down with it.
+#
+#        A NUMBER THE REGISTER NAMES IS ACCOUNTED FOR. Class I's register, in that same index,
+#        carries one row per number taken, and a number is taken before its record lands — so a
+#        record can land above a number another branch still holds. That number is carried by no
+#        record and declared by no gap row, and it is not lost: D2 reads the register as a
+#        second account of the sequence and stays silent on a number a register row names. Arm
+#        CTL-D2-REG holds that silence, and arm CTL-D2-REG-OTHER holds its bound — a register
+#        row accounts for its own number and for no other.
+#
+#        WHAT THAT READ GIVES UP, DECLARED. Class I requires a row for every record above its
+#        floor and requires the rows to be consecutive, so on any tree class I passes every
+#        number between that floor and the highest record has a row, and D2 cannot fire above
+#        the floor there. A number nothing carries reads, above the floor, as a hold class I
+#        reports on every run and never fails. D2 keeps its whole reach at and below the floor.
+#        And the two classes share that fence from here on: a change that takes this read out
+#        declares, in the `adr-number-declaration` fence and in the same commit, every number
+#        the register names that no record carries and a record stands above, or D2 fails on
+#        each. .github/workflows/corpus-hygiene.yml states that under its partial rollback.
 #   E    AN OWNED RULE IS STATED ONCE AND CITED. A [THIRD-PARTY] party member's standing — no
 #        `## Group` roster row, and counted in `- **Total travelers:**` as an unnamed member — is
 #        stated once, under the heading CH_E_OWNER_HEAD in CH_E_OWNER_DOC. Three surfaces once
@@ -309,6 +327,57 @@
 #        fence cannot name such an entry — a direct child is one segment of letters, digits,
 #        dot, underscore and hyphen — so it reads H1 until it is renamed, which is the closed
 #        direction. The one name not carried whole is a name holding a newline, read as its lines.
+#   I    THE NUMBER REGISTER. A record number is taken on the default branch BEFORE the record
+#        that carries it is written: one row in the `adr-number-register` fence in
+#        reference/adr/README.md, naming the number and the record's file. Class D grades the
+#        numbering of the tree it is handed, and it cannot see a number that two unmerged
+#        branches each chose — the register is where a number exists before its record does.
+#        This group grades the register against the directory: a number carried by two rows
+#        (I1); a record above the register's floor that its number's row does not name — no row
+#        at all, a row naming another file, or a row marking the number spent with no record
+#        (I2); and a row that is not the next number, or whose second column is not a record
+#        file name carrying that number or a reason token (I3). I0 is a surface with no path
+#        list or no record file on it: a broken probe or a relocated corpus, never an empty
+#        register.
+#
+#        I2 IS THE ARM THAT ACTS ON A BRANCH THAT NEVER LOOKED. The workflow runs this suite on
+#        a branch as it was pushed and, where the branch has a pull request open, on that
+#        branch merged into the default branch as it then stood; what follows from there being
+#        two runs is stated in .github/workflows/corpus-hygiene.yml and not here. On the branch
+#        as pushed, a branch cut before the claim carries no row for its record and fails, and
+#        a branch cut after it carries a row naming another record's file and fails — neither
+#        needs the branch to have merged the default branch since another one took its number.
+#        Rows stand in number order at the foot of one fence, so the rows written for one
+#        number on separate branches are a textual conflict the host does not merge until
+#        somebody resolves it. A resolution that keeps both rows is I1, and one that keeps the
+#        default branch's row over a record still filed under that number is I2.
+#
+#        WHAT THIS GROUP READS PAST: WHICH ROW CAME FIRST. A hold is a row whose record has
+#        not landed, and in one tree the holder's row and a row put in its place are the same
+#        shape. A branch that rewrites such a row to name its own record — directly, or by
+#        resolving the conflict above in its own favour — passes I1, I2 and I3, and afterwards
+#        the record the row used to name is the one I2 reports. The last row of the fence can
+#        be taken out the same way while its record has not landed. reference/adr/README.md
+#        states the rule that forbids both: the row already on the default branch stands, and
+#        a row naming another record's file is changed only by a change that carries nothing
+#        else. No arm here holds that rule, because no tree records the order of its own
+#        history. Once a record has landed class D's D1 refuses a second record at its number,
+#        so the rows this group protects from replacement are the rows that have stopped being
+#        holds.
+#
+#        A ROW IS NEVER REMOVED, AND THE FLOOR IS A POINT IN HISTORY. Records numbered at or
+#        below CH_ADR_REG_FLOOR predate the register and carry no row. Every number above it
+#        has a row from the moment it is taken and keeps it after its record lands, so a row
+#        deleted under a landed record is I2, and a row deleted from the head of the fence is
+#        I3 on the row that follows it — neither is a quiet lowering of what is graded. A row
+#        whose record has not landed is a HOLD and is reported on every run, never failed:
+#        whether a hold is still wanted is a question about intent, and this arm decides a
+#        shape.
+#
+#        AN EMPTY REGISTER OVER NO RECORD ABOVE THE FLOOR RENDERS VACUOUS, not PASS and not
+#        FAIL — the state of a tree in which no number has been taken since the floor. Arm
+#        CTL-I-VACUOUS drives the verdict stage itself over that state and requires exactly
+#        that rendering; arm CTL-I-VACUOUS-NOT requires a populated register to render PASS.
 #   CTL  a synthetic fixture tree, built in a temp dir ON EVERY RUN, plus the arms whose ids
 #        end -RETRO, each replaying a defect this repository actually shipped. One MUST-FIRE
 #        arm per finding code this file can emit, alongside the specificity arms that tell a
@@ -411,6 +480,12 @@ CH_RETRO_PATH='reference/adr/ADR-008-publish-content-guard.md'
 CH_ADR_DIR='reference/adr'
 CH_ADR_INDEX='reference/adr/README.md'
 CH_ADR_TAG='adr-number-declaration'
+# The number register: the tag of the fence, in that same index, that carries one row per number
+# taken — and the last number taken before the register existed. Records at or below that number
+# predate the register and carry no row. It is a point in this corpus's history, not a
+# population, and it is never re-pinned. Named once.
+CH_ADR_REG_TAG='adr-number-register'
+CH_ADR_REG_FLOOR='43'
 # Group E's owner: the document that states a [THIRD-PARTY] party member's roster standing, and
 # the heading line its statement sits under. And the revision whose blobs arm CTL-E-RETRO replays
 # — the tree on which three surfaces gave the standing three different answers. Named once.
@@ -952,25 +1027,35 @@ AWK
 cat > "$WORK/d.awk" <<'AWK'
 # ARGV[1] the declared-gap TSV, already extracted from the index by fence.awk — the SAME
 # reader class C drives, so the corpus's declaring device has one parser and not two.
-# ARGV[2] a newline-separated relative path list. -v ROOT=<dir> -v ADRDIR=<dir>
-# -v INDEX=<relpath> -v DECFILE=<path of ARGV[1]>
+# ARGV[2] the register TSV, extracted by that reader under class I's tag. ARGV[3] a
+# newline-separated relative path list. -v ROOT=<dir> -v ADRDIR=<dir> -v INDEX=<relpath>
+# -v DECFILE=<path of ARGV[1]> -v REGFILE=<path of ARGV[2]>
 #
-# THE TWO INPUTS ARE SPLIT BY FILENAME, NOT BY `FNR == NR`, AND THE DIFFERENCE IS LOAD-
+# THE INPUTS ARE SPLIT BY FILENAME, NOT BY `FNR == NR`, AND THE DIFFERENCE IS LOAD-
 # BEARING. That idiom is sound only while the first file is non-empty: an empty declaration
-# leaves NR and FNR equal for every record of the SECOND file too, so the entire path list is
+# leaves NR and FNR equal for every record of the NEXT file too, so the entire path list is
 # consumed as declaration rows and the walk reports an empty corpus — a zero that reads like
 # a clean tree. A fixture carrying no declaring fence is the ORDINARY case here, not an edge
 # one, so this was measured rather than reasoned about: with the idiom in place, four control
 # arms below went red and a fifth passed for the wrong reason.
 #
 # Emits one FINDING per defect, and ALWAYS a DENOM carrying the records walked, the index
-# rows read, the gaps declared, the gaps a declaration actually holds open, and the span's
-# upper bound — the denominators that make a zero a measurement rather than an empty walk.
+# rows read, the gaps declared, the gaps a declaration actually holds open, the span's upper
+# bound, and the unoccupied numbers inside the span that a register row names — the
+# denominators that make a zero a measurement rather than an empty walk.
 FILENAME == DECFILE {
   split($0, d, "\t")
   if (d[1] == "") next
   if (d[1] ~ /^[0-9]+$/) { DECL[d[1] + 0] = d[2]; ndecl++ }
   else                     BADROW[++nbad] = d[1] " " d[2]
+  next
+}
+# The register, read for ONE thing: which numbers it names. A number a register row names is
+# taken, so it is not a hole in the sequence. What the row says about that number — which
+# file, or none — is class I's to grade and is not read here.
+FILENAME == REGFILE {
+  split($0, r, "\t")
+  if (r[1] ~ /^[0-9]+$/) REG[r[1] + 0] = 1
   next
 }
 { if ($0 != "") FILES[++nf] = $0 }
@@ -1024,6 +1109,7 @@ END {
   for (n = 1; n <= maxn; n++) {
     if (n in FBYNUM) continue
     if (n in DECL)   { nheld++; continue }
+    if (n in REG)    { nreg++; continue }
     printf "FINDING D2 %s\n", pad(n)
   }
 
@@ -1042,7 +1128,7 @@ END {
   # that must not be reachable.
   if (nf == 0 || nrec == 0 || nrow == 0)
     printf "FINDING D0 files=%d records=%d rows=%d\n", nf + 0, nrec + 0, nrow + 0
-  printf "DENOM %d %d %d %d %d\n", nrec + 0, nrow + 0, ndecl + 0, nheld + 0, maxn + 0
+  printf "DENOM %d %d %d %d %d %d\n", nrec + 0, nrow + 0, ndecl + 0, nheld + 0, maxn + 0, nreg + 0
 }
 function numof(b,   k) { k = b; sub(/^ADR-/, "", k); sub(/-.*$/, "", k); return k + 0 }
 function pad(n) { return sprintf("%03d", n + 0) }
@@ -2244,6 +2330,90 @@ function treeline(s,   k, a, w) {
 }
 AWK
 
+# ── i.awk — class I, the number register against the record directory ────────────────
+cat > "$WORK/i.awk" <<'AWK'
+# ARGV[1] the register TSV "<number>\t<second column>", already extracted from the index by
+# fence.awk — the SAME reader classes C, D and G drive. ARGV[2] a newline-separated relative
+# path list. -v ADRDIR=<dir> -v FLOOR=<the last number taken before the register existed>
+# -v REGFILE=<path of ARGV[1]>
+#
+# The two inputs are split BY FILENAME, for the reason d.awk records: an empty register is the
+# ordinary case in a fixture, and `FNR == NR` would read the whole path list as register rows.
+#
+# A ROW'S SECOND COLUMN IS ONE OF TWO THINGS. A record FILE NAME — `ADR-<number>-<title>.md` —
+# says which record the number was taken for, and must carry the row's own number. Anything
+# else is a REASON TOKEN: the number is spent and no record carries it, so a record written
+# under it is named by no file and is a finding like any other mismatch. A column that is not a
+# whole file name and still LOOKS like one is refused rather than read as a reason, because
+# read as a reason it marks the number spent — the opposite of what its author meant, and
+# silent until the record lands red. Three marks are taken for a file name written wrongly: a
+# path separator, which is the directory-qualified spelling class A of this suite teaches an
+# author to write; a closing `.md`; and the record prefix, anywhere in the column and in any
+# letter case. A reason token therefore carries none of the three.
+#
+# ROWS ARE CONSECUTIVE FROM THE FLOOR. The first row is the number after FLOOR and every row is
+# the number after the row above it. That is one rule with three jobs: it puts every claim at
+# the foot of the fence, where two of them collide; it makes a skipped number a finding on the
+# claim that skipped it; and it makes a row deleted from the head of the fence a finding on the
+# row left first.
+#
+# Emits one FINDING per defect, one HELD line per row whose record has not landed, and ALWAYS a
+# DENOM carrying the record files walked, the rows read, the records above the floor, the rows
+# holding a number no record carries yet, the rows marking a number spent, and the floor.
+BEGIN { want = FLOOR + 1 }
+FILENAME == REGFILE {
+  split($0, r, "\t")
+  if (r[1] == "") next
+  nrow++
+  if (r[1] !~ /^[0-9]+$/) { printf "FINDING I3 %s %s not-a-number\n", r[1], r[2]; next }
+  n = r[1] + 0
+  if (n in ROW)           { printf "FINDING I1 %s %s %s\n", pad(n), ROW[n], r[2]; next }
+  if (n != want)            printf "FINDING I3 %s %s expected-%s\n", pad(n), r[2], pad(want)
+  if (r[2] ~ /^ADR-[0-9]+-.+\.md$/) {
+    if (numof(r[2]) != n)   printf "FINDING I3 %s %s names-another-number\n", pad(n), r[2]
+  } else if (index(r[2], "/") > 0 || r[2] ~ /\.md$/ || tolower(r[2]) ~ /adr-/) {
+    printf "FINDING I3 %s %s not-a-record-file-name\n", pad(n), r[2]
+  } else SPENT[n] = 1
+  ROW[n] = r[2]
+  if (n >= want) want = n + 1
+  next
+}
+{ if ($0 != "") FILES[++nf] = $0 }
+END {
+  # ── The records on disk, by d.awk's recogniser: the basename shape, and the digit run inside
+  # it. A record at or below the floor predates the register and is read past.
+  for (i = 1; i <= nf; i++) {
+    rel = FILES[i]
+    if (index(rel, ADRDIR "/") != 1) continue
+    b = rel; sub(/^.*\//, "", b)
+    if (b !~ /^ADR-[0-9]+-.+\.md$/) continue
+    nrec++
+    n = numof(b)
+    if (n <= FLOOR + 0) continue
+    nabove++
+    if (!(n in ROW))   { printf "FINDING I2 %s %s unregistered\n", pad(n), b; continue }
+    if (ROW[n] != b)   { printf "FINDING I2 %s %s registered-to-%s\n", pad(n), b, ROW[n]; continue }
+    LANDED[n] = 1
+  }
+
+  # ── What the register holds beyond the records: a row with no record yet, and a row that
+  # marks its number spent. Both are reported; neither is a finding.
+  for (k in ROW) {
+    if (k in SPENT)       { nspent++; continue }
+    if (!(k in LANDED))   { nheld++; printf "HELD %s %s\n", pad(k), ROW[k] }
+  }
+
+  # I0 is emitted BY THE EXTRACTOR, as D0 is, so it enters the group-Y inventory on the same
+  # terms as every other code. An ADR surface carrying no record file is a broken probe or a
+  # relocated corpus, and an empty register over it would otherwise read as nothing taken.
+  if (nf == 0 || nrec == 0)
+    printf "FINDING I0 files=%d records=%d\n", nf + 0, nrec + 0
+  printf "DENOM %d %d %d %d %d %d\n", nrec + 0, nrow + 0, nabove + 0, nheld + 0, nspent + 0, FLOOR + 0
+}
+function numof(b,   k) { k = b; sub(/^ADR-/, "", k); sub(/-.*$/, "", k); return k + 0 }
+function pad(n) { return sprintf("%03d", n + 0) }
+AWK
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # THE COMPARATOR. ONE function, driven by the real-tree arm and by every group-C control
 # arm below.
@@ -2260,19 +2430,33 @@ ch_scan_b() { awk -v ROOT="$1" -f "$WORK/b.awk" "$2"; }
 # knob: a gate whose strictness can be set by the caller is not a gate. It is changed by
 # editing the line below, in a diff, alongside the fence rows that change with it.
 ch_scan_c() { awk -v ROOT="$1" -v SHOW="${3:-0}" -v LOOK=2 -f "$WORK/seg.awk" -f "$WORK/c.awk" "$2"; }
-# The tag defaults to class C's, so every existing caller is unchanged; classes D and G pass
+# The tag defaults to class C's, so every existing caller is unchanged; classes D, G and I pass
 # their own. ONE fence reader serves every declaring fence — a second parser for the same on-disk
 # shape would be a second place for that shape to drift.
 ch_fence()  { awk -v TAG="${2:-$CH_FENCE_TAG}" -f "$WORK/fence.awk" "$1"; }
 
 # ch_scan_d <root> <listfile> — the class-D scan, shaped like ch_scan_a: the declaration is
 # extracted first, then handed to the walker as a file, so the control arms drive exactly the
-# code the real tree does.
+# code the real tree does. The register is extracted the same way, by the same reader under
+# class I's tag, and handed over beside it: D2 reads which numbers it names and nothing else.
 ch_scan_d() {
-  if [ -r "$1/$CH_ADR_INDEX" ]; then ch_fence "$1/$CH_ADR_INDEX" "$CH_ADR_TAG" > "$WORK/adrdec.tsv"
-  else : > "$WORK/adrdec.tsv"; fi
+  if [ -r "$1/$CH_ADR_INDEX" ]; then
+    ch_fence "$1/$CH_ADR_INDEX" "$CH_ADR_TAG" > "$WORK/adrdec.tsv"
+    ch_fence "$1/$CH_ADR_INDEX" "$CH_ADR_REG_TAG" > "$WORK/adrreg.tsv"
+  else : > "$WORK/adrdec.tsv"; : > "$WORK/adrreg.tsv"; fi
   awk -v ROOT="$1" -v ADRDIR="$CH_ADR_DIR" -v INDEX="$CH_ADR_INDEX" \
-    -v DECFILE="$WORK/adrdec.tsv" -f "$WORK/d.awk" "$WORK/adrdec.tsv" "$2"
+    -v DECFILE="$WORK/adrdec.tsv" -v REGFILE="$WORK/adrreg.tsv" -f "$WORK/d.awk" \
+    "$WORK/adrdec.tsv" "$WORK/adrreg.tsv" "$2"
+}
+
+# ch_scan_i <root> <listfile> — the class-I scan. The floor is the pinned one for the real tree
+# and for every control arm alike, for the reason ch_scan_c gives about a caller-set strictness:
+# the fixtures are numbered FROM the floor rather than handed a floor of their own.
+ch_scan_i() {
+  if [ -r "$1/$CH_ADR_INDEX" ]; then ch_fence "$1/$CH_ADR_INDEX" "$CH_ADR_REG_TAG" > "$WORK/adrreg.tsv"
+  else : > "$WORK/adrreg.tsv"; fi
+  awk -v ADRDIR="$CH_ADR_DIR" -v FLOOR="$CH_ADR_REG_FLOOR" -v REGFILE="$WORK/adrreg.tsv" \
+    -f "$WORK/i.awk" "$WORK/adrreg.tsv" "$2"
 }
 
 # ch_scan_e <root> <listfile> [shared] — the class-E scan. The third argument turns the quote-run
@@ -2490,12 +2674,13 @@ D_NROW="$(awk '$1 == "DENOM" { print $3 }' <<<"$D_OUT")"
 D_NDECL="$(awk '$1 == "DENOM" { print $4 }' <<<"$D_OUT")"
 D_NHELD="$(awk '$1 == "DENOM" { print $5 }' <<<"$D_OUT")"
 D_MAXN="$(awk '$1 == "DENOM" { print $6 }' <<<"$D_OUT")"
+D_NREG="$(awk '$1 == "DENOM" { print $7 }' <<<"$D_OUT")"
 D_NDUP="$(n_code "$D_OUT" D1)"
 D_NGAP="$(n_code "$D_OUT" D2)"
 D_NMIS="$(n_code "$D_OUT" D3)"
 D_NROT="$(n_code "$D_OUT" D4)"
-printf '  SURFACE: %s record file(s) under %s/ and %s index row(s) in %s, over a span reaching %s; %s declared number(s), %s of them holding a gap open.\n' \
-  "$D_NREC" "$CH_ADR_DIR" "$D_NROW" "$CH_ADR_INDEX" "$D_MAXN" "$D_NDECL" "$D_NHELD"
+printf '  SURFACE: %s record file(s) under %s/ and %s index row(s) in %s, over a span reaching %s; %s declared number(s), %s of them holding a gap open; %s unoccupied number(s) inside the span named by a register row.\n' \
+  "$D_NREC" "$CH_ADR_DIR" "$D_NROW" "$CH_ADR_INDEX" "$D_MAXN" "$D_NDECL" "$D_NHELD" "${D_NREG:-0}"
 for c in D0 D1 D2 D3 D4; do echo "$c" >> "$SURF_LOG"; done
 
 # The vacuity guard is written so an unrun extractor resolves to the LOUD answer: an unset
@@ -2515,9 +2700,9 @@ else
 fi
 
 if [ "${D_NGAP:-0}" -eq 0 ]; then
-  PASS "D2: every number up to $D_MAXN is either carried by a record or DECLARED a deliberate gap — $D_NHELD held open by a row in the \`$CH_ADR_TAG\` fence in $CH_ADR_INDEX. A declared gap PASSING is the whole point of declaring it, and it is also what makes this zero a measurement in the other direction: a fence this scan failed to read would leave that gap undeclared and turn this verdict red rather than quietly green. Arm CTL-D2 plants an undeclared gap and requires it to fail; arm CTL-D2-DECL declares the same gap and requires silence"
+  PASS "D2: every number up to $D_MAXN is carried by a record, DECLARED a deliberate gap or named by a register row — $D_NHELD held open by a row in the \`$CH_ADR_TAG\` fence in $CH_ADR_INDEX, and ${D_NREG:-0} taken by a row in the \`$CH_ADR_REG_TAG\` fence there for a record that has not landed. A declared gap PASSING is the whole point of declaring it, and it is also what makes this zero a measurement in the other direction: a fence this scan failed to read would leave that gap undeclared and turn this verdict red rather than quietly green. Arm CTL-D2 plants an undeclared gap and requires it to fail; arm CTL-D2-DECL declares the same gap and requires silence; arm CTL-D2-REG names it in the register and requires silence; and arm CTL-D2-REG-OTHER requires the hole beside a registered one to fail"
 else
-  FAIL "D2: $D_NGAP number(s) up to $D_MAXN are carried by no record and declared by no row. Either the record is missing, or the gap is deliberate and belongs in the \`$CH_ADR_TAG\` fence in $CH_ADR_INDEX — a row there needs BOTH columns, the number and a reason token, and a row carrying only a number declares nothing:"
+  FAIL "D2: $D_NGAP number(s) up to $D_MAXN are carried by no record, declared by no row and named by no register row. Either the record is missing, or the gap is deliberate and belongs in the \`$CH_ADR_TAG\` fence in $CH_ADR_INDEX — a row there needs BOTH columns, the number and a reason token, and a row carrying only a number declares nothing:"
   grep '^FINDING D2 ' <<<"$D_OUT" | awk '{ printf "      ADR-%s\n", $3 }'
 fi
 
@@ -2770,6 +2955,73 @@ h_assert() {
 ch_list_h_real "$ROOT" > "$WORK/list.h"
 h_assert "$ROOT" "$WORK/list.h"
 for c in H0 H1 H2 H3 H4 H5; do echo "$c" >> "$SURF_LOG"; done
+
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "I — the number register: every number taken has one row, and a record lands only under its own"
+# ═════════════════════════════════════════════════════════════════════════════════
+# THE VERDICT STAGE IS A FUNCTION, unlike groups A to G above, for one reason: its empty-population
+# limb is a claim — an empty register over no record above the floor renders VACUOUS, never red —
+# and arm CTL-I-VACUOUS holds that claim by driving this same stage over a fixture. Inline, it
+# could only be read.
+ch_assert_i() {  # ch_assert_i <extractor-output>
+  local out="$1" nrec nrow nabove nheld nspent floor n0 n1 n2 n3
+  nrec="$(awk '$1 == "DENOM" { print $2 }' <<<"$out")"
+  nrow="$(awk '$1 == "DENOM" { print $3 }' <<<"$out")"
+  nabove="$(awk '$1 == "DENOM" { print $4 }' <<<"$out")"
+  nheld="$(awk '$1 == "DENOM" { print $5 }' <<<"$out")"
+  nspent="$(awk '$1 == "DENOM" { print $6 }' <<<"$out")"
+  floor="$(awk '$1 == "DENOM" { printf "%03d", $7 }' <<<"$out")"
+  n0="$(n_code "$out" I0)"; n1="$(n_code "$out" I1)"; n2="$(n_code "$out" I2)"; n3="$(n_code "$out" I3)"
+  printf '  SURFACE: %s record file(s) under %s/, %s of them numbered above the floor at %s; %s row(s) in the `%s` fence in %s, %s holding a number no record carries yet and %s marking a number spent.\n' \
+    "${nrec:-unread}" "$CH_ADR_DIR" "${nabove:-unread}" "${floor:-unread}" "${nrow:-unread}" "$CH_ADR_REG_TAG" "$CH_ADR_INDEX" "${nheld:-unread}" "${nspent:-unread}"
+  awk '$1 == "HELD" { printf "    HELD: ADR-%s, for %s\n", $2, $3 }' <<<"$out" | sort
+
+  # The vacuity guard is written so an unrun extractor resolves to the LOUD answer, as D0's is: an
+  # unset denominator reads 0 and an unset code count reads 1, and both land on the FAIL limb.
+  if [ "${nrec:-0}" -gt 0 ] && [ "${n0:-1}" -eq 0 ]; then
+    PASS "I0: the class-I surface is non-empty — $nrec record file(s) read from $CH_ADR_DIR/, so a register with nothing to grade below is an empty population and not an empty walk"
+  else
+    FAIL "I0: the class-I surface came back EMPTY or the scan did not run (records=${nrec:-unread}) — a zero here is a broken probe or a relocated corpus, never a register with nothing taken, and I1, I2 and I3 are withheld"
+    FAIL "I1/I2/I3: withheld — I0 above names the cause, and a register graded against a directory that was not read would report every row as a hold"
+    return 0
+  fi
+
+  if [ "${nrow:-0}" -eq 0 ] && [ "${nabove:-0}" -eq 0 ]; then
+    VACUOUS "I1/I2/I3: the population is EMPTY — the \`$CH_ADR_REG_TAG\` fence in $CH_ADR_INDEX carries no row and no record is numbered above the floor at $floor, so no number has been taken since the register's floor and this group proves nothing about this tree by itself. It says so rather than reporting a bare PASS; what it rests on is the CTL-I arms, which plant each defect in a fixture and require it to be found"
+    return 0
+  fi
+
+  if [ "${n1:-0}" -eq 0 ]; then
+    PASS "I1: no number is carried by two rows — $nrow row(s), each its own number. The zero is a measurement: arm CTL-I1 keeps both rows of a claim that was made twice, which is what a conflict resolved by keeping both sides leaves, and requires it to be found"
+  else
+    FAIL "I1: $n1 number(s) are carried by two rows in the \`$CH_ADR_REG_TAG\` fence in $CH_ADR_INDEX. A number is taken once: the row that reached the default branch first holds it, and the other claim takes the next number instead:"
+    grep '^FINDING I1 ' <<<"$out" | awk '{ printf "      ADR-%s: %s and %s\n", $3, $4, $5 }'
+  fi
+
+  if [ "${n2:-0}" -eq 0 ]; then
+    PASS "I2: every record numbered above the floor at $floor lands under its own row — $nabove record(s), each named by the row for its number. The zero is a measurement: arm CTL-I2 plants a record with no row, arm CTL-I2-OTHER one whose number's row names another file, and arm CTL-I2-SPENT one at a number marked spent, and each must be found"
+  else
+    FAIL "I2: $n2 record(s) numbered above the floor at $floor are not named by the row for their number in the \`$CH_ADR_REG_TAG\` fence in $CH_ADR_INDEX. A number is taken on the default branch before a record is written under it; a number another row names is taken, and this record takes the next one:"
+    grep '^FINDING I2 ' <<<"$out" | awk '{ printf "      ADR-%s: %s (%s)\n", $3, $4, $5 }'
+  fi
+
+  if [ "${n3:-0}" -eq 0 ]; then
+    PASS "I3: every row is the next number and names it — $nrow row(s), consecutive from the number after $floor, each carrying a record file name with its own number or a reason token. Arms CTL-I3-NEXT, CTL-I3-ORDER, CTL-I3-FLOOR, CTL-I3-BAD, CTL-I3-NAME, CTL-I3-SLIP and CTL-I3-PATH plant one of each"
+  else
+    FAIL "I3: $n3 row(s) in the \`$CH_ADR_REG_TAG\` fence in $CH_ADR_INDEX are out of sequence or malformed. A row is the number after the row above it, at the foot of the fence; its left column is the number alone, and its right column the record's file name alone, carrying that number, or one reason token — which carries no path separator, no closing .md and no record prefix, because a column that does is taken for a file name written wrongly:"
+    grep '^FINDING I3 ' <<<"$out" | awk '{ printf "      %s (%s): %s\n", $3, $4, $5 }'
+  fi
+}
+
+I_OUT="$(ch_scan_i "$ROOT" "$WORK/list.real")"
+I_NROW="$(awk '$1 == "DENOM" { print $3 }' <<<"$I_OUT")"
+I_NABOVE="$(awk '$1 == "DENOM" { print $4 }' <<<"$I_OUT")"
+I_NHELD="$(awk '$1 == "DENOM" { print $5 }' <<<"$I_OUT")"
+I_NSPENT="$(awk '$1 == "DENOM" { print $6 }' <<<"$I_OUT")"
+I_FLOOR="$(awk '$1 == "DENOM" { printf "%03d", $7 }' <<<"$I_OUT")"
+for c in I0 I1 I2 I3; do echo "$c" >> "$SURF_LOG"; done
+ch_assert_i "$I_OUT"
 
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
@@ -3150,6 +3402,15 @@ ctl_adr_decl() {  # ctl_adr_decl <root> <row...> — append the declaring fence 
     printf '```\n'
   } >> "$d/$CH_ADR_INDEX"
 }
+ctl_adr_reg() {  # ctl_adr_reg <root> <row...> — append the register fence to that index
+  local d="$1"; shift
+  { printf '\n'
+    printf '```%s\n' "$CH_ADR_REG_TAG"
+    printf '# number  record\n'
+    local r; for r in "$@"; do printf '%s\n' "$r"; done
+    printf '```\n'
+  } >> "$d/$CH_ADR_INDEX"
+}
 
 D="$(ctl_mk d1)"
 ctl_adr_rec "$D" ADR-001-alpha.md ADR-002-beta.md ADR-002-gamma.md
@@ -3181,6 +3442,20 @@ ctl_adr_idx "$D" ADR-001-alpha.md ADR-003-gamma.md
 ctl_adr_decl "$D" '002  deliberate-withdrawal'
 O="$(ch_scan_d "$D" "$(ctl_list "$D")")"
 ctl_mustnot "CTL-D2-DECL" D2 "$O" "the SAME gap is declared by a row in the fence — the arm that tells a correct gate from a merely strict one, because a gate failing here fails on the live corpus too, where a withdrawn record's number is a permanent and deliberate hole"
+
+D="$(ctl_mk d2reg)"
+ctl_adr_rec "$D" ADR-001-alpha.md ADR-003-gamma.md
+ctl_adr_idx "$D" ADR-001-alpha.md ADR-003-gamma.md
+ctl_adr_reg "$D" '002  ADR-002-beta.md'
+O="$(ch_scan_d "$D" "$(ctl_list "$D")")"
+ctl_mustnot "CTL-D2-REG" D2 "$O" "the SAME hole is named by a row in the register — a number taken on the default branch for a record that has not landed, with a later record landed above it. It is held, not lost, and what that row says about the number is class I's to grade"
+
+D="$(ctl_mk d2regother)"
+ctl_adr_rec "$D" ADR-001-alpha.md ADR-004-delta.md
+ctl_adr_idx "$D" ADR-001-alpha.md ADR-004-delta.md
+ctl_adr_reg "$D" '002  ADR-002-beta.md'
+O="$(ch_scan_d "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-D2-REG-OTHER" D2 "$O" "the span has a hole at each of two numbers and the register names only the first — a register row accounts for its own number and for no other, so the hole beside it is still reported. A reader that took any register row as cover for the whole span would be silent here" 1
 
 D="$(ctl_mk d3file)"
 ctl_adr_rec "$D" ADR-001-alpha.md ADR-002-beta.md
@@ -4758,6 +5033,163 @@ else
   FAIL "CTL-H-MD-PRESENT: over the conformant fixture the registered assertion returned '${H_PRESENT:-nothing}' rather than passes and no FAIL — MD[H] below would then certify a flip from a state that was never green"
 fi
 
+# ── I ────────────────────────────────────────────────────────────────────────────
+# Each fixture is a small ADR corpus numbered FROM THE PINNED FLOOR, so the same ch_scan_i that
+# graded the tree above grades it with the same floor: I_0 is the floor itself — a record that
+# predates the register — and I_1 to I_5 are the first numbers a register can carry. No
+# record number is written out here; each is derived, so the arms follow the floor rather than
+# restating it.
+i_num() { printf '%03d' "$(( CH_ADR_REG_FLOOR + $1 ))"; }
+I_0="$(i_num 0)"; I_1="$(i_num 1)"; I_2="$(i_num 2)"; I_3="$(i_num 3)"
+I_4="$(i_num 4)"; I_5="$(i_num 5)"
+
+D="$(ctl_mk i0)"
+ctl_adr_idx "$D"
+O="$(ch_scan_i "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-I0" I0 "$O" "the directory carries no record file — an empty ADR surface, which is a broken probe or a relocated corpus and must never read as a register with nothing taken" 1
+
+D="$(ctl_mk i1)"
+ctl_adr_rec "$D" "ADR-$I_0-old.md" "ADR-$I_1-alpha.md"
+ctl_adr_idx "$D" "ADR-$I_0-old.md" "ADR-$I_1-alpha.md"
+ctl_adr_reg "$D" "$I_1  ADR-$I_1-alpha.md" "$I_1  ADR-$I_1-beta.md"
+O="$(ch_scan_i "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-I1" I1 "$O" "ONE number is carried by two rows, each naming its own record — the state a conflict between two claims is left in when it is resolved by keeping both sides. The rows differ, which is what made them conflict; that they are both still here is the finding" 1
+
+D="$(ctl_mk i2)"
+ctl_adr_rec "$D" "ADR-$I_0-old.md" "ADR-$I_1-alpha.md"
+ctl_adr_idx "$D" "ADR-$I_0-old.md" "ADR-$I_1-alpha.md"
+O="$(ch_scan_i "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-I2" I2 "$O" "a record numbered above the floor and NO row for its number — the branch cut before anybody claimed that number, which wrote its record and never looked. Its own tree is the whole input, so the finding does not wait for it to merge the default branch" 1
+
+D="$(ctl_mk i2other)"
+ctl_adr_rec "$D" "ADR-$I_0-old.md" "ADR-$I_1-beta.md"
+ctl_adr_idx "$D" "ADR-$I_0-old.md" "ADR-$I_1-beta.md"
+ctl_adr_reg "$D" "$I_1  ADR-$I_1-alpha.md"
+O="$(ch_scan_i "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-I2-OTHER" I2 "$O" "a record whose number's row names ANOTHER record's file — the branch that did merge the default branch after the claim landed, and kept its own record at the number somebody else holds. The holder's row is what makes the intruder red rather than the holder" 1
+
+D="$(ctl_mk i2spent)"
+ctl_adr_rec "$D" "ADR-$I_0-old.md" "ADR-$I_1-alpha.md"
+ctl_adr_idx "$D" "ADR-$I_0-old.md" "ADR-$I_1-alpha.md"
+ctl_adr_reg "$D" "$I_1  withdrawn-before-landing"
+O="$(ch_scan_i "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-I2-SPENT" I2 "$O" "a record written under a number whose row marks it SPENT — a number given up is not given back, so a later record cannot take it however its file is named" 1
+
+D="$(ctl_mk i2held)"
+ctl_adr_rec "$D" "ADR-$I_0-old.md"
+ctl_adr_idx "$D" "ADR-$I_0-old.md"
+ctl_adr_reg "$D" "$I_1  ADR-$I_1-alpha.md"
+O="$(ch_scan_i "$D" "$(ctl_list "$D")")"
+ctl_mustnot "CTL-I2-HELD" I2 "$O" "a row whose record has NOT landed — a hold, which is the register doing the one thing it is for. A gate that failed here would fail on every claim the moment it reached the default branch"
+I_NH="$(awk '$1 == "HELD" { n++ } END { print n + 0 }' <<<"$O")"
+if [ "$I_NH" -eq 1 ]; then
+  PASS "CTL-I-HELD: that hold is REPORTED — the extractor printed exactly one HELD line for it, so a number taken and not yet landed stays visible on every run instead of passing in silence"
+else
+  FAIL "CTL-I-HELD: the extractor printed $I_NH HELD line(s) for a register carrying exactly one row with no record — a hold that is not reported is a number nobody can see is taken"
+fi
+
+D="$(ctl_mk i2floor)"
+ctl_adr_rec "$D" ADR-001-first.md "ADR-$I_0-old.md"
+ctl_adr_idx "$D" ADR-001-first.md "ADR-$I_0-old.md"
+O="$(ch_scan_i "$D" "$(ctl_list "$D")")"
+ctl_mustnot "CTL-I2-FLOOR" I2 "$O" "records numbered at and below the floor carry no row and owe none — they predate the register, and a gate that demanded rows for them would fail on the corpus this suite grades"
+
+D="$(ctl_mk i3next)"
+ctl_adr_rec "$D" "ADR-$I_0-old.md"
+ctl_adr_idx "$D" "ADR-$I_0-old.md"
+ctl_adr_reg "$D" "$I_2  ADR-$I_2-beta.md"
+O="$(ch_scan_i "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-I3-NEXT" I3 "$O" "the first row is NOT the number after the floor — a claim that skipped a number, and equally a register whose first row was deleted: both leave a number above the floor that nothing accounts for" 1
+
+D="$(ctl_mk i3order)"
+ctl_adr_rec "$D" "ADR-$I_0-old.md"
+ctl_adr_idx "$D" "ADR-$I_0-old.md"
+ctl_adr_reg "$D" "$I_2  ADR-$I_2-beta.md" "$I_1  ADR-$I_1-alpha.md"
+O="$(ch_scan_i "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-I3-ORDER" I3 "$O" "the rows stand OUT OF ORDER — every number is present and neither row is the next one where it stands. The arity is the assertion: the row that ran ahead and the row that came late are each named, because a claim placed anywhere but the foot of the fence is a claim that does not collide with the one beside it" 2
+
+D="$(ctl_mk i3floor)"
+ctl_adr_rec "$D" "ADR-$I_0-old.md"
+ctl_adr_idx "$D" "ADR-$I_0-old.md"
+ctl_adr_reg "$D" "$I_0  ADR-$I_0-old.md"
+O="$(ch_scan_i "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-I3-FLOOR" I3 "$O" "a row for a number AT the floor — a record that predates the register does not enter it, and a row down there would move the place the next claim is written" 1
+
+D="$(ctl_mk i3bad)"
+ctl_adr_rec "$D" "ADR-$I_0-old.md" "ADR-$I_1-alpha.md"
+ctl_adr_idx "$D" "ADR-$I_0-old.md" "ADR-$I_1-alpha.md"
+ctl_adr_reg "$D" "ADR-$I_1  ADR-$I_1-alpha.md"
+O="$(ch_scan_i "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-I3-BAD" I3 "$O" "a row writes the full identifier where the number belongs — the same authoring slip arm CTL-D4-BAD plants on the fence above, and one that takes nothing while LOOKING like a claim" 1
+ctl_mustfire "CTL-I3-BAD-HOLD" I2 "$O" "and the same malformed row does NOT register its record — the record it meant to name is still reported as carrying no row, so a row that reads like a claim and is not cannot let a record land. This is the pair that makes the register fail-closed rather than fail-quiet" 1
+
+D="$(ctl_mk i3name)"
+ctl_adr_rec "$D" "ADR-$I_0-old.md"
+ctl_adr_idx "$D" "ADR-$I_0-old.md"
+ctl_adr_reg "$D" "$I_1  ADR-$I_2-alpha.md"
+O="$(ch_scan_i "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-I3-NAME" I3 "$O" "a row whose file name carries ANOTHER number than its left column — the number is written twice on this fence, and a row that disagrees with itself holds neither" 1
+
+D="$(ctl_mk i3slip)"
+ctl_adr_rec "$D" "ADR-$I_0-old.md"
+ctl_adr_idx "$D" "ADR-$I_0-old.md"
+ctl_adr_reg "$D" "$I_1  ADR-$I_1-alpha"
+O="$(ch_scan_i "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-I3-SLIP" I3 "$O" "a right column that opens like a record file name and is not one — the extension left off. Read as a reason token it would mark the number spent, which is the opposite of what its author meant, so it is refused instead" 1
+
+D="$(ctl_mk i3path)"
+ctl_adr_rec "$D" "ADR-$I_0-old.md"
+ctl_adr_idx "$D" "ADR-$I_0-old.md"
+ctl_adr_reg "$D" "$I_1  $CH_ADR_DIR/alpha-decision" "$I_2  beta-decision.md" "$I_3  adr-$I_3-gamma-decision" "$I_4  [ADR-$I_4](ADR-$I_4-delta-decision.md)" "$I_5  $CH_ADR_DIR/ADR-$I_5-epsilon-decision.md"
+O="$(ch_scan_i "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-I3-PATH" I3 "$O" "five right columns that are not a whole record file name and each LOOK like one, where the arm above plants one. Four carry exactly one of the marks the refusal reads: a directory with no record name behind it carries the path separator, a title with its extension and no prefix carries the closing .md, the name in lower case with no extension carries the prefix in another letter case, and the index row's own link pasted whole carries the prefix away from the start. The fifth is the directory-qualified path class A teaches an author to write, and carries them all. The arity is the assertion: read as a reason token, any one of them would mark its number spent, in silence, until its record landed red" 5
+
+D="$(ctl_mk ispec)"
+ctl_adr_rec "$D" ADR-001-first.md "ADR-$I_0-old.md" "ADR-$I_1-alpha.md"
+printf 'notes, not a record\n' > "$D/$CH_ADR_DIR/notes.md"
+printf 'a draft carrying no number\n' > "$D/$CH_ADR_DIR/ADR-draft-thoughts.md"
+ctl_adr_idx "$D" ADR-001-first.md "ADR-$I_0-old.md" "ADR-$I_1-alpha.md"
+ctl_adr_reg "$D" "$I_1  ADR-$I_1-alpha.md" "$I_2  ADR-$I_2-beta.md" "$I_3  withdrawn-before-landing"
+O="$(ch_scan_i "$D" "$(ctl_list "$D")")"
+ctl_mustnot "CTL-I-SPEC" I2 "$O" "a register in every state a sound one takes at once — a row whose record has landed, a row holding a number for a record not yet written, and a row marking a number spent — over records below the floor, the index, a notes file and a draft carrying no number. None of it is a record written under somebody else's number"
+ctl_mustnot "CTL-I-SPEC-DUP" I1 "$O" "and no number in it is carried twice"
+ctl_mustnot "CTL-I-SPEC-ROW" I3 "$O" "and every row in it is the next number, carrying a file name with its own number or a reason token"
+I_NH="$(awk '$1 == "HELD" { n++ } END { print n + 0 }' <<<"$O")"
+I_NS="$(awk '$1 == "DENOM" { print $6 }' <<<"$O")"
+if [ "$I_NH" -eq 1 ] && [ "${I_NS:-0}" -eq 1 ]; then
+  PASS "CTL-I-SPENT: in that register the row marking a number spent is counted as spent and is NOT reported as a hold — one HELD line, for the row whose record is still to come, and one spent — so a number given up stops being listed as something still on its way"
+else
+  FAIL "CTL-I-SPENT: over a register carrying one hold and one spent number the extractor reported $I_NH HELD line(s) and ${I_NS:-no} spent — a spent number reported as a hold never leaves the list of what is still coming"
+fi
+
+# CTL-I-VACUOUS and CTL-I-VACUOUS-NOT — the RENDERING, asserted. Every arm above grades the
+# extractor. These two grade the verdict stage, by running that same ch_assert_i in a subshell
+# whose three verdict functions are rebound to silent counters, on md_probe's pattern, so nothing
+# they emit reaches this run's own counters or its output. What comes back is "<pass> <fail>
+# <vacuous>". An empty register over no record above the floor must be one VACUOUS and no FAIL;
+# the populated register from CTL-I-SPEC must be PASS throughout and VACUOUS nowhere. Without the
+# second, a stage that rendered everything VACUOUS would satisfy the first.
+i_render() {  # i_render <extractor-output> -> "<pass> <fail> <vacuous>" on stdout
+  ( pass=0; fail=0; vacuous=0
+    PASS()    { pass=$((pass+1)); }
+    FAIL()    { fail=$((fail+1)); }
+    VACUOUS() { vacuous=$((vacuous+1)); }
+    ch_assert_i "$1" >/dev/null 2>&1
+    printf '%d %d %d' "$pass" "$fail" "$vacuous" )
+}
+I_RV="$(i_render "$(ch_scan_i "$WORK/fx/i2floor" "$(ctl_list "$WORK/fx/i2floor")")")"
+if [ "$I_RV" = "1 0 1" ]; then
+  PASS "CTL-I-VACUOUS: over a register with no row and a corpus with no record above the floor, the verdict stage renders one PASS for a readable surface, one VACUOUS for the empty population and NO FAIL — an empty population reads vacuous rather than red, and rather than as a bare PASS"
+else
+  FAIL "CTL-I-VACUOUS: over a register with no row and a corpus with no record above the floor, the verdict stage rendered '<pass> <fail> <vacuous>' = '$I_RV' rather than '1 0 1' — an empty population must read as vacuous, never as a failure and never as a pass"
+fi
+I_RN="$(i_render "$O")"
+if [ "$I_RN" = "4 0 0" ]; then
+  PASS "CTL-I-VACUOUS-NOT: over the populated register arm CTL-I-SPEC grades, the same stage renders four PASS verdicts and neither a VACUOUS nor a FAIL — it does not render a population vacuous, so the arm above is not satisfied by a stage that renders everything that way"
+else
+  FAIL "CTL-I-VACUOUS-NOT: over a populated, sound register the verdict stage rendered '<pass> <fail> <vacuous>' = '$I_RN' rather than '4 0 0' — it must grade a population that is there"
+fi
+
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
 echo "Y — the assertion inventory, derived from this file and checked in both directions"
@@ -5159,8 +5591,8 @@ printf 'LOCATOR: %s in-scope (bare) path:line locator(s) over %s tracked file(s)
   "$B_NHIT" "$B_NFILE" "$B_NWIDE" "$B_NOOS"
 printf 'COUNT-ASSERTION: %s residual site(s) in %s file(s) over %s sentence(s) graded; %s declared row(s).\n' \
   "$C_NSITE" "$C_NDIRTY" "$C_NSENT" "$C_NROW"
-printf 'ADR-NUMBERING: %s record file(s) and %s index row(s) over a span reaching %s; %s collision(s), %s undeclared gap(s), %s index/directory disagreement(s), %s stale declaration(s); %s gap(s) held open by declaration.\n' \
-  "$D_NREC" "$D_NROW" "$D_MAXN" "$D_NDUP" "$D_NGAP" "$D_NMIS" "$D_NROT" "$D_NHELD"
+printf 'ADR-NUMBERING: %s record file(s) and %s index row(s) over a span reaching %s; %s collision(s), %s undeclared gap(s), %s index/directory disagreement(s), %s stale declaration(s); %s gap(s) held open by declaration, %s unoccupied number(s) named by the register.\n' \
+  "$D_NREC" "$D_NROW" "$D_MAXN" "$D_NDUP" "$D_NGAP" "$D_NMIS" "$D_NROT" "$D_NHELD" "${D_NREG:-0}"
 printf 'OWNED-RULE: %s standing sentence(s) in %s file(s); %s uncited; %s contrary; owner heading %s.\n' \
   "$E_NSTAND" "$E_NSFILE" "$E_N1" "$E_N2" "$E_NHEAD"
 # The measurement state class F decided above: under F0 the line carries the cause and no counter.
@@ -5184,6 +5616,16 @@ if [ "$H_MEASURED" -eq 1 ]; then
     "$H_NENUM" "$CH_H_DIR" "$CH_H_DOC" "$H_NDISK" "$H_N1" "$H_N2" "$H_N3" "$H_N4" "$H_N5"
 else
   printf 'REFERENCE-MAP: NOT-EVALUATED — %s — this is not a clean result\n' "$H_WHY"
+fi
+# Class I's line, in the three states its verdict stage has: unmeasured, empty, and counted. The
+# unmeasured state prints no counter, on group G's rule, and the empty one says VACUOUS.
+if [ "$(awk '$1 == "DENOM" { n++ } END { print n + 0 }' <<<"$I_OUT")" -ne 1 ] || [ "$(n_code "$I_OUT" I0)" -ne 0 ]; then
+  printf 'NUMBER-REGISTER: NOT-EVALUATED — the register scan read no record file or did not run — this is not a clean result\n'
+elif [ "${I_NROW:-0}" -eq 0 ] && [ "${I_NABOVE:-0}" -eq 0 ]; then
+  printf 'NUMBER-REGISTER: VACUOUS — no row in the register and no record above the floor at %s.\n' "$I_FLOOR"
+else
+  printf 'NUMBER-REGISTER: %s row(s) and %s record(s) above the floor at %s; %s number(s) taken twice, %s record(s) not named by their row, %s row(s) out of sequence or malformed; %s held, %s spent.\n' \
+    "$I_NROW" "$I_NABOVE" "$I_FLOOR" "$(n_code "$I_OUT" I1)" "$(n_code "$I_OUT" I2)" "$(n_code "$I_OUT" I3)" "$I_NHELD" "$I_NSPENT"
 fi
 if [ "$vacuous" -gt 0 ]; then
   printf 'NOTE: %d assertion(s) had an EMPTY POPULATION and proved nothing about this tree: %s. Read each named arm and its own verdict above for what carries it. This line names the vacuous ARMS rather than a compensating group, because the arms that compensate are not always in the group the vacuous arm belongs to, and a hardcoded group here was a claim about a run it had not read.\n' "$vacuous" "${VACUOUS_IDS% }"

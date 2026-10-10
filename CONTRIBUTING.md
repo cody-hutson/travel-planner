@@ -68,6 +68,15 @@ carries no merge SHA and no tag, so nothing in it has to wait for the merge.
    version is claimed when the release merges, so a branch cut days earlier cannot hold
    one: a name that asserts a version goes stale on its way to the merge.
 2. Do the work of the release on that branch.
+   **A decision record's number is taken on `main` before the record is written under it.**
+   Releases that each pick the next free `ADR-NNN` race as releases that each pick the next
+   version do, and the race ends differently. A version lost to another release is restamped,
+   as step 3 says, and nothing published has to change. A record number is never reused or
+   renumbered once it is published, so a collision that reaches `main` cannot be repaired by
+   renaming either record. A release that authors a decision record therefore takes the
+   record's number first, in a pull request of its own that merges before the record's file is
+   named: `reference/adr/README.md` § *Number declarations* states how a number is taken and
+   what holds it.
 3. Add the `## [X.Y.Z]` CHANGELOG entry **on the same branch**, at any point before the PR merges — including after step 4, when a draft PR is opened early and extended.
    **Date the entry the day you write it** — not the merge day, not the tag day: the entry is
    authored before the merge, so the merge date isn't knowable without guessing at a future one,
@@ -88,7 +97,7 @@ carries no merge SHA and no tag, so nothing in it has to wait for the merge.
    the tagged tree and refuses the tag unless its `CHANGELOG.md` carries `## [X.Y.Z]` as the
    newest version heading; it changes nothing. Push the tag only when the check exits 0, then
    publish the release from that tag. The tag then carries its own changelog entry, which it
-   does not if the entry lands afterwards. The tag is also the step with nothing after it —
+   does not if the entry lands afterwards. The tag is also the step that cannot be taken back —
    which is why every mutable part of this procedure, the branch name and the prose and the
    version heading alike, is ordered before it, and why the check runs before the push.
    **If the check refuses the tag, do not push it.** Delete it locally (`git tag -d vX.Y.Z`),
@@ -100,6 +109,9 @@ carries no merge SHA and no tag, so nothing in it has to wait for the merge.
    `scripts/test-corpus-hygiene.sh` group **G**. A tag pushed without its entry turns that
    required check red until it is declared under *Why earlier tags look different* below —
    a pushed tag is not rewritten, so the declaration is the remedy left.
+7. After the release, ratify any decision record it landed as `Proposed`: a pull request of its
+   own into `main`. `reference/adr/README.md` § *Convention* states the practice and what the
+   ratifying change sets, under *What an amendment may add*.
 
 **The release PR body is a summary plus links, not a second copy of the work.**
 Each stage of a release records its own detail durably, in a comment on that

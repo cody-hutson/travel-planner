@@ -3,6 +3,66 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.54.0] — 2026-10-09 — Decision records hold their number and their spine
+
+No trip verb changes behaviour in this release. What changes is met by whoever writes or amends
+one of the engine's decision records, the files under `reference/adr/`. Until now nothing held a
+record's number across branches that had not merged, while several records were being written at
+once. A stray period in the sentence that lists a record's sections cut the list short, and the
+suite that grades every record against that list passed over what was left. And records have
+carried a release's schedule, with no rule saying they may not. From this release a record's
+number is taken on `main` before the record is written, and a branch that ignores the claim is
+stopped before it merges. A convention sentence that a stray character has malformed is refused
+instead of read short, with the one spelling that still reads short pinned by a test. And that
+directory's README says what a record may contain. Each paragraph below says what its change does
+not reach.
+
+**A malformed convention sentence is refused, where it was read short.**
+`scripts/test-adr-conformance.sh` reads the sections it grades every decision record on from the
+*Sections* bullet of `reference/adr/README.md` § *Convention*. A period after a name in mid-list, a
+blank line inside the list, or a later bullet opening with the same `**Sections:**` token each left
+a shorter list behind, and group `SP` passed over what was left: the limit the `0.40.0` entry
+declared. The read is now bounded by the bullet, and the names read from its first sentence must be
+as many as the bullet's middle dots separate. Anything else is a new finding, `SP2`, reported first
+and alone, and no record is graded against a refused list; a list broken only by a blank line is
+read whole. What is left open: a well-formed sentence that names fewer sections is read as written.
+One character can leave one, a period typed in place of the list's last separator, and so can a
+period followed at once by something that ends the bullet. The count the run prints on its `CORPUS`
+line is what shows it, and an arm holds the first, so a change that closes it has to turn that arm
+over. The suite stays an advisory check: a refused read turns its run red and does not block a
+merge by itself.
+
+**A decision record's number is now taken on `main` before the record is written.**
+`reference/adr/README.md` § *Number declarations* gains a register: a fenced block carrying a row
+for every number taken, each naming its record's file, added by a pull request of its own.
+`scripts/test-corpus-hygiene.sh` gains a group that grades the register against the record
+directory. It fails a record whose number's row does not name it, a number carried by more than
+one row and a row out of sequence, on a branch as it is pushed and on that branch's merge into
+`main`, so a record written with no row fails before its branch has merged `main`. Group **D**
+reads the register as well, so a number held for a record still in flight is not a gap when a
+later record is numbered above it. `CONTRIBUTING.md` § *Cutting a release* states the rule inside
+step 2 and names the ratifying change as step 7. The decision, and the shapes it was chosen
+over, are in `reference/adr/ADR-044-record-number-register.md`. What it does not reach: which
+claim of a number came first, so a later claimant that rewrites the earlier row passes every
+check and the README's rule is what forbids it; a change that carries a record and no entry in
+this file, on a branch older than the register, which nothing makes merge `main`; and
+`ADR_NUM_EXEMPT` in `scripts/test-adr-conformance.sh`, which does not read the register and has
+to carry a held number on every branch that numbers a record above it.
+
+**`reference/adr/README.md` § *Convention* now says what a decision record leaves to a release
+plan.** A new bullet, *Scheduling content*, separates a consequence — the surface a decision
+reaches, the change that surface owes, and a coupling the decision forces, with its reason — from
+a schedule: work assigned to a wave, a release or a milestone, work assigned to a card, a slice or
+a person, or an item named as a unit of the plan. It says what counts as assigning, lists what is
+not a schedule, and leaves the owner a record names on a residual where it stands. The sentence
+that called a `Follow-on build slices` section conventional now points at that bullet; the
+bullet's list of sections is untouched. `ADR-022` is amended under the rule: the table in § *What
+this decision makes false elsewhere* loses its `Who closes it` column, whose wave assignments an
+earlier amendment had reported removed, and that earlier account loses one sentence that described
+a sibling record. The amendment's account is the record's closing `## Amendment history`. The
+records that carry a `Follow-on build slices` section are listed, each with a verdict, in this
+release's pull request. Amending them is not in this release, and nothing checks the rule.
+
 ## [0.53.0] — 2026-10-09 — The corpus describes itself truly
 
 No trip verb plans, records or publishes a trip differently in this release. What changes is what
