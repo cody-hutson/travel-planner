@@ -158,7 +158,7 @@ and not because anything was found against them.
 
 **On what a grader reads.** `#1765 R-2`, `R-3`, `R-9` and `R-10` outline what a grader looks for in
 a transcript — no offered values, follow-up discipline, cumulative load, listening without
-endorsement. #1769 sets every pass level.
+endorsement. The suite that runs the checks sets every pass level.
 
 ### The own-words rule was worded two ways, and the operator ruled between them
 
@@ -266,7 +266,7 @@ independent review's. Where the operator ruled against the design, that is said.
 | A predicate's whole shape **in this record** | rejected | `ADR-042` § 3: tables, enumerations and procedures are never a record's |
 | That shape in **a new specification under `reference/`** — the revised design's | rejected by ruling | No new file; the approved change set stands. Nothing is built yet, so no change writes that shape into a record and none owes it a document; and part of what would move is not settled |
 | That shape in a new section of `reference/data-model.md` | rejected | Its subject is the data model, and a turn-level check on a conversation is not one |
-| The record states the rules; **the cards that build the checks pin their shape** | **selected** | § *The predicates* |
+| The record states the rules; **the suites that run the checks pin their shape** | **selected** | § *The predicates* |
 | The arm over the forms' own conduct lands **with the change that rewords the forms** — the revised design's | rejected by ruling | An arm scoped away from the one input known to trip it cannot fail. It lands with the other prohibition limbs, against a declared ledger |
 | The restatement of the shared rules **moved into the change that builds the text-level checks** | rejected | A larger change there and a re-pointed tone pass. Splitting each check by limb makes every arm true when it lands |
 | **The interviewer labels its own turns** | rejected | The interviewer under test would be grading itself |
@@ -385,8 +385,8 @@ turns.** Nothing else decides.
    share."*, the value *"happy to share with Sam"* passes the check and is reported as reordered;
    the write the rule asks for is *"With Sam, happy to share"*.
    A reorder — in a value written or a confirmation spoken — is a reported fidelity note that fails
-   nothing. #1769's suite produces the report, and the operator reads it: what a reorder that fails
-   no check leaves standing is the operator's (§ *Residuals*).
+   nothing. The suite that runs the check reports it: what a reorder that fails no check leaves
+   standing is the operator's (§ *Residuals*).
 4. **The admitted non-utterances are a closed list of five.** An addition is a new decision.
 
    | | What is written | When | Already decided in |
@@ -512,7 +512,7 @@ Whether any turn is taken is the same in every style.**
 6. **The invariant a check can evaluate.** Given the same turns from the person, any pair of styles
    takes the same kinds of interviewer turn on the same fields and writes the same bytes.
 7. **The names: `warm` (the default), `brisk`, `gentle`.** Each names a sound. `warm` is the sound
-   of the default persona #1330 authors. `brisk` is short turns, a quick pace and a plain
+   of the default persona. `brisk` is short turns, a quick pace and a plain
    register. `gentle` is an unhurried pace and a soft register.
 
 *Supersedes:* nothing.
@@ -532,7 +532,7 @@ decision.**
   no follow-up spends it.
 - **D5.6** — on doubt, ask. The ask-on-doubt is no follow-up and carries no count.
 - **D6.3** — the spoken care for `PERSON`-class questions. Its reach is unchanged, and whether it
-  should cover health-shaped fields typed otherwise stays the question #1353 already carries.
+  should cover health-shaped fields typed otherwise stays an open question.
 
 Left as they are, each by the operator's confirmation: the worked example stays for the person to
 compare against, and the hand-off set is the other record's subject; a form's label is the form's,
@@ -547,9 +547,8 @@ of D1 is evaluated on the authored conduct as well. **This record states each ru
 cases, its inputs, its verdicts and one worked pair, and no more.** A check's word lists, clause
 windows and engine, what separates one word from the next, how a turn's kind is derived, the labels
 a test conversation declares and the verdict for each further case are settled design (`ADR-042`
-§ 3). They are written into no record, and are pinned by the suites of the cards that build the
-checks: #1353 for the text-level forms, #1769 for the transcript-level ones. Every example
-exchange below is synthetic; one pair of sentences is the forms' own, and is marked as that.
+§ 3). They are written into no record, and are pinned by the suites that run the checks. Every
+example exchange below is synthetic; one pair of sentences is the forms' own, and is marked as that.
 
 **The verdicts, in every form.** *Pass*. *Fail*, naming the limb and the words or the turn. *Not
 determinable*, naming the missing input — a verdict of the predicate, not a failure to give one.
@@ -568,27 +567,27 @@ form's boundary, and the guidance quotes of a block-owned form.
 thing named, unless that sentence denies it. A limb suffixed `.E` is an existence limb: a sentence
 the inputs must carry.
 
-| Limb | Condition | Lands with |
-|---|---|---|
-| `OW-T.P1` — no licence | recording or confirming a value from a source other than the answering person's words: an example, an option they did not choose, another field, a guess, a default, assent alone — an admitted non-utterance (`A1` to `A5`) apart | #1353 |
-| `OW-T.P2` — closure | admitting into a recorded value a non-utterance that is not one of `A1` to `A5` | #1353 |
-| `OW-T.E1` — the rule is stated | the shared rules say, in the same words in both carriers, that a recorded value is made only of what the answering person said | #1353 — it holds today, in shared rules 7 and 8 |
-| `OW-T.E2` — the example sentences | once the rules admit an example, they also say that an example not taken up in the person's own words is never recorded, and that assent to one records nothing | #1330 |
-| `FB-T.P1` — no licence | a second follow-up on a field; a follow-up after a skip, a decline, a stop or an empty answer; a follow-up on a field the file already answers from an earlier session; a follow-up on a closed field; a follow-up that repeats the question in the same words; or a follow-up on a `PERSON`-class field in a spoken session | #1353 |
-| `FB-T.E1` — the bound is stated | both carriers state the bound, with the numbers D3 states | #1330 |
-| `FB-T.E2` — the exclusions are stated | both carriers state D3's exclusions | #1330 |
-| `FB-T.E3` — the exit is stated | both carriers say what is written when a field's turns end | #1330 |
-| `FB-T.E4` — retirement | the sentence carrying shared rule 2's cap is gone from both carriers | #1330 |
-| `WT.P1` — no value in a prompt | a prompt carrying, quoting or offering a value outside clauses (a) and (b) of the restated W-test, or a value under the name of an example | #1353 |
-| `WT.P2` — silence | treating silence as assent | #1353 |
-| `WT.E1` — the example rule is stated | both carriers state the example rule: kinds and never a value, the occasions, the count, never the object of a confirmation | #1330 |
+| Limb | Condition |
+|---|---|
+| `OW-T.P1` — no licence | recording or confirming a value from a source other than the answering person's words: an example, an option they did not choose, another field, a guess, a default, assent alone — an admitted non-utterance (`A1` to `A5`) apart |
+| `OW-T.P2` — closure | admitting into a recorded value a non-utterance that is not one of `A1` to `A5` |
+| `OW-T.E1` — the rule is stated | the shared rules say, in the same words in both carriers, that a recorded value is made only of what the answering person said — it holds today, in shared rules 7 and 8 |
+| `OW-T.E2` — the example sentences | once the rules admit an example, they also say that an example not taken up in the person's own words is never recorded, and that assent to one records nothing |
+| `FB-T.P1` — no licence | a second follow-up on a field; a follow-up after a skip, a decline, a stop or an empty answer; a follow-up on a field the file already answers from an earlier session; a follow-up on a closed field; a follow-up that repeats the question in the same words; or a follow-up on a `PERSON`-class field in a spoken session |
+| `FB-T.E1` — the bound is stated | both carriers state the bound, with the numbers D3 states |
+| `FB-T.E2` — the exclusions are stated | both carriers state D3's exclusions |
+| `FB-T.E3` — the exit is stated | both carriers say what is written when a field's turns end |
+| `FB-T.E4` — retirement | the sentence carrying shared rule 2's cap is gone from both carriers |
+| `WT.P1` — no value in a prompt | a prompt carrying, quoting or offering a value outside clauses (a) and (b) of the restated W-test, or a value under the name of an example |
+| `WT.P2` — silence | treating silence as assent |
+| `WT.E1` — the example rule is stated | both carriers state the example rule: kinds and never a value, the occasions, the count, never the object of a confirmation |
 
-**Where the limbs land.** Every prohibition limb lands with #1353, over all three inputs. The
-forms' own ask-prose carried, at `5d50eb5`, five known sentences that direct what the shared rules
-already bar; so #1353's check covers the forms against a declared ledger of those sentences —
-failing on an undeclared hit, and on a declared row that no longer trips — and #1330 rewords them.
-Every existence limb lands with the change that makes it true, #1330, except `OW-T.E1`, which holds
-today and lands with #1353. No arm is handed to a card that lands before the sentence it looks for.
+**Where the limbs land.** A prohibition limb is evaluated on the texts as they stand, the forms
+included, against a declared ledger of the known sentences. An existence limb lands with the change
+that writes the sentence it looks for. The forms' own ask-prose carried, at `5d50eb5`, five known
+sentences that direct what the shared rules already bar; so the check covers the forms against a
+declared ledger of those sentences — failing on an undeclared hit, and on a declared row that no
+longer trips.
 
 | Check | | A sentence in the conduct | Verdict |
 |---|---|---|---|
@@ -716,7 +715,7 @@ turns were taken.
 
 - **The guard against leading is weaker than a form-only rule had.** An echoed example passes, and
   is reported (D2).
-- **Styles differ by sound alone.** The slice that builds them (#1771) may find that thin.
+- **Styles differ by sound alone.** The change that builds them may find that thin.
 - **The form's kinds may still come with the first ask**, where `#1765 X-1` recommends no example
   before a thin answer (inference). It stands because it is the one example device the operator had
   already ruled on, and it is confined to text the form's author wrote. A report of echoed examples
@@ -750,15 +749,15 @@ exceed one bound it adds, in one corner, until the edit that writes the bound in
 
 ### What this decision makes false elsewhere
 
-| Surface | What changes | Who brings it into line |
-|---|---|---|
-| `skills/trip-record/interview-conduct.md`, shared rules 2, 3 and 7, and the card's copy of each | the cap goes; the example rule, the bound with its exclusions and exit, and the restated W-test are stated. Both carriers change together: `scripts/test-artifact-schema.sh` group `PC` fails the moment the texts differ | #1330 |
-| The same file's write-capable rule on the skip, where it says a surviving bracket means nobody has asked | not true of a field left open, whose bracket survives although it was asked | #1330 |
-| The style set, each style's line and the offer, in the conduct and on the card | written | #1771 |
-| The forms' own conduct — the known sentences of the guided forms' ask-prose, and the trip-context form's declared phrase where the conduct says "a word" | reworded; `A2` is already worded for the text a form declares | #1330, its scope amended at its own planning; #1353 holds the ledger until then |
-| The route that cannot write | neither `ADR-022` D6.3's care nor D3's speech clause is in what that route reads: the card carries the shared rules only | #1327 |
-| `ADR-026` § 5's enforcement-strength cell for CH-2 | unchanged here; it moves when the check exists | #1353 |
-| `reference/adr/README.md` | the index row for this record | the change that lands it |
+| Surface | What changes |
+|---|---|
+| `skills/trip-record/interview-conduct.md`, shared rules 2, 3 and 7, and the card's copy of each | the cap goes; the example rule, the bound with its exclusions and exit, and the restated W-test are stated. Both carriers change together: `scripts/test-artifact-schema.sh` group `PC` fails the moment the texts differ |
+| The same file's write-capable rule on the skip, where it says a surviving bracket means nobody has asked | not true of a field left open, whose bracket survives although it was asked |
+| The style set, each style's line and the offer, in the conduct and on the card | written |
+| The forms' own conduct — the known sentences of the guided forms' ask-prose, and the trip-context form's declared phrase where the conduct says "a word" | reworded; `A2` is already worded for the text a form declares |
+| The route that cannot write | neither `ADR-022` D6.3's care nor D3's speech clause is in what that route reads: the card carries the shared rules only |
+| `ADR-026` § 5's enforcement-strength cell for CH-2 | unchanged here; it moves when the check exists |
+| `reference/adr/README.md` | the index row for this record, in the change that lands it |
 
 ### What is untouched
 
