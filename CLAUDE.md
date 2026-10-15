@@ -629,6 +629,16 @@ One writer per block. A writer not named for a block does not write it — not "
 
 **What enforces them.** Milestone 45 plans a byte fence on file size, which enforces none of these clauses, and an integration note on a pull request that adds much to a file and removes little, which enforces clause 3 in form only — that a note is present, never that it is true. Neither exists before that milestone ships; the rest is good faith. Every sentence left behind is paid for each time its file is read, and `reference/load-class-model.md` declares how often that is.
 
+### Rules over an enumeration
+
+**A rule stated over an enumeration — a list of verdicts, classes, cases or sources — is true only of the members its author could see.** A member that arrives later is neither ranked against the others nor admitted to them, and the sentence that told them apart goes on reading as complete while every check stays green. Whoever writes such a rule in an engine file owes it the three things below, and so does an edit that adds, removes or renames one of its members or changes the sentence that tells them apart; no other edit to the rule does. Each is stated at the rule, which cites this section and does not re-explain it; nothing here orders a sweep of rules that already stand.
+
+1. **Precedence.** Where two members can hold for one input, the rule says which governs — as an order a reader follows, or as a test that separates them. List order ranks nothing until the rule says it does. Where the rule gives no other ground, a member that reports a finding governs one that passes.
+2. **Admission.** The rule says what an input no member names resolves to, and it is the one place a member is added. Another file that must repeat the members names the owner where it repeats them.
+3. **A criterion in place of a list.** Where the members are instances of one test, the rule states the test and the test decides. The members it goes on to name are examples and are said to be; an input they omit is decided by the test, never by its absence from them.
+
+What the required suite holds a registered enumeration's repeats to, and what no check can see of a rule of this kind, are stated once, in `reference/data-architecture.md` § *The enumeration register*.
+
 ## File Structure
 
 ```
