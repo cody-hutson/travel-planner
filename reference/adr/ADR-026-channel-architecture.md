@@ -3,7 +3,7 @@
 - **Status:** Accepted (2026-09-23)
   **Superseded in part (2026-10-09, Friday)** — the first sentence of CH-2's W-test in
   § *Decision* 5, as far as it reaches an example, by
-  [ADR-044](ADR-044-interview-conversation-conduct.md). This amendment records a decision taken
+  [ADR-045](ADR-045-interview-conversation-conduct.md). This amendment records a decision taken
   there and takes none here: the rest of that row, the W-rule and the R-rule, and every other
   decision of this record, stand. The supersession takes effect as that record states. The
   superseded sentence is retained as decided, with an inline marker at it pointing forward, per
@@ -727,7 +727,7 @@ the rule."*
 | Channel | **W-test** | **R-test** | Enforcement strength today |
 |---|---|---|---|
 | **CH-1** | **N/A — no inbound limb exists.** Stated as N/A rather than invented, so adding one becomes a visible change to this record | `verify_ciphertext` on the encrypted limb; `verify_publishable_content` on the `--plaintext` limb — both grading the relation between `P` and C19 | **shipped shell predicates + regression suite** |
-| **CH-2** | a prompt may name a field and a remedy; it may **never carry, quote, or offer a candidate value**. *(Superseded in part (2026-10-09, Friday) by [ADR-044](ADR-044-interview-conversation-conduct.md), as far as this sentence reaches an example; the rest of this row stands.)* **Silence is not assent** in a spoken modality | what is said aloud is bounded — needs include medical facts, and a spoken interview is audible to a room | **prose** |
+| **CH-2** | a prompt may name a field and a remedy; it may **never carry, quote, or offer a candidate value**. *(Superseded in part (2026-10-09, Friday) by [ADR-045](ADR-045-interview-conversation-conduct.md), as far as this sentence reaches an example; the rest of this row stands.)* **Silence is not assent** in a spoken modality | what is said aloud is bounded — needs include medical facts, and a spoken interview is audible to a room | **prose** |
 | **CH-3** | provenance-marking records that a value is **second-hand** and **never establishes consent** (`ADR-006`) | the standing rule on the passphrase **value**; `ADR-007` § 2 — no command may set `ALLOW_PLAINTEXT`, none may pass `--yes` to `unpublish` | **shipped text predicates over the authored command and conduct text + regression suite**, with per-verb `allowed-tools`; the predicates grade that text, not a live session |
 
 **Why two rules rather than one.** `ADR-015` clause 7 sits at the intersection: a report line is an

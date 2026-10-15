@@ -15,7 +15,7 @@ slice is cut. No trip verb behaves differently, and neither the interview's cond
 interview card is edited: an interview runs after this release exactly as it ran before it.
 
 **What the interviewer may say, and how far it may go.**
-`reference/adr/ADR-044-interview-conversation-conduct.md` decides the conduct. The interviewer may
+`reference/adr/ADR-045-interview-conversation-conduct.md` decides the conduct. The interviewer may
 give an example to help someone answer: two or three kinds of answer, said as an example, never a
 value the person might adopt, and never a form's placeholder example or an item of its lists. It
 may ask one further question when an answer is thin — at most one on a field and at most two
@@ -27,7 +27,7 @@ changes how the asking sounds and nothing else. Each rule is stated so that a ch
 it; the checks are later slices.
 
 **What comes back beside the profile.**
-`reference/adr/ADR-045-interview-rating-and-engagement-record.md` decides the return. Once the form
+`reference/adr/ADR-046-interview-rating-and-engagement-record.md` decides the return. Once the form
 has been given back, the traveller is asked to rate the interview from one to five, and may skip.
 Only the number they said is recorded, and a missing reply costs the rating and nothing else.
 Beside the rating comes an engagement record: the interviewer's own account of its turns, as

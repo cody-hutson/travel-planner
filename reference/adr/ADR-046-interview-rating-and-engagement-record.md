@@ -1,4 +1,4 @@
-# ADR-045: What comes back beside the profile — a rating asked after the give-back, an engagement record of identifiers and counts, a tagged return and a governed class, superseding ADR-040 D1 and ADR-022 D1.1 in part
+# ADR-046: What comes back beside the profile — a rating asked after the give-back, an engagement record of identifiers and counts, a tagged return and a governed class, superseding ADR-040 D1 and ADR-022 D1.1 in part
 
 - **Status:** Proposed
 - **Deciders:** repo maintainer
@@ -15,7 +15,7 @@
   them; and what the travel manager reads when a rating is low. It is addressed to whoever authors
   the interview card, the trip-record command and the data architecture.
 - **What this record is not.** It decides no example rule, no follow-up bound and no rule about an
-  interview style: those are [`ADR-044`](ADR-044-interview-conversation-conduct.md)'s, and every
+  interview style: those are [`ADR-045`](ADR-045-interview-conversation-conduct.md)'s, and every
   term used here for an interviewer turn or for an interview style is that record's, cited. It
   builds no class and edits no card, conduct, command, schema or specification:
   `templates/interview-card.md`, `skills/trip-record/interview-conduct.md`,
@@ -60,7 +60,7 @@ lifecycle, a publish posture, a witness, and a row in the `erase` reach table. W
 keeps is not a cursor — nothing reads it to resume — but it is person data at a new address, and
 the cost that option was rejected on is paid here and not avoided.
 
-**The vocabulary is the conduct record's.** `ADR-044` fixes what an interviewer turn is called and
+**The vocabulary is the conduct record's.** `ADR-045` fixes what an interviewer turn is called and
 what an interview style is. This record reads those terms and counts with them; it defines none of
 them again (§ *The terms this record fixes*).
 
@@ -390,7 +390,7 @@ ends named, and skipping is fine. Only the number the person said is recorded.**
     It is an utterance of this record's own: it is not the decline of a field, which `ADR-022`
     D5.5 and the conduct record govern.
 13. **An interview style** may change how the ask sounds, and never whether it is made, the scale,
-    the names of its ends or what is recorded (`ADR-044` D4).
+    the names of its ends or what is recorded (`ADR-045` D4).
 
 **Its permitted cases.** At the ask: the ask itself; the numbers offered again once, where the
 reply names none; a skip taken. Nothing else — no example, no follow-up, no offer after a silence,
@@ -419,11 +419,11 @@ interviewer's account of its own turns. The rating is not part of it.
    | `EF-1` — the form | the form's own path and contract version, as its `intake-form` block spells them | It is the form's text, the same for every person |
    | `EF-2` — the channel tier | `W` or `T`, the names `ADR-022` D6.1 gives; set by the writer | It names the channel |
    | `EF-3` — the date saved | set by the writer when the entry reaches its home; never by a recipient's assistant | It is a date the engine supplies |
-   | `EF-4` — the interview styles in force | in order, the name of each interview style the session used. Nothing is recorded for a change | Each is a name from the conduct record's set. Said plainly: a name other than the default interview style's shows the person chose it — a choice about the asking, not a value of any field. An interview style is a sound (`ADR-044` D4), so the names say how the asking sounded and nothing about which turns were taken |
+   | `EF-4` — the interview styles in force | in order, the name of each interview style the session used. Nothing is recorded for a change | Each is a name from the conduct record's set. Said plainly: a name other than the default interview style's shows the person chose it — a choice about the asking, not a value of any field. An interview style is a sound (`ADR-045` D4), so the names say how the asking sounded and nothing about which turns were taken |
    | `EF-5` — the ledger | one row for each field the interviewer put, in the order first put, with a count for each kind of further turn taken on it. A `PERSON`-class field has no row of its own (item 4) | A row's identifier is the form's section heading and label, as the form spells them. The kinds are names. The counts are numbers |
 
 3. **The kinds counted.** Every kind in the conduct record's closed list of the kinds of
-   interviewer turn that put or concern a field (`ADR-044` § *The terms this record fixes*,
+   interviewer turn that put or concern a field (`ADR-045` § *The terms this record fixes*,
    item 7), other than the pair it calls *ask* — which is what makes a row — and *confirmation*.
    This record cites that list and restates no other member of it. Said plainly, as the cost: an
    example that rides a first ask or a follow-up is not a turn of its own and is not seen, and an
@@ -470,7 +470,7 @@ interviewer's account of its own turns. The rating is not part of it.
    conversation nothing independent checks it, and on a channel that cannot write it is another
    assistant's account of itself. The travel manager reads it. It is never an input to the
    conduct record's checks on a conversation: an interviewer labelling its own turns is the
-   interviewer under test grading itself, which that record refuses (`ADR-044` § *The
+   interviewer under test grading itself, which that record refuses (`ADR-045` § *The
    predicates*).
 
 **Its permitted cases.** A value of the record is a member of the set its field declares, or a whole
@@ -709,7 +709,7 @@ interview, or open a change to the conduct. Nothing in the engine acts on the nu
     was given.
 11. **the tag** — the literal token by which the return is found: `interview-return`.
 
-**Read from the conduct record, and restated nowhere here** (`ADR-044` § *The terms this record
+**Read from the conduct record, and restated nowhere here** (`ADR-045` § *The terms this record
 fixes*): *put* and *first put* (its item 4); *follow-up*, and the turns it is not (item 6); the
 kinds of interviewer turn, and the closed list of those that put or concern a field (item 7);
 *example* (item 1); *the person answering* (item 3); *left open* (item 13); and *interview style*,
@@ -785,7 +785,7 @@ change.
 | An entry is written at a session's ending | the interview verb has no output act | new; it waits for the edit |
 | A class holds the entries | the class enumeration is closed without it | nothing to hold until it exists |
 | `erase` reaches the class | no such location exists | nothing to reach until it does |
-| A count for each kind of further turn | the carriers define no follow-up, no composed example and no interview style until the conduct is edited to `ADR-044` | until then such a count is nought and no interview style but the default is named; each kind's name enters a session's instruction in the change that defines the kind |
+| A count for each kind of further turn | the carriers define no follow-up, no composed example and no interview style until the conduct is edited to `ADR-045` | until then such a count is nought and no interview style but the default is named; each kind's name enters a session's instruction in the change that defines the kind |
 
 So a session following the files as they stand uses nothing this record gives, and breaks nothing
 it says.
@@ -818,7 +818,7 @@ leaner — what `#1766 V-8` bears on, operator-attested and ungraded — is not 
 of the return is written into the profile's file, and `reference/data-model.md`
 § *`ANSWERED()`* and its classification are read and not changed.
 
-**The decisions beside this one.** Every decision of `ADR-044`, `ADR-039` and `ADR-023`.
+**The decisions beside this one.** Every decision of `ADR-045`, `ADR-039` and `ADR-023`.
 `ADR-040` D0, D2 and D3. In `ADR-022`: D1.2 to D1.5; D3.2, under which one session covers one form,
 so an entry is one session's; D5.1 and D5.2, since an entry holds no value and confirms none; D5.4,
 read by analogy at the rating ask — the number named, never the nearest; D5.5, since nothing is
@@ -876,7 +876,7 @@ is a residual a ruling overtook.
 | RR-23 | **An unlinked traveller's entries.** No `erase` runs; they go as the traveller file goes, by the operator's hand | the operator |
 | RR-24 | **Entries on a trip a person was unlinked from** are unreached unless the operator names the trip, and nothing shows them: the residual scan reads a name, and an entry holds a key | #1770 |
 | RR-25 | **A return carried into a file by hand.** Where a hand-save — of a person record, or of a trip profile saved outside the save — copies the tagged return in with the rest, it rests in that file unchecked and unpooled. Nothing this record decides takes it out | #1770 |
-| RR-26 | **The pooling runs where the writer runs.** In transit, and in an assistant's history, the section has a row for every field put — beside those fields' answers. And the spoken care of `ADR-022` D6.3 is not in what that route reads (`ADR-044`'s `RS-15`) | #1327 |
+| RR-26 | **The pooling runs where the writer runs.** In transit, and in an assistant's history, the section has a row for every field put — beside those fields' answers. And the spoken care of `ADR-022` D6.3 is not in what that route reads (`ADR-045`'s `RS-15`) | #1327 |
 | RR-27 | **Candour.** A rating given aloud, or at the travel manager's own terminal, may shade upward (`#1765 F-7`, carried by inference) | the operator |
 | RR-28 | **`ADR-022`'s driver, its options table and its consequences rows** say *no new artifact class* with no marker | the operator, as accepted |
 | RR-29 | **A class with a row in each root.** Its `trip:` value is a slug in one root and the cross-trip sentinel in the other, and its publish class differs between them | #1770 |
@@ -914,7 +914,7 @@ trailing newline.
 - [`ADR-022`](ADR-022-interview-session-model.md) — D1.1, superseded in part; D1.2, D3.2, D5.4,
   D5.5, D6.1, D6.2, D6.3, D6.4 and D6.5, read; its residual R8, for the join the classification is
   read by
-- [`ADR-044`](ADR-044-interview-conversation-conduct.md) — the terms this record reads, the list of
+- [`ADR-045`](ADR-045-interview-conversation-conduct.md) — the terms this record reads, the list of
   kinds it counts by and the names of the interview styles; D4; its residuals `RS-2`, `RS-8` and
   `RS-15`
 - [`ADR-023`](ADR-023-interviewer-authored-home-and-form-contract.md) — D4.1, the hand-off set; and
