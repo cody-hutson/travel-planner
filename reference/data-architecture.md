@@ -1550,6 +1550,103 @@ away.** Re-pin only the rows you meant to change, or the assertion stops being a
 becomes a rubber stamp. The suite can emit a fresh census to compare against, and that is a
 diagnostic rather than a repair.
 
+#### The enumeration register
+
+**A third declaring fence, on the same mechanism as the freeze and the count-assertion
+declaration above, and for a different property.**
+`reference/adr/ADR-047-rules-over-an-enumeration.md` decides the rule this fence serves, and
+`CLAUDE.md` § *Rules over an enumeration* states it: a rule over an enumeration has an owner,
+and another file that must repeat the members names that owner. A repeat registered here is
+held to its owner.
+
+**What the suite holds.** `scripts/test-corpus-hygiene.sh` reads this fence and, for each
+`id`, reads the members off the owner and off every site and compares the sets. **The
+comparison runs in both directions:** a site that lacks a member its owner names fails, and a
+site that names a member its owner does not fails. **A repeat that carries no row fails as
+well.** In an engine file with no row for an `id`, a paragraph that writes more than one of
+that `id`'s members as code spans is read as an unregistered repeat of it; a paragraph is a
+run of non-blank lines outside a fenced block, so a whole table, or a list with no blank line
+in it, is a single paragraph. **That reading is of tokens, not of meaning.** Where the
+paragraph does repeat the enumeration, the remedy is a `site` row in the same commit, or
+wording that does not repeat the members; taking the code spans off is not one, because the
+repeat then stands unseen. Where the paragraph belongs to another enumeration that shares the
+tokens, neither remedy fits, and what is reconsidered is that paragraph's tokens or the
+registration. A row removed while its repeat stands turns that red too. Where a repeat is
+neither registered nor caught by that reading, nothing holds it.
+
+**When the instrument is broken.** Anything that stops a reading is a failure of the
+instrument: it is reported as that, it withholds every comparison for its `id`, and it never
+passes. It withholds none for another `id`: the others are read and graded on the same run,
+which fails all the same. A failure that belongs to no `id` — the fence absent or empty, or a
+row whose `id` cannot be read — stops the whole reading. The test is whether the members could
+be read, not whether the cause appears here. A row short of a field, an `id` without exactly
+one owner or without a site, a site row that copies its owner row, a path that is not a tracked
+markdown file, an anchor not found exactly once, a `lead` anchor with no list before the next
+heading and a reading that yields no member are examples.
+
+**The rows hold no member.** A row names where a reading is, never what it reads. Adding a
+member is an edit at the owner and at each site, and the fence does not change.
+
+Each row is `id | role | path | kind | anchor`. `role` is `owner` or `site`, and an `id` is
+its owner row and at least one site row. `kind` says how the members are read, and each kind
+reads code spans and nothing else: `lead` reads the first code span in the bold lead-in of
+each item of the first list that follows the anchor before the next heading; `list` reads the
+code spans inside the bracketed group, round or square, that opens directly after the anchor.
+The anchor is everything after the fourth separator — a literal found exactly once in `path`,
+with a run of whitespace matched as a single space. A line whose first non-blank character is
+`#` is a comment; a blank line is ignored.
+
+```enumeration-register
+# id | role | path | kind | anchor
+nightlife-verdicts | owner | agents/06-validator.md | lead | record exactly one verdict:
+nightlife-verdicts | site  | agents/06-validator.md | list | - **Verdicts:**
+```
+
+**What the unregistered-repeat reading passes over.** It reads engine files, in the sense
+`CLAUDE.md` § *Editing an engine file* gives the term. A record keeps what it said and a
+worked example is a specimen, so neither is held to an owner that changes after it was
+written. Which files those are is stated once, in `scripts/test-corpus-hygiene.sh`: one
+function there says what a reading of engine prose passes over, the suite's owned-rule class
+and this reading both take it, and this document holds no copy of the paths.
+
+**What a green check establishes here, and what it does not.** The suite grades the rows of
+the register and the unregistered repeats it can read, and nothing else; on this subject a
+green suite is not evidence of absence. This list is the one statement of what it cannot
+see, and the suite's banner, its workflow and the charter cite it.
+
+- **That a sentence is a rule over an enumeration at all,** and whether members a rule
+  already names can both hold. The first is a reading of prose and the second a reading of
+  meaning; no check reaches either.
+- **An enumeration nobody registered.** With no owner row there is no member set to look for.
+- **A member written where no reading looks:** in prose and not as a code span, in a code
+  span delimited by doubled backticks, in a code span outside the group or list its row
+  points at, or — for the unregistered-repeat reading — inside a fenced block.
+- **Which list a `lead` row meant.** It reads the first list after its anchor before the next
+  heading, however many paragraphs stand between, so a list placed ahead of the one meant is
+  the one read. A heading is a line that opens with `#` marks; an underlined heading, or one
+  inside a block quote, does not bound the search.
+- **What a member means, and its rank.** A site that uses an owner's token for something else
+  agrees, and so does an owner or a site whose members stand in another order.
+- **A further repeat inside a file that already carries a row for that `id`,** a repeat of
+  one member alone, and a repeat whose members sit in separate paragraphs.
+- **A repeat in a file that reading passes over,** and anything that is not tracked markdown.
+  The partition is by path and not by kind: every file under the records directory is passed
+  over, its index among them, and a file elsewhere is read whatever it is.
+- **This document as a site.** A row cannot name the document the fence stands in: the row's
+  own anchor, written in the fence, is a second occurrence of it there.
+
+**A decision record as a site.** Where a record first stated an enumeration that an
+instructing surface now owns, the record stays as decided and carries no row:
+`reference/adr/ADR-001-nightlife-agent.md` § 3 names the occasion members in their earlier
+words. Where a record repeats an enumeration an instructing surface already owned, a `site`
+row for it is admitted, at a cost its author weighs first: when the owner gains or loses a
+member that row turns red, and a record cannot follow its owner without a new decision.
+
+**When this fence changes.** Add a row in the commit that makes a file repeat a registered
+enumeration, and an `id` — its owner row and a site row — when a rule's repeats are worth
+holding; remove a row with the repeat it names. A row is never added or removed to make a red
+go away.
+
 ---
 
 ## 11. What This Document Does Not Define

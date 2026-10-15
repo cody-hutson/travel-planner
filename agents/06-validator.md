@@ -1192,7 +1192,7 @@ the ownership rule and it is what keeps two writers off one frontmatter block:
 | Day [N] | [YYYY-MM-DD, Sat] | [yes / no] | [Traveler — "desire" (tier) / weekend / occasion / —] | [N entries (member sets) / no-nightlife note (member sets) / neither / absent] | [covered / declined / gap / contradiction / n/a] |
 
 - **Applicable nights:** [N of M]
-- **Verdicts:** [N covered · N declined · N gap · N contradiction · N n/a]
+- **Verdicts:** [N `covered` · N `declined` · N `gap` · N `contradiction` · N `n/a`]
 - **Gate basis:** [which travelers were read for the desire limb, and who was present when]
 - **Nightlife list read:** [full menu / gate-result stub (SKIP) / absent — none of these is a finding]
 
