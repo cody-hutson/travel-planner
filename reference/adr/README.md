@@ -189,6 +189,7 @@ record until the change that lands the held one.
 044       ADR-044-record-number-register.md
 045       ADR-045-interview-conversation-conduct.md
 046       ADR-046-interview-rating-and-engagement-record.md
+047       ADR-047-rules-over-an-enumeration.md
 ```
 
 Records numbered below the register's first row predate it and carry no row. Why a register,
