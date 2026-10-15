@@ -1134,6 +1134,18 @@ function numof(b,   k) { k = b; sub(/^ADR-/, "", k); sub(/-.*$/, "", k); return 
 function pad(n) { return sprintf("%03d", n + 0) }
 AWK
 
+# ── scope.awk — which tracked markdown a reading of engine prose passes over. ONE function,
+# run with every program that reads engine prose; neither holds a path of its own ───────────
+cat > "$WORK/scope.awk" <<'AWK'
+# The scanned surface: every tracked markdown file but three declared exclusions.
+function inscope(p) {
+  if (index(p, "reference/adr/") == 1) return 0
+  if (index(p, "examples/") == 1) return 0
+  if (p == "CHANGELOG.md") return 0
+  return 1
+}
+AWK
+
 # ── e.awk — class E, the owned-rule scan ─────────────────────────────────────────
 cat > "$WORK/e.awk" <<'AWK'
 # ARGV[1] newline-separated relative path list. -v ROOT=<dir> -v ODOC=<owner doc> -v OHEAD=<owner
@@ -1203,13 +1215,6 @@ END {
   if (nscan == 0 || nsent == 0 || nhead != 1 || nown == 0)
     printf "FINDING E0 files=%d sentences=%d heading=%d owner-standing=%d\n", nscan, nsent, nhead, nown
   printf "DENOM %d %d %d %d %d %d\n", nscan, nsent, nstand, nown, nhead, nsfile
-}
-# The scanned surface: every tracked markdown file but three declared exclusions.
-function inscope(p) {
-  if (index(p, "reference/adr/") == 1) return 0
-  if (index(p, "examples/") == 1) return 0
-  if (p == "CHANGELOG.md") return 0
-  return 1
 }
 function eflush(rel, b, o, own,   k, nn, arr) {
   if (b == "") return o
@@ -2464,7 +2469,7 @@ ch_scan_i() {
 # below passes nothing, for the reason ch_scan_c gives about a caller-set strictness.
 ch_scan_e() {
   awk -v ROOT="$1" -v ODOC="$CH_E_OWNER_DOC" -v OHEAD="$CH_E_OWNER_HEAD" -v SHARED="${3:-0}" \
-    -f "$WORK/seg.awk" -f "$WORK/e.awk" "$2"
+    -f "$WORK/seg.awk" -f "$WORK/scope.awk" -f "$WORK/e.awk" "$2"
 }
 
 # Class F's listers name EVERY file, not only markdown: f.awk decides what is shell from the
