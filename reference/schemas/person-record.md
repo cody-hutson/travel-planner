@@ -1,6 +1,6 @@
 # Artifact schema — C22 `people/<person>.md`
 
-The durable person record — one file per person, held across trips rather than copied into each one. It is the **first class in the model that is not per-trip**, and the only one whose store is git-ignored, so the tracked witness under `examples/` is the only instance this gate can ever reach. `reference/adr/ADR-012-people-library.md` is authoritative for the decisions behind it.
+The durable person record — one file per person, held across trips rather than copied into each one. It is the **first class in the model that is not per-trip**, and its real store lives under the operator's data root (`reference/data-model.md` § *Composition — the trip-side read of a durable record*), so the tracked witness under `examples/` is the only instance this gate can ever reach. `reference/adr/ADR-012-people-library.md` is authoritative for the decisions behind it.
 
 The fenced block below is the machine-readable half; `scripts/validate-artifacts.sh` reads it and holds no copy of it. Everything outside the fence is rationale.
 

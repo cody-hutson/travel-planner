@@ -78,10 +78,11 @@
 # disposition, both directions, on the real tree; and that for a given (plan, site) pair
 # every rendered element instance resolves to its component, per day and per track.
 #
-# IT CANNOT ESTABLISH that the site it read is the site the verb WROTE. The trip tree is
-# git-ignored and carries no history, so this walk grades the artifact after the write and
-# never the act. Nor can any inspection of any tree establish that a given run INVOKED this
-# walker at all: the suite grades that the verb DECLARES the invocation, and no further.
+# IT CANNOT ESTABLISH that the site it read is the site the verb WROTE. The trip tree lives
+# under the operator's data root (CLAUDE.md § Resolving a trip), and this repository holds
+# no earlier state of it, so this walk grades the artifact after the write and never the
+# act. Nor can any inspection of any tree establish that a given run INVOKED this walker at
+# all: the suite grades that the verb DECLARES the invocation, and no further.
 # That residual is real, it is not closable from the tree, and it rides on every suite run
 # as its own reported line rather than sitting in this comment.
 #

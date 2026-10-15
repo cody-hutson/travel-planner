@@ -141,9 +141,9 @@ prohibition in this file is justified by what the frontmatter omits — omission
   primitives, and that is the whole of what they carry.** **This command creates no file
   and no directory** and overwrites none: every path it touches must already exist, and a missing one
   is a stop, never a create. That conduct serves `ADR-007` §2 bound 5, whose class is **IRREVERSIBLE**
-  because `trips/` is git-ignored and carries no history. **The entries do not close creation or
-  overwriting in general** — standing rule 6 names what is left over and why. **The bound is met by
-  rule; these two entries only narrow what the rule has to carry.**
+  because `trips/` lives under `<data-root>` and nothing in this repository could restore it. **The
+  entries do not close creation or overwriting in general** — standing rule 6 names what is left over
+  and why. **The bound is met by rule; these two entries only narrow what the rule has to carry.**
 
 **`Read` and `Edit` are file-general and the frontmatter does not bound them, so the bound is a rule
 this file follows.** `Read` could reach `trips/<slug>/.passphrase`; `Edit` could reach a file
@@ -266,10 +266,10 @@ the verbs that existed when it was written.
    its contents in any output, including a refusal. Reading it would put the secret into the session
    transcript, which is the failure the publish exclusions exist to avoid.
 5. **Never overwrites and never deletes existing trip content.** `ADR-007` §2 bound 5, and `trips/`
-   is git-ignored, so a clobber is recoverable from nothing — not from a revert, not from the repo,
-   not from the log. `Edit` is used on exactly two admitted shapes: **changing only the named field's
-   line**, and **appending under a new section where no existing line changes**. Removing a line,
-   rewriting a file, reordering it, merging into a prior unit or deleting one is neither.
+   lives under `<data-root>`, so nothing in this repository could restore a clobber — not a revert,
+   not the repo, not the log. `Edit` is used on exactly two admitted shapes: **changing only the named
+   field's line**, and **appending under a new section where no existing line changes**. Removing a
+   line, rewriting a file, reordering it, merging into a prior unit or deleting one is neither.
 6. **Creates nothing.** No file, no directory. Every path this command touches must already exist; a
    missing one is a stop that names the path and names the repair, and the repair is named rather
    than run. **`Write` and `NotebookEdit` are denied by name, which addresses those two primitives —
@@ -623,9 +623,9 @@ read live from the `lifecycle` column of the table above**, never from a sentenc
 **Why setting and removing are not the same act, when they reach the same gate result.** An absent
 `**Lifecycle:**` line defaults to `ACTIVE` at G4, so removing the line would resolve the trip
 identically. **Removing it is a deletion of trip content, which `ADR-007` §2 bound 5 forbids**, and
-`trips/` is git-ignored, so the removed line is recoverable from nothing. It would also erase the
-record that this trip was ever concluded. **Same outcome, different legality — this file takes the
-legal one.** The line stays, and the trip's history stays legible.
+`trips/` lives under `<data-root>`, so nothing in this repository could restore the removed line. It
+would also erase the record that this trip was ever concluded. **Same outcome, different legality —
+this file takes the legal one.** The line stays, and the trip's history stays legible.
 
 **Echo the outgoing value and the incoming one**, both, so the change is visible in the output rather
 than only in the file.

@@ -4,7 +4,12 @@ One record per reusable group — **a named set of people you travel with, held 
 assembled one person at a time on every trip.** The same four people going away together for the
 third time are a group; referencing that group at setup expands it to its members.
 
-Everything in here is git-ignored except this file.
+**Your group records live in the `groups/` folder of your data folder** — the folder
+`~/.travel-planner/data-root` names; the engine's `CLAUDE.md` § *Resolving a trip* says how it is
+found. This file is kept in both of the places it is read: beside your records there, and in the
+engine's own `groups/` folder, which holds this file and never a record. Everything below
+describes the store in your data folder, except the section whose heading begins *The engine's
+copy*.
 
 ## What a record is
 
@@ -32,16 +37,21 @@ would sit in a record that has no place to hold it and that erasure removes bull
 Names are looked up from each person's own record when a group is shown to you, so a person who is
 renamed reads correctly here the moment their record changes — there is nothing to keep in step.
 
-## Why this file is tracked and nothing beside it is
+## The engine's copy — why this file is tracked and nothing beside it is
 
-A clone has to show that `groups/` is where group records live. This file is the only tracked thing
-under it: `.gitignore` excludes the directory's *contents* (`/groups/*`) rather than the directory
-itself, so this signpost survives while every record beside it stays on your machine.
+**This section is about the engine's repository, and about no other folder.** The engine ships a
+`groups/` folder so that a data folder can be given the same shape, and so that install has this
+file to copy into it. In the engine's repository this file is the only tracked thing under
+`groups/`: the engine's `.gitignore` excludes that directory's *contents* (`/groups/*`) rather than
+the directory itself, so every checkout carries the signpost and none carries a record.
 
-Same arrangement as [`../trips/README.md`](../trips/README.md),
-[`../analysis/README.md`](../analysis/README.md) and [`../people/README.md`](../people/README.md),
-for the same reason. The invariant is tested — see group `V` in
-[`../scripts/test-publish-guard.sh`](../scripts/test-publish-guard.sh).
+The engine keeps its own `trips/` and `people/` folders the same way, for the same reason. The
+invariant is tested for this folder by group `V` in the engine's `scripts/test-publish-guard.sh`.
+
+**None of this is a promise about the folder your records are in, even where that folder is an
+earlier checkout of the engine's repository.** Nothing in the engine reaches into your data
+folder's version control, so whether that folder is tracked, backed up or synced is yours to
+decide.
 
 ## What a record does not hold
 
@@ -110,10 +120,11 @@ shows the difference field by field, which is the detail a bulk preview cannot.
 
 **Deleting a group deletes the group and nothing else.** Every person in it keeps their record, and
 every trip that already expanded it is untouched. That is the whole of what deletion does, and it is
-worth stating because the word invites a worse guess. It is not reversible — nothing here is in git,
-so there is no earlier version to restore from — but it is **reconstructible**: a group is a name and
-a list of ids, and you can make it again. Deleting a *person* is a different operation entirely, and
-it is the one that cannot be undone: see [`../people/README.md`](../people/README.md) § *Deleting a
+worth stating because the word invites a worse guess. It is not reversible — the engine keeps no
+copy of a group record, so unless you have kept a backup of your data folder yourself there is no
+earlier version to restore from — but it is **reconstructible**: a group is a name and a list of
+ids, and you can make it again. Deleting a *person* is a different operation entirely, and it is
+the one that cannot be undone: see [`../people/README.md`](../people/README.md) § *Deleting a
 person*.
 
 **Groups may share a name.** Their ids differ, so nothing is ambiguous, and creating a

@@ -12,8 +12,9 @@ publish: internal-hard
 
 > **Illustrative, sanitized example. Not a real person.** No real personal detail
 > appears in this file, and none ever may: this class is `publish: internal-hard`
-> and every real instance of it is git-ignored. This one is tracked **only** because
-> the validity horizon needs an instance the schema gate can reach.
+> and every real instance of it lives under the operator's data root. This one is
+> tracked **only** because the validity horizon needs an instance the schema gate can
+> reach.
 
 **This record exists to exercise the validity horizon, which its sibling deliberately
 does not.** `psn-3c7e.md` states in its own prose that the mark is *not exercised here*,

@@ -732,8 +732,8 @@ reader cannot otherwise tell full coverage from a denominator that was never com
 file carries entries but no markers at all, M is not measurable — the estimate renders `undetermined`
 and names the condition, never `0 of 0`**, which is the validator's `unverifiable` limb applied here.
 That limb is reachable rather than theoretical: under § 7.2's tolerant read a pre-migration artifact
-in a user's git-ignored `trips/` carries no markers at all, and `examples/tokyo-2026/` is pinned by
-§ 10 and asserted by group `FW`, so its entries can never gain them.
+in a user's `trips/`, under their data root, carries no markers at all, and `examples/tokyo-2026/` is
+pinned by § 10 and asserted by group `FW`, so its entries can never gain them.
 
 **The first three limbs are the `measured` verdict's three arithmetic cases and the fourth is the
 other verdict**, which is why the count is four rather than three: `N = M` is not a degenerate reading
@@ -895,7 +895,7 @@ this paragraph is the record of that so a later reader does not rediscover the i
 
 **Composition with per-artifact frontmatter.** This declaration is repo-side and the artifact parse
 is unchanged, so it reaches an artifact carrying no frontmatter at all — which, under § 7.2's
-tolerant read, is every pre-migration artifact and every trip in the git-ignored working dir. Once
+tolerant read, is every pre-migration artifact and every trip under an operator's data root. Once
 an artifact carries its own frontmatter, the two sources compose by **union, never by override**:
 at version 0 the frontmatter limb contributes nothing and the declaration carries the class; at
 version ≥ 1 both contribute. No artifact loses coverage by not being migrated yet, and none gains a
@@ -978,9 +978,9 @@ instruction runs a vacuous one.**
 
 The canonical tokens above are the hyphenated lowercase forms — the form the corpus already used
 everywhere for `persist-mutable`. They are recorded here because the compatibility surface reaches
-past the repository: an artifact written before the migration, in a user's git-ignored `trips/`
-directory, may still carry a legacy spelling, and a reader that meets one collapses it onto the
-canonical token above rather than treating it as a sixth class.
+past the repository: an artifact written before the migration, in a user's `trips/` directory
+under their data root, may still carry a legacy spelling, and a reader that meets one collapses it
+onto the canonical token above rather than treating it as a sixth class.
 
 **Two classes are assigned by the absence of an exception, and the absence is the assignment.**
 `CLAUDE.md` § *Output Versioning* states one default — agent outputs accumulate, they do not
@@ -1034,7 +1034,7 @@ interchangeable and semantically unrelated.
 > own.** It reports and declines.
 
 The write-stop is the load-bearing half. Without it an un-migrated agent silently downgrades a newer
-artifact — an irreversible loss inside a user's git-ignored working directory that this repo cannot
+artifact — an irreversible loss under a user's data root, which this repo cannot
 reach or repair.
 
 **Every reading agent cites this rule; none restates it.** That is the pattern `reference/data-model.md`
@@ -1088,10 +1088,10 @@ reading. The engine guarantees three things and declines to guarantee a fourth.
 >    needs a field its instance predates handles the absence; it does not substitute a default.
 >    Guaranteeing otherwise would require rewriting artifacts the engine has no right to rewrite.
 
-**Why this is stated rather than assumed.** The compatibility surface is a git-ignored directory
-this repository cannot reach, inspect, or repair. A schema change weighed against this guarantee is
-reversible; one weighed against nothing is not — the damage is discovered by a user, in their own
-working directory, after it is already done.
+**Why this is stated rather than assumed.** The compatibility surface is the operator's data root
+(`CLAUDE.md` § *Resolving a trip*), a directory this repository cannot reach, inspect, or repair. A
+schema change weighed against this guarantee is reversible; one weighed against nothing is not — the
+damage is discovered by a user, in their own working directory, after it is already done.
 
 ### 7.6 The upgrade contract
 
@@ -1284,9 +1284,11 @@ grades it against the one row that shipped, **for the classes that row names.**
 **The seam those four name is not closed here, and that is a decision rather than an omission.** A
 schema-grammar addition that made any of them a required field would bump the version under § 7.4
 and owe a migration for instances at version *n−1* — and § 7.5 records that those instances sit on
-a compatibility surface which is a git-ignored directory this repository cannot reach, inspect or
+a compatibility surface — the operator's data root — which this repository cannot reach, inspect or
 repair. Weighing that change needs its own evidence; it is not a rider on a correction to this
-table. Until a slice takes it, the declaration above is the whole of the position.
+table. Closing it is assigned to no work item and has no owner; one is warranted when something
+needs an element this table marks as a gap — for instance a consumer that needs `readers:`, or a
+cap that needs `enforced-by:` — and until then the declaration above is the whole of the position.
 
 ---
 
@@ -1351,7 +1353,7 @@ The order is fixed by two constraints, and both are hard.
 1. **The version contract lands before any artifact is migrated.** § 7's tolerant read — and
    specifically its write-stop — is what keeps a partially-migrated working directory readable. A
    migration that landed first would put artifacts into the field that un-migrated agents could
-   silently downgrade, in a git-ignored directory this repo cannot reach.
+   silently downgrade, under an operator's data root this repo cannot reach.
 2. **The worked example is a byte-identical regression witness and is not edited in place.** Every
    file under `examples/tokyo-2026/` is pinned by content address in the freeze declaration below,
    and `scripts/test-artifact-schema.sh` group **FW** asserts each one byte-for-byte on every push —
@@ -1432,10 +1434,11 @@ witness, which do not, and why each one that does not never will, is declared pe
 standing exceptions are named, with their reasons stated as durable properties, in
 `reference/schemas/README.md` § *Coverage*. It is not restated here — a second copy of a coverage
 answer is a second home for it, which § 4.3 forbids. **What that home settles for a reader grading a
-migration:** a class whose instances are per-trip files under the git-ignored `trips/` tree can be
-migrated only at its **emitter** — the agent prompt that writes it, and the schema that declares its
-shape — so a class carrying no witness is graded there and never against a repository artifact. That
-is a statement about where a class can exist, not a relaxation of any criterion.
+migration:** a class whose instances are per-trip files under the `trips/` tree of an operator's
+data root can be migrated only at its **emitter** — the agent prompt that writes it, and the schema
+that declares its shape — so a class carrying no witness is graded there and never against a
+repository artifact. That is a statement about where a class can exist, not a relaxation of any
+criterion.
 
 #### The count-assertion declaration
 
