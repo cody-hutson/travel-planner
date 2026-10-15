@@ -624,8 +624,8 @@ complete transcript fails.
 non-utterance on that non-utterance's own terms (`A1` to `A5`). A value of one of those five kinds
 written outside its terms fails, naming the kind: an em dash where no skip was uttered, a declared
 text where no empty answer was given. Any other value passes when every word of it occurs among the
-words of the answering person's turns on that field, counted with multiplicity. A fail names the
-words. *Order* and *example echo* are reported beside the verdict, as D2 states them.
+words of the answering person's turns on that field, counted with multiplicity. A fail of the words
+limb names the words. *Order* and *example echo* are reported beside the verdict, as D2 states them.
 
 | | Their turn on the field | Recorded | Verdict |
 |---|---|---|---|

@@ -349,7 +349,8 @@ Only the number the person said is recorded.**
 
 1. **When.** On a channel that cannot write, after the form's block has been given back with the
    instruction to send it back. On one that can, after the session's entry has been written at its
-   ending (D3). One turn. **A missing reply costs the rating only.**
+   ending, or at that ending where the record was declined (D3). One turn. **A missing reply costs
+   the rating only.**
 2. **Which sessions.** A session in which a person answers for themselves on a guided form. Not on
    a block-owned form, where the person answering is the operator. Not where every answer of the
    session was relayed by the operator. The same sessions, and no others, make an entry at all.
@@ -503,8 +504,8 @@ write path — and to nothing about the assistant.**
 1. **The order.** The form's block is given back first, on every tier that gives one back, with
    the instruction to send it back; the rating is asked after it. **The instruction to send the
    block back is given with the block, and never later than the ask.** Where the session can
-   write, the entry is written first and the rating asked after it. A missing reply costs the
-   rating only. **The give-back never waits on the rating.**
+   write, the entry is written first, unless the record was declined, and the rating asked after it.
+   A missing reply costs the rating only. **The give-back never waits on the rating.**
 2. **One block, and the rating beside it.** At the first sitting the operator ruled one block,
    with the return a tagged section below the end-of-profile heading. At the confirm sitting the
    operator amended that ruling: **the tagged section inside the block carries the engagement
