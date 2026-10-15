@@ -60,10 +60,10 @@ or script changes here; those are later slices, and the records name what each m
 Nearly every ground the records cite is an inference, or rests on one run of one voice assistant,
 and the records say so: the numbers in them — the kinds in an example, the follow-up bound, the
 rating's scale, what counts as low — are judgment, recorded as judgment. That an assistant gives
-back a tagged return and a rating's line was not measured; where it does not, the profile is saved
-as today and the traveller is asked nothing more. And a row of the engagement record is, by
-inference, an account of how a person responded at that question, which outlives the profile; the
-traveller is told of the record before the first question and may decline it.
+back the return's tagged section and a rating's line was not measured; where it does not, the
+profile is saved as today and the traveller is asked nothing more. And a row of the engagement
+record is, by inference, an account of how a person responded at that question, which outlives the
+profile; the traveller is told of the record before the first question and may decline it.
 
 ## [0.54.0] — 2026-10-09 — Decision records hold their number and their spine
 
