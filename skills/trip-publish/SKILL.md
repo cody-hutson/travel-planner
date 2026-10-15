@@ -340,8 +340,8 @@ protects only the verbs that existed when it was written.
    rather than to the `trips/` path, because the arm this file owns is not inert under
    that path:** the script's `update` arm removes and re-creates the per-trip scratch
    clone at `trips/<slug>/.publish/` and copies the re-encrypted page into it. That
-   directory is a git-ignored scratch clone rather than trip content, which is why it does
-   not cross `reference/adr/ADR-007-command-entry-point.md` § 2's bound against
+   directory is a scratch clone under `<data-root>` rather than trip content, which is why
+   it does not cross `reference/adr/ADR-007-command-entry-point.md` § 2's bound against
    overwriting existing trip content — but it *is* a write under `trips/`, so a rule
    phrased by path would be false the first time this command ran.
 6. **It creates no per-trip GitHub repository and takes no site down.** Repo creation and

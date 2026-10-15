@@ -861,17 +861,17 @@ This is the payoff of D1.1 and it is listed first because it is the part a reade
 
 ### What this decision makes false elsewhere
 
-**Amendment (2026-09-21, Monday) — scheduling content removed.** This section previously carried an `Owner` column assigning changes to a release wave, and the record additionally carried a trailing section naming build slices. Both are scheduling, and scheduling belongs to a release plan, which changes when the backlog changes — while this record does not. The wave assignments and the slice list are removed; every statement of what becomes false elsewhere is kept, including the mechanical coupling facts, which are consequences of the decisions rather than schedule. One cell gains an explicit `D5.1` basis it had been taking from the removed token. No decision is reversed, narrowed or re-opened.
+**Amendment (2026-09-21, Monday) — scheduling content removed.** This section previously carried an `Owner` column assigning changes to a release wave, and the record additionally carried a trailing section naming build slices. Both are scheduling, and scheduling belongs to a release plan, which changes when the backlog changes — while this record does not. The wave assignments and the slice list are removed; every statement of what becomes false elsewhere is kept, including the mechanical coupling facts, which are consequences of the decisions rather than schedule. No decision is reversed, narrowed or re-opened.
 
-| Surface | Change | Who closes it |
-|---|---|---|
-| `reference/adr/README.md` | one index row for this record | this milestone's corpus step |
-| `skills/trip-record/SKILL.md` standing rule 3, and § `profile` → *Edit* | the skip byte, per D2.4 | Wave 1 |
-| `skills/trip-record/SKILL.md` § `profile` route 1 | seed-then-edit, per D1.2 | Wave 1 |
-| `skills/trip-record/SKILL.md` § `profile` **Reads:** block | **easily missed.** That block is an enumerated read-scope ceiling stated at purpose granularity. Per-answer writes and D2.6's re-read-before-write add **no new path** but do add new **purposes** — the resumption read, and the pre-write re-read — so the ceiling must be amended even though the path set is unchanged | Wave 1 |
-| `skills/trip-record/SKILL.md` § `profile` route 2 | reconcile *write it to the path unmodified* with the seed's placeholder substitution, per D2.5 | Wave 1 |
-| the forms' numbered guide rules | wherever the sibling record places them | Wave 1 |
-| an assertion grading the three-valued refinement | **named as a residual, not designed here.** No group grades placeholder-against-em-dash today | Wave 1 |
+| Surface | Change |
+|---|---|
+| `reference/adr/README.md` | one index row for this record, in this milestone's corpus step |
+| `skills/trip-record/SKILL.md` standing rule 3, and § `profile` → *Edit* | the skip byte, per D2.4 |
+| `skills/trip-record/SKILL.md` § `profile` route 1 | seed-then-edit, per D1.2 |
+| `skills/trip-record/SKILL.md` § `profile` **Reads:** block | **easily missed.** That block is an enumerated read-scope ceiling stated at purpose granularity. Per-answer writes and D2.6's re-read-before-write add **no new path** but do add new **purposes** — the resumption read, and the pre-write re-read — so the ceiling must be amended even though the path set is unchanged |
+| `skills/trip-record/SKILL.md` § `profile` route 2 | reconcile *write it to the path unmodified* with the seed's placeholder substitution, per D2.5 |
+| the forms' numbered guide rules | wherever the sibling record places them |
+| an assertion grading the three-valued refinement | **named as a residual, not designed here.** No group grades placeholder-against-em-dash today |
 
 ### Two facts a small-looking change would hide
 
@@ -964,3 +964,20 @@ Every residual is named with its owner. A residual with no owner is not a residu
   exclusion that together discharge D2.5
 - `scripts/test-artifact-schema.sh` group `AR3` — the placeholder-substitution requirement the seed
   must satisfy
+
+## Amendment history
+
+**Amendment (2026-10-09, Friday) — § *What this decision makes false elsewhere*: the wave
+assignments its 2026-09-21 amendment reported removed are removed, and that account loses a sentence
+that was never true of this record; no decision changes.** The amendment of 2026-09-21 in that
+section says "The wave assignments and the slice list are removed". The slice list was removed then.
+The wave assignments in that section's table were not: its third column was renamed from `Owner` to
+`Who closes it`, and its cells still read `Wave 1` in every row but the first. Those cells are now
+removed, and the column with them, under `reference/adr/README.md` § *Convention*, *Scheduling
+content*: work assigned to a wave in a table of consequences is a schedule, and a schedule belongs
+to a release plan. The first row's cell read "this milestone's corpus step". It concerns this
+record's own index row and names no later release, so it is kept, moved into that row's `Change`
+cell. Every statement of what becomes false elsewhere stands as it stood. The same account also said
+"One cell gains an explicit `D5.1` basis it had been taking from the removed token." That sentence
+describes the sibling record, `ADR-023`, whose table carries the cell. No cell of this record gained
+such a basis, and the sentence is removed.

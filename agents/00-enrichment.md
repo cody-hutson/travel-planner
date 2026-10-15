@@ -532,8 +532,8 @@ does not check them here, and that is precisely why they are written down.**
    every write human-confirmed and still let the record drift toward whatever the most
    recent trip said, one click at a time. Promotion is an explicit act through the
    command surface. Removing a redundant override is a human edit to a human-authored
-   line in a git-ignored working directory — nothing in this repository could restore
-   it, so reporting is cheap and deleting is not reversible at all.
+   line under the operator's data root (`CLAUDE.md` § *Resolving a trip*) — nothing in this
+   repository could restore it, so reporting is cheap and deleting is not reversible at all.
 
 **Which trips get a signal, and which get only a mention.** Resolution is **one trip per
 session**, so this is never a fan-out: **you write exactly one trip's model — the
@@ -797,8 +797,8 @@ needs through the same fallback path above, admit them:
 - **No file, anywhere.** They get no `travelers/<name>.md`, no proxy profile
   and no consent attestation. Their durable record is the carried-forward model
   entry itself — trip-scoped, living only in the derived model inside the
-  git-ignored `trips/` working dir, and deletable. `ADR-006` refuses the *file*;
-  it does not claim the entry leaves no trace.
+  trip's own directory under the operator's data root, and deletable. `ADR-006`
+  refuses the *file*; it does not claim the entry leaves no trace.
 - **Never invented from a `Party:` string.** A `Party:` value with no
   operator-supplied needs yields **no entry** — not a blank one, not a
   `PROFILE MISSING` one. Capture is operator-triggered, always. A nameless
@@ -1001,8 +1001,8 @@ you are about to overwrite. That makes you exactly the reader the write-stop nam
 at exactly the moment it binds. **When its condition holds, report it and decline
 the write.** Leave the file as you found it and say plainly that a newer model was
 present and was not overwritten. Do not downgrade it, do not merge into it, and do
-not treat this as a warning you may proceed past: the file lives in the git-ignored
-working directory, so a downgrade destroys fields nothing in this repository can
+not treat this as a warning you may proceed past: the file lives under the operator's
+data root, so a downgrade destroys fields nothing in this repository can
 reach or restore. Declining costs one pass; not declining costs the operator data
 they cannot get back.
 

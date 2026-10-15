@@ -82,7 +82,11 @@ name: ADR conformance
 #        index row fails, which is the input a first-match reader is blind to
 #   SP   THE EXPECTED SPINE, ABSENT-ONLY. An absent spine section fails; an extra section
 #        must not, because the index states that escape hatch in its own convention. The
-#        spine is READ from that convention on every run and is held nowhere
+#        spine is READ from that convention on every run and is held nowhere. A convention
+#        sentence that is not well-formed FAILS the group and no record is graded against
+#        it: the read is refused. A WELL-FORMED sentence that names fewer sections is READ AS
+#        WRITTEN, whether its writer shortened it or a stray period left it so, and the count
+#        the run prints on its CORPUS line is the control on that
 #   LF   THE LIFECYCLE. A status token drawn from the enum the index declares, and a
 #        Superseded record naming its superseder. The token is the value's leading alphabetic
 #        word rather than a substring, because live status lines contain the word Proposed
@@ -102,8 +106,8 @@ name: ADR conformance
 #   Y    the inventory itself: every emittable code has an arm, every arm names an emittable
 #        code, checked in both directions. The code set is READ FROM the suite on every run
 #   PF   no verdict in the suite is decided by a pipeline's exit status
-#   MD   the discriminating-evidence rule, asserted against the suite's own extractors, all
-#        of them registered from the first commit
+#   MD   the discriminating-evidence rule, asserted against the suite's own extractors: its
+#        scanners, registered from the first commit, and the convention reader beside them
 #
 # NO POPULATION, ARM COUNT, CODE COUNT OR RECORD COUNT IS WRITTEN INTO THIS FILE. Every
 # figure the gate knows is emitted at run time on its own summary lines — CORPUS, NUMBERING
