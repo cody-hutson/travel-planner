@@ -100,7 +100,7 @@ decision here is presented as following from it.**
   evidence.
 - `#1766 V-3` — T. The block carried on past the end-of-profile heading with the form's guide,
   which the card told the assistant to leave out. So the one measured assistant has already put
-  text where D3 puts the tagged return — the wrong text.
+  text where D3 puts the return's tagged section — the wrong text.
 - `#1766 V-1` and `V-2` — T. An answered line came back as its unanswered placeholder, and lines
   the form computes came back blank. They show a give-back departing from a simpler contract than
   D3's.
@@ -112,8 +112,8 @@ decision here is presented as following from it.**
   unmeasured. It bears on what a silence at the rating ask costs, and on when the instruction to
   send the block back is given.
 - `#1766 Q2` and `Q5` — undetermined. Whether the card is still being followed at the end of a
-  session, which is where the tagged return, the rating ask and the rating's line all sit, is not
-  determined. The run did reach the give-back (operator-attested).
+  session, which is where the return's tagged section, the rating ask and the rating's line all sit,
+  is not determined. The run did reach the give-back (operator-attested).
 - `#1766 Q4` — uncoded, by the operator's ruling. What a traveller can do about the assistant's
   copy of the conversation was not determined, and vendor-side retention is not observable.
 - `#1766 V-7` — T. The returned block keeps the form's trip placeholder, which whoever saves it
@@ -292,13 +292,13 @@ D1.1 in part, as to no new artifact class.** Every other decision of both record
 - **`ADR-040` D1.** D1 has a channel with no write path return one fenced block carrying the form
   above its end marker *"and nothing below it"*. It says so in its lead sentence and again in the
   paragraph that closes it. **What is superseded is that phrase.** Under D3 the block carries the
-  end-of-profile heading and, below it, a tagged return; and after the block the rating follows as
-  a tagged line of its own. **What stands:** that the form comes back as one fenced block, with no
-  second block beside it; that above the end marker the block is what the target file would hold
-  if each answer had been written into it as it was given; each bullet of D1; that record's D0;
-  its D2, where *"a returned block"* is read as the form's block (D3), so D2 takes no mark; its D3,
-  under which the return's contract goes on the card and nowhere else; and every consequence it
-  states.
+  end-of-profile heading and, below it, a tagged section of the return; and after the block the
+  rating follows as a tagged line of its own. **What stands:** that the form comes back as one
+  fenced block, with no second block beside it; that above the end marker the block is what the
+  target file would hold if each answer had been written into it as it was given; each bullet of D1;
+  that record's D0; its D2, where *"a returned block"* is read as the form's block (D3), so D2 takes
+  no mark; its D3, under which the return's contract goes on the card and nowhere else; and every
+  consequence it states.
 - **`ADR-022` D1.1.** D1.1's headline is a pair of sentences — *"Resumption state is DERIVED. No
   new artifact class is created."* — and the paragraph that closes it lists what is not created,
   ending *"no row in the `erase` reach table"*. **What is superseded is the second sentence and
@@ -371,10 +371,11 @@ Only the number the person said is recorded.**
    writes to. Who reads it is also said before the first question (item 12), so it is never first
    heard after the answer.
 9. **What may happen at the ask.** No example. No follow-up, and so no "why". Where the reply names
-   no number, the numbers are offered again once, and then the rating is left unrated. A skip is
-   taken at once. **A silence records nothing and is offered nothing, and it is not a silence
-   `ADR-022` D5.5 counts**: the form's block has already been given, or the entry written, and the
-   session has nothing left to protect.
+   no number, the numbers are offered again once, and then the rating is left unrated. A reply that
+   names no one number of the scale — none, more than one, or one off it — is a reply that names no
+   number, and the numbers are offered again once. A skip is taken at once. **A silence records
+   nothing and is offered nothing, and it is not a silence `ADR-022` D5.5 counts**: the form's block
+   has already been given, or the entry written, and the session has nothing left to protect.
 10. **What is recorded.** The number the person said, as a digit or as its word; or a skip mark,
     where they uttered a skip; or nothing. Never a number inferred from words, tone or how the
     session went, and never the nearest number.
@@ -388,8 +389,8 @@ Only the number the person said is recorded.**
     none of their words, goes with the rating to the same reader. **They may decline that record.**
     **A decline of the record counts only before the block is given or the entry is written.** Taken
     then, no engagement record is given back or written for that session, and a rating may still be
-    given. It is an utterance of this record's own: it is not the decline of a field, which
-    `ADR-022` D5.5 and the conduct record govern.
+    given: the session's entry then holds the rating alone. It is an utterance of this record's own:
+    it is not the decline of a field, which `ADR-022` D5.5 and the conduct record govern.
 13. **An interview style** may change how the ask sounds, and never whether it is made, the scale,
     the names of its ends or what is recorded (`ADR-045` D4).
 
@@ -435,13 +436,14 @@ interviewer's account of its own turns. The rating is not part of it.
    and label as `ADR-022` D6.3 and that record's R8 read it. It is never read from a list of names
    in this record, the card or the save, so a field newly typed `PERSON` is covered with no edit.
    **A section that holds any `PERSON`-class field is one row for the section, pooling every field
-   of it that was put, and saying how many it pools.** Where such a section repeats a block — the
-   person form's needs section, one block for each need — **the count is of the labels the form
-   prints for the section, and it does not grow with the number of entries a person gave**: a
-   pooled row does not show how many needs a person listed. **The pooling is the writer's act, at
-   the write.** A recipient's assistant holds no classification, so the section it gives back has
-   a row for every field it put; the block around it holds those fields' answers themselves, so
-   the rows add nothing to what is in transit. What rests in the class's home is pooled.
+   of it that was put, and saying how many it pools.** **Every pooled section counts the distinct
+   labels the form prints for it, whether or not they were asked, and the count does not grow with
+   the number of entries a person gave**: where such a section repeats a block — the person form's
+   needs section, one block for each need — a pooled row does not show how many needs a person
+   listed. **The pooling is the writer's act, at the write.** A recipient's assistant holds no
+   classification, so the section it gives back has a row for every field it put; the block around
+   it holds those fields' answers themselves, so the rows add nothing to what is in transit. What
+   rests in the class's home is pooled.
 5. **What a count lets a reader infer, said so it can be seen.** Under *a traveller answer is a
    value of a field of a form*, the record holds none, and no word anyone said. It does hold
    something else. **Each counted kind is defined, in the conduct record, by what the person had
@@ -450,7 +452,8 @@ interviewer's account of its own turns. The rating is not part of it.
    inference, an account of how the person responded at that field.** And it outlives the profile:
    an answer later taken back leaves the profile and not the entry. That is what "which
    follow-ups" costs. What bounds it is the grain as ruled, the pooling, that nothing is recorded
-   for a change of interview style, and the person's leave to decline the record (D1).
+   for a change of interview style, and the person's leave to decline the record (D1). A pooled row
+   never reflects what a session asked; "how long" for a pooled section is its further turns only.
 6. **What it never holds.** A word the person said. A word the interviewer said: no question,
    example, confirmation or follow-up text. A value of any field of a form. The rating. A row of
    its own for a `PERSON`-class field. The field at which an interview style changed. A time of
@@ -462,8 +465,7 @@ interviewer's account of its own turns. The rating is not part of it.
    can ask of an assistant, and an estimated duration is an invented value; and an entry has one
    field list on every tier. That a session that can write could record minutes is a choice
    declined, not a constraint met. **The cost of item 4's count, as put to the operator with it:**
-   for a section that repeats a block, "how long" understates the asking where a person gave
-   several entries.
+   for a pooled section, "how long" is its further turns only.
 8. **The rating is held apart.** It is a separate value in the same entry, with its own rule (D1),
    its own provenance — a person's statement, where the engagement record is the interviewer's
    account — and its own acceptance (D3).
@@ -494,8 +496,8 @@ write path — and to nothing about the assistant.**
 
 | Tier | How the return reaches its home |
 |---|---|
-| **W** — the session can write | Nothing is returned. At an ending D1 names, the session writes the entry — its engagement record — to the class's home; then it asks the rating, and a rating given or skipped is written into that entry. A session that ends on a second silence, or is left, writes no entry |
-| **T** — no write path, and text can be returned | One fenced block, and no other block: the form as `ADR-040` D1 has it above its end-of-profile heading; that heading; and below it the tagged return, holding the engagement record. The instruction to send the block back is given with it. Then the rating ask. Then the rating, as a tagged line of its own, to be sent back with the block |
+| **W** — the session can write | Nothing is returned. At an ending D1 names, the session writes the entry — its engagement record — to the class's home; then it asks the rating, and a rating given or skipped is written into that entry, or makes it where the record was declined. A session that ends on a second silence, or is left, writes no entry |
+| **T** — no write path, and text can be returned | One fenced block, and no other block: the form as `ADR-040` D1 has it above its end-of-profile heading; that heading; and below it the return's tagged section, holding the engagement record. The instruction to send the block back is given with it. Then the rating ask. Then the rating, as a tagged line of its own, to be sent back with the block |
 | **refuse** | No interview runs, so nothing returns |
 
 1. **The order.** The form's block is given back first, on every tier that gives one back, with
@@ -507,7 +509,7 @@ write path — and to nothing about the assistant.**
    with the return a tagged section below the end-of-profile heading. At the confirm sitting the
    operator amended that ruling: **the tagged section inside the block carries the engagement
    record, and the rating travels beside it** — it comes back as its own tagged line, after the
-   block, found by its tag.
+   block, found by the tag.
 3. **The tag.** The return is identified by a tag: a literal token of its own, unlike every tag
    and heading a form carries — **`interview-return`**. The card, the save and the class's schema
    share that one literal. Measured against the fence tags in use at `5d50eb5`, it collides with
@@ -553,8 +555,8 @@ write path — and to nothing about the assistant.**
 12. **For each assistant the voice-mode finding measured.** That set is one cell, `claude-ios`.
     For it, run once: the form's block came back as copyable text, unprompted (`#1766 Q3`,
     operator-attested), with deviations (`#1766 Q3_fidelity`, T) — among them text below the
-    end-of-profile heading that the card told it to leave out (`#1766 V-3`, T). **That a tagged
-    return comes back below that heading, and a rating's line after the block, was not
+    end-of-profile heading that the card told it to leave out (`#1766 V-3`, T). **That the return's
+    tagged section comes back below that heading, and a rating's line after the block, was not
     exercised**: the one request outside the card is not reported as made (`#1766
     cd6_outside_card`), so for this cell the rule is stated and not shown. No other cell was
     measured; for each the rule is stated and shown for none (§ *Residuals*). **Where the return
@@ -564,11 +566,11 @@ write path — and to nothing about the assistant.**
 **Its permitted cases.** What is handed to the save holds a return that is found and kept; found
 and kept in part; found more than once; or absent — each with the outcome item 9 declares, and in
 none of them a different profile. **Its inputs:** the text handed to the save; the form. **One
-worked example.** A returned block arrives with its fence lost and its tagged return after the
-form's lines. The save finds the return by its tag and keeps the entry, and the profile's merge
+worked example.** A returned block arrives with its fence lost and the return's tagged section after
+the form's lines. The save finds the return by its tag and keeps the entry, and the profile's merge
 writes what it would have written had no return come. Had the tagged section been damaged and the
-rating's line sound, the engagement record would not be kept and the rating would, and the save
-would say so, naming the damaged line by its position.
+rating's line sound, the engagement record would not be kept and the rating would, making that
+session's entry, and the save would say so, naming the damaged line by its position.
 
 *Supersedes:* `ADR-040` D1 in part (D0).
 
@@ -626,11 +628,11 @@ name, its path in each root and its reach-table rows are settled design, not thi
     held for that subject — the writer's date aside — is named as already held and not written,
     as the merge already does for a repeat unit. Sessions that truly read alike count once; that
     is the accepted cost. **A rating's line joins the entry of the session it ends** (D1,
-    item 11): handed over with a return, it is written into that return's entry, and a rating
-    that arrives for an entry held without one is taken. **A rating that arrives alone is never
-    dropped as a repeat**: the already-held rule is not applied to a rating by itself. Which
-    entry a rating's line joins when it is handed over apart from its block, and more than one
-    entry is held without a rating, is not decided here (§ *Residuals*).
+    item 11). An entry may hold a rating with no engagement record. A rating given with its block
+    makes or joins that session's entry. A rating's line handed over by itself joins the one entry
+    that lacks a rating when there is exactly one; otherwise it is not kept, and the save says so.
+    **A rating that arrives alone is never dropped as a repeat**: the already-held rule is not
+    applied to a rating by itself.
 12. **What nothing here reaches.** The copy in a recipient's assistant, and the message a returned
     block travelled in. That is `ADR-022` D6.4's residual, unchanged: the same class at the same
     boundary, since that history already holds the whole conversation.
@@ -704,8 +706,8 @@ interview, or open a change to the conduct. Nothing in the engine acts on the nu
    identifiers and counts.
 9. **the ledger**, and **a pooled row** — the engagement record's rows, one for each field put; and
    the one row kept for a section that holds any `PERSON`-class field.
-10. **an entry** — one session's return as kept: its engagement record, and its rating where one
-    was given.
+10. **an entry** — one session's return as kept: its engagement record where one was kept, and its
+    rating where one was given.
 11. **the tag** — the literal token by which the return is found: `interview-return`.
 
 **Read from the conduct record, and restated nowhere here** (`ADR-045` § *The terms this record
@@ -779,7 +781,7 @@ change.
 | Clause of this record | The surface as it read at `5d50eb5` | Relation |
 |---|---|---|
 | A rating is asked, after the give-back | no sentence in either carrier mentions one | new; it waits for the edit |
-| The block carries its heading and a tagged return below it | the card returns nothing from that heading down | the card is stricter, and binds until the edit |
+| The block carries its heading and a tagged section of the return below it | the card returns nothing from that heading down | the card is stricter, and binds until the edit |
 | Above the heading the block is exactly what `ADR-040` D1 has | the same | the same; nothing is withdrawn |
 | An entry is written at a session's ending | the interview verb has no output act | new; it waits for the edit |
 | A class holds the entries | the class enumeration is closed without it | nothing to hold until it exists |
@@ -793,7 +795,7 @@ it says.
 
 | Surface | What changes |
 |---|---|
-| `templates/interview-card.md`, its shared rules and § *Giving back the finished form* | the opening sentence and the rating ask are stated; *"Everything above the end-of-profile heading, and nothing from that heading down"* is no longer the contract, because the block carries that heading and the tagged return below it; the closing line that tells the person to send the block back is given with the block and, after a rating, names the rating's line too; the tagged return's contract is written there and nowhere else |
+| `templates/interview-card.md`, its shared rules and § *Giving back the finished form* | the opening sentence and the rating ask are stated; *"Everything above the end-of-profile heading, and nothing from that heading down"* is no longer the contract, because the block carries that heading and the return's tagged section below it; the closing line that tells the person to send the block back is given with the block and, after a rating, names the rating's line too; the return's contract is written there and nowhere else |
 | `skills/trip-record/interview-conduct.md` | the opening sentence and the rating ask, in the same words as the card's — `scripts/test-artifact-schema.sh` group `PC` fails the moment the carriers' shared rules differ; and its write-capable rule that nothing is held in conversation that the file does not hold gains a clause, because the session holds its count of its own turns until its ending |
 | `skills/trip-record/SKILL.md` § `## interview <form> [<target>]` | *"This verb has no output act"* stays true of a block and of answers, and gains a clause: the ending writes an entry |
 | The same file, § `## profile <name>` | its sentence that a returned block is merged "and nothing else is written" is no longer the whole of it, because the save also writes the entry; the passage that refuses a block carrying no `intake-form` block, or more than one, gains the return's step and says the return never stops the merge; its `Reads:` ceiling gains purposes — the handed-over text, for the tag, and the subject's file of the class, for the already-held rule; and it gains the branch that takes a store-rooted form's returned text for the return alone |
@@ -852,10 +854,10 @@ is a residual a ruling overtook.
 | # | Residual | Owner |
 |---|---|---|
 | RR-1 | **Every cell of the voice-mode finding's frame but one is unmeasured.** D3's rule is stated for each and shown for none | the operator, who set the scope to one cell |
-| RR-2 | **`#1766 Q2` and `Q5` are undetermined.** They bear on whether the card is still followed at the end of a session — which is now where the tagged return, the rating ask and the rating's line all sit | #1327 |
+| RR-2 | **`#1766 Q2` and `Q5` are undetermined.** They bear on whether the card is still followed at the end of a session — which is now where the return's tagged section, the rating ask and the rating's line all sit | #1327 |
 | RR-3 | **`#1766 Q4` is uncoded.** What a traveller can do about the assistant's copy of the conversation — the return included — was not determined | #1327 |
 | RR-4 | **No candidate workaround was recorded for `#1766 V-1` to `V-5` and `V-7`.** `V-3` changes character: the measured assistant put the form's guide below the heading, where the return now goes. The guide carries no tagged line, so the save finds no return in it and it stays inert | #1327 |
-| RR-5 | **That an assistant gives back a tagged return below the heading, and a rating's line after the block, is an assumption.** It is first observed when the save is built on it | #1770 |
+| RR-5 | **That an assistant gives back the return's tagged section below the heading, and a rating's line after the block, is an assumption.** It is first observed when the save is built on it | #1770 |
 | RR-5b | **The same, on a real assistant** | #1327 |
 | RR-6 | **The entry is a self-report**, and on a channel that cannot write it is another assistant's. On a real conversation nothing checks it | the operator |
 | RR-7 | **A session that ends on silence, or is left, has no rating and no entry.** Where the session cannot write this is a limit; where it can, it is chosen (D0, D3) | the operator |
@@ -875,15 +877,13 @@ is a residual a ruling overtook.
 | RR-22 | **What the checks on this record's rules need declared**: the reply at the rating ask; a traveller who rates low; a returned block in each case of the declared outcome; and a person-form conversation that puts a `PERSON`-class field | #1770 |
 | RR-23 | **An unlinked traveller's entries.** No `erase` runs; they go as the traveller file goes, by the operator's hand | the operator |
 | RR-24 | **Entries on a trip a person was unlinked from** are unreached unless the operator names the trip, and nothing shows them: the residual scan reads a name, and an entry holds a key | #1770 |
-| RR-25 | **A return carried into a file by hand.** Where a hand-save — of a person record, or of a trip profile saved outside the save — copies the tagged return in with the rest, it rests in that file unchecked and unpooled. Nothing this record decides takes it out | #1770 |
+| RR-25 | **A return carried into a file by hand.** Where a hand-save — of a person record, or of a trip profile saved outside the save — copies the return's tagged section in with the rest, it rests in that file unchecked and unpooled. Nothing this record decides takes it out | the operator |
 | RR-26 | **The pooling runs where the writer runs.** In transit, and in an assistant's history, the section has a row for every field put — beside those fields' answers. And the spoken care of `ADR-022` D6.3 is not in what that route reads (`ADR-045`'s `RS-15`) | #1327 |
 | RR-27 | **Candour.** A rating given aloud, or at the travel manager's own terminal, may shade upward (`#1765 F-7`, carried by inference) | the operator |
 | RR-28 | **`ADR-022`'s driver, its options table and its consequences rows** say *no new artifact class* with no marker | the operator, as accepted |
 | RR-29 | **A class with a row in each root.** Its `trip:` value is a slug in one root and the cross-trip sentinel in the other, and its publish class differs between them | #1770 |
 | RR-30 | **On a route that writes, nothing prompts the travel manager to look** at a low rating | the operator |
-| RR-32 | **Which entry a rating's line joins when it is handed over apart from its block**, where more than one entry is held without a rating. A line handed over by itself names no session | the operator |
-| RR-33 | **The return's lines as they are written**: how a row names a field where a form repeats a block or prints a line with no label; what carries the tag once a fence is lost; where a tagged part ends; and whether the rating's line carries the same token. Settled design, held to D3's rules | #1770 |
-| RR-34 | **The pooled count at its edges**: whether *the labels the form prints for the section* reads a label once, or once for each block the form ships; and what it reads where a printed label was never put | the operator |
+| RR-33 | **The return's lines as they are written**: how a row names a field where a form repeats a block or prints a line with no label; what carries the tag once a fence is lost; where a tagged part ends. Settled design, held to D3's rules | #1770 |
 | RR-35 | **What a person hears before the first question now has parts from more than one record** — the disclosure `ADR-022` requires, the offer of an interview style, and this record's opening sentence — and no record bounds their total | the operator |
 | RR-36 | **Whether the hand-off set should be leaner** (`#1766 V-8`, operator-attested, ungraded) | #1327 |
 
