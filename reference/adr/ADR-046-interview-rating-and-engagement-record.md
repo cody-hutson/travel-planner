@@ -22,7 +22,7 @@
   `skills/trip-record/SKILL.md` and `reference/data-architecture.md` read after it as they read
   before, and a session follows them. It states rules, and carries no serialization, line grammar,
   file name, path pattern, reach-table row, schema or procedure for what it decides: that is
-  settled design, pinned by the card that builds the class (#1770). And the *engagement record*
+  settled design, and belongs to the specification for its subject. And the *engagement record*
   named here is neither `engagement(t)`, the axis
   [`ADR-025`](ADR-025-engagement-model-over-time.md) defines, nor that record itself, which
   [`ADR-026`](ADR-026-channel-architecture.md) and an earlier `CHANGELOG.md` entry call by the
@@ -575,7 +575,7 @@ would say so, naming the damaged line by its position.
 
 **What comes back is kept as a governed class in the data model: one writer, a lifecycle, a publish
 class, a schema check and an erase row.** This record decides the class. Its schema, its file's
-name, its path in each root and its reach-table rows are the build's (#1770).
+name, its path in each root and its reach-table rows are settled design, not this record's.
 
 1. **A class in the model.** Personal data about one person's interview sessions on one form.
    Never rendered, never published, never read by an agent, and never read by the interviewer.
@@ -663,16 +663,14 @@ a rating gates nothing in the engine.**
    The review is at the entry's home, a plain-text file of the class. No new verb is needed. The
    cost, said plainly: on a route that writes, nothing prompts the travel manager to look.
 4. **What they can change.** The conduct: the shared rules, or a form's own ask-prose. Only
-   through a change whose pull request records the result of the conduct's synthetic suite
-   (#1769). **A rating is a reason to open a change, never a change.**
+   through a change to the conduct. **A rating is a reason to open a change, never a change.**
 5. **What they cannot change.** The rating: no verb edits it. The profile, on the strength of a
    rating. An interview style for a traveller: the conduct record makes the interview style the
    traveller's to choose.
 6. **What they can do with no change at all.** Resume the interview over what the profile leaves
    un-asked. Use another route for that traveller. Talk to them.
 7. **A rating gates nothing in the engine.** No verb blocks, re-plans or asks again on a rating or
-   on a record. It is one of the signals a later conduct pass is graded on (#1330), and that
-   pass's threshold is its own to declare: *low* here is the review's.
+   on a record. *Low* here is the review's.
 8. **A limit, named.** On a route that writes, the session runs at the travel manager's own
    terminal, so a rating given there is given in front of its reader.
 
@@ -792,27 +790,27 @@ it says.
 
 ### What this decision makes false elsewhere
 
-| Surface | What changes | Who brings it into line |
-|---|---|---|
-| `templates/interview-card.md`, its shared rules and § *Giving back the finished form* | the opening sentence and the rating ask are stated; *"Everything above the end-of-profile heading, and nothing from that heading down"* is no longer the contract, because the block carries that heading and the tagged return below it; the closing line that tells the person to send the block back is given with the block and, after a rating, names the rating's line too; the tagged return's contract is written there and nowhere else | #1770 |
-| `skills/trip-record/interview-conduct.md` | the opening sentence and the rating ask, in the same words as the card's — `scripts/test-artifact-schema.sh` group `PC` fails the moment the carriers' shared rules differ; and its write-capable rule that nothing is held in conversation that the file does not hold gains a clause, because the session holds its count of its own turns until its ending | #1770 |
-| `skills/trip-record/SKILL.md` § `## interview <form> [<target>]` | *"This verb has no output act"* stays true of a block and of answers, and gains a clause: the ending writes an entry | #1770 |
-| The same file, § `## profile <name>` | its sentence that a returned block is merged "and nothing else is written" is no longer the whole of it, because the save also writes the entry; the passage that refuses a block carrying no `intake-form` block, or more than one, gains the return's step and says the return never stops the merge; its `Reads:` ceiling gains purposes — the handed-over text, for the tag, and the subject's file of the class, for the already-held rule; and it gains the branch that takes a store-rooted form's returned text for the return alone | #1770 |
-| The same file, its standing clause | the write of an entry under the people store's root needs a standing rule of its own, since no standing rule admits that write today; and removing a subject's file of entries is a deletion its erasure rule does not yet list | #1770 |
-| The same file, § `## erase <person-id>` | the reach table gains the class's rows, its stated tally moves with them, and the schema suite's arm that grades the tally moves too | #1770 |
-| `reference/data-architecture.md` §§ 1 and 1.1, and the sections that state a class's lifecycle, provenance and publish class | the class's rows, one for each root, and every count, heading, identifier range and member list that moves with them — among them § 5.1's sentence naming the `internal-hard` classes as an exact set, which gains the row for the people store's root, and § 1's sentence on which classes are not per-trip | #1770 |
-| The records that quote that § 5.1 sentence, or call a class its last member — `ADR-010`, `ADR-016`, `ADR-025`, `ADR-026`, `ADR-027` and `ADR-029` | each states the set as it stood when it was written | the operator, for whether any of them is corrected; #1770 names them when the set moves |
-| `reference/schemas/`, and a witness under `examples/` | the class's schema, and its witness | #1770 |
-| `scripts/validate-artifacts.sh` and `scripts/test-artifact-schema.sh` | the validator's class-heading constant, and the suite's arms over the class table and the reach table | #1770 |
-| `ADR-022` § *Consequences*, *What this buys* — its rows for `reference/data-architecture.md` § 1.1 and for the `erase` reach table | they say what D1.1 bought — no new artifact class, and no new location — and stop being true of the engine once the class exists | nothing is owed: a record is marked at its decision, and the marker at D1.1 points here |
-| `reference/adr/README.md` | the index row for this record | the change that lands it |
+| Surface | What changes |
+|---|---|
+| `templates/interview-card.md`, its shared rules and § *Giving back the finished form* | the opening sentence and the rating ask are stated; *"Everything above the end-of-profile heading, and nothing from that heading down"* is no longer the contract, because the block carries that heading and the tagged return below it; the closing line that tells the person to send the block back is given with the block and, after a rating, names the rating's line too; the tagged return's contract is written there and nowhere else |
+| `skills/trip-record/interview-conduct.md` | the opening sentence and the rating ask, in the same words as the card's — `scripts/test-artifact-schema.sh` group `PC` fails the moment the carriers' shared rules differ; and its write-capable rule that nothing is held in conversation that the file does not hold gains a clause, because the session holds its count of its own turns until its ending |
+| `skills/trip-record/SKILL.md` § `## interview <form> [<target>]` | *"This verb has no output act"* stays true of a block and of answers, and gains a clause: the ending writes an entry |
+| The same file, § `## profile <name>` | its sentence that a returned block is merged "and nothing else is written" is no longer the whole of it, because the save also writes the entry; the passage that refuses a block carrying no `intake-form` block, or more than one, gains the return's step and says the return never stops the merge; its `Reads:` ceiling gains purposes — the handed-over text, for the tag, and the subject's file of the class, for the already-held rule; and it gains the branch that takes a store-rooted form's returned text for the return alone |
+| The same file, its standing clause | the write of an entry under the people store's root needs a standing rule of its own, since no standing rule admits that write today; and removing a subject's file of entries is a deletion its erasure rule does not yet list |
+| The same file, § `## erase <person-id>` | the reach table gains the class's rows, its stated tally moves with them, and the schema suite's arm that grades the tally moves too |
+| `reference/data-architecture.md` §§ 1 and 1.1, and the sections that state a class's lifecycle, provenance and publish class | the class's rows, one for each root, and every count, heading, identifier range and member list that moves with them — among them § 5.1's sentence naming the `internal-hard` classes as an exact set, which gains the row for the people store's root, and § 1's sentence on which classes are not per-trip |
+| The records that quote that § 5.1 sentence, or call a class its last member — `ADR-010`, `ADR-016`, `ADR-025`, `ADR-026`, `ADR-027` and `ADR-029` | each states the set as it stood when it was written; the change that moves the set names them |
+| `reference/schemas/`, and a witness under `examples/` | the class's schema, and its witness |
+| `scripts/validate-artifacts.sh` and `scripts/test-artifact-schema.sh` | the validator's class-heading constant, and the suite's arms over the class table and the reach table |
+| `ADR-022` § *Consequences*, *What this buys* — its rows for `reference/data-architecture.md` § 1.1 and for the `erase` reach table | they say what D1.1 bought — no new artifact class, and no new location — and stop being true of the engine once the class exists; nothing is owed: a record is marked at its decision, and the marker at D1.1 points here |
+| `reference/adr/README.md` | the index row for this record, in the change that lands it |
 
 ### What is untouched
 
 **The hand-off set.** It is `ADR-023` D4.1's, and this record adds no file to it and removes none:
 the return's contract goes on the card, which is a member already. Whether the set should be
-leaner — what `#1766 V-8` bears on, operator-attested and ungraded — is not decided here; it is
-#1327's to raise, from runs that start with the set.
+leaner — what `#1766 V-8` bears on, operator-attested and ungraded — is not decided here
+(§ *Residuals*).
 
 **The profile.** The same answers produce the same profile with a return and without one. Nothing
 of the return is written into the profile's file, and `reference/data-model.md`
@@ -885,6 +883,7 @@ is a residual a ruling overtook.
 | RR-33 | **The return's lines as they are written**: how a row names a field where a form repeats a block or prints a line with no label; what carries the tag once a fence is lost; where a tagged part ends; and whether the rating's line carries the same token. Settled design, held to D3's rules | #1770 |
 | RR-34 | **The pooled count at its edges**: whether *the labels the form prints for the section* reads a label once, or once for each block the form ships; and what it reads where a printed label was never put | the operator |
 | RR-35 | **What a person hears before the first question now has parts from more than one record** — the disclosure `ADR-022` requires, the offer of an interview style, and this record's opening sentence — and no record bounds their total | the operator |
+| RR-36 | **Whether the hand-off set should be leaner** (`#1766 V-8`, operator-attested, ungraded) | #1327 |
 
 ## References
 
@@ -947,5 +946,5 @@ trailing newline.
 - `templates/traveler-intake.template.md` and `templates/person-intake.template.md` — the guided
   forms
 
-**The cards.** #1768, this record's; #1205, the epic; #1767, the conduct record's. #1770, which
-builds what this record decides; #1327, #1330, #1771 and #1769, which read it.
+**The cards.** #1768, this record's; #1205, the epic; #1767, the conduct record's. #1770, #1327,
+#1330, #1771 and #1769, which read it.
