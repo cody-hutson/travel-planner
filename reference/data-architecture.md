@@ -1598,7 +1598,7 @@ with a run of whitespace matched as a single space. A line whose first non-blank
 
 ```enumeration-register
 # id | role | path | kind | anchor
-nightlife-verdicts | owner | agents/06-validator.md | lead | record exactly one verdict:
+nightlife-verdicts | owner | agents/06-validator.md | lead | **The ladder.**
 nightlife-verdicts | site  | agents/06-validator.md | list | - **Verdicts:**
 ```
 
