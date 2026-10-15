@@ -280,17 +280,18 @@ independent review's. Where the operator ruled against the design, that is said.
 of both records stands.
 
 - **`ADR-022` D5.3.** An example is not an option, and D5.3 is a decision about options. It reaches
-  an example on one reading: that whatever is said beside an open question is an offer — which its
-  opening sentences bound to the form's own text, and which its clause *"an open question stays
-  open"* withholds from a field whose form carries no option list. That is the reading the grading
-  recorded in commit `14043ee` took when it *"read the mention as an offer"*, and the reading shared
-  rule 3 follows where it says to ask such a field open and offer none. A composed example is text
-  the form does not carry, said beside an open question, so on that reading D5.3 bars it — and on
-  that reading D5.3 is superseded. **Everything D5.3 says of an option stands:** an option is
-  offered only from the form's own option text, quoted; none is offered for a field whose form
-  carries no option list; and a paraphrase of the form's options is an invention. So do that
-  record's paragraph on what makes D5.3 and D5.4 gradeable, its reading of D5.3 at the close of its
-  § *Decision* 5, and its rows `S13` and `OS-4`, which are about the option list's one home.
+  an example on one reading: that whatever is said beside an open question is an offer. On that
+  reading two of its sentences apply: its opening sentences bound an offer to the form's own text,
+  and its clause *"an open question stays open"* withholds one from a field whose form carries no
+  option list. That is the reading the grading recorded in commit `14043ee` took when it *"read the
+  mention as an offer"*, and the reading shared rule 3 follows where it says to ask such a field
+  open and offer none. A composed example is text the form does not carry, said beside an open
+  question, so on that reading D5.3 bars it — and on that reading D5.3 is superseded. **Everything
+  D5.3 says of an option stands:** an option is offered only from the form's own option text,
+  quoted; none is offered for a field whose form carries no option list; and a paraphrase of the
+  form's options is an invention. So do that record's paragraph on what makes D5.3 and D5.4
+  gradeable, its reading of D5.3 at the close of its § *Decision* 5, and its rows `S13` and `OS-4`,
+  which are about the option list's one home.
 - **`ADR-026` § 5, CH-2's W-test, its first sentence.** The candidate value that sentence bars is,
   in shared rule 7's gloss and in the reading commit `14043ee` records, a value *arrived at* rather
   than one the form lists. A composed example is text the interviewer arrives at, so the sentence
@@ -398,7 +399,7 @@ turns.** Nothing else decides.
 
    **A member a form declares as its default is not admitted as a sixth** — the trip form's
    `one-off` for "anything else" is the known case — and the form's ask-prose is reworded.
-5. **What a word is.** A difference of case, spacing, punctuation or typographic form is not a
+5. **What a word is.** A difference of case, punctuation or typographic form is not a
    difference of word. Nothing that changes which word it is — a spelling repair, a stem, a
    synonym, a digit for a word — is admitted. This record does not close the list of folded forms:
    the definition a check runs is settled design.
@@ -573,7 +574,7 @@ the inputs must carry.
 | `OW-T.P2` — closure | admitting into a recorded value a non-utterance that is not one of `A1` to `A5` | #1353 |
 | `OW-T.E1` — the rule is stated | the shared rules say, in the same words in both carriers, that a recorded value is made only of what the answering person said | #1353 — it holds today, in shared rules 7 and 8 |
 | `OW-T.E2` — the example sentences | once the rules admit an example, they also say that an example not taken up in the person's own words is never recorded, and that assent to one records nothing | #1330 |
-| `FB-T.P1` — no licence | a second follow-up on a field; a follow-up after a skip, a decline, a stop or an empty answer; or a follow-up on a `PERSON`-class field in a spoken session | #1353 |
+| `FB-T.P1` — no licence | a second follow-up on a field; a follow-up after a skip, a decline, a stop or an empty answer; a follow-up on a field the file already answers from an earlier session; a follow-up on a closed field; a follow-up that repeats the question in the same words; or a follow-up on a `PERSON`-class field in a spoken session | #1353 |
 | `FB-T.E1` — the bound is stated | both carriers state the bound, with the numbers D3 states | #1330 |
 | `FB-T.E2` — the exclusions are stated | both carriers state D3's exclusions | #1330 |
 | `FB-T.E3` — the exit is stated | both carriers say what is written when a field's turns end | #1330 |
@@ -641,6 +642,7 @@ words. *Order* and *example echo* are reported beside the verdict, as D2 states 
   the question that asks them is an ask-on-doubt and is not such a turn; no follow-up is put after
   an empty answer; and no follow-up is put on a field the file already answered when the session
   began;
+- no follow-up is put on a closed field;
 - a follow-up does not repeat the ask in the same words, and carries no value but the person's own
   words, the field's label and an example as D1 bounds one;
 - where the session is spoken and the field is typed `PERSON`, no follow-up puts it;
@@ -771,7 +773,8 @@ view, which stays true of that surface.
 
 | What | Tier | Why |
 |---|---|---|
-| The decisions, before the conduct is edited to them | **CHEAP** | a record and the marks that point at it, revertible together; no session behaves differently yet |
+| The decisions, while this record is `Proposed` | **CHEAP** | a record and the marks that point at it, revertible together; no session behaves differently yet |
+| The decisions, once this record is `Accepted` | **MODERATE** | as this record's card states |
 | The example bound, the follow-up shape and the two lists a style is held to, once slices are built on them | **MODERATE** | a record superseded in part can be superseded again, but the slices built on it follow it |
 | The own-words predicate | **CHEAP** until a suite pins it, **MODERATE** after | the suite's fixtures encode it |
 | The style names | **CHEAP** | product vocabulary |
@@ -803,6 +806,8 @@ Every residual has an owner that is a card or the operator.
 | RS-18 | **`ADR-026` § 5's enforcement-strength cell for CH-2 and its residual paragraph** | #1353 |
 | RS-19 | **The status-lag report the marks cause**: `ADR-022` and `ADR-026` are Accepted and cite this record while it is `Proposed` | the operator; the change that sets this record `Accepted` clears it |
 | RS-20 | **A reorder, in a value written or a confirmation spoken, does not conform to `ADR-022` D5.1 and D5.2 and fails no check** | the operator, who reads the report #1769's suite produces |
+| RS-21 | **The reported observation *order* is defined for a value and not for a confirmation**, though D2 item 3 reports a reorder in either | #1769 |
+| RS-22 | **A silence and an unclear reply on one field, in either order**, have no row in D3 item 5's table | #1769 |
 
 ## References
 
