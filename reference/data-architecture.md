@@ -1600,6 +1600,11 @@ with a run of whitespace matched as a single space. A line whose first non-blank
 # id | role | path | kind | anchor
 nightlife-verdicts | owner | agents/06-validator.md | lead | **The ladder.**
 nightlife-verdicts | site  | agents/06-validator.md | list | - **Verdicts:**
+occasion-members   | owner | agents/06-validator.md | list | A natural occasion falls on that night
+occasion-members   | site  | agents/05-hub-planner.md | list | natural occasion does
+occasion-members   | site  | agents/07-nightlife.md | list | a natural occasion falls on some night of the trip
+occasion-members   | site  | agents/07-nightlife.md | lead | Resolve each member from its own source
+occasion-members   | site  | CLAUDE.md | list | a natural occasion would apply to
 ```
 
 **What the unregistered-repeat reading passes over.** It reads engine files, in the sense

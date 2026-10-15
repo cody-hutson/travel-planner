@@ -52,14 +52,16 @@ anything**, and resolve to exactly one of three depths:
 | Signal present | Depth | Output |
 |---|---|---|
 | At least one traveler holds a desire whose text or theme tag is nightlife-shaped — archetypes `a night out` / `live music`, theme tag `nightlife` | **FULL** | full menu, minimum 12 entries |
-| No such desire, but a nightlife **interest** (`bars & nightlife`, `live music`) is present, **or** a natural occasion applies (a weekend night, a birthday), resolved as the trip-level projection defined below | **LIGHT** | minimum 5 entries, concentrated in the low-key and non-drinking sections |
+| No such desire, but a nightlife **interest** is present — a value under `Interests:`, such as `bars & nightlife` or `live music` — **or** a natural occasion falls on some night of the trip (`weekend night`, `calendar occasion`), resolved as the trip-level projection defined below | **LIGHT** | minimum 5 entries, concentrated in the low-key and non-drinking sections |
 | Neither | **SKIP** | the gate-result stub described under `## Input` — and stop |
 
-**An interest alone never reaches FULL.** The intake form calls the interests
-block a soft signal that is broader and looser than the specific, ranked
-desires above it. Treating a ticked interest as a desire forces nightlife on a
-group that never asked for it — the exact outcome group-fit gating exists to
-prevent. An interest raises depth; it never creates demand.
+**An interest alone never reaches FULL.** Which label a value sits under
+decides what it is.
+`agents/06-validator.md` → "A ticked interest is not a desire" owns that rule,
+and this gate follows it: `live music` under `Interests:` is an interest, and
+under a `Desire:` it is a desire. Treating a ticked interest as a desire forces
+nightlife on a group that never asked for it — the exact outcome group-fit
+gating exists to prevent. An interest raises depth; it never creates demand.
 
 **Presence is evaluated at trip level here, never per night.** A traveler
 counts as present if they are on the trip at all — read `Can travel:` /
@@ -68,14 +70,16 @@ presence is the hub's to evaluate at placement time. You do not know which
 night is which, and you do not need to.
 
 **The occasion limb is a trip-level projection, never a per-night test.**
-Its members are per-night predicates and this gate is night-blind, so
-resolve the limb as the one question this altitude can answer: **does this
-trip contain at least one night a natural occasion would apply to?** — does a
-weekend night fall inside the trip's span, or a special occasion inside
-trip-context.md's travel dates or calendar events. That is the exact
-trip-level projection of the per-night rule the hub applies at placement time
-and the validator applies in its coverage check, so all three resolve one
-predicate instead of three.
+Its members are owned by `agents/06-validator.md` → "Occasion limb" and
+repeated in the row above; a member is added there, never here
+(`CLAUDE.md` § *Rules over an enumeration*). They are per-night predicates
+and this gate is night-blind, so resolve the limb as the one question this
+altitude can answer: **does this trip contain at least one night a natural
+occasion would apply to?** — does a weekend night fall inside the trip's
+span, or a calendar occasion inside trip-context.md's travel dates or
+calendar events. That is the exact trip-level projection of the per-night
+rule the hub applies at placement time and the validator applies in its
+coverage check, so all three resolve one predicate instead of three.
 
 **`a last night` is not a member of this limb.** Every trip has a last night, so
 at trip level that predicate is universally true: it cannot change the answer to
@@ -85,14 +89,19 @@ enumeration rather than carried as an inert member — do not reintroduce it her
 unless it can change that answer.
 
 **Resolve each member from its own source, and never assert one you could not
-read.** Weekend night: the `### Outbound` / `### Return` legs' `[Day, Date,
-Time TZ]` — the only weekday trip-context.md's template governs. Special
-occasion: `## Events & Calendar`, whose dated public entries are holidays,
-festivals and major events. Birthday and other personal occasions: the
-`Special occasion?` carry-through in `outputs/traveler-model.md` — `## Events &
-Calendar` has no field for one, and `agents/00-enrichment.md` states the datum
-links to nothing trip-level. If a member has no readable source on this trip,
-record that in the stub's `Basis:` line rather than asserting the limb.
+read.**
+
+- **`weekend night`** — every leg line's `[Day, Date, Time TZ]` under
+  trip-context.md's `## Logistics`. That test decides which lines are read;
+  `### Outbound` and `### Return` are examples of the blocks that carry one
+  (`CLAUDE.md` § *Rules over an enumeration*).
+- **`calendar occasion`** — `## Events & Calendar`, whose dated public entries
+  are holidays, festivals and major events.
+
+The owner admits no other member: a traveler's `Special occasion?` answer in
+`outputs/traveler-model.md` is not read by this gate. If a member has no
+readable source on this trip, record that in the stub's `Basis:` line rather
+than asserting the limb.
 
 **What the gate reads — and what it does not.** The three rows above resolve on
 the desire and theme-tag signal, the interest signal, and the occasion limb, and
@@ -249,11 +258,10 @@ Read trip-context.md fully before producing output. Read in this order:
 1. `outputs/traveler-model.md` — **first, and before any research.** The
    `[DERIVED]` per-traveler desires with their `Priority tier:` (`anchor` /
    `wish` / `nice-to-have`), theme tags, interests, the desire-overlap signal,
-   the presence facets (`Can travel:` / `Blackout:` / `Arrive / leave:`), the
-   per-traveler `Recurrence` marking, which raises the candidate floor for any
-   desire marked `daily`, and the `Special occasion?` carry-through if one is
-   present. Then, for the occasion limb only, `trip-context.md` →
-   `## Logistics` → `### Outbound` / `### Return` (the legs' `Departs:` /
+   the presence facets (`Can travel:` / `Blackout:` / `Arrive / leave:`), and
+   the per-traveler `Recurrence` marking, which raises the candidate floor for
+   any desire marked `daily`. Then, for the occasion limb only,
+   `trip-context.md` → `## Logistics` (every leg line's `Departs:` /
    `Arrives:` `[Day, Date, Time TZ]`, which give the trip's span and its
    weekdays) and `trip-context.md` → `## Events & Calendar` (its dated public
    entries).

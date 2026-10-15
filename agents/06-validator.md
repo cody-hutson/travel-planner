@@ -611,8 +611,13 @@ A night is **nightlife-applicable** when either limb holds:
   nightlife archetype (`a night out`, `live music`), or carrying a nightlife
   `Theme tag(s):` (`nightlife`). Any `Priority tier:` qualifies — anchor, wish, or
   nice-to-have. Carry the tier into the verdict; it does not gate it.
-- **Occasion limb.** A natural occasion falls on that night — a weekend night, or a
-  special occasion in trip-context.md's travel dates or calendar events.
+- **Occasion limb.** A natural occasion falls on that night
+  (`weekend night`, `calendar occasion`) — a weekend night, or an occasion dated to that
+  night in trip-context.md's travel dates or calendar events. This sentence owns those
+  members (`CLAUDE.md` § *Rules over an enumeration*): a member is added here, and a
+  night that is neither is not an occasion night. A traveler's `Special occasion?`
+  answer is not a member, whatever words it shares with a calendar entry: the label
+  decides.
 
 Presence is evaluated **per night**, against that night's date, using the **same**
 present-day set the needs audit uses — see `reference/data-model.md` → "Presence — a
@@ -621,10 +626,14 @@ traveler's present-day set". Do not re-derive it here, and do not read the raw
 `### Per-Traveler Planning Days [DERIVED]` block. A traveler outside their window that
 night, or whose blackout covers it, does not make the night applicable.
 
-**A ticked interest is not a desire.** `bars & nightlife` under a traveler's
-Interests is a soft signal — broader and looser than the ranked Desires. Reading it
-as a desire would force nightlife on a group that ticked a box. Gate on Desires
-only; both strings contain "nightlife", so this distinction is the whole gate.
+**A ticked interest is not a desire.** The label decides, never the string
+(`CLAUDE.md` § *Rules over an enumeration*): a value under a traveler's `Interests:`
+is an interest whatever words it shares with a desire archetype, and only a `Desire:`
+line is a desire. `bars & nightlife` and `live music` are examples — `live music` is
+offered on both intake forms, and under `Interests:` it is still an interest. An
+interest is a soft selection signal, looser than the ranked Desires
+(`reference/data-model.md` § *Lifecycle facets*); reading it as a desire would force
+nightlife on a group that ticked a box. Gate on Desires only.
 
 **A night with neither limb is not applicable and is never flagged** — the same
 rule as not failing a conditional need on a day its constraint never governed.
@@ -690,6 +699,13 @@ outranks keeps the severity its own rung gives it. When a night resolves at
 `contradiction` and an obliged traveler is also unaccounted for, record that beside
 the verdict as a second Warning, with the citation the `gap` rung asks for. The
 verdict stays `contradiction`, and the counter counts the night there.
+
+**A present traveler the gate did not oblige.** On a night that only the desire limb makes
+applicable, a present traveler who holds no nightlife desire is outside the obligation,
+and no verdict turns on them. `agents/05-hub-planner.md` still asks that every present
+traveler be named by an entry or by a no-nightlife line, never both and never neither:
+where such a traveler is named by neither, record a Note naming them; where one is named
+by both, that is the `contradiction` rung.
 
 **Read the block; do not classify venues.** What counts as nightlife was settled by
 the primary-draw partition upstream: food-forward drinking (izakaya, mezcalerías,
@@ -1202,7 +1218,7 @@ the ownership rule and it is what keeps two writers off one frontmatter block:
 
 | Night | Date / weekday | Applicable? | What made it applicable | Block content | Verdict |
 |-------|----------------|-------------|-------------------------|---------------|---------|
-| Day [N] | [YYYY-MM-DD, Sat] | [yes / no] | [Traveler — "desire" (tier) / weekend / occasion / —] | [N entries (member sets) / no-nightlife note (member sets) / neither / absent] | [the night's verdict] |
+| Day [N] | [YYYY-MM-DD, Sat] | [yes / no] | [Traveler — "desire" (tier) / the occasion member that held / —] | [N entries (member sets) / no-nightlife note (member sets) / neither / absent] | [the night's verdict] |
 
 - **Applicable nights:** [N of M]
 - **Verdicts:** [N `covered` · N `declined` · N `gap` · N `contradiction` · N `n/a`]

@@ -1317,7 +1317,8 @@ Line names, realistic times, first-timer cautions.]
 
 [If nightlife applies tonight — desire-gated and optional, never a forced anchor
 (ADR-001 § 3): it applies when a present traveler holds a nightlife/evening desire, or a
-natural occasion does (weekend, special occasion). Entries obey the venue-matrix dedup
+natural occasion does (`weekend night`, `calendar occasion`) — the members
+`agents/06-validator.md` → "Occasion limb" owns. Entries obey the venue-matrix dedup
 rules. When it does not apply, write the no-nightlife line instead. On any night, each
 present traveler is named by exactly one of — an entry whose member slot includes them, or
 a no-nightlife line whose member slot includes them — never both, never neither. On a night
