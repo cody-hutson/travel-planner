@@ -316,11 +316,11 @@ D1.1 in part, as to no new artifact class.** Every other decision of both record
   record sits close to both.** The row D6.1 gives a session that can write says *"there is no
   output act at all, because the answers were never held in conversation"*. Its reason is about
   answers handed back from a conversation: an entry holds no answer, is written by the session to
-  its home, and is returned to nobody. Said plainly: the session does hold its own turn counts until its ending,
-  which is the cadence that record rejected for answers. That is a choice (D3), taken so that
-  nothing marks a session that was left. D1.1's *"Resumption state is DERIVED"* and D1.2's *"There
-  is no abandon event and nothing marks one"* stand too: nothing of the class is ever read by the
-  interviewer, on any tier; no entry is written for a session that is left or that ends on
+  its home, and is returned to nobody. Said plainly: the session does hold its own turn counts until
+  its ending, which is the cadence that record rejected for answers. That is a choice (D3), taken so
+  that nothing marks a session that was left. D1.1's *"Resumption state is DERIVED"* and D1.2's
+  *"There is no abandon event and nothing marks one"* stand too: nothing of the class is ever read
+  by the interviewer, on any tier; no entry is written for a session that is left or that ends on
   silence; and an entry has no field for how a session ended. Said plainly: that an entry exists
   shows a session reached one of the endings D1 names. It does not say which, and nothing reads it
   to resume.
@@ -343,8 +343,9 @@ D1.1 in part, as to no new artifact class.** Every other decision of both record
 
 ### D1 — how the rating is asked
 
-**The rating is asked after the give-back, in one turn: a whole number from one to five, with the
-ends named, and skipping is fine. Only the number the person said is recorded.**
+**The rating is asked after the give-back — or, where the session can write, after its entry is
+written — in one turn: a whole number from one to five, with the ends named, and skipping is fine.
+Only the number the person said is recorded.**
 
 1. **When.** On a channel that cannot write, after the form's block has been given back with the
    instruction to send it back. On one that can, after the session's entry has been written at its
@@ -380,15 +381,15 @@ ends named, and skipping is fine. Only the number the person said is recorded.**
 11. **One a session.** The rating's subject is the session it ends. A later session's ask is a
     different question, so it is asked whatever an earlier session's reply was. Nothing is asked
     twice inside one session.
-12. **The opening sentence, and a decline of the record.** Before the first question the person is
-    told, once, with the disclosure `ADR-022` D6.2 and D6.4 already require where the channel
-    cannot write: that at the end they will be asked to rate the interview and may skip; and that
-    a count of the interviewer's own turns, question by question, holding none of their words,
-    goes with the rating to the same reader. **They may decline that record.** **A decline of the
-    record counts only before the block is given or the entry is written.** Taken then, no
-    engagement record is given back or written for that session, and a rating may still be given.
-    It is an utterance of this record's own: it is not the decline of a field, which `ADR-022`
-    D5.5 and the conduct record govern.
+12. **The opening sentence, and a decline of the record.** Before the first question, on every
+    tier, the person is told once — where the channel cannot write, with the disclosure `ADR-022`
+    D6.2 and D6.4 already require there — that at the end they will be asked to rate the interview
+    and may skip; and that a count of the interviewer's own turns, question by question, holding
+    none of their words, goes with the rating to the same reader. **They may decline that record.**
+    **A decline of the record counts only before the block is given or the entry is written.** Taken
+    then, no engagement record is given back or written for that session, and a rating may still be
+    given. It is an utterance of this record's own: it is not the decline of a field, which
+    `ADR-022` D5.5 and the conduct record govern.
 13. **An interview style** may change how the ask sounds, and never whether it is made, the scale,
     the names of its ends or what is recorded (`ADR-045` D4).
 
@@ -799,6 +800,7 @@ it says.
 | The same file, its standing clause | the write of an entry under the people store's root needs a standing rule of its own, since no standing rule admits that write today; and removing a subject's file of entries is a deletion its erasure rule does not yet list |
 | The same file, § `## erase <person-id>` | the reach table gains the class's rows, its stated tally moves with them, and the schema suite's arm that grades the tally moves too |
 | `reference/data-architecture.md` §§ 1 and 1.1, and the sections that state a class's lifecycle, provenance and publish class | the class's rows, one for each root, and every count, heading, identifier range and member list that moves with them — among them § 5.1's sentence naming the `internal-hard` classes as an exact set, which gains the row for the people store's root, and § 1's sentence on which classes are not per-trip |
+| `reference/site-layout-spec.md` § 9.1 | its `publish-contract-artifacts` fence, which the artifact-schema suite holds to § 1.1 in both directions for every `bound` and `internal-hard` row, gains the row for the people store's root; its sentence "Four classes carry `internal-hard`" moves with it |
 | The records that quote that § 5.1 sentence, or call a class its last member — `ADR-010`, `ADR-016`, `ADR-025`, `ADR-026`, `ADR-027` and `ADR-029` | each states the set as it stood when it was written; the change that moves the set names them |
 | `reference/schemas/`, and a witness under `examples/` | the class's schema, and its witness |
 | `scripts/validate-artifacts.sh` and `scripts/test-artifact-schema.sh` | the validator's class-heading constant, and the suite's arms over the class table and the reach table |
@@ -821,9 +823,9 @@ of the return is written into the profile's file, and `reference/data-model.md`
 so an entry is one session's; D5.1 and D5.2, since an entry holds no value and confirms none; D5.4,
 read by analogy at the rating ask — the number named, never the nearest; D5.5, since nothing is
 written on a silence, at a field or at the ask; D5.6; each row of D6.1; D6.2 to D6.5, the
-disclosure among them; and D6.3, which D2's pooling reads and does not change. `ADR-025`'s definition of
-*engaged* on what the engine holds and never on what a traveller did: neither a rating nor an
-entry is an input to `engagement(t)`, and no floor is added. `ADR-026`: no further channel is
+disclosure among them; and D6.3, which D2's pooling reads and does not change. `ADR-025`'s
+definition of *engaged* on what the engine holds and never on what a traveller did: neither a rating
+nor an entry is an input to `engagement(t)`, and no floor is added. `ADR-026`: no further channel is
 admitted — the return crosses as the form's block does, in the sender's hands — and its W-rule is
 why no rating is ever inferred.
 

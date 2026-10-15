@@ -5,41 +5,42 @@ follows Keep a Changelog; versions follow Semantic Versioning.
 
 ## [Unreleased] — 2026-10-09 — The interviewer becomes a conversation: the founding decision
 
-This release decides and builds nothing, deliberately. The interviewer asks a form's questions
-under floors that were set on purpose: it may offer only the options the form itself carries, its
-shared rules cap how many questions a section gets, and when it finishes it gives back the profile
-and nothing else. Nothing asks the traveller how the interview went, and nothing records what the
-interviewer did. Making the interviewer a conversation crosses several accepted decision records
-and the interview's conduct at once, so a pair of decision records settle it first, before any
-slice is cut. No trip verb behaves differently, and neither the interview's conduct nor the
-interview card is edited: an interview runs after this release exactly as it ran before it.
+This release lands two decision records and deliberately builds nothing. The interviewer asks a
+form's questions under floors that were set on purpose: it may offer only the options the form
+itself carries, its shared rules cap how many questions a section gets, and when it finishes it
+gives back the profile and nothing else. Nothing asks the traveller how the interview went, and
+nothing records what the interviewer did. Making the interviewer a conversation crosses several
+accepted decision records and the interview's conduct at once, so a pair of decision records settle
+it first, before any slice is cut. No trip verb behaves differently, and neither the interview's
+conduct nor the interview card is edited: an interview runs after this release exactly as it ran
+before it.
 
 **What the interviewer may say, and how far it may go.**
 `reference/adr/ADR-045-interview-conversation-conduct.md` decides the conduct. The interviewer may
 give an example to help someone answer: two or three kinds of answer, said as an example, never a
-value the person might adopt, and never a form's placeholder example or an item of its lists. It
-may ask one further question when an answer is thin — at most one on a field and at most two
-across a section — and never after a skip, a decline, a stop or an empty answer, nor on a
+value the person might adopt, and never a placeholder example, menu item or tick-list item of its
+section. It may ask one further question when an answer is thin — at most one on a field and at most
+two across a section — and never after a skip, a decline, a stop or an empty answer, nor on a
 `PERSON`-class field in a spoken session. Every recorded value is made only of the answering
-person's own words; a change of word order and an echoed example are reported and fail nothing.
-And a traveller may choose an interview style — `warm` by default, `brisk` or `gentle` — which
-changes how the asking sounds and nothing else. Each rule is stated so that a check can evaluate
-it; the checks are later slices.
+person's own words; a change of word order and an echoed example are reported and fail nothing. And
+a traveller may choose an interview style — `warm` by default, `brisk` or `gentle` — which changes
+how the asking sounds and nothing else. Each rule is stated so that a check can evaluate it; the
+checks are later slices.
 
 **What comes back beside the profile.**
 `reference/adr/ADR-046-interview-rating-and-engagement-record.md` decides the return. Once the form
-has been given back, the traveller is asked to rate the interview from one to five, and may skip.
-Only the number they said is recorded, and a missing reply costs the rating and nothing else.
-Beside the rating comes an engagement record: the interviewer's own account of its turns, as
-identifiers and counts — which questions it asked, and how many further turns of each kind it took
-on each — holding no word anyone said. A section of a form that holds a `PERSON`-class question is
-kept as one pooled row. On a channel that cannot write, the engagement record rides in the one
-returned block, below the end-of-profile heading and under a tag; the save finds it by that
-tag and never by where it sits, and never touches the profile's merge on its account. The rating
-follows as a tagged line of its own. What comes back is kept as a governed class in the data model
-— one writer, a schema check, an erase row — beside the profile it belongs to, and at that
-profile's publish class. A travel manager reads a low rating there, beside the profile, and
-nothing in the engine acts on one.
+has been given back — or, where the session can write, once its entry is written — the traveller is
+asked to rate the interview from one to five, and may skip. Only the number they said is recorded,
+and a missing reply costs the rating and nothing else. Beside the rating comes an engagement record:
+the interviewer's own account of its turns, as identifiers and counts — which questions it asked,
+and how many further turns of each kind it took on each — holding no word anyone said. A section of
+a form that holds a `PERSON`-class question is kept as one pooled row. On a channel that cannot
+write, the engagement record rides in the one returned block, below the end-of-profile heading and
+under a tag; the save finds it by that tag and never by where it sits, and never touches the
+profile's merge on its account. The rating follows as a tagged line of its own. What comes back is
+kept as a governed class in the data model — one writer, a schema check, an erase row — beside the
+profile it belongs to, and at that profile's publish class. A travel manager reads a low rating
+there, beside the profile, and nothing in the engine acts on one.
 
 **Four earlier decisions gain a mark, and none is rewritten.** Where a new record supersedes part
 of an accepted one, the earlier record says so on its `Status:` line and at the superseded text,
