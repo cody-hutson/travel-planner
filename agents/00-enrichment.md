@@ -244,8 +244,13 @@ link against. Specifically:
 
   A traveler may also note a **Special occasion?** — a birthday, anniversary,
   honeymoon, or milestone the trip is marking. It is not a lifecycle facet and
-  links to nothing trip-level; carry it through verbatim alongside their facets
-  so the hub can see it.
+  links to nothing trip-level; carry it through verbatim alongside their facets.
+  No agent prompt reads it: the occasion members the hub, the validator and the
+  nightlife gate apply are read from trip-context.md, never from this answer.
+  It is carried for two readers that Accepted records decide and no slice has
+  built — the group snapshot (`reference/adr/ADR-037-group-snapshot.md`) and
+  the site (`reference/adr/ADR-031-site-phase-model.md`). A reader, when one
+  is built, is named here (`CLAUDE.md` § *Rules over an enumeration*).
 - **Derive the per-traveler document set.** Entry and exit requirements depend on
   the individual traveler *and* on the destination pair, so they are derived
   per person, never stated once for the group. Read the traveler's `Passport:`
