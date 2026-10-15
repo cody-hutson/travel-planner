@@ -47,9 +47,9 @@ Commit `14043ee` records the operator's decision on the durable form's must-have
 of need that step lists may be shared as examples, never as a list to choose from, and they are
 given with the ask. It added a clause to shared rule 3 — an example the ask-prose gives for its
 section *"may still be mentioned as an example, never offered as a choice"* — and its message
-records two things this record relies on. The grading of D5.3 on that release *"read the mention as an offer"*.
-And the candidate value shared rule 7 bars *"is one arrived at"*, where an example the ask-prose
-gives is the form's own text.
+records two things this record relies on. The grading of D5.3 on that release *"read the mention as
+an offer"*. And the candidate value shared rule 7 bars *"is one arrived at"*, where an example the
+ask-prose gives is the form's own text.
 
 **The interviewer epic's refinement asks for more than those floors admit** (#1205): an interviewer
 that may give an example to help someone answer and may follow up when an answer is thin, while
@@ -282,15 +282,15 @@ of both records stands.
 - **`ADR-022` D5.3.** An example is not an option, and D5.3 is a decision about options. It reaches
   an example on one reading: that whatever is said beside an open question is an offer — which its
   opening sentences bound to the form's own text, and which its clause *"an open question stays
-  open"* withholds from a field whose form carries no option list. That is the reading the grading recorded in commit `14043ee` took
-  when it *"read the mention as an offer"*, and the reading shared rule 3 follows where it says to
-  ask such a field open and offer none. A composed example is text the form does not carry, said
-  beside an open question, so on that reading D5.3 bars it — and on that reading D5.3 is
-  superseded. **Everything D5.3 says of an option stands:** an option is offered only from the
-  form's own option text, quoted; none is offered for a field whose form carries no option list;
-  and a paraphrase of the form's options is an invention. So do that record's paragraph on what
-  makes D5.3 and D5.4 gradeable, its reading of D5.3 at the close of its § *Decision* 5, and its
-  rows `S13` and `OS-4`, which are about the option list's one home.
+  open"* withholds from a field whose form carries no option list. That is the reading the grading
+  recorded in commit `14043ee` took when it *"read the mention as an offer"*, and the reading shared
+  rule 3 follows where it says to ask such a field open and offer none. A composed example is text
+  the form does not carry, said beside an open question, so on that reading D5.3 bars it — and on
+  that reading D5.3 is superseded. **Everything D5.3 says of an option stands:** an option is
+  offered only from the form's own option text, quoted; none is offered for a field whose form
+  carries no option list; and a paraphrase of the form's options is an invention. So do that
+  record's paragraph on what makes D5.3 and D5.4 gradeable, its reading of D5.3 at the close of its
+  § *Decision* 5, and its rows `S13` and `OS-4`, which are about the option list's one home.
 - **`ADR-026` § 5, CH-2's W-test, its first sentence.** The candidate value that sentence bars is,
   in shared rule 7's gloss and in the reading commit `14043ee` records, a value *arrived at* rather
   than one the form lists. A composed example is text the interviewer arrives at, so the sentence
@@ -394,7 +394,7 @@ turns.** Nothing else decides.
    | `A2` | the text a form declares for an empty answer — `none` on the needs block | they gave the empty answer, in that word or in any words that state it. Where it is unclear whether they meant the empty answer or a skip, ask. Never on silence | `ADR-022` D3.6, D5.6, and D5.4 as amended |
    | `A3` | a member of a `closed:` set, as the form spells it | their words contain the member, or pick it unambiguously by position | `ADR-022` D5.4, its test whole |
    | `A4` | a provenance mark the output class admits | a relayed answer; the mark is struck before the value beside it is evaluated | `ADR-022` D4.1 |
-   | `A5` | the form's own fixed text — a label, a heading, a computed line, a bracket nobody reached or resolved | always | `ADR-022` D3.5, D1.3; [`ADR-040`](ADR-040-transcript-only-return-and-save.md) D1 |
+   | `A5` | the form's own fixed text — a label, a heading, a computed line, a bracket no answer or skip has resolved, whether or not the field was reached | always | `ADR-022` D3.5, D1.3; [`ADR-040`](ADR-040-transcript-only-return-and-save.md) D1 |
 
    **A member a form declares as its default is not admitted as a sixth** — the trip form's
    `one-off` for "anything else" is the known case — and the form's ask-prose is reworded.
@@ -456,7 +456,7 @@ stands.
    |---|---|---|
    | The follow-up is answered | their words from both turns, tightened by deletion only | does not ask it |
    | The follow-up is declined, or met with silence | the answer already taken stands. A silence there gets `ADR-022` D5.5's re-offer, which the follow-up did not spend | does not ask it |
-   | They say "skip" at a follow-up | nothing on that word: **it is clarified by asking** whether they are leaving the follow-up or skipping the field | as their reply decides |
+   | They say "skip" at a follow-up | nothing on that word: **it is clarified by asking** whether they are leaving the follow-up or skipping the field (`ADR-022` D5.6: which they meant is in doubt, so nothing is written until they say) | as their reply decides |
    | Doubt remains after asking, on an open field | their words as they said them, quoted. A verbatim value can always be built there, so `ADR-022` D5.6 never leaves an open field without an exit | does not ask it |
    | They utter a skip | the em dash (`A1`) | does not ask it |
    | They give the empty answer a form declares a word for | that declared text (`A2`) | does not ask it |
@@ -469,7 +469,7 @@ stands.
    clarification or an example the person asked for; their own return to a field, or their change
    of an answer; the starred pass's decision point; the style offer; a disclosure; the spoken-care
    offer; a routing statement.
-7. **Shared rule 2's cap goes.** Each field is put once, and the form's ask-prose says how a
+7. **Shared rule 2's cap goes.** Each field is asked once, and the form's ask-prose says how a
    section's fields are grouped into questions. The sentence carrying the cap leaves both carriers
    in the change that writes this bound in. That rule's other sentence — a placeholder is a hint,
    never a script to read out — stands with no opening.
@@ -569,7 +569,7 @@ the inputs must carry.
 
 | Limb | Condition | Lands with |
 |---|---|---|
-| `OW-T.P1` — no licence | recording or confirming a value from a source other than the answering person's words: an example, an option they did not choose, another field, a guess, a default, assent alone | #1353 |
+| `OW-T.P1` — no licence | recording or confirming a value from a source other than the answering person's words: an example, an option they did not choose, another field, a guess, a default, assent alone — an admitted non-utterance (`A1` to `A5`) apart | #1353 |
 | `OW-T.P2` — closure | admitting into a recorded value a non-utterance that is not one of `A1` to `A5` | #1353 |
 | `OW-T.E1` — the rule is stated | the shared rules say, in the same words in both carriers, that a recorded value is made only of what the answering person said | #1353 — it holds today, in shared rules 7 and 8 |
 | `OW-T.E2` — the example sentences | once the rules admit an example, they also say that an example not taken up in the person's own words is never recorded, and that assent to one records nothing | #1330 |
@@ -621,22 +621,26 @@ input. On a real conversation nothing independent supplies (iii) and (iv), so bo
 complete transcript fails.
 
 **`OW-C` — for each recorded value, with its field.** The value passes when it is an admitted
-non-utterance on that non-utterance's own terms (`A1` to `A5`), or when every word of it occurs
-among the words of the answering person's turns on that field, counted with multiplicity. A fail
-names the words. *Order* and *example echo* are reported beside the verdict, as D2 states them.
+non-utterance on that non-utterance's own terms (`A1` to `A5`). A value of one of those five kinds
+written outside its terms fails, naming the kind: an em dash where no skip was uttered, a declared
+text where no empty answer was given. Any other value passes when every word of it occurs among the
+words of the answering person's turns on that field, counted with multiplicity. A fail names the
+words. *Order* and *example echo* are reported beside the verdict, as D2 states them.
 
 | | Their turn on the field | Recorded | Verdict |
 |---|---|---|---|
 | ✓ | "I'd want my own room if it isn't too expensive." | "own room if it isn't too expensive" | pass — order kept |
-| ✗ | the same | "own room if it's affordable" | fail — "affordable" is in no turn of theirs; it is the form's placeholder wording |
+| ✗ | the same | "own room if it's affordable" | fail — "it's" and "affordable" are in no turn of theirs; the value is the form's placeholder wording |
 
 **`FB-C` — for each field, in one session.** All of these hold:
 
 - at most one turn of the kind *follow-up* puts it, and across its section the follow-ups number at
   most two;
-- no turn of any kind puts it after an uttered skip, decline or stop for it or for its section; no
-  follow-up is put after an empty answer; and no follow-up is put on a field the file already
-  answered when the session began;
+- no turn of any kind puts it after an uttered skip, decline or stop for it or for its section — a
+  "skip" said at a follow-up is one only when they have said it is the field they are skipping, and
+  the question that asks them is an ask-on-doubt and is not such a turn; no follow-up is put after
+  an empty answer; and no follow-up is put on a field the file already answered when the session
+  began;
 - a follow-up does not repeat the ask in the same words, and carries no value but the person's own
   words, the field's label and an example as D1 bounds one;
 - where the session is spoken and the field is typed `PERSON`, no follow-up puts it;
@@ -646,8 +650,8 @@ names the words. *Order* and *example echo* are reported beside the verdict, as 
 
 | | The exchange, on a field asking about rooming | Verdict |
 |---|---|---|
-| ✓ | "How do you feel about rooming?" — "Share." — "You said 'share' — anyone in particular?" — "With Sam." | passes — one follow-up, after a taken answer, carrying only their word |
-| ✗ | the same, then: "And would a twin or a double suit you both?" | fails twice — a second follow-up on the field, and, under the restated W-test, values that are neither theirs nor the form's |
+| ✓ | "How do you feel about rooming?" — "Share." — "You said 'share' — anyone in particular?" — "With Sam." | passes — one follow-up, after an answer the fixture declares taken and thin, carrying only their word |
+| ✗ | the same, then: "And would a twin or a double suit you both?" | fails twice — a second follow-up on the field, and it carries values that are neither theirs nor the form's |
 
 ### The terms this record fixes
 
@@ -661,8 +665,8 @@ Each is a term the milestone's other record may read.
    the name of an example is a candidate value.
 3. **the person answering** — the traveller; the operator, where an answer is relayed.
 4. **put**, **first put**, **grouped ask** — an interviewer turn *puts* a field when it asks for
-   that field's answer. A grouped ask is one question naming several fields, and it puts each one
-   it names.
+   that field's answer. A field's *first put* is the first turn that puts it. A grouped ask is one
+   question naming several fields, and it puts each one it names.
 5. **a taken answer** — an answer the interviewer can record as it stands.
 6. **follow-up**, and the turns it is not: **ask-on-doubt**, **member re-offer**, **silence
    re-offer**, **single re-ask**. The first three name turns `ADR-022` D5.6, D5.4 and D5.5 decide;
@@ -671,8 +675,9 @@ Each is a term the milestone's other record may read.
    *ask-on-doubt*, *member re-offer*, *silence re-offer*, *asked-for* (a repeat, a clarification or
    an example the person asked for), *example* (an example turn on the interviewer's own initiative
    that rides no follow-up) and *confirmation*. Those that put no field: *decision point*, *style
-   offer*, *disclosure*, *spoken-care offer*, *routing statement* and *give-back*. **The list of
-   kinds that put or concern a field is closed.**
+   offer*, *disclosure*, *spoken-care offer*, *routing statement* and *give-back* (*give-back* as
+   `ADR-040` D1 has it; *disclosure* as `ADR-022` D6.2 has it). **The list of kinds that put or
+   concern a field is closed.**
 8. **thin answer** — the warrant for a follow-up; judged by a grader, never by a count.
    **Stuck** — the person says they do not know what to answer.
 9. **the follow-up bound** — at most one follow-up a field in a session, and at most two a section.
@@ -795,7 +800,7 @@ Every residual has an owner that is a card or the operator.
 | RS-15 | **The spoken care is not in what the route that cannot write reads**, so neither it nor D3's speech clause reaches that route until a change writes them where it reads | #1327 |
 | RS-16 | **Held cards quote text this record overtakes.** #1330 quotes D5.3 as a floor. #1353 quotes the W-test, and it and #1327 call `ADR-022` D6.3's confirmation a follow-up. #1769 and the epic's fourth criterion (#1205) say *subsequence*, which is stricter than D2's check. The epic's eighth criterion has a follow-up on a thin *or ambiguous* answer, where an ambiguous one gets the ask-on-doubt | each card, at its own planning |
 | RS-17 | **The interim.** Shared rule 3 cites D5.3 while D5.3 carries a mark, from the merge that lands this record to the rule's edit | #1330 |
-| RS-18 | **`ADR-026` § 5's enforcement-strength cell and residual paragraph**, and the order in which this record's mark there and the pending correction of that table's CH-3 row land | #1353 for the cell and the paragraph; the operator, who merges both, for the order |
+| RS-18 | **`ADR-026` § 5's enforcement-strength cell for CH-2 and its residual paragraph** | #1353 |
 | RS-19 | **The status-lag report the marks cause**: `ADR-022` and `ADR-026` are Accepted and cite this record while it is `Proposed` | the operator; the change that sets this record `Accepted` clears it |
 | RS-20 | **A reorder, in a value written or a confirmation spoken, does not conform to `ADR-022` D5.1 and D5.2 and fails no check** | the operator, who reads the report #1769's suite produces |
 
@@ -843,8 +848,9 @@ trailing newline.
 
 - `skills/trip-record/interview-conduct.md` and `templates/interview-card.md` — the shared rules, in
   both carriers
-- `templates/traveler-intake.template.md` and `templates/person-intake.template.md` — the guided
-  forms, and their own ask-prose
+- `templates/traveler-intake.template.md` — the trip form — and
+  `templates/person-intake.template.md` — the person form, called the durable form here; the
+  guided forms, and their own ask-prose
 - `reference/data-model.md` — each field's class, read live
 - Commit `14043ee` — the operator's ruling on the durable form's must-haves step, and the clause it
   added to shared rule 3
