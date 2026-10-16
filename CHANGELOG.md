@@ -98,11 +98,18 @@ names.
 behind this release is model sessions reading each section, with the data root bound by statement:
 the read of the data-root pointer and the slash-command dispatch are not exercised. The person
 view's exercise was one session, which read its section once and whose logs record no call to a
-reviewer tool. The group view's exercise was ten fresh sessions, and 14 of their 35 messages
+reviewer tool; two of its cases were run again, in one further session with the tool forbidden, and
+it did not call it. The group view's exercise was ten fresh sessions, and 14 of their 35 messages
 called a reviewer tool; four of its cases were run again, in two further sessions with the tool
 forbidden, and neither called it. Suite
 group `RP` grades the tree — the fixture's declared states, each section's enumerations, a reference
-reader of the label rule and a reference computation of a group's candidates — and never a verb. No
+reader of the label rule and a reference computation of a group's candidates — and never a verb.
+Some of the views' rules are held by prose and by exercise runs whose logs record no call to a
+reviewer tool, and by no suite arm, so an edit that removes one turns nothing red. Two of them are
+the wording that says where a member's edge has to sit, which separates *no joint archived trip*
+from `NO-EDGE-FOUND` in the group view's section and in the decision record's corrected row, and the
+rule that a render names what it could not read by its kind and prints no path, in the shared bound
+the person view's section declares and in two clauses of the group view's section. No
 tracked fixture holds an order state: a checkout sets file stamps, and the example roots that may
 carry an itinerary are pinned by name. The source operands of the relation are exercise-only
 placeholders standing in for files a real archived trip carries, and as tracked both archived roots
@@ -124,7 +131,10 @@ traveller on it; the decision record's point of use that resolves no trip is not
 For the group view, the operator's replies in the exercise are scripted: each was sent to the same
 session after its first return had been read, and no person typed them. A group record's title line
 does not reach the tool result, because the record's `## Members` section is taken by its heading
-and nothing above it is returned. What does reach the tool results is the whole of each candidate's
+and nothing above it is returned. In its first turn, one of the two sessions that re-ran the group
+view's cases read two person records past their frontmatter and into their title lines, so their
+display names reached a tool result; no answer carried them.
+What does reach the tool results is the whole of each candidate's
 trip context and of each confirmed trip's coverage file, opened whole as the person view opens a
 reached trip's, and a trip context is opened for every candidate, confirmed or not. The confirmation
 rule — by slug, matched whole, nothing pre-selected — is held by prose and graded by one exercise,
