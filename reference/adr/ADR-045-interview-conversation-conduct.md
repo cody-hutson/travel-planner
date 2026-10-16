@@ -1,6 +1,6 @@
 # ADR-045: The interviewer's conversation conduct — examples by kind, own words as a predicate, a follow-up bound and a chosen interview style, superseding ADR-022 D5.3 and ADR-026 § 5's CH-2 W-test in part
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-10-15)
 - **Deciders:** repo maintainer
 - **Driving work:** the *interviewer becomes a conversation: the founding decision* milestone —
   its conduct card (#1767), cut from the interviewer epic (#1205) at that epic's refinement as the
