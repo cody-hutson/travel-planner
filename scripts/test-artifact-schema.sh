@@ -47,6 +47,7 @@
 #        column, § 9's per-class delta column, and the frontmatter of the class's declared
 #        witness. Per-field denominators, because the fields do not all have the same number
 #        of homes, and `writer` is excluded with its ground measured rather than asserted.
+#        § 9's range parse is also read under mawk and gawk invoked by name (CA10).
 #   PB   the publish-bound artifact set matches the site-layout spec's declaring fence, in
 #        both directions and with the class agreeing per row.
 #   FT   reference/data-model.md's field table: the extractor that reads it by index and the
@@ -181,6 +182,7 @@
 #   VI   the venue-identity split rule has a witness. A MERGE is a claim, so the claim is
 #        asserted to carry the rung that warrants it, on ordered rungs stopped at the first
 #        that decides and biased toward SPLITTING an uncertain pair.
+#        Its readers are also run under mawk and gawk invoked by name (VI3).
 #   C    the skip predicate, made observable rather than asserted — C1a and C1b, the two arms
 #        the section below calls THE POINT OF THIS SUITE. The fixtures differ by EXACTLY ONE
 #        LINE and that is asserted before either arm is graded.
@@ -396,8 +398,16 @@
 # STRICT SKIP MODE (set by CI — .github/workflows/artifact-schema.yml).
 #   GUARD_STRICT_SKIPS=1   a SKIP fails the run unless its group is declared below.
 #   GUARD_EXPECTED_SKIPS   space-separated group ids whose skip is expected and stated.
-# This suite is pure bash with no Node, no gh and no network, so it has NO legitimate skip
-# and its expected-skip set is correctly EMPTY. VACUOUS is a distinct verdict from SKIP for
+# This suite is pure bash with no Node, no gh and no network, and its expected-skip set is
+# correctly EMPTY. Some arms do skip on a CONTRIBUTOR'S host that lacks a capability: CA10 and
+# VI3 where mawk is not installed (VI3: or gawk), and LC4 to LC8 where the awk answers the same
+# in every locale. So the hosted run DEPENDS on the runner image carrying mawk and gawk, and on
+# its awk reading the codeset. If the image drops either interpreter, the strict pass at the
+# foot of this file fails the run naming the arms that skipped, and CA10's and VI3's own lines
+# name the interpreter that is missing. The remedy is a workflow step installing it ahead of
+# this suite, which would give the job its first network dependency. The empty set is
+# load-bearing for exactly that reason: a runner that lost a capability fails under this mode
+# instead of going quietly green. VACUOUS is a distinct verdict from SKIP for
 # the reason the trip-resolution-contract suite already states: a skipped GROUP is a hole
 # in the suite, an empty POPULATION is a real measurement of the tree, and collapsing the
 # two would hide one behind the other.
@@ -1317,8 +1327,11 @@ fi
 # host lists — and the arms report how many of each they exercised. A run on a host with no
 # folding locale is a weaker measurement and says so; it is never a vacuous one, because the set
 # is never smaller than two and LC2 does not depend on the archive at all. A host that lists no
-# multibyte locale is different: no member could see the codeset, so LC3 fails the run there,
-# and LC4 fails it on an awk that reads bytes in every locale.
+# multibyte locale is different: no member could see the codeset, so LC3 fails the run there.
+# An awk that answers the same in every locale is different again — mawk reads bytes in every
+# one: no locale differential can see the codeset on it, so LC4 to LC8 SKIP and name it, CA10
+# grades the engine axis through mawk and gawk invoked by name, and CI, which runs strict,
+# fails if its own awk ever reads that way.
 #
 # ── THIS SUITE'S LOCALE POSTURE, AND THE SIBLINGS THAT TAKE THE OPPOSITE ONE ─────
 # Three separate things, stated apart because each is a different kind of claim.
@@ -1328,7 +1341,9 @@ fi
 # caller's locale.
 # WHAT THIS GROUP ASSERTS, on every run. va_type_ok's slug predicate (LC1) and ca_delta's range
 # parse (LC5) answer the same under C and under a UTF-8 locale the host lists, and the run fails
-# if none loads (LC3). That is the whole of the asserted surface.
+# if none loads (LC3). On an awk that answers the same in every locale the ca_delta half skips
+# instead (LC4 to LC8), and CA10 grades the engine by name, running ca_delta under mawk and
+# gawk. That is the whole of the asserted surface.
 # WHAT WAS MEASURED, AND IS NOT ASSERTED. The rest of the suite reads the caller's locale. Its
 # verdict set was measured identical under LC_ALL=C and under a UTF-8 default when this record
 # was written. No arm compares verdict sets, so a locale dependence added outside the asserted
@@ -1544,14 +1559,39 @@ fi
 # awk this suite runs must read a bracket expression per character under it. mawk reads bytes in
 # every locale, and the BSD awk macOS ships reads a bracket expression per character while its
 # length() counts bytes — so the probe is a bracket expression, the construct the finding is
-# about, and never length(). Where this fails, LC6 and LC7 cannot fire, and they say so.
+# about, and never length(). On an engine that answers the probe the same in every locale —
+# bytes everywhere, as mawk reads, or characters everywhere — it SKIPs, naming the engine and the
+# reading, and LC5 to LC8 skip with it: no locale differential can see the codeset there, and
+# CA10 grades the engine axis by name instead. Any other answer that is not the expected one, an
+# empty answer included, FAILs and names what was measured. The version is read with -W version,
+# which mawk and gawk answer on stdout, before --version, which BSD awk answers.
 LC_AWK_MB="$( ( export LC_ALL="${LC_MB:-C}"; printf '\342\200\223\n' | awk '{ print ($0 ~ /^[^0-9]$/) }' ) 2>/dev/null )"
 LC_AWK_C="$( ( export LC_ALL=C; printf '\342\200\223\n' | awk '{ print ($0 ~ /^[^0-9]$/) }' ) 2>/dev/null )"
-LC_AWK_ID="$(awk --version 2>&1 | awk 'NR == 1')"
+LC_AWK_ID="$(awk -W version 2>/dev/null </dev/null | awk 'NR == 1')"
+if [ -z "$LC_AWK_ID" ]; then LC_AWK_ID="$(awk --version 2>&1 </dev/null | awk 'NR == 1')"; fi
+# LC_FLAT — the engine gave ONE answer under the multibyte member and under C. It needs a member
+# to have been probed under (with none, both probes run under C and agree trivially, which is
+# LC3's finding, not the engine's) and a non-empty answer (an empty one is a probe that did not
+# run, and FAILs below). LC_FLAT_READ names the reading that was seen.
+LC_FLAT=0; LC_FLAT_READ=""
+if [ -n "$LC_MB" ] && [ -n "$LC_AWK_MB" ] && [ "$LC_AWK_MB" = "$LC_AWK_C" ]; then
+  LC_FLAT=1
+  case "$LC_AWK_MB" in
+    0) LC_FLAT_READ="bytes in every locale: it matched U+2013 as THREE bytes in a bracket expression under $LC_MB as well as under C, which is how mawk reads it" ;;
+    1) LC_FLAT_READ="characters in every locale: it matched U+2013 as ONE character in a bracket expression under C as well as under $LC_MB" ;;
+    *) LC_FLAT_READ="one answer in every locale: it answered '$LC_AWK_MB' under $LC_MB and under C alike for a one-character bracket match of U+2013" ;;
+  esac
+fi
+LC4_WHY="that is neither a character-aware reading nor one answer in every locale. Run under a character-aware awk"
+if [ -z "$LC_AWK_C" ]; then LC4_WHY="the probe under C printed no answer, so the engine was not measured"; fi
+if [ -z "$LC_AWK_MB" ]; then LC4_WHY="the probe under ${LC_MB:-C} printed no answer, so the engine was not measured"; fi
+if [ -z "$LC_MB" ]; then LC4_WHY="there is no multibyte member to probe under (read LC3), so both probes ran under C and this arm measured nothing about the engine. Install a locale whose character type is UTF-8"; fi
 if [ -n "$LC_MB" ] && [ "$LC_AWK_MB" = 1 ] && [ "$LC_AWK_C" = 0 ]; then
   PASS "LC4: this host's awk (${LC_AWK_ID:-unidentified}) matches U+2013 as ONE character in a bracket expression under $LC_MB and as three bytes under C, so a locale differential over an awk program can observe a multibyte construct on this engine"
+elif [ "$LC_FLAT" -eq 1 ]; then
+  SKIP "LC4: this host's awk (${LC_AWK_ID:-unidentified}) reads $LC_FLAT_READ. An engine that answers the same in every locale cannot be observed by any locale differential, so LC5 to LC8 skip with it. That is a property of the engine, not of your change; the engine axis is graded instead by CA10, which runs ca_delta under mawk and gawk invoked by name. Not a pass: CI runs with GUARD_STRICT_SKIPS=1 and declares no skip, so on the hosted runner this branch fails the run"
 else
-  FAIL "LC4: this host's awk (${LC_AWK_ID:-unidentified}) answered '${LC_AWK_MB:-nothing}' under ${LC_MB:-no multibyte member} and '${LC_AWK_C:-nothing}' under C for a one-character bracket match of U+2013 (1 and 0 expected). It reads bytes in every locale, so no locale differential can see a multibyte construct on this engine, and LC6 and LC7 cannot fire. Run under a character-aware awk"
+  FAIL "LC4: this host's awk (${LC_AWK_ID:-unidentified}) answered '${LC_AWK_MB:-nothing}' under ${LC_MB:-no multibyte member} and '${LC_AWK_C:-nothing}' under C for a one-character bracket match of U+2013 (1 and 0 expected) — $LC4_WHY"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
@@ -1862,6 +1902,98 @@ else
   FAIL "CA9: ca_delta read the fixture under C as [$(printf '%s' "$CA9_GOT" | tr '\n\t' ';,')] against [$(printf '%s' "$CA9_WANT" | tr '\n\t' ';,')] — the range grammar is not byte-safe, or the control cell was expanded or dropped instead of named"
 fi
 
+# ── ENGINE PARITY — THE SAME FUNCTION, UNDER AN INTERPRETER NAMED ────────────────
+# A locale differential cannot see an awk that answers the same in EVERY locale: on that engine
+# nothing varies with the locale. mawk is such an engine, reading bytes in every locale, and it is
+# the one this suite was measured to grade differently under — in a container whose awk was mawk
+# 1.3.4, CA2 and VI1 failed on a tree the hosted runner passed. So the engine is an axis of its
+# own, graded by running the SAME function under an interpreter invoked by name. Each copy is
+# derived from the function's own `declare -f` text with only its interpreter word changed —
+# never a second parser — and each arm asserts that the copy reverts to the original exactly,
+# that exactly one interpreter word was replaced, and that no host awk is left in it.
+#
+# mawk is the engine at risk. An arm that needs it SKIPs on a host without it, a contributor's
+# macOS host for one, and says so. A SKIP is not a pass: CI runs with GUARD_STRICT_SKIPS=1 and
+# declares no skip, so on the hosted runner, whose image is expected to carry mawk and gawk, a
+# skip here fails the run, and the arm's own line names the interpreter that is missing.
+#
+# eng_copy <function> <engine> — the function renamed <function>_on_<engine>, with each
+# interpreter word at command position (a line's first word, or the first word inside "$(")
+# replaced by <engine>. eng_revert <function> <engine> undoes exactly that and nothing more, so a
+# copy that changed anything else does not revert. eng_words counts the lines carrying the
+# replaced word. eng_residue counts the lines still carrying the HOST awk at a command position
+# — a line's first word, the first word inside "$(", or the first word after a pipe — so a copy
+# that changed LESS than it should, keeping an interpreter the substitution does not reach,
+# fails as surely as one that changed more. ENG_RESIDUE_CTL is that count over a synthetic text
+# carrying one site of each of the three forms and two engine-named sites that must not count,
+# and both arms below require it to read exactly 3, so a residue of 0 is a measurement.
+eng_copy() {
+  declare -f "$1" | LC_ALL=C sed -e '1s/^'"$1"' /'"$1"'_on_'"$2"' /' -e 's/^\( *\)awk /\1'"$2"' /' -e 's/\$(awk /$('"$2"' /'
+}
+eng_revert() {
+  LC_ALL=C sed -e '1s/^'"$1"'_on_'"$2"' /'"$1"' /' -e 's/^\( *\)'"$2"' /\1awk /' -e 's/\$('"$2"' /$(awk /'
+}
+eng_words() {
+  printf '%s\n' "$1" | LC_ALL=C grep -c -E '^ *'"$2"' |\$\('"$2"' '
+}
+eng_residue() {
+  printf '%s\n' "$1" | LC_ALL=C grep -c -E '(^ *|\$\(|\| *)awk '
+}
+ENG_RESIDUE_FX=$'  awk x\ny=$(awk x\nz | awk x\n  mawk x\ny=$(gawk x'
+ENG_RESIDUE_CTL="$(eng_residue "$ENG_RESIDUE_FX")"
+eng_id() {  # the named interpreter's own version line, never the host awk's
+  case "$1" in
+    mawk) mawk -W version 2>/dev/null </dev/null | awk -F, 'NR == 1 { print $1 }' ;;
+    gawk) gawk -W version 2>/dev/null </dev/null | awk -F, 'NR == 1 { print $1 }' ;;
+  esac
+}
+lit_replace() {  # <old> <new> on stdin — every occurrence, literally, with no escape processing
+  LIT_OLD="$1" LIT_NEW="$2" awk '{ s = $0; r = ""; while ((i = index(s, ENVIRON["LIT_OLD"])) > 0) { r = r substr(s, 1, i - 1) ENVIRON["LIT_NEW"]; s = substr(s, i + length(ENVIRON["LIT_OLD"])) } print r s }'
+}
+
+# CA10 — ENGINE PARITY on ca_delta. For each of mawk and gawk present by name, a copy of
+# ca_delta differing only in its interpreter word reads the CA9 fixture exactly as CA9_WANT
+# states — the en-dash ranges expanded, the three-number control cell reported PARSE-FAIL —
+# under C and under the multibyte member, and reads § 9 exactly as ca_delta reads it under C.
+# MUST FIRE beside it, per engine: the same copy with the separator class narrowed back to one
+# character must NOT reproduce CA9_WANT under C, so the comparison is shown able to see the CA2
+# defect on the very engine it grades. Prediction: on mawk that copy misreads the fixture in
+# every locale; on gawk, under C.
+CA10_REF="$( ( export LC_ALL=C; ca_delta ) 2>/dev/null )"
+CA10_GRADED=""; CA10_ABSENT=""; CA10_BAD=""; CA10_NG=0; CA10_FIRED=0; CA10_MAWK=0
+if [ "$ENG_RESIDUE_CTL" != 3 ]; then CA10_BAD="$CA10_BAD residue-probe-read-${ENG_RESIDUE_CTL:-nothing}-of-3"; fi
+for ca10_e in mawk gawk; do
+  if [ -z "$(command -v "$ca10_e" 2>/dev/null)" ]; then CA10_ABSENT="$CA10_ABSENT $ca10_e"; continue; fi
+  CA10_NG=$((CA10_NG + 1))
+  case "$ca10_e" in mawk) CA10_MAWK=1 ;; esac
+  ca10_src="$(eng_copy ca_delta "$ca10_e")"
+  ca10_back="$(printf '%s\n' "$ca10_src" | eng_revert ca_delta "$ca10_e")"
+  if [ "$ca10_back" != "$(declare -f ca_delta)" ]; then CA10_BAD="$CA10_BAD $ca10_e:copy-changed-more-than-the-interpreter"; fi
+  if [ "$(eng_words "$ca10_src" "$ca10_e")" -ne 1 ]; then CA10_BAD="$CA10_BAD $ca10_e:interpreter-words=$(eng_words "$ca10_src" "$ca10_e")"; fi
+  if [ "$(eng_residue "$ca10_src")" -ne 0 ]; then CA10_BAD="$CA10_BAD $ca10_e:host-awk-left=$(eng_residue "$ca10_src")"; fi
+  eval "$ca10_src"
+  for ca10_l in C ${LC_MB:+"$LC_MB"}; do
+    ca10_fx="$( ( export LC_ALL="$ca10_l"; EN_DOC="$CA_FX"; "ca_delta_on_$ca10_e" ) 2>/dev/null )"
+    ca10_doc="$( ( export LC_ALL="$ca10_l"; "ca_delta_on_$ca10_e" ) 2>/dev/null )"
+    if [ "$ca10_fx" != "$CA9_WANT" ]; then CA10_BAD="$CA10_BAD $ca10_e@$ca10_l:fixture"; fi
+    if [ "$ca10_doc" != "$CA10_REF" ]; then CA10_BAD="$CA10_BAD $ca10_e@$ca10_l:section-9"; fi
+  done
+  ca10_plant="$(printf '%s\n' "$ca10_src" | lit_replace "ca_delta_on_$ca10_e ()" "ca_delta_narrow_on_$ca10_e ()" | lit_replace '[^0-9]+[0-9]+' '[^0-9][0-9]+')"
+  eval "$ca10_plant"
+  ca10_pfx="$( ( export LC_ALL=C; EN_DOC="$CA_FX"; "ca_delta_narrow_on_$ca10_e" ) 2>/dev/null )"
+  if [ "$ca10_pfx" != "$CA9_WANT" ]; then CA10_FIRED=$((CA10_FIRED + 1)); else CA10_BAD="$CA10_BAD $ca10_e:narrowed-control-did-not-fire"; fi
+  CA10_GRADED="$CA10_GRADED $ca10_e ($(eng_id "$ca10_e"))"
+done
+if [ -n "$CA10_BAD" ]; then
+  FAIL "CA10: ENGINE PARITY — ca_delta read differently under an interpreter named, or its copy changed more or less than the interpreter word, or a control did not fire:$CA10_BAD (graded:${CA10_GRADED:- none}). A range parse that holds under one awk and not another grades a contributor's tree differently from CI's"
+elif [ "$CA10_MAWK" -eq 0 ]; then
+  SKIP "CA10: ENGINE PARITY — this host has no mawk, the engine this arm exists for (graded:${CA10_GRADED:- none}; absent:$CA10_ABSENT). Not a pass, and not your change: CI runs strict and declares no skip, so on the hosted runner this arm must grade mawk or fail"
+elif [ "$CA10_NG" -ge 1 ] && [ "$CA10_FIRED" -eq "$CA10_NG" ]; then
+  PASS "CA10: ENGINE PARITY — under$CA10_GRADED, a copy of ca_delta differing only in its interpreter word, with no host awk left in it, reads the CA9 fixture exactly as CA9 states (the en-dash ranges expanded, the three-number cell reported PARSE-FAIL) under C${LC_MB:+ and $LC_MB}, and reads § 9 exactly as ca_delta does under C. On each engine the same copy with a one-character separator class misreads the fixture, so the comparison can see the CA2 defect where it grades, and the residue probe found all 3 of its planted sites${CA10_ABSENT:+ (not installed here:$CA10_ABSENT)}"
+else
+  FAIL "CA10: ENGINE PARITY — the tally does not close (graded=$CA10_NG narrowed-controls-fired=$CA10_FIRED)"
+fi
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group LC, continued — ca_delta's range parse reads the same under every locale in the set.
 #
@@ -1915,7 +2047,9 @@ lc_fixture_hits() {  # <detail> — how many of the reported disagreements are o
 # LC5 — THROUGH THE REAL FUNCTION, over the real § 9 and the CA9 fixture, under the codeset set.
 LC5_R="$(lc_fn_diff ca_delta "$EN_DOC" "$CA_FX")"
 LC5_P="$(printf '%s' "$LC5_R" | cut -f1)"; LC5_B="$(printf '%s' "$LC5_R" | cut -f2)"; LC5_W="$(printf '%s' "$LC5_R" | cut -f3)"
-if [ "$LC5_P" -gt 0 ] && [ "$LC5_B" -eq 0 ] && [ "$LC5_W" -gt 0 ] && [ "$LC_MB_N" -ge 1 ]; then
+if [ "$LC_FLAT" -eq 1 ]; then
+  SKIP "LC5: not graded on this engine — LC4 shows this awk answers the same in every locale, so ca_delta cannot read differently across the set here, and a zero would not be a measurement"
+elif [ "$LC5_P" -gt 0 ] && [ "$LC5_B" -eq 0 ] && [ "$LC5_W" -gt 0 ] && [ "$LC_MB_N" -ge 1 ]; then
   PASS "LC5: ca_delta returned byte-identical output across all $LC5_P (input, locale) comparisons — § 9 and the CA9 fixture, each under C against every other member of the codeset set, $LC_MB_N of them multibyte, with $LC_CS_OUT member(s) of the collation set left out as not multibyte:${LC_CS_OUT_NAMES:- none} — over $LC5_W class rows read under C. Observed through the real function; LC6 and LC7 show the same evaluator reporting a planted construct, so this zero is a measurement"
 else
   FAIL "LC5: ca_delta is locale-dependent or the comparison is blind (comparisons=$LC5_P disagreements=$LC5_B class-rows-under-C=$LC5_W multibyte-members=$LC_MB_N left-out=$LC_CS_OUT; each must be non-zero except disagreements and left-out):$(printf '%s' "$LC5_R" | cut -f4)"
@@ -1931,7 +2065,9 @@ LC6_WIDE1="$(lc_count '[^0-9]+[0-9]+' "$LC6_SRC")"; LC6_NARROW1="$(lc_count '[^0
 eval "$LC6_SRC"
 LC6_R="$(lc_fn_diff lc_planted_narrow "$EN_DOC" "$CA_FX")"
 LC6_B="$(printf '%s' "$LC6_R" | cut -f2)"; LC6_FX="$(lc_fixture_hits "$(printf '%s' "$LC6_R" | cut -f4)")"
-if [ "$LC6_WIDE0" -eq 1 ] && [ "$LC6_WIDE1" -eq 0 ] && [ "$LC6_NARROW1" -eq $((LC6_NARROW0 + 1)) ] && [ "$LC6_FX" -ge 1 ]; then
+if [ "$LC_FLAT" -eq 1 ]; then
+  SKIP "LC6: MUST FIRE cannot fire on this engine — LC4 shows it answers the same in every locale, so the planted one-character class reads the same under every member. CA10 plants the same class and grades it through mawk and gawk by name"
+elif [ "$LC6_WIDE0" -eq 1 ] && [ "$LC6_WIDE1" -eq 0 ] && [ "$LC6_NARROW1" -eq $((LC6_NARROW0 + 1)) ] && [ "$LC6_FX" -ge 1 ]; then
   PASS "LC6: MUST FIRE — a copy of ca_delta whose range test admits a one-character separator again is reported on $LC6_B comparison(s), $LC6_FX of them on the fixture. The planted token was asserted to have replaced the real one exactly once, so the arm graded a changed function"
 else
   FAIL "LC6: MUST FIRE — the planted one-character separator was not reported (replaced=$LC6_WIDE0->$LC6_WIDE1 planted=$LC6_NARROW0->$LC6_NARROW1 disagreements=$LC6_B fixture-disagreements=$LC6_FX). If the replacement landed, the evaluator cannot see a codeset-dependent construct on this host — read LC3 and LC4"
@@ -1948,7 +2084,9 @@ LC7_ADDED="$(lc_count "$LC7_LINE" "$LC7_SRC")"; LC7_INTACT=0
 eval "$LC7_SRC"
 LC7_R="$(lc_fn_diff lc_planted_addonly "$EN_DOC" "$CA_FX")"
 LC7_B="$(printf '%s' "$LC7_R" | cut -f2)"; LC7_FX="$(lc_fixture_hits "$(printf '%s' "$LC7_R" | cut -f4)")"
-if [ "$LC7_ADDED" -eq 1 ] && [ "$LC7_INTACT" -eq 1 ] && [ "$LC7_FX" -ge 1 ]; then
+if [ "$LC_FLAT" -eq 1 ]; then
+  SKIP "LC7: MUST FIRE, ADD-ONLY, cannot fire on this engine — LC4 shows it answers the same in every locale, so the added line reads the same under every member"
+elif [ "$LC7_ADDED" -eq 1 ] && [ "$LC7_INTACT" -eq 1 ] && [ "$LC7_FX" -ge 1 ]; then
   PASS "LC7: MUST FIRE, ADD-ONLY — one locale-dependent line added to an otherwise byte-identical copy of ca_delta is reported on $LC7_B comparison(s), $LC7_FX of them on the fixture. The guard is not addition-blind: nothing existing had to change for it to fire"
 else
   FAIL "LC7: MUST FIRE, ADD-ONLY — the added locale-dependent line was not reported (added=$LC7_ADDED intact=$LC7_INTACT disagreements=$LC7_B fixture-disagreements=$LC7_FX). If it was added and the rest is intact, the evaluator is blind to it on this host — read LC3 and LC4"
@@ -1964,7 +2102,9 @@ LC8_R="$(lc_fn_diff lc_planted_invariant "$EN_DOC" "$CA_FX")"
 LC8_P="$(printf '%s' "$LC8_R" | cut -f1)"; LC8_B="$(printf '%s' "$LC8_R" | cut -f2)"; LC8_W="$(printf '%s' "$LC8_R" | cut -f3)"
 LC8_SAME=0
 [ "$( ( export LC_ALL=C; lc_planted_invariant ) 2>/dev/null )" = "$( ( export LC_ALL=C; ca_delta ) 2>/dev/null )" ] && LC8_SAME=1
-if [ "$LC8_ADDED" -eq 1 ] && [ "$LC8_P" -gt 0 ] && [ "$LC8_B" -eq 0 ] && [ "$LC8_W" -gt 0 ] && [ "$LC8_SAME" -eq 1 ]; then
+if [ "$LC_FLAT" -eq 1 ]; then
+  SKIP "LC8: SPECIFICITY has nothing to separate on this engine — LC6 and LC7 cannot fire where LC4 shows the awk answers the same in every locale"
+elif [ "$LC8_ADDED" -eq 1 ] && [ "$LC8_P" -gt 0 ] && [ "$LC8_B" -eq 0 ] && [ "$LC8_W" -gt 0 ] && [ "$LC8_SAME" -eq 1 ]; then
   PASS "LC8: SPECIFICITY — a locale-invariant line added at the same point is reported on 0 of $LC8_P comparisons and reads § 9 exactly as ca_delta does. What LC6 and LC7 report is the locale dependence they plant, not the act of editing"
 else
   FAIL "LC8: SPECIFICITY — a locale-invariant added line was reported or read differently (added=$LC8_ADDED comparisons=$LC8_P disagreements=$LC8_B class-rows=$LC8_W same-as-ca_delta=$LC8_SAME), so LC6 and LC7 cannot tell a locale-dependent edit from any edit"
@@ -3525,6 +3665,18 @@ fi
 # two marker forms § 4.5 rule 2 assigns — never by matching a display string. Keyed on
 # names, this group would define its population as the set of pairs that already agree,
 # which is the tautology EN's own header warns about in the same terms.
+#
+# ── THE HEADING TESTS ARE SPELLED WITHOUT AN INTERVAL ───────────────────────────
+# Both readers below find a heading by its run of `#`s — two to six in vi_bindings, one to six
+# in vi_open_decisions — and the run is spelled out (`###?#?#?#?`, `##?#?#?#?#?`) rather than
+# written as an interval expression. That is the convention this file already states for its
+# awk programs: an interval is not read the same by every awk, and a misread pattern yields a
+# plausible answer rather than an error. A heading test that never fires leaves every fenced
+# mention's display string empty and keeps only the last mention in each file. In a container
+# whose awk was mawk 1.3.4, VI1 failed on a tree the runner passed, reporting exactly the one
+# key that reading produces. VI3 grades these readers under mawk by name wherever it is
+# installed; its ENGINES line prints how mawk reads the heading test written as an interval, and
+# its ENGINES FIXTURE line runs that interval over five lines built to tell the readings apart.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
 echo "VI — a merged venue key carries the warrant the identity procedure requires"
@@ -3547,7 +3699,7 @@ vi_bindings() {
       if (pk != "") { printf "%s\t%s\t%s\t%d\t1\n", pk, ph, pf, loc; pk = "" }
     }
     FNR == 1 { flush(); heading = ""; loc = 0; infence = 0 }
-    /^#{2,6}[ \t]/ {
+    /^###?#?#?#?[ \t]/ {
       flush(); h = $0; sub(/^#+[ \t]*/, "", h); sub(/[ \t]+$/, "", h)
       heading = h; loc = 0; next
     }
@@ -3638,11 +3790,15 @@ VI_NMULTI="$(printf '%s\n' "$VI_BIND" | awk -F'\t' 'NF>4{print $1 "\t" $2}' | so
 # discuss OPEN DECISIONS at length — and any key token happening to appear in that prose
 # would silently discharge a violation. Rung 5 requires the pair to be NAMED in the
 # table, so the table is the population.
-VI_OD="$(awk '
-  index($0, "OPEN DECISIONS") > 0 { insec = 1; next }
-  insec && (/^#{1,6}[ \t]/ || /^---[ \t]*$/) { insec = 0; next }
-  insec && /^\|/ { print }
-' ${VI_FILES[@]+"${VI_FILES[@]}"} 2>/dev/null)"
+vi_open_decisions() {
+  [ "$#" -gt 0 ] || return 0
+  awk '
+    index($0, "OPEN DECISIONS") > 0 { insec = 1; next }
+    insec && (/^##?#?#?#?#?[ \t]/ || /^---[ \t]*$/) { insec = 0; next }
+    insec && /^\|/ { print }
+  ' "$@" 2>/dev/null
+}
+VI_OD="$(vi_open_decisions ${VI_FILES[@]+"${VI_FILES[@]}"})"
 
 printf '  BINDINGS: %d mention(s) over %d key(s) across %d tracked markdown file(s); %d are source mentions; %d key(s) carry more than one display string\n' \
   "$VI_NBIND" "$VI_NKEYS" "$VI_NFILES" "$VI_NSRC" "$VI_NMULTI"
@@ -3680,6 +3836,108 @@ if [ "$VI_OK" -eq 1 ] && [ "$VI_NMULTI" -gt 0 ]; then
     PASS "VI2: control — with every mention's location evidence stripped from a runtime copy (the mutation is asserted to have landed) the same evaluator reports $VI_C1 unwarranted merge(s), and with the OPEN DECISIONS text emptied it reports $VI_C2. VI1's zero is a measurement of both limbs rather than an evaluator that cannot fail"
   else
     FAIL "VI2: the must-fire arm did not behave (mutation-landed=$VI_LANDED stripped-location-detected=$VI_C1 expected>=1) — VI1's verdict has no control behind it"
+  fi
+fi
+
+# VI3 — ENGINE PARITY on the venue readers. vi_bindings, vi_open_decisions and vi_violations,
+# each copied with only its interpreter word changed, must produce under mawk what they produce
+# under gawk — the bindings and the OPEN DECISIONS rows byte for byte, and the unwarranted merges
+# as a SET. vi_violations emits its rows from a `for (k in …)` loop, whose order belongs to the
+# engine, so both sides of that comparison are sorted under C first: two engines that agree on
+# the set and not on the sequence are not a parity break, and reading them as one would report
+# an engine fault beside the VI1 failure that caused it. MUST FIRE beside it: a copy whose
+# heading rule can never fire, the shape VI1 failed in under mawk, must read the corpus
+# differently, so the comparison is shown able to see it. Needs both interpreters by name; SKIPs
+# without them, and CI runs strict, so on the hosted runner it must grade or fail.
+#
+# Two lines print beside the verdict, and both are measurements rather than verdicts. ENGINES
+# counts the source mentions each engine reads with the shipped heading test and with the same
+# test written as an interval, as this group wrote it before. ENGINES FIXTURE runs that interval
+# over five lines built in the run's temp dir — `## x`, `###### x`, `# x`, `####### x`, and the
+# interval's own text followed by ` x` — and names each engine's reading: honoured correctly when
+# it matches lines 1 and 2 and nothing else, not honoured when it matches line 5 alone (the braces
+# read as literal characters), honoured wrongly otherwise, with the lines it did match. A count
+# over the corpus cannot tell the last two apart; the fixture can. The hypothesis is that mawk
+# misreads the interval, and the fixture records which way. gawk is the control: unless it reads
+# the fixture as honoured correctly the fixture cannot discriminate, and VI3 fails naming it. The
+# interval is assembled from two pieces, so this file holds no interval expression for a scan of
+# its own text to find.
+vi3_fixture() {  # <engine> — the fixture lines the interval matches, in the form "1,2"
+  case "$1" in
+    mawk) mawk "$VI3_FXPROG" "$VI3_FX" 2>/dev/null ;;
+    gawk) gawk "$VI3_FXPROG" "$VI3_FX" 2>/dev/null ;;
+  esac
+}
+vi3_reading() {  # <matched-lines> <rc> — the reading those lines name
+  if [ "$2" -ne 0 ]; then printf 'rejected the program (rc=%s)' "$2"; return 0; fi
+  case "$1" in
+    1,2) printf 'honoured correctly' ;;
+    5)   printf 'not honoured (the braces read as literal characters)' ;;
+    *)   printf 'honoured wrongly (matched line(s): %s)' "${1:-none}" ;;
+  esac
+}
+if [ "$VI_OK" -eq 1 ]; then
+  VI3_ABSENT=""
+  for vi3_e in mawk gawk; do
+    if [ -z "$(command -v "$vi3_e" 2>/dev/null)" ]; then VI3_ABSENT="$VI3_ABSENT $vi3_e"; fi
+  done
+  if [ -n "$VI3_ABSENT" ]; then
+    SKIP "VI3: ENGINE PARITY — needs both mawk and gawk by name, and this host lacks$VI3_ABSENT. Not a pass, and not your change: CI runs strict and declares no skip, so on the hosted runner this arm must grade both or fail"
+  else
+    VI3_BAD=""
+    if [ "$ENG_RESIDUE_CTL" != 3 ]; then VI3_BAD="$VI3_BAD residue-probe-read-${ENG_RESIDUE_CTL:-nothing}-of-3"; fi
+    for vi3_e in mawk gawk; do
+      for vi3_f in vi_bindings vi_open_decisions vi_violations; do
+        vi3_src="$(eng_copy "$vi3_f" "$vi3_e")"
+        if [ "$(printf '%s\n' "$vi3_src" | eng_revert "$vi3_f" "$vi3_e")" != "$(declare -f "$vi3_f")" ]; then VI3_BAD="$VI3_BAD $vi3_f@$vi3_e:copy-changed-more-than-the-interpreter"; fi
+        if [ "$(eng_words "$vi3_src" "$vi3_e")" -ne 1 ]; then VI3_BAD="$VI3_BAD $vi3_f@$vi3_e:interpreter-words=$(eng_words "$vi3_src" "$vi3_e")"; fi
+        if [ "$(eng_residue "$vi3_src")" -ne 0 ]; then VI3_BAD="$VI3_BAD $vi3_f@$vi3_e:host-awk-left=$(eng_residue "$vi3_src")"; fi
+        eval "$vi3_src"
+      done
+    done
+    VI3_MB="$(vi_bindings_on_mawk ${VI_FILES[@]+"${VI_FILES[@]}"})"; VI3_GB="$(vi_bindings_on_gawk ${VI_FILES[@]+"${VI_FILES[@]}"})"
+    VI3_MO="$(vi_open_decisions_on_mawk ${VI_FILES[@]+"${VI_FILES[@]}"})"; VI3_GO="$(vi_open_decisions_on_gawk ${VI_FILES[@]+"${VI_FILES[@]}"})"
+    VI3_MV="$(vi_violations_on_mawk "$VI3_MB" "$VI3_MO" | LC_ALL=C sort)"; VI3_GV="$(vi_violations_on_gawk "$VI3_GB" "$VI3_GO" | LC_ALL=C sort)"
+    VI3_N="$(printf '%s\n' "$VI3_GB" | grep -c '[^[:space:]]')"
+    if [ "$VI3_MB" != "$VI3_GB" ]; then VI3_BAD="$VI3_BAD bindings"; fi
+    if [ "$VI3_MO" != "$VI3_GO" ]; then VI3_BAD="$VI3_BAD open-decisions"; fi
+    if [ "$VI3_MV" != "$VI3_GV" ]; then VI3_BAD="$VI3_BAD unwarranted-merges"; fi
+    if [ "$VI3_N" -eq 0 ]; then VI3_BAD="$VI3_BAD empty-population"; fi
+    VI3_SHIPPED='/^###?#?#?#?[ \t]/'
+    VI3_RENAMED="$(declare -f vi_bindings_on_gawk | lit_replace 'vi_bindings_on_gawk ()' 'vi_bindings_never_on_gawk ()')"
+    VI3_NEVER="$(printf '%s\n' "$VI3_RENAMED" | lit_replace "$VI3_SHIPPED {" "0 && $VI3_SHIPPED {")"
+    if [ "$VI3_NEVER" = "$VI3_RENAMED" ]; then VI3_BAD="$VI3_BAD heading-test-respelled(the control's anchor is gone; an interval is not read the same by every awk)"; fi
+    eval "$VI3_NEVER"
+    VI3_NB="$(vi_bindings_never_on_gawk ${VI_FILES[@]+"${VI_FILES[@]}"})"
+    VI3_NV="$(vi_violations_on_gawk "$VI3_NB" "$VI3_GO" | grep -c '[^[:space:]]')"
+    VI3_FIRED=0
+    if [ "$VI3_NB" != "$VI3_GB" ]; then VI3_FIRED=1; fi
+    # The interval, assembled from two pieces, and the five-line fixture it is read over.
+    VI3_IVA='{2'; VI3_IVB=',6}'
+    VI3_INTERVAL="#${VI3_IVA}${VI3_IVB}"
+    VI3_IVRE="/^${VI3_INTERVAL}[ \t]/"
+    for vi3_e in mawk gawk; do
+      eval "$(declare -f "vi_bindings_on_$vi3_e" | lit_replace "vi_bindings_on_$vi3_e ()" "vi_bindings_interval_on_$vi3_e ()" | lit_replace "$VI3_SHIPPED" "$VI3_IVRE")"
+    done
+    VI3_FX="$WORK/vi3-interval-fixture.md"
+    printf '## x\n###### x\n# x\n####### x\n%s x\n' "$VI3_INTERVAL" > "$VI3_FX"
+    VI3_FXPROG="$VI3_IVRE"' { printf "%s%d", (n++ ? "," : ""), NR } END { print "" }'
+    VI3_FM="$(vi3_fixture mawk)"; VI3_FM_RC=$?
+    VI3_FG="$(vi3_fixture gawk)"; VI3_FG_RC=$?
+    if [ "$VI3_FG_RC" -ne 0 ]; then VI3_BAD="$VI3_BAD interval-fixture-control(gawk-rc=$VI3_FG_RC)"; fi
+    if [ "$VI3_FG" != "1,2" ]; then VI3_BAD="$VI3_BAD interval-fixture-control(gawk-matched=${VI3_FG:-none})"; fi
+    printf '  ENGINES: shipped heading test — %s source mention(s) under mawk (%s), %s under gawk (%s); the same test written as an interval — %s under mawk, %s under gawk\n' \
+      "$(printf '%s\n' "$VI3_MB" | awk -F'\t' 'NF > 4 && $5 == 1 { n++ } END { print n + 0 }')" "$(eng_id mawk)" \
+      "$(printf '%s\n' "$VI3_GB" | awk -F'\t' 'NF > 4 && $5 == 1 { n++ } END { print n + 0 }')" "$(eng_id gawk)" \
+      "$(vi_bindings_interval_on_mawk ${VI_FILES[@]+"${VI_FILES[@]}"} | awk -F'\t' 'NF > 4 && $5 == 1 { n++ } END { print n + 0 }')" \
+      "$(vi_bindings_interval_on_gawk ${VI_FILES[@]+"${VI_FILES[@]}"} | awk -F'\t' 'NF > 4 && $5 == 1 { n++ } END { print n + 0 }')"
+    printf '  ENGINES FIXTURE: the interval %s over five lines (## x, ###### x, # x, ####### x, and its own text) — mawk matched line(s) %s: %s; gawk matched line(s) %s: %s\n' \
+      "$VI3_IVRE" "${VI3_FM:-none}" "$(vi3_reading "$VI3_FM" "$VI3_FM_RC")" "${VI3_FG:-none}" "$(vi3_reading "$VI3_FG" "$VI3_FG_RC")"
+    if [ -z "$VI3_BAD" ] && [ "$VI3_FIRED" -eq 1 ]; then
+      PASS "VI3: ENGINE PARITY — the venue readers, each copied with only its interpreter word changed and no host awk left in it, read $VI3_N binding(s) and the OPEN DECISIONS rows byte for byte the same under mawk as under gawk, and the same set of unwarranted merges. A copy whose heading rule never fires reads the corpus differently ($VI3_NV unwarranted merge(s) against $(printf '%s\n' "$VI3_GV" | grep -c '[^[:space:]]') from the shipped reader), so the comparison sees the shape VI1 failed in under mawk; gawk reads the interval fixture as honoured correctly, so the ENGINES FIXTURE line can tell the readings apart"
+    else
+      FAIL "VI3: ENGINE PARITY — the venue readers read differently under mawk than under gawk, or a copy changed more or less than its interpreter word, or a control did not fire (differs:${VI3_BAD:- none}; control-fired=$VI3_FIRED). A merge VI1 grades green under one awk and red under another is the failure this suite was measured with"
+    fi
   fi
 fi
 
@@ -19488,8 +19746,11 @@ if [ "$vacuous" -gt 0 ]; then
 fi
 rc=0
 [ "$fail" -eq 0 ] || rc=1
-# STRICT SKIP MODE — a skipped group is a failure unless it is declared. This suite has no
-# dependency-gated group, so its declared set is correctly EMPTY and every skip fails.
+# STRICT SKIP MODE — a skipped group is a failure unless it is declared. CA10, VI3 and LC4 to
+# LC8 skip on a host without the capability each needs, and the hosted runner is expected to
+# carry every one of them (the header's STRICT SKIP MODE paragraph states the dependency), so
+# the declared set is correctly EMPTY and every skip fails: on the runner, a skip here means the
+# image lost a capability.
 if [ "${GUARD_STRICT_SKIPS:-0}" = "1" ]; then
   unexpected=""
   # shellcheck disable=SC2086
