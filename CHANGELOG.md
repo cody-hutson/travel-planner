@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — A returning party's past trips reach the planner
+## [0.56.0] — 2026-10-09 — A returning party's past trips reach the planner
 
 Until now an archived trip's coverage record was written and never read back. Each archived trip
 keeps `outputs/satisfaction-metrics.md`, which records, per traveller and per desire, whether the
