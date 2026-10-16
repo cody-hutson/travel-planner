@@ -5,8 +5,9 @@
 - **Driving work:** the *interviewer becomes a conversation: the founding decision* milestone —
   its conduct card (#1767), cut from the interviewer epic (#1205) at that epic's refinement as the
   decision gate at the head of the work it opens. The operator rendered the decisions below at that
-  card's design gate, in a first sitting and a confirm sitting, and amended the closing clause of
-  the fifth at the Collective Review of the milestone's other card. This record transcribes them.
+  card's design gate, in a first sitting and a confirm sitting, amended the closing clause of the
+  fifth at the Collective Review of the milestone's other card, and ruled at Dev Testing. This
+  record transcribes them.
 - **What this record is.** A decision about **what the interviewer may say, and how far it may
   go**: when it may give an example and what one may contain, what must be true of every value it
   records, how often it may come back to a field, and what a traveller's choice of interview style
@@ -194,8 +195,9 @@ order stays the interviewer's rule. D2 states both.
 
 ## Options considered
 
-Each choice was put to the operator at the design gate with the design's recommendation and an
-independent review's. Where the operator ruled against the design, that is said.
+Each choice was put to the operator at the design gate, with the design's recommendation and an
+independent review's, or at Dev Testing, with that review's. Where the operator ruled against the
+design, that is said.
 
 ### D1 — where an example's words come from, and when one may be given
 
@@ -213,6 +215,8 @@ independent review's. Where the operator ruled against the design, that is said.
 | A section's menu or tick list **mentioned as examples** — the revised design's | rejected by ruling | Wider than the bound the operator had ruled: the form itself calls an item of such a list a complete answer, so mentioning the items voices values. The lists are described and not read out |
 | A section's menu or tick list **as an option source** for the field that points at it | rejected | A change to [`ADR-023`](ADR-023-interviewer-authored-home-and-form-contract.md) D2.3, beyond this record |
 | On a field whose answer is itself a kind: **nothing composed there**, or **an adoptable value said as an example** | not taken | The operator ruled for the option between them: a composed example one level up, held to a floor a check can run. The second would narrow the ruled bound on those fields; no ground was recorded for the first |
+| On a `PERSON`-class field in a spoken session, a composed example **only on request** | **selected** | D1 |
+| On that field, a composed example **as on any other field** | not taken | No ground was recorded |
 
 ### D2 — what decides whether a recorded value is the person's own
 
@@ -241,6 +245,9 @@ independent review's. Where the operator ruled against the design, that is said.
 | A field whose replies name no member: **no stated count**, or **a second such reply read as a skip** | rejected | The first states no point at which the interviewer stops offering; the second writes an em dash for a skip nobody uttered, which `ADR-022` D5.5 forbids |
 | A follow-up **after an empty answer** — the revised design did not bar it | rejected by ruling | It is a probe after a negative, and the review found it on a form's safety field. Barred, as after a decline |
 | **No speech clause** | rejected | A spoken answer is audible to a room, and a follow-up asks for more of it aloud |
+| **No follow-up on a closed field, on a field an earlier session answered, or as a repeat of the question in the same words** — three exclusions from the design that no ruling had rendered — as prohibitions, with a line for each in both checks | **selected** | D3 |
+| The closed-field exclusion **as an observation**, and not a prohibition | not taken | No ground was recorded |
+| **All three struck** | not taken | No ground was recorded |
 
 ### D4 — how a style is chosen, and what it may change
 
@@ -270,6 +277,8 @@ independent review's. Where the operator ruled against the design, that is said.
 | The arm over the forms' own conduct lands **with the change that rewords the forms** — the revised design's | rejected by ruling | An arm scoped away from the one input known to trip it cannot fail. It lands with the other prohibition limbs, against a declared ledger |
 | The restatement of the shared rules **moved into the change that builds the text-level checks** | rejected | A larger change there and a re-pointed tone pass. Splitting each check by limb makes every arm true when it lands |
 | **The interviewer labels its own turns** | rejected | The interviewer under test would be grading itself |
+| Three places where a decision and its check do not meet — **a silence and an unclear reply mixed on one field, a reordered confirmation, a compound joined or split** — left as residuals, the record neutral on each | **selected** | § *Residuals* |
+| The three **ruled in this record** | not taken | No ground was recorded |
 
 ## Decision
 
