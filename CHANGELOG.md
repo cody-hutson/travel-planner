@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-10-09 — The interviewer becomes a conversation: the founding decision
+## [0.55.0] — 2026-10-09 — The interviewer becomes a conversation: the founding decision
 
 This release lands two decision records and deliberately builds nothing. The interviewer asks a
 form's questions under floors that were set on purpose: it may offer only the options the form
