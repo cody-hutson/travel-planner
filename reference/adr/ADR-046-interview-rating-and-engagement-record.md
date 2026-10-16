@@ -164,8 +164,9 @@ decision here is presented as following from it.**
 ## Options considered
 
 Each choice was put to the operator at the Collective Review, with the design's recommendation and
-an independent review's, or at Dev Testing, with that review's. Where the operator ruled against
-the design, that is said.
+an independent review's; at a sitting after it, on what a pooled row counts where a section repeats
+a block; or at Dev Testing, on that review's findings. Where the operator ruled against the design,
+that is said.
 
 ### D1 — how the rating is asked
 
@@ -209,6 +210,7 @@ the design, that is said.
 | A pooled row holding the `PERSON`-class fields' turns alone, the section's other fields keeping rows of their own | rejected by ruling | Measured at `5d50eb5`, one of the sections that hold such a field holds exactly one, so that row would be the field's own tally under another name |
 | A pooled row that says nothing of how many it pools | not taken | The operator ruled that it says how many |
 | A pooled count that grows with each block a person filled | rejected by ruling | A count that tracked the number of a person's needs would be a fact about their answers, by inference |
+| What a pooled row counts where a section repeats a block, left open as a residual | not taken | No ground was recorded |
 | **Every pooled section counted by the distinct labels the form prints for it, asked or not** | **selected** | D2 |
 | A pooled section counted by the fields put, its single-field case stated as a cost | not taken | A pooled row would then reflect what a session asked |
 | A field for how the session ended | rejected | It would be the mark `ADR-022` D1.2 declines to keep |
@@ -795,7 +797,7 @@ change.
 
 | Clause of this record | The surface as it read at `5d50eb5` | Relation |
 |---|---|---|
-| A rating is asked, after the give-back | no sentence in either carrier mentions one | new; it waits for the edit |
+| A rating is asked at the end | no sentence in either carrier mentions one | new; it waits for the edit |
 | The block carries its heading and a tagged section of the return below it | the card returns nothing from that heading down | the card is stricter, and binds until the edit |
 | Above the heading the block is exactly what `ADR-040` D1 has | the same | the same; nothing is withdrawn |
 | An entry is written at a session's ending | the interview verb has no output act | new; it waits for the edit |
@@ -857,7 +859,7 @@ why no rating is ever inferred.
 | The scale, once ratings are kept | **MODERATE** | ratings on different scales do not compare |
 | *Low* | **CHEAP** while this record is `Proposed`, **MODERATE** after | a threshold, moved by re-reading kept numbers |
 | What the engagement record holds, once entries are kept | **MODERATE** | a value added later is a new permitted case, and so a new decision |
-| The return's shape on a channel that cannot write | **MODERATE** | the card, the save and the class's schema share it |
+| The return's shape on a channel that cannot write | **CHEAP** while this record is `Proposed`, **MODERATE** after | the card, the save and the class's schema share it |
 | The class, once entries exist on users' machines | **EXPENSIVE** | they sit in directories this repository cannot reach or repair |
 | This record's number and file name | **IRREVERSIBLE** | numbers are never reused, and other records cite a record by its file |
 
