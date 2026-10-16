@@ -319,6 +319,33 @@
 # has gone dead on the live surface is not detected. That is a stated residual, not
 # coverage.
 #
+# ── THIS SUITE'S LOCALE POSTURE ──────────────────────────────────────────────────
+# Three separate things, stated apart because each is a different kind of claim.
+# THE PIN POSTURE, as this file has it. Nothing is exported at the top. LC_ALL=C is set on the two
+# calls that need byte semantics, the awk program in group W and the sort that fixes the command
+# order, and the locale arms set each member's locale inside the subshell that reads under it.
+# Every other line reads the caller's locale.
+# WHAT IS ASSERTED, on every run. The edge trims read no locale. trim and group J's rj_trimv
+# strip one fixed set, ASCII whitespace and U+00A0; the readers of a skill file's frontmatter, a
+# verb's or the carrier's, strip ASCII whitespace alone, through fm_trim, so a frontmatter edge
+# carrying U+00A0 is kept and reported. Arms GQL, GJU and GQF read Grant cells, a roster header
+# cell and a frontmatter flag line, each edged by U+00A0 and by U+3000, under C and under a UTF-8
+# locale the host lists, and fail the run if the host lists none. That is the whole of the
+# asserted surface.
+# WHAT WAS MEASURED, AND IS NOT ASSERTED. Every other match this file makes with a POSIX character
+# class or a bracket range — in a regular expression, a case pattern, a parameter expansion, or a
+# tr, grep or sed call — and every awk program and sort not pinned above reads the caller's
+# locale: collapse() and lower(), the delimiter-row test, group J's class-row match and the grant
+# reader's frontmatter-key test among them. The suite's verdict set was measured identical under
+# LC_ALL=C and under a UTF-8 locale when this record was written. No arm compares verdict sets, so
+# a locale dependence added there would not turn this suite red.
+# test-corpus-hygiene.sh and test-adr-conformance.sh take the opposite posture and export
+# LC_ALL=C at their top. test-artifact-schema.sh is unpinned, and its group LC asserts that
+# va_type_ok's slug predicate and ca_delta's range parse answer the same under C and under a UTF-8
+# locale the host lists, the ca_delta half skipping on an awk that answers the same in every
+# locale; the rest of that suite reads the caller's locale. None of them borrows a locale from
+# another; CONTRIBUTING.md lists every suite's posture side by side.
+#
 # NOTE: publish-trip-site.sh is deliberately NOT sourced. This suite needs zero functions
 # from it, and sourcing a security-critical script to parse a markdown table would create
 # shared fate — a syntax error there would make the TAXONOMY invariant unverifiable for a
@@ -506,7 +533,58 @@ REQ_COLS=( verb lifecycle mode destination depth )
 # ─────────────────────────────────────────────────────────────────────────────────
 # Small helpers
 # ─────────────────────────────────────────────────────────────────────────────────
-trim() { local s="$1"; s="${s#"${s%%[![:space:]]*}"}"; s="${s%"${s##*[![:space:]]}"}"; printf '%s' "$s"; }
+# trimv <var> <s> [ascii] — <s> with its leading and trailing whitespace removed, nothing else,
+# written into <var>, and THE SAME WAY UNDER EVERY LOCALE. It is the one definition of the edge
+# set: trim prints what it writes, group J's rj_trimv delegates to it, and fm_trim calls it with
+# `ascii`. It writes a variable rather than printing, so a reader that walks thousands of lines
+# calls it with no fork. Its locals carry the _tv_ prefix because printf -v writes the nearest
+# variable of the name it is given, and a caller passing one of this function's own names would
+# be handed nothing back.
+#
+# The set is fixed: the six ASCII characters the POSIX locale's space class holds (space, tab,
+# newline, vertical tab, form feed, carriage return), plus U+00A0, the no-break space, unless the
+# third argument is `ascii`. It is written out rather than taken from [[:space:]], because that
+# class's members depend on the locale. Under C a no-break space is two ordinary bytes; a UTF-8
+# locale may count it, and other Unicode spaces, as whitespace. A Grant cell whose code span was
+# followed by U+00A0 therefore paired with its allowed-tools entry under one locale and was named
+# by Q1 and Q2 under another. U+00A0 is removed as a literal byte string, never as a bracket
+# member, so a byte-wise reading and a character-wise one remove the same two bytes: the ENGINE
+# PARITY rule group W's awk program follows. Every other non-ASCII space is kept under every
+# locale, so an edge carrying one is reported everywhere rather than paired somewhere. Nothing
+# inside the string is touched.
+#
+# TWO POLICIES OVER ONE SET, SPLIT BY WHAT DECIDES AN EDGE BYTE'S MEANING. A markdown cell, a
+# heading and a line of prose are read by a person, so their readers take the set with U+00A0,
+# through trim and rj_trimv: a cell that differs from its grant only by an invisible edge byte
+# reads as naming that grant, and U+00A0 is the space an editor or a paste leaves at a cell's edge
+# unseen. A skill file's frontmatter, a verb's or the carrier's, is read by the runtime's YAML
+# parser, so its readers take the ASCII set alone, through fm_trim: a YAML parser keeps U+00A0 as
+# part of the value or key it edges, so a `disable-model-invocation: true` line carrying one may
+# set nothing. There U+00A0 is kept and reported under every locale, as publish-trip-site.sh's
+# _approval_line_parse refuses it in its own grammar. Neither policy reads the locale. Arms GQL,
+# GJU and GQF read Grant cells, a roster header cell and a frontmatter flag line, each edged by
+# U+00A0 and by U+3000, under C and under a UTF-8 locale the host lists, on every run.
+#
+# SCOPE: the guarantee is the edge trims' alone. Every other match this file makes with a POSIX
+# character class or a bracket range — in a regular expression, a case pattern, a parameter
+# expansion, or a tr, grep or sed call — and every awk program and sort not pinned to LC_ALL=C
+# still reads the caller's locale: collapse() and lower(), the delimiter-row test, group J's
+# class-row match and the grant reader's frontmatter-key test among them.
+trimv() {
+  local _tv_s="$2" _tv_p _tv_ws=$' \t\n\v\f\r' _tv_nb=$'\302\240'
+  if [ "${3:-}" = 'ascii' ]; then _tv_nb=''; fi
+  while :; do
+    _tv_p="$_tv_s"
+    _tv_s="${_tv_s#"${_tv_s%%[!$_tv_ws]*}"}"; _tv_s="${_tv_s#"$_tv_nb"}"
+    _tv_s="${_tv_s%"${_tv_s##*[!$_tv_ws]}"}"; _tv_s="${_tv_s%"$_tv_nb"}"
+    [ "$_tv_s" = "$_tv_p" ] && break
+  done
+  printf -v "$1" '%s' "$_tv_s"
+}
+# trim <s> — the cell, heading and prose policy, printed. fm_trim <s> — the frontmatter policy,
+# printed: ASCII whitespace alone, so an edge carrying U+00A0 survives to be reported.
+trim() { local _tr_s; trimv _tr_s "$1"; printf '%s' "$_tr_s"; }
+fm_trim() { local _tr_s; trimv _tr_s "$1" ascii; printf '%s' "$_tr_s"; }
 collapse() { printf '%s' "$1" | tr -s '[:space:]' ' '; }
 lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
 
@@ -922,7 +1000,7 @@ parse_command_file() {
   # which limb carried each arm, so a file resting on neither is visible rather than assumed.
   local posture='-' has_flag=0 has_clause=0 pnorm i
   for (( i=0; i<n; i++ )); do
-    [ "$(trim "${L[$i]}")" = 'disable-model-invocation: true' ] && has_flag=1
+    [ "$(fm_trim "${L[$i]}")" = 'disable-model-invocation: true' ] && has_flag=1
     [ "${FD[$i]}" -eq 0 ] || continue
     pnorm="$(neg_norm "${L[$i]}")"
     case "$pnorm" in *'the verb is the one the user typed'*) has_clause=1 ;; esac
@@ -2494,7 +2572,7 @@ parity_check() {
         break
       fi
       [ "$infm" -eq 1 ] || continue
-      t="$(trim "$line")"
+      t="$(fm_trim "$line")"
       case "$t" in
         'allowed-tools:'*)    role='allow' ;;
         'disallowed-tools:'*) role='deny' ;;
@@ -2510,7 +2588,7 @@ parity_check() {
         rest="${rest%:\*}"
         scr="${rest%% *}"
         sub='-'
-        [ "$rest" != "$scr" ] && sub="$(trim "${rest#"$scr"}")"
+        [ "$rest" != "$scr" ] && sub="$(fm_trim "${rest#"$scr"}")"
         [ -n "$pfx" ] || pfx='(bare)'
         TF+=( "$base" ); TR+=( "$role" ); TP+=( "$pfx" ); TS+=( "$scr" ); TB+=( "$sub" )
         n_pat=$((n_pat+1))
@@ -2723,7 +2801,7 @@ gq_header_kind() {
 # enclosing pair of square brackets is removed first, the flow-sequence form disallowed-tools uses.
 gq_split_tools() {
   local v cur='' ch i depth=0
-  v="$(trim "$1")"
+  v="$(fm_trim "$1")"
   case "$v" in '['*']') v="${v#\[}"; v="${v%\]}" ;; esac
   for (( i=0; i<${#v}; i++ )); do
     ch="${v:i:1}"
@@ -2731,12 +2809,12 @@ gq_split_tools() {
       '(') depth=$((depth+1)); cur="$cur$ch" ;;
       ')') [ "$depth" -gt 0 ] && depth=$((depth-1)); cur="$cur$ch" ;;
       ',') if [ "$depth" -eq 0 ]; then
-             cur="$(trim "$cur")"; [ -n "$cur" ] && printf '%s\n' "$cur"; cur=''
+             cur="$(fm_trim "$cur")"; [ -n "$cur" ] && printf '%s\n' "$cur"; cur=''
            else cur="$cur$ch"; fi ;;
       *)   cur="$cur$ch" ;;
     esac
   done
-  cur="$(trim "$cur")"; [ -n "$cur" ] && printf '%s\n' "$cur"
+  cur="$(fm_trim "$cur")"; [ -n "$cur" ] && printf '%s\n' "$cur"
   return 0
 }
 
@@ -2744,10 +2822,10 @@ gq_split_tools() {
 gq_key() {
   local g="$1" spec word rest=''
   case "$g" in 'Bash('*')') ;; *) return 0 ;; esac
-  spec="${g#Bash(}"; spec="${spec%\)}"; spec="$(trim "$spec")"; spec="${spec%:\*}"
+  spec="${g#Bash(}"; spec="${spec%\)}"; spec="$(fm_trim "$spec")"; spec="${spec%:\*}"
   word="${spec%% *}"
   case "$word" in */*) ;; *) return 0 ;; esac
-  [ "$word" != "$spec" ] && rest="$(trim "${spec#"$word"}")"
+  [ "$word" != "$spec" ] && rest="$(fm_trim "${spec#"$word"}")"
   word="${word##*/}"
   if [ -n "$rest" ]; then printf '%s %s' "$word" "$rest"; else printf '%s' "$word"; fi
 }
@@ -2823,7 +2901,7 @@ grant_table_check() {
       fi
       [ "$infm" -eq 1 ] || continue
       if [ "$inat" -eq 1 ] && ! [[ "$line" =~ ^[[:alnum:]_-]+: ]]; then
-        t="$(trim "$line")"
+        t="$(fm_trim "$line")"
         case "$t" in
           ''|'#'*) ;;
           *) n_cont=$((n_cont+1))
@@ -2832,7 +2910,7 @@ grant_table_check() {
         continue
       fi
       inat=0
-      line="$(trim "$line")"
+      line="$(fm_trim "$line")"
       case "$line" in 'allowed-tools:'*) inat=1 ;; *) continue ;; esac
       while IFS= read -r g || [ -n "$g" ]; do
         [ -n "$g" ] || continue
@@ -2940,7 +3018,7 @@ gq_assert_rows() {     # Q1 — every row pairs with a grant
     FAIL "Q1: ${nx} of ${nr} grant-table row(s) name no allowed-tools entry of their own verb"
     show "$out" 'Q1'
   else
-    PASS "Q1: ROW -> GRANT — all ${nr} grant-table row(s) across ${nv} verb(s) pair with an allowed-tools entry of their own verb, against ${ng} entries read. A row pairs by exact spelling, or a path-bearing Bash grant by its script's file name and arm; the row side is never normalized. Controls: GQ1, GQ4, GQ6 and GQ9 fire in group GQ, and GQ7 stays silent"
+    PASS "Q1: ROW -> GRANT — all ${nr} grant-table row(s) across ${nv} verb(s) pair with an allowed-tools entry of their own verb, against ${ng} entries read. A row pairs by exact spelling, or a path-bearing Bash grant by its script's file name and arm; the row side is never normalized. Controls: GQ1, GQ4, GQ6 and GQ9 fire in group GQ, GQ7 stays silent, and GQL shows both under C and under a UTF-8 locale"
   fi
 }
 
@@ -2962,7 +3040,7 @@ gq_assert_grants() {   # Q2 — every grant pairs with a row
     FAIL "Q2: ${nx} of ${ng} allowed-tools entr(ies) of a graded verb have no grant-table row"
     show "$out" 'Q2'
   else
-    PASS "Q2: GRANT -> ROW — all ${ng} allowed-tools entr(ies) of ${nv} graded verb(s) are named by a row of their own verb's grant table (${nr} rows read). The grant side is read in full — every entry of every allowed-tools line, with no graded verb continuing that value onto a line this reader would not join — so a grant added with nothing removed is found. disallowed-tools entries are denials and are not paired. Controls: GQ2, GQ3, GQ4 and GQ6 fire in group GQ, GQ8 withholds, and GQ7 stays silent"
+    PASS "Q2: GRANT -> ROW — all ${ng} allowed-tools entr(ies) of ${nv} graded verb(s) are named by a row of their own verb's grant table (${nr} rows read). The grant side is read in full — every entry of every allowed-tools line, with no graded verb continuing that value onto a line this reader would not join — so a grant added with nothing removed is found. disallowed-tools entries are denials and are not paired. Controls: GQ2, GQ3, GQ4 and GQ6 fire in group GQ, GQ8 withholds, GQ7 stays silent, and GQL shows both under C and under a UTF-8 locale"
   fi
 }
 
@@ -3388,8 +3466,8 @@ inference_check() {
   local whole=''
   for (( i=0; i<${#CL[@]}; i++ )); do
     cline="${CL[$i]}"
-    [ "$(trim "$cline")" = 'disable-model-invocation: true' ] && cflag=1
-    case "$(trim "$cline")" in 'disable-model-invocation:'*) cflag=1 ;; esac
+    [ "$(fm_trim "$cline")" = 'disable-model-invocation: true' ] && cflag=1
+    case "$(fm_trim "$cline")" in 'disable-model-invocation:'*) cflag=1 ;; esac
     whole="$whole $cline"
   done
   cnorm="$(neg_norm "$whole")"
@@ -3552,8 +3630,8 @@ picker_check() {
       fi
       [ "$infm" -eq 1 ] || continue
       case "$line" in
-        'argument-hint:'*) hint="$(trim "${line#argument-hint:}")" ;;
-        'description:'*)   desc="$(trim "${line#description:}")" ;;
+        'argument-hint:'*) hint="$(fm_trim "${line#argument-hint:}")" ;;
+        'description:'*)   desc="$(fm_trim "${line#description:}")" ;;
       esac
     done < "$f"
 
@@ -3740,8 +3818,11 @@ RJ_HEAD_PRE='### Pre-Work Output '
 
 # rj_trimv <var> <s> — <s> with leading and trailing whitespace removed, into <var>. Fork-free:
 # every helper below writes a variable rather than printing, because a command substitution per
-# line is a fork per line, and the three inputs this reader walks are thousands of lines long.
-rj_trimv() { local _rj_t="$2"; _rj_t="${_rj_t#"${_rj_t%%[![:space:]]*}"}"; _rj_t="${_rj_t%"${_rj_t##*[![:space:]]}"}"; printf -v "$1" '%s' "$_rj_t"; }
+# line is a fork per line, and the three inputs this reader walks are thousands of lines long. It
+# delegates to trimv under the cell policy, so a roster cell loses the same edge bytes a Grant cell
+# does, under every locale: ASCII whitespace and U+00A0, and nothing else. Arm GJU reads a roster
+# header cell edged by U+00A0 and by U+3000 under C and under a UTF-8 locale the host lists.
+rj_trimv() { trimv "$1" "$2"; }
 
 # rj_norm <cell> — code-span and bold markers removed, whitespace collapsed and trimmed,
 # lower-cased. Only header candidates reach it, so the one `tr` it costs is bounded.
@@ -6187,6 +6268,13 @@ echo "── Group GQ — control arms for the grant tables."
 # pair differs in the one property the arm keys on — which column the token sits in.
 GQ_UNHELD='Bash(zzq-unheld:*)'
 
+# The two non-ASCII spaces arm GQL plants at the edge of a Grant cell, spelled by their bytes:
+# U+00A0, which trim removes under every locale, and U+3000, which it keeps under every locale.
+# Arm GQF plants the same two at the edge of a frontmatter flag line, where fm_trim keeps both, and
+# arm GJU at the edge of a roster header cell in group GJ, where rj_trimv acts as trim does.
+GQ_NBSP=$'\302\240'
+GQ_WIDE=$'\343\200\200'
+
 # The add-only world carries GQ_FILL further grants, each with its own row, BEFORE the appended
 # one, so a reader that samples the first N entries misses it for every N below GQ_FILL + 4.
 # That is 36 — four and a half times the longest allowed-tools line any verb carries today (8).
@@ -6226,6 +6314,14 @@ GQ_FILL=32
 #               grant holds                                                      -> Q1 only
 #   unticked    a row no grant holds whose Grant cell is not a code span, right after the three
 #               rows                                                             -> Q1 only
+#   nbspcell    every Grant cell edged by U+00A0: before the code span, after it, and on both sides
+#               among ASCII spaces, which trim removes under every locale         -> nothing
+#   widecell    the Read cell followed by U+3000, which trim keeps under every locale -> Q1 and Q2
+#   flagline    the frontmatter carries `disable-model-invocation: true` trailed by an ASCII space
+#               and a tab, which fm_trim removes                    -> nothing; arm GQF reads FLAG
+#   nbspflag    the same line twice, one led by U+00A0 and one trailed by a space and U+00A0, which
+#               fm_trim keeps under every locale                    -> nothing; arm GQF reads '-'
+#   wideflag    the same two lines with U+3000, which fm_trim keeps -> nothing; arm GQF reads '-'
 #   notable     no grant table: the three rows sit under a header naming neither form, so the verb
 #               is read and graded by nothing                                    -> nothing
 gq_gen_verb() {
@@ -6244,6 +6340,11 @@ gq_gen_verb() {
     if [ "$defect" = 'addgrant' ]; then printf -- ', Glob'; fi
     if [ "$defect" = 'wrapgrant' ]; then printf -- ',\n  Glob\n'; else printf -- '\n'; fi
     printf -- 'disallowed-tools: [Bash(%sscripts/zz-fixture.sh other:*), Write]\n' "$ENGINE_ROOT_TOK"
+    case "$defect" in
+      flagline) printf -- 'disable-model-invocation: true \t\n' ;;
+      nbspflag) printf -- '%sdisable-model-invocation: true\ndisable-model-invocation: true %s\n' "$GQ_NBSP" "$GQ_NBSP" ;;
+      wideflag) printf -- '%sdisable-model-invocation: true\ndisable-model-invocation: true %s\n' "$GQ_WIDE" "$GQ_WIDE" ;;
+    esac
     printf -- '---\n\n# /%s\n\n' "$name"
     case "$defect" in
       renamedhead) printf -- '| Grant | What each grant is used for |\n|---|---|\n' ;;
@@ -6260,10 +6361,17 @@ gq_gen_verb() {
       *)           printf -- '| Grant | The use that holds it |\n|---|---|\n' ;;
     esac
     if [ "$defect" = 'celledit' ]; then printf -- '| %sBash(ls)%s | the listing |\n' "$BT" "$BT"
+    elif [ "$defect" = 'nbspcell' ]; then printf -- '| %s%sBash(ls:*)%s | the listing |\n' "$GQ_NBSP" "$BT" "$BT"
     elif [ "$defect" != 'crossverb' ]; then printf -- '| %sBash(ls:*)%s | the listing |\n' "$BT" "$BT"; fi
-    printf -- '| %sRead%s | a read |\n' "$BT" "$BT"
+    case "$defect" in
+      nbspcell) printf -- '| %sRead%s%s | a read |\n' "$BT" "$BT" "$GQ_NBSP" ;;
+      widecell) printf -- '| %sRead%s%s | a read |\n' "$BT" "$BT" "$GQ_WIDE" ;;
+      *)        printf -- '| %sRead%s | a read |\n' "$BT" "$BT" ;;
+    esac
     if [ "$defect" = 'rootedrow' ]; then
       printf -- '| %sBash(%sscripts/zz-fixture.sh arm:*)%s | the single invocation of that arm, spelled in full |\n' "$BT" "$ENGINE_ROOT_TOK" "$BT"
+    elif [ "$defect" = 'nbspcell' ]; then
+      printf -- '| %s %szz-fixture.sh arm%s %s | the single invocation of that arm |\n' "$GQ_NBSP" "$BT" "$BT" "$GQ_NBSP"
     elif [ "$defect" != 'droprow' ]; then
       printf -- '| %szz-fixture.sh arm%s | the single invocation of that arm |\n' "$BT" "$BT"
     fi
@@ -6616,6 +6724,135 @@ else
   FAIL "GQK: over verb files that carry no grant table, Q0 did not render exactly one FAIL and no PASS from its VACUITY limb — files $(getcount "$GQKO" GQFILES) of ${GQK_NF}, unreadable $(getcount "$GQKO" GQUNREAD), graded $(getcount "$GQKO" GQVERBS), near misses $(getcount "$GQKO" GQNEAR), continued $(getcount "$GQKO" GQCONT); Q0 probe '${GQK_P0}' where '0 1' is required"
 fi
 
+# ── GQL — A GRANT CELL GRADES THE SAME UNDER EVERY LOCALE. Two BUILT worlds, each read by the real
+# reader twice on this run: under C, and under a multibyte locale this host lists.
+#   nbspcell  every Grant cell edged by U+00A0 — before the code span, after it, and on both sides
+#             among ASCII spaces. trim removes it under every locale, so all three rows pair and
+#             nothing is named, under C as under UTF-8. The cell AFTER the code span is the form
+#             that once paired under a UTF-8 locale and was named by Q1 and Q2 under C.
+#   widecell  the Read cell followed by U+3000, which trim keeps: Q1 names the row and Q2 the entry,
+#             under C as under UTF-8. Without it, a trim that went back to [[:space:]] for every
+#             space except U+00A0 would read green here.
+# Each world's two readings must also be byte-identical. The multibyte member is chosen by the rule
+# test-artifact-schema.sh's group LC uses — a C.UTF-8 spelling the host can load, else the first
+# name `locale -a` lists — and probed in the shell with C assigned first, so a name the C library
+# cannot load falls back to C and is not counted. No member is a FAIL, never a skip: a run with C
+# alone has compared nothing. The reader runs in a subshell that EXPORTS the locale, so every
+# command it forks reads the same one. What this host's own [[:space:]] does with U+00A0 and with
+# U+3000 under that member is printed on the PASS line and graded by nothing: it is the
+# measurement a host supplies, and the verdict does not depend on it.
+gq_mb_ok() {  # gq_mb_ok <locale> — true when U+00A0's two bytes read as ONE character under it
+  local LC_ALL=C
+  LC_ALL="$1"
+  [ "${#GQ_NBSP}" -eq 1 ]
+}
+gq_in_space() {  # gq_in_space <locale> <char> — "yes" when this host's [[:space:]] holds <char> under it
+  local LC_ALL=C
+  LC_ALL="$1"
+  case "$2" in [[:space:]]) printf 'yes' ;; *) printf 'no' ;; esac
+}
+gq_clean() {  # gq_clean <out> — 0 when one verb, three rows and three grants are read and nothing is named
+  [ "$(getcount "$1" GQVERBS)" = '1' ] && [ "$(getcount "$1" GQROWS)" = '3' ] && [ "$(getcount "$1" GQGRANTS)" = '3' ] \
+    && [ "$(getcount "$1" GQUNROW)" = '0' ] && [ "$(getcount "$1" GQUNGRANT)" = '0' ] \
+    && [ "$(getcount "$1" GQNEAR)" = '0' ] && [ "$(getcount "$1" GQCONT)" = '0' ] \
+    && [ "$(grep -c '^FINDING ' <<<"$1")" = '0' ]
+}
+gq_wide_named() {  # gq_wide_named <out> — 0 when exactly the Read row (Q1) and the Read entry (Q2) are named
+  grep -q '^FINDING Q1 /zz-graded:[0-9][0-9]* the grant-table row ' <<<"$1" \
+    && grep -q '^FINDING Q2 /zz-graded the allowed-tools entry "Read" ' <<<"$1" \
+    && [ "$(grep -c '^FINDING ' <<<"$1")" = '2' ] && [ "$(getcount "$1" GQVERBS)" = '1' ]
+}
+# gq_mb_pick — the multibyte member, by the rule above, or nothing. A function rather than a loop
+# here, because GQF below and GJU in group GJ read under the member it picks, by the same rule.
+gq_mb_pick() {
+  local gqll gqm=''
+  while IFS= read -r gqll; do
+    [ -n "$gqll" ] || continue
+    gq_mb_ok "$gqll" 2>/dev/null || continue
+    case "$gqll" in C.UTF-8|C.utf8|C.UTF8) gqm="$gqll"; break ;; esac
+    [ -n "$gqm" ] || gqm="$gqll"
+  done <<GQLLOC
+C.UTF-8
+C.utf8
+$(locale -a 2>/dev/null)
+GQLLOC
+  printf '%s' "$gqm"
+}
+GQL_MB="$(gq_mb_pick)"
+GQLN="$(gq_world GQL-nbsp nbspcell)"; GQLW="$(gq_world GQL-wide widecell)"
+GQL_NC="$( export LC_ALL=C; grant_table_check "$GQLN" )"
+GQL_WC="$( export LC_ALL=C; grant_table_check "$GQLW" )"
+GQL_NM=''; GQL_WM=''; GQL_NBIN='-'; GQL_WIN='-'
+if [ -n "$GQL_MB" ]; then
+  GQL_NM="$( export LC_ALL="$GQL_MB"; grant_table_check "$GQLN" )"
+  GQL_WM="$( export LC_ALL="$GQL_MB"; grant_table_check "$GQLW" )"
+  GQL_NBIN="$(gq_in_space "$GQL_MB" "$GQ_NBSP")"; GQL_WIN="$(gq_in_space "$GQL_MB" "$GQ_WIDE")"
+fi
+GQL_S=1
+[ "$(grep -c -F "$GQ_NBSP" "$GQLN/zz-graded/SKILL.md")" = '3' ] || GQL_S=0
+grep -qF "| ${BT}Read${BT}${GQ_NBSP} |" "$GQLN/zz-graded/SKILL.md" || GQL_S=0
+[ "$(grep -c -F "$GQ_WIDE" "$GQLW/zz-graded/SKILL.md")" = '1' ] || GQL_S=0
+grep -qF "| ${BT}Read${BT}${GQ_WIDE} |" "$GQLW/zz-graded/SKILL.md" || GQL_S=0
+gq_mb_ok C && GQL_S=0
+arm Q1; arm Q2
+if [ "$GQL_S" -eq 0 ]; then
+  FAIL "GQL: fixture integrity — a built Grant cell does not carry U+00A0 or U+3000 where its world places it, or C reads U+00A0 as one character, so a verdict here would prove nothing"
+elif [ -z "$GQL_MB" ]; then
+  FAIL "GQL: NO MULTIBYTE LOCALE — neither C.UTF-8 spelling loads and locale -a lists no name under which U+00A0 reads as one character, so C was compared with nothing. One locale cannot show that a cell grades the same under two"
+elif gq_clean "$GQL_NC" && gq_clean "$GQL_NM" && [ "$GQL_NC" = "$GQL_NM" ] \
+     && gq_wide_named "$GQL_WC" && gq_wide_named "$GQL_WM" && [ "$GQL_WC" = "$GQL_WM" ]; then
+  PASS "GQL: LOCALE-INVARIANT — Grant cells edged by U+00A0, before the code span, after it and among ASCII spaces, pair under C and under ${GQL_MB} with nothing named (1 verb, 3 rows, 3 grants each time), and a cell followed by U+3000, which trim keeps, is named by Q1 and Q2 under both; each world's two readings are byte-identical. trim's whitespace set is fixed, so this verdict does not depend on the host's [[:space:]]. MEASURED, NOT GRADED: under ${GQL_MB} this host's [[:space:]] holds U+00A0: ${GQL_NBIN}; holds U+3000: ${GQL_WIN}"
+else
+  FAIL "GQL: a Grant cell graded differently by locale, or not as specified — U+00A0 world: under C $(grep -c '^FINDING ' <<<"$GQL_NC") finding(s), under ${GQL_MB} $(grep -c '^FINDING ' <<<"$GQL_NM"); U+3000 world: under C $(grep -c '^FINDING ' <<<"$GQL_WC"), under ${GQL_MB} $(grep -c '^FINDING ' <<<"$GQL_WM") (want 0, 0, 2, 2, and each pair identical). This host's [[:space:]] under ${GQL_MB} holds U+00A0: ${GQL_NBIN}; U+3000: ${GQL_WIN}. First finding: $(grep -h '^FINDING ' <<<"$GQL_NC"$'\n'"$GQL_NM"$'\n'"$GQL_WC"$'\n'"$GQL_WM" | awk 'NR == 1')"
+fi
+
+# ── GQF — A FRONTMATTER FLAG READS THE SAME UNDER EVERY LOCALE, AND KEEPS U+00A0 AT ITS EDGE. Three
+# BUILT verb files, each read by parse_command_file, the reader of the typed-only posture's flag
+# half, under C and under the member gq_mb_pick chose for GQL:
+#   nbspflag  a `disable-model-invocation: true` line led by U+00A0, and one trailed by a space and
+#             U+00A0. fm_trim keeps U+00A0, so neither line is the flag: POSTURE '-' under both. A
+#             YAML parser reads the first as a different key and the second as the string "true"
+#             plus U+00A0, so a flag the runtime may not hold is reported, never certified.
+#   wideflag  the same two lines with U+3000, which no trim removes: '-' under both. Without it, a
+#             frontmatter trim gone back to [[:space:]] would read green under C, where that class
+#             is ASCII.
+#   flagline  the plain line trailed by a space and a tab, which fm_trim removes: FLAG under both,
+#             so the reader is shown to find the flag where it is there.
+# Each file's two readings must also be byte-identical. A frontmatter reader moved onto trim reads
+# the U+00A0 file as flagged, and that is the regression this arm turns red on.
+gqf_read() {  # gqf_read <verb-root> — the POSTURE record parse_command_file emits for zz-graded
+  grep '^POSTURE ' <<<"$(parse_command_file "$1/zz-graded/SKILL.md" '/zz-graded' RESOLVE 2>/dev/null)"
+}
+GQFN="$(gq_world GQF-nbsp nbspflag)"; GQFW="$(gq_world GQF-wide wideflag)"; GQFP="$(gq_world GQF-plain flagline)"
+GQF_NC="$( export LC_ALL=C; gqf_read "$GQFN" )"
+GQF_WC="$( export LC_ALL=C; gqf_read "$GQFW" )"
+GQF_PC="$( export LC_ALL=C; gqf_read "$GQFP" )"
+GQF_NM=''; GQF_WM=''; GQF_PM=''
+if [ -n "$GQL_MB" ]; then
+  GQF_NM="$( export LC_ALL="$GQL_MB"; gqf_read "$GQFN" )"
+  GQF_WM="$( export LC_ALL="$GQL_MB"; gqf_read "$GQFW" )"
+  GQF_PM="$( export LC_ALL="$GQL_MB"; gqf_read "$GQFP" )"
+fi
+GQF_S=1
+[ "$(grep -c -F "$GQ_NBSP" "$GQFN/zz-graded/SKILL.md")" = '2' ] || GQF_S=0
+grep -qxF "${GQ_NBSP}disable-model-invocation: true" "$GQFN/zz-graded/SKILL.md" || GQF_S=0
+grep -qxF "disable-model-invocation: true ${GQ_NBSP}" "$GQFN/zz-graded/SKILL.md" || GQF_S=0
+[ "$(grep -c -F "$GQ_WIDE" "$GQFW/zz-graded/SKILL.md")" = '2' ] || GQF_S=0
+grep -qxF "${GQ_WIDE}disable-model-invocation: true" "$GQFW/zz-graded/SKILL.md" || GQF_S=0
+grep -qxF "disable-model-invocation: true ${GQ_WIDE}" "$GQFW/zz-graded/SKILL.md" || GQF_S=0
+grep -qxF "disable-model-invocation: true "$'\t' "$GQFP/zz-graded/SKILL.md" || GQF_S=0
+if [ "$GQF_S" -eq 0 ]; then
+  FAIL "GQF: fixture integrity — a built frontmatter does not carry its flag lines edged as its file places them, so a verdict here would prove nothing"
+elif [ -z "$GQL_MB" ]; then
+  FAIL "GQF: NO MULTIBYTE LOCALE — gq_mb_pick found no name under which U+00A0 reads as one character, so C was compared with nothing"
+elif [ "$GQF_NC" = 'POSTURE /zz-graded -' ] && [ "$GQF_NM" = "$GQF_NC" ] \
+     && [ "$GQF_WC" = 'POSTURE /zz-graded -' ] && [ "$GQF_WM" = "$GQF_WC" ] \
+     && [ "$GQF_PC" = 'POSTURE /zz-graded FLAG' ] && [ "$GQF_PM" = "$GQF_PC" ]; then
+  PASS "GQF: LOCALE-INVARIANT, AND U+00A0 KEPT AT A FRONTMATTER EDGE — a disable-model-invocation: true line led by U+00A0, or trailed by a space and U+00A0, is not read as the flag under C or under ${GQL_MB}, nor is either edged by U+3000; the plain line trailed by a space and a tab is read as the flag under both; and each file's two readings are identical. fm_trim strips ASCII whitespace alone, so this verdict does not depend on the host's [[:space:]], and an edge byte a YAML parser keeps is reported rather than trimmed into a flag"
+else
+  FAIL "GQF: a frontmatter flag line read differently by locale, or not as specified — U+00A0 file: under C '${GQF_NC}', under ${GQL_MB} '${GQF_NM}'; U+3000 file: '${GQF_WC}', '${GQF_WM}'; plain file: '${GQF_PC}', '${GQF_PM}' (want POSTURE /zz-graded - for the first four and POSTURE /zz-graded FLAG for the last two)"
+fi
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group GJ — controls for group J. Every fixture is rooted at $WORK, so group Z's claim
 # covers them. The MUST-FIRE worlds are BUILT by gj_world from a defect switch — never
@@ -6639,13 +6876,17 @@ fi
 # branch of the reader alone declares: a File heading, a bare Pre-Work heading, and a writer
 # list naming the prompt's own id first, with and without a space after its comma. The fifth
 # adds a third agent, its class (the heading's count moving to 8 with it) and its prompt, and
-# that agent's row names no outputs/ path. Their arms follow GJ9.
+# that agent's row names no outputs/ path. Their arms follow GJ9. Two more edge the header's agent
+# cell, nbsphead with U+00A0 before the word, after it and among ASCII spaces, and widehead with
+# U+3000 after it; arm GJU reads them.
 gj_world() {
   local d="$1" dft="$2" hdr rowa rowb cnt=7 bid='zz-beta' qlist='[zz-alpha, zz-gamma]' pend
   mkdir -p "$d/agents" "$d/reference"
   pend=', declares `outputs/zz-pending.md`, not written before the landing that ships its writer'
   hdr='|  agent|PROMPT  FILE | `Output File` |  When to  dispatch   |'
   [ "$dft" = 'anchor0' ] && hdr='| Agent | Prompt File | Output Files | When to dispatch |'
+  [ "$dft" = 'nbsphead' ] && hdr='|'"$GQ_NBSP"'  agent '"$GQ_NBSP"'|PROMPT  FILE | `Output File` |  When to  dispatch   |'
+  [ "$dft" = 'widehead' ] && hdr='|  agent'"$GQ_WIDE"'|PROMPT  FILE | `Output File` |  When to  dispatch   |'
   rowa='| Zz Alpha | `agents/zz-alpha.md` | `outputs/zz-a.md`, its preserved `outputs/zz-a-v<N>.md`, `outputs/zz-shared.md` (primary writer), `outputs/zz-a-status.md`'"$pend"' | always |'
   rowb='| Zz Beta | `agents/zz-beta.md` | `outputs/zz-b.md`, `outputs/zz-b-sections.md` (its sections), `outputs/zz-shared.md` (setup seed only) | always |'
   case "$dft" in
@@ -6933,6 +7174,45 @@ if [ -n "$GJV_BAD" ]; then
   FAIL "GJV: a degenerate world reached a PASS, or rendered more than one verdict: $GJV_BAD"
 else
   PASS "GJV: VACUITY and DEGRADATION — over an empty roster, an empty class table, an unreadable prompt and a root with neither input, each of the three assertions renders exactly one FAIL and no PASS (${GJV_N} of ${GJV_N} probes), and an unread input is counted DEGRADED — never read as empty — while an empty-but-read input is not"
+fi
+
+# GJU — A ROSTER HEADER CELL READS THE SAME UNDER EVERY LOCALE. Two BUILT worlds, each read by the
+# real reader under C and under the multibyte member gq_mb_pick chooses, by the rule GQL states:
+#   nbsphead  the agent cell edged by U+00A0, before the word, after it and among ASCII spaces.
+#             rj_trimv removes it under every locale, so the world reads exactly as the conforming
+#             world does under C: the roster anchored, both rows read, nothing named.
+#   widehead  the agent cell followed by U+3000, which rj_trimv keeps: the header is not the
+#             roster's, and J0 names 0 roster header rows, under C as under UTF-8. Without it, a
+#             trim that went back to [[:space:]] for every space but U+00A0 would read green here.
+# Each world's two readings must also be byte-identical. The reader runs in a subshell that
+# EXPORTS the locale, so lower's tr, which rj_norm forks, reads the same one.
+GJU_MB="$(gq_mb_pick)"
+gj_world "$GJ/nbsphead" nbsphead; gj_world "$GJ/widehead" widehead
+GJU_OK="$( export LC_ALL=C; roster_write_check "$GJ/ok" )"
+GJU_NC="$( export LC_ALL=C; roster_write_check "$GJ/nbsphead" )"
+GJU_WC="$( export LC_ALL=C; roster_write_check "$GJ/widehead" )"
+GJU_NM=''; GJU_WM=''
+if [ -n "$GJU_MB" ]; then
+  GJU_NM="$( export LC_ALL="$GJU_MB"; roster_write_check "$GJ/nbsphead" )"
+  GJU_WM="$( export LC_ALL="$GJU_MB"; roster_write_check "$GJ/widehead" )"
+fi
+GJU_S=1
+[ "$(grep -c -F "$GQ_NBSP" "$GJ/nbsphead/CLAUDE.md")" = '1' ] || GJU_S=0
+grep -qF "|${GQ_NBSP}  agent ${GQ_NBSP}|PROMPT  FILE |" "$GJ/nbsphead/CLAUDE.md" || GJU_S=0
+[ "$(grep -c -F "$GQ_WIDE" "$GJ/widehead/CLAUDE.md")" = '1' ] || GJU_S=0
+grep -qF "|  agent${GQ_WIDE}|PROMPT  FILE |" "$GJ/widehead/CLAUDE.md" || GJU_S=0
+arm J0
+if [ "$GJU_S" -eq 0 ]; then
+  FAIL "GJU: fixture integrity — a built roster header does not carry U+00A0 or U+3000 where its world places it, so a verdict here would prove nothing"
+elif [ -z "$GJU_MB" ]; then
+  FAIL "GJU: NO MULTIBYTE LOCALE — gq_mb_pick found no name under which U+00A0 reads as one character, so C was compared with nothing"
+elif [ "$(getcount "$GJU_NC" J_ROWS)" = '2' ] && [ "$(grep -c '^FINDING ' <<<"$GJU_NC")" = '0' ] \
+     && [ "$GJU_NC" = "$GJU_OK" ] && [ "$GJU_NM" = "$GJU_NC" ] \
+     && [ "$(grep -c '^FINDING J0 CLAUDE.md carries 0 roster header row' <<<"$GJU_WC")" = '1' ] \
+     && [ "$(grep -c '^FINDING ' <<<"$GJU_WC")" = '1' ] && [ "$GJU_WM" = "$GJU_WC" ]; then
+  PASS "GJU: LOCALE-INVARIANT — a roster header whose agent cell is edged by U+00A0, before the word, after it and among ASCII spaces, anchors the roster under C and under ${GJU_MB}, and the world reads exactly as the conforming world reads (2 rows, nothing named); a header whose agent cell is followed by U+3000, which rj_trimv keeps, is not the roster's, and J0 names 0 roster header rows under both; each world's two readings are byte-identical. rj_trimv's whitespace set is trim's, fixed, so this verdict does not depend on the host's [[:space:]]"
+else
+  FAIL "GJU: a roster header cell read differently by locale, or not as specified — U+00A0 world: under C $(grep -c '^FINDING ' <<<"$GJU_NC") finding(s) and $(getcount "$GJU_NC" J_ROWS) row(s), under ${GJU_MB} $(grep -c '^FINDING ' <<<"$GJU_NM") finding(s); U+3000 world: under C $(grep -c '^FINDING ' <<<"$GJU_WC"), under ${GJU_MB} $(grep -c '^FINDING ' <<<"$GJU_WM") (want 0, 0, 1, 1, the U+00A0 world reading as the conforming one does, and each pair identical). First finding: $(grep -h '^FINDING ' <<<"$GJU_NC"$'\n'"$GJU_NM"$'\n'"$GJU_WC"$'\n'"$GJU_WM" | awk 'NR == 1')"
 fi
 
 # gj_live <dir> — a byte copy of the three live inputs this group reads.
