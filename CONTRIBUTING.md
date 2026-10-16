@@ -44,6 +44,24 @@ and no `types:` list that leaves out `synchronize`, and is listed both in `CONTE
 `scripts/pin-required-checks.py` and in [SECURITY.md](SECURITY.md), *Branch Protection
 Posture*.
 
+### Locale posture of the guard suites
+
+A suite's verdicts are not meant to depend on the locale your shell exports. Each suite either
+exports `LC_ALL=C` at its top, or leaves the locale unpinned and sets `LC_ALL=C` only on the calls
+that need byte semantics — and the unpinned ones differ in what they assert about the rest. When
+you move between suites, read the row for the one you are running rather than carrying the last
+one's habit across.
+
+| Suite | Posture | When you run it |
+|---|---|---|
+| `scripts/test-corpus-hygiene.sh`, `scripts/test-adr-conformance.sh` | export `LC_ALL=C` at the top of the file | your shell's locale never reaches them |
+| `scripts/test-artifact-schema.sh` | unpinned; `LC_ALL=C` on the individual calls that need byte semantics, and group `LC` sets each member's locale inside the arm that compares under it | Group `LC` asserts on every run that `va_type_ok`'s slug predicate and `ca_delta`'s range parse answer the same under C and under a UTF-8 locale the host lists, and fails the run if none loads. The rest of the suite reads your locale: its verdict set was measured identical under `LC_ALL=C` and a UTF-8 default when this row was written, and that is not asserted. |
+| `scripts/test-command-taxonomy.sh` | unpinned; `LC_ALL=C` on one awk program and one sort, while its `trim` helper and its other calls read the caller's locale | a cell ending in a non-ASCII space can grade differently under C and under UTF-8 |
+| `scripts/test-publish-guard.sh`, `scripts/test-trip-resolution-contract.sh` | unpinned; `LC_ALL=C` on the individual calls that need byte semantics | your shell's locale reaches everything except those calls |
+
+A suite that reads differently with `LC_ALL=C` set than without it has a defect in the suite.
+Report it against the suite rather than reading it as a failure of your change.
+
 ## Cutting a release
 
 A release is a change like any other: it follows *Making a change* above, start to

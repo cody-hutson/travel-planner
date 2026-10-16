@@ -138,9 +138,12 @@ name: Artifact schema
 #        read FROM that block and the corpus from the schema directory, so no count is
 #        pinned and a schema that drops a required field cannot leave this suite's output
 #        byte-identical — which is what it used to do, measured rather than predicted
-#   LC   the value and key classifiers answer the same under every locale the host declares.
-#        A bracket range resolves against the collating sequence, so an unpinned range made
-#        CI enforce a rule an operator's own run did not
+#   LC   the value and key classifiers, and ca_delta's class-assignment range parse, answer the
+#        same under every locale in a set that carries C and a multibyte locale on every host;
+#        the multibyte member's presence, and the awk's ability to read it, are asserted in the
+#        run. A bracket expression resolves against the collating sequence and reads a character
+#        or a byte by the codeset, so an unpinned construct made CI enforce a rule an operator's
+#        own run did not
 #   FW   the frozen regression witness is held by an ASSERTION rather than by a review
 #        convention, which is a person remembering rather than a gate
 #   PS   the per-event status presence check has a witness in the shipped corpus, and its

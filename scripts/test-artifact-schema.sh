@@ -39,9 +39,10 @@
 #        removes a universal field"). The key set is read FROM that block and the corpus from
 #        the schema directory, so no count is pinned. Without it a schema can drop a required
 #        field and this suite's output stays BYTE-IDENTICAL — measured, not predicted.
-#   LC   the value and key classifiers answer the same under every locale the host declares.
-#        A bracket range resolves against the collating sequence, so `[a-z]` matched uppercase
-#        under a UTF-8 default and CI enforced a rule an operator's own run did not.
+#   LC   the value and key classifiers, and ca_delta's class-assignment range parse, answer the
+#        same under every locale in a set that carries C and a multibyte locale on every host.
+#        A bracket expression resolves against the collating sequence and reads a character or
+#        a byte by the codeset, so either could make CI enforce a rule an operator's run did not.
 #   CA   the several homes of each class's assignment agree: § 1.1's columns, § 6's Members
 #        column, § 9's per-class delta column, and the frontmatter of the class's declared
 #        witness. Per-field denominators, because the fields do not all have the same number
@@ -1277,7 +1278,8 @@ if [ "$UF_OK" -eq 1 ]; then
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
-# Group LC — the classifying predicates do not change their answer with the locale.
+# Group LC — the classifying predicates, and ca_delta's range parse, do not change their answer
+# with the locale.
 #
 # ── THE FINDING ──────────────────────────────────────────────────────────────────
 # `va_type_ok`'s slug arm and `va_fm_pairs`'s kebab-case arm both classified with bracket
@@ -1296,16 +1298,47 @@ fi
 # whose locale archive contains nothing that folds. LC1 asserts the behaviour through the
 # real function, which is the arm that would have caught the original.
 #
+# ── THE SECOND FINDING — THE CODESET, IN GROUP CA ────────────────────────────────
+# ca_delta's range test admitted a separator exactly ONE character wide, and § 9 writes its
+# range rows with an en dash. A character-aware awk under a UTF-8 locale reads that dash as one
+# character; under C, and on mawk in any locale, it is three bytes, so the two range rows did not
+# parse and CA2 reported their five classes absent — on a correct tree, under LC_ALL=C, while the
+# runner's UTF-8 default stayed green. The fix is by construction again (see ca_delta). The
+# coverage is LC1-shaped rather than LC2-shaped, because LC2's detector reads collation ranges and
+# a negated class is not one: LC5 drives the REAL ca_delta under every member of the CODESET set
+# (C, POSIX and the set's multibyte members — see lc_fn_diff), LC6 and LC7 plant a
+# locale-dependent construct in copies of it and must be reported, and LC8 shows that a
+# locale-invariant edit is not. They print after group CA, which is where ca_delta is defined.
+#
 # ── WHY THE POPULATION IS DERIVED FROM THE HOST ──────────────────────────────────
 # A folding locale cannot be assumed present: C, POSIX and C.UTF-8 all collate by codepoint
 # and none of them reproduces the finding. So the locale set is DERIVED — C and POSIX always,
-# plus whatever the host declares that the probe shows to fold — and the arm reports how many
-# of each it exercised. A run on a host with none is a weaker measurement and says so; it is
-# never a vacuous one, because the set is never smaller than two and LC2 does not depend on
-# the archive at all.
+# plus whatever the host declares that the probe shows to fold, plus one MULTIBYTE locale the
+# host lists — and the arms report how many of each they exercised. A run on a host with no
+# folding locale is a weaker measurement and says so; it is never a vacuous one, because the set
+# is never smaller than two and LC2 does not depend on the archive at all. A host that lists no
+# multibyte locale is different: no member could see the codeset, so LC3 fails the run there,
+# and LC4 fails it on an awk that reads bytes in every locale.
+#
+# ── THIS SUITE'S LOCALE POSTURE, AND THE SIBLINGS THAT TAKE THE OPPOSITE ONE ─────
+# Three separate things, stated apart because each is a different kind of claim.
+# THE PIN POSTURE, as this file has it. Nothing is exported at the top. LC_ALL=C is set per call,
+# on the individual calls that need byte semantics, and this group sets each member's locale
+# inside the subshell or function that probes or compares under it. Every other line reads the
+# caller's locale.
+# WHAT THIS GROUP ASSERTS, on every run. va_type_ok's slug predicate (LC1) and ca_delta's range
+# parse (LC5) answer the same under C and under a UTF-8 locale the host lists, and the run fails
+# if none loads (LC3). That is the whole of the asserted surface.
+# WHAT WAS MEASURED, AND IS NOT ASSERTED. The rest of the suite reads the caller's locale. Its
+# verdict set was measured identical under LC_ALL=C and under a UTF-8 default when this record
+# was written. No arm compares verdict sets, so a locale dependence added outside the asserted
+# surface would not turn this group red.
+# test-corpus-hygiene.sh and test-adr-conformance.sh take the opposite posture and export
+# LC_ALL=C at their top, because their character classes must read bytes everywhere. Neither
+# borrows a locale from the other; CONTRIBUTING.md lists every suite's posture side by side.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
-echo "LC — the classifying predicates are locale-invariant"
+echo "LC — the classifying predicates are locale-invariant, over a set that carries a multibyte locale"
 
 # lc_folds <locale> — true when a bracket range folds case under that locale. Probed on a
 # construct THIS FILE owns rather than on the validator, so the probe stays independent of
@@ -1330,10 +1363,61 @@ $lcname"
 done <<EOF
 $(locale -a 2>/dev/null)
 EOF
+# ── THE MULTIBYTE MEMBER — WHY A FOLDING LOCALE IS NOT ENOUGH ────────────────────
+# The folding probe above selects locales by COLLATION, the axis the slug finding lives on.
+# The class-assignment range parse in group CA lives on a different axis, the CODESET: under a
+# multibyte locale a character-aware awk reads U+2013 as one character, and under C or any
+# single-byte locale as three bytes. A folding locale need not be multibyte — the ISO-8859
+# locales fold and are single-byte — and a shell that does not fold at all leaves this set at
+# C and POSIX alone: bash 5 matches bracket ranges in ASCII order by default, and that is the
+# set the hosted runner reports in LC0. A differential over two single-byte locales cannot
+# see a codeset-dependent construct, so ONE multibyte locale is added — a C.UTF-8 spelling the
+# host can load, else the first multibyte name it lists — and LC3 asserts that the set carries
+# one. C.UTF-8 is preferred because it collates by codepoint: it adds the codeset axis without
+# adding a second collation axis.
+#
+# lc_multibyte <locale> — true when U+2013's three bytes read as ONE character under that
+# locale. Probed in the SHELL, never in awk, so the answer is a property of the locale and not
+# of the engine that later reads it; LC4 grades the engine separately. C is assigned first, so
+# a name the C library cannot load falls back to C and reads single-byte instead of inheriting
+# the caller's own locale. That is what makes it safe to try the two C.UTF-8 spellings BY NAME
+# ahead of what `locale -a` lists — the member then does not depend on how a host spells it, or
+# on the host shipping `locale` at all. The probe's stderr is discarded, because a shell that
+# warns when it cannot load a locale would otherwise print one line per unloadable name.
+lc_multibyte() {
+  local LC_ALL=C
+  LC_ALL="$1"
+  local s=$'\342\200\223'
+  [ "${#s}" -eq 1 ]
+}
+lc_in_set() {
+  local m
+  while IFS= read -r m; do [ "$m" = "$1" ] && return 0; done <<EOF
+$LC_SET
+EOF
+  return 1
+}
+LC_MB=""
+while IFS= read -r lcname; do
+  [ -n "$lcname" ] || continue
+  lc_multibyte "$lcname" 2>/dev/null || continue
+  case "$lcname" in C.UTF-8|C.utf8|C.UTF8) LC_MB="$lcname"; break ;; esac
+  [ -n "$LC_MB" ] || LC_MB="$lcname"
+done <<EOF
+C.UTF-8
+C.utf8
+$(locale -a 2>/dev/null)
+EOF
+LC_MB_ADDED=0
+if [ -n "$LC_MB" ] && ! lc_in_set "$LC_MB"; then
+  LC_SET="$LC_SET
+$LC_MB"
+  LC_MB_ADDED=1
+fi
 LC_N="$(printf '%s\n' "$LC_SET" | grep -c '[^[:space:]]')"
 
 if [ "$LC_N" -ge 2 ]; then
-  PASS "LC0: the differential runs over $LC_N locale(s) — C and POSIX, plus the $LC_FOLD_N collation-folding locale(s) this host declares. A folding locale is one where a bracket range matches outside its written span, which is the construct the finding is about"
+  PASS "LC0: the differential runs over $LC_N locale(s) — C and POSIX, plus the $LC_FOLD_N collation-folding locale(s) this host declares, plus the multibyte locale ${LC_MB:-<none listed>} (added=$LC_MB_ADDED; 0 means the set already carried it). A folding locale is one where a bracket range matches outside its written span, the slug finding's construct; a multibyte one is where a character is more than one byte, ca_delta's"
 else
   FAIL "LC0: only $LC_N locale(s) were assembled — a differential needs at least two, so LC1 below would be comparing a value with itself"
 fi
@@ -1415,6 +1499,61 @@ else
   FAIL "LC2: $LC_RANGE_TOTAL collation-dependent bracket range(s) remain in va_type_ok / va_fm_pairs across $LC_BODY_LINES lines — a range is resolved against the current locale's collating sequence, so these predicates answer differently in CI and in an operator's shell"
 fi
 
+# LC3 — the set carries a MULTIBYTE member, asserted rather than assumed. Every member single-
+# byte means every comparison below reads bytes against bytes, and a codeset-dependent construct
+# in ca_delta reads green over it. Two controls ride in the arm: C must read single-byte, and a
+# name no host lists must fall back to C rather than inherit the caller's locale — without the
+# second, the count could be this run's own locale counted once per name.
+#
+# The same pass derives LC_CS_SET, the CODESET comparison set that LC5–LC8 iterate: C, POSIX and
+# each member lc_multibyte accepts. LC_SET is chosen by COLLATION, for LC1, and a folding member
+# can carry a multibyte codeset other than UTF-8 — GB18030, Shift_JIS, Big5, EUC — that takes
+# ASCII bytes such as `|` and the backtick as trail bytes, so a reader of a UTF-8 document
+# collapses under it on a correct tree. ca_delta's byte-safety holds for UTF-8 and for single-byte
+# codesets, and the codeset set is narrowed to what lc_multibyte accepts: a single-byte member
+# left out reads bytes exactly as C does, so it adds no codeset coverage. LC5 reports how many
+# members were left out, and which.
+LC_MB_N=0; LC_MB_NAMES=""
+LC_CS_SET="C
+POSIX"
+LC_CS_OUT=0; LC_CS_OUT_NAMES=""
+while IFS= read -r lcm; do
+  [ -n "$lcm" ] || continue
+  lcm_mb=0
+  lc_multibyte "$lcm" 2>/dev/null && lcm_mb=1
+  if [ "$lcm_mb" -eq 1 ]; then LC_MB_N=$((LC_MB_N + 1)); LC_MB_NAMES="$LC_MB_NAMES $lcm"; fi
+  case "$lcm" in C|POSIX) continue ;; esac
+  if [ "$lcm_mb" -eq 1 ]; then
+    LC_CS_SET="$LC_CS_SET
+$lcm"
+  else
+    LC_CS_OUT=$((LC_CS_OUT + 1)); LC_CS_OUT_NAMES="$LC_CS_OUT_NAMES $lcm"
+  fi
+done <<EOF
+$LC_SET
+EOF
+LC_MB_CTL_C=0; lc_multibyte C 2>/dev/null || LC_MB_CTL_C=1
+LC_MB_CTL_X=0; lc_multibyte zz_ZZ.UTF-8 2>/dev/null || LC_MB_CTL_X=1
+if [ "$LC_MB_N" -ge 1 ] && [ "$LC_MB_CTL_C" -eq 1 ] && [ "$LC_MB_CTL_X" -eq 1 ]; then
+  PASS "LC3: $LC_MB_N of the differential's $LC_N locale(s) are multibyte —$LC_MB_NAMES — each shown so by the shell reading U+2013's three bytes as ONE character. C reads them as three, and a name no host lists falls back to C, so the count is a property of the members and not of this run's own locale"
+else
+  FAIL "LC3: $LC_MB_N of the differential's $LC_N locale(s) are multibyte (C-control=$LC_MB_CTL_C, unlisted-name-control=$LC_MB_CTL_X; each must read 1). With no multibyte member every locale comparison in this suite reads bytes against bytes and cannot see a codeset-dependent construct. Install a locale whose character type is UTF-8 — any name 'locale -a' lists"
+fi
+
+# LC4 — the ENGINE can see the codeset. A multibyte member is necessary and not sufficient: the
+# awk this suite runs must read a bracket expression per character under it. mawk reads bytes in
+# every locale, and the BSD awk macOS ships reads a bracket expression per character while its
+# length() counts bytes — so the probe is a bracket expression, the construct the finding is
+# about, and never length(). Where this fails, LC6 and LC7 cannot fire, and they say so.
+LC_AWK_MB="$( ( export LC_ALL="${LC_MB:-C}"; printf '\342\200\223\n' | awk '{ print ($0 ~ /^[^0-9]$/) }' ) 2>/dev/null )"
+LC_AWK_C="$( ( export LC_ALL=C; printf '\342\200\223\n' | awk '{ print ($0 ~ /^[^0-9]$/) }' ) 2>/dev/null )"
+LC_AWK_ID="$(awk --version 2>&1 | awk 'NR == 1')"
+if [ -n "$LC_MB" ] && [ "$LC_AWK_MB" = 1 ] && [ "$LC_AWK_C" = 0 ]; then
+  PASS "LC4: this host's awk (${LC_AWK_ID:-unidentified}) matches U+2013 as ONE character in a bracket expression under $LC_MB and as three bytes under C, so a locale differential over an awk program can observe a multibyte construct on this engine"
+else
+  FAIL "LC4: this host's awk (${LC_AWK_ID:-unidentified}) answered '${LC_AWK_MB:-nothing}' under ${LC_MB:-no multibyte member} and '${LC_AWK_C:-nothing}' under C for a one-character bracket match of U+2013 (1 and 0 expected). It reads bytes in every locale, so no locale differential can see a multibyte construct on this engine, and LC6 and LC7 cannot fire. Run under a character-aware awk"
+fi
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group CA — the several homes of each class's assignment agree.
 #
@@ -1486,7 +1625,9 @@ ca_members() {
 # multibyte UTF-8 character is an ASCII digit — and it is the class the split below already
 # used. A digit-led cell that still does not read as N or N<sep>M, such as the three-number
 # 5–7–9, emits PARSE-FAIL rather than being skipped, so CA2 names it instead of reporting its
-# classes absent. CA9 grades the grammar itself, on a fixture read under C.
+# classes absent. CA9 grades the grammar itself, on a fixture read under C. Group LC grades this
+# function under C, POSIX and every multibyte member of its codeset set (LC5), and plants the
+# one-character class back to show it would see it (LC6).
 ca_delta() {
   awk -v canon="$CA_LIFE_ENUM" '
     BEGIN { nm = split(canon, M, "|") }
@@ -1719,6 +1860,114 @@ if [ -n "$CA_M3" ] && [ "$CA9_GOT" = "$CA9_WANT" ]; then
   PASS "CA9: ca_delta reads the fixture under C exactly as it was built — the en-dash ranges 2–4 and 10–12 expand to their spans, a multibyte character beside the token in a Lifecycle cell changes nothing, and the three-number control cell 5–7–9 is reported PARSE-FAIL with none of its classes emitted. Byte semantics, so this is the reading mawk and a C-locale run take"
 else
   FAIL "CA9: ca_delta read the fixture under C as [$(printf '%s' "$CA9_GOT" | tr '\n\t' ';,')] against [$(printf '%s' "$CA9_WANT" | tr '\n\t' ';,')] — the range grammar is not byte-safe, or the control cell was expanded or dropped instead of named"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group LC, continued — ca_delta's range parse reads the same under every locale in the set.
+#
+# Emitted HERE rather than in group LC's own block because group LC runs before group CA defines
+# ca_delta. The ids are LC's, and group RS reduces an id to its group by its leading capitals,
+# so these verdicts count as group LC wherever they print.
+#
+# ── ONE EVALUATOR, FOUR SUBJECTS ─────────────────────────────────────────────────
+# lc_fn_diff runs a function over each input under C and under every other member of
+# LC_CS_SET — the CODESET set LC3 derived: C, POSIX and the multibyte members, never the whole
+# collation set LC1 reads — and compares the outputs byte for byte. LC5 drives it over the REAL
+# ca_delta. LC6 and LC7 drive it over copies of ca_delta derived from its own `declare -f` text,
+# each carrying a planted locale-dependent construct, and each MUST be reported. LC8 drives it
+# over a copy carrying a locale-INVARIANT added line, which must not be — the arm that separates
+# "the differential sees locale dependence" from "the differential flags any edit". The copies
+# are derived from the function as this shell holds it, so a change to ca_delta's text moves
+# them with it, and an anchor that no longer exists makes the arm fail rather than plant nothing.
+#
+# ── WHAT IT DOES NOT COVER ───────────────────────────────────────────────────────
+# The covered surface is ca_delta. Other awk programs in this file that read multibyte content
+# are not driven through the differential; group LC's header names its whole covered set.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "LC — ca_delta's range parse is locale-invariant (graded here, after group CA defines it)"
+
+lc_fn_diff() {  # <function> <input>... ; "<pairs>\t<disagreements>\t<class-rows-under-C>\t<detail>"
+  local fn="$1" inp base out l pairs=0 bad=0 rows=0 detail=""
+  shift
+  for inp in "$@"; do
+    base="$( ( export LC_ALL=C; EN_DOC="$inp"; "$fn" ) 2>/dev/null )"
+    rows=$((rows + $(printf '%s\n' "$base" | awk -F'\t' '$1 ~ /^[0-9]+$/ { n++ } END { print n + 0 }')))
+    while IFS= read -r l; do
+      [ -n "$l" ] || continue
+      [ "$l" != C ] || continue
+      out="$( ( export LC_ALL="$l"; EN_DOC="$inp"; "$fn" ) 2>/dev/null )"
+      pairs=$((pairs + 1))
+      if [ "$out" != "$base" ]; then bad=$((bad + 1)); detail="$detail ${inp##*/}@$l"; fi
+    done <<EOF
+$LC_CS_SET
+EOF
+  done
+  printf '%s\t%s\t%s\t%s\n' "$pairs" "$bad" "$rows" "$detail"
+}
+lc_count() {  # <literal> <text> — occurrences of a literal string, never a pattern
+  awk -v t="$1" '{ s = $0; while ((i = index(s, t)) > 0) { n++; s = substr(s, i + length(t)) } } END { print n + 0 }' <<<"$2"
+}
+lc_fixture_hits() {  # <detail> — how many of the reported disagreements are on the CA9 fixture
+  printf '%s\n' "$1" | awk -v f="${CA_FX##*/}@" '{ for (i = 1; i <= NF; i++) if (index($i, f) == 1) n++ } END { print n + 0 }'
+}
+
+# LC5 — THROUGH THE REAL FUNCTION, over the real § 9 and the CA9 fixture, under the codeset set.
+LC5_R="$(lc_fn_diff ca_delta "$EN_DOC" "$CA_FX")"
+LC5_P="$(printf '%s' "$LC5_R" | cut -f1)"; LC5_B="$(printf '%s' "$LC5_R" | cut -f2)"; LC5_W="$(printf '%s' "$LC5_R" | cut -f3)"
+if [ "$LC5_P" -gt 0 ] && [ "$LC5_B" -eq 0 ] && [ "$LC5_W" -gt 0 ] && [ "$LC_MB_N" -ge 1 ]; then
+  PASS "LC5: ca_delta returned byte-identical output across all $LC5_P (input, locale) comparisons — § 9 and the CA9 fixture, each under C against every other member of the codeset set, $LC_MB_N of them multibyte, with $LC_CS_OUT member(s) of the collation set left out as not multibyte:${LC_CS_OUT_NAMES:- none} — over $LC5_W class rows read under C. Observed through the real function; LC6 and LC7 show the same evaluator reporting a planted construct, so this zero is a measurement"
+else
+  FAIL "LC5: ca_delta is locale-dependent or the comparison is blind (comparisons=$LC5_P disagreements=$LC5_B class-rows-under-C=$LC5_W multibyte-members=$LC_MB_N left-out=$LC_CS_OUT; each must be non-zero except disagreements and left-out):$(printf '%s' "$LC5_R" | cut -f4)"
+fi
+
+# LC6 — MUST FIRE, by REPLACEMENT. The range test's separator class narrowed back to one
+# character — the exact construct of the finding — in a copy of ca_delta. Predicted before it
+# runs: on a character-aware awk, every multibyte member disagrees with C on both inputs.
+LC_SRC="$(declare -f ca_delta)"
+LC6_WIDE0="$(lc_count '[^0-9]+[0-9]+' "$LC_SRC")"; LC6_NARROW0="$(lc_count '[^0-9][0-9]+' "$LC_SRC")"
+LC6_SRC="$(printf '%s\n' "$LC_SRC" | LC_ALL=C sed -e '1s/^ca_delta /lc_planted_narrow /' -e 's/\[^0-9\]+\[0-9\]+/[^0-9][0-9]+/')"
+LC6_WIDE1="$(lc_count '[^0-9]+[0-9]+' "$LC6_SRC")"; LC6_NARROW1="$(lc_count '[^0-9][0-9]+' "$LC6_SRC")"
+eval "$LC6_SRC"
+LC6_R="$(lc_fn_diff lc_planted_narrow "$EN_DOC" "$CA_FX")"
+LC6_B="$(printf '%s' "$LC6_R" | cut -f2)"; LC6_FX="$(lc_fixture_hits "$(printf '%s' "$LC6_R" | cut -f4)")"
+if [ "$LC6_WIDE0" -eq 1 ] && [ "$LC6_WIDE1" -eq 0 ] && [ "$LC6_NARROW1" -eq $((LC6_NARROW0 + 1)) ] && [ "$LC6_FX" -ge 1 ]; then
+  PASS "LC6: MUST FIRE — a copy of ca_delta whose range test admits a one-character separator again is reported on $LC6_B comparison(s), $LC6_FX of them on the fixture. The planted token was asserted to have replaced the real one exactly once, so the arm graded a changed function"
+else
+  FAIL "LC6: MUST FIRE — the planted one-character separator was not reported (replaced=$LC6_WIDE0->$LC6_WIDE1 planted=$LC6_NARROW0->$LC6_NARROW1 disagreements=$LC6_B fixture-disagreements=$LC6_FX). If the replacement landed, the evaluator cannot see a codeset-dependent construct on this host — read LC3 and LC4"
+fi
+
+# LC7 — MUST FIRE, ADD-ONLY. One line inserted ahead of the split, every existing line kept:
+# a guard that drops a cell whose separator is wider than one character, written as the bracket
+# expression the finding is about. The copy minus that line must equal ca_delta byte for byte.
+LC7_LINE='      if (rng ~ /[0-9][^0-9][^0-9]/) next'
+LC7_SRC="$(printf '%s\n' "$LC_SRC" | LC_ALL=C awk -v add="$LC7_LINE" 'NR == 1 { sub(/^ca_delta /, "lc_planted_addonly ") } index($0, "split(rng, R,") > 0 { print add } { print }')"
+LC7_BACK="$(printf '%s\n' "$LC7_SRC" | LC_ALL=C awk -v add="$LC7_LINE" '$0 != add' | LC_ALL=C sed '1s/^lc_planted_addonly /ca_delta /')"
+LC7_ADDED="$(lc_count "$LC7_LINE" "$LC7_SRC")"; LC7_INTACT=0
+[ "$LC7_BACK" = "$LC_SRC" ] && LC7_INTACT=1
+eval "$LC7_SRC"
+LC7_R="$(lc_fn_diff lc_planted_addonly "$EN_DOC" "$CA_FX")"
+LC7_B="$(printf '%s' "$LC7_R" | cut -f2)"; LC7_FX="$(lc_fixture_hits "$(printf '%s' "$LC7_R" | cut -f4)")"
+if [ "$LC7_ADDED" -eq 1 ] && [ "$LC7_INTACT" -eq 1 ] && [ "$LC7_FX" -ge 1 ]; then
+  PASS "LC7: MUST FIRE, ADD-ONLY — one locale-dependent line added to an otherwise byte-identical copy of ca_delta is reported on $LC7_B comparison(s), $LC7_FX of them on the fixture. The guard is not addition-blind: nothing existing had to change for it to fire"
+else
+  FAIL "LC7: MUST FIRE, ADD-ONLY — the added locale-dependent line was not reported (added=$LC7_ADDED intact=$LC7_INTACT disagreements=$LC7_B fixture-disagreements=$LC7_FX). If it was added and the rest is intact, the evaluator is blind to it on this host — read LC3 and LC4"
+fi
+
+# LC8 — SPECIFICITY. The same insertion point, a line that cannot depend on the locale. The copy
+# must agree with itself across every member AND with the real ca_delta under C.
+LC8_LINE='      if (rng == "") next'
+LC8_SRC="$(printf '%s\n' "$LC_SRC" | LC_ALL=C awk -v add="$LC8_LINE" 'NR == 1 { sub(/^ca_delta /, "lc_planted_invariant ") } index($0, "split(rng, R,") > 0 { print add } { print }')"
+LC8_ADDED="$(lc_count "$LC8_LINE" "$LC8_SRC")"
+eval "$LC8_SRC"
+LC8_R="$(lc_fn_diff lc_planted_invariant "$EN_DOC" "$CA_FX")"
+LC8_P="$(printf '%s' "$LC8_R" | cut -f1)"; LC8_B="$(printf '%s' "$LC8_R" | cut -f2)"; LC8_W="$(printf '%s' "$LC8_R" | cut -f3)"
+LC8_SAME=0
+[ "$( ( export LC_ALL=C; lc_planted_invariant ) 2>/dev/null )" = "$( ( export LC_ALL=C; ca_delta ) 2>/dev/null )" ] && LC8_SAME=1
+if [ "$LC8_ADDED" -eq 1 ] && [ "$LC8_P" -gt 0 ] && [ "$LC8_B" -eq 0 ] && [ "$LC8_W" -gt 0 ] && [ "$LC8_SAME" -eq 1 ]; then
+  PASS "LC8: SPECIFICITY — a locale-invariant line added at the same point is reported on 0 of $LC8_P comparisons and reads § 9 exactly as ca_delta does. What LC6 and LC7 report is the locale dependence they plant, not the act of editing"
+else
+  FAIL "LC8: SPECIFICITY — a locale-invariant added line was reported or read differently (added=$LC8_ADDED comparisons=$LC8_P disagreements=$LC8_B class-rows=$LC8_W same-as-ca_delta=$LC8_SAME), so LC6 and LC7 cannot tell a locale-dependent edit from any edit"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
