@@ -2456,7 +2456,8 @@ cat > "$WORK/j.awk" <<'AWK'
 # Members are code spans, read from the surfaces on every run; this program spells none.
 #   FINDING J0 <id> <where> <why>             the instrument is broken for <id>: J1, J2 and J3 are
 #                                             withheld for <id> and for no other. <id> is "-" where the
-#                                             failure belongs to no id, and then nothing is read
+#                                             failure belongs to no id, and then no verdict is reported
+#                                             for any enumeration
 #   FINDING J1 <id> <site> <member>           the site lacks a member the owner names
 #   FINDING J2 <id> <site> <member>           the site names a member the owner does not
 #   FINDING J3 <id> <path> <line> <n> <members>
@@ -3282,7 +3283,7 @@ echo "J — a registered enumeration agrees with its owner in both directions, a
 # j_assert <root> <listfile> — group J's verdicts over one tree. It is ONE function and runs the
 # extractor itself, so group MD can register it: with ch_scan_j removed it reports exactly one
 # FAIL and no PASS. The measurement state is decided in two steps — whether the register could be
-# read at all, where a failure that belongs to no id stops every reading, and then, for each id,
+# read at all, where a failure that belongs to no id withholds every verdict, and then, for each id,
 # whether its own reading could be made. A broken id withholds its own comparisons and no other's,
 # and the run fails all the same. The J_* values it leaves are the summary line's; it is called in
 # this shell once, for the tracked tree, and everywhere else inside a probe subshell.
@@ -3296,7 +3297,7 @@ j_assert() {   # j_assert <root> <listfile>
   J_NPAST="$(awk '$1 == "DENOM" { print $10 }' <<<"$out")"; J_NBAD="$(awk '$1 == "DENOM" { print $11 }' <<<"$out")"
   J_N1="$(n_code "$out" J1)"; J_N2="$(n_code "$out" J2)"; J_N3="$(n_code "$out" J3)"
   # A failure that belongs to no id — the fence absent or empty, a row whose id cannot be read —
-  # stops the whole reading. One that names an id withholds that id's comparisons and no other's.
+  # withholds every verdict. One that names an id withholds that id's comparisons and no other's.
   J_NCLASS="$(awk '$1 == "FINDING" && $2 == "J0" && $3 == "-" { n++ } END { print n + 0 }' <<<"$out")"
   J_WHY="$(awk '$1 == "FINDING" && $2 == "J0" { $1 = ""; $2 = ""; sub(/^ +/, ""); printf "%s%s", s, $0; s = "; " }' <<<"$out")"
   [ -n "$J_WHY" ] || J_WHY='the extractor printed no result'
@@ -3305,7 +3306,7 @@ j_assert() {   # j_assert <root> <listfile>
   if [ "$J_MEASURED" -ne 1 ]; then
     J_NREAD=0
     printf '  SURFACE: NOT-EVALUATED — %s — this is not a clean result\n' "$J_WHY"
-    FAIL "J0: the register is NOT a measurement on this run — $J_WHY. Nothing was read for any enumeration, so J1, J2 and J3 are not reported as verdicts. Restore the fence or the row; never delete a row to make this pass"
+    FAIL "J0: the register is NOT a measurement on this run — $J_WHY. No verdict is reported for any enumeration: J1, J2 and J3 are withheld. Restore the fence or the row; never delete a row to make this pass"
     grep '^FINDING J[123] ' <<<"$out" | awk '{ $1 = ""; sub(/^ /, ""); printf "      read where a reading was possible, and not a verdict: %s\n", $0 }'
     return 0
   fi
@@ -5768,7 +5769,7 @@ ctl_j_fire "CTL-J0-OTHER-ID-GRADED-READ" J1 fx-list "$O" "and on the same run th
 
 D="$(ctl_j_mk j0nosep)"
 ctl_j_doc "$D" "$J_R1" 'this line carries no separator at all' "$J_R2" "$J_R3" "$J_R4" "$J_R5" "$J_R6"
-ctl_j_why "CTL-J0-NO-SEPARATOR" - a-row-does-not-carry-its-five-fields "$(ctl_j_scan "$D")" "a line with no separator follows a valid row: its id cannot be read, so it is charged to no id and stops the whole reading, and not to the row above it"
+ctl_j_why "CTL-J0-NO-SEPARATOR" - a-row-does-not-carry-its-five-fields "$(ctl_j_scan "$D")" "a line with no separator follows a valid row: its id cannot be read, so it is charged to no id and withholds every verdict, and not to the row above it"
 
 D="$(ctl_j_mk j0copy)"
 printf '%s\n' '**The solo list.**' '' '- **`left`** — one.' '- **`right`** — the other.' > "$D/docs/solo.md"

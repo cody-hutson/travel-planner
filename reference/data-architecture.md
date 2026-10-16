@@ -1578,7 +1578,7 @@ neither registered nor caught by that reading, nothing holds it.
 instrument: it is reported as that, it withholds every comparison for its `id`, and it never
 passes. It withholds none for another `id`: the others are read and graded on the same run,
 which fails all the same. A failure that belongs to no `id` — the fence absent or empty, or a
-row whose `id` cannot be read — stops the whole reading. The test is whether the members could
+row whose `id` cannot be read — withholds every verdict. The test is whether the members could
 be read, not whether the cause appears here. A row short of a field, an `id` without exactly
 one owner or without a site, a site row that copies its owner row, a path that is not a tracked
 markdown file, an anchor not found exactly once, a `lead` anchor with no list before the next
