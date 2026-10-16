@@ -95,8 +95,12 @@ budget; that row is re-measured, and the reduction stays with the consolidation 
 names.
 
 **The honest limits.** Neither verb was run end to end. No suite executes a verb, and the exercise
-behind this release is one model's reading of each section, once, with the data root bound by
-statement: the read of the data-root pointer and the slash-command dispatch are not exercised. Suite
+behind this release is model sessions reading each section, with the data root bound by statement:
+the read of the data-root pointer and the slash-command dispatch are not exercised. The person
+view's exercise was one session, which read its section once and whose logs record no call to a
+reviewer tool. The group view's exercise was ten fresh sessions, and 14 of their 35 messages
+called a reviewer tool; four of its cases were run again, in two further sessions with the tool
+forbidden, and neither called it. Suite
 group `RP` grades the tree — the fixture's declared states, each section's enumerations, a reference
 reader of the label rule and a reference computation of a group's candidates — and never a verb. No
 tracked fixture holds an order state: a checkout sets file stamps, and the example roots that may
@@ -134,7 +138,10 @@ gives and the one the person view takes. That the group view is not run while a 
 conducting an interview is held by one sentence of its section and one condition on its routing row;
 nothing mechanical holds it, and no exercise case produces the refusal. Where a confirmed trip's
 roster table is missing, the erasure reading cannot be tested: the group view's member lines say so,
-and the person view says nothing in the same state.
+and the person view says nothing in the same state. No exercise case produces the group view's
+`UNDETERMINED` in three of its kinds: in the listing it prints when no group is named, for a
+trip's traveller directory that could not be listed, and for a bearer in that directory that
+could not be read.
 
 ## [0.55.0] — 2026-10-09 — The interviewer becomes a conversation: the founding decision
 
