@@ -660,6 +660,7 @@ travel-planner/
 ├── people/                   ← skeleton of the durable cross-trip person store — ships README.md only; real records live under <data-root>/people/
 ├── reference/                ← engine reference specs
 │   ├── adr/                       ← architecture decision records (one file per decision)
+│   ├── channel-and-engagement-model.md ← channel and engagement model (the registered memberships: the channel-set and its admission test, the G8 class, the freshness verdicts, the names)
 │   ├── command-reference.md       ← the whole command surface in one table (verb, arguments, required trip state)
 │   ├── data-architecture.md       ← engine-wide data architecture (artifact model, identity, serialization, publishability, lifecycle classes, schema version)
 │   ├── data-model.md              ← satisfaction-layer data architecture (storage homes, reconciliation, write ownership)

@@ -342,6 +342,22 @@
 #        cell ADR-030 moves; on the encrypted limb a field the declaration does not carry, or
 #        carries only if marked, reads UNDETERMINED, never admit; and the three-valued
 #        conjunction with the denial side, UNDETERMINED a third outcome asserted by exit code
+#   CG   the memberships reference/channel-and-engagement-model.md registers, held to their
+#        owners. THE CHANNEL-SET: the ids of that document's channel-set-register fence against
+#        the set table of ADR-026 § Decision 2, in both directions; each channel against the
+#        declarations that record's admission paragraph names, read from the tables that
+#        declare them; each vacancy against its verdict and its ground; the limbs of the
+#        document's first block quotation against the record's own list; that record's
+#        admission paragraph standing whole in the document; the wording of every fence value
+#        against that record; and the wording of every block quotation of the document
+#        against a decision record — a file under reference/adr/ whose name opens ADR- —
+#        each ending where a sentence ends. THE CLASS: the rows of the g8-class-register
+#        fence against every relation table and every record's sentence typing a reading
+#        into the class, read a paragraph at a time, in both directions; and no cell of a
+#        requirement table or a relation table carrying a typed reading's token. NO ID, LIMB,
+#        DECLARATION, RELATION OR READING IS SPELLED IN THIS GROUP — each is read, and the
+#        arms plant invented ones. What breaks a reading, and what this group cannot see, are
+#        stated once, in that document's closing section, and are not restated here
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -19020,6 +19036,875 @@ if [ "$MC_OK" -eq 1 ]; then
   else
     FAIL "MC5n1: the real record raises $MC5_NFIND finding(s), or $MC5_ACC of its $MC5_NB bullet(s) are accounted for — the must-not-fire the arms above are measured against does not hold"
   fi
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group CG — the memberships reference/channel-and-engagement-model.md registers, held to
+# their owners: the channel-set and its admission test, and the G8 class.
+#
+# ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
+# ADR-026 decides what a channel is and which surfaces are members; ADR-025 types a reading into
+# gate G8's class. The registering document restates both in the records' own words, so a reader
+# can apply the admission test without reading the record end to end. A restatement that no check
+# compares with its owner goes stale silently, and this group compares them on every push: a
+# fourth channel, a vacancy re-typed as a member, a quotation reworded on either side, a relation
+# or a typed reading with no row, and a gate table naming a typed reading each turn it red. The
+# document's third registration, the freshness verdicts, is held by the enumeration register in
+# scripts/test-corpus-hygiene.sh, not here.
+#
+#   cg_scan_set    the first reader: the owning record where it stands, and the document
+#   cg_scan_class  the second reader: the class fence against every relation table and every
+#                  record's typing sentence, and the cells of the gate tables
+#   cg_assert      CG0 to CG7, decided on the two readers' captured output
+#
+# NO ID, LIMB, DECLARATION, RELATION OR READING IS SPELLED IN THIS GROUP: each is read, and the
+# arms plant invented ones. What breaks a reading, and what this group cannot see, are stated
+# once, in that document's closing section, and are not restated here.
+#
+# ── REGISTRATION: AN EXPLICIT MD OPT-OUT, NOT A SILENT OMISSION ──────────────────
+# md_flips registers an assertion by removing its subject function and requiring exactly one FAIL
+# and no PASS. cg_assert reads two subjects, the two readers, so with one removed the other
+# section still passes and the probe would call the assertion blind when it is not. The
+# COMPENSATING CONTROLS are the standing arms at the foot of this group: a must-fire for every
+# record kind either reader prints and for each broken reading, must-stay-silent arms for each
+# reader, and probes of cg_assert itself — that a broken reading is one failure with its section
+# withheld, and that a record no verdict counts breaks the reading rather than passing. Each arm
+# drives the same code over a copy under the temporary directory, every tracked markdown file a
+# link to this tree but the ones it edits; it checks first that its edit landed, and it adds no
+# tracked fixture.
+#
+# The programs that read a record run in the C locale, set on each invocation and never exported.
+#
+# CG emits BEFORE group RS, and must stay there: RS reads the complete emitted set.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "CG — the registered memberships: the channel-set and its admission test, and the G8 class"
+
+# The two readers, and the one edit primitive the standing arms share, written by quoted
+# here-documents so that nothing in them is expanded.
+cat > "$WORK/cg-set.awk" <<'CG_SET_AWK'
+# ARGV[1]  newline-separated relative path list of the tracked markdown.
+# -v ROOT=<dir> -v DOC=<registering document> -v TAG=<fence tag> -v REC=<owning record>
+# -v ADRDIR=<record directory> -v RECPFX=<what a record's file name opens with>
+# -v SEC=<heading that opens the record's decision section>
+# -v ADMIT=<literal that opens the admission paragraph>
+# Reads the owning record where it stands and the registering document, and prints one record per
+# difference. This program spells no id, no limb, no declaration name and no value: every one is read.
+#   BROKEN <why>                 a reading could not be made; every comparison is withheld
+#   MISSING <id>                 the record's set table carries an id the fence does not
+#   UNOWNED <id>                 the fence carries an id the record's set table does not
+#   UNDECLARED <id> <name>       a channel of the fence lacks, in the record, a declaration the admission paragraph names
+#   INCOMPLETE <id> <field>      a vacancy of the fence lacks its verdict or its ground
+#   NOTCHANNEL <id>              the record declares a test or an envelope value for an id that is not a channel of the fence
+#   LIMB-MISSING <limb>          the record states a limb the document's first block quotation does not carry
+#   LIMB-UNOWNED <limb>          the document's first block quotation carries a limb the record does not state
+#   NOT-WHOLE admission          the record's admission paragraph does not stand whole in a block quotation of the document
+#   CUT quotation:<n> <opens>    a block quotation of the document does not end where a sentence ends
+#   REWORDED fence:<id>:<field>  a fence value is not in the words of the owning record
+#   REWORDED quotation:<n> <opens>   a block quotation of the document is not in the words of any record
+#   DENOM <set-ids> <fence-ids> <channels> <vacancies> <limbs-record> <limbs-document> <declaration-names>
+#         <declaration-tables> <values-held> <quotations-held> <records-read>
+# <opens> is the quotation's first words, so the line names the quotation and not only its ordinal.
+function trim(s) { sub(/^[ \t\r]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+function plain(s) { gsub(/[*`]/, "", s); gsub(/[ \t\r]+/, " ", s); return trim(s) }
+function broken(why) { printf "BROKEN %s\n", why; BAD = 1 }
+# the first words of a quotation, for a line an editor can act on
+function opens(s,   n, w, i, out) {
+  n = split(s, w, " "); out = ""
+  for (i = 1; i <= n && i <= 7; i++) out = out (i > 1 ? " " : "") w[i]
+  return "\"" out (n > 7 ? " ..." : "") "\""
+}
+# does a quotation end where a sentence ends: a full stop, a question mark or an exclamation mark,
+# with any closing quotation mark or bracket after it set aside
+function ends(s) {
+  while (s ~ /[]"')]$/) s = substr(s, 1, length(s) - 1)
+  return (s ~ /[.?!]$/)
+}
+# the cells of a table row, markup kept: CELL[1..n]
+function cells(line,   n, i, parts) {
+  n = split(line, parts, "|")
+  NCELL = 0
+  for (i = 2; i < n; i++) CELL[++NCELL] = trim(parts[i])
+  return NCELL
+}
+# the first bold token of a cell: the text between its first pair of double asterisks
+function boldkey(c,   a, b) {
+  a = index(c, "**"); if (a == 0) return ""
+  c = substr(c, a + 2); b = index(c, "**"); if (b == 0) return ""
+  return trim(substr(c, 1, b - 1))
+}
+# a whole file as one line of plain words: quotation markers dropped, emphasis and code marks dropped
+function flat(path,   f, line, t, acc) {
+  f = ROOT "/" path; acc = ""
+  while ((getline line < f) > 0) {
+    t = line; sub(/^[ \t]*>[ ]?/, "", t)
+    acc = acc " " t
+  }
+  close(f)
+  return plain(acc)
+}
+{ if ($0 != "") LIST[++NLIST] = $0 }
+END {
+  # ── the record, where it stands ────────────────────────────────────────────────────────────
+  f = ROOT "/" REC; nr = 0
+  while ((getline line < f) > 0) RL[++nr] = line
+  close(f)
+  if (nr == 0) { broken("the-owning-record-is-unreadable"); }
+  dstart = 0; dend = nr + 1
+  for (i = 1; i <= nr; i++) {
+    if (RL[i] == SEC && dstart == 0) { dstart = i; continue }
+    if (dstart && dend == nr + 1 && substr(RL[i], 1, 3) == "## ") dend = i
+  }
+  if (!BAD && dstart == 0) broken("the-decision-section-heading-is-absent")
+  # the limb list: the first block quotation of the decision section
+  nlr = 0
+  if (!BAD) {
+    for (i = dstart + 1; i < dend; i++) if (substr(RL[i], 1, 1) == ">") break
+    for (; i < dend && substr(RL[i], 1, 1) == ">"; i++) {
+      if (RL[i] ~ /^> - \*\*[^*]+\*\* /) { k = boldkey(RL[i]); if (k != "") { LREC[k] = 1; nlr++ } }
+    }
+    if (nlr == 0) broken("the-first-block-quotation-of-the-decision-section-carries-no-limb")
+  }
+  # the tables of the decision section that stand at the left margin
+  nset = 0; ntab = 0
+  if (!BAD) {
+    for (i = dstart + 1; i < dend; i++) {
+      if (substr(RL[i], 1, 1) != "|" || (i > 1 && substr(RL[i - 1], 1, 1) == "|")) continue
+      nh = cells(RL[i]); for (c = 1; c <= nh; c++) H[c] = plain(CELL[c])
+      isset = (H[1] == "id")
+      for (j = i + 1; j < dend && substr(RL[j], 1, 1) == "|"; j++) {
+        if (RL[j] ~ /^\|[ :|-]+\|[ \t]*$/) continue
+        nc = cells(RL[j])
+        if (isset) { k = plain(CELL[1]); if (k != "") { SETREC[k] = 1; SETORD[++nset] = k } }
+        key = boldkey(CELL[1])
+        for (c = 2; c <= nh; c++) { TH[i, c] = H[c]; if (key != "") { TKEY[i, key] = 1; TVAL[i, key, c] = CELL[c] } }
+      }
+      TAB[++ntab] = i; TNH[i] = nh
+    }
+    if (nset == 0) broken("no-table-of-the-decision-section-opens-with-an-id-column")
+  }
+  # the admission paragraph and the names it requires
+  nname = 0; par = ""
+  if (!BAD) {
+    hits = 0
+    for (i = dstart + 1; i < dend; i++) if (index(RL[i], ADMIT) > 0) { hits++; at = i }
+    if (hits != 1) broken("the-admission-paragraph-is-found-" hits "-times-not-once")
+    else {
+      for (i = at; i < dend && RL[i] !~ /^[ \t\r]*$/; i++) par = par " " RL[i]
+      s = par
+      while ((a = index(s, "`")) > 0) {
+        s = substr(s, a + 1); b = index(s, "`"); if (b == 0) break
+        nm = substr(s, 1, b - 1); s = substr(s, b + 1)
+        if (!(nm in NAMESEEN)) { NAMESEEN[nm] = 1; NAME[++nname] = nm }
+      }
+      if (nname == 0) broken("the-admission-paragraph-names-no-declaration")
+    }
+  }
+  # which table declares each name, and in which column
+  ndtab = 0
+  if (!BAD) for (n = 1; n <= nname; n++) {
+    found = 0
+    for (t = 1; t <= ntab; t++) { i = TAB[t]; for (c = 2; c <= TNH[i]; c++) if (TH[i, c] == NAME[n]) { found++; NT[n] = i; NC[n] = c } }
+    if (found != 1) broken("the-declaration-" NAME[n] "-heads-a-column-of-" found "-tables-not-one")
+    else if (!(NT[n] in DTSEEN)) { DTSEEN[NT[n]] = 1; ndtab++ }
+  }
+  # ── the registering document ───────────────────────────────────────────────────────────────
+  f = ROOT "/" DOC; infence = 0; inreg = 0; seen = 0; nrow = 0; nq = 0; q = ""; nld = 0
+  while ((getline line < f) > 0) {
+    if (substr(line, 1, 3) == "```") {
+      if (q != "") { Q[++nq] = q; q = "" }
+      if (!infence) { infence = 1; inreg = (line == "```" TAG); if (inreg) seen++ } else { infence = 0; inreg = 0 }
+      continue
+    }
+    if (infence) {
+      if (!inreg) continue
+      t = trim(line); if (t == "" || substr(t, 1, 1) == "#") continue
+      p1 = index(t, "|"); rest = substr(t, p1 + 1); p2 = index(rest, "|")
+      if (p1 == 0 || p2 == 0) { broken("a-row-does-not-carry-its-three-fields"); continue }
+      id = trim(substr(t, 1, p1 - 1)); fld = trim(substr(rest, 1, p2 - 1)); val = trim(substr(rest, p2 + 1))
+      if (id == "" || val == "") { broken("a-row-does-not-carry-its-three-fields"); continue }
+      if (fld != "channel" && fld != "vacancy" && fld != "verdict" && fld != "ground") { broken("a-row-names-a-field-outside-the-grammar"); continue }
+      if ((id, fld) in FV) { broken("the-id-" id "-carries-the-field-" fld "-twice"); continue }
+      FV[id, fld] = val; nrow++
+      if (!(id in IDSEEN)) { IDSEEN[id] = 1; IDS[++nid] = id }
+      continue
+    }
+    if (substr(line, 1, 1) == ">") {
+      t = line; sub(/^>[ ]?/, "", t); q = q " " t
+      # the document's limbs are read where the record's are: in the first block quotation, and nowhere else
+      if (nq == 0 && line ~ /^> - \*\*[^*]+\*\* /) { k = boldkey(line); if (k != "") { LDOC[k] = 1; nld++ } }
+    } else if (q != "") { Q[++nq] = q; q = "" }
+  }
+  close(f)
+  if (q != "") Q[++nq] = q
+  if (seen != 1 || nrow == 0) broken("the-fence-is-found-" seen "-times-or-holds-no-row")
+  nch = 0; nva = 0
+  for (x = 1; x <= nid; x++) {
+    id = IDS[x]; isch = ((id, "channel") in FV); isva = ((id, "vacancy") in FV)
+    if (isch == isva) broken("the-id-" id "-is-not-exactly-one-of-channel-and-vacancy")
+    if (isch) nch++; else if (isva) nva++
+    if (isch && (((id, "verdict") in FV) || ((id, "ground") in FV))) broken("the-channel-" id "-carries-a-vacancy-field")
+  }
+  # ── the records' words, for the restatement check: the files a record's name opens ─────────
+  nrec = 0
+  for (x = 1; x <= NLIST; x++) if (index(LIST[x], ADRDIR "/" RECPFX) == 1) { RECTXT[++nrec] = flat(LIST[x]); RP[nrec] = LIST[x]; if (LIST[x] == REC) own = nrec }
+  if (nrec == 0 || own == 0) broken("no-record-was-read-for-the-restatement-check")
+  if (BAD) { exit 0 }
+  # ── the comparisons ────────────────────────────────────────────────────────────────────────
+  for (x = 1; x <= nset; x++) if (!(SETORD[x] in IDSEEN)) printf "MISSING %s\n", SETORD[x]
+  for (x = 1; x <= nid; x++) if (!(IDS[x] in SETREC)) printf "UNOWNED %s\n", IDS[x]
+  for (x = 1; x <= nid; x++) {
+    id = IDS[x]
+    if ((id, "channel") in FV) {
+      for (n = 1; n <= nname; n++) if (!((NT[n], id) in TKEY) || plain(TVAL[NT[n], id, NC[n]]) == "") printf "UNDECLARED %s %s\n", id, NAME[n]
+    } else {
+      if (!((id, "verdict") in FV)) printf "INCOMPLETE %s verdict\n", id
+      if (!((id, "ground") in FV)) printf "INCOMPLETE %s ground\n", id
+    }
+  }
+  for (key in TKEY) {
+    split(key, kk, SUBSEP)
+    if (!(kk[1] in DTSEEN)) continue
+    if (!((kk[2], "channel") in FV) && !(kk[2] in C5SEEN)) { C5SEEN[kk[2]] = 1; printf "NOTCHANNEL %s\n", kk[2] }
+  }
+  for (k in LREC) if (!(k in LDOC)) printf "LIMB-MISSING %s\n", k
+  for (k in LDOC) if (!(k in LREC)) printf "LIMB-UNOWNED %s\n", k
+  # the admission paragraph stands whole in the document
+  pa = plain(par); ok = 0
+  for (x = 1; x <= nq; x++) if (index(plain(Q[x]), pa) > 0) { ok = 1; break }
+  if (!ok) printf "NOT-WHOLE admission\n"
+  nval = 0
+  for (x = 1; x <= nid; x++) {
+    id = IDS[x]
+    split("channel vacancy verdict ground", FN, " ")
+    for (y = 1; y <= 4; y++) if ((id, FN[y]) in FV) {
+      nval++
+      if (index(RECTXT[own], plain(FV[id, FN[y]])) == 0) printf "REWORDED fence:%s:%s\n", id, FN[y]
+    }
+  }
+  for (x = 1; x <= nq; x++) {
+    pq = plain(Q[x]); ok = 0
+    if (!ends(pq)) printf "CUT quotation:%d %s\n", x, opens(pq)
+    for (r = 1; r <= nrec; r++) if (index(RECTXT[r], pq) > 0) { ok = 1; break }
+    if (!ok) printf "REWORDED quotation:%d %s\n", x, opens(pq)
+  }
+  printf "DENOM %d %d %d %d %d %d %d %d %d %d %d\n", nset, nid, nch, nva, nlr, nld, nname, ndtab, nval, nq, nrec
+}
+CG_SET_AWK
+cat > "$WORK/cg-class.awk" <<'CG_CLASS_AWK'
+# ARGV[1]  newline-separated relative path list of the tracked markdown.
+# -v ROOT=<dir> -v DOC=<registering document> -v TAG=<fence tag> -v ADRDIR=<record directory>
+# -v RECPFX=<what a record's file name opens with> -v GATE=<the gate id the class is named for>
+# Reads the fence, every relation table and requirement table of the tracked markdown, and every
+# record's sentence typing a reading into the class. This program spells no relation and no reading.
+#   BROKEN <why>                       a reading could not be made; every comparison is withheld
+#   UNREGISTERED <file> <relation>     a relation table declares a relation the fence has no row for
+#   NOSUBJECT <reading> <file>         a row whose file neither declares that relation nor types that reading
+#   UNLISTED <file> <reading>          a record types a reading into the class and the fence has no row for it
+#   GATED <file> <line> <reading>      a cell of a requirement table or of a relation table carries a typed reading
+#   DENOM <rows> <relation-rows> <typed-rows> <relation-tables> <relations-declared> <records-read>
+#         <typing-sentences> <requirement-tables> <gate-table-rows> <gate-table-cells>
+# A typing sentence is read from a record one paragraph at a time, with its line breaks and its
+# quotation markers set aside, so it is found however it is wrapped. No typing sentence in any record
+# is a reading that could not be made: the gate comparison would then be holding no token to look for.
+function trim(s) { sub(/^[ \t\r]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+function plain(s) { gsub(/[*`]/, "", s); gsub(/[ \t\r]+/, " ", s); return trim(s) }
+function broken(why) { printf "BROKEN %s\n", why; BAD = 1 }
+function cells(line,   n, i, parts) {
+  n = split(line, parts, "|"); NCELL = 0
+  for (i = 2; i < n; i++) CELL[++NCELL] = trim(parts[i])
+  return NCELL
+}
+function firstspan(c,   a, b) {
+  a = index(c, "`"); if (a == 0) return ""
+  c = substr(c, a + 1); b = index(c, "`"); if (b == 0) return ""
+  return substr(c, 1, b - 1)
+}
+# does the cell carry the token whole — no letter, digit, underscore or hyphen against either end
+function hastok(s, tok,   pos, p, q, a, b) {
+  pos = 1
+  while ((p = index(substr(s, pos), tok)) > 0) {
+    q = pos + p - 1
+    a = (q == 1) ? "" : substr(s, q - 1, 1); b = substr(s, q + length(tok), 1)
+    if (a !~ /[A-Za-z0-9_-]/ && b !~ /[A-Za-z0-9_-]/) return 1
+    pos = q + 1
+  }
+  return 0
+}
+# one paragraph of a record, held in PARA with its whitespace collapsed: every typing sentence in it
+function endpara(path,   pos, p, q, head, i, a, rd) {
+  if (PARA == "") return
+  pos = 1
+  while ((p = index(substr(PARA, pos), needle)) > 0) {
+    q = pos + p - 1; head = substr(PARA, 1, q - 1); a = 0
+    for (i = length(head); i >= 1; i--) if (substr(head, i, 1) == "`") { a = i; break }
+    if (a > 0) { rd = substr(head, a + 1); TYPED[path, rd] = 1; TY[++ntype] = path SUBSEP rd; TYNAME[rd] = 1 }
+    pos = q + length(needle)
+  }
+  PARA = ""
+}
+{ if ($0 != "") LIST[++NLIST] = $0 }
+END {
+  # ── the fence ──────────────────────────────────────────────────────────────────────────────
+  f = ROOT "/" DOC; infence = 0; inreg = 0; seen = 0; nrow = 0
+  while ((getline line < f) > 0) {
+    if (substr(line, 1, 3) == "```") {
+      if (!infence) { infence = 1; inreg = (line == "```" TAG); if (inreg) seen++ } else { infence = 0; inreg = 0 }
+      continue
+    }
+    if (!inreg) continue
+    t = trim(line); if (t == "" || substr(t, 1, 1) == "#") continue
+    p1 = index(t, "|")
+    if (p1 == 0) { broken("a-row-does-not-carry-its-two-fields"); continue }
+    rd = trim(substr(t, 1, p1 - 1)); fl = trim(substr(t, p1 + 1))
+    if (rd == "" || fl == "") { broken("a-row-does-not-carry-its-two-fields"); continue }
+    if ((rd, fl) in ROW) { broken("the-row-" rd "-is-written-twice"); continue }
+    ROW[rd, fl] = 1; RRD[++nrow] = rd; RFL[nrow] = fl
+  }
+  close(f)
+  if (seen != 1 || nrow == 0) broken("the-fence-is-found-" seen "-times-or-holds-no-row")
+  for (r = 1; r <= nrow; r++) { ok = 0; for (x = 1; x <= NLIST; x++) if (LIST[x] == RFL[r]) ok = 1; if (!ok) broken("the-row-" RRD[r] "-names-a-file-that-is-not-tracked-markdown") }
+  # ── every tracked markdown file but the registering document ───────────────────────────────
+  nreltab = 0; nrel = 0; nreqtab = 0; ngrow = 0; ngcell = 0; nrec = 0; ntype = 0; ng = 0
+  needle = "` is **`" GATE "`-class**"
+  for (x = 1; x <= NLIST; x++) {
+    path = LIST[x]; if (path == DOC) continue
+    isrec = (index(path, ADRDIR "/" RECPFX) == 1); if (isrec) nrec++
+    f = ROOT "/" path; n = 0; infence = 0; prev = ""; kind = ""; PARA = ""
+    while ((getline line < f) > 0) {
+      n++
+      if (substr(line, 1, 3) == "```") { if (isrec) endpara(path); infence = !infence; prev = line; kind = ""; continue }
+      if (infence) { prev = line; continue }
+      if (isrec) {
+        t = line; sub(/^[ \t]*>[ ]?/, "", t); gsub(/[ \t\r]+/, " ", t); t = trim(t)
+        if (t == "") endpara(path); else PARA = (PARA == "" ? t : PARA " " t)
+      }
+      if (substr(line, 1, 1) == "|") {
+        if (substr(prev, 1, 1) != "|") {
+          nh = cells(line); h1 = tolower(plain(CELL[1])); kind = ""
+          if (h1 == "relation") { kind = "rel"; nreltab++ }
+          else if (h1 == "verb") { for (c = 2; c <= nh; c++) if (tolower(plain(CELL[c])) == "depth") kind = "req"; if (kind == "req") nreqtab++ }
+          if (kind != "") { G[++ng] = path SUBSEP n SUBSEP line; ngrow++ }
+        } else if (kind != "" && line !~ /^\|[ :|-]+\|[ \t]*$/) {
+          cells(line); G[++ng] = path SUBSEP n SUBSEP line; ngrow++
+          if (kind == "rel") { nm = firstspan(CELL[1]); if (nm != "") { REL[path, nm] = 1; RE[++nrel] = path SUBSEP nm } }
+        }
+      } else kind = ""
+      prev = line
+    }
+    close(f)
+    if (isrec) endpara(path)
+  }
+  if (nreltab == 0) broken("no-relation-table-was-read-in-any-tracked-file")
+  if (nreqtab == 0) broken("no-requirement-table-was-read-in-any-tracked-file")
+  if (nrec == 0) broken("no-record-was-read")
+  if (nrec > 0 && ntype == 0) broken("no-record-types-a-reading-into-the-class")
+  if (BAD) exit 0
+  # ── the comparisons ────────────────────────────────────────────────────────────────────────
+  for (i = 1; i <= nrel; i++) { split(RE[i], kk, SUBSEP); if (!((kk[2], kk[1]) in ROW)) printf "UNREGISTERED %s %s\n", kk[1], kk[2] }
+  nrr = 0; ntr = 0
+  for (r = 1; r <= nrow; r++) {
+    if ((RFL[r], RRD[r]) in REL) nrr++
+    else if ((RFL[r], RRD[r]) in TYPED) ntr++
+    else printf "NOSUBJECT %s %s\n", RRD[r], RFL[r]
+  }
+  for (i = 1; i <= ntype; i++) { split(TY[i], kk, SUBSEP); if (!((kk[2], kk[1]) in ROW)) printf "UNLISTED %s %s\n", kk[1], kk[2] }
+  for (r = 1; r <= nrow; r++) if ((RFL[r], RRD[r]) in TYPED) TYNAME[RRD[r]] = 1
+  for (i = 1; i <= ng; i++) {
+    split(G[i], kk, SUBSEP); nc = cells(kk[3])
+    for (c = 1; c <= nc; c++) { ngcell++; for (rd in TYNAME) if (hastok(CELL[c], rd)) printf "GATED %s %d %s\n", kk[1], kk[2], rd }
+  }
+  printf "DENOM %d %d %d %d %d %d %d %d %d %d\n", nrow, nrr, ntr, nreltab, nrel, nrec, ntype, nreqtab, ngrow, ngcell
+}
+CG_CLASS_AWK
+cat > "$WORK/cg-mut.awk" <<'CG_MUT_AWK'
+# cg-mut.awk — ONE edit of one file, for the group's standing arms; the file is printed whole.
+# The edit is -v kind; its operands come through ENVIRON (CG_A to CG_D), so no escape in them is
+# processed. Every kind finds what it edits by POSITION or by the fence grammar, and never by
+# spelling an id, a limb, a declaration, a relation or a reading.
+#   fence-drop-last   A tag · B field          the fence loses its last row of that field
+#   fence-drop-first  A tag                    the fence loses its first row
+#   fence-drop-under  A tag · B prefix         the fence loses its last row whose second cell opens B
+#   fence-append      A tag · B row            a row after the fence's last row
+#   fence-retype      A tag · B from · C to · D fields   the last row of field B becomes field C,
+#                                              and its id's rows of the fields D go with it
+#   fence-revalue     A tag · B field · C value  the last row of field B takes the value C
+#   fence-rename      A tag · B new tag
+#   quote-drop-limb   A n · C heading          the n-th block quotation loses its last bold-led item
+#   quote-append      A n · B lines · C heading  lines after the n-th block quotation's last line
+#   quote-drop        A literal                the block quotation carrying the literal goes whole
+#   quote-cut         A n                      the n-th quotation keeps its first line to its first comma
+#   quote-prefix      A n · B words            the words open the n-th quotation's first line
+#   quote-suffix      A n · B words · C heading  the words close the n-th quotation's first line
+#   quote-join        A n                      the n-th quotation on one line, its emphasis dropped
+#   append            B lines                  a paragraph after the file's last line
+#   line-sub          A line · B line          the first line equal to A becomes B
+#   sub-first         A text · B text          the first occurrence of A becomes B
+#   sub-all           A text · B text          every occurrence of A becomes B
+#   split-at          A text                   the first line carrying A breaks before it, the rest on
+#                                              a line of its own inside the same block quotation
+#   table-append      A header · B row · C heading  the first table, after the heading line C if C is
+#                                              given, whose first header cell reads A gains a last row
+#   table-cell        A header · B column · C token  the first table opening A with a header cell B:
+#                                              its first data row's last cell gains the token
+# A quotation kind given a heading C counts only the quotations that open after the first line
+# equal to C. Lines inside a fenced block are never a quotation.
+function trim(s) { sub(/^[ \t\r]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+function low(s) { gsub(/[*`]/, "", s); gsub(/[ \t\r]+/, " ", s); return tolower(trim(s)) }
+function cell1(line,   p) { p = split(line, P, "|"); return (p >= 3) ? low(P[2]) : "" }
+function hashead(line, h,   p, i) { p = split(line, P, "|"); for (i = 2; i < p; i++) if (low(P[i]) == h) return 1; return 0 }
+# a fence row's fields: F1 before the first pipe, F2 between the first and the second (to the end
+# when there is no second), F3 after the second
+function fields(line,   t, p1, rest, p2) {
+  t = trim(line); p1 = index(t, "|"); F1 = ""; F2 = ""; F3 = ""
+  if (p1 == 0) return 0
+  F1 = trim(substr(t, 1, p1 - 1)); rest = substr(t, p1 + 1); p2 = index(rest, "|")
+  if (p2 == 0) { F2 = trim(rest); return 2 }
+  F2 = trim(substr(rest, 1, p2 - 1)); F3 = trim(substr(rest, p2 + 1)); return 3
+}
+function isrow(line,   t) { t = trim(line); return (t != "" && substr(t, 1, 1) != "#") }
+{ L[NR] = $0 }
+END {
+  A = ENVIRON["CG_A"]; B = ENVIRON["CG_B"]; C = ENVIRON["CG_C"]; D = ENVIRON["CG_D"]
+  for (i = 1; i <= NR; i++) DROP[i] = 0
+  # ── the fence named A
+  fo = 0; fc = 0; first = 0; last = 0
+  for (i = 1; i <= NR; i++) {
+    if (!fo && L[i] == "```" A) { fo = i; continue }
+    if (fo && !fc && substr(L[i], 1, 3) == "```") fc = i
+  }
+  for (i = fo + 1; fo && fc && i < fc; i++) if (isrow(L[i])) { if (!first) first = i; last = i }
+  if (kind == "fence-drop-first" && first) DROP[first] = 1
+  if (kind == "fence-drop-last" || kind == "fence-revalue" || kind == "fence-retype" || kind == "fence-drop-under") {
+    at = 0
+    for (i = fo + 1; fo && fc && i < fc; i++) {
+      if (!isrow(L[i])) continue
+      fields(L[i])
+      if (kind == "fence-drop-under") { if (index(F2, B) == 1) at = i }
+      else if (F2 == B) at = i
+    }
+    if (at && (kind == "fence-drop-last" || kind == "fence-drop-under")) DROP[at] = 1
+    if (at && kind == "fence-revalue") { fields(L[at]); L[at] = F1 " | " F2 " | " C }
+    if (at && kind == "fence-retype") {
+      fields(L[at]); id = F1; L[at] = F1 " | " C " | " F3
+      nd = split(D, DF, " ")
+      for (i = fo + 1; i < fc; i++) {
+        if (i == at || !isrow(L[i])) continue
+        fields(L[i]); if (F1 != id) continue
+        for (k = 1; k <= nd; k++) if (F2 == DF[k]) DROP[i] = 1
+      }
+    }
+  }
+  if (kind == "fence-rename" && fo) L[fo] = "```" B
+  # ── the block quotations, in order, outside fenced blocks: QS[n] to QE[n]
+  qfrom = 0
+  if (C != "" && (kind == "quote-drop-limb" || kind == "quote-append" || kind == "quote-suffix")) {
+    for (i = 1; i <= NR; i++) if (L[i] == C) { qfrom = i; break }
+  }
+  nq = 0; inf = 0
+  for (i = 1; i <= NR; i++) {
+    if (substr(L[i], 1, 3) == "```") { inf = !inf; continue }
+    if (inf || i <= qfrom) continue
+    if (substr(L[i], 1, 1) == ">") { if (nq == 0 || QE[nq] != i - 1) QS[++nq] = i; QE[nq] = i }
+  }
+  n = A + 0
+  if (kind == "quote-drop-limb" && n >= 1 && n <= nq) {
+    at = 0
+    for (i = QS[n]; i <= QE[n]; i++) if (L[i] ~ /^> - \*\*[^*]+\*\* /) at = i
+    if (at) { DROP[at] = 1; for (i = at + 1; i <= QE[n] && L[i] ~ /^>   /; i++) DROP[i] = 1 }
+  }
+  if (kind == "quote-drop") {
+    for (q = 1; q <= nq; q++) {
+      hit = 0; for (i = QS[q]; i <= QE[q]; i++) if (index(L[i], A) > 0) hit = 1
+      if (hit) for (i = QS[q]; i <= QE[q]; i++) DROP[i] = 1
+    }
+  }
+  if (kind == "quote-cut" && n >= 1 && n <= nq) {
+    s = L[QS[n]]; p = index(s, ", "); if (p > 0) L[QS[n]] = substr(s, 1, p - 1)
+    for (i = QS[n] + 1; i <= QE[n]; i++) DROP[i] = 1
+  }
+  if (kind == "quote-prefix" && n >= 1 && n <= nq) { s = L[QS[n]]; sub(/^>[ ]?/, "", s); L[QS[n]] = "> " B s }
+  if (kind == "quote-suffix" && n >= 1 && n <= nq) L[QS[n]] = L[QS[n]] B
+  if (kind == "quote-join" && n >= 1 && n <= nq) {
+    s = ""
+    for (i = QS[n]; i <= QE[n]; i++) { t = L[i]; sub(/^>[ ]?/, "", t); t = trim(t); if (t != "") s = s (s == "" ? "" : " ") t; if (i > QS[n]) DROP[i] = 1 }
+    gsub(/\*\*/, "", s); L[QS[n]] = "> " s
+  }
+  if (kind == "line-sub") for (i = 1; i <= NR; i++) if (L[i] == A) { L[i] = B; break }
+  if (kind == "sub-first") for (i = 1; i <= NR; i++) if ((p = index(L[i], A)) > 0) { L[i] = substr(L[i], 1, p - 1) B substr(L[i], p + length(A)); break }
+  if (kind == "sub-all" && A != "") for (i = 1; i <= NR; i++) {
+    s = L[i]; o = ""
+    while ((p = index(s, A)) > 0) { o = o substr(s, 1, p - 1) B; s = substr(s, p + length(A)) }
+    L[i] = o s
+  }
+  if (kind == "split-at") for (i = 1; i <= NR; i++) if ((p = index(L[i], A)) > 1) {
+    mk = (substr(L[i], 1, 1) == ">") ? "> " : ""
+    L[i] = substr(L[i], 1, p - 1) "\n" mk trim(substr(L[i], p)); break
+  }
+  # ── tables
+  tat = 0; tail = 0
+  if (kind == "table-append" || kind == "table-cell") {
+    from = 1
+    if (kind == "table-append" && C != "") { from = 0; for (i = 1; i <= NR; i++) if (L[i] == C) { from = i; break } }
+    for (i = from; from && i <= NR; i++) {
+      if (substr(L[i], 1, 1) != "|" || (i > 1 && substr(L[i - 1], 1, 1) == "|")) continue
+      if (cell1(L[i]) != A) continue
+      if (kind == "table-cell" && !hashead(L[i], B)) continue
+      tat = i; break
+    }
+    if (tat && kind == "table-append") { for (j = tat; j < NR && substr(L[j + 1], 1, 1) == "|"; j++); tail = j }
+    if (tat && kind == "table-cell") {
+      for (j = tat + 1; j <= NR && substr(L[j], 1, 1) == "|"; j++) if (L[j] !~ /^\|[ :|-]+\|[ \t]*$/) break
+      if (j <= NR && substr(L[j], 1, 1) == "|") { s = L[j]; sub(/\|[ \t]*$/, "", s); L[j] = s " " C " |" }
+    }
+  }
+  for (i = 1; i <= NR; i++) {
+    if (DROP[i]) continue
+    print L[i]
+    if (kind == "fence-append" && last && i == last) print B
+    if (kind == "quote-append" && n >= 1 && n <= nq && i == QE[n]) print B
+    if (kind == "table-append" && tail && i == tail) print B
+  }
+  if (kind == "append") { print ""; print B }
+}
+CG_MUT_AWK
+
+CG_DOC='reference/channel-and-engagement-model.md'
+CG_SET_TAG='channel-set-register'
+CG_CLASS_TAG='g8-class-register'
+CG_REC='reference/adr/ADR-026-channel-architecture.md'
+CG_ADRDIR='reference/adr'
+CG_RECPFX='ADR-'
+CG_SEC='## Decision'
+CG_ADMIT='**What admits a fourth member.**'
+CG_GATE='G8'
+
+cg_scan_set() {     # cg_scan_set <root> <listfile> — the first reader
+  LC_ALL=C awk -v ROOT="$1" -v DOC="$CG_DOC" -v TAG="$CG_SET_TAG" -v REC="$CG_REC" -v ADRDIR="$CG_ADRDIR" \
+               -v RECPFX="$CG_RECPFX" -v SEC="$CG_SEC" -v ADMIT="$CG_ADMIT" -f "$WORK/cg-set.awk" "$2"
+}
+cg_scan_class() {   # cg_scan_class <root> <listfile> — the second reader
+  LC_ALL=C awk -v ROOT="$1" -v DOC="$CG_DOC" -v TAG="$CG_CLASS_TAG" -v ADRDIR="$CG_ADRDIR" -v RECPFX="$CG_RECPFX" \
+               -v GATE="$CG_GATE" -f "$WORK/cg-class.awk" "$2"
+}
+cg_n()    { awk -v k="$2" '$1 == k { n++ } END { print n + 0 }' <<<"$1"; }
+cg_rows() { awk -v k="$2" '$1 == k { printf "      %s\n", $0 }' <<<"$1"; }
+cg_den()  { awk '$1 == "DENOM" { $1 = ""; sub(/^ /, ""); d = $0 } END { print d }' <<<"$1"; }
+cg_why()  { awk '$1 == "BROKEN" { printf "%s%s", s, $2; s = "; " }' <<<"$1"; }
+cg_recs() { awk 'NF && $1 != "DENOM" && $1 != "BROKEN" { n++ } END { print n + 0 }' <<<"$1"; }
+
+cg_assert() {   # cg_assert <root> <listfile>
+  local s c sden cden swhy cwhy sok cok n1 n2 n3 n4 n5 n6 n7
+  s="$(cg_scan_set "$1" "$2")"; c="$(cg_scan_class "$1" "$2")"
+  sden="$(cg_den "$s")"; cden="$(cg_den "$c")"; swhy="$(cg_why "$s")"; cwhy="$(cg_why "$c")"
+  sok=0; cok=0
+  if [ -n "$sden" ] && [ -z "$swhy" ]; then sok=1; fi
+  if [ -n "$cden" ] && [ -z "$cwhy" ]; then cok=1; fi
+  if [ "$sok" -ne 1 ] && [ -z "$swhy" ]; then swhy='the reader printed no result'; fi
+  if [ "$cok" -ne 1 ] && [ -z "$cwhy" ]; then cwhy='the reader printed no result'; fi
+  # The seven counts, taken once and reused by the verdicts below. Every record a reader prints
+  # is counted by one of them, or that reading is broken: a record of a kind no verdict names
+  # would otherwise print and pass, so it fails CG0 and its section is withheld.
+  n1=$(( $(cg_n "$s" MISSING) + $(cg_n "$s" UNOWNED) ))
+  n2=$(( $(cg_n "$s" UNDECLARED) + $(cg_n "$s" NOTCHANNEL) ))
+  n3=$(cg_n "$s" INCOMPLETE)
+  n4=$(( $(cg_n "$s" LIMB-MISSING) + $(cg_n "$s" LIMB-UNOWNED) + $(cg_n "$s" NOT-WHOLE) ))
+  n5=$(( $(cg_n "$s" REWORDED) + $(cg_n "$s" CUT) ))
+  n6=$(( $(cg_n "$c" UNREGISTERED) + $(cg_n "$c" NOSUBJECT) + $(cg_n "$c" UNLISTED) ))
+  n7=$(cg_n "$c" GATED)
+  if [ "$sok" -eq 1 ] && [ "$(cg_recs "$s")" -ne $(( n1 + n2 + n3 + n4 + n5 )) ]; then sok=0; swhy='a-record-no-verdict-grades'; fi
+  if [ "$cok" -eq 1 ] && [ "$(cg_recs "$c")" -ne $(( n6 + n7 )) ]; then cok=0; cwhy='a-record-no-verdict-grades'; fi
+
+  # ── CG0 — the instrument. One verdict whichever reader broke, and that reader's comparisons withheld.
+  if [ "$sok" -eq 1 ] && [ "$cok" -eq 1 ]; then
+    PASS "CG0: every reading was made — the channel-set [$sden]; the class [$cden]. Each figure is read as its reader's own header names it"
+  else
+    printf '  SURFACE: NOT-EVALUATED — this is not a clean result\n'
+    FAIL "CG0: a reading this group needs could not be made — the channel-set: ${swhy:-read}; the class: ${cwhy:-read}. Not a skip and not a pass: every comparison of a section whose reading failed is withheld and is NOT reported as a verdict. Where the document or a fence was damaged, restore it. Where the record was amended or consolidated, the record stands: in the same change, move this group's constant that names what moved — the record's path, its decision heading, its admission lead-in — or, for the typing sentence, the shape the second reader looks for. Where the reason is a-record-no-verdict-grades, a reader printed a record of a kind no verdict here counts: name that kind in the verdict that grades it. A record is never edited to suit this suite, and a row is never deleted to make this pass"
+  fi
+
+  if [ "$sok" -eq 1 ]; then
+    if [ "$n1" -eq 0 ]; then
+      PASS "CG1: the set table of $CG_REC and the $CG_SET_TAG fence carry the same id(s) [$sden]. The zero is a measurement: the arms below plant a row on each side"
+    else
+      FAIL "CG1: $n1 id(s) differ between the set table of $CG_REC and the $CG_SET_TAG fence of $CG_DOC. MISSING — the record carries the id and the fence does not: add its row to the fence in the change that amended the record. UNOWNED — the fence carries an id the record does not: a member is admitted by an amendment to that record or by a superseding record, never by a row here, so remove the row or land the record's change first:"
+      cg_rows "$s" MISSING; cg_rows "$s" UNOWNED
+    fi
+    if [ "$n2" -eq 0 ]; then
+      PASS "CG2: every channel of the fence carries, in the record, each declaration its admission paragraph names, and the record declares none for an id that is not a channel here [$sden]"
+    else
+      FAIL "CG2: $n2 declaration(s) do not match the fence's channels. UNDECLARED <id> <name> — the record's table that declares <name> has no row keyed on that id, or an empty cell: a surface is a member only when the record declares every one of them, and the fence follows the record. NOTCHANNEL <id> — the record declares a test or an envelope value for an id the fence does not carry as a channel: restore the fence's row, or the record's:"
+      cg_rows "$s" UNDECLARED; cg_rows "$s" NOTCHANNEL
+    fi
+    if [ "$n3" -eq 0 ]; then
+      PASS "CG3: every vacancy of the fence carries its verdict and its ground [$sden]"
+    else
+      FAIL "CG3: $n3 vacancy field(s) are absent from the $CG_SET_TAG fence of $CG_DOC. Add the row — the id, then verdict or ground, then the record's own words:"
+      cg_rows "$s" INCOMPLETE
+    fi
+    if [ "$n4" -eq 0 ]; then
+      PASS "CG4: the test $CG_DOC quotes is the record's test — its limbs one item each, read from the first block quotation on each side, and the paragraph that says what admits a member standing whole [$sden]"
+    else
+      FAIL "CG4: $n4 part(s) of the admission test differ between $CG_REC and $CG_DOC. LIMB-MISSING <limb> — the record states the limb and the document's FIRST block quotation does not carry it as an item of its own. LIMB-UNOWNED <limb> — that quotation carries a limb the record does not state. NOT-WHOLE admission — the record's paragraph that says what admits a member does not stand whole in any block quotation of the document. Quote the record as it stands; where the record changed, the document follows in the same change:"
+      cg_rows "$s" LIMB-MISSING; cg_rows "$s" LIMB-UNOWNED; cg_rows "$s" NOT-WHOLE
+    fi
+    if [ "$n5" -eq 0 ]; then
+      PASS "CG5: every value of the fence is in the words of $CG_REC, and every block quotation of $CG_DOC is in the words of a decision record and ends where a sentence ends [$sden]. This holds WORDING. It does not establish that the words are the decision in force: that document's closing section lists what this cannot see"
+    else
+      FAIL "CG5: $n5 restatement(s) in $CG_DOC fail the wording check. REWORDED fence:<id>:<field> — the value of that row of the $CG_SET_TAG fence is not in the words of $CG_REC. REWORDED quotation:<n> — the document's n-th block quotation, which opens with the words printed, is in the words of no file under $CG_ADRDIR/ whose name opens $CG_RECPFX. CUT quotation:<n> — that quotation does not end where a sentence ends: quote on to the end of the sentence; a table row or a formula cannot be quoted alone — quote the sentence that introduces it. Restore the record's wording in the document; if the record was amended, the document follows in the same change:"
+      cg_rows "$s" REWORDED; cg_rows "$s" CUT
+    fi
+  fi
+
+  if [ "$cok" -eq 1 ]; then
+    if [ "$n6" -eq 0 ]; then
+      PASS "CG6: every relation a relation table declares and every reading a record types has a row in the $CG_CLASS_TAG fence, and every row a subject [$cden]"
+    else
+      FAIL "CG6: $n6 row(s) and subject(s) of the $CG_CLASS_TAG fence of $CG_DOC do not pair. UNREGISTERED <file> <relation> — a relation table in that file declares the relation and the fence has no row: add '<relation> | <file>' in the same change. UNLISTED <file> <reading> — that record types the reading into the class and the fence has no row: add it. NOSUBJECT <reading> <file> — the row names a file that neither declares that relation in a relation table nor types that reading: follow the declaration to where it went, or remove the row with it. A typing sentence is read however it is wrapped, so a re-wrap is never the cause:"
+      cg_rows "$c" UNREGISTERED; cg_rows "$c" UNLISTED; cg_rows "$c" NOSUBJECT
+    fi
+    if [ "$n7" -eq 0 ]; then
+      PASS "CG7: no cell of a requirement table or a relation table carries the token of a typed reading [$cden]. The zero is held against a token set that is not empty — with no typing sentence read, CG0 fails and this verdict is withheld. It reads those two table shapes and that exact token, and nothing else"
+    else
+      FAIL "CG7: $n7 cell(s) of a requirement table or a relation table carry the token of a typed reading — file, line, reading below. In a requirement table that makes whether a verb runs depend on the reading; in a relation table it makes a consumer evaluate it. The record that types the reading decides both, so take the token out of the table; a change to what may bind or evaluate the reading is a decision record's, never a cell's:"
+      cg_rows "$c" GATED
+    fi
+  fi
+  CG_SOK="$sok"; CG_COK="$cok"; CG_SDEN="$sden"
+  return 0
+}
+
+# ── THE LIVE RUN ─────────────────────────────────────────────────────────────────
+# The tracked markdown, one path to a line, handed to each reader as a file and never through a
+# pipe. An unreadable list breaks both readings, which CG0 reports.
+CG_W="$WORK/cg"; mkdir -p "$CG_W"
+CG_LIST="$CG_W/tracked.list"
+( cd "$ROOT" && git ls-files '*.md' ) > "$CG_LIST" 2>/dev/null
+CG_SOK=0; CG_COK=0; CG_SDEN=""
+cg_assert "$ROOT" "$CG_LIST"
+
+# ── THE STANDING ARMS ────────────────────────────────────────────────────────────
+# A base tree of links, one per tracked markdown file, is copied whole for each arm. An arm's edit
+# is written beside a link and renamed over it, so nothing is ever written through a link into
+# this tree. Every key an arm predicts is read from the live document — the channel-set fence's
+# last channel row, its last vacancy and ground rows, the first quotation's last limb, the class
+# fence's first row and its typed row — and every word an arm plants is invented. The words are
+# read by substring, so each planted value carries a token no tracked file holds.
+CG_BASE="$CG_W/base"; mkdir -p "$CG_BASE"
+cgdir=""
+while IFS= read -r cgp || [ -n "$cgp" ]; do
+  [ -n "$cgp" ] || continue
+  case "$cgp" in */*) cgd="${cgp%/*}" ;; *) cgd="." ;; esac
+  if [ "$cgd" != "$cgdir" ]; then mkdir -p "$CG_BASE/$cgd"; cgdir="$cgd"; fi
+  ln -s "$ROOT/$cgp" "$CG_BASE/$cgp"
+done < "$CG_LIST"
+
+cg_farm() {   # cg_farm <id> — one arm's copy of the base tree, with its own list; prints its root
+  cp -R "$CG_BASE" "$CG_W/$1" 2>/dev/null
+  cp "$CG_LIST" "$CG_W/$1.list"
+  printf '%s' "$CG_W/$1"
+}
+cg_edit() {   # cg_edit <root> <path> <kind> [A B C D] — one edit of <path>, renamed over its link
+  local d="$1" p="$2" k="$3" src
+  [ -n "$p" ] || return 0
+  src="$d/$p"; [ -e "$src" ] || src=/dev/null
+  CG_A="${4:-}" CG_B="${5:-}" CG_C="${6:-}" CG_D="${7:-}" LC_ALL=C awk -v kind="$k" -f "$WORK/cg-mut.awk" "$src" > "$d/$p.cg-new" 2>/dev/null
+  mv -f "$d/$p.cg-new" "$d/$p"
+}
+cg_newfile() { printf '%s' "$3" > "$1/$2"; printf '%s\n' "$2" >> "$1.list"; }   # a file this tree does not carry
+cg_landed() {   # cg_landed <root> <path>… — how many of the paths do NOT differ from this tree
+  local d="$1" p n=0; shift
+  for p in "$@"; do
+    if [ -z "$p" ]; then n=$((n + 1)); elif [ -e "$ROOT/$p" ]; then cmp -s "$ROOT/$p" "$d/$p" && n=$((n + 1)); elif [ ! -s "$d/$p" ]; then n=$((n + 1)); fi
+  done
+  printf '%s' "$n"
+}
+cg_has()  { awk -v r="$2" 'index($0, r) == 1 { n++ } END { print n + 0 }' <<<"$1"; }
+cg_nrec() { awk 'NF && $1 != "DENOM" { n++ } END { print n + 0 }' <<<"$1"; }
+cg_flat() { printf '%s' "$1" | tr '\n' ';'; }
+# cg_stray <output> <prefix>… — the records that open with none of the prefixes
+cg_stray() {
+  local out="$1"; shift
+  CG_PFX="$(printf '%s\n' "$@")" awk 'BEGIN { n = split(ENVIRON["CG_PFX"], P, "\n") }
+    NF && $1 != "DENOM" { hit = 0; for (i = 1; i <= n; i++) if (P[i] != "" && index($0, P[i]) == 1) hit = 1; if (!hit) s++ }
+    END { print s + 0 }' <<<"$out"
+}
+# cg_fire <id> <what> <not-landed> <output> <denominator 1|0> <records> <prefix>… — MUST-FIRE: the
+# edit landed; the reader printed exactly <records> record(s), each opening with a predicted
+# prefix and every prefix opening one; and a denominator line, or none for a broken reading
+cg_fire() {
+  local id="$1" what="$2" miss="$3" out="$4" wden="$5" want="$6" got nd stray lack="" p; shift 6
+  got="$(cg_nrec "$out")"; nd="$(cg_has "$out" 'DENOM ')"; stray="$(cg_stray "$out" "$@")"
+  for p in "$@"; do [ "$(cg_has "$out" "$p")" -gt 0 ] || lack="$lack '$p'"; done
+  if [ "$miss" -ne 0 ]; then
+    FAIL "$id: fixture integrity — $what: $miss edited file(s) do not differ from this tree, so the arm below would prove nothing"
+  elif [ "$got" -eq "$want" ] && [ "$stray" -eq 0 ] && [ -z "$lack" ] && [ "$nd" -eq "$wden" ]; then
+    PASS "$id: MUST-FIRE — $what: $got record(s), as predicted — $(cg_flat "$out")"
+  else
+    FAIL "$id: MUST-FIRE did not fire as predicted — $what: $want record(s) were predicted, each opening with one of ($*), and $wden denominator line(s); the reader printed $got, $stray unpredicted, $nd denominator line(s)${lack:+, none opening with$lack} — $(cg_flat "$out")"
+  fi
+}
+# cg_quiet <id> <what> <not-landed> <output> — MUST-NOT-FIRE: the edit landed, the reading was
+# made, and no record printed
+cg_quiet() {
+  local id="$1" what="$2" miss="$3" out="$4" nd nr
+  nd="$(cg_has "$out" 'DENOM ')"; nr="$(cg_nrec "$out")"
+  if [ "$miss" -ne 0 ]; then
+    FAIL "$id: fixture integrity — $what: $miss edited file(s) do not differ from this tree, so the silence below would prove nothing"
+  elif [ "$nd" -eq 1 ] && [ "$nr" -eq 0 ]; then
+    PASS "$id: MUST-NOT-FIRE — $what: the reading was made [$(cg_den "$out")] and printed no record"
+  else
+    FAIL "$id: MUST-NOT-FIRE fired — $what: the reader printed $nr record(s) and $nd denominator line(s) — $(cg_flat "$out")"
+  fi
+}
+# cg_probe <work> <root> <list> — cg_assert with its readers taken from <work>, run in a subshell
+# where each verdict prints as 'P <message>' or 'F <message>' and is counted nowhere
+cg_probe() {
+  ( WORK="$1"
+    PASS() { printf 'P %s\n' "$*"; }
+    FAIL() { printf 'F %s\n' "$*"; }
+    cg_assert "$2" "$3" ) 2>/dev/null
+}
+cg_ids() { awk -v k="$2" '$1 == k { v = $2; sub(/:.*/, "", v); printf "%s%s", (n++ ? " " : ""), v }' <<<"$1"; }
+# cg_cg0 <probe-output> <text> — how many CG0 failures carry the text where CG0 names each reading's
+# state ("the channel-set: …; the class: …"). The remedy sentences after it name every reason, so
+# they are never read.
+cg_cg0() { awk -v w="$2" '$1 == "F" && $2 == "CG0:" { s = $0; a = index(s, "the channel-set: "); b = index(s, ". Not a skip"); if (a > 0 && b > a && index(substr(s, a, b - a), w) > 0) n++ } END { print n + 0 }' <<<"$1"; }
+# cg_fn <id> <what> <not-landed> <probe-output> <passed> <failed> [<CG0 names>] [<CG0 does not name>]
+cg_fn() {
+  local id="$1" what="$2" miss="$3" out="$4" wp="$5" wf="$6" yes="${7:-}" no="${8:-}" gp gf ny nn
+  gp="$(cg_ids "$out" P)"; gf="$(cg_ids "$out" F)"
+  ny=1; [ -z "$yes" ] || ny="$(cg_cg0 "$out" "$yes")"
+  nn=0; [ -z "$no" ] || nn="$(cg_cg0 "$out" "$no")"
+  if [ "$miss" -ne 0 ]; then
+    FAIL "$id: fixture integrity — $what: the edit did not land, so the probe below would prove nothing"
+  elif [ "$gp" = "$wp" ] && [ "$gf" = "$wf" ] && [ "$ny" -ge 1 ] && [ "$nn" -eq 0 ]; then
+    PASS "$id: $what — cg_assert passed [$gp] and failed [$gf], as predicted${yes:+, its CG0 naming $yes}${no:+ and not $no}"
+  else
+    FAIL "$id: $what — predicted passed [$wp] and failed [$wf]${yes:+, CG0 naming $yes}${no:+ and not $no}; cg_assert passed [$gp] and failed [$gf]"
+  fi
+}
+cg_work() { mkdir -p "$CG_W/$1-w"; cp "$WORK/cg-set.awk" "$WORK/cg-class.awk" "$CG_W/$1-w/"; printf '%s' "$CG_W/$1-w"; }
+cg_fence() {   # cg_fence <file> <tag> — the fence's rows, each field trimmed, tab-joined
+  LC_ALL=C awk -v tag="$2" '
+    function trim(s) { sub(/^[ \t\r]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+    substr($0, 1, 3) == "```" { if (!inf) { inf = 1; on = ($0 == "```" tag) } else { inf = 0; on = 0 }; next }
+    on { t = trim($0); if (t == "" || substr(t, 1, 1) == "#") next; n = split(t, F, "|"); o = trim(F[1]); for (i = 2; i <= n; i++) o = o "\t" trim(F[i]); print o }' "$1"
+}
+
+CG_SETROWS="$(cg_fence "$ROOT/$CG_DOC" "$CG_SET_TAG")"
+CG_CLSROWS="$(cg_fence "$ROOT/$CG_DOC" "$CG_CLASS_TAG")"
+CG_KCH="$(awk -F'\t' '$2 == "channel" { v = $1 } END { print v }' <<<"$CG_SETROWS")"
+CG_KVA="$(awk -F'\t' '$2 == "vacancy" { v = $1 } END { print v }' <<<"$CG_SETROWS")"
+CG_KGR="$(awk -F'\t' '$2 == "ground" { v = $1 } END { print v }' <<<"$CG_SETROWS")"
+CG_KR1="$(awk -F'\t' 'NR == 1 { print $1 }' <<<"$CG_CLSROWS")"
+CG_KF1="$(awk -F'\t' 'NR == 1 { print $2 }' <<<"$CG_CLSROWS")"
+CG_KTR="$(awk -F'\t' -v p="$CG_ADRDIR/" 'index($2, p) == 1 { v = $1 } END { print v }' <<<"$CG_CLSROWS")"
+CG_KTF="$(awk -F'\t' -v p="$CG_ADRDIR/" 'index($2, p) == 1 { v = $2 } END { print v }' <<<"$CG_CLSROWS")"
+CG_KLIMB="$(LC_ALL=C awk 'substr($0, 1, 3) == "```" { inf = !inf; next }
+  inf { next }
+  /^>/ { q = 1; if ($0 ~ /^> - \*\*[^*]+\*\* /) { s = $0; sub(/^> - \*\*/, "", s); sub(/\*\*.*/, "", s); k = s }; next }
+  q { exit }
+  END { print k }' "$ROOT/$CG_DOC")"
+CG_NNAME="$(awk '{ print $7 + 0 }' <<<"$CG_SDEN")"
+CG_NQ="$(awk '{ print $10 + 0 }' <<<"$CG_SDEN")"
+CG_NEEDLE='` is **`'"$CG_GATE"'`-class**'
+CG_PNEW="$CG_ADRDIR/${CG_RECPFX}999-cgplant-control.md"
+
+if [ "$CG_SOK" -eq 1 ]; then
+  # ── the first reader: one must-fire per record kind and per broken reading, and three silences
+  cgd="$(cg_farm CG1f1)"; cg_edit "$cgd" "$CG_REC" table-append id '| **ZQ-9** | *zq* | *zq* | *zq* | zq |' "$CG_SEC"
+  cg_fire CG1f1 "the record's set table gains a row keyed on an invented id" "$(cg_landed "$cgd" "$CG_REC")" "$(cg_scan_set "$cgd" "$cgd.list")" 1 1 'MISSING ZQ-9'
+  cgd="$(cg_farm CG1f2)"; cg_edit "$cgd" "$CG_DOC" fence-append "$CG_SET_TAG" 'ZQ-9   | channel | a cgplant surface'
+  cg_fire CG1f2 "the fence gains a channel row keyed on an invented id" "$(cg_landed "$cgd" "$CG_DOC")" "$(cg_scan_set "$cgd" "$cgd.list")" 1 $((CG_NNAME + 2)) 'UNOWNED ZQ-9' 'UNDECLARED ZQ-9 ' 'REWORDED fence:ZQ-9:channel'
+  cgd="$(cg_farm CG2f1)"; cg_edit "$cgd" "$CG_DOC" fence-retype "$CG_SET_TAG" vacancy channel 'verdict ground'
+  cg_fire CG2f1 "the fence's last vacancy, $CG_KVA, re-typed a channel, its verdict and ground dropped" "$(cg_landed "$cgd" "$CG_DOC")" "$(cg_scan_set "$cgd" "$cgd.list")" 1 "$CG_NNAME" "UNDECLARED $CG_KVA "
+  cgd="$(cg_farm CG2f2)"; cg_edit "$cgd" "$CG_DOC" fence-drop-last "$CG_SET_TAG" channel
+  cg_fire CG2f2 "the fence loses its last channel row, $CG_KCH" "$(cg_landed "$cgd" "$CG_DOC")" "$(cg_scan_set "$cgd" "$cgd.list")" 1 2 "MISSING $CG_KCH" "NOTCHANNEL $CG_KCH"
+  cgd="$(cg_farm CG3f1)"; cg_edit "$cgd" "$CG_DOC" fence-drop-last "$CG_SET_TAG" ground
+  cg_fire CG3f1 "the fence loses its last ground row, $CG_KGR's" "$(cg_landed "$cgd" "$CG_DOC")" "$(cg_scan_set "$cgd" "$cgd.list")" 1 1 "INCOMPLETE $CG_KGR ground"
+  cgd="$(cg_farm CG4f1)"; cg_edit "$cgd" "$CG_DOC" quote-drop-limb 1
+  cg_fire CG4f1 "the document's first quotation loses its last limb, $CG_KLIMB" "$(cg_landed "$cgd" "$CG_DOC")" "$(cg_scan_set "$cgd" "$cgd.list")" 1 1 "LIMB-MISSING $CG_KLIMB"
+  cgd="$(cg_farm CG4f2)"; cg_edit "$cgd" "$CG_DOC" quote-append 1 '> - **LZ** — a cgplant limb.'
+  cg_fire CG4f2 "the document's first quotation gains an invented limb" "$(cg_landed "$cgd" "$CG_DOC")" "$(cg_scan_set "$cgd" "$cgd.list")" 1 2 'LIMB-UNOWNED LZ' 'REWORDED quotation:1 '
+  cgd="$(cg_farm CG4f3)"; cg_edit "$cgd" "$CG_DOC" quote-drop "$CG_ADMIT"
+  cg_fire CG4f3 "the document loses the quotation that carries the admission lead-in" "$(cg_landed "$cgd" "$CG_DOC")" "$(cg_scan_set "$cgd" "$cgd.list")" 1 1 'NOT-WHOLE admission'
+  cgd="$(cg_farm CG4f4)"; cg_edit "$cgd" "$CG_REC" quote-append 1 '> - **LZ** — a cgplant limb.' "$CG_SEC"
+  cg_fire CG4f4 "the record's limb list gains an invented limb" "$(cg_landed "$cgd" "$CG_REC")" "$(cg_scan_set "$cgd" "$cgd.list")" 1 1 'LIMB-MISSING LZ'
+  cgd="$(cg_farm CG5f1)"; cg_edit "$cgd" "$CG_DOC" quote-cut 2
+  cg_fire CG5f1 "the document's second quotation is cut at its first comma" "$(cg_landed "$cgd" "$CG_DOC")" "$(cg_scan_set "$cgd" "$cgd.list")" 1 1 'CUT quotation:2 '
+  cgd="$(cg_farm CG5f2)"; cg_edit "$cgd" "$CG_DOC" fence-revalue "$CG_SET_TAG" ground 'a cgplant ground'
+  cg_fire CG5f2 "the fence's last ground row takes an invented value" "$(cg_landed "$cgd" "$CG_DOC")" "$(cg_scan_set "$cgd" "$cgd.list")" 1 1 "REWORDED fence:$CG_KGR:ground"
+  cgd="$(cg_farm CG5f3)"; cg_edit "$cgd" "$CG_DOC" quote-prefix 2 'cgplant '
+  cg_fire CG5f3 "the document's second quotation opens with an invented word" "$(cg_landed "$cgd" "$CG_DOC")" "$(cg_scan_set "$cgd" "$cgd.list")" 1 1 'REWORDED quotation:2 '
+  cgd="$(cg_farm CG5f4)"; cg_edit "$cgd" "$CG_DOC" append '' '> Cgplant words that stand in the records index alone.'
+  cg_edit "$cgd" "$CG_ADRDIR/README.md" append '' 'Cgplant words that stand in the records index alone.'
+  cg_fire CG5f4 "a quotation whose words stand only in the records index, not in a decision record" "$(cg_landed "$cgd" "$CG_DOC" "$CG_ADRDIR/README.md")" "$(cg_scan_set "$cgd" "$cgd.list")" 1 1 "REWORDED quotation:$((CG_NQ + 1)) "
+  cgd="$(cg_farm CG5f5)"; cg_edit "$cgd" "$CG_REC" quote-suffix 1 ' cgplant' "$CG_SEC"
+  cg_fire CG5f5 "the record is reworded where the document quotes its limb list" "$(cg_landed "$cgd" "$CG_REC")" "$(cg_scan_set "$cgd" "$cgd.list")" 1 1 'REWORDED quotation:1 '
+  cgd="$(cg_farm CG0f1)"; cg_edit "$cgd" "$CG_DOC" fence-rename "$CG_SET_TAG" "$CG_SET_TAG-cgplant"
+  cg_fire CG0f1 "the channel-set fence's tag is renamed" "$(cg_landed "$cgd" "$CG_DOC")" "$(cg_scan_set "$cgd" "$cgd.list")" 0 1 'BROKEN the-fence-is-found-0-times-or-holds-no-row'
+  cgd="$(cg_farm CG0f2)"; cg_edit "$cgd" "$CG_REC" sub-first "$CG_ADMIT" '**Cgplant admits.**'
+  cg_fire CG0f2 "the record's admission lead-in is renamed" "$(cg_landed "$cgd" "$CG_REC")" "$(cg_scan_set "$cgd" "$cgd.list")" 0 1 'BROKEN the-admission-paragraph-is-found-0-times-not-once'
+  cgd="$(cg_farm CG1n1)"; cg_edit "$cgd" "$CG_DOC" append '' 'A cgplant surface is proposed here as a fourth member, and no record has admitted it.'
+  cg_quiet CG1n1 "a paragraph of the document names a fourth member in prose" "$(cg_landed "$cgd" "$CG_DOC")" "$(cg_scan_set "$cgd" "$cgd.list")"
+  cgd="$(cg_farm CG5n1)"; cg_edit "$cgd" "$CG_DOC" quote-join 2
+  cg_quiet CG5n1 "the document's second quotation re-wrapped onto one line, its emphasis dropped" "$(cg_landed "$cgd" "$CG_DOC")" "$(cg_scan_set "$cgd" "$cgd.list")"
+  cgd="$(cg_farm CG5n2)"; cg_newfile "$cgd" "$CG_PNEW" $'# A cgplant record\n\nThe cgplant record says "a quotation may close on its mark."\n'
+  cg_edit "$cgd" "$CG_DOC" append '' '> The cgplant record says "a quotation may close on its mark."'
+  cg_quiet CG5n2 "a quotation ending on a closing quotation mark after its full stop, its words in a record" "$(cg_landed "$cgd" "$CG_DOC" "$CG_PNEW")" "$(cg_scan_set "$cgd" "$cgd.list")"
+fi
+
+if [ "$CG_COK" -eq 1 ]; then
+  # ── the second reader: one must-fire per record kind and per broken reading, and four silences
+  cgd="$(cg_farm CG6f1)"; cg_edit "$cgd" "$CG_KF1" table-append relation '| `zq-relation` | a cgplant side | a cgplant rule | a cgplant outcome |'
+  cg_fire CG6f1 "the first relation table gains a row for an invented relation" "$(cg_landed "$cgd" "$CG_KF1")" "$(cg_scan_class "$cgd" "$cgd.list")" 1 1 "UNREGISTERED $CG_KF1 zq-relation"
+  cgd="$(cg_farm CG6f2)"; cg_edit "$cgd" "$CG_DOC" fence-drop-first "$CG_CLASS_TAG"
+  cg_fire CG6f2 "the class fence loses its first row, $CG_KR1" "$(cg_landed "$cgd" "$CG_DOC")" "$(cg_scan_class "$cgd" "$cgd.list")" 1 1 "UNREGISTERED $CG_KF1 $CG_KR1"
+  cgd="$(cg_farm CG6f3)"; cg_edit "$cgd" "$CG_DOC" fence-append "$CG_CLASS_TAG" "zq-reading | $CG_KF1"
+  cg_fire CG6f3 "the class fence gains a row whose file declares no such relation" "$(cg_landed "$cgd" "$CG_DOC")" "$(cg_scan_class "$cgd" "$cgd.list")" 1 1 "NOSUBJECT zq-reading $CG_KF1"
+  cgd="$(cg_farm CG6f4)"; cg_edit "$cgd" "$CG_DOC" fence-drop-under "$CG_CLASS_TAG" "$CG_ADRDIR/"
+  cg_fire CG6f4 "the class fence loses its typed row, $CG_KTR, while the record still types it" "$(cg_landed "$cgd" "$CG_DOC")" "$(cg_scan_class "$cgd" "$cgd.list")" 1 1 "UNLISTED $CG_KTF $CG_KTR"
+  cgd="$(cg_farm CG6f5)"; cg_newfile "$cgd" "$CG_PNEW" "$(printf '# A cgplant record\n\n`zq-reading`\nis **`%s`-class**: a reading this cgplant record types.' "$CG_GATE")"
+  cg_fire CG6f5 "a record types an invented reading, its sentence wrapped before is" "$(cg_landed "$cgd" "$CG_PNEW")" "$(cg_scan_class "$cgd" "$cgd.list")" 1 1 "UNLISTED $CG_PNEW zq-reading"
+  cgd="$(cg_farm CG7f1)"; cg_edit "$cgd" "$CG_KF1" table-cell verb depth "$CG_KTR"
+  cg_fire CG7f1 "the first requirement table's first data row carries the typed reading" "$(cg_landed "$cgd" "$CG_KF1")" "$(cg_scan_class "$cgd" "$cgd.list")" 1 1 "GATED $CG_KF1 "
+  cgd="$(cg_farm CG0f3)"; cg_edit "$cgd" "$CG_DOC" fence-rename "$CG_CLASS_TAG" "$CG_CLASS_TAG-cgplant"
+  cg_fire CG0f3 "the class fence's tag is renamed" "$(cg_landed "$cgd" "$CG_DOC")" "$(cg_scan_class "$cgd" "$cgd.list")" 0 1 'BROKEN the-fence-is-found-0-times-or-holds-no-row'
+  cgd="$(cg_farm CG0f4)"; cgn=0
+  while IFS= read -r cgp || [ -n "$cgp" ]; do
+    case "$cgp" in "$CG_ADRDIR/$CG_RECPFX"*) ;; *) continue ;; esac
+    if grep -q -F -- "$CG_NEEDLE" "$cgd/$cgp"; then cg_edit "$cgd" "$cgp" sub-all "$CG_NEEDLE" '` is **`'"$CG_GATE"'`-cgplant**'; cgn=$((cgn + 1)); fi
+  done < "$CG_LIST"
+  if [ "$cgn" -gt 0 ]; then cgm=0; else cgm=1; fi
+  cg_fire CG0f4 "every record's typing sentence names another class ($cgn record(s) edited)" "$cgm" "$(cg_scan_class "$cgd" "$cgd.list")" 0 1 'BROKEN no-record-types-a-reading-into-the-class'
+  cgd="$(cg_farm CG6n1)"; cg_edit "$cgd" "$CG_KTF" split-at ' is **`'"$CG_GATE"'`-class**'
+  cg_quiet CG6n1 "the typing sentence re-wrapped after its code span" "$(cg_landed "$cgd" "$CG_KTF")" "$(cg_scan_class "$cgd" "$cgd.list")"
+  cgd="$(cg_farm CG6n2)"; cg_edit "$cgd" "$CG_ADRDIR/README.md" append '' '`zq-reading` is **`'"$CG_GATE"'`-class**: a shape the cgplant index carries.'
+  cg_quiet CG6n2 "the typing shape written in the records index, which is not a decision record" "$(cg_landed "$cgd" "$CG_ADRDIR/README.md")" "$(cg_scan_class "$cgd" "$cgd.list")"
+  cgd="$(cg_farm CG6n3)"; cg_edit "$cgd" "$CG_KF1" append '' 'The `zq-relation` relation is named here in cgplant prose, outside any table.'
+  cg_quiet CG6n3 "a relation named in prose in the file of the relation table" "$(cg_landed "$cgd" "$CG_KF1")" "$(cg_scan_class "$cgd" "$cgd.list")"
+  cgd="$(cg_farm CG6n4)"; cg_newfile "$cgd" "$CG_PNEW" "$(printf '# A cgplant record\n\n`zq-reading`\n\nis **`%s`-class**: words a blank line splits.' "$CG_GATE")"
+  cg_quiet CG6n4 "a record's typing words split by a blank line" "$(cg_landed "$cgd" "$CG_PNEW")" "$(cg_scan_class "$cgd" "$cgd.list")"
+fi
+
+if [ "$CG_SOK" -eq 1 ] && [ "$CG_COK" -eq 1 ]; then
+  # ── cg_assert, probed: a record no verdict counts is a broken reading, a broken reading is one
+  #    failure with its section withheld, and a record of a named kind never trips either
+  cgw="$(cg_work CG0f5)"; cg_edit "$cgw" cg-set.awk sub-first '  printf "DENOM ' '  printf "ZQKIND a-record-of-a-kind-no-verdict-names\n"'"$VA_NL"'  printf "DENOM '
+  cg_fn CG0f5 "the first reader prints a record of a kind no verdict names" "$(cmp -s "$WORK/cg-set.awk" "$cgw/cg-set.awk" && echo 1 || echo 0)" "$(cg_probe "$cgw" "$ROOT" "$CG_LIST")" 'CG6 CG7' 'CG0' 'the channel-set: a-record-no-verdict-grades'
+  cgw="$(cg_work CG0f6)"; cg_edit "$cgw" cg-class.awk sub-first '  printf "DENOM ' '  printf "ZQKIND a-record-of-a-kind-no-verdict-names\n"'"$VA_NL"'  printf "DENOM '
+  cg_fn CG0f6 "the second reader prints a record of a kind no verdict names" "$(cmp -s "$WORK/cg-class.awk" "$cgw/cg-class.awk" && echo 1 || echo 0)" "$(cg_probe "$cgw" "$ROOT" "$CG_LIST")" 'CG1 CG2 CG3 CG4 CG5' 'CG0' 'the class: a-record-no-verdict-grades'
+  cgw="$(cg_work CG0f7)"; cg_edit "$cgw" cg-set.awk sub-first '  printf "DENOM ' '  printf "missing ZQ-9\n"'"$VA_NL"'  printf "DENOM '
+  cg_fn CG0f7 "the first reader prints a named kind in lower case" "$(cmp -s "$WORK/cg-set.awk" "$cgw/cg-set.awk" && echo 1 || echo 0)" "$(cg_probe "$cgw" "$ROOT" "$CG_LIST")" 'CG6 CG7' 'CG0' 'the channel-set: a-record-no-verdict-grades'
+  cgd="$(cg_farm CG0n1)"; cg_edit "$cgd" "$CG_DOC" fence-append "$CG_SET_TAG" 'ZQ-9   | channel | a cgplant surface'
+  cg_fn CG0n1 "a fourth channel row, every record it prints of a named kind" "$(cg_landed "$cgd" "$CG_DOC")" "$(cg_probe "$WORK" "$cgd" "$cgd.list")" 'CG0 CG3 CG4 CG6 CG7' 'CG1 CG2 CG5'
+  cgd="$(cg_farm CG0n2)"; cg_edit "$cgd" "$CG_DOC" fence-drop-under "$CG_CLASS_TAG" "$CG_ADRDIR/"
+  cg_fn CG0n2 "the class fence loses its typed row" "$(cg_landed "$cgd" "$CG_DOC")" "$(cg_probe "$WORK" "$cgd" "$cgd.list")" 'CG0 CG1 CG2 CG3 CG4 CG5 CG7' 'CG6'
+  cgd="$(cg_farm CG0n3)"; cg_edit "$cgd" "$CG_REC" line-sub "$CG_SEC" "$CG_SEC cgplant"
+  cg_fn CG0n3 "the record's decision heading renamed: a broken reading reports its own reason" "$(cg_landed "$cgd" "$CG_REC")" "$(cg_probe "$WORK" "$cgd" "$cgd.list")" 'CG6 CG7' 'CG0' 'the channel-set: the-decision-section-heading-is-absent' 'a-record-no-verdict-grades'
+  cgd="$(cg_farm CG0f8)"; cg_edit "$cgd" "$CG_DOC" fence-rename "$CG_CLASS_TAG" "$CG_CLASS_TAG-cgplant"
+  cg_fn CG0f8 "the class fence's tag renamed: the class section is withheld" "$(cg_landed "$cgd" "$CG_DOC")" "$(cg_probe "$WORK" "$cgd" "$cgd.list")" 'CG1 CG2 CG3 CG4 CG5' 'CG0' 'the class: the-fence-is-found-0-times-or-holds-no-row'
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
