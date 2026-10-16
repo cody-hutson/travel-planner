@@ -28,9 +28,8 @@ to another, such as a section relocated out of a larger document, re-pins every 
 the same change and by the same rule. Re-pinning the row of the file the classification rule puts
 in the class `first-read` writes the suite's constant for that file to the same value, in the same
 change, and the constant is re-derived the same way — the file's size plus its class headroom.
-`CH_EMIT=growth ./scripts/test-corpus-hygiene.sh` prints
-each row's re-pin value beside the file's size and its ceiling, so the value is read off rather
-than worked out by hand.
+`CH_EMIT=growth ./scripts/test-corpus-hygiene.sh` prints each row's re-pin value beside the
+file's size and its ceiling, so the value is read off rather than worked out by hand.
 
 **A re-pin is a decision, not a repair.** Raising a row is how a file is allowed to grow past its
 ceiling, so the change that raises it says why, and the release that ships it names it in its
@@ -43,7 +42,7 @@ already weigh.
 file and is also bounded by a named constant in the suite. Its row is held equal to that constant,
 and a row above it or below it fails; of the two, the lower is the ceiling
 (`reference/load-class-model.md` § 5, *instrument*), and held equal they are one. Raising its
-ceiling is therefore an edit to the constant, in a diff of its own.
+ceiling is therefore an edit to the constant, in the same change that re-pins its row.
 
 **What a green suite does not say.** That a file is the right size, or that a raised row was the
 right decision: the suite holds each file to its row and reads nothing else. Nothing compares a

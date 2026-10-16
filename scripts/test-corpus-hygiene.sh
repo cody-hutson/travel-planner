@@ -422,7 +422,8 @@
 #        below, is K7, so the two cannot silently disagree, and only an edit to the constant
 #        raises that file's ceiling.
 #   CTL  a synthetic fixture tree, built in a temp dir ON EVERY RUN, plus the arms whose ids
-#        end -RETRO, each replaying a defect this repository actually shipped. One MUST-FIRE
+#        end -RETRO, each replaying this repository's own history — a defect it actually
+#        shipped or, for CTL-SIZE-RETRO, the per-file classification it recorded. One MUST-FIRE
 #        arm per finding code this file can emit, alongside the specificity arms that tell a
 #        correct implementation from a lookalike. A code with no arm is a check
 #        indistinguishable from one that CANNOT fire.
@@ -488,14 +489,14 @@
 # ── ONE DEPENDENCY ON REPOSITORY HISTORY, STATED ─────────────────────────────────
 # The suite reads this repository's history as blobs and as tags, and both arrive through the
 # same checkout. Every arm whose id ends -RETRO reads a blob from a commit in that history: it
-# is the arm that tests its class's detector against a defect the repository actually shipped
-# rather than one this file wrote, and it is therefore the arm worth keeping honest. Arm
-# CTL-RETRO replays class C's shipped defect, CTL-E-RETRO class E's, CTL-F-RETRO class F's, and
-# CTL-H-RETRO and CTL-H5-RETRO class H's — the fence that left entries unnamed, and the map row
-# that named them. Each of those two reads its revision's tree listing as well as its blobs.
-# Arm CTL-SIZE-RETRO is the size group's, and replays a record rather than a defect: the per-file
-# classification recorded at the commit that declared the load classes, which it reproduces from
-# that revision's tree listing and blobs.
+# holds its class's detector to something the repository actually produced rather than to a
+# fixture this file wrote — a defect it shipped or, for one arm, a classification it recorded —
+# and it is therefore the arm worth keeping honest. Arm CTL-RETRO replays class C's shipped
+# defect, CTL-E-RETRO class E's, CTL-F-RETRO class F's, and CTL-H-RETRO and CTL-H5-RETRO class
+# H's — the fence that left entries unnamed, and the map row that named them. Each of those two
+# reads its revision's tree listing as well as its blobs. Arm CTL-SIZE-RETRO is the size group's,
+# and the one that replays a record: the per-file classification recorded at the commit that
+# declared the load classes, which it reproduces from that revision's tree listing and blobs.
 # Group G reads the release tags, and its arm CTL-G-RETRO grades the release check against a tag
 # the repository actually shipped without its entry. Both need history deeper than a single
 # commit, which is why .github/workflows/corpus-hygiene.yml sets fetch-depth: 0 and says why —
