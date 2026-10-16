@@ -29,8 +29,8 @@ checks are later slices.
 
 **What comes back beside the profile.**
 `reference/adr/ADR-046-interview-rating-and-engagement-record.md` decides the return. Once the form
-has been given back — or, where the session can write, once its entry is written — the traveller is
-asked to rate the interview from one to five, and may skip. Only the number they said is recorded,
+has been given back — or, where the session can write, at its ending — the traveller is asked to
+rate the interview from one to five, and may skip. Only the number they said is recorded,
 and a missing reply costs the rating and nothing else. Beside the rating comes an engagement record:
 the interviewer's own account of its turns, as identifiers and counts — which questions it asked,
 and how many further turns of each kind it took on each — holding no word anyone said. A section of

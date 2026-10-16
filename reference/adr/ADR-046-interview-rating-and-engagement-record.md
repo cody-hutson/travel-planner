@@ -1,4 +1,4 @@
-# ADR-046: What comes back beside the profile — a rating asked after the give-back, an engagement record of identifiers and counts, a tagged return and a governed class, superseding ADR-040 D1 and ADR-022 D1.1 in part
+# ADR-046: What comes back beside the profile — a rating asked at the end, an engagement record of identifiers and counts, a tagged return and a governed class, superseding ADR-040 D1 and ADR-022 D1.1 in part
 
 - **Status:** Proposed
 - **Deciders:** repo maintainer
@@ -6,8 +6,9 @@
   its return card (#1768), cut from the interviewer epic (#1205) at that epic's refinement as the
   decision gate for the data half of the interviewer's conversation model. The operator rendered
   the decisions below at that card's Collective Review, in a first sitting and a confirm sitting,
-  and ruled afterwards on what a pooled row counts where a section repeats a block. This record
-  transcribes them.
+  ruled afterwards on what a pooled row counts where a section repeats a block; and ruled at Dev
+  Testing on what the tag marks, a rating with no engagement record, what every pooled section
+  counts, and a reply that names no one number. This record transcribes them.
 - **What this record is.** A decision about **what comes back beside the profile after an
   interview, in what shape, and where it is kept**: how the traveller's rating of the interview is
   asked; what the engagement record — the interviewer's account of its own turns — may hold; how
@@ -343,9 +344,9 @@ D1.1 in part, as to no new artifact class.** Every other decision of both record
 
 ### D1 — how the rating is asked
 
-**The rating is asked after the give-back — or, where the session can write, after its entry is
-written — in one turn: a whole number from one to five, with the ends named, and skipping is fine.
-Only the number the person said is recorded.**
+**The rating is asked after the give-back — or, where the session can write, at its ending — in
+one turn: a whole number from one to five, with the ends named, and skipping is fine. Only the
+number the person said is recorded.**
 
 1. **When.** On a channel that cannot write, after the form's block has been given back with the
    instruction to send it back. On one that can, after the session's entry has been written at its
@@ -376,7 +377,7 @@ Only the number the person said is recorded.**
    names no one number of the scale — none, more than one, or one off it — is a reply that names no
    number, and the numbers are offered again once. A skip is taken at once. **A silence records
    nothing and is offered nothing, and it is not a silence `ADR-022` D5.5 counts**: the form's block
-   has already been given, or the entry written, and the session has nothing left to protect.
+   has already been given, or the ending reached, and the session has nothing left to protect.
 10. **What is recorded.** The number the person said, as a digit or as its word; or a skip mark,
     where they uttered a skip; or nothing. Never a number inferred from words, tone or how the
     session went, and never the nearest number.
@@ -437,14 +438,14 @@ interviewer's account of its own turns. The rating is not part of it.
    and label as `ADR-022` D6.3 and that record's R8 read it. It is never read from a list of names
    in this record, the card or the save, so a field newly typed `PERSON` is covered with no edit.
    **A section that holds any `PERSON`-class field is one row for the section, pooling every field
-   of it that was put, and saying how many it pools.** **Every pooled section counts the distinct
-   labels the form prints for it, whether or not they were asked, and the count does not grow with
-   the number of entries a person gave**: where such a section repeats a block — the person form's
-   needs section, one block for each need — a pooled row does not show how many needs a person
-   listed. **The pooling is the writer's act, at the write.** A recipient's assistant holds no
-   classification, so the section it gives back has a row for every field it put; the block around
-   it holds those fields' answers themselves, so the rows add nothing to what is in transit. What
-   rests in the class's home is pooled.
+   of it that was put, and saying a count of the section's labels.** **Every pooled section counts
+   the distinct labels the form prints for it, whether or not they were asked, and the count does
+   not grow with the number of entries a person gave**: where such a section repeats a block — the
+   person form's needs section, one block for each need — a pooled row does not show how many needs
+   a person listed. **The pooling is the writer's act, at the write.** A recipient's assistant holds
+   no classification, so the section it gives back has a row for every field it put; the block
+   around it holds those fields' answers themselves, so the rows add nothing to what is in transit.
+   What rests in the class's home is pooled.
 5. **What a count lets a reader infer, said so it can be seen.** Under *a traveller answer is a
    value of a field of a form*, the record holds none, and no word anyone said. It does hold
    something else. **Each counted kind is defined, in the conduct record, by what the person had
@@ -483,9 +484,9 @@ field. Nothing else is a value or a row. **Its inputs:** the form the entry name
 pooling, the classification, read live. **One worked example.** A session on the person form puts
 the passport field and the other fields of its section, puts fields elsewhere, and puts nothing in
 the needs section. The entry's ledger has a row of its own for each field put elsewhere, and one
-row for the passport field's section, which says how many fields it pools and counts one silence
-re-offer. Nothing in the entry says which of them the silence fell at. Had the session put the
-needs section, that section's row would read the same whether the person listed one need or
+row for the passport field's section, which says its count of the section's labels and counts one
+silence re-offer. Nothing in the entry says which of them the silence fell at. Had the session put
+the needs section, that section's row would read the same whether the person listed one need or
 several.
 
 *Supersedes:* nothing.
@@ -497,7 +498,7 @@ write path — and to nothing about the assistant.**
 
 | Tier | How the return reaches its home |
 |---|---|
-| **W** — the session can write | Nothing is returned. At an ending D1 names, the session writes the entry — its engagement record — to the class's home; then it asks the rating, and a rating given or skipped is written into that entry, or makes it where the record was declined. A session that ends on a second silence, or is left, writes no entry |
+| **W** — the session can write | Nothing is returned. At an ending D1 names, the session writes the entry — its engagement record — to the class's home, unless the record was declined; then it asks the rating, and a rating given or skipped is written into that entry, or makes it where the record was declined. A session that ends on a second silence, or is left, writes no entry |
 | **T** — no write path, and text can be returned | One fenced block, and no other block: the form as `ADR-040` D1 has it above its end-of-profile heading; that heading; and below it the return's tagged section, holding the engagement record. The instruction to send the block back is given with it. Then the rating ask. Then the rating, as a tagged line of its own, to be sent back with the block |
 | **refuse** | No interview runs, so nothing returns |
 
@@ -522,7 +523,7 @@ write path — and to nothing about the assistant.**
 5. **Its place, as the card asks for it:** below the end-of-profile heading, which the block now
    carries. Never above it. On the trip form the last line above that heading is one the merge
    finds by its place and not by a label.
-6. **What the save does with it.** The save finds the tagged part, checks the engagement record
+6. **What the save does with it.** The save finds the tagged section, checks the engagement record
    against its closed vocabulary, pools it (D2), attaches the tier, the date and the subject's
    key, writes the entry, and says what it kept. **It never touches the profile's merge on the
    return's account**: the merge is never changed, delayed or refused for it, and nothing of the
@@ -548,9 +549,9 @@ write path — and to nothing about the assistant.**
     name.
 11. **A person-form interview, on a channel that cannot write.** The operator saves the person
     record by hand, as today (`ADR-040` D2), and hands the returned text to the save **for the
-    return alone**. The save finds the tagged part, checks it, pools it and writes the entry. **It
-    writes nothing of the record.** *"A returned block"*, in D2's *"no rule of that command admits
-    a verb to write a returned block into the store"*, is read as the form's block, so that
+    return alone**. The save finds the tagged section, checks it, pools it and writes the entry.
+    **It writes nothing of the record.** *"A returned block"*, in D2's *"no rule of that command
+    admits a verb to write a returned block into the store"*, is read as the form's block, so that
     decision stands and takes no mark. Measured at `5d50eb5`, every `PERSON`-class field is on
     that form, so this is where the pooling does its work on such a channel.
 12. **For each assistant the voice-mode finding measured.** That set is one cell, `claude-ios`.
@@ -759,7 +760,7 @@ change.
 - **On a route that writes, the session holds its own turn counts until its ending**, and a
   session that ends on silence, or is left, leaves no rating and no entry. The sessions most worth
   reading are the ones this loop sees least.
-- **"How long" understates the asking on a section that repeats a block**, and a pooled row does
+- **"How long" for a pooled section is its further turns only**, and a pooled row does
   not identify the turns behind a low rating on its own section.
 - **The scale, *low* and the endings are judgment.** No measurement bears on them, and *low* rests
   on one inference.
@@ -848,9 +849,9 @@ why no rating is ever inferred.
 
 ## Residuals
 
-Every residual has an owner that is a card or the operator. The numbers are the design's, kept so
-that a readiness input and this table name one thing by one number; a number missing from the run
-is a residual a ruling overtook.
+Every residual has an owner that is a card or the operator. The numbers up to `RR-31` are the
+design's, and the later ones follow on from them; all are kept so that a readiness input and this
+table name one thing by one number; a number missing from the run is a residual a ruling overtook.
 
 | # | Residual | Owner |
 |---|---|---|
@@ -864,15 +865,15 @@ is a residual a ruling overtook.
 | RR-7 | **A session that ends on silence, or is left, has no rating and no entry.** Where the session cannot write this is a limit; where it can, it is chosen (D0, D3) | the operator |
 | RR-8 | **The scale, *low* and the endings rest on no measurement**, and *low* on one inference | the operator; read again when the conduct pass graded on the rating reports (#1330) |
 | RR-9 | **A number said aloud may be transcribed as another word.** Narrowed by the leave to type it, and by the line the person can read | #1327 |
-| RR-11 | **No dependency edge holds the card that builds the class behind the synthetic suite its checks join** (#1769) | #1770, at its own planning |
-| RR-12 | **The build card's stated blast radius and reversibility are overtaken.** It describes a change contained to the interview's ending and the save path; it builds a class, with a row in each root | #1770, at its own planning |
+| RR-11 | **Nothing holds the change that adds the class behind the conduct's synthetic suite, which its checks join** | #1770, at its own planning |
+| RR-12 | **A held card's stated blast radius and reversibility are overtaken.** It describes a change contained to the interview's ending and the save path; the class has a row in each root | #1770, at its own planning |
 | RR-13 | **Nothing says which conduct produced a rating.** The card carries no revision of its own, so ratings from before and after a change to the conduct cannot be told apart | #1770 |
 | RR-14 | **The interim.** From the merge that lands this record, `ADR-040` D1 carries a mark while the card returns nothing from the heading down, and `ADR-022` D1.1 carries one while no class exists | #1770 |
 | RR-15 | **`.approvers`, `.approvals`, `.change-confirmed` and `.published-itinerary`, in a trip's directory, are in no row of the data architecture's closed enumeration**, measured at `5d50eb5`. The class decided here does not add to that | the operator; outside this record's scope |
 | RR-16 | **The message a returned block travels in, and the assistant's own history,** hold the return and are in no row of the reach table — the same class at the same boundary as the answers (`ADR-022` D6.4) | #1770 |
 | RR-17 | **A run of `erase` interrupted before the class's row** leaves the subject's file of entries standing, and the next run reads the trip as already erased — the residue the reach table already states for the approval sidecars' row | #1770 |
 | RR-18 | **The name.** *Engagement* is used in more than one sense across the records | the operator |
-| RR-19 | **Held cards quote text this record overtakes.** The build card says the rating is asked once, at the end, which differs from D1 by one further offer; that the record comes back beside the profile on the route that writes, where nothing comes back and it is written; and that the record identifies the interviewer turns behind a rating, which a pooled row does not do for its own section. The epic's eleventh criterion says no traveller answer beyond what the profile holds, which D2 reads under a stated definition | #1770, at its own planning; the operator, for the epic's criterion (#1205) |
+| RR-19 | **Held cards quote text this record overtakes.** One says the rating is asked once, at the end, which differs from D1 by one further offer; that the record comes back beside the profile on the route that writes, where nothing comes back and it is written; and that the record identifies the interviewer turns behind a rating, which a pooled row does not do for its own section. The epic's eleventh criterion says no traveller answer beyond what the profile holds, which D2 reads under a stated definition | #1770, at its own planning; the operator, for the epic's criterion (#1205) |
 | RR-20 | **The status-lag report the marks cause**: `ADR-040` and `ADR-022` are Accepted and cite this record while it is `Proposed` | the operator; the change that sets this record `Accepted` clears it |
 | RR-21 | **Whether a session that ends on silence gives the form back** is not stated on the card; and a non-reply at the rating ask is a case its runs should include | #1327 |
 | RR-22 | **What the checks on this record's rules need declared**: the reply at the rating ask; a traveller who rates low; a returned block in each case of the declared outcome; and a person-form conversation that puts a `PERSON`-class field | #1770 |
