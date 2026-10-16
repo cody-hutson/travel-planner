@@ -83,6 +83,12 @@ carries no merge SHA and no tag, so nothing in it has to wait for the merge.
    and re-dating at merge time would put back the post-merge touch this section exists to remove.
    An entry's date can therefore be a day or two earlier than its tag; entries before `0.12.0`
    predate this rule.
+   **The entry also says what moved in the size fence this release**, read from what
+   `CH_EMIT=growth ./scripts/test-corpus-hygiene.sh` prints before the entry's prose is final,
+   and the decision taken on it — a row re-pinned, and why, or a section relocating, with its
+   issue filed and linked — or it says that nothing moved worth naming; at the release that
+   seeds `reference/size-fence.md` every row is new, so nothing moved against an earlier fence,
+   and the entry says so.
    **Stamp the version last.** Draft the entry's prose whenever it suits the work, but write
    the `## [X.Y.Z]` heading itself in the last commit before the merge, with the version
    checked unclaimed at that moment. Until the merge the entry is an ordinary branch
