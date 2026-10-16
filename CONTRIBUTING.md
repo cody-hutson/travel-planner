@@ -83,6 +83,12 @@ carries no merge SHA and no tag, so nothing in it has to wait for the merge.
    and re-dating at merge time would put back the post-merge touch this section exists to remove.
    An entry's date can therefore be a day or two earlier than its tag; entries before `0.12.0`
    predate this rule.
+   **The entry also says what moved in the size fence this release**, read from what
+   `CH_EMIT=growth ./scripts/test-corpus-hygiene.sh` prints before the entry's prose is final,
+   and the decision taken on it — a row re-pinned, and why, or a section relocating, with its
+   issue filed and linked — or it says that nothing moved worth naming; at the release that
+   seeds `reference/size-fence.md` every row is new, so nothing moved against an earlier fence,
+   and the entry says so.
    **Stamp the version last.** Draft the entry's prose whenever it suits the work, but write
    the `## [X.Y.Z]` heading itself in the last commit before the merge, with the version
    checked unclaimed at that moment. Until the merge the entry is an ordinary branch
@@ -120,7 +126,10 @@ those records. Write it when the PR opens and leave it that way: a later slice, 
 remediation round or a re-review belongs where the rest of its stage's detail
 already lives, or in a comment on the PR — not appended to the body. Appending
 makes the body a moving target for whoever is reviewing it, and stores a second
-copy of something that was never at risk of being lost.
+copy of something that was never at risk of being lost. The only addition the body
+takes after the PR opens is an integration note that the integration-note check
+(`.github/workflows/integration-note.yml`) asks for, because that check reads the
+body and nothing else.
 
 **Nothing in a release is committed to `main` directly** — not the CHANGELOG, not
 anything else. A direct push to `main` skips the pull-request requirement and all

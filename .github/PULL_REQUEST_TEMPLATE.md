@@ -21,6 +21,16 @@
 - [ ] Markdown links resolve (local files exist; external links load)
 - [ ] No personal data, secrets, or private-repo references introduced
 
+## Integration note
+
+<!-- Asked for only when .github/workflows/integration-note.yml flags a file: a large addition to -->
+<!-- an existing tracked markdown file that deletes little. Say what this change removed, merged -->
+<!-- or superseded to make room, or say in a sentence why nothing could be. Left as these -->
+<!-- comments, the section reads as empty; the check reads that a note is there, never whether it is true. -->
+<!-- A heading of any level ends this section: write the note as plain lines. -->
+<!-- Write it when the pull request opens. To know before opening whether one is asked for, run -->
+<!-- ./scripts/check-integration-note.py --check --base origin/main --head HEAD --body-file <draft body> -->
+
 ---
 
 ### Issue References

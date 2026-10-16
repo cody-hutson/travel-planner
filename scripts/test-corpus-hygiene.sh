@@ -378,8 +378,52 @@
 #        FAIL — the state of a tree in which no number has been taken since the floor. Arm
 #        CTL-I-VACUOUS drives the verdict stage itself over that state and requires exactly
 #        that rendering; arm CTL-I-VACUOUS-NOT requires a populated register to render PASS.
+#   K    THE SIZE FENCE. Every tracked markdown file that owes a row under
+#        reference/load-class-model.md — its class by the rule of its § 4, its instrument and
+#        floor from the load-class-parameters fence after the growth-property step of its § 5 —
+#        carries a byte ceiling in the size-ceiling fence in reference/size-fence.md, and is held
+#        to it: a file over its ceiling is K1, a file that owes a row and has none is K2, and a
+#        row the fence cannot hold a file to — a path the tree does not hold, a ceiling that is not
+#        a whole number, a path written twice — is K3. The classification is this file's own
+#        reading of that rule, written from its text: a tracked markdown file no clause reaches is
+#        K4, and a class whose instrument is row or constant and which holds no file is K5. The
+#        rule counts a path anywhere, fenced lines included, so every row cites the file it names;
+#        the rule therefore runs a second time with the size-ceiling fence's own lines taken out
+#        of reference/size-fence.md, and a file classified the first time and unclassified the
+#        second is classified only by its own row, which is K8. Arm CTL-SIZE-RETRO replays the
+#        per-file classification recorded at the declaration's own commit, which this file
+#        carries as a table and never regenerates.
+#
+#        NOTHING OF THE DECLARATION IS COPIED HERE. Floors, headroom and instruments are read from
+#        the load-class-parameters fence on every run; a value outside its grammar or a missing key
+#        is K0, as an absent or rowless size fence is, and K0 withholds the rest. A row is a
+#        ceiling — the file's size plus its class headroom when the row was written — and
+#        CH_EMIT=growth prints each row's re-pin value beside the file's size.
+#
+#        CEILING-ONLY: NO CODE COMPARES A SIZE WITH A LOWER BOUND. A size is compared only with a
+#        ceiling, so a file getting smaller reaches a code only through what the removed text
+#        said — a citation, a frontmatter key or a digest row the classification reads, a heading
+#        or a fence line, or a row of the fence itself — and never through its size. A row for a
+#        file that has fallen below its floor, or that the declaration no longer holds to a row,
+#        is reported as UNOWED on every run and never failed, because failing it would make a
+#        reduction red.
+#
+#        THE LETTER IS WRITTEN IN FOUR PLACES: the CH_SIZE_LETTER line, the emission sites in
+#        load-class.awk and size.awk, this entry, and the group's entry in
+#        .github/workflows/corpus-hygiene.yml. Everything else composes the code from the
+#        constant. Group Y reads the first two: a site missed in either leaves a code with no arm
+#        or an arm naming a code nothing emits, and Y1 fails. It reads neither of the last two,
+#        and nothing else holds them to the letter. The letter is kept as it is and is never
+#        re-lettered.
+#
+#        THE FIRST-VERB READ IS HELD TWICE. A file the rule classes first-read is bounded by its
+#        row and by CH_FIRST_READ_CEILING, and fails above the lower of the two: over the constant
+#        is K6. Its row is held equal to the constant, and a row that differs from it, above or
+#        below, is K7, so the two cannot silently disagree, and only an edit to the constant
+#        raises that file's ceiling.
 #   CTL  a synthetic fixture tree, built in a temp dir ON EVERY RUN, plus the arms whose ids
-#        end -RETRO, each replaying a defect this repository actually shipped. One MUST-FIRE
+#        end -RETRO, each replaying this repository's own history — a defect it actually
+#        shipped or, for CTL-SIZE-RETRO, the per-file classification it recorded. One MUST-FIRE
 #        arm per finding code this file can emit, alongside the specificity arms that tell a
 #        correct implementation from a lookalike. A code with no arm is a check
 #        indistinguishable from one that CANNOT fire.
@@ -445,11 +489,14 @@
 # ── ONE DEPENDENCY ON REPOSITORY HISTORY, STATED ─────────────────────────────────
 # The suite reads this repository's history as blobs and as tags, and both arrive through the
 # same checkout. Every arm whose id ends -RETRO reads a blob from a commit in that history: it
-# is the arm that tests its class's detector against a defect the repository actually shipped
-# rather than one this file wrote, and it is therefore the arm worth keeping honest. Arm
-# CTL-RETRO replays class C's shipped defect, CTL-E-RETRO class E's, CTL-F-RETRO class F's, and
-# CTL-H-RETRO and CTL-H5-RETRO class H's — the fence that left entries unnamed, and the map row
-# that named them. Each of those two reads its revision's tree listing as well as its blobs.
+# holds its class's detector to something the repository actually produced rather than to a
+# fixture this file wrote — a defect it shipped or, for one arm, a classification it recorded —
+# and it is therefore the arm worth keeping honest. Arm CTL-RETRO replays class C's shipped
+# defect, CTL-E-RETRO class E's, CTL-F-RETRO class F's, and CTL-H-RETRO and CTL-H5-RETRO class
+# H's — the fence that left entries unnamed, and the map row that named them. Each of those two
+# reads its revision's tree listing as well as its blobs. Arm CTL-SIZE-RETRO is the size group's,
+# and the one that replays a record: the per-file classification recorded at the commit that
+# declared the load classes, which it reproduces from that revision's tree listing and blobs.
 # Group G reads the release tags, and its arm CTL-G-RETRO grades the release check against a tag
 # the repository actually shipped without its entry. Both need history deeper than a single
 # commit, which is why .github/workflows/corpus-hygiene.yml sets fetch-depth: 0 and says why —
@@ -519,6 +566,30 @@ CH_H_DIR='reference'
 CH_H_MAP='README.md'
 CH_H_RETRO_REV='54df1bfe8c7ce91cac002cb6b3c4619935c00fc1'
 CH_H_MAP_RETRO_REV='a49a66639bba0ffd60ad47d6c17aad5369ee2b52'
+# The size group's surfaces: the document that carries the size-ceiling fence and that fence's tag;
+# the declaration whose load-class-parameters fence every floor, headroom and instrument is read
+# from, and that fence's tag; the revision whose per-file classification arm CTL-SIZE-RETRO replays
+# — the commit that added the declaration; and the letter the group's codes carry. Named once, and
+# read from nowhere else.
+CH_SIZE_DOC='reference/size-fence.md'
+CH_SIZE_TAG='size-ceiling'
+CH_SIZE_PARAM_DOC='reference/load-class-model.md'
+CH_SIZE_PARAM_TAG='load-class-parameters'
+CH_SIZE_RETRO_REV='cb33116bbb5fee4be88fe73708ebcadfe94ec708'
+CH_SIZE_LETTER='K'
+# The first-verb read's ceiling. Every file reference/load-class-model.md § 4 classes first-read —
+# the charter, which every verb reads once per invocation before it acts — is bounded by this byte
+# count as well as by its row in the size-ceiling fence, and fails above the lower of the two. It
+# is a ceiling on that read, not an always-loaded budget: in the decided posture the engine is an
+# installed capability, and the charter is read by a verb rather than loaded when a session starts
+# (reference/adr/ADR-021-installable-capability.md, Decision 1, as amended). It is a CONSTANT of
+# the detector, deliberately not an environment knob: a gate whose strictness can be set by the
+# caller is not a gate. It is changed by editing the line below, in a diff someone reviews, and
+# that is the point — the file's row is held equal to it, so a row moved on its own fails, and
+# re-pinning that row writes this line to the same value in the same change. It was seeded at the
+# file's size plus the headroom the load-class-parameters fence declares for its class, and is
+# re-derived the same way when it is moved on purpose.
+CH_FIRST_READ_CEILING='147230'
 
 pass=0; fail=0; skip=0; vacuous=0; SKIPPED=""; VACUOUS_IDS=""
 PASS()    { printf '  \033[1;32mPASS\033[0m %s\n' "$*"; pass=$((pass+1)); }
@@ -2414,6 +2485,668 @@ function numof(b,   k) { k = b; sub(/^ADR-/, "", k); sub(/-.*$/, "", k); return 
 function pad(n) { return sprintf("%03d", n + 0) }
 AWK
 
+# ── load-class.awk — the classification rule of reference/load-class-model.md § 4, and § 5's instrument step ──
+cat > "$WORK/load-class.awk" <<'AWK'
+# THREE INPUTS, split BY FILENAME for the reason d.awk records — an empty one is an ordinary case in a
+# fixture, and `FNR == NR` would read the next file as the first:
+#   PFILE  the load-class-parameters rows as "<class.parameter>\t<value>", extracted by fence.awk
+#   AFILE  every tracked path of the graded tree, one to a line; the directories are derived from it
+#   MFILE  "<bytes>\t<path>" for every tracked markdown file; each text is read from ROOT in END
+# -v ROOT=<dir> -v PDOC=<1 when the declaration is readable> -v STRIP=<a path, or empty>
+# -v STRIPTAG=<a fence tag>. With STRIP set, that file's text is read with the fence tagged STRIPTAG
+# taken out, its opening and closing lines included: the second pass the size group runs to find a
+# file that nothing but its own row classifies.
+#
+# WRITTEN FROM THE RULE'S TEXT, term by term and clause by clause, and held to the per-file
+# classification recorded at the declaration's own commit by arm CTL-SIZE-RETRO. Each term is read as:
+#   path token   each maximal run of [A-Za-z0-9_./-] that does not open with a slash, cut at its first
+#                empty segment, one trailing full stop dropped; the character after the cut is kept
+#                for the wildcard rule. The text after each ${CLAUDE_SKILL_DIR}/ and each
+#                <engine-root>/ is read the same way, as a skill-directory and an engine-root token
+#   resolves     . and .. normalised, and a result above the root is nothing. A plain token against
+#                the root when a tracked file or a derived directory stands there, and otherwise
+#                against the holder's directory; an engine-root token against the root alone; a
+#                skill-directory token against the directory of each skill surface the holder is
+#                bundled with, a skill surface being bundled with itself. A token ending in a slash
+#                is a directory, any other a file
+#   cites        a file token anywhere, fenced lines included, resolving to a tracked markdown file
+#                other than the holder
+#   names        cites, and a directory token on a prose line whose next character is not *, ? or [,
+#                naming every tracked markdown file directly in that directory but the holder
+#   fenced       a line whose first non-blank characters are three backticks toggles the mask, and is
+#                itself fenced; prose is every other line outside a fence
+#   frontmatter  a first line that is exactly ---, to the next line opening ---. A key is a run of
+#                letters, digits, underscore and hyphen, then optional blanks and a colon, and its
+#                value is trimmed. A skill surface carries name and description; its flag is set when
+#                disable-model-invocation reads exactly true
+#   bundled      from each skill surface, skill-directory file tokens followed through the surface and
+#                every file already bundled with it, adding each tracked markdown file reached that is
+#                not itself a skill surface, until nothing is added
+#   pinned       a line inside a fence opening on exactly three backticks and frozen-witness-digest and
+#                closing on exactly three backticks, carrying a run of forty hexadecimal digits bounded
+#                by non-hex characters, one of whose file tokens resolves to the file
+#   release      at least one unfenced line opening "## ", and every such line opening "## [" with a
+#   entries      version of three dot-separated numbers and then "]", or "## [Unreleased]"
+# The clauses are § 4's, in its order, the first that holds deciding: listed; first-read — named on
+# a line of a skill surface whose first non-blank text is Contract:; typed; dispatched — named in the
+# Prompt File cell of a table that a file of the three classes above carries, read as a prose line,
+# from the row after the header naming that column through each consecutive row that is not a
+# separator; on-demand — named by an instruction surface, a file of the four classes above or one
+# bundled with a skill surface; fixture — an artifact key, or pinned; release-log; browsed — a
+# reserved basename, or cited by another tracked markdown file. The instrument is none for a file
+# that is pinned or carries release entries, whatever its class, and its class's otherwise. A row is
+# owed when the instrument is row or constant and the size is at or above the class floor.
+#
+# NO VALUE OF THE DECLARATION IS WRITTEN HERE. Each class's four parameters are required, each in its
+# grammar — instrument row, constant or none; floor a whole number; headroom a whole number then a
+# percent sign; band the word headroom; and any of the last three a hyphen where the instrument is
+# none. A key that is missing, written twice or outside its grammar is K0, naming the key. The class
+# names are the rule's own terms and are written here; nothing else of the declaration is.
+#
+# Emits one CLASS line per tracked markdown file, in input order:
+#   CLASS <class> <instrument> <owed> <bytes> <floor> <headroom-percent> <path>
+# where <owed> is row or -, and <floor> and <headroom-percent> are - unless the class's instrument
+# applies; one TALLY line per class in § 3's order, then the unclassified; and
+#   FINDING K4 <bytes> <path>          a tracked markdown file no clause reaches
+#   FINDING K5 <class> <instrument>    a class whose instrument is row or constant, holding no file
+# On a surface that is not a measurement it emits EXACTLY ONE K0 naming the first cause it met, and
+# nothing else but the DENOM, so no class is ever printed over a reading that did not happen:
+#   FINDING K0 <cause>
+# ALWAYS one DENOM CLASS <files> <parameter rows> <unclassified> <owing a row> <measured: 1 or 0>.
+BEGIN {
+  NC = split("listed first-read typed dispatched on-demand fixture release-log browsed", CL, " ")
+  split("instrument floor headroom band", PA, " ")
+  split("README.md CONTRIBUTING.md SECURITY.md PULL_REQUEST_TEMPLATE.md", RV, " ")
+  for (k in RV) RESERVED[RV[k]] = 1
+  SKM = "${CLAUDE_SKILL_DIR}/"; ERM = "<engine-root>/"
+}
+FILENAME == PFILE {
+  split($0, f, "\t")
+  if (f[1] == "") next
+  npar++
+  if (f[1] in P) TWICE[f[1]] = 1
+  P[f[1]] = f[2]
+  next
+}
+FILENAME == AFILE {
+  if ($0 == "") next
+  FILES[$0] = 1
+  d = $0
+  while (sub("/[^/]*$", "", d)) DIRS[d] = 1
+  next
+}
+FILENAME == MFILE {
+  split($0, f, "\t")
+  if (f[2] == "") next
+  nmd++; MP[nmd] = f[2]; MB[f[2]] = f[1] + 0; MD[f[2]] = nmd
+  d = f[2]; if (!sub("/[^/]*$", "", d)) d = ""
+  DN[d]++; DM[d, DN[d]] = f[2]
+  next
+}
+END {
+  cause = ""
+  if (nmd + 0 == 0)          cause = "no-tracked-markdown-read"
+  else if (PDOC + 0 != 1)    cause = "parameter-document-absent"
+  else if (npar + 0 == 0)    cause = "parameter-fence-rowless"
+  else for (c = 1; c <= NC && cause == ""; c++) cause = badclass(CL[c])
+  if (cause != "") {
+    printf "FINDING K0 %s\n", cause
+    printf "DENOM CLASS %d %d 0 0 0\n", nmd + 0, npar + 0
+    exit
+  }
+
+  for (i = 1; i <= nmd; i++) readfile(MP[i])
+
+  # The skill surfaces, then each one's bundle.
+  for (i = 1; i <= nmd; i++) {
+    H = MP[i]
+    if (!(((H, "name") in FM) && ((H, "description") in FM))) continue
+    SK[H] = 1; SKL[++nsk] = H
+    FLAG[H] = (((H, "disable-model-invocation") in FM) && FM[H, "disable-model-invocation"] == "true")
+  }
+  for (s = 1; s <= nsk; s++) {
+    S = SKL[s]; SD = dirof(S)
+    nq = 1; Q[1] = S
+    for (qi = 1; qi <= nq; qi++) {
+      F = Q[qi]
+      for (k = 1; k <= SHN[F] + 0; k++) {
+        n = SHI[F, k]
+        if (SR[n] == "P" || SR[n] == "D" || substr(ST[n], length(ST[n]), 1) == "/") continue
+        r = norm(SD == "" ? ST[n] : SD "/" ST[n])
+        if (r == "" || !(r in MD) || (r in SK) || ((r, S) in BUND)) continue
+        BUND[r, S] = 1; BUNDLED[r] = 1; Q[++nq] = r
+      }
+    }
+  }
+  # A skill-directory token resolves against the directory of each surface its holder is bundled
+  # with, so it is resolved here, once the bundles are known.
+  for (n = 1; n <= ns; n++) {
+    H = SH[n]
+    for (s = 1; s <= nsk; s++) {
+      S = SKL[s]
+      if (S != H && !((H, S) in BUND)) continue
+      SD = dirof(S)
+      r = norm(SD == "" ? ST[n] : SD "/" ST[n])
+      if (r != "") note(H, r, substr(ST[n], length(ST[n]), 1) == "/", SP[n], SX[n], SR[n])
+    }
+  }
+  for (i = 1; i <= nmd; i++) { H = MP[i]; for (k = 1; k <= KN[H, "f"] + 0; k++) CITED[KL[H, "f", k]] = 1 }
+
+  # The clauses, in order. A clause only ever classes a file no earlier clause has.
+  for (i = 1; i <= nmd; i++) { H = MP[i]; if ((H in SK) && !FLAG[H]) CLS[H] = "listed" }
+  for (s = 1; s <= nsk; s++) mark(SKL[s], "C", "first-read")
+  for (i = 1; i <= nmd; i++) { H = MP[i]; if (!(H in CLS) && (H in SK) && FLAG[H]) CLS[H] = "typed" }
+  for (i = 1; i <= nmd; i++) {
+    H = MP[i]; c = (H in CLS) ? CLS[H] : ""
+    if (c == "listed" || c == "first-read" || c == "typed") mark(H, "P", "dispatched")
+  }
+  for (i = 1; i <= nmd; i++) {
+    H = MP[i]; c = (H in CLS) ? CLS[H] : ""
+    if (c == "listed" || c == "first-read" || c == "typed" || c == "dispatched" || (H in BUNDLED)) ISURF[H] = 1
+  }
+  for (i = 1; i <= nmd; i++) { H = MP[i]; if (H in ISURF) mark(H, "", "on-demand") }
+  for (i = 1; i <= nmd; i++) {
+    H = MP[i]
+    if (H in CLS) continue
+    b = H; sub(/^.*\//, "", b)
+    if (((H, "artifact") in FM) || (H in PIN))  CLS[H] = "fixture"
+    else if (H in RELENT)                        CLS[H] = "release-log"
+    else if ((b in RESERVED) || (H in CITED))    CLS[H] = "browsed"
+  }
+
+  for (i = 1; i <= nmd; i++) {
+    H = MP[i]
+    if (!(H in CLS)) {
+      nun++
+      printf "CLASS unclassified - - %d - - %s\n", MB[H], H
+      printf "FINDING K4 %d %s\n", MB[H], H
+      continue
+    }
+    c = CLS[H]; NIN[c]++
+    ins = ((H in PIN) || (H in RELENT)) ? "none" : P[c ".instrument"]
+    fl = "-"; pc = "-"; ow = "-"
+    if (ins == "row" || ins == "constant") {
+      fl = P[c ".floor"]; pc = P[c ".headroom"]; sub(/%$/, "", pc)
+      if (MB[H] >= fl + 0) { ow = "row"; nowed++ }
+    }
+    printf "CLASS %s %s %s %d %s %s %s\n", c, ins, ow, MB[H], fl, pc, H
+  }
+  for (c = 1; c <= NC; c++) {
+    printf "TALLY %s %d\n", CL[c], NIN[CL[c]] + 0
+    ins = P[CL[c] ".instrument"]
+    if ((ins == "row" || ins == "constant") && NIN[CL[c]] + 0 == 0) printf "FINDING K5 %s %s\n", CL[c], ins
+  }
+  printf "TALLY unclassified %d\n", nun + 0
+  printf "DENOM CLASS %d %d %d %d 1\n", nmd, npar, nun + 0, nowed + 0
+}
+# badclass — the first parameter of one class that is missing, written twice or outside its
+# grammar, as a K0 cause; empty when all four read.
+function badclass(c,   q, k, v, ins, ok) {
+  if (!((c ".instrument") in P)) return "parameter-unreadable:" c ".instrument"
+  ins = P[c ".instrument"]
+  for (q = 1; q <= 4; q++) {
+    k = c "." PA[q]
+    if (!(k in P) || (k in TWICE)) return "parameter-unreadable:" k
+    v = P[k]
+    if (q == 1)        ok = (v == "row" || v == "constant" || v == "none")
+    else if (v == "-") ok = (ins == "none")
+    else if (q == 2)   ok = (v ~ /^[0-9]+$/)
+    else if (q == 3)   ok = (v ~ /^[0-9]+%$/)
+    else               ok = (v == "headroom")
+    if (!ok) return "parameter-unreadable:" k
+  }
+  return ""
+}
+# readfile — one tracked markdown file, line by line: its frontmatter, its fence mask, its pin lines,
+# its second-level headings, its Contract: lines and its Prompt File cells, and every path token in it.
+function readfile(H,   HD, fn, line, ln, fz, t, infm, pin, strip, col, n, cells, q, c, prose, ispin, k, v, nh, okh) {
+  HD = dirof(H); fn = ROOT "/" H
+  ln = 0; fz = 0; infm = 0; pin = 0; strip = 0; col = 0; nh = 0; okh = 1
+  while ((getline line < fn) > 0) {
+    if (STRIP != "" && H == STRIP) {
+      if (!strip && line == "```" STRIPTAG) { strip = 1; continue }
+      if (strip) { if (line == "```") strip = 0; continue }
+    }
+    ln++
+    if (ln == 1) infm = (line == "---")
+    else if (infm) {
+      if (substr(line, 1, 3) == "---") infm = 0
+      else if (match(line, /^[A-Za-z0-9_-]+[ \t]*:/)) {
+        k = substr(line, 1, RLENGTH - 1); sub(/[ \t]+$/, "", k)
+        v = substr(line, RLENGTH + 1); sub(/^[ \t]+/, "", v); sub(/[ \t]+$/, "", v)
+        if (!((H, k) in FM)) FM[H, k] = v
+      }
+    }
+    t = line; sub(/^[ \t]+/, "", t)
+    if (substr(t, 1, 3) == "```") { fz = !fz; prose = 0 } else prose = !fz
+    ispin = 0
+    if (!pin) { if (line == "```frozen-witness-digest") pin = 1 }
+    else if (line == "```") pin = 0
+    else ispin = hex40(line)
+    if (prose && substr(line, 1, 3) == "## ") {
+      nh++
+      if (line !~ /^## \[[0-9]+\.[0-9]+\.[0-9]+\]/ && line !~ /^## \[Unreleased\]/) okh = 0
+    }
+    scan(line, prose, (substr(t, 1, 9) == "Contract:") ? "C" : "", H, HD)
+    if (ispin) scan(line, 0, "D", H, HD)
+    if (!(prose && substr(t, 1, 1) == "|")) { col = 0; continue }
+    n = split(line, cells, "|")
+    if (col == 0) {
+      for (q = 1; q <= n; q++) {
+        c = cells[q]; sub(/^[ \t]+/, "", c); sub(/[ \t]+$/, "", c)
+        if (c == "Prompt File") { col = q; break }
+      }
+    } else if (col <= n && cells[col] !~ /^[ \t]*:?-+:?[ \t]*$/) scan(cells[col], 1, "P", H, HD)
+  }
+  close(fn)
+  if (nh > 0 && okh) RELENT[H] = 1
+}
+# scan — every path token of one line or cell. The role says what else the line is: C a Contract:
+# line, P a Prompt File cell, D a pin line, and empty an ordinary line.
+function scan(s, prose, role, H, HD,   rest, run, after, j, m, mk) {
+  rest = s
+  while (match(rest, /[A-Za-z0-9_.\/-]+/)) {
+    run = substr(rest, RSTART, RLENGTH); after = substr(rest, RSTART + RLENGTH, 1)
+    rest = substr(rest, RSTART + RLENGTH)
+    if (substr(run, 1, 1) != "/" && tokof(run, after)) take("p", TK, TN, prose, role, H, HD)
+  }
+  for (m = 1; m <= 2; m++) {
+    mk = (m == 1) ? SKM : ERM
+    rest = s
+    while ((j = index(rest, mk)) > 0) {
+      rest = substr(rest, j + length(mk))
+      if (!match(rest, /^[A-Za-z0-9_.\/-]+/)) continue
+      run = substr(rest, 1, RLENGTH); after = substr(rest, RLENGTH + 1, 1)
+      if (substr(run, 1, 1) != "/" && tokof(run, after)) take((m == 1) ? "s" : "e", TK, TN, prose, role, H, HD)
+    }
+  }
+}
+# tokof — the token a run carries: cut at its first empty segment, one trailing full stop dropped.
+# Sets TK and TN, the character after the cut; false when nothing is left.
+function tokof(run, after,   k) {
+  k = index(run, "//")
+  if (k > 0) { TK = substr(run, 1, k); TN = "/" } else { TK = run; TN = after }
+  if (substr(TK, length(TK), 1) == ".") TK = substr(TK, 1, length(TK) - 1)
+  return (TK != "")
+}
+# take — resolve a plain or engine-root token now; keep a skill-directory token until the bundles
+# are known.
+function take(kind, tok, nxt, prose, role, H, HD,   r) {
+  if (kind == "s") {
+    ns++; SH[ns] = H; ST[ns] = tok; SX[ns] = nxt; SP[ns] = prose; SR[ns] = role
+    SHN[H]++; SHI[H, SHN[H]] = ns
+    return
+  }
+  r = norm(tok)
+  if (kind == "p" && !(r != "" && ((r in FILES) || (r in DIRS))) && HD != "") r = norm(HD "/" tok)
+  if (r != "") note(H, r, substr(tok, length(tok), 1) == "/", prose, nxt, role)
+}
+# note — what one resolved token says. A file token names a tracked markdown file other than its
+# holder; a directory token names, on a prose line and with no wildcard after it, the directory.
+function note(H, r, isdir, prose, nxt, role,   kind) {
+  if (role == "D") { if (!isdir && (r in MD)) PIN[r] = 1; return }
+  if (!isdir) { if (!(r in MD) || r == H) return; kind = "f" }
+  else { if (!prose || nxt == "*" || nxt == "?" || nxt == "[") return; kind = "d" }
+  if (role != "P") keep(H, kind, r)
+  if (role != "")  keep(H, role kind, r)
+}
+function keep(H, k, r) {
+  if ((H, k, r) in KEPT) return
+  KEPT[H, k, r] = 1; KN[H, k]++; KL[H, k, KN[H, k]] = r
+}
+# mark — give every file a holder names, through the records of one role, a class, where no earlier
+# clause has given it one. A named directory names each tracked markdown file directly in it.
+function mark(H, role, cls,   k, r, j) {
+  for (k = 1; k <= KN[H, role "f"] + 0; k++) { r = KL[H, role "f", k]; if (!(r in CLS)) CLS[r] = cls }
+  for (k = 1; k <= KN[H, role "d"] + 0; k++) {
+    r = KL[H, role "d", k]
+    for (j = 1; j <= DN[r] + 0; j++) if (DM[r, j] != H && !(DM[r, j] in CLS)) CLS[DM[r, j]] = cls
+  }
+}
+function hex40(s) {
+  while (match(s, /[0-9A-Fa-f]+/)) { if (RLENGTH == 40) return 1; s = substr(s, RSTART + RLENGTH) }
+  return 0
+}
+function dirof(p) { if (!sub("/[^/]*$", "", p)) p = ""; return p }
+function norm(p,   n, a, i, k, out, st) {
+  n = split(p, a, "/"); k = 0
+  for (i = 1; i <= n; i++) {
+    if (a[i] == "" || a[i] == ".") continue
+    if (a[i] == "..") { if (k == 0) return ""; k--; continue }
+    st[++k] = a[i]
+  }
+  out = ""
+  for (i = 1; i <= k; i++) out = out (i > 1 ? "/" : "") st[i]
+  return out
+}
+AWK
+
+# ── size.awk — the size-ceiling fence held against the classification ────────────────
+cat > "$WORK/size.awk" <<'AWK'
+# THREE INPUTS, split BY FILENAME: CFILE, load-class.awk's output over the graded tree; C2FILE, its
+# output over the same tree with the size-ceiling fence's own lines taken out of the document that
+# carries it; RFILE, that fence's rows as "<ceiling>\t<path>", extracted by fence.awk — the SAME
+# reader every declaring fence in this suite goes through. -v DOCREAD=<1 when the document that
+# carries the fence is readable> -v FRCEIL=<CH_FIRST_READ_CEILING, the first-verb read's constant>.
+#
+# A row is held against the classification, and it is the classification's word, not the row's,
+# that says whether a file owes one. A row the fence cannot hold its file to still stands for that
+# file, so its one defect is reported once and not again as a missing row. A file that is classified
+# when the fence is read and unclassified when the fence's lines are taken out is classified by
+# nothing but its own row: § 4 counts a path anywhere, fenced lines included, so every row cites the
+# file it names, and a row added for a file nothing else names would otherwise turn an unclassified
+# file green. A row for a file that owes none is REPORTED as UNOWED and never failed. NOTHING HERE
+# COMPARES A SIZE WITH A LOWER BOUND. A file the classification puts in the class first-read is held
+# by the constant as well — found by its class, never by its name — and its row is held EQUAL to
+# the constant, so a row that differs from it in either direction fails.
+#
+# Emits, after load-class.awk's own findings, tallies and DENOM, which it passes through:
+#   FINDING K1 <bytes> <ceiling> <path>        a file over its row
+#   FINDING K2 <class> <bytes> <floor> <path>  a file that owes a row and has none
+#   FINDING K3 <reason> <ceiling> <path>       absent-path · not-a-whole-number · repeated-path
+#   FINDING K6 <bytes> <constant> <path>       a first-read file over the constant
+#   FINDING K7 <ceiling> <constant> <path>     a first-read file's row that differs from the constant
+#   FINDING K8 <bytes> <path>                  a file classified only by its own row
+#   UNOWED <reason> <ceiling> <path>           below-floor · instrument-none · unclassified
+# On a surface that is not a measurement — the document absent, a fence with no row, or a constant
+# that is not a whole number — it emits EXACTLY ONE K0 and withholds every other finding,
+# load-class.awk's included:
+#   FINDING K0 <cause>
+# ALWAYS one DENOM SIZE <rows> <owing a row> <owing a row and holding one> <unowed rows> <first-read
+# files>.
+FILENAME == CFILE {
+  if ($1 == "CLASS") {
+    p = $0; for (k = 1; k <= 7; k++) sub(/^[^ ]+ /, "", p)
+    nf++; CP[nf] = p; C[p] = $2; I[p] = $3; O[p] = $4; B[p] = $5 + 0; FL[p] = $6
+  } else BUF[++nb] = $0
+  next
+}
+FILENAME == C2FILE {
+  if ($1 == "CLASS") { p = $0; for (k = 1; k <= 7; k++) sub(/^[^ ]+ /, "", p); C2[p] = $2 }
+  next
+}
+FILENAME == RFILE { split($0, f, "\t"); if (f[2] == "") next; nr++; RC[nr] = f[1]; RP[nr] = f[2]; next }
+END {
+  cause = ""
+  if (DOCREAD + 0 != 1)               cause = "size-fence-document-absent"
+  else if (nr + 0 == 0)               cause = "size-fence-rowless"
+  else if (FRCEIL !~ /^[0-9]+$/)      cause = "constant-not-a-whole-number:" FRCEIL
+  if (cause != "") {
+    printf "FINDING K0 %s\n", cause
+    for (k = 1; k <= nb; k++) if (BUF[k] !~ /^FINDING /) print BUF[k]
+    printf "DENOM SIZE %d 0 0 0 0\n", nr + 0
+    exit
+  }
+  for (k = 1; k <= nb; k++) print BUF[k]
+  for (k = 1; k <= nr; k++) {
+    p = RP[k]; c = RC[k]
+    if (p in HAS)           { printf "FINDING K3 repeated-path %s %s\n", c, p; continue }
+    HAS[p] = 1
+    if (!(p in C))          { printf "FINDING K3 absent-path %s %s\n", c, p; continue }
+    if (c !~ /^[0-9]+$/)    { printf "FINDING K3 not-a-whole-number %s %s\n", c, p; continue }
+    if (B[p] > c + 0)       printf "FINDING K1 %d %s %s\n", B[p], c, p
+    if (C[p] == "first-read" && c + 0 != FRCEIL + 0) printf "FINDING K7 %s %s %s\n", c, FRCEIL, p
+    if (O[p] != "row") {
+      nun++
+      printf "UNOWED %s %s %s\n", (C[p] == "unclassified") ? "unclassified" : ((I[p] == "none") ? "instrument-none" : "below-floor"), c, p
+    }
+  }
+  for (k = 1; k <= nf; k++) {
+    p = CP[k]
+    if (O[p] == "row") {
+      nowed++
+      if (p in HAS) nheld++
+      else printf "FINDING K2 %s %d %s %s\n", C[p], B[p], FL[p], p
+    }
+    if (C[p] == "first-read") { nfr++; if (B[p] > FRCEIL + 0) printf "FINDING K6 %d %s %s\n", B[p], FRCEIL, p }
+    if (C[p] != "unclassified" && (p in C2) && C2[p] == "unclassified") printf "FINDING K8 %d %s\n", B[p], p
+  }
+  printf "DENOM SIZE %d %d %d %d %d\n", nr, nowed + 0, nheld + 0, nun + 0, nfr + 0
+}
+AWK
+
+# ── growth.awk — the growth summary: the size-ceiling rows at HEAD against the previous release's ──
+cat > "$WORK/growth.awk" <<'AWK'
+# FOUR INPUTS, split BY FILENAME: CFILE, load-class.awk's output over the tree at HEAD; RFILE, the
+# size-ceiling rows at HEAD; BFILE, the rows the base's tree carried; SFILE, "<bytes>\t<path>" for
+# every blob of the base. -v HEADSHA -v BASE=<the base tag, empty when none was found> -v BASESHA
+# -v BREAD=<1 when the base was read> -v BFENCE=<1 when the base's tree carries the fence>.
+#
+# THREE BASE STATES, and the header names which. A base whose tree carries the fence is compared
+# against. A base whose tree carries none is the seeding case, where every row is new. No base — no
+# release tag reachable from HEAD, or a base that could not be read — is NOT-EVALUATED, and it is
+# never the seeding case: in that state no row is compared, and only what HEAD alone decides is
+# printed, the files that owe a row and have none and the rows for files that owe none.
+#
+# Prints table lines only, never a finding: a header, a column header, one line per path and a
+# summary. A state is new, raised, lowered, kept, dropped, owed or unowed; grew and moved are the
+# differences from the base; re-pin is the file's size plus its class headroom, rounded up to a whole
+# byte, where the file owes a row; and a cell with no value is -. Every path is relative to the
+# repository root, and nothing here prints the root itself.
+FILENAME == CFILE {
+  if ($1 == "CLASS") {
+    p = $0; for (k = 1; k <= 7; k++) sub(/^[^ ]+ /, "", p)
+    np++; PP[np] = p; INC[p] = 1; C[p] = $2; I[p] = $3; O[p] = $4; B[p] = $5; PC[p] = $7
+  } else if ($1 == "DENOM" && $2 == "CLASS") { seen = 1; meas = $7 + 0 }
+  next
+}
+FILENAME == RFILE { split($0, f, "\t"); if (f[2] != "" && !(f[2] in R)) { R[f[2]] = f[1]; RL[++nrh] = f[2] }; next }
+FILENAME == BFILE { split($0, f, "\t"); if (f[2] != "" && !(f[2] in BR)) { BR[f[2]] = f[1]; BL[++nrb] = f[2] }; next }
+FILENAME == SFILE { split($0, f, "\t"); if (f[2] != "") BS[f[2]] = f[1]; next }
+END {
+  if (BASE == "" || BREAD + 0 != 1) st = "c"
+  else if (BFENCE + 0 == 1)         st = "a"
+  else                              st = "b"
+  if (!seen || !meas) {
+    printf "# growth — size-ceiling rows at HEAD %s: NOT-EVALUATED — the classification is not a measurement on this tree; run the suite for its cause\n", HEADSHA
+    exit
+  }
+  if (st == "a")      printf "# growth — size-ceiling rows at HEAD %s against %s (%s)\n", HEADSHA, BASE, BASESHA
+  else if (st == "b") printf "# growth — size-ceiling rows at HEAD %s against %s (%s), which carries no size fence: every row is new\n", HEADSHA, BASE, BASESHA
+  else                printf "# growth — size-ceiling rows at HEAD %s: NOT-EVALUATED — no release tag reachable from HEAD; fetch tags%s\n", HEADSHA, (BASE == "" ? "" : " (a base, " BASE ", was found and could not be read)")
+  printf "# %-8s %-8s %-8s %-8s %-8s %-8s %-8s %-8s %s\n", "state", "size", "at-base", "grew", "ceiling", "at-base", "moved", "re-pin", "path"
+  for (k = 1; k <= np; k++) line(PP[k])
+  for (k = 1; k <= nrh; k++) if (!(RL[k] in INC)) line(RL[k])
+  for (k = 1; k <= nrb; k++) if (!(BL[k] in INC) && !(BL[k] in R)) line(BL[k])
+  if (st == "c")
+    printf "# rows at HEAD %d, at the base NOT-EVALUATED; owed without a row %d; unowed rows %d\n", nrh + 0, N["owed"] + 0, N["unowed"] + 0
+  else
+    printf "# rows at HEAD %d, at the base %d — new %d, raised %d, lowered %d, kept %d, dropped %d; owed without a row %d; unowed rows %d\n", nrh + 0, (st == "a") ? nrb + 0 : 0, N["new"] + 0, N["raised"] + 0, N["lowered"] + 0, N["kept"] + 0, N["dropped"] + 0, N["owed"] + 0, N["unowed"] + 0
+}
+function line(p,   s, sz, bsz, grew, ce, bce, mv, rp, why) {
+  sz   = (p in INC) ? B[p] : "-"
+  bsz  = (st != "c" && (p in BS)) ? BS[p] : "-"
+  grew = (sz != "-" && bsz != "-") ? sz - bsz : "-"
+  ce   = (p in R) ? R[p] : "-"
+  bce  = (st == "a" && (p in BR)) ? BR[p] : "-"
+  mv   = (ce ~ /^[0-9]+$/ && bce ~ /^[0-9]+$/) ? ce - bce : "-"
+  rp   = ((p in INC) && O[p] == "row") ? B[p] + int((B[p] * PC[p] + 99) / 100) : "-"
+  why  = ""
+  if (p in R) {
+    if ((p in INC) && O[p] != "row") {
+      s = "unowed"
+      why = (C[p] == "unclassified") ? "unclassified" : ((I[p] == "none") ? "instrument-none" : "below-floor")
+    }
+    else if (st == "c")             return
+    else if (bce == "-")            s = "new"
+    else if (ce + 0 > bce + 0)      s = "raised"
+    else if (ce + 0 < bce + 0)      s = "lowered"
+    else                            s = "kept"
+  }
+  else if ((p in INC) && O[p] == "row") s = "owed"
+  else if (st == "a" && (p in BR))      s = "dropped"
+  else                                  return
+  N[s]++
+  printf "%-10s %-8s %-8s %-8s %-8s %-8s %-8s %-8s %s%s\n", s, sz, bsz, grew, ce, bce, mv, rp, p, (why == "" ? "" : " (" why ")")
+}
+AWK
+
+# ── size-retro.tsv — the classification arm CTL-SIZE-RETRO replays, vendored and never regenerated ──
+# Data, not markdown: a markdown copy would enter the population it grades. It is written into $WORK
+# from this file on every run, as every program above is, so this suite still sources nothing.
+cat > "$WORK/size-retro.tsv" <<'TSV'
+# The per-file classification that #1172's Stage 6 recorded at its first commit, vendored and
+# never regenerated: issue #1678, comment 5965780012 (created 2026-10-03T05:03:18Z; its
+# updated_at is the same instant, so it was never edited), the <details> block "The run at C1",
+# for commit cb33116bbb5fee4be88fe73708ebcadfe94ec708. Four columns, that comment's own: class,
+# instrument, row owed, path. The same record gives the three planted arms CTL-SIZE-RETRO
+# replays: an orphan reads 154 files and 2 unclassified, the orphan cited from CONTRIBUTING.md
+# reads browsed, and the orphan's body at reference/README.md reads browsed.
+browsed       row      -     .github/PULL_REQUEST_TEMPLATE.md
+release-log   none     -     CHANGELOG.md
+first-read    constant row   CLAUDE.md
+browsed       row      -     CONTRIBUTING.md
+on-demand     row      -     README.md
+browsed       row      -     SECURITY.md
+listed        row      -     SKILL.md
+dispatched    row      row   agents/00-enrichment.md
+dispatched    row      row   agents/01-activities.md
+dispatched    row      row   agents/02-food.md
+dispatched    row      row   agents/03-scheduling.md
+dispatched    row      row   agents/04-transport.md
+dispatched    row      row   agents/05-hub-planner.md
+dispatched    row      row   agents/06-validator.md
+dispatched    row      row   agents/07-nightlife.md
+dispatched    row      -     agents/destination-ideation.md
+browsed       row      -     analysis/README.md
+on-demand     row      -     examples/archived-trip-demo/README.md
+fixture       none     -     examples/archived-trip-demo/outputs/traveler-model.md
+fixture       none     -     examples/archived-trip-demo/travelers/dana.md
+fixture       none     -     examples/archived-trip-demo/travelers/per-4f1c.md
+on-demand     row      -     examples/archived-trip-demo/trip-context.md
+on-demand     row      -     examples/archived-trip-demo/trip-log.md
+browsed       row      row   examples/data-architecture-demo/README.md
+fixture       none     -     examples/data-architecture-demo/outputs/activities-list.md
+fixture       none     -     examples/data-architecture-demo/outputs/change-summary.md
+fixture       none     -     examples/data-architecture-demo/outputs/cost-estimate.md
+fixture       none     -     examples/data-architecture-demo/outputs/event-status.md
+fixture       none     -     examples/data-architecture-demo/outputs/final-itinerary-v1.md
+fixture       none     -     examples/data-architecture-demo/outputs/final-itinerary.md
+fixture       none     -     examples/data-architecture-demo/outputs/links-reference.md
+fixture       none     -     examples/data-architecture-demo/outputs/nightlife-list.md
+fixture       none     -     examples/data-architecture-demo/outputs/rooftop-sunset-bars.md
+fixture       none     -     examples/data-architecture-demo/outputs/satisfaction-metrics.md
+fixture       none     -     examples/data-architecture-demo/outputs/scheduling-framework.md
+fixture       none     -     examples/data-architecture-demo/outputs/transport-brief.md
+fixture       none     -     examples/data-architecture-demo/outputs/traveler-model.md
+fixture       none     -     examples/data-architecture-demo/outputs/validation-report.md
+fixture       none     -     examples/data-architecture-demo/outputs/venue-matrix.md
+fixture       none     -     examples/data-architecture-demo/travelers/alex.md
+fixture       none     -     examples/data-architecture-demo/travelers/robin.md
+fixture       none     -     examples/data-architecture-demo/trip-context.md
+fixture       none     -     examples/data-architecture-demo/trip-log.md
+browsed       row      -     examples/evening-boundary-demo/README.md
+fixture       none     -     examples/evening-boundary-demo/outputs/activities-list.md
+fixture       none     -     examples/evening-boundary-demo/outputs/food-list.md
+fixture       none     -     examples/evening-boundary-demo/outputs/nightlife-list.md
+browsed       row      -     examples/ideation-demo/README.md
+fixture       none     -     examples/ideation-demo/outputs/destination-shortlist.md
+browsed       row      -     examples/ideation-demo/traveler-leanings.md
+browsed       row      -     examples/people-library-demo/README.md
+fixture       none     -     examples/people-library-demo/groups/grp-4a81.md
+on-demand     row      -     examples/people-library-demo/people/psn-3c7e.md
+fixture       none     -     examples/people-library-demo/people/psn-9d42.md
+on-demand     row      -     examples/people-library-demo/travelers/noor.md
+browsed       row      -     examples/single-origin-demo/README.md
+fixture       none     -     examples/single-origin-demo/trip-context.md
+fixture       none     -     examples/tokyo-2026/README.md
+fixture       none     -     examples/tokyo-2026/outputs/activities-list.md
+fixture       none     -     examples/tokyo-2026/outputs/casual-dining-family.md
+on-demand     none     -     examples/tokyo-2026/outputs/final-itinerary.md
+fixture       none     -     examples/tokyo-2026/outputs/food-list.md
+on-demand     none     -     examples/tokyo-2026/outputs/links-reference.md
+fixture       none     -     examples/tokyo-2026/outputs/scheduling-framework.md
+fixture       none     -     examples/tokyo-2026/outputs/transport-brief.md
+fixture       none     -     examples/tokyo-2026/trip-context.md
+fixture       none     -     examples/tokyo-2026/trip-log.md
+browsed       row      -     examples/two-origin-demo/README.md
+fixture       none     -     examples/two-origin-demo/trip-context.md
+on-demand     row      -     groups/README.md
+on-demand     row      -     people/README.md
+browsed       row      -     reference/adr/ADR-001-nightlife-agent.md
+browsed       row      -     reference/adr/ADR-002-living-site-refresh.md
+browsed       row      -     reference/adr/ADR-003-group-coordination.md
+browsed       row      -     reference/adr/ADR-004-contact-emergency-privacy.md
+on-demand     row      -     reference/adr/ADR-005-location-invariant.md
+on-demand     row      -     reference/adr/ADR-006-third-party-data-capture.md
+on-demand     row      row   reference/adr/ADR-007-command-entry-point.md
+on-demand     row      row   reference/adr/ADR-008-publish-content-guard.md
+browsed       row      row   reference/adr/ADR-009-data-architecture.md
+browsed       row      row   reference/adr/ADR-010-per-traveler-approval-collection.md
+browsed       row      row   reference/adr/ADR-011-per-traveler-cost-estimation.md
+on-demand     row      row   reference/adr/ADR-012-people-library.md
+browsed       row      -     reference/adr/ADR-013-count-assertion-basis.md
+on-demand     row      -     reference/adr/ADR-014-cross-trip-consent-refusal.md
+browsed       row      row   reference/adr/ADR-015-durable-field-validity-horizon.md
+on-demand     row      row   reference/adr/ADR-016-reusable-groups.md
+on-demand     row      row   reference/adr/ADR-017-derived-trip-history.md
+on-demand     row      row   reference/adr/ADR-018-cost-estimation-method.md
+browsed       row      row   reference/adr/ADR-019-discriminating-evidence-rule.md
+browsed       row      row   reference/adr/ADR-021-installable-capability.md
+on-demand     row      row   reference/adr/ADR-022-interview-session-model.md
+on-demand     row      row   reference/adr/ADR-023-interviewer-authored-home-and-form-contract.md
+browsed       row      row   reference/adr/ADR-024-form-contract-writer-boundary.md
+browsed       row      row   reference/adr/ADR-025-engagement-model-over-time.md
+browsed       row      row   reference/adr/ADR-026-channel-architecture.md
+browsed       row      row   reference/adr/ADR-027-post-trip-preference-memory.md
+browsed       row      row   reference/adr/ADR-028-derived-planning-day-block-owners.md
+on-demand     row      row   reference/adr/ADR-029-group-approval-return-and-threshold.md
+browsed       row      row   reference/adr/ADR-030-what-the-private-site-may-show.md
+browsed       row      row   reference/adr/ADR-031-site-phase-model.md
+browsed       row      -     reference/adr/ADR-032-site-round-trip-contract.md
+browsed       row      -     reference/adr/ADR-033-site-section-ceiling.md
+browsed       row      -     reference/adr/ADR-034-site-build-admission.md
+browsed       row      -     reference/adr/ADR-035-site-transitions-and-refresh.md
+browsed       row      -     reference/adr/ADR-036-published-artifact-model-row.md
+browsed       row      row   reference/adr/ADR-037-group-snapshot.md
+browsed       row      row   reference/adr/ADR-038-contact-emergency-group-visibility.md
+browsed       row      -     reference/adr/ADR-039-interview-conduct-bundled-with-the-verb.md
+browsed       row      -     reference/adr/ADR-040-transcript-only-return-and-save.md
+browsed       row      -     reference/adr/README.md
+on-demand     row      -     reference/command-reference.md
+on-demand     row      row   reference/data-architecture.md
+on-demand     row      row   reference/data-model.md
+unclassified  -        -     reference/load-class-model.md
+on-demand     row      -     reference/region-reference.md
+on-demand     row      -     reference/replan-protocol.md
+on-demand     row      -     reference/schemas/README.md
+on-demand     row      -     reference/schemas/activities-list.md
+on-demand     row      -     reference/schemas/change-summary.md
+on-demand     row      -     reference/schemas/cost-estimate.md
+on-demand     row      -     reference/schemas/destination-shortlist.md
+on-demand     row      -     reference/schemas/event-status.md
+on-demand     row      -     reference/schemas/final-itinerary-frozen.md
+on-demand     row      -     reference/schemas/final-itinerary.md
+on-demand     row      -     reference/schemas/food-list.md
+on-demand     row      -     reference/schemas/group-record.md
+on-demand     row      -     reference/schemas/links-reference.md
+on-demand     row      -     reference/schemas/nightlife-list.md
+on-demand     row      -     reference/schemas/person-record.md
+on-demand     row      -     reference/schemas/satisfaction-metrics.md
+on-demand     row      -     reference/schemas/scheduling-framework.md
+on-demand     row      -     reference/schemas/targeted-research.md
+on-demand     row      -     reference/schemas/transport-brief.md
+on-demand     row      -     reference/schemas/travel-site.md
+on-demand     row      -     reference/schemas/traveler-model.md
+on-demand     row      -     reference/schemas/traveler-profile.md
+on-demand     row      -     reference/schemas/trip-context.md
+on-demand     row      -     reference/schemas/trip-log.md
+on-demand     row      -     reference/schemas/validation-report.md
+on-demand     row      -     reference/schemas/venue-matrix.md
+on-demand     row      row   reference/site-layout-spec.md
+typed         row      row   skills/trip-decommission/SKILL.md
+typed         row      row   skills/trip-new/SKILL.md
+typed         row      row   skills/trip-publish/SKILL.md
+typed         row      row   skills/trip-record/SKILL.md
+on-demand     row      -     skills/trip-record/interview-conduct.md
+typed         row      row   skills/trip/SKILL.md
+on-demand     row      -     templates/interview-card.md
+on-demand     row      -     templates/person-intake.template.md
+on-demand     row      row   templates/traveler-intake.template.md
+on-demand     row      -     templates/trip-context.template.md
+on-demand     row      -     trips/README.md
+TSV
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # THE COMPARATOR. ONE function, driven by the real-tree arm and by every group-C control
 # arm below.
@@ -2531,6 +3264,96 @@ ch_scan_h() {
     -f "$WORK/h.awk" "$2"
 }
 
+# The size group's drivers. Sizes are byte counts of the graded root's own files — the blob sizes in
+# a checkout, and in a revision materialized into $WORK — read with wc -c, never with a stat whose
+# spelling differs between the systems this suite runs on.
+# ch_size_list <root> <md-list> — "<bytes>\t<path>" for each listed file the root holds.
+ch_size_list() {
+  local p n
+  while IFS= read -r p || [ -n "$p" ]; do
+    if [ -z "$p" ] || [ ! -f "$1/$p" ]; then continue; fi
+    n=$(( $(wc -c < "$1/$p") ))
+    printf '%s\t%s\n' "$n" "$p"
+  done < "$2"
+}
+# ch_classify <root> <sized-md-list> <all-list> [<strip-path>] — the classification of one tree:
+# the declaration's own parameter fence through the one fence reader, then load-class.awk. With a
+# fourth argument, that file is read with the size-ceiling fence's own lines taken out.
+ch_classify() {
+  local pdoc=0
+  if [ -r "$1/$CH_SIZE_PARAM_DOC" ]; then
+    pdoc=1; ch_fence "$1/$CH_SIZE_PARAM_DOC" "$CH_SIZE_PARAM_TAG" > "$WORK/size.params"
+  else : > "$WORK/size.params"; fi
+  awk -v ROOT="$1" -v PDOC="$pdoc" -v STRIP="${4:-}" -v STRIPTAG="$CH_SIZE_TAG" \
+    -v PFILE="$WORK/size.params" -v AFILE="$3" -v MFILE="$2" \
+    -f "$WORK/load-class.awk" "$WORK/size.params" "$3" "$2"
+}
+# ch_scan_size <root> <md-list> <all-list> — the size group over one tree, shaped like ch_scan_h: the
+# real tree and every control arm drive this one function. The classification runs twice, the second
+# time with the size-ceiling fence's lines taken out of the document that carries it, and size.awk
+# holds the fence against both; a classification that is not a measurement is printed as it stands,
+# and nothing is compared against it.
+ch_scan_size() {
+  local sdoc=0 meas
+  ch_size_list "$1" "$2" > "$WORK/size.md"
+  ch_classify "$1" "$WORK/size.md" "$3" > "$WORK/size.cls"
+  meas="$(awk '$1 == "DENOM" && $2 == "CLASS" { print $7 }' "$WORK/size.cls")"
+  if [ "${meas:-0}" != "1" ]; then cat "$WORK/size.cls"; return 0; fi
+  ch_classify "$1" "$WORK/size.md" "$3" "$CH_SIZE_DOC" > "$WORK/size.cls2"
+  if [ -r "$1/$CH_SIZE_DOC" ]; then
+    sdoc=1; ch_fence "$1/$CH_SIZE_DOC" "$CH_SIZE_TAG" > "$WORK/size.rows"
+  else : > "$WORK/size.rows"; fi
+  awk -v CFILE="$WORK/size.cls" -v C2FILE="$WORK/size.cls2" -v RFILE="$WORK/size.rows" -v DOCREAD="$sdoc" \
+    -v FRCEIL="$CH_FIRST_READ_CEILING" \
+    -f "$WORK/size.awk" "$WORK/size.cls" "$WORK/size.cls2" "$WORK/size.rows"
+}
+# size_base_tag <root> — the release the growth summary compares against: the highest tag merged into
+# HEAD whose name is a release tag, by integer tuple, less any tag that peels to HEAD's own commit, so
+# the summary run on a tagged merge commit compares against the release before it. The name grammar
+# is RELEASE_TAG_RE's in scripts/check-release-tag.sh. Prints nothing when no tag qualifies.
+size_base_tag() {
+  local hc
+  hc="$(git -C "$1" rev-parse -q --verify 'HEAD^{commit}' 2>/dev/null)" || return 0
+  git -C "$1" for-each-ref --merged "$hc" --format='%(refname) %(objectname) %(*objectname)' refs/tags 2>/dev/null \
+    | awk -v hc="$hc" '
+        { t = $1; sub(/^refs\/tags\//, "", t) }
+        t ~ /^v[0-9]+\.[0-9]+\.[0-9]+$/ {
+          c = ($3 != "") ? $3 : $2
+          if (c == hc) next
+          split(substr(t, 2), v, ".")
+          a = v[1] + 0; b = v[2] + 0; d = v[3] + 0
+          if (best == "" || a > b1 || (a == b1 && (b > b2 || (b == b2 && d > b3)))) { best = t; b1 = a; b2 = b; b3 = d }
+        }
+        END { if (best != "") print best }'
+}
+# size_growth <root> — the growth summary, on stdout. The base's rows come from its own tree, through
+# the same fence reader, and its sizes from its tree listing; a base that cannot be read is said to be
+# unread, never taken for one that carries no fence.
+size_growth() {
+  local root="$1" head base bsha="" bread=1 bfence=0
+  ch_list_real "$root" > "$WORK/list.g.md"
+  ch_list_h_real "$root" > "$WORK/list.g.all"
+  ch_size_list "$root" "$WORK/list.g.md" > "$WORK/g.md"
+  ch_classify "$root" "$WORK/g.md" "$WORK/list.g.all" > "$WORK/g.cls"
+  if [ -r "$root/$CH_SIZE_DOC" ]; then ch_fence "$root/$CH_SIZE_DOC" "$CH_SIZE_TAG" > "$WORK/g.rows"; else : > "$WORK/g.rows"; fi
+  head="$(git -C "$root" rev-parse --short HEAD 2>/dev/null)"
+  base="$(size_base_tag "$root")"
+  : > "$WORK/g.brows"; : > "$WORK/g.bsizes"; : > "$WORK/g.ls"
+  if [ -n "$base" ]; then
+    bsha="$(git -C "$root" rev-parse --short "${base}^{commit}" 2>/dev/null)" || bread=0
+    git -C "$root" ls-tree -r -l "$base" > "$WORK/g.ls" 2>/dev/null || bread=0
+    awk -F'\t' '{ split($1, a, " "); if ($2 != "") print a[4] "\t" $2 }' "$WORK/g.ls" > "$WORK/g.bsizes"
+    bfence="$(awk -F'\t' -v p="$CH_SIZE_DOC" '$2 == p { n++ } END { print (n > 0) ? 1 : 0 }' "$WORK/g.ls")"
+    if [ "$bread" -eq 1 ] && [ "$bfence" -eq 1 ]; then
+      git -C "$root" show "${base}:$CH_SIZE_DOC" > "$WORK/g.bdoc" 2>/dev/null || bread=0
+      ch_fence "$WORK/g.bdoc" "$CH_SIZE_TAG" > "$WORK/g.brows"
+    fi
+  fi
+  awk -v HEADSHA="$head" -v BASE="$base" -v BASESHA="$bsha" -v BREAD="$bread" -v BFENCE="$bfence" \
+    -v CFILE="$WORK/g.cls" -v RFILE="$WORK/g.rows" -v BFILE="$WORK/g.brows" -v SFILE="$WORK/g.bsizes" \
+    -f "$WORK/growth.awk" "$WORK/g.cls" "$WORK/g.rows" "$WORK/g.brows" "$WORK/g.bsizes"
+}
+
 # ch_compare_c <root> <fence-doc-abs> <listfile> — the both-direction assertion.
 #   C0 the fence yields zero rows: an empty declaration asserts nothing.
 #   C1 observed ABOVE the declared row — a new assertion was introduced.
@@ -2567,10 +3390,18 @@ ch_compare_c() {
 # removed. It is NOT a way to make a red go away: regenerating the whole fence turns the
 # assertion into a rubber stamp, which is the same warning § 10's freeze declaration already
 # carries for the frozen-witness fence. Re-pin only the rows you meant to change.
-if [ "${CH_EMIT:-}" = "census" ] || [ "${CH_EMIT:-}" = "sites" ]; then
+#
+# CH_EMIT=growth prints the size-ceiling fence's rows at HEAD against the fence the previous release
+# tag carried, with each file's size, its growth since that tag and its re-pin value — the file's
+# size plus its class headroom. It is how that fence is SEEDED, as census is for the digest fence,
+# and where a re-pin value is read; the same warning holds. Writing every row at once is a seed and
+# nothing else.
+if [ "${CH_EMIT:-}" = "census" ] || [ "${CH_EMIT:-}" = "sites" ] || [ "${CH_EMIT:-}" = "growth" ]; then
   ch_list_real "$ROOT" > "$WORK/list.real"
   if [ "$CH_EMIT" = "sites" ]; then
     ch_scan_c "$ROOT" "$WORK/list.real" 1 | grep '^SITE ' | sort
+  elif [ "$CH_EMIT" = "growth" ]; then
+    size_growth "$ROOT"
   else
     printf '# sites  path\n'
     ch_scan_c "$ROOT" "$WORK/list.real" | awk '$1 == "COUNT" { print $2 "\t" $3 }' \
@@ -3022,6 +3853,115 @@ I_NSPENT="$(awk '$1 == "DENOM" { print $6 }' <<<"$I_OUT")"
 I_FLOOR="$(awk '$1 == "DENOM" { printf "%03d", $7 }' <<<"$I_OUT")"
 for c in I0 I1 I2 I3; do echo "$c" >> "$SURF_LOG"; done
 ch_assert_i "$I_OUT"
+
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "$CH_SIZE_LETTER — the size fence: every tracked markdown file that owes a row is held to its byte ceiling"
+# ═════════════════════════════════════════════════════════════════════════════════
+# size_assert <root> <md-list> <all-list> — the size group's verdicts over one tree, on h_assert's
+# shape: ONE function that runs the extractor itself, so group MD can register it — with
+# ch_scan_size removed it reports exactly one FAIL and no PASS. Every code is composed from
+# CH_SIZE_LETTER and never written here. THE MEASUREMENT STATE is decided once, on group G's rule:
+# the scan is a measurement only when the classification read a file and declared itself measured,
+# the fence was read and compared, and no not-a-measurement finding came back. An unrun extractor
+# resolves to the LOUD answer, and there nothing below prints a counter. The SZ_* values it leaves
+# are the summary line's; it is called in this shell once, for the tracked tree, and everywhere
+# else inside a probe subshell.
+size_assert() {
+  local out L="$CH_SIZE_LETTER"
+  out="$(ch_scan_size "$1" "$2" "$3")"
+  SZ_NFILE="$(awk '$1 == "DENOM" && $2 == "CLASS" { print $3 }' <<<"$out")"
+  SZ_NPAR="$(awk '$1 == "DENOM" && $2 == "CLASS" { print $4 }' <<<"$out")"
+  SZ_NUNCL="$(awk '$1 == "DENOM" && $2 == "CLASS" { print $5 }' <<<"$out")"
+  SZ_MEAS="$(awk '$1 == "DENOM" && $2 == "CLASS" { print $7 }' <<<"$out")"
+  SZ_NROW="$(awk '$1 == "DENOM" && $2 == "SIZE" { print $3 }' <<<"$out")"
+  SZ_NOWED="$(awk '$1 == "DENOM" && $2 == "SIZE" { print $4 }' <<<"$out")"
+  SZ_NHELD="$(awk '$1 == "DENOM" && $2 == "SIZE" { print $5 }' <<<"$out")"
+  SZ_NUNOWED="$(awk '$1 == "DENOM" && $2 == "SIZE" { print $6 }' <<<"$out")"
+  SZ_NFR="$(awk '$1 == "DENOM" && $2 == "SIZE" { print $7 }' <<<"$out")"
+  SZ_N0="$(n_code "$out" "${L}0")"; SZ_N1="$(n_code "$out" "${L}1")"; SZ_N2="$(n_code "$out" "${L}2")"
+  SZ_N3="$(n_code "$out" "${L}3")"; SZ_N4="$(n_code "$out" "${L}4")"; SZ_N5="$(n_code "$out" "${L}5")"
+  SZ_N6="$(n_code "$out" "${L}6")"; SZ_N7="$(n_code "$out" "${L}7")"; SZ_N8="$(n_code "$out" "${L}8")"
+  SZ_WHY="$(awk -v c="${L}0" '$1 == "FINDING" && $2 == c { $1 = ""; $2 = ""; sub(/^ +/, ""); print }' <<<"$out")"
+  [ -n "$SZ_WHY" ] || SZ_WHY='the extractor printed no result'
+  if [ "${SZ_NFILE:-0}" -gt 0 ] && [ "${SZ_MEAS:-0}" = "1" ] && [ -n "$SZ_NROW" ] && [ "${SZ_N0:-1}" -eq 0 ]; then SZ_MEASURED=1; else SZ_MEASURED=0; fi
+
+  if [ "$SZ_MEASURED" -ne 1 ]; then
+    printf '  SURFACE: NOT-EVALUATED — %s — this is not a clean result\n' "$SZ_WHY"
+    FAIL "${L}0: the size group is NOT a measurement on this run — $SZ_WHY. A zero here is an unreadable declaration, an absent or rowless size fence or a listing that read no markdown, never a tree inside its ceilings, so every other verdict of this group is withheld: a comparison with one side unread would report every file as over its ceiling, or none"
+    return 0
+  fi
+
+  printf '  SURFACE: %s tracked markdown file(s) classified by the rule of %s § 4 over %s parameter row(s) from its `%s` fence — %s; %s file(s) owing a row against %s row(s) in the `%s` fence in %s.\n' \
+    "$SZ_NFILE" "$CH_SIZE_PARAM_DOC" "$SZ_NPAR" "$CH_SIZE_PARAM_TAG" \
+    "$(awk '$1 == "TALLY" { printf "%s%s %s", s, $2, $3; s = ", " }' <<<"$out")" \
+    "$SZ_NOWED" "$SZ_NROW" "$CH_SIZE_TAG" "$CH_SIZE_DOC"
+  awk '$1 == "UNOWED" { printf "    UNOWED: %s %s %s\n", $2, $3, $4 }' <<<"$out"
+  PASS "${L}0: the classification read $SZ_NFILE tracked markdown file(s) against $SZ_NPAR parameter row(s) from the \`$CH_SIZE_PARAM_TAG\` fence in $CH_SIZE_PARAM_DOC, and the \`$CH_SIZE_TAG\` fence in $CH_SIZE_DOC carries $SZ_NROW row(s), so every verdict below is a measurement. Arms CTL-SIZE-NO-PARAMETERS and CTL-SIZE-NO-FENCE remove each side and require this to fail"
+
+  if [ "${SZ_N1:-0}" -eq 0 ]; then
+    PASS "${L}1: no file exceeds its row — $SZ_NHELD of the $SZ_NOWED file(s) owing a row held to one of $SZ_NROW row(s). The zero is a measurement: arm CTL-SIZE-OVER sets a row one byte under its file's size and requires it to be found, and arm CTL-SIZE-AT-CEILING requires a file at exactly its row to pass"
+  else
+    FAIL "${L}1: $SZ_N1 file(s) exceed their row in the \`$CH_SIZE_TAG\` fence in $CH_SIZE_DOC. A row is raised only on purpose, in a change that says why, to the value CH_EMIT=growth prints beside the file — or the file is cut back under its row:"
+    grep "^FINDING ${L}1 " <<<"$out" | awk '{ printf "      %s: %s byte(s) against a row of %s\n", $5, $3, $4 }'
+  fi
+
+  if [ "${SZ_N2:-0}" -eq 0 ]; then
+    PASS "${L}2: every one of the $SZ_NOWED file(s) that owe a row has one. The zero is a measurement: arm CTL-SIZE-OWED-NO-ROW removes a row and requires it to be found, and the lookalike arms plant a file below its floor, a pinned one and a release log, none of which owes a row"
+  else
+    FAIL "${L}2: $SZ_N2 file(s) owe a row and have none — each is classed by the rule of $CH_SIZE_PARAM_DOC § 4 into a class whose instrument is row or constant, and is at or above that class's floor. Add the row CH_EMIT=growth prints for it, in the change that made it owe one:"
+    grep "^FINDING ${L}2 " <<<"$out" | awk '{ printf "      %s: %s, %s byte(s) against a floor of %s\n", $6, $3, $4, $5 }'
+  fi
+
+  if [ "${SZ_N3:-0}" -eq 0 ]; then
+    PASS "${L}3: every one of the $SZ_NROW row(s) names a tracked markdown file once, with a whole number for its ceiling. Arms CTL-SIZE-ABSENT-ROW, CTL-SIZE-NOT-A-NUMBER and CTL-SIZE-REPEATED-ROW plant one of each, and arm CTL-SIZE-UNOWED-ROW requires a row for a file that owes none to be reported and not failed"
+  else
+    FAIL "${L}3: $SZ_N3 row(s) in the \`$CH_SIZE_TAG\` fence in $CH_SIZE_DOC cannot hold a file to a ceiling — a path the tree does not hold, a ceiling that is not a whole number, or a path written twice. Correct or remove the row in the change that moved the file:"
+    grep "^FINDING ${L}3 " <<<"$out" | awk '{ printf "      %s: %s (ceiling %s)\n", $5, $3, $4 }'
+  fi
+
+  if [ "${SZ_N4:-0}" -eq 0 ]; then
+    PASS "${L}4: every one of the $SZ_NFILE tracked markdown file(s) is reached by a clause of the rule. The zero is a measurement: arm CTL-SIZE-ORPHAN plants a file nothing names and requires it to be found, and arm CTL-SIZE-RETRO holds this reading of the rule to the classification recorded at the commit that declared it"
+  else
+    FAIL "${L}4: $SZ_N4 tracked markdown file(s) are reached by no clause of the rule in $CH_SIZE_PARAM_DOC § 4 — nothing loads them, nothing cites them, and no reader is named for them. Name each where it is read, or remove it:"
+    grep "^FINDING ${L}4 " <<<"$out" | awk '{ printf "      %s (%s byte(s))\n", $4, $3 }'
+  fi
+
+  if [ "${SZ_N5:-0}" -eq 0 ]; then
+    PASS "${L}5: every class whose instrument is row or constant holds at least one tracked markdown file. The zero is a measurement: arm CTL-SIZE-EMPTY-CLASS empties one and requires it to be found"
+  else
+    FAIL "${L}5: $SZ_N5 class(es) whose instrument is row or constant hold no tracked markdown file — an instrument with nothing to hold is a declaration the tree no longer meets, or a rule that no longer reaches its files:"
+    grep "^FINDING ${L}5 " <<<"$out" | awk '{ printf "      %s (%s)\n", $3, $4 }'
+  fi
+
+  if [ "${SZ_N6:-0}" -eq 0 ]; then
+    PASS "${L}6: no file the rule classes first-read exceeds CH_FIRST_READ_CEILING — $SZ_NFR such file(s) against the constant $CH_FIRST_READ_CEILING. The zero is a measurement: arm CTL-SIZE-OVER-CONSTANT writes the first-verb file one byte over the constant and requires it to be found, and arm CTL-SIZE-AT-CONSTANT requires a file at exactly the constant to pass"
+  else
+    FAIL "${L}6: $SZ_N6 file(s) the rule classes first-read exceed CH_FIRST_READ_CEILING ($CH_FIRST_READ_CEILING bytes). The first-verb read is raised only by an edit to that constant, in a reviewed diff, with the file's row moved to the same value in the same change — or the file is cut back under it:"
+    grep "^FINDING ${L}6 " <<<"$out" | awk '{ printf "      %s: %s byte(s) against the constant %s\n", $5, $3, $4 }'
+  fi
+
+  if [ "${SZ_N7:-0}" -eq 0 ]; then
+    PASS "${L}7: the row of every file the rule classes first-read equals CH_FIRST_READ_CEILING — $SZ_NFR such file(s) against the constant $CH_FIRST_READ_CEILING, so the row and the constant name one ceiling. The zero is a measurement: arms CTL-SIZE-ROW-ABOVE-CONSTANT and CTL-SIZE-ROW-BELOW-CONSTANT move the row off the constant in each direction and require it to be found"
+  else
+    FAIL "${L}7: $SZ_N7 row(s) for a file the rule classes first-read differ from CH_FIRST_READ_CEILING ($CH_FIRST_READ_CEILING bytes). That row is held equal to the constant: a re-pin of it writes the constant to the same value in the same change, re-derived as the file's size plus its class headroom, and a row moved alone is this finding:"
+    grep "^FINDING ${L}7 " <<<"$out" | awk '{ printf "      %s: a row of %s against the constant %s\n", $5, $3, $4 }'
+  fi
+
+  if [ "${SZ_N8:-0}" -eq 0 ]; then
+    PASS "${L}8: no file is classified only by its own row — the rule run again over the same $SZ_NFILE file(s) with the \`$CH_SIZE_TAG\` fence's lines taken out of $CH_SIZE_DOC leaves none of them unclassified that the first run classified. The zero is a measurement: arm CTL-SIZE-ORPHAN-WITH-ROW gives a file nothing names a row and requires it to be found"
+  else
+    FAIL "${L}8: $SZ_N8 file(s) are classified only because their own row in the \`$CH_SIZE_TAG\` fence cites them — take the row out and nothing names them. A row is not a citation: name each where it is read, or remove the file and its row:"
+    grep "^FINDING ${L}8 " <<<"$out" | awk '{ printf "      %s (%s byte(s))\n", $4, $3 }'
+  fi
+  return 0
+}
+
+SZ_MEASURED=0; SZ_WHY='the group did not run'
+ch_list_real "$ROOT" > "$WORK/list.size.md"
+ch_list_h_real "$ROOT" > "$WORK/list.size.all"
+size_assert "$ROOT" "$WORK/list.size.md" "$WORK/list.size.all"
+for c in 0 1 2 3 4 5 6 7 8; do echo "${CH_SIZE_LETTER}$c" >> "$SURF_LOG"; done
 
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
@@ -5190,6 +6130,461 @@ else
   FAIL "CTL-I-VACUOUS-NOT: over a populated, sound register the verdict stage rendered '<pass> <fail> <vacuous>' = '$I_RN' rather than '4 0 0' — it must grade a population that is there"
 fi
 
+# ── the size fence ───────────────────────────────────────────────────────────────
+# Every arm here but CTL-SIZE-RETRO drives the SAME ch_scan_size the tracked tree was graded by,
+# over one base fixture, ctl_size_mk, with one plant. The fixture's declaration carries the tracked
+# tree's own parameter rows, re-emitted through the fence reader, so no fixture is handed a
+# strictness of its own, on the rule ch_scan_i states; every size below is a floor read from those
+# rows plus or minus a margin, never a figure written here. Its first-verb file is CHARTER.md, never
+# the charter's own name, so the rule is shown to find that file by classification. The base holds a
+# file of each class whose instrument is row or constant and a row for the one file that owes one,
+# and yields no finding at all — arm CTL-SIZE-WHOLE requires that, so every arm's finding is its own
+# plant's. A must-not-fire arm here does not rest on silence alone: ctl_size_quiet requires the scan
+# to have classified the fixture, so an extractor that went quiet because it read nothing reads red.
+#
+# The two rows the sizes below are computed from — the on-demand floor and headroom — are read off
+# the tracked tree, so they are exactly as well-formed as that tree's declaration, and the arithmetic
+# that builds a fixture cannot take a value that is not a whole number: under set -u it aborts the
+# whole suite before the size arms, group Y, PF and MD run, with no Result line, and on a shell that
+# exits 0 from that abort the run reads green. So arm CTL-SIZE-PARAMS checks both before any
+# arithmetic sees them, and when either is not a whole number it says so, fails, and builds every
+# fixture on zero instead. Each fixture still carries the tracked tree's rows as they stand, so every
+# size arm below then fails against them, the run completes, and it exits non-zero. It checks only
+# what the builder computes with; the rows' own grammar is the size group's not-a-measurement code.
+# That grammar admits a leading zero, and the readers of a value written with one disagree unless
+# bash reads it in base ten: awk and the integration-note checker read 09000 as 9000, while bash's
+# arithmetic and its printf read a leading zero as octal — they reject 08 and 09000, and read
+# 020000 as 8192. So the arm reads each value it admits in base ten before any arithmetic sees it,
+# and every reader of the declaration then reads the same number.
+ch_fence "$ROOT/$CH_SIZE_PARAM_DOC" "$CH_SIZE_PARAM_TAG" > "$WORK/size.realparams" 2>/dev/null || : > "$WORK/size.realparams"
+SZ_FLOOR="$(awk -F'\t' '$1 == "on-demand.floor" { print $2 }' "$WORK/size.realparams")"
+SZ_PCT="$(awk -F'\t' '$1 == "on-demand.headroom" { v = $2; sub(/%$/, "", v); print v }' "$WORK/size.realparams")"
+SZ_PBAD=""
+case "$SZ_FLOOR" in ''|*[!0-9]*) SZ_PBAD="${SZ_PBAD}on-demand.floor " ;; esac
+case "$SZ_PCT" in ''|*[!0-9]*) SZ_PBAD="${SZ_PBAD}on-demand.headroom " ;; esac
+if [ -n "$SZ_PBAD" ]; then
+  FAIL "CTL-SIZE-PARAMS: ${SZ_PBAD% } in the \`$CH_SIZE_PARAM_TAG\` fence in $CH_SIZE_PARAM_DOC did not read as a whole number (floor '$SZ_FLOOR', headroom '$SZ_PCT' with its % taken off) — every size arm below is built from these two, so each is built on zero instead and fails against the rows its fixture carries"
+  SZ_FLOOR=0; SZ_PCT=0
+else
+  SZ_FLOOR_TXT="$SZ_FLOOR"; SZ_PCT_TXT="$SZ_PCT"
+  SZ_FLOOR=$(( 10#$SZ_FLOOR )); SZ_PCT=$(( 10#$SZ_PCT ))
+  PASS "CTL-SIZE-PARAMS: the two rows every size fixture is built from read as whole numbers, in base ten as awk and the integration-note checker read them — on-demand.floor '$SZ_FLOOR_TXT' as $SZ_FLOOR, and on-demand.headroom '$SZ_PCT_TXT' as $SZ_PCT once its % is taken off, in the \`$CH_SIZE_PARAM_TAG\` fence in $CH_SIZE_PARAM_DOC — so the arithmetic below cannot abort the run, and builds each fixture on the number every other reader of the declaration reads"
+fi
+SZ_BIG=$(( ${SZ_FLOOR:-0} + 1000 ))
+SZ_BIGROW=$(( SZ_BIG + (SZ_BIG * ${SZ_PCT:-0} + 99) / 100 ))
+SZ_DIGEST="$(printf '%040d' 0)"
+
+ctl_size_pad() {  # ctl_size_pad <file> <bytes> — blank lines appended until the file holds exactly <bytes>
+  local need
+  need=$(( $2 - $(wc -c < "$1") ))
+  if [ "$need" -le 0 ]; then return 0; fi
+  awk -v n="$need" 'BEGIN { while (n >= 100) { printf "%99s\n", ""; n -= 100 } if (n > 0) printf "%" n "s", "" }' >> "$1"
+}
+ctl_size_row() { printf '%-10d %s' "$1" "$2"; }   # ctl_size_row <ceiling> <path> — one row, as the fence writes it
+ctl_size_rows() {  # ctl_size_rows <root> <row...> — the size fence document, carrying exactly those rows
+  local d="$1" r; shift
+  { printf '# Fixture size fence\n\n```%s\n# ceiling  path\n' "$CH_SIZE_TAG"
+    for r in "$@"; do printf '%s\n' "$r"; done
+    printf '```\n'
+  } > "$d/$CH_SIZE_DOC"
+}
+ctl_size_mk() {  # ctl_size_mk <name> — the base fixture; its path on stdout
+  local d="$WORK/fx/$1"
+  mkdir -p "$d/skills/v" "$d/agents" "$d/reference"
+  printf -- '---\nname: fixture\ndescription: The guided entry of the fixture.\n---\n\nIt names a verb and runs none.\n' > "$d/SKILL.md"
+  printf -- '---\nname: v\ndescription: The fixture verb.\ndisable-model-invocation: true\n---\n\nContract: CHARTER.md\n\n| Agent | Prompt File |\n|---|---|\n| Agent A | `agents/a.md` |\n\nRead reference/big.md when a step asks for it.\n' > "$d/skills/v/SKILL.md"
+  printf '# Fixture charter\n\nThe classes are declared in %s, and the ceilings in %s.\n' "$CH_SIZE_PARAM_DOC" "$CH_SIZE_DOC" > "$d/CHARTER.md"
+  printf '# Agent A\n\nA dispatched prompt.\n' > "$d/agents/a.md"
+  printf '# Fixture\n\nThe repository the fixture stands for.\n' > "$d/README.md"
+  printf '# Big\n\nA document a verb reads on demand.\n' > "$d/reference/big.md"
+  ctl_size_pad "$d/reference/big.md" "$SZ_BIG"
+  { printf '# Fixture declaration\n\n```%s\n# class.parameter  value\n' "$CH_SIZE_PARAM_TAG"
+    awk -F'\t' '{ printf "%s %s\n", $1, $2 }' "$WORK/size.realparams"
+    printf '```\n'
+  } > "$d/$CH_SIZE_PARAM_DOC"
+  ctl_size_rows "$d" "$(ctl_size_row "$SZ_BIGROW" reference/big.md)"
+  printf '%s\n' "$d"
+}
+ctl_size_scan() {  # ctl_size_scan <root> — ch_scan_size over a fixture, its two lists built by find
+  ch_list_dir "$1" > "$WORK/list.szfx.md"; ch_list_f_dir "$1" > "$WORK/list.szfx.all"
+  ch_scan_size "$1" "$WORK/list.szfx.md" "$WORK/list.szfx.all"
+}
+ctl_size_class() {  # ctl_size_class <root> <path> — the class the rule gives one file of a fixture
+  ch_list_dir "$1" > "$WORK/list.szc.md"; ch_list_f_dir "$1" > "$WORK/list.szc.all"
+  ch_size_list "$1" "$WORK/list.szc.md" > "$WORK/szc.md"
+  ch_classify "$1" "$WORK/szc.md" "$WORK/list.szc.all" \
+    | awk -v p="$2" '$1 == "CLASS" { q = $0; for (k = 1; k <= 7; k++) sub(/^[^ ]+ /, "", q); if (q == p) print $2 }'
+}
+ctl_size_quiet() {  # ctl_size_quiet <label> <output> <what-was-planted> <code...> — none of the codes, over a measured scan
+  local label="$1" out="$2" what="$3" c hit="" n
+  shift 3
+  n="$(awk '$1 == "DENOM" && $2 == "CLASS" && $7 == 1 { print $3 }' <<<"$out")"
+  for c in "$@"; do [ "$(n_code "$out" "$c")" -eq 0 ] || hit="$hit$c "; done
+  if [ "${n:-0}" -gt 0 ] && [ -z "$hit" ]; then
+    PASS "$label: $* stayed silent over $n classified file(s) — $what"
+  else
+    FAIL "$label: MUST NOT FIRE — $what — over a fixture the scan classified; the extractor reported '${hit% }' over ${n:-no} classified file(s)"
+  fi
+}
+
+# CTL-SIZE-WHOLE — the base, with nothing planted. The positive control every arm below rests on.
+SZ_CLEAN="$(ctl_size_mk szclean)"
+ch_list_dir "$SZ_CLEAN" > "$WORK/list.szclean.md"; ch_list_f_dir "$SZ_CLEAN" > "$WORK/list.szclean.all"
+O="$(ch_scan_size "$SZ_CLEAN" "$WORK/list.szclean.md" "$WORK/list.szclean.all")"
+SZW_F="$(grep -c '^FINDING ' <<<"$O" || true)"
+SZW_D="$(awk '$1 == "DENOM" && $2 == "CLASS" && $3 > 0 && $4 > 0 && $6 > 0 && $7 == 1 { n++ }
+              $1 == "DENOM" && $2 == "SIZE" && $3 > 0 && $4 > 0 && $5 > 0 { n++ } END { print n + 0 }' <<<"$O")"
+if [ "${SZW_F:-1}" -eq 0 ] && [ "$SZW_D" -eq 2 ]; then
+  PASS "CTL-SIZE-WHOLE: the base fixture — a file of each class whose instrument is row or constant, and a row for the one file that owes one — yields no finding at all, and the classification and the fence each read a non-empty population, so every finding an arm below reports is its own plant's"
+else
+  FAIL "CTL-SIZE-WHOLE: over the base fixture the extractor reported ${SZW_F:-no} finding(s), and $SZW_D of the two non-empty readings it must make — an arm below could be reporting the base rather than its plant: $(grep '^FINDING ' <<<"$O" | tr '\n' ';')"
+fi
+SZW_T="$(awk '$1 == "TALLY" && ($2 == "fixture" || $2 == "release-log") && $3 == 0 { n++ } END { print n + 0 }' <<<"$O")"
+SZW_5="$(n_code "$O" "${CH_SIZE_LETTER}5")"
+if [ "$SZW_T" -eq 2 ] && [ "${SZW_5:-1}" -eq 0 ]; then
+  PASS "CTL-SIZE-EMPTY-NONE-CLASS: the base holds no fixture and no release-log file, both classes whose instrument is none, and no empty class is reported — a class that takes no instrument has nothing to hold"
+else
+  FAIL "CTL-SIZE-EMPTY-NONE-CLASS: over the base, which holds no file of the two classes whose instrument is none, the extractor reported an empty class ${SZW_5:-?} time(s) with $SZW_T of those two classes read empty — a class that takes no instrument is not owed a file"
+fi
+
+D="$(ctl_size_mk szover)"
+ctl_size_rows "$D" "$(ctl_size_row "$(( SZ_BIG - 1 ))" reference/big.md)"
+O="$(ctl_size_scan "$D")"
+ctl_mustfire "CTL-SIZE-OVER" "${CH_SIZE_LETTER}1" "$O" "a row set one byte under its file's size" 1
+
+D="$(ctl_size_mk szatceiling)"
+ctl_size_rows "$D" "$(ctl_size_row "$SZ_BIG" reference/big.md)"
+O="$(ctl_size_scan "$D")"
+ctl_size_quiet "CTL-SIZE-AT-CEILING" "$O" "a row equal to its file's size — a file at exactly its ceiling is inside it" "${CH_SIZE_LETTER}1"
+
+D="$(ctl_size_mk szowed)"
+ctl_size_rows "$D" "$(ctl_size_row "$(( $(wc -c < "$D/README.md") ))" README.md)"
+O="$(ctl_size_scan "$D")"
+ctl_mustfire "CTL-SIZE-OWED-NO-ROW" "${CH_SIZE_LETTER}2" "$O" "the row of the one file that owes a row taken out — the fence keeps a row for a file that owes none, so it is not rowless" 1
+
+D="$(ctl_size_mk szbelow)"
+printf 'Read reference/small.md as well.\n' >> "$D/skills/v/SKILL.md"
+printf '# Small\n\nA document a verb reads on demand.\n' > "$D/reference/small.md"
+ctl_size_pad "$D/reference/small.md" "$(( SZ_FLOOR - 1 ))"
+O="$(ctl_size_scan "$D")"
+ctl_size_quiet "CTL-SIZE-BELOW-FLOOR" "$O" "a second on-demand file one byte under its class floor, carrying no row" "${CH_SIZE_LETTER}2" "${CH_SIZE_LETTER}4"
+
+# The floor itself. reference/load-class-model.md § 5 owes a row at or above the floor, so a file of
+# exactly the floor owes one. CTL-SIZE-OWED-NO-ROW stands its file a thousand bytes over the floor and
+# CTL-SIZE-BELOW-FLOOR one byte under it, so neither tells at-or-above from strictly above; this does.
+D="$(ctl_size_mk szatfloor)"
+printf 'Read reference/floor.md as well.\n' >> "$D/skills/v/SKILL.md"
+printf '# Floor\n\nA document a verb reads on demand.\n' > "$D/reference/floor.md"
+ctl_size_pad "$D/reference/floor.md" "$SZ_FLOOR"
+O="$(ctl_size_scan "$D")"
+ctl_mustfire "CTL-SIZE-AT-FLOOR" "${CH_SIZE_LETTER}2" "$O" "a second on-demand file of exactly its class floor, carrying no row — a file at the floor owes a row, as one above it does" 1
+
+D="$(ctl_size_mk szpinned)"
+printf 'See reference/pinned.md for the worked instance.\n' >> "$D/CHARTER.md"
+printf '# Pinned\n\nA worked instance whose bytes a digest fixes.\n' > "$D/reference/pinned.md"
+ctl_size_pad "$D/reference/pinned.md" "$SZ_BIG"
+printf '\n```frozen-witness-digest\n# blob-sha1  path\n%s  reference/pinned.md\n```\n' "$SZ_DIGEST" >> "$D/README.md"
+O="$(ctl_size_scan "$D")"
+ctl_size_quiet "CTL-SIZE-PINNED-NO-ROW" "$O" "a file over its floor, named by the first-verb file and pinned by a frozen-witness-digest row, carrying no row — its class is on-demand, and only § 5's growth-property step exempts it" "${CH_SIZE_LETTER}2" "${CH_SIZE_LETTER}4"
+
+# The release-entry lookalike is planted where the class CANNOT decide it: the first-verb file names
+# it, so its class is on-demand, whose instrument is row, and only § 5's release-entries step
+# exempts it — the construction CTL-SIZE-PINNED-NO-ROW uses for the pin. Cited only from README.md
+# instead, the file is release-log by class and the class alone decides none, so that second arm
+# passes against a reading that lacks the step; it is kept as a lookalike of its own.
+D="$(ctl_size_mk szrelease)"
+printf 'See reference/log.md for what each release changed.\n' >> "$D/CHARTER.md"
+printf '# Log\n\n## [Unreleased]\n\n## [1.2.3]\n\nA release entry.\n' > "$D/reference/log.md"
+ctl_size_pad "$D/reference/log.md" "$SZ_BIG"
+O="$(ctl_size_scan "$D")"
+ctl_size_quiet "CTL-SIZE-RELEASE-LOG-NO-ROW" "$O" "a file over its floor whose every second-level heading is a release entry, named by the first-verb file so its class is on-demand, carrying no row — only § 5's release-entries step exempts it" "${CH_SIZE_LETTER}2" "${CH_SIZE_LETTER}4"
+
+D="$(ctl_size_mk szreleasecited)"
+printf 'See reference/log.md for what each release changed.\n' >> "$D/README.md"
+printf '# Log\n\n## [Unreleased]\n\n## [1.2.3]\n\nA release entry.\n' > "$D/reference/log.md"
+ctl_size_pad "$D/reference/log.md" "$SZ_BIG"
+O="$(ctl_size_scan "$D")"
+ctl_size_quiet "CTL-SIZE-RELEASE-LOG-CITED-NO-ROW" "$O" "the same file cited only from README.md, so its class is release-log and the class decides none" "${CH_SIZE_LETTER}2" "${CH_SIZE_LETTER}4"
+
+D="$(ctl_size_mk szabsent)"
+ctl_size_rows "$D" "$(ctl_size_row "$SZ_BIGROW" reference/big.md)" "$(ctl_size_row "$SZ_BIGROW" reference/gone.md)"
+O="$(ctl_size_scan "$D")"
+ctl_mustfire "CTL-SIZE-ABSENT-ROW" "${CH_SIZE_LETTER}3" "$O" "a row for a path the tree does not hold" 1
+ctl_h_rec "CTL-SIZE-ABSENT-ROW-REASON" "$O" "${CH_SIZE_LETTER}3 absent-path $SZ_BIGROW reference/gone.md" "the row is refused because no tracked markdown file stands at its path"
+
+D="$(ctl_size_mk sznotanumber)"
+ctl_size_rows "$D" "20k        reference/big.md"
+O="$(ctl_size_scan "$D")"
+ctl_mustfire "CTL-SIZE-NOT-A-NUMBER" "${CH_SIZE_LETTER}3" "$O" "a row whose ceiling is not a whole number" 1
+ctl_h_rec "CTL-SIZE-NOT-A-NUMBER-REASON" "$O" "${CH_SIZE_LETTER}3 not-a-whole-number 20k reference/big.md" "the row is refused for its ceiling, and its file is not reported again as owing a row it does not have"
+
+D="$(ctl_size_mk szrepeated)"
+ctl_size_rows "$D" "$(ctl_size_row "$SZ_BIGROW" reference/big.md)" "$(ctl_size_row "$SZ_BIGROW" reference/big.md)"
+O="$(ctl_size_scan "$D")"
+ctl_mustfire "CTL-SIZE-REPEATED-ROW" "${CH_SIZE_LETTER}3" "$O" "a second row for one path" 1
+ctl_h_rec "CTL-SIZE-REPEATED-ROW-REASON" "$O" "${CH_SIZE_LETTER}3 repeated-path $SZ_BIGROW reference/big.md" "the second row is refused as a repeat of the first"
+
+D="$(ctl_size_mk szunowed)"
+ctl_size_rows "$D" "$(ctl_size_row "$(( $(wc -c < "$D/agents/a.md") ))" agents/a.md)" "$(ctl_size_row "$SZ_BIGROW" reference/big.md)"
+O="$(ctl_size_scan "$D")"
+ctl_size_quiet "CTL-SIZE-UNOWED-ROW" "$O" "a row for a present file under its class floor" "${CH_SIZE_LETTER}3"
+SZU_N="$(awk '$1 == "UNOWED" && $2 == "below-floor" && $4 == "agents/a.md" { n++ } END { print n + 0 }' <<<"$O")"
+SZU_ALL="$(awk '$1 == "UNOWED" { n++ } END { print n + 0 }' <<<"$O")"
+if [ "$SZU_N" -eq 1 ] && [ "$SZU_ALL" -eq 1 ]; then
+  PASS "CTL-SIZE-UNOWED-REPORT: that row is reported once, as UNOWED below-floor, and failed nowhere — a row for a file that owes none is a report, never a finding"
+else
+  FAIL "CTL-SIZE-UNOWED-REPORT: a row for a file under its floor must be reported exactly once as UNOWED below-floor; the extractor printed $SZU_ALL UNOWED line(s), $SZU_N of them that one"
+fi
+
+ctl_size_orphan() { printf '# Planted surface\n\nNothing names this file.\n' > "$1"; }   # the body every orphan plant carries
+D="$(ctl_size_mk szorphan)"
+ctl_size_orphan "$D/reference/orphan.md"
+O="$(ctl_size_scan "$D")"
+ctl_mustfire "CTL-SIZE-ORPHAN" "${CH_SIZE_LETTER}4" "$O" "a file nothing names, cites or reserves" 1
+
+D="$(ctl_size_mk szorphancited)"
+ctl_size_orphan "$D/reference/orphan.md"
+printf 'See reference/orphan.md.\n' >> "$D/README.md"
+O="$(ctl_size_scan "$D")"
+ctl_size_quiet "CTL-SIZE-ORPHAN-CITED" "$O" "the same file cited by its path from README.md" "${CH_SIZE_LETTER}4"
+SZO_C="$(ctl_size_class "$D" reference/orphan.md)"
+if [ "$SZO_C" = "browsed" ]; then
+  PASS "CTL-SIZE-ORPHAN-CITED-CLASS: the cited file reads browsed — a file another tracked markdown file cites"
+else
+  FAIL "CTL-SIZE-ORPHAN-CITED-CLASS: a file README.md cites must read browsed, and reads '${SZO_C:-nothing}'"
+fi
+
+D="$(ctl_size_mk szorphanreserved)"
+ctl_size_orphan "$D/reference/README.md"
+O="$(ctl_size_scan "$D")"
+ctl_size_quiet "CTL-SIZE-ORPHAN-RESERVED" "$O" "the same body under a name the repository host reserves, named by nothing" "${CH_SIZE_LETTER}4"
+SZO_R="$(ctl_size_class "$D" reference/README.md)"
+if [ "$SZO_R" = "browsed" ]; then
+  PASS "CTL-SIZE-ORPHAN-RESERVED-CLASS: the file reads browsed by its reserved name, cited by nothing"
+else
+  FAIL "CTL-SIZE-ORPHAN-RESERVED-CLASS: a file under a reserved name must read browsed, and reads '${SZO_R:-nothing}'"
+fi
+
+D="$(ctl_size_mk szemptyclass)"
+printf -- '---\nname: v\ndescription: The fixture verb.\ndisable-model-invocation: true\n---\n\nContract: CHARTER.md\n\nRead reference/big.md when a step asks for it, and agents/a.md when it dispatches.\n' > "$D/skills/v/SKILL.md"
+O="$(ctl_size_scan "$D")"
+ctl_h_solely "CTL-SIZE-EMPTY-CLASS" "$O" "${CH_SIZE_LETTER}5" 1 "the dispatch roster taken out, so the class of a file named in one holds nothing — the prompt it named is still named in prose, so nothing else moves" "dispatched"
+
+D="$(ctl_size_mk sznoparams)"
+printf '# Fixture declaration\n\nThe parameter fence has been taken out.\n' > "$D/$CH_SIZE_PARAM_DOC"
+O="$(ctl_size_scan "$D")"
+ctl_h_solely "CTL-SIZE-NO-PARAMETERS" "$O" "${CH_SIZE_LETTER}0" 1 "the declaration carries no parameter fence — a reading with no parameters is not a measurement, and nothing else is reported over it" "parameter-fence-rowless"
+
+D="$(ctl_size_mk sznofence)"
+rm -f "$D/$CH_SIZE_DOC"
+O="$(ctl_size_scan "$D")"
+ctl_h_solely "CTL-SIZE-NO-FENCE" "$O" "${CH_SIZE_LETTER}0" 1 "the document that carries the size fence is not there — a fence that was not read holds nothing to a ceiling, and nothing else is reported over it" "size-fence-document-absent"
+
+# The row-as-citation arms. § 4 counts a path anywhere, fenced lines included, so a row cites the
+# file it names, and a file nothing else names reads browsed once it has a row.
+D="$(ctl_size_mk szorphanrow)"
+ctl_size_orphan "$D/reference/orphan.md"
+ctl_size_rows "$D" "$(ctl_size_row "$SZ_BIGROW" reference/big.md)" "$(ctl_size_row "$(( $(wc -c < "$D/reference/orphan.md") ))" reference/orphan.md)"
+O="$(ctl_size_scan "$D")"
+ctl_mustfire "CTL-SIZE-ORPHAN-WITH-ROW" "${CH_SIZE_LETTER}8" "$O" "a file nothing names, given a row — its own row is the only thing that classifies it" 1
+
+D="$(ctl_size_mk szcitedrow)"
+ctl_size_orphan "$D/reference/orphan.md"
+printf 'See reference/orphan.md.\n' >> "$D/README.md"
+ctl_size_rows "$D" "$(ctl_size_row "$SZ_BIGROW" reference/big.md)" "$(ctl_size_row "$(( $(wc -c < "$D/reference/orphan.md") ))" reference/orphan.md)"
+O="$(ctl_size_scan "$D")"
+ctl_size_quiet "CTL-SIZE-CITED-WITH-ROW" "$O" "the same file and row, the file also cited from README.md — taking the row out leaves it browsed" "${CH_SIZE_LETTER}8" "${CH_SIZE_LETTER}4"
+
+# CTL-SIZE-RETRO — this reading of the rule held to a RECORD rather than to a defect: the per-file
+# classification recorded at the commit that declared the load classes, carried above as size-retro.tsv
+# and never regenerated. The tree is that revision's own listing and blobs, materialized into $WORK —
+# nothing touches the working tree, the index or any worktree — and its parameters are that
+# revision's own declaration. On that tree the rule reaches one file by no clause, by design: nothing
+# cited the declaration yet. It needs history deeper than one commit, as the other -RETRO arms do, and
+# an unreachable revision FAILS rather than skipping. Its three planted arms are the same record's,
+# their expectations derived from the table, never written here as figures.
+ctl_arm "${CH_SIZE_LETTER}4"
+SR_D="$WORK/fx/size-retro"; SR_OK=1
+mkdir -p "$SR_D"
+ch_list_h_rev "$ROOT" "$CH_SIZE_RETRO_REV" > "$WORK/list.sretro.all" 2>/dev/null || SR_OK=0
+awk '/\.md$/' "$WORK/list.sretro.all" > "$WORK/list.sretro.md"
+while IFS= read -r srp || [ -n "$srp" ]; do
+  mkdir -p "$(dirname "$SR_D/$srp")"
+  git -C "$ROOT" cat-file blob "${CH_SIZE_RETRO_REV}:$srp" > "$SR_D/$srp" 2>/dev/null || SR_OK=0
+done < "$WORK/list.sretro.md"
+sr_classify() {  # sr_classify <root> <md-list> <all-list> — the classification of a materialized tree
+  ch_size_list "$1" "$2" > "$WORK/sretro.sized"
+  ch_classify "$1" "$WORK/sretro.sized" "$3"
+}
+sr_rows() { awk '$1 == "CLASS" { q = $0; for (k = 1; k <= 7; k++) sub(/^[^ ]+ /, "", q); print $2, $3, $4, q }' <<<"$1"; }
+sr_uncl() { awk '$1 == "CLASS" && $2 == "unclassified" { q = $0; for (k = 1; k <= 7; k++) sub(/^[^ ]+ /, "", q); print q }' <<<"$1" | sort | tr '\n' ' '; }
+sr_classof() { awk -v p="$2" '$1 == "CLASS" { q = $0; for (k = 1; k <= 7; k++) sub(/^[^ ]+ /, "", q); if (q == p) print $2 }' <<<"$1"; }
+sr_plant() {  # sr_plant <name> <path> — a copy of the materialized tree with the planted file at <path>
+  local d="$WORK/fx/$1"
+  cp -R "$SR_D" "$d"
+  ctl_size_orphan "$d/$2"
+  { cat "$WORK/list.sretro.all"; printf '%s\n' "$2"; } > "$WORK/list.$1.all"
+  { cat "$WORK/list.sretro.md"; printf '%s\n' "$2"; } > "$WORK/list.$1.md"
+}
+awk '!/^#/ && NF == 4 { print $1, $2, $3, $4 }' "$WORK/size-retro.tsv" | sort > "$WORK/sretro.want"
+SR_NWANT="$(grep -c '[^[:space:]]' "$WORK/sretro.want" || true)"
+SR_UWANT="$(awk '$1 == "unclassified" { print $4 }' "$WORK/sretro.want" | sort | tr '\n' ' ')"
+SR_NUWANT="$(awk '$1 == "unclassified" { n++ } END { print n + 0 }' "$WORK/sretro.want")"
+if [ "$SR_OK" -eq 0 ] || [ ! -s "$WORK/list.sretro.md" ] || [ "${SR_NWANT:-0}" -eq 0 ]; then
+  FAIL "CTL-SIZE-RETRO: the tree at ${CH_SIZE_RETRO_REV:0:7} is unreachable or the vendored table read empty, so the one size arm that holds the rule's reading to a record did not run. This is a hole, not a skip — CI must check out with fetch-depth: 0"
+else
+  SR_OUT="$(sr_classify "$SR_D" "$WORK/list.sretro.md" "$WORK/list.sretro.all")"
+  sr_rows "$SR_OUT" | sort > "$WORK/sretro.got"
+  SR_NGOT="$(grep -c '[^[:space:]]' "$WORK/sretro.got" || true)"
+  SR_NDIFF="$(comm -3 "$WORK/sretro.want" "$WORK/sretro.got" | grep -c '[^[:space:]]' || true)"
+  SR_N4="$(n_code "$SR_OUT" "${CH_SIZE_LETTER}4")"
+  SR_UGOT="$(sr_uncl "$SR_OUT")"
+  if [ "$SR_NGOT" -eq "$SR_NWANT" ] && [ "$SR_NDIFF" -eq 0 ] && [ "$SR_N4" -eq "$SR_NUWANT" ] && [ "$SR_UGOT" = "$SR_UWANT" ]; then
+    PASS "CTL-SIZE-RETRO: on the real tree at ${CH_SIZE_RETRO_REV:0:7}, all $SR_NGOT of $SR_NWANT files read the class, instrument and row owed the record gives them, none differs, and the file the rule reached by no clause (${SR_UWANT% }) was reported once as unclassified — this reading of the rule reproduces the record it is held to"
+  else
+    FAIL "CTL-SIZE-RETRO: MUST REPRODUCE the record — $SR_NWANT row(s) and the unclassified set '${SR_UWANT% }'; the reading gave $SR_NGOT row(s), $SR_NDIFF row(s) differing between the two, $SR_N4 unclassified report(s) and the set '${SR_UGOT% }'. A different answer on a revision with a record is a different rule, not a clean one:"
+    comm -3 "$WORK/sretro.want" "$WORK/sretro.got" | awk '{ sub(/^\t/, "reading: "); if ($0 !~ /^reading: /) $0 = "record:  " $0; printf "      %s\n", $0 }'
+  fi
+
+  SR_PLANT='reference/planted-surface.md'
+  sr_plant size-retro-orphan "$SR_PLANT"
+  SR_O="$(sr_classify "$WORK/fx/size-retro-orphan" "$WORK/list.size-retro-orphan.md" "$WORK/list.size-retro-orphan.all")"
+  SR_ON="$(awk '$1 == "CLASS" { n++ } END { print n + 0 }' <<<"$SR_O")"
+  SR_OU="$(sr_uncl "$SR_O")"
+  SR_OWANT="$( { awk '$1 == "unclassified" { print $4 }' "$WORK/sretro.want"; printf '%s\n' "$SR_PLANT"; } | sort | tr '\n' ' ')"
+  if [ "$SR_ON" -eq $(( SR_NWANT + 1 )) ] && [ "$SR_OU" = "$SR_OWANT" ]; then
+    PASS "CTL-SIZE-RETRO-ORPHAN: the same tree with a file nothing names reads the table's rows plus one, and its unclassified set is the record's plus that file (${SR_OU% })"
+  else
+    FAIL "CTL-SIZE-RETRO-ORPHAN: with a file nothing names the tree must read the table's rows plus one and the unclassified set '${SR_OWANT% }'; it read $SR_ON file(s) and '${SR_OU% }'"
+  fi
+
+  sr_plant size-retro-cited "$SR_PLANT"
+  printf 'See %s.\n' "$SR_PLANT" >> "$WORK/fx/size-retro-cited/CONTRIBUTING.md"
+  SR_C="$(sr_classify "$WORK/fx/size-retro-cited" "$WORK/list.size-retro-cited.md" "$WORK/list.size-retro-cited.all")"
+  SR_CU="$(sr_uncl "$SR_C")"; SR_CC="$(sr_classof "$SR_C" "$SR_PLANT")"
+  if [ "$SR_CC" = "browsed" ] && [ "$SR_CU" = "$SR_UWANT" ]; then
+    PASS "CTL-SIZE-RETRO-CITED: the planted file cited from CONTRIBUTING.md reads browsed, and the unclassified set is the record's own (${SR_CU% })"
+  else
+    FAIL "CTL-SIZE-RETRO-CITED: cited from CONTRIBUTING.md the planted file must read browsed with the unclassified set '${SR_UWANT% }'; it read '${SR_CC:-nothing}' with '${SR_CU% }'"
+  fi
+
+  sr_plant size-retro-reserved reference/README.md
+  SR_R="$(sr_classify "$WORK/fx/size-retro-reserved" "$WORK/list.size-retro-reserved.md" "$WORK/list.size-retro-reserved.all")"
+  SR_RU="$(sr_uncl "$SR_R")"; SR_RC="$(sr_classof "$SR_R" reference/README.md)"
+  if [ "$SR_RC" = "browsed" ] && [ "$SR_RU" = "$SR_UWANT" ]; then
+    PASS "CTL-SIZE-RETRO-RESERVED: the same body at a reserved name, named by nothing, reads browsed, and the unclassified set is the record's own (${SR_RU% })"
+  else
+    FAIL "CTL-SIZE-RETRO-RESERVED: at a reserved name the planted file must read browsed with the unclassified set '${SR_UWANT% }'; it read '${SR_RC:-nothing}' with '${SR_RU% }'"
+  fi
+fi
+
+# CTL-SIZE-GROWTH and CTL-SIZE-GROWTH-NO-BASE — the emitter's comparison, driven as a program over a
+# fixture with no git history: the classification and rows of a tree at HEAD, against a planted
+# base. Neither registers a code; like CTL-B1-WIDE, each grades an output the gate prints. The base
+# is planted so that every state the summary can print is printed once — a row raised, a row lowered,
+# a row kept, a row new, a row dropped, a file owing a row it does not have, and a row for a file
+# under its floor — because a state no arm prints is a state whose label nothing holds.
+D="$(ctl_size_mk szgrowth)"
+printf 'Read reference/big2.md, reference/big3.md, reference/big4.md and reference/big5.md as well.\n' >> "$D/skills/v/SKILL.md"
+printf '# Big two\n\nA document a verb reads on demand.\n' > "$D/reference/big2.md"; ctl_size_pad "$D/reference/big2.md" "$SZ_BIG"
+printf '# Big three\n\nA document a verb reads on demand.\n' > "$D/reference/big3.md"; ctl_size_pad "$D/reference/big3.md" "$SZ_BIG"
+printf '# Big four\n\nA document a verb reads on demand.\n' > "$D/reference/big4.md"; ctl_size_pad "$D/reference/big4.md" "$SZ_BIG"
+printf '# Big five\n\nA document a verb reads on demand.\n' > "$D/reference/big5.md"; ctl_size_pad "$D/reference/big5.md" "$SZ_BIG"
+SZG_A="$(( $(wc -c < "$D/agents/a.md") ))"
+ctl_size_rows "$D" "$(ctl_size_row "$SZG_A" agents/a.md)" "$(ctl_size_row "$SZ_BIGROW" reference/big.md)" \
+  "$(ctl_size_row "$SZ_BIGROW" reference/big2.md)" "$(ctl_size_row "$SZ_BIGROW" reference/big4.md)" "$(ctl_size_row "$SZ_BIGROW" reference/big5.md)"
+printf '%s\t%s\n' "$(( SZ_BIGROW - 50 ))" reference/big.md "$(( SZ_BIGROW + 50 ))" reference/big4.md \
+  "$SZ_BIGROW" reference/big5.md "$SZ_BIGROW" reference/gone.md > "$WORK/szg.brows"
+printf '%s\t%s\n' "$(( SZ_BIG - 10 ))" reference/big.md "$(( SZ_BIG + 10 ))" reference/big4.md "$SZ_BIG" reference/big5.md > "$WORK/szg.bsizes"
+ch_list_dir "$D" > "$WORK/list.szg.md"; ch_list_f_dir "$D" > "$WORK/list.szg.all"
+ch_size_list "$D" "$WORK/list.szg.md" > "$WORK/szg.md"
+ch_classify "$D" "$WORK/szg.md" "$WORK/list.szg.all" > "$WORK/szg.cls"
+ch_fence "$D/$CH_SIZE_DOC" "$CH_SIZE_TAG" > "$WORK/szg.rows"
+szg_run() {  # szg_run <base> <read> <fence> — growth.awk over that fixture, as the emitter drives it
+  awk -v HEADSHA=fixture -v BASE="$1" -v BASESHA=fixture -v BREAD="$2" -v BFENCE="$3" \
+    -v CFILE="$WORK/szg.cls" -v RFILE="$WORK/szg.rows" -v BFILE="$WORK/szg.brows" -v SFILE="$WORK/szg.bsizes" \
+    -f "$WORK/growth.awk" "$WORK/szg.cls" "$WORK/szg.rows" "$WORK/szg.brows" "$WORK/szg.bsizes"
+}
+szg_has() { CTL_SZG_WANT="$2" awk '{ $1 = $1 } $0 == ENVIRON["CTL_SZG_WANT"] { n++ } END { print n + 0 }' <<<"$1"; }
+O="$(szg_run v0.0.1 1 1)"
+SZG_R="$(szg_has "$O" "raised $SZ_BIG $(( SZ_BIG - 10 )) 10 $SZ_BIGROW $(( SZ_BIGROW - 50 )) 50 $SZ_BIGROW reference/big.md")"
+SZG_N="$(szg_has "$O" "new $SZ_BIG - - $SZ_BIGROW - - $SZ_BIGROW reference/big2.md")"
+SZG_O="$(szg_has "$O" "owed $SZ_BIG - - - - - $SZ_BIGROW reference/big3.md")"
+SZG_D="$(szg_has "$O" "dropped - - - - $SZ_BIGROW - - reference/gone.md")"
+SZG_W="$(szg_has "$O" "lowered $SZ_BIG $(( SZ_BIG + 10 )) -10 $SZ_BIGROW $(( SZ_BIGROW + 50 )) -50 $SZ_BIGROW reference/big4.md")"
+SZG_K="$(szg_has "$O" "kept $SZ_BIG $SZ_BIG 0 $SZ_BIGROW $SZ_BIGROW 0 $SZ_BIGROW reference/big5.md")"
+SZG_U1="$(szg_has "$O" "unowed $SZG_A - - $SZG_A - - - agents/a.md (below-floor)")"
+SZG_S="$(szg_has "$O" "# rows at HEAD 5, at the base 4 — new 1, raised 1, lowered 1, kept 1, dropped 1; owed without a row 1; unowed rows 1")"
+SZG_L="$(awk '$1 !~ /^#/ { n++ } END { print n + 0 }' <<<"$O")"
+if [ "$SZG_R" -eq 1 ] && [ "$SZG_W" -eq 1 ] && [ "$SZG_K" -eq 1 ] && [ "$SZG_N" -eq 1 ] && [ "$SZG_D" -eq 1 ] && [ "$SZG_O" -eq 1 ] && [ "$SZG_U1" -eq 1 ] && [ "$SZG_S" -eq 1 ] && [ "$SZG_L" -eq 7 ]; then
+  PASS "CTL-SIZE-GROWTH: against a base whose fence held one row lower, one higher, one equal and one for a file since removed, the summary prints a raised, a lowered and a kept row each with its growth, its move and its re-pin value, a new row, a dropped row, a file owing a row with the row to write, and a row for a file under its floor with that reason — each once, with nothing else, and a summary line that counts all seven"
+else
+  FAIL "CTL-SIZE-GROWTH: the summary must print one raised, one lowered, one kept, one new, one dropped, one owed and one unowed (below-floor) line with their values and a summary counting them, and nothing else; it printed raised $SZG_R, lowered $SZG_W, kept $SZG_K, new $SZG_N, dropped $SZG_D, owed $SZG_O, unowed $SZG_U1, summary $SZG_S, over $SZG_L table line(s): $(tr '\n' ';' <<<"$O")"
+fi
+SZG_C="$(szg_run '' 1 1)"
+SZG_B="$(szg_run v0.0.1 1 0)"
+SZG_CC="$(awk 'index($0, "NOT-EVALUATED — no release tag reachable from HEAD; fetch tags") { n++ } END { print n + 0 }' <<<"$SZG_C")"
+SZG_CB="$(awk 'index($0, "carries no size fence") || index($0, "every row is new") || $1 == "new" { n++ } END { print n + 0 }' <<<"$SZG_C")"
+SZG_BB="$(awk 'index($0, "carries no size fence: every row is new") { n++ } END { print n + 0 }' <<<"$SZG_B")"
+SZG_U="$(szg_run v0.0.1 0 1 | awk 'index($0, "NOT-EVALUATED — no release tag reachable from HEAD; fetch tags") { n++ } END { print n + 0 }')"
+if [ "$SZG_CC" -eq 1 ] && [ "$SZG_CB" -eq 0 ] && [ "$SZG_BB" -eq 1 ] && [ "$SZG_U" -eq 1 ]; then
+  PASS "CTL-SIZE-GROWTH-NO-BASE: with no base the header says NOT-EVALUATED and asks for the tags, and neither the seeding wording nor a new row is printed; a base that could not be read reads the same; and a base read and carrying no fence is the only state that prints the seeding wording — the three states are three, and the third never reads as the second"
+else
+  FAIL "CTL-SIZE-GROWTH-NO-BASE: no base must print the NOT-EVALUATED header ($SZG_CC) and no seeding wording or new row ($SZG_CB), an unread base the same header ($SZG_U), and only a read base with no fence the seeding wording ($SZG_BB)"
+fi
+
+# The first-verb read. Each arm sets the fixture's first-verb file, CHARTER.md, to a size around the
+# real CH_FIRST_READ_CEILING — not a constant of the fixture's own — and gives it a row beside the
+# base's. The rule finds that file by its class, so its name is never the charter's. The row is held
+# EQUAL to the constant, so a row that differs from it fails in either direction, and a row equal to
+# it is the lookalike. The constant is read in base ten here for the reason arm CTL-SIZE-PARAMS
+# gives: size.awk reads a leading zero as decimal, and bash's arithmetic, left to itself, as octal.
+# A constant that is not a whole number is left as written, for the size group's K0 to report.
+ctl_size_charter() {  # ctl_size_charter <name> <bytes> <ceiling> — the base, the first-verb file at <bytes>, its row at <ceiling>
+  local d
+  d="$(ctl_size_mk "$1")"
+  ctl_size_pad "$d/CHARTER.md" "$2"
+  ctl_size_rows "$d" "$(ctl_size_row "$3" CHARTER.md)" "$(ctl_size_row "$SZ_BIGROW" reference/big.md)"
+  printf '%s\n' "$d"
+}
+case "$CH_FIRST_READ_CEILING" in
+  ''|*[!0-9]*) SZ_FR="$CH_FIRST_READ_CEILING" ;;
+  *)           SZ_FR=$(( 10#$CH_FIRST_READ_CEILING )) ;;
+esac
+D="$(ctl_size_charter szoverconst "$(( SZ_FR + 1 ))" "$SZ_FR")"
+O="$(ctl_size_scan "$D")"
+ctl_mustfire "CTL-SIZE-OVER-CONSTANT" "${CH_SIZE_LETTER}6" "$O" "the first-verb file one byte over the constant, its row equal to the constant — the over-its-row code fires beside it, and this arm counts the constant's" 1
+
+D="$(ctl_size_charter szatconst "$SZ_FR" "$SZ_FR")"
+O="$(ctl_size_scan "$D")"
+ctl_size_quiet "CTL-SIZE-AT-CONSTANT" "$O" "the first-verb file at exactly the constant, its row equal to it" "${CH_SIZE_LETTER}6" "${CH_SIZE_LETTER}1" "${CH_SIZE_LETTER}7"
+
+D="$(ctl_size_charter szrowabove "$SZ_FR" "$(( SZ_FR + 1 ))")"
+O="$(ctl_size_scan "$D")"
+ctl_h_solely "CTL-SIZE-ROW-ABOVE-CONSTANT" "$O" "${CH_SIZE_LETTER}7" 1 "the first-verb file at the constant, its row one byte above it — a row raised on its own, which neither the file's size nor its row can see"
+
+D="$(ctl_size_charter szrowbelow "$(( SZ_FR - 2000 ))" "$(( SZ_FR - 1000 ))")"
+O="$(ctl_size_scan "$D")"
+ctl_h_solely "CTL-SIZE-ROW-BELOW-CONSTANT" "$O" "${CH_SIZE_LETTER}7" 1 "the first-verb file under the constant, its row under the constant and above the file — a row re-pinned down while the constant stays, after which the row alone would bind"
+
+D="$(ctl_size_charter szrowatconst "$(( SZ_FR - 1000 ))" "$SZ_FR")"
+O="$(ctl_size_scan "$D")"
+ctl_size_quiet "CTL-SIZE-ROW-AT-CONSTANT" "$O" "the first-verb file under the constant, its row equal to the constant" "${CH_SIZE_LETTER}7" "${CH_SIZE_LETTER}1" "${CH_SIZE_LETTER}6"
+
+D="$(ctl_size_mk szotherrow)"
+ctl_size_rows "$D" "$(ctl_size_row "$(( SZ_FR + 1 ))" reference/big.md)"
+O="$(ctl_size_scan "$D")"
+ctl_size_quiet "CTL-SIZE-OTHER-ROW-ABOVE-CONSTANT" "$O" "an on-demand file's row above the constant — the constant binds the first-read class and no other" "${CH_SIZE_LETTER}7"
+
+# The registered assertion, run over the base fixture with its subject PRESENT. md_flips below shows
+# the same call reporting one FAIL once ch_scan_size is removed; this arm is the other half.
+SZ_PRESENT="$(md_probe zzq_size_no_such_subject size_assert "$SZ_CLEAN" "$WORK/list.szclean.md" "$WORK/list.szclean.all")"
+if [ -n "$SZ_PRESENT" ] && [ "${SZ_PRESENT##* }" = "0" ] && [ "${SZ_PRESENT%% *}" != "0" ]; then
+  PASS "CTL-SIZE-MD-PRESENT: with its subject present the registered assertion reports pass=${SZ_PRESENT%% *} fail=${SZ_PRESENT##* } over the base fixture — so the single FAIL that MD[SIZE] requires below is a flip, and not a verdict that fixture already carried"
+else
+  FAIL "CTL-SIZE-MD-PRESENT: over the base fixture the registered assertion returned '${SZ_PRESENT:-nothing}' rather than passes and no FAIL — MD[SIZE] below would then certify a flip from a state that was never green"
+fi
+
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
 echo "Y — the assertion inventory, derived from this file and checked in both directions"
@@ -5556,7 +6951,9 @@ fi
 # with its subject removed and requires exactly one FAIL and no PASS. What is registered: group
 # H's h_assert, over ch_scan_h, the function that drives its extractor. It is probed over the
 # conformant fixture the H control arms built, where it passes — arm CTL-H-MD-PRESENT is that
-# half — so what is certified is a flip, and not a verdict that was already red. The declared
+# half — so what is certified is a flip, and not a verdict that was already red. The size group's
+# size_assert is registered the same way, over ch_scan_size and that group's base fixture, where arm
+# CTL-SIZE-MD-PRESENT is the other half. The declared
 # residual in MD2 is still this suite's registration queue: every entry that leaves it gains an
 # MD[...] arm here in the same edit, and an entry cannot leave it until its assertion is
 # remediated, because an oracle asked to certify a still-blind assertion turns the suite red for
@@ -5581,6 +6978,7 @@ fi
 # which re-runs a function. What compensates is the mutation of its own subject each arm was
 # observed red under, recorded with the change that added the arm.
 md_flips ch_scan_h 'H' h_assert "$H_CLEAN" "$WORK/list.hclean"
+md_flips ch_scan_size 'SIZE' size_assert "$SZ_CLEAN" "$WORK/list.szclean.md" "$WORK/list.szclean.all"
 
 echo
 printf 'Result: \033[1;32m%d passed\033[0m, \033[1;31m%d failed\033[0m, \033[1;33m%d skipped\033[0m, \033[1;36m%d vacuous\033[0m\n' \
@@ -5626,6 +7024,14 @@ elif [ "${I_NROW:-0}" -eq 0 ] && [ "${I_NABOVE:-0}" -eq 0 ]; then
 else
   printf 'NUMBER-REGISTER: %s row(s) and %s record(s) above the floor at %s; %s number(s) taken twice, %s record(s) not named by their row, %s row(s) out of sequence or malformed; %s held, %s spent.\n' \
     "$I_NROW" "$I_NABOVE" "$I_FLOOR" "$(n_code "$I_OUT" I1)" "$(n_code "$I_OUT" I2)" "$(n_code "$I_OUT" I3)" "$I_NHELD" "$I_NSPENT"
+fi
+# The measurement state the size group decided above: under its not-a-measurement code the line
+# carries the cause and no counter.
+if [ "$SZ_MEASURED" -eq 1 ]; then
+  printf 'SIZE-FENCE: %s tracked markdown file(s) classified, %s unclassified; %s owing a row against %s row(s) declared; %s over a ceiling, %s owed without a row, %s defective row(s), %s row(s) for a file that owes none, %s file(s) classified only by their own row; %s first-read file(s) against the constant %s, %s over it, %s row(s) unequal to it.\n' \
+    "$SZ_NFILE" "$SZ_NUNCL" "$SZ_NOWED" "$SZ_NROW" "$SZ_N1" "$SZ_N2" "$SZ_N3" "$SZ_NUNOWED" "$SZ_N8" "$SZ_NFR" "$CH_FIRST_READ_CEILING" "$SZ_N6" "$SZ_N7"
+else
+  printf 'SIZE-FENCE: NOT-EVALUATED — %s — this is not a clean result\n' "$SZ_WHY"
 fi
 if [ "$vacuous" -gt 0 ]; then
   printf 'NOTE: %d assertion(s) had an EMPTY POPULATION and proved nothing about this tree: %s. Read each named arm and its own verdict above for what carries it. This line names the vacuous ARMS rather than a compensating group, because the arms that compensate are not always in the group the vacuous arm belongs to, and a hardcoded group here was a claim about a run it had not read.\n' "$vacuous" "${VACUOUS_IDS% }"

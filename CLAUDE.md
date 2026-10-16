@@ -627,7 +627,7 @@ One writer per block. A writer not named for a block does not write it — not "
 2. **Search for an existing home before adding a normative sentence.** A rule that has a home is changed or cited there, never stated twice. *Good faith:* a search leaves no trace either way, and nothing here claims it can be observed.
 3. **Declare what was removed alongside what was added**, in the change's own record — its commit message or pull request — never in the file. *Reviewer-checkable:* the declaration is there or it is not, and the diff shows whether it is true.
 
-**What enforces them.** Milestone 45 plans a byte fence on file size, which enforces none of these clauses, and an integration note on a pull request that adds much to a file and removes little, which enforces clause 3 in form only — that a note is present, never that it is true. Neither exists before that milestone ships; the rest is good faith. Every sentence left behind is paid for each time its file is read, and `reference/load-class-model.md` declares how often that is.
+**What enforces them.** The size fence in `reference/size-fence.md` holds every tracked markdown file that owes a row to a byte ceiling, which enforces none of these clauses: it bounds how far a file grows, never what the growth says. A job asks a pull request that adds much to a file and removes little for a note in the pull-request body on what it reconciled, and is red while that note is absent, which enforces clause 3 in form only and only where it reads — that a note is present in the pull-request body, never that it is true, so a declaration made only in a commit message leaves it red. The rest is good faith. Every sentence left behind is paid for each time its file is read, and `reference/load-class-model.md` declares how often that is.
 
 ## File Structure
 
@@ -657,7 +657,8 @@ travel-planner/
 │   ├── region-reference.md        ← every block-owned form's regions in one table, each with its writer-table row and verdict (derived — what /trip-record interview reads)
 │   ├── replan-protocol.md         ← the behaviour a replan takes when the trip is near
 │   ├── schemas/                   ← per-artifact-class schemas + the CI gate's coverage declaration
-│   └── site-layout-spec.md        ← travel-site responsive/layout specification
+│   ├── site-layout-spec.md        ← travel-site responsive/layout specification
+│   └── size-fence.md              ← the size fence — the byte ceiling each tracked markdown file that owes a row is held to
 ├── scripts/                  ← publish-trip-site.sh (private publish) + the test-*.sh guard suites
 ├── templates/
 │   ├── trip-context.template.md
