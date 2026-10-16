@@ -321,9 +321,10 @@
 #
 # ── THIS SUITE'S LOCALE POSTURE ──────────────────────────────────────────────────
 # Three separate things, stated apart because each is a different kind of claim.
-# THE PIN POSTURE, as this file has it. Nothing is exported at the top. LC_ALL=C is set on the two
-# calls that need byte semantics, the awk program in group W and the sort that fixes the command
-# order, and the locale arms set each member's locale inside the subshell that reads under it.
+# THE PIN POSTURE, as this file has it. Nothing is exported at the top. LC_ALL=C is set only on
+# the calls that need byte semantics, the awk program in group W and the sort that fixes the
+# command order, and the locale arms set each member's locale inside the subshell that reads under
+# it.
 # Every other line reads the caller's locale.
 # WHAT IS ASSERTED, on every run. The edge trims read no locale. trim and group J's rj_trimv
 # strip one fixed set, ASCII whitespace and U+00A0; the readers of a skill file's frontmatter, a
