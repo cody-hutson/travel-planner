@@ -23,7 +23,9 @@
 #        SPELLING ONLY. A line number is the least durable reference form there is — it rots
 #        on the next insertion above it, silently, and points at whatever moved into its
 #        place. The in-scope population is empty, so this group renders VACUOUS rather than a
-#        bare PASS, and group CTL is the only thing that ever exercises it.
+#        bare PASS, and group CTL is the only thing that ever exercises it. Its surface arm B0
+#        comes first and fails a walk that could not open a listed file or read no line, so
+#        that verdict is reached only over a walk that read the tree.
 #
 #        THE SCOPE IS NARROWER THAN THE NAME, DELIBERATELY, AND THE GAP IS REPORTED ON EVERY
 #        RUN. B1's pattern requires the extension to sit immediately against the colon, so a
@@ -442,6 +444,15 @@
 # not the corpus's locators — the class-B entry above states the boundary and the group prints
 # the out-of-scope figure beside its own verdict on every run.
 #
+# ── A VACUOUS ARM FAILS THE RUN UNLESS IT IS DECLARED, ON EVERY HOST ─────────────
+# An empty population proves nothing about the tree, so a VACUOUS verdict cannot leave a run
+# green by itself. The exit rule fails the run on any arm that rendered VACUOUS and is not in
+# CH_VACUOUS_DECL, the expected-vacuous set held beside VACUOUS() below, one line per arm with
+# the reason its population is expected to be empty; group B's arm is declared there. That set
+# lives in this file and not in the workflow's env, and the rule does not wait for
+# GUARD_STRICT_SKIPS: a skip turns on what a host provides, but an empty population is the same
+# on every host, so what excuses one is read on every run, in CI and out of it.
+#
 # ── ONE DEPENDENCY ON REPOSITORY HISTORY, STATED ─────────────────────────────────
 # The suite reads this repository's history as blobs and as tags, and both arrive through the
 # same checkout. Every arm whose id ends -RETRO reads a blob from a commit in that history: it
@@ -590,6 +601,71 @@ md_flips() {   # md_flips <subject-fn> <id> <assertion-fn> [args…]
 # not of the suite, so a literal there is a claim about a run it never read.
 VACUOUS() { printf '  \033[1;36mVACUOUS\033[0m %s\n' "$*"; vacuous=$((vacuous+1)); VACUOUS_IDS="$VACUOUS_IDS${*%%:*} "; }
 
+# ── CH_VACUOUS_DECL — THE EXPECTED-VACUOUS SET, read by the exit rule at the end of this file.
+# One line per arm: the arm's id exactly as its VACUOUS line opens (the text before the first
+# colon, which is what VACUOUS() records), a space, and the reason its population is expected to
+# be empty and what carries the arm while it is. The exit rule fails the run on each of these:
+#   an arm that rendered VACUOUS and has no line here;
+#   a line here whose arm did not render VACUOUS on the run. Its population is no longer empty,
+#     or the arm was renamed or removed, and a declaration that outlived its vacuity would excuse
+#     the next empty population that arm reads. Groups C, D and G hold their own declarations in
+#     both directions, and MD2 its residual, for the same reason;
+#   a line that names an arm and gives no reason;
+#   a VACUOUS verdict whose arm id cannot be read, because then the run cannot say which arm it was.
+# To declare an arm, add its line in the change that makes it render VACUOUS. To retire one,
+# delete its line in the change that gives the arm a population. The trip-resolution-contract
+# suite fails on any vacuous count and ships no declaration; this suite needs one, because the
+# population of one of its arms is meant to stay empty.
+CH_VACUOUS_DECL='
+B1 its in-scope population is a bare path:line locator in tracked markdown, which this corpus means to keep empty, so on a clean tree B1 renders VACUOUS by design and a locator turns it red; what carries the denominator is surface arm B0, which must PASS before B1 can render VACUOUS and which fails a walk that could not open a listed file or read no line, and what carries detection is arm CTL-B1, which plants locators in a fixture and requires them found, with CTL-B1-SPEC and CTL-B1-WIDE beside it
+'
+
+# ch_vacuity_rc <declaration> — the vacuity half of the exit rule. It is a function so that the
+# CTL-VACUITY arms drive the code the exit rule runs, over the recorder that rule reads: $vacuous
+# and $VACUOUS_IDS, which VACUOUS() above is the only writer of. It prints one VACUITY line per
+# finding, or one line naming what was declared, with the counts it compared, and returns 1 on
+# any finding and 0 otherwise. Membership is tested with the case idiom the strict-skip pass at
+# the end of this file uses, so no verdict here rests on a pipeline.
+ch_vacuity_rc() {
+  local decl="$1" line id rest ids="" nids=0 noreason="" undeclared="" stale="" n=0 v rc=0
+  while IFS= read -r line; do
+    line="${line#"${line%%[![:space:]]*}"}"
+    [ -n "$line" ] || continue
+    id="${line%%[[:space:]]*}"; rest="${line#"$id"}"
+    if [ -z "${rest//[[:space:]]/}" ]; then noreason="$noreason$id "; continue; fi
+    ids="$ids$id "; nids=$((nids+1))
+  done <<<"$decl"
+  # shellcheck disable=SC2086  # the recorder is a space-separated word list, split on purpose
+  for v in $VACUOUS_IDS; do
+    n=$((n+1))
+    case " $ids " in *" $v "*) ;; *) undeclared="$undeclared$v " ;; esac
+  done
+  # shellcheck disable=SC2086  # the declared ids are the same kind of word list
+  for v in $ids; do
+    case " $VACUOUS_IDS " in *" $v "*) ;; *) stale="$stale$v " ;; esac
+  done
+  if [ "$n" -ne "$vacuous" ]; then
+    printf 'VACUITY: %d VACUOUS verdict(s) were counted and %d arm id(s) recorded. A VACUOUS line opens with its arm id and a colon; one that does not cannot be named, so this run cannot say which arm was vacuous.\n' "$vacuous" "$n"
+    rc=1
+  fi
+  if [ -n "$undeclared" ]; then
+    printf 'VACUITY: arm(s) rendered VACUOUS and are not declared in CH_VACUOUS_DECL: %s— an empty population proved nothing about this tree, so it fails the run. Give the arm a population or, where empty is its expected state, add its line to CH_VACUOUS_DECL, beside VACUOUS() where the verdict helpers are defined, with the reason and the arm that carries it.\n' "$undeclared"
+    rc=1
+  fi
+  if [ -n "$stale" ]; then
+    printf 'VACUITY: declared in CH_VACUOUS_DECL and did not render VACUOUS on this run: %s— if one of these FAILED above, its own verdict is the finding and this line follows from it. Otherwise its population is no longer empty, or the arm was renamed or removed: delete its line in the same change, because a declaration that outlives its vacuity would excuse the next empty population that arm reads.\n' "$stale"
+    rc=1
+  fi
+  if [ -n "$noreason" ]; then
+    printf 'VACUITY: line(s) in CH_VACUOUS_DECL name an arm and give no reason: %s— each line states why the population of its arm is expected to be empty and what carries the arm, or it is an exemption nobody can re-check.\n' "$noreason"
+    rc=1
+  fi
+  if [ "$rc" -eq 0 ]; then
+    printf 'VACUITY: %d VACUOUS verdict(s) and %d declared arm(s) (%s); every vacuous arm is declared and every declared arm rendered VACUOUS, so no empty population passed this run unannounced.\n' "$vacuous" "$nids" "${ids% }"
+  fi
+  return "$rc"
+}
+
 WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
 ARM_LOG="$WORK/arms";  : > "$ARM_LOG"
 SURF_LOG="$WORK/surf"; : > "$SURF_LOG"
@@ -723,13 +799,21 @@ cat > "$WORK/b.awk" <<'AWK'
 # does not rest on an arm either: unlike B1's zero, a non-zero is self-evidencing, and arm
 # CTL-B1-WIDE nonetheless plants the code-spanned form B1 cannot see and requires this loop
 # to find it — otherwise a wide count that merely echoed `hits` would look identical here.
+#
+# The walk's own denominator is two more DENOM fields, on the same terms: the listed files it
+# could not open, and the lines it read. The list counts a file before the walk opens it, so a
+# file that cannot be opened makes its first getline return -1 and ends the loop as quietly as a
+# file read to its end; without these fields a walk that read nothing reports the same empty
+# population as a tree that has no locator. Group B's surface arm B0 reads them, so they are
+# counted here and asserted there, and they emit no finding code: group Y's inventory is
+# untouched, and B0's must-fire arm is CTL-B0, which lists a file that does not exist.
 { if ($0 != "") FILES[++nf] = $0 }
 END {
-  hits = 0; whits = 0
+  hits = 0; whits = 0; unread = 0; nline = 0
   for (i = 1; i <= nf; i++) {
     rel = FILES[i]; f = ROOT "/" rel
     infence = 0; ln = 0
-    while ((getline line < f) > 0) {
+    while ((r = (getline line < f)) > 0) {
       ln++
       t = line; sub(/^[ \t]+/, "", t)
       if (substr(t, 1, 3) == "```") { infence = !infence; continue }
@@ -757,9 +841,11 @@ END {
         whits++
       }
     }
+    if (r < 0 && ln == 0) unread++
+    nline += ln
     close(f)
   }
-  printf "DENOM %d %d %d\n", nf, hits, whits
+  printf "DENOM %d %d %d %d %d\n", nf, hits, whits, unread, nline
 }
 AWK
 
@@ -2619,16 +2705,33 @@ B_OUT="$(ch_scan_b "$ROOT" "$WORK/list.real")"
 B_NFILE="$(awk '$1 == "DENOM" { print $2 }' <<<"$B_OUT")"
 B_NHIT="$(awk '$1 == "DENOM" { print $3 }' <<<"$B_OUT")"
 B_NWIDE="$(awk '$1 == "DENOM" { print $4 }' <<<"$B_OUT")"
+B_NUNREAD="$(awk '$1 == "DENOM" { print $5 }' <<<"$B_OUT")"
+B_NLINE="$(awk '$1 == "DENOM" { print $6 }' <<<"$B_OUT")"
 B_NOOS=$(( ${B_NWIDE:-0} - ${B_NHIT:-0} ))
-printf '  SURFACE: %s tracked markdown file(s) walked for path:line locators — %s in this group'"'"'s IN-SCOPE bare spelling, %s in either spelling, so %s sit OUTSIDE this predicate and are reported rather than counted as clean.\n' \
-  "$B_NFILE" "$B_NHIT" "$B_NWIDE" "$B_NOOS"
+printf '  SURFACE: %s tracked markdown file(s) walked for path:line locators, %s of them unreadable and %s line(s) read — %s in this group'"'"'s IN-SCOPE bare spelling, %s in either spelling, so %s sit OUTSIDE this predicate and are reported rather than counted as clean.\n' \
+  "$B_NFILE" "${B_NUNREAD:-unread}" "${B_NLINE:-unread}" "$B_NHIT" "$B_NWIDE" "$B_NOOS"
 echo "B1" >> "$SURF_LOG"
 
-if [ "${B_NHIT:-0}" -eq 0 ]; then
-  VACUOUS "B1: the IN-SCOPE population is EMPTY — $B_NFILE file(s) walked, no BARE path:line locator found. This group proves nothing about this tree by itself and says so rather than reporting a bare PASS; what it rests on is arm CTL-B1, which plants two locators in a fixture and requires both to be found. READ THIS AS THE PREDICATE'S VERDICT AND NOT THE CORPUS'S: $B_NWIDE locator(s) are present in either spelling and $B_NOOS of them are out of scope here by declaration — a code-spanned path or emphasised digits put a markdown delimiter between the extension and the colon, which B1's pattern does not cross. The banner's class-B entry carries the boundary and why widening it is not this gate's call; arm CTL-B1-WIDE is what makes the out-of-scope figure a measurement"
+# B0 — the surface, in the idiom of every other lettered group's surface arm, and FIRST because
+# B1's empty population is a measurement only over a walk that read the tree. The guard is written
+# so an unrun extractor resolves to the loud answer: an unset unreadable count reads 1 and an unset
+# line count reads 0, and both land on the FAIL limb. It reads the walk's own DENOM fields and not
+# the wider locator figure, which is a property of the corpus and may legitimately reach zero.
+B_SURFACE=0
+if [ "${B_NUNREAD:-1}" -eq 0 ] && [ "${B_NLINE:-0}" -gt 0 ]; then
+  B_SURFACE=1
+  PASS "B0: the class-B surface was read — each of the $B_NFILE listed file(s) opened, $B_NLINE line(s) read and none unreadable, so an empty in-scope population below is a measurement of this tree and not an empty walk. Arm CTL-B0 lists a file that does not exist and requires it counted unreadable"
 else
+  FAIL "B0: the class-B surface was NOT read — ${B_NUNREAD:-unread} of ${B_NFILE:-unread} listed file(s) could not be opened and ${B_NLINE:-unread} line(s) were read. A zero here is a broken probe or a relocated corpus, never a tree with no locator, and B1's empty population is withheld rather than rendered VACUOUS"
+fi
+
+if [ "${B_NHIT:-0}" -gt 0 ]; then
   FAIL "B1: $B_NHIT line-number locator(s) in tracked markdown. A line number rots on the next insertion above it and then points at whatever moved into its place — cite the section or the quoted text instead:"
   grep '^FINDING B1 ' <<<"$B_OUT" | awk '{ printf "      %s:%s  %s\n", $3, $4, $5 }'
+elif [ "$B_SURFACE" -eq 1 ]; then
+  VACUOUS "B1: the IN-SCOPE population is EMPTY — $B_NFILE file(s) walked and read, per B0 above, no BARE path:line locator found. This group proves nothing about this tree by itself and says so rather than reporting a bare PASS; what it rests on is arm CTL-B1, which plants two locators in a fixture and requires both to be found. READ THIS AS THE PREDICATE'S VERDICT AND NOT THE CORPUS'S: $B_NWIDE locator(s) are present in either spelling and $B_NOOS of them are out of scope here by declaration — a code-spanned path or emphasised digits put a markdown delimiter between the extension and the colon, which B1's pattern does not cross. The banner's class-B entry carries the boundary and why widening it is not this gate's call; arm CTL-B1-WIDE is what makes the out-of-scope figure a measurement"
+else
+  FAIL "B1: withheld — B0 above names the cause. An empty in-scope population over a walk that did not read the tree is not a measurement, so it is not rendered VACUOUS, which is the verdict CH_VACUOUS_DECL excuses"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
@@ -3140,6 +3243,24 @@ if [ "${BW_WIDE:-0}" -gt "${BW_NARROW:-0}" ]; then
   PASS "CTL-B1-WIDE: the scope boundary is a measurement in both directions — two code-spanned locators are planted, B1's in-scope pattern reports $BW_NARROW of them and the out-of-scope measurement reports $BW_WIDE. The strict inequality is the assertion: it convicts B1's declared blindness to the delimiter AND proves the wider loop is not an echo of the narrower one"
 else
   FAIL "CTL-B1-WIDE: the out-of-scope measurement reported $BW_WIDE against B1's $BW_NARROW on a fixture carrying ONLY code-spanned locators. Without a strict inequality here the figure reported beside B1's verdict cannot be told from a copy of B1's own pattern, and the scope note it supports would be unfounded"
+fi
+
+# CTL-B0 — the must-fire arm for B0's surface fields. The list is written by hand, because the
+# lister reads the directory and so can never name a file that is not there: it carries one real
+# two-line file and one path that does not exist. The walk must count exactly that one path
+# unreadable and exactly the real file's two lines read, so a count that ignored a failed open, or
+# that counted every listed file as read, cannot look like this. Like CTL-B1-WIDE it asserts no
+# finding code and is written without ctl_mustfire, so group Y's inventory is unchanged by it.
+D="$(ctl_mk b0)"
+printf 'A line with nothing to find.\nAnother.\n' > "$D/docs/notes.md"
+printf 'docs/notes.md\ndocs/listed-and-absent.md\n' > "$WORK/list.b0"
+O="$(ch_scan_b "$D" "$WORK/list.b0")"
+B0_UNREAD="$(awk '$1 == "DENOM" { print $5 }' <<<"$O")"
+B0_LINE="$(awk '$1 == "DENOM" { print $6 }' <<<"$O")"
+if [ "${B0_UNREAD:-0}" -eq 1 ] && [ "${B0_LINE:-0}" -eq 2 ]; then
+  PASS "CTL-B0: over a list naming one readable two-line file and one path that does not exist, the walk counts exactly $B0_UNREAD file unreadable and exactly $B0_LINE line(s) read, so the fields B0 grades measure a failed open rather than echoing the list"
+else
+  FAIL "CTL-B0: over a list naming one readable two-line file and one path that does not exist, the walk counted ${B0_UNREAD:-no} file(s) unreadable and ${B0_LINE:-no} line(s) read rather than 1 and 2 — B0 cannot tell a walk that read the tree from one that read nothing"
 fi
 
 # ── C ────────────────────────────────────────────────────────────────────────────
@@ -5190,6 +5311,36 @@ else
   FAIL "CTL-I-VACUOUS-NOT: over a populated, sound register the verdict stage rendered '<pass> <fail> <vacuous>' = '$I_RN' rather than '4 0 0' — it must grade a population that is there"
 fi
 
+# CTL-VACUITY-* — the vacuity half of the exit rule, driven through the recorder it reads and the
+# function it calls. Each case runs in a subshell that empties the recorder and then calls the
+# REAL VACUOUS(), never a rebound copy such as the one i_render above uses, so the status read
+# back is the one the exit rule takes. One line is out of these arms' reach: the one at the end
+# of this file that joins that status to the run's. It was shown by planting an undeclared VACUOUS
+# arm in the run and reading a non-zero exit while every verdict stayed green, recorded with the
+# change that added these arms. UNDECLARED and EMPTIED must fire on the undeclared-arm rule alone,
+# STALE on the stale-line rule and UNNAMED on the unreadable-id rule; DECLARED, over the
+# declaration this file ships, must fire on none of them. The no-reason rule is held by two arms,
+# because it is written on two lines and each arm's input trips a second rule once one of those
+# lines is gone: NOREASON names a reason-less arm that did not render VACUOUS, so without the line
+# that sets such a line aside the stale-line rule still returns 1; NOREASON-RENDERED names one that
+# did, so without the line that reports it the undeclared-arm rule still returns 1. Either alone
+# leaves one of the two lines deletable with every arm green. DECLARED is a function, for one
+# reason: group MD registers it, and md_flips re-runs a function.
+ctl_vac() {  # ctl_vac <declaration> [<arm-id>...] -> ch_vacuity_rc's status once those arms rendered VACUOUS
+  local decl="$1" a; shift
+  ( vacuous=0; VACUOUS_IDS=""
+    for a in "$@"; do VACUOUS "$a: planted by a vacuity control arm"; done
+    ch_vacuity_rc "$decl" )
+}
+ctl_vac_declared() { expect_rc 0 "CTL-VACUITY-DECLARED" "B1 rendering VACUOUS and nothing else leaves the shipped declaration silent, so the rule does not fire on a declared arm" -- ctl_vac "$CH_VACUOUS_DECL" B1; }
+expect_rc 1 "CTL-VACUITY-UNDECLARED" "an arm that renders VACUOUS and is not declared fails the run, over the declaration this file ships" -- ctl_vac "$CH_VACUOUS_DECL" B1 ZVAC
+ctl_vac_declared
+expect_rc 1 "CTL-VACUITY-EMPTIED" "with the declaration emptied the same B1 vacuity fails the run, so the B1 line is what keeps this suite green and not a rule that cannot fire" -- ctl_vac "" B1
+expect_rc 1 "CTL-VACUITY-STALE" "a declared arm that did not render VACUOUS fails the run, so a declaration cannot outlive its vacuity" -- ctl_vac "$CH_VACUOUS_DECL"
+expect_rc 1 "CTL-VACUITY-NOREASON" "a declaration line that names an arm and gives no reason fails the run" -- ctl_vac "$CH_VACUOUS_DECL"$'\n'"ZVAC" B1
+expect_rc 1 "CTL-VACUITY-NOREASON-RENDERED" "a declaration line that gives no reason fails the run when its arm did render VACUOUS, so the stale-line rule is not what supplies the status" -- ctl_vac "$CH_VACUOUS_DECL"$'\n'"ZVAC" B1 ZVAC
+expect_rc 1 "CTL-VACUITY-UNNAMED" "a VACUOUS verdict whose arm id cannot be read fails the run rather than escaping the set" -- ctl_vac "$CH_VACUOUS_DECL" B1 ""
+
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
 echo "Y — the assertion inventory, derived from this file and checked in both directions"
@@ -5561,6 +5712,12 @@ fi
 # MD[...] arm here in the same edit, and an entry cannot leave it until its assertion is
 # remediated, because an oracle asked to certify a still-blind assertion turns the suite red for
 # a defect it is reporting rather than causing.
+# The vacuity half of the exit rule is registered as well: ch_vacuity_rc is the subject whose
+# removal must flip ctl_vac_declared, the function arm CTL-VACUITY-DECLARED runs above, over the
+# declaration this file ships, where it passes. With ch_vacuity_rc removed the arm reads status 127
+# and reports its subject absent, so what is certified is again a flip. The exit rule's own call
+# to it is outside md_flips, which re-runs an assertion and not the run's status; an absent
+# ch_vacuity_rc there exits 127 and sets the status to 1.
 #
 # ── CLAUSE 6 OPT-OUT, DECLARED RATHER THAN LEFT SILENT ───────────────────────────
 # WHAT IS OPTED OUT. The subjects group H reads that are FILES AND LISTINGS, not shell functions,
@@ -5581,14 +5738,15 @@ fi
 # which re-runs a function. What compensates is the mutation of its own subject each arm was
 # observed red under, recorded with the change that added the arm.
 md_flips ch_scan_h 'H' h_assert "$H_CLEAN" "$WORK/list.hclean"
+md_flips ch_vacuity_rc 'VACUITY' ctl_vac_declared
 
 echo
 printf 'Result: \033[1;32m%d passed\033[0m, \033[1;31m%d failed\033[0m, \033[1;33m%d skipped\033[0m, \033[1;36m%d vacuous\033[0m\n' \
   "$pass" "$fail" "$skip" "$vacuous"
 printf 'CITATION: %s markdown citation(s) read over %s tracked file(s); %s bare where a unique durable home exists.\n' \
   "$A_NCITE" "$A_NFILE" "$A_NBARE"
-printf 'LOCATOR: %s in-scope (bare) path:line locator(s) over %s tracked file(s); %s in either spelling, %s out of scope by declaration.\n' \
-  "$B_NHIT" "$B_NFILE" "$B_NWIDE" "$B_NOOS"
+printf 'LOCATOR: %s in-scope (bare) path:line locator(s) over %s tracked file(s), %s unreadable and %s line(s) read; %s in either spelling, %s out of scope by declaration.\n' \
+  "$B_NHIT" "$B_NFILE" "${B_NUNREAD:-unread}" "${B_NLINE:-unread}" "$B_NWIDE" "$B_NOOS"
 printf 'COUNT-ASSERTION: %s residual site(s) in %s file(s) over %s sentence(s) graded; %s declared row(s).\n' \
   "$C_NSITE" "$C_NDIRTY" "$C_NSENT" "$C_NROW"
 printf 'ADR-NUMBERING: %s record file(s) and %s index row(s) over a span reaching %s; %s collision(s), %s undeclared gap(s), %s index/directory disagreement(s), %s stale declaration(s); %s gap(s) held open by declaration, %s unoccupied number(s) named by the register.\n' \
@@ -5632,6 +5790,11 @@ if [ "$vacuous" -gt 0 ]; then
 fi
 rc=0
 [ "$fail" -eq 0 ] || rc=1
+# A VACUOUS ARM FAILS THE RUN UNLESS IT IS DECLARED. Before this rule the status read fail alone,
+# so a run whose populations were all empty exited 0, and the strict-skip pass below could not
+# see it either, because VACUOUS() does not append to SKIPPED. The rule is unconditional: it does
+# not wait for GUARD_STRICT_SKIPS, and what it excuses is CH_VACUOUS_DECL, beside VACUOUS().
+ch_vacuity_rc "$CH_VACUOUS_DECL" || rc=1
 # STRICT SKIP MODE — a skipped group is a failure unless it is declared. This suite has no
 # dependency-gated group, so its declared set is correctly EMPTY and every skip fails.
 if [ "${GUARD_STRICT_SKIPS:-0}" = "1" ]; then
