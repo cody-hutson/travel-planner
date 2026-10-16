@@ -160,3 +160,57 @@ jobs:
 
           echo ":white_check_mark: PR body parser-clean (0 matches outside Issue References block)" \
             | tee -a "$GITHUB_STEP_SUMMARY"
+
+  # gate-efficacy: posture=advisory
+  #   Advisory by decision, for the reason the job above gives: its subject is the
+  #   pull-request BODY, it triggers on `pull_request` only, and it has no verdict on a
+  #   direct push to `main`. It grades CONTRIBUTING.md's convention "The release PR body
+  #   is a summary plus links" one edit at a time: an edit to the body of a pull request
+  #   whose head is a release/* branch reads as accretion when it adds a heading, a
+  #   paragraph or list item that opens in bold, or a task-list item.
+  #   What it delivers is an EDIT-TIME grade, not a standing control of the body's
+  #   history. The grade is read from one `edited` event's own payload and attaches to
+  #   the check run on the head commit of that moment. It stays visible there only until
+  #   the next push or event runs this job again, and that run does not re-grade the
+  #   edit, so a green check on a later head says nothing about edits made before it. The
+  #   only cumulative read -- the body as opened against the body now, from its revision
+  #   history -- is the same script's --population mode, narrowed to one pull request by
+  #   --pr, which needs an authenticated gh and runs outside CI.
+  #   The first step grades the probe itself over synthetic fixtures, so a probe that
+  #   cannot fire never grades an edit; the second step reads this event's own payload
+  #   file, so no body text passes through an expression or an environment variable.
+  accretion:
+    name: PR body accretion probe
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (for the probe script)
+        uses: actions/checkout@v7
+
+      - name: Self-test the probe over synthetic fixtures
+        run: |
+          rc=0
+          python3 scripts/check-pr-body-accretion.py --self-test > "$RUNNER_TEMP/accretion-self-test.txt" || rc=$?
+          cat "$RUNNER_TEMP/accretion-self-test.txt"
+          {
+            echo "## PR body accretion probe: self-test (exit $rc)"
+            echo
+            printf '%s\n' '~~~'
+            cat "$RUNNER_TEMP/accretion-self-test.txt"
+            printf '%s\n' '~~~'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$rc"
+
+      - name: Grade this edit to the body
+        if: github.event.action == 'edited'
+        run: |
+          rc=0
+          python3 scripts/check-pr-body-accretion.py --event "$GITHUB_EVENT_PATH" > "$RUNNER_TEMP/accretion-edit.txt" || rc=$?
+          cat "$RUNNER_TEMP/accretion-edit.txt"
+          {
+            echo "## PR body accretion probe: this edit (exit $rc)"
+            echo
+            printf '%s\n' '~~~'
+            cat "$RUNNER_TEMP/accretion-edit.txt"
+            printf '%s\n' '~~~'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$rc"
