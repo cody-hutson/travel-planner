@@ -32,9 +32,15 @@ an inline <!-- is removed only together with a --> on the same line, and never i
 span. The section runs from its heading -- any level, any case, an optional trailing colon and
 an optional closing # run -- to the next heading of any level, a thematic break or the end of
 the body, whichever comes first. Fenced code inside it is content; a fence's delimiter lines are
-not. It is empty unless a letter or digit remains. GRADED: that the note is present and not
-empty. NOT GRADED: whether it is true -- this job cannot see that, and says so on every run
-that asks for a note.
+not. It is empty unless a letter or digit remains. Three forms GitHub renders are not modelled,
+and are a stated residual rather than a reading this file claims: a setext heading (the words
+underlined) and a heading inside a blockquote are no heading here, so the note reads absent; and
+a note written as an indented code block is read as plain lines, so an HTML comment in it is
+removed though GitHub shows it, and a note made only of such a line reads empty. Each errs toward
+asking for a note, never toward passing without one; the self-test pins all three as they read
+today, and the template's own '## Integration note' heading is the form that is read. GRADED:
+that the note is present and not empty. NOT GRADED: whether it is true -- this job cannot see
+that, and says so on every run that asks for a note.
 
 INPUTS. In --check, PR_BASE_SHA, PR_HEAD_SHA and PR_BODY come from the environment the workflow
 step sets; the body never passes through a shell and is never printed. --base, --head and
@@ -656,6 +662,20 @@ def arms_predicate(t):
                 "CHANGELOG.md never enters the rows; NOTES.md, given the same +150, flags")
     t.arm("ST-CHANGELOG", changelog)
 
+    def changelog_nested():
+        repo = t.repo("changelog-nested")
+        repo.write("CHANGELOG.md", lines_of(t.big, "c"))
+        repo.write("docs/CHANGELOG.md", lines_of(t.big, "d"))
+        base = repo.commit("base")
+        repo.branch("pr", base)
+        for p in ("CHANGELOG.md", "docs/CHANGELOG.md"):
+            repo.write(p, added(150, "a") + repo.read(p))
+        res = evaluate(repo.root, base, repo.commit("pr"))
+        return ([r["path"] for r in res["rows"]] == ["docs/CHANGELOG.md"] and flags(res) == ["docs/CHANGELOG.md"],
+                "only the root CHANGELOG.md is excluded: docs/CHANGELOG.md, given the same +150, enters "
+                "the rows and flags as ordinary content")
+    t.arm("ST-CHANGELOG-NESTED", changelog_nested)
+
     def new_file():
         repo = t.repo("newfile")
         repo.write("ref/big.txt", lines_of(t.big, "x"))
@@ -669,6 +689,28 @@ def arms_predicate(t):
                 and all(r["path"] != "ref/big.txt" for r in res["rows"]),
                 "a new file's row is read and passed as new; big.txt never enters the rows")
     t.arm("ST-NEW-FILE", new_file)
+
+    def floor_at_merge_base():
+        repo = t.repo("floor-at-merge-base")
+        repo.write("ref/big.md", lines_of(t.big, "b"))
+        base = repo.commit("base")
+        repo.branch("pr", base)
+        raised = []
+        for line in t.params.split("\n"):
+            row = fence_row(line)
+            if row and row[0].endswith(".floor") and re.fullmatch(r"[0-9]+", row[1]):
+                line = "{} {}".format(row[0], t.big + 1)
+            raised.append(line)
+        repo.write(PARAM_DOC, "# parameters\n\n```" + PARAM_TAG + "\n" + "\n".join(raised) + "```\n")
+        repo.write("ref/big.md", repo.read("ref/big.md") + added(LINE_THRESHOLD, "a"))
+        head = repo.commit("pr raises every floor and adds to ref/big.md")
+        res = evaluate(repo.root, base, head)
+        at_head = floor_from_text(repo.read(PARAM_DOC))
+        return (flags(res) == ["ref/big.md"] and res["floor"] == t.floor and at_head == (t.big + 1, t.nfloors),
+                "the head raises every floor to {} B, above the file's {} B, and the file still flags "
+                "against the merge base's floor {}: a pull request cannot grade itself by the "
+                "declaration it edits".format(at_head[0], t.big, res["floor"]))
+    t.arm("ST-FLOOR-AT-MERGE-BASE", floor_at_merge_base)
 
 
 def orphan_repo(t, name):
@@ -848,6 +890,52 @@ def arms_reader(t):
                 "CONTRIBUTING.md exception, and the --body-file run that answers before opening")
     t.arm("ST-REMEDY", remedy)
 
+    def disclaimer():
+        # The sentence is written out here rather than read from GRADED: an arm that compared the
+        # printed line with the constant would pass whatever the constant said.
+        said = "Graded: that a note is present and not empty. Not graded: whether it is true."
+        failed, passed = [], []
+        grade(t.flagged_result(), "", failed.append)
+        grade(t.flagged_result(), filled, passed.append)
+        fail_line = [l for l in failed if l.startswith(PREFIX + "FAIL -- ")]
+        pass_line = [l for l in passed if l.startswith(PREFIX + "PASS -- ")]
+        return (len(fail_line) == 1 and fail_line[0].endswith(said)
+                and len(pass_line) == 1 and pass_line[0].endswith(said),
+                "a flag's FAIL line and its PASS line each end by saying what is graded and that "
+                "whether the note is true is not")
+    t.arm("ST-DISCLAIMER", disclaimer)
+
+    def first_heading():
+        body = "## Integration note\n\n## Integration note\nMerged the two duplicate tables into one.\n"
+        st, info = note_block(body)
+        lines = []
+        grade(t.flagged_result(), body, lines.append)
+        warned = PREFIX + "WARNING: 1 further 'Integration note' heading(s); the first is read"
+        return (st == "empty" and info["head"] == 0 and info["extra"] == 1 and warned in lines,
+                "two note headings, the first empty: the first is the note, so it reads empty, and "
+                "the second is warned about rather than read")
+    t.arm("ST-FIRST-HEADING", first_heading)
+
+    # Declared residuals, named in the docstring's THE NOTE paragraph: three forms GitHub renders as
+    # a note that this reader does not model. Each arm pins today's reading beside a twin the reader
+    # does read, so the disagreement is declared, and a change to the reader on these forms is a
+    # visible change rather than a silent one.
+    t.arm("ST-RESIDUAL-SETEXT", lambda: (
+        status("Integration note\n----------------\nMerged the two duplicate tables into one.\n") == "absent"
+        and status("## Integration note\nMerged the two duplicate tables into one.\n") == "present",
+        "declared residual: a setext heading, which GitHub renders, is no heading here and reads "
+        "absent; its ## twin reads present"))
+    t.arm("ST-RESIDUAL-BLOCKQUOTE", lambda: (
+        status("> ## Integration note\n> Merged the two duplicate tables into one.\n") == "absent"
+        and status("## Integration note\nMerged the two duplicate tables into one.\n") == "present",
+        "declared residual: a heading inside a blockquote, which GitHub renders, is no heading here "
+        "and reads absent; the same lines outside the blockquote read present"))
+    t.arm("ST-RESIDUAL-INDENTED-CODE", lambda: (
+        status("## Integration note\n\n    <!-- kept the old table -->\n") == "empty"
+        and status("## Integration note\n\n    kept the old table\n") == "present",
+        "declared residual: a note that is an indented code block holding a comment, which GitHub "
+        "shows as text, reads empty; the same block holding the words alone reads present"))
+
 
 def arms_exit(t):
     filled = t.template.replace("## Integration note\n",
@@ -877,6 +965,41 @@ def arms_exit(t):
                 "a refusal exits {} and a flag with no note exits {}, each with its own ::error:: "
                 "line, and neither is the self-test's".format(rc_refusal, rc_flag))
     t.arm("ST-EXIT-SEPARATION", separation)
+
+    # The process entry the workflow step runs: main, then run_check, which reads the environment
+    # and hands the exit status back to the shell. Every arm above calls check() in-process; this one
+    # runs this file as a subprocess, copied into a fixture repository's scripts/ so its root resolves
+    # there, from a working directory outside that repository, with argv --check alone and an
+    # environment holding PATH, the self-test's isolated git settings and the three PR_ variables
+    # and nothing else. The base tip has moved past the fork, so the range line's base is not its
+    # merge base, and the order it names them in is read.
+    def entry():
+        repo, fork, head = t.fixture("entry")
+        repo.switch("main")
+        repo.write("ref/small.md", repo.read("ref/small.md") + "one more line\n")
+        tip = repo.commit("main moves past the fork")
+        copy = os.path.join(repo.root, "scripts", os.path.basename(__file__))
+        os.makedirs(os.path.dirname(copy), exist_ok=True)
+        shutil.copyfile(os.path.abspath(__file__), copy)
+
+        def run(body):
+            env = dict(ISOLATED, PATH=os.environ.get("PATH", os.defpath),
+                       PR_BASE_SHA=tip, PR_HEAD_SHA=head, PR_BODY=body)
+            proc = subprocess.run([sys.executable, copy, "--check"], cwd=t.tmp, env=env,
+                                  stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                                  stderr=subprocess.STDOUT, timeout=300)
+            return proc.returncode, proc.stdout.decode("utf-8", "replace").splitlines()
+        rc_bare, bare = run("")
+        rc_note, noted = run(filled)
+        span = PREFIX + "range {}..{} (merge base of base {} and head {})".format(
+            fork[:12], head[:12], tip[:12], head[:12])
+        return (rc_bare == 1 and FLAG_ERROR.format("absent", 1) in bare and span in bare
+                and rc_note == 0 and span in noted
+                and any(l.startswith(PREFIX + "PASS -- 1 file(s) flagged") for l in noted),
+                "run as the step runs it, from PR_BASE_SHA, PR_HEAD_SHA and PR_BODY alone: a flag "
+                "with an empty body exits {} and with a note exits {}, and the range line names "
+                "the merge base, then the base, then the head".format(rc_bare, rc_note))
+    t.arm("ST-ENTRY", entry)
 
 
 def self_test(root):
