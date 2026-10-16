@@ -163,8 +163,9 @@ decision here is presented as following from it.**
 
 ## Options considered
 
-Each choice was put to the operator at the Collective Review with the design's recommendation and
-an independent review's. Where the operator ruled against the design, that is said.
+Each choice was put to the operator at the Collective Review, with the design's recommendation and
+an independent review's, or at Dev Testing, with that review's. Where the operator ruled against
+the design, that is said.
 
 ### D1 — how the rating is asked
 
@@ -187,6 +188,8 @@ an independent review's. Where the operator ruled against the design, that is sa
 | Every session on every form is asked | rejected | On a block-owned form the person answering is the operator, and where every answer is relayed the operator is the one answering too |
 | No rating after a stop | not taken | The block is already given, and one skippable ask is not a push |
 | Strictly one turn at the ask, with nothing offered again | not taken | No ground was recorded. The selected rule differs from the build card's "asked once" by one further offer |
+| **A reply that names no one number of the scale is offered the numbers again once** | **selected** | D1 |
+| The same reply recorded as no rating | not taken | No ground was recorded |
 | The ask treated as a closed field in full, its silence offer included | rejected | The form's block has already been given, so a silence there has nothing left to protect |
 | Spoken only: the ask does not say the number may be typed | not taken | `#1765 F-7` informs the judgment that a typed number is more candid, by an inference marked as one |
 | Not saying who reads the rating until after it is given | rejected | It would draw a more candid number by keeping from the person what they need to know to give it |
@@ -206,6 +209,8 @@ an independent review's. Where the operator ruled against the design, that is sa
 | A pooled row holding the `PERSON`-class fields' turns alone, the section's other fields keeping rows of their own | rejected by ruling | Measured at `5d50eb5`, one of the sections that hold such a field holds exactly one, so that row would be the field's own tally under another name |
 | A pooled row that says nothing of how many it pools | not taken | The operator ruled that it says how many |
 | A pooled count that grows with each block a person filled | rejected by ruling | A count that tracked the number of a person's needs would be a fact about their answers, by inference |
+| **Every pooled section counted by the distinct labels the form prints for it, asked or not** | **selected** | D2 |
+| A pooled section counted by the fields put, its single-field case stated as a cost | not taken | A pooled row would then reflect what a session asked |
 | A field for how the session ended | rejected | It would be the mark `ADR-022` D1.2 declines to keep |
 | An outcome for each field — answered, skipped or left open | rejected | A second home for a fact the profile owns |
 | Minutes, or any clock time | rejected | A channel that cannot write has no clock the card can ask of an assistant, an estimated duration is an invented value, and an entry has one field list on every tier. That a session that can write could record minutes is a choice declined, not a constraint met |
@@ -233,6 +238,8 @@ an independent review's. Where the operator ruled against the design, that is sa
 | No rating on a channel that cannot write | not taken | It applies both of the first sitting's rulings by giving the rating up there |
 | The return taken whole or not at all — the first design's | rejected | It ties the rating to the engagement record, so a damaged record would discard a rating in its own closed set |
 | The record states that a tag identifies the return, and the build names the token | not taken | The card, the save and the schema must share one literal |
+| **One literal marks both parts** | **selected** | D3 |
+| The tag marks the tagged section only | not taken | The card, the save and the schema must share one literal |
 | A session that can write records its ledger row by row as it runs | rejected | A row written as the session runs marks a session that was left, which `ADR-022` D1.2 declines to mark |
 | A person-form return **copied into the store by the operator's hand** | rejected | No check, no pooling, and a second writer for the class |
 | A person-form return **left in the saved file until a command next reads it and moves it out** — the revised design's | rejected by ruling | The review found that it takes lines out of a durable record, which no standing rule of the command admits; that it names no verb; and that until that read the return rests in the file unchecked and unpooled |
@@ -261,6 +268,9 @@ an independent review's. Where the operator ruled against the design, that is sa
 | `erase` re-keys an entry to the trip's token | rejected | It keeps a per-field account of an erased person's interview under a pseudonym, for no use the plan has |
 | A removal act the operator can call for any traveller | rejected | A new act on the command, and a standing rule |
 | A return saved twice is kept twice | rejected | One session would count as two |
+| **A rating with no engagement record kept as an entry; a line handed over by itself joins the one entry that lacks a rating, where there is exactly one** | **selected** | D4 |
+| A line handed over by itself never placed | not taken | No ground was recorded |
+| Which entry such a line joins left open | not taken | No ground was recorded |
 
 ### D5 — how the travel manager reviews a low rating
 
@@ -767,6 +777,9 @@ change.
 - **The rule for a channel that cannot write is stated beyond the evidence**: it rests on one
   operator-attested observation and one assumption. The declared outcome is what keeps a wrong
   assumption from costing more than the return.
+- **A rating's line handed over by itself joins the one entry that lacks a rating**, which is its
+  own session's only where that session kept an entry: where it kept none and an earlier session's
+  entry lacks a rating, the line joins the earlier one.
 
 ### The interim — what binds a session until the card, the command and the data architecture are edited
 
@@ -839,9 +852,10 @@ why no rating is ever inferred.
 
 | What | Tier | Why |
 |---|---|---|
-| The decisions, before the card, the command and the data architecture are edited to them | **CHEAP** | a record and the marks that point at it, revertible together; no session behaves differently yet |
+| The decisions, while this record is `Proposed` | **CHEAP** | a record and the marks that point at it, revertible together; no session behaves differently yet |
+| The decisions, once this record is `Accepted` | **MODERATE** | as this record's card states |
 | The scale, once ratings are kept | **MODERATE** | ratings on different scales do not compare |
-| *Low* | **CHEAP** | a threshold, moved by re-reading kept numbers |
+| *Low* | **CHEAP** while this record is `Proposed`, **MODERATE** after | a threshold, moved by re-reading kept numbers |
 | What the engagement record holds, once entries are kept | **MODERATE** | a value added later is a new permitted case, and so a new decision |
 | The return's shape on a channel that cannot write | **MODERATE** | the card, the save and the class's schema share it |
 | The class, once entries exist on users' machines | **EXPENSIVE** | they sit in directories this repository cannot reach or repair |
