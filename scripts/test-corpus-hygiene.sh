@@ -6151,6 +6151,11 @@ fi
 # fixture on zero instead. Each fixture still carries the tracked tree's rows as they stand, so every
 # size arm below then fails against them, the run completes, and it exits non-zero. It checks only
 # what the builder computes with; the rows' own grammar is the size group's not-a-measurement code.
+# That grammar admits a leading zero, and the readers of a value written with one disagree unless
+# bash reads it in base ten: awk and the integration-note checker read 09000 as 9000, while bash's
+# arithmetic and its printf read a leading zero as octal — they reject 08 and 09000, and read
+# 020000 as 8192. So the arm reads each value it admits in base ten before any arithmetic sees it,
+# and every reader of the declaration then reads the same number.
 ch_fence "$ROOT/$CH_SIZE_PARAM_DOC" "$CH_SIZE_PARAM_TAG" > "$WORK/size.realparams" 2>/dev/null || : > "$WORK/size.realparams"
 SZ_FLOOR="$(awk -F'\t' '$1 == "on-demand.floor" { print $2 }' "$WORK/size.realparams")"
 SZ_PCT="$(awk -F'\t' '$1 == "on-demand.headroom" { v = $2; sub(/%$/, "", v); print v }' "$WORK/size.realparams")"
@@ -6161,7 +6166,9 @@ if [ -n "$SZ_PBAD" ]; then
   FAIL "CTL-SIZE-PARAMS: ${SZ_PBAD% } in the \`$CH_SIZE_PARAM_TAG\` fence in $CH_SIZE_PARAM_DOC did not read as a whole number (floor '$SZ_FLOOR', headroom '$SZ_PCT' with its % taken off) — every size arm below is built from these two, so each is built on zero instead and fails against the rows its fixture carries"
   SZ_FLOOR=0; SZ_PCT=0
 else
-  PASS "CTL-SIZE-PARAMS: the two rows every size fixture is built from read as whole numbers — on-demand.floor $SZ_FLOOR, and on-demand.headroom $SZ_PCT once its % is taken off, in the \`$CH_SIZE_PARAM_TAG\` fence in $CH_SIZE_PARAM_DOC — so the arithmetic below cannot abort the run"
+  SZ_FLOOR_TXT="$SZ_FLOOR"; SZ_PCT_TXT="$SZ_PCT"
+  SZ_FLOOR=$(( 10#$SZ_FLOOR )); SZ_PCT=$(( 10#$SZ_PCT ))
+  PASS "CTL-SIZE-PARAMS: the two rows every size fixture is built from read as whole numbers, in base ten as awk and the integration-note checker read them — on-demand.floor '$SZ_FLOOR_TXT' as $SZ_FLOOR, and on-demand.headroom '$SZ_PCT_TXT' as $SZ_PCT once its % is taken off, in the \`$CH_SIZE_PARAM_TAG\` fence in $CH_SIZE_PARAM_DOC — so the arithmetic below cannot abort the run, and builds each fixture on the number every other reader of the declaration reads"
 fi
 SZ_BIG=$(( ${SZ_FLOOR:-0} + 1000 ))
 SZ_BIGROW=$(( SZ_BIG + (SZ_BIG * ${SZ_PCT:-0} + 99) / 100 ))
@@ -6530,7 +6537,9 @@ fi
 # real CH_FIRST_READ_CEILING — not a constant of the fixture's own — and gives it a row beside the
 # base's. The rule finds that file by its class, so its name is never the charter's. The row is held
 # EQUAL to the constant, so a row that differs from it fails in either direction, and a row equal to
-# it is the lookalike.
+# it is the lookalike. The constant is read in base ten here for the reason arm CTL-SIZE-PARAMS
+# gives: size.awk reads a leading zero as decimal, and bash's arithmetic, left to itself, as octal.
+# A constant that is not a whole number is left as written, for the size group's K0 to report.
 ctl_size_charter() {  # ctl_size_charter <name> <bytes> <ceiling> — the base, the first-verb file at <bytes>, its row at <ceiling>
   local d
   d="$(ctl_size_mk "$1")"
@@ -6538,7 +6547,10 @@ ctl_size_charter() {  # ctl_size_charter <name> <bytes> <ceiling> — the base, 
   ctl_size_rows "$d" "$(ctl_size_row "$3" CHARTER.md)" "$(ctl_size_row "$SZ_BIGROW" reference/big.md)"
   printf '%s\n' "$d"
 }
-SZ_FR="$CH_FIRST_READ_CEILING"
+case "$CH_FIRST_READ_CEILING" in
+  ''|*[!0-9]*) SZ_FR="$CH_FIRST_READ_CEILING" ;;
+  *)           SZ_FR=$(( 10#$CH_FIRST_READ_CEILING )) ;;
+esac
 D="$(ctl_size_charter szoverconst "$(( SZ_FR + 1 ))" "$SZ_FR")"
 O="$(ctl_size_scan "$D")"
 ctl_mustfire "CTL-SIZE-OVER-CONSTANT" "${CH_SIZE_LETTER}6" "$O" "the first-verb file one byte over the constant, its row equal to the constant — the over-its-row code fires beside it, and this arm counts the constant's" 1
