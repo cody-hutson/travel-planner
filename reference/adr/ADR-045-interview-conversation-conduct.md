@@ -532,7 +532,7 @@ decision.**
   no follow-up spends it.
 - **D5.6** — on doubt, ask. The ask-on-doubt is no follow-up and carries no count.
 - **D6.3** — the spoken care for `PERSON`-class questions. Its reach is unchanged, and whether it
-  should cover health-shaped fields typed otherwise stays an open question.
+  should cover health-shaped fields typed otherwise stays an open question (§ *Residuals*).
 
 Left as they are, each by the operator's confirmation: the worked example stays for the person to
 compare against, and the hand-off set is the other record's subject; a form's label is the form's,
@@ -610,7 +610,7 @@ its kind, and whether it gave an example. (v) The form — its labels, its heads
 declared text and its computed lines — each field's class from `reference/data-model.md`, and the
 marks the output class admits. (vi) Whether the session is spoken.
 
-**Their scope.** These are checks for #1769's synthetic suite. They are **exact on an authored test
+**Their scope.** These are checks for a synthetic test suite. They are **exact on an authored test
 conversation**, where the fixture's author writes both sides and declares (iii), (iv) and (vi). On a
 **generated** one, where the interviewer under test produces its own side, which field a turn puts
 and whether it gave an example are judged labels: a verdict that rests on a judged label says so,
@@ -775,8 +775,8 @@ view, which stays true of that surface.
 | The decisions, while this record is `Proposed` | **CHEAP** | a record and the marks that point at it, revertible together; no session behaves differently yet |
 | The decisions, once this record is `Accepted` | **MODERATE** | as this record's card states |
 | The example bound, the follow-up shape and the two lists a style is held to, once slices are built on them | **MODERATE** | a record superseded in part can be superseded again, but the slices built on it follow it |
-| The own-words predicate | **CHEAP** until a suite pins it, **MODERATE** after | the suite's fixtures encode it |
-| The style names | **CHEAP** | product vocabulary |
+| The own-words predicate | **CHEAP** while this record is `Proposed` and no suite pins it, **MODERATE** after either | the suite's fixtures encode it |
+| The style names | **CHEAP** while this record is `Proposed`, **MODERATE** after | product vocabulary |
 | This record's number and file name | **IRREVERSIBLE** | numbers are never reused, and other records cite a record by its file |
 
 ## Residuals
@@ -807,6 +807,7 @@ Every residual has an owner that is a card or the operator.
 | RS-20 | **A reorder, in a value written or a confirmation spoken, does not conform to `ADR-022` D5.1 and D5.2 and fails no check** | the operator, who reads the report #1769's suite produces |
 | RS-21 | **The reported observation *order* is defined for a value and not for a confirmation**, though D2 item 3 reports a reorder in either | #1769 |
 | RS-22 | **A silence and an unclear reply on one field, in either order**, have no row in D3 item 5's table | #1769 |
+| RS-23 | **Whether `ADR-022` D6.3's spoken care should reach health-shaped fields typed otherwise.** Its reach is unchanged here | #1353 |
 
 ## References
 
