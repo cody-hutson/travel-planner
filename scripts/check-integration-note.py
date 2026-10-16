@@ -690,26 +690,48 @@ def arms_predicate(t):
                 "a new file's row is read and passed as new; big.txt never enters the rows")
     t.arm("ST-NEW-FILE", new_file)
 
+    # The floor and the file's size are read at the merge base, and at neither of the two other
+    # commits the range names. The head raises every floor above the file; then main moves past the
+    # fork, as ST-ENTRY moves it, raising every floor to a third value and cutting the file under
+    # the merge base's floor. A read at the head or at the base tip, of the declaration or of the
+    # size, leaves the file unflagged, and the floor it reports names which commit was read.
     def floor_at_merge_base():
         repo = t.repo("floor-at-merge-base")
         repo.write("ref/big.md", lines_of(t.big, "b"))
-        base = repo.commit("base")
-        repo.branch("pr", base)
-        raised = []
-        for line in t.params.split("\n"):
-            row = fence_row(line)
-            if row and row[0].endswith(".floor") and re.fullmatch(r"[0-9]+", row[1]):
-                line = "{} {}".format(row[0], t.big + 1)
-            raised.append(line)
-        repo.write(PARAM_DOC, "# parameters\n\n```" + PARAM_TAG + "\n" + "\n".join(raised) + "```\n")
+        fork = repo.commit("base")
+        repo.branch("pr", fork)
+
+        def declaring(floor):
+            out = []
+            for line in t.params.split("\n"):
+                row = fence_row(line)
+                if row and row[0].endswith(".floor") and re.fullmatch(r"[0-9]+", row[1]):
+                    line = "{} {}".format(row[0], floor)
+                out.append(line)
+            return "# parameters\n\n```" + PARAM_TAG + "\n" + "\n".join(out) + "```\n"
+        repo.write(PARAM_DOC, declaring(t.big + 1))
         repo.write("ref/big.md", repo.read("ref/big.md") + added(LINE_THRESHOLD, "a"))
         head = repo.commit("pr raises every floor and adds to ref/big.md")
-        res = evaluate(repo.root, base, head)
         at_head = floor_from_text(repo.read(PARAM_DOC))
-        return (flags(res) == ["ref/big.md"] and res["floor"] == t.floor and at_head == (t.big + 1, t.nfloors),
-                "the head raises every floor to {} B, above the file's {} B, and the file still flags "
-                "against the merge base's floor {}: a pull request cannot grade itself by the "
-                "declaration it edits".format(at_head[0], t.big, res["floor"]))
+        repo.switch("main")
+        repo.write(PARAM_DOC, declaring(t.big + 2))
+        repo.write("ref/big.md", lines_of(t.floor - 1, "b"))
+        tip = repo.commit("main raises every floor again and cuts ref/big.md under the floor")
+        at_tip = floor_from_text(repo.read(PARAM_DOC))
+        tip_size = int(git(repo.root, "cat-file", "-s", tip + ":ref/big.md")[1].decode().strip())
+        res = evaluate(repo.root, tip, head)
+        row = [r for r in res["rows"] if r["path"] == "ref/big.md"]
+        return (res["mb"] == fork and res["base"] == tip and fork != tip
+                and flags(res) == ["ref/big.md"] and res["floor"] == t.floor
+                and len(row) == 1 and row[0]["size"] == t.big
+                and at_head == (t.big + 1, t.nfloors) and at_tip == (t.big + 2, t.nfloors)
+                and tip_size < t.floor,
+                "the head declares every floor {} B and the base tip, past the fork, {} B, both above "
+                "the file's {} B, and the base tip cuts the file to {} B; flagged {} against floor {} "
+                "at a size of {} B, which must be the merge base's {} and {}: a pull request is graded "
+                "by neither the declaration it edits nor one main wrote after it forked".format(
+                    at_head[0], at_tip[0], t.big, tip_size, flags(res), res["floor"],
+                    row[0]["size"] if row else None, t.floor, t.big))
     t.arm("ST-FLOOR-AT-MERGE-BASE", floor_at_merge_base)
 
 
