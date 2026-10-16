@@ -5619,13 +5619,17 @@ ctl_j_solely() {  # ctl_j_solely <label> <id> <output> <what> — J0 for <id>, a
     FAIL "$label: MUST FIRE J0 for $id and nothing else for it — $what; the extractor reported J0 $n0 time(s) and $nx other finding(s) for it"
   fi
 }
-ctl_j_bad() {  # ctl_j_bad <label> <output> <n> <what> — the denominator's count of ids withheld
-  local label="$1" out="$2" want="$3" what="$4" got
+ctl_j_bad() {  # ctl_j_bad <label> <output> <n> <record> <what> — the denominator's count of ids withheld,
+  # and the exact finding a defect planted on ANOTHER id prints, once. The count alone is met by a reader
+  # that reads nothing more once an id breaks at the fence, so the other id's finding is what grades
+  # containment: such a reader reports the count and never the finding
+  local label="$1" out="$2" want="$3" rec="$4" what="$5" got nrec
   got="$(awk '$1 == "DENOM" { print $11 }' <<<"$out")"
-  if [ "${got:-none}" = "$want" ]; then
-    PASS "$label: $got id(s) withheld, and every other id read — $what"
+  nrec="$(awk -v r="$rec" '$0 == r { n++ } END { print n + 0 }' <<<"$out")"
+  if [ "${got:-none}" = "$want" ] && [ "$nrec" -eq 1 ]; then
+    PASS "$label: $got id(s) withheld, and the defect planted on another id is still found, as '$rec' — $what"
   else
-    FAIL "$label: the denominator must withhold $want id(s) — $what; it withheld '${got:-no DENOM line}'"
+    FAIL "$label: the denominator must withhold $want id(s), and the defect planted on another id must still be found, once, as '$rec' — $what; it withheld '${got:-no DENOM line}' and printed that finding $nrec time(s)"
   fi
 }
 
@@ -5726,9 +5730,10 @@ ctl_j_fire "CTL-J0-PATH" J0 fx-lead "$(ctl_j_scan "$D")" "a row names a file tha
 
 D="$(ctl_j_mk j0nosite)"
 ctl_j_doc "$D" "$J_R1" "$J_R3" "$J_R4" "$J_R5" "$J_R6"
+ctl_j_sub "$D/docs/second.md" '(`one`, `two`)' '(`one`)'
 O="$(ctl_j_scan "$D")"
 ctl_j_fire "CTL-J0-NO-SITE" J0 fx-lead "$O" "an id's only site row is removed: an owner row alone is not a registration"
-ctl_j_bad "CTL-J0-NO-SITE-CONTAINED" "$O" 1 "the broken id is withheld and the other id is still read on the same run"
+ctl_j_bad "CTL-J0-NO-SITE-CONTAINED" "$O" 1 "FINDING J1 fx-list docs/second.md two" "the broken id is withheld and the other id is still read on the same run"
 
 D="$(ctl_j_mk j0absent)"
 ctl_j_sub "$D/docs/owner.md" '**The ladder.**' '**The stair.**'
@@ -5768,9 +5773,10 @@ ctl_j_why "CTL-J0-NO-SEPARATOR" - a-row-does-not-carry-its-five-fields "$(ctl_j_
 D="$(ctl_j_mk j0copy)"
 printf '%s\n' '**The solo list.**' '' '- **`left`** — one.' '- **`right`** — the other.' > "$D/docs/solo.md"
 ctl_j_doc "$D" "$J_R1" "$J_R2" "$J_R3" "$J_R4" "$J_R5" "$J_R6" 'fx-self | owner | docs/solo.md | lead | **The solo list.**' 'fx-self | site  | docs/solo.md | lead | **The solo list.**'
+ctl_j_sub "$D/docs/site.md" '[N `alpha` · N `beta`]' '[N `alpha`]'
 O="$(ctl_j_scan "$D")"
 ctl_j_why "CTL-J0-SITE-COPY" fx-self a-site-row-copies-its-owner-row "$O" "an id's only site row repeats its owner row — the owner compared with itself, which would pass both comparisons on nothing"
-ctl_j_bad "CTL-J0-SITE-COPY-CONTAINED" "$O" 1 "that id is withheld, and the two others are read"
+ctl_j_bad "CTL-J0-SITE-COPY-CONTAINED" "$O" 1 "FINDING J1 fx-lead docs/site.md beta" "that id is withheld, and another id is still read on the same run"
 
 # What must stay silent, each over the denominators it plants.
 D="$(ctl_j_mk jorder)"
