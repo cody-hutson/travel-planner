@@ -120,9 +120,10 @@ name: Corpus hygiene
 #        reference/size-fence.md and fails above it. A file owing a row with none, a row the
 #        fence cannot hold a file to, a file the classification rule reaches by no clause, an
 #        instrument-carrying class holding no file, and a file the rule reaches only through its
-#        own row each fail too. The parameters are read from the declaration and copied nowhere;
-#        what the group reports without failing, and why, is stated in the suite's banner entry
-#        for it and is not restated here
+#        own row each fail too. The file the rule classes first-read is bounded as well by a
+#        constant in the suite, and its row is held equal to it. The parameters are read from the
+#        declaration and copied nowhere; what the group reports without failing, and why, is
+#        stated in the suite's banner entry for it and is not restated here
 #   CTL  a synthetic fixture tree built in a temp dir on every invocation, plus the arms whose
 #        ids end -RETRO, each replaying a real historical defect. One MUST-FIRE arm per finding
 #        code the suite can

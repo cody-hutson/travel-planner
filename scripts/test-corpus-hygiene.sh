@@ -415,6 +415,12 @@
 #        or an arm naming a code nothing emits, and Y1 fails. It reads neither of the last two,
 #        and nothing else holds them to the letter. The letter is kept as it is and is never
 #        re-lettered.
+#
+#        THE FIRST-VERB READ IS HELD TWICE. A file the rule classes first-read is bounded by its
+#        row and by CH_FIRST_READ_CEILING, and fails above the lower of the two: over the constant
+#        is K6. Its row is held equal to the constant, and a row that differs from it, above or
+#        below, is K7, so the two cannot silently disagree, and only an edit to the constant
+#        raises that file's ceiling.
 #   CTL  a synthetic fixture tree, built in a temp dir ON EVERY RUN, plus the arms whose ids
 #        end -RETRO, each replaying a defect this repository actually shipped. One MUST-FIRE
 #        arm per finding code this file can emit, alongside the specificity arms that tell a
@@ -570,6 +576,19 @@ CH_SIZE_PARAM_DOC='reference/load-class-model.md'
 CH_SIZE_PARAM_TAG='load-class-parameters'
 CH_SIZE_RETRO_REV='cb33116bbb5fee4be88fe73708ebcadfe94ec708'
 CH_SIZE_LETTER='K'
+# The first-verb read's ceiling. Every file reference/load-class-model.md § 4 classes first-read —
+# the charter, which every verb reads once per invocation before it acts — is bounded by this byte
+# count as well as by its row in the size-ceiling fence, and fails above the lower of the two. It
+# is a ceiling on that read, not an always-loaded budget: in the decided posture the engine is an
+# installed capability, and the charter is read by a verb rather than loaded when a session starts
+# (reference/adr/ADR-021-installable-capability.md, Decision 1, as amended). It is a CONSTANT of
+# the detector, deliberately not an environment knob: a gate whose strictness can be set by the
+# caller is not a gate. It is changed by editing the line below, in a diff someone reviews, and
+# that is the point — the file's row is held equal to it, so a row moved on its own fails, and
+# re-pinning that row writes this line to the same value in the same change. It was seeded at the
+# file's size plus the headroom the load-class-parameters fence declares for its class, and is
+# re-derived the same way when it is moved on purpose.
+CH_FIRST_READ_CEILING='147230'
 
 pass=0; fail=0; skip=0; vacuous=0; SKIPPED=""; VACUOUS_IDS=""
 PASS()    { printf '  \033[1;32mPASS\033[0m %s\n' "$*"; pass=$((pass+1)); }
@@ -2807,7 +2826,7 @@ cat > "$WORK/size.awk" <<'AWK'
 # output over the same tree with the size-ceiling fence's own lines taken out of the document that
 # carries it; RFILE, that fence's rows as "<ceiling>\t<path>", extracted by fence.awk — the SAME
 # reader every declaring fence in this suite goes through. -v DOCREAD=<1 when the document that
-# carries the fence is readable>.
+# carries the fence is readable> -v FRCEIL=<CH_FIRST_READ_CEILING, the first-verb read's constant>.
 #
 # A row is held against the classification, and it is the classification's word, not the row's,
 # that says whether a file owes one. A row the fence cannot hold its file to still stands for that
@@ -2816,18 +2835,24 @@ cat > "$WORK/size.awk" <<'AWK'
 # nothing but its own row: § 4 counts a path anywhere, fenced lines included, so every row cites the
 # file it names, and a row added for a file nothing else names would otherwise turn an unclassified
 # file green. A row for a file that owes none is REPORTED as UNOWED and never failed. NOTHING HERE
-# COMPARES A SIZE WITH A LOWER BOUND.
+# COMPARES A SIZE WITH A LOWER BOUND. A file the classification puts in the class first-read is held
+# by the constant as well — found by its class, never by its name — and its row is held EQUAL to
+# the constant, so a row that differs from it in either direction fails.
 #
 # Emits, after load-class.awk's own findings, tallies and DENOM, which it passes through:
 #   FINDING K1 <bytes> <ceiling> <path>        a file over its row
 #   FINDING K2 <class> <bytes> <floor> <path>  a file that owes a row and has none
 #   FINDING K3 <reason> <ceiling> <path>       absent-path · not-a-whole-number · repeated-path
+#   FINDING K6 <bytes> <constant> <path>       a first-read file over the constant
+#   FINDING K7 <ceiling> <constant> <path>     a first-read file's row that differs from the constant
 #   FINDING K8 <bytes> <path>                  a file classified only by its own row
 #   UNOWED <reason> <ceiling> <path>           below-floor · instrument-none · unclassified
-# On a surface that is not a measurement — the document absent, or a fence with no row — it emits
-# EXACTLY ONE K0 and withholds every other finding, load-class.awk's included:
+# On a surface that is not a measurement — the document absent, a fence with no row, or a constant
+# that is not a whole number — it emits EXACTLY ONE K0 and withholds every other finding,
+# load-class.awk's included:
 #   FINDING K0 <cause>
-# ALWAYS one DENOM SIZE <rows> <owing a row> <owing a row and holding one> <unowed rows>.
+# ALWAYS one DENOM SIZE <rows> <owing a row> <owing a row and holding one> <unowed rows> <first-read
+# files>.
 FILENAME == CFILE {
   if ($1 == "CLASS") {
     p = $0; for (k = 1; k <= 7; k++) sub(/^[^ ]+ /, "", p)
@@ -2842,12 +2867,13 @@ FILENAME == C2FILE {
 FILENAME == RFILE { split($0, f, "\t"); if (f[2] == "") next; nr++; RC[nr] = f[1]; RP[nr] = f[2]; next }
 END {
   cause = ""
-  if (DOCREAD + 0 != 1)   cause = "size-fence-document-absent"
-  else if (nr + 0 == 0)   cause = "size-fence-rowless"
+  if (DOCREAD + 0 != 1)               cause = "size-fence-document-absent"
+  else if (nr + 0 == 0)               cause = "size-fence-rowless"
+  else if (FRCEIL !~ /^[0-9]+$/)      cause = "constant-not-a-whole-number:" FRCEIL
   if (cause != "") {
     printf "FINDING K0 %s\n", cause
     for (k = 1; k <= nb; k++) if (BUF[k] !~ /^FINDING /) print BUF[k]
-    printf "DENOM SIZE %d 0 0 0\n", nr + 0
+    printf "DENOM SIZE %d 0 0 0 0\n", nr + 0
     exit
   }
   for (k = 1; k <= nb; k++) print BUF[k]
@@ -2858,6 +2884,7 @@ END {
     if (!(p in C))          { printf "FINDING K3 absent-path %s %s\n", c, p; continue }
     if (c !~ /^[0-9]+$/)    { printf "FINDING K3 not-a-whole-number %s %s\n", c, p; continue }
     if (B[p] > c + 0)       printf "FINDING K1 %d %s %s\n", B[p], c, p
+    if (C[p] == "first-read" && c + 0 != FRCEIL + 0) printf "FINDING K7 %s %s %s\n", c, FRCEIL, p
     if (O[p] != "row") {
       nun++
       printf "UNOWED %s %s %s\n", (C[p] == "unclassified") ? "unclassified" : ((I[p] == "none") ? "instrument-none" : "below-floor"), c, p
@@ -2870,9 +2897,10 @@ END {
       if (p in HAS) nheld++
       else printf "FINDING K2 %s %d %s %s\n", C[p], B[p], FL[p], p
     }
+    if (C[p] == "first-read") { nfr++; if (B[p] > FRCEIL + 0) printf "FINDING K6 %d %s %s\n", B[p], FRCEIL, p }
     if (C[p] != "unclassified" && (p in C2) && C2[p] == "unclassified") printf "FINDING K8 %d %s\n", B[p], p
   }
-  printf "DENOM SIZE %d %d %d %d\n", nr, nowed + 0, nheld + 0, nun + 0
+  printf "DENOM SIZE %d %d %d %d %d\n", nr, nowed + 0, nheld + 0, nun + 0, nfr + 0
 }
 AWK
 
@@ -3275,6 +3303,7 @@ ch_scan_size() {
     sdoc=1; ch_fence "$1/$CH_SIZE_DOC" "$CH_SIZE_TAG" > "$WORK/size.rows"
   else : > "$WORK/size.rows"; fi
   awk -v CFILE="$WORK/size.cls" -v C2FILE="$WORK/size.cls2" -v RFILE="$WORK/size.rows" -v DOCREAD="$sdoc" \
+    -v FRCEIL="$CH_FIRST_READ_CEILING" \
     -f "$WORK/size.awk" "$WORK/size.cls" "$WORK/size.cls2" "$WORK/size.rows"
 }
 # size_base_tag <root> — the release the growth summary compares against: the highest tag merged into
@@ -3848,9 +3877,10 @@ size_assert() {
   SZ_NOWED="$(awk '$1 == "DENOM" && $2 == "SIZE" { print $4 }' <<<"$out")"
   SZ_NHELD="$(awk '$1 == "DENOM" && $2 == "SIZE" { print $5 }' <<<"$out")"
   SZ_NUNOWED="$(awk '$1 == "DENOM" && $2 == "SIZE" { print $6 }' <<<"$out")"
+  SZ_NFR="$(awk '$1 == "DENOM" && $2 == "SIZE" { print $7 }' <<<"$out")"
   SZ_N0="$(n_code "$out" "${L}0")"; SZ_N1="$(n_code "$out" "${L}1")"; SZ_N2="$(n_code "$out" "${L}2")"
   SZ_N3="$(n_code "$out" "${L}3")"; SZ_N4="$(n_code "$out" "${L}4")"; SZ_N5="$(n_code "$out" "${L}5")"
-  SZ_N8="$(n_code "$out" "${L}8")"
+  SZ_N6="$(n_code "$out" "${L}6")"; SZ_N7="$(n_code "$out" "${L}7")"; SZ_N8="$(n_code "$out" "${L}8")"
   SZ_WHY="$(awk -v c="${L}0" '$1 == "FINDING" && $2 == c { $1 = ""; $2 = ""; sub(/^ +/, ""); print }' <<<"$out")"
   [ -n "$SZ_WHY" ] || SZ_WHY='the extractor printed no result'
   if [ "${SZ_NFILE:-0}" -gt 0 ] && [ "${SZ_MEAS:-0}" = "1" ] && [ -n "$SZ_NROW" ] && [ "${SZ_N0:-1}" -eq 0 ]; then SZ_MEASURED=1; else SZ_MEASURED=0; fi
@@ -3903,6 +3933,20 @@ size_assert() {
     grep "^FINDING ${L}5 " <<<"$out" | awk '{ printf "      %s (%s)\n", $3, $4 }'
   fi
 
+  if [ "${SZ_N6:-0}" -eq 0 ]; then
+    PASS "${L}6: no file the rule classes first-read exceeds CH_FIRST_READ_CEILING — $SZ_NFR such file(s) against the constant $CH_FIRST_READ_CEILING. The zero is a measurement: arm CTL-SIZE-OVER-CONSTANT writes the first-verb file one byte over the constant and requires it to be found, and arm CTL-SIZE-AT-CONSTANT requires a file at exactly the constant to pass"
+  else
+    FAIL "${L}6: $SZ_N6 file(s) the rule classes first-read exceed CH_FIRST_READ_CEILING ($CH_FIRST_READ_CEILING bytes). The first-verb read is raised only by an edit to that constant, in a reviewed diff, with the file's row moved to the same value in the same change — or the file is cut back under it:"
+    grep "^FINDING ${L}6 " <<<"$out" | awk '{ printf "      %s: %s byte(s) against the constant %s\n", $5, $3, $4 }'
+  fi
+
+  if [ "${SZ_N7:-0}" -eq 0 ]; then
+    PASS "${L}7: the row of every file the rule classes first-read equals CH_FIRST_READ_CEILING — $SZ_NFR such file(s) against the constant $CH_FIRST_READ_CEILING, so the row and the constant name one ceiling. The zero is a measurement: arms CTL-SIZE-ROW-ABOVE-CONSTANT and CTL-SIZE-ROW-BELOW-CONSTANT move the row off the constant in each direction and require it to be found"
+  else
+    FAIL "${L}7: $SZ_N7 row(s) for a file the rule classes first-read differ from CH_FIRST_READ_CEILING ($CH_FIRST_READ_CEILING bytes). That row is held equal to the constant: a re-pin of it writes the constant to the same value in the same change, re-derived as the file's size plus its class headroom, and a row moved alone is this finding:"
+    grep "^FINDING ${L}7 " <<<"$out" | awk '{ printf "      %s: a row of %s against the constant %s\n", $5, $3, $4 }'
+  fi
+
   if [ "${SZ_N8:-0}" -eq 0 ]; then
     PASS "${L}8: no file is classified only by its own row — the rule run again over the same $SZ_NFILE file(s) with the \`$CH_SIZE_TAG\` fence's lines taken out of $CH_SIZE_DOC leaves none of them unclassified that the first run classified. The zero is a measurement: arm CTL-SIZE-ORPHAN-WITH-ROW gives a file nothing names a row and requires it to be found"
   else
@@ -3916,7 +3960,7 @@ SZ_MEASURED=0; SZ_WHY='the group did not run'
 ch_list_real "$ROOT" > "$WORK/list.size.md"
 ch_list_h_real "$ROOT" > "$WORK/list.size.all"
 size_assert "$ROOT" "$WORK/list.size.md" "$WORK/list.size.all"
-for c in 0 1 2 3 4 5 8; do echo "${CH_SIZE_LETTER}$c" >> "$SURF_LOG"; done
+for c in 0 1 2 3 4 5 6 7 8; do echo "${CH_SIZE_LETTER}$c" >> "$SURF_LOG"; done
 
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
@@ -6441,6 +6485,44 @@ else
   FAIL "CTL-SIZE-GROWTH-NO-BASE: no base must print the NOT-EVALUATED header ($SZG_CC) and no seeding wording or new row ($SZG_CB), an unread base the same header ($SZG_U), and only a read base with no fence the seeding wording ($SZG_BB)"
 fi
 
+# The first-verb read. Each arm sets the fixture's first-verb file, CHARTER.md, to a size around the
+# real CH_FIRST_READ_CEILING — not a constant of the fixture's own — and gives it a row beside the
+# base's. The rule finds that file by its class, so its name is never the charter's. The row is held
+# EQUAL to the constant, so a row that differs from it fails in either direction, and a row equal to
+# it is the lookalike.
+ctl_size_charter() {  # ctl_size_charter <name> <bytes> <ceiling> — the base, the first-verb file at <bytes>, its row at <ceiling>
+  local d
+  d="$(ctl_size_mk "$1")"
+  ctl_size_pad "$d/CHARTER.md" "$2"
+  ctl_size_rows "$d" "$(ctl_size_row "$3" CHARTER.md)" "$(ctl_size_row "$SZ_BIGROW" reference/big.md)"
+  printf '%s\n' "$d"
+}
+SZ_FR="$CH_FIRST_READ_CEILING"
+D="$(ctl_size_charter szoverconst "$(( SZ_FR + 1 ))" "$SZ_FR")"
+O="$(ctl_size_scan "$D")"
+ctl_mustfire "CTL-SIZE-OVER-CONSTANT" "${CH_SIZE_LETTER}6" "$O" "the first-verb file one byte over the constant, its row equal to the constant — the over-its-row code fires beside it, and this arm counts the constant's" 1
+
+D="$(ctl_size_charter szatconst "$SZ_FR" "$SZ_FR")"
+O="$(ctl_size_scan "$D")"
+ctl_size_quiet "CTL-SIZE-AT-CONSTANT" "$O" "the first-verb file at exactly the constant, its row equal to it" "${CH_SIZE_LETTER}6" "${CH_SIZE_LETTER}1" "${CH_SIZE_LETTER}7"
+
+D="$(ctl_size_charter szrowabove "$SZ_FR" "$(( SZ_FR + 1 ))")"
+O="$(ctl_size_scan "$D")"
+ctl_h_solely "CTL-SIZE-ROW-ABOVE-CONSTANT" "$O" "${CH_SIZE_LETTER}7" 1 "the first-verb file at the constant, its row one byte above it — a row raised on its own, which neither the file's size nor its row can see"
+
+D="$(ctl_size_charter szrowbelow "$(( SZ_FR - 2000 ))" "$(( SZ_FR - 1000 ))")"
+O="$(ctl_size_scan "$D")"
+ctl_h_solely "CTL-SIZE-ROW-BELOW-CONSTANT" "$O" "${CH_SIZE_LETTER}7" 1 "the first-verb file under the constant, its row under the constant and above the file — a row re-pinned down while the constant stays, after which the row alone would bind"
+
+D="$(ctl_size_charter szrowatconst "$(( SZ_FR - 1000 ))" "$SZ_FR")"
+O="$(ctl_size_scan "$D")"
+ctl_size_quiet "CTL-SIZE-ROW-AT-CONSTANT" "$O" "the first-verb file under the constant, its row equal to the constant" "${CH_SIZE_LETTER}7" "${CH_SIZE_LETTER}1" "${CH_SIZE_LETTER}6"
+
+D="$(ctl_size_mk szotherrow)"
+ctl_size_rows "$D" "$(ctl_size_row "$(( SZ_FR + 1 ))" reference/big.md)"
+O="$(ctl_size_scan "$D")"
+ctl_size_quiet "CTL-SIZE-OTHER-ROW-ABOVE-CONSTANT" "$O" "an on-demand file's row above the constant — the constant binds the first-read class and no other" "${CH_SIZE_LETTER}7"
+
 # The registered assertion, run over the base fixture with its subject PRESENT. md_flips below shows
 # the same call reporting one FAIL once ch_scan_size is removed; this arm is the other half.
 SZ_PRESENT="$(md_probe zzq_size_no_such_subject size_assert "$SZ_CLEAN" "$WORK/list.szclean.md" "$WORK/list.szclean.all")"
@@ -6893,8 +6975,8 @@ fi
 # The measurement state the size group decided above: under its not-a-measurement code the line
 # carries the cause and no counter.
 if [ "$SZ_MEASURED" -eq 1 ]; then
-  printf 'SIZE-FENCE: %s tracked markdown file(s) classified, %s unclassified; %s owing a row against %s row(s) declared; %s over a ceiling, %s owed without a row, %s defective row(s), %s row(s) for a file that owes none, %s file(s) classified only by their own row.\n' \
-    "$SZ_NFILE" "$SZ_NUNCL" "$SZ_NOWED" "$SZ_NROW" "$SZ_N1" "$SZ_N2" "$SZ_N3" "$SZ_NUNOWED" "$SZ_N8"
+  printf 'SIZE-FENCE: %s tracked markdown file(s) classified, %s unclassified; %s owing a row against %s row(s) declared; %s over a ceiling, %s owed without a row, %s defective row(s), %s row(s) for a file that owes none, %s file(s) classified only by their own row; %s first-read file(s) against the constant %s, %s over it, %s row(s) unequal to it.\n' \
+    "$SZ_NFILE" "$SZ_NUNCL" "$SZ_NOWED" "$SZ_NROW" "$SZ_N1" "$SZ_N2" "$SZ_N3" "$SZ_NUNOWED" "$SZ_N8" "$SZ_NFR" "$CH_FIRST_READ_CEILING" "$SZ_N6" "$SZ_N7"
 else
   printf 'SIZE-FENCE: NOT-EVALUATED — %s — this is not a clean result\n' "$SZ_WHY"
 fi

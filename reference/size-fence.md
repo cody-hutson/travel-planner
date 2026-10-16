@@ -25,7 +25,10 @@ stores it, plus the headroom its class declares — that share of the size, roun
 byte (`reference/load-class-model.md` § 5, *headroom*). A row written at the bare size leaves no
 room, and the next sentence anyone adds to the file fails. A change that moves bytes from one file
 to another, such as a section relocated out of a larger document, re-pins every row it moved, in
-the same change and by the same rule. `CH_EMIT=growth ./scripts/test-corpus-hygiene.sh` prints
+the same change and by the same rule. Re-pinning the row of the file the classification rule puts
+in the class `first-read` writes the suite's constant for that file to the same value, in the same
+change, and the constant is re-derived the same way — the file's size plus its class headroom.
+`CH_EMIT=growth ./scripts/test-corpus-hygiene.sh` prints
 each row's re-pin value beside the file's size and its ceiling, so the value is read off rather
 than worked out by hand.
 
@@ -34,6 +37,13 @@ ceiling, so the change that raises it says why, and the release that ships it na
 changelog entry (`CONTRIBUTING.md` § *Cutting a release*). Re-pin only the rows you meant to
 change: regenerating the whole fence turns every ceiling into a record of whatever the files
 already weigh.
+
+**The first-verb read is held twice.** The file the classification rule puts in the class
+`first-read` — the charter, which every verb reads before it acts — carries its row like any other
+file and is also bounded by a named constant in the suite. Its row is held equal to that constant,
+and a row above it or below it fails; of the two, the lower is the ceiling
+(`reference/load-class-model.md` § 5, *instrument*), and held equal they are one. Raising its
+ceiling is therefore an edit to the constant, in a diff of its own.
 
 **What a green suite does not say.** That a file is the right size, or that a raised row was the
 right decision: the suite holds each file to its row and reads nothing else. Nothing compares a
