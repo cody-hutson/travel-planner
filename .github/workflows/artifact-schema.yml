@@ -56,7 +56,8 @@ name: Artifact schema
 #   CA   the several homes of each class's assignment agree — the class enumeration's
 #        columns, the lifecycle section's Members column, the gap analysis's per-class
 #        delta column, and the frontmatter of the class's declared witness. Denominators
-#        are stated PER FIELD because the fields do not all have the same number of homes
+#        are stated PER FIELD because the fields do not all have the same number of homes.
+#        The gap analysis's range parse is also read under mawk and gawk invoked by name
 #   PB   the publish-bound artifact set matches the site-layout spec's declaring fence, in
 #        both directions and with the class agreeing per row
 #   FT   reference/data-model.md's field table: the extractor that reads it by index and the
@@ -138,9 +139,12 @@ name: Artifact schema
 #        read FROM that block and the corpus from the schema directory, so no count is
 #        pinned and a schema that drops a required field cannot leave this suite's output
 #        byte-identical — which is what it used to do, measured rather than predicted
-#   LC   the value and key classifiers answer the same under every locale the host declares.
-#        A bracket range resolves against the collating sequence, so an unpinned range made
-#        CI enforce a rule an operator's own run did not
+#   LC   the value and key classifiers, and ca_delta's class-assignment range parse, answer the
+#        same under every locale in a set that carries C and a multibyte locale on every host;
+#        the multibyte member's presence, and the awk's ability to read it, are asserted in the
+#        run. A bracket expression resolves against the collating sequence and reads a character
+#        or a byte by the codeset, so an unpinned construct made CI enforce a rule an operator's
+#        own run did not
 #   FW   the frozen regression witness is held by an ASSERTION rather than by a review
 #        convention, which is a person remembering rather than a gate
 #   PS   the per-event status presence check has a witness in the shipped corpus, and its
@@ -148,7 +152,8 @@ name: Artifact schema
 #   LS   the locked-elements seed trigger: which trip's declared elements a seed would fire
 #        on, graded over a population this suite MEASURES rather than names
 #   VI   the venue-identity split rule has a witness. A merge is a claim, so the claim is
-#        asserted to carry the rung that warrants it
+#        asserted to carry the rung that warrants it.
+#        Its readers are also run under mawk and gawk invoked by name
 #   C    the skip predicate, made observable rather than asserted — an unversioned artifact
 #        wrong in three ways contributes ZERO to the failure count, and the byte-identical
 #        fixture with a schema-version added does fail. The two arms the suite's own header
@@ -156,6 +161,9 @@ name: Artifact schema
 #   MD   the discriminating-evidence rule, asserted against the suite file itself: no PASS
 #        may be reached on a branch a DEGENERATE outcome also reaches. The oracle that
 #        grades it is itself controlled in both directions
+#   FZ   no verdict arm in the suite file reaches PASS through a disjunction. The walk
+#        covers top-level code only and reads the first verdict after `then`, and its
+#        own controls must fire before its zero is read
 #   AF   the archived-trip freeze and the one operation that reaches through it — an
 #        ordinary person edit leaves an archived trip untouched, and erasure reaches it
 #        anyway. Both halves, against a tracked fixture
@@ -335,9 +343,17 @@ name: Artifact schema
 #
 # ── WHY THE STRICT MODE ──────────────────────────────────────────────────────────
 # GUARD_STRICT_SKIPS=1 makes a skipped group a failure unless it is declared. This suite
-# declares NO expected skips, so GUARD_EXPECTED_SKIPS is deliberately EMPTY: it is pure
-# bash with no Node, no gh and no network, so it has no dependency-gated group and
-# therefore no legitimate skip. An empty declaration here is the correct value, not an
+# declares NO expected skips, so GUARD_EXPECTED_SKIPS is deliberately EMPTY. It is pure bash
+# with no Node, no gh and no network, but it does depend on what this runner's image carries.
+# Some arms skip on a contributor's host that lacks a capability — CA10 and VI3 without mawk
+# installed (VI3: or gawk), and LC4 to LC8 under an awk that answers the same in every
+# locale — so this check DEPENDS on the image carrying mawk and gawk, and on its awk reading
+# the codeset. If the image drops either interpreter, the run fails naming the arms that
+# skipped, and their own lines name the interpreter that is missing. The remedy is a step
+# that installs it ahead of the suite, which would give this job its first network
+# dependency. The runner label below, ubuntu-latest, floats, and that is an accepted residual
+# rather than a pin: an image change that drops an interpreter fails this check, named,
+# instead of passing it with a hole. An empty declaration here is the correct value, not an
 # omission.
 
 on:
@@ -363,6 +379,6 @@ jobs:
         env:
           # A SKIP is a FAILURE unless its group is declared below.
           GUARD_STRICT_SKIPS: '1'
-          # Empty by design — this suite has no dependency-gated group to declare.
+          # Empty by design: on this runner every arm grades, so any skip fails (WHY THE STRICT MODE).
           GUARD_EXPECTED_SKIPS: ''
         run: ./scripts/test-artifact-schema.sh

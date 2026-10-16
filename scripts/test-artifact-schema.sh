@@ -39,13 +39,15 @@
 #        removes a universal field"). The key set is read FROM that block and the corpus from
 #        the schema directory, so no count is pinned. Without it a schema can drop a required
 #        field and this suite's output stays BYTE-IDENTICAL — measured, not predicted.
-#   LC   the value and key classifiers answer the same under every locale the host declares.
-#        A bracket range resolves against the collating sequence, so `[a-z]` matched uppercase
-#        under a UTF-8 default and CI enforced a rule an operator's own run did not.
+#   LC   the value and key classifiers, and ca_delta's class-assignment range parse, answer the
+#        same under every locale in a set that carries C and a multibyte locale on every host.
+#        A bracket expression resolves against the collating sequence and reads a character or
+#        a byte by the codeset, so either could make CI enforce a rule an operator's run did not.
 #   CA   the several homes of each class's assignment agree: § 1.1's columns, § 6's Members
 #        column, § 9's per-class delta column, and the frontmatter of the class's declared
 #        witness. Per-field denominators, because the fields do not all have the same number
 #        of homes, and `writer` is excluded with its ground measured rather than asserted.
+#        § 9's range parse is also read under mawk and gawk invoked by name (CA10).
 #   PB   the publish-bound artifact set matches the site-layout spec's declaring fence, in
 #        both directions and with the class agreeing per row.
 #   FT   reference/data-model.md's field table: the extractor that reads it by index and the
@@ -180,6 +182,7 @@
 #   VI   the venue-identity split rule has a witness. A MERGE is a claim, so the claim is
 #        asserted to carry the rung that warrants it, on ordered rungs stopped at the first
 #        that decides and biased toward SPLITTING an uncertain pair.
+#        Its readers are also run under mawk and gawk invoked by name (VI3).
 #   C    the skip predicate, made observable rather than asserted — C1a and C1b, the two arms
 #        the section below calls THE POINT OF THIS SUITE. The fixtures differ by EXACTLY ONE
 #        LINE and that is asserted before either arm is graded.
@@ -187,6 +190,9 @@
 #        on a branch a DEGENERATE outcome also reaches. The oracle that grades it is itself
 #        controlled in both directions — it must convict a planted blind assertion and
 #        certify a remediated one, on the same subject in the same process.
+#   FZ   no verdict arm in THIS FILE reaches PASS through a disjunction, over its top-level
+#        code only: awk programs, substitutions and here-documents are stepped over, the
+#        first verdict after `then` decides a guard's polarity, and standing plants prove both.
 #   AF   the archived-trip freeze and the one operation that reaches through it. Both halves
 #        against a tracked fixture: an ordinary person edit leaves an archived trip
 #        byte-unchanged, and erasure reaches it anyway.
@@ -395,8 +401,16 @@
 # STRICT SKIP MODE (set by CI — .github/workflows/artifact-schema.yml).
 #   GUARD_STRICT_SKIPS=1   a SKIP fails the run unless its group is declared below.
 #   GUARD_EXPECTED_SKIPS   space-separated group ids whose skip is expected and stated.
-# This suite is pure bash with no Node, no gh and no network, so it has NO legitimate skip
-# and its expected-skip set is correctly EMPTY. VACUOUS is a distinct verdict from SKIP for
+# This suite is pure bash with no Node, no gh and no network, and its expected-skip set is
+# correctly EMPTY. Some arms do skip on a CONTRIBUTOR'S host that lacks a capability: CA10 and
+# VI3 where mawk is not installed (VI3: or gawk), and LC4 to LC8 where the awk answers the same
+# in every locale. So the hosted run DEPENDS on the runner image carrying mawk and gawk, and on
+# its awk reading the codeset. If the image drops either interpreter, the strict pass at the
+# foot of this file fails the run naming the arms that skipped, and CA10's and VI3's own lines
+# name the interpreter that is missing. The remedy is a workflow step installing it ahead of
+# this suite, which would give the job its first network dependency. The empty set is
+# load-bearing for exactly that reason: a runner that lost a capability fails under this mode
+# instead of going quietly green. VACUOUS is a distinct verdict from SKIP for
 # the reason the trip-resolution-contract suite already states: a skipped GROUP is a hole
 # in the suite, an empty POPULATION is a real measurement of the tree, and collapsing the
 # two would hide one behind the other.
@@ -1277,7 +1291,8 @@ if [ "$UF_OK" -eq 1 ]; then
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
-# Group LC — the classifying predicates do not change their answer with the locale.
+# Group LC — the classifying predicates, and ca_delta's range parse, do not change their answer
+# with the locale.
 #
 # ── THE FINDING ──────────────────────────────────────────────────────────────────
 # `va_type_ok`'s slug arm and `va_fm_pairs`'s kebab-case arm both classified with bracket
@@ -1296,16 +1311,52 @@ fi
 # whose locale archive contains nothing that folds. LC1 asserts the behaviour through the
 # real function, which is the arm that would have caught the original.
 #
+# ── THE SECOND FINDING — THE CODESET, IN GROUP CA ────────────────────────────────
+# ca_delta's range test admitted a separator exactly ONE character wide, and § 9 writes its
+# range rows with an en dash. A character-aware awk under a UTF-8 locale reads that dash as one
+# character; under C, and on mawk in any locale, it is three bytes, so the two range rows did not
+# parse and CA2 reported their five classes absent — on a correct tree, under LC_ALL=C, while the
+# runner's UTF-8 default stayed green. The fix is by construction again (see ca_delta). The
+# coverage is LC1-shaped rather than LC2-shaped, because LC2's detector reads collation ranges and
+# a negated class is not one: LC5 drives the REAL ca_delta under every member of the CODESET set
+# (C, POSIX and the set's multibyte members — see lc_fn_diff), LC6 and LC7 plant a
+# locale-dependent construct in copies of it and must be reported, and LC8 shows that a
+# locale-invariant edit is not. They print after group CA, which is where ca_delta is defined.
+#
 # ── WHY THE POPULATION IS DERIVED FROM THE HOST ──────────────────────────────────
 # A folding locale cannot be assumed present: C, POSIX and C.UTF-8 all collate by codepoint
 # and none of them reproduces the finding. So the locale set is DERIVED — C and POSIX always,
-# plus whatever the host declares that the probe shows to fold — and the arm reports how many
-# of each it exercised. A run on a host with none is a weaker measurement and says so; it is
-# never a vacuous one, because the set is never smaller than two and LC2 does not depend on
-# the archive at all.
+# plus whatever the host declares that the probe shows to fold, plus one MULTIBYTE locale the
+# host lists — and the arms report how many of each they exercised. A run on a host with no
+# folding locale is a weaker measurement and says so; it is never a vacuous one, because the set
+# is never smaller than two and LC2 does not depend on the archive at all. A host that lists no
+# multibyte locale is different: no member could see the codeset, so LC3 fails the run there.
+# An awk that answers the same in every locale is different again — mawk reads bytes in every
+# one: no locale differential can see the codeset on it, so LC4 to LC8 SKIP and name it, CA10
+# grades the engine axis through mawk and gawk invoked by name, and CI, which runs strict,
+# fails if its own awk ever reads that way.
+#
+# ── THIS SUITE'S LOCALE POSTURE, AND THE SIBLINGS THAT TAKE THE OPPOSITE ONE ─────
+# Three separate things, stated apart because each is a different kind of claim.
+# THE PIN POSTURE, as this file has it. Nothing is exported at the top. LC_ALL=C is set per call,
+# on the individual calls that need byte semantics, and this group sets each member's locale
+# inside the subshell or function that probes or compares under it. Every other line reads the
+# caller's locale.
+# WHAT THIS GROUP ASSERTS, on every run. va_type_ok's slug predicate (LC1) and ca_delta's range
+# parse (LC5) answer the same under C and under a UTF-8 locale the host lists, and the run fails
+# if none loads (LC3). On an awk that answers the same in every locale the ca_delta half skips
+# instead (LC4 to LC8), and CA10 grades the engine by name, running ca_delta under mawk and
+# gawk. That is the whole of the asserted surface.
+# WHAT WAS MEASURED, AND IS NOT ASSERTED. The rest of the suite reads the caller's locale. Its
+# verdict set was measured identical under LC_ALL=C and under a UTF-8 default when this record
+# was written. No arm compares verdict sets, so a locale dependence added outside the asserted
+# surface would not turn this group red.
+# test-corpus-hygiene.sh and test-adr-conformance.sh take the opposite posture and export
+# LC_ALL=C at their top, because their character classes must read bytes everywhere. Neither
+# borrows a locale from the other; CONTRIBUTING.md lists every suite's posture side by side.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
-echo "LC — the classifying predicates are locale-invariant"
+echo "LC — the classifying predicates are locale-invariant, over a set that carries a multibyte locale"
 
 # lc_folds <locale> — true when a bracket range folds case under that locale. Probed on a
 # construct THIS FILE owns rather than on the validator, so the probe stays independent of
@@ -1330,10 +1381,61 @@ $lcname"
 done <<EOF
 $(locale -a 2>/dev/null)
 EOF
+# ── THE MULTIBYTE MEMBER — WHY A FOLDING LOCALE IS NOT ENOUGH ────────────────────
+# The folding probe above selects locales by COLLATION, the axis the slug finding lives on.
+# The class-assignment range parse in group CA lives on a different axis, the CODESET: under a
+# multibyte locale a character-aware awk reads U+2013 as one character, and under C or any
+# single-byte locale as three bytes. A folding locale need not be multibyte — the ISO-8859
+# locales fold and are single-byte — and a shell that does not fold at all leaves this set at
+# C and POSIX alone: bash 5 matches bracket ranges in ASCII order by default, and that is the
+# set the hosted runner reports in LC0. A differential over two single-byte locales cannot
+# see a codeset-dependent construct, so ONE multibyte locale is added — a C.UTF-8 spelling the
+# host can load, else the first multibyte name it lists — and LC3 asserts that the set carries
+# one. C.UTF-8 is preferred because it collates by codepoint: it adds the codeset axis without
+# adding a second collation axis.
+#
+# lc_multibyte <locale> — true when U+2013's three bytes read as ONE character under that
+# locale. Probed in the SHELL, never in awk, so the answer is a property of the locale and not
+# of the engine that later reads it; LC4 grades the engine separately. C is assigned first, so
+# a name the C library cannot load falls back to C and reads single-byte instead of inheriting
+# the caller's own locale. That is what makes it safe to try the two C.UTF-8 spellings BY NAME
+# ahead of what `locale -a` lists — the member then does not depend on how a host spells it, or
+# on the host shipping `locale` at all. The probe's stderr is discarded, because a shell that
+# warns when it cannot load a locale would otherwise print one line per unloadable name.
+lc_multibyte() {
+  local LC_ALL=C
+  LC_ALL="$1"
+  local s=$'\342\200\223'
+  [ "${#s}" -eq 1 ]
+}
+lc_in_set() {
+  local m
+  while IFS= read -r m; do [ "$m" = "$1" ] && return 0; done <<EOF
+$LC_SET
+EOF
+  return 1
+}
+LC_MB=""
+while IFS= read -r lcname; do
+  [ -n "$lcname" ] || continue
+  lc_multibyte "$lcname" 2>/dev/null || continue
+  case "$lcname" in C.UTF-8|C.utf8|C.UTF8) LC_MB="$lcname"; break ;; esac
+  [ -n "$LC_MB" ] || LC_MB="$lcname"
+done <<EOF
+C.UTF-8
+C.utf8
+$(locale -a 2>/dev/null)
+EOF
+LC_MB_ADDED=0
+if [ -n "$LC_MB" ] && ! lc_in_set "$LC_MB"; then
+  LC_SET="$LC_SET
+$LC_MB"
+  LC_MB_ADDED=1
+fi
 LC_N="$(printf '%s\n' "$LC_SET" | grep -c '[^[:space:]]')"
 
 if [ "$LC_N" -ge 2 ]; then
-  PASS "LC0: the differential runs over $LC_N locale(s) — C and POSIX, plus the $LC_FOLD_N collation-folding locale(s) this host declares. A folding locale is one where a bracket range matches outside its written span, which is the construct the finding is about"
+  PASS "LC0: the differential runs over $LC_N locale(s) — C and POSIX, plus the $LC_FOLD_N collation-folding locale(s) this host declares, plus the multibyte locale ${LC_MB:-<none listed>} (added=$LC_MB_ADDED; 0 means the set already carried it). A folding locale is one where a bracket range matches outside its written span, the slug finding's construct; a multibyte one is where a character is more than one byte, ca_delta's"
 else
   FAIL "LC0: only $LC_N locale(s) were assembled — a differential needs at least two, so LC1 below would be comparing a value with itself"
 fi
@@ -1415,6 +1517,86 @@ else
   FAIL "LC2: $LC_RANGE_TOTAL collation-dependent bracket range(s) remain in va_type_ok / va_fm_pairs across $LC_BODY_LINES lines — a range is resolved against the current locale's collating sequence, so these predicates answer differently in CI and in an operator's shell"
 fi
 
+# LC3 — the set carries a MULTIBYTE member, asserted rather than assumed. Every member single-
+# byte means every comparison below reads bytes against bytes, and a codeset-dependent construct
+# in ca_delta reads green over it. Two controls ride in the arm: C must read single-byte, and a
+# name no host lists must fall back to C rather than inherit the caller's locale — without the
+# second, the count could be this run's own locale counted once per name.
+#
+# The same pass derives LC_CS_SET, the CODESET comparison set that LC5–LC8 iterate: C, POSIX and
+# each member lc_multibyte accepts. LC_SET is chosen by COLLATION, for LC1, and a folding member
+# can carry a multibyte codeset other than UTF-8 — GB18030, Shift_JIS, Big5, EUC — that takes
+# ASCII bytes such as `|` and the backtick as trail bytes, so a reader of a UTF-8 document
+# collapses under it on a correct tree. ca_delta's byte-safety holds for UTF-8 and for single-byte
+# codesets, and the codeset set is narrowed to what lc_multibyte accepts: a single-byte member
+# left out reads bytes exactly as C does, so it adds no codeset coverage. LC5 reports how many
+# members were left out, and which.
+LC_MB_N=0; LC_MB_NAMES=""
+LC_CS_SET="C
+POSIX"
+LC_CS_OUT=0; LC_CS_OUT_NAMES=""
+while IFS= read -r lcm; do
+  [ -n "$lcm" ] || continue
+  lcm_mb=0
+  lc_multibyte "$lcm" 2>/dev/null && lcm_mb=1
+  if [ "$lcm_mb" -eq 1 ]; then LC_MB_N=$((LC_MB_N + 1)); LC_MB_NAMES="$LC_MB_NAMES $lcm"; fi
+  case "$lcm" in C|POSIX) continue ;; esac
+  if [ "$lcm_mb" -eq 1 ]; then
+    LC_CS_SET="$LC_CS_SET
+$lcm"
+  else
+    LC_CS_OUT=$((LC_CS_OUT + 1)); LC_CS_OUT_NAMES="$LC_CS_OUT_NAMES $lcm"
+  fi
+done <<EOF
+$LC_SET
+EOF
+LC_MB_CTL_C=0; lc_multibyte C 2>/dev/null || LC_MB_CTL_C=1
+LC_MB_CTL_X=0; lc_multibyte zz_ZZ.UTF-8 2>/dev/null || LC_MB_CTL_X=1
+if [ "$LC_MB_N" -ge 1 ] && [ "$LC_MB_CTL_C" -eq 1 ] && [ "$LC_MB_CTL_X" -eq 1 ]; then
+  PASS "LC3: $LC_MB_N of the differential's $LC_N locale(s) are multibyte —$LC_MB_NAMES — each shown so by the shell reading U+2013's three bytes as ONE character. C reads them as three, and a name no host lists falls back to C, so the count is a property of the members and not of this run's own locale"
+else
+  FAIL "LC3: $LC_MB_N of the differential's $LC_N locale(s) are multibyte (C-control=$LC_MB_CTL_C, unlisted-name-control=$LC_MB_CTL_X; each must read 1). With no multibyte member every locale comparison in this suite reads bytes against bytes and cannot see a codeset-dependent construct. Install a locale whose character type is UTF-8 — any name 'locale -a' lists"
+fi
+
+# LC4 — the ENGINE can see the codeset. A multibyte member is necessary and not sufficient: the
+# awk this suite runs must read a bracket expression per character under it. mawk reads bytes in
+# every locale, and the BSD awk macOS ships reads a bracket expression per character while its
+# length() counts bytes — so the probe is a bracket expression, the construct the finding is
+# about, and never length(). On an engine that answers the probe the same in every locale —
+# bytes everywhere, as mawk reads, or characters everywhere — it SKIPs, naming the engine and the
+# reading, and LC5 to LC8 skip with it: no locale differential can see the codeset there, and
+# CA10 grades the engine axis by name instead. Any other answer that is not the expected one, an
+# empty answer included, FAILs and names what was measured. The version is read with -W version,
+# which mawk and gawk answer on stdout, before --version, which BSD awk answers.
+LC_AWK_MB="$( ( export LC_ALL="${LC_MB:-C}"; printf '\342\200\223\n' | awk '{ print ($0 ~ /^[^0-9]$/) }' ) 2>/dev/null )"
+LC_AWK_C="$( ( export LC_ALL=C; printf '\342\200\223\n' | awk '{ print ($0 ~ /^[^0-9]$/) }' ) 2>/dev/null )"
+LC_AWK_ID="$(awk -W version 2>/dev/null </dev/null | awk 'NR == 1')"
+if [ -z "$LC_AWK_ID" ]; then LC_AWK_ID="$(awk --version 2>&1 </dev/null | awk 'NR == 1')"; fi
+# LC_FLAT — the engine gave ONE answer under the multibyte member and under C. It needs a member
+# to have been probed under (with none, both probes run under C and agree trivially, which is
+# LC3's finding, not the engine's) and a non-empty answer (an empty one is a probe that did not
+# run, and FAILs below). LC_FLAT_READ names the reading that was seen.
+LC_FLAT=0; LC_FLAT_READ=""
+if [ -n "$LC_MB" ] && [ -n "$LC_AWK_MB" ] && [ "$LC_AWK_MB" = "$LC_AWK_C" ]; then
+  LC_FLAT=1
+  case "$LC_AWK_MB" in
+    0) LC_FLAT_READ="bytes in every locale: it matched U+2013 as THREE bytes in a bracket expression under $LC_MB as well as under C, which is how mawk reads it" ;;
+    1) LC_FLAT_READ="characters in every locale: it matched U+2013 as ONE character in a bracket expression under C as well as under $LC_MB" ;;
+    *) LC_FLAT_READ="one answer in every locale: it answered '$LC_AWK_MB' under $LC_MB and under C alike for a one-character bracket match of U+2013" ;;
+  esac
+fi
+LC4_WHY="that is neither a character-aware reading nor one answer in every locale. Run under a character-aware awk"
+if [ -z "$LC_AWK_C" ]; then LC4_WHY="the probe under C printed no answer, so the engine was not measured"; fi
+if [ -z "$LC_AWK_MB" ]; then LC4_WHY="the probe under ${LC_MB:-C} printed no answer, so the engine was not measured"; fi
+if [ -z "$LC_MB" ]; then LC4_WHY="there is no multibyte member to probe under (read LC3), so both probes ran under C and this arm measured nothing about the engine. Install a locale whose character type is UTF-8"; fi
+if [ -n "$LC_MB" ] && [ "$LC_AWK_MB" = 1 ] && [ "$LC_AWK_C" = 0 ]; then
+  PASS "LC4: this host's awk (${LC_AWK_ID:-unidentified}) matches U+2013 as ONE character in a bracket expression under $LC_MB and as three bytes under C, so a locale differential over an awk program can observe a multibyte construct on this engine"
+elif [ "$LC_FLAT" -eq 1 ]; then
+  SKIP "LC4: this host's awk (${LC_AWK_ID:-unidentified}) reads $LC_FLAT_READ. An engine that answers the same in every locale cannot be observed by any locale differential, so LC5 to LC8 skip with it. That is a property of the engine, not of your change; the engine axis is graded instead by CA10, which runs ca_delta under mawk and gawk invoked by name. Not a pass: CI runs with GUARD_STRICT_SKIPS=1 and declares no skip, so on the hosted runner this branch fails the run"
+else
+  FAIL "LC4: this host's awk (${LC_AWK_ID:-unidentified}) answered '${LC_AWK_MB:-nothing}' under ${LC_MB:-no multibyte member} and '${LC_AWK_C:-nothing}' under C for a one-character bracket match of U+2013 (1 and 0 expected) — $LC4_WHY"
+fi
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group CA — the several homes of each class's assignment agree.
 #
@@ -1477,6 +1659,18 @@ ca_members() {
 # EXPANDED, and a cell that does not resolve to exactly one canonical token emits a
 # PARSE-FAIL row rather than a plausible guess: two tokens in a cell, or none, is a parse
 # this gate cannot decide, and deciding it silently is how a green lands on the wrong data.
+#
+# THE SEPARATOR IS A RUN OF NON-DIGITS, NEVER ONE CHARACTER. § 9 writes its ranges with an en
+# dash: one character to a character-aware awk under a UTF-8 locale, three bytes under C and on
+# mawk in every locale. A one-character class parsed those rows under the first reading and
+# skipped them under the second, so CA2 went red under LC_ALL=C on a correct tree while the
+# UTF-8 runner stayed green. `[^0-9]+` reads the same separator under both, because no byte of a
+# multibyte UTF-8 character is an ASCII digit — and it is the class the split below already
+# used. A digit-led cell that still does not read as N or N<sep>M, such as the three-number
+# 5–7–9, emits PARSE-FAIL rather than being skipped, so CA2 names it instead of reporting its
+# classes absent. CA9 grades the grammar itself, on a fixture read under C. Group LC grades this
+# function under C, POSIX and every multibyte member of its codeset set (LC5), and plants the
+# one-character class back to show it would see it (LC6).
 ca_delta() {
   awk -v canon="$CA_LIFE_ENUM" '
     BEGIN { nm = split(canon, M, "|") }
@@ -1485,7 +1679,10 @@ ca_delta() {
     inside && /^\|/ {
       if (split($0, F, "|") != 5) next
       rng = F[2]; gsub(/[ `*]/, "", rng)
-      if (rng !~ /^[0-9]+([^0-9][0-9]+)?$/) next
+      if (rng !~ /^[0-9]+([^0-9]+[0-9]+)?$/) {
+        if (rng ~ /^[0-9]/) printf "PARSE-FAIL\t%s\n", rng
+        next
+      }
       tmp = F[4]; found = 0; tok = ""
       while (match(tmp, /`[a-z-]+`/)) {
         t = substr(tmp, RSTART + 1, RLENGTH - 2)
@@ -1676,6 +1873,244 @@ if [ "$CA_MUT_CHANGED" -eq 1 ] && [ "$CA_CTL_SIX" -ge 1 ] && [ "$CA_CTL_NINE" -g
   PASS "CA8: control — flipping ONE class's lifecycle in a copy of § 1.1 makes the SAME comparator report a disagreement against § 6 ($CA_CTL_SIX) and against § 9 ($CA_CTL_NINE), and the mutation was asserted to have changed the table. The zeroes in CA1 and CA2 are measurements rather than a comparator that cannot fail"
 else
   FAIL "CA8: the control arm did not behave (mutated=$CA_MUT_CHANGED six=$CA_CTL_SIX nine=$CA_CTL_NINE) — every CA verdict above is a zero with no control behind it"
+fi
+
+# CA9 — THE RANGE GRAMMAR, on a fixture whose answer is known before it is read. Built fresh in
+# the run's temp dir from the canonical lifecycle members, so no member is spelled here, and
+# read under C — where EVERY engine reads bytes, which is the reading the hosted runner never
+# takes. An en-dash range expands to its span; a multibyte character in the Lifecycle cell,
+# after the token — a cell ca_delta reads, so the fixture exercises a column the parser takes
+# its token from — changes nothing; and the three-number control cell is named PARSE-FAIL
+# rather than expanded or silently dropped: a cell this gate cannot decide is reported, which
+# is ca_delta's own rule.
+CA_FX="$WORK/ca-delta-fixture.md"
+CA_M1="$(printf '%s' "$CA_LIFE_ENUM" | awk -F'|' '{ print $1 }')"
+CA_M2="$(printf '%s' "$CA_LIFE_ENUM" | awk -F'|' '{ print $2 }')"
+CA_M3="$(printf '%s' "$CA_LIFE_ENUM" | awk -F'|' '{ print $3 }')"
+CA_EN=$'\342\200\223'
+{
+  printf '## 9. Per-Artifact Gap Analysis\n\n| C | Identity | Lifecycle |\n|---|---|---|\n'
+  printf '| 1 | x | `%s` Caf\303\251 |\n' "$CA_M1"
+  printf '| 2%s4 | x | `%s` |\n' "$CA_EN" "$CA_M2"
+  printf '| 10%s12 | x | `%s` |\n' "$CA_EN" "$CA_M3"
+  printf '| 5%s7%s9 | x | `%s` |\n' "$CA_EN" "$CA_EN" "$CA_M1"
+  printf '\n## 10. After\n'
+} > "$CA_FX"
+CA9_WANT="$(printf '1\t%s\n2\t%s\n3\t%s\n4\t%s\n10\t%s\n11\t%s\n12\t%s\nPARSE-FAIL\t5%s7%s9' \
+  "$CA_M1" "$CA_M2" "$CA_M2" "$CA_M2" "$CA_M3" "$CA_M3" "$CA_M3" "$CA_EN" "$CA_EN")"
+CA9_GOT="$( ( export LC_ALL=C; EN_DOC="$CA_FX"; ca_delta ) 2>/dev/null )"
+if [ -n "$CA_M3" ] && [ "$CA9_GOT" = "$CA9_WANT" ]; then
+  PASS "CA9: ca_delta reads the fixture under C exactly as it was built — the en-dash ranges 2–4 and 10–12 expand to their spans, a multibyte character beside the token in a Lifecycle cell changes nothing, and the three-number control cell 5–7–9 is reported PARSE-FAIL with none of its classes emitted. Byte semantics, so this is the reading mawk and a C-locale run take"
+else
+  FAIL "CA9: ca_delta read the fixture under C as [$(printf '%s' "$CA9_GOT" | tr '\n\t' ';,')] against [$(printf '%s' "$CA9_WANT" | tr '\n\t' ';,')] — the range grammar is not byte-safe, or the control cell was expanded or dropped instead of named"
+fi
+
+# ── ENGINE PARITY — THE SAME FUNCTION, UNDER AN INTERPRETER NAMED ────────────────
+# A locale differential cannot see an awk that answers the same in EVERY locale: on that engine
+# nothing varies with the locale. mawk is such an engine, reading bytes in every locale, and it is
+# the one this suite was measured to grade differently under — in a container whose awk was mawk
+# 1.3.4, CA2 and VI1 failed on a tree the hosted runner passed. So the engine is an axis of its
+# own, graded by running the SAME function under an interpreter invoked by name. Each copy is
+# derived from the function's own `declare -f` text with only its interpreter word changed —
+# never a second parser — and each arm asserts that the copy reverts to the original exactly,
+# that exactly one interpreter word was replaced, and that no host awk is left in it.
+#
+# mawk is the engine at risk. An arm that needs it SKIPs on a host without it, a contributor's
+# macOS host for one, and says so. A SKIP is not a pass: CI runs with GUARD_STRICT_SKIPS=1 and
+# declares no skip, so on the hosted runner, whose image is expected to carry mawk and gawk, a
+# skip here fails the run, and the arm's own line names the interpreter that is missing.
+#
+# eng_copy <function> <engine> — the function renamed <function>_on_<engine>, with each
+# interpreter word at command position (a line's first word, or the first word inside "$(")
+# replaced by <engine>. eng_revert <function> <engine> undoes exactly that and nothing more, so a
+# copy that changed anything else does not revert. eng_words counts the lines carrying the
+# replaced word. eng_residue counts the lines still carrying the HOST awk at a command position
+# — a line's first word, the first word inside "$(", or the first word after a pipe — so a copy
+# that changed LESS than it should, keeping an interpreter the substitution does not reach,
+# fails as surely as one that changed more. ENG_RESIDUE_CTL is that count over a synthetic text
+# carrying one site of each of the three forms and two engine-named sites that must not count,
+# and both arms below require it to read exactly 3, so a residue of 0 is a measurement.
+eng_copy() {
+  declare -f "$1" | LC_ALL=C sed -e '1s/^'"$1"' /'"$1"'_on_'"$2"' /' -e 's/^\( *\)awk /\1'"$2"' /' -e 's/\$(awk /$('"$2"' /'
+}
+eng_revert() {
+  LC_ALL=C sed -e '1s/^'"$1"'_on_'"$2"' /'"$1"' /' -e 's/^\( *\)'"$2"' /\1awk /' -e 's/\$('"$2"' /$(awk /'
+}
+eng_words() {
+  printf '%s\n' "$1" | LC_ALL=C grep -c -E '^ *'"$2"' |\$\('"$2"' '
+}
+eng_residue() {
+  printf '%s\n' "$1" | LC_ALL=C grep -c -E '(^ *|\$\(|\| *)awk '
+}
+ENG_RESIDUE_FX=$'  awk x\ny=$(awk x\nz | awk x\n  mawk x\ny=$(gawk x'
+ENG_RESIDUE_CTL="$(eng_residue "$ENG_RESIDUE_FX")"
+eng_id() {  # the named interpreter's own version line, never the host awk's
+  case "$1" in
+    mawk) mawk -W version 2>/dev/null </dev/null | awk -F, 'NR == 1 { print $1 }' ;;
+    gawk) gawk -W version 2>/dev/null </dev/null | awk -F, 'NR == 1 { print $1 }' ;;
+  esac
+}
+lit_replace() {  # <old> <new> on stdin — every occurrence, literally, with no escape processing
+  LIT_OLD="$1" LIT_NEW="$2" awk '{ s = $0; r = ""; while ((i = index(s, ENVIRON["LIT_OLD"])) > 0) { r = r substr(s, 1, i - 1) ENVIRON["LIT_NEW"]; s = substr(s, i + length(ENVIRON["LIT_OLD"])) } print r s }'
+}
+
+# CA10 — ENGINE PARITY on ca_delta. For each of mawk and gawk present by name, a copy of
+# ca_delta differing only in its interpreter word reads the CA9 fixture exactly as CA9_WANT
+# states — the en-dash ranges expanded, the three-number control cell reported PARSE-FAIL —
+# under C and under the multibyte member, and reads § 9 exactly as ca_delta reads it under C.
+# MUST FIRE beside it, per engine: the same copy with the separator class narrowed back to one
+# character must NOT reproduce CA9_WANT under C, so the comparison is shown able to see the CA2
+# defect on the very engine it grades. Prediction: on mawk that copy misreads the fixture in
+# every locale; on gawk, under C.
+CA10_REF="$( ( export LC_ALL=C; ca_delta ) 2>/dev/null )"
+CA10_GRADED=""; CA10_ABSENT=""; CA10_BAD=""; CA10_NG=0; CA10_FIRED=0; CA10_MAWK=0
+if [ "$ENG_RESIDUE_CTL" != 3 ]; then CA10_BAD="$CA10_BAD residue-probe-read-${ENG_RESIDUE_CTL:-nothing}-of-3"; fi
+for ca10_e in mawk gawk; do
+  if [ -z "$(command -v "$ca10_e" 2>/dev/null)" ]; then CA10_ABSENT="$CA10_ABSENT $ca10_e"; continue; fi
+  CA10_NG=$((CA10_NG + 1))
+  case "$ca10_e" in mawk) CA10_MAWK=1 ;; esac
+  ca10_src="$(eng_copy ca_delta "$ca10_e")"
+  ca10_back="$(printf '%s\n' "$ca10_src" | eng_revert ca_delta "$ca10_e")"
+  if [ "$ca10_back" != "$(declare -f ca_delta)" ]; then CA10_BAD="$CA10_BAD $ca10_e:copy-changed-more-than-the-interpreter"; fi
+  if [ "$(eng_words "$ca10_src" "$ca10_e")" -ne 1 ]; then CA10_BAD="$CA10_BAD $ca10_e:interpreter-words=$(eng_words "$ca10_src" "$ca10_e")"; fi
+  if [ "$(eng_residue "$ca10_src")" -ne 0 ]; then CA10_BAD="$CA10_BAD $ca10_e:host-awk-left=$(eng_residue "$ca10_src")"; fi
+  eval "$ca10_src"
+  for ca10_l in C ${LC_MB:+"$LC_MB"}; do
+    ca10_fx="$( ( export LC_ALL="$ca10_l"; EN_DOC="$CA_FX"; "ca_delta_on_$ca10_e" ) 2>/dev/null )"
+    ca10_doc="$( ( export LC_ALL="$ca10_l"; "ca_delta_on_$ca10_e" ) 2>/dev/null )"
+    if [ "$ca10_fx" != "$CA9_WANT" ]; then CA10_BAD="$CA10_BAD $ca10_e@$ca10_l:fixture"; fi
+    if [ "$ca10_doc" != "$CA10_REF" ]; then CA10_BAD="$CA10_BAD $ca10_e@$ca10_l:section-9"; fi
+  done
+  ca10_plant="$(printf '%s\n' "$ca10_src" | lit_replace "ca_delta_on_$ca10_e ()" "ca_delta_narrow_on_$ca10_e ()" | lit_replace '[^0-9]+[0-9]+' '[^0-9][0-9]+')"
+  eval "$ca10_plant"
+  ca10_pfx="$( ( export LC_ALL=C; EN_DOC="$CA_FX"; "ca_delta_narrow_on_$ca10_e" ) 2>/dev/null )"
+  if [ "$ca10_pfx" != "$CA9_WANT" ]; then CA10_FIRED=$((CA10_FIRED + 1)); else CA10_BAD="$CA10_BAD $ca10_e:narrowed-control-did-not-fire"; fi
+  CA10_GRADED="$CA10_GRADED $ca10_e ($(eng_id "$ca10_e"))"
+done
+if [ -n "$CA10_BAD" ]; then
+  FAIL "CA10: ENGINE PARITY — ca_delta read differently under an interpreter named, or its copy changed more or less than the interpreter word, or a control did not fire:$CA10_BAD (graded:${CA10_GRADED:- none}). A range parse that holds under one awk and not another grades a contributor's tree differently from CI's"
+elif [ "$CA10_MAWK" -eq 0 ]; then
+  SKIP "CA10: ENGINE PARITY — this host has no mawk, the engine this arm exists for (graded:${CA10_GRADED:- none}; absent:$CA10_ABSENT). Not a pass, and not your change: CI runs strict and declares no skip, so on the hosted runner this arm must grade mawk or fail"
+elif [ "$CA10_NG" -ge 1 ] && [ "$CA10_FIRED" -eq "$CA10_NG" ]; then
+  PASS "CA10: ENGINE PARITY — under$CA10_GRADED, a copy of ca_delta differing only in its interpreter word, with no host awk left in it, reads the CA9 fixture exactly as CA9 states (the en-dash ranges expanded, the three-number cell reported PARSE-FAIL) under C${LC_MB:+ and $LC_MB}, and reads § 9 exactly as ca_delta does under C. On each engine the same copy with a one-character separator class misreads the fixture, so the comparison can see the CA2 defect where it grades, and the residue probe found all 3 of its planted sites${CA10_ABSENT:+ (not installed here:$CA10_ABSENT)}"
+else
+  FAIL "CA10: ENGINE PARITY — the tally does not close (graded=$CA10_NG narrowed-controls-fired=$CA10_FIRED)"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group LC, continued — ca_delta's range parse reads the same under every locale in the set.
+#
+# Emitted HERE rather than in group LC's own block because group LC runs before group CA defines
+# ca_delta. The ids are LC's, and group RS reduces an id to its group by its leading capitals,
+# so these verdicts count as group LC wherever they print.
+#
+# ── ONE EVALUATOR, FOUR SUBJECTS ─────────────────────────────────────────────────
+# lc_fn_diff runs a function over each input under C and under every other member of
+# LC_CS_SET — the CODESET set LC3 derived: C, POSIX and the multibyte members, never the whole
+# collation set LC1 reads — and compares the outputs byte for byte. LC5 drives it over the REAL
+# ca_delta. LC6 and LC7 drive it over copies of ca_delta derived from its own `declare -f` text,
+# each carrying a planted locale-dependent construct, and each MUST be reported. LC8 drives it
+# over a copy carrying a locale-INVARIANT added line, which must not be — the arm that separates
+# "the differential sees locale dependence" from "the differential flags any edit". The copies
+# are derived from the function as this shell holds it, so a change to ca_delta's text moves
+# them with it, and an anchor that no longer exists makes the arm fail rather than plant nothing.
+#
+# ── WHAT IT DOES NOT COVER ───────────────────────────────────────────────────────
+# The covered surface is ca_delta. Other awk programs in this file that read multibyte content
+# are not driven through the differential; group LC's header names its whole covered set.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "LC — ca_delta's range parse is locale-invariant (graded here, after group CA defines it)"
+
+lc_fn_diff() {  # <function> <input>... ; "<pairs>\t<disagreements>\t<class-rows-under-C>\t<detail>"
+  local fn="$1" inp base out l pairs=0 bad=0 rows=0 detail=""
+  shift
+  for inp in "$@"; do
+    base="$( ( export LC_ALL=C; EN_DOC="$inp"; "$fn" ) 2>/dev/null )"
+    rows=$((rows + $(printf '%s\n' "$base" | awk -F'\t' '$1 ~ /^[0-9]+$/ { n++ } END { print n + 0 }')))
+    while IFS= read -r l; do
+      [ -n "$l" ] || continue
+      [ "$l" != C ] || continue
+      out="$( ( export LC_ALL="$l"; EN_DOC="$inp"; "$fn" ) 2>/dev/null )"
+      pairs=$((pairs + 1))
+      if [ "$out" != "$base" ]; then bad=$((bad + 1)); detail="$detail ${inp##*/}@$l"; fi
+    done <<EOF
+$LC_CS_SET
+EOF
+  done
+  printf '%s\t%s\t%s\t%s\n' "$pairs" "$bad" "$rows" "$detail"
+}
+lc_count() {  # <literal> <text> — occurrences of a literal string, never a pattern
+  awk -v t="$1" '{ s = $0; while ((i = index(s, t)) > 0) { n++; s = substr(s, i + length(t)) } } END { print n + 0 }' <<<"$2"
+}
+lc_fixture_hits() {  # <detail> — how many of the reported disagreements are on the CA9 fixture
+  printf '%s\n' "$1" | awk -v f="${CA_FX##*/}@" '{ for (i = 1; i <= NF; i++) if (index($i, f) == 1) n++ } END { print n + 0 }'
+}
+
+# LC5 — THROUGH THE REAL FUNCTION, over the real § 9 and the CA9 fixture, under the codeset set.
+LC5_R="$(lc_fn_diff ca_delta "$EN_DOC" "$CA_FX")"
+LC5_P="$(printf '%s' "$LC5_R" | cut -f1)"; LC5_B="$(printf '%s' "$LC5_R" | cut -f2)"; LC5_W="$(printf '%s' "$LC5_R" | cut -f3)"
+if [ "$LC_FLAT" -eq 1 ]; then
+  SKIP "LC5: not graded on this engine — LC4 shows this awk answers the same in every locale, so ca_delta cannot read differently across the set here, and a zero would not be a measurement"
+elif [ "$LC5_P" -gt 0 ] && [ "$LC5_B" -eq 0 ] && [ "$LC5_W" -gt 0 ] && [ "$LC_MB_N" -ge 1 ]; then
+  PASS "LC5: ca_delta returned byte-identical output across all $LC5_P (input, locale) comparisons — § 9 and the CA9 fixture, each under C against every other member of the codeset set, $LC_MB_N of them multibyte, with $LC_CS_OUT member(s) of the collation set left out as not multibyte:${LC_CS_OUT_NAMES:- none} — over $LC5_W class rows read under C. Observed through the real function; LC6 and LC7 show the same evaluator reporting a planted construct, so this zero is a measurement"
+else
+  FAIL "LC5: ca_delta is locale-dependent or the comparison is blind (comparisons=$LC5_P disagreements=$LC5_B class-rows-under-C=$LC5_W multibyte-members=$LC_MB_N left-out=$LC_CS_OUT; each must be non-zero except disagreements and left-out):$(printf '%s' "$LC5_R" | cut -f4)"
+fi
+
+# LC6 — MUST FIRE, by REPLACEMENT. The range test's separator class narrowed back to one
+# character — the exact construct of the finding — in a copy of ca_delta. Predicted before it
+# runs: on a character-aware awk, every multibyte member disagrees with C on both inputs.
+LC_SRC="$(declare -f ca_delta)"
+LC6_WIDE0="$(lc_count '[^0-9]+[0-9]+' "$LC_SRC")"; LC6_NARROW0="$(lc_count '[^0-9][0-9]+' "$LC_SRC")"
+LC6_SRC="$(printf '%s\n' "$LC_SRC" | LC_ALL=C sed -e '1s/^ca_delta /lc_planted_narrow /' -e 's/\[^0-9\]+\[0-9\]+/[^0-9][0-9]+/')"
+LC6_WIDE1="$(lc_count '[^0-9]+[0-9]+' "$LC6_SRC")"; LC6_NARROW1="$(lc_count '[^0-9][0-9]+' "$LC6_SRC")"
+eval "$LC6_SRC"
+LC6_R="$(lc_fn_diff lc_planted_narrow "$EN_DOC" "$CA_FX")"
+LC6_B="$(printf '%s' "$LC6_R" | cut -f2)"; LC6_FX="$(lc_fixture_hits "$(printf '%s' "$LC6_R" | cut -f4)")"
+if [ "$LC_FLAT" -eq 1 ]; then
+  SKIP "LC6: MUST FIRE cannot fire on this engine — LC4 shows it answers the same in every locale, so the planted one-character class reads the same under every member. CA10 plants the same class and grades it through mawk and gawk by name"
+elif [ "$LC6_WIDE0" -eq 1 ] && [ "$LC6_WIDE1" -eq 0 ] && [ "$LC6_NARROW1" -eq $((LC6_NARROW0 + 1)) ] && [ "$LC6_FX" -ge 1 ]; then
+  PASS "LC6: MUST FIRE — a copy of ca_delta whose range test admits a one-character separator again is reported on $LC6_B comparison(s), $LC6_FX of them on the fixture. The planted token was asserted to have replaced the real one exactly once, so the arm graded a changed function"
+else
+  FAIL "LC6: MUST FIRE — the planted one-character separator was not reported (replaced=$LC6_WIDE0->$LC6_WIDE1 planted=$LC6_NARROW0->$LC6_NARROW1 disagreements=$LC6_B fixture-disagreements=$LC6_FX). If the replacement landed, the evaluator cannot see a codeset-dependent construct on this host — read LC3 and LC4"
+fi
+
+# LC7 — MUST FIRE, ADD-ONLY. One line inserted ahead of the split, every existing line kept:
+# a guard that drops a cell whose separator is wider than one character, written as the bracket
+# expression the finding is about. The copy minus that line must equal ca_delta byte for byte.
+LC7_LINE='      if (rng ~ /[0-9][^0-9][^0-9]/) next'
+LC7_SRC="$(printf '%s\n' "$LC_SRC" | LC_ALL=C awk -v add="$LC7_LINE" 'NR == 1 { sub(/^ca_delta /, "lc_planted_addonly ") } index($0, "split(rng, R,") > 0 { print add } { print }')"
+LC7_BACK="$(printf '%s\n' "$LC7_SRC" | LC_ALL=C awk -v add="$LC7_LINE" '$0 != add' | LC_ALL=C sed '1s/^lc_planted_addonly /ca_delta /')"
+LC7_ADDED="$(lc_count "$LC7_LINE" "$LC7_SRC")"; LC7_INTACT=0
+[ "$LC7_BACK" = "$LC_SRC" ] && LC7_INTACT=1
+eval "$LC7_SRC"
+LC7_R="$(lc_fn_diff lc_planted_addonly "$EN_DOC" "$CA_FX")"
+LC7_B="$(printf '%s' "$LC7_R" | cut -f2)"; LC7_FX="$(lc_fixture_hits "$(printf '%s' "$LC7_R" | cut -f4)")"
+if [ "$LC_FLAT" -eq 1 ]; then
+  SKIP "LC7: MUST FIRE, ADD-ONLY, cannot fire on this engine — LC4 shows it answers the same in every locale, so the added line reads the same under every member"
+elif [ "$LC7_ADDED" -eq 1 ] && [ "$LC7_INTACT" -eq 1 ] && [ "$LC7_FX" -ge 1 ]; then
+  PASS "LC7: MUST FIRE, ADD-ONLY — one locale-dependent line added to an otherwise byte-identical copy of ca_delta is reported on $LC7_B comparison(s), $LC7_FX of them on the fixture. The guard is not addition-blind: nothing existing had to change for it to fire"
+else
+  FAIL "LC7: MUST FIRE, ADD-ONLY — the added locale-dependent line was not reported (added=$LC7_ADDED intact=$LC7_INTACT disagreements=$LC7_B fixture-disagreements=$LC7_FX). If it was added and the rest is intact, the evaluator is blind to it on this host — read LC3 and LC4"
+fi
+
+# LC8 — SPECIFICITY. The same insertion point, a line that cannot depend on the locale. The copy
+# must agree with itself across every member AND with the real ca_delta under C.
+LC8_LINE='      if (rng == "") next'
+LC8_SRC="$(printf '%s\n' "$LC_SRC" | LC_ALL=C awk -v add="$LC8_LINE" 'NR == 1 { sub(/^ca_delta /, "lc_planted_invariant ") } index($0, "split(rng, R,") > 0 { print add } { print }')"
+LC8_ADDED="$(lc_count "$LC8_LINE" "$LC8_SRC")"
+eval "$LC8_SRC"
+LC8_R="$(lc_fn_diff lc_planted_invariant "$EN_DOC" "$CA_FX")"
+LC8_P="$(printf '%s' "$LC8_R" | cut -f1)"; LC8_B="$(printf '%s' "$LC8_R" | cut -f2)"; LC8_W="$(printf '%s' "$LC8_R" | cut -f3)"
+LC8_SAME=0
+[ "$( ( export LC_ALL=C; lc_planted_invariant ) 2>/dev/null )" = "$( ( export LC_ALL=C; ca_delta ) 2>/dev/null )" ] && LC8_SAME=1
+if [ "$LC_FLAT" -eq 1 ]; then
+  SKIP "LC8: SPECIFICITY has nothing to separate on this engine — LC6 and LC7 cannot fire where LC4 shows the awk answers the same in every locale"
+elif [ "$LC8_ADDED" -eq 1 ] && [ "$LC8_P" -gt 0 ] && [ "$LC8_B" -eq 0 ] && [ "$LC8_W" -gt 0 ] && [ "$LC8_SAME" -eq 1 ]; then
+  PASS "LC8: SPECIFICITY — a locale-invariant line added at the same point is reported on 0 of $LC8_P comparisons and reads § 9 exactly as ca_delta does. What LC6 and LC7 report is the locale dependence they plant, not the act of editing"
+else
+  FAIL "LC8: SPECIFICITY — a locale-invariant added line was reported or read differently (added=$LC8_ADDED comparisons=$LC8_P disagreements=$LC8_B class-rows=$LC8_W same-as-ca_delta=$LC8_SAME), so LC6 and LC7 cannot tell a locale-dependent edit from any edit"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
@@ -3233,6 +3668,18 @@ fi
 # two marker forms § 4.5 rule 2 assigns — never by matching a display string. Keyed on
 # names, this group would define its population as the set of pairs that already agree,
 # which is the tautology EN's own header warns about in the same terms.
+#
+# ── THE HEADING TESTS ARE SPELLED WITHOUT AN INTERVAL ───────────────────────────
+# Both readers below find a heading by its run of `#`s — two to six in vi_bindings, one to six
+# in vi_open_decisions — and the run is spelled out (`###?#?#?#?`, `##?#?#?#?#?`) rather than
+# written as an interval expression. That is the convention this file already states for its
+# awk programs: an interval is not read the same by every awk, and a misread pattern yields a
+# plausible answer rather than an error. A heading test that never fires leaves every fenced
+# mention's display string empty and keeps only the last mention in each file. In a container
+# whose awk was mawk 1.3.4, VI1 failed on a tree the runner passed, reporting exactly the one
+# key that reading produces. VI3 grades these readers under mawk by name wherever it is
+# installed; its ENGINES line prints how mawk reads the heading test written as an interval, and
+# its ENGINES FIXTURE line runs that interval over five lines built to tell the readings apart.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
 echo "VI — a merged venue key carries the warrant the identity procedure requires"
@@ -3255,7 +3702,7 @@ vi_bindings() {
       if (pk != "") { printf "%s\t%s\t%s\t%d\t1\n", pk, ph, pf, loc; pk = "" }
     }
     FNR == 1 { flush(); heading = ""; loc = 0; infence = 0 }
-    /^#{2,6}[ \t]/ {
+    /^###?#?#?#?[ \t]/ {
       flush(); h = $0; sub(/^#+[ \t]*/, "", h); sub(/[ \t]+$/, "", h)
       heading = h; loc = 0; next
     }
@@ -3346,11 +3793,15 @@ VI_NMULTI="$(printf '%s\n' "$VI_BIND" | awk -F'\t' 'NF>4{print $1 "\t" $2}' | so
 # discuss OPEN DECISIONS at length — and any key token happening to appear in that prose
 # would silently discharge a violation. Rung 5 requires the pair to be NAMED in the
 # table, so the table is the population.
-VI_OD="$(awk '
-  index($0, "OPEN DECISIONS") > 0 { insec = 1; next }
-  insec && (/^#{1,6}[ \t]/ || /^---[ \t]*$/) { insec = 0; next }
-  insec && /^\|/ { print }
-' ${VI_FILES[@]+"${VI_FILES[@]}"} 2>/dev/null)"
+vi_open_decisions() {
+  [ "$#" -gt 0 ] || return 0
+  awk '
+    index($0, "OPEN DECISIONS") > 0 { insec = 1; next }
+    insec && (/^##?#?#?#?#?[ \t]/ || /^---[ \t]*$/) { insec = 0; next }
+    insec && /^\|/ { print }
+  ' "$@" 2>/dev/null
+}
+VI_OD="$(vi_open_decisions ${VI_FILES[@]+"${VI_FILES[@]}"})"
 
 printf '  BINDINGS: %d mention(s) over %d key(s) across %d tracked markdown file(s); %d are source mentions; %d key(s) carry more than one display string\n' \
   "$VI_NBIND" "$VI_NKEYS" "$VI_NFILES" "$VI_NSRC" "$VI_NMULTI"
@@ -3388,6 +3839,108 @@ if [ "$VI_OK" -eq 1 ] && [ "$VI_NMULTI" -gt 0 ]; then
     PASS "VI2: control — with every mention's location evidence stripped from a runtime copy (the mutation is asserted to have landed) the same evaluator reports $VI_C1 unwarranted merge(s), and with the OPEN DECISIONS text emptied it reports $VI_C2. VI1's zero is a measurement of both limbs rather than an evaluator that cannot fail"
   else
     FAIL "VI2: the must-fire arm did not behave (mutation-landed=$VI_LANDED stripped-location-detected=$VI_C1 expected>=1) — VI1's verdict has no control behind it"
+  fi
+fi
+
+# VI3 — ENGINE PARITY on the venue readers. vi_bindings, vi_open_decisions and vi_violations,
+# each copied with only its interpreter word changed, must produce under mawk what they produce
+# under gawk — the bindings and the OPEN DECISIONS rows byte for byte, and the unwarranted merges
+# as a SET. vi_violations emits its rows from a `for (k in …)` loop, whose order belongs to the
+# engine, so both sides of that comparison are sorted under C first: two engines that agree on
+# the set and not on the sequence are not a parity break, and reading them as one would report
+# an engine fault beside the VI1 failure that caused it. MUST FIRE beside it: a copy whose
+# heading rule can never fire, the shape VI1 failed in under mawk, must read the corpus
+# differently, so the comparison is shown able to see it. Needs both interpreters by name; SKIPs
+# without them, and CI runs strict, so on the hosted runner it must grade or fail.
+#
+# Two lines print beside the verdict, and both are measurements rather than verdicts. ENGINES
+# counts the source mentions each engine reads with the shipped heading test and with the same
+# test written as an interval, as this group wrote it before. ENGINES FIXTURE runs that interval
+# over five lines built in the run's temp dir — `## x`, `###### x`, `# x`, `####### x`, and the
+# interval's own text followed by ` x` — and names each engine's reading: honoured correctly when
+# it matches lines 1 and 2 and nothing else, not honoured when it matches line 5 alone (the braces
+# read as literal characters), honoured wrongly otherwise, with the lines it did match. A count
+# over the corpus cannot tell the last two apart; the fixture can. The hypothesis is that mawk
+# misreads the interval, and the fixture records which way. gawk is the control: unless it reads
+# the fixture as honoured correctly the fixture cannot discriminate, and VI3 fails naming it. The
+# interval is assembled from two pieces, so this file holds no interval expression for a scan of
+# its own text to find.
+vi3_fixture() {  # <engine> — the fixture lines the interval matches, in the form "1,2"
+  case "$1" in
+    mawk) mawk "$VI3_FXPROG" "$VI3_FX" 2>/dev/null ;;
+    gawk) gawk "$VI3_FXPROG" "$VI3_FX" 2>/dev/null ;;
+  esac
+}
+vi3_reading() {  # <matched-lines> <rc> — the reading those lines name
+  if [ "$2" -ne 0 ]; then printf 'rejected the program (rc=%s)' "$2"; return 0; fi
+  case "$1" in
+    1,2) printf 'honoured correctly' ;;
+    5)   printf 'not honoured (the braces read as literal characters)' ;;
+    *)   printf 'honoured wrongly (matched line(s): %s)' "${1:-none}" ;;
+  esac
+}
+if [ "$VI_OK" -eq 1 ]; then
+  VI3_ABSENT=""
+  for vi3_e in mawk gawk; do
+    if [ -z "$(command -v "$vi3_e" 2>/dev/null)" ]; then VI3_ABSENT="$VI3_ABSENT $vi3_e"; fi
+  done
+  if [ -n "$VI3_ABSENT" ]; then
+    SKIP "VI3: ENGINE PARITY — needs both mawk and gawk by name, and this host lacks$VI3_ABSENT. Not a pass, and not your change: CI runs strict and declares no skip, so on the hosted runner this arm must grade both or fail"
+  else
+    VI3_BAD=""
+    if [ "$ENG_RESIDUE_CTL" != 3 ]; then VI3_BAD="$VI3_BAD residue-probe-read-${ENG_RESIDUE_CTL:-nothing}-of-3"; fi
+    for vi3_e in mawk gawk; do
+      for vi3_f in vi_bindings vi_open_decisions vi_violations; do
+        vi3_src="$(eng_copy "$vi3_f" "$vi3_e")"
+        if [ "$(printf '%s\n' "$vi3_src" | eng_revert "$vi3_f" "$vi3_e")" != "$(declare -f "$vi3_f")" ]; then VI3_BAD="$VI3_BAD $vi3_f@$vi3_e:copy-changed-more-than-the-interpreter"; fi
+        if [ "$(eng_words "$vi3_src" "$vi3_e")" -ne 1 ]; then VI3_BAD="$VI3_BAD $vi3_f@$vi3_e:interpreter-words=$(eng_words "$vi3_src" "$vi3_e")"; fi
+        if [ "$(eng_residue "$vi3_src")" -ne 0 ]; then VI3_BAD="$VI3_BAD $vi3_f@$vi3_e:host-awk-left=$(eng_residue "$vi3_src")"; fi
+        eval "$vi3_src"
+      done
+    done
+    VI3_MB="$(vi_bindings_on_mawk ${VI_FILES[@]+"${VI_FILES[@]}"})"; VI3_GB="$(vi_bindings_on_gawk ${VI_FILES[@]+"${VI_FILES[@]}"})"
+    VI3_MO="$(vi_open_decisions_on_mawk ${VI_FILES[@]+"${VI_FILES[@]}"})"; VI3_GO="$(vi_open_decisions_on_gawk ${VI_FILES[@]+"${VI_FILES[@]}"})"
+    VI3_MV="$(vi_violations_on_mawk "$VI3_MB" "$VI3_MO" | LC_ALL=C sort)"; VI3_GV="$(vi_violations_on_gawk "$VI3_GB" "$VI3_GO" | LC_ALL=C sort)"
+    VI3_N="$(printf '%s\n' "$VI3_GB" | grep -c '[^[:space:]]')"
+    if [ "$VI3_MB" != "$VI3_GB" ]; then VI3_BAD="$VI3_BAD bindings"; fi
+    if [ "$VI3_MO" != "$VI3_GO" ]; then VI3_BAD="$VI3_BAD open-decisions"; fi
+    if [ "$VI3_MV" != "$VI3_GV" ]; then VI3_BAD="$VI3_BAD unwarranted-merges"; fi
+    if [ "$VI3_N" -eq 0 ]; then VI3_BAD="$VI3_BAD empty-population"; fi
+    VI3_SHIPPED='/^###?#?#?#?[ \t]/'
+    VI3_RENAMED="$(declare -f vi_bindings_on_gawk | lit_replace 'vi_bindings_on_gawk ()' 'vi_bindings_never_on_gawk ()')"
+    VI3_NEVER="$(printf '%s\n' "$VI3_RENAMED" | lit_replace "$VI3_SHIPPED {" "0 && $VI3_SHIPPED {")"
+    if [ "$VI3_NEVER" = "$VI3_RENAMED" ]; then VI3_BAD="$VI3_BAD heading-test-respelled(the control's anchor is gone; an interval is not read the same by every awk)"; fi
+    eval "$VI3_NEVER"
+    VI3_NB="$(vi_bindings_never_on_gawk ${VI_FILES[@]+"${VI_FILES[@]}"})"
+    VI3_NV="$(vi_violations_on_gawk "$VI3_NB" "$VI3_GO" | grep -c '[^[:space:]]')"
+    VI3_FIRED=0
+    if [ "$VI3_NB" != "$VI3_GB" ]; then VI3_FIRED=1; fi
+    # The interval, assembled from two pieces, and the five-line fixture it is read over.
+    VI3_IVA='{2'; VI3_IVB=',6}'
+    VI3_INTERVAL="#${VI3_IVA}${VI3_IVB}"
+    VI3_IVRE="/^${VI3_INTERVAL}[ \t]/"
+    for vi3_e in mawk gawk; do
+      eval "$(declare -f "vi_bindings_on_$vi3_e" | lit_replace "vi_bindings_on_$vi3_e ()" "vi_bindings_interval_on_$vi3_e ()" | lit_replace "$VI3_SHIPPED" "$VI3_IVRE")"
+    done
+    VI3_FX="$WORK/vi3-interval-fixture.md"
+    printf '## x\n###### x\n# x\n####### x\n%s x\n' "$VI3_INTERVAL" > "$VI3_FX"
+    VI3_FXPROG="$VI3_IVRE"' { printf "%s%d", (n++ ? "," : ""), NR } END { print "" }'
+    VI3_FM="$(vi3_fixture mawk)"; VI3_FM_RC=$?
+    VI3_FG="$(vi3_fixture gawk)"; VI3_FG_RC=$?
+    if [ "$VI3_FG_RC" -ne 0 ]; then VI3_BAD="$VI3_BAD interval-fixture-control(gawk-rc=$VI3_FG_RC)"; fi
+    if [ "$VI3_FG" != "1,2" ]; then VI3_BAD="$VI3_BAD interval-fixture-control(gawk-matched=${VI3_FG:-none})"; fi
+    printf '  ENGINES: shipped heading test — %s source mention(s) under mawk (%s), %s under gawk (%s); the same test written as an interval — %s under mawk, %s under gawk\n' \
+      "$(printf '%s\n' "$VI3_MB" | awk -F'\t' 'NF > 4 && $5 == 1 { n++ } END { print n + 0 }')" "$(eng_id mawk)" \
+      "$(printf '%s\n' "$VI3_GB" | awk -F'\t' 'NF > 4 && $5 == 1 { n++ } END { print n + 0 }')" "$(eng_id gawk)" \
+      "$(vi_bindings_interval_on_mawk ${VI_FILES[@]+"${VI_FILES[@]}"} | awk -F'\t' 'NF > 4 && $5 == 1 { n++ } END { print n + 0 }')" \
+      "$(vi_bindings_interval_on_gawk ${VI_FILES[@]+"${VI_FILES[@]}"} | awk -F'\t' 'NF > 4 && $5 == 1 { n++ } END { print n + 0 }')"
+    printf '  ENGINES FIXTURE: the interval %s over five lines (## x, ###### x, # x, ####### x, and its own text) — mawk matched line(s) %s: %s; gawk matched line(s) %s: %s\n' \
+      "$VI3_IVRE" "${VI3_FM:-none}" "$(vi3_reading "$VI3_FM" "$VI3_FM_RC")" "${VI3_FG:-none}" "$(vi3_reading "$VI3_FG" "$VI3_FG_RC")"
+    if [ -z "$VI3_BAD" ] && [ "$VI3_FIRED" -eq 1 ]; then
+      PASS "VI3: ENGINE PARITY — the venue readers, each copied with only its interpreter word changed and no host awk left in it, read $VI3_N binding(s) and the OPEN DECISIONS rows byte for byte the same under mawk as under gawk, and the same set of unwarranted merges. A copy whose heading rule never fires reads the corpus differently ($VI3_NV unwarranted merge(s) against $(printf '%s\n' "$VI3_GV" | grep -c '[^[:space:]]') from the shipped reader), so the comparison sees the shape VI1 failed in under mawk; gawk reads the interval fixture as honoured correctly, so the ENGINES FIXTURE line can tell the readings apart"
+    else
+      FAIL "VI3: ENGINE PARITY — the venue readers read differently under mawk than under gawk, or a copy changed more or less than its interpreter word, or a control did not fire (differs:${VI3_BAD:- none}; control-fired=$VI3_FIRED). A merge VI1 grades green under one awk and red under another is the failure this suite was measured with"
+    fi
   fi
 fi
 
@@ -4346,28 +4899,36 @@ if [ "$FT_OK" -eq 1 ]; then
   awk -v p="$FT_RULE_BOUND" 'index($0, p) == 0' "$FT_DOC" > "$FT_FX"
   FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
   FT_V="$(md_probe zzq_ft_no_such_subject ft_rule_assert "$FT_FX" "$FT_SKILL")"
-  if [ "$FT_V" = "0 1" ] && { [ "$FT_LD" -eq 1 ] || [ "$FT_VL" = "0 1" ]; }; then
+  if [ "$FT_V" != "0 1" ]; then
+    FAIL "CTL-FT6-DM: MUST FIRE — landed=$FT_LD, FT6 read '$FT_V' where '0 1' is owed with the data model's sentence removed"
+  elif [ "$FT_LD" -eq 1 ]; then
     PASS "CTL-FT6-DM: MUST FIRE — the heading-to-section sentence removed from a copy of reference/data-model.md turns FT6 to exactly one FAIL ($FT_V), with the skill untouched"
   else
-    FAIL "CTL-FT6-DM: MUST FIRE — landed=$FT_LD, FT6 read '$FT_V' where '0 1' is owed with the data model's sentence removed"
+    PASS "CTL-FT6-DM: MUST FIRE — the live data model has already lost the heading-to-section sentence, so the removal had nothing to remove; FT6 carries that red itself (live '$FT_VL') and this control stands rather than failing to construct"
   fi
   FT_FX="$WORK/ft/rule-skill.md"
   awk 'index($0, "(after optional whitespace) on a character that is neither a") == 0' "$FT_SKILL" > "$FT_FX"
   FT_LD=0; cmp -s "$FT_SKILL" "$FT_FX" || FT_LD=1
   FT_V="$(md_probe zzq_ft_no_such_subject ft_rule_assert "$FT_DOC" "$FT_FX")"
-  if [ "$FT_V" = "0 1" ] && { [ "$FT_LD" -eq 1 ] || [ "$FT_VL" = "0 1" ]; }; then
+  if [ "$FT_V" != "0 1" ]; then
+    FAIL "CTL-FT6-SKILL: MUST FIRE — landed=$FT_LD, FT6 read '$FT_V' where '0 1' is owed with the skill's sentence removed"
+  elif [ "$FT_LD" -eq 1 ]; then
     PASS "CTL-FT6-SKILL: MUST FIRE — the line carrying the token boundary removed from a copy of skills/trip-record/SKILL.md turns FT6 to exactly one FAIL ($FT_V), with the data model untouched"
   else
-    FAIL "CTL-FT6-SKILL: MUST FIRE — landed=$FT_LD, FT6 read '$FT_V' where '0 1' is owed with the skill's sentence removed"
+    PASS "CTL-FT6-SKILL: MUST FIRE — the live documents have already lost the rule, so the removal had nothing to remove; FT6 carries that red itself (live '$FT_VL') and this control stands rather than failing to construct"
   fi
   FT_FX="$WORK/ft/rule-wrap.md"
   awk -v p="$FT_RULE_BOUND" 'i = index($0, p) { k = i + index(p, " on a character") - 1; print substr($0, 1, k - 1); print substr($0, k + 1); next } { print }' "$FT_DOC" > "$FT_FX"
   FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
   FT_V="$(md_probe zzq_ft_no_such_subject ft_rule_assert "$FT_FX" "$FT_SKILL")"
-  if [ "$FT_V" = "$FT_VL" ] && { [ "$FT_LD" -eq 1 ] || [ "$FT_VL" = "0 1" ]; }; then
-    PASS "CTL-FT6-WRAP: MUST NOT FIRE — the data model's sentence re-wrapped mid-phrase on a copy grades exactly as the live document does ($FT_V), so FT6 reads the rule's content and never its line breaks"
-  else
+  if [ "$FT_V" != "$FT_VL" ]; then
     FAIL "CTL-FT6-WRAP: MUST NOT FIRE — landed=$FT_LD, the re-wrapped copy read '$FT_V' where the live document reads '$FT_VL'. A reflow alone would turn FT6 red, which is the failure that gets an arm disabled rather than trusted"
+  elif [ "$FT_LD" -eq 1 ]; then
+    PASS "CTL-FT6-WRAP: MUST NOT FIRE — the data model's sentence re-wrapped mid-phrase on a copy grades exactly as the live document does ($FT_V), so FT6 reads the rule's content and never its line breaks"
+  elif [ "$FT_VL" = "0 1" ]; then
+    PASS "CTL-FT6-WRAP: MUST NOT FIRE — the live data model has already lost the sentence, so there was nothing to re-wrap; FT6 carries that red itself (live '$FT_VL') and this control stands rather than failing to construct"
+  else
+    FAIL "CTL-FT6-WRAP: MUST NOT FIRE — landed=$FT_LD, the re-wrap changed nothing in the copy while the live FT6 reads '$FT_VL' rather than '0 1': the sentence is absent from the data model and FT6 does not see it"
   fi
 fi
 
@@ -11731,15 +12292,132 @@ rl_answered_class() {
 # blank, a lone em dash and a surviving bracketed placeholder are all unanswered, while
 # `none` IS an answer — the one place the form makes a word stand in for the em dash.
 
+# rl_readable <root> [fixed-path…] — RL0's readability gate. The fixed required surfaces arrive as
+# quoted positional arguments after <root>, and every one of them is graded: an EMPTY argument is a
+# path that cannot be read, so it is named, never skipped. The guided forms arrive on stdin, one
+# path per line, and only there is a blank line skipped, because an empty forms list is one blank
+# line rather than a surface. One list under one blank-line rule would get one of the two wrong: it
+# would skip an emptied fixed surface as nothing to check, or name an empty forms list as a missing
+# surface. Every path that is not readable is named in ONE FAIL, relative to <root>, and the status
+# is 1; when every path reads, nothing renders and the status is 0. It is a function rather than
+# top-level code so that CTL-RL0-ABSENT below can drive the SAME gate over a fixture: the live call
+# and the arm are one gate, and the arm grades the FAIL line itself, which is the line `set -u`
+# would abort on. RL_MISSING is initialised on entry for that reason — an unreadable surface renders
+# a FAIL naming it instead of ending the suite.
+#
+# The forms read from stdin are appended to the fixed list, and ONE `-r` test grades them all, in
+# the order the caller gave them. The caller hands the forms over on a here-document, never through
+# a pipe: a pipeline runs the function in a subshell, where its FAIL would print and the run's
+# failure count would not move. The fixed surfaces are separately quoted variables, so passing them
+# as arguments splits nothing. The forms are a newline list, which as arguments would need either
+# unquoted word splitting or an array, and an empty array is an unbound variable under `set -u` in
+# bash 3.2, which macOS ships as /bin/bash and where this suite runs green.
+rl_readable() {
+  local root="${1:-}" rl_f RL_MISSING=""
+  shift
+  while IFS= read -r rl_f; do
+    [ -n "$rl_f" ] || continue
+    set -- "$@" "$rl_f"
+  done
+  for rl_f in "$@"; do
+    [ -r "$rl_f" ] || RL_MISSING="$RL_MISSING ${rl_f#"$root/"}"
+  done
+  [ -n "$RL_MISSING" ] || return 0
+  FAIL "RL0: required surface(s) unreadable:$RL_MISSING — not a skip and not a pass"
+  return 1
+}
+
+# ── CTL-RL0-ABSENT — MUST FIRE, graded FIRST. RL0's unreadable FAIL is reached only when a
+# required surface cannot be read, and the tracked tree carries every one, so on a real run that
+# line never renders and nothing shows it still can. This arm renders it on EVERY run, in two cases
+# over one fixture root. The first hands the gate, on stdin, one file that exists and one path that
+# does NOT exist. A path that does not exist is unreadable to every uid. A permission change is
+# not, because a process running as root reads straight through it, so a fixture built with chmod
+# would turn this arm red on a root host while the gate was sound. The file that exists is the
+# specificity limb: a gate that named every path it was given would name that one too. The second
+# hands it, as fixed arguments, the file that exists and an EMPTY entry, with one blank line on
+# stdin: the empty fixed entry has to be named, exactly once, and the blank line must not be. That
+# is the degenerate input a single blank-skipping list would grade as nothing to check — a fixed
+# path emptied by an edit, or by a lookup that came back empty — and it holds the two lists' blank
+# rules apart from both sides.
+#
+# The gate runs inside a capture whose PASS and FAIL are rebound to recorders, so the FAIL it
+# renders is read as text and never reaches this run's counters. Its input arrives on a
+# here-string, so it runs in the capture's own shell and three outcomes stay distinct: a status
+# of 127 is an ABSENT gate, no status line at all is a gate that ABORTED (an unbound variable
+# under `set -u`), and 1 with one FAIL naming the absent path is the gate working. The limbs run
+# most specific first, so a regression lands on the limb written for it: a surface named by its
+# absolute path is reported as that, before the broader test that its bare name is present.
+# rl0_absent_assert takes every input as an argument and calls rl_readable itself, which is what
+# lets md_flips register it below: removing rl_readable has to flip this arm, and only this arm.
+rl0_absent_assert() {   # rl0_absent_assert <fixture-root> <present-name> <absent-name>
+  local fx="$1" present="$2" absent="$3" list out ln rc="" nf=0 np=0 msg="" rc_e="" msg_e="" lst_e
+  list="$fx/$present
+$fx/$absent"
+  out="$(PASS() { printf 'P %s\n' "$*"; }; FAIL() { printf 'F %s\n' "$*"; }; rl_readable "$fx" <<<"$list"; printf 'R %s\n' "$?")"
+  while IFS= read -r ln; do
+    case "$ln" in
+      'R '*) rc="${ln#R }" ;;
+      'F '*) nf=$((nf+1)); msg="${ln#F }" ;;
+      'P '*) np=$((np+1)) ;;
+    esac
+  done <<<"$out"
+  out="$(PASS() { printf 'P %s\n' "$*"; }; FAIL() { printf 'F %s\n' "$*"; }; rl_readable "$fx" "$fx/$present" "" <<<""; printf 'R %s\n' "$?")"
+  while IFS= read -r ln; do
+    case "$ln" in
+      'R '*) rc_e="${ln#R }" ;;
+      'F '*) msg_e="${ln#F }" ;;
+    esac
+  done <<<"$out"
+  # The list the empty-entry case named, cut from its FAIL between 'unreadable:' and the dash after
+  # it. Each named entry carries one leading space, so one empty entry is exactly one space and a
+  # second entry adds another.
+  lst_e="${msg_e#*unreadable:}"
+  lst_e="${lst_e%% —*}"
+  if [ ! -r "$fx/$present" ]; then
+    FAIL "CTL-RL0-ABSENT: the fixture did not land — '$present' is not readable under the fixture root, so the specificity limb has nothing to clear and this control proves nothing"
+  elif [ -e "$fx/$absent" ]; then
+    FAIL "CTL-RL0-ABSENT: the fixture did not land — '$absent' EXISTS under the fixture root, so the list carries no missing surface and this control proves nothing"
+  elif [[ ! "$rc" =~ ^[0-9]+$ ]]; then
+    FAIL "CTL-RL0-ABSENT: MUST FIRE — the gate returned no status line: it ABORTED before rendering, which under set -u is an unbound variable on the FAIL path. RL0's unreadable branch would end the suite rather than grade it"
+  elif [ "$rc" -eq 127 ]; then
+    FAIL "CTL-RL0-ABSENT: MUST FIRE — rc=127: rl_readable is NOT DEFINED. The gate is ABSENT, so RL0's unreadable branch has nothing to render it"
+  elif [ "$rc" -ne 1 ]; then
+    FAIL "CTL-RL0-ABSENT: MUST FIRE — over a list holding a path that does not exist, rl_readable returned rc=$rc where exactly 1 was required, so the gate graded an absent surface readable"
+  elif [ "$np" -ne 0 ]; then
+    FAIL "CTL-RL0-ABSENT: MUST FIRE — the gate rendered $np PASS line(s) over a list holding a path that does not exist, where it must render none"
+  elif [ "$nf" -ne 1 ]; then
+    FAIL "CTL-RL0-ABSENT: MUST FIRE — the gate rendered $nf FAIL line(s) where exactly one was required"
+  elif [ "${msg%%:*}" != "RL0" ]; then
+    FAIL "CTL-RL0-ABSENT: MUST FIRE — the FAIL the gate rendered carries the id '${msg%%:*}', not RL0"
+  elif [[ "$msg" == *"$fx/"* ]]; then
+    FAIL "CTL-RL0-ABSENT: RL0 named the surface by its absolute path rather than relative to the root it was given: '$msg'"
+  elif [[ "$msg" != *" $absent"* ]]; then
+    FAIL "CTL-RL0-ABSENT: MUST FIRE — RL0 failed without NAMING the absent surface '$absent', relative to the root it was given: '$msg'. A FAIL that does not say which surface is missing sends its reader looking"
+  elif [[ "$msg" == *"$present"* ]]; then
+    FAIL "CTL-RL0-ABSENT: SPECIFICITY — RL0 also named '$present', a file that exists and reads: '$msg'. The gate is naming the paths it was given rather than the ones it could not read"
+  elif [ "$rc_e" != "1" ]; then
+    FAIL "CTL-RL0-ABSENT: MUST FIRE — over a fixed list carrying an EMPTY entry, rl_readable returned '${rc_e:-no status line}' where exactly 1 was required, so the empty fixed entry was not graded unreadable: a required path emptied by an edit would pass RL0, and every arm after it would grade without that surface"
+  elif [ "$lst_e" != " " ]; then
+    FAIL "CTL-RL0-ABSENT: MUST FIRE — over a fixed list carrying one EMPTY entry and a blank line on stdin, RL0 did not name exactly that one empty entry: '$msg_e'. The empty fixed entry is a surface and must be named once; the blank stdin line is no surface and must not be"
+  else
+    PASS "CTL-RL0-ABSENT: MUST FIRE — over a fixture holding one file that exists and one path that does not, rl_readable returned rc=1 and rendered exactly one FAIL, id RL0, naming '$absent' relative to the fixture root and not naming '$present'; and over a fixed list carrying that file and an EMPTY entry, with a blank line on stdin, it returned rc=1 and named the empty entry once and the blank line not at all. RL0's unreadable branch renders on every run rather than only on a tree that has lost a surface, and on every host: no uid can read a path that does not exist, root included"
+  fi
+}
+
+RL0_FX="$WORK/rl0-fx"
+RL0_PRESENT="present.md"
+RL0_ABSENT="absent.md"
+mkdir -p "$RL0_FX" && printf 'a required surface that exists\n' > "$RL0_FX/$RL0_PRESENT"
+rl0_absent_assert "$RL0_FX" "$RL0_PRESENT" "$RL0_ABSENT"
+# Registered HERE rather than in group MD, as group MG registers its own: the arm needs this
+# group's fixture. md_flips removes rl_readable and requires this arm to report exactly one FAIL
+# and no PASS. Group MD's controls on the oracle itself, MD4 and MD5, run later in this same
+# process, so an oracle that had stopped discriminating still turns this run red.
+md_flips rl_readable 'CTL-RL0-ABSENT' rl0_absent_assert "$RL0_FX" "$RL0_PRESENT" "$RL0_ABSENT"
+
 RL_OK=1
-RL_MISSING=""
-for rl_f in "$RL_DM" "$RL_CMD" "$RL_PAIR_T" "$RL_PAIR_R" "$RL_UNLINKED"; do
-  [ -r "$rl_f" ] || { RL_OK=0; RL_MISSING="$RL_MISSING ${rl_f#"$ROOT/"}"; }
-done
-while IFS= read -r rl_f; do
-  [ -n "$rl_f" ] || continue
-  [ -r "$rl_f" ] || { RL_OK=0; RL_MISSING="$RL_MISSING ${rl_f#"$ROOT/"}"; }
-done <<EOF
+rl_readable "$ROOT" "$RL_DM" "$RL_CMD" "$RL_PAIR_T" "$RL_PAIR_R" "$RL_UNLINKED" <<EOF || RL_OK=0
 $RL_FORMS
 EOF
 
@@ -11757,8 +12435,6 @@ if [ "$RL_OK" -eq 1 ]; then
     FAIL "RL0: the classification parsed to $RL_NCLASS labelled row(s) / $RL_NPERSON person-class. Every verdict below would be over an empty or class-blind table, so this fails rather than passing quietly"
     RL_OK=0
   fi
-else
-  FAIL "RL0: required surface(s) unreadable:$RL_MISSING — not a skip and not a pass"
 fi
 
 if [ "$RL_OK" -eq 1 ]; then
@@ -15512,6 +16188,480 @@ md_flips st_sitemap 'ST-CF-SITE' site_cov_assert 'ST-CF-SITE' 'CTL-ST-CF-SITE' '
 # sentinel is the seam between the primitive's mechanism and that requirement.
 
 # ═════════════════════════════════════════════════════════════════════════════════
+# Group FZ — every verdict arm in this file must be able to FAIL.
+#
+# ── WHY THIS GROUP IS HERE AND NOT ONLY IN THE SUITE WHERE IT WAS FOUNDED ────────
+# The rule was founded in the trip-resolution-contract suite, after that suite shipped two
+# verdict arms unable to fail and both were found by a human reading predicates at Stage 7
+# rather than by a check. The shape is not local to that suite. When this group was installed
+# here its walker was first run over every guard suite, and it found the shape in one of them,
+# three guards, rewritten in the same change. A guard whose failure branch is unreachable
+# reports PASS forever, and that PASS is indistinguishable from a real one in every run, so a
+# rule enforced in one suite leaves the growth surface of the others unguarded. The same
+# group, the same walker and the same controls ship in every guard suite, each over its own
+# source, so a finding is reported by the suite whose arm it is.
+#
+# ── THE RULE IT ENFORCES, AND WHY THAT RULE ──────────────────────────────────────
+# Reachability is not decidable in general, so this group does not claim to decide it. It
+# enforces a SHAPE, and the shape is the one both founding instances had:
+#
+#     a verdict guard that reaches PASS through a DISJUNCTION.
+#
+# Written `if A or B; then PASS ... else FAIL`, the failure branch requires `not A and
+# not B` — a CONJUNCTION the author never wrote down and therefore never checked. That is
+# where unsatisfiability hides. In both founding instances the second disjunct was implied
+# by the first's negation, so the conjunction could never hold. The same disjunction
+# reaching FAIL is the opposite case and is not flagged: `if A or B; then FAIL` fires
+# whenever either holds.
+#
+# The shape is not merely suspicious, it is never NECESSARY. Every arm written that way can
+# be written as a chain — one `elif` per condition, one message per branch — which is
+# strictly better for a second reason: a branch that can fire for several reasons proves
+# that something was wrong, not WHICH thing. And where a disjunct exists to excuse an empty
+# population, the honest verdict for that case is never PASS, unless a live arm already
+# carries that red and the message names it: otherwise it is VACUOUS where the suite has
+# that verdict, or a FAIL that names the empty population. So the rule costs nothing it
+# should keep.
+#
+# ── COVERAGE BOUNDARY — WHAT THIS GROUP DOES NOT GRADE ───────────────────────────
+# Stated plainly, because an overclaiming meta-arm is the same defect one level up.
+#   *  It decides a SHAPE, never reachability. A tautological guard — `[ "$n" -ge 0 ]` over
+#      a count, `[ -n "$x" ]` over a value assigned a literal just above it, or a comparison
+#      between two values the suite itself constructs to be equal — reaches PASS without a
+#      disjunction and is INVISIBLE here. This group would not have caught such an arm, and
+#      does not claim it would. The class is a DECLARED RESIDUAL, not an oversight, and no
+#      detector for it ships, for a stated reason: whether a guard can fail is whether its
+#      negation is satisfiable over the values this file can produce, which is not decidable
+#      in general, and a detector for a few literal spellings would grade those spellings
+#      while reading as coverage of the class — the very failure this group exists to catch.
+#      Group MD's static arm leaves every shell-test condition unflagged by design; its
+#      dynamic arm convicts a REGISTERED assertion whose PASS survives its subject's removal,
+#      which some tautological guards do. An unregistered tautological guard is seen by
+#      nothing in this file, and this paragraph is where a reader is told so.
+#   *  It grades the guards whose taken branch carries a verdict on the line that branch
+#      starts on — the rest of the guard's own line after `then`, or else the next non-blank
+#      non-comment line — and it reads the FIRST verdict there, so `then FAIL ...; else
+#      PASS ...` is a guard that reaches FAIL. A verdict that first appears deeper inside a
+#      branch is counted as a non-verdict guard and is not graded. The counts are printed, so
+#      the ungraded remainder is visible rather than implied.
+#   *  It locates a guard only where `if` or `elif` opens a line of top-level code, so three
+#      verdict forms are never located and never graded: (a) a list-form verdict,
+#      `A && PASS "..." or FAIL "..."`, which with a disjunction for A is the most compact
+#      spelling of the banned shape; (b) a guard whose `if` is not the first word on its
+#      line — a `case` arm, a one-line function body, or one after `;` or `&&`; and (c) a
+#      disjunction decided in a helper or an assignment and compared afterwards, where the
+#      guard that reaches PASS tests the stored result and never sees the disjunction — the
+#      artifact-schema suite's `st_cf_dfired` is one. FZ3 prints FZ_UNLOCATED, the top-level
+#      lines that carry a PASS verdict and are no located guard's verdict line. All three
+#      forms fall inside it, so their remainder is counted on every run rather than implied
+#      to be zero; so does every PASS reached through an `else` or first appearing deeper in
+#      a branch, so the count bounds the three forms from above and is no census of them.
+#   *  It walks TOP-LEVEL CODE ONLY. A lexer tracks what is open at each point — quotes,
+#      $( ), backticks, ${ }, $(( )) and here-documents — and a line that begins inside one
+#      of them is an embedded program or a payload, never a shell guard: an awk program's
+#      `if`, a script written out through a here-document, a mock defined inside a
+#      multi-line command substitution. Inside a guard the operator counts only at the
+#      guard's own level, so one inside a substitution, a quoted literal or a here-document
+#      is not this guard's disjunction, while one inside [[ ]] or (( )) is. The number of
+#      lines not walked is printed with FZ3. A verdict placed inside a multi-line command
+#      substitution runs in a subshell whose counters never reach this run, and it is not
+#      graded here either. A `<<` whose delimiter is neither a word nor quoted — the
+#      shift-assign `<<=` is one — names no line on which a here-document would end, so the
+#      lexer records it rather than guess, and FZ3 refuses a file that carries one.
+#   *  It recognises the operator as two bars. A disjunction spelled `-o` inside [ ] or
+#      test, a `case` alternation, a negated group, and a `then` standing alone on its own
+#      line are not recognised; none of them was written into a verdict guard in any guard
+#      suite when this group was installed, and the walk does not grade them.
+#   *  The walk is line-oriented and does not track nesting, so it attributes a verdict to
+#      the guard it most recently completed. Every control below runs on a synthetic source
+#      of known shape precisely because the parser's own correctness cannot be assumed.
+#   *  Its scan set is THIS FILE — not a script it sources, and not a sibling suite. Each
+#      guard suite carries this group over its own source, so a finding is reported by the
+#      suite whose arm it is. The walker is the same text in every suite that carries it, by
+#      the convention group MD follows, and nothing asserts the copies agree: a correction to
+#      one is a correction owed to all of them.
+#
+# ── THE CONTROLS ARE PERMANENT, NOT A ONE-TIME DEMONSTRATION ─────────────────────
+# FZ1 plants an arm carrying the banned shape and requires the detector to flag it. FZ2
+# plants the conforming source — the same arm rewritten as a chain, PLUS a conjunctive
+# PASS-reaching guard — and requires silence over it; that second guard is the only
+# specimen an over-matching detector can be seen on, and FZ2 asserts its presence rather
+# than assuming it. Three more plants each stand behind one correction the walker carries,
+# and each is a source a walker without that correction reads wrongly. FZ5 is a one-line
+# guard that names FAIL first: a walker taking any PASS after `then` reads it as a
+# PASS-reaching disjunction. FZ6 is two awk programs carrying the operator, each followed by
+# a shell guard: a walker reading awk's `if` as a shell guard flags the awk line and lets it
+# swallow the guard after it, so FZ6 requires the second, disjunctive guard flagged at its
+# OWN line. FZ7 puts the operator inside a command substitution, a quoted literal and a
+# here-document, then a `<<` whose delimiter is no word, which must be refused without
+# hiding what follows, then a real one inside [[ ]] that must still be flagged. Every plant is
+# built and run on EVERY invocation, so a detector that stops detecting is caught by the
+# next run rather than by the next reader. FZ1 is graded FIRST, and FZ3 reads FZ1, FZ6 and
+# FZ7 before it reads this file: a zero whose sensitivity arms did not fire is a broken
+# probe, not a clean file. FZ3 also refuses a scan whose lexer ended this file inside a
+# construct it never saw closed, because every line after the opener was invisible to it,
+# and one whose lexer met a `<<` it could not delimit.
+#
+# The needle is assembled from two pieces, and the comments above spell it `or` rather
+# than literally. The plants are the deliberate exception: each spells the operator in full,
+# so that no plant is built out of the needle it is meant to test — a control assembled from
+# the thing it validates cannot detect that thing drifting. The literal is safe in the plants
+# because the walker reads only top-level code, and every plant line is a quoted argument.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group FZ — every verdict arm in this file must be able to FAIL."
+
+FZ_OR='|'"|"
+FZ_Q="'"
+FZ_GUARDS=0; FZ_ARMS=0; FZ_PASSARMS=0; FZ_FAILARMS=0; FZ_NONVERDICT=0; FZ_UNRESOLVED=0
+FZ_BAD=0; FZ_BAD_AT=""; FZ_LINES=0; FZ_EMBEDDED=0; FZ_LEXEND=""
+FZ_PASSTOP=0; FZ_PASSREAD=0; FZ_UNLOCATED=0
+FZ_PJ=(); FZ_CO=()
+
+# fz_lex — one pass over a shell source, keeping a stack of the constructs open at each point:
+# T top-level code; S '…'; A $'…'; D "…"; B a backtick; C $( … ) and c a ( ) inside it; P ${ … };
+# R and r $(( … )). A comment is dropped where a word may start; a here-document's body is
+# every line after its opener up to its delimiter. A `<<` whose delimiter is neither a word nor
+# quoted, as in the shift-assign `<<=`, opens no body: no line can be named on which it would
+# end, so its line number is recorded instead. Per line it records the TOP-LEVEL projection —
+# the line with the inside of every open construct removed and the quote marks kept — and
+# whether the line BEGAN in top-level code. A line that began inside a construct is part of an
+# embedded program or a payload, never a shell guard. FZ_LEXEND is the state at end of input:
+# "T|" when every construct closed and no here-document is pending, and the lines of any `<<`
+# it could not delimit follow a second bar, so the state is then never "T|".
+fz_lex() {  # <file> -> FZ_PJ[] FZ_CO[] FZ_EMBEDDED FZ_LEXEND
+  local f="$1" line rest pre c c2 c3 st="T" top proj last hdq="" tag dash k qd hbad=""
+  FZ_PJ=(); FZ_CO=(); FZ_EMBEDDED=0; FZ_LEXEND=""
+  while IFS= read -r line || [ -n "$line" ]; do
+    if [ -n "$hdq" ]; then
+      tag="${hdq%% *}"; k="$line"
+      case "$tag" in -*) tag="${tag#-}"; k="${k#"${k%%[!	]*}"}" ;; esac
+      [ "$k" = "$tag" ] && hdq="${hdq#* }"
+      FZ_PJ+=(""); FZ_CO+=(0); FZ_EMBEDDED=$((FZ_EMBEDDED+1)); continue
+    fi
+    if [ "$st" = T ]; then FZ_CO+=(1); else FZ_CO+=(0); FZ_EMBEDDED=$((FZ_EMBEDDED+1)); fi
+    proj=""; rest="$line"; last=" "
+    while [ -n "$rest" ]; do
+      top="${st:$((${#st}-1))}"
+      case "$top" in
+        T|C|c) pre="${rest%%[\'\"\\\`\$#\<\(\)]*}" ;;
+        S)     pre="${rest%%\'*}" ;;
+        A)     pre="${rest%%[\\\']*}" ;;
+        D)     pre="${rest%%[\\\"\`\$]*}" ;;
+        B)     pre="${rest%%[\\\`\'\"]*}" ;;
+        P)     pre="${rest%%[\\\}\$]*}" ;;
+        R|r)   pre="${rest%%[\(\)\$]*}" ;;
+      esac
+      if [ -n "$pre" ]; then
+        [ "$st" = T ] && proj="$proj$pre"
+        last="${pre:$((${#pre}-1))}"
+        rest="${rest:${#pre}}"
+        [ -n "$rest" ] || break
+      fi
+      c="${rest:0:1}"; c2="${rest:0:2}"; c3="${rest:0:3}"
+      case "$top" in
+        T|C|c)
+          case "$c" in
+            \\) [ "$st" = T ] && proj="$proj$c2"; rest="${rest:2}"; last=x ;;
+            \') [ "$st" = T ] && proj="$proj'"; st="${st}S"; rest="${rest:1}" ;;
+            \") [ "$st" = T ] && proj="$proj\""; st="${st}D"; rest="${rest:1}" ;;
+            \`) st="${st}B"; rest="${rest:1}" ;;
+            \$) case "$c3" in
+                  '$(('*) st="${st}Rr"; rest="${rest:3}" ;;
+                  *) case "$c2" in
+                       "\$'") st="${st}A"; rest="${rest:2}" ;;
+                       '$(') st="${st}C"; rest="${rest:2}" ;;
+                       '${') st="${st}P"; rest="${rest:2}" ;;
+                       *) [ "$st" = T ] && proj="$proj\$"; rest="${rest:1}"; last='$' ;;
+                     esac ;;
+                esac ;;
+            \#) case "$last" in
+                  ' '|'	'|';'|'&'|'|'|'('|')') rest="" ;;
+                  *) [ "$st" = T ] && proj="$proj#"; rest="${rest:1}"; last='#' ;;
+                esac ;;
+            \<) if [ "$c3" = '<<<' ]; then
+                  [ "$st" = T ] && proj="$proj<<<"; rest="${rest:3}"; last='<'
+                elif [ "$c2" = '<<' ]; then
+                  rest="${rest:2}"; dash=""; qd=""
+                  case "$rest" in -*) dash="-"; rest="${rest:1}" ;; esac
+                  rest="${rest#"${rest%%[! 	]*}"}"
+                  case "$rest" in
+                    \'*) rest="${rest:1}"; tag="${rest%%\'*}"; rest="${rest#*\'}"; qd=q ;;
+                    \"*) rest="${rest:1}"; tag="${rest%%\"*}"; rest="${rest#*\"}"; qd=q ;;
+                    \\*) rest="${rest:1}"; tag="${rest%%[!A-Za-z0-9_]*}"; rest="${rest:${#tag}}" ;;
+                    *)   tag="${rest%%[!A-Za-z0-9_]*}"; rest="${rest:${#tag}}" ;;
+                  esac
+                  if [ -n "$tag$qd" ]; then hdq="$hdq$dash$tag "; else hbad="$hbad${#FZ_CO[@]} "; fi
+                  [ "$st" = T ] && proj="$proj<<$tag"; last=x
+                else
+                  [ "$st" = T ] && proj="$proj<"; rest="${rest:1}"; last='<'
+                fi ;;
+            \() if [ "$top" = T ]; then proj="$proj("; else st="${st}c"; fi; rest="${rest:1}"; last='(' ;;
+            \)) if [ "$top" = T ]; then proj="$proj)"; else st="${st%?}"; fi; rest="${rest:1}"; last=')' ;;
+          esac ;;
+        S) st="${st%?}"; [ "$st" = T ] && proj="$proj'"; rest="${rest:1}"; last="'" ;;
+        A) if [ "$c" = '\' ]; then rest="${rest:2}"; else st="${st%?}"; [ "$st" = T ] && proj="$proj'"; rest="${rest:1}"; last="'"; fi ;;
+        D) case "$c" in
+             \\) rest="${rest:2}" ;;
+             \") st="${st%?}"; [ "$st" = T ] && proj="$proj\""; rest="${rest:1}"; last='"' ;;
+             \`) st="${st}B"; rest="${rest:1}" ;;
+             \$) case "$c3" in
+                   '$(('*) st="${st}Rr"; rest="${rest:3}" ;;
+                   *) case "$c2" in
+                        '$(') st="${st}C"; rest="${rest:2}" ;;
+                        '${') st="${st}P"; rest="${rest:2}" ;;
+                        *) rest="${rest:1}" ;;
+                      esac ;;
+                 esac ;;
+           esac ;;
+        B) case "$c" in
+             \\) rest="${rest:2}" ;;
+             \`) st="${st%?}"; rest="${rest:1}" ;;
+             \') st="${st}S"; rest="${rest:1}" ;;
+             \") st="${st}D"; rest="${rest:1}" ;;
+           esac ;;
+        P) case "$c" in
+             \\) rest="${rest:2}" ;;
+             \}) st="${st%?}"; rest="${rest:1}" ;;
+             \$) case "$c2" in
+                   '$(') st="${st}C"; rest="${rest:2}" ;;
+                   '${') st="${st}P"; rest="${rest:2}" ;;
+                   *) rest="${rest:1}" ;;
+                 esac ;;
+           esac ;;
+        R|r) case "$c" in
+               \() st="${st}r"; rest="${rest:1}" ;;
+               \)) st="${st%?}"; rest="${rest:1}" ;;
+               \$) case "$c2" in
+                     '$(') st="${st}C"; rest="${rest:2}" ;;
+                     *) rest="${rest:1}" ;;
+                   esac ;;
+             esac ;;
+      esac
+    done
+    FZ_PJ+=("$proj")
+  done < "$f"
+  FZ_LEXEND="$st|$hdq"
+  if [ -n "$hbad" ]; then FZ_LEXEND="$FZ_LEXEND|${hbad% }"; fi
+  return 0
+}
+
+# Resolve one located guard against the FIRST verdict of its taken branch — the earliest PASS or
+# FAIL on the line that branch starts on, so `then FAIL …; else PASS …` reaches FAIL.
+fz_resolve() {
+  local p=-1 q=-1 x
+  case "$fz_rest" in *'PASS "'*) x="${fz_rest%%PASS \"*}"; p=${#x} ;; esac
+  case "$fz_rest" in *'FAIL "'*) x="${fz_rest%%FAIL \"*}"; q=${#x} ;; esac
+  if [ "$p" -lt 0 ] && [ "$q" -lt 0 ]; then
+    FZ_NONVERDICT=$((FZ_NONVERDICT+1))
+  elif [ "$p" -lt 0 ]; then
+    FZ_ARMS=$((FZ_ARMS+1)); FZ_FAILARMS=$((FZ_FAILARMS+1))
+  elif [ "$q" -ge 0 ] && [ "$q" -lt "$p" ]; then
+    FZ_ARMS=$((FZ_ARMS+1)); FZ_FAILARMS=$((FZ_FAILARMS+1))
+  else
+    FZ_ARMS=$((FZ_ARMS+1)); FZ_PASSARMS=$((FZ_PASSARMS+1))
+    case "$fz_guard" in
+      *"$FZ_OR"*) FZ_BAD=$((FZ_BAD+1)); FZ_BAD_AT="$FZ_BAD_AT$fz_gline " ;;
+    esac
+  fi
+}
+
+# Walk the top-level projection of a shell source and grade every verdict guard it can locate.
+fz_scan() {  # <file>
+  local f="$1" i=0 n t co pend=0 want=0
+  FZ_GUARDS=0; FZ_ARMS=0; FZ_PASSARMS=0; FZ_FAILARMS=0; FZ_NONVERDICT=0; FZ_UNRESOLVED=0
+  FZ_BAD=0; FZ_BAD_AT=""; FZ_LINES=0; FZ_PASSTOP=0; FZ_PASSREAD=0; FZ_UNLOCATED=0
+  fz_guard=""; fz_gline=0; fz_rest=""
+  fz_lex "$f"; n=${#FZ_PJ[@]}
+  while [ "$i" -lt "$n" ]; do
+    t="${FZ_PJ[$i]}"; co="${FZ_CO[$i]}"; i=$((i+1)); FZ_LINES=$i
+    t="${t#"${t%%[![:space:]]*}"}"
+    [ -n "$t" ] || continue
+    case "$t" in *'PASS "'*) FZ_PASSTOP=$((FZ_PASSTOP+1)) ;; esac
+    if [ "$pend" -eq 1 ]; then
+      fz_guard="$fz_guard $t"
+      case "$t" in
+        *' then'*|*';then'*) pend=0; FZ_GUARDS=$((FZ_GUARDS+1)); fz_rest="${t#*then}"; want=1 ;;
+        *) continue ;;
+      esac
+    else
+      case "$co$t" in
+        '1if '*|'1elif '*|'1if	'*|'1elif	'*)
+          [ "$want" -eq 1 ] && FZ_UNRESOLVED=$((FZ_UNRESOLVED+1))
+          want=0
+          fz_guard="$t"; fz_gline="$i"
+          case "$t" in
+            *' then'*|*';then'*) pend=0; FZ_GUARDS=$((FZ_GUARDS+1)); fz_rest="${t#*then}"; want=1 ;;
+            *) pend=1; continue ;;
+          esac ;;
+        *)
+          if [ "$want" -eq 1 ]; then
+            fz_rest="$t"; want=0
+            case "$t" in 'else'*|'fi'*) FZ_NONVERDICT=$((FZ_NONVERDICT+1)); continue ;; esac
+            fz_resolve
+            case "$t" in *'PASS "'*) FZ_PASSREAD=$((FZ_PASSREAD+1)) ;; esac
+          fi
+          continue ;;
+      esac
+    fi
+    fz_rest="${fz_rest#"${fz_rest%%[![:space:]]*}"}"
+    if [ -n "$fz_rest" ]; then
+      want=0; fz_resolve
+      case "$t" in *'PASS "'*) FZ_PASSREAD=$((FZ_PASSREAD+1)) ;; esac
+    fi
+  done
+  [ "$want" -eq 1 ] && FZ_UNRESOLVED=$((FZ_UNRESOLVED+1))
+  FZ_UNLOCATED=$((FZ_PASSTOP-FZ_PASSREAD))
+  return 0
+}
+
+fz_plant() {  # <path> <banned|conforming|oneline|embedded|substitution>
+  local p="$1"
+  mkdir -p "${p%/*}"
+  {
+    printf '%s\n' '#!/usr/bin/env bash'
+    printf '%s\n' 'p="$1"; n="$2"'
+    case "$2" in
+      banned)
+        printf '%s\n' 'if [ ! -e "$p/canary" ] || [ "$n" -gt 0 ]; then'
+        printf '%s\n' '  PASS "PLANT: nothing was written"'
+        printf '%s\n' 'else'
+        printf '%s\n' '  FAIL "PLANT: something was written"'
+        printf '%s\n' 'fi' ;;
+      conforming)
+        # The same arm as a chain: one condition per branch, one message per branch.
+        printf '%s\n' 'if [ ! -e "$p/canary" ]; then'
+        printf '%s\n' '  FAIL "PLANT: the canary is absent"'
+        printf '%s\n' 'elif [ "$n" -eq 0 ]; then'
+        printf '%s\n' '  FAIL "PLANT: the watched surface was empty"'
+        printf '%s\n' 'else'
+        printf '%s\n' '  PASS "PLANT: measured"'
+        printf '%s\n' 'fi'
+        # And a plain CONJUNCTIVE guard that reaches PASS — the only specimen an over-match can be
+        # seen on, which is why FZ2 asserts its presence.
+        printf '%s\n' 'if [ -e "$p/canary" ] && [ "$n" -gt 0 ]; then'
+        printf '%s\n' '  PASS "PLANT: the surface was watched and is unchanged"'
+        printf '%s\n' 'else'
+        printf '%s\n' '  FAIL "PLANT: the surface changed"'
+        printf '%s\n' 'fi' ;;
+      oneline)
+        # One line, FAIL first: a disjunction that REACHES FAIL, which this rule permits.
+        printf '%s\n' 'if [ ! -e "$p/canary" ] || [ "$n" -gt 0 ]; then FAIL "PLANT: the canary is absent or something was written"; else PASS "PLANT: the canary is present and nothing was written"; fi' ;;
+      embedded)
+        # Two awk programs whose OWN control flow carries the operator, each followed by a shell
+        # guard: the first conjunctive, the second disjunctive, at line 16 of the plant.
+        printf 'x="$(awk %s{\n' "$FZ_Q"
+        printf '%s\n' '  if (a || b) next' '  print'
+        printf '}%s "$p")"\n' "$FZ_Q"
+        printf '%s\n' 'if [ -e "$p/canary" ] && [ "$n" -gt 0 ]; then' '  PASS "PLANT: measured after an embedded program"' 'else' '  FAIL "PLANT: not measured"' 'fi'
+        printf 'x="$(awk %s{\n' "$FZ_Q"
+        printf '%s\n' '  if (a || b) next' '  print'
+        printf '}%s "$p")"\n' "$FZ_Q"
+        printf '%s\n' 'if [ ! -e "$p/canary" ] || [ "$n" -gt 0 ]; then' '  PASS "PLANT: nothing was written"' 'else' '  FAIL "PLANT: something was written"' 'fi' ;;
+      substitution)
+        # The operator inside a command substitution, inside a quoted literal and inside a
+        # here-document — none of them the guard's own — then, at line 18, a `<<` whose
+        # delimiter is no word, which must be refused and must not hide what follows, then a
+        # real one in [[ ]], at line 19.
+        printf '%s\n' 'if [ "$(grep -c x "$p" || true)" -gt 0 ]; then' '  PASS "PLANT: the count was taken"' 'else' '  FAIL "PLANT: the count was not taken"' 'fi'
+        printf '%s\n' 'if grep -q "a||b" "$p"; then' '  PASS "PLANT: the literal was found"' 'else' '  FAIL "PLANT: the literal was absent"' 'fi'
+        printf '%s\n' 'cat > "$p.sh" <<"EOF"' 'if [ -e a ] || [ -e b ]; then' '  PASS "PLANT: written into a here-document, never run here"' 'fi' 'EOF'
+        printf '%s\n' '(( m <<= 1 ))'
+        printf '%s\n' 'if [[ -e "$p/canary" || "$n" -gt 0 ]]; then' '  PASS "PLANT: either held"' 'else' '  FAIL "PLANT: neither held"' 'fi' ;;
+    esac
+  } > "$p"
+}
+
+FZ_BANNED="$WORK/fz/banned.sh"
+FZ_CLEAN="$WORK/fz/conforming.sh"
+FZ_ONELINE="$WORK/fz/oneline.sh"
+FZ_EMBEDSRC="$WORK/fz/embedded.sh"
+FZ_SUBST="$WORK/fz/substitution.sh"
+fz_plant "$FZ_BANNED" banned
+fz_plant "$FZ_CLEAN" conforming
+fz_plant "$FZ_ONELINE" oneline
+fz_plant "$FZ_EMBEDSRC" embedded
+fz_plant "$FZ_SUBST" substitution
+
+# ── FZ1 — SENSITIVITY, graded FIRST.
+fz_scan "$FZ_BANNED"
+FZ1_BAD="$FZ_BAD"; FZ1_AT="$FZ_BAD_AT"; FZ1_PASSARMS="$FZ_PASSARMS"
+if [ "$FZ1_BAD" -eq 1 ] && [ "$FZ1_PASSARMS" -eq 1 ]; then
+  PASS "FZ1: SENSITIVITY — a planted arm whose PASS is guarded by a disjunction is detected (1 finding, at line ${FZ1_AT% } of the plant), so the detector fires on the shape both shipped instances had"
+else
+  FAIL "FZ1: SENSITIVITY — the planted unfirable arm was NOT detected as expected (findings=$FZ1_BAD, PASS-reaching arms located=$FZ1_PASSARMS, expected 1 and 1). Every verdict below rests on this arm, so none of them is trustworthy"
+fi
+
+# ── FZ2 — SPECIFICITY over the conforming source, a PASS-reaching guard included.
+fz_scan "$FZ_CLEAN"
+FZ2_BAD="$FZ_BAD"; FZ2_ARMS="$FZ_ARMS"; FZ2_FAILARMS="$FZ_FAILARMS"; FZ2_PASSARMS="$FZ_PASSARMS"
+if [ "$FZ2_BAD" -eq 0 ] && [ "$FZ2_ARMS" -ge 3 ] && [ "$FZ2_FAILARMS" -ge 2 ] && [ "$FZ2_PASSARMS" -ge 1 ]; then
+  PASS "FZ2: SPECIFICITY — the conforming source is NOT flagged, over $FZ2_ARMS located verdict arm(s): $FZ2_FAILARMS reaching FAIL and $FZ2_PASSARMS reaching PASS through a conjunction, which is the specimen a widened detector would over-match. The detector discriminates the shape rather than rejecting every guard"
+else
+  FAIL "FZ2: SPECIFICITY — the conforming source was flagged, or the walker located too little of it to say (findings=$FZ2_BAD, arms=$FZ2_ARMS, FAIL-reaching=$FZ2_FAILARMS, PASS-reaching=$FZ2_PASSARMS; want 0 findings over >=3 arms with >=2 FAIL-reaching and >=1 PASS-reaching). The detector cannot tell the shapes apart, or there is nothing in the sample for an over-match to show on, and FZ3's verdict means nothing either way"
+fi
+
+# ── FZ5 — FIRST VERDICT. A one-line guard reads FAIL first; read by any PASS after `then`, it
+# would be a PASS-reaching disjunction and a false finding.
+fz_scan "$FZ_ONELINE"
+FZ5_BAD="$FZ_BAD"; FZ5_ARMS="$FZ_ARMS"; FZ5_FAILARMS="$FZ_FAILARMS"; FZ5_PASSARMS="$FZ_PASSARMS"
+if [ "$FZ5_BAD" -eq 0 ] && [ "$FZ5_ARMS" -eq 1 ] && [ "$FZ5_FAILARMS" -eq 1 ] && [ "$FZ5_PASSARMS" -eq 0 ]; then
+  PASS "FZ5: FIRST VERDICT — a one-line guard whose branch names FAIL first and PASS only after its else is read as the FAIL-reaching guard it is, and its disjunction is NOT flagged: a disjunction reaching FAIL fires whenever either side holds, which this rule permits"
+else
+  FAIL "FZ5: FIRST VERDICT — the one-line FAIL-first specimen read findings=$FZ5_BAD, arms=$FZ5_ARMS, FAIL-reaching=$FZ5_FAILARMS, PASS-reaching=$FZ5_PASSARMS where 0, 1, 1 and 0 are owed. The walker is grading a verdict other than the first one after then"
+fi
+
+# ── FZ6 — EMBEDDED PROGRAMS. Control flow inside an awk program is not a shell guard, and
+# stepping over it must not blind the walker to the guard after it.
+fz_scan "$FZ_EMBEDSRC"
+FZ6_BAD="$FZ_BAD"; FZ6_AT="$FZ_BAD_AT"; FZ6_GUARDS="$FZ_GUARDS"; FZ6_PASSARMS="$FZ_PASSARMS"
+if [ "$FZ6_BAD" -eq 1 ] && [ "${FZ6_AT% }" = 16 ] && [ "$FZ6_GUARDS" -eq 2 ] && [ "$FZ6_PASSARMS" -eq 2 ]; then
+  PASS "FZ6: EMBEDDED PROGRAM — over a plant carrying two awk programs whose own control flow holds the operator, the walker locates exactly the 2 shell guards, leaves the conjunctive one unflagged, and flags the disjunctive one at its own line (line ${FZ6_AT% } of the plant), not at the awk line above it"
+else
+  FAIL "FZ6: EMBEDDED PROGRAM — the plant read findings=$FZ6_BAD at line(s) ${FZ6_AT% }, guards=$FZ6_GUARDS, PASS-reaching=$FZ6_PASSARMS where 1 finding at line 16 over 2 guards, both PASS-reaching, is owed. Control flow inside an embedded program was read as a shell guard, or stepping over it hid the guard that follows"
+fi
+
+# ── FZ7 — THE OPERATOR OUTSIDE THE GUARD'S OWN LIST. Inside a command substitution, a quoted
+# literal or a here-document it is not this guard's disjunction; inside [[ ]] it is. And a `<<`
+# whose delimiter is no word is refused, at its own line, without hiding the guard after it.
+fz_scan "$FZ_SUBST"
+FZ7_BAD="$FZ_BAD"; FZ7_AT="$FZ_BAD_AT"; FZ7_GUARDS="$FZ_GUARDS"; FZ7_PASSARMS="$FZ_PASSARMS"; FZ7_LEXEND="$FZ_LEXEND"
+if [ "$FZ7_BAD" -eq 1 ] && [ "${FZ7_AT% }" = 19 ] && [ "$FZ7_GUARDS" -eq 3 ] && [ "$FZ7_PASSARMS" -eq 3 ] && [ "$FZ7_LEXEND" = "T||18" ]; then
+  PASS "FZ7: SPECIFICITY AND SENSITIVITY IN ONE PLANT — the operator inside a command substitution, inside a quoted literal and inside a here-document is not flagged, the here-document's own guard is not located, a << whose delimiter is no word is refused at its own line (line ${FZ7_LEXEND##*|} of the plant) without hiding what follows, and the disjunction inside [[ ]] is flagged at its own line (line ${FZ7_AT% } of the plant), over the 3 shell guards the plant carries"
+else
+  FAIL "FZ7: the plant read findings=$FZ7_BAD at line(s) ${FZ7_AT% }, guards=$FZ7_GUARDS, PASS-reaching=$FZ7_PASSARMS and lexer end state '$FZ7_LEXEND', where 1 finding at line 19 over 3 guards, all PASS-reaching, and the end state 'T||18' are owed. The operator was read where it is not the guard's own, the walker stopped seeing guards after a substitution, a literal or a here-document, or a << it cannot delimit was taken for a here-document rather than refused"
+fi
+
+# ── FZ3 — THIS FILE. The claim and its denominator, graded only once every control above that
+# could make its zero a false one has been read.
+fz_scan "$SELF"
+FZ_WC="$(wc -l < "$SELF" | tr -d ' ')"
+if [ "$FZ1_BAD" -ne 1 ]; then
+  FAIL "FZ3: the sensitivity arm did not fire on the plant (FZ1 above), so whatever this scan found or did not find in this file is untrustworthy — a zero from a detector never shown to detect anything is a broken probe, not a clean result"
+elif [ "$FZ6_BAD" -ne 1 ]; then
+  FAIL "FZ3: the disjunction planted after an embedded program was not seen (FZ6 above), so stepping over this file's embedded programs may have hidden guards — its zero is not a measurement"
+elif [ "$FZ7_BAD" -ne 1 ]; then
+  FAIL "FZ3: the disjunction planted after a substitution, a literal and a here-document was not seen (FZ7 above), so this file's zero may be a walker gone blind rather than a clean file"
+elif [ "$FZ7_LEXEND" != "T||18" ]; then
+  FAIL "FZ3: the << planted in FZ7 with a delimiter that is neither a word nor quoted was not refused (FZ7 above, end state '$FZ7_LEXEND'), so a here-document this lexer cannot delimit could close early in this file and hide every line after it — its zero is not a measurement"
+elif [ "$FZ_LEXEND" != "T|" ]; then
+  FAIL "FZ3: the lexer ended this file in state '$FZ_LEXEND' where 'T|' is owed — the constructs still open, a bar, any here-document still pending and, after a second bar, the line(s) of any << whose delimiter is neither a word nor quoted, which it refuses to guess the end of. Every line past such a point may have been invisible to the walker, so its zero describes at best a prefix"
+elif [ "$FZ_ARMS" -eq 0 ]; then
+  FAIL "FZ3: the walker located 0 verdict arms in this file, so its zero on the banned shape is an empty scan and not a clean result — the file's shape or this walker has moved"
+elif [ "$FZ_BAD" -eq 0 ]; then
+  PASS "FZ3: $FZ_GUARDS guard(s) in this file's top-level code — $FZ_ARMS located verdict arm(s) ($FZ_PASSARMS reaching PASS, $FZ_FAILARMS reaching FAIL), $FZ_NONVERDICT non-verdict, $FZ_UNRESOLVED unresolved — and 0 of the $FZ_PASSARMS PASS-reaching guards is a disjunction. $FZ_EMBEDDED line(s) lay inside quoted payloads, substitutions or here-documents and were not walked. $FZ_UNLOCATED of the $FZ_PASSTOP top-level line(s) carrying a PASS verdict are no located guard's verdict line — reached through an else, first appearing deeper in a branch, or written in a form the walker does not locate — and are not graded. The controls fired, so this zero is a measurement. It grades a shape, not reachability: see this group's coverage boundary for what it cannot see"
+else
+  FAIL "FZ3: $FZ_BAD verdict arm(s) in this file reach PASS through a disjunction, at line(s) ${FZ_BAD_AT% }. The failure branch then needs every disjunct false at once — a conjunction nobody wrote down — which is how both previously shipped arms became unable to fail. Rewrite as a chain: one condition per branch, one message per branch"
+fi
+
+# ── FZ4 — the walk covered the file, measured by a differently-shaped counter.
+if [ "$FZ_LINES" -ge "$FZ_WC" ] && [ "$FZ_LINES" -le "$((FZ_WC+1))" ] && [ "$FZ_WC" -gt 0 ]; then
+  PASS "FZ4: the walker read $FZ_LINES line(s) of this file against $FZ_WC counted independently — the scan covered the whole source, so FZ3's population is the file's and not a prefix of it"
+else
+  FAIL "FZ4: the walker read $FZ_LINES line(s) of this file while an independent count reads $FZ_WC — the walk did not cover the source, so FZ3 graded a prefix and its verdict does not describe this file"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
 # Group W — the round-trip completeness walk: the contract graded, the instances controlled.
 #
 # ── THE DEFECT ───────────────────────────────────────────────────────────────────
@@ -19196,8 +20346,11 @@ if [ "$vacuous" -gt 0 ]; then
 fi
 rc=0
 [ "$fail" -eq 0 ] || rc=1
-# STRICT SKIP MODE — a skipped group is a failure unless it is declared. This suite has no
-# dependency-gated group, so its declared set is correctly EMPTY and every skip fails.
+# STRICT SKIP MODE — a skipped group is a failure unless it is declared. CA10, VI3 and LC4 to
+# LC8 skip on a host without the capability each needs, and the hosted runner is expected to
+# carry every one of them (the header's STRICT SKIP MODE paragraph states the dependency), so
+# the declared set is correctly EMPTY and every skip fails: on the runner, a skip here means the
+# image lost a capability.
 if [ "${GUARD_STRICT_SKIPS:-0}" = "1" ]; then
   unexpected=""
   # shellcheck disable=SC2086

@@ -181,9 +181,13 @@ set -uo pipefail
 # pins it: the character classes below resolve against the collating sequence, and under a
 # UTF-8 default a range can match glyphs a C-locale run would not — CI would then enforce a
 # rule an operator's own run did not. This suite reads the same markdown corpus that one
-# does. It is the OPPOSITE of test-artifact-schema.sh's requirement, which grades the
-# locale-sensitivity of its own validator and false-fails when LC_ALL is pinned; the two
-# must not borrow a locale from each other or from a shared harness.
+# does. It takes the opposite posture to test-artifact-schema.sh, which leaves the locale
+# unpinned apart from per-call LC_ALL=C on the calls that need byte semantics and the per-member
+# locales of its group LC. What that group asserts on every run is narrow: va_type_ok's slug
+# predicate and ca_delta's range parse answer the same under C and under a UTF-8 locale the host
+# lists, and the run fails if none loads. The rest of that suite reads the caller's locale, and
+# that its verdicts do not move with it was measured when this was written, not asserted. The
+# two must not borrow a locale from each other or from a shared harness.
 export LC_ALL=C
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -198,7 +202,7 @@ ADR_INDEX='reference/adr/README.md'
 
 # THE ONE PINNED VALUE. The known gap in the record sequence, asserted in both directions.
 # Space-separated if it ever holds more than one.
-ADR_NUM_EXEMPT='20'
+ADR_NUM_EXEMPT='20 47'
 
 # The historical witnesses. Each is a real revision of this repository.
 #   IX — a record whose file read Accepted while the index still read Proposed.
