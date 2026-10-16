@@ -3656,7 +3656,9 @@ st_cf_unres_note() { [ -z "$ST_CF_UNRES" ] || printf '%s — ' "$ST_CF_UNRES"; }
 #        declares a value the table's own Class column refuses for its section
 # Every arm has a standing control on a COPY under $WORK, asserted to have LANDED, and graded
 # as a DELTA against this run's own live reading — never against a clean-table literal — so a
-# mutation replayed on the tracked table turns the arm it targets red and no control besides.
+# mutation replayed on the tracked table turns the arm it targets red, and every control whose
+# target the replay leaves alone stays green; a replay on a row a control itself targets may
+# turn that control, or a sibling targeting the same row, red with it.
 # No count is spelled in this group: the declared row count is read from the document.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
@@ -4309,7 +4311,7 @@ ft_route_assert "$FT_DOC" "$FT_FORMS"
 
 # ── The controls. Each mutates a COPY under $WORK, asserts the mutation LANDED, and compares the
 # copy's report with this run's LIVE report as a delta, so replaying a mutation on the tracked
-# table reddens the arm it targets and leaves these standing.
+# table reddens the arm it targets and leaves standing each control whose target it leaves alone.
 if [ "$FT_OK" -eq 1 ]; then
   FT_REP0="$(ft_count_report "$FT_DOC")"
   FT_KR0="$(ft_key_report "$FT_DOC")"
