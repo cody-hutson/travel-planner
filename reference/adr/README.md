@@ -190,6 +190,7 @@ record until the change that lands the held one.
 045       ADR-045-interview-conversation-conduct.md
 046       ADR-046-interview-rating-and-engagement-record.md
 047       ADR-047-rules-over-an-enumeration.md
+048       ADR-048-guard-arm-falsifiability-rule.md
 ```
 
 Records numbered below the register's first row predate it and carry no row. Why a register,
