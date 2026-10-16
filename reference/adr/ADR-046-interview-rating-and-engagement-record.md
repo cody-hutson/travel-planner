@@ -818,7 +818,7 @@ it says.
 | The same file, § `## erase <person-id>` | the reach table gains the class's rows, its stated tally moves with them, and the schema suite's arm that grades the tally moves too |
 | `reference/data-architecture.md` §§ 1 and 1.1, and the sections that state a class's lifecycle, provenance and publish class | the class's rows, one for each root, and every count, heading, identifier range and member list that moves with them — among them § 5.1's sentence naming the `internal-hard` classes as an exact set, which gains the row for the people store's root, and § 1's sentence on which classes are not per-trip |
 | `reference/site-layout-spec.md` § 9.1 | its `publish-contract-artifacts` fence, which the artifact-schema suite holds to § 1.1 in both directions for every `bound` and `internal-hard` row, gains the row for the people store's root; its sentence "Four classes carry `internal-hard`" moves with it |
-| The records that quote that § 5.1 sentence, or call a class its last member — `ADR-010`, `ADR-016`, `ADR-025`, `ADR-026`, `ADR-027` and `ADR-029` | each states the set as it stood when it was written; the change that moves the set names them |
+| The records that quote that § 5.1 sentence, or call a class its last member — `ADR-010`, `ADR-016`, `ADR-025`, `ADR-026`, `ADR-027` and `ADR-029` | each states the set as it stood when it was written, and whether any of them is corrected is not decided here (§ *Residuals*); the change that moves the set names them |
 | `reference/schemas/`, and a witness under `examples/` | the class's schema, and its witness |
 | `scripts/validate-artifacts.sh` and `scripts/test-artifact-schema.sh` | the validator's class-heading constant, and the suite's arms over the class table and the reach table |
 | `ADR-022` § *Consequences*, *What this buys* — its rows for `reference/data-architecture.md` § 1.1 and for the `erase` reach table | they say what D1.1 bought — no new artifact class, and no new location — and stop being true of the engine once the class exists; nothing is owed: a record is marked at its decision, and the marker at D1.1 points here |
@@ -902,6 +902,7 @@ table name one thing by one number; a number missing from the run is a residual 
 | RR-33 | **The return's lines as they are written**: how a row names a field where a form repeats a block or prints a line with no label; what carries the tag once a fence is lost; where a tagged part ends. Settled design, held to D3's rules | #1770 |
 | RR-35 | **What a person hears before the first question now has parts from more than one record** — the disclosure `ADR-022` requires, the offer of an interview style, and this record's opening sentence — and no record bounds their total | the operator |
 | RR-36 | **Whether the hand-off set should be leaner** (`#1766 V-8`, operator-attested, ungraded) | #1327 |
+| RR-37 | **Whether any of the six records that quote the `internal-hard` set is corrected** — `ADR-010`, `ADR-016`, `ADR-025`, `ADR-026`, `ADR-027` and `ADR-029`, each of which states the set as it stood when it was written | the operator |
 
 ## References
 
