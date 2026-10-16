@@ -115,6 +115,14 @@ name: Corpus hygiene
 #        run is started again when the default branch moves. An empty register over no record
 #        above the floor renders VACUOUS, and the floor and the declared boundary are stated in
 #        the suite's banner entry for this group
+#   K    THE SIZE FENCE. Every tracked markdown file that owes a row under
+#        reference/load-class-model.md carries a byte ceiling in the size-ceiling fence in
+#        reference/size-fence.md and fails above it. A file owing a row with none, a row the
+#        fence cannot hold a file to, a file the classification rule reaches by no clause, an
+#        instrument-carrying class holding no file, and a file the rule reaches only through its
+#        own row each fail too. The parameters are read from the declaration and copied nowhere;
+#        what the group reports without failing, and why, is stated in the suite's banner entry
+#        for it and is not restated here
 #   CTL  a synthetic fixture tree built in a temp dir on every invocation, plus the arms whose
 #        ids end -RETRO, each replaying a real historical defect. One MUST-FIRE arm per finding
 #        code the suite can
@@ -137,9 +145,10 @@ name: Corpus hygiene
 #
 #   NON-MARKDOWN SURFACES. The suite reads tracked markdown; in group G, the release tags
 #   and the CHANGELOG each tagged tree carries; in class F, every tracked shell file and every
-#   workflow run: value, graded for that one class and nothing else; and in group H, the names
-#   of the tracked entries under reference/, read to hold one enumeration to them and for
-#   nothing else. Issue templates, workflow comments and every other non-markdown surface are
+#   workflow run: value, graded for that one class and nothing else; in group H, the names of
+#   the tracked entries under reference/, read to hold one enumeration to them and for nothing
+#   else; and in the size group, the names of every tracked file, read to resolve the paths the
+#   classification rule follows and for nothing else. Issue templates, workflow comments and every other non-markdown surface are
 #   not graded, and one of the motivating recurrences lived in a workflow comment. That gap is
 #   real and is left to review; stating it is what keeps a green from being read as more than
 #   it is.
