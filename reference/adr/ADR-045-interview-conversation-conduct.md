@@ -6,8 +6,9 @@
   its conduct card (#1767), cut from the interviewer epic (#1205) at that epic's refinement as the
   decision gate at the head of the work it opens. The operator rendered the decisions below at that
   card's design gate, in a first sitting and a confirm sitting, amended the closing clause of the
-  fifth at the Collective Review of the milestone's other card, and ruled at Dev Testing. This
-  record transcribes them.
+  fifth at the Collective Review of the milestone's other card, and ruled at Dev Testing on the
+  design's three follow-up exclusions, a composed example on a `PERSON`-class field in a spoken
+  session, and where a decision and its check do not meet. This record transcribes them.
 - **What this record is.** A decision about **what the interviewer may say, and how far it may
   go**: when it may give an example and what one may contain, what must be true of every value it
   records, how often it may come back to a field, and what a traveller's choice of interview style
@@ -196,8 +197,8 @@ order stays the interviewer's rule. D2 states both.
 ## Options considered
 
 Each choice was put to the operator at the design gate, with the design's recommendation and an
-independent review's, or at Dev Testing, with that review's. Where the operator ruled against the
-design, that is said.
+independent review's, or at Dev Testing, on that review's findings. Where the operator ruled against
+the design, that is said.
 
 ### D1 — where an example's words come from, and when one may be given
 
@@ -277,7 +278,7 @@ design, that is said.
 | The arm over the forms' own conduct lands **with the change that rewords the forms** — the revised design's | rejected by ruling | An arm scoped away from the one input known to trip it cannot fail. It lands with the other prohibition limbs, against a declared ledger |
 | The restatement of the shared rules **moved into the change that builds the text-level checks** | rejected | A larger change there and a re-pointed tone pass. Splitting each check by limb makes every arm true when it lands |
 | **The interviewer labels its own turns** | rejected | The interviewer under test would be grading itself |
-| The places where a decision and its check do not meet — **a silence and an unclear reply mixed on one field, a reordered confirmation, a compound joined or split** — left as residuals, the record neutral on each | **selected** | § *Residuals* |
+| The places Dev Testing named where a decision and its check do not meet — **a silence and an unclear reply mixed on one field, a reordered confirmation, a compound joined or split** — left as residuals, the record neutral on each | **selected** | § *Residuals* |
 | The three **ruled in this record** | not taken | No ground was recorded |
 
 ## Decision
@@ -802,7 +803,7 @@ Every residual has an owner that is a card or the operator.
 | RS-6 | **A value that reverses meaning by deletion or by reorder passes.** The predicate guards words, not meaning | #1769, to say whether a rubric dimension grades it; the operator, if a rule is wanted |
 | RS-7 | **The text-level checks' word lists, clause windows and engine**, and the ledger of the forms' known sentences | #1353 |
 | RS-8 | **The test conversations' labels, the harness that derives a turn's kind, what a word is for a check, and the verdict for each further case** | #1769; the milestone's other record, if its engagement record carries labels |
-| RS-9 | **Shared rules 2, 3 and 7, the card's copy, every existence limb but the one that holds today, and the default style's persona** — unedited here | #1330 |
+| RS-9 | **Shared rules 2, 3 and 7, the card's copy, every existence limb but `OW-T.E1`, and the default style's persona** — unedited here | #1330 |
 | RS-10 | **The forms' known ask-prose sentences and the declared phrase**, and whether a one-off and an unanswered field must be told apart where a form writes the em dash for both | #1330 |
 | RS-11 | **Where option text ends inside a headed bracket.** Shared rule 3 does not say whether an `e.g.` clause there is offered, and `ADR-023` D2.3 declined a grammar | #1330, for the rule's wording; the operator, if a grammar is wanted |
 | RS-12 | **The style set's text**, each style's line, and whether *playful* is admitted | #1771; the operator for *playful* |
