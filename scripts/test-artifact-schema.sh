@@ -4610,9 +4610,11 @@ if [ "$FT_OK" -eq 1 ]; then
     FAIL "CTL-FT7-HOLDS: MUST FIRE — landed=$FT_LD, the route findings gained '$(ft_route_show "$FT_ADD")' where '$(ft_route_show "$FT_WANT")' is owed"
   fi
 
-  # CTL-FT7-DESIRES and CTL-FT7-CARRIED — MUST FIRE the admissibility reading: `desires` on the row
-  # of the first section holding a DEFAULT field, and `carried` on the row of the first holding a
-  # PERSON field. CTL-FT7-FREE is their near-miss and MUST NOT fire. It is PLANTED, as CTL-FT7-FACET
+  # CTL-FT7-DESIRES, CTL-FT7-CARRIED and CTL-FT7-DESIRES-PERSON — MUST FIRE the admissibility
+  # reading: `desires` on the row of the first section holding a DEFAULT field, `carried` on the row
+  # of the first holding a PERSON field, and `desires` on the row of the first holding a PERSON field
+  # and no DEFAULT field — a section desires:DEFAULT cannot refuse, so the refusal it is owed is
+  # desires:PERSON's. CTL-FT7-FREE is their near-miss and MUST NOT fire. It is PLANTED, as CTL-FT7-FACET
   # is, and reads no row of the real fence: a TRIP-class field under a section no row names, its
   # bullet above the first guided form's boundary, and a row declaring that section `desires`
   # written after the fence's last row. The sections read and the rows the reading examined MUST
@@ -4642,6 +4644,19 @@ if [ "$FT_OK" -eq 1 ]; then
     PASS "CTL-FT7-CARRIED: MUST FIRE — the value on the row for \`$FT_RPSEC\`, a section holding a PERSON field, retyped \`carried\` on a copy of the fence adds exactly one finding, that value refused for that section ($(ft_route_show "$FT_ADD")). A section that carries a durable, non-overridable field cannot be declared silent"
   else
     FAIL "CTL-FT7-CARRIED: MUST FIRE — landed=$FT_LD fence-line=$FT_RPLN, the route findings gained $FT_NADD record(s), $FT_HITN of them REFUSED for '$FT_RPSEC' and \`carried\`, where exactly one of each is owed: '$(ft_route_show "$FT_ADD")'"
+  fi
+  FT_RNSEC="$(awk -F'\t' '{ n++; s[n] = $2; c[n] = $4; if ($4 == "DEFAULT") d[$2] = 1 } END { for (i = 1; i <= n; i++) if (c[i] == "PERSON" && !(s[i] in d)) { print s[i]; exit } }' "$FT_ROWS0")"
+  FT_RNLN="$(ft_route_rows "$FT_DOC" | awk -F'\t' -v s="$FT_RNSEC" '$1 == s { l = $3 } END { print l + 0 }')"
+  FT_FX="$WORK/ft/route-desires-person.md"
+  awk -v ln="$FT_RNLN" 'FNR == ln { sub(/[|].*$/, "| desires") } { print }' "$FT_DOC" > "$FT_FX"
+  FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
+  FT_ADD="$(ft_delta "$FT_RR0" "$(ft_route_findings "$(ft_route_report "$FT_FX" "$FT_FORMS")")")"
+  FT_NADD="$(printf '%s\n' "$FT_ADD" | grep -c '[^[:space:]]')"
+  FT_HITN="$(printf '%s\n' "$FT_ADD" | awk -F'\t' -v s="$FT_RNSEC" '$1 == "REFUSED" && $2 == s && $3 == "desires" { k++ } END { print k + 0 }')"
+  if [ "$FT_LD" -eq 1 ] && [ -n "$FT_RNSEC" ] && [ "$FT_RNLN" -gt 0 ] && [ "$FT_NADD" -eq 1 ] && [ "$FT_HITN" -eq 1 ]; then
+    PASS "CTL-FT7-DESIRES-PERSON: MUST FIRE — the value on the row for \`$FT_RNSEC\`, a section holding a PERSON field and no DEFAULT field, retyped \`desires\` on a copy of the fence adds exactly one finding, that value refused for that section ($(ft_route_show "$FT_ADD")). With no DEFAULT field there, the refusal is the bound desires:PERSON's: a section that carries a durable, non-overridable field cannot be declared a desire while the suite stays green"
+  else
+    FAIL "CTL-FT7-DESIRES-PERSON: MUST FIRE — section='$FT_RNSEC' landed=$FT_LD fence-line=$FT_RNLN, the route findings gained $FT_NADD record(s), $FT_HITN of them REFUSED for '$FT_RNSEC' and \`desires\`, where exactly one of each is owed: '$(ft_route_show "$FT_ADD")'"
   fi
   FT_FX="$WORK/ft/route-free.md"
   awk -v ln="$FT_RLAST" '{ print } FNR == ln { print "ZZ-FT-ROUTE-SECTION | desires" }' "$FT_DOC" > "$FT_FX"
