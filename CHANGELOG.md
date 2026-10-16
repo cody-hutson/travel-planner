@@ -138,7 +138,7 @@ gives and the one the person view takes. That the group view is not run while a 
 conducting an interview is held by one sentence of its section and one condition on its routing row;
 nothing mechanical holds it, and no exercise case produces the refusal. Where a confirmed trip's
 roster table is missing, the erasure reading cannot be tested: the group view's member lines say so,
-and the person view says nothing in the same state. No exercise case produces the group view's
+and the person view says the same for a reached trip. No exercise case produces the group view's
 `UNDETERMINED` in three of its kinds: in the listing it prints when no group is named, for a
 trip's traveller directory that could not be listed, and for a bearer in that directory that
 could not be read.
