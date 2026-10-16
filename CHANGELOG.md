@@ -3,6 +3,131 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [Unreleased] — 2026-10-16 — Controls point at the population at risk
+
+No trip verb plans, records or publishes a trip differently in this release. What changes is met by
+whoever runs or edits a guard suite under `scripts/`, the suites `SECURITY.md` names among the
+required status checks, and by whoever edits a release pull request's body once it is open. Each
+change points a control at a population it was meant to grade and did not reach. An arm whose
+population is empty no longer leaves the corpus-hygiene run green unannounced. Every verdict guard
+in the required guard suites is graded for a PASS reached through a disjunction, and each suite says
+beside that rule which class it cannot see. The artifact-schema suite's range parse and the
+command-taxonomy suite's edge trims read the same input the same way under C and under a UTF-8
+locale, and the range parse reads it the same way under mawk and gawk; arms assert both. A failure
+branch no arm drove now has one. And a probe reads the accretion the release pull-request body
+convention forbids, bold-led paragraphs and task rows as well as headings. Each paragraph below says
+what its change does not reach.
+
+**An empty population fails the corpus-hygiene run unless it is declared.**
+`scripts/test-corpus-hygiene.sh` counted a VACUOUS verdict without failing on it, so a run whose
+populations were all empty could exit 0. Its exit rule now fails the run on an arm that rendered
+VACUOUS and is not declared in `CH_VACUOUS_DECL`, the expected-vacuous set held beside the suite's
+`VACUOUS()` helper, one line per arm with the reason its population is expected to be empty and what
+carries the arm while it is. It fails the other ways round too: on a declared arm that did not
+render VACUOUS, on a line that names an arm and gives no reason, and on a VACUOUS verdict whose arm
+cannot be named. The rule does not wait for `GUARD_STRICT_SKIPS`, because an empty population is the
+same on every host. Group B's locator arm is the one declared, and a new surface arm, `B0`, must
+first show that the walk opened every listed file and read a line, so the declared verdict is
+reached only over a walk that read the tree. The `CTL-VACUITY` arms drive the rule on every run, and
+group `MD` registers it. What is left open: a declaration's reason is checked for presence, not for
+truth.
+
+**The artifact-schema suite's class-assignment range parse no longer depends on the locale, and
+group `LC` covers it.** `ca_delta` in `scripts/test-artifact-schema.sh` found a range's separator
+with a one-character class, and the separator in the range cells of `reference/data-architecture.md`
+§ 9 is an en dash, which `LC_ALL=C` reads as three bytes, so under C one cell parsed differently and
+`CA2` failed on a tree CI passed. The separator is now read as a run of non-digits, which an en dash
+satisfies whether it is read as one character or as three bytes, and arm `CA9` grades that grammar
+on a fixture read under C. Group `LC`, which exists to forbid locale-dependent behaviour in this
+file, now grades `ca_delta` as well: it compares its output under C, POSIX and every multibyte
+member of its codeset set, plants a one-character separator that must be reported and an added
+locale-dependent line that must be reported, checks that a locale-invariant line is not, and names
+the locales it left out. The suites' locale postures are written where a contributor meets them:
+`CONTRIBUTING.md` § *Locale posture of the guard suites* gives, for each suite, its posture, what it
+asserts and what was only measured, and group `LC`'s banner in the artifact-schema suite carries the
+same record. What is left open: group `LC` asserts that `va_type_ok`'s slug predicate and
+`ca_delta`'s range parse answer the same under C and under a UTF-8 locale, and nothing more; the
+rest of the suite reads the caller's locale, and its verdict set reading the same under both is a
+measurement, not an assertion.
+
+**The artifact-schema suite grades its range parse and its venue readers under mawk and gawk by
+name.** On a host whose `awk` was mawk, `CA2` and `VI1` failed on a tree CI passed: the range
+separator is the cause above, and the venue readers' heading test used an interval expression, which
+the hosted runner's mawk was measured to misread. The heading test and the reader of a venue's open
+decisions are now written without an interval. Arm `CA10` runs a copy of `ca_delta` under mawk and
+under gawk, each invoked by name, and requires each to read the `CA9` fixture as `CA9` states and
+§ 9 as `ca_delta` does; arm `VI3` runs the venue readers under both and requires the same bindings,
+the same open decisions and the same unwarranted merges. Each copy is checked to change only its
+interpreter word and to leave no host `awk` in it. On a host carrying both, the `ENGINES:` and
+`ENGINES FIXTURE:` lines print how each engine reads the heading test and an interval written in its
+place. On an `awk` that answers the same in every locale, the `ca_delta` half of group `LC` skips
+and names the engine, and `CA10` grades the engine axis instead. What is left open: no arm runs the
+whole suite with mawk as `awk`. The hosted run depends on the runner image carrying both mawk and
+gawk, under a runner label, `ubuntu-latest`, that floats. On a host without mawk `CA10` skips, on a
+host without either engine `VI3` skips, and a strict run fails on either skip, naming it.
+
+**The command-taxonomy suite's edge trims grade the same under every locale.**
+`scripts/test-command-taxonomy.sh` trims the edges of the cells, headings and lines it reads through
+two helpers, `trim` and group J's `rj_trimv`, and both stripped the shell's `[[:space:]]` class.
+That class changes with the locale: under `LC_ALL=C` a no-break space (U+00A0) is two ordinary
+bytes, while a UTF-8 locale may count it, and other Unicode spaces, as whitespace. A Grant cell
+whose code span was followed by one therefore paired with its `allowed-tools` entry in one shell and
+was named by Q1 and Q2 in another, and a roster header cell edged the same way split group J the
+same way. Both helpers now strip one fixed set under every locale, the six ASCII whitespace
+characters and U+00A0, through one definition. The readers of a verb's or the guided-entry carrier's
+frontmatter, the `disable-model-invocation` flag readers among them, strip the ASCII characters
+alone, so a frontmatter edge carrying U+00A0 is kept and reported under every locale rather than
+trimmed into a flag a YAML parser would not read. Arms `GQL`, `GJU` and `GQF` read Grant cells, a
+roster header cell and a frontmatter flag line, each edged by U+00A0 and by U+3000, under C and
+under a UTF-8 locale the host lists on every run, and fail when the host lists none. What is left
+open: every other non-ASCII space at an edge is kept, so it is reported under every locale rather
+than paired; and every other match the suite makes with a POSIX character class or a bracket range —
+`collapse`, `lower`, the delimiter-row test and group J's class-row match among them — and every awk
+program and sort it does not pin to `LC_ALL=C` still reads the caller's locale.
+
+**The artifact-schema suite's readability check is driven by an arm.** `RL0` fails a run whose
+required surfaces cannot be read and names them, and until now no arm drove that branch. The check
+is now one function, `rl_readable`, which the live check and a standing arm, `CTL-RL0-ABSENT`, both
+call on every run. The arm requires an absent path in a fixture to be named, and a fixed required
+surface whose path is empty to be named once rather than skipped; group `MD` registers it. What is
+left open: the arm reads the list it checks out of `RL0`'s failure message, so a rewording of that
+message turns the arm red, with the message quoted, while the check is sound.
+
+**A probe grades what a release pull request's body gains after it opens.** The release pull-request
+body convention now has a probe, `scripts/check-pr-body-accretion.py`, which detects headings,
+bold-led paragraphs and list items, and task-list rows added to a release pull request's body after
+it was opened. The advisory PR-body workflow grades each edit to such a body at the moment it is
+made — an edit-time grade that the next push or event supersedes, not a standing record of the
+body's history — and the script's population mode, run with an authenticated `gh` over every
+release-head pull request's revision history (or, with `--pr`, over one pull request's body as
+opened against its body now), is the cumulative read. The job is declared advisory in
+`.github/workflows/pr-body-parser-clean.yml` and is not among the required status checks
+`SECURITY.md` lists, so a red grade there does not block a merge. What is left open: the script's
+declared boundary names what it passes over, among them prose added inside an existing block, table
+rows, a thematic break written with hyphens and a code span that runs across lines.
+
+**Every required guard suite grades its own verdict arms for an arm that cannot fail.** Group `FZ`,
+which until now graded only the trip-resolution-contract suite, runs in all five required guard
+suites, each over its own file. It fails a suite when a verdict reaches PASS through a disjunction —
+`if A or B; then PASS`, whose failure branch needs a conjunction nobody wrote down — and accepts the
+same arm written as a chain, one condition and one message per branch. Its walker was corrected on
+the way: it reads top-level code only, so control flow inside an embedded `awk` program, a
+substitution, a quoted string or a here-document is no longer taken for a shell guard, and a guard's
+polarity is its first verdict, so a one-line guard that names FAIL first reaches FAIL. Run over
+every suite, the corrected walker found the shape in three controls of the artifact-schema suite,
+and those are now chains. Each copy of the group says what it does not grade: a guard that cannot
+fail because its condition is a tautology is declared out of reach, with the reason; the verdict
+forms the walker does not locate are named, and counted on every run; and a here-document delimiter
+it cannot read is refused rather than guessed at.
+`reference/adr/ADR-048-guard-arm-falsifiability-rule.md` records the rule, `Proposed`.
+
+**The honest limits.** The decision record lands `Proposed`. The flip to `Accepted` is the
+maintainer's, in a pull request of its own after the release, as step 7 of `CONTRIBUTING.md`
+§ *Cutting a release* states. Several of the new arms grade only where the host provides what they
+need: `CA10` needs mawk and `VI3` needs mawk and gawk, each by name, and the locale arms need a
+UTF-8 locale the host lists. On a host without them those arms skip or fail and name what is
+missing, and CI's strict mode fails a run on any skip it has not declared.
+
 ## [0.55.0] — 2026-10-09 — The interviewer becomes a conversation: the founding decision
 
 This release lands two decision records and deliberately builds nothing. The interviewer asks a
