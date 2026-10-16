@@ -35,7 +35,8 @@ file's size and its ceiling, so the value is read off rather than worked out by 
 ceiling, so the change that raises it says why, and the release that ships it names it in its
 changelog entry (`CONTRIBUTING.md` § *Cutting a release*). Re-pin only the rows you meant to
 change: regenerating the whole fence turns every ceiling into a record of whatever the files
-already weigh.
+already weigh. A row the growth summary lists as `unowed` is not re-pinned but removed, by the
+release that sees it there, before that release stamps its version.
 
 **The first-verb read is held twice.** The file the classification rule puts in the class
 `first-read` — the charter, which every verb reads before it acts — carries its row like any other
@@ -50,7 +51,7 @@ file's size with a lower bound — a file that shrinks reaches a finding only th
 removed text said, such as a citation, a frontmatter key or a digest row the classification reads,
 and never through its size — so a row can stand above what its file now needs. A row for a file
 that has fallen below its floor, or that the declaration no longer holds to a row, is reported on
-every run and not failed, and the growth summary lists it so the next release can take it out.
+every run and not failed, and the growth summary lists it as `unowed`.
 
 **Grammar.** Two columns, both required, whitespace-separated: the ceiling in bytes, then the
 file's path from the repository root. A line whose first non-blank character is `#` is a comment,
