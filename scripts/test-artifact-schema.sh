@@ -12281,15 +12281,132 @@ rl_answered_class() {
 # blank, a lone em dash and a surviving bracketed placeholder are all unanswered, while
 # `none` IS an answer — the one place the form makes a word stand in for the em dash.
 
+# rl_readable <root> [fixed-path…] — RL0's readability gate. The fixed required surfaces arrive as
+# quoted positional arguments after <root>, and every one of them is graded: an EMPTY argument is a
+# path that cannot be read, so it is named, never skipped. The guided forms arrive on stdin, one
+# path per line, and only there is a blank line skipped, because an empty forms list is one blank
+# line rather than a surface. One list under one blank-line rule would get one of the two wrong: it
+# would skip an emptied fixed surface as nothing to check, or name an empty forms list as a missing
+# surface. Every path that is not readable is named in ONE FAIL, relative to <root>, and the status
+# is 1; when every path reads, nothing renders and the status is 0. It is a function rather than
+# top-level code so that CTL-RL0-ABSENT below can drive the SAME gate over a fixture: the live call
+# and the arm are one gate, and the arm grades the FAIL line itself, which is the line `set -u`
+# would abort on. RL_MISSING is initialised on entry for that reason — an unreadable surface renders
+# a FAIL naming it instead of ending the suite.
+#
+# The forms read from stdin are appended to the fixed list, and ONE `-r` test grades them all, in
+# the order the caller gave them. The caller hands the forms over on a here-document, never through
+# a pipe: a pipeline runs the function in a subshell, where its FAIL would print and the run's
+# failure count would not move. The fixed surfaces are separately quoted variables, so passing them
+# as arguments splits nothing. The forms are a newline list, which as arguments would need either
+# unquoted word splitting or an array, and an empty array is an unbound variable under `set -u` in
+# bash 3.2, which macOS ships as /bin/bash and where this suite runs green.
+rl_readable() {
+  local root="${1:-}" rl_f RL_MISSING=""
+  shift
+  while IFS= read -r rl_f; do
+    [ -n "$rl_f" ] || continue
+    set -- "$@" "$rl_f"
+  done
+  for rl_f in "$@"; do
+    [ -r "$rl_f" ] || RL_MISSING="$RL_MISSING ${rl_f#"$root/"}"
+  done
+  [ -n "$RL_MISSING" ] || return 0
+  FAIL "RL0: required surface(s) unreadable:$RL_MISSING — not a skip and not a pass"
+  return 1
+}
+
+# ── CTL-RL0-ABSENT — MUST FIRE, graded FIRST. RL0's unreadable FAIL is reached only when a
+# required surface cannot be read, and the tracked tree carries every one, so on a real run that
+# line never renders and nothing shows it still can. This arm renders it on EVERY run, in two cases
+# over one fixture root. The first hands the gate, on stdin, one file that exists and one path that
+# does NOT exist. A path that does not exist is unreadable to every uid. A permission change is
+# not, because a process running as root reads straight through it, so a fixture built with chmod
+# would turn this arm red on a root host while the gate was sound. The file that exists is the
+# specificity limb: a gate that named every path it was given would name that one too. The second
+# hands it, as fixed arguments, the file that exists and an EMPTY entry, with one blank line on
+# stdin: the empty fixed entry has to be named, exactly once, and the blank line must not be. That
+# is the degenerate input a single blank-skipping list would grade as nothing to check — a fixed
+# path emptied by an edit, or by a lookup that came back empty — and it holds the two lists' blank
+# rules apart from both sides.
+#
+# The gate runs inside a capture whose PASS and FAIL are rebound to recorders, so the FAIL it
+# renders is read as text and never reaches this run's counters. Its input arrives on a
+# here-string, so it runs in the capture's own shell and three outcomes stay distinct: a status
+# of 127 is an ABSENT gate, no status line at all is a gate that ABORTED (an unbound variable
+# under `set -u`), and 1 with one FAIL naming the absent path is the gate working. The limbs run
+# most specific first, so a regression lands on the limb written for it: a surface named by its
+# absolute path is reported as that, before the broader test that its bare name is present.
+# rl0_absent_assert takes every input as an argument and calls rl_readable itself, which is what
+# lets md_flips register it below: removing rl_readable has to flip this arm, and only this arm.
+rl0_absent_assert() {   # rl0_absent_assert <fixture-root> <present-name> <absent-name>
+  local fx="$1" present="$2" absent="$3" list out ln rc="" nf=0 np=0 msg="" rc_e="" msg_e="" lst_e
+  list="$fx/$present
+$fx/$absent"
+  out="$(PASS() { printf 'P %s\n' "$*"; }; FAIL() { printf 'F %s\n' "$*"; }; rl_readable "$fx" <<<"$list"; printf 'R %s\n' "$?")"
+  while IFS= read -r ln; do
+    case "$ln" in
+      'R '*) rc="${ln#R }" ;;
+      'F '*) nf=$((nf+1)); msg="${ln#F }" ;;
+      'P '*) np=$((np+1)) ;;
+    esac
+  done <<<"$out"
+  out="$(PASS() { printf 'P %s\n' "$*"; }; FAIL() { printf 'F %s\n' "$*"; }; rl_readable "$fx" "$fx/$present" "" <<<""; printf 'R %s\n' "$?")"
+  while IFS= read -r ln; do
+    case "$ln" in
+      'R '*) rc_e="${ln#R }" ;;
+      'F '*) msg_e="${ln#F }" ;;
+    esac
+  done <<<"$out"
+  # The list the empty-entry case named, cut from its FAIL between 'unreadable:' and the dash after
+  # it. Each named entry carries one leading space, so one empty entry is exactly one space and a
+  # second entry adds another.
+  lst_e="${msg_e#*unreadable:}"
+  lst_e="${lst_e%% —*}"
+  if [ ! -r "$fx/$present" ]; then
+    FAIL "CTL-RL0-ABSENT: the fixture did not land — '$present' is not readable under the fixture root, so the specificity limb has nothing to clear and this control proves nothing"
+  elif [ -e "$fx/$absent" ]; then
+    FAIL "CTL-RL0-ABSENT: the fixture did not land — '$absent' EXISTS under the fixture root, so the list carries no missing surface and this control proves nothing"
+  elif [[ ! "$rc" =~ ^[0-9]+$ ]]; then
+    FAIL "CTL-RL0-ABSENT: MUST FIRE — the gate returned no status line: it ABORTED before rendering, which under set -u is an unbound variable on the FAIL path. RL0's unreadable branch would end the suite rather than grade it"
+  elif [ "$rc" -eq 127 ]; then
+    FAIL "CTL-RL0-ABSENT: MUST FIRE — rc=127: rl_readable is NOT DEFINED. The gate is ABSENT, so RL0's unreadable branch has nothing to render it"
+  elif [ "$rc" -ne 1 ]; then
+    FAIL "CTL-RL0-ABSENT: MUST FIRE — over a list holding a path that does not exist, rl_readable returned rc=$rc where exactly 1 was required, so the gate graded an absent surface readable"
+  elif [ "$np" -ne 0 ]; then
+    FAIL "CTL-RL0-ABSENT: MUST FIRE — the gate rendered $np PASS line(s) over a list holding a path that does not exist, where it must render none"
+  elif [ "$nf" -ne 1 ]; then
+    FAIL "CTL-RL0-ABSENT: MUST FIRE — the gate rendered $nf FAIL line(s) where exactly one was required"
+  elif [ "${msg%%:*}" != "RL0" ]; then
+    FAIL "CTL-RL0-ABSENT: MUST FIRE — the FAIL the gate rendered carries the id '${msg%%:*}', not RL0"
+  elif [[ "$msg" == *"$fx/"* ]]; then
+    FAIL "CTL-RL0-ABSENT: RL0 named the surface by its absolute path rather than relative to the root it was given: '$msg'"
+  elif [[ "$msg" != *" $absent"* ]]; then
+    FAIL "CTL-RL0-ABSENT: MUST FIRE — RL0 failed without NAMING the absent surface '$absent', relative to the root it was given: '$msg'. A FAIL that does not say which surface is missing sends its reader looking"
+  elif [[ "$msg" == *"$present"* ]]; then
+    FAIL "CTL-RL0-ABSENT: SPECIFICITY — RL0 also named '$present', a file that exists and reads: '$msg'. The gate is naming the paths it was given rather than the ones it could not read"
+  elif [ "$rc_e" != "1" ]; then
+    FAIL "CTL-RL0-ABSENT: MUST FIRE — over a fixed list carrying an EMPTY entry, rl_readable returned '${rc_e:-no status line}' where exactly 1 was required, so the empty fixed entry was not graded unreadable: a required path emptied by an edit would pass RL0, and every arm after it would grade without that surface"
+  elif [ "$lst_e" != " " ]; then
+    FAIL "CTL-RL0-ABSENT: MUST FIRE — over a fixed list carrying one EMPTY entry and a blank line on stdin, RL0 did not name exactly that one empty entry: '$msg_e'. The empty fixed entry is a surface and must be named once; the blank stdin line is no surface and must not be"
+  else
+    PASS "CTL-RL0-ABSENT: MUST FIRE — over a fixture holding one file that exists and one path that does not, rl_readable returned rc=1 and rendered exactly one FAIL, id RL0, naming '$absent' relative to the fixture root and not naming '$present'; and over a fixed list carrying that file and an EMPTY entry, with a blank line on stdin, it returned rc=1 and named the empty entry once and the blank line not at all. RL0's unreadable branch renders on every run rather than only on a tree that has lost a surface, and on every host: no uid can read a path that does not exist, root included"
+  fi
+}
+
+RL0_FX="$WORK/rl0-fx"
+RL0_PRESENT="present.md"
+RL0_ABSENT="absent.md"
+mkdir -p "$RL0_FX" && printf 'a required surface that exists\n' > "$RL0_FX/$RL0_PRESENT"
+rl0_absent_assert "$RL0_FX" "$RL0_PRESENT" "$RL0_ABSENT"
+# Registered HERE rather than in group MD, as group MG registers its own: the arm needs this
+# group's fixture. md_flips removes rl_readable and requires this arm to report exactly one FAIL
+# and no PASS. Group MD's controls on the oracle itself, MD4 and MD5, run later in this same
+# process, so an oracle that had stopped discriminating still turns this run red.
+md_flips rl_readable 'CTL-RL0-ABSENT' rl0_absent_assert "$RL0_FX" "$RL0_PRESENT" "$RL0_ABSENT"
+
 RL_OK=1
-RL_MISSING=""
-for rl_f in "$RL_DM" "$RL_CMD" "$RL_PAIR_T" "$RL_PAIR_R" "$RL_UNLINKED"; do
-  [ -r "$rl_f" ] || { RL_OK=0; RL_MISSING="$RL_MISSING ${rl_f#"$ROOT/"}"; }
-done
-while IFS= read -r rl_f; do
-  [ -n "$rl_f" ] || continue
-  [ -r "$rl_f" ] || { RL_OK=0; RL_MISSING="$RL_MISSING ${rl_f#"$ROOT/"}"; }
-done <<EOF
+rl_readable "$ROOT" "$RL_DM" "$RL_CMD" "$RL_PAIR_T" "$RL_PAIR_R" "$RL_UNLINKED" <<EOF || RL_OK=0
 $RL_FORMS
 EOF
 
@@ -12307,8 +12424,6 @@ if [ "$RL_OK" -eq 1 ]; then
     FAIL "RL0: the classification parsed to $RL_NCLASS labelled row(s) / $RL_NPERSON person-class. Every verdict below would be over an empty or class-blind table, so this fails rather than passing quietly"
     RL_OK=0
   fi
-else
-  FAIL "RL0: required surface(s) unreadable:$RL_MISSING — not a skip and not a pass"
 fi
 
 if [ "$RL_OK" -eq 1 ]; then
