@@ -120,7 +120,10 @@ those records. Write it when the PR opens and leave it that way: a later slice, 
 remediation round or a re-review belongs where the rest of its stage's detail
 already lives, or in a comment on the PR — not appended to the body. Appending
 makes the body a moving target for whoever is reviewing it, and stores a second
-copy of something that was never at risk of being lost.
+copy of something that was never at risk of being lost. The only addition the body
+takes after the PR opens is an integration note that the integration-note check
+(`.github/workflows/integration-note.yml`) asks for, because that check reads the
+body and nothing else.
 
 **Nothing in a release is committed to `main` directly** — not the CHANGELOG, not
 anything else. A direct push to `main` skips the pull-request requirement and all
