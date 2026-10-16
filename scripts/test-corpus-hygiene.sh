@@ -6140,9 +6140,28 @@ fi
 # and yields no finding at all — arm CTL-SIZE-WHOLE requires that, so every arm's finding is its own
 # plant's. A must-not-fire arm here does not rest on silence alone: ctl_size_quiet requires the scan
 # to have classified the fixture, so an extractor that went quiet because it read nothing reads red.
+#
+# The two rows the sizes below are computed from — the on-demand floor and headroom — are read off
+# the tracked tree, so they are exactly as well-formed as that tree's declaration, and the arithmetic
+# that builds a fixture cannot take a value that is not a whole number: under set -u it aborts the
+# whole suite before the size arms, group Y, PF and MD run, with no Result line, and on a shell that
+# exits 0 from that abort the run reads green. So arm CTL-SIZE-PARAMS checks both before any
+# arithmetic sees them, and when either is not a whole number it says so, fails, and builds every
+# fixture on zero instead. Each fixture still carries the tracked tree's rows as they stand, so every
+# size arm below then fails against them, the run completes, and it exits non-zero. It checks only
+# what the builder computes with; the rows' own grammar is the size group's not-a-measurement code.
 ch_fence "$ROOT/$CH_SIZE_PARAM_DOC" "$CH_SIZE_PARAM_TAG" > "$WORK/size.realparams" 2>/dev/null || : > "$WORK/size.realparams"
 SZ_FLOOR="$(awk -F'\t' '$1 == "on-demand.floor" { print $2 }' "$WORK/size.realparams")"
 SZ_PCT="$(awk -F'\t' '$1 == "on-demand.headroom" { v = $2; sub(/%$/, "", v); print v }' "$WORK/size.realparams")"
+SZ_PBAD=""
+case "$SZ_FLOOR" in ''|*[!0-9]*) SZ_PBAD="${SZ_PBAD}on-demand.floor " ;; esac
+case "$SZ_PCT" in ''|*[!0-9]*) SZ_PBAD="${SZ_PBAD}on-demand.headroom " ;; esac
+if [ -n "$SZ_PBAD" ]; then
+  FAIL "CTL-SIZE-PARAMS: ${SZ_PBAD% } in the \`$CH_SIZE_PARAM_TAG\` fence in $CH_SIZE_PARAM_DOC did not read as a whole number (floor '$SZ_FLOOR', headroom '$SZ_PCT' with its % taken off) — every size arm below is built from these two, so each is built on zero instead and fails against the rows its fixture carries"
+  SZ_FLOOR=0; SZ_PCT=0
+else
+  PASS "CTL-SIZE-PARAMS: the two rows every size fixture is built from read as whole numbers — on-demand.floor $SZ_FLOOR, and on-demand.headroom $SZ_PCT once its % is taken off, in the \`$CH_SIZE_PARAM_TAG\` fence in $CH_SIZE_PARAM_DOC — so the arithmetic below cannot abort the run"
+fi
 SZ_BIG=$(( ${SZ_FLOOR:-0} + 1000 ))
 SZ_BIGROW=$(( SZ_BIG + (SZ_BIG * ${SZ_PCT:-0} + 99) / 100 ))
 SZ_DIGEST="$(printf '%040d' 0)"
