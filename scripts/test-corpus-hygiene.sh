@@ -6261,6 +6261,16 @@ ctl_size_pad "$D/reference/small.md" "$(( SZ_FLOOR - 1 ))"
 O="$(ctl_size_scan "$D")"
 ctl_size_quiet "CTL-SIZE-BELOW-FLOOR" "$O" "a second on-demand file one byte under its class floor, carrying no row" "${CH_SIZE_LETTER}2" "${CH_SIZE_LETTER}4"
 
+# The floor itself. reference/load-class-model.md § 5 owes a row at or above the floor, so a file of
+# exactly the floor owes one. CTL-SIZE-OWED-NO-ROW stands its file a thousand bytes over the floor and
+# CTL-SIZE-BELOW-FLOOR one byte under it, so neither tells at-or-above from strictly above; this does.
+D="$(ctl_size_mk szatfloor)"
+printf 'Read reference/floor.md as well.\n' >> "$D/skills/v/SKILL.md"
+printf '# Floor\n\nA document a verb reads on demand.\n' > "$D/reference/floor.md"
+ctl_size_pad "$D/reference/floor.md" "$SZ_FLOOR"
+O="$(ctl_size_scan "$D")"
+ctl_mustfire "CTL-SIZE-AT-FLOOR" "${CH_SIZE_LETTER}2" "$O" "a second on-demand file of exactly its class floor, carrying no row — a file at the floor owes a row, as one above it does" 1
+
 D="$(ctl_size_mk szpinned)"
 printf 'See reference/pinned.md for the worked instance.\n' >> "$D/CHARTER.md"
 printf '# Pinned\n\nA worked instance whose bytes a digest fixes.\n' > "$D/reference/pinned.md"
@@ -6462,14 +6472,22 @@ fi
 
 # CTL-SIZE-GROWTH and CTL-SIZE-GROWTH-NO-BASE — the emitter's comparison, driven as a program over a
 # fixture with no git history: the classification and rows of a tree at HEAD, against a planted
-# base. Neither registers a code; like CTL-B1-WIDE, each grades an output the gate prints.
+# base. Neither registers a code; like CTL-B1-WIDE, each grades an output the gate prints. The base
+# is planted so that every state the summary can print is printed once — a row raised, a row lowered,
+# a row kept, a row new, a row dropped, a file owing a row it does not have, and a row for a file
+# under its floor — because a state no arm prints is a state whose label nothing holds.
 D="$(ctl_size_mk szgrowth)"
-printf 'Read reference/big2.md and reference/big3.md as well.\n' >> "$D/skills/v/SKILL.md"
+printf 'Read reference/big2.md, reference/big3.md, reference/big4.md and reference/big5.md as well.\n' >> "$D/skills/v/SKILL.md"
 printf '# Big two\n\nA document a verb reads on demand.\n' > "$D/reference/big2.md"; ctl_size_pad "$D/reference/big2.md" "$SZ_BIG"
 printf '# Big three\n\nA document a verb reads on demand.\n' > "$D/reference/big3.md"; ctl_size_pad "$D/reference/big3.md" "$SZ_BIG"
-ctl_size_rows "$D" "$(ctl_size_row "$SZ_BIGROW" reference/big.md)" "$(ctl_size_row "$SZ_BIGROW" reference/big2.md)"
-printf '%s\t%s\n' "$(( SZ_BIGROW - 50 ))" reference/big.md "$SZ_BIGROW" reference/gone.md > "$WORK/szg.brows"
-printf '%s\t%s\n' "$(( SZ_BIG - 10 ))" reference/big.md > "$WORK/szg.bsizes"
+printf '# Big four\n\nA document a verb reads on demand.\n' > "$D/reference/big4.md"; ctl_size_pad "$D/reference/big4.md" "$SZ_BIG"
+printf '# Big five\n\nA document a verb reads on demand.\n' > "$D/reference/big5.md"; ctl_size_pad "$D/reference/big5.md" "$SZ_BIG"
+SZG_A="$(( $(wc -c < "$D/agents/a.md") ))"
+ctl_size_rows "$D" "$(ctl_size_row "$SZG_A" agents/a.md)" "$(ctl_size_row "$SZ_BIGROW" reference/big.md)" \
+  "$(ctl_size_row "$SZ_BIGROW" reference/big2.md)" "$(ctl_size_row "$SZ_BIGROW" reference/big4.md)" "$(ctl_size_row "$SZ_BIGROW" reference/big5.md)"
+printf '%s\t%s\n' "$(( SZ_BIGROW - 50 ))" reference/big.md "$(( SZ_BIGROW + 50 ))" reference/big4.md \
+  "$SZ_BIGROW" reference/big5.md "$SZ_BIGROW" reference/gone.md > "$WORK/szg.brows"
+printf '%s\t%s\n' "$(( SZ_BIG - 10 ))" reference/big.md "$(( SZ_BIG + 10 ))" reference/big4.md "$SZ_BIG" reference/big5.md > "$WORK/szg.bsizes"
 ch_list_dir "$D" > "$WORK/list.szg.md"; ch_list_f_dir "$D" > "$WORK/list.szg.all"
 ch_size_list "$D" "$WORK/list.szg.md" > "$WORK/szg.md"
 ch_classify "$D" "$WORK/szg.md" "$WORK/list.szg.all" > "$WORK/szg.cls"
@@ -6485,12 +6503,15 @@ SZG_R="$(szg_has "$O" "raised $SZ_BIG $(( SZ_BIG - 10 )) 10 $SZ_BIGROW $(( SZ_BI
 SZG_N="$(szg_has "$O" "new $SZ_BIG - - $SZ_BIGROW - - $SZ_BIGROW reference/big2.md")"
 SZG_O="$(szg_has "$O" "owed $SZ_BIG - - - - - $SZ_BIGROW reference/big3.md")"
 SZG_D="$(szg_has "$O" "dropped - - - - $SZ_BIGROW - - reference/gone.md")"
-SZG_S="$(szg_has "$O" "# rows at HEAD 2, at the base 2 — new 1, raised 1, lowered 0, kept 0, dropped 1; owed without a row 1; unowed rows 0")"
+SZG_W="$(szg_has "$O" "lowered $SZ_BIG $(( SZ_BIG + 10 )) -10 $SZ_BIGROW $(( SZ_BIGROW + 50 )) -50 $SZ_BIGROW reference/big4.md")"
+SZG_K="$(szg_has "$O" "kept $SZ_BIG $SZ_BIG 0 $SZ_BIGROW $SZ_BIGROW 0 $SZ_BIGROW reference/big5.md")"
+SZG_U1="$(szg_has "$O" "unowed $SZG_A - - $SZG_A - - - agents/a.md (below-floor)")"
+SZG_S="$(szg_has "$O" "# rows at HEAD 5, at the base 4 — new 1, raised 1, lowered 1, kept 1, dropped 1; owed without a row 1; unowed rows 1")"
 SZG_L="$(awk '$1 !~ /^#/ { n++ } END { print n + 0 }' <<<"$O")"
-if [ "$SZG_R" -eq 1 ] && [ "$SZG_N" -eq 1 ] && [ "$SZG_O" -eq 1 ] && [ "$SZG_D" -eq 1 ] && [ "$SZG_S" -eq 1 ] && [ "$SZG_L" -eq 4 ]; then
-  PASS "CTL-SIZE-GROWTH: against a base whose fence held one row lower and one row for a file since removed, the summary prints a raised row with its growth, its move and its re-pin value, a new row, a dropped row and a file owing a row with the row to write — each once, with nothing else, and a summary line that counts them"
+if [ "$SZG_R" -eq 1 ] && [ "$SZG_W" -eq 1 ] && [ "$SZG_K" -eq 1 ] && [ "$SZG_N" -eq 1 ] && [ "$SZG_D" -eq 1 ] && [ "$SZG_O" -eq 1 ] && [ "$SZG_U1" -eq 1 ] && [ "$SZG_S" -eq 1 ] && [ "$SZG_L" -eq 7 ]; then
+  PASS "CTL-SIZE-GROWTH: against a base whose fence held one row lower, one higher, one equal and one for a file since removed, the summary prints a raised, a lowered and a kept row each with its growth, its move and its re-pin value, a new row, a dropped row, a file owing a row with the row to write, and a row for a file under its floor with that reason — each once, with nothing else, and a summary line that counts all seven"
 else
-  FAIL "CTL-SIZE-GROWTH: the summary must print one raised, one new, one dropped and one owed line with their values and a summary counting them, and nothing else; it printed raised $SZG_R, new $SZG_N, owed $SZG_O, dropped $SZG_D, summary $SZG_S, over $SZG_L table line(s): $(tr '\n' ';' <<<"$O")"
+  FAIL "CTL-SIZE-GROWTH: the summary must print one raised, one lowered, one kept, one new, one dropped, one owed and one unowed (below-floor) line with their values and a summary counting them, and nothing else; it printed raised $SZG_R, lowered $SZG_W, kept $SZG_K, new $SZG_N, dropped $SZG_D, owed $SZG_O, unowed $SZG_U1, summary $SZG_S, over $SZG_L table line(s): $(tr '\n' ';' <<<"$O")"
 fi
 SZG_C="$(szg_run '' 1 1)"
 SZG_B="$(szg_run v0.0.1 1 0)"
