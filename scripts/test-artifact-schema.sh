@@ -1477,6 +1477,16 @@ ca_members() {
 # EXPANDED, and a cell that does not resolve to exactly one canonical token emits a
 # PARSE-FAIL row rather than a plausible guess: two tokens in a cell, or none, is a parse
 # this gate cannot decide, and deciding it silently is how a green lands on the wrong data.
+#
+# THE SEPARATOR IS A RUN OF NON-DIGITS, NEVER ONE CHARACTER. § 9 writes its ranges with an en
+# dash: one character to a character-aware awk under a UTF-8 locale, three bytes under C and on
+# mawk in every locale. A one-character class parsed those rows under the first reading and
+# skipped them under the second, so CA2 went red under LC_ALL=C on a correct tree while the
+# UTF-8 runner stayed green. `[^0-9]+` reads the same separator under both, because no byte of a
+# multibyte UTF-8 character is an ASCII digit — and it is the class the split below already
+# used. A digit-led cell that still does not read as N or N<sep>M, such as the three-number
+# 5–7–9, emits PARSE-FAIL rather than being skipped, so CA2 names it instead of reporting its
+# classes absent. CA9 grades the grammar itself, on a fixture read under C.
 ca_delta() {
   awk -v canon="$CA_LIFE_ENUM" '
     BEGIN { nm = split(canon, M, "|") }
@@ -1485,7 +1495,10 @@ ca_delta() {
     inside && /^\|/ {
       if (split($0, F, "|") != 5) next
       rng = F[2]; gsub(/[ `*]/, "", rng)
-      if (rng !~ /^[0-9]+([^0-9][0-9]+)?$/) next
+      if (rng !~ /^[0-9]+([^0-9]+[0-9]+)?$/) {
+        if (rng ~ /^[0-9]/) printf "PARSE-FAIL\t%s\n", rng
+        next
+      }
       tmp = F[4]; found = 0; tok = ""
       while (match(tmp, /`[a-z-]+`/)) {
         t = substr(tmp, RSTART + 1, RLENGTH - 2)
@@ -1676,6 +1689,36 @@ if [ "$CA_MUT_CHANGED" -eq 1 ] && [ "$CA_CTL_SIX" -ge 1 ] && [ "$CA_CTL_NINE" -g
   PASS "CA8: control — flipping ONE class's lifecycle in a copy of § 1.1 makes the SAME comparator report a disagreement against § 6 ($CA_CTL_SIX) and against § 9 ($CA_CTL_NINE), and the mutation was asserted to have changed the table. The zeroes in CA1 and CA2 are measurements rather than a comparator that cannot fail"
 else
   FAIL "CA8: the control arm did not behave (mutated=$CA_MUT_CHANGED six=$CA_CTL_SIX nine=$CA_CTL_NINE) — every CA verdict above is a zero with no control behind it"
+fi
+
+# CA9 — THE RANGE GRAMMAR, on a fixture whose answer is known before it is read. Built fresh in
+# the run's temp dir from the canonical lifecycle members, so no member is spelled here, and
+# read under C — where EVERY engine reads bytes, which is the reading the hosted runner never
+# takes. An en-dash range expands to its span; a multibyte character in the Lifecycle cell,
+# after the token — a cell ca_delta reads, so the fixture exercises a column the parser takes
+# its token from — changes nothing; and the three-number control cell is named PARSE-FAIL
+# rather than expanded or silently dropped: a cell this gate cannot decide is reported, which
+# is ca_delta's own rule.
+CA_FX="$WORK/ca-delta-fixture.md"
+CA_M1="$(printf '%s' "$CA_LIFE_ENUM" | awk -F'|' '{ print $1 }')"
+CA_M2="$(printf '%s' "$CA_LIFE_ENUM" | awk -F'|' '{ print $2 }')"
+CA_M3="$(printf '%s' "$CA_LIFE_ENUM" | awk -F'|' '{ print $3 }')"
+CA_EN=$'\342\200\223'
+{
+  printf '## 9. Per-Artifact Gap Analysis\n\n| C | Identity | Lifecycle |\n|---|---|---|\n'
+  printf '| 1 | x | `%s` Caf\303\251 |\n' "$CA_M1"
+  printf '| 2%s4 | x | `%s` |\n' "$CA_EN" "$CA_M2"
+  printf '| 10%s12 | x | `%s` |\n' "$CA_EN" "$CA_M3"
+  printf '| 5%s7%s9 | x | `%s` |\n' "$CA_EN" "$CA_EN" "$CA_M1"
+  printf '\n## 10. After\n'
+} > "$CA_FX"
+CA9_WANT="$(printf '1\t%s\n2\t%s\n3\t%s\n4\t%s\n10\t%s\n11\t%s\n12\t%s\nPARSE-FAIL\t5%s7%s9' \
+  "$CA_M1" "$CA_M2" "$CA_M2" "$CA_M2" "$CA_M3" "$CA_M3" "$CA_M3" "$CA_EN" "$CA_EN")"
+CA9_GOT="$( ( export LC_ALL=C; EN_DOC="$CA_FX"; ca_delta ) 2>/dev/null )"
+if [ -n "$CA_M3" ] && [ "$CA9_GOT" = "$CA9_WANT" ]; then
+  PASS "CA9: ca_delta reads the fixture under C exactly as it was built — the en-dash ranges 2–4 and 10–12 expand to their spans, a multibyte character beside the token in a Lifecycle cell changes nothing, and the three-number control cell 5–7–9 is reported PARSE-FAIL with none of its classes emitted. Byte semantics, so this is the reading mawk and a C-locale run take"
+else
+  FAIL "CA9: ca_delta read the fixture under C as [$(printf '%s' "$CA9_GOT" | tr '\n\t' ';,')] against [$(printf '%s' "$CA9_WANT" | tr '\n\t' ';,')] — the range grammar is not byte-safe, or the control cell was expanded or dropped instead of named"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
