@@ -4273,7 +4273,7 @@ ft_route_assert() {
       $1 == "HOLDS"    { printf "      HOLDS: `%s` declares `%s`, which is outside the vocabulary the data model states\n", $2, $3 }
       $1 == "REFUSED"  { printf "      REFUSED: `%s` declares `%s`, which the bounds refuse for a section holding %s field(s)\n", $2, $3, $4 }'
   else
-    PASS "FT7: each of the $nsec section(s) under which a guided intake form carries a field — $ndef of them holding a DEFAULT field, $nfld labelled field(s) in all, reached from $nbul bullet(s) of $nstop form(s) — has exactly one row in the $ndecl-row $FT_ROUTE_TAG fence, and every row names such a section and a value of the declared vocabulary; the ${nadm:-0} row(s) declaring a value the field table bounds are each admissible for the classes their section holds. Both directions are read on every run, and the population is the forms' own: a section the declared forms come to carry reaches this arm with no list of sections here. What this does NOT establish is stated where the fence is declared. CTL-FT7-FACET, -DROP, -EXTRA, -TWICE, -HOLDS, -DESIRES and -CARRIED show it failing; CTL-FT7-FIELD, -NOFORM and -FREE show a field added under a routed section, a row no guided form reaches, and a bounded value on a section the bounds leave free, leaving it green"
+    PASS "FT7: each of the $nsec section(s) under which a guided intake form carries a field — $ndef of them holding a DEFAULT field, $nfld labelled field(s) in all, reached from $nbul bullet(s) of $nstop form(s) — has exactly one row in the $ndecl-row $FT_ROUTE_TAG fence, and every row names such a section and a value of the declared vocabulary; the ${nadm:-0} row(s) declaring a value the field table bounds are each admissible for the classes their section holds. Both directions are read on every run, and the population is the forms' own: a section the declared forms come to carry reaches this arm with no list of sections here. What this does NOT establish is stated where the fence is declared. CTL-FT7-FACET, -DROP, -EXTRA, -TWICE, -HOLDS, -DESIRES, -DESIRES-PERSON, -CARRIED and -NOFENCE show it failing; CTL-FT7-FIELD, -NOFORM and -FREE show a field added under a routed section, a row no guided form reaches, and a bounded value on a section the bounds leave free, leaving it green"
   fi
 }
 
@@ -4511,9 +4511,9 @@ if [ "$FT_OK" -eq 1 ]; then
   fi
 
   # ── FT7's controls. Same form as every control above: a COPY under $WORK, asserted to have
-  # LANDED, graded as a DELTA against this run's live findings. Each derives its target from the
-  # table and the forms — the first guided form, the first DEFAULT row's section — and spells no
-  # section of the real model.
+  # LANDED, graded as a DELTA against this run's live findings, compared without the counts they
+  # carry (ft_route_delta, below). Each derives its target from the table and the forms — the
+  # first guided form, the first DEFAULT row's section — and spells no section of the real model.
   FT_RL="$(ft_route_report "$FT_DOC" "$FT_FORMS")"
   FT_RR0="$(ft_route_findings "$FT_RL")"
   FT_RN0="$(awk -F'\t' '$1 == "NFLD" { print $2; exit }' <<<"$FT_RL")"
@@ -4523,6 +4523,19 @@ if [ "$FT_OK" -eq 1 ]; then
   FT_RLAST="$(ft_route_rows "$FT_DOC" | awk -F'\t' '{ l = $3 } END { print l + 0 }')"
   FT_RSB="$(awk -F'\t' '$1 == "LINE" { v = $2 } END { print v + 0 }' <<<"$(st_boundary "${FT_RFORM:-/nonexistent}")")"
   ft_route_show() { printf '%s' "$1" | tr '\t' '|' | tr '\n' ';'; }
+  # ft_route_delta <a> <b> — ft_delta for FT7's route findings: the records of <b> whose key <a> does
+  # not carry, each printed whole. A record's key is its code and its section, and its value where it
+  # has one: UNROUTED, STALE and TWICE are keyed on code and section, HOLDS and REFUSED on code,
+  # section and value. The counts a record carries — UNROUTED's rows and DEFAULT rows, TWICE's count,
+  # REFUSED's classes — are not in the key, so a copy that moves a count on a section the live
+  # findings already name adds no finding by that alone, and the counts stay in the records printed.
+  ft_route_delta() {
+    printf '%s\n%s\n%s\n' "$1" "$FT_SEP" "$2" | awk -F'\t' -v sep="$FT_SEP" '
+      function key() { return ($1 == "HOLDS" || $1 == "REFUSED") ? ($1 "\t" $2 "\t" $3) : ($1 "\t" $2) }
+      !past && $0 == sep { past = 1; next }
+      !past { if ($0 != "") a[key()] = 1; next }
+      $0 != "" && !(key() in a) { print }'
+  }
 
   # CTL-FT7-FACET — MUST FIRE, add-only on the subject side: a DEFAULT field under a section no row
   # names, with its bullet above the boundary of a guided form. CTL-FT7-NOFORM is its near-miss —
@@ -4533,14 +4546,14 @@ if [ "$FT_OK" -eq 1 ]; then
   FT_FY="$WORK/ft/route-facet-form.md"
   awk -v ln="$FT_RSB" 'FNR == ln { print "## ZZ-FT-ROUTE-SECTION"; print ""; print "- **ZZ-FT-ROUTE-LABEL:** [a synthetic field]"; print "" } { print }' "${FT_RFORM:-/nonexistent}" > "$FT_FY"
   FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || { cmp -s "$FT_RFORM" "$FT_FY" || FT_LD=1; }
-  FT_ADD="$(ft_delta "$FT_RR0" "$(ft_route_findings "$(ft_route_report "$FT_FX" "$(ft_swap "$FT_FORMS" "$FT_RFORM" "$FT_FY")")")")"
+  FT_ADD="$(ft_route_delta "$FT_RR0" "$(ft_route_findings "$(ft_route_report "$FT_FX" "$(ft_swap "$FT_FORMS" "$FT_RFORM" "$FT_FY")")")")"
   FT_WANT="$(printf 'UNROUTED\tZZ-FT-ROUTE-SECTION\t1\t1')"
   if [ "$FT_LD" -eq 1 ] && [ "$FT_RSB" -gt 0 ] && [ "$FT_ADD" = "$FT_WANT" ]; then
     PASS "CTL-FT7-FACET: MUST FIRE — a DEFAULT field under \`ZZ-FT-ROUTE-SECTION\` appended as row $FT_NEXT to a copy of the model, with its bullet written above the boundary of a copy of ${FT_RFORM#"$ROOT/"} (line $FT_RSB), adds exactly one finding: that section, 1 field, 1 of them DEFAULT, unrouted. A facet that arrives with no declared route is a named FT7 failure"
   else
     FAIL "CTL-FT7-FACET: MUST FIRE — landed=$FT_LD boundary=$FT_RSB, the route findings gained '$(ft_route_show "$FT_ADD")' where '$(ft_route_show "$FT_WANT")' is owed. FT7's zero above has no control behind it for the facet it exists to catch"
   fi
-  FT_ADD="$(ft_delta "$FT_RR0" "$(ft_route_findings "$(ft_route_report "$FT_FX" "$FT_FORMS")")")"
+  FT_ADD="$(ft_route_delta "$FT_RR0" "$(ft_route_findings "$(ft_route_report "$FT_FX" "$FT_FORMS")")")"
   if [ "$FT_LD" -eq 1 ] && [ -z "$FT_ADD" ]; then
     PASS "CTL-FT7-NOFORM: MUST NOT FIRE — the same row with no bullet on any guided form adds no route finding: the section is not one a composed source can carry, so it is owed no row. That a row with no field behind it is a defect at all is FT5's verdict, not this arm's"
   else
@@ -4553,7 +4566,7 @@ if [ "$FT_OK" -eq 1 ]; then
   ft_row_line "$FT_NEXT" 'ZZ-FT-ROUTE-LABEL' "$FT_RSEC" DEFAULT Y slot 'a synthetic field under a section a route row already names' >> "$FT_FX"
   FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
   FT_R="$(ft_route_report "$FT_FX" "$FT_FORMS")"
-  FT_ADD="$(ft_delta "$FT_RR0" "$(ft_route_findings "$FT_R")")"
+  FT_ADD="$(ft_route_delta "$FT_RR0" "$(ft_route_findings "$FT_R")")"
   FT_RN="$(awk -F'\t' '$1 == "NFLD" { print $2; exit }' <<<"$FT_R")"
   if [ "$FT_LD" -eq 1 ] && [ -n "$FT_RSEC" ] && [ -z "$FT_ADD" ] && [ "${FT_RN:-0}" -eq $((FT_RN0 + 1)) ]; then
     PASS "CTL-FT7-FIELD: MUST NOT FIRE — a DEFAULT field appended under \`$FT_RSEC\`, a section the fence already names, on a copy of the model adds no route finding while the fields read move $FT_RN0 → $FT_RN. A later field of a routed facet is admitted with no edit to the fence, and the moved denominator is what makes that silence a reading"
@@ -4565,7 +4578,7 @@ if [ "$FT_OK" -eq 1 ]; then
   FT_FX="$WORK/ft/route-drop.md"
   awk -v ln="$FT_RLN" 'FNR != ln' "$FT_DOC" > "$FT_FX"
   FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
-  FT_ADD="$(ft_delta "$FT_RR0" "$(ft_route_findings "$(ft_route_report "$FT_FX" "$FT_FORMS")")")"
+  FT_ADD="$(ft_route_delta "$FT_RR0" "$(ft_route_findings "$(ft_route_report "$FT_FX" "$FT_FORMS")")")"
   FT_NADD="$(printf '%s\n' "$FT_ADD" | grep -c '[^[:space:]]')"
   FT_HITN="$(printf '%s\n' "$FT_ADD" | awk -F'\t' -v s="$FT_RSEC" '$1 == "UNROUTED" && $2 == s { k++ } END { print k + 0 }')"
   if [ "$FT_LD" -eq 1 ] && [ "$FT_RLN" -gt 0 ] && [ "$FT_NADD" -eq 1 ] && [ "$FT_HITN" -eq 1 ]; then
@@ -4579,7 +4592,7 @@ if [ "$FT_OK" -eq 1 ]; then
   FT_FX="$WORK/ft/route-extra.md"
   awk -v ln="$FT_RLAST" '{ print } FNR == ln { print "ZZ-FT-ROUTE-SECTION | facets" }' "$FT_DOC" > "$FT_FX"
   FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
-  FT_ADD="$(ft_delta "$FT_RR0" "$(ft_route_findings "$(ft_route_report "$FT_FX" "$FT_FORMS")")")"
+  FT_ADD="$(ft_route_delta "$FT_RR0" "$(ft_route_findings "$(ft_route_report "$FT_FX" "$FT_FORMS")")")"
   FT_WANT="$(printf 'STALE\tZZ-FT-ROUTE-SECTION')"
   if [ "$FT_LD" -eq 1 ] && [ "$FT_RLAST" -gt 0 ] && [ "$FT_ADD" = "$FT_WANT" ]; then
     PASS "CTL-FT7-EXTRA: MUST FIRE — a row for \`ZZ-FT-ROUTE-SECTION\` written into a copy of the fence (after line $FT_RLAST) adds exactly one finding, that row stale. A declaration cannot outlive the section it declares, which is what makes the fence a pin rather than an allowlist"
@@ -4592,7 +4605,7 @@ if [ "$FT_OK" -eq 1 ]; then
   FT_FX="$WORK/ft/route-twice.md"
   awk -v ln="$FT_RLN" '{ print } FNR == ln { print }' "$FT_DOC" > "$FT_FX"
   FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
-  FT_ADD="$(ft_delta "$FT_RR0" "$(ft_route_findings "$(ft_route_report "$FT_FX" "$FT_FORMS")")")"
+  FT_ADD="$(ft_route_delta "$FT_RR0" "$(ft_route_findings "$(ft_route_report "$FT_FX" "$FT_FORMS")")")"
   FT_WANT="$(printf 'TWICE\t%s\t2' "$FT_RSEC")"
   if [ "$FT_LD" -eq 1 ] && [ "$FT_ADD" = "$FT_WANT" ]; then
     PASS "CTL-FT7-TWICE: MUST FIRE — the row for \`$FT_RSEC\` repeated on a copy of the fence adds exactly one finding, that section declared 2 times. Two rows for one section are two answers to one question, and the arm does not pick"
@@ -4602,7 +4615,7 @@ if [ "$FT_OK" -eq 1 ]; then
   FT_FX="$WORK/ft/route-holds.md"
   awk -v ln="$FT_RLN" 'FNR == ln { sub(/[|].*$/, "| zzq-ft-route-value") } { print }' "$FT_DOC" > "$FT_FX"
   FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
-  FT_ADD="$(ft_delta "$FT_RR0" "$(ft_route_findings "$(ft_route_report "$FT_FX" "$FT_FORMS")")")"
+  FT_ADD="$(ft_route_delta "$FT_RR0" "$(ft_route_findings "$(ft_route_report "$FT_FX" "$FT_FORMS")")")"
   FT_WANT="$(printf 'HOLDS\t%s\tzzq-ft-route-value' "$FT_RSEC")"
   if [ "$FT_LD" -eq 1 ] && [ "$FT_ADD" = "$FT_WANT" ]; then
     PASS "CTL-FT7-HOLDS: MUST FIRE — the value on the row for \`$FT_RSEC\` retyped \`zzq-ft-route-value\` on a copy of the fence adds exactly one finding, that value outside the vocabulary, and nothing else: the section still has its row"
@@ -4626,7 +4639,7 @@ if [ "$FT_OK" -eq 1 ]; then
   FT_FX="$WORK/ft/route-desires.md"
   awk -v ln="$FT_RLN" 'FNR == ln { sub(/[|].*$/, "| desires") } { print }' "$FT_DOC" > "$FT_FX"
   FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
-  FT_ADD="$(ft_delta "$FT_RR0" "$(ft_route_findings "$(ft_route_report "$FT_FX" "$FT_FORMS")")")"
+  FT_ADD="$(ft_route_delta "$FT_RR0" "$(ft_route_findings "$(ft_route_report "$FT_FX" "$FT_FORMS")")")"
   FT_NADD="$(printf '%s\n' "$FT_ADD" | grep -c '[^[:space:]]')"
   FT_HITN="$(printf '%s\n' "$FT_ADD" | awk -F'\t' -v s="$FT_RSEC" '$1 == "REFUSED" && $2 == s && $3 == "desires" { k++ } END { print k + 0 }')"
   if [ "$FT_LD" -eq 1 ] && [ "$FT_RLN" -gt 0 ] && [ "$FT_NADD" -eq 1 ] && [ "$FT_HITN" -eq 1 ]; then
@@ -4637,7 +4650,7 @@ if [ "$FT_OK" -eq 1 ]; then
   FT_FX="$WORK/ft/route-carried.md"
   awk -v ln="$FT_RPLN" 'FNR == ln { sub(/[|].*$/, "| carried") } { print }' "$FT_DOC" > "$FT_FX"
   FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
-  FT_ADD="$(ft_delta "$FT_RR0" "$(ft_route_findings "$(ft_route_report "$FT_FX" "$FT_FORMS")")")"
+  FT_ADD="$(ft_route_delta "$FT_RR0" "$(ft_route_findings "$(ft_route_report "$FT_FX" "$FT_FORMS")")")"
   FT_NADD="$(printf '%s\n' "$FT_ADD" | grep -c '[^[:space:]]')"
   FT_HITN="$(printf '%s\n' "$FT_ADD" | awk -F'\t' -v s="$FT_RPSEC" '$1 == "REFUSED" && $2 == s && $3 == "carried" { k++ } END { print k + 0 }')"
   if [ "$FT_LD" -eq 1 ] && [ "$FT_RPLN" -gt 0 ] && [ "$FT_NADD" -eq 1 ] && [ "$FT_HITN" -eq 1 ]; then
@@ -4650,7 +4663,7 @@ if [ "$FT_OK" -eq 1 ]; then
   FT_FX="$WORK/ft/route-desires-person.md"
   awk -v ln="$FT_RNLN" 'FNR == ln { sub(/[|].*$/, "| desires") } { print }' "$FT_DOC" > "$FT_FX"
   FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
-  FT_ADD="$(ft_delta "$FT_RR0" "$(ft_route_findings "$(ft_route_report "$FT_FX" "$FT_FORMS")")")"
+  FT_ADD="$(ft_route_delta "$FT_RR0" "$(ft_route_findings "$(ft_route_report "$FT_FX" "$FT_FORMS")")")"
   FT_NADD="$(printf '%s\n' "$FT_ADD" | grep -c '[^[:space:]]')"
   FT_HITN="$(printf '%s\n' "$FT_ADD" | awk -F'\t' -v s="$FT_RNSEC" '$1 == "REFUSED" && $2 == s && $3 == "desires" { k++ } END { print k + 0 }')"
   if [ "$FT_LD" -eq 1 ] && [ -n "$FT_RNSEC" ] && [ "$FT_RNLN" -gt 0 ] && [ "$FT_NADD" -eq 1 ] && [ "$FT_HITN" -eq 1 ]; then
@@ -4665,7 +4678,7 @@ if [ "$FT_OK" -eq 1 ]; then
   awk -v ln="$FT_RSB" 'FNR == ln { print "## ZZ-FT-ROUTE-SECTION"; print ""; print "- **ZZ-FT-ROUTE-LABEL:** [a synthetic field]"; print "" } { print }' "${FT_RFORM:-/nonexistent}" > "$FT_FY"
   FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || { cmp -s "$FT_RFORM" "$FT_FY" || FT_LD=1; }
   FT_R="$(ft_route_report "$FT_FX" "$(ft_swap "$FT_FORMS" "$FT_RFORM" "$FT_FY")")"
-  FT_ADD="$(ft_delta "$FT_RR0" "$(ft_route_findings "$FT_R")")"
+  FT_ADD="$(ft_route_delta "$FT_RR0" "$(ft_route_findings "$FT_R")")"
   FT_RS="$(awk -F'\t' '$1 == "NSEC" { print $2; exit }' <<<"$FT_R")"
   FT_RA="$(awk -F'\t' '$1 == "NADM" { print $2; exit }' <<<"$FT_R")"
   if [ "$FT_LD" -eq 1 ] && [ "$FT_RLAST" -gt 0 ] && [ "$FT_RSB" -gt 0 ] && [ -z "$FT_ADD" ] && [ "${FT_RS:-0}" -eq $((FT_RS0 + 1)) ] && [ "${FT_RA:-0}" -eq $((FT_RA0 + 1)) ]; then
