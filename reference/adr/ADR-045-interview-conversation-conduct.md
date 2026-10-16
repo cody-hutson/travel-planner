@@ -277,7 +277,7 @@ design, that is said.
 | The arm over the forms' own conduct lands **with the change that rewords the forms** — the revised design's | rejected by ruling | An arm scoped away from the one input known to trip it cannot fail. It lands with the other prohibition limbs, against a declared ledger |
 | The restatement of the shared rules **moved into the change that builds the text-level checks** | rejected | A larger change there and a re-pointed tone pass. Splitting each check by limb makes every arm true when it lands |
 | **The interviewer labels its own turns** | rejected | The interviewer under test would be grading itself |
-| Three places where a decision and its check do not meet — **a silence and an unclear reply mixed on one field, a reordered confirmation, a compound joined or split** — left as residuals, the record neutral on each | **selected** | § *Residuals* |
+| The places where a decision and its check do not meet — **a silence and an unclear reply mixed on one field, a reordered confirmation, a compound joined or split** — left as residuals, the record neutral on each | **selected** | § *Residuals* |
 | The three **ruled in this record** | not taken | No ground was recorded |
 
 ## Decision
