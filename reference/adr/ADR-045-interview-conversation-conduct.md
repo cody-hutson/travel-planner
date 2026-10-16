@@ -571,7 +571,7 @@ the inputs must carry.
 |---|---|
 | `OW-T.P1` — no licence | recording or confirming a value from a source other than the answering person's words: an example, an option they did not choose, another field, a guess, a default, assent alone — an admitted non-utterance (`A1` to `A5`) apart |
 | `OW-T.P2` — closure | admitting into a recorded value a non-utterance that is not one of `A1` to `A5` |
-| `OW-T.E1` — the rule is stated | the shared rules say, in the same words in both carriers, that a recorded value is made only of what the answering person said — it holds today, in shared rules 7 and 8 |
+| `OW-T.E1` — the rule is stated (true at `5d50eb5`, in shared rules 7 and 8) | the shared rules say, in the same words in both carriers, that a recorded value is made only of what the answering person said |
 | `OW-T.E2` — the example sentences | once the rules admit an example, they also say that an example not taken up in the person's own words is never recorded, and that assent to one records nothing |
 | `FB-T.P1` — no licence | a second follow-up on a field; a follow-up after a skip, a decline, a stop or an empty answer; a follow-up on a field the file already answers from an earlier session; a follow-up on a closed field; a follow-up that repeats the question in the same words; or a follow-up on a `PERSON`-class field in a spoken session |
 | `FB-T.E1` — the bound is stated | both carriers state the bound, with the numbers D3 states |
@@ -585,9 +585,9 @@ the inputs must carry.
 **Where the limbs land.** A prohibition limb is evaluated on the texts as they stand, the forms
 included, against a declared ledger of the known sentences. An existence limb lands with the change
 that writes the sentence it looks for. The forms' own ask-prose carried, at `5d50eb5`, five known
-sentences that direct what the shared rules already bar; so the check covers the forms against a
-declared ledger of those sentences — failing on an undeclared hit, and on a declared row that no
-longer trips.
+sentences that direct what the shared rules already bar; so a prohibition limb covers the forms
+against a declared ledger of those sentences — failing on an undeclared hit, and on a declared row
+that no longer trips.
 
 | Check | | A sentence in the conduct | Verdict |
 |---|---|---|---|
@@ -677,8 +677,8 @@ Each is a term the milestone's other record may read.
    an example the person asked for), *example* (an example turn on the interviewer's own initiative
    that rides no follow-up) and *confirmation*. Those that put no field: *decision point*, *style
    offer*, *disclosure*, *spoken-care offer*, *routing statement* and *give-back* (*give-back* as
-   `ADR-040` D1 has it; *disclosure* as `ADR-022` D6.2 has it). **The list of kinds that put or
-   concern a field is closed.**
+   `ADR-040` D1 decides it; *disclosure* as `ADR-022` D6.2 and D6.4 have it). **The list of kinds
+   that put or concern a field is closed.**
 8. **thin answer** — the warrant for a follow-up; judged by a grader, never by a count.
    **Stuck** — the person says they do not know what to answer.
 9. **the follow-up bound** — at most one follow-up a field in a session, and at most two a section.
