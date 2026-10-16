@@ -44,7 +44,7 @@ cannot be made is a failure of the instrument: it fails the run and withholds th
 its own enumeration, and only a fault in the fence itself withholds them all. The register holds the
 validator's nightlife verdicts, the occasion members and the freshness verdicts. What the class does
 not reach is listed once, in that section, and the charter, the suite and its workflow cite the
-list: that a sentence is a rule over an enumeration at all, an enumeration nobody registered, a
+list, which includes: that a sentence is a rule over an enumeration at all, an enumeration nobody registered, a
 member written in prose rather than as a code span, a member's meaning or its rank, and any file the
 reading passes over by path, which is every file under `reference/adr/` and `examples/`, and this
 one.
