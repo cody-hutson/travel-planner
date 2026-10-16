@@ -1180,13 +1180,20 @@ merely **unlisted** here, which is not the same as denied and establishes nothin
 vacuously here; it is not a mandate to run the research role.
 
 **Render the `## Update signals` block enrichment produced, then name the next verb by signal class
-— without running it.** Four classes:
+— without running it.** Four classes, and this table owns them: a class is added here and in
+`agents/00-enrichment.md` → "Map onto those four classes; never add a fifth", which decides which
+class a change takes, in one change. No check holds that paragraph to this table. A line of the
+block's body — a list item above its `###` partition, whose lines are information and take no class
+— is classed here by what it names: one that names a need is a changed need; one that names a desire
+or its tier, a changed desire; a `PROFILE MISSING` entry is its own class; and any other line of the
+block's body is a changed journey facet — report it and name no command
+(`CLAUDE.md` § *Rules over an enumeration*).
 
 | Signal class | What this verb names | Why it does not run it |
 |---|---|---|
 | a changed need | `/trip replan`, naming the spokes the need touches | dispatching a planning pipeline is a different request type with its own command and its own permissions |
 | a changed desire | `/trip replan`, with no spoke named | the same |
-| a changed journey facet | `### Per-Traveler Planning Days [DERIVED]` is **stale** — report it and **name no command** | that block has **no writer** in `CLAUDE.md` § *Write ownership*, so its staleness is reported and never repaired in place |
+| a changed journey facet | report it and **name no command**; where the signal says `### Per-Traveler Planning Days [DERIVED]` is **stale**, say that too | the reconcile has already carried the change into the model, and that block has **no writer** in `CLAUDE.md` § *Write ownership*, so its staleness is reported and never repaired in place |
 | `PROFILE MISSING` | `/trip-record profile <name>` | the profile is the operator's to collect |
 
 **The denominator is the roster, never the directory.** `travelers/` ships empty and stays empty
@@ -2596,7 +2603,7 @@ of the shape *"the record says X, this trip says Y — promote?"* would leave ev
 human-confirmed and would satisfy the store's no-agent-writes rule **literally** while defeating it
 in practice, the record drifting toward whatever the most recent trip said one click at a time. The
 shipped precedent for reporting without naming a command is already in `## travelers`, whose
-changed-journey-facet class reports staleness and **names no command**. **Discovery is handled once,
+changed-journey-facet class reports the change and **names no command**. **Discovery is handled once,
 non-field-specifically, in `link`'s own confirmation**, at a moment the operator initiated — one
 naming, in one place, is not a solicitation.
 

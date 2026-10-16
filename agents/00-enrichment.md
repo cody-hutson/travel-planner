@@ -229,12 +229,16 @@ link against. Specifically:
   so the origin can be added to `## Logistics` — do not create the block yourself,
   and do not let the traveler file become the de-facto home for a trip-level origin.
 
-  **A changed journey facet is a re-derive trigger — on every trip, not only
-  multi-origin ones.** When a traveler's `Leaving from:` or `Arrive / leave:`
-  changes, name that facet in the update signal you already emit for them
+  **A changed label that the per-traveler planning-days block is derived from is a
+  re-derive trigger — on every trip, not only multi-origin ones.** The block's own
+  header owns that test and names its examples —
+  `templates/trip-context.template.md` § *Per-Traveler Planning Days [DERIVED]*,
+  today `Leaving from:` and `Arrive / leave:`. When one of them changes, name it in
+  the update signal you already emit for that traveler
   (see *Profile-change detection* below) and state that
   `trip-context.md` `## Logistics` → `### Per-Traveler Planning Days [DERIVED]`
-  is now stale. You do **not** rewrite that block — journey & origin is still not
+  is now stale. A change to any other label leaves that block current, so say
+  nothing of the block on its line. You do **not** rewrite that block — journey & origin is still not
   yours to write into trip-context.md, and the rule above is unchanged. **Report the
   staleness and name no command.** That block has **no writer** in `CLAUDE.md`
   § *Write ownership — trip-context.md, block by block*, so its staleness is reported
@@ -426,9 +430,10 @@ Trigger"), which sanctions exactly this behavior:
   ## Update signals [DERIVED]
   > Candidate replanning triggers — a changed profile alongside the existing
   > missed-booking (event-status) trigger. The hub owns whether/how to re-plan.
-  - Jordan: added anchor "sumo tournament" [new]; dropped wish "standout coffee".
-  - Pat: revised need — heat ceiling tightened (shade by noon, was early afternoon).
-  - Alex: heat ceiling tightened, from the linked person record [library change].
+  - Jordan: added anchor — Desire [new]; dropped wish — Desire.
+  - Pat: revised need — Specific.
+  - Alex: revised need — Specific, from the linked person record [library change].
+  - Robin: Interests changed, from the linked person record [library change].
 
   ### Divergence — information only, no replanning implied
   - Alex: Pace — DIVERGENT; this trip overrides the person default, which changed
@@ -501,10 +506,20 @@ unpartitioned class-violation line naming `Category` or `Specific` is read by th
 four-class router as *a changed need* and dispatched to `/trip replan` — the exact
 conversion the partition exists to prevent, on the class least able to afford it.
 
-**Map onto those four classes; never add a fifth.** A composed change to a need or a
-desire is a changed need or a changed desire; a composed change to a journey, lodging or
-pace facet is a changed journey facet; an unresolvable reference is `PROFILE MISSING`.
-The mapping is total, so `trip-record` needs no edit.
+**Map onto those four classes; never add a fifth.** What the changed label's section
+holds decides its class — a test in place of a list of facets
+(`CLAUDE.md` § *Rules over an enumeration*) — and
+`reference/data-model.md` § *The update-signal route* declares what each section holds.
+A change under a section that holds `needs` is a changed need; `desires`, a changed
+desire; `facets`, a changed journey facet — journey, lodging and pace are examples of
+that class, not its edge. A section that holds `carried` maps onto none of them: a
+change under it writes no line. A section with no row there is read as `facets`. The
+label a value sits under settles its section, so a value under `Interests:` is never a
+changed desire (`agents/06-validator.md` → "A ticked interest is not a desire").
+An unresolvable reference is `PROFILE MISSING`, an entry's class and never a label's,
+so no change takes two classes. The four classes are owned by the table under
+`skills/trip-record/SKILL.md` § `travelers`, which says what each one names; a class is
+added there and here, in one change.
 
 **Four prohibitions bind everything you write under `## Update signals [DERIVED]`,
 including the `###` partition. They are conduct, not enforcement: the publish guard
