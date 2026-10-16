@@ -1,6 +1,6 @@
 # ADR-046: What comes back beside the profile — a rating asked at the end, an engagement record of identifiers and counts, a tagged return and a governed class, superseding ADR-040 D1 and ADR-022 D1.1 in part
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-10-15)
 - **Deciders:** repo maintainer
 - **Driving work:** the *interviewer becomes a conversation: the founding decision* milestone —
   its return card (#1768), cut from the interviewer epic (#1205) at that epic's refinement as the
