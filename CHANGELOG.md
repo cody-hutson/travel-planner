@@ -9,14 +9,14 @@ No trip verb plans, records or publishes a trip differently in this release. Wha
 whoever runs or edits a guard suite under `scripts/`, the suites `SECURITY.md` names among the
 required status checks, and by whoever edits a release pull request's body once it is open. Each
 change points a control at a population it was meant to grade and did not reach. An arm whose
-population is empty no longer leaves the corpus-hygiene run green unannounced. Every verdict guard
-in the required guard suites is graded for a PASS reached through a disjunction, and each suite says
-beside that rule which class it cannot see. The artifact-schema suite's range parse and the
-command-taxonomy suite's edge trims read the same input the same way under C and under a UTF-8
-locale, and the range parse reads it the same way under mawk and gawk; arms assert both. A failure
-branch no arm drove now has one. And a probe reads the accretion the release pull-request body
-convention forbids, bold-led paragraphs and task rows as well as headings. Each paragraph below says
-what its change does not reach.
+population is empty no longer leaves the corpus-hygiene run green unannounced. Each required guard
+suite grades the verdict guards it locates in its own top-level code for a PASS reached through a
+disjunction, and says beside that rule which verdict forms it does not locate and which class it
+cannot see. The artifact-schema suite's range parse and the command-taxonomy suite's edge trims read
+the same input the same way under C and under a UTF-8 locale, and the range parse reads it the same
+way under mawk and gawk; arms assert both. A failure branch no arm drove now has one. And a probe
+reads the accretion the release pull-request body convention forbids, bold-led paragraphs and task
+rows as well as headings. Each paragraph below says what its change does not reach.
 
 **An empty population fails the corpus-hygiene run unless it is declared.**
 `scripts/test-corpus-hygiene.sh` counted a VACUOUS verdict without failing on it, so a run whose
