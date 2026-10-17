@@ -2169,7 +2169,7 @@ invocation_check() {
       n_men=$((n_men+1))
 
       if [[ "$line" == *"Bash($SCRIPT_REL"* ]]; then n_grant=$((n_grant+1)); continue; fi
-      if [[ "$t" == 'allowed-tools:'* ]] || [[ "$t" == 'disallowed-tools:'* ]]; then n_grant=$((n_grant+1)); continue; fi
+      case "$(fm_trim "$line")" in 'allowed-tools:'*|'disallowed-tools:'*) n_grant=$((n_grant+1)); continue ;; esac
 
       # The candidate command line: a fenced line as it stands, or the content of a line that
       # is WHOLE a single code span at fence depth 0. Any other rendering yields no candidate
@@ -6323,6 +6323,8 @@ GQ_FILL=32
 #   nbspflag    the same line twice, one led by U+00A0 and one trailed by a space and U+00A0, which
 #               fm_trim keeps under every locale                    -> nothing; arm GQF reads '-'
 #   wideflag    the same two lines with U+3000, which fm_trim keeps -> nothing; arm GQF reads '-'
+#   edgedeny    a whole-script publish denial three times: plain, led by U+00A0, and led by U+3000
+#               -> nothing; arm GQF reads one grant and two unresolved mentions (F5)
 #   notable     no grant table: the three rows sit under a header naming neither form, so the verb
 #               is read and graded by nothing                                    -> nothing
 gq_gen_verb() {
@@ -6345,6 +6347,7 @@ gq_gen_verb() {
       flagline) printf -- 'disable-model-invocation: true \t\n' ;;
       nbspflag) printf -- '%sdisable-model-invocation: true\ndisable-model-invocation: true %s\n' "$GQ_NBSP" "$GQ_NBSP" ;;
       wideflag) printf -- '%sdisable-model-invocation: true\ndisable-model-invocation: true %s\n' "$GQ_WIDE" "$GQ_WIDE" ;;
+      edgedeny) for k in '' "$GQ_NBSP" "$GQ_WIDE"; do printf -- '%sdisallowed-tools: [Bash(%s%s:*)]\n' "$k" "$ENGINE_ROOT_TOK" "$SCRIPT_REL"; done ;;
     esac
     printf -- '---\n\n# /%s\n\n' "$name"
     case "$defect" in
@@ -6807,9 +6810,9 @@ else
   FAIL "GQL: a Grant cell graded differently by locale, or not as specified — U+00A0 world: under C $(grep -c '^FINDING ' <<<"$GQL_NC") finding(s), under ${GQL_MB} $(grep -c '^FINDING ' <<<"$GQL_NM"); U+3000 world: under C $(grep -c '^FINDING ' <<<"$GQL_WC"), under ${GQL_MB} $(grep -c '^FINDING ' <<<"$GQL_WM") (want 0, 0, 2, 2, and each pair identical). This host's [[:space:]] under ${GQL_MB} holds U+00A0: ${GQL_NBIN}; U+3000: ${GQL_WIN}. First finding: $(grep -h '^FINDING ' <<<"$GQL_NC"$'\n'"$GQL_NM"$'\n'"$GQL_WC"$'\n'"$GQL_WM" | awk 'NR == 1')"
 fi
 
-# ── GQF — A FRONTMATTER FLAG READS THE SAME UNDER EVERY LOCALE, AND KEEPS U+00A0 AT ITS EDGE. Three
-# BUILT verb files, each read by parse_command_file, the reader of the typed-only posture's flag
-# half, under C and under the member gq_mb_pick chose for GQL:
+# ── GQF — A FRONTMATTER LINE READS THE SAME UNDER EVERY LOCALE, AND KEEPS U+00A0 AT ITS EDGE. Four
+# BUILT verb files, each read under C and under the member gq_mb_pick chose for GQL. The first three
+# are read by parse_command_file, the reader of the typed-only posture's flag half:
 #   nbspflag  a `disable-model-invocation: true` line led by U+00A0, and one trailed by a space and
 #             U+00A0. fm_trim keeps U+00A0, so neither line is the flag: POSTURE '-' under both. A
 #             YAML parser reads the first as a different key and the second as the string "true"
@@ -6819,20 +6822,47 @@ fi
 #             is ASCII.
 #   flagline  the plain line trailed by a space and a tab, which fm_trim removes: FLAG under both,
 #             so the reader is shown to find the flag where it is there.
+# The fourth is read by invocation_check, which classifies every mention of the publish script in a
+# verb file and counts a frontmatter allowed-tools or disallowed-tools line as a grant:
+#   edgedeny  a whole-script publish denial three times: plain, led by U+00A0, and led by U+3000.
+#             The plain line is a grant; each edged line is an unresolved mention (F5), named with
+#             its line, under both. A YAML parser reads an edged key as a different key, so a denial
+#             the runtime may not hold is reported, never counted as held.
 # Each file's two readings must also be byte-identical. A frontmatter reader moved onto trim reads
-# the U+00A0 file as flagged, and that is the regression this arm turns red on.
+# the U+00A0 flag file as flagged, or counts the U+00A0-led denial as a grant, and that is the
+# regression this arm turns red on.
 gqf_read() {  # gqf_read <verb-root> — the POSTURE record parse_command_file emits for zz-graded
   grep '^POSTURE ' <<<"$(parse_command_file "$1/zz-graded/SKILL.md" '/zz-graded' RESOLVE 2>/dev/null)"
 }
+gqf_deny() {  # gqf_deny <verb-root> — invocation_check's reading of the publish script's mentions
+  invocation_check "$1" '' 2>/dev/null
+}
+# gqf_deny_ok <reading> — one grant, and an F5 naming each edged denial line and nothing else.
+gqf_deny_ok() {
+  [ "$(grep -c '^FINDING ' <<<"$1")" = '2' ] && [ "$(grep -c '^FINDING F5 ' <<<"$1")" = '2' ] \
+    && grep -qF "/zz-graded:${GQF_DN} mentions the publish script" <<<"$1" \
+    && grep -qF "/zz-graded:${GQF_DW} mentions the publish script" <<<"$1" \
+    && [ "$(awk '$1 == "COUNT" && $2 == "GRANTS" { print $3 }' <<<"$1")" = '1' ]
+}
+gqf_deny_sum() {  # gqf_deny_sum <reading> — the reading on one line, for the FAIL text
+  printf '%s finding(s), F5 at line(s) %s, %s grant(s)' "$(grep -c '^FINDING ' <<<"$1")" \
+    "$(grep '^FINDING F5 ' <<<"$1" | sed -n 's|.*/zz-graded:\([0-9][0-9]*\) .*|\1|p' | tr '\n' ' ')" \
+    "$(awk '$1 == "COUNT" && $2 == "GRANTS" { print $3 }' <<<"$1")"
+}
 GQFN="$(gq_world GQF-nbsp nbspflag)"; GQFW="$(gq_world GQF-wide wideflag)"; GQFP="$(gq_world GQF-plain flagline)"
+GQFD="$(gq_world GQF-deny edgedeny)"
+GQF_DN="$(grep -n -F "${GQ_NBSP}disallowed-tools:" "$GQFD/zz-graded/SKILL.md" | cut -d: -f1)"
+GQF_DW="$(grep -n -F "${GQ_WIDE}disallowed-tools:" "$GQFD/zz-graded/SKILL.md" | cut -d: -f1)"
 GQF_NC="$( export LC_ALL=C; gqf_read "$GQFN" )"
 GQF_WC="$( export LC_ALL=C; gqf_read "$GQFW" )"
 GQF_PC="$( export LC_ALL=C; gqf_read "$GQFP" )"
-GQF_NM=''; GQF_WM=''; GQF_PM=''
+GQF_DC="$( export LC_ALL=C; gqf_deny "$GQFD" )"
+GQF_NM=''; GQF_WM=''; GQF_PM=''; GQF_DM=''
 if [ -n "$GQL_MB" ]; then
   GQF_NM="$( export LC_ALL="$GQL_MB"; gqf_read "$GQFN" )"
   GQF_WM="$( export LC_ALL="$GQL_MB"; gqf_read "$GQFW" )"
   GQF_PM="$( export LC_ALL="$GQL_MB"; gqf_read "$GQFP" )"
+  GQF_DM="$( export LC_ALL="$GQL_MB"; gqf_deny "$GQFD" )"
 fi
 GQF_S=1
 [ "$(grep -c -F "$GQ_NBSP" "$GQFN/zz-graded/SKILL.md")" = '2' ] || GQF_S=0
@@ -6842,16 +6872,24 @@ grep -qxF "disable-model-invocation: true ${GQ_NBSP}" "$GQFN/zz-graded/SKILL.md"
 grep -qxF "${GQ_WIDE}disable-model-invocation: true" "$GQFW/zz-graded/SKILL.md" || GQF_S=0
 grep -qxF "disable-model-invocation: true ${GQ_WIDE}" "$GQFW/zz-graded/SKILL.md" || GQF_S=0
 grep -qxF "disable-model-invocation: true "$'\t' "$GQFP/zz-graded/SKILL.md" || GQF_S=0
+[ "$(grep -c -F "$GQ_NBSP" "$GQFD/zz-graded/SKILL.md")" = '1' ] || GQF_S=0
+[ "$(grep -c -F "$GQ_WIDE" "$GQFD/zz-graded/SKILL.md")" = '1' ] || GQF_S=0
+for gqf_e in '' "$GQ_NBSP" "$GQ_WIDE"; do
+  grep -qxF "${gqf_e}disallowed-tools: [Bash(${ENGINE_ROOT_TOK}${SCRIPT_REL}:*)]" "$GQFD/zz-graded/SKILL.md" || GQF_S=0
+done
+[ -n "$GQF_DN" ] || GQF_S=0
+[ -n "$GQF_DW" ] || GQF_S=0
 if [ "$GQF_S" -eq 0 ]; then
-  FAIL "GQF: fixture integrity — a built frontmatter does not carry its flag lines edged as its file places them, so a verdict here would prove nothing"
+  FAIL "GQF: fixture integrity — a built frontmatter does not carry its flag or denial lines edged as its file places them, so a verdict here would prove nothing"
 elif [ -z "$GQL_MB" ]; then
   FAIL "GQF: NO MULTIBYTE LOCALE — gq_mb_pick found no name under which U+00A0 reads as one character, so C was compared with nothing"
 elif [ "$GQF_NC" = 'POSTURE /zz-graded -' ] && [ "$GQF_NM" = "$GQF_NC" ] \
      && [ "$GQF_WC" = 'POSTURE /zz-graded -' ] && [ "$GQF_WM" = "$GQF_WC" ] \
-     && [ "$GQF_PC" = 'POSTURE /zz-graded FLAG' ] && [ "$GQF_PM" = "$GQF_PC" ]; then
-  PASS "GQF: LOCALE-INVARIANT, AND U+00A0 KEPT AT A FRONTMATTER EDGE — a disable-model-invocation: true line led by U+00A0, or trailed by a space and U+00A0, is not read as the flag under C or under ${GQL_MB}, nor is either edged by U+3000; the plain line trailed by a space and a tab is read as the flag under both; and each file's two readings are identical. fm_trim strips ASCII whitespace alone, so this verdict does not depend on the host's [[:space:]], and an edge byte a YAML parser keeps is reported rather than trimmed into a flag"
+     && [ "$GQF_PC" = 'POSTURE /zz-graded FLAG' ] && [ "$GQF_PM" = "$GQF_PC" ] \
+     && gqf_deny_ok "$GQF_DC" && [ "$GQF_DM" = "$GQF_DC" ]; then
+  PASS "GQF: LOCALE-INVARIANT, AND U+00A0 KEPT AT A FRONTMATTER EDGE — a disable-model-invocation: true line led by U+00A0, or trailed by a space and U+00A0, is not read as the flag under C or under ${GQL_MB}, nor is either edged by U+3000; the plain line trailed by a space and a tab is read as the flag under both; of a whole-script publish denial written plain, led by U+00A0 and led by U+3000, invocation_check counts the plain line a grant and names each edged line an unresolved mention (F5) under both; and each file's two readings are identical. fm_trim strips ASCII whitespace alone, so this verdict does not depend on the host's [[:space:]], and an edge byte a YAML parser keeps is reported rather than trimmed into a flag or a denial"
 else
-  FAIL "GQF: a frontmatter flag line read differently by locale, or not as specified — U+00A0 file: under C '${GQF_NC}', under ${GQL_MB} '${GQF_NM}'; U+3000 file: '${GQF_WC}', '${GQF_WM}'; plain file: '${GQF_PC}', '${GQF_PM}' (want POSTURE /zz-graded - for the first four and POSTURE /zz-graded FLAG for the last two)"
+  FAIL "GQF: a frontmatter flag or denial line read differently by locale, or not as specified — U+00A0 file: under C '${GQF_NC}', under ${GQL_MB} '${GQF_NM}'; U+3000 file: '${GQF_WC}', '${GQF_WM}'; plain file: '${GQF_PC}', '${GQF_PM}' (want POSTURE /zz-graded - for the first four and POSTURE /zz-graded FLAG for the last two); denial file: under C $(gqf_deny_sum "$GQF_DC"), under ${GQL_MB} $(gqf_deny_sum "$GQF_DM") (want 2 finding(s), F5 at line(s) ${GQF_DN} ${GQF_DW}, 1 grant(s), the same under both)"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
