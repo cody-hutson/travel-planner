@@ -554,7 +554,7 @@ expect_rc() {   # expect_rc <want> <id> <prose> -- <cmd…>
   local subject="${1:-<no-command>}" got
   "$@" >/dev/null 2>&1; got=$?
   if [ "$got" -eq 127 ] && [ "$want" -ne 127 ]; then
-    FAIL "$id: $prose -- rc=127: '$subject' is NOT DEFINED. The subject is ABSENT, not rejecting, so this assertion has no subject to grade"
+    FAIL "$id: $prose -- rc=127: '$subject', or a command it runs, is NOT DEFINED. The subject is ABSENT, not rejecting, so this assertion has no subject to grade"
   elif [ "$got" -eq "$want" ]; then
     PASS "$id: $prose [rc=$got, expected $want]"
   else
@@ -2708,18 +2708,26 @@ B_NWIDE="$(awk '$1 == "DENOM" { print $4 }' <<<"$B_OUT")"
 B_NUNREAD="$(awk '$1 == "DENOM" { print $5 }' <<<"$B_OUT")"
 B_NLINE="$(awk '$1 == "DENOM" { print $6 }' <<<"$B_OUT")"
 B_NOOS=$(( ${B_NWIDE:-0} - ${B_NHIT:-0} ))
-printf '  SURFACE: %s tracked markdown file(s) walked for path:line locators, %s of them unreadable and %s line(s) read — %s in this group'"'"'s IN-SCOPE bare spelling, %s in either spelling, so %s sit OUTSIDE this predicate and are reported rather than counted as clean.\n' \
-  "$B_NFILE" "${B_NUNREAD:-unread}" "${B_NLINE:-unread}" "$B_NHIT" "$B_NWIDE" "$B_NOOS"
+# The measurement state B0 grades below, decided here so that over a walk B0 refuses no line this
+# group prints carries a counter of the comparison, on group G's rule.
+B_SURFACE=0
+if [ "${B_NUNREAD:-1}" -eq 0 ] && [ "${B_NLINE:-0}" -gt 0 ]; then B_SURFACE=1; fi
+if [ "$B_SURFACE" -eq 1 ]; then
+  printf '  SURFACE: %s tracked markdown file(s) walked for path:line locators, %s of them unreadable and %s line(s) read — %s in this group'"'"'s IN-SCOPE bare spelling, %s in either spelling, so %s sit OUTSIDE this predicate and are reported rather than counted as clean.\n' \
+    "$B_NFILE" "$B_NUNREAD" "$B_NLINE" "$B_NHIT" "$B_NWIDE" "$B_NOOS"
+else
+  printf '  SURFACE: NOT-EVALUATED — the class-B walk could not open %s of %s listed file(s) and read %s line(s) — this is not a clean result\n' \
+    "${B_NUNREAD:-unread}" "${B_NFILE:-unread}" "${B_NLINE:-unread}"
+fi
 echo "B1" >> "$SURF_LOG"
 
 # B0 — the surface, in the idiom of every other lettered group's surface arm, and FIRST because
-# B1's empty population is a measurement only over a walk that read the tree. The guard is written
-# so an unrun extractor resolves to the loud answer: an unset unreadable count reads 1 and an unset
-# line count reads 0, and both land on the FAIL limb. It reads the walk's own DENOM fields and not
-# the wider locator figure, which is a property of the corpus and may legitimately reach zero.
-B_SURFACE=0
-if [ "${B_NUNREAD:-1}" -eq 0 ] && [ "${B_NLINE:-0}" -gt 0 ]; then
-  B_SURFACE=1
+# B1's empty population is a measurement only over a walk that read the tree. The state it grades
+# is decided above, by a guard written so an unrun extractor resolves to the loud answer: an unset
+# unreadable count reads 1 and an unset line count reads 0, and both land on the FAIL limb. It
+# reads the walk's own DENOM fields and not the wider locator figure, which is a property of the
+# corpus and may legitimately reach zero.
+if [ "$B_SURFACE" -eq 1 ]; then
   PASS "B0: the class-B surface was read — each of the $B_NFILE listed file(s) opened, $B_NLINE line(s) read and none unreadable, so an empty in-scope population below is a measurement of this tree and not an empty walk. Arm CTL-B0 lists a file that does not exist and requires it counted unreadable"
 else
   FAIL "B0: the class-B surface was NOT read — ${B_NUNREAD:-unread} of ${B_NFILE:-unread} listed file(s) could not be opened and ${B_NLINE:-unread} line(s) were read. A zero here is a broken probe or a relocated corpus, never a tree with no locator, and B1's empty population is withheld rather than rendered VACUOUS"
@@ -3251,6 +3259,14 @@ fi
 # unreadable and exactly the real file's two lines read, so a count that ignored a failed open, or
 # that counted every listed file as read, cannot look like this. Like CTL-B1-WIDE it asserts no
 # finding code and is written without ctl_mustfire, so group Y's inventory is unchanged by it.
+# GROUP MD OPT-OUT for B0 and CTL-B0, declared per clause 6 rather than left silent. The subject
+# of both is the walk inside the GENERATED b.awk, not a shell function, and both arms are written
+# inline, so md_flips, which removes a function and re-runs one, has nothing to remove and nothing
+# to re-run. The compensating positive control is the mutation each was observed red under at its
+# real call site: B0 FAILs, and B1 is withheld, when group B's real walk is pointed at a root that
+# does not exist and when one path that does not exist is added to its list; CTL-B0 FAILs when the
+# walk stops counting a failed open, when it stops adding the lines it read, and when DENOM stops
+# carrying those two fields.
 D="$(ctl_mk b0)"
 printf 'A line with nothing to find.\nAnother.\n' > "$D/docs/notes.md"
 printf 'docs/notes.md\ndocs/listed-and-absent.md\n' > "$WORK/list.b0"
@@ -6219,8 +6235,14 @@ printf 'Result: \033[1;32m%d passed\033[0m, \033[1;31m%d failed\033[0m, \033[1;3
   "$pass" "$fail" "$skip" "$vacuous"
 printf 'CITATION: %s markdown citation(s) read over %s tracked file(s); %s bare where a unique durable home exists.\n' \
   "$A_NCITE" "$A_NFILE" "$A_NBARE"
-printf 'LOCATOR: %s in-scope (bare) path:line locator(s) over %s tracked file(s), %s unreadable and %s line(s) read; %s in either spelling, %s out of scope by declaration.\n' \
-  "$B_NHIT" "$B_NFILE" "${B_NUNREAD:-unread}" "${B_NLINE:-unread}" "$B_NWIDE" "$B_NOOS"
+# The measurement state B0 decided above: over a walk B0 refused the line carries the cause and no counter.
+if [ "$B_SURFACE" -eq 1 ]; then
+  printf 'LOCATOR: %s in-scope (bare) path:line locator(s) over %s tracked file(s), %s unreadable and %s line(s) read; %s in either spelling, %s out of scope by declaration.\n' \
+    "$B_NHIT" "$B_NFILE" "$B_NUNREAD" "$B_NLINE" "$B_NWIDE" "$B_NOOS"
+else
+  printf 'LOCATOR: NOT-EVALUATED — the class-B walk could not open %s of %s listed file(s) and read %s line(s) — this is not a clean result\n' \
+    "${B_NUNREAD:-unread}" "${B_NFILE:-unread}" "${B_NLINE:-unread}"
+fi
 printf 'COUNT-ASSERTION: %s residual site(s) in %s file(s) over %s sentence(s) graded; %s declared row(s).\n' \
   "$C_NSITE" "$C_NDIRTY" "$C_NSENT" "$C_NROW"
 printf 'ADR-NUMBERING: %s record file(s) and %s index row(s) over a span reaching %s; %s collision(s), %s undeclared gap(s), %s index/directory disagreement(s), %s stale declaration(s); %s gap(s) held open by declaration, %s unoccupied number(s) named by the register.\n' \
