@@ -185,7 +185,9 @@ set -uo pipefail
 # unpinned apart from per-call LC_ALL=C on the calls that need byte semantics and the per-member
 # locales of its group LC. What that group asserts on every run is narrow: va_type_ok's slug
 # predicate and ca_delta's range parse answer the same under C and under a UTF-8 locale the host
-# lists, and the run fails if none loads. The rest of that suite reads the caller's locale, and
+# lists, and the run fails if none loads. On an awk that answers the same in every locale the
+# ca_delta half skips instead (LC4 to LC8), and that suite's CA10 grades the engine by name,
+# running ca_delta under mawk and gawk. The rest of that suite reads the caller's locale, and
 # that its verdicts do not move with it was measured when this was written, not asserted. The
 # two must not borrow a locale from each other or from a shared harness.
 export LC_ALL=C
