@@ -374,7 +374,9 @@ jobs:
       - uses: actions/checkout@v7
 
       # No Node setup step: this suite is pure bash and POSIX text processing. It needs
-      # no Node, no gh and no network, which is exactly why its expected-skip set is empty.
+      # no Node, no gh and no network, but it does need mawk and gawk from the runner image;
+      # with both present every arm grades, which is why its expected-skip set is empty
+      # (WHY THE STRICT MODE).
       - name: Run the artifact-schema suite
         env:
           # A SKIP is a FAILURE unless its group is declared below.

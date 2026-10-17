@@ -64,7 +64,7 @@ place. On an `awk` that answers the same in every locale, the `ca_delta` half of
 and names the engine, and `CA10` grades the engine axis instead. What is left open: no arm runs the
 whole suite with mawk as `awk`. The hosted run depends on the runner image carrying both mawk and
 gawk, under a runner label, `ubuntu-latest`, that floats. On a host without mawk `CA10` skips, on a
-host without either engine `VI3` skips, and a strict run fails on either skip, naming it.
+host missing either engine `VI3` skips, and a strict run fails on either skip, naming it.
 
 **The command-taxonomy suite's edge trims grade the same under every locale.**
 `scripts/test-command-taxonomy.sh` trims the edges of the cells, headings and lines it reads through
