@@ -307,7 +307,7 @@ Read the relevant agent prompt from `agents/<name>.md` (see the roster below) an
 | Enrichment | `agents/00-enrichment.md` | Updates `trip-context.md` [ENRICH] fields (research role); rebuilds `outputs/traveler-model.md` (reconciler role); seeds the initial `locked` rows of `outputs/event-status.md` at setup only — the hub owns that file | New trip setup, destination/hotel change |
 | Activities | `agents/01-activities.md` | `outputs/activities-list.md` | User wants activity research or replacements |
 | Food | `agents/02-food.md` | `outputs/food-list.md` | User wants food research or replacements |
-| Nightlife | `agents/07-nightlife.md` | `outputs/nightlife-list.md` | User wants going-out research, or a full pipeline where a present traveler holds a nightlife/evening desire, or the trip contains at least one night a natural occasion would apply to (a weekend night, or a special occasion in trip-context.md's travel dates or calendar events) — the spoke resolves its own desire gate and writes a gate-result stub when nobody does |
+| Nightlife | `agents/07-nightlife.md` | `outputs/nightlife-list.md` | User wants going-out research, or a full pipeline where a present traveler holds a nightlife/evening desire, or the trip contains at least one night a natural occasion would apply to (`weekend night`, `calendar occasion`), the members `agents/06-validator.md` owns in its occasion limb — the spoke resolves its own desire gate and writes a gate-result stub when nobody does |
 | Scheduling | `agents/03-scheduling.md` | `outputs/scheduling-framework.md` | Structural schedule changes, resequencing |
 | Transport | `agents/04-transport.md` | `outputs/transport-brief.md` | Transport questions requiring research |
 | Hub Planner | `agents/05-hub-planner.md` | `outputs/links-reference.md`, `outputs/venue-matrix.md`, `outputs/final-itinerary.md` and its preserved predecessor `outputs/final-itinerary-v<N>.md`, `outputs/event-status.md` (primary writer), `outputs/satisfaction-metrics.md` (desire-coverage + balance sections), `outputs/change-summary.md`, `outputs/cost-estimate.md` | Full synthesis or itinerary restructuring — **runs and reconciles the three optimizer engines** (routing vs. desire-coverage vs. experiential arc) into one itinerary, needs applied as hard constraints first (R1–R4) |
@@ -633,6 +633,16 @@ One writer per block. A writer not named for a block does not write it — not "
 
 **What enforces them.** Milestone 45 plans a byte fence on file size, which enforces none of these clauses, and an integration note on a pull request that adds much to a file and removes little, which enforces clause 3 in form only — that a note is present, never that it is true. Neither exists before that milestone ships; the rest is good faith. Every sentence left behind is paid for each time its file is read, and `reference/load-class-model.md` declares how often that is.
 
+### Rules over an enumeration
+
+**A rule stated over an enumeration — a list of verdicts, classes, cases or sources — is true only of the members its author could see.** A member that arrives later is neither ranked against the others nor admitted to them, and the sentence that told them apart goes on reading as complete while every check stays green. Whoever writes such a rule in an engine file owes it the three things below, and so does an edit that adds, removes or renames one of its members or changes the sentence that tells them apart; no other edit to the rule does. Each is stated at the rule, which cites this section and does not re-explain it; nothing here orders a sweep of rules that already stand.
+
+1. **Precedence.** Where two members can hold for one input, the rule says which governs — as an order a reader follows, or as a test that separates them. List order ranks nothing until the rule says it does. Where the rule gives no other ground, a member that reports a finding governs one that passes.
+2. **Admission.** The rule says what an input no member names resolves to, and it is the one place a member is added. Another file that must repeat the members names the owner where it repeats them.
+3. **A criterion in place of a list.** Where the members are instances of one test, the rule states the test and the test decides. The members it goes on to name are examples and are said to be; an input they omit is decided by the test, never by its absence from them.
+
+What the required suite holds a registered enumeration's repeats to, and what no check can see of a rule of this kind, are stated once, in `reference/data-architecture.md` § *The enumeration register*.
+
 ## File Structure
 
 ```
@@ -654,6 +664,7 @@ travel-planner/
 ├── people/                   ← skeleton of the durable cross-trip person store — ships README.md only; real records live under <data-root>/people/
 ├── reference/                ← engine reference specs
 │   ├── adr/                       ← architecture decision records (one file per decision)
+│   ├── channel-and-engagement-model.md ← channel and engagement model (the registered memberships: the channel-set and its admission test, the G8 class, the freshness verdicts, the names)
 │   ├── command-reference.md       ← the whole command surface in one table (verb, arguments, required trip state)
 │   ├── data-architecture.md       ← engine-wide data architecture (artifact model, identity, serialization, publishability, lifecycle classes, schema version)
 │   ├── data-model.md              ← satisfaction-layer data architecture (storage homes, reconciliation, write ownership)

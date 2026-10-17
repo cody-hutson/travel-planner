@@ -3,6 +3,114 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [Unreleased] — 2026-10-15 — Admission and precedence law
+
+A rule written over a list — of verdicts, classes, cases or sources — is true only of the members
+its author could see. A member that arrives later is neither ranked against the others nor admitted
+to them, and the sentence that told them apart goes on reading as complete, with every required
+check green. Rules of that shape had gone stale in the nightlife check and in the enrichment agent's
+update signal. This release states once what such a rule owes, gives the corpus-hygiene suite a
+register that holds each repeat of a registered list to the rule that owns it, applies the law where
+those rules had gone stale, and registers memberships that two decision records decide about
+channels and engagement. Whoever writes or edits a rule of this kind in an engine file meets the law
+in `CLAUDE.md`. An operator meets the change in the validator's nightlife verdicts, in the occasions
+the nightlife gate counts, in the lines the update signal writes, and in what
+`/trip-record travelers` says of a changed journey facet. No command is added, and none takes
+different arguments. Each paragraph below says what its change does not reach.
+
+**A rule over an enumeration owes precedence, admission and a criterion, stated once.** `CLAUDE.md`
+gains § *Rules over an enumeration*, beside the rules for editing an engine file. Where two members
+can hold for one input, the rule says which governs, and where it gives no other ground, a member
+that reports a finding governs one that passes. It says what an input no member names resolves to,
+and it is the one place a member is added: another file that must repeat the members names it as
+their owner. Where the members are instances of one test, the rule states the test and the test
+decides; the members it names are examples. The duties bind whoever writes such a rule in an engine
+file, and an edit that adds, removes or renames a member or changes the sentence that tells the
+members apart, and no other edit; each is stated at the rule, which cites the section. The decision,
+and the options it was weighed against, are in `reference/adr/ADR-047-rules-over-an-enumeration.md`.
+It lands `Proposed`, under the number the register on `main` holds for it, and is ratified after the
+release in a change of its own, as `CONTRIBUTING.md` § *Cutting a release* step 7 asks. What it does
+not reach: nothing orders a sweep of the rules that already stand, so a rule of this kind that no
+such edit touches keeps the form it has.
+
+**A registered enumeration's repeats are held to their owner.** `reference/data-architecture.md`
+gains § *The enumeration register*: a fenced declaration whose rows name, for each registered
+enumeration, the rule that owns its members and each site that repeats them, and hold no member
+themselves. A new class of `scripts/test-corpus-hygiene.sh`, `J`, reads the members off the owner
+and off each site, as code spans and nothing else, and fails a site that lacks a member its owner
+names or names one its owner does not. It also fails a paragraph that writes more than one member of
+a registered enumeration as code spans in an engine file that carries no row for it. A reading that
+cannot be made is a failure of the instrument: it fails the run and withholds the comparisons for
+its own enumeration, and only a fault in the fence itself withholds them all. The register holds the
+validator's nightlife verdicts, the occasion members and the freshness verdicts. What the class does
+not reach is listed once, in that section, and the charter, the suite and its workflow cite the
+list, which includes: that a sentence is a rule over an enumeration at all, an enumeration nobody registered, a
+member written in prose rather than as a code span, a member's meaning or its rank, and any file the
+reading passes over by path, which is every file under `reference/adr/` and `examples/`, and this
+one.
+
+**The nightlife check ranks its verdicts, and one rule owns the occasion members.** In
+`agents/06-validator.md` the nightlife coverage verdicts become one ordered ladder — `n/a`,
+`contradiction`, `gap`, `covered`, `declined` — in which a rung is reached only when every answer
+above it is no, and below its first rung a finding outranks a pass. A traveller named by both an
+entry and a no-nightlife line now settles the night at `contradiction` before `gap` is asked, and an
+obliged traveller also left unaccounted for is recorded beside it as a second Warning. Each obliged
+traveller is accounted for on their own, so on a split night the lines that name the tracks meet the
+occasion limb together, and one test decides every line in the night's block, entries and
+no-nightlife lines alike: whether the travellers it names can still be determined. A present
+traveller the gate did not oblige is outside the obligation, and one that no line names is recorded
+in a Note. The occasion members, `weekend night` and `calendar occasion`, are owned by the
+validator's occasion limb, and the hub, the nightlife prompt and the charter's roster row name that
+owner where they repeat them. A traveller's `Special occasion?` answer is not a member, so the
+nightlife gate no longer reads it, and the label a value sits under decides whether it is an
+interest or a desire. The enrichment agent still carries that answer through verbatim, and no longer
+says the hub sees it: no agent prompt reads it, and the readers it is carried for, the group
+snapshot and the site, are decided by Accepted decision records and not yet built. What it does not
+reach: no executable validator exists, so class `J` holds the ladder's rung names equal to the
+report's verdict counter as a set, and no check reads their order or what the ladder decides on a
+night.
+
+**A change to a traveller's answers is classed by what its section holds.**
+`reference/data-model.md` gains § *The update-signal route*, a fenced declaration of what each
+section of the guided intake forms holds: `needs`, `desires`, `facets` or `carried`. The enrichment
+agent's mapping onto the update signal's four classes applies that test in place of a list of
+facets, and no longer calls the list total: a change under a section that holds `needs` is a changed
+need, under `desires` a changed desire and under `facets` a changed journey facet, a section with no
+row is read as `facets`, and a change under `Anything else`, today the one section declared
+`carried`, writes no line. A composed change to any facet a traveller's form carries now has a
+stated route. A change to `Can travel:` or `Blackout:` is a changed journey facet, reported with no
+command named, by choice. The planning-days block's header, in `templates/trip-context.template.md`,
+and the reconciler's rule now say the same thing about when the block is stale: when a label it is
+derived from changes, `Leaving from:` and `Arrive / leave:` being today's examples, and on no other
+change. `/trip-record travelers` owns the four classes in its table, and no longer reports the
+planning days stale for a facet that cannot stale them. The update-signal example no longer shows a
+field's value. A new arm of `scripts/test-artifact-schema.sh`, `FT7`, fails that suite when a form
+carries a field under a section with no declared route, and the route check refuses a declaration
+that types a durable section as a desire or silences a section that holds a non-overridable field.
+What it does not reach: inside those bounds any section can be retyped and the suite stays green,
+the arm reads neither the prompt that applies the route nor what an agent does with a change, and no
+check holds the enrichment agent's mapping to the verb's table of classes.
+
+**The channel-set, the `G8` class and the freshness verdicts are registered against their owners.**
+A new reference document, `reference/channel-and-engagement-model.md`, which the charter's file tree
+now names, registers memberships that two decision records decide: the channel-set and its admission
+test, from `reference/adr/ADR-026-channel-architecture.md`; the readings of the `G8` class, each
+beside the file that declares it, the one `reference/adr/ADR-025-engagement-model-over-time.md`
+types into the class among them; and the freshness verdicts that staleness reuses. It decides
+nothing and admits nothing: each registration names its owner where it repeats the members, and says
+what holds the copy. A new group of `scripts/test-artifact-schema.sh`, `CG`, reads the document's
+two fences against their owners, and fails on a channel or a limb on one side only, a vacancy
+re-typed as a member or missing its verdict or its ground, a fence value not in its owning record's
+words or a quotation in no decision record's words, a relation or a typed reading with no row, and a
+requirement or relation table that names a typed reading. The freshness verdicts are the register's
+third enumeration, read by class `J`, and `skills/trip/SKILL.md` § *The freshness report* now says a
+verdict is added there and nowhere else. The document also carries the names the two records
+introduced or adopted, each with the collision it was measured against. No gate is bound to
+`engagement(t)`, and no decision record is edited. What it does not reach is listed in the
+document's closing section: everything it says in its own words, a surface nobody proposes as a
+channel, words a record keeps but no longer decides, so that a vacancy row put back to the value its
+own amendment superseded reads green, and a gate in any shape the group does not read.
+
 ## [0.56.0] — 2026-10-09 — A returning party's past trips reach the planner
 
 Until now an archived trip's coverage record was written and never read back. Each archived trip
