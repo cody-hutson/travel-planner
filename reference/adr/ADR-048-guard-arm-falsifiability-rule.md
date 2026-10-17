@@ -43,9 +43,10 @@ under the awk line; 76 real guards were misattributed that way in the artifact-s
 And a one-line guard that names FAIL first and PASS after its `else` was read as reaching PASS.
 
 **Carried into every guard suite, the rule is cross-cutting.** Each of those suites is a required
-check, and each then rejects a guard written `if A or B; then PASS`. When this record was written
-the rule appeared in no tracked file outside the founding suite's own banner, so a contributor
-would first meet it as a red check.
+check, and each then rejects a guard written `if A or B; then PASS`. At the release's base the rule
+appeared in no tracked file outside the founding suite's own banner; carried, it stands in the
+banner of each suite that runs it and nowhere a contributor reads before that check runs, so a
+contributor would first meet it as a red check.
 
 **A second class of unfirable arm has no shape to find.** A guard that reaches PASS through a
 tautology — a count compared against zero with `-ge`, a value tested non-empty just after a literal
@@ -155,9 +156,10 @@ The coverage boundary in the group's banner is part of this decision, and it sta
   suite.
 - **The verdict forms the walker never locates**: a list-form verdict, a guard whose `if` is not
   the first word on its line, and a disjunction decided in a helper or an assignment and compared
-  afterwards. Their remainder is counted on every run, by a count that also takes in every PASS
-  reached through an `else` or first appearing deeper in a branch, so it bounds the three forms
-  from above and does not census them.
+  afterwards. The first two are counted on every run where they stand on a line of their own, by a
+  count that also takes in a PASS reached through an `else` on a later line or first appearing
+  deeper in a branch, so it bounds them from above and does not census them; the third is never in
+  that count, because the guard that tests the stored result is located and read.
 - **What the walk does not read**: a guard whose first verdict lies deeper in its branch, anything outside
   top-level code, a disjunction spelled other than with two bars, and nesting. A here-document
   delimiter that is neither a word nor quoted is refused rather than guessed at.

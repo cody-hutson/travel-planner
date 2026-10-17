@@ -16252,10 +16252,14 @@ md_flips st_sitemap 'ST-CF-SITE' site_cov_assert 'ST-CF-SITE' 'CTL-ST-CF-SITE' '
 #      disjunction decided in a helper or an assignment and compared afterwards, where the
 #      guard that reaches PASS tests the stored result and never sees the disjunction — the
 #      artifact-schema suite's `st_cf_dfired` is one. FZ3 prints FZ_UNLOCATED, the top-level
-#      lines that carry a PASS verdict and are no located guard's verdict line. All three
-#      forms fall inside it, so their remainder is counted on every run rather than implied
-#      to be zero; so does every PASS reached through an `else` or first appearing deeper in
-#      a branch, so the count bounds the three forms from above and is no census of them.
+#      lines that carry a PASS verdict and are no located guard's verdict line. Forms (a) and
+#      (b) fall inside it when they stand on a line of their own, and so does a PASS reached
+#      through an `else` on a later line or first appearing deeper in a branch, so the count
+#      bounds (a) and (b) from above and is no census of them. It never counts form (c),
+#      whose comparing guard is located and whose PASS is read as that guard's verdict, nor a
+#      list-form verdict or an `else` PASS standing on the line a located guard's branch
+#      starts on, which is read as that guard's verdict line and graded against that guard's
+#      condition.
 #   *  It walks TOP-LEVEL CODE ONLY. A lexer tracks what is open at each point — quotes,
 #      $( ), backticks, ${ }, $(( )) and here-documents — and a line that begins inside one
 #      of them is an embedded program or a payload, never a shell guard: an awk program's

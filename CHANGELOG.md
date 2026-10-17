@@ -117,8 +117,8 @@ polarity is its first verdict, so a one-line guard that names FAIL first reaches
 every suite, the corrected walker found the shape in three controls of the artifact-schema suite,
 and those are now chains. Each copy of the group says what it does not grade: a guard that cannot
 fail because its condition is a tautology is declared out of reach, with the reason; the verdict
-forms the walker does not locate are named, and counted on every run; and a here-document delimiter
-it cannot read is refused rather than guessed at.
+forms the walker does not locate are named, and a count printed on every run bounds the two it can
+see from above; and a here-document delimiter it cannot read is refused rather than guessed at.
 `reference/adr/ADR-048-guard-arm-falsifiability-rule.md` records the rule, `Proposed`.
 
 **The honest limits.** The decision record lands `Proposed`. The flip to `Accepted` is the
