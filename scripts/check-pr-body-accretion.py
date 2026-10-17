@@ -45,11 +45,13 @@ THE CLASSES, AND WHY EACH IS READ AS IT IS
     [ ] and [x]; fenced code (``` or ~~~, closed by a run of the same
     character at least as long) and HTML comments are not read. A comment
     opens only outside a fence and outside a backtick code span, and runs to
-    its first -->, or to the end of the body when it never closes, as the
-    rendered page hides it. A thematic break written with * or _ (***, ___,
-    * * *) is neither a bold lead nor a list item. Character classes are
-    explicit ASCII throughout ([ \\t], never \\s), so the reading does not
-    depend on the locale or the interpreter build.
+    its first -->, or to the end of the body when it never closes. The
+    rendered page hides it the same way when the comment opens its line;
+    THE DECLARED BOUNDARY names the case where it does not. A thematic break
+    written with * or _ (***, ___, * * *) is neither a bold lead nor a list
+    item. Character classes are explicit ASCII throughout ([ \\t], never
+    \\s), so the reading does not depend on the locale or the interpreter
+    build.
 
 MODES
     --self-test
@@ -149,6 +151,11 @@ THE DECLARED BOUNDARY -- what this reading passes over
       opens a comment;
     - a code span that runs across lines: only a span opened and closed on
       one line shields a <!-- inside it;
+    - a <!-- in the middle of a line, outside a code span, whose --> does
+      not arrive before the paragraph ends: the rendered page shows it as
+      text and shows what follows, while this reading hides everything up
+      to its first --> (or to the end of the body), so an addition there
+      reads SILENT;
     - a line that opens with an HTML comment is classified by the text left
       once the comment is removed, where the rendered page shows that line
       as raw HTML;
@@ -398,8 +405,16 @@ def _counts(g):
     return "H=%d B=%d T=%d P=%d" % (g["H"], g["B"], g["T"], g["P"])
 
 
+CONTROL_CHAR_RE = re.compile(r"[\x00-\x1f\x7f-\x9f]")
+
+
+def _printable(text):
+    """Escape C0/C1 control characters, so body text cannot drive a terminal."""
+    return CONTROL_CHAR_RE.sub(lambda m: "\\x%02x" % ord(m.group(0)), text)
+
+
 def _heading_lines(added):
-    return ["  + h%d %s" % (depth, text[:60]) for depth, text in added]
+    return ["  + h%d %s" % (depth, _printable(text[:60])) for depth, text in added]
 
 
 # ---------------------------------------------------------------------------
@@ -1274,6 +1289,18 @@ def self_test(out):
                 check("E5", False, "a malformed payload was graded")
             except Refused:
                 check("E5", True, "a malformed payload refuses")
+            # E6: body text reaches stdout, so a control character in an added heading is
+            # escaped rather than passed to the terminal or the job log that shows it.
+            hostile = os.path.join(d, "E6.json")
+            with open(hostile, "w", encoding="utf-8") as f:
+                json.dump(_event_payload("edited", "release/x", BASE,
+                                         BASE + "\n\n## Round \x1b[31mtwo\n"), f)
+            buf = io.StringIO()
+            rc = grade_event(hostile, buf)
+            text = buf.getvalue()
+            check("E6", rc == 1 and "\\x1b[31mtwo" in text and "\x1b" not in text,
+                  "rc=%d, expected 1 with the escape rendered as the characters \\x1b and "
+                  "no 0x1b byte: %r" % (rc, text.splitlines()[1:2]))
             before_path = os.path.join(d, "before.md")
             after_path = os.path.join(d, "after.md")
             with open(before_path, "w", encoding="utf-8") as f:
