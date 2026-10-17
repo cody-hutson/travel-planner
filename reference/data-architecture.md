@@ -1607,6 +1607,7 @@ occasion-members   | site  | agents/07-nightlife.md | lead | Resolve each member
 occasion-members   | site  | CLAUDE.md | list | a natural occasion would apply to
 freshness-verdicts | owner | skills/trip/SKILL.md | lead | each naming the relation and its verdict:
 freshness-verdicts | site  | reference/channel-and-engagement-model.md | list | Staleness takes its verdicts from that family
+freshness-verdicts | site  | skills/trip-record/SKILL.md | lead | The observation is of order, never of time, and it is the shipped one
 ```
 
 **What the unregistered-repeat reading passes over.** It reads engine files, in the sense

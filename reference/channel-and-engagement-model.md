@@ -78,14 +78,16 @@ reading's owner, and naming it beside the reading is the admission duty of
 # reading             | declared in
 itinerary-to-build    | skills/trip/SKILL.md
 research-to-placement | skills/trip/SKILL.md
+plan-to-coverage      | skills/trip-record/SKILL.md
 engagement(t)         | reference/adr/ADR-025-engagement-model-over-time.md
 ```
 
 **A relation** is a freshness relation a command file declares in its own relation table — the
 table whose first column is headed *relation*. That table is its owner: a relation is added
 there, and its row here follows in the same change. The relations registered above are evaluated
-inside `trip.freshness`. A consumer that evaluates a relation outside `trip.freshness` says so in
-its own report, and declares it the same way.
+inside `trip.freshness` unless the file that declares one evaluates it outside, as
+`skills/trip-record/SKILL.md` does with `plan-to-coverage`. A consumer that evaluates a relation
+outside `trip.freshness` says so in its own report, and declares it the same way.
 
 **`engagement(t)`** is a reading a decision record types into the class, and that record is its
 owner:
@@ -146,7 +148,7 @@ reused by those records and minted by neither.
 | `W-rule` · `R-rule` · `W-test` · `R-test` | the authorship rule, the emission rule, and a channel's observable test for each | `ADR-026` § 5 | none found |
 | `direct-crossing` | adopted and measured; no sentence of the record defines it | `ADR-026` § 6 | none found |
 | `phase-axis-declaration` | the fence in which each record declares the axis tokens | `ADR-026` § 4, `ADR-025` § 1 | none found |
-| `engagement` | the axis: on what basis the engine holds a person, and who authored it | `ADR-025` § 1, `ADR-026` § 6 | the milestone name *Group approval engagement layer* in `ADR-010`, the same domain, and the verb *engage*; `ADR-026` also writes *the engagement record* for `ADR-025` itself |
+| `engagement` | the axis: on what basis the engine holds a person, and who authored it | `ADR-025` § 1, `ADR-026` § 6 | the milestone name *Group approval engagement layer* in `ADR-010`, the same domain, and the verb *engage*; `ADR-026` also writes *the engagement record* for `ADR-025` itself, and `ADR-046` writes *engagement record* for the identifiers and counts that come back beside a profile, a record it says is neither `engagement(t)` nor `ADR-025` itself |
 | `engagement(t)` | the axis read for one member of its domain | `ADR-025` § 1 | the bare name above |
 | `PERSON-LINKED` · `SELF-STATED` · `OPERATOR-STATED` · `THIRD-PARTY-STATED` · `UNSOURCED` · `ENGAGEMENT-UNDETERMINED` | the values of the axis | `ADR-025` § 1 | *what the operator stated*, quoted by two records for the same state; the shipped `UNDETERMINED`, the same sense; the rest none found |
 | `NO-SUBJECT-KIND` | the fence literal beside the value that has no subject kind | `ADR-025` § 1 | none found |
