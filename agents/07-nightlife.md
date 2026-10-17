@@ -77,9 +77,14 @@ and this gate is night-blind, so resolve the limb as the one question this
 altitude can answer: **does this trip contain at least one night a natural
 occasion would apply to?** — does a weekend night fall inside the trip's
 span, or a calendar occasion inside trip-context.md's travel dates or
-calendar events. That is the exact trip-level projection of the per-night
-rule the hub applies at placement time and the validator applies in its
-coverage check, so all three resolve one predicate instead of three.
+calendar events. Where no leg reaches a date outside the trip-day set, that
+is the exact trip-level projection of the per-night rule the hub applies at
+placement time and the validator applies in its coverage check, so all three
+resolve one predicate instead of three. Where an additional origin's leg
+reaches a weekend night outside that set, this gate counts the night and the
+per-night rule never sees it: by `reference/data-model.md` § *Presence* that
+date is not a trip day, so the hub does not plan it and the validator does
+not audit it.
 
 **`a last night` is not a member of this limb.** Every trip has a last night, so
 at trip level that predicate is universally true: it cannot change the answer to
