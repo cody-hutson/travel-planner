@@ -333,7 +333,7 @@ writer, a store, a reach row, an `archive` change and a second home.
 |---|---|
 | `UNDETERMINED` | the trip listing or the group record cannot be read. The population canary `G1` is inherited, so an unreadable listing never becomes *no joint trips* |
 | *fewer than two resolvable members* | the group resolves fewer than two members, so no scan runs, and the view says so |
-| *no joint archived trip* | the scan completed, some member's edge exists, and no archived trip other than `t₀` carries edges for two or more members. A plain line — **`NO-EDGE-FOUND` is never printed while any member's edge exists** |
+| *no joint archived trip* | the scan completed, some member's edge exists on a trip other than `t₀`, and no archived trip other than `t₀` carries edges for two or more members. A plain line — **`NO-EDGE-FOUND` is never printed while any member's edge exists on a trip other than `t₀`** |
 | `NO-EDGE-FOUND` | the scan completed and **no** member's edge exists on any trip other than `t₀` |
 | `UNDETERMINED`, per candidate | that candidate's roster cannot be read, so `r(t)` is not known |
 | `UNDETERMINED`, per bullet | a `## Members` bullet does not resolve; it is counted in `n` and is not a member |
@@ -813,3 +813,21 @@ it rather than with the offer.
   the router's totality over unmapped `DEFAULT` facets, which decides where a composed `Dislikes`
   change routes; #1459, a trip's party-level preferences at synthesis; #1460, the C14 witness's
   layout; and #1353, CH-2's tests, where the tension with `ADR-017` § 4's enum offer is noted.
+
+## Amendment history
+
+**Amendment (2026-10-09, Friday) — in § *Decision* 2, the *no joint archived trip* row of the
+group view's terminal set now says where a member's edge has to sit; this corrects a claim.** The
+row's condition read *"some member's edge exists"*, and the rule in bold beside it read
+*"`NO-EDGE-FOUND` is never printed while any member's edge exists"*. Neither said *on a trip other
+than `t₀`*, though the `NO-EDGE-FOUND` row directly below it says so, the person view's terminal
+set in § *Decision* 1 says so in its `RESOLVED(n)`, *edges exist, none archived* and
+`NO-EDGE-FOUND` rows, and `cand(G, t₀)` leaves `t₀` out by definition. Read without the qualifier,
+both rows held wherever every member's only edge was on `t₀`, and the bold rule then forbade
+`NO-EDGE-FOUND` in the state that token's own condition describes. That state is an ordinary one:
+a group the qualifying listing offers has members linked on `t₀`, and where they are linked on no
+other trip it is the state the view reaches. Both clauses are corrected in place, with the
+qualifier the row below already carried. The outputs of the terminal set and every other condition
+stand as decided. The reading is `ADR-017` § 2's —
+*"The resolved trip is excluded from its own history"* — and it is the one the acceptance review
+of the driving card ran when it raised the omission (#1387, finding F-1).

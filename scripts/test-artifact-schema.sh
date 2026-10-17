@@ -358,6 +358,22 @@
 #        DECLARATION, RELATION OR READING IS SPELLED IN THIS GROUP — each is read, and the
 #        arms plant invented ones. What breaks a reading, and what this group cannot see, are
 #        stated once, in that document's closing section, and are not restated here
+#   DC   the declared desire-coverage header of C14 has ONE home — the fenced shape in
+#        reference/data-model.md § `outputs/satisfaction-metrics.md` shape — read from there on
+#        every run and never held here. Every other statement of it, found by SHAPE, and every
+#        tracked C14 instance, found by the class's own selector, is byte-identical to it; an
+#        empty instance selection FAILS. Not graded: a statement removed whole, heading and
+#        table together, leaves the population.
+#   RP   the returning-party fixture set and the two read verbs over it — the set's declared states,
+#        read from the `returning-party-fixture` fence in `examples/returning-party-demo/README.md`
+#        and never held here, against the files; a reference reader of the coverage table by header
+#        label, its labels and cell values read from the `past-coverage` section's own steps, with
+#        its controls; a reference computation of a group's candidates over the declared roots and
+#        store, with synthetic controls that include the state where every member's only edge is on
+#        the trip being planned; each section's own enumerations against its prose and against the
+#        terminal-set table of the decision record it builds; and the group section's citations of
+#        the person section, which must resolve and must restate nothing. NOT ESTABLISHED: that
+#        either verb reads or renders as these references do — no suite executes a verb.
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -2133,13 +2149,23 @@ if [ "$PS_OK" -eq 1 ]; then
   # mismatch. The fixture carries a derived model but no outputs/final-itinerary.md, so it is
   # outside this predicate and lands in PS3's derived list. The partition closed at
   # 1 + 1 + 7 = 9. Only the denominator moved.
+  #
+  # It moved 9 -> 12 with examples/returning-party-demo/, examples/returning-party-first-demo/
+  # and examples/returning-party-second-demo/, and that re-read was performed against the
+  # failing run: PS1 still selects examples/tokyo-2026 ALONE and PS2 still names
+  # examples/data-architecture-demo ALONE, both observed in the run that reported the pin
+  # mismatch, so both sets are unchanged. None of the three carries an
+  # outputs/final-itinerary.md — the first is a trip still being planned, with no outputs/ at
+  # all, and the other two are archived trips whose outputs/ holds a coverage file and nothing
+  # else — so all three are outside this predicate and land in PS3's derived list. The
+  # partition closed at 1 + 1 + 10 = 12. Only the denominator moved.
   if [ "$((PS_NFIRE + PS_NSIL + PS_NOUT))" -ne "$PS_NTRIP" ]; then
     FAIL "PS4: the partition does not close — $PS_NFIRE + $PS_NSIL + $PS_NOUT != $PS_NTRIP. A denominator that cannot be reconstructed is not a denominator"
     PS_OK=0
-  elif [ "$PS_NTRIP" -eq 9 ]; then
-    PASS "PS4: the partition closes over all $PS_NTRIP trips, and the denominator is the 9 pinned when this group was last re-read"
+  elif [ "$PS_NTRIP" -eq 12 ]; then
+    PASS "PS4: the partition closes over all $PS_NTRIP trips, and the denominator is the 12 pinned when this group was last re-read"
   else
-    FAIL "PS4: examples/ now carries $PS_NTRIP trip director(ies), not the 9 pinned when this group was last re-read. The partition still closes, so this is not a corruption — it is a NEW FIXTURE, and PS1/PS2's set assertions and PS3's declared-not-exercised list have to be re-read against it and the pin updated in the same commit"
+    FAIL "PS4: examples/ now carries $PS_NTRIP trip director(ies), not the 12 pinned when this group was last re-read. The partition still closes, so this is not a corruption — it is a NEW FIXTURE, and PS1/PS2's set assertions and PS3's declared-not-exercised list have to be re-read against it and the pin updated in the same commit"
     PS_OK=0
   fi
 fi
@@ -19935,6 +19961,2008 @@ if [ "$CG_SOK" -eq 1 ] && [ "$CG_COK" -eq 1 ]; then
   cg_fn CG0n3 "the record's decision heading renamed: a broken reading reports its own reason" "$(cg_landed "$cgd" "$CG_REC")" "$(cg_probe "$WORK" "$cgd" "$cgd.list")" 'CG6 CG7' 'CG0' 'the channel-set: the-decision-section-heading-is-absent' 'a-record-no-verdict-grades'
   cgd="$(cg_farm CG0f8)"; cg_edit "$cgd" "$CG_DOC" fence-rename "$CG_CLASS_TAG" "$CG_CLASS_TAG-cgplant"
   cg_fn CG0f8 "the class fence's tag renamed: the class section is withheld" "$(cg_landed "$cgd" "$CG_DOC")" "$(cg_probe "$WORK" "$cgd" "$cgd.list")" 'CG1 CG2 CG3 CG4 CG5' 'CG0' 'the class: the-fence-is-found-0-times-or-holds-no-row'
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group DC — the declared desire-coverage header: one home, and every other statement of it
+# and every tracked instance byte-identical to that home.
+#
+# ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
+# The class schema for outputs/satisfaction-metrics.md grades frontmatter and nothing else, so
+# the BODY shape of its desire-coverage table was held by no assertion. The class's tracked
+# witness carried a header row its writer does not declare, every required suite stayed green,
+# and a reader that takes that section by column position misreads one of the two shapes.
+#
+# ── ONE HOME, READ ON EVERY RUN AND NEVER HELD HERE ──────────────────────────────
+# The declared row lives in reference/data-model.md, in the fenced shape under the heading
+# DC_ART addresses. dc_home reads it from there on every run and no line of this file spells
+# it, for group EN's reason: a copy here would be a second source of truth, green while the
+# document it claims to enforce drifted away from it. The writers' prompts each carry the row
+# too, and they are ASSERTED identical to the home rather than turned into citations of it — a
+# prompt file is passed whole as its agent's instructions, so a writer has to carry the row it
+# emits.
+#
+# ── A STATEMENT IS FOUND BY SHAPE, AN INSTANCE BY THE CLASS'S OWN SELECTOR ────────
+# A statement site is an ATX-shaped line whose text leads, token-bounded, with DC_SEG, or a
+# line that is wholly one bold span leading with it. Its row is the first line beginning with
+# a pipe before the next ATX-shaped line. A site is never found by matching the row, which is
+# what keeps a DRIFTED statement in the population to be reported rather than letting it
+# leave. Fenced lines are READ, not skipped, because a statement may sit inside a fence — the
+# home's own does. An instance is whatever va_select resolves to the class, so a tracked
+# instance added later joins the population with no edit here, and it must carry the section
+# and the row.
+#
+# ── WHAT IS NOT GRADED, DECLARED RATHER THAN LEFT TO BE FOUND ────────────────────
+# A statement removed WHOLE — heading and table together — leaves the discovered population
+# instead of failing; one that keeps its heading and loses its table does fail. The separator
+# row under the header and any emphasis on a cell are not read at all, which DC6 shows.
+#
+# ── THE ARMS ─────────────────────────────────────────────────────────────────────
+#   DC0  the home resolves to exactly one row. Every later arm is withheld when it does not
+#   DC1  every other statement of the header, over every tracked markdown file DC2 does not
+#        select, equals the home row. A site with no row fails, and so does finding no site
+#   DC2  every tracked instance carries exactly one heading leading with DC_SEG, and its row
+#        equals the home row. An EMPTY selection is a failure, never a VACUOUS verdict
+#   DC3  MUST FIRE — a copy of an instance carrying the header this group was written against
+#   DC4  MUST FIRE — an empty instance list
+#   DC5  MUST FIRE — a statement whose row has its leading cells exchanged
+#   DC6  MUST NOT FIRE — a matching instance dashed and emphasised differently, and a file of
+#        near-misses that carries no statement site
+# Each live arm's reading is a function — dc_home, dc_statements, dc_instances — and DC3 to
+# DC6 re-run those same functions over inputs built on this run: copies under $WORK, and an
+# empty list. The arms are not registered with md_flips: what each grades is a tracked
+# document, which that primitive cannot remove, and DC3 to DC6 are its standing controls. No
+# count is spelled anywhere in this file for this group: the row, the statements and the
+# instances are all read.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "DC — the declared desire-coverage header: one home, and every other statement and every tracked instance byte-identical to it"
+
+DC_DOC="$ROOT/reference/data-model.md"
+# The class's artifact name. It is the selector's key for an instance and — as a code span
+# followed by the word `shape` — the text of the heading that opens the home's region. An
+# address, never the row.
+DC_ART='outputs/satisfaction-metrics.md'
+# The section's name: the leading segment a statement site and an instance's heading are found
+# by. Also an address.
+DC_SEG='Desire-coverage'
+mkdir -p "$WORK/dc"
+
+# dc_home <document> — the home, as TAB records. Fence state comes from the shared helper, so
+# the region is closed by the next ATX heading OUTSIDE a fence and the fenced shape's own
+# heading-shaped lines never end it.
+#   REGION <k>            unfenced ATX headings whose text is the artifact's code span, then `shape`
+#   HEAD   <k> <line>     ATX-shaped lines inside the first such region that lead with the
+#                         section's name, and the line of the first
+#   ROW    <line> <row>   the first line beginning with a pipe after that line and before the
+#                         next ATX-shaped line or fence closer, trailing whitespace trimmed.
+#                         Absent when no such line follows
+dc_home() {
+  awk -v art="$DC_ART" -v seg="$DC_SEG" "$FT_LEAD_FN""$ST_CF_FENCE_FN"'
+    function atx(s) { return (s ~ /^#+[ \t]/) }
+    function htext(s) { sub(/^#+[ \t]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+    { L[NR] = $0 }
+    END {
+      want = "`" art "` shape"
+      CF_ON = 0; nreg = 0; r0 = 0; r1 = 0
+      for (i = 1; i <= NR; i++) {
+        F[i] = cf_fence_step(L[i])
+        if (F[i] != "" || !atx(L[i])) continue
+        if (htext(L[i]) == want) { nreg++; if (nreg == 1) { r0 = i; continue } }
+        if (r0 > 0 && r1 == 0) r1 = i - 1
+      }
+      if (r1 == 0) r1 = NR
+      printf "REGION\t%d\n", nreg
+      nh = 0; h = 0
+      if (r0 > 0) for (i = r0 + 1; i <= r1; i++) if (atx(L[i]) && ft_lead(seg, htext(L[i]))) { nh++; if (nh == 1) h = i }
+      printf "HEAD\t%d\t%d\n", nh, h
+      if (h > 0) for (i = h + 1; i <= r1; i++) {
+        if (atx(L[i]) || F[i] == "C") break
+        if (substr(L[i], 1, 1) == "|") { s = L[i]; sub(/[ \t\r]+$/, "", s); printf "ROW\t%d\t%s\n", i, s; break }
+      }
+    }' "$1"
+}
+
+# dc_sites <file>… — every statement site in the files, fenced lines READ: one TAB record
+# `<file> <line> <kind> <row-line> <row>` per site, in file order. <kind> is H for an ATX-shaped
+# line whose text leads with the section's name and B for a line that is wholly one bold span
+# leading with it. The row is the first line beginning with a pipe before the next ATX-shaped
+# line, trailing whitespace trimmed; a site with none reports row-line 0 and an empty row. ONE
+# awk process over the whole population, for en_probe's reason.
+dc_sites() {
+  [ "$#" -gt 0 ] || return 0
+  awk -v seg="$DC_SEG" "$FT_LEAD_FN"'
+    function flush(   i) { for (i = 1; i <= np; i++) printf "%s\t%d\t%s\t0\t\n", pf[i], pl[i], pk[i]; np = 0 }
+    FNR == 1 { flush() }
+    {
+      s = $0; sub(/[ \t\r]+$/, "", s)
+      if ($0 ~ /^#+[ \t]/) {
+        flush()
+        t = s; sub(/^#+[ \t]+/, "", t)
+        if (ft_lead(seg, t)) { np = 1; pf[1] = FILENAME; pl[1] = FNR; pk[1] = "H" }
+        next
+      }
+      n = length(s)
+      if (n > 4 && substr(s, 1, 2) == "**" && substr(s, n - 1) == "**") {
+        t = substr(s, 3, n - 4)
+        if (index(t, "**") == 0 && ft_lead(seg, t)) { np++; pf[np] = FILENAME; pl[np] = FNR; pk[np] = "B"; next }
+      }
+      if (np > 0 && substr(s, 1, 1) == "|") {
+        for (i = 1; i <= np; i++) printf "%s\t%d\t%s\t%d\t%s\n", pf[i], pl[i], pk[i], FNR, s
+        np = 0
+      }
+    }
+    END { flush() }' "$@"
+}
+
+# dc_count <records> <code> — how many records open with <code>. Always a number, so a caller
+# that reads nothing compares a zero rather than an empty string.
+dc_count() { awk -F'\t' -v c="$2" '$1 == c { n++ } END { print n + 0 }' <<<"$1"; }
+
+# dc_statements <home-row> <skip-file> <skip-line> <file>… — DC1's reading. One TAB record per
+# statement site in the files, the site at <skip-file>:<skip-line> left out:
+#   SAME  <file> <line> <kind>
+#   DIFF  <file> <line> <kind> <row-line> <row>
+#   NOROW <file> <line> <kind>
+# then ONE closing record, COUNT <sites>, so a caller can tell "no site" from a scan that did
+# not reach its end. The comparison is string equality in the shell, never an awk -v value.
+dc_statements() {
+  local dcs_row="$1" dcs_sf="$2" dcs_sl="$3" dcs_out dcs_f dcs_l dcs_k dcs_rl dcs_r dcs_n=0
+  shift 3
+  dcs_out="$(dc_sites "$@")"
+  while IFS="$VA_TAB" read -r dcs_f dcs_l dcs_k dcs_rl dcs_r; do
+    [ -n "$dcs_f" ] || continue
+    if [ "$dcs_f" = "$dcs_sf" ] && [ "$dcs_l" = "$dcs_sl" ]; then continue; fi
+    dcs_n=$((dcs_n+1))
+    if [ "$dcs_rl" = 0 ]; then
+      printf 'NOROW\t%s\t%s\t%s\n' "$dcs_f" "$dcs_l" "$dcs_k"
+    elif [ "$dcs_r" = "$dcs_row" ]; then
+      printf 'SAME\t%s\t%s\t%s\n' "$dcs_f" "$dcs_l" "$dcs_k"
+    else
+      printf 'DIFF\t%s\t%s\t%s\t%s\t%s\n' "$dcs_f" "$dcs_l" "$dcs_k" "$dcs_rl" "$dcs_r"
+    fi
+  done <<EOF
+$dcs_out
+EOF
+  printf 'COUNT\t%s\n' "$dcs_n"
+}
+
+# dc_instances <home-row> <root> <path-list> — DC2's reading. <path-list> is one path per
+# line, each relative to <root>. One TAB record per instance:
+#   SAME   <path> <line>
+#   DIFF   <path> <line> <row-line> <row>   its row is not the home row
+#   NOROW  <path> <line>                    its heading is followed by no pipe row
+#   NOHEAD <path>                           it carries no ATX heading leading with the section's name
+#   MANY   <path> <k>                       it carries k such headings, where exactly one must lead
+#   UNREAD <path>                           it is not readable
+# and, where the list names no instance at all, the ONE record EMPTY — a selection of nothing
+# is a finding of its own, never a list of zero disagreements.
+dc_instances() {
+  local dci_row="$1" dci_root="$2" dci_p dci_recs dci_k dci_l dci_rl dci_r dci_n=0
+  while IFS= read -r dci_p; do
+    [ -n "$dci_p" ] || continue
+    dci_n=$((dci_n+1))
+    if [ ! -r "$dci_root/$dci_p" ]; then printf 'UNREAD\t%s\n' "$dci_p"; continue; fi
+    dci_recs="$(dc_sites "$dci_root/$dci_p")"
+    dci_k="$(awk -F'\t' '$3 == "H" { n++ } END { print n + 0 }' <<<"$dci_recs")"
+    if [ "$dci_k" -eq 0 ]; then printf 'NOHEAD\t%s\n' "$dci_p"; continue; fi
+    if [ "$dci_k" -ne 1 ]; then printf 'MANY\t%s\t%s\n' "$dci_p" "$dci_k"; continue; fi
+    dci_l=""; dci_rl=""; dci_r=""
+    IFS="$VA_TAB" read -r _ dci_l _ dci_rl dci_r <<<"$(awk -F'\t' '$3 == "H"' <<<"$dci_recs")"
+    if [ "$dci_rl" = 0 ]; then
+      printf 'NOROW\t%s\t%s\n' "$dci_p" "$dci_l"
+    elif [ "$dci_r" = "$dci_row" ]; then
+      printf 'SAME\t%s\t%s\n' "$dci_p" "$dci_l"
+    else
+      printf 'DIFF\t%s\t%s\t%s\t%s\n' "$dci_p" "$dci_l" "$dci_rl" "$dci_r"
+    fi
+  done <<EOF
+$3
+EOF
+  [ "$dci_n" -gt 0 ] || printf 'EMPTY\n'
+}
+
+# ── DC0 — the home, read BEFORE anything rests on it. Each way of not resolving to exactly one
+# row is its own FAIL, and every later arm is withheld: a comparison against a row that was
+# never read would agree with nothing or with everything.
+DC_OK=1
+DC_HOME="$(dc_home "$DC_DOC" 2>/dev/null)"
+DC_NREG="$(awk -F'\t' '$1 == "REGION" { n = $2 } END { print n + 0 }' <<<"$DC_HOME")"
+DC_NHEAD="$(awk -F'\t' '$1 == "HEAD" { n = $2 } END { print n + 0 }' <<<"$DC_HOME")"
+DC_HHEAD="$(awk -F'\t' '$1 == "HEAD" { n = $3 } END { print n + 0 }' <<<"$DC_HOME")"
+DC_HLINE="$(awk -F'\t' '$1 == "ROW" { n = $2 } END { print n + 0 }' <<<"$DC_HOME")"
+DC_HROW="$(awk -F'\t' '$1 == "ROW" { sub(/^[^\t]*\t[^\t]*\t/, ""); print }' <<<"$DC_HOME")"
+if [ ! -r "$DC_DOC" ]; then
+  FAIL "DC0: ${DC_DOC#"$ROOT/"} is not readable — the home of the declared desire-coverage header is absent, so nothing below can be asserted. Not a skip and not a pass"
+  DC_OK=0
+elif [ "$DC_NREG" -ne 1 ]; then
+  FAIL "DC0: ${DC_DOC#"$ROOT/"} carries $DC_NREG unfenced heading(s) whose text is the code span \`$DC_ART\` followed by 'shape', where exactly one must open the home's region — the home is absent or ambiguous, so no row was read and every later arm is withheld"
+  DC_OK=0
+elif [ "$DC_NHEAD" -ne 1 ]; then
+  FAIL "DC0: the home's region in ${DC_DOC#"$ROOT/"} carries $DC_NHEAD heading-shaped line(s) leading with '$DC_SEG', where exactly one must — which line states the header is undecided, so no row was read and every later arm is withheld"
+  DC_OK=0
+elif [ -z "$DC_HROW" ]; then
+  FAIL "DC0: no line beginning with a pipe follows the '$DC_SEG' line at ${DC_DOC#"$ROOT/"} line $DC_HHEAD before the next heading-shaped line or the closer of its fence — the home states a section and no header row, so every later arm is withheld"
+  DC_OK=0
+else
+  PASS "DC0: the declared desire-coverage header resolves at its ONE home — ${DC_DOC#"$ROOT/"} line $DC_HLINE, the first pipe row under the one heading-shaped line leading with '$DC_SEG' (line $DC_HHEAD) in the region the \`$DC_ART\` shape heading opens. It is read on this run and held nowhere in this file: [$DC_HROW]"
+fi
+
+if [ "$DC_OK" -eq 1 ]; then
+  # The instance selection, from the class's own selector: every row va_select resolves to this
+  # artifact, by either of its arms. One repository-relative path per line.
+  DC_SEL="$(va_select "$ROOT" tracked | awk -F'\t' -v a="$DC_ART" 'NF > 2 && $1 != "EXCLUDED" && $1 != "UNMATCHED" && $2 == a { print $3 }')"
+  DC_NSEL="$(awk 'NF { n++ } END { print n + 0 }' <<<"$DC_SEL")"
+
+  # ── DC1 — every OTHER statement of the header. The population is every tracked markdown file
+  # the selection does not name, and the home's own site is left out by path and line.
+  DC_FILES=(); DC_NFILES=0
+  while IFS= read -r dcf; do
+    [ -n "$dcf" ] || continue
+    case "$VA_NL$DC_SEL$VA_NL" in *"$VA_NL$dcf$VA_NL"*) continue ;; esac
+    if [ -r "$ROOT/$dcf" ]; then DC_FILES+=("$ROOT/$dcf"); DC_NFILES=$((DC_NFILES+1)); fi
+  done <<EOF
+$(cd "$ROOT" && git ls-files '*.md' 2>/dev/null)
+EOF
+  DC_ST="$(dc_statements "$DC_HROW" "$DC_DOC" "$DC_HHEAD" ${DC_FILES[@]+"${DC_FILES[@]}"})"
+  DC_ST_END="$(dc_count "$DC_ST" COUNT)"
+  DC_ST_N="$(awk -F'\t' '$1 == "COUNT" { n = $2 } END { print n + 0 }' <<<"$DC_ST")"
+  DC_ST_SAME="$(dc_count "$DC_ST" SAME)"
+  DC_ST_WHERE="$(awk -F'\t' -v r="$ROOT/" '$1 == "SAME" { p = $2; if (index(p, r) == 1) p = substr(p, length(r) + 1); printf "%s%s line %s", (n++ ? ", " : ""), p, $3 }' <<<"$DC_ST")"
+  if [ "$DC_NFILES" -eq 0 ]; then
+    FAIL "DC1: the tracked markdown population outside the instance selection is EMPTY, so no statement of the header could have been found — a scan over nothing is a broken probe, never agreement"
+  elif [ "$DC_ST_END" -ne 1 ]; then
+    FAIL "DC1: the statement scan over $DC_NFILES tracked markdown file(s) did not reach its closing record, so an empty finding list here would not be agreement"
+  elif [ "$DC_ST_N" -eq 0 ]; then
+    FAIL "DC1: no statement of the desire-coverage header other than the home was found across $DC_NFILES tracked markdown file(s). A writer's prompt carries the row it emits, so a zero here is a scan that stopped seeing the shape — or every copy removed whole, which this group declares it cannot tell from that"
+  elif [ "$DC_ST_SAME" -ne "$DC_ST_N" ]; then
+    FAIL "DC1: $((DC_ST_N - DC_ST_SAME)) of $DC_ST_N other statement(s) of the desire-coverage header do not equal the home row [$DC_HROW] at ${DC_DOC#"$ROOT/"} line $DC_HLINE. The home is the authority — change the statement to match it:"
+    awk -F'\t' -v r="$ROOT/" '
+      $1 == "DIFF" || $1 == "NOROW" {
+        p = $2; if (index(p, r) == 1) p = substr(p, length(r) + 1)
+        if ($1 == "NOROW") { printf "      %s line %s -> no pipe row before the next heading-shaped line\n", p, $3; next }
+        row = $0; sub(/^[^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t/, "", row)
+        printf "      %s line %s -> [%s]\n", p, $5, row
+      }' <<<"$DC_ST"
+  else
+    PASS "DC1: all $DC_ST_N other statement(s) of the desire-coverage header — $DC_ST_WHERE — are byte-identical to the home row, over $DC_NFILES tracked markdown file(s) the instance selection does not name. Each was found by SHAPE, fenced lines read, and never by matching the row, so a drifted statement stays in this population and is reported"
+  fi
+
+  # ── DC2 — every tracked instance. An EMPTY selection is a FAIL, never VACUOUS: the class
+  # declares a tracked witness, so nothing selected means the witness left the tree or the
+  # selector stopped reaching it.
+  DC_IN="$(dc_instances "$DC_HROW" "$ROOT" "$DC_SEL")"
+  DC_IN_EMPTY="$(dc_count "$DC_IN" EMPTY)"
+  DC_IN_SAME="$(dc_count "$DC_IN" SAME)"
+  DC_IN_ALL="$(awk 'NF { n++ } END { print n + 0 }' <<<"$DC_IN")"
+  if [ "$DC_NSEL" -eq 0 ] || [ "$DC_IN_EMPTY" -ne 0 ]; then
+    FAIL "DC2: the instance selection is EMPTY — va_select resolved no tracked file to \`$DC_ART\`. That is a failure and never a VACUOUS verdict: the class declares a tracked witness, so an empty selection means the witness left the tree or the selector stopped reaching it, and a header no instance carries is a header nothing grades"
+  elif [ "$DC_IN_SAME" -ne "$DC_NSEL" ] || [ "$DC_IN_ALL" -ne "$DC_NSEL" ]; then
+    FAIL "DC2: $((DC_NSEL - DC_IN_SAME)) of $DC_NSEL tracked instance(s) of \`$DC_ART\` do not carry the declared desire-coverage header [$DC_HROW]. Each must carry exactly one heading leading with '$DC_SEG' and, as the first pipe row under it, the home row byte for byte:"
+    awk -F'\t' -v seg="$DC_SEG" '
+      $1 == "DIFF"   { row = $0; sub(/^[^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t/, "", row); printf "      %s line %s -> [%s]\n", $2, $4, row }
+      $1 == "NOROW"  { printf "      %s line %s -> the heading is followed by no pipe row\n", $2, $3 }
+      $1 == "NOHEAD" { printf "      %s -> no heading leading with %s\n", $2, seg }
+      $1 == "MANY"   { printf "      %s -> %s headings leading with %s, where exactly one must\n", $2, $3, seg }
+      $1 == "UNREAD" { printf "      %s -> not readable\n", $2 }' <<<"$DC_IN"
+  else
+    PASS "DC2: all $DC_NSEL tracked instance(s) of \`$DC_ART\` — $(printf '%s' "$DC_SEL" | tr '\n' ' ') — carry exactly one heading leading with '$DC_SEG', and the first pipe row under it is byte-identical to the home row at ${DC_DOC#"$ROOT/"} line $DC_HLINE. The selection is the class's own, so a tracked instance added later is graded with no edit here"
+  fi
+
+  # ── DC3 — MUST FIRE. The control the gap asks for: a copy of the first selected instance
+  # whose row is replaced by the header this group was written against, graded by DC2's own
+  # function. That header is spelled HERE and nowhere else in this file; it is not the declared
+  # row, so the suite still holds no copy of that.
+  DC3_OLD='| Traveller | Desire | Tier | Covered | By |'
+  DC3_V="${DC_SEL%%"$VA_NL"*}"
+  DC3_REL='dc3-instance-under-the-old-header.md'
+  DC3_RL=0; DC3_MUT=0; DC3_AT=""; DC3_REC=""
+  if [ -n "$DC3_V" ] && [ -r "$ROOT/$DC3_V" ]; then
+    DC3_RL="$(awk -F'\t' '$3 == "H" && $4 > 0 && n == 0 { n = $4 } END { print n + 0 }' <<<"$(dc_sites "$ROOT/$DC3_V")")"
+  fi
+  if [ "$DC3_RL" -gt 0 ]; then
+    awk -v n="$DC3_RL" -v r="$DC3_OLD" 'FNR == n { print r; next } { print }' "$ROOT/$DC3_V" > "$WORK/dc/$DC3_REL"
+    cmp -s "$ROOT/$DC3_V" "$WORK/dc/$DC3_REL" || DC3_MUT=1
+    DC3_AT="$(awk -v n="$DC3_RL" 'FNR == n' "$WORK/dc/$DC3_REL")"
+    DC3_REC="$(dc_instances "$DC_HROW" "$WORK/dc" "$DC3_REL")"
+  fi
+  DC3_NDIFF="$(dc_count "$DC3_REC" DIFF)"
+  DC3_NALL="$(awk 'NF { n++ } END { print n + 0 }' <<<"$DC3_REC")"
+  DC3_ROW="$(awk -F'\t' '$1 == "DIFF" { sub(/^[^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t/, ""); print }' <<<"$DC3_REC")"
+  if [ "$DC3_RL" -eq 0 ]; then
+    FAIL "DC3: CONTROL on DC2 could not run — no selected instance carries a heading leading with '$DC_SEG' and a row under it to replace, so DC2's reading was never shown to fire"
+  elif [ "$DC3_MUT" -ne 1 ] || [ "$DC3_AT" != "$DC3_OLD" ]; then
+    FAIL "DC3: the mutation did not land — the copy of $DC3_V is byte-identical to its original, or its line $DC3_RL does not read [$DC3_OLD]. A control over an unchanged copy grades the real instance twice and proves nothing"
+  elif [ "$DC3_NDIFF" -eq 1 ] && [ "$DC3_NALL" -eq 1 ] && [ "$DC3_ROW" = "$DC3_OLD" ]; then
+    PASS "DC3: MUST FIRE — a copy of $DC3_V with its header row at line $DC3_RL replaced by [$DC3_OLD] is reported by DC2's own function as DIFFERING from the home row, and as nothing else. The mutation is asserted to have landed, so DC2's agreement above is a measurement: an instance carrying that header turns it red"
+  else
+    FAIL "DC3: CONTROL on DC2 did not fire — a copy of $DC3_V carrying [$DC3_OLD] at line $DC3_RL was graded [$(printf '%s' "$DC3_REC" | tr '\t\n' ' ;')] rather than as one differing row. DC2's clean verdict proves nothing until this control fires"
+  fi
+
+  # ── DC4 — MUST FIRE. The empty selection, on DC2's own function.
+  DC4_REC="$(dc_instances "$DC_HROW" "$ROOT" "")"
+  if [ "$DC4_REC" = "EMPTY" ]; then
+    PASS "DC4: MUST FIRE — handed an instance list naming nothing, DC2's own function returns the one EMPTY record and no agreement, so a selection of zero instances fails DC2 rather than passing over nothing"
+  else
+    FAIL "DC4: CONTROL on DC2's empty-selection limb did not fire — an empty instance list returned [$(printf '%s' "$DC4_REC" | tr '\t\n' ' ;')] rather than the one EMPTY record. A selection that reads nothing would be graded as agreement"
+  fi
+
+  # ── DC5 — MUST FIRE. A DRIFTED statement: a whole-line bold lead-in over the home row with
+  # its leading cells exchanged, built from the row read on this run, scanned by DC1's own
+  # function. The exchange is asserted to have changed the string.
+  DC5_ROW="$(awk -F'|' 'BEGIN { OFS = "|" } NF > 3 { t = $2; $2 = $3; $3 = t } { print }' <<<"$DC_HROW")"
+  DC5_FILE="$WORK/dc/dc5-drifted-statement.md"
+  printf '**%s — a statement planted in a copy, never in the tree**\n\n%s\n' "$DC_SEG" "$DC5_ROW" > "$DC5_FILE"
+  DC5_REC="$(dc_statements "$DC_HROW" "" 0 "$DC5_FILE")"
+  DC5_N="$(awk -F'\t' '$1 == "COUNT" { n = $2 } END { print n + 0 }' <<<"$DC5_REC")"
+  DC5_NDIFF="$(awk -F'\t' '$1 == "DIFF" && $4 == "B" { n++ } END { print n + 0 }' <<<"$DC5_REC")"
+  DC5_NSAME="$(dc_count "$DC5_REC" SAME)"
+  if [ "$DC5_ROW" = "$DC_HROW" ]; then
+    FAIL "DC5: the exchange did not change the row — [$DC5_ROW] is the home row itself, so this control has no drifted statement to grade"
+  elif [ "$DC5_N" -eq 1 ] && [ "$DC5_NDIFF" -eq 1 ] && [ "$DC5_NSAME" -eq 0 ]; then
+    PASS "DC5: MUST FIRE — a statement under a whole-line bold lead-in whose row is the home row with its leading cells exchanged, [$DC5_ROW], is FOUND by DC1's own function and reported as differing. The exchange is asserted to have changed the string, so DC1's agreement above is a measurement and a drifted statement does not leave the population"
+  else
+    FAIL "DC5: CONTROL on DC1 did not fire — the planted statement was graded [$(printf '%s' "$DC5_REC" | tr '\t\n' ' ;')] rather than found once and reported as differing. DC1's clean verdict proves nothing until this control fires"
+  fi
+
+  # ── DC6 — MUST NOT FIRE, on each function. An instance carrying the home row over a separator
+  # row dashed its own way and a verdict cell in bold must be graded matching by DC2's
+  # function; and a file of near-misses — a table row whose first cell is the bold token, and
+  # a prose line that opens with the bold token and goes on — must yield no statement site from
+  # DC1's. Each fixture is built from what this run read.
+  DC6_SEP="$(awk -F'|' '{ s = "|"; for (i = 2; i < NF; i++) s = s "---|"; print s }' <<<"$DC_HROW")"
+  DC6_DATA="$(awk -F'|' '{ s = "|"; for (i = 2; i < NF; i++) s = s ((i == NF - 1) ? " **covered** |" : " a fixture cell |"); print s }' <<<"$DC_HROW")"
+  DC6A_REL='dc6-matching-instance.md'
+  printf '## %s — a matching instance built in a copy, never in the tree\n\n%s\n%s\n%s\n' "$DC_SEG" "$DC_HROW" "$DC6_SEP" "$DC6_DATA" > "$WORK/dc/$DC6A_REL"
+  DC6A_REC="$(dc_instances "$DC_HROW" "$WORK/dc" "$DC6A_REL")"
+  DC6A_SAME="$(dc_count "$DC6A_REC" SAME)"
+  DC6A_ALL="$(awk 'NF { n++ } END { print n + 0 }' <<<"$DC6A_REC")"
+  DC6B_FILE="$WORK/dc/dc6-near-misses.md"
+  printf '| **%s** | a table row whose first cell is the bold token | a fixture cell |\n\n**%s** opens this prose line, and the line goes on past it.\n' "$DC_SEG" "$DC_SEG" > "$DC6B_FILE"
+  DC6B_REC="$(dc_statements "$DC_HROW" "" 0 "$DC6B_FILE")"
+  DC6B_END="$(dc_count "$DC6B_REC" COUNT)"
+  DC6B_N="$(awk -F'\t' '$1 == "COUNT" { n = $2 } END { print n + 0 }' <<<"$DC6B_REC")"
+  DC6B_ALL="$(awk 'NF { n++ } END { print n + 0 }' <<<"$DC6B_REC")"
+  DC6B_TOK="$(awk -v t="$DC_SEG" 'index($0, t) > 0 { n++ } END { print n + 0 }' "$DC6B_FILE")"
+  if [ "$DC6A_SAME" -eq 1 ] && [ "$DC6A_ALL" -eq 1 ] && [ "$DC6B_END" -eq 1 ] && [ "$DC6B_N" -eq 0 ] && [ "$DC6B_ALL" -eq 1 ] && [ "$DC6B_TOK" -gt 0 ]; then
+    PASS "DC6: MUST NOT FIRE — an instance carrying the home row over a separator row dashed its own way [$DC6_SEP] and a verdict cell in bold is graded MATCHING by DC2's function, and a file whose $DC6B_TOK line(s) each carry '$DC_SEG' as a near-miss — a table row's bold first cell, a prose line opening with the bold token — yields 0 statement sites from DC1's, which reached its closing record. Neither function matches everything: DC3 and DC5 above are what each reports when the row itself differs"
+  else
+    FAIL "DC6: specificity failed — the matching instance was graded [$(printf '%s' "$DC6A_REC" | tr '\t\n' ' ;')] where exactly one SAME record was required, or the near-miss file's $DC6B_TOK token-bearing line(s) were graded [$(printf '%s' "$DC6B_REC" | tr '\t\n' ' ;')] where a closing record counting no site was required. A reading that flags a differently dashed table, or takes a table row or a prose line for a statement, turns this group red for being right"
+  fi
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group RP — the returning-party fixture set, and the read verb drawn against it.
+#
+# ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
+# `/trip-record past-coverage` reads what an archived trip's plan last recorded as covered
+# for a person, reached through that person's reference. Three example roots are the state it
+# is drawn against: a trip still being planned, and the archived trips its travellers came
+# from. No suite here can run a verb, so what this group grades is the TREE — that the set is
+# in the states its own README declares, that a reader following the section's steps takes
+# from those files the tallies the README declares, and that the section's enumerations agree
+# with its own prose and with the decision record it builds.
+#
+# ── THE DECLARATION LIVES IN THE FIXTURE, NOT IN THIS FILE ───────────────────────
+# Roots, lifecycles, bearers, tallies, the bearer with no row and the token states are read
+# from the `returning-party-fixture` fence in the set's README — group AF's mechanism. Each
+# arm reads the rows of the KINDS IT NAMES and passes over every other row, so a later card
+# adds row kinds and arms without editing these; RP0 prints how many rows it passed over, so
+# a mistyped kind is visible rather than silent.
+#
+# ── THE READER'S VOCABULARY IS READ FROM THE SECTION, NEVER HELD HERE ────────────
+# The header labels and the cell values the reader accepts are the code spans of two list
+# items of the section — the item that names the cells and the item that says how a row
+# counts — taken by ANCHOR WORDS, because each of those items names other code spans too. A
+# label dropped from the section therefore reaches the reader with no edit here, and turns
+# RP4 red on the tracked files.
+#
+# ── WHAT IS HELD RATHER THAN DERIVED, AND WHY ────────────────────────────────────
+# Addresses: the fence's name, the verb's token, the sub-heading the steps sit under, the
+# anchor words, the header cells that name the section's tables, and the headings that open
+# the two regions read elsewhere. The three verdict tokens RP8 looks for are that arm's
+# subjects. The key a traveller cell and a file stem are compared under is the two-step key
+# reference/data-model.md § *Traveler identity* quotes from the code that runs it; it is a
+# function, embedded in rp_read, and no set is derived from it.
+#
+# ── WHAT IS NOT ESTABLISHED, DECLARED RATHER THAN LEFT TO BE FOUND ───────────────
+# That the VERB reads as the reader does. The reader is a second implementation of the
+# section's steps, written for this arm; a run of the verb is graded elsewhere, by reading
+# what it prints. A table cell holding an escaped pipe is not read as one cell, and no tracked
+# file carries one.
+#
+# ── THE ARMS ─────────────────────────────────────────────────────────────────────
+#   RP0  the fence yields a row of every kind the arms read, and a trip of each lifecycle.
+#        Every later arm is withheld when it does not
+#   RP1  each declared root's trip context carries the lifecycle marker its row declares
+#   RP2  the tracked traveller files under the declared roots and the bearer rows are one set,
+#        and each file carries the reference its row declares, or none
+#   RP3  every declared reference names a record tracked under the declared store, and a live one
+#   RP4  the reader's tallies over each declared root and stem equal the declared ones
+#   RP5  the bearer declared to have no row has none, read against a bearer of that file that does
+#   RP6  the roster's first column carries an erasure token where declared, and none where not
+#   RP7  MUST FIRE — the reader's controls: a second spelling and a rotation agree with the
+#        subject, a missing label is undetermined, and a reader by position disagrees
+#   RP8  MUST FIRE — the section's tables against its prose, and its outcome set against the record
+#   RP9  MUST FIRE — the clause the relation's row quotes still stands at its home
+# RP4 and RP5 are withheld when the vocabulary cannot be read, and RP7 says so. The arms are
+# not registered with md_flips: what each grades is a tracked document, which that primitive
+# cannot remove, and RP7 to RP9 carry their own controls. No count is spelled anywhere in this
+# file for this group: every set is read.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "RP — the returning-party fixture set and the read verb over it: the set's declared states against the files, a reference reader by header label, and the section's enumerations against its prose and the record"
+
+RP_SET="examples/returning-party-demo"
+RP_DOC="$ROOT/$RP_SET/README.md"
+RP_CMD="$ROOT/skills/trip-record/SKILL.md"
+RP_VERB='past-coverage'
+# The sub-heading the reader's steps sit under, and the list items' own ordinals. Addresses.
+RP_READ_HEAD="Reading a trip's desire-coverage table"
+RP_STEP_CELLS='3. '
+RP_STEP_ROWS='5. '
+# The header cells that name the section's tables. Addresses.
+RP_T_OUT='Output'
+RP_T_PER='Per reached trip'
+RP_T_REL='relation'
+# The record the section builds, and the heading that opens the region its terminal set sits in.
+RP_ADR="$ROOT/reference/adr/ADR-027-post-trip-preference-memory.md"
+RP_ADR_HEAD='1. Outcome retention'
+# The home of the clause the relation's row quotes.
+RP_QDOC="$ROOT/reference/data-model.md"
+RP_QHEAD='Three metric types'
+mkdir -p "$WORK/rp"
+
+# rp_rows <kind> — the declared rows of one kind, fields TAB-joined. Read from the fence and
+# nowhere else. A row of any other kind is passed over.
+rp_rows() {
+  awk -v want="$1" '
+    $0 == "```returning-party-fixture" { infence = 1; next }
+    infence && $0 == "```" { infence = 0; next }
+    infence {
+      line = $0
+      sub(/^[ \t]+/, "", line); sub(/[ \t\r]+$/, "", line)
+      if (line == "" || substr(line, 1, 1) == "#") next
+      n = split(line, f, /[ \t]+/)
+      if (f[1] != want) next
+      out = ""
+      for (i = 2; i <= n; i++) out = out (i > 2 ? "\t" : "") f[i]
+      print out
+    }
+  ' "$RP_DOC"
+}
+
+# rp_unread <kinds> — how many fence rows open with a kind that is not in the space-delimited
+# list. Reported by RP0 and failed by nothing.
+rp_unread() {
+  awk -v kinds=" $1 " '
+    $0 == "```returning-party-fixture" { infence = 1; next }
+    infence && $0 == "```" { infence = 0; next }
+    infence {
+      line = $0
+      sub(/^[ \t]+/, "", line); sub(/[ \t\r]+$/, "", line)
+      if (line == "" || substr(line, 1, 1) == "#") next
+      split(line, f, /[ \t]+/)
+      if (index(kinds, " " f[1] " ") == 0) n++
+    }
+    END { print n + 0 }
+  ' "$RP_DOC"
+}
+
+# rp_n <lines> — how many non-blank lines. Always a number.
+rp_n() { awk 'NF { n++ } END { print n + 0 }' <<<"$1"; }
+
+# rp_tabs <lines> — the non-blank lines joined by TAB, the form a list travels to awk in.
+rp_tabs() { awk 'NF { printf "%s%s", (n++ ? "\t" : ""), $0 }' <<<"$1"; }
+
+# rp_minus <a> <b> — the non-blank lines of <a> that are not lines of <b>, deduped, in <a>'s
+# order. Membership by exact line, never by comm, which needs both sides sorted alike.
+rp_minus() {
+  awk 'FILENAME == ARGV[1] { if (NF) b[$0] = 1; next } NF && !($0 in b) && !s[$0]++ { print }' \
+    <(printf '%s\n' "$2") <(printf '%s\n' "$1")
+}
+
+# rp_fm <file> <key> — the value of one frontmatter key, one line per occurrence, and nothing
+# when the key is absent or the file opens with no frontmatter block.
+rp_fm() {
+  awk -v k="$2" '
+    NR == 1 { if ($0 != "---") exit; next }
+    $0 == "---" { exit }
+    {
+      p = index($0, ":"); if (p < 2) next
+      key = substr($0, 1, p - 1); sub(/^[ \t]+/, "", key); sub(/[ \t]+$/, "", key)
+      if (key != k) next
+      v = substr($0, p + 1); sub(/^[ \t]+/, "", v); sub(/[ \t\r]+$/, "", v)
+      print v
+    }
+  ' "$1"
+}
+
+# rp_section <file> — the verb's section: from its `## <verb>` heading to the next `## ` heading.
+rp_section() {
+  awk -v v="$RP_VERB" '
+    index($0, "## " v " ") == 1 || $0 == "## " v { on = 1; print; next }
+    on && /^## / { on = 0 }
+    on { print }
+  ' "$1"
+}
+
+# rp_under <text> <heading> — the lines under the one heading of <text> whose text is exactly
+# <heading>, up to the next heading-shaped line.
+rp_under() {
+  awk -v h="$2" '
+    /^#+[ \t]/ { t = $0; sub(/^#+[ \t]+/, "", t); sub(/[ \t\r]+$/, "", t); on = (t == h); next }
+    on { print }
+  ' <<<"$1"
+}
+
+# rp_spans <line> <from> <upto> <stops> — the code spans that follow the words <from> on the
+# line, one per line of output. Where <upto> is given the read ends at those words, and finds
+# nothing when they do not follow; otherwise it ends at the first character of <stops> that
+# sits outside a code span. ANCHORED, because a line this is used on names other spans too.
+rp_spans() {
+  awk -v from="$2" -v upto="$3" -v stops="$4" '
+    {
+      p = index($0, from); if (p == 0) next
+      r = substr($0, p + length(from))
+      if (upto != "") { q = index(r, upto); if (q == 0) next; r = substr(r, 1, q - 1) }
+      n = length(r); i = 1
+      while (i <= n) {
+        c = substr(r, i, 1)
+        if (c == "`") {
+          q = index(substr(r, i + 1), "`")
+          if (q == 0) break
+          print substr(r, i + 1, q - 1)
+          i = i + q + 1
+          continue
+        }
+        if (stops != "" && index(stops, c) > 0) break
+        i++
+      }
+    }
+  ' <<<"$1"
+}
+
+# rp_read <coverage-file> <file-stem> <mode> — THE REFERENCE READER: the section's steps over
+# one file and one key. RP4, RP5 and RP7 all call it. The section is found by group DC's own
+# locator, dc_sites, so a fenced heading counts here exactly as it does there.
+#   <mode>  label          the three cells are found by header label, each whole and trimmed of
+#                          whitespace and emphasis, against the labels read from the section
+#           locate         as label, and it prints where the cells were found and stops
+#           pos:<t>,<i>,<v>  the cells are taken at those ordinals and no label is read — the
+#                          reader RP7 shows to be wrong
+#   stdout, the first line the status:
+#     NOFILE | NOSECTION | MANY <k> | NOTABLE     no file; no such heading; more than one; no pipe row under it
+#     NOLABEL <cell> | DUPLABEL <cell>             a needed label is carried by no header cell, or by more than one
+#     BADCELL <cell> <line>                        a row under the key holds a tier or a verdict outside the values read
+#     NOROW                                        the table was read, and no row carries the key
+#     TALLY                                        then one line per tier that has a row: <tier> TAB <count per verdict, in the order read>
+#     AT <t>,<i>,<v>                               locate mode only
+rp_read() {
+  local rpr_f="$1" rpr_stem="$2" rpr_mode="${3:-label}" rpr_sites rpr_k rpr_rl
+  if [ ! -r "$rpr_f" ]; then printf 'NOFILE\n'; return 0; fi
+  rpr_sites="$(dc_sites "$rpr_f")"
+  rpr_k="$(awk -F'\t' '$3 == "H" { n++ } END { print n + 0 }' <<<"$rpr_sites")"
+  if [ "$rpr_k" -eq 0 ]; then printf 'NOSECTION\n'; return 0; fi
+  if [ "$rpr_k" -ne 1 ]; then printf 'MANY\t%s\n' "$rpr_k"; return 0; fi
+  rpr_rl="$(awk -F'\t' '$3 == "H" { print $4 }' <<<"$rpr_sites")"
+  if [ "$rpr_rl" = 0 ]; then printf 'NOTABLE\n'; return 0; fi
+  awk -v start="$rpr_rl" -v stem="$rpr_stem" -v mode="$rpr_mode" \
+      -v ltrav="$RP_L_TRAV" -v ltier="$RP_L_TIER" -v lverd="$RP_L_VERD" \
+      -v vtier="$RP_V_TIER" -v vverd="$RP_V_VERD" '
+    function clean(s) { gsub(/\[[^]]*\]/, " ", s); gsub(/[*_`]/, " ", s); gsub(/[ \t]+/, " ", s); sub(/^ +/, "", s); sub(/ +$/, "", s); return s }
+    function key(s) { s = tolower(clean(s)); gsub(/[^a-z0-9]/, "", s); return s }
+    function bare(s) { gsub(/[*_]/, "", s); sub(/^[ \t]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+    function among(x, A, n,   i) { for (i = 1; i <= n; i++) if (A[i] == x) return i; return 0 }
+    BEGIN {
+      nlt = split(ltrav, LT, "\t"); nli = split(ltier, LI, "\t"); nlv = split(lverd, LV, "\t")
+      nvt = split(vtier, VT, "\t"); nvv = split(vverd, VV, "\t")
+      for (i = 1; i <= nvt; i++) VT[i] = tolower(VT[i])
+      for (i = 1; i <= nvv; i++) VV[i] = tolower(VV[i])
+      st = ""; bad = ""; rows = 0; ended = 0
+    }
+    FNR < start { next }
+    FNR == start {
+      nh = split($0, H, "|")
+      if (substr(mode, 1, 4) == "pos:") {
+        split(substr(mode, 5), P, ",")
+        ct = P[1] + 1; ci = P[2] + 1; cv = P[3] + 1
+      } else {
+        kt = 0; ki = 0; kv = 0
+        for (i = 2; i < nh; i++) {
+          c = bare(H[i])
+          if (among(c, LT, nlt)) { kt++; ct = i }
+          if (among(c, LI, nli)) { ki++; ci = i }
+          if (among(c, LV, nlv)) { kv++; cv = i }
+        }
+        if (kt != 1)      st = (kt == 0 ? "NOLABEL" : "DUPLABEL") "\ttraveller"
+        else if (ki != 1) st = (ki == 0 ? "NOLABEL" : "DUPLABEL") "\ttier"
+        else if (kv != 1) st = (kv == 0 ? "NOLABEL" : "DUPLABEL") "\tverdict"
+        else if (mode == "locate") st = "AT\t" (ct - 1) "," (ci - 1) "," (cv - 1)
+      }
+      next
+    }
+    st != "" || ended { next }
+    substr($0, 1, 1) != "|" { ended = 1; next }
+    {
+      n = split($0, C, "|")
+      sep = 1
+      for (i = 2; i < n; i++) if (C[i] !~ /^[ \t]*:?-+:?[ \t]*$/) { sep = 0; break }
+      if (sep) next
+      if (key(C[ct]) != key(stem)) next
+      rows++
+      ti = among(tolower(bare(C[ci])), VT, nvt); vi = among(tolower(bare(C[cv])), VV, nvv)
+      if (ti == 0)      { if (bad == "") { bad = "tier"; badline = FNR } }
+      else if (vi == 0) { if (bad == "") { bad = "verdict"; badline = FNR } }
+      else              { N[ti, vi]++; seen[ti] = 1 }
+    }
+    END {
+      if (st != "")       print st
+      else if (bad != "") printf "BADCELL\t%s\t%d\n", bad, badline
+      else if (rows == 0) print "NOROW"
+      else {
+        print "TALLY"
+        for (i = 1; i <= nvt; i++) if (seen[i]) {
+          line = VT[i]
+          for (j = 1; j <= nvv; j++) line = line "\t" (N[i, j] + 0)
+          print line
+        }
+      }
+    }
+  ' "$rpr_f"
+}
+
+# rp_status <reader-output> — its first line, TABs turned to spaces so it prints in a message.
+rp_status() { awk 'NR == 1 { gsub(/\t/, " "); print }' <<<"$1"; }
+
+# rp_roster <trip-context> — "<rows>\t<tokens>": the non-separator rows of the `## Group`
+# roster table, its header row among them, and how many of their first-column cells are an
+# erasure token — `per-` and four lowercase hexadecimal digits and nothing else. The digits are
+# spelled out rather than written as an interval, for group GM's reason.
+rp_roster() {
+  awk '
+    /^## Group/ { ingrp = 1; next }
+    ingrp && /^## / { ingrp = 0 }
+    ingrp && /^\|/ {
+      split($0, cell, "|")
+      v = cell[2]; gsub(/^[ \t]+|[ \t\r]+$/, "", v)
+      if (v == "" || v ~ /^:?-+:?$/) next
+      r++
+      if (v ~ /^per-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]$/) t++
+    }
+    END { printf "%d\t%d\n", r + 0, t + 0 }
+  ' "$1"
+}
+
+# rp_members <text> <header-cell> — the first-column members of the FIRST table of <text> whose
+# header row opens with <header-cell>: code-span and emphasis markers stripped, whitespace
+# trimmed, the separator row left out. One per line. A table is a run of lines beginning with a
+# pipe, and its header is the first of them.
+rp_members() {
+  awk -F'|' -v h="$2" '
+    function bare(s) { gsub(/[`*]/, "", s); sub(/^[ \t]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+    substr($0, 1, 1) != "|" { on = 0; next }
+    on == 0 { on = (taken == 0 && bare($2) == h) ? 1 : -1; if (on == 1) taken = 1; next }
+    on == 1 { t = bare($2); if (t == "" || t ~ /^[-: ]+$/) next; print t }
+  ' <<<"$1"
+}
+
+# rp_tables <text> <header-cell> — how many tables of <text> open with that header cell.
+rp_tables() {
+  awk -F'|' -v h="$2" '
+    function bare(s) { gsub(/[`*]/, "", s); sub(/^[ \t]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+    substr($0, 1, 1) != "|" { on = 0; next }
+    on == 0 { on = 1; if (bare($2) == h) n++ }
+    END { print n + 0 }
+  ' <<<"$1"
+}
+
+# rp_rawrows <text> <header-cell> — the data rows of that same table, whole and as written.
+rp_rawrows() {
+  awk -F'|' -v h="$2" '
+    function bare(s) { gsub(/[`*]/, "", s); sub(/^[ \t]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+    substr($0, 1, 1) != "|" { on = 0; next }
+    on == 0 { on = (taken == 0 && bare($2) == h) ? 1 : -1; if (on == 1) taken = 1; next }
+    on == 1 { t = bare($2); if (t == "" || t ~ /^[-: ]+$/) next; print }
+  ' <<<"$1"
+}
+
+# rp_less_table <text> <header-cell> — <text> without the rows of the tables opening with that cell.
+rp_less_table() {
+  awk -F'|' -v h="$2" '
+    function bare(s) { gsub(/[`*]/, "", s); sub(/^[ \t]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+    substr($0, 1, 1) != "|" { on = 0; print; next }
+    on == 0 { on = (bare($2) == h) ? 1 : -1 }
+    on == -1 { print }
+  ' <<<"$1"
+}
+
+# rp_prose_hits <text> <string> — on how many lines that are NOT table rows the string occurs,
+# code-span and emphasis markers stripped from the line first.
+rp_prose_hits() {
+  awk -v m="$2" 'substr($0, 1, 1) != "|" { s = $0; gsub(/[`*]/, "", s); if (index(s, m) > 0) n++ } END { print n + 0 }' <<<"$1"
+}
+
+# rp_orphans <text> <header-cell> — the members of that table that occur on no line outside a
+# table. Limb (i) of RP8, as a function, so the must-fire copy is graded by the same reading.
+rp_orphans() {
+  local rpo_m
+  while IFS= read -r rpo_m; do
+    [ -n "$rpo_m" ] || continue
+    [ "$(rp_prose_hits "$1" "$rpo_m")" -gt 0 ] || printf '%s\n' "$rpo_m"
+  done <<<"$(rp_members "$1" "$2")"
+}
+
+# rp_region <file> <heading-prefix> — the lines of the region opened by the first unfenced
+# heading whose text BEGINS <heading-prefix>, closed by the next unfenced heading of that level
+# or higher. Fence state comes from the shared helper.
+rp_region() {
+  awk -v p="$2" "$ST_CF_FENCE_FN"'
+    {
+      f = cf_fence_step($0)
+      if (f == "" && $0 ~ /^#+[ \t]/) {
+        lvl = match($0, /[^#]/) - 1
+        t = $0; sub(/^#+[ \t]+/, "", t)
+        if (on && lvl <= olvl) { on = 0; done = 1 }
+        if (!on && !done && index(t, p) == 1) { on = 1; olvl = lvl; next }
+      }
+      if (on) print
+    }
+  ' "$1"
+}
+
+# rp_occurs <text> <string> — how many times the fixed string occurs, read a line at a time, so
+# an occurrence wrapped across two lines is not one.
+rp_occurs() {
+  awk -v n="$2" '{ s = $0; while ((p = index(s, n)) > 0) { c++; s = substr(s, p + length(n)) } } END { print c + 0 }' <<<"$1"
+}
+
+# rp_relabel <file> <line> <from-list> <to-list> — the file with, on that line, each cell that is
+# whole a <from> label replaced by the <to> label of the same ordinal. Both lists are TAB-joined.
+rp_relabel() {
+  awk -v n="$2" -v from="$3" -v to="$4" '
+    BEGIN { k = split(from, F, "\t"); split(to, T, "\t") }
+    FNR == n {
+      m = split($0, c, "|"); out = ""
+      for (i = 1; i <= m; i++) {
+        v = c[i]; b = v; gsub(/^[ \t]+|[ \t\r]+$/, "", b)
+        for (j = 1; j <= k; j++) if (b != "" && b == F[j]) { v = " " T[j] " "; break }
+        out = out (i > 1 ? "|" : "") v
+      }
+      print out; next
+    }
+    { print }
+  ' "$1"
+}
+# rp_cells_in <pipe-row> <label-list> — how many of the row's cells are, whole, a label of the list.
+rp_cells_in() {
+  awk -F'|' -v l="$2" 'BEGIN { k = split(l, L, "\t") } { for (i = 2; i < NF; i++) { b = $i; gsub(/^[ \t]+|[ \t\r]+$/, "", b); for (j = 1; j <= k; j++) if (b != "" && b == L[j]) n++ } } END { print n + 0 }' <<<"$1"
+}
+
+# ── RP0 — the declaration, read BEFORE anything rests on it.
+RP_KINDS='store trip bearer tally no-record token'
+RP_OK=1
+RP_STORE=""; RP_TRIPS=""; RP_BEAR=""; RP_TALLY=""; RP_NOREC=""; RP_TOKEN=""
+if [ ! -r "$RP_DOC" ]; then
+  FAIL "RP0: $RP_SET/README.md is not readable, so the declaration could not be read. Not a skip and not a pass, and every later arm of this group is withheld"
+  RP_OK=0
+else
+  RP_STORE="$(rp_rows store)"
+  RP_TRIPS="$(rp_rows trip)"
+  RP_BEAR="$(rp_rows bearer)"
+  RP_TALLY="$(rp_rows tally)"
+  RP_NOREC="$(rp_rows no-record)"
+  RP_TOKEN="$(rp_rows token)"
+  RP_NSTORE="$(rp_n "$RP_STORE")"
+  RP_NTRIP="$(rp_n "$RP_TRIPS")"
+  RP_NBEAR="$(rp_n "$RP_BEAR")"
+  RP_NTALLY="$(rp_n "$RP_TALLY")"
+  RP_NNOREC="$(rp_n "$RP_NOREC")"
+  RP_NTOKEN="$(rp_n "$RP_TOKEN")"
+  RP_NARCH="$(awk -F'\t' '$2 == "ARCHIVED" { n++ } END { print n + 0 }' <<<"$RP_TRIPS")"
+  RP_NACT="$(awk -F'\t' '$2 == "ACTIVE" { n++ } END { print n + 0 }' <<<"$RP_TRIPS")"
+  RP_NUNREAD="$(rp_unread "$RP_KINDS")"
+  if [ "$RP_NSTORE" -gt 0 ] && [ "$RP_NTRIP" -gt 0 ] && [ "$RP_NBEAR" -gt 0 ] && [ "$RP_NTALLY" -gt 0 ] \
+     && [ "$RP_NNOREC" -gt 0 ] && [ "$RP_NTOKEN" -gt 0 ] && [ "$RP_NARCH" -gt 0 ] && [ "$RP_NACT" -gt 0 ]; then
+    PASS "RP0: the \`returning-party-fixture\` fence in $RP_SET/README.md yields a row of every kind this group reads — store $RP_NSTORE, trip $RP_NTRIP ($RP_NACT ACTIVE, $RP_NARCH ARCHIVED), bearer $RP_NBEAR, tally $RP_NTALLY, no-record $RP_NNOREC, token $RP_NTOKEN — and this suite holds no copy of any of them. Rows of any other kind: $RP_NUNREAD, passed over by RP0 to RP6 and counted here so a mistyped kind is visible; a kind none of those arms names is never a failure"
+  else
+    FAIL "RP0: the \`returning-party-fixture\` fence in $RP_SET/README.md yielded store=$RP_NSTORE trip=$RP_NTRIP (ACTIVE=$RP_NACT ARCHIVED=$RP_NARCH) bearer=$RP_NBEAR tally=$RP_NTALLY no-record=$RP_NNOREC token=$RP_NTOKEN, with $RP_NUNREAD row(s) of some other kind. A kind at zero means the arm that reads it would grade nothing, so every later arm of this group is withheld — this fails rather than passing quietly"
+    RP_OK=0
+  fi
+fi
+
+if [ "$RP_OK" -eq 1 ]; then
+  # The verb's section, and from it the reader's vocabulary — read here, before RP4, because
+  # RP4 and RP5 read through it. RP7 is where its failure is reported.
+  RP_SECT="$(rp_section "$RP_CMD" 2>/dev/null)"
+  RP_NSECT="$(rp_n "$RP_SECT")"
+  RP_STEPS="$(rp_under "$RP_SECT" "$RP_READ_HEAD")"
+  RP_STEP3="$(awk -v o="$RP_STEP_CELLS" 'index($0, o) == 1' <<<"$RP_STEPS")"
+  RP_STEP5="$(awk -v o="$RP_STEP_ROWS" 'index($0, o) == 1' <<<"$RP_STEPS")"
+  RP_L_TRAV="$(rp_tabs "$(rp_spans "$RP_STEP3" 'the traveller cell is' '' ';.')")"
+  RP_L_TIER="$(rp_tabs "$(rp_spans "$RP_STEP3" 'the tier cell is' '' ';.')")"
+  RP_L_VERD="$(rp_tabs "$(rp_spans "$RP_STEP3" 'the verdict cell is' '' ';.')")"
+  RP_V_TIER="$(rp_tabs "$(rp_spans "$RP_STEP5" 'its tier' 'its verdict' '')")"
+  RP_V_VERD="$(rp_tabs "$(rp_spans "$RP_STEP5" 'its verdict' '' '.')")"
+  RP_VOC_OK=0
+  if [ -n "$RP_L_TRAV" ] && [ -n "$RP_L_TIER" ] && [ -n "$RP_L_VERD" ] && [ -n "$RP_V_TIER" ] && [ -n "$RP_V_VERD" ]; then RP_VOC_OK=1; fi
+  RP_VOC_SHOW="traveller { $(printf '%s' "$RP_L_TRAV" | tr '\t' '|') } tier { $(printf '%s' "$RP_L_TIER" | tr '\t' '|') } verdict { $(printf '%s' "$RP_L_VERD" | tr '\t' '|') }; tier values { $(printf '%s' "$RP_V_TIER" | tr '\t' '|') } verdict values { $(printf '%s' "$RP_V_VERD" | tr '\t' '|') }"
+
+  # ── RP1 — the lifecycle marker, presence and value, per declared root. The two questions
+  # AF1 and AF2 ask of one root, asked of each of these.
+  RP1_N=0; RP1_BAD=""
+  while IFS="$VA_TAB" read -r rp_root rp_life; do
+    [ -n "$rp_root" ] || continue
+    RP1_N=$((RP1_N+1))
+    rp_ctx="$ROOT/$rp_root/trip-context.md"
+    if [ ! -r "$rp_ctx" ]; then RP1_BAD="$RP1_BAD $rp_root(trip-context.md is not readable)"; continue; fi
+    rp_ml="$(awk '/^\*\*Lifecycle:\*\*/ { c++ } END { print c + 0 }' "$rp_ctx")"
+    rp_mv="$(awk '/^\*\*Lifecycle:\*\*/ { v = $0; sub(/^\*\*Lifecycle:\*\*[ \t]*/, "", v); sub(/[ \t\r]+$/, "", v); print v }' "$rp_ctx" | tr '\n' ' ')"
+    rp_mv="${rp_mv% }"
+    if [ "$rp_life" = "ARCHIVED" ]; then
+      if [ "$rp_ml" -ne 1 ] || [ "$rp_mv" != "ARCHIVED" ]; then RP1_BAD="$RP1_BAD $rp_root(declared ARCHIVED; $rp_ml marker line(s), value '${rp_mv:-<none>}')"; fi
+    elif [ "$rp_life" = "ACTIVE" ]; then
+      if [ "$rp_ml" -ne 0 ]; then RP1_BAD="$RP1_BAD $rp_root(declared ACTIVE; $rp_ml marker line(s), value '${rp_mv:-<none>}')"; fi
+    else
+      RP1_BAD="$RP1_BAD $rp_root(the declared lifecycle '$rp_life' is neither ACTIVE nor ARCHIVED)"
+    fi
+  done <<<"$RP_TRIPS"
+  if [ "$RP1_N" -gt 0 ] && [ -z "$RP1_BAD" ]; then
+    PASS "RP1: all $RP1_N declared root(s) carry the lifecycle marker their \`trip\` row declares — a root declared ARCHIVED has exactly one \`**Lifecycle:**\` line and it reads ARCHIVED, and a root declared ACTIVE has none, which is the state the resolution ladder reads as active. Presence and value are both asked: $RP_NARCH ARCHIVED and $RP_NACT ACTIVE"
+  else
+    FAIL "RP1: of $RP1_N declared root(s), the lifecycle marker disagrees with the \`trip\` row for:$RP1_BAD — the view reaches a trip only where its marker reads ARCHIVED and leaves out the one being planned, so a root in the wrong state is a fixture that exercises a different outcome from the one it declares"
+  fi
+
+  # ── RP2 — the bearers. The tracked traveller files under the declared roots and the `bearer`
+  # rows are ONE set, both directions, and each file carries the reference its row declares.
+  RP2_FILES=""
+  while IFS="$VA_TAB" read -r rp_root _; do
+    [ -n "$rp_root" ] || continue
+    while IFS= read -r rp_p; do
+      [ -n "$rp_p" ] || continue
+      rp_stem="${rp_p##*/}"
+      RP2_FILES="$RP2_FILES$rp_root$VA_TAB${rp_stem%.md}$VA_NL"
+    done <<<"$(cd "$ROOT" && git ls-files -- "$rp_root/travelers/*.md" 2>/dev/null)"
+  done <<<"$RP_TRIPS"
+  RP2_ROWS="$(awk -F'\t' 'NF >= 3 { print $1 "\t" $2 }' <<<"$RP_BEAR")"
+  RP2_NFILES="$(rp_n "$RP2_FILES")"
+  RP2_NOROW="$(rp_minus "$RP2_FILES" "$RP2_ROWS")"
+  RP2_NOFILE="$(rp_minus "$RP2_ROWS" "$RP2_FILES")"
+  RP2_LINKED=0; RP2_BARE=0; RP2_DIFF=""
+  while IFS="$VA_TAB" read -r rp_root rp_stem rp_id; do
+    [ -n "$rp_root" ] || continue
+    rp_tf="$ROOT/$rp_root/travelers/$rp_stem.md"
+    [ -r "$rp_tf" ] || continue
+    rp_got="$(rp_fm "$rp_tf" person | tr '\n' ' ')"
+    rp_got="${rp_got% }"
+    if [ "$rp_id" = "none" ]; then
+      RP2_BARE=$((RP2_BARE+1))
+      [ -z "$rp_got" ] || RP2_DIFF="$RP2_DIFF $rp_root/travelers/$rp_stem.md(declared none; carries person: $rp_got)"
+    else
+      RP2_LINKED=$((RP2_LINKED+1))
+      [ "$rp_got" = "$rp_id" ] || RP2_DIFF="$RP2_DIFF $rp_root/travelers/$rp_stem.md(declared $rp_id; carries '${rp_got:-<no person: key>}')"
+    fi
+  done <<<"$RP_BEAR"
+  if [ "$RP2_NFILES" -gt 0 ] && [ -z "$RP2_NOROW" ] && [ -z "$RP2_NOFILE" ] && [ -z "$RP2_DIFF" ] && [ "$RP2_LINKED" -gt 0 ] && [ "$RP2_BARE" -gt 0 ]; then
+    PASS "RP2: the $RP2_NFILES tracked traveller file(s) under the declared roots and the $RP_NBEAR \`bearer\` row(s) are the same set, compared in both directions, and each file's frontmatter \`person:\` is the id its row declares — $RP2_LINKED linked — or is absent where the row says none — $RP2_BARE unlinked. Both kinds are present, so the set holds a traveller the view can resolve and one it answers with no reference"
+  else
+    FAIL "RP2: the tracked traveller files under the declared roots and the \`bearer\` rows disagree — $RP2_NFILES file(s), $RP_NBEAR row(s), $RP2_LINKED linked, $RP2_BARE unlinked. File(s) with no row: [$(printf '%s' "$RP2_NOROW" | tr '\t\n' '/ ')]. Row(s) with no file: [$(printf '%s' "$RP2_NOFILE" | tr '\t\n' '/ ')]. Differing reference(s):${RP2_DIFF:- none}. A set with no linked bearer, or with no unlinked one, fails as well: each is an outcome the set exists to hold"
+  fi
+
+  # ── RP3 — every declared reference names a record TRACKED under the declared store, and a
+  # live one. The references do not resolve in place in this tree, which the set's README says;
+  # this arm is what stands behind them.
+  RP3_IDS="$(awk -F'\t' 'NF >= 3 && $3 != "none" && !s[$3]++ { print $3 }' <<<"$RP_BEAR")"
+  RP3_NIDS="$(rp_n "$RP3_IDS")"
+  RP3_BAD=""; RP3_FOUND=0
+  while IFS= read -r rp_id; do
+    [ -n "$rp_id" ] || continue
+    rp_hit=""
+    while IFS= read -r rp_store; do
+      [ -n "$rp_store" ] || continue
+      rp_trk="$(cd "$ROOT" && git ls-files -- "$rp_store/people/$rp_id.md" 2>/dev/null)"
+      if [ "$rp_trk" = "$rp_store/people/$rp_id.md" ]; then rp_hit="$rp_trk"; fi
+    done <<<"$RP_STORE"
+    if [ -z "$rp_hit" ]; then RP3_BAD="$RP3_BAD $rp_id(no tracked record under a declared store)"; continue; fi
+    rp_stub="$(rp_fm "$ROOT/$rp_hit" merged-into | tr '\n' ' ')"
+    if [ -n "${rp_stub% }" ]; then RP3_BAD="$RP3_BAD $rp_id($rp_hit is a merge stub: merged-into ${rp_stub% })"; continue; fi
+    RP3_FOUND=$((RP3_FOUND+1))
+  done <<<"$RP3_IDS"
+  if [ "$RP3_NIDS" -gt 0 ] && [ -z "$RP3_BAD" ] && [ "$RP3_FOUND" -eq "$RP3_NIDS" ]; then
+    PASS "RP3: all $RP3_NIDS distinct person id(s) the \`bearer\` rows declare — $(printf '%s' "$RP3_IDS" | tr '\n' ' ')— name a file \`people/<id>.md\` tracked under the declared store ($(printf '%s' "$RP_STORE" | tr '\n' ' ')), and none of those records carries a \`merged-into:\` key. Every reference in the set names a live tracked record, though none resolves in place in this tree"
+  else
+    FAIL "RP3: of $RP3_NIDS distinct person id(s) the \`bearer\` rows declare, $RP3_FOUND name a live record tracked under the declared store ($(printf '%s' "$RP_STORE" | tr '\n' ' ')). Not resolved:${RP3_BAD:- none}. A reference naming no tracked record is a tracked dangling reference, and one naming a stub is a tracked redirect — each a state this set says it does not carry"
+  fi
+
+  if [ "$RP_VOC_OK" -eq 1 ]; then
+    # ── RP4 — the declared tallies, against the reader. Both directions, over every root and
+    # stem a `tally` row names: a declared row the reader does not produce, and a row it
+    # produces that the fence does not declare.
+    RP4_DECL="$(awk -F'\t' 'NF >= 3 { print }' <<<"$RP_TALLY")"
+    RP4_PAIRS="$(awk -F'\t' 'NF >= 3 && !s[$1 "\t" $2]++ { print $1 "\t" $2 }' <<<"$RP_TALLY")"
+    RP4_NPAIRS="$(rp_n "$RP4_PAIRS")"
+    RP4_GOT=""; RP4_UNREAD=""
+    while IFS="$VA_TAB" read -r rp_root rp_stem; do
+      [ -n "$rp_root" ] || continue
+      rp_out="$(rp_read "$ROOT/$rp_root/$DC_ART" "$rp_stem" label)"
+      if [ "$(rp_status "$rp_out")" != "TALLY" ]; then RP4_UNREAD="$RP4_UNREAD $rp_root:$rp_stem($(rp_status "$rp_out"))"; continue; fi
+      RP4_GOT="$RP4_GOT$(awk -v r="$rp_root" -v s="$rp_stem" 'NR > 1 && NF { print r "\t" s "\t" $0 }' <<<"$rp_out")$VA_NL"
+    done <<<"$RP4_PAIRS"
+    RP4_NGOT="$(rp_n "$RP4_GOT")"
+    RP4_ONLY_DECL="$(rp_minus "$RP4_DECL" "$RP4_GOT")"
+    RP4_ONLY_GOT="$(rp_minus "$RP4_GOT" "$RP4_DECL")"
+    if [ "$RP4_NPAIRS" -gt 0 ] && [ -z "$RP4_UNREAD" ] && [ "$RP4_NGOT" -gt 0 ] && [ -z "$RP4_ONLY_DECL" ] && [ -z "$RP4_ONLY_GOT" ]; then
+      PASS "RP4: over the $RP4_NPAIRS root-and-stem pair(s) the \`tally\` rows name, the reference reader's tier-by-verdict tallies equal the $RP_NTALLY declared row(s) in both directions — $RP4_NGOT produced, none undeclared and none missing. The reader finds the section by its heading and the three cells by header label, with the labels and values read from the \`$RP_VERB\` section on this run [$RP_VOC_SHOW]. What this grades is the fixture and the rule, never the verb"
+    else
+      FAIL "RP4: the reference reader and the \`tally\` rows disagree over $RP4_NPAIRS root-and-stem pair(s) — $RP_NTALLY declared, $RP4_NGOT produced. Not read as tallies:${RP4_UNREAD:- none}. Declared and not produced: [$(printf '%s' "$RP4_ONLY_DECL" | tr '\t\n' ' ;')]. Produced and not declared: [$(printf '%s' "$RP4_ONLY_GOT" | tr '\t\n' ' ;')]. The declared tallies are what a run of the verb is read against, so either the coverage file or the fence is wrong"
+    fi
+
+    # ── RP5 — the bearer with no row. A zero, so it is read against a control in the SAME
+    # file: another declared bearer of that root whose rows the same reader does find.
+    RP5_N=0; RP5_BAD=""; RP5_CTL=0
+    while IFS="$VA_TAB" read -r rp_root rp_stem; do
+      [ -n "$rp_root" ] || continue
+      RP5_N=$((RP5_N+1))
+      rp_st="$(rp_status "$(rp_read "$ROOT/$rp_root/$DC_ART" "$rp_stem" label)")"
+      rp_ctl=0
+      while IFS="$VA_TAB" read -r rp_broot rp_bstem _; do
+        [ "$rp_broot" = "$rp_root" ] || continue
+        [ "$rp_bstem" != "$rp_stem" ] || continue
+        if [ "$(rp_status "$(rp_read "$ROOT/$rp_root/$DC_ART" "$rp_bstem" label)")" = "TALLY" ]; then rp_ctl=$((rp_ctl+1)); fi
+      done <<<"$RP_BEAR"
+      RP5_CTL=$((RP5_CTL+rp_ctl))
+      if [ "$rp_st" != "NOROW" ]; then RP5_BAD="$RP5_BAD $rp_root:$rp_stem(read as $rp_st, where NOROW was declared)"
+      elif [ "$rp_ctl" -eq 0 ]; then RP5_BAD="$RP5_BAD $rp_root:$rp_stem(no other declared bearer of that root reads as tallies, so the zero has no control)"; fi
+    done <<<"$RP_NOREC"
+    if [ "$RP5_N" -gt 0 ] && [ -z "$RP5_BAD" ] && [ "$RP5_CTL" -gt 0 ]; then
+      PASS "RP5: for all $RP5_N \`no-record\` row(s) the reference reader read the coverage table and found NO row under that stem's key — the state the view words as holding no outcome record, never as not covered. The zero is a measurement: in the same file(s) the same reader found rows under $RP5_CTL other declared bearer(s)"
+    else
+      FAIL "RP5: of $RP5_N \`no-record\` row(s), with $RP5_CTL control bearer(s) read as tallies:${RP5_BAD:- none recorded} — a bearer declared to have no row has one, or the file could not be read as a table, or nothing else in it was found by the same reader. A zero with no control is a reader that sees nothing"
+    fi
+  fi
+
+  # ── RP6 — the erasure token in the roster's first column, where declared and nowhere else.
+  # The `no` rows are zeros; the `yes` rows are the same function finding one, which is why
+  # both values have to occur in the set.
+  RP6_N=0; RP6_YES=0; RP6_NO=0; RP6_BAD=""
+  while IFS="$VA_TAB" read -r rp_root rp_want; do
+    [ -n "$rp_root" ] || continue
+    RP6_N=$((RP6_N+1))
+    rp_ctx="$ROOT/$rp_root/trip-context.md"
+    if [ ! -r "$rp_ctx" ]; then RP6_BAD="$RP6_BAD $rp_root(trip-context.md is not readable)"; continue; fi
+    IFS="$VA_TAB" read -r rp_rr rp_rt <<<"$(rp_roster "$rp_ctx")"
+    if [ "$rp_want" = "yes" ]; then
+      RP6_YES=$((RP6_YES+1))
+      [ "$rp_rt" -gt 0 ] || RP6_BAD="$RP6_BAD $rp_root(declared yes; $rp_rt token cell(s) over $rp_rr roster row(s))"
+    elif [ "$rp_want" = "no" ]; then
+      RP6_NO=$((RP6_NO+1))
+      if [ "$rp_rr" -eq 0 ]; then RP6_BAD="$RP6_BAD $rp_root(declared no; the roster table yielded no row, so the zero is over nothing)"
+      elif [ "$rp_rt" -ne 0 ]; then RP6_BAD="$RP6_BAD $rp_root(declared no; $rp_rt token cell(s) over $rp_rr roster row(s))"; fi
+    else
+      RP6_BAD="$RP6_BAD $rp_root(the declared value '$rp_want' is neither yes nor no)"
+    fi
+  done <<<"$RP_TOKEN"
+  if [ "$RP6_N" -gt 0 ] && [ -z "$RP6_BAD" ] && [ "$RP6_YES" -gt 0 ] && [ "$RP6_NO" -gt 0 ]; then
+    PASS "RP6: all $RP6_N \`token\` row(s) hold — the \`## Group\` roster's first column carries at least one cell that is \`per-\` and four lowercase hexadecimal digits and nothing else on the $RP6_YES root(s) declared yes, and none on the $RP6_NO declared no. Both values occur, so the zeros are read by a function this run saw find a token: the set holds a trip the erasure reading is printed for and one it is not"
+  else
+    FAIL "RP6: of $RP6_N \`token\` row(s) — $RP6_YES declared yes, $RP6_NO declared no — these disagree with the roster:${RP6_BAD:- none recorded}. A set declaring only one value fails too: without a root that carries a token the zeros prove nothing, and without one that does not, the reading is never shown absent"
+  fi
+
+  # ── RP7 — THE READER'S CONTROLS, MUST FIRE. First the vocabulary and the extractor that read
+  # it; then three copies of the first archived root's coverage file, each built under $WORK
+  # with its mutation asserted to have landed; then the reader by position, which must be wrong.
+  RP7_X3='9. **Planted** cells: the traveller cell is `Aa` or `Bb`; the tier cell is `Cc` or `Dd`; the verdict cell is `Ee` or `Ff`. Anything else is `ZZ`.'
+  RP7_X5='9. **Planted** row: its tier — `t1`, `t2` or `t3`, folded — and its verdict — `v1` or `v2`, stripped. Any other value is `ZZ`; it is never `YY`.'
+  RP7_XGOT="$(rp_tabs "$(rp_spans "$RP7_X3" 'the traveller cell is' '' ';.')")/$(rp_tabs "$(rp_spans "$RP7_X3" 'the tier cell is' '' ';.')")/$(rp_tabs "$(rp_spans "$RP7_X3" 'the verdict cell is' '' ';.')")/$(rp_tabs "$(rp_spans "$RP7_X5" 'its tier' 'its verdict' '')")/$(rp_tabs "$(rp_spans "$RP7_X5" 'its verdict' '' '.')")"
+  RP7_XWANT="Aa${VA_TAB}Bb/Cc${VA_TAB}Dd/Ee${VA_TAB}Ff/t1${VA_TAB}t2${VA_TAB}t3/v1${VA_TAB}v2"
+  RP7_ROOT="$(awk -F'\t' '$2 == "ARCHIVED" && !n++ { print $1 }' <<<"$RP_TRIPS")"
+  RP7_STEM="$(awk -F'\t' -v r="$RP7_ROOT" '$1 == r && !n++ { print $2 }' <<<"$RP_TALLY")"
+  RP7_SRC="$ROOT/$RP7_ROOT/$DC_ART"
+  RP7_BASE=""; RP7_HL=0; RP7_AT=""; RP7_A=""; RP7_B=""; RP7_C=""; RP7_P0=""; RP7_P1=""
+  RP7_LANDA=0; RP7_LANDB=0; RP7_LANDC=0; RP7_PLANT='Level'
+  RP7_HDR=""; RP7_HA=""; RP7_HB=""; RP7_HC=""; RP7_ORD=""
+  RP7_TWO=0
+  if [ "$RP_VOC_OK" -eq 1 ]; then
+    RP7_L2="$(awk -F'\t' '{ print (NF >= 2) }' <<<"$RP_L_TRAV")$(awk -F'\t' '{ print (NF >= 2) }' <<<"$RP_L_TIER")$(awk -F'\t' '{ print (NF >= 2) }' <<<"$RP_L_VERD")"
+    [ "$RP7_L2" = "111" ] && RP7_TWO=1
+  fi
+  if [ "$RP_VOC_OK" -eq 1 ] && [ "$RP7_TWO" -eq 1 ] && [ -n "$RP7_STEM" ] && [ -r "$RP7_SRC" ]; then
+    RP7_BASE="$(rp_read "$RP7_SRC" "$RP7_STEM" label)"
+    RP7_HL="$(awk -F'\t' '$3 == "H" && $4 > 0 && !n++ { print $4 }' <<<"$(dc_sites "$RP7_SRC")")"
+    RP7_HL="${RP7_HL:-0}"
+    RP7_AT="$(rp_read "$RP7_SRC" "$RP7_STEM" locate)"
+  fi
+  if [ "$RP7_HL" -gt 0 ]; then
+    RP7_HDR="$(awk -v n="$RP7_HL" 'FNR == n' "$RP7_SRC")"
+    # (a) the second spelling of all three labels: each header cell equal to the first label of
+    # its pair is replaced by the second of that pair.
+    RP7_FROM="${RP_L_TRAV%%"$VA_TAB"*}$VA_TAB${RP_L_TIER%%"$VA_TAB"*}$VA_TAB${RP_L_VERD%%"$VA_TAB"*}"
+    RP7_TO="$(awk -F'\t' '{ print $2 }' <<<"$RP_L_TRAV")$VA_TAB$(awk -F'\t' '{ print $2 }' <<<"$RP_L_TIER")$VA_TAB$(awk -F'\t' '{ print $2 }' <<<"$RP_L_VERD")"
+    rp_relabel "$RP7_SRC" "$RP7_HL" "$RP7_FROM" "$RP7_TO" > "$WORK/rp/rp7-second-spelling.md"
+    RP7_HA="$(awk -v n="$RP7_HL" 'FNR == n' "$WORK/rp/rp7-second-spelling.md")"
+    if [ "$RP7_HA" != "$RP7_HDR" ] && [ "$(rp_cells_in "$RP7_HA" "$RP7_TO")" -eq "$(rp_cells_in "$RP7_HDR" "$RP7_FROM")" ] && [ "$(rp_cells_in "$RP7_HDR" "$RP7_FROM")" -gt 0 ] && [ "$(rp_cells_in "$RP7_HA" "$RP7_FROM")" -eq 0 ]; then RP7_LANDA=1; fi
+    RP7_A="$(rp_read "$WORK/rp/rp7-second-spelling.md" "$RP7_STEM" label)"
+    # (b) a rotation: every row of the table's run with its first cell moved to the end.
+    awk -v n="$RP7_HL" '
+      FNR >= n && !ended && substr($0, 1, 1) == "|" {
+        m = split($0, c, "|"); out = "|"
+        for (i = 3; i < m; i++) out = out c[i] "|"
+        print out c[2] "|"; next
+      }
+      FNR > n { ended = 1 }
+      { print }
+    ' "$RP7_SRC" > "$WORK/rp/rp7-rotated.md"
+    RP7_HB="$(awk -v n="$RP7_HL" 'FNR == n' "$WORK/rp/rp7-rotated.md")"
+    RP7_ATB="$(rp_read "$WORK/rp/rp7-rotated.md" "$RP7_STEM" locate)"
+    if [ "$RP7_HB" != "$RP7_HDR" ] && [ "$(rp_status "$RP7_ATB")" != "$(rp_status "$RP7_AT")" ] && [ "${RP7_ATB%%"$VA_TAB"*}" = "AT" ]; then RP7_LANDB=1; fi
+    RP7_B="$(rp_read "$WORK/rp/rp7-rotated.md" "$RP7_STEM" label)"
+    # (c) a header whose tier label is a string in neither spelling of any cell.
+    rp_relabel "$RP7_SRC" "$RP7_HL" "$RP_L_TIER" "$(awk -F'\t' -v p="$RP7_PLANT" '{ for (i = 1; i <= NF; i++) printf "%s%s", (i > 1 ? "\t" : ""), p }' <<<"$RP_L_TIER")" > "$WORK/rp/rp7-missing-label.md"
+    RP7_HC="$(awk -v n="$RP7_HL" 'FNR == n' "$WORK/rp/rp7-missing-label.md")"
+    if [ "$RP7_HC" != "$RP7_HDR" ] && [ "$(rp_cells_in "$RP7_HC" "$RP_L_TIER")" -eq 0 ] && [ "$(rp_cells_in "$RP7_HC" "$RP7_PLANT")" -gt 0 ] && [ "$(rp_cells_in "| $RP7_PLANT |" "$RP_L_TRAV$VA_TAB$RP_L_TIER$VA_TAB$RP_L_VERD")" -eq 0 ]; then RP7_LANDC=1; fi
+    RP7_C="$(rp_read "$WORK/rp/rp7-missing-label.md" "$RP7_STEM" label)"
+    # The reader by POSITION: the ordinals the three cells hold in the subject's own header, which
+    # group DC holds to the declared one. Right on the subject, and it must be wrong on the rotation.
+    RP7_ORD="${RP7_AT#*"$VA_TAB"}"
+    RP7_P0="$(rp_read "$RP7_SRC" "$RP7_STEM" "pos:$RP7_ORD")"
+    RP7_P1="$(rp_read "$WORK/rp/rp7-rotated.md" "$RP7_STEM" "pos:$RP7_ORD")"
+  fi
+  if [ "$RP_NSECT" -eq 0 ]; then
+    FAIL "RP7: skills/trip-record/SKILL.md yielded no section opened by the \`## $RP_VERB\` heading, so the reader has no steps to take its labels and values from. RP4 and RP5 were WITHHELD: a reader with no vocabulary would have graded nothing"
+  elif [ "$RP7_XGOT" != "$RP7_XWANT" ]; then
+    FAIL "RP7: CONTROL on the extractor — over two planted step lines it returned [$(printf '%s' "$RP7_XGOT" | tr '\t' ' ')] rather than exactly the spans planted after each anchor, [$(printf '%s' "$RP7_XWANT" | tr '\t' ' ')]. The planted lines carry a further code span the anchors must not take. What it read from the real section is therefore not a measurement"
+  elif [ "$RP_VOC_OK" -ne 1 ]; then
+    FAIL "RP7: the section's steps under *$RP_READ_HEAD* did not yield a label for every needed cell and a value for a tier and a verdict — read [$RP_VOC_SHOW] from the list items opening '$RP_STEP_CELLS' and '$RP_STEP_ROWS'. The anchors are the words that precede each run of code spans; a step reworded past them fails here rather than drifting. RP4 and RP5 were WITHHELD"
+  elif [ "$RP7_TWO" -ne 1 ]; then
+    FAIL "RP7: the section names fewer than two spellings for a needed cell [$RP_VOC_SHOW], so the second-spelling control has nothing to plant and the reader was never shown to accept one"
+  elif [ "$RP7_HL" -eq 0 ] || [ "$(rp_status "$RP7_BASE")" != "TALLY" ]; then
+    FAIL "RP7: the controls could not run — the subject, the first ARCHIVED root's coverage file ($RP7_ROOT/$DC_ART) read for stem '${RP7_STEM:-<none declared>}', came back [$(rp_status "$RP7_BASE")] where tallies were needed to compare a copy against"
+  elif [ "$RP7_LANDA" -ne 1 ] || [ "$RP7_LANDB" -ne 1 ] || [ "$RP7_LANDC" -ne 1 ]; then
+    FAIL "RP7: a mutation did not land — second spelling=$RP7_LANDA rotation=$RP7_LANDB missing label=$RP7_LANDC (1 is landed). A control over an unchanged copy grades the real file twice and proves nothing. Headers: subject [$RP7_HDR] second spelling [$RP7_HA] rotated [$RP7_HB] missing [$RP7_HC]"
+  elif [ "$RP7_A" != "$RP7_BASE" ] || [ "$RP7_B" != "$RP7_BASE" ]; then
+    FAIL "RP7: the reader by label does not survive a respelled or a reordered header — subject [$(printf '%s' "$RP7_BASE" | tr '\t\n' ' ;')], second spelling [$(printf '%s' "$RP7_A" | tr '\t\n' ' ;')], rotated [$(printf '%s' "$RP7_B" | tr '\t\n' ' ;')]. All three must be the same tallies: the rows did not change, only how the header names and orders them"
+  elif [ "$(rp_status "$RP7_C")" != "NOLABEL tier" ]; then
+    FAIL "RP7: a header whose tier label was replaced by '$RP7_PLANT', a string in neither spelling of any cell, read as [$(rp_status "$RP7_C")] rather than as undetermined for want of the tier cell. A reader that guesses a cell it cannot find is the reader the label rule exists to forbid"
+  elif [ "$RP7_P0" != "$RP7_BASE" ]; then
+    FAIL "RP7: the reader by position, at the ordinals the subject's own header holds ($RP7_ORD), does not reproduce the subject's tallies on the subject itself — [$(printf '%s' "$RP7_P0" | tr '\t\n' ' ;')] — so its disagreement on the rotation would show nothing about position"
+  elif [ "$RP7_P1" = "$RP7_BASE" ]; then
+    FAIL "RP7: MUST FIRE did not fire — a reader taking the cells at the declared layout's ordinals ($RP7_ORD) returned the subject's own tallies on the rotated copy. The rotation then discriminates nothing, and the label reader's agreement above is not evidence that it reads by label"
+  else
+    PASS "RP7: MUST FIRE — the reader's vocabulary was read from the \`$RP_VERB\` section on this run [$RP_VOC_SHOW], by an extractor that returns exactly the spans planted after each anchor on two planted lines and leaves the others. Over copies of $RP7_ROOT/$DC_ART for stem '$RP7_STEM', each with its mutation asserted to have landed: the second spelling of all three labels and a rotation of every row both yield the subject's tallies [$(printf '%s' "$RP7_BASE" | tr '\t\n' ' ;')]; a tier label replaced by '$RP7_PLANT' yields undetermined, naming the tier cell; and a reader by position, right on the subject at ordinals $RP7_ORD, returns [$(printf '%s' "$RP7_P1" | tr '\t\n' ' ;')] on the rotated copy. No copy is a tracked file"
+  fi
+
+  # ── RP8 — THE SECTION'S ENUMERATIONS. Limb (i) holds each table against the section's own
+  # prose, which is group DH's arm for another verb. Limb (ii) holds the outcome set against the
+  # decision record's own table, read on every run: both sides of limb (i) are the section, so
+  # a row dropped from the table and from the prose together passes it. The must-fire is that edit.
+  RP8_CTLTAB="| $RP_T_OUT | a second column |
+|---|---|
+| \`ALPHA\` | a thing |
+| *a beta sentence* | another thing |
+
+not a table line"
+  RP8_CTLGOT="$(rp_tabs "$(rp_members "$RP8_CTLTAB" "$RP_T_OUT")")"
+  RP8_OUT="$(rp_members "$RP_SECT" "$RP_T_OUT")"
+  RP8_PER="$(rp_members "$RP_SECT" "$RP_T_PER")"
+  RP8_REL="$(rp_members "$RP_SECT" "$RP_T_REL")"
+  RP8_NOUT="$(rp_n "$RP8_OUT")"; RP8_NPER="$(rp_n "$RP8_PER")"; RP8_NREL="$(rp_n "$RP8_REL")"
+  RP8_ORPH="$(rp_orphans "$RP_SECT" "$RP_T_OUT")$VA_NL$(rp_orphans "$RP_SECT" "$RP_T_PER")"
+  RP8_NORPH="$(rp_n "$RP8_ORPH")"
+  RP8_NOTREL="$(rp_less_table "$RP_SECT" "$RP_T_REL")"
+  RP8_VMISS=""
+  for rp_tok in CURRENT BEHIND UNDETERMINED; do
+    [ "$(rp_occurs "$RP8_NOTREL" "$rp_tok")" -gt 0 ] || RP8_VMISS="$RP8_VMISS $rp_tok"
+  done
+  RP8_ABSENT="$(rp_occurs "$RP8_NOTREL" 'ZZ-A-TOKEN-THE-SECTION-DOES-NOT-CARRY')"
+  RP8_REGION="$(rp_region "$RP_ADR" "$RP_ADR_HEAD" 2>/dev/null)"
+  RP8_NREGION="$(rp_n "$RP8_REGION")"
+  RP8_NRTAB="$(rp_tables "$RP8_REGION" "$RP_T_OUT")"
+  RP8_REC="$(rp_members "$RP8_REGION" "$RP_T_OUT")"
+  RP8_NREC="$(rp_n "$RP8_REC")"
+  RP8_SEC_ONLY="$(rp_minus "$RP8_OUT" "$RP8_REC")"
+  RP8_REC_ONLY="$(rp_minus "$RP8_REC" "$RP8_OUT")"
+  # The must-fire copy: the section with its first outcome removed from the table and from the
+  # paragraph that names where each scan ends — the edit limb (i) passes.
+  RP8_PARA='**Where the scan ends decides the output.**'
+  RP8_VICTIM="$(awk 'NF && !n++ { print }' <<<"$RP8_OUT")"
+  RP8_COPY="$(awk -F'|' -v v="$RP8_VICTIM" -v h="$RP_T_OUT" -v para="$RP8_PARA" '
+    function bare(s) { gsub(/[`*]/, "", s); sub(/^[ \t]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+    function cut(s, m,   p) { while ((p = index(s, m)) > 0) s = substr(s, 1, p - 1) substr(s, p + length(m)); return s }
+    substr($0, 1, 1) == "|" {
+      if (on == 0) on = (bare($2) == h) ? 1 : -1
+      if (on == 1 && bare($2) == v) next
+      print; next
+    }
+    { on = 0 }
+    index($0, para) == 1 { print cut(cut($0, "`" v "`"), "*" v "*"); next }
+    { print }
+  ' <<<"$RP_SECT")"
+  RP8_COUT="$(rp_members "$RP8_COPY" "$RP_T_OUT")"
+  RP8_CPARA="$(awk -v para="$RP8_PARA" 'index($0, para) == 1' <<<"$RP8_COPY")"
+  RP8_LAND=0
+  if [ -n "$RP8_VICTIM" ] && [ "$(rp_n "$RP8_COUT")" -eq $((RP8_NOUT - 1)) ] && [ -z "$(rp_minus "$RP8_COUT" "$RP8_OUT")" ] \
+     && [ "$(rp_tabs "$(rp_minus "$RP8_OUT" "$RP8_COUT")")" = "$RP8_VICTIM" ] && [ -n "$RP8_CPARA" ] && [ "$(rp_prose_hits "$RP8_CPARA" "$RP8_VICTIM")" -eq 0 ]; then RP8_LAND=1; fi
+  RP8_CORPH="$(rp_n "$(rp_orphans "$RP8_COPY" "$RP_T_OUT")")"
+  RP8_CREC_ONLY="$(rp_tabs "$(rp_minus "$RP8_REC" "$RP8_COUT")")"
+  RP8_CSEC_ONLY="$(rp_minus "$RP8_COUT" "$RP8_REC")"
+  if [ "$RP8_CTLGOT" != "ALPHA${VA_TAB}a beta sentence" ]; then
+    FAIL "RP8: MUST FIRE — the extractor's CONTROL returned [$(printf '%s' "$RP8_CTLGOT" | tr '\t' ';')] from a synthetic table carrying exactly a code-spanned token and an emphasised sentence, so it cannot be trusted to report what the real tables hold. The probe is reported UNUSABLE rather than the enumeration complete"
+  elif [ "$RP_NSECT" -eq 0 ] || [ "$RP8_NOUT" -eq 0 ] || [ "$RP8_NPER" -eq 0 ] || [ "$RP8_NREC" -eq 0 ]; then
+    FAIL "RP8: an extraction came back EMPTY — the \`## $RP_VERB\` section yielded $RP_NSECT non-blank line(s), its table headed '$RP_T_OUT' $RP8_NOUT member(s), its table headed '$RP_T_PER' $RP8_NPER, and the record's table headed '$RP_T_OUT', inside the region of $RP8_NREGION non-blank line(s) the heading beginning '$RP_ADR_HEAD' opens in ${RP_ADR#"$ROOT/"}, $RP8_NREC. A comparison over nothing reports agreement; a renamed heading or header cell is the likeliest cause and is a finding in its own right"
+  elif [ "$RP8_NRTAB" -ne 1 ]; then
+    FAIL "RP8: the region the heading beginning '$RP_ADR_HEAD' opens in ${RP_ADR#"$ROOT/"} carries $RP8_NRTAB table(s) headed '$RP_T_OUT', where exactly one is the person view's terminal set — which table the section is held against is undecided"
+  elif [ "$RP8_NORPH" -ne 0 ]; then
+    FAIL "RP8: limb (i) — $RP8_NORPH member(s) of the section's outcome tables occur on no line outside a table: [$(printf '%s' "$RP8_ORPH" | tr '\n' ';')]. A row nothing in the prose reaches is decoration, and the paragraph that says where each scan ends is where an outcome has to be named"
+  elif [ "$RP8_NREL" -ne 1 ] || [ -n "$RP8_VMISS" ] || [ "$RP8_ABSENT" -ne 0 ]; then
+    FAIL "RP8: limb (i) — the relation table carries $RP8_NREL data row(s) where the relation is declared once; verdict token(s) occurring nowhere outside it:${RP8_VMISS:- none}; and a token the section does not carry was counted $RP8_ABSENT time(s), where zero shows the count is not a constant"
+  elif [ -n "$RP8_SEC_ONLY" ] || [ -n "$RP8_REC_ONLY" ]; then
+    FAIL "RP8: limb (ii) — the section's outcome set and the decision record's terminal-set table differ. In the section and not the record: [$(printf '%s' "$RP8_SEC_ONLY" | tr '\n' ';')]. In the record and not the section: [$(printf '%s' "$RP8_REC_ONLY" | tr '\n' ';')]. The record is read on this run, from the table headed '$RP_T_OUT' under the heading beginning '$RP_ADR_HEAD', and held nowhere here; the section builds what that record decided"
+  elif [ "$RP8_LAND" -ne 1 ]; then
+    FAIL "RP8: the must-fire mutation did not land — a copy of the section with '$RP8_VICTIM' removed from the table headed '$RP_T_OUT' and from the paragraph opening '$RP8_PARA' still reads [$(printf '%s' "$RP8_COUT" | tr '\n' ';')], or that paragraph was not found. A control over an unchanged copy proves nothing"
+  elif [ "$RP8_CORPH" -ne 0 ] || [ "$RP8_CREC_ONLY" != "$RP8_VICTIM" ] || [ -n "$RP8_CSEC_ONLY" ]; then
+    FAIL "RP8: MUST FIRE did not fire as specified — on a copy of the section with '$RP8_VICTIM' removed from its table and its paragraph together, limb (i) reported $RP8_CORPH orphan(s) where none was expected, and limb (ii) reported record-only [$(printf '%s' "$RP8_CREC_ONLY" | tr '\t' ';')] and section-only [$(printf '%s' "$RP8_CSEC_ONLY" | tr '\n' ';')] where exactly '$RP8_VICTIM' and nothing were required. The agreement above is not a measurement until this fires"
+  else
+    PASS "RP8: MUST FIRE — in the \`## $RP_VERB\` section ($RP_NSECT non-blank lines), limb (i): each of the $RP8_NOUT member(s) of the outcome table { $(printf '%s' "$RP8_OUT" | tr '\n' ';') } and the $RP8_NPER of the per-trip table { $(printf '%s' "$RP8_PER" | tr '\n' ';') } occurs again on a line that is not a table row; the relation table has one data row; and CURRENT, BEHIND and UNDETERMINED each occur outside it, counted by a reader that returns zero for a token the section does not carry. Limb (ii): the outcome table and the decision record's own terminal-set table — the one table headed '$RP_T_OUT' in the region of $RP8_NREGION non-blank line(s) the heading beginning '$RP_ADR_HEAD' opens, read on this run — are the same set in both directions. The control: with '$RP8_VICTIM' removed from the table and from its paragraph together, limb (i) still passes and limb (ii) reports exactly that member as the one the record still carries"
+  fi
+
+  # ── RP9 — THE QUOTATION, MUST FIRE. The relation's row fixes its membership by quoting a
+  # clause of the data model; the emphasis is the section's own quotation mark, and the home
+  # carries the clause as plain text. Exactly once, in the region its heading opens.
+  RP9_ANCHOR='determinable from'
+  RP9_ROW="$(rp_rawrows "$RP_SECT" "$RP_T_REL")"
+  RP9_Q="$(awk -v o="$RP9_ANCHOR" '{ p = index($0, "*" o); if (p == 0) next; r = substr($0, p + 1); q = index(r, "*"); if (q == 0) next; print substr(r, 1, q - 1) }' <<<"$RP9_ROW")"
+  RP9_REGION="$(rp_region "$RP_QDOC" "$RP_QHEAD" 2>/dev/null)"
+  RP9_NREGION="$(rp_n "$RP9_REGION")"
+  RP9_HITS=0; RP9_FILEHITS=0; RP9_CHITS=1; RP9_CNEAR=0; RP9_CMUT=0; RP9_NEAR=""
+  if [ -n "$RP9_Q" ] && [ "$(rp_n "$RP9_Q")" -eq 1 ]; then
+    RP9_HITS="$(rp_occurs "$RP9_REGION" "$RP9_Q")"
+    RP9_FILEHITS="$(rp_occurs "$(cat "$RP_QDOC" 2>/dev/null)" "$RP9_Q")"
+    RP9_NEAR="reworded for this control, ${RP9_Q#* }"
+    awk -v n="$RP9_Q" -v w="$RP9_NEAR" '{ s = $0; out = ""; while ((p = index(s, n)) > 0) { out = out substr(s, 1, p - 1) w; s = substr(s, p + length(n)) } print out s }' "$RP_QDOC" > "$WORK/rp/rp9-clause-reworded.md" 2>/dev/null
+    cmp -s "$RP_QDOC" "$WORK/rp/rp9-clause-reworded.md" || RP9_CMUT=1
+    RP9_CREGION="$(rp_region "$WORK/rp/rp9-clause-reworded.md" "$RP_QHEAD" 2>/dev/null)"
+    RP9_CHITS="$(rp_occurs "$RP9_CREGION" "$RP9_Q")"
+    RP9_CNEAR="$(rp_occurs "$RP9_CREGION" "$RP9_NEAR")"
+  fi
+  if [ "$RP_NSECT" -eq 0 ] || [ "$(rp_n "$RP9_ROW")" -ne 1 ]; then
+    FAIL "RP9: the relation's row could not be read — the \`## $RP_VERB\` section yielded $RP_NSECT non-blank line(s) and its table headed '$RP_T_REL' yielded $(rp_n "$RP9_ROW") data row(s), where exactly one carries the quotation"
+  elif [ -z "$RP9_Q" ] || [ "$(rp_n "$RP9_Q")" -ne 1 ]; then
+    FAIL "RP9: the quotation cannot be read from the relation's row — no single emphasised span opening with the words '$RP9_ANCHOR' was found in it. The emphasis is how the section marks the clause it quotes, so a row that drops it has stopped saying what fixes the relation's membership"
+  elif [ "$RP9_NREGION" -eq 0 ]; then
+    FAIL "RP9: ${RP_QDOC#"$ROOT/"} yielded no region under a heading beginning '$RP_QHEAD', so the quotation has no home to be looked for in. Not a pass: a count over nothing is zero for a reason that has nothing to do with the clause"
+  elif [ "$RP9_HITS" -ne 1 ]; then
+    FAIL "RP9: the clause the relation's row quotes, [$RP9_Q], occurs $RP9_HITS time(s) in the region of $RP9_NREGION non-blank line(s) the heading beginning '$RP_QHEAD' opens in ${RP_QDOC#"$ROOT/"} ($RP9_FILEHITS in the whole file), where exactly once is required. At zero the home was reworded and the row quotes a sentence that is no longer there; the row says a change to that sentence is a change to the relation"
+  elif [ "$RP9_CMUT" -ne 1 ] || [ "$RP9_CNEAR" -ne 1 ] || [ "$RP9_CHITS" -ne 0 ]; then
+    FAIL "RP9: MUST FIRE did not fire as specified — over a copy of ${RP_QDOC#"$ROOT/"} with the clause reworded (copy differs=$RP9_CMUT, reworded clause found $RP9_CNEAR time(s) in the same region), the quotation was still counted $RP9_CHITS time(s) where zero was required. The count above is not a measurement until a reworded home turns it"
+  else
+    PASS "RP9: MUST FIRE — the clause the relation's row quotes, read from the row as the emphasised span opening '$RP9_ANCHOR' — [$RP9_Q] — occurs exactly once as a fixed string in the region of $RP9_NREGION non-blank line(s) the heading beginning '$RP_QHEAD' opens in ${RP_QDOC#"$ROOT/"}, and $RP9_FILEHITS time(s) in the whole file. On a copy of that document with the clause reworded, asserted to differ and to carry the reworded clause once in that region, the same count is zero. Read a line at a time, so a clause wrapped across two lines would not be found and would fail here"
+  fi
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group RP, continued — the group view, drawn against the same fixture set.
+#
+# ── WHAT THESE ARMS ADD ──────────────────────────────────────────────────────────
+# `/trip-record group-past-coverage` lists, for a named group, the archived trips other than
+# the one being planned on which at least two of its members travelled as linked travellers,
+# and for the trips the operator confirms it prints each member's own tallies. The arms below
+# grade the TREE and the section's TEXT, as the arms above do, and never the verb: that the
+# group, the candidates and the qualifying trip the set's README declares are what the files
+# bear out; that a reference computation of the candidates gives the declared answer, and the
+# status the section's rule gives, on states built under the work directory; that the
+# section's outcome set is its own prose's and the decision record's; and that what the
+# section cites of another section resolves, while nothing it cites is restated.
+#
+# ── THE DECLARATION IS THE SAME FENCE ────────────────────────────────────────────
+# Further row kinds — `group`, `joint` and `qualifies` — in the fence the arms above read.
+# RP0 to RP6 pass over them and RP0 counts them; RP10 is the arm that requires them.
+#
+# ── WHAT IS HELD RATHER THAN DERIVED, AND WHY ────────────────────────────────────
+# Addresses: this verb's token, the heading that opens the record's region for the group
+# view, the sub-heading the relation is declared under, the words that open the paragraph
+# naming where a run ends, and the words a citation of a table opens with. Every id, count,
+# root, cited heading and compared token is read: from the fence, from the tracked files or
+# from the sections. An id a control plants is taken on the run and asserted to name nothing
+# the copied store holds. The shape of a member entry is group GM's own reader, and the shape
+# of a group id is the one the section states.
+#
+# ── WHAT IS NOT ESTABLISHED, DECLARED RATHER THAN LEFT TO BE FOUND ───────────────
+# That the VERB computes, confirms or renders as these references do. The reference
+# computation is a second implementation of the section's rule for a candidate, written for
+# these arms, and it reads a trip's lifecycle from the fence, which RP1 holds to the files.
+# The section's citation of a table by a bold lead in another section is read by no limb: RP16
+# reads a citation behind the section sign, and a table cited by its header cell.
+#
+# ── THE ARMS ─────────────────────────────────────────────────────────────────────
+#   RP10  the fence yields a row of each further kind, on roots of the declared lifecycle.
+#         Every later arm is withheld when a kind is empty
+#   RP11  each declared group's record is tracked under the store, its member lines are bare
+#         entries, and as many of them resolve as the row declares
+#   RP12  the reference computation's candidates over the tracked roots are the joint rows, and
+#         each roster's data rows are the declared count, an erasure token's row among them
+#   RP13  the same computation's linked-member count on each trip being planned gives the
+#         qualifies rows
+#   RP14  MUST FIRE — the computation's controls, each a state built under the work directory,
+#         and the overlap the record's uncorrected wording had
+#   RP15  MUST FIRE — the section's outcome table against its prose and against the record's
+#   RP16  MUST FIRE — the section's citations resolve, a cited table stands under its header
+#         cell, and nothing cited is restated
+# These arms are not registered with md_flips, for the reason the arms above give.
+# ═════════════════════════════════════════════════════════════════════════════════
+RP_GVERB='group-past-coverage'
+# The heading that opens the record's region for the group view. An address.
+RP_ADR_GHEAD='2. Group memory'
+# The sub-heading the relation is declared under. An address.
+RP_REL_HEAD='The relation — `plan-to-coverage`'
+# The words that open the paragraph naming where a run ends, and those a table citation opens with.
+RP_G_PARA='**Where the run ends decides the output.**'
+RP_CITE_TABLE='the table headed *'
+
+# rp_g_rowbad <rows> <kind> <fields> <id-field> — the rows of one kind that do not carry
+# exactly <fields> fields, or whose group id is not `grp-` and four lowercase hexadecimal
+# digits. The digits are spelled out rather than written as an interval, for group GM's reason.
+rp_g_rowbad() {
+  awk -F'\t' -v kind="$2" -v want="$3" -v idf="$4" '
+    NF && (NF != want || $idf !~ /^grp-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]$/) { gsub(/\t/, " "); printf " %s(%s)", kind, $0 }
+  ' <<<"$1"
+}
+
+# rp_g_field <records> <tag> <n> — field <n> of the first TAB record that opens with <tag>.
+rp_g_field() { awk -F'\t' -v t="$2" -v n="$3" '$1 == t && !d++ { print $n }' <<<"$1"; }
+
+# rp_g_ls <base> <lister> <dir> — the `.md` entries directly under <base>/<dir>, as paths
+# relative to <base>. <lister> is `tracked`, which asks git and so sees tracked files alone, or
+# `files`, which reads the directory — the form a state built under $WORK needs.
+rp_g_ls() {
+  local rgl_p
+  if [ "$2" = "tracked" ]; then
+    while IFS= read -r rgl_p; do
+      case "${rgl_p#"$3/"}" in ''|*/*) continue ;; esac
+      printf '%s\n' "$rgl_p"
+    done <<<"$(cd "$1" && git ls-files -- "$3/*.md" 2>/dev/null)"
+  else
+    for rgl_p in "$1/$3"/*.md; do
+      if [ -f "$rgl_p" ]; then printf '%s\n' "${rgl_p#"$1/"}"; fi
+    done
+  fi
+}
+
+# rp_g_members <base> <lister> <store> <group-id> — a group's members, by the section's rule:
+#   BULLETS <n>            the non-blank lines under `## Members`
+#   RESOLVED <n>           those that resolve: a live record, or a stub one hop from a live one
+#   MEMBER <id>            one per distinct survivor, in bullet order
+#   EDGEID <member> <id>   one per id of a member's closure: the survivor itself, and each
+#                          stub that redirects to it
+#   UNRESOLVED <id | ?>    one per line that does not resolve; `?` where it is no bare entry
+# and the one line NORECORD where the record is not among the store's entries. A person
+# record is read to the end of its frontmatter and no further.
+rp_g_members() {
+  local rgm_rec="$3/groups/$4.md" rgm_have rgm_people="" rgm_bul="" rgm_p rgm_id rgm_to
+  rgm_have="$(rp_g_ls "$1" "$2" "$3/groups")"
+  case "$VA_NL$rgm_have$VA_NL" in *"$VA_NL$rgm_rec$VA_NL"*) ;; *) printf 'NORECORD\n'; return 0 ;; esac
+  while IFS= read -r rgm_p; do
+    [ -n "$rgm_p" ] || continue
+    rgm_id="${rgm_p##*/}"; rgm_id="${rgm_id%.md}"
+    rgm_to="$(rp_fm "$1/$rgm_p" merged-into | tr '\n' ' ')"
+    rgm_people="$rgm_people$rgm_id$VA_TAB${rgm_to% }$VA_NL"
+  done <<<"$(rp_g_ls "$1" "$2" "$3/people")"
+  while IFS= read -r rgm_p; do
+    case "$rgm_p" in ''|'## '*) continue ;; esac
+    if [ -z "$(gm_nonconforming "$rgm_p")" ]; then rgm_bul="$rgm_bul${rgm_p#- }$VA_NL"; else rgm_bul="$rgm_bul?$VA_NL"; fi
+  done <<<"$(gm_nonblank "$(er_section "$1/$rgm_rec" "$GM_SECTION")")"
+  awk -F'\t' '
+    FILENAME == ARGV[1] { if (NF) { have[$1] = 1; to[$1] = $2 } next }
+    !NF { next }
+    {
+      nb++; id = $1; surv = ""
+      if (id in have) {
+        if (to[id] == "") surv = id
+        else if ((to[id] in have) && to[to[id]] == "") surv = to[id]
+      }
+      if (surv == "") { unres[++nu] = id; next }
+      nr++
+      if (!(surv in mem)) { mem[surv] = 1; order[++nm] = surv }
+    }
+    END {
+      printf "BULLETS\t%d\nRESOLVED\t%d\n", nb, nr
+      for (i = 1; i <= nm; i++) {
+        printf "MEMBER\t%s\n", order[i]
+        printf "EDGEID\t%s\t%s\n", order[i], order[i]
+        for (s in to) if (to[s] == order[i]) printf "EDGEID\t%s\t%s\n", order[i], s
+      }
+      for (i = 1; i <= nu; i++) printf "UNRESOLVED\t%s\n", unres[i]
+    }
+  ' <(printf '%s' "$rgm_people") <(printf '%s' "$rgm_bul")
+}
+
+# rp_g_store <group-id> — the first declared store the group's record is tracked under, or nothing.
+rp_g_store() {
+  local rgt_s
+  while IFS= read -r rgt_s; do
+    [ -n "$rgt_s" ] || continue
+    if [ "$(rp_g_members "$ROOT" tracked "$rgt_s" "$1")" != "NORECORD" ]; then printf '%s\n' "$rgt_s"; return 0; fi
+  done <<<"$RP_STORE"
+  return 0
+}
+
+# rp_g_edges <base> <lister> <trip-root> — the `person:` reference of each traveller file directly
+# under <base>/<trip-root>/travelers, one per line. A file carrying none prints nothing, and
+# no line below a file's frontmatter is read.
+rp_g_edges() {
+  local rge_p
+  while IFS= read -r rge_p; do
+    [ -n "$rge_p" ] || continue
+    rp_fm "$1/$rge_p" person
+  done <<<"$(rp_g_ls "$1" "$2" "$3/travelers")"
+}
+
+# rp_g_k <members> <edges> — how many MEMBERs of rp_g_members' output have, among <edges>, an
+# id of their closure. A member with more than one bearer counts once.
+rp_g_k() {
+  awk -F'\t' '
+    FILENAME == ARGV[1] { if ($1 == "EDGEID") own[$3] = $2; next }
+    NF && ($1 in own) && !seen[own[$1]]++ { k++ }
+    END { print k + 0 }
+  ' <(printf '%s\n' "$1") <(printf '%s\n' "$2")
+}
+
+# rp_g_view <base> <lister> <store> <group-id> <planned-root> <edge-test> <trips> — THE
+# REFERENCE COMPUTATION of the group view's candidates, by the section's rule. <trips> is one
+# `<root> TAB <lifecycle>` line per trip of the population. <edge-test> says where "some
+# member's edge exists" is looked for: `other`, the trips other than the planned one, which is
+# the section's reading and the corrected record's; or `every`, the planned trip included,
+# which is the reading the record's uncorrected row admitted.
+#   stdout:
+#     MEMBERS <bullets> <resolved> <distinct>
+#     READ <n>                    trip traveller directories listed. 0 where no scan runs
+#     K <root> <lifecycle> <k>    one per trip other than the planned one, where a scan ran
+#     CAND <root> <k>             one per candidate, in <trips> order
+#     STATUS <NORECORD | TOOFEW | NOEDGE | NOJOINT | CAND>
+#     PRED <too-few> <no-joint> <no-edge>   each 0 or 1, the middle one under <edge-test>
+rp_g_view() {
+  local rgv_m rgv_nm rgv_read=0 rgv_k rgv_any=0 rgv_all=0 rgv_rows="" rgv_cand="" rgv_root rgv_life rgv_st rgv_pj=0 rgv_pe=0
+  rgv_m="$(rp_g_members "$1" "$2" "$3" "$4")"
+  if [ "$rgv_m" = "NORECORD" ]; then printf 'STATUS\tNORECORD\n'; return 0; fi
+  rgv_nm="$(awk -F'\t' '$1 == "MEMBER" { n++ } END { print n + 0 }' <<<"$rgv_m")"
+  printf 'MEMBERS\t%s\t%s\t%s\n' "$(rp_g_field "$rgv_m" BULLETS 2)" "$(rp_g_field "$rgv_m" RESOLVED 2)" "$rgv_nm"
+  if [ "$rgv_nm" -lt 2 ]; then printf 'READ\t0\nSTATUS\tTOOFEW\nPRED\t1\t0\t0\n'; return 0; fi
+  while IFS="$VA_TAB" read -r rgv_root rgv_life; do
+    [ -n "$rgv_root" ] || continue
+    if [ "$rgv_root" = "$5" ]; then
+      if [ "$6" = "every" ]; then
+        rgv_read=$((rgv_read+1))
+        rgv_k="$(rp_g_k "$rgv_m" "$(rp_g_edges "$1" "$2" "$rgv_root")")"
+        if [ "$rgv_k" -gt 0 ]; then rgv_all=1; fi
+      fi
+      continue
+    fi
+    rgv_read=$((rgv_read+1))
+    rgv_k="$(rp_g_k "$rgv_m" "$(rp_g_edges "$1" "$2" "$rgv_root")")"
+    rgv_rows="${rgv_rows}K$VA_TAB$rgv_root$VA_TAB$rgv_life$VA_TAB$rgv_k$VA_NL"
+    if [ "$rgv_k" -gt 0 ]; then rgv_any=1; rgv_all=1; fi
+    if [ "$rgv_life" = "ARCHIVED" ] && [ "$rgv_k" -ge 2 ]; then rgv_cand="${rgv_cand}CAND$VA_TAB$rgv_root$VA_TAB$rgv_k$VA_NL"; fi
+  done <<<"$7"
+  printf 'READ\t%s\n%s%s' "$rgv_read" "$rgv_rows" "$rgv_cand"
+  if [ -n "$rgv_cand" ]; then
+    rgv_st="CAND"
+  else
+    if [ "$rgv_any" -eq 1 ]; then rgv_st="NOJOINT"; else rgv_st="NOEDGE"; rgv_pe=1; fi
+    if [ "$6" = "every" ]; then rgv_pj="$rgv_all"; else rgv_pj="$rgv_any"; fi
+  fi
+  printf 'STATUS\t%s\nPRED\t0\t%s\t%s\n' "$rgv_st" "$rgv_pj" "$rgv_pe"
+}
+
+# rp_g_qualify <base> <lister> <store> <planned-root> <group-ids> — THE QUALIFYING COMPUTATION:
+# per id, how many of that group's members carry an edge on the planned trip, counted as
+# rp_g_view counts a candidate's. One `<group-id> TAB <count>` line per group counting at
+# least two, in the order given.
+rp_g_qualify() {
+  local rgq_id rgq_e rgq_k
+  rgq_e="$(rp_g_edges "$1" "$2" "$4")"
+  while IFS= read -r rgq_id; do
+    [ -n "$rgq_id" ] || continue
+    rgq_k="$(rp_g_k "$(rp_g_members "$1" "$2" "$3" "$rgq_id")" "$rgq_e")"
+    if [ "$rgq_k" -ge 2 ]; then printf '%s\t%s\n' "$rgq_id" "$rgq_k"; fi
+  done <<<"$5"
+}
+
+# rp_roster_data <trip-context> — "<data-rows>\t<tokens>" for the FIRST pipe table under the
+# `## Group` heading: the rows below its header row and its delimiter row, and how many of
+# their first-column cells are an erasure token. `-1` rows where no table stands there.
+# rp_roster, above, counts the header row with the rest; this is the count the section calls
+# the roster size.
+rp_roster_data() {
+  awk '
+    /^## Group/ { ingrp = 1; next }
+    ingrp && /^## / { ingrp = 0 }
+    !ingrp || done { next }
+    substr($0, 1, 1) != "|" { if (nrow > 0) done = 1; next }
+    {
+      nrow++
+      if (nrow == 1) next
+      split($0, cell, "|")
+      v = cell[2]; gsub(/^[ \t]+|[ \t\r]+$/, "", v)
+      if (nrow == 2 && v ~ /^:?-+:?$/) next
+      r++
+      if (v ~ /^per-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]$/) t++
+    }
+    END { if (nrow == 0) printf "-1\t0\n"; else printf "%d\t%d\n", r + 0, t + 0 }
+  ' "$1"
+}
+
+# rp_g_copy <dest> <trips> — the declared store, and the roots <trips> names, copied under
+# <dest> at the paths they are tracked at: each store's person and group records, and each
+# root's traveller files. Tracked files only, so a state built from the copy starts from what
+# the fence declares.
+rp_g_copy() {
+  local rgc_r rgc_p rgc_list=""
+  while IFS= read -r rgc_r; do
+    [ -n "$rgc_r" ] || continue
+    rgc_list="$rgc_list$(rp_g_ls "$ROOT" tracked "$rgc_r/people")$VA_NL$(rp_g_ls "$ROOT" tracked "$rgc_r/groups")$VA_NL"
+  done <<<"$RP_STORE"
+  while IFS="$VA_TAB" read -r rgc_r _; do
+    [ -n "$rgc_r" ] || continue
+    rgc_list="$rgc_list$(rp_g_ls "$ROOT" tracked "$rgc_r/travelers")$VA_NL"
+  done <<<"$2"
+  while IFS= read -r rgc_p; do
+    [ -n "$rgc_p" ] || continue
+    if [ -f "$ROOT/$rgc_p" ]; then mkdir -p "$1/${rgc_p%/*}" && cp "$ROOT/$rgc_p" "$1/$rgc_p"; fi
+  done <<<"$rgc_list"
+}
+
+# rp_g_fresh <dir> <prefix> — an id, <prefix> and four hexadecimal digits, that names no file
+# under <dir>: the first of a fixed walk. What a control plants where the store must not
+# already hold the id.
+rp_g_fresh() {
+  local rgf_h
+  for rgf_h in 0a0a 0b0b 0c0c 0d0d 0e0e 0f0f 1a1a 1b1b; do
+    if [ ! -e "$1/$2-$rgf_h.md" ]; then printf '%s-%s\n' "$2" "$rgf_h"; return 0; fi
+  done
+  return 0
+}
+
+# rp_g_setbullets <group-file> <ids> — the record rewritten with its member section holding
+# exactly those ids, one per line of <ids>, a bullet each. Every line above the heading is kept.
+rp_g_setbullets() {
+  local rgs_head
+  rgs_head="$(awk -v h="## $GM_SECTION" '{ print } index($0, h) == 1 { exit }' "$1")"
+  { printf '%s\n\n' "$rgs_head"; awk 'NF { print "- " $0 }' <<<"$2"; } > "$1"
+}
+
+# rp_hregion <file> <heading-line> — the region of <file> opened by each unfenced line that IS
+# <heading-line>, to the next unfenced `## ` line. How a citation's named section is found:
+# by its whole heading, so one verb's token never opens another's section.
+rp_hregion() {
+  awk -v h="$2" "$ST_CF_FENCE_FN"'
+    {
+      f = cf_fence_step($0)
+      if (f == "" && index($0, "## ") == 1) { t = $0; sub(/[ \t\r]+$/, "", t); on = (t == h) }
+      if (on) print
+    }
+  ' "$1"
+}
+
+# rp_h3hits <text> <cited> — how many unfenced `###` headings of <text> a citation names: by the
+# heading's whole text, or by its leading segment before an em dash.
+rp_h3hits() {
+  awk -v c="$2" "$ST_CF_FENCE_FN"'
+    {
+      f = cf_fence_step($0)
+      if (f != "" || index($0, "### ") != 1) next
+      t = substr($0, 5); sub(/^[ \t]+/, "", t); sub(/[ \t\r]+$/, "", t)
+      p = index(t, " — ")
+      if (t == c || (p > 0 && substr(t, 1, p - 1) == c)) n++
+    }
+    END { print n + 0 }
+  ' <<<"$1"
+}
+
+# rp_h3body <text> <cited> — the lines under each `###` heading of <text> the citation names, to
+# the next heading of that level or higher.
+rp_h3body() {
+  awk -v c="$2" "$ST_CF_FENCE_FN"'
+    {
+      f = cf_fence_step($0)
+      if (f == "" && $0 ~ /^#+[ \t]/) {
+        lvl = match($0, /[^#]/) - 1
+        if (lvl <= 3) on = 0
+        if (lvl == 3) {
+          t = $0; sub(/^#+[ \t]+/, "", t); sub(/[ \t\r]+$/, "", t)
+          p = index(t, " — ")
+          if (t == c || (p > 0 && substr(t, 1, p - 1) == c)) { on = 1; next }
+        }
+      }
+      if (on) print
+    }
+  ' <<<"$1"
+}
+
+# rp_cites <text> — every citation behind the section sign in <text>, one TAB record each, in
+# reading order:  <class> <span> <cited> <table-cell>
+#   <class>       by the code span that DIRECTLY precedes the sign, whitespace alone between
+#                 the two: a where that span opens `## `, b for any other span, c where there
+#                 is none; x where the emphasised span that follows the sign never closes
+#   <span>        that code span, or `-`
+#   <cited>       the emphasised span that follows the sign, read to its closing marker outside
+#                 any code span, so a cited heading may carry one
+#   <table-cell>  the emphasised span after the words a table citation opens with, where those
+#                 words stand before this citation in the same sentence with no other citation
+#                 between them; otherwise `-`
+rp_cites() {
+  awk -v sign='§ *' -v tw="$RP_CITE_TABLE" '
+    {
+      s = $0; n = length(s); from = 1
+      while ((p = index(substr(s, from), sign)) > 0) {
+        at = from + p - 1
+        i = at + length(sign); incode = 0; cited = ""; closed = 0
+        while (i <= n) {
+          c = substr(s, i, 1)
+          if (c == "`") incode = !incode
+          else if (c == "*" && !incode) { closed = 1; break }
+          cited = cited c
+          i++
+        }
+        j = at - 1
+        while (j >= 1 && (substr(s, j, 1) == " " || substr(s, j, 1) == "\t")) j--
+        span = "-"; cls = "c"
+        if (j >= 1 && substr(s, j, 1) == "`") {
+          k = j - 1
+          while (k >= 1 && substr(s, k, 1) != "`") k--
+          if (k >= 1) { span = substr(s, k + 1, j - k - 1); cls = (index(span, "## ") == 1) ? "a" : "b" }
+        }
+        if (!closed) cls = "x"
+        cell = "-"
+        pre = substr(s, from, at - from)
+        m = index(pre, tw)
+        if (m > 0) {
+          r = substr(pre, m + length(tw))
+          e = index(r, "*")
+          if (e > 1 && index(substr(r, e + 1), ". ") == 0) cell = substr(r, 1, e - 1)
+        }
+        printf "%s\t%s\t%s\t%s\n", cls, span, (cited == "" ? "-" : cited), cell
+        from = closed ? i + 1 : n + 1
+      }
+    }
+  ' <<<"$1"
+}
+
+RP_GROUP=""; RP_JOINT=""; RP_QUAL=""; RP_GOK=0
+RP_NGROUP=0; RP_NJOINT=0; RP_NQUAL=0
+if [ "$RP_OK" -eq 1 ]; then
+  # ── RP10 — the further row kinds, read BEFORE anything rests on them.
+  RP_GROUP="$(rp_rows group)"
+  RP_JOINT="$(rp_rows joint)"
+  RP_QUAL="$(rp_rows qualifies)"
+  RP_NGROUP="$(rp_n "$RP_GROUP")"; RP_NJOINT="$(rp_n "$RP_JOINT")"; RP_NQUAL="$(rp_n "$RP_QUAL")"
+  RP10_BAD="$(rp_g_rowbad "$RP_GROUP" group 3 1)$(rp_g_rowbad "$RP_JOINT" joint 4 2)$(rp_g_rowbad "$RP_QUAL" qualifies 3 2)"
+  while IFS="$VA_TAB" read -r rp_root _; do
+    [ -n "$rp_root" ] || continue
+    rp_life="$(awk -F'\t' -v r="$rp_root" '$1 == r { v = v (v == "" ? "" : " ") $2 } END { print v }' <<<"$RP_TRIPS")"
+    [ "$rp_life" = "ARCHIVED" ] || RP10_BAD="$RP10_BAD joint($rp_root is declared '${rp_life:-<no trip row>}', where a candidate is an ARCHIVED trip)"
+  done <<<"$RP_JOINT"
+  while IFS="$VA_TAB" read -r rp_root _; do
+    [ -n "$rp_root" ] || continue
+    rp_life="$(awk -F'\t' -v r="$rp_root" '$1 == r { v = v (v == "" ? "" : " ") $2 } END { print v }' <<<"$RP_TRIPS")"
+    [ "$rp_life" = "ACTIVE" ] || RP10_BAD="$RP10_BAD qualifies($rp_root is declared '${rp_life:-<no trip row>}', where a group qualifies on an ACTIVE trip)"
+  done <<<"$RP_QUAL"
+  if [ "$RP_NGROUP" -eq 0 ] || [ "$RP_NJOINT" -eq 0 ] || [ "$RP_NQUAL" -eq 0 ]; then
+    FAIL "RP10: the \`returning-party-fixture\` fence in $RP_SET/README.md yielded group=$RP_NGROUP joint=$RP_NJOINT qualifies=$RP_NQUAL. A kind at zero means the arm that reads it would grade nothing, so every later arm of this group is withheld — this fails rather than passing quietly"
+  elif [ -n "$RP10_BAD" ]; then
+    FAIL "RP10: of $RP_NGROUP \`group\`, $RP_NJOINT \`joint\` and $RP_NQUAL \`qualifies\` row(s) in the fence, these are not rows of their kind:$RP10_BAD. A group id is \`grp-\` and four lowercase hexadecimal digits; a \`joint\` row names a root a \`trip\` row declares ARCHIVED, and a \`qualifies\` row one it declares ACTIVE"
+    RP_GOK=1
+  else
+    PASS "RP10: the \`returning-party-fixture\` fence in $RP_SET/README.md yields a row of each further kind — group $RP_NGROUP, joint $RP_NJOINT, qualifies $RP_NQUAL — each with the fields its kind carries and a group id that is \`grp-\` and four lowercase hexadecimal digits; every \`joint\` root is one a \`trip\` row declares ARCHIVED and every \`qualifies\` root one it declares ACTIVE. This suite holds no copy of any of them"
+    RP_GOK=1
+  fi
+fi
+
+if [ "$RP_GOK" -eq 1 ]; then
+  RP_GIDS="$(awk -F'\t' 'NF && !s[$1]++ { print $1 }' <<<"$RP_GROUP")"
+  RP_GPLAN="$(awk -F'\t' '$2 == "ACTIVE" && !n++ { print $1 }' <<<"$RP_TRIPS")"
+
+  # ── RP11 — each declared group, against its record. The record is found tracked under a
+  # declared store; its member section is read by group GM's own readers.
+  RP11_N=0; RP11_BAD=""; RP11_NB=0
+  while IFS="$VA_TAB" read -r rp_gid rp_gnb rp_gnr; do
+    [ -n "$rp_gid" ] || continue
+    RP11_N=$((RP11_N+1))
+    rp_gs="$(rp_g_store "$rp_gid")"
+    if [ -z "$rp_gs" ]; then RP11_BAD="$RP11_BAD $rp_gid(no record groups/$rp_gid.md is tracked under a declared store)"; continue; fi
+    rp_gm="$(rp_g_members "$ROOT" tracked "$rp_gs" "$rp_gid")"
+    rp_gnon="$(rp_n "$(gm_nonconforming "$(er_section "$ROOT/$rp_gs/groups/$rp_gid.md" "$GM_SECTION")")")"
+    rp_gb="$(rp_g_field "$rp_gm" BULLETS 2)"; rp_gr="$(rp_g_field "$rp_gm" RESOLVED 2)"
+    RP11_NB=$((RP11_NB + ${rp_gb:-0}))
+    if [ "$rp_gnon" -ne 0 ]; then
+      RP11_BAD="$RP11_BAD $rp_gid($rp_gnon line(s) under its member heading are not a bare member entry)"
+    elif [ "${rp_gb:-0}" != "$rp_gnb" ] || [ "${rp_gr:-0}" != "$rp_gnr" ]; then
+      RP11_BAD="$RP11_BAD $rp_gid(declared $rp_gnb member line(s), $rp_gnr resolving; the record carries ${rp_gb:-0}, ${rp_gr:-0} resolving)"
+    fi
+  done <<<"$RP_GROUP"
+  if [ "$RP11_N" -gt 0 ] && [ -z "$RP11_BAD" ] && [ "$RP11_NB" -gt 0 ]; then
+    PASS "RP11: all $RP11_N \`group\` row(s) hold — each names a record \`groups/<id>.md\` tracked under a declared store ($(printf '%s' "$RP_STORE" | tr '\n' ' ')), every non-blank line under its member heading is a bare member entry by group GM's own reader, the count of those lines is the declared one — $RP11_NB in all — and as many resolve as the row declares: a tracked record carrying no \`merged-into:\` key, or a stub whose target is one. No record is added or edited for this; the tracked witness is read"
+  else
+    FAIL "RP11: of $RP11_N \`group\` row(s), with $RP11_NB member line(s) read, these disagree with the tracked record:${RP11_BAD:- none recorded}. A group declared with a member count the record does not bear out is a fixture every later arm of this group computes from"
+  fi
+
+  # ── RP12 — THE REFERENCE COMPUTATION over the tracked roots. Per declared group, the
+  # candidates it finds and that group's `joint` rows are one set, both directions, with the
+  # same member count. Then each joint root's roster, by its data rows.
+  RP12_GOT=""; RP12_N=0
+  while IFS= read -r rp_gid; do
+    [ -n "$rp_gid" ] || continue
+    RP12_N=$((RP12_N+1))
+    rp_gs="$(rp_g_store "$rp_gid")"
+    [ -n "$rp_gs" ] || continue
+    RP12_GOT="$RP12_GOT$(awk -F'\t' -v g="$rp_gid" '$1 == "CAND" { print $2 "\t" g "\t" $3 }' <<<"$(rp_g_view "$ROOT" tracked "$rp_gs" "$rp_gid" "$RP_GPLAN" other "$RP_TRIPS")")$VA_NL"
+  done <<<"$RP_GIDS"
+  RP12_DECL="$(awk -F'\t' 'NF >= 4 { print $1 "\t" $2 "\t" $3 }' <<<"$RP_JOINT")"
+  RP12_NGOT="$(rp_n "$RP12_GOT")"
+  RP12_ONLY_DECL="$(rp_minus "$RP12_DECL" "$RP12_GOT")"
+  RP12_ONLY_GOT="$(rp_minus "$RP12_GOT" "$RP12_DECL")"
+  RP12_RBAD=""; RP12_TOK=0; RP12_ROWS=0
+  while IFS="$VA_TAB" read -r rp_root _ _ rp_want; do
+    [ -n "$rp_root" ] || continue
+    rp_ctx="$ROOT/$rp_root/trip-context.md"
+    if [ ! -r "$rp_ctx" ]; then RP12_RBAD="$RP12_RBAD $rp_root(trip-context.md is not readable)"; continue; fi
+    IFS="$VA_TAB" read -r rp_rr rp_rt <<<"$(rp_roster_data "$rp_ctx")"
+    if [ "$rp_rt" -gt 0 ]; then RP12_TOK=$((RP12_TOK+1)); fi
+    if [ "$rp_rr" -gt 0 ]; then RP12_ROWS=$((RP12_ROWS+rp_rr)); fi
+    [ "$rp_rr" = "$rp_want" ] || RP12_RBAD="$RP12_RBAD $rp_root(declared $rp_want roster row(s); the first table under its group heading holds $rp_rr below the header and delimiter rows)"
+  done <<<"$RP_JOINT"
+  if [ "$RP12_N" -eq 0 ] || [ -z "$RP_GPLAN" ]; then
+    FAIL "RP12: the reference computation could not run — $RP12_N declared group(s), and the planned root read from the \`trip\` rows was '${RP_GPLAN:-<none>}'. A comparison over nothing reports agreement"
+  elif [ "$RP12_NGOT" -eq 0 ] || [ -n "$RP12_ONLY_DECL" ] || [ -n "$RP12_ONLY_GOT" ]; then
+    FAIL "RP12: the reference computation and the \`joint\` rows disagree — $RP_NJOINT declared, $RP12_NGOT produced, over $RP12_N group(s) and the $RP_NARCH root(s) declared ARCHIVED. Declared and not produced: [$(printf '%s' "$RP12_ONLY_DECL" | tr '\t\n' ' ;')]. Produced and not declared: [$(printf '%s' "$RP12_ONLY_GOT" | tr '\t\n' ' ;')]. A candidate is an archived trip, other than the one being planned, on which at least two of the group's resolved members are referenced from a tracked traveller file's frontmatter, each member counted once"
+  elif [ -n "$RP12_RBAD" ]; then
+    FAIL "RP12: the candidates agree, and the roster of a \`joint\` root does not hold the declared number of data rows:$RP12_RBAD. The roster size is the rows of the first pipe table under the group heading, below its header row and its delimiter row"
+  elif [ "$RP12_TOK" -eq 0 ]; then
+    FAIL "RP12: the candidates and the roster counts agree, and no \`joint\` root's roster holds a first-column cell that is an erasure token — so nothing here shows the count includes such a row, which is the property the section states. $RP12_ROWS data row(s) were read"
+  else
+    PASS "RP12: THE REFERENCE COMPUTATION over the tracked roots — for the $RP12_N declared group(s), the archived trips other than $RP_GPLAN on which at least two resolved members are referenced from a tracked traveller file's frontmatter, each member counted once, are the $RP_NJOINT \`joint\` row(s) in both directions and with the same member count: [$(printf '%s' "$RP12_GOT" | tr '\t\n' ' ;')]. Each joint root's roster holds the declared data rows — $RP12_ROWS in all, below the header and delimiter rows of the first table under the group heading — and on $RP12_TOK of them a first-column cell is an erasure token, so the count is seen to include such a row. This grades the tree and the rule, never the verb"
+  fi
+
+  # ── RP13 — the qualifying computation: per declared group and trip being planned, the
+  # linked-member count, counted as RP12 counts a candidate's.
+  RP13_GOT=""; RP13_N=0
+  while IFS="$VA_TAB" read -r rp_root rp_life; do
+    [ "$rp_life" = "ACTIVE" ] || continue
+    while IFS= read -r rp_gid; do
+      [ -n "$rp_gid" ] || continue
+      RP13_N=$((RP13_N+1))
+      rp_gs="$(rp_g_store "$rp_gid")"
+      [ -n "$rp_gs" ] || continue
+      RP13_GOT="$RP13_GOT$(awk -F'\t' -v r="$rp_root" 'NF { print r "\t" $0 }' <<<"$(rp_g_qualify "$ROOT" tracked "$rp_gs" "$rp_root" "$rp_gid")")$VA_NL"
+    done <<<"$RP_GIDS"
+  done <<<"$RP_TRIPS"
+  RP13_DECL="$(awk -F'\t' 'NF >= 3 { print $1 "\t" $2 "\t" $3 }' <<<"$RP_QUAL")"
+  RP13_NGOT="$(rp_n "$RP13_GOT")"
+  RP13_ONLY_DECL="$(rp_minus "$RP13_DECL" "$RP13_GOT")"
+  RP13_ONLY_GOT="$(rp_minus "$RP13_GOT" "$RP13_DECL")"
+  if [ "$RP13_N" -gt 0 ] && [ "$RP13_NGOT" -gt 0 ] && [ -z "$RP13_ONLY_DECL" ] && [ -z "$RP13_ONLY_GOT" ]; then
+    PASS "RP13: over $RP13_N pair(s) of a declared group and a root declared ACTIVE, the pairs on which at least two of the group's resolved members are linked — counted as RP12 counts a candidate's — are the $RP_NQUAL \`qualifies\` row(s) in both directions and with the same count: [$(printf '%s' "$RP13_GOT" | tr '\t\n' ' ;')]"
+  else
+    FAIL "RP13: the qualifying computation and the \`qualifies\` rows disagree over $RP13_N pair(s) of a declared group and a root declared ACTIVE — $RP_NQUAL declared, $RP13_NGOT produced. Declared and not produced: [$(printf '%s' "$RP13_ONLY_DECL" | tr '\t\n' ' ;')]. Produced and not declared: [$(printf '%s' "$RP13_ONLY_GOT" | tr '\t\n' ' ;')]. A group qualifies on a trip being planned where at least two of its members carry an edge on it"
+  fi
+
+  # ── RP14 — THE COMPUTATION'S CONTROLS, MUST FIRE. Each is a state built under $WORK from a
+  # copy of the declared store and roots, its mutation asserted to have landed; none is
+  # tracked. The must-fire is the overlap the record's uncorrected row had: with a member's
+  # edge looked for on every trip, the planned one included, the state where every member's
+  # only edge is on the planned trip satisfies the no-joint and the no-edge predicates at once.
+  RP14_GID="$(awk -F'\t' 'NF && !n++ { print $1 }' <<<"$RP_GROUP")"
+  RP14_STORE="$(rp_g_store "$RP14_GID")"
+  RP14_W="$WORK/rp/g"
+  RP14_GF="$RP14_STORE/groups/$RP14_GID.md"
+  RP14_BV=""; RP14_BM=""; RP14_BCAND=""; RP14_BMEM=""; RP14_IDS=""; RP14_NIDS=0; RP14_FIRST=""; RP14_KEEP=""
+  RP14_AID=""; RP14_AV=""; RP14_AM=""; RP14_BVB=""; RP14_CID=""; RP14_CV=""; RP14_CM=""
+  RP14_DVO=""; RP14_DVE=""; RP14_SID=""; RP14_E1V=""; RP14_E1M=""; RP14_E2V=""
+  RP14_FID=""; RP14_FLIST=""; RP14_FQ=""; RP14_FWANT=""; RP14_QK=""; RP14_FBASE=""
+  RP14_LA=0; RP14_LB=0; RP14_LC=0; RP14_LD=0; RP14_LE=0; RP14_LF=0
+  if [ -n "$RP14_STORE" ] && [ -n "$RP_GPLAN" ]; then
+    mkdir -p "$RP14_W"
+    rp_g_copy "$RP14_W/base" "$RP_TRIPS"
+    RP14_IDS="$(awk 'index($0, "- ") == 1 { print substr($0, 3) }' <<<"$(er_section "$RP14_W/base/$RP14_GF" "$GM_SECTION" 2>/dev/null)")"
+    RP14_NIDS="$(rp_n "$RP14_IDS")"
+    RP14_FIRST="$(awk 'NF && !n++ { print }' <<<"$RP14_IDS")"
+    RP14_KEEP="$(awk 'NF { a[++n] = $0 } END { for (i = 1; i < n; i++) print a[i] }' <<<"$RP14_IDS")"
+    RP14_BV="$(rp_g_view "$RP14_W/base" files "$RP14_STORE" "$RP14_GID" "$RP_GPLAN" other "$RP_TRIPS")"
+    RP14_BM="$(rp_g_members "$RP14_W/base" files "$RP14_STORE" "$RP14_GID")"
+    RP14_BCAND="$(awk -F'\t' '$1 == "CAND"' <<<"$RP14_BV")"
+    RP14_BMEM="$(awk -F'\t' '$1 == "MEMBER"' <<<"$RP14_BM")"
+  fi
+  if [ "$RP14_NIDS" -gt 1 ] && [ "$(rp_g_field "$RP14_BV" STATUS 2)" = "CAND" ]; then
+    # (a) a further bullet naming no record.
+    cp -R "$RP14_W/base" "$RP14_W/a"
+    RP14_AID="$(rp_g_fresh "$RP14_W/a/$RP14_STORE/people" psn)"
+    rp_g_setbullets "$RP14_W/a/$RP14_GF" "$RP14_IDS$VA_NL$RP14_AID"
+    RP14_AM="$(rp_g_members "$RP14_W/a" files "$RP14_STORE" "$RP14_GID")"
+    RP14_AV="$(rp_g_view "$RP14_W/a" files "$RP14_STORE" "$RP14_GID" "$RP_GPLAN" other "$RP_TRIPS")"
+    if [ -n "$RP14_AID" ] && [ ! -e "$RP14_W/a/$RP14_STORE/people/$RP14_AID.md" ] && [ "$(rp_g_field "$RP14_AM" UNRESOLVED 2)" = "$RP14_AID" ]; then RP14_LA=1; fi
+    # (b) one resolving bullet removed.
+    cp -R "$RP14_W/base" "$RP14_W/b"
+    rp_g_setbullets "$RP14_W/b/$RP14_GF" "$RP14_KEEP"
+    RP14_BVB="$(rp_g_view "$RP14_W/b" files "$RP14_STORE" "$RP14_GID" "$RP_GPLAN" other "$RP_TRIPS")"
+    if [ "$(rp_g_field "$RP14_BVB" MEMBERS 2)" = "$((RP14_NIDS - 1))" ]; then RP14_LB=1; fi
+    # (c) a further member that resolves and is linked on no trip, then one linked member removed.
+    cp -R "$RP14_W/base" "$RP14_W/c"
+    RP14_CID="$(rp_g_fresh "$RP14_W/c/$RP14_STORE/people" psn)"
+    printf -- '---\nschema-version: 1\n---\n\n# A record a control wrote\n' > "$RP14_W/c/$RP14_STORE/people/$RP14_CID.md"
+    rp_g_setbullets "$RP14_W/c/$RP14_GF" "$RP14_KEEP$VA_NL$RP14_CID"
+    RP14_CM="$(rp_g_members "$RP14_W/c" files "$RP14_STORE" "$RP14_GID")"
+    RP14_CV="$(rp_g_view "$RP14_W/c" files "$RP14_STORE" "$RP14_GID" "$RP_GPLAN" other "$RP_TRIPS")"
+    if [ -n "$RP14_CID" ] && [ "$(rp_g_field "$RP14_CM" BULLETS 2)" = "$RP14_NIDS" ] && [ "$(rp_g_field "$RP14_CM" RESOLVED 2)" = "$RP14_NIDS" ] \
+       && [ -n "$(rp_minus "MEMBER$VA_TAB$RP14_CID" "$RP14_BMEM")" ] && [ -z "$(rp_minus "MEMBER$VA_TAB$RP14_CID" "$(awk -F'\t' '$1 == "MEMBER"' <<<"$RP14_CM")")" ]; then RP14_LC=1; fi
+    # (d) the trip being planned alone: the store, and that one root.
+    RP14_PLANROW="$(awk -F'\t' -v r="$RP_GPLAN" '$1 == r { print }' <<<"$RP_TRIPS")"
+    rp_g_copy "$RP14_W/d" "$RP14_PLANROW"
+    RP14_DVO="$(rp_g_view "$RP14_W/d" files "$RP14_STORE" "$RP14_GID" "$RP_GPLAN" other "$RP14_PLANROW")"
+    RP14_DVE="$(rp_g_view "$RP14_W/d" files "$RP14_STORE" "$RP14_GID" "$RP_GPLAN" every "$RP14_PLANROW")"
+    RP14_DOTHER=0
+    while IFS="$VA_TAB" read -r rp_root _; do
+      [ -n "$rp_root" ] || continue
+      if [ "$rp_root" != "$RP_GPLAN" ] && [ -e "$RP14_W/d/$rp_root" ]; then RP14_DOTHER=$((RP14_DOTHER+1)); fi
+    done <<<"$RP_TRIPS"
+    if [ -d "$RP14_W/d/$RP_GPLAN/travelers" ] && [ "$RP14_DOTHER" -eq 0 ] && [ "$(rp_n "$RP14_PLANROW")" -eq 1 ] && [ "$(rp_g_field "$RP14_DVE" READ 2)" = "1" ]; then RP14_LD=1; fi
+    # (e) a bullet naming a one-hop stub; then a member beside a stub that redirects to it.
+    cp -R "$RP14_W/base" "$RP14_W/e1"
+    RP14_SID="$(rp_g_fresh "$RP14_W/e1/$RP14_STORE/people" psn)"
+    printf -- '---\nschema-version: 1\nmerged-into: %s\n---\n\n# A stub a control wrote\n' "$RP14_FIRST" > "$RP14_W/e1/$RP14_STORE/people/$RP14_SID.md"
+    rp_g_setbullets "$RP14_W/e1/$RP14_GF" "$(awk -v a="$RP14_FIRST" -v b="$RP14_SID" '$0 == a { print b; next } { print }' <<<"$RP14_IDS")"
+    RP14_E1M="$(rp_g_members "$RP14_W/e1" files "$RP14_STORE" "$RP14_GID")"
+    RP14_E1V="$(rp_g_view "$RP14_W/e1" files "$RP14_STORE" "$RP14_GID" "$RP_GPLAN" other "$RP_TRIPS")"
+    cp -R "$RP14_W/e1" "$RP14_W/e2"
+    rp_g_setbullets "$RP14_W/e2/$RP14_GF" "$RP14_FIRST$VA_NL$RP14_SID"
+    RP14_E2V="$(rp_g_view "$RP14_W/e2" files "$RP14_STORE" "$RP14_GID" "$RP_GPLAN" other "$RP_TRIPS")"
+    if [ -n "$RP14_SID" ] && [ "$(rp_fm "$RP14_W/e1/$RP14_STORE/people/$RP14_SID.md" merged-into)" = "$RP14_FIRST" ] \
+       && [ "$(rp_occurs "$(cat "$RP14_W/e1/$RP14_GF")" "- $RP14_SID")" -eq 1 ] && [ "$(rp_occurs "$(cat "$RP14_W/e1/$RP14_GF")" "- $RP14_FIRST")" -eq 0 ] \
+       && [ "$(rp_occurs "$(cat "$RP14_W/e2/$RP14_GF")" "- $RP14_SID")" -eq 1 ] && [ "$(rp_occurs "$(cat "$RP14_W/e2/$RP14_GF")" "- $RP14_FIRST")" -eq 1 ]; then RP14_LE=1; fi
+    # (f) a second group record naming the same members, under an id no row declares.
+    cp -R "$RP14_W/base" "$RP14_W/f"
+    RP14_FID="$(rp_g_fresh "$RP14_W/f/$RP14_STORE/groups" grp)"
+    cp "$RP14_W/f/$RP14_GF" "$RP14_W/f/$RP14_STORE/groups/$RP14_FID.md"
+    RP14_FLIST="$(awk -F/ '{ s = $NF; sub(/\.md$/, "", s); if (s ~ /^grp-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]$/) print s }' <<<"$(rp_g_ls "$RP14_W/f" files "$RP14_STORE/groups")")"
+    RP14_FQ="$(rp_g_qualify "$RP14_W/f" files "$RP14_STORE" "$RP_GPLAN" "$RP14_FLIST")"
+    RP14_QK="$(awk -F'\t' -v r="$RP_GPLAN" -v g="$RP14_GID" '$1 == r && $2 == g && !n++ { print $3 }' <<<"$RP_QUAL")"
+    RP14_FBASE="$(awk -F/ '{ s = $NF; sub(/\.md$/, "", s); if (s ~ /^grp-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]$/) print s }' <<<"$(rp_g_ls "$RP14_W/base" files "$RP14_STORE/groups")")"
+    RP14_FWANT="$(rp_g_qualify "$RP14_W/base" files "$RP14_STORE" "$RP_GPLAN" "$RP14_FBASE")$VA_NL$RP14_FID$VA_TAB$RP14_QK"
+    if [ -n "$RP14_FID" ] && [ -n "$(rp_minus "$RP14_FID" "$RP_GIDS")" ] && cmp -s "$RP14_W/f/$RP14_GF" "$RP14_W/f/$RP14_STORE/groups/$RP14_FID.md" \
+       && [ "$(rp_n "$RP14_FLIST")" -eq $(( $(rp_n "$RP14_FBASE") + 1 )) ]; then RP14_LF=1; fi
+  fi
+  RP14_PB="$(awk -F'\t' '$1 == "PRED" { print $2 $3 $4 }' <<<"$RP14_BVB")"
+  RP14_PC="$(awk -F'\t' '$1 == "PRED" { print $2 $3 $4 }' <<<"$RP14_CV")"
+  RP14_PD="$(awk -F'\t' '$1 == "PRED" { print $2 $3 $4 }' <<<"$RP14_DVO")"
+  RP14_PE="$(awk -F'\t' '$1 == "PRED" { print $2 $3 $4 }' <<<"$RP14_DVE")"
+  if [ -z "$RP14_STORE" ] || [ -z "$RP_GPLAN" ] || [ "$RP14_NIDS" -lt 2 ] || [ "$(rp_g_field "$RP14_BV" STATUS 2)" != "CAND" ] || [ "$(rp_g_field "$RP14_BV" READ 2)" = "0" ]; then
+    FAIL "RP14: the controls could not be built — the first declared group is '${RP14_GID:-<none>}', its store '${RP14_STORE:-<not tracked under a declared store>}', the planned root '${RP_GPLAN:-<none>}'; a copy of the declared store and roots under the work directory read $RP14_NIDS member line(s) and status [$(rp_g_field "$RP14_BV" STATUS 2)] with [$(rp_g_field "$RP14_BV" READ 2)] traveller director(ies) listed, where a group of at least two members with a candidate is what every control starts from"
+  elif [ "$RP14_LA" -ne 1 ] || [ "$RP14_LB" -ne 1 ] || [ "$RP14_LC" -ne 1 ] || [ "$RP14_LD" -ne 1 ] || [ "$RP14_LE" -ne 1 ] || [ "$RP14_LF" -ne 1 ]; then
+    FAIL "RP14: a mutation did not land — (a) a bullet naming no record=$RP14_LA (b) a bullet removed=$RP14_LB (c) a further member, then one removed=$RP14_LC (d) the planned trip alone=$RP14_LD (e) a stub in a member's place=$RP14_LE (f) a second group record=$RP14_LF, where 1 is landed. A control over an unchanged copy grades the declared state again and proves nothing"
+  elif [ "$(rp_g_field "$RP14_AM" BULLETS 2)" != "$((RP14_NIDS + 1))" ] || [ "$(awk -F'\t' '$1 == "MEMBER"' <<<"$RP14_AM")" != "$RP14_BMEM" ] || [ "$(awk -F'\t' '$1 == "CAND"' <<<"$RP14_AV")" != "$RP14_BCAND" ]; then
+    FAIL "RP14: control (a) disagrees — with a bullet naming no record ($RP14_AID) added, the computation read $(rp_g_field "$RP14_AM" BULLETS 2) member line(s) where $((RP14_NIDS + 1)) was required, members [$(awk -F'\t' '$1 == "MEMBER" { printf "%s ", $2 }' <<<"$RP14_AM")] where [$(awk -F'\t' '{ printf "%s ", $2 }' <<<"$RP14_BMEM")] was, and candidates [$(awk -F'\t' '$1 == "CAND" { printf "%s %s; ", $2, $3 }' <<<"$RP14_AV")] where [$(awk -F'\t' '{ printf "%s %s; ", $2, $3 }' <<<"$RP14_BCAND")] was. An unresolved bullet is counted in the member count and is not a member"
+  elif [ "$(rp_g_field "$RP14_BVB" STATUS 2)" != "TOOFEW" ] || [ "$(rp_g_field "$RP14_BVB" READ 2)" != "0" ]; then
+    FAIL "RP14: control (b) disagrees — with one resolving bullet removed the computation ended [$(rp_g_field "$RP14_BVB" STATUS 2)] with [$(rp_g_field "$RP14_BVB" READ 2)] traveller director(ies) listed, where the too-few-members status and no directory read were required. On the unchanged copy the same computation listed $(rp_g_field "$RP14_BV" READ 2)"
+  elif [ "$(rp_g_field "$RP14_CV" STATUS 2)" != "NOJOINT" ] || [ -n "$(awk -F'\t' '$1 == "CAND"' <<<"$RP14_CV")" ] || [ "$(rp_g_field "$RP14_CV" READ 2)" = "0" ]; then
+    FAIL "RP14: control (c) disagrees — with a further member that resolves and is linked on no trip ($RP14_CID), and one linked member removed, the computation ended [$(rp_g_field "$RP14_CV" STATUS 2)] with candidates [$(awk -F'\t' '$1 == "CAND" { printf "%s %s; ", $2, $3 }' <<<"$RP14_CV")], where no candidate and the no-joint status were required: each archived trip then carries one member's edge"
+  elif [ "$(rp_g_field "$RP14_DVO" STATUS 2)" != "NOEDGE" ]; then
+    FAIL "RP14: control (d) disagrees — over the planned trip alone the computation ended [$(rp_g_field "$RP14_DVO" STATUS 2)], where the no-edge status was required: every member's only edge is on the trip being planned"
+  elif [ "$(awk -F'\t' '$1 == "MEMBER"' <<<"$RP14_E1M")" != "$RP14_BMEM" ] || [ "$(awk -F'\t' '$1 == "CAND"' <<<"$RP14_E1V")" != "$RP14_BCAND" ] || [ "$(rp_g_field "$RP14_E1M" RESOLVED 2)" != "$RP14_NIDS" ]; then
+    FAIL "RP14: control (e) disagrees — with the bullet for $RP14_FIRST replaced by a stub one hop from it ($RP14_SID), the computation read members [$(awk -F'\t' '$1 == "MEMBER" { printf "%s ", $2 }' <<<"$RP14_E1M")] and candidates [$(awk -F'\t' '$1 == "CAND" { printf "%s %s; ", $2, $3 }' <<<"$RP14_E1V")], where the unchanged copy's were required: a bullet naming a one-hop stub resolves to its survivor"
+  elif [ "$(rp_g_field "$RP14_E2V" MEMBERS 4)" != "1" ] || [ "$(rp_g_field "$RP14_E2V" MEMBERS 3)" != "$(rp_g_field "$RP14_E2V" MEMBERS 2)" ] || [ "$(rp_g_field "$RP14_E2V" STATUS 2)" != "TOOFEW" ]; then
+    FAIL "RP14: control (e) disagrees — a group listing $RP14_FIRST and a stub that redirects to it read [$(awk -F'\t' '$1 == "MEMBERS" { print $2 " line(s), " $3 " resolving, " $4 " distinct" }' <<<"$RP14_E2V")] and ended [$(rp_g_field "$RP14_E2V" STATUS 2)], where every line resolving to one member, counted once, was required"
+  elif [ -z "$RP14_QK" ] || [ -n "$(rp_minus "$RP14_GID$VA_TAB$RP14_QK$VA_NL$RP14_FID$VA_TAB$RP14_QK" "$RP14_FQ")" ] || [ -n "$(rp_minus "$RP14_FWANT" "$RP14_FQ")" ] || [ -n "$(rp_minus "$RP14_FQ" "$RP14_FWANT")" ]; then
+    FAIL "RP14: control (f) disagrees — over a store holding a second group record ($RP14_FID) that names the same members as $RP14_GID, the qualifying computation on $RP_GPLAN returned [$(printf '%s' "$RP14_FQ" | tr '\t\n' ' ;')], where both groups, each with the count the fence declares for the tracked one (${RP14_QK:-<no qualifies row>}), and nothing the unchanged copy does not also return, were required"
+  elif [ "$RP14_PB" != "100" ] || [ "$RP14_PC" != "010" ] || [ "$RP14_PD" != "001" ]; then
+    FAIL "RP14: with a member's edge looked for on the trips other than the planned one, the too-few, no-joint and no-edge predicates read (b) [$RP14_PB] (c) [$RP14_PC] (d) [$RP14_PD], where exactly one holds in each: 100, 010 and 001. The outcomes are then not a partition"
+  elif [ "$RP14_PE" != "011" ]; then
+    FAIL "RP14: MUST FIRE did not fire — on (d), with a member's edge looked for on every trip, the planned one included, the predicates read [$RP14_PE] where the no-joint and the no-edge predicates both holding, 011, is the overlap the record's uncorrected row had. The partition above is not shown to depend on where an edge is looked for"
+  else
+    PASS "RP14: MUST FIRE — the reference computation's controls, each a state built under the work directory from a copy of the declared store and roots for $RP14_GID, its mutation asserted to have landed and none of it tracked: (a) a bullet naming no record raises the member count to $((RP14_NIDS + 1)) and leaves the members and the candidates as they were; (b) one resolving bullet removed ends in the too-few-members status with no traveller directory listed, where the unchanged copy listed $(rp_g_field "$RP14_BV" READ 2); (c) a further member that resolves and is linked on no trip, with one linked member removed, leaves no candidate and the no-joint status; (d) the trip being planned alone ends in the no-edge status; (e) a bullet naming a one-hop stub resolves to its survivor, and a member listed beside a stub that redirects to it is counted once; (f) a second group record naming the same members qualifies beside the first, each with the declared count of $RP14_QK. With a member's edge looked for on the other trips only, exactly one of the too-few, no-joint and no-edge predicates holds in each of (b), (c) and (d); looked for on every trip, the planned one included, both the no-joint and the no-edge predicate hold on (d) — the overlap the record's uncorrected row had"
+  fi
+
+  # ── RP15 — THE SECTION'S OUTCOME TABLE, MUST FIRE. Limb (i) holds it against the section's
+  # own prose; limb (ii) against the group terminal set of the decision record, read on every
+  # run. The must-fire is the edit limb (i) passes: an outcome removed from the table and from
+  # the paragraph that names where a run ends, together.
+  RP_GSECT="$(RP_VERB="$RP_GVERB" rp_section "$RP_CMD" 2>/dev/null)"
+  RP_NGSECT="$(rp_n "$RP_GSECT")"
+  RP15_CTLTAB="| $RP_T_OUT | a second column |
+|---|---|
+| \`ALPHA\`, per thing | a thing |
+| *a beta sentence* | another thing |
+
+not a table line"
+  RP15_CTLGOT="$(rp_tabs "$(rp_members "$RP15_CTLTAB" "$RP_T_OUT")")"
+  RP15_OUT="$(rp_members "$RP_GSECT" "$RP_T_OUT")"
+  RP15_NOUT="$(rp_n "$RP15_OUT")"
+  RP15_ORPH="$(rp_orphans "$RP_GSECT" "$RP_T_OUT")"
+  RP15_NORPH="$(rp_n "$RP15_ORPH")"
+  RP15_REGION="$(rp_region "$RP_ADR" "$RP_ADR_GHEAD" 2>/dev/null)"
+  RP15_NREGION="$(rp_n "$RP15_REGION")"
+  RP15_NRTAB="$(rp_tables "$RP15_REGION" "$RP_T_OUT")"
+  RP15_REC="$(rp_members "$RP15_REGION" "$RP_T_OUT")"
+  RP15_NREC="$(rp_n "$RP15_REC")"
+  RP15_SEC_ONLY="$(rp_minus "$RP15_OUT" "$RP15_REC")"
+  RP15_REC_ONLY="$(rp_minus "$RP15_REC" "$RP15_OUT")"
+  # The member the must-fire removes: the first that no other member of the table contains, so
+  # cutting it from the paragraph takes nothing of another member with it.
+  RP15_VICTIM="$(awk 'NF { m[++n] = $0 } END { for (i = 1; i <= n; i++) { ok = 1; for (j = 1; j <= n; j++) if (j != i && index(m[j], m[i]) > 0) ok = 0; if (ok) { print m[i]; break } } }' <<<"$RP15_OUT")"
+  awk -F'|' -v v="$RP15_VICTIM" -v h="$RP_T_OUT" -v para="$RP_G_PARA" '
+    function bare(s) { gsub(/[`*]/, "", s); sub(/^[ \t]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+    function cut(s, m,   p) { while ((p = index(s, m)) > 0) s = substr(s, 1, p - 1) substr(s, p + length(m)); return s }
+    substr($0, 1, 1) == "|" {
+      if (on == 0) on = (bare($2) == h) ? 1 : -1
+      if (on == 1 && bare($2) == v) next
+      print; next
+    }
+    { on = 0 }
+    index($0, para) == 1 { print cut(cut($0, "`" v "`"), "*" v "*"); next }
+    { print }
+  ' <<<"$RP_GSECT" > "$WORK/rp/rp15-outcome-removed.md"
+  RP15_COPY="$(cat "$WORK/rp/rp15-outcome-removed.md")"
+  RP15_COUT="$(rp_members "$RP15_COPY" "$RP_T_OUT")"
+  RP15_CPARA="$(awk -v para="$RP_G_PARA" 'index($0, para) == 1' <<<"$RP15_COPY")"
+  RP15_LAND=0
+  if [ -n "$RP15_VICTIM" ] && [ "$(rp_n "$RP15_COUT")" -eq $((RP15_NOUT - 1)) ] && [ -z "$(rp_minus "$RP15_COUT" "$RP15_OUT")" ] \
+     && [ "$(rp_tabs "$(rp_minus "$RP15_OUT" "$RP15_COUT")")" = "$RP15_VICTIM" ] && [ -n "$RP15_CPARA" ] && [ "$(rp_prose_hits "$RP15_CPARA" "$RP15_VICTIM")" -eq 0 ]; then RP15_LAND=1; fi
+  RP15_CORPH="$(rp_n "$(rp_orphans "$RP15_COPY" "$RP_T_OUT")")"
+  RP15_CREC_ONLY="$(rp_tabs "$(rp_minus "$RP15_REC" "$RP15_COUT")")"
+  RP15_CSEC_ONLY="$(rp_minus "$RP15_COUT" "$RP15_REC")"
+  if [ "$RP15_CTLGOT" != "ALPHA, per thing${VA_TAB}a beta sentence" ]; then
+    FAIL "RP15: MUST FIRE — the extractor's CONTROL returned [$(printf '%s' "$RP15_CTLGOT" | tr '\t' ';')] from a synthetic table carrying exactly a code-spanned token with words after it and an emphasised sentence, so it cannot be trusted to report what the real tables hold. The probe is reported UNUSABLE rather than the enumeration complete"
+  elif [ "$RP_NGSECT" -eq 0 ] || [ "$RP15_NOUT" -eq 0 ] || [ "$RP15_NREC" -eq 0 ]; then
+    FAIL "RP15: an extraction came back EMPTY — the \`## $RP_GVERB\` section yielded $RP_NGSECT non-blank line(s), its table headed '$RP_T_OUT' $RP15_NOUT member(s), and the record's table headed '$RP_T_OUT', inside the region of $RP15_NREGION non-blank line(s) the heading beginning '$RP_ADR_GHEAD' opens in ${RP_ADR#"$ROOT/"}, $RP15_NREC. A comparison over nothing reports agreement; a renamed heading or header cell is the likeliest cause and is a finding in its own right"
+  elif [ "$RP15_NRTAB" -ne 1 ]; then
+    FAIL "RP15: the region the heading beginning '$RP_ADR_GHEAD' opens in ${RP_ADR#"$ROOT/"} carries $RP15_NRTAB table(s) headed '$RP_T_OUT', where exactly one is the group view's terminal set — which table the section is held against is undecided"
+  elif [ "$RP15_NORPH" -ne 0 ]; then
+    FAIL "RP15: limb (i) — $RP15_NORPH member(s) of the section's outcome table occur on no line outside a table: [$(printf '%s' "$RP15_ORPH" | tr '\n' ';')]. The paragraph that says where a run ends is where each outcome has to be named"
+  elif [ -n "$RP15_SEC_ONLY" ] || [ -n "$RP15_REC_ONLY" ]; then
+    FAIL "RP15: limb (ii) — the section's outcome set and the decision record's group terminal set differ. In the section and not the record: [$(printf '%s' "$RP15_SEC_ONLY" | tr '\n' ';')]. In the record and not the section: [$(printf '%s' "$RP15_REC_ONLY" | tr '\n' ';')]. The record is read on this run, from the table headed '$RP_T_OUT' under the heading beginning '$RP_ADR_GHEAD', and held nowhere here. First columns are compared, with code-span and emphasis markers stripped and whitespace trimmed; no condition cell is read"
+  elif [ "$RP15_LAND" -ne 1 ]; then
+    FAIL "RP15: the must-fire mutation did not land — a copy of the section with '$RP15_VICTIM' removed from the table headed '$RP_T_OUT' and from the paragraph opening '$RP_G_PARA' still reads [$(printf '%s' "$RP15_COUT" | tr '\n' ';')], or that paragraph was not found. A control over an unchanged copy proves nothing"
+  elif [ "$RP15_CORPH" -ne 0 ] || [ "$RP15_CREC_ONLY" != "$RP15_VICTIM" ] || [ -n "$RP15_CSEC_ONLY" ]; then
+    FAIL "RP15: MUST FIRE did not fire as specified — on a copy of the section with '$RP15_VICTIM' removed from its table and its paragraph together, limb (i) reported $RP15_CORPH orphan(s) where none was expected, and limb (ii) reported record-only [$(printf '%s' "$RP15_CREC_ONLY" | tr '\t' ';')] and section-only [$(printf '%s' "$RP15_CSEC_ONLY" | tr '\n' ';')] where exactly '$RP15_VICTIM' and nothing were required. The agreement above is not a measurement until this fires"
+  else
+    PASS "RP15: MUST FIRE — in the \`## $RP_GVERB\` section ($RP_NGSECT non-blank lines), limb (i): each of the $RP15_NOUT member(s) of the outcome table { $(printf '%s' "$RP15_OUT" | tr '\n' ';') } occurs again on a line that is not a table row. Limb (ii): that table and the decision record's group terminal set — the one table headed '$RP_T_OUT' in the region of $RP15_NREGION non-blank line(s) the heading beginning '$RP_ADR_GHEAD' opens, read on this run — are the same set in both directions, first columns compared with markers stripped; no condition cell is read. The control: on a copy under the work directory with '$RP15_VICTIM' removed from the table and from its paragraph together, limb (i) still passes and limb (ii) reports exactly that member as the one the record still carries"
+  fi
+
+  # ── RP16 — CITATIONS RESOLVE, AND NOTHING CITED IS RESTATED, MUST FIRE. Limb (i): every
+  # citation behind the section sign, sorted by the code span directly before it. Limb (iii):
+  # a table cited by its header cell. Limb (ii): none of the relation's own verdict tokens, and
+  # none of the reader's labels or cell values, stands in this section as a code span.
+  RP16_CITES="$(rp_cites "$RP_GSECT")"
+  RP16_N="$(rp_n "$RP16_CITES")"
+  RP16_NA="$(awk -F'\t' '$1 == "a" { n++ } END { print n + 0 }' <<<"$RP16_CITES")"
+  RP16_NB="$(awk -F'\t' '$1 == "b" { n++ } END { print n + 0 }' <<<"$RP16_CITES")"
+  RP16_NC="$(awk -F'\t' '$1 == "c" { n++ } END { print n + 0 }' <<<"$RP16_CITES")"
+  RP16_HEADS="$(awk -F'\t' '$1 == "a" && !s[$2 "\t" $3]++ { n++ } END { print n + 0 }' <<<"$RP16_CITES")"
+  RP16_BAD=""; RP16_MFS=""; RP16_MFH=""
+  while IFS="$VA_TAB" read -r rp_cc rp_cs rp_ct _; do
+    [ -n "$rp_cc" ] || continue
+    if [ "$rp_cc" = "a" ]; then
+      rp_ch="$(rp_h3hits "$(rp_hregion "$RP_CMD" "$rp_cs")" "$rp_ct")"
+      [ "$rp_ch" -eq 1 ] || RP16_BAD="$RP16_BAD [$rp_cs § $rp_ct: $rp_ch heading(s) in that section]"
+      if [ -z "$RP16_MFH" ] && [ "$rp_ch" -eq 1 ] && [ "$(rp_h3hits "$RP_GSECT" "$rp_ct")" -ge 1 ]; then RP16_MFS="$rp_cs"; RP16_MFH="$rp_ct"; fi
+    elif [ "$rp_cc" = "c" ]; then
+      rp_ch="$(rp_h3hits "$RP_GSECT" "$rp_ct")"
+      [ "$rp_ch" -eq 1 ] || RP16_BAD="$RP16_BAD [§ $rp_ct: $rp_ch heading(s) in this section]"
+    elif [ "$rp_cc" != "b" ]; then
+      RP16_BAD="$RP16_BAD [§ $rp_ct: the emphasised span never closes]"
+    fi
+  done <<<"$RP16_CITES"
+  # The must-fire for limb (i): the sub-heading this section and a cited one both carry, reworded
+  # inside the cited section alone.
+  RP16_MF1=1; RP16_MF1NEW=0; RP16_MF1OWN=0; RP16_MFNEW="$RP16_MFH, reworded for this control"
+  if [ -n "$RP16_MFH" ]; then
+    awk -v sec="$RP16_MFS" -v old="### $RP16_MFH" -v new="### $RP16_MFNEW" "$ST_CF_FENCE_FN"'
+      {
+        f = cf_fence_step($0)
+        if (f == "" && index($0, "## ") == 1) { t = $0; sub(/[ \t\r]+$/, "", t); on = (t == sec) }
+        if (on && f == "" && $0 == old) { print new; next }
+        print
+      }
+    ' "$RP_CMD" > "$WORK/rp/rp16-heading-reworded.md"
+    RP16_MF1="$(rp_h3hits "$(rp_hregion "$WORK/rp/rp16-heading-reworded.md" "$RP16_MFS")" "$RP16_MFH")"
+    RP16_MF1NEW="$(rp_h3hits "$(rp_hregion "$WORK/rp/rp16-heading-reworded.md" "$RP16_MFS")" "$RP16_MFNEW")"
+    RP16_MF1OWN="$(rp_h3hits "$(RP_VERB="$RP_GVERB" rp_section "$WORK/rp/rp16-heading-reworded.md")" "$RP16_MFH")"
+  fi
+  # Limb (iii): the table citations, and the must-fire on the first of them.
+  RP16_TABS="$(awk -F'\t' '$1 == "a" && $4 != "-"' <<<"$RP16_CITES")"
+  RP16_NT="$(rp_n "$RP16_TABS")"
+  RP16_TBAD=""; RP16_TS=""; RP16_TH=""; RP16_TX=""
+  while IFS="$VA_TAB" read -r _ rp_cs rp_ct rp_cx; do
+    [ -n "$rp_cs" ] || continue
+    rp_tn="$(rp_tables "$(rp_h3body "$(rp_hregion "$RP_CMD" "$rp_cs")" "$rp_ct")" "$rp_cx")"
+    [ "$rp_tn" -eq 1 ] || RP16_TBAD="$RP16_TBAD [the table headed $rp_cx under $rp_cs § $rp_ct: $rp_tn table(s)]"
+    if [ -z "$RP16_TX" ] && [ "$rp_tn" -eq 1 ]; then RP16_TS="$rp_cs"; RP16_TH="$rp_ct"; RP16_TX="$rp_cx"; fi
+  done <<<"$RP16_TABS"
+  RP16_MF3=1; RP16_MF3NEW=0; RP16_MF3HEAD=0; RP16_TXNEW="$RP16_TX, reworded for this control"
+  if [ -n "$RP16_TX" ]; then
+    awk -F'|' -v sec="$RP16_TS" -v x="$RP16_TX" -v nx="$RP16_TXNEW" "$ST_CF_FENCE_FN"'
+      function bare(s) { gsub(/[`*]/, "", s); sub(/^[ \t]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+      {
+        f = cf_fence_step($0)
+        if (f == "" && index($0, "## ") == 1) { t = $0; sub(/[ \t\r]+$/, "", t); on = (t == sec) }
+        ispipe = (substr($0, 1, 1) == "|")
+        if (on && ispipe && !waspipe && bare($2) == x) {
+          p = index($0, x); print substr($0, 1, p - 1) nx substr($0, p + length(x)); waspipe = 1; next
+        }
+        waspipe = ispipe
+        print
+      }
+    ' "$RP_CMD" > "$WORK/rp/rp16-cell-reworded.md"
+    RP16_TCOPY="$(rp_hregion "$WORK/rp/rp16-cell-reworded.md" "$RP16_TS")"
+    RP16_MF3="$(rp_tables "$(rp_h3body "$RP16_TCOPY" "$RP16_TH")" "$RP16_TX")"
+    RP16_MF3NEW="$(rp_tables "$(rp_h3body "$RP16_TCOPY" "$RP16_TH")" "$RP16_TXNEW")"
+    RP16_MF3HEAD="$(rp_h3hits "$RP16_TCOPY" "$RP16_TH")"
+  fi
+  # Limb (ii): the relation's verdict tokens, read from the code spans that open the bullets
+  # under its sub-heading in the person section, less the code-spanned tokens of this section's
+  # own outcome table; then the reader's labels and cell values, as RP7 extracts them.
+  RP16_RTOK="$(awk '
+    index($0, "- ") != 1 { next }
+    {
+      s = substr($0, 3); while (substr(s, 1, 1) == "*") s = substr(s, 2)
+      if (substr(s, 1, 1) != "`") next
+      s = substr(s, 2); q = index(s, "`")
+      if (q > 1) print substr(s, 1, q - 1)
+    }
+  ' <<<"$(rp_under "$RP_SECT" "$RP_REL_HEAD")")"
+  RP16_OWN="$(awk -F'|' '
+    {
+      s = $2
+      while ((p = index(s, "`")) > 0) {
+        s = substr(s, p + 1); q = index(s, "`"); if (q == 0) break
+        print substr(s, 1, q - 1); s = substr(s, q + 1)
+      }
+    }
+  ' <<<"$(rp_rawrows "$RP_GSECT" "$RP_T_OUT")")"
+  RP16_ONLY="$(rp_minus "$RP16_RTOK" "$RP16_OWN")"
+  RP16_SHARED="$(rp_minus "$RP16_RTOK" "$RP16_ONLY")"
+  RP16_NRTOK="$(rp_n "$RP16_RTOK")"; RP16_NONLY="$(rp_n "$RP16_ONLY")"; RP16_NSHARED="$(rp_n "$RP16_SHARED")"
+  RP16_FORB="$RP16_ONLY"
+  if [ "$RP_VOC_OK" -eq 1 ]; then
+    RP16_FORB="$RP16_FORB$VA_NL$(tr '\t' '\n' <<<"$RP_L_TRAV$VA_TAB$RP_L_TIER$VA_TAB$RP_L_VERD$VA_TAB$RP_V_TIER$VA_TAB$RP_V_VERD")"
+  fi
+  RP16_NFORB=0; RP16_FOUND=""; RP16_SENS0=""
+  while IFS= read -r rp_tok; do
+    [ -n "$rp_tok" ] || continue
+    RP16_NFORB=$((RP16_NFORB+1))
+    [ "$(rp_occurs "$RP_GSECT" "\`$rp_tok\`")" -eq 0 ] || RP16_FOUND="$RP16_FOUND [$rp_tok]"
+    [ "$(rp_occurs "$RP_SECT" "\`$rp_tok\`")" -gt 0 ] || RP16_SENS0="$RP16_SENS0 [$rp_tok]"
+  done <<<"$RP16_FORB"
+  RP16_SHAREDHITS=0
+  while IFS= read -r rp_tok; do
+    [ -n "$rp_tok" ] || continue
+    RP16_SHAREDHITS=$((RP16_SHAREDHITS + $(rp_occurs "$RP_GSECT" "\`$rp_tok\`")))
+  done <<<"$RP16_SHARED"
+  if [ "$RP_NGSECT" -eq 0 ] || [ "$RP16_N" -eq 0 ] || [ "$RP_NSECT" -eq 0 ]; then
+    FAIL "RP16: an extraction came back EMPTY — the \`## $RP_GVERB\` section yielded $RP_NGSECT non-blank line(s) and $RP16_N citation(s) behind the section sign, and the \`## $RP_VERB\` section $RP_NSECT non-blank line(s). A section that cites nothing is not a section whose citations resolve"
+  elif [ -n "$RP16_BAD" ]; then
+    FAIL "RP16: limb (i) — of $RP16_N citation(s) in the \`## $RP_GVERB\` section ($RP16_NA naming a section of this file, $RP16_NC naming a sub-heading of the section itself, $RP16_NB naming another file and passed over), these do not resolve to exactly one \`###\` heading, by its whole text or by its leading segment before an em dash:$RP16_BAD. A sub-heading a verb cites is fixed once cited, and a citation of one that was renamed points at nothing"
+  elif [ -z "$RP16_MFH" ]; then
+    FAIL "RP16: limb (i) — no citation naming a section of this file cites a sub-heading the \`## $RP_GVERB\` section also carries, so the must-fire has nothing to reword and the resolutions above were never shown to tell one section's heading from another's. $RP16_NA citation(s) name a section"
+  elif [ "$RP16_MF1NEW" -ne 1 ] || [ "$RP16_MF1OWN" -ne 1 ]; then
+    FAIL "RP16: the must-fire mutation for limb (i) did not land — on a copy of ${RP_CMD#"$ROOT/"} with the sub-heading '$RP16_MFH' reworded inside \`$RP16_MFS\` alone, that section carries the reworded heading $RP16_MF1NEW time(s) and the \`## $RP_GVERB\` section still carries its own $RP16_MF1OWN time(s), where once each was required"
+  elif [ "$RP16_MF1" -ne 0 ]; then
+    FAIL "RP16: MUST FIRE did not fire — with the sub-heading '$RP16_MFH' reworded inside \`$RP16_MFS\` alone, the citation naming that section still resolved to $RP16_MF1 heading(s). The \`## $RP_GVERB\` section carries a sub-heading of the same text, and a citation that resolves against the wrong section holds nothing"
+  elif [ "$RP16_NT" -eq 0 ]; then
+    FAIL "RP16: limb (iii) — the \`## $RP_GVERB\` section holds no citation of a table by its header cell: the words '${RP_CITE_TABLE}' and an emphasised span, followed in the same sentence by a citation naming a section of this file. An empty population fails this limb"
+  elif [ -n "$RP16_TBAD" ]; then
+    FAIL "RP16: limb (iii) — of $RP16_NT citation(s) of a table by its header cell, these do not find exactly one pipe table whose header row opens with that cell under the cited sub-heading:$RP16_TBAD. The cell is fixed with its heading, and a citation of a table that was renamed points at nothing"
+  elif [ "$RP16_MF3NEW" -ne 1 ] || [ "$RP16_MF3HEAD" -ne 1 ]; then
+    FAIL "RP16: the must-fire mutation for limb (iii) did not land — on a copy of ${RP_CMD#"$ROOT/"} with the header cell '$RP16_TX' reworded inside \`$RP16_TS\`, the cited sub-heading '$RP16_TH' resolves $RP16_MF3HEAD time(s) and the reworded cell heads $RP16_MF3NEW table(s) under it, where once each was required"
+  elif [ "$RP16_MF3" -ne 0 ]; then
+    FAIL "RP16: MUST FIRE did not fire — with the header cell '$RP16_TX' reworded inside \`$RP16_TS\` and its sub-heading left as it stands, limb (iii) still found $RP16_MF3 table(s) headed by the cited cell. Limb (i) resolves the heading either way, so nothing would then hold the table the citation names"
+  elif [ "$RP_VOC_OK" -ne 1 ] || [ "$RP16_NRTOK" -eq 0 ]; then
+    FAIL "RP16: limb (ii) could not run — the reader's labels and cell values were not read from the \`## $RP_VERB\` section (RP7 says why), or the bullets under its sub-heading '$RP_REL_HEAD' open with no code span: $RP16_NRTOK token(s) read. A count over an empty list is zero for a reason that has nothing to do with this section"
+  elif [ -n "$RP16_SENS0" ]; then
+    FAIL "RP16: limb (ii) — SENSITIVITY: of the $RP16_NFORB token(s), label(s) and cell value(s) looked for, these occur nowhere as a code span in the \`## $RP_VERB\` section they were read from:$RP16_SENS0. The count that would find one in the group section is then not shown to find anything"
+  elif [ "$RP16_NSHARED" -eq 0 ] || [ "$RP16_SHAREDHITS" -eq 0 ]; then
+    FAIL "RP16: limb (ii) — SPECIFICITY has no input: $RP16_NSHARED of the relation's $RP16_NRTOK verdict token(s) is also a token of this section's own outcome table, occurring $RP16_SHAREDHITS time(s) here. A token both sections carry is what shows the list looked for is the relation's alone and not every token"
+  elif [ -n "$RP16_FOUND" ]; then
+    FAIL "RP16: limb (ii) — the \`## $RP_GVERB\` section carries, as a code span, what it cites and must not restate:$RP16_FOUND. Looked for: the relation's verdict tokens its own outcome table does not carry [$(printf '%s' "$RP16_ONLY" | tr '\n' ' ')], and the header labels and cell values the reference reader takes from the \`## $RP_VERB\` section. The relation, the coverage-table read and the readings have one home"
+  else
+    PASS "RP16: MUST FIRE — in the \`## $RP_GVERB\` section, limb (i): all $RP16_N citation(s) behind the section sign were sorted by the code span directly before them — $RP16_NA naming a section of this file, across $RP16_HEADS distinct section-and-heading pair(s); $RP16_NC naming a sub-heading of the section itself; $RP16_NB naming another file, passed over and counted — and every one of the first two kinds resolves to exactly one \`###\` heading of its own section, by its whole text or by its leading segment before an em dash. With '$RP16_MFH', a sub-heading both sections carry, reworded inside \`$RP16_MFS\` alone on a copy under the work directory, the citation naming that section resolves nowhere while the section's own still resolves once. Limb (iii): the $RP16_NT citation(s) of a table by its header cell each find exactly one pipe table opening with that cell under the cited sub-heading; with '$RP16_TX' reworded on a copy and its heading left, the heading still resolves and no table is found. Limb (ii): none of the $RP16_NFORB string(s) looked for — the $RP16_NONLY verdict token(s) of the relation that this section's outcome table does not carry, and the labels and cell values the reference reader takes from the \`## $RP_VERB\` section — occurs here as a code span, while each occurs in that section; the $RP16_NSHARED token(s) both carry [$(printf '%s' "$RP16_SHARED" | tr '\n' ' ')] were left out of the list and occur here $RP16_SHAREDHITS time(s)"
+  fi
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
