@@ -95,19 +95,35 @@ need yields a constraint Critical with **no** needs-compliance row, by design.
 
 **Type: covered / not covered, per traveller, per desire.** A boolean, not a degree.
 
-| Traveller | Desire | Tier | Covered | By |
+| Traveler | Desire | Priority tier | Per-day coverage | Covered? |
 |---|---|---|---|---|
-| Alex | Watch a sunset from a rooftop | anchor | **covered** | `evt-5ab8` |
-| Alex | Spend real time in a good bookshop | wish | **covered** | `evt-3f9a` |
-| Alex | See a working food market | nice-to-have | **covered** | `evt-1d60` |
-| Robin | See contemporary art | anchor | **covered** | `evt-b47e` |
-| Robin | Walk along the river | wish | **covered** | `evt-2f77` |
-| Robin | Watch a sunset from a rooftop | wish | **covered** | `evt-5ab8` |
-| Robin | Hear live fado | nice-to-have | **not covered** | — |
+| Alex | Watch a sunset from a rooftop | anchor | — | **covered** |
+| Alex | Spend real time in a good bookshop | wish | — | **covered** |
+| Alex | See a working food market | nice-to-have | — | **covered** |
+| Robin | See contemporary art | anchor | — | **covered** |
+| Robin | Walk along the river | wish | — | **covered** |
+| Robin | Watch a sunset from a rooftop | wish | — | **covered** |
+| Robin | Hear live fado | nice-to-have | — | **not covered** |
 
 **6 covered / 1 not covered, of 7.** Every anchor and every wish is covered; the one
 uncovered desire is a nice-to-have. `evt-5ab8` covers two rows at once, which is the
 placement the desire-overlap signal in `outputs/traveler-model.md` exists to find.
+
+**Which event covers each row is carried here, outside the table.** The declared layout has
+no column for the covering event, so the join is a list keyed by event id, and each id
+resolves in `outputs/event-status.md`:
+
+- `evt-5ab8` — Alex · *Watch a sunset from a rooftop*, and Robin · *Watch a sunset from a rooftop*
+- `evt-3f9a` — Alex · *Spend real time in a good bookshop*
+- `evt-1d60` — Alex · *See a working food market*
+- `evt-b47e` — Robin · *See contemporary art*
+- `evt-2f77` — Robin · *Walk along the river*
+
+Robin · *Hear live fado* has no covering event, which is what its `not covered` records.
+
+**Every `Per-day coverage` cell above reads `—`.** Each of these desires is
+`Recurrence: one-off` in its traveller's file, and the cell carries a per-day reading only
+for a desire marked `daily`.
 
 **Sam contributes no row, and that is not the same as contributing a `not covered`
 one.** The operator supplied needs only, so Sam's desire set is `unknown` rather than
