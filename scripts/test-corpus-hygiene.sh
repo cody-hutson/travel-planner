@@ -612,10 +612,12 @@ VACUOUS() { printf '  \033[1;36mVACUOUS\033[0m %s\n' "$*"; vacuous=$((vacuous+1)
 #     both directions, and MD2 its residual, for the same reason;
 #   a line that names an arm and gives no reason;
 #   a VACUOUS verdict whose arm id cannot be read, because then the run cannot say which arm it was.
-# To declare an arm, add its line in the change that makes it render VACUOUS. To retire one,
-# delete its line in the change that gives the arm a population. The trip-resolution-contract
-# suite fails on any vacuous count and ships no declaration; this suite needs one, because the
-# population of one of its arms is meant to stay empty.
+# To declare an arm, add its line in the change that makes it render VACUOUS. That line is the
+# whole edit: arm CTL-VACUITY-DECLARED renders every arm declared here, and the other CTL-VACUITY
+# arms read CTL_VAC_DECL, a fixture of their own, so no arm is edited. To retire one, delete its
+# line in the change that gives the arm a population. The trip-resolution-contract suite fails on
+# any vacuous count and ships no declaration; this suite needs one, because the population of one
+# of its arms is meant to stay empty.
 CH_VACUOUS_DECL='
 B1 its in-scope population is a bare path:line locator in tracked markdown, which this corpus means to keep empty, so on a clean tree B1 renders VACUOUS by design and a locator turns it red; what carries the denominator is surface arm B0, which must PASS before B1 can render VACUOUS and which fails a walk that could not open a listed file or read no line, and what carries detection is arm CTL-B1, which plants locators in a fixture and requires them found, with CTL-B1-SPEC and CTL-B1-WIDE beside it
 '
@@ -624,8 +626,11 @@ B1 its in-scope population is a bare path:line locator in tracked markdown, whic
 # CTL-VACUITY arms drive the code the exit rule runs, over the recorder that rule reads: $vacuous
 # and $VACUOUS_IDS, which VACUOUS() above is the only writer of. It prints one VACUITY line per
 # finding, or one line naming what was declared, with the counts it compared, and returns 1 on
-# any finding and 0 otherwise. Membership is tested with the case idiom the strict-skip pass at
-# the end of this file uses, so no verdict here rests on a pipeline.
+# any finding and 0 otherwise. Given `ids` as its second argument it prints the ids the
+# declaration gives a reason for, read by the same parse, and grades nothing: arm
+# CTL-VACUITY-DECLARED renders those, so that arm reads every arm the shipped set declares.
+# Membership is tested with the case idiom the strict-skip pass at the end of this file uses, so
+# no verdict here rests on a pipeline.
 ch_vacuity_rc() {
   local decl="$1" line id rest ids="" nids=0 noreason="" undeclared="" stale="" n=0 v rc=0
   while IFS= read -r line; do
@@ -635,6 +640,7 @@ ch_vacuity_rc() {
     if [ -z "${rest//[[:space:]]/}" ]; then noreason="$noreason$id "; continue; fi
     ids="$ids$id "; nids=$((nids+1))
   done <<<"$decl"
+  if [ "${2:-}" = 'ids' ]; then printf '%s' "${ids% }"; return 0; fi
   # shellcheck disable=SC2086  # the recorder is a space-separated word list, split on purpose
   for v in $VACUOUS_IDS; do
     n=$((n+1))
@@ -5335,28 +5341,43 @@ fi
 # of this file that joins that status to the run's. It was shown by planting an undeclared VACUOUS
 # arm in the run and reading a non-zero exit while every verdict stayed green, recorded with the
 # change that added these arms. UNDECLARED and EMPTIED must fire on the undeclared-arm rule alone,
-# STALE on the stale-line rule and UNNAMED on the unreadable-id rule; DECLARED, over the
-# declaration this file ships, must fire on none of them. The no-reason rule is held by two arms,
-# because it is written on two lines and each arm's input trips a second rule once one of those
-# lines is gone: NOREASON names a reason-less arm that did not render VACUOUS, so without the line
-# that sets such a line aside the stale-line rule still returns 1; NOREASON-RENDERED names one that
-# did, so without the line that reports it the undeclared-arm rule still returns 1. Either alone
-# leaves one of the two lines deletable with every arm green. DECLARED is a function, for one
-# reason: group MD registers it, and md_flips re-runs a function.
+# STALE on the stale-line rule and UNNAMED on the unreadable-id rule, whatever the set this file
+# ships holds: EMPTIED reads no declaration, and every other arm but DECLARED reads CTL_VAC_DECL
+# below, a fixture holding one B1 line. Over the shipped set, a member an arm does not plant would
+# read stale inside it and supply its status, so once a second member joined, an arm planting B1
+# alone would pass on two causes. That each rule still turns an arm red with a second member
+# joined, when a line that writes it is deleted, was shown and recorded with the change that gave
+# these arms their fixture. DECLARED reads the shipped set, renders every arm it declares, by the
+# parse the rule itself runs, and must fire on none of the rules, so a join is one line in
+# CH_VACUOUS_DECL and no arm is edited. The no-reason rule is held by two arms, because it is
+# written on two lines and each arm's input trips a second rule once one of those lines is gone:
+# NOREASON names a reason-less arm that did not render VACUOUS, so without the line that sets such
+# a line aside the stale-line rule still returns 1; NOREASON-RENDERED names one that did, so
+# without the line that reports it the undeclared-arm rule still returns 1. Either alone leaves
+# one of the two lines deletable with every arm green. DECLARED is a function, for one reason:
+# group MD registers it, and md_flips re-runs a function.
+CTL_VAC_DECL='
+B1 a fixture line for the CTL-VACUITY arms, held apart from CH_VACUOUS_DECL so the members that set ships never reach these arms
+'
 ctl_vac() {  # ctl_vac <declaration> [<arm-id>...] -> ch_vacuity_rc's status once those arms rendered VACUOUS
   local decl="$1" a; shift
   ( vacuous=0; VACUOUS_IDS=""
     for a in "$@"; do VACUOUS "$a: planted by a vacuity control arm"; done
     ch_vacuity_rc "$decl" )
 }
-ctl_vac_declared() { expect_rc 0 "CTL-VACUITY-DECLARED" "B1 rendering VACUOUS and nothing else leaves the shipped declaration silent, so the rule does not fire on a declared arm" -- ctl_vac "$CH_VACUOUS_DECL" B1; }
-expect_rc 1 "CTL-VACUITY-UNDECLARED" "an arm that renders VACUOUS and is not declared fails the run, over the declaration this file ships" -- ctl_vac "$CH_VACUOUS_DECL" B1 ZVAC
+ctl_vac_declared() {
+  local ids
+  ids="$(ch_vacuity_rc "$CH_VACUOUS_DECL" ids)"
+  # shellcheck disable=SC2086  # the declared ids are a word list, split on purpose
+  expect_rc 0 "CTL-VACUITY-DECLARED" "every arm the shipped declaration declares (${ids:-none}) rendering VACUOUS, and nothing else, leaves it silent, so the rule does not fire on a declared arm" -- ctl_vac "$CH_VACUOUS_DECL" $ids
+}
+expect_rc 1 "CTL-VACUITY-UNDECLARED" "an arm that renders VACUOUS and is not declared fails the run, over CTL_VAC_DECL, the arms' fixture declaration" -- ctl_vac "$CTL_VAC_DECL" B1 ZVAC
 ctl_vac_declared
 expect_rc 1 "CTL-VACUITY-EMPTIED" "with the declaration emptied the same B1 vacuity fails the run, so the B1 line is what keeps this suite green and not a rule that cannot fire" -- ctl_vac "" B1
-expect_rc 1 "CTL-VACUITY-STALE" "a declared arm that did not render VACUOUS fails the run, so a declaration cannot outlive its vacuity" -- ctl_vac "$CH_VACUOUS_DECL"
-expect_rc 1 "CTL-VACUITY-NOREASON" "a declaration line that names an arm and gives no reason fails the run" -- ctl_vac "$CH_VACUOUS_DECL"$'\n'"ZVAC" B1
-expect_rc 1 "CTL-VACUITY-NOREASON-RENDERED" "a declaration line that gives no reason fails the run when its arm did render VACUOUS, so the stale-line rule is not what supplies the status" -- ctl_vac "$CH_VACUOUS_DECL"$'\n'"ZVAC" B1 ZVAC
-expect_rc 1 "CTL-VACUITY-UNNAMED" "a VACUOUS verdict whose arm id cannot be read fails the run rather than escaping the set" -- ctl_vac "$CH_VACUOUS_DECL" B1 ""
+expect_rc 1 "CTL-VACUITY-STALE" "a declared arm that did not render VACUOUS fails the run, so a declaration cannot outlive its vacuity" -- ctl_vac "$CTL_VAC_DECL"
+expect_rc 1 "CTL-VACUITY-NOREASON" "a declaration line that names an arm and gives no reason fails the run" -- ctl_vac "$CTL_VAC_DECL"$'\n'"ZVAC" B1
+expect_rc 1 "CTL-VACUITY-NOREASON-RENDERED" "a declaration line that gives no reason fails the run when its arm did render VACUOUS, so the stale-line rule is not what supplies the status" -- ctl_vac "$CTL_VAC_DECL"$'\n'"ZVAC" B1 ZVAC
+expect_rc 1 "CTL-VACUITY-UNNAMED" "a VACUOUS verdict whose arm id cannot be read fails the run rather than escaping the set" -- ctl_vac "$CTL_VAC_DECL" B1 ""
 
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
