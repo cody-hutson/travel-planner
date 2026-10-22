@@ -634,6 +634,11 @@ One line per relation this file declares, each naming the relation and its verdi
   This is its own verdict and is never reported as `BEHIND`: an artifact never produced and
   one that exists but trails its inputs are different conditions with different remedies.
 
+**A verdict is added in the list above, and nowhere else** — the admission duty of
+`CLAUDE.md` § *Rules over an enumeration*; `reference/channel-and-engagement-model.md` § 3
+repeats the list as a registered repeat, held to it in both directions on every push, and says
+what a red there asks when the list changes.
+
 Render **every** declared relation, the ones reading `CURRENT` included. A report printing
 only its complaints would leave the reader unable to tell a relation that came out clean from
 one that was never evaluated, which is the same silence this file refuses elsewhere.

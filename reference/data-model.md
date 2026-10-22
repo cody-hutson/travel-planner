@@ -485,6 +485,34 @@ A **field** is a distinct `(section, label)` pair rendered as a body bullet of t
 
 > **`Passport` acquires a third artifact scope, and the publish guard must follow it.** `Passport` is `PERSON`, so it lives in the durable person record as well as in a trip's traveler file. Per `reference/data-architecture.md` § 5.2 the non-publishable fence *does not inherit* — it is one row per field **per artifact scope** — so the person-record scope needs its **own** non-publishable row. A missing row there is fail-open on a passport.
 
+### The update-signal route — what each section holds
+
+A composed change is classed for the update signal by what the section its label sits under **holds**, and this fence declares that once per section of the guided intake forms — the sections a traveller's composed source can carry. The block-owned trip-context form is no part of that source, so its sections take no row. `agents/00-enrichment.md` → "Map onto those four classes; never add a fifth" owns the rule that reads this fence, and that rule is not restated here.
+
+`needs` and `desires` name the halves of § *The Per-Traveler Model*. `facets` is any other section a change to which is reported. `carried` is a section whose answers no agent prompt plans from — today a labelled answer the reconciler carries into the model verbatim, and a free-text tail no prompt names. A value joins that vocabulary here and at the rule that reads it, in one change. **The table above bounds `desires` and `carried`.** `desires` may be declared only for a section none of whose fields is `DEFAULT` or `PERSON`, because a desire's source of truth is the trip's own traveler file. `carried` may be declared only for a section that holds no `PERSON` field, because a change to a `PERSON` field is never silent.
+
+```signal-route-declaration
+# section            | holds
+About you            | facets
+Destination leanings | facets
+Dates & availability | facets
+Getting there & back | facets
+Where you stay       | facets
+Budget appetite      | facets
+Needs                | needs
+Desires              | desires
+Travel style & pace  | facets
+Interests & tastes   | facets
+People dynamics      | facets
+Anything else        | carried
+```
+
+Each row is `section | holds`. The `section` cell is a `Section` cell of the table above, written as that table writes it. A line whose first non-blank character is `#` is a comment; a blank line is ignored.
+
+**`Dates & availability` holds `facets`, and that is a choice.** A composed change to `Can travel:` or `Blackout:` is reported with no command named, although both labels are the availability limb of § *Presence — a traveler's present-day set* above. The report is what puts such a change in front of whoever decides to re-plan; no row here names a replan for it.
+
+**What holds this fence, and what it does not reach.** `scripts/test-artifact-schema.sh` group `FT` reads it beside the table above, through that suite's own extractor, and compares in both directions: a section of a guided form that carries a field and has no row here fails, and so does a row whose section no guided form carries, a section declared more than once, a value outside the vocabulary, and a value the bounds above refuse for its section. A field added under a section that already has a row moves nothing. The suite carries its own copy of the vocabulary and of those bounds, and that copy is the one the comparison uses; nothing compares it with the paragraph above. Inside the bounds the comparison does not hold which value a section declares: any section may be retyped `needs` or `facets`, and one with no `PERSON` field `carried`, and one none of whose fields is `DEFAULT` or `PERSON`, `desires`, and the suite stays green. The comparison is of this fence against the table and the forms: it does not read the prompt that applies the route, it cannot show what an agent does with a change, and it does not hold the signal classes. A label routed apart from its own section is not expressible here — the declaration is section-granular, as the decision it records is.
+
 ### The decision rule for mixed cases — four ordered tests, first match wins
 
 Deterministic and re-runnable: apply the tests in order and stop at the first match.

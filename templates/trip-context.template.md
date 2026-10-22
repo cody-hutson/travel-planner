@@ -134,8 +134,8 @@ All other days are locked."]
 > Computed per traveler. Do not manually edit.
 > Reads each traveler's own profile **by link** — the `## Group` roster below carries
 > the path (`travelers/<name>.md`). No value a traveler wrote is copied here: every
-> cell is derived, and goes stale when a profile changes.
-> **Recompute trigger:** any traveler profile change (the enrichment agent's update
+> cell is derived, and goes stale when a label it is derived from changes, whichever source the value composes from — that test decides (`CLAUDE.md` § *Rules over an enumeration*).
+> **Recompute trigger:** such a change. `Leaving from:` and `Arrive / leave:` are today's examples of such a label; a change to no other label stales this block (the enrichment agent's update
 > signal in `outputs/traveler-model.md` is the signal to re-derive this block).
 > **Nothing currently performs that re-derivation.** This block has **no writer** in
 > `CLAUDE.md` § *Write ownership — trip-context.md, block by block*, so the

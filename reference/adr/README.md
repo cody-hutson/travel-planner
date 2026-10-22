@@ -215,6 +215,7 @@ so each group stays in number order.
 | [ADR-042](ADR-042-accepted-record-growth.md) | Accepted records after acceptance — what an amendment may add, the consolidated-decision form, and where settled design belongs | Accepted |
 | [ADR-043](ADR-043-required-check-census-parser.md) | The required-check census reads a parsed document — PyYAML on the runner, a marker read from the comment layer, and a refusal wherever it cannot vouch | Accepted |
 | [ADR-044](ADR-044-record-number-register.md) | A record's number is taken on `main` before the record is written — a register row that names its record, a required check that grades it, and the shapes it was chosen over | Accepted |
+| [ADR-047](ADR-047-rules-over-an-enumeration.md) | Rules over an enumeration — precedence at the rule, one owner for the members, a criterion where the list is what goes stale, and what no check can see | Proposed |
 | [ADR-048](ADR-048-guard-arm-falsifiability-rule.md) | The guard-arm falsifiability rule — no verdict guard reaches PASS through a disjunction, graded by group FZ in each guard suite over its own top-level code, with the tautological class declared out of reach | Proposed |
 
 ### Data architecture

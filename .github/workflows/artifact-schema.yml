@@ -65,7 +65,9 @@ name: Artifact schema
 #        reading the table goes through; the row count declared in the denominator rule and
 #        graded against the table; a key that cannot resolve a bullet to two rows; a closed
 #        vocabulary per axis; every labelled row reached by a form's bullet unless declared
-#        bullet-less; and the heading-to-section rule stated in the data model and the skill
+#        bullet-less; the heading-to-section rule stated in the data model and the skill; and
+#        the update-signal route — what each section of the guided forms holds, declared in a
+#        fence in the data model — held to the table and the forms in both directions
 #   ST   the starred-field set in EACH intake form, and the form contract, on THREE
 #        propositions. AGREEMENT: in each form of the starred pass — the per-trip
 #        templates/traveler-intake.template.md and the durable
@@ -271,6 +273,14 @@ name: Artifact schema
 #        cell ADR-030 moves; on the encrypted limb a field the declaration does not carry, or
 #        carries only if marked, reads UNDETERMINED, never admit; and the three-valued
 #        conjunction with the denial side, UNDETERMINED a third outcome asserted by exit code
+#   CG   the memberships reference/channel-and-engagement-model.md registers, held to their
+#        owners: the channel-set against ADR-026's own set table, admission paragraph and
+#        declaring tables, with that paragraph standing whole in the document and the wording
+#        of every fence value and every block quotation held to a decision record's; and the
+#        G8 class register against every relation table and every record's typing sentence,
+#        with no cell of a requirement table or a relation table carrying a typed reading's
+#        token. What breaks a reading, and what the group cannot see, are stated in that
+#        document's closing section and are not restated here
 #   DC   the declared desire-coverage header of C14 has ONE home — the fenced shape in
 #        reference/data-model.md § `outputs/satisfaction-metrics.md` shape — read from there on
 #        every run and never held in the suite. Every other statement of it, found by SHAPE,

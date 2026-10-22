@@ -380,6 +380,27 @@
 #        FAIL — the state of a tree in which no number has been taken since the floor. Arm
 #        CTL-I-VACUOUS drives the verdict stage itself over that state and requires exactly
 #        that rendering; arm CTL-I-VACUOUS-NOT requires a populated register to render PASS.
+#   J    A REGISTERED ENUMERATION AGREES WITH ITS OWNER, AND AN UNREGISTERED REPEAT OF IT FAILS.
+#        A rule over an enumeration has one owner, and a file that must repeat its members
+#        names that owner. The repeats worth holding are rows of the CH_J_TAG fence in
+#        CH_FENCE_DOC. For each id the members are read off the owner and off every site — code
+#        spans, and nothing else — and compared as sets. J1 — a site lacks a member its owner
+#        names. J2 — a site names a member its owner does not. J3 — a file that carries no
+#        row for an id writes more than one of its members, as code spans, in one paragraph.
+#        J0 — the instrument is broken for that id; it withholds J1, J2 and J3 for that
+#        id and for no other, and is a failure itself.
+#
+#        THIS FILE SPELLS NO MEMBER, AND THIS CLASS ADDS NO PATH. Every member is read from the
+#        surfaces on every run, and the arms' fixture uses invented words. The files the J3
+#        reading passes over are the ones class E declares out of its own scan: both run with
+#        scope.awk and take inscope() from it, so the two cannot differ.
+#
+#        WHAT BREAKS THE INSTRUMENT, AND THE DECLARED BOUNDARY, ARE STATED ONCE AND NOT HERE.
+#        The section "The enumeration register" of CH_FENCE_DOC owns both: the test for a broken
+#        reading, with its examples, and everything this class cannot see. This entry cites that
+#        section. A copy here would be a second list, and a second list is what goes stale.
+#        There is no -RETRO arm: no shipped defect was written as a registered reading, so arm
+#        CTL-J2-REPLAY reproduces the shape of one on the fixture and says so.
 #   CTL  a synthetic fixture tree, built in a temp dir ON EVERY RUN, plus the arms whose ids
 #        end -RETRO, each replaying a defect this repository actually shipped. One MUST-FIRE
 #        arm per finding code this file can emit, alongside the specificity arms that tell a
@@ -530,6 +551,9 @@ CH_H_DIR='reference'
 CH_H_MAP='README.md'
 CH_H_RETRO_REV='54df1bfe8c7ce91cac002cb6b3c4619935c00fc1'
 CH_H_MAP_RETRO_REV='a49a66639bba0ffd60ad47d6c17aad5369ee2b52'
+# Group J's register: the tag of the fence, in CH_FENCE_DOC, whose rows name an enumeration's
+# owner and the sites that repeat its members. The rows hold no member. Named once.
+CH_J_TAG='enumeration-register'
 
 pass=0; fail=0; skip=0; vacuous=0; SKIPPED=""; VACUOUS_IDS=""
 PASS()    { printf '  \033[1;32mPASS\033[0m %s\n' "$*"; pass=$((pass+1)); }
@@ -1226,6 +1250,18 @@ function numof(b,   k) { k = b; sub(/^ADR-/, "", k); sub(/-.*$/, "", k); return 
 function pad(n) { return sprintf("%03d", n + 0) }
 AWK
 
+# ── scope.awk — which tracked markdown a reading of engine prose passes over. ONE function,
+# run with every program that reads engine prose; neither holds a path of its own ───────────
+cat > "$WORK/scope.awk" <<'AWK'
+# The scanned surface: every tracked markdown file but three declared exclusions.
+function inscope(p) {
+  if (index(p, "reference/adr/") == 1) return 0
+  if (index(p, "examples/") == 1) return 0
+  if (p == "CHANGELOG.md") return 0
+  return 1
+}
+AWK
+
 # ── e.awk — class E, the owned-rule scan ─────────────────────────────────────────
 cat > "$WORK/e.awk" <<'AWK'
 # ARGV[1] newline-separated relative path list. -v ROOT=<dir> -v ODOC=<owner doc> -v OHEAD=<owner
@@ -1295,13 +1331,6 @@ END {
   if (nscan == 0 || nsent == 0 || nhead != 1 || nown == 0)
     printf "FINDING E0 files=%d sentences=%d heading=%d owner-standing=%d\n", nscan, nsent, nhead, nown
   printf "DENOM %d %d %d %d %d %d\n", nscan, nsent, nstand, nown, nhead, nsfile
-}
-# The scanned surface: every tracked markdown file but three declared exclusions.
-function inscope(p) {
-  if (index(p, "reference/adr/") == 1) return 0
-  if (index(p, "examples/") == 1) return 0
-  if (p == "CHANGELOG.md") return 0
-  return 1
 }
 function eflush(rel, b, o, own,   k, nn, arr) {
   if (b == "") return o
@@ -2506,6 +2535,223 @@ function numof(b,   k) { k = b; sub(/^ADR-/, "", k); sub(/-.*$/, "", k); return 
 function pad(n) { return sprintf("%03d", n + 0) }
 AWK
 
+# ── j.awk — class J, the enumeration register: each id's members read off its owner and off its
+# sites and compared, then every engine file read for a repeat of an id it carries no row for ──
+cat > "$WORK/j.awk" <<'AWK'
+# ARGV[1] newline-separated relative path list of the tracked markdown.
+# -v ROOT=<dir> -v DOC=<declaring document> -v TAG=<register fence tag>
+# Run with the shared scope program, whose inscope() is the one statement of which files a
+# reading of engine prose passes over; this program holds no path of its own.
+# Reads the register fence, then for each id reads the members off the owner and off each site
+# and compares the two sets in both directions; then reads every listed file that carries no row
+# for an id and is in scope, paragraph by paragraph, for an unregistered repeat of that id.
+# Members are code spans, read from the surfaces on every run; this program spells none.
+#   FINDING J0 <id> <where> <why>             the instrument is broken for <id>: J1, J2 and J3 are
+#                                             withheld for <id> and for no other. <id> is "-" where the
+#                                             failure belongs to no id, and then no verdict is reported
+#                                             for any enumeration
+#   FINDING J1 <id> <site> <member>           the site lacks a member the owner names
+#   FINDING J2 <id> <site> <member>           the site names a member the owner does not
+#   FINDING J3 <id> <path> <line> <n> <members>
+#                                             a file with no row for <id> writes <n> of its members, as
+#                                             code spans, in the paragraph that opens at <line>; the
+#                                             members it read follow, joined by ", "
+#   DENOM <ids> <rows> <owners> <sites> <files> <member-readings-at-owners> <files-read-for-repeats>
+#         <paragraphs-read> <files-passed-over> <ids-withheld>
+function trim(s) { sub(/^[ \t\r]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+function norm(s) { gsub(/[ \t\r]+/, " ", s); return trim(s) }
+function broken(id, where, why) { printf "FINDING J0 %s %s %s\n", id, where, why; if (!(id in BAD)) { BAD[id] = 1; if (id != "-") nbad++ } }
+function load(path,   f, line, t) {
+  f = ROOT "/" path; NL = 0; NT = ""
+  while ((getline line < f) > 0) {
+    NL++; LN[NL] = line; t = norm(line)
+    if (t != "") NT = (NT == "" ? t : NT " " t)
+    EOFF[NL] = length(NT)
+  }
+  close(f)
+}
+function occurrences(hay, needle,   c, i, off) {
+  c = 0; off = 1
+  while ((i = index(substr(hay, off), needle)) > 0) { c++; off += i }
+  return c
+}
+function indent(s,   n) { n = 0; while (substr(s, n + 1, 1) == " ") n++; return n }
+function ismarker(s) { return (s ~ /^[0-9]+\.[ \t]/ || s ~ /^[-*+][ \t]/) }
+function markerclass(s) { return (s ~ /^[0-9]/) ? "n" : substr(s, 1, 1) }
+# kind=list — the code spans inside the bracketed group that opens directly after the anchor
+function read_list(id, path, anchor,   p, i, j, ch, op, cl, depth, n) {
+  p = index(NT, anchor) + length(anchor)
+  while (substr(NT, p, 1) == " ") p++
+  op = substr(NT, p, 1)
+  if (op == "(") cl = ")"; else if (op == "[") cl = "]"
+  else { broken(id, path, "no-bracketed-group-opens-after-the-anchor"); return 0 }
+  depth = 1; n = 0; i = p + 1
+  while (i <= length(NT) && depth > 0) {
+    ch = substr(NT, i, 1)
+    if (ch == "`") {
+      j = index(substr(NT, i + 1), "`")
+      if (j == 0) break
+      MEM[++n] = substr(NT, i + 1, j - 1); i = i + j + 1; continue
+    }
+    if (ch == op) depth++; else if (ch == cl) depth--
+    i++
+  }
+  if (depth > 0) { broken(id, path, "bracketed-group-is-not-closed"); return 0 }
+  return n
+}
+# kind=lead — the first code span in the bold lead-in of each item of the first list that follows
+# the anchor BEFORE THE NEXT HEADING. Lines that are not list items are passed over until the list
+# opens, so a paragraph may stand between an anchor and its list; a heading may not — a list under
+# a later heading is another section's list, and reading it would be a reading of the wrong text.
+# A line inside a fenced block is neither a heading nor an item. The list ends at the first line,
+# not indented under an item, that is not an item of the same marker type.
+function read_lead(id, path, anchor,   e, l, i, t, lvl, mc, started, b, bold, s, k, n, fenced) {
+  e = index(NT, anchor) + length(anchor) - 1
+  for (l = 1; l <= NL; l++) if (EOFF[l] >= e) break
+  n = 0; started = 0; fenced = 0
+  for (i = 1; i <= NL; i++) {
+    t = LN[i]; sub(/^[ ]+/, "", t)
+    if (substr(t, 1, 3) == "```") {
+      if (i > l && started && indent(LN[i]) <= lvl) break
+      fenced = !fenced; continue
+    }
+    if (i <= l || fenced) continue
+    if (LN[i] ~ /^[ \t\r]*$/) continue
+    if (!started) {
+      if (t ~ /^#+[ \t]/) { broken(id, path, "no-list-follows-the-anchor-before-the-next-heading"); return 0 }
+      if (!ismarker(t)) continue
+      started = 1; lvl = indent(LN[i]); mc = markerclass(t)
+    } else {
+      if (indent(LN[i]) > lvl) continue
+      if (!ismarker(t) || markerclass(t) != mc) break
+    }
+    sub(/^([0-9]+\.|[-*+])[ \t]+/, "", t)
+    if (substr(t, 1, 2) != "**") { broken(id, path, "a-list-item-has-no-bold-lead-in"); return 0 }
+    s = substr(t, 3); b = index(s, "**")
+    if (b == 0) { broken(id, path, "a-bold-lead-in-is-not-closed-on-its-line"); return 0 }
+    bold = substr(s, 1, b - 1); k = index(bold, "`")
+    if (k == 0) { broken(id, path, "a-bold-lead-in-carries-no-code-span"); return 0 }
+    bold = substr(bold, k + 1); k = index(bold, "`")
+    if (k == 0) { broken(id, path, "a-code-span-is-not-closed"); return 0 }
+    MEM[++n] = substr(bold, 1, k - 1)
+  }
+  return n
+}
+function readrow(r,   n, a, m, i) {
+  if (!(RPATH[r] in TRACKED)) { broken(RID[r], RPATH[r], "the-path-is-not-a-tracked-markdown-file"); return }
+  load(RPATH[r])
+  a = norm(RANCH[r]); n = occurrences(NT, a)
+  if (a == "" || n != 1) { broken(RID[r], RPATH[r], "the-anchor-is-found-" n "-times-not-once"); return }
+  m = (RKIND[r] == "lead") ? read_lead(RID[r], RPATH[r], a) : read_list(RID[r], RPATH[r], a)
+  if (RID[r] in BAD) return
+  if (m == 0) { broken(RID[r], RPATH[r], "the-reading-yields-no-member"); return }
+  RN[r] = m
+  for (i = 1; i <= m; i++) HAS[r, MEM[i]] = 1
+  for (i = 1; i <= m; i++) RM[r, i] = MEM[i]
+  FILESEEN[RPATH[r]] = 1
+}
+# One paragraph — a run of non-blank lines outside a fenced block — held in PAR, opening at PLN.
+# For each id the file carries no row for, count the distinct owner members it writes as code spans.
+function endpar(path,   s, a, b, i, id, o, k, c, span, ms) {
+  if (PAR == "") return
+  NPAR++
+  for (span in SPAN) delete SPAN[span]
+  s = PAR
+  while ((a = index(s, "`")) > 0) {
+    s = substr(s, a + 1); b = index(s, "`")
+    if (b == 0) break
+    SPAN[substr(s, 1, b - 1)] = 1; s = substr(s, b + 1)
+  }
+  for (i = 1; i <= nid; i++) {
+    id = IDS[i]
+    if ((id in BAD) || ((id, path) in ROWPATH)) continue
+    o = OWNROW[id]; c = 0; ms = ""
+    for (k = 1; k <= RN[o]; k++) if ((RM[o, k] in SPAN) && !((id, RM[o, k]) in CNTD)) { c++; CNTD[id, RM[o, k]] = 1; ms = ms (ms == "" ? "" : ", ") RM[o, k] }
+    for (k = 1; k <= RN[o]; k++) delete CNTD[id, RM[o, k]]
+    if (c >= 2) printf "FINDING J3 %s %s %d %d %s\n", id, path, PLN, c, ms
+  }
+  PAR = ""
+}
+function scanfile(path,   f, line, t, n, infence) {
+  f = ROOT "/" path; n = 0; infence = 0; PAR = ""
+  while ((getline line < f) > 0) {
+    n++; t = norm(line)
+    if (substr(t, 1, 3) == "```") { endpar(path); infence = !infence; continue }
+    if (infence) continue
+    if (t == "") { endpar(path); continue }
+    if (PAR == "") PLN = n
+    PAR = (PAR == "" ? t : PAR " " t)
+  }
+  close(f); endpar(path)
+}
+{ if ($0 != "") { TRACKED[$0] = 1; ORDER[++NTRK] = $0 } }
+END {
+  f = ROOT "/" DOC; infence = 0; nrow = 0; seenfence = 0; nbad = 0
+  while ((getline line < f) > 0) {
+    if (line == "```" TAG) { infence = 1; seenfence = 1; continue }
+    if (infence && line == "```") { infence = 0; continue }
+    if (!infence) continue
+    t = trim(line)
+    if (t == "" || substr(t, 1, 1) == "#") continue
+    # The fields are cleared before each row is split, so a line that fails before its first field
+    # is read is charged to no id — it is not the row above it.
+    rest = line; ok = 1
+    for (k = 1; k <= 4; k++) FLD[k] = ""
+    for (k = 1; k <= 4; k++) {
+      p = index(rest, "|")
+      if (p == 0) { ok = 0; break }
+      FLD[k] = trim(substr(rest, 1, p - 1)); rest = substr(rest, p + 1)
+    }
+    if (!ok || FLD[1] == "" || trim(rest) == "") {
+      if (FLD[1] != "" && !(FLD[1] in IDSEEN)) { IDSEEN[FLD[1]] = 1; IDS[++nid] = FLD[1] }
+      broken((FLD[1] == "" ? "-" : FLD[1]), DOC, "a-row-does-not-carry-its-five-fields"); continue
+    }
+    nrow++; RID[nrow] = FLD[1]; RROLE[nrow] = FLD[2]; RPATH[nrow] = FLD[3]; RKIND[nrow] = FLD[4]; RANCH[nrow] = trim(rest)
+    ROWPATH[FLD[1], FLD[3]] = 1
+    if (!(FLD[1] in IDSEEN)) { IDSEEN[FLD[1]] = 1; IDS[++nid] = FLD[1] }
+    if (FLD[2] == "owner") { NOWN[FLD[1]]++; OWNROW[FLD[1]] = nrow; nown++ }
+    else if (FLD[2] == "site") { NSITE[FLD[1]]++; nsite++ }
+    else broken(FLD[1], DOC, "a-row-names-a-role-that-is-neither-owner-nor-site")
+    if (FLD[4] != "lead" && FLD[4] != "list") broken(FLD[1], DOC, "a-row-names-a-kind-that-is-neither-lead-nor-list")
+  }
+  close(f)
+  if (!seenfence || nrow == 0) broken("-", DOC, "the-register-fence-is-absent-or-holds-no-row")
+  for (i = 1; i <= nid; i++) {
+    id = IDS[i]
+    if (NOWN[id] != 1) broken(id, DOC, "the-id-has-" (NOWN[id] + 0) "-owner-rows-not-one")
+    if (NSITE[id] + 0 == 0) broken(id, DOC, "the-id-has-no-site-row")
+  }
+  # A site row whose path, kind and anchor are its owner row's reads the owner a second time and
+  # compares it with itself, so it is no site: the id it registers is broken, as one with no site is.
+  for (r = 1; r <= nrow; r++) {
+    id = RID[r]
+    if (RROLE[r] != "site" || NOWN[id] != 1) continue
+    o = OWNROW[id]
+    if (RPATH[r] == RPATH[o] && RKIND[r] == RKIND[o] && norm(RANCH[r]) == norm(RANCH[o])) broken(id, DOC, "a-site-row-copies-its-owner-row")
+  }
+  for (r = 1; r <= nrow; r++) if (!(RID[r] in BAD)) readrow(r)
+  nmem = 0
+  for (i = 1; i <= nid; i++) {
+    id = IDS[i]
+    if (id in BAD) continue
+    o = OWNROW[id]; nmem += RN[o]
+    for (r = 1; r <= nrow; r++) {
+      if (RID[r] != id || RROLE[r] != "site") continue
+      for (k = 1; k <= RN[o]; k++) if (!((r, RM[o, k]) in HAS)) printf "FINDING J1 %s %s %s\n", id, RPATH[r], RM[o, k]
+      for (k = 1; k <= RN[r]; k++) if (!((o, RM[r, k]) in HAS)) printf "FINDING J2 %s %s %s\n", id, RPATH[r], RM[r, k]
+    }
+  }
+  nscan = 0; npast = 0; NPAR = 0
+  if (!("-" in BAD)) for (j = 1; j <= NTRK; j++) {
+    p = ORDER[j]
+    if (!inscope(p)) { npast++; continue }
+    nscan++; scanfile(p)
+  }
+  nfile = 0; for (p in FILESEEN) nfile++
+  printf "DENOM %d %d %d %d %d %d %d %d %d %d\n", nid, nrow, nown, nsite, nfile, nmem, nscan, NPAR, npast, nbad
+}
+AWK
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # THE COMPARATOR. ONE function, driven by the real-tree arm and by every group-C control
 # arm below.
@@ -2556,7 +2802,7 @@ ch_scan_i() {
 # below passes nothing, for the reason ch_scan_c gives about a caller-set strictness.
 ch_scan_e() {
   awk -v ROOT="$1" -v ODOC="$CH_E_OWNER_DOC" -v OHEAD="$CH_E_OWNER_HEAD" -v SHARED="${3:-0}" \
-    -f "$WORK/seg.awk" -f "$WORK/e.awk" "$2"
+    -f "$WORK/seg.awk" -f "$WORK/scope.awk" -f "$WORK/e.awk" "$2"
 }
 
 # Class F's listers name EVERY file, not only markdown: f.awk decides what is shell from the
@@ -2621,6 +2867,13 @@ ch_list_h_rev()  { git -C "$1" ls-tree -r --name-only -z "$2" | tr '\000' '\n'; 
 ch_scan_h() {
   awk -v ROOT="$1" -v DOC="$CH_H_DOC" -v HEAD="$CH_H_HEAD" -v DIR="$CH_H_DIR" -v MAP="$CH_H_MAP" \
     -f "$WORK/h.awk" "$2"
+}
+
+# ch_scan_j <root> <listfile> — class J over one tree, shaped like ch_scan_h: the real tree and every
+# control arm drive this one function. The shared scope program runs first, so the files the
+# unregistered-repeat reading passes over are the ones class E declares out of its own scan.
+ch_scan_j() {  # ch_scan_j <root> <listfile>
+  awk -v ROOT="$1" -v DOC="$CH_FENCE_DOC" -v TAG="$CH_J_TAG" -f "$WORK/scope.awk" -f "$WORK/j.awk" "$2"
 }
 
 # ch_compare_c <root> <fence-doc-abs> <listfile> — the both-direction assertion.
@@ -3140,6 +3393,80 @@ I_NSPENT="$(awk '$1 == "DENOM" { print $6 }' <<<"$I_OUT")"
 I_FLOOR="$(awk '$1 == "DENOM" { printf "%03d", $7 }' <<<"$I_OUT")"
 for c in I0 I1 I2 I3; do echo "$c" >> "$SURF_LOG"; done
 ch_assert_i "$I_OUT"
+
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "J — a registered enumeration agrees with its owner in both directions, and an unregistered repeat of it fails"
+# ═════════════════════════════════════════════════════════════════════════════════
+# j_assert <root> <listfile> — group J's verdicts over one tree. It is ONE function and runs the
+# extractor itself, so group MD can register it: with ch_scan_j removed it reports exactly one
+# FAIL and no PASS. The measurement state is decided in two steps — whether the register could be
+# read at all, where a failure that belongs to no id withholds every verdict, and then, for each id,
+# whether its own reading could be made. A broken id withholds its own comparisons and no other's,
+# and the run fails all the same. The J_* values it leaves are the summary line's; it is called in
+# this shell once, for the tracked tree, and everywhere else inside a probe subshell.
+j_assert() {   # j_assert <root> <listfile>
+  local out
+  out="$(ch_scan_j "$1" "$2")"
+  J_NID="$(awk '$1 == "DENOM" { print $2 }' <<<"$out")";    J_NROW="$(awk '$1 == "DENOM" { print $3 }' <<<"$out")"
+  J_NOWN="$(awk '$1 == "DENOM" { print $4 }' <<<"$out")";   J_NSITE="$(awk '$1 == "DENOM" { print $5 }' <<<"$out")"
+  J_NFILE="$(awk '$1 == "DENOM" { print $6 }' <<<"$out")";  J_NMEM="$(awk '$1 == "DENOM" { print $7 }' <<<"$out")"
+  J_NSCAN="$(awk '$1 == "DENOM" { print $8 }' <<<"$out")";  J_NPAR="$(awk '$1 == "DENOM" { print $9 }' <<<"$out")"
+  J_NPAST="$(awk '$1 == "DENOM" { print $10 }' <<<"$out")"; J_NBAD="$(awk '$1 == "DENOM" { print $11 }' <<<"$out")"
+  J_N1="$(n_code "$out" J1)"; J_N2="$(n_code "$out" J2)"; J_N3="$(n_code "$out" J3)"
+  # A failure that belongs to no id — the fence absent or empty, a row whose id cannot be read —
+  # withholds every verdict. One that names an id withholds that id's comparisons and no other's.
+  J_NCLASS="$(awk '$1 == "FINDING" && $2 == "J0" && $3 == "-" { n++ } END { print n + 0 }' <<<"$out")"
+  J_WHY="$(awk '$1 == "FINDING" && $2 == "J0" { $1 = ""; $2 = ""; sub(/^ +/, ""); printf "%s%s", s, $0; s = "; " }' <<<"$out")"
+  [ -n "$J_WHY" ] || J_WHY='the extractor printed no result'
+  if [ "${J_NCLASS:-1}" -eq 0 ] && [ "${J_NID:-0}" -gt 0 ] && [ "${J_NSCAN:-0}" -gt 0 ] && [ -n "${J_NBAD:-}" ]; then J_MEASURED=1; else J_MEASURED=0; fi
+
+  if [ "$J_MEASURED" -ne 1 ]; then
+    J_NREAD=0
+    printf '  SURFACE: NOT-EVALUATED — %s — this is not a clean result\n' "$J_WHY"
+    FAIL "J0: the register is NOT a measurement on this run — $J_WHY. No verdict is reported for any enumeration: J1, J2 and J3 are withheld. Restore the fence or the row; never delete a row to make this pass"
+    grep '^FINDING J[123] ' <<<"$out" | awk '{ $1 = ""; sub(/^ /, ""); printf "      read where a reading was possible, and not a verdict: %s\n", $0 }'
+    return 0
+  fi
+
+  J_NREAD=$(( J_NID - J_NBAD ))
+  printf '  SURFACE: %s of %s enumeration(s) read, in %s row(s) — %s owner, %s site; %s member reading(s) at the owners of those read, over %s file(s); %s engine file(s) and %s paragraph(s) read for an unregistered repeat, %s file(s) passed over.\n' \
+    "$J_NREAD" "$J_NID" "$J_NROW" "$J_NOWN" "$J_NSITE" "$J_NMEM" "$J_NFILE" "$J_NSCAN" "$J_NPAR" "$J_NPAST"
+  if [ "$J_NBAD" -eq 0 ]; then
+    PASS "J0: the register reads — $J_NID enumeration(s), each with one owner and at least one site, every anchor found once, $J_NMEM member reading(s) at the owners, and $J_NSCAN engine file(s) read for a repeat"
+  elif [ "$J_NREAD" -gt 0 ]; then
+    FAIL "J0: $J_NBAD of $J_NID enumeration(s) could NOT be read — $J_WHY. A reading that could not be made withholds every comparison for its own enumeration and for no other: the $J_NREAD read are graded below, and this run fails all the same. Restore the anchor, the list or the row; never delete a row to make this pass"
+  else
+    FAIL "J0: none of the $J_NID enumeration(s) could be read — $J_WHY. A reading that could not be made withholds every comparison for its own enumeration, and none was made, so nothing below is a verdict. Restore the anchor, the list or the row; never delete a row to make this pass"
+  fi
+  if [ "$J_NREAD" -le 0 ] || [ "${J_NMEM:-0}" -le 0 ]; then
+    printf '  J1, J2, J3: NOT-EVALUATED — no enumeration could be read, so there is no comparison to report\n'
+    return 0
+  fi
+
+  if [ "${J_N1:-0}" -eq 0 ]; then
+    PASS "J1: every site names every member its owner names — over the $J_NREAD of $J_NID enumeration(s) read. The zero is a measurement: the arms below fire on a planted omission"
+  else
+    FAIL "J1: $J_N1 member(s) an owner names are missing at a registered site. Add the member at the site in the commit that added it at the owner:"
+    grep '^FINDING J1 ' <<<"$out" | awk '{ $1 = ""; $2 = ""; sub(/^  /, ""); printf "      %s\n", $0 }'
+  fi
+  if [ "${J_N2:-0}" -eq 0 ]; then
+    PASS "J2: no site names a member its owner does not — over the $J_NREAD of $J_NID enumeration(s) read. The zero is a measurement: the arms below fire on a planted addition"
+  else
+    FAIL "J2: $J_N2 member(s) are named at a registered site and not by the owner. A member is added at the owner, which is the one place it is admitted:"
+    grep '^FINDING J2 ' <<<"$out" | awk '{ $1 = ""; $2 = ""; sub(/^  /, ""); printf "      %s\n", $0 }'
+  fi
+  if [ "${J_N3:-0}" -eq 0 ]; then
+    PASS "J3: no engine file writes more than one member of a registered enumeration in one paragraph without a row — $J_NSCAN file(s), $J_NPAR paragraph(s) read, for the $J_NREAD of $J_NID enumeration(s) read. The zero is a measurement: the arms below fire on a planted repeat and on a row removed while its repeat stands"
+  else
+    FAIL "J3: $J_N3 paragraph(s) write more than one member of a registered enumeration, as code spans, in a file that carries no row for it. This is a reading of tokens. Where the paragraph repeats the enumeration, add a site row in this commit or word it so it does not repeat the members — taking the code spans off is not a remedy. Where it belongs to another enumeration that shares the tokens, reconsider those tokens or the registration. A row is never removed to clear a red:"
+    grep '^FINDING J3 ' <<<"$out" | awk '{ m = $0; sub(/^FINDING J3 [^ ]+ [^ ]+ [^ ]+ [^ ]+ /, "", m); printf "      %s  %s line %s  %s member(s) in one paragraph: %s\n", $3, $4, $5, $6, m }'
+  fi
+  return 0
+}
+
+j_assert "$ROOT" "$WORK/list.real"
+for c in J0 J1 J2 J3; do echo "$c" >> "$SURF_LOG"; done
 
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
@@ -5379,6 +5706,319 @@ expect_rc 1 "CTL-VACUITY-NOREASON" "a declaration line that names an arm and giv
 expect_rc 1 "CTL-VACUITY-NOREASON-RENDERED" "a declaration line that gives no reason fails the run when its arm did render VACUOUS, so the stale-line rule is not what supplies the status" -- ctl_vac "$CTL_VAC_DECL"$'\n'"ZVAC" B1 ZVAC
 expect_rc 1 "CTL-VACUITY-UNNAMED" "a VACUOUS verdict whose arm id cannot be read fails the run rather than escaping the set" -- ctl_vac "$CTL_VAC_DECL" B1 ""
 
+# ── J ────────────────────────────────────────────────────────────────────────────
+# One fixture, built by ctl_j_mk, over invented words, so this file spells no member of a real
+# enumeration. fx-lead is a ladder at its owner, read by kind lead, and a tally at its site.
+# fx-list is a bracketed group at its owner and at two sites, and a bold-lead list at a third, so
+# one id carries a list row and a lead row in one file. docs/other.md carries no row. A record, a
+# worked example and the release log each write two members in one paragraph, and inscope()
+# passes over all three. The lookalikes are part of the fixture: a bulleted item after the
+# owner's ordered list, a site group inside an enclosing square bracket, one member alone in a
+# paragraph, and two members in separate paragraphs. Each arm builds it, plants one change with
+# ctl_j_sub, and reads it with the same ch_scan_j that graded the tree above.
+J_R1='fx-lead | owner | docs/owner.md | lead | **The ladder.**'
+J_R2='fx-lead | site  | docs/site.md  | list | - **Tally:**'
+J_R3='fx-list | owner | docs/owner.md | list | A member holds'
+J_R4='fx-list | site  | docs/site.md  | list | a member does'
+J_R5='fx-list | site  | docs/site.md  | lead | Each member has a source'
+J_R6='fx-list | site  | docs/second.md | list | So does this file'
+# The clean fixture's denominators. Every arm that must stay silent requires its own exactly, so a
+# reader that went quiet because it read nothing reads red there and not clean.
+J_DEN='2 6 2 4 3 4 5 11 3 0'
+ctl_j_doc() {  # ctl_j_doc <root> [row...] — the declaring document: one heading line, then the fence
+  local d="$1" r; shift
+  { printf '# Fixture architecture document\n\n```%s\n# id | role | path | kind | anchor\n' "$CH_J_TAG"
+    for r in "$@"; do printf '%s\n' "$r"; done
+    printf '```\n'
+  } > "$d/$CH_FENCE_DOC"
+}
+ctl_j_mk() {  # ctl_j_mk <name> — the conformant fixture with all six rows; prints its root
+  local d; d="$(ctl_mk "j-$1")"
+  printf '%s\n' '**The ladder.**' '' '1. **`alpha`** — the first rung.' '2. **`beta`, a Warning** — the second.' '' \
+    '- **Members.** A member holds (`one`, `two`) on the night.' > "$d/docs/owner.md"
+  printf '%s\n' '- **Tally:** [N `alpha` · N `beta`]' '' '[It applies when a member does (`one`, `two`), as the owner says.]' '' \
+    '**Each member has a source.**' '' '- **`one`** — read from the first place.' '- **`two`** — read from the second.' > "$d/docs/site.md"
+  printf '%s\n' '[So does this file (`one`, `two`).]' > "$d/docs/second.md"
+  printf '%s\n' 'A night may read `one`.' '' 'And, a paragraph later, `two`.' > "$d/docs/other.md"
+  printf '%s\n' 'It was `one` or `two` then.' > "$d/reference/adr/ADR-900-fixture.md"
+  printf '%s\n' 'It was `one` or `two` then.' > "$d/examples/demo/README.md"
+  printf '%s\n' 'It was `one` or `two` then.' > "$d/CHANGELOG.md"
+  ctl_j_doc "$d" "$J_R1" "$J_R2" "$J_R3" "$J_R4" "$J_R5" "$J_R6"
+  printf '%s\n' "$d"
+}
+# ctl_j_sub <file> <old> <new> — the first <old>, read literally, becomes <new>; a \n in either is a
+# line break. A planted edit that does not land is a FAIL here, so no arm reads the unplanted
+# fixture as the state it names.
+ctl_j_sub() {
+  if awk -v o="$2" -v n="$3" '{ t = (NR == 1 ? $0 : t "\n" $0) } END { i = index(t, o); if (i == 0) exit 3; printf "%s%s%s\n", substr(t, 1, i - 1), n, substr(t, i + length(o)) }' "$1" > "$1.planted"; then
+    mv "$1.planted" "$1"
+  else
+    FAIL "CTL-J: a planted edit did not land in ${1#"$WORK"/} — the text it replaces is not there, so the arm after it would read the unplanted fixture"
+  fi
+}
+ctl_j_scan() { ch_scan_j "$1" "$(ctl_list "$1")"; }
+ctl_j_fire() {  # ctl_j_fire <label> <code> <id> <output> <what> [<expected-n>] — <code> fired for <id>
+  local label="$1" code="$2" id="$3" out="$4" what="$5" want="${6:-}" n
+  ctl_arm "$code"
+  n="$(awk -v c="$code" -v i="$id" '$1 == "FINDING" && $2 == c && $3 == i { n++ } END { print n + 0 }' <<<"$out")"
+  if [ "$n" -eq 0 ]; then
+    FAIL "$label: MUST FIRE — $what, and the extractor reported no $code for $id. A code with no arm behind it is a check indistinguishable from one that cannot fire"
+  elif [ -n "$want" ] && [ "$n" -ne "$want" ]; then
+    FAIL "$label: MUST FIRE $want time(s) — $what, and the extractor reported $code for $id $n time(s). The arity is the assertion here, not merely the firing"
+  else
+    PASS "$label: $code fired for $id ($n) — $what"
+  fi
+}
+ctl_j_why() {  # ctl_j_why <label> <id> <reason> <output> <what> — J0, for <id>, with that reason
+  local label="$1" id="$2" why="$3" out="$4" what="$5" n
+  ctl_arm J0
+  n="$(awk -v i="$id" -v w="$why" '$1 == "FINDING" && $2 == "J0" && $3 == i && $5 == w { n++ } END { print n + 0 }' <<<"$out")"
+  if [ "$n" -eq 1 ]; then
+    PASS "$label: J0 fired for $id, once, as $why — $what"
+  else
+    FAIL "$label: MUST FIRE J0 for $id as $why, once — $what; the extractor reported it $n time(s)"
+  fi
+}
+ctl_j_rec() {  # ctl_j_rec <label> <output> <record> <what> — the exact finding line is printed
+  local label="$1" out="$2" rec="$3" what="$4" n
+  n="$(awk -v r="$rec" '$0 == r { n++ } END { print n + 0 }' <<<"$out")"
+  if [ "$n" -eq 1 ]; then
+    PASS "$label: the extractor printed '$rec' — $what"
+  else
+    FAIL "$label: the extractor must print '$rec' once — $what; it printed it $n time(s)"
+  fi
+}
+ctl_j_quiet() {  # ctl_j_quiet <label> <output> <denominators> <what> — no finding, the denominators exact
+  local label="$1" out="$2" want="$3" what="$4" nf den
+  nf="$(awk '$1 == "FINDING" { n++ } END { print n + 0 }' <<<"$out")"
+  den="$(awk '$1 == "DENOM" { $1 = ""; sub(/^ /, ""); print }' <<<"$out")"
+  if [ "$nf" -eq 0 ] && [ "$den" = "$want" ]; then
+    PASS "$label: no finding, over denominators '$den' as planted — $what"
+  else
+    FAIL "$label: MUST STAY SILENT over denominators '$want' — $what; the extractor reported $nf finding(s) over '${den:-no DENOM line}'"
+  fi
+}
+ctl_j_solely() {  # ctl_j_solely <label> <id> <output> <what> — J0 for <id>, and nothing else for <id>
+  local label="$1" id="$2" out="$3" what="$4" n0 nx
+  ctl_arm J0
+  n0="$(awk -v i="$id" '$1 == "FINDING" && $2 == "J0" && $3 == i { n++ } END { print n + 0 }' <<<"$out")"
+  nx="$(awk -v i="$id" '$1 == "FINDING" && $2 != "J0" && $3 == i { n++ } END { print n + 0 }' <<<"$out")"
+  if [ "$n0" -ge 1 ] && [ "$nx" -eq 0 ]; then
+    PASS "$label: J0 fired for $id and no other code did — $what"
+  else
+    FAIL "$label: MUST FIRE J0 for $id and nothing else for it — $what; the extractor reported J0 $n0 time(s) and $nx other finding(s) for it"
+  fi
+}
+ctl_j_bad() {  # ctl_j_bad <label> <output> <n> <record> <what> — the denominator's count of ids withheld,
+  # and the exact finding a defect planted on ANOTHER id prints, once. The count alone is met by a reader
+  # that reads nothing more once an id breaks at the fence, so the other id's finding is what grades
+  # containment: such a reader reports the count and never the finding
+  local label="$1" out="$2" want="$3" rec="$4" what="$5" got nrec
+  got="$(awk '$1 == "DENOM" { print $11 }' <<<"$out")"
+  nrec="$(awk -v r="$rec" '$0 == r { n++ } END { print n + 0 }' <<<"$out")"
+  if [ "${got:-none}" = "$want" ] && [ "$nrec" -eq 1 ]; then
+    PASS "$label: $got id(s) withheld, and the defect planted on another id is still found, as '$rec' — $what"
+  else
+    FAIL "$label: the denominator must withhold $want id(s), and the defect planted on another id must still be found, once, as '$rec' — $what; it withheld '${got:-no DENOM line}' and printed that finding $nrec time(s)"
+  fi
+}
+
+# The conformant fixture. It is also what group MD probes: the registered assertion passes over it,
+# so removing the extractor flips a pass and not a verdict that was already red.
+J_CLEAN="$(ctl_j_mk clean)"
+ch_list_dir "$J_CLEAN" > "$WORK/list.jclean"
+O="$(ch_scan_j "$J_CLEAN" "$WORK/list.jclean")"
+ctl_j_quiet "CTL-J-CLEAN" "$O" "$J_DEN" "the conformant fixture, which carries the lookalikes: a bulleted item after the owner's ordered list, a site group inside an enclosing square bracket, a list row and a lead row for one id in one file, one member alone in a paragraph, two members in separate paragraphs, and two members in one paragraph of a record, a worked example and the release log"
+
+# Both directions, at the owner and at a site, for each kind.
+D="$(ctl_j_mk j1ownlead)"
+ctl_j_sub "$D/docs/owner.md" '2. **`beta`, a Warning** — the second.' '2. **`beta`, a Warning** — the second.\n3. **`gamma`** — the third rung.'
+ctl_j_fire "CTL-J1-OWNER-ADD-LEAD" J1 fx-lead "$(ctl_j_scan "$D")" "a third rung is added at the owner and not at its site" 1
+
+D="$(ctl_j_mk j2ownlead)"
+ctl_j_sub "$D/docs/owner.md" '1. **`alpha`** — the first rung.\n2. **`beta`, a Warning** — the second.' '1. **`alpha`** — the first rung.'
+ctl_j_fire "CTL-J2-OWNER-DROP-LEAD" J2 fx-lead "$(ctl_j_scan "$D")" "the second rung is removed whole at the owner and stays at its site" 1
+
+D="$(ctl_j_mk j2siteadd)"
+ctl_j_sub "$D/docs/site.md" '[N `alpha` · N `beta`]' '[N `alpha` · N `beta` · N `gamma`]'
+ctl_j_fire "CTL-J2-SITE-ADD" J2 fx-lead "$(ctl_j_scan "$D")" "the site's tally names a third member the owner does not" 1
+
+D="$(ctl_j_mk j1sitedrop)"
+ctl_j_sub "$D/docs/site.md" 'a member does (`one`, `two`)' 'a member does (`one`)'
+ctl_j_fire "CTL-J1-SITE-DROP" J1 fx-list "$(ctl_j_scan "$D")" "one span is removed from a site's group" 1
+
+D="$(ctl_j_mk j1ownlist)"
+ctl_j_sub "$D/docs/owner.md" 'A member holds (`one`, `two`)' 'A member holds (`one`, `two`, `three`)'
+ctl_j_fire "CTL-J1-OWNER-ADD-LIST" J1 fx-list "$(ctl_j_scan "$D")" "a third span is added to the owner's group — once at each of its three sites" 3
+
+D="$(ctl_j_mk j2ownlist)"
+ctl_j_sub "$D/docs/owner.md" 'A member holds (`one`, `two`)' 'A member holds (`one`)'
+ctl_j_fire "CTL-J2-OWNER-DROP-LIST" J2 fx-list "$(ctl_j_scan "$D")" "one span is removed from the owner's group — once at each of its three sites" 3
+
+# CTL-J2-REPLAY reproduces, on the fixture, the shape of the defect this class exists for: a site
+# still carrying a member its owner withdrew. No shipped defect was written as a registered
+# reading, so there is no -RETRO arm to replay one from history.
+D="$(ctl_j_mk j2replay)"
+ctl_j_sub "$D/docs/site.md" 'a member does (`one`, `two`)' 'a member does (`one`, `two`, `gone`)'
+ctl_j_fire "CTL-J2-REPLAY" J2 fx-list "$(ctl_j_scan "$D")" "a site's group still carries a member its owner no longer names" 1
+
+D="$(ctl_j_mk j1sources)"
+ctl_j_sub "$D/docs/owner.md" 'A member holds (`one`, `two`)' 'A member holds (`one`, `two`, `three`)'
+ctl_j_sub "$D/docs/site.md" 'a member does (`one`, `two`)' 'a member does (`one`, `two`, `three`)'
+ctl_j_sub "$D/docs/second.md" '(`one`, `two`)' '(`one`, `two`, `three`)'
+O="$(ctl_j_scan "$D")"
+ctl_j_fire "CTL-J1-SOURCES-STALE" J1 fx-list "$O" "a member is added at the owner and at both bracketed sites, and the list that sources each member is left as it was" 1
+ctl_j_rec "CTL-J1-SOURCES-STALE-FILE" "$O" "FINDING J1 fx-list docs/site.md three" "the finding names the file that carries the sourcing list, and the member it does not source"
+
+# An unregistered repeat, and the row that holds one.
+D="$(ctl_j_mk j3file)"
+ctl_j_sub "$D/docs/other.md" 'A night may read `one`.\n\nAnd, a paragraph later, `two`.' 'A night may read `one`.\nAnd, a paragraph later, `two`.'
+O="$(ctl_j_scan "$D")"
+ctl_j_fire "CTL-J3-FILE" J3 fx-list "$O" "add-only: the file that carries no row joins its two one-member paragraphs into one" 1
+ctl_j_rec "CTL-J3-MEMBERS" "$O" "FINDING J3 fx-list docs/other.md 1 2 one, two" "the finding names the paragraph's opening line and the members it read there, as the other two comparison codes name theirs"
+
+D="$(ctl_j_mk j3table)"
+ctl_j_sub "$D/docs/other.md" 'A night may read `one`.\n\nAnd, a paragraph later, `two`.' '| night | `one` |\n| later | `two` |'
+ctl_j_fire "CTL-J3-TABLE" J3 fx-list "$(ctl_j_scan "$D")" "the two members stand in two rows of one table there — a whole table is one paragraph" 1
+
+D="$(ctl_j_mk j3rowgone)"
+ctl_j_doc "$D" "$J_R1" "$J_R2" "$J_R3" "$J_R4" "$J_R5"
+O="$(ctl_j_scan "$D")"
+ctl_j_fire "CTL-J3-ROW-REMOVED" J3 fx-list "$O" "remove-only: the second site's row is removed while its repeat stands" 1
+ctl_j_rec "CTL-J3-ROW-REMOVED-FILE" "$O" "FINDING J3 fx-list docs/second.md 1 2 one, two" "the finding names the file whose row was removed — which is what gives 'a row is never removed to make a red go away' a runner"
+
+D="$(ctl_j_mk j3partition)"
+printf '%s\n' 'It was `one` or `two` then.' > "$D/docs/record-copy.md"
+O="$(ctl_j_scan "$D")"
+ctl_j_fire "CTL-J3-OUT-OF-PARTITION" J3 fx-list "$O" "the record's paragraph is written in a file under docs/" 1
+ctl_j_rec "CTL-J3-OUT-OF-PARTITION-FILE" "$O" "FINDING J3 fx-list docs/record-copy.md 1 2 one, two" "the same sentence the record carries silently is found there — the path is what passes over the record, and not its words"
+
+# A broken instrument: what the register cannot read is a failure, withheld for its own id alone.
+D="$(ctl_j_mk j0nofence)"
+printf '# Fixture architecture document\n' > "$D/$CH_FENCE_DOC"
+ctl_j_fire "CTL-J0-NO-FENCE" J0 - "$(ctl_j_scan "$D")" "the declaring document carries no register fence — a failure that belongs to no id" 1
+
+D="$(ctl_j_mk j0short)"
+ctl_j_doc "$D" "$J_R1" 'fx-lead | site  | docs/site.md  | list' "$J_R3" "$J_R4" "$J_R5" "$J_R6"
+ctl_j_fire "CTL-J0-SHORT-ROW" J0 fx-lead "$(ctl_j_scan "$D")" "a row has lost its anchor"
+
+D="$(ctl_j_mk j0role)"
+ctl_j_doc "$D" "$J_R1" 'fx-lead | sight | docs/site.md  | list | - **Tally:**' "$J_R3" "$J_R4" "$J_R5" "$J_R6"
+ctl_j_fire "CTL-J0-ROLE" J0 fx-lead "$(ctl_j_scan "$D")" "a row names a role that is neither owner nor site"
+
+D="$(ctl_j_mk j0kind)"
+ctl_j_doc "$D" "$J_R1" 'fx-lead | site  | docs/site.md  | lest | - **Tally:**' "$J_R3" "$J_R4" "$J_R5" "$J_R6"
+ctl_j_fire "CTL-J0-KIND" J0 fx-lead "$(ctl_j_scan "$D")" "a row names a kind that is neither lead nor list"
+
+D="$(ctl_j_mk j0owners)"
+ctl_j_doc "$D" "$J_R1" "$J_R2" 'fx-lead | owner | docs/site.md  | list | - **Tally:**' "$J_R3" "$J_R4" "$J_R5" "$J_R6"
+ctl_j_fire "CTL-J0-TWO-OWNERS" J0 fx-lead "$(ctl_j_scan "$D")" "an id carries a second owner row"
+
+D="$(ctl_j_mk j0path)"
+ctl_j_doc "$D" "$J_R1" 'fx-lead | site  | docs/absent.md | list | - **Tally:**' "$J_R3" "$J_R4" "$J_R5" "$J_R6"
+ctl_j_fire "CTL-J0-PATH" J0 fx-lead "$(ctl_j_scan "$D")" "a row names a file that is not in the tracked list"
+
+D="$(ctl_j_mk j0nosite)"
+ctl_j_doc "$D" "$J_R1" "$J_R3" "$J_R4" "$J_R5" "$J_R6"
+ctl_j_sub "$D/docs/second.md" '(`one`, `two`)' '(`one`)'
+O="$(ctl_j_scan "$D")"
+ctl_j_fire "CTL-J0-NO-SITE" J0 fx-lead "$O" "an id's only site row is removed: an owner row alone is not a registration"
+ctl_j_bad "CTL-J0-NO-SITE-CONTAINED" "$O" 1 "FINDING J1 fx-list docs/second.md two" "the broken id is withheld and the other id is still read on the same run"
+
+D="$(ctl_j_mk j0absent)"
+ctl_j_sub "$D/docs/owner.md" '**The ladder.**' '**The stair.**'
+ctl_j_solely "CTL-J0-ANCHOR-ABSENT" fx-lead "$(ctl_j_scan "$D")" "the owner's anchor is renamed, so it is found no times"
+
+D="$(ctl_j_mk j0twice)"
+ctl_j_sub "$D/docs/owner.md" 'on the night.' 'on the night.\n\nSee **The ladder.** above.'
+ctl_j_solely "CTL-J0-ANCHOR-TWICE" fx-lead "$(ctl_j_scan "$D")" "the owner's anchor is written a second time in its file"
+
+D="$(ctl_j_mk j0nogroup)"
+ctl_j_sub "$D/docs/owner.md" 'A member holds (`one`, `two`) on the night.' 'A member holds: `one`, `two` on the night.'
+ctl_j_fire "CTL-J0-NO-GROUP" J0 fx-list "$(ctl_j_scan "$D")" "the owner's brackets are replaced by a colon, so no group opens after the anchor"
+
+D="$(ctl_j_mk j0empty)"
+ctl_j_sub "$D/docs/owner.md" 'A member holds (`one`, `two`)' 'A member holds (one, two)'
+ctl_j_fire "CTL-J0-EMPTY" J0 fx-list "$(ctl_j_scan "$D")" "the owner's members are written as plain words, so the reading yields none"
+
+D="$(ctl_j_mk j0leadspan)"
+ctl_j_sub "$D/docs/owner.md" '2. **`beta`, a Warning**' '2. **beta, a Warning**'
+ctl_j_fire "CTL-J0-LEAD-SPAN" J0 fx-lead "$(ctl_j_scan "$D")" "a rung's bold lead-in has lost its code span — a rung that cannot be read is not a rung removed"
+
+D="$(ctl_j_mk j0heading)"
+ctl_j_sub "$D/docs/owner.md" '**The ladder.**\n\n1.' '**The ladder.**\n\n## A later section\n\n1.'
+ctl_j_why "CTL-J0-LEAD-HEADING" fx-lead no-list-follows-the-anchor-before-the-next-heading "$(ctl_j_scan "$D")" "a heading stands between the owner's anchor and its list, so the list is another section's"
+
+D="$(ctl_j_mk j0otherid)"
+ctl_j_sub "$D/docs/owner.md" '**The ladder.**' '**The stair.**'
+ctl_j_sub "$D/docs/second.md" '(`one`, `two`)' '(`one`)'
+O="$(ctl_j_scan "$D")"
+ctl_j_fire "CTL-J0-OTHER-ID-GRADED" J0 fx-lead "$O" "one id's anchor is renamed"
+ctl_j_fire "CTL-J0-OTHER-ID-GRADED-READ" J1 fx-list "$O" "and on the same run the other id's site, which lost a span, is still read and graded" 1
+
+D="$(ctl_j_mk j0nosep)"
+ctl_j_doc "$D" "$J_R1" 'this line carries no separator at all' "$J_R2" "$J_R3" "$J_R4" "$J_R5" "$J_R6"
+ctl_j_why "CTL-J0-NO-SEPARATOR" - a-row-does-not-carry-its-five-fields "$(ctl_j_scan "$D")" "a line with no separator follows a valid row: its id cannot be read, so it is charged to no id and withholds every verdict, and not to the row above it"
+
+D="$(ctl_j_mk j0copy)"
+printf '%s\n' '**The solo list.**' '' '- **`left`** — one.' '- **`right`** — the other.' > "$D/docs/solo.md"
+ctl_j_doc "$D" "$J_R1" "$J_R2" "$J_R3" "$J_R4" "$J_R5" "$J_R6" 'fx-self | owner | docs/solo.md | lead | **The solo list.**' 'fx-self | site  | docs/solo.md | lead | **The solo list.**'
+ctl_j_sub "$D/docs/site.md" '[N `alpha` · N `beta`]' '[N `alpha`]'
+O="$(ctl_j_scan "$D")"
+ctl_j_why "CTL-J0-SITE-COPY" fx-self a-site-row-copies-its-owner-row "$O" "an id's only site row repeats its owner row — the owner compared with itself, which would pass both comparisons on nothing"
+ctl_j_bad "CTL-J0-SITE-COPY-CONTAINED" "$O" 1 "FINDING J1 fx-lead docs/site.md beta" "that id is withheld, and another id is still read on the same run"
+
+# What must stay silent, each over the denominators it plants.
+D="$(ctl_j_mk jorder)"
+ctl_j_sub "$D/docs/site.md" '[N `alpha` · N `beta`]' '[N `beta` · N `alpha`]'
+ctl_j_quiet "CTL-J-ORDER" "$(ctl_j_scan "$D")" "$J_DEN" "the site's members stand in another order — membership is graded, not rank"
+
+D="$(ctl_j_mk jwrapanchor)"
+ctl_j_sub "$D/docs/site.md" '[It applies when a member does (' '[It applies when a member\ndoes ('
+ctl_j_quiet "CTL-J-WRAP-ANCHOR" "$(ctl_j_scan "$D")" "$J_DEN" "a line break falls inside a site's anchor"
+
+D="$(ctl_j_mk jwrapgroup)"
+ctl_j_sub "$D/docs/site.md" 'a member does (`one`, `two`)' 'a member does (`one`,\n`two`)'
+ctl_j_quiet "CTL-J-WRAP-GROUP" "$(ctl_j_scan "$D")" "$J_DEN" "a line break falls inside a site's group"
+
+D="$(ctl_j_mk jplainwords)"
+ctl_j_sub "$D/docs/site.md" 'a member does (`one`, `two`)' 'a member does (`one`, `two`, and no others)'
+ctl_j_quiet "CTL-J-PLAIN-WORDS" "$(ctl_j_scan "$D")" "$J_DEN" "plain words stand inside a site's group beside its code spans"
+
+D="$(ctl_j_mk jspanoutside)"
+ctl_j_sub "$D/docs/site.md" 'a member does (`one`, `two`)' 'a member does (`one`, `two`) `three`'
+ctl_j_quiet "CTL-J-SPAN-OUTSIDE" "$(ctl_j_scan "$D")" "$J_DEN" "a code span stands directly after a site's closing bracket, outside its group"
+
+D="$(ctl_j_mk jleadpara)"
+ctl_j_sub "$D/docs/owner.md" '**The ladder.**\n\n1.' '**The ladder.**\n\nA paragraph stands between the anchor and its list.\n\n1.'
+ctl_j_quiet "CTL-J-LEAD-PARA" "$(ctl_j_scan "$D")" '2 6 2 4 3 4 5 12 3 0' "a paragraph stands between the owner's anchor and its list, which a lead reading passes over — the paragraph count moves by the one planted"
+
+D="$(ctl_j_mk jfencedhash)"
+ctl_j_sub "$D/docs/owner.md" '**The ladder.**\n\n1.' '**The ladder.**\n\n```\n# a hash line, inside a fence\n```\n\n1.'
+ctl_j_quiet "CTL-J-LEAD-FENCED-HASH" "$(ctl_j_scan "$D")" "$J_DEN" "a fenced block between the owner's anchor and its list carries a line that opens with a hash mark, which is neither a heading nor a paragraph"
+
+D="$(ctl_j_mk j3twoids)"
+ctl_j_sub "$D/docs/other.md" 'A night may read `one`.' 'A night may read `one` and `alpha`.'
+ctl_j_quiet "CTL-J3-TWO-IDS" "$(ctl_j_scan "$D")" "$J_DEN" "one paragraph carries one member of each id — members are counted per id"
+
+D="$(ctl_j_mk j3fenced)"
+ctl_j_sub "$D/docs/other.md" 'And, a paragraph later, `two`.' 'And, a paragraph later, `two`.\n\n```\n`one` and `two`\n```'
+ctl_j_quiet "CTL-J3-FENCED" "$(ctl_j_scan "$D")" "$J_DEN" "two members stand inside a fenced block of the file that carries no row"
+
+D="$(ctl_j_mk j3plain)"
+ctl_j_sub "$D/docs/other.md" 'A night may read `one`.' 'A night may read one, or two.'
+ctl_j_quiet "CTL-J3-PLAIN" "$(ctl_j_scan "$D")" "$J_DEN" "two members are written as plain words in one paragraph there"
+
+# The registered assertion, run over the conformant fixture with its subject PRESENT. md_flips
+# below shows the same call reporting one FAIL once ch_scan_j is removed; this arm is the other
+# half, without which that FAIL could be a verdict the fixture already carried.
+J_PRESENT="$(md_probe zzq_j_no_such_subject j_assert "$J_CLEAN" "$WORK/list.jclean")"
+if [ -n "$J_PRESENT" ] && [ "${J_PRESENT##* }" = "0" ] && [ "${J_PRESENT%% *}" != "0" ]; then
+  PASS "CTL-J-MD-PRESENT: with its subject present the registered assertion reports pass=${J_PRESENT%% *} fail=${J_PRESENT##* } over the conformant fixture — so the single FAIL that MD[J] requires below is a flip, and not a verdict that fixture already carried"
+else
+  FAIL "CTL-J-MD-PRESENT: over the conformant fixture the registered assertion returned '${J_PRESENT:-nothing}' rather than passes and no FAIL — MD[J] below would then certify a flip from a state that was never green"
+fi
+
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
 echo "Y — the assertion inventory, derived from this file and checked in both directions"
@@ -5743,9 +6383,10 @@ fi
 
 # ── REGISTERED ASSERTIONS, AND WHAT IS NOT REGISTERED. md_flips re-runs a registered assertion
 # with its subject removed and requires exactly one FAIL and no PASS. What is registered: group
-# H's h_assert, over ch_scan_h, the function that drives its extractor. It is probed over the
-# conformant fixture the H control arms built, where it passes — arm CTL-H-MD-PRESENT is that
-# half — so what is certified is a flip, and not a verdict that was already red. The declared
+# H's h_assert, over ch_scan_h, and group J's j_assert, over ch_scan_j — in each, the function that
+# drives its extractor. Each is probed over the conformant fixture its own control arms built,
+# where it passes — arms CTL-H-MD-PRESENT and CTL-J-MD-PRESENT are that half — so what is
+# certified is a flip, and not a verdict that was already red. The declared
 # residual in MD2 is still this suite's registration queue: every entry that leaves it gains an
 # MD[...] arm here in the same edit, and an entry cannot leave it until its assertion is
 # remediated, because an oracle asked to certify a still-blind assertion turns the suite red for
@@ -5775,6 +6416,10 @@ fi
 # h_assert or a lister — a shell function that an arm written inline cannot hand to md_flips,
 # which re-runs a function. What compensates is the mutation of its own subject each arm was
 # observed red under, recorded with the change that added the arm.
+# Group J's subjects that are files are opted out on the same ground — the declaring document, its
+# fence and every surface a row names are the INPUT UNDER TEST. Its CTL-J0 arms remove the fence, a
+# row's field, a site row, an anchor, a group and a list in turn and require each to fail; and every
+# must-not-fire J arm requires the exact denominators its fixture plants.
 md_flips ch_scan_h 'H' h_assert "$H_CLEAN" "$WORK/list.hclean"
 md_flips ch_vacuity_rc 'VACUITY' ctl_vac_declared
 
@@ -6255,6 +6900,7 @@ if [ "$FZ_LINES" -ge "$FZ_WC" ] && [ "$FZ_LINES" -le "$((FZ_WC+1))" ] && [ "$FZ_
 else
   FAIL "FZ4: the walker read $FZ_LINES line(s) of this file while an independent count reads $FZ_WC — the walk did not cover the source, so FZ3 graded a prefix and its verdict does not describe this file"
 fi
+md_flips ch_scan_j 'J' j_assert "$J_CLEAN" "$WORK/list.jclean"
 
 echo
 printf 'Result: \033[1;32m%d passed\033[0m, \033[1;31m%d failed\033[0m, \033[1;33m%d skipped\033[0m, \033[1;36m%d vacuous\033[0m\n' \
@@ -6306,6 +6952,21 @@ elif [ "${I_NROW:-0}" -eq 0 ] && [ "${I_NABOVE:-0}" -eq 0 ]; then
 else
   printf 'NUMBER-REGISTER: %s row(s) and %s record(s) above the floor at %s; %s number(s) taken twice, %s record(s) not named by their row, %s row(s) out of sequence or malformed; %s held, %s spent.\n' \
     "$I_NROW" "$I_NABOVE" "$I_FLOOR" "$(n_code "$I_OUT" I1)" "$(n_code "$I_OUT" I2)" "$(n_code "$I_OUT" I3)" "$I_NHELD" "$I_NSPENT"
+fi
+# Class J's line, in the measurement state its verdict function decided: every id read, some
+# withheld, none read, or unmeasured. A withheld reading puts its cause on the line, and no line
+# carries a counter beside a comparison that was not made, on group G's rule.
+if [ "$J_MEASURED" -eq 1 ] && [ "$J_NBAD" -eq 0 ]; then
+  printf 'ENUMERATION-REGISTER: %s enumeration(s) in %s row(s) over %s file(s), %s member reading(s) at the owners; %s missing at a site, %s unowned at a site; %s engine file(s) read for an unregistered repeat and %s passed over, %s unregistered repeat(s).\n' \
+    "$J_NID" "$J_NROW" "$J_NFILE" "$J_NMEM" "$J_N1" "$J_N2" "$J_NSCAN" "$J_NPAST" "$J_N3"
+elif [ "$J_MEASURED" -eq 1 ] && [ "$J_NREAD" -gt 0 ]; then
+  printf 'ENUMERATION-REGISTER: %s of %s enumeration(s) read, %s NOT-EVALUATED — %s — this is not a clean result. Of those read: %s missing at a site, %s unowned at a site, %s unregistered repeat(s).\n' \
+    "$J_NREAD" "$J_NID" "$J_NBAD" "$J_WHY" "$J_N1" "$J_N2" "$J_N3"
+elif [ "$J_MEASURED" -eq 1 ]; then
+  printf 'ENUMERATION-REGISTER: 0 of %s enumeration(s) read, %s NOT-EVALUATED — %s — this is not a clean result\n' \
+    "$J_NID" "$J_NBAD" "$J_WHY"
+else
+  printf 'ENUMERATION-REGISTER: NOT-EVALUATED — %s — this is not a clean result\n' "$J_WHY"
 fi
 if [ "$vacuous" -gt 0 ]; then
   printf 'NOTE: %d assertion(s) had an EMPTY POPULATION and proved nothing about this tree: %s. Read each named arm and its own verdict above for what carries it. This line names the vacuous ARMS rather than a compensating group, because the arms that compensate are not always in the group the vacuous arm belongs to, and a hardcoded group here was a claim about a run it had not read.\n' "$vacuous" "${VACUOUS_IDS% }"
