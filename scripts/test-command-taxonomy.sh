@@ -327,12 +327,13 @@
 # it.
 # Every other line reads the caller's locale.
 # WHAT IS ASSERTED, on every run. The edge trims read no locale. trim and group J's rj_trimv
-# strip one fixed set, ASCII whitespace and U+00A0; the readers of a skill file's frontmatter, a
-# verb's or the carrier's, strip ASCII whitespace alone, through fm_trim, so a frontmatter edge
-# carrying U+00A0 is kept and reported. Arms GQL, GJU and GQF read Grant cells, a roster header
-# cell and a frontmatter flag line, each edged by U+00A0 and by U+3000, under C and under a UTF-8
-# locale the host lists, and fail the run if the host lists none. That is the whole of the
-# asserted surface.
+# strip one fixed set, ASCII whitespace and U+00A0; the readers of a verb's frontmatter strip
+# ASCII whitespace alone, through fm_trim, so a frontmatter edge carrying U+00A0 is kept and
+# reported; and the carrier's two flag readers take trim's set, so a flag key led by U+00A0 is
+# read as the key. Arms GQL, GJU and GQF read Grant cells, a roster header cell, and a verb's
+# frontmatter flag and publish-script denial lines, each edged by U+00A0 and by U+3000, and GQF a
+# carrier flag key led by U+00A0, under C and under a UTF-8 locale the host lists, and fail the
+# run if the host lists none. That is the whole of the asserted surface.
 # WHAT WAS MEASURED, AND IS NOT ASSERTED. Every other match this file makes with a POSIX character
 # class or a bracket range — in a regular expression, a case pattern, a parameter expansion, or a
 # tr, grep or sed call — and every awk program and sort not pinned above reads the caller's
@@ -559,12 +560,17 @@ REQ_COLS=( verb lifecycle mode destination depth )
 # through trim and rj_trimv: a cell that differs from its grant only by an invisible edge byte
 # reads as naming that grant, and U+00A0 is the space an editor or a paste leaves at a cell's edge
 # unseen. A skill file's frontmatter, a verb's or the carrier's, is read by the runtime's YAML
-# parser, so its readers take the ASCII set alone, through fm_trim: a YAML parser keeps U+00A0 as
-# part of the value or key it edges, so a `disable-model-invocation: true` line carrying one may
-# set nothing. There U+00A0 is kept and reported under every locale, as publish-trip-site.sh's
-# _approval_line_parse refuses it in its own grammar. Neither policy reads the locale. Arms GQL,
-# GJU and GQF read Grant cells, a roster header cell and a frontmatter flag line, each edged by
-# U+00A0 and by U+3000, under C and under a UTF-8 locale the host lists, on every run.
+# parser, so a verb's readers take the ASCII set alone, through fm_trim: a YAML parser keeps
+# U+00A0 as part of the value or key it edges, so a `disable-model-invocation: true` line carrying
+# one may set nothing. There U+00A0 is kept and reported under every locale, as
+# publish-trip-site.sh's _approval_line_parse refuses it in its own grammar. The carrier's two
+# flag readers are the exception, by the flag's polarity rather than its parser: on a verb the
+# flag protects, so reading an edged one as absent is the safe reading, while on the carrier its
+# presence is the defect L2 reports, so those two take trim's set and read a key led by U+00A0 as
+# the key, which reports it whichever way the runtime reads that key. Neither policy reads the
+# locale. Arms GQL, GJU and GQF read Grant cells, a roster header cell, and a verb's frontmatter
+# flag and publish-script denial lines, each edged by U+00A0 and by U+3000, and GQF a carrier flag
+# key led by U+00A0, under C and under a UTF-8 locale the host lists, on every run.
 #
 # SCOPE: the guarantee is the edge trims' alone. Every other match this file makes with a POSIX
 # character class or a bracket range — in a regular expression, a case pattern, a parameter
@@ -3467,8 +3473,9 @@ inference_check() {
   local whole=''
   for (( i=0; i<${#CL[@]}; i++ )); do
     cline="${CL[$i]}"
-    [ "$(fm_trim "$cline")" = 'disable-model-invocation: true' ] && cflag=1
-    case "$(fm_trim "$cline")" in 'disable-model-invocation:'*) cflag=1 ;; esac
+    # trim, not fm_trim: here the flag's presence is the defect (trimv, TWO POLICIES).
+    [ "$(trim "$cline")" = 'disable-model-invocation: true' ] && cflag=1
+    case "$(trim "$cline")" in 'disable-model-invocation:'*) cflag=1 ;; esac
     whole="$whole $cline"
   done
   cnorm="$(neg_norm "$whole")"
@@ -4548,7 +4555,7 @@ gen_cmd() {  # gen_cmd <dir> <tuple> <defect>
 # whether those two agree, so they read one literal rather than two.
 FIXTURE_ADMIT_KEY='/trip status'
 
-# gen_carrier <path> <defect> — the guided-entry carrier at a fixture engine root.
+# gen_carrier <path> <defect> [<edge>] — the guided-entry carrier at a fixture engine root.
 #
 # Group L is the only reader of this surface, and no other generator produces it: the carrier sits
 # OUTSIDE the verb directory every other fixture writes into, which is the whole point of it.
@@ -4556,15 +4563,17 @@ FIXTURE_ADMIT_KEY='/trip status'
 #   ok          — names no verb, carries no flag, declares all three negatives
 #   verbtoken   — names a live verb token, which is the second enumeration the design forbids
 #   flag        — carries the frontmatter key whose presence would disable guided entry silently
+#   edgekey     — carries that key's line led by <edge>, the bytes arm GQF passes (U+00A0)
 #   noneg       — declares none of the three negatives
 #   preexec     — carries the retired pre-execution line, which group I must flag here as well
 #   preexecnear — carries its near-miss, the two characters in the other order, which it must not
 gen_carrier() {
-  local p="$1" defect="${2:-ok}"
+  local p="$1" defect="${2:-ok}" edge="${3:-}"
   mkdir -p "${p%/*}"
   {
     printf -- '---\nname: fixture-engine\ndescription: fixture landing surface for the guided-entry carrier.\n'
     [ "$defect" = 'flag' ] && printf -- 'disable-model-invocation: true\n'
+    [ "$defect" = 'edgekey' ] && printf -- '%sdisable-model-invocation: true\n' "$edge"
     printf -- '---\n\n# The way in\n\n'
     printf -- 'Somebody has said in their own words what they want to do. This surface names the verb and hands over the command to type.\n\n'
     [ "$defect" = 'preexec' ] && printf -- '!%sls -1 trips%s\n\n' "$BT" "$BT"
@@ -6810,9 +6819,10 @@ else
   FAIL "GQL: a Grant cell graded differently by locale, or not as specified — U+00A0 world: under C $(grep -c '^FINDING ' <<<"$GQL_NC") finding(s), under ${GQL_MB} $(grep -c '^FINDING ' <<<"$GQL_NM"); U+3000 world: under C $(grep -c '^FINDING ' <<<"$GQL_WC"), under ${GQL_MB} $(grep -c '^FINDING ' <<<"$GQL_WM") (want 0, 0, 2, 2, and each pair identical). This host's [[:space:]] under ${GQL_MB} holds U+00A0: ${GQL_NBIN}; U+3000: ${GQL_WIN}. First finding: $(grep -h '^FINDING ' <<<"$GQL_NC"$'\n'"$GQL_NM"$'\n'"$GQL_WC"$'\n'"$GQL_WM" | awk 'NR == 1')"
 fi
 
-# ── GQF — A FRONTMATTER LINE READS THE SAME UNDER EVERY LOCALE, AND KEEPS U+00A0 AT ITS EDGE. Four
-# BUILT verb files, each read under C and under the member gq_mb_pick chose for GQL. The first three
-# are read by parse_command_file, the reader of the typed-only posture's flag half:
+# ── GQF — A FRONTMATTER LINE READS THE SAME UNDER EVERY LOCALE; A VERB'S KEEPS U+00A0 AT ITS EDGE,
+# AND THE CARRIER'S FLAG KEY IS READ THROUGH IT. Four BUILT verb files and one BUILT carrier, each
+# read under C and under the member gq_mb_pick chose for GQL. The first three verb files are read
+# by parse_command_file, the reader of the typed-only posture's flag half:
 #   nbspflag  a `disable-model-invocation: true` line led by U+00A0, and one trailed by a space and
 #             U+00A0. fm_trim keeps U+00A0, so neither line is the flag: POSTURE '-' under both. A
 #             YAML parser reads the first as a different key and the second as the string "true"
@@ -6828,9 +6838,16 @@ fi
 #             The plain line is a grant; each edged line is an unresolved mention (F5), named with
 #             its line, under both. A YAML parser reads an edged key as a different key, so a denial
 #             the runtime may not hold is reported, never counted as held.
-# Each file's two readings must also be byte-identical. A frontmatter reader moved onto trim reads
-# the U+00A0 flag file as flagged, or counts the U+00A0-led denial as a grant, and that is the
-# regression this arm turns red on.
+# The carrier is built by gen_carrier at a fixture engine root and read by inference_check, the
+# reader of group L, whose L2 reports the flag there because its presence is the defect:
+#   carrier   a `disable-model-invocation: true` line led by U+00A0. The carrier's two flag
+#             readers take trim's set, so the line reads as the key: L2 and no other finding,
+#             under both. A runtime that strips U+00A0 from a key would hold that flag and one that
+#             reads it as a different key would not, and either way it is reported.
+# Each file's two readings must also be byte-identical. A verb's frontmatter reader moved onto
+# trim reads the U+00A0 flag file as flagged, or counts the U+00A0-led denial as a grant, and the
+# carrier's two flag readers moved back onto fm_trim leave its key unread; those are the
+# regressions this arm turns red on.
 gqf_read() {  # gqf_read <verb-root> — the POSTURE record parse_command_file emits for zz-graded
   grep '^POSTURE ' <<<"$(parse_command_file "$1/zz-graded/SKILL.md" '/zz-graded' RESOLVE 2>/dev/null)"
 }
@@ -6849,20 +6866,33 @@ gqf_deny_sum() {  # gqf_deny_sum <reading> — the reading on one line, for the 
     "$(grep '^FINDING F5 ' <<<"$1" | sed -n 's|.*/zz-graded:\([0-9][0-9]*\) .*|\1|p' | tr '\n' ' ')" \
     "$(awk '$1 == "COUNT" && $2 == "GRANTS" { print $3 }' <<<"$1")"
 }
+gqf_carrier() {  # gqf_carrier <engine-root> — the findings inference_check emits over a built world
+  grep '^FINDING ' <<<"$(inference_check "$(collect_records "$1")" "$1/SKILL.md" 2>/dev/null)"
+}
+gqf_carrier_ok() {  # gqf_carrier_ok <findings> — L2, and no other finding
+  [ "$(grep -c '^FINDING ' <<<"$1")" = '1' ] && grep -q '^FINDING L2 ' <<<"$1"
+}
+gqf_carrier_sum() {  # gqf_carrier_sum <findings> — the finding ids on one line, for the FAIL text
+  local s; s="$(sed -n 's/^FINDING \([A-Z0-9]*\) .*/\1/p' <<<"$1" | tr '\n' ' ')"
+  printf '%s' "${s:-none}"
+}
 GQFN="$(gq_world GQF-nbsp nbspflag)"; GQFW="$(gq_world GQF-wide wideflag)"; GQFP="$(gq_world GQF-plain flagline)"
 GQFD="$(gq_world GQF-deny edgedeny)"
+GQFC="$WORK/GQF-carrier"; gen_tree "$GQFC" ok ok; gen_carrier "$GQFC/SKILL.md" edgekey "$GQ_NBSP"
 GQF_DN="$(grep -n -F "${GQ_NBSP}disallowed-tools:" "$GQFD/zz-graded/SKILL.md" | cut -d: -f1)"
 GQF_DW="$(grep -n -F "${GQ_WIDE}disallowed-tools:" "$GQFD/zz-graded/SKILL.md" | cut -d: -f1)"
 GQF_NC="$( export LC_ALL=C; gqf_read "$GQFN" )"
 GQF_WC="$( export LC_ALL=C; gqf_read "$GQFW" )"
 GQF_PC="$( export LC_ALL=C; gqf_read "$GQFP" )"
 GQF_DC="$( export LC_ALL=C; gqf_deny "$GQFD" )"
-GQF_NM=''; GQF_WM=''; GQF_PM=''; GQF_DM=''
+GQF_CC="$( export LC_ALL=C; gqf_carrier "$GQFC" )"
+GQF_NM=''; GQF_WM=''; GQF_PM=''; GQF_DM=''; GQF_CM=''
 if [ -n "$GQL_MB" ]; then
   GQF_NM="$( export LC_ALL="$GQL_MB"; gqf_read "$GQFN" )"
   GQF_WM="$( export LC_ALL="$GQL_MB"; gqf_read "$GQFW" )"
   GQF_PM="$( export LC_ALL="$GQL_MB"; gqf_read "$GQFP" )"
   GQF_DM="$( export LC_ALL="$GQL_MB"; gqf_deny "$GQFD" )"
+  GQF_CM="$( export LC_ALL="$GQL_MB"; gqf_carrier "$GQFC" )"
 fi
 GQF_S=1
 [ "$(grep -c -F "$GQ_NBSP" "$GQFN/zz-graded/SKILL.md")" = '2' ] || GQF_S=0
@@ -6879,17 +6909,20 @@ for gqf_e in '' "$GQ_NBSP" "$GQ_WIDE"; do
 done
 [ -n "$GQF_DN" ] || GQF_S=0
 [ -n "$GQF_DW" ] || GQF_S=0
+[ "$(grep -c -F "$GQ_NBSP" "$GQFC/SKILL.md")" = '1' ] || GQF_S=0
+grep -qxF "${GQ_NBSP}disable-model-invocation: true" "$GQFC/SKILL.md" || GQF_S=0
 if [ "$GQF_S" -eq 0 ]; then
-  FAIL "GQF: fixture integrity — a built frontmatter does not carry its flag or denial lines edged as its file places them, so a verdict here would prove nothing"
+  FAIL "GQF: fixture integrity — a built frontmatter does not carry its flag or denial lines edged as its file places them, or the built carrier does not carry its flag line led by U+00A0, so a verdict here would prove nothing"
 elif [ -z "$GQL_MB" ]; then
   FAIL "GQF: NO MULTIBYTE LOCALE — gq_mb_pick found no name under which U+00A0 reads as one character, so C was compared with nothing"
 elif [ "$GQF_NC" = 'POSTURE /zz-graded -' ] && [ "$GQF_NM" = "$GQF_NC" ] \
      && [ "$GQF_WC" = 'POSTURE /zz-graded -' ] && [ "$GQF_WM" = "$GQF_WC" ] \
      && [ "$GQF_PC" = 'POSTURE /zz-graded FLAG' ] && [ "$GQF_PM" = "$GQF_PC" ] \
-     && gqf_deny_ok "$GQF_DC" && [ "$GQF_DM" = "$GQF_DC" ]; then
-  PASS "GQF: LOCALE-INVARIANT, AND U+00A0 KEPT AT A FRONTMATTER EDGE — a disable-model-invocation: true line led by U+00A0, or trailed by a space and U+00A0, is not read as the flag under C or under ${GQL_MB}, nor is either edged by U+3000; the plain line trailed by a space and a tab is read as the flag under both; of a whole-script publish denial written plain, led by U+00A0 and led by U+3000, invocation_check counts the plain line a grant and names each edged line an unresolved mention (F5) under both; and each file's two readings are identical. fm_trim strips ASCII whitespace alone, so this verdict does not depend on the host's [[:space:]], and an edge byte a YAML parser keeps is reported rather than trimmed into a flag or a denial"
+     && gqf_deny_ok "$GQF_DC" && [ "$GQF_DM" = "$GQF_DC" ] \
+     && gqf_carrier_ok "$GQF_CC" && [ "$GQF_CM" = "$GQF_CC" ]; then
+  PASS "GQF: LOCALE-INVARIANT, U+00A0 KEPT AT A VERB'S FRONTMATTER EDGE AND READ THROUGH AT THE CARRIER'S FLAG KEY — a disable-model-invocation: true line led by U+00A0, or trailed by a space and U+00A0, is not read as the flag under C or under ${GQL_MB}, nor is either edged by U+3000; the plain line trailed by a space and a tab is read as the flag under both; of a whole-script publish denial written plain, led by U+00A0 and led by U+3000, invocation_check counts the plain line a grant and names each edged line an unresolved mention (F5) under both; a guided-entry carrier whose disable-model-invocation key is led by U+00A0 is read as carrying the key, L2 and no other finding, under both; and each file's two readings are identical. fm_trim strips ASCII whitespace alone and trim one fixed set, so this verdict does not depend on the host's [[:space:]]: on a verb an edge byte a YAML parser keeps is reported rather than trimmed into a flag or a denial, and on the carrier, where the flag's presence is the defect, a key the runtime might read through a U+00A0 edge is reported either way"
 else
-  FAIL "GQF: a frontmatter flag or denial line read differently by locale, or not as specified — U+00A0 file: under C '${GQF_NC}', under ${GQL_MB} '${GQF_NM}'; U+3000 file: '${GQF_WC}', '${GQF_WM}'; plain file: '${GQF_PC}', '${GQF_PM}' (want POSTURE /zz-graded - for the first four and POSTURE /zz-graded FLAG for the last two); denial file: under C $(gqf_deny_sum "$GQF_DC"), under ${GQL_MB} $(gqf_deny_sum "$GQF_DM") (want 2 finding(s), F5 at line(s) ${GQF_DN} ${GQF_DW}, 1 grant(s), the same under both)"
+  FAIL "GQF: a frontmatter flag or denial line read differently by locale, or not as specified — U+00A0 file: under C '${GQF_NC}', under ${GQL_MB} '${GQF_NM}'; U+3000 file: '${GQF_WC}', '${GQF_WM}'; plain file: '${GQF_PC}', '${GQF_PM}' (want POSTURE /zz-graded - for the first four and POSTURE /zz-graded FLAG for the last two); denial file: under C $(gqf_deny_sum "$GQF_DC"), under ${GQL_MB} $(gqf_deny_sum "$GQF_DM") (want 2 finding(s), F5 at line(s) ${GQF_DN} ${GQF_DW}, 1 grant(s), the same under both); carrier file: under C $(gqf_carrier_sum "$GQF_CC"), under ${GQL_MB} $(gqf_carrier_sum "$GQF_CM") (want L2 alone under both)"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
