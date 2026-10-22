@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-10-15 — Admission and precedence law
+## [0.57.0] — 2026-10-15 — Admission and precedence law
 
 A rule written over a list — of verdicts, classes, cases or sources — is true only of the members
 its author could see. A member that arrives later is neither ranked against the others nor admitted
