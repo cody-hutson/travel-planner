@@ -204,7 +204,7 @@ ADR_INDEX='reference/adr/README.md'
 
 # THE ONE PINNED VALUE. The known gap in the record sequence, asserted in both directions.
 # Space-separated if it ever holds more than one.
-ADR_NUM_EXEMPT='20 47'
+ADR_NUM_EXEMPT='20'
 
 # The historical witnesses. Each is a real revision of this repository.
 #   IX — a record whose file read Accepted while the index still read Proposed.
