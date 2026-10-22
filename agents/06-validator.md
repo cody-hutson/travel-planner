@@ -611,8 +611,13 @@ A night is **nightlife-applicable** when either limb holds:
   nightlife archetype (`a night out`, `live music`), or carrying a nightlife
   `Theme tag(s):` (`nightlife`). Any `Priority tier:` qualifies — anchor, wish, or
   nice-to-have. Carry the tier into the verdict; it does not gate it.
-- **Occasion limb.** A natural occasion falls on that night — a weekend night, or a
-  special occasion in trip-context.md's travel dates or calendar events.
+- **Occasion limb.** A natural occasion falls on that night
+  (`weekend night`, `calendar occasion`) — a weekend night, or an occasion dated to that
+  night in trip-context.md's travel dates or calendar events. This sentence owns those
+  members (`CLAUDE.md` § *Rules over an enumeration*): a member is added here, and a
+  night that is neither is not an occasion night. A traveler's `Special occasion?`
+  answer is not a member, whatever words it shares with a calendar entry: the label
+  decides.
 
 Presence is evaluated **per night**, against that night's date, using the **same**
 present-day set the needs audit uses — see `reference/data-model.md` → "Presence — a
@@ -621,62 +626,86 @@ traveler's present-day set". Do not re-derive it here, and do not read the raw
 `### Per-Traveler Planning Days [DERIVED]` block. A traveler outside their window that
 night, or whose blackout covers it, does not make the night applicable.
 
-**A ticked interest is not a desire.** `bars & nightlife` under a traveler's
-Interests is a soft signal — broader and looser than the ranked Desires. Reading it
-as a desire would force nightlife on a group that ticked a box. Gate on Desires
-only; both strings contain "nightlife", so this distinction is the whole gate.
+**A ticked interest is not a desire.** The label decides, never the string
+(`CLAUDE.md` § *Rules over an enumeration*): a value under a traveler's `Interests:`
+is an interest whatever words it shares with a desire archetype, and only a `Desire:`
+line is a desire. `bars & nightlife` and `live music` are examples — `live music` is
+offered on both intake forms, and under `Interests:` it is still an interest. An
+interest is a soft selection signal, looser than the ranked Desires
+(`reference/data-model.md` § *Lifecycle facets*); reading it as a desire would force
+nightlife on a group that ticked a box. Gate on Desires only.
 
 **A night with neither limb is not applicable and is never flagged** — the same
 rule as not failing a conditional need on a day its constraint never governed.
 
-On each applicable night, read **that day's `**Nightlife**` block** in
-`outputs/final-itinerary.md` and record exactly one verdict:
+For each night, read **that day's `**Nightlife**` block** in
+`outputs/final-itinerary.md` and record exactly one verdict — the rung the ladder below
+stops at.
 
-**Whose night the gate obliged.** Every verdict is scoped to the member set the gate
-obliged, and the two limbs oblige different sets: the **desire limb** yields a
-**per-traveler** obligation — the desire-holders present that night, at any tier — and the
-**occasion limb** yields a **whole-group** obligation. Entries and no-nightlife lines each
-name a member set in their `[whole group | Subgroup members]` slot, and `whole group` names
-everyone present that night. **That slot has exactly two admissible readings** — `whole group`,
-or verbatim a Parallel Track block's `[Subgroup members]` string for that day. **A slot that is
-neither, whatever it says, names no member set at all:** it is not a wider set and not a narrower
-one, so it covers nobody and discharges nobody, and any member set the gate obliged that only
-that line could have accounted for is left unaccounted for — a `gap` under the bullet below.
-Record the slot as read in a Note alongside whatever verdict the night resolves to, so the
-wording still converges. This governs **every slot-bearing line, entry and no-nightlife alike**,
-and it holds in one direction only: **an unreadable slot is never the reason a night passes.**
+**Whose night the gate obliged.** The gate obliges travelers, and each is accounted for on
+their own. The **desire limb** obliges the desire-holders present that night, at any tier.
+The **occasion limb** obliges every traveler present that night — a **whole-group**
+obligation, met traveler by traveler: on a split night the lines that name the tracks meet
+it together, and no slot has to read `whole group`. Entries and no-nightlife lines each
+name travelers in their `[whole group | Subgroup members]` slot. **That slot has exactly
+two admissible readings** — `whole group`, which names everyone present that night, or
+verbatim a Parallel Track block's `[Subgroup members]` string for that day, which names
+the travelers that string lists. **A slot that is neither, whatever it says, names
+nobody:** it is not a wider set and not a narrower one, so its line serves nobody and
+declines nobody. An obliged traveler is **accounted for** when an entry names them, or
+when a no-nightlife line names them and they hold no nightlife desire. A decline never
+accounts for a desire-holder, at any tier.
 
-- **`covered`** — the block carries one or more nightlife entries, and every member set the
-  gate obliged is named by an entry's member slot, or discharged by a no-nightlife line in
-  the sense the `declined` bullet below defines. A decline that covers a desire-holder is
-  not a discharge, so it does not make the night `covered`. No finding.
-- **`declined`** — the block carries the `No nightlife tonight — [reason]` line with
-  a filled reason. No finding. This is a correct outcome, not a gap. A decline discharges
-  only the member set its line names, and only a set the desire limb did not oblige — an
-  occasion-limb-only night, or a member set holding no nightlife desire.
-- **`declined`, plus a Note** — the line is present and its member slot reads, but the line is
-  malformed. **The test is whether *who declined* stays determinable, not whether the
-  malformation appears on a list:** a colon or other separator in place of the em-dash, and the
-  reason left empty or as an unfilled placeholder, are the forms seen so far, and both leave the
-  member set legible. That legibility is why the intent is unambiguous and the night passes; the
-  Note exists so the emitted wording converges rather than drifting silently. **An unreadable or
-  absent member slot is not one of these** — there the member set is exactly what cannot be
-  determined. It names no member set, discharges nobody, and the night resolves on that basis by
-  the rule in the obligation preamble above.
-- **`gap`, a Warning** — either the block carries neither an entry nor any no-nightlife
-  statement for a member set the gate obliged, or the block is absent from an applicable
-  night, **or** a no-nightlife line's member slot includes a traveler the gate obliged via
-  the desire limb. A decline that covers a desire-holder is a `gap`, not a `declined` — it
-  is the split-night loss this check exists to surface, and it fires at every tier the gate
-  admits. Cite the night, its weekday, the unserved member set, and which traveler's desire
-  (with its tier) or which occasion made the night applicable.
-- **`contradiction`, a Warning** — the block carries both an entry and a
-  no-nightlife line whose member slots intersect. The plan asserts two incompatible things
-  about one night. On an unsplit night both slots read `whole group`, they intersect, and
-  this fires exactly as it does today.
+**One test for every line in the block: is who it names still determinable?** The test
+decides, and the forms named here are examples
+(`CLAUDE.md` § *Rules over an enumeration*). A line whose member slot reads counts for
+exactly the travelers it names, however else it is malformed. On a no-nightlife line, a
+colon or other separator in place of the em-dash and a reason left empty or as an unfilled
+placeholder are the forms seen so far; an entry with a wrong separator or a missing field
+is the same case. A line whose member slot is unreadable or absent counts for nobody.
+Either way, record the line as read in a Note beside the verdict, so the emitted wording
+converges rather than drifting silently. The Note changes no verdict, and it holds in one
+direction only: **an unreadable slot is never the reason a night passes.** A slot that
+reads is taken at its word: whether an entry in fact serves everyone its slot names is the
+hub's statement, and this check does not test it. This governs every slot-bearing line,
+entry and no-nightlife alike.
 
-On a **non-applicable** night, record `n/a`. A missing block on a non-applicable
-night is a template-conformance **Note**, never a coverage finding.
+**The ladder.** The order is the rule (`CLAUDE.md` § *Rules over an enumeration*): each
+rung asks one question, a rung is reached only when every answer above it is no, and the
+last is what remains. The first rung is a precondition — a night no limb makes applicable
+is not graded for coverage at all — and below it a finding outranks a pass. A verdict is
+added here, as a rung with its own question, and nowhere else.
+
+1. **`n/a`** — is the night not applicable? Neither limb holds. A missing block on such a
+   night is a template-conformance **Note**, never a coverage finding.
+2. **`contradiction`, a Warning** — is any traveler named by both an entry and a
+   no-nightlife line? The plan asserts two incompatible things about that traveler's
+   night, and until it says one of them nobody can tell whether they are accounted for.
+   On an unsplit night a `whole group` entry beside a `whole group` no-nightlife line is
+   this rung. Cite the night, its weekday and the travelers named by both.
+3. **`gap`, a Warning** — is any obliged traveler unaccounted for? No entry names them,
+   and either no no-nightlife line names them, or one does and they hold a nightlife
+   desire — the split-night loss this check exists to surface, at every tier the gate
+   admits. A block absent from an applicable night leaves every obliged traveler
+   unaccounted for. Cite the night, its weekday, the unaccounted travelers, and which
+   traveler's desire (with its tier) or which occasion made the night applicable.
+4. **`covered`** — is any obliged traveler named by an entry? Every obliged traveler is
+   accounted for and at least one of them is served. No finding.
+5. **`declined`** — what remains: every obliged traveler is accounted for by a
+   no-nightlife line. No finding. This is a correct outcome, not a gap.
+
+**A higher rung ranks the verdict, never the evidence.** A finding a higher rung
+outranks keeps the severity its own rung gives it. When a night resolves at
+`contradiction` and an obliged traveler is also unaccounted for, record that beside
+the verdict as a second Warning, with the citation the `gap` rung asks for. The
+verdict stays `contradiction`, and the counter counts the night there.
+
+**A present traveler the gate did not oblige.** On a night that only the desire limb makes
+applicable, a present traveler who holds no nightlife desire is outside the obligation,
+and no verdict turns on them. `agents/05-hub-planner.md` still asks that every present
+traveler be named by an entry or by a no-nightlife line, never both and never neither:
+where such a traveler is named by neither, record a Note naming them; where one is named
+by both, that is the `contradiction` rung.
 
 **Read the block; do not classify venues.** What counts as nightlife was settled by
 the primary-draw partition upstream: food-forward drinking (izakaya, mezcalerías,
@@ -1189,10 +1218,10 @@ the ownership rule and it is what keeps two writers off one frontmatter block:
 
 | Night | Date / weekday | Applicable? | What made it applicable | Block content | Verdict |
 |-------|----------------|-------------|-------------------------|---------------|---------|
-| Day [N] | [YYYY-MM-DD, Sat] | [yes / no] | [Traveler — "desire" (tier) / weekend / occasion / —] | [N entries (member sets) / no-nightlife note (member sets) / neither / absent] | [covered / declined / gap / contradiction / n/a] |
+| Day [N] | [YYYY-MM-DD, Sat] | [yes / no] | [Traveler — "desire" (tier) / the occasion member that held / —] | [N entries (member sets) / no-nightlife note (member sets) / neither / absent] | [the night's verdict] |
 
 - **Applicable nights:** [N of M]
-- **Verdicts:** [N covered · N declined · N gap · N contradiction · N n/a]
+- **Verdicts:** [N `covered` · N `declined` · N `gap` · N `contradiction` · N `n/a`]
 - **Gate basis:** [which travelers were read for the desire limb, and who was present when]
 - **Nightlife list read:** [full menu / gate-result stub (SKIP) / absent — none of these is a finding]
 
