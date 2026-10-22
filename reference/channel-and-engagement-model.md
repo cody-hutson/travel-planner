@@ -86,8 +86,9 @@ engagement(t)         | reference/adr/ADR-025-engagement-model-over-time.md
 table whose first column is headed *relation*. That table is its owner: a relation is added
 there, and its row here follows in the same change. The relations registered above are evaluated
 inside `trip.freshness` unless the file that declares one evaluates it outside, as
-`skills/trip-record/SKILL.md` does with `plan-to-coverage`. A consumer that evaluates a relation
-outside `trip.freshness` says so in its own report, and declares it the same way.
+`skills/trip-record/SKILL.md` does with `plan-to-coverage`
+(`CLAUDE.md` § *Rules over an enumeration*). A consumer that evaluates a relation outside
+`trip.freshness` says so in its own report, and declares it the same way.
 
 **`engagement(t)`** is a reading a decision record types into the class, and that record is its
 owner:
