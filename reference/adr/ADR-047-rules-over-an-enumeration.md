@@ -1,6 +1,6 @@
 # ADR-047: Rules over an enumeration — precedence at the rule, one owner for the members, a criterion where the list is what goes stale, and what no check can see
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-10-22)
 - **Deciders:** repo maintainer
 - **Driving work:** the *Admission and precedence law* milestone — the card that states one
   resolution-and-admission law for rules over an enumeration (#674).
