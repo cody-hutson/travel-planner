@@ -200,9 +200,10 @@ under embedded programs is gone.
 the same accepted duplication `ADR-019` records for group `MD`. The walk adds seconds to each run:
 about four for the largest suite, as measured under macOS's stock bash.
 
-**What stays open.** The tautological class; the verdict forms the walker never locates, counted
-from above; a verdict first appearing deeper in a branch; and the agreement of the copies. Each is
-written in the coverage boundary where the group's reader meets it.
+**What stays open.** The tautological class; the verdict forms the walker never locates, the first
+two bounded from above where they stand on a line of their own and the third never counted; a
+verdict first appearing deeper in a branch; and the agreement of the copies. Each is written in
+the coverage boundary where the group's reader meets it.
 
 **Relationship to the discriminating-evidence rule.** [`ADR-019`](ADR-019-discriminating-evidence-rule.md)
 says a PASS must require evidence its subject could only have produced by running. This record says
