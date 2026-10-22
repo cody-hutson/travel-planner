@@ -2708,8 +2708,8 @@ B_NWIDE="$(awk '$1 == "DENOM" { print $4 }' <<<"$B_OUT")"
 B_NUNREAD="$(awk '$1 == "DENOM" { print $5 }' <<<"$B_OUT")"
 B_NLINE="$(awk '$1 == "DENOM" { print $6 }' <<<"$B_OUT")"
 B_NOOS=$(( ${B_NWIDE:-0} - ${B_NHIT:-0} ))
-# The measurement state B0 grades below, decided here so that over a walk B0 refuses no line this
-# group prints carries a counter of the comparison, on group G's rule.
+# The measurement state B0 grades below, also decided here so that over a walk B0 refuses no line
+# this group prints carries a counter of the comparison, on group G's rule.
 B_SURFACE=0
 if [ "${B_NUNREAD:-1}" -eq 0 ] && [ "${B_NLINE:-0}" -gt 0 ]; then B_SURFACE=1; fi
 if [ "$B_SURFACE" -eq 1 ]; then
@@ -2722,12 +2722,13 @@ fi
 echo "B1" >> "$SURF_LOG"
 
 # B0 — the surface, in the idiom of every other lettered group's surface arm, and FIRST because
-# B1's empty population is a measurement only over a walk that read the tree. The state it grades
-# is decided above, by a guard written so an unrun extractor resolves to the loud answer: an unset
-# unreadable count reads 1 and an unset line count reads 0, and both land on the FAIL limb. It
-# reads the walk's own DENOM fields and not the wider locator figure, which is a property of the
-# corpus and may legitimately reach zero.
-if [ "$B_SURFACE" -eq 1 ]; then
+# B1's empty population is a measurement only over a walk that read the tree. It tests the same
+# two DENOM fields the printed state above is decided from, spelled out so group FZ reads the
+# conjunction itself and not a stored copy of it, and it is written so an unrun extractor resolves
+# to the loud answer: an unset unreadable count reads 1 and an unset line count reads 0, and both
+# land on the FAIL limb. It reads the walk's own DENOM fields and not the wider locator figure,
+# which is a property of the corpus and may legitimately reach zero.
+if [ "${B_NUNREAD:-1}" -eq 0 ] && [ "${B_NLINE:-0}" -gt 0 ]; then
   PASS "B0: the class-B surface was read — each of the $B_NFILE listed file(s) opened, $B_NLINE line(s) read and none unreadable, so an empty in-scope population below is a measurement of this tree and not an empty walk. Arm CTL-B0 lists a file that does not exist and requires it counted unreadable"
 else
   FAIL "B0: the class-B surface was NOT read — ${B_NUNREAD:-unread} of ${B_NFILE:-unread} listed file(s) could not be opened and ${B_NLINE:-unread} line(s) were read. A zero here is a broken probe or a relocated corpus, never a tree with no locator, and B1's empty population is withheld rather than rendered VACUOUS"
