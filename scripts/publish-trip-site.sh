@@ -532,7 +532,7 @@ strip_to_text() { # <html_file> -> visible text on stdout
 # the read above cannot take, wherever the text read in its place stops short of the tag's own
 # `>`: when the list holds a `<` (a `${…}` placeholder or a quoted value carrying one, as in
 # `<span ${i<k} class="…">`), or holds a `>` inside a quoted value or a placeholder ahead of the
-# tag's own and the next `<` after the list opens no tag. A value those words break up there can
+# tag's own and the next `<` after the list opens no tag (#2070). A value those words break up there can
 # go unmatched: the phrase rule loses a value whose every five-word run crosses one, and the
 # conjunctive rule one whose key tokens they push past its window. CLOSED: those names reach this
 # stream, so a third-party member named as one aborts the publish — a false abort, remedied by the
