@@ -30,6 +30,9 @@
 # L16 is the denial side of `may-carry` (ADR-026 § Decision 3), one must-fire per declared
 # row: a value under each row's selector, planted at that row's scope, aborts as a HIT, and
 # the same trip without it publishes. The rows are read from the live declaration.
+# L17 grades the guard reading its own projections: one that fails, or a published or joined
+# one that yields no words, is UNDETERMINED (rc=2) whatever the caller's `pipefail`, and the
+# refusal names the projection and nothing else.
 # M = published-bytes / stoplist / freshness remediation (#123 A6.5) · N = block-scoped
 # conjunctive window (#123 PR-7) · O = the [THIRD-PARTY] class: entry denylist,
 # value-granularity mark, real derived-model shape (#123 AC 3).
@@ -1851,6 +1854,199 @@ else
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
+# L17 — AN ARM THE GUARD COULD NOT READ IS UNDETERMINED, NEVER A PASS.
+#
+# Every case above runs each projection to completion. This one makes ONE projection fail
+# on purpose and asks what the guard then certifies. Each arm of the guard is a pipeline —
+# projection, entity decoding, line sentinels, normalization — and a stage that fails leaves
+# nothing behind it, or a prefix of the render. A guard that matched whatever was left would
+# certify a file it never read, and a value only that projection can see would publish. The
+# guard reads each arm's status, and refuses an arm that failed or yielded no words, before
+# the class is read.
+#
+# THE RENDERS ARE BUILT SO THAT ONE PROJECTION ALONE SEES THE VALUE. L17P carries it only in
+# an img alt, which only the published projection reads — L13AL's construction, and L13c's
+# attribution. L17J splits its first word with an inline tag, which only the joined projection
+# closes up. L17V separates its words with an image whose alt is long: the visible projection
+# reads them as neighbours, the joined one fuses two of them into one token, and the published
+# one puts the alt's words between them. A failure forced on that projection is therefore the
+# only route by which the value could go unread, and the guard's answer is about that route.
+#
+# THE CELLS, every one graded EXACTLY at rc=2:
+#   published, joined   fails with no output · fails after writing a real prefix · the same
+#                       prefix with the CALLER'S pipefail off · succeeds with no output
+#   visible             fails after a real prefix of twenty words or more, pipefail off
+#   normalization       tr, inside _norm_words, fails after a prefix, pipefail off
+#   entity decoding     fails after a prefix on the PUBLISHED arm alone — its first call, on
+#                       the visible arm, runs as production does — pipefail off
+#   matcher             fails on the joined arm alone
+# The pipefail-off cells grade the status read rather than this suite's own `pipefail`. The
+# guard sets it inside each arm's subshell, so turning it off in the caller's subshell is the
+# one thing varied, and it is enough — S15k needed a fresh shell for its own reasons, and the
+# pin here lives inside the guard. The succeeds-with-no-output cells grade the emptiness limb
+# on its own, where the status limb cannot fire. Each prefix is a real one: the first lines of
+# the same projection over the same render, written before any stub exists.
+#
+# A STAGE THE ARMS SHARE CANNOT CHOOSE THE ARM IT FAILS IN. Stubbed outright it fails on the
+# visible arm, which is read first, so the normalization cell grades the VISIBLE arm's read of
+# a shared stage. The entity-decoding cell fails on its SECOND call, so it grades the PUBLISHED
+# arm's read of one: its first call creates a marker file keyed to the capture directory the
+# caller names, and the oracle's re-run, which writes to its own directory, counts its own
+# calls. Its prefix is the published projection's first three lines through the decoder,
+# which L17a already grades as carrying words and not the value.
+#
+# Every stub is defined inside the subshell that uses it, so it dies with that subshell, and
+# L17e asserts that. Offline, $WORK fixtures and shell-function stubs only; no legitimate skip.
+# ─────────────────────────────────────────────────────────────────────────────
+l17val="Border note: carry your Ruritanian passport, valid to 2033, at all times."
+L17P="$WORK/l17_published.html"
+lplant "$L17P" 5 "nothing of interest on this line at all"
+{ head -4 "$L17P"; printf '<img src="x.png" alt="%s">\n' "$l17val"; tail -n +6 "$L17P"; } > "$L17P.tmp" && mv "$L17P.tmp" "$L17P"
+L17J="$WORK/l17_joined.html"
+lplant "$L17J" 5 "Border note: carry your Rurit<b>anian</b> passport, valid to 2033, at all times."
+L17V="$WORK/l17_visible.html"
+lplant "$L17V" 7 'Border note: Ruritanian<img src="x.png" alt="one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty twentyone twentytwo twentythree twentyfour twentyfive twentysix">passport, valid to 2033, at all times.'
+strip_to_published_text "$L17P" > "$WORK/l17_pfx_pub.txt"
+strip_to_joined_text    "$L17J" > "$WORK/l17_pfx_join.txt"
+strip_to_text_blocks    "$L17V" > "$WORK/l17_pfx_vis.txt"
+L17_DEFS="$(declare -f strip_to_published_text strip_to_joined_text strip_to_text_blocks _guard_match _norm_words _decode_entities)"
+L17_CELLS='pub-none pub-prefix pub-prefix-pfoff pub-empty join-none join-prefix join-prefix-pfoff join-empty vis-prefix-pfoff norm-prefix-pfoff pub-decode-pfoff matcher-joined'
+L17_NCELLS=12
+
+# The words in a prefix, counted the way the guard counts an arm: through the stages that
+# follow the projection, with both sentinels subtracted.
+l17_words() { # <prefix_file> <lines>
+  head -n "$2" "$1" | _decode_entities | _line_sentinels | _norm_words \
+    | awk -v B="$_GUARD_BLOCK" -v L="$_GUARD_LINE" '$0 != B && $0 != L { c++ } END { print c + 0 }'
+}
+
+# One cell: the stub its name declares, inside a subshell, and the guard's exact status.
+l17_cell() { # <capture_file> <cell> -> rc on stdout
+  local cap="$1" cell="$2" r
+  case "$cell" in
+    pub-*) r="$L17P" ;; join-*|matcher-*) r="$L17J" ;; vis-*) r="$L17V" ;; *) r="$L17P" ;;
+  esac
+  ( case "$cell" in *-pfoff) set +o pipefail ;; esac
+    case "$cell" in
+      pub-none)          strip_to_published_text() { return 1; } ;;
+      pub-prefix*)       strip_to_published_text() { head -n 3 "$WORK/l17_pfx_pub.txt"; return 1; } ;;
+      pub-empty)         strip_to_published_text() { return 0; } ;;
+      join-none)         strip_to_joined_text() { return 1; } ;;
+      join-prefix*)      strip_to_joined_text() { head -n 3 "$WORK/l17_pfx_join.txt"; return 1; } ;;
+      join-empty)        strip_to_joined_text() { return 0; } ;;
+      vis-prefix-pfoff)  strip_to_text_blocks() { head -n 6 "$WORK/l17_pfx_vis.txt"; return 1; } ;;
+      norm-prefix-pfoff) tr() { head -c 300 | command tr "$@"; return 1; } ;;
+      pub-decode-pfoff)  eval "$(declare -f _decode_entities | sed '1s/^_decode_entities/l17_real_decode/')"
+                         _decode_entities() { if [ -e "${cap%.err}.decoded" ]; then l17_real_decode | awk 'NR <= 3'; return 1; fi; : > "${cap%.err}.decoded"; l17_real_decode; } ;;
+      matcher-joined)    eval "$(declare -f _guard_match | sed '1s/^_guard_match/l17_real_match/')"
+                         _guard_match() { case "$3" in *joined.words) return 2 ;; esac; l17_real_match "$@"; } ;;
+    esac
+    verify_publishable_content "$r" "$LTD" >/dev/null 2>"$cap" )
+  printf '%s' "$?"
+}
+
+# L17a — FIXTURE INTEGRITY, graded FIRST. Each prefix must carry words, so that the
+# prefix cells are refused by the STATUS limb and not by the emptiness limb — the visible
+# one at least twenty, or the floor would refuse it instead — and no prefix may carry the
+# value, or a cell could be decided by a match on the prefix. Each render must carry its
+# value in the form that confines it to one projection.
+l17_wp="$(l17_words "$WORK/l17_pfx_pub.txt" 3)"; l17_wj="$(l17_words "$WORK/l17_pfx_join.txt" 3)"; l17_wv="$(l17_words "$WORK/l17_pfx_vis.txt" 6)"
+l17_pv=0
+for l17_f in "$WORK/l17_pfx_pub.txt:3" "$WORK/l17_pfx_join.txt:3" "$WORK/l17_pfx_vis.txt:6"; do
+  case "$(head -n "${l17_f##*:}" "${l17_f%:*}" | _decode_entities | _norm_words | tr '\n' ' ')" in
+    *ruritanian*|*2033*) l17_pv=$((l17_pv+1)) ;;
+  esac
+done
+l17_rv="$(grep -c -F 'alt="Border note: carry your Ruritanian passport' "$L17P")$(grep -c -F 'Rurit<b>anian</b>' "$L17J")$(grep -c -F 'Ruritanian<img' "$L17V")"
+if [ "$l17_wp" -ge 1 ] && [ "$l17_wj" -ge 1 ] && [ "$l17_wv" -ge 20 ] && [ "$l17_pv" -eq 0 ] && [ "$l17_rv" = "111" ]; then
+  PASS "L17a: fixture integrity — the published and joined prefixes carry $l17_wp and $l17_wj words and the visible one $l17_wv, none carries the value, and each render carries the value in the one form its projection alone reads. The prefix cells below are decided by the status limb"
+else
+  FAIL "L17a: the fixtures are not set up as claimed (prefix words published=$l17_wp joined=$l17_wj visible=$l17_wv want >=1/>=1/>=20; prefixes carrying the value=$l17_pv want 0; renders carrying their value=$l17_rv want 111) — L17b would not be measuring the status read"
+fi
+
+# L17b — THE SUBJECT, and the arm registered with the oracle. One verdict over every cell,
+# so that with the guard removed every cell reads 127 and the arm reports exactly one FAIL.
+# Captures go to the directory the caller names, so the oracle's re-run cannot overwrite
+# the ones L17d reads.
+l17_assert() { # <capture_dir>
+  local d="$1" cell rc ok=0 n=0 bad=""
+  mkdir -p "$d"
+  for cell in $L17_CELLS; do
+    n=$((n+1))
+    rc="$(l17_cell "$d/$cell.err" "$cell")"
+    if [ "$rc" = "2" ]; then ok=$((ok+1)); else bad="$bad $cell=rc$rc"; fi
+  done
+  if [ "$n" -eq "$L17_NCELLS" ] && [ "$ok" -eq "$n" ]; then
+    PASS "L17b: all $n cells are UNDETERMINED (rc=2) — a published or joined projection that fails with no output, fails after a real prefix (with the caller's pipefail on and off) or succeeds with no output, a visible projection that fails after twenty words or more, a normalization stage that fails after a prefix, an entity-decoding stage that fails after a prefix on the published arm alone, and a matcher that fails on the joined arm alone. No path from a projection the guard could not read reaches a pass"
+  else
+    FAIL "L17b: $ok of $n cells (want $L17_NCELLS) returned rc=2 —$bad. A cell at rc=0 is the guard certifying a render one of its own projections never read; rc=1 is a match on a stream it should have refused"
+  fi
+}
+l17_assert "$WORK/l17live"
+
+# L17c — CONTROL. With every projection working, each render is a HIT attributed to the one
+# projection that sees its value, so a refusal above is that projection's failure being read
+# and not a render the guard refuses anyway. A pipefail-off run with nothing stubbed is a HIT
+# too, so the off cells' refusals are not an artefact of turning the option off.
+lguard "$L17P"; l17_cp="$LRC"; l17_ap="$(lprj)" || l17_ap="NONE"
+lguard "$L17J"; l17_cj="$LRC"; l17_aj="$(lprj)" || l17_aj="NONE"
+lguard "$L17V"; l17_cv="$LRC"; l17_av="$(lprj)" || l17_av="NONE"
+( set +o pipefail; verify_publishable_content "$L17P" "$LTD" >/dev/null 2>&1 ); l17_coff=$?
+if [ "$l17_cp" -eq 1 ] && [ "$l17_ap" = "retrievable markup (comment, attribute or script body)" ] \
+   && [ "$l17_cj" -eq 1 ] && [ "$l17_aj" = "joined markup (an inline tag split a word)" ] \
+   && [ "$l17_cv" -eq 1 ] && [ "$l17_av" = "visible text" ] && [ "$l17_coff" -eq 1 ]; then
+  PASS "L17c: CONTROL — with every projection working the three renders abort as a HIT (rc=1), attributed to '$l17_ap', '$l17_aj' and '$l17_av' respectively, and the published-only render is a HIT with the caller's pipefail off as well (rc=$l17_coff)"
+else
+  FAIL "L17c: the control did not hold (published-only rc=$l17_cp '$l17_ap'; joined-only rc=$l17_cj '$l17_aj'; visible-only rc=$l17_cv '$l17_av'; pipefail off rc=$l17_coff) — a refusal in L17b cannot be attributed to the projection that was made to fail"
+fi
+
+# L17d — THE MESSAGE (AC-4). A projection refusal names the projection, from the closed
+# enum the HIT arm uses, and nothing else: it is written before the class is read, so no
+# value is in scope. Read from the captures L17b's live run wrote. The value scan carries
+# its own sensitivity arm, a planted line it must find.
+l17_enum() { # <cell> -> the projection a refusal of that cell must name
+  case "$1" in
+    pub-*)  printf '%s' "retrievable markup (comment, attribute or script body)" ;;
+    join-*) printf '%s' "joined markup (an inline tag split a word)" ;;
+    vis-*)  printf '%s' "visible text" ;;
+  esac
+}
+l17_named=0; l17_misnamed=""; l17_leak=0; l17_ncap=0
+for l17_c in $L17_CELLS; do
+  l17_cap="$WORK/l17live/$l17_c.err"
+  [ -r "$l17_cap" ] || continue
+  l17_ncap=$((l17_ncap+1))
+  case "$(cat "$l17_cap")" in *[Rr]uritanian*|*2033*) l17_leak=$((l17_leak+1)) ;; esac
+  l17_want="$(l17_enum "$l17_c")"
+  [ -n "$l17_want" ] || continue
+  case "$(cat "$l17_cap")" in
+    *"could not be read ($l17_want): its pipeline exited "*) l17_named=$((l17_named+1)) ;;
+    *) l17_misnamed="$l17_misnamed $l17_c" ;;
+  esac
+done
+l17_mx=0; case "$(cat "$WORK/l17live/matcher-joined.err" 2>/dev/null)" in *"could not be run (matcher exit 2)"*) l17_mx=1 ;; esac
+l17_plant="planted: carry your Ruritanian passport, valid to 2033"
+l17_ctl=0; case "$l17_plant" in *[Rr]uritanian*|*2033*) l17_ctl=1 ;; esac
+if [ "$l17_ctl" -eq 1 ] && [ "$l17_ncap" -eq "$L17_NCELLS" ] && [ "$l17_named" -eq 10 ] && [ -z "$l17_misnamed" ] && [ "$l17_mx" -eq 1 ] && [ "$l17_leak" -eq 0 ]; then
+  PASS "L17d: AC-4 — each of the 10 projection refusals names the projection that was made to fail, from the closed enum, the matcher cell names the matcher, and none of the $l17_ncap captures carries the value; the value scan found the planted line, so its zero is a measurement"
+else
+  FAIL "L17d: captures=$l17_ncap of $L17_NCELLS, refusals naming their projection=$l17_named of 10 (misnamed:${l17_misnamed:- none}), matcher named=$l17_mx, captures carrying the value=$l17_leak, scan control=$l17_ctl — a refusal names the wrong projection, or the value reached a log this suite publishes"
+fi
+
+# L17e — THE RESTORE. S6c's rule applied to these stubs: every one lived and died in a
+# subshell, so the production definitions read now must be the ones read before L17b, and
+# neither tr, the renamed matcher nor the renamed decoder may exist as a function in this shell.
+l17_stub=""
+declare -F tr             >/dev/null 2>&1 && l17_stub="$l17_stub tr"
+declare -F l17_real_match >/dev/null 2>&1 && l17_stub="$l17_stub l17_real_match"
+declare -F l17_real_decode >/dev/null 2>&1 && l17_stub="$l17_stub l17_real_decode"
+if [ -n "$L17_DEFS" ] && [ "$(declare -f strip_to_published_text strip_to_joined_text strip_to_text_blocks _guard_match _norm_words _decode_entities)" = "$L17_DEFS" ] && [ -z "$l17_stub" ]; then
+  PASS "L17e: every L17 stub died with its subshell — the six production definitions read now are byte-identical to the ones read before L17b, and no stub function survives in this shell"
+else
+  FAIL "L17e: a stub outlived its subshell (functions still defined:${l17_stub:- none}), or a production definition changed — every verdict after L17 would be grading the stub"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Group M — the three confirmed defects from the Phase A6.5 adversarial design
 # review of the shipped guard (#316). One regression case per counter-design:
 #   M1  CD-1  the guard matched the visible-text PROJECTION while publish copies
@@ -1965,6 +2161,520 @@ else
 fi
 mguard "$MCLEAN" "$MTD"
 if [ "$MRC" -eq 0 ]; then PASS "M1d: the same machinery-rich render without the value publishes (rc=0) — the new arm does not blanket-abort markup"; else FAIL "M1d: a clean render was blocked (rc=$MRC) — the published-bytes arm over-matches ordinary markup"; fi
+
+# ── M1e–M1h (#1467) — a key token written directly before `=`, on the three surfaces only the
+# published arm reads ──
+#
+# The published projection drops an attribute NAME as machinery, and it found one by its shape
+# alone: any word followed by `=`, anywhere in the file. A word written that way in a comment
+# body, a script body or an attribute value went with it, so each `=` render below published at
+# rc=0 where its twin — the same render with that one `=` replaced by a space — aborted at rc=1.
+# The projection now finds an attribute name by its place: inside a tag, outside its quoted
+# values. Each surface arm grades the `=` render against its twin, by exit code and by the
+# projection the abort names, and carries the defect inside the arm (ARMED-RED): the shape-only
+# rule, run over the production projection's output in a subshell, must publish the `=` render
+# again, so the arm is shown able to fail, and the stub dies with its subshell. The attribute-
+# value arm also reads that the attribute's own NAME is still dropped: confining the rule must
+# not delete it, and no other arm would notice if it did — measured, groups L to O stay green
+# with the rule removed outright.
+M1EQ_PRJ='retrievable markup (comment, attribute or script body)'
+M1EQ_CM="$WORK/m1eq_comment.html"; mrender "$M1EQ_CM" '<!-- planner note: Ruritanian= passport valid to 2033 -->'
+M1TW_CM="$WORK/m1tw_comment.html"; mrender "$M1TW_CM" '<!-- planner note: Ruritanian  passport valid to 2033 -->'
+M1EQ_SC="$WORK/m1eq_script.html";  mrender "$M1EQ_SC" '<script>var Ruritanian = "passport valid to 2033";</script>'
+M1TW_SC="$WORK/m1tw_script.html";  mrender "$M1TW_SC" '<script>var Ruritanian   "passport valid to 2033";</script>'
+M1EQ_AV="$WORK/m1eq_attr.html";    mrender "$M1EQ_AV" '<a href="https://example.org/entry?Ruritanian=passport+valid+to+2033">entry rules</a>'
+M1TW_AV="$WORK/m1tw_attr.html";    mrender "$M1TW_AV" '<a href="https://example.org/entry?Ruritanian passport+valid+to+2033">entry rules</a>'
+m1eq_n() { "$1" "$2" | _decode_entities | _norm_words | awk -v T="$3" '$0 == T { c++ } END { print c + 0 }'; }   # <projection> <render> <token> -> its count
+
+# M1e — FIXTURE INTEGRITY, graded FIRST. Each pair differs in exactly one byte, so a verdict that
+# differs between them is that `=`'s; each `=` render spells the key token once; and neither the
+# visible nor the joined projection of any of the six carries it, so a HIT below is the published
+# arm's and a publish is that arm losing the token.
+m1e_ok=0; m1e_bad=""
+for m1e_p in "comment:$M1EQ_CM:$M1TW_CM" "script:$M1EQ_SC:$M1TW_SC" "attribute value:$M1EQ_AV:$M1TW_AV"; do
+  m1e_n="${m1e_p%%:*}"; m1e_r="${m1e_p#*:}"; m1e_e="${m1e_r%%:*}"; m1e_t="${m1e_r#*:}"
+  m1e_d="$(cmp -l "$m1e_e" "$m1e_t" 2>/dev/null | awk 'END { print NR + 0 }')"
+  m1e_k="$(awk '{ c += gsub(/Ruritanian/, "&") } END { print c + 0 }' "$m1e_e")"
+  m1e_o=$(( $(m1eq_n strip_to_text_blocks "$m1e_e" ruritanian) + $(m1eq_n strip_to_joined_text "$m1e_e" ruritanian) + $(m1eq_n strip_to_text_blocks "$m1e_t" ruritanian) + $(m1eq_n strip_to_joined_text "$m1e_t" ruritanian) ))
+  if [ "$m1e_d" -eq 1 ] && [ "$m1e_k" -eq 1 ] && [ "$m1e_o" -eq 0 ]; then m1e_ok=$((m1e_ok+1)); else m1e_bad="$m1e_bad ${m1e_n}(bytes differing=$m1e_d, key spelled=$m1e_k, other arms=$m1e_o)"; fi
+done
+if [ "$m1e_ok" -eq 3 ]; then
+  PASS "M1e: fixture integrity — each of the 3 '=' renders differs from its twin in exactly one byte and spells the key token once, and neither it nor its twin carries the token on the visible or the joined arm. A verdict difference below is that '=', read by the published arm"
+else
+  FAIL "M1e: the '=' fixtures are not set up as claimed:$m1e_bad — M1f to M1h would not be measuring the published arm"
+fi
+
+# M1f–M1h — one surface each, one verdict each, so the oracle can re-run each whole (group MD).
+m1eq_prj() { local ln; while IFS= read -r ln; do
+  if [[ "$ln" =~ reached\ the\ published\ file\ at\ .*:[0-9?]+\ \((.*)\)\. ]]; then printf '%s' "${BASH_REMATCH[1]}"; return 0; fi
+done < "$MOUT"; return 1; }
+m1eq_assert() { # <id> <surface> <=-render> <twin> [an attribute name the render carries] — one verdict
+  local id="$1" what="$2" eq="$3" tw="$4" nm="${5:-}" rq pq rt pt mut nm_in=1 kept=0 nmok="" nmbad=""
+  mguard "$eq" "$MTD"; rq="$MRC"; pq="$(m1eq_prj)" || pq="NONE"
+  mguard "$tw" "$MTD"; rt="$MRC"; pt="$(m1eq_prj)" || pt="NONE"
+  mut="$( eval "$(declare -f strip_to_published_text | sed '1s/^strip_to_published_text/m1eq_real/')"
+          strip_to_published_text() { m1eq_real "$1" | perl -0777 -pe 's{([-A-Za-z_:][-A-Za-z0-9_:.]*)\s*=\s*}{ q( ) . ($& =~ tr/\n//cdr) }ge'; }
+          verify_publishable_content "$eq" "$MTD" >/dev/null 2>&1; printf '%s' "$?" )"
+  if [ -n "$nm" ]; then
+    nm_in="$(awk -v N="$nm=" '{ c += gsub(N, "&") } END { print c + 0 }' "$eq")"
+    kept="$(m1eq_n strip_to_published_text "$eq" "$nm")"
+    nmok=", and the attribute name $nm is still dropped (in the file $nm_in time(s), in the published stream $kept)"
+    nmbad="; attribute name $nm in the file $nm_in time(s), in the published stream $kept (want at least 1, and 0)"
+  fi
+  if [ "$rq" -eq 1 ] && [ "$pq" = "$M1EQ_PRJ" ] && [ "$rt" -eq 1 ] && [ "$pt" = "$M1EQ_PRJ" ] && [ "$mut" = "0" ] && [ "$nm_in" -ge 1 ] && [ "$kept" -eq 0 ]; then
+    PASS "$id: a key token written directly before '=' in $what is read — the '=' render aborts as a HIT (rc=1) named '$pq', as its twin without the '=' does (rc=$rt); ARMED-RED — the shape-only rule run over the same projection publishes it (rc=$mut)$nmok"
+  else
+    FAIL "$id: a key token written before '=' in $what — '=' render rc=$rq '$pq', twin rc=$rt '$pt' (want 1 and '$M1EQ_PRJ' for both); shape-only mutant rc=$mut (want 0)$nmbad. A value only the published arm reads publishes, or this arm can no longer tell"
+  fi
+}
+m1eq_assert M1f "a comment body"     "$M1EQ_CM" "$M1TW_CM"
+m1eq_assert M1g "a script body"      "$M1EQ_SC" "$M1TW_SC"
+m1eq_assert M1h "an attribute value" "$M1EQ_AV" "$M1TW_AV" href
+
+# ── M1i–M1n (#1467) — a key token written directly after `<`, on the same three surfaces ──
+#
+# The published projection drops a tag NAME as machinery, and it found one by its shape alone:
+# the word after any `<`, with nothing but spaces or a `/` between them, anywhere in the file. A
+# word written that way in a comment body, a script body or an attribute value went with it —
+# the address in `Name <address>`, the right-hand side of `n<limit` — so each `<` render below
+# published at rc=0 where its twin, the same render with that one `<` replaced by a space,
+# aborted at rc=1. The projection now reads those three surfaces as text, and keeps a `<` in
+# them only where a block tag or a listed inline tag follows it. M1j writes the criterion's slash
+# form (`</ word`) and M1l its spaced form (`< word`), beside the direct form M1k and M1m write,
+# so a helper narrowed to a `<` directly before a letter turns M1j and M1l red. Each surface arm
+# grades the `<` render against its
+# twin, by exit code and by the projection the abort names, and carries the defect inside the
+# arm (ARMED-RED): the shipped whole-file tag-name rule, run over the raw render ahead of the
+# production projection in a subshell, must publish the `<` render again, so the arm is shown
+# able to fail, and the stub dies with its subshell. Each also reads that the render's own
+# `<link>` tag NAME is still dropped: reading those surfaces as text must not stop the rule
+# dropping a real tag's name, and no other arm would notice if it did — measured, groups L to O
+# stay green with the tag-name rule removed outright. M1m is the `Name <address>` form, on the
+# comment surface M1j already registers, so it is not registered a second time. M1n grades the
+# block-tag `<` those surfaces keep: a block tag inside a script string still ends a block, so a
+# passport's two facts in two paragraphs of one string do not pair, as they do not on the page.
+# M1o to M1s, after it, grade the inline-tag `<` they keep, the attribute list read with it, and
+# the list itself.
+M1LT_CM="$WORK/m1lt_comment.html"; mrender "$M1LT_CM" '<!-- planner note: </ Ruritanian passport valid to 2033 -->'
+M1LW_CM="$WORK/m1lw_comment.html"; mrender "$M1LW_CM" '<!-- planner note:  / Ruritanian passport valid to 2033 -->'
+M1LT_SC="$WORK/m1lt_script.html";  mrender "$M1LT_SC" '<script>var ok = n<Ruritanian && "passport valid to 2033";</script>'
+M1LW_SC="$WORK/m1lw_script.html";  mrender "$M1LW_SC" '<script>var ok = n Ruritanian && "passport valid to 2033";</script>'
+M1LT_AV="$WORK/m1lt_attr.html";    mrender "$M1LT_AV" '<img src="x.png" alt="a < Ruritanian passport valid to 2033">'
+M1LW_AV="$WORK/m1lw_attr.html";    mrender "$M1LW_AV" '<img src="x.png" alt="a   Ruritanian passport valid to 2033">'
+M1LT_NA="$WORK/m1lt_address.html"; mrender "$M1LT_NA" '<!-- maintainer: Travel Desk <quillon at example dot invalid> -->'
+M1LW_NA="$WORK/m1lw_address.html"; mrender "$M1LW_NA" '<!-- maintainer: Travel Desk  quillon at example dot invalid> -->'
+
+# M1i — FIXTURE INTEGRITY, graded FIRST. Each pair differs in exactly one byte, so a verdict that
+# differs between them is that `<`'s; each `<` render spells its key token once; and neither the
+# visible nor the joined projection of any of the eight carries it, so a HIT below is the
+# published arm's and a publish is that arm losing the token.
+m1i_ok=0; m1i_bad=""
+for m1i_p in "comment:Ruritanian:$M1LT_CM:$M1LW_CM" "script:Ruritanian:$M1LT_SC:$M1LW_SC" "attribute value:Ruritanian:$M1LT_AV:$M1LW_AV" "address:quillon:$M1LT_NA:$M1LW_NA"; do
+  m1i_n="${m1i_p%%:*}"; m1i_r="${m1i_p#*:}"; m1i_w="${m1i_r%%:*}"; m1i_r="${m1i_r#*:}"; m1i_e="${m1i_r%%:*}"; m1i_t="${m1i_r#*:}"
+  m1i_lw="$(printf '%s' "$m1i_w" | _norm_words)"
+  m1i_d="$(cmp -l "$m1i_e" "$m1i_t" 2>/dev/null | awk 'END { print NR + 0 }')"
+  m1i_k="$(awk -v W="$m1i_w" '{ c += gsub(W, "&") } END { print c + 0 }' "$m1i_e")"
+  m1i_o=$(( $(m1eq_n strip_to_text_blocks "$m1i_e" "$m1i_lw") + $(m1eq_n strip_to_joined_text "$m1i_e" "$m1i_lw") + $(m1eq_n strip_to_text_blocks "$m1i_t" "$m1i_lw") + $(m1eq_n strip_to_joined_text "$m1i_t" "$m1i_lw") ))
+  if [ "$m1i_d" -eq 1 ] && [ "$m1i_k" -eq 1 ] && [ "$m1i_o" -eq 0 ]; then m1i_ok=$((m1i_ok+1)); else m1i_bad="$m1i_bad ${m1i_n}(bytes differing=$m1i_d, key spelled=$m1i_k, other arms=$m1i_o)"; fi
+done
+if [ "$m1i_ok" -eq 4 ]; then
+  PASS "M1i: fixture integrity — each of the 4 '<' renders differs from its twin in exactly one byte and spells its key token once, and neither it nor its twin carries the token on the visible or the joined arm. A verdict difference below is that '<', read by the published arm"
+else
+  FAIL "M1i: the '<' fixtures are not set up as claimed:$m1i_bad — M1j to M1m would not be measuring the published arm"
+fi
+
+# M1j–M1m — one surface each, one verdict each, so the oracle can re-run each whole (group MD).
+m1lt_assert() { # <id> <surface> <'<'-render> <twin> — one verdict
+  local id="$1" what="$2" lt="$3" tw="$4" rq pq rt pt mut tg_in tg_out
+  mguard "$lt" "$MTD"; rq="$MRC"; pq="$(m1eq_prj)" || pq="NONE"
+  mguard "$tw" "$MTD"; rt="$MRC"; pt="$(m1eq_prj)" || pt="NONE"
+  mut="$( eval "$(declare -f strip_to_published_text | sed '1s/^strip_to_published_text/m1lt_real/')"
+          strip_to_published_text() { m1lt_real <(perl -0777 -pe 's{<\s*/?\s*[A-Za-z][-A-Za-z0-9]*}{ q( ) . ($& =~ tr/\n//cdr) }ge' "$1"); }
+          verify_publishable_content "$lt" "$MTD" >/dev/null 2>&1; printf '%s' "$?" )"
+  tg_in="$(awk '{ c += gsub(/<link/, "&") } END { print c + 0 }' "$lt")"
+  tg_out="$(m1eq_n strip_to_published_text "$lt" link)"
+  if [ "$rq" -eq 1 ] && [ "$pq" = "$M1EQ_PRJ" ] && [ "$rt" -eq 1 ] && [ "$pt" = "$M1EQ_PRJ" ] && [ "$mut" = "0" ] && [ "$tg_in" -ge 1 ] && [ "$tg_out" -eq 0 ]; then
+    PASS "$id: a key token written directly after '<' in $what is read — the '<' render aborts as a HIT (rc=1) named '$pq', as its twin without the '<' does (rc=$rt); ARMED-RED — the whole-file tag-name rule run ahead of the same projection publishes it (rc=$mut); and the tag name link is still dropped (in the file $tg_in time(s), in the published stream $tg_out)"
+  else
+    FAIL "$id: a key token written after '<' in $what — '<' render rc=$rq '$pq', twin rc=$rt '$pt' (want 1 and '$M1EQ_PRJ' for both); whole-file tag-name mutant rc=$mut (want 0); tag name link in the file $tg_in time(s), in the published stream $tg_out (want at least 1, and 0). A value only the published arm reads publishes, this arm can no longer tell, or a real tag's name now reaches the stream"
+  fi
+}
+m1lt_assert M1j "a comment body"                      "$M1LT_CM" "$M1LW_CM"
+m1lt_assert M1k "a script body"                       "$M1LT_SC" "$M1LW_SC"
+m1lt_assert M1l "an attribute value"                  "$M1LT_AV" "$M1LW_AV"
+m1lt_assert M1m "a comment body's Name <address> line" "$M1LT_NA" "$M1LW_NA"
+
+# M1n — THE ONE `<` THOSE SURFACES KEEP. Two paragraphs of one script string carry a passport's
+# two facts, one each. The block tags between them end a block inside the string as they would
+# on the page, so the facts do not pair and the render publishes. The control holds the same
+# words in ONE paragraph of the string and aborts, so the publish is the block boundary's and not
+# a projection that cannot see the string. ARMED-RED: the same projection with its block
+# boundaries removed must abort the two-paragraph render, so the arm is shown able to fail.
+M1BK_SP="$WORK/m1bk_split.html"; mrender "$M1BK_SP" '<script>var pop = "<p>Lunch: Ruritanian deli</p><p>2033 Expo tour, tickets valid to noon</p>";</script>'
+M1BK_ON="$WORK/m1bk_one.html";   mrender "$M1BK_ON" '<script>var pop = "<p>Lunch: Ruritanian deli. 2033 Expo tour, tickets valid to noon</p>";</script>'
+m1bk_assert() { # one verdict
+  local rs ro po mut oth
+  mguard "$M1BK_SP" "$MTD"; rs="$MRC"
+  mguard "$M1BK_ON" "$MTD"; ro="$MRC"; po="$(m1eq_prj)" || po="NONE"
+  mut="$( eval "$(declare -f strip_to_published_text | sed '1s/^strip_to_published_text/m1bk_real/')"
+          strip_to_published_text() { m1bk_real "$1" | sed "s/$_GUARD_BLOCK/ /g"; }
+          verify_publishable_content "$M1BK_SP" "$MTD" >/dev/null 2>&1; printf '%s' "$?" )"
+  oth=$(( $(m1eq_n strip_to_text_blocks "$M1BK_SP" ruritanian) + $(m1eq_n strip_to_joined_text "$M1BK_SP" ruritanian) ))
+  if [ "$rs" -eq 0 ] && [ "$ro" -eq 1 ] && [ "$po" = "$M1EQ_PRJ" ] && [ "$mut" = "1" ] && [ "$oth" -eq 0 ]; then
+    PASS "M1n: a block tag inside a script string still ends a block — a passport's two facts in two paragraphs of one string publish (rc=$rs), the same words in one paragraph abort as a HIT (rc=$ro) named '$po', and with the block boundaries removed the two-paragraph render aborts (rc=$mut), so the publish is the boundary's. The visible and joined arms carry the key token $oth time(s)"
+  else
+    FAIL "M1n: two paragraphs of one script string rc=$rs (want 0), one paragraph rc=$ro '$po' (want 1 and '$M1EQ_PRJ'), boundaries removed rc=$mut (want 1), key token on the other arms $oth (want 0) — a block tag in a script string no longer ends a block, so the conjunctive window pairs across it, or this arm can no longer tell"
+  fi
+}
+m1bk_assert
+
+# ── M1o–M1p (#1467) — the INLINE-tag `<` those surfaces keep, in both directions ──
+#
+# Reading the three surfaces as text keeps a `<` that opens an inline tag on _GUARD_INLINE_TAGS,
+# HTML's phrasing content, as markup, and the tag-name rule drops that tag's name there as it
+# does on the page. M1o grades the OPEN direction: a value emphasised with listed tags inside a
+# script string — a map pop-up's note, a checklist rule a template literal renders — keeps its
+# words next to each other on the published arm, so the passport's two facts still pair and the
+# need's five-word runs survive, as they did before those surfaces were read as text. M1p grades
+# the CLOSED direction: a third-party member named like a listed tag does not abort a page that
+# writes that tag in a script string, a comment and an attribute value, and the same member's
+# name written as a word does abort, so the member is keyed and the publish is the list's doing.
+# Each carries the defect inside the arm (ARMED-RED): the same projection with the inline list
+# taken out of its helper, so that the helper keeps only a block tag's `<`, must publish M1o's
+# two renders and abort M1p's. The model is synthetic: the suite's Porto passport, and a member
+# named Em.
+M1IN_POP="$WORK/m1in_popup.html";     mrender "$M1IN_POP" '<script>var pop = "<b>Border desk</b><br>Entry: <em>Ruritanian</em> passport, <strong>valid</strong> to <strong>2033</strong>";</script>'
+M1IN_CHK="$WORK/m1in_checklist.html"; mrender "$M1IN_CHK" '<script>var rule = "Lift needed: <b>cannot manage</b> more than <b>one flight</b> of stairs"; var item = `<label><input type="checkbox"> <span>${rule}</span></label>`;</script>'
+M1IN_TD="$WORK/porto-em"; mkdir -p "$M1IN_TD/outputs"
+cat > "$M1IN_TD/outputs/traveler-model.md" <<'MD'
+# Traveler Model — Porto 2029 [DERIVED]
+
+## Rowan
+- Passport: Ruritanian, valid to 2033
+
+## Em [OPERATOR-PROVIDED] [THIRD-PARTY]
+
+### Needs
+- Category: mobility
+  Specific: cannot manage more than one flight of stairs in a single stretch
+  Applies to: ## Hard Constraints → "Mobility"
+MD
+M1IN_TAG="$WORK/m1in_tagname.html"; mrender "$M1IN_TAG" '<script>var pop = "<b>Corner Roastery</b><br>Ask for the <em>window</em> table";</script>
+<!-- promo: <em>two for one</em> on Tuesdays -->
+<a href="#menu" title="the <em>new</em> menu">menu</a>'
+M1IN_KEY="$WORK/m1in_keyed.html"; mrender "$M1IN_KEY" '<!-- planner note: ask Em at the desk -->'
+m1in_off() { # <render> <trip_dir> -> the guard's status with the inline list taken out of the helper
+  ( eval "$(declare -f strip_to_published_text | sed 's/|\$_GUARD_INLINE_TAGS//')"
+    verify_publishable_content "$1" "$2" >/dev/null 2>&1; printf '%s' "$?" )
+}
+m1io_assert() { # one verdict
+  local rp pp rl pl mp ml oth
+  mguard "$M1IN_POP" "$MTD"; rp="$MRC"; pp="$(m1eq_prj)" || pp="NONE"
+  mguard "$M1IN_CHK" "$MTD"; rl="$MRC"; pl="$(m1eq_prj)" || pl="NONE"
+  mp="$(m1in_off "$M1IN_POP" "$MTD")"; ml="$(m1in_off "$M1IN_CHK" "$MTD")"
+  oth=$(( $(m1eq_n strip_to_text_blocks "$M1IN_POP" ruritanian) + $(m1eq_n strip_to_joined_text "$M1IN_POP" ruritanian) + $(m1eq_n strip_to_text_blocks "$M1IN_CHK" flight) + $(m1eq_n strip_to_joined_text "$M1IN_CHK" flight) ))
+  if [ "$rp" -eq 1 ] && [ "$pp" = "$M1EQ_PRJ" ] && [ "$rl" -eq 1 ] && [ "$pl" = "$M1EQ_PRJ" ] && [ "$mp" = "0" ] && [ "$ml" = "0" ] && [ "$oth" -eq 0 ]; then
+    PASS "M1o: a value emphasised with listed inline tags inside a script string is read whole — the pop-up's passport note aborts as a HIT (rc=$rp) named '$pp', and the checklist rule a template literal renders aborts too (rc=$rl); ARMED-RED — with the inline list taken out of the helper both publish (rc=$mp, rc=$ml). The visible and joined arms carry the key tokens $oth time(s)"
+  else
+    FAIL "M1o: pop-up note rc=$rp '$pp', checklist rule rc=$rl '$pl' (want 1 and '$M1EQ_PRJ' for both); without the inline list rc=$mp and rc=$ml (want 0 and 0); key tokens on the other arms $oth (want 0). A value that listed inline tags break up inside a script string publishes, or this arm can no longer tell"
+  fi
+}
+m1io_assert
+m1ip_assert() { # one verdict
+  local rt rk pk mt tg
+  mguard "$M1IN_TAG" "$M1IN_TD"; rt="$MRC"
+  mguard "$M1IN_KEY" "$M1IN_TD"; rk="$MRC"; pk="$(m1eq_prj)" || pk="NONE"
+  mt="$(m1in_off "$M1IN_TAG" "$M1IN_TD")"
+  tg="$(awk '{ c += gsub(/<em>/, "&") } END { print c + 0 }' "$M1IN_TAG")"
+  if [ "$rt" -eq 0 ] && [ "$rk" -eq 1 ] && [ "$pk" = "$M1EQ_PRJ" ] && [ "$mt" = "1" ] && [ "$tg" -ge 3 ]; then
+    PASS "M1p: a third-party member named like a listed inline tag does not abort a page that writes the tag in a script string, a comment and an attribute value ($tg times; rc=$rt), while the same name written as a word aborts as a HIT (rc=$rk) named '$pk'; ARMED-RED — with the inline list taken out of the helper the page aborts (rc=$mt)"
+  else
+    FAIL "M1p: the page writing the tag rc=$rt (want 0), the name written as a word rc=$rk '$pk' (want 1 and '$M1EQ_PRJ'), without the inline list rc=$mt (want 1), the tag in the page $tg time(s) (want at least 3). A member named like a listed tag aborts a clean page, or this arm can no longer tell"
+  fi
+}
+m1ip_assert
+
+# ── M1q–M1s (#1467) — a kept tag's ATTRIBUTE LIST, and the inline list's membership ──
+#
+# A tag kept as markup inside those surfaces is read as a tag is: where its attribute list runs on
+# to a `>`, with no `<`, `;`, `(`, `)`, `{` or `}` outside its quoted values, each attribute NAME
+# goes and each VALUE stays. A character reference in any of HTML's reference shapes, a template
+# literal's one-line `${…}` placeholder and a quoted value after a `=` are each one unit of that
+# list, and the list runs on past its line through lines the reader takes as names and
+# `name=value` pairs. M1q grades the OPEN direction on the realistic form, inline markup that
+# carries attributes: a pop-up note written with `<span class="…">` and a checklist rule written
+# with `<b class="">`, inside script strings, keep the value's words next to each other and abort
+# as M1o's bare forms do; so do pop-ups whose spans carry a `${…}` placeholder, whose class values
+# are single-quoted, whose quotes are written `&quot;`, `&#34;` or `&#x22;`, or whose tooltip
+# quotes are `&#39;`, pop-ups whose spans set their attributes on the next line — among them a
+# value written `&-`, and a single-quoted value beside an entity-quoted one — and one whose quoted
+# class values run over a line. Each of those cells pins one unit or one branch of the list, so a
+# helper that loses it turns that cell red, and so do six more lists that only this read takes:
+# spans whose quoted value holds a `<`, written in double quotes and in single quotes, and escaped
+# inside a double- and a single-quoted script string; spans whose quoted values hold a `>` and then
+# a `<` that opens a tag; and a list on the head line holding a quoted `>`, which this read takes
+# whole before anything below can end it at that `>`. Where this read cannot reach the tag's `>`,
+# the text up to the last `>` before the next tag, else up to the next `>` with no `<` before it,
+# is read as the list instead, and M1q's other cells are the lists only those two bounds take:
+# spans whose placeholder stands on the next line, alone or as an unquoted value, whose
+# placeholder's braces nest or run over a line, whose next line starts with a word no attribute
+# list carries, a pop-up whose entity-quoted value runs over a line, and an image with no tag after
+# it in its string, which the second bound alone takes; and spans whose list holds a `>` inside a
+# quoted value or a placeholder ahead of the tag's own — an arrow function's among them, on the
+# next line or nested on the head line — with a closing tag, a comment or an opening tag after the
+# list, which the first bound alone takes. M1r grades the PRICE the RESIDUAL states: a word written
+# directly before `=` after such a `<` is dropped as an attribute name wherever it stands inside the
+# text read as the tag's list, as the shipped guard dropped it, so that render publishes, and so do
+# a comment that holds that word as an attribute on the line after its `<`, one whose quoted value
+# after the `=` runs over a line, the same comparison closed by `)` with a `>` later in the script,
+# a comparison whose next line is no attribute list, and a loop whose assignment stands between an
+# arrow function's `>` and the last `>` before markup later in the script; a member named like an
+# attribute that a list over lines carries does not abort the page either, written in double quotes
+# with a tag after the list or in single quotes with none, and nor does one named like the attribute
+# an arrow function's list carries ahead of a closing tag. A run that meets a `<` first keeps its
+# word and aborts, its word after that `<` read as M1k's is, and so do the same `<` written inside a
+# `${…}` placeholder, a comparison with no `>` after it at all, a comparison whose first `>` comes
+# before the word with only a comparison's `<` after it, and a comparison closed by `)` with a
+# quoted `<` after it, which this read does not reach past the `)`. A kept head followed by lines of
+# nothing but spaces and then a line that is no attribute list aborts too, read under a five-second
+# CPU cap, so a reader that backtracks over those spaces fails the arm instead of holding the run;
+# each line is long enough that one of those runs read without its possessive quantifier overruns
+# the cap on its own. Each carries the defect inside the arm (ARMED-RED): the same projection with
+# the attribute-list read taken out of its helper — the `>` lookahead its three readings share made
+# unsatisfiable, which leaves every `<` the helper keeps exactly as it was — must publish M1q's
+# thirty-one renders and abort M1r's nine priced ones. M1s grades the LIST: every name of HTML's
+# phrasing content, written here as a literal copy and never read from _GUARD_INLINE_TAGS, rendered
+# as `<T>zq</T>` inside one comment body, must leave no listed name in the published stream while
+# every `zq` reaches it; with the inline list taken out of the helper (M1o's control) each name
+# reaches it twice. A name taken off the constant turns M1s red; a name added to it does not, and
+# widening the list is a deliberate edit in three places — the constant, the copy here, and the
+# count of names M1s's condition and its FAIL message carry. A comment body and not a script string:
+# a `</script>` written inside a script string ends the script.
+M1KA_POP="$WORK/m1ka_popup.html";     mrender "$M1KA_POP" '<script>var pop = `<b>Border desk</b><br>Entry: <span class="flag">Ruritanian</span> passport, <span class="ok">valid</span> to <span class="yr">2033</span>`;</script>'
+M1KA_CHK="$WORK/m1ka_checklist.html"; mrender "$M1KA_CHK" '<script>var rule = `Lift needed: <b class="">cannot manage</b> more than <b class="">one flight</b> of stairs`; var item = `<label><input type="checkbox"> <span>${rule}</span></label>`;</script>'
+M1KA_REF="$WORK/m1ka_charref.html";   mrender "$M1KA_REF" '<div data-popup="Entry: Ruritanian <span class=&quot;a&quot;>passport</span>, <span class=&quot;b&quot;>valid</span> to <span class=&quot;c&quot;>2033</span>">details</div>'
+M1KA_N34="$WORK/m1ka_decimal.html";   mrender "$M1KA_N34" '<div data-popup="Entry: Ruritanian <span class=&#34;a&#34;>passport</span>, <span class=&#34;b&#34;>valid</span> to <span class=&#34;c&#34;>2033</span>">details</div>'
+M1KA_X22="$WORK/m1ka_hex.html";       mrender "$M1KA_X22" '<div data-popup="Entry: Ruritanian <span class=&#x22;a&#x22;>passport</span>, <span class=&#x22;b&#x22;>valid</span> to <span class=&#x22;c&#x22;>2033</span>">details</div>'
+M1KA_T39="$WORK/m1ka_tooltip.html";   mrender "$M1KA_T39" '<button data-tip="Entry: Ruritanian <b class=&#39;hl&#39;>passport</b>, <b class=&#39;hl&#39;>valid</b> to <b class=&#39;hl&#39;>2033</b>">?</button>'
+M1KA_SQ="$WORK/m1ka_squote.html";     mrender "$M1KA_SQ" "<script>marker.bindPopup(\"<b>Border desk</b><br>Entry: <span class='flag'>Ruritanian</span> passport, <span class='ok'>valid</span> to <span class='yr'>2033</span>\");</script>"
+M1KA_DL="$WORK/m1ka_placeholder.html"; mrender "$M1KA_DL" '<script>var pop = `Entry: <span ${c} class="">Ruritanian</span> passport, <span ${c} class="">valid</span> to <span ${c} class="">2033</span>`;</script>'
+M1KA_ML="$WORK/m1ka_lines.html";      mrender "$M1KA_ML" '<script>var pop = `<b>Border desk</b><br>Entry: <span
+ class="flag">Ruritanian</span> passport, <span
+ class="ok">valid</span> to <span
+ class="yr">2033</span>`;</script>'
+M1KA_QML="$WORK/m1ka_qlines.html";    mrender "$M1KA_QML" '<script>var pop = `Entry: <span class="flag
+">Ruritanian</span> passport, <span class="ok
+">valid</span> to <span class="yr
+">2033</span>`;</script>'
+M1KA_AMP="$WORK/m1ka_nextamp.html";   mrender "$M1KA_AMP" '<script>var pop = `Entry: <span
+ data-k=&- class="">Ruritanian</span> passport, <span
+ data-k=&- class="">valid</span> to <span
+ data-k=&- class="">2033</span>`;</script>'
+M1KA_FSE="$WORK/m1ka_nextquotes.html"; mrender "$M1KA_FSE" "<div data-popup=\"Entry: Ruritanian <span
+ data-tip='' class=&quot;&quot;>passport</span>, <span
+ data-tip='' class=&quot;&quot;>valid</span> to <span
+ data-tip='' class=&quot;&quot;>2033</span>\">details</div>"
+M1KA_FLP="$WORK/m1ka_nextph.html";    mrender "$M1KA_FLP" '<script>var pop = `Entry: <span
+ ${c} class="">Ruritanian</span> passport, <span
+ ${c} class="">valid</span> to <span
+ ${c} class="">2033</span>`;</script>'
+M1KA_FLV="$WORK/m1ka_nextphvalue.html"; mrender "$M1KA_FLV" '<script>var pop = `Entry: <span
+ data-k=${c} class="">Ruritanian</span> passport, <span
+ data-k=${c} class="">valid</span> to <span
+ data-k=${c} class="">2033</span>`;</script>'
+M1KA_NEST="$WORK/m1ka_nested.html";   mrender "$M1KA_NEST" '<script>var pop = `Entry: <span class="">Ruritanian</span> passport, <span ${ {}[k] } class="">valid</span> to <span ${ {}[k] } class="">2033</span>`;</script>'
+M1KA_MLBR="$WORK/m1ka_placeholderlines.html"; mrender "$M1KA_MLBR" '<script>var pop = `Entry: <span class="">Ruritanian</span> passport, <span ${
+ k } class="">valid</span> to <span ${
+ k } class="">2033</span>`;</script>'
+M1KA_NAL="$WORK/m1ka_nextnotlist.html"; mrender "$M1KA_NAL" '<script>var pop = `Entry: <span
+ 1x class="">Ruritanian</span> passport, <span
+ 1x class="">valid</span> to <span
+ 1x class="">2033</span>`;</script>'
+M1KA_ENQ="$WORK/m1ka_entitylines.html"; mrender "$M1KA_ENQ" '<div data-popup="Entry: Ruritanian <span title=&quot;a
+b&quot; class=&quot;&quot;>passport</span>, valid to 2033">details</div>'
+M1KA_QLT="$WORK/m1ka_quotedlt.html";  mrender "$M1KA_QLT" '<script>var pop = `Entry: <span data-op="<" class="">Ruritanian</span> passport, <span data-op="<" class="">valid</span> to <span data-op="<" class="">2033</span>`;</script>'
+M1KA_SLT="$WORK/m1ka_squotedlt.html"; mrender "$M1KA_SLT" "<script>var pop = \`Entry: <span data-op='<' class=\"\">Ruritanian</span> passport, <span data-op='<' class=\"\">valid</span> to <span data-op='<' class=\"\">2033</span>\`;</script>"
+M1KA_DQE="$WORK/m1ka_escapeddq.html"; mrender "$M1KA_DQE" '<script>marker.bindPopup("Entry: <span data-op=\"<\" class=\"\">Ruritanian</span> passport, <span data-op=\"<\" class=\"\">valid</span> to <span data-op=\"<\" class=\"\">2033</span>");</script>'
+M1KA_SQE="$WORK/m1ka_escapedsq.html"; mrender "$M1KA_SQE" "<script>marker.bindPopup('Entry: <span data-op=\\'<\\' class=\\'\\'>Ruritanian</span> passport, <span data-op=\\'<\\' class=\\'\\'>valid</span> to <span data-op=\\'<\\' class=\\'\\'>2033</span>');</script>"
+M1KA_TAG="$WORK/m1ka_quotedtag.html"; mrender "$M1KA_TAG" '<script>var pop = `Entry: <span title=">" data-op="<b" class="">Ruritanian</span> passport, <span title=">" data-op="<b" class="">valid</span> to <span title=">" data-op="<b" class="">2033</span>`;</script>'
+M1KA_HQG="$WORK/m1ka_headquotedgt.html"; mrender "$M1KA_HQG" '<script>var pop = `Entry: <span title=">" class="" data-k="">Ruritanian</span> passport, <span title=">" class="" data-k="">valid</span> to <span title=">" class="" data-k="">2033</span>`;</script>'
+M1KA_NTG="$WORK/m1ka_notag.html";     mrender "$M1KA_NTG" '<script>var pop = `Entry: Ruritanian <img
+ ${c} class="" src="x.png">passport, valid to 2033`;</script>'
+M1KA_QGT="$WORK/m1ka_quotedgt.html";  mrender "$M1KA_QGT" '<script>var pop = `Entry: <span
+ ${c} title=">" class="">Ruritanian</span> passport, <span
+ ${c} title=">" class="">valid</span> to <span
+ ${c} title=">" class="">2033</span>`;</script>'
+M1KA_PGT="$WORK/m1ka_placeholdergt.html"; mrender "$M1KA_PGT" '<script>var pop = `Entry: Ruritanian <span
+ ${a>b} class="" title="">passport</span>, valid to 2033`;</script>'
+M1KA_AFL="$WORK/m1ka_arrowline.html"; mrender "$M1KA_AFL" '<script>var pop = `Entry: Ruritanian <span
+ ${f(x => x)} class="" title="">passport</span>, valid to 2033`;</script>'
+M1KA_AHN="$WORK/m1ka_arrownest.html"; mrender "$M1KA_AHN" '<script>var pop = `Entry: Ruritanian <span ${f(x => { x })} class="" title="">passport</span>, valid to 2033`;</script>'
+M1KA_BNG="$WORK/m1ka_beforecomment.html"; mrender "$M1KA_BNG" '<script>var pop = `Entry: <span
+ ${c} title=">" class=""><!---->Ruritanian</span> passport, <span
+ ${c} title=">" class=""><!---->valid</span> to <span
+ ${c} title=">" class=""><!---->2033</span>`;</script>'
+M1KA_LTR="$WORK/m1ka_beforetag.html"; mrender "$M1KA_LTR" '<script>var pop = `Entry: <span
+ ${c} title=">" class=""><b>Ruritanian</b></span> passport, <span
+ ${c} title=">" class=""><b>valid</b></span> to <span
+ ${c} title=">" class=""><b>2033</b></span>`;</script>'
+M1KA_EQ="$WORK/m1ka_price.html";      mrender "$M1KA_EQ" '<script>if (n<b && Ruritanian=="passport valid to 2033" > 0) { go(); }</script>'
+M1KA_EQN="$WORK/m1ka_pricenext.html"; mrender "$M1KA_EQN" '<!-- planner note: n<b
+ Ruritanian="passport valid to 2033" -->'
+M1KA_EQV="$WORK/m1ka_pricevalue.html"; mrender "$M1KA_EQV" '<!-- planner note: n<b Ruritanian="passport
+valid to 2033" -->'
+M1KA_EQT="$WORK/m1ka_stopped.html";   mrender "$M1KA_EQT" '<script>if (n<b && Ruritanian=="passport valid to 2033") { go(); } if (k > 2) { stop(); }</script>'
+M1KA_LT="$WORK/m1ka_lt.html";         mrender "$M1KA_LT" '<script>if (n<b && m<Ruritanian > 0) { note = "passport valid to 2033"; }</script>'
+M1KA_LTB="$WORK/m1ka_ltbraces.html";  mrender "$M1KA_LTB" '<script>var pop = `Entry: <span ${n<Ruritanian ? 1 : 0} class="">passport</span>, valid to 2033`;</script>'
+M1KA_EQL="$WORK/m1ka_eqlines.html";   mrender "$M1KA_EQL" '<script>if (n<b
+ && Ruritanian=="passport valid to 2033"
+ > 0) { go(); }</script>'
+M1KA_NGT="$WORK/m1ka_nogt.html";      mrender "$M1KA_NGT" '<script>if (n<b && Ruritanian=="passport valid to 2033") { go(); }</script>'
+M1KA_EQM="$WORK/m1ka_pricemarkup.html"; mrender "$M1KA_EQM" '<script>for (let i = 0; i < a.length; i++) { f(x => x); } const Ruritanian = "passport valid to 2033"; g(y => y); el.innerHTML = `<b>x</b>`;</script>'
+M1KA_CLT="$WORK/m1ka_comparelt.html"; mrender "$M1KA_CLT" '<script>if (n<b && f(x) > 0 && Ruritanian=="passport valid to 2033") { show(y => y); } if (m < k) { go(); }</script>'
+M1KA_PLT="$WORK/m1ka_parenlt.html";   mrender "$M1KA_PLT" '<script>var t = (n<b && Ruritanian=="passport valid to 2033") && op == "<" > 0;</script>'
+M1KA_TD="$WORK/porto-type"; mkdir -p "$M1KA_TD/outputs"
+cat > "$M1KA_TD/outputs/traveler-model.md" <<'MD'
+# Traveler Model — Porto 2029 [DERIVED]
+
+## Rowan
+- Passport: Ruritanian, valid to 2033
+
+## Type [OPERATOR-PROVIDED] [THIRD-PARTY]
+
+### Needs
+- Category: mobility
+  Specific: cannot manage more than one flight of stairs in a single stretch
+  Applies to: ## Hard Constraints → "Mobility"
+MD
+M1KA_TYP="$WORK/m1ka_typemember.html"; mrender "$M1KA_TYP" '<div id="checklist"></div>
+<script>document.getElementById("checklist").innerHTML = items.map(b => `<label class="chk-item">
+  <input type="checkbox" data-id="${b.id}"
+    ${done[b.id] ? "checked" : ""}>
+  <span class="venue">${b.venue}</span></label>`).join("");</script>'
+M1KA_TYS="$WORK/m1ka_typesquote.html"; mrender "$M1KA_TYS" "<div id=\"checklist\"></div>
+<script>document.getElementById(\"checklist\").innerHTML = items.map(b => \`<input type=\"checkbox\" data-id=\"\${b.id}\"
+    \${done[b.id] ? 'checked' : ''}>\`).join(\"\");</script>"
+M1KA_CD="$WORK/porto-class"; mkdir -p "$M1KA_CD/outputs"
+cat > "$M1KA_CD/outputs/traveler-model.md" <<'MD'
+# Traveler Model — Porto 2029 [DERIVED]
+
+## Rowan
+- Passport: Ruritanian, valid to 2033
+
+## Class [OPERATOR-PROVIDED] [THIRD-PARTY]
+
+### Needs
+- Category: mobility
+  Specific: cannot manage more than one flight of stairs in a single stretch
+  Applies to: ## Hard Constraints → "Mobility"
+MD
+M1KA_LIC="$WORK/m1ka_classarrow.html"; mrender "$M1KA_LIC" '<script>list.innerHTML = stops.map(s => `<li
+ ${f(x => x)} class="stop">${s.name}</li>`).join("");</script>'
+m1ka_ws="$(printf '%s' '<!-- planner note: n<b'; printf '\n%32000s' '' '' '' '' '' '' '' '' '' '' '' '' '' '' '' '' '' '' '' ''; printf '\n%s' '( Ruritanian passport valid to 2033 -->')"
+M1KA_WS="$WORK/m1ka_spaces.html";     mrender "$M1KA_WS" "$m1ka_ws"
+m1ka_off() { # <render> <trip_dir> -> the guard's status with the attribute-list read taken out of the helper
+  ( eval "$(declare -f strip_to_published_text | sed 's/(?=>)|)/(?!)|)/')"
+    verify_publishable_content "$1" "$2" >/dev/null 2>&1; printf '%s' "$?" )
+}
+m1iq_assert() { # one verdict
+  local rp pp rl pl rf pf rn pn rq pq rd pd ra pa rx px rt pt rs ps ra2 pa2 re pe rh ph rj pj rk pk ro po ry py rw pw re2 pe2 rs2 ps2 rd2 pd2 rq2 pq2 ri pi rv pv rn2 pn2 ru pu rz pz rb pb rg pg rf2 pf2 rl2 pl2 mp ml mf mn mq md ma mx mt ms ma2 me mh mj mk mo my mw me2 ms2 md2 mq2 mi mv mn2 mu mz mb mg mf2 ml2 oth rr
+  mguard "$M1KA_POP" "$MTD"; rp="$MRC"; pp="$(m1eq_prj)" || pp="NONE"
+  mguard "$M1KA_CHK" "$MTD"; rl="$MRC"; pl="$(m1eq_prj)" || pl="NONE"
+  mguard "$M1KA_REF" "$MTD"; rf="$MRC"; pf="$(m1eq_prj)" || pf="NONE"
+  mguard "$M1KA_ML" "$MTD"; rn="$MRC"; pn="$(m1eq_prj)" || pn="NONE"
+  mguard "$M1KA_QML" "$MTD"; rq="$MRC"; pq="$(m1eq_prj)" || pq="NONE"
+  mguard "$M1KA_DL" "$MTD"; rd="$MRC"; pd="$(m1eq_prj)" || pd="NONE"
+  mguard "$M1KA_N34" "$MTD"; ra="$MRC"; pa="$(m1eq_prj)" || pa="NONE"
+  mguard "$M1KA_X22" "$MTD"; rx="$MRC"; px="$(m1eq_prj)" || px="NONE"
+  mguard "$M1KA_T39" "$MTD"; rt="$MRC"; pt="$(m1eq_prj)" || pt="NONE"
+  mguard "$M1KA_SQ" "$MTD"; rs="$MRC"; ps="$(m1eq_prj)" || ps="NONE"
+  mguard "$M1KA_AMP" "$MTD"; ra2="$MRC"; pa2="$(m1eq_prj)" || pa2="NONE"
+  mguard "$M1KA_FSE" "$MTD"; re="$MRC"; pe="$(m1eq_prj)" || pe="NONE"
+  mguard "$M1KA_FLP" "$MTD"; rh="$MRC"; ph="$(m1eq_prj)" || ph="NONE"
+  mguard "$M1KA_FLV" "$MTD"; rj="$MRC"; pj="$(m1eq_prj)" || pj="NONE"
+  mguard "$M1KA_NEST" "$MTD"; rk="$MRC"; pk="$(m1eq_prj)" || pk="NONE"
+  mguard "$M1KA_MLBR" "$MTD"; ro="$MRC"; po="$(m1eq_prj)" || po="NONE"
+  mguard "$M1KA_NAL" "$MTD"; ry="$MRC"; py="$(m1eq_prj)" || py="NONE"
+  mguard "$M1KA_ENQ" "$MTD"; rw="$MRC"; pw="$(m1eq_prj)" || pw="NONE"
+  mguard "$M1KA_QLT" "$MTD"; re2="$MRC"; pe2="$(m1eq_prj)" || pe2="NONE"
+  mguard "$M1KA_SLT" "$MTD"; rs2="$MRC"; ps2="$(m1eq_prj)" || ps2="NONE"
+  mguard "$M1KA_DQE" "$MTD"; rd2="$MRC"; pd2="$(m1eq_prj)" || pd2="NONE"
+  mguard "$M1KA_SQE" "$MTD"; rq2="$MRC"; pq2="$(m1eq_prj)" || pq2="NONE"
+  mguard "$M1KA_TAG" "$MTD"; ri="$MRC"; pi="$(m1eq_prj)" || pi="NONE"
+  mguard "$M1KA_HQG" "$MTD"; rv="$MRC"; pv="$(m1eq_prj)" || pv="NONE"
+  mguard "$M1KA_NTG" "$MTD"; rn2="$MRC"; pn2="$(m1eq_prj)" || pn2="NONE"
+  mguard "$M1KA_QGT" "$MTD"; ru="$MRC"; pu="$(m1eq_prj)" || pu="NONE"
+  mguard "$M1KA_PGT" "$MTD"; rz="$MRC"; pz="$(m1eq_prj)" || pz="NONE"
+  mguard "$M1KA_AFL" "$MTD"; rb="$MRC"; pb="$(m1eq_prj)" || pb="NONE"
+  mguard "$M1KA_AHN" "$MTD"; rg="$MRC"; pg="$(m1eq_prj)" || pg="NONE"
+  mguard "$M1KA_BNG" "$MTD"; rf2="$MRC"; pf2="$(m1eq_prj)" || pf2="NONE"
+  mguard "$M1KA_LTR" "$MTD"; rl2="$MRC"; pl2="$(m1eq_prj)" || pl2="NONE"
+  mp="$(m1ka_off "$M1KA_POP" "$MTD")"; ml="$(m1ka_off "$M1KA_CHK" "$MTD")"; mf="$(m1ka_off "$M1KA_REF" "$MTD")"
+  mn="$(m1ka_off "$M1KA_ML" "$MTD")"; mq="$(m1ka_off "$M1KA_QML" "$MTD")"; md="$(m1ka_off "$M1KA_DL" "$MTD")"
+  ma="$(m1ka_off "$M1KA_N34" "$MTD")"; mx="$(m1ka_off "$M1KA_X22" "$MTD")"; mt="$(m1ka_off "$M1KA_T39" "$MTD")"
+  ms="$(m1ka_off "$M1KA_SQ" "$MTD")"; ma2="$(m1ka_off "$M1KA_AMP" "$MTD")"; me="$(m1ka_off "$M1KA_FSE" "$MTD")"
+  mh="$(m1ka_off "$M1KA_FLP" "$MTD")"; mj="$(m1ka_off "$M1KA_FLV" "$MTD")"; mk="$(m1ka_off "$M1KA_NEST" "$MTD")"
+  mo="$(m1ka_off "$M1KA_MLBR" "$MTD")"; my="$(m1ka_off "$M1KA_NAL" "$MTD")"; mw="$(m1ka_off "$M1KA_ENQ" "$MTD")"
+  me2="$(m1ka_off "$M1KA_QLT" "$MTD")"; ms2="$(m1ka_off "$M1KA_SLT" "$MTD")"; md2="$(m1ka_off "$M1KA_DQE" "$MTD")"
+  mq2="$(m1ka_off "$M1KA_SQE" "$MTD")"; mi="$(m1ka_off "$M1KA_TAG" "$MTD")"; mv="$(m1ka_off "$M1KA_HQG" "$MTD")"
+  mn2="$(m1ka_off "$M1KA_NTG" "$MTD")"; mu="$(m1ka_off "$M1KA_QGT" "$MTD")"; mz="$(m1ka_off "$M1KA_PGT" "$MTD")"
+  mb="$(m1ka_off "$M1KA_AFL" "$MTD")"; mg="$(m1ka_off "$M1KA_AHN" "$MTD")"; mf2="$(m1ka_off "$M1KA_BNG" "$MTD")"
+  ml2="$(m1ka_off "$M1KA_LTR" "$MTD")"
+  oth=$(( $(m1eq_n strip_to_text_blocks "$M1KA_CHK" flight) + $(m1eq_n strip_to_joined_text "$M1KA_CHK" flight) ))
+  for rr in "$M1KA_POP" "$M1KA_REF" "$M1KA_ML" "$M1KA_QML" "$M1KA_DL" "$M1KA_N34" "$M1KA_X22" "$M1KA_T39" "$M1KA_SQ" "$M1KA_AMP" "$M1KA_FSE" "$M1KA_FLP" "$M1KA_FLV" "$M1KA_NEST" "$M1KA_MLBR" "$M1KA_NAL" "$M1KA_ENQ" "$M1KA_QLT" "$M1KA_SLT" "$M1KA_DQE" "$M1KA_SQE" "$M1KA_TAG" "$M1KA_HQG" "$M1KA_NTG" "$M1KA_QGT" "$M1KA_PGT" "$M1KA_AFL" "$M1KA_AHN" "$M1KA_BNG" "$M1KA_LTR"; do oth=$(( oth + $(m1eq_n strip_to_text_blocks "$rr" ruritanian) + $(m1eq_n strip_to_joined_text "$rr" ruritanian) )); done
+  if [ "$rp" -eq 1 ] && [ "$pp" = "$M1EQ_PRJ" ] && [ "$rl" -eq 1 ] && [ "$pl" = "$M1EQ_PRJ" ] && [ "$rf" -eq 1 ] && [ "$pf" = "$M1EQ_PRJ" ] && [ "$rn" -eq 1 ] && [ "$pn" = "$M1EQ_PRJ" ] && [ "$rq" -eq 1 ] && [ "$pq" = "$M1EQ_PRJ" ] && [ "$rd" -eq 1 ] && [ "$pd" = "$M1EQ_PRJ" ] && [ "$ra" -eq 1 ] && [ "$pa" = "$M1EQ_PRJ" ] && [ "$rx" -eq 1 ] && [ "$px" = "$M1EQ_PRJ" ] && [ "$rt" -eq 1 ] && [ "$pt" = "$M1EQ_PRJ" ] && [ "$rs" -eq 1 ] && [ "$ps" = "$M1EQ_PRJ" ] && [ "$ra2" -eq 1 ] && [ "$pa2" = "$M1EQ_PRJ" ] && [ "$re" -eq 1 ] && [ "$pe" = "$M1EQ_PRJ" ] && [ "$rh" -eq 1 ] && [ "$ph" = "$M1EQ_PRJ" ] && [ "$rj" -eq 1 ] && [ "$pj" = "$M1EQ_PRJ" ] && [ "$rk" -eq 1 ] && [ "$pk" = "$M1EQ_PRJ" ] && [ "$ro" -eq 1 ] && [ "$po" = "$M1EQ_PRJ" ] && [ "$ry" -eq 1 ] && [ "$py" = "$M1EQ_PRJ" ] && [ "$rw" -eq 1 ] && [ "$pw" = "$M1EQ_PRJ" ] && [ "$re2" -eq 1 ] && [ "$pe2" = "$M1EQ_PRJ" ] && [ "$rs2" -eq 1 ] && [ "$ps2" = "$M1EQ_PRJ" ] && [ "$rd2" -eq 1 ] && [ "$pd2" = "$M1EQ_PRJ" ] && [ "$rq2" -eq 1 ] && [ "$pq2" = "$M1EQ_PRJ" ] && [ "$ri" -eq 1 ] && [ "$pi" = "$M1EQ_PRJ" ] && [ "$rv" -eq 1 ] && [ "$pv" = "$M1EQ_PRJ" ] && [ "$rn2" -eq 1 ] && [ "$pn2" = "$M1EQ_PRJ" ] && [ "$ru" -eq 1 ] && [ "$pu" = "$M1EQ_PRJ" ] && [ "$rz" -eq 1 ] && [ "$pz" = "$M1EQ_PRJ" ] && [ "$rb" -eq 1 ] && [ "$pb" = "$M1EQ_PRJ" ] && [ "$rg" -eq 1 ] && [ "$pg" = "$M1EQ_PRJ" ] && [ "$rf2" -eq 1 ] && [ "$pf2" = "$M1EQ_PRJ" ] && [ "$rl2" -eq 1 ] && [ "$pl2" = "$M1EQ_PRJ" ] && [ "$mp" = "0" ] && [ "$ml" = "0" ] && [ "$mf" = "0" ] && [ "$mn" = "0" ] && [ "$mq" = "0" ] && [ "$md" = "0" ] && [ "$ma" = "0" ] && [ "$mx" = "0" ] && [ "$mt" = "0" ] && [ "$ms" = "0" ] && [ "$ma2" = "0" ] && [ "$me" = "0" ] && [ "$mh" = "0" ] && [ "$mj" = "0" ] && [ "$mk" = "0" ] && [ "$mo" = "0" ] && [ "$my" = "0" ] && [ "$mw" = "0" ] && [ "$me2" = "0" ] && [ "$ms2" = "0" ] && [ "$md2" = "0" ] && [ "$mq2" = "0" ] && [ "$mi" = "0" ] && [ "$mv" = "0" ] && [ "$mn2" = "0" ] && [ "$mu" = "0" ] && [ "$mz" = "0" ] && [ "$mb" = "0" ] && [ "$mg" = "0" ] && [ "$mf2" = "0" ] && [ "$ml2" = "0" ] && [ "$oth" -eq 0 ]; then
+    PASS "M1q: listed inline tags that carry attributes are read as tags — the pop-up note written with span classes inside a script string aborts as a HIT (rc=$rp) named '$pp', the checklist rule written with class=\"\" on its b tags aborts (rc=$rl), and so do the pop-up held in an attribute value whose quotes are written as character references (rc=$rf), the one whose spans set their attributes on the next line (rc=$rn), the one whose quoted class values run over a line (rc=$rq), the one whose spans carry a \${…} placeholder (rc=$rd), the pop-ups whose quotes are decimal and hexadecimal references (rc=$ra, rc=$rx), the tooltip whose quotes are &#39; (rc=$rt), the pop-up whose class values are single-quoted (rc=$rs), and the next-line pop-ups with a value written &- (rc=$ra2) and with a single-quoted and an entity-quoted value (rc=$re); where the precise read cannot reach the tag's '>', the text up to the last '>' before the next tag, else up to the next '>', is read as the list, so the spans whose placeholder stands on the next line alone (rc=$rh) or as a value (rc=$rj), whose placeholder's braces nest (rc=$rk) or run over a line (rc=$ro), whose next line starts with a word no list carries (rc=$ry), the pop-up whose entity-quoted value runs over a line (rc=$rw) and the image with no tag after it in its string (rc=$rn2) abort too, and so do the spans whose list holds a quoted '>' (rc=$ru), a placeholder's '>' (rc=$rz), an arrow function on the next line (rc=$rb) or nested on the head line (rc=$rg), and a quoted '>' ahead of a comment (rc=$rf2) or of an opening tag (rc=$rl2); the precise read takes whole the spans whose quoted value holds a '<' in double quotes (rc=$re2), in single quotes (rc=$rs2), escaped inside a double-quoted (rc=$rd2) and a single-quoted script string (rc=$rq2), the spans whose quoted values hold a '>' and then a tag's '<' (rc=$ri), and the head-line list holding a quoted '>' (rc=$rv), so those abort as well; ARMED-RED — with the attribute-list read taken out of the helper all thirty-one publish (rc=$mp, rc=$ml, rc=$mf, rc=$mn, rc=$mq, rc=$md, rc=$ma, rc=$mx, rc=$mt, rc=$ms, rc=$ma2, rc=$me, rc=$mh, rc=$mj, rc=$mk, rc=$mo, rc=$my, rc=$mw, rc=$me2, rc=$ms2, rc=$md2, rc=$mq2, rc=$mi, rc=$mv, rc=$mn2, rc=$mu, rc=$mz, rc=$mb, rc=$mg, rc=$mf2, rc=$ml2). The visible and joined arms carry the key tokens $oth time(s)"
+  else
+    FAIL "M1q: span-class pop-up note rc=$rp '$pp', class=\"\" checklist rule rc=$rl '$pl', character-reference pop-up rc=$rf '$pf', attributes on the next line rc=$rn '$pn', quoted values over a line rc=$rq '$pq', \${…} placeholder rc=$rd '$pd', decimal references rc=$ra '$pa', hexadecimal references rc=$rx '$px', &#39; tooltip rc=$rt '$pt', single-quoted class values rc=$rs '$ps', next-line &- value rc=$ra2 '$pa2', next-line single- and entity-quoted values rc=$re '$pe', next-line placeholder rc=$rh '$ph', next-line placeholder value rc=$rj '$pj', nested placeholder braces rc=$rk '$pk', placeholder over a line rc=$ro '$po', next line no list rc=$ry '$py', entity-quoted value over a line rc=$rw '$pw', quoted '<' in double quotes rc=$re2 '$pe2', quoted '<' in single quotes rc=$rs2 '$ps2', escaped double-quoted '<' rc=$rd2 '$pd2', escaped single-quoted '<' rc=$rq2 '$pq2', quoted '>' then a tag's '<' rc=$ri '$pi', head-line quoted '>' rc=$rv '$pv', image with no tag after it rc=$rn2 '$pn2', next-line list with a quoted '>' rc=$ru '$pu', next-line placeholder holding '>' rc=$rz '$pz', arrow function on the next line rc=$rb '$pb', arrow function nested on the head line rc=$rg '$pg', quoted '>' ahead of a comment rc=$rf2 '$pf2', quoted '>' ahead of an opening tag rc=$rl2 '$pl2' (want 1 and '$M1EQ_PRJ' for each); without the attribute-list read rc=$mp, rc=$ml, rc=$mf, rc=$mn, rc=$mq, rc=$md, rc=$ma, rc=$mx, rc=$mt, rc=$ms, rc=$ma2, rc=$me, rc=$mh, rc=$mj, rc=$mk, rc=$mo, rc=$my, rc=$mw, rc=$me2, rc=$ms2, rc=$md2, rc=$mq2, rc=$mi, rc=$mv, rc=$mn2, rc=$mu, rc=$mz, rc=$mb, rc=$mg, rc=$mf2 and rc=$ml2 (want 0 for each); key tokens on the other arms $oth (want 0). A kept tag's attribute names break a value up inside those surfaces again, or this arm can no longer tell"
+  fi
+}
+m1iq_assert
+m1ir_assert() { # one verdict
+  local re rn rv rt rl pl rb pb rx rg pg ry rh rq rk ro po rf pf rw pw me mn mv mt mx my mh mq mk oth rr
+  mguard "$M1KA_EQ" "$MTD"; re="$MRC"
+  mguard "$M1KA_EQN" "$MTD"; rn="$MRC"
+  mguard "$M1KA_EQV" "$MTD"; rv="$MRC"
+  mguard "$M1KA_EQT" "$MTD"; rt="$MRC"
+  mguard "$M1KA_EQL" "$MTD"; rx="$MRC"
+  mguard "$M1KA_TYP" "$M1KA_TD"; ry="$MRC"
+  mguard "$M1KA_EQM" "$MTD"; rh="$MRC"
+  mguard "$M1KA_TYS" "$M1KA_TD"; rq="$MRC"
+  mguard "$M1KA_LIC" "$M1KA_CD"; rk="$MRC"
+  mguard "$M1KA_LT" "$MTD"; rl="$MRC"; pl="$(m1eq_prj)" || pl="NONE"
+  mguard "$M1KA_LTB" "$MTD"; rb="$MRC"; pb="$(m1eq_prj)" || pb="NONE"
+  mguard "$M1KA_NGT" "$MTD"; rg="$MRC"; pg="$(m1eq_prj)" || pg="NONE"
+  mguard "$M1KA_CLT" "$MTD"; ro="$MRC"; po="$(m1eq_prj)" || po="NONE"
+  mguard "$M1KA_PLT" "$MTD"; rf="$MRC"; pf="$(m1eq_prj)" || pf="NONE"
+  rw="$( ulimit -t 5; verify_publishable_content "$M1KA_WS" "$MTD" >/dev/null 2>"$MOUT"; printf '%s' "$?" )"; pw="$(m1eq_prj)" || pw="NONE"
+  me="$(m1ka_off "$M1KA_EQ" "$MTD")"; mn="$(m1ka_off "$M1KA_EQN" "$MTD")"; mv="$(m1ka_off "$M1KA_EQV" "$MTD")"
+  mt="$(m1ka_off "$M1KA_EQT" "$MTD")"; mx="$(m1ka_off "$M1KA_EQL" "$MTD")"; my="$(m1ka_off "$M1KA_TYP" "$M1KA_TD")"
+  mh="$(m1ka_off "$M1KA_EQM" "$MTD")"; mq="$(m1ka_off "$M1KA_TYS" "$M1KA_TD")"; mk="$(m1ka_off "$M1KA_LIC" "$M1KA_CD")"
+  oth=$(( $(m1eq_n strip_to_text_blocks "$M1KA_TYP" type) + $(m1eq_n strip_to_joined_text "$M1KA_TYP" type) + $(m1eq_n strip_to_text_blocks "$M1KA_TYS" type) + $(m1eq_n strip_to_joined_text "$M1KA_TYS" type) + $(m1eq_n strip_to_text_blocks "$M1KA_LIC" class) + $(m1eq_n strip_to_joined_text "$M1KA_LIC" class) ))
+  for rr in "$M1KA_EQ" "$M1KA_EQN" "$M1KA_EQV" "$M1KA_EQT" "$M1KA_EQL" "$M1KA_EQM" "$M1KA_LT" "$M1KA_LTB" "$M1KA_NGT" "$M1KA_CLT" "$M1KA_PLT" "$M1KA_WS"; do oth=$(( oth + $(m1eq_n strip_to_text_blocks "$rr" ruritanian) + $(m1eq_n strip_to_joined_text "$rr" ruritanian) )); done
+  if [ "$re" -eq 0 ] && [ "$rn" -eq 0 ] && [ "$rv" -eq 0 ] && [ "$rt" -eq 0 ] && [ "$rx" -eq 0 ] && [ "$ry" -eq 0 ] && [ "$rh" -eq 0 ] && [ "$rq" -eq 0 ] && [ "$rk" -eq 0 ] && [ "$rl" -eq 1 ] && [ "$pl" = "$M1EQ_PRJ" ] && [ "$rb" -eq 1 ] && [ "$pb" = "$M1EQ_PRJ" ] && [ "$rg" -eq 1 ] && [ "$pg" = "$M1EQ_PRJ" ] && [ "$ro" -eq 1 ] && [ "$po" = "$M1EQ_PRJ" ] && [ "$rf" -eq 1 ] && [ "$pf" = "$M1EQ_PRJ" ] && [ "$rw" = "1" ] && [ "$pw" = "$M1EQ_PRJ" ] && [ "$me" = "1" ] && [ "$mn" = "1" ] && [ "$mv" = "1" ] && [ "$mt" = "1" ] && [ "$mx" = "1" ] && [ "$my" = "1" ] && [ "$mh" = "1" ] && [ "$mq" = "1" ] && [ "$mk" = "1" ] && [ "$oth" -eq 0 ]; then
+    PASS "M1r: the stated price of reading a kept tag's attribute list — a word written directly before '=' after '<b' is dropped as an attribute name wherever it stands inside the text read as the tag's list, as the shipped guard dropped it, and that render publishes (rc=$re), as do the comment that holds that word as an attribute on the line after its '<b' (rc=$rn), the one whose quoted value after '=' runs over a line (rc=$rv), the same comparison closed by ')' with a '>' later in the script (rc=$rt), a comparison whose next line is no attribute list (rc=$rx) and a loop whose assignment stands before the last '>' ahead of markup later in the script (rc=$rh); a member named like an attribute that a list over lines carries does not abort the page, written in double quotes with a tag after the list (rc=$ry) or in single quotes with none (rc=$rq), nor does one named like the attribute an arrow function's list carries ahead of a closing tag (rc=$rk); a run that meets a '<' first aborts as a HIT (rc=$rl) named '$pl', and so do the same '<' written inside a \${…} placeholder (rc=$rb), a comparison with no '>' after it (rc=$rg), a comparison whose first '>' comes before the word with only a comparison's '<' after it (rc=$ro), a comparison closed by ')' with a quoted '<' after it (rc=$rf), and a kept head followed by lines of nothing but spaces, read under a five-second CPU cap (rc=$rw); ARMED-RED — with the attribute-list read taken out of the helper the nine priced renders abort (rc=$me, rc=$mn, rc=$mv, rc=$mt, rc=$mx, rc=$mh, rc=$my, rc=$mq, rc=$mk), so their publish is that read's doing. The visible and joined arms carry the key tokens $oth time(s)"
+  else
+    FAIL "M1r: the '=' render after '<b' rc=$re, its next-line form rc=$rn, its value-over-a-line form rc=$rv, the comparison closed by ')' rc=$rt, the comparison whose next line is no attribute list rc=$rx, the loop priced up to the markup after it rc=$rh, and the pages whose lists carry an attribute named like a member rc=$ry, rc=$rq and rc=$rk (want 0 for each, the stated price), the run that meets a '<' rc=$rl '$pl', the '<' inside a \${…} placeholder rc=$rb '$pb', the comparison with no '>' after it rc=$rg '$pg', the comparison whose first '>' comes before the word rc=$ro '$po', the comparison closed by ')' with a quoted '<' after it rc=$rf '$pf' and the kept head followed by lines of spaces under a five-second CPU cap rc=$rw '$pw' (want 1 and '$M1EQ_PRJ' for each), without the attribute-list read rc=$me, rc=$mn, rc=$mv, rc=$mt, rc=$mx, rc=$mh, rc=$my, rc=$mq and rc=$mk (want 1 for each), key tokens on the other arms $oth (want 0). The price the RESIDUAL states is no longer the one the code pays, the read stalls on whitespace, or this arm can no longer tell"
+  fi
+}
+m1ir_assert
+M1IS_TAGS='a abbr area audio b bdi bdo button canvas cite code data datalist del dfn em embed i iframe img input ins kbd label link map mark math meta meter noscript object output picture progress q ruby s samp script select selectedcontent slot small span strong sub sup svg template textarea time u var video wbr'
+M1IS_R="$WORK/m1is_list.html"
+{ printf '%s' '<!-- '; for m1is_t in $M1IS_TAGS; do printf '<%s>zq</%s> ' "$m1is_t" "$m1is_t"; done; printf '%s\n' '-->'; } > "$M1IS_R"
+m1is_n() { "$1" "$2" | _decode_entities | _norm_words | awk -v L=" $M1IS_TAGS " 'index(L, " " $0 " ") > 0 { c++ } END { print c + 0 }'; }   # <projection> <render> -> listed names in its stream
+m1is_assert() { # one verdict
+  local nt nl nz mo
+  nt="$(printf '%s' "$M1IS_TAGS" | awk '{ print NF }')"
+  nl="$(m1is_n strip_to_published_text "$M1IS_R")"
+  nz="$(m1eq_n strip_to_published_text "$M1IS_R" zq)"
+  mo="$( eval "$(declare -f strip_to_published_text | sed 's/|\$_GUARD_INLINE_TAGS//')"; m1is_n strip_to_published_text "$M1IS_R" )"
+  if [ "$nt" -eq 56 ] && [ "$nz" -eq "$nt" ] && [ "$nl" -eq 0 ] && [ "$mo" -eq $((2 * nt)) ]; then
+    PASS "M1s: every name of HTML's phrasing content ($nt, from this file's own copy) written as a tag inside a comment body stays markup — 0 listed names reach the published stream while all $nz zq words do; ARMED-RED — with the inline list taken out of the helper $mo listed names reach it, two for each tag"
+  else
+    FAIL "M1s: names in the copy $nt (want 56), zq words $nz (want $nt), listed names in the published stream $nl (want 0), with the inline list taken out $mo (want $((2 * nt))). A phrasing element left off _GUARD_INLINE_TAGS reads as text inside those surfaces again, or this arm can no longer tell"
+  fi
+}
+m1is_assert
 
 # ── M2 (CD-2) — is_stop in the token branch; a stopword-only name is a declared non-key ──
 MSTOP="$WORK/porto-stopword"; mkdir -p "$MSTOP/outputs"
@@ -2377,20 +3087,20 @@ else
   FAIL "M5d: a projection is no longer line-count-preserving (source=$m5src joined=$m5lj visible=$m5lv published=$m5lp; newline-reference arm=$m5adv, want 1). A transform that consumes a newline shifts every reported line after it while the token stream stays valid — the suite would not notice"
 fi
 
-# M5e — THE FAIL DIRECTION OF EACH NEW SUBJECT, which is NOT the same for the two and is
-# the reason this arm asserts presence rather than only effect. Removing _decode_entities
-# is fail-CLOSED and audible: the visible arm empties, the 20-word floor fires, and the
-# verdict is rc=2 UNDETERMINED. Removing strip_to_joined_text is fail-OPEN and SILENT:
-# `[ -s "$jfile" ]` is simply false, rcj stays 1, and the tag-split case returns to rc=0.
-# A new arm inherits the posture of the guard it sits behind, not the posture of its
-# siblings, and this arm is what makes the difference observable.
+# M5e — THE FAIL DIRECTION OF EACH NEW SUBJECT, and both directions are CLOSED. Removing
+# _decode_entities empties the visible arm, the 20-word floor fires, and the verdict is
+# rc=2 UNDETERMINED. Removing strip_to_joined_text fails the joined arm's pipeline; the
+# guard reads that status and refuses the arm before any record is matched, and the verdict
+# is rc=2 as well. A new arm inherits the posture of the guard it sits behind, and this arm
+# is what makes that posture observable for both subjects: a removal that publishes would be
+# the guard certifying a render one of its projections never read.
 m5_dec_rc=0; m5_join_rc=0
 m5_dec_rc="$( unset -f _decode_entities;    verify_publishable_content "$M5DEC" "$MTD" >/dev/null 2>&1; printf '%s' "$?" )"
 m5_join_rc="$( unset -f strip_to_joined_text; verify_publishable_content "$M5TAG" "$MTD" >/dev/null 2>&1; printf '%s' "$?" )"
-if [ "$m5_dec_rc" -eq 2 ] && [ "$m5_join_rc" -eq 0 ]; then
-  PASS "M5e: the two new subjects fail in OPPOSITE directions and both are measured — without _decode_entities the entity case is rc=2 UNDETERMINED (fail-closed, audible), and without strip_to_joined_text the tag-split case is rc=0 (fail-OPEN, silent). The second is why the arm's PRESENCE is asserted and not only its effect"
+if [ "$m5_dec_rc" -eq 2 ] && [ "$m5_join_rc" -eq 2 ]; then
+  PASS "M5e: both new subjects fail CLOSED when removed, and both are measured — without _decode_entities the entity case is rc=2 UNDETERMINED (the visible arm empties and the floor fires), and without strip_to_joined_text the tag-split case is rc=2 UNDETERMINED (the joined arm's failed status is refused). Neither removal can publish a render the guard did not read"
 else
-  FAIL "M5e: a removal did not produce its measured direction (no decoder: rc=$m5_dec_rc want 2; no joined arm: rc=$m5_join_rc want 0) — if the joined arm now fails closed that is an improvement to record, and if the decoder now fails open that is a hole"
+  FAIL "M5e: a removal did not fail closed (no decoder: rc=$m5_dec_rc want 2; no joined arm: rc=$m5_join_rc want 2) — rc=0 on either is the guard certifying a render one of its own projections never read"
 fi
 
 # ── Group N (PR-7 / OB-1) — the conjunctive window is scoped to one block ────
@@ -5635,9 +6345,9 @@ S15H_FAD="$(wc -c < "$WORK/s15h_fail_dec.err" | tr -d ' ')"
 if [ "$S15H_OKP" -ne 0 ] || [ "$S15H_OKJ" -ne 0 ] || [ "$S15H_OKD" -ne 0 ]; then
   FAIL "S15h: CONTROL — with perl working the three programs wrote ${S15H_OKP}B / ${S15H_OKJ}B / ${S15H_OKD}B of stderr over a healthy render, so a non-zero under the stub would not be distinguishable from ordinary output"
 elif [ "$S15H_FAP" -gt 0 ] && [ "$S15H_FAJ" -gt 0 ] && [ "$S15H_FAD" -gt 0 ]; then
-  PASS "S15h: AC-4 — with perl failing, strip_to_published_text, strip_to_joined_text and _decode_entities each pass its diagnostic through (${S15H_FAP}B / ${S15H_FAJ}B / ${S15H_FAD}B), where a working perl writes 0B from each. A failure in any of the three now says why, instead of reaching the guard as an empty stream"
+  PASS "S15h: AC-4 — with perl failing, strip_to_published_text, strip_to_joined_text and _decode_entities each pass its diagnostic through (${S15H_FAP}B / ${S15H_FAJ}B / ${S15H_FAD}B), where a working perl writes 0B from each. A failure in any of the three now says why, ahead of the guard's own refusal of the projection it could not read"
 else
-  FAIL "S15h: with perl failing the three programs wrote ${S15H_FAP}B / ${S15H_FAJ}B / ${S15H_FAD}B of stderr — at least one still discards the only trace its failure leaves, and the guard downstream reads the empty stream as 'no markup to inspect'"
+  FAIL "S15h: with perl failing the three programs wrote ${S15H_FAP}B / ${S15H_FAJ}B / ${S15H_FAD}B of stderr — at least one still discards the only trace of why it failed, so the guard downstream can refuse the projection and name it but cannot say what went wrong"
 fi
 
 # ── S15i — AC-4, POLICY, read from the PARSED bodies so a comment cannot fake it. The rule
@@ -8872,7 +9582,7 @@ md_flips cmd_list          "I5" i5_assert
 #   verify_publishable_content → the CLEAN arm, the one whose subject is the guard rather
 #                           than the matcher inside it;
 #   _decode_entities and strip_to_joined_text → the ENCODING arm, the only arm both
-#                           reach, and they reach it in opposite directions (M5e).
+#                           reach, and either removal now reaches it as a refusal (M5e).
 md_flips _guard_match               "N2b" n2_over_assert
 md_flips _guard_match               "N2c" n2_carry_assert
 md_flips verify_publishable_content "N2d" n2_clean_assert
@@ -8911,6 +9621,41 @@ md_flips nonpublishable_values      "O7g" o7g_assert
 md_flips nonpublishable_values      "O8a" o8a_assert
 md_flips verify_publishable_content "O9b" o9b_assert
 md_flips nonpublishable_values      "O9c" o9c_assert
+
+# The projection-status arm's subject. L17b grades an EXACT status on every cell and counts
+# anything else as that cell failing, so with the guard removed every cell reads 127 and the
+# one verdict the arm emits is a FAIL. Its captures go to their own directory here, so this
+# re-run cannot overwrite the ones L17d read.
+md_flips verify_publishable_content "L17b" l17_assert "$WORK/l17md"
+
+# The published projection's '=' arms (#1467). Each grades an EXACT status on its render and on
+# its twin, so with the projection removed the guard refuses its published arm (rc=2) and each
+# arm's one verdict is a FAIL. One registration per surface, because each verdict rests on a
+# different part of the tag reading — a comment body passed whole, a script body passed whole, a
+# quoted value kept — and none of the three carries another's.
+md_flips strip_to_published_text    "M1f" m1eq_assert M1f "a comment body"     "$M1EQ_CM" "$M1TW_CM"
+md_flips strip_to_published_text    "M1g" m1eq_assert M1g "a script body"      "$M1EQ_SC" "$M1TW_SC"
+md_flips strip_to_published_text    "M1h" m1eq_assert M1h "an attribute value" "$M1EQ_AV" "$M1TW_AV" href
+
+# The published projection's '<' arms (#1467), on the same rule: each grades an EXACT status on
+# its render and on its twin, so with the projection removed the guard refuses its published arm
+# (rc=2) and each arm's one verdict is a FAIL. One registration per surface, as for the '=' arms,
+# and one for the block boundary those surfaces keep, which rests on a part of the reading none of
+# the three carries. M1m reads the comment surface M1j registers, so it is not registered twice.
+md_flips strip_to_published_text    "M1j" m1lt_assert M1j "a comment body"     "$M1LT_CM" "$M1LW_CM"
+md_flips strip_to_published_text    "M1k" m1lt_assert M1k "a script body"      "$M1LT_SC" "$M1LW_SC"
+md_flips strip_to_published_text    "M1l" m1lt_assert M1l "an attribute value" "$M1LT_AV" "$M1LW_AV"
+md_flips strip_to_published_text    "M1n" m1bk_assert
+# The inline-tag `<` those surfaces keep (#1467): each arm grades an EXACT status, so with the
+# projection removed the guard refuses its published arm (rc=2) and each arm's one verdict is a
+# FAIL.
+md_flips strip_to_published_text    "M1o" m1io_assert
+md_flips strip_to_published_text    "M1p" m1ip_assert
+# A kept tag's attribute list and the list's membership (#1467): each grades an EXACT status or
+# an exact count, so with the projection removed each arm's one verdict is a FAIL.
+md_flips strip_to_published_text    "M1q" m1iq_assert
+md_flips strip_to_published_text    "M1r" m1ir_assert
+md_flips strip_to_published_text    "M1s" m1is_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group FZ — every verdict arm in this file must be able to FAIL.

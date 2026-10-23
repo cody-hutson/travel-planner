@@ -387,11 +387,12 @@ StatiCrypt build; this repo has no site build to run a decoy through, so the sam
 **structurally** — tag names and attribute names are dropped at extraction rather than differenced
 away afterwards.
 
-Fail-closed means `2` — abort — when the traveler model is absent, is not a readable regular file, is
-empty, or parses with **zero `## <Name>` entries recognized**; when a per-traveler profile is newer
-than the model, or is unreadable, or either mtime cannot be read; when the class reads empty from a
-model older than the render; when a class value is below its rule's keyability floor; and when the
-render is unreadable or yields under 20 words of visible text. But a model that **parses with a
+Fail-closed means `2` — abort — whenever the class or the render cannot be determined, as it is
+when the traveler model is absent, is not a readable regular file, is empty, or parses with **zero
+`## <Name>` entries recognized**; when a per-traveler profile is newer than the model, or is
+unreadable, or either mtime cannot be read; when the class reads empty from a model older than the
+render; when a class value is below its rule's keyability floor; and when the render is unreadable
+or yields under 20 words of visible text. But a model that **parses with a
 genuinely empty class, and is not stale, returns `0` and publishes**. That distinction is
 load-bearing: a parsed-and-empty class is a *measurement*, an unrecognized or stale file is a
 *degradation*, and collapsing them would make a broken parser indistinguishable from a trip that has
@@ -917,3 +918,19 @@ that is not this table's, so read each layer by what it does rather than by the 
 - First-party source of the Passport member, and the label shape the profile parse binds to:
   `templates/traveler-intake.template.md`; the `[DERIVED]` status of the projection and the
   refresh contract: `CLAUDE.md` → *Satisfaction-layer artifacts*.
+
+## Amendment history
+
+**Amendment (2026-10-23, Friday) — § *Decision* 3: the sentence listing when the
+guard returns `2` stops reading as the whole set; no decision changes.** The sentence opened
+"Fail-closed means `2` — abort — when", and the list after it read as every path to `2`. It was not
+every path: at the release baseline the guard also returned `2` with no rendered site or trip dir to
+read, when it could not stage its own work, on a matcher that could not run — § *Decision* 4 names
+that one — and on a publishability declaration it could not read or apply. It now also returns `2`
+when a projection of the render fails, or when the published or the joined projection yields no
+words, because a projection that did not run has not read the render. Each is an instance of the
+rule § *Context* states, that an undetermined result is a failure, never a clean pass, and of the
+contract § *Decision* 3 gives the code `2`. The sentence now leads with that contract and keeps its
+list as instances of it. The paths themselves are settled design and this record does not restate
+them: the guard states them in `scripts/publish-trip-site.sh`, and `scripts/test-publish-guard.sh`
+pins the ones it grades, the projection paths among them in group L.
