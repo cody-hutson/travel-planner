@@ -40,7 +40,8 @@
 # Approval gate (ADR-029, which supersedes in part the organizer-confirm rule of ADR-003 §
 # Decision 2). Once a baseline is recorded, update refuses when the itinerary content of the
 # outgoing render differs from what is currently published and no approval covers it, or when it
-# cannot determine that content at all (a render it cannot read, project or normalize); rotate
+# cannot determine whether that content moved at all (a render it cannot read, project or
+# normalize, or a baseline sidecar that is present but cannot be read as one); rotate
 # re-publishes the same render and applies the refusal itself. A republish carrying the SAME
 # itinerary content — a coordination-state marker change, say — is not a plan change and passes.
 # Two configurations:
@@ -2966,12 +2967,12 @@ approval_ledger_path()      { printf '%s' "$1/.approvals"; }
 
 # The `digest=` line of a two-line record, or NOTHING when the file is absent, the
 # line is missing, or the token is not a well-formed digest. Folding those three
-# into one empty answer is what satisfies ADR-007 §2's bound that no command may
-# predicate a branch on a field's ABSENCE where a placeholder makes that field
-# present: every caller branches on the VALUE, and a malformed record is never read
-# as approval. Written as a read loop rather than a pipeline on purpose — a
-# `sed ... | head -1` would be the early-exit-under-pipefail shape this suite's
-# group PF grades against.
+# into one empty answer is what keeps a malformed `.change-confirmed` from ever
+# reading as an approval, the conservative direction for that record. The published
+# baseline is read through `_baseline_record` instead, because there an empty answer
+# is the permissive direction (#1468). Written as a read loop rather than a pipeline
+# on purpose — a `sed ... | head -1` would be the early-exit-under-pipefail shape this
+# suite's group PF grades against.
 _record_digest() { # <record_file> -> digest token, or nothing
   local f="${1:-}" line tok=""
   [ -r "$f" ] || return 0
@@ -2984,6 +2985,37 @@ _record_digest() { # <record_file> -> digest token, or nothing
     ''|*[!A-Za-z0-9-]*) return 0 ;;
   esac
   printf '%s' "$tok"
+}
+
+# The published baseline, classified (#1468 case 5). Exactly one answer on stdout:
+#   absent     no sidecar at the path — no file and no link. The one answer that means "never
+#              recorded", and the only one THE NO-BASELINE BRANCH in SEAM S2 is reached by.
+#   unusable   a sidecar is present — a file, a link (dangling or not), a directory — but no
+#              baseline can be read from it: it is not a readable regular file, it has no
+#              digest= line, or its token is neither 64 lowercase hex characters (what the
+#              recorder writes) nor the legacy <digits>-<digits> shape (what it wrote before #719).
+#   <token>    the recorded digest.
+# ADR-007 § 2: absence and a malformed or truncated file are different conditions and never the
+# same branch. _record_digest's fold put them on one branch, which for this sidecar — unlike
+# .change-confirmed — is the permissive one: an unreadable baseline on a trip that declares no
+# approvers read as no baseline and published whatever went out. Every caller branches on the
+# VALUE printed here and none tests the path itself. Presence is existence OR a link, as
+# _approval_policy reads it. The regular-file test comes before any read, so a FIFO cannot block
+# the gate.
+_baseline_record() { # <record_file> -> absent | unusable | the recorded digest token
+  local f="${1:-}" tok
+  if [ ! -e "$f" ] && [ ! -L "$f" ]; then printf 'absent'; return 0; fi
+  if [ ! -f "$f" ] || [ ! -r "$f" ]; then printf 'unusable'; return 0; fi
+  tok="$(_record_digest "$f")"
+  if [ "${#tok}" -eq 64 ]; then
+    case "$tok" in *[!0123456789abcdef]*) ;; *) printf '%s' "$tok"; return 0 ;; esac
+  fi
+  case "$tok" in
+    ''|*[!0123456789-]*|-*|*-|*-*-*) ;;
+    *-*) printf '%s' "$tok"; return 0 ;;
+  esac
+  printf 'unusable'
+  return 0
 }
 
 # The one staging step for a baseline record (#1468 case 4): a temp file beside <record_file>, in
@@ -3003,21 +3035,22 @@ _stage_published_record() { # <record_file> <digest> -> the staged path on stdou
 }
 
 # The recorder's own warning when a push leaves no new baseline, worded by the state the push
-# leaves, read the way the gate reads it, so the words cannot disagree with the next verdict.
-# "NOT ACTIVE" is said only where it is true: no baseline on a trip that declares no approvers;
-# each other policy is told the exit that works on it.
+# leaves, read the way the gate reads it — through _baseline_record — so the words cannot disagree
+# with the next verdict. "NOT ACTIVE" is said only where it is true: no baseline on a trip that
+# declares no approvers; each other policy is told the exit that works on it.
 _warn_unrecorded() { # <trip_dir> <cause> -> one warning, worded by the state the push leaves
   local out
   out="$(published_itinerary_path "$1")"
-  if [ -n "$(_record_digest "$out")" ]; then
-    warn "$2 The push itself succeeded. No new baseline was recorded for this push. The organizer-confirm gate keeps the baseline it already had — the plan published before this push — so until a push records a new one the next update is gated against that earlier plan, and a working copy reverted to it would publish without asking. Fix the cause, then re-run update to record this push's baseline."
-  else
-    case "$(_approval_policy "$1" 2>/dev/null)" in
-      none)     warn "$2 The push itself succeeded. No baseline was recorded for this push, and this trip has none, so the organizer-confirm gate is NOT ACTIVE for it: every update will publish without asking for confirmation until a push records a baseline. Fix the cause, then re-run update to record one." ;;
-      declared) warn "$2 The push itself succeeded. No baseline was recorded for this push, and this trip has none; it declares approvers, so the gate still holds the next update until approvals of its outgoing plan are recorded. Fix the cause, then re-run update to record a baseline." ;;
-      *)        warn "$2 The push itself succeeded. No baseline was recorded for this push, and this trip has none; its approval sidecars are malformed, so the gate holds every plan change, and confirm records no approval, until they are repaired. Repair them and fix the cause, then re-run update to record a baseline." ;;
-    esac
-  fi
+  case "$(_baseline_record "$out")" in
+    absent)
+      case "$(_approval_policy "$1" 2>/dev/null)" in
+        none)     warn "$2 The push itself succeeded. No baseline was recorded for this push, and this trip has none, so the organizer-confirm gate is NOT ACTIVE for it: every update will publish without asking for confirmation until a push records a baseline. Fix the cause, then re-run update to record one." ;;
+        declared) warn "$2 The push itself succeeded. No baseline was recorded for this push, and this trip has none; it declares approvers, so the gate still holds the next update until approvals of its outgoing plan are recorded. Fix the cause, then re-run update to record a baseline." ;;
+        *)        warn "$2 The push itself succeeded. No baseline was recorded for this push, and this trip has none; its approval sidecars are malformed, so the gate holds every plan change, and confirm records no approval, until they are repaired. Repair them and fix the cause, then re-run update to record a baseline." ;;
+      esac ;;
+    unusable|'') warn "$2 The push itself succeeded. No baseline was recorded for this push, and the sidecar at $out is present but cannot be used, so the organizer-confirm gate refuses the next update as undetermined until that file is repaired or deleted." ;;
+    *) warn "$2 The push itself succeeded. No new baseline was recorded for this push. The organizer-confirm gate keeps the baseline it already had — the plan published before this push — so until a push records a new one the next update is gated against that earlier plan, and a working copy reverted to it would publish without asking. Fix the cause, then re-run update to record this push's baseline." ;;
+  esac
   return 0
 }
 
@@ -3040,7 +3073,7 @@ record_published_itinerary() { # <trip_dir> <site_html>
     _warn_unrecorded "$trip_dir" "could not identify the itinerary content of $site_html — it could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause."
     return 0
   fi
-  if tmp="$(_stage_published_record "$out" "$dg")" && mv -f "$tmp" "$out" && [ "$(_record_digest "$out")" = "$dg" ]; then
+  if tmp="$(_stage_published_record "$out" "$dg")" && mv -f "$tmp" "$out" && [ "$(_baseline_record "$out")" = "$dg" ]; then
     return 0
   fi
   if [ -n "$tmp" ] && [ -e "$tmp" ]; then rm -f "$tmp" || :; fi
@@ -3259,31 +3292,40 @@ _baseline_matches() { # <trip_dir> <baseline-digest> <outgoing-digest> -> 0 when
 # allowlist-proceed case there still aborts on anything outside this vocabulary. THE EMISSION
 # THE REPLACEMENT OWES (#1184) is kept: `undetermined` whenever the verdict depends on the
 # outgoing render's itinerary content and that content cannot be identified — on every policy,
-# the declared no-baseline branch included. Group S15 grades it whatever body this function holds.
+# the declared no-baseline branch included, and whenever a baseline sidecar is present but cannot
+# be used (#1468). Group S15 grades it whatever body this function holds.
 #
 #   none-pending  no baseline on a trip that declares no approvers, OR the outgoing itinerary
 #                 content is exactly what is published — directly, or through the
 #                 legacy-baseline shim                                                -> proceed
-#   undetermined  the verdict depends on the outgoing render, and it could not be read,
-#                 projected or normalized — whether it moved is UNKNOWN; never written
-#                 to any sidecar                                                      -> abort
+#   undetermined  whether the itinerary moved is UNKNOWN: a baseline sidecar is present but
+#                 cannot be used (_baseline_record), on every policy; or the verdict depends
+#                 on the outgoing render, and it could not be read, projected or normalized.
+#                 Never written to any sidecar                                        -> abort
 #   unconfirmed   itinerary content moved and no approval covers it: no parseable
 #                 confirmation, too few declared approvals, or a malformed approval state -> abort
 #   stale         itinerary content moved since it was approved                       -> abort
 #   confirmed     the approval covers this exact itinerary content — the organizer's
 #                 confirmation, or the declared threshold met by approvals for it     -> proceed
 #
-# THE NO-BASELINE BRANCH STAYS FIRST for a trip that declares no approvers: with no anchor there
-# is nothing to compare, so the answer does not depend on the render. A trip that DOES declare
-# approvers is evaluated against its approvals even with no baseline (#718's FM-2 i) — a
-# declaration exists to hold plan changes, and one with no anchor would otherwise wave every
-# change through. A MALFORMED approval state is never the legacy default (FM-2 ii): it reads
-# `unconfirmed` wherever the plan cannot be shown unchanged, and `none-pending` only where the
-# outgoing plan equals the baseline, where nothing new can be publishing (#719 DR-2).
+# AN UNUSABLE BASELINE ANSWERS FIRST, ON EVERY POLICY (#1468 case 5): ADR-007 § 2 makes absence
+# and a malformed or truncated file different conditions and never the same branch, so only
+# `absent` reaches THE NO-BASELINE BRANCH, which stays first for a trip that declares no
+# approvers: with no anchor there is nothing to compare, so the answer does not depend on the
+# render. A trip that DOES declare approvers is evaluated against its approvals even with no
+# baseline (#718's FM-2 i) — a declaration exists to hold plan changes, and one with no anchor
+# would otherwise wave every change through. A MALFORMED approval state is never the legacy
+# default (FM-2 ii): it reads `unconfirmed` wherever the plan cannot be shown unchanged, and
+# `none-pending` only where the outgoing plan equals the baseline, where nothing new can be
+# publishing (#719 DR-2).
 change_confirmation_state() { # <trip_dir> -> one token on stdout
   local trip_dir="$1" pol base_dg out_dg rec_dg k t s
   pol="$(_approval_policy "$trip_dir")"
-  base_dg="$(_record_digest "$(published_itinerary_path "$trip_dir")")"
+  base_dg="$(_baseline_record "$(published_itinerary_path "$trip_dir")")"
+  case "$base_dg" in
+    absent)      base_dg="" ;;                         # never recorded: THE NO-BASELINE BRANCH below
+    unusable|'') printf 'undetermined'; return 0 ;;    # present but unusable, on every policy (#1468 case 5)
+  esac
   if [ -z "$base_dg" ]; then
     case "$pol" in
       none)      printf 'none-pending'; return 0 ;;   # the shipped first branch, undeclared trips only
@@ -3332,16 +3374,22 @@ change_confirmation_state() { # <trip_dir> -> one token on stdout
 #     on it too, but `*)`'s text asserts that the itinerary content differs — a claim
 #     nobody could have computed, and exactly the fabricated statement this token exists
 #     to remove. So the arm exists for its MESSAGE and not for its verdict: the proceed set
-#     is unchanged, `*)` is still the default, and the arm is not an exemption. That message
-#     speaks of the render's identity only, never of change in either direction, because
-#     identity is all the gate failed to establish. S15f grades both directions.
+#     is unchanged, `*)` is still the default, and the arm is not an exemption. Its message
+#     names whichever side the gate could not establish — a baseline sidecar present but
+#     unusable (#1468 case 5), read again through `_baseline_record`, or the outgoing render's
+#     identity — and never speaks of change in either direction, because that is all the gate
+#     failed to establish. S15f and S28b grade it.
 require_change_confirmation() { # <trip_dir>
   local trip_dir="$1"
   local state
   state="$(change_confirmation_state "$trip_dir")"
   case "$state" in
     none-pending|confirmed) return 0 ;;
-    undetermined) die "GUARD ABORTED — could not identify the itinerary content of the outgoing render of ${trip_dir} (state: undetermined): it could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause. Nothing was pushed, and the published site was not touched. confirm refuses this state as well, because a confirmation binds to an identified itinerary and there is none: fix whichever of the three it is, then re-run." ;;
+    undetermined)
+      case "$(_baseline_record "$(published_itinerary_path "$trip_dir")")" in
+        unusable|'') die "GUARD ABORTED — the published baseline of ${trip_dir} is present but cannot be used (state: undetermined): $(published_itinerary_path "$trip_dir") is not a readable regular file, or it carries no well-formed digest= line. The gate compares the outgoing plan with that baseline, and without it nothing could be compared, so nothing was pushed and the published site was not touched. confirm refuses this state as well. Restore read access to that file, or replace it from a backup, or delete it: on a trip that declares no approvers the next update then publishes without asking and records a new baseline, and on one that declares approvers it waits for approvals of the outgoing plan." ;;
+      esac
+      die "GUARD ABORTED — could not identify the itinerary content of the outgoing render of ${trip_dir} (state: undetermined): it could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause. Nothing was pushed, and the published site was not touched. confirm refuses this state as well, because a confirmation binds to an identified itinerary and there is none: fix whichever of the three it is, then re-run." ;;
     *) die "GUARD ABORTED — the itinerary content differs from the published plan and no organizer confirmation covers it (state: ${state:-empty}). Nothing was pushed and the published plan is unchanged. Either confirm the change:  $(basename "$0") confirm ${trip_dir}  — or revert the working copy to the published plan and re-run." ;;
   esac
 }
@@ -3948,11 +3996,17 @@ cmd_confirm() { # <trip_dir>
   [ "$state" != "none-pending" ] \
     || die "nothing to confirm for $trip_dir — the itinerary content of the outgoing render is the plan that is already published (or the trip has never been published). Confirmation binds to a change; there is none."
 
-  # Refuse an UNDETERMINED state here, BEFORE the terminal check and the prompt (#1184). A
-  # confirmation binds to an identified itinerary and there is none to bind to: prompting
-  # would ask the organizer to type CONFIRM against a state nobody could compute.
-  [ "$state" != "undetermined" ] \
-    || die "cannot confirm for $trip_dir — could not determine whether its itinerary changed: the outgoing render $site_html could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause. A confirmation binds to an identified itinerary and there is none to bind to, so nothing was recorded."
+  # Refuse an UNDETERMINED state here, BEFORE the terminal check and the prompt (#1184; #1468
+  # case 5). A confirmation is recorded against an identified itinerary and a known published
+  # plan, and here one of the two cannot be read: prompting would ask the organizer to type
+  # CONFIRM against a state nobody could compute. The refusal names which, read through the
+  # gate's own classifier.
+  [ "$state" != "undetermined" ] || {
+    case "$(_baseline_record "$(published_itinerary_path "$trip_dir")")" in
+      unusable|'') die "cannot confirm for $trip_dir — could not determine whether its itinerary changed: its published baseline $(published_itinerary_path "$trip_dir") is present but cannot be used — it is not a readable regular file, or it carries no well-formed digest= line. A confirmation is recorded against a known published plan and none can be read, so nothing was recorded. Restore read access to that file, or replace it from a backup, or delete it; then re-run." ;;
+    esac
+    die "cannot confirm for $trip_dir — could not determine whether its itinerary changed: the outgoing render $site_html could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause. A confirmation binds to an identified itinerary and there is none to bind to, so nothing was recorded."
+  }
 
   # A malformed approval state (#719, FM-2 ii) holds every plan change at the gate, and it is not
   # the organizer-confirm default either: recording an organizer confirmation here would not open

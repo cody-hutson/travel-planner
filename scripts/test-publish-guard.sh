@@ -8629,7 +8629,7 @@ fi
 # recording act's functions, name no traveller file, person record, derived model or provenance
 # mark. Sensitivity: the class-source function that does read the derived model names it.
 # Specificity: a fabricated token is in none of them.
-SA22_FNS='change_confirmation_state _approval_policy _approvers_grammar _approvals_grammar _approval_tally _baseline_matches _legacy_itinerary_digest _legacy_digest_of itinerary_digest strip_to_itinerary_text _digest_of _record_digest published_itinerary_path change_confirmation_path approver_declaration_path approval_ledger_path resolve_site_html _confirm_declared _approval_line_parse _ledger_append _record_threshold_met _published_record_date _undecided_entry'
+SA22_FNS='change_confirmation_state _approval_policy _approvers_grammar _approvals_grammar _approval_tally _baseline_matches _legacy_itinerary_digest _legacy_digest_of itinerary_digest strip_to_itinerary_text _digest_of _record_digest _baseline_record published_itinerary_path change_confirmation_path approver_declaration_path approval_ledger_path resolve_site_html _confirm_declared _approval_line_parse _ledger_append _record_threshold_met _published_record_date _undecided_entry'
 SA22_EMPTY=0; SA22_HIT=""; SA22_SPEC=0; SA22_N=0
 for safn in $SA22_FNS; do
   SA22_N=$((SA22_N+1))
@@ -9025,16 +9025,25 @@ fi
 # Group S, #1468 — THE BASELINE THE GATE COMPARES AGAINST
 #
 # Every verdict from S0 to S26a reads the published baseline, .published-itinerary, and none
-# grades what writes it after a push or what a push leaves when it cannot be written. This block
-# grades the recorder that writes it.
+# grades what writes it after a push, what a push leaves when it cannot be written, or what the
+# gate does with one that is present and cannot be used. This block grades the recorder that
+# writes it and the classifier that reads it.
 #
 #   S27a  THE RECORDER'S OWN WARNING — the staging step failing after a push, on a trip with no
 #         baseline, warns NOT ACTIVE, returns 0 under errexit and writes no sidecar
 #   S27b  every failure the recorder meets — mktemp refusing, mktemp naming a path under a missing
-#         directory, mv refusing — on a trip with no baseline and on one whose baseline records
-#         another plan: each warns by the state it leaves, returns 0, keeps the sidecar
+#         directory, mv refusing — on a trip with no baseline, on one whose baseline records
+#         another plan and on one whose baseline is present but unusable, and the sidecar's path
+#         a directory (S27b′): each warns by the state it leaves, returns 0, keeps the sidecar
 #         byte-identical and leaves no temporary; control: unstubbed, it writes the sidecar;
 #         ARMED-RED: the shipped recorder's silent `mktemp … || return 0` is convicted
+#   S28a  CASE 5 — nine shapes of a present but unusable baseline, on both policies and both
+#         renders, all resolve `undetermined`; six controls keep their verdicts, a legacy CRC
+#         baseline included; ARMED-RED: the old fold reads one of them `none-pending`
+#   S28b  the gate refuses each unusable shape naming the file and making no claim about change
+#   S28c  update, end to end, refuses before any clone — the Success Indicator's arm
+#   S28d  confirm refuses each shape on both policies before its terminal check
+#   S28e  the classifier itself: nine shapes `unusable`, absence `absent`, a token itself
 #   S27c  a trip that declares approvers, or whose approval sidecars are malformed, is never told
 #         NOT ACTIVE, and each is told the exit that works on it
 #   S27d  a trip directory that loses write between the staging and the move still gets the
@@ -9089,24 +9098,30 @@ s27a_assert() {
 }
 s27a_assert
 
-# ── S27b — EVERY FAILURE THE RECORDER MEETS, ON BOTH STATES IT CAN LEAVE. Three failures, each on a
-# trip with no baseline (marker N: NOT ACTIVE) and on one whose baseline records another plan
-# (marker K: keeps the baseline it already had), six cells. Each must return 0 under errexit with
-# the after-marker, carry its own state's marker and not the other's, leave the sidecar
-# byte-identical (absent where there was none) and leave no temporary beside it. CONTROL: the
-# recorder unstubbed on a trip with no baseline writes the sidecar and warns nothing, so "nothing
-# written" above is a measurement of a writer that can write. ARMED-RED: the shipped recorder's
-# body, whose `mktemp … || return 0` returns silently, is put back for the first cell and must
-# leave no marker, then the production recorder is re-evaluated.
+# ── S27b — EVERY FAILURE THE RECORDER MEETS, ON EVERY STATE IT CAN LEAVE. Three failures, each on a
+# trip with no baseline (marker N: NOT ACTIVE), on one whose baseline records another plan (marker
+# K: keeps the baseline it already had) and on one whose baseline is present but unusable (marker
+# U: present but cannot be used), nine cells; and S27b′'s tenth, the sidecar's path a directory,
+# which needs no stub because the move lands the record inside it. Each must return 0 under
+# errexit with the after-marker, carry its own state's marker and no other, leave the sidecar
+# byte-identical (absent where there was none) and leave no temporary beside it; after the
+# directory cell the classifier still reads the path `unusable`, and the record sits inside the
+# directory rather than at the path. CONTROL: the recorder unstubbed on a trip with no baseline
+# writes the sidecar and warns nothing, so "nothing written" above is a measurement of a writer
+# that can write. ARMED-RED: the shipped recorder's body, whose `mktemp … || return 0` returns
+# silently, is put back for the first cell and must leave no marker, then the production recorder
+# is re-evaluated.
 s27b_assert() {
-  local f s d e rc aft n k ok=1 why="" cells=0 c ce crc cn=0 ck=0 me mn=0 mk=0
+  local f s d e rc aft n k u ok=1 why="" cells=0 c ce crc cn=0 ck=0 me mn=0 mk=0
   for f in mktemp-fails mktemp-missing mv-fails; do
-    for s in absent kept; do
+    for s in absent kept unusable; do
       cells=$((cells+1))
       if [ "$s" = absent ]; then
         d="$(s_fixture "s27b-$f-$s-$RANDOM" 14:00 none)"
-      else
+      elif [ "$s" = kept ]; then
         d="$(s_fixture "s27b-$f-$s-$RANDOM" 16:30 none)"; s_record "$d/.published-itinerary" "$S_DA" published; cp "$d/.published-itinerary" "$d.before"
+      else
+        d="$(s_fixture "s27b-$f-$s-$RANDOM" 16:30 none)"; printf 'published=2027-06-01T00:00:00Z\n' > "$d/.published-itinerary"; cp "$d/.published-itinerary" "$d.before"
       fi
       case "$f" in
         mktemp-fails)   mktemp() { return 1; } ;;
@@ -9115,21 +9130,39 @@ s27b_assert() {
       esac
       e="$( ( set -e; record_published_itinerary "$d" "$d/$S15_RENDER"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; rc=$?
       unset -f mktemp mv
-      aft=0; n=0; k=0
+      aft=0; n=0; k=0; u=0
       case "$e" in *S27-AFTER*) aft=1 ;; esac
       case "$e" in *"NOT ACTIVE"*) n=1 ;; esac
       case "$e" in *"keeps the baseline it already had"*) k=1 ;; esac
+      case "$e" in *"present but cannot be used"*) u=1 ;; esac
       [ "$rc" -eq 0 ] && [ "$aft" -eq 1 ] || { ok=0; why="$why $f/$s:rc=$rc,after=$aft"; }
       [ "$(sb_temps "$d")" -eq 0 ] || { ok=0; why="$why $f/$s:temps=$(sb_temps "$d")"; }
       if [ "$s" = absent ]; then
-        [ "$n" -eq 1 ] && [ "$k" -eq 0 ] || { ok=0; why="$why $f/$s:marker=N$n/K$k"; }
+        [ "$n$k$u" = 100 ] || { ok=0; why="$why $f/$s:marker=N$n/K$k/U$u"; }
         [ ! -e "$d/.published-itinerary" ] || { ok=0; why="$why $f/$s:sidecar-written"; }
+      elif [ "$s" = kept ]; then
+        [ "$n$k$u" = 010 ] || { ok=0; why="$why $f/$s:marker=N$n/K$k/U$u"; }
+        cmp -s "$d.before" "$d/.published-itinerary" || { ok=0; why="$why $f/$s:sidecar-changed"; }
       else
-        [ "$k" -eq 1 ] && [ "$n" -eq 0 ] || { ok=0; why="$why $f/$s:marker=N$n/K$k"; }
+        [ "$n$k$u" = 001 ] || { ok=0; why="$why $f/$s:marker=N$n/K$k/U$u"; }
         cmp -s "$d.before" "$d/.published-itinerary" || { ok=0; why="$why $f/$s:sidecar-changed"; }
       fi
     done
   done
+  # S27b′ — the sidecar's path a directory. The move lands the record inside it, and the read-back
+  # is what catches that: the classifier still reads the path `unusable`, the record sits inside
+  # the directory, and nothing is left beside it.
+  cells=$((cells+1))
+  d="$(s_fixture "s27b-dir-$RANDOM" 16:30 none)"; mkdir -p "$d/.published-itinerary"
+  e="$( ( set -e; record_published_itinerary "$d" "$d/$S15_RENDER"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; rc=$?
+  aft=0; n=0; k=0; u=0
+  case "$e" in *S27-AFTER*) aft=1 ;; esac
+  case "$e" in *"NOT ACTIVE"*) n=1 ;; esac
+  case "$e" in *"keeps the baseline it already had"*) k=1 ;; esac
+  case "$e" in *"present but cannot be used"*) u=1 ;; esac
+  [ "$rc" -eq 0 ] && [ "$aft" -eq 1 ] && [ "$n$k$u" = 001 ] || { ok=0; why="$why dir:rc=$rc,after=$aft,marker=N$n/K$k/U$u"; }
+  [ "$(_baseline_record "$d/.published-itinerary")" = unusable ] && [ -d "$d/.published-itinerary" ] || { ok=0; why="$why dir:classified=$(_baseline_record "$d/.published-itinerary")"; }
+  [ "$(sb_temps "$d/.published-itinerary")" -eq 1 ] && [ "$(sb_temps "$d")" -eq 0 ] || { ok=0; why="$why dir:inside=$(sb_temps "$d/.published-itinerary"),beside=$(sb_temps "$d")"; }
   c="$(s_fixture "s27b-ctl-$RANDOM" 14:00 none)"
   ce="$( ( set -e; record_published_itinerary "$c" "$c/$S15_RENDER"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; crc=$?
   case "$ce" in *"NOT ACTIVE"*) cn=1 ;; esac
@@ -9147,13 +9180,222 @@ s27b_assert() {
   case "$me" in *"keeps the baseline it already had"*) mk=1 ;; esac
   if [ "$crc" -ne 0 ] || [ "$(_record_digest "$c/.published-itinerary")" != "$S_DA" ] || [ "$cn" -ne 0 ] || [ "$ck" -ne 0 ]; then
     FAIL "S27b: CONTROL — the unstubbed recorder on a trip with no baseline returned rc=$crc, wrote '$(_record_digest "$c/.published-itinerary")' (want $S_DA) and warned N=$cn K=$ck (want neither), so the absence of a write below is not a measurement"
-  elif [ "$ok" -eq 1 ] && [ "$cells" -eq 6 ] && [ "$mn" -eq 0 ] && [ "$mk" -eq 0 ]; then
-    PASS "S27b: on each of $cells cells — mktemp refusing, mktemp naming a missing directory and mv refusing, each with no baseline and with a baseline of another plan — the recorder returns 0 under errexit, warns NOT ACTIVE or that it keeps the baseline it already had by the state it leaves, keeps the sidecar byte-identical and leaves no temporary; the control writes the sidecar; ARMED-RED: the shipped recorder's silent return leaves no marker, and the assertion convicts it"
+  elif [ "$ok" -eq 1 ] && [ "$cells" -eq 10 ] && [ "$mn" -eq 0 ] && [ "$mk" -eq 0 ]; then
+    PASS "S27b: on each of $cells cells — mktemp refusing, mktemp naming a missing directory and mv refusing, each with no baseline, with a baseline of another plan and with one present but unusable, and the sidecar's path a directory — the recorder returns 0 under errexit, warns NOT ACTIVE, that it keeps the baseline it already had, or that the sidecar is present but cannot be used, by the state it leaves, keeps the sidecar byte-identical and leaves no temporary beside it, and the record moved into a directory is caught by the read-back; the control writes the sidecar; ARMED-RED: the shipped recorder's silent return leaves no marker, and the assertion convicts it"
   else
     FAIL "S27b: cells=$cells$why; ARMED-RED read N=$mn K=$mk (want neither)"
   fi
 }
 s27b_assert
+
+# ── S28 — CASE 5: A BASELINE SIDECAR THAT IS PRESENT BUT CANNOT BE USED (#1468). ADR-007 § 2 makes
+# absence and a malformed or truncated file different conditions and never the same branch, so
+# each shape below must reach the gate as `undetermined`, never as "no baseline". s28_plant writes
+# one of the nine shapes at a trip's sidecar path. The mode-000 shape takes L5b's form: a runner
+# that can still read a 000 file gets a directory instead, a construct no privilege reads as a
+# regular file, so every cell renders a verdict on every runner and none becomes a skip. S_LA is
+# the legacy CRC token of the 14:00 render, which must still read as a baseline.
+S28_SHAPES='dangling mode000 badtoken nodigest empty directory hex20 upper64 crlf'
+s28_plant() { # <trip> <shape> — a present but unusable baseline sidecar, one of S28_SHAPES
+  local f="$1/.published-itinerary"
+  case "$2" in
+    dangling)  ln -s "$1/zzq-no-such-baseline" "$f" ;;
+    mode000)   s_record "$f" "$S_DA" published; chmod 000 "$f"
+               if [ -r "$f" ]; then chmod 644 "$f"; rm -f "$f"; mkdir -p "$f"; fi ;;
+    badtoken)  printf 'digest=not*a*digest\npublished=2027-06-01T00:00:00Z\n' > "$f" ;;
+    nodigest)  printf 'published=2027-06-01T00:00:00Z\n' > "$f" ;;
+    empty)     : > "$f" ;;
+    directory) mkdir -p "$f" ;;
+    hex20)     printf 'digest=0123456789abcdef0123\npublished=2027-06-01T00:00:00Z\n' > "$f" ;;
+    upper64)   printf 'digest=%s\npublished=2027-06-01T00:00:00Z\n' "$(tr 'abcdef' 'ABCDEF' <<<"$S_DA")" > "$f" ;;
+    crlf)      printf 'digest=%s\r\npublished=2027-06-01T00:00:00Z\r\n' "$S_DA" > "$f" ;;
+  esac
+}
+s_render "$WORK/sb-la.html" 14:00 none; S_LA="$(_legacy_itinerary_digest "$WORK/sb-la.html")"
+
+# ── S28a — THE SUBJECT. Nine shapes × {a trip that declares no approvers, one that declares one
+# approver at threshold all} × {the 14:00 render, which is the baseline's own plan where one could
+# be read, and the 16:30 render} — 36 trips, every one `undetermined`. Fixture integrity first:
+# the mode-000 sidecar must not be a readable regular file. SIX CONTROLS keep their verdicts, so
+# the 36 are not a resolver that answers `undetermined` to everything: no sidecar at all, on both
+# policies; an S_DA baseline under its own plan and under a moved one; and a legacy CRC baseline
+# under each — the last two are criterion 1's "a legacy CRC-shaped baseline still reads as a
+# baseline". ARMED-RED: _baseline_record replaced by the old fold (a digest if _record_digest
+# reads one, else `absent`) makes the undeclared, moved trip with no digest= line read
+# none-pending, which the assertion convicts; the classifier is then re-evaluated from its saved
+# text. Registered: with the resolver removed every state is empty.
+s28a_assert() {
+  local sh pol t d st n=0 got=0 bad="" integ=1 c1 c2 c3 c4 c5 c6 md mut
+  for sh in $S28_SHAPES; do
+    for pol in undeclared declared; do
+      for t in 14:00 16:30; do
+        n=$((n+1))
+        d="$(s_fixture "s28a-$sh-$pol-${t%%:*}-$RANDOM" "$t" none)"
+        [ "$pol" = undeclared ] || sa_declare "$d" all zqa1
+        s28_plant "$d" "$sh"
+        if [ "$sh" = mode000 ] && [ -f "$d/.published-itinerary" ] && [ -r "$d/.published-itinerary" ]; then integ=0; fi
+        st="$(change_confirmation_state "$d" 2>/dev/null)"
+        if [ "$st" = undetermined ]; then got=$((got+1)); else bad="$bad $sh/$pol/$t=${st:-empty}"; fi
+      done
+    done
+  done
+  d="$(s_fixture "s28a-c1-$RANDOM" 14:00 none)"; c1="$(change_confirmation_state "$d" 2>/dev/null)"
+  d="$(s_fixture "s28a-c2-$RANDOM" 14:00 none)"; sa_declare "$d" all zqa1; c2="$(change_confirmation_state "$d" 2>/dev/null)"
+  d="$(s_fixture "s28a-c3-$RANDOM" 14:00 none)"; s_record "$d/.published-itinerary" "$S_DA" published; c3="$(change_confirmation_state "$d" 2>/dev/null)"
+  d="$(s_fixture "s28a-c4-$RANDOM" 16:30 none)"; s_record "$d/.published-itinerary" "$S_DA" published; c4="$(change_confirmation_state "$d" 2>/dev/null)"
+  d="$(s_fixture "s28a-c5-$RANDOM" 14:00 none)"; s_record "$d/.published-itinerary" "$S_LA" published; c5="$(change_confirmation_state "$d" 2>/dev/null)"
+  d="$(s_fixture "s28a-c6-$RANDOM" 16:30 none)"; s_record "$d/.published-itinerary" "$S_LA" published; c6="$(change_confirmation_state "$d" 2>/dev/null)"
+  md="$(s_fixture "s28a-mut-$RANDOM" 16:30 none)"; s28_plant "$md" nodigest
+  _baseline_record() { local t; t="$(_record_digest "${1:-}")"; if [ -n "$t" ]; then printf '%s' "$t"; else printf 'absent'; fi; }   # MUTANT: the old fold
+  mut="$(change_confirmation_state "$md" 2>/dev/null)"
+  sb_restore _baseline_record
+  if [ "$integ" -ne 1 ]; then
+    FAIL "S28a: fixture integrity — a mode-000 sidecar is still a readable regular file after L5b's fallback, so that shape is not unusable on this runner and its cells would grade something else"
+  elif [ "$c1 $c2 $c3 $c4 $c5 $c6" != "none-pending unconfirmed none-pending unconfirmed none-pending unconfirmed" ]; then
+    FAIL "S28a: CONTROL — with no sidecar (undeclared, declared), an S_DA baseline (unmoved, moved) and a legacy CRC baseline (unmoved, moved) the states read [$c1 $c2 $c3 $c4 $c5 $c6], want [none-pending unconfirmed none-pending unconfirmed none-pending unconfirmed], so an undetermined below would not be attributable to the sidecar"
+  elif [ "$got" -eq 36 ] && [ "$n" -eq 36 ] && [ "$mut" = none-pending ]; then
+    PASS "S28a: case 5 — $got of $n trips whose baseline sidecar is present but unusable (dangling link, mode 000, a token not a digest, no digest= line, empty, a directory, a 20-hex token, a 64-character uppercase token, CRLF), on both policies and both renders, resolve undetermined; the six controls keep their verdicts, a legacy CRC baseline among them reading as a baseline; ARMED-RED: the old fold reads the undeclared moved no-digest= trip none-pending"
+  else
+    FAIL "S28a: $got of $n cells read undetermined;${bad:- none other} ARMED-RED read '$mut' (want none-pending)"
+  fi
+}
+s28a_assert
+
+# ── S28b — THE GATE ON EACH SHAPE. The nine undeclared trips under the moved render, each through
+# ( require_change_confirmation … ): each must refuse, name `(state: undetermined)`, say the
+# baseline is present but cannot be used, name the sidecar's path, and carry none of S15f's
+# vocabulary of change once the trip path is scrubbed — and must not speak of the outgoing render,
+# which is the other cause's message. CONTROL: an unreadable render (S15a's trip) keeps the render
+# cause and not this one, and a readable moved render's refusal carries the vocabulary, so the scan
+# can see a claim.
+s28b_assert() {
+  local sh d e rc m ok=1 n=0 why="" ce cr cc=0 crr=0 cu=0
+  for sh in $S28_SHAPES; do
+    n=$((n+1))
+    d="$(s_fixture "s28b-$sh-$RANDOM" 16:30 none)"; s28_plant "$d" "$sh"
+    e="$( ( require_change_confirmation "$d" ) 2>&1 >/dev/null )"; rc=$?
+    m="${e//"$d"/<trip>}"
+    [ "$rc" -ne 0 ] || { ok=0; why="$why $sh:rc=0"; }
+    case "$e" in *"(state: undetermined)"*) ;; *) ok=0; why="$why $sh:no-token" ;; esac
+    case "$e" in *"present but cannot be used"*) ;; *) ok=0; why="$why $sh:no-cause" ;; esac
+    case "$e" in *"$d/.published-itinerary"*) ;; *) ok=0; why="$why $sh:no-path" ;; esac
+    case "$e" in *"outgoing render"*) ok=0; why="$why $sh:render-cause" ;; esac
+    [ -z "$(s15f_claims "$m")" ] || { ok=0; why="$why $sh:claims[$(s15f_claims "$m")]"; }
+  done
+  ce="$( ( require_change_confirmation "$S15AD" ) 2>&1 >/dev/null )"
+  cr="$( ( require_change_confirmation "$S15DD" ) 2>&1 >/dev/null )"
+  case "$ce" in *"outgoing render"*) crr=1 ;; esac
+  case "$ce" in *"present but cannot be used"*) cu=1 ;; esac
+  [ -n "$(s15f_claims "${cr//"$S15DD"/<trip>}")" ] && cc=1
+  if [ "$crr" -ne 1 ] || [ "$cu" -ne 0 ] || [ "$cc" -ne 1 ]; then
+    FAIL "S28b: CONTROL — the unreadable render's refusal names the render=$crr and this cause=$cu (want 1 and 0), and the readable moved render's refusal carries the vocabulary of change=$cc (want 1), so the readings below are not measurements"
+  elif [ "$ok" -eq 1 ] && [ "$n" -eq 9 ]; then
+    PASS "S28b: on each of the $n shapes the gate refuses, names undetermined, says the baseline at the sidecar's path is present but cannot be used, and makes no claim about change in either direction; the render cause keeps its own words, and a readable moved render's refusal carries the vocabulary the scan looks for"
+  else
+    FAIL "S28b: the gate's refusals on the $n shapes:$why"
+  fi
+}
+s28b_assert
+
+# ── S28c — THE SUCCESS INDICATOR'S ARM: update, end to end, refuses an unusable baseline before any
+# network effect. S8's mock of gh and npx is defined here and withdrawn here. Two undeclared trips —
+# a dangling link, which no privilege reads, and a sidecar with no digest= line — must each return
+# 1, name the cause, and leave no `repo clone` in the mock's log. CONTROL: a trip with a usable
+# S_DA baseline and a confirmation of the 16:30 plan it carries does reach the clone, so the zero
+# below is a measurement of a path that can clone.
+SB_GHLOG="$WORK/sb_gh.log"
+s28c_assert() {
+  local dl nd cc e1 e2 r1 r2 l1 l2 lc m1=0 m2=0 cl1=0 cl2=0 clc=0
+  dl="$(s_fixture "s28cl-$RANDOM" 16:30 none)"; s28_plant "$dl" dangling
+  nd="$(s_fixture "s28cn-$RANDOM" 16:30 none)"; s28_plant "$nd" nodigest
+  cc="$(s_fixture "s28cc-$RANDOM" 16:30 none)"; s_record "$cc/.published-itinerary" "$S_DA" published; s_record "$cc/.change-confirmed" "$S_DB" confirmed
+  gh() {   # mock: S8's — record the call, answer the read-only probes, create or clone nothing real
+    printf '%s\n' "$*" >> "$SB_GHLOG"
+    case "${1:-} ${2:-}" in
+      "api user")    printf 'testowner' ;;
+      "repo view")   return 0 ;;
+      "auth status") printf "Token scopes: 'repo'\n" ;;
+      *)             return 0 ;;
+    esac
+  }
+  npx() { return 0; }
+  : > "$SB_GHLOG"; e1="$( ( cmd_update "$dl" ) 2>&1 >/dev/null )"; r1=$?; l1="$(cat "$SB_GHLOG")"
+  : > "$SB_GHLOG"; e2="$( ( cmd_update "$nd" ) 2>&1 >/dev/null )"; r2=$?; l2="$(cat "$SB_GHLOG")"
+  : > "$SB_GHLOG"; ( cmd_update "$cc" ) >/dev/null 2>&1; lc="$(cat "$SB_GHLOG")"
+  unset -f gh npx
+  case "$e1" in *"present but cannot be used"*) m1=1 ;; esac
+  case "$e2" in *"present but cannot be used"*) m2=1 ;; esac
+  case "$l1" in *"repo clone"*) cl1=1 ;; esac
+  case "$l2" in *"repo clone"*) cl2=1 ;; esac
+  case "$lc" in *"repo clone"*) clc=1 ;; esac
+  if [ "$clc" -ne 1 ]; then
+    FAIL "S28c: CONTROL — a confirmed update over a usable baseline never reached the clone in the mock's log, so the absence of a clone below proves nothing"
+  elif [ "$r1" -eq 1 ] && [ "$r2" -eq 1 ] && [ "$m1" -eq 1 ] && [ "$m2" -eq 1 ] && [ "$cl1" -eq 0 ] && [ "$cl2" -eq 0 ]; then
+    PASS "S28c: update over a baseline sidecar that is a dangling link, and over one with no digest= line, returns 1 naming the unusable baseline and never clones the per-trip repo; a confirmed update over a usable baseline does reach the clone"
+  else
+    FAIL "S28c: dangling rc=$r1 named=$m1 cloned=$cl1; no digest= rc=$r2 named=$m2 cloned=$cl2 — an unusable baseline let update through, or its refusal came after a network effect"
+  fi
+}
+s28c_assert
+
+# ── S28d — CONFIRM ON EACH SHAPE, BOTH POLICIES. ( cmd_confirm … ) </dev/null on the nine shapes
+# under the moved render, on a trip that declares no approvers and on one that declares an
+# approver: each must return 1 saying it could not determine whether the itinerary changed and
+# naming the published baseline, never reach the terminal check, write no .change-confirmed, and
+# print no approval line — so the declared branch was never entered. CONTROL: a moved render over
+# a usable S_DA baseline does reach the terminal check.
+s28d_assert() {
+  local sh pol d out e rc ok=1 n=0 why="" ce ct=0
+  for sh in $S28_SHAPES; do
+    for pol in undeclared declared; do
+      n=$((n+1))
+      d="$(s_fixture "s28d-$sh-$pol-$RANDOM" 16:30 none)"
+      [ "$pol" = undeclared ] || sa_declare "$d" all zqa1
+      s28_plant "$d" "$sh"
+      out="$( ( cmd_confirm "$d" ) </dev/null 2>"$WORK/s28d.err" )"; rc=$?; e="$(cat "$WORK/s28d.err")"
+      [ "$rc" -eq 1 ] || { ok=0; why="$why $sh/$pol:rc=$rc"; }
+      case "$e" in *"could not determine"*) ;; *) ok=0; why="$why $sh/$pol:no-cd" ;; esac
+      case "$e" in *"published baseline"*) ;; *) ok=0; why="$why $sh/$pol:no-cause" ;; esac
+      case "$e" in *"requires a terminal"*) ok=0; why="$why $sh/$pol:reached-terminal" ;; esac
+      [ ! -e "$d/.change-confirmed" ] || { ok=0; why="$why $sh/$pol:wrote"; }
+      [ "$(sa_line_codes "$out")" = "0 -" ] || { ok=0; why="$why $sh/$pol:approval-line"; }
+    done
+  done
+  d="$(s_fixture "s28d-ctl-$RANDOM" 16:30 none)"; s_record "$d/.published-itinerary" "$S_DA" published
+  ce="$( ( cmd_confirm "$d" ) </dev/null 2>&1 >/dev/null )"
+  case "$ce" in *"requires a terminal"*) ct=1 ;; esac
+  if [ "$ct" -ne 1 ]; then
+    FAIL "S28d: CONTROL — confirm on a moved render over a usable baseline did not reach the terminal check, so a refusal below could not be told from a death at it"
+  elif [ "$ok" -eq 1 ] && [ "$n" -eq 18 ]; then
+    PASS "S28d: confirm refuses all $n cells — nine unusable shapes on both policies — saying it could not determine whether the itinerary changed and naming the published baseline, before the terminal check, writing nothing and printing no approval line; a moved render over a usable baseline reaches the terminal check"
+  else
+    FAIL "S28d: confirm on the $n cells:$why"
+  fi
+}
+s28d_assert
+
+# ── S28e — THE CLASSIFIER ITSELF. _baseline_record over the nine shapes, an absent path, an S_DA
+# record and a legacy CRC record must print `unusable` nine times, `absent`, the S_DA token and the
+# CRC token — the last is criterion 1's legacy baseline, read as one. Registered: with the
+# classifier removed every answer is empty.
+s28e_assert() {
+  local sh d got="" want="" ab da la
+  for sh in $S28_SHAPES; do
+    d="$(s_fixture "s28e-$sh-$RANDOM" 14:00 none)"; s28_plant "$d" "$sh"
+    got="$got $(_baseline_record "$d/.published-itinerary" 2>/dev/null)"; want="$want unusable"
+  done
+  d="$(s_fixture "s28e-ab-$RANDOM" 14:00 none)"; ab="$(_baseline_record "$d/.published-itinerary" 2>/dev/null)"
+  d="$(s_fixture "s28e-da-$RANDOM" 14:00 none)"; s_record "$d/.published-itinerary" "$S_DA" published; da="$(_baseline_record "$d/.published-itinerary" 2>/dev/null)"
+  d="$(s_fixture "s28e-la-$RANDOM" 14:00 none)"; s_record "$d/.published-itinerary" "$S_LA" published; la="$(_baseline_record "$d/.published-itinerary" 2>/dev/null)"
+  if [ -z "$S_LA" ] || [ "${#S_DA}" -ne 64 ]; then
+    FAIL "S28e: fixture integrity — the legacy token reads '$S_LA' and the S_DA token is ${#S_DA} characters, so the two readings below would not be about a CRC token and a SHA-256 one"
+  elif [ "$got" = "$want" ] && [ "$ab" = absent ] && [ "$da" = "$S_DA" ] && [ "$la" = "$S_LA" ]; then
+    PASS "S28e: _baseline_record reads each of the nine shapes as unusable, an absent sidecar as absent, an S_DA record as its own token and a legacy CRC record as its own token — a legacy baseline still reads as a baseline"
+  else
+    FAIL "S28e: shapes [$got] want [$want]; absent '$ab'; S_DA '$da'; CRC '$la' (want $S_LA)"
+  fi
+}
+s28e_assert
 
 # ── Group S, #1468 amendment 1 (D-6, FM-1, FM-3, CD-1) — the recorder's words ──
 # Helpers for S27c and S27d. Every negative is a captured value inside a `[ … ]` conjunction;
@@ -9185,7 +9427,7 @@ s27c_assert() {
 }
 s27d_assert() {
   local c d a=0 n=0 side=0 csd
-  c="$(s_fixture "s27dc-$RANDOM" 14:00 none)"; s27_run "$c"; csd="$(_record_digest "$c/.published-itinerary")"
+  c="$(s_fixture "s27dc-$RANDOM" 14:00 none)"; s27_run "$c"; csd="$(_baseline_record "$c/.published-itinerary")"
   d="$(s_fixture "s27d-$RANDOM" 14:00 none)"; S27D_DIR="$d"
   if [ "${S27D_PRIV:-0}" -eq 1 ]; then
     mv() { return 1; }; rm() { return 1; }
@@ -9231,6 +9473,8 @@ fi
 # The block's registrations, at its end as PP and RV register inside their own groups. Each
 # re-runs the SAME argv its live arm ran, with the named subject removed.
 md_flips record_published_itinerary "S27a" s27a_assert
+md_flips change_confirmation_state  "S28a" s28a_assert
+md_flips _baseline_record           "S28e" s28e_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group T, #719 — THE APPROVAL PAIR ON THE RENDER: the schema's two fields, the band's statement,
@@ -11009,12 +11253,13 @@ for rv_s in unreadable empty newline-only two-line crlf; do rv2e_assert "RV2e-$r
 # ── RV3 — AC3. A rotation aborted before its push leaves .passphrase byte-identical, at every
 # abort point, each proven REACHED by the point's own message. "absent": a trip with no
 # .passphrase keeps none after an aborted rotation.
-rv3_assert() { # <id> <floor|gate|preflight|clone|encrypt|guard|commit|absent>
+rv3_assert() { # <id> <floor|gate|preflight|clone|encrypt|guard|commit|absent|unusable>
   local id="$1" p="$2" name d bare out rc h0 h1 w seen=0 same=0
   name="rv3-$p-$RANDOM"; bare="$RVW/origin/$name-trip.git"
   case "$p" in
-    gate|absent) d="$(s_fixture "$name" 16:30 none)"
-                 s_record "$d/.published-itinerary" "$S_DA" published ;;
+    gate|absent|unusable) d="$(s_fixture "$name" 16:30 none)"
+                 if [ "$p" = unusable ]; then printf 'published=2027-06-01T00:00:00Z\n' > "$d/.published-itinerary"
+                 else s_record "$d/.published-itinerary" "$S_DA" published; fi ;;
     clone)       d="$RVW/$name"; mkdir -p "$d/outputs"; cp "$SRC" "$d/outputs/$name-travel-site.html" ;;
     *)           d="$(rv_fixture "$name")" ;;
   esac
@@ -11025,6 +11270,8 @@ rv3_assert() { # <id> <floor|gate|preflight|clone|encrypt|guard|commit|absent>
     floor)     w='shorter than 12 characters'
                out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" --passphrase 'short-key' ) 2>&1 )"; rc=$? ;;
     gate|absent) w='itinerary content differs'
+               out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$? ;;
+    unusable)  w='present but cannot be used'
                out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$? ;;
     preflight) w='gh is not authenticated'
                out="$( ( unset STATICRYPT_PASSWORD; export RV_GH_AUTH_FAIL=1; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$? ;;
@@ -11062,7 +11309,7 @@ rv3_assert() { # <id> <floor|gate|preflight|clone|encrypt|guard|commit|absent>
     PASS "$id: rotate aborted at the $p point (rc=1, the point's own message) and .passphrase is exactly as it was"
   fi
 }
-for rv_p in floor gate preflight clone encrypt guard commit absent; do rv3_assert "RV3-$rv_p" "$rv_p"; done
+for rv_p in floor gate preflight clone encrypt guard commit absent unusable; do rv3_assert "RV3-$rv_p" "$rv_p"; done
 
 # ── RV4 — AC4. The push fails after the commit point: .passphrase must already name the new
 # key, and the next update must publish under it — never back under the revoked one.
@@ -11983,7 +12230,7 @@ md_flips cmd_publish "RV2c" rv2_assert  "RV2c" publish
 md_flips cmd_update  "RV2b" rv2b_assert "RV2b"
 for rv_c in env-only file-only agree empty-env; do md_flips cmd_update "RV2d-$rv_c" rv2d_assert "RV2d-$rv_c" "$rv_c"; done
 for rv_s in unreadable empty newline-only two-line crlf; do md_flips cmd_update "RV2e-$rv_s" rv2e_assert "RV2e-$rv_s" "$rv_s"; done
-for rv_p in floor gate preflight clone encrypt guard commit absent; do md_flips cmd_rotate "RV3-$rv_p" rv3_assert "RV3-$rv_p" "$rv_p"; done
+for rv_p in floor gate preflight clone encrypt guard commit absent unusable; do md_flips cmd_rotate "RV3-$rv_p" rv3_assert "RV3-$rv_p" "$rv_p"; done
 md_flips cmd_rotate  "RV4"  rv4_assert  "RV4"
 for rv_f in no-value unknown; do md_flips cmd_rotate "RV5-$rv_f" rv5_assert "RV5-$rv_f" "$rv_f"; done
 md_flips cmd_rotate  "RV7"  rv7_assert  "RV7"
