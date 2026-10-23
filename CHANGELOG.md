@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-10-23 — The corpus has a budget that fails
+## [0.59.0] — 2026-10-23 — The corpus has a budget that fails
 
 No trip verb plans, records or publishes a trip differently in this release. What changes is met by
 whoever adds to a tracked markdown file, edits the charter, opens a pull request that adds much to a
