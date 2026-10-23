@@ -1,0 +1,75 @@
+name: Integration note
+
+# Asks a pull request that adds much to an existing tracked markdown file and removes little to
+# say what it reconciled. It runs scripts/check-integration-note.py, whose header states the
+# predicate in full: per file, between the merge base of the pull request's base and head and its
+# head, CHANGELOG.md excluded, a file is flagged when its additions reach a line threshold, its
+# deletions stay under a stated share of them, and its size at the merge base is at least the
+# class floor reference/load-class-model.md declares. A flag asks the body for an "Integration
+# note" section above the --- rule that precedes Issue References.
+#
+# WHAT A GREEN RUN PROVES, AND WHAT IT DOES NOT. Green means no file met all three conditions, or
+# the note under that heading is present and carries at least one word. It never means the note
+# is true: whether the change really removed, merged or superseded what the note names is not
+# something this job can see, and it prints that on every run that asks for a note.
+#
+# SECURITY: the pull-request body is untrusted. It reaches the grading step only through that
+# step's env: map, and the checker reads it from its own environment, so it never passes through
+# a shell's text, word expansion or an argument list. No run: value below carries GitHub
+# expression syntax; every expression sits in an env: value or a step's if: condition. The
+# checker prints the note's verdict and line counts, never its text, and escapes control
+# characters in every path it prints, so neither the body nor a crafted file name can begin a
+# line the runner reads as a workflow command.
+#
+# THE CHECKOUT DEPTH IS LOAD-BEARING. The range starts at the merge base of the pull request's base
+# and head, never at the base tip: a two-dot range reports phantom additions, and hides real ones,
+# on any branch behind its base. A merge base needs history, so the checkout fetches all of it.
+# Lowering the depth makes the checker refuse, loudly, rather than grade a range it cannot read.
+#
+# WHY A WORKFLOW OF ITS OWN. Its subject is the pull request as a whole, its diff and its body, which
+# no existing workflow grades together; the body gate (pr-body-parser-clean.yml) reads the body
+# alone at the default depth, and the required suites read the tree. A separate job keeps a red run
+# here attributable to this question, under this name, and shares no fate with a required check.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  # gate-efficacy: posture=advisory
+  #   Unregistered permanently, by decision: never a required context, so no branch-protection
+  #   rule holds a merge on it. Its defence against a boilerplate note would be a reviewer
+  #   reading the note, and this is a single-maintainer project (CONTRIBUTING.md, Contribution
+  #   model): author and reviewer are the same person, so that defence is structurally
+  #   unavailable. It grades that a note is present and not empty, never that it is true. By
+  #   the project's ruling, a red run for a flag with no note is cleared before merge by adding
+  #   the note to the pull-request body, not merged over; editing the body re-runs it. Its
+  #   subject is a pull request, so it has no verdict on a direct push to main.
+  integration-note:
+    name: Integration note (check-integration-note.py)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Load-bearing: the merge base needs history. See the checkout-depth note above.
+          fetch-depth: 0
+
+      # The self-test grades the instrument, not the pull request, on synthetic histories it
+      # builds in a temporary directory, with no network and no token. A failure prints one
+      # ::error:: line naming the instrument and turns this step red under its own name.
+      - name: Self-test
+        run: ./scripts/check-integration-note.py --self-test
+
+      # Runs whether or not the self-test passed, so a red self-test never hides the pull
+      # request's verdict. Exit 1 is a flag with no note; exit 2 is a refusal, which names its
+      # cause and grades nothing. Each prints its own ::error:: line.
+      - name: Grade the pull request
+        if: ${{ !cancelled() }}
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: ./scripts/check-integration-note.py --check

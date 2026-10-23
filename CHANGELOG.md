@@ -3,6 +3,80 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.59.0] — 2026-10-23 — The corpus has a budget that fails
+
+No trip verb plans, records or publishes a trip differently in this release. What changes is met by
+whoever adds to a tracked markdown file, edits the charter, opens a pull request that adds much to a
+large markdown file, or cuts a release. Every tracked markdown file that owes one now carries a byte
+ceiling that the corpus-hygiene suite fails when the file grows past it, and the charter every verb
+reads before it acts is held to a named constant as well. A pull request that adds much to a large
+markdown file and removes little is asked for a note on what it reconciled. And a release's
+changelog entry says what moved in the size fence, or that nothing did. Each paragraph below says
+what its change does not reach.
+
+**Every tracked markdown file that owes a row is held to a byte ceiling.** `reference/size-fence.md`
+declares the rows, a ceiling in bytes and a path each, and group `K` of
+`scripts/test-corpus-hygiene.sh` holds the tree to them. It fails a file over its row, a file that
+owes a row and has none, a row the fence cannot hold a file to, a tracked markdown file no clause of
+the classification rule reaches, a class carrying an instrument that holds no file, and a file
+classified only by its own row. Which files owe a row, and how large a row is, are read on every run
+from `reference/load-class-model.md` and stated nowhere else: a file owes a row when that document's
+rule puts it in a class whose instrument is a row or a constant and its size is at or above that
+class's floor, and a row is the file's size plus its class headroom. A row for a file that no longer
+owes one is reported on every run and never failed, and the release that sees such a row removes it
+before it stamps its version. `CH_EMIT=growth ./scripts/test-corpus-hygiene.sh` prints each row
+against the fence the previous release tag carried, with the value a re-pin would write. What is
+left open: a green run says each file is under its row and nothing more, not that a file is the
+right size nor that a raised row was the right decision, and no code compares a size with a lower
+bound, so a file that shrinks reaches a finding only through what the removed text said.
+
+**The charter is held to a named constant as well as to its row.** `CLAUDE.md`, the file the
+classification rule puts in the class `first-read`, is also bounded by `CH_FIRST_READ_CEILING` in
+`scripts/test-corpus-hygiene.sh`. Its row is held equal to that constant: the suite fails the file
+above the constant (`K6`) and a row that stands above or below it (`K7`), so the row and the
+constant name one ceiling and cannot silently disagree. Raising the charter's ceiling is therefore
+an edit to the constant, made in the change that re-pins its row.
+
+**A pull request that adds much to a large markdown file and removes little is asked for a note.**
+`.github/workflows/integration-note.yml` runs `scripts/check-integration-note.py`, which flags a
+tracked markdown file whose additions reach a line threshold while its deletions stay under a stated
+share of them, where the file was already at or above its class floor at the merge base. A flag
+keeps the job red until the pull request's body carries an *Integration note* section that is not
+empty. The pull-request template gains that section, with no checkbox, and `CONTRIBUTING.md` names
+the note as the one addition a release pull request's body takes after it opens. The job is not a
+required status check, and a red run there is cleared before the pull request merges, by practice
+rather than by branch protection. The charter's sentence on what enforces its editing rules now
+states the fence and the job in the present tense. What is left open: the job grades that a note is
+present, never that it is true; `CHANGELOG.md` is outside its range; a note written only in a commit
+message leaves it red; and where it reads a form other than GitHub shows it, a setext heading or a
+heading inside a blockquote taken for no heading and a note written as an indented code block read
+as plain lines, it errs toward asking for a note.
+
+**A release's changelog entry says what moved in the size fence.** `CONTRIBUTING.md` § *Cutting a
+release* asks each entry, at the step that writes it, to say what `CH_EMIT=growth
+./scripts/test-corpus-hygiene.sh` printed before the entry's prose was final and the decision taken
+on it, a row re-pinned and why or a section relocating with its issue filed and linked, or that
+nothing moved worth naming. At the release that seeds the fence every row is new, and the entry says
+so.
+
+**Size fence.** This release seeds `reference/size-fence.md`, so every row is new and nothing moved
+against an earlier fence; the charter's own ceiling is the constant `CH_FIRST_READ_CEILING` in
+`scripts/test-corpus-hygiene.sh`. The seed was taken on the release branch and taken again at the
+merge candidate, after `main` was merged in, as the release's plan set. The rows that differ between
+the two belong to the files that grew on `main` in between, each seeded at its size there plus its
+headroom: `CLAUDE.md`, with the constant, `agents/00-enrichment.md`, `agents/05-hub-planner.md`,
+`agents/06-validator.md`, `agents/07-nightlife.md`,
+`reference/adr/ADR-027-post-trip-preference-memory.md`, `reference/adr/README.md`,
+`reference/data-architecture.md`, `reference/data-model.md`, `skills/trip-record/SKILL.md` and
+`skills/trip/SKILL.md`. `templates/trip-context.template.md` crossed its floor there and is seeded
+with a row of its own.
+
+**The honest limits.** The fence holds sizes and nothing else. A raised row is a decision: the
+change that raises it says why, and the entry of the release that ships it names it. Every ceiling
+here was written at this release's merge candidate, so a file that grows before a later release
+merges meets its row then. The integration-note job is the one change in this release that a merge
+does not wait on by mechanism.
+
 ## [0.58.0] — 2026-10-16 — Controls point at the population at risk
 
 No trip verb plans, records or publishes a trip differently in this release. What changes is met by
