@@ -9022,6 +9022,217 @@ else
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
+# Group S, #1468 — THE BASELINE THE GATE COMPARES AGAINST
+#
+# Every verdict from S0 to S26a reads the published baseline, .published-itinerary, and none
+# grades what writes it after a push or what a push leaves when it cannot be written. This block
+# grades the recorder that writes it.
+#
+#   S27a  THE RECORDER'S OWN WARNING — the staging step failing after a push, on a trip with no
+#         baseline, warns NOT ACTIVE, returns 0 under errexit and writes no sidecar
+#   S27b  every failure the recorder meets — mktemp refusing, mktemp naming a path under a missing
+#         directory, mv refusing — on a trip with no baseline and on one whose baseline records
+#         another plan: each warns by the state it leaves, returns 0, keeps the sidecar
+#         byte-identical and leaves no temporary; control: unstubbed, it writes the sidecar;
+#         ARMED-RED: the shipped recorder's silent `mktemp … || return 0` is convicted
+#   S27c  a trip that declares approvers, or whose approval sidecars are malformed, is never told
+#         NOT ACTIVE, and each is told the exit that works on it
+#   S27d  a trip directory that loses write between the staging and the move still gets the
+#         warning and rc 0: the clean-up of the temporary cannot end the command after a push
+#   S30d  THE RESTORE — every production function this block saved reads exactly as saved, and
+#         none of the commands its arms stub is still a function
+#
+# HOW THE ARMS ARE WRITTEN — group S15's three rules, unchanged. Every negative is a captured
+# value inside a `[ … ]` conjunction that leads to a PASS; nothing is read through a pipeline into
+# an early-exiting grep (group PF); every stub is withdrawn in the arm that set it, and an
+# ARMED-RED mutant is withdrawn by re-evaluating the production definition saved below, S16's
+# SA_SAVED_* idiom. No group letter is minted: RS reduces every id to its leading capitals.
+#
+# Offline: $WORK fixtures and shell-function stubs. No network, no Node, no TTY. No legitimate
+# skip, and deliberately NOT declared in GUARD_EXPECTED_SKIPS.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "The baseline the gate compares against (#1468):"
+
+# Every production function an arm below stubs or mutates, saved before any arm runs. sb_restore
+# re-evaluates the saved text; S30d compares each against it.
+SB_SAVED_FNS='change_confirmation_state _baseline_record record_published_itinerary require_recordable_baseline itinerary_digest _legacy_itinerary_digest'
+for sbfn in $SB_SAVED_FNS; do
+  eval "SB_SAVED_${sbfn}=\"\$(declare -f ${sbfn})\""
+done
+sb_restore() { # <fn> — the saved production definition, re-evaluated; unset where none was saved
+  local v="SB_SAVED_$1"
+  if [ -n "${!v}" ]; then eval "${!v}"; else unset -f "$1"; fi
+}
+# The staging primitive's temporaries beside a trip's sidecar: mktemp's six-character suffix.
+sb_temps() { local n=0 f; for f in "$1"/.published-itinerary.??????; do [ -e "$f" ] && n=$((n+1)); done; printf '%s' "$n"; }
+
+# ── S27a — THE RECORDER'S OWN WARNING (#1468 case 4). The staging step fails after a push on a
+# trip that declares no approvers and has no baseline. The recorder must say the gate is NOT
+# ACTIVE, return 0 under the errexit production runs it with — the after-marker is the proof that
+# no failed step ended the command — and leave no sidecar behind. Registered: with the recorder
+# removed its subshell exits 127 under errexit, so no marker prints and the verdict is a FAIL.
+s27a_assert() {
+  local d e rc aft=0 na=0 side=0
+  d="$(s_fixture "s27a-$RANDOM" 14:00 none)"
+  mktemp() { return 1; }
+  e="$( ( set -e; record_published_itinerary "$d" "$d/$S15_RENDER"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; rc=$?
+  unset -f mktemp
+  case "$e" in *S27-AFTER*) aft=1 ;; esac
+  case "$e" in *"NOT ACTIVE"*) na=1 ;; esac
+  [ -e "$d/.published-itinerary" ] && side=1
+  if [ "$rc" -eq 0 ] && [ "$aft" -eq 1 ] && [ "$na" -eq 1 ] && [ "$side" -eq 0 ]; then
+    PASS "S27a: when the staging step fails after a push on a trip with no baseline, the recorder says the gate is NOT ACTIVE, returns 0 under errexit with the after-marker printed, and writes no sidecar"
+  else
+    FAIL "S27a: rc=$rc after-marker=$aft NOT-ACTIVE=$na sidecar=$side — the recorder stayed silent, ended the command, or left a sidecar it could not stage"
+  fi
+}
+s27a_assert
+
+# ── S27b — EVERY FAILURE THE RECORDER MEETS, ON BOTH STATES IT CAN LEAVE. Three failures, each on a
+# trip with no baseline (marker N: NOT ACTIVE) and on one whose baseline records another plan
+# (marker K: keeps the baseline it already had), six cells. Each must return 0 under errexit with
+# the after-marker, carry its own state's marker and not the other's, leave the sidecar
+# byte-identical (absent where there was none) and leave no temporary beside it. CONTROL: the
+# recorder unstubbed on a trip with no baseline writes the sidecar and warns nothing, so "nothing
+# written" above is a measurement of a writer that can write. ARMED-RED: the shipped recorder's
+# body, whose `mktemp … || return 0` returns silently, is put back for the first cell and must
+# leave no marker, then the production recorder is re-evaluated.
+s27b_assert() {
+  local f s d e rc aft n k ok=1 why="" cells=0 c ce crc cn=0 ck=0 me mn=0 mk=0
+  for f in mktemp-fails mktemp-missing mv-fails; do
+    for s in absent kept; do
+      cells=$((cells+1))
+      if [ "$s" = absent ]; then
+        d="$(s_fixture "s27b-$f-$s-$RANDOM" 14:00 none)"
+      else
+        d="$(s_fixture "s27b-$f-$s-$RANDOM" 16:30 none)"; s_record "$d/.published-itinerary" "$S_DA" published; cp "$d/.published-itinerary" "$d.before"
+      fi
+      case "$f" in
+        mktemp-fails)   mktemp() { return 1; } ;;
+        mktemp-missing) mktemp() { printf '%s' "$WORK/zzq-s27b-no-such-dir/rec.XXXXXX"; } ;;
+        mv-fails)       mv() { return 1; } ;;
+      esac
+      e="$( ( set -e; record_published_itinerary "$d" "$d/$S15_RENDER"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; rc=$?
+      unset -f mktemp mv
+      aft=0; n=0; k=0
+      case "$e" in *S27-AFTER*) aft=1 ;; esac
+      case "$e" in *"NOT ACTIVE"*) n=1 ;; esac
+      case "$e" in *"keeps the baseline it already had"*) k=1 ;; esac
+      [ "$rc" -eq 0 ] && [ "$aft" -eq 1 ] || { ok=0; why="$why $f/$s:rc=$rc,after=$aft"; }
+      [ "$(sb_temps "$d")" -eq 0 ] || { ok=0; why="$why $f/$s:temps=$(sb_temps "$d")"; }
+      if [ "$s" = absent ]; then
+        [ "$n" -eq 1 ] && [ "$k" -eq 0 ] || { ok=0; why="$why $f/$s:marker=N$n/K$k"; }
+        [ ! -e "$d/.published-itinerary" ] || { ok=0; why="$why $f/$s:sidecar-written"; }
+      else
+        [ "$k" -eq 1 ] && [ "$n" -eq 0 ] || { ok=0; why="$why $f/$s:marker=N$n/K$k"; }
+        cmp -s "$d.before" "$d/.published-itinerary" || { ok=0; why="$why $f/$s:sidecar-changed"; }
+      fi
+    done
+  done
+  c="$(s_fixture "s27b-ctl-$RANDOM" 14:00 none)"
+  ce="$( ( set -e; record_published_itinerary "$c" "$c/$S15_RENDER"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; crc=$?
+  case "$ce" in *"NOT ACTIVE"*) cn=1 ;; esac
+  case "$ce" in *"keeps the baseline it already had"*) ck=1 ;; esac
+  d="$(s_fixture "s27b-mut-$RANDOM" 14:00 none)"
+  record_published_itinerary() { # MUTANT: the shipped staging step, which returned silently
+    local out tmp dg; out="$(published_itinerary_path "$1")"; dg="$(itinerary_digest "$2")"; [ -n "$dg" ] || return 0
+    tmp="$(mktemp "${out}.XXXXXX")" || return 0; printf 'digest=%s\npublished=%s\n' "$dg" "$(_iso_now)" > "$tmp"; mv -f "$tmp" "$out"
+  }
+  mktemp() { return 1; }
+  me="$( ( set -e; record_published_itinerary "$d" "$d/$S15_RENDER"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"
+  unset -f mktemp
+  sb_restore record_published_itinerary
+  case "$me" in *"NOT ACTIVE"*) mn=1 ;; esac
+  case "$me" in *"keeps the baseline it already had"*) mk=1 ;; esac
+  if [ "$crc" -ne 0 ] || [ "$(_record_digest "$c/.published-itinerary")" != "$S_DA" ] || [ "$cn" -ne 0 ] || [ "$ck" -ne 0 ]; then
+    FAIL "S27b: CONTROL — the unstubbed recorder on a trip with no baseline returned rc=$crc, wrote '$(_record_digest "$c/.published-itinerary")' (want $S_DA) and warned N=$cn K=$ck (want neither), so the absence of a write below is not a measurement"
+  elif [ "$ok" -eq 1 ] && [ "$cells" -eq 6 ] && [ "$mn" -eq 0 ] && [ "$mk" -eq 0 ]; then
+    PASS "S27b: on each of $cells cells — mktemp refusing, mktemp naming a missing directory and mv refusing, each with no baseline and with a baseline of another plan — the recorder returns 0 under errexit, warns NOT ACTIVE or that it keeps the baseline it already had by the state it leaves, keeps the sidecar byte-identical and leaves no temporary; the control writes the sidecar; ARMED-RED: the shipped recorder's silent return leaves no marker, and the assertion convicts it"
+  else
+    FAIL "S27b: cells=$cells$why; ARMED-RED read N=$mn K=$mk (want neither)"
+  fi
+}
+s27b_assert
+
+# ── Group S, #1468 amendment 1 (D-6, FM-1, FM-3, CD-1) — the recorder's words ──
+# Helpers for S27c and S27d. Every negative is a captured value inside a `[ … ]` conjunction;
+# every stub is withdrawn in the arm that set it.
+S27D_PRIV=0; s27d_probe="$(mktemp -d "$WORK/s27dp.XXXXXX")"; chmod a-w "$s27d_probe"; [ -w "$s27d_probe" ] && S27D_PRIV=1; chmod u+w "$s27d_probe"
+s27_run() { S27_ERR="$( ( set -e; record_published_itinerary "$1" "$1/$S15_RENDER"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; S27_RC=$?; }
+s27c_assert() {
+  local u d m eu ed em ru rd rmal nu=0 nd=0 nm=0 ad=0 am=0 rp=0
+  u="$(s_fixture "s27cu-$RANDOM" 14:00 none)"; d="$(s_fixture "s27cd-$RANDOM" 14:00 none)"; sa_declare "$d" 1 zqa1
+  m="$(s_fixture "s27cm-$RANDOM" 14:00 none)"; sa_rec "$m" zqa1 approve "$S_DA"
+  mktemp() { return 1; }
+  s27_run "$u"; eu="$S27_ERR"; ru=$S27_RC
+  s27_run "$d"; ed="$S27_ERR"; rd=$S27_RC
+  s27_run "$m"; em="$S27_ERR"; rmal=$S27_RC
+  unset -f mktemp
+  case "$eu" in *"NOT ACTIVE"*) nu=1 ;; esac
+  case "$ed" in *"NOT ACTIVE"*) nd=1 ;; esac
+  case "$em" in *"NOT ACTIVE"*) nm=1 ;; esac
+  case "$ed" in *"until approvals of its outgoing plan are recorded"*) ad=1 ;; esac
+  case "$em" in *"until approvals of its outgoing plan are recorded"*) am=1 ;; esac
+  case "$em" in *"until they are repaired"*) rp=1 ;; esac
+  if [ "$ru" -ne 0 ] || [ "$nu" -ne 1 ]; then
+    FAIL "S27c: CONTROL — an undeclared trip with no baseline returned rc=$ru and NOT ACTIVE=$nu (want 0 and 1)"
+  elif [ "$rd" -eq 0 ] && [ "$rmal" -eq 0 ] && [ "$nd" -eq 0 ] && [ "$nm" -eq 0 ] && [ "$ad" -eq 1 ] && [ "$am" -eq 0 ] && [ "$rp" -eq 1 ]; then
+    PASS "S27c: declaring and malformed trips are never told NOT ACTIVE; each warning names the exit that works on it — approvals of the outgoing plan where approvers are declared, repairing the sidecars where they are malformed"
+  else
+    FAIL "S27c: declared rc=$rd notactive=$nd approvals-exit=$ad; malformed rc=$rmal notactive=$nm approvals-exit=$am repair-exit=$rp"
+  fi
+}
+s27d_assert() {
+  local c d a=0 n=0 side=0 csd
+  c="$(s_fixture "s27dc-$RANDOM" 14:00 none)"; s27_run "$c"; csd="$(_record_digest "$c/.published-itinerary")"
+  d="$(s_fixture "s27d-$RANDOM" 14:00 none)"; S27D_DIR="$d"
+  if [ "${S27D_PRIV:-0}" -eq 1 ]; then
+    mv() { return 1; }; rm() { return 1; }
+  else
+    mv() { chmod a-w "$S27D_DIR"; command mv "$@"; }
+  fi
+  s27_run "$d"
+  unset -f mv rm; chmod u+w "$d"
+  case "$S27_ERR" in *S27-AFTER*) a=1 ;; esac
+  case "$S27_ERR" in *"NOT ACTIVE"*) n=1 ;; esac
+  [ -e "$d/.published-itinerary" ] && side=1
+  if [ "$csd" != "$S_DA" ]; then
+    FAIL "S27d: CONTROL — the same recorder on a writable trip wrote '$csd', not $S_DA"
+  elif [ "$S27_RC" -eq 0 ] && [ "$a" -eq 1 ] && [ "$n" -eq 1 ] && [ "$side" -eq 0 ]; then
+    PASS "S27d: a trip directory that loses write between the staging and the move (priv-fallback=${S27D_PRIV:-0}) still gets the recorder's NOT ACTIVE warning and rc 0 under errexit — the temp file's clean-up cannot end the command after a push"
+  else
+    FAIL "S27d: rc=$S27_RC after-marker=$a NOT-ACTIVE=$n sidecar=$side — the clean-up ended the command, or the warning was lost"
+  fi
+}
+s27c_assert
+s27d_assert
+
+# ── S30d — THE RESTORE (S26a's rule, applied to this block). Every production function this block
+# saved reads exactly as saved, and none of the commands its arms stub is still a function.
+# CONTROL: the recorder's saved text is not empty, so the comparison reads a definition.
+SB30_MOVED=""
+for sbfn in $SB_SAVED_FNS; do
+  sbv="SB_SAVED_$sbfn"
+  if [ "$(declare -f "$sbfn")" != "${!sbv}" ]; then SB30_MOVED="$SB30_MOVED $sbfn"; fi
+done
+SB30_STUBS=""
+for sbfn in mktemp mv perl tr gh npx rm; do
+  declare -F "$sbfn" >/dev/null 2>&1 && SB30_STUBS="$SB30_STUBS $sbfn"
+done
+if [ -z "$SB_SAVED_record_published_itinerary" ]; then
+  FAIL "S30d: CONTROL — the saved text of record_published_itinerary is empty, so a comparison against it reads nothing"
+elif [ -z "$SB30_MOVED" ] && [ -z "$SB30_STUBS" ]; then
+  PASS "S30d: every production function this block saved reads exactly as saved, and none of mktemp, mv, perl, tr, gh, npx or rm is still a shell function — the arms after this one grade production code"
+else
+  FAIL "S30d: functions not restored:[${SB30_MOVED# }], stubs left:[${SB30_STUBS# }]"
+fi
+
+# The block's registrations, at its end as PP and RV register inside their own groups. Each
+# re-runs the SAME argv its live arm ran, with the named subject removed.
+md_flips record_published_itinerary "S27a" s27a_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
 # Group T, #719 — THE APPROVAL PAIR ON THE RENDER: the schema's two fields, the band's statement,
 # the site verb's name-free read, and the band's excision with the pair inside it.
 #

@@ -2986,35 +2986,66 @@ _record_digest() { # <record_file> -> digest token, or nothing
   printf '%s' "$tok"
 }
 
-# Records the itinerary content that is now live. Called AFTER a push succeeds, so
-# the sidecar never claims content that was not published. Atomic: written to a
-# temp file in the same directory, then moved into place, so a crash mid-write
-# cannot leave a half-record that _record_digest would read as a digest.
+# The one staging step for a baseline record (#1468 case 4): a temp file beside <record_file>, in
+# the same directory, holding the two lines the recorder writes. Prints the temp path; returns
+# non-zero, leaving nothing behind, when the file cannot be created or written. The recorder
+# calls it after a push and require_recordable_baseline calls it before one, so the check before
+# the push cannot pass where the recorder's own staging would fail.
+_stage_published_record() { # <record_file> <digest> -> the staged path on stdout, or non-zero with nothing left
+  local tmp
+  tmp="$(mktemp "${1}.XXXXXX")" || return 1
+  if printf 'digest=%s\npublished=%s\n' "$2" "$(_iso_now)" > "$tmp"; then
+    printf '%s' "$tmp"
+    return 0
+  fi
+  rm -f "$tmp"
+  return 1
+}
+
+# The recorder's own warning when a push leaves no new baseline, worded by the state the push
+# leaves, read the way the gate reads it, so the words cannot disagree with the next verdict.
+# "NOT ACTIVE" is said only where it is true: no baseline on a trip that declares no approvers;
+# each other policy is told the exit that works on it.
+_warn_unrecorded() { # <trip_dir> <cause> -> one warning, worded by the state the push leaves
+  local out
+  out="$(published_itinerary_path "$1")"
+  if [ -n "$(_record_digest "$out")" ]; then
+    warn "$2 The push itself succeeded. No new baseline was recorded for this push. The organizer-confirm gate keeps the baseline it already had — the plan published before this push — so until a push records a new one the next update is gated against that earlier plan, and a working copy reverted to it would publish without asking. Fix the cause, then re-run update to record this push's baseline."
+  else
+    case "$(_approval_policy "$1" 2>/dev/null)" in
+      none)     warn "$2 The push itself succeeded. No baseline was recorded for this push, and this trip has none, so the organizer-confirm gate is NOT ACTIVE for it: every update will publish without asking for confirmation until a push records a baseline. Fix the cause, then re-run update to record one." ;;
+      declared) warn "$2 The push itself succeeded. No baseline was recorded for this push, and this trip has none; it declares approvers, so the gate still holds the next update until approvals of its outgoing plan are recorded. Fix the cause, then re-run update to record a baseline." ;;
+      *)        warn "$2 The push itself succeeded. No baseline was recorded for this push, and this trip has none; its approval sidecars are malformed, so the gate holds every plan change, and confirm records no approval, until they are repaired. Repair them and fix the cause, then re-run update to record a baseline." ;;
+    esac
+  fi
+  return 0
+}
+
+# Records the itinerary content that is now live. Called AFTER a push succeeds, so the sidecar
+# never claims content that was not published. Staged beside the sidecar by
+# _stage_published_record, moved into place, then READ BACK the way the gate reads it, so a crash
+# mid-write cannot leave a half-record, and a record that landed somewhere else — inside a
+# directory standing at the sidecar's path, say — is caught rather than assumed.
 #
-# WHEN THE RENDER HAS NO IDENTITY, NOTHING IS RECORDED AND THE OPERATOR IS TOLD WHICH
-# STATE THAT LEAVES (#1184). The push has already happened, so this cannot refuse; it can
-# only be truthful. The two cases are different states and get different words. With a
-# baseline already recorded, the gate keeps it and refuses the next update as
-# `undetermined` until the render can be identified again. With NO baseline, the gate has
-# no anchor at all: it resolves `none-pending` and every later update publishes without
-# asking, so the warning says the gate is NOT ACTIVE rather than implying it still guards
-# the trip. "A baseline" is read exactly as the gate reads it, through _record_digest, so
-# the words cannot disagree with the verdict.
+# EVERY PATH THAT LEAVES NO NEW BASELINE WARNS, AND RETURNS 0 (#1184; #1468 case 4). The push has
+# already happened, so this cannot refuse; it can only be truthful, and no failed step may end the
+# command under errexit after a push that succeeded — the removal of a temp file included, which
+# fails for the same reason a move into the same directory does (#1468, FM-1). The warning is
+# _warn_unrecorded's, worded by the state the push leaves.
 record_published_itinerary() { # <trip_dir> <site_html>
-  local trip_dir="$1" site_html="$2" out tmp dg
+  local trip_dir="$1" site_html="$2" out tmp="" dg
   out="$(published_itinerary_path "$trip_dir")"
   dg="$(itinerary_digest "$site_html")"
   if [ -z "$dg" ]; then
-    if [ -n "$(_record_digest "$out")" ]; then
-      warn "could not identify the itinerary content of $site_html — it could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause. No new baseline was recorded for this push. The organizer-confirm gate keeps the baseline it already had, and it will refuse the next update as undetermined until the render can be identified again."
-    else
-      warn "could not identify the itinerary content of $site_html — it could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause. No baseline was recorded for this push, and this trip has none, so the organizer-confirm gate is NOT ACTIVE for it: every update will publish without asking for confirmation until a push records a baseline. Fix the cause, then re-run update to record one."
-    fi
+    _warn_unrecorded "$trip_dir" "could not identify the itinerary content of $site_html — it could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause."
     return 0
   fi
-  tmp="$(mktemp "${out}.XXXXXX")" || return 0
-  printf 'digest=%s\npublished=%s\n' "$dg" "$(_iso_now)" > "$tmp"
-  mv -f "$tmp" "$out"
+  if tmp="$(_stage_published_record "$out" "$dg")" && mv -f "$tmp" "$out" && [ "$(_record_digest "$out")" = "$dg" ]; then
+    return 0
+  fi
+  if [ -n "$tmp" ] && [ -e "$tmp" ]; then rm -f "$tmp" || :; fi
+  _warn_unrecorded "$trip_dir" "could not record the baseline at $out — the sidecar could not be staged, written or put in place beside it; any error printed above names the cause."
+  return 0
 }
 
 # ── THE APPROVAL READERS (#719, ADR-029 § Decisions 2–5) ─────────────────────────
