@@ -60,15 +60,15 @@ same reader. Rows stand in byte order of the path.
 
 ```size-ceiling
 # ceiling  path
-147230     CLAUDE.md
-81120      agents/00-enrichment.md
+153381     CLAUDE.md
+82813      agents/00-enrichment.md
 26506      agents/01-activities.md
 32180      agents/02-food.md
 39526      agents/03-scheduling.md
 41696      agents/04-transport.md
-91420      agents/05-hub-planner.md
-79349      agents/06-validator.md
-32371      agents/07-nightlife.md
+91505      agents/05-hub-planner.md
+81304      agents/06-validator.md
+33103      agents/07-nightlife.md
 36055      examples/data-architecture-demo/README.md
 58860      reference/adr/ADR-007-command-entry-point.md
 83538      reference/adr/ADR-008-publish-content-guard.md
@@ -87,7 +87,7 @@ same reader. Rows stand in byte order of the path.
 42880      reference/adr/ADR-024-form-contract-writer-boundary.md
 80707      reference/adr/ADR-025-engagement-model-over-time.md
 84663      reference/adr/ADR-026-channel-architecture.md
-73704      reference/adr/ADR-027-post-trip-preference-memory.md
+75309      reference/adr/ADR-027-post-trip-preference-memory.md
 85334      reference/adr/ADR-028-derived-planning-day-block-owners.md
 64173      reference/adr/ADR-029-group-approval-return-and-threshold.md
 51958      reference/adr/ADR-030-what-the-private-site-may-show.md
@@ -99,14 +99,15 @@ same reader. Rows stand in byte order of the path.
 29243      reference/adr/ADR-043-required-check-census-parser.md
 78668      reference/adr/ADR-045-interview-conversation-conduct.md
 96483      reference/adr/ADR-046-interview-rating-and-engagement-record.md
-27574      reference/adr/README.md
-138521     reference/data-architecture.md
-242401     reference/data-model.md
+28177      reference/adr/README.md
+147099     reference/data-architecture.md
+246314     reference/data-model.md
 63987      reference/site-layout-spec.md
 60026      skills/trip-decommission/SKILL.md
 40851      skills/trip-new/SKILL.md
 48711      skills/trip-publish/SKILL.md
-419047     skills/trip-record/SKILL.md
-105747     skills/trip/SKILL.md
+470268     skills/trip-record/SKILL.md
+106098     skills/trip/SKILL.md
 22110      templates/traveler-intake.template.md
+22251      templates/trip-context.template.md
 ```

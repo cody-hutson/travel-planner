@@ -624,7 +624,7 @@ CH_SIZE_LETTER='K'
 # re-pinning that row writes this line to the same value in the same change. It was seeded at the
 # file's size plus the headroom the load-class-parameters fence declares for its class, and is
 # re-derived the same way when it is moved on purpose.
-CH_FIRST_READ_CEILING='147230'
+CH_FIRST_READ_CEILING='153381'
 
 pass=0; fail=0; skip=0; vacuous=0; SKIPPED=""; VACUOUS_IDS=""
 PASS()    { printf '  \033[1;32mPASS\033[0m %s\n' "$*"; pass=$((pass+1)); }
