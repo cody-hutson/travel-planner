@@ -23,7 +23,9 @@
 #        SPELLING ONLY. A line number is the least durable reference form there is — it rots
 #        on the next insertion above it, silently, and points at whatever moved into its
 #        place. The in-scope population is empty, so this group renders VACUOUS rather than a
-#        bare PASS, and group CTL is the only thing that ever exercises it.
+#        bare PASS, and group CTL is the only thing that ever exercises it. Its surface arm B0
+#        comes first and fails a walk that could not open a listed file or read no line, so
+#        that verdict is reached only over a walk that read the tree.
 #
 #        THE SCOPE IS NARROWER THAN THE NAME, DELIBERATELY, AND THE GAP IS REPORTED ON EVERY
 #        RUN. B1's pattern requires the extension to sit immediately against the colon, so a
@@ -463,6 +465,15 @@
 # not the corpus's locators — the class-B entry above states the boundary and the group prints
 # the out-of-scope figure beside its own verdict on every run.
 #
+# ── A VACUOUS ARM FAILS THE RUN UNLESS IT IS DECLARED, ON EVERY HOST ─────────────
+# An empty population proves nothing about the tree, so a VACUOUS verdict cannot leave a run
+# green by itself. The exit rule fails the run on any arm that rendered VACUOUS and is not in
+# CH_VACUOUS_DECL, the expected-vacuous set held beside VACUOUS() below, one line per arm with
+# the reason its population is expected to be empty; group B's arm is declared there. That set
+# lives in this file and not in the workflow's env, and the rule does not wait for
+# GUARD_STRICT_SKIPS: a skip turns on what a host provides, but an empty population is the same
+# on every host, so what excuses one is read on every run, in CI and out of it.
+#
 # ── ONE DEPENDENCY ON REPOSITORY HISTORY, STATED ─────────────────────────────────
 # The suite reads this repository's history as blobs and as tags, and both arrive through the
 # same checkout. Every arm whose id ends -RETRO reads a blob from a commit in that history: it
@@ -567,7 +578,7 @@ expect_rc() {   # expect_rc <want> <id> <prose> -- <cmd…>
   local subject="${1:-<no-command>}" got
   "$@" >/dev/null 2>&1; got=$?
   if [ "$got" -eq 127 ] && [ "$want" -ne 127 ]; then
-    FAIL "$id: $prose -- rc=127: '$subject' is NOT DEFINED. The subject is ABSENT, not rejecting, so this assertion has no subject to grade"
+    FAIL "$id: $prose -- rc=127: '$subject', or a command it runs, is NOT DEFINED. The subject is ABSENT, not rejecting, so this assertion has no subject to grade"
   elif [ "$got" -eq "$want" ]; then
     PASS "$id: $prose [rc=$got, expected $want]"
   else
@@ -613,6 +624,77 @@ md_flips() {   # md_flips <subject-fn> <id> <assertion-fn> [args…]
 # whenever any vacuous verdict existed; the group that compensates is a property of the arm,
 # not of the suite, so a literal there is a claim about a run it never read.
 VACUOUS() { printf '  \033[1;36mVACUOUS\033[0m %s\n' "$*"; vacuous=$((vacuous+1)); VACUOUS_IDS="$VACUOUS_IDS${*%%:*} "; }
+
+# ── CH_VACUOUS_DECL — THE EXPECTED-VACUOUS SET, read by the exit rule at the end of this file.
+# One line per arm: the arm's id exactly as its VACUOUS line opens (the text before the first
+# colon, which is what VACUOUS() records), a space, and the reason its population is expected to
+# be empty and what carries the arm while it is. The exit rule fails the run on each of these:
+#   an arm that rendered VACUOUS and has no line here;
+#   a line here whose arm did not render VACUOUS on the run. Its population is no longer empty,
+#     or the arm was renamed or removed, and a declaration that outlived its vacuity would excuse
+#     the next empty population that arm reads. Groups C, D and G hold their own declarations in
+#     both directions, and MD2 its residual, for the same reason;
+#   a line that names an arm and gives no reason;
+#   a VACUOUS verdict whose arm id cannot be read, because then the run cannot say which arm it was.
+# To declare an arm, add its line in the change that makes it render VACUOUS. That line is the
+# whole edit: arm CTL-VACUITY-DECLARED renders every arm declared here, and the other CTL-VACUITY
+# arms read CTL_VAC_DECL, a fixture of their own, so no arm is edited. To retire one, delete its
+# line in the change that gives the arm a population. The trip-resolution-contract suite fails on
+# any vacuous count and ships no declaration; this suite needs one, because the population of one
+# of its arms is meant to stay empty.
+CH_VACUOUS_DECL='
+B1 its in-scope population is a bare path:line locator in tracked markdown, which this corpus means to keep empty, so on a clean tree B1 renders VACUOUS by design and a locator turns it red; what carries the denominator is surface arm B0, which must PASS before B1 can render VACUOUS and which fails a walk that could not open a listed file or read no line, and what carries detection is arm CTL-B1, which plants locators in a fixture and requires them found, with CTL-B1-SPEC and CTL-B1-WIDE beside it
+'
+
+# ch_vacuity_rc <declaration> — the vacuity half of the exit rule. It is a function so that the
+# CTL-VACUITY arms drive the code the exit rule runs, over the recorder that rule reads: $vacuous
+# and $VACUOUS_IDS, which VACUOUS() above is the only writer of. It prints one VACUITY line per
+# finding, or one line naming what was declared, with the counts it compared, and returns 1 on
+# any finding and 0 otherwise. Given `ids` as its second argument it prints the ids the
+# declaration gives a reason for, read by the same parse, and grades nothing: arm
+# CTL-VACUITY-DECLARED renders those, so that arm reads every arm the shipped set declares.
+# Membership is tested with the case idiom the strict-skip pass at the end of this file uses, so
+# no verdict here rests on a pipeline.
+ch_vacuity_rc() {
+  local decl="$1" line id rest ids="" nids=0 noreason="" undeclared="" stale="" n=0 v rc=0
+  while IFS= read -r line; do
+    line="${line#"${line%%[![:space:]]*}"}"
+    [ -n "$line" ] || continue
+    id="${line%%[[:space:]]*}"; rest="${line#"$id"}"
+    if [ -z "${rest//[[:space:]]/}" ]; then noreason="$noreason$id "; continue; fi
+    ids="$ids$id "; nids=$((nids+1))
+  done <<<"$decl"
+  if [ "${2:-}" = 'ids' ]; then printf '%s' "${ids% }"; return 0; fi
+  # shellcheck disable=SC2086  # the recorder is a space-separated word list, split on purpose
+  for v in $VACUOUS_IDS; do
+    n=$((n+1))
+    case " $ids " in *" $v "*) ;; *) undeclared="$undeclared$v " ;; esac
+  done
+  # shellcheck disable=SC2086  # the declared ids are the same kind of word list
+  for v in $ids; do
+    case " $VACUOUS_IDS " in *" $v "*) ;; *) stale="$stale$v " ;; esac
+  done
+  if [ "$n" -ne "$vacuous" ]; then
+    printf 'VACUITY: %d VACUOUS verdict(s) were counted and %d arm id(s) recorded. A VACUOUS line opens with its arm id and a colon; one that does not cannot be named, so this run cannot say which arm was vacuous.\n' "$vacuous" "$n"
+    rc=1
+  fi
+  if [ -n "$undeclared" ]; then
+    printf 'VACUITY: arm(s) rendered VACUOUS and are not declared in CH_VACUOUS_DECL: %s— an empty population proved nothing about this tree, so it fails the run. Give the arm a population or, where empty is its expected state, add its line to CH_VACUOUS_DECL, beside VACUOUS() where the verdict helpers are defined, with the reason and the arm that carries it.\n' "$undeclared"
+    rc=1
+  fi
+  if [ -n "$stale" ]; then
+    printf 'VACUITY: declared in CH_VACUOUS_DECL and did not render VACUOUS on this run: %s— if one of these FAILED above, its own verdict is the finding and this line follows from it. Otherwise its population is no longer empty, or the arm was renamed or removed: delete its line in the same change, because a declaration that outlives its vacuity would excuse the next empty population that arm reads.\n' "$stale"
+    rc=1
+  fi
+  if [ -n "$noreason" ]; then
+    printf 'VACUITY: line(s) in CH_VACUOUS_DECL name an arm and give no reason: %s— each line states why the population of its arm is expected to be empty and what carries the arm, or it is an exemption nobody can re-check.\n' "$noreason"
+    rc=1
+  fi
+  if [ "$rc" -eq 0 ]; then
+    printf 'VACUITY: %d VACUOUS verdict(s) and %d declared arm(s) (%s); every vacuous arm is declared and every declared arm rendered VACUOUS, so no empty population passed this run unannounced.\n' "$vacuous" "$nids" "${ids% }"
+  fi
+  return "$rc"
+}
 
 WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
 ARM_LOG="$WORK/arms";  : > "$ARM_LOG"
@@ -747,13 +829,21 @@ cat > "$WORK/b.awk" <<'AWK'
 # does not rest on an arm either: unlike B1's zero, a non-zero is self-evidencing, and arm
 # CTL-B1-WIDE nonetheless plants the code-spanned form B1 cannot see and requires this loop
 # to find it — otherwise a wide count that merely echoed `hits` would look identical here.
+#
+# The walk's own denominator is two more DENOM fields, on the same terms: the listed files it
+# could not open, and the lines it read. The list counts a file before the walk opens it, so a
+# file that cannot be opened makes its first getline return -1 and ends the loop as quietly as a
+# file read to its end; without these fields a walk that read nothing reports the same empty
+# population as a tree that has no locator. Group B's surface arm B0 reads them, so they are
+# counted here and asserted there, and they emit no finding code: group Y's inventory is
+# untouched, and B0's must-fire arm is CTL-B0, which lists a file that does not exist.
 { if ($0 != "") FILES[++nf] = $0 }
 END {
-  hits = 0; whits = 0
+  hits = 0; whits = 0; unread = 0; nline = 0
   for (i = 1; i <= nf; i++) {
     rel = FILES[i]; f = ROOT "/" rel
     infence = 0; ln = 0
-    while ((getline line < f) > 0) {
+    while ((r = (getline line < f)) > 0) {
       ln++
       t = line; sub(/^[ \t]+/, "", t)
       if (substr(t, 1, 3) == "```") { infence = !infence; continue }
@@ -781,9 +871,11 @@ END {
         whits++
       }
     }
+    if (r < 0 && ln == 0) unread++
+    nline += ln
     close(f)
   }
-  printf "DENOM %d %d %d\n", nf, hits, whits
+  printf "DENOM %d %d %d %d %d\n", nf, hits, whits, unread, nline
 }
 AWK
 
@@ -2872,16 +2964,42 @@ B_OUT="$(ch_scan_b "$ROOT" "$WORK/list.real")"
 B_NFILE="$(awk '$1 == "DENOM" { print $2 }' <<<"$B_OUT")"
 B_NHIT="$(awk '$1 == "DENOM" { print $3 }' <<<"$B_OUT")"
 B_NWIDE="$(awk '$1 == "DENOM" { print $4 }' <<<"$B_OUT")"
+B_NUNREAD="$(awk '$1 == "DENOM" { print $5 }' <<<"$B_OUT")"
+B_NLINE="$(awk '$1 == "DENOM" { print $6 }' <<<"$B_OUT")"
 B_NOOS=$(( ${B_NWIDE:-0} - ${B_NHIT:-0} ))
-printf '  SURFACE: %s tracked markdown file(s) walked for path:line locators — %s in this group'"'"'s IN-SCOPE bare spelling, %s in either spelling, so %s sit OUTSIDE this predicate and are reported rather than counted as clean.\n' \
-  "$B_NFILE" "$B_NHIT" "$B_NWIDE" "$B_NOOS"
+# The measurement state B0 grades below, also decided here so that over a walk B0 refuses no line
+# this group prints carries a counter of the comparison, on group G's rule.
+B_SURFACE=0
+if [ "${B_NUNREAD:-1}" -eq 0 ] && [ "${B_NLINE:-0}" -gt 0 ]; then B_SURFACE=1; fi
+if [ "$B_SURFACE" -eq 1 ]; then
+  printf '  SURFACE: %s tracked markdown file(s) walked for path:line locators, %s of them unreadable and %s line(s) read — %s in this group'"'"'s IN-SCOPE bare spelling, %s in either spelling, so %s sit OUTSIDE this predicate and are reported rather than counted as clean.\n' \
+    "$B_NFILE" "$B_NUNREAD" "$B_NLINE" "$B_NHIT" "$B_NWIDE" "$B_NOOS"
+else
+  printf '  SURFACE: NOT-EVALUATED — the class-B walk could not open %s of %s listed file(s) and read %s line(s) — this is not a clean result\n' \
+    "${B_NUNREAD:-unread}" "${B_NFILE:-unread}" "${B_NLINE:-unread}"
+fi
 echo "B1" >> "$SURF_LOG"
 
-if [ "${B_NHIT:-0}" -eq 0 ]; then
-  VACUOUS "B1: the IN-SCOPE population is EMPTY — $B_NFILE file(s) walked, no BARE path:line locator found. This group proves nothing about this tree by itself and says so rather than reporting a bare PASS; what it rests on is arm CTL-B1, which plants two locators in a fixture and requires both to be found. READ THIS AS THE PREDICATE'S VERDICT AND NOT THE CORPUS'S: $B_NWIDE locator(s) are present in either spelling and $B_NOOS of them are out of scope here by declaration — a code-spanned path or emphasised digits put a markdown delimiter between the extension and the colon, which B1's pattern does not cross. The banner's class-B entry carries the boundary and why widening it is not this gate's call; arm CTL-B1-WIDE is what makes the out-of-scope figure a measurement"
+# B0 — the surface, in the idiom of every other lettered group's surface arm, and FIRST because
+# B1's empty population is a measurement only over a walk that read the tree. It tests the same
+# two DENOM fields the printed state above is decided from, spelled out so group FZ reads the
+# conjunction itself and not a stored copy of it, and it is written so an unrun extractor resolves
+# to the loud answer: an unset unreadable count reads 1 and an unset line count reads 0, and both
+# land on the FAIL limb. It reads the walk's own DENOM fields and not the wider locator figure,
+# which is a property of the corpus and may legitimately reach zero.
+if [ "${B_NUNREAD:-1}" -eq 0 ] && [ "${B_NLINE:-0}" -gt 0 ]; then
+  PASS "B0: the class-B surface was read — each of the $B_NFILE listed file(s) opened, $B_NLINE line(s) read and none unreadable, so an empty in-scope population below is a measurement of this tree and not an empty walk. Arm CTL-B0 lists a file that does not exist and requires it counted unreadable"
 else
+  FAIL "B0: the class-B surface was NOT read — ${B_NUNREAD:-unread} of ${B_NFILE:-unread} listed file(s) could not be opened and ${B_NLINE:-unread} line(s) were read. A zero here is a broken probe or a relocated corpus, never a tree with no locator, and B1's empty population is withheld rather than rendered VACUOUS"
+fi
+
+if [ "${B_NHIT:-0}" -gt 0 ]; then
   FAIL "B1: $B_NHIT line-number locator(s) in tracked markdown. A line number rots on the next insertion above it and then points at whatever moved into its place — cite the section or the quoted text instead:"
   grep '^FINDING B1 ' <<<"$B_OUT" | awk '{ printf "      %s:%s  %s\n", $3, $4, $5 }'
+elif [ "$B_SURFACE" -eq 1 ]; then
+  VACUOUS "B1: the IN-SCOPE population is EMPTY — $B_NFILE file(s) walked and read, per B0 above, no BARE path:line locator found. This group proves nothing about this tree by itself and says so rather than reporting a bare PASS; what it rests on is arm CTL-B1, which plants two locators in a fixture and requires both to be found. READ THIS AS THE PREDICATE'S VERDICT AND NOT THE CORPUS'S: $B_NWIDE locator(s) are present in either spelling and $B_NOOS of them are out of scope here by declaration — a code-spanned path or emphasised digits put a markdown delimiter between the extension and the colon, which B1's pattern does not cross. The banner's class-B entry carries the boundary and why widening it is not this gate's call; arm CTL-B1-WIDE is what makes the out-of-scope figure a measurement"
+else
+  FAIL "B1: withheld — B0 above names the cause. An empty in-scope population over a walk that did not read the tree is not a measurement, so it is not rendered VACUOUS, which is the verdict CH_VACUOUS_DECL excuses"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
@@ -3467,6 +3585,32 @@ if [ "${BW_WIDE:-0}" -gt "${BW_NARROW:-0}" ]; then
   PASS "CTL-B1-WIDE: the scope boundary is a measurement in both directions — two code-spanned locators are planted, B1's in-scope pattern reports $BW_NARROW of them and the out-of-scope measurement reports $BW_WIDE. The strict inequality is the assertion: it convicts B1's declared blindness to the delimiter AND proves the wider loop is not an echo of the narrower one"
 else
   FAIL "CTL-B1-WIDE: the out-of-scope measurement reported $BW_WIDE against B1's $BW_NARROW on a fixture carrying ONLY code-spanned locators. Without a strict inequality here the figure reported beside B1's verdict cannot be told from a copy of B1's own pattern, and the scope note it supports would be unfounded"
+fi
+
+# CTL-B0 — the must-fire arm for B0's surface fields. The list is written by hand, because the
+# lister reads the directory and so can never name a file that is not there: it carries one real
+# two-line file and one path that does not exist. The walk must count exactly that one path
+# unreadable and exactly the real file's two lines read, so a count that ignored a failed open, or
+# that counted every listed file as read, cannot look like this. Like CTL-B1-WIDE it asserts no
+# finding code and is written without ctl_mustfire, so group Y's inventory is unchanged by it.
+# GROUP MD OPT-OUT for B0 and CTL-B0, declared per clause 6 rather than left silent. The subject
+# of both is the walk inside the GENERATED b.awk, not a shell function, and both arms are written
+# inline, so md_flips, which removes a function and re-runs one, has nothing to remove and nothing
+# to re-run. The compensating positive control is the mutation each was observed red under at its
+# real call site: B0 FAILs, and B1 is withheld, when group B's real walk is pointed at a root that
+# does not exist and when one path that does not exist is added to its list; CTL-B0 FAILs when the
+# walk stops counting a failed open, when it stops adding the lines it read, and when DENOM stops
+# carrying those two fields.
+D="$(ctl_mk b0)"
+printf 'A line with nothing to find.\nAnother.\n' > "$D/docs/notes.md"
+printf 'docs/notes.md\ndocs/listed-and-absent.md\n' > "$WORK/list.b0"
+O="$(ch_scan_b "$D" "$WORK/list.b0")"
+B0_UNREAD="$(awk '$1 == "DENOM" { print $5 }' <<<"$O")"
+B0_LINE="$(awk '$1 == "DENOM" { print $6 }' <<<"$O")"
+if [ "${B0_UNREAD:-0}" -eq 1 ] && [ "${B0_LINE:-0}" -eq 2 ]; then
+  PASS "CTL-B0: over a list naming one readable two-line file and one path that does not exist, the walk counts exactly $B0_UNREAD file unreadable and exactly $B0_LINE line(s) read, so the fields B0 grades measure a failed open rather than echoing the list"
+else
+  FAIL "CTL-B0: over a list naming one readable two-line file and one path that does not exist, the walk counted ${B0_UNREAD:-no} file(s) unreadable and ${B0_LINE:-no} line(s) read rather than 1 and 2 — B0 cannot tell a walk that read the tree from one that read nothing"
 fi
 
 # ── C ────────────────────────────────────────────────────────────────────────────
@@ -5517,6 +5661,51 @@ else
   FAIL "CTL-I-VACUOUS-NOT: over a populated, sound register the verdict stage rendered '<pass> <fail> <vacuous>' = '$I_RN' rather than '4 0 0' — it must grade a population that is there"
 fi
 
+# CTL-VACUITY-* — the vacuity half of the exit rule, driven through the recorder it reads and the
+# function it calls. Each case runs in a subshell that empties the recorder and then calls the
+# REAL VACUOUS(), never a rebound copy such as the one i_render above uses, so the status read
+# back is the one the exit rule takes. One line is out of these arms' reach: the one at the end
+# of this file that joins that status to the run's. It was shown by planting an undeclared VACUOUS
+# arm in the run and reading a non-zero exit while every verdict stayed green, recorded with the
+# change that added these arms. UNDECLARED and EMPTIED must fire on the undeclared-arm rule alone,
+# STALE on the stale-line rule and UNNAMED on the unreadable-id rule, whatever the set this file
+# ships holds: EMPTIED reads no declaration, and every other arm but DECLARED reads CTL_VAC_DECL
+# below, a fixture holding one B1 line. Over the shipped set, a member an arm does not plant would
+# read stale inside it and supply its status, so once a second member joined, an arm planting B1
+# alone would pass on two causes. That each rule still turns an arm red with a second member
+# joined, when a line that writes it is deleted, was shown and recorded with the change that gave
+# these arms their fixture. DECLARED reads the shipped set, renders every arm it declares, by the
+# parse the rule itself runs, and must fire on none of the rules, so a join is one line in
+# CH_VACUOUS_DECL and no arm is edited. The no-reason rule is held by two arms, because it is
+# written on two lines and each arm's input trips a second rule once one of those lines is gone:
+# NOREASON names a reason-less arm that did not render VACUOUS, so without the line that sets such
+# a line aside the stale-line rule still returns 1; NOREASON-RENDERED names one that did, so
+# without the line that reports it the undeclared-arm rule still returns 1. Either alone leaves
+# one of the two lines deletable with every arm green. DECLARED is a function, for one reason:
+# group MD registers it, and md_flips re-runs a function.
+CTL_VAC_DECL='
+B1 a fixture line for the CTL-VACUITY arms, held apart from CH_VACUOUS_DECL so the members that set ships never reach these arms
+'
+ctl_vac() {  # ctl_vac <declaration> [<arm-id>...] -> ch_vacuity_rc's status once those arms rendered VACUOUS
+  local decl="$1" a; shift
+  ( vacuous=0; VACUOUS_IDS=""
+    for a in "$@"; do VACUOUS "$a: planted by a vacuity control arm"; done
+    ch_vacuity_rc "$decl" )
+}
+ctl_vac_declared() {
+  local ids
+  ids="$(ch_vacuity_rc "$CH_VACUOUS_DECL" ids)"
+  # shellcheck disable=SC2086  # the declared ids are a word list, split on purpose
+  expect_rc 0 "CTL-VACUITY-DECLARED" "every arm the shipped declaration declares (${ids:-none}) rendering VACUOUS, and nothing else, leaves it silent, so the rule does not fire on a declared arm" -- ctl_vac "$CH_VACUOUS_DECL" $ids
+}
+expect_rc 1 "CTL-VACUITY-UNDECLARED" "an arm that renders VACUOUS and is not declared fails the run, over CTL_VAC_DECL, the arms' fixture declaration" -- ctl_vac "$CTL_VAC_DECL" B1 ZVAC
+ctl_vac_declared
+expect_rc 1 "CTL-VACUITY-EMPTIED" "with the declaration emptied the same B1 vacuity fails the run, so the B1 line is what keeps this suite green and not a rule that cannot fire" -- ctl_vac "" B1
+expect_rc 1 "CTL-VACUITY-STALE" "a declared arm that did not render VACUOUS fails the run, so a declaration cannot outlive its vacuity" -- ctl_vac "$CTL_VAC_DECL"
+expect_rc 1 "CTL-VACUITY-NOREASON" "a declaration line that names an arm and gives no reason fails the run" -- ctl_vac "$CTL_VAC_DECL"$'\n'"ZVAC" B1
+expect_rc 1 "CTL-VACUITY-NOREASON-RENDERED" "a declaration line that gives no reason fails the run when its arm did render VACUOUS, so the stale-line rule is not what supplies the status" -- ctl_vac "$CTL_VAC_DECL"$'\n'"ZVAC" B1 ZVAC
+expect_rc 1 "CTL-VACUITY-UNNAMED" "a VACUOUS verdict whose arm id cannot be read fails the run rather than escaping the set" -- ctl_vac "$CTL_VAC_DECL" B1 ""
+
 # ── J ────────────────────────────────────────────────────────────────────────────
 # One fixture, built by ctl_j_mk, over invented words, so this file spells no member of a real
 # enumeration. fx-lead is a ladder at its owner, read by kind lead, and a tally at its site.
@@ -6202,6 +6391,12 @@ fi
 # MD[...] arm here in the same edit, and an entry cannot leave it until its assertion is
 # remediated, because an oracle asked to certify a still-blind assertion turns the suite red for
 # a defect it is reporting rather than causing.
+# The vacuity half of the exit rule is registered as well: ch_vacuity_rc is the subject whose
+# removal must flip ctl_vac_declared, the function arm CTL-VACUITY-DECLARED runs above, over the
+# declaration this file ships, where it passes. With ch_vacuity_rc removed the arm reads status 127
+# and reports its subject absent, so what is certified is again a flip. The exit rule's own call
+# to it is outside md_flips, which re-runs an assertion and not the run's status; an absent
+# ch_vacuity_rc there exits 127 and sets the status to 1.
 #
 # ── CLAUSE 6 OPT-OUT, DECLARED RATHER THAN LEFT SILENT ───────────────────────────
 # WHAT IS OPTED OUT. The subjects group H reads that are FILES AND LISTINGS, not shell functions,
@@ -6226,6 +6421,485 @@ fi
 # row's field, a site row, an anchor, a group and a list in turn and require each to fail; and every
 # must-not-fire J arm requires the exact denominators its fixture plants.
 md_flips ch_scan_h 'H' h_assert "$H_CLEAN" "$WORK/list.hclean"
+md_flips ch_vacuity_rc 'VACUITY' ctl_vac_declared
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group FZ — every verdict arm in this file must be able to FAIL.
+#
+# ── WHY THIS GROUP IS HERE AND NOT ONLY IN THE SUITE WHERE IT WAS FOUNDED ────────
+# The rule was founded in the trip-resolution-contract suite, after that suite shipped two
+# verdict arms unable to fail and both were found by a human reading predicates at Stage 7
+# rather than by a check. The shape is not local to that suite. When this group was installed
+# here its walker was first run over every guard suite, and it found the shape in one of them,
+# three guards, rewritten in the same change. A guard whose failure branch is unreachable
+# reports PASS forever, and that PASS is indistinguishable from a real one in every run, so a
+# rule enforced in one suite leaves the growth surface of the others unguarded. The same
+# group, the same walker and the same controls ship in every guard suite, each over its own
+# source, so a finding is reported by the suite whose arm it is.
+#
+# ── THE RULE IT ENFORCES, AND WHY THAT RULE ──────────────────────────────────────
+# Reachability is not decidable in general, so this group does not claim to decide it. It
+# enforces a SHAPE, and the shape is the one both founding instances had:
+#
+#     a verdict guard that reaches PASS through a DISJUNCTION.
+#
+# Written `if A or B; then PASS ... else FAIL`, the failure branch requires `not A and
+# not B` — a CONJUNCTION the author never wrote down and therefore never checked. That is
+# where unsatisfiability hides. In both founding instances the second disjunct was implied
+# by the first's negation, so the conjunction could never hold. The same disjunction
+# reaching FAIL is the opposite case and is not flagged: `if A or B; then FAIL` fires
+# whenever either holds.
+#
+# The shape is not merely suspicious, it is never NECESSARY. Every arm written that way can
+# be written as a chain — one `elif` per condition, one message per branch — which is
+# strictly better for a second reason: a branch that can fire for several reasons proves
+# that something was wrong, not WHICH thing. And where a disjunct exists to excuse an empty
+# population, the honest verdict for that case is never PASS, unless a live arm already
+# carries that red and the message names it: otherwise it is VACUOUS where the suite has
+# that verdict, or a FAIL that names the empty population. So the rule costs nothing it
+# should keep.
+#
+# ── COVERAGE BOUNDARY — WHAT THIS GROUP DOES NOT GRADE ───────────────────────────
+# Stated plainly, because an overclaiming meta-arm is the same defect one level up.
+#   *  It decides a SHAPE, never reachability. A tautological guard — `[ "$n" -ge 0 ]` over
+#      a count, `[ -n "$x" ]` over a value assigned a literal just above it, or a comparison
+#      between two values the suite itself constructs to be equal — reaches PASS without a
+#      disjunction and is INVISIBLE here. This group would not have caught such an arm, and
+#      does not claim it would. The class is a DECLARED RESIDUAL, not an oversight, and no
+#      detector for it ships, for a stated reason: whether a guard can fail is whether its
+#      negation is satisfiable over the values this file can produce, which is not decidable
+#      in general, and a detector for a few literal spellings would grade those spellings
+#      while reading as coverage of the class — the very failure this group exists to catch.
+#      Group MD's static arm leaves every shell-test condition unflagged by design; its
+#      dynamic arm convicts a REGISTERED assertion whose PASS survives its subject's removal,
+#      which some tautological guards do. An unregistered tautological guard is seen by
+#      nothing in this file, and this paragraph is where a reader is told so.
+#   *  It grades the guards whose taken branch carries a verdict on the line that branch
+#      starts on — the rest of the guard's own line after `then`, or else the next non-blank
+#      non-comment line — and it reads the FIRST verdict there, so `then FAIL ...; else
+#      PASS ...` is a guard that reaches FAIL. A verdict that first appears deeper inside a
+#      branch is counted as a non-verdict guard and is not graded. The counts are printed, so
+#      the ungraded remainder is visible rather than implied.
+#   *  It locates a guard only where `if` or `elif` opens a line of top-level code, so three
+#      verdict forms are never located and never graded: (a) a list-form verdict,
+#      `A && PASS "..." or FAIL "..."`, which with a disjunction for A is the most compact
+#      spelling of the banned shape; (b) a guard whose `if` is not the first word on its
+#      line — a `case` arm, a one-line function body, or one after `;` or `&&`; and (c) a
+#      disjunction decided in a helper or an assignment and compared afterwards, where the
+#      guard that reaches PASS tests the stored result and never sees the disjunction — the
+#      artifact-schema suite's `st_cf_dfired` is one. FZ3 prints FZ_UNLOCATED, the top-level
+#      lines that carry a PASS verdict and are no located guard's verdict line. Forms (a) and
+#      (b) fall inside it when they stand on a line of their own, and so does a PASS reached
+#      through an `else` on a later line or first appearing deeper in a branch, so the count
+#      bounds (a) and (b) from above and is no census of them. It never counts form (c),
+#      whose comparing guard is located and whose PASS is read as that guard's verdict, nor a
+#      list-form verdict or an `else` PASS standing on the line a located guard's branch
+#      starts on, which is read as that guard's verdict line and graded against that guard's
+#      condition.
+#   *  It walks TOP-LEVEL CODE ONLY. A lexer tracks what is open at each point — quotes,
+#      $( ), backticks, ${ }, $(( )) and here-documents — and a line that begins inside one
+#      of them is an embedded program or a payload, never a shell guard: an awk program's
+#      `if`, a script written out through a here-document, a mock defined inside a
+#      multi-line command substitution. Inside a guard the operator counts only at the
+#      guard's own level, so one inside a substitution, a quoted literal or a here-document
+#      is not this guard's disjunction, while one inside [[ ]] or (( )) is. The number of
+#      lines not walked is printed with FZ3. A verdict placed inside a multi-line command
+#      substitution runs in a subshell whose counters never reach this run, and it is not
+#      graded here either. A `<<` whose delimiter is neither a word nor quoted — the
+#      shift-assign `<<=` is one — names no line on which a here-document would end, so the
+#      lexer records it rather than guess, and FZ3 refuses a file that carries one.
+#   *  It recognises the operator as two bars. A disjunction spelled `-o` inside [ ] or
+#      test, a `case` alternation, a negated group, and a `then` standing alone on its own
+#      line are not recognised; none of them was written into a verdict guard in any guard
+#      suite when this group was installed, and the walk does not grade them.
+#   *  The walk is line-oriented and does not track nesting, so it attributes a verdict to
+#      the guard it most recently completed. Every control below runs on a synthetic source
+#      of known shape precisely because the parser's own correctness cannot be assumed.
+#   *  Its scan set is THIS FILE — not a script it sources, and not a sibling suite. Each
+#      guard suite carries this group over its own source, so a finding is reported by the
+#      suite whose arm it is. The walker is the same text in every suite that carries it, by
+#      the convention group MD follows, and nothing asserts the copies agree: a correction to
+#      one is a correction owed to all of them.
+#
+# ── THE CONTROLS ARE PERMANENT, NOT A ONE-TIME DEMONSTRATION ─────────────────────
+# FZ1 plants an arm carrying the banned shape and requires the detector to flag it. FZ2
+# plants the conforming source — the same arm rewritten as a chain, PLUS a conjunctive
+# PASS-reaching guard — and requires silence over it; that second guard is the only
+# specimen an over-matching detector can be seen on, and FZ2 asserts its presence rather
+# than assuming it. Three more plants each stand behind one correction the walker carries,
+# and each is a source a walker without that correction reads wrongly. FZ5 is a one-line
+# guard that names FAIL first: a walker taking any PASS after `then` reads it as a
+# PASS-reaching disjunction. FZ6 is two awk programs carrying the operator, each followed by
+# a shell guard: a walker reading awk's `if` as a shell guard flags the awk line and lets it
+# swallow the guard after it, so FZ6 requires the second, disjunctive guard flagged at its
+# OWN line. FZ7 puts the operator inside a command substitution, a quoted literal and a
+# here-document, then a `<<` whose delimiter is no word, which must be refused without
+# hiding what follows, then a real one inside [[ ]] that must still be flagged. Every plant is
+# built and run on EVERY invocation, so a detector that stops detecting is caught by the
+# next run rather than by the next reader. FZ1 is graded FIRST, and FZ3 reads FZ1, FZ6 and
+# FZ7 before it reads this file: a zero whose sensitivity arms did not fire is a broken
+# probe, not a clean file. FZ3 also refuses a scan whose lexer ended this file inside a
+# construct it never saw closed, because every line after the opener was invisible to it,
+# and one whose lexer met a `<<` it could not delimit.
+#
+# The needle is assembled from two pieces, and the comments above spell it `or` rather
+# than literally. The plants are the deliberate exception: each spells the operator in full,
+# so that no plant is built out of the needle it is meant to test — a control assembled from
+# the thing it validates cannot detect that thing drifting. The literal is safe in the plants
+# because the walker reads only top-level code, and every plant line is a quoted argument.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group FZ — every verdict arm in this file must be able to FAIL."
+
+FZ_OR='|'"|"
+FZ_Q="'"
+FZ_GUARDS=0; FZ_ARMS=0; FZ_PASSARMS=0; FZ_FAILARMS=0; FZ_NONVERDICT=0; FZ_UNRESOLVED=0
+FZ_BAD=0; FZ_BAD_AT=""; FZ_LINES=0; FZ_EMBEDDED=0; FZ_LEXEND=""
+FZ_PASSTOP=0; FZ_PASSREAD=0; FZ_UNLOCATED=0
+FZ_PJ=(); FZ_CO=()
+
+# fz_lex — one pass over a shell source, keeping a stack of the constructs open at each point:
+# T top-level code; S '…'; A $'…'; D "…"; B a backtick; C $( … ) and c a ( ) inside it; P ${ … };
+# R and r $(( … )). A comment is dropped where a word may start; a here-document's body is
+# every line after its opener up to its delimiter. A `<<` whose delimiter is neither a word nor
+# quoted, as in the shift-assign `<<=`, opens no body: no line can be named on which it would
+# end, so its line number is recorded instead. Per line it records the TOP-LEVEL projection —
+# the line with the inside of every open construct removed and the quote marks kept — and
+# whether the line BEGAN in top-level code. A line that began inside a construct is part of an
+# embedded program or a payload, never a shell guard. FZ_LEXEND is the state at end of input:
+# "T|" when every construct closed and no here-document is pending, and the lines of any `<<`
+# it could not delimit follow a second bar, so the state is then never "T|".
+fz_lex() {  # <file> -> FZ_PJ[] FZ_CO[] FZ_EMBEDDED FZ_LEXEND
+  local f="$1" line rest pre c c2 c3 st="T" top proj last hdq="" tag dash k qd hbad=""
+  FZ_PJ=(); FZ_CO=(); FZ_EMBEDDED=0; FZ_LEXEND=""
+  while IFS= read -r line || [ -n "$line" ]; do
+    if [ -n "$hdq" ]; then
+      tag="${hdq%% *}"; k="$line"
+      case "$tag" in -*) tag="${tag#-}"; k="${k#"${k%%[!	]*}"}" ;; esac
+      [ "$k" = "$tag" ] && hdq="${hdq#* }"
+      FZ_PJ+=(""); FZ_CO+=(0); FZ_EMBEDDED=$((FZ_EMBEDDED+1)); continue
+    fi
+    if [ "$st" = T ]; then FZ_CO+=(1); else FZ_CO+=(0); FZ_EMBEDDED=$((FZ_EMBEDDED+1)); fi
+    proj=""; rest="$line"; last=" "
+    while [ -n "$rest" ]; do
+      top="${st:$((${#st}-1))}"
+      case "$top" in
+        T|C|c) pre="${rest%%[\'\"\\\`\$#\<\(\)]*}" ;;
+        S)     pre="${rest%%\'*}" ;;
+        A)     pre="${rest%%[\\\']*}" ;;
+        D)     pre="${rest%%[\\\"\`\$]*}" ;;
+        B)     pre="${rest%%[\\\`\'\"]*}" ;;
+        P)     pre="${rest%%[\\\}\$]*}" ;;
+        R|r)   pre="${rest%%[\(\)\$]*}" ;;
+      esac
+      if [ -n "$pre" ]; then
+        [ "$st" = T ] && proj="$proj$pre"
+        last="${pre:$((${#pre}-1))}"
+        rest="${rest:${#pre}}"
+        [ -n "$rest" ] || break
+      fi
+      c="${rest:0:1}"; c2="${rest:0:2}"; c3="${rest:0:3}"
+      case "$top" in
+        T|C|c)
+          case "$c" in
+            \\) [ "$st" = T ] && proj="$proj$c2"; rest="${rest:2}"; last=x ;;
+            \') [ "$st" = T ] && proj="$proj'"; st="${st}S"; rest="${rest:1}" ;;
+            \") [ "$st" = T ] && proj="$proj\""; st="${st}D"; rest="${rest:1}" ;;
+            \`) st="${st}B"; rest="${rest:1}" ;;
+            \$) case "$c3" in
+                  '$(('*) st="${st}Rr"; rest="${rest:3}" ;;
+                  *) case "$c2" in
+                       "\$'") st="${st}A"; rest="${rest:2}" ;;
+                       '$(') st="${st}C"; rest="${rest:2}" ;;
+                       '${') st="${st}P"; rest="${rest:2}" ;;
+                       *) [ "$st" = T ] && proj="$proj\$"; rest="${rest:1}"; last='$' ;;
+                     esac ;;
+                esac ;;
+            \#) case "$last" in
+                  ' '|'	'|';'|'&'|'|'|'('|')') rest="" ;;
+                  *) [ "$st" = T ] && proj="$proj#"; rest="${rest:1}"; last='#' ;;
+                esac ;;
+            \<) if [ "$c3" = '<<<' ]; then
+                  [ "$st" = T ] && proj="$proj<<<"; rest="${rest:3}"; last='<'
+                elif [ "$c2" = '<<' ]; then
+                  rest="${rest:2}"; dash=""; qd=""
+                  case "$rest" in -*) dash="-"; rest="${rest:1}" ;; esac
+                  rest="${rest#"${rest%%[! 	]*}"}"
+                  case "$rest" in
+                    \'*) rest="${rest:1}"; tag="${rest%%\'*}"; rest="${rest#*\'}"; qd=q ;;
+                    \"*) rest="${rest:1}"; tag="${rest%%\"*}"; rest="${rest#*\"}"; qd=q ;;
+                    \\*) rest="${rest:1}"; tag="${rest%%[!A-Za-z0-9_]*}"; rest="${rest:${#tag}}" ;;
+                    *)   tag="${rest%%[!A-Za-z0-9_]*}"; rest="${rest:${#tag}}" ;;
+                  esac
+                  if [ -n "$tag$qd" ]; then hdq="$hdq$dash$tag "; else hbad="$hbad${#FZ_CO[@]} "; fi
+                  [ "$st" = T ] && proj="$proj<<$tag"; last=x
+                else
+                  [ "$st" = T ] && proj="$proj<"; rest="${rest:1}"; last='<'
+                fi ;;
+            \() if [ "$top" = T ]; then proj="$proj("; else st="${st}c"; fi; rest="${rest:1}"; last='(' ;;
+            \)) if [ "$top" = T ]; then proj="$proj)"; else st="${st%?}"; fi; rest="${rest:1}"; last=')' ;;
+          esac ;;
+        S) st="${st%?}"; [ "$st" = T ] && proj="$proj'"; rest="${rest:1}"; last="'" ;;
+        A) if [ "$c" = '\' ]; then rest="${rest:2}"; else st="${st%?}"; [ "$st" = T ] && proj="$proj'"; rest="${rest:1}"; last="'"; fi ;;
+        D) case "$c" in
+             \\) rest="${rest:2}" ;;
+             \") st="${st%?}"; [ "$st" = T ] && proj="$proj\""; rest="${rest:1}"; last='"' ;;
+             \`) st="${st}B"; rest="${rest:1}" ;;
+             \$) case "$c3" in
+                   '$(('*) st="${st}Rr"; rest="${rest:3}" ;;
+                   *) case "$c2" in
+                        '$(') st="${st}C"; rest="${rest:2}" ;;
+                        '${') st="${st}P"; rest="${rest:2}" ;;
+                        *) rest="${rest:1}" ;;
+                      esac ;;
+                 esac ;;
+           esac ;;
+        B) case "$c" in
+             \\) rest="${rest:2}" ;;
+             \`) st="${st%?}"; rest="${rest:1}" ;;
+             \') st="${st}S"; rest="${rest:1}" ;;
+             \") st="${st}D"; rest="${rest:1}" ;;
+           esac ;;
+        P) case "$c" in
+             \\) rest="${rest:2}" ;;
+             \}) st="${st%?}"; rest="${rest:1}" ;;
+             \$) case "$c2" in
+                   '$(') st="${st}C"; rest="${rest:2}" ;;
+                   '${') st="${st}P"; rest="${rest:2}" ;;
+                   *) rest="${rest:1}" ;;
+                 esac ;;
+           esac ;;
+        R|r) case "$c" in
+               \() st="${st}r"; rest="${rest:1}" ;;
+               \)) st="${st%?}"; rest="${rest:1}" ;;
+               \$) case "$c2" in
+                     '$(') st="${st}C"; rest="${rest:2}" ;;
+                     *) rest="${rest:1}" ;;
+                   esac ;;
+             esac ;;
+      esac
+    done
+    FZ_PJ+=("$proj")
+  done < "$f"
+  FZ_LEXEND="$st|$hdq"
+  if [ -n "$hbad" ]; then FZ_LEXEND="$FZ_LEXEND|${hbad% }"; fi
+  return 0
+}
+
+# Resolve one located guard against the FIRST verdict of its taken branch — the earliest PASS or
+# FAIL on the line that branch starts on, so `then FAIL …; else PASS …` reaches FAIL.
+fz_resolve() {
+  local p=-1 q=-1 x
+  case "$fz_rest" in *'PASS "'*) x="${fz_rest%%PASS \"*}"; p=${#x} ;; esac
+  case "$fz_rest" in *'FAIL "'*) x="${fz_rest%%FAIL \"*}"; q=${#x} ;; esac
+  if [ "$p" -lt 0 ] && [ "$q" -lt 0 ]; then
+    FZ_NONVERDICT=$((FZ_NONVERDICT+1))
+  elif [ "$p" -lt 0 ]; then
+    FZ_ARMS=$((FZ_ARMS+1)); FZ_FAILARMS=$((FZ_FAILARMS+1))
+  elif [ "$q" -ge 0 ] && [ "$q" -lt "$p" ]; then
+    FZ_ARMS=$((FZ_ARMS+1)); FZ_FAILARMS=$((FZ_FAILARMS+1))
+  else
+    FZ_ARMS=$((FZ_ARMS+1)); FZ_PASSARMS=$((FZ_PASSARMS+1))
+    case "$fz_guard" in
+      *"$FZ_OR"*) FZ_BAD=$((FZ_BAD+1)); FZ_BAD_AT="$FZ_BAD_AT$fz_gline " ;;
+    esac
+  fi
+}
+
+# Walk the top-level projection of a shell source and grade every verdict guard it can locate.
+fz_scan() {  # <file>
+  local f="$1" i=0 n t co pend=0 want=0
+  FZ_GUARDS=0; FZ_ARMS=0; FZ_PASSARMS=0; FZ_FAILARMS=0; FZ_NONVERDICT=0; FZ_UNRESOLVED=0
+  FZ_BAD=0; FZ_BAD_AT=""; FZ_LINES=0; FZ_PASSTOP=0; FZ_PASSREAD=0; FZ_UNLOCATED=0
+  fz_guard=""; fz_gline=0; fz_rest=""
+  fz_lex "$f"; n=${#FZ_PJ[@]}
+  while [ "$i" -lt "$n" ]; do
+    t="${FZ_PJ[$i]}"; co="${FZ_CO[$i]}"; i=$((i+1)); FZ_LINES=$i
+    t="${t#"${t%%[![:space:]]*}"}"
+    [ -n "$t" ] || continue
+    case "$t" in *'PASS "'*) FZ_PASSTOP=$((FZ_PASSTOP+1)) ;; esac
+    if [ "$pend" -eq 1 ]; then
+      fz_guard="$fz_guard $t"
+      case "$t" in
+        *' then'*|*';then'*) pend=0; FZ_GUARDS=$((FZ_GUARDS+1)); fz_rest="${t#*then}"; want=1 ;;
+        *) continue ;;
+      esac
+    else
+      case "$co$t" in
+        '1if '*|'1elif '*|'1if	'*|'1elif	'*)
+          [ "$want" -eq 1 ] && FZ_UNRESOLVED=$((FZ_UNRESOLVED+1))
+          want=0
+          fz_guard="$t"; fz_gline="$i"
+          case "$t" in
+            *' then'*|*';then'*) pend=0; FZ_GUARDS=$((FZ_GUARDS+1)); fz_rest="${t#*then}"; want=1 ;;
+            *) pend=1; continue ;;
+          esac ;;
+        *)
+          if [ "$want" -eq 1 ]; then
+            fz_rest="$t"; want=0
+            case "$t" in 'else'*|'fi'*) FZ_NONVERDICT=$((FZ_NONVERDICT+1)); continue ;; esac
+            fz_resolve
+            case "$t" in *'PASS "'*) FZ_PASSREAD=$((FZ_PASSREAD+1)) ;; esac
+          fi
+          continue ;;
+      esac
+    fi
+    fz_rest="${fz_rest#"${fz_rest%%[![:space:]]*}"}"
+    if [ -n "$fz_rest" ]; then
+      want=0; fz_resolve
+      case "$t" in *'PASS "'*) FZ_PASSREAD=$((FZ_PASSREAD+1)) ;; esac
+    fi
+  done
+  [ "$want" -eq 1 ] && FZ_UNRESOLVED=$((FZ_UNRESOLVED+1))
+  FZ_UNLOCATED=$((FZ_PASSTOP-FZ_PASSREAD))
+  return 0
+}
+
+fz_plant() {  # <path> <banned|conforming|oneline|embedded|substitution>
+  local p="$1"
+  mkdir -p "${p%/*}"
+  {
+    printf '%s\n' '#!/usr/bin/env bash'
+    printf '%s\n' 'p="$1"; n="$2"'
+    case "$2" in
+      banned)
+        printf '%s\n' 'if [ ! -e "$p/canary" ] || [ "$n" -gt 0 ]; then'
+        printf '%s\n' '  PASS "PLANT: nothing was written"'
+        printf '%s\n' 'else'
+        printf '%s\n' '  FAIL "PLANT: something was written"'
+        printf '%s\n' 'fi' ;;
+      conforming)
+        # The same arm as a chain: one condition per branch, one message per branch.
+        printf '%s\n' 'if [ ! -e "$p/canary" ]; then'
+        printf '%s\n' '  FAIL "PLANT: the canary is absent"'
+        printf '%s\n' 'elif [ "$n" -eq 0 ]; then'
+        printf '%s\n' '  FAIL "PLANT: the watched surface was empty"'
+        printf '%s\n' 'else'
+        printf '%s\n' '  PASS "PLANT: measured"'
+        printf '%s\n' 'fi'
+        # And a plain CONJUNCTIVE guard that reaches PASS — the only specimen an over-match can be
+        # seen on, which is why FZ2 asserts its presence.
+        printf '%s\n' 'if [ -e "$p/canary" ] && [ "$n" -gt 0 ]; then'
+        printf '%s\n' '  PASS "PLANT: the surface was watched and is unchanged"'
+        printf '%s\n' 'else'
+        printf '%s\n' '  FAIL "PLANT: the surface changed"'
+        printf '%s\n' 'fi' ;;
+      oneline)
+        # One line, FAIL first: a disjunction that REACHES FAIL, which this rule permits.
+        printf '%s\n' 'if [ ! -e "$p/canary" ] || [ "$n" -gt 0 ]; then FAIL "PLANT: the canary is absent or something was written"; else PASS "PLANT: the canary is present and nothing was written"; fi' ;;
+      embedded)
+        # Two awk programs whose OWN control flow carries the operator, each followed by a shell
+        # guard: the first conjunctive, the second disjunctive, at line 16 of the plant.
+        printf 'x="$(awk %s{\n' "$FZ_Q"
+        printf '%s\n' '  if (a || b) next' '  print'
+        printf '}%s "$p")"\n' "$FZ_Q"
+        printf '%s\n' 'if [ -e "$p/canary" ] && [ "$n" -gt 0 ]; then' '  PASS "PLANT: measured after an embedded program"' 'else' '  FAIL "PLANT: not measured"' 'fi'
+        printf 'x="$(awk %s{\n' "$FZ_Q"
+        printf '%s\n' '  if (a || b) next' '  print'
+        printf '}%s "$p")"\n' "$FZ_Q"
+        printf '%s\n' 'if [ ! -e "$p/canary" ] || [ "$n" -gt 0 ]; then' '  PASS "PLANT: nothing was written"' 'else' '  FAIL "PLANT: something was written"' 'fi' ;;
+      substitution)
+        # The operator inside a command substitution, inside a quoted literal and inside a
+        # here-document — none of them the guard's own — then, at line 18, a `<<` whose
+        # delimiter is no word, which must be refused and must not hide what follows, then a
+        # real one in [[ ]], at line 19.
+        printf '%s\n' 'if [ "$(grep -c x "$p" || true)" -gt 0 ]; then' '  PASS "PLANT: the count was taken"' 'else' '  FAIL "PLANT: the count was not taken"' 'fi'
+        printf '%s\n' 'if grep -q "a||b" "$p"; then' '  PASS "PLANT: the literal was found"' 'else' '  FAIL "PLANT: the literal was absent"' 'fi'
+        printf '%s\n' 'cat > "$p.sh" <<"EOF"' 'if [ -e a ] || [ -e b ]; then' '  PASS "PLANT: written into a here-document, never run here"' 'fi' 'EOF'
+        printf '%s\n' '(( m <<= 1 ))'
+        printf '%s\n' 'if [[ -e "$p/canary" || "$n" -gt 0 ]]; then' '  PASS "PLANT: either held"' 'else' '  FAIL "PLANT: neither held"' 'fi' ;;
+    esac
+  } > "$p"
+}
+
+FZ_BANNED="$WORK/fz/banned.sh"
+FZ_CLEAN="$WORK/fz/conforming.sh"
+FZ_ONELINE="$WORK/fz/oneline.sh"
+FZ_EMBEDSRC="$WORK/fz/embedded.sh"
+FZ_SUBST="$WORK/fz/substitution.sh"
+fz_plant "$FZ_BANNED" banned
+fz_plant "$FZ_CLEAN" conforming
+fz_plant "$FZ_ONELINE" oneline
+fz_plant "$FZ_EMBEDSRC" embedded
+fz_plant "$FZ_SUBST" substitution
+
+# ── FZ1 — SENSITIVITY, graded FIRST.
+fz_scan "$FZ_BANNED"
+FZ1_BAD="$FZ_BAD"; FZ1_AT="$FZ_BAD_AT"; FZ1_PASSARMS="$FZ_PASSARMS"
+if [ "$FZ1_BAD" -eq 1 ] && [ "$FZ1_PASSARMS" -eq 1 ]; then
+  PASS "FZ1: SENSITIVITY — a planted arm whose PASS is guarded by a disjunction is detected (1 finding, at line ${FZ1_AT% } of the plant), so the detector fires on the shape both shipped instances had"
+else
+  FAIL "FZ1: SENSITIVITY — the planted unfirable arm was NOT detected as expected (findings=$FZ1_BAD, PASS-reaching arms located=$FZ1_PASSARMS, expected 1 and 1). Every verdict below rests on this arm, so none of them is trustworthy"
+fi
+
+# ── FZ2 — SPECIFICITY over the conforming source, a PASS-reaching guard included.
+fz_scan "$FZ_CLEAN"
+FZ2_BAD="$FZ_BAD"; FZ2_ARMS="$FZ_ARMS"; FZ2_FAILARMS="$FZ_FAILARMS"; FZ2_PASSARMS="$FZ_PASSARMS"
+if [ "$FZ2_BAD" -eq 0 ] && [ "$FZ2_ARMS" -ge 3 ] && [ "$FZ2_FAILARMS" -ge 2 ] && [ "$FZ2_PASSARMS" -ge 1 ]; then
+  PASS "FZ2: SPECIFICITY — the conforming source is NOT flagged, over $FZ2_ARMS located verdict arm(s): $FZ2_FAILARMS reaching FAIL and $FZ2_PASSARMS reaching PASS through a conjunction, which is the specimen a widened detector would over-match. The detector discriminates the shape rather than rejecting every guard"
+else
+  FAIL "FZ2: SPECIFICITY — the conforming source was flagged, or the walker located too little of it to say (findings=$FZ2_BAD, arms=$FZ2_ARMS, FAIL-reaching=$FZ2_FAILARMS, PASS-reaching=$FZ2_PASSARMS; want 0 findings over >=3 arms with >=2 FAIL-reaching and >=1 PASS-reaching). The detector cannot tell the shapes apart, or there is nothing in the sample for an over-match to show on, and FZ3's verdict means nothing either way"
+fi
+
+# ── FZ5 — FIRST VERDICT. A one-line guard reads FAIL first; read by any PASS after `then`, it
+# would be a PASS-reaching disjunction and a false finding.
+fz_scan "$FZ_ONELINE"
+FZ5_BAD="$FZ_BAD"; FZ5_ARMS="$FZ_ARMS"; FZ5_FAILARMS="$FZ_FAILARMS"; FZ5_PASSARMS="$FZ_PASSARMS"
+if [ "$FZ5_BAD" -eq 0 ] && [ "$FZ5_ARMS" -eq 1 ] && [ "$FZ5_FAILARMS" -eq 1 ] && [ "$FZ5_PASSARMS" -eq 0 ]; then
+  PASS "FZ5: FIRST VERDICT — a one-line guard whose branch names FAIL first and PASS only after its else is read as the FAIL-reaching guard it is, and its disjunction is NOT flagged: a disjunction reaching FAIL fires whenever either side holds, which this rule permits"
+else
+  FAIL "FZ5: FIRST VERDICT — the one-line FAIL-first specimen read findings=$FZ5_BAD, arms=$FZ5_ARMS, FAIL-reaching=$FZ5_FAILARMS, PASS-reaching=$FZ5_PASSARMS where 0, 1, 1 and 0 are owed. The walker is grading a verdict other than the first one after then"
+fi
+
+# ── FZ6 — EMBEDDED PROGRAMS. Control flow inside an awk program is not a shell guard, and
+# stepping over it must not blind the walker to the guard after it.
+fz_scan "$FZ_EMBEDSRC"
+FZ6_BAD="$FZ_BAD"; FZ6_AT="$FZ_BAD_AT"; FZ6_GUARDS="$FZ_GUARDS"; FZ6_PASSARMS="$FZ_PASSARMS"
+if [ "$FZ6_BAD" -eq 1 ] && [ "${FZ6_AT% }" = 16 ] && [ "$FZ6_GUARDS" -eq 2 ] && [ "$FZ6_PASSARMS" -eq 2 ]; then
+  PASS "FZ6: EMBEDDED PROGRAM — over a plant carrying two awk programs whose own control flow holds the operator, the walker locates exactly the 2 shell guards, leaves the conjunctive one unflagged, and flags the disjunctive one at its own line (line ${FZ6_AT% } of the plant), not at the awk line above it"
+else
+  FAIL "FZ6: EMBEDDED PROGRAM — the plant read findings=$FZ6_BAD at line(s) ${FZ6_AT% }, guards=$FZ6_GUARDS, PASS-reaching=$FZ6_PASSARMS where 1 finding at line 16 over 2 guards, both PASS-reaching, is owed. Control flow inside an embedded program was read as a shell guard, or stepping over it hid the guard that follows"
+fi
+
+# ── FZ7 — THE OPERATOR OUTSIDE THE GUARD'S OWN LIST. Inside a command substitution, a quoted
+# literal or a here-document it is not this guard's disjunction; inside [[ ]] it is. And a `<<`
+# whose delimiter is no word is refused, at its own line, without hiding the guard after it.
+fz_scan "$FZ_SUBST"
+FZ7_BAD="$FZ_BAD"; FZ7_AT="$FZ_BAD_AT"; FZ7_GUARDS="$FZ_GUARDS"; FZ7_PASSARMS="$FZ_PASSARMS"; FZ7_LEXEND="$FZ_LEXEND"
+if [ "$FZ7_BAD" -eq 1 ] && [ "${FZ7_AT% }" = 19 ] && [ "$FZ7_GUARDS" -eq 3 ] && [ "$FZ7_PASSARMS" -eq 3 ] && [ "$FZ7_LEXEND" = "T||18" ]; then
+  PASS "FZ7: SPECIFICITY AND SENSITIVITY IN ONE PLANT — the operator inside a command substitution, inside a quoted literal and inside a here-document is not flagged, the here-document's own guard is not located, a << whose delimiter is no word is refused at its own line (line ${FZ7_LEXEND##*|} of the plant) without hiding what follows, and the disjunction inside [[ ]] is flagged at its own line (line ${FZ7_AT% } of the plant), over the 3 shell guards the plant carries"
+else
+  FAIL "FZ7: the plant read findings=$FZ7_BAD at line(s) ${FZ7_AT% }, guards=$FZ7_GUARDS, PASS-reaching=$FZ7_PASSARMS and lexer end state '$FZ7_LEXEND', where 1 finding at line 19 over 3 guards, all PASS-reaching, and the end state 'T||18' are owed. The operator was read where it is not the guard's own, the walker stopped seeing guards after a substitution, a literal or a here-document, or a << it cannot delimit was taken for a here-document rather than refused"
+fi
+
+# ── FZ3 — THIS FILE. The claim and its denominator, graded only once every control above that
+# could make its zero a false one has been read.
+fz_scan "$SELF"
+FZ_WC="$(wc -l < "$SELF" | tr -d ' ')"
+if [ "$FZ1_BAD" -ne 1 ]; then
+  FAIL "FZ3: the sensitivity arm did not fire on the plant (FZ1 above), so whatever this scan found or did not find in this file is untrustworthy — a zero from a detector never shown to detect anything is a broken probe, not a clean result"
+elif [ "$FZ6_BAD" -ne 1 ]; then
+  FAIL "FZ3: the disjunction planted after an embedded program was not seen (FZ6 above), so stepping over this file's embedded programs may have hidden guards — its zero is not a measurement"
+elif [ "$FZ7_BAD" -ne 1 ]; then
+  FAIL "FZ3: the disjunction planted after a substitution, a literal and a here-document was not seen (FZ7 above), so this file's zero may be a walker gone blind rather than a clean file"
+elif [ "$FZ7_LEXEND" != "T||18" ]; then
+  FAIL "FZ3: the << planted in FZ7 with a delimiter that is neither a word nor quoted was not refused (FZ7 above, end state '$FZ7_LEXEND'), so a here-document this lexer cannot delimit could close early in this file and hide every line after it — its zero is not a measurement"
+elif [ "$FZ_LEXEND" != "T|" ]; then
+  FAIL "FZ3: the lexer ended this file in state '$FZ_LEXEND' where 'T|' is owed — the constructs still open, a bar, any here-document still pending and, after a second bar, the line(s) of any << whose delimiter is neither a word nor quoted, which it refuses to guess the end of. Every line past such a point may have been invisible to the walker, so its zero describes at best a prefix"
+elif [ "$FZ_ARMS" -eq 0 ]; then
+  FAIL "FZ3: the walker located 0 verdict arms in this file, so its zero on the banned shape is an empty scan and not a clean result — the file's shape or this walker has moved"
+elif [ "$FZ_BAD" -eq 0 ]; then
+  PASS "FZ3: $FZ_GUARDS guard(s) in this file's top-level code — $FZ_ARMS located verdict arm(s) ($FZ_PASSARMS reaching PASS, $FZ_FAILARMS reaching FAIL), $FZ_NONVERDICT non-verdict, $FZ_UNRESOLVED unresolved — and 0 of the $FZ_PASSARMS PASS-reaching guards is a disjunction. $FZ_EMBEDDED line(s) lay inside quoted payloads, substitutions or here-documents and were not walked. $FZ_UNLOCATED of the $FZ_PASSTOP top-level line(s) carrying a PASS verdict are no located guard's verdict line — reached through an else, first appearing deeper in a branch, or written in a form the walker does not locate — and are not graded. The controls fired, so this zero is a measurement. It grades a shape, not reachability: see this group's coverage boundary for what it cannot see"
+else
+  FAIL "FZ3: $FZ_BAD verdict arm(s) in this file reach PASS through a disjunction, at line(s) ${FZ_BAD_AT% }. The failure branch then needs every disjunct false at once — a conjunction nobody wrote down — which is how both previously shipped arms became unable to fail. Rewrite as a chain: one condition per branch, one message per branch"
+fi
+
+# ── FZ4 — the walk covered the file, measured by a differently-shaped counter.
+if [ "$FZ_LINES" -ge "$FZ_WC" ] && [ "$FZ_LINES" -le "$((FZ_WC+1))" ] && [ "$FZ_WC" -gt 0 ]; then
+  PASS "FZ4: the walker read $FZ_LINES line(s) of this file against $FZ_WC counted independently — the scan covered the whole source, so FZ3's population is the file's and not a prefix of it"
+else
+  FAIL "FZ4: the walker read $FZ_LINES line(s) of this file while an independent count reads $FZ_WC — the walk did not cover the source, so FZ3 graded a prefix and its verdict does not describe this file"
+fi
 md_flips ch_scan_j 'J' j_assert "$J_CLEAN" "$WORK/list.jclean"
 
 echo
@@ -6233,8 +6907,14 @@ printf 'Result: \033[1;32m%d passed\033[0m, \033[1;31m%d failed\033[0m, \033[1;3
   "$pass" "$fail" "$skip" "$vacuous"
 printf 'CITATION: %s markdown citation(s) read over %s tracked file(s); %s bare where a unique durable home exists.\n' \
   "$A_NCITE" "$A_NFILE" "$A_NBARE"
-printf 'LOCATOR: %s in-scope (bare) path:line locator(s) over %s tracked file(s); %s in either spelling, %s out of scope by declaration.\n' \
-  "$B_NHIT" "$B_NFILE" "$B_NWIDE" "$B_NOOS"
+# The measurement state B0 decided above: over a walk B0 refused the line carries the cause and no counter.
+if [ "$B_SURFACE" -eq 1 ]; then
+  printf 'LOCATOR: %s in-scope (bare) path:line locator(s) over %s tracked file(s), %s unreadable and %s line(s) read; %s in either spelling, %s out of scope by declaration.\n' \
+    "$B_NHIT" "$B_NFILE" "$B_NUNREAD" "$B_NLINE" "$B_NWIDE" "$B_NOOS"
+else
+  printf 'LOCATOR: NOT-EVALUATED — the class-B walk could not open %s of %s listed file(s) and read %s line(s) — this is not a clean result\n' \
+    "${B_NUNREAD:-unread}" "${B_NFILE:-unread}" "${B_NLINE:-unread}"
+fi
 printf 'COUNT-ASSERTION: %s residual site(s) in %s file(s) over %s sentence(s) graded; %s declared row(s).\n' \
   "$C_NSITE" "$C_NDIRTY" "$C_NSENT" "$C_NROW"
 printf 'ADR-NUMBERING: %s record file(s) and %s index row(s) over a span reaching %s; %s collision(s), %s undeclared gap(s), %s index/directory disagreement(s), %s stale declaration(s); %s gap(s) held open by declaration, %s unoccupied number(s) named by the register.\n' \
@@ -6293,6 +6973,11 @@ if [ "$vacuous" -gt 0 ]; then
 fi
 rc=0
 [ "$fail" -eq 0 ] || rc=1
+# A VACUOUS ARM FAILS THE RUN UNLESS IT IS DECLARED. Before this rule the status read fail alone,
+# so a run whose populations were all empty exited 0, and the strict-skip pass below could not
+# see it either, because VACUOUS() does not append to SKIPPED. The rule is unconditional: it does
+# not wait for GUARD_STRICT_SKIPS, and what it excuses is CH_VACUOUS_DECL, beside VACUOUS().
+ch_vacuity_rc "$CH_VACUOUS_DECL" || rc=1
 # STRICT SKIP MODE — a skipped group is a failure unless it is declared. This suite has no
 # dependency-gated group, so its declared set is correctly EMPTY and every skip fails.
 if [ "${GUARD_STRICT_SKIPS:-0}" = "1" ]; then

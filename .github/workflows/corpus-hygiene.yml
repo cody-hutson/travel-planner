@@ -205,7 +205,10 @@ name: Corpus hygiene
 # and a record stands above — the figure group D prints as named by the register. Without that
 # declaration group D fails on each such number the moment the read is gone, on the default
 # branch and on every branch that merges it. Each row declared this way comes out again in the
-# change that lands the record it stood in for.
+# change that lands the record it stood in for. The harness's own state names arms as well: a
+# change that removes a group also deletes that group's lines from CH_VACUOUS_DECL, the
+# expected-vacuous set the suite holds beside its VACUOUS() helper, in the same commit, or the
+# vacuity rule's stale limb fails the run.
 #
 # ── WHY THE STRICT MODE ──────────────────────────────────────────────────────────
 # GUARD_STRICT_SKIPS=1 makes a skipped group a failure unless it is declared. This suite
@@ -214,6 +217,12 @@ name: Corpus hygiene
 # therefore no legitimate skip. An empty declaration here is the correct value, not an
 # omission. VACUOUS is a separate verdict and is not a skip — group B renders it, because an
 # empty POPULATION is a measurement of the tree while a skipped GROUP is a hole in the suite.
+#
+# A VACUOUS arm does not wait for this mode either. The suite fails the run on any arm that
+# rendered VACUOUS and is not in CH_VACUOUS_DECL, the expected-vacuous set it holds beside its
+# VACUOUS() helper with one reason per arm; group B's arm is declared there. That set lives in
+# the suite and not in an env value below, because an empty population is the same on every
+# host: a declaration only this file carried would leave a local run red on a clean tree.
 
 on:
   push:

@@ -101,6 +101,10 @@ name: Publish guard
 #         subject reaches. Like RS it is pure bash with no external dependency, so it has
 #         no legitimate skip and MUST NOT be named in GUARD_EXPECTED_SKIPS — a skipped
 #         meta-assertion is precisely the vanishing group the strict mode exists to catch
+#   FZ    no verdict arm in this suite reaches PASS through a disjunction — the shape that
+#         leaves a failure branch needing a conjunction nobody wrote down. Pure bash over
+#         the suite's own source, so it has no legitimate skip and MUST NOT be named in
+#         GUARD_EXPECTED_SKIPS
 #   PF    no verdict in this suite, or in the publish script it guards, is decided by
 #         a pipeline's exit status
 #   RS    this boundary itself. RS parses the two blocks and set-diffs them against the
