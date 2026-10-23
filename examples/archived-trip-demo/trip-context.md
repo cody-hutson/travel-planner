@@ -15,8 +15,8 @@ publish: bound
 > **Illustrative, sanitized example. Not a real trip.** Placeholder people, a
 > placeholder destination, illustrative dates, and no real bookings.
 
-**This is the archived-trip fixture, and it is the only one in the repository.** No
-other example carries a `**Lifecycle:**` marker at all, so before it there was no
+**This is the archived-trip fixture: the worked example of the freeze rule.** Before
+it, no example carried a `**Lifecycle:**` marker at all, so there was no
 archived trip for any assertion to run against. It exists to make two halves of one
 rule observable at the same time: an ordinary person-record edit leaves this trip
 untouched, and an erasure reaches it. `CLAUDE.md` § *Archived trips — what the freeze

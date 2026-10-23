@@ -3,6 +3,394 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.58.0] — 2026-10-16 — Controls point at the population at risk
+
+No trip verb plans, records or publishes a trip differently in this release. What changes is met by
+whoever runs or edits a guard suite under `scripts/`, the suites `SECURITY.md` names among the
+required status checks, and by whoever edits a release pull request's body once it is open. Each
+change points a control at a population it was meant to grade and did not reach. An arm whose
+population is empty no longer leaves the corpus-hygiene run green unannounced. Each required guard
+suite grades the verdict guards it locates in its own top-level code for a PASS reached through a
+disjunction, and says beside that rule which verdict forms it does not locate and which class it
+cannot see. The artifact-schema suite's range parse and the command-taxonomy suite's edge trims read
+the same input the same way under C and under a UTF-8 locale, and the range parse reads it the same
+way under mawk and gawk; arms assert both. A failure branch no arm drove now has one. And a probe
+reads the accretion the release pull-request body convention forbids, bold-led paragraphs and task
+rows as well as headings. Each paragraph below says what its change does not reach.
+
+**An empty population fails the corpus-hygiene run unless it is declared.**
+`scripts/test-corpus-hygiene.sh` counted a VACUOUS verdict without failing on it, so a run whose
+populations were all empty could exit 0. Its exit rule now fails the run on an arm that rendered
+VACUOUS and is not declared in `CH_VACUOUS_DECL`, the expected-vacuous set held beside the suite's
+`VACUOUS()` helper, one line per arm with the reason its population is expected to be empty and what
+carries the arm while it is. It fails the other ways round too: on a declared arm that did not
+render VACUOUS, on a line that names an arm and gives no reason, and on a VACUOUS verdict whose arm
+cannot be named. The rule does not wait for `GUARD_STRICT_SKIPS`, because an empty population is the
+same on every host. Group B's locator arm is the one declared, and a new surface arm, `B0`, must
+first show that the walk opened every listed file and read a line, so the declared verdict is
+reached only over a walk that read the tree. The `CTL-VACUITY` arms drive the rule on every run, and
+group `MD` registers it. What is left open: a declaration's reason is checked for presence, not for
+truth, and no standing arm reaches the one exit-rule line that joins the rule's status to the run's.
+A planted undeclared arm showed it once, in the change that added the rule; with the line deleted,
+every arm stays green.
+
+**The artifact-schema suite's class-assignment range parse no longer depends on the locale, and
+group `LC` covers it.** `ca_delta` in `scripts/test-artifact-schema.sh` found a range's separator
+with a one-character class, and the separator in the range cells of `reference/data-architecture.md`
+§ 9 is an en dash, which `LC_ALL=C` reads as three bytes, so under C one cell parsed differently and
+`CA2` failed on a tree CI passed. The separator is now read as a run of non-digits, which an en dash
+satisfies whether it is read as one character or as three bytes, and arm `CA9` grades that grammar
+on a fixture read under C. Group `LC`, which exists to forbid locale-dependent behaviour in this
+file, now grades `ca_delta` as well: it compares its output under C, POSIX and every multibyte
+member of its codeset set, plants a one-character separator that must be reported and an added
+locale-dependent line that must be reported, checks that a locale-invariant line is not, and names
+the locales it left out. The suites' locale postures are written where a contributor meets them:
+`CONTRIBUTING.md` § *Locale posture of the guard suites* gives, for each suite, its posture, what it
+asserts and what was only measured, and group `LC`'s banner in the artifact-schema suite carries the
+same record. What is left open: group `LC` asserts that `va_type_ok`'s slug predicate and
+`ca_delta`'s range parse answer the same under C and under a UTF-8 locale, and nothing more; the
+rest of the suite reads the caller's locale, and its verdict set reading the same under both is a
+measurement, not an assertion.
+
+**The artifact-schema suite grades its range parse and its venue readers under mawk and gawk by
+name.** On a host whose `awk` was mawk, `CA2` and `VI1` failed on a tree CI passed: the range
+separator is the cause above, and the venue readers' heading test used an interval expression, which
+the hosted runner's mawk was measured to misread. The heading test and the reader of a venue's open
+decisions are now written without an interval. Arm `CA10` runs a copy of `ca_delta` under mawk and
+under gawk, each invoked by name, and requires each to read the `CA9` fixture as `CA9` states and
+§ 9 as `ca_delta` does; arm `VI3` runs the venue readers under both and requires the same bindings,
+the same open decisions and the same unwarranted merges. Each copy is checked to change only its
+interpreter word and to leave no host `awk` in it. On a host carrying both, the `ENGINES:` and
+`ENGINES FIXTURE:` lines print how each engine reads the heading test and an interval written in its
+place. On an `awk` that answers the same in every locale, the `ca_delta` half of group `LC` skips
+and names the engine, and `CA10` grades the engine axis instead. What is left open: no arm runs the
+whole suite with mawk as `awk`. The hosted run depends on the runner image carrying both mawk and
+gawk, under a runner label, `ubuntu-latest`, that floats. On a host without mawk `CA10` skips, on a
+host missing either engine `VI3` skips, and a strict run fails on either skip, naming it.
+
+**The command-taxonomy suite's edge trims grade the same under every locale.**
+`scripts/test-command-taxonomy.sh` trims the edges of the cells, headings and lines it reads through
+two helpers, `trim` and group J's `rj_trimv`, and both stripped the shell's `[[:space:]]` class.
+That class changes with the locale: under `LC_ALL=C` a no-break space (U+00A0) is two ordinary
+bytes, while a UTF-8 locale may count it, and other Unicode spaces, as whitespace. A Grant cell
+whose code span was followed by one therefore paired with its `allowed-tools` entry in one shell and
+was named by Q1 and Q2 in another, and a roster header cell edged the same way split group J the
+same way. Both helpers now strip one fixed set under every locale, the six ASCII whitespace
+characters and U+00A0, through one definition. The readers of a verb's frontmatter, its
+`disable-model-invocation` flag reader among them, strip the ASCII characters alone, so a
+frontmatter edge carrying U+00A0 is kept and reported under every locale rather than trimmed into a
+flag a YAML parser would not read. The guided-entry carrier's two flag readers strip U+00A0 as well,
+because there the flag's presence is the defect, so a flag key led by U+00A0 is reported whichever
+way the runtime reads it. Arms `GQL`, `GJU` and `GQF` read Grant cells, a roster header cell, and a
+verb's frontmatter flag and publish-script denial lines, each edged by U+00A0 and by U+3000, and
+`GQF` a carrier flag key led by U+00A0, under C and under a UTF-8 locale the host lists on every
+run, and fail when the host lists none. What is left open: every other non-ASCII space at an edge is
+kept, so it is reported under every locale rather than paired; and every other match the suite makes
+with a POSIX character class or a bracket range — `collapse`, `lower`, the delimiter-row test and
+group J's class-row match among them — and every awk program and sort it does not pin to `LC_ALL=C`
+still reads the caller's locale.
+
+**The artifact-schema suite's readability check is driven by an arm.** `RL0` fails a run whose
+required surfaces cannot be read and names them, and until now no arm drove that branch. The check
+is now one function, `rl_readable`, which the live check and a standing arm, `CTL-RL0-ABSENT`, both
+call on every run. The arm requires an absent path in a fixture to be named, and a fixed required
+surface whose path is empty to be named once rather than skipped; group `MD` registers it. What is
+left open: the arm reads the list it checks out of `RL0`'s failure message, so a rewording of that
+message turns the arm red, with the message quoted, while the check is sound.
+
+**A probe grades what a release pull request's body gains after it opens.** The release pull-request
+body convention now has a probe, `scripts/check-pr-body-accretion.py`, which detects headings,
+bold-led paragraphs and list items, and task-list rows added to a release pull request's body after
+it was opened. The advisory PR-body workflow grades each edit to such a body at the moment it is
+made — an edit-time grade that the next push or event supersedes, not a standing record of the
+body's history — and the script's population mode, run with an authenticated `gh` over every
+release-head pull request's revision history (or, with `--pr`, over one pull request's body as
+opened against its body now), is the cumulative read. The job is declared advisory in
+`.github/workflows/pr-body-parser-clean.yml` and is not among the required status checks
+`SECURITY.md` lists, so a red grade there does not block a merge. What is left open: the script's
+declared boundary names what it passes over, among them prose added inside an existing block, table
+rows, a thematic break written with hyphens and a code span that runs across lines.
+
+**Every required guard suite grades its own verdict arms for an arm that cannot fail.** Group `FZ`,
+which until now graded only the trip-resolution-contract suite, runs in all five required guard
+suites, each over its own file. It fails a suite when a verdict reaches PASS through a disjunction —
+`if A or B; then PASS`, whose failure branch needs a conjunction nobody wrote down — and accepts the
+same arm written as a chain, one condition and one message per branch. Its walker was corrected on
+the way: it reads top-level code only, so control flow inside an embedded `awk` program, a
+substitution, a quoted string or a here-document is no longer taken for a shell guard, and a guard's
+polarity is its first verdict, so a one-line guard that names FAIL first reaches FAIL. Run over
+every suite, the corrected walker found the shape in three controls of the artifact-schema suite,
+and those are now chains. Each copy of the group says what it does not grade: a guard that cannot
+fail because its condition is a tautology is declared out of reach, with the reason; the verdict
+forms the walker does not locate are named, and a count printed on every run bounds the two it can
+see from above; and a here-document delimiter it cannot read is refused rather than guessed at.
+`reference/adr/ADR-048-guard-arm-falsifiability-rule.md` records the rule, `Proposed`.
+
+**The honest limits.** The decision record lands `Proposed`. The flip to `Accepted` is the
+maintainer's, in a pull request of its own after the release, as step 7 of `CONTRIBUTING.md`
+§ *Cutting a release* states. Several of the new arms grade only where the host provides what they
+need: `CA10` needs mawk and `VI3` needs mawk and gawk, each by name, and the locale arms need a
+UTF-8 locale the host lists. On a host without them those arms skip or fail and name what is
+missing, and CI's strict mode fails a run on any skip it has not declared.
+
+## [0.57.0] — 2026-10-15 — Admission and precedence law
+
+A rule written over a list — of verdicts, classes, cases or sources — is true only of the members
+its author could see. A member that arrives later is neither ranked against the others nor admitted
+to them, and the sentence that told them apart goes on reading as complete, with every required
+check green. Rules of that shape had gone stale in the nightlife check and in the enrichment agent's
+update signal. This release states once what such a rule owes, gives the corpus-hygiene suite a
+register that holds each repeat of a registered list to the rule that owns it, applies the law where
+those rules had gone stale, and registers memberships that two decision records decide about
+channels and engagement. Whoever writes or edits a rule of this kind in an engine file meets the law
+in `CLAUDE.md`. An operator meets the change in the validator's nightlife verdicts, in the occasions
+the nightlife gate counts, in the lines the update signal writes, and in what
+`/trip-record travelers` says of a changed journey facet. No command is added, and none takes
+different arguments. Each paragraph below says what its change does not reach.
+
+**A rule over an enumeration owes precedence, admission and a criterion, stated once.** `CLAUDE.md`
+gains § *Rules over an enumeration*, beside the rules for editing an engine file. Where two members
+can hold for one input, the rule says which governs, and where it gives no other ground, a member
+that reports a finding governs one that passes. It says what an input no member names resolves to,
+and it is the one place a member is added: another file that must repeat the members names it as
+their owner. Where the members are instances of one test, the rule states the test and the test
+decides; the members it names are examples. The duties bind whoever writes such a rule in an engine
+file, and an edit that adds, removes or renames a member or changes the sentence that tells the
+members apart, and no other edit; each is stated at the rule, which cites the section. The decision,
+and the options it was weighed against, are in `reference/adr/ADR-047-rules-over-an-enumeration.md`.
+It lands `Proposed`, under the number the register on `main` holds for it, and is ratified after the
+release in a change of its own, as `CONTRIBUTING.md` § *Cutting a release* step 7 asks. What it does
+not reach: nothing orders a sweep of the rules that already stand, so a rule of this kind that no
+such edit touches keeps the form it has.
+
+**A registered enumeration's repeats are held to their owner.** `reference/data-architecture.md`
+gains § *The enumeration register*: a fenced declaration whose rows name, for each registered
+enumeration, the rule that owns its members and each site that repeats them, and hold no member
+themselves. A new class of `scripts/test-corpus-hygiene.sh`, `J`, reads the members off the owner
+and off each site, as code spans and nothing else, and fails a site that lacks a member its owner
+names or names one its owner does not. It also fails a paragraph that writes more than one member of
+a registered enumeration as code spans in an engine file that carries no row for it. A reading that
+cannot be made is a failure of the instrument: it fails the run and withholds the comparisons for
+its own enumeration, and only a fault in the fence itself withholds them all. The register holds the
+validator's nightlife verdicts, the occasion members and the freshness verdicts. What the class does
+not reach is listed once, in that section, and the charter, the suite and its workflow cite the
+list, which includes: that a sentence is a rule over an enumeration at all, an enumeration nobody registered, a
+member written in prose rather than as a code span, a member's meaning or its rank, and any file the
+reading passes over by path, which is every file under `reference/adr/` and `examples/`, and this
+one.
+
+**The nightlife check ranks its verdicts, and one rule owns the occasion members.** In
+`agents/06-validator.md` the nightlife coverage verdicts become one ordered ladder — `n/a`,
+`contradiction`, `gap`, `covered`, `declined` — in which a rung is reached only when every answer
+above it is no, and below its first rung a finding outranks a pass. A traveller named by both an
+entry and a no-nightlife line now settles the night at `contradiction` before `gap` is asked, and an
+obliged traveller also left unaccounted for is recorded beside it as a second Warning. Each obliged
+traveller is accounted for on their own, so on a split night the lines that name the tracks meet the
+occasion limb together, and one test decides every line in the night's block, entries and
+no-nightlife lines alike: whether the travellers it names can still be determined. A present
+traveller the gate did not oblige is outside the obligation, and one that no line names is recorded
+in a Note. The occasion members, `weekend night` and `calendar occasion`, are owned by the
+validator's occasion limb, and the hub, the nightlife prompt and the charter's roster row name that
+owner where they repeat them. A traveller's `Special occasion?` answer is not a member, so the
+nightlife gate no longer reads it, and the label a value sits under decides whether it is an
+interest or a desire. The enrichment agent still carries that answer through verbatim, and no longer
+says the hub sees it: no agent prompt reads it, and the readers it is carried for, the group
+snapshot and the site, are decided by Accepted decision records and not yet built. What it does not
+reach: no executable validator exists, so class `J` holds the ladder's rung names equal to the
+report's verdict counter as a set, and no check reads their order or what the ladder decides on a
+night.
+
+**A change to a traveller's answers is classed by what its section holds.**
+`reference/data-model.md` gains § *The update-signal route*, a fenced declaration of what each
+section of the guided intake forms holds: `needs`, `desires`, `facets` or `carried`. The enrichment
+agent's mapping onto the update signal's four classes applies that test in place of a list of
+facets, and no longer calls the list total: a change under a section that holds `needs` is a changed
+need, under `desires` a changed desire and under `facets` a changed journey facet, a section with no
+row is read as `facets`, and a change under `Anything else`, today the one section declared
+`carried`, writes no line. A composed change to any facet a traveller's form carries now has a
+stated route. A change to `Can travel:` or `Blackout:` is a changed journey facet, reported with no
+command named, by choice. The planning-days block's header, in `templates/trip-context.template.md`,
+and the reconciler's rule now say the same thing about when the block is stale: when a label it is
+derived from changes, `Leaving from:` and `Arrive / leave:` being today's examples, and on no other
+change. `/trip-record travelers` owns the four classes in its table, and no longer reports the
+planning days stale for a facet that cannot stale them. The update-signal example no longer shows a
+field's value. A new arm of `scripts/test-artifact-schema.sh`, `FT7`, fails that suite when a form
+carries a field under a section with no declared route, and the route check refuses a declaration
+that types a durable section as a desire or silences a section that holds a non-overridable field.
+What it does not reach: inside those bounds any section can be retyped and the suite stays green,
+the arm reads neither the prompt that applies the route nor what an agent does with a change, and no
+check holds the enrichment agent's mapping to the verb's table of classes.
+
+**The channel-set, the `G8` class and the freshness verdicts are registered against their owners.**
+A new reference document, `reference/channel-and-engagement-model.md`, which the charter's file tree
+now names, registers memberships that two decision records decide: the channel-set and its admission
+test, from `reference/adr/ADR-026-channel-architecture.md`; the readings of the `G8` class, each
+beside the file that declares it, the one `reference/adr/ADR-025-engagement-model-over-time.md`
+types into the class among them; and the freshness verdicts that staleness reuses. It decides
+nothing and admits nothing: each registration names its owner where it repeats the members, and says
+what holds the copy. A new group of `scripts/test-artifact-schema.sh`, `CG`, reads the document's
+two fences against their owners, and fails on a channel or a limb on one side only, a vacancy
+re-typed as a member or missing its verdict or its ground, a fence value not in its owning record's
+words or a quotation in no decision record's words, a relation or a typed reading with no row, and a
+requirement or relation table that names a typed reading. The freshness verdicts are the register's
+third enumeration, read by class `J`, and `skills/trip/SKILL.md` § *The freshness report* now says a
+verdict is added there and nowhere else. The document also carries the names the two records
+introduced or adopted, each with the collision it was measured against. No gate is bound to
+`engagement(t)`, and no decision record is edited. What it does not reach is listed in the
+document's closing section: everything it says in its own words, a surface nobody proposes as a
+channel, words a record keeps but no longer decides, so that a vacancy row put back to the value its
+own amendment superseded reads green, and a gate in any shape the group does not read.
+
+## [0.56.0] — 2026-10-09 — A returning party's past trips reach the planner
+
+Until now an archived trip's coverage record was written and never read back. Each archived trip
+keeps `outputs/satisfaction-metrics.md`, which records, per traveller and per desire, whether the
+plan as last synthesized covered it. Once the trip was archived no verb opened that file again, so
+the next trip a returning party planned started as if it were their first. This release adds two
+read-only verbs to `/trip-record` that read those records in place, one for a person and one for a
+reusable group, and it brings the tracked outcome file into the layout its writer declares, with a
+check that fails when one stops matching. You run both verbs yourself, from the command surface.
+Neither stores anything, and nothing is offered into a new plan yet.
+
+**`/trip-record past-coverage <name>` shows what the plans of a person's earlier trips covered.**
+For a traveller on the trip being planned who is linked to a durable person record, it finds the
+other trips that carry the same reference, reaches the archived ones, and prints a line for each:
+the trip's slug, and tier-by-verdict tallies of the `anchor`, `wish` and `nice-to-have` desires that
+trip's plan covered and did not cover. The traveller is named by person id and never by name. The
+coverage table is read by its heading and by header label, never by column position, under either
+spelling the table has shipped with. Every tally is worded as plan coverage as last synthesized:
+whether a trip's plan, when it was last synthesized, covered a desire of that tier. It says nothing
+about what happened on a trip.
+
+**Each kind of absence is reported as a different thing.** A traveller who carries no reference, a
+completed scan that found no other trip, trips that exist and are not archived, and a read that
+could not be completed are separate outputs, and none of them reads as *nothing was planned for this
+person*. A reached trip whose coverage file holds no row for the person *holds no outcome record*;
+it is never shown as `not covered`.
+
+**Every line carries a report-only verdict on the order of that trip's own files.**
+`plan-to-coverage` orders a trip's coverage file against that trip's itinerary, traveller model and
+event-status files by their stamps: `CURRENT` where the coverage file is the newest, `BEHIND` naming
+the file that leads it, or `UNDETERMINED` naming what could not be listed. It is declared once, in
+the person view's section, and it never decides whether a verb runs, what it reads or which trips it
+reaches. Where a trip's roster carries an erasure token, its line says that the order reads as one
+an erasure set, never as a plan change.
+
+**`/trip-record group-past-coverage [<group-id>]` shows it for a group, on the trips you confirm.**
+Given a group id, it lists the archived trips, other than the one being planned, on which at least
+two of the group's members travelled as linked travellers. Each is shown as its slug, how many of
+the group were on it and its roster size, and none is ranked or pre-selected. It then asks which of
+them were this party's trips. You confirm by naming each trip's slug, and a reply that names no
+listed slug confirms nothing. For each trip you confirm it prints a line per member who was linked
+on it: that member's own tallies under their person id, with that trip's verdict. There is no total
+across members or across trips, and no value belongs to the group. With no group named it lists the
+groups that qualify on this trip, by id and member count and never by name, and chooses none.
+
+**The group view is a view and not a memory.** The candidate list is recomputed on every run and
+your confirmation is written nowhere, so the next run asks again. No group record gains a slot and
+no trip file names a group. It is run from the command surface only: never during an interview, and
+nothing it prints is put in front of a traveller.
+
+**The decision record now says where a member's edge has to sit.** In
+`reference/adr/ADR-027-post-trip-preference-memory.md` § *Decision* 2, the *no joint archived trip*
+row required that some member's edge exists, and forbade `NO-EDGE-FOUND` while any did, without
+saying *on a trip other than the one being planned*. Read as written, a group whose members were
+linked only on the trip being planned met that row and the `NO-EDGE-FOUND` row at once. The row is
+corrected in place and a closing *Amendment history* gives the account; no decision changes. In that
+state the group view prints `NO-EDGE-FOUND`.
+
+**`/trip-record` says who takes its `grep` grant.** The paragraph above its verb sections said
+nothing else in the file uses `Bash(grep:*)`. The group view takes that grant for a single read: a
+group record's `## Members` section, from its heading to the end of the file, so the title line
+above it, which holds the group's display name, is not read. The paragraph now states for `grep` the
+rule it already stated for `ls`. No grant is added.
+
+**The tracked outcome file matches the layout its writer declares, and a check holds it there.**
+This change belongs to a different line of work from the views, the one that makes the corpus's own
+claims executable, and it ships here because the check it adds grades every tracked outcome file,
+and this release adds archived example trips that carry one.
+`examples/data-architecture-demo/outputs/satisfaction-metrics.md` carried a desire-coverage header
+its writer does not declare. It now carries the declared one, whose home is
+`reference/data-model.md`. A new group of the artifact-schema suite, `DC`, reads that header from
+its home on every run and fails when any other statement of it, or any tracked outcome file,
+differs. A statement removed whole, heading and table together, leaves the set it reads and is not
+graded.
+
+**New example roots and a suite group stand behind the views.** `examples/returning-party-demo/` is
+a trip being planned; `examples/returning-party-first-demo/` and
+`examples/returning-party-second-demo/` are archived trips its travellers came from, the second of
+them reached by an erasure. The set's README declares the states it holds, and the group it is read
+with is the one already tracked under `examples/people-library-demo/`. Suite group `RP` holds the
+files to that declaration, runs a reference reader of the coverage table and a reference computation
+of a group's candidates, holds each section's set of outputs to the decision record's, and checks
+that what the group view's section cites of the person view's resolves and is not restated.
+`examples/archived-trip-demo/` no longer calls itself the only archived trip in the repository.
+
+**Both verbs are registered where a verb is found.** Each has its routing row and its read-scope row
+in `CLAUDE.md` and its row in `reference/command-reference.md`. Both sections are added to the
+engine's largest command file, which `CLAUDE.md` § *Verb body size* already records as over its
+budget; that row is re-measured, and the reduction stays with the consolidation work the section
+names.
+
+**The honest limits.** Neither verb was run end to end. No suite executes a verb, and the exercise
+behind this release is model sessions reading each section, with the data root bound by statement:
+the read of the data-root pointer and the slash-command dispatch are not exercised. The person
+view's exercise was one session, which read its section once and whose logs record no call to a
+reviewer tool; two of its cases were run again, in one further session with the tool forbidden, and
+it did not call it. The group view's exercise was ten fresh sessions, and 14 of their 35 messages
+called a reviewer tool; four of its cases were run again, in two further sessions with the tool
+forbidden, and neither called it. Suite
+group `RP` grades the tree — the fixture's declared states, each section's enumerations, a reference
+reader of the label rule and a reference computation of a group's candidates — and never a verb.
+Some of the views' rules are held by prose and by exercise runs whose logs record no call to a
+reviewer tool, and by no suite arm, so an edit that removes one turns nothing red. Two of them are
+the wording that says where a member's edge has to sit, which separates *no joint archived trip*
+from `NO-EDGE-FOUND` in the group view's section and in the decision record's corrected row, and the
+rule that a render names what it could not read by its kind and prints no path, in the shared bound
+the person view's section declares and in two clauses of the group view's section. No
+tracked fixture holds an order state: a checkout sets file stamps, and the example roots that may
+carry an itinerary are pinned by name. The source operands of the relation are exercise-only
+placeholders standing in for files a real archived trip carries, and as tracked both archived roots
+read `UNDETERMINED` on it. A tie is produced in the exercise by stamping the operands identically;
+it was not observed arising on its own. The order the relation reports is the files' stamps. A copy,
+a restore or a sync that does not keep stamps resets it, and no derivation rewrites an archived
+trip, so the verdict goes on reporting what that act left. Under a shared newest stamp the listing
+falls back to name order, so a tie can print `BEHIND` naming whichever tied file sorts first, or
+`CURRENT` where the coverage file sorts first among them; this was measured on macOS `/bin/ls`, and
+GNU `ls` was not measured. That the relation is report-only is held by prose: no rule in the engine
+consumes a verdict, and none asserts that none does. A reached trip's coverage file and trip context
+are opened whole. The person view uses, carries and prints only what its `**Reads:**` block names,
+but the tool results hold the whole of both — other travellers' rows, desire text, needs-compliance
+rows, the destination line — so what a session transcript can hold is wider than ids and tallies,
+and the scan made of each exercise answer grades the rendered answer, not tool results. The person
+view shows a person's past plan coverage only while a trip is being planned and that person is a
+traveller on it; the decision record's point of use that resolves no trip is not built.
+
+For the group view, the operator's replies in the exercise are scripted: each was sent to the same
+session after its first return had been read, and no person typed them. A group record's title line
+does not reach the tool result, because the record's `## Members` section is taken by its heading
+and nothing above it is returned. In its first turn, one of the two sessions that re-ran the group
+view's cases read two person records past their frontmatter and into their title lines, so their
+display names reached a tool result; no answer carried them.
+What does reach the tool results is the whole of each candidate's
+trip context and of each confirmed trip's coverage file, opened whole as the person view opens a
+reached trip's, and a trip context is opened for every candidate, confirmed or not. The confirmation
+rule — by slug, matched whole, nothing pre-selected — is held by prose and graded by one exercise,
+and no required case of it offers a slug that contains another. The group view shows a group's past
+plan coverage only while a trip is being planned; the decision record's point of use that resolves
+no trip is not built. No tracked fixture holds a second qualifying group, a member bullet that does
+not resolve or a group with too few members: those states are built by the suite in its own work
+directory and composed in the exercise. A trip whose `trip-context.md` yields no line in the record
+block reads as not archived and is not offered, which is the reading the resolution ladder's `G4`
+gives and the one the person view takes. That the group view is not run while a session is
+conducting an interview is held by one sentence of its section and one condition on its routing row;
+nothing mechanical holds it, and no exercise case produces the refusal. Where a confirmed trip's
+roster table is missing, the erasure reading cannot be tested: the group view's member lines say so,
+and the person view says the same for a reached trip. No exercise case produces the group view's
+`UNDETERMINED` in three of its kinds: in the listing it prints when no group is named, for a
+trip's traveller directory that could not be listed, and for a bearer in that directory that
+could not be read.
+
 ## [0.55.0] — 2026-10-09 — The interviewer becomes a conversation: the founding decision
 
 This release lands two decision records and deliberately builds nothing. The interviewer asks a

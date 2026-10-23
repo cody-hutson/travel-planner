@@ -23,7 +23,9 @@
 #        SPELLING ONLY. A line number is the least durable reference form there is — it rots
 #        on the next insertion above it, silently, and points at whatever moved into its
 #        place. The in-scope population is empty, so this group renders VACUOUS rather than a
-#        bare PASS, and group CTL is the only thing that ever exercises it.
+#        bare PASS, and group CTL is the only thing that ever exercises it. Its surface arm B0
+#        comes first and fails a walk that could not open a listed file or read no line, so
+#        that verdict is reached only over a walk that read the tree.
 #
 #        THE SCOPE IS NARROWER THAN THE NAME, DELIBERATELY, AND THE GAP IS REPORTED ON EVERY
 #        RUN. B1's pattern requires the extension to sit immediately against the colon, so a
@@ -378,6 +380,27 @@
 #        FAIL — the state of a tree in which no number has been taken since the floor. Arm
 #        CTL-I-VACUOUS drives the verdict stage itself over that state and requires exactly
 #        that rendering; arm CTL-I-VACUOUS-NOT requires a populated register to render PASS.
+#   J    A REGISTERED ENUMERATION AGREES WITH ITS OWNER, AND AN UNREGISTERED REPEAT OF IT FAILS.
+#        A rule over an enumeration has one owner, and a file that must repeat its members
+#        names that owner. The repeats worth holding are rows of the CH_J_TAG fence in
+#        CH_FENCE_DOC. For each id the members are read off the owner and off every site — code
+#        spans, and nothing else — and compared as sets. J1 — a site lacks a member its owner
+#        names. J2 — a site names a member its owner does not. J3 — a file that carries no
+#        row for an id writes more than one of its members, as code spans, in one paragraph.
+#        J0 — the instrument is broken for that id; it withholds J1, J2 and J3 for that
+#        id and for no other, and is a failure itself.
+#
+#        THIS FILE SPELLS NO MEMBER, AND THIS CLASS ADDS NO PATH. Every member is read from the
+#        surfaces on every run, and the arms' fixture uses invented words. The files the J3
+#        reading passes over are the ones class E declares out of its own scan: both run with
+#        scope.awk and take inscope() from it, so the two cannot differ.
+#
+#        WHAT BREAKS THE INSTRUMENT, AND THE DECLARED BOUNDARY, ARE STATED ONCE AND NOT HERE.
+#        The section "The enumeration register" of CH_FENCE_DOC owns both: the test for a broken
+#        reading, with its examples, and everything this class cannot see. This entry cites that
+#        section. A copy here would be a second list, and a second list is what goes stale.
+#        There is no -RETRO arm: no shipped defect was written as a registered reading, so arm
+#        CTL-J2-REPLAY reproduces the shape of one on the fixture and says so.
 #   K    THE SIZE FENCE. Every tracked markdown file that owes a row under
 #        reference/load-class-model.md — its class by the rule of its § 4, its instrument and
 #        floor from the load-class-parameters fence after the growth-property step of its § 5 —
@@ -486,6 +509,15 @@
 # not the corpus's locators — the class-B entry above states the boundary and the group prints
 # the out-of-scope figure beside its own verdict on every run.
 #
+# ── A VACUOUS ARM FAILS THE RUN UNLESS IT IS DECLARED, ON EVERY HOST ─────────────
+# An empty population proves nothing about the tree, so a VACUOUS verdict cannot leave a run
+# green by itself. The exit rule fails the run on any arm that rendered VACUOUS and is not in
+# CH_VACUOUS_DECL, the expected-vacuous set held beside VACUOUS() below, one line per arm with
+# the reason its population is expected to be empty; group B's arm is declared there. That set
+# lives in this file and not in the workflow's env, and the rule does not wait for
+# GUARD_STRICT_SKIPS: a skip turns on what a host provides, but an empty population is the same
+# on every host, so what excuses one is read on every run, in CI and out of it.
+#
 # ── ONE DEPENDENCY ON REPOSITORY HISTORY, STATED ─────────────────────────────────
 # The suite reads this repository's history as blobs and as tags, and both arrive through the
 # same checkout. Every arm whose id ends -RETRO reads a blob from a commit in that history: it
@@ -566,6 +598,9 @@ CH_H_DIR='reference'
 CH_H_MAP='README.md'
 CH_H_RETRO_REV='54df1bfe8c7ce91cac002cb6b3c4619935c00fc1'
 CH_H_MAP_RETRO_REV='a49a66639bba0ffd60ad47d6c17aad5369ee2b52'
+# Group J's register: the tag of the fence, in CH_FENCE_DOC, whose rows name an enumeration's
+# owner and the sites that repeat its members. The rows hold no member. Named once.
+CH_J_TAG='enumeration-register'
 # The size group's surfaces: the document that carries the size-ceiling fence and that fence's tag;
 # the declaration whose load-class-parameters fence every floor, headroom and instrument is read
 # from, and that fence's tag; the revision whose per-file classification arm CTL-SIZE-RETRO replays
@@ -614,7 +649,7 @@ expect_rc() {   # expect_rc <want> <id> <prose> -- <cmd…>
   local subject="${1:-<no-command>}" got
   "$@" >/dev/null 2>&1; got=$?
   if [ "$got" -eq 127 ] && [ "$want" -ne 127 ]; then
-    FAIL "$id: $prose -- rc=127: '$subject' is NOT DEFINED. The subject is ABSENT, not rejecting, so this assertion has no subject to grade"
+    FAIL "$id: $prose -- rc=127: '$subject', or a command it runs, is NOT DEFINED. The subject is ABSENT, not rejecting, so this assertion has no subject to grade"
   elif [ "$got" -eq "$want" ]; then
     PASS "$id: $prose [rc=$got, expected $want]"
   else
@@ -660,6 +695,77 @@ md_flips() {   # md_flips <subject-fn> <id> <assertion-fn> [args…]
 # whenever any vacuous verdict existed; the group that compensates is a property of the arm,
 # not of the suite, so a literal there is a claim about a run it never read.
 VACUOUS() { printf '  \033[1;36mVACUOUS\033[0m %s\n' "$*"; vacuous=$((vacuous+1)); VACUOUS_IDS="$VACUOUS_IDS${*%%:*} "; }
+
+# ── CH_VACUOUS_DECL — THE EXPECTED-VACUOUS SET, read by the exit rule at the end of this file.
+# One line per arm: the arm's id exactly as its VACUOUS line opens (the text before the first
+# colon, which is what VACUOUS() records), a space, and the reason its population is expected to
+# be empty and what carries the arm while it is. The exit rule fails the run on each of these:
+#   an arm that rendered VACUOUS and has no line here;
+#   a line here whose arm did not render VACUOUS on the run. Its population is no longer empty,
+#     or the arm was renamed or removed, and a declaration that outlived its vacuity would excuse
+#     the next empty population that arm reads. Groups C, D and G hold their own declarations in
+#     both directions, and MD2 its residual, for the same reason;
+#   a line that names an arm and gives no reason;
+#   a VACUOUS verdict whose arm id cannot be read, because then the run cannot say which arm it was.
+# To declare an arm, add its line in the change that makes it render VACUOUS. That line is the
+# whole edit: arm CTL-VACUITY-DECLARED renders every arm declared here, and the other CTL-VACUITY
+# arms read CTL_VAC_DECL, a fixture of their own, so no arm is edited. To retire one, delete its
+# line in the change that gives the arm a population. The trip-resolution-contract suite fails on
+# any vacuous count and ships no declaration; this suite needs one, because the population of one
+# of its arms is meant to stay empty.
+CH_VACUOUS_DECL='
+B1 its in-scope population is a bare path:line locator in tracked markdown, which this corpus means to keep empty, so on a clean tree B1 renders VACUOUS by design and a locator turns it red; what carries the denominator is surface arm B0, which must PASS before B1 can render VACUOUS and which fails a walk that could not open a listed file or read no line, and what carries detection is arm CTL-B1, which plants locators in a fixture and requires them found, with CTL-B1-SPEC and CTL-B1-WIDE beside it
+'
+
+# ch_vacuity_rc <declaration> — the vacuity half of the exit rule. It is a function so that the
+# CTL-VACUITY arms drive the code the exit rule runs, over the recorder that rule reads: $vacuous
+# and $VACUOUS_IDS, which VACUOUS() above is the only writer of. It prints one VACUITY line per
+# finding, or one line naming what was declared, with the counts it compared, and returns 1 on
+# any finding and 0 otherwise. Given `ids` as its second argument it prints the ids the
+# declaration gives a reason for, read by the same parse, and grades nothing: arm
+# CTL-VACUITY-DECLARED renders those, so that arm reads every arm the shipped set declares.
+# Membership is tested with the case idiom the strict-skip pass at the end of this file uses, so
+# no verdict here rests on a pipeline.
+ch_vacuity_rc() {
+  local decl="$1" line id rest ids="" nids=0 noreason="" undeclared="" stale="" n=0 v rc=0
+  while IFS= read -r line; do
+    line="${line#"${line%%[![:space:]]*}"}"
+    [ -n "$line" ] || continue
+    id="${line%%[[:space:]]*}"; rest="${line#"$id"}"
+    if [ -z "${rest//[[:space:]]/}" ]; then noreason="$noreason$id "; continue; fi
+    ids="$ids$id "; nids=$((nids+1))
+  done <<<"$decl"
+  if [ "${2:-}" = 'ids' ]; then printf '%s' "${ids% }"; return 0; fi
+  # shellcheck disable=SC2086  # the recorder is a space-separated word list, split on purpose
+  for v in $VACUOUS_IDS; do
+    n=$((n+1))
+    case " $ids " in *" $v "*) ;; *) undeclared="$undeclared$v " ;; esac
+  done
+  # shellcheck disable=SC2086  # the declared ids are the same kind of word list
+  for v in $ids; do
+    case " $VACUOUS_IDS " in *" $v "*) ;; *) stale="$stale$v " ;; esac
+  done
+  if [ "$n" -ne "$vacuous" ]; then
+    printf 'VACUITY: %d VACUOUS verdict(s) were counted and %d arm id(s) recorded. A VACUOUS line opens with its arm id and a colon; one that does not cannot be named, so this run cannot say which arm was vacuous.\n' "$vacuous" "$n"
+    rc=1
+  fi
+  if [ -n "$undeclared" ]; then
+    printf 'VACUITY: arm(s) rendered VACUOUS and are not declared in CH_VACUOUS_DECL: %s— an empty population proved nothing about this tree, so it fails the run. Give the arm a population or, where empty is its expected state, add its line to CH_VACUOUS_DECL, beside VACUOUS() where the verdict helpers are defined, with the reason and the arm that carries it.\n' "$undeclared"
+    rc=1
+  fi
+  if [ -n "$stale" ]; then
+    printf 'VACUITY: declared in CH_VACUOUS_DECL and did not render VACUOUS on this run: %s— if one of these FAILED above, its own verdict is the finding and this line follows from it. Otherwise its population is no longer empty, or the arm was renamed or removed: delete its line in the same change, because a declaration that outlives its vacuity would excuse the next empty population that arm reads.\n' "$stale"
+    rc=1
+  fi
+  if [ -n "$noreason" ]; then
+    printf 'VACUITY: line(s) in CH_VACUOUS_DECL name an arm and give no reason: %s— each line states why the population of its arm is expected to be empty and what carries the arm, or it is an exemption nobody can re-check.\n' "$noreason"
+    rc=1
+  fi
+  if [ "$rc" -eq 0 ]; then
+    printf 'VACUITY: %d VACUOUS verdict(s) and %d declared arm(s) (%s); every vacuous arm is declared and every declared arm rendered VACUOUS, so no empty population passed this run unannounced.\n' "$vacuous" "$nids" "${ids% }"
+  fi
+  return "$rc"
+}
 
 WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
 ARM_LOG="$WORK/arms";  : > "$ARM_LOG"
@@ -794,13 +900,21 @@ cat > "$WORK/b.awk" <<'AWK'
 # does not rest on an arm either: unlike B1's zero, a non-zero is self-evidencing, and arm
 # CTL-B1-WIDE nonetheless plants the code-spanned form B1 cannot see and requires this loop
 # to find it — otherwise a wide count that merely echoed `hits` would look identical here.
+#
+# The walk's own denominator is two more DENOM fields, on the same terms: the listed files it
+# could not open, and the lines it read. The list counts a file before the walk opens it, so a
+# file that cannot be opened makes its first getline return -1 and ends the loop as quietly as a
+# file read to its end; without these fields a walk that read nothing reports the same empty
+# population as a tree that has no locator. Group B's surface arm B0 reads them, so they are
+# counted here and asserted there, and they emit no finding code: group Y's inventory is
+# untouched, and B0's must-fire arm is CTL-B0, which lists a file that does not exist.
 { if ($0 != "") FILES[++nf] = $0 }
 END {
-  hits = 0; whits = 0
+  hits = 0; whits = 0; unread = 0; nline = 0
   for (i = 1; i <= nf; i++) {
     rel = FILES[i]; f = ROOT "/" rel
     infence = 0; ln = 0
-    while ((getline line < f) > 0) {
+    while ((r = (getline line < f)) > 0) {
       ln++
       t = line; sub(/^[ \t]+/, "", t)
       if (substr(t, 1, 3) == "```") { infence = !infence; continue }
@@ -828,9 +942,11 @@ END {
         whits++
       }
     }
+    if (r < 0 && ln == 0) unread++
+    nline += ln
     close(f)
   }
-  printf "DENOM %d %d %d\n", nf, hits, whits
+  printf "DENOM %d %d %d %d %d\n", nf, hits, whits, unread, nline
 }
 AWK
 
@@ -1205,6 +1321,18 @@ function numof(b,   k) { k = b; sub(/^ADR-/, "", k); sub(/-.*$/, "", k); return 
 function pad(n) { return sprintf("%03d", n + 0) }
 AWK
 
+# ── scope.awk — which tracked markdown a reading of engine prose passes over. ONE function,
+# run with every program that reads engine prose; neither holds a path of its own ───────────
+cat > "$WORK/scope.awk" <<'AWK'
+# The scanned surface: every tracked markdown file but three declared exclusions.
+function inscope(p) {
+  if (index(p, "reference/adr/") == 1) return 0
+  if (index(p, "examples/") == 1) return 0
+  if (p == "CHANGELOG.md") return 0
+  return 1
+}
+AWK
+
 # ── e.awk — class E, the owned-rule scan ─────────────────────────────────────────
 cat > "$WORK/e.awk" <<'AWK'
 # ARGV[1] newline-separated relative path list. -v ROOT=<dir> -v ODOC=<owner doc> -v OHEAD=<owner
@@ -1274,13 +1402,6 @@ END {
   if (nscan == 0 || nsent == 0 || nhead != 1 || nown == 0)
     printf "FINDING E0 files=%d sentences=%d heading=%d owner-standing=%d\n", nscan, nsent, nhead, nown
   printf "DENOM %d %d %d %d %d %d\n", nscan, nsent, nstand, nown, nhead, nsfile
-}
-# The scanned surface: every tracked markdown file but three declared exclusions.
-function inscope(p) {
-  if (index(p, "reference/adr/") == 1) return 0
-  if (index(p, "examples/") == 1) return 0
-  if (p == "CHANGELOG.md") return 0
-  return 1
 }
 function eflush(rel, b, o, own,   k, nn, arr) {
   if (b == "") return o
@@ -2485,6 +2606,223 @@ function numof(b,   k) { k = b; sub(/^ADR-/, "", k); sub(/-.*$/, "", k); return 
 function pad(n) { return sprintf("%03d", n + 0) }
 AWK
 
+# ── j.awk — class J, the enumeration register: each id's members read off its owner and off its
+# sites and compared, then every engine file read for a repeat of an id it carries no row for ──
+cat > "$WORK/j.awk" <<'AWK'
+# ARGV[1] newline-separated relative path list of the tracked markdown.
+# -v ROOT=<dir> -v DOC=<declaring document> -v TAG=<register fence tag>
+# Run with the shared scope program, whose inscope() is the one statement of which files a
+# reading of engine prose passes over; this program holds no path of its own.
+# Reads the register fence, then for each id reads the members off the owner and off each site
+# and compares the two sets in both directions; then reads every listed file that carries no row
+# for an id and is in scope, paragraph by paragraph, for an unregistered repeat of that id.
+# Members are code spans, read from the surfaces on every run; this program spells none.
+#   FINDING J0 <id> <where> <why>             the instrument is broken for <id>: J1, J2 and J3 are
+#                                             withheld for <id> and for no other. <id> is "-" where the
+#                                             failure belongs to no id, and then no verdict is reported
+#                                             for any enumeration
+#   FINDING J1 <id> <site> <member>           the site lacks a member the owner names
+#   FINDING J2 <id> <site> <member>           the site names a member the owner does not
+#   FINDING J3 <id> <path> <line> <n> <members>
+#                                             a file with no row for <id> writes <n> of its members, as
+#                                             code spans, in the paragraph that opens at <line>; the
+#                                             members it read follow, joined by ", "
+#   DENOM <ids> <rows> <owners> <sites> <files> <member-readings-at-owners> <files-read-for-repeats>
+#         <paragraphs-read> <files-passed-over> <ids-withheld>
+function trim(s) { sub(/^[ \t\r]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+function norm(s) { gsub(/[ \t\r]+/, " ", s); return trim(s) }
+function broken(id, where, why) { printf "FINDING J0 %s %s %s\n", id, where, why; if (!(id in BAD)) { BAD[id] = 1; if (id != "-") nbad++ } }
+function load(path,   f, line, t) {
+  f = ROOT "/" path; NL = 0; NT = ""
+  while ((getline line < f) > 0) {
+    NL++; LN[NL] = line; t = norm(line)
+    if (t != "") NT = (NT == "" ? t : NT " " t)
+    EOFF[NL] = length(NT)
+  }
+  close(f)
+}
+function occurrences(hay, needle,   c, i, off) {
+  c = 0; off = 1
+  while ((i = index(substr(hay, off), needle)) > 0) { c++; off += i }
+  return c
+}
+function indent(s,   n) { n = 0; while (substr(s, n + 1, 1) == " ") n++; return n }
+function ismarker(s) { return (s ~ /^[0-9]+\.[ \t]/ || s ~ /^[-*+][ \t]/) }
+function markerclass(s) { return (s ~ /^[0-9]/) ? "n" : substr(s, 1, 1) }
+# kind=list — the code spans inside the bracketed group that opens directly after the anchor
+function read_list(id, path, anchor,   p, i, j, ch, op, cl, depth, n) {
+  p = index(NT, anchor) + length(anchor)
+  while (substr(NT, p, 1) == " ") p++
+  op = substr(NT, p, 1)
+  if (op == "(") cl = ")"; else if (op == "[") cl = "]"
+  else { broken(id, path, "no-bracketed-group-opens-after-the-anchor"); return 0 }
+  depth = 1; n = 0; i = p + 1
+  while (i <= length(NT) && depth > 0) {
+    ch = substr(NT, i, 1)
+    if (ch == "`") {
+      j = index(substr(NT, i + 1), "`")
+      if (j == 0) break
+      MEM[++n] = substr(NT, i + 1, j - 1); i = i + j + 1; continue
+    }
+    if (ch == op) depth++; else if (ch == cl) depth--
+    i++
+  }
+  if (depth > 0) { broken(id, path, "bracketed-group-is-not-closed"); return 0 }
+  return n
+}
+# kind=lead — the first code span in the bold lead-in of each item of the first list that follows
+# the anchor BEFORE THE NEXT HEADING. Lines that are not list items are passed over until the list
+# opens, so a paragraph may stand between an anchor and its list; a heading may not — a list under
+# a later heading is another section's list, and reading it would be a reading of the wrong text.
+# A line inside a fenced block is neither a heading nor an item. The list ends at the first line,
+# not indented under an item, that is not an item of the same marker type.
+function read_lead(id, path, anchor,   e, l, i, t, lvl, mc, started, b, bold, s, k, n, fenced) {
+  e = index(NT, anchor) + length(anchor) - 1
+  for (l = 1; l <= NL; l++) if (EOFF[l] >= e) break
+  n = 0; started = 0; fenced = 0
+  for (i = 1; i <= NL; i++) {
+    t = LN[i]; sub(/^[ ]+/, "", t)
+    if (substr(t, 1, 3) == "```") {
+      if (i > l && started && indent(LN[i]) <= lvl) break
+      fenced = !fenced; continue
+    }
+    if (i <= l || fenced) continue
+    if (LN[i] ~ /^[ \t\r]*$/) continue
+    if (!started) {
+      if (t ~ /^#+[ \t]/) { broken(id, path, "no-list-follows-the-anchor-before-the-next-heading"); return 0 }
+      if (!ismarker(t)) continue
+      started = 1; lvl = indent(LN[i]); mc = markerclass(t)
+    } else {
+      if (indent(LN[i]) > lvl) continue
+      if (!ismarker(t) || markerclass(t) != mc) break
+    }
+    sub(/^([0-9]+\.|[-*+])[ \t]+/, "", t)
+    if (substr(t, 1, 2) != "**") { broken(id, path, "a-list-item-has-no-bold-lead-in"); return 0 }
+    s = substr(t, 3); b = index(s, "**")
+    if (b == 0) { broken(id, path, "a-bold-lead-in-is-not-closed-on-its-line"); return 0 }
+    bold = substr(s, 1, b - 1); k = index(bold, "`")
+    if (k == 0) { broken(id, path, "a-bold-lead-in-carries-no-code-span"); return 0 }
+    bold = substr(bold, k + 1); k = index(bold, "`")
+    if (k == 0) { broken(id, path, "a-code-span-is-not-closed"); return 0 }
+    MEM[++n] = substr(bold, 1, k - 1)
+  }
+  return n
+}
+function readrow(r,   n, a, m, i) {
+  if (!(RPATH[r] in TRACKED)) { broken(RID[r], RPATH[r], "the-path-is-not-a-tracked-markdown-file"); return }
+  load(RPATH[r])
+  a = norm(RANCH[r]); n = occurrences(NT, a)
+  if (a == "" || n != 1) { broken(RID[r], RPATH[r], "the-anchor-is-found-" n "-times-not-once"); return }
+  m = (RKIND[r] == "lead") ? read_lead(RID[r], RPATH[r], a) : read_list(RID[r], RPATH[r], a)
+  if (RID[r] in BAD) return
+  if (m == 0) { broken(RID[r], RPATH[r], "the-reading-yields-no-member"); return }
+  RN[r] = m
+  for (i = 1; i <= m; i++) HAS[r, MEM[i]] = 1
+  for (i = 1; i <= m; i++) RM[r, i] = MEM[i]
+  FILESEEN[RPATH[r]] = 1
+}
+# One paragraph — a run of non-blank lines outside a fenced block — held in PAR, opening at PLN.
+# For each id the file carries no row for, count the distinct owner members it writes as code spans.
+function endpar(path,   s, a, b, i, id, o, k, c, span, ms) {
+  if (PAR == "") return
+  NPAR++
+  for (span in SPAN) delete SPAN[span]
+  s = PAR
+  while ((a = index(s, "`")) > 0) {
+    s = substr(s, a + 1); b = index(s, "`")
+    if (b == 0) break
+    SPAN[substr(s, 1, b - 1)] = 1; s = substr(s, b + 1)
+  }
+  for (i = 1; i <= nid; i++) {
+    id = IDS[i]
+    if ((id in BAD) || ((id, path) in ROWPATH)) continue
+    o = OWNROW[id]; c = 0; ms = ""
+    for (k = 1; k <= RN[o]; k++) if ((RM[o, k] in SPAN) && !((id, RM[o, k]) in CNTD)) { c++; CNTD[id, RM[o, k]] = 1; ms = ms (ms == "" ? "" : ", ") RM[o, k] }
+    for (k = 1; k <= RN[o]; k++) delete CNTD[id, RM[o, k]]
+    if (c >= 2) printf "FINDING J3 %s %s %d %d %s\n", id, path, PLN, c, ms
+  }
+  PAR = ""
+}
+function scanfile(path,   f, line, t, n, infence) {
+  f = ROOT "/" path; n = 0; infence = 0; PAR = ""
+  while ((getline line < f) > 0) {
+    n++; t = norm(line)
+    if (substr(t, 1, 3) == "```") { endpar(path); infence = !infence; continue }
+    if (infence) continue
+    if (t == "") { endpar(path); continue }
+    if (PAR == "") PLN = n
+    PAR = (PAR == "" ? t : PAR " " t)
+  }
+  close(f); endpar(path)
+}
+{ if ($0 != "") { TRACKED[$0] = 1; ORDER[++NTRK] = $0 } }
+END {
+  f = ROOT "/" DOC; infence = 0; nrow = 0; seenfence = 0; nbad = 0
+  while ((getline line < f) > 0) {
+    if (line == "```" TAG) { infence = 1; seenfence = 1; continue }
+    if (infence && line == "```") { infence = 0; continue }
+    if (!infence) continue
+    t = trim(line)
+    if (t == "" || substr(t, 1, 1) == "#") continue
+    # The fields are cleared before each row is split, so a line that fails before its first field
+    # is read is charged to no id — it is not the row above it.
+    rest = line; ok = 1
+    for (k = 1; k <= 4; k++) FLD[k] = ""
+    for (k = 1; k <= 4; k++) {
+      p = index(rest, "|")
+      if (p == 0) { ok = 0; break }
+      FLD[k] = trim(substr(rest, 1, p - 1)); rest = substr(rest, p + 1)
+    }
+    if (!ok || FLD[1] == "" || trim(rest) == "") {
+      if (FLD[1] != "" && !(FLD[1] in IDSEEN)) { IDSEEN[FLD[1]] = 1; IDS[++nid] = FLD[1] }
+      broken((FLD[1] == "" ? "-" : FLD[1]), DOC, "a-row-does-not-carry-its-five-fields"); continue
+    }
+    nrow++; RID[nrow] = FLD[1]; RROLE[nrow] = FLD[2]; RPATH[nrow] = FLD[3]; RKIND[nrow] = FLD[4]; RANCH[nrow] = trim(rest)
+    ROWPATH[FLD[1], FLD[3]] = 1
+    if (!(FLD[1] in IDSEEN)) { IDSEEN[FLD[1]] = 1; IDS[++nid] = FLD[1] }
+    if (FLD[2] == "owner") { NOWN[FLD[1]]++; OWNROW[FLD[1]] = nrow; nown++ }
+    else if (FLD[2] == "site") { NSITE[FLD[1]]++; nsite++ }
+    else broken(FLD[1], DOC, "a-row-names-a-role-that-is-neither-owner-nor-site")
+    if (FLD[4] != "lead" && FLD[4] != "list") broken(FLD[1], DOC, "a-row-names-a-kind-that-is-neither-lead-nor-list")
+  }
+  close(f)
+  if (!seenfence || nrow == 0) broken("-", DOC, "the-register-fence-is-absent-or-holds-no-row")
+  for (i = 1; i <= nid; i++) {
+    id = IDS[i]
+    if (NOWN[id] != 1) broken(id, DOC, "the-id-has-" (NOWN[id] + 0) "-owner-rows-not-one")
+    if (NSITE[id] + 0 == 0) broken(id, DOC, "the-id-has-no-site-row")
+  }
+  # A site row whose path, kind and anchor are its owner row's reads the owner a second time and
+  # compares it with itself, so it is no site: the id it registers is broken, as one with no site is.
+  for (r = 1; r <= nrow; r++) {
+    id = RID[r]
+    if (RROLE[r] != "site" || NOWN[id] != 1) continue
+    o = OWNROW[id]
+    if (RPATH[r] == RPATH[o] && RKIND[r] == RKIND[o] && norm(RANCH[r]) == norm(RANCH[o])) broken(id, DOC, "a-site-row-copies-its-owner-row")
+  }
+  for (r = 1; r <= nrow; r++) if (!(RID[r] in BAD)) readrow(r)
+  nmem = 0
+  for (i = 1; i <= nid; i++) {
+    id = IDS[i]
+    if (id in BAD) continue
+    o = OWNROW[id]; nmem += RN[o]
+    for (r = 1; r <= nrow; r++) {
+      if (RID[r] != id || RROLE[r] != "site") continue
+      for (k = 1; k <= RN[o]; k++) if (!((r, RM[o, k]) in HAS)) printf "FINDING J1 %s %s %s\n", id, RPATH[r], RM[o, k]
+      for (k = 1; k <= RN[r]; k++) if (!((o, RM[r, k]) in HAS)) printf "FINDING J2 %s %s %s\n", id, RPATH[r], RM[r, k]
+    }
+  }
+  nscan = 0; npast = 0; NPAR = 0
+  if (!("-" in BAD)) for (j = 1; j <= NTRK; j++) {
+    p = ORDER[j]
+    if (!inscope(p)) { npast++; continue }
+    nscan++; scanfile(p)
+  }
+  nfile = 0; for (p in FILESEEN) nfile++
+  printf "DENOM %d %d %d %d %d %d %d %d %d %d\n", nid, nrow, nown, nsite, nfile, nmem, nscan, NPAR, npast, nbad
+}
+AWK
+
 # ── load-class.awk — the classification rule of reference/load-class-model.md § 4, and § 5's instrument step ──
 cat > "$WORK/load-class.awk" <<'AWK'
 # THREE INPUTS, split BY FILENAME for the reason d.awk records — an empty one is an ordinary case in a
@@ -3197,7 +3535,7 @@ ch_scan_i() {
 # below passes nothing, for the reason ch_scan_c gives about a caller-set strictness.
 ch_scan_e() {
   awk -v ROOT="$1" -v ODOC="$CH_E_OWNER_DOC" -v OHEAD="$CH_E_OWNER_HEAD" -v SHARED="${3:-0}" \
-    -f "$WORK/seg.awk" -f "$WORK/e.awk" "$2"
+    -f "$WORK/seg.awk" -f "$WORK/scope.awk" -f "$WORK/e.awk" "$2"
 }
 
 # Class F's listers name EVERY file, not only markdown: f.awk decides what is shell from the
@@ -3262,6 +3600,13 @@ ch_list_h_rev()  { git -C "$1" ls-tree -r --name-only -z "$2" | tr '\000' '\n'; 
 ch_scan_h() {
   awk -v ROOT="$1" -v DOC="$CH_H_DOC" -v HEAD="$CH_H_HEAD" -v DIR="$CH_H_DIR" -v MAP="$CH_H_MAP" \
     -f "$WORK/h.awk" "$2"
+}
+
+# ch_scan_j <root> <listfile> — class J over one tree, shaped like ch_scan_h: the real tree and every
+# control arm drive this one function. The shared scope program runs first, so the files the
+# unregistered-repeat reading passes over are the ones class E declares out of its own scan.
+ch_scan_j() {  # ch_scan_j <root> <listfile>
+  awk -v ROOT="$1" -v DOC="$CH_FENCE_DOC" -v TAG="$CH_J_TAG" -f "$WORK/scope.awk" -f "$WORK/j.awk" "$2"
 }
 
 # The size group's drivers. Sizes are byte counts of the graded root's own files — the blob sizes in
@@ -3450,16 +3795,42 @@ B_OUT="$(ch_scan_b "$ROOT" "$WORK/list.real")"
 B_NFILE="$(awk '$1 == "DENOM" { print $2 }' <<<"$B_OUT")"
 B_NHIT="$(awk '$1 == "DENOM" { print $3 }' <<<"$B_OUT")"
 B_NWIDE="$(awk '$1 == "DENOM" { print $4 }' <<<"$B_OUT")"
+B_NUNREAD="$(awk '$1 == "DENOM" { print $5 }' <<<"$B_OUT")"
+B_NLINE="$(awk '$1 == "DENOM" { print $6 }' <<<"$B_OUT")"
 B_NOOS=$(( ${B_NWIDE:-0} - ${B_NHIT:-0} ))
-printf '  SURFACE: %s tracked markdown file(s) walked for path:line locators — %s in this group'"'"'s IN-SCOPE bare spelling, %s in either spelling, so %s sit OUTSIDE this predicate and are reported rather than counted as clean.\n' \
-  "$B_NFILE" "$B_NHIT" "$B_NWIDE" "$B_NOOS"
+# The measurement state B0 grades below, also decided here so that over a walk B0 refuses no line
+# this group prints carries a counter of the comparison, on group G's rule.
+B_SURFACE=0
+if [ "${B_NUNREAD:-1}" -eq 0 ] && [ "${B_NLINE:-0}" -gt 0 ]; then B_SURFACE=1; fi
+if [ "$B_SURFACE" -eq 1 ]; then
+  printf '  SURFACE: %s tracked markdown file(s) walked for path:line locators, %s of them unreadable and %s line(s) read — %s in this group'"'"'s IN-SCOPE bare spelling, %s in either spelling, so %s sit OUTSIDE this predicate and are reported rather than counted as clean.\n' \
+    "$B_NFILE" "$B_NUNREAD" "$B_NLINE" "$B_NHIT" "$B_NWIDE" "$B_NOOS"
+else
+  printf '  SURFACE: NOT-EVALUATED — the class-B walk could not open %s of %s listed file(s) and read %s line(s) — this is not a clean result\n' \
+    "${B_NUNREAD:-unread}" "${B_NFILE:-unread}" "${B_NLINE:-unread}"
+fi
 echo "B1" >> "$SURF_LOG"
 
-if [ "${B_NHIT:-0}" -eq 0 ]; then
-  VACUOUS "B1: the IN-SCOPE population is EMPTY — $B_NFILE file(s) walked, no BARE path:line locator found. This group proves nothing about this tree by itself and says so rather than reporting a bare PASS; what it rests on is arm CTL-B1, which plants two locators in a fixture and requires both to be found. READ THIS AS THE PREDICATE'S VERDICT AND NOT THE CORPUS'S: $B_NWIDE locator(s) are present in either spelling and $B_NOOS of them are out of scope here by declaration — a code-spanned path or emphasised digits put a markdown delimiter between the extension and the colon, which B1's pattern does not cross. The banner's class-B entry carries the boundary and why widening it is not this gate's call; arm CTL-B1-WIDE is what makes the out-of-scope figure a measurement"
+# B0 — the surface, in the idiom of every other lettered group's surface arm, and FIRST because
+# B1's empty population is a measurement only over a walk that read the tree. It tests the same
+# two DENOM fields the printed state above is decided from, spelled out so group FZ reads the
+# conjunction itself and not a stored copy of it, and it is written so an unrun extractor resolves
+# to the loud answer: an unset unreadable count reads 1 and an unset line count reads 0, and both
+# land on the FAIL limb. It reads the walk's own DENOM fields and not the wider locator figure,
+# which is a property of the corpus and may legitimately reach zero.
+if [ "${B_NUNREAD:-1}" -eq 0 ] && [ "${B_NLINE:-0}" -gt 0 ]; then
+  PASS "B0: the class-B surface was read — each of the $B_NFILE listed file(s) opened, $B_NLINE line(s) read and none unreadable, so an empty in-scope population below is a measurement of this tree and not an empty walk. Arm CTL-B0 lists a file that does not exist and requires it counted unreadable"
 else
+  FAIL "B0: the class-B surface was NOT read — ${B_NUNREAD:-unread} of ${B_NFILE:-unread} listed file(s) could not be opened and ${B_NLINE:-unread} line(s) were read. A zero here is a broken probe or a relocated corpus, never a tree with no locator, and B1's empty population is withheld rather than rendered VACUOUS"
+fi
+
+if [ "${B_NHIT:-0}" -gt 0 ]; then
   FAIL "B1: $B_NHIT line-number locator(s) in tracked markdown. A line number rots on the next insertion above it and then points at whatever moved into its place — cite the section or the quoted text instead:"
   grep '^FINDING B1 ' <<<"$B_OUT" | awk '{ printf "      %s:%s  %s\n", $3, $4, $5 }'
+elif [ "$B_SURFACE" -eq 1 ]; then
+  VACUOUS "B1: the IN-SCOPE population is EMPTY — $B_NFILE file(s) walked and read, per B0 above, no BARE path:line locator found. This group proves nothing about this tree by itself and says so rather than reporting a bare PASS; what it rests on is arm CTL-B1, which plants two locators in a fixture and requires both to be found. READ THIS AS THE PREDICATE'S VERDICT AND NOT THE CORPUS'S: $B_NWIDE locator(s) are present in either spelling and $B_NOOS of them are out of scope here by declaration — a code-spanned path or emphasised digits put a markdown delimiter between the extension and the colon, which B1's pattern does not cross. The banner's class-B entry carries the boundary and why widening it is not this gate's call; arm CTL-B1-WIDE is what makes the out-of-scope figure a measurement"
+else
+  FAIL "B1: withheld — B0 above names the cause. An empty in-scope population over a walk that did not read the tree is not a measurement, so it is not rendered VACUOUS, which is the verdict CH_VACUOUS_DECL excuses"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
@@ -3856,6 +4227,80 @@ ch_assert_i "$I_OUT"
 
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
+echo "J — a registered enumeration agrees with its owner in both directions, and an unregistered repeat of it fails"
+# ═════════════════════════════════════════════════════════════════════════════════
+# j_assert <root> <listfile> — group J's verdicts over one tree. It is ONE function and runs the
+# extractor itself, so group MD can register it: with ch_scan_j removed it reports exactly one
+# FAIL and no PASS. The measurement state is decided in two steps — whether the register could be
+# read at all, where a failure that belongs to no id withholds every verdict, and then, for each id,
+# whether its own reading could be made. A broken id withholds its own comparisons and no other's,
+# and the run fails all the same. The J_* values it leaves are the summary line's; it is called in
+# this shell once, for the tracked tree, and everywhere else inside a probe subshell.
+j_assert() {   # j_assert <root> <listfile>
+  local out
+  out="$(ch_scan_j "$1" "$2")"
+  J_NID="$(awk '$1 == "DENOM" { print $2 }' <<<"$out")";    J_NROW="$(awk '$1 == "DENOM" { print $3 }' <<<"$out")"
+  J_NOWN="$(awk '$1 == "DENOM" { print $4 }' <<<"$out")";   J_NSITE="$(awk '$1 == "DENOM" { print $5 }' <<<"$out")"
+  J_NFILE="$(awk '$1 == "DENOM" { print $6 }' <<<"$out")";  J_NMEM="$(awk '$1 == "DENOM" { print $7 }' <<<"$out")"
+  J_NSCAN="$(awk '$1 == "DENOM" { print $8 }' <<<"$out")";  J_NPAR="$(awk '$1 == "DENOM" { print $9 }' <<<"$out")"
+  J_NPAST="$(awk '$1 == "DENOM" { print $10 }' <<<"$out")"; J_NBAD="$(awk '$1 == "DENOM" { print $11 }' <<<"$out")"
+  J_N1="$(n_code "$out" J1)"; J_N2="$(n_code "$out" J2)"; J_N3="$(n_code "$out" J3)"
+  # A failure that belongs to no id — the fence absent or empty, a row whose id cannot be read —
+  # withholds every verdict. One that names an id withholds that id's comparisons and no other's.
+  J_NCLASS="$(awk '$1 == "FINDING" && $2 == "J0" && $3 == "-" { n++ } END { print n + 0 }' <<<"$out")"
+  J_WHY="$(awk '$1 == "FINDING" && $2 == "J0" { $1 = ""; $2 = ""; sub(/^ +/, ""); printf "%s%s", s, $0; s = "; " }' <<<"$out")"
+  [ -n "$J_WHY" ] || J_WHY='the extractor printed no result'
+  if [ "${J_NCLASS:-1}" -eq 0 ] && [ "${J_NID:-0}" -gt 0 ] && [ "${J_NSCAN:-0}" -gt 0 ] && [ -n "${J_NBAD:-}" ]; then J_MEASURED=1; else J_MEASURED=0; fi
+
+  if [ "$J_MEASURED" -ne 1 ]; then
+    J_NREAD=0
+    printf '  SURFACE: NOT-EVALUATED — %s — this is not a clean result\n' "$J_WHY"
+    FAIL "J0: the register is NOT a measurement on this run — $J_WHY. No verdict is reported for any enumeration: J1, J2 and J3 are withheld. Restore the fence or the row; never delete a row to make this pass"
+    grep '^FINDING J[123] ' <<<"$out" | awk '{ $1 = ""; sub(/^ /, ""); printf "      read where a reading was possible, and not a verdict: %s\n", $0 }'
+    return 0
+  fi
+
+  J_NREAD=$(( J_NID - J_NBAD ))
+  printf '  SURFACE: %s of %s enumeration(s) read, in %s row(s) — %s owner, %s site; %s member reading(s) at the owners of those read, over %s file(s); %s engine file(s) and %s paragraph(s) read for an unregistered repeat, %s file(s) passed over.\n' \
+    "$J_NREAD" "$J_NID" "$J_NROW" "$J_NOWN" "$J_NSITE" "$J_NMEM" "$J_NFILE" "$J_NSCAN" "$J_NPAR" "$J_NPAST"
+  if [ "$J_NBAD" -eq 0 ]; then
+    PASS "J0: the register reads — $J_NID enumeration(s), each with one owner and at least one site, every anchor found once, $J_NMEM member reading(s) at the owners, and $J_NSCAN engine file(s) read for a repeat"
+  elif [ "$J_NREAD" -gt 0 ]; then
+    FAIL "J0: $J_NBAD of $J_NID enumeration(s) could NOT be read — $J_WHY. A reading that could not be made withholds every comparison for its own enumeration and for no other: the $J_NREAD read are graded below, and this run fails all the same. Restore the anchor, the list or the row; never delete a row to make this pass"
+  else
+    FAIL "J0: none of the $J_NID enumeration(s) could be read — $J_WHY. A reading that could not be made withholds every comparison for its own enumeration, and none was made, so nothing below is a verdict. Restore the anchor, the list or the row; never delete a row to make this pass"
+  fi
+  if [ "$J_NREAD" -le 0 ] || [ "${J_NMEM:-0}" -le 0 ]; then
+    printf '  J1, J2, J3: NOT-EVALUATED — no enumeration could be read, so there is no comparison to report\n'
+    return 0
+  fi
+
+  if [ "${J_N1:-0}" -eq 0 ]; then
+    PASS "J1: every site names every member its owner names — over the $J_NREAD of $J_NID enumeration(s) read. The zero is a measurement: the arms below fire on a planted omission"
+  else
+    FAIL "J1: $J_N1 member(s) an owner names are missing at a registered site. Add the member at the site in the commit that added it at the owner:"
+    grep '^FINDING J1 ' <<<"$out" | awk '{ $1 = ""; $2 = ""; sub(/^  /, ""); printf "      %s\n", $0 }'
+  fi
+  if [ "${J_N2:-0}" -eq 0 ]; then
+    PASS "J2: no site names a member its owner does not — over the $J_NREAD of $J_NID enumeration(s) read. The zero is a measurement: the arms below fire on a planted addition"
+  else
+    FAIL "J2: $J_N2 member(s) are named at a registered site and not by the owner. A member is added at the owner, which is the one place it is admitted:"
+    grep '^FINDING J2 ' <<<"$out" | awk '{ $1 = ""; $2 = ""; sub(/^  /, ""); printf "      %s\n", $0 }'
+  fi
+  if [ "${J_N3:-0}" -eq 0 ]; then
+    PASS "J3: no engine file writes more than one member of a registered enumeration in one paragraph without a row — $J_NSCAN file(s), $J_NPAR paragraph(s) read, for the $J_NREAD of $J_NID enumeration(s) read. The zero is a measurement: the arms below fire on a planted repeat and on a row removed while its repeat stands"
+  else
+    FAIL "J3: $J_N3 paragraph(s) write more than one member of a registered enumeration, as code spans, in a file that carries no row for it. This is a reading of tokens. Where the paragraph repeats the enumeration, add a site row in this commit or word it so it does not repeat the members — taking the code spans off is not a remedy. Where it belongs to another enumeration that shares the tokens, reconsider those tokens or the registration. A row is never removed to clear a red:"
+    grep '^FINDING J3 ' <<<"$out" | awk '{ m = $0; sub(/^FINDING J3 [^ ]+ [^ ]+ [^ ]+ [^ ]+ /, "", m); printf "      %s  %s line %s  %s member(s) in one paragraph: %s\n", $3, $4, $5, $6, m }'
+  fi
+  return 0
+}
+
+j_assert "$ROOT" "$WORK/list.real"
+for c in J0 J1 J2 J3; do echo "$c" >> "$SURF_LOG"; done
+
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
 echo "$CH_SIZE_LETTER — the size fence: every tracked markdown file that owes a row is held to its byte ceiling"
 # ═════════════════════════════════════════════════════════════════════════════════
 # size_assert <root> <md-list> <all-list> — the size group's verdicts over one tree, on h_assert's
@@ -4080,6 +4525,32 @@ if [ "${BW_WIDE:-0}" -gt "${BW_NARROW:-0}" ]; then
   PASS "CTL-B1-WIDE: the scope boundary is a measurement in both directions — two code-spanned locators are planted, B1's in-scope pattern reports $BW_NARROW of them and the out-of-scope measurement reports $BW_WIDE. The strict inequality is the assertion: it convicts B1's declared blindness to the delimiter AND proves the wider loop is not an echo of the narrower one"
 else
   FAIL "CTL-B1-WIDE: the out-of-scope measurement reported $BW_WIDE against B1's $BW_NARROW on a fixture carrying ONLY code-spanned locators. Without a strict inequality here the figure reported beside B1's verdict cannot be told from a copy of B1's own pattern, and the scope note it supports would be unfounded"
+fi
+
+# CTL-B0 — the must-fire arm for B0's surface fields. The list is written by hand, because the
+# lister reads the directory and so can never name a file that is not there: it carries one real
+# two-line file and one path that does not exist. The walk must count exactly that one path
+# unreadable and exactly the real file's two lines read, so a count that ignored a failed open, or
+# that counted every listed file as read, cannot look like this. Like CTL-B1-WIDE it asserts no
+# finding code and is written without ctl_mustfire, so group Y's inventory is unchanged by it.
+# GROUP MD OPT-OUT for B0 and CTL-B0, declared per clause 6 rather than left silent. The subject
+# of both is the walk inside the GENERATED b.awk, not a shell function, and both arms are written
+# inline, so md_flips, which removes a function and re-runs one, has nothing to remove and nothing
+# to re-run. The compensating positive control is the mutation each was observed red under at its
+# real call site: B0 FAILs, and B1 is withheld, when group B's real walk is pointed at a root that
+# does not exist and when one path that does not exist is added to its list; CTL-B0 FAILs when the
+# walk stops counting a failed open, when it stops adding the lines it read, and when DENOM stops
+# carrying those two fields.
+D="$(ctl_mk b0)"
+printf 'A line with nothing to find.\nAnother.\n' > "$D/docs/notes.md"
+printf 'docs/notes.md\ndocs/listed-and-absent.md\n' > "$WORK/list.b0"
+O="$(ch_scan_b "$D" "$WORK/list.b0")"
+B0_UNREAD="$(awk '$1 == "DENOM" { print $5 }' <<<"$O")"
+B0_LINE="$(awk '$1 == "DENOM" { print $6 }' <<<"$O")"
+if [ "${B0_UNREAD:-0}" -eq 1 ] && [ "${B0_LINE:-0}" -eq 2 ]; then
+  PASS "CTL-B0: over a list naming one readable two-line file and one path that does not exist, the walk counts exactly $B0_UNREAD file unreadable and exactly $B0_LINE line(s) read, so the fields B0 grades measure a failed open rather than echoing the list"
+else
+  FAIL "CTL-B0: over a list naming one readable two-line file and one path that does not exist, the walk counted ${B0_UNREAD:-no} file(s) unreadable and ${B0_LINE:-no} line(s) read rather than 1 and 2 — B0 cannot tell a walk that read the tree from one that read nothing"
 fi
 
 # ── C ────────────────────────────────────────────────────────────────────────────
@@ -6130,6 +6601,364 @@ else
   FAIL "CTL-I-VACUOUS-NOT: over a populated, sound register the verdict stage rendered '<pass> <fail> <vacuous>' = '$I_RN' rather than '4 0 0' — it must grade a population that is there"
 fi
 
+# CTL-VACUITY-* — the vacuity half of the exit rule, driven through the recorder it reads and the
+# function it calls. Each case runs in a subshell that empties the recorder and then calls the
+# REAL VACUOUS(), never a rebound copy such as the one i_render above uses, so the status read
+# back is the one the exit rule takes. One line is out of these arms' reach: the one at the end
+# of this file that joins that status to the run's. It was shown by planting an undeclared VACUOUS
+# arm in the run and reading a non-zero exit while every verdict stayed green, recorded with the
+# change that added these arms. UNDECLARED and EMPTIED must fire on the undeclared-arm rule alone,
+# STALE on the stale-line rule and UNNAMED on the unreadable-id rule, whatever the set this file
+# ships holds: EMPTIED reads no declaration, and every other arm but DECLARED reads CTL_VAC_DECL
+# below, a fixture holding one B1 line. Over the shipped set, a member an arm does not plant would
+# read stale inside it and supply its status, so once a second member joined, an arm planting B1
+# alone would pass on two causes. That each rule still turns an arm red with a second member
+# joined, when a line that writes it is deleted, was shown and recorded with the change that gave
+# these arms their fixture. DECLARED reads the shipped set, renders every arm it declares, by the
+# parse the rule itself runs, and must fire on none of the rules, so a join is one line in
+# CH_VACUOUS_DECL and no arm is edited. The no-reason rule is held by two arms, because it is
+# written on two lines and each arm's input trips a second rule once one of those lines is gone:
+# NOREASON names a reason-less arm that did not render VACUOUS, so without the line that sets such
+# a line aside the stale-line rule still returns 1; NOREASON-RENDERED names one that did, so
+# without the line that reports it the undeclared-arm rule still returns 1. Either alone leaves
+# one of the two lines deletable with every arm green. DECLARED is a function, for one reason:
+# group MD registers it, and md_flips re-runs a function.
+CTL_VAC_DECL='
+B1 a fixture line for the CTL-VACUITY arms, held apart from CH_VACUOUS_DECL so the members that set ships never reach these arms
+'
+ctl_vac() {  # ctl_vac <declaration> [<arm-id>...] -> ch_vacuity_rc's status once those arms rendered VACUOUS
+  local decl="$1" a; shift
+  ( vacuous=0; VACUOUS_IDS=""
+    for a in "$@"; do VACUOUS "$a: planted by a vacuity control arm"; done
+    ch_vacuity_rc "$decl" )
+}
+ctl_vac_declared() {
+  local ids
+  ids="$(ch_vacuity_rc "$CH_VACUOUS_DECL" ids)"
+  # shellcheck disable=SC2086  # the declared ids are a word list, split on purpose
+  expect_rc 0 "CTL-VACUITY-DECLARED" "every arm the shipped declaration declares (${ids:-none}) rendering VACUOUS, and nothing else, leaves it silent, so the rule does not fire on a declared arm" -- ctl_vac "$CH_VACUOUS_DECL" $ids
+}
+expect_rc 1 "CTL-VACUITY-UNDECLARED" "an arm that renders VACUOUS and is not declared fails the run, over CTL_VAC_DECL, the arms' fixture declaration" -- ctl_vac "$CTL_VAC_DECL" B1 ZVAC
+ctl_vac_declared
+expect_rc 1 "CTL-VACUITY-EMPTIED" "with the declaration emptied the same B1 vacuity fails the run, so the B1 line is what keeps this suite green and not a rule that cannot fire" -- ctl_vac "" B1
+expect_rc 1 "CTL-VACUITY-STALE" "a declared arm that did not render VACUOUS fails the run, so a declaration cannot outlive its vacuity" -- ctl_vac "$CTL_VAC_DECL"
+expect_rc 1 "CTL-VACUITY-NOREASON" "a declaration line that names an arm and gives no reason fails the run" -- ctl_vac "$CTL_VAC_DECL"$'\n'"ZVAC" B1
+expect_rc 1 "CTL-VACUITY-NOREASON-RENDERED" "a declaration line that gives no reason fails the run when its arm did render VACUOUS, so the stale-line rule is not what supplies the status" -- ctl_vac "$CTL_VAC_DECL"$'\n'"ZVAC" B1 ZVAC
+expect_rc 1 "CTL-VACUITY-UNNAMED" "a VACUOUS verdict whose arm id cannot be read fails the run rather than escaping the set" -- ctl_vac "$CTL_VAC_DECL" B1 ""
+
+# ── J ────────────────────────────────────────────────────────────────────────────
+# One fixture, built by ctl_j_mk, over invented words, so this file spells no member of a real
+# enumeration. fx-lead is a ladder at its owner, read by kind lead, and a tally at its site.
+# fx-list is a bracketed group at its owner and at two sites, and a bold-lead list at a third, so
+# one id carries a list row and a lead row in one file. docs/other.md carries no row. A record, a
+# worked example and the release log each write two members in one paragraph, and inscope()
+# passes over all three. The lookalikes are part of the fixture: a bulleted item after the
+# owner's ordered list, a site group inside an enclosing square bracket, one member alone in a
+# paragraph, and two members in separate paragraphs. Each arm builds it, plants one change with
+# ctl_j_sub, and reads it with the same ch_scan_j that graded the tree above.
+J_R1='fx-lead | owner | docs/owner.md | lead | **The ladder.**'
+J_R2='fx-lead | site  | docs/site.md  | list | - **Tally:**'
+J_R3='fx-list | owner | docs/owner.md | list | A member holds'
+J_R4='fx-list | site  | docs/site.md  | list | a member does'
+J_R5='fx-list | site  | docs/site.md  | lead | Each member has a source'
+J_R6='fx-list | site  | docs/second.md | list | So does this file'
+# The clean fixture's denominators. Every arm that must stay silent requires its own exactly, so a
+# reader that went quiet because it read nothing reads red there and not clean.
+J_DEN='2 6 2 4 3 4 5 11 3 0'
+ctl_j_doc() {  # ctl_j_doc <root> [row...] — the declaring document: one heading line, then the fence
+  local d="$1" r; shift
+  { printf '# Fixture architecture document\n\n```%s\n# id | role | path | kind | anchor\n' "$CH_J_TAG"
+    for r in "$@"; do printf '%s\n' "$r"; done
+    printf '```\n'
+  } > "$d/$CH_FENCE_DOC"
+}
+ctl_j_mk() {  # ctl_j_mk <name> — the conformant fixture with all six rows; prints its root
+  local d; d="$(ctl_mk "j-$1")"
+  printf '%s\n' '**The ladder.**' '' '1. **`alpha`** — the first rung.' '2. **`beta`, a Warning** — the second.' '' \
+    '- **Members.** A member holds (`one`, `two`) on the night.' > "$d/docs/owner.md"
+  printf '%s\n' '- **Tally:** [N `alpha` · N `beta`]' '' '[It applies when a member does (`one`, `two`), as the owner says.]' '' \
+    '**Each member has a source.**' '' '- **`one`** — read from the first place.' '- **`two`** — read from the second.' > "$d/docs/site.md"
+  printf '%s\n' '[So does this file (`one`, `two`).]' > "$d/docs/second.md"
+  printf '%s\n' 'A night may read `one`.' '' 'And, a paragraph later, `two`.' > "$d/docs/other.md"
+  printf '%s\n' 'It was `one` or `two` then.' > "$d/reference/adr/ADR-900-fixture.md"
+  printf '%s\n' 'It was `one` or `two` then.' > "$d/examples/demo/README.md"
+  printf '%s\n' 'It was `one` or `two` then.' > "$d/CHANGELOG.md"
+  ctl_j_doc "$d" "$J_R1" "$J_R2" "$J_R3" "$J_R4" "$J_R5" "$J_R6"
+  printf '%s\n' "$d"
+}
+# ctl_j_sub <file> <old> <new> — the first <old>, read literally, becomes <new>; a \n in either is a
+# line break. A planted edit that does not land is a FAIL here, so no arm reads the unplanted
+# fixture as the state it names.
+ctl_j_sub() {
+  if awk -v o="$2" -v n="$3" '{ t = (NR == 1 ? $0 : t "\n" $0) } END { i = index(t, o); if (i == 0) exit 3; printf "%s%s%s\n", substr(t, 1, i - 1), n, substr(t, i + length(o)) }' "$1" > "$1.planted"; then
+    mv "$1.planted" "$1"
+  else
+    FAIL "CTL-J: a planted edit did not land in ${1#"$WORK"/} — the text it replaces is not there, so the arm after it would read the unplanted fixture"
+  fi
+}
+ctl_j_scan() { ch_scan_j "$1" "$(ctl_list "$1")"; }
+ctl_j_fire() {  # ctl_j_fire <label> <code> <id> <output> <what> [<expected-n>] — <code> fired for <id>
+  local label="$1" code="$2" id="$3" out="$4" what="$5" want="${6:-}" n
+  ctl_arm "$code"
+  n="$(awk -v c="$code" -v i="$id" '$1 == "FINDING" && $2 == c && $3 == i { n++ } END { print n + 0 }' <<<"$out")"
+  if [ "$n" -eq 0 ]; then
+    FAIL "$label: MUST FIRE — $what, and the extractor reported no $code for $id. A code with no arm behind it is a check indistinguishable from one that cannot fire"
+  elif [ -n "$want" ] && [ "$n" -ne "$want" ]; then
+    FAIL "$label: MUST FIRE $want time(s) — $what, and the extractor reported $code for $id $n time(s). The arity is the assertion here, not merely the firing"
+  else
+    PASS "$label: $code fired for $id ($n) — $what"
+  fi
+}
+ctl_j_why() {  # ctl_j_why <label> <id> <reason> <output> <what> — J0, for <id>, with that reason
+  local label="$1" id="$2" why="$3" out="$4" what="$5" n
+  ctl_arm J0
+  n="$(awk -v i="$id" -v w="$why" '$1 == "FINDING" && $2 == "J0" && $3 == i && $5 == w { n++ } END { print n + 0 }' <<<"$out")"
+  if [ "$n" -eq 1 ]; then
+    PASS "$label: J0 fired for $id, once, as $why — $what"
+  else
+    FAIL "$label: MUST FIRE J0 for $id as $why, once — $what; the extractor reported it $n time(s)"
+  fi
+}
+ctl_j_rec() {  # ctl_j_rec <label> <output> <record> <what> — the exact finding line is printed
+  local label="$1" out="$2" rec="$3" what="$4" n
+  n="$(awk -v r="$rec" '$0 == r { n++ } END { print n + 0 }' <<<"$out")"
+  if [ "$n" -eq 1 ]; then
+    PASS "$label: the extractor printed '$rec' — $what"
+  else
+    FAIL "$label: the extractor must print '$rec' once — $what; it printed it $n time(s)"
+  fi
+}
+ctl_j_quiet() {  # ctl_j_quiet <label> <output> <denominators> <what> — no finding, the denominators exact
+  local label="$1" out="$2" want="$3" what="$4" nf den
+  nf="$(awk '$1 == "FINDING" { n++ } END { print n + 0 }' <<<"$out")"
+  den="$(awk '$1 == "DENOM" { $1 = ""; sub(/^ /, ""); print }' <<<"$out")"
+  if [ "$nf" -eq 0 ] && [ "$den" = "$want" ]; then
+    PASS "$label: no finding, over denominators '$den' as planted — $what"
+  else
+    FAIL "$label: MUST STAY SILENT over denominators '$want' — $what; the extractor reported $nf finding(s) over '${den:-no DENOM line}'"
+  fi
+}
+ctl_j_solely() {  # ctl_j_solely <label> <id> <output> <what> — J0 for <id>, and nothing else for <id>
+  local label="$1" id="$2" out="$3" what="$4" n0 nx
+  ctl_arm J0
+  n0="$(awk -v i="$id" '$1 == "FINDING" && $2 == "J0" && $3 == i { n++ } END { print n + 0 }' <<<"$out")"
+  nx="$(awk -v i="$id" '$1 == "FINDING" && $2 != "J0" && $3 == i { n++ } END { print n + 0 }' <<<"$out")"
+  if [ "$n0" -ge 1 ] && [ "$nx" -eq 0 ]; then
+    PASS "$label: J0 fired for $id and no other code did — $what"
+  else
+    FAIL "$label: MUST FIRE J0 for $id and nothing else for it — $what; the extractor reported J0 $n0 time(s) and $nx other finding(s) for it"
+  fi
+}
+ctl_j_bad() {  # ctl_j_bad <label> <output> <n> <record> <what> — the denominator's count of ids withheld,
+  # and the exact finding a defect planted on ANOTHER id prints, once. The count alone is met by a reader
+  # that reads nothing more once an id breaks at the fence, so the other id's finding is what grades
+  # containment: such a reader reports the count and never the finding
+  local label="$1" out="$2" want="$3" rec="$4" what="$5" got nrec
+  got="$(awk '$1 == "DENOM" { print $11 }' <<<"$out")"
+  nrec="$(awk -v r="$rec" '$0 == r { n++ } END { print n + 0 }' <<<"$out")"
+  if [ "${got:-none}" = "$want" ] && [ "$nrec" -eq 1 ]; then
+    PASS "$label: $got id(s) withheld, and the defect planted on another id is still found, as '$rec' — $what"
+  else
+    FAIL "$label: the denominator must withhold $want id(s), and the defect planted on another id must still be found, once, as '$rec' — $what; it withheld '${got:-no DENOM line}' and printed that finding $nrec time(s)"
+  fi
+}
+
+# The conformant fixture. It is also what group MD probes: the registered assertion passes over it,
+# so removing the extractor flips a pass and not a verdict that was already red.
+J_CLEAN="$(ctl_j_mk clean)"
+ch_list_dir "$J_CLEAN" > "$WORK/list.jclean"
+O="$(ch_scan_j "$J_CLEAN" "$WORK/list.jclean")"
+ctl_j_quiet "CTL-J-CLEAN" "$O" "$J_DEN" "the conformant fixture, which carries the lookalikes: a bulleted item after the owner's ordered list, a site group inside an enclosing square bracket, a list row and a lead row for one id in one file, one member alone in a paragraph, two members in separate paragraphs, and two members in one paragraph of a record, a worked example and the release log"
+
+# Both directions, at the owner and at a site, for each kind.
+D="$(ctl_j_mk j1ownlead)"
+ctl_j_sub "$D/docs/owner.md" '2. **`beta`, a Warning** — the second.' '2. **`beta`, a Warning** — the second.\n3. **`gamma`** — the third rung.'
+ctl_j_fire "CTL-J1-OWNER-ADD-LEAD" J1 fx-lead "$(ctl_j_scan "$D")" "a third rung is added at the owner and not at its site" 1
+
+D="$(ctl_j_mk j2ownlead)"
+ctl_j_sub "$D/docs/owner.md" '1. **`alpha`** — the first rung.\n2. **`beta`, a Warning** — the second.' '1. **`alpha`** — the first rung.'
+ctl_j_fire "CTL-J2-OWNER-DROP-LEAD" J2 fx-lead "$(ctl_j_scan "$D")" "the second rung is removed whole at the owner and stays at its site" 1
+
+D="$(ctl_j_mk j2siteadd)"
+ctl_j_sub "$D/docs/site.md" '[N `alpha` · N `beta`]' '[N `alpha` · N `beta` · N `gamma`]'
+ctl_j_fire "CTL-J2-SITE-ADD" J2 fx-lead "$(ctl_j_scan "$D")" "the site's tally names a third member the owner does not" 1
+
+D="$(ctl_j_mk j1sitedrop)"
+ctl_j_sub "$D/docs/site.md" 'a member does (`one`, `two`)' 'a member does (`one`)'
+ctl_j_fire "CTL-J1-SITE-DROP" J1 fx-list "$(ctl_j_scan "$D")" "one span is removed from a site's group" 1
+
+D="$(ctl_j_mk j1ownlist)"
+ctl_j_sub "$D/docs/owner.md" 'A member holds (`one`, `two`)' 'A member holds (`one`, `two`, `three`)'
+ctl_j_fire "CTL-J1-OWNER-ADD-LIST" J1 fx-list "$(ctl_j_scan "$D")" "a third span is added to the owner's group — once at each of its three sites" 3
+
+D="$(ctl_j_mk j2ownlist)"
+ctl_j_sub "$D/docs/owner.md" 'A member holds (`one`, `two`)' 'A member holds (`one`)'
+ctl_j_fire "CTL-J2-OWNER-DROP-LIST" J2 fx-list "$(ctl_j_scan "$D")" "one span is removed from the owner's group — once at each of its three sites" 3
+
+# CTL-J2-REPLAY reproduces, on the fixture, the shape of the defect this class exists for: a site
+# still carrying a member its owner withdrew. No shipped defect was written as a registered
+# reading, so there is no -RETRO arm to replay one from history.
+D="$(ctl_j_mk j2replay)"
+ctl_j_sub "$D/docs/site.md" 'a member does (`one`, `two`)' 'a member does (`one`, `two`, `gone`)'
+ctl_j_fire "CTL-J2-REPLAY" J2 fx-list "$(ctl_j_scan "$D")" "a site's group still carries a member its owner no longer names" 1
+
+D="$(ctl_j_mk j1sources)"
+ctl_j_sub "$D/docs/owner.md" 'A member holds (`one`, `two`)' 'A member holds (`one`, `two`, `three`)'
+ctl_j_sub "$D/docs/site.md" 'a member does (`one`, `two`)' 'a member does (`one`, `two`, `three`)'
+ctl_j_sub "$D/docs/second.md" '(`one`, `two`)' '(`one`, `two`, `three`)'
+O="$(ctl_j_scan "$D")"
+ctl_j_fire "CTL-J1-SOURCES-STALE" J1 fx-list "$O" "a member is added at the owner and at both bracketed sites, and the list that sources each member is left as it was" 1
+ctl_j_rec "CTL-J1-SOURCES-STALE-FILE" "$O" "FINDING J1 fx-list docs/site.md three" "the finding names the file that carries the sourcing list, and the member it does not source"
+
+# An unregistered repeat, and the row that holds one.
+D="$(ctl_j_mk j3file)"
+ctl_j_sub "$D/docs/other.md" 'A night may read `one`.\n\nAnd, a paragraph later, `two`.' 'A night may read `one`.\nAnd, a paragraph later, `two`.'
+O="$(ctl_j_scan "$D")"
+ctl_j_fire "CTL-J3-FILE" J3 fx-list "$O" "add-only: the file that carries no row joins its two one-member paragraphs into one" 1
+ctl_j_rec "CTL-J3-MEMBERS" "$O" "FINDING J3 fx-list docs/other.md 1 2 one, two" "the finding names the paragraph's opening line and the members it read there, as the other two comparison codes name theirs"
+
+D="$(ctl_j_mk j3table)"
+ctl_j_sub "$D/docs/other.md" 'A night may read `one`.\n\nAnd, a paragraph later, `two`.' '| night | `one` |\n| later | `two` |'
+ctl_j_fire "CTL-J3-TABLE" J3 fx-list "$(ctl_j_scan "$D")" "the two members stand in two rows of one table there — a whole table is one paragraph" 1
+
+D="$(ctl_j_mk j3rowgone)"
+ctl_j_doc "$D" "$J_R1" "$J_R2" "$J_R3" "$J_R4" "$J_R5"
+O="$(ctl_j_scan "$D")"
+ctl_j_fire "CTL-J3-ROW-REMOVED" J3 fx-list "$O" "remove-only: the second site's row is removed while its repeat stands" 1
+ctl_j_rec "CTL-J3-ROW-REMOVED-FILE" "$O" "FINDING J3 fx-list docs/second.md 1 2 one, two" "the finding names the file whose row was removed — which is what gives 'a row is never removed to make a red go away' a runner"
+
+D="$(ctl_j_mk j3partition)"
+printf '%s\n' 'It was `one` or `two` then.' > "$D/docs/record-copy.md"
+O="$(ctl_j_scan "$D")"
+ctl_j_fire "CTL-J3-OUT-OF-PARTITION" J3 fx-list "$O" "the record's paragraph is written in a file under docs/" 1
+ctl_j_rec "CTL-J3-OUT-OF-PARTITION-FILE" "$O" "FINDING J3 fx-list docs/record-copy.md 1 2 one, two" "the same sentence the record carries silently is found there — the path is what passes over the record, and not its words"
+
+# A broken instrument: what the register cannot read is a failure, withheld for its own id alone.
+D="$(ctl_j_mk j0nofence)"
+printf '# Fixture architecture document\n' > "$D/$CH_FENCE_DOC"
+ctl_j_fire "CTL-J0-NO-FENCE" J0 - "$(ctl_j_scan "$D")" "the declaring document carries no register fence — a failure that belongs to no id" 1
+
+D="$(ctl_j_mk j0short)"
+ctl_j_doc "$D" "$J_R1" 'fx-lead | site  | docs/site.md  | list' "$J_R3" "$J_R4" "$J_R5" "$J_R6"
+ctl_j_fire "CTL-J0-SHORT-ROW" J0 fx-lead "$(ctl_j_scan "$D")" "a row has lost its anchor"
+
+D="$(ctl_j_mk j0role)"
+ctl_j_doc "$D" "$J_R1" 'fx-lead | sight | docs/site.md  | list | - **Tally:**' "$J_R3" "$J_R4" "$J_R5" "$J_R6"
+ctl_j_fire "CTL-J0-ROLE" J0 fx-lead "$(ctl_j_scan "$D")" "a row names a role that is neither owner nor site"
+
+D="$(ctl_j_mk j0kind)"
+ctl_j_doc "$D" "$J_R1" 'fx-lead | site  | docs/site.md  | lest | - **Tally:**' "$J_R3" "$J_R4" "$J_R5" "$J_R6"
+ctl_j_fire "CTL-J0-KIND" J0 fx-lead "$(ctl_j_scan "$D")" "a row names a kind that is neither lead nor list"
+
+D="$(ctl_j_mk j0owners)"
+ctl_j_doc "$D" "$J_R1" "$J_R2" 'fx-lead | owner | docs/site.md  | list | - **Tally:**' "$J_R3" "$J_R4" "$J_R5" "$J_R6"
+ctl_j_fire "CTL-J0-TWO-OWNERS" J0 fx-lead "$(ctl_j_scan "$D")" "an id carries a second owner row"
+
+D="$(ctl_j_mk j0path)"
+ctl_j_doc "$D" "$J_R1" 'fx-lead | site  | docs/absent.md | list | - **Tally:**' "$J_R3" "$J_R4" "$J_R5" "$J_R6"
+ctl_j_fire "CTL-J0-PATH" J0 fx-lead "$(ctl_j_scan "$D")" "a row names a file that is not in the tracked list"
+
+D="$(ctl_j_mk j0nosite)"
+ctl_j_doc "$D" "$J_R1" "$J_R3" "$J_R4" "$J_R5" "$J_R6"
+ctl_j_sub "$D/docs/second.md" '(`one`, `two`)' '(`one`)'
+O="$(ctl_j_scan "$D")"
+ctl_j_fire "CTL-J0-NO-SITE" J0 fx-lead "$O" "an id's only site row is removed: an owner row alone is not a registration"
+ctl_j_bad "CTL-J0-NO-SITE-CONTAINED" "$O" 1 "FINDING J1 fx-list docs/second.md two" "the broken id is withheld and the other id is still read on the same run"
+
+D="$(ctl_j_mk j0absent)"
+ctl_j_sub "$D/docs/owner.md" '**The ladder.**' '**The stair.**'
+ctl_j_solely "CTL-J0-ANCHOR-ABSENT" fx-lead "$(ctl_j_scan "$D")" "the owner's anchor is renamed, so it is found no times"
+
+D="$(ctl_j_mk j0twice)"
+ctl_j_sub "$D/docs/owner.md" 'on the night.' 'on the night.\n\nSee **The ladder.** above.'
+ctl_j_solely "CTL-J0-ANCHOR-TWICE" fx-lead "$(ctl_j_scan "$D")" "the owner's anchor is written a second time in its file"
+
+D="$(ctl_j_mk j0nogroup)"
+ctl_j_sub "$D/docs/owner.md" 'A member holds (`one`, `two`) on the night.' 'A member holds: `one`, `two` on the night.'
+ctl_j_fire "CTL-J0-NO-GROUP" J0 fx-list "$(ctl_j_scan "$D")" "the owner's brackets are replaced by a colon, so no group opens after the anchor"
+
+D="$(ctl_j_mk j0empty)"
+ctl_j_sub "$D/docs/owner.md" 'A member holds (`one`, `two`)' 'A member holds (one, two)'
+ctl_j_fire "CTL-J0-EMPTY" J0 fx-list "$(ctl_j_scan "$D")" "the owner's members are written as plain words, so the reading yields none"
+
+D="$(ctl_j_mk j0leadspan)"
+ctl_j_sub "$D/docs/owner.md" '2. **`beta`, a Warning**' '2. **beta, a Warning**'
+ctl_j_fire "CTL-J0-LEAD-SPAN" J0 fx-lead "$(ctl_j_scan "$D")" "a rung's bold lead-in has lost its code span — a rung that cannot be read is not a rung removed"
+
+D="$(ctl_j_mk j0heading)"
+ctl_j_sub "$D/docs/owner.md" '**The ladder.**\n\n1.' '**The ladder.**\n\n## A later section\n\n1.'
+ctl_j_why "CTL-J0-LEAD-HEADING" fx-lead no-list-follows-the-anchor-before-the-next-heading "$(ctl_j_scan "$D")" "a heading stands between the owner's anchor and its list, so the list is another section's"
+
+D="$(ctl_j_mk j0otherid)"
+ctl_j_sub "$D/docs/owner.md" '**The ladder.**' '**The stair.**'
+ctl_j_sub "$D/docs/second.md" '(`one`, `two`)' '(`one`)'
+O="$(ctl_j_scan "$D")"
+ctl_j_fire "CTL-J0-OTHER-ID-GRADED" J0 fx-lead "$O" "one id's anchor is renamed"
+ctl_j_fire "CTL-J0-OTHER-ID-GRADED-READ" J1 fx-list "$O" "and on the same run the other id's site, which lost a span, is still read and graded" 1
+
+D="$(ctl_j_mk j0nosep)"
+ctl_j_doc "$D" "$J_R1" 'this line carries no separator at all' "$J_R2" "$J_R3" "$J_R4" "$J_R5" "$J_R6"
+ctl_j_why "CTL-J0-NO-SEPARATOR" - a-row-does-not-carry-its-five-fields "$(ctl_j_scan "$D")" "a line with no separator follows a valid row: its id cannot be read, so it is charged to no id and withholds every verdict, and not to the row above it"
+
+D="$(ctl_j_mk j0copy)"
+printf '%s\n' '**The solo list.**' '' '- **`left`** — one.' '- **`right`** — the other.' > "$D/docs/solo.md"
+ctl_j_doc "$D" "$J_R1" "$J_R2" "$J_R3" "$J_R4" "$J_R5" "$J_R6" 'fx-self | owner | docs/solo.md | lead | **The solo list.**' 'fx-self | site  | docs/solo.md | lead | **The solo list.**'
+ctl_j_sub "$D/docs/site.md" '[N `alpha` · N `beta`]' '[N `alpha`]'
+O="$(ctl_j_scan "$D")"
+ctl_j_why "CTL-J0-SITE-COPY" fx-self a-site-row-copies-its-owner-row "$O" "an id's only site row repeats its owner row — the owner compared with itself, which would pass both comparisons on nothing"
+ctl_j_bad "CTL-J0-SITE-COPY-CONTAINED" "$O" 1 "FINDING J1 fx-lead docs/site.md beta" "that id is withheld, and another id is still read on the same run"
+
+# What must stay silent, each over the denominators it plants.
+D="$(ctl_j_mk jorder)"
+ctl_j_sub "$D/docs/site.md" '[N `alpha` · N `beta`]' '[N `beta` · N `alpha`]'
+ctl_j_quiet "CTL-J-ORDER" "$(ctl_j_scan "$D")" "$J_DEN" "the site's members stand in another order — membership is graded, not rank"
+
+D="$(ctl_j_mk jwrapanchor)"
+ctl_j_sub "$D/docs/site.md" '[It applies when a member does (' '[It applies when a member\ndoes ('
+ctl_j_quiet "CTL-J-WRAP-ANCHOR" "$(ctl_j_scan "$D")" "$J_DEN" "a line break falls inside a site's anchor"
+
+D="$(ctl_j_mk jwrapgroup)"
+ctl_j_sub "$D/docs/site.md" 'a member does (`one`, `two`)' 'a member does (`one`,\n`two`)'
+ctl_j_quiet "CTL-J-WRAP-GROUP" "$(ctl_j_scan "$D")" "$J_DEN" "a line break falls inside a site's group"
+
+D="$(ctl_j_mk jplainwords)"
+ctl_j_sub "$D/docs/site.md" 'a member does (`one`, `two`)' 'a member does (`one`, `two`, and no others)'
+ctl_j_quiet "CTL-J-PLAIN-WORDS" "$(ctl_j_scan "$D")" "$J_DEN" "plain words stand inside a site's group beside its code spans"
+
+D="$(ctl_j_mk jspanoutside)"
+ctl_j_sub "$D/docs/site.md" 'a member does (`one`, `two`)' 'a member does (`one`, `two`) `three`'
+ctl_j_quiet "CTL-J-SPAN-OUTSIDE" "$(ctl_j_scan "$D")" "$J_DEN" "a code span stands directly after a site's closing bracket, outside its group"
+
+D="$(ctl_j_mk jleadpara)"
+ctl_j_sub "$D/docs/owner.md" '**The ladder.**\n\n1.' '**The ladder.**\n\nA paragraph stands between the anchor and its list.\n\n1.'
+ctl_j_quiet "CTL-J-LEAD-PARA" "$(ctl_j_scan "$D")" '2 6 2 4 3 4 5 12 3 0' "a paragraph stands between the owner's anchor and its list, which a lead reading passes over — the paragraph count moves by the one planted"
+
+D="$(ctl_j_mk jfencedhash)"
+ctl_j_sub "$D/docs/owner.md" '**The ladder.**\n\n1.' '**The ladder.**\n\n```\n# a hash line, inside a fence\n```\n\n1.'
+ctl_j_quiet "CTL-J-LEAD-FENCED-HASH" "$(ctl_j_scan "$D")" "$J_DEN" "a fenced block between the owner's anchor and its list carries a line that opens with a hash mark, which is neither a heading nor a paragraph"
+
+D="$(ctl_j_mk j3twoids)"
+ctl_j_sub "$D/docs/other.md" 'A night may read `one`.' 'A night may read `one` and `alpha`.'
+ctl_j_quiet "CTL-J3-TWO-IDS" "$(ctl_j_scan "$D")" "$J_DEN" "one paragraph carries one member of each id — members are counted per id"
+
+D="$(ctl_j_mk j3fenced)"
+ctl_j_sub "$D/docs/other.md" 'And, a paragraph later, `two`.' 'And, a paragraph later, `two`.\n\n```\n`one` and `two`\n```'
+ctl_j_quiet "CTL-J3-FENCED" "$(ctl_j_scan "$D")" "$J_DEN" "two members stand inside a fenced block of the file that carries no row"
+
+D="$(ctl_j_mk j3plain)"
+ctl_j_sub "$D/docs/other.md" 'A night may read `one`.' 'A night may read one, or two.'
+ctl_j_quiet "CTL-J3-PLAIN" "$(ctl_j_scan "$D")" "$J_DEN" "two members are written as plain words in one paragraph there"
+
+# The registered assertion, run over the conformant fixture with its subject PRESENT. md_flips
+# below shows the same call reporting one FAIL once ch_scan_j is removed; this arm is the other
+# half, without which that FAIL could be a verdict the fixture already carried.
+J_PRESENT="$(md_probe zzq_j_no_such_subject j_assert "$J_CLEAN" "$WORK/list.jclean")"
+if [ -n "$J_PRESENT" ] && [ "${J_PRESENT##* }" = "0" ] && [ "${J_PRESENT%% *}" != "0" ]; then
+  PASS "CTL-J-MD-PRESENT: with its subject present the registered assertion reports pass=${J_PRESENT%% *} fail=${J_PRESENT##* } over the conformant fixture — so the single FAIL that MD[J] requires below is a flip, and not a verdict that fixture already carried"
+else
+  FAIL "CTL-J-MD-PRESENT: over the conformant fixture the registered assertion returned '${J_PRESENT:-nothing}' rather than passes and no FAIL — MD[J] below would then certify a flip from a state that was never green"
+fi
+
 # ── the size fence ───────────────────────────────────────────────────────────────
 # Every arm here but CTL-SIZE-RETRO drives the SAME ch_scan_size the tracked tree was graded by,
 # over one base fixture, ctl_size_mk, with one plant. The fixture's declaration carries the tracked
@@ -6949,15 +7778,22 @@ fi
 
 # ── REGISTERED ASSERTIONS, AND WHAT IS NOT REGISTERED. md_flips re-runs a registered assertion
 # with its subject removed and requires exactly one FAIL and no PASS. What is registered: group
-# H's h_assert, over ch_scan_h, the function that drives its extractor. It is probed over the
-# conformant fixture the H control arms built, where it passes — arm CTL-H-MD-PRESENT is that
-# half — so what is certified is a flip, and not a verdict that was already red. The size group's
+# H's h_assert, over ch_scan_h, and group J's j_assert, over ch_scan_j — in each, the function that
+# drives its extractor. Each is probed over the conformant fixture its own control arms built,
+# where it passes — arms CTL-H-MD-PRESENT and CTL-J-MD-PRESENT are that half — so what is
+# certified is a flip, and not a verdict that was already red. The size group's
 # size_assert is registered the same way, over ch_scan_size and that group's base fixture, where arm
 # CTL-SIZE-MD-PRESENT is the other half. The declared
 # residual in MD2 is still this suite's registration queue: every entry that leaves it gains an
 # MD[...] arm here in the same edit, and an entry cannot leave it until its assertion is
 # remediated, because an oracle asked to certify a still-blind assertion turns the suite red for
 # a defect it is reporting rather than causing.
+# The vacuity half of the exit rule is registered as well: ch_vacuity_rc is the subject whose
+# removal must flip ctl_vac_declared, the function arm CTL-VACUITY-DECLARED runs above, over the
+# declaration this file ships, where it passes. With ch_vacuity_rc removed the arm reads status 127
+# and reports its subject absent, so what is certified is again a flip. The exit rule's own call
+# to it is outside md_flips, which re-runs an assertion and not the run's status; an absent
+# ch_vacuity_rc there exits 127 and sets the status to 1.
 #
 # ── CLAUSE 6 OPT-OUT, DECLARED RATHER THAN LEFT SILENT ───────────────────────────
 # WHAT IS OPTED OUT. The subjects group H reads that are FILES AND LISTINGS, not shell functions,
@@ -6977,7 +7813,491 @@ fi
 # h_assert or a lister — a shell function that an arm written inline cannot hand to md_flips,
 # which re-runs a function. What compensates is the mutation of its own subject each arm was
 # observed red under, recorded with the change that added the arm.
+# Group J's subjects that are files are opted out on the same ground — the declaring document, its
+# fence and every surface a row names are the INPUT UNDER TEST. Its CTL-J0 arms remove the fence, a
+# row's field, a site row, an anchor, a group and a list in turn and require each to fail; and every
+# must-not-fire J arm requires the exact denominators its fixture plants.
 md_flips ch_scan_h 'H' h_assert "$H_CLEAN" "$WORK/list.hclean"
+md_flips ch_vacuity_rc 'VACUITY' ctl_vac_declared
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group FZ — every verdict arm in this file must be able to FAIL.
+#
+# ── WHY THIS GROUP IS HERE AND NOT ONLY IN THE SUITE WHERE IT WAS FOUNDED ────────
+# The rule was founded in the trip-resolution-contract suite, after that suite shipped two
+# verdict arms unable to fail and both were found by a human reading predicates at Stage 7
+# rather than by a check. The shape is not local to that suite. When this group was installed
+# here its walker was first run over every guard suite, and it found the shape in one of them,
+# three guards, rewritten in the same change. A guard whose failure branch is unreachable
+# reports PASS forever, and that PASS is indistinguishable from a real one in every run, so a
+# rule enforced in one suite leaves the growth surface of the others unguarded. The same
+# group, the same walker and the same controls ship in every guard suite, each over its own
+# source, so a finding is reported by the suite whose arm it is.
+#
+# ── THE RULE IT ENFORCES, AND WHY THAT RULE ──────────────────────────────────────
+# Reachability is not decidable in general, so this group does not claim to decide it. It
+# enforces a SHAPE, and the shape is the one both founding instances had:
+#
+#     a verdict guard that reaches PASS through a DISJUNCTION.
+#
+# Written `if A or B; then PASS ... else FAIL`, the failure branch requires `not A and
+# not B` — a CONJUNCTION the author never wrote down and therefore never checked. That is
+# where unsatisfiability hides. In both founding instances the second disjunct was implied
+# by the first's negation, so the conjunction could never hold. The same disjunction
+# reaching FAIL is the opposite case and is not flagged: `if A or B; then FAIL` fires
+# whenever either holds.
+#
+# The shape is not merely suspicious, it is never NECESSARY. Every arm written that way can
+# be written as a chain — one `elif` per condition, one message per branch — which is
+# strictly better for a second reason: a branch that can fire for several reasons proves
+# that something was wrong, not WHICH thing. And where a disjunct exists to excuse an empty
+# population, the honest verdict for that case is never PASS, unless a live arm already
+# carries that red and the message names it: otherwise it is VACUOUS where the suite has
+# that verdict, or a FAIL that names the empty population. So the rule costs nothing it
+# should keep.
+#
+# ── COVERAGE BOUNDARY — WHAT THIS GROUP DOES NOT GRADE ───────────────────────────
+# Stated plainly, because an overclaiming meta-arm is the same defect one level up.
+#   *  It decides a SHAPE, never reachability. A tautological guard — `[ "$n" -ge 0 ]` over
+#      a count, `[ -n "$x" ]` over a value assigned a literal just above it, or a comparison
+#      between two values the suite itself constructs to be equal — reaches PASS without a
+#      disjunction and is INVISIBLE here. This group would not have caught such an arm, and
+#      does not claim it would. The class is a DECLARED RESIDUAL, not an oversight, and no
+#      detector for it ships, for a stated reason: whether a guard can fail is whether its
+#      negation is satisfiable over the values this file can produce, which is not decidable
+#      in general, and a detector for a few literal spellings would grade those spellings
+#      while reading as coverage of the class — the very failure this group exists to catch.
+#      Group MD's static arm leaves every shell-test condition unflagged by design; its
+#      dynamic arm convicts a REGISTERED assertion whose PASS survives its subject's removal,
+#      which some tautological guards do. An unregistered tautological guard is seen by
+#      nothing in this file, and this paragraph is where a reader is told so.
+#   *  It grades the guards whose taken branch carries a verdict on the line that branch
+#      starts on — the rest of the guard's own line after `then`, or else the next non-blank
+#      non-comment line — and it reads the FIRST verdict there, so `then FAIL ...; else
+#      PASS ...` is a guard that reaches FAIL. A verdict that first appears deeper inside a
+#      branch is counted as a non-verdict guard and is not graded. The counts are printed, so
+#      the ungraded remainder is visible rather than implied.
+#   *  It locates a guard only where `if` or `elif` opens a line of top-level code, so three
+#      verdict forms are never located and never graded: (a) a list-form verdict,
+#      `A && PASS "..." or FAIL "..."`, which with a disjunction for A is the most compact
+#      spelling of the banned shape; (b) a guard whose `if` is not the first word on its
+#      line — a `case` arm, a one-line function body, or one after `;` or `&&`; and (c) a
+#      disjunction decided in a helper or an assignment and compared afterwards, where the
+#      guard that reaches PASS tests the stored result and never sees the disjunction — the
+#      artifact-schema suite's `st_cf_dfired` is one. FZ3 prints FZ_UNLOCATED, the top-level
+#      lines that carry a PASS verdict and are no located guard's verdict line. Forms (a) and
+#      (b) fall inside it when they stand on a line of their own, and so does a PASS reached
+#      through an `else` on a later line or first appearing deeper in a branch, so the count
+#      bounds (a) and (b) from above and is no census of them. It never counts form (c),
+#      whose comparing guard is located and whose PASS is read as that guard's verdict, nor a
+#      list-form verdict or an `else` PASS standing on the line a located guard's branch
+#      starts on, which is read as that guard's verdict line and graded against that guard's
+#      condition.
+#   *  It walks TOP-LEVEL CODE ONLY. A lexer tracks what is open at each point — quotes,
+#      $( ), backticks, ${ }, $(( )) and here-documents — and a line that begins inside one
+#      of them is an embedded program or a payload, never a shell guard: an awk program's
+#      `if`, a script written out through a here-document, a mock defined inside a
+#      multi-line command substitution. Inside a guard the operator counts only at the
+#      guard's own level, so one inside a substitution, a quoted literal or a here-document
+#      is not this guard's disjunction, while one inside [[ ]] or (( )) is. The number of
+#      lines not walked is printed with FZ3. A verdict placed inside a multi-line command
+#      substitution runs in a subshell whose counters never reach this run, and it is not
+#      graded here either. A `<<` whose delimiter is neither a word nor quoted — the
+#      shift-assign `<<=` is one — names no line on which a here-document would end, so the
+#      lexer records it rather than guess, and FZ3 refuses a file that carries one.
+#   *  It recognises the operator as two bars. A disjunction spelled `-o` inside [ ] or
+#      test, a `case` alternation, a negated group, and a `then` standing alone on its own
+#      line are not recognised; none of them was written into a verdict guard in any guard
+#      suite when this group was installed, and the walk does not grade them.
+#   *  The walk is line-oriented and does not track nesting, so it attributes a verdict to
+#      the guard it most recently completed. Every control below runs on a synthetic source
+#      of known shape precisely because the parser's own correctness cannot be assumed.
+#   *  Its scan set is THIS FILE — not a script it sources, and not a sibling suite. Each
+#      guard suite carries this group over its own source, so a finding is reported by the
+#      suite whose arm it is. The walker is the same text in every suite that carries it, by
+#      the convention group MD follows, and nothing asserts the copies agree: a correction to
+#      one is a correction owed to all of them.
+#
+# ── THE CONTROLS ARE PERMANENT, NOT A ONE-TIME DEMONSTRATION ─────────────────────
+# FZ1 plants an arm carrying the banned shape and requires the detector to flag it. FZ2
+# plants the conforming source — the same arm rewritten as a chain, PLUS a conjunctive
+# PASS-reaching guard — and requires silence over it; that second guard is the only
+# specimen an over-matching detector can be seen on, and FZ2 asserts its presence rather
+# than assuming it. Three more plants each stand behind one correction the walker carries,
+# and each is a source a walker without that correction reads wrongly. FZ5 is a one-line
+# guard that names FAIL first: a walker taking any PASS after `then` reads it as a
+# PASS-reaching disjunction. FZ6 is two awk programs carrying the operator, each followed by
+# a shell guard: a walker reading awk's `if` as a shell guard flags the awk line and lets it
+# swallow the guard after it, so FZ6 requires the second, disjunctive guard flagged at its
+# OWN line. FZ7 puts the operator inside a command substitution, a quoted literal and a
+# here-document, then a `<<` whose delimiter is no word, which must be refused without
+# hiding what follows, then a real one inside [[ ]] that must still be flagged. Every plant is
+# built and run on EVERY invocation, so a detector that stops detecting is caught by the
+# next run rather than by the next reader. FZ1 is graded FIRST, and FZ3 reads FZ1, FZ6 and
+# FZ7 before it reads this file: a zero whose sensitivity arms did not fire is a broken
+# probe, not a clean file. FZ3 also refuses a scan whose lexer ended this file inside a
+# construct it never saw closed, because every line after the opener was invisible to it,
+# and one whose lexer met a `<<` it could not delimit.
+#
+# The needle is assembled from two pieces, and the comments above spell it `or` rather
+# than literally. The plants are the deliberate exception: each spells the operator in full,
+# so that no plant is built out of the needle it is meant to test — a control assembled from
+# the thing it validates cannot detect that thing drifting. The literal is safe in the plants
+# because the walker reads only top-level code, and every plant line is a quoted argument.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group FZ — every verdict arm in this file must be able to FAIL."
+
+FZ_OR='|'"|"
+FZ_Q="'"
+FZ_GUARDS=0; FZ_ARMS=0; FZ_PASSARMS=0; FZ_FAILARMS=0; FZ_NONVERDICT=0; FZ_UNRESOLVED=0
+FZ_BAD=0; FZ_BAD_AT=""; FZ_LINES=0; FZ_EMBEDDED=0; FZ_LEXEND=""
+FZ_PASSTOP=0; FZ_PASSREAD=0; FZ_UNLOCATED=0
+FZ_PJ=(); FZ_CO=()
+
+# fz_lex — one pass over a shell source, keeping a stack of the constructs open at each point:
+# T top-level code; S '…'; A $'…'; D "…"; B a backtick; C $( … ) and c a ( ) inside it; P ${ … };
+# R and r $(( … )). A comment is dropped where a word may start; a here-document's body is
+# every line after its opener up to its delimiter. A `<<` whose delimiter is neither a word nor
+# quoted, as in the shift-assign `<<=`, opens no body: no line can be named on which it would
+# end, so its line number is recorded instead. Per line it records the TOP-LEVEL projection —
+# the line with the inside of every open construct removed and the quote marks kept — and
+# whether the line BEGAN in top-level code. A line that began inside a construct is part of an
+# embedded program or a payload, never a shell guard. FZ_LEXEND is the state at end of input:
+# "T|" when every construct closed and no here-document is pending, and the lines of any `<<`
+# it could not delimit follow a second bar, so the state is then never "T|".
+fz_lex() {  # <file> -> FZ_PJ[] FZ_CO[] FZ_EMBEDDED FZ_LEXEND
+  local f="$1" line rest pre c c2 c3 st="T" top proj last hdq="" tag dash k qd hbad=""
+  FZ_PJ=(); FZ_CO=(); FZ_EMBEDDED=0; FZ_LEXEND=""
+  while IFS= read -r line || [ -n "$line" ]; do
+    if [ -n "$hdq" ]; then
+      tag="${hdq%% *}"; k="$line"
+      case "$tag" in -*) tag="${tag#-}"; k="${k#"${k%%[!	]*}"}" ;; esac
+      [ "$k" = "$tag" ] && hdq="${hdq#* }"
+      FZ_PJ+=(""); FZ_CO+=(0); FZ_EMBEDDED=$((FZ_EMBEDDED+1)); continue
+    fi
+    if [ "$st" = T ]; then FZ_CO+=(1); else FZ_CO+=(0); FZ_EMBEDDED=$((FZ_EMBEDDED+1)); fi
+    proj=""; rest="$line"; last=" "
+    while [ -n "$rest" ]; do
+      top="${st:$((${#st}-1))}"
+      case "$top" in
+        T|C|c) pre="${rest%%[\'\"\\\`\$#\<\(\)]*}" ;;
+        S)     pre="${rest%%\'*}" ;;
+        A)     pre="${rest%%[\\\']*}" ;;
+        D)     pre="${rest%%[\\\"\`\$]*}" ;;
+        B)     pre="${rest%%[\\\`\'\"]*}" ;;
+        P)     pre="${rest%%[\\\}\$]*}" ;;
+        R|r)   pre="${rest%%[\(\)\$]*}" ;;
+      esac
+      if [ -n "$pre" ]; then
+        [ "$st" = T ] && proj="$proj$pre"
+        last="${pre:$((${#pre}-1))}"
+        rest="${rest:${#pre}}"
+        [ -n "$rest" ] || break
+      fi
+      c="${rest:0:1}"; c2="${rest:0:2}"; c3="${rest:0:3}"
+      case "$top" in
+        T|C|c)
+          case "$c" in
+            \\) [ "$st" = T ] && proj="$proj$c2"; rest="${rest:2}"; last=x ;;
+            \') [ "$st" = T ] && proj="$proj'"; st="${st}S"; rest="${rest:1}" ;;
+            \") [ "$st" = T ] && proj="$proj\""; st="${st}D"; rest="${rest:1}" ;;
+            \`) st="${st}B"; rest="${rest:1}" ;;
+            \$) case "$c3" in
+                  '$(('*) st="${st}Rr"; rest="${rest:3}" ;;
+                  *) case "$c2" in
+                       "\$'") st="${st}A"; rest="${rest:2}" ;;
+                       '$(') st="${st}C"; rest="${rest:2}" ;;
+                       '${') st="${st}P"; rest="${rest:2}" ;;
+                       *) [ "$st" = T ] && proj="$proj\$"; rest="${rest:1}"; last='$' ;;
+                     esac ;;
+                esac ;;
+            \#) case "$last" in
+                  ' '|'	'|';'|'&'|'|'|'('|')') rest="" ;;
+                  *) [ "$st" = T ] && proj="$proj#"; rest="${rest:1}"; last='#' ;;
+                esac ;;
+            \<) if [ "$c3" = '<<<' ]; then
+                  [ "$st" = T ] && proj="$proj<<<"; rest="${rest:3}"; last='<'
+                elif [ "$c2" = '<<' ]; then
+                  rest="${rest:2}"; dash=""; qd=""
+                  case "$rest" in -*) dash="-"; rest="${rest:1}" ;; esac
+                  rest="${rest#"${rest%%[! 	]*}"}"
+                  case "$rest" in
+                    \'*) rest="${rest:1}"; tag="${rest%%\'*}"; rest="${rest#*\'}"; qd=q ;;
+                    \"*) rest="${rest:1}"; tag="${rest%%\"*}"; rest="${rest#*\"}"; qd=q ;;
+                    \\*) rest="${rest:1}"; tag="${rest%%[!A-Za-z0-9_]*}"; rest="${rest:${#tag}}" ;;
+                    *)   tag="${rest%%[!A-Za-z0-9_]*}"; rest="${rest:${#tag}}" ;;
+                  esac
+                  if [ -n "$tag$qd" ]; then hdq="$hdq$dash$tag "; else hbad="$hbad${#FZ_CO[@]} "; fi
+                  [ "$st" = T ] && proj="$proj<<$tag"; last=x
+                else
+                  [ "$st" = T ] && proj="$proj<"; rest="${rest:1}"; last='<'
+                fi ;;
+            \() if [ "$top" = T ]; then proj="$proj("; else st="${st}c"; fi; rest="${rest:1}"; last='(' ;;
+            \)) if [ "$top" = T ]; then proj="$proj)"; else st="${st%?}"; fi; rest="${rest:1}"; last=')' ;;
+          esac ;;
+        S) st="${st%?}"; [ "$st" = T ] && proj="$proj'"; rest="${rest:1}"; last="'" ;;
+        A) if [ "$c" = '\' ]; then rest="${rest:2}"; else st="${st%?}"; [ "$st" = T ] && proj="$proj'"; rest="${rest:1}"; last="'"; fi ;;
+        D) case "$c" in
+             \\) rest="${rest:2}" ;;
+             \") st="${st%?}"; [ "$st" = T ] && proj="$proj\""; rest="${rest:1}"; last='"' ;;
+             \`) st="${st}B"; rest="${rest:1}" ;;
+             \$) case "$c3" in
+                   '$(('*) st="${st}Rr"; rest="${rest:3}" ;;
+                   *) case "$c2" in
+                        '$(') st="${st}C"; rest="${rest:2}" ;;
+                        '${') st="${st}P"; rest="${rest:2}" ;;
+                        *) rest="${rest:1}" ;;
+                      esac ;;
+                 esac ;;
+           esac ;;
+        B) case "$c" in
+             \\) rest="${rest:2}" ;;
+             \`) st="${st%?}"; rest="${rest:1}" ;;
+             \') st="${st}S"; rest="${rest:1}" ;;
+             \") st="${st}D"; rest="${rest:1}" ;;
+           esac ;;
+        P) case "$c" in
+             \\) rest="${rest:2}" ;;
+             \}) st="${st%?}"; rest="${rest:1}" ;;
+             \$) case "$c2" in
+                   '$(') st="${st}C"; rest="${rest:2}" ;;
+                   '${') st="${st}P"; rest="${rest:2}" ;;
+                   *) rest="${rest:1}" ;;
+                 esac ;;
+           esac ;;
+        R|r) case "$c" in
+               \() st="${st}r"; rest="${rest:1}" ;;
+               \)) st="${st%?}"; rest="${rest:1}" ;;
+               \$) case "$c2" in
+                     '$(') st="${st}C"; rest="${rest:2}" ;;
+                     *) rest="${rest:1}" ;;
+                   esac ;;
+             esac ;;
+      esac
+    done
+    FZ_PJ+=("$proj")
+  done < "$f"
+  FZ_LEXEND="$st|$hdq"
+  if [ -n "$hbad" ]; then FZ_LEXEND="$FZ_LEXEND|${hbad% }"; fi
+  return 0
+}
+
+# Resolve one located guard against the FIRST verdict of its taken branch — the earliest PASS or
+# FAIL on the line that branch starts on, so `then FAIL …; else PASS …` reaches FAIL.
+fz_resolve() {
+  local p=-1 q=-1 x
+  case "$fz_rest" in *'PASS "'*) x="${fz_rest%%PASS \"*}"; p=${#x} ;; esac
+  case "$fz_rest" in *'FAIL "'*) x="${fz_rest%%FAIL \"*}"; q=${#x} ;; esac
+  if [ "$p" -lt 0 ] && [ "$q" -lt 0 ]; then
+    FZ_NONVERDICT=$((FZ_NONVERDICT+1))
+  elif [ "$p" -lt 0 ]; then
+    FZ_ARMS=$((FZ_ARMS+1)); FZ_FAILARMS=$((FZ_FAILARMS+1))
+  elif [ "$q" -ge 0 ] && [ "$q" -lt "$p" ]; then
+    FZ_ARMS=$((FZ_ARMS+1)); FZ_FAILARMS=$((FZ_FAILARMS+1))
+  else
+    FZ_ARMS=$((FZ_ARMS+1)); FZ_PASSARMS=$((FZ_PASSARMS+1))
+    case "$fz_guard" in
+      *"$FZ_OR"*) FZ_BAD=$((FZ_BAD+1)); FZ_BAD_AT="$FZ_BAD_AT$fz_gline " ;;
+    esac
+  fi
+}
+
+# Walk the top-level projection of a shell source and grade every verdict guard it can locate.
+fz_scan() {  # <file>
+  local f="$1" i=0 n t co pend=0 want=0
+  FZ_GUARDS=0; FZ_ARMS=0; FZ_PASSARMS=0; FZ_FAILARMS=0; FZ_NONVERDICT=0; FZ_UNRESOLVED=0
+  FZ_BAD=0; FZ_BAD_AT=""; FZ_LINES=0; FZ_PASSTOP=0; FZ_PASSREAD=0; FZ_UNLOCATED=0
+  fz_guard=""; fz_gline=0; fz_rest=""
+  fz_lex "$f"; n=${#FZ_PJ[@]}
+  while [ "$i" -lt "$n" ]; do
+    t="${FZ_PJ[$i]}"; co="${FZ_CO[$i]}"; i=$((i+1)); FZ_LINES=$i
+    t="${t#"${t%%[![:space:]]*}"}"
+    [ -n "$t" ] || continue
+    case "$t" in *'PASS "'*) FZ_PASSTOP=$((FZ_PASSTOP+1)) ;; esac
+    if [ "$pend" -eq 1 ]; then
+      fz_guard="$fz_guard $t"
+      case "$t" in
+        *' then'*|*';then'*) pend=0; FZ_GUARDS=$((FZ_GUARDS+1)); fz_rest="${t#*then}"; want=1 ;;
+        *) continue ;;
+      esac
+    else
+      case "$co$t" in
+        '1if '*|'1elif '*|'1if	'*|'1elif	'*)
+          [ "$want" -eq 1 ] && FZ_UNRESOLVED=$((FZ_UNRESOLVED+1))
+          want=0
+          fz_guard="$t"; fz_gline="$i"
+          case "$t" in
+            *' then'*|*';then'*) pend=0; FZ_GUARDS=$((FZ_GUARDS+1)); fz_rest="${t#*then}"; want=1 ;;
+            *) pend=1; continue ;;
+          esac ;;
+        *)
+          if [ "$want" -eq 1 ]; then
+            fz_rest="$t"; want=0
+            case "$t" in 'else'*|'fi'*) FZ_NONVERDICT=$((FZ_NONVERDICT+1)); continue ;; esac
+            fz_resolve
+            case "$t" in *'PASS "'*) FZ_PASSREAD=$((FZ_PASSREAD+1)) ;; esac
+          fi
+          continue ;;
+      esac
+    fi
+    fz_rest="${fz_rest#"${fz_rest%%[![:space:]]*}"}"
+    if [ -n "$fz_rest" ]; then
+      want=0; fz_resolve
+      case "$t" in *'PASS "'*) FZ_PASSREAD=$((FZ_PASSREAD+1)) ;; esac
+    fi
+  done
+  [ "$want" -eq 1 ] && FZ_UNRESOLVED=$((FZ_UNRESOLVED+1))
+  FZ_UNLOCATED=$((FZ_PASSTOP-FZ_PASSREAD))
+  return 0
+}
+
+fz_plant() {  # <path> <banned|conforming|oneline|embedded|substitution>
+  local p="$1"
+  mkdir -p "${p%/*}"
+  {
+    printf '%s\n' '#!/usr/bin/env bash'
+    printf '%s\n' 'p="$1"; n="$2"'
+    case "$2" in
+      banned)
+        printf '%s\n' 'if [ ! -e "$p/canary" ] || [ "$n" -gt 0 ]; then'
+        printf '%s\n' '  PASS "PLANT: nothing was written"'
+        printf '%s\n' 'else'
+        printf '%s\n' '  FAIL "PLANT: something was written"'
+        printf '%s\n' 'fi' ;;
+      conforming)
+        # The same arm as a chain: one condition per branch, one message per branch.
+        printf '%s\n' 'if [ ! -e "$p/canary" ]; then'
+        printf '%s\n' '  FAIL "PLANT: the canary is absent"'
+        printf '%s\n' 'elif [ "$n" -eq 0 ]; then'
+        printf '%s\n' '  FAIL "PLANT: the watched surface was empty"'
+        printf '%s\n' 'else'
+        printf '%s\n' '  PASS "PLANT: measured"'
+        printf '%s\n' 'fi'
+        # And a plain CONJUNCTIVE guard that reaches PASS — the only specimen an over-match can be
+        # seen on, which is why FZ2 asserts its presence.
+        printf '%s\n' 'if [ -e "$p/canary" ] && [ "$n" -gt 0 ]; then'
+        printf '%s\n' '  PASS "PLANT: the surface was watched and is unchanged"'
+        printf '%s\n' 'else'
+        printf '%s\n' '  FAIL "PLANT: the surface changed"'
+        printf '%s\n' 'fi' ;;
+      oneline)
+        # One line, FAIL first: a disjunction that REACHES FAIL, which this rule permits.
+        printf '%s\n' 'if [ ! -e "$p/canary" ] || [ "$n" -gt 0 ]; then FAIL "PLANT: the canary is absent or something was written"; else PASS "PLANT: the canary is present and nothing was written"; fi' ;;
+      embedded)
+        # Two awk programs whose OWN control flow carries the operator, each followed by a shell
+        # guard: the first conjunctive, the second disjunctive, at line 16 of the plant.
+        printf 'x="$(awk %s{\n' "$FZ_Q"
+        printf '%s\n' '  if (a || b) next' '  print'
+        printf '}%s "$p")"\n' "$FZ_Q"
+        printf '%s\n' 'if [ -e "$p/canary" ] && [ "$n" -gt 0 ]; then' '  PASS "PLANT: measured after an embedded program"' 'else' '  FAIL "PLANT: not measured"' 'fi'
+        printf 'x="$(awk %s{\n' "$FZ_Q"
+        printf '%s\n' '  if (a || b) next' '  print'
+        printf '}%s "$p")"\n' "$FZ_Q"
+        printf '%s\n' 'if [ ! -e "$p/canary" ] || [ "$n" -gt 0 ]; then' '  PASS "PLANT: nothing was written"' 'else' '  FAIL "PLANT: something was written"' 'fi' ;;
+      substitution)
+        # The operator inside a command substitution, inside a quoted literal and inside a
+        # here-document — none of them the guard's own — then, at line 18, a `<<` whose
+        # delimiter is no word, which must be refused and must not hide what follows, then a
+        # real one in [[ ]], at line 19.
+        printf '%s\n' 'if [ "$(grep -c x "$p" || true)" -gt 0 ]; then' '  PASS "PLANT: the count was taken"' 'else' '  FAIL "PLANT: the count was not taken"' 'fi'
+        printf '%s\n' 'if grep -q "a||b" "$p"; then' '  PASS "PLANT: the literal was found"' 'else' '  FAIL "PLANT: the literal was absent"' 'fi'
+        printf '%s\n' 'cat > "$p.sh" <<"EOF"' 'if [ -e a ] || [ -e b ]; then' '  PASS "PLANT: written into a here-document, never run here"' 'fi' 'EOF'
+        printf '%s\n' '(( m <<= 1 ))'
+        printf '%s\n' 'if [[ -e "$p/canary" || "$n" -gt 0 ]]; then' '  PASS "PLANT: either held"' 'else' '  FAIL "PLANT: neither held"' 'fi' ;;
+    esac
+  } > "$p"
+}
+
+FZ_BANNED="$WORK/fz/banned.sh"
+FZ_CLEAN="$WORK/fz/conforming.sh"
+FZ_ONELINE="$WORK/fz/oneline.sh"
+FZ_EMBEDSRC="$WORK/fz/embedded.sh"
+FZ_SUBST="$WORK/fz/substitution.sh"
+fz_plant "$FZ_BANNED" banned
+fz_plant "$FZ_CLEAN" conforming
+fz_plant "$FZ_ONELINE" oneline
+fz_plant "$FZ_EMBEDSRC" embedded
+fz_plant "$FZ_SUBST" substitution
+
+# ── FZ1 — SENSITIVITY, graded FIRST.
+fz_scan "$FZ_BANNED"
+FZ1_BAD="$FZ_BAD"; FZ1_AT="$FZ_BAD_AT"; FZ1_PASSARMS="$FZ_PASSARMS"
+if [ "$FZ1_BAD" -eq 1 ] && [ "$FZ1_PASSARMS" -eq 1 ]; then
+  PASS "FZ1: SENSITIVITY — a planted arm whose PASS is guarded by a disjunction is detected (1 finding, at line ${FZ1_AT% } of the plant), so the detector fires on the shape both shipped instances had"
+else
+  FAIL "FZ1: SENSITIVITY — the planted unfirable arm was NOT detected as expected (findings=$FZ1_BAD, PASS-reaching arms located=$FZ1_PASSARMS, expected 1 and 1). Every verdict below rests on this arm, so none of them is trustworthy"
+fi
+
+# ── FZ2 — SPECIFICITY over the conforming source, a PASS-reaching guard included.
+fz_scan "$FZ_CLEAN"
+FZ2_BAD="$FZ_BAD"; FZ2_ARMS="$FZ_ARMS"; FZ2_FAILARMS="$FZ_FAILARMS"; FZ2_PASSARMS="$FZ_PASSARMS"
+if [ "$FZ2_BAD" -eq 0 ] && [ "$FZ2_ARMS" -ge 3 ] && [ "$FZ2_FAILARMS" -ge 2 ] && [ "$FZ2_PASSARMS" -ge 1 ]; then
+  PASS "FZ2: SPECIFICITY — the conforming source is NOT flagged, over $FZ2_ARMS located verdict arm(s): $FZ2_FAILARMS reaching FAIL and $FZ2_PASSARMS reaching PASS through a conjunction, which is the specimen a widened detector would over-match. The detector discriminates the shape rather than rejecting every guard"
+else
+  FAIL "FZ2: SPECIFICITY — the conforming source was flagged, or the walker located too little of it to say (findings=$FZ2_BAD, arms=$FZ2_ARMS, FAIL-reaching=$FZ2_FAILARMS, PASS-reaching=$FZ2_PASSARMS; want 0 findings over >=3 arms with >=2 FAIL-reaching and >=1 PASS-reaching). The detector cannot tell the shapes apart, or there is nothing in the sample for an over-match to show on, and FZ3's verdict means nothing either way"
+fi
+
+# ── FZ5 — FIRST VERDICT. A one-line guard reads FAIL first; read by any PASS after `then`, it
+# would be a PASS-reaching disjunction and a false finding.
+fz_scan "$FZ_ONELINE"
+FZ5_BAD="$FZ_BAD"; FZ5_ARMS="$FZ_ARMS"; FZ5_FAILARMS="$FZ_FAILARMS"; FZ5_PASSARMS="$FZ_PASSARMS"
+if [ "$FZ5_BAD" -eq 0 ] && [ "$FZ5_ARMS" -eq 1 ] && [ "$FZ5_FAILARMS" -eq 1 ] && [ "$FZ5_PASSARMS" -eq 0 ]; then
+  PASS "FZ5: FIRST VERDICT — a one-line guard whose branch names FAIL first and PASS only after its else is read as the FAIL-reaching guard it is, and its disjunction is NOT flagged: a disjunction reaching FAIL fires whenever either side holds, which this rule permits"
+else
+  FAIL "FZ5: FIRST VERDICT — the one-line FAIL-first specimen read findings=$FZ5_BAD, arms=$FZ5_ARMS, FAIL-reaching=$FZ5_FAILARMS, PASS-reaching=$FZ5_PASSARMS where 0, 1, 1 and 0 are owed. The walker is grading a verdict other than the first one after then"
+fi
+
+# ── FZ6 — EMBEDDED PROGRAMS. Control flow inside an awk program is not a shell guard, and
+# stepping over it must not blind the walker to the guard after it.
+fz_scan "$FZ_EMBEDSRC"
+FZ6_BAD="$FZ_BAD"; FZ6_AT="$FZ_BAD_AT"; FZ6_GUARDS="$FZ_GUARDS"; FZ6_PASSARMS="$FZ_PASSARMS"
+if [ "$FZ6_BAD" -eq 1 ] && [ "${FZ6_AT% }" = 16 ] && [ "$FZ6_GUARDS" -eq 2 ] && [ "$FZ6_PASSARMS" -eq 2 ]; then
+  PASS "FZ6: EMBEDDED PROGRAM — over a plant carrying two awk programs whose own control flow holds the operator, the walker locates exactly the 2 shell guards, leaves the conjunctive one unflagged, and flags the disjunctive one at its own line (line ${FZ6_AT% } of the plant), not at the awk line above it"
+else
+  FAIL "FZ6: EMBEDDED PROGRAM — the plant read findings=$FZ6_BAD at line(s) ${FZ6_AT% }, guards=$FZ6_GUARDS, PASS-reaching=$FZ6_PASSARMS where 1 finding at line 16 over 2 guards, both PASS-reaching, is owed. Control flow inside an embedded program was read as a shell guard, or stepping over it hid the guard that follows"
+fi
+
+# ── FZ7 — THE OPERATOR OUTSIDE THE GUARD'S OWN LIST. Inside a command substitution, a quoted
+# literal or a here-document it is not this guard's disjunction; inside [[ ]] it is. And a `<<`
+# whose delimiter is no word is refused, at its own line, without hiding the guard after it.
+fz_scan "$FZ_SUBST"
+FZ7_BAD="$FZ_BAD"; FZ7_AT="$FZ_BAD_AT"; FZ7_GUARDS="$FZ_GUARDS"; FZ7_PASSARMS="$FZ_PASSARMS"; FZ7_LEXEND="$FZ_LEXEND"
+if [ "$FZ7_BAD" -eq 1 ] && [ "${FZ7_AT% }" = 19 ] && [ "$FZ7_GUARDS" -eq 3 ] && [ "$FZ7_PASSARMS" -eq 3 ] && [ "$FZ7_LEXEND" = "T||18" ]; then
+  PASS "FZ7: SPECIFICITY AND SENSITIVITY IN ONE PLANT — the operator inside a command substitution, inside a quoted literal and inside a here-document is not flagged, the here-document's own guard is not located, a << whose delimiter is no word is refused at its own line (line ${FZ7_LEXEND##*|} of the plant) without hiding what follows, and the disjunction inside [[ ]] is flagged at its own line (line ${FZ7_AT% } of the plant), over the 3 shell guards the plant carries"
+else
+  FAIL "FZ7: the plant read findings=$FZ7_BAD at line(s) ${FZ7_AT% }, guards=$FZ7_GUARDS, PASS-reaching=$FZ7_PASSARMS and lexer end state '$FZ7_LEXEND', where 1 finding at line 19 over 3 guards, all PASS-reaching, and the end state 'T||18' are owed. The operator was read where it is not the guard's own, the walker stopped seeing guards after a substitution, a literal or a here-document, or a << it cannot delimit was taken for a here-document rather than refused"
+fi
+
+# ── FZ3 — THIS FILE. The claim and its denominator, graded only once every control above that
+# could make its zero a false one has been read.
+fz_scan "$SELF"
+FZ_WC="$(wc -l < "$SELF" | tr -d ' ')"
+if [ "$FZ1_BAD" -ne 1 ]; then
+  FAIL "FZ3: the sensitivity arm did not fire on the plant (FZ1 above), so whatever this scan found or did not find in this file is untrustworthy — a zero from a detector never shown to detect anything is a broken probe, not a clean result"
+elif [ "$FZ6_BAD" -ne 1 ]; then
+  FAIL "FZ3: the disjunction planted after an embedded program was not seen (FZ6 above), so stepping over this file's embedded programs may have hidden guards — its zero is not a measurement"
+elif [ "$FZ7_BAD" -ne 1 ]; then
+  FAIL "FZ3: the disjunction planted after a substitution, a literal and a here-document was not seen (FZ7 above), so this file's zero may be a walker gone blind rather than a clean file"
+elif [ "$FZ7_LEXEND" != "T||18" ]; then
+  FAIL "FZ3: the << planted in FZ7 with a delimiter that is neither a word nor quoted was not refused (FZ7 above, end state '$FZ7_LEXEND'), so a here-document this lexer cannot delimit could close early in this file and hide every line after it — its zero is not a measurement"
+elif [ "$FZ_LEXEND" != "T|" ]; then
+  FAIL "FZ3: the lexer ended this file in state '$FZ_LEXEND' where 'T|' is owed — the constructs still open, a bar, any here-document still pending and, after a second bar, the line(s) of any << whose delimiter is neither a word nor quoted, which it refuses to guess the end of. Every line past such a point may have been invisible to the walker, so its zero describes at best a prefix"
+elif [ "$FZ_ARMS" -eq 0 ]; then
+  FAIL "FZ3: the walker located 0 verdict arms in this file, so its zero on the banned shape is an empty scan and not a clean result — the file's shape or this walker has moved"
+elif [ "$FZ_BAD" -eq 0 ]; then
+  PASS "FZ3: $FZ_GUARDS guard(s) in this file's top-level code — $FZ_ARMS located verdict arm(s) ($FZ_PASSARMS reaching PASS, $FZ_FAILARMS reaching FAIL), $FZ_NONVERDICT non-verdict, $FZ_UNRESOLVED unresolved — and 0 of the $FZ_PASSARMS PASS-reaching guards is a disjunction. $FZ_EMBEDDED line(s) lay inside quoted payloads, substitutions or here-documents and were not walked. $FZ_UNLOCATED of the $FZ_PASSTOP top-level line(s) carrying a PASS verdict are no located guard's verdict line — reached through an else, first appearing deeper in a branch, or written in a form the walker does not locate — and are not graded. The controls fired, so this zero is a measurement. It grades a shape, not reachability: see this group's coverage boundary for what it cannot see"
+else
+  FAIL "FZ3: $FZ_BAD verdict arm(s) in this file reach PASS through a disjunction, at line(s) ${FZ_BAD_AT% }. The failure branch then needs every disjunct false at once — a conjunction nobody wrote down — which is how both previously shipped arms became unable to fail. Rewrite as a chain: one condition per branch, one message per branch"
+fi
+
+# ── FZ4 — the walk covered the file, measured by a differently-shaped counter.
+if [ "$FZ_LINES" -ge "$FZ_WC" ] && [ "$FZ_LINES" -le "$((FZ_WC+1))" ] && [ "$FZ_WC" -gt 0 ]; then
+  PASS "FZ4: the walker read $FZ_LINES line(s) of this file against $FZ_WC counted independently — the scan covered the whole source, so FZ3's population is the file's and not a prefix of it"
+else
+  FAIL "FZ4: the walker read $FZ_LINES line(s) of this file while an independent count reads $FZ_WC — the walk did not cover the source, so FZ3 graded a prefix and its verdict does not describe this file"
+fi
+md_flips ch_scan_j 'J' j_assert "$J_CLEAN" "$WORK/list.jclean"
 md_flips ch_scan_size 'SIZE' size_assert "$SZ_CLEAN" "$WORK/list.szclean.md" "$WORK/list.szclean.all"
 
 echo
@@ -6985,8 +8305,14 @@ printf 'Result: \033[1;32m%d passed\033[0m, \033[1;31m%d failed\033[0m, \033[1;3
   "$pass" "$fail" "$skip" "$vacuous"
 printf 'CITATION: %s markdown citation(s) read over %s tracked file(s); %s bare where a unique durable home exists.\n' \
   "$A_NCITE" "$A_NFILE" "$A_NBARE"
-printf 'LOCATOR: %s in-scope (bare) path:line locator(s) over %s tracked file(s); %s in either spelling, %s out of scope by declaration.\n' \
-  "$B_NHIT" "$B_NFILE" "$B_NWIDE" "$B_NOOS"
+# The measurement state B0 decided above: over a walk B0 refused the line carries the cause and no counter.
+if [ "$B_SURFACE" -eq 1 ]; then
+  printf 'LOCATOR: %s in-scope (bare) path:line locator(s) over %s tracked file(s), %s unreadable and %s line(s) read; %s in either spelling, %s out of scope by declaration.\n' \
+    "$B_NHIT" "$B_NFILE" "$B_NUNREAD" "$B_NLINE" "$B_NWIDE" "$B_NOOS"
+else
+  printf 'LOCATOR: NOT-EVALUATED — the class-B walk could not open %s of %s listed file(s) and read %s line(s) — this is not a clean result\n' \
+    "${B_NUNREAD:-unread}" "${B_NFILE:-unread}" "${B_NLINE:-unread}"
+fi
 printf 'COUNT-ASSERTION: %s residual site(s) in %s file(s) over %s sentence(s) graded; %s declared row(s).\n' \
   "$C_NSITE" "$C_NDIRTY" "$C_NSENT" "$C_NROW"
 printf 'ADR-NUMBERING: %s record file(s) and %s index row(s) over a span reaching %s; %s collision(s), %s undeclared gap(s), %s index/directory disagreement(s), %s stale declaration(s); %s gap(s) held open by declaration, %s unoccupied number(s) named by the register.\n' \
@@ -7025,6 +8351,21 @@ else
   printf 'NUMBER-REGISTER: %s row(s) and %s record(s) above the floor at %s; %s number(s) taken twice, %s record(s) not named by their row, %s row(s) out of sequence or malformed; %s held, %s spent.\n' \
     "$I_NROW" "$I_NABOVE" "$I_FLOOR" "$(n_code "$I_OUT" I1)" "$(n_code "$I_OUT" I2)" "$(n_code "$I_OUT" I3)" "$I_NHELD" "$I_NSPENT"
 fi
+# Class J's line, in the measurement state its verdict function decided: every id read, some
+# withheld, none read, or unmeasured. A withheld reading puts its cause on the line, and no line
+# carries a counter beside a comparison that was not made, on group G's rule.
+if [ "$J_MEASURED" -eq 1 ] && [ "$J_NBAD" -eq 0 ]; then
+  printf 'ENUMERATION-REGISTER: %s enumeration(s) in %s row(s) over %s file(s), %s member reading(s) at the owners; %s missing at a site, %s unowned at a site; %s engine file(s) read for an unregistered repeat and %s passed over, %s unregistered repeat(s).\n' \
+    "$J_NID" "$J_NROW" "$J_NFILE" "$J_NMEM" "$J_N1" "$J_N2" "$J_NSCAN" "$J_NPAST" "$J_N3"
+elif [ "$J_MEASURED" -eq 1 ] && [ "$J_NREAD" -gt 0 ]; then
+  printf 'ENUMERATION-REGISTER: %s of %s enumeration(s) read, %s NOT-EVALUATED — %s — this is not a clean result. Of those read: %s missing at a site, %s unowned at a site, %s unregistered repeat(s).\n' \
+    "$J_NREAD" "$J_NID" "$J_NBAD" "$J_WHY" "$J_N1" "$J_N2" "$J_N3"
+elif [ "$J_MEASURED" -eq 1 ]; then
+  printf 'ENUMERATION-REGISTER: 0 of %s enumeration(s) read, %s NOT-EVALUATED — %s — this is not a clean result\n' \
+    "$J_NID" "$J_NBAD" "$J_WHY"
+else
+  printf 'ENUMERATION-REGISTER: NOT-EVALUATED — %s — this is not a clean result\n' "$J_WHY"
+fi
 # The measurement state the size group decided above: under its not-a-measurement code the line
 # carries the cause and no counter.
 if [ "$SZ_MEASURED" -eq 1 ]; then
@@ -7038,6 +8379,11 @@ if [ "$vacuous" -gt 0 ]; then
 fi
 rc=0
 [ "$fail" -eq 0 ] || rc=1
+# A VACUOUS ARM FAILS THE RUN UNLESS IT IS DECLARED. Before this rule the status read fail alone,
+# so a run whose populations were all empty exited 0, and the strict-skip pass below could not
+# see it either, because VACUOUS() does not append to SKIPPED. The rule is unconditional: it does
+# not wait for GUARD_STRICT_SKIPS, and what it excuses is CH_VACUOUS_DECL, beside VACUOUS().
+ch_vacuity_rc "$CH_VACUOUS_DECL" || rc=1
 # STRICT SKIP MODE — a skipped group is a failure unless it is declared. This suite has no
 # dependency-gated group, so its declared set is correctly EMPTY and every skip fails.
 if [ "${GUARD_STRICT_SKIPS:-0}" = "1" ]; then

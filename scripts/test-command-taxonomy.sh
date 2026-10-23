@@ -319,6 +319,35 @@
 # has gone dead on the live surface is not detected. That is a stated residual, not
 # coverage.
 #
+# ── THIS SUITE'S LOCALE POSTURE ──────────────────────────────────────────────────
+# Three separate things, stated apart because each is a different kind of claim.
+# THE PIN POSTURE, as this file has it. Nothing is exported at the top. LC_ALL=C is set only on
+# the calls that need byte semantics, the awk program in group W and the sort that fixes the
+# command order, and the locale arms set each member's locale inside the subshell that reads under
+# it.
+# Every other line reads the caller's locale.
+# WHAT IS ASSERTED, on every run. The edge trims read no locale. trim and group J's rj_trimv
+# strip one fixed set, ASCII whitespace and U+00A0; the readers of a verb's frontmatter strip
+# ASCII whitespace alone, through fm_trim, so a frontmatter edge carrying U+00A0 is kept and
+# reported; and the carrier's two flag readers take trim's set, so a flag key led by U+00A0 is
+# read as the key. Arms GQL, GJU and GQF read Grant cells, a roster header cell, and a verb's
+# frontmatter flag and publish-script denial lines, each edged by U+00A0 and by U+3000, and GQF a
+# carrier flag key led by U+00A0, under C and under a UTF-8 locale the host lists, and fail the
+# run if the host lists none. That is the whole of the asserted surface.
+# WHAT WAS MEASURED, AND IS NOT ASSERTED. Every other match this file makes with a POSIX character
+# class or a bracket range — in a regular expression, a case pattern, a parameter expansion, or a
+# tr, grep or sed call — and every awk program and sort not pinned above reads the caller's
+# locale: collapse() and lower(), the delimiter-row test, group J's class-row match and the grant
+# reader's frontmatter-key test among them. The suite's verdict set was measured identical under
+# LC_ALL=C and under a UTF-8 locale when this record was written. No arm compares verdict sets, so
+# a locale dependence added there would not turn this suite red.
+# test-corpus-hygiene.sh and test-adr-conformance.sh take the opposite posture and export
+# LC_ALL=C at their top. test-artifact-schema.sh is unpinned, and its group LC asserts that
+# va_type_ok's slug predicate and ca_delta's range parse answer the same under C and under a UTF-8
+# locale the host lists, the ca_delta half skipping on an awk that answers the same in every
+# locale; the rest of that suite reads the caller's locale. None of them borrows a locale from
+# another; CONTRIBUTING.md lists every suite's posture side by side.
+#
 # NOTE: publish-trip-site.sh is deliberately NOT sourced. This suite needs zero functions
 # from it, and sourcing a security-critical script to parse a markdown table would create
 # shared fate — a syntax error there would make the TAXONOMY invariant unverifiable for a
@@ -506,7 +535,63 @@ REQ_COLS=( verb lifecycle mode destination depth )
 # ─────────────────────────────────────────────────────────────────────────────────
 # Small helpers
 # ─────────────────────────────────────────────────────────────────────────────────
-trim() { local s="$1"; s="${s#"${s%%[![:space:]]*}"}"; s="${s%"${s##*[![:space:]]}"}"; printf '%s' "$s"; }
+# trimv <var> <s> [ascii] — <s> with its leading and trailing whitespace removed, nothing else,
+# written into <var>, and THE SAME WAY UNDER EVERY LOCALE. It is the one definition of the edge
+# set: trim prints what it writes, group J's rj_trimv delegates to it, and fm_trim calls it with
+# `ascii`. It writes a variable rather than printing, so a reader that walks thousands of lines
+# calls it with no fork. Its locals carry the _tv_ prefix because printf -v writes the nearest
+# variable of the name it is given, and a caller passing one of this function's own names would
+# be handed nothing back.
+#
+# The set is fixed: the six ASCII characters the POSIX locale's space class holds (space, tab,
+# newline, vertical tab, form feed, carriage return), plus U+00A0, the no-break space, unless the
+# third argument is `ascii`. It is written out rather than taken from [[:space:]], because that
+# class's members depend on the locale. Under C a no-break space is two ordinary bytes; a UTF-8
+# locale may count it, and other Unicode spaces, as whitespace. A Grant cell whose code span was
+# followed by U+00A0 therefore paired with its allowed-tools entry under one locale and was named
+# by Q1 and Q2 under another. U+00A0 is removed as a literal byte string, never as a bracket
+# member, so a byte-wise reading and a character-wise one remove the same two bytes: the ENGINE
+# PARITY rule group W's awk program follows. Every other non-ASCII space is kept under every
+# locale, so an edge carrying one is reported everywhere rather than paired somewhere. Nothing
+# inside the string is touched.
+#
+# TWO POLICIES OVER ONE SET, SPLIT BY WHAT DECIDES AN EDGE BYTE'S MEANING. A markdown cell, a
+# heading and a line of prose are read by a person, so their readers take the set with U+00A0,
+# through trim and rj_trimv: a cell that differs from its grant only by an invisible edge byte
+# reads as naming that grant, and U+00A0 is the space an editor or a paste leaves at a cell's edge
+# unseen. A skill file's frontmatter, a verb's or the carrier's, is read by the runtime's YAML
+# parser, so a verb's readers take the ASCII set alone, through fm_trim: a YAML parser keeps
+# U+00A0 as part of the value or key it edges, so a `disable-model-invocation: true` line carrying
+# one may set nothing. There U+00A0 is kept and reported under every locale, as
+# publish-trip-site.sh's _approval_line_parse refuses it in its own grammar. The carrier's two
+# flag readers are the exception, by the flag's polarity rather than its parser: on a verb the
+# flag protects, so reading an edged one as absent is the safe reading, while on the carrier its
+# presence is the defect L2 reports, so those two take trim's set and read a key led by U+00A0 as
+# the key, which reports it whichever way the runtime reads that key. Neither policy reads the
+# locale. Arms GQL, GJU and GQF read Grant cells, a roster header cell, and a verb's frontmatter
+# flag and publish-script denial lines, each edged by U+00A0 and by U+3000, and GQF a carrier flag
+# key led by U+00A0, under C and under a UTF-8 locale the host lists, on every run.
+#
+# SCOPE: the guarantee is the edge trims' alone. Every other match this file makes with a POSIX
+# character class or a bracket range — in a regular expression, a case pattern, a parameter
+# expansion, or a tr, grep or sed call — and every awk program and sort not pinned to LC_ALL=C
+# still reads the caller's locale: collapse() and lower(), the delimiter-row test, group J's
+# class-row match and the grant reader's frontmatter-key test among them.
+trimv() {
+  local _tv_s="$2" _tv_p _tv_ws=$' \t\n\v\f\r' _tv_nb=$'\302\240'
+  if [ "${3:-}" = 'ascii' ]; then _tv_nb=''; fi
+  while :; do
+    _tv_p="$_tv_s"
+    _tv_s="${_tv_s#"${_tv_s%%[!$_tv_ws]*}"}"; _tv_s="${_tv_s#"$_tv_nb"}"
+    _tv_s="${_tv_s%"${_tv_s##*[!$_tv_ws]}"}"; _tv_s="${_tv_s%"$_tv_nb"}"
+    [ "$_tv_s" = "$_tv_p" ] && break
+  done
+  printf -v "$1" '%s' "$_tv_s"
+}
+# trim <s> — the cell, heading and prose policy, printed. fm_trim <s> — the frontmatter policy,
+# printed: ASCII whitespace alone, so an edge carrying U+00A0 survives to be reported.
+trim() { local _tr_s; trimv _tr_s "$1"; printf '%s' "$_tr_s"; }
+fm_trim() { local _tr_s; trimv _tr_s "$1" ascii; printf '%s' "$_tr_s"; }
 collapse() { printf '%s' "$1" | tr -s '[:space:]' ' '; }
 lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
 
@@ -922,7 +1007,7 @@ parse_command_file() {
   # which limb carried each arm, so a file resting on neither is visible rather than assumed.
   local posture='-' has_flag=0 has_clause=0 pnorm i
   for (( i=0; i<n; i++ )); do
-    [ "$(trim "${L[$i]}")" = 'disable-model-invocation: true' ] && has_flag=1
+    [ "$(fm_trim "${L[$i]}")" = 'disable-model-invocation: true' ] && has_flag=1
     [ "${FD[$i]}" -eq 0 ] || continue
     pnorm="$(neg_norm "${L[$i]}")"
     case "$pnorm" in *'the verb is the one the user typed'*) has_clause=1 ;; esac
@@ -2090,7 +2175,7 @@ invocation_check() {
       n_men=$((n_men+1))
 
       if [[ "$line" == *"Bash($SCRIPT_REL"* ]]; then n_grant=$((n_grant+1)); continue; fi
-      if [[ "$t" == 'allowed-tools:'* ]] || [[ "$t" == 'disallowed-tools:'* ]]; then n_grant=$((n_grant+1)); continue; fi
+      case "$(fm_trim "$line")" in 'allowed-tools:'*|'disallowed-tools:'*) n_grant=$((n_grant+1)); continue ;; esac
 
       # The candidate command line: a fenced line as it stands, or the content of a line that
       # is WHOLE a single code span at fence depth 0. Any other rendering yields no candidate
@@ -2494,7 +2579,7 @@ parity_check() {
         break
       fi
       [ "$infm" -eq 1 ] || continue
-      t="$(trim "$line")"
+      t="$(fm_trim "$line")"
       case "$t" in
         'allowed-tools:'*)    role='allow' ;;
         'disallowed-tools:'*) role='deny' ;;
@@ -2510,7 +2595,7 @@ parity_check() {
         rest="${rest%:\*}"
         scr="${rest%% *}"
         sub='-'
-        [ "$rest" != "$scr" ] && sub="$(trim "${rest#"$scr"}")"
+        [ "$rest" != "$scr" ] && sub="$(fm_trim "${rest#"$scr"}")"
         [ -n "$pfx" ] || pfx='(bare)'
         TF+=( "$base" ); TR+=( "$role" ); TP+=( "$pfx" ); TS+=( "$scr" ); TB+=( "$sub" )
         n_pat=$((n_pat+1))
@@ -2723,7 +2808,7 @@ gq_header_kind() {
 # enclosing pair of square brackets is removed first, the flow-sequence form disallowed-tools uses.
 gq_split_tools() {
   local v cur='' ch i depth=0
-  v="$(trim "$1")"
+  v="$(fm_trim "$1")"
   case "$v" in '['*']') v="${v#\[}"; v="${v%\]}" ;; esac
   for (( i=0; i<${#v}; i++ )); do
     ch="${v:i:1}"
@@ -2731,12 +2816,12 @@ gq_split_tools() {
       '(') depth=$((depth+1)); cur="$cur$ch" ;;
       ')') [ "$depth" -gt 0 ] && depth=$((depth-1)); cur="$cur$ch" ;;
       ',') if [ "$depth" -eq 0 ]; then
-             cur="$(trim "$cur")"; [ -n "$cur" ] && printf '%s\n' "$cur"; cur=''
+             cur="$(fm_trim "$cur")"; [ -n "$cur" ] && printf '%s\n' "$cur"; cur=''
            else cur="$cur$ch"; fi ;;
       *)   cur="$cur$ch" ;;
     esac
   done
-  cur="$(trim "$cur")"; [ -n "$cur" ] && printf '%s\n' "$cur"
+  cur="$(fm_trim "$cur")"; [ -n "$cur" ] && printf '%s\n' "$cur"
   return 0
 }
 
@@ -2744,10 +2829,10 @@ gq_split_tools() {
 gq_key() {
   local g="$1" spec word rest=''
   case "$g" in 'Bash('*')') ;; *) return 0 ;; esac
-  spec="${g#Bash(}"; spec="${spec%\)}"; spec="$(trim "$spec")"; spec="${spec%:\*}"
+  spec="${g#Bash(}"; spec="${spec%\)}"; spec="$(fm_trim "$spec")"; spec="${spec%:\*}"
   word="${spec%% *}"
   case "$word" in */*) ;; *) return 0 ;; esac
-  [ "$word" != "$spec" ] && rest="$(trim "${spec#"$word"}")"
+  [ "$word" != "$spec" ] && rest="$(fm_trim "${spec#"$word"}")"
   word="${word##*/}"
   if [ -n "$rest" ]; then printf '%s %s' "$word" "$rest"; else printf '%s' "$word"; fi
 }
@@ -2823,7 +2908,7 @@ grant_table_check() {
       fi
       [ "$infm" -eq 1 ] || continue
       if [ "$inat" -eq 1 ] && ! [[ "$line" =~ ^[[:alnum:]_-]+: ]]; then
-        t="$(trim "$line")"
+        t="$(fm_trim "$line")"
         case "$t" in
           ''|'#'*) ;;
           *) n_cont=$((n_cont+1))
@@ -2832,7 +2917,7 @@ grant_table_check() {
         continue
       fi
       inat=0
-      line="$(trim "$line")"
+      line="$(fm_trim "$line")"
       case "$line" in 'allowed-tools:'*) inat=1 ;; *) continue ;; esac
       while IFS= read -r g || [ -n "$g" ]; do
         [ -n "$g" ] || continue
@@ -2940,7 +3025,7 @@ gq_assert_rows() {     # Q1 — every row pairs with a grant
     FAIL "Q1: ${nx} of ${nr} grant-table row(s) name no allowed-tools entry of their own verb"
     show "$out" 'Q1'
   else
-    PASS "Q1: ROW -> GRANT — all ${nr} grant-table row(s) across ${nv} verb(s) pair with an allowed-tools entry of their own verb, against ${ng} entries read. A row pairs by exact spelling, or a path-bearing Bash grant by its script's file name and arm; the row side is never normalized. Controls: GQ1, GQ4, GQ6 and GQ9 fire in group GQ, and GQ7 stays silent"
+    PASS "Q1: ROW -> GRANT — all ${nr} grant-table row(s) across ${nv} verb(s) pair with an allowed-tools entry of their own verb, against ${ng} entries read. A row pairs by exact spelling, or a path-bearing Bash grant by its script's file name and arm; the row side is never normalized. Controls: GQ1, GQ4, GQ6 and GQ9 fire in group GQ, GQ7 stays silent, and GQL shows both under C and under a UTF-8 locale"
   fi
 }
 
@@ -2962,7 +3047,7 @@ gq_assert_grants() {   # Q2 — every grant pairs with a row
     FAIL "Q2: ${nx} of ${ng} allowed-tools entr(ies) of a graded verb have no grant-table row"
     show "$out" 'Q2'
   else
-    PASS "Q2: GRANT -> ROW — all ${ng} allowed-tools entr(ies) of ${nv} graded verb(s) are named by a row of their own verb's grant table (${nr} rows read). The grant side is read in full — every entry of every allowed-tools line, with no graded verb continuing that value onto a line this reader would not join — so a grant added with nothing removed is found. disallowed-tools entries are denials and are not paired. Controls: GQ2, GQ3, GQ4 and GQ6 fire in group GQ, GQ8 withholds, and GQ7 stays silent"
+    PASS "Q2: GRANT -> ROW — all ${ng} allowed-tools entr(ies) of ${nv} graded verb(s) are named by a row of their own verb's grant table (${nr} rows read). The grant side is read in full — every entry of every allowed-tools line, with no graded verb continuing that value onto a line this reader would not join — so a grant added with nothing removed is found. disallowed-tools entries are denials and are not paired. Controls: GQ2, GQ3, GQ4 and GQ6 fire in group GQ, GQ8 withholds, GQ7 stays silent, and GQL shows both under C and under a UTF-8 locale"
   fi
 }
 
@@ -3388,6 +3473,7 @@ inference_check() {
   local whole=''
   for (( i=0; i<${#CL[@]}; i++ )); do
     cline="${CL[$i]}"
+    # trim, not fm_trim: here the flag's presence is the defect (trimv, TWO POLICIES).
     [ "$(trim "$cline")" = 'disable-model-invocation: true' ] && cflag=1
     case "$(trim "$cline")" in 'disable-model-invocation:'*) cflag=1 ;; esac
     whole="$whole $cline"
@@ -3552,8 +3638,8 @@ picker_check() {
       fi
       [ "$infm" -eq 1 ] || continue
       case "$line" in
-        'argument-hint:'*) hint="$(trim "${line#argument-hint:}")" ;;
-        'description:'*)   desc="$(trim "${line#description:}")" ;;
+        'argument-hint:'*) hint="$(fm_trim "${line#argument-hint:}")" ;;
+        'description:'*)   desc="$(fm_trim "${line#description:}")" ;;
       esac
     done < "$f"
 
@@ -3740,8 +3826,11 @@ RJ_HEAD_PRE='### Pre-Work Output '
 
 # rj_trimv <var> <s> — <s> with leading and trailing whitespace removed, into <var>. Fork-free:
 # every helper below writes a variable rather than printing, because a command substitution per
-# line is a fork per line, and the three inputs this reader walks are thousands of lines long.
-rj_trimv() { local _rj_t="$2"; _rj_t="${_rj_t#"${_rj_t%%[![:space:]]*}"}"; _rj_t="${_rj_t%"${_rj_t##*[![:space:]]}"}"; printf -v "$1" '%s' "$_rj_t"; }
+# line is a fork per line, and the three inputs this reader walks are thousands of lines long. It
+# delegates to trimv under the cell policy, so a roster cell loses the same edge bytes a Grant cell
+# does, under every locale: ASCII whitespace and U+00A0, and nothing else. Arm GJU reads a roster
+# header cell edged by U+00A0 and by U+3000 under C and under a UTF-8 locale the host lists.
+rj_trimv() { trimv "$1" "$2"; }
 
 # rj_norm <cell> — code-span and bold markers removed, whitespace collapsed and trimmed,
 # lower-cased. Only header candidates reach it, so the one `tr` it costs is bounded.
@@ -4466,7 +4555,7 @@ gen_cmd() {  # gen_cmd <dir> <tuple> <defect>
 # whether those two agree, so they read one literal rather than two.
 FIXTURE_ADMIT_KEY='/trip status'
 
-# gen_carrier <path> <defect> — the guided-entry carrier at a fixture engine root.
+# gen_carrier <path> <defect> [<edge>] — the guided-entry carrier at a fixture engine root.
 #
 # Group L is the only reader of this surface, and no other generator produces it: the carrier sits
 # OUTSIDE the verb directory every other fixture writes into, which is the whole point of it.
@@ -4474,15 +4563,17 @@ FIXTURE_ADMIT_KEY='/trip status'
 #   ok          — names no verb, carries no flag, declares all three negatives
 #   verbtoken   — names a live verb token, which is the second enumeration the design forbids
 #   flag        — carries the frontmatter key whose presence would disable guided entry silently
+#   edgekey     — carries that key's line led by <edge>, the bytes arm GQF passes (U+00A0)
 #   noneg       — declares none of the three negatives
 #   preexec     — carries the retired pre-execution line, which group I must flag here as well
 #   preexecnear — carries its near-miss, the two characters in the other order, which it must not
 gen_carrier() {
-  local p="$1" defect="${2:-ok}"
+  local p="$1" defect="${2:-ok}" edge="${3:-}"
   mkdir -p "${p%/*}"
   {
     printf -- '---\nname: fixture-engine\ndescription: fixture landing surface for the guided-entry carrier.\n'
     [ "$defect" = 'flag' ] && printf -- 'disable-model-invocation: true\n'
+    [ "$defect" = 'edgekey' ] && printf -- '%sdisable-model-invocation: true\n' "$edge"
     printf -- '---\n\n# The way in\n\n'
     printf -- 'Somebody has said in their own words what they want to do. This surface names the verb and hands over the command to type.\n\n'
     [ "$defect" = 'preexec' ] && printf -- '!%sls -1 trips%s\n\n' "$BT" "$BT"
@@ -6187,6 +6278,13 @@ echo "── Group GQ — control arms for the grant tables."
 # pair differs in the one property the arm keys on — which column the token sits in.
 GQ_UNHELD='Bash(zzq-unheld:*)'
 
+# The two non-ASCII spaces arm GQL plants at the edge of a Grant cell, spelled by their bytes:
+# U+00A0, which trim removes under every locale, and U+3000, which it keeps under every locale.
+# Arm GQF plants the same two at the edge of a frontmatter flag line, where fm_trim keeps both, and
+# arm GJU at the edge of a roster header cell in group GJ, where rj_trimv acts as trim does.
+GQ_NBSP=$'\302\240'
+GQ_WIDE=$'\343\200\200'
+
 # The add-only world carries GQ_FILL further grants, each with its own row, BEFORE the appended
 # one, so a reader that samples the first N entries misses it for every N below GQ_FILL + 4.
 # That is 36 — four and a half times the longest allowed-tools line any verb carries today (8).
@@ -6226,6 +6324,16 @@ GQ_FILL=32
 #               grant holds                                                      -> Q1 only
 #   unticked    a row no grant holds whose Grant cell is not a code span, right after the three
 #               rows                                                             -> Q1 only
+#   nbspcell    every Grant cell edged by U+00A0: before the code span, after it, and on both sides
+#               among ASCII spaces, which trim removes under every locale         -> nothing
+#   widecell    the Read cell followed by U+3000, which trim keeps under every locale -> Q1 and Q2
+#   flagline    the frontmatter carries `disable-model-invocation: true` trailed by an ASCII space
+#               and a tab, which fm_trim removes                    -> nothing; arm GQF reads FLAG
+#   nbspflag    the same line twice, one led by U+00A0 and one trailed by a space and U+00A0, which
+#               fm_trim keeps under every locale                    -> nothing; arm GQF reads '-'
+#   wideflag    the same two lines with U+3000, which fm_trim keeps -> nothing; arm GQF reads '-'
+#   edgedeny    a whole-script publish denial three times: plain, led by U+00A0, and led by U+3000
+#               -> nothing; arm GQF reads one grant and two unresolved mentions (F5)
 #   notable     no grant table: the three rows sit under a header naming neither form, so the verb
 #               is read and graded by nothing                                    -> nothing
 gq_gen_verb() {
@@ -6244,6 +6352,12 @@ gq_gen_verb() {
     if [ "$defect" = 'addgrant' ]; then printf -- ', Glob'; fi
     if [ "$defect" = 'wrapgrant' ]; then printf -- ',\n  Glob\n'; else printf -- '\n'; fi
     printf -- 'disallowed-tools: [Bash(%sscripts/zz-fixture.sh other:*), Write]\n' "$ENGINE_ROOT_TOK"
+    case "$defect" in
+      flagline) printf -- 'disable-model-invocation: true \t\n' ;;
+      nbspflag) printf -- '%sdisable-model-invocation: true\ndisable-model-invocation: true %s\n' "$GQ_NBSP" "$GQ_NBSP" ;;
+      wideflag) printf -- '%sdisable-model-invocation: true\ndisable-model-invocation: true %s\n' "$GQ_WIDE" "$GQ_WIDE" ;;
+      edgedeny) for k in '' "$GQ_NBSP" "$GQ_WIDE"; do printf -- '%sdisallowed-tools: [Bash(%s%s:*)]\n' "$k" "$ENGINE_ROOT_TOK" "$SCRIPT_REL"; done ;;
+    esac
     printf -- '---\n\n# /%s\n\n' "$name"
     case "$defect" in
       renamedhead) printf -- '| Grant | What each grant is used for |\n|---|---|\n' ;;
@@ -6260,10 +6374,17 @@ gq_gen_verb() {
       *)           printf -- '| Grant | The use that holds it |\n|---|---|\n' ;;
     esac
     if [ "$defect" = 'celledit' ]; then printf -- '| %sBash(ls)%s | the listing |\n' "$BT" "$BT"
+    elif [ "$defect" = 'nbspcell' ]; then printf -- '| %s%sBash(ls:*)%s | the listing |\n' "$GQ_NBSP" "$BT" "$BT"
     elif [ "$defect" != 'crossverb' ]; then printf -- '| %sBash(ls:*)%s | the listing |\n' "$BT" "$BT"; fi
-    printf -- '| %sRead%s | a read |\n' "$BT" "$BT"
+    case "$defect" in
+      nbspcell) printf -- '| %sRead%s%s | a read |\n' "$BT" "$BT" "$GQ_NBSP" ;;
+      widecell) printf -- '| %sRead%s%s | a read |\n' "$BT" "$BT" "$GQ_WIDE" ;;
+      *)        printf -- '| %sRead%s | a read |\n' "$BT" "$BT" ;;
+    esac
     if [ "$defect" = 'rootedrow' ]; then
       printf -- '| %sBash(%sscripts/zz-fixture.sh arm:*)%s | the single invocation of that arm, spelled in full |\n' "$BT" "$ENGINE_ROOT_TOK" "$BT"
+    elif [ "$defect" = 'nbspcell' ]; then
+      printf -- '| %s %szz-fixture.sh arm%s %s | the single invocation of that arm |\n' "$GQ_NBSP" "$BT" "$BT" "$GQ_NBSP"
     elif [ "$defect" != 'droprow' ]; then
       printf -- '| %szz-fixture.sh arm%s | the single invocation of that arm |\n' "$BT" "$BT"
     fi
@@ -6616,6 +6737,194 @@ else
   FAIL "GQK: over verb files that carry no grant table, Q0 did not render exactly one FAIL and no PASS from its VACUITY limb — files $(getcount "$GQKO" GQFILES) of ${GQK_NF}, unreadable $(getcount "$GQKO" GQUNREAD), graded $(getcount "$GQKO" GQVERBS), near misses $(getcount "$GQKO" GQNEAR), continued $(getcount "$GQKO" GQCONT); Q0 probe '${GQK_P0}' where '0 1' is required"
 fi
 
+# ── GQL — A GRANT CELL GRADES THE SAME UNDER EVERY LOCALE. Two BUILT worlds, each read by the real
+# reader twice on this run: under C, and under a multibyte locale this host lists.
+#   nbspcell  every Grant cell edged by U+00A0 — before the code span, after it, and on both sides
+#             among ASCII spaces. trim removes it under every locale, so all three rows pair and
+#             nothing is named, under C as under UTF-8. The cell AFTER the code span is the form
+#             that once paired under a UTF-8 locale and was named by Q1 and Q2 under C.
+#   widecell  the Read cell followed by U+3000, which trim keeps: Q1 names the row and Q2 the entry,
+#             under C as under UTF-8. Without it, a trim that went back to [[:space:]] for every
+#             space except U+00A0 would read green here.
+# Each world's two readings must also be byte-identical. The multibyte member is chosen by the rule
+# test-artifact-schema.sh's group LC uses — a C.UTF-8 spelling the host can load, else the first
+# name `locale -a` lists — and probed in the shell with C assigned first, so a name the C library
+# cannot load falls back to C and is not counted. No member is a FAIL, never a skip: a run with C
+# alone has compared nothing. The reader runs in a subshell that EXPORTS the locale, so every
+# command it forks reads the same one. What this host's own [[:space:]] does with U+00A0 and with
+# U+3000 under that member is printed on the PASS line and graded by nothing: it is the
+# measurement a host supplies, and the verdict does not depend on it.
+gq_mb_ok() {  # gq_mb_ok <locale> — true when U+00A0's two bytes read as ONE character under it
+  local LC_ALL=C
+  LC_ALL="$1"
+  [ "${#GQ_NBSP}" -eq 1 ]
+}
+gq_in_space() {  # gq_in_space <locale> <char> — "yes" when this host's [[:space:]] holds <char> under it
+  local LC_ALL=C
+  LC_ALL="$1"
+  case "$2" in [[:space:]]) printf 'yes' ;; *) printf 'no' ;; esac
+}
+gq_clean() {  # gq_clean <out> — 0 when one verb, three rows and three grants are read and nothing is named
+  [ "$(getcount "$1" GQVERBS)" = '1' ] && [ "$(getcount "$1" GQROWS)" = '3' ] && [ "$(getcount "$1" GQGRANTS)" = '3' ] \
+    && [ "$(getcount "$1" GQUNROW)" = '0' ] && [ "$(getcount "$1" GQUNGRANT)" = '0' ] \
+    && [ "$(getcount "$1" GQNEAR)" = '0' ] && [ "$(getcount "$1" GQCONT)" = '0' ] \
+    && [ "$(grep -c '^FINDING ' <<<"$1")" = '0' ]
+}
+gq_wide_named() {  # gq_wide_named <out> — 0 when exactly the Read row (Q1) and the Read entry (Q2) are named
+  grep -q '^FINDING Q1 /zz-graded:[0-9][0-9]* the grant-table row ' <<<"$1" \
+    && grep -q '^FINDING Q2 /zz-graded the allowed-tools entry "Read" ' <<<"$1" \
+    && [ "$(grep -c '^FINDING ' <<<"$1")" = '2' ] && [ "$(getcount "$1" GQVERBS)" = '1' ]
+}
+# gq_mb_pick — the multibyte member, by the rule above, or nothing. A function rather than a loop
+# here, because GQF below and GJU in group GJ read under the member it picks, by the same rule.
+gq_mb_pick() {
+  local gqll gqm=''
+  while IFS= read -r gqll; do
+    [ -n "$gqll" ] || continue
+    gq_mb_ok "$gqll" 2>/dev/null || continue
+    case "$gqll" in C.UTF-8|C.utf8|C.UTF8) gqm="$gqll"; break ;; esac
+    [ -n "$gqm" ] || gqm="$gqll"
+  done <<GQLLOC
+C.UTF-8
+C.utf8
+$(locale -a 2>/dev/null)
+GQLLOC
+  printf '%s' "$gqm"
+}
+GQL_MB="$(gq_mb_pick)"
+GQLN="$(gq_world GQL-nbsp nbspcell)"; GQLW="$(gq_world GQL-wide widecell)"
+GQL_NC="$( export LC_ALL=C; grant_table_check "$GQLN" )"
+GQL_WC="$( export LC_ALL=C; grant_table_check "$GQLW" )"
+GQL_NM=''; GQL_WM=''; GQL_NBIN='-'; GQL_WIN='-'
+if [ -n "$GQL_MB" ]; then
+  GQL_NM="$( export LC_ALL="$GQL_MB"; grant_table_check "$GQLN" )"
+  GQL_WM="$( export LC_ALL="$GQL_MB"; grant_table_check "$GQLW" )"
+  GQL_NBIN="$(gq_in_space "$GQL_MB" "$GQ_NBSP")"; GQL_WIN="$(gq_in_space "$GQL_MB" "$GQ_WIDE")"
+fi
+GQL_S=1
+[ "$(grep -c -F "$GQ_NBSP" "$GQLN/zz-graded/SKILL.md")" = '3' ] || GQL_S=0
+grep -qF "| ${BT}Read${BT}${GQ_NBSP} |" "$GQLN/zz-graded/SKILL.md" || GQL_S=0
+[ "$(grep -c -F "$GQ_WIDE" "$GQLW/zz-graded/SKILL.md")" = '1' ] || GQL_S=0
+grep -qF "| ${BT}Read${BT}${GQ_WIDE} |" "$GQLW/zz-graded/SKILL.md" || GQL_S=0
+gq_mb_ok C && GQL_S=0
+arm Q1; arm Q2
+if [ "$GQL_S" -eq 0 ]; then
+  FAIL "GQL: fixture integrity — a built Grant cell does not carry U+00A0 or U+3000 where its world places it, or C reads U+00A0 as one character, so a verdict here would prove nothing"
+elif [ -z "$GQL_MB" ]; then
+  FAIL "GQL: NO MULTIBYTE LOCALE — neither C.UTF-8 spelling loads and locale -a lists no name under which U+00A0 reads as one character, so C was compared with nothing. One locale cannot show that a cell grades the same under two"
+elif gq_clean "$GQL_NC" && gq_clean "$GQL_NM" && [ "$GQL_NC" = "$GQL_NM" ] \
+     && gq_wide_named "$GQL_WC" && gq_wide_named "$GQL_WM" && [ "$GQL_WC" = "$GQL_WM" ]; then
+  PASS "GQL: LOCALE-INVARIANT — Grant cells edged by U+00A0, before the code span, after it and among ASCII spaces, pair under C and under ${GQL_MB} with nothing named (1 verb, 3 rows, 3 grants each time), and a cell followed by U+3000, which trim keeps, is named by Q1 and Q2 under both; each world's two readings are byte-identical. trim's whitespace set is fixed, so this verdict does not depend on the host's [[:space:]]. MEASURED, NOT GRADED: under ${GQL_MB} this host's [[:space:]] holds U+00A0: ${GQL_NBIN}; holds U+3000: ${GQL_WIN}"
+else
+  FAIL "GQL: a Grant cell graded differently by locale, or not as specified — U+00A0 world: under C $(grep -c '^FINDING ' <<<"$GQL_NC") finding(s), under ${GQL_MB} $(grep -c '^FINDING ' <<<"$GQL_NM"); U+3000 world: under C $(grep -c '^FINDING ' <<<"$GQL_WC"), under ${GQL_MB} $(grep -c '^FINDING ' <<<"$GQL_WM") (want 0, 0, 2, 2, and each pair identical). This host's [[:space:]] under ${GQL_MB} holds U+00A0: ${GQL_NBIN}; U+3000: ${GQL_WIN}. First finding: $(grep -h '^FINDING ' <<<"$GQL_NC"$'\n'"$GQL_NM"$'\n'"$GQL_WC"$'\n'"$GQL_WM" | awk 'NR == 1')"
+fi
+
+# ── GQF — A FRONTMATTER LINE READS THE SAME UNDER EVERY LOCALE; A VERB'S KEEPS U+00A0 AT ITS EDGE,
+# AND THE CARRIER'S FLAG KEY IS READ THROUGH IT. Four BUILT verb files and one BUILT carrier, each
+# read under C and under the member gq_mb_pick chose for GQL. The first three verb files are read
+# by parse_command_file, the reader of the typed-only posture's flag half:
+#   nbspflag  a `disable-model-invocation: true` line led by U+00A0, and one trailed by a space and
+#             U+00A0. fm_trim keeps U+00A0, so neither line is the flag: POSTURE '-' under both. A
+#             YAML parser reads the first as a different key and the second as the string "true"
+#             plus U+00A0, so a flag the runtime may not hold is reported, never certified.
+#   wideflag  the same two lines with U+3000, which no trim removes: '-' under both. Without it, a
+#             frontmatter trim gone back to [[:space:]] would read green under C, where that class
+#             is ASCII.
+#   flagline  the plain line trailed by a space and a tab, which fm_trim removes: FLAG under both,
+#             so the reader is shown to find the flag where it is there.
+# The fourth is read by invocation_check, which classifies every mention of the publish script in a
+# verb file and counts a frontmatter allowed-tools or disallowed-tools line as a grant:
+#   edgedeny  a whole-script publish denial three times: plain, led by U+00A0, and led by U+3000.
+#             The plain line is a grant; each edged line is an unresolved mention (F5), named with
+#             its line, under both. A YAML parser reads an edged key as a different key, so a denial
+#             the runtime may not hold is reported, never counted as held.
+# The carrier is built by gen_carrier at a fixture engine root and read by inference_check, the
+# reader of group L, whose L2 reports the flag there because its presence is the defect:
+#   carrier   a `disable-model-invocation: true` line led by U+00A0. The carrier's two flag
+#             readers take trim's set, so the line reads as the key: L2 and no other finding,
+#             under both. A runtime that strips U+00A0 from a key would hold that flag and one that
+#             reads it as a different key would not, and either way it is reported.
+# Each file's two readings must also be byte-identical. A verb's frontmatter reader moved onto
+# trim reads the U+00A0 flag file as flagged, or counts the U+00A0-led denial as a grant, and the
+# carrier's two flag readers moved back onto fm_trim leave its key unread; those are the
+# regressions this arm turns red on.
+gqf_read() {  # gqf_read <verb-root> — the POSTURE record parse_command_file emits for zz-graded
+  grep '^POSTURE ' <<<"$(parse_command_file "$1/zz-graded/SKILL.md" '/zz-graded' RESOLVE 2>/dev/null)"
+}
+gqf_deny() {  # gqf_deny <verb-root> — invocation_check's reading of the publish script's mentions
+  invocation_check "$1" '' 2>/dev/null
+}
+# gqf_deny_ok <reading> — one grant, and an F5 naming each edged denial line and nothing else.
+gqf_deny_ok() {
+  [ "$(grep -c '^FINDING ' <<<"$1")" = '2' ] && [ "$(grep -c '^FINDING F5 ' <<<"$1")" = '2' ] \
+    && grep -qF "/zz-graded:${GQF_DN} mentions the publish script" <<<"$1" \
+    && grep -qF "/zz-graded:${GQF_DW} mentions the publish script" <<<"$1" \
+    && [ "$(awk '$1 == "COUNT" && $2 == "GRANTS" { print $3 }' <<<"$1")" = '1' ]
+}
+gqf_deny_sum() {  # gqf_deny_sum <reading> — the reading on one line, for the FAIL text
+  printf '%s finding(s), F5 at line(s) %s, %s grant(s)' "$(grep -c '^FINDING ' <<<"$1")" \
+    "$(grep '^FINDING F5 ' <<<"$1" | sed -n 's|.*/zz-graded:\([0-9][0-9]*\) .*|\1|p' | tr '\n' ' ')" \
+    "$(awk '$1 == "COUNT" && $2 == "GRANTS" { print $3 }' <<<"$1")"
+}
+gqf_carrier() {  # gqf_carrier <engine-root> — the findings inference_check emits over a built world
+  grep '^FINDING ' <<<"$(inference_check "$(collect_records "$1")" "$1/SKILL.md" 2>/dev/null)"
+}
+gqf_carrier_ok() {  # gqf_carrier_ok <findings> — L2, and no other finding
+  [ "$(grep -c '^FINDING ' <<<"$1")" = '1' ] && grep -q '^FINDING L2 ' <<<"$1"
+}
+gqf_carrier_sum() {  # gqf_carrier_sum <findings> — the finding ids on one line, for the FAIL text
+  local s; s="$(sed -n 's/^FINDING \([A-Z0-9]*\) .*/\1/p' <<<"$1" | tr '\n' ' ')"
+  printf '%s' "${s:-none}"
+}
+GQFN="$(gq_world GQF-nbsp nbspflag)"; GQFW="$(gq_world GQF-wide wideflag)"; GQFP="$(gq_world GQF-plain flagline)"
+GQFD="$(gq_world GQF-deny edgedeny)"
+GQFC="$WORK/GQF-carrier"; gen_tree "$GQFC" ok ok; gen_carrier "$GQFC/SKILL.md" edgekey "$GQ_NBSP"
+GQF_DN="$(grep -n -F "${GQ_NBSP}disallowed-tools:" "$GQFD/zz-graded/SKILL.md" | cut -d: -f1)"
+GQF_DW="$(grep -n -F "${GQ_WIDE}disallowed-tools:" "$GQFD/zz-graded/SKILL.md" | cut -d: -f1)"
+GQF_NC="$( export LC_ALL=C; gqf_read "$GQFN" )"
+GQF_WC="$( export LC_ALL=C; gqf_read "$GQFW" )"
+GQF_PC="$( export LC_ALL=C; gqf_read "$GQFP" )"
+GQF_DC="$( export LC_ALL=C; gqf_deny "$GQFD" )"
+GQF_CC="$( export LC_ALL=C; gqf_carrier "$GQFC" )"
+GQF_NM=''; GQF_WM=''; GQF_PM=''; GQF_DM=''; GQF_CM=''
+if [ -n "$GQL_MB" ]; then
+  GQF_NM="$( export LC_ALL="$GQL_MB"; gqf_read "$GQFN" )"
+  GQF_WM="$( export LC_ALL="$GQL_MB"; gqf_read "$GQFW" )"
+  GQF_PM="$( export LC_ALL="$GQL_MB"; gqf_read "$GQFP" )"
+  GQF_DM="$( export LC_ALL="$GQL_MB"; gqf_deny "$GQFD" )"
+  GQF_CM="$( export LC_ALL="$GQL_MB"; gqf_carrier "$GQFC" )"
+fi
+GQF_S=1
+[ "$(grep -c -F "$GQ_NBSP" "$GQFN/zz-graded/SKILL.md")" = '2' ] || GQF_S=0
+grep -qxF "${GQ_NBSP}disable-model-invocation: true" "$GQFN/zz-graded/SKILL.md" || GQF_S=0
+grep -qxF "disable-model-invocation: true ${GQ_NBSP}" "$GQFN/zz-graded/SKILL.md" || GQF_S=0
+[ "$(grep -c -F "$GQ_WIDE" "$GQFW/zz-graded/SKILL.md")" = '2' ] || GQF_S=0
+grep -qxF "${GQ_WIDE}disable-model-invocation: true" "$GQFW/zz-graded/SKILL.md" || GQF_S=0
+grep -qxF "disable-model-invocation: true ${GQ_WIDE}" "$GQFW/zz-graded/SKILL.md" || GQF_S=0
+grep -qxF "disable-model-invocation: true "$'\t' "$GQFP/zz-graded/SKILL.md" || GQF_S=0
+[ "$(grep -c -F "$GQ_NBSP" "$GQFD/zz-graded/SKILL.md")" = '1' ] || GQF_S=0
+[ "$(grep -c -F "$GQ_WIDE" "$GQFD/zz-graded/SKILL.md")" = '1' ] || GQF_S=0
+for gqf_e in '' "$GQ_NBSP" "$GQ_WIDE"; do
+  grep -qxF "${gqf_e}disallowed-tools: [Bash(${ENGINE_ROOT_TOK}${SCRIPT_REL}:*)]" "$GQFD/zz-graded/SKILL.md" || GQF_S=0
+done
+[ -n "$GQF_DN" ] || GQF_S=0
+[ -n "$GQF_DW" ] || GQF_S=0
+[ "$(grep -c -F "$GQ_NBSP" "$GQFC/SKILL.md")" = '1' ] || GQF_S=0
+grep -qxF "${GQ_NBSP}disable-model-invocation: true" "$GQFC/SKILL.md" || GQF_S=0
+if [ "$GQF_S" -eq 0 ]; then
+  FAIL "GQF: fixture integrity — a built frontmatter does not carry its flag or denial lines edged as its file places them, or the built carrier does not carry its flag line led by U+00A0, so a verdict here would prove nothing"
+elif [ -z "$GQL_MB" ]; then
+  FAIL "GQF: NO MULTIBYTE LOCALE — gq_mb_pick found no name under which U+00A0 reads as one character, so C was compared with nothing"
+elif [ "$GQF_NC" = 'POSTURE /zz-graded -' ] && [ "$GQF_NM" = "$GQF_NC" ] \
+     && [ "$GQF_WC" = 'POSTURE /zz-graded -' ] && [ "$GQF_WM" = "$GQF_WC" ] \
+     && [ "$GQF_PC" = 'POSTURE /zz-graded FLAG' ] && [ "$GQF_PM" = "$GQF_PC" ] \
+     && gqf_deny_ok "$GQF_DC" && [ "$GQF_DM" = "$GQF_DC" ] \
+     && gqf_carrier_ok "$GQF_CC" && [ "$GQF_CM" = "$GQF_CC" ]; then
+  PASS "GQF: LOCALE-INVARIANT, U+00A0 KEPT AT A VERB'S FRONTMATTER EDGE AND READ THROUGH AT THE CARRIER'S FLAG KEY — a disable-model-invocation: true line led by U+00A0, or trailed by a space and U+00A0, is not read as the flag under C or under ${GQL_MB}, nor is either edged by U+3000; the plain line trailed by a space and a tab is read as the flag under both; of a whole-script publish denial written plain, led by U+00A0 and led by U+3000, invocation_check counts the plain line a grant and names each edged line an unresolved mention (F5) under both; a guided-entry carrier whose disable-model-invocation key is led by U+00A0 is read as carrying the key, L2 and no other finding, under both; and each file's two readings are identical. fm_trim strips ASCII whitespace alone and trim one fixed set, so this verdict does not depend on the host's [[:space:]]: on a verb an edge byte a YAML parser keeps is reported rather than trimmed into a flag or a denial, and on the carrier, where the flag's presence is the defect, a key the runtime might read through a U+00A0 edge is reported either way"
+else
+  FAIL "GQF: a frontmatter flag or denial line read differently by locale, or not as specified — U+00A0 file: under C '${GQF_NC}', under ${GQL_MB} '${GQF_NM}'; U+3000 file: '${GQF_WC}', '${GQF_WM}'; plain file: '${GQF_PC}', '${GQF_PM}' (want POSTURE /zz-graded - for the first four and POSTURE /zz-graded FLAG for the last two); denial file: under C $(gqf_deny_sum "$GQF_DC"), under ${GQL_MB} $(gqf_deny_sum "$GQF_DM") (want 2 finding(s), F5 at line(s) ${GQF_DN} ${GQF_DW}, 1 grant(s), the same under both); carrier file: under C $(gqf_carrier_sum "$GQF_CC"), under ${GQL_MB} $(gqf_carrier_sum "$GQF_CM") (want L2 alone under both)"
+fi
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group GJ — controls for group J. Every fixture is rooted at $WORK, so group Z's claim
 # covers them. The MUST-FIRE worlds are BUILT by gj_world from a defect switch — never
@@ -6639,13 +6948,17 @@ fi
 # branch of the reader alone declares: a File heading, a bare Pre-Work heading, and a writer
 # list naming the prompt's own id first, with and without a space after its comma. The fifth
 # adds a third agent, its class (the heading's count moving to 8 with it) and its prompt, and
-# that agent's row names no outputs/ path. Their arms follow GJ9.
+# that agent's row names no outputs/ path. Their arms follow GJ9. Two more edge the header's agent
+# cell, nbsphead with U+00A0 before the word, after it and among ASCII spaces, and widehead with
+# U+3000 after it; arm GJU reads them.
 gj_world() {
   local d="$1" dft="$2" hdr rowa rowb cnt=7 bid='zz-beta' qlist='[zz-alpha, zz-gamma]' pend
   mkdir -p "$d/agents" "$d/reference"
   pend=', declares `outputs/zz-pending.md`, not written before the landing that ships its writer'
   hdr='|  agent|PROMPT  FILE | `Output File` |  When to  dispatch   |'
   [ "$dft" = 'anchor0' ] && hdr='| Agent | Prompt File | Output Files | When to dispatch |'
+  [ "$dft" = 'nbsphead' ] && hdr='|'"$GQ_NBSP"'  agent '"$GQ_NBSP"'|PROMPT  FILE | `Output File` |  When to  dispatch   |'
+  [ "$dft" = 'widehead' ] && hdr='|  agent'"$GQ_WIDE"'|PROMPT  FILE | `Output File` |  When to  dispatch   |'
   rowa='| Zz Alpha | `agents/zz-alpha.md` | `outputs/zz-a.md`, its preserved `outputs/zz-a-v<N>.md`, `outputs/zz-shared.md` (primary writer), `outputs/zz-a-status.md`'"$pend"' | always |'
   rowb='| Zz Beta | `agents/zz-beta.md` | `outputs/zz-b.md`, `outputs/zz-b-sections.md` (its sections), `outputs/zz-shared.md` (setup seed only) | always |'
   case "$dft" in
@@ -6933,6 +7246,45 @@ if [ -n "$GJV_BAD" ]; then
   FAIL "GJV: a degenerate world reached a PASS, or rendered more than one verdict: $GJV_BAD"
 else
   PASS "GJV: VACUITY and DEGRADATION — over an empty roster, an empty class table, an unreadable prompt and a root with neither input, each of the three assertions renders exactly one FAIL and no PASS (${GJV_N} of ${GJV_N} probes), and an unread input is counted DEGRADED — never read as empty — while an empty-but-read input is not"
+fi
+
+# GJU — A ROSTER HEADER CELL READS THE SAME UNDER EVERY LOCALE. Two BUILT worlds, each read by the
+# real reader under C and under the multibyte member gq_mb_pick chooses, by the rule GQL states:
+#   nbsphead  the agent cell edged by U+00A0, before the word, after it and among ASCII spaces.
+#             rj_trimv removes it under every locale, so the world reads exactly as the conforming
+#             world does under C: the roster anchored, both rows read, nothing named.
+#   widehead  the agent cell followed by U+3000, which rj_trimv keeps: the header is not the
+#             roster's, and J0 names 0 roster header rows, under C as under UTF-8. Without it, a
+#             trim that went back to [[:space:]] for every space but U+00A0 would read green here.
+# Each world's two readings must also be byte-identical. The reader runs in a subshell that
+# EXPORTS the locale, so lower's tr, which rj_norm forks, reads the same one.
+GJU_MB="$(gq_mb_pick)"
+gj_world "$GJ/nbsphead" nbsphead; gj_world "$GJ/widehead" widehead
+GJU_OK="$( export LC_ALL=C; roster_write_check "$GJ/ok" )"
+GJU_NC="$( export LC_ALL=C; roster_write_check "$GJ/nbsphead" )"
+GJU_WC="$( export LC_ALL=C; roster_write_check "$GJ/widehead" )"
+GJU_NM=''; GJU_WM=''
+if [ -n "$GJU_MB" ]; then
+  GJU_NM="$( export LC_ALL="$GJU_MB"; roster_write_check "$GJ/nbsphead" )"
+  GJU_WM="$( export LC_ALL="$GJU_MB"; roster_write_check "$GJ/widehead" )"
+fi
+GJU_S=1
+[ "$(grep -c -F "$GQ_NBSP" "$GJ/nbsphead/CLAUDE.md")" = '1' ] || GJU_S=0
+grep -qF "|${GQ_NBSP}  agent ${GQ_NBSP}|PROMPT  FILE |" "$GJ/nbsphead/CLAUDE.md" || GJU_S=0
+[ "$(grep -c -F "$GQ_WIDE" "$GJ/widehead/CLAUDE.md")" = '1' ] || GJU_S=0
+grep -qF "|  agent${GQ_WIDE}|PROMPT  FILE |" "$GJ/widehead/CLAUDE.md" || GJU_S=0
+arm J0
+if [ "$GJU_S" -eq 0 ]; then
+  FAIL "GJU: fixture integrity — a built roster header does not carry U+00A0 or U+3000 where its world places it, so a verdict here would prove nothing"
+elif [ -z "$GJU_MB" ]; then
+  FAIL "GJU: NO MULTIBYTE LOCALE — gq_mb_pick found no name under which U+00A0 reads as one character, so C was compared with nothing"
+elif [ "$(getcount "$GJU_NC" J_ROWS)" = '2' ] && [ "$(grep -c '^FINDING ' <<<"$GJU_NC")" = '0' ] \
+     && [ "$GJU_NC" = "$GJU_OK" ] && [ "$GJU_NM" = "$GJU_NC" ] \
+     && [ "$(grep -c '^FINDING J0 CLAUDE.md carries 0 roster header row' <<<"$GJU_WC")" = '1' ] \
+     && [ "$(grep -c '^FINDING ' <<<"$GJU_WC")" = '1' ] && [ "$GJU_WM" = "$GJU_WC" ]; then
+  PASS "GJU: LOCALE-INVARIANT — a roster header whose agent cell is edged by U+00A0, before the word, after it and among ASCII spaces, anchors the roster under C and under ${GJU_MB}, and the world reads exactly as the conforming world reads (2 rows, nothing named); a header whose agent cell is followed by U+3000, which rj_trimv keeps, is not the roster's, and J0 names 0 roster header rows under both; each world's two readings are byte-identical. rj_trimv's whitespace set is trim's, fixed, so this verdict does not depend on the host's [[:space:]]"
+else
+  FAIL "GJU: a roster header cell read differently by locale, or not as specified — U+00A0 world: under C $(grep -c '^FINDING ' <<<"$GJU_NC") finding(s) and $(getcount "$GJU_NC" J_ROWS) row(s), under ${GJU_MB} $(grep -c '^FINDING ' <<<"$GJU_NM") finding(s); U+3000 world: under C $(grep -c '^FINDING ' <<<"$GJU_WC"), under ${GJU_MB} $(grep -c '^FINDING ' <<<"$GJU_WM") (want 0, 0, 1, 1, the U+00A0 world reading as the conforming one does, and each pair identical). First finding: $(grep -h '^FINDING ' <<<"$GJU_NC"$'\n'"$GJU_NM"$'\n'"$GJU_WC"$'\n'"$GJU_WM" | awk 'NR == 1')"
 fi
 
 # gj_live <dir> — a byte copy of the three live inputs this group reads.
@@ -7601,6 +7953,484 @@ md_flips grant_table_check 'Q2' gq_assert_grants "$CDIR"
 md_flips roster_write_check 'J0' rj_assert_population "$ROOT"
 md_flips roster_write_check 'J1' rj_assert_named "$ROOT"
 md_flips roster_write_check 'J2' rj_assert_join "$ROOT"
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group FZ — every verdict arm in this file must be able to FAIL.
+#
+# ── WHY THIS GROUP IS HERE AND NOT ONLY IN THE SUITE WHERE IT WAS FOUNDED ────────
+# The rule was founded in the trip-resolution-contract suite, after that suite shipped two
+# verdict arms unable to fail and both were found by a human reading predicates at Stage 7
+# rather than by a check. The shape is not local to that suite. When this group was installed
+# here its walker was first run over every guard suite, and it found the shape in one of them,
+# three guards, rewritten in the same change. A guard whose failure branch is unreachable
+# reports PASS forever, and that PASS is indistinguishable from a real one in every run, so a
+# rule enforced in one suite leaves the growth surface of the others unguarded. The same
+# group, the same walker and the same controls ship in every guard suite, each over its own
+# source, so a finding is reported by the suite whose arm it is.
+#
+# ── THE RULE IT ENFORCES, AND WHY THAT RULE ──────────────────────────────────────
+# Reachability is not decidable in general, so this group does not claim to decide it. It
+# enforces a SHAPE, and the shape is the one both founding instances had:
+#
+#     a verdict guard that reaches PASS through a DISJUNCTION.
+#
+# Written `if A or B; then PASS ... else FAIL`, the failure branch requires `not A and
+# not B` — a CONJUNCTION the author never wrote down and therefore never checked. That is
+# where unsatisfiability hides. In both founding instances the second disjunct was implied
+# by the first's negation, so the conjunction could never hold. The same disjunction
+# reaching FAIL is the opposite case and is not flagged: `if A or B; then FAIL` fires
+# whenever either holds.
+#
+# The shape is not merely suspicious, it is never NECESSARY. Every arm written that way can
+# be written as a chain — one `elif` per condition, one message per branch — which is
+# strictly better for a second reason: a branch that can fire for several reasons proves
+# that something was wrong, not WHICH thing. And where a disjunct exists to excuse an empty
+# population, the honest verdict for that case is never PASS, unless a live arm already
+# carries that red and the message names it: otherwise it is VACUOUS where the suite has
+# that verdict, or a FAIL that names the empty population. So the rule costs nothing it
+# should keep.
+#
+# ── COVERAGE BOUNDARY — WHAT THIS GROUP DOES NOT GRADE ───────────────────────────
+# Stated plainly, because an overclaiming meta-arm is the same defect one level up.
+#   *  It decides a SHAPE, never reachability. A tautological guard — `[ "$n" -ge 0 ]` over
+#      a count, `[ -n "$x" ]` over a value assigned a literal just above it, or a comparison
+#      between two values the suite itself constructs to be equal — reaches PASS without a
+#      disjunction and is INVISIBLE here. This group would not have caught such an arm, and
+#      does not claim it would. The class is a DECLARED RESIDUAL, not an oversight, and no
+#      detector for it ships, for a stated reason: whether a guard can fail is whether its
+#      negation is satisfiable over the values this file can produce, which is not decidable
+#      in general, and a detector for a few literal spellings would grade those spellings
+#      while reading as coverage of the class — the very failure this group exists to catch.
+#      Group MD's static arm leaves every shell-test condition unflagged by design; its
+#      dynamic arm convicts a REGISTERED assertion whose PASS survives its subject's removal,
+#      which some tautological guards do. An unregistered tautological guard is seen by
+#      nothing in this file, and this paragraph is where a reader is told so.
+#   *  It grades the guards whose taken branch carries a verdict on the line that branch
+#      starts on — the rest of the guard's own line after `then`, or else the next non-blank
+#      non-comment line — and it reads the FIRST verdict there, so `then FAIL ...; else
+#      PASS ...` is a guard that reaches FAIL. A verdict that first appears deeper inside a
+#      branch is counted as a non-verdict guard and is not graded. The counts are printed, so
+#      the ungraded remainder is visible rather than implied.
+#   *  It locates a guard only where `if` or `elif` opens a line of top-level code, so three
+#      verdict forms are never located and never graded: (a) a list-form verdict,
+#      `A && PASS "..." or FAIL "..."`, which with a disjunction for A is the most compact
+#      spelling of the banned shape; (b) a guard whose `if` is not the first word on its
+#      line — a `case` arm, a one-line function body, or one after `;` or `&&`; and (c) a
+#      disjunction decided in a helper or an assignment and compared afterwards, where the
+#      guard that reaches PASS tests the stored result and never sees the disjunction — the
+#      artifact-schema suite's `st_cf_dfired` is one. FZ3 prints FZ_UNLOCATED, the top-level
+#      lines that carry a PASS verdict and are no located guard's verdict line. Forms (a) and
+#      (b) fall inside it when they stand on a line of their own, and so does a PASS reached
+#      through an `else` on a later line or first appearing deeper in a branch, so the count
+#      bounds (a) and (b) from above and is no census of them. It never counts form (c),
+#      whose comparing guard is located and whose PASS is read as that guard's verdict, nor a
+#      list-form verdict or an `else` PASS standing on the line a located guard's branch
+#      starts on, which is read as that guard's verdict line and graded against that guard's
+#      condition.
+#   *  It walks TOP-LEVEL CODE ONLY. A lexer tracks what is open at each point — quotes,
+#      $( ), backticks, ${ }, $(( )) and here-documents — and a line that begins inside one
+#      of them is an embedded program or a payload, never a shell guard: an awk program's
+#      `if`, a script written out through a here-document, a mock defined inside a
+#      multi-line command substitution. Inside a guard the operator counts only at the
+#      guard's own level, so one inside a substitution, a quoted literal or a here-document
+#      is not this guard's disjunction, while one inside [[ ]] or (( )) is. The number of
+#      lines not walked is printed with FZ3. A verdict placed inside a multi-line command
+#      substitution runs in a subshell whose counters never reach this run, and it is not
+#      graded here either. A `<<` whose delimiter is neither a word nor quoted — the
+#      shift-assign `<<=` is one — names no line on which a here-document would end, so the
+#      lexer records it rather than guess, and FZ3 refuses a file that carries one.
+#   *  It recognises the operator as two bars. A disjunction spelled `-o` inside [ ] or
+#      test, a `case` alternation, a negated group, and a `then` standing alone on its own
+#      line are not recognised; none of them was written into a verdict guard in any guard
+#      suite when this group was installed, and the walk does not grade them.
+#   *  The walk is line-oriented and does not track nesting, so it attributes a verdict to
+#      the guard it most recently completed. Every control below runs on a synthetic source
+#      of known shape precisely because the parser's own correctness cannot be assumed.
+#   *  Its scan set is THIS FILE — not a script it sources, and not a sibling suite. Each
+#      guard suite carries this group over its own source, so a finding is reported by the
+#      suite whose arm it is. The walker is the same text in every suite that carries it, by
+#      the convention group MD follows, and nothing asserts the copies agree: a correction to
+#      one is a correction owed to all of them.
+#
+# ── THE CONTROLS ARE PERMANENT, NOT A ONE-TIME DEMONSTRATION ─────────────────────
+# FZ1 plants an arm carrying the banned shape and requires the detector to flag it. FZ2
+# plants the conforming source — the same arm rewritten as a chain, PLUS a conjunctive
+# PASS-reaching guard — and requires silence over it; that second guard is the only
+# specimen an over-matching detector can be seen on, and FZ2 asserts its presence rather
+# than assuming it. Three more plants each stand behind one correction the walker carries,
+# and each is a source a walker without that correction reads wrongly. FZ5 is a one-line
+# guard that names FAIL first: a walker taking any PASS after `then` reads it as a
+# PASS-reaching disjunction. FZ6 is two awk programs carrying the operator, each followed by
+# a shell guard: a walker reading awk's `if` as a shell guard flags the awk line and lets it
+# swallow the guard after it, so FZ6 requires the second, disjunctive guard flagged at its
+# OWN line. FZ7 puts the operator inside a command substitution, a quoted literal and a
+# here-document, then a `<<` whose delimiter is no word, which must be refused without
+# hiding what follows, then a real one inside [[ ]] that must still be flagged. Every plant is
+# built and run on EVERY invocation, so a detector that stops detecting is caught by the
+# next run rather than by the next reader. FZ1 is graded FIRST, and FZ3 reads FZ1, FZ6 and
+# FZ7 before it reads this file: a zero whose sensitivity arms did not fire is a broken
+# probe, not a clean file. FZ3 also refuses a scan whose lexer ended this file inside a
+# construct it never saw closed, because every line after the opener was invisible to it,
+# and one whose lexer met a `<<` it could not delimit.
+#
+# The needle is assembled from two pieces, and the comments above spell it `or` rather
+# than literally. The plants are the deliberate exception: each spells the operator in full,
+# so that no plant is built out of the needle it is meant to test — a control assembled from
+# the thing it validates cannot detect that thing drifting. The literal is safe in the plants
+# because the walker reads only top-level code, and every plant line is a quoted argument.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group FZ — every verdict arm in this file must be able to FAIL."
+
+FZ_OR='|'"|"
+FZ_Q="'"
+FZ_GUARDS=0; FZ_ARMS=0; FZ_PASSARMS=0; FZ_FAILARMS=0; FZ_NONVERDICT=0; FZ_UNRESOLVED=0
+FZ_BAD=0; FZ_BAD_AT=""; FZ_LINES=0; FZ_EMBEDDED=0; FZ_LEXEND=""
+FZ_PASSTOP=0; FZ_PASSREAD=0; FZ_UNLOCATED=0
+FZ_PJ=(); FZ_CO=()
+
+# fz_lex — one pass over a shell source, keeping a stack of the constructs open at each point:
+# T top-level code; S '…'; A $'…'; D "…"; B a backtick; C $( … ) and c a ( ) inside it; P ${ … };
+# R and r $(( … )). A comment is dropped where a word may start; a here-document's body is
+# every line after its opener up to its delimiter. A `<<` whose delimiter is neither a word nor
+# quoted, as in the shift-assign `<<=`, opens no body: no line can be named on which it would
+# end, so its line number is recorded instead. Per line it records the TOP-LEVEL projection —
+# the line with the inside of every open construct removed and the quote marks kept — and
+# whether the line BEGAN in top-level code. A line that began inside a construct is part of an
+# embedded program or a payload, never a shell guard. FZ_LEXEND is the state at end of input:
+# "T|" when every construct closed and no here-document is pending, and the lines of any `<<`
+# it could not delimit follow a second bar, so the state is then never "T|".
+fz_lex() {  # <file> -> FZ_PJ[] FZ_CO[] FZ_EMBEDDED FZ_LEXEND
+  local f="$1" line rest pre c c2 c3 st="T" top proj last hdq="" tag dash k qd hbad=""
+  FZ_PJ=(); FZ_CO=(); FZ_EMBEDDED=0; FZ_LEXEND=""
+  while IFS= read -r line || [ -n "$line" ]; do
+    if [ -n "$hdq" ]; then
+      tag="${hdq%% *}"; k="$line"
+      case "$tag" in -*) tag="${tag#-}"; k="${k#"${k%%[!	]*}"}" ;; esac
+      [ "$k" = "$tag" ] && hdq="${hdq#* }"
+      FZ_PJ+=(""); FZ_CO+=(0); FZ_EMBEDDED=$((FZ_EMBEDDED+1)); continue
+    fi
+    if [ "$st" = T ]; then FZ_CO+=(1); else FZ_CO+=(0); FZ_EMBEDDED=$((FZ_EMBEDDED+1)); fi
+    proj=""; rest="$line"; last=" "
+    while [ -n "$rest" ]; do
+      top="${st:$((${#st}-1))}"
+      case "$top" in
+        T|C|c) pre="${rest%%[\'\"\\\`\$#\<\(\)]*}" ;;
+        S)     pre="${rest%%\'*}" ;;
+        A)     pre="${rest%%[\\\']*}" ;;
+        D)     pre="${rest%%[\\\"\`\$]*}" ;;
+        B)     pre="${rest%%[\\\`\'\"]*}" ;;
+        P)     pre="${rest%%[\\\}\$]*}" ;;
+        R|r)   pre="${rest%%[\(\)\$]*}" ;;
+      esac
+      if [ -n "$pre" ]; then
+        [ "$st" = T ] && proj="$proj$pre"
+        last="${pre:$((${#pre}-1))}"
+        rest="${rest:${#pre}}"
+        [ -n "$rest" ] || break
+      fi
+      c="${rest:0:1}"; c2="${rest:0:2}"; c3="${rest:0:3}"
+      case "$top" in
+        T|C|c)
+          case "$c" in
+            \\) [ "$st" = T ] && proj="$proj$c2"; rest="${rest:2}"; last=x ;;
+            \') [ "$st" = T ] && proj="$proj'"; st="${st}S"; rest="${rest:1}" ;;
+            \") [ "$st" = T ] && proj="$proj\""; st="${st}D"; rest="${rest:1}" ;;
+            \`) st="${st}B"; rest="${rest:1}" ;;
+            \$) case "$c3" in
+                  '$(('*) st="${st}Rr"; rest="${rest:3}" ;;
+                  *) case "$c2" in
+                       "\$'") st="${st}A"; rest="${rest:2}" ;;
+                       '$(') st="${st}C"; rest="${rest:2}" ;;
+                       '${') st="${st}P"; rest="${rest:2}" ;;
+                       *) [ "$st" = T ] && proj="$proj\$"; rest="${rest:1}"; last='$' ;;
+                     esac ;;
+                esac ;;
+            \#) case "$last" in
+                  ' '|'	'|';'|'&'|'|'|'('|')') rest="" ;;
+                  *) [ "$st" = T ] && proj="$proj#"; rest="${rest:1}"; last='#' ;;
+                esac ;;
+            \<) if [ "$c3" = '<<<' ]; then
+                  [ "$st" = T ] && proj="$proj<<<"; rest="${rest:3}"; last='<'
+                elif [ "$c2" = '<<' ]; then
+                  rest="${rest:2}"; dash=""; qd=""
+                  case "$rest" in -*) dash="-"; rest="${rest:1}" ;; esac
+                  rest="${rest#"${rest%%[! 	]*}"}"
+                  case "$rest" in
+                    \'*) rest="${rest:1}"; tag="${rest%%\'*}"; rest="${rest#*\'}"; qd=q ;;
+                    \"*) rest="${rest:1}"; tag="${rest%%\"*}"; rest="${rest#*\"}"; qd=q ;;
+                    \\*) rest="${rest:1}"; tag="${rest%%[!A-Za-z0-9_]*}"; rest="${rest:${#tag}}" ;;
+                    *)   tag="${rest%%[!A-Za-z0-9_]*}"; rest="${rest:${#tag}}" ;;
+                  esac
+                  if [ -n "$tag$qd" ]; then hdq="$hdq$dash$tag "; else hbad="$hbad${#FZ_CO[@]} "; fi
+                  [ "$st" = T ] && proj="$proj<<$tag"; last=x
+                else
+                  [ "$st" = T ] && proj="$proj<"; rest="${rest:1}"; last='<'
+                fi ;;
+            \() if [ "$top" = T ]; then proj="$proj("; else st="${st}c"; fi; rest="${rest:1}"; last='(' ;;
+            \)) if [ "$top" = T ]; then proj="$proj)"; else st="${st%?}"; fi; rest="${rest:1}"; last=')' ;;
+          esac ;;
+        S) st="${st%?}"; [ "$st" = T ] && proj="$proj'"; rest="${rest:1}"; last="'" ;;
+        A) if [ "$c" = '\' ]; then rest="${rest:2}"; else st="${st%?}"; [ "$st" = T ] && proj="$proj'"; rest="${rest:1}"; last="'"; fi ;;
+        D) case "$c" in
+             \\) rest="${rest:2}" ;;
+             \") st="${st%?}"; [ "$st" = T ] && proj="$proj\""; rest="${rest:1}"; last='"' ;;
+             \`) st="${st}B"; rest="${rest:1}" ;;
+             \$) case "$c3" in
+                   '$(('*) st="${st}Rr"; rest="${rest:3}" ;;
+                   *) case "$c2" in
+                        '$(') st="${st}C"; rest="${rest:2}" ;;
+                        '${') st="${st}P"; rest="${rest:2}" ;;
+                        *) rest="${rest:1}" ;;
+                      esac ;;
+                 esac ;;
+           esac ;;
+        B) case "$c" in
+             \\) rest="${rest:2}" ;;
+             \`) st="${st%?}"; rest="${rest:1}" ;;
+             \') st="${st}S"; rest="${rest:1}" ;;
+             \") st="${st}D"; rest="${rest:1}" ;;
+           esac ;;
+        P) case "$c" in
+             \\) rest="${rest:2}" ;;
+             \}) st="${st%?}"; rest="${rest:1}" ;;
+             \$) case "$c2" in
+                   '$(') st="${st}C"; rest="${rest:2}" ;;
+                   '${') st="${st}P"; rest="${rest:2}" ;;
+                   *) rest="${rest:1}" ;;
+                 esac ;;
+           esac ;;
+        R|r) case "$c" in
+               \() st="${st}r"; rest="${rest:1}" ;;
+               \)) st="${st%?}"; rest="${rest:1}" ;;
+               \$) case "$c2" in
+                     '$(') st="${st}C"; rest="${rest:2}" ;;
+                     *) rest="${rest:1}" ;;
+                   esac ;;
+             esac ;;
+      esac
+    done
+    FZ_PJ+=("$proj")
+  done < "$f"
+  FZ_LEXEND="$st|$hdq"
+  if [ -n "$hbad" ]; then FZ_LEXEND="$FZ_LEXEND|${hbad% }"; fi
+  return 0
+}
+
+# Resolve one located guard against the FIRST verdict of its taken branch — the earliest PASS or
+# FAIL on the line that branch starts on, so `then FAIL …; else PASS …` reaches FAIL.
+fz_resolve() {
+  local p=-1 q=-1 x
+  case "$fz_rest" in *'PASS "'*) x="${fz_rest%%PASS \"*}"; p=${#x} ;; esac
+  case "$fz_rest" in *'FAIL "'*) x="${fz_rest%%FAIL \"*}"; q=${#x} ;; esac
+  if [ "$p" -lt 0 ] && [ "$q" -lt 0 ]; then
+    FZ_NONVERDICT=$((FZ_NONVERDICT+1))
+  elif [ "$p" -lt 0 ]; then
+    FZ_ARMS=$((FZ_ARMS+1)); FZ_FAILARMS=$((FZ_FAILARMS+1))
+  elif [ "$q" -ge 0 ] && [ "$q" -lt "$p" ]; then
+    FZ_ARMS=$((FZ_ARMS+1)); FZ_FAILARMS=$((FZ_FAILARMS+1))
+  else
+    FZ_ARMS=$((FZ_ARMS+1)); FZ_PASSARMS=$((FZ_PASSARMS+1))
+    case "$fz_guard" in
+      *"$FZ_OR"*) FZ_BAD=$((FZ_BAD+1)); FZ_BAD_AT="$FZ_BAD_AT$fz_gline " ;;
+    esac
+  fi
+}
+
+# Walk the top-level projection of a shell source and grade every verdict guard it can locate.
+fz_scan() {  # <file>
+  local f="$1" i=0 n t co pend=0 want=0
+  FZ_GUARDS=0; FZ_ARMS=0; FZ_PASSARMS=0; FZ_FAILARMS=0; FZ_NONVERDICT=0; FZ_UNRESOLVED=0
+  FZ_BAD=0; FZ_BAD_AT=""; FZ_LINES=0; FZ_PASSTOP=0; FZ_PASSREAD=0; FZ_UNLOCATED=0
+  fz_guard=""; fz_gline=0; fz_rest=""
+  fz_lex "$f"; n=${#FZ_PJ[@]}
+  while [ "$i" -lt "$n" ]; do
+    t="${FZ_PJ[$i]}"; co="${FZ_CO[$i]}"; i=$((i+1)); FZ_LINES=$i
+    t="${t#"${t%%[![:space:]]*}"}"
+    [ -n "$t" ] || continue
+    case "$t" in *'PASS "'*) FZ_PASSTOP=$((FZ_PASSTOP+1)) ;; esac
+    if [ "$pend" -eq 1 ]; then
+      fz_guard="$fz_guard $t"
+      case "$t" in
+        *' then'*|*';then'*) pend=0; FZ_GUARDS=$((FZ_GUARDS+1)); fz_rest="${t#*then}"; want=1 ;;
+        *) continue ;;
+      esac
+    else
+      case "$co$t" in
+        '1if '*|'1elif '*|'1if	'*|'1elif	'*)
+          [ "$want" -eq 1 ] && FZ_UNRESOLVED=$((FZ_UNRESOLVED+1))
+          want=0
+          fz_guard="$t"; fz_gline="$i"
+          case "$t" in
+            *' then'*|*';then'*) pend=0; FZ_GUARDS=$((FZ_GUARDS+1)); fz_rest="${t#*then}"; want=1 ;;
+            *) pend=1; continue ;;
+          esac ;;
+        *)
+          if [ "$want" -eq 1 ]; then
+            fz_rest="$t"; want=0
+            case "$t" in 'else'*|'fi'*) FZ_NONVERDICT=$((FZ_NONVERDICT+1)); continue ;; esac
+            fz_resolve
+            case "$t" in *'PASS "'*) FZ_PASSREAD=$((FZ_PASSREAD+1)) ;; esac
+          fi
+          continue ;;
+      esac
+    fi
+    fz_rest="${fz_rest#"${fz_rest%%[![:space:]]*}"}"
+    if [ -n "$fz_rest" ]; then
+      want=0; fz_resolve
+      case "$t" in *'PASS "'*) FZ_PASSREAD=$((FZ_PASSREAD+1)) ;; esac
+    fi
+  done
+  [ "$want" -eq 1 ] && FZ_UNRESOLVED=$((FZ_UNRESOLVED+1))
+  FZ_UNLOCATED=$((FZ_PASSTOP-FZ_PASSREAD))
+  return 0
+}
+
+fz_plant() {  # <path> <banned|conforming|oneline|embedded|substitution>
+  local p="$1"
+  mkdir -p "${p%/*}"
+  {
+    printf '%s\n' '#!/usr/bin/env bash'
+    printf '%s\n' 'p="$1"; n="$2"'
+    case "$2" in
+      banned)
+        printf '%s\n' 'if [ ! -e "$p/canary" ] || [ "$n" -gt 0 ]; then'
+        printf '%s\n' '  PASS "PLANT: nothing was written"'
+        printf '%s\n' 'else'
+        printf '%s\n' '  FAIL "PLANT: something was written"'
+        printf '%s\n' 'fi' ;;
+      conforming)
+        # The same arm as a chain: one condition per branch, one message per branch.
+        printf '%s\n' 'if [ ! -e "$p/canary" ]; then'
+        printf '%s\n' '  FAIL "PLANT: the canary is absent"'
+        printf '%s\n' 'elif [ "$n" -eq 0 ]; then'
+        printf '%s\n' '  FAIL "PLANT: the watched surface was empty"'
+        printf '%s\n' 'else'
+        printf '%s\n' '  PASS "PLANT: measured"'
+        printf '%s\n' 'fi'
+        # And a plain CONJUNCTIVE guard that reaches PASS — the only specimen an over-match can be
+        # seen on, which is why FZ2 asserts its presence.
+        printf '%s\n' 'if [ -e "$p/canary" ] && [ "$n" -gt 0 ]; then'
+        printf '%s\n' '  PASS "PLANT: the surface was watched and is unchanged"'
+        printf '%s\n' 'else'
+        printf '%s\n' '  FAIL "PLANT: the surface changed"'
+        printf '%s\n' 'fi' ;;
+      oneline)
+        # One line, FAIL first: a disjunction that REACHES FAIL, which this rule permits.
+        printf '%s\n' 'if [ ! -e "$p/canary" ] || [ "$n" -gt 0 ]; then FAIL "PLANT: the canary is absent or something was written"; else PASS "PLANT: the canary is present and nothing was written"; fi' ;;
+      embedded)
+        # Two awk programs whose OWN control flow carries the operator, each followed by a shell
+        # guard: the first conjunctive, the second disjunctive, at line 16 of the plant.
+        printf 'x="$(awk %s{\n' "$FZ_Q"
+        printf '%s\n' '  if (a || b) next' '  print'
+        printf '}%s "$p")"\n' "$FZ_Q"
+        printf '%s\n' 'if [ -e "$p/canary" ] && [ "$n" -gt 0 ]; then' '  PASS "PLANT: measured after an embedded program"' 'else' '  FAIL "PLANT: not measured"' 'fi'
+        printf 'x="$(awk %s{\n' "$FZ_Q"
+        printf '%s\n' '  if (a || b) next' '  print'
+        printf '}%s "$p")"\n' "$FZ_Q"
+        printf '%s\n' 'if [ ! -e "$p/canary" ] || [ "$n" -gt 0 ]; then' '  PASS "PLANT: nothing was written"' 'else' '  FAIL "PLANT: something was written"' 'fi' ;;
+      substitution)
+        # The operator inside a command substitution, inside a quoted literal and inside a
+        # here-document — none of them the guard's own — then, at line 18, a `<<` whose
+        # delimiter is no word, which must be refused and must not hide what follows, then a
+        # real one in [[ ]], at line 19.
+        printf '%s\n' 'if [ "$(grep -c x "$p" || true)" -gt 0 ]; then' '  PASS "PLANT: the count was taken"' 'else' '  FAIL "PLANT: the count was not taken"' 'fi'
+        printf '%s\n' 'if grep -q "a||b" "$p"; then' '  PASS "PLANT: the literal was found"' 'else' '  FAIL "PLANT: the literal was absent"' 'fi'
+        printf '%s\n' 'cat > "$p.sh" <<"EOF"' 'if [ -e a ] || [ -e b ]; then' '  PASS "PLANT: written into a here-document, never run here"' 'fi' 'EOF'
+        printf '%s\n' '(( m <<= 1 ))'
+        printf '%s\n' 'if [[ -e "$p/canary" || "$n" -gt 0 ]]; then' '  PASS "PLANT: either held"' 'else' '  FAIL "PLANT: neither held"' 'fi' ;;
+    esac
+  } > "$p"
+}
+
+FZ_BANNED="$WORK/fz/banned.sh"
+FZ_CLEAN="$WORK/fz/conforming.sh"
+FZ_ONELINE="$WORK/fz/oneline.sh"
+FZ_EMBEDSRC="$WORK/fz/embedded.sh"
+FZ_SUBST="$WORK/fz/substitution.sh"
+fz_plant "$FZ_BANNED" banned
+fz_plant "$FZ_CLEAN" conforming
+fz_plant "$FZ_ONELINE" oneline
+fz_plant "$FZ_EMBEDSRC" embedded
+fz_plant "$FZ_SUBST" substitution
+
+# ── FZ1 — SENSITIVITY, graded FIRST.
+fz_scan "$FZ_BANNED"
+FZ1_BAD="$FZ_BAD"; FZ1_AT="$FZ_BAD_AT"; FZ1_PASSARMS="$FZ_PASSARMS"
+if [ "$FZ1_BAD" -eq 1 ] && [ "$FZ1_PASSARMS" -eq 1 ]; then
+  PASS "FZ1: SENSITIVITY — a planted arm whose PASS is guarded by a disjunction is detected (1 finding, at line ${FZ1_AT% } of the plant), so the detector fires on the shape both shipped instances had"
+else
+  FAIL "FZ1: SENSITIVITY — the planted unfirable arm was NOT detected as expected (findings=$FZ1_BAD, PASS-reaching arms located=$FZ1_PASSARMS, expected 1 and 1). Every verdict below rests on this arm, so none of them is trustworthy"
+fi
+
+# ── FZ2 — SPECIFICITY over the conforming source, a PASS-reaching guard included.
+fz_scan "$FZ_CLEAN"
+FZ2_BAD="$FZ_BAD"; FZ2_ARMS="$FZ_ARMS"; FZ2_FAILARMS="$FZ_FAILARMS"; FZ2_PASSARMS="$FZ_PASSARMS"
+if [ "$FZ2_BAD" -eq 0 ] && [ "$FZ2_ARMS" -ge 3 ] && [ "$FZ2_FAILARMS" -ge 2 ] && [ "$FZ2_PASSARMS" -ge 1 ]; then
+  PASS "FZ2: SPECIFICITY — the conforming source is NOT flagged, over $FZ2_ARMS located verdict arm(s): $FZ2_FAILARMS reaching FAIL and $FZ2_PASSARMS reaching PASS through a conjunction, which is the specimen a widened detector would over-match. The detector discriminates the shape rather than rejecting every guard"
+else
+  FAIL "FZ2: SPECIFICITY — the conforming source was flagged, or the walker located too little of it to say (findings=$FZ2_BAD, arms=$FZ2_ARMS, FAIL-reaching=$FZ2_FAILARMS, PASS-reaching=$FZ2_PASSARMS; want 0 findings over >=3 arms with >=2 FAIL-reaching and >=1 PASS-reaching). The detector cannot tell the shapes apart, or there is nothing in the sample for an over-match to show on, and FZ3's verdict means nothing either way"
+fi
+
+# ── FZ5 — FIRST VERDICT. A one-line guard reads FAIL first; read by any PASS after `then`, it
+# would be a PASS-reaching disjunction and a false finding.
+fz_scan "$FZ_ONELINE"
+FZ5_BAD="$FZ_BAD"; FZ5_ARMS="$FZ_ARMS"; FZ5_FAILARMS="$FZ_FAILARMS"; FZ5_PASSARMS="$FZ_PASSARMS"
+if [ "$FZ5_BAD" -eq 0 ] && [ "$FZ5_ARMS" -eq 1 ] && [ "$FZ5_FAILARMS" -eq 1 ] && [ "$FZ5_PASSARMS" -eq 0 ]; then
+  PASS "FZ5: FIRST VERDICT — a one-line guard whose branch names FAIL first and PASS only after its else is read as the FAIL-reaching guard it is, and its disjunction is NOT flagged: a disjunction reaching FAIL fires whenever either side holds, which this rule permits"
+else
+  FAIL "FZ5: FIRST VERDICT — the one-line FAIL-first specimen read findings=$FZ5_BAD, arms=$FZ5_ARMS, FAIL-reaching=$FZ5_FAILARMS, PASS-reaching=$FZ5_PASSARMS where 0, 1, 1 and 0 are owed. The walker is grading a verdict other than the first one after then"
+fi
+
+# ── FZ6 — EMBEDDED PROGRAMS. Control flow inside an awk program is not a shell guard, and
+# stepping over it must not blind the walker to the guard after it.
+fz_scan "$FZ_EMBEDSRC"
+FZ6_BAD="$FZ_BAD"; FZ6_AT="$FZ_BAD_AT"; FZ6_GUARDS="$FZ_GUARDS"; FZ6_PASSARMS="$FZ_PASSARMS"
+if [ "$FZ6_BAD" -eq 1 ] && [ "${FZ6_AT% }" = 16 ] && [ "$FZ6_GUARDS" -eq 2 ] && [ "$FZ6_PASSARMS" -eq 2 ]; then
+  PASS "FZ6: EMBEDDED PROGRAM — over a plant carrying two awk programs whose own control flow holds the operator, the walker locates exactly the 2 shell guards, leaves the conjunctive one unflagged, and flags the disjunctive one at its own line (line ${FZ6_AT% } of the plant), not at the awk line above it"
+else
+  FAIL "FZ6: EMBEDDED PROGRAM — the plant read findings=$FZ6_BAD at line(s) ${FZ6_AT% }, guards=$FZ6_GUARDS, PASS-reaching=$FZ6_PASSARMS where 1 finding at line 16 over 2 guards, both PASS-reaching, is owed. Control flow inside an embedded program was read as a shell guard, or stepping over it hid the guard that follows"
+fi
+
+# ── FZ7 — THE OPERATOR OUTSIDE THE GUARD'S OWN LIST. Inside a command substitution, a quoted
+# literal or a here-document it is not this guard's disjunction; inside [[ ]] it is. And a `<<`
+# whose delimiter is no word is refused, at its own line, without hiding the guard after it.
+fz_scan "$FZ_SUBST"
+FZ7_BAD="$FZ_BAD"; FZ7_AT="$FZ_BAD_AT"; FZ7_GUARDS="$FZ_GUARDS"; FZ7_PASSARMS="$FZ_PASSARMS"; FZ7_LEXEND="$FZ_LEXEND"
+if [ "$FZ7_BAD" -eq 1 ] && [ "${FZ7_AT% }" = 19 ] && [ "$FZ7_GUARDS" -eq 3 ] && [ "$FZ7_PASSARMS" -eq 3 ] && [ "$FZ7_LEXEND" = "T||18" ]; then
+  PASS "FZ7: SPECIFICITY AND SENSITIVITY IN ONE PLANT — the operator inside a command substitution, inside a quoted literal and inside a here-document is not flagged, the here-document's own guard is not located, a << whose delimiter is no word is refused at its own line (line ${FZ7_LEXEND##*|} of the plant) without hiding what follows, and the disjunction inside [[ ]] is flagged at its own line (line ${FZ7_AT% } of the plant), over the 3 shell guards the plant carries"
+else
+  FAIL "FZ7: the plant read findings=$FZ7_BAD at line(s) ${FZ7_AT% }, guards=$FZ7_GUARDS, PASS-reaching=$FZ7_PASSARMS and lexer end state '$FZ7_LEXEND', where 1 finding at line 19 over 3 guards, all PASS-reaching, and the end state 'T||18' are owed. The operator was read where it is not the guard's own, the walker stopped seeing guards after a substitution, a literal or a here-document, or a << it cannot delimit was taken for a here-document rather than refused"
+fi
+
+# ── FZ3 — THIS FILE. The claim and its denominator, graded only once every control above that
+# could make its zero a false one has been read.
+fz_scan "$SELF"
+FZ_WC="$(wc -l < "$SELF" | tr -d ' ')"
+if [ "$FZ1_BAD" -ne 1 ]; then
+  FAIL "FZ3: the sensitivity arm did not fire on the plant (FZ1 above), so whatever this scan found or did not find in this file is untrustworthy — a zero from a detector never shown to detect anything is a broken probe, not a clean result"
+elif [ "$FZ6_BAD" -ne 1 ]; then
+  FAIL "FZ3: the disjunction planted after an embedded program was not seen (FZ6 above), so stepping over this file's embedded programs may have hidden guards — its zero is not a measurement"
+elif [ "$FZ7_BAD" -ne 1 ]; then
+  FAIL "FZ3: the disjunction planted after a substitution, a literal and a here-document was not seen (FZ7 above), so this file's zero may be a walker gone blind rather than a clean file"
+elif [ "$FZ7_LEXEND" != "T||18" ]; then
+  FAIL "FZ3: the << planted in FZ7 with a delimiter that is neither a word nor quoted was not refused (FZ7 above, end state '$FZ7_LEXEND'), so a here-document this lexer cannot delimit could close early in this file and hide every line after it — its zero is not a measurement"
+elif [ "$FZ_LEXEND" != "T|" ]; then
+  FAIL "FZ3: the lexer ended this file in state '$FZ_LEXEND' where 'T|' is owed — the constructs still open, a bar, any here-document still pending and, after a second bar, the line(s) of any << whose delimiter is neither a word nor quoted, which it refuses to guess the end of. Every line past such a point may have been invisible to the walker, so its zero describes at best a prefix"
+elif [ "$FZ_ARMS" -eq 0 ]; then
+  FAIL "FZ3: the walker located 0 verdict arms in this file, so its zero on the banned shape is an empty scan and not a clean result — the file's shape or this walker has moved"
+elif [ "$FZ_BAD" -eq 0 ]; then
+  PASS "FZ3: $FZ_GUARDS guard(s) in this file's top-level code — $FZ_ARMS located verdict arm(s) ($FZ_PASSARMS reaching PASS, $FZ_FAILARMS reaching FAIL), $FZ_NONVERDICT non-verdict, $FZ_UNRESOLVED unresolved — and 0 of the $FZ_PASSARMS PASS-reaching guards is a disjunction. $FZ_EMBEDDED line(s) lay inside quoted payloads, substitutions or here-documents and were not walked. $FZ_UNLOCATED of the $FZ_PASSTOP top-level line(s) carrying a PASS verdict are no located guard's verdict line — reached through an else, first appearing deeper in a branch, or written in a form the walker does not locate — and are not graded. The controls fired, so this zero is a measurement. It grades a shape, not reachability: see this group's coverage boundary for what it cannot see"
+else
+  FAIL "FZ3: $FZ_BAD verdict arm(s) in this file reach PASS through a disjunction, at line(s) ${FZ_BAD_AT% }. The failure branch then needs every disjunct false at once — a conjunction nobody wrote down — which is how both previously shipped arms became unable to fail. Rewrite as a chain: one condition per branch, one message per branch"
+fi
+
+# ── FZ4 — the walk covered the file, measured by a differently-shaped counter.
+if [ "$FZ_LINES" -ge "$FZ_WC" ] && [ "$FZ_LINES" -le "$((FZ_WC+1))" ] && [ "$FZ_WC" -gt 0 ]; then
+  PASS "FZ4: the walker read $FZ_LINES line(s) of this file against $FZ_WC counted independently — the scan covered the whole source, so FZ3's population is the file's and not a prefix of it"
+else
+  FAIL "FZ4: the walker read $FZ_LINES line(s) of this file while an independent count reads $FZ_WC — the walk did not cover the source, so FZ3 graded a prefix and its verdict does not describe this file"
+fi
 
 # Group Z — the guard mutates none of the surfaces it reads. The watch set is those
 # surfaces plus the workflow that runs this guard — see tree_state for its derivation. It
