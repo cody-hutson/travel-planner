@@ -41,14 +41,18 @@
 # Decision 2). Once a baseline is recorded, update refuses when the itinerary content of the
 # outgoing render differs from what is currently published and no approval covers it, or when it
 # cannot determine whether that content moved at all (a render it cannot read, project or
-# normalize, or a baseline sidecar that is present but cannot be read as one); rotate
-# re-publishes the same render and applies the refusal itself. A republish carrying the SAME
-# itinerary content — a coordination-state marker change, say — is not a plan change and passes.
+# normalize, a baseline sidecar that is present but cannot be read as one, or a baseline record an
+# earlier push staged and never put in place); rotate re-publishes the same render and applies the
+# refusal itself. A republish carrying the SAME itinerary content — a coordination-state marker
+# change, say — is not a plan change and passes.
 # Two configurations:
 #   - A trip that declares no approvers is gated on the organizer's own confirmation, exactly as
-#     before. With no baseline the gate is NOT ACTIVE there and update publishes without asking;
-#     publish and update record a baseline after each push whose render they can identify, and
-#     warn when a push leaves the trip without one.
+#     before. With no baseline, and no baseline record a push left staged, the gate is NOT ACTIVE
+#     there and update publishes without asking; publish, update and rotate refuse a push whose
+#     render they cannot identify or whose baseline they cannot stage beside the trip, stage the
+#     baseline record each push needs immediately before it and put it in place after, and warn
+#     when a push leaves that record staged instead; while it is, update refuses as undetermined
+#     what it would otherwise pass as unchanged or as ungated.
 #   - A trip that declares approvers (<trip-dir>/.approvers, written by /trip-record .approvers)
 #     is gated on the declared number of them approving this exact plan, each approval recorded
 #     by the organizer at a terminal as the organizer's statement. Its plan is evaluated against
@@ -2964,6 +2968,12 @@ published_itinerary_path() { printf '%s' "$1/.published-itinerary"; }
 #               confirm, by an atomic append that preserves every prior byte
 approver_declaration_path() { printf '%s' "$1/.approvers"; }
 approval_ledger_path()      { printf '%s' "$1/.approvals"; }
+# The baseline record a push has staged and not yet put in place (#1468 D-6): the baseline's
+# staged twin. stage_baseline_record writes it immediately before a push, and
+# record_published_itinerary moves it over .published-itinerary after the push succeeds. It is
+# present between the two, and stays wherever that move fails, so the gate can read that a push's
+# record is outstanding. The previous release never opens it.
+staged_record_path()       { printf '%s' "$1/.published-itinerary.next"; }
 
 # The `digest=` line of a two-line record, or NOTHING when the file is absent, the
 # line is missing, or the token is not a well-formed digest. Folding those three
@@ -3036,48 +3046,131 @@ _stage_published_record() { # <record_file> <digest> -> the staged path on stdou
 
 # The recorder's own warning when a push leaves no new baseline, worded by the state the push
 # leaves, read the way the gate reads it — through _baseline_record — so the words cannot disagree
-# with the next verdict. "NOT ACTIVE" is said only where it is true: no baseline on a trip that
-# declares no approvers; each other policy is told the exit that works on it.
-_warn_unrecorded() { # <trip_dir> <cause> -> one warning, worded by the state the push leaves
-  local out
+# with the next verdict. "NOT ACTIVE" is said only where it is true: no baseline, and no record
+# staged, on a trip that declares no approvers. A staged record is read three ways, as the gate
+# reads it: one that cannot be read holds every update; one holding another plan's digest was
+# written while this push was under way; and one holding this push's own digest, or one beside a
+# push whose digest is not known, is this push's. The third argument is the digest the push
+# carried, or nothing where it could not be identified.
+_warn_unrecorded() { # <trip_dir> <cause> <digest-or-empty> -> one warning, worded by the state the push leaves
+  local out nxt base nxt_dg
   out="$(published_itinerary_path "$1")"
-  case "$(_baseline_record "$out")" in
+  nxt="$(staged_record_path "$1")"
+  base="$(_baseline_record "$out")"
+  case "$base" in
+    unusable|'')
+      warn "$2 The push itself succeeded. No baseline was recorded for this push, and the sidecar at $out is present but cannot be used, so the organizer-confirm gate refuses the next update as undetermined until that file is repaired or deleted."
+      return 0 ;;
+  esac
+  nxt_dg="$(_baseline_record "$nxt")"
+  case "$nxt_dg" in
+    absent) ;;
+    unusable|'')
+      warn "$2 The push itself succeeded. No baseline was recorded for this push, and the baseline record staged at $nxt is present but cannot be read, so the organizer-confirm gate refuses every update as undetermined until that file is repaired or deleted."
+      return 0 ;;
+    *)
+      if [ -n "${3:-}" ] && [ "$nxt_dg" != "$3" ]; then
+        warn "$2 The push itself succeeded. No baseline was recorded for this push, and the record staged at $nxt holds another plan's digest, written while this push was under way. Until a push puts a record in place, the organizer-confirm gate cannot tell which plan the published site carries, so it refuses as undetermined an update of any other plan that it would otherwise pass as unchanged or as ungated, save a plan whose own approvals meet the threshold on a trip that declares approvers. Run one command on a trip at a time; then re-run update with the plan this trip should publish, which records it."
+      else
+        warn "$2 The push itself succeeded, and its baseline record is left staged at $nxt. Until a push puts a record in place, the organizer-confirm gate cannot tell which plan the published site carries, so it refuses as undetermined an update it would otherwise pass as unchanged or as ungated, save a plan whose own approvals meet the threshold on a trip that declares approvers; an update of a changed plan still needs its approval. Fix the cause, then re-run update with this plan to record its baseline — or, if the site does not carry this plan, delete $nxt."
+      fi
+      return 0 ;;
+  esac
+  case "$base" in
     absent)
       case "$(_approval_policy "$1" 2>/dev/null)" in
         none)     warn "$2 The push itself succeeded. No baseline was recorded for this push, and this trip has none, so the organizer-confirm gate is NOT ACTIVE for it: every update will publish without asking for confirmation until a push records a baseline. Fix the cause, then re-run update to record one." ;;
         declared) warn "$2 The push itself succeeded. No baseline was recorded for this push, and this trip has none; it declares approvers, so the gate still holds the next update until approvals of its outgoing plan are recorded. Fix the cause, then re-run update to record a baseline." ;;
         *)        warn "$2 The push itself succeeded. No baseline was recorded for this push, and this trip has none; its approval sidecars are malformed, so the gate holds every plan change, and confirm records no approval, until they are repaired. Repair them and fix the cause, then re-run update to record a baseline." ;;
       esac ;;
-    unusable|'') warn "$2 The push itself succeeded. No baseline was recorded for this push, and the sidecar at $out is present but cannot be used, so the organizer-confirm gate refuses the next update as undetermined until that file is repaired or deleted." ;;
-    *) warn "$2 The push itself succeeded. No new baseline was recorded for this push. The organizer-confirm gate keeps the baseline it already had — the plan published before this push — so until a push records a new one the next update is gated against that earlier plan, and a working copy reverted to it would publish without asking. Fix the cause, then re-run update to record this push's baseline." ;;
+    *)
+      if [ -n "${3:-}" ] && _baseline_matches "$1" "$base" "$3"; then
+        warn "$2 The push itself succeeded. No new baseline was recorded for this push, but the baseline the trip already had records this same plan, so the organizer-confirm gate's verdicts are unaffected."
+      else
+        warn "$2 The push itself succeeded. No new baseline was recorded for this push. The organizer-confirm gate keeps the baseline it already had — the plan published before this push — so until a push records a new one the next update is gated against that earlier plan, and a working copy reverted to it would publish without asking. Fix the cause, then re-run update to record this push's baseline."
+      fi ;;
   esac
   return 0
 }
 
-# Records the itinerary content that is now live. Called AFTER a push succeeds, so the sidecar
-# never claims content that was not published. Staged beside the sidecar by
-# _stage_published_record, moved into place, then READ BACK the way the gate reads it, so a crash
-# mid-write cannot leave a half-record, and a record that landed somewhere else — inside a
-# directory standing at the sidecar's path, say — is caught rather than assumed.
+# Records the itinerary content that is now live. Called AFTER a push succeeds, so the sidecar never
+# claims content that was not published. Every push site hands it the digest of the plan its push
+# carried, which stage_baseline_record handed back, and that digest is what is recorded: the render
+# is not digested again here, so a render rebuilt during the push is never recorded as what the push
+# carried (#1468; CD-2 of the amendment-1 review, X-CD-1 of the amendment-2 review). Given it:
+#   - a staged record holding that digest is moved into place and READ BACK the way the gate reads
+#     it, so a record that landed somewhere else (inside a directory standing at the sidecar's path,
+#     say) is caught rather than assumed;
+#   - with no record staged, where the baseline already records that plan (the push re-published
+#     it), that digest is recorded beside the sidecar by _stage_published_record and moved into
+#     place the same way. A legacy (CRC-shaped) baseline is matched through the legacy shim, which
+#     reads the render: a render rewritten during such a push then fails to match, and the next case
+#     applies, which holds;
+#   - with no record staged, where the baseline does not record that plan, something other than this
+#     command removed the staged record during the push, and it is STAGED AGAIN, so the gate holds
+#     exactly as after a move that failed. Staging needs space after the push; where it fails, the
+#     old baseline is kept, and the warning says so;
+#   - a staged record holding another digest, or one that cannot be read, was changed during the
+#     push by something other than this command; it is left as it is, and the warning says so.
+# Called with two arguments, as no push site calls it since X-CD-1 and the suite's arms still do, the
+# render is digested here: a record of that plan already staged is moved into place, and otherwise
+# one is staged now, beside the sidecar, by _stage_published_record, and moved into place the same way.
 #
 # EVERY PATH THAT LEAVES NO NEW BASELINE WARNS, AND RETURNS 0 (#1184; #1468 case 4). The push has
 # already happened, so this cannot refuse; it can only be truthful, and no failed step may end the
 # command under errexit after a push that succeeded — the removal of a temp file included, which
-# fails for the same reason a move into the same directory does (#1468, FM-1). The warning is
+# fails for the same reason a move into the same directory does. A staged record that cannot be
+# moved into place is LEFT WHERE IT IS: it is what keeps the gate holding (SEAM S2). The warning is
 # _warn_unrecorded's, worded by the state the push leaves.
-record_published_itinerary() { # <trip_dir> <site_html>
-  local trip_dir="$1" site_html="$2" out tmp="" dg
+record_published_itinerary() { # <trip_dir> <site_html> [<the digest stage_baseline_record handed back>]
+  local trip_dir="$1" site_html="$2" out nxt tmp="" dg base nxt_dg
   out="$(published_itinerary_path "$trip_dir")"
+  nxt="$(staged_record_path "$trip_dir")"
+  if [ -n "${3:-}" ]; then
+    nxt_dg="$(_baseline_record "$nxt")"
+    if [ "$nxt_dg" = "$3" ]; then
+      if mv -f "$nxt" "$out" && [ "$(_baseline_record "$out")" = "$3" ]; then return 0; fi
+      _warn_unrecorded "$trip_dir" "could not put this push's staged baseline record, $nxt, in place at $out; any error printed above names the cause." "$3"
+      return 0
+    fi
+    if [ "$nxt_dg" = absent ]; then
+      base="$(_baseline_record "$out")"
+      case "$base" in
+        absent|unusable|'') ;;
+        *)
+          if _baseline_matches "$trip_dir" "$base" "$3"; then
+            if tmp="$(_stage_published_record "$out" "$3")" && mv -f "$tmp" "$out" && [ "$(_baseline_record "$out")" = "$3" ]; then return 0; fi
+            if [ -n "$tmp" ] && [ -e "$tmp" ]; then rm -f "$tmp" || :; fi
+            _warn_unrecorded "$trip_dir" "could not record the baseline at $out — the sidecar could not be staged, written or put in place beside it; any error printed above names the cause." "$3"
+            return 0
+          fi ;;
+      esac
+      if tmp="$(_stage_published_record "$out" "$3")" && mv -f "$tmp" "$nxt" && [ "$(_baseline_record "$nxt")" = "$3" ]; then
+        _warn_unrecorded "$trip_dir" "the baseline record this push staged at $nxt was removed while the push was under way, by something other than this command, so it was staged again rather than put in place." "$3"
+        return 0
+      fi
+      if [ -n "$tmp" ] && [ -e "$tmp" ]; then rm -f "$tmp" || :; fi
+      _warn_unrecorded "$trip_dir" "the baseline record this push staged at $nxt was removed while the push was under way, by something other than this command, and it could not be staged again; any error printed above names the cause." "$3"
+      return 0
+    fi
+    _warn_unrecorded "$trip_dir" "the baseline record this push staged at $nxt was changed while the push was under way, by something other than this command, so it was not put in place." "$3"
+    return 0
+  fi
   dg="$(itinerary_digest "$site_html")"
   if [ -z "$dg" ]; then
-    _warn_unrecorded "$trip_dir" "could not identify the itinerary content of $site_html — it could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause."
+    _warn_unrecorded "$trip_dir" "could not identify the itinerary content of $site_html — it could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause." ""
+    return 0
+  fi
+  if [ "$(_baseline_record "$nxt")" = "$dg" ]; then
+    if mv -f "$nxt" "$out" && [ "$(_baseline_record "$out")" = "$dg" ]; then return 0; fi
+    _warn_unrecorded "$trip_dir" "could not put this push's staged baseline record, $nxt, in place at $out; any error printed above names the cause." "$dg"
     return 0
   fi
   if tmp="$(_stage_published_record "$out" "$dg")" && mv -f "$tmp" "$out" && [ "$(_baseline_record "$out")" = "$dg" ]; then
     return 0
   fi
   if [ -n "$tmp" ] && [ -e "$tmp" ]; then rm -f "$tmp" || :; fi
-  _warn_unrecorded "$trip_dir" "could not record the baseline at $out — the sidecar could not be staged, written or put in place beside it; any error printed above names the cause."
+  _warn_unrecorded "$trip_dir" "could not record the baseline at $out — the sidecar could not be staged, written or put in place beside it; any error printed above names the cause." "$dg"
   return 0
 }
 
@@ -3295,13 +3388,19 @@ _baseline_matches() { # <trip_dir> <baseline-digest> <outgoing-digest> -> 0 when
 # the declared no-baseline branch included, and whenever a baseline sidecar is present but cannot
 # be used (#1468). Group S15 grades it whatever body this function holds.
 #
-#   none-pending  no baseline on a trip that declares no approvers, OR the outgoing itinerary
-#                 content is exactly what is published — directly, or through the
-#                 legacy-baseline shim                                                -> proceed
+#   none-pending  no baseline on a trip that declares no approvers, and no other plan's record
+#                 staged; OR the outgoing itinerary content is exactly what is published —
+#                 directly, or through the legacy-baseline shim — and no push's record is
+#                 still staged                                                        -> proceed
 #   undetermined  whether the itinerary moved is UNKNOWN: a baseline sidecar is present but
-#                 cannot be used (_baseline_record), on every policy; or the verdict depends
-#                 on the outgoing render, and it could not be read, projected or normalized.
-#                 Never written to any sidecar                                        -> abort
+#                 cannot be used (_baseline_record), on every policy; or a push's baseline
+#                 record is still staged and the outgoing plan is the baseline's own,
+#                 whatever plan that record names, or, with no baseline on a trip that
+#                 declares no approvers, is not that record's own — where the answer would
+#                 otherwise be none-pending, save on a trip that declares approvers whose
+#                 approvals of the outgoing plan meet its threshold, which is confirmed
+#                 (#1468 D-6); or the verdict depends on the outgoing render, and it could
+#                 not be read, projected or normalized. Never written to any sidecar  -> abort
 #   unconfirmed   itinerary content moved and no approval covers it: no parseable
 #                 confirmation, too few declared approvals, or a malformed approval state -> abort
 #   stale         itinerary content moved since it was approved                       -> abort
@@ -3318,15 +3417,37 @@ _baseline_matches() { # <trip_dir> <baseline-digest> <outgoing-digest> -> 0 when
 # default (FM-2 ii): it reads `unconfirmed` wherever the plan cannot be shown unchanged, and
 # `none-pending` only where the outgoing plan equals the baseline, where nothing new can be
 # publishing (#719 DR-2).
+#
+# A STAGED RECORD HOLDS THE TWO VERDICTS THAT REST ON KNOWING WHICH PLAN IS LIVE (#1468 D-6).
+# stage_baseline_record writes .published-itinerary.next immediately before a push, and the
+# recorder moves it into place after; while it is present the site may carry its plan, or the plan
+# of an earlier push whose record it replaced, rather than the baseline's. So the outgoing plan
+# matching the baseline becomes undetermined whatever plan that record names, its own included —
+# a record of the baseline's own plan is left where a push of it failed after another plan's record
+# was outstanding (X-FM-2 of the #1468 amendment-2 review) — and no baseline on a trip that declares
+# no approvers becomes undetermined where the outgoing plan is not that record's own. One exception:
+# on a trip that declares approvers, a baseline's own plan whose approvals meet the threshold is
+# confirmed, because a met threshold covers a plan whichever plan is live (CD-1 of the #1468
+# amendment-1 review). On every other policy (a trip that declares no approvers, or one whose
+# approval sidecars are malformed) that plan stays held, whatever the confirmation record says.
+# Every other answer stands: a changed plan still needs its approval whichever plan is live, and a
+# confirmation or a met threshold for it covers it whichever that is. A staged record that cannot be
+# read is undetermined on every policy, as an unusable baseline is. Only `absent` leaves THE
+# NO-BASELINE BRANCH where it was.
 change_confirmation_state() { # <trip_dir> -> one token on stdout
-  local trip_dir="$1" pol base_dg out_dg rec_dg k t s
+  local trip_dir="$1" pol base_dg nxt_dg out_dg rec_dg k t s held=0
   pol="$(_approval_policy "$trip_dir")"
   base_dg="$(_baseline_record "$(published_itinerary_path "$trip_dir")")"
   case "$base_dg" in
     absent)      base_dg="" ;;                         # never recorded: THE NO-BASELINE BRANCH below
     unusable|'') printf 'undetermined'; return 0 ;;    # present but unusable, on every policy (#1468 case 5)
   esac
-  if [ -z "$base_dg" ]; then
+  nxt_dg="$(_baseline_record "$(staged_record_path "$trip_dir")")"
+  case "$nxt_dg" in
+    absent)      nxt_dg="" ;;                          # no push's record is outstanding
+    unusable|'') printf 'undetermined'; return 0 ;;    # an outstanding record that cannot be read (#1468 D-6)
+  esac
+  if [ -z "$base_dg" ] && [ -z "$nxt_dg" ]; then
     case "$pol" in
       none)      printf 'none-pending'; return 0 ;;   # the shipped first branch, undeclared trips only
       malformed) printf 'unconfirmed';  return 0 ;;   # FM-2: never the legacy default
@@ -3334,7 +3455,31 @@ change_confirmation_state() { # <trip_dir> -> one token on stdout
   fi
   out_dg="$(itinerary_digest "$(resolve_site_html "$trip_dir")")"
   if [ -z "$out_dg" ]; then printf 'undetermined'; return 0; fi
-  if [ -n "$base_dg" ] && _baseline_matches "$trip_dir" "$base_dg" "$out_dg"; then printf 'none-pending'; return 0; fi
+  # A push's record is outstanding and this is not that push's plan. On a trip with no baseline that
+  # declares no approvers, which plan the site carries is then unknown, so the ungated verdict cannot
+  # be given (#1468 D-6). The unchanged verdict below is held whatever plan the record names (X-FM-2).
+  if [ -n "$nxt_dg" ] && [ "$nxt_dg" != "$out_dg" ]; then held=1; fi
+  if [ -n "$base_dg" ] && _baseline_matches "$trip_dir" "$base_dg" "$out_dg"; then
+    if [ -z "$nxt_dg" ]; then printf 'none-pending'; return 0; fi
+    # Held on the baseline's own plan while a push's record is outstanding, whichever plan that record
+    # names: a record of this same plan is left where a push of it failed after another plan's record
+    # was outstanding, and that other plan may be the one live (X-FM-2 of the #1468 amendment-2
+    # review). A trip that declares approvers is not held where that plan's own approvals meet the
+    # threshold: a met threshold covers a plan whichever plan is live (CD-1 of the #1468 amendment-1
+    # review). Every other policy, and a shortfall, is held.
+    if [ "$pol" = declared ]; then
+      read -r k t s <<<"$(_approval_tally "$trip_dir" "$out_dg")"
+      case "$k$t" in
+        ''|*[!0123456789]*) ;;
+        *) if [ "$k" -ge "$t" ]; then printf 'confirmed'; return 0; fi ;;
+      esac
+    fi
+    printf 'undetermined'; return 0
+  fi
+  if [ -z "$base_dg" ] && [ "$pol" = none ]; then    # no baseline, and a push's record outstanding
+    if [ "$held" -eq 1 ]; then printf 'undetermined'; else printf 'none-pending'; fi
+    return 0
+  fi
   case "$pol" in
     malformed) printf 'unconfirmed'; return 0 ;;
     declared)
@@ -3375,13 +3520,14 @@ change_confirmation_state() { # <trip_dir> -> one token on stdout
 #     nobody could have computed, and exactly the fabricated statement this token exists
 #     to remove. So the arm exists for its MESSAGE and not for its verdict: the proceed set
 #     is unchanged, `*)` is still the default, and the arm is not an exemption. Its message
-#     names whichever side the gate could not establish — a baseline sidecar present but
-#     unusable (#1468 case 5), read again through `_baseline_record`, or the outgoing render's
-#     identity — and never speaks of change in either direction, because that is all the gate
-#     failed to establish. S15f and S28b grade it.
+#     names whichever side the gate could not establish, read again through `_baseline_record` in
+#     the order the resolver reads them: a baseline sidecar present but unusable (#1468 case 5), a
+#     push's baseline record present but unreadable, the outgoing render's identity, or a push's
+#     baseline record still staged (#1468 D-6). It never speaks of change in either direction,
+#     because that is all the gate failed to establish. S15f and S28b grade it, and S31b and S31i.
 require_change_confirmation() { # <trip_dir>
   local trip_dir="$1"
-  local state
+  local state out_dg
   state="$(change_confirmation_state "$trip_dir")"
   case "$state" in
     none-pending|confirmed) return 0 ;;
@@ -3389,6 +3535,17 @@ require_change_confirmation() { # <trip_dir>
       case "$(_baseline_record "$(published_itinerary_path "$trip_dir")")" in
         unusable|'') die "GUARD ABORTED — the published baseline of ${trip_dir} is present but cannot be used (state: undetermined): $(published_itinerary_path "$trip_dir") is not a readable regular file, or it carries no well-formed digest= line. The gate compares the outgoing plan with that baseline, and without it nothing could be compared, so nothing was pushed and the published site was not touched. confirm refuses this state as well. Restore read access to that file, or replace it from a backup, or delete it: on a trip that declares no approvers the next update then publishes without asking and records a new baseline, and on one that declares approvers it waits for approvals of the outgoing plan." ;;
       esac
+      case "$(_baseline_record "$(staged_record_path "$trip_dir")")" in
+        unusable|'') die "GUARD ABORTED — a baseline record an earlier push staged at $(staged_record_path "$trip_dir") is present but cannot be read (state: undetermined): it is not a readable regular file, or it carries no well-formed digest= line. While it is there the gate cannot tell which plan the published site carries, so it refuses every update; nothing was pushed, and the published site was not touched. confirm refuses this state as well. Repair that file, or delete it, then re-run; once it is gone the gate compares the outgoing plan with the baseline alone." ;;
+      esac
+      out_dg="$(itinerary_digest "$(resolve_site_html "$trip_dir")")"
+      if [ -n "$out_dg" ]; then
+        case "$(_baseline_record "$(staged_record_path "$trip_dir")")" in
+          absent) ;;
+          "$out_dg") die "GUARD ABORTED — a baseline record an earlier push staged is still outstanding at $(staged_record_path "$trip_dir") (state: undetermined), and it names the plan going out, which the published baseline records as well: that push may have reached the published site without its record being put in place, or failed after an earlier push of another plan did, so which plan the site carries is unknown, and the gate could not compare the outgoing plan with it. Nothing was pushed, and the published site was not touched. confirm refuses this state as well. While that record stands this plan stays held, so re-running update with it cannot clear the record. If the site carries the plan the published baseline records, which is this one, the record is redundant: delete that file and re-run. If it carries another plan, keep the file, because deleting it would let this plan publish over that one unasked: publish the plan the site should carry through update instead, with its confirmation or its approvals, which stages that plan's record over this one and records it; or unpublish, then publish again." ;;
+          *) die "GUARD ABORTED — a baseline record an earlier push staged is still outstanding at $(staged_record_path "$trip_dir") (state: undetermined): that push may have reached the published site without its record being put in place, so which plan the site carries is unknown, and the gate could not compare the outgoing plan with it. Nothing was pushed, and the published site was not touched. confirm refuses this state as well. If the site carries the plan the published baseline records, the record is redundant: delete that file and re-run. If it carries another plan, keep the file. Re-run update with the plan the site should carry — usually the plan that push carried — with its confirmation or its approvals: that push stages its plan's record over this one and records it. Where that push was a first publish, its per-trip repository may hold no page at all, and update cannot run on an empty one: unpublish, then publish again." ;;
+        esac
+      fi
       die "GUARD ABORTED — could not identify the itinerary content of the outgoing render of ${trip_dir} (state: undetermined): it could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause. Nothing was pushed, and the published site was not touched. confirm refuses this state as well, because a confirmation binds to an identified itinerary and there is none: fix whichever of the three it is, then re-run." ;;
     *) die "GUARD ABORTED — the itinerary content differs from the published plan and no organizer confirmation covers it (state: ${state:-empty}). Nothing was pushed and the published plan is unchanged. Either confirm the change:  $(basename "$0") confirm ${trip_dir}  — or revert the working copy to the published plan and re-run." ;;
   esac
@@ -3662,15 +3819,120 @@ require_render_approval_code() { # <trip_dir> <site_html> <update|publish>
   return 0
 }
 
-# THE REPUBLISH PATH'S GUARDS, AS ONE CALL LINE (#719, the scope-lock's C5). update calls this and
-# nothing else at the gate's position: S3 exactly as it was, and then the render's approval-code
-# guard. #85 relocates the gate onto its event-driven path by moving that one line, as S3's own
-# banner promises, so the code guard cannot be left behind by a relocation that carries S3 alone.
-# publish calls the code guard on its own: S3 does not gate publish, by design.
+# Whether the outgoing plan is the one the baseline already records — S2's own predicate,
+# _baseline_matches over a usable token — with no push's record outstanding (CD-1, the #1468
+# review). Such a push needs no new record: where recording fails after it, the baseline it keeps
+# is still exact, so neither the guard's probe nor the staged record is required of it.
+_republishes_baseline() { # <trip_dir> <outgoing-digest> -> 0 when no record needs staging
+  local base
+  base="$(_baseline_record "$(published_itinerary_path "$1")")"
+  case "$base" in absent|unusable|'') return 1 ;; esac
+  [ "$(_baseline_record "$(staged_record_path "$1")")" = absent ] || return 1
+  _baseline_matches "$1" "$base" "$2"
+}
+
+# THE RECORD A PUSH WILL NEED, STAGED IMMEDIATELY BEFORE IT (#1468 D-6). The guard's probe proves the
+# trip directory could take a record when the command began; this writes the record itself, as
+# .published-itinerary.next, after the command's own writes (the clone, the ciphertext, the
+# commit), so a volume those writes filled refuses the push here rather than after it. Called by
+# publish, update and rotate, each after its own writes and immediately before its push: between
+# the two stand only rotate's progress line and, in publish, the push subshell's entry into the
+# clone its commit was made in. Neither writes to the trip's volume, and neither is a check that can
+# refuse. The step left after the push is then one rename. A rename can still fail: over a sidecar
+# that cannot be renamed over, in a directory that lost write, and on APFS on a volume that filled
+# during the push, where a rename needs space of its own (measured; HFS+ renamed in the same state).
+# So the gate does not rely on the rename: while a staged record is outstanding it refuses, as
+# undetermined, an update it would otherwise pass as unchanged or as ungated, save the baseline's
+# own plan on a trip that declares approvers where that plan's approvals meet the threshold (SEAM
+# S2), and the record stays where it is until a push puts it, or a newer one, in place. A failure
+# here stops the command before its push. There is nothing to stage where the push re-publishes the
+# recorded plan (_republishes_baseline).
+#
+# THE DIGEST OF THE PLAN THIS PUSH CARRIES IS HANDED BACK (#1468 D-6; CD-2 of the amendment-1 review,
+# X-CD-1 of the amendment-2 review). Given a fourth argument, that variable receives it by printf -v,
+# as encrypt_verify_commit hands back its commit: the digest written into the staged record, or,
+# where the push re-publishes the recorded plan and nothing is staged, that plan's digest. The caller
+# passes it to record_published_itinerary, which records that plan and never a digest read from the
+# render after the push, so a render rebuilt during the push is never recorded as what the push
+# carried. Call this as a bare command in the push's own shell: printf -v sets a variable in the
+# calling shell only, so inside $( ) or a subshell the digest is lost. The caller's variable must not
+# share a name with a local here.
+#
+# WHAT THIS DOES NOT REACH, stated as limits. Two publish-path commands run on one trip at the same
+# moment share this one staged name and the one baseline, so the order of their stagers, pushes and
+# recorders decides what is left. The baseline can end naming a plan the site no longer carries,
+# beside a staged record. Or one command's recorder finds the staged name empty, because the other
+# command's record was put in place there first; it then stages its own plan again and warns, and
+# the plan the site does carry is held as undetermined. Either way the exit rests on the plan the
+# baseline records. Where the site carries that plan, deleting the staged file resolves this. Where
+# it carries another, deleting would let the baseline's plan publish over it unasked: update with
+# the plan the site should carry, which records it. Re-running update with the plan the staged file
+# names, where the site does not carry it, would publish that plan over the live one. Staging again
+# needs space after the push; where it fails, the baseline is left as it was and the recorder says
+# so. Run one at a time, as the header says. Another program rewriting or deleting the trip's
+# control files, or its render, during a push is the second limit. Two of its cases are reached: a
+# render rewritten after this step is never recorded, because the recorder records the plan this
+# push carried; and a staged record removed during the push is staged again, at the cost above. The
+# rest is not: the gate trusts the trip directory for every sidecar it reads, so such a program can
+# still leave a baseline naming a plan the site does not carry, and a render rewritten between the
+# encryption and this step is staged as though the push carried it. A first publish whose push failed
+# after its per-trip repository was created leaves its record staged on a trip with no baseline, and
+# update cannot run on that empty repository: unpublish, then publish again.
+stage_baseline_record() { # <trip_dir> <site_html> <publish|update|rotate> [<var-to-receive-the-pushed-plan's-digest>]
+  local trip_dir="$1" site_html="$2" verb="$3" nxt dg tmp="" after='then re-run.'
+  [ "$verb" != rotate ] || after='then run update: the new passphrase is already recorded, and update finishes the rotation, as it does after a failed push.'
+  [ -z "${4:-}" ] || printf -v "$4" '%s' ''
+  dg="$(itinerary_digest "$site_html")"
+  [ -n "$dg" ] || die "$verb: could not identify the itinerary content of $site_html just before the push; any error printed above names the cause. Nothing was pushed. Fix the cause, $after"
+  if _republishes_baseline "$trip_dir" "$dg"; then
+    [ -z "${4:-}" ] || printf -v "$4" '%s' "$dg"
+    return 0
+  fi
+  nxt="$(staged_record_path "$trip_dir")"
+  if tmp="$(_stage_published_record "$(published_itinerary_path "$trip_dir")" "$dg")" && mv -f "$tmp" "$nxt" && [ "$(_baseline_record "$nxt")" = "$dg" ]; then
+    [ -z "${4:-}" ] || printf -v "$4" '%s' "$dg"
+    return 0
+  fi
+  if [ -n "$tmp" ] && [ -e "$tmp" ]; then rm -f "$tmp" || :; fi
+  die "$verb: could not stage this push's baseline record at $nxt; any error printed above names the cause. Nothing was pushed. Make $(dirname "$nxt") writable, or free space on its volume, $after"
+}
+
+# THE BASELINE GUARD (#1468 cases 2 and 4, under the milestone's direction that every fail-open
+# case a mechanism can reach closes). Proven before anything is cloned, committed, keyed or pushed:
+# the outgoing render has an itinerary identity, the digest the recorder will write; the sidecar's
+# path and its staged twin's are each absent or a regular file; and the recorder's own staging step,
+# _stage_published_record, succeeds beside the sidecar — so this cannot pass where that step would
+# fail. The probe is deleted at once, and a deletion that fails ends the command here, before the
+# push. A push that re-publishes the recorded plan needs no new record (_republishes_baseline), so
+# the probe is skipped for it. It is NOT the gate: it reads no approval and decides nothing about
+# whether the plan may publish, which is why publish may call it. What it cannot see is the trip
+# directory changing after it; stage_baseline_record writes the record itself immediately before
+# the push, and the gate holds while that record is outstanding (SEAM S2).
+require_recordable_baseline() { # <trip_dir> <site_html>
+  local trip_dir="$1" site_html="$2" out nxt dg tmp
+  dg="$(itinerary_digest "$site_html")"
+  [ -n "$dg" ] || die "GUARD ABORTED — could not identify the itinerary content of the outgoing render ${site_html}: it could not be read, its itinerary text could not be projected, or that text could not be normalized; any error printed above names the cause. A push of it would leave no baseline for the approval gate to compare the next update with, so nothing was pushed and the published site was not touched. Fix the cause, then re-run."
+  out="$(published_itinerary_path "$trip_dir")"
+  nxt="$(staged_record_path "$trip_dir")"
+  [ ! -e "$out" ] || [ -f "$out" ] || die "GUARD ABORTED — $out is not a regular file, so the baseline this push needs could not be recorded there. Nothing was pushed. Delete it, or put the trip's baseline back as a regular file, then re-run."
+  [ ! -e "$nxt" ] || [ -f "$nxt" ] || die "GUARD ABORTED — $nxt is not a regular file, so the record this push stages could not be written there. Nothing was pushed. Delete it, then re-run."
+  if _republishes_baseline "$trip_dir" "$dg"; then return 0; fi
+  tmp="$(_stage_published_record "$out" "$dg")" || die "GUARD ABORTED — could not stage the baseline beside $out, so this push could not record the plan it publishes; any error printed above names the cause. Nothing was pushed. Make $(dirname "$out") writable, then re-run."
+  rm -f "$tmp"
+  return 0
+}
+
+# THE REPUBLISH PATH'S GUARDS, AS ONE CALL LINE (#719, the scope-lock's C5; #1468). update calls this
+# and nothing else at the gate's position: S3 exactly as it was, then the render's approval-code
+# guard, then the baseline guard. #85 relocates the gate onto its event-driven path by moving that
+# one line, as S3's own banner promises, so neither guard can be left behind by a relocation that
+# carries S3 alone. publish calls the code guard and the baseline guard on its own: S3 does not
+# gate publish, by design.
 require_publish_guards() { # <trip_dir> <site_html>
   local trip_dir="$1" site_html="$2"
   require_change_confirmation "$trip_dir"
   require_render_approval_code "$trip_dir" "$site_html" update
+  require_recordable_baseline "$trip_dir" "$site_html"
   return 0
 }
 
@@ -3704,6 +3966,10 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   # S3 does not gate publish, by design — it cannot overwrite a published plan — but a render
   # stating an approval code that is not its own plan's must not reach a first publish either.
   require_render_approval_code "$trip_dir" "$site_html" publish
+  # The baseline guard (#1468 cases 2 and 4), before the repo is probed, created or pushed: a
+  # first publish that could not record its baseline would leave a trip that declares no
+  # approvers with the gate NOT ACTIVE. It is not the gate, which still does not run here.
+  require_recordable_baseline "$trip_dir" "$site_html"
   slug="$(slug_for "$trip_dir")"
   pub_dir="$trip_dir/.publish"
   owner="$(gh api user --jq '.login')"
@@ -3742,11 +4008,21 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   fi
 
   info "Creating per-trip repo and pushing…"
+  # The commit first, in a subshell of its own (#1468 D-6, CD-3 of the amendment-1 review): the
+  # record is then staged after the command's own writes, as in update and rotate, and a commit that
+  # fails stops the command with nothing staged. The push is the second subshell, after the stager.
   ( cd "$pub_dir"
     git init -q
     git add index.html
     commit_noreply . "Publish trip site"
     git branch -M main
+  )
+  # The baseline record this push needs, staged after the commit; between it and the push stands
+  # only the push subshell's entry into the clone (#1468 D-6). The digest of the plan this push
+  # carries comes back in `staged`, for the recorder.
+  local staged=""
+  stage_baseline_record "$trip_dir" "$site_html" publish staged
+  ( cd "$pub_dir"
     gh repo create "$slug" --public --source=. --remote=origin --push >/dev/null
   )
   info "Enabling GitHub Pages…"
@@ -3758,7 +4034,7 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   # structurally cannot overwrite a published plan — but without this line the gate
   # would have no anchor on a freshly published trip and the FIRST unapproved change
   # after a publish would sail through. Recording is not gating.
-  record_published_itinerary "$trip_dir" "$site_html"
+  record_published_itinerary "$trip_dir" "$site_html" "$staged"
 
   ok "Published: https://${owner}.github.io/${slug}/"
   if [ "$plaintext" != "1" ]; then
@@ -3890,7 +4166,7 @@ cmd_update() { # <trip_dir>
   require_passphrase_sources_agree "$trip_dir"
   preflight; resolve_noreply_identity
 
-  local site_html pub_dir passphrase owner slug mine="" lease="" prior=""
+  local site_html pub_dir passphrase owner slug mine="" lease="" prior="" staged=""
   site_html="$(resolve_site_html "$trip_dir")"
   # THE APPROVAL GATE AND THE RENDER'S APPROVAL-CODE GUARD, as ONE call line (#552; #719 under
   # ADR-029 and the scope-lock's C5). Its position is exact and load-bearing: after the render
@@ -3938,6 +4214,10 @@ cmd_update() { # <trip_dir>
   # meantime has already recorded a new key, and pushing this run's ciphertext would put the
   # key it revoked back over it.
   require_key_of_record "$trip_dir" "$passphrase" "$pub_dir" "$mine"
+  # The baseline record this push needs, staged now, with nothing between it and the push
+  # (#1468 D-6): a push that fails leaves it staged, and the gate holds while it is. The digest of
+  # the plan this push carries comes back in `staged`, and the recorder records exactly that plan.
+  stage_baseline_record "$trip_dir" "$site_html" update staged
   if ! push_trip_site "$pub_dir" "$mine" update "$lease"; then
     # The remote moved after the check. A rotation that recorded a new key meanwhile is caught
     # here, and this run takes its own commit back and says so; otherwise the push simply failed.
@@ -3948,7 +4228,7 @@ cmd_update() { # <trip_dir>
   # here rather than earlier for that reason: a sidecar written before the push would
   # claim content a failed push never delivered, and the next republish would then
   # compare against a plan nobody can see.
-  record_published_itinerary "$trip_dir" "$site_html"
+  record_published_itinerary "$trip_dir" "$site_html" "$staged"
   ok "Updated: https://${owner}.github.io/${slug}/  (changes appear behind the passphrase prompt)"
 }
 
@@ -3997,14 +4277,25 @@ cmd_confirm() { # <trip_dir>
     || die "nothing to confirm for $trip_dir — the itinerary content of the outgoing render is the plan that is already published (or the trip has never been published). Confirmation binds to a change; there is none."
 
   # Refuse an UNDETERMINED state here, BEFORE the terminal check and the prompt (#1184; #1468
-  # case 5). A confirmation is recorded against an identified itinerary and a known published
-  # plan, and here one of the two cannot be read: prompting would ask the organizer to type
-  # CONFIRM against a state nobody could compute. The refusal names which, read through the
+  # case 5 and D-6). A confirmation is recorded against an identified itinerary and a known
+  # published plan, and here one of the two cannot be read: prompting would ask the organizer to
+  # type CONFIRM against a state nobody could compute. The refusal names which, read through the
   # gate's own classifier.
   [ "$state" != "undetermined" ] || {
     case "$(_baseline_record "$(published_itinerary_path "$trip_dir")")" in
       unusable|'') die "cannot confirm for $trip_dir — could not determine whether its itinerary changed: its published baseline $(published_itinerary_path "$trip_dir") is present but cannot be used — it is not a readable regular file, or it carries no well-formed digest= line. A confirmation is recorded against a known published plan and none can be read, so nothing was recorded. Restore read access to that file, or replace it from a backup, or delete it; then re-run." ;;
     esac
+    case "$(_baseline_record "$(staged_record_path "$trip_dir")")" in
+      unusable|'') die "cannot confirm for $trip_dir — could not determine whether its itinerary changed: a baseline record an earlier push staged at $(staged_record_path "$trip_dir") is present but cannot be read — it is not a readable regular file, or it carries no well-formed digest= line — so which plan the published site carries is unknown. A confirmation is recorded against a known published plan and none can be read, so nothing was recorded. Repair that file, or delete it; then re-run." ;;
+    esac
+    dg="$(itinerary_digest "$site_html")"
+    if [ -n "$dg" ]; then
+      case "$(_baseline_record "$(staged_record_path "$trip_dir")")" in
+        absent) ;;
+        "$dg") die "cannot confirm for $trip_dir — could not determine whether its itinerary changed: a baseline record an earlier push staged is still outstanding at $(staged_record_path "$trip_dir"), and it names the plan going out, which the published baseline records as well, so which plan the published site carries is unknown. A confirmation is recorded against a known published plan and none can be read, so nothing was recorded. While that record stands this plan stays held, and re-running update with it cannot clear the record. If the site carries the plan the published baseline records, which is this one, the record is redundant: delete that file, then re-run. If it carries another plan, keep the file, because deleting it would let this plan publish over that one unasked: publish the plan the site should carry through update instead, with its confirmation or its approvals, or unpublish, then publish again." ;;
+        *) die "cannot confirm for $trip_dir — could not determine whether its itinerary changed: a baseline record an earlier push staged is still outstanding at $(staged_record_path "$trip_dir"), so which plan the published site carries is unknown. A confirmation is recorded against a known published plan and none can be read, so nothing was recorded. If the site carries the plan the published baseline records, the record is redundant: delete that file, then re-run. If it carries another plan, keep the file. Re-run update with the plan the site should carry — usually the plan that push carried — with its confirmation or its approvals, which records it. Where that push was a first publish, its per-trip repository may hold no page at all, and update cannot run on an empty one: unpublish, then publish again." ;;
+      esac
+    fi
     die "cannot confirm for $trip_dir — could not determine whether its itinerary changed: the outgoing render $site_html could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause. A confirmation binds to an identified itinerary and there is none to bind to, so nothing was recorded."
   }
 
@@ -4196,7 +4487,7 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   # this trip's own under --data-root, never a path under the working directory.
   trip_dir="$(resolve_trip_dir "$trip_dir")"
   [ -d "$trip_dir" ] || die "no such trip dir$(trip_dir_where) — check the first argument after the command, which names the trip; it is not repeated here, in case a passphrase was typed in its place."
-  local pf="$trip_dir/.passphrase" site_html pub_dir owner slug mine=""
+  local pf="$trip_dir/.passphrase" site_html pub_dir owner slug mine="" staged=""
   [ "$supplied" = "1" ] || newp="$(gen_passphrase)"
   # These refusals come BEFORE anything is written: an aborted rotation must leave .passphrase
   # exactly as it was, and the clone without a commit of its own.
@@ -4224,9 +4515,14 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   # key — every abort before this line left .passphrase untouched, and a push that fails after it
   # leaves .passphrase naming the key the next update converges the site onto.
   write_passphrase_file "$pf" "$newp"
+  # The baseline record this push needs, staged now, after the key is recorded; between it and the
+  # push stands only the progress line below, which writes nothing to the trip (#1468 D-6). A
+  # refusal here is a push that did not happen: the new key is recorded, and update finishes the
+  # rotation. The digest of the plan this push carries comes back in `staged`, for the recorder.
+  stage_baseline_record "$trip_dir" "$site_html" rotate staged
   info "New passphrase recorded in the trip's .passphrase. Pushing — if the push fails, re-run update to finish the rotation; until it succeeds, the previous passphrase still opens the site."
   push_trip_site "$pub_dir" "$mine" rotate
-  record_published_itinerary "$trip_dir" "$site_html"
+  record_published_itinerary "$trip_dir" "$site_html" "$staged"
   ok "Updated: https://${owner}.github.io/${slug}/  (changes appear behind the passphrase prompt)"
   warn "Passphrase ROTATED — anyone you previously shared the site with must re-receive the new one. Earlier versions stay in the per-trip repository's history, readable to anyone holding an old passphrase; to withdraw them, unpublish (which deletes the repository) and publish again."
   warn_if_environment_differs "$newp"

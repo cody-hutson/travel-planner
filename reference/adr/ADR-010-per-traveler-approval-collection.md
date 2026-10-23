@@ -540,6 +540,11 @@ is unknown rather than known to have moved." That was narrower than the gate alr
 emits the token for a trip that declares approvers and has no baseline when its render cannot be
 identified — and #1468 widens the token again: a baseline sidecar that is present but cannot be
 used is not an absent one (`ADR-007` § 2), so the gate emits `undetermined` for it on every policy.
-The vocabulary is settled design, so the sentence now names where it is stated rather than
+It emits `undetermined` too where a baseline record a push staged is still outstanding, in place of
+the `none-pending` it would otherwise give — for a plan matching the baseline, whatever plan that
+record names, and, on a trip that declares no approvers and has no baseline, for any plan but that
+record's own — because a push may have reached the site without its record; on a trip that declares
+approvers, the baseline's own plan whose approvals meet the threshold reads `confirmed` there
+instead. The vocabulary is settled design, so the sentence now names where it is stated rather than
 restating it (`reference/adr/README.md` § *Convention*, *What an amendment may add*). No decision
 moves: the band is still `extend-seam`, and the vocabulary still has five members.

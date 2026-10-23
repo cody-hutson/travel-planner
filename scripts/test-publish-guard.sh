@@ -8629,7 +8629,7 @@ fi
 # recording act's functions, name no traveller file, person record, derived model or provenance
 # mark. Sensitivity: the class-source function that does read the derived model names it.
 # Specificity: a fabricated token is in none of them.
-SA22_FNS='change_confirmation_state _approval_policy _approvers_grammar _approvals_grammar _approval_tally _baseline_matches _legacy_itinerary_digest _legacy_digest_of itinerary_digest strip_to_itinerary_text _digest_of _record_digest _baseline_record published_itinerary_path change_confirmation_path approver_declaration_path approval_ledger_path resolve_site_html _confirm_declared _approval_line_parse _ledger_append _record_threshold_met _published_record_date _undecided_entry'
+SA22_FNS='change_confirmation_state _approval_policy _approvers_grammar _approvals_grammar _approval_tally _baseline_matches _legacy_itinerary_digest _legacy_digest_of itinerary_digest strip_to_itinerary_text _digest_of _record_digest _baseline_record staged_record_path published_itinerary_path change_confirmation_path approver_declaration_path approval_ledger_path resolve_site_html _confirm_declared _approval_line_parse _ledger_append _record_threshold_met _published_record_date _undecided_entry'
 SA22_EMPTY=0; SA22_HIT=""; SA22_SPEC=0; SA22_N=0
 for safn in $SA22_FNS; do
   SA22_N=$((SA22_N+1))
@@ -9044,10 +9044,29 @@ fi
 #   S28c  update, end to end, refuses before any clone — the Success Indicator's arm
 #   S28d  confirm refuses each shape on both policies before its terminal check
 #   S28e  the classifier itself: nine shapes `unusable`, absence `absent`, a token itself
+#   S29a  CASES 2 AND 4 AT THE SOURCE — publish refuses a render nothing can read before the repo
+#         is probed or created
+#   S29b  update on an ungated trip with no baseline refuses the same render before any clone
+#   S29c  the other two refusals — a baseline that cannot be staged, a sidecar path that is not a
+#         regular file — on update, publish and rotate, rotate leaving .passphrase as it was
+#   S29d  structural: the guard's place in require_publish_guards and in publish, publish ungated
 #   S27c  a trip that declares approvers, or whose approval sidecars are malformed, is never told
 #         NOT ACTIVE, and each is told the exit that works on it
 #   S27d  a trip directory that loses write between the staging and the move still gets the
 #         warning and rc 0: the clean-up of the temporary cannot end the command after a push
+#   S27e  a push that re-published the recorded plan, with no record written, is told the kept
+#         baseline records this same plan
+#   S29e  the guard's probe is skipped for a push that re-publishes the recorded plan, and not
+#         where another plan's record is outstanding
+#   S31a  D-6 — a staged record holds exactly the verdicts that rest on which plan is live
+#   S31b  S31c  the gate and confirm refuse a held trip, naming the outstanding record
+#   S31d  the stager writes the push's record, refuses when it cannot, and stages nothing on a
+#         re-publish
+#   S31e  the recorder on every state the staged record can be in after the push
+#   S31f  S31g  the push sites as built: guard < stager < push < recorder, and only `info` or
+#         `cd` between a stager and its push
+#   S31h  the digest the stager hands back
+#   S31i  the order in which a refusal names its cause, and the exits each one offers
 #   S30d  THE RESTORE — every production function this block saved reads exactly as saved, and
 #         none of the commands its arms stub is still a function
 #
@@ -9065,7 +9084,7 @@ echo "The baseline the gate compares against (#1468):"
 
 # Every production function an arm below stubs or mutates, saved before any arm runs. sb_restore
 # re-evaluates the saved text; S30d compares each against it.
-SB_SAVED_FNS='change_confirmation_state _baseline_record record_published_itinerary require_recordable_baseline itinerary_digest _legacy_itinerary_digest'
+SB_SAVED_FNS='change_confirmation_state _baseline_record record_published_itinerary require_recordable_baseline itinerary_digest _legacy_itinerary_digest staged_record_path'
 for sbfn in $SB_SAVED_FNS; do
   eval "SB_SAVED_${sbfn}=\"\$(declare -f ${sbfn})\""
 done
@@ -9397,11 +9416,159 @@ s28e_assert() {
 }
 s28e_assert
 
-# ── Group S, #1468 amendment 1 (D-6, FM-1, FM-3, CD-1) — the recorder's words ──
-# Helpers for S27c and S27d. Every negative is a captured value inside a `[ … ]` conjunction;
-# every stub is withdrawn in the arm that set it.
+# ── S29 — CASES 2 AND 4 AT THE SOURCE (#1468, under direction (A)): no push begins that could not
+# end with a recorded baseline. require_recordable_baseline refuses before anything is cloned,
+# created or pushed when the outgoing render has no itinerary identity, when the sidecar's path is
+# not a regular file, or when the recorder's own staging step fails beside it. publish calls it
+# directly, and update and rotate through require_publish_guards. Each arm that drives a command
+# defines S8's mock of gh and npx through sb_gh, and withdraws both before its verdict.
+sb_gh() { # S8's mock of gh, shared by the S29 arms: record the call, answer the read-only probes
+  printf '%s\n' "$*" >> "$SB_GHLOG"
+  case "${1:-} ${2:-}" in
+    "api user")    printf 'testowner' ;;
+    "repo view")   return 0 ;;
+    "auth status") printf "Token scopes: 'repo'\n" ;;
+    *)             return 0 ;;
+  esac
+}
+
+# ── S29a — publish, end to end, on a render nothing can read: it must return 1 naming the render's
+# identity, and the mock's log must carry neither the existence probe nor a repo creation, with no
+# sidecar written. CONTROL: an identifiable render reaches the existence probe (the mock answers
+# that the repo exists, so it then stops, as S9 does). Registered: with the guard removed, publish
+# runs on to the probe.
+s29a_assert() {
+  local d c e rc log clog msg=0 vw=0 cr=0 cvw=0 side=0
+  d="$(s15_dangling "s29a-$RANDOM")"; c="$(s_fixture "s29ac-$RANDOM" 14:00 none)"
+  gh() { sb_gh "$@"; }; npx() { return 0; }
+  : > "$SB_GHLOG"; e="$( ( cmd_publish "$d" ) 2>&1 >/dev/null )"; rc=$?; log="$(cat "$SB_GHLOG")"
+  : > "$SB_GHLOG"; ( cmd_publish "$c" ) >/dev/null 2>&1; clog="$(cat "$SB_GHLOG")"
+  unset -f gh npx
+  case "$e" in *"could not identify the itinerary content of the outgoing render"*) msg=1 ;; esac
+  case "$log" in *"repo view"*) vw=1 ;; esac
+  case "$log" in *"repo create"*) cr=1 ;; esac
+  case "$clog" in *"repo view"*) cvw=1 ;; esac
+  [ -e "$d/.published-itinerary" ] && side=1
+  if [ "$cvw" -ne 1 ]; then
+    FAIL "S29a: CONTROL — publish of an identifiable render never reached the existence probe in the mock's log, so its absence below proves nothing"
+  elif [ "$rc" -eq 1 ] && [ "$msg" -eq 1 ] && [ "$vw" -eq 0 ] && [ "$cr" -eq 0 ] && [ "$side" -eq 0 ]; then
+    PASS "S29a: publish of a render nothing can read returns 1 naming the render's identity, before the repo is probed or created and with no sidecar written; an identifiable render reaches the probe"
+  else
+    FAIL "S29a: rc=$rc named=$msg probed=$vw created=$cr sidecar=$side — publish began a push that could not end with a baseline"
+  fi
+}
+s29a_assert
+
+# ── S29b — update, end to end, on an undeclared trip with NO baseline and a render nothing can
+# read: the gate reads none-pending there, so the guard is the only thing standing between it and
+# a push that would leave the trip with no anchor. It must return 1 naming the render's identity,
+# with no clone in the mock's log. CONTROL: the same shape of trip with an identifiable render
+# reads none-pending at the gate and reaches the clone.
+s29b_assert() {
+  local d c e rc log clog st msg=0 cl=0 ccl=0
+  d="$(s15_dangling "s29b-$RANDOM")"; c="$(s_fixture "s29bc-$RANDOM" 14:00 none)"
+  st="$(change_confirmation_state "$c" 2>/dev/null)"
+  gh() { sb_gh "$@"; }; npx() { return 0; }
+  : > "$SB_GHLOG"; e="$( ( cmd_update "$d" ) 2>&1 >/dev/null )"; rc=$?; log="$(cat "$SB_GHLOG")"
+  : > "$SB_GHLOG"; ( cmd_update "$c" ) >/dev/null 2>&1; clog="$(cat "$SB_GHLOG")"
+  unset -f gh npx
+  case "$e" in *"could not identify the itinerary content of the outgoing render"*) msg=1 ;; esac
+  case "$log" in *"repo clone"*) cl=1 ;; esac
+  case "$clog" in *"repo clone"*) ccl=1 ;; esac
+  if [ "$st" != none-pending ] || [ "$ccl" -ne 1 ]; then
+    FAIL "S29b: CONTROL — the identifiable trip with no baseline read '$st' (want none-pending) and reached the clone=$ccl (want 1), so the refusal below is not attributable to the render"
+  elif [ "$rc" -eq 1 ] && [ "$msg" -eq 1 ] && [ "$cl" -eq 0 ]; then
+    PASS "S29b: update on an undeclared trip with no baseline, whose gate reads none-pending, refuses a render nothing can read (rc=1, the render's identity named) before any clone; the same trip with an identifiable render reaches the clone"
+  else
+    FAIL "S29b: rc=$rc named=$msg cloned=$cl — update began a push that would leave the trip with no baseline"
+  fi
+}
+s29b_assert
+
+# ── S29c — THE OTHER TWO REFUSALS, ON ALL THREE PUSH PATHS. (i) update with mktemp failing: "could
+# not stage the baseline", no clone. (ii) publish with the sidecar's path a directory: "is not a
+# regular file", no existence probe. (iii) rotate with mktemp failing, a usable baseline and the
+# outgoing plan confirmed: rc 1, the staging refusal, .passphrase byte-identical, no clone — the
+# guard runs before the key is written. CONTROL: (i)'s trip unstubbed reaches the clone.
+s29c_assert() {
+  local u p r c ue pe re ur pr rr ul pl rl cl um=0 pm=0 rmsg=0 ucl=0 pvw=0 rcl=0 rsame=0 ccl=0
+  u="$(s_fixture "s29cu-$RANDOM" 14:00 none)"
+  p="$(s_fixture "s29cp-$RANDOM" 14:00 none)"; mkdir -p "$p/.published-itinerary"
+  r="$(s_fixture "s29cr-$RANDOM" 16:30 none)"; s_record "$r/.published-itinerary" "$S_DA" published; s_record "$r/.change-confirmed" "$S_DB" confirmed
+  printf '%s\n' 'sb-live-synthetic-key-0029' > "$r/.passphrase"; chmod 600 "$r/.passphrase"; cp -p "$r/.passphrase" "$r.pp-before"
+  c="$(s_fixture "s29cc-$RANDOM" 14:00 none)"
+  gh() { sb_gh "$@"; }; npx() { return 0; }
+  mktemp() { return 1; }
+  : > "$SB_GHLOG"; ue="$( ( cmd_update "$u" ) 2>&1 >/dev/null )"; ur=$?; ul="$(cat "$SB_GHLOG")"
+  : > "$SB_GHLOG"; re="$( ( cmd_rotate "$r" ) 2>&1 >/dev/null )"; rr=$?; rl="$(cat "$SB_GHLOG")"
+  unset -f mktemp
+  : > "$SB_GHLOG"; pe="$( ( cmd_publish "$p" ) 2>&1 >/dev/null )"; pr=$?; pl="$(cat "$SB_GHLOG")"
+  : > "$SB_GHLOG"; ( cmd_update "$c" ) >/dev/null 2>&1; cl="$(cat "$SB_GHLOG")"
+  unset -f gh npx
+  case "$ue" in *"could not stage the baseline"*) um=1 ;; esac
+  case "$pe" in *"is not a regular file"*) pm=1 ;; esac
+  case "$re" in *"could not stage the baseline"*) rmsg=1 ;; esac
+  case "$ul" in *"repo clone"*) ucl=1 ;; esac
+  case "$pl" in *"repo view"*) pvw=1 ;; esac
+  case "$rl" in *"repo clone"*) rcl=1 ;; esac
+  case "$cl" in *"repo clone"*) ccl=1 ;; esac
+  cmp -s "$r.pp-before" "$r/.passphrase" && rsame=1
+  if [ "$ccl" -ne 1 ]; then
+    FAIL "S29c: CONTROL — update on (i)'s trip unstubbed never reached the clone, so the absence of one below proves nothing"
+  elif [ "$ur" -eq 1 ] && [ "$um" -eq 1 ] && [ "$ucl" -eq 0 ] && [ "$pr" -eq 1 ] && [ "$pm" -eq 1 ] && [ "$pvw" -eq 0 ] && [ "$rr" -eq 1 ] && [ "$rmsg" -eq 1 ] && [ "$rsame" -eq 1 ] && [ "$rcl" -eq 0 ]; then
+    PASS "S29c: update refuses a baseline it cannot stage before any clone, publish refuses a sidecar path that is not a regular file before the existence probe, and rotate refuses a baseline it cannot stage before any clone with .passphrase byte-identical; the unstubbed control reaches the clone"
+  else
+    FAIL "S29c: update rc=$ur named=$um cloned=$ucl; publish rc=$pr named=$pm probed=$pvw; rotate rc=$rr named=$rmsg passphrase-unchanged=$rsame cloned=$rcl"
+  fi
+}
+s29c_assert
+
+# ── S29d — STRUCTURAL, from the PARSED bodies as S9b reads them. require_publish_guards calls the
+# baseline guard after the render's approval-code guard; cmd_publish calls the baseline guard and
+# not the gate, ahead of its existence probe. SENSITIVITY: cmd_update's body names its one call
+# line, require_publish_guards. SPECIFICITY: a fabricated token is in none of the three bodies.
+s29d_assert() {
+  local g p u pre gc gr pg pv ok=1 why="" sens=0 spec=0
+  g="$(declare -f require_publish_guards)"; p="$(declare -f cmd_publish)"; u="$(declare -f cmd_update)"
+  gc=-1; gr=-1; pg=-1; pv=-1
+  case "$g" in *require_render_approval_code*) pre="${g%%require_render_approval_code*}"; gc=${#pre} ;; esac
+  case "$g" in *require_recordable_baseline*) pre="${g%%require_recordable_baseline*}"; gr=${#pre} ;; esac
+  case "$p" in *require_recordable_baseline*) pre="${p%%require_recordable_baseline*}"; pg=${#pre} ;; esac
+  case "$p" in *"gh repo view"*) pre="${p%%gh repo view*}"; pv=${#pre} ;; esac
+  [ "$gc" -ge 0 ] && [ "$gr" -gt "$gc" ] || { ok=0; why="$why guards:$gc/$gr"; }
+  [ "$pg" -ge 0 ] && [ "$pv" -gt "$pg" ] || { ok=0; why="$why publish:$pg/$pv"; }
+  case "$p" in *require_change_confirmation*) ok=0; why="$why publish-gated" ;; esac
+  case "$u" in *require_publish_guards*) sens=1 ;; esac
+  case "$g$p$u" in *zzq_fabricated_s29d*) spec=1 ;; esac
+  if [ "$sens" -ne 1 ] || [ "$spec" -ne 0 ]; then
+    FAIL "S29d: CONTROL — cmd_update's parsed body names require_publish_guards=$sens (want 1) and a fabricated token appears=$spec (want 0), so the offsets below are not measurements"
+  elif [ "$ok" -eq 1 ]; then
+    PASS "S29d: in the parsed bodies, require_publish_guards calls the baseline guard after the render's approval-code guard, and cmd_publish calls it ahead of its existence probe and does not call the gate — publish stays ungated"
+  else
+    FAIL "S29d: guard placement:$why"
+  fi
+}
+s29d_assert
+
+# ── Group S, #1468 amendment 1 (D-6, FM-1, FM-3, CD-1) — the staged record, and the recorder's words ──
+# Helpers for S27c–S27e, S29e and S31a–S31f. s31_trip builds a trip with a baseline (A = S0's S_DA,
+# B = S_DB), an optional staged record, an optional declaration with an approval of B (or of A and
+# B), and an optional confirmation of B. Every negative is a captured value inside a `[ … ]`
+# conjunction; every stub is withdrawn in the arm that set it.
 S27D_PRIV=0; s27d_probe="$(mktemp -d "$WORK/s27dp.XXXXXX")"; chmod a-w "$s27d_probe"; [ -w "$s27d_probe" ] && S27D_PRIV=1; chmod u+w "$s27d_probe"
 s27_run() { S27_ERR="$( ( set -e; record_published_itinerary "$1" "$1/$S15_RENDER"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; S27_RC=$?; }
+s31_trip() { # <name> <render-time> <baseline A|B|-> <staged A|B|dir|-> [declared|declaredAB|declaredABw|-] [confirmation B]
+  local d="$WORK/sb-$1-$RANDOM"; mkdir -p "$d/outputs"; s_render "$d/$S15_RENDER" "$2" none
+  case "$3" in A) s_record "$d/.published-itinerary" "$S_DA" published ;; B) s_record "$d/.published-itinerary" "$S_DB" published ;; esac
+  case "$4" in A) s_record "$d/.published-itinerary.next" "$S_DA" published ;; B) s_record "$d/.published-itinerary.next" "$S_DB" published ;; dir) mkdir -p "$d/.published-itinerary.next" ;; esac
+  case "${5:-}" in
+    declared)    sa_declare "$d" 1 zqa1; sa_rec "$d" zqa1 approve "$S_DB" ;;
+    declaredAB)  sa_declare "$d" 1 zqa1; sa_rec "$d" zqa1 approve "$S_DA"; sa_rec "$d" zqa1 approve "$S_DB" ;;
+    declaredABw) sa_declare "$d" 1 zqa1; sa_rec "$d" zqa1 approve "$S_DA"; sa_rec "$d" zqa1 approve "$S_DB"; sa_rec "$d" zqa1 withdraw "$S_DA" ;;
+  esac
+  case "${6:-}" in B) s_record "$d/.change-confirmed" "$S_DB" confirmed ;; esac
+  printf '%s' "$d"
+}
 s27c_assert() {
   local u d m eu ed em ru rd rmal nu=0 nd=0 nm=0 ad=0 am=0 rp=0
   u="$(s_fixture "s27cu-$RANDOM" 14:00 none)"; d="$(s_fixture "s27cd-$RANDOM" 14:00 none)"; sa_declare "$d" 1 zqa1
@@ -9447,8 +9614,395 @@ s27d_assert() {
     FAIL "S27d: rc=$S27_RC after-marker=$a NOT-ACTIVE=$n sidecar=$side — the clean-up ended the command, or the warning was lost"
   fi
 }
+s29e_assert() {
+  local x l m o rx rl rmv ro em st=0
+  x="$(s31_trip s29ex 14:00 A -)"; l="$(s31_trip s29el 14:00 - -)"; s_record "$l/.published-itinerary" "$S_LA" published
+  m="$(s31_trip s29em 16:30 A -)"; o="$(s31_trip s29eo 14:00 A B)"
+  mktemp() { return 1; }
+  ( require_recordable_baseline "$x" "$x/$S15_RENDER" ) >/dev/null 2>&1; rx=$?
+  ( require_recordable_baseline "$l" "$l/$S15_RENDER" ) >/dev/null 2>&1; rl=$?
+  em="$( ( require_recordable_baseline "$m" "$m/$S15_RENDER" ) 2>&1 >/dev/null )"; rmv=$?
+  ( require_recordable_baseline "$o" "$o/$S15_RENDER" ) >/dev/null 2>&1; ro=$?
+  unset -f mktemp
+  case "$em" in *"could not stage the baseline"*) st=1 ;; esac
+  if [ "$rmv" -ne 1 ] || [ "$st" -ne 1 ]; then
+    FAIL "S29e: CONTROL — a moved plan with staging failing returned rc=$rmv, staging refusal=$st (want 1, 1)"
+  elif [ "$rx" -eq 0 ] && [ "$rl" -eq 0 ] && [ "$ro" -eq 1 ]; then
+    PASS "S29e: with staging failing, the guard passes a push that re-publishes the recorded plan (exact rc=$rx, legacy CRC rc=$rl) and still refuses one where another plan's record is outstanding (rc=$ro); a moved plan is refused (control)"
+  else
+    FAIL "S29e: exact rc=$rx (want 0), legacy rc=$rl (want 0), outstanding-record rc=$ro (want 1)"
+  fi
+}
+s31a_assert() {
+  local got="" t want saved mut
+  for t in "ua 14:00 A B" "u0 14:00 - B" "da 14:00 A B declared" "ub 16:30 A B - B" "u0b 16:30 - B" "db 16:30 A B declared" "uc 18:15 A B" "ux 14:00 A dir" "ua0 14:00 A -" "u00 14:00 - -" "da0 14:00 A - declared" "na 14:00 A B declaredAB" "na0 14:00 A - declaredAB" "naa 14:00 A A declaredAB" "naw 14:00 A A declaredABw"; do
+    # shellcheck disable=SC2086
+    set -- $t
+    got="$got $(change_confirmation_state "$(s31_trip "s31a$1" "$2" "$3" "$4" "${5:-}" "${6:-}")" 2>/dev/null)"
+  done
+  saved="$(declare -f staged_record_path)"
+  staged_record_path() { printf '%s' "$1/zzq-no-staged-record"; }
+  mut="$(change_confirmation_state "$(s31_trip s31amut 14:00 A B)" 2>/dev/null)"
+  if [ -n "$saved" ]; then eval "$saved"; else unset -f staged_record_path; fi
+  want=' undetermined undetermined undetermined confirmed none-pending confirmed unconfirmed undetermined none-pending none-pending none-pending confirmed none-pending confirmed undetermined'
+  if [ "$got" = "$want" ] && [ "$mut" = none-pending ]; then
+    PASS "S31a: a staged record holds exactly the verdicts that rest on which plan is live — 11 cells and 4 controls as specified, a declared trip's published plan whose own approvals meet the threshold reading confirmed while held, and a record of that same plan holding it once its approval is withdrawn; ARMED-RED: with the staged record unread the held cell reads none-pending"
+  else
+    FAIL "S31a: states [$got] want [$want]; ARMED-RED read '$mut' (want none-pending)"
+  fi
+}
+s31b_assert() {
+  local ua da cu cr e1 e2 c5 rr r1 r2 m1 m2 ok=1 ctl=1 x why=""
+  ua="$(s31_trip s31bua 14:00 A B)"; da="$(s31_trip s31bda 14:00 A B declared)"
+  cu="$(s31_trip s31bcu 14:00 - -)"; printf 'published=2027-06-01T00:00:00Z\n' > "$cu/.published-itinerary"
+  cr="$(s15_dangling "s31bcr-$RANDOM")"; s_record "$cr/.published-itinerary" "$S_DA" published
+  e1="$( ( require_change_confirmation "$ua" ) 2>&1 >/dev/null )"; r1=$?
+  e2="$( ( require_change_confirmation "$da" ) 2>&1 >/dev/null )"; r2=$?
+  c5="$( ( require_change_confirmation "$cu" ) 2>&1 >/dev/null )"
+  rr="$( ( require_change_confirmation "$cr" ) 2>&1 >/dev/null )"
+  m1="${e1//"$ua"/<trip>}"; m2="${e2//"$da"/<trip>}"
+  for x in "$m1" "$m2"; do
+    case "$x" in *"(state: undetermined)"*) ;; *) ok=0; why="$why no-token" ;; esac
+    case "$x" in *"still outstanding"*) ;; *) ok=0; why="$why no-cause" ;; esac
+    case "$x" in *"<trip>/.published-itinerary.next"*) ;; *) ok=0; why="$why no-path" ;; esac
+    case "$x" in *"outgoing render"*|*"present but cannot be used"*) ok=0; why="$why other-cause" ;; esac
+    [ -z "$(s15f_claims "$x")" ] || { ok=0; why="$why claims[$(s15f_claims "$x")]"; }
+  done
+  case "$c5" in *"present but cannot be used"*) ;; *) ctl=0 ;; esac
+  case "$c5" in *"still outstanding"*) ctl=0 ;; esac
+  case "$rr" in *"outgoing render"*) ;; *) ctl=0 ;; esac
+  case "$rr" in *"still outstanding"*) ctl=0 ;; esac
+  if [ "$ctl" -ne 1 ]; then
+    FAIL "S31b: CONTROL — the unusable-baseline and unreadable-render messages do not keep their own causes"
+  elif [ "$r1" -ne 0 ] && [ "$r2" -ne 0 ] && [ "$ok" -eq 1 ]; then
+    PASS "S31b: the gate refuses a held trip on both policies, names undetermined, the outstanding staged record and its path, and makes no change claim; the other two causes keep their own words"
+  else
+    FAIL "S31b: rc $r1/$r2;$why"
+  fi
+}
+s31c_assert() {
+  local ua da uc e1 e2 ec r1 r2 ok=1 ct=0 x why=""
+  ua="$(s31_trip s31cua 14:00 A B)"; da="$(s31_trip s31cda 14:00 A B declared)"; uc="$(s31_trip s31cuc 18:15 A B)"
+  e1="$( ( cmd_confirm "$ua" ) </dev/null 2>&1 >/dev/null )"; r1=$?
+  e2="$( ( cmd_confirm "$da" ) </dev/null 2>&1 >/dev/null )"; r2=$?
+  ec="$( ( cmd_confirm "$uc" ) </dev/null 2>&1 >/dev/null )"
+  for x in "$e1" "$e2"; do
+    case "$x" in *"could not determine"*) ;; *) ok=0; why="$why no-cd" ;; esac
+    case "$x" in *"still outstanding"*) ;; *) ok=0; why="$why no-cause" ;; esac
+    case "$x" in *"requires a terminal"*) ok=0; why="$why reached" ;; esac
+  done
+  [ ! -e "$ua/.change-confirmed" ] || { ok=0; why="$why wrote"; }
+  case "$ec" in *"requires a terminal"*) ct=1 ;; esac
+  if [ "$ct" -ne 1 ]; then
+    FAIL "S31c: CONTROL — confirm on a held trip whose plan moved did not reach the terminal check"
+  elif [ "$r1" -eq 1 ] && [ "$r2" -eq 1 ] && [ "$ok" -eq 1 ]; then
+    PASS "S31c: confirm refuses a held trip before the terminal check on both policies, naming the outstanding record, and records nothing; a held trip whose plan moved still reaches the terminal check"
+  else
+    FAIL "S31c: rc $r1/$r2;$why"
+  fi
+}
+s31d_assert() {
+  local a b c x ra rb rc rx eb ec gb=0 gc=0
+  a="$(s31_trip s31da 16:30 A -)"; b="$(s31_trip s31db 16:30 A -)"; c="$(s31_trip s31dc 16:30 A -)"; x="$(s31_trip s31dx 14:00 A -)"
+  ( stage_baseline_record "$a" "$a/$S15_RENDER" update ) >/dev/null 2>&1; ra=$?
+  mktemp() { return 1; }
+  eb="$( ( stage_baseline_record "$b" "$b/$S15_RENDER" update ) 2>&1 >/dev/null )"; rb=$?
+  ec="$( ( stage_baseline_record "$c" "$c/$S15_RENDER" rotate ) 2>&1 >/dev/null )"; rc=$?
+  ( stage_baseline_record "$x" "$x/$S15_RENDER" rotate ) >/dev/null 2>&1; rx=$?
+  unset -f mktemp
+  case "$eb" in *"could not stage this push's baseline record"*) gb=1 ;; esac
+  case "$ec" in *"run update"*) gc=1 ;; esac
+  if [ "$ra" -eq 0 ] && [ -f "$a/.published-itinerary.next" ] && [ ! -L "$a/.published-itinerary.next" ] && [ "$(_baseline_record "$a/.published-itinerary.next")" = "$S_DB" ] && [ "$(_baseline_record "$a/.published-itinerary")" = "$S_DA" ] && [ "$(sb_temps "$a")" -eq 0 ] && [ "$rb" -eq 1 ] && [ "$gb" -eq 1 ] && [ ! -e "$b/.published-itinerary.next" ] && [ "$rc" -eq 1 ] && [ "$gc" -eq 1 ] && [ "$rx" -eq 0 ] && [ ! -e "$x/.published-itinerary.next" ]; then
+    PASS "S31d: the stager writes the push's record as a regular file reading its plan, leaves the baseline and no temp behind; refuses when it cannot stage (rotate's refusal names update); stages nothing for a push that re-publishes the recorded plan"
+  else
+    FAIL "S31d: ra=$ra staged=$(_baseline_record "$a/.published-itinerary.next" 2>/dev/null) base=$(_baseline_record "$a/.published-itinerary") temps=$(sb_temps "$a") rb=$rb named=$gb rc=$rc update-named=$gc rx=$rx x-staged=$([ -e "$x/.published-itinerary.next" ] && echo 1 || echo 0)"
+  fi
+}
+# S31e's cell (g) and its unreadable twin (#1468 amendment-3 review, R3-FM-1). Amendment 3 split the
+# recorder's "changed or removed" branch in two, and no cell reached the "changed" limb, the one a
+# staged record of ANOTHER plan takes when the recorder is handed this push's digest. (g) stages a
+# third plan's record (the 18:15 render's digest) beside an S_DA baseline and hands the recorder
+# S_DB; the twin puts a directory at the staged path. Each must leave that record as it is, say it
+# was changed while the push was under way, keep the baseline, and hold a working copy reverted to
+# the baseline's plan.
+s31e_assert() {
+  local a b p c d f e g x xu ea eb ep ec ed ef ee eg ex exu ra rb rp rc rd rf re rg rx rxu rcd st gr pst pgr dst dgr est xst xgr xust xugr
+  local aft=0 left=0 wa=0 pa=0 pl=0 ac=0 wcc=0 da=0 dw=0 fa=0 frm=0 ena=0 enw=0 ga=0 gsame=0 grec=0 eflip=0 gsame_b=0 xa=0 xch=0 xua=0 xuch=0
+  a="$(s31_trip s31ea 16:30 A B)"; b="$(s31_trip s31eb 16:30 A B)"; p="$(s31_trip s31ep 16:30 A B)"; c="$(s31_trip s31ec 16:30 A B)"
+  d="$(s31_trip s31ed 16:30 A -)"; f="$(s31_trip s31ef 16:30 A -)"; e="$(s31_trip s31ee 14:00 A -)"; g="$(s31_trip s31eg 14:00 A -)"
+  x="$(s31_trip s31ex 16:30 A -)"; xu="$(s31_trip s31exu 16:30 A dir)"
+  cp "$e/.published-itinerary" "$e.before"; cp "$g/.published-itinerary" "$g.before"
+  s27_run "$a"; ea="$S27_ERR"; ra=$S27_RC
+  mv() { case "$*" in *".published-itinerary.next "*) return 1 ;; esac; command mv "$@"; }
+  s27_run "$b"; eb="$S27_ERR"; rb=$S27_RC
+  ep="$( ( set -e; record_published_itinerary "$p" "$p/$S15_RENDER" "$S_DB"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; rp=$?
+  unset -f mv
+  s_render "$c/$S15_RENDER" 18:15; rcd="$(itinerary_digest "$c/$S15_RENDER")"
+  ec="$( ( set -e; record_published_itinerary "$c" "$c/$S15_RENDER" "$S_DB"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; rc=$?
+  ed="$( ( set -e; record_published_itinerary "$d" "$d/$S15_RENDER" "$S_DB"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; rd=$?
+  s_record "$x/.published-itinerary.next" "$rcd" published
+  ex="$( ( set -e; record_published_itinerary "$x" "$x/$S15_RENDER" "$S_DB"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; rx=$?
+  exu="$( ( set -e; record_published_itinerary "$xu" "$xu/$S15_RENDER" "$S_DB"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; rxu=$?
+  s_render "$e/$S15_RENDER" 18:15
+  ee="$( ( set -e; record_published_itinerary "$e" "$e/$S15_RENDER" "$S_DA"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; re=$?
+  mktemp() { return 1; }
+  ef="$( ( set -e; record_published_itinerary "$f" "$f/$S15_RENDER" "$S_DB"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; rf=$?
+  eg="$( ( set -e; record_published_itinerary "$g" "$g/$S15_RENDER" "$S_DA"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; rg=$?
+  unset -f mktemp
+  case "$ea" in *"push itself succeeded"*) wa=1 ;; esac
+  case "$eb" in *S27-AFTER*) aft=1 ;; esac
+  case "$eb" in *"left staged"*) left=1 ;; esac
+  case "$ep" in *S27-AFTER*) pa=1 ;; esac
+  case "$ep" in *"left staged"*) pl=1 ;; esac
+  case "$ec" in *S27-AFTER*) ac=1 ;; esac
+  case "$ec" in *"push itself succeeded"*) wcc=1 ;; esac
+  case "$ed" in *S27-AFTER*) da=1 ;; esac
+  case "$ed" in *"staged again"*) dw=1 ;; esac
+  case "$ef" in *S27-AFTER*) fa=1 ;; esac
+  case "$ef" in *"removed while the push was under way"*) frm=1 ;; esac
+  case "$ee" in *S27-AFTER*) ena=1 ;; esac
+  case "$ee" in *"push itself succeeded"*) enw=1 ;; esac
+  case "$eg" in *S27-AFTER*) ga=1 ;; esac
+  case "$eg" in *"could not record the baseline"*) grec=1 ;; esac
+  case "$eg" in *"records this same plan"*) gsame=1 ;; esac
+  case "$ex" in *S27-AFTER*) xa=1 ;; esac
+  case "$ex" in *"changed while the push was under way"*) xch=1 ;; esac
+  case "$exu" in *S27-AFTER*) xua=1 ;; esac
+  case "$exu" in *"changed while the push was under way"*) xuch=1 ;; esac
+  cmp -s "$e.before" "$e/.published-itinerary" || eflip=1
+  cmp -s "$g.before" "$g/.published-itinerary" && gsame_b=1
+  est="$(change_confirmation_state "$e" 2>/dev/null)"
+  s_render "$b/$S15_RENDER" 14:00; s_render "$p/$S15_RENDER" 14:00; s_render "$d/$S15_RENDER" 14:00; s_render "$x/$S15_RENDER" 14:00; s_render "$xu/$S15_RENDER" 14:00
+  st="$(change_confirmation_state "$b" 2>/dev/null)"; ( require_change_confirmation "$b" ) >/dev/null 2>&1; gr=$?
+  pst="$(change_confirmation_state "$p" 2>/dev/null)"; ( require_change_confirmation "$p" ) >/dev/null 2>&1; pgr=$?
+  dst="$(change_confirmation_state "$d" 2>/dev/null)"; ( require_change_confirmation "$d" ) >/dev/null 2>&1; dgr=$?
+  xst="$(change_confirmation_state "$x" 2>/dev/null)"; ( require_change_confirmation "$x" ) >/dev/null 2>&1; xgr=$?
+  xust="$(change_confirmation_state "$xu" 2>/dev/null)"; ( require_change_confirmation "$xu" ) >/dev/null 2>&1; xugr=$?
+  if [ "$ra" -ne 0 ] || [ "$wa" -ne 0 ] || [ "$(_baseline_record "$a/.published-itinerary")" != "$S_DB" ] || [ -e "$a/.published-itinerary.next" ] || [ "$(sb_temps "$a")" -ne 0 ] || [ -z "$rcd" ] || [ "$rcd" = "$S_DB" ] || [ "$rcd" = "$S_DA" ] || [ "$rf" -ne 0 ] || [ "$fa" -ne 1 ] || [ "$frm" -ne 1 ] || [ "$(_baseline_record "$f/.published-itinerary")" != "$S_DA" ] || [ -e "$f/.published-itinerary.next" ] || [ "$(sb_temps "$f")" -ne 0 ]; then
+    FAIL "S31e: CONTROL — the recorder did not move a movable staged record into place (rc=$ra warned=$wa base=$(_baseline_record "$a/.published-itinerary") staged-left=$([ -e "$a/.published-itinerary.next" ] && echo 1 || echo 0)), the rebuilt render does not carry a third plan, other than both staged and baseline (its digest '${rcd:0:12}'), or a removed record that could not be staged again did not keep the baseline and say so (rc=$rf after=$fa named=$frm base=$(_baseline_record "$f/.published-itinerary") staged-left=$([ -e "$f/.published-itinerary.next" ] && echo 1 || echo 0))"
+  elif [ "$rb" -eq 0 ] && [ "$aft" -eq 1 ] && [ "$left" -eq 1 ] && [ "$(_baseline_record "$b/.published-itinerary")" = "$S_DA" ] && [ "$(_baseline_record "$b/.published-itinerary.next")" = "$S_DB" ] && [ "$st" = undetermined ] && [ "$gr" -ne 0 ] && [ "$rp" -eq 0 ] && [ "$pa" -eq 1 ] && [ "$pl" -eq 1 ] && [ "$(_baseline_record "$p/.published-itinerary")" = "$S_DA" ] && [ "$(_baseline_record "$p/.published-itinerary.next")" = "$S_DB" ] && [ "$pst" = undetermined ] && [ "$pgr" -ne 0 ] && [ "$rc" -eq 0 ] && [ "$ac" -eq 1 ] && [ "$wcc" -eq 0 ] && [ "$(_baseline_record "$c/.published-itinerary")" = "$S_DB" ] && [ ! -e "$c/.published-itinerary.next" ] && [ "$(sb_temps "$c")" -eq 0 ] && [ "$rd" -eq 0 ] && [ "$da" -eq 1 ] && [ "$dw" -eq 1 ] && [ "$(_baseline_record "$d/.published-itinerary")" = "$S_DA" ] && [ "$(_baseline_record "$d/.published-itinerary.next")" = "$S_DB" ] && [ "$(sb_temps "$d")" -eq 0 ] && [ "$dst" = undetermined ] && [ "$dgr" -ne 0 ] && [ "$re" -eq 0 ] && [ "$ena" -eq 1 ] && [ "$enw" -eq 0 ] && [ "$eflip" -eq 1 ] && [ "$(_baseline_record "$e/.published-itinerary")" = "$S_DA" ] && [ ! -e "$e/.published-itinerary.next" ] && [ "$(sb_temps "$e")" -eq 0 ] && [ "$est" = unconfirmed ] && [ "$rg" -eq 0 ] && [ "$ga" -eq 1 ] && [ "$grec" -eq 1 ] && [ "$gsame" -eq 1 ] && [ "$gsame_b" -eq 1 ] && [ ! -e "$g/.published-itinerary.next" ] && [ "$rx" -eq 0 ] && [ "$xa" -eq 1 ] && [ "$xch" -eq 1 ] && [ "$(_baseline_record "$x/.published-itinerary")" = "$S_DA" ] && [ "$(_baseline_record "$x/.published-itinerary.next")" = "$rcd" ] && [ "$(sb_temps "$x")" -eq 0 ] && [ "$xst" = undetermined ] && [ "$xgr" -ne 0 ] && [ "$rxu" -eq 0 ] && [ "$xua" -eq 1 ] && [ "$xuch" -eq 1 ] && [ "$(_baseline_record "$xu/.published-itinerary")" = "$S_DA" ] && [ -d "$xu/.published-itinerary.next" ] && [ "$xust" = undetermined ] && [ "$xugr" -ne 0 ]; then
+    PASS "S31e: a staged record that cannot be moved into place is left staged and named, the recorder returns 0 under errexit, and a working copy reverted to the kept baseline reads undetermined and is refused — on the recorder's own path and when it is handed the staged digest, as the three push sites hand it; handed the digest of the plan its push carried, the recorder installs that record though the render was rebuilt during the push, stages it again where it was removed during the push so that a revert reads undetermined, and, where the push re-published the recorded plan, records that plan though the render was rewritten during the push, or says the kept baseline records this same plan where it cannot write; where another plan's record, or one that cannot be read, stands staged (cell g and its twin), it leaves that record as it is, says it was changed while the push was under way, keeps the baseline, and a revert reads undetermined and is refused; controls: a movable record is consumed, the rebuilt render carries a third plan, and a removed record that cannot be staged again keeps the baseline and says so"
+  else
+    FAIL "S31e: rename refused: rc=$rb after=$aft left-staged=$left base=$(_baseline_record "$b/.published-itinerary") staged=$(_baseline_record "$b/.published-itinerary.next") revert-state=$st gate-rc=$gr; handed the staged digest: rc=$rp after=$pa left-staged=$pl base=$(_baseline_record "$p/.published-itinerary") staged=$(_baseline_record "$p/.published-itinerary.next") revert-state=$pst gate-rc=$pgr; rebuilt render: rc=$rc after=$ac warned=$wcc base=$(_baseline_record "$c/.published-itinerary") staged-left=$([ -e "$c/.published-itinerary.next" ] && echo 1 || echo 0); record removed: rc=$rd after=$da staged-again=$dw base=$(_baseline_record "$d/.published-itinerary") staged=$(_baseline_record "$d/.published-itinerary.next") revert-state=$dst gate-rc=$dgr; re-publish, render rewritten: rc=$re after=$ena warned=$enw rerecorded=$eflip base=$(_baseline_record "$e/.published-itinerary") state=$est; re-publish, cannot write: rc=$rg after=$ga named=$grec same-plan=$gsame unchanged=$gsame_b; another plan's record (g): rc=$rx after=$xa named=$xch base=$(_baseline_record "$x/.published-itinerary") staged=$(_baseline_record "$x/.published-itinerary.next") revert-state=$xst gate-rc=$xgr; unreadable record: rc=$rxu after=$xua named=$xuch base=$(_baseline_record "$xu/.published-itinerary") revert-state=$xust gate-rc=$xugr"
+  fi
+}
+s27e_assert() {
+  local m k em ek rsm rsk mm=0 mk=0 km=0 kk=0 same=0
+  m="$(s31_trip s27em 14:00 A -)"; cp "$m/.published-itinerary" "$m.before"
+  k="$(s31_trip s27ek 16:30 A -)"
+  mktemp() { return 1; }
+  s27_run "$m"; em="$S27_ERR"; rsm=$S27_RC
+  s27_run "$k"; ek="$S27_ERR"; rsk=$S27_RC
+  unset -f mktemp
+  case "$em" in *"records this same plan"*) mm=1 ;; esac
+  case "$em" in *"keeps the baseline it already had"*) mk=1 ;; esac
+  case "$ek" in *"records this same plan"*) km=1 ;; esac
+  case "$ek" in *"keeps the baseline it already had"*) kk=1 ;; esac
+  cmp -s "$m.before" "$m/.published-itinerary" && same=1
+  if [ "$rsk" -ne 0 ] || [ "$kk" -ne 1 ] || [ "$km" -ne 0 ]; then
+    FAIL "S27e: CONTROL — a baseline of another plan read rc=$rsk keep=$kk same-plan=$km (want 0, 1, 0)"
+  elif [ "$rsm" -eq 0 ] && [ "$mm" -eq 1 ] && [ "$mk" -eq 0 ] && [ "$same" -eq 1 ]; then
+    PASS "S27e: where the push re-published the recorded plan and no record could be written, the recorder says the kept baseline records this same plan, not that a revert would publish unasked; control: a baseline of another plan keeps that warning"
+  else
+    FAIL "S27e: rc=$rsm same-plan-words=$mm keep-words=$mk baseline-unchanged=$same"
+  fi
+}
+s31f_pos() { # <body> <token> -> the offset of the token's first occurrence, or -1
+  local b="$1" pre
+  case "$b" in *"$2"*) pre="${b%%"$2"*}"; printf '%s' "${#pre}" ;; *) printf '%s' -1 ;; esac
+}
+s31f_assert() {
+  local v fn push guard b gd st pu re ok=1 why="" sens spec
+  for v in 'cmd_update|push_trip_site "$pub_dir" "$mine" update|require_publish_guards' \
+           'cmd_rotate|push_trip_site "$pub_dir" "$mine" rotate|write_passphrase_file' \
+           'cmd_publish|gh repo create|require_recordable_baseline'; do
+    fn="${v%%|*}"; v="${v#*|}"; push="${v%%|*}"; guard="${v#*|}"
+    b="$(declare -f "$fn")"
+    gd="$(s31f_pos "$b" "$guard")"; st="$(s31f_pos "$b" stage_baseline_record)"
+    pu="$(s31f_pos "$b" "$push")"; re="$(s31f_pos "$b" record_published_itinerary)"
+    if [ "$gd" -ge 0 ] && [ "$st" -gt "$gd" ] && [ "$pu" -gt "$st" ] && [ "$re" -gt "$pu" ]; then :; else ok=0; why="$why $fn:$gd/$st/$pu/$re"; fi
+  done
+  sens="$(s31f_pos "$(declare -f cmd_update)" push_trip_site)"
+  spec="$(s31f_pos "$(declare -f cmd_update)" zzq_fabricated_s31f)"
+  if [ "$sens" -lt 0 ] || [ "$spec" -ge 0 ]; then
+    FAIL "S31f: CONTROL — the parsed body of cmd_update locates push_trip_site at $sens and a fabricated token at $spec; the offsets below would not be measurements"
+  elif [ "$ok" -eq 1 ]; then
+    PASS "S31f: in update, rotate and publish the staged record is written after the guard and before the push, and the recorder runs after the push — read from the parsed bodies"
+  else
+    FAIL "S31f: guard/stager/push/recorder offsets out of order:$why"
+  fi
+}
+# ── Group S, #1468 amendment 2 (CD-1, CD-2, CD-3, FM-3) — the push sites as built, the digest the stager
+# hands back, and the order in which a refusal names its cause. Same three rules as above.
+# s31g_words prints the command word of every statement in a parsed body strictly between the end of
+# the stager's call and the push token; quoted text is read as no command at all.
+# S31g READS COMMAND WORDS, NOT WRITES (X-FM-3 of the #1468 amendment-2 review). Text inside double
+# quotes, a command substitution there included, is blanked before the words are read, and a
+# redirection is never read, so a write made through an allowed word's argument or redirection passes
+# it: `info "x $(git add -A)"`, `info x > file` and `cd "$(mktemp -d …)"` each read ok. That the two
+# allowed words write nothing to the trip is read from the words themselves (info prints to standard
+# output, cd changes directory), not graded here; a word outside {info, cd} is what this arm grades.
+s31g_words() { # <body> <stager-token> <push-token> -> the command words between them, or '?'
+  local b="$1" seg q piece out="" first=1 w
+  local -a ws
+  case "$b" in *"$2"*"$3"*) ;; *) printf '%s' '?'; return 0 ;; esac
+  seg="${b#*"$2"}"; seg="${seg%%"$3"*}"
+  while :; do
+    case "$seg" in *\"*\"*) q="${seg#*\"}"; seg="${seg%%\"*} Q ${q#*\"}" ;; *) break ;; esac
+  done
+  seg="${seg//;/$'\n'}"; seg="${seg//&/$'\n'}"; seg="${seg//|/$'\n'}"; seg="${seg//(/$'\n'}"; seg="${seg//)/$'\n'}"
+  while IFS= read -r piece; do
+    if [ "$first" -eq 1 ]; then first=0; continue; fi
+    read -r -a ws <<<"$piece"
+    for w in ${ws[@]+"${ws[@]}"}; do
+      case "$w" in if|then|else|'!'|'{'|'}') continue ;; esac
+      out="$out$w "; break
+    done
+  done <<<"$seg"
+  printf '%s' "${out% }"
+}
+s31g_shape() { # <body> <own-write-token> <push-token> -> " ok", or what is wrong
+  local b="$1" w pre st pu var rec why="" first
+  local -a ws
+  case "$b" in *stage_baseline_record*) ;; *) printf '%s' 'no-stager'; return 0 ;; esac
+  pre="${b%%stage_baseline_record*}"; st="${#pre}"
+  case "$b" in *"$2"*) pre="${b%%"$2"*}"; [ "${#pre}" -lt "$st" ] || why="$why write-after-stager" ;; *) why="$why no-own-write" ;; esac
+  case "$b" in *"$3"*) pre="${b%%"$3"*}"; pu="${#pre}"; [ "$pu" -gt "$st" ] || why="$why push-before-stager" ;; *) why="$why no-push" ;; esac
+  read -r -a ws <<<"$(s31g_words "$b" stage_baseline_record "$3")"
+  for w in ${ws[@]+"${ws[@]}"}; do
+    case "$w" in info|cd) ;; *) why="$why between:$w" ;; esac
+  done
+  first="${b#*stage_baseline_record}"; first="${first%%$'\n'*}"; first="${first%%;*}"
+  read -r -a ws <<<"$first"; var="${ws[3]:-}"
+  rec="${b#*record_published_itinerary}"; rec="${rec%%$'\n'*}"; rec="${rec%%;*}"
+  case "$var" in
+    ''|*[!A-Za-z0-9_]*) why="$why no-hand-off" ;;
+    *) case "$rec" in *"\"\$$var\""*|*"\"\${$var}\""*) ;; *) why="$why recorder-not-given-$var" ;; esac ;;
+  esac
+  printf '%s' "${why:- ok}"
+}
+s31g_ctl_bad()  { stage_baseline_record a b publish; git add index.html; commit_noreply . m; gh repo create z; record_published_itinerary a b; }
+s31g_ctl_good() { commit_noreply . m; stage_baseline_record a b update v; info "x; git y"; ( cd q
+  gh repo create z ); record_published_itinerary a b "$v"; }
+s31g_assert() {
+  local bad good v fn wr push b sh all="" ok=1
+  bad="$(s31g_shape "$(declare -f s31g_ctl_bad)" commit_noreply 'gh repo create')"
+  good="$(s31g_shape "$(declare -f s31g_ctl_good)" commit_noreply 'gh repo create')"
+  for v in 'cmd_update|encrypt_verify_commit|push_trip_site "$pub_dir" "$mine" update' \
+           'cmd_rotate|write_passphrase_file|push_trip_site "$pub_dir" "$mine" rotate' \
+           'cmd_publish|commit_noreply|gh repo create'; do
+    fn="${v%%|*}"; v="${v#*|}"; wr="${v%%|*}"; push="${v#*|}"
+    b="$(declare -f "$fn")"
+    sh="$(s31g_shape "$b" "$wr" "$push")"
+    all="$all $fn:[$sh]"
+    [ "$sh" = " ok" ] || ok=0
+  done
+  case "$bad" in *write-after-stager*between:git*between:commit_noreply*no-hand-off*) bad=flagged ;; esac
+  if [ "$bad" != flagged ] || [ "$good" != " ok" ]; then
+    FAIL "S31g: CONTROL — a planted push site with writes between its stager and its push read [$bad] (want each flaw flagged), and a clean one carrying a quoted ';' read [$good] (want ok); the readings below would not be measurements"
+  elif [ "$ok" -eq 1 ]; then
+    PASS "S31g: in update, rotate and publish the stager follows the command's own last write, only a progress line or the push subshell's entry into the clone stands between it and the push, and the digest it hands back is what the recorder is given — read from the parsed bodies;$all"
+  else
+    FAIL "S31g: push sites as built:$all"
+  fi
+}
+s31h_assert() {
+  local a x v vx vk
+  a="$(s31_trip s31ha 16:30 A -)"; x="$(s31_trip s31hx 14:00 A -)"
+  v="$( stage_baseline_record "$a" "$a/$S15_RENDER" update S31H_V >/dev/null 2>&1; printf '%s' "${S31H_V:-}" )"
+  vx="$( S31H_V=zzq-stale; stage_baseline_record "$x" "$x/$S15_RENDER" update S31H_V >/dev/null 2>&1; printf '%s' "${S31H_V-unset}" )"
+  vk="$( S31H_V=zzq-kept; stage_baseline_record "$x" "$x/$S15_RENDER" update >/dev/null 2>&1; printf '%s' "${S31H_V-unset}" )"
+  if [ "$vk" != zzq-kept ]; then
+    FAIL "S31h: CONTROL — called with no variable named, the stager changed one it was not given (read '$vk'), so what it hands back below would not be attributable to the argument"
+  elif [ "$v" = "$S_DB" ] && [ "$(_baseline_record "$a/.published-itinerary.next")" = "$v" ] && [ "$vx" = "$S_DA" ] && [ ! -e "$x/.published-itinerary.next" ]; then
+    PASS "S31h: the stager hands back, in the variable it is given, exactly the digest its staged record holds, and, over a stale value, the recorded plan's digest where the push re-publishes it and nothing is staged; control: a call that names no variable changes none"
+  else
+    FAIL "S31h: handed '$v' (want $S_DB, the staged record's digest '$(_baseline_record "$a/.published-itinerary.next")'); on the re-publish path '$vx' (want $S_DA, the recorded plan's), staged there=$([ -e "$x/.published-itinerary.next" ] && echo 1 || echo 0)"
+  fi
+}
+# S31i's delete exit, keyed on the BASELINE's plan (#1468 amendment-3 review, R3-FM-2 with R3-CD-1).
+# Deleting the staged record leaves the gate comparing the outgoing plan with .published-itinerary
+# alone, so deleting is safe exactly where the site carries the plan THAT file records. Every
+# staged-record refusal, in the gate and in confirm and on both of its branches, must condition its
+# delete exit on that plan, never on the record's plan and never on nothing; the other case is told
+# to publish the plan the site should carry. Trip `t` is the L1-held state the review measured: an
+# S_DA baseline beside a third plan's record (the 18:15 render's digest), with the baseline's plan
+# going out.
+s31i_assert() {
+  local n2 n3l n3d h o t dc e2 c2 e3l c3l e3d c3d eh ch eo co et ct x ok=1 ctl=1 why=""
+  n2="$(s15_dangling "s31in2-$RANDOM")"; s_record "$n2/.published-itinerary" "$S_DA" published; s_record "$n2/.published-itinerary.next" "$S_DB" published
+  n3l="$(s31_trip s31in3l 14:00 A -)"; ln -s "$n3l/zzq-no-such-record" "$n3l/.published-itinerary.next"
+  n3d="$(s31_trip s31in3d 14:00 A dir)"
+  h="$(s31_trip s31ih 14:00 A B)"
+  o="$(s31_trip s31io 14:00 A A)"
+  t="$(s31_trip s31it 14:00 A -)"; s_render "$WORK/s31i-c.html" 18:15 none; dc="$(itinerary_digest "$WORK/s31i-c.html")"; s_record "$t/.published-itinerary.next" "$dc" published
+  e2="$( ( require_change_confirmation "$n2" ) 2>&1 >/dev/null )"
+  c2="$( ( cmd_confirm "$n2" ) </dev/null 2>&1 >/dev/null )"
+  e3l="$( ( require_change_confirmation "$n3l" ) 2>&1 >/dev/null )"
+  c3l="$( ( cmd_confirm "$n3l" ) </dev/null 2>&1 >/dev/null )"
+  e3d="$( ( require_change_confirmation "$n3d" ) 2>&1 >/dev/null )"
+  c3d="$( ( cmd_confirm "$n3d" ) </dev/null 2>&1 >/dev/null )"
+  eh="$( ( require_change_confirmation "$h" ) 2>&1 >/dev/null )"
+  ch="$( ( cmd_confirm "$h" ) </dev/null 2>&1 >/dev/null )"
+  eo="$( ( require_change_confirmation "$o" ) 2>&1 >/dev/null )"
+  co="$( ( cmd_confirm "$o" ) </dev/null 2>&1 >/dev/null )"
+  et="$( ( require_change_confirmation "$t" ) 2>&1 >/dev/null )"
+  ct="$( ( cmd_confirm "$t" ) </dev/null 2>&1 >/dev/null )"
+  for x in "$e2" "$c2"; do
+    case "$x" in *"outgoing render"*) ;; *) ok=0; why="$why render-not-named" ;; esac
+    case "$x" in *"still outstanding"*) ok=0; why="$why record-named-first" ;; esac
+  done
+  for x in "$e3l" "$e3d" "$eo" "$et"; do
+    [ -z "$(s15f_claims "${x//"$WORK"/<work>}")" ] || { ok=0; why="$why claims[$(s15f_claims "${x//"$WORK"/<work>}")]"; }
+  done
+  for x in "$e3l" "$c3l" "$e3d" "$c3d"; do
+    case "$x" in *"present but cannot be read"*) ;; *) ok=0; why="$why unreadable-not-named" ;; esac
+    case "$x" in *"Repair that file, or delete it"*) ;; *) ok=0; why="$why no-repair-exit" ;; esac
+    case "$x" in *"Re-run update with the plan"*) ok=0; why="$why rerun-offered" ;; esac
+  done
+  for x in "$eh" "$ch" "$et" "$ct"; do
+    case "$x" in *"unpublish, then publish again"*) ;; *) ok=0; why="$why no-first-publish-exit" ;; esac
+    case "$x" in *"Re-run update with the plan the site should carry"*) ;; *) ok=0; why="$why no-live-plan-exit" ;; esac
+  done
+  for x in "$eo" "$co"; do
+    case "$x" in *"still outstanding"*"names the plan going out"*) ;; *) ok=0; why="$why own-plan-record-not-named" ;; esac
+    case "$x" in *"delete that file"*) ;; *) ok=0; why="$why own-plan-no-delete-exit" ;; esac
+    case "$x" in *"Re-run update with the plan"*) ok=0; why="$why own-plan-rerun-offered" ;; esac
+    case "$x" in *"publish the plan the site should carry"*) ;; *) ok=0; why="$why own-plan-no-live-plan-exit" ;; esac
+  done
+  for x in "$eh" "$ch" "$eo" "$co" "$et" "$ct"; do
+    case "$x" in *"If the site carries the plan the published baseline records"*) ;; *) ok=0; why="$why delete-not-keyed-on-baseline" ;; esac
+    case "$x" in *"does not carry that plan"*) ok=0; why="$why delete-keyed-on-record" ;; esac
+    case "$x" in *"which plan the site carries, delete"*) ok=0; why="$why delete-unconditioned" ;; esac
+  done
+  case "$eh" in *"still outstanding"*"Re-run update with the plan"*) ;; *) ctl=0 ;; esac
+  case "$eh" in *"names the plan going out"*) ctl=0 ;; esac
+  if [ "$ctl" -ne 1 ]; then
+    FAIL "S31i: CONTROL — the gate on a held trip with a readable record of another plan and its render did not name the outstanding record and its re-run exit alone, so the readings below are not measurements"
+  elif [ "$ok" -eq 1 ]; then
+    PASS "S31i: the gate and confirm name the cause the resolver acted on, in its order — an unidentifiable render beside a readable staged record is named as the render, and a staged record that cannot be read is told to be repaired or deleted, never re-run; a held trip's refusal names the first-publish exit (unpublish, then publish); a record naming the plan going out, which the baseline records as well, is told to delete the file, never to re-run update with that plan; every staged-record refusal, a third plan's record beside the baseline included, conditions its delete exit on the plan the published baseline records and tells the other case to publish the plan the site should carry; control: the held trip whose record names another plan names its record and the re-run exit"
+  else
+    FAIL "S31i: cause order and exits:$why"
+  fi
+}
 s27c_assert
 s27d_assert
+s27e_assert
+s29e_assert
+s31a_assert
+s31b_assert
+s31c_assert
+s31d_assert
+s31e_assert
+s31f_assert
+s31g_assert
+s31h_assert
+s31i_assert
+md_flips change_confirmation_state   "S31a" s31a_assert
+md_flips stage_baseline_record       "S31d" s31d_assert
+md_flips record_published_itinerary  "S31e" s31e_assert
+md_flips stage_baseline_record       "S31h" s31h_assert
+md_flips require_change_confirmation "S31i" s31i_assert
 
 # ── S30d — THE RESTORE (S26a's rule, applied to this block). Every production function this block
 # saved reads exactly as saved, and none of the commands its arms stub is still a function.
@@ -9475,6 +10029,7 @@ fi
 md_flips record_published_itinerary "S27a" s27a_assert
 md_flips change_confirmation_state  "S28a" s28a_assert
 md_flips _baseline_record           "S28e" s28e_assert
+md_flips require_recordable_baseline "S29a" s29a_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group T, #719 — THE APPROVAL PAIR ON THE RENDER: the schema's two fields, the band's statement,
