@@ -2867,6 +2867,17 @@ _legacy_digest_of() { # (stdin) -> the pre-#719 CRC-32-plus-length token
   cksum | awk '{ printf "%s-%s", $1, $2 }'
 }
 
+# THE ITINERARY'S WHITESPACE, PINNED (#1468 case 1). The normalization stages run under LC_ALL=C,
+# so no verdict, baseline or approval code depends on the caller's locale, the rule the approval
+# readers above already keep. Under a UTF-8 locale macOS `tr` counts 18 non-ASCII code points as
+# [:space:] — U+00A0, U+1680, U+2000–U+200A, U+2028, U+2029, U+202F, U+205F and U+3000, Unicode's
+# White_Space set less U+0085, measured over every scalar value — and C counts none of them; that
+# difference was the whole locale dependence. So those 18 are rewritten to an ASCII space, byte
+# for byte, before the C-locale `tr` squeezes, and a digest recorded under a UTF-8 locale on macOS
+# is reproduced exactly under any locale. A UTF-8 encoding cannot occur inside another
+# character's, so a byte match is a character match. Graded by S30.
+_ITINERARY_WS_SED=$'s/\xc2\xa0/ /g;s/\xe1\x9a\x80/ /g;s/\xe2\x80\x80/ /g;s/\xe2\x80\x81/ /g;s/\xe2\x80\x82/ /g;s/\xe2\x80\x83/ /g;s/\xe2\x80\x84/ /g;s/\xe2\x80\x85/ /g;s/\xe2\x80\x86/ /g;s/\xe2\x80\x87/ /g;s/\xe2\x80\x88/ /g;s/\xe2\x80\x89/ /g;s/\xe2\x80\x8a/ /g;s/\xe2\x80\xa8/ /g;s/\xe2\x80\xa9/ /g;s/\xe2\x80\xaf/ /g;s/\xe2\x81\x9f/ /g;s/\xe3\x80\x80/ /g'
+
 # The itinerary-content identity of a site render. Nothing on an unreadable file — the
 # caller decides what an unreadable render means: the resolver reads it as `undetermined`,
 # neither a match nor a change (#1184), and both recorders decline to write.
@@ -2898,13 +2909,14 @@ _legacy_digest_of() { # (stdin) -> the pre-#719 CRC-32-plus-length token
 # written by an earlier commit OF this branch does not match and re-anchors on the next
 # confirmed republish — fail-closed, and the only direction it could go.
 #
-# A FAILED NORMALIZATION TAKES THE SAME PATH (#1184). BSD `tr` and `sed` under a UTF-8
-# locale exit 1 on a byte that is not valid UTF-8, and `tr` writes the prefix it had read
-# before stopping (measured on macOS). A digest of that prefix is a well-formed token for a
-# TRUNCATED itinerary, and that is fail-OPEN: a day appended after the last published text
-# whose own text opens with such a byte digests equal to the baseline (the state reads
-# `none-pending`) or to the confirmation record (it reads `confirmed`), and the gate lets
-# an unapproved change through on either route. So the pipeline's status is read too, in
+# A FAILED NORMALIZATION TAKES THE SAME PATH (#1184). Before the pin above, BSD `tr` and `sed`
+# under a UTF-8 locale exited 1 on a byte that is not valid UTF-8, after writing the prefix they
+# had read; under LC_ALL=C neither does, and such a byte is digested as it stands. A stage can
+# still fail after writing a prefix for another reason, and a digest of that prefix is a
+# well-formed token for a TRUNCATED itinerary, which is fail-OPEN: a day appended after the
+# last published text whose own text opens with such a byte digests equal to the baseline (the
+# state reads `none-pending`) or to the confirmation record (it reads `confirmed`), and the gate
+# lets an unapproved change through on either route. So the pipeline's status is read too, in
 # the same way the projection's is: the command substitution carries the status of the
 # whole pipeline, and a failure in any stage is "no answer".
 #
@@ -2920,7 +2932,7 @@ itinerary_digest() { # <html_file> -> identity token, or nothing
   [ -r "${1:-}" ] || return 0
   local text dg
   text="$(strip_to_itinerary_text "$1")" || return 0
-  dg="$(set -o pipefail; printf '%s' "$text" | tr -s '[:space:]' ' ' | sed 's/^ *//; s/ *$//' | _digest_of)" || return 0
+  dg="$(set -o pipefail; printf '%s' "$text" | LC_ALL=C sed "$_ITINERARY_WS_SED" | LC_ALL=C tr -s '[:space:]' ' ' | LC_ALL=C sed 's/^ *//; s/ *$//' | _digest_of)" || return 0
   printf '%s' "$dg"
 }
 
@@ -2934,7 +2946,7 @@ _legacy_itinerary_digest() { # <html_file> -> the pre-#719 CRC-32 identity token
   [ -r "${1:-}" ] || return 0
   local text dg
   text="$(strip_to_itinerary_text "$1")" || return 0
-  dg="$(set -o pipefail; printf '%s' "$text" | tr -s '[:space:]' ' ' | sed 's/^ *//; s/ *$//' | _legacy_digest_of)" || return 0
+  dg="$(set -o pipefail; printf '%s' "$text" | LC_ALL=C sed "$_ITINERARY_WS_SED" | LC_ALL=C tr -s '[:space:]' ' ' | LC_ALL=C sed 's/^ *//; s/ *$//' | _legacy_digest_of)" || return 0
   printf '%s' "$dg"
 }
 
@@ -3158,7 +3170,7 @@ record_published_itinerary() { # <trip_dir> <site_html> [<the digest stage_basel
   fi
   dg="$(itinerary_digest "$site_html")"
   if [ -z "$dg" ]; then
-    _warn_unrecorded "$trip_dir" "could not identify the itinerary content of $site_html — it could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause." ""
+    _warn_unrecorded "$trip_dir" "could not identify the itinerary content of $site_html — it could not be read, its itinerary text could not be projected, or that text could not be normalized; any error printed above names the cause." ""
     return 0
   fi
   if [ "$(_baseline_record "$nxt")" = "$dg" ]; then
@@ -3546,7 +3558,7 @@ require_change_confirmation() { # <trip_dir>
           *) die "GUARD ABORTED — a baseline record an earlier push staged is still outstanding at $(staged_record_path "$trip_dir") (state: undetermined): that push may have reached the published site without its record being put in place, so which plan the site carries is unknown, and the gate could not compare the outgoing plan with it. Nothing was pushed, and the published site was not touched. confirm refuses this state as well. If the site carries the plan the published baseline records, the record is redundant: delete that file and re-run. If it carries another plan, keep the file. Re-run update with the plan the site should carry — usually the plan that push carried — with its confirmation or its approvals: that push stages its plan's record over this one and records it. Where that push was a first publish, its per-trip repository may hold no page at all, and update cannot run on an empty one: unpublish, then publish again." ;;
         esac
       fi
-      die "GUARD ABORTED — could not identify the itinerary content of the outgoing render of ${trip_dir} (state: undetermined): it could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause. Nothing was pushed, and the published site was not touched. confirm refuses this state as well, because a confirmation binds to an identified itinerary and there is none: fix whichever of the three it is, then re-run." ;;
+      die "GUARD ABORTED — could not identify the itinerary content of the outgoing render of ${trip_dir} (state: undetermined): it could not be read, its itinerary text could not be projected, or that text could not be normalized; any error printed above names the cause. Nothing was pushed, and the published site was not touched. confirm refuses this state as well, because a confirmation binds to an identified itinerary and there is none: fix whichever of the three it is, then re-run." ;;
     *) die "GUARD ABORTED — the itinerary content differs from the published plan and no organizer confirmation covers it (state: ${state:-empty}). Nothing was pushed and the published plan is unchanged. Either confirm the change:  $(basename "$0") confirm ${trip_dir}  — or revert the working copy to the published plan and re-run." ;;
   esac
 }
@@ -4296,7 +4308,7 @@ cmd_confirm() { # <trip_dir>
         *) die "cannot confirm for $trip_dir — could not determine whether its itinerary changed: a baseline record an earlier push staged is still outstanding at $(staged_record_path "$trip_dir"), so which plan the published site carries is unknown. A confirmation is recorded against a known published plan and none can be read, so nothing was recorded. If the site carries the plan the published baseline records, the record is redundant: delete that file, then re-run. If it carries another plan, keep the file. Re-run update with the plan the site should carry — usually the plan that push carried — with its confirmation or its approvals, which records it. Where that push was a first publish, its per-trip repository may hold no page at all, and update cannot run on an empty one: unpublish, then publish again." ;;
       esac
     fi
-    die "cannot confirm for $trip_dir — could not determine whether its itinerary changed: the outgoing render $site_html could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause. A confirmation binds to an identified itinerary and there is none to bind to, so nothing was recorded."
+    die "cannot confirm for $trip_dir — could not determine whether its itinerary changed: the outgoing render $site_html could not be read, its itinerary text could not be projected, or that text could not be normalized; any error printed above names the cause. A confirmation binds to an identified itinerary and there is none to bind to, so nothing was recorded."
   }
 
   # A malformed approval state (#719, FM-2 ii) holds every plan change at the gate, and it is not
@@ -4328,7 +4340,7 @@ cmd_confirm() { # <trip_dir>
   [ "${ans:-}" = "CONFIRM" ] || die "aborted — nothing confirmed. The published plan is unchanged."
 
   dg="$(itinerary_digest "$site_html")"
-  [ -n "$dg" ] || die "could not identify the itinerary content of $site_html — it could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause. Nothing was recorded."
+  [ -n "$dg" ] || die "could not identify the itinerary content of $site_html — it could not be read, its itinerary text could not be projected, or that text could not be normalized; any error printed above names the cause. Nothing was recorded."
   rec="$(change_confirmation_path "$trip_dir")"
   tmp="$(mktemp "${rec}.XXXXXX")" || die "could not stage the confirmation record beside $rec"
   printf 'digest=%s\nconfirmed=%s\n' "$dg" "$(_iso_now)" > "$tmp"

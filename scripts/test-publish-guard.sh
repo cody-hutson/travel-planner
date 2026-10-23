@@ -6094,11 +6094,11 @@ fi
 # recorded baseline, so an unreadable or unprojectable render fell through to `unconfirmed`
 # or `stale`, the gate's abort told the organizer that the itinerary content differed, and
 # confirm went on to the CONFIRM prompt against a state nobody had computed. The conflation
-# was not confined to an empty digest either. BSD `tr` under a UTF-8 locale exits 1 AFTER
-# writing a prefix when it meets a byte that is not valid UTF-8, so the digest identified a
-# TRUNCATED itinerary, and a day appended behind such a byte read as `none-pending`, or as
-# `confirmed` when a confirmation covered the prefix — either member of the proceed set
-# publishes an unapproved change.
+# was not confined to an empty digest either. Until the pin (#1468 case 1), BSD `tr` under a
+# UTF-8 locale exited 1 AFTER writing a prefix when it met a byte that is not valid UTF-8, so
+# the digest identified a TRUNCATED itinerary, and a day appended behind such a byte read as
+# `none-pending`, or as `confirmed` when a confirmation covered the prefix — either member of the
+# proceed set publishes an unapproved change.
 #
 #   S15a  THE SUBJECT, unreadable — a dangling-symlink render with a recorded baseline
 #         resolves `undetermined`, with no confirmation record and with an old one
@@ -6133,11 +6133,10 @@ fi
 # which MD_LEGACY is not allowed to grow to excuse. No verdict is read through a pipeline
 # into an early-exiting grep (group PF). And every stub is unset in the arm that set it.
 #
-# S15c STUBS `tr` RATHER THAN FEEDING IT A REAL INVALID BYTE, and the reason is the runner.
-# BSD `tr` on macOS fails on such a byte; GNU `tr` on the ubuntu CI runner is byte-oriented
-# and is not expected to [INFERRED — not measured on this host], so a real byte would make
-# the arm discriminate on one platform and pass vacuously on the other. A stubbed stage
-# fails on both, and a failing stage is exactly what the digest's status read must catch.
+# S15c STUBS `tr` RATHER THAN FEEDING IT A REAL INVALID BYTE: no real byte makes `tr` fail
+# under `LC_ALL=C` on either platform, which is where the normalization runs since the pin
+# (#1468 case 1), so the stage is stubbed. A stubbed stage fails on both, and a failing stage
+# is exactly what the digest's status read must catch.
 #
 # Offline: $WORK fixtures, a dangling symlink, and shell-function stubs for perl and tr. No
 # network, no Node, no TTY, no gh. This group has no legitimate skip and is deliberately
@@ -6195,8 +6194,8 @@ else
   FAIL "S15b: with perl failing, a trip whose render has not moved resolved '$S15B_ST' — a projection that could not run is being read as a change to the plan"
 fi
 
-# ── S15c — THE SUBJECT, UNNORMALIZABLE. `tr` is stubbed to fail the way BSD `tr` fails on
-# an invalid byte, minus the prefix. What is graded is the digest's own STATUS read: a
+# ── S15c — THE SUBJECT, UNNORMALIZABLE. No real byte makes `tr` fail under `LC_ALL=C` on either
+# platform, so the stage is stubbed to fail. What is graded is the digest's own STATUS read: a
 # pipeline whose stage fails still ends in cksum, and cksum over whatever arrived is a
 # well-formed token (the empty-input token, here) that identifies no itinerary at all.
 S15CD="$(s_fixture s15c 14:00 none)"
@@ -6211,7 +6210,7 @@ if [ -z "$S15C_CTL" ] || [ "$S15C_CTL" != "$S_DA" ]; then
 elif [ -z "$S15C_DG" ] && [ "$S15C_ST" = "undetermined" ]; then
   PASS "S15c: with the normalization stage failing, itinerary_digest yields NO token and the state is undetermined, while with it working the same render digests $S15C_CTL — a failing stage is 'no answer', so a truncated or empty normalization is never compared as though it were the itinerary"
 else
-  FAIL "S15c: with the normalization stage failing, itinerary_digest yielded '$S15C_DG' and the state read '$S15C_ST' — a failed pipeline still produced a token. On macOS that token identifies a TRUNCATED itinerary, and a day appended behind a byte that is not valid UTF-8 digests equal to the baseline and publishes unconfirmed"
+  FAIL "S15c: with the normalization stage failing, itinerary_digest yielded '$S15C_DG' and the state read '$S15C_ST' — a failed pipeline still produced a token, which identifies a truncated or empty normalization, and the gate would compare it as though it identified the itinerary"
 fi
 
 # ── S15d — CONTROL. A readable render whose itinerary DID move must still read as a change.
@@ -6445,15 +6444,12 @@ fi
 # (the baseline is an older plan, and the confirmation is the render without the day). Both
 # must read `undetermined`, and the gate must refuse on both.
 #
-# TWO SOURCES OF THE FAILING STAGE, BECAUSE THE PLATFORMS DIFFER. BSD `tr` under a UTF-8
-# locale stops at that byte after writing the prefix before it (measured on macOS); GNU `tr`
-# is byte-oriented and does not, which is why S15c stubs it. So the fresh shell first runs
-# this platform's own `tr` over the render. Where it fails, the REAL case is graded: the real
-# byte through the real `tr`. The EMULATED case is graded on every platform, the CI runner
-# included: a `tr` defined in the fresh shell alone, which writes the translation of
-# everything before the first 0xC9 byte and returns 1 — BSD's behaviour, reproduced. The
-# emulation lives and dies with that shell; this shell never holds it, and S15j's restore is
-# unaffected.
+# THE FAILING STAGE IS EMULATED. Under the pin (#1468 case 1) the normalization runs under
+# LC_ALL=C, where no platform's `tr` stops on that byte, so the case is graded on every
+# platform, the CI runner included, through a `tr` defined in the fresh shell alone, which
+# writes the translation of everything before the first 0xC9 byte and returns 1 — the failure
+# BSD `tr` showed under a UTF-8 locale before the pin, reproduced. The emulation lives and dies
+# with that shell; this shell never holds it, and S15j's restore is unaffected.
 #
 # FIXTURE INTEGRITY, graded first. Every fresh shell must report `pipefail` off. The emulated
 # stage must fail on the render and pass the valid-UTF-8 one. And the prefix digest — the same
@@ -6476,8 +6472,8 @@ if [ "$m" = emulated ]; then
   }
 fi
 pf=off; case ":$SHELLOPTS:" in *:pipefail:*) pf=on ;; esac
-tf=0; tr -s '[:space:]' ' ' < "$r" >/dev/null 2>&1 || tf=$?
-pre="$(printf '%s' "$(strip_to_itinerary_text "$r")" | tr -s '[:space:]' ' ' | sed 's/^ *//; s/ *$//' | _digest_of)"
+tf=0; LC_ALL=C tr -s '[:space:]' ' ' < "$r" >/dev/null 2>&1 || tf=$?
+pre="$(printf '%s' "$(strip_to_itinerary_text "$r")" | LC_ALL=C sed "$_ITINERARY_WS_SED" | LC_ALL=C tr -s '[:space:]' ' ' | LC_ALL=C sed 's/^ *//; s/ *$//' | _digest_of)"
 st="$(change_confirmation_state "$d")"
 rc=0; ( require_change_confirmation "$d" ) >/dev/null 2>&1 || rc=$?
 printf '%s %s %s %s %s' "${st:-empty}" "$rc" "$pf" "$tf" "${pre:-empty}"
@@ -6504,23 +6500,15 @@ S15KV="$(s15k_trip s15kv "$S15K_OK" "$S_DA")"
 read -r S15K_EN_ST S15K_EN_RC S15K_EN_PF S15K_EN_TF S15K_EN_PRE <<<"$(s15k_run emulated "$S15KN" "$S15KN/$S15_RENDER")"
 read -r S15K_EC_ST S15K_EC_RC S15K_EC_PF _ _ <<<"$(s15k_run emulated "$S15KC" "$S15KC/$S15_RENDER")"
 read -r S15K_EV_ST S15K_EV_RC S15K_EV_PF S15K_EV_TF _ <<<"$(s15k_run emulated "$S15KV" "$S15KV/$S15_RENDER")"
-read -r S15K_RN_ST S15K_RN_RC S15K_RN_PF S15K_RN_TF _ <<<"$(s15k_run real "$S15KN" "$S15KN/$S15_RENDER")"
-read -r S15K_RC_ST S15K_RC_RC S15K_RC_PF _ _ <<<"$(s15k_run real "$S15KC" "$S15KC/$S15_RENDER")"
-S15K_PFS="$S15K_EN_PF$S15K_EC_PF$S15K_EV_PF$S15K_RN_PF$S15K_RC_PF"
-S15K_REAL=0; [ "${S15K_RN_TF:-0}" != "0" ] && S15K_REAL=1
-S15K_REALOK=1; S15K_REALTXT='not applicable (this platform'"'"'s tr is byte-oriented)'
-if [ "$S15K_REAL" -eq 1 ]; then
-  S15K_REALOK=0; S15K_REALTXT='graded too (this platform'"'"'s tr fails on the byte)'
-  [ "$S15K_RN_ST" = "undetermined" ] && [ "$S15K_RN_RC" != "0" ] && [ "$S15K_RC_ST" = "undetermined" ] && [ "$S15K_RC_RC" != "0" ] && S15K_REALOK=1
-fi
-if [ "$S15K_R0DG" != "$S_DA" ] || [ "$S15K_PFS" != "offoffoffoffoff" ] || [ "${S15K_EN_TF:-0}" = "0" ] || [ "$S15K_EV_TF" != "0" ] || [ "$S15K_EN_PRE" != "$S_DA" ]; then
-  FAIL "S15k: fixture integrity — the render without the day digests '$S15K_R0DG' against the baseline $S_DA; pipefail in the fresh shells reads [$S15K_PFS] (want off in all five); the emulated stage returned ${S15K_EN_TF:-none} on the render (want non-zero) and ${S15K_EV_TF:-none} on the valid one (want 0); and the prefix digest is '$S15K_EN_PRE' (want the baseline). The fixture does not reproduce the fail-open's precondition, so no verdict below would be about the pin"
+S15K_PFS="$S15K_EN_PF$S15K_EC_PF$S15K_EV_PF"
+if [ "$S15K_R0DG" != "$S_DA" ] || [ "$S15K_PFS" != "offoffoff" ] || [ "${S15K_EN_TF:-0}" = "0" ] || [ "$S15K_EV_TF" != "0" ] || [ "$S15K_EN_PRE" != "$S_DA" ]; then
+  FAIL "S15k: fixture integrity — the render without the day digests '$S15K_R0DG' against the baseline $S_DA; pipefail in the fresh shells reads [$S15K_PFS] (want off in all three); the emulated stage returned ${S15K_EN_TF:-none} on the render (want non-zero) and ${S15K_EV_TF:-none} on the valid one (want 0); and the prefix digest is '$S15K_EN_PRE' (want the baseline). The fixture does not reproduce the fail-open's precondition, so no verdict below would be about the pin"
 elif [ "$S15K_EV_ST" != "unconfirmed" ] || [ "$S15K_EV_RC" = "0" ]; then
   FAIL "S15k: CONTROL — the same day in valid UTF-8 resolved '$S15K_EV_ST' with gate rc=$S15K_EV_RC through the same fresh shell, not unconfirmed with a refusal. The harness is not reading an identifiable render as one, so an undetermined below would not be attributable to the failing stage"
-elif [ "$S15K_EN_ST" = "undetermined" ] && [ "$S15K_EN_RC" != "0" ] && [ "$S15K_EC_ST" = "undetermined" ] && [ "$S15K_EC_RC" != "0" ] && [ "$S15K_REALOK" -eq 1 ]; then
-  PASS "S15k: with pipefail OFF in a fresh shell that sourced the script, a day appended behind a byte that is not valid UTF-8 resolves undetermined on the none-pending route and on the confirmed route, and the gate refuses on both (rc $S15K_EN_RC / $S15K_EC_RC). The emulated stage is graded on this platform, and the real one is $S15K_REALTXT. The prefix digest without pipefail equals the baseline, so this input publishes if the pin is removed; the pin is what holds it. Control: the valid-UTF-8 day resolves unconfirmed"
+elif [ "$S15K_EN_ST" = "undetermined" ] && [ "$S15K_EN_RC" != "0" ] && [ "$S15K_EC_ST" = "undetermined" ] && [ "$S15K_EC_RC" != "0" ]; then
+  PASS "S15k: with pipefail OFF in a fresh shell that sourced the script, a day appended behind a byte that is not valid UTF-8, read by a normalization stage that fails there after writing the prefix before it, resolves undetermined on the none-pending route and on the confirmed route, and the gate refuses on both (rc $S15K_EN_RC / $S15K_EC_RC). The failing stage is emulated: under the pin no platform's tr stops on that byte. The prefix digest without pipefail equals the baseline, so this input publishes if the pin is removed; the pin is what holds it. Control: the valid-UTF-8 day resolves unconfirmed"
 else
-  FAIL "S15k: with pipefail OFF in a fresh shell, the render resolved emulated '$S15K_EN_ST' (gate rc $S15K_EN_RC) on the none-pending route and '$S15K_EC_ST' (gate rc $S15K_EC_RC) on the confirmed route, and real '$S15K_RN_ST' (rc $S15K_RN_RC) / '$S15K_RC_ST' (rc $S15K_RC_RC). The digest's status read no longer carries its own pipefail: a stage that failed after writing a prefix digests as the truncated itinerary, which equals the baseline or the confirmation, and the gate proceeds with an unapproved change"
+  FAIL "S15k: with pipefail OFF in a fresh shell, the render resolved emulated '$S15K_EN_ST' (gate rc $S15K_EN_RC) on the none-pending route and '$S15K_EC_ST' (gate rc $S15K_EC_RC) on the confirmed route. The digest's status read no longer carries its own pipefail: a stage that failed after writing a prefix digests as the truncated itinerary, which equals the baseline or the confirmation, and the gate proceeds with an unapproved change"
 fi
 
 # ── S15l — THE RECORDER'S TWO WARNINGS (#1184, the Stage 5 review's FM-1). After a push the
@@ -9067,6 +9055,10 @@ fi
 #         `cd` between a stager and its push
 #   S31h  the digest the stager hands back
 #   S31i  the order in which a refusal names its cause, and the exits each one offers
+#   S30a  CASE 1 — the 18 code points macOS's UTF-8 [:space:] holds digest as a space under
+#         LC_ALL=C and under a UTF-8 locale; ARMED-RED: the unpinned body is convicted
+#   S30b  code points outside the set still read as text; the legacy digest moves with the pin
+#   S30c  a byte that is not valid UTF-8 digests the same under both locales
 #   S30d  THE RESTORE — every production function this block saved reads exactly as saved, and
 #         none of the commands its arms stub is still a function
 #
@@ -10004,6 +9996,96 @@ md_flips record_published_itinerary  "S31e" s31e_assert
 md_flips stage_baseline_record       "S31h" s31h_assert
 md_flips require_change_confirmation "S31i" s31i_assert
 
+# ── S30 — CASE 1: THE ITINERARY DIGEST NO LONGER DEPENDS ON THE CALLER'S LOCALE (#1468). The
+# normalization runs under LC_ALL=C, with the 18 non-ASCII code points macOS's UTF-8 [:space:]
+# holds rewritten to an ASCII space first. s30_render writes S0's 14:00 render with the given
+# bytes in place of the space between "Miradouro" and "da"; the space itself gives S0's own
+# render. S30_U is the first UTF-8 locale this host lists, read through `locale charmap`, and an
+# arm that needs it and finds none fails as fixture integrity, never skips.
+s30_render() { # <file> <bytes standing where the space after "Miradouro" stands>
+  local t
+  s_render "$1" 14:00 none; t="$(cat "$1")"; printf '%s\n' "${t/Miradouro da/Miradouro$2da}" > "$1"
+}
+S30_U=""
+for s30l in C.UTF-8 en_US.UTF-8; do
+  if [ "$(LC_ALL=$s30l locale charmap 2>/dev/null)" = UTF-8 ]; then S30_U="$s30l"; break; fi
+done
+S30_CP=( $'\302\240' $'\341\232\200' $'\342\200\200' $'\342\200\201' $'\342\200\202' $'\342\200\203' $'\342\200\204' $'\342\200\205' $'\342\200\206' $'\342\200\207' $'\342\200\210' $'\342\200\211' $'\342\200\212' $'\342\200\250' $'\342\200\251' $'\342\200\257' $'\342\201\237' $'\343\200\200' )
+
+# ── S30a — THE SUBJECT. Eighteen renders, each carrying one of the 18 code points (U+00A0, U+1680,
+# U+2000–U+200A, U+2028, U+2029, U+202F, U+205F, U+3000) between two words, each digest a 64-hex
+# token equal to the space render's under LC_ALL=C and under the UTF-8 locale — so a digest macOS
+# recorded under a UTF-8 locale is reproduced under any locale, and no baseline or approval code
+# recorded there moves. Fixture integrity first: a UTF-8 locale is listed, and the space render
+# digests to S0's token. ARMED-RED: the unpinned body the digest had before the pin, put back,
+# reads the U+00A0 render as another plan under LC_ALL=C; the production digest is then
+# re-evaluated from its saved text. Registered: with the digest removed every token is empty.
+s30a_assert() {
+  local i f sp dsc dsu dc du n=0 bad="" mut msp
+  sp="$WORK/s30a-space.html"; s30_render "$sp" ' '
+  dsc="$(LC_ALL=C itinerary_digest "$sp")"; dsu="$(LC_ALL=$S30_U itinerary_digest "$sp")"
+  for i in "${!S30_CP[@]}"; do
+    f="$WORK/s30a-$i.html"; s30_render "$f" "${S30_CP[$i]}"
+    dc="$(LC_ALL=C itinerary_digest "$f")"; du="$(LC_ALL=$S30_U itinerary_digest "$f")"
+    if [ "${#dc}" -eq 64 ] && [ "$dc" = "$dsc" ] && [ "$du" = "$dsc" ]; then n=$((n+1)); else bad="$bad cp$i:${dc:0:8}/${du:0:8}"; fi
+  done
+  itinerary_digest() { [ -r "${1:-}" ] || return 0; local text dg; text="$(strip_to_itinerary_text "$1")" || return 0; dg="$(set -o pipefail; printf '%s' "$text" | tr -s '[:space:]' ' ' | sed 's/^ *//; s/ *$//' | _digest_of)" || return 0; printf '%s' "$dg"; }   # MUTANT: the unpinned body
+  mut="$(LC_ALL=C itinerary_digest "$WORK/s30a-0.html")"; msp="$(LC_ALL=C itinerary_digest "$sp")"
+  sb_restore itinerary_digest
+  if [ -z "$S30_U" ] || [ "$dsc" != "$S_DA" ] || [ "$dsu" != "$S_DA" ]; then
+    FAIL "S30a: fixture integrity — the UTF-8 locale is '${S30_U:-none listed}', and the space render digests '${dsc:0:12}' under C and '${dsu:0:12}' under it against S0's '${S_DA:0:12}', so the 18 comparisons below would not be about the code points"
+  elif [ "$n" -eq 18 ] && [ "${#S30_CP[@]}" -eq 18 ] && [ -n "$mut" ] && [ "$mut" != "$msp" ]; then
+    PASS "S30a: each of the $n renders carrying one of the 18 code points digests to the space render's 64-hex token under LC_ALL=C and under $S30_U — the digest no longer depends on the caller's locale; ARMED-RED: the unpinned body reads the U+00A0 render as another plan under LC_ALL=C"
+  else
+    FAIL "S30a: $n of ${#S30_CP[@]} code points digest equal under both locales;${bad:- none other} ARMED-RED read '${mut:0:12}' against the space render's '${msp:0:12}' (want two different tokens)"
+  fi
+}
+s30a_assert
+
+# ── S30b — SPECIFICITY. Code points outside the set must still read as text: U+0085 (the one
+# White_Space member macOS's class does not hold), U+00C9 and U+200B each digest to a token other
+# than the space render's under both locales; the ASCII render digests the same under both; and
+# the legacy digest the baseline shim compares reads the U+00A0 render as the space render under
+# both locales, so a legacy baseline of that plan still matches it.
+s30b_assert() {
+  local sp f d c u ok=1 why="" asc asu lnc lnu lsp
+  sp="$WORK/s30b-space.html"; s30_render "$sp" ' '
+  asc="$(LC_ALL=C itinerary_digest "$sp")"; asu="$(LC_ALL=$S30_U itinerary_digest "$sp")"
+  for c in $'\302\205' $'\303\211' $'\342\200\213'; do
+    f="$WORK/s30b-$RANDOM.html"; s30_render "$f" "$c"
+    d="$(LC_ALL=C itinerary_digest "$f")"; u="$(LC_ALL=$S30_U itinerary_digest "$f")"
+    [ "${#d}" -eq 64 ] && [ "${#u}" -eq 64 ] && [ "$d" != "$asc" ] && [ "$u" != "$asc" ] || { ok=0; why="$why outside-set:${d:0:8}/${u:0:8}"; }
+  done
+  f="$WORK/s30b-nbsp.html"; s30_render "$f" $'\302\240'
+  lnc="$(LC_ALL=C _legacy_itinerary_digest "$f")"; lnu="$(LC_ALL=$S30_U _legacy_itinerary_digest "$f")"; lsp="$(LC_ALL=C _legacy_itinerary_digest "$sp")"
+  if [ -z "$S30_U" ] || [ "${#asc}" -ne 64 ]; then
+    FAIL "S30b: fixture integrity — the UTF-8 locale is '${S30_U:-none listed}' and the ASCII render digests '${asc:0:12}', so the comparisons below would not be measurements"
+  elif [ "$ok" -eq 1 ] && [ "$asc" = "$asu" ] && [ -n "$lsp" ] && [ "$lnc" = "$lsp" ] && [ "$lnu" = "$lsp" ]; then
+    PASS "S30b: U+0085, U+00C9 and U+200B each read as text, a token other than the space render's, under both locales; the ASCII render digests the same under both; and the legacy digest reads the U+00A0 render as the space render under both, so a legacy baseline still matches its plan"
+  else
+    FAIL "S30b:$why ASCII C/UTF-8 ${asc:0:8}/${asu:0:8}; legacy U+00A0 C/UTF-8 ${lnc:-empty}/${lnu:-empty} against the space render's ${lsp:-empty}"
+  fi
+}
+s30b_assert
+
+# ── S30c — THE BYTE THAT USED TO STOP THE PIPELINE. The 14:00 render with byte 0xC9, which is not
+# valid UTF-8, between two words: under the UTF-8 locale its digest is a 64-hex token equal to
+# the one under LC_ALL=C. Before the pin BSD `tr` stopped there under a UTF-8 locale, and the
+# digest read no answer; under LC_ALL=C no stage stops on it, and it is digested as it stands.
+s30c_assert() {
+  local f dc du
+  f="$WORK/s30c.html"; s30_render "$f" $'\311'
+  dc="$(LC_ALL=C itinerary_digest "$f")"; du="$(LC_ALL=$S30_U itinerary_digest "$f")"
+  if [ -z "$S30_U" ] || [ "${#dc}" -ne 64 ]; then
+    FAIL "S30c: fixture integrity — the UTF-8 locale is '${S30_U:-none listed}' and the render digests '${dc:0:12}' under LC_ALL=C, so the comparison below would not be a measurement"
+  elif [ "${#du}" -eq 64 ] && [ "$du" = "$dc" ]; then
+    PASS "S30c: a render carrying a byte that is not valid UTF-8 digests under $S30_U to the same 64-hex token as under LC_ALL=C — no stage stops on it"
+  else
+    FAIL "S30c: under $S30_U the render with 0xC9 digests '${du:-empty}', against '$dc' under LC_ALL=C"
+  fi
+}
+s30c_assert
+
 # ── S30d — THE RESTORE (S26a's rule, applied to this block). Every production function this block
 # saved reads exactly as saved, and none of the commands its arms stub is still a function.
 # CONTROL: the recorder's saved text is not empty, so the comparison reads a definition.
@@ -10030,6 +10112,7 @@ md_flips record_published_itinerary "S27a" s27a_assert
 md_flips change_confirmation_state  "S28a" s28a_assert
 md_flips _baseline_record           "S28e" s28e_assert
 md_flips require_recordable_baseline "S29a" s29a_assert
+md_flips itinerary_digest            "S30a" s30a_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group T, #719 — THE APPROVAL PAIR ON THE RENDER: the schema's two fields, the band's statement,
