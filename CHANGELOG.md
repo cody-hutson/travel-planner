@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-10-16 — Controls point at the population at risk
+## [0.58.0] — 2026-10-16 — Controls point at the population at risk
 
 No trip verb plans, records or publishes a trip differently in this release. What changes is met by
 whoever runs or edits a guard suite under `scripts/`, the suites `SECURITY.md` names among the
@@ -30,7 +30,9 @@ same on every host. Group B's locator arm is the one declared, and a new surface
 first show that the walk opened every listed file and read a line, so the declared verdict is
 reached only over a walk that read the tree. The `CTL-VACUITY` arms drive the rule on every run, and
 group `MD` registers it. What is left open: a declaration's reason is checked for presence, not for
-truth.
+truth, and no standing arm reaches the one exit-rule line that joins the rule's status to the run's.
+A planted undeclared arm showed it once, in the change that added the rule; with the line deleted,
+every arm stays green.
 
 **The artifact-schema suite's class-assignment range parse no longer depends on the locale, and
 group `LC` covers it.** `ca_delta` in `scripts/test-artifact-schema.sh` found a range's separator
@@ -74,16 +76,19 @@ bytes, while a UTF-8 locale may count it, and other Unicode spaces, as whitespac
 whose code span was followed by one therefore paired with its `allowed-tools` entry in one shell and
 was named by Q1 and Q2 in another, and a roster header cell edged the same way split group J the
 same way. Both helpers now strip one fixed set under every locale, the six ASCII whitespace
-characters and U+00A0, through one definition. The readers of a verb's or the guided-entry carrier's
-frontmatter, the `disable-model-invocation` flag readers among them, strip the ASCII characters
-alone, so a frontmatter edge carrying U+00A0 is kept and reported under every locale rather than
-trimmed into a flag a YAML parser would not read. Arms `GQL`, `GJU` and `GQF` read Grant cells, a
-roster header cell and a frontmatter flag line, each edged by U+00A0 and by U+3000, under C and
-under a UTF-8 locale the host lists on every run, and fail when the host lists none. What is left
-open: every other non-ASCII space at an edge is kept, so it is reported under every locale rather
-than paired; and every other match the suite makes with a POSIX character class or a bracket range —
-`collapse`, `lower`, the delimiter-row test and group J's class-row match among them — and every awk
-program and sort it does not pin to `LC_ALL=C` still reads the caller's locale.
+characters and U+00A0, through one definition. The readers of a verb's frontmatter, its
+`disable-model-invocation` flag reader among them, strip the ASCII characters alone, so a
+frontmatter edge carrying U+00A0 is kept and reported under every locale rather than trimmed into a
+flag a YAML parser would not read. The guided-entry carrier's two flag readers strip U+00A0 as well,
+because there the flag's presence is the defect, so a flag key led by U+00A0 is reported whichever
+way the runtime reads it. Arms `GQL`, `GJU` and `GQF` read Grant cells, a roster header cell, and a
+verb's frontmatter flag and publish-script denial lines, each edged by U+00A0 and by U+3000, and
+`GQF` a carrier flag key led by U+00A0, under C and under a UTF-8 locale the host lists on every
+run, and fail when the host lists none. What is left open: every other non-ASCII space at an edge is
+kept, so it is reported under every locale rather than paired; and every other match the suite makes
+with a POSIX character class or a bracket range — `collapse`, `lower`, the delimiter-row test and
+group J's class-row match among them — and every awk program and sort it does not pin to `LC_ALL=C`
+still reads the caller's locale.
 
 **The artifact-schema suite's readability check is driven by an arm.** `RL0` fails a run whose
 required surfaces cannot be read and names them, and until now no arm drove that branch. The check
