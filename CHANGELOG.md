@@ -8,10 +8,10 @@ follows Keep a Changelog; versions follow Semantic Versioning.
 No trip verb plans or records a trip differently in this release. What changes is met by whoever
 publishes, updates or rotates a trip's site, or confirms a change to its plan. A plaintext publish
 is refused when the content guard cannot read the page through one of its projections. And the
-confirmation gate refuses a baseline it cannot use, a push that could not end with a recorded
-baseline, and an update while a push's baseline record is still staged — three states in which an
-earlier plan, or an unconfirmed one, used to publish without asking. Each paragraph below says
-what its change does not reach.
+confirmation gate refuses a baseline it cannot use, the baseline guard refuses a push that could not
+end with a recorded baseline, and the gate refuses an update of the plans it holds while a push's
+baseline record is still staged — three states in which an earlier plan, or an unconfirmed one, used
+to publish without asking. Each paragraph below says what its change does not reach.
 
 **A plaintext publish refuses a page the content guard could not read.** If one of the projections
 it reads the page through fails, or the published or the joined one yields no words, or its matcher
@@ -27,7 +27,7 @@ block tag or one of HTML's inline (phrasing) tags, with its attributes up to the
 on the tag's own line or set out over the lines after it, with quotes written as `&quot;` or another
 character reference, and around a template literal's `${…}` placeholders — so a value emphasised
 with `<b>` or `<span class="…">` in a map pop-up, a booking checklist or a pop-up held in an
-attribute is still caught. Four limits are stated. A word directly after `<` that is itself one of
+attribute is still caught. Five limits are stated. A word directly after `<` that is itself one of
 those tag names, or that begins with one and runs on through a hyphen, is still dropped. After such
 a `<`, a word written directly before `=` is dropped as an attribute name, as it was before this
 release, wherever it falls inside the stretch read as that tag's attributes: up to the `>` the
@@ -42,7 +42,9 @@ after the list does not open a tag: a value those words split up there can be mi
 third-party member of the party named like one of them can stop a publish whose page carries it. And
 a word written before `=` inside a quoted attribute value of such a tag — `title="k="` on the spans
 around a value's words — stays in the page content as value text and can split the value up, where
-the guard before this release blocked the page.
+the guard before this release blocked the page. And a page whose every visible word is written
+directly after a `<` that no `>` closes is refused, as though a projection had failed: a
+false abort, never a leak, whose remedy is to publish it encrypted.
 
 **A baseline that is present but cannot be used is `undetermined`.** A baseline sidecar that is
 present but unreadable or malformed now reads as `undetermined` on every trip: `update` and `rotate`
@@ -51,8 +53,10 @@ read it as no baseline and publish without asking.
 
 **No push begins that could not end with a recorded baseline.** `publish`, `update` and `rotate`
 refuse before pushing when the outgoing render has no itinerary identity, when the baseline's path
-or the path of its staged record is not a regular file, or when the baseline cannot be staged beside
-the trip. A push that re-publishes the recorded plan needs no staging.
+or the path of its staged record leads to something other than a regular file, or when the baseline
+cannot be staged beside the trip. The baseline guard's file test follows a link, so on `publish` a
+link at either path passes it where the link leads to a regular file or to nothing. A push that
+re-publishes the recorded plan needs no staging.
 
 **Each push stages the record it needs, and the gate holds while it is outstanding.** Each push that
 changes the plan stages the baseline record it needs after its own last write and immediately before
