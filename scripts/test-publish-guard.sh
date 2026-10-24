@@ -30,6 +30,9 @@
 # L16 is the denial side of `may-carry` (ADR-026 § Decision 3), one must-fire per declared
 # row: a value under each row's selector, planted at that row's scope, aborts as a HIT, and
 # the same trip without it publishes. The rows are read from the live declaration.
+# L17 grades the guard reading its own projections: one that fails, or a published or joined
+# one that yields no words, is UNDETERMINED (rc=2) whatever the caller's `pipefail`, and the
+# refusal names the projection and nothing else.
 # M = published-bytes / stoplist / freshness remediation (#123 A6.5) · N = block-scoped
 # conjunctive window (#123 PR-7) · O = the [THIRD-PARTY] class: entry denylist,
 # value-granularity mark, real derived-model shape (#123 AC 3).
@@ -1851,6 +1854,248 @@ else
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
+# L17 — AN ARM THE GUARD COULD NOT READ IS UNDETERMINED, NEVER A PASS.
+#
+# Every case above runs each projection to completion. This one makes ONE projection fail
+# on purpose and asks what the guard then certifies. Each arm of the guard is a pipeline —
+# projection, entity decoding, line sentinels, normalization — and a stage that fails leaves
+# nothing behind it, or a prefix of the render. A guard that matched whatever was left would
+# certify a file it never read, and a value only that projection can see would publish. The
+# guard reads each arm's status, and refuses an arm that failed or yielded no words, before
+# the class is read.
+#
+# THE RENDERS ARE BUILT SO THAT ONE PROJECTION ALONE SEES THE VALUE. L17P carries it only in
+# an img alt, which only the published projection reads — L13AL's construction, and L13c's
+# attribution. L17J splits its first word with an inline tag, which only the joined projection
+# closes up. L17V separates its words with an image whose alt is long: the visible projection
+# reads them as neighbours, the joined one fuses two of them into one token, and the published
+# one puts the alt's words between them. A failure forced on that projection is therefore the
+# only route by which the value could go unread, and the guard's answer is about that route.
+#
+# THE CELLS, every one graded EXACTLY at rc=2:
+#   published, joined   fails with no output · fails after writing a real prefix · the same
+#                       prefix with the CALLER'S pipefail off · succeeds with no output, on
+#                       the trip's class and on a class with no values
+#   visible             fails with no output, on the trip's class and on a class with no
+#                       values · fails after a real prefix of twenty words or more, pipefail off
+#   normalization       tr, inside _norm_words, fails after a prefix, pipefail off
+#   entity decoding     fails after a prefix on the PUBLISHED arm alone — its first call, on
+#                       the visible arm, and every call after its second run as production
+#                       does — pipefail off
+#   matcher             fails on the joined arm alone
+# The pipefail-off cells grade the status read rather than this suite's own `pipefail`. The
+# guard sets it inside each arm's subshell, so turning it off in the caller's subshell is the
+# one thing varied, and it is enough — S15k needed a fresh shell for its own reasons, and the
+# pin here lives inside the guard. Each prefix is a real one: the first lines of the same
+# projection over the same render, written before any stub exists.
+#
+# WHAT DECIDES THE CELLS WITH NO OUTPUT. A published or joined arm that succeeds with no output
+# is refused by its emptiness limb, where the status limb cannot fire; a visible arm that fails
+# with no output is refused by the twenty-word floor, which is asked first, and behind it by its
+# status limb. On the trip's class the matcher stands behind all of them: it exits 3 on an empty
+# stream, so with those limbs lost the guard still reads the record undetermined, and L17b
+# stays green — only L17d's message tells the limb from the matcher there. On a class with no
+# values nothing is matched and a lost limb publishes, so the three cells on that class are what
+# decide the emptiness limbs and the visible arm's floor and status at rc=2, and the cells on
+# the trip's class keep the control L17c reads: the same render is a HIT with the projection
+# working. That class parses empty and is read as at least as new as the renders (L17a).
+#
+# A STAGE THE ARMS SHARE CANNOT CHOOSE THE ARM IT FAILS IN. Stubbed outright it fails on the
+# visible arm, which is read first, so the normalization cell grades the VISIBLE arm's read of
+# a shared stage. The entity-decoding cell fails on its SECOND call and on no other, so it
+# grades the PUBLISHED arm's read of one: if that arm's failure were let through, the joined
+# arm would read the render whole and the cell would publish, so its rc=2 is decided by the
+# published arm's status read alone. Each call leaves a marker file keyed to the capture the
+# caller names, and the oracle's re-run, which writes to its own directory, counts its own
+# calls. Its prefix is the published projection's first three lines through the decoder,
+# which L17a already grades as carrying words and not the value.
+#
+# Every stub is defined inside the subshell that uses it, so it dies with that subshell, and
+# L17e asserts that. Offline, $WORK fixtures and shell-function stubs only; no legitimate skip.
+# ─────────────────────────────────────────────────────────────────────────────
+l17val="Border note: carry your Ruritanian passport, valid to 2033, at all times."
+L17P="$WORK/l17_published.html"
+lplant "$L17P" 5 "nothing of interest on this line at all"
+{ head -4 "$L17P"; printf '<img src="x.png" alt="%s">\n' "$l17val"; tail -n +6 "$L17P"; } > "$L17P.tmp" && mv "$L17P.tmp" "$L17P"
+L17J="$WORK/l17_joined.html"
+lplant "$L17J" 5 "Border note: carry your Rurit<b>anian</b> passport, valid to 2033, at all times."
+L17V="$WORK/l17_visible.html"
+lplant "$L17V" 7 'Border note: Ruritanian<img src="x.png" alt="one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty twentyone twentytwo twentythree twentyfour twentyfive twentysix">passport, valid to 2033, at all times.'
+strip_to_published_text "$L17P" > "$WORK/l17_pfx_pub.txt"
+strip_to_joined_text    "$L17J" > "$WORK/l17_pfx_join.txt"
+strip_to_text_blocks    "$L17V" > "$WORK/l17_pfx_vis.txt"
+# The class with no values the *-noclass cells read: it parses, and it holds no record. An
+# empty class read from a model older than the render is refused before anything is matched
+# (CD-3), so the mtimes are set, never left to write order — group M's rule — with the model
+# newest.
+L17N="$WORK/l17_noclass"; mkdir -p "$L17N/outputs"
+printf '# Traveler Model [DERIVED]\n\n## Rowan\n- Interests: markets, museums\n\n### Needs\n- Category: rest\n  Specific: an early night on the first day of the trip\n' > "$L17N/outputs/traveler-model.md"
+touch -t 202601011100 "$L17P" "$L17J" "$L17V"
+touch -t 202601011200 "$L17N/outputs/traveler-model.md"
+L17_DEFS="$(declare -f strip_to_published_text strip_to_joined_text strip_to_text_blocks _guard_match _norm_words _decode_entities)"
+L17_CELLS='pub-none pub-prefix pub-prefix-pfoff pub-empty pub-empty-noclass join-none join-prefix join-prefix-pfoff join-empty join-empty-noclass vis-none vis-none-noclass vis-prefix-pfoff norm-prefix-pfoff pub-decode-pfoff matcher-joined'
+L17_NCELLS=16
+
+# The words in a prefix, counted the way the guard counts an arm: through the stages that
+# follow the projection, with both sentinels subtracted.
+l17_words() { # <prefix_file> <lines>
+  head -n "$2" "$1" | _decode_entities | _line_sentinels | _norm_words \
+    | awk -v B="$_GUARD_BLOCK" -v L="$_GUARD_LINE" '$0 != B && $0 != L { c++ } END { print c + 0 }'
+}
+
+# One cell: the stub its name declares, inside a subshell, and the guard's exact status.
+l17_cell() { # <capture_file> <cell> -> rc on stdout
+  local cap="$1" cell="$2" r td
+  case "$cell" in
+    pub-*) r="$L17P" ;; join-*|matcher-*) r="$L17J" ;; vis-*) r="$L17V" ;; *) r="$L17P" ;;
+  esac
+  case "$cell" in *-noclass) td="$L17N" ;; *) td="$LTD" ;; esac
+  ( case "$cell" in *-pfoff) set +o pipefail ;; esac
+    case "$cell" in
+      pub-none)          strip_to_published_text() { return 1; } ;;
+      pub-prefix*)       strip_to_published_text() { head -n 3 "$WORK/l17_pfx_pub.txt"; return 1; } ;;
+      pub-empty*)        strip_to_published_text() { return 0; } ;;
+      join-none)         strip_to_joined_text() { return 1; } ;;
+      join-prefix*)      strip_to_joined_text() { head -n 3 "$WORK/l17_pfx_join.txt"; return 1; } ;;
+      join-empty*)       strip_to_joined_text() { return 0; } ;;
+      vis-none*)         strip_to_text_blocks() { return 1; } ;;
+      vis-prefix-pfoff)  strip_to_text_blocks() { head -n 6 "$WORK/l17_pfx_vis.txt"; return 1; } ;;
+      norm-prefix-pfoff) tr() { head -c 300 | command tr "$@"; return 1; } ;;
+      pub-decode-pfoff)  eval "$(declare -f _decode_entities | sed '1s/^_decode_entities/l17_real_decode/')"
+                         _decode_entities() { if [ -e "${cap%.err}.decoded2" ]; then l17_real_decode; return; fi; if [ -e "${cap%.err}.decoded" ]; then : > "${cap%.err}.decoded2"; l17_real_decode | awk 'NR <= 3'; return 1; fi; : > "${cap%.err}.decoded"; l17_real_decode; } ;;
+      matcher-joined)    eval "$(declare -f _guard_match | sed '1s/^_guard_match/l17_real_match/')"
+                         _guard_match() { case "$3" in *joined.words) return 2 ;; esac; l17_real_match "$@"; } ;;
+    esac
+    verify_publishable_content "$r" "$td" >/dev/null 2>"$cap" )
+  printf '%s' "$?"
+}
+
+# L17a — FIXTURE INTEGRITY, graded FIRST. Each prefix must carry words, so that the
+# prefix cells are refused by the STATUS limb and not by the emptiness limb — the visible
+# one at least twenty, or the floor would refuse it instead — and no prefix may carry the
+# value, or a cell could be decided by a match on the prefix. Each render must carry its
+# value in the form that confines it to one projection.
+l17_wp="$(l17_words "$WORK/l17_pfx_pub.txt" 3)"; l17_wj="$(l17_words "$WORK/l17_pfx_join.txt" 3)"; l17_wv="$(l17_words "$WORK/l17_pfx_vis.txt" 6)"
+l17_pv=0
+for l17_f in "$WORK/l17_pfx_pub.txt:3" "$WORK/l17_pfx_join.txt:3" "$WORK/l17_pfx_vis.txt:6"; do
+  case "$(head -n "${l17_f##*:}" "${l17_f%:*}" | _decode_entities | _norm_words | tr '\n' ' ')" in
+    *ruritanian*|*2033*) l17_pv=$((l17_pv+1)) ;;
+  esac
+done
+l17_rv="$(grep -c -F 'alt="Border note: carry your Ruritanian passport' "$L17P")$(grep -c -F 'Rurit<b>anian</b>' "$L17J")$(grep -c -F 'Ruritanian<img' "$L17V")"
+# The class with no values must parse EMPTY and be read as fresh against each render, or the
+# *-noclass cells would be refused by the class source before any limb they grade is reached.
+l17_ne=0
+for l17_f in "$L17P" "$L17J" "$L17V"; do
+  nonpublishable_values "$L17N" "$l17_f" > "$WORK/l17_noclass.out" 2>/dev/null; l17_nrc=$?
+  if [ "$l17_nrc" -eq 0 ] && [ ! -s "$WORK/l17_noclass.out" ]; then l17_ne=$((l17_ne+1)); fi
+done
+if [ "$l17_wp" -ge 1 ] && [ "$l17_wj" -ge 1 ] && [ "$l17_wv" -ge 20 ] && [ "$l17_pv" -eq 0 ] && [ "$l17_rv" = "111" ] && [ "$l17_ne" -eq 3 ]; then
+  PASS "L17a: fixture integrity — the published and joined prefixes carry $l17_wp and $l17_wj words and the visible one $l17_wv, none carries the value, and each render carries the value in the one form its projection alone reads; the class with no values parses empty, read as fresh against each of the $l17_ne renders. The prefix cells below are decided by the status limb"
+else
+  FAIL "L17a: the fixtures are not set up as claimed (prefix words published=$l17_wp joined=$l17_wj visible=$l17_wv want >=1/>=1/>=20; prefixes carrying the value=$l17_pv want 0; renders carrying their value=$l17_rv want 111; renders the class with no values reads empty and fresh against=$l17_ne want 3) — L17b would not be measuring the status read"
+fi
+
+# L17b — THE SUBJECT, and the arm registered with the oracle. One verdict over every cell,
+# so that with the guard removed every cell reads 127 and the arm reports exactly one FAIL.
+# Captures go to the directory the caller names, so the oracle's re-run cannot overwrite
+# the ones L17d reads.
+l17_assert() { # <capture_dir>
+  local d="$1" cell rc ok=0 n=0 bad=""
+  mkdir -p "$d"
+  for cell in $L17_CELLS; do
+    n=$((n+1))
+    rc="$(l17_cell "$d/$cell.err" "$cell")"
+    if [ "$rc" = "2" ]; then ok=$((ok+1)); else bad="$bad $cell=rc$rc"; fi
+  done
+  if [ "$n" -eq "$L17_NCELLS" ] && [ "$ok" -eq "$n" ]; then
+    PASS "L17b: all $n cells are UNDETERMINED (rc=2) — a published or joined projection that fails with no output, fails after a real prefix (with the caller's pipefail on and off) or succeeds with no output, on the trip's class and on a class with no values, a visible projection that fails with no output, on either class, or after twenty words or more, a normalization stage that fails after a prefix, an entity-decoding stage that fails after a prefix on the published arm alone, and a matcher that fails on the joined arm alone. No path from a projection the guard could not read reaches a pass"
+  else
+    FAIL "L17b: $ok of $n cells (want $L17_NCELLS) returned rc=2 —$bad. A cell at rc=0 is the guard certifying a render one of its own projections never read; rc=1 is a match on a stream it should have refused"
+  fi
+}
+l17_assert "$WORK/l17live"
+
+# L17c — CONTROL. With every projection working, each render is a HIT attributed to the one
+# projection that sees its value, so a refusal above is that projection's failure being read
+# and not a render the guard refuses anyway. A pipefail-off run with nothing stubbed is a HIT
+# too, so the off cells' refusals are not an artefact of turning the option off. On the class
+# with no values each render publishes with nothing stubbed, so a *-noclass cell's refusal is
+# its stub's and not that class's.
+lguard "$L17P"; l17_cp="$LRC"; l17_ap="$(lprj)" || l17_ap="NONE"
+lguard "$L17J"; l17_cj="$LRC"; l17_aj="$(lprj)" || l17_aj="NONE"
+lguard "$L17V"; l17_cv="$LRC"; l17_av="$(lprj)" || l17_av="NONE"
+( set +o pipefail; verify_publishable_content "$L17P" "$LTD" >/dev/null 2>&1 ); l17_coff=$?
+lguard "$L17P" "$L17N"; l17_np="$LRC"
+lguard "$L17J" "$L17N"; l17_nj="$LRC"
+lguard "$L17V" "$L17N"; l17_nv="$LRC"
+if [ "$l17_cp" -eq 1 ] && [ "$l17_ap" = "retrievable markup (comment, attribute or script body)" ] \
+   && [ "$l17_cj" -eq 1 ] && [ "$l17_aj" = "joined markup (an inline tag split a word)" ] \
+   && [ "$l17_cv" -eq 1 ] && [ "$l17_av" = "visible text" ] && [ "$l17_coff" -eq 1 ] \
+   && [ "$l17_np" -eq 0 ] && [ "$l17_nj" -eq 0 ] && [ "$l17_nv" -eq 0 ]; then
+  PASS "L17c: CONTROL — with every projection working the three renders abort as a HIT (rc=1), attributed to '$l17_ap', '$l17_aj' and '$l17_av' respectively, the published-only render is a HIT with the caller's pipefail off as well (rc=$l17_coff), and on the class with no values the three renders publish (rc=$l17_np, rc=$l17_nj, rc=$l17_nv)"
+else
+  FAIL "L17c: the control did not hold (published-only rc=$l17_cp '$l17_ap'; joined-only rc=$l17_cj '$l17_aj'; visible-only rc=$l17_cv '$l17_av'; pipefail off rc=$l17_coff; on the class with no values rc=$l17_np, rc=$l17_nj and rc=$l17_nv, want 0 for each) — a refusal in L17b cannot be attributed to the projection that was made to fail"
+fi
+
+# L17d — THE MESSAGE (AC-4). A projection refusal names the projection, from the closed
+# enum the HIT arm uses, and nothing else: it is written before the class is read, so no
+# value is in scope. A visible projection that fails with no output is refused by the
+# twenty-word floor, which is asked before the status limb, so its capture carries the
+# floor's message — naming visible text, from the same enum — and is counted apart from the
+# status refusals. Read from the captures L17b's live run wrote. The value scan carries
+# its own sensitivity arm, a planted line it must find.
+l17_enum() { # <cell> -> the projection a refusal of that cell must name
+  case "$1" in
+    pub-*)  printf '%s' "retrievable markup (comment, attribute or script body)" ;;
+    join-*) printf '%s' "joined markup (an inline tag split a word)" ;;
+    vis-*)  printf '%s' "visible text" ;;
+  esac
+}
+l17_named=0; l17_floor=0; l17_misnamed=""; l17_leak=0; l17_ncap=0
+for l17_c in $L17_CELLS; do
+  l17_cap="$WORK/l17live/$l17_c.err"
+  [ -r "$l17_cap" ] || continue
+  l17_ncap=$((l17_ncap+1))
+  case "$(cat "$l17_cap")" in *[Rr]uritanian*|*2033*) l17_leak=$((l17_leak+1)) ;; esac
+  l17_want="$(l17_enum "$l17_c")"
+  [ -n "$l17_want" ] || continue
+  case "$l17_c" in
+    vis-none*)
+      case "$(cat "$l17_cap")" in
+        *"yielded only 0 words of $l17_want"*) l17_floor=$((l17_floor+1)) ;;
+        *) l17_misnamed="$l17_misnamed $l17_c" ;;
+      esac ;;
+    *)
+      case "$(cat "$l17_cap")" in
+        *"could not be read ($l17_want): its pipeline exited "*) l17_named=$((l17_named+1)) ;;
+        *) l17_misnamed="$l17_misnamed $l17_c" ;;
+      esac ;;
+  esac
+done
+l17_mx=0; case "$(cat "$WORK/l17live/matcher-joined.err" 2>/dev/null)" in *"could not be run (matcher exit 2)"*) l17_mx=1 ;; esac
+l17_plant="planted: carry your Ruritanian passport, valid to 2033"
+l17_ctl=0; case "$l17_plant" in *[Rr]uritanian*|*2033*) l17_ctl=1 ;; esac
+if [ "$l17_ctl" -eq 1 ] && [ "$l17_ncap" -eq "$L17_NCELLS" ] && [ "$l17_named" -eq 12 ] && [ "$l17_floor" -eq 2 ] && [ -z "$l17_misnamed" ] && [ "$l17_mx" -eq 1 ] && [ "$l17_leak" -eq 0 ]; then
+  PASS "L17d: AC-4 — each of the 12 projection refusals names the projection that was made to fail, from the closed enum, the 2 visible projections that fail with no output are refused by the twenty-word floor, whose message names visible text, the matcher cell names the matcher, and none of the $l17_ncap captures carries the value; the value scan found the planted line, so its zero is a measurement"
+else
+  FAIL "L17d: captures=$l17_ncap of $L17_NCELLS, refusals naming their projection=$l17_named of 12, floor refusals naming visible text=$l17_floor of 2 (misnamed:${l17_misnamed:- none}), matcher named=$l17_mx, captures carrying the value=$l17_leak, scan control=$l17_ctl — a refusal names the wrong projection, or the value reached a log this suite publishes"
+fi
+
+# L17e — THE RESTORE. S6c's rule applied to these stubs: every one lived and died in a
+# subshell, so the production definitions read now must be the ones read before L17b, and
+# neither tr, the renamed matcher nor the renamed decoder may exist as a function in this shell.
+l17_stub=""
+declare -F tr             >/dev/null 2>&1 && l17_stub="$l17_stub tr"
+declare -F l17_real_match >/dev/null 2>&1 && l17_stub="$l17_stub l17_real_match"
+declare -F l17_real_decode >/dev/null 2>&1 && l17_stub="$l17_stub l17_real_decode"
+if [ -n "$L17_DEFS" ] && [ "$(declare -f strip_to_published_text strip_to_joined_text strip_to_text_blocks _guard_match _norm_words _decode_entities)" = "$L17_DEFS" ] && [ -z "$l17_stub" ]; then
+  PASS "L17e: every L17 stub died with its subshell — the six production definitions read now are byte-identical to the ones read before L17b, and no stub function survives in this shell"
+else
+  FAIL "L17e: a stub outlived its subshell (functions still defined:${l17_stub:- none}), or a production definition changed — every verdict after L17 would be grading the stub"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Group M — the three confirmed defects from the Phase A6.5 adversarial design
 # review of the shipped guard (#316). One regression case per counter-design:
 #   M1  CD-1  the guard matched the visible-text PROJECTION while publish copies
@@ -1965,6 +2210,548 @@ else
 fi
 mguard "$MCLEAN" "$MTD"
 if [ "$MRC" -eq 0 ]; then PASS "M1d: the same machinery-rich render without the value publishes (rc=0) — the new arm does not blanket-abort markup"; else FAIL "M1d: a clean render was blocked (rc=$MRC) — the published-bytes arm over-matches ordinary markup"; fi
+
+# ── M1e–M1h (#1467) — a key token written directly before `=`, on the three surfaces only the
+# published arm reads ──
+#
+# The published projection drops an attribute NAME as machinery, and it found one by its shape
+# alone: any word followed by `=`, anywhere in the file. A word written that way in a comment
+# body, a script body or an attribute value went with it, so each `=` render below published at
+# rc=0 where its twin — the same render with that one `=` replaced by a space — aborted at rc=1.
+# The projection now finds an attribute name by its place: inside a tag, outside its quoted
+# values. Each surface arm grades the `=` render against its twin, by exit code and by the
+# projection the abort names, and carries the defect inside the arm (ARMED-RED): the shape-only
+# rule, run over the production projection's output in a subshell, must publish the `=` render
+# again, so the arm is shown able to fail, and the stub dies with its subshell. The attribute-
+# value arm also reads that the attribute's own NAME is still dropped: confining the rule must
+# not delete it, and no other arm would notice if it did — measured, groups L to O stay green
+# with the rule removed outright.
+M1EQ_PRJ='retrievable markup (comment, attribute or script body)'
+M1EQ_CM="$WORK/m1eq_comment.html"; mrender "$M1EQ_CM" '<!-- planner note: Ruritanian= passport valid to 2033 -->'
+M1TW_CM="$WORK/m1tw_comment.html"; mrender "$M1TW_CM" '<!-- planner note: Ruritanian  passport valid to 2033 -->'
+M1EQ_SC="$WORK/m1eq_script.html";  mrender "$M1EQ_SC" '<script>var Ruritanian = "passport valid to 2033";</script>'
+M1TW_SC="$WORK/m1tw_script.html";  mrender "$M1TW_SC" '<script>var Ruritanian   "passport valid to 2033";</script>'
+M1EQ_AV="$WORK/m1eq_attr.html";    mrender "$M1EQ_AV" '<a href="https://example.org/entry?Ruritanian=passport+valid+to+2033">entry rules</a>'
+M1TW_AV="$WORK/m1tw_attr.html";    mrender "$M1TW_AV" '<a href="https://example.org/entry?Ruritanian passport+valid+to+2033">entry rules</a>'
+m1eq_n() { "$1" "$2" | _decode_entities | _norm_words | awk -v T="$3" '$0 == T { c++ } END { print c + 0 }'; }   # <projection> <render> <token> -> its count
+
+# M1e — FIXTURE INTEGRITY, graded FIRST. Each pair differs in exactly one byte, so a verdict that
+# differs between them is that `=`'s; each `=` render spells the key token once; and neither the
+# visible nor the joined projection of any of the six carries it, so a HIT below is the published
+# arm's and a publish is that arm losing the token.
+m1e_ok=0; m1e_bad=""
+for m1e_p in "comment:$M1EQ_CM:$M1TW_CM" "script:$M1EQ_SC:$M1TW_SC" "attribute value:$M1EQ_AV:$M1TW_AV"; do
+  m1e_n="${m1e_p%%:*}"; m1e_r="${m1e_p#*:}"; m1e_e="${m1e_r%%:*}"; m1e_t="${m1e_r#*:}"
+  m1e_d="$(cmp -l "$m1e_e" "$m1e_t" 2>/dev/null | awk 'END { print NR + 0 }')"
+  m1e_k="$(awk '{ c += gsub(/Ruritanian/, "&") } END { print c + 0 }' "$m1e_e")"
+  m1e_o=$(( $(m1eq_n strip_to_text_blocks "$m1e_e" ruritanian) + $(m1eq_n strip_to_joined_text "$m1e_e" ruritanian) + $(m1eq_n strip_to_text_blocks "$m1e_t" ruritanian) + $(m1eq_n strip_to_joined_text "$m1e_t" ruritanian) ))
+  if [ "$m1e_d" -eq 1 ] && [ "$m1e_k" -eq 1 ] && [ "$m1e_o" -eq 0 ]; then m1e_ok=$((m1e_ok+1)); else m1e_bad="$m1e_bad ${m1e_n}(bytes differing=$m1e_d, key spelled=$m1e_k, other arms=$m1e_o)"; fi
+done
+if [ "$m1e_ok" -eq 3 ]; then
+  PASS "M1e: fixture integrity — each of the 3 '=' renders differs from its twin in exactly one byte and spells the key token once, and neither it nor its twin carries the token on the visible or the joined arm. A verdict difference below is that '=', read by the published arm"
+else
+  FAIL "M1e: the '=' fixtures are not set up as claimed:$m1e_bad — M1f to M1h would not be measuring the published arm"
+fi
+
+# M1f–M1h — one surface each, one verdict each, so the oracle can re-run each whole (group MD).
+m1eq_prj() { local ln; while IFS= read -r ln; do
+  if [[ "$ln" =~ reached\ the\ published\ file\ at\ .*:[0-9?]+\ \((.*)\)\. ]]; then printf '%s' "${BASH_REMATCH[1]}"; return 0; fi
+done < "$MOUT"; return 1; }
+m1eq_assert() { # <id> <surface> <=-render> <twin> [an attribute name the render carries] — one verdict
+  local id="$1" what="$2" eq="$3" tw="$4" nm="${5:-}" rq pq rt pt mut nm_in=1 kept=0 nmok="" nmbad=""
+  mguard "$eq" "$MTD"; rq="$MRC"; pq="$(m1eq_prj)" || pq="NONE"
+  mguard "$tw" "$MTD"; rt="$MRC"; pt="$(m1eq_prj)" || pt="NONE"
+  mut="$( eval "$(declare -f strip_to_published_text | sed '1s/^strip_to_published_text/m1eq_real/')"
+          strip_to_published_text() { m1eq_real "$1" | perl -0777 -pe 's{([-A-Za-z_:][-A-Za-z0-9_:.]*)\s*=\s*}{ q( ) . ($& =~ tr/\n//cdr) }ge'; }
+          verify_publishable_content "$eq" "$MTD" >/dev/null 2>&1; printf '%s' "$?" )"
+  if [ -n "$nm" ]; then
+    nm_in="$(awk -v N="$nm=" '{ c += gsub(N, "&") } END { print c + 0 }' "$eq")"
+    kept="$(m1eq_n strip_to_published_text "$eq" "$nm")"
+    nmok=", and the attribute name $nm is still dropped (in the file $nm_in time(s), in the published stream $kept)"
+    nmbad="; attribute name $nm in the file $nm_in time(s), in the published stream $kept (want at least 1, and 0)"
+  fi
+  if [ "$rq" -eq 1 ] && [ "$pq" = "$M1EQ_PRJ" ] && [ "$rt" -eq 1 ] && [ "$pt" = "$M1EQ_PRJ" ] && [ "$mut" = "0" ] && [ "$nm_in" -ge 1 ] && [ "$kept" -eq 0 ]; then
+    PASS "$id: a key token written directly before '=' in $what is read — the '=' render aborts as a HIT (rc=1) named '$pq', as its twin without the '=' does (rc=$rt); ARMED-RED — the shape-only rule run over the same projection publishes it (rc=$mut)$nmok"
+  else
+    FAIL "$id: a key token written before '=' in $what — '=' render rc=$rq '$pq', twin rc=$rt '$pt' (want 1 and '$M1EQ_PRJ' for both); shape-only mutant rc=$mut (want 0)$nmbad. A value only the published arm reads publishes, or this arm can no longer tell"
+  fi
+}
+m1eq_assert M1f "a comment body"     "$M1EQ_CM" "$M1TW_CM"
+m1eq_assert M1g "a script body"      "$M1EQ_SC" "$M1TW_SC"
+m1eq_assert M1h "an attribute value" "$M1EQ_AV" "$M1TW_AV" href
+
+# ── M1i–M1n (#1467) — a key token written directly after `<`, on the same three surfaces ──
+#
+# The published projection drops a tag NAME as machinery, and it found one by its shape alone:
+# the word after any `<`, with nothing but spaces or a `/` between them, anywhere in the file. A
+# word written that way in a comment body, a script body or an attribute value went with it —
+# the address in `Name <address>`, the right-hand side of `n<limit` — so each `<` render below
+# published at rc=0 where its twin, the same render with that one `<` replaced by a space,
+# aborted at rc=1. The projection now reads those three surfaces as text, and keeps a `<` in
+# them only where a block tag or a listed inline tag follows it. M1j writes the criterion's slash
+# form (`</ word`) and M1l its spaced form (`< word`), beside the direct form M1k and M1m write,
+# so a helper narrowed to a `<` directly before a letter turns M1j and M1l red. Each surface arm
+# grades the `<` render against its
+# twin, by exit code and by the projection the abort names, and carries the defect inside the
+# arm (ARMED-RED): the shipped whole-file tag-name rule, run over the raw render ahead of the
+# production projection in a subshell, must publish the `<` render again, so the arm is shown
+# able to fail, and the stub dies with its subshell. Each also reads that the render's own
+# `<link>` tag NAME is still dropped: reading those surfaces as text must not stop the rule
+# dropping a real tag's name, and no other arm would notice if it did — measured, groups L to O
+# stay green with the tag-name rule removed outright. M1m is the `Name <address>` form, on the
+# comment surface M1j already registers, so it is not registered a second time. M1n grades the
+# block-tag `<` those surfaces keep: a block tag inside a script string still ends a block, so a
+# passport's two facts in two paragraphs of one string do not pair, as they do not on the page.
+# M1o to M1s, after it, grade the inline-tag `<` they keep, the attribute list read with it, and
+# the list itself.
+M1LT_CM="$WORK/m1lt_comment.html"; mrender "$M1LT_CM" '<!-- planner note: </ Ruritanian passport valid to 2033 -->'
+M1LW_CM="$WORK/m1lw_comment.html"; mrender "$M1LW_CM" '<!-- planner note:  / Ruritanian passport valid to 2033 -->'
+M1LT_SC="$WORK/m1lt_script.html";  mrender "$M1LT_SC" '<script>var ok = n<Ruritanian && "passport valid to 2033";</script>'
+M1LW_SC="$WORK/m1lw_script.html";  mrender "$M1LW_SC" '<script>var ok = n Ruritanian && "passport valid to 2033";</script>'
+M1LT_AV="$WORK/m1lt_attr.html";    mrender "$M1LT_AV" '<img src="x.png" alt="a < Ruritanian passport valid to 2033">'
+M1LW_AV="$WORK/m1lw_attr.html";    mrender "$M1LW_AV" '<img src="x.png" alt="a   Ruritanian passport valid to 2033">'
+M1LT_NA="$WORK/m1lt_address.html"; mrender "$M1LT_NA" '<!-- maintainer: Travel Desk <quillon at example dot invalid> -->'
+M1LW_NA="$WORK/m1lw_address.html"; mrender "$M1LW_NA" '<!-- maintainer: Travel Desk  quillon at example dot invalid> -->'
+
+# M1i — FIXTURE INTEGRITY, graded FIRST. Each pair differs in exactly one byte, so a verdict that
+# differs between them is that `<`'s; each `<` render spells its key token once; and neither the
+# visible nor the joined projection of any of the eight carries it, so a HIT below is the
+# published arm's and a publish is that arm losing the token.
+m1i_ok=0; m1i_bad=""
+for m1i_p in "comment:Ruritanian:$M1LT_CM:$M1LW_CM" "script:Ruritanian:$M1LT_SC:$M1LW_SC" "attribute value:Ruritanian:$M1LT_AV:$M1LW_AV" "address:quillon:$M1LT_NA:$M1LW_NA"; do
+  m1i_n="${m1i_p%%:*}"; m1i_r="${m1i_p#*:}"; m1i_w="${m1i_r%%:*}"; m1i_r="${m1i_r#*:}"; m1i_e="${m1i_r%%:*}"; m1i_t="${m1i_r#*:}"
+  m1i_lw="$(printf '%s' "$m1i_w" | _norm_words)"
+  m1i_d="$(cmp -l "$m1i_e" "$m1i_t" 2>/dev/null | awk 'END { print NR + 0 }')"
+  m1i_k="$(awk -v W="$m1i_w" '{ c += gsub(W, "&") } END { print c + 0 }' "$m1i_e")"
+  m1i_o=$(( $(m1eq_n strip_to_text_blocks "$m1i_e" "$m1i_lw") + $(m1eq_n strip_to_joined_text "$m1i_e" "$m1i_lw") + $(m1eq_n strip_to_text_blocks "$m1i_t" "$m1i_lw") + $(m1eq_n strip_to_joined_text "$m1i_t" "$m1i_lw") ))
+  if [ "$m1i_d" -eq 1 ] && [ "$m1i_k" -eq 1 ] && [ "$m1i_o" -eq 0 ]; then m1i_ok=$((m1i_ok+1)); else m1i_bad="$m1i_bad ${m1i_n}(bytes differing=$m1i_d, key spelled=$m1i_k, other arms=$m1i_o)"; fi
+done
+if [ "$m1i_ok" -eq 4 ]; then
+  PASS "M1i: fixture integrity — each of the 4 '<' renders differs from its twin in exactly one byte and spells its key token once, and neither it nor its twin carries the token on the visible or the joined arm. A verdict difference below is that '<', read by the published arm"
+else
+  FAIL "M1i: the '<' fixtures are not set up as claimed:$m1i_bad — M1j to M1m would not be measuring the published arm"
+fi
+
+# M1j–M1m — one surface each, one verdict each, so the oracle can re-run each whole (group MD).
+m1lt_assert() { # <id> <surface> <'<'-render> <twin> — one verdict
+  local id="$1" what="$2" lt="$3" tw="$4" rq pq rt pt mut tg_in tg_out
+  mguard "$lt" "$MTD"; rq="$MRC"; pq="$(m1eq_prj)" || pq="NONE"
+  mguard "$tw" "$MTD"; rt="$MRC"; pt="$(m1eq_prj)" || pt="NONE"
+  mut="$( eval "$(declare -f strip_to_published_text | sed '1s/^strip_to_published_text/m1lt_real/')"
+          strip_to_published_text() { m1lt_real <(perl -0777 -pe 's{<\s*/?\s*[A-Za-z][-A-Za-z0-9]*}{ q( ) . ($& =~ tr/\n//cdr) }ge' "$1"); }
+          verify_publishable_content "$lt" "$MTD" >/dev/null 2>&1; printf '%s' "$?" )"
+  tg_in="$(awk '{ c += gsub(/<link/, "&") } END { print c + 0 }' "$lt")"
+  tg_out="$(m1eq_n strip_to_published_text "$lt" link)"
+  if [ "$rq" -eq 1 ] && [ "$pq" = "$M1EQ_PRJ" ] && [ "$rt" -eq 1 ] && [ "$pt" = "$M1EQ_PRJ" ] && [ "$mut" = "0" ] && [ "$tg_in" -ge 1 ] && [ "$tg_out" -eq 0 ]; then
+    PASS "$id: a key token written directly after '<' in $what is read — the '<' render aborts as a HIT (rc=1) named '$pq', as its twin without the '<' does (rc=$rt); ARMED-RED — the whole-file tag-name rule run ahead of the same projection publishes it (rc=$mut); and the tag name link is still dropped (in the file $tg_in time(s), in the published stream $tg_out)"
+  else
+    FAIL "$id: a key token written after '<' in $what — '<' render rc=$rq '$pq', twin rc=$rt '$pt' (want 1 and '$M1EQ_PRJ' for both); whole-file tag-name mutant rc=$mut (want 0); tag name link in the file $tg_in time(s), in the published stream $tg_out (want at least 1, and 0). A value only the published arm reads publishes, this arm can no longer tell, or a real tag's name now reaches the stream"
+  fi
+}
+m1lt_assert M1j "a comment body"                      "$M1LT_CM" "$M1LW_CM"
+m1lt_assert M1k "a script body"                       "$M1LT_SC" "$M1LW_SC"
+m1lt_assert M1l "an attribute value"                  "$M1LT_AV" "$M1LW_AV"
+m1lt_assert M1m "a comment body's Name <address> line" "$M1LT_NA" "$M1LW_NA"
+
+# M1n — THE ONE `<` THOSE SURFACES KEEP. Two paragraphs of one script string carry a passport's
+# two facts, one each. The block tags between them end a block inside the string as they would
+# on the page, so the facts do not pair and the render publishes. The control holds the same
+# words in ONE paragraph of the string and aborts, so the publish is the block boundary's and not
+# a projection that cannot see the string. ARMED-RED: the same projection with its block
+# boundaries removed must abort the two-paragraph render, so the arm is shown able to fail.
+M1BK_SP="$WORK/m1bk_split.html"; mrender "$M1BK_SP" '<script>var pop = "<p>Lunch: Ruritanian deli</p><p>2033 Expo tour, tickets valid to noon</p>";</script>'
+M1BK_ON="$WORK/m1bk_one.html";   mrender "$M1BK_ON" '<script>var pop = "<p>Lunch: Ruritanian deli. 2033 Expo tour, tickets valid to noon</p>";</script>'
+m1bk_assert() { # one verdict
+  local rs ro po mut oth
+  mguard "$M1BK_SP" "$MTD"; rs="$MRC"
+  mguard "$M1BK_ON" "$MTD"; ro="$MRC"; po="$(m1eq_prj)" || po="NONE"
+  mut="$( eval "$(declare -f strip_to_published_text | sed '1s/^strip_to_published_text/m1bk_real/')"
+          strip_to_published_text() { m1bk_real "$1" | sed "s/$_GUARD_BLOCK/ /g"; }
+          verify_publishable_content "$M1BK_SP" "$MTD" >/dev/null 2>&1; printf '%s' "$?" )"
+  oth=$(( $(m1eq_n strip_to_text_blocks "$M1BK_SP" ruritanian) + $(m1eq_n strip_to_joined_text "$M1BK_SP" ruritanian) ))
+  if [ "$rs" -eq 0 ] && [ "$ro" -eq 1 ] && [ "$po" = "$M1EQ_PRJ" ] && [ "$mut" = "1" ] && [ "$oth" -eq 0 ]; then
+    PASS "M1n: a block tag inside a script string still ends a block — a passport's two facts in two paragraphs of one string publish (rc=$rs), the same words in one paragraph abort as a HIT (rc=$ro) named '$po', and with the block boundaries removed the two-paragraph render aborts (rc=$mut), so the publish is the boundary's. The visible and joined arms carry the key token $oth time(s)"
+  else
+    FAIL "M1n: two paragraphs of one script string rc=$rs (want 0), one paragraph rc=$ro '$po' (want 1 and '$M1EQ_PRJ'), boundaries removed rc=$mut (want 1), key token on the other arms $oth (want 0) — a block tag in a script string no longer ends a block, so the conjunctive window pairs across it, or this arm can no longer tell"
+  fi
+}
+m1bk_assert
+
+# ── M1o–M1p (#1467) — the INLINE-tag `<` those surfaces keep, in both directions ──
+#
+# Reading the three surfaces as text keeps a `<` that opens an inline tag on _GUARD_INLINE_TAGS,
+# HTML's phrasing content, as markup, and the tag-name rule drops that tag's name there as it
+# does on the page. M1o grades the OPEN direction: a value emphasised with listed tags inside a
+# script string — a map pop-up's note, a checklist rule a template literal renders — keeps its
+# words next to each other on the published arm, so the passport's two facts still pair and the
+# need's five-word runs survive, as they did before those surfaces were read as text. M1p grades
+# the CLOSED direction: a third-party member named like a listed tag does not abort a page that
+# writes that tag in a script string, a comment and an attribute value, and the same member's
+# name written as a word does abort, so the member is keyed and the publish is the list's doing.
+# Each carries the defect inside the arm (ARMED-RED): the same projection with the inline list
+# taken out of its helper, so that the helper keeps only a block tag's `<`, must publish M1o's
+# two renders and abort M1p's. The model is synthetic: the suite's Porto passport, and a member
+# named Em.
+M1IN_POP="$WORK/m1in_popup.html";     mrender "$M1IN_POP" '<script>var pop = "<b>Border desk</b><br>Entry: <em>Ruritanian</em> passport, <strong>valid</strong> to <strong>2033</strong>";</script>'
+M1IN_CHK="$WORK/m1in_checklist.html"; mrender "$M1IN_CHK" '<script>var rule = "Lift needed: <b>cannot manage</b> more than <b>one flight</b> of stairs"; var item = `<label><input type="checkbox"> <span>${rule}</span></label>`;</script>'
+M1IN_TD="$WORK/porto-em"; mkdir -p "$M1IN_TD/outputs"
+cat > "$M1IN_TD/outputs/traveler-model.md" <<'MD'
+# Traveler Model — Porto 2029 [DERIVED]
+
+## Rowan
+- Passport: Ruritanian, valid to 2033
+
+## Em [OPERATOR-PROVIDED] [THIRD-PARTY]
+
+### Needs
+- Category: mobility
+  Specific: cannot manage more than one flight of stairs in a single stretch
+  Applies to: ## Hard Constraints → "Mobility"
+MD
+M1IN_TAG="$WORK/m1in_tagname.html"; mrender "$M1IN_TAG" '<script>var pop = "<b>Corner Roastery</b><br>Ask for the <em>window</em> table";</script>
+<!-- promo: <em>two for one</em> on Tuesdays -->
+<a href="#menu" title="the <em>new</em> menu">menu</a>'
+M1IN_KEY="$WORK/m1in_keyed.html"; mrender "$M1IN_KEY" '<!-- planner note: ask Em at the desk -->'
+m1in_off() { # <render> <trip_dir> -> the guard's status with the inline list taken out of the helper
+  ( eval "$(declare -f strip_to_published_text | sed 's/|\$_GUARD_INLINE_TAGS//')"
+    verify_publishable_content "$1" "$2" >/dev/null 2>&1; printf '%s' "$?" )
+}
+m1io_assert() { # one verdict
+  local rp pp rl pl mp ml oth
+  mguard "$M1IN_POP" "$MTD"; rp="$MRC"; pp="$(m1eq_prj)" || pp="NONE"
+  mguard "$M1IN_CHK" "$MTD"; rl="$MRC"; pl="$(m1eq_prj)" || pl="NONE"
+  mp="$(m1in_off "$M1IN_POP" "$MTD")"; ml="$(m1in_off "$M1IN_CHK" "$MTD")"
+  oth=$(( $(m1eq_n strip_to_text_blocks "$M1IN_POP" ruritanian) + $(m1eq_n strip_to_joined_text "$M1IN_POP" ruritanian) + $(m1eq_n strip_to_text_blocks "$M1IN_CHK" flight) + $(m1eq_n strip_to_joined_text "$M1IN_CHK" flight) ))
+  if [ "$rp" -eq 1 ] && [ "$pp" = "$M1EQ_PRJ" ] && [ "$rl" -eq 1 ] && [ "$pl" = "$M1EQ_PRJ" ] && [ "$mp" = "0" ] && [ "$ml" = "0" ] && [ "$oth" -eq 0 ]; then
+    PASS "M1o: a value emphasised with listed inline tags inside a script string is read whole — the pop-up's passport note aborts as a HIT (rc=$rp) named '$pp', and the checklist rule a template literal renders aborts too (rc=$rl); ARMED-RED — with the inline list taken out of the helper both publish (rc=$mp, rc=$ml). The visible and joined arms carry the key tokens $oth time(s)"
+  else
+    FAIL "M1o: pop-up note rc=$rp '$pp', checklist rule rc=$rl '$pl' (want 1 and '$M1EQ_PRJ' for both); without the inline list rc=$mp and rc=$ml (want 0 and 0); key tokens on the other arms $oth (want 0). A value that listed inline tags break up inside a script string publishes, or this arm can no longer tell"
+  fi
+}
+m1io_assert
+m1ip_assert() { # one verdict
+  local rt rk pk mt tg
+  mguard "$M1IN_TAG" "$M1IN_TD"; rt="$MRC"
+  mguard "$M1IN_KEY" "$M1IN_TD"; rk="$MRC"; pk="$(m1eq_prj)" || pk="NONE"
+  mt="$(m1in_off "$M1IN_TAG" "$M1IN_TD")"
+  tg="$(awk '{ c += gsub(/<em>/, "&") } END { print c + 0 }' "$M1IN_TAG")"
+  if [ "$rt" -eq 0 ] && [ "$rk" -eq 1 ] && [ "$pk" = "$M1EQ_PRJ" ] && [ "$mt" = "1" ] && [ "$tg" -ge 3 ]; then
+    PASS "M1p: a third-party member named like a listed inline tag does not abort a page that writes the tag in a script string, a comment and an attribute value ($tg times; rc=$rt), while the same name written as a word aborts as a HIT (rc=$rk) named '$pk'; ARMED-RED — with the inline list taken out of the helper the page aborts (rc=$mt)"
+  else
+    FAIL "M1p: the page writing the tag rc=$rt (want 0), the name written as a word rc=$rk '$pk' (want 1 and '$M1EQ_PRJ'), without the inline list rc=$mt (want 1), the tag in the page $tg time(s) (want at least 3). A member named like a listed tag aborts a clean page, or this arm can no longer tell"
+  fi
+}
+m1ip_assert
+
+# ── M1q–M1s (#1467) — a kept tag's ATTRIBUTE LIST, and the inline list's membership ──
+#
+# A tag kept as markup inside those surfaces is read as a tag is: where its attribute list runs on
+# to a `>`, with no `<`, `;`, `(`, `)`, `{` or `}` outside its quoted values, each attribute NAME
+# goes and each VALUE stays. A character reference in any of HTML's reference shapes, a template
+# literal's one-line `${…}` placeholder and a quoted value after a `=` are each one unit of that
+# list, and the list runs on past its line through lines the reader takes as names and
+# `name=value` pairs. M1q grades the OPEN direction on the realistic form, inline markup that
+# carries attributes: a pop-up note written with `<span class="…">` and a checklist rule written
+# with `<b class="">`, inside script strings, keep the value's words next to each other and abort
+# as M1o's bare forms do; so do pop-ups whose spans carry a `${…}` placeholder, whose class values
+# are single-quoted, whose quotes are written `&quot;`, `&#34;` or `&#x22;`, or whose tooltip
+# quotes are `&#39;`, pop-ups whose spans set their attributes on the next line — among them a
+# value written `&-`, and a single-quoted value beside an entity-quoted one — and one whose quoted
+# class values run over a line. Each of those cells pins one unit or one branch of the list, so a
+# helper that loses it turns that cell red — save the three reference forms, whose lists the bounds
+# below take as well — and so do nine more lists that only this read takes: spans whose quoted
+# value holds a `<`, written in double quotes and in single quotes, and escaped inside a double-
+# and a single-quoted script string; spans whose quoted values hold a `>` and then a `<` that opens
+# a tag; a list on the head line holding a quoted `>`, which this read takes whole before anything
+# below can end it at that `>`; and lists holding a quoted `>` and values quoted with `&#x22;`,
+# `&#34;` and `&quot;`, one cell for each, with a comparison's `<` after the list, so that neither
+# bound below reaches the tag's `>` and each reference form is pinned on its own. Where this read
+# cannot reach the tag's `>`, the text up to the last `>` before the next tag, else up to the next
+# `>` with no `<` before it,
+# is read as the list instead, and M1q's other cells are the lists only those two bounds take:
+# spans whose placeholder stands on the next line, alone or as an unquoted value, whose
+# placeholder's braces nest or run over a line, whose next line starts with a word no attribute
+# list carries, a pop-up whose entity-quoted value runs over a line, and an image with no tag after
+# it in its string, which the second bound alone takes; and spans whose list holds a `>` inside a
+# quoted value or a placeholder ahead of the tag's own — an arrow function's among them, on the
+# next line or nested on the head line — with a closing tag, a comment or an opening tag after the
+# list, which the first bound alone takes. M1r grades the PRICE the RESIDUAL states: a word written
+# directly before `=` after such a `<` is dropped as an attribute name wherever it stands inside the
+# text read as the tag's list, as the shipped guard dropped it, so that render publishes, and so do
+# a comment that holds that word as an attribute on the line after its `<`, one whose quoted value
+# after the `=` runs over a line, the same comparison closed by `)` with a `>` later in the script,
+# a comparison whose next line is no attribute list, and a loop whose assignment stands between an
+# arrow function's `>` and the last `>` before markup later in the script; a member named like an
+# attribute that a list over lines carries does not abort the page either, written in double quotes
+# with a tag after the list or in single quotes with none, and nor does one named like the attribute
+# an arrow function's list carries ahead of a closing tag. A run that meets a `<` first keeps its
+# word and aborts, its word after that `<` read as M1k's is, and so do the same `<` written inside a
+# `${…}` placeholder, a comparison with no `>` after it at all, a comparison whose first `>` comes
+# before the word with only a comparison's `<` after it, and a comparison closed by `)` with a
+# quoted `<` after it, which this read does not reach past the `)`. A kept head followed by lines of
+# nothing but spaces and then a line that is no attribute list aborts too, and so does the same head
+# followed by lines that each hold a name and then spaces, both read under a five-second CPU cap,
+# so a reader that backtracks over those spaces fails the arm instead of holding the run. Each line
+# is long enough that one of those runs read without its possessive quantifier overruns the cap on
+# its own: a line of spaces alone reaches only the line's leading run, which takes every space on
+# it, so the lines holding a name first are what reach the runs after it. A comment left open to the
+# end of the page is read to that end as a comment body, so a word written after a `<` in it aborts
+# as it does in a closed one; with the comment tokenizer's end-of-input branch taken out that page
+# publishes, as the shipped guard published it, so the abort is that branch's doing. Each arm
+# carries the defect inside it (ARMED-RED): the same projection with
+# the attribute-list read taken out of its helper — the `>` lookahead its three readings share made
+# unsatisfiable, which leaves every `<` the helper keeps exactly as it was — must publish M1q's
+# thirty-four renders and abort M1r's nine priced ones. M1s grades the LIST: every name of HTML's
+# phrasing content, written here as a literal copy and never read from _GUARD_INLINE_TAGS, rendered
+# as `<T>zq</T>` inside one comment body, must leave no listed name in the published stream while
+# every `zq` reaches it; with the inline list taken out of the helper (M1o's control) each name
+# reaches it twice. A name taken off the constant turns M1s red; a name added to it does not, and
+# widening the list is a deliberate edit in three places — the constant, the copy here, and the
+# count of names M1s's condition and its FAIL message carry. A comment body and not a script string:
+# a `</script>` written inside a script string ends the script.
+M1KA_POP="$WORK/m1ka_popup.html";     mrender "$M1KA_POP" '<script>var pop = `<b>Border desk</b><br>Entry: <span class="flag">Ruritanian</span> passport, <span class="ok">valid</span> to <span class="yr">2033</span>`;</script>'
+M1KA_CHK="$WORK/m1ka_checklist.html"; mrender "$M1KA_CHK" '<script>var rule = `Lift needed: <b class="">cannot manage</b> more than <b class="">one flight</b> of stairs`; var item = `<label><input type="checkbox"> <span>${rule}</span></label>`;</script>'
+M1KA_REF="$WORK/m1ka_charref.html";   mrender "$M1KA_REF" '<div data-popup="Entry: Ruritanian <span class=&quot;a&quot;>passport</span>, <span class=&quot;b&quot;>valid</span> to <span class=&quot;c&quot;>2033</span>">details</div>'
+M1KA_N34="$WORK/m1ka_decimal.html";   mrender "$M1KA_N34" '<div data-popup="Entry: Ruritanian <span class=&#34;a&#34;>passport</span>, <span class=&#34;b&#34;>valid</span> to <span class=&#34;c&#34;>2033</span>">details</div>'
+M1KA_X22="$WORK/m1ka_hex.html";       mrender "$M1KA_X22" '<div data-popup="Entry: Ruritanian <span class=&#x22;a&#x22;>passport</span>, <span class=&#x22;b&#x22;>valid</span> to <span class=&#x22;c&#x22;>2033</span>">details</div>'
+M1KA_T39="$WORK/m1ka_tooltip.html";   mrender "$M1KA_T39" '<button data-tip="Entry: Ruritanian <b class=&#39;hl&#39;>passport</b>, <b class=&#39;hl&#39;>valid</b> to <b class=&#39;hl&#39;>2033</b>">?</button>'
+M1KA_SQ="$WORK/m1ka_squote.html";     mrender "$M1KA_SQ" "<script>marker.bindPopup(\"<b>Border desk</b><br>Entry: <span class='flag'>Ruritanian</span> passport, <span class='ok'>valid</span> to <span class='yr'>2033</span>\");</script>"
+M1KA_DL="$WORK/m1ka_placeholder.html"; mrender "$M1KA_DL" '<script>var pop = `Entry: <span ${c} class="">Ruritanian</span> passport, <span ${c} class="">valid</span> to <span ${c} class="">2033</span>`;</script>'
+M1KA_ML="$WORK/m1ka_lines.html";      mrender "$M1KA_ML" '<script>var pop = `<b>Border desk</b><br>Entry: <span
+ class="flag">Ruritanian</span> passport, <span
+ class="ok">valid</span> to <span
+ class="yr">2033</span>`;</script>'
+M1KA_QML="$WORK/m1ka_qlines.html";    mrender "$M1KA_QML" '<script>var pop = `Entry: <span class="flag
+">Ruritanian</span> passport, <span class="ok
+">valid</span> to <span class="yr
+">2033</span>`;</script>'
+M1KA_AMP="$WORK/m1ka_nextamp.html";   mrender "$M1KA_AMP" '<script>var pop = `Entry: <span
+ data-k=&- class="">Ruritanian</span> passport, <span
+ data-k=&- class="">valid</span> to <span
+ data-k=&- class="">2033</span>`;</script>'
+M1KA_FSE="$WORK/m1ka_nextquotes.html"; mrender "$M1KA_FSE" "<div data-popup=\"Entry: Ruritanian <span
+ data-tip='' class=&quot;&quot;>passport</span>, <span
+ data-tip='' class=&quot;&quot;>valid</span> to <span
+ data-tip='' class=&quot;&quot;>2033</span>\">details</div>"
+M1KA_FLP="$WORK/m1ka_nextph.html";    mrender "$M1KA_FLP" '<script>var pop = `Entry: <span
+ ${c} class="">Ruritanian</span> passport, <span
+ ${c} class="">valid</span> to <span
+ ${c} class="">2033</span>`;</script>'
+M1KA_FLV="$WORK/m1ka_nextphvalue.html"; mrender "$M1KA_FLV" '<script>var pop = `Entry: <span
+ data-k=${c} class="">Ruritanian</span> passport, <span
+ data-k=${c} class="">valid</span> to <span
+ data-k=${c} class="">2033</span>`;</script>'
+M1KA_NEST="$WORK/m1ka_nested.html";   mrender "$M1KA_NEST" '<script>var pop = `Entry: <span class="">Ruritanian</span> passport, <span ${ {}[k] } class="">valid</span> to <span ${ {}[k] } class="">2033</span>`;</script>'
+M1KA_MLBR="$WORK/m1ka_placeholderlines.html"; mrender "$M1KA_MLBR" '<script>var pop = `Entry: <span class="">Ruritanian</span> passport, <span ${
+ k } class="">valid</span> to <span ${
+ k } class="">2033</span>`;</script>'
+M1KA_NAL="$WORK/m1ka_nextnotlist.html"; mrender "$M1KA_NAL" '<script>var pop = `Entry: <span
+ 1x class="">Ruritanian</span> passport, <span
+ 1x class="">valid</span> to <span
+ 1x class="">2033</span>`;</script>'
+M1KA_ENQ="$WORK/m1ka_entitylines.html"; mrender "$M1KA_ENQ" '<div data-popup="Entry: Ruritanian <span title=&quot;a
+b&quot; class=&quot;&quot;>passport</span>, valid to 2033">details</div>'
+M1KA_QLT="$WORK/m1ka_quotedlt.html";  mrender "$M1KA_QLT" '<script>var pop = `Entry: <span data-op="<" class="">Ruritanian</span> passport, <span data-op="<" class="">valid</span> to <span data-op="<" class="">2033</span>`;</script>'
+M1KA_SLT="$WORK/m1ka_squotedlt.html"; mrender "$M1KA_SLT" "<script>var pop = \`Entry: <span data-op='<' class=\"\">Ruritanian</span> passport, <span data-op='<' class=\"\">valid</span> to <span data-op='<' class=\"\">2033</span>\`;</script>"
+M1KA_DQE="$WORK/m1ka_escapeddq.html"; mrender "$M1KA_DQE" '<script>marker.bindPopup("Entry: <span data-op=\"<\" class=\"\">Ruritanian</span> passport, <span data-op=\"<\" class=\"\">valid</span> to <span data-op=\"<\" class=\"\">2033</span>");</script>'
+M1KA_SQE="$WORK/m1ka_escapedsq.html"; mrender "$M1KA_SQE" "<script>marker.bindPopup('Entry: <span data-op=\\'<\\' class=\\'\\'>Ruritanian</span> passport, <span data-op=\\'<\\' class=\\'\\'>valid</span> to <span data-op=\\'<\\' class=\\'\\'>2033</span>');</script>"
+M1KA_TAG="$WORK/m1ka_quotedtag.html"; mrender "$M1KA_TAG" '<script>var pop = `Entry: <span title=">" data-op="<b" class="">Ruritanian</span> passport, <span title=">" data-op="<b" class="">valid</span> to <span title=">" data-op="<b" class="">2033</span>`;</script>'
+M1KA_HQG="$WORK/m1ka_headquotedgt.html"; mrender "$M1KA_HQG" '<script>var pop = `Entry: <span title=">" class="" data-k="">Ruritanian</span> passport, <span title=">" class="" data-k="">valid</span> to <span title=">" class="" data-k="">2033</span>`;</script>'
+M1KA_NTG="$WORK/m1ka_notag.html";     mrender "$M1KA_NTG" '<script>var pop = `Entry: Ruritanian <img
+ ${c} class="" src="x.png">passport, valid to 2033`;</script>'
+M1KA_QGT="$WORK/m1ka_quotedgt.html";  mrender "$M1KA_QGT" '<script>var pop = `Entry: <span
+ ${c} title=">" class="">Ruritanian</span> passport, <span
+ ${c} title=">" class="">valid</span> to <span
+ ${c} title=">" class="">2033</span>`;</script>'
+M1KA_PGT="$WORK/m1ka_placeholdergt.html"; mrender "$M1KA_PGT" '<script>var pop = `Entry: Ruritanian <span
+ ${a>b} class="" title="">passport</span>, valid to 2033`;</script>'
+M1KA_AFL="$WORK/m1ka_arrowline.html"; mrender "$M1KA_AFL" '<script>var pop = `Entry: Ruritanian <span
+ ${f(x => x)} class="" title="">passport</span>, valid to 2033`;</script>'
+M1KA_AHN="$WORK/m1ka_arrownest.html"; mrender "$M1KA_AHN" '<script>var pop = `Entry: Ruritanian <span ${f(x => { x })} class="" title="">passport</span>, valid to 2033`;</script>'
+M1KA_BNG="$WORK/m1ka_beforecomment.html"; mrender "$M1KA_BNG" '<script>var pop = `Entry: <span
+ ${c} title=">" class=""><!---->Ruritanian</span> passport, <span
+ ${c} title=">" class=""><!---->valid</span> to <span
+ ${c} title=">" class=""><!---->2033</span>`;</script>'
+M1KA_LTR="$WORK/m1ka_beforetag.html"; mrender "$M1KA_LTR" '<script>var pop = `Entry: <span
+ ${c} title=">" class=""><b>Ruritanian</b></span> passport, <span
+ ${c} title=">" class=""><b>valid</b></span> to <span
+ ${c} title=">" class=""><b>2033</b></span>`;</script>'
+M1KA_RHX="$WORK/m1ka_refhex.html"; mrender "$M1KA_RHX" '<script>var pop = `Entry: Ruritanian <span title=">" class=&#x22;&#x22; data-k=&#x22;&#x22; data-m=&#x22;&#x22;>passport, valid to 2033 ${n < 3}</span>`;</script>'
+M1KA_RDC="$WORK/m1ka_refdec.html"; mrender "$M1KA_RDC" '<script>var pop = `Entry: Ruritanian <span title=">" class=&#34;&#34; data-k=&#34;&#34; data-m=&#34;&#34;>passport, valid to 2033 ${n < 3}</span>`;</script>'
+M1KA_RNM="$WORK/m1ka_refnamed.html"; mrender "$M1KA_RNM" '<script>var pop = `Entry: Ruritanian <span title=">" class=&quot;&quot; data-k=&quot;&quot; data-m=&quot;&quot;>passport, valid to 2033 ${n < 3}</span>`;</script>'
+M1KA_EQ="$WORK/m1ka_price.html";     mrender "$M1KA_EQ" '<script>if (n<b && Ruritanian=="passport valid to 2033" > 0) { go(); }</script>'
+M1KA_EQN="$WORK/m1ka_pricenext.html"; mrender "$M1KA_EQN" '<!-- planner note: n<b
+ Ruritanian="passport valid to 2033" -->'
+M1KA_EQV="$WORK/m1ka_pricevalue.html"; mrender "$M1KA_EQV" '<!-- planner note: n<b Ruritanian="passport
+valid to 2033" -->'
+M1KA_EQT="$WORK/m1ka_stopped.html";   mrender "$M1KA_EQT" '<script>if (n<b && Ruritanian=="passport valid to 2033") { go(); } if (k > 2) { stop(); }</script>'
+M1KA_LT="$WORK/m1ka_lt.html";         mrender "$M1KA_LT" '<script>if (n<b && m<Ruritanian > 0) { note = "passport valid to 2033"; }</script>'
+M1KA_LTB="$WORK/m1ka_ltbraces.html";  mrender "$M1KA_LTB" '<script>var pop = `Entry: <span ${n<Ruritanian ? 1 : 0} class="">passport</span>, valid to 2033`;</script>'
+M1KA_EQL="$WORK/m1ka_eqlines.html";   mrender "$M1KA_EQL" '<script>if (n<b
+ && Ruritanian=="passport valid to 2033"
+ > 0) { go(); }</script>'
+M1KA_NGT="$WORK/m1ka_nogt.html";      mrender "$M1KA_NGT" '<script>if (n<b && Ruritanian=="passport valid to 2033") { go(); }</script>'
+M1KA_EQM="$WORK/m1ka_pricemarkup.html"; mrender "$M1KA_EQM" '<script>for (let i = 0; i < a.length; i++) { f(x => x); } const Ruritanian = "passport valid to 2033"; g(y => y); el.innerHTML = `<b>x</b>`;</script>'
+M1KA_CLT="$WORK/m1ka_comparelt.html"; mrender "$M1KA_CLT" '<script>if (n<b && f(x) > 0 && Ruritanian=="passport valid to 2033") { show(y => y); } if (m < k) { go(); }</script>'
+M1KA_PLT="$WORK/m1ka_parenlt.html";   mrender "$M1KA_PLT" '<script>var t = (n<b && Ruritanian=="passport valid to 2033") && op == "<" > 0;</script>'
+M1KA_TD="$WORK/porto-type"; mkdir -p "$M1KA_TD/outputs"
+cat > "$M1KA_TD/outputs/traveler-model.md" <<'MD'
+# Traveler Model — Porto 2029 [DERIVED]
+
+## Rowan
+- Passport: Ruritanian, valid to 2033
+
+## Type [OPERATOR-PROVIDED] [THIRD-PARTY]
+
+### Needs
+- Category: mobility
+  Specific: cannot manage more than one flight of stairs in a single stretch
+  Applies to: ## Hard Constraints → "Mobility"
+MD
+M1KA_TYP="$WORK/m1ka_typemember.html"; mrender "$M1KA_TYP" '<div id="checklist"></div>
+<script>document.getElementById("checklist").innerHTML = items.map(b => `<label class="chk-item">
+  <input type="checkbox" data-id="${b.id}"
+    ${done[b.id] ? "checked" : ""}>
+  <span class="venue">${b.venue}</span></label>`).join("");</script>'
+M1KA_TYS="$WORK/m1ka_typesquote.html"; mrender "$M1KA_TYS" "<div id=\"checklist\"></div>
+<script>document.getElementById(\"checklist\").innerHTML = items.map(b => \`<input type=\"checkbox\" data-id=\"\${b.id}\"
+    \${done[b.id] ? 'checked' : ''}>\`).join(\"\");</script>"
+M1KA_CD="$WORK/porto-class"; mkdir -p "$M1KA_CD/outputs"
+cat > "$M1KA_CD/outputs/traveler-model.md" <<'MD'
+# Traveler Model — Porto 2029 [DERIVED]
+
+## Rowan
+- Passport: Ruritanian, valid to 2033
+
+## Class [OPERATOR-PROVIDED] [THIRD-PARTY]
+
+### Needs
+- Category: mobility
+  Specific: cannot manage more than one flight of stairs in a single stretch
+  Applies to: ## Hard Constraints → "Mobility"
+MD
+M1KA_LIC="$WORK/m1ka_classarrow.html"; mrender "$M1KA_LIC" '<script>list.innerHTML = stops.map(s => `<li
+ ${f(x => x)} class="stop">${s.name}</li>`).join("");</script>'
+m1ka_ws="$(printf '%s' '<!-- planner note: n<b'; printf '\n%32000s' '' '' '' '' '' '' '' '' '' '' '' '' '' '' '' '' '' '' '' ''; printf '\n%s' '( Ruritanian passport valid to 2033 -->')"
+M1KA_WS="$WORK/m1ka_spaces.html";     mrender "$M1KA_WS" "$m1ka_ws"
+m1ka_wsn="$(printf '%s' '<!-- planner note: n<b'; printf '\n x%32000s' '' '' '' '' '' '' '' '' '' '' '' '' '' '' '' '' '' '' '' ''; printf '\n%s' '( Ruritanian passport valid to 2033 -->')"
+M1KA_WSN="$WORK/m1ka_namespaces.html"; mrender "$M1KA_WSN" "$m1ka_wsn"
+M1KA_CMZ="$WORK/m1ka_opencomment.html"; mrender "$M1KA_CMZ" '<!-- planner note: n<Ruritanian passport valid to 2033'
+{ sed '$d' "$M1KA_CMZ"; printf '%s\n' '</body' '></html' '>'; } > "$M1KA_CMZ.tmp" && mv "$M1KA_CMZ.tmp" "$M1KA_CMZ"
+m1ka_off() { # <render> <trip_dir> -> the guard's status with the attribute-list read taken out of the helper
+  ( eval "$(declare -f strip_to_published_text | sed 's/(?=>)|)/(?!)|)/')"
+    verify_publishable_content "$1" "$2" >/dev/null 2>&1; printf '%s' "$?" )
+}
+m1kc_off() { # <render> <trip_dir> -> the guard's status with the comment tokenizer's end-of-input branch taken out
+  ( eval "$(declare -f strip_to_published_text | sed 's/(<!--\.\*?(?:-->|\\z))/(<!--.*?-->)/')"
+    verify_publishable_content "$1" "$2" >/dev/null 2>&1; printf '%s' "$?" )
+}
+m1iq_assert() { # one verdict
+  local rp pp rl pl rf pf rn pn rq pq rd pd ra pa rx px rt pt rs ps ra2 pa2 re pe rh ph rj pj rk pk ro po ry py rw pw re2 pe2 rs2 ps2 rd2 pd2 rq2 pq2 ri pi rv pv rn2 pn2 ru pu rz pz rb pb rg pg rf2 pf2 rl2 pl2 mp ml mf mn mq md ma mx mt ms ma2 me mh mj mk mo my mw me2 ms2 md2 mq2 mi mv mn2 mu mz mb mg mf2 ml2 rhx phx rdc pdc rnm pnm mhx mdc mnm oth rr
+  mguard "$M1KA_POP" "$MTD"; rp="$MRC"; pp="$(m1eq_prj)" || pp="NONE"
+  mguard "$M1KA_CHK" "$MTD"; rl="$MRC"; pl="$(m1eq_prj)" || pl="NONE"
+  mguard "$M1KA_REF" "$MTD"; rf="$MRC"; pf="$(m1eq_prj)" || pf="NONE"
+  mguard "$M1KA_ML" "$MTD"; rn="$MRC"; pn="$(m1eq_prj)" || pn="NONE"
+  mguard "$M1KA_QML" "$MTD"; rq="$MRC"; pq="$(m1eq_prj)" || pq="NONE"
+  mguard "$M1KA_DL" "$MTD"; rd="$MRC"; pd="$(m1eq_prj)" || pd="NONE"
+  mguard "$M1KA_N34" "$MTD"; ra="$MRC"; pa="$(m1eq_prj)" || pa="NONE"
+  mguard "$M1KA_X22" "$MTD"; rx="$MRC"; px="$(m1eq_prj)" || px="NONE"
+  mguard "$M1KA_T39" "$MTD"; rt="$MRC"; pt="$(m1eq_prj)" || pt="NONE"
+  mguard "$M1KA_SQ" "$MTD"; rs="$MRC"; ps="$(m1eq_prj)" || ps="NONE"
+  mguard "$M1KA_AMP" "$MTD"; ra2="$MRC"; pa2="$(m1eq_prj)" || pa2="NONE"
+  mguard "$M1KA_FSE" "$MTD"; re="$MRC"; pe="$(m1eq_prj)" || pe="NONE"
+  mguard "$M1KA_FLP" "$MTD"; rh="$MRC"; ph="$(m1eq_prj)" || ph="NONE"
+  mguard "$M1KA_FLV" "$MTD"; rj="$MRC"; pj="$(m1eq_prj)" || pj="NONE"
+  mguard "$M1KA_NEST" "$MTD"; rk="$MRC"; pk="$(m1eq_prj)" || pk="NONE"
+  mguard "$M1KA_MLBR" "$MTD"; ro="$MRC"; po="$(m1eq_prj)" || po="NONE"
+  mguard "$M1KA_NAL" "$MTD"; ry="$MRC"; py="$(m1eq_prj)" || py="NONE"
+  mguard "$M1KA_ENQ" "$MTD"; rw="$MRC"; pw="$(m1eq_prj)" || pw="NONE"
+  mguard "$M1KA_QLT" "$MTD"; re2="$MRC"; pe2="$(m1eq_prj)" || pe2="NONE"
+  mguard "$M1KA_SLT" "$MTD"; rs2="$MRC"; ps2="$(m1eq_prj)" || ps2="NONE"
+  mguard "$M1KA_DQE" "$MTD"; rd2="$MRC"; pd2="$(m1eq_prj)" || pd2="NONE"
+  mguard "$M1KA_SQE" "$MTD"; rq2="$MRC"; pq2="$(m1eq_prj)" || pq2="NONE"
+  mguard "$M1KA_TAG" "$MTD"; ri="$MRC"; pi="$(m1eq_prj)" || pi="NONE"
+  mguard "$M1KA_HQG" "$MTD"; rv="$MRC"; pv="$(m1eq_prj)" || pv="NONE"
+  mguard "$M1KA_NTG" "$MTD"; rn2="$MRC"; pn2="$(m1eq_prj)" || pn2="NONE"
+  mguard "$M1KA_QGT" "$MTD"; ru="$MRC"; pu="$(m1eq_prj)" || pu="NONE"
+  mguard "$M1KA_PGT" "$MTD"; rz="$MRC"; pz="$(m1eq_prj)" || pz="NONE"
+  mguard "$M1KA_AFL" "$MTD"; rb="$MRC"; pb="$(m1eq_prj)" || pb="NONE"
+  mguard "$M1KA_AHN" "$MTD"; rg="$MRC"; pg="$(m1eq_prj)" || pg="NONE"
+  mguard "$M1KA_BNG" "$MTD"; rf2="$MRC"; pf2="$(m1eq_prj)" || pf2="NONE"
+  mguard "$M1KA_LTR" "$MTD"; rl2="$MRC"; pl2="$(m1eq_prj)" || pl2="NONE"
+  mguard "$M1KA_RHX" "$MTD"; rhx="$MRC"; phx="$(m1eq_prj)" || phx="NONE"
+  mguard "$M1KA_RDC" "$MTD"; rdc="$MRC"; pdc="$(m1eq_prj)" || pdc="NONE"
+  mguard "$M1KA_RNM" "$MTD"; rnm="$MRC"; pnm="$(m1eq_prj)" || pnm="NONE"
+  mp="$(m1ka_off "$M1KA_POP" "$MTD")"; ml="$(m1ka_off "$M1KA_CHK" "$MTD")"; mf="$(m1ka_off "$M1KA_REF" "$MTD")"
+  mn="$(m1ka_off "$M1KA_ML" "$MTD")"; mq="$(m1ka_off "$M1KA_QML" "$MTD")"; md="$(m1ka_off "$M1KA_DL" "$MTD")"
+  ma="$(m1ka_off "$M1KA_N34" "$MTD")"; mx="$(m1ka_off "$M1KA_X22" "$MTD")"; mt="$(m1ka_off "$M1KA_T39" "$MTD")"
+  ms="$(m1ka_off "$M1KA_SQ" "$MTD")"; ma2="$(m1ka_off "$M1KA_AMP" "$MTD")"; me="$(m1ka_off "$M1KA_FSE" "$MTD")"
+  mh="$(m1ka_off "$M1KA_FLP" "$MTD")"; mj="$(m1ka_off "$M1KA_FLV" "$MTD")"; mk="$(m1ka_off "$M1KA_NEST" "$MTD")"
+  mo="$(m1ka_off "$M1KA_MLBR" "$MTD")"; my="$(m1ka_off "$M1KA_NAL" "$MTD")"; mw="$(m1ka_off "$M1KA_ENQ" "$MTD")"
+  me2="$(m1ka_off "$M1KA_QLT" "$MTD")"; ms2="$(m1ka_off "$M1KA_SLT" "$MTD")"; md2="$(m1ka_off "$M1KA_DQE" "$MTD")"
+  mq2="$(m1ka_off "$M1KA_SQE" "$MTD")"; mi="$(m1ka_off "$M1KA_TAG" "$MTD")"; mv="$(m1ka_off "$M1KA_HQG" "$MTD")"
+  mn2="$(m1ka_off "$M1KA_NTG" "$MTD")"; mu="$(m1ka_off "$M1KA_QGT" "$MTD")"; mz="$(m1ka_off "$M1KA_PGT" "$MTD")"
+  mb="$(m1ka_off "$M1KA_AFL" "$MTD")"; mg="$(m1ka_off "$M1KA_AHN" "$MTD")"; mf2="$(m1ka_off "$M1KA_BNG" "$MTD")"
+  ml2="$(m1ka_off "$M1KA_LTR" "$MTD")"; mhx="$(m1ka_off "$M1KA_RHX" "$MTD")"; mdc="$(m1ka_off "$M1KA_RDC" "$MTD")"
+  mnm="$(m1ka_off "$M1KA_RNM" "$MTD")"
+  oth=$(( $(m1eq_n strip_to_text_blocks "$M1KA_CHK" flight) + $(m1eq_n strip_to_joined_text "$M1KA_CHK" flight) ))
+  for rr in "$M1KA_POP" "$M1KA_REF" "$M1KA_ML" "$M1KA_QML" "$M1KA_DL" "$M1KA_N34" "$M1KA_X22" "$M1KA_T39" "$M1KA_SQ" "$M1KA_AMP" "$M1KA_FSE" "$M1KA_FLP" "$M1KA_FLV" "$M1KA_NEST" "$M1KA_MLBR" "$M1KA_NAL" "$M1KA_ENQ" "$M1KA_QLT" "$M1KA_SLT" "$M1KA_DQE" "$M1KA_SQE" "$M1KA_TAG" "$M1KA_HQG" "$M1KA_NTG" "$M1KA_QGT" "$M1KA_PGT" "$M1KA_AFL" "$M1KA_AHN" "$M1KA_BNG" "$M1KA_LTR" "$M1KA_RHX" "$M1KA_RDC" "$M1KA_RNM"; do oth=$(( oth + $(m1eq_n strip_to_text_blocks "$rr" ruritanian) + $(m1eq_n strip_to_joined_text "$rr" ruritanian) )); done
+  if [ "$rp" -eq 1 ] && [ "$pp" = "$M1EQ_PRJ" ] && [ "$rl" -eq 1 ] && [ "$pl" = "$M1EQ_PRJ" ] && [ "$rf" -eq 1 ] && [ "$pf" = "$M1EQ_PRJ" ] && [ "$rn" -eq 1 ] && [ "$pn" = "$M1EQ_PRJ" ] && [ "$rq" -eq 1 ] && [ "$pq" = "$M1EQ_PRJ" ] && [ "$rd" -eq 1 ] && [ "$pd" = "$M1EQ_PRJ" ] && [ "$ra" -eq 1 ] && [ "$pa" = "$M1EQ_PRJ" ] && [ "$rx" -eq 1 ] && [ "$px" = "$M1EQ_PRJ" ] && [ "$rt" -eq 1 ] && [ "$pt" = "$M1EQ_PRJ" ] && [ "$rs" -eq 1 ] && [ "$ps" = "$M1EQ_PRJ" ] && [ "$ra2" -eq 1 ] && [ "$pa2" = "$M1EQ_PRJ" ] && [ "$re" -eq 1 ] && [ "$pe" = "$M1EQ_PRJ" ] && [ "$rh" -eq 1 ] && [ "$ph" = "$M1EQ_PRJ" ] && [ "$rj" -eq 1 ] && [ "$pj" = "$M1EQ_PRJ" ] && [ "$rk" -eq 1 ] && [ "$pk" = "$M1EQ_PRJ" ] && [ "$ro" -eq 1 ] && [ "$po" = "$M1EQ_PRJ" ] && [ "$ry" -eq 1 ] && [ "$py" = "$M1EQ_PRJ" ] && [ "$rw" -eq 1 ] && [ "$pw" = "$M1EQ_PRJ" ] && [ "$re2" -eq 1 ] && [ "$pe2" = "$M1EQ_PRJ" ] && [ "$rs2" -eq 1 ] && [ "$ps2" = "$M1EQ_PRJ" ] && [ "$rd2" -eq 1 ] && [ "$pd2" = "$M1EQ_PRJ" ] && [ "$rq2" -eq 1 ] && [ "$pq2" = "$M1EQ_PRJ" ] && [ "$ri" -eq 1 ] && [ "$pi" = "$M1EQ_PRJ" ] && [ "$rv" -eq 1 ] && [ "$pv" = "$M1EQ_PRJ" ] && [ "$rn2" -eq 1 ] && [ "$pn2" = "$M1EQ_PRJ" ] && [ "$ru" -eq 1 ] && [ "$pu" = "$M1EQ_PRJ" ] && [ "$rz" -eq 1 ] && [ "$pz" = "$M1EQ_PRJ" ] && [ "$rb" -eq 1 ] && [ "$pb" = "$M1EQ_PRJ" ] && [ "$rg" -eq 1 ] && [ "$pg" = "$M1EQ_PRJ" ] && [ "$rf2" -eq 1 ] && [ "$pf2" = "$M1EQ_PRJ" ] && [ "$rl2" -eq 1 ] && [ "$pl2" = "$M1EQ_PRJ" ] && [ "$rhx" -eq 1 ] && [ "$phx" = "$M1EQ_PRJ" ] && [ "$rdc" -eq 1 ] && [ "$pdc" = "$M1EQ_PRJ" ] && [ "$rnm" -eq 1 ] && [ "$pnm" = "$M1EQ_PRJ" ] && [ "$mp" = "0" ] && [ "$ml" = "0" ] && [ "$mf" = "0" ] && [ "$mn" = "0" ] && [ "$mq" = "0" ] && [ "$md" = "0" ] && [ "$ma" = "0" ] && [ "$mx" = "0" ] && [ "$mt" = "0" ] && [ "$ms" = "0" ] && [ "$ma2" = "0" ] && [ "$me" = "0" ] && [ "$mh" = "0" ] && [ "$mj" = "0" ] && [ "$mk" = "0" ] && [ "$mo" = "0" ] && [ "$my" = "0" ] && [ "$mw" = "0" ] && [ "$me2" = "0" ] && [ "$ms2" = "0" ] && [ "$md2" = "0" ] && [ "$mq2" = "0" ] && [ "$mi" = "0" ] && [ "$mv" = "0" ] && [ "$mn2" = "0" ] && [ "$mu" = "0" ] && [ "$mz" = "0" ] && [ "$mb" = "0" ] && [ "$mg" = "0" ] && [ "$mf2" = "0" ] && [ "$ml2" = "0" ] && [ "$mhx" = "0" ] && [ "$mdc" = "0" ] && [ "$mnm" = "0" ] && [ "$oth" -eq 0 ]; then
+    PASS "M1q: listed inline tags that carry attributes are read as tags — the pop-up note written with span classes inside a script string aborts as a HIT (rc=$rp) named '$pp', the checklist rule written with class=\"\" on its b tags aborts (rc=$rl), and so do the pop-up held in an attribute value whose quotes are written as character references (rc=$rf), the one whose spans set their attributes on the next line (rc=$rn), the one whose quoted class values run over a line (rc=$rq), the one whose spans carry a \${…} placeholder (rc=$rd), the pop-ups whose quotes are decimal and hexadecimal references (rc=$ra, rc=$rx), the tooltip whose quotes are &#39; (rc=$rt), the pop-up whose class values are single-quoted (rc=$rs), and the next-line pop-ups with a value written &- (rc=$ra2) and with a single-quoted and an entity-quoted value (rc=$re); where the precise read cannot reach the tag's '>', the text up to the last '>' before the next tag, else up to the next '>', is read as the list, so the spans whose placeholder stands on the next line alone (rc=$rh) or as a value (rc=$rj), whose placeholder's braces nest (rc=$rk) or run over a line (rc=$ro), whose next line starts with a word no list carries (rc=$ry), the pop-up whose entity-quoted value runs over a line (rc=$rw) and the image with no tag after it in its string (rc=$rn2) abort too, and so do the spans whose list holds a quoted '>' (rc=$ru), a placeholder's '>' (rc=$rz), an arrow function on the next line (rc=$rb) or nested on the head line (rc=$rg), and a quoted '>' ahead of a comment (rc=$rf2) or of an opening tag (rc=$rl2); the precise read takes whole the spans whose quoted value holds a '<' in double quotes (rc=$re2), in single quotes (rc=$rs2), escaped inside a double-quoted (rc=$rd2) and a single-quoted script string (rc=$rq2), the spans whose quoted values hold a '>' and then a tag's '<' (rc=$ri), and the head-line list holding a quoted '>' (rc=$rv), and the spans whose list holds a quoted '>' and values quoted with hexadecimal, decimal and named references, with a comparison's '<' after the list, one cell per reference form (rc=$rhx, rc=$rdc, rc=$rnm), so those abort as well; ARMED-RED — with the attribute-list read taken out of the helper all thirty-four publish (rc=$mp, rc=$ml, rc=$mf, rc=$mn, rc=$mq, rc=$md, rc=$ma, rc=$mx, rc=$mt, rc=$ms, rc=$ma2, rc=$me, rc=$mh, rc=$mj, rc=$mk, rc=$mo, rc=$my, rc=$mw, rc=$me2, rc=$ms2, rc=$md2, rc=$mq2, rc=$mi, rc=$mv, rc=$mn2, rc=$mu, rc=$mz, rc=$mb, rc=$mg, rc=$mf2, rc=$ml2, rc=$mhx, rc=$mdc, rc=$mnm). The visible and joined arms carry the key tokens $oth time(s)"
+  else
+    FAIL "M1q: span-class pop-up note rc=$rp '$pp', class=\"\" checklist rule rc=$rl '$pl', character-reference pop-up rc=$rf '$pf', attributes on the next line rc=$rn '$pn', quoted values over a line rc=$rq '$pq', \${…} placeholder rc=$rd '$pd', decimal references rc=$ra '$pa', hexadecimal references rc=$rx '$px', &#39; tooltip rc=$rt '$pt', single-quoted class values rc=$rs '$ps', next-line &- value rc=$ra2 '$pa2', next-line single- and entity-quoted values rc=$re '$pe', next-line placeholder rc=$rh '$ph', next-line placeholder value rc=$rj '$pj', nested placeholder braces rc=$rk '$pk', placeholder over a line rc=$ro '$po', next line no list rc=$ry '$py', entity-quoted value over a line rc=$rw '$pw', quoted '<' in double quotes rc=$re2 '$pe2', quoted '<' in single quotes rc=$rs2 '$ps2', escaped double-quoted '<' rc=$rd2 '$pd2', escaped single-quoted '<' rc=$rq2 '$pq2', quoted '>' then a tag's '<' rc=$ri '$pi', head-line quoted '>' rc=$rv '$pv', image with no tag after it rc=$rn2 '$pn2', next-line list with a quoted '>' rc=$ru '$pu', next-line placeholder holding '>' rc=$rz '$pz', arrow function on the next line rc=$rb '$pb', arrow function nested on the head line rc=$rg '$pg', quoted '>' ahead of a comment rc=$rf2 '$pf2', quoted '>' ahead of an opening tag rc=$rl2 '$pl2', quoted '>' with hexadecimal-, decimal- and named-reference values and a comparison's '<' after the list rc=$rhx '$phx', rc=$rdc '$pdc' and rc=$rnm '$pnm' (want 1 and '$M1EQ_PRJ' for each); without the attribute-list read rc=$mp, rc=$ml, rc=$mf, rc=$mn, rc=$mq, rc=$md, rc=$ma, rc=$mx, rc=$mt, rc=$ms, rc=$ma2, rc=$me, rc=$mh, rc=$mj, rc=$mk, rc=$mo, rc=$my, rc=$mw, rc=$me2, rc=$ms2, rc=$md2, rc=$mq2, rc=$mi, rc=$mv, rc=$mn2, rc=$mu, rc=$mz, rc=$mb, rc=$mg, rc=$mf2, rc=$ml2, rc=$mhx, rc=$mdc and rc=$mnm (want 0 for each); key tokens on the other arms $oth (want 0). A kept tag's attribute names break a value up inside those surfaces again, or this arm can no longer tell"
+  fi
+}
+m1iq_assert
+m1ir_assert() { # one verdict
+  local re rn rv rt rl pl rb pb rx rg pg ry rh rq rk ro po rf pf rw pw rwn pwn rcz pcz me mn mv mt mx my mh mq mk mcz oth rr
+  mguard "$M1KA_EQ" "$MTD"; re="$MRC"
+  mguard "$M1KA_EQN" "$MTD"; rn="$MRC"
+  mguard "$M1KA_EQV" "$MTD"; rv="$MRC"
+  mguard "$M1KA_EQT" "$MTD"; rt="$MRC"
+  mguard "$M1KA_EQL" "$MTD"; rx="$MRC"
+  mguard "$M1KA_TYP" "$M1KA_TD"; ry="$MRC"
+  mguard "$M1KA_EQM" "$MTD"; rh="$MRC"
+  mguard "$M1KA_TYS" "$M1KA_TD"; rq="$MRC"
+  mguard "$M1KA_LIC" "$M1KA_CD"; rk="$MRC"
+  mguard "$M1KA_LT" "$MTD"; rl="$MRC"; pl="$(m1eq_prj)" || pl="NONE"
+  mguard "$M1KA_LTB" "$MTD"; rb="$MRC"; pb="$(m1eq_prj)" || pb="NONE"
+  mguard "$M1KA_NGT" "$MTD"; rg="$MRC"; pg="$(m1eq_prj)" || pg="NONE"
+  mguard "$M1KA_CLT" "$MTD"; ro="$MRC"; po="$(m1eq_prj)" || po="NONE"
+  mguard "$M1KA_PLT" "$MTD"; rf="$MRC"; pf="$(m1eq_prj)" || pf="NONE"
+  rw="$( ulimit -t 5; verify_publishable_content "$M1KA_WS" "$MTD" >/dev/null 2>"$MOUT"; printf '%s' "$?" )"; pw="$(m1eq_prj)" || pw="NONE"
+  rwn="$( ulimit -t 5; verify_publishable_content "$M1KA_WSN" "$MTD" >/dev/null 2>"$MOUT"; printf '%s' "$?" )"; pwn="$(m1eq_prj)" || pwn="NONE"
+  mguard "$M1KA_CMZ" "$MTD"; rcz="$MRC"; pcz="$(m1eq_prj)" || pcz="NONE"
+  me="$(m1ka_off "$M1KA_EQ" "$MTD")"; mn="$(m1ka_off "$M1KA_EQN" "$MTD")"; mv="$(m1ka_off "$M1KA_EQV" "$MTD")"
+  mt="$(m1ka_off "$M1KA_EQT" "$MTD")"; mx="$(m1ka_off "$M1KA_EQL" "$MTD")"; my="$(m1ka_off "$M1KA_TYP" "$M1KA_TD")"
+  mh="$(m1ka_off "$M1KA_EQM" "$MTD")"; mq="$(m1ka_off "$M1KA_TYS" "$M1KA_TD")"; mk="$(m1ka_off "$M1KA_LIC" "$M1KA_CD")"
+  mcz="$(m1kc_off "$M1KA_CMZ" "$MTD")"
+  oth=$(( $(m1eq_n strip_to_text_blocks "$M1KA_TYP" type) + $(m1eq_n strip_to_joined_text "$M1KA_TYP" type) + $(m1eq_n strip_to_text_blocks "$M1KA_TYS" type) + $(m1eq_n strip_to_joined_text "$M1KA_TYS" type) + $(m1eq_n strip_to_text_blocks "$M1KA_LIC" class) + $(m1eq_n strip_to_joined_text "$M1KA_LIC" class) ))
+  for rr in "$M1KA_EQ" "$M1KA_EQN" "$M1KA_EQV" "$M1KA_EQT" "$M1KA_EQL" "$M1KA_EQM" "$M1KA_LT" "$M1KA_LTB" "$M1KA_NGT" "$M1KA_CLT" "$M1KA_PLT" "$M1KA_WS" "$M1KA_WSN" "$M1KA_CMZ"; do oth=$(( oth + $(m1eq_n strip_to_text_blocks "$rr" ruritanian) + $(m1eq_n strip_to_joined_text "$rr" ruritanian) )); done
+  if [ "$re" -eq 0 ] && [ "$rn" -eq 0 ] && [ "$rv" -eq 0 ] && [ "$rt" -eq 0 ] && [ "$rx" -eq 0 ] && [ "$ry" -eq 0 ] && [ "$rh" -eq 0 ] && [ "$rq" -eq 0 ] && [ "$rk" -eq 0 ] && [ "$rl" -eq 1 ] && [ "$pl" = "$M1EQ_PRJ" ] && [ "$rb" -eq 1 ] && [ "$pb" = "$M1EQ_PRJ" ] && [ "$rg" -eq 1 ] && [ "$pg" = "$M1EQ_PRJ" ] && [ "$ro" -eq 1 ] && [ "$po" = "$M1EQ_PRJ" ] && [ "$rf" -eq 1 ] && [ "$pf" = "$M1EQ_PRJ" ] && [ "$rw" = "1" ] && [ "$pw" = "$M1EQ_PRJ" ] && [ "$rwn" = "1" ] && [ "$pwn" = "$M1EQ_PRJ" ] && [ "$rcz" -eq 1 ] && [ "$pcz" = "$M1EQ_PRJ" ] && [ "$me" = "1" ] && [ "$mn" = "1" ] && [ "$mv" = "1" ] && [ "$mt" = "1" ] && [ "$mx" = "1" ] && [ "$my" = "1" ] && [ "$mh" = "1" ] && [ "$mq" = "1" ] && [ "$mk" = "1" ] && [ "$mcz" = "0" ] && [ "$oth" -eq 0 ]; then
+    PASS "M1r: the stated price of reading a kept tag's attribute list — a word written directly before '=' after '<b' is dropped as an attribute name wherever it stands inside the text read as the tag's list, as the shipped guard dropped it, and that render publishes (rc=$re), as do the comment that holds that word as an attribute on the line after its '<b' (rc=$rn), the one whose quoted value after '=' runs over a line (rc=$rv), the same comparison closed by ')' with a '>' later in the script (rc=$rt), a comparison whose next line is no attribute list (rc=$rx) and a loop whose assignment stands before the last '>' ahead of markup later in the script (rc=$rh); a member named like an attribute that a list over lines carries does not abort the page, written in double quotes with a tag after the list (rc=$ry) or in single quotes with none (rc=$rq), nor does one named like the attribute an arrow function's list carries ahead of a closing tag (rc=$rk); a run that meets a '<' first aborts as a HIT (rc=$rl) named '$pl', and so do the same '<' written inside a \${…} placeholder (rc=$rb), a comparison with no '>' after it (rc=$rg), a comparison whose first '>' comes before the word with only a comparison's '<' after it (rc=$ro), a comparison closed by ')' with a quoted '<' after it (rc=$rf), a kept head followed by lines of nothing but spaces (rc=$rw) or by lines that each hold a name and then spaces (rc=$rwn), each read under a five-second CPU cap, and a comment left open to the end of the page, read to that end as a comment body (rc=$rcz); ARMED-RED — with the attribute-list read taken out of the helper the nine priced renders abort (rc=$me, rc=$mn, rc=$mv, rc=$mt, rc=$mx, rc=$mh, rc=$my, rc=$mq, rc=$mk), so their publish is that read's doing, and with the comment tokenizer's end-of-input branch taken out the open comment publishes (rc=$mcz), so its abort is that branch's doing. The visible and joined arms carry the key tokens $oth time(s)"
+  else
+    FAIL "M1r: the '=' render after '<b' rc=$re, its next-line form rc=$rn, its value-over-a-line form rc=$rv, the comparison closed by ')' rc=$rt, the comparison whose next line is no attribute list rc=$rx, the loop priced up to the markup after it rc=$rh, and the pages whose lists carry an attribute named like a member rc=$ry, rc=$rq and rc=$rk (want 0 for each, the stated price), the run that meets a '<' rc=$rl '$pl', the '<' inside a \${…} placeholder rc=$rb '$pb', the comparison with no '>' after it rc=$rg '$pg', the comparison whose first '>' comes before the word rc=$ro '$po', the comparison closed by ')' with a quoted '<' after it rc=$rf '$pf', the kept head followed by lines of spaces under a five-second CPU cap rc=$rw '$pw', the kept head followed by lines of a name and spaces under the same cap rc=$rwn '$pwn' and the comment left open to the end of the page rc=$rcz '$pcz' (want 1 and '$M1EQ_PRJ' for each), without the attribute-list read rc=$me, rc=$mn, rc=$mv, rc=$mt, rc=$mx, rc=$mh, rc=$my, rc=$mq and rc=$mk (want 1 for each), without the comment tokenizer's end-of-input branch rc=$mcz (want 0), key tokens on the other arms $oth (want 0). The price the RESIDUAL states is no longer the one the code pays, the read stalls on whitespace, or this arm can no longer tell"
+  fi
+}
+m1ir_assert
+M1IS_TAGS='a abbr area audio b bdi bdo button canvas cite code data datalist del dfn em embed i iframe img input ins kbd label link map mark math meta meter noscript object output picture progress q ruby s samp script select selectedcontent slot small span strong sub sup svg template textarea time u var video wbr'
+M1IS_R="$WORK/m1is_list.html"
+{ printf '%s' '<!-- '; for m1is_t in $M1IS_TAGS; do printf '<%s>zq</%s> ' "$m1is_t" "$m1is_t"; done; printf '%s\n' '-->'; } > "$M1IS_R"
+m1is_n() { "$1" "$2" | _decode_entities | _norm_words | awk -v L=" $M1IS_TAGS " 'index(L, " " $0 " ") > 0 { c++ } END { print c + 0 }'; }   # <projection> <render> -> listed names in its stream
+m1is_assert() { # one verdict
+  local nt nl nz mo
+  nt="$(printf '%s' "$M1IS_TAGS" | awk '{ print NF }')"
+  nl="$(m1is_n strip_to_published_text "$M1IS_R")"
+  nz="$(m1eq_n strip_to_published_text "$M1IS_R" zq)"
+  mo="$( eval "$(declare -f strip_to_published_text | sed 's/|\$_GUARD_INLINE_TAGS//')"; m1is_n strip_to_published_text "$M1IS_R" )"
+  if [ "$nt" -eq 56 ] && [ "$nz" -eq "$nt" ] && [ "$nl" -eq 0 ] && [ "$mo" -eq $((2 * nt)) ]; then
+    PASS "M1s: every name of HTML's phrasing content ($nt, from this file's own copy) written as a tag inside a comment body stays markup — 0 listed names reach the published stream while all $nz zq words do; ARMED-RED — with the inline list taken out of the helper $mo listed names reach it, two for each tag"
+  else
+    FAIL "M1s: names in the copy $nt (want 56), zq words $nz (want $nt), listed names in the published stream $nl (want 0), with the inline list taken out $mo (want $((2 * nt))). A phrasing element left off _GUARD_INLINE_TAGS reads as text inside those surfaces again, or this arm can no longer tell"
+  fi
+}
+m1is_assert
 
 # ── M2 (CD-2) — is_stop in the token branch; a stopword-only name is a declared non-key ──
 MSTOP="$WORK/porto-stopword"; mkdir -p "$MSTOP/outputs"
@@ -2377,20 +3164,20 @@ else
   FAIL "M5d: a projection is no longer line-count-preserving (source=$m5src joined=$m5lj visible=$m5lv published=$m5lp; newline-reference arm=$m5adv, want 1). A transform that consumes a newline shifts every reported line after it while the token stream stays valid — the suite would not notice"
 fi
 
-# M5e — THE FAIL DIRECTION OF EACH NEW SUBJECT, which is NOT the same for the two and is
-# the reason this arm asserts presence rather than only effect. Removing _decode_entities
-# is fail-CLOSED and audible: the visible arm empties, the 20-word floor fires, and the
-# verdict is rc=2 UNDETERMINED. Removing strip_to_joined_text is fail-OPEN and SILENT:
-# `[ -s "$jfile" ]` is simply false, rcj stays 1, and the tag-split case returns to rc=0.
-# A new arm inherits the posture of the guard it sits behind, not the posture of its
-# siblings, and this arm is what makes the difference observable.
+# M5e — THE FAIL DIRECTION OF EACH NEW SUBJECT, and both directions are CLOSED. Removing
+# _decode_entities empties the visible arm, the 20-word floor fires, and the verdict is
+# rc=2 UNDETERMINED. Removing strip_to_joined_text fails the joined arm's pipeline; the
+# guard reads that status and refuses the arm before any record is matched, and the verdict
+# is rc=2 as well. A new arm inherits the posture of the guard it sits behind, and this arm
+# is what makes that posture observable for both subjects: a removal that publishes would be
+# the guard certifying a render one of its projections never read.
 m5_dec_rc=0; m5_join_rc=0
 m5_dec_rc="$( unset -f _decode_entities;    verify_publishable_content "$M5DEC" "$MTD" >/dev/null 2>&1; printf '%s' "$?" )"
 m5_join_rc="$( unset -f strip_to_joined_text; verify_publishable_content "$M5TAG" "$MTD" >/dev/null 2>&1; printf '%s' "$?" )"
-if [ "$m5_dec_rc" -eq 2 ] && [ "$m5_join_rc" -eq 0 ]; then
-  PASS "M5e: the two new subjects fail in OPPOSITE directions and both are measured — without _decode_entities the entity case is rc=2 UNDETERMINED (fail-closed, audible), and without strip_to_joined_text the tag-split case is rc=0 (fail-OPEN, silent). The second is why the arm's PRESENCE is asserted and not only its effect"
+if [ "$m5_dec_rc" -eq 2 ] && [ "$m5_join_rc" -eq 2 ]; then
+  PASS "M5e: both new subjects fail CLOSED when removed, and both are measured — without _decode_entities the entity case is rc=2 UNDETERMINED (the visible arm empties and the floor fires), and without strip_to_joined_text the tag-split case is rc=2 UNDETERMINED (the joined arm's failed status is refused). Neither removal can publish a render the guard did not read"
 else
-  FAIL "M5e: a removal did not produce its measured direction (no decoder: rc=$m5_dec_rc want 2; no joined arm: rc=$m5_join_rc want 0) — if the joined arm now fails closed that is an improvement to record, and if the decoder now fails open that is a hole"
+  FAIL "M5e: a removal did not fail closed (no decoder: rc=$m5_dec_rc want 2; no joined arm: rc=$m5_join_rc want 2) — rc=0 on either is the guard certifying a render one of its own projections never read"
 fi
 
 # ── Group N (PR-7 / OB-1) — the conjunctive window is scoped to one block ────
@@ -5384,11 +6171,11 @@ fi
 # recorded baseline, so an unreadable or unprojectable render fell through to `unconfirmed`
 # or `stale`, the gate's abort told the organizer that the itinerary content differed, and
 # confirm went on to the CONFIRM prompt against a state nobody had computed. The conflation
-# was not confined to an empty digest either. BSD `tr` under a UTF-8 locale exits 1 AFTER
-# writing a prefix when it meets a byte that is not valid UTF-8, so the digest identified a
-# TRUNCATED itinerary, and a day appended behind such a byte read as `none-pending`, or as
-# `confirmed` when a confirmation covered the prefix — either member of the proceed set
-# publishes an unapproved change.
+# was not confined to an empty digest either. Until the pin (#1468 case 1), BSD `tr` under a
+# UTF-8 locale exited 1 AFTER writing a prefix when it met a byte that is not valid UTF-8, so
+# the digest identified a TRUNCATED itinerary, and a day appended behind such a byte read as
+# `none-pending`, or as `confirmed` when a confirmation covered the prefix — either member of the
+# proceed set publishes an unapproved change.
 #
 #   S15a  THE SUBJECT, unreadable — a dangling-symlink render with a recorded baseline
 #         resolves `undetermined`, with no confirmation record and with an old one
@@ -5423,11 +6210,10 @@ fi
 # which MD_LEGACY is not allowed to grow to excuse. No verdict is read through a pipeline
 # into an early-exiting grep (group PF). And every stub is unset in the arm that set it.
 #
-# S15c STUBS `tr` RATHER THAN FEEDING IT A REAL INVALID BYTE, and the reason is the runner.
-# BSD `tr` on macOS fails on such a byte; GNU `tr` on the ubuntu CI runner is byte-oriented
-# and is not expected to [INFERRED — not measured on this host], so a real byte would make
-# the arm discriminate on one platform and pass vacuously on the other. A stubbed stage
-# fails on both, and a failing stage is exactly what the digest's status read must catch.
+# S15c STUBS `tr` RATHER THAN FEEDING IT A REAL INVALID BYTE: no real byte makes `tr` fail
+# under `LC_ALL=C` on either platform, which is where the normalization runs since the pin
+# (#1468 case 1), so the stage is stubbed. A stubbed stage fails on both, and a failing stage
+# is exactly what the digest's status read must catch.
 #
 # Offline: $WORK fixtures, a dangling symlink, and shell-function stubs for perl and tr. No
 # network, no Node, no TTY, no gh. This group has no legitimate skip and is deliberately
@@ -5485,8 +6271,8 @@ else
   FAIL "S15b: with perl failing, a trip whose render has not moved resolved '$S15B_ST' — a projection that could not run is being read as a change to the plan"
 fi
 
-# ── S15c — THE SUBJECT, UNNORMALIZABLE. `tr` is stubbed to fail the way BSD `tr` fails on
-# an invalid byte, minus the prefix. What is graded is the digest's own STATUS read: a
+# ── S15c — THE SUBJECT, UNNORMALIZABLE. No real byte makes `tr` fail under `LC_ALL=C` on either
+# platform, so the stage is stubbed to fail. What is graded is the digest's own STATUS read: a
 # pipeline whose stage fails still ends in cksum, and cksum over whatever arrived is a
 # well-formed token (the empty-input token, here) that identifies no itinerary at all.
 S15CD="$(s_fixture s15c 14:00 none)"
@@ -5501,7 +6287,7 @@ if [ -z "$S15C_CTL" ] || [ "$S15C_CTL" != "$S_DA" ]; then
 elif [ -z "$S15C_DG" ] && [ "$S15C_ST" = "undetermined" ]; then
   PASS "S15c: with the normalization stage failing, itinerary_digest yields NO token and the state is undetermined, while with it working the same render digests $S15C_CTL — a failing stage is 'no answer', so a truncated or empty normalization is never compared as though it were the itinerary"
 else
-  FAIL "S15c: with the normalization stage failing, itinerary_digest yielded '$S15C_DG' and the state read '$S15C_ST' — a failed pipeline still produced a token. On macOS that token identifies a TRUNCATED itinerary, and a day appended behind a byte that is not valid UTF-8 digests equal to the baseline and publishes unconfirmed"
+  FAIL "S15c: with the normalization stage failing, itinerary_digest yielded '$S15C_DG' and the state read '$S15C_ST' — a failed pipeline still produced a token, which identifies a truncated or empty normalization, and the gate would compare it as though it identified the itinerary"
 fi
 
 # ── S15d — CONTROL. A readable render whose itinerary DID move must still read as a change.
@@ -5635,9 +6421,9 @@ S15H_FAD="$(wc -c < "$WORK/s15h_fail_dec.err" | tr -d ' ')"
 if [ "$S15H_OKP" -ne 0 ] || [ "$S15H_OKJ" -ne 0 ] || [ "$S15H_OKD" -ne 0 ]; then
   FAIL "S15h: CONTROL — with perl working the three programs wrote ${S15H_OKP}B / ${S15H_OKJ}B / ${S15H_OKD}B of stderr over a healthy render, so a non-zero under the stub would not be distinguishable from ordinary output"
 elif [ "$S15H_FAP" -gt 0 ] && [ "$S15H_FAJ" -gt 0 ] && [ "$S15H_FAD" -gt 0 ]; then
-  PASS "S15h: AC-4 — with perl failing, strip_to_published_text, strip_to_joined_text and _decode_entities each pass its diagnostic through (${S15H_FAP}B / ${S15H_FAJ}B / ${S15H_FAD}B), where a working perl writes 0B from each. A failure in any of the three now says why, instead of reaching the guard as an empty stream"
+  PASS "S15h: AC-4 — with perl failing, strip_to_published_text, strip_to_joined_text and _decode_entities each pass its diagnostic through (${S15H_FAP}B / ${S15H_FAJ}B / ${S15H_FAD}B), where a working perl writes 0B from each. A failure in any of the three now says why, ahead of the guard's own refusal of the projection it could not read"
 else
-  FAIL "S15h: with perl failing the three programs wrote ${S15H_FAP}B / ${S15H_FAJ}B / ${S15H_FAD}B of stderr — at least one still discards the only trace its failure leaves, and the guard downstream reads the empty stream as 'no markup to inspect'"
+  FAIL "S15h: with perl failing the three programs wrote ${S15H_FAP}B / ${S15H_FAJ}B / ${S15H_FAD}B of stderr — at least one still discards the only trace of why it failed, so the guard downstream can refuse the projection and name it but cannot say what went wrong"
 fi
 
 # ── S15i — AC-4, POLICY, read from the PARSED bodies so a comment cannot fake it. The rule
@@ -5735,15 +6521,12 @@ fi
 # (the baseline is an older plan, and the confirmation is the render without the day). Both
 # must read `undetermined`, and the gate must refuse on both.
 #
-# TWO SOURCES OF THE FAILING STAGE, BECAUSE THE PLATFORMS DIFFER. BSD `tr` under a UTF-8
-# locale stops at that byte after writing the prefix before it (measured on macOS); GNU `tr`
-# is byte-oriented and does not, which is why S15c stubs it. So the fresh shell first runs
-# this platform's own `tr` over the render. Where it fails, the REAL case is graded: the real
-# byte through the real `tr`. The EMULATED case is graded on every platform, the CI runner
-# included: a `tr` defined in the fresh shell alone, which writes the translation of
-# everything before the first 0xC9 byte and returns 1 — BSD's behaviour, reproduced. The
-# emulation lives and dies with that shell; this shell never holds it, and S15j's restore is
-# unaffected.
+# THE FAILING STAGE IS EMULATED. Under the pin (#1468 case 1) the normalization runs under
+# LC_ALL=C, where no platform's `tr` stops on that byte, so the case is graded on every
+# platform, the CI runner included, through a `tr` defined in the fresh shell alone, which
+# writes the translation of everything before the first 0xC9 byte and returns 1 — the failure
+# BSD `tr` showed under a UTF-8 locale before the pin, reproduced. The emulation lives and dies
+# with that shell; this shell never holds it, and S15j's restore is unaffected.
 #
 # FIXTURE INTEGRITY, graded first. Every fresh shell must report `pipefail` off. The emulated
 # stage must fail on the render and pass the valid-UTF-8 one. And the prefix digest — the same
@@ -5766,8 +6549,8 @@ if [ "$m" = emulated ]; then
   }
 fi
 pf=off; case ":$SHELLOPTS:" in *:pipefail:*) pf=on ;; esac
-tf=0; tr -s '[:space:]' ' ' < "$r" >/dev/null 2>&1 || tf=$?
-pre="$(printf '%s' "$(strip_to_itinerary_text "$r")" | tr -s '[:space:]' ' ' | sed 's/^ *//; s/ *$//' | _digest_of)"
+tf=0; LC_ALL=C tr -s '[:space:]' ' ' < "$r" >/dev/null 2>&1 || tf=$?
+pre="$(printf '%s' "$(strip_to_itinerary_text "$r")" | LC_ALL=C sed "$_ITINERARY_WS_SED" | LC_ALL=C tr -s '[:space:]' ' ' | LC_ALL=C sed 's/^ *//; s/ *$//' | _digest_of)"
 st="$(change_confirmation_state "$d")"
 rc=0; ( require_change_confirmation "$d" ) >/dev/null 2>&1 || rc=$?
 printf '%s %s %s %s %s' "${st:-empty}" "$rc" "$pf" "$tf" "${pre:-empty}"
@@ -5794,23 +6577,15 @@ S15KV="$(s15k_trip s15kv "$S15K_OK" "$S_DA")"
 read -r S15K_EN_ST S15K_EN_RC S15K_EN_PF S15K_EN_TF S15K_EN_PRE <<<"$(s15k_run emulated "$S15KN" "$S15KN/$S15_RENDER")"
 read -r S15K_EC_ST S15K_EC_RC S15K_EC_PF _ _ <<<"$(s15k_run emulated "$S15KC" "$S15KC/$S15_RENDER")"
 read -r S15K_EV_ST S15K_EV_RC S15K_EV_PF S15K_EV_TF _ <<<"$(s15k_run emulated "$S15KV" "$S15KV/$S15_RENDER")"
-read -r S15K_RN_ST S15K_RN_RC S15K_RN_PF S15K_RN_TF _ <<<"$(s15k_run real "$S15KN" "$S15KN/$S15_RENDER")"
-read -r S15K_RC_ST S15K_RC_RC S15K_RC_PF _ _ <<<"$(s15k_run real "$S15KC" "$S15KC/$S15_RENDER")"
-S15K_PFS="$S15K_EN_PF$S15K_EC_PF$S15K_EV_PF$S15K_RN_PF$S15K_RC_PF"
-S15K_REAL=0; [ "${S15K_RN_TF:-0}" != "0" ] && S15K_REAL=1
-S15K_REALOK=1; S15K_REALTXT='not applicable (this platform'"'"'s tr is byte-oriented)'
-if [ "$S15K_REAL" -eq 1 ]; then
-  S15K_REALOK=0; S15K_REALTXT='graded too (this platform'"'"'s tr fails on the byte)'
-  [ "$S15K_RN_ST" = "undetermined" ] && [ "$S15K_RN_RC" != "0" ] && [ "$S15K_RC_ST" = "undetermined" ] && [ "$S15K_RC_RC" != "0" ] && S15K_REALOK=1
-fi
-if [ "$S15K_R0DG" != "$S_DA" ] || [ "$S15K_PFS" != "offoffoffoffoff" ] || [ "${S15K_EN_TF:-0}" = "0" ] || [ "$S15K_EV_TF" != "0" ] || [ "$S15K_EN_PRE" != "$S_DA" ]; then
-  FAIL "S15k: fixture integrity — the render without the day digests '$S15K_R0DG' against the baseline $S_DA; pipefail in the fresh shells reads [$S15K_PFS] (want off in all five); the emulated stage returned ${S15K_EN_TF:-none} on the render (want non-zero) and ${S15K_EV_TF:-none} on the valid one (want 0); and the prefix digest is '$S15K_EN_PRE' (want the baseline). The fixture does not reproduce the fail-open's precondition, so no verdict below would be about the pin"
+S15K_PFS="$S15K_EN_PF$S15K_EC_PF$S15K_EV_PF"
+if [ "$S15K_R0DG" != "$S_DA" ] || [ "$S15K_PFS" != "offoffoff" ] || [ "${S15K_EN_TF:-0}" = "0" ] || [ "$S15K_EV_TF" != "0" ] || [ "$S15K_EN_PRE" != "$S_DA" ]; then
+  FAIL "S15k: fixture integrity — the render without the day digests '$S15K_R0DG' against the baseline $S_DA; pipefail in the fresh shells reads [$S15K_PFS] (want off in all three); the emulated stage returned ${S15K_EN_TF:-none} on the render (want non-zero) and ${S15K_EV_TF:-none} on the valid one (want 0); and the prefix digest is '$S15K_EN_PRE' (want the baseline). The fixture does not reproduce the fail-open's precondition, so no verdict below would be about the pin"
 elif [ "$S15K_EV_ST" != "unconfirmed" ] || [ "$S15K_EV_RC" = "0" ]; then
   FAIL "S15k: CONTROL — the same day in valid UTF-8 resolved '$S15K_EV_ST' with gate rc=$S15K_EV_RC through the same fresh shell, not unconfirmed with a refusal. The harness is not reading an identifiable render as one, so an undetermined below would not be attributable to the failing stage"
-elif [ "$S15K_EN_ST" = "undetermined" ] && [ "$S15K_EN_RC" != "0" ] && [ "$S15K_EC_ST" = "undetermined" ] && [ "$S15K_EC_RC" != "0" ] && [ "$S15K_REALOK" -eq 1 ]; then
-  PASS "S15k: with pipefail OFF in a fresh shell that sourced the script, a day appended behind a byte that is not valid UTF-8 resolves undetermined on the none-pending route and on the confirmed route, and the gate refuses on both (rc $S15K_EN_RC / $S15K_EC_RC). The emulated stage is graded on this platform, and the real one is $S15K_REALTXT. The prefix digest without pipefail equals the baseline, so this input publishes if the pin is removed; the pin is what holds it. Control: the valid-UTF-8 day resolves unconfirmed"
+elif [ "$S15K_EN_ST" = "undetermined" ] && [ "$S15K_EN_RC" != "0" ] && [ "$S15K_EC_ST" = "undetermined" ] && [ "$S15K_EC_RC" != "0" ]; then
+  PASS "S15k: with pipefail OFF in a fresh shell that sourced the script, a day appended behind a byte that is not valid UTF-8, read by a normalization stage that fails there after writing the prefix before it, resolves undetermined on the none-pending route and on the confirmed route, and the gate refuses on both (rc $S15K_EN_RC / $S15K_EC_RC). The failing stage is emulated: under the pin no platform's tr stops on that byte. The prefix digest without pipefail equals the baseline, so this input publishes if the pin is removed; the pin is what holds it. Control: the valid-UTF-8 day resolves unconfirmed"
 else
-  FAIL "S15k: with pipefail OFF in a fresh shell, the render resolved emulated '$S15K_EN_ST' (gate rc $S15K_EN_RC) on the none-pending route and '$S15K_EC_ST' (gate rc $S15K_EC_RC) on the confirmed route, and real '$S15K_RN_ST' (rc $S15K_RN_RC) / '$S15K_RC_ST' (rc $S15K_RC_RC). The digest's status read no longer carries its own pipefail: a stage that failed after writing a prefix digests as the truncated itinerary, which equals the baseline or the confirmation, and the gate proceeds with an unapproved change"
+  FAIL "S15k: with pipefail OFF in a fresh shell, the render resolved emulated '$S15K_EN_ST' (gate rc $S15K_EN_RC) on the none-pending route and '$S15K_EC_ST' (gate rc $S15K_EC_RC) on the confirmed route. The digest's status read no longer carries its own pipefail: a stage that failed after writing a prefix digests as the truncated itinerary, which equals the baseline or the confirmation, and the gate proceeds with an unapproved change"
 fi
 
 # ── S15l — THE RECORDER'S TWO WARNINGS (#1184, the Stage 5 review's FM-1). After a push the
@@ -7919,7 +8694,7 @@ fi
 # recording act's functions, name no traveller file, person record, derived model or provenance
 # mark. Sensitivity: the class-source function that does read the derived model names it.
 # Specificity: a fabricated token is in none of them.
-SA22_FNS='change_confirmation_state _approval_policy _approvers_grammar _approvals_grammar _approval_tally _baseline_matches _legacy_itinerary_digest _legacy_digest_of itinerary_digest strip_to_itinerary_text _digest_of _record_digest published_itinerary_path change_confirmation_path approver_declaration_path approval_ledger_path resolve_site_html _confirm_declared _approval_line_parse _ledger_append _record_threshold_met _published_record_date _undecided_entry'
+SA22_FNS='change_confirmation_state _approval_policy _approvers_grammar _approvals_grammar _approval_tally _baseline_matches _legacy_itinerary_digest _legacy_digest_of itinerary_digest strip_to_itinerary_text _digest_of _record_digest _baseline_record staged_record_path published_itinerary_path change_confirmation_path approver_declaration_path approval_ledger_path resolve_site_html _confirm_declared _approval_line_parse _ledger_append _record_threshold_met _published_record_date _undecided_entry'
 SA22_EMPTY=0; SA22_HIT=""; SA22_SPEC=0; SA22_N=0
 for safn in $SA22_FNS; do
   SA22_N=$((SA22_N+1))
@@ -8310,6 +9085,1111 @@ if [ -z "$SA26_MOVED" ] && [ -z "$SA26_STUBS" ] && [ "$SA26_HEX" -eq 1 ] && [ "$
 else
   FAIL "S26a: functions not restored:[${SA26_MOVED# }], stubs left:[${SA26_STUBS# }], fresh digest '$SA26_DG' against S0's '$S_DA'"
 fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group S, #1468 — THE BASELINE THE GATE COMPARES AGAINST
+#
+# Every verdict from S0 to S26a reads the published baseline, .published-itinerary, and none
+# grades what writes it after a push, what a push leaves when it cannot be written, or what the
+# gate does with one that is present and cannot be used. This block grades the recorder that
+# writes it and the classifier that reads it.
+#
+#   S27a  THE RECORDER'S OWN WARNING — the staging step failing after a push, on a trip with no
+#         baseline, warns NOT ACTIVE, returns 0 under errexit and writes no sidecar
+#   S27b  every failure the recorder meets — mktemp refusing, mktemp naming a path under a missing
+#         directory, mv refusing — on a trip with no baseline, on one whose baseline records
+#         another plan and on one whose baseline is present but unusable, and the sidecar's path
+#         a directory (S27b′): each warns by the state it leaves, returns 0, keeps the sidecar
+#         byte-identical and leaves no temporary; control: unstubbed, it writes the sidecar;
+#         ARMED-RED: the shipped recorder's silent `mktemp … || return 0` is convicted
+#   S28a  CASE 5 — nine shapes of a present but unusable baseline, on both policies and both
+#         renders, all resolve `undetermined`; six controls keep their verdicts, a legacy CRC
+#         baseline included; ARMED-RED: the old fold reads one of them `none-pending`
+#   S28b  the gate refuses each unusable shape naming the file and making no claim about change
+#   S28c  update, end to end, refuses before any clone — the Success Indicator's arm
+#   S28d  confirm refuses each shape on both policies before its terminal check
+#   S28e  the classifier itself: nine shapes `unusable`, absence `absent`, a token itself
+#   S29a  CASES 2 AND 4 AT THE SOURCE — publish refuses a render nothing can read before the repo
+#         is probed or created
+#   S29b  update on an ungated trip with no baseline refuses the same render before any clone
+#   S29c  the other two refusals — a baseline that cannot be staged, a sidecar path that is not a
+#         regular file — on update, publish and rotate, rotate leaving .passphrase as it was
+#   S29d  structural: the guard's place in require_publish_guards and in publish, publish ungated
+#   S27c  a trip that declares approvers, or whose approval sidecars are malformed, is never told
+#         NOT ACTIVE, and each is told the exit that works on it
+#   S27d  a trip directory that loses write between the staging and the move still gets the
+#         warning and rc 0: the clean-up of the temporary cannot end the command after a push
+#   S27e  a push that re-published the recorded plan, with no record written, is told the kept
+#         baseline records this same plan
+#   S29e  the guard's probe is skipped for a push that re-publishes the recorded plan, and not
+#         where another plan's record is outstanding
+#   S31a  D-6 — a staged record holds exactly the verdicts that rest on which plan is live
+#   S31b  S31c  the gate and confirm refuse a held trip, naming the outstanding record
+#   S31d  the stager writes the push's record, refuses when it cannot, and stages nothing on a
+#         re-publish
+#   S31e  the recorder on every state the staged record can be in after the push
+#   S31f  S31g  the push sites as built: guard < stager < push < recorder, and only `info` or
+#         `cd` between a stager and its push
+#   S31h  the digest the stager hands back
+#   S31i  the order in which a refusal names its cause, and the exits each one offers
+#   S30a  CASE 1 — the 18 code points macOS's UTF-8 [:space:] holds digest as a space under
+#         LC_ALL=C and under a UTF-8 locale; ARMED-RED: the unpinned body is convicted
+#   S30b  code points outside the set still read as text; the legacy digest moves with the pin
+#   S30c  a byte that is not valid UTF-8 digests the same under both locales
+#   S30d  THE RESTORE — every production function this block saved reads exactly as saved, and
+#         none of the commands its arms stub is still a function
+#
+# HOW THE ARMS ARE WRITTEN — group S15's three rules, unchanged. Every negative is a captured
+# value inside a `[ … ]` conjunction that leads to a PASS; nothing is read through a pipeline into
+# an early-exiting grep (group PF); every stub is withdrawn in the arm that set it, and an
+# ARMED-RED mutant is withdrawn by re-evaluating the production definition saved below, S16's
+# SA_SAVED_* idiom. No group letter is minted: RS reduces every id to its leading capitals.
+#
+# Offline: $WORK fixtures and shell-function stubs. No network, no Node, no TTY. No legitimate
+# skip, and deliberately NOT declared in GUARD_EXPECTED_SKIPS.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "The baseline the gate compares against (#1468):"
+
+# Every production function an arm below stubs or mutates, saved before any arm runs. sb_restore
+# re-evaluates the saved text; S30d compares each against it.
+SB_SAVED_FNS='change_confirmation_state _baseline_record record_published_itinerary require_recordable_baseline itinerary_digest _legacy_itinerary_digest staged_record_path'
+for sbfn in $SB_SAVED_FNS; do
+  eval "SB_SAVED_${sbfn}=\"\$(declare -f ${sbfn})\""
+done
+sb_restore() { # <fn> — the saved production definition, re-evaluated; unset where none was saved
+  local v="SB_SAVED_$1"
+  if [ -n "${!v}" ]; then eval "${!v}"; else unset -f "$1"; fi
+}
+# The staging primitive's temporaries beside a trip's sidecar: mktemp's six-character suffix.
+sb_temps() { local n=0 f; for f in "$1"/.published-itinerary.??????; do [ -e "$f" ] && n=$((n+1)); done; printf '%s' "$n"; }
+
+# ── S27a — THE RECORDER'S OWN WARNING (#1468 case 4). The staging step fails after a push on a
+# trip that declares no approvers and has no baseline. The recorder must say the gate is NOT
+# ACTIVE, return 0 under the errexit production runs it with — the after-marker is the proof that
+# no failed step ended the command — and leave no sidecar behind. Registered: with the recorder
+# removed its subshell exits 127 under errexit, so no marker prints and the verdict is a FAIL.
+s27a_assert() {
+  local d e rc aft=0 na=0 side=0
+  d="$(s_fixture "s27a-$RANDOM" 14:00 none)"
+  mktemp() { return 1; }
+  e="$( ( set -e; record_published_itinerary "$d" "$d/$S15_RENDER"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; rc=$?
+  unset -f mktemp
+  case "$e" in *S27-AFTER*) aft=1 ;; esac
+  case "$e" in *"NOT ACTIVE"*) na=1 ;; esac
+  [ -e "$d/.published-itinerary" ] && side=1
+  if [ "$rc" -eq 0 ] && [ "$aft" -eq 1 ] && [ "$na" -eq 1 ] && [ "$side" -eq 0 ]; then
+    PASS "S27a: when the staging step fails after a push on a trip with no baseline, the recorder says the gate is NOT ACTIVE, returns 0 under errexit with the after-marker printed, and writes no sidecar"
+  else
+    FAIL "S27a: rc=$rc after-marker=$aft NOT-ACTIVE=$na sidecar=$side — the recorder stayed silent, ended the command, or left a sidecar it could not stage"
+  fi
+}
+s27a_assert
+
+# ── S27b — EVERY FAILURE THE RECORDER MEETS, ON EVERY STATE IT CAN LEAVE. Three failures, each on a
+# trip with no baseline (marker N: NOT ACTIVE), on one whose baseline records another plan (marker
+# K: keeps the baseline it already had) and on one whose baseline is present but unusable (marker
+# U: present but cannot be used), nine cells; and S27b′'s tenth, the sidecar's path a directory,
+# which needs no stub because the move lands the record inside it. Each must return 0 under
+# errexit with the after-marker, carry its own state's marker and no other, leave the sidecar
+# byte-identical (absent where there was none) and leave no temporary beside it; after the
+# directory cell the classifier still reads the path `unusable`, and the record sits inside the
+# directory rather than at the path. CONTROL: the recorder unstubbed on a trip with no baseline
+# writes the sidecar and warns nothing, so "nothing written" above is a measurement of a writer
+# that can write. ARMED-RED: the shipped recorder's body, whose `mktemp … || return 0` returns
+# silently, is put back for the first cell and must leave no marker, then the production recorder
+# is re-evaluated.
+s27b_assert() {
+  local f s d e rc aft n k u ok=1 why="" cells=0 c ce crc cn=0 ck=0 me mn=0 mk=0
+  for f in mktemp-fails mktemp-missing mv-fails; do
+    for s in absent kept unusable; do
+      cells=$((cells+1))
+      if [ "$s" = absent ]; then
+        d="$(s_fixture "s27b-$f-$s-$RANDOM" 14:00 none)"
+      elif [ "$s" = kept ]; then
+        d="$(s_fixture "s27b-$f-$s-$RANDOM" 16:30 none)"; s_record "$d/.published-itinerary" "$S_DA" published; cp "$d/.published-itinerary" "$d.before"
+      else
+        d="$(s_fixture "s27b-$f-$s-$RANDOM" 16:30 none)"; printf 'published=2027-06-01T00:00:00Z\n' > "$d/.published-itinerary"; cp "$d/.published-itinerary" "$d.before"
+      fi
+      case "$f" in
+        mktemp-fails)   mktemp() { return 1; } ;;
+        mktemp-missing) mktemp() { printf '%s' "$WORK/zzq-s27b-no-such-dir/rec.XXXXXX"; } ;;
+        mv-fails)       mv() { return 1; } ;;
+      esac
+      e="$( ( set -e; record_published_itinerary "$d" "$d/$S15_RENDER"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; rc=$?
+      unset -f mktemp mv
+      aft=0; n=0; k=0; u=0
+      case "$e" in *S27-AFTER*) aft=1 ;; esac
+      case "$e" in *"NOT ACTIVE"*) n=1 ;; esac
+      case "$e" in *"keeps the baseline it already had"*) k=1 ;; esac
+      case "$e" in *"present but cannot be used"*) u=1 ;; esac
+      [ "$rc" -eq 0 ] && [ "$aft" -eq 1 ] || { ok=0; why="$why $f/$s:rc=$rc,after=$aft"; }
+      [ "$(sb_temps "$d")" -eq 0 ] || { ok=0; why="$why $f/$s:temps=$(sb_temps "$d")"; }
+      if [ "$s" = absent ]; then
+        [ "$n$k$u" = 100 ] || { ok=0; why="$why $f/$s:marker=N$n/K$k/U$u"; }
+        [ ! -e "$d/.published-itinerary" ] || { ok=0; why="$why $f/$s:sidecar-written"; }
+      elif [ "$s" = kept ]; then
+        [ "$n$k$u" = 010 ] || { ok=0; why="$why $f/$s:marker=N$n/K$k/U$u"; }
+        cmp -s "$d.before" "$d/.published-itinerary" || { ok=0; why="$why $f/$s:sidecar-changed"; }
+      else
+        [ "$n$k$u" = 001 ] || { ok=0; why="$why $f/$s:marker=N$n/K$k/U$u"; }
+        cmp -s "$d.before" "$d/.published-itinerary" || { ok=0; why="$why $f/$s:sidecar-changed"; }
+      fi
+    done
+  done
+  # S27b′ — the sidecar's path a directory. The move lands the record inside it, and the read-back
+  # is what catches that: the classifier still reads the path `unusable`, the record sits inside
+  # the directory, and nothing is left beside it.
+  cells=$((cells+1))
+  d="$(s_fixture "s27b-dir-$RANDOM" 16:30 none)"; mkdir -p "$d/.published-itinerary"
+  e="$( ( set -e; record_published_itinerary "$d" "$d/$S15_RENDER"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; rc=$?
+  aft=0; n=0; k=0; u=0
+  case "$e" in *S27-AFTER*) aft=1 ;; esac
+  case "$e" in *"NOT ACTIVE"*) n=1 ;; esac
+  case "$e" in *"keeps the baseline it already had"*) k=1 ;; esac
+  case "$e" in *"present but cannot be used"*) u=1 ;; esac
+  [ "$rc" -eq 0 ] && [ "$aft" -eq 1 ] && [ "$n$k$u" = 001 ] || { ok=0; why="$why dir:rc=$rc,after=$aft,marker=N$n/K$k/U$u"; }
+  [ "$(_baseline_record "$d/.published-itinerary")" = unusable ] && [ -d "$d/.published-itinerary" ] || { ok=0; why="$why dir:classified=$(_baseline_record "$d/.published-itinerary")"; }
+  [ "$(sb_temps "$d/.published-itinerary")" -eq 1 ] && [ "$(sb_temps "$d")" -eq 0 ] || { ok=0; why="$why dir:inside=$(sb_temps "$d/.published-itinerary"),beside=$(sb_temps "$d")"; }
+  c="$(s_fixture "s27b-ctl-$RANDOM" 14:00 none)"
+  ce="$( ( set -e; record_published_itinerary "$c" "$c/$S15_RENDER"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; crc=$?
+  case "$ce" in *"NOT ACTIVE"*) cn=1 ;; esac
+  case "$ce" in *"keeps the baseline it already had"*) ck=1 ;; esac
+  d="$(s_fixture "s27b-mut-$RANDOM" 14:00 none)"
+  record_published_itinerary() { # MUTANT: the shipped staging step, which returned silently
+    local out tmp dg; out="$(published_itinerary_path "$1")"; dg="$(itinerary_digest "$2")"; [ -n "$dg" ] || return 0
+    tmp="$(mktemp "${out}.XXXXXX")" || return 0; printf 'digest=%s\npublished=%s\n' "$dg" "$(_iso_now)" > "$tmp"; mv -f "$tmp" "$out"
+  }
+  mktemp() { return 1; }
+  me="$( ( set -e; record_published_itinerary "$d" "$d/$S15_RENDER"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"
+  unset -f mktemp
+  sb_restore record_published_itinerary
+  case "$me" in *"NOT ACTIVE"*) mn=1 ;; esac
+  case "$me" in *"keeps the baseline it already had"*) mk=1 ;; esac
+  if [ "$crc" -ne 0 ] || [ "$(_record_digest "$c/.published-itinerary")" != "$S_DA" ] || [ "$cn" -ne 0 ] || [ "$ck" -ne 0 ]; then
+    FAIL "S27b: CONTROL — the unstubbed recorder on a trip with no baseline returned rc=$crc, wrote '$(_record_digest "$c/.published-itinerary")' (want $S_DA) and warned N=$cn K=$ck (want neither), so the absence of a write below is not a measurement"
+  elif [ "$ok" -eq 1 ] && [ "$cells" -eq 10 ] && [ "$mn" -eq 0 ] && [ "$mk" -eq 0 ]; then
+    PASS "S27b: on each of $cells cells — mktemp refusing, mktemp naming a missing directory and mv refusing, each with no baseline, with a baseline of another plan and with one present but unusable, and the sidecar's path a directory — the recorder returns 0 under errexit, warns NOT ACTIVE, that it keeps the baseline it already had, or that the sidecar is present but cannot be used, by the state it leaves, keeps the sidecar byte-identical and leaves no temporary beside it, and the record moved into a directory is caught by the read-back; the control writes the sidecar; ARMED-RED: the shipped recorder's silent return leaves no marker, and the assertion convicts it"
+  else
+    FAIL "S27b: cells=$cells$why; ARMED-RED read N=$mn K=$mk (want neither)"
+  fi
+}
+s27b_assert
+
+# ── S28 — CASE 5: A BASELINE SIDECAR THAT IS PRESENT BUT CANNOT BE USED (#1468). ADR-007 § 2 makes
+# absence and a malformed or truncated file different conditions and never the same branch, so
+# each shape below must reach the gate as `undetermined`, never as "no baseline". s28_plant writes
+# one of the nine shapes at a trip's sidecar path. The mode-000 shape takes L5b's form: a runner
+# that can still read a 000 file gets a directory instead, a construct no privilege reads as a
+# regular file, so every cell renders a verdict on every runner and none becomes a skip. S_LA is
+# the legacy CRC token of the 14:00 render, which must still read as a baseline.
+S28_SHAPES='dangling mode000 badtoken nodigest empty directory hex20 upper64 crlf'
+s28_plant() { # <trip> <shape> — a present but unusable baseline sidecar, one of S28_SHAPES
+  local f="$1/.published-itinerary"
+  case "$2" in
+    dangling)  ln -s "$1/zzq-no-such-baseline" "$f" ;;
+    mode000)   s_record "$f" "$S_DA" published; chmod 000 "$f"
+               if [ -r "$f" ]; then chmod 644 "$f"; rm -f "$f"; mkdir -p "$f"; fi ;;
+    badtoken)  printf 'digest=not*a*digest\npublished=2027-06-01T00:00:00Z\n' > "$f" ;;
+    nodigest)  printf 'published=2027-06-01T00:00:00Z\n' > "$f" ;;
+    empty)     : > "$f" ;;
+    directory) mkdir -p "$f" ;;
+    hex20)     printf 'digest=0123456789abcdef0123\npublished=2027-06-01T00:00:00Z\n' > "$f" ;;
+    upper64)   printf 'digest=%s\npublished=2027-06-01T00:00:00Z\n' "$(tr 'abcdef' 'ABCDEF' <<<"$S_DA")" > "$f" ;;
+    crlf)      printf 'digest=%s\r\npublished=2027-06-01T00:00:00Z\r\n' "$S_DA" > "$f" ;;
+  esac
+}
+s_render "$WORK/sb-la.html" 14:00 none; S_LA="$(_legacy_itinerary_digest "$WORK/sb-la.html")"
+
+# ── S28a — THE SUBJECT. Nine shapes × {a trip that declares no approvers, one that declares one
+# approver at threshold all} × {the 14:00 render, which is the baseline's own plan where one could
+# be read, and the 16:30 render} — 36 trips, every one `undetermined`. Fixture integrity first:
+# the mode-000 sidecar must not be a readable regular file. SIX CONTROLS keep their verdicts, so
+# the 36 are not a resolver that answers `undetermined` to everything: no sidecar at all, on both
+# policies; an S_DA baseline under its own plan and under a moved one; and a legacy CRC baseline
+# under each — the last two are criterion 1's "a legacy CRC-shaped baseline still reads as a
+# baseline". ARMED-RED: _baseline_record replaced by the old fold (a digest if _record_digest
+# reads one, else `absent`) makes the undeclared, moved trip with no digest= line read
+# none-pending, which the assertion convicts; the classifier is then re-evaluated from its saved
+# text. Registered: with the resolver removed every state is empty.
+s28a_assert() {
+  local sh pol t d st n=0 got=0 bad="" integ=1 c1 c2 c3 c4 c5 c6 md mut
+  for sh in $S28_SHAPES; do
+    for pol in undeclared declared; do
+      for t in 14:00 16:30; do
+        n=$((n+1))
+        d="$(s_fixture "s28a-$sh-$pol-${t%%:*}-$RANDOM" "$t" none)"
+        [ "$pol" = undeclared ] || sa_declare "$d" all zqa1
+        s28_plant "$d" "$sh"
+        if [ "$sh" = mode000 ] && [ -f "$d/.published-itinerary" ] && [ -r "$d/.published-itinerary" ]; then integ=0; fi
+        st="$(change_confirmation_state "$d" 2>/dev/null)"
+        if [ "$st" = undetermined ]; then got=$((got+1)); else bad="$bad $sh/$pol/$t=${st:-empty}"; fi
+      done
+    done
+  done
+  d="$(s_fixture "s28a-c1-$RANDOM" 14:00 none)"; c1="$(change_confirmation_state "$d" 2>/dev/null)"
+  d="$(s_fixture "s28a-c2-$RANDOM" 14:00 none)"; sa_declare "$d" all zqa1; c2="$(change_confirmation_state "$d" 2>/dev/null)"
+  d="$(s_fixture "s28a-c3-$RANDOM" 14:00 none)"; s_record "$d/.published-itinerary" "$S_DA" published; c3="$(change_confirmation_state "$d" 2>/dev/null)"
+  d="$(s_fixture "s28a-c4-$RANDOM" 16:30 none)"; s_record "$d/.published-itinerary" "$S_DA" published; c4="$(change_confirmation_state "$d" 2>/dev/null)"
+  d="$(s_fixture "s28a-c5-$RANDOM" 14:00 none)"; s_record "$d/.published-itinerary" "$S_LA" published; c5="$(change_confirmation_state "$d" 2>/dev/null)"
+  d="$(s_fixture "s28a-c6-$RANDOM" 16:30 none)"; s_record "$d/.published-itinerary" "$S_LA" published; c6="$(change_confirmation_state "$d" 2>/dev/null)"
+  md="$(s_fixture "s28a-mut-$RANDOM" 16:30 none)"; s28_plant "$md" nodigest
+  _baseline_record() { local t; t="$(_record_digest "${1:-}")"; if [ -n "$t" ]; then printf '%s' "$t"; else printf 'absent'; fi; }   # MUTANT: the old fold
+  mut="$(change_confirmation_state "$md" 2>/dev/null)"
+  sb_restore _baseline_record
+  if [ "$integ" -ne 1 ]; then
+    FAIL "S28a: fixture integrity — a mode-000 sidecar is still a readable regular file after L5b's fallback, so that shape is not unusable on this runner and its cells would grade something else"
+  elif [ "$c1 $c2 $c3 $c4 $c5 $c6" != "none-pending unconfirmed none-pending unconfirmed none-pending unconfirmed" ]; then
+    FAIL "S28a: CONTROL — with no sidecar (undeclared, declared), an S_DA baseline (unmoved, moved) and a legacy CRC baseline (unmoved, moved) the states read [$c1 $c2 $c3 $c4 $c5 $c6], want [none-pending unconfirmed none-pending unconfirmed none-pending unconfirmed], so an undetermined below would not be attributable to the sidecar"
+  elif [ "$got" -eq 36 ] && [ "$n" -eq 36 ] && [ "$mut" = none-pending ]; then
+    PASS "S28a: case 5 — $got of $n trips whose baseline sidecar is present but unusable (dangling link, mode 000, a token not a digest, no digest= line, empty, a directory, a 20-hex token, a 64-character uppercase token, CRLF), on both policies and both renders, resolve undetermined; the six controls keep their verdicts, a legacy CRC baseline among them reading as a baseline; ARMED-RED: the old fold reads the undeclared moved no-digest= trip none-pending"
+  else
+    FAIL "S28a: $got of $n cells read undetermined;${bad:- none other} ARMED-RED read '$mut' (want none-pending)"
+  fi
+}
+s28a_assert
+
+# ── S28b — THE GATE ON EACH SHAPE. The nine undeclared trips under the moved render, each through
+# ( require_change_confirmation … ): each must refuse, name `(state: undetermined)`, say the
+# baseline is present but cannot be used, name the sidecar's path, and carry none of S15f's
+# vocabulary of change once the trip path is scrubbed — and must not speak of the outgoing render,
+# which is the other cause's message. CONTROL: an unreadable render (S15a's trip) keeps the render
+# cause and not this one, and a readable moved render's refusal carries the vocabulary, so the scan
+# can see a claim.
+s28b_assert() {
+  local sh d e rc m ok=1 n=0 why="" ce cr cc=0 crr=0 cu=0
+  for sh in $S28_SHAPES; do
+    n=$((n+1))
+    d="$(s_fixture "s28b-$sh-$RANDOM" 16:30 none)"; s28_plant "$d" "$sh"
+    e="$( ( require_change_confirmation "$d" ) 2>&1 >/dev/null )"; rc=$?
+    m="${e//"$d"/<trip>}"
+    [ "$rc" -ne 0 ] || { ok=0; why="$why $sh:rc=0"; }
+    case "$e" in *"(state: undetermined)"*) ;; *) ok=0; why="$why $sh:no-token" ;; esac
+    case "$e" in *"present but cannot be used"*) ;; *) ok=0; why="$why $sh:no-cause" ;; esac
+    case "$e" in *"$d/.published-itinerary"*) ;; *) ok=0; why="$why $sh:no-path" ;; esac
+    case "$e" in *"outgoing render"*) ok=0; why="$why $sh:render-cause" ;; esac
+    [ -z "$(s15f_claims "$m")" ] || { ok=0; why="$why $sh:claims[$(s15f_claims "$m")]"; }
+  done
+  ce="$( ( require_change_confirmation "$S15AD" ) 2>&1 >/dev/null )"
+  cr="$( ( require_change_confirmation "$S15DD" ) 2>&1 >/dev/null )"
+  case "$ce" in *"outgoing render"*) crr=1 ;; esac
+  case "$ce" in *"present but cannot be used"*) cu=1 ;; esac
+  [ -n "$(s15f_claims "${cr//"$S15DD"/<trip>}")" ] && cc=1
+  if [ "$crr" -ne 1 ] || [ "$cu" -ne 0 ] || [ "$cc" -ne 1 ]; then
+    FAIL "S28b: CONTROL — the unreadable render's refusal names the render=$crr and this cause=$cu (want 1 and 0), and the readable moved render's refusal carries the vocabulary of change=$cc (want 1), so the readings below are not measurements"
+  elif [ "$ok" -eq 1 ] && [ "$n" -eq 9 ]; then
+    PASS "S28b: on each of the $n shapes the gate refuses, names undetermined, says the baseline at the sidecar's path is present but cannot be used, and makes no claim about change in either direction; the render cause keeps its own words, and a readable moved render's refusal carries the vocabulary the scan looks for"
+  else
+    FAIL "S28b: the gate's refusals on the $n shapes:$why"
+  fi
+}
+s28b_assert
+
+# ── S28c — THE SUCCESS INDICATOR'S ARM: update, end to end, refuses an unusable baseline before any
+# network effect. S8's mock of gh and npx is defined here and withdrawn here. Two undeclared trips —
+# a dangling link, which no privilege reads, and a sidecar with no digest= line — must each return
+# 1, name the cause, and leave no `repo clone` in the mock's log. CONTROL: a trip with a usable
+# S_DA baseline and a confirmation of the 16:30 plan it carries does reach the clone, so the zero
+# below is a measurement of a path that can clone.
+SB_GHLOG="$WORK/sb_gh.log"
+s28c_assert() {
+  local dl nd cc e1 e2 r1 r2 l1 l2 lc m1=0 m2=0 cl1=0 cl2=0 clc=0
+  dl="$(s_fixture "s28cl-$RANDOM" 16:30 none)"; s28_plant "$dl" dangling
+  nd="$(s_fixture "s28cn-$RANDOM" 16:30 none)"; s28_plant "$nd" nodigest
+  cc="$(s_fixture "s28cc-$RANDOM" 16:30 none)"; s_record "$cc/.published-itinerary" "$S_DA" published; s_record "$cc/.change-confirmed" "$S_DB" confirmed
+  gh() {   # mock: S8's — record the call, answer the read-only probes, create or clone nothing real
+    printf '%s\n' "$*" >> "$SB_GHLOG"
+    case "${1:-} ${2:-}" in
+      "api user")    printf 'testowner' ;;
+      "repo view")   return 0 ;;
+      "auth status") printf "Token scopes: 'repo'\n" ;;
+      *)             return 0 ;;
+    esac
+  }
+  npx() { return 0; }
+  : > "$SB_GHLOG"; e1="$( ( cmd_update "$dl" ) 2>&1 >/dev/null )"; r1=$?; l1="$(cat "$SB_GHLOG")"
+  : > "$SB_GHLOG"; e2="$( ( cmd_update "$nd" ) 2>&1 >/dev/null )"; r2=$?; l2="$(cat "$SB_GHLOG")"
+  : > "$SB_GHLOG"; ( cmd_update "$cc" ) >/dev/null 2>&1; lc="$(cat "$SB_GHLOG")"
+  unset -f gh npx
+  case "$e1" in *"present but cannot be used"*) m1=1 ;; esac
+  case "$e2" in *"present but cannot be used"*) m2=1 ;; esac
+  case "$l1" in *"repo clone"*) cl1=1 ;; esac
+  case "$l2" in *"repo clone"*) cl2=1 ;; esac
+  case "$lc" in *"repo clone"*) clc=1 ;; esac
+  if [ "$clc" -ne 1 ]; then
+    FAIL "S28c: CONTROL — a confirmed update over a usable baseline never reached the clone in the mock's log, so the absence of a clone below proves nothing"
+  elif [ "$r1" -eq 1 ] && [ "$r2" -eq 1 ] && [ "$m1" -eq 1 ] && [ "$m2" -eq 1 ] && [ "$cl1" -eq 0 ] && [ "$cl2" -eq 0 ]; then
+    PASS "S28c: update over a baseline sidecar that is a dangling link, and over one with no digest= line, returns 1 naming the unusable baseline and never clones the per-trip repo; a confirmed update over a usable baseline does reach the clone"
+  else
+    FAIL "S28c: dangling rc=$r1 named=$m1 cloned=$cl1; no digest= rc=$r2 named=$m2 cloned=$cl2 — an unusable baseline let update through, or its refusal came after a network effect"
+  fi
+}
+s28c_assert
+
+# ── S28d — CONFIRM ON EACH SHAPE, BOTH POLICIES. ( cmd_confirm … ) </dev/null on the nine shapes
+# under the moved render, on a trip that declares no approvers and on one that declares an
+# approver: each must return 1 saying it could not determine whether the itinerary changed and
+# naming the published baseline, never reach the terminal check, write no .change-confirmed, and
+# print no approval line — so the declared branch was never entered. CONTROL: a moved render over
+# a usable S_DA baseline does reach the terminal check.
+s28d_assert() {
+  local sh pol d out e rc ok=1 n=0 why="" ce ct=0
+  for sh in $S28_SHAPES; do
+    for pol in undeclared declared; do
+      n=$((n+1))
+      d="$(s_fixture "s28d-$sh-$pol-$RANDOM" 16:30 none)"
+      [ "$pol" = undeclared ] || sa_declare "$d" all zqa1
+      s28_plant "$d" "$sh"
+      out="$( ( cmd_confirm "$d" ) </dev/null 2>"$WORK/s28d.err" )"; rc=$?; e="$(cat "$WORK/s28d.err")"
+      [ "$rc" -eq 1 ] || { ok=0; why="$why $sh/$pol:rc=$rc"; }
+      case "$e" in *"could not determine"*) ;; *) ok=0; why="$why $sh/$pol:no-cd" ;; esac
+      case "$e" in *"published baseline"*) ;; *) ok=0; why="$why $sh/$pol:no-cause" ;; esac
+      case "$e" in *"requires a terminal"*) ok=0; why="$why $sh/$pol:reached-terminal" ;; esac
+      [ ! -e "$d/.change-confirmed" ] || { ok=0; why="$why $sh/$pol:wrote"; }
+      [ "$(sa_line_codes "$out")" = "0 -" ] || { ok=0; why="$why $sh/$pol:approval-line"; }
+    done
+  done
+  d="$(s_fixture "s28d-ctl-$RANDOM" 16:30 none)"; s_record "$d/.published-itinerary" "$S_DA" published
+  ce="$( ( cmd_confirm "$d" ) </dev/null 2>&1 >/dev/null )"
+  case "$ce" in *"requires a terminal"*) ct=1 ;; esac
+  if [ "$ct" -ne 1 ]; then
+    FAIL "S28d: CONTROL — confirm on a moved render over a usable baseline did not reach the terminal check, so a refusal below could not be told from a death at it"
+  elif [ "$ok" -eq 1 ] && [ "$n" -eq 18 ]; then
+    PASS "S28d: confirm refuses all $n cells — nine unusable shapes on both policies — saying it could not determine whether the itinerary changed and naming the published baseline, before the terminal check, writing nothing and printing no approval line; a moved render over a usable baseline reaches the terminal check"
+  else
+    FAIL "S28d: confirm on the $n cells:$why"
+  fi
+}
+s28d_assert
+
+# ── S28e — THE CLASSIFIER ITSELF. _baseline_record over the nine shapes, an absent path, an S_DA
+# record and a legacy CRC record must print `unusable` nine times, `absent`, the S_DA token and the
+# CRC token — the last is criterion 1's legacy baseline, read as one. Registered: with the
+# classifier removed every answer is empty.
+s28e_assert() {
+  local sh d got="" want="" ab da la
+  for sh in $S28_SHAPES; do
+    d="$(s_fixture "s28e-$sh-$RANDOM" 14:00 none)"; s28_plant "$d" "$sh"
+    got="$got $(_baseline_record "$d/.published-itinerary" 2>/dev/null)"; want="$want unusable"
+  done
+  d="$(s_fixture "s28e-ab-$RANDOM" 14:00 none)"; ab="$(_baseline_record "$d/.published-itinerary" 2>/dev/null)"
+  d="$(s_fixture "s28e-da-$RANDOM" 14:00 none)"; s_record "$d/.published-itinerary" "$S_DA" published; da="$(_baseline_record "$d/.published-itinerary" 2>/dev/null)"
+  d="$(s_fixture "s28e-la-$RANDOM" 14:00 none)"; s_record "$d/.published-itinerary" "$S_LA" published; la="$(_baseline_record "$d/.published-itinerary" 2>/dev/null)"
+  if [ -z "$S_LA" ] || [ "${#S_DA}" -ne 64 ]; then
+    FAIL "S28e: fixture integrity — the legacy token reads '$S_LA' and the S_DA token is ${#S_DA} characters, so the two readings below would not be about a CRC token and a SHA-256 one"
+  elif [ "$got" = "$want" ] && [ "$ab" = absent ] && [ "$da" = "$S_DA" ] && [ "$la" = "$S_LA" ]; then
+    PASS "S28e: _baseline_record reads each of the nine shapes as unusable, an absent sidecar as absent, an S_DA record as its own token and a legacy CRC record as its own token — a legacy baseline still reads as a baseline"
+  else
+    FAIL "S28e: shapes [$got] want [$want]; absent '$ab'; S_DA '$da'; CRC '$la' (want $S_LA)"
+  fi
+}
+s28e_assert
+
+# ── S29 — CASES 2 AND 4 AT THE SOURCE (#1468, under direction (A)): no push begins that could not
+# end with a recorded baseline. require_recordable_baseline refuses before anything is cloned,
+# created or pushed when the outgoing render has no itinerary identity, when the sidecar's path is
+# not a regular file, or when the recorder's own staging step fails beside it. publish calls it
+# directly, and update and rotate through require_publish_guards. Each arm that drives a command
+# defines S8's mock of gh and npx through sb_gh, and withdraws both before its verdict.
+sb_gh() { # S8's mock of gh, shared by the S29 arms: record the call, answer the read-only probes
+  printf '%s\n' "$*" >> "$SB_GHLOG"
+  case "${1:-} ${2:-}" in
+    "api user")    printf 'testowner' ;;
+    "repo view")   return 0 ;;
+    "auth status") printf "Token scopes: 'repo'\n" ;;
+    *)             return 0 ;;
+  esac
+}
+
+# ── S29a — publish, end to end, on a render nothing can read: it must return 1 naming the render's
+# identity, and the mock's log must carry neither the existence probe nor a repo creation, with no
+# sidecar written. CONTROL: an identifiable render reaches the existence probe (the mock answers
+# that the repo exists, so it then stops, as S9 does). Registered: with the guard removed, publish
+# runs on to the probe.
+s29a_assert() {
+  local d c e rc log clog msg=0 vw=0 cr=0 cvw=0 side=0
+  d="$(s15_dangling "s29a-$RANDOM")"; c="$(s_fixture "s29ac-$RANDOM" 14:00 none)"
+  gh() { sb_gh "$@"; }; npx() { return 0; }
+  : > "$SB_GHLOG"; e="$( ( cmd_publish "$d" ) 2>&1 >/dev/null )"; rc=$?; log="$(cat "$SB_GHLOG")"
+  : > "$SB_GHLOG"; ( cmd_publish "$c" ) >/dev/null 2>&1; clog="$(cat "$SB_GHLOG")"
+  unset -f gh npx
+  case "$e" in *"could not identify the itinerary content of the outgoing render"*) msg=1 ;; esac
+  case "$log" in *"repo view"*) vw=1 ;; esac
+  case "$log" in *"repo create"*) cr=1 ;; esac
+  case "$clog" in *"repo view"*) cvw=1 ;; esac
+  [ -e "$d/.published-itinerary" ] && side=1
+  if [ "$cvw" -ne 1 ]; then
+    FAIL "S29a: CONTROL — publish of an identifiable render never reached the existence probe in the mock's log, so its absence below proves nothing"
+  elif [ "$rc" -eq 1 ] && [ "$msg" -eq 1 ] && [ "$vw" -eq 0 ] && [ "$cr" -eq 0 ] && [ "$side" -eq 0 ]; then
+    PASS "S29a: publish of a render nothing can read returns 1 naming the render's identity, before the repo is probed or created and with no sidecar written; an identifiable render reaches the probe"
+  else
+    FAIL "S29a: rc=$rc named=$msg probed=$vw created=$cr sidecar=$side — publish began a push that could not end with a baseline"
+  fi
+}
+s29a_assert
+
+# ── S29b — update, end to end, on an undeclared trip with NO baseline and a render nothing can
+# read: the gate reads none-pending there, so the guard is the only thing standing between it and
+# a push that would leave the trip with no anchor. It must return 1 naming the render's identity,
+# with no clone in the mock's log. CONTROL: the same shape of trip with an identifiable render
+# reads none-pending at the gate and reaches the clone.
+s29b_assert() {
+  local d c e rc log clog st msg=0 cl=0 ccl=0
+  d="$(s15_dangling "s29b-$RANDOM")"; c="$(s_fixture "s29bc-$RANDOM" 14:00 none)"
+  st="$(change_confirmation_state "$c" 2>/dev/null)"
+  gh() { sb_gh "$@"; }; npx() { return 0; }
+  : > "$SB_GHLOG"; e="$( ( cmd_update "$d" ) 2>&1 >/dev/null )"; rc=$?; log="$(cat "$SB_GHLOG")"
+  : > "$SB_GHLOG"; ( cmd_update "$c" ) >/dev/null 2>&1; clog="$(cat "$SB_GHLOG")"
+  unset -f gh npx
+  case "$e" in *"could not identify the itinerary content of the outgoing render"*) msg=1 ;; esac
+  case "$log" in *"repo clone"*) cl=1 ;; esac
+  case "$clog" in *"repo clone"*) ccl=1 ;; esac
+  if [ "$st" != none-pending ] || [ "$ccl" -ne 1 ]; then
+    FAIL "S29b: CONTROL — the identifiable trip with no baseline read '$st' (want none-pending) and reached the clone=$ccl (want 1), so the refusal below is not attributable to the render"
+  elif [ "$rc" -eq 1 ] && [ "$msg" -eq 1 ] && [ "$cl" -eq 0 ]; then
+    PASS "S29b: update on an undeclared trip with no baseline, whose gate reads none-pending, refuses a render nothing can read (rc=1, the render's identity named) before any clone; the same trip with an identifiable render reaches the clone"
+  else
+    FAIL "S29b: rc=$rc named=$msg cloned=$cl — update began a push that would leave the trip with no baseline"
+  fi
+}
+s29b_assert
+
+# ── S29c — THE OTHER TWO REFUSALS, ON ALL THREE PUSH PATHS. (i) update with mktemp failing: "could
+# not stage the baseline", no clone. (ii) publish with the sidecar's path a directory: "is not a
+# regular file", no existence probe. (iii) rotate with mktemp failing, a usable baseline and the
+# outgoing plan confirmed: rc 1, the staging refusal, .passphrase byte-identical, no clone — the
+# guard runs before the key is written. CONTROL: (i)'s trip unstubbed reaches the clone.
+s29c_assert() {
+  local u p r c ue pe re ur pr rr ul pl rl cl um=0 pm=0 rmsg=0 ucl=0 pvw=0 rcl=0 rsame=0 ccl=0
+  u="$(s_fixture "s29cu-$RANDOM" 14:00 none)"
+  p="$(s_fixture "s29cp-$RANDOM" 14:00 none)"; mkdir -p "$p/.published-itinerary"
+  r="$(s_fixture "s29cr-$RANDOM" 16:30 none)"; s_record "$r/.published-itinerary" "$S_DA" published; s_record "$r/.change-confirmed" "$S_DB" confirmed
+  printf '%s\n' 'sb-live-synthetic-key-0029' > "$r/.passphrase"; chmod 600 "$r/.passphrase"; cp -p "$r/.passphrase" "$r.pp-before"
+  c="$(s_fixture "s29cc-$RANDOM" 14:00 none)"
+  gh() { sb_gh "$@"; }; npx() { return 0; }
+  mktemp() { return 1; }
+  : > "$SB_GHLOG"; ue="$( ( cmd_update "$u" ) 2>&1 >/dev/null )"; ur=$?; ul="$(cat "$SB_GHLOG")"
+  : > "$SB_GHLOG"; re="$( ( cmd_rotate "$r" ) 2>&1 >/dev/null )"; rr=$?; rl="$(cat "$SB_GHLOG")"
+  unset -f mktemp
+  : > "$SB_GHLOG"; pe="$( ( cmd_publish "$p" ) 2>&1 >/dev/null )"; pr=$?; pl="$(cat "$SB_GHLOG")"
+  : > "$SB_GHLOG"; ( cmd_update "$c" ) >/dev/null 2>&1; cl="$(cat "$SB_GHLOG")"
+  unset -f gh npx
+  case "$ue" in *"could not stage the baseline"*) um=1 ;; esac
+  case "$pe" in *"is not a regular file"*) pm=1 ;; esac
+  case "$re" in *"could not stage the baseline"*) rmsg=1 ;; esac
+  case "$ul" in *"repo clone"*) ucl=1 ;; esac
+  case "$pl" in *"repo view"*) pvw=1 ;; esac
+  case "$rl" in *"repo clone"*) rcl=1 ;; esac
+  case "$cl" in *"repo clone"*) ccl=1 ;; esac
+  cmp -s "$r.pp-before" "$r/.passphrase" && rsame=1
+  if [ "$ccl" -ne 1 ]; then
+    FAIL "S29c: CONTROL — update on (i)'s trip unstubbed never reached the clone, so the absence of one below proves nothing"
+  elif [ "$ur" -eq 1 ] && [ "$um" -eq 1 ] && [ "$ucl" -eq 0 ] && [ "$pr" -eq 1 ] && [ "$pm" -eq 1 ] && [ "$pvw" -eq 0 ] && [ "$rr" -eq 1 ] && [ "$rmsg" -eq 1 ] && [ "$rsame" -eq 1 ] && [ "$rcl" -eq 0 ]; then
+    PASS "S29c: update refuses a baseline it cannot stage before any clone, publish refuses a sidecar path that is not a regular file before the existence probe, and rotate refuses a baseline it cannot stage before any clone with .passphrase byte-identical; the unstubbed control reaches the clone"
+  else
+    FAIL "S29c: update rc=$ur named=$um cloned=$ucl; publish rc=$pr named=$pm probed=$pvw; rotate rc=$rr named=$rmsg passphrase-unchanged=$rsame cloned=$rcl"
+  fi
+}
+s29c_assert
+
+# ── S29d — STRUCTURAL, from the PARSED bodies as S9b reads them. require_publish_guards calls the
+# baseline guard after the render's approval-code guard; cmd_publish calls the baseline guard and
+# not the gate, ahead of its existence probe. SENSITIVITY: cmd_update's body names its one call
+# line, require_publish_guards. SPECIFICITY: a fabricated token is in none of the three bodies.
+s29d_assert() {
+  local g p u pre gc gr pg pv ok=1 why="" sens=0 spec=0
+  g="$(declare -f require_publish_guards)"; p="$(declare -f cmd_publish)"; u="$(declare -f cmd_update)"
+  gc=-1; gr=-1; pg=-1; pv=-1
+  case "$g" in *require_render_approval_code*) pre="${g%%require_render_approval_code*}"; gc=${#pre} ;; esac
+  case "$g" in *require_recordable_baseline*) pre="${g%%require_recordable_baseline*}"; gr=${#pre} ;; esac
+  case "$p" in *require_recordable_baseline*) pre="${p%%require_recordable_baseline*}"; pg=${#pre} ;; esac
+  case "$p" in *"gh repo view"*) pre="${p%%gh repo view*}"; pv=${#pre} ;; esac
+  [ "$gc" -ge 0 ] && [ "$gr" -gt "$gc" ] || { ok=0; why="$why guards:$gc/$gr"; }
+  [ "$pg" -ge 0 ] && [ "$pv" -gt "$pg" ] || { ok=0; why="$why publish:$pg/$pv"; }
+  case "$p" in *require_change_confirmation*) ok=0; why="$why publish-gated" ;; esac
+  case "$u" in *require_publish_guards*) sens=1 ;; esac
+  case "$g$p$u" in *zzq_fabricated_s29d*) spec=1 ;; esac
+  if [ "$sens" -ne 1 ] || [ "$spec" -ne 0 ]; then
+    FAIL "S29d: CONTROL — cmd_update's parsed body names require_publish_guards=$sens (want 1) and a fabricated token appears=$spec (want 0), so the offsets below are not measurements"
+  elif [ "$ok" -eq 1 ]; then
+    PASS "S29d: in the parsed bodies, require_publish_guards calls the baseline guard after the render's approval-code guard, and cmd_publish calls it ahead of its existence probe and does not call the gate — publish stays ungated"
+  else
+    FAIL "S29d: guard placement:$why"
+  fi
+}
+s29d_assert
+
+# ── Group S, #1468 amendment 1 (D-6, FM-1, FM-3, CD-1) — the staged record, and the recorder's words ──
+# Helpers for S27c–S27e, S29e and S31a–S31f. s31_trip builds a trip with a baseline (A = S0's S_DA,
+# B = S_DB), an optional staged record, an optional declaration with an approval of B (or of A and
+# B), and an optional confirmation of B. Every negative is a captured value inside a `[ … ]`
+# conjunction; every stub is withdrawn in the arm that set it.
+S27D_PRIV=0; s27d_probe="$(mktemp -d "$WORK/s27dp.XXXXXX")"; chmod a-w "$s27d_probe"; [ -w "$s27d_probe" ] && S27D_PRIV=1; chmod u+w "$s27d_probe"
+s27_run() { S27_ERR="$( ( set -e; record_published_itinerary "$1" "$1/$S15_RENDER"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; S27_RC=$?; }
+s31_trip() { # <name> <render-time> <baseline A|B|-> <staged A|B|dir|-> [declared|declaredAB|declaredABw|-] [confirmation B]
+  local d="$WORK/sb-$1-$RANDOM"; mkdir -p "$d/outputs"; s_render "$d/$S15_RENDER" "$2" none
+  case "$3" in A) s_record "$d/.published-itinerary" "$S_DA" published ;; B) s_record "$d/.published-itinerary" "$S_DB" published ;; esac
+  case "$4" in A) s_record "$d/.published-itinerary.next" "$S_DA" published ;; B) s_record "$d/.published-itinerary.next" "$S_DB" published ;; dir) mkdir -p "$d/.published-itinerary.next" ;; esac
+  case "${5:-}" in
+    declared)    sa_declare "$d" 1 zqa1; sa_rec "$d" zqa1 approve "$S_DB" ;;
+    declaredAB)  sa_declare "$d" 1 zqa1; sa_rec "$d" zqa1 approve "$S_DA"; sa_rec "$d" zqa1 approve "$S_DB" ;;
+    declaredABw) sa_declare "$d" 1 zqa1; sa_rec "$d" zqa1 approve "$S_DA"; sa_rec "$d" zqa1 approve "$S_DB"; sa_rec "$d" zqa1 withdraw "$S_DA" ;;
+  esac
+  case "${6:-}" in B) s_record "$d/.change-confirmed" "$S_DB" confirmed ;; esac
+  printf '%s' "$d"
+}
+s27c_assert() {
+  local u d m eu ed em ru rd rmal nu=0 nd=0 nm=0 ad=0 am=0 rp=0
+  u="$(s_fixture "s27cu-$RANDOM" 14:00 none)"; d="$(s_fixture "s27cd-$RANDOM" 14:00 none)"; sa_declare "$d" 1 zqa1
+  m="$(s_fixture "s27cm-$RANDOM" 14:00 none)"; sa_rec "$m" zqa1 approve "$S_DA"
+  mktemp() { return 1; }
+  s27_run "$u"; eu="$S27_ERR"; ru=$S27_RC
+  s27_run "$d"; ed="$S27_ERR"; rd=$S27_RC
+  s27_run "$m"; em="$S27_ERR"; rmal=$S27_RC
+  unset -f mktemp
+  case "$eu" in *"NOT ACTIVE"*) nu=1 ;; esac
+  case "$ed" in *"NOT ACTIVE"*) nd=1 ;; esac
+  case "$em" in *"NOT ACTIVE"*) nm=1 ;; esac
+  case "$ed" in *"until approvals of its outgoing plan are recorded"*) ad=1 ;; esac
+  case "$em" in *"until approvals of its outgoing plan are recorded"*) am=1 ;; esac
+  case "$em" in *"until they are repaired"*) rp=1 ;; esac
+  if [ "$ru" -ne 0 ] || [ "$nu" -ne 1 ]; then
+    FAIL "S27c: CONTROL — an undeclared trip with no baseline returned rc=$ru and NOT ACTIVE=$nu (want 0 and 1)"
+  elif [ "$rd" -eq 0 ] && [ "$rmal" -eq 0 ] && [ "$nd" -eq 0 ] && [ "$nm" -eq 0 ] && [ "$ad" -eq 1 ] && [ "$am" -eq 0 ] && [ "$rp" -eq 1 ]; then
+    PASS "S27c: declaring and malformed trips are never told NOT ACTIVE; each warning names the exit that works on it — approvals of the outgoing plan where approvers are declared, repairing the sidecars where they are malformed"
+  else
+    FAIL "S27c: declared rc=$rd notactive=$nd approvals-exit=$ad; malformed rc=$rmal notactive=$nm approvals-exit=$am repair-exit=$rp"
+  fi
+}
+s27d_assert() {
+  local c d a=0 n=0 side=0 csd
+  c="$(s_fixture "s27dc-$RANDOM" 14:00 none)"; s27_run "$c"; csd="$(_baseline_record "$c/.published-itinerary")"
+  d="$(s_fixture "s27d-$RANDOM" 14:00 none)"; S27D_DIR="$d"
+  if [ "${S27D_PRIV:-0}" -eq 1 ]; then
+    mv() { return 1; }; rm() { return 1; }
+  else
+    mv() { chmod a-w "$S27D_DIR"; command mv "$@"; }
+  fi
+  s27_run "$d"
+  unset -f mv rm; chmod u+w "$d"
+  case "$S27_ERR" in *S27-AFTER*) a=1 ;; esac
+  case "$S27_ERR" in *"NOT ACTIVE"*) n=1 ;; esac
+  [ -e "$d/.published-itinerary" ] && side=1
+  if [ "$csd" != "$S_DA" ]; then
+    FAIL "S27d: CONTROL — the same recorder on a writable trip wrote '$csd', not $S_DA"
+  elif [ "$S27_RC" -eq 0 ] && [ "$a" -eq 1 ] && [ "$n" -eq 1 ] && [ "$side" -eq 0 ]; then
+    PASS "S27d: a trip directory that loses write between the staging and the move (priv-fallback=${S27D_PRIV:-0}) still gets the recorder's NOT ACTIVE warning and rc 0 under errexit — the temp file's clean-up cannot end the command after a push"
+  else
+    FAIL "S27d: rc=$S27_RC after-marker=$a NOT-ACTIVE=$n sidecar=$side — the clean-up ended the command, or the warning was lost"
+  fi
+}
+s29e_assert() {
+  local x l m o rx rl rmv ro em st=0
+  x="$(s31_trip s29ex 14:00 A -)"; l="$(s31_trip s29el 14:00 - -)"; s_record "$l/.published-itinerary" "$S_LA" published
+  m="$(s31_trip s29em 16:30 A -)"; o="$(s31_trip s29eo 14:00 A B)"
+  mktemp() { return 1; }
+  ( require_recordable_baseline "$x" "$x/$S15_RENDER" ) >/dev/null 2>&1; rx=$?
+  ( require_recordable_baseline "$l" "$l/$S15_RENDER" ) >/dev/null 2>&1; rl=$?
+  em="$( ( require_recordable_baseline "$m" "$m/$S15_RENDER" ) 2>&1 >/dev/null )"; rmv=$?
+  ( require_recordable_baseline "$o" "$o/$S15_RENDER" ) >/dev/null 2>&1; ro=$?
+  unset -f mktemp
+  case "$em" in *"could not stage the baseline"*) st=1 ;; esac
+  if [ "$rmv" -ne 1 ] || [ "$st" -ne 1 ]; then
+    FAIL "S29e: CONTROL — a moved plan with staging failing returned rc=$rmv, staging refusal=$st (want 1, 1)"
+  elif [ "$rx" -eq 0 ] && [ "$rl" -eq 0 ] && [ "$ro" -eq 1 ]; then
+    PASS "S29e: with staging failing, the guard passes a push that re-publishes the recorded plan (exact rc=$rx, legacy CRC rc=$rl) and still refuses one where another plan's record is outstanding (rc=$ro); a moved plan is refused (control)"
+  else
+    FAIL "S29e: exact rc=$rx (want 0), legacy rc=$rl (want 0), outstanding-record rc=$ro (want 1)"
+  fi
+}
+s31a_assert() {
+  local got="" t want saved mut
+  for t in "ua 14:00 A B" "u0 14:00 - B" "da 14:00 A B declared" "ub 16:30 A B - B" "u0b 16:30 - B" "db 16:30 A B declared" "uc 18:15 A B" "ux 14:00 A dir" "ua0 14:00 A -" "u00 14:00 - -" "da0 14:00 A - declared" "na 14:00 A B declaredAB" "na0 14:00 A - declaredAB" "naa 14:00 A A declaredAB" "naw 14:00 A A declaredABw"; do
+    # shellcheck disable=SC2086
+    set -- $t
+    got="$got $(change_confirmation_state "$(s31_trip "s31a$1" "$2" "$3" "$4" "${5:-}" "${6:-}")" 2>/dev/null)"
+  done
+  saved="$(declare -f staged_record_path)"
+  staged_record_path() { printf '%s' "$1/zzq-no-staged-record"; }
+  mut="$(change_confirmation_state "$(s31_trip s31amut 14:00 A B)" 2>/dev/null)"
+  if [ -n "$saved" ]; then eval "$saved"; else unset -f staged_record_path; fi
+  want=' undetermined undetermined undetermined confirmed none-pending confirmed unconfirmed undetermined none-pending none-pending none-pending confirmed none-pending confirmed undetermined'
+  if [ "$got" = "$want" ] && [ "$mut" = none-pending ]; then
+    PASS "S31a: a staged record holds exactly the verdicts that rest on which plan is live — 11 cells and 4 controls as specified, a declared trip's published plan whose own approvals meet the threshold reading confirmed while held, and a record of that same plan holding it once its approval is withdrawn; ARMED-RED: with the staged record unread the held cell reads none-pending"
+  else
+    FAIL "S31a: states [$got] want [$want]; ARMED-RED read '$mut' (want none-pending)"
+  fi
+}
+s31b_assert() {
+  local ua da cu cr e1 e2 c5 rr r1 r2 m1 m2 ok=1 ctl=1 x why=""
+  ua="$(s31_trip s31bua 14:00 A B)"; da="$(s31_trip s31bda 14:00 A B declared)"
+  cu="$(s31_trip s31bcu 14:00 - -)"; printf 'published=2027-06-01T00:00:00Z\n' > "$cu/.published-itinerary"
+  cr="$(s15_dangling "s31bcr-$RANDOM")"; s_record "$cr/.published-itinerary" "$S_DA" published
+  e1="$( ( require_change_confirmation "$ua" ) 2>&1 >/dev/null )"; r1=$?
+  e2="$( ( require_change_confirmation "$da" ) 2>&1 >/dev/null )"; r2=$?
+  c5="$( ( require_change_confirmation "$cu" ) 2>&1 >/dev/null )"
+  rr="$( ( require_change_confirmation "$cr" ) 2>&1 >/dev/null )"
+  m1="${e1//"$ua"/<trip>}"; m2="${e2//"$da"/<trip>}"
+  for x in "$m1" "$m2"; do
+    case "$x" in *"(state: undetermined)"*) ;; *) ok=0; why="$why no-token" ;; esac
+    case "$x" in *"still outstanding"*) ;; *) ok=0; why="$why no-cause" ;; esac
+    case "$x" in *"<trip>/.published-itinerary.next"*) ;; *) ok=0; why="$why no-path" ;; esac
+    case "$x" in *"outgoing render"*|*"present but cannot be used"*) ok=0; why="$why other-cause" ;; esac
+    [ -z "$(s15f_claims "$x")" ] || { ok=0; why="$why claims[$(s15f_claims "$x")]"; }
+  done
+  case "$c5" in *"present but cannot be used"*) ;; *) ctl=0 ;; esac
+  case "$c5" in *"still outstanding"*) ctl=0 ;; esac
+  case "$rr" in *"outgoing render"*) ;; *) ctl=0 ;; esac
+  case "$rr" in *"still outstanding"*) ctl=0 ;; esac
+  if [ "$ctl" -ne 1 ]; then
+    FAIL "S31b: CONTROL — the unusable-baseline and unreadable-render messages do not keep their own causes"
+  elif [ "$r1" -ne 0 ] && [ "$r2" -ne 0 ] && [ "$ok" -eq 1 ]; then
+    PASS "S31b: the gate refuses a held trip on both policies, names undetermined, the outstanding staged record and its path, and makes no change claim; the other two causes keep their own words"
+  else
+    FAIL "S31b: rc $r1/$r2;$why"
+  fi
+}
+s31c_assert() {
+  local ua da uc e1 e2 ec r1 r2 ok=1 ct=0 x why=""
+  ua="$(s31_trip s31cua 14:00 A B)"; da="$(s31_trip s31cda 14:00 A B declared)"; uc="$(s31_trip s31cuc 18:15 A B)"
+  e1="$( ( cmd_confirm "$ua" ) </dev/null 2>&1 >/dev/null )"; r1=$?
+  e2="$( ( cmd_confirm "$da" ) </dev/null 2>&1 >/dev/null )"; r2=$?
+  ec="$( ( cmd_confirm "$uc" ) </dev/null 2>&1 >/dev/null )"
+  for x in "$e1" "$e2"; do
+    case "$x" in *"could not determine"*) ;; *) ok=0; why="$why no-cd" ;; esac
+    case "$x" in *"still outstanding"*) ;; *) ok=0; why="$why no-cause" ;; esac
+    case "$x" in *"requires a terminal"*) ok=0; why="$why reached" ;; esac
+  done
+  [ ! -e "$ua/.change-confirmed" ] || { ok=0; why="$why wrote"; }
+  case "$ec" in *"requires a terminal"*) ct=1 ;; esac
+  if [ "$ct" -ne 1 ]; then
+    FAIL "S31c: CONTROL — confirm on a held trip whose plan moved did not reach the terminal check"
+  elif [ "$r1" -eq 1 ] && [ "$r2" -eq 1 ] && [ "$ok" -eq 1 ]; then
+    PASS "S31c: confirm refuses a held trip before the terminal check on both policies, naming the outstanding record, and records nothing; a held trip whose plan moved still reaches the terminal check"
+  else
+    FAIL "S31c: rc $r1/$r2;$why"
+  fi
+}
+s31d_assert() {
+  local a b c x ra rb rc rx eb ec gb=0 gc=0
+  a="$(s31_trip s31da 16:30 A -)"; b="$(s31_trip s31db 16:30 A -)"; c="$(s31_trip s31dc 16:30 A -)"; x="$(s31_trip s31dx 14:00 A -)"
+  ( stage_baseline_record "$a" "$a/$S15_RENDER" update ) >/dev/null 2>&1; ra=$?
+  mktemp() { return 1; }
+  eb="$( ( stage_baseline_record "$b" "$b/$S15_RENDER" update ) 2>&1 >/dev/null )"; rb=$?
+  ec="$( ( stage_baseline_record "$c" "$c/$S15_RENDER" rotate ) 2>&1 >/dev/null )"; rc=$?
+  ( stage_baseline_record "$x" "$x/$S15_RENDER" rotate ) >/dev/null 2>&1; rx=$?
+  unset -f mktemp
+  case "$eb" in *"could not stage this push's baseline record"*) gb=1 ;; esac
+  case "$ec" in *"run update"*) gc=1 ;; esac
+  if [ "$ra" -eq 0 ] && [ -f "$a/.published-itinerary.next" ] && [ ! -L "$a/.published-itinerary.next" ] && [ "$(_baseline_record "$a/.published-itinerary.next")" = "$S_DB" ] && [ "$(_baseline_record "$a/.published-itinerary")" = "$S_DA" ] && [ "$(sb_temps "$a")" -eq 0 ] && [ "$rb" -eq 1 ] && [ "$gb" -eq 1 ] && [ ! -e "$b/.published-itinerary.next" ] && [ "$rc" -eq 1 ] && [ "$gc" -eq 1 ] && [ "$rx" -eq 0 ] && [ ! -e "$x/.published-itinerary.next" ]; then
+    PASS "S31d: the stager writes the push's record as a regular file reading its plan, leaves the baseline and no temp behind; refuses when it cannot stage (rotate's refusal names update); stages nothing for a push that re-publishes the recorded plan"
+  else
+    FAIL "S31d: ra=$ra staged=$(_baseline_record "$a/.published-itinerary.next" 2>/dev/null) base=$(_baseline_record "$a/.published-itinerary") temps=$(sb_temps "$a") rb=$rb named=$gb rc=$rc update-named=$gc rx=$rx x-staged=$([ -e "$x/.published-itinerary.next" ] && echo 1 || echo 0)"
+  fi
+}
+# S31e's cell (g) and its unreadable twin (#1468 amendment-3 review, R3-FM-1). Amendment 3 split the
+# recorder's "changed or removed" branch in two, and no cell reached the "changed" limb, the one a
+# staged record of ANOTHER plan takes when the recorder is handed this push's digest. (g) stages a
+# third plan's record (the 18:15 render's digest) beside an S_DA baseline and hands the recorder
+# S_DB; the twin puts a directory at the staged path. Each must leave that record as it is, say it
+# was changed while the push was under way, keep the baseline, and hold a working copy reverted to
+# the baseline's plan.
+s31e_assert() {
+  local a b p c d f e g x xu ea eb ep ec ed ef ee eg ex exu ra rb rp rc rd rf re rg rx rxu rcd st gr pst pgr dst dgr est xst xgr xust xugr
+  local aft=0 left=0 wa=0 pa=0 pl=0 ac=0 wcc=0 da=0 dw=0 fa=0 frm=0 ena=0 enw=0 ga=0 gsame=0 grec=0 eflip=0 gsame_b=0 xa=0 xch=0 xua=0 xuch=0
+  a="$(s31_trip s31ea 16:30 A B)"; b="$(s31_trip s31eb 16:30 A B)"; p="$(s31_trip s31ep 16:30 A B)"; c="$(s31_trip s31ec 16:30 A B)"
+  d="$(s31_trip s31ed 16:30 A -)"; f="$(s31_trip s31ef 16:30 A -)"; e="$(s31_trip s31ee 14:00 A -)"; g="$(s31_trip s31eg 14:00 A -)"
+  x="$(s31_trip s31ex 16:30 A -)"; xu="$(s31_trip s31exu 16:30 A dir)"
+  cp "$e/.published-itinerary" "$e.before"; cp "$g/.published-itinerary" "$g.before"
+  s27_run "$a"; ea="$S27_ERR"; ra=$S27_RC
+  mv() { case "$*" in *".published-itinerary.next "*) return 1 ;; esac; command mv "$@"; }
+  s27_run "$b"; eb="$S27_ERR"; rb=$S27_RC
+  ep="$( ( set -e; record_published_itinerary "$p" "$p/$S15_RENDER" "$S_DB"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; rp=$?
+  unset -f mv
+  s_render "$c/$S15_RENDER" 18:15; rcd="$(itinerary_digest "$c/$S15_RENDER")"
+  ec="$( ( set -e; record_published_itinerary "$c" "$c/$S15_RENDER" "$S_DB"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; rc=$?
+  ed="$( ( set -e; record_published_itinerary "$d" "$d/$S15_RENDER" "$S_DB"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; rd=$?
+  s_record "$x/.published-itinerary.next" "$rcd" published
+  ex="$( ( set -e; record_published_itinerary "$x" "$x/$S15_RENDER" "$S_DB"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; rx=$?
+  exu="$( ( set -e; record_published_itinerary "$xu" "$xu/$S15_RENDER" "$S_DB"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; rxu=$?
+  s_render "$e/$S15_RENDER" 18:15
+  ee="$( ( set -e; record_published_itinerary "$e" "$e/$S15_RENDER" "$S_DA"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; re=$?
+  mktemp() { return 1; }
+  ef="$( ( set -e; record_published_itinerary "$f" "$f/$S15_RENDER" "$S_DB"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; rf=$?
+  eg="$( ( set -e; record_published_itinerary "$g" "$g/$S15_RENDER" "$S_DA"; printf 'S27-AFTER\n' >&2 ) 2>&1 >/dev/null )"; rg=$?
+  unset -f mktemp
+  case "$ea" in *"push itself succeeded"*) wa=1 ;; esac
+  case "$eb" in *S27-AFTER*) aft=1 ;; esac
+  case "$eb" in *"left staged"*) left=1 ;; esac
+  case "$ep" in *S27-AFTER*) pa=1 ;; esac
+  case "$ep" in *"left staged"*) pl=1 ;; esac
+  case "$ec" in *S27-AFTER*) ac=1 ;; esac
+  case "$ec" in *"push itself succeeded"*) wcc=1 ;; esac
+  case "$ed" in *S27-AFTER*) da=1 ;; esac
+  case "$ed" in *"staged again"*) dw=1 ;; esac
+  case "$ef" in *S27-AFTER*) fa=1 ;; esac
+  case "$ef" in *"removed while the push was under way"*) frm=1 ;; esac
+  case "$ee" in *S27-AFTER*) ena=1 ;; esac
+  case "$ee" in *"push itself succeeded"*) enw=1 ;; esac
+  case "$eg" in *S27-AFTER*) ga=1 ;; esac
+  case "$eg" in *"could not record the baseline"*) grec=1 ;; esac
+  case "$eg" in *"records this same plan"*) gsame=1 ;; esac
+  case "$ex" in *S27-AFTER*) xa=1 ;; esac
+  case "$ex" in *"changed while the push was under way"*) xch=1 ;; esac
+  case "$exu" in *S27-AFTER*) xua=1 ;; esac
+  case "$exu" in *"changed while the push was under way"*) xuch=1 ;; esac
+  cmp -s "$e.before" "$e/.published-itinerary" || eflip=1
+  cmp -s "$g.before" "$g/.published-itinerary" && gsame_b=1
+  est="$(change_confirmation_state "$e" 2>/dev/null)"
+  s_render "$b/$S15_RENDER" 14:00; s_render "$p/$S15_RENDER" 14:00; s_render "$d/$S15_RENDER" 14:00; s_render "$x/$S15_RENDER" 14:00; s_render "$xu/$S15_RENDER" 14:00
+  st="$(change_confirmation_state "$b" 2>/dev/null)"; ( require_change_confirmation "$b" ) >/dev/null 2>&1; gr=$?
+  pst="$(change_confirmation_state "$p" 2>/dev/null)"; ( require_change_confirmation "$p" ) >/dev/null 2>&1; pgr=$?
+  dst="$(change_confirmation_state "$d" 2>/dev/null)"; ( require_change_confirmation "$d" ) >/dev/null 2>&1; dgr=$?
+  xst="$(change_confirmation_state "$x" 2>/dev/null)"; ( require_change_confirmation "$x" ) >/dev/null 2>&1; xgr=$?
+  xust="$(change_confirmation_state "$xu" 2>/dev/null)"; ( require_change_confirmation "$xu" ) >/dev/null 2>&1; xugr=$?
+  if [ "$ra" -ne 0 ] || [ "$wa" -ne 0 ] || [ "$(_baseline_record "$a/.published-itinerary")" != "$S_DB" ] || [ -e "$a/.published-itinerary.next" ] || [ "$(sb_temps "$a")" -ne 0 ] || [ -z "$rcd" ] || [ "$rcd" = "$S_DB" ] || [ "$rcd" = "$S_DA" ] || [ "$rf" -ne 0 ] || [ "$fa" -ne 1 ] || [ "$frm" -ne 1 ] || [ "$(_baseline_record "$f/.published-itinerary")" != "$S_DA" ] || [ -e "$f/.published-itinerary.next" ] || [ "$(sb_temps "$f")" -ne 0 ]; then
+    FAIL "S31e: CONTROL — the recorder did not move a movable staged record into place (rc=$ra warned=$wa base=$(_baseline_record "$a/.published-itinerary") staged-left=$([ -e "$a/.published-itinerary.next" ] && echo 1 || echo 0)), the rebuilt render does not carry a third plan, other than both staged and baseline (its digest '${rcd:0:12}'), or a removed record that could not be staged again did not keep the baseline and say so (rc=$rf after=$fa named=$frm base=$(_baseline_record "$f/.published-itinerary") staged-left=$([ -e "$f/.published-itinerary.next" ] && echo 1 || echo 0))"
+  elif [ "$rb" -eq 0 ] && [ "$aft" -eq 1 ] && [ "$left" -eq 1 ] && [ "$(_baseline_record "$b/.published-itinerary")" = "$S_DA" ] && [ "$(_baseline_record "$b/.published-itinerary.next")" = "$S_DB" ] && [ "$st" = undetermined ] && [ "$gr" -ne 0 ] && [ "$rp" -eq 0 ] && [ "$pa" -eq 1 ] && [ "$pl" -eq 1 ] && [ "$(_baseline_record "$p/.published-itinerary")" = "$S_DA" ] && [ "$(_baseline_record "$p/.published-itinerary.next")" = "$S_DB" ] && [ "$pst" = undetermined ] && [ "$pgr" -ne 0 ] && [ "$rc" -eq 0 ] && [ "$ac" -eq 1 ] && [ "$wcc" -eq 0 ] && [ "$(_baseline_record "$c/.published-itinerary")" = "$S_DB" ] && [ ! -e "$c/.published-itinerary.next" ] && [ "$(sb_temps "$c")" -eq 0 ] && [ "$rd" -eq 0 ] && [ "$da" -eq 1 ] && [ "$dw" -eq 1 ] && [ "$(_baseline_record "$d/.published-itinerary")" = "$S_DA" ] && [ "$(_baseline_record "$d/.published-itinerary.next")" = "$S_DB" ] && [ "$(sb_temps "$d")" -eq 0 ] && [ "$dst" = undetermined ] && [ "$dgr" -ne 0 ] && [ "$re" -eq 0 ] && [ "$ena" -eq 1 ] && [ "$enw" -eq 0 ] && [ "$eflip" -eq 1 ] && [ "$(_baseline_record "$e/.published-itinerary")" = "$S_DA" ] && [ ! -e "$e/.published-itinerary.next" ] && [ "$(sb_temps "$e")" -eq 0 ] && [ "$est" = unconfirmed ] && [ "$rg" -eq 0 ] && [ "$ga" -eq 1 ] && [ "$grec" -eq 1 ] && [ "$gsame" -eq 1 ] && [ "$gsame_b" -eq 1 ] && [ ! -e "$g/.published-itinerary.next" ] && [ "$rx" -eq 0 ] && [ "$xa" -eq 1 ] && [ "$xch" -eq 1 ] && [ "$(_baseline_record "$x/.published-itinerary")" = "$S_DA" ] && [ "$(_baseline_record "$x/.published-itinerary.next")" = "$rcd" ] && [ "$(sb_temps "$x")" -eq 0 ] && [ "$xst" = undetermined ] && [ "$xgr" -ne 0 ] && [ "$rxu" -eq 0 ] && [ "$xua" -eq 1 ] && [ "$xuch" -eq 1 ] && [ "$(_baseline_record "$xu/.published-itinerary")" = "$S_DA" ] && [ -d "$xu/.published-itinerary.next" ] && [ "$xust" = undetermined ] && [ "$xugr" -ne 0 ]; then
+    PASS "S31e: a staged record that cannot be moved into place is left staged and named, the recorder returns 0 under errexit, and a working copy reverted to the kept baseline reads undetermined and is refused — on the recorder's own path and when it is handed the staged digest, as the three push sites hand it; handed the digest of the plan its push carried, the recorder installs that record though the render was rebuilt during the push, stages it again where it was removed during the push so that a revert reads undetermined, and, where the push re-published the recorded plan, records that plan though the render was rewritten during the push, or says the kept baseline records this same plan where it cannot write; where another plan's record, or one that cannot be read, stands staged (cell g and its twin), it leaves that record as it is, says it was changed while the push was under way, keeps the baseline, and a revert reads undetermined and is refused; controls: a movable record is consumed, the rebuilt render carries a third plan, and a removed record that cannot be staged again keeps the baseline and says so"
+  else
+    FAIL "S31e: rename refused: rc=$rb after=$aft left-staged=$left base=$(_baseline_record "$b/.published-itinerary") staged=$(_baseline_record "$b/.published-itinerary.next") revert-state=$st gate-rc=$gr; handed the staged digest: rc=$rp after=$pa left-staged=$pl base=$(_baseline_record "$p/.published-itinerary") staged=$(_baseline_record "$p/.published-itinerary.next") revert-state=$pst gate-rc=$pgr; rebuilt render: rc=$rc after=$ac warned=$wcc base=$(_baseline_record "$c/.published-itinerary") staged-left=$([ -e "$c/.published-itinerary.next" ] && echo 1 || echo 0); record removed: rc=$rd after=$da staged-again=$dw base=$(_baseline_record "$d/.published-itinerary") staged=$(_baseline_record "$d/.published-itinerary.next") revert-state=$dst gate-rc=$dgr; re-publish, render rewritten: rc=$re after=$ena warned=$enw rerecorded=$eflip base=$(_baseline_record "$e/.published-itinerary") state=$est; re-publish, cannot write: rc=$rg after=$ga named=$grec same-plan=$gsame unchanged=$gsame_b; another plan's record (g): rc=$rx after=$xa named=$xch base=$(_baseline_record "$x/.published-itinerary") staged=$(_baseline_record "$x/.published-itinerary.next") revert-state=$xst gate-rc=$xgr; unreadable record: rc=$rxu after=$xua named=$xuch base=$(_baseline_record "$xu/.published-itinerary") revert-state=$xust gate-rc=$xugr"
+  fi
+}
+s27e_assert() {
+  local m k em ek rsm rsk mm=0 mk=0 km=0 kk=0 same=0
+  m="$(s31_trip s27em 14:00 A -)"; cp "$m/.published-itinerary" "$m.before"
+  k="$(s31_trip s27ek 16:30 A -)"
+  mktemp() { return 1; }
+  s27_run "$m"; em="$S27_ERR"; rsm=$S27_RC
+  s27_run "$k"; ek="$S27_ERR"; rsk=$S27_RC
+  unset -f mktemp
+  case "$em" in *"records this same plan"*) mm=1 ;; esac
+  case "$em" in *"keeps the baseline it already had"*) mk=1 ;; esac
+  case "$ek" in *"records this same plan"*) km=1 ;; esac
+  case "$ek" in *"keeps the baseline it already had"*) kk=1 ;; esac
+  cmp -s "$m.before" "$m/.published-itinerary" && same=1
+  if [ "$rsk" -ne 0 ] || [ "$kk" -ne 1 ] || [ "$km" -ne 0 ]; then
+    FAIL "S27e: CONTROL — a baseline of another plan read rc=$rsk keep=$kk same-plan=$km (want 0, 1, 0)"
+  elif [ "$rsm" -eq 0 ] && [ "$mm" -eq 1 ] && [ "$mk" -eq 0 ] && [ "$same" -eq 1 ]; then
+    PASS "S27e: where the push re-published the recorded plan and no record could be written, the recorder says the kept baseline records this same plan, not that a revert would publish unasked; control: a baseline of another plan keeps that warning"
+  else
+    FAIL "S27e: rc=$rsm same-plan-words=$mm keep-words=$mk baseline-unchanged=$same"
+  fi
+}
+s31f_pos() { # <body> <token> -> the offset of the token's first occurrence, or -1
+  local b="$1" pre
+  case "$b" in *"$2"*) pre="${b%%"$2"*}"; printf '%s' "${#pre}" ;; *) printf '%s' -1 ;; esac
+}
+s31f_assert() {
+  local v fn push guard b gd st pu re ok=1 why="" sens spec
+  for v in 'cmd_update|push_trip_site "$pub_dir" "$mine" update|require_publish_guards' \
+           'cmd_rotate|push_trip_site "$pub_dir" "$mine" rotate|write_passphrase_file' \
+           'cmd_publish|gh repo create|require_recordable_baseline'; do
+    fn="${v%%|*}"; v="${v#*|}"; push="${v%%|*}"; guard="${v#*|}"
+    b="$(declare -f "$fn")"
+    gd="$(s31f_pos "$b" "$guard")"; st="$(s31f_pos "$b" stage_baseline_record)"
+    pu="$(s31f_pos "$b" "$push")"; re="$(s31f_pos "$b" record_published_itinerary)"
+    if [ "$gd" -ge 0 ] && [ "$st" -gt "$gd" ] && [ "$pu" -gt "$st" ] && [ "$re" -gt "$pu" ]; then :; else ok=0; why="$why $fn:$gd/$st/$pu/$re"; fi
+  done
+  sens="$(s31f_pos "$(declare -f cmd_update)" push_trip_site)"
+  spec="$(s31f_pos "$(declare -f cmd_update)" zzq_fabricated_s31f)"
+  if [ "$sens" -lt 0 ] || [ "$spec" -ge 0 ]; then
+    FAIL "S31f: CONTROL — the parsed body of cmd_update locates push_trip_site at $sens and a fabricated token at $spec; the offsets below would not be measurements"
+  elif [ "$ok" -eq 1 ]; then
+    PASS "S31f: in update, rotate and publish the staged record is written after the guard and before the push, and the recorder runs after the push — read from the parsed bodies"
+  else
+    FAIL "S31f: guard/stager/push/recorder offsets out of order:$why"
+  fi
+}
+# ── Group S, #1468 amendment 2 (CD-1, CD-2, CD-3, FM-3) — the push sites as built, the digest the stager
+# hands back, and the order in which a refusal names its cause. Same three rules as above.
+# s31g_words prints the command word of every statement in a parsed body strictly between the end of
+# the stager's call and the push token; quoted text is read as no command at all.
+# S31g READS COMMAND WORDS, NOT WRITES (X-FM-3 of the #1468 amendment-2 review). Text inside double
+# quotes, a command substitution there included, is blanked before the words are read, and a
+# redirection is never read, so a write made through an allowed word's argument or redirection passes
+# it: `info "x $(git add -A)"`, `info x > file` and `cd "$(mktemp -d …)"` each read ok. That the two
+# allowed words write nothing to the trip is read from the words themselves (info prints to standard
+# output, cd changes directory), not graded here; a word outside {info, cd} is what this arm grades.
+s31g_words() { # <body> <stager-token> <push-token> -> the command words between them, or '?'
+  local b="$1" seg q piece out="" first=1 w
+  local -a ws
+  case "$b" in *"$2"*"$3"*) ;; *) printf '%s' '?'; return 0 ;; esac
+  seg="${b#*"$2"}"; seg="${seg%%"$3"*}"
+  while :; do
+    case "$seg" in *\"*\"*) q="${seg#*\"}"; seg="${seg%%\"*} Q ${q#*\"}" ;; *) break ;; esac
+  done
+  seg="${seg//;/$'\n'}"; seg="${seg//&/$'\n'}"; seg="${seg//|/$'\n'}"; seg="${seg//(/$'\n'}"; seg="${seg//)/$'\n'}"
+  while IFS= read -r piece; do
+    if [ "$first" -eq 1 ]; then first=0; continue; fi
+    read -r -a ws <<<"$piece"
+    for w in ${ws[@]+"${ws[@]}"}; do
+      case "$w" in if|then|else|'!'|'{'|'}') continue ;; esac
+      out="$out$w "; break
+    done
+  done <<<"$seg"
+  printf '%s' "${out% }"
+}
+s31g_shape() { # <body> <own-write-token> <push-token> -> " ok", or what is wrong
+  local b="$1" w pre st pu var rec why="" first
+  local -a ws
+  case "$b" in *stage_baseline_record*) ;; *) printf '%s' 'no-stager'; return 0 ;; esac
+  pre="${b%%stage_baseline_record*}"; st="${#pre}"
+  case "$b" in *"$2"*) pre="${b%%"$2"*}"; [ "${#pre}" -lt "$st" ] || why="$why write-after-stager" ;; *) why="$why no-own-write" ;; esac
+  case "$b" in *"$3"*) pre="${b%%"$3"*}"; pu="${#pre}"; [ "$pu" -gt "$st" ] || why="$why push-before-stager" ;; *) why="$why no-push" ;; esac
+  read -r -a ws <<<"$(s31g_words "$b" stage_baseline_record "$3")"
+  for w in ${ws[@]+"${ws[@]}"}; do
+    case "$w" in info|cd) ;; *) why="$why between:$w" ;; esac
+  done
+  first="${b#*stage_baseline_record}"; first="${first%%$'\n'*}"; first="${first%%;*}"
+  read -r -a ws <<<"$first"; var="${ws[3]:-}"
+  rec="${b#*record_published_itinerary}"; rec="${rec%%$'\n'*}"; rec="${rec%%;*}"
+  case "$var" in
+    ''|*[!A-Za-z0-9_]*) why="$why no-hand-off" ;;
+    *) case "$rec" in *"\"\$$var\""*|*"\"\${$var}\""*) ;; *) why="$why recorder-not-given-$var" ;; esac ;;
+  esac
+  printf '%s' "${why:- ok}"
+}
+s31g_ctl_bad()  { stage_baseline_record a b publish; git add index.html; commit_noreply . m; gh repo create z; record_published_itinerary a b; }
+s31g_ctl_good() { commit_noreply . m; stage_baseline_record a b update v; info "x; git y"; ( cd q
+  gh repo create z ); record_published_itinerary a b "$v"; }
+s31g_assert() {
+  local bad good v fn wr push b sh all="" ok=1
+  bad="$(s31g_shape "$(declare -f s31g_ctl_bad)" commit_noreply 'gh repo create')"
+  good="$(s31g_shape "$(declare -f s31g_ctl_good)" commit_noreply 'gh repo create')"
+  for v in 'cmd_update|encrypt_verify_commit|push_trip_site "$pub_dir" "$mine" update' \
+           'cmd_rotate|write_passphrase_file|push_trip_site "$pub_dir" "$mine" rotate' \
+           'cmd_publish|commit_noreply|gh repo create'; do
+    fn="${v%%|*}"; v="${v#*|}"; wr="${v%%|*}"; push="${v#*|}"
+    b="$(declare -f "$fn")"
+    sh="$(s31g_shape "$b" "$wr" "$push")"
+    all="$all $fn:[$sh]"
+    [ "$sh" = " ok" ] || ok=0
+  done
+  case "$bad" in *write-after-stager*between:git*between:commit_noreply*no-hand-off*) bad=flagged ;; esac
+  if [ "$bad" != flagged ] || [ "$good" != " ok" ]; then
+    FAIL "S31g: CONTROL — a planted push site with writes between its stager and its push read [$bad] (want each flaw flagged), and a clean one carrying a quoted ';' read [$good] (want ok); the readings below would not be measurements"
+  elif [ "$ok" -eq 1 ]; then
+    PASS "S31g: in update, rotate and publish the stager follows the command's own last write, only a progress line or the push subshell's entry into the clone stands between it and the push, and the digest it hands back is what the recorder is given — read from the parsed bodies;$all"
+  else
+    FAIL "S31g: push sites as built:$all"
+  fi
+}
+s31h_assert() {
+  local a x v vx vk
+  a="$(s31_trip s31ha 16:30 A -)"; x="$(s31_trip s31hx 14:00 A -)"
+  v="$( stage_baseline_record "$a" "$a/$S15_RENDER" update S31H_V >/dev/null 2>&1; printf '%s' "${S31H_V:-}" )"
+  vx="$( S31H_V=zzq-stale; stage_baseline_record "$x" "$x/$S15_RENDER" update S31H_V >/dev/null 2>&1; printf '%s' "${S31H_V-unset}" )"
+  vk="$( S31H_V=zzq-kept; stage_baseline_record "$x" "$x/$S15_RENDER" update >/dev/null 2>&1; printf '%s' "${S31H_V-unset}" )"
+  if [ "$vk" != zzq-kept ]; then
+    FAIL "S31h: CONTROL — called with no variable named, the stager changed one it was not given (read '$vk'), so what it hands back below would not be attributable to the argument"
+  elif [ "$v" = "$S_DB" ] && [ "$(_baseline_record "$a/.published-itinerary.next")" = "$v" ] && [ "$vx" = "$S_DA" ] && [ ! -e "$x/.published-itinerary.next" ]; then
+    PASS "S31h: the stager hands back, in the variable it is given, exactly the digest its staged record holds, and, over a stale value, the recorded plan's digest where the push re-publishes it and nothing is staged; control: a call that names no variable changes none"
+  else
+    FAIL "S31h: handed '$v' (want $S_DB, the staged record's digest '$(_baseline_record "$a/.published-itinerary.next")'); on the re-publish path '$vx' (want $S_DA, the recorded plan's), staged there=$([ -e "$x/.published-itinerary.next" ] && echo 1 || echo 0)"
+  fi
+}
+# S31i's delete exit, keyed on the BASELINE's plan (#1468 amendment-3 review, R3-FM-2 with R3-CD-1).
+# Deleting the staged record leaves the gate comparing the outgoing plan with .published-itinerary
+# alone, so deleting is safe exactly where the site carries the plan THAT file records. Every
+# staged-record refusal, in the gate and in confirm and on both of its branches, must condition its
+# delete exit on that plan, never on the record's plan and never on nothing; the other case is told
+# to publish the plan the site should carry. Trip `t` is the L1-held state the review measured: an
+# S_DA baseline beside a third plan's record (the 18:15 render's digest), with the baseline's plan
+# going out.
+s31i_assert() {
+  local n2 n3l n3d h o t dc e2 c2 e3l c3l e3d c3d eh ch eo co et ct x ok=1 ctl=1 why=""
+  n2="$(s15_dangling "s31in2-$RANDOM")"; s_record "$n2/.published-itinerary" "$S_DA" published; s_record "$n2/.published-itinerary.next" "$S_DB" published
+  n3l="$(s31_trip s31in3l 14:00 A -)"; ln -s "$n3l/zzq-no-such-record" "$n3l/.published-itinerary.next"
+  n3d="$(s31_trip s31in3d 14:00 A dir)"
+  h="$(s31_trip s31ih 14:00 A B)"
+  o="$(s31_trip s31io 14:00 A A)"
+  t="$(s31_trip s31it 14:00 A -)"; s_render "$WORK/s31i-c.html" 18:15 none; dc="$(itinerary_digest "$WORK/s31i-c.html")"; s_record "$t/.published-itinerary.next" "$dc" published
+  e2="$( ( require_change_confirmation "$n2" ) 2>&1 >/dev/null )"
+  c2="$( ( cmd_confirm "$n2" ) </dev/null 2>&1 >/dev/null )"
+  e3l="$( ( require_change_confirmation "$n3l" ) 2>&1 >/dev/null )"
+  c3l="$( ( cmd_confirm "$n3l" ) </dev/null 2>&1 >/dev/null )"
+  e3d="$( ( require_change_confirmation "$n3d" ) 2>&1 >/dev/null )"
+  c3d="$( ( cmd_confirm "$n3d" ) </dev/null 2>&1 >/dev/null )"
+  eh="$( ( require_change_confirmation "$h" ) 2>&1 >/dev/null )"
+  ch="$( ( cmd_confirm "$h" ) </dev/null 2>&1 >/dev/null )"
+  eo="$( ( require_change_confirmation "$o" ) 2>&1 >/dev/null )"
+  co="$( ( cmd_confirm "$o" ) </dev/null 2>&1 >/dev/null )"
+  et="$( ( require_change_confirmation "$t" ) 2>&1 >/dev/null )"
+  ct="$( ( cmd_confirm "$t" ) </dev/null 2>&1 >/dev/null )"
+  for x in "$e2" "$c2"; do
+    case "$x" in *"outgoing render"*) ;; *) ok=0; why="$why render-not-named" ;; esac
+    case "$x" in *"still outstanding"*) ok=0; why="$why record-named-first" ;; esac
+  done
+  for x in "$e3l" "$e3d" "$eo" "$et"; do
+    [ -z "$(s15f_claims "${x//"$WORK"/<work>}")" ] || { ok=0; why="$why claims[$(s15f_claims "${x//"$WORK"/<work>}")]"; }
+  done
+  for x in "$e3l" "$c3l" "$e3d" "$c3d"; do
+    case "$x" in *"present but cannot be read"*) ;; *) ok=0; why="$why unreadable-not-named" ;; esac
+    case "$x" in *"Repair that file, or delete it"*) ;; *) ok=0; why="$why no-repair-exit" ;; esac
+    case "$x" in *"Re-run update with the plan"*) ok=0; why="$why rerun-offered" ;; esac
+  done
+  for x in "$eh" "$ch" "$et" "$ct"; do
+    case "$x" in *"unpublish, then publish again"*) ;; *) ok=0; why="$why no-first-publish-exit" ;; esac
+    case "$x" in *"Re-run update with the plan the site should carry"*) ;; *) ok=0; why="$why no-live-plan-exit" ;; esac
+  done
+  for x in "$eo" "$co"; do
+    case "$x" in *"still outstanding"*"names the plan going out"*) ;; *) ok=0; why="$why own-plan-record-not-named" ;; esac
+    case "$x" in *"delete that file"*) ;; *) ok=0; why="$why own-plan-no-delete-exit" ;; esac
+    case "$x" in *"Re-run update with the plan"*) ok=0; why="$why own-plan-rerun-offered" ;; esac
+    case "$x" in *"publish the plan the site should carry"*) ;; *) ok=0; why="$why own-plan-no-live-plan-exit" ;; esac
+  done
+  for x in "$eh" "$ch" "$eo" "$co" "$et" "$ct"; do
+    case "$x" in *"If the site carries the plan the published baseline records"*) ;; *) ok=0; why="$why delete-not-keyed-on-baseline" ;; esac
+    case "$x" in *"does not carry that plan"*) ok=0; why="$why delete-keyed-on-record" ;; esac
+    case "$x" in *"which plan the site carries, delete"*) ok=0; why="$why delete-unconditioned" ;; esac
+  done
+  case "$eh" in *"still outstanding"*"Re-run update with the plan"*) ;; *) ctl=0 ;; esac
+  case "$eh" in *"names the plan going out"*) ctl=0 ;; esac
+  if [ "$ctl" -ne 1 ]; then
+    FAIL "S31i: CONTROL — the gate on a held trip with a readable record of another plan and its render did not name the outstanding record and its re-run exit alone, so the readings below are not measurements"
+  elif [ "$ok" -eq 1 ]; then
+    PASS "S31i: the gate and confirm name the cause the resolver acted on, in its order — an unidentifiable render beside a readable staged record is named as the render, and a staged record that cannot be read is told to be repaired or deleted, never re-run; a held trip's refusal names the first-publish exit (unpublish, then publish); a record naming the plan going out, which the baseline records as well, is told to delete the file, never to re-run update with that plan; every staged-record refusal, a third plan's record beside the baseline included, conditions its delete exit on the plan the published baseline records and tells the other case to publish the plan the site should carry; control: the held trip whose record names another plan names its record and the re-run exit"
+  else
+    FAIL "S31i: cause order and exits:$why"
+  fi
+}
+s27c_assert
+s27d_assert
+s27e_assert
+s29e_assert
+s31a_assert
+s31b_assert
+s31c_assert
+s31d_assert
+s31e_assert
+s31f_assert
+s31g_assert
+s31h_assert
+s31i_assert
+md_flips change_confirmation_state   "S31a" s31a_assert
+md_flips stage_baseline_record       "S31d" s31d_assert
+md_flips record_published_itinerary  "S31e" s31e_assert
+md_flips stage_baseline_record       "S31h" s31h_assert
+md_flips require_change_confirmation "S31i" s31i_assert
+
+# ── S30 — CASE 1: THE ITINERARY DIGEST NO LONGER DEPENDS ON THE CALLER'S LOCALE (#1468). The
+# normalization runs under LC_ALL=C, with the 18 non-ASCII code points macOS's UTF-8 [:space:]
+# holds rewritten to an ASCII space first. s30_render writes S0's 14:00 render with the given
+# bytes in place of the space between "Miradouro" and "da"; the space itself gives S0's own
+# render. S30_U is the first UTF-8 locale this host lists, read through `locale charmap`, and an
+# arm that needs it and finds none fails as fixture integrity, never skips.
+s30_render() { # <file> <bytes standing where the space after "Miradouro" stands>
+  local t
+  s_render "$1" 14:00 none; t="$(cat "$1")"; printf '%s\n' "${t/Miradouro da/Miradouro$2da}" > "$1"
+}
+S30_U=""
+for s30l in C.UTF-8 en_US.UTF-8; do
+  if [ "$(LC_ALL=$s30l locale charmap 2>/dev/null)" = UTF-8 ]; then S30_U="$s30l"; break; fi
+done
+S30_CP=( $'\302\240' $'\341\232\200' $'\342\200\200' $'\342\200\201' $'\342\200\202' $'\342\200\203' $'\342\200\204' $'\342\200\205' $'\342\200\206' $'\342\200\207' $'\342\200\210' $'\342\200\211' $'\342\200\212' $'\342\200\250' $'\342\200\251' $'\342\200\257' $'\342\201\237' $'\343\200\200' )
+
+# ── S30a — THE SUBJECT. Eighteen renders, each carrying one of the 18 code points (U+00A0, U+1680,
+# U+2000–U+200A, U+2028, U+2029, U+202F, U+205F, U+3000) between two words, each digest a 64-hex
+# token equal to the space render's under LC_ALL=C and under the UTF-8 locale — so a digest macOS
+# recorded under a UTF-8 locale is reproduced under any locale, and no baseline or approval code
+# recorded there moves. Fixture integrity first: a UTF-8 locale is listed, and the space render
+# digests to S0's token. ARMED-RED: the unpinned body the digest had before the pin, put back,
+# reads the U+00A0 render as another plan under LC_ALL=C; the production digest is then
+# re-evaluated from its saved text. Registered: with the digest removed every token is empty.
+s30a_assert() {
+  local i f sp dsc dsu dc du n=0 bad="" mut msp
+  sp="$WORK/s30a-space.html"; s30_render "$sp" ' '
+  dsc="$(LC_ALL=C itinerary_digest "$sp")"; dsu="$(LC_ALL=$S30_U itinerary_digest "$sp")"
+  for i in "${!S30_CP[@]}"; do
+    f="$WORK/s30a-$i.html"; s30_render "$f" "${S30_CP[$i]}"
+    dc="$(LC_ALL=C itinerary_digest "$f")"; du="$(LC_ALL=$S30_U itinerary_digest "$f")"
+    if [ "${#dc}" -eq 64 ] && [ "$dc" = "$dsc" ] && [ "$du" = "$dsc" ]; then n=$((n+1)); else bad="$bad cp$i:${dc:0:8}/${du:0:8}"; fi
+  done
+  itinerary_digest() { [ -r "${1:-}" ] || return 0; local text dg; text="$(strip_to_itinerary_text "$1")" || return 0; dg="$(set -o pipefail; printf '%s' "$text" | tr -s '[:space:]' ' ' | sed 's/^ *//; s/ *$//' | _digest_of)" || return 0; printf '%s' "$dg"; }   # MUTANT: the unpinned body
+  mut="$(LC_ALL=C itinerary_digest "$WORK/s30a-0.html")"; msp="$(LC_ALL=C itinerary_digest "$sp")"
+  sb_restore itinerary_digest
+  if [ -z "$S30_U" ] || [ "$dsc" != "$S_DA" ] || [ "$dsu" != "$S_DA" ]; then
+    FAIL "S30a: fixture integrity — the UTF-8 locale is '${S30_U:-none listed}', and the space render digests '${dsc:0:12}' under C and '${dsu:0:12}' under it against S0's '${S_DA:0:12}', so the 18 comparisons below would not be about the code points"
+  elif [ "$n" -eq 18 ] && [ "${#S30_CP[@]}" -eq 18 ] && [ -n "$mut" ] && [ "$mut" != "$msp" ]; then
+    PASS "S30a: each of the $n renders carrying one of the 18 code points digests to the space render's 64-hex token under LC_ALL=C and under $S30_U — the digest no longer depends on the caller's locale; ARMED-RED: the unpinned body reads the U+00A0 render as another plan under LC_ALL=C"
+  else
+    FAIL "S30a: $n of ${#S30_CP[@]} code points digest equal under both locales;${bad:- none other} ARMED-RED read '${mut:0:12}' against the space render's '${msp:0:12}' (want two different tokens)"
+  fi
+}
+s30a_assert
+
+# ── S30b — SPECIFICITY. Code points outside the set must still read as text: U+0085 (the one
+# White_Space member macOS's class does not hold), U+00C9 and U+200B each digest to a token other
+# than the space render's under both locales; the ASCII render digests the same under both; and
+# the legacy digest the baseline shim compares reads the U+00A0 render as the space render under
+# both locales, so a legacy baseline of that plan still matches it.
+s30b_assert() {
+  local sp f d c u ok=1 why="" asc asu lnc lnu lsp
+  sp="$WORK/s30b-space.html"; s30_render "$sp" ' '
+  asc="$(LC_ALL=C itinerary_digest "$sp")"; asu="$(LC_ALL=$S30_U itinerary_digest "$sp")"
+  for c in $'\302\205' $'\303\211' $'\342\200\213'; do
+    f="$WORK/s30b-$RANDOM.html"; s30_render "$f" "$c"
+    d="$(LC_ALL=C itinerary_digest "$f")"; u="$(LC_ALL=$S30_U itinerary_digest "$f")"
+    [ "${#d}" -eq 64 ] && [ "${#u}" -eq 64 ] && [ "$d" != "$asc" ] && [ "$u" != "$asc" ] || { ok=0; why="$why outside-set:${d:0:8}/${u:0:8}"; }
+  done
+  f="$WORK/s30b-nbsp.html"; s30_render "$f" $'\302\240'
+  lnc="$(LC_ALL=C _legacy_itinerary_digest "$f")"; lnu="$(LC_ALL=$S30_U _legacy_itinerary_digest "$f")"; lsp="$(LC_ALL=C _legacy_itinerary_digest "$sp")"
+  if [ -z "$S30_U" ] || [ "${#asc}" -ne 64 ]; then
+    FAIL "S30b: fixture integrity — the UTF-8 locale is '${S30_U:-none listed}' and the ASCII render digests '${asc:0:12}', so the comparisons below would not be measurements"
+  elif [ "$ok" -eq 1 ] && [ "$asc" = "$asu" ] && [ -n "$lsp" ] && [ "$lnc" = "$lsp" ] && [ "$lnu" = "$lsp" ]; then
+    PASS "S30b: U+0085, U+00C9 and U+200B each read as text, a token other than the space render's, under both locales; the ASCII render digests the same under both; and the legacy digest reads the U+00A0 render as the space render under both, so a legacy baseline still matches its plan"
+  else
+    FAIL "S30b:$why ASCII C/UTF-8 ${asc:0:8}/${asu:0:8}; legacy U+00A0 C/UTF-8 ${lnc:-empty}/${lnu:-empty} against the space render's ${lsp:-empty}"
+  fi
+}
+s30b_assert
+
+# ── S30c — THE BYTE THAT USED TO STOP THE PIPELINE. The 14:00 render with byte 0xC9, which is not
+# valid UTF-8, between two words: under the UTF-8 locale its digest is a 64-hex token equal to
+# the one under LC_ALL=C. Before the pin BSD `tr` stopped there under a UTF-8 locale, and the
+# digest read no answer; under LC_ALL=C no stage stops on it, and it is digested as it stands.
+s30c_assert() {
+  local f dc du
+  f="$WORK/s30c.html"; s30_render "$f" $'\311'
+  dc="$(LC_ALL=C itinerary_digest "$f")"; du="$(LC_ALL=$S30_U itinerary_digest "$f")"
+  if [ -z "$S30_U" ] || [ "${#dc}" -ne 64 ]; then
+    FAIL "S30c: fixture integrity — the UTF-8 locale is '${S30_U:-none listed}' and the render digests '${dc:0:12}' under LC_ALL=C, so the comparison below would not be a measurement"
+  elif [ "${#du}" -eq 64 ] && [ "$du" = "$dc" ]; then
+    PASS "S30c: a render carrying a byte that is not valid UTF-8 digests under $S30_U to the same 64-hex token as under LC_ALL=C — no stage stops on it"
+  else
+    FAIL "S30c: under $S30_U the render with 0xC9 digests '${du:-empty}', against '$dc' under LC_ALL=C"
+  fi
+}
+s30c_assert
+
+# ── S30d — THE RESTORE (S26a's rule, applied to this block). Every production function this block
+# saved reads exactly as saved, and none of the commands its arms stub is still a function.
+# CONTROL: the recorder's saved text is not empty, so the comparison reads a definition.
+SB30_MOVED=""
+for sbfn in $SB_SAVED_FNS; do
+  sbv="SB_SAVED_$sbfn"
+  if [ "$(declare -f "$sbfn")" != "${!sbv}" ]; then SB30_MOVED="$SB30_MOVED $sbfn"; fi
+done
+SB30_STUBS=""
+for sbfn in mktemp mv perl tr gh npx rm; do
+  declare -F "$sbfn" >/dev/null 2>&1 && SB30_STUBS="$SB30_STUBS $sbfn"
+done
+if [ -z "$SB_SAVED_record_published_itinerary" ]; then
+  FAIL "S30d: CONTROL — the saved text of record_published_itinerary is empty, so a comparison against it reads nothing"
+elif [ -z "$SB30_MOVED" ] && [ -z "$SB30_STUBS" ]; then
+  PASS "S30d: every production function this block saved reads exactly as saved, and none of mktemp, mv, perl, tr, gh, npx or rm is still a shell function — the arms after this one grade production code"
+else
+  FAIL "S30d: functions not restored:[${SB30_MOVED# }], stubs left:[${SB30_STUBS# }]"
+fi
+
+# The block's registrations, at its end as PP and RV register inside their own groups. Each
+# re-runs the SAME argv its live arm ran, with the named subject removed.
+md_flips record_published_itinerary "S27a" s27a_assert
+md_flips change_confirmation_state  "S28a" s28a_assert
+md_flips _baseline_record           "S28e" s28e_assert
+md_flips require_recordable_baseline "S29a" s29a_assert
+md_flips itinerary_digest            "S30a" s30a_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group T, #719 — THE APPROVAL PAIR ON THE RENDER: the schema's two fields, the band's statement,
@@ -8872,7 +10752,7 @@ md_flips cmd_list          "I5" i5_assert
 #   verify_publishable_content → the CLEAN arm, the one whose subject is the guard rather
 #                           than the matcher inside it;
 #   _decode_entities and strip_to_joined_text → the ENCODING arm, the only arm both
-#                           reach, and they reach it in opposite directions (M5e).
+#                           reach, and either removal now reaches it as a refusal (M5e).
 md_flips _guard_match               "N2b" n2_over_assert
 md_flips _guard_match               "N2c" n2_carry_assert
 md_flips verify_publishable_content "N2d" n2_clean_assert
@@ -8911,6 +10791,41 @@ md_flips nonpublishable_values      "O7g" o7g_assert
 md_flips nonpublishable_values      "O8a" o8a_assert
 md_flips verify_publishable_content "O9b" o9b_assert
 md_flips nonpublishable_values      "O9c" o9c_assert
+
+# The projection-status arm's subject. L17b grades an EXACT status on every cell and counts
+# anything else as that cell failing, so with the guard removed every cell reads 127 and the
+# one verdict the arm emits is a FAIL. Its captures go to their own directory here, so this
+# re-run cannot overwrite the ones L17d read.
+md_flips verify_publishable_content "L17b" l17_assert "$WORK/l17md"
+
+# The published projection's '=' arms (#1467). Each grades an EXACT status on its render and on
+# its twin, so with the projection removed the guard refuses its published arm (rc=2) and each
+# arm's one verdict is a FAIL. One registration per surface, because each verdict rests on a
+# different part of the tag reading — a comment body passed whole, a script body passed whole, a
+# quoted value kept — and none of the three carries another's.
+md_flips strip_to_published_text    "M1f" m1eq_assert M1f "a comment body"     "$M1EQ_CM" "$M1TW_CM"
+md_flips strip_to_published_text    "M1g" m1eq_assert M1g "a script body"      "$M1EQ_SC" "$M1TW_SC"
+md_flips strip_to_published_text    "M1h" m1eq_assert M1h "an attribute value" "$M1EQ_AV" "$M1TW_AV" href
+
+# The published projection's '<' arms (#1467), on the same rule: each grades an EXACT status on
+# its render and on its twin, so with the projection removed the guard refuses its published arm
+# (rc=2) and each arm's one verdict is a FAIL. One registration per surface, as for the '=' arms,
+# and one for the block boundary those surfaces keep, which rests on a part of the reading none of
+# the three carries. M1m reads the comment surface M1j registers, so it is not registered twice.
+md_flips strip_to_published_text    "M1j" m1lt_assert M1j "a comment body"     "$M1LT_CM" "$M1LW_CM"
+md_flips strip_to_published_text    "M1k" m1lt_assert M1k "a script body"      "$M1LT_SC" "$M1LW_SC"
+md_flips strip_to_published_text    "M1l" m1lt_assert M1l "an attribute value" "$M1LT_AV" "$M1LW_AV"
+md_flips strip_to_published_text    "M1n" m1bk_assert
+# The inline-tag `<` those surfaces keep (#1467): each arm grades an EXACT status, so with the
+# projection removed the guard refuses its published arm (rc=2) and each arm's one verdict is a
+# FAIL.
+md_flips strip_to_published_text    "M1o" m1io_assert
+md_flips strip_to_published_text    "M1p" m1ip_assert
+# A kept tag's attribute list and the list's membership (#1467): each grades an EXACT status or
+# an exact count, so with the projection removed each arm's one verdict is a FAIL.
+md_flips strip_to_published_text    "M1q" m1iq_assert
+md_flips strip_to_published_text    "M1r" m1ir_assert
+md_flips strip_to_published_text    "M1s" m1is_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group FZ — every verdict arm in this file must be able to FAIL.
@@ -10053,12 +11968,13 @@ for rv_s in unreadable empty newline-only two-line crlf; do rv2e_assert "RV2e-$r
 # ── RV3 — AC3. A rotation aborted before its push leaves .passphrase byte-identical, at every
 # abort point, each proven REACHED by the point's own message. "absent": a trip with no
 # .passphrase keeps none after an aborted rotation.
-rv3_assert() { # <id> <floor|gate|preflight|clone|encrypt|guard|commit|absent>
+rv3_assert() { # <id> <floor|gate|preflight|clone|encrypt|guard|commit|absent|unusable>
   local id="$1" p="$2" name d bare out rc h0 h1 w seen=0 same=0
   name="rv3-$p-$RANDOM"; bare="$RVW/origin/$name-trip.git"
   case "$p" in
-    gate|absent) d="$(s_fixture "$name" 16:30 none)"
-                 s_record "$d/.published-itinerary" "$S_DA" published ;;
+    gate|absent|unusable) d="$(s_fixture "$name" 16:30 none)"
+                 if [ "$p" = unusable ]; then printf 'published=2027-06-01T00:00:00Z\n' > "$d/.published-itinerary"
+                 else s_record "$d/.published-itinerary" "$S_DA" published; fi ;;
     clone)       d="$RVW/$name"; mkdir -p "$d/outputs"; cp "$SRC" "$d/outputs/$name-travel-site.html" ;;
     *)           d="$(rv_fixture "$name")" ;;
   esac
@@ -10069,6 +11985,8 @@ rv3_assert() { # <id> <floor|gate|preflight|clone|encrypt|guard|commit|absent>
     floor)     w='shorter than 12 characters'
                out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" --passphrase 'short-key' ) 2>&1 )"; rc=$? ;;
     gate|absent) w='itinerary content differs'
+               out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$? ;;
+    unusable)  w='present but cannot be used'
                out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$? ;;
     preflight) w='gh is not authenticated'
                out="$( ( unset STATICRYPT_PASSWORD; export RV_GH_AUTH_FAIL=1; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$? ;;
@@ -10106,7 +12024,7 @@ rv3_assert() { # <id> <floor|gate|preflight|clone|encrypt|guard|commit|absent>
     PASS "$id: rotate aborted at the $p point (rc=1, the point's own message) and .passphrase is exactly as it was"
   fi
 }
-for rv_p in floor gate preflight clone encrypt guard commit absent; do rv3_assert "RV3-$rv_p" "$rv_p"; done
+for rv_p in floor gate preflight clone encrypt guard commit absent unusable; do rv3_assert "RV3-$rv_p" "$rv_p"; done
 
 # ── RV4 — AC4. The push fails after the commit point: .passphrase must already name the new
 # key, and the next update must publish under it — never back under the revoked one.
@@ -11027,7 +12945,7 @@ md_flips cmd_publish "RV2c" rv2_assert  "RV2c" publish
 md_flips cmd_update  "RV2b" rv2b_assert "RV2b"
 for rv_c in env-only file-only agree empty-env; do md_flips cmd_update "RV2d-$rv_c" rv2d_assert "RV2d-$rv_c" "$rv_c"; done
 for rv_s in unreadable empty newline-only two-line crlf; do md_flips cmd_update "RV2e-$rv_s" rv2e_assert "RV2e-$rv_s" "$rv_s"; done
-for rv_p in floor gate preflight clone encrypt guard commit absent; do md_flips cmd_rotate "RV3-$rv_p" rv3_assert "RV3-$rv_p" "$rv_p"; done
+for rv_p in floor gate preflight clone encrypt guard commit absent unusable; do md_flips cmd_rotate "RV3-$rv_p" rv3_assert "RV3-$rv_p" "$rv_p"; done
 md_flips cmd_rotate  "RV4"  rv4_assert  "RV4"
 for rv_f in no-value unknown; do md_flips cmd_rotate "RV5-$rv_f" rv5_assert "RV5-$rv_f" "$rv_f"; done
 md_flips cmd_rotate  "RV7"  rv7_assert  "RV7"

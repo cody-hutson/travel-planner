@@ -40,14 +40,19 @@
 # Approval gate (ADR-029, which supersedes in part the organizer-confirm rule of ADR-003 §
 # Decision 2). Once a baseline is recorded, update refuses when the itinerary content of the
 # outgoing render differs from what is currently published and no approval covers it, or when it
-# cannot determine that content at all (a render it cannot read, project or normalize); rotate
-# re-publishes the same render and applies the refusal itself. A republish carrying the SAME
-# itinerary content — a coordination-state marker change, say — is not a plan change and passes.
+# cannot determine whether that content moved at all (a render it cannot read, project or
+# normalize, a baseline sidecar that is present but cannot be read as one, or a baseline record an
+# earlier push staged and never put in place); rotate re-publishes the same render and applies the
+# refusal itself. A republish carrying the SAME itinerary content — a coordination-state marker
+# change, say — is not a plan change and passes.
 # Two configurations:
 #   - A trip that declares no approvers is gated on the organizer's own confirmation, exactly as
-#     before. With no baseline the gate is NOT ACTIVE there and update publishes without asking;
-#     publish and update record a baseline after each push whose render they can identify, and
-#     warn when a push leaves the trip without one.
+#     before. With no baseline, and no baseline record a push left staged, the gate is NOT ACTIVE
+#     there and update publishes without asking; publish, update and rotate refuse a push whose
+#     render they cannot identify or whose baseline they cannot stage beside the trip, stage the
+#     baseline record each push needs immediately before it and put it in place after, and warn
+#     when a push leaves that record staged instead; while it is, update refuses as undetermined
+#     what it would otherwise pass as unchanged or as ungated.
 #   - A trip that declares approvers (<trip-dir>/.approvers, written by /trip-record .approvers)
 #     is gated on the declared number of them approving this exact plan, each approval recorded
 #     by the organizer at a terminal as the organizer's statement. Its plan is evaluated against
@@ -468,6 +473,89 @@ strip_to_text() { # <html_file> -> visible text on stdout
 # and the only part of the file guaranteed to carry no trip content, so they are dropped
 # at extraction rather than differenced away afterwards. Same mitigation, same reason,
 # obtained without a decoy that cannot be built here.
+#
+# MACHINERY IS FOUND BY ITS PLACE, NOT ITS SHAPE. An attribute name is the word before a `=`
+# inside a tag, outside that tag's quoted values; a tag name is the word directly after a `<`
+# that opens a tag. Found by shape alone — any word followed by `=`, or following a `<` with
+# nothing but spaces or a `/` between them, anywhere — the two rules also took a word written
+# that way in a comment body, a script body or an attribute value, so `<!-- Ruritanian= … -->`,
+# `var Ruritanian = …`, `?Ruritanian=…`, `n<Ruritanian` and `Travel Desk <quillon …>` lost the
+# value's key token and published at rc=0 where the same text without the `=` or the `<`
+# aborted. So each tag is read whole: a quoted value stays as it stands, an unquoted value
+# travels with its name so a `=` inside it is never taken for another name, and a comment body,
+# a <script>/<style> body and every attribute value pass as TEXT. None of them is markup, so
+# each `<` in them becomes a space before the tag-name rule below runs, and that rule finds the
+# `<` of a tag and nothing else. TWO KINDS OF `<` ARE KEPT IN THOSE SURFACES, because markup
+# written inside them is still markup to the page that renders it: a `<` that opens a block tag
+# (_GUARD_BLOCK_TAGS), and a `<` that opens an inline tag on _GUARD_INLINE_TAGS, HTML's
+# phrasing content. A tag kept there is read as a tag is: where its attribute list runs on to a
+# `>`, with no `<`, `;`, `(`, `)`, `{` or `}` outside its quoted values, each attribute NAME and
+# its `=` go and every VALUE stays, as text, as inside any tag. Three units of that list hold a
+# stop character and stop nothing: a character reference in one of HTML's reference shapes
+# (`&name;`, `&#34;`, `&#x22;`), the `;` that closes it included; a template literal's unquoted
+# `${…}` placeholder that closes on its own line with no brace and no `<` inside it, whatever else
+# it holds; and a quoted value written directly after a `=`, which may run over lines. The list
+# runs on past the end of its line only through lines this reader takes as a list of names and
+# `name=value` pairs, with a closing `/`: a value there is quoted, or holds no whitespace, quote,
+# `<`, `>`, `=`, backtick, `;`, `(`, `)`, `{` or `}` outside a character reference. Each run of
+# spaces or tabs on those lines is read one way only, so lines of nothing but spaces after a kept
+# head cost time in proportion to their length rather than stalling the read. WHERE THAT READ
+# CANNOT REACH THE TAG'S `>`, the text from the tag's name is read as its list instead, and its
+# attribute names go the same way: up to the last `>` before the next tag — the next `<`, where a
+# `/`, a `!` or a letter follows it — else up to the next `>` with no `<` before it. The reader
+# above decides how far a list can run, never whether a list that ends at a `>` keeps its names.
+# A placeholder whose braces nest or run over lines, a placeholder or any other word on a line
+# after the tag's own, and the second line of an entity-quoted value therefore no longer let a
+# kept tag's names into the stream wherever that text reaches the tag's own `>`, which it does
+# when no `<` stands in the list and either no `>` stands inside it or the next `<` after the list
+# opens a tag. A `<` still ends that text, so a word written after one is
+# read as it is everywhere else in those surfaces. The block boundary below therefore splits a
+# script string's `<p>…</p><p>…</p>` exactly as it always did, so every block sentinel this
+# projection emits stands where it stood, which is what the conjunctive window's block scoping
+# reads; and the tag-name rule drops a kept tag's name there as it does in markup, so a map
+# pop-up's `<span class="flag">Ruritanian</span> passport, <em>valid</em> to 2033` keeps its
+# words next to each other. Graded by group M, M1e–M1s.
+# RESIDUAL, stated rather than discovered, in both directions. OPEN: a key token written directly
+# after `<` in one of those surfaces, with nothing but spaces or a `/` between them, is dropped
+# there as a tag's name when it is a block-tag or a listed inline-tag name, or begins with one and
+# runs on through a hyphen, which takes the whole hyphenated word; a block-tag name becomes a block
+# boundary as well (`<!-- needs a <table near the door -->`, or `Travel Desk <mark-ellis …>` for a
+# member named Mark Ellis). OPEN, and the price of reading a kept tag's attribute list: a key token
+# written directly before `=` after such a `<` is dropped as an attribute name, as the shipped
+# guard dropped it, wherever it stands inside the text read as that tag's list — up to the `>` the
+# read above reaches, through a quoted value or a placeholder where it takes the list, and
+# otherwise up to the last `>` before the next tag, else the next `>` with no `<` before it.
+# `n<b && Ruritanian=="…" > 0` in a script pays it, as do the same comparison closed by `)` with a
+# `>` later on and a loop's `i < a.length` followed by `Ruritanian = "…"` and then an arrow
+# function's `=>`; markup written later in the same script carries that text on to the last `>`
+# before it, and the `-->` that closes a comment is such a `>` too. Outside that text the word is
+# kept: after the `>` that ends it, as in `n<b && x > 0 && Ruritanian=="…"` with no tag after it;
+# past a `<` the read does not step over; and where the comment, script or value ends with no `>`
+# after the `<`. OPEN TOO: a tag on neither list — a custom element, an SVG or MathML child, or an
+# element outside phrasing content — written inside one of those surfaces is read as text, its
+# name and its attribute names with it, and so are the attribute names of a kept tag whose list
+# the read above cannot take, wherever the text read in its place stops short of the tag's own
+# `>`: when the list holds a `<` (a `${…}` placeholder or a quoted value carrying one, as in
+# `<span ${i<k} class="…">`), or holds a `>` inside a quoted value or a placeholder ahead of the
+# tag's own and the next `<` after the list opens no tag (#2070). A value those words break up there can
+# go unmatched: the phrase rule loses a value whose every five-word run crosses one, and the
+# conjunctive rule one whose key tokens they push past its window. CLOSED: those names reach this
+# stream, so a third-party member named as one aborts the publish — a false abort, remedied by the
+# encrypted publish or by editing the markup. OPEN TOO, the price of keeping every value (#2068):
+# a word written before `=` inside what that list's reader takes as a quoted value — `title="k="`
+# on spans around a value's words — stays in this stream as value text between the words around
+# it, where the shipped rule dropped it and blocked the page, and can push a value's key tokens
+# apart as those names do; so can a later name kept as value text where an apostrophe in an
+# unquoted value opens what that reader takes as a quoted unit.
+# The same reading reaches the visible text through a stray `<`: it opens a tag that the reader
+# above takes whole, its quote-aware attribute list running on to the next unquoted `>`, so an
+# apostrophe after that `<` opens a quoted unit that can span real visible markup, and that unit is
+# read as an attribute value, under every rule above for those surfaces. In the visible text itself
+# the tag-name rule still drops a word written directly after a `<`, with nothing but spaces or a
+# `/` between them — the spaced form included, which a browser shows as text — and the visible and
+# joined projections read the same span as a tag up to the next `>`, so such a word can go unread
+# by all three arms.
+#
 # NEWLINE-PRESERVING, and that is a precondition rather than a nicety. Every destructive
 # substitution below can span a line — [^>] and \s both match a newline — so each one
 # re-emits the newlines it consumes: `\$& =~ tr/\n//cdr` deletes every character that is
@@ -480,21 +568,24 @@ strip_to_text() { # <html_file> -> visible text on stdout
 # STDERR IS KEPT, BY THE ONE RULE THIS FILE APPLIES TO EVERY perl PROGRAM (#1184). A program
 # discards its stderr only when a fallback limb follows it: the discard exists to silence
 # perl before the fallback answers, and without a fallback there is nothing to answer. This
-# program has none. A discard here would therefore silence the only trace a failure leaves,
-# because the caller reads an empty stream as "no markup to inspect" and says nothing
-# further. strip_to_text is the single program in this file with a fallback and the single
-# one that discards; the reason it keeps that limb is stated above strip_to_text_blocks. THE
+# program has none. A discard here would therefore silence the only account of WHY a
+# failure happened: the caller refuses a projection that failed or yielded nothing, and
+# names it, but only perl's own message says what went wrong. strip_to_text is the single
+# program in this file with a fallback and the single one that discards; the reason it
+# keeps that limb is stated above strip_to_text_blocks. THE
 # ACCEPTED COST: a perl diagnostic that is not a failure — an overflowing numeric character
 # reference, or a locale perl cannot set — now reaches the terminal on a successful run too.
 # That is noise rather than a fault, and restoring the discard to hide it would hide the
 # failure with it. Graded by S15h and S15i.
 strip_to_published_text() { # <html_file> -> retrievable non-machinery content on stdout
   perl -0777 -pe "
+    sub inert { my \$v = shift; \$v =~ s{<(?:(\s*/?\s*(?:$_GUARD_BLOCK_TAGS|$_GUARD_INLINE_TAGS)\b)((?:(?:&(?:[A-Za-z][A-Za-z0-9]*|#[0-9]+|#[xX][0-9A-Fa-f]+);|\\\$\{[^{}<\n]*\}|=[ \t\n]*(?:\"[^\"]*\"|'[^']*')|[^<>\"';(){}\n=]|=(?![ \t\n]*[\"'])|\"[^\"\n]*\"|'[^'\n]*')*(?:\n[ \t]*+(?:[-A-Za-z_:][-A-Za-z0-9_:.]*(?:[ \t]*=[ \t]*(?:\"[^\"]*\"|'[^']*'|(?:&(?:[A-Za-z][A-Za-z0-9]*|#[0-9]+|#[xX][0-9A-Fa-f]+);|[^\s\"'<>=\`;(){}])+))?(?:[ \t]++[-A-Za-z_:][-A-Za-z0-9_:.]*(?:[ \t]*=[ \t]*(?:\"[^\"]*\"|'[^']*'|(?:&(?:[A-Za-z][A-Za-z0-9]*|#[0-9]+|#[xX][0-9A-Fa-f]+);|[^\s\"'<>=\`;(){}])+))?)*)?[ \t]*+/?[ \t]*+)*|[^<]*(?=>[^<>]*<[/!A-Za-z])|[^<>]*+)(?=>)|))?}{ my (\$h, \$r) = (\$1, \$2); defined \$h ? '<' . \$h . attrs(\$r) : ' ' }gie; \$v }   # TEXT, not markup: each < becomes a space, unless a block tag or a listed inline tag follows it, read as a tag whose attribute NAMES go
+    sub attrs { my \$v = shift; \$v =~ s{(\"[^\"]*\"|'[^']*')|([-A-Za-z_:][-A-Za-z0-9_:.]*\s*=\s*)([^\s\"'>]*)}{ defined \$1 ? inert(\$1) : ' ' . (\$2 =~ tr/\n//cdr) . inert(\$3) }ge; \$v }   # one tag: each attribute NAME and its = go, every VALUE stays, as text
     s{<!DOCTYPE[^>]*>}{ ' ' . (\$& =~ tr/\n//cdr) }gie;      # the doctype is machinery
+    s{(<!--.*?(?:-->|\z))|(<\s*(script|style)\b)((?:[^>\"']|\"[^\"]*\"|'[^']*')*)(>.*?(?=</\3>|\z))|(<\s*/?\s*[A-Za-z][-A-Za-z0-9]*)((?:[^>\"']|\"[^\"]*\"|'[^']*')*)}{ my (\$c, \$s, \$sa, \$sb, \$t, \$ta) = (\$1, \$2, \$4, \$5, \$6, \$7); defined \$c ? '<!--' . inert(substr(\$c, 4)) : defined \$s ? \$s . attrs(\$sa) . inert(\$sb) : \$t . attrs(\$ta) }gise;   # names only inside a tag; a comment or script/style BODY passes whole, as text
     s/<!--/ /g; s/-->/ /g;                             # drop the delimiters, KEEP the body
     s{<\s*/?\s*($_GUARD_BLOCK_TAGS)\b}{ ' $_GUARD_BLOCK ' . (\$& =~ tr/\n//cdr) }gie;   # block boundary, before tag names go
     s{<\s*/?\s*([A-Za-z][-A-Za-z0-9]*)}{ ' ' . (\$& =~ tr/\n//cdr) }ge;   # the tag NAME (with its \"<\") is machinery
-    s{([-A-Za-z_:][-A-Za-z0-9_:.]*)\s*=\s*}{ ' ' . (\$& =~ tr/\n//cdr) }ge;   # the attribute NAME is machinery; its VALUE stays
   " "$1"
 }
 
@@ -752,6 +843,24 @@ GUARD_CONJ_SLACK=4
 # match, not a false abort. Both are stated in ADR-008.
 _GUARD_BLOCK='zzguardblockzz'
 _GUARD_BLOCK_TAGS='p|div|h[1-6]|li|tr|td|th|dt|dd|section|article|header|footer|aside|nav|main|ul|ol|dl|table|blockquote|figure|figcaption|br|hr|form|fieldset|pre'
+# The INLINE tags strip_to_published_text keeps as markup inside a comment body, a
+# <script>/<style> body and an attribute value, beside the block tags above, and reads as tags
+# there, so each one's attribute names go with its name. It has one reader, that projection's
+# text helper; the visible and joined projections never read it, and the joined projection's own
+# "inline tag", any non-block tag on one line, is not this set. The set is HTML's PHRASING
+# CONTENT (HTML Living Standard, § 3.2.5.2.5): the elements HTML allows inside a run of text,
+# where markup sits between a value's words. `br` is phrasing content as well and is already a
+# block tag above. A member the standard qualifies (`area`, `link`, `meta`, `selectedcontent`) is
+# listed by name, because the projection does not track the context the qualifier names. NOT on
+# it, and read as text inside those surfaces with their attribute names: custom elements, SVG and
+# MathML children, and every element outside phrasing content — the residual stated above
+# strip_to_published_text. A name on the list is dropped after `<` in those surfaces and a name
+# off it reaches the stream from them, so the list follows the standard's category, not the tags
+# one page happens to use; M1s renders every name from a literal copy of its own, so a name taken
+# off here turns it red. Never empty: an empty value adds an empty alternative to the helper's
+# pattern, which matches in front of every word, so every `<` before a word in those surfaces is
+# kept and the `<` fix is undone; M1j to M1m are the arms that fail.
+_GUARD_INLINE_TAGS='a|abbr|area|audio|b|bdi|bdo|button|canvas|cite|code|data|datalist|del|dfn|em|embed|i|iframe|img|input|ins|kbd|label|link|map|mark|math|meta|meter|noscript|object|output|picture|progress|q|ruby|s|samp|script|select|selectedcontent|slot|small|span|strong|sub|sup|svg|template|textarea|time|u|var|video|wbr'
 
 # The LINE sentinel — the block sentinel's idiom carried from block boundaries to line
 # boundaries, for the same reason and with the same properties. It is injected once per
@@ -2111,8 +2220,8 @@ $rmerge	$rtarget"
 # field only. Stage 8: this is a decision, not an inconsistency to fix.
 verify_publishable_content() { # <site_html> <trip_dir>
   local site_html="${1:-}" trip_dir="${2:-}"
-  local recs rc rcv rcp rcj work rfile pfile jfile vfile n field rule value hit=0 undet=0
-  local locv="" locp="" locj="" loc="" proj=""
+  local recs rc rcv rcp rcj work rfile pfile jfile vfile n np nj field rule value hit=0 undet=0
+  local locv="" locp="" locj="" loc="" proj="" stv=0 stp=0 stj=0
 
   if [ -z "$site_html" ] || [ -z "$trip_dir" ]; then
     warn "guard: content check needs a rendered site and a trip dir"; return 2
@@ -2131,7 +2240,21 @@ verify_publishable_content() { # <site_html> <trip_dir>
   # of the comparison — one normalization, six streams, no chance of the sides drifting —
   # and all three run their strip through _decode_entities, so a character reference is
   # resolved before tokenization on every arm rather than on whichever one was remembered.
-  strip_to_text_blocks "$site_html" | _decode_entities | _line_sentinels | _norm_words > "$rfile"
+  #
+  # EACH ARM'S STATUS IS READ, AND AN ARM THE GUARD COULD NOT READ IS UNDETERMINED — NEVER A
+  # PASS. An arm is a pipeline of four stages — projection, entity decoding, line sentinels,
+  # normalization — and a stage that fails leaves nothing behind it, or a prefix. Either way the
+  # stream is not the render, and matching it would certify a file nobody read: a value past the
+  # point of failure would publish. So each arm runs in a subshell that sets `pipefail` for
+  # itself, and the subshell's status is the whole pipeline's, the stages inside _norm_words
+  # included. It is set INSIDE for the reason itinerary_digest sets it inside its own
+  # substitution: a caller that sourced this file can turn `pipefail` off after this file's own
+  # `set` line, and a read that leaned on the caller's option would see only the last stage,
+  # which succeeds on a prefix. Every refusal below comes before the class is read, so no value
+  # is in scope when it is written — it names the projection from the closed enum below and
+  # nothing else — and an empty class does not excuse it: a render the guard could not read is
+  # not certified, whatever the trip holds.
+  ( set -o pipefail; strip_to_text_blocks "$site_html" | _decode_entities | _line_sentinels | _norm_words > "$rfile" ) || stv=$?
   # NEITHER sentinel is a word, and both must be subtracted from the degraded-extraction
   # floor. The line sentinel matters more than the block one here: there is one per source
   # line, so counting them would let a render of 20 near-empty lines clear a 20-word floor
@@ -2142,15 +2265,45 @@ verify_publishable_content() { # <site_html> <trip_dir>
     warn "guard: the rendered site yielded only $n words of visible text — a degraded extraction is not a clean result"
     return 2
   fi
-  # No word floor on the published arm: a page with no comments, attributes or scripts
-  # yields little here and that is normal, not degraded. An EMPTY published stream is
-  # simply not matched against — _guard_match reads an empty render as UNDETERMINED, and
-  # a file with no markup to inspect is not an undetermined result.
-  strip_to_published_text "$site_html" | _decode_entities | _line_sentinels | _norm_words > "$pfile"
-  # No word floor on the joined arm either, and for the same reason as the published arm:
-  # its emptiness is a property of the file, not a degraded read. An empty joined stream
-  # is simply not matched against.
-  strip_to_joined_text "$site_html" | _decode_entities | _line_sentinels | _norm_words > "$jfile"
+  # The floor is asked first, so a visible projection that failed and left little behind is
+  # reported by the floor, as it always was, with the projection's own diagnostic above it. One
+  # that failed after writing twenty words or more clears the floor, and its status refuses it.
+  if [ "$stv" -ne 0 ]; then
+    rm -rf "$work"
+    warn "guard: a projection of $site_html could not be read (visible text): its pipeline exited $stv and yielded $n words. A projection that failed or yielded nothing has not read the render, so what would be published cannot be certified, and an undetermined result is a failure, never a clean pass. The PROJECTION is the subject here, not the render or a model record: editing either clears nothing until the projection runs."
+    return 2
+  fi
+  # No word FLOOR on the published arm, and no empty stream either. This projection removes
+  # only markup machinery — the doctype, the comment delimiters, tag names and attribute names —
+  # so on a render that cleared the floor above it carries the visible words as well as what the
+  # markup carries, and a page with no comments, attributes or scripts yields its visible text
+  # here, not nothing. An empty stream therefore means the projection did not run as it should,
+  # even where every stage reported success, and it is refused as a failed one is. RESIDUAL,
+  # stated rather than discovered: a word written in the visible text directly after a `<`,
+  # with nothing but spaces or a `/` between them — the spaced form included, which a browser
+  # shows as text — is dropped here as a tag name is, so a render whose EVERY visible word is so
+  # written, with no `>` after it, projects to nothing and is refused — a false abort, the
+  # closed direction, whose remedy is the encrypted publish. What the same rule does in a
+  # comment, a script or an attribute value, in both directions, is stated above
+  # strip_to_published_text.
+  ( set -o pipefail; strip_to_published_text "$site_html" | _decode_entities | _line_sentinels | _norm_words > "$pfile" ) || stp=$?
+  np="$(awk -v B="$_GUARD_BLOCK" -v L="$_GUARD_LINE" '$0 != B && $0 != L { c++ } END { print c + 0 }' "$pfile")"; np="${np:-0}"
+  if [ "$stp" -ne 0 ] || [ "$np" -eq 0 ]; then
+    rm -rf "$work"
+    warn "guard: a projection of $site_html could not be read (retrievable markup (comment, attribute or script body)): its pipeline exited $stp and yielded $np words. A projection that failed or yielded nothing has not read the render, so what would be published cannot be certified, and an undetermined result is a failure, never a clean pass. The PROJECTION is the subject here, not the render or a model record: editing either clears nothing until the projection runs."
+    return 2
+  fi
+  # No word floor and no empty stream on the joined arm either. It keeps every visible character
+  # and only closes an inline tag up, which can join two words into one but never removes one, so
+  # after the floor above it always carries at least one word; an empty one is refused as a
+  # failed one is.
+  ( set -o pipefail; strip_to_joined_text "$site_html" | _decode_entities | _line_sentinels | _norm_words > "$jfile" ) || stj=$?
+  nj="$(awk -v B="$_GUARD_BLOCK" -v L="$_GUARD_LINE" '$0 != B && $0 != L { c++ } END { print c + 0 }' "$jfile")"; nj="${nj:-0}"
+  if [ "$stj" -ne 0 ] || [ "$nj" -eq 0 ]; then
+    rm -rf "$work"
+    warn "guard: a projection of $site_html could not be read (joined markup (an inline tag split a word)): its pipeline exited $stj and yielded $nj words. A projection that failed or yielded nothing has not read the render, so what would be published cannot be certified, and an undetermined result is a failure, never a clean pass. The PROJECTION is the subject here, not the render or a model record: editing either clears nothing until the projection runs."
+    return 2
+  fi
 
   recs="$(nonpublishable_values "$trip_dir" "$site_html")" && rc=0 || rc=$?
   if [ "$rc" -ne 0 ]; then rm -rf "$work"; return 2; fi
@@ -2168,18 +2321,22 @@ verify_publishable_content() { # <site_html> <trip_dir>
     # `||` at its call site, which suspends errexit through the whole body — the same
     # property the `rcv=$?` idiom depended on before.
     locv="$(_guard_match "$rule" "$vfile" "$rfile")"; rcv=$?
-    rcp=1; locp=""
-    [ -s "$pfile" ] && { locp="$(_guard_match "$rule" "$vfile" "$pfile")"; rcp=$?; }
-    rcj=1; locj=""
-    [ -s "$jfile" ] && { locj="$(_guard_match "$rule" "$vfile" "$jfile")"; rcj=$?; }
+    locp="$(_guard_match "$rule" "$vfile" "$pfile")"; rcp=$?
+    locj="$(_guard_match "$rule" "$vfile" "$jfile")"; rcj=$?
     # Combine the three arms. A hit on ANY projection is a hit — the value is in the
-    # file either way. Otherwise the visible arm carries the verdict, because every
-    # non-hit code is a property of the VALUE (its keyability floor, its distinctiveness)
-    # rather than of the projection, so the arms agree on it by construction. The
-    # elif/else limbs are therefore unchanged by the third arm: it can only turn a
-    # non-hit into a hit, never change WHICH non-hit code is reported.
+    # file either way. Otherwise the first arm, in the arms' own order, whose code is not a
+    # plain no-match carries the verdict. Every such code but one is a property of the VALUE
+    # (its keyability floor, its distinctiveness) rather than of the projection, so the arms
+    # agree on it by construction — no arm reaches this point empty, because the checks above
+    # refuse an arm that yielded no words. The one that is not is a matcher that could not
+    # run, which can fire on one arm alone; it is reported from whichever arm it fired on, the
+    # joined arm included, so a matcher failure on any arm is undetermined, never a no-match —
+    # unless the visible arm reports the value a declared non-key (4), which carries the verdict
+    # before the published or the joined arm's code is read, so a matcher failure there is not
+    # reported. No value can pass that way: a declared non-key is unmatched on every arm.
     if   [ "$rcv" -eq 0 ] || [ "$rcp" -eq 0 ] || [ "$rcj" -eq 0 ]; then rc=0
     elif [ "$rcv" -eq 1 ] && [ "$rcp" -ne 1 ]; then rc="$rcp"
+    elif [ "$rcv" -eq 1 ] && [ "$rcj" -ne 1 ]; then rc="$rcj"
     else rc="$rcv"; fi
     # The HIT arm reports a position in the EVALUAND — the file the guard was asked to
     # certify — because that is the artifact the operator has to edit. The model
@@ -2713,6 +2870,17 @@ _legacy_digest_of() { # (stdin) -> the pre-#719 CRC-32-plus-length token
   cksum | awk '{ printf "%s-%s", $1, $2 }'
 }
 
+# THE ITINERARY'S WHITESPACE, PINNED (#1468 case 1). The normalization stages run under LC_ALL=C,
+# so no verdict, baseline or approval code depends on the caller's locale, the rule the approval
+# readers above already keep. Under a UTF-8 locale macOS `tr` counts 18 non-ASCII code points as
+# [:space:] — U+00A0, U+1680, U+2000–U+200A, U+2028, U+2029, U+202F, U+205F and U+3000, Unicode's
+# White_Space set less U+0085, measured over every scalar value — and C counts none of them; that
+# difference was the whole locale dependence. So those 18 are rewritten to an ASCII space, byte
+# for byte, before the C-locale `tr` squeezes, and a digest recorded under a UTF-8 locale on macOS
+# is reproduced exactly under any locale. A UTF-8 encoding cannot occur inside another
+# character's, so a byte match is a character match. Graded by S30.
+_ITINERARY_WS_SED=$'s/\xc2\xa0/ /g;s/\xe1\x9a\x80/ /g;s/\xe2\x80\x80/ /g;s/\xe2\x80\x81/ /g;s/\xe2\x80\x82/ /g;s/\xe2\x80\x83/ /g;s/\xe2\x80\x84/ /g;s/\xe2\x80\x85/ /g;s/\xe2\x80\x86/ /g;s/\xe2\x80\x87/ /g;s/\xe2\x80\x88/ /g;s/\xe2\x80\x89/ /g;s/\xe2\x80\x8a/ /g;s/\xe2\x80\xa8/ /g;s/\xe2\x80\xa9/ /g;s/\xe2\x80\xaf/ /g;s/\xe2\x81\x9f/ /g;s/\xe3\x80\x80/ /g'
+
 # The itinerary-content identity of a site render. Nothing on an unreadable file — the
 # caller decides what an unreadable render means: the resolver reads it as `undetermined`,
 # neither a match nor a change (#1184), and both recorders decline to write.
@@ -2744,13 +2912,14 @@ _legacy_digest_of() { # (stdin) -> the pre-#719 CRC-32-plus-length token
 # written by an earlier commit OF this branch does not match and re-anchors on the next
 # confirmed republish — fail-closed, and the only direction it could go.
 #
-# A FAILED NORMALIZATION TAKES THE SAME PATH (#1184). BSD `tr` and `sed` under a UTF-8
-# locale exit 1 on a byte that is not valid UTF-8, and `tr` writes the prefix it had read
-# before stopping (measured on macOS). A digest of that prefix is a well-formed token for a
-# TRUNCATED itinerary, and that is fail-OPEN: a day appended after the last published text
-# whose own text opens with such a byte digests equal to the baseline (the state reads
-# `none-pending`) or to the confirmation record (it reads `confirmed`), and the gate lets
-# an unapproved change through on either route. So the pipeline's status is read too, in
+# A FAILED NORMALIZATION TAKES THE SAME PATH (#1184). Before the pin above, BSD `tr` and `sed`
+# under a UTF-8 locale exited 1 on a byte that is not valid UTF-8, after writing the prefix they
+# had read; under LC_ALL=C neither does, and such a byte is digested as it stands. A stage can
+# still fail after writing a prefix for another reason, and a digest of that prefix is a
+# well-formed token for a TRUNCATED itinerary, which is fail-OPEN: a day appended after the
+# last published text whose own text opens with such a byte digests equal to the baseline (the
+# state reads `none-pending`) or to the confirmation record (it reads `confirmed`), and the gate
+# lets an unapproved change through on either route. So the pipeline's status is read too, in
 # the same way the projection's is: the command substitution carries the status of the
 # whole pipeline, and a failure in any stage is "no answer".
 #
@@ -2766,7 +2935,7 @@ itinerary_digest() { # <html_file> -> identity token, or nothing
   [ -r "${1:-}" ] || return 0
   local text dg
   text="$(strip_to_itinerary_text "$1")" || return 0
-  dg="$(set -o pipefail; printf '%s' "$text" | tr -s '[:space:]' ' ' | sed 's/^ *//; s/ *$//' | _digest_of)" || return 0
+  dg="$(set -o pipefail; printf '%s' "$text" | LC_ALL=C sed "$_ITINERARY_WS_SED" | LC_ALL=C tr -s '[:space:]' ' ' | LC_ALL=C sed 's/^ *//; s/ *$//' | _digest_of)" || return 0
   printf '%s' "$dg"
 }
 
@@ -2780,7 +2949,7 @@ _legacy_itinerary_digest() { # <html_file> -> the pre-#719 CRC-32 identity token
   [ -r "${1:-}" ] || return 0
   local text dg
   text="$(strip_to_itinerary_text "$1")" || return 0
-  dg="$(set -o pipefail; printf '%s' "$text" | tr -s '[:space:]' ' ' | sed 's/^ *//; s/ *$//' | _legacy_digest_of)" || return 0
+  dg="$(set -o pipefail; printf '%s' "$text" | LC_ALL=C sed "$_ITINERARY_WS_SED" | LC_ALL=C tr -s '[:space:]' ' ' | LC_ALL=C sed 's/^ *//; s/ *$//' | _legacy_digest_of)" || return 0
   printf '%s' "$dg"
 }
 
@@ -2814,15 +2983,21 @@ published_itinerary_path() { printf '%s' "$1/.published-itinerary"; }
 #               confirm, by an atomic append that preserves every prior byte
 approver_declaration_path() { printf '%s' "$1/.approvers"; }
 approval_ledger_path()      { printf '%s' "$1/.approvals"; }
+# The baseline record a push has staged and not yet put in place (#1468 D-6): the baseline's
+# staged twin. stage_baseline_record writes it immediately before a push, and
+# record_published_itinerary moves it over .published-itinerary after the push succeeds. It is
+# present between the two, and stays wherever that move fails, so the gate can read that a push's
+# record is outstanding. The previous release never opens it.
+staged_record_path()       { printf '%s' "$1/.published-itinerary.next"; }
 
 # The `digest=` line of a two-line record, or NOTHING when the file is absent, the
 # line is missing, or the token is not a well-formed digest. Folding those three
-# into one empty answer is what satisfies ADR-007 §2's bound that no command may
-# predicate a branch on a field's ABSENCE where a placeholder makes that field
-# present: every caller branches on the VALUE, and a malformed record is never read
-# as approval. Written as a read loop rather than a pipeline on purpose — a
-# `sed ... | head -1` would be the early-exit-under-pipefail shape this suite's
-# group PF grades against.
+# into one empty answer is what keeps a malformed `.change-confirmed` from ever
+# reading as an approval, the conservative direction for that record. The published
+# baseline is read through `_baseline_record` instead, because there an empty answer
+# is the permissive direction (#1468). Written as a read loop rather than a pipeline
+# on purpose — a `sed ... | head -1` would be the early-exit-under-pipefail shape this
+# suite's group PF grades against.
 _record_digest() { # <record_file> -> digest token, or nothing
   local f="${1:-}" line tok=""
   [ -r "$f" ] || return 0
@@ -2837,35 +3012,181 @@ _record_digest() { # <record_file> -> digest token, or nothing
   printf '%s' "$tok"
 }
 
-# Records the itinerary content that is now live. Called AFTER a push succeeds, so
-# the sidecar never claims content that was not published. Atomic: written to a
-# temp file in the same directory, then moved into place, so a crash mid-write
-# cannot leave a half-record that _record_digest would read as a digest.
-#
-# WHEN THE RENDER HAS NO IDENTITY, NOTHING IS RECORDED AND THE OPERATOR IS TOLD WHICH
-# STATE THAT LEAVES (#1184). The push has already happened, so this cannot refuse; it can
-# only be truthful. The two cases are different states and get different words. With a
-# baseline already recorded, the gate keeps it and refuses the next update as
-# `undetermined` until the render can be identified again. With NO baseline, the gate has
-# no anchor at all: it resolves `none-pending` and every later update publishes without
-# asking, so the warning says the gate is NOT ACTIVE rather than implying it still guards
-# the trip. "A baseline" is read exactly as the gate reads it, through _record_digest, so
-# the words cannot disagree with the verdict.
-record_published_itinerary() { # <trip_dir> <site_html>
-  local trip_dir="$1" site_html="$2" out tmp dg
-  out="$(published_itinerary_path "$trip_dir")"
-  dg="$(itinerary_digest "$site_html")"
-  if [ -z "$dg" ]; then
-    if [ -n "$(_record_digest "$out")" ]; then
-      warn "could not identify the itinerary content of $site_html — it could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause. No new baseline was recorded for this push. The organizer-confirm gate keeps the baseline it already had, and it will refuse the next update as undetermined until the render can be identified again."
-    else
-      warn "could not identify the itinerary content of $site_html — it could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause. No baseline was recorded for this push, and this trip has none, so the organizer-confirm gate is NOT ACTIVE for it: every update will publish without asking for confirmation until a push records a baseline. Fix the cause, then re-run update to record one."
-    fi
+# The published baseline, classified (#1468 case 5). Exactly one answer on stdout:
+#   absent     no sidecar at the path — no file and no link. The one answer that means "never
+#              recorded", and the only one THE NO-BASELINE BRANCH in SEAM S2 is reached by.
+#   unusable   a sidecar is present — a file, a link (dangling or not), a directory — but no
+#              baseline can be read from it: it is not a readable regular file, it has no
+#              digest= line, or its token is neither 64 lowercase hex characters (what the
+#              recorder writes) nor the legacy <digits>-<digits> shape (what it wrote before #719).
+#   <token>    the recorded digest.
+# ADR-007 § 2: absence and a malformed or truncated file are different conditions and never the
+# same branch. _record_digest's fold put them on one branch, which for this sidecar — unlike
+# .change-confirmed — is the permissive one: an unreadable baseline on a trip that declares no
+# approvers read as no baseline and published whatever went out. Every caller branches on the
+# VALUE printed here and none tests the path itself. Presence is existence OR a link, as
+# _approval_policy reads it. The regular-file test comes before any read, so a FIFO cannot block
+# the gate.
+_baseline_record() { # <record_file> -> absent | unusable | the recorded digest token
+  local f="${1:-}" tok
+  if [ ! -e "$f" ] && [ ! -L "$f" ]; then printf 'absent'; return 0; fi
+  if [ ! -f "$f" ] || [ ! -r "$f" ]; then printf 'unusable'; return 0; fi
+  tok="$(_record_digest "$f")"
+  if [ "${#tok}" -eq 64 ]; then
+    case "$tok" in *[!0123456789abcdef]*) ;; *) printf '%s' "$tok"; return 0 ;; esac
+  fi
+  case "$tok" in
+    ''|*[!0123456789-]*|-*|*-|*-*-*) ;;
+    *-*) printf '%s' "$tok"; return 0 ;;
+  esac
+  printf 'unusable'
+  return 0
+}
+
+# The one staging step for a baseline record (#1468 case 4): a temp file beside <record_file>, in
+# the same directory, holding the two lines the recorder writes. Prints the temp path; returns
+# non-zero, leaving nothing behind, when the file cannot be created or written. The recorder
+# calls it after a push and require_recordable_baseline calls it before one, so the check before
+# the push cannot pass where the recorder's own staging would fail.
+_stage_published_record() { # <record_file> <digest> -> the staged path on stdout, or non-zero with nothing left
+  local tmp
+  tmp="$(mktemp "${1}.XXXXXX")" || return 1
+  if printf 'digest=%s\npublished=%s\n' "$2" "$(_iso_now)" > "$tmp"; then
+    printf '%s' "$tmp"
     return 0
   fi
-  tmp="$(mktemp "${out}.XXXXXX")" || return 0
-  printf 'digest=%s\npublished=%s\n' "$dg" "$(_iso_now)" > "$tmp"
-  mv -f "$tmp" "$out"
+  rm -f "$tmp"
+  return 1
+}
+
+# The recorder's own warning when a push leaves no new baseline, worded by the state the push
+# leaves, read the way the gate reads it — through _baseline_record — so the words cannot disagree
+# with the next verdict. "NOT ACTIVE" is said only where it is true: no baseline, and no record
+# staged, on a trip that declares no approvers. A staged record is read three ways, as the gate
+# reads it: one that cannot be read holds every update; one holding another plan's digest was
+# written while this push was under way; and one holding this push's own digest, or one beside a
+# push whose digest is not known, is this push's. The third argument is the digest the push
+# carried, or nothing where it could not be identified.
+_warn_unrecorded() { # <trip_dir> <cause> <digest-or-empty> -> one warning, worded by the state the push leaves
+  local out nxt base nxt_dg
+  out="$(published_itinerary_path "$1")"
+  nxt="$(staged_record_path "$1")"
+  base="$(_baseline_record "$out")"
+  case "$base" in
+    unusable|'')
+      warn "$2 The push itself succeeded. No baseline was recorded for this push, and the sidecar at $out is present but cannot be used, so the organizer-confirm gate refuses the next update as undetermined until that file is repaired or deleted."
+      return 0 ;;
+  esac
+  nxt_dg="$(_baseline_record "$nxt")"
+  case "$nxt_dg" in
+    absent) ;;
+    unusable|'')
+      warn "$2 The push itself succeeded. No baseline was recorded for this push, and the baseline record staged at $nxt is present but cannot be read, so the organizer-confirm gate refuses every update as undetermined until that file is repaired or deleted."
+      return 0 ;;
+    *)
+      if [ -n "${3:-}" ] && [ "$nxt_dg" != "$3" ]; then
+        warn "$2 The push itself succeeded. No baseline was recorded for this push, and the record staged at $nxt holds another plan's digest, written while this push was under way. Until a push puts a record in place, the organizer-confirm gate cannot tell which plan the published site carries, so it refuses as undetermined an update of any other plan that it would otherwise pass as unchanged or as ungated, save a plan whose own approvals meet the threshold on a trip that declares approvers. Run one command on a trip at a time; then re-run update with the plan this trip should publish, which records it."
+      else
+        warn "$2 The push itself succeeded, and its baseline record is left staged at $nxt. Until a push puts a record in place, the organizer-confirm gate cannot tell which plan the published site carries, so it refuses as undetermined an update it would otherwise pass as unchanged or as ungated, save a plan whose own approvals meet the threshold on a trip that declares approvers; an update of a changed plan still needs its approval. Fix the cause, then re-run update with this plan to record its baseline — or, if the site does not carry this plan, delete $nxt."
+      fi
+      return 0 ;;
+  esac
+  case "$base" in
+    absent)
+      case "$(_approval_policy "$1" 2>/dev/null)" in
+        none)     warn "$2 The push itself succeeded. No baseline was recorded for this push, and this trip has none, so the organizer-confirm gate is NOT ACTIVE for it: every update will publish without asking for confirmation until a push records a baseline. Fix the cause, then re-run update to record one." ;;
+        declared) warn "$2 The push itself succeeded. No baseline was recorded for this push, and this trip has none; it declares approvers, so the gate still holds the next update until approvals of its outgoing plan are recorded. Fix the cause, then re-run update to record a baseline." ;;
+        *)        warn "$2 The push itself succeeded. No baseline was recorded for this push, and this trip has none; its approval sidecars are malformed, so the gate holds every plan change, and confirm records no approval, until they are repaired. Repair them and fix the cause, then re-run update to record a baseline." ;;
+      esac ;;
+    *)
+      if [ -n "${3:-}" ] && _baseline_matches "$1" "$base" "$3"; then
+        warn "$2 The push itself succeeded. No new baseline was recorded for this push, but the baseline the trip already had records this same plan, so the organizer-confirm gate's verdicts are unaffected."
+      else
+        warn "$2 The push itself succeeded. No new baseline was recorded for this push. The organizer-confirm gate keeps the baseline it already had — the plan published before this push — so until a push records a new one the next update is gated against that earlier plan, and a working copy reverted to it would publish without asking. Fix the cause, then re-run update to record this push's baseline."
+      fi ;;
+  esac
+  return 0
+}
+
+# Records the itinerary content that is now live. Called AFTER a push succeeds, so the sidecar never
+# claims content that was not published. Every push site hands it the digest of the plan its push
+# carried, which stage_baseline_record handed back, and that digest is what is recorded: the render
+# is not digested again here, so a render rebuilt during the push is never recorded as what the push
+# carried (#1468; CD-2 of the amendment-1 review, X-CD-1 of the amendment-2 review). Given it:
+#   - a staged record holding that digest is moved into place and READ BACK the way the gate reads
+#     it, so a record that landed somewhere else (inside a directory standing at the sidecar's path,
+#     say) is caught rather than assumed;
+#   - with no record staged, where the baseline already records that plan (the push re-published
+#     it), that digest is recorded beside the sidecar by _stage_published_record and moved into
+#     place the same way. A legacy (CRC-shaped) baseline is matched through the legacy shim, which
+#     reads the render: a render rewritten during such a push then fails to match, and the next case
+#     applies, which holds;
+#   - with no record staged, where the baseline does not record that plan, something other than this
+#     command removed the staged record during the push, and it is STAGED AGAIN, so the gate holds
+#     exactly as after a move that failed. Staging needs space after the push; where it fails, the
+#     old baseline is kept, and the warning says so;
+#   - a staged record holding another digest, or one that cannot be read, was changed during the
+#     push by something other than this command; it is left as it is, and the warning says so.
+# Called with two arguments, as no push site calls it since X-CD-1 and the suite's arms still do, the
+# render is digested here: a record of that plan already staged is moved into place, and otherwise
+# one is staged now, beside the sidecar, by _stage_published_record, and moved into place the same way.
+#
+# EVERY PATH THAT LEAVES NO NEW BASELINE WARNS, AND RETURNS 0 (#1184; #1468 case 4). The push has
+# already happened, so this cannot refuse; it can only be truthful, and no failed step may end the
+# command under errexit after a push that succeeded — the removal of a temp file included, which
+# fails for the same reason a move into the same directory does. A staged record that cannot be
+# moved into place is LEFT WHERE IT IS: it is what keeps the gate holding (SEAM S2). The warning is
+# _warn_unrecorded's, worded by the state the push leaves.
+record_published_itinerary() { # <trip_dir> <site_html> [<the digest stage_baseline_record handed back>]
+  local trip_dir="$1" site_html="$2" out nxt tmp="" dg base nxt_dg
+  out="$(published_itinerary_path "$trip_dir")"
+  nxt="$(staged_record_path "$trip_dir")"
+  if [ -n "${3:-}" ]; then
+    nxt_dg="$(_baseline_record "$nxt")"
+    if [ "$nxt_dg" = "$3" ]; then
+      if mv -f "$nxt" "$out" && [ "$(_baseline_record "$out")" = "$3" ]; then return 0; fi
+      _warn_unrecorded "$trip_dir" "could not put this push's staged baseline record, $nxt, in place at $out; any error printed above names the cause." "$3"
+      return 0
+    fi
+    if [ "$nxt_dg" = absent ]; then
+      base="$(_baseline_record "$out")"
+      case "$base" in
+        absent|unusable|'') ;;
+        *)
+          if _baseline_matches "$trip_dir" "$base" "$3"; then
+            if tmp="$(_stage_published_record "$out" "$3")" && mv -f "$tmp" "$out" && [ "$(_baseline_record "$out")" = "$3" ]; then return 0; fi
+            if [ -n "$tmp" ] && [ -e "$tmp" ]; then rm -f "$tmp" || :; fi
+            _warn_unrecorded "$trip_dir" "could not record the baseline at $out — the sidecar could not be staged, written or put in place beside it; any error printed above names the cause." "$3"
+            return 0
+          fi ;;
+      esac
+      if tmp="$(_stage_published_record "$out" "$3")" && mv -f "$tmp" "$nxt" && [ "$(_baseline_record "$nxt")" = "$3" ]; then
+        _warn_unrecorded "$trip_dir" "the baseline record this push staged at $nxt was removed while the push was under way, by something other than this command, so it was staged again rather than put in place." "$3"
+        return 0
+      fi
+      if [ -n "$tmp" ] && [ -e "$tmp" ]; then rm -f "$tmp" || :; fi
+      _warn_unrecorded "$trip_dir" "the baseline record this push staged at $nxt was removed while the push was under way, by something other than this command, and it could not be staged again; any error printed above names the cause." "$3"
+      return 0
+    fi
+    _warn_unrecorded "$trip_dir" "the baseline record this push staged at $nxt was changed while the push was under way, by something other than this command, so it was not put in place." "$3"
+    return 0
+  fi
+  dg="$(itinerary_digest "$site_html")"
+  if [ -z "$dg" ]; then
+    _warn_unrecorded "$trip_dir" "could not identify the itinerary content of $site_html — it could not be read, its itinerary text could not be projected, or that text could not be normalized; any error printed above names the cause." ""
+    return 0
+  fi
+  if [ "$(_baseline_record "$nxt")" = "$dg" ]; then
+    if mv -f "$nxt" "$out" && [ "$(_baseline_record "$out")" = "$dg" ]; then return 0; fi
+    _warn_unrecorded "$trip_dir" "could not put this push's staged baseline record, $nxt, in place at $out; any error printed above names the cause." "$dg"
+    return 0
+  fi
+  if tmp="$(_stage_published_record "$out" "$dg")" && mv -f "$tmp" "$out" && [ "$(_baseline_record "$out")" = "$dg" ]; then
+    return 0
+  fi
+  if [ -n "$tmp" ] && [ -e "$tmp" ]; then rm -f "$tmp" || :; fi
+  _warn_unrecorded "$trip_dir" "could not record the baseline at $out — the sidecar could not be staged, written or put in place beside it; any error printed above names the cause." "$dg"
+  return 0
 }
 
 # ── THE APPROVAL READERS (#719, ADR-029 § Decisions 2–5) ─────────────────────────
@@ -3079,32 +3400,69 @@ _baseline_matches() { # <trip_dir> <baseline-digest> <outgoing-digest> -> 0 when
 # allowlist-proceed case there still aborts on anything outside this vocabulary. THE EMISSION
 # THE REPLACEMENT OWES (#1184) is kept: `undetermined` whenever the verdict depends on the
 # outgoing render's itinerary content and that content cannot be identified — on every policy,
-# the declared no-baseline branch included. Group S15 grades it whatever body this function holds.
+# the declared no-baseline branch included, and whenever a baseline sidecar is present but cannot
+# be used (#1468). Group S15 grades it whatever body this function holds.
 #
-#   none-pending  no baseline on a trip that declares no approvers, OR the outgoing itinerary
-#                 content is exactly what is published — directly, or through the
-#                 legacy-baseline shim                                                -> proceed
-#   undetermined  the verdict depends on the outgoing render, and it could not be read,
-#                 projected or normalized — whether it moved is UNKNOWN; never written
-#                 to any sidecar                                                      -> abort
+#   none-pending  no baseline on a trip that declares no approvers, and no other plan's record
+#                 staged; OR the outgoing itinerary content is exactly what is published —
+#                 directly, or through the legacy-baseline shim — and no push's record is
+#                 still staged                                                        -> proceed
+#   undetermined  whether the itinerary moved is UNKNOWN: a baseline sidecar is present but
+#                 cannot be used (_baseline_record), on every policy; or a push's baseline
+#                 record is still staged and the outgoing plan is the baseline's own,
+#                 whatever plan that record names, or, with no baseline on a trip that
+#                 declares no approvers, is not that record's own — where the answer would
+#                 otherwise be none-pending, save on a trip that declares approvers whose
+#                 approvals of the outgoing plan meet its threshold, which is confirmed
+#                 (#1468 D-6); or the verdict depends on the outgoing render, and it could
+#                 not be read, projected or normalized. Never written to any sidecar  -> abort
 #   unconfirmed   itinerary content moved and no approval covers it: no parseable
 #                 confirmation, too few declared approvals, or a malformed approval state -> abort
 #   stale         itinerary content moved since it was approved                       -> abort
 #   confirmed     the approval covers this exact itinerary content — the organizer's
 #                 confirmation, or the declared threshold met by approvals for it     -> proceed
 #
-# THE NO-BASELINE BRANCH STAYS FIRST for a trip that declares no approvers: with no anchor there
-# is nothing to compare, so the answer does not depend on the render. A trip that DOES declare
-# approvers is evaluated against its approvals even with no baseline (#718's FM-2 i) — a
-# declaration exists to hold plan changes, and one with no anchor would otherwise wave every
-# change through. A MALFORMED approval state is never the legacy default (FM-2 ii): it reads
-# `unconfirmed` wherever the plan cannot be shown unchanged, and `none-pending` only where the
-# outgoing plan equals the baseline, where nothing new can be publishing (#719 DR-2).
+# AN UNUSABLE BASELINE ANSWERS FIRST, ON EVERY POLICY (#1468 case 5): ADR-007 § 2 makes absence
+# and a malformed or truncated file different conditions and never the same branch, so only
+# `absent` reaches THE NO-BASELINE BRANCH, which stays first for a trip that declares no
+# approvers: with no anchor there is nothing to compare, so the answer does not depend on the
+# render. A trip that DOES declare approvers is evaluated against its approvals even with no
+# baseline (#718's FM-2 i) — a declaration exists to hold plan changes, and one with no anchor
+# would otherwise wave every change through. A MALFORMED approval state is never the legacy
+# default (FM-2 ii): it reads `unconfirmed` wherever the plan cannot be shown unchanged, and
+# `none-pending` only where the outgoing plan equals the baseline, where nothing new can be
+# publishing (#719 DR-2).
+#
+# A STAGED RECORD HOLDS THE TWO VERDICTS THAT REST ON KNOWING WHICH PLAN IS LIVE (#1468 D-6).
+# stage_baseline_record writes .published-itinerary.next immediately before a push, and the
+# recorder moves it into place after; while it is present the site may carry its plan, or the plan
+# of an earlier push whose record it replaced, rather than the baseline's. So the outgoing plan
+# matching the baseline becomes undetermined whatever plan that record names, its own included —
+# a record of the baseline's own plan is left where a push of it failed after another plan's record
+# was outstanding (X-FM-2 of the #1468 amendment-2 review) — and no baseline on a trip that declares
+# no approvers becomes undetermined where the outgoing plan is not that record's own. One exception:
+# on a trip that declares approvers, a baseline's own plan whose approvals meet the threshold is
+# confirmed, because a met threshold covers a plan whichever plan is live (CD-1 of the #1468
+# amendment-1 review). On every other policy (a trip that declares no approvers, or one whose
+# approval sidecars are malformed) that plan stays held, whatever the confirmation record says.
+# Every other answer stands: a changed plan still needs its approval whichever plan is live, and a
+# confirmation or a met threshold for it covers it whichever that is. A staged record that cannot be
+# read is undetermined on every policy, as an unusable baseline is. Only `absent` leaves THE
+# NO-BASELINE BRANCH where it was.
 change_confirmation_state() { # <trip_dir> -> one token on stdout
-  local trip_dir="$1" pol base_dg out_dg rec_dg k t s
+  local trip_dir="$1" pol base_dg nxt_dg out_dg rec_dg k t s held=0
   pol="$(_approval_policy "$trip_dir")"
-  base_dg="$(_record_digest "$(published_itinerary_path "$trip_dir")")"
-  if [ -z "$base_dg" ]; then
+  base_dg="$(_baseline_record "$(published_itinerary_path "$trip_dir")")"
+  case "$base_dg" in
+    absent)      base_dg="" ;;                         # never recorded: THE NO-BASELINE BRANCH below
+    unusable|'') printf 'undetermined'; return 0 ;;    # present but unusable, on every policy (#1468 case 5)
+  esac
+  nxt_dg="$(_baseline_record "$(staged_record_path "$trip_dir")")"
+  case "$nxt_dg" in
+    absent)      nxt_dg="" ;;                          # no push's record is outstanding
+    unusable|'') printf 'undetermined'; return 0 ;;    # an outstanding record that cannot be read (#1468 D-6)
+  esac
+  if [ -z "$base_dg" ] && [ -z "$nxt_dg" ]; then
     case "$pol" in
       none)      printf 'none-pending'; return 0 ;;   # the shipped first branch, undeclared trips only
       malformed) printf 'unconfirmed';  return 0 ;;   # FM-2: never the legacy default
@@ -3112,7 +3470,31 @@ change_confirmation_state() { # <trip_dir> -> one token on stdout
   fi
   out_dg="$(itinerary_digest "$(resolve_site_html "$trip_dir")")"
   if [ -z "$out_dg" ]; then printf 'undetermined'; return 0; fi
-  if [ -n "$base_dg" ] && _baseline_matches "$trip_dir" "$base_dg" "$out_dg"; then printf 'none-pending'; return 0; fi
+  # A push's record is outstanding and this is not that push's plan. On a trip with no baseline that
+  # declares no approvers, which plan the site carries is then unknown, so the ungated verdict cannot
+  # be given (#1468 D-6). The unchanged verdict below is held whatever plan the record names (X-FM-2).
+  if [ -n "$nxt_dg" ] && [ "$nxt_dg" != "$out_dg" ]; then held=1; fi
+  if [ -n "$base_dg" ] && _baseline_matches "$trip_dir" "$base_dg" "$out_dg"; then
+    if [ -z "$nxt_dg" ]; then printf 'none-pending'; return 0; fi
+    # Held on the baseline's own plan while a push's record is outstanding, whichever plan that record
+    # names: a record of this same plan is left where a push of it failed after another plan's record
+    # was outstanding, and that other plan may be the one live (X-FM-2 of the #1468 amendment-2
+    # review). A trip that declares approvers is not held where that plan's own approvals meet the
+    # threshold: a met threshold covers a plan whichever plan is live (CD-1 of the #1468 amendment-1
+    # review). Every other policy, and a shortfall, is held.
+    if [ "$pol" = declared ]; then
+      read -r k t s <<<"$(_approval_tally "$trip_dir" "$out_dg")"
+      case "$k$t" in
+        ''|*[!0123456789]*) ;;
+        *) if [ "$k" -ge "$t" ]; then printf 'confirmed'; return 0; fi ;;
+      esac
+    fi
+    printf 'undetermined'; return 0
+  fi
+  if [ -z "$base_dg" ] && [ "$pol" = none ]; then    # no baseline, and a push's record outstanding
+    if [ "$held" -eq 1 ]; then printf 'undetermined'; else printf 'none-pending'; fi
+    return 0
+  fi
   case "$pol" in
     malformed) printf 'unconfirmed'; return 0 ;;
     declared)
@@ -3152,16 +3534,34 @@ change_confirmation_state() { # <trip_dir> -> one token on stdout
 #     on it too, but `*)`'s text asserts that the itinerary content differs — a claim
 #     nobody could have computed, and exactly the fabricated statement this token exists
 #     to remove. So the arm exists for its MESSAGE and not for its verdict: the proceed set
-#     is unchanged, `*)` is still the default, and the arm is not an exemption. That message
-#     speaks of the render's identity only, never of change in either direction, because
-#     identity is all the gate failed to establish. S15f grades both directions.
+#     is unchanged, `*)` is still the default, and the arm is not an exemption. Its message
+#     names whichever side the gate could not establish, read again through `_baseline_record` in
+#     the order the resolver reads them: a baseline sidecar present but unusable (#1468 case 5), a
+#     push's baseline record present but unreadable, the outgoing render's identity, or a push's
+#     baseline record still staged (#1468 D-6). It never speaks of change in either direction,
+#     because that is all the gate failed to establish. S15f and S28b grade it, and S31b and S31i.
 require_change_confirmation() { # <trip_dir>
   local trip_dir="$1"
-  local state
+  local state out_dg
   state="$(change_confirmation_state "$trip_dir")"
   case "$state" in
     none-pending|confirmed) return 0 ;;
-    undetermined) die "GUARD ABORTED — could not identify the itinerary content of the outgoing render of ${trip_dir} (state: undetermined): it could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause. Nothing was pushed, and the published site was not touched. confirm refuses this state as well, because a confirmation binds to an identified itinerary and there is none: fix whichever of the three it is, then re-run." ;;
+    undetermined)
+      case "$(_baseline_record "$(published_itinerary_path "$trip_dir")")" in
+        unusable|'') die "GUARD ABORTED — the published baseline of ${trip_dir} is present but cannot be used (state: undetermined): $(published_itinerary_path "$trip_dir") is not a readable regular file, or it carries no well-formed digest= line. The gate compares the outgoing plan with that baseline, and without it nothing could be compared, so nothing was pushed and the published site was not touched. confirm refuses this state as well. Restore read access to that file, or replace it from a backup, or delete it: on a trip that declares no approvers the next update then publishes without asking and records a new baseline, and on one that declares approvers it waits for approvals of the outgoing plan." ;;
+      esac
+      case "$(_baseline_record "$(staged_record_path "$trip_dir")")" in
+        unusable|'') die "GUARD ABORTED — a baseline record an earlier push staged at $(staged_record_path "$trip_dir") is present but cannot be read (state: undetermined): it is not a readable regular file, or it carries no well-formed digest= line. While it is there the gate cannot tell which plan the published site carries, so it refuses every update; nothing was pushed, and the published site was not touched. confirm refuses this state as well. Repair that file, or delete it, then re-run; once it is gone the gate compares the outgoing plan with the baseline alone." ;;
+      esac
+      out_dg="$(itinerary_digest "$(resolve_site_html "$trip_dir")")"
+      if [ -n "$out_dg" ]; then
+        case "$(_baseline_record "$(staged_record_path "$trip_dir")")" in
+          absent) ;;
+          "$out_dg") die "GUARD ABORTED — a baseline record an earlier push staged is still outstanding at $(staged_record_path "$trip_dir") (state: undetermined), and it names the plan going out, which the published baseline records as well: that push may have reached the published site without its record being put in place, or failed after an earlier push of another plan did, so which plan the site carries is unknown, and the gate could not compare the outgoing plan with it. Nothing was pushed, and the published site was not touched. confirm refuses this state as well. While that record stands this plan stays held, so re-running update with it cannot clear the record. If the site carries the plan the published baseline records, which is this one, the record is redundant: delete that file and re-run. If it carries another plan, keep the file, because deleting it would let this plan publish over that one unasked: publish the plan the site should carry through update instead, with its confirmation or its approvals, which stages that plan's record over this one and records it; or unpublish, then publish again." ;;
+          *) die "GUARD ABORTED — a baseline record an earlier push staged is still outstanding at $(staged_record_path "$trip_dir") (state: undetermined): that push may have reached the published site without its record being put in place, so which plan the site carries is unknown, and the gate could not compare the outgoing plan with it. Nothing was pushed, and the published site was not touched. confirm refuses this state as well. If the site carries the plan the published baseline records, the record is redundant: delete that file and re-run. If it carries another plan, keep the file. Re-run update with the plan the site should carry — usually the plan that push carried — with its confirmation or its approvals: that push stages its plan's record over this one and records it. Where that push was a first publish, its per-trip repository may hold no page at all, and update cannot run on an empty one: unpublish, then publish again." ;;
+        esac
+      fi
+      die "GUARD ABORTED — could not identify the itinerary content of the outgoing render of ${trip_dir} (state: undetermined): it could not be read, its itinerary text could not be projected, or that text could not be normalized; any error printed above names the cause. Nothing was pushed, and the published site was not touched. confirm refuses this state as well, because a confirmation binds to an identified itinerary and there is none: fix whichever of the three it is, then re-run." ;;
     *) die "GUARD ABORTED — the itinerary content differs from the published plan and no organizer confirmation covers it (state: ${state:-empty}). Nothing was pushed and the published plan is unchanged. Either confirm the change:  $(basename "$0") confirm ${trip_dir}  — or revert the working copy to the published plan and re-run." ;;
   esac
 }
@@ -3434,15 +3834,120 @@ require_render_approval_code() { # <trip_dir> <site_html> <update|publish>
   return 0
 }
 
-# THE REPUBLISH PATH'S GUARDS, AS ONE CALL LINE (#719, the scope-lock's C5). update calls this and
-# nothing else at the gate's position: S3 exactly as it was, and then the render's approval-code
-# guard. #85 relocates the gate onto its event-driven path by moving that one line, as S3's own
-# banner promises, so the code guard cannot be left behind by a relocation that carries S3 alone.
-# publish calls the code guard on its own: S3 does not gate publish, by design.
+# Whether the outgoing plan is the one the baseline already records — S2's own predicate,
+# _baseline_matches over a usable token — with no push's record outstanding (CD-1, the #1468
+# review). Such a push needs no new record: where recording fails after it, the baseline it keeps
+# is still exact, so neither the guard's probe nor the staged record is required of it.
+_republishes_baseline() { # <trip_dir> <outgoing-digest> -> 0 when no record needs staging
+  local base
+  base="$(_baseline_record "$(published_itinerary_path "$1")")"
+  case "$base" in absent|unusable|'') return 1 ;; esac
+  [ "$(_baseline_record "$(staged_record_path "$1")")" = absent ] || return 1
+  _baseline_matches "$1" "$base" "$2"
+}
+
+# THE RECORD A PUSH WILL NEED, STAGED IMMEDIATELY BEFORE IT (#1468 D-6). The guard's probe proves the
+# trip directory could take a record when the command began; this writes the record itself, as
+# .published-itinerary.next, after the command's own writes (the clone, the ciphertext, the
+# commit), so a volume those writes filled refuses the push here rather than after it. Called by
+# publish, update and rotate, each after its own writes and immediately before its push: between
+# the two stand only rotate's progress line and, in publish, the push subshell's entry into the
+# clone its commit was made in. Neither writes to the trip's volume, and neither is a check that can
+# refuse. The step left after the push is then one rename. A rename can still fail: over a sidecar
+# that cannot be renamed over, in a directory that lost write, and on APFS on a volume that filled
+# during the push, where a rename needs space of its own (measured; HFS+ renamed in the same state).
+# So the gate does not rely on the rename: while a staged record is outstanding it refuses, as
+# undetermined, an update it would otherwise pass as unchanged or as ungated, save the baseline's
+# own plan on a trip that declares approvers where that plan's approvals meet the threshold (SEAM
+# S2), and the record stays where it is until a push puts it, or a newer one, in place. A failure
+# here stops the command before its push. There is nothing to stage where the push re-publishes the
+# recorded plan (_republishes_baseline).
+#
+# THE DIGEST OF THE PLAN THIS PUSH CARRIES IS HANDED BACK (#1468 D-6; CD-2 of the amendment-1 review,
+# X-CD-1 of the amendment-2 review). Given a fourth argument, that variable receives it by printf -v,
+# as encrypt_verify_commit hands back its commit: the digest written into the staged record, or,
+# where the push re-publishes the recorded plan and nothing is staged, that plan's digest. The caller
+# passes it to record_published_itinerary, which records that plan and never a digest read from the
+# render after the push, so a render rebuilt during the push is never recorded as what the push
+# carried. Call this as a bare command in the push's own shell: printf -v sets a variable in the
+# calling shell only, so inside $( ) or a subshell the digest is lost. The caller's variable must not
+# share a name with a local here.
+#
+# WHAT THIS DOES NOT REACH, stated as limits. Two publish-path commands run on one trip at the same
+# moment share this one staged name and the one baseline, so the order of their stagers, pushes and
+# recorders decides what is left. The baseline can end naming a plan the site no longer carries,
+# beside a staged record. Or one command's recorder finds the staged name empty, because the other
+# command's record was put in place there first; it then stages its own plan again and warns, and
+# the plan the site does carry is held as undetermined. Either way the exit rests on the plan the
+# baseline records. Where the site carries that plan, deleting the staged file resolves this. Where
+# it carries another, deleting would let the baseline's plan publish over it unasked: update with
+# the plan the site should carry, which records it. Re-running update with the plan the staged file
+# names, where the site does not carry it, would publish that plan over the live one. Staging again
+# needs space after the push; where it fails, the baseline is left as it was and the recorder says
+# so. Run one at a time, as the header says. Another program rewriting or deleting the trip's
+# control files, or its render, during a push is the second limit. Two of its cases are reached: a
+# render rewritten after this step is never recorded, because the recorder records the plan this
+# push carried; and a staged record removed during the push is staged again, at the cost above. The
+# rest is not: the gate trusts the trip directory for every sidecar it reads, so such a program can
+# still leave a baseline naming a plan the site does not carry, and a render rewritten between the
+# encryption and this step is staged as though the push carried it. A first publish whose push failed
+# after its per-trip repository was created leaves its record staged on a trip with no baseline, and
+# update cannot run on that empty repository: unpublish, then publish again.
+stage_baseline_record() { # <trip_dir> <site_html> <publish|update|rotate> [<var-to-receive-the-pushed-plan's-digest>]
+  local trip_dir="$1" site_html="$2" verb="$3" nxt dg tmp="" after='then re-run.'
+  [ "$verb" != rotate ] || after='then run update: the new passphrase is already recorded, and update finishes the rotation, as it does after a failed push.'
+  [ -z "${4:-}" ] || printf -v "$4" '%s' ''
+  dg="$(itinerary_digest "$site_html")"
+  [ -n "$dg" ] || die "$verb: could not identify the itinerary content of $site_html just before the push; any error printed above names the cause. Nothing was pushed. Fix the cause, $after"
+  if _republishes_baseline "$trip_dir" "$dg"; then
+    [ -z "${4:-}" ] || printf -v "$4" '%s' "$dg"
+    return 0
+  fi
+  nxt="$(staged_record_path "$trip_dir")"
+  if tmp="$(_stage_published_record "$(published_itinerary_path "$trip_dir")" "$dg")" && mv -f "$tmp" "$nxt" && [ "$(_baseline_record "$nxt")" = "$dg" ]; then
+    [ -z "${4:-}" ] || printf -v "$4" '%s' "$dg"
+    return 0
+  fi
+  if [ -n "$tmp" ] && [ -e "$tmp" ]; then rm -f "$tmp" || :; fi
+  die "$verb: could not stage this push's baseline record at $nxt; any error printed above names the cause. Nothing was pushed. Make $(dirname "$nxt") writable, or free space on its volume, $after"
+}
+
+# THE BASELINE GUARD (#1468 cases 2 and 4, under the milestone's direction that every fail-open
+# case a mechanism can reach closes). Proven before anything is cloned, committed, keyed or pushed:
+# the outgoing render has an itinerary identity, the digest the recorder will write; the sidecar's
+# path and its staged twin's are each absent or a regular file; and the recorder's own staging step,
+# _stage_published_record, succeeds beside the sidecar — so this cannot pass where that step would
+# fail. The probe is deleted at once, and a deletion that fails ends the command here, before the
+# push. A push that re-publishes the recorded plan needs no new record (_republishes_baseline), so
+# the probe is skipped for it. It is NOT the gate: it reads no approval and decides nothing about
+# whether the plan may publish, which is why publish may call it. What it cannot see is the trip
+# directory changing after it; stage_baseline_record writes the record itself immediately before
+# the push, and the gate holds while that record is outstanding (SEAM S2).
+require_recordable_baseline() { # <trip_dir> <site_html>
+  local trip_dir="$1" site_html="$2" out nxt dg tmp
+  dg="$(itinerary_digest "$site_html")"
+  [ -n "$dg" ] || die "GUARD ABORTED — could not identify the itinerary content of the outgoing render ${site_html}: it could not be read, its itinerary text could not be projected, or that text could not be normalized; any error printed above names the cause. A push of it would leave no baseline for the approval gate to compare the next update with, so nothing was pushed and the published site was not touched. Fix the cause, then re-run."
+  out="$(published_itinerary_path "$trip_dir")"
+  nxt="$(staged_record_path "$trip_dir")"
+  [ ! -e "$out" ] || [ -f "$out" ] || die "GUARD ABORTED — $out is not a regular file, so the baseline this push needs could not be recorded there. Nothing was pushed. Delete it, or put the trip's baseline back as a regular file, then re-run."
+  [ ! -e "$nxt" ] || [ -f "$nxt" ] || die "GUARD ABORTED — $nxt is not a regular file, so the record this push stages could not be written there. Nothing was pushed. Delete it, then re-run."
+  if _republishes_baseline "$trip_dir" "$dg"; then return 0; fi
+  tmp="$(_stage_published_record "$out" "$dg")" || die "GUARD ABORTED — could not stage the baseline beside $out, so this push could not record the plan it publishes; any error printed above names the cause. Nothing was pushed. Make $(dirname "$out") writable, then re-run."
+  rm -f "$tmp"
+  return 0
+}
+
+# THE REPUBLISH PATH'S GUARDS, AS ONE CALL LINE (#719, the scope-lock's C5; #1468). update calls this
+# and nothing else at the gate's position: S3 exactly as it was, then the render's approval-code
+# guard, then the baseline guard. #85 relocates the gate onto its event-driven path by moving that
+# one line, as S3's own banner promises, so neither guard can be left behind by a relocation that
+# carries S3 alone. publish calls the code guard and the baseline guard on its own: S3 does not
+# gate publish, by design.
 require_publish_guards() { # <trip_dir> <site_html>
   local trip_dir="$1" site_html="$2"
   require_change_confirmation "$trip_dir"
   require_render_approval_code "$trip_dir" "$site_html" update
+  require_recordable_baseline "$trip_dir" "$site_html"
   return 0
 }
 
@@ -3476,6 +3981,10 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   # S3 does not gate publish, by design — it cannot overwrite a published plan — but a render
   # stating an approval code that is not its own plan's must not reach a first publish either.
   require_render_approval_code "$trip_dir" "$site_html" publish
+  # The baseline guard (#1468 cases 2 and 4), before the repo is probed, created or pushed: a
+  # first publish that could not record its baseline would leave a trip that declares no
+  # approvers with the gate NOT ACTIVE. It is not the gate, which still does not run here.
+  require_recordable_baseline "$trip_dir" "$site_html"
   slug="$(slug_for "$trip_dir")"
   pub_dir="$trip_dir/.publish"
   owner="$(gh api user --jq '.login')"
@@ -3491,7 +4000,7 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
     # and asking someone to type PUBLISH and THEN refusing trains them to read the prompt
     # as noise. Nothing has been copied to the publish dir at this point.
     verify_publishable_content "$site_html" "$trip_dir" \
-      || die "GUARD ABORTED publish — the rendered site carries content that must not be published, or the non-publishable class could not be determined. Nothing was pushed. Publish encrypted (drop --plaintext) or resolve the finding above."
+      || die "GUARD ABORTED publish — the rendered site carries content that must not be published, or the render or its non-publishable class could not be determined. Nothing was pushed. Publish encrypted (drop --plaintext) or resolve the finding above."
     if [ -t 0 ]; then
       printf '  Type PUBLISH to confirm public, unencrypted publishing: '; read -r ans
       [ "${ans:-}" = "PUBLISH" ] || die "aborted — plaintext not confirmed."
@@ -3514,11 +4023,21 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   fi
 
   info "Creating per-trip repo and pushing…"
+  # The commit first, in a subshell of its own (#1468 D-6, CD-3 of the amendment-1 review): the
+  # record is then staged after the command's own writes, as in update and rotate, and a commit that
+  # fails stops the command with nothing staged. The push is the second subshell, after the stager.
   ( cd "$pub_dir"
     git init -q
     git add index.html
     commit_noreply . "Publish trip site"
     git branch -M main
+  )
+  # The baseline record this push needs, staged after the commit; between it and the push stands
+  # only the push subshell's entry into the clone (#1468 D-6). The digest of the plan this push
+  # carries comes back in `staged`, for the recorder.
+  local staged=""
+  stage_baseline_record "$trip_dir" "$site_html" publish staged
+  ( cd "$pub_dir"
     gh repo create "$slug" --public --source=. --remote=origin --push >/dev/null
   )
   info "Enabling GitHub Pages…"
@@ -3530,7 +4049,7 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   # structurally cannot overwrite a published plan — but without this line the gate
   # would have no anchor on a freshly published trip and the FIRST unapproved change
   # after a publish would sail through. Recording is not gating.
-  record_published_itinerary "$trip_dir" "$site_html"
+  record_published_itinerary "$trip_dir" "$site_html" "$staged"
 
   ok "Published: https://${owner}.github.io/${slug}/"
   if [ "$plaintext" != "1" ]; then
@@ -3662,7 +4181,7 @@ cmd_update() { # <trip_dir>
   require_passphrase_sources_agree "$trip_dir"
   preflight; resolve_noreply_identity
 
-  local site_html pub_dir passphrase owner slug mine="" lease="" prior=""
+  local site_html pub_dir passphrase owner slug mine="" lease="" prior="" staged=""
   site_html="$(resolve_site_html "$trip_dir")"
   # THE APPROVAL GATE AND THE RENDER'S APPROVAL-CODE GUARD, as ONE call line (#552; #719 under
   # ADR-029 and the scope-lock's C5). Its position is exact and load-bearing: after the render
@@ -3710,6 +4229,10 @@ cmd_update() { # <trip_dir>
   # meantime has already recorded a new key, and pushing this run's ciphertext would put the
   # key it revoked back over it.
   require_key_of_record "$trip_dir" "$passphrase" "$pub_dir" "$mine"
+  # The baseline record this push needs, staged now, with nothing between it and the push
+  # (#1468 D-6): a push that fails leaves it staged, and the gate holds while it is. The digest of
+  # the plan this push carries comes back in `staged`, and the recorder records exactly that plan.
+  stage_baseline_record "$trip_dir" "$site_html" update staged
   if ! push_trip_site "$pub_dir" "$mine" update "$lease"; then
     # The remote moved after the check. A rotation that recorded a new key meanwhile is caught
     # here, and this run takes its own commit back and says so; otherwise the push simply failed.
@@ -3720,7 +4243,7 @@ cmd_update() { # <trip_dir>
   # here rather than earlier for that reason: a sidecar written before the push would
   # claim content a failed push never delivered, and the next republish would then
   # compare against a plan nobody can see.
-  record_published_itinerary "$trip_dir" "$site_html"
+  record_published_itinerary "$trip_dir" "$site_html" "$staged"
   ok "Updated: https://${owner}.github.io/${slug}/  (changes appear behind the passphrase prompt)"
 }
 
@@ -3768,11 +4291,28 @@ cmd_confirm() { # <trip_dir>
   [ "$state" != "none-pending" ] \
     || die "nothing to confirm for $trip_dir — the itinerary content of the outgoing render is the plan that is already published (or the trip has never been published). Confirmation binds to a change; there is none."
 
-  # Refuse an UNDETERMINED state here, BEFORE the terminal check and the prompt (#1184). A
-  # confirmation binds to an identified itinerary and there is none to bind to: prompting
-  # would ask the organizer to type CONFIRM against a state nobody could compute.
-  [ "$state" != "undetermined" ] \
-    || die "cannot confirm for $trip_dir — could not determine whether its itinerary changed: the outgoing render $site_html could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause. A confirmation binds to an identified itinerary and there is none to bind to, so nothing was recorded."
+  # Refuse an UNDETERMINED state here, BEFORE the terminal check and the prompt (#1184; #1468
+  # case 5 and D-6). A confirmation is recorded against an identified itinerary and a known
+  # published plan, and here one of the two cannot be read: prompting would ask the organizer to
+  # type CONFIRM against a state nobody could compute. The refusal names which, read through the
+  # gate's own classifier.
+  [ "$state" != "undetermined" ] || {
+    case "$(_baseline_record "$(published_itinerary_path "$trip_dir")")" in
+      unusable|'') die "cannot confirm for $trip_dir — could not determine whether its itinerary changed: its published baseline $(published_itinerary_path "$trip_dir") is present but cannot be used — it is not a readable regular file, or it carries no well-formed digest= line. A confirmation is recorded against a known published plan and none can be read, so nothing was recorded. Restore read access to that file, or replace it from a backup, or delete it; then re-run." ;;
+    esac
+    case "$(_baseline_record "$(staged_record_path "$trip_dir")")" in
+      unusable|'') die "cannot confirm for $trip_dir — could not determine whether its itinerary changed: a baseline record an earlier push staged at $(staged_record_path "$trip_dir") is present but cannot be read — it is not a readable regular file, or it carries no well-formed digest= line — so which plan the published site carries is unknown. A confirmation is recorded against a known published plan and none can be read, so nothing was recorded. Repair that file, or delete it; then re-run." ;;
+    esac
+    dg="$(itinerary_digest "$site_html")"
+    if [ -n "$dg" ]; then
+      case "$(_baseline_record "$(staged_record_path "$trip_dir")")" in
+        absent) ;;
+        "$dg") die "cannot confirm for $trip_dir — could not determine whether its itinerary changed: a baseline record an earlier push staged is still outstanding at $(staged_record_path "$trip_dir"), and it names the plan going out, which the published baseline records as well, so which plan the published site carries is unknown. A confirmation is recorded against a known published plan and none can be read, so nothing was recorded. While that record stands this plan stays held, and re-running update with it cannot clear the record. If the site carries the plan the published baseline records, which is this one, the record is redundant: delete that file, then re-run. If it carries another plan, keep the file, because deleting it would let this plan publish over that one unasked: publish the plan the site should carry through update instead, with its confirmation or its approvals, or unpublish, then publish again." ;;
+        *) die "cannot confirm for $trip_dir — could not determine whether its itinerary changed: a baseline record an earlier push staged is still outstanding at $(staged_record_path "$trip_dir"), so which plan the published site carries is unknown. A confirmation is recorded against a known published plan and none can be read, so nothing was recorded. If the site carries the plan the published baseline records, the record is redundant: delete that file, then re-run. If it carries another plan, keep the file. Re-run update with the plan the site should carry — usually the plan that push carried — with its confirmation or its approvals, which records it. Where that push was a first publish, its per-trip repository may hold no page at all, and update cannot run on an empty one: unpublish, then publish again." ;;
+      esac
+    fi
+    die "cannot confirm for $trip_dir — could not determine whether its itinerary changed: the outgoing render $site_html could not be read, its itinerary text could not be projected, or that text could not be normalized; any error printed above names the cause. A confirmation binds to an identified itinerary and there is none to bind to, so nothing was recorded."
+  }
 
   # A malformed approval state (#719, FM-2 ii) holds every plan change at the gate, and it is not
   # the organizer-confirm default either: recording an organizer confirmation here would not open
@@ -3803,7 +4343,7 @@ cmd_confirm() { # <trip_dir>
   [ "${ans:-}" = "CONFIRM" ] || die "aborted — nothing confirmed. The published plan is unchanged."
 
   dg="$(itinerary_digest "$site_html")"
-  [ -n "$dg" ] || die "could not identify the itinerary content of $site_html — it could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause. Nothing was recorded."
+  [ -n "$dg" ] || die "could not identify the itinerary content of $site_html — it could not be read, its itinerary text could not be projected, or that text could not be normalized; any error printed above names the cause. Nothing was recorded."
   rec="$(change_confirmation_path "$trip_dir")"
   tmp="$(mktemp "${rec}.XXXXXX")" || die "could not stage the confirmation record beside $rec"
   printf 'digest=%s\nconfirmed=%s\n' "$dg" "$(_iso_now)" > "$tmp"
@@ -3962,7 +4502,7 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   # this trip's own under --data-root, never a path under the working directory.
   trip_dir="$(resolve_trip_dir "$trip_dir")"
   [ -d "$trip_dir" ] || die "no such trip dir$(trip_dir_where) — check the first argument after the command, which names the trip; it is not repeated here, in case a passphrase was typed in its place."
-  local pf="$trip_dir/.passphrase" site_html pub_dir owner slug mine=""
+  local pf="$trip_dir/.passphrase" site_html pub_dir owner slug mine="" staged=""
   [ "$supplied" = "1" ] || newp="$(gen_passphrase)"
   # These refusals come BEFORE anything is written: an aborted rotation must leave .passphrase
   # exactly as it was, and the clone without a commit of its own.
@@ -3990,9 +4530,14 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   # key — every abort before this line left .passphrase untouched, and a push that fails after it
   # leaves .passphrase naming the key the next update converges the site onto.
   write_passphrase_file "$pf" "$newp"
+  # The baseline record this push needs, staged now, after the key is recorded; between it and the
+  # push stands only the progress line below, which writes nothing to the trip (#1468 D-6). A
+  # refusal here is a push that did not happen: the new key is recorded, and update finishes the
+  # rotation. The digest of the plan this push carries comes back in `staged`, for the recorder.
+  stage_baseline_record "$trip_dir" "$site_html" rotate staged
   info "New passphrase recorded in the trip's .passphrase. Pushing — if the push fails, re-run update to finish the rotation; until it succeeds, the previous passphrase still opens the site."
   push_trip_site "$pub_dir" "$mine" rotate
-  record_published_itinerary "$trip_dir" "$site_html"
+  record_published_itinerary "$trip_dir" "$site_html" "$staged"
   ok "Updated: https://${owner}.github.io/${slug}/  (changes appear behind the passphrase prompt)"
   warn "Passphrase ROTATED — anyone you previously shared the site with must re-receive the new one. Earlier versions stay in the per-trip repository's history, readable to anyone holding an old passphrase; to withdraw them, unpublish (which deletes the repository) and publish again."
   warn_if_environment_differs "$newp"

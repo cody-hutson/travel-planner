@@ -277,10 +277,10 @@ instructed to use the seam rather than excavate it.
 **Amendment (2026-09-25, Friday) — the seam's vocabulary, corrected from four tokens to five,
 and the one emission a replacement body owes.** The second paragraph of this section called the
 vocabulary four-token, and it was when this record landed. #1184 added a fifth token,
-`undetermined`, and the count is corrected in place. `undetermined` means that a baseline is
-recorded but the outgoing render's itinerary content could not be identified — the render could
-not be read, its itinerary text could not be projected, or that text could not be normalized — so
-whether the itinerary moved is unknown rather than known to have moved. It is computed on every
+`undetermined`, and the count is corrected in place. `undetermined` means that whether the
+itinerary moved is unknown rather than known to have moved; the conditions under which the gate
+emits it are stated beside `change_confirmation_state` in `scripts/publish-trip-site.sh` and
+pinned by group S of `scripts/test-publish-guard.sh`. It is computed on every
 run and never written to disk. `require_change_confirmation` aborts on it with an arm of its own,
 because the wildcard arm's message asserts that the content differs, and `cmd_confirm` refuses it
 before the terminal check and the prompt; the proceed allowlist is unchanged, and the token is not
@@ -528,3 +528,23 @@ closed, and the form is established by the record that bullet anticipated. No de
   *Coordination Notice*, and `reference/schemas/travel-site.md`'s `coordination-since` rationale.
 - The status lifecycle and amendment rule this record follows, and the partial-supersession form it
   declines to invent: `reference/adr/README.md` § *Convention*.
+
+## Amendment history
+
+**Amendment (2026-10-23, Friday) — § 5's account of `undetermined`.** The 2026-09-25 account
+in § 5 defined the token as a recorded baseline beside an outgoing render that could not be
+identified, in the words: "`undetermined` means that a baseline is recorded but the outgoing
+render's itinerary content could not be identified — the render could not be read, its itinerary
+text could not be projected, or that text could not be normalized — so whether the itinerary moved
+is unknown rather than known to have moved." That was narrower than the gate already was — it also
+emits the token for a trip that declares approvers and has no baseline when its render cannot be
+identified — and #1468 widens the token again: a baseline sidecar that is present but cannot be
+used is not an absent one (`ADR-007` § 2), so the gate emits `undetermined` for it on every policy.
+It emits `undetermined` too where a baseline record a push staged is still outstanding, in place of
+the `none-pending` it would otherwise give — for a plan matching the baseline, whatever plan that
+record names, and, on a trip that declares no approvers and has no baseline, for any plan but that
+record's own — because a push may have reached the site without its record; on a trip that declares
+approvers, the baseline's own plan whose approvals meet the threshold reads `confirmed` there
+instead. The vocabulary is settled design, so the sentence now names where it is stated rather than
+restating it (`reference/adr/README.md` § *Convention*, *What an amendment may add*). No decision
+moves: the band is still `extend-seam`, and the vocabulary still has five members.

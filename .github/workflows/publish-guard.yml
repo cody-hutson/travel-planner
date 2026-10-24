@@ -47,12 +47,19 @@ name: Publish guard
 #   L     plaintext content guard (#123) — the new predicate and its class source
 #   M     published-bytes matching, the name-arm stoplist, and class freshness — the
 #         three defects the Phase A6.5 adversarial review confirmed against the first
-#         cut of L. M1 pins all eight markup surfaces a value can ride out on. M5 pins
+#         cut of L. M1 pins all eight markup surfaces a value can ride out on, and
+#         M1e to M1h a key token written directly before `=` on the three of them only
+#         the published arm reads — a comment body, a script body, an attribute value;
+#         M1i to M1m the same for a key token written directly after `<`, M1n that a
+#         block tag inside them still ends a block, M1o and M1p that a listed
+#         inline tag inside them is still markup, in both directions, M1q and M1r
+#         that its attribute list is read as a tag's and what that costs, and M1s
+#         that every name on the list is. M5 pins
 #         the two ENCODING transforms ADR-008 had recorded as missed and mechanical — a
 #         numeric or hex character reference, and an inline tag splitting a word — with
 #         the line-count-preservation arm that keeps the decoder from shifting every
-#         reported line, and an arm measuring that its two new subjects fail in opposite
-#         directions
+#         reported line, and an arm measuring that each of its two new subjects fails
+#         closed when it is removed
 #   N     the conjunctive window scoped to a structural block, both directions: token
 #         recurrence across day boundaries must not abort, a same-block carry-through must.
 #         N2 adds the WITHIN-block direction over a 19-fixture discrimination matrix —
