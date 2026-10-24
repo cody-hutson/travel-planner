@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-10-23 — The publish guard fails closed
+## [0.60.0] — 2026-10-23 — The publish guard fails closed
 
 No trip verb plans or records a trip differently in this release. What changes is met by whoever
 publishes, updates or rotates a trip's site, or confirms a change to its plan. A plaintext publish
