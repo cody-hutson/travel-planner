@@ -15,9 +15,9 @@ what its change does not reach.
 
 **A plaintext publish refuses a page the content guard could not read.** If one of the projections
 it reads the page through fails, or the published or the joined one yields no words, or its matcher
-cannot run on one of them, the guard says which and stops, where before it went on and certified the
-page. A value written directly before an `=` in an HTML comment, a script or an attribute value is
-now read as page content rather than dropped as markup, so it stops the publish as the same value
+cannot run on the joined one, the guard says which and stops, where before it went on and certified
+the page. A value written directly before an `=` in an HTML comment, a script or an attribute value
+is now read as page content rather than dropped as markup, so it stops the publish as the same value
 written without the `=` always did.
 
 **A word written after a `<` there is read as well.** A word written directly after a `<` in those
@@ -37,12 +37,12 @@ followed by an assignment and then an arrow function's `=>` is such a stretch, a
 later in the same script carries it on to the last `>` before that markup. Any other tag written
 there — a custom element, or an SVG or MathML child — is read as text, attribute names included,
 and so are the attribute names of a listed tag whose attribute list, in a form the precise reading
-cannot take, holds a `<`, or holds a `>` inside a quoted value or a placeholder with no tag after the
-list: a value those words split up there can be missed, and a third-party member of the party named
-like one of them can stop a publish whose page carries it. And a word written before `=` inside a
-quoted attribute value of such a tag — `title="k="` on the spans around a value's words — stays in
-the page content as value text and can split the value up, where the guard before this release
-blocked the page.
+cannot take, holds a `<`, or holds a `>` inside a quoted value or a placeholder where the next `<`
+after the list does not open a tag: a value those words split up there can be missed, and a
+third-party member of the party named like one of them can stop a publish whose page carries it. And
+a word written before `=` inside a quoted attribute value of such a tag — `title="k="` on the spans
+around a value's words — stays in the page content as value text and can split the value up, where
+the guard before this release blocked the page.
 
 **A baseline that is present but cannot be used is `undetermined`.** A baseline sidecar that is
 present but unreadable or malformed now reads as `undetermined` on every trip: `update` and `rotate`
