@@ -2330,7 +2330,10 @@ verify_publishable_content() { # <site_html> <trip_dir>
     # agree on it by construction — no arm reaches this point empty, because the checks above
     # refuse an arm that yielded no words. The one that is not is a matcher that could not
     # run, which can fire on one arm alone; it is reported from whichever arm it fired on, the
-    # joined arm included, so a matcher failure on any arm is undetermined, never a no-match.
+    # joined arm included, so a matcher failure on any arm is undetermined, never a no-match —
+    # unless the visible arm reports the value a declared non-key (4), which carries the verdict
+    # before the published or the joined arm's code is read, so a matcher failure there is not
+    # reported. No value can pass that way: a declared non-key is unmatched on every arm.
     if   [ "$rcv" -eq 0 ] || [ "$rcp" -eq 0 ] || [ "$rcj" -eq 0 ]; then rc=0
     elif [ "$rcv" -eq 1 ] && [ "$rcp" -ne 1 ]; then rc="$rcp"
     elif [ "$rcv" -eq 1 ] && [ "$rcj" -ne 1 ]; then rc="$rcj"
