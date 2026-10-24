@@ -15,7 +15,8 @@ to publish without asking. Each paragraph below says what its change does not re
 
 **A plaintext publish refuses a page the content guard could not read.** If one of the projections
 it reads the page through fails, or the published or the joined one yields no words, or its matcher
-cannot run on the joined one, the guard says which and stops, where before it went on and certified
+cannot run on the joined one — unless the visible projection reports the value a declared non-key,
+which no projection matches — the guard says which and stops, where before it went on and certified
 the page. A value written directly before an `=` in an HTML comment, a script or an attribute value
 is now read as page content rather than dropped as markup, so it stops the publish as the same value
 written without the `=` always did.
@@ -27,7 +28,7 @@ block tag or one of HTML's inline (phrasing) tags, with its attributes up to the
 on the tag's own line or set out over the lines after it, with quotes written as `&quot;` or another
 character reference, and around a template literal's `${…}` placeholders — so a value emphasised
 with `<b>` or `<span class="…">` in a map pop-up, a booking checklist or a pop-up held in an
-attribute is still caught. Five limits are stated. A word directly after `<` that is itself one of
+attribute is still caught. Six limits are stated. A word directly after `<` that is itself one of
 those tag names, or that begins with one and runs on through a hyphen, is still dropped. After such
 a `<`, a word written directly before `=` is dropped as an attribute name, as it was before this
 release, wherever it falls inside the stretch read as that tag's attributes: up to the `>` the
@@ -42,9 +43,14 @@ after the list does not open a tag: a value those words split up there can be mi
 third-party member of the party named like one of them can stop a publish whose page carries it. And
 a word written before `=` inside a quoted attribute value of such a tag — `title="k="` on the spans
 around a value's words — stays in the page content as value text and can split the value up, where
-the guard before this release blocked the page. And a page whose every visible word is written
+the guard before this release blocked the page. A later name can split a value up the same way: an
+apostrophe in an unquoted value opens what the precise reading takes as a quoted unit, and a name
+after it stays inside that unit as value text. And a page whose every visible word is written
 directly after a `<` that no `>` closes is refused, as though a projection had failed: a
-false abort, never a leak, whose remedy is to publish it encrypted.
+false abort, never a leak, whose remedy is to publish it encrypted. And in the visible text itself,
+a value written directly after a `<`, with nothing but spaces or a `/` between them — the spaced
+form included, which a browser shows as text — can go unread by all three projections, as before
+this release.
 
 **A baseline that is present but cannot be used is `undetermined`.** A baseline sidecar that is
 present but unreadable or malformed now reads as `undetermined` on every trip: `update` and `rotate`
@@ -104,7 +110,9 @@ carries is held until the staged file is deleted; and a staged record removed du
 staged again, so the gate holds. Staging again needs space after the push; where it cannot be
 written, the earlier baseline is kept and the recorder says so. A render rewritten between the
 encryption and the staging is staged as though the push carried it. A trip already left, before this
-release, with a baseline its site no longer carries has no staged record, so it is not held. And a
+release, with a baseline its site no longer carries has no staged record, so it is not held; and on
+a trip that declares no approvers and has neither a baseline nor a staged record, the gate is
+NOT ACTIVE, as before, and `update` publishes without asking until a push records a baseline. And a
 trip whose baseline or approvals were recorded under a C locale or on Linux, and whose itinerary
 carries a no-break or other Unicode space, reads as changed once: one confirmation, or one approval
 round.
