@@ -12510,6 +12510,134 @@ else
   PASS "ER24: every one of $ER24_TOK token(s) across the $ER24_NP pinned witness file(s) lies in a region a REACH row prescribes, and every erased entry's Source names its own token's file ($ER24_SKEPT Source line(s) seen on kept entries). All three plants moved their count by exactly 1 — § *Trip Style*, the survivor's traveller file, and an erased entry's Source line — so the zero is a measurement over the whole witness"
 fi
 
+# ── ER25 — THE ROSTER'S TWO COLUMNS ARE FOUND BY WHAT THEY HOLD, NEVER BY THEIR HEADER (#1791,
+# QF-05). Erasure's join, `group`'s presence probe and `person`'s withdrawal probe named the
+# columns by the template's header — `Person` and `Traveler file` — while two tracked rosters,
+# the archived witness among them, head the same columns `Traveler` and `Profile`. The rule now
+# lives in one paragraph of § `group`: the person column is column 1, and the path column is the
+# one column after the first whose data cells hold `travelers/…md`. Three limbs:
+#   (i)   THE READER over every tracked roster: er25_cols implements that paragraph, and on the
+#         tracked tree it must find a path column in every roster carrying a `travelers/…md`
+#         cell, at least one of them headed other than `Traveler file` — the case a header read
+#         could not see — and the witness's `travelers/dana.md` must join the same row under its
+#         shipped header and under the template's;
+#   (ii)  THE OPERATIVE SENTENCES: the paragraph's four load-bearing phrases are present, and no
+#         line of the verb file outside § `profile` names a roster column by its header. § `profile`
+#         keeps `Traveler file` on purpose — it names the column `/trip-new` writes — and is this
+#         limb's sensitivity arm: the same count over it must be non-zero;
+#   (iii) MUST-FIRE CONTROLS: path cells turned to free text find no path column; a second column
+#         of path-shaped cells finds none either (two qualifying columns read as none); one phrase
+#         stripped from a copy of § `group` drops the phrase count by exactly 1; and the header
+#         phrase planted into a copy of § `erase` is counted.
+er25_cols() {
+  awk -F'|' '
+    /^## Group/ { on = 1; next }
+    on && /^## / { on = 0 }
+    !on || done { next }
+    !/^\|/ { if (hdr != "") done = 1; next }
+    hdr == "" {
+      hdr = $0; nc = NF - 2
+      for (i = 2; i <= NF - 1; i++) { h = $i; gsub(/^[ \t]+/, "", h); gsub(/[ \t]+$/, "", h); H[i - 1] = h }
+      next
+    }
+    /^\|[ \t:|-]+$/ { next }
+    {
+      for (i = 3; i <= NF - 1; i++) {
+        c = $i; gsub(/`/, "", c); gsub(/^[ \t]+/, "", c); gsub(/[ \t]+$/, "", c)
+        if (c ~ /^travelers\/.*\.md$/) Q[i - 1] = 1
+      }
+    }
+    END {
+      nq = 0; pc = 0
+      for (k in Q) { nq++; pc = k }
+      if (nq != 1) pc = 0
+      printf "%d\t%d\t%s\t%d\n", nc + 0, pc + 0, (pc ? H[pc] : ""), nq + 0
+    }' <<<"$1"
+}
+# er25_join <trip-context text> <path> <stem-key> -> column 1 of the row the file joins: by exact
+# path in the path column where the roster has one, and otherwise by the stem key.
+er25_join() {
+  local pc
+  pc="$(er25_cols "$1" | cut -f2)"
+  awk -F'|' -v pc="$pc" -v want="$2" -v key="$3" '
+    function k(s) { s = tolower(s); gsub(/[^a-z0-9]/, "", s); return s }
+    /^## Group/ { on = 1; next }
+    on && /^## / { on = 0 }
+    !on || done { next }
+    !/^\|/ { if (seen) done = 1; next }
+    !seen { seen = 1; next }
+    /^\|[ \t:|-]+$/ { next }
+    {
+      p1 = $2; gsub(/^[ \t]+/, "", p1); gsub(/[ \t]+$/, "", p1)
+      if (pc > 0) { c = $(pc + 1); gsub(/`/, "", c); gsub(/^[ \t]+/, "", c); gsub(/[ \t]+$/, "", c); if (c == want) { print p1; exit } }
+      else if (k(p1) == key) { print p1; exit }
+    }' <<<"$1"
+}
+# er25_pins <section text> -> how many of the paragraph's four operative phrases it carries.
+er25_pins() {
+  local n=0 t
+  t="$(tr '\n' ' ' <<<"$1" | tr -s ' ')"
+  case "$t" in *'found by what they hold, never by their header'*) n=$((n + 1)) ;; esac
+  case "$t" in *'The **person column** is the table'"'"'s first column'*) n=$((n + 1)) ;; esac
+  case "$t" in *'begins `travelers/` and ends `.md`'*) n=$((n + 1)) ;; esac
+  case "$t" in *'one with two or more has none either'*) n=$((n + 1)) ;; esac
+  printf '%d\n' "$n"
+}
+# er25_hdr <text> -> lines naming a roster column by its header.
+er25_hdr() { grep -c -F -e '`Traveler file`' -e '`Person` column' -e '`Person` cell' <<<"$1" || true; }
+
+ER25_POP="$(cd "$ROOT" && git ls-files '*trip-context*.md' 2>/dev/null | grep -v '^reference/schemas/')"
+ER25_NR=0; ER25_NWANT=0; ER25_NFOUND=0; ER25_NOTHER=0; ER25_MISS=""
+while IFS= read -r f; do
+  [ -n "$f" ] && [ -r "$ROOT/$f" ] || continue
+  t="$(cat "$ROOT/$f")"
+  IFS="$VA_TAB" read -r nc pc ph nq <<<"$(er25_cols "$t")"
+  [ "${nc:-0}" -gt 0 ] || continue
+  ER25_NR=$((ER25_NR + 1))
+  if awk '/^## Group/{on=1;next} on&&/^## /{on=0} on&&/^\|/&&/travelers\/[^|]*\.md/{f=1} END{exit !f}' <<<"$t"; then
+    ER25_NWANT=$((ER25_NWANT + 1))
+    if [ "${pc:-0}" -gt 0 ]; then
+      ER25_NFOUND=$((ER25_NFOUND + 1))
+      [ "$ph" != "Traveler file" ] && ER25_NOTHER=$((ER25_NOTHER + 1))
+    else
+      ER25_MISS="$ER25_MISS $f"
+    fi
+  fi
+done <<<"$ER25_POP"
+ER25_W="$ROOT/examples/archived-trip-demo/trip-context.md"
+ER25_WT=""; [ -r "$ER25_W" ] && ER25_WT="$(cat "$ER25_W")"
+ER25_J1="$(er25_join "$ER25_WT" 'travelers/dana.md' dana)"
+ER25_WT2="$(er_sub1 "$ER25_WT" '| Traveler | Profile | Role / relationship |' '| Person | Traveler file | Role / Relationship |')"
+ER25_J2="$(er25_join "$ER25_WT2" 'travelers/dana.md' dana)"
+ER25_J2OK=0; [ "$ER25_WT2" != "$ER25_WT" ] && ER25_J2OK=1
+# Controls on the reader.
+ER25_FREE="$(awk '/^## Group/{on=1} on&&/^## Hard/{on=0} { if (on) gsub(/`travelers\//, "`see "); print }' <<<"$ER25_WT")"
+ER25_C1="$(er25_cols "$ER25_FREE" | cut -f4)"
+ER25_TWO="$(er_sub1 "$ER25_WT" '| Booked the group flight; held the guesthouse reservation |' '| `travelers/extra.md` |')"
+ER25_C2="$(er25_cols "$ER25_TWO" | cut -f2)"
+ER25_C2Q="$(er25_cols "$ER25_TWO" | cut -f4)"
+# The operative sentences.
+ER25_GSEC="$(er_section "$ER_CMD" "group [")"
+ER25_PIN="$(er25_pins "$ER25_GSEC")"
+ER25_PIN_X="$(er25_pins "$(er_sub1 "$ER25_GSEC" 'one with two or more has none either' 'one with two or more has one')")"
+ER25_PROF="$(er_section "$ER_CMD" "profile ")"
+ER25_REST="$(awk 'index($0, "## profile ") == 1 { off = 1; next } off && /^## / { off = 0 } !off { print }' "$ER_CMD")"
+ER25_H_REST="$(er25_hdr "$ER25_REST")"
+ER25_H_PROF="$(er25_hdr "$ER25_PROF")"
+ER25_H_ERASE="$(er25_hdr "$ER_SEC")"
+ER25_H_PLANT="$(er25_hdr "$(er_sub1 "$ER_SEC" 'the row whose path cell names' 'the row whose `Traveler file` cell names')")"
+if [ "$ER25_NR" -lt 3 ] || [ -z "$ER25_WT" ] || [ -z "$ER25_GSEC" ]; then
+  FAIL "ER25: measured nothing — $ER25_NR tracked roster(s) parsed, the witness read=$([ -n "$ER25_WT" ] && echo 1 || echo 0) and § \`group\` read=$([ -n "$ER25_GSEC" ] && echo 1 || echo 0). A column reader over no roster proves nothing about the rule it implements"
+elif [ "${ER25_C1:-1}" -ne 0 ] || [ "${ER25_C2:-1}" -ne 0 ] || [ "${ER25_C2Q:-0}" -ne 2 ] || [ "$ER25_PIN_X" -ne $((ER25_PIN - 1)) ] || [ "$ER25_H_PROF" -lt 1 ] || [ "$ER25_H_PLANT" -ne $((ER25_H_ERASE + 1)) ] || [ "$ER25_J2OK" -ne 1 ]; then
+  FAIL "ER25: BROKEN PROBE — a must-fire control did not move: free-text path cells qualified ${ER25_C1:-?} column(s) (must be 0), two path-shaped columns read path column ${ER25_C2:-?} with ${ER25_C2Q:-?} qualifying (must be 0 and 2), a stripped phrase read $ER25_PIN_X against $ER25_PIN (must be one fewer), § \`profile\` held $ER25_H_PROF header-named line(s) (must be at least 1), the planted header phrase read $ER25_H_PLANT against § \`erase\`'s $ER25_H_ERASE (must be one more), and the header rename landed=$ER25_J2OK. Until each fires, a verdict below is the instrument's"
+elif [ "$ER25_PIN" -ne 4 ] || [ "$ER25_H_REST" -ne 0 ]; then
+  FAIL "ER25: the column rule is not the one the verb file reads by — § \`group\` carries $ER25_PIN of the paragraph's 4 operative phrases (found by what they hold; the person column is the first; the path cell's shape; two qualifying columns read as none), and $ER25_H_REST line(s) outside § \`profile\` still name a roster column by its header. A join that reads \`Traveler file\` by name misses the witness's \`Profile\` column and leaves the next run's join to chance"
+elif [ "$ER25_NFOUND" -ne "$ER25_NWANT" ] || [ "$ER25_NOTHER" -lt 1 ] || [ "$ER25_J1" != "Dana" ] || [ "$ER25_J2" != "Dana" ]; then
+  FAIL "ER25: the rule does not read the tracked rosters — a path column was found in $ER25_NFOUND of the $ER25_NWANT roster(s) carrying a traveller-file cell (missed:${ER25_MISS:- none}), $ER25_NOTHER of them headed other than \`Traveler file\` (must be at least 1), and the witness's \`travelers/dana.md\` joined '${ER25_J1:-<none>}' under its own header and '${ER25_J2:-<none>}' under the template's (both must be Dana)"
+else
+  PASS "ER25: the roster's columns are found by what they hold — over $ER25_NR tracked roster(s) the path column is found in all $ER25_NWANT that carry a traveller-file cell, $ER25_NOTHER of them headed other than \`Traveler file\`, and the witness's \`travelers/dana.md\` joins Dana under its own \`Traveler | Profile\` header and under the template's. § \`group\` states the rule in all 4 operative phrases, no line outside § \`profile\` names a column by its header, and every control fired: free text qualifies no column, two path-shaped columns read as none, a stripped phrase and a planted header phrase each move their count by 1"
+fi
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RL — reconcile-on-link: the survey's two witnesses, on the tracked tree.
 #
