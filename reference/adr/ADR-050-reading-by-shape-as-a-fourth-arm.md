@@ -1,6 +1,6 @@
 # ADR-050: Reading by shape as a fourth arm — the published projection the guard before 0.60.0 wrote, kept beside the one that replaced it, read and credited last, and named by a fourth projection value, superseding ADR-008 Decisions 3 and 4 in part
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-10-29)
 - **Deciders:** repo maintainer
 - **Driving work:** #2068 (carrying #2070), in the *A plaintext publish never lets through a value
   the guard used to catch* milestone. Its design measured that no reading of the published file in
