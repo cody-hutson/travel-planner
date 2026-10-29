@@ -12686,6 +12686,12 @@ fi
 #   (ii)  THE OLD CLAIM GONE: no line of § `erase` still calls this state an interrupted erasure;
 #   (iii) MUST-FIRE CONTROLS: each phrase stripped from a copy drops the count by exactly 1, and the
 #         old claim planted into a copy is counted.
+# Dev Testing F-01 adds a fourth claim to limbs (i)-(iii). A re-run reads `ALREADY-ERASED` only where
+# the row the discovered file joins carries the token, and a file that joins no row is the no-row
+# branch. The Step 1 table row, row 38's cell, the row-31 paragraph and the receipt's last paragraph
+# each said it of any tombstone on the trip, which is the over-claim this branch removes. Their
+# scoped wording is pinned below, each old sentence is graded gone, and each old sentence planted
+# into a copy of the section is counted.
 ER26_PINS=(
   'is the no-row branch, and the run writes nothing on that trip'
   'the subject was taken off the roster through `## group`'
@@ -12704,7 +12710,28 @@ ER26_PINS=(
   'every REACH row there reads `UNDETERMINED` and nothing is written'
   're-link the trip with `/trip-record link <name> <person-id>`'
   'and a trip `--also-trip` names, which its REPORT rows read'
+  'the row the discovered file joins already carries `per-[0-9a-f]{4}` in column 1'
+  'Where the file joins no row, the no-row branch below applies instead'
+  'Where the row the discovered file joins carries the token, that run reads `ALREADY-ERASED`'
+  'where the file joins no row, that run meets the no-row branch of § *Step 1*'
+  'Where the row the discovered file joins carries the tombstone, the next run emits `ALREADY-ERASED` on row 31'
+  'Where the file joins no row, it meets the no-row branch of § *Step 1*: row 31 reads `UNDETERMINED`'
+  'On a trip where the row the discovered file joins already carries the token, a later run mints nothing'
+  'Where the file joins no row, the trip is in the no-row branch of § *Step 1*, and its receipt reads as that branch says'
 )
+# The four unscoped sentences Dev Testing F-01 named. Each must read 0 in § `erase`, and each,
+# planted into a copy, must be counted.
+ER26_OLD01=(
+  'the roster row of any resolved trip already carries `per-[0-9a-f]{4}` in column 1'
+  'which still resolves the trip and reads `ALREADY-ERASED` on every REACH row but rows 2, 8 and 9'
+  'The next run keys on the tombstoned roster cell, emits `ALREADY-ERASED` on row 31'
+  'On a trip whose roster already carries the token, a later run mints nothing'
+)
+er26_old01() {
+  local a=() p
+  for p in "${ER26_OLD01[@]}"; do a+=(-e "$p"); done
+  grep -c -F "${a[@]}" <<<"$1" || true
+}
 er26_flat() { tr '\n' ' ' <<<"$1" | tr -s ' '; }
 # er26_pins <flattened text> -> how many of ER26_PINS it carries.
 er26_pins() {
@@ -12731,14 +12758,20 @@ for er26_p in "${ER26_PINS[@]}"; do
 done
 ER26_OLD="$(er26_old "$ER_SEC")"
 ER26_OLD_PLANT="$(er26_old "$(er_sub1 "$ER_SEC" 'is the no-row branch, and the run writes nothing on that trip' 'is an interrupted erasure')")"
+ER26_O1="$(er26_old01 "$ER_SEC")"
+ER26_O1BAD=0
+for er26_o in "${ER26_OLD01[@]}"; do
+  [ "$(er26_old01 "$ER_SEC
+$er26_o")" -eq $((ER26_O1 + 1)) ] || ER26_O1BAD=$((ER26_O1BAD + 1))
+done
 if [ -z "$ER_SEC" ] || [ "${#ER26_FLAT}" -lt 1000 ]; then
   FAIL "ER26: measured nothing — § \`erase\` read ${#ER26_FLAT} flattened byte(s). A phrase count over an empty section proves nothing about the branch it pins"
-elif [ "$ER26_STRIPBAD" -ne 0 ] || { [ "$ER26_PIN" -gt 0 ] && [ "$ER26_OLD_PLANT" -ne $((ER26_OLD + 1)) ]; }; then
-  FAIL "ER26: BROKEN PROBE — $ER26_STRIPBAD of the $ER26_PIN present phrase(s) did not drop the count by exactly 1 when stripped from a copy (a phrase carried twice, or a matcher that does not read it), and the old claim planted into a copy read $ER26_OLD_PLANT against $ER26_OLD (must be one more). Until each fires, a verdict below is the instrument's"
-elif [ "$ER26_PIN" -ne "$ER26_N" ] || [ "$ER26_OLD" -ne 0 ]; then
-  FAIL "ER26: the no-row branch is not the one § \`erase\` states — it carries $ER26_PIN of the $ER26_N operative phrase(s) (missing:${ER26_MISSING:- none}), and $ER26_OLD line(s) still call a file that joins no row an interrupted erasure. A trip with no tombstone whose file joins no row falls through every other branch, and a record deleted while such a file stands leaves nothing that can find the file by id"
+elif [ "$ER26_STRIPBAD" -ne 0 ] || { [ "$ER26_PIN" -gt 0 ] && [ "$ER26_OLD_PLANT" -ne $((ER26_OLD + 1)) ]; } || [ "$ER26_O1BAD" -ne 0 ]; then
+  FAIL "ER26: BROKEN PROBE — $ER26_STRIPBAD of the $ER26_PIN present phrase(s) did not drop the count by exactly 1 when stripped from a copy (a phrase carried twice, or a matcher that does not read it), the old claim planted into a copy read $ER26_OLD_PLANT against $ER26_OLD (must be one more), and $ER26_O1BAD of the ${#ER26_OLD01[@]} unscoped re-run sentence(s) planted into a copy were not counted once more. Until each fires, a verdict below is the instrument's"
+elif [ "$ER26_PIN" -ne "$ER26_N" ] || [ "$ER26_OLD" -ne 0 ] || [ "$ER26_O1" -ne 0 ]; then
+  FAIL "ER26: the no-row branch is not the one § \`erase\` states — it carries $ER26_PIN of the $ER26_N operative phrase(s) (missing:${ER26_MISSING:- none}), $ER26_OLD line(s) still call a file that joins no row an interrupted erasure, and $ER26_O1 line(s) still say a re-run reads \`ALREADY-ERASED\` on a trip because any row carries a tombstone. A trip with no tombstone whose file joins no row falls through every other branch, a trip carrying someone else's tombstone reads that false \`ALREADY-ERASED\`, and a record deleted while such a file stands leaves nothing that can find the file by id"
 else
-  PASS "ER26: a discovered file that joins no roster row is one branch — § \`erase\` carries all $ER26_N operative phrase(s): the four ways the branch is reached, the \`## group\` exit among them, over both roster states; every REACH row \`UNDETERMINED\` and every REPORT row under candidate names; the dry run naming each such trip; the store step held, row 29 naming the trips holding it, and the re-run that finishes it; \`--also-trip\` report-only, with re-linking as the route to a write, and on the *Reads:* line. No line calls the state an interrupted erasure, and every control fired: each phrase stripped moves the count by 1, and the old claim planted is counted"
+  PASS "ER26: a discovered file that joins no roster row is one branch — § \`erase\` carries all $ER26_N operative phrase(s): the four ways the branch is reached, the \`## group\` exit among them, over both roster states; every REACH row \`UNDETERMINED\` and every REPORT row under candidate names; the dry run naming each such trip; the store step held, row 29 naming the trips holding it, and the re-run that finishes it; \`--also-trip\` report-only, with re-linking as the route to a write, and on the *Reads:* line; and \`ALREADY-ERASED\` scoped to the row the discovered file joins at the Step 1 table row, row 38, the row-31 paragraph and the receipt, each pointing the unjoined case at the no-row branch. No line calls the state an interrupted erasure or reads \`ALREADY-ERASED\` off any tombstone, and every control fired: each phrase stripped moves the count by 1, and each old claim planted is counted"
 fi
 
 # ── ER27 — WHERE A TRIP NAMES THE SUBJECT OTHERWISE, THE RECORD'S NAME IS READ THERE AS A CANDIDATE,
