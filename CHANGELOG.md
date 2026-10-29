@@ -3,6 +3,49 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [Unreleased] — 2026-10-29 — Erasure reaches the four names it still misses
+
+`/trip-record erase` now reaches the names it used to leave behind. Whoever erases a person sees a
+wider reach report, and a party member who never filed a profile can now be erased too.
+`/trip-record person` can withdraw such a member after their erasure. Nothing else plans or records
+a trip differently.
+
+**The roster's columns are found by what they hold.** Erasure looked for the person and path columns
+by their template headers, so a roster headed `Traveler | Profile` didn't join. Now column 1 is the
+person column, and the path column is the one whose cells hold a `travelers/` path, whatever the
+headers say.
+
+**A trip whose roster no longer names the person holds the record's deletion.** Someone you took off
+a trip with `/trip-record group` keeps their traveller file there. Erasure finds that file by the
+person's id but can't tell which row is theirs, so it writes nothing on that trip. It lists the
+places the trip still names them as candidates, and it keeps the person's record until you settle
+each such file. Run the erase again after that and it finishes. And a re-run reads `ALREADY-ERASED`
+on a trip only where the person's own row carries the token.
+
+**A trip that calls the person by another name is read under the record's name too.** Where a trip
+says "Mom" and the record says "Pat", every report row there also reads "Pat" as a candidate. It
+never rewrites that name, because on that trip it can belong to someone else.
+
+**Another traveller's own file loses the person's name from its party lines.** Reach row 39 rewrites
+the name in another traveller's `Relationship:`, `Party:`, `Rooming:`, `Overlap:` and
+`Split off with:` lines. Erasure never rewrites another person's name, even one that holds the
+subject's name inside it.
+
+**A party member who holds no record can be erased.** `erase --third-party <n>` names them by their
+place in the trip's traveller model, and you confirm by typing the trip's slug. Their heading becomes
+a token. On an active trip the next reconcile keeps their need under that token, so the party the
+plan is sized for doesn't shrink. To take them off the trip later, withdraw them by the token or by
+`--third-party <n>`. Standing rule 16 bounds the run to that one trip, and ADR-006 and ADR-012
+record this as the delete path.
+
+**Size fence.** Nothing moved. Every row stands where `0.60.0` set it, and none is re-pinned.
+`skills/trip-record/SKILL.md`, ADR-012, `agents/00-enrichment.md` and `CLAUDE.md` grew beneath
+their rows. `people/README.md` and ADR-006 stay under their class floor, so neither owes a row.
+
+**What it doesn't reach.** We didn't run a live erase against a trip in this release. The tests
+grade the verb's text and its worked examples. A name standing in a place erasure reads and leaves
+alone is still listed for you to remove. Anything already published stays out of reach.
+
 ## [0.60.0] — 2026-10-23 — The publish guard fails closed
 
 No trip verb plans or records a trip differently in this release. What changes is met by whoever
