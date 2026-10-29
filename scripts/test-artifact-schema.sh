@@ -13059,14 +13059,77 @@ IFS="$(printf '\t')" read -r ER30_R6 ER30_HH6 ER30_L6 <<<"$(er30_order "$ER30_A6
 IFS="$(printf '\t')" read -r ER30_R12 ER30_HH12 ER30_L12 <<<"$(er30_order "$ER30_A12")"
 ER30_ORD=1
 { [ "$ER30_HH6" -gt "$ER30_R6" ] && [ "$ER30_HH6" -eq "$ER30_L6" ] && [ "$ER30_HH12" -gt "$ER30_R12" ] && [ "$ER30_HH12" -eq "$ER30_L12" ]; } || ER30_ORD=0
-if [ ! -r "$ER30_A6" ] || [ ! -r "$ER30_A12" ] || [ -z "$ER30_B12" ] || [ -z "$ER30_ROW" ]; then
-  FAIL "ER30: measured nothing — ADR-006 read=$([ -r "$ER30_A6" ] && echo 1 || echo 0), ADR-012 read=$([ -r "$ER30_A12" ] && echo 1 || echo 0), and ADR-012's *Two entry classes* both-marks row read=$([ -n "$ER30_ROW" ] && echo 1 || echo 0). The records' agreement cannot be graded over records that are not there"
-elif [ "$ER30_STRIPBAD" -ne 0 ] || [ "$ER30_OLD_PLANT" -ne $((ER30_OLD + 1)) ] || [ "$ER30_PR2_PLANT" -ne $((ER30_PR2 + 1)) ]; then
-  FAIL "ER30: BROKEN PROBE — $ER30_STRIPBAD of the $ER30_PIN present phrase(s) did not drop the count by exactly 1 when stripped; the replaced row sentence planted read $ER30_OLD_PLANT against $ER30_OLD (must be one more); the active-trip ground planted read $ER30_PR2_PLANT against $ER30_PR2 (must be one more). Until each fires, a verdict below is the instrument's"
-elif [ "$ER30_ORD" -ne 1 ] || [ "$ER30_PIN" -ne "$ER30_N" ] || [ "$ER30_OLD" -ne 0 ] || [ "$ER30_PR2" -ne 0 ]; then
-  FAIL "ER30: the records do not agree on option (A) as decided — \`## Amendment history\` after \`References\` and last: ADR-006 at line $ER30_HH6 (References $ER30_R6, last heading $ER30_L6), ADR-012 at line $ER30_HH12 (References $ER30_R12, last heading $ER30_L12); $ER30_PIN of the $ER30_N operative phrase(s) present (missing:${ER30_MISSING:- none}); the replaced *Two entry classes* sentence stands $ER30_OLD time(s) in ADR-012's body (must be 0); and the active-trip ground for rejecting (B) stands $ER30_PR2 time(s) in the entries (must be 0, because it is as true of (A))"
+# THE PATH ITSELF (#1791, QF-09). The verb file and the reconciler agree with the records: rule 16
+# derives the write as an exception to rule 2 and leaves rule 5 unchanged; § `erase` carries the
+# sub-section naming the subject by its place, its re-run reading (FM-1), the split refusal of a
+# stale and a pending row (FM-5), its order, and what the next reconcile does; the reconciler's
+# third exit carries the substituted entry forward under its token, need included (the operator's
+# carry-forward ruling); and the archived witness's erased both-marks heading keeps
+# `[THIRD-PARTY]`. "Never this verb's subject" and the old third exit's drop are gone. Controls:
+# each phrase stripped drops its count by exactly 1; the old sentence planted into a copy of
+# § `erase` is counted; the mark removed from a copy of the witness model drops its count by 1.
+ER30_ENR="$ROOT/agents/00-enrichment.md"
+ER30_WIT="$ROOT/examples/archived-trip-demo/outputs/traveler-model.md"
+ER30_PINS7=(
+  '16. **An erasure whose subject holds no record is bounded by the one trip that holds their record'
+  'Against rule 2 it is an exception, not a widening, taken under the Extension rule below; rule 5 is unchanged'
+  '### A subject who holds no record — a party member recorded through `## person`'
+  '| `--third-party <n>` is given in place of `<person-id>` |'
+  'row 10 reads `ALREADY-ERASED`, and every other REACH row reads `UNDETERMINED`, never `ALREADY-ERASED`'
+  'the first run'"'"'s dry-run reach report is the only inventory of the places that name stood'
+  'A **stale** row is refused naming `/trip-record group`'
+  'A **pending** row is refused with that reason'
+  'Where no roster row joins, row 10 is the first write'
+  'the next reconcile carries the entry forward under its token, need included'
+  'and, under `--third-party <n>`, the resolved trip'"'"'s whole directory in place of the trips discovery resolved'
+  'except that resolved trip, which the `--third-party` path reads and writes as a trip discovery resolved is read and written'
+  'except a both-marks entry'"'"'s token, which keeps the `[THIRD-PARTY]` mark'
+  '### The standing rules this verb writes under are rules 10, 13 and 16'
+  '**Rule 16 carries the path of § *A subject who holds no record*.**'
+  'Under `--third-party <n>` the typed token is the trip'"'"'s slug'
+  'a stated residual, because this verb reads no file that would show it'
+  '**The third exit is an erasure substitution: it ends the entry under its name.**'
+  '**carry the substituted entry forward verbatim under its token**'
+)
+er30_pins7() {
+  local n=0 p
+  for p in "${ER30_PINS7[@]}"; do
+    case "$1" in *"$p"*) n=$((n + 1)) ;; esac
+  done
+  printf '%d\n' "$n"
+}
+ER30_T7="$(er26_flat "$(cat "$ER_CMD" 2>/dev/null)") | $(er26_flat "$(cat "$ER30_ENR" 2>/dev/null)")"
+ER30_N7="${#ER30_PINS7[@]}"
+ER30_PIN7="$(er30_pins7 "$ER30_T7")"
+ER30_MISSING7=""; ER30_STRIPBAD7=0
+for er30_p in "${ER30_PINS7[@]}"; do
+  case "$ER30_T7" in
+    *"$er30_p"*)
+      er30_x="$(er30_pins7 "$(er_sub1 "$ER30_T7" "$er30_p" '')")"
+      [ "$er30_x" -eq $((ER30_PIN7 - 1)) ] || ER30_STRIPBAD7=$((ER30_STRIPBAD7 + 1)) ;;
+    *) ER30_MISSING7="$ER30_MISSING7 [$er30_p]" ;;
+  esac
+done
+ER30_GONE='is never this verb'"'"'s subject'
+ER30_GONE_N="$(grep -c -F "$ER30_GONE" <<<"$ER_SEC" || true)"
+ER30_GONE_PLANT="$(grep -c -F "$ER30_GONE" <<<"$ER_SEC
+$ER30_GONE" || true)"
+ER30_DROP='Without this exit the rule reproduces an erased person'"'"'s recorded need'
+ER30_DROP_N="$(grep -c -F "$ER30_DROP" <<<"$ER30_T7" || true)"
+ER30_DROP_PLANT="$(grep -c -F "$ER30_DROP" <<<"$ER30_T7
+$ER30_DROP" || true)"
+er30_wit() { awk '/^## per-/ && index($0, "[ERASED]") && index($0, "[OPERATOR-PROVIDED]") && index($0, "[THIRD-PARTY]") { n++ } END { print n + 0 }' <<<"$1"; }
+ER30_WT=""; [ -r "$ER30_WIT" ] && ER30_WT="$(cat "$ER30_WIT")"
+ER30_WN="$(er30_wit "$ER30_WT")"
+ER30_WN_X="$(er30_wit "$(awk '!done && /^## per-/ && index($0, "[ERASED]") && index($0, "[THIRD-PARTY]") { sub(/[ \t]*`?\[THIRD-PARTY\]`?/, ""); done = 1 } { print }' <<<"$ER30_WT")")"
+if [ ! -r "$ER30_A6" ] || [ ! -r "$ER30_A12" ] || [ -z "$ER30_B12" ] || [ -z "$ER30_ROW" ] || [ ! -r "$ER30_ENR" ] || [ -z "$ER30_WT" ]; then
+  FAIL "ER30: measured nothing — ADR-006 read=$([ -r "$ER30_A6" ] && echo 1 || echo 0), ADR-012 read=$([ -r "$ER30_A12" ] && echo 1 || echo 0), ADR-012's *Two entry classes* both-marks row read=$([ -n "$ER30_ROW" ] && echo 1 || echo 0), the reconciler read=$([ -r "$ER30_ENR" ] && echo 1 || echo 0) and the archived witness's model read=$([ -n "$ER30_WT" ] && echo 1 || echo 0). The texts' agreement cannot be graded over texts that are not there"
+elif [ "$ER30_STRIPBAD" -ne 0 ] || [ "$ER30_OLD_PLANT" -ne $((ER30_OLD + 1)) ] || [ "$ER30_PR2_PLANT" -ne $((ER30_PR2 + 1)) ] || [ "$ER30_STRIPBAD7" -ne 0 ] || [ "$ER30_GONE_PLANT" -ne $((ER30_GONE_N + 1)) ] || [ "$ER30_DROP_PLANT" -ne $((ER30_DROP_N + 1)) ] || [ "$ER30_WN_X" -ne $((ER30_WN - 1)) ]; then
+  FAIL "ER30: BROKEN PROBE — $ER30_STRIPBAD of the $ER30_PIN record phrase(s) and $ER30_STRIPBAD7 of the $ER30_PIN7 path phrase(s) did not drop their count by exactly 1 when stripped; the replaced row sentence planted read $ER30_OLD_PLANT against $ER30_OLD, the active-trip ground planted read $ER30_PR2_PLANT against $ER30_PR2, the old never-the-subject sentence planted into § \`erase\` read $ER30_GONE_PLANT against $ER30_GONE_N, and the old third exit's drop planted into the verb file and the reconciler read $ER30_DROP_PLANT against $ER30_DROP_N (each must be one more); and \`[THIRD-PARTY]\` removed from a copy of the witness model read $ER30_WN_X erased both-marks heading(s) against $ER30_WN (must be one fewer). Until each fires, a verdict below is the instrument's"
+elif [ "$ER30_ORD" -ne 1 ] || [ "$ER30_PIN" -ne "$ER30_N" ] || [ "$ER30_OLD" -ne 0 ] || [ "$ER30_PR2" -ne 0 ] || [ "$ER30_PIN7" -ne "$ER30_N7" ] || [ "$ER30_GONE_N" -ne 0 ] || [ "$ER30_DROP_N" -ne 0 ] || [ "$ER30_WN" -lt 1 ]; then
+  FAIL "ER30: the texts do not agree on option (A) — \`## Amendment history\` after \`References\` and last: ADR-006 at line $ER30_HH6 (References $ER30_R6, last heading $ER30_L6), ADR-012 at line $ER30_HH12 (References $ER30_R12, last heading $ER30_L12); $ER30_PIN of the $ER30_N record phrase(s) present (missing:${ER30_MISSING:- none}); $ER30_PIN7 of the $ER30_N7 path phrase(s) in the verb file and the reconciler (missing:${ER30_MISSING7:- none}); the replaced *Two entry classes* sentence stands $ER30_OLD time(s) in ADR-012's body and the active-trip ground $ER30_PR2 time(s) in the entries; \"never this verb's subject\" stands $ER30_GONE_N time(s) in § \`erase\` and the old third exit's drop $ER30_DROP_N time(s) (each must be 0); and the archived witness carries $ER30_WN erased both-marks heading(s) (must be at least 1)"
 else
-  PASS "ER30: both ADRs close on an \`## Amendment history\` entry after \`References\` recording (A) as chosen and (B) as rejected on the archived-trip ground alone; ADR-012's *Two entry classes* both-marks row now says the name, not the need, is what a regeneration would carry back, and the replaced sentence is gone from its body; all $ER30_N operative phrase(s) present, the active-trip ground absent, and every control fired — each phrase stripped, the replaced sentence planted and the active-trip ground planted each move their count by 1"
+  PASS "ER30: both ADRs close on an \`## Amendment history\` entry after \`References\` recording (A) as chosen and (B) as rejected on the archived-trip ground alone, and ADR-012's *Two entry classes* both-marks row says the name, not the need, is what a regeneration would carry back; the verb file and the reconciler carry all $ER30_N7 path phrase(s) — rule 16 as an exception to rule 2 with rule 5 unchanged, the sub-section with its re-run reading, its split refusal and its order, the carried-forward entry and the third exit that carries it — with \"never this verb's subject\" and the old drop gone; the archived witness keeps $ER30_WN erased both-marks heading(s). Every control fired: each phrase stripped moves its count by 1, each old sentence planted is counted, and the mark removed from the witness drops its count by 1"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
