@@ -12795,6 +12795,10 @@ ER27_PINS=(
   'that the record'"'"'s name was read there as a candidate'
   'the description text of each constraint row 7 names, which row 7 reports and does not count'
   'row 20'"'"'s control files are not opened, `.passphrase` among them, the trip'"'"'s key'
+  # Dev Testing F-07: a trip `--also-trip` names has its own bullet in § *The name every match
+  # reads*, and the receipt's closing line names that trip.
+  '**on a trip `--also-trip` names**, which discovery did not resolve, there is no trip name either'
+  'for each trip `--also-trip` named, that its REPORT rows read the record'"'"'s name there as a candidate'
 )
 er27_pins() {
   local n=0 p
@@ -12854,7 +12858,7 @@ elif [ "$ER27_STRIPBAD" -ne 0 ] || [ "${ER27_MC:-0}" -ne 1 ] || [ "${ER27_MU:-0}
 elif [ "$ER27_PIN" -ne "$ER27_N" ] || [ "$ER27_NREC" -lt 1 ] || [ -n "$ER27_BAD" ] || [ -n "$ER27_UNNAMED" ] || [ "${ER27_REACH:-1}" -ne 0 ]; then
   FAIL "ER27: the record's name on a trip that names the subject otherwise is not read as § \`erase\` must say — it carries $ER27_PIN of the $ER27_N operative phrase(s) (missing:${ER27_MISSING:- none}); the fixture carries $ER27_NREC keep(s) of the record's name '$ER_R_R' (must be at least 1), miscounted:${ER27_BAD:- none}, standing where no REPORT row names:${ER27_UNNAMED:- none}; and the record's name reads ${ER27_REACH:-?} across ER22's REACH regions (must be 0). A trip whose name for the subject is not the record's can hold the record's name as another traveller's, so only a REPORT row may read it, as a candidate"
 else
-  PASS "ER27: § \`erase\` carries all $ER27_N operative phrase(s) — every REPORT row on a trip whose name is not the record's reads the record's name as a candidate on a first run as on a later one, the no-row branch's candidates are named, the receipt says so per trip, and row 38 names row 7's text and row 20's unopened files; the fixture's $ER27_NREC keep(s) of the record's name '$ER_R_R' hold their count in a location a REPORT row names, and the record's name reads 0 across ER22's REACH regions. Every control fired: each phrase stripped moves the count by 1, and the name moved into \`Mobility notes:\` keeps its count, fails the location check and reads 1 in a REACH region"
+  PASS "ER27: § \`erase\` carries all $ER27_N operative phrase(s) — every REPORT row on a trip whose name is not the record's reads the record's name as a candidate on a first run as on a later one, the no-row branch's candidates are named, a trip \`--also-trip\` names has its own bullet, the receipt says so per trip and for each named trip, and row 38 names row 7's text and row 20's unopened files; the fixture's $ER27_NREC keep(s) of the record's name '$ER_R_R' hold their count in a location a REPORT row names, and the record's name reads 0 across ER22's REACH regions. Every control fired: each phrase stripped moves the count by 1, and the name moved into \`Mobility notes:\` keeps its count, fails the location check and reads 1 in a REACH region"
 fi
 
 # ── ER28 — ROW 39: ANOTHER TRAVELLER'S NAME SLOTS CARRY THE TOKEN, AND ADMISSION IS THE `TRIP` CLASS
