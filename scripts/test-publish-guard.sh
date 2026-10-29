@@ -30,8 +30,8 @@
 # L16 is the denial side of `may-carry` (ADR-026 § Decision 3), one must-fire per declared
 # row: a value under each row's selector, planted at that row's scope, aborts as a HIT, and
 # the same trip without it publishes. The rows are read from the live declaration.
-# L17 grades the guard reading its own projections: one that fails, or a published or joined
-# one that yields no words, is UNDETERMINED (rc=2) whatever the caller's `pipefail`, and the
+# L17 grades the guard reading its own projections: one that fails, or a published, joined or
+# shape one that yields no words, is UNDETERMINED (rc=2) whatever the caller's `pipefail`, and the
 # refusal names the projection and nothing else. L17f grades that every arm of both content
 # guards runs through the one arm helper and counts through the one count, and L17g that the
 # count subtracts both sentinels.
@@ -44,7 +44,8 @@
 # M7 = the guard's fourth arm (#2068, ADR-050): the published projection as the guard before 0.60.0
 # wrote it, read last and credited last, blocks again the pages it blocked — a value whose words
 # tags and attribute names push apart inside a script string, a comment or an attribute value —
-# while criterion 5's `=` render is still named for the published arm.
+# while criterion 5's `=` render is still named for the published arm (M7g), and a page the joined
+# arm catches too is still named for the joined arm (M7i).
 # M8 = the anchors (#2072): every projection reads a long run after a `<` and a long name run in
 # time proportional to its length, under a CPU cap, and the name-run anchor reads what it read.
 # R = the change-summary (#550). R1-R5 grade its CONTENT guard (AC 5) —
@@ -3516,7 +3517,7 @@ else
   FAIL "M5e: a removal did not fail closed (no decoder: rc=$m5_dec_rc want 2; no joined arm: rc=$m5_join_rc want 2) — rc=0 on either is the guard certifying a render one of its own projections never read"
 fi
 
-# ── M7a–M7h (#2068, ADR-050) — the guard's fourth arm, a reading by shape, read and credited last ──
+# ── M7a–M7i (#2068, ADR-050) — the guard's fourth arm, a reading by shape, read and credited last ──
 #
 # The published projection finds machinery by its place, which keeps a key token written directly
 # before `=` (M1e–M1h), and so keeps as text words a page around a value can carry: a `word=`
@@ -3725,6 +3726,54 @@ m7h_assert() { # one verdict
   fi
 }
 m7h_assert
+
+# M7i — the fourth arm's credit after the joined arm. ADR-050 Decision 2 names the fourth arm only
+# when no other arm hit; M7g pins that order against the published arm, and this arm pins it against
+# the joined arm, on a page both arms hit and neither the visible nor the published arm does: the
+# need split mid-word by an inline tag in the visible text, which the joined arm closes up, and the
+# same need's words wrapped in three spans whose title carries `k= m=` inside a script string, which
+# the fourth arm drops (M7a's shape). The page is named for the joined arm. An arm is turned off by
+# making it read what an arm that misses the page reads, as m7_off does: the joined arm reads the
+# visible projection, the fourth arm the published one. With the joined arm off the fourth arm
+# names the page, with the fourth arm off the joined arm does, and with both off it publishes, so
+# both arms hit it and no other arm does. ARMED-RED: the attribution's last two branches swapped in
+# the production guard's text (pp_body, since the recorder stands in for the guard here), in a
+# subshell, name the page for the fourth arm. Not registered with group MD: removing either
+# projection makes the guard refuse (rc=2) before any name is chosen, which M7a's and M1x's
+# registrations already convict, and it says nothing about the order; the swap is what reaches it.
+M7I_JPRJ='joined markup (an inline tag split a word)'
+M7I_P="$WORK/m7i_joined_shape.html"; mrender "$M7I_P" "<p>Note: cannot manage more than o<b>ne</b> flight of stairs i<b>n</b> a single stretch.</p><script>var pop = 'Note: cannot manage more than <span title=\"k= m=\">one</span> flight of stairs <span title=\"k= m=\">in</span> a single <span title=\"k= m=\">stretch</span>';</script>"
+# The swap, on the guard's text as declare -f renders it: the joined branch's test reads the fourth
+# arm's code, and the two branches' locator and name trade places through a placeholder.
+M7I_SWAP='s/if \[ "\$rcj" -eq 0 \]/if [ "$rcs" -eq 0 ]/
+s/loc="\$locj"/loc="\$locs@"/
+s/loc="\$locs"/loc="\$locj"/
+s/loc="\$locs@"/loc="\$locs"/
+s/proj="joined markup (an inline tag split a word)"/proj="@"/
+s/proj="markup read by shape (every tag and attribute name dropped)"/proj="joined markup (an inline tag split a word)"/
+s/proj="@"/proj="markup read by shape (every tag and attribute name dropped)"/'
+m7i_run() { # <joined-off|shape-off|both-off|swapped> -> the guard's status on M7i's page, its warnings in $MOUT
+  ( case "$1" in joined-off|both-off) strip_to_joined_text() { strip_to_text_blocks "$@"; } ;; esac
+    case "$1" in shape-off|both-off) strip_to_shape_text() { strip_to_published_text "$@"; } ;; esac
+    case "$1" in swapped) eval "$(pp_body verify_publishable_content | sed "$M7I_SWAP")" ;; esac
+    verify_publishable_content "$M7I_P" "$MTD" >/dev/null 2>"$MOUT"; printf '%s' "$?" )
+}
+m7i_assert() { # one verdict
+  local rh ph rj pj rs ps rb pb rw pw nc
+  mguard "$M7I_P" "$MTD"; rh="$MRC"; ph="$(m1eq_prj)" || ph="NONE"
+  rj="$(m7i_run joined-off)"; pj="$(m1eq_prj)" || pj="NONE"
+  rs="$(m7i_run shape-off)"; ps="$(m1eq_prj)" || ps="NONE"
+  rb="$(m7i_run both-off)"; pb="$(m1eq_prj)" || pb="NONE"
+  rw="$(m7i_run swapped)"; pw="$(m1eq_prj)" || pw="NONE"
+  pp_body verify_publishable_content > "$WORK/m7i_guard.txt"; sed "$M7I_SWAP" "$WORK/m7i_guard.txt" > "$WORK/m7i_swapped.txt"
+  nc="$(awk 'NR == FNR { a[FNR] = $0; next } a[FNR] != $0 { c++ } END { print c + 0 }' "$WORK/m7i_guard.txt" "$WORK/m7i_swapped.txt")"
+  if [ "$rh" -eq 1 ] && [ "$ph" = "$M7I_JPRJ" ] && [ "$rj" = "1" ] && [ "$pj" = "$M7_PRJ" ] && [ "$rs" = "1" ] && [ "$ps" = "$M7I_JPRJ" ] && [ "$rb" = "0" ] && [ "$pb" = "NONE" ] && [ "$rw" = "1" ] && [ "$pw" = "$M7_PRJ" ] && [ "$nc" -eq 5 ]; then
+    PASS "M7i: the fourth arm is credited after the joined arm — a need split mid-word by an inline tag in the visible text, and wrapped in three spans with title=\"k= m=\" inside a script string, aborts as a HIT (rc=$rh) named '$ph'; with the joined arm reading what the visible projection reads it aborts (rc=$rj) named '$pj', with the fourth arm reading what the published projection reads it aborts (rc=$rs) named '$ps', and with both so read it publishes (rc=$rb), so both arms hit it and no other arm does; ARMED-RED — with the attribution's last two branches swapped ($nc line(s) of the guard changed) it aborts (rc=$rw) named '$pw'"
+  else
+    FAIL "M7i: the page rc=$rh '$ph' (want 1 and '$M7I_JPRJ'); with the joined arm reading as the visible projection rc=$rj '$pj' (want 1 and '$M7_PRJ'), with the fourth arm reading as the published projection rc=$rs '$ps' (want 1 and '$M7I_JPRJ'), with both so read rc=$rb '$pb' (want 0 and NONE); with the attribution's last two branches swapped rc=$rw '$pw' (want 1 and '$M7_PRJ'), lines of the guard changed $nc (want 5). A page the joined arm catches is named for the fourth arm, or this arm can no longer tell"
+  fi
+}
+m7i_assert
 
 # ── M8a–M8c (#2072) — a tag head and a name run are each read one way only ──
 #
