@@ -13134,6 +13134,9 @@ ER30_PINS7=(
   # `--third-party <n>`, never by a name, so the member leaves the count on the operator's statement.
   'It names the entry by its token or by `--third-party <n>`, never by a name'
   '**An entry an erasure re-keyed is withdrawn by its token or by its place, never by a name**'
+  # Dev Testing F-03: the token mint also compares every heading key in the trip's traveller model,
+  # where an erased both-marks entry keeps its token with no roster row.
+  'and against every heading key in that trip'"'"'s `outputs/traveler-model.md`, its marks set aside'
 )
 er30_pins7() {
   local n=0 p
