@@ -11686,8 +11686,9 @@ if [ "$ER_OK" -eq 1 ]; then
     FAIL "ER19: the group-store reach is as designed ($ER_GRP_RM REACH row on \`## Members\`, $ER_GRP_RH REPORT row on the title line, control $ER_GRP_CTL row(s)) but groups/README.md § *$ER_GHEAD* no longer discloses it — the name-outside-reach sentence matched=$ER_GDISC and the report sentence matched=$ER_GREP, over $ER_GNSEC line(s) extracted with the flattening confirmed by the wrap-spanning control. That section tells the reader the name is where a group's meaning goes; without both sentences it never tells them that erasing a person leaves a group still named after them, or that the report says which ones, which reads as anonymised when it is not"
   fi
 
-  # ── ER20 — THE PERSON-SIDE SURVIVOR LIST SAYS FIVE: THE FOURTH IS THE GROUP NAME, AND THE
-  # FIFTH A NAME STANDING IN A PLACE THE ERASURE REPORTS RATHER THAN REWRITES.
+  # ── ER20 — THE PERSON-SIDE SURVIVOR LIST SAYS SIX: THE FOURTH IS THE GROUP NAME, THE FIFTH A
+  # NAME STANDING IN A PLACE THE ERASURE REPORTS RATHER THAN REWRITES, AND THE SIXTH A TRIP WHOSE
+  # ROSTER NO LONGER NAMES THE PERSON, WHICH HOLDS THE RECORD'S DELETION (#1791).
   # The same fact as ER19, read from the other side. `people/README.md` § *Deleting a person*
   # introduces its survivor list as "said plainly rather than left for you to discover" — a
   # promise to ENUMERATE what erasure cannot reach — and then states a cardinal. A group's
@@ -11731,22 +11732,30 @@ if [ "$ER_OK" -eq 1 ]; then
   ER_PNCTL="$(printf '%s\n' "$ER_PCSEC" | grep -c '[^[:space:]]' || true)"
   ER_PFLAT="$(printf '%s\n' "$ER_PSEC" | sed 's/^[[:space:]]*>[[:space:]]*//' | tr '\n\t' '  ' | tr -s ' ')"
   ER_PWRAP=0; ER_PCARD=0; ER_PID=0; ER_PFIFTH=0; ER_PSTOP=0; ER_PXREF=0
+  ER_PSIXTH=0; ER_PHOLD=0; ER_PROW39=0
   # Here-strings rather than pipes, per group PF: a pipe into an early-exiting `grep -q`
   # reports failure on a SUCCESSFUL match under pipefail.
   grep -qF 'there is no earlier version to restore from' <<<"$ER_PFLAT" && ER_PWRAP=1
-  grep -qF 'Five things survive it' <<<"$ER_PFLAT" && ER_PCARD=1
+  grep -qF 'Six things survive it, and the last three survive' <<<"$ER_PFLAT" && ER_PCARD=1
   grep -qF "The fourth is a reusable group's name" <<<"$ER_PFLAT" && ER_PID=1
   grep -qF 'The fifth is a name in a place the operation reads' <<<"$ER_PFLAT" && ER_PFIFTH=1
+  # #1791: the sixth survivor, the record's held deletion it carries, and the fifth paragraph's
+  # amendment — the lines of another traveller's own file that name the party are rewritten now.
+  grep -qF 'The sixth is a trip whose roster no longer names the person' <<<"$ER_PFLAT" && ER_PSIXTH=1
+  grep -qF "erasure keeps the person's record and names the trips holding it" <<<"$ER_PFLAT" && ER_PHOLD=1
+  # Dev Testing F-08: the fifth paragraph names `Relationship:` among those lines, as how another
+  # traveller fits in the group.
+  grep -qF "the lines in another traveller's own file that say how they fit in the group, or who they share the trip, a room or a split-off with" <<<"$ER_PFLAT" && ER_PROW39=1
   grep -qF 'stops at the title line on purpose' <<<"$ER_PFLAT" && ER_PSTOP=1
   grep -qF '../groups/README.md' <<<"$ER_PFLAT" && ER_PXREF=1
   if [ "$ER_PNSEC" -eq 0 ] || [ "$ER_PNCTL" -eq 0 ] || [ "$ER_PWRAP" -eq 0 ]; then
     FAIL "ER20: an extraction or the matcher itself came back EMPTY — people/README.md § *$ER_PHEAD* yielded $ER_PNSEC non-blank line(s), the control section § *$ER_PCTLH* read by the SAME extractor yielded $ER_PNCTL, and the wrap-spanning control phrase matched=$ER_PWRAP. That phrase spans a hard wrap in this section, so a zero on it means the flattening is gone and every prose verdict here would be a line-shaped zero over a hard-wrapped file. With the control section at 0 the extractor is broken; with only the subject at 0 the section has moved. Not a skip and not a pass"
   elif [ "$ER_GRP_OK" -ne 1 ]; then
     FAIL "ER20: the group-store reach has MOVED — $ER_GRP_N reach row(s) name \`groups/\`: $ER_GRP_RM REACH on the \`## Members\` bullets, $ER_GRP_RH REPORT on the \`# <H1>\` title line, $ER_GRP_XH REACH on the title line (expected two rows — one REACH on the bullets, one REPORT on the title line, none reaching it). The person-side survivor count rests on that reach: a group's name is a survivor only while the rewrite stops at the member bullets, so the cardinal in people/README.md § *$ER_PHEAD* must be re-derived against the new reach in the SAME commit, alongside the group-side disclosure ER19 grades. A count that outlives the fact it counts is the defect this arm exists for"
-  elif [ "$ER_PCARD" -eq 1 ] && [ "$ER_PID" -eq 1 ] && [ "$ER_PFIFTH" -eq 1 ] && [ "$ER_PSTOP" -eq 1 ] && [ "$ER_PXREF" -eq 1 ]; then
-    PASS "ER20: people/README.md § *$ER_PHEAD* enumerates FIVE survivors over $ER_PNSEC extracted line(s) (control section $ER_PNCTL line(s), flattening validated by the wrap-spanning control) — it states the cardinal, names a reusable group's name as the fourth and a name in a place the operation reads and does not rewrite as the fifth, discloses that erasure reaches the group record and stops at its title line on purpose, and cites ../groups/README.md so a reader meeting either side reaches the other. The two disclosures now move with the one reach measurement — one REACH row on the bullets and one REPORT row on the title line — instead of with each other"
+  elif [ "$ER_PCARD" -eq 1 ] && [ "$ER_PID" -eq 1 ] && [ "$ER_PFIFTH" -eq 1 ] && [ "$ER_PSTOP" -eq 1 ] && [ "$ER_PXREF" -eq 1 ] && [ "$ER_PSIXTH" -eq 1 ] && [ "$ER_PHOLD" -eq 1 ] && [ "$ER_PROW39" -eq 1 ]; then
+    PASS "ER20: people/README.md § *$ER_PHEAD* enumerates SIX survivors over $ER_PNSEC extracted line(s) (control section $ER_PNCTL line(s), flattening validated by the wrap-spanning control) — it states the cardinal, names a reusable group's name as the fourth, a name in a place the operation reads and does not rewrite as the fifth (whose list of rewritten places now carries the party lines of another traveller's own file, how they fit in the group among them), and a trip whose roster no longer names the person as the sixth, with the record's held deletion, discloses that erasure reaches the group record and stops at its title line on purpose, and cites ../groups/README.md so a reader meeting either side reaches the other. The two disclosures now move with the one reach measurement — one REACH row on the bullets and one REPORT row on the title line — instead of with each other"
   else
-    FAIL "ER20: people/README.md § *$ER_PHEAD* no longer enumerates the survivors the reach leaves — cardinal 'Five things survive it' matched=$ER_PCARD, the fourth named as a reusable group's name=$ER_PID, the fifth named as a name in a place the operation reads=$ER_PFIFTH, the stops-at-the-title-line disclosure=$ER_PSTOP, the cross-reference to ../groups/README.md=$ER_PXREF, over $ER_PNSEC extracted line(s) with the flattening confirmed. This section PROMISES to say plainly what erasure cannot reach, so a survivor missing from it is a false enumeration rather than an omission — and a stale cardinal is the half a reader cannot detect, because the list still reads complete. groups/README.md discloses the same reach from the other side; a release that changes one side changes both"
+    FAIL "ER20: people/README.md § *$ER_PHEAD* no longer enumerates the survivors the reach leaves — cardinal 'Six things survive it, and the last three survive' matched=$ER_PCARD, the fourth named as a reusable group's name=$ER_PID, the fifth named as a name in a place the operation reads=$ER_PFIFTH, the fifth's party lines of another traveller's file named as rewritten=$ER_PROW39, the sixth named as a trip whose roster no longer names the person=$ER_PSIXTH, the record's held deletion=$ER_PHOLD, the stops-at-the-title-line disclosure=$ER_PSTOP, the cross-reference to ../groups/README.md=$ER_PXREF, over $ER_PNSEC extracted line(s) with the flattening confirmed. This section PROMISES to say plainly what erasure cannot reach, so a survivor missing from it is a false enumeration rather than an omission — and a stale cardinal is the half a reader cannot detect, because the list still reads complete. groups/README.md discloses the same reach from the other side; a release that changes one side changes both"
   fi
 
   # ── ER21 — EVERY SECTION OF THE TRIP FILE, AND EVERY LABELLED LINE OF § Dietary & Health, HAS
@@ -12224,22 +12233,78 @@ for i in 1 2 3 4 5 6; do
 done
 ER22_READ=0
 [ -n "$ER_R_CTX" ] && [ -n "$ER_R_MODEL" ] && [ -n "$ER_R_T" ] && [ -n "$ER_R_A" ] && [ -n "$ER_R_R" ] && [ -n "$ER_R_S" ] && [ -n "$ER_R_P" ] && ER22_READ=1
-ER22_BASE="$(er22_count "$ER_R_A" "$ER_R_CTX" "$ER_R_MODEL")"
+# THE PROTECTED NAMES (#1791, AC10). A `protect <file>#<section> <name> <count>` line declares another
+# person's name that holds the subject's name inside it — § `erase` says Phase B never rewrites
+# another person's name. Each is masked before every count below, so it is not read as a survivor,
+# and the unmasked count is a fourth control: it must exceed the masked count by exactly the
+# occurrences the regions observably hold inside the protected names, so the mask is load-bearing
+# rather than decorative. The declared count is graded on its own branch (Dev Testing F-04).
+ER22_PROT="$(er_rfence protect)"
+ER22_PNAMES="$(awk -F'\t' 'NF >= 3 { n = ""; for (i = 2; i < NF; i++) n = n (i > 2 ? " " : "") $i; print n }' <<<"$ER22_PROT")"
+ER22_PJ="$(printf '%s\n' "$ER22_PNAMES" | awk 'NF { o = o (o == "" ? "" : "|") $0 } END { print o }')"
+ER22_PSUM="$(awk -F'\t' 'NF >= 3 { s += $NF } END { print s + 0 }' <<<"$ER22_PROT")"
+ER22_PNUM="$(printf '%s\n' "$ER22_PNAMES" | grep -c '[^[:space:]]' || true)"
+er22_mask() {
+  awk -v names="$ER22_PJ" '
+    { t = t (NR > 1 ? "\n" : "") $0 }
+    END {
+      n = split(names, N, "|")
+      for (k = 1; k <= n; k++) {
+        w = N[k]; if (w == "") continue
+        o = ""; s = t
+        while ((i = index(s, w)) > 0) { o = o substr(s, 1, i - 1) "PROTECTED-NAME"; s = substr(s, i + length(w)) }
+        t = o s
+      }
+      print t
+    }' <<<"$1"
+}
+ER22_CTX="$(er22_mask "$ER_R_CTX")"; ER22_MODEL="$(er22_mask "$ER_R_MODEL")"
+ER22_UNMASK="$(er22_count "$ER_R_A" "$ER_R_CTX" "$ER_R_MODEL" | cut -f1)"
+ER22_BASE="$(er22_count "$ER_R_A" "$ER22_CTX" "$ER22_MODEL")"
 ER22_N="$(printf '%s' "$ER22_BASE" | cut -f1)"
 ER22_PER="$(printf '%s' "$ER22_BASE" | cut -f2)"
-ER22_SURV="$(er_wcount "$ER_R_S" "$(er22_reg 1 "$ER_R_CTX" "$ER_R_MODEL"; er22_reg 5 "$ER_R_CTX" "$ER_R_MODEL")")"
-ER22_PENT="$(awk -v p="## $ER_R_P" 'index($0, p) == 1 { on = 1; next } on && /^## / { on = 0 } on { print }' <<<"$ER_R_MODEL")"
+ER22_SURV="$(er_wcount "$ER_R_S" "$(er22_reg 1 "$ER22_CTX" "$ER22_MODEL"; er22_reg 5 "$ER22_CTX" "$ER22_MODEL")")"
+ER22_PENT="$(awk -v p="## $ER_R_P" 'index($0, p) == 1 { on = 1; next } on && /^## / { on = 0 } on { print }' <<<"$ER22_MODEL")"
 ER22_PT="$(er_wcount "$ER_R_T" "$ER22_PENT")"
 ER22_PA="$(er_wcount "$ER_R_A" "$ER22_PENT")"
 ER22_PN="$(printf '%s\n' "$ER22_PENT" | grep -c '[^[:space:]]' || true)"
+# Dev Testing F-04 — each `protect` line's OBSERVED occurrences, read word-bounded in the section
+# the line declares, as ER29 reads it. The unmask control below is held to what the six REACH
+# regions observably hold inside the protected names, so it grades the mask alone. The declared
+# count is graded on a branch of its own, so a fixture where Phase B rewrote another person's name
+# — the failure AC10 guards — reads as that FAIL and never as a broken probe.
+er22_preg() {
+  local txt=""
+  case "${1%%#*}" in
+    trip-context.md) txt="$ER_R_CTX" ;;
+    outputs/traveler-model.md) txt="$ER_R_MODEL" ;;
+  esac
+  [ -n "$txt" ] || return 0
+  if [ "${1#*#}" = "body" ]; then er_rx body '' '' '' "$txt"; else er_rx sect "${1#*#}" '' '' "$txt"; fi
+}
+ER22_PINSIDE=0; ER22_PBAD=""; ER22_POBS=""
+while IFS= read -r er22_pl; do
+  [ -n "$er22_pl" ] || continue
+  er22_loc="$(cut -f1 <<<"$er22_pl")"
+  er22_nm="$(awk -F'\t' '{ n = ""; for (i = 2; i < NF; i++) n = n (i > 2 ? " " : "") $i; print n }' <<<"$er22_pl")"
+  er22_dc="$(awk -F'\t' '{ print $NF }' <<<"$er22_pl")"
+  er22_ob="$(er_wcount "$er22_nm" "$(er22_preg "$er22_loc")")"
+  ER22_POBS="$ER22_POBS'$er22_nm' $er22_ob of $er22_dc in $er22_loc; "
+  [ "$er22_ob" = "$er22_dc" ] || ER22_PBAD="$ER22_PBAD '$er22_nm' reads $er22_ob in $er22_loc, declared $er22_dc;"
+  er22_w="$(er_wcount "$ER_R_A" "$er22_nm")"
+  for i in 1 2 3 4 5 6; do
+    er22_k="$(er_wcount "$er22_nm" "$(er22_reg "$i" "$ER_R_CTX" "$ER_R_MODEL")")"
+    ER22_PINSIDE=$((ER22_PINSIDE + er22_w * er22_k))
+  done
+done <<<"$ER22_PROT"
 # The three plants.
-ER22_K1="$(er22_count "$ER_R_A" "$ER_R_CTX" "$(er_sub1 "$ER_R_MODEL" "whenever $ER_R_T takes one" "whenever $ER_R_A takes one")" | cut -f1)"
-ER22_M2="$(er_sub1 "$ER_R_CTX" "$ER_R_T needs step-free" "$ER_R_A needs step-free")"
-ER22_K2A="$(er22_count "$ER_R_A" "$ER22_M2" "$ER_R_MODEL" | cut -f1)"
-ER22_K2R="$(er22_count "$ER_R_R" "$ER22_M2" "$ER_R_MODEL" | cut -f1)"
-ER22_K3="$(er22_count "$ER_R_A" "$(er_sub1 "$ER_R_CTX" "helps $ER_R_T rest" "helps $ER_R_A rest")" "$ER_R_MODEL" | cut -f1)"
+ER22_K1="$(er22_count "$ER_R_A" "$ER22_CTX" "$(er_sub1 "$ER22_MODEL" "whenever $ER_R_T takes one" "whenever $ER_R_A takes one")" | cut -f1)"
+ER22_M2="$(er_sub1 "$ER22_CTX" "$ER_R_T needs step-free" "$ER_R_A needs step-free")"
+ER22_K2A="$(er22_count "$ER_R_A" "$ER22_M2" "$ER22_MODEL" | cut -f1)"
+ER22_K2R="$(er22_count "$ER_R_R" "$ER22_M2" "$ER22_MODEL" | cut -f1)"
+ER22_K3="$(er22_count "$ER_R_A" "$(er_sub1 "$ER22_CTX" "helps $ER_R_T rest" "helps $ER_R_A rest")" "$ER22_MODEL" | cut -f1)"
 ER22_COK=0
-[ "$ER22_K1" -eq "$((ER22_N + 1))" ] && [ "$ER22_K2A" -eq "$((ER22_N + 1))" ] && [ "$ER22_K2R" -eq 0 ] && [ "$ER22_K3" -eq "$((ER22_N + 1))" ] && [ "$ER22_SURV" -ge 1 ] && ER22_COK=1
+[ "$ER22_K1" -eq "$((ER22_N + 1))" ] && [ "$ER22_K2A" -eq "$((ER22_N + 1))" ] && [ "$ER22_K2R" -eq 0 ] && [ "$ER22_K3" -eq "$((ER22_N + 1))" ] && [ "$ER22_SURV" -ge 1 ] && [ "$ER22_UNMASK" -eq "$((ER22_N + ER22_PINSIDE))" ] && ER22_COK=1
 # The cross-check: every row this fixture's regions stand for must still be REACH.
 ER22_XBAD=""
 for r in 1 2 3 4 6 10 32 33 35 36; do
@@ -12247,18 +12312,22 @@ for r in 1 2 3 4 6 10 32 33 35 36; do
 done
 if [ "$ER22_READ" -ne 1 ]; then
   FAIL "ER22: the erasure-reach fixture or its declaration could not be read — trip-context, model, and the subject's token, name on this trip, record name, survivor and both-marks label must all be present, and one was not. Every count below would be over nothing"
+elif [ "$ER22_PNUM" -lt 1 ] || [ "$ER22_PSUM" -lt 1 ]; then
+  FAIL "ER22: the declaration carries $ER22_PNUM \`protect\` line(s) declaring $ER22_PSUM occurrence(s) — at least one is required, because Phase B's rule that it never rewrites another person's name has nothing to grade it in this fixture without one, and the mask below would be untested"
 elif [ "$ER22_EMPTY" -ne 0 ] || [ "$ER22_PN" -eq 0 ]; then
   FAIL "ER22: a REACH region came back EMPTY — non-blank lines per region (Group, Dietary & Health lines, Hard Constraints Applies-to, Logistics slots, model body, erased entry heading) read ${ER22_NLS% } and the both-marks entry read $ER22_PN. A region that holds nothing holds no survivor for the wrong reason"
 elif [ "$ER22_COK" -ne 1 ]; then
-  FAIL "ER22: BROKEN PROBE — a must-fire control did not move as predicted: the both-marks plant read $ER22_K1, the alias plant read $ER22_K2A keyed on the name on this trip and $ER22_K2R keyed on the record's name, and the nested-bullet plant read $ER22_K3 (each must be one more than the fixture's $ER22_N, and the record-keyed count 0); the survivor control read $ER22_SURV (must be at least 1). Until each fires, a zero here is the instrument's rather than the fixture's"
+  FAIL "ER22: BROKEN PROBE — a must-fire control did not move as predicted: the both-marks plant read $ER22_K1, the alias plant read $ER22_K2A keyed on the name on this trip and $ER22_K2R keyed on the record's name, and the nested-bullet plant read $ER22_K3 (each must be one more than the fixture's $ER22_N, and the record-keyed count 0); the survivor control read $ER22_SURV (must be at least 1); and the unmasked count read $ER22_UNMASK against the masked $ER22_N plus the $ER22_PINSIDE occurrence(s) the REACH regions observably hold inside the protected name(s) ${ER22_PJ:-none}. Until each fires, a zero here is the instrument's rather than the fixture's"
+elif [ -n "$ER22_PBAD" ]; then
+  FAIL "ER22: AC10 — another person's name does not stand as the fixture declares:$ER22_PBAD Phase B rewrote the subject's name inside another person's name, which § \`erase\` says it never does, and that person's roster cell, their key and the count read off them move with it. The mask and the plants all fired, so this is the fixture's failure and not the instrument's"
 elif [ -n "$ER22_XBAD" ]; then
   FAIL "ER22: the reach table does not reach the places this fixture is clean in — row(s)${ER22_XBAD} do not read REACH (the fixture's regions stand for rows 1, 2, 3, 4, 6, 10, 32, 33, 35 and 36; survivors in them read $ER22_N). A fixture whose post-state holds no survivor grades nothing about a table that no longer prescribes that post-state"
 elif [ "$ER22_N" -ne 0 ]; then
-  FAIL "ER22: the subject's name survives in a REACH location — $ER22_N occurrence(s), per region (Group, Dietary & Health lines, Hard Constraints Applies-to, Logistics slots, model body, erased entry heading) ${ER22_PER}. A name left standing where the table says it is rewritten is exactly the erasure the receipt would report as total"
+  FAIL "ER22: the subject's name survives in a REACH location — $ER22_N occurrence(s) with the protected name(s) ${ER22_PJ} masked, per region (Group, Dietary & Health lines, Hard Constraints Applies-to, Logistics slots, model body, erased entry heading) ${ER22_PER}. A name left standing where the table says it is rewritten is exactly the erasure the receipt would report as total"
 elif [ "$ER22_PT" -lt 1 ] || [ "$ER22_PA" -ne 0 ]; then
   FAIL "ER22: CIAC-4 — the both-marks entry's text carries the subject's token $ER22_PT time(s) and the name on this trip $ER22_PA time(s); it must carry the token at least once and the name never. Row 35 substitutes the subject's name inside that entry's text and leaves its heading and needs, which are the party member's"
 else
-  PASS "ER22: the name on this trip reads 0 across the six REACH regions (${ER22_NLS% } non-blank line(s)), the survivor control reads $ER22_SURV, the both-marks entry carries the token $ER22_PT time(s) and the name 0, and rows 1, 2, 3, 4, 6, 10, 32, 33, 35 and 36 read REACH. All three plants fired — the both-marks need, the alias in \`Mobility notes:\` (1 on the name on this trip, 0 on the record's), and the line nested under \`Other health notes:\` — so the zero is a measurement over regions that do reach the lines they name"
+  PASS "ER22: the name on this trip reads 0 across the six REACH regions (${ER22_NLS% } non-blank line(s)), with the protected name(s) ${ER22_PJ} masked first — unmasked it reads $ER22_UNMASK, exactly the $ER22_PINSIDE occurrence(s) inside them, and each stands as declared (${ER22_POBS% }), the survivor control reads $ER22_SURV, the both-marks entry carries the token $ER22_PT time(s) and the name 0, and rows 1, 2, 3, 4, 6, 10, 32, 33, 35 and 36 read REACH. All three plants fired — the both-marks need, the alias in \`Mobility notes:\` (1 on the name on this trip, 0 on the record's), and the line nested under \`Other health notes:\` — so the zero is a measurement over regions that do reach the lines they name"
 fi
 
 # ── ER23 — THE BOUNDS HOLD: NO OVER-MATCH (#1457 AC-6, R-7, CR-16). Each `keep` line declares an
@@ -12508,6 +12577,697 @@ elif [ "$ER24_BAD" -ne 0 ] || [ "$ER24_SBAD" -ne 0 ]; then
   FAIL "ER24: the archived witness carries substitutions the table does not prescribe — $ER24_BAD of $ER24_TOK token(s) lie where no REACH row reaches (${ER24_WHERE:-none}), and $ER24_SBAD erased entr(y/ies) name a Source other than their own token's file (${ER24_SWHERE:-none}). A tracked witness showing a substitution the table does not prescribe is a copy of the name the table never reaches, or a table that has stopped describing its own witness"
 else
   PASS "ER24: every one of $ER24_TOK token(s) across the $ER24_NP pinned witness file(s) lies in a region a REACH row prescribes, and every erased entry's Source names its own token's file ($ER24_SKEPT Source line(s) seen on kept entries). All three plants moved their count by exactly 1 — § *Trip Style*, the survivor's traveller file, and an erased entry's Source line — so the zero is a measurement over the whole witness"
+fi
+
+# ── ER25 — THE ROSTER'S TWO COLUMNS ARE FOUND BY WHAT THEY HOLD, NEVER BY THEIR HEADER (#1791,
+# QF-05). Erasure's join, `group`'s presence probe and `person`'s withdrawal probe named the
+# columns by the template's header — `Person` and `Traveler file` — while two tracked rosters,
+# the archived witness among them, head the same columns `Traveler` and `Profile`. The rule now
+# lives in one paragraph of § `group`: the person column is column 1, and the path column is the
+# one column after the first whose data cells hold `travelers/…md`. Three limbs:
+#   (i)   THE READER over every tracked roster: er25_cols implements that paragraph, and on the
+#         tracked tree it must find a path column in every roster carrying a `travelers/…md`
+#         cell, at least one of them headed other than `Traveler file` — the case a header read
+#         could not see — and the witness's `travelers/dana.md` must join the same row under its
+#         shipped header and under the template's;
+#   (ii)  THE OPERATIVE SENTENCES: the paragraph's four load-bearing phrases are present, and no
+#         line of the verb file outside § `profile` names a roster column by its header. § `profile`
+#         keeps `Traveler file` on purpose — it names the column `/trip-new` writes — and is this
+#         limb's sensitivity arm: the same count over it must be non-zero;
+#   (iii) MUST-FIRE CONTROLS: path cells turned to free text find no path column; a second column
+#         of path-shaped cells finds none either (two qualifying columns read as none); one phrase
+#         stripped from a copy of § `group` drops the phrase count by exactly 1; and the header
+#         phrase planted into a copy of § `erase` is counted.
+er25_cols() {
+  awk -F'|' '
+    /^## Group/ { on = 1; next }
+    on && /^## / { on = 0 }
+    !on || done { next }
+    !/^\|/ { if (hdr != "") done = 1; next }
+    hdr == "" {
+      hdr = $0; nc = NF - 2
+      for (i = 2; i <= NF - 1; i++) { h = $i; gsub(/^[ \t]+/, "", h); gsub(/[ \t]+$/, "", h); H[i - 1] = h }
+      next
+    }
+    /^\|[ \t:|-]+$/ { next }
+    {
+      for (i = 3; i <= NF - 1; i++) {
+        c = $i; gsub(/`/, "", c); gsub(/^[ \t]+/, "", c); gsub(/[ \t]+$/, "", c)
+        if (c ~ /^travelers\/.*\.md$/) Q[i - 1] = 1
+      }
+    }
+    END {
+      nq = 0; pc = 0
+      for (k in Q) { nq++; pc = k }
+      if (nq != 1) pc = 0
+      printf "%d\t%d\t%s\t%d\n", nc + 0, pc + 0, (pc ? H[pc] : ""), nq + 0
+    }' <<<"$1"
+}
+# er25_join <trip-context text> <path> <stem-key> -> column 1 of the row the file joins: by exact
+# path in the path column where the roster has one, and otherwise by the stem key.
+er25_join() {
+  local pc
+  pc="$(er25_cols "$1" | cut -f2)"
+  awk -F'|' -v pc="$pc" -v want="$2" -v key="$3" '
+    function k(s) { s = tolower(s); gsub(/[^a-z0-9]/, "", s); return s }
+    /^## Group/ { on = 1; next }
+    on && /^## / { on = 0 }
+    !on || done { next }
+    !/^\|/ { if (seen) done = 1; next }
+    !seen { seen = 1; next }
+    /^\|[ \t:|-]+$/ { next }
+    {
+      p1 = $2; gsub(/^[ \t]+/, "", p1); gsub(/[ \t]+$/, "", p1)
+      if (pc > 0) { c = $(pc + 1); gsub(/`/, "", c); gsub(/^[ \t]+/, "", c); gsub(/[ \t]+$/, "", c); if (c == want) { print p1; exit } }
+      else if (k(p1) == key) { print p1; exit }
+    }' <<<"$1"
+}
+# er25_pins <section text> -> how many of the paragraph's four operative phrases it carries.
+er25_pins() {
+  local n=0 t
+  t="$(tr '\n' ' ' <<<"$1" | tr -s ' ')"
+  case "$t" in *'found by what they hold, never by their header'*) n=$((n + 1)) ;; esac
+  case "$t" in *'The **person column** is the table'"'"'s first column'*) n=$((n + 1)) ;; esac
+  case "$t" in *'begins `travelers/` and ends `.md`'*) n=$((n + 1)) ;; esac
+  case "$t" in *'one with two or more has none either'*) n=$((n + 1)) ;; esac
+  printf '%d\n' "$n"
+}
+# er25_hdr <text> -> lines naming a roster column by its header.
+er25_hdr() { grep -c -F -e '`Traveler file`' -e '`Person` column' -e '`Person` cell' <<<"$1" || true; }
+
+ER25_POP="$(cd "$ROOT" && git ls-files '*trip-context*.md' 2>/dev/null | grep -v '^reference/schemas/')"
+ER25_NR=0; ER25_NWANT=0; ER25_NFOUND=0; ER25_NOTHER=0; ER25_MISS=""
+while IFS= read -r f; do
+  [ -n "$f" ] && [ -r "$ROOT/$f" ] || continue
+  t="$(cat "$ROOT/$f")"
+  IFS="$VA_TAB" read -r nc pc ph _ <<<"$(er25_cols "$t")"
+  [ "${nc:-0}" -gt 0 ] || continue
+  ER25_NR=$((ER25_NR + 1))
+  if awk '/^## Group/{on=1;next} on&&/^## /{on=0} on&&/^\|/&&/travelers\/[^|]*\.md/{f=1} END{exit !f}' <<<"$t"; then
+    ER25_NWANT=$((ER25_NWANT + 1))
+    if [ "${pc:-0}" -gt 0 ]; then
+      ER25_NFOUND=$((ER25_NFOUND + 1))
+      [ "$ph" != "Traveler file" ] && ER25_NOTHER=$((ER25_NOTHER + 1))
+    else
+      ER25_MISS="$ER25_MISS $f"
+    fi
+  fi
+done <<<"$ER25_POP"
+ER25_W="$ROOT/examples/archived-trip-demo/trip-context.md"
+ER25_WT=""; [ -r "$ER25_W" ] && ER25_WT="$(cat "$ER25_W")"
+ER25_J1="$(er25_join "$ER25_WT" 'travelers/dana.md' dana)"
+ER25_WT2="$(er_sub1 "$ER25_WT" '| Traveler | Profile | Role / relationship |' '| Person | Traveler file | Role / Relationship |')"
+ER25_J2="$(er25_join "$ER25_WT2" 'travelers/dana.md' dana)"
+ER25_J2OK=0; [ "$ER25_WT2" != "$ER25_WT" ] && ER25_J2OK=1
+# Controls on the reader.
+ER25_FREE="$(awk '/^## Group/{on=1} on&&/^## Hard/{on=0} { if (on) gsub(/`travelers\//, "`see "); print }' <<<"$ER25_WT")"
+ER25_C1="$(er25_cols "$ER25_FREE" | cut -f4)"
+ER25_TWO="$(er_sub1 "$ER25_WT" '| Booked the group flight; held the guesthouse reservation |' '| `travelers/extra.md` |')"
+ER25_C2="$(er25_cols "$ER25_TWO" | cut -f2)"
+ER25_C2Q="$(er25_cols "$ER25_TWO" | cut -f4)"
+# The operative sentences.
+ER25_GSEC="$(er_section "$ER_CMD" "group [")"
+ER25_PIN="$(er25_pins "$ER25_GSEC")"
+ER25_PIN_X="$(er25_pins "$(er_sub1 "$ER25_GSEC" 'one with two or more has none either' 'one with two or more has one')")"
+ER25_PROF="$(er_section "$ER_CMD" "profile ")"
+ER25_REST="$(awk 'index($0, "## profile ") == 1 { off = 1; next } off && /^## / { off = 0 } !off { print }' "$ER_CMD")"
+ER25_H_REST="$(er25_hdr "$ER25_REST")"
+ER25_H_PROF="$(er25_hdr "$ER25_PROF")"
+ER25_H_ERASE="$(er25_hdr "$ER_SEC")"
+ER25_H_PLANT="$(er25_hdr "$(er_sub1 "$ER_SEC" 'the row whose path cell names' 'the row whose `Traveler file` cell names')")"
+if [ "$ER25_NR" -lt 3 ] || [ -z "$ER25_WT" ] || [ -z "$ER25_GSEC" ]; then
+  FAIL "ER25: measured nothing — $ER25_NR tracked roster(s) parsed, the witness read=$([ -n "$ER25_WT" ] && echo 1 || echo 0) and § \`group\` read=$([ -n "$ER25_GSEC" ] && echo 1 || echo 0). A column reader over no roster proves nothing about the rule it implements"
+elif [ "${ER25_C1:-1}" -ne 0 ] || [ "${ER25_C2:-1}" -ne 0 ] || [ "${ER25_C2Q:-0}" -ne 2 ] || [ "$ER25_PIN_X" -ne $((ER25_PIN - 1)) ] || [ "$ER25_H_PROF" -lt 1 ] || [ "$ER25_H_PLANT" -ne $((ER25_H_ERASE + 1)) ] || [ "$ER25_J2OK" -ne 1 ]; then
+  FAIL "ER25: BROKEN PROBE — a must-fire control did not move: free-text path cells qualified ${ER25_C1:-?} column(s) (must be 0), two path-shaped columns read path column ${ER25_C2:-?} with ${ER25_C2Q:-?} qualifying (must be 0 and 2), a stripped phrase read $ER25_PIN_X against $ER25_PIN (must be one fewer), § \`profile\` held $ER25_H_PROF header-named line(s) (must be at least 1), the planted header phrase read $ER25_H_PLANT against § \`erase\`'s $ER25_H_ERASE (must be one more), and the header rename landed=$ER25_J2OK. Until each fires, a verdict below is the instrument's"
+elif [ "$ER25_PIN" -ne 4 ] || [ "$ER25_H_REST" -ne 0 ]; then
+  FAIL "ER25: the column rule is not the one the verb file reads by — § \`group\` carries $ER25_PIN of the paragraph's 4 operative phrases (found by what they hold; the person column is the first; the path cell's shape; two qualifying columns read as none), and $ER25_H_REST line(s) outside § \`profile\` still name a roster column by its header. A join that reads \`Traveler file\` by name misses the witness's \`Profile\` column and leaves the next run's join to chance"
+elif [ "$ER25_NFOUND" -ne "$ER25_NWANT" ] || [ "$ER25_NOTHER" -lt 1 ] || [ "$ER25_J1" != "Dana" ] || [ "$ER25_J2" != "Dana" ]; then
+  FAIL "ER25: the rule does not read the tracked rosters — a path column was found in $ER25_NFOUND of the $ER25_NWANT roster(s) carrying a traveller-file cell (missed:${ER25_MISS:- none}), $ER25_NOTHER of them headed other than \`Traveler file\` (must be at least 1), and the witness's \`travelers/dana.md\` joined '${ER25_J1:-<none>}' under its own header and '${ER25_J2:-<none>}' under the template's (both must be Dana)"
+else
+  PASS "ER25: the roster's columns are found by what they hold — over $ER25_NR tracked roster(s) the path column is found in all $ER25_NWANT that carry a traveller-file cell, $ER25_NOTHER of them headed other than \`Traveler file\`, and the witness's \`travelers/dana.md\` joins Dana under its own \`Traveler | Profile\` header and under the template's. § \`group\` states the rule in all 4 operative phrases, no line outside § \`profile\` names a column by its header, and every control fired: free text qualifies no column, two path-shaped columns read as none, a stripped phrase and a planted header phrase each move their count by 1"
+fi
+
+# ── ER26 — A DISCOVERED FILE THAT JOINS NO ROW IS ONE BRANCH, AND THE RECORD WAITS FOR IT (#1791,
+# QF-01, QF-02, QF-06). § *Step 1* called a traveller file that joins no roster row "an interrupted
+# erasure", and only where the roster already carried a tombstone. The same state is reached four
+# ways — the subject taken off the roster through `## group`, a roster naming them in a way the join
+# cannot confirm, an interrupted run, someone else's erasure — and a trip with no tombstone fell
+# through every branch. The run now writes nothing on such a trip, reads it under candidate names,
+# names it in the dry run, and holds the store step (the record's deletion last) until every such
+# file is settled, so the id still selects the subject on the next run. `--also-trip` reads a trip
+# discovery did not resolve for its REPORT rows only, and the *Reads:* line says so. Three limbs:
+#   (i)   THE OPERATIVE SENTENCES: every phrase below is present in § `erase`, flattened, once;
+#   (ii)  THE OLD CLAIM GONE: no line of § `erase` still calls this state an interrupted erasure;
+#   (iii) MUST-FIRE CONTROLS: each phrase stripped from a copy drops the count by exactly 1, and the
+#         old claim planted into a copy is counted.
+# Dev Testing F-01 adds a fourth claim to limbs (i)-(iii). A re-run reads `ALREADY-ERASED` only where
+# the row the discovered file joins carries the token, and a file that joins no row is the no-row
+# branch. The Step 1 table row, row 38's cell, the row-31 paragraph and the receipt's last paragraph
+# each said it of any tombstone on the trip, which is the over-claim this branch removes. Their
+# scoped wording is pinned below, each old sentence is graded gone, and each old sentence planted
+# into a copy of the section is counted. Dev Testing F-13 adds a fifth site the same way: the
+# sentence in § *The order of writes* that said the next run keys on the tombstoned roster cell now
+# says so of the row the discovered file joins, and sends a file that joins no row to the no-row
+# branch. Stage 8 QA-03 adds a sixth the same way, in § *The receipt*: the superseded file's
+# receipt is the last that can name it only where the run's store step runs, and where the run
+# holds that step the receipt says the next run names the file again.
+ER26_PINS=(
+  'is the no-row branch, and the run writes nothing on that trip'
+  'the subject was taken off the roster through `## group`'
+  'the roster names them in a way the join cannot confirm'
+  'or someone else was erased there'
+  'Where the roster carries a `per-[0-9a-f]{4}` row, the last two cannot be told apart'
+  'Every REACH row of that trip reads `UNDETERMINED`'
+  'Every REPORT row reads under candidate names'
+  'The dry-run reach report names each such trip before the prompt'
+  'the run holds the store step'
+  'row 29'"'"'s receipt line names each trip holding it'
+  'a re-run after the operator settles each such file reaches those trips and finishes the deletion'
+  'Steps 9 and 10 are held while any discovered traveller file is in the no-row branch'
+  'for a file in the no-row branch it says that the run held that deletion'
+  '`--also-trip <slug>` names such a trip for a closer report'
+  'every REACH row there reads `UNDETERMINED` and nothing is written'
+  're-link the trip with `/trip-record link <name> <person-id>`'
+  'and a trip `--also-trip` names, which its REPORT rows read'
+  'the row the discovered file joins already carries `per-[0-9a-f]{4}` in column 1'
+  'Where the file joins no row, the no-row branch below applies instead'
+  'Where the row the discovered file joins carries the token, that run reads `ALREADY-ERASED`'
+  'where the file joins no row, that run meets the no-row branch of § *Step 1*'
+  'Where the row the discovered file joins carries the tombstone, the next run emits `ALREADY-ERASED` on row 31'
+  'Where the file joins no row, it meets the no-row branch of § *Step 1*: row 31 reads `UNDETERMINED`'
+  'On a trip where the row the discovered file joins already carries the token, a later run mints nothing'
+  'Where the file joins no row, the trip is in the no-row branch of § *Step 1*, and its receipt reads as that branch says'
+  # Dev Testing F-13: § *The order of writes*.
+  'where the row the discovered file joins carries the tombstone, the next run of this verb keys on that cell'
+  'where the file joins no row, the next run meets the no-row branch of § *Step 1* and writes nothing on that trip at all'
+  # Stage 8 QA-03: § *The receipt*.
+  'For the superseded file it says, where the run'"'"'s store step runs, that this receipt is the last that can name it'
+  'and where the run holds that step, that the next run names it again'
+)
+# The four unscoped sentences Dev Testing F-01 named, the clause Dev Testing F-13 named, and the
+# unconditioned receipt clause Stage 8 QA-03 named. Each must read 0 in § `erase`, and each,
+# planted into a copy, must be counted.
+ER26_OLD01=(
+  'the roster row of any resolved trip already carries `per-[0-9a-f]{4}` in column 1'
+  'which still resolves the trip and reads `ALREADY-ERASED` on every REACH row but rows 2, 8 and 9'
+  'The next run keys on the tombstoned roster cell, emits `ALREADY-ERASED` on row 31'
+  'On a trip whose roster already carries the token, a later run mints nothing'
+  'keys on the tombstoned roster cell and writes nothing on that trip but what step 8 left undone'
+  'For the superseded file it says that this receipt is the last that can name it'
+)
+er26_old01() {
+  local er_pats=() p
+  for p in "${ER26_OLD01[@]}"; do er_pats+=(-e "$p"); done
+  grep -c -F "${er_pats[@]}" <<<"$1" || true
+}
+er26_flat() { tr '\n' ' ' <<<"$1" | tr -s ' '; }
+# er26_pins <flattened text> -> how many of ER26_PINS it carries.
+er26_pins() {
+  local n=0 p
+  for p in "${ER26_PINS[@]}"; do
+    case "$1" in *"$p"*) n=$((n + 1)) ;; esac
+  done
+  printf '%d\n' "$n"
+}
+# er26_old <text> -> lines still naming the state an interrupted erasure.
+er26_old() { grep -c -i -F -e 'is an interrupted erasure' -e 'interrupted-erasure branch' -e 'reads it as an interrupted erasure' <<<"$1" || true; }
+ER26_FLAT="$(er26_flat "$ER_SEC")"
+ER26_N="${#ER26_PINS[@]}"
+ER26_PIN="$(er26_pins "$ER26_FLAT")"
+ER26_MISSING=""
+for er26_p in "${ER26_PINS[@]}"; do
+  case "$ER26_FLAT" in *"$er26_p"*) ;; *) ER26_MISSING="$ER26_MISSING [$er26_p]" ;; esac
+done
+ER26_STRIPBAD=0
+for er26_p in "${ER26_PINS[@]}"; do
+  case "$ER26_FLAT" in *"$er26_p"*) ;; *) continue ;; esac
+  er26_x="$(er26_pins "$(er_sub1 "$ER26_FLAT" "$er26_p" '')")"
+  [ "$er26_x" -eq $((ER26_PIN - 1)) ] || ER26_STRIPBAD=$((ER26_STRIPBAD + 1))
+done
+ER26_OLD="$(er26_old "$ER_SEC")"
+ER26_OLD_PLANT="$(er26_old "$(er_sub1 "$ER_SEC" 'is the no-row branch, and the run writes nothing on that trip' 'is an interrupted erasure')")"
+ER26_O1="$(er26_old01 "$ER_SEC")"
+ER26_O1BAD=0
+for er26_o in "${ER26_OLD01[@]}"; do
+  [ "$(er26_old01 "$ER_SEC
+$er26_o")" -eq $((ER26_O1 + 1)) ] || ER26_O1BAD=$((ER26_O1BAD + 1))
+done
+if [ -z "$ER_SEC" ] || [ "${#ER26_FLAT}" -lt 1000 ]; then
+  FAIL "ER26: measured nothing — § \`erase\` read ${#ER26_FLAT} flattened byte(s). A phrase count over an empty section proves nothing about the branch it pins"
+elif [ "$ER26_STRIPBAD" -ne 0 ] || { [ "$ER26_PIN" -gt 0 ] && [ "$ER26_OLD_PLANT" -ne $((ER26_OLD + 1)) ]; } || [ "$ER26_O1BAD" -ne 0 ]; then
+  FAIL "ER26: BROKEN PROBE — $ER26_STRIPBAD of the $ER26_PIN present phrase(s) did not drop the count by exactly 1 when stripped from a copy (a phrase carried twice, or a matcher that does not read it), the old claim planted into a copy read $ER26_OLD_PLANT against $ER26_OLD (must be one more), and $ER26_O1BAD of the ${#ER26_OLD01[@]} unscoped sentence(s) planted into a copy were not counted once more. Until each fires, a verdict below is the instrument's"
+elif [ "$ER26_PIN" -ne "$ER26_N" ] || [ "$ER26_OLD" -ne 0 ] || [ "$ER26_O1" -ne 0 ]; then
+  FAIL "ER26: the no-row branch is not the one § \`erase\` states — it carries $ER26_PIN of the $ER26_N operative phrase(s) (missing:${ER26_MISSING:- none}), $ER26_OLD line(s) still call a file that joins no row an interrupted erasure, and $ER26_O1 line(s) still say a re-run reads \`ALREADY-ERASED\` on a trip, or keys on its tombstone, because any row carries one, or call the superseded file's receipt the last that can name it whether or not the store step runs. A trip with no tombstone whose file joins no row falls through every other branch, a trip carrying someone else's tombstone reads that false \`ALREADY-ERASED\`, and a record deleted while such a file stands leaves nothing that can find the file by id"
+else
+  PASS "ER26: a discovered file that joins no roster row is one branch — § \`erase\` carries all $ER26_N operative phrase(s): the four ways the branch is reached, the \`## group\` exit among them, over both roster states; every REACH row \`UNDETERMINED\` and every REPORT row under candidate names; the dry run naming each such trip; the store step held, row 29 naming the trips holding it, and the re-run that finishes it; \`--also-trip\` report-only, with re-linking as the route to a write, and on the *Reads:* line; and \`ALREADY-ERASED\` scoped to the row the discovered file joins at the Step 1 table row, row 38, the row-31 paragraph and the receipt, and the re-run's key scoped to it in § *The order of writes*, each pointing the unjoined case at the no-row branch; and the superseded file's receipt the last that can name it only where the store step runs. No line calls the state an interrupted erasure, reads \`ALREADY-ERASED\` off any tombstone, keys a re-run on one or calls that receipt the last unconditionally, and every control fired: each phrase stripped moves the count by 1, and each old claim planted is counted"
+fi
+
+# ── ER27 — WHERE A TRIP NAMES THE SUBJECT OTHERWISE, THE RECORD'S NAME IS READ THERE AS A CANDIDATE,
+# AND ROW 38 SAYS WHAT IT DOES NOT READ (#1791, QF-03, QF-04). A trip may call the subject by a name
+# that is not the record's display name, and there the record's name can be another traveller's,
+# so no REACH row matches it. § *The name every match reads* now says that every REPORT row on such
+# a trip reads the record's name as a candidate, on a first run as on a later one, and names the
+# candidates on a trip in the no-row branch; the receipt's closing line says so per trip; and row
+# 38's cell names the two things it does not count — row 7's constraint text, which row 7 reports,
+# and row 20's control files, which are never opened. Three limbs:
+#   (i)   THE OPERATIVE SENTENCES: each phrase below is present in § `erase`, flattened, once;
+#   (ii)  THE FIXTURE: the erasure-reach fixture carries a keep of the RECORD's name, it holds its
+#         count, and it stands in a location a REPORT row names, read as ER23 reads a scope keep;
+#         and the record's name reads 0 across ER22's six REACH regions;
+#   (iii) MUST-FIRE CONTROLS: each phrase stripped drops the count by exactly 1; the record's name
+#         and its keep moved into `Mobility notes:` in memory keep their count of 1 and fail the
+#         location check; and the same move reads 1 across ER22's REACH regions.
+ER27_PINS=(
+  'so does every REPORT row on every trip whose name is not the record'"'"'s display name, as a candidate, on a first run as on a later one'
+  'there is no trip name: the candidates are the title line of the discovered file and the record'"'"'s display name'
+  'that the record'"'"'s name was read there as a candidate'
+  'the description text of each constraint row 7 names, which row 7 reports and does not count'
+  'row 20'"'"'s control files are not opened, `.passphrase` among them, the trip'"'"'s key'
+  # Dev Testing F-07: a trip `--also-trip` names has its own bullet in § *The name every match
+  # reads*, and the receipt's closing line names that trip.
+  '**on a trip `--also-trip` names**, which discovery did not resolve, there is no trip name either'
+  'for each trip `--also-trip` named, that its REPORT rows read the record'"'"'s name there as a candidate'
+  # Dev Testing F-16: the block's lead says the record's display name is never read alone where the
+  # trip's own name can be read, so it no longer reads against the `--also-trip` bullet.
+  'never the record'"'"'s display name alone where the trip'"'"'s own name can be read'
+)
+er27_pins() {
+  local n=0 p
+  for p in "${ER27_PINS[@]}"; do
+    case "$1" in *"$p"*) n=$((n + 1)) ;; esac
+  done
+  printf '%d\n' "$n"
+}
+# er27_named <loc> -> 0 where a REPORT row names the keep's location, read against $ER_R_CTX.
+er27_named() {
+  local reg2 sec lab nm hh ll
+  reg2="${1#*#}"; sec="${reg2%%:*}"; lab=""
+  case "$reg2" in *:*) lab="${reg2#*:}" ;; esac
+  nm="$(er23_names "$sec" "$lab")"
+  hh="$(printf '%s' "$nm" | cut -f1)"; ll="$(printf '%s' "$nm" | cut -f2)"
+  [ -n "$ll" ] || ll='*'
+  grep -qxF "$(printf '%s\t%s\tREPORT' "$hh" "$ll")" <<<"$ER23_CITES"
+}
+ER27_FLAT="$(er26_flat "$ER_SEC")"
+ER27_N="${#ER27_PINS[@]}"
+ER27_PIN="$(er27_pins "$ER27_FLAT")"
+ER27_MISSING=""; ER27_STRIPBAD=0
+for er27_p in "${ER27_PINS[@]}"; do
+  case "$ER27_FLAT" in
+    *"$er27_p"*)
+      er27_x="$(er27_pins "$(er_sub1 "$ER27_FLAT" "$er27_p" '')")"
+      [ "$er27_x" -eq $((ER27_PIN - 1)) ] || ER27_STRIPBAD=$((ER27_STRIPBAD + 1)) ;;
+    *) ER27_MISSING="$ER27_MISSING [$er27_p]" ;;
+  esac
+done
+# The fixture: every keep of the record's name.
+ER27_NREC=0; ER27_BAD=""; ER27_UNNAMED=""
+while IFS="$(printf '\t')" read -r er27_loc er27_str er27_cnt; do
+  [ -n "$er27_loc" ] && [ "$er27_str" = "$ER_R_R" ] && [ "${er27_loc%%#*}" = "trip-context.md" ] || continue
+  ER27_NREC=$((ER27_NREC + 1))
+  er27_got="$(er_wcount "$er27_str" "$(er23_region "$er27_loc")")"
+  [ "$er27_got" = "$er27_cnt" ] || ER27_BAD="$ER27_BAD $er27_loc: $er27_got, declared $er27_cnt;"
+  er27_named "$er27_loc" || ER27_UNNAMED="$ER27_UNNAMED $er27_loc"
+done <<EOF
+$ER23_KEEPS
+EOF
+ER27_REACH="$(er22_count "$ER_R_R" "$ER_R_CTX" "$ER_R_MODEL" | cut -f1)"
+# The move control, in a subshell so the fixture text it swaps in never leaks.
+ER27_MCTX="$(er_sub1 "$(er_wsub1 "$ER_R_CTX" "$ER_R_R" 'someone')" '- **Mobility notes:** ' "- **Mobility notes:** $ER_R_R; ")"
+ER27_MOVE="$(
+  ER_R_CTX="$ER27_MCTX"
+  c="$(er_wcount "$ER_R_R" "$(er23_region 'trip-context.md#dietary-health:mobility-notes')")"
+  if er27_named 'trip-context.md#dietary-health:mobility-notes'; then u=0; else u=1; fi
+  r="$(er22_count "$ER_R_R" "$ER27_MCTX" "$ER_R_MODEL" | cut -f1)"
+  printf '%s\t%s\t%s\n' "$c" "$u" "$r"
+)"
+ER27_MC="$(printf '%s' "$ER27_MOVE" | cut -f1)"; ER27_MU="$(printf '%s' "$ER27_MOVE" | cut -f2)"; ER27_MR="$(printf '%s' "$ER27_MOVE" | cut -f3)"
+if [ -z "$ER_SEC" ] || [ "${#ER27_FLAT}" -lt 1000 ] || [ -z "$ER_R_CTX" ] || [ -z "$ER_R_R" ]; then
+  FAIL "ER27: measured nothing — § \`erase\` read ${#ER27_FLAT} flattened byte(s), and the erasure-reach fixture's trip-context and record name read $([ -n "$ER_R_CTX" ] && echo 1 || echo 0) and '${ER_R_R:-<none>}'. A phrase count and a keep check over nothing prove nothing"
+elif [ "$ER27_STRIPBAD" -ne 0 ] || [ "${ER27_MC:-0}" -ne 1 ] || [ "${ER27_MU:-0}" -ne 1 ] || [ "${ER27_MR:-0}" -ne 1 ]; then
+  FAIL "ER27: BROKEN PROBE — $ER27_STRIPBAD of the $ER27_PIN present phrase(s) did not drop the count by exactly 1 when stripped; the record's name moved into \`Mobility notes:\` read ${ER27_MC:-?} there (must be 1), failed the REPORT-location check=${ER27_MU:-?} (must be 1) and read ${ER27_MR:-?} across ER22's REACH regions (must be 1). Until each fires, a verdict below is the instrument's"
+elif [ "$ER27_PIN" -ne "$ER27_N" ] || [ "$ER27_NREC" -lt 1 ] || [ -n "$ER27_BAD" ] || [ -n "$ER27_UNNAMED" ] || [ "${ER27_REACH:-1}" -ne 0 ]; then
+  FAIL "ER27: the record's name on a trip that names the subject otherwise is not read as § \`erase\` must say — it carries $ER27_PIN of the $ER27_N operative phrase(s) (missing:${ER27_MISSING:- none}); the fixture carries $ER27_NREC keep(s) of the record's name '$ER_R_R' (must be at least 1), miscounted:${ER27_BAD:- none}, standing where no REPORT row names:${ER27_UNNAMED:- none}; and the record's name reads ${ER27_REACH:-?} across ER22's REACH regions (must be 0). A trip whose name for the subject is not the record's can hold the record's name as another traveller's, so only a REPORT row may read it, as a candidate"
+else
+  PASS "ER27: § \`erase\` carries all $ER27_N operative phrase(s) — every REPORT row on a trip whose name is not the record's reads the record's name as a candidate on a first run as on a later one, the no-row branch's candidates are named, a trip \`--also-trip\` names has its own bullet, which the block's lead qualifies for, the receipt says so per trip and for each named trip, and row 38 names row 7's text and row 20's unopened files; the fixture's $ER27_NREC keep(s) of the record's name '$ER_R_R' hold their count in a location a REPORT row names, and the record's name reads 0 across ER22's REACH regions. Every control fired: each phrase stripped moves the count by 1, and the name moved into \`Mobility notes:\` keeps its count, fails the location check and reads 1 in a REACH region"
+fi
+
+# ── ER28 — ROW 39: ANOTHER TRAVELLER'S NAME SLOTS CARRY THE TOKEN, AND ADMISSION IS THE `TRIP` CLASS
+# PLUS THE ROW'S OWN LIST (#1791, QF-07, AC9). Erasure reported another traveller's own file whole,
+# so the lines saying who they room or split off with kept the subject's name, and on an active
+# trip the reconcile re-derived it from there. Row 39 now substitutes inside the value of each
+# field it lists, and admits a field only where reference/data-model.md § *The classification*
+# classes it `TRIP` — the class a person record never holds, which is why a reconcile cannot bring
+# the name back. Four limbs:
+#   (i)   ROW 39 READS REACH, and every label its Location cell lists is classed `TRIP`;
+#   (ii)  THE FIXTURE: in the erasure-reach fixture's travelers/odile.md, the listed labels' lines
+#         carry the subject's token at least twice and the name on this trip never;
+#   (iii) THE OPERATIVE SENTENCES: row 39's bounds, its place in the write order, rule 10 (b), and
+#         Phase B's protected-name paragraph, each present once;
+#   (iv)  MUST-FIRE CONTROLS: the name planted in `Split off with:` reads 1 more over the slots; the
+#         name planted on a `Solo, I'd:` line reads no more over the slots and 1 more over the file;
+#         the class reader reads `Solo, I'd` as a class other than TRIP; and each phrase stripped
+#         drops the count by exactly 1.
+ER28_PINS=(
+  '**Never empty a line.**'
+  '**Admission is the `TRIP` class plus this list**'
+  'then row 39, the name slots of every other traveller'"'"'s file'
+  'row 32, row 33 and row 39 change a name inside a line'
+  '**Another person'"'"'s name is never rewritten by Phase B.**'
+  'the person cell of every other roster row, and the name of every `[THIRD-PARTY]` entry the derived model carries'
+  'is not substituted on any row; it is counted and listed apart as a candidate on that row'"'"'s receipt line'
+)
+er28_pins() {
+  local n=0 p
+  for p in "${ER28_PINS[@]}"; do
+    case "$1" in *"$p"*) n=$((n + 1)) ;; esac
+  done
+  printf '%d\n' "$n"
+}
+ER28_DMF="$ROOT/reference/data-model.md"
+# er28_class <field> -> the Class cell of that field's row in § *The classification*, bold removed.
+er28_class() {
+  [ -r "$ER28_DMF" ] || return 0
+  awk -F'|' -v f="$1" '
+    index($0, "### The classification") == 1 { on = 1; next }
+    on && /^## / { on = 0 }
+    on && /^\|[ \t]*[0-9]+[ \t]*\|/ {
+      x = $3; gsub(/[` \t]/, "", x); y = f; gsub(/[ \t]/, "", y)
+      if (x == y) { c = $5; gsub(/[* \t]/, "", c); print c; exit }
+    }' "$ER28_DMF"
+}
+ER28_LOC="$(awk -F'\t' '$1 == 39 { print $2 }' <<<"$ER_TROWS")"
+ER28_LABELS="$(grep -o '`[A-Z][^`]*:`' <<<"$ER28_LOC" | tr -d '`' | sed 's/:$//')"
+ER28_NLAB="$(printf '%s\n' "$ER28_LABELS" | grep -c '[^[:space:]]' || true)"
+ER28_LJ="$(printf '%s\n' "$ER28_LABELS" | awk 'NF { o = o (o == "" ? "" : "|") $0 } END { print o }')"
+ER28_NOTTRIP=""
+while IFS= read -r er28_l; do
+  [ -n "$er28_l" ] || continue
+  er28_c="$(er28_class "$er28_l")"
+  [ "$er28_c" = "TRIP" ] || ER28_NOTTRIP="$ER28_NOTTRIP $er28_l=${er28_c:-<no row>}"
+done <<EOF
+$ER28_LABELS
+EOF
+ER28_SOLO="$(er28_class "Solo, I'd")"
+# er28_slots <text> -> each listed label's line, with the lines that continue it.
+er28_slots() {
+  awk -v L="$ER28_LJ" '
+    BEGIN { n = split(L, a, "|"); for (k = 1; k <= n; k++) want[a[k]] = 1 }
+    /^[ \t]*- [^*]*\*\*[^*]+:\*\*/ {
+      l = $0; sub(/^[^*]*\*\*/, "", l); sub(/:\*\*.*$/, "", l)
+      on = (l in want); if (on) print
+      next
+    }
+    on && /^[ \t]+[^ \t]/ { print; next }
+    { on = 0 }' <<<"$1"
+}
+ER28_OF="$ER_RFIX/travelers/odile.md"
+ER28_OT=""; [ -r "$ER28_OF" ] && ER28_OT="$(cat "$ER28_OF")"
+ER28_SL="$(er28_slots "$ER28_OT")"
+ER28_NSL="$(printf '%s\n' "$ER28_SL" | grep -c '[^[:space:]]' || true)"
+ER28_TOK="$(er_wcount "$ER_R_T" "$ER28_SL")"
+ER28_NAME="$(er_wcount "$ER_R_A" "$ER28_SL")"
+ER28_WHOLE="$(er_wcount "$ER_R_A" "$ER28_OT")"
+ER28_P1="$(er_wcount "$ER_R_A" "$(er28_slots "$(er_sub1 "$ER28_OT" '- **Split off with:** ' "- **Split off with:** $ER_R_A, ")")")"
+ER28_P2T="$(er_sub1 "$ER28_OT" '- **Split off with:** ' "- **Solo, I'd:** a slow morning with $ER_R_A\\n- **Split off with:** ")"
+ER28_P2S="$(er_wcount "$ER_R_A" "$(er28_slots "$ER28_P2T")")"
+ER28_P2W="$(er_wcount "$ER_R_A" "$ER28_P2T")"
+ER28_FLAT="$(er26_flat "$ER_SEC")"
+ER28_N="${#ER28_PINS[@]}"
+ER28_PIN="$(er28_pins "$ER28_FLAT")"
+ER28_MISSING=""; ER28_STRIPBAD=0
+for er28_p in "${ER28_PINS[@]}"; do
+  case "$ER28_FLAT" in
+    *"$er28_p"*)
+      er28_x="$(er28_pins "$(er_sub1 "$ER28_FLAT" "$er28_p" '')")"
+      [ "$er28_x" -eq $((ER28_PIN - 1)) ] || ER28_STRIPBAD=$((ER28_STRIPBAD + 1)) ;;
+    *) ER28_MISSING="$ER28_MISSING [$er28_p]" ;;
+  esac
+done
+ER28_DISP="$(er_row_disp 39)"
+if [ -z "$ER28_LOC" ] || [ "$ER28_NLAB" -lt 1 ] || [ -z "$ER28_OT" ] || [ "$ER28_NSL" -lt 1 ]; then
+  FAIL "ER28: measured nothing — reach row 39 read '${ER28_LOC:-<absent>}' listing $ER28_NLAB label(s), the fixture's travelers/odile.md read=$([ -n "$ER28_OT" ] && echo 1 || echo 0), and its listed slots yielded $ER28_NSL line(s). Another traveller's name slots cannot be graded against a row or a file that is not there"
+elif [ "$ER28_STRIPBAD" -ne 0 ] || [ "$ER28_P1" -ne $((ER28_NAME + 1)) ] || [ "$ER28_P2S" -ne "$ER28_NAME" ] || [ "$ER28_P2W" -ne $((ER28_WHOLE + 1)) ] || [ -z "$ER28_SOLO" ] || [ "$ER28_SOLO" = "TRIP" ]; then
+  FAIL "ER28: BROKEN PROBE — $ER28_STRIPBAD of the $ER28_PIN present phrase(s) did not drop the count by exactly 1 when stripped; the name planted in \`Split off with:\` read $ER28_P1 over the slots (must be $((ER28_NAME + 1))); planted on a \`Solo, I'd:\` line it read $ER28_P2S over the slots (must be $ER28_NAME) and $ER28_P2W over the file (must be $((ER28_WHOLE + 1))); and the class reader read \`Solo, I'd\` as '${ER28_SOLO:-<no row>}' (must be a class other than TRIP). Until each fires, a verdict below is the instrument's"
+elif [ "$ER28_DISP" != "REACH" ] || [ -n "$ER28_NOTTRIP" ] || [ "$ER28_PIN" -ne "$ER28_N" ] || [ "$ER28_TOK" -lt 2 ] || [ "$ER28_NAME" -ne 0 ]; then
+  FAIL "ER28: another traveller's name slots are not reached as row 39 must reach them — row 39 reads ${ER28_DISP:-<none>} (must be REACH); labels not classed TRIP:${ER28_NOTTRIP:- none}; $ER28_PIN of the $ER28_N operative phrase(s) present (missing:${ER28_MISSING:- none}); and in travelers/odile.md the slots carry the token $ER28_TOK time(s) (must be at least 2) and the name on this trip $ER28_NAME time(s) (must be 0). A slot a person record could hold would be restored by the next reconcile, and a slot left naming the subject brings the name back on an active trip"
+else
+  PASS "ER28: row 39 reads REACH over $ER28_NLAB listed label(s) (${ER28_LJ}), every one classed TRIP — the class no person record holds, so a reconcile cannot restore the name; travelers/odile.md's $ER28_NSL slot line(s) carry the token $ER28_TOK time(s) and the name on this trip 0; and § \`erase\` carries all $ER28_N operative phrase(s), row 39's bounds and Phase B's protected names among them. Every control fired: a plant in \`Split off with:\` reads 1 more, a plant on a \`Solo, I'd:\` line reads none over the slots and 1 more over the file, the class reader reads \`Solo, I'd\` as $ER28_SOLO, and each phrase stripped moves the count by 1"
+fi
+
+# ── ER29 — A THIRD-PARTY MEMBER'S STALE ROW KEEPS ITS NAME, ITS KEY AND ITS PLACE IN THE COUNT (#1791,
+# QF-08, AC10). Phase B reads every other person's name before it substitutes, so a member recorded
+# through `## person` whose stale row holds the subject's name inside their own keeps that row
+# whole: its person-cell key still equals the key of the model entry marked `[ROSTERED]`, and the
+# counted floor — named travellers plus the outside-roster count — still equals the total
+# (skills/trip-record/SKILL.md § *Roster standing of a third-party member*). The fixture's
+# `protect trip-context.md#group <name> <count>` line names the member. Two must-fire controls:
+# the name's second word rewritten to the token in the row drops its count by 1 and breaks the
+# key match; and `[ROSTERED]` dropped from the model entry raises the floor by 1. Both run on a
+# PRISTINE pair built from the declared name and the token, never on the fixture (Dev Testing
+# F-04): a fixture that lost the anchor a plant needs is the very failure this arm guards, so it
+# must read as the substantive FAIL below and never as a broken probe.
+er29_key() { tr 'A-Z' 'a-z' <<<"$1" | tr -cd 'a-z0-9'; }
+# er29_roster <ctx> -> column 1 of every data row of § Group's roster table.
+er29_roster() {
+  awk -F'|' '
+    /^## Group/ { on = 1; next }
+    on && /^## / { on = 0 }
+    !on || done { next }
+    !/^\|/ { if (seen) done = 1; next }
+    !seen { seen = 1; next }
+    /^\|[ \t:|-]+$/ { next }
+    { c = $2; gsub(/^[ \t]+/, "", c); gsub(/[ \t]+$/, "", c); print c }' <<<"$1"
+}
+# er29_measure <ctx> <model> <name> -> `<name in Group>\t<rostered>\t<rostered matched>\t<named>\t<outside>\t<total>`
+er29_measure() {
+  local grp nc keys rost match named outside total h k
+  grp="$(er_rx sect group '' '' "$1")"
+  nc="$(er_wcount "$3" "$grp")"
+  keys="$(while IFS= read -r c; do [ -n "$c" ] && er29_key "$c" && echo; done <<<"$(er29_roster "$1")")"
+  named="$(printf '%s\n' "$keys" | grep -c '[^[:space:]]' || true)"
+  rost=0; match=0
+  while IFS= read -r h; do
+    [ -n "$h" ] || continue
+    rost=$((rost + 1))
+    k="$(er29_key "$h")"
+    grep -qxF "$k" <<<"$keys" && match=$((match + 1))
+  done <<<"$(awk 'NR == 1 && $0 == "---" { fm = 1; next } fm { if ($0 == "---") fm = 0; next }
+    /^## / && index($0, "[OPERATOR-PROVIDED]") && index($0, "[THIRD-PARTY]") && index($0, "[ROSTERED]") {
+      h = substr($0, 4); sub(/[ \t]*`?\[.*$/, "", h); print h }' <<<"$2")"
+  outside="$(awk 'NR == 1 && $0 == "---" { fm = 1; next } fm { if ($0 == "---") fm = 0; next }
+    /^## / && index($0, "[OPERATOR-PROVIDED]") && index($0, "[THIRD-PARTY]") && !index($0, "[ROSTERED]") { n++ }
+    END { print n + 0 }' <<<"$2")"
+  total="$(awk '/^- \*\*Total travelers:\*\*/ { t = $0; sub(/^.*\*\*[ \t]*/, "", t); gsub(/[^0-9]/, "", t); print t; exit }' <<<"$1")"
+  printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$nc" "$rost" "$match" "$named" "$outside" "${total:-}"
+}
+ER29_PL="$(awk -F'\t' '$1 == "trip-context.md#group" { print; exit }' <<<"$(er_rfence protect)")"
+ER29_NAME="$(awk -F'\t' 'NF >= 3 { n = ""; for (i = 2; i < NF; i++) n = n (i > 2 ? " " : "") $i; print n }' <<<"$ER29_PL")"
+ER29_DECL="$(awk -F'\t' 'NF >= 3 { print $NF }' <<<"$ER29_PL")"
+ER29_M="$(er29_measure "$ER_R_CTX" "$ER_R_MODEL" "$ER29_NAME")"
+IFS="$(printf '\t')" read -r ER29_NC ER29_ROST ER29_MATCH ER29_NAMED ER29_OUT ER29_TOTAL <<<"$ER29_M"
+ER29_W2="$(awk '{ print $NF }' <<<"$ER29_NAME")"
+ER29_PCTX="$(printf '## Group\n\n| Person | Role |\n|---|---|\n| %s | — |\n\n- **Total travelers:** 1\n\n## Hard Constraints\n' "$ER29_NAME")"
+ER29_PMODEL="$(printf '## %s `[OPERATOR-PROVIDED]` `[THIRD-PARTY]` `[ROSTERED]`\n\n- a need\n' "$ER29_NAME")"
+IFS="$(printf '\t')" read -r ER29_PNC _ ER29_PMATCH ER29_PNAMED ER29_POUT _ <<<"$(er29_measure "$ER29_PCTX" "$ER29_PMODEL" "$ER29_NAME")"
+ER29_C1="$(er29_measure "$(er_sub1 "$ER29_PCTX" "| $ER29_NAME |" "| ${ER29_NAME% *} $ER_R_T |")" "$ER29_PMODEL" "$ER29_NAME")"
+IFS="$(printf '\t')" read -r ER29_C1NC _ ER29_C1MATCH _ _ _ <<<"$ER29_C1"
+ER29_C2="$(er29_measure "$ER29_PCTX" "$(er_sub1 "$ER29_PMODEL" ' `[ROSTERED]`' '')" "$ER29_NAME")"
+IFS="$(printf '\t')" read -r _ _ _ ER29_C2NAMED ER29_C2OUT _ <<<"$ER29_C2"
+if [ -z "$ER29_NAME" ] || [ -z "$ER29_DECL" ] || [ -z "$ER29_TOTAL" ] || [ "${ER29_NAMED:-0}" -lt 1 ] || [ "$ER29_W2" = "$ER29_NAME" ]; then
+  FAIL "ER29: measured nothing — the fixture's \`protect trip-context.md#group\` line named '${ER29_NAME:-<none>}' with count '${ER29_DECL:-<none>}' (a name of two or more words is required), the roster read ${ER29_NAMED:-0} data row(s), and \`Total travelers\` read '${ER29_TOTAL:-<none>}'. A stale row's standing cannot be graded on a roster or a total that is not there"
+elif [ "${ER29_PNC:-0}" -lt 1 ] || [ "${ER29_PMATCH:-0}" -ne 1 ] || [ "${ER29_C1NC:-0}" -ne $((ER29_PNC - 1)) ] || [ "${ER29_C1MATCH:-0}" -ne $((ER29_PMATCH - 1)) ] || [ $((ER29_C2NAMED + ER29_C2OUT)) -ne $((ER29_PNAMED + ER29_POUT + 1)) ]; then
+  FAIL "ER29: BROKEN PROBE — on the pristine pair built from '$ER29_NAME', the name read ${ER29_PNC:-?} time(s) in § Group with ${ER29_PMATCH:-?} key match(es) (must be at least 1, and exactly 1); its last word rewritten to the token in its roster cell read ${ER29_C1NC:-?} (must be $((${ER29_PNC:-0} - 1))) with ${ER29_C1MATCH:-?} key match(es) (must be $((${ER29_PMATCH:-0} - 1))); and \`[ROSTERED]\` dropped from its model entry read a floor of $((ER29_C2NAMED + ER29_C2OUT)) (must be $((${ER29_PNAMED:-0} + ${ER29_POUT:-0} + 1))). Until each fires, a verdict below is the instrument's"
+elif [ "$ER29_NC" -ne "$ER29_DECL" ] || [ "$ER29_ROST" -lt 1 ] || [ "$ER29_MATCH" -ne "$ER29_ROST" ] || [ $((ER29_NAMED + ER29_OUT)) -ne "$ER29_TOTAL" ]; then
+  FAIL "ER29: a third-party member's stale row did not keep its standing — '$ER29_NAME' reads $ER29_NC time(s) in § Group (declared $ER29_DECL); $ER29_MATCH of $ER29_ROST \`[ROSTERED]\` model entr(ies) share a key with a roster row (must be all, and at least 1); and the counted floor, $ER29_NAMED named plus $ER29_OUT outside the roster, reads $((ER29_NAMED + ER29_OUT)) against \`Total travelers\` $ER29_TOTAL. Phase B that rewrote the subject's name inside another person's would re-key their row, break the \`[ROSTERED]\` join and move the count the transport plan sizes the party from"
+else
+  PASS "ER29: '$ER29_NAME' keeps its $ER29_NC occurrence(s) in § Group, its roster row shares its key with the \`[ROSTERED]\` model entry ($ER29_MATCH of $ER29_ROST), and the counted floor — $ER29_NAMED named plus $ER29_OUT outside the roster — equals \`Total travelers\` $ER29_TOTAL. Both controls fired on a pristine pair built from the declared name: the last word rewritten to the token drops the count to $ER29_C1NC and the key matches to $ER29_C1MATCH, and \`[ROSTERED]\` dropped raises the floor to $((ER29_C2NAMED + ER29_C2OUT))"
+fi
+
+# ── ER30 — THE TEXTS AGREE ON OPTION (A): A PARTY MEMBER WHO HOLDS NO RECORD HAS A DELETE PATH BY
+# SUBSTITUTION (#1791, QF-09, AC11–AC12). `ADR-006` (item 3 of its 2026-09-03 amendment) and
+# `ADR-012` (*Decision* § 6b item 3) said the carried-forward entry of a party member who will never
+# file a profile is reached by substitution, while the erasure verb took only a person record's id.
+# Each ADR now carries a closing `## Amendment history` entry recording (A) as chosen and (B), the
+# withdrawal as the delete path, as rejected on the one ground that holds — no reconcile runs on an
+# archived trip — and NOT on an active-trip ground (PR-2), which would be as true of (A). `ADR-012`'s
+# *Two entry classes* both-marks row is corrected in place: what undoes an erasure is the name a
+# regeneration carries forward, not the need, which is why the substituted entry is carried forward
+# with its need under the token. Limbs: each entry stands after `References` as the last section;
+# the operative phrases are present once; the replaced row sentence is gone from the body; and no
+# entry carries the active-trip ground. MUST-FIRE CONTROLS: each phrase stripped drops the count by
+# exactly 1; the replaced sentence planted into a copy of the body is counted; and the active-trip
+# ground planted into a copy of an entry is counted.
+ER30_A6="$ROOT/reference/adr/ADR-006-third-party-data-capture.md"
+ER30_A12="$ROOT/reference/adr/ADR-012-people-library.md"
+# er30_order <file> -> `<line of ## References>\t<line of ## Amendment history>\t<line of the last ## heading>`
+er30_order() {
+  [ -r "$1" ] || { printf '0\t0\t0\n'; return 0; }
+  awk '/^## References/ { r = NR } /^## Amendment history/ { h = NR } /^## / { l = NR } END { printf "%d\t%d\t%d\n", r, h, l }' "$1"
+}
+er30_hist() { [ -r "$1" ] && awk '/^## Amendment history/ { on = 1 } on' "$1"; }
+er30_body() { [ -r "$1" ] && awk '/^## Amendment history/ { exit } { print }' "$1"; }
+ER30_PINS=(
+  '**(A), chosen:**'
+  '**(B), rejected:**'
+  'no reconcile runs on an archived trip, so under (B) nothing would delete such an entry there'
+  'Option (A), an erasure whose subject is that entry, is chosen'
+  'is rejected: no reconcile runs on an archived trip to honour it'
+  'the entry **survives the erasure**, name and need together'
+  'a need carried under the trip'"'"'s token names nobody'
+)
+er30_pins() {
+  local n=0 p
+  for p in "${ER30_PINS[@]}"; do
+    case "$1" in *"$p"*) n=$((n + 1)) ;; esac
+  done
+  printf '%d\n' "$n"
+}
+ER30_H6="$(er26_flat "$(er30_hist "$ER30_A6")")"
+ER30_H12="$(er26_flat "$(er30_hist "$ER30_A12")")"
+ER30_B12="$(er30_body "$ER30_A12")"
+ER30_ROW="$(grep -F '| carrying **both**' <<<"$ER30_B12" || true)"
+ER30_TEXT="$ER30_H6 | $ER30_H12 | $ER30_ROW"
+ER30_N="${#ER30_PINS[@]}"
+ER30_PIN="$(er30_pins "$ER30_TEXT")"
+ER30_MISSING=""; ER30_STRIPBAD=0
+for er30_p in "${ER30_PINS[@]}"; do
+  case "$ER30_TEXT" in
+    *"$er30_p"*)
+      er30_x="$(er30_pins "$(er_sub1 "$ER30_TEXT" "$er30_p" '')")"
+      [ "$er30_x" -eq $((ER30_PIN - 1)) ] || ER30_STRIPBAD=$((ER30_STRIPBAD + 1)) ;;
+    *) ER30_MISSING="$ER30_MISSING [$er30_p]" ;;
+  esac
+done
+ER30_OLDS='A person who asked to be deleted keeps their recorded need on every subsequent synthesis'
+ER30_OLD="$(grep -c -F "$ER30_OLDS" <<<"$ER30_B12" || true)"
+ER30_OLD_PLANT="$(grep -c -F "$ER30_OLDS" <<<"$ER30_B12
+$ER30_OLDS" || true)"
+ER30_ACT='only by recording them as not travelling'
+ER30_PR2="$(grep -c -F "$ER30_ACT" <<<"$ER30_H6
+$ER30_H12" || true)"
+ER30_PR2_PLANT="$(grep -c -F "$ER30_ACT" <<<"$ER30_H6
+$ER30_H12
+$ER30_ACT" || true)"
+IFS="$(printf '\t')" read -r ER30_R6 ER30_HH6 ER30_L6 <<<"$(er30_order "$ER30_A6")"
+IFS="$(printf '\t')" read -r ER30_R12 ER30_HH12 ER30_L12 <<<"$(er30_order "$ER30_A12")"
+ER30_ORD=1
+{ [ "$ER30_HH6" -gt "$ER30_R6" ] && [ "$ER30_HH6" -eq "$ER30_L6" ] && [ "$ER30_HH12" -gt "$ER30_R12" ] && [ "$ER30_HH12" -eq "$ER30_L12" ]; } || ER30_ORD=0
+# THE PATH ITSELF (#1791, QF-09). The verb file and the reconciler agree with the records: rule 16
+# derives the write as an exception to rule 2 and leaves rule 5 unchanged; § `erase` carries the
+# sub-section naming the subject by its place, its re-run reading (FM-1), the split refusal of a
+# stale and a pending row (FM-5), its order, and what the next reconcile does; the reconciler's
+# third exit carries the substituted entry forward under its token, need included (the operator's
+# carry-forward ruling); and the archived witness's erased both-marks heading keeps
+# `[THIRD-PARTY]`. "Never this verb's subject" and the old third exit's drop are gone. Controls:
+# each phrase stripped drops its count by exactly 1; the old sentence planted into a copy of
+# § `erase` is counted; the mark removed from a copy of the witness model drops its count by 1.
+ER30_ENR="$ROOT/agents/00-enrichment.md"
+ER30_CLA="$ROOT/CLAUDE.md"
+ER30_WIT="$ROOT/examples/archived-trip-demo/outputs/traveler-model.md"
+ER30_PINS7=(
+  '16. **An erasure whose subject holds no record is bounded by the one trip that holds their record'
+  'Against rule 2 it is an exception, not a widening, taken under the Extension rule below; rule 5 is unchanged'
+  '### A subject who holds no record — a party member recorded through `## person`'
+  '| `--third-party <n>` is given in place of `<person-id>` |'
+  'row 10 reads `ALREADY-ERASED`, and every other REACH row reads `UNDETERMINED`, never `ALREADY-ERASED`'
+  'the first run'"'"'s dry-run reach report is the only inventory of the places that name stood'
+  'A **stale** row is refused naming `/trip-record group`'
+  'A **pending** row is refused with that reason'
+  'Where no roster row joins, row 10 is the first write'
+  'the next reconcile carries the entry forward under its token, need included'
+  'and, under `--third-party <n>`, the resolved trip'"'"'s whole directory in place of the trips discovery resolved'
+  'except that resolved trip, which the `--third-party` path reads and writes as a trip discovery resolved is read and written'
+  'except a both-marks entry'"'"'s token, which keeps the `[THIRD-PARTY]` mark'
+  '### The standing rules this verb writes under are rules 10, 13 and 16'
+  '**Rule 16 carries the path of § *A subject who holds no record*.**'
+  'Under `--third-party <n>` the typed token is the trip'"'"'s slug'
+  'a stated residual, because this verb reads no file that would show it'
+  '**carry the substituted entry forward verbatim under its token**'
+  # Dev Testing F-09: the third exit ends the name and carries the entry, and the exit count says
+  # the exits change an entry rather than end it.
+  '**The third exit is an erasure substitution: it ends the name, and the entry is carried.**'
+  '**Three exits change a carried entry, and only three.**'
+  # Dev Testing F-02, ruled (a): a withdrawal names an erased both-marks entry by its token or by
+  # `--third-party <n>`, never by a name, so the member leaves the count on the operator's statement.
+  'It names the entry by its token or by `--third-party <n>`, never by a name'
+  '**An entry an erasure re-keyed is withdrawn by its token or by its place, never by a name**'
+  # Dev Testing F-03: the token mint also compares every heading key in the trip's traveller model,
+  # where an erased both-marks entry keeps its token with no roster row.
+  'and against every heading key in that trip'"'"'s `outputs/traveler-model.md`, its marks set aside'
+  # Dev Testing F-06, ruled (add): CLAUDE.md's *Person erasure* intent row and its erase read-scope
+  # row each name the path for a subject who holds no record.
+  'A party member who holds no record is named by `--third-party <n>` instead, and the operator confirms by typing the trip'"'"'s slug'
+  'or, under `--third-party <n>`, the one resolved trip in their place'
+  # Dev Testing F-14: § `person`'s *Reads:* line takes the presence probe for the token the reconcile
+  # resolves, and the reconciler's second exit takes a withdrawal by token or by place, and counts
+  # the place as it counts the model's person entries.
+  'or, for an entry an erasure re-keyed, for the token the reconcile resolves'
+  'A withdrawal of an entry an erasure re-keyed names it by its token or by its place, never by a name'
+  'a place is counted from the top of the model you read before this write, over its person entries'
+  # Stage 8 QA-01, ruled (a): a revision of an erased entry's needs takes the withdrawal's key, in
+  # § `person` and in the reconciler's second exit, so the old name never comes back to the trip
+  # and the member is never counted twice.
+  '**A revision of such an entry'"'"'s needs takes the same key**'
+  'A revision of such an entry'"'"'s needs is keyed the same way, by its token or its place and never by a name'
+)
+er30_pins7() {
+  local n=0 p
+  for p in "${ER30_PINS7[@]}"; do
+    case "$1" in *"$p"*) n=$((n + 1)) ;; esac
+  done
+  printf '%d\n' "$n"
+}
+ER30_T7="$(er26_flat "$(cat "$ER_CMD" 2>/dev/null)") | $(er26_flat "$(cat "$ER30_ENR" 2>/dev/null)") | $(er26_flat "$(cat "$ER30_CLA" 2>/dev/null)")"
+ER30_N7="${#ER30_PINS7[@]}"
+ER30_PIN7="$(er30_pins7 "$ER30_T7")"
+ER30_MISSING7=""; ER30_STRIPBAD7=0
+for er30_p in "${ER30_PINS7[@]}"; do
+  case "$ER30_T7" in
+    *"$er30_p"*)
+      er30_x="$(er30_pins7 "$(er_sub1 "$ER30_T7" "$er30_p" '')")"
+      [ "$er30_x" -eq $((ER30_PIN7 - 1)) ] || ER30_STRIPBAD7=$((ER30_STRIPBAD7 + 1)) ;;
+    *) ER30_MISSING7="$ER30_MISSING7 [$er30_p]" ;;
+  esac
+done
+ER30_GONE='is never this verb'"'"'s subject'
+ER30_GONE_N="$(grep -c -F "$ER30_GONE" <<<"$ER_SEC" || true)"
+ER30_GONE_PLANT="$(grep -c -F "$ER30_GONE" <<<"$ER_SEC
+$ER30_GONE" || true)"
+ER30_DROP='Without this exit the rule reproduces an erased person'"'"'s recorded need'
+ER30_DROP_N="$(grep -c -F "$ER30_DROP" <<<"$ER30_T7" || true)"
+ER30_DROP_PLANT="$(grep -c -F "$ER30_DROP" <<<"$ER30_T7
+$ER30_DROP" || true)"
+# Dev Testing F-09: the two reconciler sentences that said the third exit ends the entry. Each must
+# read 0 in the reconciler, and each, planted into a copy, must be counted.
+ER30_EXITOLD=(
+  'Three exits end a carried entry, and only three'
+  'it ends the entry under its name'
+)
+er30_exitold() {
+  local er_pats=() p
+  for p in "${ER30_EXITOLD[@]}"; do er_pats+=(-e "$p"); done
+  grep -c -F "${er_pats[@]}" <<<"$1" || true
+}
+ER30_ENRT=""; [ -r "$ER30_ENR" ] && ER30_ENRT="$(cat "$ER30_ENR")"
+ER30_EXO="$(er30_exitold "$ER30_ENRT")"
+ER30_EXOBAD=0
+for er30_o in "${ER30_EXITOLD[@]}"; do
+  [ "$(er30_exitold "$ER30_ENRT
+$er30_o")" -eq $((ER30_EXO + 1)) ] || ER30_EXOBAD=$((ER30_EXOBAD + 1))
+done
+er30_wit() { awk '/^## per-/ && index($0, "[ERASED]") && index($0, "[OPERATOR-PROVIDED]") && index($0, "[THIRD-PARTY]") { n++ } END { print n + 0 }' <<<"$1"; }
+ER30_WT=""; [ -r "$ER30_WIT" ] && ER30_WT="$(cat "$ER30_WIT")"
+ER30_WN="$(er30_wit "$ER30_WT")"
+ER30_WN_X="$(er30_wit "$(awk '!done && /^## per-/ && index($0, "[ERASED]") && index($0, "[THIRD-PARTY]") { sub(/[ \t]*`?\[THIRD-PARTY\]`?/, ""); done = 1 } { print }' <<<"$ER30_WT")")"
+if [ ! -r "$ER30_A6" ] || [ ! -r "$ER30_A12" ] || [ -z "$ER30_B12" ] || [ -z "$ER30_ROW" ] || [ ! -r "$ER30_ENR" ] || [ ! -r "$ER30_CLA" ] || [ -z "$ER30_WT" ]; then
+  FAIL "ER30: measured nothing — ADR-006 read=$([ -r "$ER30_A6" ] && echo 1 || echo 0), ADR-012 read=$([ -r "$ER30_A12" ] && echo 1 || echo 0), ADR-012's *Two entry classes* both-marks row read=$([ -n "$ER30_ROW" ] && echo 1 || echo 0), the reconciler read=$([ -r "$ER30_ENR" ] && echo 1 || echo 0), CLAUDE.md read=$([ -r "$ER30_CLA" ] && echo 1 || echo 0) and the archived witness's model read=$([ -n "$ER30_WT" ] && echo 1 || echo 0). The texts' agreement cannot be graded over texts that are not there"
+elif [ "$ER30_STRIPBAD" -ne 0 ] || [ "$ER30_OLD_PLANT" -ne $((ER30_OLD + 1)) ] || [ "$ER30_PR2_PLANT" -ne $((ER30_PR2 + 1)) ] || [ "$ER30_STRIPBAD7" -ne 0 ] || [ "$ER30_GONE_PLANT" -ne $((ER30_GONE_N + 1)) ] || [ "$ER30_DROP_PLANT" -ne $((ER30_DROP_N + 1)) ] || [ "$ER30_WN_X" -ne $((ER30_WN - 1)) ] || [ "$ER30_EXOBAD" -ne 0 ]; then
+  FAIL "ER30: BROKEN PROBE — $ER30_STRIPBAD of the $ER30_PIN record phrase(s) and $ER30_STRIPBAD7 of the $ER30_PIN7 path phrase(s) did not drop their count by exactly 1 when stripped; the replaced row sentence planted read $ER30_OLD_PLANT against $ER30_OLD, the active-trip ground planted read $ER30_PR2_PLANT against $ER30_PR2, the old never-the-subject sentence planted into § \`erase\` read $ER30_GONE_PLANT against $ER30_GONE_N, and the old third exit's drop planted into the verb file and the reconciler read $ER30_DROP_PLANT against $ER30_DROP_N (each must be one more); \`[THIRD-PARTY]\` removed from a copy of the witness model read $ER30_WN_X erased both-marks heading(s) against $ER30_WN (must be one fewer); and $ER30_EXOBAD of the ${#ER30_EXITOLD[@]} old exit sentence(s) planted into a copy of the reconciler were not counted once more. Until each fires, a verdict below is the instrument's"
+elif [ "$ER30_ORD" -ne 1 ] || [ "$ER30_PIN" -ne "$ER30_N" ] || [ "$ER30_OLD" -ne 0 ] || [ "$ER30_PR2" -ne 0 ] || [ "$ER30_PIN7" -ne "$ER30_N7" ] || [ "$ER30_GONE_N" -ne 0 ] || [ "$ER30_DROP_N" -ne 0 ] || [ "$ER30_WN" -lt 1 ] || [ "$ER30_EXO" -ne 0 ]; then
+  FAIL "ER30: the texts do not agree on option (A) — \`## Amendment history\` after \`References\` and last: ADR-006 at line $ER30_HH6 (References $ER30_R6, last heading $ER30_L6), ADR-012 at line $ER30_HH12 (References $ER30_R12, last heading $ER30_L12); $ER30_PIN of the $ER30_N record phrase(s) present (missing:${ER30_MISSING:- none}); $ER30_PIN7 of the $ER30_N7 path phrase(s) in the verb file, the reconciler and CLAUDE.md (missing:${ER30_MISSING7:- none}); the replaced *Two entry classes* sentence stands $ER30_OLD time(s) in ADR-012's body and the active-trip ground $ER30_PR2 time(s) in the entries; \"never this verb's subject\" stands $ER30_GONE_N time(s) in § \`erase\`, the old third exit's drop $ER30_DROP_N time(s), and the old exit sentences that said the third exit ends the entry $ER30_EXO time(s) in the reconciler (each must be 0); and the archived witness carries $ER30_WN erased both-marks heading(s) (must be at least 1)"
+else
+  PASS "ER30: both ADRs close on an \`## Amendment history\` entry after \`References\` recording (A) as chosen and (B) as rejected on the archived-trip ground alone, and ADR-012's *Two entry classes* both-marks row says the name, not the need, is what a regeneration would carry back; the verb file, the reconciler and CLAUDE.md carry all $ER30_N7 path phrase(s) — rule 16 as an exception to rule 2 with rule 5 unchanged, the sub-section with its re-run reading, its split refusal and its order, the carried-forward entry and the third exit that ends its name and carries it, under an exit count that says the exits change an entry, the withdrawal that names an erased entry by its token or its place, on the *Reads:* line and in the reconciler's second exit too, the revision of its needs keyed the same way in § \`person\` and in that exit, and CLAUDE.md's intent and read-scope rows naming that path — with \"never this verb's subject\", the old drop and the old exit sentences gone; the archived witness keeps $ER30_WN erased both-marks heading(s). Every control fired: each phrase stripped moves its count by 1, each old sentence planted is counted, and the mark removed from the witness drops its count by 1"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════

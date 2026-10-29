@@ -35,6 +35,10 @@ entry's shared desire, in the need of the party member recorded `[OPERATOR-PROVI
 
 - Need → — (traveller-scoped; no trip-level constraint); specific: a seated break whenever per-2c9e takes one.
 
+## Nell Basil `[OPERATOR-PROVIDED]` `[THIRD-PARTY]` `[ROSTERED]`
+
+- Need → — (traveller-scoped; no trip-level constraint); specific: a window seat on any boat.
+
 ## Update signals [DERIVED]
 
 - per-2c9e: Pace — REDUNDANT-OVERRIDE; the line can be removed.

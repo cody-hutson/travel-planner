@@ -853,22 +853,33 @@ created it — never describe it as current, re-confirmed, or consented to. A pa
 that carries it re-states nothing about that person; it only declines to lose what
 was already recorded.
 
-**Three exits end a carried entry, and only three.** Anything else leaves it in place.
+**Three exits change a carried entry, and only three.** Anything else leaves it in place.
 **Evaluate supersession before carry-forward**, in that order: once the person's own
 profile has superseded the entry, both marks are gone, so there is nothing left for
 the carry-forward rule to match and a superseded entry is **never re-admitted** on a
 later pass. The second exit is a **fresh operator statement** about that person — one
 that revises the needs replaces the carried text (the newer statement wins), one that
 withdraws them drops the entry. Both are real changes, so both emit an update signal.
+A withdrawal of an entry an erasure re-keyed names it by its token or by its place,
+never by a name, and a place is counted from the top of the model you read before this
+write, over its person entries — every `##` heading whose key the reserved-key list
+does not hold (§ *Traveler identity*, below). A revision of such an entry's needs is
+keyed the same way, by its token or its place and never by a name, and replaces its
+need text under the same heading with every mark kept, so the name it no longer carries
+never returns to the trip and the member is never counted twice.
 
-**The third exit is an erasure substitution, and it is evaluated before carry-forward
-for the same reason supersession is.** An entry the erasure verb has substituted — its
-heading re-keyed to the `per-<token>` shape and marked `[ERASED]` — is **never
-re-admitted** by the carry-forward rule. Evaluate the substitution first, so that by the
-time carry-forward runs there is nothing left for it to match. **Without this exit the
-rule reproduces an erased person's recorded need on every subsequent pass**, because
-carry-forward copies the entry verbatim out of the very model the erasure wrote — the
-person asked to be forgotten and the reconciler keeps restating them, silently, forever.
+**The third exit is an erasure substitution: it ends the name, and the entry is carried.** An entry
+the erasure verb has substituted — its heading re-keyed to the `per-<token>` shape and
+marked `[ERASED]` — is never re-admitted under the name it carried. Evaluate the
+substitution before carry-forward, for the same reason supersession is, and then **carry
+the substituted entry forward verbatim under its token** — same token key, same need text,
+both marks and `[ERASED]` — the way every other both-marks entry is carried. Never key it back to a name,
+and never drop it for having been erased. **What an erasure must not leave a reconcile to
+restore is the name, never the need**: the token is minted for that one trip and never
+tied to a person, so a need carried under it names nobody, while dropping it would take
+the need the plan was built around from a member who still travels and lower the count
+the agents size the party from. `[THIRD-PARTY]` stays on the heading, so the need stays
+exactly as non-publishable as it was.
 
 **Two provenance behaviours are unchanged by all of this, and saying which is which
 matters, because "preserved" reads as one behaviour when it is two.** A `[THIRD-PARTY]`

@@ -351,7 +351,7 @@ separate times in that file, so it is a deliberate design property rather than a
 
 | Entry class | What a regeneration does to it | How erasure fails if it regenerates |
 |---|---|---|
-| carrying **both** `[OPERATOR-PROVIDED]` and `[THIRD-PARTY]` | **carried forward verbatim** — there is no source file to re-derive it from | the entry **survives the erasure**. A person who asked to be deleted keeps their recorded need on every subsequent synthesis |
+| carrying **both** `[OPERATOR-PROVIDED]` and `[THIRD-PARTY]` | **carried forward verbatim** — there is no source file to re-derive it from | the entry **survives the erasure**, name and need together. A person who asked to be deleted keeps their recorded need, under their own name, on every subsequent synthesis |
 | carrying `[OPERATOR-PROVIDED]` **alone** | **not** carried forward — the carry-forward predicate does not match it, and there is no usable profile to project from | the entry is **dropped**, and the display name **re-enters** from the roster on the next pass |
 
 **These are not one defect at two addresses; they are inverses**, and conflating them is precisely the
@@ -1565,3 +1565,21 @@ retained as written; no decision of this record changes, and none is re-opened.
   the result vocabulary this design needs: `MALFORMED` already a finding token for a row that does
   not parse to its expected shape, and the single `INHERITS` that is English prose in a comment
   rather than a status token
+
+## Amendment history
+
+**Amendment (2026-10-28, Wednesday) — *Decision* § 6b, item 3: the delete path recorded as decided,
+with the option weighed against it; and *Context*, the both-marks row of the entry-class table: what
+a regeneration would carry back is the name. No decision changes.** Item 3 says "It acquires a delete
+path" and that "the erasure verb reaches it by **substitution**". The erasure verb took a person
+record's id, and § 5 gives such a member no record, so the delete path existed in this record and
+not in the verb. Option (A), an erasure whose subject is that entry, is chosen. Option (B), the
+withdrawal recorded as the delete path, is rejected: no reconcile runs on an archived trip to honour
+it. Both are recorded with their ground in `ADR-006`'s amendment history, in the entry of the same
+date. The bound item 2 sets is unchanged: the token such an erasure writes is minted for one trip
+and never correlated, so the entry acquires no identifier that could link the member across trips.
+The both-marks row of the entry-class table read "the entry **survives the erasure**. A person who
+asked to be deleted keeps their recorded need on every subsequent synthesis", which treated the
+carried need as the erasure undone. What undoes an erasure is the name carried with it, and a need
+carried under the trip's token names nobody, so the row now says the entry survives name and need
+together. The subject path is stated in `skills/trip-record/SKILL.md` § `erase`.
