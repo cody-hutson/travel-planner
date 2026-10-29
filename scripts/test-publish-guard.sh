@@ -2753,6 +2753,123 @@ m1is_assert() { # one verdict
 }
 m1is_assert
 
+# ── M1t–M1u (#2055) — a <script> or <style> body ends at its closing tag, spaced or not ──
+#
+# A browser ends a script or style body at `</script >`, whitespace before the `>`, as it does at
+# `</script>`. The published projection ended the body at an exact closing tag only, so after a
+# spaced one it read the rest of the page as body text, up to the next exact closing tag or the
+# end of the file. A tag on neither list met there was read as text, its name between the words
+# around it (M1t), and every tag name met there reached its stream (M1u). The visible and joined
+# projections still end the body at an exact closing tag (the comment above strip_to_text_blocks
+# says why), so on M1t's renders they delete the stretch from the spaced closing tag to the next
+# exact one, value and all, and the published arm is the one that reads it. M1t grades the value:
+# a page whose need is split twice by `<font>` in that stretch, so that no five-word run survives
+# the tag names, aborts as a HIT named for the published arm, in a script body and in a style
+# body, and its exact-close twin aborts too. M1u grades the other direction: a member named
+# Summary does not abort a page that writes `<details><summary>` after a spaced closing tag, and
+# that page's published stream is its exact-close twin's, token for token. Each carries the defect
+# inside the arm (ARMED-RED): the published projection's lookahead put back to the exact closing
+# tag, in a subshell, must publish M1t's two spaced renders and abort M1u's.
+M1T_V='cannot manage more than <font>one</font> flight of stairs <font>in</font> a single stretch'
+M1T_SC="$WORK/m1t_script_spaced.html"; mrender "$M1T_SC" "<script>var a = 1;</script ><p>Note: $M1T_V.</p><script>var b = 2;</script>"
+M1T_ST="$WORK/m1t_style_spaced.html";  mrender "$M1T_ST" "<style>.a{color:#333}</style ><p>Note: $M1T_V.</p><style>.b{color:#444}</style>"
+M1T_EX="$WORK/m1t_script_exact.html";  mrender "$M1T_EX" "<script>var a = 1;</script><p>Note: $M1T_V.</p><script>var b = 2;</script>"
+m1t_unfixed() { # <render> <trip_dir> -> the guard's status with the published lookahead put back to the exact closing tag
+  ( eval "$(declare -f strip_to_published_text | sed 's#</\\3\\s\*>#</\\3>#')"
+    verify_publishable_content "$1" "$2" >/dev/null 2>&1; printf '%s' "$?" )
+}
+m1t_run() { # <projection> <render> -> how many times MV's twelve words stand in its stream as one run
+  "$1" "$2" | _decode_entities | _norm_words | tr '\n' ' ' \
+    | awk -v N=" $(printf '%s' "$MV" | _norm_words | tr '\n' ' ')" '{ s = " " $0; while ((i = index(s, N)) > 0) { c++; s = substr(s, i + length(N) - 1) } } END { print c + 0 }'
+}
+m1t_assert() { # one verdict
+  local rs ps rt pt rx ms mt oth nf
+  mguard "$M1T_SC" "$MTD"; rs="$MRC"; ps="$(m1eq_prj)" || ps="NONE"
+  mguard "$M1T_ST" "$MTD"; rt="$MRC"; pt="$(m1eq_prj)" || pt="NONE"
+  mguard "$M1T_EX" "$MTD"; rx="$MRC"
+  ms="$(m1t_unfixed "$M1T_SC" "$MTD")"; mt="$(m1t_unfixed "$M1T_ST" "$MTD")"
+  oth=$(( $(m1t_run strip_to_text_blocks "$M1T_SC") + $(m1t_run strip_to_joined_text "$M1T_SC") + $(m1t_run strip_to_text_blocks "$M1T_ST") + $(m1t_run strip_to_joined_text "$M1T_ST") ))
+  nf="$(awk '{ c += gsub(/<font>/, "&") } END { print c + 0 }' "$M1T_SC" "$M1T_ST" "$M1T_EX")"
+  if [ "$rs" -eq 1 ] && [ "$ps" = "$M1EQ_PRJ" ] && [ "$rt" -eq 1 ] && [ "$pt" = "$M1EQ_PRJ" ] && [ "$rx" -eq 1 ] && [ "$ms" = "0" ] && [ "$mt" = "0" ] && [ "$oth" -eq 0 ] && [ "$nf" -eq 6 ]; then
+    PASS "M1t: a value written after a spaced closing tag is read — the need split twice by a tag on neither list, after '</script >', aborts as a HIT (rc=$rs) named '$ps', so does the same after '</style >' (rc=$rt), and the exact-close twin aborts too (rc=$rx); ARMED-RED — with the published lookahead put back to the exact closing tag both spaced renders publish (rc=$ms, rc=$mt). The visible and joined arms carry the need as one run $oth time(s) on the spaced renders, so the HIT is the published arm's"
+  else
+    FAIL "M1t: spaced script render rc=$rs '$ps', spaced style render rc=$rt '$pt' (want 1 and '$M1EQ_PRJ' for both), exact-close twin rc=$rx (want 1); with the lookahead put back rc=$ms and rc=$mt (want 0 and 0); the need as one run on the visible and joined arms $oth (want 0); splitting tags in the renders $nf (want 6). A value after a spaced closing tag publishes, or this arm can no longer tell"
+  fi
+}
+m1t_assert
+M1U_TD="$WORK/porto-summary"; mkdir -p "$M1U_TD/outputs"
+cat > "$M1U_TD/outputs/traveler-model.md" <<'MD'
+# Traveler Model — Porto 2029 [DERIVED]
+
+## Rowan
+- Passport: Ruritanian, valid to 2033
+
+## Summary [OPERATOR-PROVIDED] [THIRD-PARTY]
+
+### Needs
+- Category: mobility
+  Specific: needs a bench to rest on at every stop along the way
+  Applies to: ## Hard Constraints → "Mobility"
+MD
+M1U_SP="$WORK/m1u_spaced.html"; mrender "$M1U_SP" '<script>var a = 1;</script ><details><summary>Rainy-day options</summary>the tile museum</details>'
+M1U_EX="$WORK/m1u_exact.html";  mrender "$M1U_EX" '<script>var a = 1;</script><details><summary>Rainy-day options</summary>the tile museum</details>'
+m1u_stream() { strip_to_published_text "$1" | _decode_entities | _norm_words | tr '\n' ' '; }   # <render> -> its published stream on one line
+m1u_assert() { # one verdict
+  local rs rx ss sx ms mss same=no moved=no
+  mguard "$M1U_SP" "$M1U_TD"; rs="$MRC"
+  mguard "$M1U_EX" "$M1U_TD"; rx="$MRC"
+  ss="$(m1u_stream "$M1U_SP")"; sx="$(m1u_stream "$M1U_EX")"
+  ms="$(m1t_unfixed "$M1U_SP" "$M1U_TD")"
+  mss="$( eval "$(declare -f strip_to_published_text | sed 's#</\\3\\s\*>#</\\3>#')"; m1u_stream "$M1U_SP" )"
+  [ -n "$sx" ] && [ "$ss" = "$sx" ] && same=yes
+  [ -n "$mss" ] && [ "$mss" != "$sx" ] && moved=yes
+  if [ "$rs" -eq 0 ] && [ "$rx" -eq 0 ] && [ "$same" = "yes" ] && [ "$ms" = "1" ] && [ "$moved" = "yes" ]; then
+    PASS "M1u: the markup after a spaced closing tag is read as markup — a member named Summary does not abort a page that writes '<details><summary>' after '</script >' (rc=$rs), as its exact-close twin does not (rc=$rx), and the two published streams are the same, token for token; ARMED-RED — with the published lookahead put back to the exact closing tag the spaced render aborts (rc=$ms) and its stream differs"
+  else
+    FAIL "M1u: spaced render rc=$rs, exact-close twin rc=$rx (want 0 and 0); published streams the same: $same (want yes); with the lookahead put back rc=$ms (want 1) and its stream differing: $moved (want yes). Tag names after a spaced closing tag reach the published stream again, or this arm can no longer tell"
+  fi
+}
+m1u_assert
+
+# ── M1x–M1y (#2055) — a value inside a body whose ONLY closing tag carries a space ──
+#
+# The visible and joined projections end a <script> or <style> body at an exact closing tag, so a
+# body whose only closing tag is written with a space is not deleted there: they read it as
+# visible text. The guard before 0.60.0 blocked a value written inside such a body through that
+# reading, and so does the guard at the base: a value split mid-word by an inline tag is closed up
+# by the joined arm (M1x), and a value around one of whose words a tag carries attribute-value
+# words is read whole by the visible arm (M1y). The published arm alone reads neither, because
+# inside a body a mid-word split stays split and a kept tag's attribute values stay as text, so
+# each exact-close twin, whose body the visible and joined projections delete, publishes. Each
+# need is split twice, so that no five-word run survives on the published arm. Each arm carries the
+# change it guards against inside the arm (ARMED-RED): the visible and joined projections made to
+# end a body at a spaced closing tag too, in a subshell, must publish its render — that change
+# would give up this class, which is why it is not made (the comment above strip_to_text_blocks).
+M1X_SP="$WORK/m1x_spaced.html"; mrender "$M1X_SP" "<script>var s = 'Note: cannot manage more than o<b>ne</b> flight of stairs i<b>n</b> a single stretch';</script >"
+M1Y_SP="$WORK/m1y_spaced.html"; mrender "$M1Y_SP" "<script>var s = 'Note: cannot manage more than <span title=\"see note\">one</span> flight of stairs <span title=\"see note\">in</span> a single stretch';</script >"
+M1X_EX="$WORK/m1x_exact.html"; sed 's#</script >#</script>#' "$M1X_SP" > "$M1X_EX"
+M1Y_EX="$WORK/m1y_exact.html"; sed 's#</script >#</script>#' "$M1Y_SP" > "$M1Y_EX"
+m1bc_off() { # <render> <trip_dir> -> the guard's status with the visible and joined readers ending a body at a spaced closing tag too
+  ( eval "$(declare -f strip_to_text_blocks | sed 's#</\\1>#</\\1\\s*>#')"
+    eval "$(declare -f strip_to_joined_text | sed 's#</\\1>#</\\1\\s*>#')"
+    verify_publishable_content "$1" "$2" >/dev/null 2>&1; printf '%s' "$?" )
+}
+m1bc_assert() { # <id> <shape> <spaced render> <exact-close twin> <the projection its abort names> — one verdict
+  local id="$1" what="$2" sp="$3" tw="$4" want="$5" rs ps rt ms ks kt dz
+  mguard "$sp" "$MTD"; rs="$MRC"; ps="$(m1eq_prj)" || ps="NONE"
+  mguard "$tw" "$MTD"; rt="$MRC"
+  ms="$(m1bc_off "$sp" "$MTD")"
+  ks="$(awk '{ c += gsub(/<\/script >/, "&") } END { print c + 0 }' "$sp")"; kt="$(awk '{ c += gsub(/<\/script >/, "&") } END { print c + 0 }' "$tw")"
+  dz=$(( $(wc -c < "$sp") - $(wc -c < "$tw") ))
+  if [ "$rs" -eq 1 ] && [ "$ps" = "$want" ] && [ "$rt" -eq 0 ] && [ "$ms" = "0" ] && [ "$ks" -eq 1 ] && [ "$kt" -eq 0 ] && [ "$dz" -eq 1 ]; then
+    PASS "$id: $what inside a <script> body whose only closing tag carries a space still aborts as a HIT (rc=$rs) named '$ps', as before 0.60.0; its exact-close twin, one byte shorter, publishes (rc=$rt), so the abort is that reading of the body; ARMED-RED — with the visible and joined readers ending a body at a spaced closing tag too the page publishes (rc=$ms)"
+  else
+    FAIL "$id: $what inside a body closed only with a space — spaced render rc=$rs '$ps' (want 1 and '$want'), exact-close twin rc=$rt (want 0), with the visible and joined readers ending a body at a spaced closing tag rc=$ms (want 0); spaced closing tags in the render $ks and in the twin $kt (want 1 and 0), bytes between them $dz (want 1). A class of pages the guard before 0.60.0 blocked publishes, or this arm can no longer tell"
+  fi
+}
+m1bc_assert M1x "a value split mid-word by an inline tag"            "$M1X_SP" "$M1X_EX" 'joined markup (an inline tag split a word)'
+m1bc_assert M1y "a value with an attribute-carrying tag around a word" "$M1Y_SP" "$M1Y_EX" 'visible text'
+
 # ── M2 (CD-2) — is_stop in the token branch; a stopword-only name is a declared non-key ──
 MSTOP="$WORK/porto-stopword"; mkdir -p "$MSTOP/outputs"
 cat > "$MSTOP/outputs/traveler-model.md" <<'MD'
@@ -10826,6 +10943,13 @@ md_flips strip_to_published_text    "M1p" m1ip_assert
 md_flips strip_to_published_text    "M1q" m1iq_assert
 md_flips strip_to_published_text    "M1r" m1ir_assert
 md_flips strip_to_published_text    "M1s" m1is_assert
+# Where a <script> or <style> body ends (#2055). Each grades an EXACT status, so with its subject
+# removed the guard refuses that projection (rc=2) and the arm's one verdict is a FAIL. M1t rests on
+# the published projection, which reads the value after a spaced closing tag; M1x and M1y rest on
+# the joined and the visible projection, which read a body closed only with a space as visible text.
+md_flips strip_to_published_text    "M1t" m1t_assert
+md_flips strip_to_joined_text       "M1x" m1bc_assert M1x "a value split mid-word by an inline tag"            "$M1X_SP" "$M1X_EX" 'joined markup (an inline tag split a word)'
+md_flips strip_to_text_blocks       "M1y" m1bc_assert M1y "a value with an attribute-carrying tag around a word" "$M1Y_SP" "$M1Y_EX" 'visible text'
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group FZ — every verdict arm in this file must be able to FAIL.

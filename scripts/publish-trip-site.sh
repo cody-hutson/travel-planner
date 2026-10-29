@@ -441,6 +441,9 @@ encrypt_to_tmp() { # <src_html> <passphrase>
 
 # Visible text of an HTML file — markup and <script>/<style> blocks removed.
 # Used so the guard derives leak-tokens from itinerary *content*, not shared markup.
+# A block ends here at an exact closing tag only, and deliberately so: this projection feeds
+# verify_ciphertext, which reads ciphertext, where the stretch after a spaced closing tag that
+# strip_to_published_text reads does not exist, and #550's AC 5 holds its behaviour fixed.
 strip_to_text() { # <html_file> -> visible text on stdout
   perl -0777 -pe 's/<(script|style)\b[^>]*>.*?<\/\1>//gis; s/<[^>]+>/ /g' "$1" 2>/dev/null \
     || sed -E 's/<[^>]*>/ /g' "$1"
@@ -483,7 +486,8 @@ strip_to_text() { # <html_file> -> visible text on stdout
 # value's key token and published at rc=0 where the same text without the `=` or the `<`
 # aborted. So each tag is read whole: a quoted value stays as it stands, an unquoted value
 # travels with its name so a `=` inside it is never taken for another name, and a comment body,
-# a <script>/<style> body and every attribute value pass as TEXT. None of them is markup, so
+# a <script>/<style> body — which ends at its closing tag with or without whitespace before the
+# `>`, as a browser ends it — and every attribute value pass as TEXT. None of them is markup, so
 # each `<` in them becomes a space before the tag-name rule below runs, and that rule finds the
 # `<` of a tag and nothing else. TWO KINDS OF `<` ARE KEPT IN THOSE SURFACES, because markup
 # written inside them is still markup to the page that renders it: a `<` that opens a block tag
@@ -514,7 +518,7 @@ strip_to_text() { # <html_file> -> visible text on stdout
 # projection emits stands where it stood, which is what the conjunctive window's block scoping
 # reads; and the tag-name rule drops a kept tag's name there as it does in markup, so a map
 # pop-up's `<span class="flag">Ruritanian</span> passport, <em>valid</em> to 2033` keeps its
-# words next to each other. Graded by group M, M1e–M1s.
+# words next to each other. Graded by group M, M1e–M1u.
 # RESIDUAL, stated rather than discovered, in both directions. OPEN: a key token written directly
 # after `<` in one of those surfaces, with nothing but spaces or a `/` between them, is dropped
 # there as a tag's name when it is a block-tag or a listed inline-tag name, or begins with one and
@@ -554,7 +558,9 @@ strip_to_text() { # <html_file> -> visible text on stdout
 # the tag-name rule still drops a word written directly after a `<`, with nothing but spaces or a
 # `/` between them — the spaced form included, which a browser shows as text — and the visible and
 # joined projections read the same span as a tag up to the next `>`, so such a word can go unread
-# by all three arms.
+# by all three arms. Markup after a <script> or <style> closing tag written with a space before its
+# `>` is markup like any other, so a word written directly after a `<` there is read as a tag name,
+# as everywhere else in markup.
 #
 # NEWLINE-PRESERVING, and that is a precondition rather than a nicety. Every destructive
 # substitution below can span a line — [^>] and \s both match a newline — so each one
@@ -582,7 +588,7 @@ strip_to_published_text() { # <html_file> -> retrievable non-machinery content o
     sub inert { my \$v = shift; \$v =~ s{<(?:(\s*/?\s*(?:$_GUARD_BLOCK_TAGS|$_GUARD_INLINE_TAGS)\b)((?:(?:&(?:[A-Za-z][A-Za-z0-9]*|#[0-9]+|#[xX][0-9A-Fa-f]+);|\\\$\{[^{}<\n]*\}|=[ \t\n]*(?:\"[^\"]*\"|'[^']*')|[^<>\"';(){}\n=]|=(?![ \t\n]*[\"'])|\"[^\"\n]*\"|'[^'\n]*')*(?:\n[ \t]*+(?:[-A-Za-z_:][-A-Za-z0-9_:.]*(?:[ \t]*=[ \t]*(?:\"[^\"]*\"|'[^']*'|(?:&(?:[A-Za-z][A-Za-z0-9]*|#[0-9]+|#[xX][0-9A-Fa-f]+);|[^\s\"'<>=\`;(){}])+))?(?:[ \t]++[-A-Za-z_:][-A-Za-z0-9_:.]*(?:[ \t]*=[ \t]*(?:\"[^\"]*\"|'[^']*'|(?:&(?:[A-Za-z][A-Za-z0-9]*|#[0-9]+|#[xX][0-9A-Fa-f]+);|[^\s\"'<>=\`;(){}])+))?)*)?[ \t]*+/?[ \t]*+)*|[^<]*(?=>[^<>]*<[/!A-Za-z])|[^<>]*+)(?=>)|))?}{ my (\$h, \$r) = (\$1, \$2); defined \$h ? '<' . \$h . attrs(\$r) : ' ' }gie; \$v }   # TEXT, not markup: each < becomes a space, unless a block tag or a listed inline tag follows it, read as a tag whose attribute NAMES go
     sub attrs { my \$v = shift; \$v =~ s{(\"[^\"]*\"|'[^']*')|([-A-Za-z_:][-A-Za-z0-9_:.]*\s*=\s*)([^\s\"'>]*)}{ defined \$1 ? inert(\$1) : ' ' . (\$2 =~ tr/\n//cdr) . inert(\$3) }ge; \$v }   # one tag: each attribute NAME and its = go, every VALUE stays, as text
     s{<!DOCTYPE[^>]*>}{ ' ' . (\$& =~ tr/\n//cdr) }gie;      # the doctype is machinery
-    s{(<!--.*?(?:-->|\z))|(<\s*(script|style)\b)((?:[^>\"']|\"[^\"]*\"|'[^']*')*)(>.*?(?=</\3>|\z))|(<\s*/?\s*[A-Za-z][-A-Za-z0-9]*)((?:[^>\"']|\"[^\"]*\"|'[^']*')*)}{ my (\$c, \$s, \$sa, \$sb, \$t, \$ta) = (\$1, \$2, \$4, \$5, \$6, \$7); defined \$c ? '<!--' . inert(substr(\$c, 4)) : defined \$s ? \$s . attrs(\$sa) . inert(\$sb) : \$t . attrs(\$ta) }gise;   # names only inside a tag; a comment or script/style BODY passes whole, as text
+    s{(<!--.*?(?:-->|\z))|(<\s*(script|style)\b)((?:[^>\"']|\"[^\"]*\"|'[^']*')*)(>.*?(?=</\3\s*>|\z))|(<\s*/?\s*[A-Za-z][-A-Za-z0-9]*)((?:[^>\"']|\"[^\"]*\"|'[^']*')*)}{ my (\$c, \$s, \$sa, \$sb, \$t, \$ta) = (\$1, \$2, \$4, \$5, \$6, \$7); defined \$c ? '<!--' . inert(substr(\$c, 4)) : defined \$s ? \$s . attrs(\$sa) . inert(\$sb) : \$t . attrs(\$ta) }gise;   # names only inside a tag; a comment or script/style BODY passes whole, as text
     s/<!--/ /g; s/-->/ /g;                             # drop the delimiters, KEEP the body
     s{<\s*/?\s*($_GUARD_BLOCK_TAGS)\b}{ ' $_GUARD_BLOCK ' . (\$& =~ tr/\n//cdr) }gie;   # block boundary, before tag names go
     s{<\s*/?\s*([A-Za-z][-A-Za-z0-9]*)}{ ' ' . (\$& =~ tr/\n//cdr) }ge;   # the tag NAME (with its \"<\") is machinery
@@ -641,6 +647,11 @@ strip_to_published_text() { # <html_file> -> retrievable non-machinery content o
 # both use it as their SENSITIVITY arm, so removing it would zero the control that makes
 # their zeroes measurements, and #550 AC 5 byte-freezes it besides. A future change
 # extending there must re-point both arms in the same commit. Graded by group S14.
+#
+# Its <script>/<style> deletion ends at an exact closing tag only, where a browser also ends a
+# body at one written with a space, because ending it there too would delete a body whose only
+# closing tag is spaced and so let through a class of pages the guard before 0.60.0 blocked by
+# reading that body as visible text (M1x, M1y).
 strip_to_text_blocks() { # <html_file> -> visible text with block sentinels on stdout
   perl -0777 -pe "
     s{<(script|style)\b[^>]*>.*?</\1>}{ \$& =~ tr/\n//cdr }gise;
@@ -671,6 +682,8 @@ strip_to_text_blocks() { # <html_file> -> visible text with block sentinels on s
 # A tag that SPANS lines cannot be joined without destroying the line map, so it falls to
 # the fourth substitution and keeps the space-substituting, newline-re-emitting behaviour.
 # Its stderr is kept, by the rule stated above strip_to_published_text: no fallback, no discard.
+# Its <script>/<style> deletion ends at an exact closing tag only, as strip_to_text_blocks's does,
+# because ending it at a spaced one too would let through pages the guard before 0.60.0 blocked.
 strip_to_joined_text() { # <html_file> -> visible text with INLINE tags removed, NO space
   perl -0777 -pe "
     s{<(script|style)\b[^>]*>.*?</\1>}{ \$& =~ tr/\n//cdr }gise;
@@ -2824,6 +2837,10 @@ _COORD_NOTICE_CAP=512
 #
 # THE REPLACEMENT IS A SPACE, not nothing — the tag strip's idiom, and what keeps
 # `foo<!--c-->bar` from digesting as a single token.
+#
+# A <script>/<style> block ends here at an exact closing tag only, and deliberately so: reading the
+# spaced one as strip_to_published_text does would move the digest of every render that carries
+# one, and with it every recorded baseline and approval code for such a trip.
 strip_to_itinerary_text() { # <html_file> -> visible itinerary text on stdout, or nothing on failure
   COORD_CLASS="$_COORD_NOTICE_CLASS" COORD_CAP="$_COORD_NOTICE_CAP" \
   perl -0777 -pe '
