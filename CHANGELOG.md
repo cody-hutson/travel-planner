@@ -7,13 +7,16 @@ follows Keep a Changelog; versions follow Semantic Versioning.
 
 `/trip-record erase` now reaches the names it used to leave behind. Whoever erases a person sees a
 wider reach report, and a party member who never filed a profile can now be erased too.
-`/trip-record person` can withdraw such a member after their erasure. Nothing else plans or records
-a trip differently.
+`/trip-record person` can withdraw such a member after their erasure. And `/trip-record group`,
+`group-expand` and `person`'s withdrawal now read a roster's columns the way erasure does. Nothing
+else plans or records a trip differently.
 
 **The roster's columns are found by what they hold.** Erasure looked for the person and path columns
-by their template headers, so a roster headed `Traveler | Profile` didn't join. Now column 1 is the
-person column, and the path column is the one whose cells hold a `travelers/` path, whatever the
-headers say.
+by their template headers, and so did `/trip-record group`, `group-expand` and `person`'s
+withdrawal. On a roster headed `Traveler | Profile` erasure didn't join, and those verbs found no
+`Person` column to read. Now column 1 is the person column, and the path column is the one whose
+cells hold a `travelers/` path, whatever the headers say. `group` probes and counts a roster this
+way and adds rows to it this way. `group-expand` and `person`'s withdrawal probe it this way too.
 
 **A trip whose roster no longer names the person holds the record's deletion.** Someone you took off
 a trip with `/trip-record group` keeps their traveller file there. Erasure finds that file by the
