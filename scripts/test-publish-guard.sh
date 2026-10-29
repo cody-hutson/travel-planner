@@ -12708,9 +12708,11 @@ rv24_assert "RV24"
 # the server accepted it — left the clone's record of the remote behind for good. update leased its
 # push on that record, so every later update refused and its "re-run update" looped. update must
 # refresh the record before it leases, and converge: the next update succeeds with the live page
-# under the key .passphrase names. The push below goes BY PATH, so no remote-tracking ref moves.
+# under the key .passphrase names. The push below goes by path. Since Git 2.56 a push by path or URL
+# to a uniquely matching remote moves that remote's tracking ref as well, so the setup puts the clone's
+# record back where it stood before the push: the state a dropped connection leaves.
 rv25_assert() { # <id> <rotate|update>
-  local id="$1" form="$2" name d bare pub e c rec0 srv0 rc live pf
+  local id="$1" form="$2" name d bare pub e c rec_pre rec0 srv0 rc live pf
   local k1='rv-unrecorded-old-synthetic-key-34' k2='rv-unrecorded-new-synthetic-key-35'
   name="rv25-$form-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"; pub="$d/.publish"
   case "$form" in
@@ -12721,7 +12723,13 @@ rv25_assert() { # <id> <rotate|update>
   git -C "$pub" add index.html
   git -C "$pub" -c user.name=t -c user.email=t@example.invalid commit -q -m "$form"
   c="$(git -C "$pub" rev-parse HEAD)"
+  rec_pre="$(git -C "$pub" rev-parse -q --verify refs/remotes/origin/main)"
   git -C "$pub" push -q "$bare" "$c:refs/heads/main"
+  if [ -n "$rec_pre" ]; then
+    git -C "$pub" update-ref refs/remotes/origin/main "$rec_pre"
+  elif git -C "$pub" rev-parse -q --verify refs/remotes/origin/main >/dev/null; then
+    git -C "$pub" update-ref -d refs/remotes/origin/main
+  fi
   rec0="$(git -C "$pub" rev-parse refs/remotes/origin/main 2>/dev/null)"; srv0="$(rv_head "$bare")"
   ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$?
   live="$(rv_pushed_key "$bare")"; pf="$(cat "$d/.passphrase" 2>/dev/null)"
