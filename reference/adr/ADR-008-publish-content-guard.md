@@ -686,11 +686,12 @@ scope decision taken at the Stage 9 re-gate:**
    block is what stops a clean multi-day itinerary aborting forever, and it costs this: a value whose
    two facts land in different blocks — say adjacent table cells — no longer pairs. A carry-through
    into prose, which is the realistic shape, sits in one block and is still caught (N1d).
-4. **Tag names and attribute names.** Neither projection covers them. They are markup machinery and
+4. **Tag names and attribute names.** No projection covers them. They are markup machinery and
    carry no trip content; this is the structural form of `verify_ciphertext`'s boilerplate
-   subtraction, and it is what stops the published-bytes arm aborting on ordinary CSS and script
-   (M1d). A render containing the literal sentinel `zzguardblockzz` would split a block that should
-   not have split — a missed match, never a false abort.
+   subtraction, and it keeps every attribute name out of the published-bytes arm's stream (M1h), so
+   a member named like an attribute the page carries does not abort the publish (M1r). A render
+   containing the literal sentinel `zzguardblockzz` would split a block that should not have split —
+   a missed match, never a false abort.
 5. **Paraphrase, and it is the only transform class left.** This residual used to name three classes
    — paraphrase, entity encoding and mid-word tag splitting — and stated that the latter two were
    *"open, not accepted: unlike paraphrase they are mechanical and a normalizer could close them."*
@@ -956,3 +957,12 @@ records that decision and takes none: the `Status:` line carries the supersessio
 marker points forward at Decision 3's heading, its projection table, Decision 4's enum sentence and
 the layer table's row for this guard. The superseded text is retained as decided, so no wording is
 replaced.
+
+**Amendment (2026-10-29, Thursday) — § *Coverage boundary*, residual 4: the arm it cites, and its
+count word; no decision changes.** Residual 4 said that dropping attribute names "is what stops the
+published-bytes arm aborting on ordinary CSS and script", and cited M1d for it. M1d cannot fail for
+that reason: with `attrs` made to keep each attribute name, M1d still passes, while M1h, which reads
+that the attribute's own name is dropped, and M1r, whose renders expect a member named like an
+attribute the page carries to publish, both fail. The sentence now cites M1h and M1r. It also
+read "Neither projection covers them", which was written when the guard matched two projections;
+none of them covers these names, so it reads "No projection".
