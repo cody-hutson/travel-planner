@@ -928,6 +928,45 @@ _norm_words() {
     | sed '/^$/d'
 }
 
+# _guard_arm <decode|raw> <projection> <evaluand> <words_file>
+#   Runs ONE arm of a content guard into <words_file>: <projection> <evaluand>, then
+#   _decode_entities under `decode` and not under `raw`, then _line_sentinels and _norm_words.
+#   Returns the whole pipeline's status: 0 when every stage exited 0, otherwise the status of
+#   the last stage that did not, so a stage that fails after writing a prefix is non-zero
+#   although the stream it left is not empty. Writes nothing to stdout. A first argument that
+#   is neither mode runs nothing and returns 2.
+#
+# EVERY ARM OF BOTH CONTENT GUARDS RUNS THROUGH THIS FUNCTION, so an arm cannot be added
+# without its status being read, and the stages after the projection are written here once.
+# `decode` is the HTML guard's mode: a render carries character references, and each is
+# resolved before tokenization on every arm. `raw` is the change-summary guard's: its markdown
+# projection has never had that stage, and the mode keeps its token stream as it was.
+#
+# `pipefail` IS SET INSIDE, in this function's own subshell, for the reason itinerary_digest
+# sets it inside its substitution: a caller that sourced this file can turn `pipefail` off
+# after this file's own `set` line, and a status read that leaned on the caller's option would
+# see only the last stage, which succeeds on a prefix. What a caller refuses on a non-zero
+# status, and in what order against its word floor, is stated at each caller.
+_guard_arm() { # <decode|raw> <projection> <evaluand> <words_file> -> the pipeline's status
+  case "${1:-}" in
+    decode) ( set -o pipefail; "$2" "$3" | _decode_entities | _line_sentinels | _norm_words > "$4" ) ;;
+    raw)    ( set -o pipefail; "$2" "$3" | _line_sentinels | _norm_words > "$4" ) ;;
+    *)      return 2 ;;
+  esac
+}
+
+# _guard_words <words_file> -> the arm's word count on stdout
+#   The one word count every arm of both content guards takes. NEITHER sentinel is a word, and
+#   both are subtracted. The line sentinel matters most: there is one per source line, so
+#   counting them would let a render of twenty near-empty lines clear a twenty-word floor that
+#   exists precisely to catch an extraction that yielded nothing. On a file it cannot read it
+#   prints nothing; every caller reads that as 0 through its own `${n:-0}`, and every arm
+#   refuses 0. That default is load-bearing: an empty count in a numeric test is an error, not
+#   a number below the floor, and the test would read as false.
+_guard_words() { # <words_file> -> count on stdout
+  awk -v B="$_GUARD_BLOCK" -v L="$_GUARD_LINE" '$0 != B && $0 != L { c++ } END { print c + 0 }' "$1"
+}
+
 # _guard_match <rule> <value_tokens_file> <render_tokens_file>
 #   exit 0  the value matched the render under <rule>          (a HIT)
 #        1  no match
@@ -2249,30 +2288,24 @@ verify_publishable_content() { # <site_html> <trip_dir>
   # THREE projections of the same file, matched independently, because publish copies the
   # file and not the painting of it. The visible arm is what a reader sees; the published
   # arm is what a reader can retrieve; the joined arm is what a reader sees once an inline
-  # tag that SPLIT A WORD is closed up. All three use the SAME _norm_words on both sides
-  # of the comparison — one normalization, six streams, no chance of the sides drifting —
-  # and all three run their strip through _decode_entities, so a character reference is
-  # resolved before tokenization on every arm rather than on whichever one was remembered.
+  # tag that SPLIT A WORD is closed up. Each runs through _guard_arm in `decode` mode, so all
+  # three use the SAME _norm_words on both sides of the comparison — one normalization, six
+  # streams, no chance of the sides drifting — and all three resolve a character reference
+  # before tokenization rather than on whichever arm was remembered.
   #
   # EACH ARM'S STATUS IS READ, AND AN ARM THE GUARD COULD NOT READ IS UNDETERMINED — NEVER A
   # PASS. An arm is a pipeline of four stages — projection, entity decoding, line sentinels,
   # normalization — and a stage that fails leaves nothing behind it, or a prefix. Either way the
   # stream is not the render, and matching it would certify a file nobody read: a value past the
-  # point of failure would publish. So each arm runs in a subshell that sets `pipefail` for
-  # itself, and the subshell's status is the whole pipeline's, the stages inside _norm_words
-  # included. It is set INSIDE for the reason itinerary_digest sets it inside its own
-  # substitution: a caller that sourced this file can turn `pipefail` off after this file's own
-  # `set` line, and a read that leaned on the caller's option would see only the last stage,
-  # which succeeds on a prefix. Every refusal below comes before the class is read, so no value
-  # is in scope when it is written — it names the projection from the closed enum below and
-  # nothing else — and an empty class does not excuse it: a render the guard could not read is
-  # not certified, whatever the trip holds.
-  ( set -o pipefail; strip_to_text_blocks "$site_html" | _decode_entities | _line_sentinels | _norm_words > "$rfile" ) || stv=$?
-  # NEITHER sentinel is a word, and both must be subtracted from the degraded-extraction
-  # floor. The line sentinel matters more than the block one here: there is one per source
-  # line, so counting them would let a render of 20 near-empty lines clear a 20-word floor
-  # that exists precisely to catch an extraction that yielded nothing.
-  n="$(awk -v B="$_GUARD_BLOCK" -v L="$_GUARD_LINE" '$0 != B && $0 != L { c++ } END { print c + 0 }' "$rfile")"; n="${n:-0}"
+  # point of failure would publish. So each arm's status is _guard_arm's, which is the whole
+  # pipeline's whatever the caller's `pipefail`, the stages inside _norm_words included; the
+  # helper says why it sets the option itself. Every refusal below comes before the class is
+  # read, so no value is in scope when it is written — it names the projection from the closed
+  # enum below and nothing else — and an empty class does not excuse it: a render the guard
+  # could not read is not certified, whatever the trip holds.
+  _guard_arm decode strip_to_text_blocks "$site_html" "$rfile" || stv=$?
+  # Neither sentinel is a word, and the floor counts neither: _guard_words says why.
+  n="$(_guard_words "$rfile")"; n="${n:-0}"
   if [ "$n" -lt 20 ]; then
     rm -rf "$work"
     warn "guard: the rendered site yielded only $n words of visible text — a degraded extraction is not a clean result"
@@ -2299,8 +2332,8 @@ verify_publishable_content() { # <site_html> <trip_dir>
   # closed direction, whose remedy is the encrypted publish. What the same rule does in a
   # comment, a script or an attribute value, in both directions, is stated above
   # strip_to_published_text.
-  ( set -o pipefail; strip_to_published_text "$site_html" | _decode_entities | _line_sentinels | _norm_words > "$pfile" ) || stp=$?
-  np="$(awk -v B="$_GUARD_BLOCK" -v L="$_GUARD_LINE" '$0 != B && $0 != L { c++ } END { print c + 0 }' "$pfile")"; np="${np:-0}"
+  _guard_arm decode strip_to_published_text "$site_html" "$pfile" || stp=$?
+  np="$(_guard_words "$pfile")"; np="${np:-0}"
   if [ "$stp" -ne 0 ] || [ "$np" -eq 0 ]; then
     rm -rf "$work"
     warn "guard: a projection of $site_html could not be read (retrievable markup (comment, attribute or script body)): its pipeline exited $stp and yielded $np words. A projection that failed or yielded nothing has not read the render, so what would be published cannot be certified, and an undetermined result is a failure, never a clean pass. The PROJECTION is the subject here, not the render or a model record: editing either clears nothing until the projection runs."
@@ -2310,8 +2343,8 @@ verify_publishable_content() { # <site_html> <trip_dir>
   # and only closes an inline tag up, which can join two words into one but never removes one, so
   # after the floor above it always carries at least one word; an empty one is refused as a
   # failed one is.
-  ( set -o pipefail; strip_to_joined_text "$site_html" | _decode_entities | _line_sentinels | _norm_words > "$jfile" ) || stj=$?
-  nj="$(awk -v B="$_GUARD_BLOCK" -v L="$_GUARD_LINE" '$0 != B && $0 != L { c++ } END { print c + 0 }' "$jfile")"; nj="${nj:-0}"
+  _guard_arm decode strip_to_joined_text "$site_html" "$jfile" || stj=$?
+  nj="$(_guard_words "$jfile")"; nj="${nj:-0}"
   if [ "$stj" -ne 0 ] || [ "$nj" -eq 0 ]; then
     rm -rf "$work"
     warn "guard: a projection of $site_html could not be read (joined markup (an inline tag split a word)): its pipeline exited $stj and yielded $nj words. A projection that failed or yielded nothing has not read the render, so what would be published cannot be certified, and an undetermined result is a failure, never a clean pass. The PROJECTION is the subject here, not the render or a model record: editing either clears nothing until the projection runs."
@@ -2404,12 +2437,13 @@ EOF
 # Reusing it here would mean either widening it to a second evaluand class or calling
 # it on a file it was not written for.
 #
-# What IS reused is everything below it, and all three are evaluand-agnostic by
-# construction: nonpublishable_values (the class SOURCE), _norm_words (the shared
-# normalization), and _guard_match (the matcher, which consumes two token files and
-# knows nothing about the class that produced them). This function therefore adds one
-# projection and no membership knowledge — it declares ZERO selectors, no literal
-# field label and no literal member name, exactly as its HTML sibling does. That is
+# What IS reused is everything below it, and all of it is evaluand-agnostic by
+# construction: nonpublishable_values (the class SOURCE), _guard_arm and _guard_words (an
+# arm's pipeline, its status and its word count, called as each HTML arm calls them),
+# _norm_words (the shared normalization), and _guard_match (the matcher, which consumes two
+# token files and knows nothing about the class that produced them). This function
+# therefore adds one projection and no membership knowledge — it declares ZERO selectors,
+# no literal field label and no literal member name, exactly as its HTML sibling does. That is
 # the property test-publish-guard.sh case L8 grades, and L8 names its target functions
 # explicitly, so this one is added to that list in the same change.
 
@@ -2429,7 +2463,8 @@ EOF
 # exists to catch actually produce: an empty, unreadable or truncated file yields 0.
 # Note the asymmetry with the HTML arm and why it is correct — the markdown projection
 # below is NON-LOSSY (it inserts sentinels and drops nothing), so there is no extraction
-# machinery here that can silently degrade. The floor guards the file, not the parser.
+# machinery here that can silently degrade. The floor guards the file; the arm's status,
+# read as every arm's is, guards the pipeline.
 GUARD_SUMMARY_FLOOR=4
 
 # strip_md_to_text_blocks <markdown_file> -> text with block sentinels on stdout
@@ -2500,7 +2535,7 @@ strip_md_to_text_blocks() { # <markdown_file> -> visible text with block sentine
 verify_summary_content() { # <change_summary_md> <trip_dir>
   local summary_md="${1:-}" trip_dir="${2:-}"
   local recs rc work sfile vfile n field rule value hit=0 undet=0
-  local loc=""
+  local loc="" sts=0
 
   if [ -z "$summary_md" ] || [ -z "$trip_dir" ]; then
     warn "guard: the summary check needs a change summary and a trip dir"; return 2
@@ -2512,13 +2547,23 @@ verify_summary_content() { # <change_summary_md> <trip_dir>
   work="$(mktemp -d)" || { warn "guard: could not stage the summary check"; return 2; }
   sfile="$work/summary.words"; vfile="$work/value.words"
 
-  strip_md_to_text_blocks "$summary_md" | _line_sentinels | _norm_words > "$sfile"
-  # Neither sentinel is a word and neither may count toward the floor — the same
-  # subtraction the HTML arm makes, for the same reason, now over both.
-  n="$(awk -v B="$_GUARD_BLOCK" -v L="$_GUARD_LINE" '$0 != B && $0 != L { c++ } END { print c + 0 }' "$sfile")"; n="${n:-0}"
+  _guard_arm raw strip_md_to_text_blocks "$summary_md" "$sfile" || sts=$?
+  # Neither sentinel is a word, and the floor counts neither: the one count every arm takes.
+  n="$(_guard_words "$sfile")"; n="${n:-0}"
   if [ "$n" -lt "$GUARD_SUMMARY_FLOOR" ]; then
     rm -rf "$work"
     warn "guard: the change summary yielded only $n words — below the $GUARD_SUMMARY_FLOOR-word floor, so a degraded read is not a clean result"
+    return 2
+  fi
+  # The floor is asked first, as on the HTML guard's visible arm, so a projection that failed
+  # and left little behind is reported by the floor, as it always was. One that failed after
+  # writing $GUARD_SUMMARY_FLOOR words or more clears the floor, and its status refuses it: the
+  # stream is a prefix of the summary, and a value past the point of failure would read as
+  # absent. Like every refusal here it comes before the class is read, so no value is in scope
+  # when it is written, and an empty class does not excuse it.
+  if [ "$sts" -ne 0 ]; then
+    rm -rf "$work"
+    warn "guard: a projection of $summary_md could not be read: its pipeline exited $sts and yielded $n words. A projection that failed has not read the summary, so what would be shared cannot be certified, and an undetermined result is a failure, never a clean pass. The PROJECTION is the subject here, not the summary or a model record: editing either clears nothing until the projection runs."
     return 2
   fi
 

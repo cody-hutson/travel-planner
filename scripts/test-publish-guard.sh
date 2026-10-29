@@ -32,7 +32,9 @@
 # the same trip without it publishes. The rows are read from the live declaration.
 # L17 grades the guard reading its own projections: one that fails, or a published or joined
 # one that yields no words, is UNDETERMINED (rc=2) whatever the caller's `pipefail`, and the
-# refusal names the projection and nothing else.
+# refusal names the projection and nothing else. L17f grades that every arm of both content
+# guards runs through the one arm helper and counts through the one count, and L17g that the
+# count subtracts both sentinels.
 # M = published-bytes / stoplist / freshness remediation (#123 A6.5) · N = block-scoped
 # conjunctive window (#123 PR-7) · O = the [THIRD-PARTY] class: entry denylist,
 # value-granularity mark, real derived-model shape (#123 AC 3).
@@ -47,7 +49,9 @@
 # the placement tuple the emitter spec declares actually detects a same-day time move
 # on the shipped witness, that an unchanged re-bake still detects nothing, that
 # time is compared WITHIN the matched key rather than folded into it, and that a
-# status-only change reaches STATUS-CHANGED instead of being re-reported as MOVED.
+# status-only change reaches STATUS-CHANGED instead of being re-reported as MOVED. R8
+# grades the summary guard reading its projection's status: one that fails after a prefix
+# clearing the floor is UNDETERMINED (rc=2), whatever the caller's `pipefail`.
 # S = the organizer-confirm gate (#552 AC 5) — the republish path gates on the
 # organizer's confirmation of an ITINERARY-CONTENT change, not on publish-as-such, so a
 # coordination-marker-only republish still reaches the group. Grades both branches
@@ -931,7 +935,7 @@ pp_legacy_verify() { # <site_html> <trip_dir> -> the legacy guard's status on st
     strip_to_joined_text()    { pp_legacy_joi "$1"; }
     verify_publishable_content "$1" "$2" >/dev/null 2>&1; printf '%s' "$?" )
 }
-PP_FNS='strip_to_published_text strip_to_text_blocks strip_to_joined_text _decode_entities _line_sentinels _norm_words _guard_match nonpublishable_values'
+PP_FNS='strip_to_published_text strip_to_text_blocks strip_to_joined_text _decode_entities _line_sentinels _norm_words _guard_match _guard_arm _guard_words nonpublishable_values'
 PP_CMDS='perl awk sed tr head tail grep cat mktemp rm basename'
 # shellcheck disable=SC2086 # PP_FNS is a word list by construction
 PP_FP="$(declare -f $PP_FNS)"
@@ -1096,8 +1100,10 @@ fi
 # commit as the re-key rather than after it.
 l8sel="$(_guard_declared_selectors)"
 l8n="$(printf '%s\n' "$l8sel" | grep -c .)"
-# Every function that must hold ZERO selectors. Two predicates and one projection.
-L8_PREDICATES='verify_publishable_content verify_summary_content strip_md_to_text_blocks'
+# Every function that must hold ZERO selectors. Two predicates, the projection the summary
+# predicate adds, and the two helpers every arm of both runs through: an arm's stages moved out
+# of the predicates' bodies into those two, and a selector could be hardcoded there as easily.
+L8_PREDICATES='verify_publishable_content verify_summary_content strip_md_to_text_blocks _guard_arm _guard_words'
 l8absent=""
 # Each body is read through pp_body, so the guard graded is the production one and not the
 # parity cells' recorder standing in for it from group L to M6.
@@ -1976,10 +1982,10 @@ fi
 #                       the visible arm, and every call after its second run as production
 #                       does — pipefail off
 #   matcher             fails on the joined arm alone
-# The pipefail-off cells grade the status read rather than this suite's own `pipefail`. The
-# guard sets it inside each arm's subshell, so turning it off in the caller's subshell is the
-# one thing varied, and it is enough — S15k needed a fresh shell for its own reasons, and the
-# pin here lives inside the guard. Each prefix is a real one: the first lines of the same
+# The pipefail-off cells grade the status read rather than this suite's own `pipefail`.
+# _guard_arm sets it inside each arm's subshell, so turning it off in the caller's subshell is
+# the one thing varied, and it is enough — S15k needed a fresh shell for its own reasons, and
+# the pin here lives inside the helper. Each prefix is a real one: the first lines of the same
 # projection over the same render, written before any stub exists.
 #
 # WHAT DECIDES THE CELLS WITH NO OUTPUT. A published or joined arm that succeeds with no output
@@ -2187,6 +2193,100 @@ if [ -n "$L17_DEFS" ] && [ "$(declare -f strip_to_published_text strip_to_joined
 else
   FAIL "L17e: a stub outlived its subshell (functions still defined:${l17_stub:- none}), or a production definition changed — every verdict after L17 would be grading the stub"
 fi
+
+# L17f — EVERY ARM OF BOTH CONTENT GUARDS RUNS THROUGH THE ONE ARM HELPER AND THE ONE COUNT
+# (#2071 AC-1). L17b grades the status reads the guard makes; this grades that neither guard
+# has an arm without one. A projection a guard calls other than as _guard_arm's argument is an
+# arm whose status nothing reads, a guard body that names `pipefail` is running a pipeline of
+# its own beside the helper, and an arm that counts its words other than through _guard_words
+# carries a copy of the count — each reopens, for that arm, the fail-open L17b closes, while
+# every L17 cell stays green. Read from the parsed bodies (declare -f drops comments), so a
+# projection named in a comment is not counted. A projection is any word that begins `strip_`:
+# every projection in the publish script is so named, so an arm added later is counted with no
+# list here to update. The count's awk program is read as well: it is written once in the
+# publish script, in _guard_words, so a copy anywhere in the script turns this red. The scan's
+# control is a planted body carrying one arm of each kind, which it must tell apart.
+l17f_scan() { # <function-body text> -> "<projections> <through-helper> <helper-calls> <counts> <pipefail-lines>"
+  local line rest np=0 nh=0 na=0 nw=0 npf=0
+  while IFS= read -r line; do
+    rest="$line"; while [[ "$rest" =~ strip_[a-z_]+(.*) ]]; do np=$((np+1)); rest="${BASH_REMATCH[1]}"; done
+    rest="$line"; while [[ "$rest" =~ _guard_arm[[:space:]]+(decode|raw)[[:space:]]+strip_[a-z_]+(.*) ]]; do nh=$((nh+1)); rest="${BASH_REMATCH[2]}"; done
+    rest="$line"; while [[ "$rest" =~ _guard_arm[[:space:]](.*) ]]; do na=$((na+1)); rest="${BASH_REMATCH[1]}"; done
+    rest="$line"; while [[ "$rest" =~ _guard_words[[:space:]](.*) ]]; do nw=$((nw+1)); rest="${BASH_REMATCH[1]}"; done
+    case "$line" in *pipefail*) npf=$((npf+1)) ;; esac
+  done <<EOF
+$1
+EOF
+  printf '%d %d %d %d %d' "$np" "$nh" "$na" "$nw" "$npf"
+}
+L17F_PLANT='( set -o pipefail; strip_to_text_blocks "$1" | _decode_entities | _line_sentinels | _norm_words > "$2" ) || st=$?
+_guard_arm decode strip_to_joined_text "$1" "$3" || sj=$?
+n="$(_guard_words "$3")"'
+l17f_ctl="$(l17f_scan "$L17F_PLANT")"
+l17f_v="$(l17f_scan "$(pp_body verify_publishable_content)")"
+l17f_s="$(l17f_scan "$(declare -f verify_summary_content)")"
+read -r l17f_vp l17f_vh l17f_va l17f_vw l17f_vf <<< "$l17f_v"
+read -r l17f_sp l17f_sh l17f_sa l17f_sw l17f_sf <<< "$l17f_s"
+l17f_lit='$0 != B && $0 != L { c++ }'
+l17f_nlit="$(grep -c -F -- "$l17f_lit" "$SELF_PUBLISH")"
+l17f_lctl="$(grep -c -F -- "$l17f_lit" "$SELF")"
+if [ "$l17f_ctl" = "2 1 1 1 1" ] && [ "$l17f_lctl" -ge 1 ] \
+   && [ "$l17f_vp" -ge 3 ] && [ "$l17f_vh" -eq "$l17f_vp" ] && [ "$l17f_va" -eq "$l17f_vh" ] && [ "$l17f_vw" -eq "$l17f_va" ] && [ "$l17f_vf" -eq 0 ] \
+   && [ "$l17f_sp" -ge 1 ] && [ "$l17f_sh" -eq "$l17f_sp" ] && [ "$l17f_sa" -eq "$l17f_sh" ] && [ "$l17f_sw" -eq "$l17f_sa" ] && [ "$l17f_sf" -eq 0 ] \
+   && [ "$l17f_nlit" -eq 1 ]; then
+  PASS "L17f: AC-1 — verify_publishable_content calls each of its $l17f_vp projections only as _guard_arm's argument and counts each arm through _guard_words ($l17f_vw calls), verify_summary_content its $l17f_sp the same way ($l17f_sw), neither body names pipefail, and the count's awk program is written $l17f_nlit time in the publish script. The scan told the planted body's hand-written arm from its helper arm (control '$l17f_ctl'), so these counts are a measurement"
+else
+  FAIL "L17f: control '$l17f_ctl' (want '2 1 1 1 1'; the count's awk program in this suite $l17f_lctl time(s), want >=1); verify_publishable_content '$l17f_v' and verify_summary_content '$l17f_s' (projections, through _guard_arm, _guard_arm calls, _guard_words calls, pipefail lines — want the first three equal, the fourth equal to them, the last 0, and at least 3 and 1 projections); the count's awk program $l17f_nlit time(s) in the publish script, want 1 — an arm runs outside the helper, counts outside it, or the scan cannot see one"
+fi
+
+# L17g — THE ONE COUNT SUBTRACTS BOTH SENTINELS, ON BOTH GUARDS (#2071). _guard_words is the
+# count every arm's floor or emptiness check reads, and what makes it a count of WORDS is that
+# neither sentinel is one. Two renders and two summaries, each pair with the same lines: one of
+# each carries fewer words than its guard's floor, on more lines and more block boundaries than
+# that floor, so a count that took either sentinel for a word would clear the floor and publish
+# it; the other carries more words than the floor. Each is read against the class with no
+# values, fresh against all four, so the floor is the only question: the under-floor files are
+# UNDETERMINED (rc=2) and the others publish (rc=0), which also shows the refusals are the
+# floor's and not the files' shape. Fixture integrity is counted by grep, not by the helper.
+L17G="$WORK/l17g"; mkdir -p "$L17G"
+{ printf '<html><body>\n'
+  for l17g_i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30; do
+    case "$l17g_i" in *0) printf '<p>w%s</p>\n' "$l17g_i" ;; *) printf '<p></p>\n' ;; esac
+  done
+  printf '</body></html>\n'; } > "$L17G/under.html"
+{ printf '<html><body>\n'
+  for l17g_i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30; do
+    printf '<p>w%s</p>\n' "$l17g_i"
+  done
+  printf '</body></html>\n'; } > "$L17G/over.html"
+printf '# Change Summary\n\n\n\n\n\n\n\n' > "$L17G/under.md"
+printf '# Change Summary for the group\n\n\n\n\n\n\n\n' > "$L17G/over.md"
+touch -t 202601011100 "$L17G/under.html" "$L17G/over.html" "$L17G/under.md" "$L17G/over.md"
+strip_to_text_blocks "$L17G/under.html" | _decode_entities | _line_sentinels | _norm_words > "$L17G/under.html.words"
+strip_md_to_text_blocks "$L17G/under.md" | _line_sentinels | _norm_words > "$L17G/under.md.words"
+l17g_hw="$(grep -c -v -x -F -e "$_GUARD_BLOCK" -e "$_GUARD_LINE" "$L17G/under.html.words")"
+l17g_hl="$(grep -c -x -F -e "$_GUARD_LINE" "$L17G/under.html.words")"; l17g_hb="$(grep -c -x -F -e "$_GUARD_BLOCK" "$L17G/under.html.words")"
+l17g_mw="$(grep -c -v -x -F -e "$_GUARD_BLOCK" -e "$_GUARD_LINE" "$L17G/under.md.words")"
+l17g_ml="$(grep -c -x -F -e "$_GUARD_LINE" "$L17G/under.md.words")"; l17g_mb="$(grep -c -x -F -e "$_GUARD_BLOCK" "$L17G/under.md.words")"
+l17g_assert() {
+  local f want rc ok=0 n=0 bad=""
+  for f in under.html:2 over.html:0 under.md:2 over.md:0; do
+    n=$((n+1)); want="${f##*:}"
+    case "$f" in
+      *.html:*) verify_publishable_content "$L17G/${f%:*}" "$L17N" >/dev/null 2>&1; rc=$? ;;
+      *)        verify_summary_content     "$L17G/${f%:*}" "$L17N" >/dev/null 2>&1; rc=$? ;;
+    esac
+    if [ "$rc" -eq "$want" ]; then ok=$((ok+1)); else bad="$bad ${f%:*}=rc$rc/want$want"; fi
+  done
+  if [ "$l17g_hw" -lt 20 ] && [ $((l17g_hw + l17g_hl)) -ge 20 ] && [ $((l17g_hw + l17g_hb)) -ge 20 ] \
+     && [ "$l17g_mw" -lt "$GUARD_SUMMARY_FLOOR" ] && [ $((l17g_mw + l17g_ml)) -ge "$GUARD_SUMMARY_FLOOR" ] && [ $((l17g_mw + l17g_mb)) -ge "$GUARD_SUMMARY_FLOOR" ] \
+     && [ "$n" -eq 4 ] && [ "$ok" -eq 4 ]; then
+    PASS "L17g: the count subtracts both sentinels on both guards — a render of $l17g_hw words on $l17g_hl lines and $l17g_hb blocks, and a summary of $l17g_mw words on $l17g_ml lines and $l17g_mb blocks, are UNDETERMINED (rc=2) under their floors of 20 and $GUARD_SUMMARY_FLOOR, which either sentinel counted as a word would have cleared; the same lines carrying more words than the floor publish (rc=0) on the same class"
+  else
+    FAIL "L17g: render words=$l17g_hw lines=$l17g_hl blocks=$l17g_hb (want words <20 and words plus either >=20); summary words=$l17g_mw lines=$l17g_ml blocks=$l17g_mb (want words <$GUARD_SUMMARY_FLOOR and words plus either >=$GUARD_SUMMARY_FLOOR); $ok of $n files returned their status —$bad. An under-floor file at rc=0 is a sentinel counted as a word"
+  fi
+}
+l17g_assert
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Group M — the three confirmed defects from the Phase A6.5 adversarial design
@@ -5327,6 +5427,112 @@ if [ "$R7CRC" -eq 0 ]; then
   PASS "R7c: SPECIFICITY — the summary R1 certifies clean still passes (rc=0) against the fixture carrying the [THIRD-PARTY] entry, whose class holds $R7ERECS further record(s). So R7b's abort is caused by the value that was carried, not by the entry's presence in the class"
 else
   FAIL "R7c: a clean summary returned rc=$R7CRC against the third-party fixture — the entry-limb records abort or undetermine a correct summary on their own, so R7b is not evidence and no trip carrying a third-party entry could ever publish a change summary"
+fi
+
+# ── Group R, #2071 — the summary arm reads its projection's status ──────────────────
+# verify_summary_content runs its one arm through _guard_arm, as each arm of the HTML guard
+# does, and refuses a projection that failed after writing GUARD_SUMMARY_FLOOR words or more.
+# Below the floor such a read was always refused (R3); above it the stream was a prefix of the
+# summary, a value past the point of failure read as absent, and the summary certified clean.
+#   R8a  FIXTURE INTEGRITY, graded first: each prefix clears the floor and carries no class
+#        value, the summary carries the value past both, and the class with no values parses
+#        empty and fresh against the summary its cells read
+#   R8b  THE SUBJECT, and the arm registered with the oracle. Its cells are of both kinds in
+#        ONE verdict: the projection, or a stage after it, fails after a prefix (rc=2, the
+#        caller's pipefail on and off, and on a class with no values), and the same projection
+#        succeeds (rc=1 on the trip's class, pipefail on and off; rc=0 on the class with no
+#        values). With either arm helper removed every cell reads rc=2, so the failing cells
+#        alone would still PASS; the succeeding ones are what make the registrations against
+#        _guard_arm and _guard_words discriminate
+#   R8c  THE MESSAGE: each refusal names the status read and carries no class value
+# Every stub is defined inside the subshell that uses it, and dies with it, as L17's do.
+R8_PFX="$WORK/r8_pfx_md.txt"; strip_md_to_text_blocks "$RHIT" > "$R8_PFX"
+R8_PFXL=12
+# The class with no values the *-noclass cells read is NEWER than the summary they read, so it
+# is a fresh empty class and not a stale one, which is refused before any limb is reached.
+R8N="$WORK/r8_noclass"; mkdir -p "$R8N/outputs"
+printf '# Traveler Model [DERIVED]\n\n## Rowan\n- Interests: markets, museums\n\n### Needs\n- Category: rest\n  Specific: an early night on the first day of the trip\n' > "$R8N/outputs/traveler-model.md"
+R8S="$WORK/r8_noclass_summary.md"; cp "$RHIT" "$R8S"
+touch -t 202601011100 "$R8S"
+touch -t 202601011200 "$R8N/outputs/traveler-model.md"
+R8_CELLS='md-prefix md-prefix-pfoff norm-prefix-pfoff md-prefix-noclass md-ctl md-ctl-pfoff md-ctl-noclass'
+R8_NCELLS=7
+
+# The words in a stream file, counted by a reader that is not _guard_words, so the fixture
+# check does not lean on the helper under test.
+r8_words() { grep -c -v -x -F -e "$_GUARD_BLOCK" -e "$_GUARD_LINE" "$1"; }
+
+r8_cell() { # <capture_file> <cell> -> rc on stdout
+  local cap="$1" cell="$2" s="$RHIT" td="$RTD"
+  case "$cell" in *-noclass) s="$R8S"; td="$R8N" ;; esac
+  ( case "$cell" in *-pfoff) set +o pipefail ;; esac
+    case "$cell" in
+      md-prefix*)        strip_md_to_text_blocks() { head -n "$R8_PFXL" "$R8_PFX"; return 1; } ;;
+      norm-prefix-pfoff) tr() { head -c 300 | command tr "$@"; return 1; } ;;
+    esac
+    verify_summary_content "$s" "$td" >/dev/null 2>"$cap" )
+  printf '%s' "$?"
+}
+r8_want() { # <cell> -> the exact status that cell must return
+  case "$1" in md-ctl-noclass) printf '0' ;; md-ctl*) printf '1' ;; *) printf '2' ;; esac
+}
+
+# R8a — FIXTURE INTEGRITY, graded FIRST, for L17a's reason: each prefix must clear the floor,
+# so that its cell is refused by the status read and not by the floor, and neither may carry
+# the value, or a cell could be decided by a match on the prefix.
+head -n "$R8_PFXL" "$R8_PFX" | _line_sentinels | _norm_words > "$WORK/r8_pfx_md.words"
+strip_md_to_text_blocks "$RHIT" | _line_sentinels | perl -0777 -pe '$_ = substr($_, 0, 300)' | _norm_words > "$WORK/r8_pfx_norm.words"
+r8_wm="$(r8_words "$WORK/r8_pfx_md.words")"; r8_wn="$(r8_words "$WORK/r8_pfx_norm.words")"
+r8_pv=0
+for r8_f in "$WORK/r8_pfx_md.words" "$WORK/r8_pfx_norm.words"; do
+  case " $(tr '\n' ' ' < "$r8_f") " in *" irish "*|*" 2027 "*) r8_pv=$((r8_pv+1)) ;; esac
+done
+r8_sv=0; case " $(strip_md_to_text_blocks "$RHIT" | _norm_words | tr '\n' ' ') " in *" irish "*" 2027 "*) r8_sv=1 ;; esac
+nonpublishable_values "$R8N" "$R8S" > "$WORK/r8_noclass.out" 2>/dev/null; r8_nrc=$?
+r8_ne=0; if [ "$r8_nrc" -eq 0 ] && [ ! -s "$WORK/r8_noclass.out" ]; then r8_ne=1; fi
+if [ "$r8_wm" -ge "$GUARD_SUMMARY_FLOOR" ] && [ "$r8_wn" -ge "$GUARD_SUMMARY_FLOOR" ] && [ "$r8_pv" -eq 0 ] && [ "$r8_sv" -eq 1 ] && [ "$r8_ne" -eq 1 ]; then
+  PASS "R8a: fixture integrity — the projection's prefix carries $r8_wm words and the normalization stage's $r8_wn, both at or above the $GUARD_SUMMARY_FLOOR-word floor and neither carrying the value, which the summary carries past both; the class with no values parses empty and fresh against its summary. The failing cells below are decided by the status read"
+else
+  FAIL "R8a: the fixtures are not set up as claimed (prefix words projection=$r8_wm normalization=$r8_wn want >=$GUARD_SUMMARY_FLOOR; prefixes carrying the value=$r8_pv want 0; summary carrying it=$r8_sv want 1; class with no values empty and fresh=$r8_ne want 1) — R8b would not be measuring the status read"
+fi
+
+# R8b — THE SUBJECT, and the arm registered with the oracle against the guard and both of its
+# arm helpers. Captures go to the directory the caller names, so the oracle's re-runs cannot
+# overwrite the ones R8c reads.
+r8_assert() { # <capture_dir>
+  local d="$1" cell rc want ok=0 n=0 bad=""
+  mkdir -p "$d"
+  for cell in $R8_CELLS; do
+    n=$((n+1))
+    rc="$(r8_cell "$d/$cell.err" "$cell")"; want="$(r8_want "$cell")"
+    if [ "$rc" = "$want" ]; then ok=$((ok+1)); else bad="$bad $cell=rc$rc/want$want"; fi
+  done
+  if [ "$n" -eq "$R8_NCELLS" ] && [ "$ok" -eq "$n" ]; then
+    PASS "R8b: all $n cells returned their exact status — the summary's projection failing after a prefix that clears the floor is UNDETERMINED (rc=2) with the caller's pipefail on and off, so is a normalization stage failing after a prefix, and so is a failing projection on a class with no values; the same projection succeeding is a HIT on the trip's class (rc=1, pipefail on and off) and publishes on the class with no values (rc=0). No path from a projection the summary guard could not read reaches a pass, and its refusals are the projection's, not a guard that refuses whatever it reads"
+  else
+    FAIL "R8b: $ok of $n cells (want $R8_NCELLS) returned their exact status —$bad. rc=0 on a failing cell is the summary certified from a prefix; rc=2 on a succeeding cell is a guard that refuses whatever it reads, which also satisfies every failing cell"
+  fi
+}
+r8_assert "$WORK/r8live"
+
+# R8c — THE MESSAGE. A refusal of a failing cell names the status read and nothing else: it is
+# written before the class is read, so no value is in scope. Read from the captures R8b's live
+# run wrote; the value scan carries its own sensitivity arm, a planted line it must find.
+r8_named=0; r8_leak=0; r8_ncap=0
+for r8_c in $R8_CELLS; do
+  r8_cap="$WORK/r8live/$r8_c.err"
+  [ -r "$r8_cap" ] || continue
+  r8_ncap=$((r8_ncap+1))
+  case "$(cat "$r8_cap")" in *[Ii]rish*|*2027*) r8_leak=$((r8_leak+1)) ;; esac
+  case "$r8_c" in md-ctl*) continue ;; esac
+  case "$(cat "$r8_cap")" in *"could not be read: its pipeline exited "*) r8_named=$((r8_named+1)) ;; esac
+done
+r8_plant="planted: carry your Irish passport, valid to 2027"
+r8_ctl=0; case "$r8_plant" in *[Ii]rish*|*2027*) r8_ctl=1 ;; esac
+if [ "$r8_ctl" -eq 1 ] && [ "$r8_ncap" -eq "$R8_NCELLS" ] && [ "$r8_named" -eq 4 ] && [ "$r8_leak" -eq 0 ]; then
+  PASS "R8c: each of the 4 refusals names the status read, and none of the $r8_ncap captures carries the value; the value scan found the planted line, so its zero is a measurement"
+else
+  FAIL "R8c: captures=$r8_ncap of $R8_NCELLS, refusals naming the status read=$r8_named of 4, captures carrying the value=$r8_leak, scan control=$r8_ctl — a refusal is not the status read's, or the value reached a log this suite publishes"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
@@ -11117,6 +11323,19 @@ md_flips nonpublishable_values      "O9c" o9c_assert
 # one verdict the arm emits is a FAIL. Its captures go to their own directory here, so this
 # re-run cannot overwrite the ones L17d read.
 md_flips verify_publishable_content "L17b" l17_assert "$WORK/l17md"
+
+# The change-summary guard's projection status (#2071), registered against the guard and against
+# both arm helpers. R8b grades an EXACT status on every cell, and its cells are of both kinds in
+# ONE verdict: with the guard removed every cell reads 127; with _guard_arm removed, or
+# _guard_words, every cell reads rc=2, which the failing cells expect and the succeeding cells do
+# not, so each removal leaves exactly one FAIL. An arm over the failing cells alone — L17b's shape
+# — would read blind to either helper, which is why L17b is registered against the guard only.
+md_flips verify_summary_content     "R8b"       r8_assert "$WORK/r8md"
+md_flips _guard_arm                 "R8b-arm"   r8_assert "$WORK/r8md"
+md_flips _guard_words               "R8b-words" r8_assert "$WORK/r8md"
+# The count itself (#2071): L17g grades an EXACT status on files either side of each floor, so
+# with _guard_words removed every file reads rc=2, which its over-floor files do not expect.
+md_flips _guard_words               "L17g"      l17g_assert
 
 # The published projection's '=' arms (#1467). Each grades an EXACT status on its render and on
 # its twin, so with the projection removed the guard refuses its published arm (rc=2) and each
