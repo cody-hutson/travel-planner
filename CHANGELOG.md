@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-10-29 — Erasure reaches the four names it still misses
+## [0.61.0] — 2026-10-29 — Erasure reaches the four names it still misses
 
 `/trip-record erase` now finds the names it used to leave behind, and rewrites each one or lists it
 for you to remove. Whoever erases a person sees a wider reach report, and a party member who never
