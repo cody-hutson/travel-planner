@@ -36,6 +36,9 @@
 # M = published-bytes / stoplist / freshness remediation (#123 A6.5) · N = block-scoped
 # conjunctive window (#123 PR-7) · O = the [THIRD-PARTY] class: entry denylist,
 # value-granularity mark, real derived-model shape (#123 AC 3).
+# M6 = the pre-0.60.0 parity cells (CIAC-1): every page the suite renders in groups L to O that
+# the guard before 0.60.0 blocked is blocked at the head, read by a recorder that wraps the guard
+# from group L to M6.
 # R = the change-summary (#550). R1-R5 grade its CONTENT guard (AC 5) —
 # verify_summary_content over outputs/change-summary.md, an `internal` artifact
 # verify_publishable_content never sees: the clean/HIT/UNDETERMINED triple, the
@@ -871,6 +874,94 @@ HTML
 LOUT="$WORK/l.err"; LRC=0
 lguard() { verify_publishable_content "$1" "${2:-$LTD}" >/dev/null 2>"$LOUT"; LRC=$?; }
 
+# ── The pre-0.60.0 parity cells' RECORDER (CIAC-1), installed before group L's first arm ──
+#
+# Groups L to O pass page after page to verify_publishable_content, directly or through lguard,
+# mguard and oguard. M6, after group O, asks of each of those pages that the guard before 0.60.0
+# blocked whether the guard as it stands blocks it too. So from here to M6 the guard is wrapped:
+# verify_publishable_content is a recorder that calls the production guard, renamed
+# pp_real_verify, and keeps its status. While PP_ON=1, and only while every function the guard's
+# verdict path reads is byte-identical to the definition this suite sourced and no command it
+# runs is shadowed by a function — so a page graded under a stub is skipped and counted rather
+# than recorded — it grades the same page again in a subshell through the three legacy readers
+# below, discards that run's output, and appends one row to a manifest: the page's basename, the
+# trip's, the head's status and the legacy status. It returns the head's status unchanged and
+# writes nothing to its caller's streams, so no arm in between reads a different answer. M6e
+# puts the production guard back and asserts it. An arm that reads the guard's TEXT while the
+# recorder stands in for it reads it through pp_body, which returns the production definition.
+#
+# THE ORACLE, LABELLED AS SUCH: pp_legacy_pub is strip_to_published_text, and pp_legacy_vis and
+# pp_legacy_joi are strip_to_text_blocks and strip_to_joined_text, each copied verbatim from
+# v0.59.0, the guard before 0.60.0, with only its name changed. The three programs are frozen;
+# TWO OF THEIR INPUTS ARE NOT. Each interpolates _GUARD_BLOCK_TAGS and _GUARD_BLOCK from this
+# shell at run time, so a change to either moves this oracle with it, and it stops being
+# v0.59.0's. Nothing else in the guard's verdict path differs between v0.59.0 and the head's
+# base: _guard_match, nonpublishable_values, _norm_words and _decode_entities carry no changed
+# line between the two, so a legacy rc=1 is a page the guard before 0.60.0 blocked.
+pp_legacy_pub() { # v0.59.0's strip_to_published_text, verbatim but for its name — frozen; reads _GUARD_BLOCK_TAGS and _GUARD_BLOCK live
+  perl -0777 -pe "
+    s{<!DOCTYPE[^>]*>}{ ' ' . (\$& =~ tr/\n//cdr) }gie;      # the doctype is machinery
+    s/<!--/ /g; s/-->/ /g;                             # drop the delimiters, KEEP the body
+    s{<\s*/?\s*($_GUARD_BLOCK_TAGS)\b}{ ' $_GUARD_BLOCK ' . (\$& =~ tr/\n//cdr) }gie;   # block boundary, before tag names go
+    s{<\s*/?\s*([A-Za-z][-A-Za-z0-9]*)}{ ' ' . (\$& =~ tr/\n//cdr) }ge;   # the tag NAME (with its \"<\") is machinery
+    s{([-A-Za-z_:][-A-Za-z0-9_:.]*)\s*=\s*}{ ' ' . (\$& =~ tr/\n//cdr) }ge;   # the attribute NAME is machinery; its VALUE stays
+  " "$1"
+}
+pp_legacy_vis() { # v0.59.0's strip_to_text_blocks, verbatim but for its name — frozen; reads _GUARD_BLOCK_TAGS and _GUARD_BLOCK live
+  perl -0777 -pe "
+    s{<(script|style)\b[^>]*>.*?</\1>}{ \$& =~ tr/\n//cdr }gise;
+    s{<\s*/?\s*($_GUARD_BLOCK_TAGS)\b[^>]*>}{ ' $_GUARD_BLOCK ' . (\$& =~ tr/\n//cdr) }gie;
+    s{<[^>]+>}{ ' ' . (\$& =~ tr/\n//cdr) }ge;
+  " "$1"
+}
+pp_legacy_joi() { # v0.59.0's strip_to_joined_text, verbatim but for its name — frozen; reads _GUARD_BLOCK_TAGS and _GUARD_BLOCK live
+  perl -0777 -pe "
+    s{<(script|style)\b[^>]*>.*?</\1>}{ \$& =~ tr/\n//cdr }gise;
+    s{<\s*/?\s*($_GUARD_BLOCK_TAGS)\b[^>]*>}{ ' $_GUARD_BLOCK ' . (\$& =~ tr/\n//cdr) }gie;
+    s{<[^>\n]+>}{}g;
+    s{<[^>]+>}{ ' ' . (\$& =~ tr/\n//cdr) }ge;
+  " "$1"
+}
+# The legacy guard: the guard as it stands, reading the page through the three legacy readers.
+# PP_ON is cleared inside, so a recorder still standing in for the guard passes straight through.
+pp_legacy_verify() { # <site_html> <trip_dir> -> the legacy guard's status on stdout
+  ( PP_ON=0
+    strip_to_published_text() { pp_legacy_pub "$1"; }
+    strip_to_text_blocks()    { pp_legacy_vis "$1"; }
+    strip_to_joined_text()    { pp_legacy_joi "$1"; }
+    verify_publishable_content "$1" "$2" >/dev/null 2>&1; printf '%s' "$?" )
+}
+PP_FNS='strip_to_published_text strip_to_text_blocks strip_to_joined_text _decode_entities _line_sentinels _norm_words _guard_match nonpublishable_values'
+PP_CMDS='perl awk sed tr head tail grep cat mktemp rm basename'
+# shellcheck disable=SC2086 # PP_FNS is a word list by construction
+PP_FP="$(declare -f $PP_FNS)"
+PP_VPC="$(declare -f verify_publishable_content)"
+PP_MAN="$WORK/pp_manifest"; PP_SKIP="$WORK/pp_skipped"; : > "$PP_MAN"; : > "$PP_SKIP"
+pp_record() { # <site_html> <trip_dir> <head status> -> one manifest row, or one skip
+  local c
+  for c in $PP_CMDS; do
+    if declare -F "$c" >/dev/null 2>&1; then printf 'shadowed %s\n' "$c" >> "$PP_SKIP"; return 0; fi
+  done
+  # shellcheck disable=SC2086 # PP_FNS is a word list by construction
+  if [ "$(declare -f $PP_FNS)" != "$PP_FP" ]; then printf 'stubbed\n' >> "$PP_SKIP"; return 0; fi
+  printf '%s|%s|%s|%s\n' "${1##*/}" "${2##*/}" "$3" "$(pp_legacy_verify "$1" "$2")" >> "$PP_MAN"
+}
+pp_body() { # <function> -> its definition as the publish script wrote it: the production guard's while the recorder stands in for it
+  if [ "$1" = verify_publishable_content ] && declare -F pp_real_verify >/dev/null 2>&1; then
+    declare -f pp_real_verify | sed '1s/^pp_real_verify/verify_publishable_content/'
+  else
+    declare -f "$1"
+  fi
+}
+eval "$(printf '%s\n' "$PP_VPC" | sed '1s/^verify_publishable_content/pp_real_verify/')"
+verify_publishable_content() { # the RECORDER: the production guard's status, recorded beside the legacy guard's
+  local pp_rc=0
+  pp_real_verify "$@" || pp_rc=$?
+  if [ "${PP_ON:-0}" -eq 1 ]; then pp_record "${1:-}" "${2:-}" "$pp_rc"; fi
+  return "$pp_rc"
+}
+PP_ON=1
+
 # L1 — a Passport value reaching the render aborts.
 LHIT="$WORK/l_passport.html"
 lrender "$LHIT" "Border note: carry your Ruritanian passport, valid to 2033, at all times."
@@ -1008,14 +1099,16 @@ l8n="$(printf '%s\n' "$l8sel" | grep -c .)"
 # Every function that must hold ZERO selectors. Two predicates and one projection.
 L8_PREDICATES='verify_publishable_content verify_summary_content strip_md_to_text_blocks'
 l8absent=""
+# Each body is read through pp_body, so the guard graded is the production one and not the
+# parity cells' recorder standing in for it from group L to M6.
 for l8f in $L8_PREDICATES; do
-  declare -f "$l8f" >/dev/null 2>&1 || l8absent="$l8absent$l8f "
+  pp_body "$l8f" >/dev/null 2>&1 || l8absent="$l8absent$l8f "
 done
 l8pred=0; l8src=0
 while IFS= read -r l8s; do
   [ -n "$l8s" ] || continue
   for l8f in $L8_PREDICATES; do
-    l8pred=$(( l8pred + $(declare -f "$l8f" | grep -cF -- "$l8s") ))
+    l8pred=$(( l8pred + $(pp_body "$l8f" | grep -cF -- "$l8s") ))
   done
   l8src=$((  l8src  + $(declare -f nonpublishable_values | grep -cF -- "$l8s") ))
 done <<EOF
@@ -4532,6 +4625,116 @@ o9c_assert() {
   fi
 }
 o9c_assert
+
+# ── M6 — the pre-0.60.0 parity cells (CIAC-1) ────────────────────────────────
+#
+# The recorder installed before group L graded every page the suite rendered and passed to
+# verify_publishable_content from there to here twice: through the guard as it stands, and
+# through the same guard reading the page with v0.59.0's three readers in place of the head's —
+# the guard before 0.60.0. A legacy rc=1 is a page that guard blocked. These cells ask, of that
+# population and of no other, that the guard as it stands blocks each such page too, except a
+# page the fence below names with an operator's ruling. Their reach is the pages this suite
+# renders: a shape no arm here writes is not in the population, and a PASS says nothing about
+# it. A page an arm grades under a stub, or with a command shadowed by a function, was skipped
+# and counted rather than recorded, because what was graded there is not the guard.
+#   M6a  the population: pairs recorded, calls skipped, the legacy-blocked denominator, legacy
+#        rc=2 reported outside it, and #2055's leak page (M1t's) among the blocked
+#   M6b  every legacy-blocked page is blocked at the head, unless the fence names it — the
+#        fence held one way
+#   M6c  the fence held the other way: an entry whose page no longer differs fails. The fence
+#        is EMPTY at release; its check is shown able to fire on a planted entry
+#   M6d  ARMED-RED: #2055's leak page graded with the published lookahead put back is flagged
+#        by M6b's own predicate (head 0, legacy 1)
+#   M6e  the recorder is gone and the production guard is back, byte for byte
+# Every verdict names pages by basename only: no value reaches this log.
+#
+# THE FENCE, a literal list, one `<page basename> <reason-token>` per line. An entry is added
+# only where an operator ruling records a deliberate limit for a shape the guard before 0.60.0
+# blocked, and the same change narrows the milestone's AFTER for that shape.
+PP_FENCE=''
+PP_ON=0
+pp_fenced() { # <page basename> <fence text> -> status 0 when the fence names the page
+  local b
+  while read -r b _; do
+    if [ -n "$b" ] && [ "$b" = "$1" ]; then return 0; fi
+  done <<EOF
+$2
+EOF
+  return 1
+}
+pp_regressed() { # <page basename> <head rc> <legacy rc> <fence text> -> status 0 when M6b reports the pair
+  [ "$3" = "1" ] && [ "$2" != "1" ] && ! pp_fenced "$1" "$4"
+}
+pp_stale() { # <fence text> -> each fenced page the manifest does NOT show blocked by the legacy guard alone, one per line
+  local b
+  while read -r b _; do
+    [ -n "$b" ] || continue
+    awk -F '|' -v P="$b" '$1 == P && $4 == "1" && $3 != "1" { f = 1 } END { exit f ? 0 : 1 }' "$PP_MAN" || printf '%s\n' "$b"
+  done <<EOF
+$1
+EOF
+}
+pp_leakp="${M1T_SC##*/}"
+pp_n="$(awk 'END { print NR + 0 }' "$PP_MAN")"
+pp_sk="$(awk 'END { print NR + 0 }' "$PP_SKIP")"
+pp_shd="$(awk '$1 == "shadowed" { c++ } END { print c + 0 }' "$PP_SKIP")"
+pp_l1="$(awk -F '|' '$4 == "1" { c++ } END { print c + 0 }' "$PP_MAN")"
+pp_l2="$(awk -F '|' '$4 == "2" { c++ } END { print c + 0 }' "$PP_MAN")"
+pp_hn="$(awk -F '|' '$3 == "1" && $4 != "1" { c++ } END { print c + 0 }' "$PP_MAN")"
+pp_leak="$(awk -F '|' -v P="$pp_leakp" '$1 == P && $4 == "1" { c++ } END { print c + 0 }' "$PP_MAN")"
+if [ "$pp_l1" -ge 1 ] && [ "$pp_leak" -ge 1 ]; then
+  PASS "M6a: pre-0.60.0 parity — over the pages the suite renders in groups L to O: $pp_n graded pairs recorded, $pp_sk calls skipped under a stub or a shadowed command ($pp_shd shadowed), $pp_l1 pairs the guard before 0.60.0 blocks (rc=1, the denominator), $pp_l2 it could not determine (rc=2, reported and outside the denominator), $pp_hn the head blocks and it did not, and #2055's leak page ($pp_leakp) among the blocked $pp_leak time(s). The legacy guard reads through v0.59.0's three readers, frozen copies that interpolate _GUARD_BLOCK_TAGS and _GUARD_BLOCK live"
+else
+  FAIL "M6a: pre-0.60.0 parity — the population is not a measurement: $pp_l1 legacy-blocked pair(s) of $pp_n recorded ($pp_sk skipped), #2055's leak page $pp_leakp blocked $pp_leak time(s) (want at least 1 of each). The recorder did not run, so the cells below would grade nothing"
+fi
+m6b_assert() { # one verdict
+  local p h g den=0 nb=0 bad="" ctl=0
+  if pp_regressed planted-control 0 1 ""; then ctl=1; fi
+  while IFS='|' read -r p _ h g; do
+    if [ "$g" = "1" ]; then den=$((den+1)); fi
+    if pp_regressed "$p" "$h" "$g" "$PP_FENCE"; then nb=$((nb+1)); bad="$bad $p"; fi
+  done < "$PP_MAN"
+  if [ "$ctl" -eq 1 ] && [ "$den" -ge 1 ] && [ "$nb" -eq 0 ]; then
+    PASS "M6b: pre-0.60.0 parity — every one of the $den pairs the guard before 0.60.0 blocks, among the pages the suite renders, is blocked at the head, and the fence excuses none of them; the predicate flags a planted pair (head 0, legacy 1), so the zero is a measurement"
+  else
+    FAIL "M6b: pre-0.60.0 parity — $nb of $den legacy-blocked pair(s) publish or go undetermined at the head with no fence entry:$bad (predicate control $ctl, want 1). A page the guard before 0.60.0 caught is no longer caught"
+  fi
+}
+m6b_assert
+pp_fe="$(printf '%s\n' "$PP_FENCE" | awk 'NF { c++ } END { print c + 0 }')"
+pp_st="$(pp_stale "$PP_FENCE" | awk 'NF { c++ } END { print c + 0 }')"
+pp_lhp="${LHIT##*/}"
+pp_lh="$(awk -F '|' -v P="$pp_lhp" '$1 == P && $3 == "1" && $4 == "1" { c++ } END { print c + 0 }' "$PP_MAN")"
+pp_pl="$(pp_stale "$pp_lhp planted-control" | awk 'NF { c++ } END { print c + 0 }')"
+pp_px=0; pp_regressed "$pp_leakp" 0 1 "$pp_leakp planted-control" || pp_px=1
+if [ "$pp_st" -eq 0 ] && [ "$pp_lh" -ge 1 ] && [ "$pp_pl" -eq 1 ] && [ "$pp_px" -eq 1 ]; then
+  PASS "M6c: pre-0.60.0 parity — the fence holds $pp_fe entr(ies) and none is stale; held both ways: a planted entry naming L1's page ($pp_lhp), which both guards block, is reported stale, and a planted entry naming a page excuses that page from M6b's predicate, so an entry can neither outlive its page's difference nor fail to excuse it"
+else
+  FAIL "M6c: pre-0.60.0 parity — $pp_st of $pp_fe fence entr(ies) stale (want 0); L1's page blocked by both guards $pp_lh time(s) (want at least 1); planted stale entry reported $pp_pl time(s) (want 1); planted entry excusing its page $pp_px (want 1). The fence names a page that no longer differs, or its check cannot tell"
+fi
+m6d_assert() { # one verdict
+  local h g fl=no
+  h="$(m1t_unfixed "$M1T_SC" "$MTD")"
+  g="$(pp_legacy_verify "$M1T_SC" "$MTD")"
+  if pp_regressed "${M1T_SC##*/}" "$h" "$g" "$PP_FENCE"; then fl=yes; fi
+  if [ "$h" = "0" ] && [ "$g" = "1" ] && [ "$fl" = "yes" ]; then
+    PASS "M6d: pre-0.60.0 parity — ARMED-RED: #2055's leak page, graded with the published lookahead put back to the exact closing tag, publishes (rc=$h) where the guard before 0.60.0 blocks it (rc=$g), and M6b's predicate flags the pair, so the cells can fail"
+  else
+    FAIL "M6d: pre-0.60.0 parity — the unfixed published program gives rc=$h (want 0), the legacy guard rc=$g (want 1), M6b's predicate flagged it: $fl (want yes). The cells could not see the regression #2055 repairs"
+  fi
+}
+m6d_assert
+pp_rec="$(declare -f verify_publishable_content)"
+eval "$PP_VPC"
+unset -f pp_real_verify
+pp_gone=yes; declare -F pp_real_verify >/dev/null 2>&1 && pp_gone=no
+pp_back=no; [ -n "$PP_VPC" ] && [ "$(declare -f verify_publishable_content)" = "$PP_VPC" ] && pp_back=yes
+pp_was=no; [ "$pp_rec" != "$PP_VPC" ] && pp_was=yes
+if [ "$pp_back" = yes ] && [ "$pp_was" = yes ] && [ "$pp_gone" = yes ]; then
+  PASS "M6e: pre-0.60.0 parity — the recorder is gone: verify_publishable_content is byte-identical to the definition the suite sourced, the renamed production guard is undefined, and the recorder read before the restore differed from it, so the comparison can tell"
+else
+  FAIL "M6e: pre-0.60.0 parity — the recorder outlived its cells (production definition restored: $pp_back, recorder differed from it before the restore: $pp_was, renamed guard gone: $pp_gone; want yes for each). Every verdict after this point would grade the recorder"
+fi
 
 # ── Group R (#550 AC 5) — the change-summary content guard ───────────────────
 # outputs/change-summary.md (C20) is `publish: internal`: it is shared out of band and
@@ -10950,6 +11153,10 @@ md_flips strip_to_published_text    "M1s" m1is_assert
 md_flips strip_to_published_text    "M1t" m1t_assert
 md_flips strip_to_joined_text       "M1x" m1bc_assert M1x "a value split mid-word by an inline tag"            "$M1X_SP" "$M1X_EX" 'joined markup (an inline tag split a word)'
 md_flips strip_to_text_blocks       "M1y" m1bc_assert M1y "a value with an attribute-carrying tag around a word" "$M1Y_SP" "$M1Y_EX" 'visible text'
+# The pre-0.60.0 parity cells' armed-red control (CIAC-1). M6d grades an EXACT status from the
+# legacy guard, so with the frozen published copy removed that guard refuses its published arm
+# (rc=2), the pair is not flagged, and the arm's one verdict is a FAIL.
+md_flips pp_legacy_pub              "M6d" m6d_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group FZ — every verdict arm in this file must be able to FAIL.
