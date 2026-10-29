@@ -2407,7 +2407,7 @@ verify_publishable_content() { # <site_html> <trip_dir>
     [ -n "${rule:-}" ] || continue
     printf '%s' "$value" | _norm_words > "$vfile"
     # _guard_match now writes the winning render position to stdout on a HIT and nothing
-    # at all otherwise, so both arms are captured. The exit-status contract is unchanged,
+    # at all otherwise, so all four arms are captured. The exit-status contract is unchanged,
     # and so is the errexit behaviour: this function already runs as the left operand of
     # `||` at its call site, which suspends errexit through the whole body — the same
     # property the `rcv=$?` idiom depended on before.
@@ -2481,7 +2481,7 @@ EOF
 # ── WHY A SECOND EVALUAND AND NOT A SECOND MECHANISM ─────────────────────────
 # outputs/change-summary.md (C20) is `publish: internal`. It is shared by the
 # organizer out of band and never reaches the render, so verify_publishable_content
-# never sees it: that function is HTML-bound on both of its projections and is called
+# never sees it: that function is HTML-bound on all four of its projections and is called
 # from exactly one site, cmd_publish's plaintext limb, on the file being published.
 # Reusing it here would mean either widening it to a second evaluand class or calling
 # it on a file it was not written for.
@@ -2533,7 +2533,7 @@ GUARD_SUMMARY_FLOOR=4
 # the line's own text, so the line opens the new block rather than closing the old one.
 #
 # ONE OUTPUT LINE PER SOURCE LINE, which is the markdown counterpart of the
-# newline-preservation the two HTML projections now carry. The sentinel used to be
+# newline-preservation the four HTML projections now carry. The sentinel used to be
 # printed on a line of its own AHEAD of the line that opened the block, so a source line
 # opening a block produced two output lines and the line map ran ahead of the file. It is
 # emitted as a PREFIX on the line instead. The token stream is unchanged: _norm_words
@@ -2577,7 +2577,7 @@ strip_md_to_text_blocks() { # <markdown_file> -> visible text with block sentine
 # states: the strings matched here are passport values and third-party health needs,
 # and this runs in a public Actions log.
 #
-# ONE projection, not two. The HTML sibling matches a visible arm and a retrievable arm
+# ONE projection, not four. The HTML sibling matches visible, published, joined and shape arms
 # because publish copies the file rather than the painting of it. There is no such split
 # here: the projection below drops nothing, so the tokens it yields ARE the file's, and a
 # second arm would be the same stream twice.
