@@ -12713,6 +12713,89 @@ else
   PASS "ER26: a discovered file that joins no roster row is one branch — § \`erase\` carries all $ER26_N operative phrase(s): the four ways the branch is reached, the \`## group\` exit among them, over both roster states; every REACH row \`UNDETERMINED\` and every REPORT row under candidate names; the dry run naming each such trip; the store step held, row 29 naming the trips holding it, and the re-run that finishes it; \`--also-trip\` report-only, with re-linking as the route to a write, and on the *Reads:* line. No line calls the state an interrupted erasure, and every control fired: each phrase stripped moves the count by 1, and the old claim planted is counted"
 fi
 
+# ── ER27 — WHERE A TRIP NAMES THE SUBJECT OTHERWISE, THE RECORD'S NAME IS READ THERE AS A CANDIDATE,
+# AND ROW 38 SAYS WHAT IT DOES NOT READ (#1791, QF-03, QF-04). A trip may call the subject by a name
+# that is not the record's display name, and there the record's name can be another traveller's,
+# so no REACH row matches it. § *The name every match reads* now says that every REPORT row on such
+# a trip reads the record's name as a candidate, on a first run as on a later one, and names the
+# candidates on a trip in the no-row branch; the receipt's closing line says so per trip; and row
+# 38's cell names the two things it does not count — row 7's constraint text, which row 7 reports,
+# and row 20's control files, which are never opened. Three limbs:
+#   (i)   THE OPERATIVE SENTENCES: each phrase below is present in § `erase`, flattened, once;
+#   (ii)  THE FIXTURE: the erasure-reach fixture carries a keep of the RECORD's name, it holds its
+#         count, and it stands in a location a REPORT row names, read as ER23 reads a scope keep;
+#         and the record's name reads 0 across ER22's six REACH regions;
+#   (iii) MUST-FIRE CONTROLS: each phrase stripped drops the count by exactly 1; the record's name
+#         and its keep moved into `Mobility notes:` in memory keep their count of 1 and fail the
+#         location check; and the same move reads 1 across ER22's REACH regions.
+ER27_PINS=(
+  'so does every REPORT row on every trip whose name is not the record'"'"'s display name, as a candidate, on a first run as on a later one'
+  'there is no trip name: the candidates are the title line of the discovered file and the record'"'"'s display name'
+  'that the record'"'"'s name was read there as a candidate'
+  'the description text of each constraint row 7 names, which row 7 reports and does not count'
+  'row 20'"'"'s control files are not opened, `.passphrase` among them, the trip'"'"'s key'
+)
+er27_pins() {
+  local n=0 p
+  for p in "${ER27_PINS[@]}"; do
+    case "$1" in *"$p"*) n=$((n + 1)) ;; esac
+  done
+  printf '%d\n' "$n"
+}
+# er27_named <loc> -> 0 where a REPORT row names the keep's location, read against $ER_R_CTX.
+er27_named() {
+  local reg2 sec lab nm hh ll
+  reg2="${1#*#}"; sec="${reg2%%:*}"; lab=""
+  case "$reg2" in *:*) lab="${reg2#*:}" ;; esac
+  nm="$(er23_names "$sec" "$lab")"
+  hh="$(printf '%s' "$nm" | cut -f1)"; ll="$(printf '%s' "$nm" | cut -f2)"
+  [ -n "$ll" ] || ll='*'
+  grep -qxF "$(printf '%s\t%s\tREPORT' "$hh" "$ll")" <<<"$ER23_CITES"
+}
+ER27_FLAT="$(er26_flat "$ER_SEC")"
+ER27_N="${#ER27_PINS[@]}"
+ER27_PIN="$(er27_pins "$ER27_FLAT")"
+ER27_MISSING=""; ER27_STRIPBAD=0
+for er27_p in "${ER27_PINS[@]}"; do
+  case "$ER27_FLAT" in
+    *"$er27_p"*)
+      er27_x="$(er27_pins "$(er_sub1 "$ER27_FLAT" "$er27_p" '')")"
+      [ "$er27_x" -eq $((ER27_PIN - 1)) ] || ER27_STRIPBAD=$((ER27_STRIPBAD + 1)) ;;
+    *) ER27_MISSING="$ER27_MISSING [$er27_p]" ;;
+  esac
+done
+# The fixture: every keep of the record's name.
+ER27_NREC=0; ER27_BAD=""; ER27_UNNAMED=""
+while IFS="$(printf '\t')" read -r er27_loc er27_str er27_cnt; do
+  [ -n "$er27_loc" ] && [ "$er27_str" = "$ER_R_R" ] && [ "${er27_loc%%#*}" = "trip-context.md" ] || continue
+  ER27_NREC=$((ER27_NREC + 1))
+  er27_got="$(er_wcount "$er27_str" "$(er23_region "$er27_loc")")"
+  [ "$er27_got" = "$er27_cnt" ] || ER27_BAD="$ER27_BAD $er27_loc: $er27_got, declared $er27_cnt;"
+  er27_named "$er27_loc" || ER27_UNNAMED="$ER27_UNNAMED $er27_loc"
+done <<EOF
+$ER23_KEEPS
+EOF
+ER27_REACH="$(er22_count "$ER_R_R" "$ER_R_CTX" "$ER_R_MODEL" | cut -f1)"
+# The move control, in a subshell so the fixture text it swaps in never leaks.
+ER27_MCTX="$(er_sub1 "$(er_wsub1 "$ER_R_CTX" "$ER_R_R" 'someone')" '- **Mobility notes:** ' "- **Mobility notes:** $ER_R_R; ")"
+ER27_MOVE="$(
+  ER_R_CTX="$ER27_MCTX"
+  c="$(er_wcount "$ER_R_R" "$(er23_region 'trip-context.md#dietary-health:mobility-notes')")"
+  if er27_named 'trip-context.md#dietary-health:mobility-notes'; then u=0; else u=1; fi
+  r="$(er22_count "$ER_R_R" "$ER27_MCTX" "$ER_R_MODEL" | cut -f1)"
+  printf '%s\t%s\t%s\n' "$c" "$u" "$r"
+)"
+ER27_MC="$(printf '%s' "$ER27_MOVE" | cut -f1)"; ER27_MU="$(printf '%s' "$ER27_MOVE" | cut -f2)"; ER27_MR="$(printf '%s' "$ER27_MOVE" | cut -f3)"
+if [ -z "$ER_SEC" ] || [ "${#ER27_FLAT}" -lt 1000 ] || [ -z "$ER_R_CTX" ] || [ -z "$ER_R_R" ]; then
+  FAIL "ER27: measured nothing — § \`erase\` read ${#ER27_FLAT} flattened byte(s), and the erasure-reach fixture's trip-context and record name read $([ -n "$ER_R_CTX" ] && echo 1 || echo 0) and '${ER_R_R:-<none>}'. A phrase count and a keep check over nothing prove nothing"
+elif [ "$ER27_STRIPBAD" -ne 0 ] || [ "${ER27_MC:-0}" -ne 1 ] || [ "${ER27_MU:-0}" -ne 1 ] || [ "${ER27_MR:-0}" -ne 1 ]; then
+  FAIL "ER27: BROKEN PROBE — $ER27_STRIPBAD of the $ER27_PIN present phrase(s) did not drop the count by exactly 1 when stripped; the record's name moved into \`Mobility notes:\` read ${ER27_MC:-?} there (must be 1), failed the REPORT-location check=${ER27_MU:-?} (must be 1) and read ${ER27_MR:-?} across ER22's REACH regions (must be 1). Until each fires, a verdict below is the instrument's"
+elif [ "$ER27_PIN" -ne "$ER27_N" ] || [ "$ER27_NREC" -lt 1 ] || [ -n "$ER27_BAD" ] || [ -n "$ER27_UNNAMED" ] || [ "${ER27_REACH:-1}" -ne 0 ]; then
+  FAIL "ER27: the record's name on a trip that names the subject otherwise is not read as § \`erase\` must say — it carries $ER27_PIN of the $ER27_N operative phrase(s) (missing:${ER27_MISSING:- none}); the fixture carries $ER27_NREC keep(s) of the record's name '$ER_R_R' (must be at least 1), miscounted:${ER27_BAD:- none}, standing where no REPORT row names:${ER27_UNNAMED:- none}; and the record's name reads ${ER27_REACH:-?} across ER22's REACH regions (must be 0). A trip whose name for the subject is not the record's can hold the record's name as another traveller's, so only a REPORT row may read it, as a candidate"
+else
+  PASS "ER27: § \`erase\` carries all $ER27_N operative phrase(s) — every REPORT row on a trip whose name is not the record's reads the record's name as a candidate on a first run as on a later one, the no-row branch's candidates are named, the receipt says so per trip, and row 38 names row 7's text and row 20's unopened files; the fixture's $ER27_NREC keep(s) of the record's name '$ER_R_R' hold their count in a location a REPORT row names, and the record's name reads 0 across ER22's REACH regions. Every control fired: each phrase stripped moves the count by 1, and the name moved into \`Mobility notes:\` keeps its count, fails the location check and reads 1 in a REACH region"
+fi
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RL — reconcile-on-link: the survey's two witnesses, on the tracked tree.
 #

@@ -4,7 +4,7 @@
 
 This fixture is the state `/trip-record erase` leaves on an **active** trip. It is drawn so that
 the reach rows for `trip-context.md` and `outputs/traveler-model.md` each have something to
-grade, and `scripts/test-artifact-schema.sh` arms `ER22` and `ER23` read the declaration below
+grade, and `scripts/test-artifact-schema.sh` arms `ER22`, `ER23` and `ER27` read the declaration below
 and hold no copy of it. The archived half of the same rows is `../archived-trip-demo/`.
 
 - **Reached** — the roster row and its prose, an origin's traveller slot, a constraint's
@@ -14,7 +14,9 @@ and hold no copy of it. The archived half of the same rows is `../archived-trip-
 - **Reported, and left standing** — a line of `## Trip Style`, which states a fact about the
   trip, and the `Allergies:` list, where the subject's name is also a food. The name is still
   in both because those places are reported rather than rewritten, and the receipt names each
-  with its count.
+  with its count. A second `## Trip Style` line carries the name on the subject's record,
+  which this trip does not use for them: a REPORT row reads it as a candidate, and no row
+  writes it.
 - **Kept by the bounds** — the same word in lower case, inside a health note the erasure does
   rewrite, and inside a longer word. A correct erasure leaves each of them alone.
 
@@ -43,6 +45,7 @@ keep trip-context.md#trip-style Basil 1
 keep trip-context.md#dietary-health:allergies Basil 1
 keep trip-context.md#dietary-health:other-health-notes basil 1
 keep outputs/traveler-model.md#body Basilica 3
+keep trip-context.md#trip-style Vasileios 1
 ```
 
 A section slug is its heading with any trailing bracketed marker removed, lower-cased, every

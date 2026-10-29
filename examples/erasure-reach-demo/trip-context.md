@@ -67,6 +67,7 @@ publish: bound
 ## Trip Style
 
 - An unhurried last afternoon by the river, which Basil asked for.
+- A ferry out to the beach, which Vasileios once suggested.
 
 ## Dietary & Health
 
