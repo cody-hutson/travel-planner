@@ -12638,6 +12638,74 @@ else
   PASS "ER25: the roster's columns are found by what they hold — over $ER25_NR tracked roster(s) the path column is found in all $ER25_NWANT that carry a traveller-file cell, $ER25_NOTHER of them headed other than \`Traveler file\`, and the witness's \`travelers/dana.md\` joins Dana under its own \`Traveler | Profile\` header and under the template's. § \`group\` states the rule in all 4 operative phrases, no line outside § \`profile\` names a column by its header, and every control fired: free text qualifies no column, two path-shaped columns read as none, a stripped phrase and a planted header phrase each move their count by 1"
 fi
 
+# ── ER26 — A DISCOVERED FILE THAT JOINS NO ROW IS ONE BRANCH, AND THE RECORD WAITS FOR IT (#1791,
+# QF-01, QF-02, QF-06). § *Step 1* called a traveller file that joins no roster row "an interrupted
+# erasure", and only where the roster already carried a tombstone. The same state is reached four
+# ways — the subject taken off the roster through `## group`, a roster naming them in a way the join
+# cannot confirm, an interrupted run, someone else's erasure — and a trip with no tombstone fell
+# through every branch. The run now writes nothing on such a trip, reads it under candidate names,
+# names it in the dry run, and holds the store step (the record's deletion last) until every such
+# file is settled, so the id still selects the subject on the next run. `--also-trip` reads a trip
+# discovery did not resolve for its REPORT rows only, and the *Reads:* line says so. Three limbs:
+#   (i)   THE OPERATIVE SENTENCES: every phrase below is present in § `erase`, flattened, once;
+#   (ii)  THE OLD CLAIM GONE: no line of § `erase` still calls this state an interrupted erasure;
+#   (iii) MUST-FIRE CONTROLS: each phrase stripped from a copy drops the count by exactly 1, and the
+#         old claim planted into a copy is counted.
+ER26_PINS=(
+  'is the no-row branch, and the run writes nothing on that trip'
+  'the subject was taken off the roster through `## group`'
+  'the roster names them in a way the join cannot confirm'
+  'or someone else was erased there'
+  'Where the roster carries a `per-[0-9a-f]{4}` row, the last two cannot be told apart'
+  'Every REACH row of that trip reads `UNDETERMINED`'
+  'Every REPORT row reads under candidate names'
+  'The dry-run reach report names each such trip before the prompt'
+  'the run holds the store step'
+  'row 29'"'"'s receipt line names each trip holding it'
+  'a re-run after the operator settles each such file reaches those trips and finishes the deletion'
+  'Steps 9 and 10 are held while any discovered traveller file is in the no-row branch'
+  'for a file in the no-row branch it says that the run held that deletion'
+  '`--also-trip <slug>` names such a trip for a closer report'
+  'every REACH row there reads `UNDETERMINED` and nothing is written'
+  're-link the trip with `/trip-record link <name> <person-id>`'
+  'and a trip `--also-trip` names, which its REPORT rows read'
+)
+er26_flat() { tr '\n' ' ' <<<"$1" | tr -s ' '; }
+# er26_pins <flattened text> -> how many of ER26_PINS it carries.
+er26_pins() {
+  local n=0 p
+  for p in "${ER26_PINS[@]}"; do
+    case "$1" in *"$p"*) n=$((n + 1)) ;; esac
+  done
+  printf '%d\n' "$n"
+}
+# er26_old <text> -> lines still naming the state an interrupted erasure.
+er26_old() { grep -c -i -F -e 'is an interrupted erasure' -e 'interrupted-erasure branch' -e 'reads it as an interrupted erasure' <<<"$1" || true; }
+ER26_FLAT="$(er26_flat "$ER_SEC")"
+ER26_N="${#ER26_PINS[@]}"
+ER26_PIN="$(er26_pins "$ER26_FLAT")"
+ER26_MISSING=""
+for er26_p in "${ER26_PINS[@]}"; do
+  case "$ER26_FLAT" in *"$er26_p"*) ;; *) ER26_MISSING="$ER26_MISSING [$er26_p]" ;; esac
+done
+ER26_STRIPBAD=0
+for er26_p in "${ER26_PINS[@]}"; do
+  case "$ER26_FLAT" in *"$er26_p"*) ;; *) continue ;; esac
+  er26_x="$(er26_pins "$(er_sub1 "$ER26_FLAT" "$er26_p" '')")"
+  [ "$er26_x" -eq $((ER26_PIN - 1)) ] || ER26_STRIPBAD=$((ER26_STRIPBAD + 1))
+done
+ER26_OLD="$(er26_old "$ER_SEC")"
+ER26_OLD_PLANT="$(er26_old "$(er_sub1 "$ER_SEC" 'is the no-row branch, and the run writes nothing on that trip' 'is an interrupted erasure')")"
+if [ -z "$ER_SEC" ] || [ "${#ER26_FLAT}" -lt 1000 ]; then
+  FAIL "ER26: measured nothing — § \`erase\` read ${#ER26_FLAT} flattened byte(s). A phrase count over an empty section proves nothing about the branch it pins"
+elif [ "$ER26_STRIPBAD" -ne 0 ] || { [ "$ER26_PIN" -gt 0 ] && [ "$ER26_OLD_PLANT" -ne $((ER26_OLD + 1)) ]; }; then
+  FAIL "ER26: BROKEN PROBE — $ER26_STRIPBAD of the $ER26_PIN present phrase(s) did not drop the count by exactly 1 when stripped from a copy (a phrase carried twice, or a matcher that does not read it), and the old claim planted into a copy read $ER26_OLD_PLANT against $ER26_OLD (must be one more). Until each fires, a verdict below is the instrument's"
+elif [ "$ER26_PIN" -ne "$ER26_N" ] || [ "$ER26_OLD" -ne 0 ]; then
+  FAIL "ER26: the no-row branch is not the one § \`erase\` states — it carries $ER26_PIN of the $ER26_N operative phrase(s) (missing:${ER26_MISSING:- none}), and $ER26_OLD line(s) still call a file that joins no row an interrupted erasure. A trip with no tombstone whose file joins no row falls through every other branch, and a record deleted while such a file stands leaves nothing that can find the file by id"
+else
+  PASS "ER26: a discovered file that joins no roster row is one branch — § \`erase\` carries all $ER26_N operative phrase(s): the four ways the branch is reached, the \`## group\` exit among them, over both roster states; every REACH row \`UNDETERMINED\` and every REPORT row under candidate names; the dry run naming each such trip; the store step held, row 29 naming the trips holding it, and the re-run that finishes it; \`--also-trip\` report-only, with re-linking as the route to a write, and on the *Reads:* line. No line calls the state an interrupted erasure, and every control fired: each phrase stripped moves the count by 1, and the old claim planted is counted"
+fi
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RL — reconcile-on-link: the survey's two witnesses, on the tracked tree.
 #
