@@ -81,11 +81,12 @@ version to restore from. After a deletion, a trip that referenced that person re
 a name — shows you every location it is about to reach before it changes anything, and
 asks you to type that id back. There is no flag that skips the prompt and no way to run
 it unattended; that is deliberate, and it is the only operation here that works this way.
-It then removes the record and walks the trips, and it prints one line per location so
-you can see what it reached and what it could not.
+It then walks the trips and removes the record, unless a trip holds it as the sixth survivor
+below says, and it prints one line per location so you can see what it reached and what it
+could not.
 
-**What it cannot reach, said plainly rather than left for you to discover.** Five things
-survive it, and the last two survive for a different reason than the first three. A trip
+**What it cannot reach, said plainly rather than left for you to discover.** Six things
+survive it, and the last three survive for a different reason than the first three. A trip
 you had already **unlinked** this person from keeps their name in its own files —
 unlinking leaves no trace behind, so nothing connects that trip to this record any more
 and nothing can find it by id. The erase report lists such trips as *candidates*, by path
@@ -107,13 +108,25 @@ same reach from the group's side.
 
 **The fifth is a name in a place the operation reads and chooses not to rewrite.** On every
 trip it does find, it rewrites the places that name the person — the roster, their traveller
-file, the derived model, a mobility or health note, the lines saying who travels from where —
-and it reports, rather than rewrites, the places that describe the trip itself: its
-destination and dates, its bookings, style and budget, its food and allergy lists, the blocks
-another agent writes, and another traveller's own file. A person's name can also be a place,
+file, the derived model, a mobility or health note, the lines saying who travels from where,
+the lines in another traveller's own file that say how they fit in the group, or who they
+share the trip, a room or a split-off with — and it reports, rather than rewrites, the places
+that describe the trip itself: its destination and dates, its bookings, style and budget, its
+food and allergy lists, the blocks another agent writes, and the rest of another traveller's
+own file. A person's name can also be a place,
 a month, a food or an ordinary word, and a rewrite that caught the wrong one could not be
 taken back. So a name standing in one of those places is left as it was, the report lists
 each place with its count, and removing it is yours.
+
+**The sixth is a trip whose roster no longer names the person.** Someone you took off a trip
+with `/trip-record group` keeps their traveller file there, because that verb never deletes
+one. Erasure finds the file by their id, but no row tells it which name the trip uses for
+them, so it writes nothing on that trip. The report names the file by what it is rather than
+by its name, lists the places the trip still names them as *candidates*, and says the file
+holds everything they filed. While such a file stands, erasure keeps the person's record and
+names the trips holding it: remove the file, or make the roster row and the file agree, then
+run the erase again and it finishes. The same happens on a trip that carries another person's
+erasure, where the operation cannot tell whether this one ran there and stopped.
 
 Deleting a record by hand still works and still does only what it used to: it removes the
 record, and every reference inside every trip stays behind pointing at nothing.

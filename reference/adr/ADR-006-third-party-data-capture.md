@@ -245,3 +245,19 @@ Final, for the decision above.
 - Capture surfaces: `templates/traveler-intake.template.md` — since split, alongside
   `templates/person-intake.template.md` — plus `skills/trip-record/SKILL.md` and
   `agents/00-enrichment.md`.
+
+## Amendment history
+
+**Amendment (2026-10-28, Wednesday) — § *Decision*, item 3 of the 2026-09-03 amendment: the delete
+path it names is recorded as decided, with the option weighed against it; no decision changes.**
+Item 3 says the carried-forward entry of a party member who will never file a profile "acquires a
+delete path" and that "An erasure verb reaches it by **substitution**". The erasure verb shipped
+taking a person record's id, and such a member holds no record, so no verb could name them as its
+subject, and the verb's own text came to record the withdrawal as their only delete path. Two
+remedies were weighed. **(A), chosen:** an erasure whose subject is that entry, named by its trip
+and its place in that trip's derived model, which substitutes the member's name across the trip, so
+item 3 holds as written. **(B), rejected:** recording the withdrawal — the operator's statement that
+the member is not travelling — as the delete path. A withdrawal is honoured only by a reconcile, and
+no reconcile runs on an archived trip, so under (B) nothing would delete such an entry there. How
+the subject is named and what the run writes are settled design, stated in
+`skills/trip-record/SKILL.md` § `erase`, and are not restated here.
