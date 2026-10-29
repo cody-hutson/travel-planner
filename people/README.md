@@ -109,11 +109,11 @@ same reach from the group's side.
 **The fifth is a name in a place the operation reads and chooses not to rewrite.** On every
 trip it does find, it rewrites the places that name the person — the roster, their traveller
 file, the derived model, a mobility or health note, the lines saying who travels from where,
-the lines in another traveller's own file that say who they share the trip, a room or a
-split-off with — and it reports, rather than rewrites, the places that describe the trip
-itself: its destination and dates, its bookings, style and budget, its food and allergy lists,
-the blocks another agent writes, and the rest of another traveller's own file. A person's
-name can also be a place,
+the lines in another traveller's own file that say how they fit in the group, or who they
+share the trip, a room or a split-off with — and it reports, rather than rewrites, the places
+that describe the trip itself: its destination and dates, its bookings, style and budget, its
+food and allergy lists, the blocks another agent writes, and the rest of another traveller's
+own file. A person's name can also be a place,
 a month, a food or an ordinary word, and a rewrite that caught the wrong one could not be
 taken back. So a name standing in one of those places is left as it was, the report lists
 each place with its count, and removing it is yours.
