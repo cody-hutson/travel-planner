@@ -1186,8 +1186,15 @@ reconcile leaves: its withdrawal rows decide, and they apply only where the pres
 the member sits in the named-traveler count and leaves it with their row, so the table's other rows
 decide, and this verb names `/trip-record group` for that row's removal as a departure and does not
 run it. Where the reconcile dropped nothing, because the model held no entry under that name, write
-nothing here. What a withdrawal writes in `trip-context.md` is what § *The total* allows — one
-number, echoed before it is written, and no name.
+nothing here. **An entry an erasure re-keyed is withdrawn by its token or by its place, never by a
+name**: the operator gives `per-<token>` in place of `<name>`, or `--third-party <n>` counted as
+`## erase` § *A subject who holds no record* item 1 counts the model's person entries, and this verb
+carries the withdrawal to the reconcile under that token or that place, which the reconcile resolves
+in the model it reads before writing it, so the presence probe is taken for the entry's token and
+the member leaves the count on the operator's statement
+(`reference/adr/ADR-041-third-party-roster-standing.md`). What a withdrawal writes in
+`trip-context.md` is what § *The total* allows — one number, echoed before it is written, and no
+name.
 
 **Durability, stated rather than hidden.** The entry lives only in `outputs/traveler-model.md`,
 which is `[DERIVED]` and rebuilt from source files — with this entry class **stated as an
@@ -2713,7 +2720,7 @@ Erasure mints **one token per (person × trip)**, of the shape `per-<token>` whe
 5. **Rows.** The reach table below. Row 10 re-keys the heading to `## per-<token> [ERASED]`, keeping the entry's marks, so the token stays non-publishable exactly as the name was. Rows 1–3 read `n/a` where no roster row joins, and otherwise reach the joined row. Row 8 reaches a pending profile file that joins, and reads `n/a` otherwise; row 9 reads `n/a`. Rows 26–30 read `n/a`: no record, no stub, and a group holds only person ids. Every other row runs as on any trip.
 6. **Order.** Where no roster row joins, row 10 is the first write, because the heading is that name's one authority; the rest follow § *The order of writes* from its step 2, with no store step. Where a row joins, which is possible only on an archived trip, the ordinary order applies.
 7. **Confirmation.** `erase --third-party <n>` → the dry-run reach report → the prompt names the entry's name and the trip's slug → a typed confirmation of **the slug** at a terminal → execute. No `--yes`, and no non-interactive path.
-8. **Afterwards.** On an active trip the next reconcile carries the entry forward under its token, need included, as it carries every both-marks entry (`agents/00-enrichment.md`, the third exit): the member still counts in `Total travelers` and in the outside-roster count (`## group` § *Roster standing of a third-party member*), and `[THIRD-PARTY]` keeps their need non-publishable. On an archived trip the entry stays as its token, its need and its marks, and a reopen's first reconcile carries it the same way. Only a withdrawal ends the entry, and it lowers the count.
+8. **Afterwards.** On an active trip the next reconcile carries the entry forward under its token, need included, as it carries every both-marks entry (`agents/00-enrichment.md`, the third exit): the member still counts in `Total travelers` and in the outside-roster count (`## group` § *Roster standing of a third-party member*), and `[THIRD-PARTY]` keeps their need non-publishable. On an archived trip the entry stays as its token, its need and its marks, and a reopen's first reconcile carries it the same way. Only a withdrawal ends the entry, and it lowers the count. It names the entry by its token or by `--third-party <n>`, never by a name, so the member leaves the count on the operator's statement, as `reference/adr/ADR-041-third-party-roster-standing.md` requires (`## person <name>` § *A withdrawal*).
 
 ### Step 2 — discovery, and the residue it cannot find
 

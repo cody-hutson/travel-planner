@@ -13125,8 +13125,15 @@ ER30_PINS7=(
   '**Rule 16 carries the path of § *A subject who holds no record*.**'
   'Under `--third-party <n>` the typed token is the trip'"'"'s slug'
   'a stated residual, because this verb reads no file that would show it'
-  '**The third exit is an erasure substitution: it ends the entry under its name.**'
   '**carry the substituted entry forward verbatim under its token**'
+  # Dev Testing F-09: the third exit ends the name and carries the entry, and the exit count says
+  # the exits change an entry rather than end it.
+  '**The third exit is an erasure substitution: it ends the name, and the entry is carried.**'
+  '**Three exits change a carried entry, and only three.**'
+  # Dev Testing F-02, ruled (a): a withdrawal names an erased both-marks entry by its token or by
+  # `--third-party <n>`, never by a name, so the member leaves the count on the operator's statement.
+  'It names the entry by its token or by `--third-party <n>`, never by a name'
+  '**An entry an erasure re-keyed is withdrawn by its token or by its place, never by a name**'
 )
 er30_pins7() {
   local n=0 p
@@ -13155,18 +13162,36 @@ ER30_DROP='Without this exit the rule reproduces an erased person'"'"'s recorded
 ER30_DROP_N="$(grep -c -F "$ER30_DROP" <<<"$ER30_T7" || true)"
 ER30_DROP_PLANT="$(grep -c -F "$ER30_DROP" <<<"$ER30_T7
 $ER30_DROP" || true)"
+# Dev Testing F-09: the two reconciler sentences that said the third exit ends the entry. Each must
+# read 0 in the reconciler, and each, planted into a copy, must be counted.
+ER30_EXITOLD=(
+  'Three exits end a carried entry, and only three'
+  'it ends the entry under its name'
+)
+er30_exitold() {
+  local a=() p
+  for p in "${ER30_EXITOLD[@]}"; do a+=(-e "$p"); done
+  grep -c -F "${a[@]}" <<<"$1" || true
+}
+ER30_ENRT=""; [ -r "$ER30_ENR" ] && ER30_ENRT="$(cat "$ER30_ENR")"
+ER30_EXO="$(er30_exitold "$ER30_ENRT")"
+ER30_EXOBAD=0
+for er30_o in "${ER30_EXITOLD[@]}"; do
+  [ "$(er30_exitold "$ER30_ENRT
+$er30_o")" -eq $((ER30_EXO + 1)) ] || ER30_EXOBAD=$((ER30_EXOBAD + 1))
+done
 er30_wit() { awk '/^## per-/ && index($0, "[ERASED]") && index($0, "[OPERATOR-PROVIDED]") && index($0, "[THIRD-PARTY]") { n++ } END { print n + 0 }' <<<"$1"; }
 ER30_WT=""; [ -r "$ER30_WIT" ] && ER30_WT="$(cat "$ER30_WIT")"
 ER30_WN="$(er30_wit "$ER30_WT")"
 ER30_WN_X="$(er30_wit "$(awk '!done && /^## per-/ && index($0, "[ERASED]") && index($0, "[THIRD-PARTY]") { sub(/[ \t]*`?\[THIRD-PARTY\]`?/, ""); done = 1 } { print }' <<<"$ER30_WT")")"
 if [ ! -r "$ER30_A6" ] || [ ! -r "$ER30_A12" ] || [ -z "$ER30_B12" ] || [ -z "$ER30_ROW" ] || [ ! -r "$ER30_ENR" ] || [ -z "$ER30_WT" ]; then
   FAIL "ER30: measured nothing — ADR-006 read=$([ -r "$ER30_A6" ] && echo 1 || echo 0), ADR-012 read=$([ -r "$ER30_A12" ] && echo 1 || echo 0), ADR-012's *Two entry classes* both-marks row read=$([ -n "$ER30_ROW" ] && echo 1 || echo 0), the reconciler read=$([ -r "$ER30_ENR" ] && echo 1 || echo 0) and the archived witness's model read=$([ -n "$ER30_WT" ] && echo 1 || echo 0). The texts' agreement cannot be graded over texts that are not there"
-elif [ "$ER30_STRIPBAD" -ne 0 ] || [ "$ER30_OLD_PLANT" -ne $((ER30_OLD + 1)) ] || [ "$ER30_PR2_PLANT" -ne $((ER30_PR2 + 1)) ] || [ "$ER30_STRIPBAD7" -ne 0 ] || [ "$ER30_GONE_PLANT" -ne $((ER30_GONE_N + 1)) ] || [ "$ER30_DROP_PLANT" -ne $((ER30_DROP_N + 1)) ] || [ "$ER30_WN_X" -ne $((ER30_WN - 1)) ]; then
-  FAIL "ER30: BROKEN PROBE — $ER30_STRIPBAD of the $ER30_PIN record phrase(s) and $ER30_STRIPBAD7 of the $ER30_PIN7 path phrase(s) did not drop their count by exactly 1 when stripped; the replaced row sentence planted read $ER30_OLD_PLANT against $ER30_OLD, the active-trip ground planted read $ER30_PR2_PLANT against $ER30_PR2, the old never-the-subject sentence planted into § \`erase\` read $ER30_GONE_PLANT against $ER30_GONE_N, and the old third exit's drop planted into the verb file and the reconciler read $ER30_DROP_PLANT against $ER30_DROP_N (each must be one more); and \`[THIRD-PARTY]\` removed from a copy of the witness model read $ER30_WN_X erased both-marks heading(s) against $ER30_WN (must be one fewer). Until each fires, a verdict below is the instrument's"
-elif [ "$ER30_ORD" -ne 1 ] || [ "$ER30_PIN" -ne "$ER30_N" ] || [ "$ER30_OLD" -ne 0 ] || [ "$ER30_PR2" -ne 0 ] || [ "$ER30_PIN7" -ne "$ER30_N7" ] || [ "$ER30_GONE_N" -ne 0 ] || [ "$ER30_DROP_N" -ne 0 ] || [ "$ER30_WN" -lt 1 ]; then
-  FAIL "ER30: the texts do not agree on option (A) — \`## Amendment history\` after \`References\` and last: ADR-006 at line $ER30_HH6 (References $ER30_R6, last heading $ER30_L6), ADR-012 at line $ER30_HH12 (References $ER30_R12, last heading $ER30_L12); $ER30_PIN of the $ER30_N record phrase(s) present (missing:${ER30_MISSING:- none}); $ER30_PIN7 of the $ER30_N7 path phrase(s) in the verb file and the reconciler (missing:${ER30_MISSING7:- none}); the replaced *Two entry classes* sentence stands $ER30_OLD time(s) in ADR-012's body and the active-trip ground $ER30_PR2 time(s) in the entries; \"never this verb's subject\" stands $ER30_GONE_N time(s) in § \`erase\` and the old third exit's drop $ER30_DROP_N time(s) (each must be 0); and the archived witness carries $ER30_WN erased both-marks heading(s) (must be at least 1)"
+elif [ "$ER30_STRIPBAD" -ne 0 ] || [ "$ER30_OLD_PLANT" -ne $((ER30_OLD + 1)) ] || [ "$ER30_PR2_PLANT" -ne $((ER30_PR2 + 1)) ] || [ "$ER30_STRIPBAD7" -ne 0 ] || [ "$ER30_GONE_PLANT" -ne $((ER30_GONE_N + 1)) ] || [ "$ER30_DROP_PLANT" -ne $((ER30_DROP_N + 1)) ] || [ "$ER30_WN_X" -ne $((ER30_WN - 1)) ] || [ "$ER30_EXOBAD" -ne 0 ]; then
+  FAIL "ER30: BROKEN PROBE — $ER30_STRIPBAD of the $ER30_PIN record phrase(s) and $ER30_STRIPBAD7 of the $ER30_PIN7 path phrase(s) did not drop their count by exactly 1 when stripped; the replaced row sentence planted read $ER30_OLD_PLANT against $ER30_OLD, the active-trip ground planted read $ER30_PR2_PLANT against $ER30_PR2, the old never-the-subject sentence planted into § \`erase\` read $ER30_GONE_PLANT against $ER30_GONE_N, and the old third exit's drop planted into the verb file and the reconciler read $ER30_DROP_PLANT against $ER30_DROP_N (each must be one more); \`[THIRD-PARTY]\` removed from a copy of the witness model read $ER30_WN_X erased both-marks heading(s) against $ER30_WN (must be one fewer); and $ER30_EXOBAD of the ${#ER30_EXITOLD[@]} old exit sentence(s) planted into a copy of the reconciler were not counted once more. Until each fires, a verdict below is the instrument's"
+elif [ "$ER30_ORD" -ne 1 ] || [ "$ER30_PIN" -ne "$ER30_N" ] || [ "$ER30_OLD" -ne 0 ] || [ "$ER30_PR2" -ne 0 ] || [ "$ER30_PIN7" -ne "$ER30_N7" ] || [ "$ER30_GONE_N" -ne 0 ] || [ "$ER30_DROP_N" -ne 0 ] || [ "$ER30_WN" -lt 1 ] || [ "$ER30_EXO" -ne 0 ]; then
+  FAIL "ER30: the texts do not agree on option (A) — \`## Amendment history\` after \`References\` and last: ADR-006 at line $ER30_HH6 (References $ER30_R6, last heading $ER30_L6), ADR-012 at line $ER30_HH12 (References $ER30_R12, last heading $ER30_L12); $ER30_PIN of the $ER30_N record phrase(s) present (missing:${ER30_MISSING:- none}); $ER30_PIN7 of the $ER30_N7 path phrase(s) in the verb file and the reconciler (missing:${ER30_MISSING7:- none}); the replaced *Two entry classes* sentence stands $ER30_OLD time(s) in ADR-012's body and the active-trip ground $ER30_PR2 time(s) in the entries; \"never this verb's subject\" stands $ER30_GONE_N time(s) in § \`erase\`, the old third exit's drop $ER30_DROP_N time(s), and the old exit sentences that said the third exit ends the entry $ER30_EXO time(s) in the reconciler (each must be 0); and the archived witness carries $ER30_WN erased both-marks heading(s) (must be at least 1)"
 else
-  PASS "ER30: both ADRs close on an \`## Amendment history\` entry after \`References\` recording (A) as chosen and (B) as rejected on the archived-trip ground alone, and ADR-012's *Two entry classes* both-marks row says the name, not the need, is what a regeneration would carry back; the verb file and the reconciler carry all $ER30_N7 path phrase(s) — rule 16 as an exception to rule 2 with rule 5 unchanged, the sub-section with its re-run reading, its split refusal and its order, the carried-forward entry and the third exit that carries it — with \"never this verb's subject\" and the old drop gone; the archived witness keeps $ER30_WN erased both-marks heading(s). Every control fired: each phrase stripped moves its count by 1, each old sentence planted is counted, and the mark removed from the witness drops its count by 1"
+  PASS "ER30: both ADRs close on an \`## Amendment history\` entry after \`References\` recording (A) as chosen and (B) as rejected on the archived-trip ground alone, and ADR-012's *Two entry classes* both-marks row says the name, not the need, is what a regeneration would carry back; the verb file and the reconciler carry all $ER30_N7 path phrase(s) — rule 16 as an exception to rule 2 with rule 5 unchanged, the sub-section with its re-run reading, its split refusal and its order, the carried-forward entry and the third exit that ends its name and carries it, under an exit count that says the exits change an entry, and the withdrawal that names an erased entry by its token or its place — with \"never this verb's subject\", the old drop and the old exit sentences gone; the archived witness keeps $ER30_WN erased both-marks heading(s). Every control fired: each phrase stripped moves its count by 1, each old sentence planted is counted, and the mark removed from the witness drops its count by 1"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════

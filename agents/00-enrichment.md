@@ -853,7 +853,7 @@ created it — never describe it as current, re-confirmed, or consented to. A pa
 that carries it re-states nothing about that person; it only declines to lose what
 was already recorded.
 
-**Three exits end a carried entry, and only three.** Anything else leaves it in place.
+**Three exits change a carried entry, and only three.** Anything else leaves it in place.
 **Evaluate supersession before carry-forward**, in that order: once the person's own
 profile has superseded the entry, both marks are gone, so there is nothing left for
 the carry-forward rule to match and a superseded entry is **never re-admitted** on a
@@ -861,7 +861,7 @@ later pass. The second exit is a **fresh operator statement** about that person 
 that revises the needs replaces the carried text (the newer statement wins), one that
 withdraws them drops the entry. Both are real changes, so both emit an update signal.
 
-**The third exit is an erasure substitution: it ends the entry under its name.** An entry
+**The third exit is an erasure substitution: it ends the name, and the entry is carried.** An entry
 the erasure verb has substituted — its heading re-keyed to the `per-<token>` shape and
 marked `[ERASED]` — is never re-admitted under the name it carried. Evaluate the
 substitution before carry-forward, for the same reason supersession is, and then **carry
