@@ -45,6 +45,8 @@
 # wrote it, read last and credited last, blocks again the pages it blocked — a value whose words
 # tags and attribute names push apart inside a script string, a comment or an attribute value —
 # while criterion 5's `=` render is still named for the published arm.
+# M8 = the anchors (#2072): every projection reads a long run after a `<` and a long name run in
+# time proportional to its length, under a CPU cap, and the name-run anchor reads what it read.
 # R = the change-summary (#550). R1-R5 grade its CONTENT guard (AC 5) —
 # verify_summary_content over outputs/change-summary.md, an `internal` artifact
 # verify_publishable_content never sees: the clean/HIT/UNDETERMINED triple, the
@@ -3723,6 +3725,70 @@ m7h_assert() { # one verdict
   fi
 }
 m7h_assert
+
+# ── M8a–M8c (#2072) — a tag head and a name run are each read one way only ──
+#
+# Two patterns the projections inherited took time that grew with the square of a long run: the
+# head of a tag, `\s*/?\s*` before a tag name, on a `<` followed by a long run of spaces (shape 1);
+# and `attrs`'s name run, retried at every position of a long run of name characters in a kept
+# tag's list (shape 2). Both failed closed — a slow guard, never a pass. The tag head is now
+# possessive in every projection that reads one, the visible and joined block rules among them,
+# and the name run is anchored at the start of the run, carrying a leading `[0-9.]` prefix through
+# as it stood. M8a and M8b run each of the four projections over 256 KB of each shape, and over a
+# control of the same length in a character outside the repeated class, under a five-second CPU
+# cap: each must complete. Each carries the old pattern inside the arm (ARMED-RED), put back into
+# the published projection in a subshell and run over 64 KB, which the cap must stop. M8c grades
+# that the anchor reads what the unanchored rule read, on a run that opens with a digit, and that
+# the name-start lookbehind the card first proposed would not have: the lookbehind is built in the
+# arm, and it keeps the run whole.
+m8_file() { # <out_file> <head> <bytes> <character> <tail>
+  { printf '%s' "$2"; printf '%*s' "$3" '' | tr ' ' "$4"; printf '%s\n' "$5"; } > "$1"
+}
+m8_cap() { # <projection> <file> -> its status under a five-second CPU cap
+  ( ulimit -t 5; "$1" "$2" >/dev/null 2>&1; printf '%s' "$?" )
+}
+M8_S1="$WORK/m8_head_spaces.html";  m8_file "$M8_S1" '<!-- <' 262144 ' ' ' -->'
+M8_C1="$WORK/m8_head_dashes.html";  m8_file "$M8_C1" '<!-- <' 262144 '-' ' -->'
+M8_S2="$WORK/m8_run_names.html";    m8_file "$M8_S2" '<!-- <span ;' 262144 'a' ' > -->'
+M8_C2="$WORK/m8_run_hashes.html";   m8_file "$M8_C2" '<!-- <span ;' 262144 '#' ' > -->'
+M8_S1M="$WORK/m8_head_spaces_64k.html"; m8_file "$M8_S1M" '<!-- <' 65536 ' ' ' -->'
+M8_S2M="$WORK/m8_run_names_64k.html";   m8_file "$M8_S2M" '<!-- <span ;' 65536 'a' ' > -->'
+M8_HEAD_OLD='s#\\s\*+/?\\s\*+#\\s*/?\\s*#g'
+M8_RUN_OLD='s/(?<!\[-A-Za-z0-9_:\.\])(\[0-9\.\]\*+)(\[-A-Za-z_:\]\[-A-Za-z0-9_:\.\]\*+/()([-A-Za-z_:][-A-Za-z0-9_:.]*/'
+M8_RUN_LB='s/(?<!\[-A-Za-z0-9_:\.\])(\[0-9\.\]\*+)/()(?<![-A-Za-z0-9_:.])/'
+m8_shape_assert() { # <id> <what> <shape file> <control file> <mutant sed> <mutant file> <mutant marker> — one verdict
+  local id="$1" what="$2" sf="$3" cf="$4" sed_old="$5" mf="$6" mark="$7" p st ok=0 n=0 bad="" ms mk sz
+  for p in strip_to_published_text strip_to_text_blocks strip_to_joined_text strip_to_shape_text; do
+    for f in "$sf" "$cf"; do
+      n=$((n+1)); st="$(m8_cap "$p" "$f")"
+      if [ "$st" = "0" ]; then ok=$((ok+1)); else bad="$bad $p:${f##*/}=$st"; fi
+    done
+  done
+  mk="$(declare -f strip_to_published_text | sed "$sed_old" | grep -c -F -- "$mark")"
+  ms="$( ulimit -t 5; eval "$(declare -f strip_to_published_text | sed "$sed_old")"; strip_to_published_text "$mf" >/dev/null 2>&1; printf '%s' "$?" )"
+  sz=$(( $(wc -c < "$sf") + 0 ))
+  if [ "$n" -eq 8 ] && [ "$ok" -eq 8 ] && [ "$sz" -gt 262144 ] && [ "$mk" -ge 1 ] && [ "$ms" -gt 128 ]; then
+    PASS "$id: $what — each of the four projections reads $sz bytes of it, and the same length of its control, inside a five-second CPU cap ($ok of $n complete with status 0); ARMED-RED — the old pattern put back into the published projection ($mk site(s) changed) does not finish 64 KB of it inside the cap (status $ms)"
+  else
+    FAIL "$id: $what — $ok of $n projection runs completed inside the cap (want 8 of 8:${bad:- none failed}), shape bytes $sz (want more than 262144), the old pattern put back at $mk site(s) (want at least 1) and its run over 64 KB status $ms (want the cap to stop it, above 128). A projection is quadratic on this shape again, or this arm can no longer tell"
+  fi
+}
+m8_shape_assert M8a "a '<' followed by a long run of spaces (the tag head)" "$M8_S1" "$M8_C1" "$M8_HEAD_OLD" "$M8_S1M" '\s*/?\s*'
+m8_shape_assert M8b "a kept tag whose list is a long run of name characters (the name run)" "$M8_S2" "$M8_C2" "$M8_RUN_OLD" "$M8_S2M" '()([-A-Za-z_:][-A-Za-z0-9_:.]*\s*='
+M8C_R="$WORK/m8c_digitrun.html"; printf '%s\n' '<!-- note <span 9abc=def x=1>w</span> -->' > "$M8C_R"
+m8c_assert() { # one verdict
+  local hd old lb mk
+  hd="$(strip_to_published_text "$M8C_R" | _decode_entities | _norm_words | tr '\n' ' ')"
+  old="$( eval "$(declare -f strip_to_published_text | sed "$M8_RUN_OLD")"; strip_to_published_text "$M8C_R" | _decode_entities | _norm_words | tr '\n' ' ' )"
+  lb="$( eval "$(declare -f strip_to_published_text | sed "$M8_RUN_LB")"; strip_to_published_text "$M8C_R" | _decode_entities | _norm_words | tr '\n' ' ' )"
+  mk="$(declare -f strip_to_published_text | sed "$M8_RUN_LB" | grep -c -F -- '()(?<![-A-Za-z0-9_:.])')"
+  if [ "$hd" = "note 9 def 1 w " ] && [ "$old" = "$hd" ] && [ "$mk" -ge 1 ] && [ "$lb" = "note 9abc def 1 w " ]; then
+    PASS "M8c: the run-start anchor reads a name run that opens with a digit as the unanchored rule read it — '$hd' on both — and the name-start lookbehind, built in this arm, reads '$lb', keeping the run whole, so the arm tells the two apart"
+  else
+    FAIL "M8c: the head reads '$hd', the unanchored rule '$old' (want both 'note 9 def 1 w '), the lookbehind variant '$lb' built at $mk site(s) (want 'note 9abc def 1 w ' and at least 1). The anchor changed what the projection reads, or this arm can no longer tell"
+  fi
+}
+m8c_assert
 
 # ── Group N (PR-7 / OB-1) — the conjunctive window is scoped to one block ────
 # W=25 was calibrated on a fixture carrying ONE occurrence of each token. A real

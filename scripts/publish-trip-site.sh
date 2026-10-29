@@ -501,9 +501,10 @@ strip_to_text() { # <html_file> -> visible text on stdout
 # it holds; and a quoted value written directly after a `=`, which may run over lines. The list
 # runs on past the end of its line only through lines this reader takes as a list of names and
 # `name=value` pairs, with a closing `/`: a value there is quoted, or holds no whitespace, quote,
-# `<`, `>`, `=`, backtick, `;`, `(`, `)`, `{` or `}` outside a character reference. Each run of
-# spaces or tabs on those lines is read one way only, so lines of nothing but spaces after a kept
-# head cost time in proportion to their length rather than stalling the read. WHERE THAT READ
+# `<`, `>`, `=`, backtick, `;`, `(`, `)`, `{` or `}` outside a character reference. Every tag
+# head and every name run — each run of spaces or tabs on those lines among them — is read one
+# way only, a name run from its start, so a long run costs time in proportion to its length
+# rather than stalling the read. WHERE THAT READ
 # CANNOT REACH THE TAG'S `>`, the text from the tag's name is read as its list instead, and its
 # attribute names go the same way: up to the last `>` before the next tag — the next `<`, where a
 # `/`, a `!` or a letter follows it — else up to the next `>` with no `<` before it. The reader
@@ -588,13 +589,13 @@ strip_to_text() { # <html_file> -> visible text on stdout
 # failure with it. Graded by S15h and S15i.
 strip_to_published_text() { # <html_file> -> retrievable non-machinery content on stdout
   perl -0777 -pe "
-    sub inert { my \$v = shift; \$v =~ s{<(?:(\s*/?\s*(?:$_GUARD_BLOCK_TAGS|$_GUARD_INLINE_TAGS)\b)((?:(?:&(?:[A-Za-z][A-Za-z0-9]*|#[0-9]+|#[xX][0-9A-Fa-f]+);|\\\$\{[^{}<\n]*\}|=[ \t\n]*(?:\"[^\"]*\"|'[^']*')|[^<>\"';(){}\n=]|=(?![ \t\n]*[\"'])|\"[^\"\n]*\"|'[^'\n]*')*(?:\n[ \t]*+(?:[-A-Za-z_:][-A-Za-z0-9_:.]*(?:[ \t]*=[ \t]*(?:\"[^\"]*\"|'[^']*'|(?:&(?:[A-Za-z][A-Za-z0-9]*|#[0-9]+|#[xX][0-9A-Fa-f]+);|[^\s\"'<>=\`;(){}])+))?(?:[ \t]++[-A-Za-z_:][-A-Za-z0-9_:.]*(?:[ \t]*=[ \t]*(?:\"[^\"]*\"|'[^']*'|(?:&(?:[A-Za-z][A-Za-z0-9]*|#[0-9]+|#[xX][0-9A-Fa-f]+);|[^\s\"'<>=\`;(){}])+))?)*)?[ \t]*+/?[ \t]*+)*|[^<]*(?=>[^<>]*<[/!A-Za-z])|[^<>]*+)(?=>)|))?}{ my (\$h, \$r) = (\$1, \$2); defined \$h ? '<' . \$h . attrs(\$r) : ' ' }gie; \$v }   # TEXT, not markup: each < becomes a space, unless a block tag or a listed inline tag follows it, read as a tag whose attribute NAMES go
-    sub attrs { my \$v = shift; \$v =~ s{(\"[^\"]*\"|'[^']*')|([-A-Za-z_:][-A-Za-z0-9_:.]*\s*=\s*)([^\s\"'>]*)}{ defined \$1 ? inert(\$1) : ' ' . (\$2 =~ tr/\n//cdr) . inert(\$3) }ge; \$v }   # one tag: each attribute NAME and its = go, every VALUE stays, as text
+    sub inert { my \$v = shift; \$v =~ s{<(?:(\s*+/?\s*+(?:$_GUARD_BLOCK_TAGS|$_GUARD_INLINE_TAGS)\b)((?:(?:&(?:[A-Za-z][A-Za-z0-9]*|#[0-9]+|#[xX][0-9A-Fa-f]+);|\\\$\{[^{}<\n]*\}|=[ \t\n]*(?:\"[^\"]*\"|'[^']*')|[^<>\"';(){}\n=]|=(?![ \t\n]*[\"'])|\"[^\"\n]*\"|'[^'\n]*')*(?:\n[ \t]*+(?:[-A-Za-z_:][-A-Za-z0-9_:.]*(?:[ \t]*=[ \t]*(?:\"[^\"]*\"|'[^']*'|(?:&(?:[A-Za-z][A-Za-z0-9]*|#[0-9]+|#[xX][0-9A-Fa-f]+);|[^\s\"'<>=\`;(){}])+))?(?:[ \t]++[-A-Za-z_:][-A-Za-z0-9_:.]*(?:[ \t]*=[ \t]*(?:\"[^\"]*\"|'[^']*'|(?:&(?:[A-Za-z][A-Za-z0-9]*|#[0-9]+|#[xX][0-9A-Fa-f]+);|[^\s\"'<>=\`;(){}])+))?)*)?[ \t]*+/?[ \t]*+)*|[^<]*(?=>[^<>]*<[/!A-Za-z])|[^<>]*+)(?=>)|))?}{ my (\$h, \$r) = (\$1, \$2); defined \$h ? '<' . \$h . attrs(\$r) : ' ' }gie; \$v }   # TEXT, not markup: each < becomes a space, unless a block tag or a listed inline tag follows it, read as a tag whose attribute NAMES go
+    sub attrs { my \$v = shift; \$v =~ s{(\"[^\"]*\"|'[^']*')|(?<![-A-Za-z0-9_:.])([0-9.]*+)([-A-Za-z_:][-A-Za-z0-9_:.]*+\s*=\s*)([^\s\"'>]*)}{ defined \$1 ? inert(\$1) : \$2 . ' ' . (\$3 =~ tr/\n//cdr) . inert(\$4) }ge; \$v }   # one tag: each attribute NAME and its = go, every VALUE stays, as text
     s{<!DOCTYPE[^>]*>}{ ' ' . (\$& =~ tr/\n//cdr) }gie;      # the doctype is machinery
-    s{(<!--.*?(?:-->|\z))|(<\s*(script|style)\b)((?:[^>\"']|\"[^\"]*\"|'[^']*')*)(>.*?(?=</\3\s*>|\z))|(<\s*/?\s*[A-Za-z][-A-Za-z0-9]*)((?:[^>\"']|\"[^\"]*\"|'[^']*')*)}{ my (\$c, \$s, \$sa, \$sb, \$t, \$ta) = (\$1, \$2, \$4, \$5, \$6, \$7); defined \$c ? '<!--' . inert(substr(\$c, 4)) : defined \$s ? \$s . attrs(\$sa) . inert(\$sb) : \$t . attrs(\$ta) }gise;   # names only inside a tag; a comment or script/style BODY passes whole, as text
+    s{(<!--.*?(?:-->|\z))|(<\s*(script|style)\b)((?:[^>\"']|\"[^\"]*\"|'[^']*')*)(>.*?(?=</\3\s*>|\z))|(<\s*+/?\s*+[A-Za-z][-A-Za-z0-9]*)((?:[^>\"']|\"[^\"]*\"|'[^']*')*)}{ my (\$c, \$s, \$sa, \$sb, \$t, \$ta) = (\$1, \$2, \$4, \$5, \$6, \$7); defined \$c ? '<!--' . inert(substr(\$c, 4)) : defined \$s ? \$s . attrs(\$sa) . inert(\$sb) : \$t . attrs(\$ta) }gise;   # names only inside a tag; a comment or script/style BODY passes whole, as text
     s/<!--/ /g; s/-->/ /g;                             # drop the delimiters, KEEP the body
-    s{<\s*/?\s*($_GUARD_BLOCK_TAGS)\b}{ ' $_GUARD_BLOCK ' . (\$& =~ tr/\n//cdr) }gie;   # block boundary, before tag names go
-    s{<\s*/?\s*([A-Za-z][-A-Za-z0-9]*)}{ ' ' . (\$& =~ tr/\n//cdr) }ge;   # the tag NAME (with its \"<\") is machinery
+    s{<\s*+/?\s*+($_GUARD_BLOCK_TAGS)\b}{ ' $_GUARD_BLOCK ' . (\$& =~ tr/\n//cdr) }gie;   # block boundary, before tag names go
+    s{<\s*+/?\s*+([A-Za-z][-A-Za-z0-9]*)}{ ' ' . (\$& =~ tr/\n//cdr) }ge;   # the tag NAME (with its \"<\") is machinery
   " "$1"
 }
 
@@ -658,7 +659,7 @@ strip_to_published_text() { # <html_file> -> retrievable non-machinery content o
 strip_to_text_blocks() { # <html_file> -> visible text with block sentinels on stdout
   perl -0777 -pe "
     s{<(script|style)\b[^>]*>.*?</\1>}{ \$& =~ tr/\n//cdr }gise;
-    s{<\s*/?\s*($_GUARD_BLOCK_TAGS)\b[^>]*>}{ ' $_GUARD_BLOCK ' . (\$& =~ tr/\n//cdr) }gie;
+    s{<\s*+/?\s*+($_GUARD_BLOCK_TAGS)\b[^>]*>}{ ' $_GUARD_BLOCK ' . (\$& =~ tr/\n//cdr) }gie;
     s{<[^>]+>}{ ' ' . (\$& =~ tr/\n//cdr) }ge;
   " "$1"
 }
@@ -690,7 +691,7 @@ strip_to_text_blocks() { # <html_file> -> visible text with block sentinels on s
 strip_to_joined_text() { # <html_file> -> visible text with INLINE tags removed, NO space
   perl -0777 -pe "
     s{<(script|style)\b[^>]*>.*?</\1>}{ \$& =~ tr/\n//cdr }gise;
-    s{<\s*/?\s*($_GUARD_BLOCK_TAGS)\b[^>]*>}{ ' $_GUARD_BLOCK ' . (\$& =~ tr/\n//cdr) }gie;
+    s{<\s*+/?\s*+($_GUARD_BLOCK_TAGS)\b[^>]*>}{ ' $_GUARD_BLOCK ' . (\$& =~ tr/\n//cdr) }gie;
     s{<[^>\n]+>}{}g;
     s{<[^>]+>}{ ' ' . (\$& =~ tr/\n//cdr) }ge;
   " "$1"
