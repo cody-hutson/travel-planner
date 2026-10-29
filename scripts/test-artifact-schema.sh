@@ -11686,8 +11686,9 @@ if [ "$ER_OK" -eq 1 ]; then
     FAIL "ER19: the group-store reach is as designed ($ER_GRP_RM REACH row on \`## Members\`, $ER_GRP_RH REPORT row on the title line, control $ER_GRP_CTL row(s)) but groups/README.md § *$ER_GHEAD* no longer discloses it — the name-outside-reach sentence matched=$ER_GDISC and the report sentence matched=$ER_GREP, over $ER_GNSEC line(s) extracted with the flattening confirmed by the wrap-spanning control. That section tells the reader the name is where a group's meaning goes; without both sentences it never tells them that erasing a person leaves a group still named after them, or that the report says which ones, which reads as anonymised when it is not"
   fi
 
-  # ── ER20 — THE PERSON-SIDE SURVIVOR LIST SAYS FIVE: THE FOURTH IS THE GROUP NAME, AND THE
-  # FIFTH A NAME STANDING IN A PLACE THE ERASURE REPORTS RATHER THAN REWRITES.
+  # ── ER20 — THE PERSON-SIDE SURVIVOR LIST SAYS SIX: THE FOURTH IS THE GROUP NAME, THE FIFTH A
+  # NAME STANDING IN A PLACE THE ERASURE REPORTS RATHER THAN REWRITES, AND THE SIXTH A TRIP WHOSE
+  # ROSTER NO LONGER NAMES THE PERSON, WHICH HOLDS THE RECORD'S DELETION (#1791).
   # The same fact as ER19, read from the other side. `people/README.md` § *Deleting a person*
   # introduces its survivor list as "said plainly rather than left for you to discover" — a
   # promise to ENUMERATE what erasure cannot reach — and then states a cardinal. A group's
@@ -11731,22 +11732,28 @@ if [ "$ER_OK" -eq 1 ]; then
   ER_PNCTL="$(printf '%s\n' "$ER_PCSEC" | grep -c '[^[:space:]]' || true)"
   ER_PFLAT="$(printf '%s\n' "$ER_PSEC" | sed 's/^[[:space:]]*>[[:space:]]*//' | tr '\n\t' '  ' | tr -s ' ')"
   ER_PWRAP=0; ER_PCARD=0; ER_PID=0; ER_PFIFTH=0; ER_PSTOP=0; ER_PXREF=0
+  ER_PSIXTH=0; ER_PHOLD=0; ER_PROW39=0
   # Here-strings rather than pipes, per group PF: a pipe into an early-exiting `grep -q`
   # reports failure on a SUCCESSFUL match under pipefail.
   grep -qF 'there is no earlier version to restore from' <<<"$ER_PFLAT" && ER_PWRAP=1
-  grep -qF 'Five things survive it' <<<"$ER_PFLAT" && ER_PCARD=1
+  grep -qF 'Six things survive it, and the last three survive' <<<"$ER_PFLAT" && ER_PCARD=1
   grep -qF "The fourth is a reusable group's name" <<<"$ER_PFLAT" && ER_PID=1
   grep -qF 'The fifth is a name in a place the operation reads' <<<"$ER_PFLAT" && ER_PFIFTH=1
+  # #1791: the sixth survivor, the record's held deletion it carries, and the fifth paragraph's
+  # amendment — the lines of another traveller's own file that name the party are rewritten now.
+  grep -qF 'The sixth is a trip whose roster no longer names the person' <<<"$ER_PFLAT" && ER_PSIXTH=1
+  grep -qF "erasure keeps the person's record and names the trips holding it" <<<"$ER_PFLAT" && ER_PHOLD=1
+  grep -qF "the lines in another traveller's own file that say who they share the trip, a room or a split-off with" <<<"$ER_PFLAT" && ER_PROW39=1
   grep -qF 'stops at the title line on purpose' <<<"$ER_PFLAT" && ER_PSTOP=1
   grep -qF '../groups/README.md' <<<"$ER_PFLAT" && ER_PXREF=1
   if [ "$ER_PNSEC" -eq 0 ] || [ "$ER_PNCTL" -eq 0 ] || [ "$ER_PWRAP" -eq 0 ]; then
     FAIL "ER20: an extraction or the matcher itself came back EMPTY — people/README.md § *$ER_PHEAD* yielded $ER_PNSEC non-blank line(s), the control section § *$ER_PCTLH* read by the SAME extractor yielded $ER_PNCTL, and the wrap-spanning control phrase matched=$ER_PWRAP. That phrase spans a hard wrap in this section, so a zero on it means the flattening is gone and every prose verdict here would be a line-shaped zero over a hard-wrapped file. With the control section at 0 the extractor is broken; with only the subject at 0 the section has moved. Not a skip and not a pass"
   elif [ "$ER_GRP_OK" -ne 1 ]; then
     FAIL "ER20: the group-store reach has MOVED — $ER_GRP_N reach row(s) name \`groups/\`: $ER_GRP_RM REACH on the \`## Members\` bullets, $ER_GRP_RH REPORT on the \`# <H1>\` title line, $ER_GRP_XH REACH on the title line (expected two rows — one REACH on the bullets, one REPORT on the title line, none reaching it). The person-side survivor count rests on that reach: a group's name is a survivor only while the rewrite stops at the member bullets, so the cardinal in people/README.md § *$ER_PHEAD* must be re-derived against the new reach in the SAME commit, alongside the group-side disclosure ER19 grades. A count that outlives the fact it counts is the defect this arm exists for"
-  elif [ "$ER_PCARD" -eq 1 ] && [ "$ER_PID" -eq 1 ] && [ "$ER_PFIFTH" -eq 1 ] && [ "$ER_PSTOP" -eq 1 ] && [ "$ER_PXREF" -eq 1 ]; then
-    PASS "ER20: people/README.md § *$ER_PHEAD* enumerates FIVE survivors over $ER_PNSEC extracted line(s) (control section $ER_PNCTL line(s), flattening validated by the wrap-spanning control) — it states the cardinal, names a reusable group's name as the fourth and a name in a place the operation reads and does not rewrite as the fifth, discloses that erasure reaches the group record and stops at its title line on purpose, and cites ../groups/README.md so a reader meeting either side reaches the other. The two disclosures now move with the one reach measurement — one REACH row on the bullets and one REPORT row on the title line — instead of with each other"
+  elif [ "$ER_PCARD" -eq 1 ] && [ "$ER_PID" -eq 1 ] && [ "$ER_PFIFTH" -eq 1 ] && [ "$ER_PSTOP" -eq 1 ] && [ "$ER_PXREF" -eq 1 ] && [ "$ER_PSIXTH" -eq 1 ] && [ "$ER_PHOLD" -eq 1 ] && [ "$ER_PROW39" -eq 1 ]; then
+    PASS "ER20: people/README.md § *$ER_PHEAD* enumerates SIX survivors over $ER_PNSEC extracted line(s) (control section $ER_PNCTL line(s), flattening validated by the wrap-spanning control) — it states the cardinal, names a reusable group's name as the fourth, a name in a place the operation reads and does not rewrite as the fifth (whose list of rewritten places now carries the party lines of another traveller's own file), and a trip whose roster no longer names the person as the sixth, with the record's held deletion, discloses that erasure reaches the group record and stops at its title line on purpose, and cites ../groups/README.md so a reader meeting either side reaches the other. The two disclosures now move with the one reach measurement — one REACH row on the bullets and one REPORT row on the title line — instead of with each other"
   else
-    FAIL "ER20: people/README.md § *$ER_PHEAD* no longer enumerates the survivors the reach leaves — cardinal 'Five things survive it' matched=$ER_PCARD, the fourth named as a reusable group's name=$ER_PID, the fifth named as a name in a place the operation reads=$ER_PFIFTH, the stops-at-the-title-line disclosure=$ER_PSTOP, the cross-reference to ../groups/README.md=$ER_PXREF, over $ER_PNSEC extracted line(s) with the flattening confirmed. This section PROMISES to say plainly what erasure cannot reach, so a survivor missing from it is a false enumeration rather than an omission — and a stale cardinal is the half a reader cannot detect, because the list still reads complete. groups/README.md discloses the same reach from the other side; a release that changes one side changes both"
+    FAIL "ER20: people/README.md § *$ER_PHEAD* no longer enumerates the survivors the reach leaves — cardinal 'Six things survive it, and the last three survive' matched=$ER_PCARD, the fourth named as a reusable group's name=$ER_PID, the fifth named as a name in a place the operation reads=$ER_PFIFTH, the fifth's party lines of another traveller's file named as rewritten=$ER_PROW39, the sixth named as a trip whose roster no longer names the person=$ER_PSIXTH, the record's held deletion=$ER_PHOLD, the stops-at-the-title-line disclosure=$ER_PSTOP, the cross-reference to ../groups/README.md=$ER_PXREF, over $ER_PNSEC extracted line(s) with the flattening confirmed. This section PROMISES to say plainly what erasure cannot reach, so a survivor missing from it is a false enumeration rather than an omission — and a stale cardinal is the half a reader cannot detect, because the list still reads complete. groups/README.md discloses the same reach from the other side; a release that changes one side changes both"
   fi
 
   # ── ER21 — EVERY SECTION OF THE TRIP FILE, AND EVERY LABELLED LINE OF § Dietary & Health, HAS
