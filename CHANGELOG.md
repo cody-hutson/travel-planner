@@ -5,11 +5,11 @@ follows Keep a Changelog; versions follow Semantic Versioning.
 
 ## [Unreleased] — 2026-10-29 — Erasure reaches the four names it still misses
 
-`/trip-record erase` now reaches the names it used to leave behind. Whoever erases a person sees a
-wider reach report, and a party member who never filed a profile can now be erased too.
-`/trip-record person` can withdraw such a member after their erasure. And `/trip-record group`,
-`group-expand` and `person`'s withdrawal now read a roster's columns the way erasure does. Nothing
-else plans or records a trip differently.
+`/trip-record erase` now finds the names it used to leave behind, and rewrites each one or lists it
+for you to remove. Whoever erases a person sees a wider reach report, and a party member who never
+filed a profile can now be erased too. `/trip-record person` can withdraw such a member after their
+erasure. And `/trip-record group`, `group-expand` and `person`'s withdrawal now read a roster's
+columns the way erasure does. Nothing else plans or records a trip differently.
 
 **The roster's columns are found by what they hold.** Erasure looked for the person and path columns
 by their template headers, and so did `/trip-record group`, `group-expand` and `person`'s
@@ -38,8 +38,8 @@ subject's name inside it.
 place in the trip's traveller model, and you confirm by typing the trip's slug. Their heading becomes
 a token. On an active trip the next reconcile keeps their need under that token, so the party the
 plan is sized for doesn't shrink. To take them off the trip later, withdraw them by the token or by
-`--third-party <n>`. Standing rule 16 bounds the run to that one trip, and ADR-006 and ADR-012
-record this as the delete path.
+`--third-party <n>`. Change their needs the same way, so their old name never comes back. Standing
+rule 16 bounds the run to that one trip, and ADR-006 and ADR-012 record this as the delete path.
 
 **Size fence.** Nothing moved. Every row stands where `0.60.0` set it, and none is re-pinned.
 `skills/trip-record/SKILL.md`, ADR-012, `agents/00-enrichment.md` and `CLAUDE.md` grew beneath
