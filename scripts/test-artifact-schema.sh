@@ -12990,6 +12990,85 @@ else
   PASS "ER29: '$ER29_NAME' keeps its $ER29_NC occurrence(s) in § Group, its roster row shares its key with the \`[ROSTERED]\` model entry ($ER29_MATCH of $ER29_ROST), and the counted floor — $ER29_NAMED named plus $ER29_OUT outside the roster — equals \`Total travelers\` $ER29_TOTAL. Both controls fired: the last word rewritten to the token drops the count to $ER29_C1NC and the key matches to $ER29_C1MATCH, and \`[ROSTERED]\` dropped raises the floor to $((ER29_C2NAMED + ER29_C2OUT))"
 fi
 
+# ── ER30 — THE TEXTS AGREE ON OPTION (A): A PARTY MEMBER WHO HOLDS NO RECORD HAS A DELETE PATH BY
+# SUBSTITUTION (#1791, QF-09, AC11–AC12). `ADR-006` (item 3 of its 2026-09-03 amendment) and
+# `ADR-012` (*Decision* § 6b item 3) said the carried-forward entry of a party member who will never
+# file a profile is reached by substitution, while the erasure verb took only a person record's id.
+# Each ADR now carries a closing `## Amendment history` entry recording (A) as chosen and (B), the
+# withdrawal as the delete path, as rejected on the one ground that holds — no reconcile runs on an
+# archived trip — and NOT on an active-trip ground (PR-2), which would be as true of (A). `ADR-012`'s
+# *Two entry classes* both-marks row is corrected in place: what undoes an erasure is the name a
+# regeneration carries forward, not the need, which is why the substituted entry is carried forward
+# with its need under the token. Limbs: each entry stands after `References` as the last section;
+# the operative phrases are present once; the replaced row sentence is gone from the body; and no
+# entry carries the active-trip ground. MUST-FIRE CONTROLS: each phrase stripped drops the count by
+# exactly 1; the replaced sentence planted into a copy of the body is counted; and the active-trip
+# ground planted into a copy of an entry is counted.
+ER30_A6="$ROOT/reference/adr/ADR-006-third-party-data-capture.md"
+ER30_A12="$ROOT/reference/adr/ADR-012-people-library.md"
+# er30_order <file> -> `<line of ## References>\t<line of ## Amendment history>\t<line of the last ## heading>`
+er30_order() {
+  [ -r "$1" ] || { printf '0\t0\t0\n'; return 0; }
+  awk '/^## References/ { r = NR } /^## Amendment history/ { h = NR } /^## / { l = NR } END { printf "%d\t%d\t%d\n", r, h, l }' "$1"
+}
+er30_hist() { [ -r "$1" ] && awk '/^## Amendment history/ { on = 1 } on' "$1"; }
+er30_body() { [ -r "$1" ] && awk '/^## Amendment history/ { exit } { print }' "$1"; }
+ER30_PINS=(
+  '**(A), chosen:**'
+  '**(B), rejected:**'
+  'no reconcile runs on an archived trip, so under (B) nothing would delete such an entry there'
+  'Option (A), an erasure whose subject is that entry, is chosen'
+  'is rejected: no reconcile runs on an archived trip to honour it'
+  'the entry **survives the erasure**, name and need together'
+  'a need carried under the trip'"'"'s token names nobody'
+)
+er30_pins() {
+  local n=0 p
+  for p in "${ER30_PINS[@]}"; do
+    case "$1" in *"$p"*) n=$((n + 1)) ;; esac
+  done
+  printf '%d\n' "$n"
+}
+ER30_H6="$(er26_flat "$(er30_hist "$ER30_A6")")"
+ER30_H12="$(er26_flat "$(er30_hist "$ER30_A12")")"
+ER30_B12="$(er30_body "$ER30_A12")"
+ER30_ROW="$(grep -F '| carrying **both**' <<<"$ER30_B12" || true)"
+ER30_TEXT="$ER30_H6 | $ER30_H12 | $ER30_ROW"
+ER30_N="${#ER30_PINS[@]}"
+ER30_PIN="$(er30_pins "$ER30_TEXT")"
+ER30_MISSING=""; ER30_STRIPBAD=0
+for er30_p in "${ER30_PINS[@]}"; do
+  case "$ER30_TEXT" in
+    *"$er30_p"*)
+      er30_x="$(er30_pins "$(er_sub1 "$ER30_TEXT" "$er30_p" '')")"
+      [ "$er30_x" -eq $((ER30_PIN - 1)) ] || ER30_STRIPBAD=$((ER30_STRIPBAD + 1)) ;;
+    *) ER30_MISSING="$ER30_MISSING [$er30_p]" ;;
+  esac
+done
+ER30_OLDS='A person who asked to be deleted keeps their recorded need on every subsequent synthesis'
+ER30_OLD="$(grep -c -F "$ER30_OLDS" <<<"$ER30_B12" || true)"
+ER30_OLD_PLANT="$(grep -c -F "$ER30_OLDS" <<<"$ER30_B12
+$ER30_OLDS" || true)"
+ER30_ACT='only by recording them as not travelling'
+ER30_PR2="$(grep -c -F "$ER30_ACT" <<<"$ER30_H6
+$ER30_H12" || true)"
+ER30_PR2_PLANT="$(grep -c -F "$ER30_ACT" <<<"$ER30_H6
+$ER30_H12
+$ER30_ACT" || true)"
+IFS="$(printf '\t')" read -r ER30_R6 ER30_HH6 ER30_L6 <<<"$(er30_order "$ER30_A6")"
+IFS="$(printf '\t')" read -r ER30_R12 ER30_HH12 ER30_L12 <<<"$(er30_order "$ER30_A12")"
+ER30_ORD=1
+{ [ "$ER30_HH6" -gt "$ER30_R6" ] && [ "$ER30_HH6" -eq "$ER30_L6" ] && [ "$ER30_HH12" -gt "$ER30_R12" ] && [ "$ER30_HH12" -eq "$ER30_L12" ]; } || ER30_ORD=0
+if [ ! -r "$ER30_A6" ] || [ ! -r "$ER30_A12" ] || [ -z "$ER30_B12" ] || [ -z "$ER30_ROW" ]; then
+  FAIL "ER30: measured nothing — ADR-006 read=$([ -r "$ER30_A6" ] && echo 1 || echo 0), ADR-012 read=$([ -r "$ER30_A12" ] && echo 1 || echo 0), and ADR-012's *Two entry classes* both-marks row read=$([ -n "$ER30_ROW" ] && echo 1 || echo 0). The records' agreement cannot be graded over records that are not there"
+elif [ "$ER30_STRIPBAD" -ne 0 ] || [ "$ER30_OLD_PLANT" -ne $((ER30_OLD + 1)) ] || [ "$ER30_PR2_PLANT" -ne $((ER30_PR2 + 1)) ]; then
+  FAIL "ER30: BROKEN PROBE — $ER30_STRIPBAD of the $ER30_PIN present phrase(s) did not drop the count by exactly 1 when stripped; the replaced row sentence planted read $ER30_OLD_PLANT against $ER30_OLD (must be one more); the active-trip ground planted read $ER30_PR2_PLANT against $ER30_PR2 (must be one more). Until each fires, a verdict below is the instrument's"
+elif [ "$ER30_ORD" -ne 1 ] || [ "$ER30_PIN" -ne "$ER30_N" ] || [ "$ER30_OLD" -ne 0 ] || [ "$ER30_PR2" -ne 0 ]; then
+  FAIL "ER30: the records do not agree on option (A) as decided — \`## Amendment history\` after \`References\` and last: ADR-006 at line $ER30_HH6 (References $ER30_R6, last heading $ER30_L6), ADR-012 at line $ER30_HH12 (References $ER30_R12, last heading $ER30_L12); $ER30_PIN of the $ER30_N operative phrase(s) present (missing:${ER30_MISSING:- none}); the replaced *Two entry classes* sentence stands $ER30_OLD time(s) in ADR-012's body (must be 0); and the active-trip ground for rejecting (B) stands $ER30_PR2 time(s) in the entries (must be 0, because it is as true of (A))"
+else
+  PASS "ER30: both ADRs close on an \`## Amendment history\` entry after \`References\` recording (A) as chosen and (B) as rejected on the archived-trip ground alone; ADR-012's *Two entry classes* both-marks row now says the name, not the need, is what a regeneration would carry back, and the replaced sentence is gone from its body; all $ER30_N operative phrase(s) present, the active-trip ground absent, and every control fired — each phrase stripped, the replaced sentence planted and the active-trip ground planted each move their count by 1"
+fi
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RL — reconcile-on-link: the survey's two witnesses, on the tracked tree.
 #
