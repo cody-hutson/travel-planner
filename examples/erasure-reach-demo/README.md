@@ -4,13 +4,21 @@
 
 This fixture is the state `/trip-record erase` leaves on an **active** trip. It is drawn so that
 the reach rows for `trip-context.md` and `outputs/traveler-model.md` each have something to
-grade, and `scripts/test-artifact-schema.sh` arms `ER22`, `ER23` and `ER27` read the declaration below
-and hold no copy of it. The archived half of the same rows is `../archived-trip-demo/`.
+grade, and `scripts/test-artifact-schema.sh` arms `ER22`, `ER23`, `ER27`, `ER28` and `ER29` read
+the declaration below and hold no copy of it. The archived half of the same rows is
+`../archived-trip-demo/`.
 
 - **Reached** — the roster row and its prose, an origin's traveller slot, a constraint's
   `Applies to:` roster, a mobility note, a health note and the line nested under it, and every
   line of the derived model's body, the need of the party member recorded
-  `[OPERATOR-PROVIDED]` + `[THIRD-PARTY]` included, whose text named the subject.
+  `[OPERATOR-PROVIDED]` + `[THIRD-PARTY]` included, whose text named the subject. In another
+  traveller's own file, `travelers/odile.md`, the `Rooming:`, `Split off with:` and `Overlap:`
+  lines carry the token where they named the subject; the rest of that file is Odile's own.
+- **Protected** — `Nell Basil`, a second party member recorded through the operator, whose
+  stale roster row and subgroup note hold the subject's name inside their own. Erasure never
+  rewrites another person's name, so both stay whole, the row keeps the key its `[ROSTERED]`
+  entry joins, and `Total travelers` still counts them (`skills/trip-record/SKILL.md`
+  § *Roster standing of a third-party member*). The `protect` line below declares them.
 - **Reported, and left standing** — a line of `## Trip Style`, which states a fact about the
   trip, and the `Allergies:` list, where the subject's name is also a food. The name is still
   in both because those places are reported rather than rewritten, and the receipt names each
@@ -27,9 +35,10 @@ one.
 
 **The subject's name appears in this fixture on purpose.** It is invented, and a surviving
 occurrence in a place the table reports is part of what this fixture shows. **The party member
-recorded through the operator carries a label rather than a name**, the discipline
-`../archived-trip-demo/` keeps for that class: the class is exercised, and no person is
-depicted.
+recorded through the operator whose need named the subject carries a label rather than a
+name**, the discipline `../archived-trip-demo/` keeps for that class: the class is exercised,
+and no person is depicted. The second, `Nell Basil`, carries an invented name because the name
+is what this fixture exercises: it holds the subject's name inside it.
 
 ## The declaration
 
@@ -46,6 +55,8 @@ keep trip-context.md#dietary-health:allergies Basil 1
 keep trip-context.md#dietary-health:other-health-notes basil 1
 keep outputs/traveler-model.md#body Basilica 3
 keep trip-context.md#trip-style Vasileios 1
+# protect <file>#<section-slug> <another person's name> <count> — a name holding the subject's, never rewritten
+protect trip-context.md#group Nell Basil 2
 ```
 
 A section slug is its heading with any trailing bracketed marker removed, lower-cased, every

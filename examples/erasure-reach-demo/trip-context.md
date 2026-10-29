@@ -53,10 +53,11 @@ publish: bound
 |--------|---------------------|
 | Odile | Primary traveler / planner |
 | per-2c9e | — |
+| Nell Basil | Travels on Odile's booking |
 
-- **Total travelers:** 3
+- **Total travelers:** 4
 - **Travel mode:** Group moves together
-- **Subgroup notes:** Odile and per-2c9e share every day of the plan.
+- **Subgroup notes:** Odile, Nell Basil and per-2c9e share every day of the plan.
 
 ## Hard Constraints
 
