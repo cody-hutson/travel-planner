@@ -4,6 +4,12 @@
   day; **citation form amended a fourth time (2026-08-28)**, **a fifth time (2026-08-29)** and **a sixth time (2026-08-30)**;
   **Decision, Coverage boundary and residual list amended a seventh time (2026-09-11)**; **residual 10 retracted and the class-source narrowing re-derived, an eighth time (2026-09-12)**;
   **a pointer at the validator's publish-bound source set, a ninth time (2026-09-26)**.
+  **Superseded in part (2026-10-29, Thursday)** — § *Decision* 3, as far as it sets the projection
+  count at three, and § *Decision* 4, as far as it closes the projection enum at three values, by
+  [ADR-050](ADR-050-reading-by-shape-as-a-fourth-arm.md). This amendment records a decision taken
+  there and takes none here: the rest of both decisions, and every other decision of this record,
+  stands. The superseded text is retained as decided, with an inline marker at it pointing forward,
+  per `reference/adr/README.md` § *Convention*.
   **First amendment** — an independent adversarial design review confirmed four defects in the first
   implementation: the guard matched the visible-text projection rather than the published bytes, the
   name arm applied no stoplist, the class bound to a `[DERIVED]` cache with no freshness check, and
@@ -359,6 +365,8 @@ unbounded window an innocent render that mentions one token early and the other 
 abort.
 
 **3. `verify_publishable_content <site_html> <trip_dir>` — a pure consumer, matching three projections.**
+*(Superseded in part (2026-10-29, Thursday) by [ADR-050](ADR-050-reading-by-shape-as-a-fourth-arm.md),
+as far as this decision sets the projection count at three; the rest of this decision stands.)*
 It returns `0` (nothing non-publishable reached the published file), `1` (a hit), or `2`
 (undetermined). Three codes where the sibling guard has two, because the regression suite has to tell
 a *hit* from an *undetermined*: under a binary contract a guard that aborted for the wrong reason
@@ -373,6 +381,9 @@ each record is matched against *three* projections of it and a hit on any is a h
 | visible | `strip_to_text_blocks` | text nodes — what a reader sees |
 | published | `strip_to_published_text` | HTML comment bodies, every attribute value, `<script>`/`<style>` bodies |
 | joined | `strip_to_joined_text` | visible text with single-line INLINE tags removed and no space inserted, so a tag that splits a word cannot hide the value. A separate arm rather than a change to the visible projection: the rejoin cannot be made conditional on anything the markup offers, and applying it to the arm that carries the verdict would fuse two legitimate adjacent links into one false token. Character references are resolved on **every** arm before tokenization. |
+
+*(Superseded in part (2026-10-29, Thursday) by [ADR-050](ADR-050-reading-by-shape-as-a-fourth-arm.md),
+which adds a fourth arm; the three rows stand.)*
 
 Together these cover every content-bearing byte; what neither covers is tag names and attribute
 names, which are machinery and carry no trip content. Matching only the visible projection was
@@ -405,7 +416,9 @@ A locator names a position in the artifact the guard was asked to certify — `<
 the published file, `<change-summary.md>:<line>` for the summary — followed for the HTML guard by a
 projection tag from a closed **three**-value enum: `visible text`,
 `retrievable markup (comment, attribute or script body)`, or `joined markup (an inline tag split a
-word)`. The order is the arms' own order, so a hit is attributed to the weakest projection that saw
+word)`. *(Superseded in part (2026-10-29, Thursday) by
+[ADR-050](ADR-050-reading-by-shape-as-a-fourth-arm.md), which adds a fourth value; the rest of this
+decision stands.)* The order is the arms' own order, so a hit is attributed to the weakest projection that saw
 it — the one the operator can read on the page before opening the source. The model coordinate is
 retained under `provenance`, because the operator still needs to know *what* leaked in order to judge
 the render edit, but it is no longer the leading, actionable coordinate.
@@ -673,11 +686,12 @@ scope decision taken at the Stage 9 re-gate:**
    block is what stops a clean multi-day itinerary aborting forever, and it costs this: a value whose
    two facts land in different blocks — say adjacent table cells — no longer pairs. A carry-through
    into prose, which is the realistic shape, sits in one block and is still caught (N1d).
-4. **Tag names and attribute names.** Neither projection covers them. They are markup machinery and
+4. **Tag names and attribute names.** No projection covers them. They are markup machinery and
    carry no trip content; this is the structural form of `verify_ciphertext`'s boilerplate
-   subtraction, and it is what stops the published-bytes arm aborting on ordinary CSS and script
-   (M1d). A render containing the literal sentinel `zzguardblockzz` would split a block that should
-   not have split — a missed match, never a false abort.
+   subtraction, and it keeps every attribute name out of the published-bytes arm's stream (M1h), so
+   a member named like an attribute the page carries does not abort the publish (M1r). A render
+   containing the literal sentinel `zzguardblockzz` would split a block that should not have split —
+   a missed match, never a false abort.
 5. **Paraphrase, and it is the only transform class left.** This residual used to name three classes
    — paraphrase, entity encoding and mid-word tag splitting — and stated that the latter two were
    *"open, not accepted: unlike paraphrase they are mechanical and a normalizer could close them."*
@@ -868,7 +882,7 @@ not interchangeable:
 | Layer | Surface | Artifact audited | When | Catches paraphrase? |
 |---|---|---|---|---|
 | 1 — agent judgement | `agents/06-validator.md` | the five § 9.1 publish-bound sources | at validation | yes, judged |
-| 2 — **this guard** | `verify_publishable_content` | the **published file**, all three projections | at every publish | **no** |
+| 2 — **this guard** | `verify_publishable_content` | the **published file**, all three projections *(superseded in part (2026-10-29, Thursday) by [ADR-050](ADR-050-reading-by-shape-as-a-fourth-arm.md), which adds a fourth)* | at every publish | **no** |
 | 3 — structural (#278) | a declared field attribute | the build's field selection | by construction | n/a — prevented, not detected |
 
 The validator's dynamic-set clause — *"if the site build ever reads a new source, that source joins
@@ -934,3 +948,21 @@ contract § *Decision* 3 gives the code `2`. The sentence now leads with that co
 list as instances of it. The paths themselves are settled design and this record does not restate
 them: the guard states them in `scripts/publish-trip-site.sh`, and `scripts/test-publish-guard.sh`
 pins the ones it grades, the projection paths among them in group L.
+
+**Amendment (2026-10-29, Thursday) — the `Status:` line, § *Decision* 3 and 4, and the layer table:
+the partial supersession by [ADR-050](ADR-050-reading-by-shape-as-a-fourth-arm.md) recorded; no
+decision changes here.** ADR-050 adds a fourth projection to the set § *Decision* 3 matches and a
+fourth value to the enum § *Decision* 4 closes, and leaves the rest of both standing. This amendment
+records that decision and takes none: the `Status:` line carries the supersession, and an inline
+marker points forward at Decision 3's heading, its projection table, Decision 4's enum sentence and
+the layer table's row for this guard. The superseded text is retained as decided, so no wording is
+replaced.
+
+**Amendment (2026-10-29, Thursday) — § *Coverage boundary*, residual 4: the arm it cites, and its
+count word; no decision changes.** Residual 4 said that dropping attribute names "is what stops the
+published-bytes arm aborting on ordinary CSS and script", and cited M1d for it. M1d cannot fail for
+that reason: with `attrs` made to keep each attribute name, M1d still passes, while M1h, which reads
+that the attribute's own name is dropped, and M1r, whose renders expect a member named like an
+attribute the page carries to publish, both fail. The sentence now cites M1h and M1r. It also
+read "Neither projection covers them", which was written when the guard matched two projections;
+none of them covers these names, so it reads "No projection".

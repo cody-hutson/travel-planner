@@ -30,12 +30,24 @@
 # L16 is the denial side of `may-carry` (ADR-026 § Decision 3), one must-fire per declared
 # row: a value under each row's selector, planted at that row's scope, aborts as a HIT, and
 # the same trip without it publishes. The rows are read from the live declaration.
-# L17 grades the guard reading its own projections: one that fails, or a published or joined
-# one that yields no words, is UNDETERMINED (rc=2) whatever the caller's `pipefail`, and the
-# refusal names the projection and nothing else.
+# L17 grades the guard reading its own projections: one that fails, or a published, joined or
+# shape one that yields no words, is UNDETERMINED (rc=2) whatever the caller's `pipefail`, and the
+# refusal names the projection and nothing else. L17f grades that every arm of both content
+# guards runs through the one arm helper and counts through the one count, and L17g that the
+# count subtracts both sentinels.
 # M = published-bytes / stoplist / freshness remediation (#123 A6.5) · N = block-scoped
 # conjunctive window (#123 PR-7) · O = the [THIRD-PARTY] class: entry denylist,
 # value-granularity mark, real derived-model shape (#123 AC 3).
+# M6 = the pre-0.60.0 parity cells (CIAC-1): every page the suite renders in groups L to O that
+# the guard before 0.60.0 blocked is blocked at the head, read by a recorder that wraps the guard
+# from group L to M6.
+# M7 = the guard's fourth arm (#2068, ADR-050): the published projection as the guard before 0.60.0
+# wrote it, read last and credited last, blocks again the pages it blocked — a value whose words
+# tags and attribute names push apart inside a script string, a comment or an attribute value —
+# while criterion 5's `=` render is still named for the published arm (M7g), and a page the joined
+# arm catches too is still named for the joined arm (M7i).
+# M8 = the anchors (#2072): every projection reads a long run after a `<` and a long name run in
+# time proportional to its length, under a CPU cap, and the name-run anchor reads what it read.
 # R = the change-summary (#550). R1-R5 grade its CONTENT guard (AC 5) —
 # verify_summary_content over outputs/change-summary.md, an `internal` artifact
 # verify_publishable_content never sees: the clean/HIT/UNDETERMINED triple, the
@@ -44,7 +56,9 @@
 # the placement tuple the emitter spec declares actually detects a same-day time move
 # on the shipped witness, that an unchanged re-bake still detects nothing, that
 # time is compared WITHIN the matched key rather than folded into it, and that a
-# status-only change reaches STATUS-CHANGED instead of being re-reported as MOVED.
+# status-only change reaches STATUS-CHANGED instead of being re-reported as MOVED. R8
+# grades the summary guard reading its projection's status: one that fails after a prefix
+# clearing the floor is UNDETERMINED (rc=2), whatever the caller's `pipefail`.
 # S = the organizer-confirm gate (#552 AC 5) — the republish path gates on the
 # organizer's confirmation of an ITINERARY-CONTENT change, not on publish-as-such, so a
 # coordination-marker-only republish still reaches the group. Grades both branches
@@ -871,6 +885,97 @@ HTML
 LOUT="$WORK/l.err"; LRC=0
 lguard() { verify_publishable_content "$1" "${2:-$LTD}" >/dev/null 2>"$LOUT"; LRC=$?; }
 
+# ── The pre-0.60.0 parity cells' RECORDER (CIAC-1), installed before group L's first arm ──
+#
+# Groups L to O pass page after page to verify_publishable_content, directly or through lguard,
+# mguard and oguard. M6, after group O, asks of each of those pages that the guard before 0.60.0
+# blocked whether the guard as it stands blocks it too. So from here to M6 the guard is wrapped:
+# verify_publishable_content is a recorder that calls the production guard, renamed
+# pp_real_verify, and keeps its status. While PP_ON=1, and only while every function the guard's
+# verdict path reads is byte-identical to the definition this suite sourced and no command it
+# runs is shadowed by a function — so a page graded under a stub is skipped and counted rather
+# than recorded — it grades the same page again in a subshell through the three legacy readers
+# below, discards that run's output, and appends one row to a manifest: the page's basename, the
+# trip's, the head's status and the legacy status. It returns the head's status unchanged and
+# writes nothing to its caller's streams, so no arm in between reads a different answer. M6e
+# puts the production guard back and asserts it. An arm that reads the guard's TEXT while the
+# recorder stands in for it reads it through pp_body, which returns the production definition.
+#
+# THE ORACLE, LABELLED AS SUCH: pp_legacy_pub is strip_to_published_text, and pp_legacy_vis and
+# pp_legacy_joi are strip_to_text_blocks and strip_to_joined_text, each copied verbatim from
+# v0.59.0, the guard before 0.60.0, with only its name changed. The three programs are frozen;
+# TWO OF THEIR INPUTS ARE NOT. Each interpolates _GUARD_BLOCK_TAGS and _GUARD_BLOCK from this
+# shell at run time, so a change to either moves this oracle with it, and it stops being
+# v0.59.0's. Nothing else in the guard's verdict path differs between v0.59.0 and the head's
+# base: _guard_match, nonpublishable_values, _norm_words and _decode_entities carry no changed
+# line between the two, so a legacy rc=1 is a page the guard before 0.60.0 blocked.
+pp_legacy_pub() { # v0.59.0's strip_to_published_text, verbatim but for its name — frozen; reads _GUARD_BLOCK_TAGS and _GUARD_BLOCK live
+  perl -0777 -pe "
+    s{<!DOCTYPE[^>]*>}{ ' ' . (\$& =~ tr/\n//cdr) }gie;      # the doctype is machinery
+    s/<!--/ /g; s/-->/ /g;                             # drop the delimiters, KEEP the body
+    s{<\s*/?\s*($_GUARD_BLOCK_TAGS)\b}{ ' $_GUARD_BLOCK ' . (\$& =~ tr/\n//cdr) }gie;   # block boundary, before tag names go
+    s{<\s*/?\s*([A-Za-z][-A-Za-z0-9]*)}{ ' ' . (\$& =~ tr/\n//cdr) }ge;   # the tag NAME (with its \"<\") is machinery
+    s{([-A-Za-z_:][-A-Za-z0-9_:.]*)\s*=\s*}{ ' ' . (\$& =~ tr/\n//cdr) }ge;   # the attribute NAME is machinery; its VALUE stays
+  " "$1"
+}
+pp_legacy_vis() { # v0.59.0's strip_to_text_blocks, verbatim but for its name — frozen; reads _GUARD_BLOCK_TAGS and _GUARD_BLOCK live
+  perl -0777 -pe "
+    s{<(script|style)\b[^>]*>.*?</\1>}{ \$& =~ tr/\n//cdr }gise;
+    s{<\s*/?\s*($_GUARD_BLOCK_TAGS)\b[^>]*>}{ ' $_GUARD_BLOCK ' . (\$& =~ tr/\n//cdr) }gie;
+    s{<[^>]+>}{ ' ' . (\$& =~ tr/\n//cdr) }ge;
+  " "$1"
+}
+pp_legacy_joi() { # v0.59.0's strip_to_joined_text, verbatim but for its name — frozen; reads _GUARD_BLOCK_TAGS and _GUARD_BLOCK live
+  perl -0777 -pe "
+    s{<(script|style)\b[^>]*>.*?</\1>}{ \$& =~ tr/\n//cdr }gise;
+    s{<\s*/?\s*($_GUARD_BLOCK_TAGS)\b[^>]*>}{ ' $_GUARD_BLOCK ' . (\$& =~ tr/\n//cdr) }gie;
+    s{<[^>\n]+>}{}g;
+    s{<[^>]+>}{ ' ' . (\$& =~ tr/\n//cdr) }ge;
+  " "$1"
+}
+# The legacy guard: the guard as it stands, reading the page through the three legacy readers,
+# with its fourth arm (ADR-050) reading the legacy published copy as well, so that arm adds nothing
+# the guard before 0.60.0 lacked. PP_ON is cleared inside, so a recorder still standing in for the
+# guard passes straight through.
+pp_legacy_verify() { # <site_html> <trip_dir> -> the legacy guard's status on stdout
+  ( PP_ON=0
+    strip_to_published_text() { pp_legacy_pub "$1"; }
+    strip_to_text_blocks()    { pp_legacy_vis "$1"; }
+    strip_to_joined_text()    { pp_legacy_joi "$1"; }
+    strip_to_shape_text()     { pp_legacy_pub "$1"; }
+    verify_publishable_content "$1" "$2" >/dev/null 2>&1; printf '%s' "$?" )
+}
+PP_FNS='strip_to_published_text strip_to_text_blocks strip_to_joined_text strip_to_shape_text _decode_entities _line_sentinels _norm_words _guard_match _guard_arm _guard_words nonpublishable_values'
+PP_CMDS='perl awk sed tr head tail grep cat mktemp rm basename'
+# shellcheck disable=SC2086 # PP_FNS is a word list by construction
+PP_FP="$(declare -f $PP_FNS)"
+PP_VPC="$(declare -f verify_publishable_content)"
+PP_MAN="$WORK/pp_manifest"; PP_SKIP="$WORK/pp_skipped"; : > "$PP_MAN"; : > "$PP_SKIP"
+pp_record() { # <site_html> <trip_dir> <head status> -> one manifest row, or one skip
+  local c
+  for c in $PP_CMDS; do
+    if declare -F "$c" >/dev/null 2>&1; then printf 'shadowed %s\n' "$c" >> "$PP_SKIP"; return 0; fi
+  done
+  # shellcheck disable=SC2086 # PP_FNS is a word list by construction
+  if [ "$(declare -f $PP_FNS)" != "$PP_FP" ]; then printf 'stubbed\n' >> "$PP_SKIP"; return 0; fi
+  printf '%s|%s|%s|%s\n' "${1##*/}" "${2##*/}" "$3" "$(pp_legacy_verify "$1" "$2")" >> "$PP_MAN"
+}
+pp_body() { # <function> -> its definition as the publish script wrote it: the production guard's while the recorder stands in for it
+  if [ "$1" = verify_publishable_content ] && declare -F pp_real_verify >/dev/null 2>&1; then
+    declare -f pp_real_verify | sed '1s/^pp_real_verify/verify_publishable_content/'
+  else
+    declare -f "$1"
+  fi
+}
+eval "$(printf '%s\n' "$PP_VPC" | sed '1s/^verify_publishable_content/pp_real_verify/')"
+verify_publishable_content() { # the RECORDER: the production guard's status, recorded beside the legacy guard's
+  local pp_rc=0
+  pp_real_verify "$@" || pp_rc=$?
+  if [ "${PP_ON:-0}" -eq 1 ]; then pp_record "${1:-}" "${2:-}" "$pp_rc"; fi
+  return "$pp_rc"
+}
+PP_ON=1
+
 # L1 — a Passport value reaching the render aborts.
 LHIT="$WORK/l_passport.html"
 lrender "$LHIT" "Border note: carry your Ruritanian passport, valid to 2033, at all times."
@@ -1005,17 +1110,21 @@ fi
 # commit as the re-key rather than after it.
 l8sel="$(_guard_declared_selectors)"
 l8n="$(printf '%s\n' "$l8sel" | grep -c .)"
-# Every function that must hold ZERO selectors. Two predicates and one projection.
-L8_PREDICATES='verify_publishable_content verify_summary_content strip_md_to_text_blocks'
+# Every function that must hold ZERO selectors. Two predicates, the projection the summary
+# predicate adds, and the two helpers every arm of both runs through: an arm's stages moved out
+# of the predicates' bodies into those two, and a selector could be hardcoded there as easily.
+L8_PREDICATES='verify_publishable_content verify_summary_content strip_md_to_text_blocks _guard_arm _guard_words'
 l8absent=""
+# Each body is read through pp_body, so the guard graded is the production one and not the
+# parity cells' recorder standing in for it from group L to M6.
 for l8f in $L8_PREDICATES; do
-  declare -f "$l8f" >/dev/null 2>&1 || l8absent="$l8absent$l8f "
+  pp_body "$l8f" >/dev/null 2>&1 || l8absent="$l8absent$l8f "
 done
 l8pred=0; l8src=0
 while IFS= read -r l8s; do
   [ -n "$l8s" ] || continue
   for l8f in $L8_PREDICATES; do
-    l8pred=$(( l8pred + $(declare -f "$l8f" | grep -cF -- "$l8s") ))
+    l8pred=$(( l8pred + $(pp_body "$l8f" | grep -cF -- "$l8s") ))
   done
   l8src=$((  l8src  + $(declare -f nonpublishable_values | grep -cF -- "$l8s") ))
 done <<EOF
@@ -1865,16 +1974,18 @@ fi
 # the class is read.
 #
 # THE RENDERS ARE BUILT SO THAT ONE PROJECTION ALONE SEES THE VALUE. L17P carries it only in
-# an img alt, which only the published projection reads — L13AL's construction, and L13c's
-# attribution. L17J splits its first word with an inline tag, which only the joined projection
-# closes up. L17V separates its words with an image whose alt is long: the visible projection
+# an img alt, which among the first three only the published projection reads — L13AL's
+# construction, and L13c's attribution; the fourth, the shape projection, reads an attribute value
+# as the published one does, so its cells use L17P too, and a failure forced on it is refused
+# before the published arm's match is ever read. L17J splits its first word with an inline tag,
+# which only the joined projection closes up. L17V separates its words with an image whose alt is long: the visible projection
 # reads them as neighbours, the joined one fuses two of them into one token, and the published
 # one puts the alt's words between them. A failure forced on that projection is therefore the
 # only route by which the value could go unread, and the guard's answer is about that route.
 #
 # THE CELLS, every one graded EXACTLY at rc=2:
-#   published, joined   fails with no output · fails after writing a real prefix · the same
-#                       prefix with the CALLER'S pipefail off · succeeds with no output, on
+#   published, joined,  fails with no output · fails after writing a real prefix · the same
+#   shape               prefix with the CALLER'S pipefail off · succeeds with no output, on
 #                       the trip's class and on a class with no values
 #   visible             fails with no output, on the trip's class and on a class with no
 #                       values · fails after a real prefix of twenty words or more, pipefail off
@@ -1883,19 +1994,19 @@ fi
 #                       the visible arm, and every call after its second run as production
 #                       does — pipefail off
 #   matcher             fails on the joined arm alone
-# The pipefail-off cells grade the status read rather than this suite's own `pipefail`. The
-# guard sets it inside each arm's subshell, so turning it off in the caller's subshell is the
-# one thing varied, and it is enough — S15k needed a fresh shell for its own reasons, and the
-# pin here lives inside the guard. Each prefix is a real one: the first lines of the same
+# The pipefail-off cells grade the status read rather than this suite's own `pipefail`.
+# _guard_arm sets it inside each arm's subshell, so turning it off in the caller's subshell is
+# the one thing varied, and it is enough — S15k needed a fresh shell for its own reasons, and
+# the pin here lives inside the helper. Each prefix is a real one: the first lines of the same
 # projection over the same render, written before any stub exists.
 #
-# WHAT DECIDES THE CELLS WITH NO OUTPUT. A published or joined arm that succeeds with no output
+# WHAT DECIDES THE CELLS WITH NO OUTPUT. A published, joined or shape arm that succeeds with no output
 # is refused by its emptiness limb, where the status limb cannot fire; a visible arm that fails
 # with no output is refused by the twenty-word floor, which is asked first, and behind it by its
 # status limb. On the trip's class the matcher stands behind all of them: it exits 3 on an empty
 # stream, so with those limbs lost the guard still reads the record undetermined, and L17b
 # stays green — only L17d's message tells the limb from the matcher there. On a class with no
-# values nothing is matched and a lost limb publishes, so the three cells on that class are what
+# values nothing is matched and a lost limb publishes, so the four cells on that class are what
 # decide the emptiness limbs and the visible arm's floor and status at rc=2, and the cells on
 # the trip's class keep the control L17c reads: the same render is a HIT with the projection
 # working. That class parses empty and is read as at least as new as the renders (L17a).
@@ -1924,6 +2035,7 @@ lplant "$L17V" 7 'Border note: Ruritanian<img src="x.png" alt="one two three fou
 strip_to_published_text "$L17P" > "$WORK/l17_pfx_pub.txt"
 strip_to_joined_text    "$L17J" > "$WORK/l17_pfx_join.txt"
 strip_to_text_blocks    "$L17V" > "$WORK/l17_pfx_vis.txt"
+strip_to_shape_text     "$L17P" > "$WORK/l17_pfx_shape.txt"
 # The class with no values the *-noclass cells read: it parses, and it holds no record. An
 # empty class read from a model older than the render is refused before anything is matched
 # (CD-3), so the mtimes are set, never left to write order — group M's rule — with the model
@@ -1932,9 +2044,9 @@ L17N="$WORK/l17_noclass"; mkdir -p "$L17N/outputs"
 printf '# Traveler Model [DERIVED]\n\n## Rowan\n- Interests: markets, museums\n\n### Needs\n- Category: rest\n  Specific: an early night on the first day of the trip\n' > "$L17N/outputs/traveler-model.md"
 touch -t 202601011100 "$L17P" "$L17J" "$L17V"
 touch -t 202601011200 "$L17N/outputs/traveler-model.md"
-L17_DEFS="$(declare -f strip_to_published_text strip_to_joined_text strip_to_text_blocks _guard_match _norm_words _decode_entities)"
-L17_CELLS='pub-none pub-prefix pub-prefix-pfoff pub-empty pub-empty-noclass join-none join-prefix join-prefix-pfoff join-empty join-empty-noclass vis-none vis-none-noclass vis-prefix-pfoff norm-prefix-pfoff pub-decode-pfoff matcher-joined'
-L17_NCELLS=16
+L17_DEFS="$(declare -f strip_to_published_text strip_to_joined_text strip_to_text_blocks strip_to_shape_text _guard_match _norm_words _decode_entities)"
+L17_CELLS='pub-none pub-prefix pub-prefix-pfoff pub-empty pub-empty-noclass join-none join-prefix join-prefix-pfoff join-empty join-empty-noclass vis-none vis-none-noclass vis-prefix-pfoff norm-prefix-pfoff pub-decode-pfoff matcher-joined shape-none shape-prefix shape-prefix-pfoff shape-empty shape-empty-noclass'
+L17_NCELLS=21
 
 # The words in a prefix, counted the way the guard counts an arm: through the stages that
 # follow the projection, with both sentinels subtracted.
@@ -1958,6 +2070,9 @@ l17_cell() { # <capture_file> <cell> -> rc on stdout
       join-none)         strip_to_joined_text() { return 1; } ;;
       join-prefix*)      strip_to_joined_text() { head -n 3 "$WORK/l17_pfx_join.txt"; return 1; } ;;
       join-empty*)       strip_to_joined_text() { return 0; } ;;
+      shape-none)        strip_to_shape_text() { return 1; } ;;
+      shape-prefix*)     strip_to_shape_text() { head -n 3 "$WORK/l17_pfx_shape.txt"; return 1; } ;;
+      shape-empty*)      strip_to_shape_text() { return 0; } ;;
       vis-none*)         strip_to_text_blocks() { return 1; } ;;
       vis-prefix-pfoff)  strip_to_text_blocks() { head -n 6 "$WORK/l17_pfx_vis.txt"; return 1; } ;;
       norm-prefix-pfoff) tr() { head -c 300 | command tr "$@"; return 1; } ;;
@@ -1975,9 +2090,9 @@ l17_cell() { # <capture_file> <cell> -> rc on stdout
 # one at least twenty, or the floor would refuse it instead — and no prefix may carry the
 # value, or a cell could be decided by a match on the prefix. Each render must carry its
 # value in the form that confines it to one projection.
-l17_wp="$(l17_words "$WORK/l17_pfx_pub.txt" 3)"; l17_wj="$(l17_words "$WORK/l17_pfx_join.txt" 3)"; l17_wv="$(l17_words "$WORK/l17_pfx_vis.txt" 6)"
+l17_wp="$(l17_words "$WORK/l17_pfx_pub.txt" 3)"; l17_wj="$(l17_words "$WORK/l17_pfx_join.txt" 3)"; l17_wv="$(l17_words "$WORK/l17_pfx_vis.txt" 6)"; l17_ws="$(l17_words "$WORK/l17_pfx_shape.txt" 3)"
 l17_pv=0
-for l17_f in "$WORK/l17_pfx_pub.txt:3" "$WORK/l17_pfx_join.txt:3" "$WORK/l17_pfx_vis.txt:6"; do
+for l17_f in "$WORK/l17_pfx_pub.txt:3" "$WORK/l17_pfx_join.txt:3" "$WORK/l17_pfx_vis.txt:6" "$WORK/l17_pfx_shape.txt:3"; do
   case "$(head -n "${l17_f##*:}" "${l17_f%:*}" | _decode_entities | _norm_words | tr '\n' ' ')" in
     *ruritanian*|*2033*) l17_pv=$((l17_pv+1)) ;;
   esac
@@ -1990,10 +2105,10 @@ for l17_f in "$L17P" "$L17J" "$L17V"; do
   nonpublishable_values "$L17N" "$l17_f" > "$WORK/l17_noclass.out" 2>/dev/null; l17_nrc=$?
   if [ "$l17_nrc" -eq 0 ] && [ ! -s "$WORK/l17_noclass.out" ]; then l17_ne=$((l17_ne+1)); fi
 done
-if [ "$l17_wp" -ge 1 ] && [ "$l17_wj" -ge 1 ] && [ "$l17_wv" -ge 20 ] && [ "$l17_pv" -eq 0 ] && [ "$l17_rv" = "111" ] && [ "$l17_ne" -eq 3 ]; then
-  PASS "L17a: fixture integrity — the published and joined prefixes carry $l17_wp and $l17_wj words and the visible one $l17_wv, none carries the value, and each render carries the value in the one form its projection alone reads; the class with no values parses empty, read as fresh against each of the $l17_ne renders. The prefix cells below are decided by the status limb"
+if [ "$l17_wp" -ge 1 ] && [ "$l17_wj" -ge 1 ] && [ "$l17_wv" -ge 20 ] && [ "$l17_ws" -ge 1 ] && [ "$l17_pv" -eq 0 ] && [ "$l17_rv" = "111" ] && [ "$l17_ne" -eq 3 ]; then
+  PASS "L17a: fixture integrity — the published, joined and shape prefixes carry $l17_wp, $l17_wj and $l17_ws words and the visible one $l17_wv, none carries the value, and each render carries the value in the one form its projection alone reads among the first three; the class with no values parses empty, read as fresh against each of the $l17_ne renders. The prefix cells below are decided by the status limb"
 else
-  FAIL "L17a: the fixtures are not set up as claimed (prefix words published=$l17_wp joined=$l17_wj visible=$l17_wv want >=1/>=1/>=20; prefixes carrying the value=$l17_pv want 0; renders carrying their value=$l17_rv want 111; renders the class with no values reads empty and fresh against=$l17_ne want 3) — L17b would not be measuring the status read"
+  FAIL "L17a: the fixtures are not set up as claimed (prefix words published=$l17_wp joined=$l17_wj visible=$l17_wv shape=$l17_ws want >=1/>=1/>=20/>=1; prefixes carrying the value=$l17_pv want 0; renders carrying their value=$l17_rv want 111; renders the class with no values reads empty and fresh against=$l17_ne want 3) — L17b would not be measuring the status read"
 fi
 
 # L17b — THE SUBJECT, and the arm registered with the oracle. One verdict over every cell,
@@ -2009,7 +2124,7 @@ l17_assert() { # <capture_dir>
     if [ "$rc" = "2" ]; then ok=$((ok+1)); else bad="$bad $cell=rc$rc"; fi
   done
   if [ "$n" -eq "$L17_NCELLS" ] && [ "$ok" -eq "$n" ]; then
-    PASS "L17b: all $n cells are UNDETERMINED (rc=2) — a published or joined projection that fails with no output, fails after a real prefix (with the caller's pipefail on and off) or succeeds with no output, on the trip's class and on a class with no values, a visible projection that fails with no output, on either class, or after twenty words or more, a normalization stage that fails after a prefix, an entity-decoding stage that fails after a prefix on the published arm alone, and a matcher that fails on the joined arm alone. No path from a projection the guard could not read reaches a pass"
+    PASS "L17b: all $n cells are UNDETERMINED (rc=2) — a published, joined or shape projection that fails with no output, fails after a real prefix (with the caller's pipefail on and off) or succeeds with no output, on the trip's class and on a class with no values, a visible projection that fails with no output, on either class, or after twenty words or more, a normalization stage that fails after a prefix, an entity-decoding stage that fails after a prefix on the published arm alone, and a matcher that fails on the joined arm alone. No path from a projection the guard could not read reaches a pass"
   else
     FAIL "L17b: $ok of $n cells (want $L17_NCELLS) returned rc=2 —$bad. A cell at rc=0 is the guard certifying a render one of its own projections never read; rc=1 is a match on a stream it should have refused"
   fi
@@ -2050,6 +2165,7 @@ l17_enum() { # <cell> -> the projection a refusal of that cell must name
     pub-*)  printf '%s' "retrievable markup (comment, attribute or script body)" ;;
     join-*) printf '%s' "joined markup (an inline tag split a word)" ;;
     vis-*)  printf '%s' "visible text" ;;
+    shape-*) printf '%s' "markup read by shape (every tag and attribute name dropped)" ;;
   esac
 }
 l17_named=0; l17_floor=0; l17_misnamed=""; l17_leak=0; l17_ncap=0
@@ -2076,10 +2192,10 @@ done
 l17_mx=0; case "$(cat "$WORK/l17live/matcher-joined.err" 2>/dev/null)" in *"could not be run (matcher exit 2)"*) l17_mx=1 ;; esac
 l17_plant="planted: carry your Ruritanian passport, valid to 2033"
 l17_ctl=0; case "$l17_plant" in *[Rr]uritanian*|*2033*) l17_ctl=1 ;; esac
-if [ "$l17_ctl" -eq 1 ] && [ "$l17_ncap" -eq "$L17_NCELLS" ] && [ "$l17_named" -eq 12 ] && [ "$l17_floor" -eq 2 ] && [ -z "$l17_misnamed" ] && [ "$l17_mx" -eq 1 ] && [ "$l17_leak" -eq 0 ]; then
-  PASS "L17d: AC-4 — each of the 12 projection refusals names the projection that was made to fail, from the closed enum, the 2 visible projections that fail with no output are refused by the twenty-word floor, whose message names visible text, the matcher cell names the matcher, and none of the $l17_ncap captures carries the value; the value scan found the planted line, so its zero is a measurement"
+if [ "$l17_ctl" -eq 1 ] && [ "$l17_ncap" -eq "$L17_NCELLS" ] && [ "$l17_named" -eq 17 ] && [ "$l17_floor" -eq 2 ] && [ -z "$l17_misnamed" ] && [ "$l17_mx" -eq 1 ] && [ "$l17_leak" -eq 0 ]; then
+  PASS "L17d: AC-4 — each of the 17 projection refusals names the projection that was made to fail, from the closed enum, the 2 visible projections that fail with no output are refused by the twenty-word floor, whose message names visible text, the matcher cell names the matcher, and none of the $l17_ncap captures carries the value; the value scan found the planted line, so its zero is a measurement"
 else
-  FAIL "L17d: captures=$l17_ncap of $L17_NCELLS, refusals naming their projection=$l17_named of 12, floor refusals naming visible text=$l17_floor of 2 (misnamed:${l17_misnamed:- none}), matcher named=$l17_mx, captures carrying the value=$l17_leak, scan control=$l17_ctl — a refusal names the wrong projection, or the value reached a log this suite publishes"
+  FAIL "L17d: captures=$l17_ncap of $L17_NCELLS, refusals naming their projection=$l17_named of 17, floor refusals naming visible text=$l17_floor of 2 (misnamed:${l17_misnamed:- none}), matcher named=$l17_mx, captures carrying the value=$l17_leak, scan control=$l17_ctl — a refusal names the wrong projection, or the value reached a log this suite publishes"
 fi
 
 # L17e — THE RESTORE. S6c's rule applied to these stubs: every one lived and died in a
@@ -2089,11 +2205,105 @@ l17_stub=""
 declare -F tr             >/dev/null 2>&1 && l17_stub="$l17_stub tr"
 declare -F l17_real_match >/dev/null 2>&1 && l17_stub="$l17_stub l17_real_match"
 declare -F l17_real_decode >/dev/null 2>&1 && l17_stub="$l17_stub l17_real_decode"
-if [ -n "$L17_DEFS" ] && [ "$(declare -f strip_to_published_text strip_to_joined_text strip_to_text_blocks _guard_match _norm_words _decode_entities)" = "$L17_DEFS" ] && [ -z "$l17_stub" ]; then
-  PASS "L17e: every L17 stub died with its subshell — the six production definitions read now are byte-identical to the ones read before L17b, and no stub function survives in this shell"
+if [ -n "$L17_DEFS" ] && [ "$(declare -f strip_to_published_text strip_to_joined_text strip_to_text_blocks strip_to_shape_text _guard_match _norm_words _decode_entities)" = "$L17_DEFS" ] && [ -z "$l17_stub" ]; then
+  PASS "L17e: every L17 stub died with its subshell — the seven production definitions read now are byte-identical to the ones read before L17b, and no stub function survives in this shell"
 else
   FAIL "L17e: a stub outlived its subshell (functions still defined:${l17_stub:- none}), or a production definition changed — every verdict after L17 would be grading the stub"
 fi
+
+# L17f — EVERY ARM OF BOTH CONTENT GUARDS RUNS THROUGH THE ONE ARM HELPER AND THE ONE COUNT
+# (#2071 AC-1). L17b grades the status reads the guard makes; this grades that neither guard
+# has an arm without one. A projection a guard calls other than as _guard_arm's argument is an
+# arm whose status nothing reads, a guard body that names `pipefail` is running a pipeline of
+# its own beside the helper, and an arm that counts its words other than through _guard_words
+# carries a copy of the count — each reopens, for that arm, the fail-open L17b closes, while
+# every L17 cell stays green. Read from the parsed bodies (declare -f drops comments), so a
+# projection named in a comment is not counted. A projection is any word that begins `strip_`:
+# every projection in the publish script is so named, so an arm added later is counted with no
+# list here to update. The count's awk program is read as well: it is written once in the
+# publish script, in _guard_words, so a copy anywhere in the script turns this red. The scan's
+# control is a planted body carrying one arm of each kind, which it must tell apart.
+l17f_scan() { # <function-body text> -> "<projections> <through-helper> <helper-calls> <counts> <pipefail-lines>"
+  local line rest np=0 nh=0 na=0 nw=0 npf=0
+  while IFS= read -r line; do
+    rest="$line"; while [[ "$rest" =~ strip_[a-z_]+(.*) ]]; do np=$((np+1)); rest="${BASH_REMATCH[1]}"; done
+    rest="$line"; while [[ "$rest" =~ _guard_arm[[:space:]]+(decode|raw)[[:space:]]+strip_[a-z_]+(.*) ]]; do nh=$((nh+1)); rest="${BASH_REMATCH[2]}"; done
+    rest="$line"; while [[ "$rest" =~ _guard_arm[[:space:]](.*) ]]; do na=$((na+1)); rest="${BASH_REMATCH[1]}"; done
+    rest="$line"; while [[ "$rest" =~ _guard_words[[:space:]](.*) ]]; do nw=$((nw+1)); rest="${BASH_REMATCH[1]}"; done
+    case "$line" in *pipefail*) npf=$((npf+1)) ;; esac
+  done <<EOF
+$1
+EOF
+  printf '%d %d %d %d %d' "$np" "$nh" "$na" "$nw" "$npf"
+}
+L17F_PLANT='( set -o pipefail; strip_to_text_blocks "$1" | _decode_entities | _line_sentinels | _norm_words > "$2" ) || st=$?
+_guard_arm decode strip_to_joined_text "$1" "$3" || sj=$?
+n="$(_guard_words "$3")"'
+l17f_ctl="$(l17f_scan "$L17F_PLANT")"
+l17f_v="$(l17f_scan "$(pp_body verify_publishable_content)")"
+l17f_s="$(l17f_scan "$(declare -f verify_summary_content)")"
+read -r l17f_vp l17f_vh l17f_va l17f_vw l17f_vf <<< "$l17f_v"
+read -r l17f_sp l17f_sh l17f_sa l17f_sw l17f_sf <<< "$l17f_s"
+l17f_lit='$0 != B && $0 != L { c++ }'
+l17f_nlit="$(grep -c -F -- "$l17f_lit" "$SELF_PUBLISH")"
+l17f_lctl="$(grep -c -F -- "$l17f_lit" "$SELF")"
+if [ "$l17f_ctl" = "2 1 1 1 1" ] && [ "$l17f_lctl" -ge 1 ] \
+   && [ "$l17f_vp" -ge 3 ] && [ "$l17f_vh" -eq "$l17f_vp" ] && [ "$l17f_va" -eq "$l17f_vh" ] && [ "$l17f_vw" -eq "$l17f_va" ] && [ "$l17f_vf" -eq 0 ] \
+   && [ "$l17f_sp" -ge 1 ] && [ "$l17f_sh" -eq "$l17f_sp" ] && [ "$l17f_sa" -eq "$l17f_sh" ] && [ "$l17f_sw" -eq "$l17f_sa" ] && [ "$l17f_sf" -eq 0 ] \
+   && [ "$l17f_nlit" -eq 1 ]; then
+  PASS "L17f: AC-1 — verify_publishable_content calls each of its $l17f_vp projections only as _guard_arm's argument and counts each arm through _guard_words ($l17f_vw calls), verify_summary_content its $l17f_sp the same way ($l17f_sw), neither body names pipefail, and the count's awk program is written $l17f_nlit time in the publish script. The scan told the planted body's hand-written arm from its helper arm (control '$l17f_ctl'), so these counts are a measurement"
+else
+  FAIL "L17f: control '$l17f_ctl' (want '2 1 1 1 1'; the count's awk program in this suite $l17f_lctl time(s), want >=1); verify_publishable_content '$l17f_v' and verify_summary_content '$l17f_s' (projections, through _guard_arm, _guard_arm calls, _guard_words calls, pipefail lines — want the first three equal, the fourth equal to them, the last 0, and at least 3 and 1 projections); the count's awk program $l17f_nlit time(s) in the publish script, want 1 — an arm runs outside the helper, counts outside it, or the scan cannot see one"
+fi
+
+# L17g — THE ONE COUNT SUBTRACTS BOTH SENTINELS, ON BOTH GUARDS (#2071). _guard_words is the
+# count every arm's floor or emptiness check reads, and what makes it a count of WORDS is that
+# neither sentinel is one. Two renders and two summaries, each pair with the same lines: one of
+# each carries fewer words than its guard's floor, on more lines and more block boundaries than
+# that floor, so a count that took either sentinel for a word would clear the floor and publish
+# it; the other carries more words than the floor. Each is read against the class with no
+# values, fresh against all four, so the floor is the only question: the under-floor files are
+# UNDETERMINED (rc=2) and the others publish (rc=0), which also shows the refusals are the
+# floor's and not the files' shape. Fixture integrity is counted by grep, not by the helper.
+L17G="$WORK/l17g"; mkdir -p "$L17G"
+{ printf '<html><body>\n'
+  for l17g_i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30; do
+    case "$l17g_i" in *0) printf '<p>w%s</p>\n' "$l17g_i" ;; *) printf '<p></p>\n' ;; esac
+  done
+  printf '</body></html>\n'; } > "$L17G/under.html"
+{ printf '<html><body>\n'
+  for l17g_i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30; do
+    printf '<p>w%s</p>\n' "$l17g_i"
+  done
+  printf '</body></html>\n'; } > "$L17G/over.html"
+printf '# Change Summary\n\n\n\n\n\n\n\n' > "$L17G/under.md"
+printf '# Change Summary for the group\n\n\n\n\n\n\n\n' > "$L17G/over.md"
+touch -t 202601011100 "$L17G/under.html" "$L17G/over.html" "$L17G/under.md" "$L17G/over.md"
+strip_to_text_blocks "$L17G/under.html" | _decode_entities | _line_sentinels | _norm_words > "$L17G/under.html.words"
+strip_md_to_text_blocks "$L17G/under.md" | _line_sentinels | _norm_words > "$L17G/under.md.words"
+l17g_hw="$(grep -c -v -x -F -e "$_GUARD_BLOCK" -e "$_GUARD_LINE" "$L17G/under.html.words")"
+l17g_hl="$(grep -c -x -F -e "$_GUARD_LINE" "$L17G/under.html.words")"; l17g_hb="$(grep -c -x -F -e "$_GUARD_BLOCK" "$L17G/under.html.words")"
+l17g_mw="$(grep -c -v -x -F -e "$_GUARD_BLOCK" -e "$_GUARD_LINE" "$L17G/under.md.words")"
+l17g_ml="$(grep -c -x -F -e "$_GUARD_LINE" "$L17G/under.md.words")"; l17g_mb="$(grep -c -x -F -e "$_GUARD_BLOCK" "$L17G/under.md.words")"
+l17g_assert() {
+  local f want rc ok=0 n=0 bad=""
+  for f in under.html:2 over.html:0 under.md:2 over.md:0; do
+    n=$((n+1)); want="${f##*:}"
+    case "$f" in
+      *.html:*) verify_publishable_content "$L17G/${f%:*}" "$L17N" >/dev/null 2>&1; rc=$? ;;
+      *)        verify_summary_content     "$L17G/${f%:*}" "$L17N" >/dev/null 2>&1; rc=$? ;;
+    esac
+    if [ "$rc" -eq "$want" ]; then ok=$((ok+1)); else bad="$bad ${f%:*}=rc$rc/want$want"; fi
+  done
+  if [ "$l17g_hw" -lt 20 ] && [ $((l17g_hw + l17g_hl)) -ge 20 ] && [ $((l17g_hw + l17g_hb)) -ge 20 ] \
+     && [ "$l17g_mw" -lt "$GUARD_SUMMARY_FLOOR" ] && [ $((l17g_mw + l17g_ml)) -ge "$GUARD_SUMMARY_FLOOR" ] && [ $((l17g_mw + l17g_mb)) -ge "$GUARD_SUMMARY_FLOOR" ] \
+     && [ "$n" -eq 4 ] && [ "$ok" -eq 4 ]; then
+    PASS "L17g: the count subtracts both sentinels on both guards — a render of $l17g_hw words on $l17g_hl lines and $l17g_hb blocks, and a summary of $l17g_mw words on $l17g_ml lines and $l17g_mb blocks, are UNDETERMINED (rc=2) under their floors of 20 and $GUARD_SUMMARY_FLOOR, which either sentinel counted as a word would have cleared; the same lines carrying more words than the floor publish (rc=0) on the same class"
+  else
+    FAIL "L17g: render words=$l17g_hw lines=$l17g_hl blocks=$l17g_hb (want words <20 and words plus either >=20); summary words=$l17g_mw lines=$l17g_ml blocks=$l17g_mb (want words <$GUARD_SUMMARY_FLOOR and words plus either >=$GUARD_SUMMARY_FLOOR); $ok of $n files returned their status —$bad. An under-floor file at rc=0 is a sentinel counted as a word"
+  fi
+}
+l17g_assert
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Group M — the three confirmed defects from the Phase A6.5 adversarial design
@@ -2413,7 +2623,10 @@ M1IN_TAG="$WORK/m1in_tagname.html"; mrender "$M1IN_TAG" '<script>var pop = "<b>C
 <a href="#menu" title="the <em>new</em> menu">menu</a>'
 M1IN_KEY="$WORK/m1in_keyed.html"; mrender "$M1IN_KEY" '<!-- planner note: ask Em at the desk -->'
 m1in_off() { # <render> <trip_dir> -> the guard's status with the inline list taken out of the helper
+  # The fourth arm (ADR-050) reads what the mutated projection reads: it drops every tag name by
+  # shape, so left as it is it would catch the page the mutant exists to publish.
   ( eval "$(declare -f strip_to_published_text | sed 's/|\$_GUARD_INLINE_TAGS//')"
+    strip_to_shape_text() { strip_to_published_text "$@"; }
     verify_publishable_content "$1" "$2" >/dev/null 2>&1; printf '%s' "$?" )
 }
 m1io_assert() { # one verdict
@@ -2639,11 +2852,14 @@ M1KA_WSN="$WORK/m1ka_namespaces.html"; mrender "$M1KA_WSN" "$m1ka_wsn"
 M1KA_CMZ="$WORK/m1ka_opencomment.html"; mrender "$M1KA_CMZ" '<!-- planner note: n<Ruritanian passport valid to 2033'
 { sed '$d' "$M1KA_CMZ"; printf '%s\n' '</body' '></html' '>'; } > "$M1KA_CMZ.tmp" && mv "$M1KA_CMZ.tmp" "$M1KA_CMZ"
 m1ka_off() { # <render> <trip_dir> -> the guard's status with the attribute-list read taken out of the helper
+  # Each mutant here points the fourth arm (ADR-050) at the mutated projection, as m1in_off does.
   ( eval "$(declare -f strip_to_published_text | sed 's/(?=>)|)/(?!)|)/')"
+    strip_to_shape_text() { strip_to_published_text "$@"; }
     verify_publishable_content "$1" "$2" >/dev/null 2>&1; printf '%s' "$?" )
 }
 m1kc_off() { # <render> <trip_dir> -> the guard's status with the comment tokenizer's end-of-input branch taken out
   ( eval "$(declare -f strip_to_published_text | sed 's/(<!--\.\*?(?:-->|\\z))/(<!--.*?-->)/')"
+    strip_to_shape_text() { strip_to_published_text "$@"; }
     verify_publishable_content "$1" "$2" >/dev/null 2>&1; printf '%s' "$?" )
 }
 m1iq_assert() { # one verdict
@@ -2752,6 +2968,126 @@ m1is_assert() { # one verdict
   fi
 }
 m1is_assert
+
+# ── M1t–M1u (#2055) — a <script> or <style> body ends at its closing tag, spaced or not ──
+#
+# A browser ends a script or style body at `</script >`, whitespace before the `>`, as it does at
+# `</script>`. The published projection ended the body at an exact closing tag only, so after a
+# spaced one it read the rest of the page as body text, up to the next exact closing tag or the
+# end of the file. A tag on neither list met there was read as text, its name between the words
+# around it (M1t), and every tag name met there reached its stream (M1u). The visible and joined
+# projections still end the body at an exact closing tag (the comment above strip_to_text_blocks
+# says why), so on M1t's renders they delete the stretch from the spaced closing tag to the next
+# exact one, value and all, and the published arm is the one that reads it. M1t grades the value:
+# a page whose need is split twice by `<font>` in that stretch, so that no five-word run survives
+# the tag names, aborts as a HIT named for the published arm, in a script body and in a style
+# body, and its exact-close twin aborts too. M1u grades the other direction: a member named
+# Summary does not abort a page that writes `<details><summary>` after a spaced closing tag, and
+# that page's published stream is its exact-close twin's, token for token. Each carries the defect
+# inside the arm (ARMED-RED): the published projection's lookahead put back to the exact closing
+# tag, in a subshell, must publish M1t's two spaced renders and abort M1u's.
+M1T_V='cannot manage more than <font>one</font> flight of stairs <font>in</font> a single stretch'
+M1T_SC="$WORK/m1t_script_spaced.html"; mrender "$M1T_SC" "<script>var a = 1;</script ><p>Note: $M1T_V.</p><script>var b = 2;</script>"
+M1T_ST="$WORK/m1t_style_spaced.html";  mrender "$M1T_ST" "<style>.a{color:#333}</style ><p>Note: $M1T_V.</p><style>.b{color:#444}</style>"
+M1T_EX="$WORK/m1t_script_exact.html";  mrender "$M1T_EX" "<script>var a = 1;</script><p>Note: $M1T_V.</p><script>var b = 2;</script>"
+m1t_unfixed() { # <render> <trip_dir> -> the guard's status with the published lookahead put back to the exact closing tag
+  # The fourth arm (ADR-050) reads what the mutated projection reads, for M1t's and M1u's
+  # ARMED-RED and for M6d: it drops a tag on neither list by shape, so it would catch the leak page.
+  ( eval "$(declare -f strip_to_published_text | sed 's#</\\3\\s\*>#</\\3>#')"
+    strip_to_shape_text() { strip_to_published_text "$@"; }
+    verify_publishable_content "$1" "$2" >/dev/null 2>&1; printf '%s' "$?" )
+}
+m1t_run() { # <projection> <render> -> how many times MV's twelve words stand in its stream as one run
+  "$1" "$2" | _decode_entities | _norm_words | tr '\n' ' ' \
+    | awk -v N=" $(printf '%s' "$MV" | _norm_words | tr '\n' ' ')" '{ s = " " $0; while ((i = index(s, N)) > 0) { c++; s = substr(s, i + length(N) - 1) } } END { print c + 0 }'
+}
+m1t_assert() { # one verdict
+  local rs ps rt pt rx ms mt oth nf
+  mguard "$M1T_SC" "$MTD"; rs="$MRC"; ps="$(m1eq_prj)" || ps="NONE"
+  mguard "$M1T_ST" "$MTD"; rt="$MRC"; pt="$(m1eq_prj)" || pt="NONE"
+  mguard "$M1T_EX" "$MTD"; rx="$MRC"
+  ms="$(m1t_unfixed "$M1T_SC" "$MTD")"; mt="$(m1t_unfixed "$M1T_ST" "$MTD")"
+  oth=$(( $(m1t_run strip_to_text_blocks "$M1T_SC") + $(m1t_run strip_to_joined_text "$M1T_SC") + $(m1t_run strip_to_text_blocks "$M1T_ST") + $(m1t_run strip_to_joined_text "$M1T_ST") ))
+  nf="$(awk '{ c += gsub(/<font>/, "&") } END { print c + 0 }' "$M1T_SC" "$M1T_ST" "$M1T_EX")"
+  if [ "$rs" -eq 1 ] && [ "$ps" = "$M1EQ_PRJ" ] && [ "$rt" -eq 1 ] && [ "$pt" = "$M1EQ_PRJ" ] && [ "$rx" -eq 1 ] && [ "$ms" = "0" ] && [ "$mt" = "0" ] && [ "$oth" -eq 0 ] && [ "$nf" -eq 6 ]; then
+    PASS "M1t: a value written after a spaced closing tag is read — the need split twice by a tag on neither list, after '</script >', aborts as a HIT (rc=$rs) named '$ps', so does the same after '</style >' (rc=$rt), and the exact-close twin aborts too (rc=$rx); ARMED-RED — with the published lookahead put back to the exact closing tag both spaced renders publish (rc=$ms, rc=$mt). The visible and joined arms carry the need as one run $oth time(s) on the spaced renders, so the HIT is the published arm's"
+  else
+    FAIL "M1t: spaced script render rc=$rs '$ps', spaced style render rc=$rt '$pt' (want 1 and '$M1EQ_PRJ' for both), exact-close twin rc=$rx (want 1); with the lookahead put back rc=$ms and rc=$mt (want 0 and 0); the need as one run on the visible and joined arms $oth (want 0); splitting tags in the renders $nf (want 6). A value after a spaced closing tag publishes, or this arm can no longer tell"
+  fi
+}
+m1t_assert
+M1U_TD="$WORK/porto-summary"; mkdir -p "$M1U_TD/outputs"
+cat > "$M1U_TD/outputs/traveler-model.md" <<'MD'
+# Traveler Model — Porto 2029 [DERIVED]
+
+## Rowan
+- Passport: Ruritanian, valid to 2033
+
+## Summary [OPERATOR-PROVIDED] [THIRD-PARTY]
+
+### Needs
+- Category: mobility
+  Specific: needs a bench to rest on at every stop along the way
+  Applies to: ## Hard Constraints → "Mobility"
+MD
+M1U_SP="$WORK/m1u_spaced.html"; mrender "$M1U_SP" '<script>var a = 1;</script ><details><summary>Rainy-day options</summary>the tile museum</details>'
+M1U_EX="$WORK/m1u_exact.html";  mrender "$M1U_EX" '<script>var a = 1;</script><details><summary>Rainy-day options</summary>the tile museum</details>'
+m1u_stream() { strip_to_published_text "$1" | _decode_entities | _norm_words | tr '\n' ' '; }   # <render> -> its published stream on one line
+m1u_assert() { # one verdict
+  local rs rx ss sx ms mss same=no moved=no
+  mguard "$M1U_SP" "$M1U_TD"; rs="$MRC"
+  mguard "$M1U_EX" "$M1U_TD"; rx="$MRC"
+  ss="$(m1u_stream "$M1U_SP")"; sx="$(m1u_stream "$M1U_EX")"
+  ms="$(m1t_unfixed "$M1U_SP" "$M1U_TD")"
+  mss="$( eval "$(declare -f strip_to_published_text | sed 's#</\\3\\s\*>#</\\3>#')"; m1u_stream "$M1U_SP" )"
+  [ -n "$sx" ] && [ "$ss" = "$sx" ] && same=yes
+  [ -n "$mss" ] && [ "$mss" != "$sx" ] && moved=yes
+  if [ "$rs" -eq 0 ] && [ "$rx" -eq 0 ] && [ "$same" = "yes" ] && [ "$ms" = "1" ] && [ "$moved" = "yes" ]; then
+    PASS "M1u: the markup after a spaced closing tag is read as markup — a member named Summary does not abort a page that writes '<details><summary>' after '</script >' (rc=$rs), as its exact-close twin does not (rc=$rx), and the two published streams are the same, token for token; ARMED-RED — with the published lookahead put back to the exact closing tag the spaced render aborts (rc=$ms) and its stream differs"
+  else
+    FAIL "M1u: spaced render rc=$rs, exact-close twin rc=$rx (want 0 and 0); published streams the same: $same (want yes); with the lookahead put back rc=$ms (want 1) and its stream differing: $moved (want yes). Tag names after a spaced closing tag reach the published stream again, or this arm can no longer tell"
+  fi
+}
+m1u_assert
+
+# ── M1x–M1y (#2055) — a value inside a body whose ONLY closing tag carries a space ──
+#
+# The visible and joined projections end a <script> or <style> body at an exact closing tag, so a
+# body whose only closing tag is written with a space is not deleted there: they read it as
+# visible text. The guard before 0.60.0 blocked a value written inside such a body through that
+# reading, and so does the guard at the base: a value split mid-word by an inline tag is closed up
+# by the joined arm (M1x), and a value around one of whose words a tag carries attribute-value
+# words is read whole by the visible arm (M1y). The published arm alone reads neither, because
+# inside a body a mid-word split stays split and a kept tag's attribute values stay as text, so
+# each exact-close twin, whose body the visible and joined projections delete, publishes. Each
+# need is split twice, so that no five-word run survives on the published arm. Each arm carries the
+# change it guards against inside the arm (ARMED-RED): the visible and joined projections made to
+# end a body at a spaced closing tag too, in a subshell, must publish its render — that change
+# would give up this class, which is why it is not made (the comment above strip_to_text_blocks).
+M1X_SP="$WORK/m1x_spaced.html"; mrender "$M1X_SP" "<script>var s = 'Note: cannot manage more than o<b>ne</b> flight of stairs i<b>n</b> a single stretch';</script >"
+M1Y_SP="$WORK/m1y_spaced.html"; mrender "$M1Y_SP" "<script>var s = 'Note: cannot manage more than <span title=\"see note\">one</span> flight of stairs <span title=\"see note\">in</span> a single stretch';</script >"
+M1X_EX="$WORK/m1x_exact.html"; sed 's#</script >#</script>#' "$M1X_SP" > "$M1X_EX"
+M1Y_EX="$WORK/m1y_exact.html"; sed 's#</script >#</script>#' "$M1Y_SP" > "$M1Y_EX"
+m1bc_off() { # <render> <trip_dir> -> the guard's status with the visible and joined readers ending a body at a spaced closing tag too
+  ( eval "$(declare -f strip_to_text_blocks | sed 's#</\\1>#</\\1\\s*>#')"
+    eval "$(declare -f strip_to_joined_text | sed 's#</\\1>#</\\1\\s*>#')"
+    verify_publishable_content "$1" "$2" >/dev/null 2>&1; printf '%s' "$?" )
+}
+m1bc_assert() { # <id> <shape> <spaced render> <exact-close twin> <the projection its abort names> — one verdict
+  local id="$1" what="$2" sp="$3" tw="$4" want="$5" rs ps rt ms ks kt dz
+  mguard "$sp" "$MTD"; rs="$MRC"; ps="$(m1eq_prj)" || ps="NONE"
+  mguard "$tw" "$MTD"; rt="$MRC"
+  ms="$(m1bc_off "$sp" "$MTD")"
+  ks="$(awk '{ c += gsub(/<\/script >/, "&") } END { print c + 0 }' "$sp")"; kt="$(awk '{ c += gsub(/<\/script >/, "&") } END { print c + 0 }' "$tw")"
+  dz=$(( $(wc -c < "$sp") - $(wc -c < "$tw") ))
+  if [ "$rs" -eq 1 ] && [ "$ps" = "$want" ] && [ "$rt" -eq 0 ] && [ "$ms" = "0" ] && [ "$ks" -eq 1 ] && [ "$kt" -eq 0 ] && [ "$dz" -eq 1 ]; then
+    PASS "$id: $what inside a <script> body whose only closing tag carries a space still aborts as a HIT (rc=$rs) named '$ps', as before 0.60.0; its exact-close twin, one byte shorter, publishes (rc=$rt), so the abort is that reading of the body; ARMED-RED — with the visible and joined readers ending a body at a spaced closing tag too the page publishes (rc=$ms)"
+  else
+    FAIL "$id: $what inside a body closed only with a space — spaced render rc=$rs '$ps' (want 1 and '$want'), exact-close twin rc=$rt (want 0), with the visible and joined readers ending a body at a spaced closing tag rc=$ms (want 0); spaced closing tags in the render $ks and in the twin $kt (want 1 and 0), bytes between them $dz (want 1). A class of pages the guard before 0.60.0 blocked publishes, or this arm can no longer tell"
+  fi
+}
+m1bc_assert M1x "a value split mid-word by an inline tag"            "$M1X_SP" "$M1X_EX" 'joined markup (an inline tag split a word)'
+m1bc_assert M1y "a value with an attribute-carrying tag around a word" "$M1Y_SP" "$M1Y_EX" 'visible text'
 
 # ── M2 (CD-2) — is_stop in the token branch; a stopword-only name is a declared non-key ──
 MSTOP="$WORK/porto-stopword"; mkdir -p "$MSTOP/outputs"
@@ -3156,12 +3492,13 @@ m5src="$(wc -l < "$M5LINES" | tr -d ' ')"
 m5lj="$(strip_to_joined_text "$M5LINES" | _decode_entities | wc -l | tr -d ' ')"
 m5lv="$(strip_to_text_blocks "$M5LINES" | _decode_entities | wc -l | tr -d ' ')"
 m5lp="$(strip_to_published_text "$M5LINES" | _decode_entities | wc -l | tr -d ' ')"
+m5ls="$(strip_to_shape_text "$M5LINES" | _decode_entities | wc -l | tr -d ' ')"
 printf 'alpha &#10; beta &#13; gamma &#32; delta &#38; epsilon &#82;ho\n' > "$WORK/m5_adv.txt"
 m5adv="$(_decode_entities < "$WORK/m5_adv.txt" | wc -l | tr -d ' ')"
-if [ "$m5src" -ge 13 ] && [ "$m5lj" = "$m5src" ] && [ "$m5lv" = "$m5src" ] && [ "$m5lp" = "$m5src" ] && [ "$m5adv" = "1" ]; then
-  PASS "M5d: all three projections are line-count-preserving THROUGH the decoder — a $m5src-line render carrying a <script> block, a tag spanning three lines, a split word and a character reference yields $m5lj / $m5lv / $m5lp lines. The adversarial arm fires too: a single line of newline-yielding references (&#10;, &#13;) decodes to $m5adv line, so no locator downstream of an encoded value can shift"
+if [ "$m5src" -ge 13 ] && [ "$m5lj" = "$m5src" ] && [ "$m5lv" = "$m5src" ] && [ "$m5lp" = "$m5src" ] && [ "$m5ls" = "$m5src" ] && [ "$m5adv" = "1" ]; then
+  PASS "M5d: all four projections are line-count-preserving THROUGH the decoder — a $m5src-line render carrying a <script> block, a tag spanning three lines, a split word and a character reference yields $m5lj / $m5lv / $m5lp / $m5ls lines. The adversarial arm fires too: a single line of newline-yielding references (&#10;, &#13;) decodes to $m5adv line, so no locator downstream of an encoded value can shift"
 else
-  FAIL "M5d: a projection is no longer line-count-preserving (source=$m5src joined=$m5lj visible=$m5lv published=$m5lp; newline-reference arm=$m5adv, want 1). A transform that consumes a newline shifts every reported line after it while the token stream stays valid — the suite would not notice"
+  FAIL "M5d: a projection is no longer line-count-preserving (source=$m5src joined=$m5lj visible=$m5lv published=$m5lp shape=$m5ls; newline-reference arm=$m5adv, want 1). A transform that consumes a newline shifts every reported line after it while the token stream stays valid — the suite would not notice"
 fi
 
 # M5e — THE FAIL DIRECTION OF EACH NEW SUBJECT, and both directions are CLOSED. Removing
@@ -3179,6 +3516,328 @@ if [ "$m5_dec_rc" -eq 2 ] && [ "$m5_join_rc" -eq 2 ]; then
 else
   FAIL "M5e: a removal did not fail closed (no decoder: rc=$m5_dec_rc want 2; no joined arm: rc=$m5_join_rc want 2) — rc=0 on either is the guard certifying a render one of its own projections never read"
 fi
+
+# ── M7a–M7i (#2068, ADR-050) — the guard's fourth arm, a reading by shape, read and credited last ──
+#
+# The published projection finds machinery by its place, which keeps a key token written directly
+# before `=` (M1e–M1h), and so keeps as text words a page around a value can carry: a `word=`
+# inside a quoted attribute value, a name read as text where a kept tag's list cannot be taken, a
+# tag on neither list inside a script string. Those words push a value's own words apart, and a
+# page the guard before 0.60.0 blocked published. The bytes such a page needs dropped and the bytes
+# criterion 5 needs kept are the same shape, so no one reading holds both (ADR-050); the guard
+# carries a fourth arm instead, strip_to_shape_text, the earlier published program with #2072's
+# anchors, read last and credited last. Each arm grades its page against the guard as it stands
+# and carries the defect inside it (ARMED-RED): with the fourth arm made to read what the published
+# projection reads, in a subshell, the guard reads as it did before this change, and the page must
+# publish again. A twin on the same fixture shows what the shape needs. Every page is rendered on
+# group M's machinery-rich page against MTD, and every verdict is exact.
+M7_PRJ='markup read by shape (every tag and attribute name dropped)'
+m7_off() { # <render> <trip_dir> -> the guard's status with the fourth arm reading what the published projection reads
+  ( strip_to_shape_text() { strip_to_published_text "$@"; }
+    verify_publishable_content "$1" "$2" >/dev/null 2>&1; printf '%s' "$?" )
+}
+M7A_SP="$WORK/m7a_spans.html"; mrender "$M7A_SP" "<script>var pop = 'Note: cannot manage more than <span title=\"k= m=\">one</span> flight of stairs <span title=\"k= m=\">in</span> a single <span title=\"k= m=\">stretch</span>';</script>"
+M7A_TW="$WORK/m7a_twin.html";  mrender "$M7A_TW" "<script>var pop = 'Note: cannot manage more than <span title=\"k m\">one</span> flight of stairs <span title=\"k m\">in</span> a single <span title=\"k m\">stretch</span>';</script>"
+M7B_PP="$WORK/m7b_passport.html";   mrender "$M7B_PP" "<script>var pop = 'Entry: Ruritanian, <span title=\"k= m=\">valid</span> <span title=\"k= m=\">to</span> <span title=\"k= m=\">2033</span>';</script>"
+M7B_NK="$WORK/m7b_need_one.html";   mrender "$M7B_NK" "<script>var pop = 'Note: cannot manage more than <span title=\"k=\">one</span> flight of stairs <span title=\"k=\">in</span> a single <span title=\"k=\">stretch</span>';</script>"
+M7B_PK="$WORK/m7b_passport_one.html"; mrender "$M7B_PK" "<script>var pop = 'Entry: Ruritanian, <span title=\"k=\">valid</span> <span title=\"k=\">to</span> <span title=\"k=\">2033</span>';</script>"
+M7C_A="$WORK/m7c_comment.html";   mrender "$M7C_A" "<!-- Entry: Ruritanian <span title=\">\" data-alpha= data-beta= onclick=go() valid to 2033 -->"
+M7C_B="$WORK/m7c_template.html";  mrender "$M7C_B" "<script>var s = \`Entry: Ruritanian <span title=\">\" data-alpha= data-beta= onclick=go() valid to 2033\`; if (n < 3) { s = \"\"; }</script>"
+M7C_AT="$WORK/m7c_comment_closed.html";  mrender "$M7C_AT" "<!-- Entry: Ruritanian <span title=\">\" data-alpha= data-beta= onclick=go()> valid to 2033</span> -->"
+M7C_BT="$WORK/m7c_template_closed.html"; mrender "$M7C_BT" "<script>var s = \`Entry: Ruritanian <span title=\">\" data-alpha= data-beta= onclick=go()> valid to 2033</span>\`; if (n < 3) { s = \"\"; }</script>"
+M7D_AP="$WORK/m7d_apostrophe.html"; mrender "$M7D_AP" "<!-- Entry: Ruritanian <span data-a=O'N class= title= lang= dir= x='>valid</span> to 2033 -->"
+M7D_VN="$WORK/m7d_valued.html";     mrender "$M7D_VN" "<!-- Entry: Ruritanian <span data-a=O'N class=x title=y lang=z dir=w x='>valid</span> to 2033 -->"
+M7E_U="$WORK/m7e_unlisted.html"; mrender "$M7E_U" "<script>var pop = 'Note: cannot manage more than <font>one</font> flight of stairs <trip-chip>in</trip-chip> a single stretch';</script>"
+M7E_L="$WORK/m7e_listed.html";   mrender "$M7E_L" "<script>var pop = 'Note: cannot manage more than <em>one</em> flight of stairs <em>in</em> a single stretch';</script>"
+M7F_P="$WORK/m7f_popup.html"; mrender "$M7F_P" '<div data-popup="Entry: Ruritanian <em>passport</em>, <strong>valid</strong> to <strong>2033</strong>">details</div>'
+M7G_EQ="$WORK/m7g_eq_value.html"; mrender "$M7G_EQ" '<span title="Ruritanian= passport, valid to 2033">entry rules</span>'
+
+# M7a — #2068's page: the need's words wrapped in three spans whose title carries `k= m=`, inside a
+# script string. The published arm keeps `k m` between the need's words, so no five-word run
+# survives there; the fourth arm drops both names and the need stands whole in its stream.
+m7a_assert() { # one verdict
+  local rs ps rt ms npub nshape oth
+  mguard "$M7A_SP" "$MTD"; rs="$MRC"; ps="$(m1eq_prj)" || ps="NONE"
+  mguard "$M7A_TW" "$MTD"; rt="$MRC"
+  ms="$(m7_off "$M7A_SP" "$MTD")"
+  npub="$(m1t_run strip_to_published_text "$M7A_SP")"; nshape="$(m1t_run strip_to_shape_text "$M7A_SP")"
+  oth=$(( $(m1t_run strip_to_text_blocks "$M7A_SP") + $(m1t_run strip_to_joined_text "$M7A_SP") ))
+  if [ "$rs" -eq 1 ] && [ "$ps" = "$M7_PRJ" ] && [ "$rt" -eq 0 ] && [ "$ms" = "0" ] && [ "$npub" -eq 0 ] && [ "$nshape" -eq 1 ] && [ "$oth" -eq 0 ]; then
+    PASS "M7a: #2068's page — a need whose words three spans with title=\"k= m=\" push apart inside a script string aborts as a HIT (rc=$rs) named '$ps'; its twin with title=\"k m\" publishes (rc=$rt), so the HIT is the two names the fourth arm drops; ARMED-RED — with the fourth arm reading what the published projection reads the page publishes (rc=$ms). The need stands as one run $nshape time(s) in the fourth arm's stream and $npub time(s) in the published arm's, and $oth time(s) on the visible and joined arms"
+  else
+    FAIL "M7a: spans render rc=$rs '$ps' (want 1 and '$M7_PRJ'), title=\"k m\" twin rc=$rt (want 0), with the fourth arm reading as the published projection rc=$ms (want 0); the need as one run in the published stream $npub (want 0), in the fourth arm's $nshape (want 1), on the visible and joined arms $oth (want 0). #2068's page publishes again, or this arm can no longer tell"
+  fi
+}
+m7a_assert
+
+# M7b — the conjunctive member, and one span word as well as two. The Passport value with
+# `k= m=` around three of its words goes past the conjunctive window on the published arm and is
+# the fourth arm's to catch; so is the need with one name per span, `title="k="`. The Passport
+# value with one name per span stays inside the window, so the published arm catches it as it did
+# at the base, as #2068's card measured — its ARMED-RED reads 1, and it is not a page this arm
+# restores.
+m7b_assert() { # one verdict
+  local rp pp rn pn rk pk mp mn mk
+  mguard "$M7B_PP" "$MTD"; rp="$MRC"; pp="$(m1eq_prj)" || pp="NONE"
+  mguard "$M7B_NK" "$MTD"; rn="$MRC"; pn="$(m1eq_prj)" || pn="NONE"
+  mguard "$M7B_PK" "$MTD"; rk="$MRC"; pk="$(m1eq_prj)" || pk="NONE"
+  mp="$(m7_off "$M7B_PP" "$MTD")"; mn="$(m7_off "$M7B_NK" "$MTD")"; mk="$(m7_off "$M7B_PK" "$MTD")"
+  if [ "$rp" -eq 1 ] && [ "$pp" = "$M7_PRJ" ] && [ "$rn" -eq 1 ] && [ "$pn" = "$M7_PRJ" ] && [ "$rk" -eq 1 ] && [ "$pk" = "$M1EQ_PRJ" ] && [ "$mp" = "0" ] && [ "$mn" = "0" ] && [ "$mk" = "1" ]; then
+    PASS "M7b: the conjunctive member — the Passport value with title=\"k= m=\" around three of its words aborts as a HIT (rc=$rp) named '$pp', and so does the need with one name per span (rc=$rn) named '$pn'; ARMED-RED — with the fourth arm reading as the published projection both publish (rc=$mp, rc=$mn). The Passport value with one name per span aborts on the published arm already (rc=$rk, '$pk', and $mk with the fourth arm so read), inside the conjunctive window as the card measured"
+  else
+    FAIL "M7b: Passport value with two names per span rc=$rp '$pp', need with one name per span rc=$rn '$pn' (want 1 and '$M7_PRJ' for both), Passport value with one name per span rc=$rk '$pk' (want 1 and '$M1EQ_PRJ'); with the fourth arm reading as the published projection rc=$mp, rc=$mn and rc=$mk (want 0, 0 and 1). A value the guard before 0.60.0 blocked publishes, or this arm can no longer tell"
+  fi
+}
+m7b_assert
+
+# M7c — #2070's two renders, absorbed into #2068: a kept tag's attribute list holding a quoted `>`
+# with no tag after it, at a comment's end and in a template literal followed by a comparison's
+# `<`. The published projection's fallback reads the list as text there, so its attribute names
+# stand between the value's words; the fourth arm drops them. Each twin carries the tag's own `>`
+# and `</span>` after the list, so the list is read and its names go on the published arm too.
+m7c_assert() { # one verdict
+  local ra pa rb pb rat rbt ma mb
+  mguard "$M7C_A" "$MTD"; ra="$MRC"; pa="$(m1eq_prj)" || pa="NONE"
+  mguard "$M7C_B" "$MTD"; rb="$MRC"; pb="$(m1eq_prj)" || pb="NONE"
+  mguard "$M7C_AT" "$MTD"; rat="$MRC"
+  mguard "$M7C_BT" "$MTD"; rbt="$MRC"
+  ma="$(m7_off "$M7C_A" "$MTD")"; mb="$(m7_off "$M7C_B" "$MTD")"
+  if [ "$ra" -eq 1 ] && [ "$pa" = "$M7_PRJ" ] && [ "$rb" -eq 1 ] && [ "$pb" = "$M7_PRJ" ] && [ "$rat" -eq 1 ] && [ "$rbt" -eq 1 ] && [ "$ma" = "0" ] && [ "$mb" = "0" ]; then
+    PASS "M7c: #2070's renders — a list holding a quoted '>' with no tag after it, open at a comment's end, aborts as a HIT (rc=$ra) named '$pa', and in a template literal followed by a comparison's '<' (rc=$rb) named '$pb'; each twin carrying the tag's own '>' and closing tag aborts too (rc=$rat, rc=$rbt); ARMED-RED — with the fourth arm reading as the published projection both renders publish (rc=$ma, rc=$mb)"
+  else
+    FAIL "M7c: comment render rc=$ra '$pa', template render rc=$rb '$pb' (want 1 and '$M7_PRJ' for both), closed twins rc=$rat and rc=$rbt (want 1 and 1), with the fourth arm reading as the published projection rc=$ma and rc=$mb (want 0 and 0). #2070's renders publish again, or this arm can no longer tell"
+  fi
+}
+m7c_assert
+
+# M7d — #2068's apostrophe-opened form, measured and reached: an apostrophe inside an unquoted value
+# opens what the published reader takes as a quoted unit, which keeps the later names as text
+# between the value's words. Its twin gives each name a value: the unquoted values split the
+# value's words under either reader, so it is not a shape the guard before 0.60.0 caught, and it
+# stays outside the class this arm grades.
+m7d_assert() { # one verdict
+  local rd pd rv md
+  mguard "$M7D_AP" "$MTD"; rd="$MRC"; pd="$(m1eq_prj)" || pd="NONE"
+  mguard "$M7D_VN" "$MTD"; rv="$MRC"
+  md="$(m7_off "$M7D_AP" "$MTD")"
+  if [ "$rd" -eq 1 ] && [ "$pd" = "$M7_PRJ" ] && [ "$rv" -eq 0 ] && [ "$md" = "0" ]; then
+    PASS "M7d: the apostrophe-opened form — names an apostrophe in an unquoted value keeps as text between a value's words abort as a HIT (rc=$rd) named '$pd'; ARMED-RED — with the fourth arm reading as the published projection the page publishes (rc=$md). Its twin with valued names publishes (rc=$rv): outside the class, because the guard before 0.60.0 published it too"
+  else
+    FAIL "M7d: apostrophe-opened render rc=$rd '$pd' (want 1 and '$M7_PRJ'), with the fourth arm reading as the published projection rc=$md (want 0), valued-names twin rc=$rv (want 0, outside the class). The apostrophe-opened form publishes again, or this arm can no longer tell"
+  fi
+}
+m7d_assert
+
+# M7e — a fourth regression no card named: a value split by a tag on neither list — `<font>`, a
+# custom element — inside a script string. The published projection reads those tags as text,
+# their names between the need's words; the fourth arm drops every tag name by shape. Its twin
+# splits the need with a listed tag, which the published projection keeps as markup, so the twin
+# aborts on both readings.
+m7e_assert() { # one verdict
+  local ru pu rl mu ml
+  mguard "$M7E_U" "$MTD"; ru="$MRC"; pu="$(m1eq_prj)" || pu="NONE"
+  mguard "$M7E_L" "$MTD"; rl="$MRC"
+  mu="$(m7_off "$M7E_U" "$MTD")"; ml="$(m7_off "$M7E_L" "$MTD")"
+  if [ "$ru" -eq 1 ] && [ "$pu" = "$M7_PRJ" ] && [ "$rl" -eq 1 ] && [ "$mu" = "0" ] && [ "$ml" = "1" ]; then
+    PASS "M7e: a need split by a tag on neither list and by a custom element inside a script string aborts as a HIT (rc=$ru) named '$pu'; ARMED-RED — with the fourth arm reading as the published projection it publishes (rc=$mu). The twin split by a listed tag aborts on both readings (rc=$rl, rc=$ml)"
+  else
+    FAIL "M7e: unlisted-tag render rc=$ru '$pu' (want 1 and '$M7_PRJ'), with the fourth arm reading as the published projection rc=$mu (want 0); listed-tag twin rc=$rl and rc=$ml (want 1 and 1). A value split by a tag on neither list publishes again, or this arm can no longer tell"
+  fi
+}
+m7e_assert
+
+# M7f — milestone 69's Dev Testing note F-7: a value whose words bare listed inline tags wrap,
+# inside an attribute value. The published arm reads it whole and names it; with the inline list
+# taken out of the published projection and the fourth arm reading what that projection reads
+# (m1in_off), the tag names stand between the words on every arm and the page publishes.
+m7f_assert() { # one verdict
+  local rf pf mf
+  mguard "$M7F_P" "$MTD"; rf="$MRC"; pf="$(m1eq_prj)" || pf="NONE"
+  mf="$(m1in_off "$M7F_P" "$MTD")"
+  if [ "$rf" -eq 1 ] && [ "$pf" = "$M1EQ_PRJ" ] && [ "$mf" = "0" ]; then
+    PASS "M7f: F-7 — a value whose words bare listed inline tags wrap inside an attribute value aborts as a HIT (rc=$rf) named '$pf'; ARMED-RED — with the inline list taken out of the published projection and the fourth arm reading what it reads, the page publishes (rc=$mf)"
+  else
+    FAIL "M7f: F-7 render rc=$rf '$pf' (want 1 and '$M1EQ_PRJ'), without the inline list and with the fourth arm so read rc=$mf (want 0). A value wrapped in listed inline tags inside an attribute value publishes, or this arm can no longer tell"
+  fi
+}
+m7f_assert
+
+# M7g — criterion 5 of #1467 inside a quoted value: a key token written directly before `=` and a
+# space inside a quoted attribute value. That is #2068's shape exactly, so the fourth arm drops the
+# token; the published arm keeps it and the abort is named for the published arm, not the fourth.
+# The fourth arm alone made to read as the published projection changes nothing; the published
+# projection read as the guard before 0.60.0 read it, with the fourth arm reading the same, loses
+# the token and publishes.
+m7g_assert() { # one verdict
+  local rg pg ms ml
+  mguard "$M7G_EQ" "$MTD"; rg="$MRC"; pg="$(m1eq_prj)" || pg="NONE"
+  ms="$(m7_off "$M7G_EQ" "$MTD")"
+  ml="$( strip_to_published_text() { pp_legacy_pub "$1"; }; strip_to_shape_text() { pp_legacy_pub "$1"; }
+         verify_publishable_content "$M7G_EQ" "$MTD" >/dev/null 2>&1; printf '%s' "$?" )"
+  if [ "$rg" -eq 1 ] && [ "$pg" = "$M1EQ_PRJ" ] && [ "$ms" = "1" ] && [ "$ml" = "0" ]; then
+    PASS "M7g: criterion 5 inside a quoted value — a key token written directly before '=' and a space there aborts as a HIT (rc=$rg) named '$pg', the published arm's and not the fourth's; with the fourth arm reading as the published projection it still aborts (rc=$ms); ARMED-RED — with the published projection read as the guard before 0.60.0 read it, and the fourth arm reading the same, it publishes (rc=$ml)"
+  else
+    FAIL "M7g: criterion-5 render rc=$rg '$pg' (want 1 and '$M1EQ_PRJ'), with the fourth arm reading as the published projection rc=$ms (want 1), with both read as the guard before 0.60.0 read them rc=$ml (want 0). The fourth arm took criterion 5's name, or criterion 5 is lost inside a quoted value"
+  fi
+}
+m7g_assert
+
+# M7h — #2070's assignment sites, absorbed into #2068 with milestone 69's bound of 8 of 23. #2070's
+# own script is attached nowhere, so the count is taken on a reconstructed recipe-shaped one: 23
+# uniquely named assignment sites, a loop whose `qxc < data.length` opens a kept `<data` tag, and a
+# sort comparator whose `=>` ends that tag's list. A site is given back by a projection when its
+# name stands in that projection's stream fewer times than in the source, which is the assignment's
+# name dropped as an attribute name. The guard ORs its arms, so it gives a site back only when
+# every arm does: the count on its verdict is the sites all four give back. Fixture integrity is
+# the site count, and its control is the earlier published program, which gives every site back.
+# One site the published arm keeps carries the Passport value's key token in a twin, which the
+# guard must still abort on, named for the published arm: the fourth arm, which drops it, removes
+# nothing another arm keeps.
+M7H_R="$WORK/m7h_recipe.html"
+mrender "$M7H_R" "$(printf '%s\n' '<script>' 'var qxa = steps.length;' 'var qxb = "two eggs";' 'for (var qxc = 0; qxc < data.length; qxc++) {' '  qxd = data[i].due;' '  qxe = data[i].name;' '  qxf = row.count + 1;' '  qxg = row.label.trim();' '  qxh = row.weight * 2;' '  qxi = row.notes.length;' '  qxj = total - 3;' '  qxk = total % 7;' '}' 'items.sort((a, b) => a.due < b.due ? -1 : 1);' 'qxl = items[0];' 'qxm = items[1];' 'qxn = first.due;' 'qxo = last.due;' 'qxp = span - 1;' 'qxq = span / 2;' 'qxr = base + 3;' 'qxs = base * 4;' 'qxt = mid - 1;' 'qxu = mid + 1;' 'qxv = end + 2;' 'qxw = end + 3;' '</script>')"
+M7H_K="$WORK/m7h_recipe_key.html"
+sed 's#^qxl = items\[0\];#var Ruritanian = "passport valid to 2033";#' "$M7H_R" > "$M7H_K"
+perl -ne 'while (/(qx[a-z])\s*=(?![=>])/g) { print "$1\n" }' "$M7H_R" > "$WORK/m7h_sites"
+_norm_words < "$M7H_R" > "$WORK/m7h_src.words"
+m7h_gb() { # <projection> -> the site names its stream gives back, one per line
+  "$1" "$M7H_R" | _decode_entities | _norm_words > "$WORK/m7h_$1.words"
+  awk 'FILENAME == ARGV[1] { site[$0] = 1; next } FILENAME == ARGV[2] { if ($0 in site) src[$0]++; next } ($0 in site) { st[$0]++ } END { for (n in site) if (st[n] + 0 < src[n] + 0) print n }' "$WORK/m7h_sites" "$WORK/m7h_src.words" "$WORK/m7h_$1.words"
+}
+m7h_assert() { # one verdict
+  local ns gp gs gv gj gl gg rk pk mk ws
+  ns="$(awk 'END { print NR + 0 }' "$WORK/m7h_sites")"
+  m7h_gb strip_to_published_text > "$WORK/m7h_gb_pub"; m7h_gb strip_to_shape_text > "$WORK/m7h_gb_shape"
+  m7h_gb strip_to_text_blocks > "$WORK/m7h_gb_vis"; m7h_gb strip_to_joined_text > "$WORK/m7h_gb_joi"
+  m7h_gb pp_legacy_pub > "$WORK/m7h_gb_legacy"
+  # An empty stream gives every site back, so the fourth arm's count is read only beside proof
+  # that its stream carries the page: its own word count, sentinels aside.
+  ws="$(_guard_words "$WORK/m7h_strip_to_shape_text.words")"; ws="${ws:-0}"
+  gp="$(awk 'END { print NR + 0 }' "$WORK/m7h_gb_pub")"; gs="$(awk 'END { print NR + 0 }' "$WORK/m7h_gb_shape")"
+  gv="$(awk 'END { print NR + 0 }' "$WORK/m7h_gb_vis")"; gj="$(awk 'END { print NR + 0 }' "$WORK/m7h_gb_joi")"
+  gl="$(awk 'END { print NR + 0 }' "$WORK/m7h_gb_legacy")"
+  gg="$(awk '{ c[$0]++ } END { for (n in c) if (c[n] == 4) k++; print k + 0 }' "$WORK/m7h_gb_pub" "$WORK/m7h_gb_shape" "$WORK/m7h_gb_vis" "$WORK/m7h_gb_joi")"
+  mguard "$M7H_K" "$MTD"; rk="$MRC"; pk="$(m1eq_prj)" || pk="NONE"
+  mk="$( strip_to_published_text() { pp_legacy_pub "$1"; }; strip_to_shape_text() { pp_legacy_pub "$1"; }
+         verify_publishable_content "$M7H_K" "$MTD" >/dev/null 2>&1; printf '%s' "$?" )"
+  if [ "$ns" -eq 23 ] && [ "$gl" -eq "$ns" ] && [ "$gp" -le 8 ] && [ "$gg" -le 8 ] && [ "$gg" -le "$gp" ] && [ "$gs" -eq "$ns" ] && [ "$ws" -ge 20 ] && [ "$rk" -eq 1 ] && [ "$pk" = "$M1EQ_PRJ" ] && [ "$mk" = "0" ]; then
+    PASS "M7h: milestone 69's bound — on a recipe-shaped script of $ns assignment sites the published arm gives back $gp and the guard's verdict $gg (every arm must give a site back for the guard to), within 8 of 23; the fourth arm alone gives back $gs from a stream of $ws words, and the visible and joined arms $gv and $gj, so no site the published arm keeps is lost. The earlier published program gives back $gl, so the count can see a site given back. A site the published arm keeps, carrying the Passport value's key token, aborts as a HIT (rc=$rk) named '$pk'; ARMED-RED — read as the guard before 0.60.0 read it, that page publishes (rc=$mk)"
+  else
+    FAIL "M7h: sites $ns (want 23), given back by the earlier published program $gl (want all of them), by the published arm $gp and on the guard's verdict $gg (want at most 8 each, the guard's no more than the published arm's), by the fourth arm $gs from a stream of $ws words (want all of them, from at least 20); the key-token twin rc=$rk '$pk' (want 1 and '$M1EQ_PRJ'), read as the guard before 0.60.0 read it rc=$mk (want 0). More sites are given back than milestone 69's bound, or this arm can no longer tell"
+  fi
+}
+m7h_assert
+
+# M7i — the fourth arm's credit after the joined arm. ADR-050 Decision 2 names the fourth arm only
+# when no other arm hit; M7g pins that order against the published arm, and this arm pins it against
+# the joined arm, on a page both arms hit and neither the visible nor the published arm does: the
+# need split mid-word by an inline tag in the visible text, which the joined arm closes up, and the
+# same need's words wrapped in three spans whose title carries `k= m=` inside a script string, which
+# the fourth arm drops (M7a's shape). The page is named for the joined arm. An arm is turned off by
+# making it read what an arm that misses the page reads, as m7_off does: the joined arm reads the
+# visible projection, the fourth arm the published one. With the joined arm off the fourth arm
+# names the page, with the fourth arm off the joined arm does, and with both off it publishes, so
+# both arms hit it and no other arm does. ARMED-RED: the attribution's last two branches swapped in
+# the production guard's text (pp_body, since the recorder stands in for the guard here), in a
+# subshell, name the page for the fourth arm. Not registered with group MD: removing either
+# projection makes the guard refuse (rc=2) before any name is chosen, which M7a's and M1x's
+# registrations already convict, and it says nothing about the order; the swap is what reaches it.
+M7I_JPRJ='joined markup (an inline tag split a word)'
+M7I_P="$WORK/m7i_joined_shape.html"; mrender "$M7I_P" "<p>Note: cannot manage more than o<b>ne</b> flight of stairs i<b>n</b> a single stretch.</p><script>var pop = 'Note: cannot manage more than <span title=\"k= m=\">one</span> flight of stairs <span title=\"k= m=\">in</span> a single <span title=\"k= m=\">stretch</span>';</script>"
+# The swap, on the guard's text as declare -f renders it: the joined branch's test reads the fourth
+# arm's code, and the two branches' locator and name trade places through a placeholder.
+M7I_SWAP='s/if \[ "\$rcj" -eq 0 \]/if [ "$rcs" -eq 0 ]/
+s/loc="\$locj"/loc="\$locs@"/
+s/loc="\$locs"/loc="\$locj"/
+s/loc="\$locs@"/loc="\$locs"/
+s/proj="joined markup (an inline tag split a word)"/proj="@"/
+s/proj="markup read by shape (every tag and attribute name dropped)"/proj="joined markup (an inline tag split a word)"/
+s/proj="@"/proj="markup read by shape (every tag and attribute name dropped)"/'
+m7i_run() { # <joined-off|shape-off|both-off|swapped> -> the guard's status on M7i's page, its warnings in $MOUT
+  ( case "$1" in joined-off|both-off) strip_to_joined_text() { strip_to_text_blocks "$@"; } ;; esac
+    case "$1" in shape-off|both-off) strip_to_shape_text() { strip_to_published_text "$@"; } ;; esac
+    case "$1" in swapped) eval "$(pp_body verify_publishable_content | sed "$M7I_SWAP")" ;; esac
+    verify_publishable_content "$M7I_P" "$MTD" >/dev/null 2>"$MOUT"; printf '%s' "$?" )
+}
+m7i_assert() { # one verdict
+  local rh ph rj pj rs ps rb pb rw pw nc
+  mguard "$M7I_P" "$MTD"; rh="$MRC"; ph="$(m1eq_prj)" || ph="NONE"
+  rj="$(m7i_run joined-off)"; pj="$(m1eq_prj)" || pj="NONE"
+  rs="$(m7i_run shape-off)"; ps="$(m1eq_prj)" || ps="NONE"
+  rb="$(m7i_run both-off)"; pb="$(m1eq_prj)" || pb="NONE"
+  rw="$(m7i_run swapped)"; pw="$(m1eq_prj)" || pw="NONE"
+  pp_body verify_publishable_content > "$WORK/m7i_guard.txt"; sed "$M7I_SWAP" "$WORK/m7i_guard.txt" > "$WORK/m7i_swapped.txt"
+  nc="$(awk 'NR == FNR { a[FNR] = $0; next } a[FNR] != $0 { c++ } END { print c + 0 }' "$WORK/m7i_guard.txt" "$WORK/m7i_swapped.txt")"
+  if [ "$rh" -eq 1 ] && [ "$ph" = "$M7I_JPRJ" ] && [ "$rj" = "1" ] && [ "$pj" = "$M7_PRJ" ] && [ "$rs" = "1" ] && [ "$ps" = "$M7I_JPRJ" ] && [ "$rb" = "0" ] && [ "$pb" = "NONE" ] && [ "$rw" = "1" ] && [ "$pw" = "$M7_PRJ" ] && [ "$nc" -eq 5 ]; then
+    PASS "M7i: the fourth arm is credited after the joined arm — a need split mid-word by an inline tag in the visible text, and wrapped in three spans with title=\"k= m=\" inside a script string, aborts as a HIT (rc=$rh) named '$ph'; with the joined arm reading what the visible projection reads it aborts (rc=$rj) named '$pj', with the fourth arm reading what the published projection reads it aborts (rc=$rs) named '$ps', and with both so read it publishes (rc=$rb), so both arms hit it and no other arm does; ARMED-RED — with the attribution's last two branches swapped ($nc line(s) of the guard changed) it aborts (rc=$rw) named '$pw'"
+  else
+    FAIL "M7i: the page rc=$rh '$ph' (want 1 and '$M7I_JPRJ'); with the joined arm reading as the visible projection rc=$rj '$pj' (want 1 and '$M7_PRJ'), with the fourth arm reading as the published projection rc=$rs '$ps' (want 1 and '$M7I_JPRJ'), with both so read rc=$rb '$pb' (want 0 and NONE); with the attribution's last two branches swapped rc=$rw '$pw' (want 1 and '$M7_PRJ'), lines of the guard changed $nc (want 5). A page the joined arm catches is named for the fourth arm, or this arm can no longer tell"
+  fi
+}
+m7i_assert
+
+# ── M8a–M8c (#2072) — a tag head and a name run are each read one way only ──
+#
+# Two patterns the projections inherited took time that grew with the square of a long run: the
+# head of a tag, `\s*/?\s*` before a tag name, on a `<` followed by a long run of spaces (shape 1);
+# and `attrs`'s name run, retried at every position of a long run of name characters in a kept
+# tag's list (shape 2). Both failed closed — a slow guard, never a pass. The tag head is now
+# possessive in every projection that reads one, the visible and joined block rules among them,
+# and the name run is anchored at the start of the run, carrying a leading `[0-9.]` prefix through
+# as it stood. M8a and M8b run each of the four projections over 256 KB of each shape, and over a
+# control of the same length in a character outside the repeated class, under a five-second CPU
+# cap: each must complete. Each carries the old pattern inside the arm (ARMED-RED), put back into
+# the published projection in a subshell and run over 64 KB, which the cap must stop. M8c grades
+# that the anchor reads what the unanchored rule read, on a run that opens with a digit, and that
+# the name-start lookbehind the card first proposed would not have: the lookbehind is built in the
+# arm, and it keeps the run whole.
+m8_file() { # <out_file> <head> <bytes> <character> <tail>
+  { printf '%s' "$2"; printf '%*s' "$3" '' | tr ' ' "$4"; printf '%s\n' "$5"; } > "$1"
+}
+m8_cap() { # <projection> <file> -> its status under a five-second CPU cap
+  ( ulimit -t 5; "$1" "$2" >/dev/null 2>&1; printf '%s' "$?" )
+}
+M8_S1="$WORK/m8_head_spaces.html";  m8_file "$M8_S1" '<!-- <' 262144 ' ' ' -->'
+M8_C1="$WORK/m8_head_dashes.html";  m8_file "$M8_C1" '<!-- <' 262144 '-' ' -->'
+M8_S2="$WORK/m8_run_names.html";    m8_file "$M8_S2" '<!-- <span ;' 262144 'a' ' > -->'
+M8_C2="$WORK/m8_run_hashes.html";   m8_file "$M8_C2" '<!-- <span ;' 262144 '#' ' > -->'
+M8_S1M="$WORK/m8_head_spaces_64k.html"; m8_file "$M8_S1M" '<!-- <' 65536 ' ' ' -->'
+M8_S2M="$WORK/m8_run_names_64k.html";   m8_file "$M8_S2M" '<!-- <span ;' 65536 'a' ' > -->'
+M8_HEAD_OLD='s#\\s\*+/?\\s\*+#\\s*/?\\s*#g'
+M8_RUN_OLD='s/(?<!\[-A-Za-z0-9_:\.\])(\[0-9\.\]\*+)(\[-A-Za-z_:\]\[-A-Za-z0-9_:\.\]\*+/()([-A-Za-z_:][-A-Za-z0-9_:.]*/'
+M8_RUN_LB='s/(?<!\[-A-Za-z0-9_:\.\])(\[0-9\.\]\*+)/()(?<![-A-Za-z0-9_:.])/'
+m8_shape_assert() { # <id> <what> <shape file> <control file> <mutant sed> <mutant file> <mutant marker> — one verdict
+  local id="$1" what="$2" sf="$3" cf="$4" sed_old="$5" mf="$6" mark="$7" p st ok=0 n=0 bad="" ms mk sz
+  for p in strip_to_published_text strip_to_text_blocks strip_to_joined_text strip_to_shape_text; do
+    for f in "$sf" "$cf"; do
+      n=$((n+1)); st="$(m8_cap "$p" "$f")"
+      if [ "$st" = "0" ]; then ok=$((ok+1)); else bad="$bad $p:${f##*/}=$st"; fi
+    done
+  done
+  mk="$(declare -f strip_to_published_text | sed "$sed_old" | grep -c -F -- "$mark")"
+  ms="$( ulimit -t 5; eval "$(declare -f strip_to_published_text | sed "$sed_old")"; strip_to_published_text "$mf" >/dev/null 2>&1; printf '%s' "$?" )"
+  sz=$(( $(wc -c < "$sf") + 0 ))
+  if [ "$n" -eq 8 ] && [ "$ok" -eq 8 ] && [ "$sz" -gt 262144 ] && [ "$mk" -ge 1 ] && [ "$ms" -gt 128 ]; then
+    PASS "$id: $what — each of the four projections reads $sz bytes of it, and the same length of its control, inside a five-second CPU cap ($ok of $n complete with status 0); ARMED-RED — the old pattern put back into the published projection ($mk site(s) changed) does not finish 64 KB of it inside the cap (status $ms)"
+  else
+    FAIL "$id: $what — $ok of $n projection runs completed inside the cap (want 8 of 8:${bad:- none failed}), shape bytes $sz (want more than 262144), the old pattern put back at $mk site(s) (want at least 1) and its run over 64 KB status $ms (want the cap to stop it, above 128). A projection is quadratic on this shape again, or this arm can no longer tell"
+  fi
+}
+m8_shape_assert M8a "a '<' followed by a long run of spaces (the tag head)" "$M8_S1" "$M8_C1" "$M8_HEAD_OLD" "$M8_S1M" '\s*/?\s*'
+m8_shape_assert M8b "a kept tag whose list is a long run of name characters (the name run)" "$M8_S2" "$M8_C2" "$M8_RUN_OLD" "$M8_S2M" '()([-A-Za-z_:][-A-Za-z0-9_:.]*\s*='
+M8C_R="$WORK/m8c_digitrun.html"; printf '%s\n' '<!-- note <span 9abc=def x=1>w</span> -->' > "$M8C_R"
+m8c_assert() { # one verdict
+  local hd old lb mk
+  hd="$(strip_to_published_text "$M8C_R" | _decode_entities | _norm_words | tr '\n' ' ')"
+  old="$( eval "$(declare -f strip_to_published_text | sed "$M8_RUN_OLD")"; strip_to_published_text "$M8C_R" | _decode_entities | _norm_words | tr '\n' ' ' )"
+  lb="$( eval "$(declare -f strip_to_published_text | sed "$M8_RUN_LB")"; strip_to_published_text "$M8C_R" | _decode_entities | _norm_words | tr '\n' ' ' )"
+  mk="$(declare -f strip_to_published_text | sed "$M8_RUN_LB" | grep -c -F -- '()(?<![-A-Za-z0-9_:.])')"
+  if [ "$hd" = "note 9 def 1 w " ] && [ "$old" = "$hd" ] && [ "$mk" -ge 1 ] && [ "$lb" = "note 9abc def 1 w " ]; then
+    PASS "M8c: the run-start anchor reads a name run that opens with a digit as the unanchored rule read it — '$hd' on both — and the name-start lookbehind, built in this arm, reads '$lb', keeping the run whole, so the arm tells the two apart"
+  else
+    FAIL "M8c: the head reads '$hd', the unanchored rule '$old' (want both 'note 9 def 1 w '), the lookbehind variant '$lb' built at $mk site(s) (want 'note 9abc def 1 w ' and at least 1). The anchor changed what the projection reads, or this arm can no longer tell"
+  fi
+}
+m8c_assert
 
 # ── Group N (PR-7 / OB-1) — the conjunctive window is scoped to one block ────
 # W=25 was calibrated on a fixture carrying ONE occurrence of each token. A real
@@ -4416,6 +5075,129 @@ o9c_assert() {
 }
 o9c_assert
 
+# ── M6 — the pre-0.60.0 parity cells (CIAC-1) ────────────────────────────────
+#
+# The recorder installed before group L graded every page the suite rendered and passed to
+# verify_publishable_content from there to here twice: through the guard as it stands, and
+# through the same guard reading the page with v0.59.0's three readers in place of the head's —
+# the guard before 0.60.0. A legacy rc=1 is a page that guard blocked. These cells ask, of that
+# population and of no other, that the guard as it stands blocks each such page too, except a
+# page the fence below names with an operator's ruling. Their reach is the pages this suite
+# renders: a shape no arm here writes is not in the population, and a PASS says nothing about
+# it. A page an arm grades under a stub, or with a command shadowed by a function, was skipped
+# and counted rather than recorded, because what was graded there is not the guard.
+#   M6a  the population: pairs recorded, calls skipped, the legacy-blocked denominator, legacy
+#        rc=2 reported outside it, and #2055's leak page (M1t's) among the blocked
+#   M6b  every legacy-blocked page is blocked at the head, unless the fence names it — the
+#        fence held one way — and the pages only the fourth arm blocks (M7) are graded again
+#        live, so a change to that arm moves this verdict after the manifest is fixed
+#   M6c  the fence held the other way: an entry whose page no longer differs fails. The fence
+#        is EMPTY at release; its check is shown able to fire on a planted entry
+#   M6d  ARMED-RED: #2055's leak page graded with the published lookahead put back is flagged
+#        by M6b's own predicate (head 0, legacy 1)
+#   M6e  the recorder is gone and the production guard is back, byte for byte
+# Every verdict names pages by basename only: no value reaches this log.
+#
+# THE FENCE, a literal list, one `<page basename> <reason-token>` per line. An entry is added
+# only where an operator ruling records a deliberate limit for a shape the guard before 0.60.0
+# blocked, and the same change narrows the milestone's AFTER for that shape.
+PP_FENCE=''
+PP_ON=0
+pp_fenced() { # <page basename> <fence text> -> status 0 when the fence names the page
+  local b
+  while read -r b _; do
+    if [ -n "$b" ] && [ "$b" = "$1" ]; then return 0; fi
+  done <<EOF
+$2
+EOF
+  return 1
+}
+pp_regressed() { # <page basename> <head rc> <legacy rc> <fence text> -> status 0 when M6b reports the pair
+  [ "$3" = "1" ] && [ "$2" != "1" ] && ! pp_fenced "$1" "$4"
+}
+pp_stale() { # <fence text> -> each fenced page the manifest does NOT show blocked by the legacy guard alone, one per line
+  local b
+  while read -r b _; do
+    [ -n "$b" ] || continue
+    awk -F '|' -v P="$b" '$1 == P && $4 == "1" && $3 != "1" { f = 1 } END { exit f ? 0 : 1 }' "$PP_MAN" || printf '%s\n' "$b"
+  done <<EOF
+$1
+EOF
+}
+pp_leakp="${M1T_SC##*/}"
+pp_n="$(awk 'END { print NR + 0 }' "$PP_MAN")"
+pp_sk="$(awk 'END { print NR + 0 }' "$PP_SKIP")"
+pp_shd="$(awk '$1 == "shadowed" { c++ } END { print c + 0 }' "$PP_SKIP")"
+pp_l1="$(awk -F '|' '$4 == "1" { c++ } END { print c + 0 }' "$PP_MAN")"
+pp_l2="$(awk -F '|' '$4 == "2" { c++ } END { print c + 0 }' "$PP_MAN")"
+pp_hn="$(awk -F '|' '$3 == "1" && $4 != "1" { c++ } END { print c + 0 }' "$PP_MAN")"
+pp_leak="$(awk -F '|' -v P="$pp_leakp" '$1 == P && $4 == "1" { c++ } END { print c + 0 }' "$PP_MAN")"
+if [ "$pp_l1" -ge 1 ] && [ "$pp_leak" -ge 1 ]; then
+  PASS "M6a: pre-0.60.0 parity — over the pages the suite renders in groups L to O: $pp_n graded pairs recorded, $pp_sk calls skipped under a stub or a shadowed command ($pp_shd shadowed), $pp_l1 pairs the guard before 0.60.0 blocks (rc=1, the denominator), $pp_l2 it could not determine (rc=2, reported and outside the denominator), $pp_hn the head blocks and it did not, and #2055's leak page ($pp_leakp) among the blocked $pp_leak time(s). The legacy guard reads through v0.59.0's three readers, frozen copies that interpolate _GUARD_BLOCK_TAGS and _GUARD_BLOCK live"
+else
+  FAIL "M6a: pre-0.60.0 parity — the population is not a measurement: $pp_l1 legacy-blocked pair(s) of $pp_n recorded ($pp_sk skipped), #2055's leak page $pp_leakp blocked $pp_leak time(s) (want at least 1 of each). The recorder did not run, so the cells below would grade nothing"
+fi
+# The pages only the fourth arm blocks (M7), graded again live by M6b beside the manifest. The
+# manifest is fixed once group O ends, so group MD's re-run of M6b with the fourth arm removed
+# would read the same rows and stay green; these pages are graded through the guard as it stands
+# at that moment, so that re-run sees the arm gone.
+PP_LIVE="$M7A_SP $M7B_PP $M7B_NK $M7C_A $M7C_B $M7D_AP $M7E_U"
+PP_NLIVE="$(printf '%s' "$PP_LIVE" | awk '{ print NF }')"
+m6b_assert() { # one verdict
+  local p h g den=0 nb=0 bad="" ctl=0 lv=0 lb=0
+  if pp_regressed planted-control 0 1 ""; then ctl=1; fi
+  while IFS='|' read -r p _ h g; do
+    if [ "$g" = "1" ]; then den=$((den+1)); fi
+    if pp_regressed "$p" "$h" "$g" "$PP_FENCE"; then nb=$((nb+1)); bad="$bad $p"; fi
+  done < "$PP_MAN"
+  for p in $PP_LIVE; do
+    h="$( verify_publishable_content "$p" "$MTD" >/dev/null 2>&1; printf '%s' "$?" )"
+    g="$(pp_legacy_verify "$p" "$MTD")"
+    if [ "$g" = "1" ]; then lv=$((lv+1)); fi
+    if pp_regressed "${p##*/}" "$h" "$g" "$PP_FENCE"; then lb=$((lb+1)); bad="$bad ${p##*/}"; fi
+  done
+  if [ "$ctl" -eq 1 ] && [ "$den" -ge 1 ] && [ "$nb" -eq 0 ] && [ "$PP_NLIVE" -ge 1 ] && [ "$lv" -eq "$PP_NLIVE" ] && [ "$lb" -eq 0 ]; then
+    PASS "M6b: pre-0.60.0 parity — every one of the $den pairs the guard before 0.60.0 blocks, among the pages the suite renders, is blocked at the head, and the fence excuses none of them; the $lv pages only the fourth arm blocks, graded again live, are blocked at the head as the guard before 0.60.0 blocks them; the predicate flags a planted pair (head 0, legacy 1), so the zero is a measurement"
+  else
+    FAIL "M6b: pre-0.60.0 parity — $nb of $den legacy-blocked pair(s) in the manifest and $lb of the $PP_NLIVE pages graded live ($lv of them legacy-blocked, want all) publish or go undetermined at the head with no fence entry:$bad (predicate control $ctl, want 1). A page the guard before 0.60.0 caught is no longer caught"
+  fi
+}
+m6b_assert
+pp_fe="$(printf '%s\n' "$PP_FENCE" | awk 'NF { c++ } END { print c + 0 }')"
+pp_st="$(pp_stale "$PP_FENCE" | awk 'NF { c++ } END { print c + 0 }')"
+pp_lhp="${LHIT##*/}"
+pp_lh="$(awk -F '|' -v P="$pp_lhp" '$1 == P && $3 == "1" && $4 == "1" { c++ } END { print c + 0 }' "$PP_MAN")"
+pp_pl="$(pp_stale "$pp_lhp planted-control" | awk 'NF { c++ } END { print c + 0 }')"
+pp_px=0; pp_regressed "$pp_leakp" 0 1 "$pp_leakp planted-control" || pp_px=1
+if [ "$pp_st" -eq 0 ] && [ "$pp_lh" -ge 1 ] && [ "$pp_pl" -eq 1 ] && [ "$pp_px" -eq 1 ]; then
+  PASS "M6c: pre-0.60.0 parity — the fence holds $pp_fe entr(ies) and none is stale; held both ways: a planted entry naming L1's page ($pp_lhp), which both guards block, is reported stale, and a planted entry naming a page excuses that page from M6b's predicate, so an entry can neither outlive its page's difference nor fail to excuse it"
+else
+  FAIL "M6c: pre-0.60.0 parity — $pp_st of $pp_fe fence entr(ies) stale (want 0); L1's page blocked by both guards $pp_lh time(s) (want at least 1); planted stale entry reported $pp_pl time(s) (want 1); planted entry excusing its page $pp_px (want 1). The fence names a page that no longer differs, or its check cannot tell"
+fi
+m6d_assert() { # one verdict
+  local h g fl=no
+  h="$(m1t_unfixed "$M1T_SC" "$MTD")"
+  g="$(pp_legacy_verify "$M1T_SC" "$MTD")"
+  if pp_regressed "${M1T_SC##*/}" "$h" "$g" "$PP_FENCE"; then fl=yes; fi
+  if [ "$h" = "0" ] && [ "$g" = "1" ] && [ "$fl" = "yes" ]; then
+    PASS "M6d: pre-0.60.0 parity — ARMED-RED: #2055's leak page, graded with the published lookahead put back to the exact closing tag, publishes (rc=$h) where the guard before 0.60.0 blocks it (rc=$g), and M6b's predicate flags the pair, so the cells can fail"
+  else
+    FAIL "M6d: pre-0.60.0 parity — the unfixed published program gives rc=$h (want 0), the legacy guard rc=$g (want 1), M6b's predicate flagged it: $fl (want yes). The cells could not see the regression #2055 repairs"
+  fi
+}
+m6d_assert
+pp_rec="$(declare -f verify_publishable_content)"
+eval "$PP_VPC"
+unset -f pp_real_verify
+pp_gone=yes; declare -F pp_real_verify >/dev/null 2>&1 && pp_gone=no
+pp_back=no; [ -n "$PP_VPC" ] && [ "$(declare -f verify_publishable_content)" = "$PP_VPC" ] && pp_back=yes
+pp_was=no; [ "$pp_rec" != "$PP_VPC" ] && pp_was=yes
+if [ "$pp_back" = yes ] && [ "$pp_was" = yes ] && [ "$pp_gone" = yes ]; then
+  PASS "M6e: pre-0.60.0 parity — the recorder is gone: verify_publishable_content is byte-identical to the definition the suite sourced, the renamed production guard is undefined, and the recorder read before the restore differed from it, so the comparison can tell"
+else
+  FAIL "M6e: pre-0.60.0 parity — the recorder outlived its cells (production definition restored: $pp_back, recorder differed from it before the restore: $pp_was, renamed guard gone: $pp_gone; want yes for each). Every verdict after this point would grade the recorder"
+fi
+
 # ── Group R (#550 AC 5) — the change-summary content guard ───────────────────
 # outputs/change-summary.md (C20) is `publish: internal`: it is shared out of band and
 # never reaches the render, so verify_publishable_content -- HTML-bound, and called only
@@ -5007,6 +5789,112 @@ if [ "$R7CRC" -eq 0 ]; then
   PASS "R7c: SPECIFICITY — the summary R1 certifies clean still passes (rc=0) against the fixture carrying the [THIRD-PARTY] entry, whose class holds $R7ERECS further record(s). So R7b's abort is caused by the value that was carried, not by the entry's presence in the class"
 else
   FAIL "R7c: a clean summary returned rc=$R7CRC against the third-party fixture — the entry-limb records abort or undetermine a correct summary on their own, so R7b is not evidence and no trip carrying a third-party entry could ever publish a change summary"
+fi
+
+# ── Group R, #2071 — the summary arm reads its projection's status ──────────────────
+# verify_summary_content runs its one arm through _guard_arm, as each arm of the HTML guard
+# does, and refuses a projection that failed after writing GUARD_SUMMARY_FLOOR words or more.
+# Below the floor such a read was always refused (R3); above it the stream was a prefix of the
+# summary, a value past the point of failure read as absent, and the summary certified clean.
+#   R8a  FIXTURE INTEGRITY, graded first: each prefix clears the floor and carries no class
+#        value, the summary carries the value past both, and the class with no values parses
+#        empty and fresh against the summary its cells read
+#   R8b  THE SUBJECT, and the arm registered with the oracle. Its cells are of both kinds in
+#        ONE verdict: the projection, or a stage after it, fails after a prefix (rc=2, the
+#        caller's pipefail on and off, and on a class with no values), and the same projection
+#        succeeds (rc=1 on the trip's class, pipefail on and off; rc=0 on the class with no
+#        values). With either arm helper removed every cell reads rc=2, so the failing cells
+#        alone would still PASS; the succeeding ones are what make the registrations against
+#        _guard_arm and _guard_words discriminate
+#   R8c  THE MESSAGE: each refusal names the status read and carries no class value
+# Every stub is defined inside the subshell that uses it, and dies with it, as L17's do.
+R8_PFX="$WORK/r8_pfx_md.txt"; strip_md_to_text_blocks "$RHIT" > "$R8_PFX"
+R8_PFXL=12
+# The class with no values the *-noclass cells read is NEWER than the summary they read, so it
+# is a fresh empty class and not a stale one, which is refused before any limb is reached.
+R8N="$WORK/r8_noclass"; mkdir -p "$R8N/outputs"
+printf '# Traveler Model [DERIVED]\n\n## Rowan\n- Interests: markets, museums\n\n### Needs\n- Category: rest\n  Specific: an early night on the first day of the trip\n' > "$R8N/outputs/traveler-model.md"
+R8S="$WORK/r8_noclass_summary.md"; cp "$RHIT" "$R8S"
+touch -t 202601011100 "$R8S"
+touch -t 202601011200 "$R8N/outputs/traveler-model.md"
+R8_CELLS='md-prefix md-prefix-pfoff norm-prefix-pfoff md-prefix-noclass md-ctl md-ctl-pfoff md-ctl-noclass'
+R8_NCELLS=7
+
+# The words in a stream file, counted by a reader that is not _guard_words, so the fixture
+# check does not lean on the helper under test.
+r8_words() { grep -c -v -x -F -e "$_GUARD_BLOCK" -e "$_GUARD_LINE" "$1"; }
+
+r8_cell() { # <capture_file> <cell> -> rc on stdout
+  local cap="$1" cell="$2" s="$RHIT" td="$RTD"
+  case "$cell" in *-noclass) s="$R8S"; td="$R8N" ;; esac
+  ( case "$cell" in *-pfoff) set +o pipefail ;; esac
+    case "$cell" in
+      md-prefix*)        strip_md_to_text_blocks() { head -n "$R8_PFXL" "$R8_PFX"; return 1; } ;;
+      norm-prefix-pfoff) tr() { head -c 300 | command tr "$@"; return 1; } ;;
+    esac
+    verify_summary_content "$s" "$td" >/dev/null 2>"$cap" )
+  printf '%s' "$?"
+}
+r8_want() { # <cell> -> the exact status that cell must return
+  case "$1" in md-ctl-noclass) printf '0' ;; md-ctl*) printf '1' ;; *) printf '2' ;; esac
+}
+
+# R8a — FIXTURE INTEGRITY, graded FIRST, for L17a's reason: each prefix must clear the floor,
+# so that its cell is refused by the status read and not by the floor, and neither may carry
+# the value, or a cell could be decided by a match on the prefix.
+head -n "$R8_PFXL" "$R8_PFX" | _line_sentinels | _norm_words > "$WORK/r8_pfx_md.words"
+strip_md_to_text_blocks "$RHIT" | _line_sentinels | perl -0777 -pe '$_ = substr($_, 0, 300)' | _norm_words > "$WORK/r8_pfx_norm.words"
+r8_wm="$(r8_words "$WORK/r8_pfx_md.words")"; r8_wn="$(r8_words "$WORK/r8_pfx_norm.words")"
+r8_pv=0
+for r8_f in "$WORK/r8_pfx_md.words" "$WORK/r8_pfx_norm.words"; do
+  case " $(tr '\n' ' ' < "$r8_f") " in *" irish "*|*" 2027 "*) r8_pv=$((r8_pv+1)) ;; esac
+done
+r8_sv=0; case " $(strip_md_to_text_blocks "$RHIT" | _norm_words | tr '\n' ' ') " in *" irish "*" 2027 "*) r8_sv=1 ;; esac
+nonpublishable_values "$R8N" "$R8S" > "$WORK/r8_noclass.out" 2>/dev/null; r8_nrc=$?
+r8_ne=0; if [ "$r8_nrc" -eq 0 ] && [ ! -s "$WORK/r8_noclass.out" ]; then r8_ne=1; fi
+if [ "$r8_wm" -ge "$GUARD_SUMMARY_FLOOR" ] && [ "$r8_wn" -ge "$GUARD_SUMMARY_FLOOR" ] && [ "$r8_pv" -eq 0 ] && [ "$r8_sv" -eq 1 ] && [ "$r8_ne" -eq 1 ]; then
+  PASS "R8a: fixture integrity — the projection's prefix carries $r8_wm words and the normalization stage's $r8_wn, both at or above the $GUARD_SUMMARY_FLOOR-word floor and neither carrying the value, which the summary carries past both; the class with no values parses empty and fresh against its summary. The failing cells below are decided by the status read"
+else
+  FAIL "R8a: the fixtures are not set up as claimed (prefix words projection=$r8_wm normalization=$r8_wn want >=$GUARD_SUMMARY_FLOOR; prefixes carrying the value=$r8_pv want 0; summary carrying it=$r8_sv want 1; class with no values empty and fresh=$r8_ne want 1) — R8b would not be measuring the status read"
+fi
+
+# R8b — THE SUBJECT, and the arm registered with the oracle against the guard and both of its
+# arm helpers. Captures go to the directory the caller names, so the oracle's re-runs cannot
+# overwrite the ones R8c reads.
+r8_assert() { # <capture_dir>
+  local d="$1" cell rc want ok=0 n=0 bad=""
+  mkdir -p "$d"
+  for cell in $R8_CELLS; do
+    n=$((n+1))
+    rc="$(r8_cell "$d/$cell.err" "$cell")"; want="$(r8_want "$cell")"
+    if [ "$rc" = "$want" ]; then ok=$((ok+1)); else bad="$bad $cell=rc$rc/want$want"; fi
+  done
+  if [ "$n" -eq "$R8_NCELLS" ] && [ "$ok" -eq "$n" ]; then
+    PASS "R8b: all $n cells returned their exact status — the summary's projection failing after a prefix that clears the floor is UNDETERMINED (rc=2) with the caller's pipefail on and off, so is a normalization stage failing after a prefix, and so is a failing projection on a class with no values; the same projection succeeding is a HIT on the trip's class (rc=1, pipefail on and off) and publishes on the class with no values (rc=0). No path from a projection the summary guard could not read reaches a pass, and its refusals are the projection's, not a guard that refuses whatever it reads"
+  else
+    FAIL "R8b: $ok of $n cells (want $R8_NCELLS) returned their exact status —$bad. rc=0 on a failing cell is the summary certified from a prefix; rc=2 on a succeeding cell is a guard that refuses whatever it reads, which also satisfies every failing cell"
+  fi
+}
+r8_assert "$WORK/r8live"
+
+# R8c — THE MESSAGE. A refusal of a failing cell names the status read and nothing else: it is
+# written before the class is read, so no value is in scope. Read from the captures R8b's live
+# run wrote; the value scan carries its own sensitivity arm, a planted line it must find.
+r8_named=0; r8_leak=0; r8_ncap=0
+for r8_c in $R8_CELLS; do
+  r8_cap="$WORK/r8live/$r8_c.err"
+  [ -r "$r8_cap" ] || continue
+  r8_ncap=$((r8_ncap+1))
+  case "$(cat "$r8_cap")" in *[Ii]rish*|*2027*) r8_leak=$((r8_leak+1)) ;; esac
+  case "$r8_c" in md-ctl*) continue ;; esac
+  case "$(cat "$r8_cap")" in *"could not be read: its pipeline exited "*) r8_named=$((r8_named+1)) ;; esac
+done
+r8_plant="planted: carry your Irish passport, valid to 2027"
+r8_ctl=0; case "$r8_plant" in *[Ii]rish*|*2027*) r8_ctl=1 ;; esac
+if [ "$r8_ctl" -eq 1 ] && [ "$r8_ncap" -eq "$R8_NCELLS" ] && [ "$r8_named" -eq 4 ] && [ "$r8_leak" -eq 0 ]; then
+  PASS "R8c: each of the 4 refusals names the status read, and none of the $r8_ncap captures carries the value; the value scan found the planted line, so its zero is a measurement"
+else
+  FAIL "R8c: captures=$r8_ncap of $R8_NCELLS, refusals naming the status read=$r8_named of 4, captures carrying the value=$r8_leak, scan control=$r8_ctl — a refusal is not the status read's, or the value reached a log this suite publishes"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
@@ -6443,7 +7331,7 @@ fi
 # construction: perl invoked through a variable or by a path (`$PERL`, `/usr/bin/perl`),
 # and a change that removes one program while adding another, because it compares a count
 # and not a set.
-S15I_FNS='strip_to_text strip_to_published_text strip_to_text_blocks strip_to_joined_text _decode_entities strip_to_itinerary_text _digest_of'
+S15I_FNS='strip_to_text strip_to_published_text strip_to_text_blocks strip_to_joined_text strip_to_shape_text _decode_entities strip_to_itinerary_text _digest_of'
 S15I_RE='(^|[[:space:](|;`$])perl[[:space:]]+-'
 s15_perl_lines() { # <file> -> the number of non-comment lines that invoke perl by name
   local line t n=0
@@ -8117,10 +9005,10 @@ SA17H_NFN=0; for sad in $S15I_FNS; do SA17H_NFN=$((SA17H_NFN+1)); done
 SA17H_NLINE="$(s15_perl_lines "$SELF_PUBLISH")"
 printf 'digest=4294967295-1234\nconfirmed=2027-06-01T00:00:00Z\n' > "$WORK/sa17h.rec"
 SA17H_CRC="$(_record_digest "$WORK/sa17h.rec")"
-if [ "$SA17H_DN$SA17H_FB" = 00 ] && [ "$SA17H_RE" -eq 1 ] && [ "$SA17H_NFN" -eq 7 ] && [ "$SA17H_NLINE" -eq 7 ] && [ "$SA17H_CRC" = '4294967295-1234' ]; then
-  PASS "S17h: _digest_of's parsed body reads discard/fallback 00, invokes perl by S15i's own regex (F4 — the listed body is a perl program, so the count cannot be balanced by a substitution), S15I_FNS lists 7 and the script has 7 perl-invoking lines; the CRC token still parses for group T and for a pre-swap record"
+if [ "$SA17H_DN$SA17H_FB" = 00 ] && [ "$SA17H_RE" -eq 1 ] && [ "$SA17H_NFN" -eq 8 ] && [ "$SA17H_NLINE" -eq 8 ] && [ "$SA17H_CRC" = '4294967295-1234' ]; then
+  PASS "S17h: _digest_of's parsed body reads discard/fallback 00, invokes perl by S15i's own regex (F4 — the listed body is a perl program, so the count cannot be balanced by a substitution), S15I_FNS lists 8 and the script has 8 perl-invoking lines; the CRC token still parses for group T and for a pre-swap record"
 else
-  FAIL "S17h: bits $SA17H_DN$SA17H_FB (want 00), regex match $SA17H_RE (want 1), listed $SA17H_NFN and counted $SA17H_NLINE (want 7 and 7), CRC parse '$SA17H_CRC'"
+  FAIL "S17h: bits $SA17H_DN$SA17H_FB (want 00), regex match $SA17H_RE (want 1), listed $SA17H_NFN and counted $SA17H_NLINE (want 8 and 8), CRC parse '$SA17H_CRC'"
 fi
 
 # ── S18a — MUST REFUSE. Ten lines the grammar must not admit, each refused with nothing printed:
@@ -10798,6 +11686,19 @@ md_flips nonpublishable_values      "O9c" o9c_assert
 # re-run cannot overwrite the ones L17d read.
 md_flips verify_publishable_content "L17b" l17_assert "$WORK/l17md"
 
+# The change-summary guard's projection status (#2071), registered against the guard and against
+# both arm helpers. R8b grades an EXACT status on every cell, and its cells are of both kinds in
+# ONE verdict: with the guard removed every cell reads 127; with _guard_arm removed, or
+# _guard_words, every cell reads rc=2, which the failing cells expect and the succeeding cells do
+# not, so each removal leaves exactly one FAIL. An arm over the failing cells alone — L17b's shape
+# — would read blind to either helper, which is why L17b is registered against the guard only.
+md_flips verify_summary_content     "R8b"       r8_assert "$WORK/r8md"
+md_flips _guard_arm                 "R8b-arm"   r8_assert "$WORK/r8md"
+md_flips _guard_words               "R8b-words" r8_assert "$WORK/r8md"
+# The count itself (#2071): L17g grades an EXACT status on files either side of each floor, so
+# with _guard_words removed every file reads rc=2, which its over-floor files do not expect.
+md_flips _guard_words               "L17g"      l17g_assert
+
 # The published projection's '=' arms (#1467). Each grades an EXACT status on its render and on
 # its twin, so with the projection removed the guard refuses its published arm (rc=2) and each
 # arm's one verdict is a FAIL. One registration per surface, because each verdict rests on a
@@ -10826,6 +11727,27 @@ md_flips strip_to_published_text    "M1p" m1ip_assert
 md_flips strip_to_published_text    "M1q" m1iq_assert
 md_flips strip_to_published_text    "M1r" m1ir_assert
 md_flips strip_to_published_text    "M1s" m1is_assert
+# Where a <script> or <style> body ends (#2055). Each grades an EXACT status, so with its subject
+# removed the guard refuses that projection (rc=2) and the arm's one verdict is a FAIL. M1t rests on
+# the published projection, which reads the value after a spaced closing tag; M1x and M1y rest on
+# the joined and the visible projection, which read a body closed only with a space as visible text.
+md_flips strip_to_published_text    "M1t" m1t_assert
+md_flips strip_to_joined_text       "M1x" m1bc_assert M1x "a value split mid-word by an inline tag"            "$M1X_SP" "$M1X_EX" 'joined markup (an inline tag split a word)'
+md_flips strip_to_text_blocks       "M1y" m1bc_assert M1y "a value with an attribute-carrying tag around a word" "$M1Y_SP" "$M1Y_EX" 'visible text'
+# The pre-0.60.0 parity cells' armed-red control (CIAC-1). M6d grades an EXACT status from the
+# legacy guard, so with the frozen published copy removed that guard refuses its published arm
+# (rc=2), the pair is not flagged, and the arm's one verdict is a FAIL.
+md_flips pp_legacy_pub              "M6d" m6d_assert
+# The guard's fourth arm (#2068, ADR-050). Each arm grades an EXACT status on a page only that arm
+# blocks, so with strip_to_shape_text removed the guard refuses the arm (rc=2) and the arm's one
+# verdict is a FAIL. One registration per shape the arm restores: the span names inside a quoted
+# value, #2070's list read as text, the apostrophe-opened unit, and a tag on neither list. M6b is
+# registered too, through the pages it grades again live; its manifest alone could not see it.
+md_flips strip_to_shape_text        "M7a" m7a_assert
+md_flips strip_to_shape_text        "M7c" m7c_assert
+md_flips strip_to_shape_text        "M7d" m7d_assert
+md_flips strip_to_shape_text        "M7e" m7e_assert
+md_flips strip_to_shape_text        "M6b" m6b_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group FZ — every verdict arm in this file must be able to FAIL.

@@ -258,6 +258,7 @@ so each group stays in number order.
 | [ADR-036](ADR-036-published-artifact-model-row.md) | The published artifact takes no in-model row — `ADR-026` Finding 1 declined, in terms, and routed | Accepted |
 | [ADR-037](ADR-037-group-snapshot.md) | The group snapshot — what travellers share with the group before a plan, whose it is, who writes it, and where it shows | Accepted |
 | [ADR-038](ADR-038-contact-emergency-group-visibility.md) | Contact and emergency information on the private site — what the group sees, the emergency contact as a third party, and the carrier | Accepted |
+| [ADR-050](ADR-050-reading-by-shape-as-a-fourth-arm.md) | Reading by shape as a fourth arm — the published projection the guard before 0.60.0 wrote, kept beside the one that replaced it, read and credited last, and named by a fourth projection value, superseding ADR-008 Decisions 3 and 4 in part | Proposed |
 
 ### Group coordination and approval
 

@@ -3,6 +3,55 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.62.0] — 2026-10-29 — A plaintext publish never lets through a value the guard used to catch
+
+No trip verb plans or records a trip differently in this release. What changes is met by whoever
+publishes a trip's site in plaintext. The content guard again refuses every page the guard before
+0.60.0 refused, and two long-run shapes no longer slow it down with the square of their length.
+
+**A closing tag written with a space no longer hides what follows it.** A `<script>` or `<style>`
+body can be closed by a tag with a space before its bracket (`</script >`) and followed later by an
+exact `</script>`. The published projection now ends the body at the spaced tag, so a value written
+between the two stops the publish, as it did before 0.60.0. The visible and joined projections
+still end such a body only at the exact tag, as before 0.60.0. Changing them alone would give up
+values the guard before 0.60.0 caught inside such a body, so that stretch is a stated limit. A word
+written directly after a `<` in markup after such a spaced tag is read as a tag name, as everywhere
+else in markup.
+
+**A fourth reading blocks what the earlier guard blocked.** The guard also reads the published file
+the way the guard before 0.60.0 read it, finding every tag and attribute name by its shape and
+dropping it. A protected value found there stops the publish under the name
+`markup read by shape (every tag and attribute name dropped)`. That name is given only when no
+other reading found the value. This blocks pages that 0.60.0 let through:
+- a value whose words sit around spans whose quoted attribute values carry names
+  (`title="k= m="`);
+- a kept tag's attribute list read as text;
+- the same shape opened by an apostrophe in an unquoted value;
+- a value split, inside a script string, by a tag on neither of the guard's lists (`<font>`, or a
+  custom element).
+
+Its only false aborts are the ones the guard before 0.60.0 made. ADR-050, added in this release as
+Proposed, records the decision and partly supersedes ADR-008's Decisions 3 and 4.
+
+**The change-summary guard fails closed.** `verify_summary_content` is the conformance check for a
+trip's change summary. It now returns undetermined when its reading fails, even after it has
+written words, with the caller's `pipefail` on or off; before, it read no pipeline status. Every
+reading in both guards now goes through one shared helper, and the word count is written once.
+
+**Long runs no longer stall the guard.** In every reading, a long run of spaces after a `<`, or of
+name characters in a kept tag's attribute list, now costs time in proportion to its length. Before,
+the published reading's time grew with the square of the run. No verdict changes.
+
+**ADR-008's residual 4 cites cells that pin it.** The attribute-name drop is now pinned by M1h and
+M1r, which fail when the drop is removed. It no longer cites M1d, which did not.
+
+**Size fence.** Nothing moved: no row was re-pinned.
+- `reference/adr/ADR-008-publish-content-guard.md` grew 2,725 bytes to 79,999, beneath its row of
+  83,538.
+- `reference/adr/README.md` grew 313 bytes to 26,023, beneath its row of 28,177.
+- `reference/adr/ADR-050-reading-by-shape-as-a-fourth-arm.md`, at 13,539 bytes, is below the floor
+  at which a record owes a row.
+
 ## [0.61.0] — 2026-10-29 — Erasure reaches the four names it still misses
 
 `/trip-record erase` now finds the names it used to leave behind, and rewrites each one or lists it
