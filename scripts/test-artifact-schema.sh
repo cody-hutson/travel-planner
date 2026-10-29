@@ -12660,7 +12660,7 @@ ER25_NR=0; ER25_NWANT=0; ER25_NFOUND=0; ER25_NOTHER=0; ER25_MISS=""
 while IFS= read -r f; do
   [ -n "$f" ] && [ -r "$ROOT/$f" ] || continue
   t="$(cat "$ROOT/$f")"
-  IFS="$VA_TAB" read -r nc pc ph nq <<<"$(er25_cols "$t")"
+  IFS="$VA_TAB" read -r nc pc ph _ <<<"$(er25_cols "$t")"
   [ "${nc:-0}" -gt 0 ] || continue
   ER25_NR=$((ER25_NR + 1))
   if awk '/^## Group/{on=1;next} on&&/^## /{on=0} on&&/^\|/&&/travelers\/[^|]*\.md/{f=1} END{exit !f}' <<<"$t"; then
@@ -12776,9 +12776,9 @@ ER26_OLD01=(
   'For the superseded file it says that this receipt is the last that can name it'
 )
 er26_old01() {
-  local a=() p
-  for p in "${ER26_OLD01[@]}"; do a+=(-e "$p"); done
-  grep -c -F "${a[@]}" <<<"$1" || true
+  local er_pats=() p
+  for p in "${ER26_OLD01[@]}"; do er_pats+=(-e "$p"); done
+  grep -c -F "${er_pats[@]}" <<<"$1" || true
 }
 er26_flat() { tr '\n' ' ' <<<"$1" | tr -s ' '; }
 # er26_pins <flattened text> -> how many of ER26_PINS it carries.
@@ -13245,9 +13245,9 @@ ER30_EXITOLD=(
   'it ends the entry under its name'
 )
 er30_exitold() {
-  local a=() p
-  for p in "${ER30_EXITOLD[@]}"; do a+=(-e "$p"); done
-  grep -c -F "${a[@]}" <<<"$1" || true
+  local er_pats=() p
+  for p in "${ER30_EXITOLD[@]}"; do er_pats+=(-e "$p"); done
+  grep -c -F "${er_pats[@]}" <<<"$1" || true
 }
 ER30_ENRT=""; [ -r "$ER30_ENR" ] && ER30_ENRT="$(cat "$ER30_ENR")"
 ER30_EXO="$(er30_exitold "$ER30_ENRT")"
