@@ -12728,7 +12728,9 @@ fi
 # into a copy of the section is counted. Dev Testing F-13 adds a fifth site the same way: the
 # sentence in § *The order of writes* that said the next run keys on the tombstoned roster cell now
 # says so of the row the discovered file joins, and sends a file that joins no row to the no-row
-# branch.
+# branch. Stage 8 QA-03 adds a sixth the same way, in § *The receipt*: the superseded file's
+# receipt is the last that can name it only where the run's store step runs, and where the run
+# holds that step the receipt says the next run names the file again.
 ER26_PINS=(
   'is the no-row branch, and the run writes nothing on that trip'
   'the subject was taken off the roster through `## group`'
@@ -12758,15 +12760,20 @@ ER26_PINS=(
   # Dev Testing F-13: § *The order of writes*.
   'where the row the discovered file joins carries the tombstone, the next run of this verb keys on that cell'
   'where the file joins no row, the next run meets the no-row branch of § *Step 1* and writes nothing on that trip at all'
+  # Stage 8 QA-03: § *The receipt*.
+  'For the superseded file it says, where the run'"'"'s store step runs, that this receipt is the last that can name it'
+  'and where the run holds that step, that the next run names it again'
 )
-# The four unscoped sentences Dev Testing F-01 named, and the clause Dev Testing F-13 named. Each
-# must read 0 in § `erase`, and each, planted into a copy, must be counted.
+# The four unscoped sentences Dev Testing F-01 named, the clause Dev Testing F-13 named, and the
+# unconditioned receipt clause Stage 8 QA-03 named. Each must read 0 in § `erase`, and each,
+# planted into a copy, must be counted.
 ER26_OLD01=(
   'the roster row of any resolved trip already carries `per-[0-9a-f]{4}` in column 1'
   'which still resolves the trip and reads `ALREADY-ERASED` on every REACH row but rows 2, 8 and 9'
   'The next run keys on the tombstoned roster cell, emits `ALREADY-ERASED` on row 31'
   'On a trip whose roster already carries the token, a later run mints nothing'
   'keys on the tombstoned roster cell and writes nothing on that trip but what step 8 left undone'
+  'For the superseded file it says that this receipt is the last that can name it'
 )
 er26_old01() {
   local a=() p
@@ -12808,11 +12815,11 @@ done
 if [ -z "$ER_SEC" ] || [ "${#ER26_FLAT}" -lt 1000 ]; then
   FAIL "ER26: measured nothing — § \`erase\` read ${#ER26_FLAT} flattened byte(s). A phrase count over an empty section proves nothing about the branch it pins"
 elif [ "$ER26_STRIPBAD" -ne 0 ] || { [ "$ER26_PIN" -gt 0 ] && [ "$ER26_OLD_PLANT" -ne $((ER26_OLD + 1)) ]; } || [ "$ER26_O1BAD" -ne 0 ]; then
-  FAIL "ER26: BROKEN PROBE — $ER26_STRIPBAD of the $ER26_PIN present phrase(s) did not drop the count by exactly 1 when stripped from a copy (a phrase carried twice, or a matcher that does not read it), the old claim planted into a copy read $ER26_OLD_PLANT against $ER26_OLD (must be one more), and $ER26_O1BAD of the ${#ER26_OLD01[@]} unscoped re-run sentence(s) planted into a copy were not counted once more. Until each fires, a verdict below is the instrument's"
+  FAIL "ER26: BROKEN PROBE — $ER26_STRIPBAD of the $ER26_PIN present phrase(s) did not drop the count by exactly 1 when stripped from a copy (a phrase carried twice, or a matcher that does not read it), the old claim planted into a copy read $ER26_OLD_PLANT against $ER26_OLD (must be one more), and $ER26_O1BAD of the ${#ER26_OLD01[@]} unscoped sentence(s) planted into a copy were not counted once more. Until each fires, a verdict below is the instrument's"
 elif [ "$ER26_PIN" -ne "$ER26_N" ] || [ "$ER26_OLD" -ne 0 ] || [ "$ER26_O1" -ne 0 ]; then
-  FAIL "ER26: the no-row branch is not the one § \`erase\` states — it carries $ER26_PIN of the $ER26_N operative phrase(s) (missing:${ER26_MISSING:- none}), $ER26_OLD line(s) still call a file that joins no row an interrupted erasure, and $ER26_O1 line(s) still say a re-run reads \`ALREADY-ERASED\` on a trip, or keys on its tombstone, because any row carries one. A trip with no tombstone whose file joins no row falls through every other branch, a trip carrying someone else's tombstone reads that false \`ALREADY-ERASED\`, and a record deleted while such a file stands leaves nothing that can find the file by id"
+  FAIL "ER26: the no-row branch is not the one § \`erase\` states — it carries $ER26_PIN of the $ER26_N operative phrase(s) (missing:${ER26_MISSING:- none}), $ER26_OLD line(s) still call a file that joins no row an interrupted erasure, and $ER26_O1 line(s) still say a re-run reads \`ALREADY-ERASED\` on a trip, or keys on its tombstone, because any row carries one, or call the superseded file's receipt the last that can name it whether or not the store step runs. A trip with no tombstone whose file joins no row falls through every other branch, a trip carrying someone else's tombstone reads that false \`ALREADY-ERASED\`, and a record deleted while such a file stands leaves nothing that can find the file by id"
 else
-  PASS "ER26: a discovered file that joins no roster row is one branch — § \`erase\` carries all $ER26_N operative phrase(s): the four ways the branch is reached, the \`## group\` exit among them, over both roster states; every REACH row \`UNDETERMINED\` and every REPORT row under candidate names; the dry run naming each such trip; the store step held, row 29 naming the trips holding it, and the re-run that finishes it; \`--also-trip\` report-only, with re-linking as the route to a write, and on the *Reads:* line; and \`ALREADY-ERASED\` scoped to the row the discovered file joins at the Step 1 table row, row 38, the row-31 paragraph and the receipt, and the re-run's key scoped to it in § *The order of writes*, each pointing the unjoined case at the no-row branch. No line calls the state an interrupted erasure or reads \`ALREADY-ERASED\` off any tombstone or keys a re-run on one, and every control fired: each phrase stripped moves the count by 1, and each old claim planted is counted"
+  PASS "ER26: a discovered file that joins no roster row is one branch — § \`erase\` carries all $ER26_N operative phrase(s): the four ways the branch is reached, the \`## group\` exit among them, over both roster states; every REACH row \`UNDETERMINED\` and every REPORT row under candidate names; the dry run naming each such trip; the store step held, row 29 naming the trips holding it, and the re-run that finishes it; \`--also-trip\` report-only, with re-linking as the route to a write, and on the *Reads:* line; and \`ALREADY-ERASED\` scoped to the row the discovered file joins at the Step 1 table row, row 38, the row-31 paragraph and the receipt, and the re-run's key scoped to it in § *The order of writes*, each pointing the unjoined case at the no-row branch; and the superseded file's receipt the last that can name it only where the store step runs. No line calls the state an interrupted erasure, reads \`ALREADY-ERASED\` off any tombstone, keys a re-run on one or calls that receipt the last unconditionally, and every control fired: each phrase stripped moves the count by 1, and each old claim planted is counted"
 fi
 
 # ── ER27 — WHERE A TRIP NAMES THE SUBJECT OTHERWISE, THE RECORD'S NAME IS READ THERE AS A CANDIDATE,
@@ -13198,6 +13205,11 @@ ER30_PINS7=(
   'or, for an entry an erasure re-keyed, for the token the reconcile resolves'
   'A withdrawal of an entry an erasure re-keyed names it by its token or by its place, never by a name'
   'a place is counted from the top of the model you read before this write, over its person entries'
+  # Stage 8 QA-01, ruled (a): a revision of an erased entry's needs takes the withdrawal's key, in
+  # § `person` and in the reconciler's second exit, so the old name never comes back to the trip
+  # and the member is never counted twice.
+  '**A revision of such an entry'"'"'s needs takes the same key**'
+  'A revision of such an entry'"'"'s needs is keyed the same way, by its token or its place and never by a name'
 )
 er30_pins7() {
   local n=0 p
@@ -13255,7 +13267,7 @@ elif [ "$ER30_STRIPBAD" -ne 0 ] || [ "$ER30_OLD_PLANT" -ne $((ER30_OLD + 1)) ] |
 elif [ "$ER30_ORD" -ne 1 ] || [ "$ER30_PIN" -ne "$ER30_N" ] || [ "$ER30_OLD" -ne 0 ] || [ "$ER30_PR2" -ne 0 ] || [ "$ER30_PIN7" -ne "$ER30_N7" ] || [ "$ER30_GONE_N" -ne 0 ] || [ "$ER30_DROP_N" -ne 0 ] || [ "$ER30_WN" -lt 1 ] || [ "$ER30_EXO" -ne 0 ]; then
   FAIL "ER30: the texts do not agree on option (A) — \`## Amendment history\` after \`References\` and last: ADR-006 at line $ER30_HH6 (References $ER30_R6, last heading $ER30_L6), ADR-012 at line $ER30_HH12 (References $ER30_R12, last heading $ER30_L12); $ER30_PIN of the $ER30_N record phrase(s) present (missing:${ER30_MISSING:- none}); $ER30_PIN7 of the $ER30_N7 path phrase(s) in the verb file, the reconciler and CLAUDE.md (missing:${ER30_MISSING7:- none}); the replaced *Two entry classes* sentence stands $ER30_OLD time(s) in ADR-012's body and the active-trip ground $ER30_PR2 time(s) in the entries; \"never this verb's subject\" stands $ER30_GONE_N time(s) in § \`erase\`, the old third exit's drop $ER30_DROP_N time(s), and the old exit sentences that said the third exit ends the entry $ER30_EXO time(s) in the reconciler (each must be 0); and the archived witness carries $ER30_WN erased both-marks heading(s) (must be at least 1)"
 else
-  PASS "ER30: both ADRs close on an \`## Amendment history\` entry after \`References\` recording (A) as chosen and (B) as rejected on the archived-trip ground alone, and ADR-012's *Two entry classes* both-marks row says the name, not the need, is what a regeneration would carry back; the verb file, the reconciler and CLAUDE.md carry all $ER30_N7 path phrase(s) — rule 16 as an exception to rule 2 with rule 5 unchanged, the sub-section with its re-run reading, its split refusal and its order, the carried-forward entry and the third exit that ends its name and carries it, under an exit count that says the exits change an entry, the withdrawal that names an erased entry by its token or its place, on the *Reads:* line and in the reconciler's second exit too, and CLAUDE.md's intent and read-scope rows naming that path — with \"never this verb's subject\", the old drop and the old exit sentences gone; the archived witness keeps $ER30_WN erased both-marks heading(s). Every control fired: each phrase stripped moves its count by 1, each old sentence planted is counted, and the mark removed from the witness drops its count by 1"
+  PASS "ER30: both ADRs close on an \`## Amendment history\` entry after \`References\` recording (A) as chosen and (B) as rejected on the archived-trip ground alone, and ADR-012's *Two entry classes* both-marks row says the name, not the need, is what a regeneration would carry back; the verb file, the reconciler and CLAUDE.md carry all $ER30_N7 path phrase(s) — rule 16 as an exception to rule 2 with rule 5 unchanged, the sub-section with its re-run reading, its split refusal and its order, the carried-forward entry and the third exit that ends its name and carries it, under an exit count that says the exits change an entry, the withdrawal that names an erased entry by its token or its place, on the *Reads:* line and in the reconciler's second exit too, the revision of its needs keyed the same way in § \`person\` and in that exit, and CLAUDE.md's intent and read-scope rows naming that path — with \"never this verb's subject\", the old drop and the old exit sentences gone; the archived witness keeps $ER30_WN erased both-marks heading(s). Every control fired: each phrase stripped moves its count by 1, each old sentence planted is counted, and the mark removed from the witness drops its count by 1"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════

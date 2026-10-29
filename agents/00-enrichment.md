@@ -863,7 +863,10 @@ withdraws them drops the entry. Both are real changes, so both emit an update si
 A withdrawal of an entry an erasure re-keyed names it by its token or by its place,
 never by a name, and a place is counted from the top of the model you read before this
 write, over its person entries — every `##` heading whose key the reserved-key list
-does not hold (§ *Traveler identity*, below).
+does not hold (§ *Traveler identity*, below). A revision of such an entry's needs is
+keyed the same way, by its token or its place and never by a name, and replaces its
+need text under the same heading with every mark kept, so the name it no longer carries
+never returns to the trip and the member is never counted twice.
 
 **The third exit is an erasure substitution: it ends the name, and the entry is carried.** An entry
 the erasure verb has substituted — its heading re-keyed to the `per-<token>` shape and
