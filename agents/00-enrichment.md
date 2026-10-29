@@ -860,6 +860,10 @@ the carry-forward rule to match and a superseded entry is **never re-admitted** 
 later pass. The second exit is a **fresh operator statement** about that person — one
 that revises the needs replaces the carried text (the newer statement wins), one that
 withdraws them drops the entry. Both are real changes, so both emit an update signal.
+A withdrawal of an entry an erasure re-keyed names it by its token or by its place,
+never by a name, and a place is counted from the top of the model you read before this
+write, over its person entries — every `##` heading whose key the reserved-key list
+does not hold (§ *Traveler identity*, below).
 
 **The third exit is an erasure substitution: it ends the name, and the entry is carried.** An entry
 the erasure verb has substituted — its heading re-keyed to the `per-<token>` shape and
