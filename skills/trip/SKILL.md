@@ -822,7 +822,7 @@ artifact this run produces that shows the change, named by path in the announcem
 
 | the leg, in dispatch order | the artifact | what makes it evidence |
 |---|---|---|
-| the reconciler | `trips/<slug>/outputs/traveler-model.md` | its `## Update signals [DERIVED]` block carries, after the leg, a line above its `###` partition naming a changed need or a changed desire. `skills/trip-record/SKILL.md` § `travelers` owns those two classes and routes them to this verb. A rebuilt model with no such line shows nothing for the hub to recover from |
+| the reconciler | `trips/<slug>/outputs/traveler-model.md` | its `## Update signals [DERIVED]` block carries, after a leg that wrote the model, a line above its `###` partition naming a changed need or a changed desire. `skills/trip-record/SKILL.md` § `travelers` owns those two classes and routes them to this verb. A rebuilt model with no such line shows nothing for the hub to recover from. A leg that stopped or declined its write produced no artifact, so a block it left standing is not this run's evidence |
 | the spokes the coupling conditions admit | the research they appended | the dated section each one appended |
 
 Nothing else this chain writes is evidence. Apply the placement rule: the hub's equity-aware
@@ -850,7 +850,7 @@ from either, so these are branches the verb enters rather than sentences it carr
 | what this run found | why nothing is observable | what the run names |
 |---|---|---|
 | no spoke admitted and no changed profile stated | the floor runs alone, so this run produced no artifact of its own before the hub leg | `/trip-record mode` |
-| no spoke admitted, a changed profile stated, and no qualifying line after the reconciler leg | the reconciler ran, but its artifact shows no change for the hub to recover from: no composed value moved, an earlier reconcile already took the change in, the leg stopped or declined its write, or the lines are all a journey facet or `PROFILE MISSING` | `/trip-record mode`, and that where an earlier reconcile took the change in, its signal is gone until the next change, because this run's reconcile rebuilt the model without it |
+| no spoke admitted, a changed profile stated, and no qualifying line in a model the reconciler leg wrote | the reconciler ran, but its artifact shows no change for the hub to recover from: no composed value moved, an earlier reconcile already took the change in, the leg stopped or declined its write, or the lines are all a journey facet or `PROFILE MISSING` | `/trip-record mode`, and that where an earlier reconcile took the change in, its signal is gone until the next change, because this run's reconcile rebuilt the model without it; where the leg stopped or declined its write, say so, since no model was rebuilt and an earlier signal may still stand |
 | no `outputs/final-itinerary.md` on file when this run started, shown absent, not refused | `ITERATION` is an existing plan being changed, and there is none: the hub's patch and both recovery behaviours compare against a prior version | `/trip plan`, and `/trip-record mode` for a transition only the operator can state |
 
 Where more than one row holds, the lowest governs, because the plan is what the write needs
