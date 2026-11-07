@@ -467,7 +467,7 @@ jobs:
           if [ -s "$work/ids.hits" ]; then
             echo "::error::commit author or committer outside the no-reply form (…@users.noreply.github.com)"
             cat "$work/ids.hits"
-            echo "Hint: set this clone's user.email to your no-reply address, then re-commit these on your branch. CONTRIBUTING.md, Ground rules states the form; a commit already on main is not rewritten. A shape GitHub issues that the form does not take yet is added in scripts/check-identity-form.sh, and only there."
+            echo "Hint: set this clone's user.email to your no-reply address (GIT_AUTHOR_EMAIL and GIT_COMMITTER_EMAIL, when set, override it), then re-commit these on your branch with the author reset: git commit --amend --no-edit --reset-author for the last commit, or git rebase --exec 'git commit --amend --no-edit --reset-author' <base> for several. CONTRIBUTING.md, Ground rules states the form; a commit already on main is not rewritten. A shape GitHub issues that the form does not take yet is added in scripts/check-identity-form.sh, and only there."
             fail=1
           fi
 
