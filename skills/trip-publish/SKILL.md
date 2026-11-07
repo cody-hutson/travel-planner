@@ -108,7 +108,7 @@ is the case where one file's declared set spans both jobs at once.
 |---|---|
 | `Bash(ls:*)` | the trip-listing evidence block below, which the declared `contract-depth` requires |
 | `Bash(grep:*)` | the trip-record evidence block below, which the declared `contract-depth` requires |
-| `Bash(test:*)` | `update`'s passphrase precondition. Chosen because it is the narrowest primitive that answers *present and readable*, and because it **discloses no contents** — it answers by exit status, so no file's contents reach any channel. **It is still a read of the path it names**, under the definition § *What counts as a read here* adopts, and `update`'s `**Reads:**` line declares it as one. A malformed invocation can still put a usage diagnostic on stderr; that names an operand, never a file's contents |
+| `Bash(test:*)` | `update`'s environment precondition. Chosen because it is the narrowest primitive that answers *is this variable set*, and because it **discloses no contents** — it answers by exit status and reads no path. A malformed invocation can still put a usage diagnostic on stderr; that names an operand, never a value |
 | `publish-trip-site.sh update` | `update`'s single invocation |
 | `publish-trip-site.sh list` | `list`'s single invocation |
 
@@ -234,10 +234,8 @@ header row.
 The ladder this cites is stated in one place and is not restated here. The blocks above
 are this file's evidence entries, tool calls you issue as the data-root paragraph above
 directs; their output is the whole of the trip state this file **resolves against**, and
-the whole of the trip state it needs. It is **not** the whole of what this
-file reads, and this file used to say that it was: `update` takes a presence-and-readability
-probe on a per-trip path, and under the definition the rest of this surface uses, that probe
-is a read. Do not read `trip-context.md` in full, and do not read `trip-log.md` or anything
+the whole of the trip state it needs, and no verb here reads a per-trip path of its own. Do not
+read `trip-context.md` in full, and do not read `trip-log.md` or anything
 under `outputs/` — a rule this file follows, and `Read` is a **declared** denial besides,
 under the caveat above on what a declaration establishes.
 
@@ -249,27 +247,16 @@ marks itself frozen, and it is applied by `skills/trip/SKILL.md` in the same ter
 path read only to test whether it exists — or whether it is readable — is a read, and is
 declared.** The reason is the one that section gives: the probe selecting a branch is the
 control the rule on that branch turns on, and an undeclared probe hides the one read the
-rule depends on. That is exactly this file's case — limb (i) of `update`'s precondition is
-the whole of what keeps this command clear of a silent re-key, and until this revision it
-was declared nowhere.
+rule depends on. This file takes no such probe: what keeps it clear of a silent re-key is the
+script's own refusal, and `update`'s one precondition tests an environment variable.
 
-**This file had been using a narrower definition — disclosure — and reading it as the same
-one.** Under that narrower reading a `test` is not a read at all, because no contents reach
-any channel. Both statements are true; they are about **different objects**, and the file's
-error was letting one answer the other's question:
+**A read of a path and a read of a value are different objects:**
 
 - **A read of a path** is any observation this command makes of the filesystem — presence,
   readability, contents. It is what a `**Reads:**` line declares, and its purpose is that
   the reads this command performs are auditable from the file.
 - **A read of a value** is contents reaching a channel. It is what standing rule 4 forbids
   for a passphrase, and its purpose is that no secret enters the transcript.
-
-So `test -r "<data-root>/trips/<slug>/.passphrase"` **is** a read of that path, **is** declared in
-`update`'s `**Reads:**` line, and is **not** a read of that value — and rule 4 is untouched
-by the declaration. Keeping the narrower definition would have been the worse choice on this
-file specifically: it is the only file on this surface that observes a passphrase path at
-all, so a definition under which that observation is not a read is a definition under which
-the single most consequential read here is the one nothing has to declare.
 
 **The read-scope ceiling for this file.** Every verb reads exactly what its own
 `**Reads:**` line names, and nothing else; silence there is a prohibition rather than a gap.
@@ -327,13 +314,9 @@ protects only the verbs that existed when it was written.
    when it excludes a secret supplied as a command-line argument.
 4. **It never reads, prints, echoes, logs, stores or reproduces a passphrase *value*, and
    never substitutes one.** The object of this rule is the value, not the path. No
-   construct in this file directs a content-emitting primitive at a passphrase path; what
-   touches such a path is the presence-and-readability probe below, which answers by exit
-   status and discloses no contents. **That probe is a read of the path, `update`'s
-   `**Reads:**` line declares it as one, and declaring it takes nothing away from this
-   rule** — the declaration and the rule speak about different objects, which is the
-   reconciliation § *What counts as a read here* states. A refusal names the path and the
-   variable — never a value, never a substitute, never a length, never a prefix.
+   construct in this file touches a passphrase path at all; the script holds the key check,
+   and this file relays what it says. A refusal names the path and the variable — never a
+   value, never a substitute, never a length, never a prefix.
 5. **It writes, creates and deletes no trip content** — nothing this repo treats as the
    trip's own record. It introduces no field, so it claims no row in `CLAUDE.md` → *Write
    ownership — trip-context.md, block by block*. **This rule is scoped to trip content
@@ -451,19 +434,15 @@ later slice adds lands in the table or does not run.
 
 ## update
 
-**Reads:** `trips/<slug>/.passphrase` — the presence-and-readability probe of limb (i)
-below, taken **only** to establish whether that path is there and readable, never to obtain
-its value, and taken **before** any invocation is constructed because it is the control that
-keeps this verb clear of the fall-through re-key limb (i) describes; it answers by exit
-status, so it is a read of the path and not of the contents, and § *What counts as a read
-here* is where those two are kept apart. Reads no `trips/<slug>/trip-context.md`, no
+**Reads:** no path of its own. Reads no `trips/<slug>/trip-context.md`, no
 `trips/<slug>/trip-log.md`, no `trips/<slug>/.publish-slug` and nothing under
 `trips/<slug>/outputs/` — the record block above already carries the lifecycle, the mode and
 the destination by value, the publish script resolves the slug file itself, and a read here
-would give this command a second source for state it does not own. **Reads no passphrase
-value**, on this verb or anywhere in this file. Limb (ii) reads no path at all: it tests an
-environment variable, which is an observation of this process's environment rather than of
-the filesystem, and it is named here so its absence from the path list is not read as an
+would give this command a second source for state it does not own. It reads no
+`trips/<slug>/.passphrase` either: the script holds that check. **Reads no passphrase
+value**, on this verb or anywhere in this file. The precondition below reads no path at all: it
+tests an environment variable, which is an observation of this process's environment rather than
+of the filesystem, and it is named here so its absence from the path list is not read as an
 omission. Runs `scripts/publish-trip-site.sh update` and dispatches no agent.
 
 **What it is.** Re-encrypt an already-published trip site and push only ciphertext to the
@@ -479,58 +458,32 @@ because nothing in it can produce one.
 
 ### Precondition — before any invocation is constructed
 
-Run each limb below and let it pass first. Each uses `test`, which answers by exit status
-and **discloses no contents**, so no file's contents reach any channel. Limb (i) is
-nonetheless a **read** of the path it names, and this verb's `**Reads:**` line above
-declares it as one; limb (ii) reads no path at all. Run no limb through any other
-primitive.
+**`update` never generates a key, and the script holds that rule:** with no `$STATICRYPT_PASSWORD`
+and no `.passphrase` it can read, it refuses before its resolver, naming `rotate`, so it pushes
+nothing and writes no passphrase. This verb relies on that refusal rather than duplicating it.
+The one check it makes of its own is below. Run it through `test` and no other primitive: it
+answers by exit status and **discloses no contents**.
 
-**(i) The trip's passphrase file is present and readable.**
-
-```
-test -r "<data-root>/trips/<slug>/.passphrase"
-```
-
-with `<data-root>` replaced by `trip.data_root` and `<slug>` by `trip.slug`. **The probe is rooted
-because it must test the file the script will read.** The invocation below resolves the trip
-under the data root, so a probe resolved against your working directory tests some other file or
-none: it refuses a trip whose passphrase is in place, or it passes on a same-named trip elsewhere
-while the script mints a fresh passphrase for this one — the silent re-key this limb exists to
-stop. A non-zero exit is a **refusal, and it stops.** Say:
-that the trip's passphrase file at that path is absent or unreadable; that `update` would
-otherwise mint a fresh passphrase, overwrite that file, re-encrypt and push while printing
-nothing, locking out everyone holding the previous one; and that the remedy is to restore
-the file and its readability before re-running. Name the path. Name no value, no
-substitute, no length, no prefix.
-
-`reference/adr/ADR-007-command-entry-point.md` § 4 names that fall-through as the residual
-whose mitigation "is in the command, not in the script", and this limb is that mitigation.
-It is also what keeps `update` clear of the same ADR's § 2 bound against overwriting
-existing trip content: an existing-but-unreadable passphrase file is existing trip
-content, and the fall-through overwrites it.
-
-**(ii) The passphrase environment override is unset. This limb is an addition beyond the
-mitigation § 4 names, and it is stated as one.**
+**The passphrase environment override is unset.**
 
 ```
 test -z "${STATICRYPT_PASSWORD:-}"
 ```
 
-A non-zero exit is a **refusal, and it stops.** Limb (i) guarantees the trip's passphrase
-file exists, so with the override also set there are two keys in play, and this command must
-never read a passphrase value, so it cannot tell whether they agree. The script itself refuses
+A non-zero exit is a **refusal, and it stops.** With the override set there may be two keys in
+play, and this command must never read a passphrase value, so it cannot tell whether they agree. The script itself refuses
 an update whose two keys disagree, before any network call — a silent re-key is how a routine
 update once undid a rotation — and an agreeing pair resolves to the same key either way; this
-limb keeps the command from reaching that decision at all, because it cannot see which case it
+check keeps the command from reaching that decision at all, because it cannot see which case it
 is in. Say:
-that `STATICRYPT_PASSWORD` is set in this environment; that the trip's `.passphrase` is the
-key of record; and that the remedy is to unset the variable — to change the site's
+that `STATICRYPT_PASSWORD` is set in this environment; that where the trip has a `.passphrase`,
+that file is the key of record; and that the remedy is to unset the variable — to change the site's
 passphrase, the operator runs `rotate` in their own terminal. Name the variable. Name no value, no substitute, no
 length, no prefix.
 
 ### Ordering
 
-Precondition → invocation → report. Nothing is invoked before every limb passes.
+Precondition → invocation → report. Nothing is invoked before the precondition passes.
 
 ### Invocation
 
@@ -575,6 +528,16 @@ runnable has failed, the same standard the plaintext hand-off below is held to.
 two must not be collapsed: what is forbidden is running it, routing it through any
 primitive, or offering `publish` as a verb of this command. Do not do those. Do print the
 line.
+
+**When the trip has no key the script can read**, the script refuses before its resolver, and its
+own message names the remedies: putting the current passphrase back, `rotate`, and, for a site
+published `--plaintext`, `rotate` or `unpublish` followed by `publish --plaintext`. None of those
+is a verb of this file. Relay the message as an **operator hand-off**, by the same standard as the
+first publish above, printing the line for whichever remedy the operator names and running none.
+**The script's remedy of setting `STATICRYPT_PASSWORD` belongs to the operator's own terminal, never
+to this verb:** the precondition above refuses whenever that variable is set, so relayed as a step of
+this verb it would loop. Say so, and print the script's `update` line for the operator to run there
+once they have set it; set nothing, and name no value.
 
 **When the resolved trip is `ARCHIVED`**, the row above declares `lifecycle: ACTIVE`, so
 G7 disposes `REFUSE`: name the cell the resolved state does not satisfy and the value the

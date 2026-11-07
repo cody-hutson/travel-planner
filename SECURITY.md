@@ -32,7 +32,7 @@ You will receive an acknowledgement, an initial assessment, and a remediation pl
 - Reference architecture in `reference/` (site-layout spec and other design notes)
 - Template files in `templates/` (trip-context templates)
 - Scripts in `scripts/` — the publish script (StatiCrypt encryption, passphrase handling, the pre-push guards) and its test suites
-- The command surface in `skills/` — the `/trip-*` verbs, including the publish command's passphrase preconditions
+- The command surface in `skills/` — the `/trip-*` verbs, including the publish command's passphrase precondition
 - Top-level governance: `CLAUDE.md`, `README.md`
 - GitHub Actions workflows in `.github/workflows/`
 - Repository configuration (Dependabot, branch settings, issue templates, PR template)

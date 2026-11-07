@@ -561,12 +561,10 @@ rather than collapsed.
   not a retraction.
 - `update` pushes a commit to an already-public repo. The commit timestamp is a metadata residual no
   revert reaches. **Reversal:** re-run from the prior build; the site was already public.
-- `update` also carries a **silent re-key hazard**. Its passphrase resolution falls through to
-  generating a fresh passphrase when the trip's passphrase file is unreadable and the environment
-  override is unset; it then re-encrypts and pushes while printing nothing, locking out everyone
-  previously given the old one. **The mitigation is in the command, not in the script:** the command
-  asserts the passphrase file is present and readable before invoking, and refuses with an
-  explanation otherwise. That is what keeps `update` inside the addressed partition under limb (i).
+- `update` never generates a key, so it cannot re-key a trip silently: **the refusal is in the script**, before its passphrase
+  resolution, whenever the trip's passphrase file cannot be read and the environment override is unset.
+  `update` stays inside the addressed partition under limb (i): addressing it needs nothing of the
+  script that the script does not do.
 - `list` writes local trip directory names into the session transcript. The session protocol already
   places that class of information in context on every session, and a directory name is not a
   credential. Limb (ii) is about credential disclosure; this does not meet it.
@@ -616,9 +614,7 @@ the trip's `.passphrase` held a different key, so a routine update could undo a 
 (GHSA-gmm2-v7rr-jq7r). The script now refuses, before any network call, whenever the variable is set
 and the trip's `.passphrase` holds a different key or one it cannot read as a key, and `rotate` no
 longer takes its key from the variable; it reads the variable only to warn when it still differs
-from the new key. The unreadable-file residual is still a silent re-key, now to a key the script
-records in `.passphrase` rather than one it recorded nowhere; its command-layer mitigation is
-unchanged.
+from the new key. The unreadable-file residual is closed in the script as well: § *Amendment history*.
 The `/trip-publish` precondition that refuses whenever the variable is set stays in
 place: a command that must never read a passphrase value cannot tell an agreeing pair from a
 disagreeing one, so it still declines to reach the script's decision. No row, disposition or reason
@@ -680,3 +676,12 @@ in the table above changes.
   sentences it had to arbitrate between competing in-repo accounts; these are **named rather than
   quoted**, because nothing in this repository carries a competing account of them and a quotation
   would be a second copy to keep current.
+
+## Amendment history
+
+**Amendment (2026-11-07, Saturday) — `update` refuses to generate a key, so § 4's silent re-key residual
+is closed in the script.** § 4's residual bullet said "The mitigation is in the command, not in the script",
+and the 2026-09-26 account said that residual was "still a silent re-key" whose "command-layer mitigation is
+unchanged". `cmd_update` now refuses before its resolver, and the precondition in `/trip-publish` that asserted
+the file has retired, so both sentences are corrected where they stand. The precondition that refuses whenever
+the variable is set stays. No row, disposition or reason in § 4's table changes, and no decision moves.

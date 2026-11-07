@@ -62,8 +62,10 @@
 # itinerary content, so a later edit re-opens the gate.
 #
 # Passphrase resolution for publish and update (in order): $STATICRYPT_PASSWORD, then
-# <trip-dir>/.passphrase, else a strong one is generated and saved to <trip-dir>/.passphrase
-# (under the data root, chmod 600). When the variable is set AND the trip also has a .passphrase holding
+# <trip-dir>/.passphrase. With neither, publish, and only publish, first generates a strong one and
+# saves it to <trip-dir>/.passphrase (under the data root, chmod 600); the resolver itself never
+# generates, and refuses. update never generates a key: with neither source it refuses, before the
+# resolver, naming rotate. When the variable is set AND the trip also has a .passphrase holding
 # a different key — or one that cannot be read as a key — publish and update REFUSE rather than
 # choose, before any network call: .passphrase is the key of record, and a silent choice between
 # two keys is how the next routine update used to undo a rotation (GHSA-gmm2-v7rr-jq7r). The only
@@ -205,8 +207,41 @@ gen_passphrase() {
   od -An -N24 -tx1 /dev/urandom | tr -dc 'a-f0-9'
 }
 
-# The key publish and update encrypt under. rotate does NOT come through here: it supplies its
-# own new key, so this resolver's environment branch can never pre-empt a rotation.
+# update never generates a key. A key made here would re-encrypt the site and lock out everyone
+# holding the current passphrase, with nothing announced; rotate is the command that announces the one
+# it sets. Called in cmd_update before the resolver. The resolver generates nothing either and would
+# refuse too, but in words that cannot tell absence from an unreadable file and that name no remedy
+# for a published trip. The test is the resolver's own, so what passes here is what the resolver can read.
+# Absence and an unreadable file are different conditions and take different words (ADR-007 § 2): the
+# second is a key that may well be the live one. Value-free, as every refusal here is. Whether a trip was
+# published --plaintext is not recorded anywhere, so the first message speaks to both kinds of trip.
+require_key_for_update() { # <trip_dir>
+  local pf="$1/.passphrase"
+  [ -z "${STATICRYPT_PASSWORD:-}" ] || return 0
+  [ -r "$pf" ] && return 0
+  if [ -e "$pf" ] || [ -L "$pf" ]; then
+    die "update refused — $pf exists but cannot be read, and update never generates a key: a new one would lock out everyone holding the current passphrase. Nothing was encrypted, committed or pushed, and the file was not touched. Restore read access to it and re-run update, or, to change the site's passphrase, run rotate."
+  fi
+  die "update refused — this trip has no key at $pf and STATICRYPT_PASSWORD is unset, and update never generates a key: a new one would lock out everyone holding the current passphrase. Nothing was encrypted, committed or pushed, and no passphrase was written. If you hold the current passphrase, put it back at that path, or set STATICRYPT_PASSWORD, and re-run update. If it is lost, run rotate, which announces the passphrase it sets. If this site was published --plaintext: rotate encrypts it from then on, while earlier pages stay in its history; unpublish followed by publish --plaintext keeps it plaintext."
+}
+
+# publish's first key (#1614, review CD-1). A trip publish has never published has no key yet, so one
+# is generated and recorded here, immediately before the resolver: the resolver then holds no generation
+# path at all, and no update can reach one in any window. The condition is exactly the one the resolver
+# generated on until now, the variable unset and nothing readable at the path, so publish generates in
+# exactly the key states it always did, and a link into a key store still takes the key where it points.
+# rotate makes its own key and does not come through here.
+ensure_first_key() { # <trip_dir>
+  local pf="$1/.passphrase" p
+  [ -z "${STATICRYPT_PASSWORD:-}" ] || return 0
+  [ -r "$pf" ] && return 0
+  p="$(gen_passphrase)"; write_passphrase_file "$pf" "$p"
+}
+
+# The key publish and update encrypt under. It reads a key and never makes one: publish generates a
+# trip's first key before it calls this, and update refuses before it when no key can be read. rotate
+# does NOT come through here: it supplies its own new key, so this resolver's environment branch can
+# never pre-empt a rotation.
 get_passphrase() { # <trip_dir>
   local trip_dir="$1" pf="$1/.passphrase" p=""
   if [ -n "${STATICRYPT_PASSWORD:-}" ]; then
@@ -214,7 +249,7 @@ get_passphrase() { # <trip_dir>
   elif [ -r "$pf" ]; then
     p="$(cat "$pf")"
   else
-    p="$(gen_passphrase)"; write_passphrase_file "$pf" "$p"
+    die "no key could be read at $pf and STATICRYPT_PASSWORD is unset, and the passphrase resolver reads a key and never makes one. Nothing was encrypted, committed or pushed, and no passphrase was written. If the file was there when this command began, another program removed or changed it while the command ran: put the current passphrase back at that path and re-run. A trip's first key is generated by publish, and a new one is set by rotate."
   fi
   [ "${#p}" -ge 12 ] || die "passphrase too weak (need ≥12 chars for a public, brute-forceable ciphertext). If STATICRYPT_PASSWORD is set, unset it. Otherwise the key in $pf is too short: on a published trip, change it with rotate; on a trip not yet published, replace it with a longer one, or delete the file and publish will generate one."
   printf '%s' "$p"
@@ -363,8 +398,8 @@ warn_if_environment_differs() { # <new_passphrase>
 #
 # The branch below is on the DESTINATION's state, not the caller's, and BOTH limbs are
 # value-free — it selects which true sentence to print, never whether to disclose. The
-# second limb exists because get_passphrase writes no file when STATICRYPT_PASSWORD
-# supplies the value, while the message this replaces announced it as saved there
+# second limb exists because no file is written when STATICRYPT_PASSWORD supplies the
+# value, while the message this replaces announced it as saved there
 # unconditionally: that claim was already false on that path, and a pointer-only rewrite
 # that ignored it would have inherited the falsehood as a dangling pointer.
 announce_passphrase_file() { # <label> <passphrase_file>
@@ -4126,6 +4161,8 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
     cp "$site_html" "$pub_dir/index.html"
   else
     local passphrase enc boiler
+    # A trip's first key, made here and nowhere else outside rotate (see the function).
+    ensure_first_key "$trip_dir"
     passphrase="$(get_passphrase "$trip_dir")"
     info "Encrypting site (StatiCrypt — AES-256-CBC + HMAC, 600k PBKDF2)…"
     enc="$(encrypt_to_tmp "$site_html" "$passphrase")"
@@ -4338,6 +4375,7 @@ cmd_update() { # <trip_dir>
   require_publish_guards "$trip_dir" "$site_html"
   pub_dir="$(ensure_pub_clone "$trip_dir")"
   require_publish_branch "$pub_dir" update
+  require_key_for_update "$trip_dir"
   passphrase="$(get_passphrase "$trip_dir")"
   owner="$(gh api user --jq '.login')"; slug="$(slug_for "$trip_dir")"
 

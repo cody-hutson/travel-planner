@@ -14158,6 +14158,147 @@ rv35_assert() { # <id> <rewound-after-read|head-moved>
 }
 for rv_b in rewound-after-read head-moved; do rv35_assert "RV35-$rv_b" "$rv_b"; done
 
+# ── RV37 — #1614. A published trip with no key the resolver can read, the variable unset: update refuses,
+# names rotate, pushes nothing and writes nothing. absent also says what a --plaintext trip's two routes are:
+# there is no marker to tell the two trips apart, so one message speaks to both, and a plaintext-seeded fixture
+# reads the same. unreadable says the file is there and is left alone. dangling is unreadable by another route.
+rv37_assert() { # <id> <absent|plaintext|unreadable|dangling>
+  local id="$1" how="$2" name d bare pub out rc h0 h1 c0 c1 said=0 words=1 kept=1 tgt
+  name="rv37-$how-$RANDOM"; d="$(rv_fixture "$name")"; bare="$RVW/origin/$name-trip.git"; pub="$d/.publish"
+  case "$how" in
+    plaintext)  cp "$SRC" "$pub/index.html"; git -C "$pub" add index.html
+                git -C "$pub" -c user.name=t -c user.email=t@example.invalid commit -q -m plaintext; git -C "$pub" push -q origin main ;;
+    unreadable) rv_make_unreadable "$d/.passphrase" 'rv-unreadable-synthetic-key-48' || { FAIL "$id: no way to make a key path unreadable to this uid. VERDICT WITHHELD"; return 0; } ;;
+    dangling)   ln -s "$d/.passphrase-no-such-target" "$d/.passphrase" ;;
+  esac
+  h0="$(rv_head "$bare")"; c0="$(git -C "$pub" rev-parse HEAD)"; tgt="$(readlink "$d/.passphrase" 2>/dev/null)"
+  out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) 2>&1 )"; rc=$?
+  h1="$(rv_head "$bare")"; c1="$(git -C "$pub" rev-parse HEAD)"
+  rv_has "$out" 'update never generates a key' && rv_has "$out" 'rotate' && said=1
+  case "$how" in
+    absent|plaintext)
+      for rv37_w in 'rotate encrypts it from then on' 'earlier pages stay in its history' 'unpublish followed by publish --plaintext keeps it plaintext'; do rv_has "$out" "$rv37_w" || words=0; done
+      if [ -e "$d/.passphrase" ] || [ -L "$d/.passphrase" ]; then kept=0; fi ;;
+    unreadable)
+      rv_has "$out" 'cannot be read' || words=0
+      if [ ! -L "$d/.passphrase" ]; then
+        chmod 600 "$d/.passphrase" 2>/dev/null
+        [ "$(cat "$d/.passphrase" 2>/dev/null)" = 'rv-unreadable-synthetic-key-48' ] || kept=0
+      fi ;;
+    dangling)
+      rv_has "$out" 'cannot be read' || words=0
+      [ "$(readlink "$d/.passphrase" 2>/dev/null)" = "$tgt" ] || kept=0
+      [ ! -e "$d/.passphrase-no-such-target" ] || kept=0 ;;
+  esac
+  if [ "$rc" -ne 1 ] || [ "$said" -eq 0 ]; then
+    FAIL "$id: update with no readable key ($how) read rc=$rc, named-rotate=$said — it must refuse saying update never generates a key"
+  elif [ "$h0" != "$h1" ] || [ "$c0" != "$c1" ]; then
+    FAIL "$id: the refusal ($how) moved the site or left a commit in the clone"
+  elif [ "$kept" -eq 0 ]; then
+    FAIL "$id: the refusal ($how) wrote a key, or changed the key path"
+  elif [ "$words" -eq 0 ]; then
+    FAIL "$id: the refusal ($how) did not carry the words this case owes"
+  else
+    PASS "$id: update with no readable key ($how) refuses and names rotate, with the site, the clone and the key path exactly as they were"
+  fi
+}
+for rv_b in absent plaintext unreadable dangling; do rv37_assert "RV37-$rv_b" "$rv_b"; done
+# RV37c — the card's risk, and the arm's control: the same trip with the variable set publishes.
+rv37c_assert() { # <id>
+  local id="$1" name d bare rc h0 h1 k key='rv-variable-only-synthetic-key-49'
+  name="rv37c-$RANDOM"; d="$(rv_fixture "$name")"; bare="$RVW/origin/$name-trip.git"; h0="$(rv_head "$bare")"
+  ( export STATICRYPT_PASSWORD="$key"; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$?
+  h1="$(rv_head "$bare")"; k="$(rv_pushed_key "$bare")"
+  if [ "$rc" -ne 0 ] || [ "$h0" = "$h1" ]; then
+    FAIL "$id: CONTROL — with the variable set, update on a trip with no .passphrase read rc=$rc and the site moved=$([ "$h0" = "$h1" ] && echo 0 || echo 1); a trip published from the variable alone must keep working"
+  elif [ "$k" != "$key" ] || [ -e "$d/.passphrase" ]; then
+    FAIL "$id: CONTROL — the page is not under the variable's key, or a .passphrase appeared"
+  else
+    PASS "$id: CONTROL — with the variable set the same trip publishes under the variable's key, the site moves and no .passphrase appears"
+  fi
+}
+rv37c_assert "RV37c"
+# RV37s — the position, from the parsed body. A refusal behind the resolver is a key already written.
+rv37s_assert() { # <id>
+  local id="$1" b pre at_req=-1 at_get=-1 gens=0
+  b="$(declare -f cmd_update 2>/dev/null)"
+  case "$b" in *require_key_for_update*) pre="${b%%require_key_for_update*}"; at_req=${#pre} ;; esac
+  case "$b" in *get_passphrase*) pre="${b%%get_passphrase*}"; at_get=${#pre} ;; esac
+  case "$b" in *gen_passphrase*|*write_passphrase_file*|*ensure_first_key*) gens=1 ;; esac
+  if [ "${#b}" -lt 500 ] || [ "$at_get" -lt 0 ]; then
+    FAIL "$id: cmd_update's parsed body is ${#b} bytes and locates get_passphrase at $at_get — the subject is absent or a stub. VERDICT WITHHELD"
+  elif [ "$at_req" -lt 0 ] || [ "$at_req" -ge "$at_get" ]; then
+    FAIL "$id: the refusal is at byte $at_req of cmd_update and the resolver at $at_get — it must stand before the resolver"
+  elif [ "$gens" -eq 1 ]; then
+    FAIL "$id: cmd_update names a key generator or a key writer of its own"
+  else
+    PASS "$id: in cmd_update's parsed body the refusal stands before the resolver (byte $at_req, $at_get), and the body names no key generator or writer"
+  fi
+}
+rv37s_assert "RV37s"
+# RV38 — the card's second criterion: a first publish of a trip with no key still generates and records one.
+rv38_assert() { # <id>
+  local id="$1" name d rc k pf
+  name="rv38-$RANDOM"; d="$RVW/$name"; mkdir -p "$d/outputs"; cp "$SRC" "$d/outputs/$name-travel-site.html"
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_publish "$d" ) >/dev/null 2>&1; rc=$?
+  pf="$(cat "$d/.passphrase" 2>/dev/null)"
+  k="$(git -C "$d/.publish" show HEAD:index.html 2>/dev/null)"
+  if [ "$rc" -ne 0 ] || [ -z "$pf" ]; then
+    FAIL "$id: a first publish with no key read rc=$rc and recorded ${#pf} characters of key — it must generate and record one"
+  elif [ "${#k}" -eq 0 ]; then
+    FAIL "$id: a first publish committed no page. VERDICT WITHHELD"
+  else
+    PASS "$id: a first publish of a trip with no .passphrase generates one and records it, as it always has"
+  fi
+}
+rv38_assert "RV38"
+
+# ── RV46 — #1614 under CD-1: the resolver reads a key and never makes one. Called directly on a trip with no
+# key and the variable unset it refuses and writes no .passphrase; the control reads a key back once one is
+# there. RV46s reads it as a property of the script: the only functions that generate or write a key are
+# publish's first-key step and rotate, and only cmd_publish calls the first-key step, so update reaches no
+# generation path in any window.
+rv46_assert() { # <id>
+  local id="$1" d out rc rc2 got made=0 said=0 k='rv-resolver-control-synthetic-key-53'
+  d="$RVW/rv46-$RANDOM"; mkdir -p "$d"
+  out="$( ( unset STATICRYPT_PASSWORD; set -e; get_passphrase "$d" ) 2>&1 )"; rc=$?
+  { [ -e "$d/.passphrase" ] || [ -L "$d/.passphrase" ]; } && made=1
+  rv_has "$out" 'reads a key and never makes one' && said=1
+  printf '%s\n' "$k" > "$d/.passphrase"; chmod 600 "$d/.passphrase"
+  got="$( ( unset STATICRYPT_PASSWORD; set -e; get_passphrase "$d" ) 2>/dev/null )"; rc2=$?
+  if [ "$rc" -ne 1 ] || [ "$said" -eq 0 ]; then
+    FAIL "$id: the resolver on a trip with no key and the variable unset read rc=$rc, refusal worded=$said — it must refuse, not generate"
+  elif [ "$made" -eq 1 ]; then
+    FAIL "$id: the resolver wrote a .passphrase on a trip that had none"
+  elif [ "$rc2" -ne 0 ] || [ "$got" != "$k" ]; then
+    FAIL "$id: CONTROL — with a key in place the resolver read rc=$rc2 and did not return that key, so the refusal above is no measurement"
+  else
+    PASS "$id: the resolver refuses a trip with no readable key and the variable unset, writes no key, and reads one back once it is there"
+  fi
+}
+rv46_assert "RV46"
+rv46s_assert() { # <id>
+  local id="$1" fn body gen="" call="" nfn=0 names
+  names="$(sed -n 's/^\([a-z_][a-z0-9_]*\)() {.*/\1/p' "$SELF_PUBLISH")"
+  for fn in $names; do
+    body="$(declare -f "$fn" 2>/dev/null)" || continue
+    nfn=$((nfn+1))
+    body="${body#*\{}"
+    case "$body" in *gen_passphrase*|*write_passphrase_file*) gen="$gen$fn " ;; esac
+    case "$body" in *ensure_first_key*) call="$call$fn " ;; esac
+  done
+  if [ "$nfn" -lt 100 ]; then
+    FAIL "$id: read $nfn function(s) from $SELF_PUBLISH, below the floor of 100 — the scan has no subject. VERDICT WITHHELD"
+  elif [ "$gen" != "ensure_first_key cmd_rotate " ]; then
+    FAIL "$id: the functions that generate or write a key are '${gen% }', want exactly ensure_first_key and cmd_rotate"
+  elif [ "$call" != "cmd_publish " ]; then
+    FAIL "$id: the first-key step is called by '${call% }', want cmd_publish alone"
+  else
+    PASS "$id: over $nfn functions only ensure_first_key and cmd_rotate generate or write a key, and only cmd_publish calls ensure_first_key — no path through update reaches generation"
+  fi
+}
+rv46s_assert "RV46s"
+
 # ── RV28-rotate — RV28's twin. A clone that lost its record, on a rewound non-empty site: rotate refuses
 # naming the record, before anything is written.
 rv28r_assert() { # <id>
@@ -14318,6 +14459,14 @@ md_flips cmd_rotate "RV34-rotate" rv34_assert "RV34-rotate" rotate
 md_flips cmd_update "RV34-update" rv34_assert "RV34-update" update
 for rv_b in rewound-after-read head-moved; do md_flips cmd_rotate "RV35-$rv_b" rv35_assert "RV35-$rv_b" "$rv_b"; done
 md_flips require_current_site_record "RV28-rotate" rv28r_assert "RV28-rotate"
+for rv_b in absent plaintext unreadable dangling; do md_flips cmd_update "RV37-$rv_b" rv37_assert "RV37-$rv_b" "$rv_b"; done
+md_flips require_key_for_update "RV37-fn" rv37_assert "RV37-fn" absent
+md_flips cmd_update "RV37c" rv37c_assert "RV37c"
+md_flips cmd_update "RV37s" rv37s_assert "RV37s"
+md_flips cmd_publish "RV38" rv38_assert "RV38"
+md_flips ensure_first_key "RV38-fn" rv38_assert "RV38-fn"
+md_flips get_passphrase "RV46" rv46_assert "RV46"
+md_flips ensure_first_key "RV46s" rv46s_assert "RV46s"
 # RV25 and RV26 are registered against the command they drive: the fetch and the rewind guard they
 # answer to are proven by mutation. RV27 is registered against the function it grades.
 for rv_c in rotate update; do md_flips cmd_update "RV25-$rv_c" rv25_assert "RV25-$rv_c" "$rv_c"; done
