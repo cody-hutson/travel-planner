@@ -14,10 +14,18 @@ by invitation only.
 
 - **Commit with a GitHub no-reply email, not a personal one.** Turn on
   *Settings → Emails → Keep my email address private*, then set your repo identity to the
-  `…@users.noreply.github.com` address (`git config user.email`). A CI gate
+  `…@users.noreply.github.com` address (`git config user.email`);
+  `scripts/check-identity-form.sh <address>` exits 0 for an address in that form. A CI gate
   (`.github/workflows/depersonalization.yml`) blocks personal email addresses and OS
   user-home paths from entering the repo — in file content, in commit messages, and in
-  commit author/committer identity.
+  commit author/committer identity. Its check 4 refuses any commit whose author or committer
+  address is outside the form, with one exception, the committer `noreply@github.com`, exactly,
+  which the host writes on what it merges and on Dependabot's commits. Check 4 cannot see history
+  before its first run, a commit that reaches neither a pull request nor a push to `main`, a
+  committer set by hand to the host's address, a merge the host makes until it has landed, or
+  whose address it is. Nor can it see a pull request that edits the rule it applies, a commit on
+  a pushed branch, which is public before the gate reads it, or an identity in a commit trailer
+  such as `Co-authored-by`, which no check reads but check 3's list of personal mail providers.
 - **No personal data in examples.** The worked examples under `examples/` are sanitized and
   illustrative (fixture names, representative bookings). Keep your own trip data in your data
   folder — the one `~/.travel-planner/data-root` names (`CLAUDE.md` § *Resolving a trip*) — and
