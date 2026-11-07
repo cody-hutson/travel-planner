@@ -216,6 +216,9 @@
 #        prompt declares it in a frontmatter block or an Output heading — is not named in
 #        that agent's roster row
 #     J2 a roster row joins to a writer id that no § 1.1 W cell names
+#     J3 /trip research's agent key: the set derived from § 1.1 differs from the pin, a
+#        researched class joins no row other than the declared residual, an admitted row's
+#        Agent cell is not its writer id, or § research's text stops stating the derivation
 #   G   controls: must-NOT-fire arms first, the two live differential arms, one must-fire
 #       arm per emittable id, the grammar control, the derivation mutation pair, and GZV —
 #       the ZERO-VERB world, which exercises the collapse argument above and is the only
@@ -3782,7 +3785,7 @@ picker_check() {
 #
 # WHAT "NAMED" MEANS. A file is named in a row when it is the whole content of a code span in
 # that row's `Output File` cell. Prose mentions do not count — the roster renders every path
-# it names as a code span, and `/trip research`'s key filter counts paths the same way.
+# it names as a code span.
 #
 # ONE DIRECTION, BY DESIGN. This group asserts expected ⊆ named. It does not assert the
 # converse: the Enrichment row names `trip-context.md`, whose § 1.1 W cell is the
@@ -3813,14 +3816,31 @@ picker_check() {
 # with no `writer:` is attributed to the prompt, which is J1. Each finding names the list form.
 # GJ0 plants the list form as a near miss; GJ6 and GJ7 build the two failing shapes.
 #
-# TWO READERS OF ONE CELL. `skills/trip/SKILL.md` § *research* derives `/trip research`'s agent
-# key from this same `Output File` cell, admitting a row only when it names exactly one path
-# under `outputs/`. This group makes that cell a complete write list, so its own remedy — name
-# the file — can take a spoke out of that key, and nothing here observes the key set. J1's
-# finding names that coupling whenever the row it flags names exactly one `outputs/` path, so
-# the key is settled in the same change; arm GJ9 holds that, both ways. Deriving the key from
-# § 1.1 rather than from a count of paths is the structural fix, and it is outside this group.
-# Declared residual.
+# THE RESEARCH KEY, J3. `skills/trip/SKILL.md` § *research* derives `/trip research`'s agent key
+# from the join this group builds: a row is admitted when its prompt's own writer id stands in the
+# W cell of a § 1.1 class whose Prov is `researched` and whose L is `accumulate-append`. It reads no
+# `Output File` cell, so that cell keeps the one meaning this group gives it, and naming a further
+# file there leaves the spoke in the key. J3 re-derives the set and compares it with RJ_KEY_PIN.
+#
+#   THE PIN AND ITS RESIDUAL ARE THE GROUP'S HELD MEMBERS, AND THAT IS THEIR JOB. The verb's set is
+#   derived, but a derivation compared with itself cannot fail: remove a spoke's row, its class or
+#   its provenance and the derived set simply shrinks, with J0, J1 and J2 green. A spoke leaving the
+#   key, or one joining it, therefore edits RJ_KEY_PIN in the same change.
+#   RJ_KEY_RESIDUAL is the same kind of value: the `researched` classes that join no row. C18 is the
+#   one, since its W cell names no writer, and the comparison runs both ways, so a declaration cannot
+#   outlive the class's position.
+#
+#   THE AGENT CELL IS THE WRITER ID, FOR EVERY ADMITTED ROW. The verb and `/trip status` read the set
+#   from § 1.1's W cells and the roster's Agent cells, and open no prompt to learn an id, because
+#   reading all of them to dispatch one spoke is the cost this equality avoids. J3 holds it. A row
+#   whose Agent cell reads otherwise is a finding, and it could not be typed as one token either.
+#
+#   § RESEARCH'S TEXT IS READ, AND ONLY FOR THIS. J3 reads the section and requires the derivation's
+#   anchors in it and the retired count absent, so the rule cannot go back to counting paths with
+#   this group green. That is a reading of tokens. WHAT J3 DOES NOT ESTABLISH: that an agent running
+#   the verb follows the sentence. A tree of prompts cannot show that; a live `/trip research` run
+#   can. The L column filters and a new `researched` class that does not accumulate stays out of the
+#   key with no finding, which is correct, since the verb only appends. Declared residual.
 #
 # PORTABILITY. No awk (so mawk and gawk cannot disagree), no bash-4-only syntax, and every
 # character set is spelled out rather than written as a range, because a range is resolved
@@ -3834,6 +3854,9 @@ RJ_OUTDIR='outputs/'
 RJ_HEAD_OUT='### Output: '
 RJ_HEAD_FILE='### File: '
 RJ_HEAD_PRE='### Pre-Work Output '
+RJ_KEY_PIN='activities food nightlife scheduling transport'
+RJ_KEY_RESIDUAL='C18'
+RJ_KEY_SKILL='skills/trip/SKILL.md'
 
 # rj_trimv <var> <s> — <s> with leading and trailing whitespace removed, into <var>. Fork-free:
 # every helper below writes a variable rather than printing, because a command substitution per
@@ -3908,7 +3931,7 @@ rj_headv() {
 roster_write_check() {
   local root="$1" md arch lineno=0 line t depth=0 first
   md="$root/CLAUDE.md"; arch="$root/$RJ_ARCH_REL"
-  local -a R_AGENT=() R_PROMPT=() R_OFILE=() R_LINE=() R_ID=() C_N=() C_CLASS=() C_W=() C_TOK=()
+  local -a R_AGENT=() R_PROMPT=() R_OFILE=() R_LINE=() R_ID=() C_N=() C_CLASS=() C_W=() C_TOK=() C_L=() C_PROV=()
   local anchors=0 anchor_line=0 degraded=0 rows=0 classes=0 declared='' heads=0 i j k near=''
 
   # ── 1. The roster. Anchored on its own header row, matched structurally and only at
@@ -4008,6 +4031,8 @@ roster_write_check() {
       cw="${CC[3]//\*\*/}"; cw="${cw//\`/}"; rj_trimv cw "$cw"
       rj_tokensv ctok "$cw"
       C_N+=("$cn"); C_CLASS+=("$cl"); C_W+=("$cw"); C_TOK+=("$ctok")
+      cl="${CC[4]//\`/}"; cl="${cl//\*\*/}"; rj_trimv cl "$cl"; C_L+=("$cl")
+      cl="${CC[5]//\`/}"; cl="${cl//\*\*/}"; rj_trimv cl "$cl"; C_PROV+=("$cl")
     done < "$arch"
     classes=${#C_N[@]}
     if [ "$heads" -ne 1 ]; then
@@ -4107,8 +4132,7 @@ roster_write_check() {
   for (( i=0; i<rows; i++ )); do
     [ -n "${R_ID[$i]}" ] || continue
     rj_spansv named "${R_OFILE[$i]}"
-    local want='' hits=0 nout=0 sn hint
-    while IFS= read -r sn; do case "$sn" in "$RJ_OUTDIR"*) nout=$((nout+1)) ;; esac; done <<< "$named"
+    local want='' hits=0 hint
     for (( j=0; j<classes; j++ )); do
       case "${C_TOK[$j]}" in *" ${R_ID[$i]} "*) ;; *) continue ;; esac
       hits=$((hits+1))
@@ -4145,12 +4169,13 @@ roster_write_check() {
       case $'\n'"$named" in *$'\n'"$pth"$'\n'*) continue ;; esac
       hint=''
       case "$srcs" in *'in a block with no writer'*) hint="$hint. If that block quotes another agent's artifact rather than declaring this one's, it carries its writer in list form, writer: [<id>], and is then not read as this agent's" ;; esac
-      [ "$nout" -eq 1 ] && hint="$hint. This row names exactly one path under outputs/, and that is the rule /trip research's agent key admits a spoke by (skills/trip/SKILL.md § research): naming a second path takes this agent out of that key, so settle the key in the same change"
       printf 'FINDING J1 CLAUDE.md:%s the roster row "%s" does not name "%s", which that agent writes (%s) — the Output File cell names a file only as the whole content of a code span%s\n' "${R_LINE[$i]}" "${R_AGENT[$i]}" "$pth" "$srcs" "$hint"
     done <<< "$want"
   done
 
   printf 'RJUNJOINED%s\n' "${unjoined:- none}"
+  for (( i=0; i<rows; i++ )); do printf 'RJROW %s\t%s\n' "${R_AGENT[$i]}" "${R_ID[$i]}"; done
+  for (( j=0; j<classes; j++ )); do printf 'RJCLASS %s\t%s\t%s\t%s\n' "${C_N[$j]}" "${C_W[$j]}" "${C_L[$j]}" "${C_PROV[$j]}"; done
   printf 'COUNT J_ROWS %d\n' "$rows"
   printf 'COUNT J_CLASSES %d\n' "$classes"
   printf 'COUNT J_DECLARED %s\n' "${declared:-0}"
@@ -4221,6 +4246,121 @@ rj_assert_join() {
     FAIL "J2: ${RJ_N2} roster row(s) join to a writer id that no § 1.1 W cell names — their § 1.1 limb is empty rather than checked"; show "$out" 'J2'
   else
     PASS "J2: every one of the ${RJ_ROWS} roster row(s) joins to § 1.1 — each row's prompt declares one writer id, and at least one § 1.1 W cell names it"
+  fi
+}
+
+# research_key_check <root> — the subject of J3. It reads roster_write_check's census, so the join
+# has one reader, and it reads no Output File cell. Where the reader cannot be trusted it stops and
+# says so: K_J0 is non-zero, and J3 withholds its verdict as J1 and J2 do. Emits FINDING J3 lines,
+# the derived set on an RJKEYSET line, and the COUNT lines the assertion reads.
+research_key_check() {
+  local root="$1" out line n w l p rest i
+  local -a KA=() KI=() KC=() KW=() KL=()
+  out="$(roster_write_check "$root" 2>/dev/null)"
+  local rows j0
+  rows="$(getcount "$out" J_ROWS)"
+  [ -n "$rows" ] || return 0
+  j0="$(grep -c '^FINDING J0 ' <<<"$out")"
+  printf 'COUNT K_ROWS %d\nCOUNT K_J0 %d\n' "$rows" "$j0"
+  [ "$j0" -eq 0 ] || return 0
+  while IFS= read -r line; do
+    case "$line" in
+      'RJROW '*)
+        rest="${line#RJROW }"; KA+=("${rest%%$'\t'*}"); KI+=("${rest#*$'\t'}") ;;
+      'RJCLASS '*)
+        rest="${line#RJCLASS }"; n="${rest%%$'\t'*}"; rest="${rest#*$'\t'}"
+        w="${rest%%$'\t'*}"; rest="${rest#*$'\t'}"; l="${rest%%$'\t'*}"; p="${rest#*$'\t'}"
+        [ "$p" = 'researched' ] || continue
+        rj_tokensv w "$w"
+        KC+=("$n"); KW+=("$w"); KL+=("$l") ;;
+    esac
+  done <<<"$out"
+
+  # The join: a class to the rows its W cell names, and a row to the classes that admit it.
+  local unj='' tok c k joined
+  local -a KT=()
+  for (( k=0; k<${#KC[@]}; k++ )); do
+    joined=0
+    for (( i=0; i<${#KA[@]}; i++ )); do
+      case "${KW[$k]}" in *" ${KI[$i]} "*) ;; *) continue ;; esac
+      joined=1
+      [ "${KL[$k]}" = 'accumulate-append' ] || continue
+      tok="$(lower "${KA[$i]}")"
+      in_list "$tok" "${KT[@]+"${KT[@]}"}" || KT+=("$tok")
+      [ "$tok" = "${KI[$i]}" ] || printf 'FINDING J3 the roster row "%s" is admitted to the /trip research key, and its Agent cell case-folds to "%s" where its prompt declares writer id "%s" — the verb and /trip status read the set from the Agent cells, so the two must be equal, and a key is one token\n' "${KA[$i]}" "$tok" "${KI[$i]}"
+    done
+    [ "$joined" -eq 1 ] || unj="${unj:+$unj }C${KC[$k]}"
+  done
+
+  # The set against the pin, both ways. The tokens stay an array, because an Agent cell can carry
+  # a space. Sorted under C for the message, so it reads no locale.
+  local sorted='' m
+  local -a KPIN=()
+  for m in $RJ_KEY_PIN; do KPIN+=("$m"); done
+  [ "${#KT[@]}" -eq 0 ] || { sorted="$(printf '%s\n' "${KT[@]}" | LC_ALL=C sort)"; sorted="${sorted//$'\n'/ }"; }
+  for m in "${KPIN[@]}"; do
+    in_list "$m" "${KT[@]+"${KT[@]}"}" || printf 'FINDING J3 the spoke "%s" has left the /trip research key: the set derived from § 1.1 reads "%s" and RJ_KEY_PIN reads "%s". Its row, its prompt id, its class, its researched provenance or its accumulate-append lifecycle changed. If it is meant to leave, edit RJ_KEY_PIN in the same change\n' "$m" "$sorted" "$RJ_KEY_PIN"
+  done
+  for m in "${KT[@]+"${KT[@]}"}"; do
+    in_list "$m" "${KPIN[@]}" || printf 'FINDING J3 "%s" has joined the /trip research key: the set derived from § 1.1 reads "%s" and RJ_KEY_PIN reads "%s". If it is a research spoke, edit RJ_KEY_PIN in the same change; if it is not, its class is not researched\n' "$m" "$sorted" "$RJ_KEY_PIN"
+  done
+
+  # The researched classes that join no row, against the declared residual, both ways.
+  for c in $unj; do
+    case " $RJ_KEY_RESIDUAL " in *" $c "*) ;; *) printf 'FINDING J3 § 1.1 %s is researched, and its W cell names no roster writer — a class with no spoke behind it stands outside the key unseen. Name its writer, or declare it in RJ_KEY_RESIDUAL with the reason it has none\n' "$c" ;; esac
+  done
+  for c in $RJ_KEY_RESIDUAL; do
+    case " $unj " in *" $c "*) ;; *) printf 'FINDING J3 § 1.1 %s is declared in RJ_KEY_RESIDUAL as a researched class that joins no row, and it is not one now — it gained a writer, stopped being researched, or is gone. Remove the declaration, and settle what reference/schemas/targeted-research.md says of it\n' "$c" ;; esac
+  done
+
+  # The verb's own text. Newlines become spaces, so a phrase survives the file's line wrap.
+  local sk="$root/$RJ_KEY_SKILL" inr=0 text=''
+  if [ ! -r "$sk" ]; then
+    printf 'FINDING J3 %s is absent or unreadable, so whether § research still states this derivation is UNMEASURED\n' "$RJ_KEY_SKILL"
+  else
+    while IFS= read -r line || [ -n "$line" ]; do
+      case "$line" in
+        '## research') inr=1; continue ;;
+        '## '*) [ "$inr" -eq 0 ] || break ;;
+      esac
+      [ "$inr" -eq 0 ] || text="$text$line "
+    done < "$sk"
+    if [ -z "$text" ]; then
+      printf 'FINDING J3 %s carries no "## research" section at column 0, so whether it still states this derivation is UNMEASURED\n' "$RJ_KEY_SKILL"
+    else
+      for m in 'reference/data-architecture.md` § 1.1' '`researched`' '`accumulate-append`' '`writer:` id'; do
+        case "$text" in *"$m"*) ;; *) printf 'FINDING J3 %s § research does not carry "%s", so the rule it states is no longer the one this group computes\n' "$RJ_KEY_SKILL" "$m" ;; esac
+      done
+      for m in 'exactly one path' '§ *Output Versioning*'; do
+        case "$text" in *"$m"*) printf 'FINDING J3 %s § research carries "%s", the source the key was moved off: a spoke named on a second path, or an edit to that exception set, would leave the key with this group green\n' "$RJ_KEY_SKILL" "$m" ;; esac
+      done
+    fi
+  fi
+  printf 'COUNT K_RESEARCHED %d\nCOUNT K_ADMITTED %d\n' "${#KC[@]}" "${#KT[@]}"
+  printf 'RJKEYSET %s\n' "$sorted"
+  printf 'RJKEYUNJOINED %s\n' "${unj:-none}"
+  return 0
+}
+
+# rj_assert_key <root> — one verdict, in the ladder J1 and J2 use.
+rj_assert_key() {
+  local out rows j0 res adm n3
+  out="$(research_key_check "$1" 2>/dev/null)"
+  rows="$(getcount "$out" K_ROWS)"; j0="$(getcount "$out" K_J0)"
+  res="$(getcount "$out" K_RESEARCHED)"; adm="$(getcount "$out" K_ADMITTED)"
+  n3="$(grep -c '^FINDING J3 ' <<<"$out")"
+  if [ -z "$rows" ]; then
+    FAIL "J3: NO SUBJECT — the research-key reader emitted no census, so no key set was derived"
+  elif [ "${j0:-0}" -ne 0 ]; then
+    FAIL "J3: VERDICT WITHHELD — J0 did not pass, so the rows and classes the key is derived from may be a partial population. Resolve J0 first"
+  elif [ "${res:-0}" -eq 0 ]; then
+    FAIL "J3: VACUITY — § 1.1 yielded no researched class, so no key can be derived. Prov is read from the table's fifth cell, so a reordered table lands here"
+  elif [ "${adm:-0}" -eq 0 ] && [ "$n3" -eq 0 ]; then
+    FAIL "J3: VACUITY — no row was admitted and nothing was named, which the pin should have made impossible"
+  elif [ "$n3" -ne 0 ]; then
+    FAIL "J3: ${n3} finding(s) on /trip research's agent key — the verb would dispatch a different set from the one it declares, or could not read its own"; show "$out" 'J3'
+  else
+    PASS "J3: /trip research's agent key derives from § 1.1 to the pinned set — '$(sed -n 's/^RJKEYSET //p' <<<"$out")' — from ${res} researched class(es) across ${rows} roster row(s), with $(sed -n 's/^RJKEYUNJOINED //p' <<<"$out") the only researched class that joins no row; every admitted row's Agent cell is its writer id, and § research states this derivation and not the retired count"
   fi
 }
 
@@ -5875,17 +6015,19 @@ else
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
-# Group J — every file an agent writes is named in its agent-roster row. The reader,
-# roster_write_check, and its three one-verdict assertions are defined beside the other
-# checkers; this is where they report. Its controls are group GJ, beside the other
-# control blocks, and its assertions are registered with md_flips at the end of group MD.
+# Group J — every file an agent writes is named in its agent-roster row, and /trip research's
+# key is the set its join yields. The reader, roster_write_check, its three one-verdict
+# assertions and J3's research_key_check and rj_assert_key are defined beside the other
+# checkers; this is where they report. Its controls are group GJ, beside the other control
+# blocks, and its assertions are registered with md_flips at the end of group MD.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
-echo "── Group J — every file an agent writes is named in its roster row, as § 1.1's writer column and the agent's own prompt declare it."
-surface J0 J1 J2 >/dev/null
+echo "── Group J — every file an agent writes is named in its roster row, as § 1.1's writer column and the agent's own prompt declare it, and /trip research's key is the set that join yields."
+surface J0 J1 J2 J3 >/dev/null
 rj_assert_population "$ROOT"
 rj_assert_named "$ROOT"
 rj_assert_join "$ROOT"
+rj_assert_key "$ROOT"
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group G — controls. Fixture-driven: every fixture path below is rooted at $WORK, so no
@@ -7212,10 +7354,10 @@ fi
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group GJ — controls for group J. Every fixture is rooted at $WORK, so group Z's claim
 # covers them. The MUST-FIRE worlds are BUILT by gj_world from a defect switch — never
-# patched — and each arm checks that its defect is present before it reads a verdict. Two
-# arms use a byte copy of the live inputs, because what they assert is about those inputs:
-# GJL removes one span from the Enrichment row, and GJD adds one agent, one prompt and one
-# class. Each asserts that its edit landed before it reads anything.
+# patched — and each arm checks that its defect is present before it reads a verdict. The arms
+# below that assert something about the live inputs use a byte copy of them: GJL removes one
+# span from the Enrichment row, GJD adds one agent, one prompt and one class, and the GJK arms
+# move J3's inputs. Each asserts that its edit landed before it reads anything.
 # ═════════════════════════════════════════════════════════════════════════════════
 
 # gj_world <dir> <defect> — two agents, their prompts, and a § 1.1 table carrying every writer
@@ -7228,13 +7370,11 @@ fi
 # list form. The prompts carry the Output headings the reader must read — a bare Pre-Work file
 # name, and a path followed by a parenthetical — beside the ones it must not: a heading with
 # no colon, a fenced heading and an indented one. Each is a shape a naive reader gets wrong.
-# Five more switches build on the conforming world. Four each append one file that a single
-# branch of the reader alone declares: a File heading, a bare Pre-Work heading, and a writer
-# list naming the prompt's own id first, with and without a space after its comma. The fifth
-# adds a third agent, its class (the heading's count moving to 8 with it) and its prompt, and
-# that agent's row names no outputs/ path. Their arms follow GJ9. Two more edge the header's agent
-# cell, nbsphead with U+00A0 before the word, after it and among ASCII spaces, and widehead with
-# U+3000 after it; arm GJU reads them.
+# Four more switches build on the conforming world. Each appends one file that a single branch of
+# the reader alone declares: a File heading, a bare Pre-Work heading, and a writer list naming the
+# prompt's own id first, with and without a space after its comma. Their arms follow GJ8. Two more
+# edge the header's agent cell, nbsphead with U+00A0 before the word, after it and among ASCII
+# spaces, and widehead with U+3000 after it; arm GJU reads them.
 gj_world() {
   local d="$1" dft="$2" hdr rowa rowb cnt=7 bid='zz-beta' qlist='[zz-alpha, zz-gamma]' pend
   mkdir -p "$d/agents" "$d/reference"
@@ -7247,7 +7387,6 @@ gj_world() {
   rowb='| Zz Beta | `agents/zz-beta.md` | `outputs/zz-b.md`, `outputs/zz-b-sections.md` (its sections), `outputs/zz-shared.md` (setup seed only) | always |'
   case "$dft" in
     rowmiss)    rowb='| Zz Beta | `agents/zz-beta.md` | `outputs/zz-b.md`, `outputs/zz-b-sections.md` (its sections) | always |' ;;
-    onespan)    rowb='| Zz Beta | `agents/zz-beta.md` | `outputs/zz-b.md` | always |' ;;
     prose)      rowa='| Zz Alpha | `agents/zz-alpha.md` | outputs/zz-a.md, its preserved `outputs/zz-a-v<N>.md`, `outputs/zz-shared.md` (primary writer), `outputs/zz-a-status.md`'"$pend"' | always |' ;;
     badrow)     rowb='| Zz Beta | `agents/zz-beta.md` | `outputs/zz-b.md` | always | extra |' ;;
     badprompt)  rowb='| Zz Beta | agents/zz-beta.md | `outputs/zz-b.md`, `outputs/zz-b-sections.md`, `outputs/zz-shared.md` | always |' ;;
@@ -7255,7 +7394,6 @@ gj_world() {
     countdrift) cnt=8 ;;
     noclasses)  cnt=0 ;;
     joinmiss)   bid='zz-gamma'; qlist='[zz-alpha, zz-delta]' ;;
-    zerospan)   cnt=8 ;;
   esac
   {
     printf '# Fixture charter\n\nA fenced example of the roster, never a second anchor:\n\n'
@@ -7263,7 +7401,6 @@ gj_world() {
     printf '| Zz Example | `agents/zz-example.md` | `outputs/zz-example.md` | never |\n```\n\n'
     printf '**Agent roster:**\n\n%s\n|-------|------------|-------------|-----------------|\n' "$hdr"
     [ "$dft" = 'norows' ] || printf '%s\n%s\n' "$rowa" "$rowb"
-    [ "$dft" = 'zerospan' ] && printf '| Zz Zero | `agents/zz-zero.md` | `trip-context.md` (the block it seeds) | always |\n'
     printf '\nAfter the table.\n'
     [ "$dft" = 'anchor2' ] && printf '\n| Agent | Prompt File | Output File | When to dispatch |\n|---|---|---|---|\n| Zz Gamma | `agents/zz-alpha.md` | `outputs/zz-a.md` | never |\n'
   } > "$d/CLAUDE.md"
@@ -7284,7 +7421,6 @@ gj_world() {
       printf '| 5 | `outputs/<slug>.md` — targeted-research output | the spoke that re-ran | `accumulate-append` | `researched` | `internal` | Venue |\n'
       printf '| 6 | `outputs/zz-legacy.md` | zz-alpha-legacy | `output` | `derived` | `output` | Venue |\n'
       printf '| 7 | `outputs/zz-pending.md` | zz-alpha | `rebuilt-each-synthesis` | `derived` | `internal` | Venue |\n'
-      [ "$dft" = 'zerospan' ] && printf '| 8 | `outputs/zz-z.md` | zz-zero | `rebuilt-each-synthesis` | `derived` | `internal` | Venue |\n'
     fi
     printf '\n### 1.2 The next section\n\n| 8 | `outputs/zz-outside.md` | zz-alpha | x | x | x | x |\n'
   } > "$d/reference/data-architecture.md"
@@ -7310,7 +7446,6 @@ gj_world() {
     printf '\n### Output: outputs/zz-shared.md (its sections)\n\nThe setup seed this role writes once.\n'
     [ "$dft" = 'idambig' ] && printf '\n```yaml\n---\nartifact: outputs/zz-b.md\nwriter: zz-alpha\n---\n```\n'
   } > "$d/agents/zz-beta.md"
-  [ "$dft" = 'zerospan' ] && printf '## Output Format\n\n```yaml\n---\nartifact: outputs/zz-z.md\nwriter: zz-zero\n---\n```\n' > "$d/agents/zz-zero.md"
   return 0
 }
 
@@ -7332,7 +7467,7 @@ gj_tally() {
 echo
 echo "── Group GJ — control arms for group J: shown failing on each defect, passing on a correct world, and deriving its population."
 GJ="$WORK/gj"; mkdir -p "$GJ"
-for gjd in ok rowmiss promptmiss prose joinmiss anchor0 anchor2 badrow badprompt idambig countdrift nosection badclassrow norows noclasses dangling quotebare quotenowriter headmiss onespan headfile headpre listfirst listnospace zerospan; do
+for gjd in ok rowmiss promptmiss prose joinmiss anchor0 anchor2 badrow badprompt idambig countdrift nosection badclassrow norows noclasses dangling quotebare quotenowriter headmiss headfile headpre listfirst listnospace; do
   gj_world "$GJ/$gjd" "$gjd"
 done
 
@@ -7419,32 +7554,7 @@ gj_fire J1 quotenowriter '"Zz Alpha" does not name "outputs/zz-b.md".*in a block
 # and no § 1.1 class, is expected in its agent's row; the finding names the heading as its source.
 gj_fire J1 headmiss '"Zz Alpha" does not name "outputs/zz-a3.md".*the Output heading agents/zz-alpha.md:[0-9]+' GJ8 'a row omits a file its prompt declares only in an Output heading'
 
-# GJ9 — J1 NAMES THE /trip research KEY COUPLING, AND ONLY WHERE IT HOLDS. A row naming exactly one
-# outputs/ path is what that verb's agent key admits a spoke by, so J1's remedy would take the spoke
-# out of the key: each finding on such a row says so. On a row naming two such paths it must not.
-GJR1="$(roster_write_check "$GJ/onespan")"; gj_counts "$GJR1"
-GJR1_J1="$GJ_N1"; GJR1_OTHER=$(( GJ_N0 + GJ_N2 ))
-GJR1_NOTE="$(grep -c -E '^FINDING J1 .*"Zz Beta" .*exactly one path under outputs/.*/trip research' <<<"$GJR1")"
-GJR2="$(roster_write_check "$GJ/rowmiss")"; gj_counts "$GJR2"
-GJR2_J1="$GJ_N1"
-GJR2_NOTE="$(grep -c -E '^FINDING J1 .*/trip research' <<<"$GJR2")"
-GJR_VT="$(gj_tally rj_assert_named "$GJ/onespan")"
-GJR_INT=$(( $(grep -c -F '| Zz Beta | `agents/zz-beta.md` | `outputs/zz-b.md` | always |' "$GJ/onespan/CLAUDE.md") \
-          + $(grep -c -F '| Zz Beta | `agents/zz-beta.md` | `outputs/zz-b.md`, `outputs/zz-b-sections.md` (its sections) | always |' "$GJ/rowmiss/CLAUDE.md") ))
-arm J1
-if [ "$GJR_INT" -ne 2 ]; then
-  FAIL "GJ9: fixture integrity — the one-path row and the two-path row were not both built, so neither direction below is a measurement"
-elif [ "$GJR_VT" != '0 1' ] || [ "$GJR1_J1" -ne 2 ] || [ "$GJR1_OTHER" -ne 0 ]; then
-  FAIL "GJ9: MUST FIRE — over the one-path row J1 raised ${GJR1_J1} finding(s) where 2 are required and other ids ${GJR1_OTHER}, and the J1 assertion rendered '${GJR_VT}' where '0 1' is required"; show "$GJR1" 'J0|J1|J2'
-elif [ "$GJR1_NOTE" -ne 2 ]; then
-  FAIL "GJ9: MUST FIRE — ${GJR1_NOTE} of the 2 J1 findings on a row naming exactly one outputs/ path name the /trip research key coupling; each must, because naming the file takes that spoke out of the key"; show "$GJR1" 'J1'
-elif [ "$GJR2_J1" -ne 1 ] || [ "$GJR2_NOTE" -ne 0 ]; then
-  FAIL "GJ9: MUST NOT FIRE — over a row naming two outputs/ paths J1 raised ${GJR2_J1} finding(s), ${GJR2_NOTE} of them naming the /trip research key coupling; that row is outside the key, so the note would mislead"; show "$GJR2" 'J1'
-else
-  PASS "GJ9: J1 NAMES THE RESEARCH-KEY COUPLING WHERE IT HOLDS — over a row naming exactly one outputs/ path, both J1 findings name the one-path rule /trip research's agent key admits a spoke by, and the J1 assertion renders one FAIL and no PASS; over a row naming two such paths, its one J1 finding does not"
-fi
-
-# ── ONE MUST-FIRE WORLD PER READER BRANCH. GJ0 to GJ9 were built one per ratified fix, so two of
+# ── ONE MUST-FIRE WORLD PER READER BRANCH. GJ0 to GJ8 were built one per ratified fix, so two of
 # the heading limb's three forms and the writer list's split had no world in which removing the
 # branch leaves a written file unexpected. The Pre-Work heading stands only in GJ0's conforming
 # world, on a file other sources already expect; the File heading stands there only indented,
@@ -7452,8 +7562,7 @@ fi
 # names it last, after a comma and a space. Each world below declares one file by one branch
 # and nowhere else. Its arm first reads that fact back from the built files, then requires
 # exactly one J1 finding naming the row, the file and that one source — the source in its
-# parentheses, so no second source can ride along. GJN, last, holds the research-key note's
-# zero end.
+# parentheses, so no second source can ride along.
 
 # gj_mentions <world> <literal> -> how many lines of the world's charter, architecture document
 # and prompts name <literal>, so an integrity limb can require that a file is declared on one
@@ -7502,16 +7611,6 @@ GJC_INT="$(grep -c -x -F 'writer: [zz-alpha,zz-beta]' "$GJ/listnospace/agents/zz
 gj_fire_int "$GJC_INT" '1 1 1' 'the writer list line; the artifact line; the lines naming zz-l.md in the world' \
   J1 listnospace '"Zz Alpha" does not name "outputs/zz-l.md", which that agent writes \(the frontmatter agents/zz-alpha.md emits\)' \
   GJC 'the same, its writer list written with no space after the comma, writer: [zz-alpha,zz-beta]'
-
-# GJN — the research-key note's zero end. A third agent's row names no outputs/ path and omits
-# the one file its class and its prompt assign it. J1 names the file, and the finding carries no
-# note: the one-path rule the note states does not hold of a row naming none. The pattern ends
-# with '$', at the last words of J1's own text, so a note appended to the finding moves the end
-# of the line and the match fails; GJ9 holds the note's one-path and two-path cases.
-GJN_INT="$(grep -c -x -F '| Zz Zero | `agents/zz-zero.md` | `trip-context.md` (the block it seeds) | always |' "$GJ/zerospan/CLAUDE.md") $(gj_mentions zerospan 'zz-z.md') $(grep -c -F 'zz-z.md' "$GJ/zerospan/CLAUDE.md")"
-gj_fire_int "$GJN_INT" '1 2 0' 'the row naming no outputs/ path; the lines naming zz-z.md in the world, its class and its prompt; those in the charter' \
-  J1 zerospan '"Zz Zero" does not name "outputs/zz-z.md", which that agent writes \(.* C8; the frontmatter agents/zz-zero.md emits\).* the whole content of a code span$' \
-  GJN 'a row naming no outputs/ path omits the one file its agent writes, and the finding carries no /trip research key note, which holds only of a row naming exactly one'
 
 # GJV — VACUITY and DEGRADATION: an empty roster, an empty class table, an unreadable prompt,
 # and a root carrying neither input. Each assertion renders exactly one FAIL and no PASS.
@@ -7571,11 +7670,11 @@ else
   FAIL "GJU: a roster header cell read differently by locale, or not as specified — U+00A0 world: under C $(grep -c '^FINDING ' <<<"$GJU_NC") finding(s) and $(getcount "$GJU_NC" J_ROWS) row(s), under ${GJU_MB} $(grep -c '^FINDING ' <<<"$GJU_NM") finding(s); U+3000 world: under C $(grep -c '^FINDING ' <<<"$GJU_WC"), under ${GJU_MB} $(grep -c '^FINDING ' <<<"$GJU_WM") (want 0, 0, 1, 1, the U+00A0 world reading as the conforming one does, and each pair identical). First finding: $(grep -h '^FINDING ' <<<"$GJU_NC"$'\n'"$GJU_NM"$'\n'"$GJU_WC"$'\n'"$GJU_WM" | awk 'NR == 1')"
 fi
 
-# gj_live <dir> — a byte copy of the three live inputs this group reads.
+# gj_live <dir> — a byte copy of the four live inputs this group reads.
 gj_live() {
-  mkdir -p "$1/agents" "$1/reference"
+  mkdir -p "$1/agents" "$1/reference" "$1/${RJ_KEY_SKILL%/*}"
   cp "$ROOT/CLAUDE.md" "$1/CLAUDE.md"; cp "$ROOT/$RJ_ARCH_REL" "$1/$RJ_ARCH_REL"
-  cp "$ROOT"/agents/*.md "$1/agents/"
+  cp "$ROOT"/agents/*.md "$1/agents/"; cp "$ROOT/$RJ_KEY_SKILL" "$1/$RJ_KEY_SKILL"
 }
 
 # GJL — MUST FIRE on the live roster: the traveller model is removed from a copy of the
@@ -7621,6 +7720,157 @@ elif [ "$(( GJ_N0 + GJ_N1 + GJ_N2 ))" -ne "$GJD_BN" ]; then
   FAIL "GJD: the added agent changed the finding count ($GJD_BN on the tree, $(( GJ_N0 + GJ_N1 + GJ_N2 )) with the addition) — a conforming addition must raise nothing"; show "$GJD_OUT" 'J0|J1|J2'
 else
   PASS "GJD: DERIVATION — one agent, its prompt and its class added to a copy of the live inputs move the roster rows, the class rows and the expected pairs by exactly 1 each and raise nothing. The population is read from the tree; none of it is held here"
+fi
+
+# ── GJK — controls for J3, each over a byte copy of the live inputs, because what J3 asserts is
+# about those inputs. Each mutation is checked to have landed before any verdict is read, and the
+# arms a spoke's leaving is meant to be invisible to read J0, J1 and J2 as well. Built on the tree,
+# they inherit it: J3 red on the tree turns GJKA and GJKD red too, and J3 is resolved first.
+gk_edit() {  # gk_edit <dir> <file> <sed-script> — one edit to a copy, leaving the number of changed lines in GK_DIFF
+  sed -e "$3" "$1/$2" > "$1/$2.new" && mv "$1/$2.new" "$1/$2"
+  GK_DIFF="$(diff "$ROOT/$2" "$1/$2" | grep -c '^[<>]')"
+}
+# gk_fires <dir> <want-regex> <arm-id> <prose> — J3 fires with a finding matching <want>, its
+# assertion renders one FAIL and no PASS, and group J's own three stay green.
+gk_fires() {
+  local d="$1" want="$2" aid="$3" prose="$4" out hit vt v0 v1 v2
+  out="$(research_key_check "$d")"
+  hit="$(grep -c -E "^FINDING J3 .*$want" <<<"$out")"
+  vt="$(gj_tally rj_assert_key "$d")"; v0="$(gj_tally rj_assert_population "$d")"
+  v1="$(gj_tally rj_assert_named "$d")"; v2="$(gj_tally rj_assert_join "$d")"
+  arm J3
+  if [ "$hit" -lt 1 ]; then
+    FAIL "$aid: MUST FIRE — $prose: no J3 finding matched the defect"; show "$out" 'J3'
+  elif [ "$vt" != '0 1' ]; then
+    FAIL "$aid: MUST FIRE — $prose: the J3 assertion rendered pass/fail '$vt' over the defect, expected '0 1'"
+  elif [ "$v0" != '1 0' ] || [ "$v1" != '1 0' ] || [ "$v2" != '1 0' ]; then
+    FAIL "$aid: $prose was meant to be invisible to J0, J1 and J2, and they rendered '$v0', '$v1' and '$v2' — this arm no longer isolates J3"
+  else
+    PASS "$aid: MUST FIRE — $prose: J3 names the defect and renders one FAIL and no PASS, while J0, J1 and J2 stay green over it"
+  fi
+}
+RKW="$WORK/gk"; mkdir -p "$RKW"
+
+# GJKA — AC2. A second outputs/ path on a spoke's row leaves that spoke in the key. The row is shown
+# to carry two paths first, which is the count the retired rule would have read it out on.
+gj_live "$RKW/a"
+gk_edit "$RKW/a" CLAUDE.md 's/^\(| Food | .*`outputs\/food-list\.md`\)/\1, `outputs\/zz-second.md` (its sections)/'
+GKA_SPANS="$(grep -E '^\| Food \| ' "$RKW/a/CLAUDE.md" | grep -o '`outputs/[^`]*`' | grep -c .)"
+GKA_OUT="$(research_key_check "$RKW/a")"
+GKA_SET="$(sed -n 's/^RJKEYSET //p' <<<"$GKA_OUT")"; GKA_N3="$(grep -c '^FINDING J3 ' <<<"$GKA_OUT")"
+GKA_VT="$(gj_tally rj_assert_key "$RKW/a")"
+arm J3
+if [ "$GK_DIFF" -ne 2 ] || [ "$GKA_SPANS" -ne 2 ]; then
+  FAIL "GJKA: fixture integrity — the Food row in the copy names ${GKA_SPANS} outputs/ path(s) with ${GK_DIFF} changed line(s), where 2 and one replaced line (2 in diff) are built"
+elif [ "$GKA_N3" -ne 0 ] || [ "$GKA_VT" != '1 0' ] || [ "$GKA_SET" != "$RJ_KEY_PIN" ]; then
+  FAIL "GJKA: MUST NOT FIRE — a second outputs/ path on the Food row moved the key: J3 raised ${GKA_N3} finding(s), rendered '${GKA_VT}', and derived '${GKA_SET}'. If J3 is red on the tree, resolve that first"; show "$GKA_OUT" 'J3'
+else
+  PASS "GJKA: MUST NOT FIRE — the Food row names 2 outputs/ paths, and the key still reads '${GKA_SET}'. The retired count would have read that row out; the Output File cell is no input to this derivation"
+fi
+
+# GJKR, GJKP, GJKL — AC3. A spoke leaves the key by each of its three inputs in turn.
+gj_live "$RKW/r"; gk_edit "$RKW/r" CLAUDE.md '/^| Transport | /d'
+gk_int="$GK_DIFF"
+if [ "$gk_int" -ne 1 ]; then arm J3; FAIL "GJKR: fixture integrity — removing the Transport row changed ${gk_int} line(s), where 1 is built"
+else gk_fires "$RKW/r" '"transport" has left' GJKR 'the Transport row removed from the roster'; fi
+gj_live "$RKW/p"; gk_edit "$RKW/p" "$RJ_ARCH_REL" '/^### 1\.1 /,/^### 1\.2 /s/^\(| 6 | `outputs\/food-list\.md` .*\)`researched`/\1`derived`/'
+gk_int="$GK_DIFF"
+if [ "$gk_int" -ne 2 ]; then arm J3; FAIL "GJKP: fixture integrity — flipping C6's provenance changed ${gk_int} diff line(s), where one replaced line (2) is built"
+else gk_fires "$RKW/p" '"food" has left' GJKP 'C6 moved from researched to derived'; fi
+gj_live "$RKW/l"; gk_edit "$RKW/l" "$RJ_ARCH_REL" '/^### 1\.1 /,/^### 1\.2 /s/^\(| 7 | `outputs\/nightlife-list\.md` .*\)`accumulate-append`/\1`rebuilt-each-synthesis`/'
+gk_int="$GK_DIFF"
+if [ "$gk_int" -ne 2 ]; then arm J3; FAIL "GJKL: fixture integrity — flipping C7's lifecycle changed ${gk_int} diff line(s), where one replaced line (2) is built"
+else gk_fires "$RKW/l" '"nightlife" has left' GJKL 'C7 moved from accumulate-append to rebuilt-each-synthesis'; fi
+
+# GJKH — the other direction, and the equality. C20 is the hub's and accumulates: marked researched,
+# it admits a row whose Agent cell is not its id, so the pin and the equality each name it.
+gj_live "$RKW/h"; gk_edit "$RKW/h" "$RJ_ARCH_REL" '/^### 1\.1 /,/^### 1\.2 /s/^\(| 20 | `outputs\/change-summary\.md` .*\)`derived`/\1`researched`/'
+gk_int="$GK_DIFF"
+GKH_OUT="$(research_key_check "$RKW/h")"
+GKH_J="$(grep -c -E '^FINDING J3 "hub planner" has joined' <<<"$GKH_OUT")"; GKH_E="$(grep -c -E '^FINDING J3 the roster row "Hub Planner" is admitted' <<<"$GKH_OUT")"
+GKH_VT="$(gj_tally rj_assert_key "$RKW/h")"
+arm J3
+if [ "$gk_int" -ne 2 ]; then
+  FAIL "GJKH: fixture integrity — flipping C20's provenance changed ${gk_int} diff line(s), where one replaced line (2) is built"
+elif [ "$GKH_J" -ne 1 ] || [ "$GKH_E" -ne 1 ] || [ "$GKH_VT" != '0 1' ]; then
+  FAIL "GJKH: MUST FIRE — with C20 marked researched the pin limb fired ${GKH_J} time(s), the equality limb ${GKH_E}, and the assertion rendered '${GKH_VT}'"; show "$GKH_OUT" 'J3'
+else
+  PASS "GJKH: MUST FIRE — a class of the hub's marked researched admits the Hub Planner row, and J3 names it twice: it joined the key, and its Agent cell is not its writer id"
+fi
+
+# GJKC and GJKN — the declared residual, both ways. C18 leaves the researched classes, so its
+# declaration outlives its ground; a second class joins nothing. C18 gaining a writer reaches the
+# same limb, and J1 fires beside it there, because a writer's row must then name the class's file,
+# so this arm takes the mutation that leaves J1 out of it.
+gj_live "$RKW/c"; gk_edit "$RKW/c" "$RJ_ARCH_REL" '/^### 1\.1 /,/^### 1\.2 /s/^\(| 18 | .*\)`researched`/\1`derived`/'
+gk_int="$GK_DIFF"
+if [ "$gk_int" -ne 2 ]; then arm J3; FAIL "GJKC: fixture integrity — C18's provenance edit changed ${gk_int} diff line(s), where one replaced line (2) is built"
+else gk_fires "$RKW/c" 'C18 is declared in RJ_KEY_RESIDUAL' GJKC "C18 no longer researched, so its declaration has outlived its ground"; fi
+gj_live "$RKW/n"
+gkn="$(getcount "$(roster_write_check "$ROOT")" J_DECLARED)"
+gk_edit "$RKW/n" "$RJ_ARCH_REL" "s/^\(### 1\.1 .*\)(${gkn})\$/\1($((gkn+1)))/
+/^### 1\.1 /,/^### 1\.2 /s/^\(| ${gkn} | .*\)\$/\1\\
+| $((gkn+1)) | \`outputs\/zz-nowriter.md\` | zz-nowriter | \`accumulate-append\` | \`researched\` | \`internal\` | Venue |/"
+gk_int="$GK_DIFF"
+if [ "$gk_int" -ne 3 ]; then arm J3; FAIL "GJKN: fixture integrity — adding a class changed ${gk_int} diff line(s), where a heading replaced (2) and a row added (1) are built"
+else gk_fires "$RKW/n" "C$((gkn+1)) is researched, and its W cell names no roster writer" GJKN 'a second researched class joins no row'; fi
+
+# GJKD — DERIVATION, both arms. A spoke added whole — row, prompt, class — needs no edit to the verb:
+# it reaches the derived set. With the pin as it stands J3 names it; with the pin moved J3 is silent.
+# A guard that failed on any change would pass the red arm and prove nothing, so the green is load-bearing.
+gj_live "$RKW/d"
+gk_edit "$RKW/d" CLAUDE.md 's/^\(| Validator | .*\)$/\1\
+| Zzspoke | `agents\/zz-spoke.md` | `outputs\/zz-spoke.md` | never |/'
+printf '## Output\n\n```yaml\n---\nartifact: outputs/zz-spoke.md\nwriter: zzspoke\n---\n```\n' > "$RKW/d/agents/zz-spoke.md"
+gk_edit "$RKW/d" "$RJ_ARCH_REL" "s/^\(### 1\.1 .*\)(${gkn})\$/\1($((gkn+1)))/
+/^### 1\.1 /,/^### 1\.2 /s/^\(| ${gkn} | .*\)\$/\1\\
+| $((gkn+1)) | \`outputs\/zz-spoke.md\` | zzspoke | \`accumulate-append\` | \`researched\` | \`internal\` | Venue |/"
+GKD_SKILL="$(diff "$ROOT/$RJ_KEY_SKILL" "$RKW/d/$RJ_KEY_SKILL" | grep -c '^[<>]')"
+GKD_RED="$(research_key_check "$RKW/d")"; GKD_RN="$(grep -c '^FINDING J3 "zzspoke" has joined' <<<"$GKD_RED")"; GKD_RALL="$(grep -c '^FINDING J3 ' <<<"$GKD_RED")"
+GKD_GRN="$( RJ_KEY_PIN="$RJ_KEY_PIN zzspoke"; research_key_check "$RKW/d" )"; GKD_GN="$(grep -c '^FINDING J3 ' <<<"$GKD_GRN")"
+GKD_SET="$(sed -n 's/^RJKEYSET //p' <<<"$GKD_GRN")"
+arm J3
+if [ "$GKD_SKILL" -ne 0 ]; then
+  FAIL "GJKD: fixture integrity — the verb file in the copy differs from the tree, so 'no edit to the verb' is not what this arm shows"
+elif [ "$GKD_RN" -ne 1 ] || [ "$GKD_RALL" -ne 1 ]; then
+  FAIL "GJKD: RED ARM — with the pin unmoved J3 raised ${GKD_RALL} finding(s), ${GKD_RN} of them naming the added spoke; 1 and 1 are owed. If J3 is red on the tree, resolve that first"; show "$GKD_RED" 'J3'
+elif [ "$GKD_GN" -ne 0 ] || [ "$GKD_SET" != "$RJ_KEY_PIN zzspoke" ]; then
+  FAIL "GJKD: GREEN ARM — with the pin moved J3 raised ${GKD_GN} finding(s) and derived '${GKD_SET}'"; show "$GKD_GRN" 'J3'
+else
+  PASS "GJKD: DERIVATION, BOTH ARMS — a spoke added whole reaches the derived set with no edit to the verb file; J3 names it while the pin stands and is silent once the pin moves. The verb's set is derived; the pin is what makes a change to it visible"
+fi
+
+# GJKT — the verb's own text, both directions, each one edit to a copy.
+gj_live "$RKW/t1"; gk_edit "$RKW/t1" "$RJ_KEY_SKILL" 's/^\*\*Working out the set opens no prompt\.\*\*/**Admit a row whose Output File cell names exactly one path under outputs\/.** &/'
+gk_d1="$GK_DIFF"; GKT1="$(grep -c -E '^FINDING J3 .*§ research carries "exactly one path"' <<<"$(research_key_check "$RKW/t1")")"
+gj_live "$RKW/t2"; gk_edit "$RKW/t2" "$RJ_KEY_SKILL" '/^## research$/,/^## check$/s/`accumulate-append`/`rebuilt-each-synthesis`/g'
+gk_d2="$GK_DIFF"; GKT2="$(grep -c -E '^FINDING J3 .*§ research does not carry "`accumulate-append`"' <<<"$(research_key_check "$RKW/t2")")"
+GKT_VT1="$(gj_tally rj_assert_key "$RKW/t1")"; GKT_VT2="$(gj_tally rj_assert_key "$RKW/t2")"
+arm J3
+if [ "$gk_d1" -ne 2 ] || [ "$gk_d2" -lt 2 ]; then
+  FAIL "GJKT: fixture integrity — the two edits to the verb's text changed ${gk_d1} and ${gk_d2} diff line(s)"
+elif [ "$GKT1" -ne 1 ] || [ "$GKT_VT1" != '0 1' ]; then
+  FAIL "GJKT: MUST FIRE — the retired count put back into § research raised ${GKT1} matching finding(s) and rendered '${GKT_VT1}'"
+elif [ "$GKT2" -ne 1 ] || [ "$GKT_VT2" != '0 1' ]; then
+  FAIL "GJKT: MUST FIRE — an anchor removed from § research raised ${GKT2} matching finding(s) and rendered '${GKT_VT2}'"
+else
+  PASS "GJKT: MUST FIRE, BOTH WAYS — the retired count put back into § research is named, and so is a derivation anchor taken out of it. This reads tokens, and does not show that an agent follows the sentence"
+fi
+
+# GJKV — VACUITY and DEGRADATION. Each degenerate world renders one FAIL and no PASS: no researched
+# class, a roster with no rows, a class table with no rows, an unreadable prompt, and a root with
+# neither input.
+gj_live "$RKW/v"; gk_edit "$RKW/v" "$RJ_ARCH_REL" '/^### 1\.1 /,/^### 1\.2 /s/`researched`/`derived`/'
+GKV_BAD=''; GKV_N=0
+for gkw in "$RKW/v" "$GJ/norows" "$GJ/noclasses" "$GJ/dangling" "$GJ/empty"; do
+  GKV_N=$((GKV_N+1)); gkt="$(gj_tally rj_assert_key "$gkw")"
+  [ "$gkt" = '0 1' ] || GKV_BAD="$GKV_BAD${gkw##*/}=$gkt "
+done
+arm J3
+if [ -n "$GKV_BAD" ]; then
+  FAIL "GJKV: a degenerate world reached a PASS, or rendered more than one verdict: $GKV_BAD"
+else
+  PASS "GJKV: VACUITY and DEGRADATION — over no researched class, an empty roster, an empty class table, an unreadable prompt and a root with neither input, the J3 assertion renders exactly one FAIL and no PASS (${GKV_N} of ${GKV_N})"
 fi
 
 arm N1
@@ -8231,12 +8481,15 @@ md_flips grant_table_check 'Q0' gq_assert_anchor "$CDIR"
 md_flips grant_table_check 'Q1' gq_assert_rows   "$CDIR"
 md_flips grant_table_check 'Q2' gq_assert_grants "$CDIR"
 
-# ── REGISTERED WITH md_flips — group J's three verdicts. Each assertion calls
-# roster_write_check itself, so removing that function removes the evidence, and each verdict
-# must then report exactly one FAIL and no PASS. Appended after group Q's registrations.
+# ── REGISTERED WITH md_flips — group J's four verdicts. Each assertion calls
+# roster_write_check itself or through research_key_check, so removing that function removes the
+# evidence, and each verdict must then report exactly one FAIL and no PASS. J3 is registered
+# against both. Appended after group Q's registrations.
 md_flips roster_write_check 'J0' rj_assert_population "$ROOT"
 md_flips roster_write_check 'J1' rj_assert_named "$ROOT"
 md_flips roster_write_check 'J2' rj_assert_join "$ROOT"
+md_flips research_key_check 'J3' rj_assert_key "$ROOT"
+md_flips roster_write_check 'J3' rj_assert_key "$ROOT"
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group FZ — every verdict arm in this file must be able to FAIL.

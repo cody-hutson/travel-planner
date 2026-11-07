@@ -64,12 +64,12 @@ This file is the primary session bridge. It captures what trip-context.md does n
 > canonical lifecycle-class tokens and their definitions have one home,
 > `reference/data-architecture.md` § *Lifecycle Classes*, and the satisfaction-layer subsection
 > below cites it rather than defining anything. **The default-and-exception model in the rest of
-> this section is not a duplicate of that home — it is a live input read back by the engine**, in
-> two places: that section's own absence rule derives a class for an artifact its exception set
-> does not name, and `skills/trip/SKILL.md` derives the `/trip research` agent key by filtering
-> the roster to the rows this section leaves in the accumulating default. Deleting or collapsing
-> this prose would break both reads. Where the two overlap, the engine-wide tokens and definitions
-> govern; **editing the exception set below changes what that command dispatches.**
+> this section is not a duplicate of that home — it is a live input read back by the engine**:
+> that section's own absence rule derives a class for an artifact its exception set does not name.
+> Deleting or collapsing this prose would break that read. Where the two overlap, the engine-wide
+> tokens and definitions govern. `/trip research` does not read this section: its agent key comes
+> from `reference/data-architecture.md` § 1.1's `researched` classes, so **editing the exception
+> set below does not change what that command dispatches.**
 
 **Agent outputs accumulate. They do not overwrite.**
 
@@ -165,8 +165,9 @@ a trip is archived — a reopened trip absorbs current state, never a replay.
 > paragraph as a claim that four surfaces parse this section. It sits beside
 > § *Output Versioning* because that section is the corpus's derivation-policy home and carries the
 > sentence this rule qualifies — but **deliberately outside it**, because the exception sets inside
-> that section are machine-read by `skills/trip/SKILL.md` to derive the `/trip research` agent
-> key, and **this rule declares no artifact class and must never be read as a file-exception list.**
+> that section are read back by `reference/data-architecture.md` § *Lifecycle Classes*' absence
+> rule to assign a class, and **this rule declares no artifact class and must never be read as a
+> file-exception list.**
 > It is **not** in § *Resolving a trip*, which is the gate ladder: the freeze stops no resolution and
 > returns no `trip.stop_gate`, and `G8` is reserved and report-only. It is **not** in
 > `reference/data-architecture.md` § *Lifecycle Classes*, whose `lifecycle` is the **artifact** axis
@@ -261,7 +262,8 @@ Before doing anything, determine what kind of request this is:
 
 | Request | Read scope | Class |
 |---|---|---|
-| `/trip status` · `/trip-publish list` · `/trip-decommission temporary` | that verb's `**Reads:**` line | none beyond the evidence entries |
+| `/trip-publish list` · `/trip-decommission temporary` | that verb's `**Reads:**` line | none beyond the evidence entries |
+| `/trip status` | that verb's `**Reads:**` line — beyond the evidence entries, an order-only listing of the trip's outputs and, for one freshness relation's source side, the rows of `reference/data-architecture.md` § 1.1's class table | own |
 | `/trip plan` · `replan` · `reorder` · `research` · `check` · `ideas` | that verb's `**Reads:**` line, **including its attributed-agent clause** | own + attributed-agent |
 | `/trip site` | that verb's `**Reads:**` line | own |
 | `/trip schema` | that verb's `**Reads:**` line | own |

@@ -545,7 +545,12 @@ to be inferred from a wider silence. It does not read
 carried **by value** by the record block above, and a read here would give the render a
 second source of fields the ladder has already resolved, free to disagree with it. It reads
 no **content** under `trips/<slug>/outputs/` and opens no artifact there. It
-does not read `agents/<name>.md`, having no agent to supply a prompt to.
+does not read `agents/<name>.md`, having no agent to supply a prompt to. For
+`research-to-placement`'s source side alone it reads the rows of
+`reference/data-architecture.md` § 1.1's class table, taken with `Read` over a line range from
+its `### 1.1 ` heading and never the whole file, where `research`'s derivation finds them;
+that is an engine document and shows nothing of the trip. A table that cannot be read makes
+that relation `UNDETERMINED`, naming the file.
 **Reading a column live is not reading a file.** Step 1's `Command` column and this file's
 requirement table are taken from what is in context — this file's body is the body being run,
 and `CLAUDE.md` is loaded beside it when this repository is the workspace; an installed engine
@@ -935,8 +940,10 @@ because this chain reaches the hub; only `planned` events move.
 
 ## research
 
-**Reads:** `agents/<name>.md` — the prompt of the spoke the agent key selects, the path taken
-from that spoke's own row in `CLAUDE.md`'s roster. It reads nothing else: not
+**Reads:** the rows of `reference/data-architecture.md` § 1.1's class table, taken with `Read`
+over a line range from its `### 1.1 ` heading and never the whole file, which the agent key is
+derived from; and `agents/<name>.md` — the prompt of the spoke the agent key selects, the path
+taken from that spoke's own row in `CLAUDE.md`'s roster. It reads nothing else: not
 `trip-context.md`, whose mode and destination the record block already carries by value, and
 nothing under `trips/<slug>/outputs/` — the spoke reads its own accumulated output file and
 appending to it is the spoke's write, not this verb's. **Agent reads, attributed:** the spoke
@@ -947,26 +954,41 @@ spokes more: `agents/03-scheduling.md` also declares, in `ITERATION` and `RESEQU
 `outputs/activities-list.md`, `outputs/food-list.md` and `outputs/event-status.md`. That list
 is the spoke's, not this verb's, so it is cited rather than closed here — a spoke's reads are
 read from its prompt at dispatch time.
-**Dispatches** that one spoke, in the role its roster row states, writing exactly the file
-that row names.
+**Dispatches** that one spoke, in the role its roster row states, appending to exactly the
+file its `researched` class names.
 **Non-interactive: the standing clause's *run nobody can answer*.**
 
 **The agent key.** Positional — the first token of the argument string, ASCII-case-folded —
 matched by **exact string equality** against a set of **tokens** derived live from
-`CLAUDE.md`'s agent roster. The derivation has two stages, and they must not be collapsed: a
-row filter, then a cell that supplies the token. **Filter to the rows whose `Output File` cell
-names exactly one path under `outputs/`, whose file § *Output Versioning* leaves in the
-accumulating default — naming it in none of that section's replaced, rebuilt or
-persist-mutable exceptions — and whose `When to dispatch` cell does not confine the row to a
-state this verb's own row excludes. The token of an admitted row is its `Agent` cell,
-ASCII-case-folded.** The filter yields rows; the `Agent` cell yields the comparand — **a typed
-key is never compared against a row.** That set is **not written into this file and not
-counted**, and it is what keeps a spoke a later release adds from needing an edit here.
-Everything after the key is the topic, passed to the spoke and interpreted by it.
+`reference/data-architecture.md` § 1.1 and `CLAUDE.md`'s agent roster. The derivation has two
+stages, and they must not be collapsed: a filter that yields rows, then a cell that supplies
+the token. **Filter § 1.1 to the classes whose `Prov` cell is `researched` and whose `L` cell
+is `accumulate-append`. Admit a roster row when its `Agent` cell, ASCII-case-folded, stands as
+a whole token in the `W` cell of one of those classes; that class's `Class` cell is the file
+the spoke appends to, and that token is the row's key. The token of an admitted row is its
+`Agent` cell, ASCII-case-folded.** The filter yields rows; the `Agent` cell yields the
+comparand — **a typed key is never compared against a row.** That set is **not written into
+this file and not counted**, and it is what keeps a spoke a later release adds from needing an
+edit here. Everything after the key is the topic, passed to the spoke and interpreted by it.
+
+**That test decides, and the cells it does not read do not.** The `Output File` cell is the
+row's complete write list, so a further file named there leaves the spoke in the key. The
+`When to dispatch` cell says when the agent is reached for, not what it produces. `C18`, the
+targeted-research class `outputs/<slug>.md`, is `researched` and `accumulate-append` and
+supplies no row: its `W` cell reads *the spoke that re-ran*, which is no prompt's id, because
+the class has no producer (`reference/schemas/targeted-research.md`).
+
+**Working out the set opens no prompt.** An admitted row's `Agent` cell, case-folded, is its
+prompt's `writer:` id, so the set is read from § 1.1's `W` cells and the roster's `Agent`
+cells, and the one prompt opened is the one dispatched. `scripts/test-command-taxonomy.sh`
+group J holds that equality and this set on every push.
 
 A key matching nothing is **this verb's own refusal**: render the token verbatim, render the
-set read live from the roster, and stop. **No near-match, no *"did you mean"*, no fallback** —
-the reasons § *When the token is not a verb of this command* gives hold identically here.
+set read live from § 1.1 and the roster, and stop. **No near-match, no *"did you mean"*, no
+fallback** — the reasons § *When the token is not a verb of this command* gives hold
+identically here. A class table that cannot be read, or that admits no row, is the same
+refusal: name `reference/data-architecture.md` and stop. The set is never taken from the
+roster's paths instead.
 
 **It places nothing.** The spoke **appends** its research to its own output file under a new
 dated section; it rewrites nothing, reorders nothing, and deletes no prior research. Research
