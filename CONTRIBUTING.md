@@ -195,7 +195,12 @@ version. Each of the first group's entries first appears in the next release's t
 `0.34.0`, the first release cut after this section was written, was tagged on its release merge
 before its entry landed. `0.1.0` predates the CHANGELOG itself.
 
-The fence below declares every tag whose own tree does not carry the entry step 6 requires.
+`0.1.0` through `0.6.0`, `0.16.0` and `0.17.0` are lightweight tags, which carry no tagger at all.
+A lightweight tag gains one only by being rewritten, so each stays declared, and `0.1.0` holds a row
+for each limb it fails.
+
+The fence below declares every tag that lacks what step 6 requires: its own entry, or a tagger in
+the form.
 `scripts/check-release-tag.sh --all` grades every tag, and `scripts/test-corpus-hygiene.sh`
 group **G** holds its failures against this declaration in both directions: a tag that fails
 and is not declared here fails the suite, and so does a row naming a tag that no longer fails
@@ -207,10 +212,18 @@ limb and the reason it gives. A line whose first non-blank character is `#` is a
 ```release-tag-declaration
 # tag     limb:reason
 v0.1.0    changelog:no-changelog
+v0.1.0    tagger:no-tagger
+v0.2.0    tagger:no-tagger
+v0.3.0    tagger:no-tagger
+v0.4.0    tagger:no-tagger
+v0.5.0    tagger:no-tagger
+v0.6.0    tagger:no-tagger
 v0.9.0    changelog:no-entry
 v0.9.1    changelog:no-entry
 v0.10.0   changelog:no-entry
 v0.11.0   changelog:no-entry
+v0.16.0   tagger:no-tagger
+v0.17.0   tagger:no-tagger
 v0.24.0   changelog:no-entry
 v0.25.0   changelog:no-entry
 v0.26.0   changelog:no-entry

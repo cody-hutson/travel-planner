@@ -253,8 +253,9 @@
 #
 #        This class's findings are coded F0, F1 and F2. They are not class C's basis forms F1
 #        to F4 above, which name an exemption and are never emitted.
-#   G    RELEASE TAGS CARRY THEIR OWN CHANGELOG ENTRY. Every `v*` tag's own tree carries its
-#        `## [X.Y.Z]` heading, outside a fenced block, as the NEWEST version heading there —
+#   G    RELEASE TAGS CARRY THEIR OWN CHANGELOG ENTRY AND A NO-REPLY TAGGER. Every `v*` tag's own
+#        tree carries its `## [X.Y.Z]` heading, outside a fenced block, as the NEWEST version
+#        heading there, and every `v*` tag is annotated with its tagger in the no-reply form —
 #        what CONTRIBUTING.md's release procedure exists to produce, and what its step 6 checks
 #        at tag time by running scripts/check-release-tag.sh on the new tag. This group runs
 #        THAT SAME SCRIPT over every tag and grades nothing about a tag itself: the predicate
@@ -582,10 +583,12 @@ F_P='|'; F_T="$(printf '\t')"
 # and the two real tags its controls read: one this repository shipped without its own entry,
 # and one that carries it. Named once.
 CH_G_SCRIPT='scripts/check-release-tag.sh'
+CH_G_FORM='scripts/check-identity-form.sh'
 CH_G_DOC='CONTRIBUTING.md'
 CH_G_TAG='release-tag-declaration'
 CH_G_RETRO_FAIL='v0.34.0'
 CH_G_RETRO_PASS='v0.48.0'
+CH_G_RETRO_TAGGER='v0.16.0'
 # Group H's bound surface: the document that carries the one enumeration of a directory this
 # suite holds against the tree, the heading line its fence sits under, the directory it
 # enumerates, and the document whose map row cites that enumeration instead of repeating it.
@@ -4019,7 +4022,7 @@ fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
-echo "G — release tags carry their own CHANGELOG entry, graded by the check the release runs"
+echo "G — release tags carry their own CHANGELOG entry and a no-reply tagger, graded by the check the release runs"
 # ═════════════════════════════════════════════════════════════════════════════════
 # Every ref and the working tree, read BEFORE the release check first runs on this repository.
 # Arm CTL-G-READONLY compares against this after every run of it here, so a write made by ANY
@@ -4065,7 +4068,7 @@ else
   if [ "${G_N1:-0}" -eq 0 ]; then
     PASS "G1: every tag that fails the release check is declared — $G_NFAIL failing tag(s), each named in the \`$CH_G_TAG\` fence with the reason the check gives. The zero is a measurement: arm CTL-G1 ships a tag without its entry and requires it to be found"
   else
-    FAIL "G1: $G_N1 tag(s) fail the release check and are not declared. If \`git ls-remote --tags origin <tag>\` prints nothing, the tag exists only in this clone — delete it locally and do not declare it. A declaration row is the remedy for a pushed tag only: a pushed tag is not rewritten, so the remedy is a row in the \`$CH_G_TAG\` fence in $CH_G_DOC, beside a sentence saying how the tag came to lack its entry — and the release procedure's step 6 is the check that should have refused it:"
+    FAIL "G1: $G_N1 tag(s) fail the release check and are not declared. If \`git ls-remote --tags origin <tag>\` prints nothing, the tag exists only in this clone — delete it locally and do not declare it. A declaration row is the remedy for a pushed tag only: a pushed tag is not rewritten, so the remedy is a row in the \`$CH_G_TAG\` fence in $CH_G_DOC, beside a sentence saying how the tag came to fail — and the release procedure's step 6 is the check that should have refused it:"
     grep '^FINDING G1 ' <<<"$G_OUT" | awk '{ printf "      %s  %s\n", $3, $4 }'
   fi
   if [ "${G_N2:-0}" -eq 0 ]; then
@@ -5790,21 +5793,25 @@ fi
 # declaring fence — graded by the SAME ch_scan_g, and so by the same release check, that graded
 # the real tags above. Every git call that BUILDS a fixture runs with all outside configuration
 # switched off and a synthetic identity, so no signing key, hook, default branch or address on
-# the machine running the suite can reach a fixture.
+# the machine running the suite can reach a fixture. That identity is in the no-reply form, because
+# the tagger limb grades it, and no account can hold it: GitHub issues no account the id 0 and no
+# login a doubled hyphen, so this public file names nobody. Git takes a tag's tagger from the
+# committer's name and address, so these two lines set both.
+CTL_G_ID='0+fixture--selftest@users.noreply.github.com'
 ctl_g_git() {
   GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 \
-  GIT_AUTHOR_NAME=fixture GIT_AUTHOR_EMAIL=fixture@example.invalid \
-  GIT_COMMITTER_NAME=fixture GIT_COMMITTER_EMAIL=fixture@example.invalid \
+  GIT_AUTHOR_NAME=fixture GIT_AUTHOR_EMAIL="$CTL_G_ID" \
+  GIT_COMMITTER_NAME=fixture GIT_COMMITTER_EMAIL="$CTL_G_ID" \
     git -c init.defaultBranch=main -c commit.gpgSign=false -c tag.gpgSign=false "$@"
 }
 ctl_g_repo() {  # ctl_g_repo <name> — an empty repository; its path on stdout
   local d="$WORK/fx/$1"
   mkdir -p "$d" && ctl_g_git -C "$d" init -q && printf '%s\n' "$d"
 }
-ctl_g_release() {  # ctl_g_release <repo> <tag> <CHANGELOG text, or - for none> — commit, then tag
+ctl_g_release() {  # ctl_g_release <repo> <tag> <CHANGELOG text, or - for none> — commit, then an annotated tag
   local d="$1" tag="$2" text="$3"
   if [ "$text" = "-" ]; then rm -f "$d/CHANGELOG.md"; else printf '%s\n' "$text" > "$d/CHANGELOG.md"; fi
-  ctl_g_git -C "$d" add -A . && ctl_g_git -C "$d" commit -q --allow-empty -m "$tag" && ctl_g_git -C "$d" tag "$tag"
+  ctl_g_git -C "$d" add -A . && ctl_g_git -C "$d" commit -q --allow-empty -m "$tag" && ctl_g_git -C "$d" tag -a -m "$tag" "$tag"
 }
 ctl_g_decl() {  # ctl_g_decl <repo> <row...> — that repository's CONTRIBUTING.md, carrying the fence
   local d="$1"; shift
@@ -5846,7 +5853,7 @@ ctl_g_release "$S" v1.1.0 '## [1.0.0] — 2026-01-01 — first'
 ctl_g_release "$S" v1.2.0 '-'
 D="$WORK/fx/gshallow"
 ctl_g_git clone -q --depth 1 --no-tags "file://$S" "$D"
-ctl_g_git -C "$D" tag v1.2.0
+ctl_g_git -C "$D" tag -a -m v1.2.0 v1.2.0
 ctl_g_decl "$D" 'v1.1.0  changelog:no-entry' 'v1.2.0  changelog:no-changelog'
 O="$(ch_scan_g "$D")"
 ctl_mustfire "CTL-G0-SHALLOW" G0 "$O" "a shallow clone whose census lacks a declared tag — a depth-limited clone carries only the tags its truncated history reaches, so that census is a sample of the release history; it is reported as no measurement, never as a stale row whose remedy would break the full-history run" 1
@@ -5907,6 +5914,123 @@ expect_rc 1 "CTL-G-NOCOMMIT" "a tag that peels to a tree rather than a commit is
 expect_rc 2 "CTL-G-ABSENT" "a tag that does not exist is NOT-EVALUATED — never a finding and never a pass" -- g_run "$D" v9.9.9
 expect_rc 2 "CTL-G-NAME" "an argument that is not vX.Y.Z is NOT-EVALUATED" -- g_run "$D" next
 
+# The tagger limb. Each arm holds the exit status and the reason together: either alone passes a
+# check that refuses the right tag for the wrong reason, or the wrong tag for the right one. No
+# address here is anyone's: they are on reserved domains, or are the form's own near-misses.
+ctl_g_verdict() {  # ctl_g_verdict <id> <prose> <repo> <tag> <wanted status> <wanted reasons>
+  local id="$1" prose="$2" repo="$3" tag="$4" want_rc="$5" want="$6" out rc got
+  out="$(g_run "$repo" "$tag" 2>&1)"; rc=$?
+  got="$(awk -v t="$tag" '$1 == "TAG" && $2 == t && $4 == "FAIL" { printf "%s%s:%s", sep, $3, $5; sep = " " }' <<<"$out")"
+  if [ "$rc" -eq "$want_rc" ] && [ "$got" = "$want" ]; then
+    PASS "$id: $prose [rc=$rc, reasons '${got:-none}']"
+  else
+    FAIL "$id: $prose -- expected rc=$want_rc and reasons '${want:-none}', got rc=$rc and '${got:-none}'"
+  fi
+}
+ctl_g_tag_as() {  # ctl_g_tag_as <repo> <tag> <address> — a commit carrying the tag's entry, tagged annotated under <address>
+  local d="$1" tag="$2" address="$3"
+  printf '## [%s] — 2026-01-01 — entry\n' "${tag#v}" > "$d/CHANGELOG.md"
+  ctl_g_git -C "$d" add -A . && ctl_g_git -C "$d" commit -q --allow-empty -m "$tag" \
+    && GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 GIT_COMMITTER_NAME=fixture GIT_COMMITTER_EMAIL="$address" \
+       git -c tag.gpgSign=false -C "$d" tag -a -m "$tag" "$tag"
+}
+ctl_g_tag_object() {  # ctl_g_tag_object <repo> <tag> <tagger line, or - for none> — a tag object git's porcelain would not write
+  local d="$1" tag="$2" who="$3" oid text
+  printf '## [%s] — 2026-01-01 — entry\n' "${tag#v}" > "$d/CHANGELOG.md"
+  ctl_g_git -C "$d" add -A . && ctl_g_git -C "$d" commit -q --allow-empty -m "$tag"
+  text="object $(ctl_g_git -C "$d" rev-parse HEAD)"$'\n'"type commit"$'\n'"tag $tag"$'\n'
+  [ "$who" = "-" ] || text="$text$who"$'\n'
+  oid="$(ctl_g_git -C "$d" hash-object -t tag -w --stdin --literally <<<"$text"$'\n'"$tag")"
+  ctl_g_git -C "$d" update-ref "refs/tags/$tag" "$oid"
+}
+D="$(ctl_g_repo gtagger)"
+ctl_g_tag_as "$D" v2.0.0 'outside@example.org'
+ctl_g_verdict "CTL-G-TAGGER" "an annotated tag carrying its entry, under a tagger outside the form, is refused" "$D" v2.0.0 1 'tagger:out-of-form'
+ctl_g_tag_as "$D" v2.1.0 'noreply@github.com'
+ctl_g_verdict "CTL-G-TAGGER-HOST" "the host's committer address as a tagger is refused — the gate's exception binds commits alone" "$D" v2.1.0 1 'tagger:out-of-form'
+ctl_g_tag_as "$D" v2.2.0 '0+fixture--selftest@users.noreply.github.com.example.org'
+ctl_g_verdict "CTL-G-TAGGER-LONGER" "the form's domain with more after it is refused" "$D" v2.2.0 1 'tagger:out-of-form'
+ctl_g_tag_as "$D" v2.3.0 '0+fixture--selftest@noreply.github.com'
+ctl_g_verdict "CTL-G-TAGGER-LABEL" "the form's domain without its users label is refused" "$D" v2.3.0 1 'tagger:out-of-form'
+ctl_g_tag_as "$D" v2.4.0 '0+fixture--selftest@USERS.NOREPLY.GITHUB.COM'
+ctl_g_verdict "CTL-G-TAGGER-CASE" "the form's domain in upper case is refused — the comparison is exact, and GitHub writes it in lower case" "$D" v2.4.0 1 'tagger:out-of-form'
+printf '## [2.5.0] — 2026-01-01 — entry\n' > "$D/CHANGELOG.md"
+ctl_g_git -C "$D" add -A . && ctl_g_git -C "$D" commit -q -m v2.5.0 && ctl_g_git -C "$D" tag v2.5.0
+ctl_g_verdict "CTL-G-TAGGER-LIGHT" "a lightweight tag carrying its entry is refused under a reason of its own — it has no tagger to read" "$D" v2.5.0 1 'tagger:no-tagger'
+ctl_g_tag_object "$D" v2.6.0 -
+ctl_g_verdict "CTL-G-TAGGER-NONE" "a tag object with no tagger line is refused, under the reason a lightweight tag takes" "$D" v2.6.0 1 'tagger:no-tagger'
+ctl_g_tag_object "$D" v2.7.0 'tagger fixture <> 1767225600 +0000'
+ctl_g_verdict "CTL-G-TAGGER-EMPTY" "a tagger line with an empty address is refused, under the same reason" "$D" v2.7.0 1 'tagger:no-tagger'
+ctl_g_release "$D" v2.8.0 '## [2.8.0] — 2026-01-01 — entry'
+ctl_g_verdict "CTL-G-SPEC-TAGGER" "an annotated tag carrying its entry, under the id-prefixed form, passes every limb" "$D" v2.8.0 0 ''
+ctl_g_tag_as "$D" v2.9.0 'fixture--selftest@users.noreply.github.com'
+ctl_g_verdict "CTL-G-SPEC-TAGGER-OLD" "the older form with no id passes" "$D" v2.9.0 0 ''
+ctl_g_tag_as "$D" v2.10.0 '0+fixture--selftest[bot]@users.noreply.github.com'
+ctl_g_verdict "CTL-G-SPEC-TAGGER-BOT" "a bot's form passes" "$D" v2.10.0 0 ''
+
+# Two limbs, one tag. g.awk keys every observation and every row by the tag and the limb:reason
+# pair, so a tag failing both limbs takes two rows with no change to it or to fence.awk, and counts
+# once among the failing tags. The first grading proves that from the running reader rather than
+# from a reading of it, and the second that one limb's row excuses nothing of the other's.
+D="$(ctl_g_repo gtwo)"
+ctl_g_git -C "$D" commit -q --allow-empty -m v1.0.0 && ctl_g_git -C "$D" tag v1.0.0
+ctl_g_decl "$D" 'v1.0.0  changelog:no-changelog' 'v1.0.0  tagger:no-tagger'
+O="$(ch_scan_g "$D")"
+ctl_mustnot "CTL-G-SPEC-TWO-LIMBS" G1 "$O" "one tag failing both limbs, with a row for each — the state v0.1.0 is in"
+ctl_mustnot "CTL-G-SPEC-TWO-LIMBS-STALE" G2 "$O" "and neither of its two rows is stale"
+G_TD="$(awk '$1 == "DENOM" { print $2, $3, $4 }' <<<"$O")"
+if [ "$G_TD" = "1 1 2" ]; then
+  PASS "CTL-G-TWO-LIMBS-DENOM: one tag read, one failing and two rows — a tag failing two limbs counts once among the failing tags and twice among the rows"
+else
+  FAIL "CTL-G-TWO-LIMBS-DENOM: wanted the denominators 1 1 2 from one tag failing two limbs under two rows; got '${G_TD:-none}'"
+fi
+ctl_g_decl "$D" 'v1.0.0  changelog:no-changelog'
+O="$(ch_scan_g "$D")"
+ctl_mustfire "CTL-G1-OTHER-LIMB" G1 "$O" "the same tag with a row for its changelog failure alone — a row excepts its own limb's reason and nothing else" 1
+
+# The form's definition, as a command, and held to one definition. The gate's control grades the
+# rule through check 4 and the arms above grade it through the limb. CTL-G-ONE-FORM holds them to
+# the same rule: the pattern stands in the definition, each consumer names that file and calls its
+# function, and neither carries the pattern itself. A consumer's copy spelled some other way is not
+# seen here, and CONTRIBUTING.md's prose is no part of this.
+expect_rc 0 "CTL-G-SPEC-FORM" "the definition, run as a command, takes an address in the form" -- "$ROOT/$CH_G_FORM" "$CTL_G_ID"
+expect_rc 1 "CTL-G-FORM" "and refuses the host's committer address, which is an exception of the gate's and no part of the form" -- "$ROOT/$CH_G_FORM" 'noreply@github.com'
+expect_rc 2 "CTL-G-FORM-ARGS" "and judges nothing without exactly one argument" -- "$ROOT/$CH_G_FORM"
+# The login half of the rule: one refusal per login shape it must not take, each on the form's own
+# domain, so that the domain, the anchors and the id are right and only the login is wrong. Check 4
+# and the limb both reach the definition, so these hold both, and the control's records are left as
+# they are. A login widened to anything before the `@` passes every one of these; a login class
+# holding a comma, the form a misread of the rule's bracket pair produces, passes those it admits.
+G_FD="${CTL_G_ID#*@}"
+expect_rc 1 "CTL-G-FORM-LOGIN-DOT" "and refuses a login holding a dot" -- "$ROOT/$CH_G_FORM" "a.b@$G_FD"
+expect_rc 1 "CTL-G-FORM-LOGIN-UNDERSCORE" "and a login holding an underscore" -- "$ROOT/$CH_G_FORM" "a_b@$G_FD"
+expect_rc 1 "CTL-G-FORM-LOGIN-NONE" "and an empty login with no id" -- "$ROOT/$CH_G_FORM" "@$G_FD"
+expect_rc 1 "CTL-G-FORM-LOGIN-ID-ONLY" "and an id with an empty login after it" -- "$ROOT/$CH_G_FORM" "0+@$G_FD"
+expect_rc 1 "CTL-G-FORM-LOGIN-HYPHEN" "and a login opening with a hyphen" -- "$ROOT/$CH_G_FORM" "-a@$G_FD"
+expect_rc 1 "CTL-G-FORM-LOGIN-COMMA" "and a login holding a comma" -- "$ROOT/$CH_G_FORM" "a,b@$G_FD"
+expect_rc 1 "CTL-G-FORM-LOGIN-PLUS" "and a login opening with a plus and no id before it" -- "$ROOT/$CH_G_FORM" "+a@$G_FD"
+expect_rc 1 "CTL-G-FORM-LOGIN-TWO-PLUS" "and a login holding a second plus after the id" -- "$ROOT/$CH_G_FORM" "0+a+b@$G_FD"
+# The check with no rule beside it says NOT-EVALUATED: a limb with nothing to apply must never read
+# as a limb that passed. A copy of the check alone, then beside an empty file, on a tag that passes.
+D="$(ctl_g_repo gnoform)"
+ctl_g_release "$D" v1.0.0 '## [1.0.0] — 2026-01-01 — first'
+G_LONE="$WORK/fx/gnoform.lone"
+mkdir -p "$G_LONE" && cp "$ROOT/$CH_G_SCRIPT" "$G_LONE/"
+g_lone() { ( cd "$D" || exit 9; export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1; "$G_LONE/${CH_G_SCRIPT##*/}" v1.0.0 ); }
+expect_rc 2 "CTL-G-FORM-ABSENT" "the release check with no definition beside it says NOT-EVALUATED" -- g_lone
+: > "$G_LONE/${CH_G_FORM##*/}"
+expect_rc 2 "CTL-G-FORM-EMPTY" "and so does one beside a file that defines no rule" -- g_lone
+G_FDEF="$(grep -c -F 'noreply\.github' "$ROOT/$CH_G_FORM")"
+G_FCA="$(grep -c -F 'noreply\.github' "$ROOT/.github/workflows/depersonalization.yml")"
+G_FCB="$(grep -c -F 'noreply\.github' "$ROOT/$CH_G_SCRIPT")"
+G_FNA="$(grep -c -F 'identity_in_form' "$ROOT/.github/workflows/depersonalization.yml")"
+G_FNB="$(grep -c -F 'identity_in_form' "$ROOT/$CH_G_SCRIPT")"
+if [ "${G_FDEF:-0}" -eq 1 ] && [ "${G_FCA:-1}" -eq 0 ] && [ "${G_FCB:-1}" -eq 0 ] && [ "${G_FNA:-0}" -ge 1 ] && [ "${G_FNB:-0}" -ge 1 ]; then
+  PASS "CTL-G-ONE-FORM: the form's pattern stands once, in $CH_G_FORM, and the gate and the release check each call identity_in_form and hold no copy of it"
+else
+  FAIL "CTL-G-ONE-FORM: wanted the pattern once in $CH_G_FORM and in neither consumer, with both calling identity_in_form; read definition=$G_FDEF gate=$G_FCA check=$G_FCB, calls gate=$G_FNA check=$G_FNB"
+fi
+
 # CTL-G-RETRO — the real defect. v0.34.0 was the first release cut after the release procedure was
 # rewritten, and it was tagged on its release merge before its entry landed. This arm reads the
 # real tags, so it needs the full-history checkout, and a missing tag FAILS it rather than skipping.
@@ -5918,12 +6042,14 @@ else
   FAIL "CTL-G-RETRO: MUST REFUSE $CH_G_RETRO_FAIL with exit 1 and changelog:no-entry; got exit $G_RRC and '${G_RWHY:-no verdict}'. Exit 2 means the tag is absent from this checkout — CI must check out with fetch-depth: 0"
 fi
 G_SO="$(g_run "$ROOT" "$CH_G_RETRO_PASS" 2>&1)"; G_SRC=$?
-G_SWHY="$(awk -v t="$CH_G_RETRO_PASS" '$1 == "TAG" && $2 == t { print $3 ":" $4 }' <<<"$G_SO")"
-if [ "$G_SRC" -eq 0 ] && [ "$G_SWHY" = "changelog:PASS" ]; then
-  PASS "CTL-G-SPEC-RETRO: the release check passes $CH_G_RETRO_PASS, a tag this repository shipped carrying its own entry as the newest — exit 0. Without this arm, a check that refused every tag would pass CTL-G-RETRO"
+G_SCL="$(awk -v t="$CH_G_RETRO_PASS" '$1 == "TAG" && $2 == t && $3 == "changelog" { print $4 }' <<<"$G_SO")"
+G_STG="$(awk -v t="$CH_G_RETRO_PASS" '$1 == "TAG" && $2 == t && $3 == "tagger" { print $4 }' <<<"$G_SO")"
+if [ "$G_SRC" -eq 0 ] && [ "$G_SCL" = "PASS" ] && [ "$G_STG" = "PASS" ]; then
+  PASS "CTL-G-SPEC-RETRO: the release check passes $CH_G_RETRO_PASS, a tag this repository shipped carrying its own entry as the newest and a tagger in the form — exit 0, each limb read for itself. Without this arm, a check that refused every tag would pass CTL-G-RETRO"
 else
-  FAIL "CTL-G-SPEC-RETRO: MUST PASS $CH_G_RETRO_PASS with exit 0; got exit $G_SRC and '${G_SWHY:-no verdict}'"
+  FAIL "CTL-G-SPEC-RETRO: MUST PASS $CH_G_RETRO_PASS with exit 0 on each limb; got exit $G_SRC, changelog '${G_SCL:-no verdict}' and tagger '${G_STG:-no verdict}'"
 fi
+ctl_g_verdict "CTL-G-TAGGER-RETRO" "$CH_G_RETRO_TAGGER, a lightweight tag this repository actually shipped carrying its own entry, fails the tagger limb and no other" "$ROOT" "$CH_G_RETRO_TAGGER" 1 'tagger:no-tagger'
 
 # CTL-G-READONLY — the check rewrites nothing. Every ref and the working tree, read before the
 # check first ran on this repository (group G, above), must be identical after every run of it
