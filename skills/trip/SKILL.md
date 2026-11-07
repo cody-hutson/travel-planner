@@ -684,7 +684,9 @@ re-read it for the trip's mode or destination — the record block above carries
 It reads nothing under `trips/<slug>/outputs/` itself: those artifacts are read by the agents
 that consume them, and a read here would give the itinerary a second reader with no write to
 justify it. **Agent reads, attributed:** enrichment reads `trips/<slug>/travelers/*.md`,
-`trips/<slug>/trip-context.md` and `trips/<slug>/outputs/traveler-model.md`, the model it is
+`<store-root>/people/<person-id>.md`, the durable record a file's `person:` line references,
+and the survivor where that record is a `merged-into:` stub, `trips/<slug>/trip-context.md`
+and `trips/<slug>/outputs/traveler-model.md`, the model it is
 about to replace, read before it rebuilds it; each spoke reads `trips/<slug>/trip-context.md`,
 `trips/<slug>/trip-log.md`, `trips/<slug>/outputs/traveler-model.md` and its own accumulated
 output file; the hub reads the spoke outputs, `trips/<slug>/outputs/traveler-model.md` and
@@ -755,12 +757,13 @@ verdict this run did not change.
 from that agent's own row in `CLAUDE.md`'s roster; `trips/<slug>/trip-context.md` — the
 `## Mode` block alone, read before it is written, for the reason `plan`'s section gives. It
 reads no other block of that file and nothing under `trips/<slug>/outputs/` itself. **Agent
-reads, attributed:** each affected spoke reads `trips/<slug>/trip-context.md`,
+reads, attributed:** enrichment, where a changed profile is what triggered the run, reads
+`trips/<slug>/travelers/*.md`, `<store-root>/people/<person-id>.md`, the durable record a
+file's `person:` line references, and the survivor where that record is a `merged-into:` stub,
+`trips/<slug>/trip-context.md` and `trips/<slug>/outputs/traveler-model.md`, the model it is
+about to replace; each affected spoke reads `trips/<slug>/trip-context.md`,
 `trips/<slug>/trip-log.md`, `trips/<slug>/outputs/traveler-model.md` and its own accumulated
-output file; enrichment, where a changed profile is what triggered the run, reads
-`trips/<slug>/travelers/*.md`, `trips/<slug>/trip-context.md` and
-`trips/<slug>/outputs/traveler-model.md`, the model it is about to replace; the hub reads the
-spoke outputs, `trips/<slug>/outputs/traveler-model.md` and
+output file; the hub reads the spoke outputs, `trips/<slug>/outputs/traveler-model.md` and
 `trips/<slug>/outputs/event-status.md`; the validator reads the itinerary the hub produced,
 `trips/<slug>/outputs/traveler-model.md` and `trips/<slug>/outputs/event-status.md`.
 **Dispatches** enrichment where a changed profile is what triggered the run, in its reconciler
@@ -898,12 +901,13 @@ from that spoke's own row in `CLAUDE.md`'s roster. It reads nothing else: not
 `trip-context.md`, whose mode and destination the record block already carries by value, and
 nothing under `trips/<slug>/outputs/` — the spoke reads its own accumulated output file and
 appending to it is the spoke's write, not this verb's. **Agent reads, attributed:** the spoke
-reads what **its own prompt** declares — at minimum `trips/<slug>/trip-context.md`,
-`trips/<slug>/trip-log.md` and its own accumulated output file, and for some spokes more:
-`agents/03-scheduling.md` also declares `outputs/traveler-model.md` in every mode and, in
-`ITERATION` and `RESEQUENCING`, `outputs/activities-list.md`, `outputs/food-list.md` and
-`outputs/event-status.md`. That list is the spoke's, not this verb's, so it is cited rather
-than closed here — a spoke's reads are read from its prompt at dispatch time.
+reads what **its own prompt** declares and what the dispatch carries — at minimum
+`trips/<slug>/trip-context.md`, `trips/<slug>/trip-log.md`,
+`trips/<slug>/outputs/traveler-model.md` and its own accumulated output file, and for some
+spokes more: `agents/03-scheduling.md` also declares, in `ITERATION` and `RESEQUENCING`,
+`outputs/activities-list.md`, `outputs/food-list.md` and `outputs/event-status.md`. That list
+is the spoke's, not this verb's, so it is cited rather than closed here — a spoke's reads are
+read from its prompt at dispatch time.
 **Dispatches** that one spoke, in the role its roster row states, writing exactly the file
 that row names.
 **Non-interactive: the standing clause's *run nobody can answer*.**
@@ -948,12 +952,13 @@ not quantify over it.
 taken only to establish whether there is an itinerary to audit, which is a read and is
 declared. It reads no content under that directory itself, and it reads no block of
 `trip-context.md`: the audit is the validator's and the constraint set is the validator's read.
-**Agent reads, attributed:** the validator reads the current itinerary, the constraint set in
-`trips/<slug>/trip-context.md`, and `trips/<slug>/outputs/event-status.md`, which it never
-writes. **Dispatches** the validator alone, in the role its roster row states. **The dispatch
-names no output path and instructs the validator, in terms, to write neither of the two files
-its own prompt declares** — `outputs/validation-report.md` and `outputs/satisfaction-metrics.md`
-— **and to return its findings in the response instead.**
+**Agent reads, attributed:** the validator reads what **its own prompt** declares — at minimum
+the current itinerary, the constraint set in `trips/<slug>/trip-context.md`,
+`trips/<slug>/outputs/traveler-model.md` and `trips/<slug>/outputs/event-status.md`, which it
+never writes. **Dispatches** the validator alone, in the role its roster row states. **The
+dispatch names no output path and instructs the validator, in terms, to write neither of the
+two files its own prompt declares** — `outputs/validation-report.md` and
+`outputs/satisfaction-metrics.md` — **and to return its findings in the response instead.**
 **Non-interactive: the standing clause's *run nobody can answer*.**
 
 **No output path, on purpose — and the dispatch has to say so.** § Step 1 states this audit
@@ -1006,8 +1011,11 @@ so the per-event status bound does not quantify over it.
 row in `CLAUDE.md`'s roster. It reads nothing else: not `trip-context.md`, whose mode and
 destination the record block already carries by value, and nothing under
 `trips/<slug>/outputs/` — the shortlist is the agent's to write and this verb never reads it
-back. **Agent reads, attributed:** the ideation agent reads `trips/<slug>/travelers/*.md` for
-the group's leanings and `trips/<slug>/trip-context.md` for the dates and party.
+back. **Agent reads, attributed:** the ideation agent reads
+`trips/<slug>/outputs/traveler-model.md` for the group's leanings, falling back to the leaning
+fields of `trips/<slug>/travelers/*.md` where that model has not been built,
+`trips/<slug>/trip-context.md` for the dates and party, and the frontmatter of
+`trips/<slug>/outputs/destination-shortlist.md`, read before it is replaced.
 **Dispatches** Destination Ideation, in the role its roster row states, writing
 `outputs/destination-shortlist.md` alone. That artifact is `rebuilt-each-synthesis`: on a
 re-run the agent replaces it with the current ranking rather than appending to it.
@@ -1132,13 +1140,13 @@ plan's own count and code after a revert or that exception and with none after a
 run.** `confirm` writes `confirmed=` at the instant the approval event is recorded — the
 organizer's CONFIRM, or, on a trip that declares approvers, the last terminal act that leaves the
 declared threshold met before the plan it names is published — and no later path re-stamps it:
-`publish` and `update` write `.published-itinerary`, a different sidecar, and once the record names
-the published plan a later terminal act rewrites only its count. So a date read from it moves only
-at the organizer's own act, and never for a plan that has already published — with two exceptions,
-both reached once a change is abandoned and the working copy is back on the published plan. The
-first is a revert: where the record names the abandoned plan, `confirm` re-anchors the record to
-the published plan — or, where that plan's own approvals fall short, offers to retire it. The
-second is a change abandoned before any approval: on a trip that declares approvers, where the
+`publish`, `update` and `rotate` write `.published-itinerary`, a different sidecar, and once the
+record names the published plan a later terminal act rewrites only its count. So a date read from it
+moves only at the organizer's own act, and never for a plan that has already published — with two
+exceptions, both reached once a change is abandoned and the working copy is back on the published
+plan. The first is a revert: where the record names the abandoned plan, `confirm` re-anchors the
+record to the published plan — or, where that plan's own approvals fall short, offers to retire it.
+The second is a change abandoned before any approval: on a trip that declares approvers, where the
 record still names the published plan and `trips/<slug>/outputs/change-summary.md` holds an entry
 dated after the `YYYY-MM-DD` prefix of its `confirmed=` — the entry that change raised, read
 exactly as the mapping above reads entries, and never through `status` — a terminal act that

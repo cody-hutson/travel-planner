@@ -699,6 +699,8 @@ travel-planner/
             ├── event-status.md        ← per-event status — persist-mutable, survives re-runs
             ├── satisfaction-metrics.md ← coverage metrics (validator + hub)
             ├── cost-estimate.md       ← per-traveler cost projection (C21) — written by the hub, after event-status.md
+            ├── change-summary.md      ← what a re-bake moved, for the group (C20) — written by the hub
+            ├── <slug>.md              ← targeted research a spoke re-ran (C18)
             ├── final-itinerary.md     ← current version (previous versions preserved as v1, v2...)
             ├── validation-report.md
             └── [destination]-travel-site.html   ← bespoke, Claude-generated
