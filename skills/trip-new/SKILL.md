@@ -543,6 +543,6 @@ establishes **nothing**: omission is not prohibition, so no bound below is claim
   answer's place. What it wrote before that point stands, and it says so. A write the harness denies
   is relayed as a denial and never reported as done. **A session need not recognise print mode for
   this to hold**, because a question nobody answers writes nothing either way, and a verb's own
-  non-interactive row is this rule at that verb, never a different one.
+  non-interactive row stands, and stops no later than this rule would.
   `reference/adr/ADR-051-a-verb-runs-until-it-asks.md` records the decision; this rule is its
   operative statement. **This rule is followed, not enforced.**

@@ -99,8 +99,8 @@ in the answer's place. What it wrote before that point stands, and it says so. A
 denies is relayed as a denial and never reported as done.
 
 **2. The rule does not rest on recognising print mode.** A question nobody answers writes nothing
-either way, so a session that does not recognise the run writes no more than one that does. A verb's
-own non-interactive row is this rule at that verb, never a different one.
+either way, so a session that does not recognise the run writes no more than the rule allows. A
+verb's own non-interactive row stands, and stops no later than this rule would.
 
 **3. The rule is stated in each command file and cited by each verb on the declared-intent side.**
 The same text stands in each command file's standing clause, because a citation to another
