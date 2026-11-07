@@ -10499,6 +10499,33 @@ s29c_assert() {
 }
 s29c_assert
 
+# ── S29f — require_recordable_baseline's staged-path clause, the twin of S29c (ii). publish is the one path
+# where this clause is what refuses: on update and rotate the gate reads the same path as an unusable staged
+# record and refuses first. Pushes nothing: no existence probe, so no create. CONTROL: the same publish with a
+# regular file at that path reaches the existence probe, so the absence of one below is a measurement.
+s29f_assert() {
+  local p c pe pr pl cl pm=0 pvw=0 pcr=0 cvw=0
+  p="$(s_fixture "s29fp-$RANDOM" 14:00 none)"; mkdir -p "$p/.published-itinerary.next"
+  c="$(s_fixture "s29fc-$RANDOM" 14:00 none)"; s_record "$c/.published-itinerary.next" "$S_DB" published
+  gh() { sb_gh "$@"; }; npx() { return 0; }
+  : > "$SB_GHLOG"; pe="$( ( cmd_publish "$p" ) 2>&1 >/dev/null )"; pr=$?; pl="$(cat "$SB_GHLOG")"
+  : > "$SB_GHLOG"; ( cmd_publish "$c" ) >/dev/null 2>&1; cl="$(cat "$SB_GHLOG")"
+  unset -f gh npx
+  case "$pe" in *".published-itinerary.next is not a regular file"*) pm=1 ;; esac
+  case "$pl" in *"repo view"*) pvw=1 ;; esac
+  case "$pl" in *"repo create"*) pcr=1 ;; esac
+  case "$cl" in *"repo view"*) cvw=1 ;; esac
+  if [ "$cvw" -ne 1 ]; then
+    FAIL "S29f: CONTROL — publish with a regular file at the staged path never reached the existence probe, so the absence of one below proves nothing"
+  elif [ "$pr" -eq 1 ] && [ "$pm" -eq 1 ] && [ "$pvw" -eq 0 ] && [ "$pcr" -eq 0 ]; then
+    PASS "S29f: publish with a directory at the staged record's path refuses naming it, before the existence probe and any create, so nothing is pushed; the control with a regular file reaches the probe"
+  else
+    FAIL "S29f: publish rc=$pr named=$pm probed=$pvw created=$pcr"
+  fi
+}
+s29f_assert
+md_flips require_recordable_baseline "S29f" s29f_assert
+
 # ── S29d — STRUCTURAL, from the PARSED bodies as S9b reads them. require_publish_guards calls the
 # baseline guard after the render's approval-code guard; cmd_publish calls the baseline guard and
 # not the gate, ahead of its existence probe. SENSITIVITY: cmd_update's body names its one call
@@ -12636,7 +12663,9 @@ unset GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0 \
 #   - Every refusal or abort arm asserts an exact rc AND a witness only the graded point
 #     prints, so an absent subject (rc=127) cannot satisfy it. Conditions in the verdict
 #     chains are shell tests over flags computed first (MD2).
-#   - The "unreadable" arm assumes a non-root runner, as CI's is: root reads mode 000.
+#   - "Unreadable" is established, then read back, rather than assumed: root reads mode 000, so where
+#     chmod does not take, the key path is a dangling link instead (rv_make_unreadable). A non-root run
+#     grades the mode, as CI's does; the -r clause itself is only reachable there.
 #
 # ORDER. RV6 and RV12 grade the REAL encrypt_to_tmp and run before its shim is installed:
 # md_probe removes its subject by name, so a shim standing in that name would leave both
@@ -12655,6 +12684,15 @@ export GIT_CONFIG_COUNT=3 \
   GIT_CONFIG_KEY_1=tag.gpgsign        GIT_CONFIG_VALUE_1=false \
   GIT_CONFIG_KEY_2=init.defaultBranch GIT_CONFIG_VALUE_2=main
 
+# An existing key path that cannot be read, established by observation rather than by uid: mode 000 where
+# that holds, and where it does not (uid 0, or any capability that reads through modes) a dangling link,
+# which no uid can read. Returns non-zero only where neither holds, so an arm can report that and not a verdict.
+rv_make_unreadable() { # <path> <content>
+  printf '%s\n' "$2" > "$1"; chmod 000 "$1"
+  [ -r "$1" ] || return 0
+  rm -f "$1"; ln -s "$1.rv-no-such-target" "$1"
+  [ ! -r "$1" ]
+}
 # A push that fails where the fetch before it does not: the bare repository refuses it on receipt. Its own
 # core.hooksPath, because an operator's global one would divert the hook and let the push land.
 rv_reject_pushes() { # <bare>
@@ -12899,7 +12937,7 @@ rv2e_assert() { # <id> <unreadable|empty|newline-only|two-line|crlf>
   local id="$1" s="$2" name d out rc calls named=0 key='rv-domain-synthetic-key-0005'
   name="rv2e-$s-$RANDOM"; d="$(rv_fixture "$name")"
   case "$s" in
-    unreadable)   printf '%s\n' "$key" > "$d/.passphrase"; chmod 000 "$d/.passphrase" ;;
+    unreadable)   rv_make_unreadable "$d/.passphrase" "$key" || { FAIL "$id: no way to make a key path unreadable to this uid — nothing to grade. VERDICT WITHHELD"; return 0; } ;;
     empty)        : > "$d/.passphrase" ;;
     newline-only) printf '\n' > "$d/.passphrase" ;;
     two-line)     printf '%s\n%s\n' "$key" 'rv-second-line' > "$d/.passphrase" ;;
@@ -12908,7 +12946,7 @@ rv2e_assert() { # <id> <unreadable|empty|newline-only|two-line|crlf>
   : > "$RV_GHLOG"
   out="$( ( export STATICRYPT_PASSWORD="$key"; set -e; cmd_update "$d" ) 2>&1 )"; rc=$?
   calls="$(rv_lines "$RV_GHLOG")"
-  chmod 600 "$d/.passphrase" 2>/dev/null
+  [ -L "$d/.passphrase" ] || chmod 600 "$d/.passphrase" 2>/dev/null
   rv_has "$out" 'STATICRYPT_PASSWORD' && named=1
   if [ "$rc" -ne 1 ] || [ "$named" -eq 0 ]; then
     FAIL "$id: with the variable set and a .passphrase that is $s, update returned rc=$rc without the refusal"
@@ -12919,6 +12957,23 @@ rv2e_assert() { # <id> <unreadable|empty|newline-only|two-line|crlf>
   fi
 }
 for rv_s in unreadable empty newline-only two-line crlf; do rv2e_assert "RV2e-$rv_s" "$rv_s"; done
+# RV2e-ctl — absorbed #1643's control, on every run and under either uid: with the refusal really skipped, the
+# same argv reports exactly one FAIL. md_flips cannot say this: removing the function is rc=127, not a skip.
+rv2e_ctl_assert() { # <id>
+  local id="$1" got
+  got="$( ( require_passphrase_sources_agree() { return 0; }
+            pass=0; fail=0
+            PASS() { pass=$((pass+1)); }
+            FAIL() { fail=$((fail+1)); }
+            rv2e_assert "RV2e-ctl-inner" unreadable >/dev/null 2>&1
+            printf '%d %d' "$pass" "$fail" ) )"
+  if [ "$got" = "0 1" ]; then
+    PASS "$id: CONTROL — with update's refusal really skipped, RV2e-unreadable's own argv reports pass=0 fail=1, so its green under this uid is a measurement"
+  else
+    FAIL "$id: CONTROL did not fire — with update's refusal skipped RV2e-unreadable read '$got', want '0 1'"
+  fi
+}
+rv2e_ctl_assert "RV2e-ctl"
 
 # ── RV3 — AC3. A rotation aborted before its push leaves .passphrase byte-identical, at every
 # abort point, each proven REACHED by the point's own message. "absent": a trip with no
