@@ -190,6 +190,12 @@
 #     vacuous pass: GUARD_EXPECTED_SKIPS is empty by design, and declaring this group as
 #     an expected skip would convert a red into a silent pass over an unshipped surface.
 #
+#   LS  a verb that declares a listing names the call that takes it (group LS)
+#     LS0 population, region coverage, and each matcher's sensitivity + specificity arms
+#     LS1 a store listing declared with no call named, or beside "takes no Bash(ls:*)"
+#     LS2 a traveller file read on every trip with no per-trip directory call named
+#     LS3 a directory's entry names read with no listing call named
+#
 #   TD  a verb declaring the roster block as a read disposes of the count in it
 #                                                                          (group TD)
 #     TD0 population, region coverage, and BOTH matchers' sensitivity + specificity arms
@@ -5588,6 +5594,155 @@ elif [ -n "$TD_BAD" ]; then
   FAIL "TD1: a verb declares \`## Group\` in its own read line and never says what it does with \`- **Total travelers:**\` — ${TD_BAD}. That block's scope is the roster table, this field, \`- **Travel mode:**\` and \`- **Subgroup notes:**\`; a verb reading the whole block and writing part of it leaves the rest undisposed, and this is the field carrying a reconciliation table, so it is the one that goes stale in silence. Say what the verb does with it — reconcile it by \`## group\`'s table, or state that it does not touch it and why. Naming it among a cited read's purposes is not enough, and this arm excludes the read line for that reason"
 else
   PASS "TD1: all ${TD_POP} verb(s) declaring \`## Group\` as a read dispose of \`- **Total travelers:**\` in their OWN prose, outside the read declaration that raises the question. The zero is a measurement: on the same run the field matcher found the field on planted text ($TD_FSENS) and returned zero over a read line carrying it ($TD_FSPEC). This grades that the question is ANSWERED, never which answer is taken — a verb declining the field in terms passes here, and correctly"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group LS — a verb that declares a listing names the call that takes it.
+#
+# WHAT THIS GROUP IS FOR, AND THE DEFECT THAT PAID FOR IT. A `**Reads:**` line declared a store
+# listing and said in the same line that the section takes no `Bash(ls:*)`. No tool the section
+# sanctioned returns entry names, so a session that followed the text stopped there. The live pass
+# found it on two verbs as a Blocker, the fix reached those two, and the construct stood on six
+# others with every suite green. A trip-wide traveller glob is the same construct: its entry names
+# are a listing, whether or not the line calls it one.
+#
+# THE ORACLE IS THE READ DECLARATION, the first in the verb's own region, and a verb is in a
+# population only where that block declares the read. LS0 gates the arms on complete region
+# coverage, for the reason group UW states. Every matcher is index() over a literal.
+#
+# WHAT THIS GROUP DOES NOT GRADE. That a session issues the call: a tree of prompt files cannot
+# show that, and the live observation on the tagged tree is what does. It also reads the words
+# "store listing": a listing declared in other words is outside its population, which is the
+# stated limit of grading prose by a literal.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group LS — a verb that declares a listing names the call that takes it."
+
+LS_STORE='store listing'
+LS_CALL='`ls -1 "<store-root>/'
+LS_NEG='akes no `Bash(ls:*)`'
+LS_ALLTRIPS='`trips/*/travelers/*.md`'
+LS_EACHTRIP='`trips/<t>/travelers/*.md`'
+LS_TCALL='`ls -1 "<data-root>/trips/<t>/travelers"`'
+LS_ENTRY='entry names'
+LS_ANYCALL='`ls -1 '
+
+# ls_block <region-text> — the first column-0 read declaration, to the next blank line, on one line.
+ls_block() {
+  printf '%s\n' "$1" | awk '
+    !on && index($0, "**Reads:**") == 1 { on = 1 }
+    on && !done { if ($0 !~ /[^[:space:]]/) done = 1; else printf "%s ", $0 }'
+}
+# ls_store_decl <block> — 1 where the block declares a store listing.
+ls_store_decl() { printf '%s\n' "$1" | awk -v w="$LS_STORE" 'index(tolower($0), w) > 0 { f = 1 } END { print f + 0 }'; }
+# ls_store_bad <block> — 1 where a declared store listing has no call named, or the block refuses the grant.
+ls_store_bad() {
+  printf '%s\n' "$1" | awk -v c="$LS_CALL" -v n="$LS_NEG" '
+    index($0, c) > 0 { call = 1 }
+    index($0, n) > 0 { neg = 1 }
+    END { print ((!call) + neg > 0) ? 1 : 0 }'
+}
+# ls_glob_decl <block> — 1 where the block reads a traveller file on every trip.
+ls_glob_decl() {
+  printf '%s\n' "$1" | awk -v a="$LS_ALLTRIPS" -v e="$LS_EACHTRIP" '
+    index($0, a) > 0 { f = 1 }
+    index($0, e) > 0 { f = 1 }
+    END { print f + 0 }'
+}
+# ls_glob_bad <block> — 1 where such a block names no per-trip traveller-directory call.
+ls_glob_bad() { printf '%s\n' "$1" | awk -v c="$LS_TCALL" 'index($0, c) > 0 { f = 1 } END { print f ? 0 : 1 }'; }
+# ls_entry_decl <block> — 1 where the block reads a directory's entry names.
+ls_entry_decl() { printf '%s\n' "$1" | awk -v w="$LS_ENTRY" 'index(tolower($0), w) > 0 { f = 1 } END { print f + 0 }'; }
+# ls_entry_bad <block> — 1 where such a block names no listing call at all.
+ls_entry_bad() { printf '%s\n' "$1" | awk -v c="$LS_ANYCALL" 'index($0, c) > 0 { f = 1 } END { print f ? 0 : 1 }'; }
+
+LS_FILES=0; LS_POP=0; LS_GPOP=0; LS_EPOP=0; LS_BAD=""; LS_GBAD=""; LS_EBAD=""; LS_COVER_BAD=""
+for lsf in "$CDIR"/*/SKILL.md; do
+  [ -e "$lsf" ] || continue
+  LS_FILES=$((LS_FILES+1))
+  lsbase="$(verb_id "$lsf")"; lscmd="/$lsbase"
+  lsregions="$(printf '%s\n' "$ALL" | awk -v c="$lscmd" '$1 == "REGION" && $2 == c { print $4 "\t" $5 "\t" $3 }')"
+  lsn="$(printf '%s\n' "$lsregions" | grep -c '[^[:space:]]' || true)"
+  lsdecl="$(getcount "$ALL" "DECL_$lsbase")"
+  if [ "$lsn" -eq 0 ] || [ "${lsdecl:-0}" -eq 0 ] || [ "$lsn" -ne "${lsdecl:-0}" ]; then
+    LS_COVER_BAD="$LS_COVER_BAD$lscmd(walked=$lsn declared=${lsdecl:-0}) "
+    continue
+  fi
+  while IFS="$(printf '\t')" read -r lss lse lsverb; do
+    [ -n "${lss:-}" ] || continue
+    lsblk="$(ls_block "$(awk -v s="$lss" -v e="$lse" 'NR > s && NR <= e { print }' "$lsf")")"
+    if [ "$(ls_store_decl "$lsblk")" -eq 1 ]; then
+      LS_POP=$((LS_POP+1))
+      if [ "$(ls_store_bad "$lsblk")" -eq 1 ]; then LS_BAD="$LS_BAD$lscmd ${lsverb:-?}; "; fi
+    fi
+    if [ "$(ls_glob_decl "$lsblk")" -eq 1 ]; then
+      LS_GPOP=$((LS_GPOP+1))
+      if [ "$(ls_glob_bad "$lsblk")" -eq 1 ]; then LS_GBAD="$LS_GBAD$lscmd ${lsverb:-?}; "; fi
+    fi
+    if [ "$(ls_entry_decl "$lsblk")" -eq 1 ]; then
+      LS_EPOP=$((LS_EPOP+1))
+      if [ "$(ls_entry_bad "$lsblk")" -eq 1 ]; then LS_EBAD="$LS_EBAD$lscmd ${lsverb:-?}; "; fi
+    fi
+  done <<LSEOF
+$lsregions
+LSEOF
+done
+
+LS_S1="$(ls_store_bad '**Reads:** `<store-root>/people/` — the store listing. Takes no `Bash(ls:*)` use.')"
+LS_S2="$(ls_store_bad '**Reads:** `<store-root>/people/` — the store listing, for the stubs.')"
+LS_S3="$(ls_glob_bad '**Reads:** `trips/*/travelers/*.md` — the frontmatter of every file.')"
+LS_N1="$(ls_store_bad '**Reads:** `<store-root>/people/` — the store listing, taken with `Bash(ls:*)` as `ls -1 "<store-root>/people"`.')"
+LS_N2="$(ls_store_decl '**Reads:** `<store-root>/people/<id>.md` — the probe. Does not enumerate the store.')"
+LS_N3="$(ls_glob_bad '**Reads:** `trips/<t>/travelers/*.md` — every file `ls -1 "<data-root>/trips/<t>/travelers"` names.')"
+LS_S4="$(ls_entry_bad '**Reads:** `trips/<slug>/travelers/*.md`, the entry names alone, no file opened.')"
+LS_N4="$(ls_entry_bad '**Reads:** `trips/<slug>/travelers/*.md`, the entry names alone, taken as `ls -1 "<data-root>/trips/<slug>/travelers"`.')"
+
+LS_OK=1
+if [ "$LS_FILES" -eq 0 ]; then
+  LS_OK=0
+  FAIL "LS0: the walk read ${LS_FILES} command file(s) — the populations below would cover nothing"
+elif [ -n "$LS_COVER_BAD" ]; then
+  LS_OK=0
+  FAIL "LS0: COVERAGE IS INCOMPLETE — $LS_COVER_BAD. Every verdict below is computed from the region extents this gate grades"
+elif [ "$LS_POP" -eq 0 ]; then
+  LS_OK=0
+  FAIL "LS0: no verb across ${LS_FILES} command file(s) declares a store listing, so LS1 would be a statement over the empty set. Eight declare one at this group's introduction: re-derive the word this group matches"
+elif [ "$LS_GPOP" -eq 0 ]; then
+  LS_OK=0
+  FAIL "LS0: no verb across ${LS_FILES} command file(s) reads a traveller file on every trip, so LS2 would be a statement over the empty set"
+elif [ "$LS_EPOP" -eq 0 ]; then
+  LS_OK=0
+  FAIL "LS0: no verb across ${LS_FILES} command file(s) reads a directory's entry names, so LS3 would be a statement over the empty set"
+elif [ "$LS_S1" -ne 1 ] || [ "$LS_S2" -ne 1 ] || [ "$LS_S3" -ne 1 ] || [ "$LS_S4" -ne 1 ]; then
+  LS_OK=0
+  FAIL "LS0: MUST FIRE — a sensitivity arm returned the wrong value (negative $LS_S1, no call $LS_S2, no directory call $LS_S3, entry names with no call $LS_S4; each expected 1)"
+elif [ "$LS_N1" -ne 0 ] || [ "$LS_N2" -ne 0 ] || [ "$LS_N3" -ne 0 ] || [ "$LS_N4" -ne 0 ]; then
+  LS_OK=0
+  FAIL "LS0: a specificity arm fired (a named call $LS_N1, a line that enumerates nothing $LS_N2, a named directory call $LS_N3, entry names with a call $LS_N4; each expected 0)"
+else
+  PASS "LS0: the walk covered ${LS_FILES} command file(s) with every walked region count equal to the verb count declared, found ${LS_POP} verb(s) declaring a store listing, ${LS_GPOP} reading a traveller file on every trip and ${LS_EPOP} reading a directory's entry names, and each matcher's sensitivity and specificity arms held"
+fi
+
+if [ "$LS_OK" -eq 0 ]; then
+  FAIL "LS1: VERDICT WITHHELD — LS0 did not pass, so this population is not one a verdict can stand on"
+elif [ -n "$LS_BAD" ]; then
+  FAIL "LS1: a verb declares a store listing and names no call that takes it, or says it takes none — ${LS_BAD}. Name the call beside the path: taken with \`Bash(ls:*)\` as \`ls -1 \"<store-root>/<store>\"\`"
+else
+  PASS "LS1: all ${LS_POP} verb(s) declaring a store listing name the call that takes it, and none says it takes no \`Bash(ls:*)\`"
+fi
+if [ "$LS_OK" -eq 0 ]; then
+  FAIL "LS2: VERDICT WITHHELD — LS0 did not pass, so this population is not one a verdict can stand on"
+elif [ -n "$LS_GBAD" ]; then
+  FAIL "LS2: a verb reads a traveller file on every trip and names no call that lists a trip's traveller directory — ${LS_GBAD}. Those entry names are a listing too"
+else
+  PASS "LS2: all ${LS_GPOP} verb(s) reading a traveller file on every trip name the call that lists each trip's traveller directory"
+fi
+if [ "$LS_OK" -eq 0 ]; then
+  FAIL "LS3: VERDICT WITHHELD — LS0 did not pass, so this population is not one a verdict can stand on"
+elif [ -n "$LS_EBAD" ]; then
+  FAIL "LS3: a verb reads a directory's entry names and names no listing call — ${LS_EBAD}. A read of entry names is a listing, cited or not"
+else
+  PASS "LS3: all ${LS_EPOP} verb(s) reading a directory's entry names name a listing call"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
