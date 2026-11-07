@@ -167,9 +167,12 @@ commit_noreply() { # <repo_dir> <message>
   # Identity is set via BOTH -c config AND the GIT_* env vars. The env vars take
   # PRECEDENCE over -c, so a hostile GIT_AUTHOR_EMAIL / GIT_COMMITTER_EMAIL already
   # in the environment cannot override the no-reply identity into a public repo.
+  # Signing is pinned off here, with -c, which outranks the operator's global and repository
+  # configuration and GIT_CONFIG_*: an operator's signature on a public per-trip repository is the
+  # same leak as their email, and no signing program may run for a commit this script makes.
   GIT_AUTHOR_NAME="$NOREPLY_NAME"    GIT_AUTHOR_EMAIL="$NOREPLY_EMAIL" \
   GIT_COMMITTER_NAME="$NOREPLY_NAME" GIT_COMMITTER_EMAIL="$NOREPLY_EMAIL" \
-  git -C "$repo_dir" -c "user.name=${NOREPLY_NAME}" -c "user.email=${NOREPLY_EMAIL}" \
+  git -C "$repo_dir" -c "user.name=${NOREPLY_NAME}" -c "user.email=${NOREPLY_EMAIL}" -c commit.gpgsign=false \
     commit --quiet -m "$msg"
 }
 
@@ -4219,7 +4222,7 @@ encrypt_verify_commit() { # <pub_dir> <site_html> <passphrase> <verb> [<var-to-r
   ok "Guard passed."
   git -C "$pub_dir" add index.html || die "$verb: could not stage the ciphertext in $pub_dir. Nothing was pushed."
   commit_noreply "$pub_dir" "Update trip site" \
-    || die "$verb: could not commit the ciphertext in $pub_dir (commit signing, or the git error above). Nothing was pushed."
+    || die "$verb: could not commit the ciphertext in $pub_dir (the git error above names the cause). Nothing was pushed."
   # This run's own commit, read back at once and proved by its page. If another command moved the
   # clone in between, stop: nothing after this point may push, record or discard a commit that is
   # not this run's own. (The caller's variable must not share a name with a local here.)

@@ -221,6 +221,25 @@ md_flips() {   # md_flips <subject-fn> <id> <assertion-fn> [args…]
 
 WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
 
+# ── THE WHOLE RUN'S SIGNING WITNESS (#1617; review CD-2) ─────────────────────────────────────────────────────
+# Every git command this run makes reads its global configuration from one file, built here, which turns commit
+# and tag signing ON through a signer that logs each call and succeeds; system configuration is not read at all.
+# So a commit made anywhere in this suite without a pin of its own is signed and logged, and RV31-run, the last
+# arm, reads the log. Groups PP and RV pin signing off through GIT_CONFIG_*, which outranks this file, so their
+# scratch commits read as pinned, which is what they are. RV31's subjects take their own global file and their
+# own signer, so RV31c's deliberate signature lands in RV's log and never in this one. Deliberately, a local run
+# no longer reads the operator's own global identity, hooks path or signing: it reads what CI reads, which is
+# no global configuration but this file's. GIT_CONFIG_GLOBAL needs git 2.32 or later; on an older git the file
+# is not read, and RV31-run's control says so rather than passing.
+SUITE_SIGN_LOG="$WORK/suite-signer.log"; SUITE_SIGNER="$WORK/suite-signer"; : > "$SUITE_SIGN_LOG"
+{ printf '#!/bin/sh\n'
+  printf 'echo called >> "%s"\n' "$SUITE_SIGN_LOG"
+  printf 'echo "[GNUPG:] SIG_CREATED D 1 8 00 1700000000 SYNTHETIC" >&2\n'
+  printf "printf '%%s\\\\n' '-----BEGIN PGP SIGNATURE-----' '' 'c3ludGhldGlj' '-----END PGP SIGNATURE-----'\n"
+} > "$SUITE_SIGNER"; chmod +x "$SUITE_SIGNER"
+printf '[commit]\n\tgpgsign = true\n[tag]\n\tgpgsign = true\n[gpg]\n\tformat = openpgp\n\tprogram = %s\n[user]\n\tsigningkey = SUITESYNTHETICKEY\n' "$SUITE_SIGNER" > "$WORK/suite-git-global.cfg"
+export GIT_CONFIG_GLOBAL="$WORK/suite-git-global.cfg" GIT_CONFIG_NOSYSTEM=1
+
 # Synthetic plaintext itinerary (no real data — generic place names only), token-rich.
 SRC="$WORK/src.html"
 cat > "$SRC" <<'HTML'
@@ -12298,8 +12317,8 @@ PP_ORIG_BOIL="$(declare -f make_boilerplate)"
 # Commit signing is pinned OFF for the throwaway repositories this group creates, so the
 # fixture does not depend on the operator's global git configuration — measured: a global
 # commit.gpgsign=true reads as false under these entries. GIT_CONFIG_* overrides
-# configuration files, and `commit_noreply` passes only user.name/user.email with -c, so
-# nothing here contests them. Undone at the end of the group.
+# configuration files. `commit_noreply` pins commit.gpgsign=false with -c as well, which agrees
+# with them and outranks them, and nothing here contests either. Undone at the end of the group.
 export GIT_CONFIG_COUNT=3 \
   GIT_CONFIG_KEY_0=commit.gpgsign     GIT_CONFIG_VALUE_0=false \
   GIT_CONFIG_KEY_1=tag.gpgsign        GIT_CONFIG_VALUE_1=false \
@@ -12610,9 +12629,10 @@ unset GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0 \
 #   - Subjects run under ( set -e; … ), production's errexit — EXCEPT RV8, whose subject IS
 #     independence from errexit: a caller in an `||` context, or this suite's own set +e,
 #     disables -e for the whole function body, and the fix must stop on its own.
-#   - Scratch repositories pin commit signing OFF. The arms that need a commit to FAIL pin
-#     commit.gpgsign=true with gpg.format=openpgp and gpg.program=false inside their own
-#     subshell: deterministic, offline, and never reaching an operator's signing agent.
+#   - Scratch repositories pin commit signing OFF, and commit_noreply pins it too. The arms that
+#     need a commit to FAIL point core.hooksPath at a failing pre-commit inside their own subshell
+#     (rv_fail_commit_env): GIT_CONFIG_* outranks an operator's global hooksPath, the pin does not
+#     touch it, the hook runs before any signing would, and root is refused like anyone else.
 #   - Every refusal or abort arm asserts an exact rc AND a witness only the graded point
 #     prints, so an absent subject (rc=127) cannot satisfy it. Conditions in the verdict
 #     chains are shell tests over flags computed first (MD2).
@@ -12668,6 +12688,12 @@ rv_fixture() { # <name> [key] -> trip dir
   if [ "$#" -ge 2 ]; then printf '%s\n' "$2" > "$d/.passphrase"; chmod 600 "$d/.passphrase"; fi
   printf '%s' "$d"
 }
+
+# A commit that fails by a means commit_noreply's signing pin does not reach. Exports into the
+# caller's subshell only; the hook's words are this suite's own, so no git message is graded.
+RV_FAILHOOKS="$RVW/failhooks"; mkdir -p "$RV_FAILHOOKS"
+printf '#!/bin/sh\necho rv-commit-hook-refused >&2\nexit 1\n' > "$RV_FAILHOOKS/pre-commit"; chmod +x "$RV_FAILHOOKS/pre-commit"
+rv_fail_commit_env() { export GIT_CONFIG_COUNT=4 GIT_CONFIG_KEY_3=core.hooksPath GIT_CONFIG_VALUE_3="$RV_FAILHOOKS"; }
 
 # The key the page at <bare>'s main was encrypted under, read from the nonce the encrypt
 # shim wrote into it. Prints nothing when no pushed page carries a nonce.
@@ -12920,11 +12946,9 @@ rv3_assert() { # <id> <floor|gate|preflight|clone|encrypt|guard|commit|absent|un
                          set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$? ;;
     guard)     w='not verified ciphertext'
                out="$( ( unset STATICRYPT_PASSWORD; export RV_ENC_SRC="$ENC_LEAK"; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$? ;;
-    *)         w='failed to sign'
+    *)         w='could not commit the ciphertext'
                out="$( ( unset STATICRYPT_PASSWORD
-                         export GIT_CONFIG_COUNT=5 GIT_CONFIG_VALUE_0=true \
-                           GIT_CONFIG_KEY_3=gpg.format GIT_CONFIG_VALUE_3=openpgp \
-                           GIT_CONFIG_KEY_4=gpg.program GIT_CONFIG_VALUE_4=false
+                         rv_fail_commit_env
                          set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$? ;;
   esac
   h1="$(rv_head "$bare")"
@@ -13068,15 +13092,11 @@ rv8_assert() { # <id> <errexit-off|or-true>
   cp -p "$d/.passphrase" "$RVW/$name.before"; h0="$(rv_head "$bare")"
   if [ "$how" = errexit-off ]; then
     out="$( ( unset STATICRYPT_PASSWORD
-              export GIT_CONFIG_COUNT=5 GIT_CONFIG_VALUE_0=true \
-                GIT_CONFIG_KEY_3=gpg.format GIT_CONFIG_VALUE_3=openpgp \
-                GIT_CONFIG_KEY_4=gpg.program GIT_CONFIG_VALUE_4=false
+              rv_fail_commit_env
               cmd_rotate "$d"; printf 'rv8-caller-continued\n' ) 2>&1 )"; rc=$?
   else
     out="$( ( unset STATICRYPT_PASSWORD
-              export GIT_CONFIG_COUNT=5 GIT_CONFIG_VALUE_0=true \
-                GIT_CONFIG_KEY_3=gpg.format GIT_CONFIG_VALUE_3=openpgp \
-                GIT_CONFIG_KEY_4=gpg.program GIT_CONFIG_VALUE_4=false
+              rv_fail_commit_env
               set -e; cmd_rotate "$d" || true; printf 'rv8-caller-continued\n' ) 2>&1 )"; rc=$?
   fi
   h1="$(rv_head "$bare")"
@@ -13866,6 +13886,86 @@ rv30_assert() { # <id>
 }
 rv30_assert "RV30"
 
+# ── RV31 — a publish-path commit under a GLOBAL commit.gpgsign=true carries no signature and never
+# runs the signing program. Group D reaches the same commit_noreply and CI declares it an expected
+# skip, so this is the always-run witness. The subject drops the group's GIT_CONFIG_* pin, which would
+# outrank the global file and hide a missing pin, and takes signing from a real global file. The
+# signer logs and succeeds, so a missing pin shows twice: a logged call and a gpgsig header. PASS needs
+# THIS run's commit, read by its subject, so an absent subject cannot pass on an empty log.
+RV_SIGN_LOG="$RVW/signer.log"; RV_SIGNER="$RVW/signer"; RV_SIGN_GLOBAL="$RVW/sign-global.cfg"
+{ printf '#!/bin/sh\n'
+  printf 'echo called >> "%s"\n' "$RV_SIGN_LOG"
+  printf 'echo "[GNUPG:] SIG_CREATED D 1 8 00 1700000000 SYNTHETIC" >&2\n'
+  printf "printf '%%s\\\\n' '-----BEGIN PGP SIGNATURE-----' '' 'c3ludGhldGlj' '-----END PGP SIGNATURE-----'\n"
+} > "$RV_SIGNER"; chmod +x "$RV_SIGNER"
+printf '[commit]\n\tgpgsign = true\n[gpg]\n\tformat = openpgp\n\tprogram = %s\n[user]\n\tsigningkey = RVSYNTHETICKEY\n[init]\n\tdefaultBranch = main\n' "$RV_SIGNER" > "$RV_SIGN_GLOBAL"
+rv31_env() {
+  unset GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0 GIT_CONFIG_KEY_1 GIT_CONFIG_VALUE_1 GIT_CONFIG_KEY_2 GIT_CONFIG_VALUE_2
+  export GIT_CONFIG_GLOBAL="$RV_SIGN_GLOBAL"
+}
+rv31_assert() { # <id> <noreply|publish|update|rotate>
+  local id="$1" how="$2" name d repo rc subj want hdr calls signed=0
+  name="rv31-$how-$RANDOM"; : > "$RV_SIGN_LOG"
+  case "$how" in
+    noreply) repo="$RVW/$name"; want=rv31-commit; mkdir -p "$repo"; git -C "$repo" init -q; printf 'x\n' > "$repo/f"; git -C "$repo" add f
+             ( rv31_env; NOREPLY_NAME=t; NOREPLY_EMAIL='0+t@users.noreply.github.com'; set -e; commit_noreply "$repo" "$want" ) >/dev/null 2>&1; rc=$? ;;
+    publish) d="$RVW/$name"; repo="$d/.publish"; want='Publish trip site'; mkdir -p "$d/outputs"; cp "$SRC" "$d/outputs/$name-travel-site.html"
+             ( rv31_env; unset STATICRYPT_PASSWORD; set -e; cmd_publish "$d" ) >/dev/null 2>&1; rc=$? ;;
+    *)       d="$(rv_fixture "$name" 'rv-signing-synthetic-key-42')"; repo="$d/.publish"; want='Update trip site'
+             ( rv31_env; unset STATICRYPT_PASSWORD; set -e; "cmd_$how" "$d" ) >/dev/null 2>&1; rc=$? ;;
+  esac
+  subj="$(git -C "$repo" log -1 --format=%s 2>/dev/null)"
+  hdr="$(git -C "$repo" cat-file commit HEAD 2>/dev/null)"
+  case "$hdr" in *gpgsig*) signed=1 ;; esac
+  calls="$(rv_lines "$RV_SIGN_LOG")"
+  if [ "$rc" -ne 0 ]; then
+    FAIL "$id: the $how path did not complete under a global commit.gpgsign=true (rc=$rc)"
+  elif [ "$subj" != "$want" ]; then
+    FAIL "$id: the $how path's own commit was not observed (latest subject '$subj') — an empty signer log proves nothing without it. VERDICT WITHHELD"
+  elif [ "$calls" != 0 ]; then
+    FAIL "$id: the $how path invoked the signing program $calls time(s) under a global commit.gpgsign=true"
+  elif [ "$signed" -eq 1 ]; then
+    FAIL "$id: the $how path's commit carries a gpgsig header — the operator's signature on a public per-trip repository"
+  else
+    PASS "$id: under a global commit.gpgsign=true the $how path's own commit carries no signature, and the signing program was never invoked"
+  fi
+}
+for rv_p in noreply publish update rotate; do rv31_assert "RV31-$rv_p" "$rv_p"; done
+# RV31c — the witness is live: the same global file, the same signer, a commit with no pin.
+rv31c_assert() { # <id>
+  local id="$1" repo rc calls hdr signed=0
+  repo="$RVW/rv31c-$RANDOM"; : > "$RV_SIGN_LOG"; mkdir -p "$repo"; git -C "$repo" init -q; printf 'x\n' > "$repo/f"; git -C "$repo" add f
+  ( rv31_env; git -C "$repo" -c user.name=t -c user.email=t@example.invalid commit -q -m control ) >/dev/null 2>&1; rc=$?
+  calls="$(rv_lines "$RV_SIGN_LOG")"; hdr="$(git -C "$repo" cat-file commit HEAD 2>/dev/null)"
+  case "$hdr" in *gpgsig*) signed=1 ;; esac
+  if [ "$rc" -ne 0 ] || [ "$calls" != 1 ] || [ "$signed" -ne 1 ]; then
+    FAIL "RV31c: CONTROL — an unpinned commit under the same global file read rc=$rc, $calls signer call(s), signed=$signed (want 0, 1, 1), so RV31's empty log is not a measurement"
+  else
+    PASS "RV31c: CONTROL — an unpinned commit under the same global file logs exactly one signer call and carries a signature, so RV31's empty log is a measurement"
+  fi
+}
+rv31c_assert "RV31c"
+# RV31m — the pin is what the arm grades: commit_noreply with its -c stripped must be convicted, by the
+# same argv, on every run. A pin rewritten in another form strips nothing here and this arm says so.
+rv31m_probe() { # <assertion-fn> [args…] -> "<pass> <fail>" on stdout
+  ( rv31m_def="$(declare -f commit_noreply)"; eval "${rv31m_def//-c commit.gpgsign=false/}"
+    pass=0; fail=0
+    PASS() { pass=$((pass+1)); }
+    FAIL() { fail=$((fail+1)); }
+    "$@" >/dev/null 2>&1
+    printf '%d %d' "$pass" "$fail" )
+}
+rv31m_assert() { # <id>
+  local id="$1" got
+  got="$(rv31m_probe rv31_assert "RV31m-inner" update)"
+  if [ "$got" = "0 1" ]; then
+    PASS "RV31m: CONTROL — commit_noreply with its signing pin stripped is convicted by RV31's own argv (pass=0 fail=1), so RV31 grades the pin"
+  else
+    FAIL "RV31m: CONTROL did not fire — with the pin stripped RV31 read '$got', want '0 1'. Either the pin is no longer spelled -c commit.gpgsign=false, or RV31 cannot see it"
+  fi
+}
+rv31m_assert "RV31m"
+
 # ── The MD registrations — each re-runs the SAME argv its live arm ran, with the subject
 # removed. RV6 and RV12 were registered above, against the real encrypt_to_tmp.
 md_flips cmd_rotate  "RV1"  rv1_assert  "RV1"  set
@@ -13923,6 +14023,7 @@ md_flips cmd_update "RV26-retry" rv26r_assert "RV26-retry"
 md_flips cmd_update "RV28" rv28_assert "RV28"
 md_flips require_key_of_record "RV29" rv29_assert "RV29"
 md_flips write_passphrase_file "RV30" rv30_assert "RV30"
+for rv_p in noreply publish update rotate; do md_flips commit_noreply "RV31-$rv_p" rv31_assert "RV31-$rv_p" "$rv_p"; done
 
 # Teardown: mocks go; the shimmed production functions are RE-DEFINED from the saved
 # definitions, never unset — `unset -f` here would delete the real ones.
@@ -14135,6 +14236,27 @@ else
   else
     FAIL "RS6: CONTROL on the parser did not fire as specified — deleting '${RS_V2}'s roster line from a copy of the workflow added '${RS_D6% }' to RS2's finding rather than '${RS_V2}'"
   fi
+fi
+
+# ── RV31-run — the whole run made no signed commit (#1613 criterion 7, CIAC-3; review CD-2). The signer the
+# preamble's global file names has logged nothing: no commit this run made, in any group, was signed, and the
+# signing program never ran. It is read here, after every group and before the control below writes to the same
+# log. The control is the subject's own sensitivity arm: one commit with no pin, under the same file and the same
+# signer, must log exactly one call and carry a signature, or the empty log is no measurement — which is where
+# a git that ignores GIT_CONFIG_GLOBAL lands. MD-opt-out: the subject is the whole run, not a function.
+rv31run_n="$(wc -l < "$SUITE_SIGN_LOG")"; rv31run_n="${rv31run_n//[^0-9]/}"
+rv31run_repo="$WORK/rv31-run-control"; mkdir -p "$rv31run_repo"; git -C "$rv31run_repo" init -q
+printf 'x\n' > "$rv31run_repo/f"; git -C "$rv31run_repo" add f
+( unset GIT_CONFIG_COUNT GIT_CONFIG_PARAMETERS
+  git -C "$rv31run_repo" -c user.name=t -c user.email=t@example.invalid commit -q -m rv31-run-control ) >/dev/null 2>&1; rv31run_rc=$?
+rv31run_c="$(wc -l < "$SUITE_SIGN_LOG")"; rv31run_c="${rv31run_c//[^0-9]/}"; rv31run_signed=0
+case "$(git -C "$rv31run_repo" cat-file commit HEAD 2>/dev/null)" in *gpgsig*) rv31run_signed=1 ;; esac
+if [ "$rv31run_rc" -ne 0 ] || [ "$rv31run_c" != "$((rv31run_n + 1))" ] || [ "$rv31run_signed" -ne 1 ]; then
+  FAIL "RV31-run: CONTROL — an unpinned commit under the suite's global file read rc=$rv31run_rc, moved the signer log from $rv31run_n to $rv31run_c line(s) and signed=$rv31run_signed (want 0, one more line, 1): the file is not in force, so an empty log is no measurement. VERDICT WITHHELD"
+elif [ "$rv31run_n" != 0 ]; then
+  FAIL "RV31-run: this run invoked the signing program $rv31run_n time(s) — a commit somewhere in the suite is not pinned, and on an operator's machine it would carry their signature"
+else
+  PASS "RV31-run: over the whole run no commit was signed and the signing program never ran, on a signer an unpinned commit under the same file reaches (the control logged exactly one call and signed)"
 fi
 
 echo
