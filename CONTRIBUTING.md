@@ -124,23 +124,37 @@ carries no merge SHA and no tag, so nothing in it has to wait for the merge.
 5. Wait for CI, per *Making a change* step 4. The personal-data gate reads the PR's
    diff and the PR's commit messages and author identities — so the CHANGELOG entry
    is covered by it only if the entry is in the PR.
-6. Merge the PR. Tag `vX.Y.Z` on the resulting merge commit — locally first — and run
-   `scripts/check-release-tag.sh vX.Y.Z` before the tag leaves your machine. The check reads
-   the tagged tree and refuses the tag unless its `CHANGELOG.md` carries `## [X.Y.Z]` as the
-   newest version heading; it changes nothing. Push the tag only when the check exits 0, then
-   publish the release from that tag. The tag then carries its own changelog entry, which it
+6. Merge the PR. Tag `vX.Y.Z` on the resulting merge commit, locally and annotated (`git tag -a`),
+   with its tagger in the same `…@users.noreply.github.com` form the ground rules require for
+   commits: a tag takes its tagger from `user.email`, and check 4's exception for the host binds
+   commits alone. Signing is unchanged, and the form binds the tagger line only: which identity a
+   signing key is bound to is supplied by a verifier's own mapping, which no check here can read.
+   Push it with `scripts/push-release-tag.sh vX.Y.Z` from a checkout at that commit, then publish the
+   release from that tag. The pusher compares its release scripts with the tagged commit's, then
+   runs `scripts/check-release-tag.sh`, and pushes the one tag, create-only, only when the check
+   exits 0. The check reads the tag and its tree and refuses
+   the tag unless its `CHANGELOG.md` carries `## [X.Y.Z]` as the newest version heading and its
+   tagger is in the form; it changes nothing. The tag then carries its own changelog entry, which it
    does not if the entry lands afterwards. The tag is also the step that cannot be taken back —
    which is why every mutable part of this procedure, the branch name and the prose and the
    version heading alike, is ordered before it, and why the check runs before the push.
-   **If the check refuses the tag, do not push it.** Delete it locally (`git tag -d vX.Y.Z`),
-   land the missing or corrected heading through a pull request, and tag that pull request's
-   merge commit instead. A version that moved after its heading was stamped is refused the
-   same way: if another release claimed the version first and the heading was not restamped,
-   the version this tag names is not the newest entry in its own tree.
-   The same check runs over every existing tag on every push and pull request, in
-   `scripts/test-corpus-hygiene.sh` group **G**. A tag pushed without its entry turns that
-   required check red until it is declared under *Why earlier tags look different* below —
-   a pushed tag is not rewritten, so the declaration is the remedy left.
+   That is why the path is a script, as the publish script's pre-push guard is: a tracked hook is a
+   per-clone setting nothing records, and a host ruleset on tags runs no check.
+   **If the check refuses the tag (exit 1), nothing was pushed.** A `tagger:` refusal is mended on
+   the same commit: set `user.email` to your no-reply address, delete the tag locally
+   (`git tag -d vX.Y.Z`), and tag the same commit again with `git tag -a`. A `changelog:` refusal
+   is not: delete the tag locally, land the missing or corrected heading through a pull request, and
+   tag that pull request's merge commit instead. A version that moved after its heading was stamped is
+   refused the same way: if another release claimed the version first and the heading was not
+   restamped, the version this tag names is not the newest entry in its own tree.
+   **If the check exits 2, it measured nothing, and nothing was pushed.** Act on the cause it prints,
+   then run the pusher again.
+   **What this path cannot see:** a raw `git push` of the tag, a tag made on the host (a Release
+   published on a new tag name, or one made in the web interface), and whether the tagged commit is
+   on `main`. The same check runs over every existing tag on every push and pull request, in
+   `scripts/test-corpus-hygiene.sh` group **G**. A tag pushed without its entry or its tagger turns
+   that required check red until it is declared under *Why earlier tags look different* below — a
+   pushed tag is not rewritten, so the declaration is the remedy left.
 7. After the release, ratify any decision record it landed as `Proposed`: a pull request of its
    own into `main`. `reference/adr/README.md` § *Convention* states the practice and what the
    ratifying change sets, under *What an amendment may add*.

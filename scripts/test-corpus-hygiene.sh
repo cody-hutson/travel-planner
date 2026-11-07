@@ -584,6 +584,7 @@ F_P='|'; F_T="$(printf '\t')"
 # and one that carries it. Named once.
 CH_G_SCRIPT='scripts/check-release-tag.sh'
 CH_G_FORM='scripts/check-identity-form.sh'
+CH_G_PUSH='scripts/push-release-tag.sh'
 CH_G_DOC='CONTRIBUTING.md'
 CH_G_TAG='release-tag-declaration'
 CH_G_RETRO_FAIL='v0.34.0'
@@ -6030,6 +6031,125 @@ if [ "${G_FDEF:-0}" -eq 1 ] && [ "${G_FCA:-1}" -eq 0 ] && [ "${G_FCB:-1}" -eq 0 
 else
   FAIL "CTL-G-ONE-FORM: wanted the pattern once in $CH_G_FORM and in neither consumer, with both calling identity_in_form; read definition=$G_FDEF gate=$G_FCA check=$G_FCB, calls gate=$G_FNA check=$G_FNB"
 fi
+
+# The pusher, against a bare remote. Each fixture is a repository whose tree carries the release
+# scripts, as a real checkout's does, with a bare repository as its origin, so nothing here leaves
+# the suite's own temporary directory and no network is touched. Each arm reads the remote itself,
+# after the run, as well as the status: a pusher that pushed and then said it refused passes on the
+# status alone. CTL-G-READONLY is untouched by these, because none of them runs in this repository.
+ctl_g_push_repo() {  # ctl_g_push_repo <name> — sets P_D, the repository, and P_R, its bare origin
+  P_D="$(ctl_g_repo "$1")"; P_R="$WORK/fx/$1.remote.git"
+  ctl_g_git init -q --bare "$P_R" && ctl_g_git -C "$P_D" remote add origin "$P_R"
+  mkdir -p "$P_D/scripts"
+  cp "$ROOT/$CH_G_SCRIPT" "$ROOT/$CH_G_FORM" "$ROOT/$CH_G_PUSH" "$P_D/scripts/"
+}
+g_push() {  # g_push <repo> <pusher> <arg…> — the pusher, run in <repo> under the fixture's isolation
+  local repo="$1" pusher="$2"; shift 2
+  ( cd "$repo" || exit 2
+    export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
+    "$pusher" "$@" )
+}
+ctl_g_push_arm() {  # ctl_g_push_arm <id> <prose> <wanted status> <wanted tags on the remote> -- <pusher> <arg…>
+  local id="$1" prose="$2" want_rc="$3" want="$4" rc got; shift 5
+  g_push "$P_D" "$@" > "$WORK/g.push.out" 2>&1; rc=$?
+  got="$(ctl_g_git -C "$P_R" for-each-ref --format='%(refname:strip=2)' | tr '\n' ' ')"
+  if [ "$rc" -eq "$want_rc" ] && [ "$got" = "$want" ]; then
+    PASS "$id: $prose [rc=$rc, remote holds '${got:-nothing}']"
+  else
+    FAIL "$id: $prose -- expected rc=$want_rc and the remote holding '${want:-nothing}', got rc=$rc and '${got:-nothing}': $(tail -n 1 "$WORK/g.push.out")"
+  fi
+}
+
+ctl_g_push_repo gpush
+ctl_g_release "$P_D" v1.0.0 '## [1.0.0] — 2026-01-01 — first'
+ctl_g_push_arm "CTL-G-SPEC-PUSH" "bare remote: a tag that passes the check reaches the remote" 0 'v1.0.0 ' -- "$ROOT/$CH_G_PUSH" v1.0.0
+G_PL="$(ctl_g_git -C "$P_D" rev-parse refs/tags/v1.0.0)"; G_PR="$(ctl_g_git -C "$P_R" rev-parse refs/tags/v1.0.0)"
+if [ -n "$G_PL" ] && [ "$G_PL" = "$G_PR" ]; then
+  PASS "CTL-G-SPEC-PUSH-SAME: the remote holds the tag object this clone made, not a tag of the same name"
+else
+  FAIL "CTL-G-SPEC-PUSH-SAME: the remote's v1.0.0 reads '$G_PR' where this clone holds '$G_PL'"
+fi
+ctl_g_push_arm "CTL-G-PUSH-EXISTS" "bare remote: a tag the remote already has is refused, whatever this clone holds" 3 'v1.0.0 ' -- "$ROOT/$CH_G_PUSH" v1.0.0
+ctl_g_git -C "$P_D" tag -d v1.0.0 > /dev/null
+ctl_g_git -C "$P_D" commit -q --allow-empty -m moved && ctl_g_git -C "$P_D" tag -a -m moved v1.0.0
+ctl_g_push_arm "CTL-G-PUSH-MOVED" "bare remote: a tag moved here is refused rather than moved on the remote" 3 'v1.0.0 ' -- "$ROOT/$CH_G_PUSH" v1.0.0
+G_PR2="$(ctl_g_git -C "$P_R" rev-parse refs/tags/v1.0.0)"
+if [ -n "$G_PR2" ] && [ "$G_PR2" = "$G_PR" ]; then
+  PASS "CTL-G-PUSH-MOVED-KEPT: the remote's tag still names the object it was first given"
+else
+  FAIL "CTL-G-PUSH-MOVED-KEPT: the remote's v1.0.0 moved from '$G_PR' to '$G_PR2'"
+fi
+
+ctl_g_push_repo gpushno
+ctl_g_release "$P_D" v1.1.0 '-'
+ctl_g_push_arm "CTL-G-PUSH-REFUSED" "bare remote: a tag the check refuses stays off the remote — the changelog limb" 1 '' -- "$ROOT/$CH_G_PUSH" v1.1.0
+ctl_g_tag_as "$P_D" v1.2.0 'outside@example.org'
+ctl_g_push_arm "CTL-G-PUSH-TAGGER" "bare remote: and the tagger limb, which reaches the push with no wiring of its own" 1 '' -- "$ROOT/$CH_G_PUSH" v1.2.0
+printf '## [1.3.0] — 2026-01-01 — entry\n' > "$P_D/CHANGELOG.md"
+ctl_g_git -C "$P_D" add -A . && ctl_g_git -C "$P_D" commit -q -m v1.3.0 && ctl_g_git -C "$P_D" tag v1.3.0
+ctl_g_push_arm "CTL-G-PUSH-LIGHT" "bare remote: a lightweight tag stays off the remote" 1 '' -- "$ROOT/$CH_G_PUSH" v1.3.0
+ctl_g_push_arm "CTL-G-PUSH-ABSENT" "bare remote: a tag this clone does not hold names no commit to compare, and stops the push at exit 2" 2 '' -- "$ROOT/$CH_G_PUSH" v9.9.9
+ctl_g_push_arm "CTL-G-PUSH-NAME" "bare remote: an argument that is not vX.Y.Z names no tag here, and stops the push at exit 2" 2 '' -- "$ROOT/$CH_G_PUSH" next
+ctl_g_push_arm "CTL-G-PUSH-ARGS" "bare remote: no argument judges nothing and pushes nothing" 2 '' -- "$ROOT/$CH_G_PUSH"
+ctl_g_push_arm "CTL-G-PUSH-OPTION" "bare remote: an option is no tag name, so the check's census mode is never what clears a push" 2 '' -- "$ROOT/$CH_G_PUSH" --all
+
+# Any status but 0. The pusher here is the fixture's own copy, so that the check beside it is the
+# stub, and the stub is committed so that the comparison, which runs before the check, passes: the
+# tag is a real, annotated one the remote lacks, so nothing but the check's status can stop this
+# push. CTL-G-PUSH-TWO is what holds exit 2. CTL-G-PUSH-ABSENT and -NAME above also exit 2, but the
+# comparison stops them before the check runs, so a pusher that tolerated exit 2 still passes both.
+ctl_g_push_repo gpushtwo
+printf '#!/usr/bin/env bash\nexit 2\n' > "$P_D/scripts/check-release-tag.sh"
+ctl_g_release "$P_D" v1.0.0 '## [1.0.0] — 2026-01-01 — first'
+ctl_g_push_arm "CTL-G-PUSH-TWO" "bare remote: a check exiting 2 on a tag nothing else would stop stops the push — NOT-EVALUATED is never a clean result" 2 '' -- "$P_D/$CH_G_PUSH" v1.0.0
+ctl_g_push_repo gpushany
+printf '#!/usr/bin/env bash\nexit 7\n' > "$P_D/scripts/check-release-tag.sh"
+ctl_g_release "$P_D" v1.0.0 '## [1.0.0] — 2026-01-01 — first'
+ctl_g_push_arm "CTL-G-PUSH-ANY" "bare remote: a check exiting 7 stops the push — anything but 0 does" 2 '' -- "$P_D/$CH_G_PUSH" v1.0.0
+
+# The older checkout, once for each release script the comparison holds. The tagged commit's copy
+# differs from the one beside the pusher, as it does when a checkout predates a change to it — the
+# limb the tagged commit added, say. Each member is a claim of its own, so each has its own arm: a
+# comparison that left one out would push past it, and the other two arms would not notice.
+for G_SA in "CTL-G-PUSH-STALE gpushold $CH_G_SCRIPT" "CTL-G-PUSH-STALE-FORM gpushold-form $CH_G_FORM" "CTL-G-PUSH-STALE-PUSHER gpushold-pusher $CH_G_PUSH"; do
+  read -r G_SID G_SREPO G_SF <<<"$G_SA"
+  ctl_g_push_repo "$G_SREPO"
+  printf '# a line this checkout does not have\n' >> "$P_D/$G_SF"
+  ctl_g_release "$P_D" v1.0.0 '## [1.0.0] — 2026-01-01 — first'
+  ctl_g_push_arm "$G_SID" "bare remote: a checkout whose $G_SF differs from the tagged commit's pushes nothing, whatever its own check would say" 2 '' -- "$ROOT/$CH_G_PUSH" v1.0.0
+done
+
+# A tagged commit with no release scripts at all, as a tag on an older commit is.
+D="$(ctl_g_repo gpushbare)"; P_R="$WORK/fx/gpushbare.remote.git"
+ctl_g_git init -q --bare "$P_R" && ctl_g_git -C "$D" remote add origin "$P_R"
+ctl_g_release "$D" v1.0.0 '## [1.0.0] — 2026-01-01 — first'
+P_D="$D"
+ctl_g_push_arm "CTL-G-PUSH-PREDATES" "bare remote: a tagged commit that carries no release scripts pushes nothing" 2 '' -- "$ROOT/$CH_G_PUSH" v1.0.0
+
+# The one tag. A clone configured to follow tags would carry every annotated tag its push reaches,
+# and this one has a second annotated tag on the same commit.
+ctl_g_push_repo gpushone
+ctl_g_release "$P_D" v1.0.0 '## [1.0.0] — 2026-01-01 — first'
+ctl_g_git -C "$P_D" tag -a -m other v1.0.1
+ctl_g_git -C "$P_D" config push.followTags true
+ctl_g_push_arm "CTL-G-SPEC-PUSH-ONE" "bare remote: under push.followTags the one tag named reaches the remote, and no other tag and no branch" 0 'v1.0.0 ' -- "$ROOT/$CH_G_PUSH" v1.0.0
+
+# The remote's own word: one that refuses the push, and one that takes it and does not hold the tag
+# afterwards. PUSHED states what origin reads back, so the second is not reported as pushed.
+ctl_g_push_repo gpushhook
+ctl_g_release "$P_D" v1.0.0 '## [1.0.0] — 2026-01-01 — first'
+mkdir -p "$P_R/hooks"
+printf '#!/bin/sh\nexit 1\n' > "$P_R/hooks/pre-receive"; chmod +x "$P_R/hooks/pre-receive"
+ctl_g_push_arm "CTL-G-PUSH-REMOTE-REFUSES" "bare remote: a remote that refuses the push is reported as refused" 3 '' -- "$ROOT/$CH_G_PUSH" v1.0.0
+rm -f "$P_R/hooks/pre-receive"
+printf '#!/bin/sh\ngit update-ref -d refs/tags/v1.0.0\n' > "$P_R/hooks/post-receive"; chmod +x "$P_R/hooks/post-receive"
+ctl_g_push_arm "CTL-G-PUSH-NO-READBACK" "bare remote: a remote that accepts the push and does not hold the tag afterwards is not reported as pushed" 3 '' -- "$ROOT/$CH_G_PUSH" v1.0.0
+
+# No origin to read: the check passed, and the push cannot be attempted.
+ctl_g_push_repo gpushnone
+ctl_g_release "$P_D" v1.0.0 '## [1.0.0] — 2026-01-01 — first'
+ctl_g_git -C "$P_D" remote remove origin
+ctl_g_push_arm "CTL-G-PUSH-NOORIGIN" "bare remote: a clone with no origin says it could not read one" 3 '' -- "$ROOT/$CH_G_PUSH" v1.0.0
 
 # CTL-G-RETRO — the real defect. v0.34.0 was the first release cut after the release procedure was
 # rewritten, and it was tagged on its release merge before its entry landed. This arm reads the

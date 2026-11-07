@@ -7,7 +7,8 @@
 #
 # A release tag is the last step of a release and is not rewritten once it is pushed, so what a
 # tag must carry is checked against the tag itself, before the push. This script is that check.
-# CONTRIBUTING.md, Cutting a release, step 6 runs it on the tag it has just created locally.
+# scripts/push-release-tag.sh runs it on the tag CONTRIBUTING.md, Cutting a release, step 6 has
+# just created locally, and pushes only on exit 0.
 # scripts/test-corpus-hygiene.sh group G runs it over every tag on every push and pull request,
 # and holds the tags known to fail against the release-tag-declaration fence in CONTRIBUTING.md.
 # The predicate lives here and nowhere else: group G compares this script's verdicts with that
