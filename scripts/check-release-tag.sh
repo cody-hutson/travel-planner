@@ -60,14 +60,19 @@
 #   0  every graded tag passed every limb
 #   1  at least one tag failed — a FINDING, and every failing tag is printed
 #   2  NOT-EVALUATED — no tag was found, a named tag is absent, the argument is not vX.Y.Z, a read
-#      failed, or the form's definition is not beside this script. Nothing is graded on this status
-#      and no count is printed: it is never a clean result, and the census never reports one.
+#      failed, or the form's definition is not beside this script, cannot be run, or did not answer
+#      1 and 0 for the two addresses it is asked first. Nothing is graded on this status and no
+#      count is printed: it is never a clean result, and the census never reports one.
 #
 # ── WHAT IT READS, AND WHAT IT NEVER WRITES ──────────────────────────────────────────
 # Refs and objects only, through git plumbing (for-each-ref, rev-parse, ls-tree, cat-file), in
 # the repository of the working directory, as git itself resolves it. No working-tree file of that
 # repository is read, and no ref, object, index entry or file is written; there is no network. The
-# one file it reads is scripts/check-identity-form.sh, beside this script. A CI checkout
+# one file it uses is scripts/check-identity-form.sh, beside this script, which it runs as a
+# command rather than sourcing it: twice before any tag is graded, on one planted address outside
+# the form and one in it, then once per tagger. Sourced, a line that ended that file early would end
+# this check with it, at exit 0 and silent, on every tag; run, the same line answers 0 for the
+# address outside the form, and the check says NOT-EVALUATED. A CI checkout
 # carries tags only at fetch-depth: 0 — at any lower depth the census finds none and says
 # NOT-EVALUATED rather than reading an empty set as clean.
 #
@@ -206,10 +211,16 @@ grade() {
 git rev-parse --git-dir >/dev/null 2>&1 || not_evaluated "the working directory is not inside a git repository"
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || not_evaluated "this script could not locate its own directory"
-[ -r "$HERE/check-identity-form.sh" ] || not_evaluated "scripts/check-identity-form.sh is not beside this script, so the tagger limb has no rule to apply"
-# shellcheck source=check-identity-form.sh
-. "$HERE/check-identity-form.sh"
-declare -F identity_in_form >/dev/null || not_evaluated "scripts/check-identity-form.sh did not define identity_in_form, so the tagger limb has no rule to apply"
+[ -x "$HERE/check-identity-form.sh" ] || not_evaluated "scripts/check-identity-form.sh is not beside this script, or cannot be run, so the tagger limb has no rule to apply"
+identity_in_form() { "$HERE/check-identity-form.sh" "$1" >/dev/null; }  # identity_in_form <address> — 0 when it is in the form
+# Asked before any tag is graded. A definition that answered 0, or 1, to every address would grade
+# every tagger alike, so nothing is graded unless it refuses the host's committer address and takes a
+# synthetic one in the form: GitHub issues no account the id 0 and no login a doubled hyphen.
+identity_in_form 'noreply@github.com'; form_out=$?
+identity_in_form '0+release-tag--selftest@users.noreply.github.com'; form_in=$?
+if [ "$form_out" -ne 1 ] || [ "$form_in" -ne 0 ]; then
+  not_evaluated "scripts/check-identity-form.sh answered $form_out for an address outside the form and $form_in for one in it, where it must answer 1 and 0, so the tagger limb has no rule it can apply"
+fi
 
 case "$1" in
   --all)

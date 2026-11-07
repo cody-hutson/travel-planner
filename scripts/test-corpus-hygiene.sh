@@ -5991,9 +5991,10 @@ ctl_mustfire "CTL-G1-OTHER-LIMB" G1 "$O" "the same tag with a row for its change
 
 # The form's definition, as a command, and held to one definition. The gate's control grades the
 # rule through check 4 and the arms above grade it through the limb. CTL-G-ONE-FORM holds them to
-# the same rule: the pattern stands in the definition, each consumer names that file and calls its
-# function, and neither carries the pattern itself. A consumer's copy spelled some other way is not
-# seen here, and CONTRIBUTING.md's prose is no part of this.
+# the same rule: the pattern stands in the definition, each consumer names that file and runs it as
+# a command through a function of its own named identity_in_form, and neither carries the pattern
+# itself. A consumer's copy spelled some other way is not seen here, and CONTRIBUTING.md's prose is
+# no part of this.
 expect_rc 0 "CTL-G-SPEC-FORM" "the definition, run as a command, takes an address in the form" -- "$ROOT/$CH_G_FORM" "$CTL_G_ID"
 expect_rc 1 "CTL-G-FORM" "and refuses the host's committer address, which is an exception of the gate's and no part of the form" -- "$ROOT/$CH_G_FORM" 'noreply@github.com'
 expect_rc 2 "CTL-G-FORM-ARGS" "and judges nothing without exactly one argument" -- "$ROOT/$CH_G_FORM"
@@ -6021,15 +6022,30 @@ g_lone() { ( cd "$D" || exit 9; export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NO
 expect_rc 2 "CTL-G-FORM-ABSENT" "the release check with no definition beside it says NOT-EVALUATED" -- g_lone
 : > "$G_LONE/${CH_G_FORM##*/}"
 expect_rc 2 "CTL-G-FORM-EMPTY" "and so does one beside a file that defines no rule" -- g_lone
+# A definition that answers 0 to every address, as one carrying an `exit 0` above its rule does. Run
+# as a command it would pass every tagger, so the check asks it about one address outside the form
+# and one in it before grading, and says NOT-EVALUATED unless it answers 1 and 0. The tag is a
+# lightweight one the check refuses beside a sound definition, so a check that took this
+# definition's word, or ended with it, exits 0 here rather than 2.
+g_plant_form() {  # g_plant_form <dir> — that directory's copy of the definition, with `exit 0` as its second line
+  { sed -n 1p "$ROOT/$CH_G_FORM"; printf 'exit 0\n'; sed 1d "$ROOT/$CH_G_FORM"; } > "$1/${CH_G_FORM##*/}"
+}
+G_PD="$(ctl_g_repo gplant)"
+printf '## [1.0.0] — 2026-01-01 — first\n' > "$G_PD/CHANGELOG.md"
+ctl_g_git -C "$G_PD" add -A . && ctl_g_git -C "$G_PD" commit -q -m v1.0.0 && ctl_g_git -C "$G_PD" tag v1.0.0
+G_PLANT="$WORK/fx/gplant.scripts"
+mkdir -p "$G_PLANT" && cp "$ROOT/$CH_G_SCRIPT" "$ROOT/$CH_G_FORM" "$G_PLANT/" && g_plant_form "$G_PLANT"
+g_plant() { ( cd "$G_PD" || exit 9; export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1; "$G_PLANT/${CH_G_SCRIPT##*/}" v1.0.0 ); }
+expect_rc 2 "CTL-G-FORM-PLANTED" "and so does one beside a definition that answers 0 to every address, on a lightweight tag it refuses beside a sound one" -- g_plant
 G_FDEF="$(grep -c -F 'noreply\.github' "$ROOT/$CH_G_FORM")"
 G_FCA="$(grep -c -F 'noreply\.github' "$ROOT/.github/workflows/depersonalization.yml")"
 G_FCB="$(grep -c -F 'noreply\.github' "$ROOT/$CH_G_SCRIPT")"
 G_FNA="$(grep -c -F 'identity_in_form' "$ROOT/.github/workflows/depersonalization.yml")"
 G_FNB="$(grep -c -F 'identity_in_form' "$ROOT/$CH_G_SCRIPT")"
 if [ "${G_FDEF:-0}" -eq 1 ] && [ "${G_FCA:-1}" -eq 0 ] && [ "${G_FCB:-1}" -eq 0 ] && [ "${G_FNA:-0}" -ge 1 ] && [ "${G_FNB:-0}" -ge 1 ]; then
-  PASS "CTL-G-ONE-FORM: the form's pattern stands once, in $CH_G_FORM, and the gate and the release check each call identity_in_form and hold no copy of it"
+  PASS "CTL-G-ONE-FORM: the form's pattern stands once, in $CH_G_FORM, and the gate and the release check each run that file as a command through identity_in_form and hold no copy of it"
 else
-  FAIL "CTL-G-ONE-FORM: wanted the pattern once in $CH_G_FORM and in neither consumer, with both calling identity_in_form; read definition=$G_FDEF gate=$G_FCA check=$G_FCB, calls gate=$G_FNA check=$G_FNB"
+  FAIL "CTL-G-ONE-FORM: wanted the pattern once in $CH_G_FORM and in neither consumer, with both running that file through identity_in_form; read definition=$G_FDEF gate=$G_FCA check=$G_FCB, calls gate=$G_FNA check=$G_FNB"
 fi
 
 # The pusher, against a bare remote. Each fixture is a repository whose tree carries the release
@@ -6106,6 +6122,15 @@ ctl_g_push_repo gpushany
 printf '#!/usr/bin/env bash\nexit 7\n' > "$P_D/scripts/check-release-tag.sh"
 ctl_g_release "$P_D" v1.0.0 '## [1.0.0] — 2026-01-01 — first'
 ctl_g_push_arm "CTL-G-PUSH-ANY" "bare remote: a check exiting 7 stops the push — anything but 0 does" 2 '' -- "$P_D/$CH_G_PUSH" v1.0.0
+# The definition CTL-G-FORM-PLANTED plants, committed with the tag so that the comparison passes, as
+# it does once such an edit has merged: the fixture's own pusher runs the check beside it, and that
+# check runs the planted definition. The tag is lightweight, so a check that took the definition's
+# word would exit 0 and the tag would reach the remote.
+ctl_g_push_repo gpushplant
+g_plant_form "$P_D/scripts"
+printf '## [1.0.0] — 2026-01-01 — first\n' > "$P_D/CHANGELOG.md"
+ctl_g_git -C "$P_D" add -A . && ctl_g_git -C "$P_D" commit -q -m v1.0.0 && ctl_g_git -C "$P_D" tag v1.0.0
+ctl_g_push_arm "CTL-G-PUSH-FORM-PLANTED" "bare remote: a definition answering 0 to every address, committed with the tag, makes the check say NOT-EVALUATED and stops the push" 2 '' -- "$P_D/$CH_G_PUSH" v1.0.0
 
 # The older checkout, once for each release script the comparison holds. The tagged commit's copy
 # differs from the one beside the pusher, as it does when a checkout predates a change to it — the
