@@ -20,8 +20,8 @@ by invitation only.
   user-home paths from entering the repo — in file content, in commit messages, and in
   commit author/committer identity. Its check 4 refuses any commit whose author or committer
   address is outside the form, with one exception, the committer `noreply@github.com`, exactly,
-  which the host writes on what it merges and on Dependabot's commits. Check 4 cannot see history
-  before its first run, a commit that reaches neither a pull request nor a push to `main`, a
+  which the host writes on what it merges, on web-interface commits and on Dependabot's commits.
+  Check 4 cannot see history before its first run, a commit that reaches neither a pull request nor a push to `main`, a
   committer set by hand to the host's address, a merge the host makes until it has landed, or
   whose address it is. Nor can it see a pull request that edits the rule it applies, a commit on
   a pushed branch, which is public before the gate reads it, or an identity in a commit trailer
@@ -127,8 +127,8 @@ carries no merge SHA and no tag, so nothing in it has to wait for the merge.
 6. Merge the PR. Tag `vX.Y.Z` on the resulting merge commit, locally and annotated (`git tag -a`),
    with its tagger in the same `…@users.noreply.github.com` form the ground rules require for
    commits: a tag takes its tagger from `user.email`, and check 4's exception for the host binds
-   commits alone. Signing is unchanged, and the form binds the tagger line only: which identity a
-   signing key is bound to is supplied by a verifier's own mapping, which no check here can read.
+   commits alone. Sign it with a key your verifier's mapping binds to that same no-reply address; no
+   check here reads that mapping. The form binds the tagger line only.
    Push it with `scripts/push-release-tag.sh vX.Y.Z` from a checkout at that commit, then publish the
    release from that tag. The pusher compares its release scripts with the tagged commit's, then
    runs `scripts/check-release-tag.sh`, and pushes the one tag, create-only, only when the check
@@ -141,14 +141,16 @@ carries no merge SHA and no tag, so nothing in it has to wait for the merge.
    That is why the path is a script, as the publish script's pre-push guard is: a tracked hook is a
    per-clone setting nothing records, and a host ruleset on tags runs no check.
    **If the check refuses the tag (exit 1), nothing was pushed.** A `tagger:` refusal is mended on
-   the same commit: set `user.email` to your no-reply address, delete the tag locally
+   the same commit: set `user.email` to your no-reply address (`GIT_COMMITTER_EMAIL`, when set,
+   overrides `user.email`: unset it, or give it the same address), delete the tag locally
    (`git tag -d vX.Y.Z`), and tag the same commit again with `git tag -a`. A `changelog:` refusal
    is not: delete the tag locally, land the missing or corrected heading through a pull request, and
    tag that pull request's merge commit instead. A version that moved after its heading was stamped is
    refused the same way: if another release claimed the version first and the heading was not
    restamped, the version this tag names is not the newest entry in its own tree.
-   **If the check exits 2, it measured nothing, and nothing was pushed.** Act on the cause it prints,
-   then run the pusher again.
+   **If the pusher exits 2, nothing was evaluated, and nothing was pushed:** the check measured
+   nothing, or the pusher stopped first, on a tag that names no commit or a copy that differs. Act on
+   the cause it prints, then run the pusher again.
    **What this path cannot see:** a raw `git push` of the tag, a tag made on the host (a Release
    published on a new tag name, or one made in the web interface), and whether the tagged commit is
    on `main`. The same check runs over every existing tag on every push and pull request, in
