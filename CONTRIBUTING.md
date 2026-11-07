@@ -24,8 +24,9 @@ by invitation only.
   Check 4 cannot see history before its first run, a commit that reaches neither a pull request nor a push to `main`, a
   committer set by hand to the host's address, a merge the host makes until it has landed, or
   whose address it is. Nor can it see a pull request that edits the rule it applies, a commit on
-  a pushed branch, which is public before the gate reads it, or an identity in a commit trailer
-  such as `Co-authored-by`, which no check reads but check 3's list of personal mail providers.
+  a pushed branch, which is public before the gate reads it, an identity in a commit trailer
+  such as `Co-authored-by`, which no check reads but check 3's list of personal mail providers,
+  or the identity a commit's signing key is bound to, which only a verifier's own mapping supplies.
 - **No personal data in examples.** The worked examples under `examples/` are sanitized and
   illustrative (fixture names, representative bookings). Keep your own trip data in your data
   folder — the one `~/.travel-planner/data-root` names (`CLAUDE.md` § *Resolving a trip*) — and
@@ -128,7 +129,7 @@ carries no merge SHA and no tag, so nothing in it has to wait for the merge.
    with its tagger in the same `…@users.noreply.github.com` form the ground rules require for
    commits: a tag takes its tagger from `user.email`, and check 4's exception for the host binds
    commits alone. Sign it with a key your verifier's mapping binds to that same no-reply address; no
-   check here reads that mapping. The form binds the tagger line only.
+   check here reads that mapping. Of the tag's identity, the check reads the tagger line only.
    Push it with `scripts/push-release-tag.sh vX.Y.Z` from a checkout at that commit, then publish the
    release from that tag. The pusher compares its release scripts with the tagged commit's, then
    runs `scripts/check-release-tag.sh`, and pushes the one tag, create-only, only when the check

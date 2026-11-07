@@ -50,6 +50,8 @@ name: Depersonalization
 #   - An identity outside the author and committer fields: a Co-authored-by or
 #     Signed-off-by trailer, or a name. No check reads those but check 3, which holds
 #     the commit message they sit in to its list of personal mail providers.
+#   - The identity a commit's signing key is bound to, which only a verifier's own
+#     mapping supplies.
 
 on:
   push:
