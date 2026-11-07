@@ -263,9 +263,10 @@
 #        must carry. What the group asserts is the comparison. The tags that are known to fail
 #        are DECLARED in the `release-tag-declaration` fence in CONTRIBUTING.md and asserted in
 #        BOTH DIRECTIONS, on the device classes C and D use: a failing tag no row declares
-#        fails (G1), and a row naming no failing tag fails too (G2) — tags are not protected on
-#        this host, so a tag can be moved or deleted, and a declaration must not outlive the
-#        failure it excepts. A census that reads no tag, cannot read one, or disagrees with its
+#        fails (G1), and a row naming no failing tag fails too (G2) — the host's ruleset refuses
+#        deleting or force-pushing a `v*` tag, but a clone's own tags can be moved or deleted,
+#        and a declaration must not outlive the failure it excepts. A census that reads no tag,
+#        cannot read one, or disagrees with its
 #        own exit status, and a declaration that is empty while tags fail, are G0: a broken
 #        probe or a shallow checkout, never a clean history, and G0 withholds G1 and G2. So is
 #        a SHALLOW repository whose census lacks a declared tag: a depth-limited clone carries
@@ -4075,7 +4076,7 @@ else
   if [ "${G_N2:-0}" -eq 0 ]; then
     PASS "G2: every declared row still names a failing tag with the reason the check gives — $G_NDECL row(s), none stale. Arms CTL-G2, CTL-G2-ABSENT and CTL-G2-REASON plant a row that passes, one naming no tag and one naming the wrong reason"
   else
-    FAIL "G2: $G_N2 declared row(s) no longer match a failing tag — the tag passes now, no longer exists, or fails for a different reason. Tags are not protected on this host; find what moved the tag, and correct or remove the row in the same change:"
+    FAIL "G2: $G_N2 declared row(s) no longer match a failing tag — the tag passes now, no longer exists, or fails for a different reason. The host's ruleset refuses deleting or force-pushing a v* tag, but a clone's own tags have no such guard; find what moved the tag or changed its verdict, and correct or remove the row in the same change:"
     grep '^FINDING G2 ' <<<"$G_OUT" | awk '{ printf "      %s  %s\n", $3, $4 }'
   fi
 fi
@@ -5878,7 +5879,7 @@ O="$(ch_scan_g "$D")"
 ctl_mustfire "CTL-G2" G2 "$O" "a row declares a tag that carries its entry — a declaration that outlived its failure is a standing exemption for that tag, which is why this direction is asserted" 1
 ctl_g_decl "$D" 'v1.1.0  changelog:no-changelog' 'v9.9.9  changelog:no-entry'
 O="$(ch_scan_g "$D")"
-ctl_mustfire "CTL-G2-ABSENT" G2 "$O" "a row names a tag the repository does not carry — moved, deleted or mistyped, and on this host nothing prevents the first two" 1
+ctl_mustfire "CTL-G2-ABSENT" G2 "$O" "a row names a tag the repository does not carry — moved, deleted or mistyped; the host's ruleset refuses deleting or force-pushing a v* tag, and nothing prevents the first two in a clone" 1
 ctl_g_decl "$D" 'v1.1.0  changelog:no-entry'
 O="$(ch_scan_g "$D")"
 ctl_mustfire "CTL-G2-REASON" G2 "$O" "a row names a failing tag with a reason the check does not give — the row and the tag disagree, so the row is stale" 1

@@ -55,6 +55,7 @@ You will receive an acknowledgement, an initial assessment, and a remediation pl
 | Native GitHub Secret Scanning | Auto-enables on visibility flip to public |
 | Native GitHub Push Protection | Auto-enables on visibility flip to public |
 | Branch protection on `main` | Enabled (force-push blocked, deletions blocked, required status checks, stale-review dismissal, required conversation resolution) — see *Branch Protection Posture* below for the administrator exemption |
+| Tag ruleset on `refs/tags/v*` (`protect-version-tags`) | Enabled (deletions blocked, force-push blocked, no bypass actors). It runs no content check: the release-tag check runs in `scripts/push-release-tag.sh`, which `CONTRIBUTING.md`, *Cutting a release*, step 6 pushes through, and the ruleset complements it |
 
 ## Branch Protection Posture
 

@@ -141,6 +141,10 @@ carries no merge SHA and no tag, so nothing in it has to wait for the merge.
    version heading alike, is ordered before it, and why the check runs before the push.
    That is why the path is a script, as the publish script's pre-push guard is: a tracked hook is a
    per-clone setting nothing records, and a host ruleset on tags runs no check.
+   The host does hold one, `protect-version-tags` ([SECURITY.md](SECURITY.md)): it refuses deleting or
+   force-pushing a `v*` tag, and complements the pusher rather than replacing it. Read it with
+   `gh api repos/:owner/:repo/rulesets`, which names it, and `gh api repos/:owner/:repo/rulesets/<id>`,
+   which lists its rules.
    **If the check refuses the tag (exit 1), nothing was pushed.** A `tagger:` refusal is mended on
    the same commit: set `user.email` to your no-reply address (`GIT_COMMITTER_EMAIL`, when set,
    overrides `user.email`: unset it, or give it the same address), delete the tag locally
@@ -221,8 +225,9 @@ the form.
 `scripts/check-release-tag.sh --all` grades every tag, and `scripts/test-corpus-hygiene.sh`
 group **G** holds its failures against this declaration in both directions: a tag that fails
 and is not declared here fails the suite, and so does a row naming a tag that no longer fails
-for the reason given. Tags are not protected against being moved or deleted, and a declaration
-must not outlive the failure it excepts. Two columns, both required, whitespace-separated, as in
+for the reason given. The host refuses deleting or force-pushing a `v*` tag (step 6), but a clone's
+own tags have no such guard, and a declaration must not outlive the failure it excepts. Two columns,
+both required, whitespace-separated, as in
 `reference/adr/README.md` § *Number declarations*: the tag, and one token naming the check's
 limb and the reason it gives. A line whose first non-blank character is `#` is a comment.
 
