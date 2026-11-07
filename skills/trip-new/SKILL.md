@@ -532,3 +532,17 @@ establishes **nothing**: omission is not prohibition, so no bound below is claim
   `ALLOW_PLAINTEXT`, no `--yes` to `unpublish`, and no overwrite or deletion of existing trip
   content, each of which the second and fourth bullets above and `ADR-007` § 2 forbid
   unconditionally.
+- **A run nobody can answer writes only what its verb writes without asking.** A **rule**. A run is
+  non-interactive where no later message can reach the session: print mode, or a scheduled task. An
+  answer arrives only in a later message, and `allowed-tools` clears when one does
+  (`reference/adr/ADR-007-command-entry-point.md` § *Context*). So where a verb's section reaches a
+  write without asking anything, the write runs in this turn, under this turn's grants, because
+  typing the verb is what asked for it. Where the section asks first — a question, a choice of
+  routes, a confirmation, a typed token — the verb stops there: it names what it would have asked,
+  writes nothing past that point, and takes no default, no assumed answer and no flag in the
+  answer's place. What it wrote before that point stands, and it says so. A write the harness denies
+  is relayed as a denial and never reported as done. **A session need not recognise print mode for
+  this to hold**, because a question nobody answers writes nothing either way, and a verb's own
+  non-interactive row is this rule at that verb, never a different one.
+  `reference/adr/ADR-051-a-verb-runs-until-it-asks.md` records the decision; this rule is its
+  operative statement. **This rule is followed, not enforced.**

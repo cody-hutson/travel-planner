@@ -443,6 +443,21 @@ they forbid available: it admits no `ALLOW_PLAINTEXT`, no `--yes` to `unpublish`
 overwrite or deletion of existing trip content, each of which the publishing and overwrite
 paragraphs above and `ADR-007` § 2 forbid unconditionally.
 
+**A run nobody can answer writes only what its verb writes without asking.** A run is
+non-interactive where no later message can reach the session: print mode, or a scheduled task.
+An answer arrives only in a later message, and `allowed-tools` clears when one does
+(`reference/adr/ADR-007-command-entry-point.md` § *Context*). So where a verb's section
+reaches a write without asking anything, the write runs in this turn, under this turn's
+grants, because typing the verb is what asked for it. Where the section asks first — a
+question, a choice of routes, a confirmation, a typed token — the verb stops there: it names
+what it would have asked, writes nothing past that point, and takes no default, no assumed
+answer and no flag in the answer's place. What it wrote before that point stands, and it says
+so. A write the harness denies is relayed as a denial and never reported as done. **A session
+need not recognise print mode for this to hold**, because a question nobody answers writes
+nothing either way, and a verb's own non-interactive row is this rule at that verb, never a
+different one. `reference/adr/ADR-051-a-verb-runs-until-it-asks.md` records the decision; this
+rule is its operative statement. **This rule is followed, not enforced.**
+
 ## Selecting the verb
 
 A literal lookup. Every step below is lexical, and the matching step — step 4 — has a
@@ -678,6 +693,7 @@ output file; the hub reads the spoke outputs, `trips/<slug>/outputs/traveler-mod
 **Dispatches** enrichment, the spokes § *Modes* admits for the resolved mode, the hub, and the
 validator where that mode runs it — each in the role or roles its roster row states, each
 writing exactly the file or files that row names and nothing else.
+**Non-interactive: the standing clause's *run nobody can answer*.**
 
 **The chain is § *Modes*' to decide, not this section's.** Read the resolved mode's row there
 and dispatch what it says runs, in the pipeline order § *Dispatching agents* states. The
@@ -751,6 +767,7 @@ spoke outputs, `trips/<slug>/outputs/traveler-model.md` and
 role, writing `trips/<slug>/outputs/traveler-model.md` alone; the spokes the coupling
 conditions admit, the hub and the validator — each in the role its roster row states, each
 writing exactly the file or files that row names.
+**Non-interactive: the standing clause's *run nobody can answer*.**
 
 **What it evaluates before it dispatches anything.** Each coupling condition below, with the
 evidence that decided it, announced per the standing clause:
@@ -825,6 +842,7 @@ reads, attributed:** transport reads `trips/<slug>/trip-context.md`,
 `trips/<slug>/outputs/traveler-model.md` and `trips/<slug>/outputs/event-status.md`.
 **Dispatches** transport, scheduling, the hub and the validator — each in the role its roster
 row states, each writing exactly the file or files that row names.
+**Non-interactive: the standing clause's *run nobody can answer*.**
 
 **The chain: `transport → scheduling → hub → validator`.** Each link precedes the next because
 of the artifact the next link consumes, not because the order feels right.
@@ -888,6 +906,7 @@ reads what **its own prompt** declares — at minimum `trips/<slug>/trip-context
 than closed here — a spoke's reads are read from its prompt at dispatch time.
 **Dispatches** that one spoke, in the role its roster row states, writing exactly the file
 that row names.
+**Non-interactive: the standing clause's *run nobody can answer*.**
 
 **The agent key.** Positional — the first token of the argument string, ASCII-case-folded —
 matched by **exact string equality** against a set of **tokens** derived live from
@@ -935,6 +954,7 @@ writes. **Dispatches** the validator alone, in the role its roster row states. *
 names no output path and instructs the validator, in terms, to write neither of the two files
 its own prompt declares** — `outputs/validation-report.md` and `outputs/satisfaction-metrics.md`
 — **and to return its findings in the response instead.**
+**Non-interactive: the standing clause's *run nobody can answer*.**
 
 **No output path, on purpose — and the dispatch has to say so.** § Step 1 states this audit
 *"reports findings. No spokes, no hub, no edits."* `agents/06-validator.md` declares its writes
@@ -991,6 +1011,7 @@ the group's leanings and `trips/<slug>/trip-context.md` for the dates and party.
 **Dispatches** Destination Ideation, in the role its roster row states, writing
 `outputs/destination-shortlist.md` alone. That artifact is `rebuilt-each-synthesis`: on a
 re-run the agent replaces it with the current ranking rather than appending to it.
+**Non-interactive: the standing clause's *run nobody can answer*.**
 
 **Why the row's destination cell reads `UNDECIDED`.** A decided destination means the ideation
 question is already answered, and running the pipeline anyway spends it re-ranking a settled
@@ -1047,6 +1068,7 @@ as one this verb follows, not one an inspection of the tree can settle afterward
 `trips/<slug>/trip-log.md`: the log carries the reasoning behind choices, and the site renders
 what was chosen. **Dispatches no agent** — the site is authored directly, which is why this
 verb reaches `Write` for its own output rather than for an agent's.
+**Non-interactive: the standing clause's *run nobody can answer*.**
 
 **Update, do not regenerate.** Where the site exists, **patch the affected sections** and
 preserve design tweaks already approved; `Write` is reached only where the file does not

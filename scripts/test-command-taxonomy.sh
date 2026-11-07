@@ -196,6 +196,11 @@
 #     LS2 a traveller file read on every trip with no per-trip directory call named
 #     LS3 a directory's entry names read with no listing call named
 #
+#   NR  every verb not read-only says what a non-interactive run does (group NR)
+#     NR0 population, region coverage, and the matchers' arms
+#     NR1 a declared-intent verb with neither the rule's citation nor its own statement
+#     NR2 a command file not stating the rule once, or the files in two renderings
+#
 #   TD  a verb declaring the roster block as a read disposes of the count in it
 #                                                                          (group TD)
 #     TD0 population, region coverage, and BOTH matchers' sensitivity + specificity arms
@@ -5743,6 +5748,130 @@ elif [ -n "$LS_EBAD" ]; then
   FAIL "LS3: a verb reads a directory's entry names and names no listing call — ${LS_EBAD}. A read of entry names is a listing, cited or not"
 else
   PASS "LS3: all ${LS_EPOP} verb(s) reading a directory's entry names name a listing call"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group NR — every verb that is not read-only says what a non-interactive run does.
+#
+# WHAT THIS GROUP IS FOR. Six verbs stated it and twenty-eight did not, so a reader of a verb with
+# no statement could not tell whether a run nobody can answer refuses, writes without a
+# confirmation, or stops at a permission denial. One rule now states it, in each command file,
+# and a verb carries the rule's citation or its own statement.
+#
+# THE POPULATION IS FAIL-CLOSED, on the NEG record group C already reads: a verb is in it unless
+# its first read declaration declares all three negatives. A verb that declares none of them is
+# not assumed to write nothing, the line ADR-007 § 1 draws.
+#
+# WHAT THIS GROUP DOES NOT GRADE. That a session follows the rule, or recognises print mode. Whether
+# a mention of a non-interactive run says the right thing is a reading, and NR1 grades presence.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group NR — every verb that is not read-only says what a non-interactive run does."
+
+NR_HEAD='**A run nobody can answer'
+NR_CITE="the standing clause's *run nobody can answer*"
+
+# nr_carries <region-text> — 1 where the region cites the rule, states it, or carries its own statement.
+nr_carries() {
+  printf '%s\n' "$1" | awk -v c="$NR_CITE" -v h="$NR_HEAD" '
+    index($0, c) > 0 { f = 1 }
+    index($0, h) > 0 { f = 1 }
+    index(tolower($0), "non-interactive") > 0 { f = 1 }
+    END { print f + 0 }'
+}
+# nr_rule_texts <file> — one normalised line per statement of the rule at fence depth 0.
+nr_rule_texts() {
+  LC_ALL=C awk -v h="$NR_HEAD" '
+    /^```/ { fd = !fd; next }
+    fd { next }
+    /^[[:space:]]*$/ { if (index(p, h) > 0) print p; p = ""; next }
+    /^(- |[0-9]+\. )/ { if (index(p, h) > 0) print p; p = "" }
+    { sub(/^[[:space:]]+/, ""); p = (p == "" ? $0 : p " " $0) }
+    END { if (index(p, h) > 0) print p }' "$1" |
+  LC_ALL=C sed -E 's/^([0-9]+\.|-) //; s/ A \*\*rule\*\*\.//'
+}
+
+NR_FILES=0; NR_POP=0; NR_RO=0; NR_BAD=""; NR_COVER_BAD=""; NR_RFILES=0; NR_RBAD=""
+NR_RFORMS="$WORK/nr-rule-forms.txt"; : > "$NR_RFORMS"
+for nrf in "$CDIR"/*/SKILL.md; do
+  [ -e "$nrf" ] || continue
+  NR_FILES=$((NR_FILES+1))
+  nrbase="$(verb_id "$nrf")"; nrcmd="/$nrbase"
+  nrregions="$(printf '%s\n' "$ALL" | awk -v c="$nrcmd" '$1 == "REGION" && $2 == c { print $4 "\t" $5 "\t" $3 }')"
+  nrn="$(printf '%s\n' "$nrregions" | grep -c '[^[:space:]]' || true)"
+  nrdecl="$(getcount "$ALL" "DECL_$nrbase")"
+  if [ "$nrn" -eq 0 ] || [ "${nrdecl:-0}" -eq 0 ] || [ "$nrn" -ne "${nrdecl:-0}" ]; then
+    NR_COVER_BAD="$NR_COVER_BAD$nrcmd(walked=$nrn declared=${nrdecl:-0}) "
+    continue
+  fi
+  while IFS="$(printf '\t')" read -r nrs nre nrverb; do
+    [ -n "${nrs:-}" ] || continue
+    nrbits="$(printf '%s\n' "$ALL" | awk -v c="$nrcmd" -v v="$nrverb" '$1 == "NEG" && $2 == c && $3 == v && !seen { print $4; seen = 1 }')"
+    if [ "${nrbits:-0}" -eq 7 ]; then NR_RO=$((NR_RO+1)); continue; fi
+    NR_POP=$((NR_POP+1))
+    if [ "$(nr_carries "$(awk -v s="$nrs" -v e="$nre" 'NR > s && NR <= e { print }' "$nrf")")" -eq 0 ]; then
+      NR_BAD="$NR_BAD$nrcmd ${nrverb:-?}; "
+    fi
+  done <<NREOF
+$nrregions
+NREOF
+  nrt="$(nr_rule_texts "$nrf")"
+  nrtn="$(printf '%s\n' "$nrt" | grep -c '[^[:space:]]' || true)"
+  if [ "$nrtn" -eq 1 ]; then
+    NR_RFILES=$((NR_RFILES+1)); printf '%s\n' "$nrt" >> "$NR_RFORMS"
+  else
+    NR_RBAD="$NR_RBAD$nrcmd($nrtn) "
+  fi
+done
+NR_RN="$(sort -u "$NR_RFORMS" | grep -c '[^[:space:]]' || true)"
+
+NR_S1="$(nr_carries 'A plain section that asks a question and writes a file.')"
+NR_S2="$(nr_carries "**Non-interactive: the standing clause's *run nobody can answer*.**")"
+NR_S3="$(nr_carries '| the run is non-interactive | refuse. No flag skips the gate |')"
+printf '%s\n%s\n\n%s\n' '- **Another bullet.** Text.' '- **A run nobody can answer writes only.** A **rule**. Body.' '17. **A run nobody can answer writes only.** Body.' > "$WORK/nr-ctl.md"
+NR_S4="$(nr_rule_texts "$WORK/nr-ctl.md" | sort -u | grep -c '[^[:space:]]' || true)"
+
+NR_OK=1
+if [ "$NR_FILES" -eq 0 ]; then
+  NR_OK=0
+  FAIL "NR0: the walk read ${NR_FILES} command file(s) — the population below would cover nothing"
+elif [ -n "$NR_COVER_BAD" ]; then
+  NR_OK=0
+  FAIL "NR0: COVERAGE IS INCOMPLETE — $NR_COVER_BAD. Every verdict below is computed from the region extents this gate grades"
+elif [ "$NR_POP" -eq 0 ]; then
+  NR_OK=0
+  FAIL "NR0: no verb across ${NR_FILES} command file(s) is on the declared-intent side, so NR1 would be a statement over the empty set"
+elif [ "$NR_RO" -eq 0 ]; then
+  NR_OK=0
+  FAIL "NR0: no verb declares all three negatives, so the population read every verb as writing: the NEG record is not being read"
+elif [ "$NR_S1" -ne 0 ]; then
+  NR_OK=0
+  FAIL "NR0: the specificity arm fired — a section that says nothing about a non-interactive run read as saying it ($NR_S1, expected 0)"
+elif [ "$NR_S2" -ne 1 ] || [ "$NR_S3" -ne 1 ]; then
+  NR_OK=0
+  FAIL "NR0: MUST FIRE — a sensitivity arm returned the wrong value (citation $NR_S2, own row $NR_S3; each expected 1)"
+elif [ "$NR_S4" -ne 1 ]; then
+  NR_OK=0
+  FAIL "NR0: the normal form did not reduce a bullet with its label and a numbered rule to one rendering ($NR_S4, expected 1)"
+else
+  PASS "NR0: the walk covered ${NR_FILES} command file(s), every walked region count equal to the verb count declared: ${NR_POP} verb(s) on the declared-intent side, ${NR_RO} declaring all three negatives, and the matcher's arms held"
+fi
+
+if [ "$NR_OK" -eq 0 ]; then
+  FAIL "NR1: VERDICT WITHHELD — NR0 did not pass, so this population is not one a verdict can stand on"
+elif [ -n "$NR_BAD" ]; then
+  FAIL "NR1: a verb that is not read-only neither cites the rule nor says what a non-interactive run does — ${NR_BAD}. Cite the standing clause in its read declaration, or state it in its refusal table"
+else
+  PASS "NR1: all ${NR_POP} verb(s) on the declared-intent side cite the rule or say what a non-interactive run does, in their own region. This is presence: whether a session follows it is not graded here"
+fi
+if [ "$NR_OK" -eq 0 ]; then
+  FAIL "NR2: VERDICT WITHHELD — NR0 did not pass"
+elif [ -n "$NR_RBAD" ]; then
+  FAIL "NR2: a command file does not state the rule exactly once — $NR_RBAD(count of statements). Each of the ${NR_FILES} files carries one text of it, because a citation to another command's file would make this command's conduct that file's to state"
+elif [ "$NR_RN" -ne 1 ]; then
+  FAIL "NR2: the ${NR_RFILES} command files state the rule in $NR_RN renderings, expected 1 once its list marker and label are set aside"
+else
+  PASS "NR2: all ${NR_RFILES} command files state the rule once, in one rendering once its list marker and label are set aside"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
