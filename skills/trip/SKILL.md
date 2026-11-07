@@ -756,7 +756,13 @@ verdict this run did not change.
 **Reads:** `agents/<name>.md` — the prompt of each agent this verb dispatches, the path taken
 from that agent's own row in `CLAUDE.md`'s roster; `trips/<slug>/trip-context.md` — the
 `## Mode` block alone, read before it is written, for the reason `plan`'s section gives. It
-reads no other block of that file and nothing under `trips/<slug>/outputs/` itself. **Agent
+reads no other block of that file. Where the resolved mode is not already `ITERATION`, it also
+reads under `trips/<slug>/outputs/` itself, for the mode test below and nothing else:
+`final-itinerary.md`, for whether it exists, taken with `Bash(ls:*)`
+as `ls -1 "<data-root>/trips/<slug>/outputs/final-itinerary.md"` before the first dispatch;
+and, on a run that dispatches the reconciler, the `## Update signals [DERIVED]` block of
+`traveler-model.md` alone, immediately after that leg. That block names a field and never its
+value (`agents/00-enrichment.md` § *Profile-change detection*). **Agent
 reads, attributed:** enrichment, where a changed profile is what triggered the run, reads
 `trips/<slug>/travelers/*.md`, `<store-root>/people/<person-id>.md`, the durable record a
 file's `person:` line references, and the survivor where that record is a `merged-into:` stub,
@@ -800,21 +806,54 @@ named writer of `outputs/final-itinerary.md` and the primary writer of
 the hub just produced — so a run that skipped either would leave the itinerary unreconciled
 or the status-integrity guarantee unaudited. The announcement names the floor as such.
 
-**The mode.** The value is `ITERATION`. The artifact that makes the transition observable is
-the research the affected spokes appended, named by path in the announcement. Apply the
-placement rule: the hub's equity-aware disruption recovery and the validator's recovery-equity
-check both branch on `ITERATION` and are both legs of this chain, so the write precedes the
-first of them; and no remaining leg must run under the outgoing mode, because this run is the
-iteration. Writing at the end of the chain would strand exactly the readers the carve-out
-exists to reach.
+**The reconciler leg.** A changed profile is what the operator states in this run's argument
+text. Nothing here looks for one, so a run that states none dispatches no reconciler, whatever
+the traveller files hold. Where one is stated, the reconciler runs first, ahead of any spoke.
 
-**Where it writes no mode.** Where the coupling evaluation admitted no spoke, the floor runs
-alone and **this run produced no artifact of its own before the hub leg** — so no mode is
-written and none is announced. Say so, and name `/trip-record mode`: a transition with no
-artifact behind it rests on a statement only the operator can make, which is that command's
-evidence and its territory. `DISCOVERY` and `ENRICHMENT` are states this verb's own row
-admits, and the floor-only path is reachable from either, so this is a branch the verb enters
-rather than a sentence it carries.
+**The mode.** The value is `ITERATION`: an existing plan the user wants changes to, with a
+changed-profile delta among § *Modes*' triggers. So the write needs a plan,
+`trips/<slug>/outputs/final-itinerary.md` shown on file by the probe above, and the first
+artifact this run produces that shows the change, named by path in the announcement:
+
+| the leg, in dispatch order | the artifact | what makes it evidence |
+|---|---|---|
+| the reconciler | `trips/<slug>/outputs/traveler-model.md` | its `## Update signals [DERIVED]` block carries, after the leg, a line above its `###` partition naming a changed need or a changed desire. `skills/trip-record/SKILL.md` § `travelers` owns those two classes and routes them to this verb. A rebuilt model with no such line shows nothing for the hub to recover from |
+| the spokes the coupling conditions admit | the research they appended | the dated section each one appended |
+
+Nothing else this chain writes is evidence. Apply the placement rule: the hub's equity-aware
+disruption recovery and the validator's recovery-equity check both branch on `ITERATION` and
+are both legs of this chain, so the write precedes the first of them; and no remaining leg
+must run under the outgoing mode, because this run is the iteration. So a qualifying model
+takes the write straight after the reconciler, ahead of any spoke, and on a run that also
+admits spokes they then run under `ITERATION`; otherwise it lands after the spokes. Writing at
+the end of the chain would strand exactly the readers the carve-out exists to reach. On a run
+that dispatches the reconciler, the announcement states this test rather than a result.
+
+`Mode notes`, written in the same act, names the artifact by path and then the scope, because
+the hub and the spokes read their `ITERATION` scope from it: the change the coupling
+evaluation recorded, if any, and on the reconciler's artifact "for the hub, the days its
+disruption recovery reaches from the update signals". It names no traveller and no field,
+since a `[THIRD-PARTY]` member is never named in `trip-context.md`, and no `locked` or
+`firmed` event the user's argument text does not name, since the hub's preservation test reads
+this field.
+
+**Where it writes no mode.** No mode is written and none is announced on any path below, and
+the floor still runs. Say which path this run reached, and name what the last column names.
+`DISCOVERY` and `ENRICHMENT` are states this verb's own row admits, and each path is reachable
+from either, so these are branches the verb enters rather than sentences it carries.
+
+| what this run found | why nothing is observable | what the run names |
+|---|---|---|
+| no spoke admitted and no changed profile stated | the floor runs alone, so this run produced no artifact of its own before the hub leg | `/trip-record mode` |
+| no spoke admitted, a changed profile stated, and no qualifying line after the reconciler leg | the reconciler ran, but its artifact shows no change for the hub to recover from: no composed value moved, an earlier reconcile already took the change in, the leg stopped or declined its write, or the lines are all a journey facet or `PROFILE MISSING` | `/trip-record mode`, and that where an earlier reconcile took the change in, its signal is gone until the next change, because this run's reconcile rebuilt the model without it |
+| no `outputs/final-itinerary.md` on file when this run started, shown absent, not refused | `ITERATION` is an existing plan being changed, and there is none: the hub's patch and both recovery behaviours compare against a prior version | `/trip plan`, and `/trip-record mode` for a transition only the operator can state |
+
+Where more than one row holds, the lowest governs, because the plan is what the write needs
+first. A path no row names takes the standing clause's test: no artifact, no mode.
+`/trip-record mode` is named because a transition with no artifact behind it rests on a
+statement only the operator can make, which is that command's evidence and its territory.
+Where the resolved mode already reads `ITERATION`, the value would not change: nothing is
+written, nothing further is named, and neither read under `outputs/` is taken.
 
 **`outputs/event-status.md`.** Read through the agents this verb dispatches — the hub and the
 validator both read it — and on a disruption recovery a `locked → planned` regression in it

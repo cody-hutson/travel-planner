@@ -1256,6 +1256,12 @@ block's body is a changed journey facet — report it and name no command
 | a changed journey facet | report it and **name no command**; where the signal says `### Per-Traveler Planning Days [DERIVED]` is **stale**, say that too | the reconcile has already carried the change into the model, and that block has **no writer** in `CLAUDE.md` § *Write ownership*, so its staleness is reported and never repaired in place |
 | `PROFILE MISSING` | `/trip-record profile <name>` | the profile is the operator's to collect |
 
+**This reconcile has taken the change in, so a later `/trip replan` finds none of its own to advance
+the mode from.** Where the resolved mode is not `ITERATION`, say so: for a trip that holds a plan,
+`/trip-record mode` comes before `/trip replan`, and `/trip replan` then runs with no change stated,
+because the hub's disruption recovery and the validator's recovery-equity check run under that mode
+and read this reconcile's signal.
+
 **The denominator is the roster, never the directory.** `travelers/` ships empty and stays empty
 until a profile is filled, so a file count under it reads a real group as zero. This verb counts
 nothing itself: it renders what enrichment produced, and enrichment takes the `## Group` roster and
