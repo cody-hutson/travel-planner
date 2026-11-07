@@ -244,7 +244,9 @@ jobs:
 
           # ── Control: every check catches a planted leak, and only where it looks ─────
           # Runs before anything is scanned, through content_scan and identity_scan
-          # themselves, on this runner's tools. The planted values are ASSEMBLED here
+          # themselves, on this runner's tools. It proves the rules and the scans, not the
+          # reads or the verdict: check 4's git log line, its count guard and fail=1 sit
+          # outside it, as checks 1 to 3's reads of the range do. The planted values are ASSEMBLED here
           # rather than written out: this job scans its own source whenever this file is in
           # the range, and a committed literal would be refused by the very checks it exists
           # to prove.
