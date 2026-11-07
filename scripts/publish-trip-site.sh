@@ -87,7 +87,9 @@
 #
 # Repo slug resolution (in order): <trip-dir>/.publish-slug, else the convention
 # <destination>-<year>-trip. Drop a repo name in .publish-slug to publish to a custom or
-# pre-existing repo instead of the derived one (resolved identically by every subcommand).
+# pre-existing repo instead of the derived one (resolved identically by every subcommand). A
+# pre-existing repo takes its first push from publish, and only while the host says it is empty and
+# public; update and rotate refuse it, naming publish, and publish refuses any repo holding anything.
 # --opaque generates such a name for you (a random slug) and saves it there on first publish.
 #
 set -euo pipefail
@@ -3709,7 +3711,7 @@ require_change_confirmation() { # <trip_dir>
         case "$(_baseline_record "$(staged_record_path "$trip_dir")")" in
           absent) ;;
           "$out_dg") die "GUARD ABORTED — a baseline record an earlier push staged is still outstanding at $(staged_record_path "$trip_dir") (state: undetermined), and it names the plan going out, which the published baseline records as well: that push may have reached the published site without its record being put in place, or failed after an earlier push of another plan did, so which plan the site carries is unknown, and the gate could not compare the outgoing plan with it. Nothing was pushed, and the published site was not touched. confirm refuses this state as well. While that record stands this plan stays held, so re-running update with it cannot clear the record. If the site carries the plan the published baseline records, which is this one, the record is redundant: delete that file and re-run. If it carries another plan, keep the file, because deleting it would let this plan publish over that one unasked: publish the plan the site should carry through update instead, with its confirmation or its approvals, which stages that plan's record over this one and records it; or unpublish, then publish again." ;;
-          *) die "GUARD ABORTED — a baseline record an earlier push staged is still outstanding at $(staged_record_path "$trip_dir") (state: undetermined): that push may have reached the published site without its record being put in place, so which plan the site carries is unknown, and the gate could not compare the outgoing plan with it. Nothing was pushed, and the published site was not touched. confirm refuses this state as well. If the site carries the plan the published baseline records, the record is redundant: delete that file and re-run. If it carries another plan, keep the file. Re-run update with the plan the site should carry — usually the plan that push carried — with its confirmation or its approvals: that push stages its plan's record over this one and records it. Where that push was a first publish, its per-trip repository may hold no page at all, and update cannot run on an empty one: unpublish, then publish again." ;;
+          *) die "GUARD ABORTED — a baseline record an earlier push staged is still outstanding at $(staged_record_path "$trip_dir") (state: undetermined): that push may have reached the published site without its record being put in place, so which plan the site carries is unknown, and the gate could not compare the outgoing plan with it. Nothing was pushed, and the published site was not touched. confirm refuses this state as well. If the site carries the plan the published baseline records, the record is redundant: delete that file and re-run. If it carries another plan, keep the file. Re-run update with the plan the site should carry — usually the plan that push carried — with its confirmation or its approvals: that push stages its plan's record over this one and records it. Where that push was a first publish, its per-trip repository may hold no page at all: publish takes that empty repository, and update refuses it." ;;
         esac
       fi
       die "GUARD ABORTED — could not identify the itinerary content of the outgoing render of ${trip_dir} (state: undetermined): it could not be read, its itinerary text could not be projected, or that text could not be normalized; any error printed above names the cause. Nothing was pushed, and the published site was not touched. confirm refuses this state as well, because a confirmation binds to an identified itinerary and there is none: fix whichever of the three it is, then re-run." ;;
@@ -4042,8 +4044,8 @@ _republishes_baseline() { # <trip_dir> <outgoing-digest> -> 0 when no record nee
 # rest is not: the gate trusts the trip directory for every sidecar it reads, so such a program can
 # still leave a baseline naming a plan the site does not carry, and a render rewritten between the
 # encryption and this step is staged as though the push carried it. A first publish whose push failed
-# after its per-trip repository was created leaves its record staged on a trip with no baseline, and
-# update cannot run on that empty repository: unpublish, then publish again.
+# after its per-trip repository was created leaves its record staged on a trip with no baseline, and that
+# empty repository takes its first push from publish, run again, which puts the record in place.
 stage_baseline_record() { # <trip_dir> <site_html> <publish|update|rotate> [<var-to-receive-the-pushed-plan's-digest>]
   local trip_dir="$1" site_html="$2" verb="$3" nxt dg tmp="" after='then re-run.'
   [ "$verb" != rotate ] || after='then run update: the new passphrase is already recorded, and update finishes the rotation, as it does after a failed push.'
@@ -4139,10 +4141,24 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   slug="$(slug_for "$trip_dir")"
   pub_dir="$trip_dir/.publish"
   owner="$(gh api user --jq '.login')"
-  if gh repo view "${owner}/${slug}" >/dev/null 2>&1; then
-    die "per-trip repo ${owner}/${slug} already exists — use:  $(basename "$0") update ${trip_dir}  (or rotate)"
+  # A repository that exists takes this push only when the host says it is empty and public. What the
+  # host said decides, never what a clone holds; an answer that is not exactly that is the repository
+  # holding something, which is the refusal it always was.
+  local into_empty=0 host=""
+  if host="$(gh repo view "${owner}/${slug}" --json isEmpty,visibility --jq '"\(.isEmpty) \(.visibility)"' 2>/dev/null)"; then
+    case "$host" in
+      "true PUBLIC") into_empty=1 ;;
+      "true "*) die "per-trip repo ${owner}/${slug} is empty, but it is not public (${host#true }). This engine publishes to a public repository served by GitHub Pages, and only ever pushes ciphertext to it. Nothing was pushed, and no passphrase was generated. Make it public in its settings, or name another repository in ${trip_dir}/.publish-slug, and re-run publish." ;;
+      *) die "per-trip repo ${owner}/${slug} already exists — use:  $(basename "$0") update ${trip_dir}  (or rotate)" ;;
+    esac
   fi
-  rm -rf "$pub_dir"; mkdir -p "$pub_dir"
+  rm -rf "$pub_dir"
+  if [ "$into_empty" = 1 ]; then
+    gh repo clone "${owner}/${slug}" "$pub_dir" >/dev/null 2>&1 \
+      || die "publish: could not clone the empty per-trip repository ${owner}/${slug}. Nothing was pushed, and no passphrase was generated. Re-run publish when it can be reached."
+  else
+    mkdir -p "$pub_dir"
+  fi
 
   if [ "$plaintext" = "1" ]; then
     warn "PLAINTEXT publish requested — the itinerary will be WORLD-READABLE, no passphrase."
@@ -4161,7 +4177,8 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
     cp "$site_html" "$pub_dir/index.html"
   else
     local passphrase enc boiler
-    # A trip's first key, made here and nowhere else outside rotate (see the function).
+    # A trip's first key, made here and nowhere else outside rotate, on both of publish's arms: the
+    # repository this run creates, and the empty one it was given (see the function).
     ensure_first_key "$trip_dir"
     passphrase="$(get_passphrase "$trip_dir")"
     info "Encrypting site (StatiCrypt — AES-256-CBC + HMAC, 600k PBKDF2)…"
@@ -4175,7 +4192,7 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
     ok "Guard passed — only ciphertext will be pushed."
   fi
 
-  info "Creating per-trip repo and pushing…"
+  if [ "$into_empty" = 1 ]; then info "Pushing to the empty per-trip repo…"; else info "Creating per-trip repo and pushing…"; fi
   # The commit first, in a subshell of its own (#1468 D-6, CD-3 of the amendment-1 review): the
   # record is then staged after the command's own writes, as in update and rotate, and a commit that
   # fails stops the command with nothing staged. The push is the second subshell, after the stager.
@@ -4189,22 +4206,39 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   # only the push subshell's entry into the clone (#1468 D-6). The digest of the plan this push
   # carries comes back in `staged`, for the recorder.
   local staged=""
-  stage_baseline_record "$trip_dir" "$site_html" publish staged
-  ( cd "$pub_dir"
-    gh repo create "$slug" --public --source=. --remote=origin --push >/dev/null
-  )
+  if [ "$into_empty" != 1 ]; then
+    stage_baseline_record "$trip_dir" "$site_html" publish staged
+    ( cd "$pub_dir"
+      gh repo create "$slug" --public --source=. --remote=origin --push >/dev/null
+    )
+  else
+    # The clone's branch was renamed to main above, whatever the host's unborn HEAD gave it. The default
+    # branch is set explicitly rather than left to what the host does with a first push, because the next
+    # fresh clone checks out whatever it is, and update and rotate refuse anything but main. The push has
+    # already happened by then, so this warns and does not refuse.
+    local own
+    own="$(git -C "$pub_dir" rev-parse --verify -q HEAD)" \
+      || die "publish: could not read back this run's commit in $pub_dir. Nothing was pushed."
+    stage_baseline_record "$trip_dir" "$site_html" publish staged
+    push_trip_site "$pub_dir" "$own" publish \
+      || read_back_first_push "$pub_dir" "$own" "${owner}/${slug}"
+    gh api -X PATCH "repos/${owner}/${slug}" -f default_branch=main >/dev/null 2>&1 \
+      || warn "could not set main as the default branch of ${owner}/${slug}. The push itself succeeded. If a later clone reports another branch, make main the default in the repository's settings."
+  fi
   info "Enabling GitHub Pages…"
-  gh api -X POST "repos/${owner}/${slug}/pages" -f "source.branch=main" -f "source.path=/" >/dev/null 2>&1 \
-    || warn "Pages may already be enabled, or will activate shortly."
+  # The push has landed, so what follows is recorded whatever the host says about Pages, and what is
+  # printed says whether the site is served (see the function).
+  local served=1
+  enable_pages "${owner}/${slug}" || served=0
 
   # First publish establishes the baseline the #552 gate compares against. cmd_publish
-  # itself stays UNGATED — it dies above when the per-trip repo already exists, so it
+  # itself stays UNGATED — it dies above when the per-trip repo holds anything, so it
   # structurally cannot overwrite a published plan — but without this line the gate
   # would have no anchor on a freshly published trip and the FIRST unapproved change
   # after a publish would sail through. Recording is not gating.
   record_published_itinerary "$trip_dir" "$site_html" "$staged"
 
-  ok "Published: https://${owner}.github.io/${slug}/"
+  if [ "$served" = 1 ]; then ok "Published: https://${owner}.github.io/${slug}/"; fi
   if [ "$plaintext" != "1" ]; then
     # The announcement carries the passphrase FILE, never the passphrase. The second
     # get_passphrase call this replaces was redundant as well — $passphrase is already
@@ -4212,6 +4246,9 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
     announce_passphrase_file "Passphrase" "$trip_dir/.passphrase"
     printf '  To change it later: rotate %s\n\n' "$trip_dir"
   fi
+  # Last, so it is the line the operator reads last: the page is pushed and recorded, and nothing is served.
+  [ "$served" = 1 ] \
+    || die "publish: the page was pushed to ${owner}/${slug} and recorded, but GitHub Pages is not serving it: the call that enables Pages failed, and the repository reports no Pages site built from main at its root. Everything else is done, and update works as usual. To serve the site, run  gh api -X POST repos/${owner}/${slug}/pages -f \"source[branch]=main\" -f \"source[path]=/\"  or, in the repository's settings under Pages, deploy from the branch main, folder / (root). It is then at https://${owner}.github.io/${slug}/"
 }
 
 ensure_pub_clone() { # <trip_dir> -> ensures <trip_dir>/.publish is the RIGHT per-trip repo
@@ -4296,14 +4333,15 @@ refuse_unpushed_residue() { # <pub_dir>
 # put the record back where it was, so the same command, run again, refuses again rather than passing
 # the comparison. And HEAD must hold the site's tip whichever way the record got there, because a
 # leased push FORCES when its expectation holds: built on an older page it would rewind the site. The
-# tip comes back in the named variable by printf -v, so call this as a bare command.
-require_current_site_record() { # <pub_dir> <var-to-receive-the-site's-tip>
+# tip comes back in the named variable by printf -v, so call this as a bare command. A fetch that fails
+# asks the host whether the repository is now empty before it says the site could not be reached.
+require_current_site_record() { # <pub_dir> <var-to-receive-the-site's-tip> <owner/slug> <trip_dir>
   local rcs_prior rcs_tip
   printf -v "$2" '%s' ''
   rcs_prior="$(git -C "$1" rev-parse --verify -q refs/remotes/origin/main)" \
     || die "rotate refused — could not read the record of the remote in $1 (refs/remotes/origin/main), so a rewind of the site could not be detected. Nothing was changed. Remove $1 (it is cloned again from the published site, so nothing is lost) and re-run rotate."
   git -C "$1" fetch --quiet origin main \
-    || die "rotate refused — could not fetch the site's current state into $1, so this rotation could not be bound to it. Nothing was changed. Re-run rotate when the site can be reached."
+    || { refuse_emptied_repository "$1" "$3" rotate "$4"; die "rotate refused — could not fetch the site's current state into $1, so this rotation could not be bound to it. Nothing was changed. Re-run rotate when the site can be reached."; }
   rcs_tip="$(git -C "$1" rev-parse --verify -q refs/remotes/origin/main)" \
     || die "rotate refused — could not read the record of the remote in $1 (refs/remotes/origin/main) after fetching it, so this rotation could not be bound to the site. Nothing was changed. Remove $1 (it is cloned again from the published site, so nothing is lost) and re-run rotate."
   git -C "$1" merge-base --is-ancestor "$rcs_prior" "$rcs_tip" \
@@ -4329,9 +4367,10 @@ require_current_site_record() { # <pub_dir> <var-to-receive-the-site's-tip>
 # update's page — a fast-forward on top of the rotation's commit — would then put the revoked key
 # back as the live one; and a site rewound after rotate read it would take rotate's push as a
 # fast-forward carrying the withdrawn pages back. Each caller has checked that its commit descends
-# from that tip, so a leased push is still a fast-forward and the lease never forces anything. A push
-# that fails returns non-zero rather than dying, so the caller can say what it left behind. git's own
-# advice after a rejected push is switched off: the caller's message names the remedy that fits.
+# from that tip, so a leased push is still a fast-forward and the lease never forces anything. A
+# first push into an empty repository has no tip to lease and passes none. A push that fails returns
+# non-zero rather than dying, so the caller can say what it left behind. git's own advice after a
+# rejected push is switched off: the caller's message names the remedy that fits.
 push_trip_site() { # <pub_dir> <this-run's-own-commit> <verb> [<remote tip the caller's check saw>]
   git -C "$1" rev-parse --verify -q "$2^{commit}" >/dev/null \
     || die "$3: refused to push — '$2' is not a commit in $1, and an empty one would delete the site's branch. Nothing was pushed."
@@ -4342,6 +4381,84 @@ push_trip_site() { # <pub_dir> <this-run's-own-commit> <verb> [<remote tip the c
   fi
   git -C "$1" -c advice.pushUpdateRejected=false -c advice.pushNonFFCurrent=false \
     push --quiet origin "$2:refs/heads/main"
+}
+
+# An EMPTY per-trip repository takes its first push from publish, and refuses update and rotate, which
+# hold no key-generating path and no first-push path of their own (#1616). Reached only where the clone
+# has no record of the site, and that absence decides nothing: it sends the question to the host, and a
+# rewound site whose clone lost its record reads as what it is. Every answer but exactly true returns, to
+# the caller's own missing-record refusal, so an unreadable host still refuses, and writes nothing either way.
+# Called ahead of require_publish_branch, because an empty repository's clone can stand on any unborn branch.
+refuse_empty_repository() { # <pub_dir> <owner/slug> <verb> <trip_dir>
+  git -C "$1" rev-parse --verify -q refs/remotes/origin/main >/dev/null && return 0
+  host_reports_empty "$2" || return 0
+  die "$3 refused — the per-trip repository $2 is empty, so there is no site to $3 yet. Nothing was committed or pushed, and no passphrase was written. Its first push belongs to publish:  $(basename "$0") publish $4"
+}
+
+# Whether the host reports the per-trip repository empty: its answer exactly true, and nothing else. A read
+# that fails, prints nothing, or prints anything but true is not known to be empty, and every caller
+# treats it so.
+host_reports_empty() { # <owner/slug>
+  [ "$(gh repo view "$1" --json isEmpty --jq '.isEmpty' 2>/dev/null)" = true ]
+}
+
+# A clone holding a record of a site the host now reports EMPTY: the repository was emptied or created
+# again since this clone last read it (#1616, review FM-2). Asked only once a fetch has failed, because a
+# missing main is not a network failure, and "re-run when the site can be reached" would loop: the site
+# can be reached, and holds nothing. Exactly empty refuses, naming the clone's removal and publish; any
+# other answer returns, to the caller's own fetch refusal. A commit this run has already made is taken back
+# first, compare-and-swap, so the refusal leaves none in the clone: update's fetch comes after its commit.
+refuse_emptied_repository() { # <pub_dir> <owner/slug> <verb> <trip_dir> [<this run's own commit>]
+  local said="Nothing was changed."
+  host_reports_empty "$2" || return 0
+  if [ -n "${5:-}" ]; then
+    if discard_own_commit "$1" "$5"; then
+      said="Nothing was pushed, and this run took its own commit back out of $1."
+    else
+      said="Nothing was pushed by this run. Its own commit could not be taken back out of $1, and removing $1 as below discards it."
+    fi
+  fi
+  die "$3 refused — the per-trip repository $2 is empty, though $1 holds a record of a site published there: the repository was emptied or created again since this clone last read it. $said Remove $1 (it records a site the repository no longer holds) and run publish, which takes an empty repository's first push:  $(basename "$0") publish $4"
+}
+
+# GitHub Pages for <owner/slug>, served from main at the root. The host's API takes the source as a nested
+# object, so it goes as source[branch] and source[path], which gh sends as {"source":{"branch":…,"path":…}}.
+# The flat form this call used to send, source.branch=main, reaches the host as two keys it refuses with
+# HTTP 422, so it enabled nothing, and its answer was discarded behind a warning. A failed call is settled
+# by reading the Pages site back rather than by parsing the refusal, because what this call is for is a site
+# built from main at the root, however it came to exist: an HTTP 409 means Pages is already enabled, and the
+# read says from where. gh prints the host's error body on stdout when a read fails, so only the exact answer
+# passes. Returns non-zero when the host reports no such site; the caller says what that leaves, because the
+# push has landed by then.
+enable_pages() { # <owner/slug>
+  local ep_src
+  gh api -X POST "repos/$1/pages" -f "source[branch]=main" -f "source[path]=/" >/dev/null 2>&1 && return 0
+  ep_src="$(gh api "repos/$1/pages" --jq '"\(.build_type) \(.source.branch) \(.source.path)"' 2>/dev/null)"
+  [ "$ep_src" = "legacy main /" ] || return 1
+  info "GitHub Pages was already enabled for $1, serving main at its root."
+}
+
+# A first push into an empty repository that reported failure may still have landed: a connection dropped
+# after the server accepted a push reports failure too (review FM-1, CD-3). So the remote is read before
+# anything is said. Its main is this run's own commit: the push landed, the record of the remote is set to
+# it as a push reporting success would have set it, and publish carries on to the default branch, Pages and
+# the record. It has no main: the push did not land, and publish run again takes the repository under the key
+# this run recorded. Its main is another commit: another publish reached it first. It cannot be read: neither
+# can be told, and the refusal names the route from each state to a served page.
+read_back_first_push() { # <pub_dir> <this run's own commit> <owner/slug>
+  local rb_ref="" rb_rc=0
+  rb_ref="$(git -C "$1" ls-remote --exit-code origin refs/heads/main 2>/dev/null)" || rb_rc=$?
+  if [ "$rb_rc" -eq 0 ] && [ "${rb_ref%%[[:space:]]*}" = "$2" ]; then
+    warn "the push to the empty per-trip repository reported failure, but $3's main holds this run's commit: it landed. Carrying on."
+    git -C "$1" update-ref refs/remotes/origin/main "$2" \
+      || warn "could not record $3's main in $1. The next update will ask for $1 to be removed, and that is all it needs."
+    return 0
+  fi
+  [ "$rb_rc" -ne 2 ] \
+    || die "publish: the push to the empty per-trip repository failed, and $3 still holds no main, so it did not land. Nothing was published. Re-run publish: it takes the repository under the passphrase this run recorded."
+  [ "$rb_rc" -ne 0 ] \
+    || die "publish: the push to the empty per-trip repository failed, and $3's main now holds a commit this run did not make: another publish reached it first. Nothing of this run's was published, and the repository is now a published site. Remove $1 (it is cloned again from the published site) before running update, and first make sure the passphrase this trip records is the one that site is under."
+  die "publish: the push to the empty per-trip repository failed, and $3 could not be read back to tell whether it landed: a connection dropped after the server accepted a push reports failure here too. Re-run publish when GitHub can be reached. If the repository is still empty, publish takes it and nothing more is needed. If publish answers that the repository already exists, this push landed without its last two steps: run  gh api -X PATCH repos/$3 -f default_branch=main  and  gh api -X POST repos/$3/pages -f \"source[branch]=main\" -f \"source[path]=/\"  then remove $1; update then publishes to the served site as usual."
 }
 
 # The site is published from main. A reused clone on another branch — a pre-existing repository
@@ -4374,10 +4491,16 @@ cmd_update() { # <trip_dir>
   # plaintext gate states for itself in cmd_publish. #85 relocates both by moving this line.
   require_publish_guards "$trip_dir" "$site_html"
   pub_dir="$(ensure_pub_clone "$trip_dir")"
+  owner="$(gh api user --jq '.login')"; slug="$(slug_for "$trip_dir")"
+  refuse_empty_repository "$pub_dir" "${owner}/${slug}" update "$trip_dir"
   require_publish_branch "$pub_dir" update
+  # A clone with no record of the site cannot tell a rewind from a first fetch, so it refuses, and it
+  # refuses here, before a key is resolved or a commit made: a fresh clone always carries a record, so a
+  # clone without one is removed anyway, and a commit left in it would be for nothing.
+  prior="$(git -C "$pub_dir" rev-parse --verify -q refs/remotes/origin/main)" \
+    || die "update: could not read the record of the remote in $pub_dir (refs/remotes/origin/main), so a rewind of the site could not be detected. Nothing was pushed. Remove $pub_dir (it is cloned again from the published site, so nothing is lost) and re-run update."
   require_key_for_update "$trip_dir"
   passphrase="$(get_passphrase "$trip_dir")"
-  owner="$(gh api user --jq '.login')"; slug="$(slug_for "$trip_dir")"
 
   # mine receives this run's own commit, read back and proved by its page (see the function).
   encrypt_verify_commit "$pub_dir" "$site_html" "$passphrase" update mine
@@ -4393,15 +4516,12 @@ cmd_update() { # <trip_dir>
   # the lease, and one that pushed before it recorded its key first.
   # The refusal puts the record back where it was: the fetch has already moved it to the rewound
   # tip, and a record left there would let the same command, run again, pass the comparison and
-  # publish the withdrawn pages. A clone with no record at all cannot tell a rewind from a first
-  # fetch, so it refuses too — a fresh clone always carries one. And a fetch that fails runs the
-  # key check before it stops, as a failed push does: this run's commit is already made, and if a
-  # rotation has recorded a new key since, that commit is a page under the replaced key that the
-  # next push would carry.
-  prior="$(git -C "$pub_dir" rev-parse --verify -q refs/remotes/origin/main)" \
-    || die "update: could not read the record of the remote in $pub_dir (refs/remotes/origin/main), so a rewind of the site could not be detected. Nothing was pushed. Remove $pub_dir (it is cloned again from the published site, so nothing is lost) and re-run update."
+  # publish the withdrawn pages. And a fetch that fails runs the key check before it stops, as a
+  # failed push does: this run's commit is already made, and if a rotation has recorded a new key
+  # since, that commit is a page under the replaced key that the next push would carry. Then it asks the
+  # host whether the repository is now empty, which takes that commit back out before it refuses.
   git -C "$pub_dir" fetch --quiet origin main \
-    || { require_key_of_record "$trip_dir" "$passphrase" "$pub_dir" "$mine"; die "update: could not fetch the site's current state into $pub_dir, so its push could not be bound to it. Nothing was pushed; re-run update when the site can be reached."; }
+    || { require_key_of_record "$trip_dir" "$passphrase" "$pub_dir" "$mine"; refuse_emptied_repository "$pub_dir" "${owner}/${slug}" update "$trip_dir" "$mine"; die "update: could not fetch the site's current state into $pub_dir, so its push could not be bound to it. Nothing was pushed; re-run update when the site can be reached."; }
   lease="$(git -C "$pub_dir" rev-parse --verify -q refs/remotes/origin/main)" \
     || die "update: could not read the record of the remote in $pub_dir (refs/remotes/origin/main), so its push could not be bound to what its key check saw. Nothing was pushed. Remove $pub_dir (it is cloned again from the published site, so nothing is lost) and re-run update."
   git -C "$pub_dir" merge-base --is-ancestor "$prior" "$lease" \
@@ -4491,7 +4611,7 @@ cmd_confirm() { # <trip_dir>
       case "$(_baseline_record "$(staged_record_path "$trip_dir")")" in
         absent) ;;
         "$dg") die "cannot confirm for $trip_dir — could not determine whether its itinerary changed: a baseline record an earlier push staged is still outstanding at $(staged_record_path "$trip_dir"), and it names the plan going out, which the published baseline records as well, so which plan the published site carries is unknown. A confirmation is recorded against a known published plan and none can be read, so nothing was recorded. While that record stands this plan stays held, and re-running update with it cannot clear the record. If the site carries the plan the published baseline records, which is this one, the record is redundant: delete that file, then re-run. If it carries another plan, keep the file, because deleting it would let this plan publish over that one unasked: publish the plan the site should carry through update instead, with its confirmation or its approvals, or unpublish, then publish again." ;;
-        *) die "cannot confirm for $trip_dir — could not determine whether its itinerary changed: a baseline record an earlier push staged is still outstanding at $(staged_record_path "$trip_dir"), so which plan the published site carries is unknown. A confirmation is recorded against a known published plan and none can be read, so nothing was recorded. If the site carries the plan the published baseline records, the record is redundant: delete that file, then re-run. If it carries another plan, keep the file. Re-run update with the plan the site should carry — usually the plan that push carried — with its confirmation or its approvals, which records it. Where that push was a first publish, its per-trip repository may hold no page at all, and update cannot run on an empty one: unpublish, then publish again." ;;
+        *) die "cannot confirm for $trip_dir — could not determine whether its itinerary changed: a baseline record an earlier push staged is still outstanding at $(staged_record_path "$trip_dir"), so which plan the published site carries is unknown. A confirmation is recorded against a known published plan and none can be read, so nothing was recorded. If the site carries the plan the published baseline records, the record is redundant: delete that file, then re-run. If it carries another plan, keep the file. Re-run update with the plan the site should carry — usually the plan that push carried — with its confirmation or its approvals, which records it. Where that push was a first publish, its per-trip repository may hold no page at all: publish takes that empty repository, and update refuses it." ;;
       esac
     fi
     die "cannot confirm for $trip_dir — could not determine whether its itinerary changed: the outgoing render $site_html could not be read, its itinerary text could not be projected, or that text could not be normalized; any error printed above names the cause. A confirmation binds to an identified itinerary and there is none to bind to, so nothing was recorded."
@@ -4700,11 +4820,12 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   # with an itinerary change pending, confirm or revert it first, then rotate.
   require_publish_guards "$trip_dir" "$site_html"
   pub_dir="$(ensure_pub_clone "$trip_dir")"
-  require_publish_branch "$pub_dir" rotate
   owner="$(gh api user --jq '.login')"; slug="$(slug_for "$trip_dir")"
+  refuse_empty_repository "$pub_dir" "${owner}/${slug}" rotate "$trip_dir"
+  require_publish_branch "$pub_dir" rotate
   # The site as it stands now, read before anything is written (see the function). lease receives its
   # tip, which the push below is bound to.
-  require_current_site_record "$pub_dir" lease
+  require_current_site_record "$pub_dir" lease "${owner}/${slug}" "$trip_dir"
   # A page an earlier update or rotate committed but did not push is still in the reused clone,
   # under the key this rotation is about to revoke. Refuse rather than push it (see the function).
   refuse_unpushed_residue "$pub_dir"

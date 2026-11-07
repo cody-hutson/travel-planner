@@ -506,13 +506,13 @@ in the fence is the asset-resolution slice's and is left byte-identical, so a re
 concern stays attributable to one change. The retained where-to-stand sentences on this
 surface are the same pattern, already ratified.
 
-**When the trip was never published**, the script refuses before the passphrase is
-touched: it resolves the per-trip clone before it resolves the passphrase, so it creates no
-repository, pushes nothing, mints no passphrase, and its own message names the remedy — a
-first publish. (Resolving the clone does clear a stale scratch clone first; that is rule
-5's scope, and it is not a publish.) This verb relies on that refusal rather than
-duplicating it; a second, weaker pre-check would be a guard for a failure the script
-already guards precisely.
+**When the trip was never published, or its per-trip repository exists and is empty**, the script
+refuses before the passphrase is touched: it resolves the per-trip clone and asks the host about
+an empty repository before it resolves the passphrase, so it creates no repository, pushes
+nothing, mints no passphrase, and its own message names the remedy — a first publish. (Resolving
+the clone does clear a stale scratch clone first; that is rule 5's scope, and it is not a
+publish.) This verb relies on that refusal rather than duplicating it; a second, weaker
+pre-check would be a guard for a failure the script already guards precisely.
 
 A first publish is not a verb of this file, so render the named remedy as an **operator
 hand-off**: point at `CLAUDE.md` → *Publishing to GitHub Pages*, print that section's
