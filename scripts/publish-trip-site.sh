@@ -74,10 +74,12 @@
 # rotation that has recorded a different key by then, or that pushes first, stops it, and it takes
 # its own commit back out where it safely can, so a later push cannot carry it.
 # rotate refuses while the per-trip clone holds a page an earlier run committed but did not
-# push: pushed on top, that page would reach history under the key being revoked. A push
-# carries the commit its own run made, never another command's newer one, and update's push is
-# also bound to the site as it fetched it just before its key check — so a run that loses a race to another
-# command stops and says so instead of reporting success. Commands run on one trip at the same
+# push: pushed on top, that page would reach history under the key being revoked. It also reads the
+# site before it writes anything, and refuses one it cannot reach, one rewound since this clone last
+# recorded it, and one this clone is behind. A push carries the commit its own run made, never another
+# command's newer one, and update's and rotate's pushes are bound to the site as each last fetched it
+# — so a run that loses a race to another command stops and says so instead of reporting success, in
+# words that allow its push may have reached the site. Commands run on one trip at the same
 # moment are still not serialized; run one at a time. The site is published from main, and a
 # clone on any other branch is refused.
 #
@@ -4248,6 +4250,34 @@ refuse_unpushed_residue() { # <pub_dir>
   die "rotate refused — $1 holds a page that was committed but not yet pushed — by an earlier update or rotate that stopped at its push, or by one still running. A rotation would publish it too, under the passphrase you are revoking. Remove $1 (it is cloned again from the published site; every page is rebuilt from the trip, so nothing is lost) and re-run rotate — or run update first, if the current passphrase's holders should see that page. Nothing was changed."
 }
 
+# ROTATE'S READ OF THE SITE, BEFORE ANYTHING IS WRITTEN (#1613). update makes these reads after its
+# commit, because its key check interleaves with them; rotate has no such constraint, so it makes them
+# first, and a refusal here leaves .passphrase byte-identical and the clone with no new commit. The
+# order is the order of the causes. No record: a rewind could not be detected. The fetch: the site
+# could not be reached. A record that moved backwards: the site was rewound, and a push would publish
+# the withdrawn pages again. A record that moved forwards: this clone's page is not the live one. Both
+# put the record back where it was, so the same command, run again, refuses again rather than passing
+# the comparison. And HEAD must hold the site's tip whichever way the record got there, because a
+# leased push FORCES when its expectation holds: built on an older page it would rewind the site. The
+# tip comes back in the named variable by printf -v, so call this as a bare command.
+require_current_site_record() { # <pub_dir> <var-to-receive-the-site's-tip>
+  local rcs_prior rcs_tip
+  printf -v "$2" '%s' ''
+  rcs_prior="$(git -C "$1" rev-parse --verify -q refs/remotes/origin/main)" \
+    || die "rotate refused — could not read the record of the remote in $1 (refs/remotes/origin/main), so a rewind of the site could not be detected. Nothing was changed. Remove $1 (it is cloned again from the published site, so nothing is lost) and re-run rotate."
+  git -C "$1" fetch --quiet origin main \
+    || die "rotate refused — could not fetch the site's current state into $1, so this rotation could not be bound to it. Nothing was changed. Re-run rotate when the site can be reached."
+  rcs_tip="$(git -C "$1" rev-parse --verify -q refs/remotes/origin/main)" \
+    || die "rotate refused — could not read the record of the remote in $1 (refs/remotes/origin/main) after fetching it, so this rotation could not be bound to the site. Nothing was changed. Remove $1 (it is cloned again from the published site, so nothing is lost) and re-run rotate."
+  git -C "$1" merge-base --is-ancestor "$rcs_prior" "$rcs_tip" \
+    || { git -C "$1" update-ref refs/remotes/origin/main "$rcs_prior" "$rcs_tip"; die "rotate refused — the site's history was rewound after $1 last recorded it (pages withdrawn from another machine, say), and pushing now would publish them again. Nothing was changed. Remove $1 (it is cloned again from the published site) and re-run rotate."; }
+  [ "$rcs_prior" = "$rcs_tip" ] \
+    || { git -C "$1" update-ref refs/remotes/origin/main "$rcs_prior" "$rcs_tip"; die "rotate refused — the site moved after $1 last recorded it (another machine published, or a push from here reached the site without being recorded), so this rotation could be built on a page older than the live one. Nothing was changed. Remove $1 (it is cloned again from the published site) and re-run rotate."; }
+  git -C "$1" merge-base --is-ancestor "$rcs_tip" HEAD \
+    || die "rotate refused — $1 does not hold the site's current tip, so this rotation would be built on a page older than the live one. Nothing was changed. Remove $1 (it is cloned again from the published site) and re-run rotate."
+  printf -v "$2" '%s' "$rcs_tip"
+}
+
 # Push exactly this run's own commit, never the branch. A commit another command stacked on top in
 # the meantime is not this push's to publish; and when another command has already moved the remote
 # past this commit, the push is a non-fast-forward and FAILS — so a run that lost a race says so,
@@ -4257,13 +4287,14 @@ refuse_unpushed_residue() { # <pub_dir>
 # of the site's branch, and an id naming no commit is not a page this run made.
 #
 # With a fourth argument the push is LEASED: it succeeds only while the remote's main is still the
-# tip the caller read before its key check. update passes one, because a fast-forward alone is not
-# enough there: a rotation can record its key and push between update's check and update's push,
-# and update's page — a fast-forward on top of the rotation's commit — would then put the revoked
-# key back as the live one. The caller has checked that its commit descends from that tip, so a
-# leased push is still a fast-forward and the lease never forces anything. A leased push that fails
-# returns non-zero rather than dying, so the caller can re-check its key before it stops. git's own
-# advice after a rejected push is switched off: the script's message names the remedy that fits.
+# tip the caller read. update and rotate pass one, because a fast-forward alone is not enough for
+# either: a rotation can record its key and push between update's check and update's push, and
+# update's page — a fast-forward on top of the rotation's commit — would then put the revoked key
+# back as the live one; and a site rewound after rotate read it would take rotate's push as a
+# fast-forward carrying the withdrawn pages back. Each caller has checked that its commit descends
+# from that tip, so a leased push is still a fast-forward and the lease never forces anything. A push
+# that fails returns non-zero rather than dying, so the caller can say what it left behind. git's own
+# advice after a rejected push is switched off: the caller's message names the remedy that fits.
 push_trip_site() { # <pub_dir> <this-run's-own-commit> <verb> [<remote tip the caller's check saw>]
   git -C "$1" rev-parse --verify -q "$2^{commit}" >/dev/null \
     || die "$3: refused to push — '$2' is not a commit in $1, and an empty one would delete the site's branch. Nothing was pushed."
@@ -4273,7 +4304,7 @@ push_trip_site() { # <pub_dir> <this-run's-own-commit> <verb> [<remote tip the c
     return
   fi
   git -C "$1" -c advice.pushUpdateRejected=false -c advice.pushNonFFCurrent=false \
-    push --quiet origin "$2:refs/heads/main" || die "$3: the push to the per-trip repository failed."
+    push --quiet origin "$2:refs/heads/main"
 }
 
 # The site is published from main. A reused clone on another branch — a pre-existing repository
@@ -4351,7 +4382,7 @@ cmd_update() { # <trip_dir>
     # The remote moved after the check. A rotation that recorded a new key meanwhile is caught
     # here, and this run takes its own commit back and says so; otherwise the push simply failed.
     require_key_of_record "$trip_dir" "$passphrase" "$pub_dir" "$mine"
-    die "update: the push to the per-trip repository failed — the site changed after this run checked it, or the network did. This run published nothing; re-run update."
+    die "update: the push to the per-trip repository failed — the site changed after this run checked it, or the network did — and it may still have reached the site: a connection dropped after the server accepted a push reports failure here too. Re-run update: it re-reads the site first, and converges on whatever reached it."
   fi
   # The push succeeded, so this itinerary content IS what is published now. Recorded
   # here rather than earlier for that reason: a sidecar written before the push would
@@ -4616,7 +4647,7 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   # this trip's own under --data-root, never a path under the working directory.
   trip_dir="$(resolve_trip_dir "$trip_dir")"
   [ -d "$trip_dir" ] || die "no such trip dir$(trip_dir_where) — check the first argument after the command, which names the trip; it is not repeated here, in case a passphrase was typed in its place."
-  local pf="$trip_dir/.passphrase" site_html pub_dir owner slug mine="" staged=""
+  local pf="$trip_dir/.passphrase" site_html pub_dir owner slug mine="" staged="" lease=""
   [ "$supplied" = "1" ] || newp="$(gen_passphrase)"
   # These refusals come BEFORE anything is written: an aborted rotation must leave .passphrase
   # exactly as it was, and the clone without a commit of its own.
@@ -4633,12 +4664,20 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   pub_dir="$(ensure_pub_clone "$trip_dir")"
   require_publish_branch "$pub_dir" rotate
   owner="$(gh api user --jq '.login')"; slug="$(slug_for "$trip_dir")"
+  # The site as it stands now, read before anything is written (see the function). lease receives its
+  # tip, which the push below is bound to.
+  require_current_site_record "$pub_dir" lease
   # A page an earlier update or rotate committed but did not push is still in the reused clone,
   # under the key this rotation is about to revoke. Refuse rather than push it (see the function).
   refuse_unpushed_residue "$pub_dir"
   # The new key is handed down explicitly, so the environment is never read for it
   # (GHSA-gmm2-v7rr-jq7r) — a set STATICRYPT_PASSWORD can no longer take a rotation's place.
   encrypt_verify_commit "$pub_dir" "$site_html" "$newp" rotate mine
+  # Checked here, before the key is recorded, because the push below is leased and a leased push forces:
+  # another command moving this clone between the read above and this commit must stop this run, not
+  # rewind the site.
+  git -C "$pub_dir" merge-base --is-ancestor "$lease" "$mine" \
+    || die "rotate refused — this run's commit does not descend from the site's current tip: another command moved $pub_dir while this run was under way. Nothing was pushed, and $pf is exactly as it was. Remove $pub_dir (it is cloned again from the published site, so nothing is lost) and re-run rotate."
   # THE COMMIT POINT: the new ciphertext is committed and not yet pushed. Recording the key here,
   # and not after the push, means no reachable state sends a later update back to the revoked
   # key — every abort before this line left .passphrase untouched, and a push that fails after it
@@ -4649,8 +4688,10 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   # refusal here is a push that did not happen: the new key is recorded, and update finishes the
   # rotation. The digest of the plan this push carries comes back in `staged`, for the recorder.
   stage_baseline_record "$trip_dir" "$site_html" rotate staged
-  info "New passphrase recorded in the trip's .passphrase. Pushing — if the push fails, re-run update to finish the rotation; until it succeeds, the previous passphrase still opens the site."
-  push_trip_site "$pub_dir" "$mine" rotate
+  info "New passphrase recorded in the trip's .passphrase. Pushing — if the push fails, re-run update to finish the rotation; until it succeeds, the previous passphrase may still open the site."
+  if ! push_trip_site "$pub_dir" "$mine" rotate "$lease"; then
+    die "rotate: the push to the per-trip repository failed — the site changed after this run read it, or the network did — and it may still have reached the site: a connection dropped after the server accepted a push reports failure here too. $pf already holds the new passphrase, recorded before the push. Run update to finish the rotation: it re-reads the site first, and converges on whatever reached it under that passphrase. Until it succeeds, the previous passphrase may still open the site."
+  fi
   record_published_itinerary "$trip_dir" "$site_html" "$staged"
   ok "Updated: https://${owner}.github.io/${slug}/  (changes appear behind the passphrase prompt)"
   warn "Passphrase ROTATED — anyone you previously shared the site with must re-receive the new one. Earlier versions stay in the per-trip repository's history, readable to anyone holding an old passphrase; to withdraw them, unpublish (which deletes the repository) and publish again."

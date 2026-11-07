@@ -12655,6 +12655,13 @@ export GIT_CONFIG_COUNT=3 \
   GIT_CONFIG_KEY_1=tag.gpgsign        GIT_CONFIG_VALUE_1=false \
   GIT_CONFIG_KEY_2=init.defaultBranch GIT_CONFIG_VALUE_2=main
 
+# A push that fails where the fetch before it does not: the bare repository refuses it on receipt. Its own
+# core.hooksPath, because an operator's global one would divert the hook and let the push land.
+rv_reject_pushes() { # <bare>
+  mkdir -p "$1/rv-hooks"; printf '#!/bin/sh\nexit 1\n' > "$1/rv-hooks/pre-receive"; chmod +x "$1/rv-hooks/pre-receive"
+  git -C "$1" config core.hooksPath "$1/rv-hooks"
+}
+rv_allow_pushes() { git -C "$1" config --unset core.hooksPath; }
 rv_has()   { case "$1" in *"$2"*) return 0 ;; esac; return 1; }          # substring, no pipeline
 rv_lines() { local n; n="$(wc -l < "$1")"; printf '%s' "${n//[^0-9]/}"; }   # line count, no pipeline
 rv_head()  { git -C "$1" rev-parse main 2>/dev/null; }
@@ -12916,8 +12923,8 @@ for rv_s in unreadable empty newline-only two-line crlf; do rv2e_assert "RV2e-$r
 # ── RV3 — AC3. A rotation aborted before its push leaves .passphrase byte-identical, at every
 # abort point, each proven REACHED by the point's own message. "absent": a trip with no
 # .passphrase keeps none after an aborted rotation.
-rv3_assert() { # <id> <floor|gate|preflight|clone|encrypt|guard|commit|absent|unusable>
-  local id="$1" p="$2" name d bare out rc h0 h1 w seen=0 same=0
+rv3_assert() { # <id> <floor|gate|preflight|clone|fetch|encrypt|guard|commit|absent|unusable>
+  local id="$1" p="$2" name d bare out rc h0 h1 w seen=0 same=0 c0 c1
   name="rv3-$p-$RANDOM"; bare="$RVW/origin/$name-trip.git"
   case "$p" in
     gate|absent|unusable) d="$(s_fixture "$name" 16:30 none)"
@@ -12928,7 +12935,7 @@ rv3_assert() { # <id> <floor|gate|preflight|clone|encrypt|guard|commit|absent|un
   esac
   [ "$p" = absent ] || printf '%s\n' 'rv-live-synthetic-key-0006' > "$d/.passphrase"
   [ -e "$d/.passphrase" ] && cp -p "$d/.passphrase" "$RVW/$name.before"
-  h0="$(rv_head "$bare")"
+  h0="$(rv_head "$bare")"; c0="$(git -C "$d/.publish" rev-parse -q --verify HEAD 2>/dev/null)"
   case "$p" in
     floor)     w='shorter than 12 characters'
                out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" --passphrase 'short-key' ) 2>&1 )"; rc=$? ;;
@@ -12940,6 +12947,10 @@ rv3_assert() { # <id> <floor|gate|preflight|clone|encrypt|guard|commit|absent|un
                out="$( ( unset STATICRYPT_PASSWORD; export RV_GH_AUTH_FAIL=1; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$? ;;
     clone)     w="run 'publish' first"
                out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$? ;;
+    fetch)     w='could not fetch'
+               git -C "$d/.publish" remote set-url origin "$RVW/missing/$name-trip.git"
+               out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$?
+               git -C "$d/.publish" remote set-url origin "$bare" ;;
     encrypt)   w='rv-encrypt-shim-refused'
                out="$( ( unset STATICRYPT_PASSWORD
                          encrypt_to_tmp() { printf 'rv-encrypt-shim-refused\n' >&2; return 1; }
@@ -12951,7 +12962,7 @@ rv3_assert() { # <id> <floor|gate|preflight|clone|encrypt|guard|commit|absent|un
                          rv_fail_commit_env
                          set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$? ;;
   esac
-  h1="$(rv_head "$bare")"
+  h1="$(rv_head "$bare")"; c1="$(git -C "$d/.publish" rev-parse -q --verify HEAD 2>/dev/null)"
   rv_has "$out" "$w" && seen=1
   if [ "$p" = absent ]; then
     [ ! -e "$d/.passphrase" ] && same=1
@@ -12964,22 +12975,24 @@ rv3_assert() { # <id> <floor|gate|preflight|clone|encrypt|guard|commit|absent|un
     FAIL "$id: rotate exited 1 without the $p point's own message — the abort was not observed where this arm grades it. VERDICT WITHHELD"
   elif [ "$h0" != "$h1" ]; then
     FAIL "$id: the per-trip repository moved during a rotation aborted at the $p point"
+  elif [ "$c0" != "$c1" ]; then
+    FAIL "$id: a rotation aborted at the $p point left a new commit in the clone"
   elif [ "$same" -eq 0 ]; then
     FAIL "$id: a rotation aborted at the $p point left .passphrase changed or created — it no longer names the key the live site is under"
   else
     PASS "$id: rotate aborted at the $p point (rc=1, the point's own message) and .passphrase is exactly as it was"
   fi
 }
-for rv_p in floor gate preflight clone encrypt guard commit absent unusable; do rv3_assert "RV3-$rv_p" "$rv_p"; done
+for rv_p in floor gate preflight clone fetch encrypt guard commit absent unusable; do rv3_assert "RV3-$rv_p" "$rv_p"; done
 
 # ── RV4 — AC4. The push fails after the commit point: .passphrase must already name the new
 # key, and the next update must publish under it — never back under the revoked one.
 rv4_assert() { # <id>
   local id="$1" name d bare out rc k2 now old='rv-before-rotation-key-07' told=0
   name="rv4-$RANDOM"; d="$(rv_fixture "$name" "$old")"; bare="$RVW/origin/$name-trip.git"
-  git -C "$d/.publish" remote set-url origin "$RVW/missing/$name-trip.git"
+  rv_reject_pushes "$bare"
   out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$?
-  git -C "$d/.publish" remote set-url origin "$bare"
+  rv_allow_pushes "$bare"
   ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1
   k2="$(rv_pushed_key "$bare")"
   now="$(cat "$d/.passphrase" 2>/dev/null)"
@@ -13630,9 +13643,14 @@ rv24_assert() { # <id>
   local id="$1" name d bare pub out rc h0 h1 same=0 said=0
   local k1='rv-unreadable-ref-synthetic-key-32'
   name="rv24-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"; pub="$d/.publish"
-  git -C "$pub" update-ref -d refs/remotes/origin/main
   cp -p "$d/.passphrase" "$RVW/$name.before"; h0="$(rv_head "$bare")"
-  out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$?
+  out="$( ( unset STATICRYPT_PASSWORD; rv24_pub="$pub"
+            rv24_def="$(declare -f refuse_unpushed_residue)"; eval "rv24_real_rur ${rv24_def#refuse_unpushed_residue}"
+            refuse_unpushed_residue() {   # the record goes after rotate read it, and before this check counts against it
+              git -C "$rv24_pub" update-ref -d refs/remotes/origin/main
+              rv24_real_rur "$@"
+            }
+            set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$?
   h1="$(rv_head "$bare")"
   cmp -s "$RVW/$name.before" "$d/.passphrase" && same=1
   rv_has "$out" 'could not tell' && said=1
@@ -13886,6 +13904,233 @@ rv30_assert() { # <id>
 }
 rv30_assert "RV30"
 
+# A gh mock whose clone is real, for the arms whose remedy is removing the clone. RV15's shape.
+rv_gh_clones() { # (inside a subject's subshell) RV_CLONE_BARE names the site
+  gh() {
+    printf '%s\n' "$*" >> "$RV_GHLOG"
+    case "${1:-} ${2:-}" in
+      "api user")    printf 'testowner' ;;
+      "repo view")   return 1 ;;
+      "auth status") printf "Token scopes: 'repo'\n" ;;
+      "repo clone")  git clone -q "$RV_CLONE_BARE" "$4" ;;
+      *)             return 0 ;;
+    esac
+  }
+}
+
+# ── RV32 — #1613's reproduction, whole. Two updates, a rewind force-pushed from a real second clone, and
+# then: rotate refuses naming the rewind with the count unchanged; run again with .publish untouched it
+# refuses again; after .publish is removed it succeeds, the count moves by exactly its own commit
+# (the control that the count can move), and no withdrawn page is in any revision.
+rv32_assert() { # <id>
+  local id="$1" name d bare pub p0 c2 o1 o2 rc1 rc2 rc3 n_pre n0 n1 n2 n3 s1=0 s2=0 same=0 carried=0 live pf
+  local k1='rv-rewound-rotate-synthetic-key-43'
+  name="rv32-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"; pub="$d/.publish"
+  p0="$(rv_head "$bare")"
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1
+  n_pre="$(git -C "$bare" rev-list --count main)"
+  c2="$RVW/$name-second"; git clone -q "$bare" "$c2"; git -C "$c2" reset -q --hard "$p0"; git -C "$c2" push -q --force origin main
+  n0="$(git -C "$bare" rev-list --count main)"
+  cp -p "$d/.passphrase" "$RVW/$name.before"
+  o1="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) 2>&1 )"; rc1=$?; n1="$(git -C "$bare" rev-list --count main)"
+  o2="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) 2>&1 )"; rc2=$?; n2="$(git -C "$bare" rev-list --count main)"
+  rv_has "$o1" 'rewound' && s1=1
+  rv_has "$o2" 'rewound' && s2=1
+  cmp -s "$RVW/$name.before" "$d/.passphrase" && same=1
+  rm -rf "$pub"
+  ( unset STATICRYPT_PASSWORD; RV_CLONE_BARE="$bare"; rv_gh_clones; set -e; cmd_rotate "$d" ) >/dev/null 2>&1; rc3=$?
+  n3="$(git -C "$bare" rev-list --count main)"
+  rv_history_has_key "$bare" "$k1" && carried=1
+  live="$(rv_pushed_key "$bare")"; pf="$(cat "$d/.passphrase" 2>/dev/null)"
+  if [ "$n_pre" != 3 ] || [ "$n0" != 1 ]; then
+    FAIL "$id: the site did not carry two pages a rewind withdrew, as set up ($n_pre, then $n0) — nothing to grade. VERDICT WITHHELD"
+  elif [ "$n1" != "$n0" ] || [ "$rc1" -ne 1 ] || [ "$s1" -eq 0 ]; then
+    FAIL "$id: rotate after a rewind read rc=$rc1, named-the-rewind=$s1, count $n0 to $n1 — it must refuse naming the rewind with the count unchanged"
+  elif [ "$n2" != "$n0" ] || [ "$rc2" -ne 1 ] || [ "$s2" -eq 0 ]; then
+    FAIL "$id: the same rotate run again read rc=$rc2, named-the-rewind=$s2, count $n0 to $n2 — the refusal did not hold until the clone was removed"
+  elif [ "$same" -eq 0 ]; then
+    FAIL "$id: the two refusals changed .passphrase"
+  elif [ "$rc3" -ne 0 ] || [ "$n3" != 2 ]; then
+    FAIL "$id: after .publish was removed, rotate read rc=$rc3 and the count went from $n0 to $n3 — CONTROL: it must succeed and move the count by exactly its own commit"
+  elif [ -z "$live" ] || [ "$live" != "$pf" ]; then
+    FAIL "$id: CONTROL — the live page's key could not be read back as the key .passphrase holds, so the history walk below has no control. VERDICT WITHHELD"
+  elif [ "$carried" -eq 1 ]; then
+    FAIL "$id: a page the rewind withdrew is in the site's history after the remedy"
+  else
+    PASS "$id: after a rewind from a second clone, rotate refuses naming it and refuses again on the retry, count unchanged and .passphrase untouched; with .publish removed it succeeds, the count moves by its own commit alone, and no withdrawn page is in any revision"
+  fi
+}
+rv32_assert "RV32"
+
+# ── RV33 — criterion E2's second limb. The clone's record is behind the site, or the clone's branch is:
+# rotate refuses before anything is written, and refuses again. site-moved: another machine published.
+# unrecorded: a push from here reached the site and the clone never recorded it, which today's unpushed-page
+# check also refuses, and whose named remedy, here and there, is the fresh clone. head-behind: the record is
+# current and the branch is not, the case a record comparison cannot see and a leased push would force over.
+rv33_assert() { # <id> <site-moved|unrecorded|head-behind>
+  local id="$1" how="$2" name d bare pub c2 e c rec0 rec1 hd0 hd1 h0 h1 o1 o2 r1 r2 s1=0 s2=0 same=0 w rc3
+  local k1='rv-behind-rotate-synthetic-key-44'
+  name="rv33-$how-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"; pub="$d/.publish"
+  case "$how" in
+    unrecorded)
+      w='moved after'
+      e="$(rv_enc_shim "$SRC" "$k1")"; cp "$e/index.html" "$pub/index.html"; rm -rf "$e"
+      git -C "$pub" add index.html; git -C "$pub" -c user.name=t -c user.email=t@example.invalid commit -q -m own
+      rec0="$(git -C "$pub" rev-parse refs/remotes/origin/main)"; c="$(git -C "$pub" rev-parse HEAD)"
+      git -C "$pub" push -q "$bare" "$c:refs/heads/main"; git -C "$pub" update-ref refs/remotes/origin/main "$rec0" ;;
+    *)
+      c2="$RVW/$name-second"; git clone -q "$bare" "$c2"
+      e="$(rv_enc_shim "$SRC" "$k1")"; cp "$e/index.html" "$c2/index.html"; rm -rf "$e"
+      git -C "$c2" add index.html; git -C "$c2" -c user.name=t -c user.email=t@example.invalid commit -q -m elsewhere; git -C "$c2" push -q origin main
+      if [ "$how" = head-behind ]; then git -C "$pub" fetch -q origin main; w='does not hold'; else w='moved after'; fi ;;
+  esac
+  cp -p "$d/.passphrase" "$RVW/$name.before"
+  h0="$(rv_head "$bare")"; hd0="$(git -C "$pub" rev-parse HEAD)"; rec0="$(git -C "$pub" rev-parse refs/remotes/origin/main)"
+  o1="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) 2>&1 )"; r1=$?
+  o2="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) 2>&1 )"; r2=$?
+  h1="$(rv_head "$bare")"; hd1="$(git -C "$pub" rev-parse HEAD)"; rec1="$(git -C "$pub" rev-parse refs/remotes/origin/main)"
+  rv_has "$o1" "$w" && s1=1
+  rv_has "$o2" "$w" && s2=1
+  cmp -s "$RVW/$name.before" "$d/.passphrase" && same=1
+  rm -rf "$pub"
+  ( unset STATICRYPT_PASSWORD; RV_CLONE_BARE="$bare"; rv_gh_clones; set -e; cmd_rotate "$d" ) >/dev/null 2>&1; rc3=$?
+  if [ "$r1" -ne 1 ] || [ "$s1" -eq 0 ] || [ "$r2" -ne 1 ] || [ "$s2" -eq 0 ]; then
+    FAIL "$id: rotate with the clone behind the site ($how) read rc=$r1/$r2, named=$s1/$s2 — it must refuse, saying so, and refuse again"
+  elif [ "$h0" != "$h1" ] || [ "$hd0" != "$hd1" ] || [ "$same" -eq 0 ]; then
+    FAIL "$id: the refusal ($how) wrote something: site moved=$([ "$h0" = "$h1" ] && echo 0 || echo 1), clone moved=$([ "$hd0" = "$hd1" ] && echo 0 || echo 1), .passphrase same=$same"
+  elif [ "$rec0" != "$rec1" ]; then
+    FAIL "$id: the refusal ($how) left the record moved, so the same command could pass the comparison when run again"
+  elif [ "$rc3" -ne 0 ]; then
+    FAIL "$id: CONTROL — after the remedy it names, removing the clone, rotate read rc=$rc3 ($how)"
+  else
+    PASS "$id: with the clone behind the site ($how) rotate refuses, and refuses again, with the site, the clone, the record and .passphrase exactly as they were; after the remedy it names the rotation completes"
+  fi
+}
+for rv_b in site-moved unrecorded head-behind; do rv33_assert "RV33-$rv_b" "$rv_b"; done
+
+# ── RV34 — absorbed #1615. A push that fails after a fetch that succeeded. Each command's refusal allows
+# that the push may have reached the site and never says nothing was published; rotate's says .passphrase
+# already holds the new key and names update, without printing it; and the next update converges, against
+# whatever baseline record the failed push left staged: the staged file is gone, the baseline names the
+# plan, and the live page is under the key .passphrase holds.
+rv34_assert() { # <id> <rotate|update>
+  local id="$1" verb="$2" name d bare out rc rc2 h0 h1 live pf nothing=0 may=0 names=0 leak=0 stg=0 stg2=0 base now
+  local k1='rv-push-fails-synthetic-key-45'
+  name="rv34-$verb-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"
+  h0="$(rv_head "$bare")"; rv_reject_pushes "$bare"
+  out="$( ( unset STATICRYPT_PASSWORD; set -e; "cmd_$verb" "$d" ) 2>&1 )"; rc=$?
+  rv_allow_pushes "$bare"; h1="$(rv_head "$bare")"; now="$(cat "$d/.passphrase" 2>/dev/null)"
+  rv_has "$out" 'published nothing' && nothing=1
+  rv_has "$out" 'may still have reached the site' && may=1
+  [ -e "$d/.published-itinerary.next" ] && stg=1
+  if [ "$verb" = rotate ]; then
+    { rv_has "$out" "$d/.passphrase already holds the new passphrase" && rv_has "$out" 'Run update to finish the rotation'; } && names=1
+    [ "$now" != "$k1" ] && rv_has "$out" "$now" && leak=1
+  else
+    rv_has "$out" 'Re-run update' && names=1
+  fi
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc2=$?
+  live="$(rv_pushed_key "$bare")"; pf="$(cat "$d/.passphrase" 2>/dev/null)"
+  [ -e "$d/.published-itinerary.next" ] && stg2=1
+  base="$(_baseline_record "$d/.published-itinerary")"
+  if [ "$rc" -ne 1 ] || [ "$h0" != "$h1" ]; then
+    FAIL "$id: $verb with its push refused by the site read rc=$rc, site moved=$([ "$h0" = "$h1" ] && echo 0 || echo 1) — the failure was not the one this arm grades. VERDICT WITHHELD"
+  elif [ "$nothing" -eq 1 ]; then
+    FAIL "$id: $verb's refusal says nothing was published, and a failed push may have reached the site"
+  elif [ "$may" -eq 0 ] || [ "$names" -eq 0 ]; then
+    FAIL "$id: $verb's refusal did not allow that the push may have reached the site (may=$may) or did not name what comes next (names=$names)"
+  elif [ "$leak" -eq 1 ]; then
+    FAIL "$id: the refusal carries a passphrase VALUE"
+  elif [ "$stg" -eq 0 ]; then
+    FAIL "$id: the failed push left no baseline record staged, so convergence against one is not what this arm observed. VERDICT WITHHELD"
+  elif [ "$rc2" -ne 0 ] || [ -z "$live" ] || [ "$live" != "$pf" ]; then
+    FAIL "$id: the next update did not converge (rc=$rc2): the live page is not under the key .passphrase holds"
+  elif [ "$stg2" -eq 1 ] || [ "$base" = absent ]; then
+    FAIL "$id: the next update published but left the staged record outstanding ($stg2) or recorded no baseline ('$base')"
+  else
+    PASS "$id: $verb's failed push is reported as one that may have reached the site, never as nothing published; the next update converges against the staged record, under the key .passphrase holds"
+  fi
+}
+for rv_c in rotate update; do rv34_assert "RV34-$rv_c" "$rv_c"; done
+
+# ── RV35 — what the lease and the descent check are for, each by the one interleaving only it stops.
+# rewound-after-read: the site is rewound after rotate read it and before its push. Unleased, that push is a
+# fast-forward carrying the withdrawn pages back. head-moved: another command moves the clone's branch
+# back after rotate read the site. Leased, a commit built there would FORCE the site back; the descent check
+# stops it before the key is recorded.
+rv35_assert() { # <id> <rewound-after-read|head-moved>
+  local id="$1" how="$2" name d bare pub p0 p1 out rc n0 n1 same=0 injected=0 h0 h1
+  local k1='rv-lease-synthetic-key-46'
+  name="rv35-$how-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"; pub="$d/.publish"
+  p0="$(rv_head "$bare")"
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1
+  p1="$(rv_head "$bare")"; h0="$p1"
+  cp -p "$d/.passphrase" "$RVW/$name.before"
+  if [ "$how" = rewound-after-read ]; then
+    out="$( ( unset STATICRYPT_PASSWORD; rv35_bare="$bare"; rv35_p0="$p0"; rv35_mark="$RVW/$name.injected"
+              rv35_def="$(declare -f write_passphrase_file)"; eval "rv35_real_wpf ${rv35_def#write_passphrase_file}"
+              write_passphrase_file() {   # the site is rewound from elsewhere after rotate read it
+                : > "$rv35_mark"; git -C "$rv35_bare" update-ref refs/heads/main "$rv35_p0"; rv35_real_wpf "$@"
+              }
+              set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$?
+    n0=1
+  else
+    out="$( ( unset STATICRYPT_PASSWORD; rv35_pub="$pub"; rv35_p0="$p0"; rv35_mark="$RVW/$name.injected"
+              rv35_def="$(declare -f refuse_unpushed_residue)"; eval "rv35_real_rur ${rv35_def#refuse_unpushed_residue}"
+              refuse_unpushed_residue() {   # another command moves the branch of the clone back after rotate read the site
+                rv35_real_rur "$@" || return $?
+                : > "$rv35_mark"; git -C "$rv35_pub" update-ref refs/heads/main "$rv35_p0"; git -C "$rv35_pub" read-tree -u --reset "$rv35_p0"
+              }
+              set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$?
+    n0=3
+  fi
+  [ -e "$RVW/$name.injected" ] && injected=1
+  n1="$(git -C "$bare" rev-list --count main)"; h1="$(rv_head "$bare")"
+  cmp -s "$RVW/$name.before" "$d/.passphrase" && same=1
+  if [ "$injected" -eq 0 ]; then
+    FAIL "$id: the interleaving ($how) was never reached. VERDICT WITHHELD"
+  elif [ "$rc" -ne 1 ]; then
+    FAIL "$id: rotate read rc=$rc through the interleaving ($how), want exactly 1"
+  elif [ "$n1" != "$n0" ]; then
+    FAIL "$id: the site's commit count went to $n1, want $n0 ($how) — the push was not bound to the tip rotate read"
+  elif [ "$how" = head-moved ] && { [ "$same" -eq 0 ] || [ "$h0" != "$h1" ]; }; then
+    FAIL "$id: the descent check did not stop the run before its key was recorded and its site left alone (same=$same)"
+  else
+    PASS "$id: through the $how interleaving rotate stops and the site keeps the $n0 commit(s) it holds — the push cannot carry withdrawn pages back, and cannot force the site"
+  fi
+}
+for rv_b in rewound-after-read head-moved; do rv35_assert "RV35-$rv_b" "$rv_b"; done
+
+# ── RV28-rotate — RV28's twin. A clone that lost its record, on a rewound non-empty site: rotate refuses
+# naming the record, before anything is written.
+rv28r_assert() { # <id>
+  local id="$1" name d bare pub p0 out rc n0 n1 said=0 same=0
+  local k1='rv-no-record-rotate-synthetic-key-47'
+  name="rv28r-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"; pub="$d/.publish"
+  p0="$(rv_head "$bare")"
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1
+  git -C "$bare" update-ref refs/heads/main "$p0"
+  git -C "$pub" update-ref -d refs/remotes/origin/main
+  n0="$(git -C "$bare" rev-list --count main)"; cp -p "$d/.passphrase" "$RVW/$name.before"
+  out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$?
+  n1="$(git -C "$bare" rev-list --count main)"
+  rv_has "$out" 'could not read the record' && said=1
+  cmp -s "$RVW/$name.before" "$d/.passphrase" && same=1
+  if [ "$n0" != 1 ]; then
+    FAIL "$id: the site was not rewound as set up — nothing to grade. VERDICT WITHHELD"
+  elif [ "$n1" != "$n0" ]; then
+    FAIL "$id: a rotate whose clone had no record published the pages a rewind withdrew ($n0 to $n1)"
+  elif [ "$rc" -ne 1 ] || [ "$said" -eq 0 ] || [ "$same" -eq 0 ]; then
+    FAIL "$id: rotate read rc=$rc, named-the-record=$said, .passphrase same=$same"
+  else
+    PASS "$id: a rotate whose clone has no record of the remote refuses, naming it, before anything is written — a rewind cannot pass by the record being absent"
+  fi
+}
+rv28r_assert "RV28-rotate"
+
 # ── RV31 — a publish-path commit under a GLOBAL commit.gpgsign=true carries no signature and never
 # runs the signing program. Group D reaches the same commit_noreply and CI declares it an expected
 # skip, so this is the always-run witness. The subject drops the group's GIT_CONFIG_* pin, which would
@@ -13975,7 +14220,7 @@ md_flips cmd_publish "RV2c" rv2_assert  "RV2c" publish
 md_flips cmd_update  "RV2b" rv2b_assert "RV2b"
 for rv_c in env-only file-only agree empty-env; do md_flips cmd_update "RV2d-$rv_c" rv2d_assert "RV2d-$rv_c" "$rv_c"; done
 for rv_s in unreadable empty newline-only two-line crlf; do md_flips cmd_update "RV2e-$rv_s" rv2e_assert "RV2e-$rv_s" "$rv_s"; done
-for rv_p in floor gate preflight clone encrypt guard commit absent unusable; do md_flips cmd_rotate "RV3-$rv_p" rv3_assert "RV3-$rv_p" "$rv_p"; done
+for rv_p in floor gate preflight clone fetch encrypt guard commit absent unusable; do md_flips cmd_rotate "RV3-$rv_p" rv3_assert "RV3-$rv_p" "$rv_p"; done
 md_flips cmd_rotate  "RV4"  rv4_assert  "RV4"
 for rv_f in no-value unknown; do md_flips cmd_rotate "RV5-$rv_f" rv5_assert "RV5-$rv_f" "$rv_f"; done
 md_flips cmd_rotate  "RV7"  rv7_assert  "RV7"
@@ -14011,6 +14256,13 @@ md_flips main "RV13-subcommand" rv13s_assert "RV13-subcommand"
 for rv_c in missing-dir loop; do md_flips prove_key_path "RV22-$rv_c" rv22_assert "RV22-$rv_c" "$rv_c"; done
 md_flips cmd_update "RV23" rv23_assert "RV23"
 md_flips refuse_unpushed_residue "RV24" rv24_assert "RV24"
+md_flips cmd_rotate "RV32" rv32_assert "RV32"
+md_flips require_current_site_record "RV32-read" rv32_assert "RV32-read"
+for rv_b in site-moved unrecorded head-behind; do md_flips require_current_site_record "RV33-$rv_b" rv33_assert "RV33-$rv_b" "$rv_b"; done
+md_flips cmd_rotate "RV34-rotate" rv34_assert "RV34-rotate" rotate
+md_flips cmd_update "RV34-update" rv34_assert "RV34-update" update
+for rv_b in rewound-after-read head-moved; do md_flips cmd_rotate "RV35-$rv_b" rv35_assert "RV35-$rv_b" "$rv_b"; done
+md_flips require_current_site_record "RV28-rotate" rv28r_assert "RV28-rotate"
 # RV25 and RV26 are registered against the command they drive: the fetch and the rewind guard they
 # answer to are proven by mutation. RV27 is registered against the function it grades.
 for rv_c in rotate update; do md_flips cmd_update "RV25-$rv_c" rv25_assert "RV25-$rv_c" "$rv_c"; done
