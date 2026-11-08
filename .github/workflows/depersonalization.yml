@@ -2,11 +2,56 @@ name: Depersonalization
 
 # Blocks personal data (personal-email addresses, OS user-home paths) from entering
 # the repo — in added file content, in commit messages, and in commit
-# author/committer identity. It runs on every pull request into `main` and on every
-# push that lands on `main`, so a commit that reaches `main` without a pull request
-# is still scanned. Patterns are generic on purpose: this workflow ships in a public
-# repo, so it must not itself encode any specific person's tokens. An operator-side
-# local scan (kept outside the repo) covers project-specific tokens.
+# author/committer identity — and holds every commit's author and committer to the
+# no-reply form CONTRIBUTING.md's ground rules ask for. It runs on every pull request
+# into `main` and on every push that lands on `main`, so a commit that reaches `main`
+# without a pull request is still scanned. Patterns are generic on purpose: this
+# workflow ships in a public repo, so it must not itself encode any specific person's
+# tokens. An operator-side local scan (kept outside the repo) covers project-specific
+# tokens.
+#
+# CHECK 4, THE NO-REPLY FORM. Check 3 refuses a list of personal mail providers, so an
+# address on any other domain passes it. Check 4 refuses every author and committer
+# address outside the form, read field by field over every commit in the range. It is a
+# check inside the one step below rather than a step or a job of its own for the reason
+# the filter chain is: it reads the range this step resolved and goes through this
+# step's control, a separate step would need a second copy of both, and a new job would
+# report a context branch protection does not require until someone registers it by
+# hand. The rule is not written here. It is identity_in_form in
+# scripts/check-identity-form.sh, the one definition the release-tag check applies to a
+# tag's tagger, and this file runs that file as a command, once per address, after the
+# checkout.
+#
+# ITS ONE EXCEPTION is the committer noreply@github.com, exactly, on any commit. The
+# host writes that committer on the merges and squashes it makes, on web-interface
+# commits and on Dependabot's single-parent commits, so refusing it would turn this gate
+# red after each of them had landed, and admitting it on merges alone would still refuse
+# Dependabot's. The author takes no exception: the host writes its address there on
+# nothing this repository has merged, and a tag takes none either.
+#
+# WHAT CHECK 4 CANNOT SEE.
+#   - History before its first run. A commit already on `main` sits below every range
+#     this job reads, and nothing is rewritten to bring it into one.
+#   - A commit that reaches neither a pull request nor a push to `main`: a branch with
+#     no pull request, or a commit only a pushed tag reaches. No workflow runs for those.
+#   - A committer field set by hand to the host's address, which reads as the host's.
+#     The author still binds on that commit.
+#   - A merge the host makes, until it exists. That commit is graded on the push to
+#     `main`, after it has landed: this job reports it and cannot refuse it.
+#   - Whose address it is. An address in the form that belongs to someone else passes,
+#     because this reads text and a no-reply address is public.
+#   - A pull request that edits the rule. Its run uses the workflow and
+#     scripts/check-identity-form.sh as that pull request carries them, so one that
+#     widens the form, and commits under the widened shape, can pass here; only review
+#     of the change to the rule can see it.
+#   - A pushed branch before this job reads it. A commit is public once its branch is
+#     pushed to this repository, so a refusal here, and the re-commit its hint asks for,
+#     come after that commit was published, and neither unpublishes it.
+#   - An identity outside the author and committer fields: a Co-authored-by or
+#     Signed-off-by trailer, or a name. No check reads those but check 3, which holds
+#     the commit message they sit in to its list of personal mail providers.
+#   - The identity a commit's signing key is bound to, which only a verifier's own
+#     mapping supplies.
 
 on:
   push:
@@ -153,11 +198,60 @@ jobs:
           }
           lines_in() { wc -l < "$1" | tr -d ' '; }
 
-          # ── Control: both checks catch a planted leak, and only where they look ─────
-          # Runs before anything is scanned, through content_scan itself, on this
-          # runner's grep. The planted values are ASSEMBLED here rather than written out:
-          # this job scans its own source whenever this file is in the range, and a
-          # committed literal would be refused by the very checks it exists to prove.
+          # ── Check 4's reader, defined ONCE ──────────────────────────────────────────
+          # The form itself is scripts/check-identity-form.sh's, run as a command once per
+          # address rather than sourced into this shell. Sourced, a line that ended that file
+          # early would end this step with it, green, before the control or any check had
+          # run; run, the same line answers for every address the control plants, and the
+          # control turns red. A file that cannot be run stops the gate before anything is
+          # scanned, because it leaves check 4 no rule.
+          if [ ! -x ./scripts/check-identity-form.sh ]; then
+            echo "::error::scripts/check-identity-form.sh is not in this checkout, or cannot be run, so check 4 has no rule to apply and nothing was scanned."
+            exit 1
+          fi
+          identity_in_form() { ./scripts/check-identity-form.sh "$1"; }  # identity_in_form <address> — 0 when it is in the form
+          # The exception compares a whole string, so nothing longer or shorter is the host.
+          host_committer='noreply@github.com'
+
+          # Grades <records>, four lines to a commit — its id, its parents, its author's
+          # address, its committer's — and writes one `<id> <field> <address>` line to <hits>
+          # for each address refused. Four lines rather than four fields of one, because an
+          # address cannot hold a newline and can hold any separator a field would use. The
+          # author goes to the rule alone; the committer goes to the rule unless it is the
+          # host. The parents decide nothing: they only count the merges admitted, so that a
+          # log says what was admitted, and the control carries merges and single-parent
+          # commits so that an exception narrowed to merges fails it. Sets id_commits, id_host
+          # and id_host_merges in this shell, so call it directly, never inside $(…).
+          identity_scan() {  # identity_scan <records> <hits>
+            local id parents author committer
+            id_commits=0; id_host=0; id_host_merges=0
+            : > "$2"
+            while IFS= read -r id; do
+              if ! { IFS= read -r parents && IFS= read -r author && IFS= read -r committer; }; then
+                echo "::error::a commit record in $1 ended early, so its identities could not be graded and nothing was scanned."
+                exit 1
+              fi
+              id_commits=$((id_commits + 1))
+              if ! identity_in_form "$author"; then
+                printf '%s author %s\n' "${id:0:12}" "${author:-(empty)}" >> "$2"
+              fi
+              if [ "$committer" = "$host_committer" ]; then
+                id_host=$((id_host + 1))
+                case "$parents" in *' '*) id_host_merges=$((id_host_merges + 1)) ;; esac
+              elif ! identity_in_form "$committer"; then
+                printf '%s committer %s\n' "${id:0:12}" "${committer:-(empty)}" >> "$2"
+              fi
+            done < "$1"
+          }
+
+          # ── Control: every check catches a planted leak, and only where it looks ─────
+          # Runs before anything is scanned, through content_scan and identity_scan
+          # themselves, on this runner's tools. It proves the rules and the scans, not the
+          # reads or the verdict: check 4's git log line, its count guard and fail=1 sit
+          # outside it, as checks 1 to 3's reads of the range do. The planted values are ASSEMBLED here
+          # rather than written out: this job scans its own source whenever this file is in
+          # the range, and a committed literal would be refused by the very checks it exists
+          # to prove.
           at='@'
           home_seg='home'
           planted_email="gate.selftest${at}gmail.com"
@@ -214,14 +308,62 @@ jobs:
             content_scan "$work/$arm.diff" email "$EMAIL"
             content_scan "$work/$arm.diff" path "$USERPATH"
           done
+
+          # ID-FIRE — fifteen commits, each carrying exactly one address check 4 must refuse.
+          # Each commit's id opens with the field that must be refused, so the count below
+          # holds an arm to its own field: a rule that refused the wrong one, or refused one
+          # address twice while passing another, cannot reach the wanted count. The ids and the
+          # no-reply values are not real: GitHub issues no account the id 0 and no login a
+          # doubled hyphen. An address the rule must take beside the one it must refuse is
+          # the in-form value, and the host's address is written only where it is the subject.
+          form="users.noreply.github.com"
+          in_form="0+gate--selftest${at}${form}"
+          id_record() { printf '%s\n' "$1" "$2" "$3" "$4"; }  # <id> <parents> <author> <committer>
+          {
+            id_record author-01 p "outside${at}example.org" "$in_form"
+            id_record author-02 p "$host_committer" "$in_form"
+            id_record author-03 p "$host_committer" "$host_committer"
+            id_record author-04 p "0+gate--selftest${at}${form}.example.org" "$in_form"
+            id_record author-05 p "0+gate--selftest${at}noreply.github.com" "$in_form"
+            id_record author-06 p "0+gate--selftest${at}USERS.NOREPLY.GITHUB.COM" "$in_form"
+            id_record author-07 p "${planted_email}${at}${form}" "$in_form"
+            id_record author-08 p "" "$in_form"
+            id_record committer-01 p "$in_form" "outside${at}example.org"
+            id_record committer-02 p "$in_form" "${host_committer}.example.org"
+            id_record committer-03 p "$in_form" "x-${host_committer}"
+            id_record committer-04 p "$in_form" "NOREPLY${at}GITHUB.COM"
+            id_record committer-05 p "$in_form" "0+gate--selftest${at}${form}.example.org"
+            id_record committer-06 p "$in_form" "0+gate--selftest${at}noreply.github.com"
+            id_record committer-07 p "$in_form" ""
+          } > "$work/id-fire"
+          identity_scan "$work/id-fire" "$work/id-fire.hits"
+          id_fire_own="$(awk 'index($1, $2) == 1 && !seen[$1]++ { n++ } END { print n + 0 }' < "$work/id-fire.hits")"
+          id_fire="ID-FIRE commits=$id_commits refused=$(lines_in "$work/id-fire.hits") own-field=$id_fire_own"
+
+          # ID-QUIET — eight commits it must pass: the form with and without an id, a bot in
+          # both, the host committer on a merge and on single-parent commits, a root commit
+          # and a merge made outside the host. Three admitted as the host, one on a merge.
+          {
+            id_record quiet-01 p "$in_form" "$in_form"
+            id_record quiet-02 p "0+gate--selftest[bot]${at}${form}" "$host_committer"
+            id_record quiet-03 'p q' "$in_form" "$host_committer"
+            id_record quiet-04 p "$in_form" "$host_committer"
+            id_record quiet-05 p "gate--selftest${at}${form}" "gate--selftest${at}${form}"
+            id_record quiet-06 p "gate--selftest[bot]${at}${form}" "$in_form"
+            id_record quiet-07 '' "$in_form" "$in_form"
+            id_record quiet-08 'p q' "$in_form" "$in_form"
+          } > "$work/id-quiet"
+          identity_scan "$work/id-quiet" "$work/id-quiet.hits"
+          id_quiet="ID-QUIET commits=$id_commits refused=$(lines_in "$work/id-quiet.hits") host=$id_host host-merges=$id_host_merges"
+
           grep_version="$(grep --version | sed -n 1p)"
-          measured="FIRE added=$(lines_in "$work/fire.diff.added") email=$(lines_in "$work/fire.diff.email") path=$(lines_in "$work/fire.diff.path"); QUIET added=$(lines_in "$work/quiet.diff.added") email=$(lines_in "$work/quiet.diff.email") path=$(lines_in "$work/quiet.diff.path")"
-          wanted='FIRE added=5 email=2 path=3; QUIET added=2 email=0 path=0'
+          measured="FIRE added=$(lines_in "$work/fire.diff.added") email=$(lines_in "$work/fire.diff.email") path=$(lines_in "$work/fire.diff.path"); QUIET added=$(lines_in "$work/quiet.diff.added") email=$(lines_in "$work/quiet.diff.email") path=$(lines_in "$work/quiet.diff.path"); $id_fire; $id_quiet"
+          wanted='FIRE added=5 email=2 path=3; QUIET added=2 email=0 path=0; ID-FIRE commits=15 refused=15 own-field=15; ID-QUIET commits=8 refused=0 host=3 host-merges=1'
           if [ "$measured" != "$wanted" ]; then
-            echo "::error::content-check control failed on ${grep_version} — measured ${measured}; wanted ${wanted}. Checks 1 to 3 cannot be trusted to read what they are given, so nothing was scanned."
+            echo "::error::control failed on ${grep_version} — measured ${measured}; wanted ${wanted}. Checks 1 to 4 cannot be trusted to read what they are given, so nothing was scanned."
             exit 1
           fi
-          echo "Content-check control passed on ${grep_version} — ${measured}."
+          echo "Control passed on ${grep_version} — ${measured}."
 
           # Writes <diff>, the range's unified diff limited to <pathspec…>, and
           # <diff>.numstat, git's own per-file count of the lines that range adds and
@@ -312,8 +454,34 @@ jobs:
             fail=1
           fi
 
+          # 4. The no-reply form, on the author and committer of every commit in the range.
+          #    Read as check 3 is, and held to git's own count as checks 1 and 2 are: a record
+          #    this check lost would otherwise pass as a commit with nothing wrong with it.
+          if ! git log --format='%H%n%P%n%ae%n%ce' "$BASE_SHA".."$HEAD_SHA" > "$work/ids"; then
+            echo "::error::git log could not read the range for check 4, so no identity was graded."
+            exit 1
+          fi
+          identity_scan "$work/ids" "$work/ids.hits"
+          if [ "$id_commits" != "$commits" ]; then
+            echo "::error::check 4 read $id_commits commit(s) where git counts $commits for the same range — commits were lost or invented between git and the rule, so nothing check 4 reported can be trusted."
+            exit 1
+          fi
+          if [ -s "$work/ids.hits" ]; then
+            echo "::error::commit author or committer outside the no-reply form (…@users.noreply.github.com)"
+            cat "$work/ids.hits"
+            echo "Hint: set this clone's user.email to your no-reply address (GIT_AUTHOR_EMAIL and GIT_COMMITTER_EMAIL, when set, override it), then re-commit these on your branch with the author reset: git commit --amend --no-edit --reset-author for the last commit, or git rebase --exec 'git commit --amend --no-edit --reset-author' <base> for several. CONTRIBUTING.md, Ground rules states the form; a commit already on main is not rewritten. A shape GitHub issues that the form does not take yet is added in scripts/check-identity-form.sh, and only there."
+            fail=1
+          fi
+
+          # Say how many identities check 4 read and what it admitted, so a green over no
+          # commit reads differently from a clean one and a host-made merge shows as admitted.
+          echo "Commit identities read by check 4: $id_commits commit(s), $((id_commits * 2)) address(es), equal to git's own count; $(lines_in "$work/ids.hits") refused; the committer $host_committer admitted on $id_host commit(s), $id_host_merges of them merges."
+          if [ "$id_commits" -eq 0 ]; then
+            echo "::notice::this range holds no commit — check 4 had nothing to read."
+          fi
+
           if [ "$fail" -ne 0 ]; then
             echo "Depersonalization gate FAILED."
             exit 1
           fi
-          echo "Depersonalization gate clean — no personal data in this range."
+          echo "Depersonalization gate clean — no personal data, and every commit identity in the no-reply form, in this range."

@@ -3,6 +3,82 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.63.0] — 2026-11-07 — Every identity that reaches the public repository is checked
+
+No trip verb plans or records a trip differently in this release. What changes is met by whoever
+commits to this repository or cuts a release of it. A commit's author and committer, and a release
+tag's tagger, are now held to the GitHub no-reply form by a check rather than by a person, and a
+release tag now leaves the machine through a script that runs the release-tag check first.
+
+**The no-reply form has one definition.** `scripts/check-identity-form.sh` holds the rule, and both
+checks below run that file rather than a copy of it. An address is in the form when the whole of it
+reads `[<digits>+]<login>[[bot]]@users.noreply.github.com`, where the login opens with an ASCII
+letter or digit and goes on in letters, digits and hyphens. The comparison is exact and
+case-sensitive, and a shape the rule does not list is refused rather than guessed at. Run as
+`scripts/check-identity-form.sh <address>`, it exits 0 in the form, 1 outside it, and 2 when it is
+not given one address. A shape GitHub starts issuing is added there, and only there.
+
+**Check 4 holds every commit's author and committer to the form.** The `Personal-data gate` step of
+`.github/workflows/depersonalization.yml` gains a fourth check. Over every commit in the range of a
+pull request into `main`, or of a push to it, it reads the author and the committer field by field
+and refuses any address outside the form. Its one exception is the committer `noreply@github.com`,
+exactly, on any commit, which the host writes on what it merges, on web-interface commits and on
+Dependabot's commits. The author takes no exception. Check 4 runs the form's file as a command, once
+per address, and goes through the step's planted control. No required check is added. Its hint names
+`GIT_AUTHOR_EMAIL` and `GIT_COMMITTER_EMAIL` as overriding `user.email`, and says to re-commit with
+the author reset (`git commit --amend --no-edit --reset-author`). A commit already on `main` is not
+rewritten.
+
+**A release tag's tagger is checked.** `scripts/check-release-tag.sh` gains a `tagger` limb beside
+its `changelog` limb: a release tag must be annotated, with its tagger in the form. A lightweight
+tag fails as `no-tagger`, because it has no tagger to read, and a tagger outside the form fails as
+`out-of-form`. The host's committer address takes no exception here. The check runs the form's file
+as a command, after testing that it can be run. Before it grades any tag it asks the file about one
+planted address outside the form and one in it, and unless the answers are 1 and 0 it says
+NOT-EVALUATED and exits 2, so a file that answers the same for every address grades nothing.
+
+**The eight tags that cannot meet the limb are declared, not rewritten.** `v0.1.0` through `v0.6.0`,
+`v0.16.0` and `v0.17.0` are lightweight tags, which gain a tagger only by being rewritten. Each is
+declared under *Why earlier tags look different* in `CONTRIBUTING.md` as `tagger:no-tagger`, and
+`v0.1.0` keeps its `changelog:no-changelog` row as well. The corpus-hygiene suite's group G grades
+every tag under both limbs and holds each tag that fails against its declared row.
+
+**A release tag goes out through a script that checks it first.** The pusher,
+`scripts/push-release-tag.sh vX.Y.Z`, compares this checkout's copies of the release scripts with
+the tagged commit's, runs the release-tag check, pushes the one tag, create-only, only when the
+check exits 0, and then reads it back from origin. It exits 1 when the check refused the tag, and 2
+when nothing was evaluated or a precondition failed; neither pushes anything. It exits 3 when origin
+could not be read, already has the tag, refused the push or was not read back holding it. Step 6 of
+*Cutting a release* now tags the merge commit annotated, with its tagger in the form, signs it with
+a key the verifier's mapping binds to that same no-reply address, and pushes it through the pusher.
+A `tagger:` refusal is mended on the same commit; a `changelog:` one goes through a pull request.
+
+**The host's tag ruleset is recorded.** The host holds a ruleset, `protect-version-tags`, that
+refuses deleting or force-pushing a `v*` tag and has no bypass actors. It was made outside this
+release, which does not change it. `SECURITY.md` records it beside branch protection on `main`, and
+step 6 says how to read it. It runs no check on what a tag carries, so it complements the pusher
+rather than replacing it. Four sentences in `CONTRIBUTING.md` and the corpus-hygiene suite that said
+tags here are not protected now say what the host refuses, and that a clone's own tags have no such
+guard.
+
+**Size fence.** Nothing moved worth naming: against `v0.62.0` no row is new, raised, lowered or
+dropped, and none is re-pinned. `CONTRIBUTING.md`, at 19,510 bytes, and `SECURITY.md`, at 11,128,
+stay under the 20,000-byte floor of their class, so neither owes a row. The one file that grew is
+`reference/adr/README.md`, by 47 bytes to 26,070, beneath its row of 28,177. It grew on `main`, when
+ADR-051's number was taken, and reached this release when `main` was merged in.
+
+**What it doesn't reach.** No check here reads the identity a signing key is bound to, on a commit
+or on a tag: only a verifier's own mapping supplies it, so a tag can pass the `tagger` limb and
+verify under another address. Nor can a check tell whose address it reads, because a no-reply
+address is public. Check 4 cannot see history before its first run, so the nine commits outside the
+form already on `main` stay as they are. Nor does it see a commit that reaches neither a pull
+request nor a push to `main`, a committer set by hand to the host's address, a merge the host makes
+until it has landed, a pull request that edits the rule, a commit on a pushed branch, which is
+public before the gate reads it, or an identity in a commit trailer. The gate's planted control
+proves the rules and the scans, not check 4's read of the range, its count guard or its verdict. The
+pusher cannot see a raw `git push`, a tag made on the host, or whether the tagged commit is on
+`main`. Before this release's own tag, it had run only against the suite's scratch remotes.
+
 ## [0.62.0] — 2026-10-29 — A plaintext publish never lets through a value the guard used to catch
 
 No trip verb plans or records a trip differently in this release. What changes is met by whoever

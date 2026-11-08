@@ -14,10 +14,19 @@ by invitation only.
 
 - **Commit with a GitHub no-reply email, not a personal one.** Turn on
   *Settings → Emails → Keep my email address private*, then set your repo identity to the
-  `…@users.noreply.github.com` address (`git config user.email`). A CI gate
+  `…@users.noreply.github.com` address (`git config user.email`);
+  `scripts/check-identity-form.sh <address>` exits 0 for an address in that form. A CI gate
   (`.github/workflows/depersonalization.yml`) blocks personal email addresses and OS
   user-home paths from entering the repo — in file content, in commit messages, and in
-  commit author/committer identity.
+  commit author/committer identity. Its check 4 refuses any commit whose author or committer
+  address is outside the form, with one exception, the committer `noreply@github.com`, exactly,
+  which the host writes on what it merges, on web-interface commits and on Dependabot's commits.
+  Check 4 cannot see history before its first run, a commit that reaches neither a pull request nor a push to `main`, a
+  committer set by hand to the host's address, a merge the host makes until it has landed, or
+  whose address it is. Nor can it see a pull request that edits the rule it applies, a commit on
+  a pushed branch, which is public before the gate reads it, an identity in a commit trailer
+  such as `Co-authored-by`, which no check reads but check 3's list of personal mail providers,
+  or the identity a commit's signing key is bound to, which only a verifier's own mapping supplies.
 - **No personal data in examples.** The worked examples under `examples/` are sanitized and
   illustrative (fixture names, representative bookings). Keep your own trip data in your data
   folder — the one `~/.travel-planner/data-root` names (`CLAUDE.md` § *Resolving a trip*) — and
@@ -116,23 +125,43 @@ carries no merge SHA and no tag, so nothing in it has to wait for the merge.
 5. Wait for CI, per *Making a change* step 4. The personal-data gate reads the PR's
    diff and the PR's commit messages and author identities — so the CHANGELOG entry
    is covered by it only if the entry is in the PR.
-6. Merge the PR. Tag `vX.Y.Z` on the resulting merge commit — locally first — and run
-   `scripts/check-release-tag.sh vX.Y.Z` before the tag leaves your machine. The check reads
-   the tagged tree and refuses the tag unless its `CHANGELOG.md` carries `## [X.Y.Z]` as the
-   newest version heading; it changes nothing. Push the tag only when the check exits 0, then
-   publish the release from that tag. The tag then carries its own changelog entry, which it
+6. Merge the PR. Tag `vX.Y.Z` on the resulting merge commit, locally and annotated (`git tag -a`),
+   with its tagger in the same `…@users.noreply.github.com` form the ground rules require for
+   commits: a tag takes its tagger from `user.email`, and check 4's exception for the host binds
+   commits alone. Sign it with a key your verifier's mapping binds to that same no-reply address; no
+   check here reads that mapping. Of the tag's identity, the check reads the tagger line only.
+   Push it with `scripts/push-release-tag.sh vX.Y.Z` from a checkout at that commit, then publish the
+   release from that tag. The pusher compares its release scripts with the tagged commit's, then
+   runs `scripts/check-release-tag.sh`, and pushes the one tag, create-only, only when the check
+   exits 0. The check reads the tag and its tree and refuses
+   the tag unless its `CHANGELOG.md` carries `## [X.Y.Z]` as the newest version heading and its
+   tagger is in the form; it changes nothing. The tag then carries its own changelog entry, which it
    does not if the entry lands afterwards. The tag is also the step that cannot be taken back —
    which is why every mutable part of this procedure, the branch name and the prose and the
    version heading alike, is ordered before it, and why the check runs before the push.
-   **If the check refuses the tag, do not push it.** Delete it locally (`git tag -d vX.Y.Z`),
-   land the missing or corrected heading through a pull request, and tag that pull request's
-   merge commit instead. A version that moved after its heading was stamped is refused the
-   same way: if another release claimed the version first and the heading was not restamped,
-   the version this tag names is not the newest entry in its own tree.
-   The same check runs over every existing tag on every push and pull request, in
-   `scripts/test-corpus-hygiene.sh` group **G**. A tag pushed without its entry turns that
-   required check red until it is declared under *Why earlier tags look different* below —
-   a pushed tag is not rewritten, so the declaration is the remedy left.
+   That is why the path is a script, as the publish script's pre-push guard is: a tracked hook is a
+   per-clone setting nothing records, and a host ruleset on tags runs no check.
+   The host does hold one, `protect-version-tags` ([SECURITY.md](SECURITY.md)): it refuses deleting or
+   force-pushing a `v*` tag, and complements the pusher rather than replacing it. Read it with
+   `gh api repos/:owner/:repo/rulesets`, which names it, and `gh api repos/:owner/:repo/rulesets/<id>`,
+   which lists its rules.
+   **If the check refuses the tag (exit 1), nothing was pushed.** A `tagger:` refusal is mended on
+   the same commit: set `user.email` to your no-reply address (`GIT_COMMITTER_EMAIL`, when set,
+   overrides `user.email`: unset it, or give it the same address), delete the tag locally
+   (`git tag -d vX.Y.Z`), and tag the same commit again with `git tag -a`. A `changelog:` refusal
+   is not: delete the tag locally, land the missing or corrected heading through a pull request, and
+   tag that pull request's merge commit instead. A version that moved after its heading was stamped is
+   refused the same way: if another release claimed the version first and the heading was not
+   restamped, the version this tag names is not the newest entry in its own tree.
+   **If the pusher exits 2, nothing was evaluated, and nothing was pushed:** the check measured
+   nothing, or the pusher stopped first, on a tag that names no commit or a copy that differs. Act on
+   the cause it prints, then run the pusher again.
+   **What this path cannot see:** a raw `git push` of the tag, a tag made on the host (a Release
+   published on a new tag name, or one made in the web interface), and whether the tagged commit is
+   on `main`. The same check runs over every existing tag on every push and pull request, in
+   `scripts/test-corpus-hygiene.sh` group **G**. A tag pushed without its entry or its tagger turns
+   that required check red until it is declared under *Why earlier tags look different* below — a
+   pushed tag is not rewritten, so the declaration is the remedy left.
 7. After the release, ratify any decision record it landed as `Proposed`: a pull request of its
    own into `main`. `reference/adr/README.md` § *Convention* states the practice and what the
    ratifying change sets, under *What an amendment may add*.
@@ -187,22 +216,36 @@ version. Each of the first group's entries first appears in the next release's t
 `0.34.0`, the first release cut after this section was written, was tagged on its release merge
 before its entry landed. `0.1.0` predates the CHANGELOG itself.
 
-The fence below declares every tag whose own tree does not carry the entry step 6 requires.
+`0.1.0` through `0.6.0`, `0.16.0` and `0.17.0` are lightweight tags, which carry no tagger at all.
+A lightweight tag gains one only by being rewritten, so each stays declared, and `0.1.0` holds a row
+for each limb it fails.
+
+The fence below declares every tag that lacks what step 6 requires: its own entry, or a tagger in
+the form.
 `scripts/check-release-tag.sh --all` grades every tag, and `scripts/test-corpus-hygiene.sh`
 group **G** holds its failures against this declaration in both directions: a tag that fails
 and is not declared here fails the suite, and so does a row naming a tag that no longer fails
-for the reason given. Tags are not protected against being moved or deleted, and a declaration
-must not outlive the failure it excepts. Two columns, both required, whitespace-separated, as in
+for the reason given. The host refuses deleting or force-pushing a `v*` tag (step 6), but a clone's
+own tags have no such guard, and a declaration must not outlive the failure it excepts. Two columns,
+both required, whitespace-separated, as in
 `reference/adr/README.md` § *Number declarations*: the tag, and one token naming the check's
 limb and the reason it gives. A line whose first non-blank character is `#` is a comment.
 
 ```release-tag-declaration
 # tag     limb:reason
 v0.1.0    changelog:no-changelog
+v0.1.0    tagger:no-tagger
+v0.2.0    tagger:no-tagger
+v0.3.0    tagger:no-tagger
+v0.4.0    tagger:no-tagger
+v0.5.0    tagger:no-tagger
+v0.6.0    tagger:no-tagger
 v0.9.0    changelog:no-entry
 v0.9.1    changelog:no-entry
 v0.10.0   changelog:no-entry
 v0.11.0   changelog:no-entry
+v0.16.0   tagger:no-tagger
+v0.17.0   tagger:no-tagger
 v0.24.0   changelog:no-entry
 v0.25.0   changelog:no-entry
 v0.26.0   changelog:no-entry
