@@ -316,6 +316,9 @@ name: Artifact schema
 #        follow-up reported, every planted control pinned at its verdict
 #   CHR  CH-2's R-test keyed on the class PERSON read live from the data model, its seams flipped on
 #        copies, and what it does not reach — a session, the route that cannot write — printed
+#   RB   the interview rubric's shape — every dimension row carrying its traces, a pass level and an
+#        NA condition, the conversation rule and the not-graded lines anchored — its citations of
+#        ADR-045's closed lists, held by neither, and its isolation from every interviewer input
 #   RS   this coverage boundary itself, and the suite's own header roster, each set-diffed
 #        BOTH WAYS against the groups the run actually emitted. The executing set comes from
 #        the RUN, never from a static read of the suite. A group added and left undeclared

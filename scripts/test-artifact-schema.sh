@@ -410,6 +410,10 @@
 #        follow-up on a PERSON field in speech, an example only on request, the care stated in the
 #        write-capable rules, and every guided-form bullet joining one classification row — with the
 #        seams of the class flipped on copies, and what it does not reach printed on its verdict line
+#   RB   the interview rubric, reference/interview-rubric.md: its dimension table parses, every row
+#        carrying a unique id, its traces, a pass level and an NA condition; its conversation rule and
+#        its not-graded lines anchored; ADR-045's A1..A5 and kinds cited by name and held by neither;
+#        and no interviewer input naming it, each with a control on a copy
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -26527,6 +26531,226 @@ md_flips ta_grade    'CHR'     chr_assert
 md_flips chr_e1_eval 'CHR.E1'  chre1_assert "$PC_VERB" "$ROOT/reference/data-model.md"
 md_flips ta_model    'CHR.J'   chrj_assert
 md_flips ta_plants   'CHR-CTL' chrctl_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group RB — the interview rubric: its dimension table, its conversation rule and its not-graded
+# lines; its citations of ADR-045's closed lists; and its isolation from every interviewer input
+#
+# reference/interview-rubric.md is what a grader reads an interview conversation against. Its
+# dimensions are #1765 § 6's, each traced to the finding's items read with the corrections first,
+# each with a pass level and an NA condition; where ADR-045 decides a point the dimension follows the
+# record. This group grades the file's SHAPE and its ISOLATION. It never grades a grade: whether a
+# conversation is MET on a dimension is a grader's judgment, read against this file, and nothing here
+# runs one.
+#
+# ── THE ARMS ─────────────────────────────────────────────────────────────────────────────────────
+#   RB1  the dimension table under "## The dimensions" parses: every row carries the header's cell
+#        count, its Dim cell is an R-<n> id, the ids are unique, and each row carries its traces (a
+#        #1765 item id), its pass level and its NA condition, each column found by its header label.
+#        The conversation rule's bullets under "## The conversation rule" — PASS, a mechanical fail,
+#        a mechanical ND, and the disputed-dimension route — and the three not-graded lines under
+#        "## Not graded" are anchored, each in exactly one bullet. CONTROL: a copy of the rubric with
+#        the mechanical-ND bullet deleted is red, naming it.
+#   RB2  the rubric cites ADR-045's A1..A5 — the first and the last id nu_list reads, as a backticked
+#        range — and the kinds of interviewer turn by name, and holds neither list: no row of D2 item
+#        4's shape, neither of term 7's list markers, and no kind nu_list reads written as an italic
+#        name. CONTROL (SEAM-5): an A1 row planted in a copy is red.
+#   RB3  no interviewer input names the rubric: interview-rubric in any spelling — case folded, with a
+#        hyphen, an underscore, a space or nothing between the two words — occurs in none of the
+#        conduct file, the interview card, the three forms, skills/trip-record/SKILL.md and the root
+#        SKILL.md, each opened. CONTROL: the rubric's path planted on a copy of the interview verb's
+#        **Reads:** line is found.
+# Each arm is NOT EVALUATED — a FAIL — when the rubric is absent, so an absent file never reads as a
+# shape that holds or an isolation that holds.
+#
+# WHAT A GREEN DOES NOT COVER: CLAUDE.md's tree names the rubric by its bare name inside a fence. That
+# cites nothing under the load-class rule, and the card route that generated conversations run on
+# loads no CLAUDE.md, so RB3 does not read it; a future run on the verb route, which loads the whole
+# engine, is the residual this leaves, and it is stated here rather than graded.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "RB — the interview rubric: its table, its conversation rule, its citations of ADR-045, and its isolation from every interviewer input"
+
+RB_RUBRIC="$ROOT/reference/interview-rubric.md"
+mkdir -p "$WORK/rb"
+# rb_table <rubric> — the table under "## The dimensions": "HDR <cells>" then one "ROW <line> <cells>
+# <dim> <traces> <pass level> <NA when>" per row, tab-separated; or one "NE <why>" record.
+rb_table() {
+  [ -f "$1" ] || { printf 'NE\tthe rubric is absent\n'; return 0; }
+  LC_ALL=C awk '
+    function rb_cells(s, C,   n, i) { sub(/^[ \t]*\|/, "", s); sub(/\|[ \t]*$/, "", s); n = split(s, C, "|"); for (i = 1; i <= n; i++) gsub(/^[ \t]+|[ \t]+$/, "", C[i]); return n }
+    { L[++n] = $0 }
+    END {
+      s = 0; for (i = 1; i <= n; i++) if (L[i] == "## The dimensions") { if (s) { print "NE\tthe heading ## The dimensions stands more than once"; exit } s = i }
+      if (!s) { print "NE\tno ## The dimensions heading"; exit }
+      for (i = s + 1; i <= n; i++) { if (substr(L[i], 1, 1) == "|" || substr(L[i], 1, 3) == "## ") break }
+      if (i > n || substr(L[i], 1, 1) != "|") { print "NE\tno table under ## The dimensions"; exit }
+      if (i + 1 > n || L[i + 1] !~ /^\|[-| :]+\|$/) { print "NE\tthe table under ## The dimensions has no separator row"; exit }
+      nh = rb_cells(L[i], H); cd = 0; ct = 0; cp = 0; cn = 0
+      for (k = 1; k <= nh; k++) { if (H[k] == "Dim") cd = k; if (H[k] == "Traces to, corrections first") ct = k; if (index(H[k], "Pass level") == 1) cp = k; if (H[k] == "`NA` when") cn = k }
+      if (!cd || !ct || !cp || !cn) { print "NE\tthe header lacks a Dim, a Traces to, a Pass level or an NA when column"; exit }
+      printf "HDR\t%d\n", nh
+      for (i = i + 2; i <= n && substr(L[i], 1, 1) == "|"; i++) { m = rb_cells(L[i], C); printf "ROW\t%d\t%d\t%s\t%s\t%s\t%s\n", i, m, C[cd], C[ct], C[cp], C[cn] }
+    }' "$1"
+}
+# rb_bullets <rubric> <heading> — each bullet of the section under the heading, its lines joined with
+# one space, one per line, prefixed "B<TAB>"; "SEC<TAB>0" when the heading is absent or repeated.
+rb_bullets() {
+  [ -f "$1" ] || { printf 'SEC\t0\n'; return 0; }
+  LC_ALL=C awk -v h="$2" '
+    $0 == h { hn++; on = 1; next }
+    on && substr($0, 1, 3) == "## " { on = 0 }
+    on { t = $0; sub(/^[ \t]+/, "", t)
+         if (substr(t, 1, 2) == "- ") { if (b != "") print "B\t" b; b = substr(t, 3) }
+         else if (t == "") { if (b != "") print "B\t" b; b = "" }
+         else if (b != "") b = b " " t }
+    END { if (b != "" && on) print "B\t" b; if (hn != 1) print "SEC\t0"; else print "SEC\t1" }' "$1"
+}
+RB_RULE_ANCHORS="A conversation's grade is **\`PASS\`** when every dimension is \`MET\` or \`NA\` and none is \`ND\`
+**A mechanical check's fail**
+**A mechanical check's \`ND\`**
+grades **\`ND\`, never \`PASS\`**
+Both routes are the same as for a disputed dimension"
+RB_NG_ANCHORS="**\`RS-6\` — a meaning reversed
+*nothing before the core question*
+*implicit confirmation by default*"
+# rb1_eval <rubric> — one "P<TAB><problem>" per defect, or one "NE<TAB><why>"; then "N<TAB><rows><TAB><ids>".
+rb1_eval() {
+  local t r g a
+  t="$(rb_table "$1")"
+  if [ -z "$t" ]; then printf 'NE\tthe dimension table read nothing\n'; return 0; fi
+  if [ -n "$(awk -F'\t' '$1 == "NE"' <<<"$t")" ]; then awk -F'\t' '$1 == "NE"' <<<"$t"; return 0; fi
+  awk -F'\t' '$1 == "HDR" { nh = $2 } $1 == "ROW" { r++; id = $4
+      if ($3 != nh) printf "P\tthe row at line %d has %d cells where the header has %d\n", $2, $3, nh
+      if (id !~ /^`R-[0-9]+`$/) printf "P\tthe row at line %d opens %s, not an R-<n> id\n", $2, id
+      if (id in seen) printf "P\tthe id %s stands on more than one row\n", id; seen[id] = 1
+      if ($5 !~ /`[TFXS]-[0-9]+`/) printf "P\t%s carries no #1765 item in its traces\n", id
+      if ($6 == "" || $6 == "\342\200\224") printf "P\t%s carries no pass level\n", id
+      if ($7 == "" || $7 == "\342\200\224") printf "P\t%s carries no NA condition\n", id
+      ids = ids id " " }
+    END { if (r == 0) print "P\tthe table holds no row"; printf "N\t%d\t%s\n", r, ids }' <<<"$t"
+  for g in "## The conversation rule" "## Not graded"; do
+    r="$(rb_bullets "$1" "$g")"
+    if [ -z "$r" ] || [ -z "$(awk -F'\t' '$1 == "SEC" && $2 == "1"' <<<"$r")" ]; then printf 'P\tthe heading %s is absent or stands more than once\n' "$g"; continue; fi
+    if [ "$g" = "## The conversation rule" ]; then a="$RB_RULE_ANCHORS"; else a="$RB_NG_ANCHORS"; fi
+    while IFS= read -r anc; do
+      [ -n "$anc" ] || continue
+      awk -F'\t' -v a="$anc" -v g="$g" '$1 == "B" && index($2, a) { c++ } END { if (c != 1) printf "P\tunder %s, the anchor \"%s\" stands in %d bullet(s), where exactly one is required\n", g, a, c }' <<<"$r"
+    done <<<"$a"
+  done
+}
+rb1_assert() {
+  local p c n ids cut
+  p="$(rb1_eval "$RB_RUBRIC")"
+  cut="$WORK/rb/rubric-no-mech-nd.md"; : > "$cut"
+  [ -f "$RB_RUBRIC" ] && LC_ALL=C awk 'index($0, "- **A mechanical check'"'"'s `ND`**") == 1 { skip = 1; next } skip && (substr($0, 1, 2) == "- " || $0 == "" || substr($0, 1, 1) == "#") { skip = 0 } !skip' "$RB_RUBRIC" > "$cut"
+  c="$(rb1_eval "$cut")"
+  n="$(awk -F'\t' '$1 == "N" { print $2 }' <<<"$p")"; ids="$(awk -F'\t' '$1 == "N" { print $3 }' <<<"$p")"
+  if [ ! -f "$RB_RUBRIC" ]; then
+    FAIL "RB1: NOT EVALUATED — ${RB_RUBRIC#"$ROOT/"} is absent, so no dimension table, conversation rule or not-graded line can be read"
+  elif [ -n "$(awk -F'\t' '$1 == "NE"' <<<"$p")" ]; then
+    FAIL "RB1: NOT EVALUATED — $(awk -F'\t' '$1 == "NE" { print $2 }' <<<"$p")"
+  elif [ -n "$(awk -F'\t' '$1 == "P"' <<<"$p")" ]; then
+    FAIL "RB1: ${RB_RUBRIC#"$ROOT/"} — $(awk -F'\t' '$1 == "P" { printf "%s; ", $2 }' <<<"$p")"
+  elif [ "$(wc -l < "$cut")" -ge "$(wc -l < "$RB_RUBRIC")" ]; then
+    FAIL "RB1: CONTROL did not LAND — the copy with the mechanical-ND bullet deleted is no shorter than the rubric, so its verdict shows nothing"
+  elif [ -z "$(awk -F'\t' '$1 == "P" && index($2, "A mechanical check")' <<<"$c")" ]; then
+    FAIL "RB1: CONTROL did not fire as specified — with the mechanical-ND bullet deleted from a copy, the reading is '$(tr '\n' ' ' <<<"${c:-nothing}")', where it must name that bullet's anchor"
+  else
+    PASS "RB1: ${RB_RUBRIC#"$ROOT/"}'s dimension table parses — $n row(s) [${ids% }], every row carrying the header's cells, a unique R-<n> id, its #1765 traces, a pass level and an NA condition, each column found by its header label; the conversation rule's PASS, mechanical-fail, mechanical-ND and disputed-dimension bullets and the three not-graded lines each stand in exactly one bullet. CONTROL: a copy with the mechanical-ND bullet deleted reads '$(awk -F'\t' '$1 == "P" { printf "%s; ", $2 }' <<<"$c")'"
+  fi
+}
+rb1_assert
+# rb_cites <rubric> <first-id> <last-id> <kinds> — "SCANNED <lines>", then "CITE <what>" for each
+# citation found and "HOLDS <what>" for each list row or italic kind name the rubric carries.
+rb_cites() {
+  [ -f "$1" ] || return 0
+  LC_ALL=C awk -v a1="$2" -v an="$3" -v kinds="$4" '
+    BEGIN { nk = split(kinds, K, "|"); rng = "`" a1 "`\342\200\223`" an "`" }
+    { n++; s = $0
+      if (index(s, "ADR-045")) adr = 1
+      if (a1 != "" && an != "" && index(s, rng)) r = 1
+      if (index(s, "kinds of interviewer turn")) kt = 1
+      if (s ~ /^[ \t]*\|[ \t]*`A[0-9]+`[ \t]*\|/) printf "HOLDS\tline %d is a row of ADR-045 D2 item 4: %s\n", NR, substr(s, 1, 60)
+      if (index(s, "Those that put or concern a field:") || index(s, "Those that put no field:")) printf "HOLDS\tline %d carries a list marker of term 7\n", NR
+      u = s; gsub(/\*\*[^*]*\*\*/, " ", u)
+      for (k = 1; k <= nk; k++) if (K[k] != "" && index(u, "*" K[k] "*")) printf "HOLDS\tline %d writes the kind *%s* as an italic name\n", NR, K[k] }
+    END { printf "SCANNED\t%d\n", n; if (adr) print "CITE\tADR-045"; if (r) print "CITE\t" rng; if (kt) print "CITE\tthe kinds of interviewer turn" }' "$1"
+}
+rb2_assert() {
+  local recs a1 an kinds out ctl plant nc
+  recs="$(nu_list "$NU_ADR")"
+  a1="$(awk -F'\t' '$1 == "A" && !d { print $2; d = 1 }' <<<"$recs")"; an="$(awk -F'\t' '$1 == "A" { x = $2 } END { print x }' <<<"$recs")"
+  kinds="$(awk -F'\t' '$1 == "FIELD" || $1 == "NONFIELD" { printf "%s%s", (n++ ? "|" : ""), $2 }' <<<"$recs")"
+  out="$(rb_cites "$RB_RUBRIC" "$a1" "$an" "$kinds")"
+  plant="$WORK/rb/rubric-a1-row.md"; : > "$plant"
+  [ -f "$RB_RUBRIC" ] && LC_ALL=C awk '{ print } $0 == "## Pass levels" && !done { print ""; print "| `A1` | the em dash | they uttered a skip | ADR-022 D5.5 |"; done = 1 }' "$RB_RUBRIC" > "$plant"
+  ctl="$(rb_cites "$plant" "$a1" "$an" "$kinds")"
+  nc="$(awk -F'\t' '$1 == "CITE"' <<<"$out" | awk 'END { print NR }')"
+  if [ ! -f "$RB_RUBRIC" ]; then
+    FAIL "RB2: NOT EVALUATED — ${RB_RUBRIC#"$ROOT/"} is absent, so its citations of ADR-045 cannot be read"
+  elif [ -z "$a1" ] || [ -z "$kinds" ]; then
+    FAIL "RB2: NOT EVALUATED — nu_list read no admitted non-utterance or no kind from ${NU_ADR#"$ROOT/"}, so there is nothing to hold the rubric's citations to"
+  elif [ -z "$(awk -F'\t' '$1 == "SCANNED" && $2 > 0' <<<"$out")" ]; then
+    FAIL "RB2: the scan of ${RB_RUBRIC#"$ROOT/"} read nothing — '${out:-no output}'"
+  elif [ -n "$(awk -F'\t' '$1 == "HOLDS"' <<<"$out")" ]; then
+    FAIL "RB2: ${RB_RUBRIC#"$ROOT/"} holds what it must cite — $(awk -F'\t' '$1 == "HOLDS" { printf "%s; ", $2 }' <<<"$out")ADR-045's lists have one home"
+  elif [ "$nc" -ne 3 ]; then
+    FAIL "RB2: ${RB_RUBRIC#"$ROOT/"} does not cite ADR-045, its range \`$a1\`–\`$an\` and the kinds of interviewer turn by name — it cites [$(awk -F'\t' '$1 == "CITE" { printf "%s; ", $2 }' <<<"$out")]"
+  elif [ -z "$(awk -F'\t' '$1 == "HOLDS" && index($2, "row of ADR-045 D2 item 4")' <<<"$ctl")" ]; then
+    FAIL "RB2: CONTROL (SEAM-5) did not fire as specified — an A1 row planted in a copy of the rubric reads '$(tr '\n' ' ' <<<"${ctl:-nothing}")'"
+  else
+    PASS "RB2: ${RB_RUBRIC#"$ROOT/"} cites ADR-045, the range \`$a1\`–\`$an\` nu_list reads from it, and the kinds of interviewer turn by name, and holds neither list — no row of D2 item 4's shape, no term 7 list marker, and none of the $(awk -F'|' '{ print NF }' <<<"$kinds") kind(s) nu_list reads written as an italic name. CONTROL (SEAM-5): an A1 row planted in a copy is refused, '$(awk -F'\t' '$1 == "HOLDS" && !d { print $2; d = 1 }' <<<"$ctl")'"
+  fi
+}
+rb2_assert
+RB_INPUTS="skills/trip-record/interview-conduct.md
+templates/interview-card.md
+templates/traveler-intake.template.md
+templates/person-intake.template.md
+templates/trip-context.template.md
+skills/trip-record/SKILL.md
+SKILL.md"
+# rb_isolation <root> — "OPEN <path>" for each interviewer input read, "MISS <path>" for one that is
+# not there, and "HIT <path> <line>" for each line naming the rubric in any spelling.
+rb_isolation() {
+  local f
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    if [ -f "$1/$f" ]; then
+      printf 'OPEN\t%s\n' "$f"
+      LC_ALL=C awk -v p="$f" 'tolower($0) ~ /interview[-_ ]?rubric/ { printf "HIT\t%s\t%d\n", p, FNR }' "$1/$f"
+    else printf 'MISS\t%s\n' "$f"; fi
+  done <<<"$RB_INPUTS"
+}
+rb3_assert() {
+  local out ctl r n nin f
+  out="$(rb_isolation "$ROOT")"
+  r="$(mktemp -d "$WORK/rb/root.XXXXXX")"; mkdir -p "$r/skills/trip-record" "$r/templates"
+  while IFS= read -r f; do [ -n "$f" ] && [ -f "$ROOT/$f" ] && cp "$ROOT/$f" "$r/$f"; done <<<"$RB_INPUTS"
+  [ -f "$r/skills/trip-record/SKILL.md" ] && LC_ALL=C awk '/^## interview / { on = 1 } on && index($0, "**Reads:**") == 1 && !done { $0 = "**Reads:** `reference/interview-rubric.md` — planted; " substr($0, 11); done = 1 } { print }' "$ROOT/skills/trip-record/SKILL.md" > "$r/skills/trip-record/SKILL.md"
+  ctl="$(rb_isolation "$r")"
+  n="$(awk -F'\t' '$1 == "OPEN"' <<<"$out" | awk 'END { print NR }')"; nin="$(awk 'NF' <<<"$RB_INPUTS" | awk 'END { print NR }')"
+  if [ ! -f "$RB_RUBRIC" ]; then
+    FAIL "RB3: NOT EVALUATED — ${RB_RUBRIC#"$ROOT/"} is absent, so its isolation from the interviewer's inputs is a statement about nothing"
+  elif [ -z "$out" ]; then
+    FAIL "RB3: the isolation scan read nothing"
+  elif [ -n "$(awk -F'\t' '$1 == "MISS"' <<<"$out")" ] || [ "$n" -ne "$nin" ]; then
+    FAIL "RB3: NOT EVALUATED — of the $nin interviewer input(s), $n were opened; missing: $(awk -F'\t' '$1 == "MISS" { printf "%s ", $2 }' <<<"$out")"
+  elif [ -n "$(awk -F'\t' '$1 == "HIT"' <<<"$out")" ]; then
+    FAIL "RB3: an interviewer input names the rubric — $(awk -F'\t' '$1 == "HIT" { printf "%s line %s; ", $2, $3 }' <<<"$out")no interviewer reads what it is graded against"
+  elif [ -z "$(awk -F'\t' '$1 == "HIT" && $2 == "skills/trip-record/SKILL.md"' <<<"$ctl")" ]; then
+    FAIL "RB3: CONTROL did not fire as specified — the rubric's path planted on a copy of the interview verb's **Reads:** line was not found, so a zero above shows nothing"
+  else
+    PASS "RB3: none of the $n interviewer input(s) opened — $(awk -F'\t' '$1 == "OPEN" { printf "%s ", $2 }' <<<"$out")— names the rubric in any spelling. CONTROL: the rubric's path planted on a copy of the interview verb's **Reads:** line is found at line $(awk -F'\t' '$1 == "HIT" && !d { print $3; d = 1 }' <<<"$ctl")"
+  fi
+}
+rb3_assert
+
+md_flips rb_table     'RB1' rb1_assert
+md_flips rb_bullets   'RB1' rb1_assert
+md_flips rb_cites     'RB2' rb2_assert
+md_flips rb_isolation 'RB3' rb3_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # WT-ADR26 — the record and the check agree (SEAM-6), run after every CH-2 text group

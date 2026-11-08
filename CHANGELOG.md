@@ -3,6 +3,15 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [Unreleased] — The intake channel is checked, not asserted
+
+**An interview conversation now has a rubric to be graded against.** `reference/interview-rubric.md`
+holds the dimensions a grader reads one conversation against — `#1765 § 6`'s, each traced to the
+finding's items with its corrections read first, each with a pass level and an `NA` condition — and
+the rule that turns a conversation's dimensions into its grade, a mechanical check's fail or `ND`
+included. No interviewer reads it. Group `RB` of `scripts/test-artifact-schema.sh` holds its shape
+and its isolation from every interviewer input.
+
 ## [0.63.0] — 2026-11-07 — Every identity that reaches the public repository is checked
 
 No trip verb plans or records a trip differently in this release. What changes is met by whoever
