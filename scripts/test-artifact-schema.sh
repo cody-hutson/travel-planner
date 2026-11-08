@@ -388,6 +388,15 @@
 #        on a fixture; the three readers over the conduct file, the card and each interviewable form's
 #        own conduct, NOT EVALUATED on a heading they cannot find; procedure X; the raw PERSON marker;
 #        and nu_list, the one reader of ADR-045's closed lists, with the agreement it offers consumers
+#   WT   CH-2's W-test over the authored conduct text — no value in a prompt (WT.P1) and silence is not
+#        assent (WT.P2) — over the conduct file, the card and each interviewable form's own conduct,
+#        read through group WD's word definition and sentence engine: a class table where the first
+#        class that holds decides and an unclassified occurrence fails closed, R9's reach of an offer,
+#        the AC8 result recorded beside its plants, and every planted control of the design pinned at
+#        its verdict, the stated bounds pinned as bounds
+#   LG   the declared ledger of the forms' known sentences, graded both ways — an undeclared hit, a row
+#        that no longer trips, an anchor that is not unique, a row keying more than one hit, a
+#        malformed row, the readers' file set — with the ledger mutations on copies under $WORK
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -24950,6 +24959,749 @@ md_flips ta_scope   'WD10'   wd10_assert
 md_flips nu_list    'WD-NU0' nu0_assert
 md_flips nu_list    'WD-NU1' nu1_assert
 md_flips nu_agree   'WD-NU2' nu2_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group WT — CH-2's W-test over the authored conduct text: WT.P1, no value in a prompt, and WT.P2,
+# silence is not assent (ADR-045 § The predicates — On the conduct's text)
+#
+# WT.P1 grades every directive offer the readers reach, against D1 item 8's restated sentence: a
+# prompt carries no value outside clause (a), an option the form lists, and clause (b), their own
+# words, and no value under the name of an example. WT.P2 grades every clause that carries both a
+# silence phrase and an assent marker. Both read words through group WD's WD_FN and sentences
+# through its C0, and a hit is LG's to declare: the forms' known sentences are rows of the ledger,
+# so a new hit is red and a reworded one leaves a row that no longer trips.
+#
+# ── WT.P1's TRIGGERS ─────────────────────────────────────────────────────────────────────────────
+# offer(s), suggest(s), propose(s), recommend(s), mention(s); read with out within four words after
+# it; give(s) with example(s), option(s) or choice(s) within six; offered, suggested, proposed,
+# recommended or mentioned directly after be, is or are. A word inside a code span is never one (R7).
+#
+# ── WT.P1's CLASSES — a rule over an enumeration (CLAUDE.md § Rules over an enumeration) ──────────
+# Precedence: tested on the trigger object (R8), plus R9 where a class says so, THE FIRST CLASS
+# THAT HOLDS DECIDES, in this order. Admission: an occurrence no class names is UNCLASSIFIED and
+# fails closed; a class is added here and nowhere else.
+#   0  NOUN        the trigger stands directly after a determiner (a an the this that its their your
+#                  one) with no punctuation between — counted, not graded
+#   1  DENIED      R6, or object negation — pass
+#   2  ENUMERATION the object is empty — pass
+#   3  OWN         the object holds what they said, what they say, their words, their own words — pass
+#   4  LITERAL     the object backticked or double-quoted values, not closed:, open: or the em dash,
+#                  less every value that is a branch item (class 9). Each must match a member of the
+#                  step section (procedure X) and be no floor item of it — FAIL naming each failing value
+#   5  OPTION      the object holds choices, choice, options, option, members, member, those or
+#                  shapes. Its offered items, R9 (a)-(c), must each match a member and be no floor
+#                  item; with none it passes; on a step-less input any offered item fails
+#   6  NON-OPTION SOURCE  menu, tick, archetype(s), placeholder(s), wording, guidance, worked, or e.g. — FAIL
+#   7  VALUE       tag(s), value(s), guess — FAIL
+#   8  EXAMPLE     the clause carries only examples, as an example, as examples, said as an example,
+#                  never a list to choose from or never offered as a choice; or the object first
+#                  content word (after a an the some one two three) is example(s); or it holds example(s)
+#                  of your own or your own example. No item of the object or of R9 (a) and (b) may
+#                  CONTAIN a floor item of the section — FAIL naming each item that does
+#   9  BRANCH      a closed vocabulary: at least one item, and every item holds a remedy phrase (answer
+#                  it, skip it, skip, stop, stop here, keep going, named section, to text, for later,
+#                  later, defer, once more, again, branches, branch) with every word a remedy word, a
+#                  function word (it them to for move leave go exactly a an the) or a numeral one to
+#                  five standing directly before branch or branches — pass
+#   10 ITEMS       two or more items, tiled exactly by members of the step section and or / and, one
+#                  article allowed before each member, the first included — FAIL naming the items
+#                  that are no member. Inputs (i) and (ii) have no members
+#   11 UNCLASSIFIED none of the above — FAIL
+#
+# ── R9 — THE REACH OF AN OPTION OR EXAMPLE DIRECTIVE (FM-A, FM-B; A1) ─────────────────────────────
+# The offered items are read from up to three places beyond the object. (a) Each parenthesis opened in
+# the object, to its matching ) or, unclosed, to the object end — except one whose WHOLE text, trimmed,
+# matches ^ADR-[0-9]+( D[0-9]+(.[0-9]+)*)?$, a citation and nothing else. (b) The next clause, when no
+# later trigger stands in the clause and R5 ended it at : or at a spaced em dash, en dash or hyphen,
+# unless it is prose: its first word is and, but, or, so, then, if, when, while, because, which, who or
+# where, or its first item — to its first , or " or " — holds is, are, was or were. (c) For OPTION
+# only, the object text after its last option word, parentheses left out, unless that is empty or
+# opens on a frame word (the this that these those their its them they it which who whom again also
+# only never not no but from of for to in on at by with after before quoted listed given shown named
+# above below here there). Items are split at , (an or / and after it included), " or " and " and ",
+# trimmed and read through B1. Stated bounds, each a plant that PASSES with the bound named: "Offer
+# the members — Lisbon is one." (a continuation worded as prose), and "Suggest a stop again." (stop
+# and again are remedy words).
+#
+# ── WT.P2 (D5) ───────────────────────────────────────────────────────────────────────────────────
+# Population: a clause holding a silence phrase — silence, silent, no reply / replies / response,
+# say / says / said / saying nothing, go / goes / went / gone / going / stay / stays quiet, stays
+# silent, do / does / did not answer / reply / respond, don't / doesn't / didn't answer / reply /
+# respond — and an assent marker, the first in the clause deciding: a word opening assent, agree,
+# consent or accept, or yes; take / took / taking / treat… + it / that / this / silence + as; count /
+# counts / counted + as; means with an assent word in the next two. FAIL unless R6 denies the marker,
+# the word positions of each silence-phrase occurrence removed — never every word of the same
+# spelling. No modality limb: the restated sentence says silence is not assent, unqualified, so the
+# scope difference from ADR-026's cell (in a spoken modality) is recorded here and not reconciled.
+#
+# WHAT A GREEN DOES NOT COVER: a negation inside the window that does not bind the trigger reads as
+# negated; a negation further than five words away reads as not negated, which fails closed; a
+# paraphrase outside the lexicon is not seen — "Put forward the archetype menu" (Y14c) is the stated
+# lexical bound; an offered list is read only where R9 reaches it — a parenthesis, the next clause
+# after a colon or a spaced dash, the words after the option word — so a list placed elsewhere, a
+# continuation worded as prose, or a value placed after a separator inside a parenthesis is not seen;
+# and the subject is the authored text a session follows, not a session.
+#
+# AC8: Been here before? — once / a few times offered from a visit count: PASS under clause (a) and
+# term 2 (class LITERAL, members by procedure X); which member a derivation offers is ADR-017 § 4's,
+# not graded here. The plants beside it: offering know it well passes (D7), offering twice fails
+# naming twice (D4).
+#
+# ── THE ARMS ─────────────────────────────────────────────────────────────────────────────────────
+#   WT.P1     every trigger occurrence over inputs (i)-(iii) classified, the population, the classes
+#             and R9's reaches printed; its hits are graded by group LG
+#   WT.P2     the same over the silence-and-assent population
+#   WT-AC8    the AC8 sentence passes as LITERAL, both members
+#   WT-CTL[…] every planted control of D13 on the two limbs, each graded under its stated step at its
+#             pinned verdict — the plant built into $WORK, never into a tracked file — must-fire and
+#             must-not-fire alike, the stated bounds pinned as bounds
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "WT — CH-2's W-test over the conduct text: no value in a prompt (WT.P1), silence is not assent (WT.P2)"
+
+# ── THE TEXT ARMS' ENGINE — every arm's classifier, composed into ONE awk program and run once over
+# the readers' sentences, so each group below grades the same records. TA_ARMS_FN names the arm
+# libraries the run composes; each group's library lands here, ahead of the first run.
+TA_WT_FN='# ---- WT.P1 (D4, with R9) and WT.P2 (D5) ----
+function wt_init(   i, j) {
+  WT_TRIG = "offer offers suggest suggests propose proposes recommend recommends mention mentions"
+  WT_GIVE_OBJ = "example examples option options choice choices"
+  WT_PART = "offered suggested proposed recommended mentioned"; WT_PART_AUX = "be is are"
+  WT_OWN_N = split("what they said|what they say|their words|their own words", WT_OWN, "|")
+  WT_OPTION = "choices choice options option members member those shapes"
+  WT_NONOPT = "menu tick archetype archetypes placeholder placeholders wording guidance worked"
+  WT_VALUE = "tag tags value values guess"
+  WT_EXMARK_N = split("only examples|as an example|as examples|said as an example|never a list to choose from|never offered as a choice", WT_EXMARK, "|")
+  WT_EXOBJ_N = split("example of your own|your own example|examples of your own", WT_EXOBJ, "|")
+  WT_EXSKIP = "a an the some one two three"
+  WT_REM_N = split("answer it|skip it|skip|stop|stop here|keep going|named section|to text|for later|later|defer|once more|again|branches|branch", WT_REM, "|")
+  WT_VOCAB = "it them to for move leave go exactly a an the"
+  for (i = 1; i <= WT_REM_N; i++) WT_VOCAB = WT_VOCAB " " WT_REM[i]
+  WT_NUMERAL = "one two three four five"
+  WT_PROSE_FIRST = "and but or so then if when while because which who where"; WT_PROSE_ANY = "is are was were"
+  WT_FRAME = "the this that these those their its them they it which who whom again also only never not no but from of for to in on at by with after before quoted listed given shown named above below here there"
+  WT_SIL_N = 0
+  wt_sil("silence"); wt_sil("silent"); wt_sil("no reply"); wt_sil("no replies"); wt_sil("no response")
+  split("say says said saying", WTI_A, " "); for (i = 1; i <= 4; i++) wt_sil(WTI_A[i] " nothing")
+  split("go goes went gone going stay stays", WTI_A, " "); for (i = 1; i <= 7; i++) wt_sil(WTI_A[i] " quiet")
+  wt_sil("stays silent")
+  split("do does did", WTI_A, " "); split("answer reply respond", WTI_V, " ")
+  for (i = 1; i <= 3; i++) for (j = 1; j <= 3; j++) wt_sil(WTI_A[i] " not " WTI_V[j])
+  split("dont doesnt didnt", WTI_A, " "); for (i = 1; i <= 3; i++) for (j = 1; j <= 3; j++) wt_sil(WTI_A[i] " " WTI_V[j])
+}
+function wt_sil(p) { WT_SIL[++WT_SIL_N] = p }
+function wt_triggers(TG,   n, k, j, hit) {
+  n = 0
+  for (k = 1; k <= NT; k++) {
+    if (cl_incode(k)) continue
+    hit = 0
+    if (cl_in(TW[k], WT_TRIG)) hit = 1
+    else if (TW[k] == "read") { for (j = k + 1; j <= k + 4 && j <= NT; j++) if (TW[j] == "out") hit = 1 }
+    else if (TW[k] == "give" || TW[k] == "gives") { for (j = k + 1; j <= k + 6 && j <= NT; j++) if (cl_in(TW[j], WT_GIVE_OBJ)) hit = 1 }
+    else if (cl_in(TW[k], WT_PART) && k > 1 && cl_in(TW[k - 1], WT_PART_AUX)) hit = 1
+    if (hit) TG[++n] = k
+  }
+  return n
+}
+# items_of: split at a comma (an or / and after it included), at " or " and at " and ".
+function wt_items(s, IT,   n, x) {
+  n = 0
+  while (match(s, /[ \t\n\r\f\v]*,[ \t\n\r\f\v]*(or[ \t\n\r\f\v]+|and[ \t\n\r\f\v]+)?|[ \t\n\r\f\v]+or[ \t\n\r\f\v]+|[ \t\n\r\f\v]+and[ \t\n\r\f\v]+/)) {
+    x = wt_strip3(substr(s, 1, RSTART - 1)); if (x != "") IT[++n] = x; s = substr(s, RSTART + RLENGTH)
+  }
+  x = wt_strip3(s); if (x != "") IT[++n] = x
+  return n
+}
+function wt_strip3(x) { gsub(/^[ .;]+|[ .;]+$/, "", x); return x }
+function wt_is_branch(x,   A, n, i, ok, any) {
+  n = wd_words(x, A); if (n == 0) return 0
+  any = 0; for (i = 1; i <= WT_REM_N; i++) if (wd_has(A, n, WT_REM[i])) { any = 1; break }
+  if (!any) return 0
+  for (i = 1; i <= n; i++) {
+    ok = cl_in(A[i], WT_VOCAB) || (cl_in(A[i], WT_NUMERAL) && i < n && (A[i + 1] == "branch" || A[i + 1] == "branches"))
+    if (!ok) return 0
+  }
+  return 1
+}
+# D4 class 10: the words tiled exactly by members and or / and, one article before each member.
+function wt_tile(s, p, st,   OW, n, OUT, nm, MS, MW, i, ok, m, k, j, len, good) {
+  n = wd_words(s, OW); nm = m_members(p, st, OUT)
+  for (i = 1; i <= nm; i++) { k = m_norm(OUT[i]); if (k != "") MS[k] = 1 }
+  for (i = 0; i <= n; i++) ok[i] = 0
+  ok[0] = 1
+  for (i = 0; i < n; i++) {
+    if (!ok[i]) continue
+    if (OW[i + 1] == "or" || OW[i + 1] == "and") ok[i + 1] = 1
+    for (m in MS) {
+      len = split(m, MW, " ")
+      good = 1; for (j = 1; j <= len; j++) if (OW[i + j] != MW[j] || i + j > n) { good = 0; break }
+      if (good) ok[i + len] = 1
+      if (OW[i + 1] == "a" || OW[i + 1] == "an" || OW[i + 1] == "the") {
+        good = 1; for (j = 1; j <= len; j++) if (OW[i + 1 + j] != MW[j] || i + 1 + j > n) { good = 0; break }
+        if (good) ok[i + 1 + len] = 1
+      }
+    }
+  }
+  return ok[n]
+}
+# R9 (a): each parenthesis opened in [a, b): PA its opening, PB its closing or 0 when it runs to b.
+function wt_parens(a, b, PA, PB,   n, i, j) {
+  n = 0; i = a
+  while (i < b) {
+    if (substr(CL_RAW, i, 1) == "(") {
+      j = index(substr(CL_RAW, i + 1), ")")
+      if (j > 0 && i + j < b) { n++; PA[n] = i; PB[n] = i + j; i = i + j + 1; continue }
+      n++; PA[n] = i; PB[n] = 0; break
+    }
+    i++
+  }
+  return n
+}
+function wt_inside(pos, np, PA, PB,   q) { for (q = 1; q <= np; q++) if (PA[q] <= pos && (PB[q] == 0 || pos <= PB[q])) return 1; return 0 }
+# R9: the offered items beyond the object of trigger k (object end token e, raw span [a, b)).
+function wt_reach(k, e, a, b, option, RI,   n, PA, PB, np, q, txt, t, NW, nn, fi, FW, nf, prose, last, i, start, pos, out, x, IT, ni, y, cpos, opos) {
+  n = 0; RCH = ""
+  np = wt_parens(a, b, PA, PB)
+  for (q = 1; q <= np; q++) {
+    txt = substr(CL_RAW, PA[q] + 1, (PB[q] ? PB[q] : b) - PA[q] - 1)
+    if (c0_trim(txt) !~ /^ADR-[0-9]+([ \t\n\r\f\v]+D[0-9]+(\.[0-9]+)*)?$/) { n = wt_reach_add(txt, RI, n); RCH = RCH " paren" }
+  }
+  if (e == NT + 1 && (CL_SEP == ":" || CL_SEP == " \342\200\224 " || CL_SEP == " \342\200\223 " || CL_SEP == " - ") && CL_HASNXT) {
+    nn = wd_words(CL_NXT, NW); t = c0_trim(CL_NXT)
+    cpos = index(t, ","); opos = match(t, /[ \t\n\r\f\v]+or[ \t\n\r\f\v]+/) ? RSTART : 0
+    fi = t; if (cpos && (!opos || cpos < opos)) fi = substr(t, 1, cpos - 1); else if (opos) fi = substr(t, 1, opos - 1)
+    nf = wd_words(fi, FW); prose = 0; for (i = 1; i <= nf; i++) if (cl_in(FW[i], WT_PROSE_ANY)) prose = 1
+    if (nn > 0 && !cl_in(NW[1], WT_PROSE_FIRST) && !prose) { n = wt_reach_add(CL_NXT, RI, n); RCH = RCH " cont" }
+  }
+  if (option) {
+    last = 0; for (i = k + 1; i < e; i++) if (cl_in(TW[i], WT_OPTION)) last = i
+    start = TE[last]; fi = 0
+    for (i = last + 1; i < e; i++) if (!wt_inside(TS[i], np, PA, PB)) { fi = i; break }
+    if (fi && !cl_in(TW[fi], WT_FRAME)) {
+      out = ""; for (pos = start; pos < b; pos++) if (!wt_inside(pos, np, PA, PB)) out = out substr(CL_RAW, pos, 1)
+      n = wt_reach_add(out, RI, n); RCH = RCH " appos"
+    }
+  }
+  return n
+}
+function wt_reach_add(txt, RI, n,   IT, ni, i, y) {
+  ni = wt_items(txt, IT)
+  for (i = 1; i <= ni; i++) { y = IT[i]; gsub(/^[() ]+|[() ]+$/, "", y); y = x_strip(y); if (y != "") RI[++n] = y }
+  return n
+}
+function wt_contains_floor(item, FL, nfl,   IW, ni, f, FW, nw, s, j, ok, k, fw) {
+  ni = wd_words(item, IW)
+  for (f = 1; f <= nfl; f++) {
+    fw = m_norm(FL[f]); if (fw == "") continue
+    nw = split(fw, FW, " ")
+    for (s = 1; s + nw - 1 <= ni; s++) { ok = 1; for (j = 1; j <= nw; j++) if (IW[s + j - 1] != FW[j]) { ok = 0; break }; if (ok) return 1 }
+  }
+  return 0
+}
+# wt_class — D4: the first class that holds decides. Sets WT_C (class), WT_V (pass | FAIL) and WT_N (names).
+function wt_class(p, st, k, ntg, TG,   NOEX, LV, e, i, a, b, obj, nobj, OB, rawobj, LX, LP, nl, MS, FS, FL, nfl, bad, j, RI, nr, head, ex, IT, ni, allb, OUT, nm) {
+  e = NT + 1; for (i = 1; i <= ntg; i++) if (TG[i] > k) { e = TG[i]; break }
+  nobj = 0; for (i = k + 1; i < e; i++) OB[++nobj] = TW[i]
+  a = TE[k]; b = (e <= NT) ? TS[e] : CL_L + 1; rawobj = substr(CL_RAW, a, b - a)
+  WT_N = ""
+  if (k > 1 && cl_in(TW[k - 1], TA_DET) && !cl_punct(k - 1, k)) { WT_C = "NOUN"; WT_V = "-"; return }
+  if (cl_denied(k, 0) || cl_objneg(k + 1, e)) { WT_C = "DENIED"; WT_V = "pass"; split("", NOEX); WT_N = "d=" cl_denial(k, NOEX, 0); return }
+  if (nobj == 0) { WT_C = "ENUMERATION"; WT_V = "pass"; return }
+  for (i = 1; i <= WT_OWN_N; i++) if (wd_has(OB, nobj, WT_OWN[i])) { WT_C = "OWN"; WT_V = "pass"; return }
+  nl = cl_lits(a, b, LX, LP); j = 0
+  for (i = 1; i <= nl; i++) if (LX[i] != "\342\200\224" && !wt_is_branch(LX[i])) LV[++j] = LX[i]
+  if (j > 0) {
+    m_memset(p, st, MS); nfl = m_floor(p, st, FL); split("", FS); for (i = 1; i <= nfl; i++) FS[m_norm(FL[i])] = 1
+    bad = ""; for (i = 1; i <= j; i++) if (!(m_norm(LV[i]) in MS) || (m_norm(LV[i]) in FS)) bad = bad (bad == "" ? "" : "|") LV[i]
+    WT_C = "LITERAL"; WT_V = (bad == "" ? "pass" : "FAIL"); WT_N = bad; return
+  }
+  for (i = 1; i <= nobj; i++) if (cl_in(OB[i], WT_OPTION)) {
+    nr = wt_reach(k, e, a, b, 1, RI)
+    m_memset(p, st, MS); nfl = m_floor(p, st, FL); split("", FS); for (j = 1; j <= nfl; j++) FS[m_norm(FL[j])] = 1
+    bad = ""; for (j = 1; j <= nr; j++) if (!(m_norm(RI[j]) in MS) || (m_norm(RI[j]) in FS)) bad = bad (bad == "" ? "" : "|") RI[j]
+    WT_C = "OPTION"; WT_V = (bad == "" ? "pass" : "FAIL"); WT_N = bad; return
+  }
+  for (i = 1; i <= nobj; i++) if (cl_in(OB[i], WT_NONOPT)) { WT_C = "NON-OPTION SOURCE"; WT_V = "FAIL"; return }
+  if (wd_has(OB, nobj, "e g")) { WT_C = "NON-OPTION SOURCE"; WT_V = "FAIL"; return }
+  for (i = 1; i <= nobj; i++) if (cl_in(OB[i], WT_VALUE)) { WT_C = "VALUE"; WT_V = "FAIL"; return }
+  head = ""; for (i = 1; i <= nobj; i++) if (!cl_in(OB[i], WT_EXSKIP)) { head = OB[i]; break }
+  ex = (head == "example" || head == "examples")
+  for (i = 1; i <= WT_EXMARK_N && !ex; i++) if (wd_has(TW, NT, WT_EXMARK[i])) ex = 1
+  for (i = 1; i <= WT_EXOBJ_N && !ex; i++) if (wd_has(OB, nobj, WT_EXOBJ[i])) ex = 1
+  if (ex) {
+    nfl = m_floor(p, st, FL); ni = wt_items(rawobj, IT); nr = wt_reach(k, e, a, b, 0, RI)
+    for (j = 1; j <= nr; j++) IT[++ni] = RI[j]
+    bad = ""; for (j = 1; j <= ni; j++) if (wt_contains_floor(IT[j], FL, nfl)) bad = bad (bad == "" ? "" : "|") IT[j]
+    WT_C = "EXAMPLE"; WT_V = (bad == "" ? "pass" : "FAIL"); WT_N = bad; return
+  }
+  ni = wt_items(rawobj, IT)
+  allb = (ni > 0); for (j = 1; j <= ni; j++) if (!wt_is_branch(IT[j])) allb = 0
+  if (allb) { WT_C = "BRANCH"; WT_V = "pass"; return }
+  if (ni >= 2) {
+    if (wt_tile(rawobj, p, st)) { WT_C = "ITEMS"; WT_V = "pass"; return }
+    m_memset(p, st, MS); bad = ""; for (j = 1; j <= ni; j++) if (!(m_norm(IT[j]) in MS)) bad = bad (bad == "" ? "" : "|") IT[j]
+    WT_C = "ITEMS"; WT_V = "FAIL"; WT_N = bad; return
+  }
+  WT_C = "UNCLASSIFIED"; WT_V = "FAIL"
+}
+function wt_assent_word(x) { return (x ~ /^(assent|agree|consent|accept)/ || x == "yes") }
+# wt2 — D5: a clause with a silence phrase and an assent marker fails unless R6 denies the marker,
+# the word positions of each silence phrase occurrence removed. Returns 0 when not in the population.
+function wt2(   i, j, s, m, P, any, k, EX, d) {
+  any = 0; for (s = 1; s <= WT_SIL_N; s++) if (wd_has(TW, NT, WT_SIL[s])) any = 1
+  if (!any) return 0
+  k = 0
+  for (i = 1; i <= NT && !k; i++) {
+    if (wt_assent_word(TW[i])) k = i
+    else if (cl_in(TW[i], "take takes took taking treat treats treated treating") && i + 2 <= NT && cl_in(TW[i + 1], "it that this silence") && TW[i + 2] == "as") k = i
+    else if (cl_in(TW[i], "count counts counted") && i + 1 <= NT && TW[i + 1] == "as") k = i
+    else if (TW[i] == "means") { for (j = i + 1; j <= i + 2 && j <= NT; j++) if (wt_assent_word(TW[j])) k = i }
+  }
+  if (!k) return 0
+  split("", EX)
+  for (s = 1; s <= WT_SIL_N; s++) {
+    m = split(WT_SIL[s], P, " ")
+    for (i = 1; i + m - 1 <= NT; i++) { d = 1; for (j = 1; j <= m; j++) if (TW[i + j - 1] != P[j]) { d = 0; break }; if (d) for (j = 0; j < m; j++) EX[i + j] = 1 }
+  }
+  if (cl_denial(k, EX, 0) > 0) { WT2_C = "DENIED"; WT2_V = "pass" } else { WT2_C = "ASSENT"; WT2_V = "FAIL" }
+  return k
+}'
+TA_ARMS_FN="$TA_WT_FN"
+TA_MAIN_FN='# ---- the run: every sentence of the readers (mode real), or each planted control (mode plant) ----
+function ta_word_index(k,   S2, E2, R2, A2w, n, i, t) {
+  n = wd_toks(wd_fold(CL_SENT, 0), A2w, S2, E2, R2); t = CL_OFF + TS[k]
+  for (i = 1; i <= n; i++) if (S2[i] == t) return i
+  return 0
+}
+function ta_hit(limb, p, st, ti, c, nm, sent) { printf "HIT\t%s\t%s\t%s\t%d\t%s\t%s\t%s\n", limb, p, st, ti, c, nm, sent }
+function ta_seen(arm, p, st, c, v, nm, sent) { printf "SEEN\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", arm, p, st, c, v, nm, sent }
+# ta_sentence — grade one sentence under its step. With a plant arm set, only that arm grades and
+# each verdict is collected into PL_OUT / PL_FIRED rather than written.
+function ta_sentence(p, st, sent, arm,   nc, O, T, P, c, TG, ntg, i, k) {
+  nc = c0_clauses(sent, O, T, P)
+  for (c = 1; c <= nc; c++) {
+    cl_set(sent, O[c], T[c], P[c], (c < nc ? T[c + 1] : ""), (c < nc))
+    if (arm == "" || arm == "WT.P1") {
+      split("", TG); ntg = wt_triggers(TG)
+      for (i = 1; i <= ntg; i++) {
+        k = TG[i]; wt_class(p, st, k, ntg, TG)
+        if (arm != "") { ta_pl(WT_C, WT_V, WT_N); continue }
+        ta_seen("WT.P1", p, st, WT_C, WT_V, WT_N, sent)
+        if (WT_C == "OPTION" || WT_C == "EXAMPLE") printf "REACH\t%s\t%s\t%s\n", p, (RCH == "" ? "none" : substr(RCH, 2)), sent
+        if (WT_V == "FAIL") ta_hit("WT.P1", p, st, ta_word_index(k), WT_C, WT_N, sent)
+      }
+    }
+    if (arm == "" || arm == "WT.P2") {
+      if (wt2()) {
+        if (arm != "") ta_pl(WT2_C, WT2_V, "")
+        else { ta_seen("WT.P2", p, st, WT2_C, WT2_V, "", sent); if (WT2_V == "FAIL") ta_hit("WT.P2", p, st, 1, WT2_C, "", sent) }
+      }
+    }
+  }
+}
+function ta_pl(c, v, nm) { PL_OUT = PL_OUT (PL_OUT == "" ? "" : ";") c "=" v (nm == "" ? "" : "(" nm ")"); if (substr(v, 1, 4) == "FAIL") PL_FIRED = 1 }
+BEGIN {
+  FS = "\t"; wd_init(); ta_init(); wt_init()
+  m_load(model)
+  if (a2 != "") { while ((getline t < a2) > 0) { split(t, F2, "\t"); A2ROW[F2[1], F2[2]] = 1 }; close(a2) }
+}
+$1 == "S" && mode == "real" { ta_sentence($2, $3, $4, "") }
+$1 == "P" && mode == "plant" {
+  PL_OUT = ""; PL_FIRED = 0; TA_NE = ""
+  st = m_plant_step($4, $5)
+  if (TA_NE != "") { printf "PLANT\t%s\tNE\t%s\n", $2, TA_NE; next }
+  ns = c0_sents($6, PS)
+  for (q = 1; q <= ns; q++) ta_sentence($4, st, PS[q], $3)
+  printf "PLANT\t%s\t%d\t%s\n", $2, PL_FIRED, PL_OUT
+}'
+mkdir -p "$WORK/ta"
+# ta_grade <model-file> <a2-file> <reader-records-file> — the text arms over every sentence the
+# readers read: SEEN, HIT, REACH and POP records.
+ta_grade() {
+  LC_ALL=C awk -v mode=real -v model="$1" -v a2="$2" "$WD_FN$C0_FN$TA_FM_FN$FT_LEAD_FN$TA_CORE_FN$TA_ARMS_FN$TA_MAIN_FN" "$3"
+}
+# ta_plants <model-file> <a2-file> — stdin the plant table "id TAB arm TAB must TAB form TAB step TAB
+# pinned TAB plant", stdout one PLANT record per plant: "<id> <fired 0|1> <verdicts>", or "<id> NE <why>".
+ta_plants() {
+  awk -F'\t' -v c="skills/trip-record/interview-conduct.md" -v t="templates/traveler-intake.template.md" -v p="templates/person-intake.template.md" \
+    '{ printf "P\t%s\t%s\t%s\t%s\t%s\n", $1, $2, ($4 == "trip" ? t : ($4 == "person" ? p : c)), $5, $7 }' |
+    LC_ALL=C awk -v mode=plant -v model="$1" -v a2="$2" "$WD_FN$C0_FN$TA_FM_FN$FT_LEAD_FN$TA_CORE_FN$TA_ARMS_FN$TA_MAIN_FN"
+}
+# ta_a2 <ledger-file> — the declared A2 texts, "<path> TAB <text>", read from the ledger rows.
+ta_a2() {
+  awk '{ t = $0; sub(/^[ \t]+/, "", t); if (t == "" || substr(t, 1, 1) == "#") next; n = split(t, f, /[ \t]+/); if (n < 4 || f[2] != "A2") next
+         if (match(t, /`[^`]+`/) || match(t, /"[^"]+"/)) printf "%s\t%s\n", f[3], substr(t, RSTART + 1, RLENGTH - 2) }' "$1"
+}
+# ta_plant_grade <table> <out> — each plant's verdict against its pinned one, "<id> <ok|MISS> <why>".
+ta_plant_grade() {
+  awk -F'\t' 'FILENAME == ARGV[1] { must[$1] = $3; pin[$1] = $6; arm[$1] = $2; txt[$1] = $7; ord[++n] = $1; next }
+    $1 == "PLANT" { fired[$2] = $3; got[$2] = $4; seen[$2] = 1 }
+    END { for (i = 1; i <= n; i++) { id = ord[i]
+        if (!(id in seen)) { printf "%s\tMISS\tno verdict was produced\n", id; continue }
+        if (fired[id] == "NE") { printf "%s\tMISS\tNOT EVALUATED: %s\n", id, got[id]; continue }
+        w = (must[id] == "FIRE") ? 1 : 0
+        if (fired[id] + 0 != w) printf "%s\tMISS\tmust %s, and it %s: %s\n", id, must[id], (fired[id] ? "fired" : "passed"), got[id]
+        else if (got[id] != pin[id]) printf "%s\tMISS\tpinned %s, read %s\n", id, pin[id], got[id]
+        else printf "%s\tok\t%s %s :: %s\n", id, arm[id], got[id], txt[id] } }' "$1" "$2"
+}
+
+TA_MODEL_F="$WORK/ta/model.tsv"; ta_model "$ROOT" "$WORK/wd" > "$TA_MODEL_F"
+TA_RECS_F="$WORK/ta/records.tsv"; ta_read "$ROOT" "$TA_REG" > "$TA_RECS_F"
+
+# ── THE LEDGER (group LG's declaration block) — read here so the A2 texts reach the engine.
+lg_ledger() {
+  cat <<'LEDGER'
+# id   limb     path                                   anchor
+BH-2  WT.P1    templates/traveler-intake.template.md  Offer the archetype menu from the section
+BH-4  WT.P1    templates/traveler-intake.template.md  Suggest a theme tag or two
+BH-5  WT.P1    templates/person-intake.template.md    Read out the tick list
+LEDGER
+}
+LG_LEDGER_F="$WORK/ta/ledger.txt"; lg_ledger > "$LG_LEDGER_F"
+TA_A2_F="$WORK/ta/a2.tsv"; ta_a2 "$LG_LEDGER_F" > "$TA_A2_F"
+TA_OUT="$(ta_grade "$TA_MODEL_F" "$TA_A2_F" "$TA_RECS_F")"
+
+wtp1_assert() {
+  local out n cls reach hits
+  out="$(ta_grade "$TA_MODEL_F" "$TA_A2_F" "$TA_RECS_F")"
+  n="$(awk -F'\t' '$1 == "SEEN" && $2 == "WT.P1"' <<<"$out" | awk 'END { print NR }')"
+  cls="$(awk -F'\t' '$1 == "SEEN" && $2 == "WT.P1" { c[$5]++ } END { for (k in c) printf "%s %d · ", k, c[k] }' <<<"$out")"
+  reach="$(awk -F'\t' '$1 == "REACH" { c[$3]++ } END { for (k in c) printf "%s %d · ", k, c[k] }' <<<"$out")"
+  hits="$(awk -F'\t' '$1 == "HIT" && $2 == "WT.P1" { printf "[%s %s: %s] ", $6, $3, substr($8, 1, 60) }' <<<"$out")"
+  if [ "$n" -eq 0 ]; then
+    FAIL "WT.P1: no trigger occurrence was graded over inputs (i)-(iii) — an empty population is NOT EVALUATED, never a pass"
+  else
+    PASS "WT.P1: $n trigger occurrence(s) graded over inputs (i)-(iii), by class: ${cls% · }; R9 reached ${reach:-nothing}; FAIL: ${hits:-none} — each is group LG's to declare. WHAT A GREEN DOES NOT COVER is stated in this group's banner"
+  fi
+}
+wtp1_assert
+wtp2_assert() {
+  local out n cls hits
+  out="$(ta_grade "$TA_MODEL_F" "$TA_A2_F" "$TA_RECS_F")"
+  n="$(awk -F'\t' '$1 == "SEEN" && $2 == "WT.P2"' <<<"$out" | awk 'END { print NR }')"
+  cls="$(awk -F'\t' '$1 == "SEEN" && $2 == "WT.P2" { c[$5]++ } END { for (k in c) printf "%s %d ", k, c[k] }' <<<"$out")"
+  hits="$(awk -F'\t' '$1 == "HIT" && $2 == "WT.P2" { printf "[%s: %s] ", $3, substr($8, 1, 60) }' <<<"$out")"
+  if [ -z "$out" ]; then
+    FAIL "WT.P2: the text arms produced no record — they did not run"
+  elif [ "$n" -eq 0 ]; then
+    VACUOUS "WT.P2: no clause over inputs (i)-(iii) carries both a silence phrase and an assent marker, so the population is empty and this verdict proves nothing about the tree; the WT-CTL plants carry the arm"
+  else
+    PASS "WT.P2: $n clause(s) carry a silence phrase and an assent marker, by class: $cls; FAIL: ${hits:-none} — each is group LG's to declare. No modality limb: the restated sentence is unqualified, and ADR-026's spoken-modality cell is recorded beside it, not reconciled"
+  fi
+}
+wtp2_assert
+wtac8_assert() {
+  local c
+  c="$(awk -F'\t' '$1 == "SEEN" && $2 == "WT.P1" && index($8, "Where this traveler is already linked") == 1 { print $5 "=" $6 }' <<<"$(ta_grade "$TA_MODEL_F" "$TA_A2_F" "$TA_RECS_F")")"
+  if [ "$c" = "LITERAL=pass" ]; then
+    PASS "WT-AC8: Been here before? — once / a few times offered from a visit count: PASS under clause (a) and term 2 (class LITERAL, members by procedure X); which member a derivation offers is ADR-017 § 4's, not graded here"
+  else
+    FAIL "WT-AC8: the AC8 sentence reads '${c:-absent}', where it must pass as LITERAL with both of its values members of Been here before?"
+  fi
+}
+wtac8_assert
+
+# The planted controls of D13 on the two limbs: id, arm, must, form, step (a Section value, - for a
+# step-less input), the pinned verdict, and the plant. A bound is a plant that passes with its bound
+# named in the design; it is pinned here like any other.
+wt_plant_table() {
+  cat <<'PLANTS'
+D1	WT.P1	FIRE	trip	Desires	NON-OPTION SOURCE=FAIL	Suggest a theme tag or two, reusing the archetype wording where it fits.
+D2	WT.P1	FIRE	trip	Desires	NON-OPTION SOURCE=FAIL	Offer the placeholder's example wording as an example.
+D3	WT.P1	FIRE	trip	Desires	NON-OPTION SOURCE=FAIL	Read out the menu from the section.
+D4	WT.P1	FIRE	trip	Interests & tastes	LITERAL=FAIL(twice)	Offer `twice` or `a few times` from what that comes to.
+D5	WT.P1	FIRE	trip	Desires	VALUE=FAIL	Suggest a value from another field.
+D6	WT.P1	PASS	trip	Desires	EXAMPLE=pass	When an answer is thin you may offer an example that names two or three kinds of answer, said as an example and never a list to choose from.
+D7	WT.P1	PASS	trip	Interests & tastes	LITERAL=pass	Offer `know it well` from what that comes to.
+D8	WT.P2	FIRE	trip	-	ASSENT=FAIL	If they say nothing, take that as a yes.
+D9	WT.P2	FIRE	trip	-	ASSENT=FAIL	In a typed session, silence means they agree.
+D10	WT.P2	PASS	trip	-	DENIED=pass	A silence is never read as assent.
+X1	WT.P1	FIRE	trip	Desires	LITERAL=FAIL(beach|mountains)	Offer `beach` or `mountains` as examples.
+X2	WT.P1	FIRE	trip	Desires	LITERAL=FAIL(Lisbon);EXAMPLE=pass	Suggest `Lisbon` for the destination, and give the kinds of trip as examples.
+X3	WT.P1	FIRE	trip	Desires	LITERAL=FAIL(a slow morning|a big view)	Mention `a slow morning` and `a big view` as examples.
+X4	WT.P1	FIRE	trip	Desires	NON-OPTION SOURCE=FAIL	If they have nothing in mind, offer the archetype menu.
+X5	WT.P1	FIRE	trip	Desires	VALUE=FAIL	If they can't decide, suggest a theme tag.
+X6	WT.P1	FIRE	trip	Desires	NON-OPTION SOURCE=FAIL	Don't forget to offer the archetype menu.
+X7	WT.P1	FIRE	trip	Desires	NON-OPTION SOURCE=FAIL	Offer nothing but the archetype menu.
+X8	WT.P1	FIRE	trip	Desires	VALUE=FAIL	Offer no fewer than two theme tags.
+X9	WT.P1	PASS	person	Needs	EXAMPLE=pass	If they ask, give an example of your own on a must-have.
+X10	WT.P2	FIRE	trip	-	ASSENT=FAIL	When they go quiet, treat it as a yes.
+X11	WT.P2	FIRE	trip	-	ASSENT=FAIL	If they don't answer, carry on as if they agreed.
+X12	WT.P2	FIRE	trip	-	ASSENT=FAIL	No reply means they agree.
+N2	WT.P1	PASS	trip	Desires	DENIED=pass(d=5)	Never in a spoken session offer the archetype menu.
+N3	WT.P1	FIRE	trip	Desires	NON-OPTION SOURCE=FAIL	Never in a quiet spoken session offer the archetype menu.
+N10	WT.P1	FIRE	person	Interests & tastes	LITERAL=FAIL(museums)	Give `museums` as an example.
+Z1	WT.P1	PASS	trip	Desires	DENIED=pass(d=1)	Never, when they are not sure, offer the archetype menu.
+Z2	WT.P2	PASS	trip	-	DENIED=pass	If they do not reply, do not take that as a yes.
+Z2b	WT.P2	PASS	trip	-	DENIED=pass	When they did not answer, do not count that as agreement.
+Y9	WT.P1	PASS	trip	Destination leanings	ITEMS=pass	Offer beach, city, nature, culture, food, or a mix.
+Y1	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(Lisbon)	Offer the vibe options — beach, city, or Lisbon.
+Y2	WT.P1	FIRE	person	Budget appetite	OPTION=FAIL(luxury)	Offer the three shapes — keep it lean, mid-range, or luxury.
+Y3	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(Lisbon)	Offer the options beach or Lisbon.
+Y4	WT.P1	FIRE	trip	Desires	EXAMPLE=FAIL(things like a slow morning as examples)	Mention things like a slow morning as examples.
+Y5	WT.P1	FIRE	trip	Desires	EXAMPLE=FAIL(a slow morning|a big view)	Give some kinds of trip as examples — a slow morning, a big view.
+Y6	WT.P1	FIRE	trip	Desires	EXAMPLE=FAIL(a slow morning)	Give an example: a slow morning.
+Y28	WT.P1	FIRE	trip	Desires	EXAMPLE=FAIL(a slow morning|a big view)	Give examples — a slow morning, a big view.
+Y7	WT.P1	FIRE	trip	Destination leanings	UNCLASSIFIED=FAIL	Suggest Lisbon again.
+Y8b	WT.P1	FIRE	trip	Destination leanings	ITEMS=FAIL(Lisbon again|skip it)	Offer Lisbon again, or skip it.
+Y10	WT.P1	PASS	conduct	-	BRANCH=pass	Offer `keep going`, `stop here` or `go to a named section`.
+Y14c	WT.P1	PASS	trip	Desires		Put forward the archetype menu as starting points.
+Y15c	WT.P1	PASS	trip	Destination leanings	LITERAL=pass	Offer `beach` or `city`.
+Y17c	WT.P2	FIRE	trip	-	ASSENT=FAIL	If they stay silent, take it as agreement.
+Y19c	WT.P2	PASS	trip	-	DENIED=pass	If they stay silent, never take it as agreement.
+NM1	WT.P1	PASS	trip	Destination leanings	OPTION=pass	Offer the vibe options — beach, city, or nature.
+NM2	WT.P1	PASS	conduct	-	OPTION=pass	Offer those quoted — the head is a note and never a member.
+NM3	WT.P1	FIRE	conduct	-	OPTION=FAIL(beach|Lisbon)	Offer those quoted — beach or Lisbon.
+NM4	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(Lisbon)	Offer the vibe options - beach, city, or Lisbon.
+NM5	WT.P1	FIRE	trip	Interests & tastes	OPTION=FAIL(twice)	Offer the four options (never, once, twice).
+NM6	WT.P1	FIRE	trip	Interests & tastes	OPTION=FAIL(Lisbon)	Offer the four options (never, once, Lisbon
+NM7	WT.P1	PASS	trip	Destination leanings	OPTION=pass	Offer the options beach or city.
+NM8	WT.P1	PASS	conduct	-	OPTION=pass	Offer the options again.
+NM9	WT.P1	PASS	trip	Desires	EXAMPLE=pass	Mention things like a long lunch as examples.
+NM10	WT.P1	PASS	trip	Desires	EXAMPLE=pass	Give an example: a long lunch.
+NM11	WT.P1	PASS	trip	Destination leanings	BRANCH=pass	Suggest it again.
+NM12	WT.P1	FIRE	conduct	-	LITERAL=FAIL(Lisbon)	Offer `keep going`, `stop here` or `Lisbon`.
+NM16	WT.P1	FIRE	trip	Desires	NON-OPTION SOURCE=FAIL	Never in a quiet spoken session, when unsure, offer the archetype menu.
+NM17	WT.P2	FIRE	trip	-	ASSENT=FAIL	If they do not reply, take that as a yes.
+NM19	WT.P1	FIRE	trip	Destination leanings	ITEMS=FAIL(a lake)	Offer beach, city, or a lake.
+Y15	WT.P1	PASS	trip	Desires	LITERAL=pass	Offer `anchor`, `wish` or `nice-to-have`.
+Y17	WT.P2	FIRE	conduct	-	ASSENT=FAIL	Treat no reply as a yes.
+Y19	WT.P2	PASS	conduct	-	DENIED=pass	If they don't reply, it is not assent.
+Y27	WT.P1	PASS	person	Needs	EXAMPLE=pass	When they ask what counts, give examples: heat, mobility, rest.
+Y18s	WT.P2	PASS	conduct	-	DENIED=pass	Never take silence as a yes.
+Y20s	WT.P2	PASS	conduct	-	DENIED=pass	When silence follows, never count it as a yes.
+N1a	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(ADR-022 D5.3|Lisbon)	Offer the members (ADR-022 D5.3, or Lisbon).
+N1a-ctl	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(Lisbon)	Offer the members (Lisbon).
+N1a-nm	WT.P1	PASS	trip	Destination leanings	OPTION=pass	Offer the members (ADR-022 D5.3).
+N1b	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(Lisbon|Porto|which are both lovely)	Offer the members: Lisbon or Porto, which are both lovely.
+N1b-ctl	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(Lisbon|Porto)	Offer the members: Lisbon or Porto.
+N1b-bound	WT.P1	PASS	trip	Destination leanings	OPTION=pass	Offer the members — Lisbon is one.
+U1	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(Lisbon)	Offer the vibe options and Lisbon.
+U2c	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(somewhere new)	Offer the vibe options or somewhere new.
+U3	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(then Lisbon)	Offer the options, then Lisbon.
+U3bc	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(as well as Lisbon)	Offer the options as well as Lisbon.
+U13	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(Lisbon too)	Offer the members, and Lisbon too.
+U14	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(Lisbon)	Offer those (beach or city) and Lisbon.
+N1-ctl	WT.P1	PASS	trip	Destination leanings	OPTION=pass	Offer the vibe options — beach or city.
+U5	WT.P1	PASS	trip	Destination leanings	BRANCH=pass	Suggest a stop again.
+U5b	WT.P1	FIRE	trip	Destination leanings	UNCLASSIFIED=FAIL	Suggest three again.
+N7-ctl	WT.P1	PASS	trip	Destination leanings	BRANCH=pass	Suggest three branches again.
+PLANTS
+}
+WT_PLANTS_F="$WORK/ta/wt-plants.tsv"; wt_plant_table > "$WT_PLANTS_F"
+wtctl_assert() {
+  local out res id st why n=0
+  out="$(ta_plants "$TA_MODEL_F" "$TA_A2_F" < "$WT_PLANTS_F")"
+  if [ -z "$out" ]; then
+    FAIL "WT-CTL: the plant table produced no verdict — the arms did not grade a single planted control"
+    return 0
+  fi
+  printf '%s\n' "$out" > "$WORK/ta/wt-plants.out"
+  res="$(ta_plant_grade "$WT_PLANTS_F" "$WORK/ta/wt-plants.out")"
+  while IFS=$'\t' read -r id st why; do
+    n=$((n + 1))
+    if [ "$st" = "ok" ]; then PASS "WT-CTL[$id]: $why"; else FAIL "WT-CTL[$id]: $why"; fi
+  done <<<"$res"
+}
+wtctl_assert
+
+md_flips ta_grade  'WT.P1'  wtp1_assert
+md_flips ta_grade  'WT.P2'  wtp2_assert
+md_flips ta_grade  'WT-AC8' wtac8_assert
+md_flips ta_plants 'WT-CTL' wtctl_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group LG — the declared ledger of the forms' known sentences, graded both ways
+#
+# The forms carry sentences the W-test fails today — the known hits #1330 rewords. They are declared
+# here, in the suite that pins the predicates (ADR-045's marks table; ADR-042 § 3 counts a ledger as
+# settled design), one row per trigger occurrence, so the text arms can ship red-free while every
+# NEW hit turns this group red.
+#
+# GRAMMAR (reference/adr/README.md § Number declarations, extended by one free column):
+#   <id> <limb> <path> <anchor…>   whitespace-separated; the rest of the line is the anchor
+# A line whose first non-blank character is # is a comment and a blank line is ignored; a row with
+# fewer than four fields is no declaration, and its hit reads undeclared. The key is (id, limb) and
+# never a line number. A row MATCHES a hit when path and limb are equal and the anchor's B1 words occur
+# in the hit's sentence at a span that covers the hit's trigger word — for an A2 row, its declared
+# literal — so a row keys exactly one trigger occurrence.
+#
+#   LG0  the block is absent, or parses to zero lines: NOT EVALUATED. A block present with zero rows
+#        is legitimate — the state #1330 leaves
+#   LG1  a hit of a listed limb, or an A2-shaped hit, matches no row: an UNDECLARED hit
+#   LG2  a row matches no hit; each row's state prints, TRIPS, NO-LONGER-TRIPS or ANCHOR-GONE
+#   LG3  an anchor occurs other than once in its path's input region (the key is not unique)
+#   LG4  a malformed row, a duplicate (id, limb), an unknown limb, or a path outside the input set
+#   LG5  SEAM-4: the readers opened a file set other than inputs (i)-(iii)
+#   LG6  a row matches more than one hit
+#   LG-CTL[…] the ledger mutations, each on a copy under $WORK, never the tracked tree
+#
+# THE ONE INSTRUCTION A REWORDING OWES: delete the sentence's rows in the same commit. LG2 ANCHOR-GONE
+# is cleared only by a sentence that passes for the arm's reason. Deleting the row while the reworded
+# sentence still trips turns LG1 red — the arm working, never a step to work round. The coordinator
+# reaches three gap words: a default four words past its coordinator — "…, or else you should mark it
+# `one-off`." — is not a value literal, and passes. The ledger sees only what a trigger of the closed
+# lists reaches: a default written without one — "Mark it `one-off` if they say nothing." — is not
+# read by any arm, so no row can stand for it.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "LG — the declared ledger of the forms' known sentences, graded both ways"
+
+LG_FN='# The ledger, graded both ways. Inputs, keyed on FILENAME: the declaration block, the readers
+# records (S), the engine records (HIT). Records out: LG4 <why> · LG1 <limb> <path> <sentence>
+# · LG3 <id> <limb> <n> · LG6 <id> <limb> <n> · ROW <id> <limb> <state> · NROWS <n>
+function lg_words(s, A) { return wd_words(s, A) }
+function lg_find(SW, ns, AW, na, POS,   i, j, k, ok) {
+  k = 0
+  for (i = 1; i + na - 1 <= ns; i++) { ok = 1; for (j = 1; j <= na; j++) if (SW[i + j - 1] != AW[j]) { ok = 0; break }; if (ok && na > 0) POS[++k] = i }
+  return k
+}
+BEGIN { FS = "\t"; wd_init(); split(lg_limbs, LMB, " "); for (i in LMB) LIMB[LMB[i]] = 1; split(lg_paths, PTH, " "); for (i in PTH) PATH[PTH[i]] = 1 }
+FILENAME == ARGV[1] {
+  t = $0; sub(/^[ \t]+/, "", t); sub(/[ \t\r]+$/, "", t)
+  if (t == "" || substr(t, 1, 1) == "#") next
+  n = split(t, F, /[ \t]+/)
+  if (n < 4) { printf "LG4\tshort row: %s\n", t; next }
+  a = t; for (q = 1; q <= 3; q++) { sub(/^[^ \t]+[ \t]+/, "", a) }
+  nr++; RID[nr] = F[1]; RLM[nr] = F[2]; RPT[nr] = F[3]; RAN[nr] = a
+  if ((F[1], F[2]) in KEY) printf "LG4\tduplicate (id, limb): %s %s\n", F[1], F[2]
+  KEY[F[1], F[2]] = 1
+  if (!(F[2] in LIMB)) printf "LG4\tunknown limb: %s %s\n", F[1], F[2]
+  if (!(F[3] in PATH)) printf "LG4\tpath outside the input set: %s %s\n", F[1], F[3]
+  next
+}
+FILENAME == ARGV[2] { if ($1 == "S") { ns++; SP[ns] = $2; SS[ns] = $4 }; next }
+$1 == "HIT" && $2 != "FB-OBS" { nh++; HL[nh] = $2; HP[nh] = $3; HT[nh] = $5; HN[nh] = $7; HS[nh] = $8 }
+END {
+  printf "NROWS\t%d\n", nr
+  for (h = 1; h <= nh; h++) {
+    ns2 = lg_words(HS[h], SW)
+    ti = HT[h] + 0
+    if (HL[h] == "A2") { na = lg_words(HN[h], AW); k = lg_find(SW, ns2, AW, na, POS); ti = (k ? POS[1] : -1) }
+    any = 0
+    for (r = 1; r <= nr; r++) {
+      if (RLM[r] != HL[h] || RPT[r] != HP[h]) continue
+      na = lg_words(RAN[r], AW); k = lg_find(SW, ns2, AW, na, POS)
+      for (q = 1; q <= k; q++) if (POS[q] <= ti && ti < POS[q] + na) { any = 1; M[r]++; break }
+    }
+    if (!any) printf "LG1\t%s\t%s\t%s\n", HL[h], HP[h], HS[h]
+  }
+  for (r = 1; r <= nr; r++) {
+    na = lg_words(RAN[r], AW); c = 0
+    for (s = 1; s <= ns; s++) if (SP[s] == RPT[r]) { ns2 = lg_words(SS[s], SW); c += lg_find(SW, ns2, AW, na, POS) }
+    if (c != 1) printf "LG3\t%s\t%s\t%d\n", RID[r], RLM[r], c
+    if (!M[r]) printf "ROW\t%s\t%s\t%s\n", RID[r], RLM[r], (c == 0 ? "ANCHOR-GONE" : "NO-LONGER-TRIPS")
+    else if (M[r] > 1) { printf "LG6\t%s\t%s\t%d\n", RID[r], RLM[r], M[r]; printf "ROW\t%s\t%s\tTRIPS x%d\n", RID[r], RLM[r], M[r] }
+    else printf "ROW\t%s\t%s\tTRIPS\n", RID[r], RLM[r]
+  }
+}'
+LG_LIMBS='WT.P1 WT.P2 OW-T.P1 OW-T.P2 FB-T.P1 CHR.P1 CHR.P2 CHR.P3 CHR.P4 A2'
+LG_PATHS='skills/trip-record/interview-conduct.md templates/interview-card.md templates/traveler-intake.template.md templates/person-intake.template.md templates/trip-context.template.md'
+# lg_grade <ledger-file> <reader-records-file> <engine-records-file> — LG1, LG3, LG4, LG6, ROW, NROWS.
+lg_grade() {
+  LC_ALL=C awk -v lg_limbs="$LG_LIMBS" -v lg_paths="$LG_PATHS" "$WD_FN$LG_FN" "$1" "$2" "$3"
+}
+TA_OUT_F="$WORK/ta/out.tsv"; printf '%s\n' "$TA_OUT" > "$TA_OUT_F"
+lg_assert() {   # lg_assert <ledger-file> <reader-records-file> <engine-records-file> — LG0 to LG4 and LG6
+  local g nl rows st lg1 lg3 lg4 lg6
+  nl="$(awk 'END { print NR }' "$1")"
+  g="$(lg_grade "$1" "$2" "$3")"
+  rows="$(awk -F'\t' '$1 == "NROWS" { print $2 }' <<<"$g")"
+  st="$(awk -F'\t' '$1 == "ROW" { printf "%s %s %s · ", $2, $3, $4 }' <<<"$g")"
+  lg1="$(awk -F'\t' '$1 == "LG1" { printf "[%s %s: %s] ", $2, $3, substr($4, 1, 70) }' <<<"$g")"
+  lg3="$(awk -F'\t' '$1 == "LG3" { printf "[%s %s ×%s] ", $2, $3, $4 }' <<<"$g")"
+  lg4="$(awk -F'\t' '$1 == "LG4" { printf "[%s] ", $2 }' <<<"$g")"
+  lg6="$(awk -F'\t' '$1 == "LG6" { printf "[%s %s ×%s] ", $2, $3, $4 }' <<<"$g")"
+  if [ "$nl" -eq 0 ] || [ -z "$rows" ]; then
+    FAIL "LG0: NOT EVALUATED — the declaration block is absent or parses to nothing, so no hit can be declared or undeclared"
+    return 0
+  else
+    PASS "LG0: the declaration block parses — $nl line(s), $rows row(s)"
+  fi
+  if [ -n "$lg4" ]; then FAIL "LG4: a malformed row — $lg4"; else PASS "LG4: every row is well-formed, its (id, limb) unique, its limb one of [$LG_LIMBS] and its path one of the five inputs"; fi
+  if [ -n "$lg1" ]; then FAIL "LG1: an UNDECLARED hit — $lg1. A new violation of the W-test is red until it is reworded; a known one is declared by a row of this block"; else PASS "LG1: every hit of the text arms matches a declared row — none is undeclared"; fi
+  if [ -n "$(awk -F'\t' '$1 == "ROW" && $4 !~ /^TRIPS/' <<<"$g")" ]; then
+    FAIL "LG2: a declared row no longer trips — remove it in the change that rewords the sentence. States: ${st% · }"
+  else
+    PASS "LG2: every declared row trips — ${st% · }"
+  fi
+  if [ -n "$lg3" ]; then FAIL "LG3: an anchor is not unique in its path's input region — $lg3"; else PASS "LG3: every anchor occurs exactly once in its path's input region"; fi
+  if [ -n "$lg6" ]; then FAIL "LG6: a row matches more than one hit — $lg6; a row keys one trigger occurrence"; else PASS "LG6: every row matches at most one hit"; fi
+}
+lg_assert "$LG_LEDGER_F" "$TA_RECS_F" "$TA_OUT_F"
+lg5_assert() {
+  local open want
+  open="$(awk -F'\t' '$1 == "OPEN" { print $2 }' <<<"$(ta_read "$ROOT" "$TA_REG")" | sort)"
+  want="$(printf '%s\n' $LG_PATHS | sort)"
+  if [ -n "$open" ] && [ "$open" = "$want" ]; then
+    PASS "LG5: SEAM-4 — the readers opened exactly inputs (i)-(iii), so no plant under \$WORK and no example tree can read as a finding of the tracked tree"
+  else
+    FAIL "LG5: SEAM-4 — the readers opened [$(tr '\n' ' ' <<<"$open")] where the input set is [$LG_PATHS]"
+  fi
+}
+lg5_assert
+
+# ── LG-CTL — the ledger mutations, each on a copy of the inputs under $WORK, asserted to have LANDED.
+# ta_root <name> — a fresh copy of the five inputs, the field table and the charter; prints its path.
+ta_root() {
+  local r="$WORK/ta/mut/$1"
+  mkdir -p "$r/skills/trip-record" "$r/templates" "$r/reference"
+  cp "$ROOT/skills/trip-record/interview-conduct.md" "$r/skills/trip-record/"
+  cp "$ROOT/templates/interview-card.md" "$ROOT/templates/traveler-intake.template.md" "$ROOT/templates/person-intake.template.md" "$ROOT/templates/trip-context.template.md" "$r/templates/"
+  cp "$ROOT/reference/data-model.md" "$r/reference/"; cp "$ROOT/CLAUDE.md" "$r/"
+  printf '%s' "$r"
+}
+# ta_mutate <root> <relative-file> <old> <new> — replace the one occurrence of <old>; 1 when it is not exactly one.
+ta_mutate() {
+  local f="$1/$2" n
+  n="$(LIT_OLD="$3" awk 'BEGIN { RS = "\001" } { s = $0; while ((i = index(s, ENVIRON["LIT_OLD"])) > 0) { n++; s = substr(s, i + length(ENVIRON["LIT_OLD"])) } } END { print n + 0 }' "$f")"
+  [ "$n" -eq 1 ] || return 1
+  LIT_OLD="$3" LIT_NEW="$4" awk 'BEGIN { RS = "\001"; ORS = "" } { s = $0; i = index(s, ENVIRON["LIT_OLD"]); print substr(s, 1, i - 1) ENVIRON["LIT_NEW"] substr(s, i + length(ENVIRON["LIT_OLD"])) }' "$f" > "$f.new" && mv "$f.new" "$f"
+}
+# ta_run <root> <ledger-file> — the whole chain on a root: regions, readers, model, arms, ledger.
+ta_run() {
+  local r="$1"
+  ta_regions "$r" > "$r/regions.tsv"
+  ta_read "$r" "$r/regions.tsv" > "$r/records.tsv"
+  ta_model "$r" "$r" > "$r/model.tsv"
+  ta_a2 "$2" > "$r/a2.tsv"
+  ta_grade "$r/model.tsv" "$r/a2.tsv" "$r/records.tsv" > "$r/out.tsv"
+  lg_grade "$2" "$r/records.tsv" "$r/out.tsv"
+}
+# lg_ctl <id> <want-arms> <prose> <file> <old> <new> [ledger-file] — one mutation, graded on the LG arms it must turn red.
+lg_ctl() {
+  local id="$1" want="$2" prose="$3" r g got="" a
+  r="$(ta_root "$id")"
+  if [ -n "$4" ] && ! ta_mutate "$r" "$4" "$5" "$6"; then
+    FAIL "LG-CTL[$id]: the mutation did not LAND — '$5' does not occur exactly once in $4, so this control grades the unmutated tree"
+    return 0
+  fi
+  g="$(ta_run "$r" "${7:-$LG_LEDGER_F}")"
+  for a in LG1 LG3 LG6; do [ -z "$(awk -F'\t' -v a="$a" '$1 == a' <<<"$g")" ] || got="$got $a"; done
+  [ -z "$(awk -F'\t' '$1 == "ROW" && $4 !~ /^TRIPS/' <<<"$g")" ] || got="$got LG2"
+  got="$(tr ' ' '\n' <<<"$got" | sort | tr '\n' ' ' | sed 's/^ *//; s/ *$//')"
+  if [ -z "$g" ]; then
+    FAIL "LG-CTL[$id]: the chain produced nothing on the mutated copy — no arm ran"
+  elif [ "$got" != "$want" ]; then
+    FAIL "LG-CTL[$id]: $prose — expected exactly [$want] red, read [${got:-none}]. States: $(awk -F'\t' '$1 == "ROW" && $4 != "TRIPS" { printf "%s %s %s ", $2, $3, $4 }' <<<"$g")"
+  else
+    PASS "LG-CTL[$id]: $prose — exactly [$want] red, as predicted. States: $(awk -F'\t' '$1 == "ROW" && $4 != "TRIPS" { printf "%s %s %s ", $2, $3, $4 }' <<<"$g")"
+  fi
+}
+lgctl_assert() {
+  local tmpl='templates/traveler-intake.template.md' lw5="$WORK/ta/ledger-wo-bh5.txt"
+  awk '$1 != "BH-5"' "$LG_LEDGER_F" > "$lw5"
+  lg_ctl L1 'LG2' "BH-2 denied with its anchor kept reads NO-LONGER-TRIPS" "$tmpl" 'Offer the archetype menu from the section as starting points' 'Never offer the archetype menu from the section as starting points'
+  lg_ctl L2 'LG2 LG3' "BH-2 reworded away reads ANCHOR-GONE, its anchor then occurring zero times, which LG3 reports beside it" "$tmpl" 'Offer the archetype menu from the section as starting points' 'Describe what the archetype list covers, and never read it out'
+  lg_ctl L3 'LG1' "a new menu offer planted in trip Step 6 is undeclared" "$tmpl" 'Leave **Overlap** blank.' 'Leave **Overlap** blank. Offer the archetype menu again at the end.'
+  lg_ctl L4 'LG1' "BH-5's row deleted leaves its hit undeclared" '' '' '' "$lw5"
+  lg_ctl L5 'LG3 LG6' "BH-2's anchor duplicated in the same file is not a unique key" "$tmpl" 'Leave **Overlap** blank.' 'Leave **Overlap** blank. Offer the archetype menu from the section again.'
+  lg_ctl L6 'LG1' "FM-5: a second offer inside BH-4's sentence is undeclared, never absorbed by its row" "$tmpl" 'it fits. Leave' 'it fits, and offer the menu too. Leave'
+}
+lgctl_assert
+
+md_flips lg_grade 'LG'     lg_assert "$LG_LEDGER_F" "$TA_RECS_F" "$TA_OUT_F"
+md_flips ta_read  'LG5'    lg5_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RS — the group rosters that DESCRIBE this suite, asserted against the run.
