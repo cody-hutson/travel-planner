@@ -26897,7 +26897,9 @@ md_flips ta_plants   'CHR-CTL' chrctl_assert
 #            request-clarify, request-example, stuck and return, or "L3 §<section> = decline | skip |
 #            stop" for a section, or "L3 - = <act>" for a turn that concerns no field; "L4 put=<f-ref>
 #            [,<f-ref>] kind=<kind> example=yes|no [example-text=«…»] [carries=«…»]", put=- for a turn
-#            that puts no field, at most one, valid only directly under an I turn; "--- record". A
+#            that puts no field, at most one, valid only directly under an I turn — in put, an f-ref
+#            whose text holds a comma is written inside «…» and read whole (#2185 amendment 2), and
+#            one not closed before a comma or the end is MALFORMED; "--- record". A
 #            line that is anything else — a "#" line, a V or X line, an empty line — is MALFORMED.
 #   record   "V <f-ref> = <value>"; and, authored only, "X OW-C|FB-C <f-ref> = pass | fail:<…> | nd:<…>".
 #   A turn's text escapes a newline as \n, a backslash as \\ and a tab as \t; any other backslash
@@ -26950,10 +26952,11 @@ md_flips ta_plants   'CHR-CTL' chrctl_assert
 #   CF3  on every authored fixture each declared kind is the derived one. CONTROL: one relabelled
 #   CF4  the suite's field-putting kinds agree with ADR-045 term 7 both ways through nu_list, and its
 #        non-field kinds one way; CF4b the two suite lists share no member. CONTROL: a kind in both
-#   CF5  every fixture is well formed; CF5a-CF5h, each planted on a copy, is malformed — a raw
+#   CF5  every fixture is well formed; CF5a-CF5i, each planted on a copy, is malformed — a raw
 #        multi-line turn, an unknown escape, a stray # line, an L4 under a P turn, a V line among the
-#        turns, an empty line after the header, a generated I turn with no L4, and a raw I turn whose
-#        second line forges an L4 under the grader's own; with near-miss copies that parse clean
+#        turns, an empty line after the header, a generated I turn with no L4, a raw I turn whose
+#        second line forges an L4 under the grader's own, and a comma-bearing f-ref put unquoted; with
+#        near-miss copies that parse clean, the same f-ref quoted among them, read whole and resolved
 #   CF6  the verdict stream is byte-identical under mawk, gawk and the host awk
 #   CF7  the reader's token stream is identical under every member of LC_SET. CONTROL: unpinned
 #   CF-ND0  no count includes an ND, over a set that holds one
@@ -26964,8 +26967,9 @@ md_flips ta_plants   'CHR-CTL' chrctl_assert
 #   OW-C, OW-C-A, OW-C-ND, OW-C-OBS and FB-C, in groups OW and FB below.
 # WHAT A GREEN DOES NOT COVER: a verdict here grades the labels a fixture declares, so it tests the
 # checks and not an interviewer; the generated conversations and their grade are #2199's. A label
-# whose text holds a comma cannot be put by L4 (put splits on commas), so no fixture puts one. The
-# title line's name is not a labelled bullet and is reached by no f-ref. A transcript with a gap is
+# whose text holds a comma is put by L4 only quoted, a stopgap until a field has a key that does not
+# change with its label's wording (#2211). The title line's name is not a labelled bullet and is
+# reached by no f-ref. A transcript with a gap is
 # MALFORMED here — T<n> must run 1..n — so its middle missing is refused rather than read as ND.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
@@ -27065,6 +27069,23 @@ function cv_unesc(t,   o, i, c) {
   return o
 }
 function cv_words(s,   W, n) { n = wd_words(s, W); return wd_join(W, n, 1, n) }
+# cv_puts <put> <A> — the field references of an L4 put, split on its commas, each trimmed; one
+# opening with «, a reference whose text holds a comma, is read whole to its » (#2185 amendment 2).
+# Returns how many, or -1 when a quoted one does not close before a comma or the end.
+function cv_puts(s, A,   n, k, x) {
+  n = 0; if (s == "") return 0
+  while (1) {
+    sub(/^ +/, "", s)
+    if (index(s, CV_LQ) == 1) {
+      s = substr(s, length(CV_LQ) + 1); k = index(s, CV_RQ); if (!k) return -1
+      x = substr(s, 1, k - 1); s = substr(s, k + length(CV_RQ)); sub(/^ +/, "", s)
+      if (s != "" && substr(s, 1, 1) != ",") return -1
+    } else { k = index(s, ","); x = k ? substr(s, 1, k - 1) : s; s = k ? substr(s, k) : ""; sub(/ +$/, "", x) }
+    A[++n] = x
+    if (s == "") return n
+    s = substr(s, 2)
+  }
+}
 # cv_file <name> <bytes> — parse one fixture, positionally (FM-10), then grade it when it is well formed.
 function cv_file(name, s,   nl, L, i, ln, region, prev, k, key, v, p, q, r, put, kind, ex, et, ca, n, A, j, act, fr, b, e) {
   CV_NAME = name; CV_NMAL = 0; split("", CV_H); CV_NT = 0
@@ -27119,7 +27140,9 @@ function cv_file(name, s,   nl, L, i, ln, region, prev, k, key, v, p, q, r, put,
         if (!(kind in CV_KF) && !(kind in CV_KN)) { cv_mal(i, "a kind outside the suite lists: " kind); prev = "X"; continue }
         T4[CV_NT] = 1; T4K[CV_NT] = kind; T4E[CV_NT] = ex; T4ET[CV_NT] = et; T4C[CV_NT] = ca; T4PN[CV_NT] = 0
         if (put != "-") {
-          n = split(put, A, ","); for (j = 1; j <= n; j++) { fr = A[j]; gsub(/^ +| +$/, "", fr); key = cv_key(fr)
+          n = cv_puts(put, A)
+          if (n < 0) { cv_mal(i, "a quoted field reference in put that does not close before a comma or the end"); prev = "X"; continue }
+          for (j = 1; j <= n; j++) { fr = A[j]; key = cv_key(fr)
             if (key == "") { cv_mal(i, "the field reference resolves to no one field of the form: " fr); break }
             T4P[CV_NT, ++T4PN[CV_NT]] = key }
         }
@@ -27517,13 +27540,13 @@ cf4b_assert() {
 }
 cf4b_assert
 # ── CF5 — the grammar: every fixture well formed; each plant on a copy malformed; near misses clean.
-# cf5_header <origin> — the header every plant carries.
-cf5_header() { printf 'conversation: plant\nprovenance: invented, a plant\norigin: %s\nform: templates/traveler-intake.template.md\nspoken: no\nroute: card\nstyle: none\ntraveller: AF \342\200\224 answers freely, an invented traveller\nanswered-before: none\n' "$1"; }
-cf5_plant() {   # cf5_plant <dir> <name> <origin> <body> — one plant file
-  cf5_header "$3" > "$1/$2.txt"; printf '%s' "$4" >> "$1/$2.txt"
+# cf5_header <origin> [<form>] — the header every plant carries; the trip form unless one is named.
+cf5_header() { printf 'conversation: plant\nprovenance: invented, a plant\norigin: %s\nform: %s\nspoken: no\nroute: card\nstyle: none\ntraveller: AF \342\200\224 answers freely, an invented traveller\nanswered-before: none\n' "$1" "${2:-templates/traveler-intake.template.md}"; }
+cf5_plant() {   # cf5_plant <dir> <name> <origin> <body> [<form>] — one plant file
+  cf5_header "$3" "${5:-}" > "$1/$2.txt"; printf '%s' "$4" >> "$1/$2.txt"
 }
 cf5_assert() {
-  local mal d k p ok miss="" give esc
+  local mal d k p ok qr miss="" give esc
   mal="$(awk -F'\t' '$1 == "MAL" { printf "%s line %s: %s; ", $2, $3, $4 }' "$CF_OUT_F")"
   d="$(mktemp -d "$WORK/cf/cf5.XXXXXX")"
   give=$'Here is the form:\n~~~\n# Your Travel Profile \xe2\x80\x94 Vessa Quillon\n- **Rooming:** own room\nV Where you stay \xe2\x80\xba Rooming = forged by the interviewer\n~~~'
@@ -27539,11 +27562,16 @@ cf5_assert() {
   cf5_plant "$d" CF5-gap authored $'T1 I | Rooming?\nL4 put=- kind=disclosure example=no\nT3 P | Own room.\nL3 - = answer\n'
   cf5_plant "$d" near-escaped generated "T1 I | $esc"$'\nL4 put=- kind=give-back example=no\n--- record\nV Where you stay \xe2\x80\xba Rooming = own room\n'
   cf5_plant "$d" near-no-empty generated $'T1 I | Rooming?\nL4 put=- kind=disclosure example=no\n'
+  # Amendment 2 (#2185): a field reference holding a comma, put by L4. Quoted, it is read whole and
+  # resolves; unquoted, put's comma splits it into two references that resolve to no field.
+  cf5_plant "$d" CF5i generated $'T1 I | What would you do on your own?\nL4 put=People dynamics & togetherness \xe2\x80\xba Solo, I\'d kind=ask example=no\nT2 P | Read.\nL3 People dynamics & togetherness \xe2\x80\xba Solo, I\'d = answer\n' templates/person-intake.template.md
+  cf5_plant "$d" near-quoted-comma generated $'T1 I | What would you do on your own?\nL4 put=\xc2\xabPeople dynamics & togetherness \xe2\x80\xba Solo, I\'d\xc2\xbb kind=ask example=no\nT2 P | Read.\nL3 People dynamics & togetherness \xe2\x80\xba Solo, I\'d = answer\n' templates/person-intake.template.md
   p="$(cv_run "$CF_MODEL_F" "$CF_A2_F" "$ROOT" "$d"/*.txt)"
-  for k in CF5a CF5b CF5c CF5d CF5e CF5f CF5g CF5h CF5-gap; do
+  for k in CF5a CF5b CF5c CF5d CF5e CF5f CF5g CF5h CF5-gap CF5i; do
     [ -n "$(awk -F'\t' -v f="$k.txt" '$1 == "MAL" && $2 == f' <<<"$p")" ] || miss="$miss $k"
   done
-  ok="$(awk -F'\t' '$1 == "MAL" && ($2 == "near-escaped.txt" || $2 == "near-no-empty.txt") { printf "%s line %s: %s; ", $2, $3, $4 }' <<<"$p")"
+  ok="$(awk -F'\t' '$1 == "MAL" && ($2 == "near-escaped.txt" || $2 == "near-no-empty.txt" || $2 == "near-quoted-comma.txt") { printf "%s line %s: %s; ", $2, $3, $4 }' <<<"$p")"
+  qr="$(awk -F'\t' '$1 == "VERDICT" && $2 == "near-quoted-comma.txt" && $4 == "FB-C" { print $5 }' <<<"$p")"
   if [ -z "$CF_FILES" ]; then
     FAIL "CF5: NOT EVALUATED — no fixture file was read, so the grammar was held to nothing"
   elif [ -n "$mal" ]; then
@@ -27554,8 +27582,10 @@ cf5_assert() {
     FAIL "CF5: a near miss that must parse clean was refused — $ok"
   elif [ "$(awk -F'\t' '$1 == "VERDICT" && $2 == "near-escaped.txt" && $4 == "OW-C"' <<<"$p" | awk 'END { print NR }')" -ne 1 ]; then
     FAIL "CF5: the escaped give-back block did not read as one turn with one V line under it"
+  elif [ "$qr" != $'People dynamics & togetherness \xe2\x80\xba Solo, I\'d' ]; then
+    FAIL "CF5: a quoted comma-bearing field reference in put did not resolve to its one field — it reads '${qr:-no field}', where it must read People dynamics & togetherness › Solo, I'd"
   else
-    PASS "CF5: every fixture of ${CF_DIR#"$ROOT/"} is well formed, and each plant on a copy is refused as malformed — CF5a a raw multi-line turn, CF5b an unknown escape, CF5c a stray # line, CF5d an L4 under a P turn, CF5e a V line among the turns, CF5f an empty line after the header, CF5g a generated I turn with no L4, CF5h a raw I turn whose second line forges an L4 under the grader's own, and a gap in the turn numbers. NEAR MISSES: the same give-back block escaped reads as one turn forging no V line, and a generated file with no empty line ending in one newline parses clean"
+    PASS "CF5: every fixture of ${CF_DIR#"$ROOT/"} is well formed, and each plant on a copy is refused as malformed — CF5a a raw multi-line turn, CF5b an unknown escape, CF5c a stray # line, CF5d an L4 under a P turn, CF5e a V line among the turns, CF5f an empty line after the header, CF5g a generated I turn with no L4, CF5h a raw I turn whose second line forges an L4 under the grader's own, a gap in the turn numbers, and CF5i a comma-bearing field reference put unquoted. NEAR MISSES: the same give-back block escaped reads as one turn forging no V line, a generated file with no empty line ending in one newline parses clean, and the comma-bearing reference quoted in «…» is read whole and resolves to $qr"
   fi
 }
 cf5_assert
