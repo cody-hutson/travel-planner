@@ -397,6 +397,14 @@
 #   LG   the declared ledger of the forms' known sentences, graded both ways — an undeclared hit, a row
 #        that no longer trips, an anchor that is not unique, a row keying more than one hit, a
 #        malformed row, the readers' file set — with the ledger mutations on copies under $WORK
+#   OW   (the text block) no licence to record from a non-utterance (OW-T.P1), the closure of the
+#        admitted non-utterances (OW-T.P2) with OW-T.P2's evaluator set held to ADR-045 both ways
+#        (OW-T.P2a), and the own-words rule stated in both carriers (OW-T.E1, group PC called for
+#        the carriers' equality): D6's value span, coordinator and coordinates, its class table, and
+#        every planted control of the design pinned at its verdict
+#   FB   (the text block) no licence for a further question (FB-T.P1): D8's triggers, its class table
+#        and its marker rule, the one directed follow-up reported as an observation, and every planted
+#        control of the design pinned at its verdict
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -25266,7 +25274,205 @@ function wt2(   i, j, s, m, P, any, k, EX, d) {
   if (cl_denial(k, EX, 0) > 0) { WT2_C = "DENIED"; WT2_V = "pass" } else { WT2_C = "ASSENT"; WT2_V = "FAIL" }
   return k
 }'
-TA_ARMS_FN="$TA_WT_FN"
+TA_OW_FN='# ---- OW-T.P1 / OW-T.P2 (D6) ----
+function ow_init() {
+  OW_TRIG = "record records recorded write writes written put take takes taken fill enter"
+  OW_STOP = "in into on onto under at beside above below inside within with by from when if where while because after before until unless once then and or but"
+  OW_UTTER_N = split("when they say so|if they say so|what they said|what they say|their words|their own words|the member their words contain", OW_UTTER, "|")
+  OW_OWN_N = split("what they said|what they say|their words|their own words|the member their words contain|when they say so", OW_OWN, "|")
+  OW_SKIP_N = split("skip|skips|skipped|does not apply|decline|declines", OW_SKIP, "|")
+  OW_RELAY = "operator relayed behalf"
+  OW_SOURCE = "example examples guess assent nod nods nodded nodding"
+  OW_SRCP_N = split("another field|an option they did not choose|whatever the group|as their answer", OW_SRCP, "|")
+  split("first second third last nearest", OWI_O, " "); split("option member one choice", OWI_N, " ")
+  for (i = 1; i <= 5; i++) for (j = 1; j <= 4; j++) OW_SRCP[++OW_SRCP_N] = "the " OWI_O[i] " " OWI_N[j]
+}
+function ow_triggers(TG,   n, k) {
+  n = 0
+  for (k = 1; k <= NT; k++) {
+    if (!cl_in(TW[k], OW_TRIG) || cl_incode(k)) continue
+    if (k > 1 && cl_in(TW[k - 1], TA_DET) && !cl_punct(k - 1, k)) continue
+    if (k > 2 && cl_in(TW[k - 2], TA_DET) && !cl_punct(k - 2, k - 1) && !cl_punct(k - 1, k)) continue
+    TG[++n] = k
+  }
+  return n
+}
+function ow_sp(ch) { return (ch == " " || ch == "\t" || ch == "\n" || ch == "\r" || ch == "\f" || ch == "\v") }
+function ow_wordch(ch) { return (ch != "" && !ow_sp(ch) && !index("`\042.,;:!?()", ch)) }
+# ow_gap <t> <lim> — the coordinator lookahead: up to three words, each with an optional comma and
+# then whitespace, and then a literal opening quote or backtick, all before lim (K1, K12).
+function ow_gap(t, lim,   c, w0, s0) {
+  for (c = 0; c <= 3; c++) {
+    if (t < lim && index("`\042", substr(CL_LIT, t, 1))) return 1
+    if (c == 3) return 0
+    w0 = t; while (t < lim && ow_wordch(substr(CL_LIT, t, 1))) t++
+    if (t == w0) return 0
+    if (t < lim && substr(CL_LIT, t, 1) == ",") t++
+    s0 = t; while (t < lim && ow_sp(substr(CL_LIT, t, 1))) t++
+    if (t == s0) return 0
+  }
+  return 0
+}
+function ow_tail(q, lim,   r) {
+  if (q < lim && substr(CL_LIT, q, 1) == ",") q++
+  r = q; while (r < lim && ow_sp(substr(CL_LIT, r, 1))) r++
+  if (r == q) return 0
+  return ow_gap(r, lim) ? r : 0
+}
+# ow_coord_at <p> <lim> — D6 coordinator matched at p, the text visible only before lim: an optional
+# comma, whitespace, or / and, an optional else, an optional comma and whitespace. Its end, or 0.
+function ow_coord_at(p, lim,   q, r, s2, t) {
+  q = p
+  if (q < lim && substr(CL_LIT, q, 1) == ",") q++
+  r = q; while (r < lim && ow_sp(substr(CL_LIT, r, 1))) r++
+  if (r == q) return 0
+  if (r + 1 < lim && substr(CL_LIT, r, 2) == "or") q = r + 2
+  else if (r + 2 < lim && substr(CL_LIT, r, 3) == "and") q = r + 3
+  else return 0
+  s2 = q; while (s2 < lim && ow_sp(substr(CL_LIT, s2, 1))) s2++
+  if (s2 > q && s2 + 3 < lim && substr(CL_LIT, s2, 4) == "else") { t = ow_tail(s2 + 4, lim); if (t) return t }
+  return ow_tail(q, lim)
+}
+function ow_coords(a, lim, CE,   n, p, m) {
+  n = 0; p = a
+  while (p < lim) { m = ow_coord_at(p, lim); if (m) { CE[++n] = m; p = m } else p++ }
+  return n
+}
+# the gap after a coordinator, read without the object bound: the position of the literal it stands before.
+function ow_at(p,   q, w0, s0, c) {
+  for (c = 1; c <= 3; c++) {
+    q = p; w0 = q; while (q <= CL_L && ow_wordch(substr(CL_LIT, q, 1))) q++
+    if (q == w0) break
+    if (q <= CL_L && substr(CL_LIT, q, 1) == ",") q++
+    s0 = q; while (q <= CL_L && ow_sp(substr(CL_LIT, q, 1))) q++
+    if (q == s0) break
+    p = q
+  }
+  return p
+}
+function ow_lower(s,   o, i, ch, k) { o = ""; for (i = 1; i <= length(s); i++) { ch = substr(s, i, 1); k = index(WD_UP, ch); o = o (k ? substr(WD_LO, k, 1) : ch) }; return o }
+function ow_default(sent,   s) {
+  s = ow_lower(wd_fold(sent, 0))
+  return (s ~ /(anything else is|otherwise( (write|record|put))?|by default|defaults? to)[ \t\n\r\f\v]*(`[^`]+`|"[^"]+")/)
+}
+function ow_empty(sent,   s, L, i, w, lw, pre, post, j, span, A, n, k) {
+  s = ow_lower(wd_fold(sent, 0)); L = length(s)
+  for (i = 1; i <= L; i++) {
+    for (w = 1; w <= 3; w++) {
+      lw = (w == 1) ? "if" : (w == 2 ? "when" : "where")
+      if (substr(s, i, length(lw)) != lw) continue
+      pre = (i > 1) ? substr(s, i - 1, 1) : ""; post = substr(s, i + length(lw), 1)
+      if ((pre != "" && (wd_isw(pre) || pre == "_")) || (post != "" && (wd_isw(post) || post == "_"))) continue
+      span = substr(s, i); j = match(span, /[,;:]/); if (j) span = substr(span, 1, j - 1)
+      n = wd_words(span, A); for (k = 1; k <= n; k++) if (cl_in(A[k], "no nothing none")) return 1
+    }
+  }
+  return 0
+}
+# ow_class — D6, the first class that holds decides. Sets OW_C, OW_V1 (OW-T.P1), OW_V2 (OW-T.P2), OW_N.
+function ow_class(k, ntg, TG, path, sent,   NOEX, e, oe, i, a, b, ob, LX, LP, nl, CE, nc, c, at, MX, MP, nm, j, t, x, ok, bad, cuts, nk, SA, SZ, ns, lead, lw, coord, CW, ncw, u, found, sw, hit) {
+  oe = NT + 1; for (i = 1; i <= ntg; i++) if (TG[i] > k) { oe = TG[i]; break }
+  e = NT + 1; for (i = k + 1; i <= NT; i++) if (i == oe || cl_in(TW[i], OW_STOP)) { e = i; break }
+  a = TE[k]; b = (e <= NT) ? TS[e] : CL_L + 1; ob = (oe <= NT) ? TS[oe] : CL_L + 1
+  nl = cl_lits(a, b, LX, LP)
+  nc = ow_coords(a, ob, CE)
+  for (c = 1; c <= nc; c++) {
+    at = ow_at(CE[c]); nm = cl_lits(CE[c], ob, MX, MP)
+    for (j = 1; j <= nm; j++) if (MP[j] == at) { found = 0; for (t = 1; t <= nl; t++) if (LP[t] == MP[j]) found = 1; if (!found) { nl++; LX[nl] = MX[j]; LP[nl] = MP[j] } }
+  }
+  for (i = 2; i <= nl; i++) for (j = i; j > 1 && LP[j - 1] > LP[j]; j--) { t = LP[j]; LP[j] = LP[j - 1]; LP[j - 1] = t; t = LX[j]; LX[j] = LX[j - 1]; LX[j - 1] = t }
+  OW_N = ""
+  if (ow_default(sent)) { OW_C = "DEFAULT"; OW_V1 = "FAIL"; OW_V2 = "FAIL"; return }
+  j = 0; for (i = 1; i <= nl; i++) if (LX[i] != "\342\200\224") j++
+  if (j > 0 && ow_empty(sent)) {
+    ok = ""; bad = ""
+    for (i = 1; i <= nl; i++) if (LX[i] != "\342\200\224") { if (((path, LX[i]) in A2ROW)) ok = ok (ok == "" ? "" : "|") LX[i]; else bad = bad (bad == "" ? "" : "|") LX[i] }
+    if (bad == "") { OW_C = "A2"; OW_V1 = "pass"; OW_V2 = "pass:A2"; OW_N = ok; return }
+    OW_C = "A2-UNDECLARED"; OW_V1 = "FAIL"; OW_V2 = "FAIL"; OW_N = bad; return
+  }
+  if (cl_denied(k, 0) || cl_objneg(k + 1, NT + 1)) { OW_C = "DENIED"; OW_V1 = "pass"; OW_V2 = "pass"; split("", NOEX); OW_N = "d=" cl_denial(k, NOEX, 0); return }
+  if (nl > 0) {
+    nk = 1; cuts[1] = a; for (c = 1; c <= nc; c++) cuts[++nk] = CE[c]; cuts[++nk] = ob
+    ns = cl_closed(k, SA, SZ); lead = 0
+    if (ns == 1) { lw = ""; for (i = SA[1]; i <= SZ[1]; i++) lw = lw (lw == "" ? "" : " ") TW[i]; lead = (lw == "if they say so" || lw == "when they say so") }
+    bad = ""
+    for (i = 1; i <= nl; i++) {
+      x = LX[i]
+      if (x == "\342\200\224") {
+        hit = 0; for (u = 1; u <= OW_SKIP_N; u++) if (wd_has(SW, NSW, OW_SKIP[u])) hit = 1
+        if (!hit) bad = bad (bad == "" ? "" : "|") "A1-without-a-skip"
+        continue
+      }
+      coord = ""; for (c = 1; c < nk; c++) if (cuts[c] <= LP[i] && LP[i] < cuts[c + 1]) { coord = substr(CL_LIT, cuts[c], cuts[c + 1] - cuts[c]); break }
+      ncw = wd_words(coord, CW); hit = 0
+      for (u = 1; u <= OW_UTTER_N; u++) if (wd_has(CW, ncw, OW_UTTER[u])) hit = 1
+      if (hit) continue
+      if (lead && cuts[1] <= LP[i] && LP[i] < cuts[2]) continue
+      if (x == "[OPERATOR-PROVIDED]") { hit = 0; for (u = 1; u <= NSW; u++) if (cl_in(SW[u], OW_RELAY)) hit = 1; if (hit) continue }
+      bad = bad (bad == "" ? "" : "|") x
+    }
+    OW_C = "LITERAL"; OW_V1 = (bad == "" ? "pass" : "FAIL"); OW_V2 = OW_V1; OW_N = bad; return
+  }
+  for (u = 1; u <= OW_OWN_N; u++) if (wd_has(SW, NSW, OW_OWN[u])) { OW_C = "OWN"; OW_V1 = "pass"; OW_V2 = "pass"; return }
+  for (u = 1; u <= NSW; u++) if (cl_in(SW[u], OW_SOURCE)) { OW_C = "SOURCE"; OW_V1 = "FAIL"; OW_V2 = "-"; return }
+  for (u = 1; u <= OW_SRCP_N; u++) if (wd_has(SW, NSW, OW_SRCP[u])) { OW_C = "SOURCE"; OW_V1 = "FAIL"; OW_V2 = "-"; return }
+  OW_C = "NEUTRAL"; OW_V1 = "pass"; OW_V2 = "pass"
+}
+# ---- FB-T.P1 (D8) ----
+function fb_triggers(TG,   n, k, j, hit) {
+  n = 0
+  for (k = 1; k <= NT; k++) {
+    if (cl_incode(k)) continue
+    hit = 0
+    if (TW[k] == "follow" && TW[k + 1] == "up" && k + 1 <= NT) hit = 1
+    else if (TW[k] == "ask") { for (j = k + 1; j <= k + 4 && j <= NT; j++) if (cl_in(TW[j], "again more further")) hit = 1; if (k + 2 <= NT && TW[k + 1] == "one" && TW[k + 2] == "more") hit = 1 }
+    else if (TW[k] == "keep" && k + 1 <= NT && TW[k + 1] == "asking") hit = 1
+    else if (cl_in(TW[k], "press pressing probe push sharpen")) hit = 1
+    else if (TW[k] == "make" && ((k + 3 <= NT && TW[k + 1] == "each" && TW[k + 2] == "one" && TW[k + 3] == "specific") || (k + 2 <= NT && TW[k + 1] == "it" && TW[k + 2] == "specific"))) hit = 1
+    if (hit) TG[++n] = k
+  }
+  return n
+}
+function fb_objstart(k) {
+  if (TW[k] == "make") return (TW[k + 1] == "each" && TW[k + 2] == "one" && TW[k + 3] == "specific") ? k + 4 : k + 3
+  if (TW[k] == "follow" || TW[k] == "keep") return k + 2
+  return k + 1
+}
+# fb_markers <sent> <phrases> <count> — D8 marker rule: an occurrence counts only where R6 at the
+# marker does not deny it, in its own clause. Returns 1/0, or with count set the occurrences.
+function fb_markers(sent, list, count,   PH, np, nc, O, T, P, c, h, m, W2, i, j, ok, n) {
+  np = split(list, PH, "|"); nc = c0_clauses(sent, O, T, P); n = 0
+  for (c = 1; c <= nc; c++) {
+    cl_set(sent, O[c], T[c], "", "", 0)
+    for (h = 1; h <= np; h++) {
+      m = split(PH[h], W2, " "); if (m == 0) continue
+      for (i = 1; i + m - 1 <= NT; i++) {
+        ok = 1; for (j = 1; j <= m; j++) if (TW[i + j - 1] != W2[j]) { ok = 0; break }
+        if (ok && !cl_denied(i, 1)) { n++; if (!count) { fb_restore(); return 1 } }
+      }
+    }
+  }
+  fb_restore()
+  return count ? n : 0
+}
+function fb_save(sent, off, raw, sep, nxt, hn) { FBS_S = sent; FBS_O = off; FBS_R = raw; FBS_P = sep; FBS_N = nxt; FBS_H = hn }
+function fb_restore() { cl_set(FBS_S, FBS_O, FBS_R, FBS_P, FBS_N, FBS_H) }
+function fb_class(p, st, k, sent,   k2, cl, i, u) {
+  if (cl_denied(k, 0) || cl_objneg(fb_objstart(k), NT + 1) || wd_has(TW, NT, "rather than pressing")) { FB_C = "DENIED"; FB_V = "pass"; return }
+  if (fb_markers(sent, "keep|until|repeatedly|as many|again and again|each time|every time", 0)) { FB_C = "UNBOUNDED"; FB_V = "FAIL"; return }
+  if (fb_markers(sent, "second|another|twice|further", 0)) { FB_C = "SECOND"; FB_V = "FAIL"; return }
+  if (fb_markers(sent, "once|one more", 1) >= 2) { FB_C = "SECOND"; FB_V = "FAIL"; return }
+  if (fb_markers(sent, "after a skip|after a decline|after a stop|after a empty answer|if they skip|if they decline|if they stop", 0)) { FB_C = "AFTER"; FB_V = "FAIL"; return }
+  if (fb_markers(sent, "already answers|already answered|earlier session", 0)) { FB_C = "ANSWERED"; FB_V = "FAIL"; return }
+  cl = "closed field|closed fields|closed list|closed question"
+  if (st != "-" && ((p, st) in MSEC)) for (i = 1; i <= MF[p, st]; i++) if (MCL[p, st, i]) cl = cl "|" wd_wordstr(m_labelwords(MLAB[p, st, i]))
+  if (fb_markers(sent, cl, 0)) { FB_C = "CLOSED"; FB_V = "FAIL"; return }
+  if (fb_markers(sent, "same question|repeat the question|in the same words", 0)) { FB_C = "REPEAT"; FB_V = "FAIL"; return }
+  if (m_person(p, st, sent) && !wd_has(SW, NSW, "typed session") && !wd_has(SW, NSW, "in text")) { FB_C = "PERSON-SPEECH"; FB_V = "FAIL"; return }
+  if (wd_has(SW, NSW, "never a second") || wd_has(SW, NSW, "one more") || wd_has(SW, NSW, "once")) { FB_C = "BOUNDED"; FB_V = "pass"; return }
+  FB_C = "DIRECTED"; FB_V = "observation"
+}'
+TA_ARMS_FN="$TA_WT_FN$TA_OW_FN"
 TA_MAIN_FN='# ---- the run: every sentence of the readers (mode real), or each planted control (mode plant) ----
 function ta_word_index(k,   S2, E2, R2, A2w, n, i, t) {
   n = wd_toks(wd_fold(CL_SENT, 0), A2w, S2, E2, R2); t = CL_OFF + TS[k]
@@ -25277,7 +25483,7 @@ function ta_hit(limb, p, st, ti, c, nm, sent) { printf "HIT\t%s\t%s\t%s\t%d\t%s\
 function ta_seen(arm, p, st, c, v, nm, sent) { printf "SEEN\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", arm, p, st, c, v, nm, sent }
 # ta_sentence — grade one sentence under its step. With a plant arm set, only that arm grades and
 # each verdict is collected into PL_OUT / PL_FIRED rather than written.
-function ta_sentence(p, st, sent, arm,   nc, O, T, P, c, TG, ntg, i, k) {
+function ta_sentence(p, st, sent, arm,   nc, O, T, P, c, TG, ntg, i, k, OG, nog, FG, nfg) {
   nc = c0_clauses(sent, O, T, P)
   for (c = 1; c <= nc; c++) {
     cl_set(sent, O[c], T[c], P[c], (c < nc ? T[c + 1] : ""), (c < nc))
@@ -25297,11 +25503,34 @@ function ta_sentence(p, st, sent, arm,   nc, O, T, P, c, TG, ntg, i, k) {
         else { ta_seen("WT.P2", p, st, WT2_C, WT2_V, "", sent); if (WT2_V == "FAIL") ta_hit("WT.P2", p, st, 1, WT2_C, "", sent) }
       }
     }
+    if (arm == "" || arm == "OW-T.P1" || arm == "OW-T.P2") {
+      split("", OG); nog = ow_triggers(OG)
+      for (i = 1; i <= nog; i++) {
+        k = OG[i]; ow_class(k, nog, OG, p, sent)
+        if (arm == "OW-T.P1") { ta_pl(OW_C, OW_V1, OW_N); continue }
+        if (arm == "OW-T.P2") { ta_pl(OW_C, OW_V2, OW_N); continue }
+        ta_seen("OW", p, st, OW_C, OW_V1 ";" OW_V2, OW_N, sent)
+        if (OW_V1 == "FAIL") ta_hit("OW-T.P1", p, st, ta_word_index(k), OW_C, OW_N, sent)
+        if (OW_V2 == "FAIL") ta_hit("OW-T.P2", p, st, ta_word_index(k), OW_C, OW_N, sent)
+        if (OW_C == "A2") ta_hit("A2", p, st, 0, OW_C, OW_N, sent)
+      }
+    }
+    if (arm == "" || arm == "FB-T.P1") {
+      split("", FG); nfg = fb_triggers(FG)
+      for (i = 1; i <= nfg; i++) {
+        k = FG[i]; fb_save(sent, O[c], T[c], P[c], (c < nc ? T[c + 1] : ""), (c < nc)); fb_class(p, st, k, sent)
+        if (arm != "") { ta_pl(FB_C, FB_V, ""); continue }
+        ta_seen("FB", p, st, FB_C, FB_V, "", sent)
+        if (FB_V == "FAIL") ta_hit("FB-T.P1", p, st, ta_word_index(k), FB_C, "", sent)
+        if (FB_V == "observation") ta_hit("FB-OBS", p, st, ta_word_index(k), FB_C, "", sent)
+        if (FB_C == "PERSON-SPEECH") ta_hit("CHR.P3", p, st, ta_word_index(k), FB_C, "", sent)
+      }
+    }
   }
 }
 function ta_pl(c, v, nm) { PL_OUT = PL_OUT (PL_OUT == "" ? "" : ";") c "=" v (nm == "" ? "" : "(" nm ")"); if (substr(v, 1, 4) == "FAIL") PL_FIRED = 1 }
 BEGIN {
-  FS = "\t"; wd_init(); ta_init(); wt_init()
+  FS = "\t"; wd_init(); ta_init(); wt_init(); ow_init()
   m_load(model)
   if (a2 != "") { while ((getline t < a2) > 0) { split(t, F2, "\t"); A2ROW[F2[1], F2[2]] = 1 }; close(a2) }
 }
@@ -25320,12 +25549,12 @@ mkdir -p "$WORK/ta"
 ta_grade() {
   LC_ALL=C awk -v mode=real -v model="$1" -v a2="$2" "$WD_FN$C0_FN$TA_FM_FN$FT_LEAD_FN$TA_CORE_FN$TA_ARMS_FN$TA_MAIN_FN" "$3"
 }
-# ta_plants <model-file> <a2-file> — stdin the plant table "id TAB arm TAB must TAB form TAB step TAB
+# ta_plants <model-file> <a2-file> — WD_APOS=0 makes the apostrophe a separator for SEAM-1; stdin the plant table "id TAB arm TAB must TAB form TAB step TAB
 # pinned TAB plant", stdout one PLANT record per plant: "<id> <fired 0|1> <verdicts>", or "<id> NE <why>".
 ta_plants() {
   awk -F'\t' -v c="skills/trip-record/interview-conduct.md" -v t="templates/traveler-intake.template.md" -v p="templates/person-intake.template.md" \
     '{ printf "P\t%s\t%s\t%s\t%s\t%s\n", $1, $2, ($4 == "trip" ? t : ($4 == "person" ? p : c)), $5, $7 }' |
-    LC_ALL=C awk -v mode=plant -v model="$1" -v a2="$2" "$WD_FN$C0_FN$TA_FM_FN$FT_LEAD_FN$TA_CORE_FN$TA_ARMS_FN$TA_MAIN_FN"
+    LC_ALL=C awk -v mode=plant -v wd_apos="${WD_APOS:-1}" -v model="$1" -v a2="$2" "$WD_FN$C0_FN$TA_FM_FN$FT_LEAD_FN$TA_CORE_FN$TA_ARMS_FN$TA_MAIN_FN"
 }
 # ta_a2 <ledger-file> — the declared A2 texts, "<path> TAB <text>", read from the ledger rows.
 ta_a2() {
@@ -25352,9 +25581,14 @@ TA_RECS_F="$WORK/ta/records.tsv"; ta_read "$ROOT" "$TA_REG" > "$TA_RECS_F"
 lg_ledger() {
   cat <<'LEDGER'
 # id   limb     path                                   anchor
+BH-1  OW-T.P1  templates/traveler-intake.template.md  whatever the group books, record that as their answer
 BH-2  WT.P1    templates/traveler-intake.template.md  Offer the archetype menu from the section
+BH-3  OW-T.P1  templates/traveler-intake.template.md  Record `daily` only when they say so; anything else is `one-off`
+BH-3  OW-T.P2  templates/traveler-intake.template.md  Record `daily` only when they say so; anything else is `one-off`
 BH-4  WT.P1    templates/traveler-intake.template.md  Suggest a theme tag or two
 BH-5  WT.P1    templates/person-intake.template.md    Read out the tick list
+A2-1  A2       templates/person-intake.template.md    write `none` rather than leaving it blank
+A2-2  A2       templates/trip-context.template.md     write "None identified"
 LEDGER
 }
 LG_LEDGER_F="$WORK/ta/ledger.txt"; lg_ledger > "$LG_LEDGER_F"
@@ -25702,6 +25936,394 @@ lgctl_assert
 
 md_flips lg_grade 'LG'     lg_assert "$LG_LEDGER_F" "$TA_RECS_F" "$TA_OUT_F"
 md_flips ta_read  'LG5'    lg5_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group OW (the text block) — no licence to record from a non-utterance (OW-T.P1), the closure of
+# the admitted non-utterances (OW-T.P2, OW-T.P2a), and the rule stated in both carriers (OW-T.E1)
+#
+# OW-T.P1 grades every record-family directive the readers reach for a source other than the
+# person's own words, A1..A5 apart; OW-T.P2 for an admitted non-utterance that is none of A1..A5.
+# One class table serves both limbs; a hit is group LG's to declare. #1769's conversation block
+# joins this group later and reads A1..A5 through the same reader.
+#
+# ── TRIGGERS AND THE VALUE SPAN (D6) ─────────────────────────────────────────────────────────────
+# record(s), recorded, write(s), written, put, take(s), taken, fill, enter — never inside a code span,
+# and never after a determiner, or a determiner and one word, with no punctuation between (a noun).
+# The value span is the object up to the first stop word — in into on onto under at beside above
+# below inside within with by from when if where while because after before until unless once then
+# and or but — so "put it in the `# ` heading" carries no value literal.
+#
+# ── THE COORDINATOR AND THE VALUE LITERALS (D6, K1, K12, A2) ─────────────────────────────────────
+# A coordinator matches ,?\s+(or|and)(\s+else)?,?\s+ — or / and, a comma optional before it, an else
+# optional after it, and a comma optional after that. It STANDS BEFORE A LITERAL when the text after
+# it is up to three words, each optionally followed by a comma and then whitespace, and then a
+# literal opening backtick or double quote. A word is a run of characters holding no whitespace,
+# double quote, backtick or any of . , ; : ! ? ( ) — an apostrophe is part of a word, so it's is one.
+# The value literals are those in the value span plus each literal a coordinator stands before,
+# anywhere in the object; the object is cut after each such coordinator and only after those, and a
+# literal's coordinate is the piece that holds it. The coordinator reaches three gap words: four is
+# the stated bound, and passes (K1-bound).
+#
+# ── THE CLASSES — the first that holds decides; an occurrence no class names is NEUTRAL ──────────
+#   0  NOUN       the noun rule — not graded
+#   1  DEFAULT    anything else is / otherwise (write, record, put) / by default / default(s) to,
+#                 immediately followed by a literal — FAIL on both limbs (a default is a sixth non-utterance)
+#   2  A2         a value literal, the em dash apart, under an if / when / where span carrying no,
+#                 nothing or none, the literal one the ledger DECLARES as an A2 text for its path —
+#                 pass, counted A2
+#   2' A2-UNDECLARED  the same shape with a literal the ledger does not declare — FAIL on both limbs
+#   3  DENIED     R6 in the clause, or object negation — pass
+#   4  LITERAL    a value literal passes when an utterance phrase stands in its own coordinate (when
+#                 they say so, if they say so, what they said, what they say, their words, their own
+#                 words, the member their words contain); or it is in the object's FIRST coordinate and
+#                 the clause has EXACTLY ONE closed-condition segment before the trigger and that
+#                 segment's words are exactly if they say so or when they say so (K2); or it is the em
+#                 dash and the sentence names a skip (A1); or it is [OPERATOR-PROVIDED] and the sentence
+#                 names operator, relayed or behalf (A4). Otherwise FAIL, naming it. A second coordinated
+#                 literal needs its own phrase — "Record `daily` and `one-off` when they say so." fails on
+#                 daily, failing closed (U12)
+#   5  OWN        the sentence holds a their-words phrase — pass
+#   6  SOURCE     example(s), guess, assent, nod(s / ded / ding), another field, an option they did
+#                 not choose, whatever the group, as their answer, the first / second / third / last /
+#                 nearest option / member / one / choice — FAIL on OW-T.P1
+#   7  NEUTRAL    a record directive naming no source — pass
+# Stated bound (K5): "Record what they said, and use `Edit` for the change." fails on Edit — a tool
+# name after and use reads as a value — and fails closed.
+#
+# ── A1..A5 — OW-T.P2's evaluator per member, keyed by id, held to ADR-045 by OW-T.P2a ────────────
+#   A1  the em dash, admitted where the sentence names a skip (class 4)
+#   A2  the declared empty-answer texts (class 2), graded both ways by group LG
+#   A3  a member their words contain — the utterance phrase "the member their words contain" (class 4)
+#   A4  [OPERATOR-PROVIDED], admitted where the sentence names a relay (class 4)
+#   A5  the form's own fixed text — a literal past the value span's first stop word is no value
+#       literal, so "put it in the `# ` heading" admits the heading text and records nothing
+# The ids are the record's: nu_list reads them, and OW-T.P2a holds this set to them both ways, so an
+# id added to ADR-045 D2 item 4 with no evaluator here is red, and so is the reverse (SEAM-2).
+#
+# ── OW-T.E1 (D7) ─────────────────────────────────────────────────────────────────────────────────
+# Each carrier's shared rules hold a sentence carrying only, a their-words phrase, and a record-family
+# verb or take; and group PC's own comparison, called rather than restated, reports the carriers equal.
+#
+# WHAT A GREEN DOES NOT COVER: as group WT's banner states it, for these limbs too — a paraphrase
+# outside the lexicon is not seen, a default written without a trigger of the closed list is read by
+# no arm, and the subject is the authored text a session follows, not a session. RS-13's compound
+# case reaches a conversation, which is #1769's to grade.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "OW — no licence to record from a non-utterance (OW-T.P1), closure of the admitted non-utterances (OW-T.P2), the rule stated in both carriers (OW-T.E1)"
+
+OW_A_IDS='A1 A2 A3 A4 A5'
+owp_assert() {
+  local out n cls h1 h2 a2
+  out="$(ta_grade "$TA_MODEL_F" "$TA_A2_F" "$TA_RECS_F")"
+  n="$(awk -F'\t' '$1 == "SEEN" && $2 == "OW"' <<<"$out" | awk 'END { print NR }')"
+  cls="$(awk -F'\t' '$1 == "SEEN" && $2 == "OW" { c[$5]++ } END { for (k in c) printf "%s %d · ", k, c[k] }' <<<"$out")"
+  h1="$(awk -F'\t' '$1 == "HIT" && $2 == "OW-T.P1" { printf "[%s %s: %s] ", $6, $3, substr($8, 1, 60) }' <<<"$out")"
+  h2="$(awk -F'\t' '$1 == "HIT" && $2 == "OW-T.P2" { printf "[%s %s: %s] ", $6, $3, substr($8, 1, 60) }' <<<"$out")"
+  a2="$(awk -F'\t' '$1 == "HIT" && $2 == "A2" { printf "[%s in %s] ", $7, $3 }' <<<"$out")"
+  if [ "$n" -eq 0 ]; then
+    FAIL "OW-T.P1: no record-family directive was graded over inputs (i)-(iii) — an empty population is NOT EVALUATED, never a pass"
+  else
+    PASS "OW-T.P1: $n record-family directive(s) graded over inputs (i)-(iii), by class: ${cls% · }; OW-T.P1 FAIL: ${h1:-none}; OW-T.P2 FAIL: ${h2:-none}; A2 counted: ${a2:-none} — trip-context's \"None identified\" (BH-6) is one, a pass and no ledger row of its own. Each hit is group LG's to declare"
+  fi
+}
+owp_assert
+owp2a_assert() {
+  local rec d seam
+  rec="$(nu_list "$NU_ADR" | awk -F'\t' '$1 == "A" { print $2 }')"
+  d="$(nu_agree "$rec" "$(tr ' ' '\n' <<<"$OW_A_IDS")" two-way)"
+  awk '{ print } /^   \| `A5` \|/ && !done { print "   | `A6` | a planted sixth | never | — |"; done = 1 }' "$NU_ADR" > "$WORK/ta/adr045-a6.md"
+  seam="$(nu_agree "$(nu_list "$WORK/ta/adr045-a6.md" | awk -F'\t' '$1 == "A" { print $2 }')" "$(tr ' ' '\n' <<<"$OW_A_IDS")" two-way)"
+  if [ -z "$rec" ]; then
+    FAIL "OW-T.P2a: nu_list read no admitted non-utterance from ${NU_ADR#"$ROOT/"}, so OW-T.P2's evaluator set is held to nothing"
+  elif [ -n "$d" ]; then
+    FAIL "OW-T.P2a: OW-T.P2's evaluator set [$OW_A_IDS] disagrees with ADR-045 D2 item 4 — $(tr '\n' ' ' <<<"$d"). An id the record names that no evaluator implements fails, and so does the reverse: an addition is a new decision, made in the record"
+  elif [ "$seam" != "RECORD-ONLY A6" ]; then
+    FAIL "OW-T.P2a: CONTROL (SEAM-2) did not fire as specified — a sixth row planted in a copy of ADR-045 reads '${seam:-no difference}', where the agreement must name A6"
+  else
+    PASS "OW-T.P2a: OW-T.P2's evaluator set [$OW_A_IDS] agrees with ADR-045 D2 item 4 both ways, read through nu_list. CONTROL (SEAM-2): a sixth row planted in a copy of the record is refused, naming A6"
+  fi
+}
+owp2a_assert
+# ta_e1 <file> <heading> — the sentences of one section of a carrier, one per line.
+ta_e1() {
+  LC_ALL=C awk -v f="$1" -v h="$2" "$WD_FN$C0_FN$TA_RD_FN"'BEGIN { n = rd_load(f, A); if (n < 0) exit; k = rd_section(A, n, h, SEC); nb = c0_blocks(SEC, k, B); for (b = 1; b <= nb; b++) { ns = c0_sents(B[b], S); for (s = 1; s <= ns; s++) print S[s] } }'
+}
+# ow_e1_count <file> — the shared-rules sentences carrying only, a their-words phrase and a record-family verb or take.
+ow_e1_count() {
+  ta_e1 "$1" '## The rules every interview shares' | LC_ALL=C awk "$WD_FN"'
+    { n = wd_words($0, W); o = 0; v = 0; t = 0; s = " " wd_join(W, n, 1, n) " "
+      for (i = 1; i <= n; i++) { if (W[i] == "only") o = 1; if (index(" record records recorded write writes written take takes ", " " W[i] " ")) v = 1 }
+      if (index(s, " what they said ") || index(s, " what they say ") || index(s, " their words ") || index(s, " their own words ")) t = 1
+      if (o && v && t) c++ }
+    END { print c + 0 }'
+}
+# owe1_eval <conduct> <card> — "<rule sentences in the conduct file> <in the card> <PC's rc> <PC's findings>".
+owe1_eval() {
+  local nv nc pf prc
+  nv="$(ow_e1_count "$1")"; nc="$(ow_e1_count "$2")"
+  pf="$(pc_findings "$1" "$2")"; prc=$?
+  local pfn=0
+  [ -z "$pf" ] || pfn="$(awk 'END { print NR }' <<<"$pf")"
+  printf '%s %s %s %s\n' "${nv:--}" "${nc:--}" "$prc" "$pfn"
+}
+owe1_assert() {   # owe1_assert <conduct> <card>
+  local nv nc pf prc
+  nv="$(ow_e1_count "$1")"; nc="$(ow_e1_count "$2")"
+  pf="$(pc_findings "$1" "$2")"; prc=$?
+  if [ -z "$nv" ] || [ -z "$nc" ]; then
+    FAIL "OW-T.E1: the carriers could not be read for the rule — no count came back"
+  elif [ "$nv" -eq 0 ] || [ "$nc" -eq 0 ]; then
+    FAIL "OW-T.E1: the rule that a recorded value is only what they said is NOT STATED in the shared rules of ${1#"$ROOT/"} ($nv) or ${2#"$ROOT/"} ($nc)"
+  elif [ "$prc" -ne 0 ] || [ -n "$pf" ]; then
+    FAIL "OW-T.E1: the rule is stated on each side, but group PC's comparison reports the carriers UNEQUAL (rc=$prc: $(tr '\t\n' ' ;' <<<"$pf")) — \"in the same words in both carriers\" is PC's assertion"
+  else
+    PASS "OW-T.E1: each carrier's shared rules state that a recorded value is only what they said — $nv sentence(s) in ${1#"$ROOT/"}, $nc in ${2#"$ROOT/"} — and group PC's comparison reports the two carriers equal"
+  fi
+}
+owe1_assert "$PC_VERB" "$PC_CARD"
+owe1ctl_assert() {
+  local r1 r2 g1 g2 landed
+  r1="$WORK/ta/e1-both"; r2="$WORK/ta/e1-one"; mkdir -p "$r1" "$r2"
+  awk '{ s = $0; gsub(/Take only what they said\. /, "", s); print s }' "$PC_VERB" > "$r1/conduct.md"
+  awk '{ s = $0; gsub(/Take only what they said\. /, "", s); print s }' "$PC_CARD" > "$r1/card.md"
+  cp "$r1/conduct.md" "$r2/conduct.md"; cp "$PC_CARD" "$r2/card.md"
+  g1="$(owe1_eval "$r1/conduct.md" "$r1/card.md")"; g2="$(owe1_eval "$r2/conduct.md" "$r2/card.md")"
+  landed=1; cmp -s "$r1/conduct.md" "$PC_VERB" && landed=0; cmp -s "$r1/card.md" "$PC_CARD" && landed=0
+  if [ "$landed" -eq 0 ]; then
+    FAIL "OW-T.E1-CTL: the deletion did not LAND on a copy — the rule sentence is not where this control expects it"
+  elif [ "$(cut -d' ' -f1 <<<"$g1")" != "0" ] || [ "$(cut -d' ' -f2 <<<"$g1")" != "0" ]; then
+    FAIL "OW-T.E1-CTL[E1a]: with the rule deleted from both carriers the counts read [$g1], where both must be 0"
+  elif [ "$(cut -d' ' -f1 <<<"$g2")" != "0" ] || [ "$(cut -d' ' -f4 <<<"$g2")" = "0" ]; then
+    FAIL "OW-T.E1-CTL[E1b]: with the rule deleted from one carrier the reading is [$g2], where that carrier must read 0 and group PC must report the carriers unequal"
+  else
+    PASS "OW-T.E1-CTL: MUST FIRE — with \"Take only what they said.\" deleted from both carriers on copies the rule reads unstated on each side [$g1] (E1a), and deleted from the conduct file alone that side reads 0 and group PC reports the carriers unequal [$g2] (E1b)"
+  fi
+}
+owe1ctl_assert
+
+ow_plant_table() {
+  cat <<'PLANTS'
+D11	OW-T.P1	FIRE	trip	-	SOURCE=FAIL	If they like one of the examples, put it down.
+D12	OW-T.P1	FIRE	trip	-	DEFAULT=FAIL;DEFAULT=FAIL	Record `daily` only when they say so; otherwise write `one-off`.
+D13	OW-T.P2	FIRE	trip	-	DEFAULT=FAIL;DEFAULT=FAIL	Record `daily` only when they say so; otherwise write `one-off`.
+D14	OW-T.P1	FIRE	trip	-	SOURCE=FAIL	If they nod, record the first option.
+D15	OW-T.P1	PASS	trip	-	DENIED=pass(d=1);DENIED=pass(d=1)	An example they did not take up in their own words is never recorded.
+D16	OW-T.P1	PASS	trip	-	DENIED=pass(d=1)	It doesn't record an example they did not say.
+D17	OW-T.P1	PASS	person	-	A2=pass(none)	If they have no must-haves, write `none` rather than leaving it blank.
+D18	OW-T.P2	PASS	person	-	A2=pass:A2(none)	If they have no must-haves, write `none` rather than leaving it blank.
+X13	OW-T.P2	FIRE	trip	-	A2-UNDECLARED=FAIL(mid-range)	If no budget is given, write `mid-range`.
+X14	OW-T.P1	FIRE	trip	-	A2-UNDECLARED=FAIL(daily)	If they give no answer, record `daily`.
+X15	OW-T.P1	FIRE	trip	-	SOURCE=FAIL	If they don't say, record the first member.
+X16	OW-T.P1	FIRE	trip	-	A2-UNDECLARED=FAIL(one-off)	When nothing is said, put down `one-off`.
+N1	OW-T.P1	FIRE	person	Budget appetite	A2-UNDECLARED=FAIL(mid-range)	If no budget is given, write `mid-range`.
+N11	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(A1-without-a-skip)	Write `—` for the field.
+N12	OW-T.P1	PASS	trip	-	LITERAL=pass	If they skip it, write `—`.
+Z6	OW-T.P1	PASS	trip	Desires	DENIED=pass(d=1)	Never, if they are not sure, record a guess.
+Y11	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(daily)	Record their words, or `daily` if they are unsure.
+Y12	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(none)	Write what they said, or `none`.
+Y30	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(one-off)	Record `daily` when they say so, or else `one-off`.
+Y30-P2	OW-T.P2	FIRE	trip	-	LITERAL=FAIL(one-off)	Record `daily` when they say so, or else `one-off`.
+NM13	OW-T.P1	PASS	trip	-	LITERAL=pass	Record `daily` when they say so, or else `one-off` when they say so.
+NM14	OW-T.P1	PASS	trip	-	LITERAL=pass	Record their words, or `daily` if they say so.
+Y18s-OW	OW-T.P1	PASS	conduct	-	DENIED=pass(d=1)	Never take silence as a yes.
+Y21s	OW-T.P1	PASS	conduct	-	DENIED=pass(d=1);OWN=pass	Never record a guess; record what they said.
+N2a	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(one-off)	Record `daily` when they say so, or else leave `one-off`.
+N2b	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(one-off)	Record `daily` when they say so, or else mark it `one-off`.
+N2c	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(daily)	Record `daily`, or leave `one-off` when they say so.
+V1	OW-T.P1	PASS	trip	-	LITERAL=pass	Record `daily` or leave it blank, when they say so.
+V2	OW-T.P1	PASS	trip	-	LITERAL=pass	Record `daily` and nothing else, if they say so.
+N2-ctl	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(one-off)	Record `daily` when they say so, or `one-off` otherwise.
+N2-bound1	OW-T.P1	PASS	trip	-		Mark it `one-off` if they say nothing.
+N2-bound2	OW-T.P1	PASS	trip	-		Leave `one-off` in place unless they say otherwise.
+U6	OW-T.P1	PASS	trip	-	LITERAL=pass	If they say so, record `daily`.
+U7	OW-T.P1	PASS	trip	-	LITERAL=pass	When they say so, write `daily`; otherwise leave the bracket.
+U12	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(daily)	Record `daily` and `one-off` when they say so.
+N9-nm	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(daily)	If they ask, record `daily`.
+K1a	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(daily)	Record their words, or if unsure, `daily`.
+K1b	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(none)	Write what they said, or else, `none`.
+K2a	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(daily)	If they say so or stay quiet, record `daily`.
+K2b	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(daily)	When they say so or not, write `daily`.
+K3	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(daily)	If they say so, or if they don't, record `daily`.
+K1-bound	OW-T.P1	PASS	trip	-	LITERAL=pass	Record `daily` when they say so, or else you should mark it `one-off`.
+K12-apos	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(one-off)	Record `daily` when they say so, or else it's `one-off`.
+K5a	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(Edit)	Record what they said, and use `Edit` for the change.
+PLANTS
+}
+OW_PLANTS_F="$WORK/ta/ow-plants.tsv"; ow_plant_table > "$OW_PLANTS_F"
+owctl_assert() {
+  local out res id st why
+  out="$(ta_plants "$TA_MODEL_F" "$TA_A2_F" < "$OW_PLANTS_F")"
+  if [ -z "$out" ]; then
+    FAIL "OW-CTL: the plant table produced no verdict — the arms did not grade a single planted control"
+    return 0
+  fi
+  printf '%s\n' "$out" > "$WORK/ta/ow-plants.out"
+  res="$(ta_plant_grade "$OW_PLANTS_F" "$WORK/ta/ow-plants.out")"
+  while IFS=$'\t' read -r id st why; do
+    if [ "$st" = "ok" ]; then PASS "OW-CTL[$id]: $why"; else FAIL "OW-CTL[$id]: $why"; fi
+  done <<<"$res"
+}
+owctl_assert
+owseam1_assert() {
+  local on off
+  on="$(printf 'S1\tOW-T.P1\tPASS\tconduct\t-\t-\t%s\n' "It doesn't record an example they did not say." | ta_plants "$TA_MODEL_F" "$TA_A2_F")"
+  off="$(printf 'S1\tOW-T.P1\tPASS\tconduct\t-\t-\t%s\n' "It doesn't record an example they did not say." | WD_APOS=0 ta_plants "$TA_MODEL_F" "$TA_A2_F")"
+  if [ -z "$on" ]; then
+    FAIL "OW-SEAM1: the plant produced no verdict"
+  elif [ "$(cut -f3 <<<"$on")" != "0" ] || [ "$(cut -f3 <<<"$off")" != "1" ]; then
+    FAIL "OW-SEAM1: SEAM-1 did not behave — the denial plant reads '$(cut -f4 <<<"$on")' with the apostrophe joining and '$(cut -f4 <<<"$off")' with it separating, where it must pass and then fire"
+  else
+    PASS "OW-SEAM1: SEAM-1 — the denial plant D16 passes ($(cut -f4 <<<"$on")) while an in-word apostrophe joins, and with the apostrophe made a separator its doesn't reads as doesn + t, the negation is lost and it fires ($(cut -f4 <<<"$off"))"
+  fi
+}
+owseam1_assert
+
+md_flips ta_grade  'OW-T.P1'  owp_assert
+md_flips nu_agree  'OW-T.P2a' owp2a_assert
+md_flips ta_e1     'OW-T.E1'  owe1_assert "$PC_VERB" "$PC_CARD"
+md_flips ta_plants 'OW-CTL'   owctl_assert
+md_flips ta_plants 'OW-SEAM1' owseam1_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group FB (the text block) — no licence for a further question (FB-T.P1)
+#
+# FB-T.P1 grades every follow-up directive the readers reach against ADR-045 D3's six follow-up
+# exclusions and the second follow-up. #1769's conversation block joins this group later.
+#
+# ── TRIGGERS (D8) ────────────────────────────────────────────────────────────────────────────────
+# follow up / follow-up; ask with again, more or further within four words after it, or ask one more;
+# keep asking; press, pressing, probe, push, sharpen; make each one specific, make it specific.
+#
+# ── THE CLASSES — the first that holds decides; a follow-up no other class names is DIRECTED ──────
+#   1  DENIED        R6 at the trigger; or object negation of the words after the trigger phrase;
+#                    or rather than pressing — pass
+#   2  UNBOUNDED     keep, until, repeatedly, as many, again and again, each time, every time — FAIL
+#   3  SECOND        second, another, twice, further, each per occurrence; or a SECOND occurrence in
+#                    the sentence of a counting bound marker, once or one more counted together — FAIL.
+#                    never a second is class 9's denial and is not counted (D24 passes)
+#   4  AFTER         after a skip / decline / stop / empty answer; if they skip / decline / stop — FAIL
+#   5  ANSWERED      already answers, already answered, earlier session — FAIL
+#   6  CLOSED        closed field(s), closed list, closed question, or a label of the step section whose
+#                    bracket opens closed: — FAIL
+#   7  REPEAT        same question, repeat the question, in the same words — FAIL
+#   8  PERSON-SPEECH the sentence is PERSON-scoped (group WD's scope) and neither typed session nor in
+#                    text restricts it — FAIL; the clause group CHR consumes as CHR.P3
+#   9  BOUNDED       never a second, one more, once — pass
+#   10 DIRECTED      any other follow-up — pass, reported as an observation
+# THE MARKER RULE (classes 2-7): each marker is matched within one clause and counts only where it is
+# not denied at its own first word by R6's window, taken only from the words after the nearest comma
+# before the marker (A3), with closed-condition segments removed, every concessive span removed (even
+# if, even when, even though, though and although each open a span to the next comma or to the marker,
+# K4), and forget / hesitate / fail breaking. A negator none, nothing or no followed within two words by
+# but, than, fewer, more, other or except denies no marker. The comma stop and the concessive spans
+# apply at a marker only, never at a trigger. Stated bounds (K5), each failing closed: "Follow up once,
+# never, even briefly, after a skip." and "You may follow up once, but never, after a skip." fail AFTER,
+# because a negator must stand in its marker's own comma segment.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "FB — no licence for a further question (FB-T.P1)"
+
+fbp_assert() {
+  local out n cls hits obs
+  out="$(ta_grade "$TA_MODEL_F" "$TA_A2_F" "$TA_RECS_F")"
+  n="$(awk -F'\t' '$1 == "SEEN" && $2 == "FB"' <<<"$out" | awk 'END { print NR }')"
+  cls="$(awk -F'\t' '$1 == "SEEN" && $2 == "FB" { c[$5]++ } END { for (k in c) printf "%s %d · ", k, c[k] }' <<<"$out")"
+  hits="$(awk -F'\t' '$1 == "HIT" && $2 == "FB-T.P1" { printf "[%s %s: %s] ", $6, $3, substr($8, 1, 60) }' <<<"$out")"
+  obs="$(awk -F'\t' '$1 == "HIT" && $2 == "FB-OBS" { printf "[%s, %s: %s] ", $3, $4, substr($8, 1, 60) }' <<<"$out")"
+  if [ "$n" -eq 0 ]; then
+    FAIL "FB-T.P1: no follow-up directive was graded over inputs (i)-(iii) — an empty population is NOT EVALUATED, never a pass"
+  else
+    PASS "FB-T.P1: $n follow-up directive(s) graded over inputs (i)-(iii), by class: ${cls% · }; FAIL: ${hits:-none}; DIRECTED, reported as an observation and counted against FB-C's section limit: ${obs:-none}"
+  fi
+}
+fbp_assert
+fb_plant_table() {
+  cat <<'PLANTS'
+D19	FB-T.P1	FIRE	trip	-	UNBOUNDED=FAIL	If the answer is short, keep asking until you have enough detail.
+D20	FB-T.P1	FIRE	trip	-	AFTER=FAIL	If they skip, ask once more.
+D21	FB-T.P1	FIRE	trip	-	REPEAT=FAIL	Ask the same question again, in the same words.
+D22	FB-T.P1	FIRE	trip	-	CLOSED=FAIL	On a closed field, follow up once.
+D23	FB-T.P1	FIRE	person	Getting there & back	PERSON-SPEECH=FAIL	Follow up on their passport answer.
+D24	FB-T.P1	PASS	trip	-	BOUNDED=pass	When an answer is thin you may ask one more question about it, and never a second.
+D25	FB-T.P1	PASS	person	Needs	BOUNDED=pass	In a typed session only, you may follow up once on a must-have; never in a spoken one.
+X17	FB-T.P1	FIRE	trip	-	UNBOUNDED=FAIL	If they are not sure, keep asking until they are.
+X18	FB-T.P1	FIRE	trip	-	UNBOUNDED=FAIL	If they don't elaborate, push for more each time.
+N4	FB-T.P1	PASS	person	Getting there & back	BOUNDED=pass	If their journey comfort answer is thin, follow up once on Journey comfort.
+Z5	FB-T.P1	PASS	trip	-	DENIED=pass	Ask nothing again after a skip.
+Y24	FB-T.P1	PASS	trip	-	BOUNDED=pass	You may follow up once on an open field, never on a closed field.
+Y25c	FB-T.P1	PASS	trip	-	BOUNDED=pass	You may follow up once on an open field, never after a skip.
+Y26c	FB-T.P1	PASS	trip	-	BOUNDED=pass	You may follow up once, never if they skip.
+Y13	FB-T.P1	FIRE	person	Getting there & back	PERSON-SPEECH=FAIL	Follow up once on their answer.
+Y22c	FB-T.P1	FIRE	trip	Desires	CLOSED=FAIL	Follow up on their recurrence answer.
+NM15	FB-T.P1	FIRE	trip	-	CLOSED=FAIL	You may follow up once on an open field, and on a closed field.
+NM18	FB-T.P1	FIRE	trip	-	AFTER=FAIL	Ask nothing but more questions after a skip.
+NM20	FB-T.P1	FIRE	trip	-	PERSON-SPEECH=FAIL	Follow up on a `PERSON` field.
+NM21	FB-T.P1	PASS	trip	-	DIRECTED=observation	Follow up on a person field.
+NM22	FB-T.P1	PASS	trip	Getting there & back	DIRECTED=observation	Follow up on their passport answer.
+Y14	FB-T.P1	PASS	person	Getting there & back	DIRECTED=observation	Follow up on their journey comfort and their nationality.
+Y22	FB-T.P1	FIRE	trip	Desires	CLOSED=FAIL	Follow up once on Priority tier.
+Y25	FB-T.P1	PASS	conduct	-	DIRECTED=observation	A follow-up comes only after a thin answer, never after a skip.
+Y26	FB-T.P1	PASS	conduct	-	BOUNDED=pass	Follow up once, never a second time and never after a skip.
+Y23s	FB-T.P1	PASS	conduct	-	BOUNDED=pass	If they have not answered, follow up once.
+N3S	FB-T.P1	FIRE	conduct	-	SECOND=FAIL	Follow up a second time if it stays thin, never a second time after a skip.
+N4a	FB-T.P1	FIRE	conduct	-	AFTER=FAIL	Follow up even if they do not say why, after a skip.
+N4b	FB-T.P1	FIRE	conduct	-	AFTER=FAIL	Follow up even though nothing was said, after a skip.
+N4-ctl	FB-T.P1	FIRE	conduct	-	AFTER=FAIL	Follow up, if they did not answer, after a skip.
+N4-nm	FB-T.P1	PASS	conduct	-	BOUNDED=pass	Follow up once, never after a skip.
+K4a	FB-T.P1	FIRE	conduct	-	AFTER=FAIL	Follow up even if they do not say why after a skip.
+K4b	FB-T.P1	FIRE	conduct	-	AFTER=FAIL	Follow up even though nothing was said after a skip.
+K5b	FB-T.P1	FIRE	conduct	-	AFTER=FAIL	Follow up once, never, even briefly, after a skip.
+K5c	FB-T.P1	FIRE	conduct	-	AFTER=FAIL	You may follow up once, but never, after a skip.
+K6a	FB-T.P1	FIRE	conduct	-	SECOND=FAIL	Follow up once more, and then once more after that.
+K6b	FB-T.P1	FIRE	conduct	-	SECOND=FAIL	Follow up twice on a thin answer.
+K6c	FB-T.P1	FIRE	conduct	-	SECOND=FAIL	Follow up a further time if it stays thin.
+K6-nm	FB-T.P1	PASS	conduct	-	BOUNDED=pass	Follow up once more on a thin answer.
+PLANTS
+}
+FB_PLANTS_F="$WORK/ta/fb-plants.tsv"; fb_plant_table > "$FB_PLANTS_F"
+fbctl_assert() {
+  local out res id st why
+  out="$(ta_plants "$TA_MODEL_F" "$TA_A2_F" < "$FB_PLANTS_F")"
+  if [ -z "$out" ]; then
+    FAIL "FB-CTL: the plant table produced no verdict — the arms did not grade a single planted control"
+    return 0
+  fi
+  printf '%s\n' "$out" > "$WORK/ta/fb-plants.out"
+  res="$(ta_plant_grade "$FB_PLANTS_F" "$WORK/ta/fb-plants.out")"
+  while IFS=$'\t' read -r id st why; do
+    if [ "$st" = "ok" ]; then PASS "FB-CTL[$id]: $why"; else FAIL "FB-CTL[$id]: $why"; fi
+  done <<<"$res"
+}
+fbctl_assert
+md_flips ta_grade  'FB-T.P1' fbp_assert
+md_flips ta_plants 'FB-CTL'  fbctl_assert
+
+# ── The ledger seams OW makes reachable (LG-CTL), each on a copy under $WORK.
+lgctl3_assert() {
+  local p='templates/person-intake.template.md' t='templates/traveler-intake.template.md' c='skills/trip-record/interview-conduct.md' wo3="$WORK/ta/ledger-wo-bh3.txt" r g on off
+  awk '$1 != "BH-3"' "$LG_LEDGER_F" > "$wo3"
+  lg_ctl L7 'LG1' "FM-4: an A2-shaped default planted in person Step 4 is undeclared on both limbs" "$p" "not any group's budget." "not any group's budget. If no budget is given, write \`mid-range\`."
+  lg_ctl L8 'LG1 LG2 LG3' "the declared A2 text changed (none to nothing) is undeclared, and its row reads ANCHOR-GONE" "$p" 'write `none` rather' 'write `nothing` rather'
+  lg_ctl BH3-RW 'LG1 LG2 LG3' "BH-3 reworded to Y30's text — LG1 on both limbs, LG2 ANCHOR-GONE on both rows, LG3 on both" "$t" $'Record `daily` only when they say so; anything else is\n`one-off`.' $'Record `daily` when they say so, or else\n`one-off`.'
+  lg_ctl A2-SECOND 'LG1' "a second declared-none sentence on the person form is undeclared, its row still TRIPS" "$p" 'Offer packed, balanced, or relaxed.' 'Offer packed, balanced, or relaxed. If they have no pace preference, write `none`.'
+  lg_ctl BH3-RW2 'LG1 LG2 LG3' "re-check N2: BH-3 reworded to '…, or else leave \`one-off\`.'" "$t" $'Record `daily` only when they say so; anything else is\n`one-off`.' $'Record `daily` when they say so, or else leave\n`one-off`.'
+  lg_ctl BH3-RW2-CLEANUP 'LG1' "the same rewording with both BH-3 rows deleted stays red — the clean-up path cannot turn it green" "$t" $'Record `daily` only when they say so; anything else is\n`one-off`.' $'Record `daily` when they say so, or else leave\n`one-off`.' "$wo3"
+  lg_ctl Y16 'LG1' "re-check Y16: a second declared-none sentence after person Step 7 is undeclared, A2-1 still TRIPS" "$p" 'including anything they avoid.' 'including anything they avoid. If they give no answer, write `none`.'
+  r="$(ta_root FMG)"
+  if ! ta_mutate "$r" "$c" '- **W10 —' $'- Keep what they said.\n- Record the nearest member.\n- **W10 —'; then
+    FAIL "LG-CTL[FMG]: the mutation did not LAND — the W10 bullet is not where this control expects it"
+  else
+    on="$(ta_run "$r" "$LG_LEDGER_F" | awk -F'\t' '$1 == "LG1" && $2 == "OW-T.P1" && $4 == "- Record the nearest member."')"
+    off="$(C0_BULLETS=0 ta_run "$r" "$LG_LEDGER_F" | awk -F'\t' '$1 == "LG1" && $2 == "OW-T.P1" && index($4, "nearest member")')"
+    if [ -n "$on" ] && [ -z "$off" ]; then
+      PASS "LG-CTL[FMG]: FM-G's seam — the bullets \"- Keep what they said.\" and \"- Record the nearest member.\" planted before W10 read as two blocks and the second fires SOURCE, undeclared; with R1's list rule off the two merge and the bullet passes as OWN"
+    else
+      FAIL "LG-CTL[FMG]: FM-G's seam did not behave — with the list rule on the planted bullet's LG1 read '${on:-nothing}', and with it off '${off:-nothing}', where it must fire on and pass off"
+    fi
+  fi
+}
+lgctl3_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RS — the group rosters that DESCRIBE this suite, asserted against the run.
