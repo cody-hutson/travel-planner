@@ -14633,8 +14633,10 @@ for rv_b in create empty; do rv44_assert "RV44-$rv_b" "$rv_b"; done
 # 1, the host's error body on stdout, gh's own line on stderr. already: a 409, and a read-back of Pages built
 # from main at the root, which is served. absent: the read-back is a 404, so nothing is served. elsewhere: Pages
 # built from another branch, so nothing this push carried is served. workflow: Pages built by a workflow, whose
-# source still reads main at the root, so what is served is that workflow's output and not this push's branch:
-# it differs from already in its build type alone, which is what pins the read-back's comparison to all three.
+# source still reads main at the root, so what is served is that workflow's output and not this push's branch.
+# folder: Pages built from main but from /docs, so the page this push put at the root is not what is served.
+# The read-back compares three fields, and elsewhere, workflow and folder each differ from already in one of
+# them alone — the branch, the build type and the path — so each field is pinned by a limb of its own.
 rv45_gh() { # (inside a subject's subshell) RV45_PAGES names the read-back
   gh() {
     printf '%s\n' "$*" >> "$RV_GHLOG"
@@ -14652,13 +14654,14 @@ rv45_gh() { # (inside a subject's subshell) RV45_PAGES names the read-back
           already)   printf 'legacy main /' ;;
           elsewhere) printf 'legacy gh-pages /' ;;
           workflow)  printf 'workflow main /' ;;
+          folder)    printf 'legacy main /docs' ;;
           *)         printf '{"message":"Not Found","status":"404"}'; printf 'gh: Not Found (HTTP 404)\n' >&2; return 1 ;;
         esac ;;
       *)             return 0 ;;
     esac
   }
 }
-rv45_assert() { # <id> <already|absent|elsewhere|workflow>
+rv45_assert() { # <id> <already|absent|elsewhere|workflow|folder>
   local id="$1" how="$2" name d out rc want=1 told=0 named=0 ann=0 noted=0 base
   name="rv45-$how-$RANDOM"; d="$RVW/$name"; mkdir -p "$d/outputs"; cp "$SRC" "$d/outputs/$name-travel-site.html"; : > "$RV_GHLOG"
   out="$( ( unset STATICRYPT_PASSWORD; RV45_PAGES="$how"; rv45_gh; set -e; cmd_publish "$d" ) 2>&1 )"; rc=$?
@@ -14684,7 +14687,7 @@ rv45_assert() { # <id> <already|absent|elsewhere|workflow>
     PASS "$id: with Pages $how publish records what it pushed, announces the passphrase file, and says truthfully whether the site is served"
   fi
 }
-for rv_b in already absent elsewhere workflow; do rv45_assert "RV45-$rv_b" "$rv_b"; done
+for rv_b in already absent elsewhere workflow folder; do rv45_assert "RV45-$rv_b" "$rv_b"; done
 
 # ── RV46 — #1614 under CD-1: the resolver reads a key and never makes one. Called directly on a trip with no
 # key and the variable unset it refuses and writes no .passphrase; the control reads a key back once one is
@@ -14945,7 +14948,7 @@ md_flips read_back_first_push "RV42-fn" rv42_assert "RV42-fn" landed
 md_flips cmd_publish "RV43" rv43_assert "RV43"
 md_flips ensure_first_key "RV38-fn" rv38_assert "RV38-fn"
 for rv_b in create empty; do md_flips cmd_publish "RV44-$rv_b" rv44_assert "RV44-$rv_b" "$rv_b"; done
-for rv_b in already absent elsewhere workflow; do md_flips cmd_publish "RV45-$rv_b" rv45_assert "RV45-$rv_b" "$rv_b"; done
+for rv_b in already absent elsewhere workflow folder; do md_flips cmd_publish "RV45-$rv_b" rv45_assert "RV45-$rv_b" "$rv_b"; done
 md_flips enable_pages "RV45-fn" rv45_assert "RV45-fn" already
 md_flips get_passphrase "RV46" rv46_assert "RV46"
 md_flips ensure_first_key "RV46s" rv46s_assert "RV46s"
