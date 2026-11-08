@@ -405,6 +405,10 @@
 #   FB   (the text block) no licence for a further question (FB-T.P1): D8's triggers, its class table
 #        and its marker rule, the one directed follow-up reported as an observation, and every planted
 #        control of the design pinned at its verdict
+#   CHR  CH-2's R-test keyed on the class PERSON read live — one offer, a narrowed confirmation, no
+#        follow-up on a PERSON field in speech, an example only on request, the care stated in the
+#        write-capable rules, and every guided-form bullet joining one classification row — with the
+#        seams of the class flipped on copies, and what it does not reach printed on its verdict line
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -25472,7 +25476,36 @@ function fb_class(p, st, k, sent,   k2, cl, i, u) {
   if (wd_has(SW, NSW, "never a second") || wd_has(SW, NSW, "one more") || wd_has(SW, NSW, "once")) { FB_C = "BOUNDED"; FB_V = "pass"; return }
   FB_C = "DIRECTED"; FB_V = "observation"
 }'
-TA_ARMS_FN="$TA_WT_FN$TA_OW_FN"
+TA_CHR_FN='# ---- CHR: the CH-2 R-test (D9) ----
+function chr_p1(HK,   n, k, a, i, care, rep, TL, nt) {
+  n = 0
+  for (k = 1; k <= NT; k++) {
+    if (TW[k] != "offer" && TW[k] != "offers") continue
+    nt = 0; for (i = k + 1; i <= NT; i++) TL[++nt] = TW[i]
+    care = (wd_has(TL, nt, "to move") && wd_has(TL, nt, "text")) || (wd_has(TL, nt, "to leave") && wd_has(TL, nt, "later")) || wd_has(TL, nt, "to defer")
+    rep = wd_has(TW, NT, "each") || wd_has(TW, NT, "every") || wd_has(TW, NT, "per field") || wd_has(TW, NT, "again") || wd_has(TW, NT, "before each") || wd_has(TW, NT, "every time")
+    if (care && rep && !cl_denied(k, 0)) HK[++n] = k
+  }
+  return n
+}
+function chr_occ(list, HK, n,   PH, np, h, m, W2, i, j, ok) {
+  np = split(list, PH, "|")
+  for (h = 1; h <= np; h++) {
+    m = split(PH[h], W2, " ")
+    for (i = 1; i + m - 1 <= NT; i++) { ok = 1; for (j = 1; j <= m; j++) if (TW[i + j - 1] != W2[j]) { ok = 0; break }; if (ok && !cl_denied(i, 0)) HK[++n] = i }
+  }
+  return n
+}
+function chr_p2(HK,   n, i, j, back) {
+  n = chr_occ("repeat their answer|repeat the value|say it again|say the value|saying the value|confirm by repeating|read it back", HK, 0)
+  for (i = 1; i <= NT; i++) if (TW[i] == "read") { back = 0; for (j = i + 1; j <= i + 4 && j <= NT; j++) if (TW[j] == "back") back = 1; if (back && !cl_denied(i, 0)) HK[++n] = i }
+  return n
+}
+function chr_p4(HK,   r) {
+  if (wd_has(SW, NSW, "if they ask") || wd_has(SW, NSW, "on request") || wd_has(SW, NSW, "when asked") || wd_has(SW, NSW, "if asked") || wd_has(SW, NSW, "when they ask")) return 0
+  return chr_occ("your own example|example of your own|examples of your own|make up|compose|invent", HK, 0)
+}'
+TA_ARMS_FN="$TA_WT_FN$TA_OW_FN$TA_CHR_FN"
 TA_MAIN_FN='# ---- the run: every sentence of the readers (mode real), or each planted control (mode plant) ----
 function ta_word_index(k,   S2, E2, R2, A2w, n, i, t) {
   n = wd_toks(wd_fold(CL_SENT, 0), A2w, S2, E2, R2); t = CL_OFF + TS[k]
@@ -25483,7 +25516,8 @@ function ta_hit(limb, p, st, ti, c, nm, sent) { printf "HIT\t%s\t%s\t%s\t%d\t%s\
 function ta_seen(arm, p, st, c, v, nm, sent) { printf "SEEN\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", arm, p, st, c, v, nm, sent }
 # ta_sentence — grade one sentence under its step. With a plant arm set, only that arm grades and
 # each verdict is collected into PL_OUT / PL_FIRED rather than written.
-function ta_sentence(p, st, sent, arm,   nc, O, T, P, c, TG, ntg, i, k, OG, nog, FG, nfg) {
+function ta_sentence(p, st, sent, arm,   ps, nc, O, T, P, c, TG, ntg, i, k, r, OG, nog, FG, nfg, HK, nh) {
+  ps = m_person(p, st, sent)
   nc = c0_clauses(sent, O, T, P)
   for (c = 1; c <= nc; c++) {
     cl_set(sent, O[c], T[c], P[c], (c < nc ? T[c + 1] : ""), (c < nc))
@@ -25525,6 +25559,18 @@ function ta_sentence(p, st, sent, arm,   nc, O, T, P, c, TG, ntg, i, k, OG, nog,
         if (FB_V == "observation") ta_hit("FB-OBS", p, st, ta_word_index(k), FB_C, "", sent)
         if (FB_C == "PERSON-SPEECH") ta_hit("CHR.P3", p, st, ta_word_index(k), FB_C, "", sent)
       }
+    }
+    if (arm == "CHR.P1" || arm == "CHR.P2" || arm == "CHR.P4") {
+      if (!ps) { ta_pl("NOT-SCOPED", "pass", ""); continue }
+      split("", HK); nh = (arm == "CHR.P1") ? chr_p1(HK) : ((arm == "CHR.P2") ? chr_p2(HK) : chr_p4(HK))
+      for (i = 1; i <= nh; i++) ta_pl("HIT", "FAIL", "")
+      continue
+    }
+    if (arm == "" && ps) {
+      printf "POP\tCHR\t%s\t%s\t%s\n", p, st, T[c]
+      split("", HK); nh = chr_p1(HK); for (i = 1; i <= nh; i++) ta_hit("CHR.P1", p, st, ta_word_index(HK[i]), "P1", "", sent)
+      split("", HK); nh = chr_p2(HK); for (i = 1; i <= nh; i++) ta_hit("CHR.P2", p, st, ta_word_index(HK[i]), "P2", "", sent)
+      split("", HK); nh = chr_p4(HK); for (i = 1; i <= nh; i++) ta_hit("CHR.P4", p, st, ta_word_index(HK[i]), "P4", "", sent)
     }
   }
 }
@@ -26324,6 +26370,162 @@ lgctl3_assert() {
   fi
 }
 lgctl3_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group CHR — CH-2's R-test, keyed on the class PERSON read live (ADR-026 § 5's CH-2 R-test cell)
+#
+# What it binds: ADR-022 D6.3 — one offer, once a session, and a narrowed confirmation, the trigger
+# being the class read live; W10, the conduct's own statement of D6.3; FB-T.P1's PERSON clause,
+# consumed here and not restated; and ADR-045 D1 item 6 — a composed example on a PERSON-class field
+# in speech only on request. ADR-045 names no R predicate, so the limb ids are this suite's. Not RT:
+# that is the name of one of #1770's checks.
+#
+# POPULATION: the R5 clauses of every PERSON-scoped sentence (group WD's scope, read per sentence).
+#   CHR.P1  one offer — offer(s) followed by to move … text, to leave … later or to defer, in a clause
+#           carrying each, every, per field, again, before each or every time, not denied
+#   CHR.P2  narrowed confirmation — repeat their answer, repeat the value, say it again, say the value,
+#           saying the value, confirm by repeating, read it back, or read with back within four words,
+#           not denied. W10's "without saying the value again" is the denial
+#   CHR.P3  FB-T.P1's class 8 (PERSON-SPEECH) on any sentence
+#   CHR.P4  example only on request — your own example, example(s) of your own, make up, compose or
+#           invent, not denied, in a sentence carrying none of if they ask, on request, when asked, if
+#           asked, when they ask
+#   CHR.E1  the care is stated: the write-capable rules hold a sentence carrying `PERSON` — a Class
+#           value ft_rows returns, so a renamed class fails this limb — say once and without saying
+#           the value
+#   CHR.J   every bullet of both guided forms joins exactly one classification row through group FT's
+#           join, the join group WD's form model uses; NONE or AMBIG names the bullet
+# Hits are group LG's to declare.
+#
+# WHAT IT DOES NOT REACH, printed on its verdict line: a live session; the route that cannot write,
+# which carries no spoken care — the card's gap, RS-15, carried by #1327 and never read as a pass;
+# health-shaped fields the trip-context form types TRIP (RS-23 and QA-02, answered not now; reopening
+# signal: a recorded spoken run on the trip form); and whether anyone is in the room. Y14 is the
+# scope's stated bound (group WD).
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "CHR — CH-2's R-test, keyed on the class PERSON read live"
+
+chr_assert() {
+  local out pop hits
+  out="$(ta_grade "$TA_MODEL_F" "$TA_A2_F" "$TA_RECS_F")"
+  pop="$(awk -F'\t' '$1 == "POP"' <<<"$out" | awk 'END { print NR }')"
+  hits="$(awk -F'\t' '$1 == "HIT" && $2 ~ /^CHR\./ { printf "[%s %s: %s] ", $2, $3, substr($8, 1, 60) }' <<<"$out")"
+  if [ "$pop" -eq 0 ]; then
+    FAIL "CHR: no PERSON-scoped clause was read — the population the R-test grades is empty, so CHR.P1 to CHR.P4 would be true of nothing. A class PERSON renamed in the data model lands here"
+  else
+    PASS "CHR: $pop PERSON-scoped clause(s) graded by CHR.P1, CHR.P2 and CHR.P4, and CHR.P3 read from FB-T.P1's class 8 on every sentence; hits: ${hits:-none} — each is group LG's to declare. NOT REACHED: a live session; the route that cannot write, which carries no spoken care (RS-15, #1327 — the card's gap, a stated residual and never a pass); health-shaped TRIP fields (RS-23, QA-02 — not now; reopening signal: a recorded spoken run on the trip form); whether anyone is in the room"
+  fi
+}
+chr_assert
+# chr_e1_eval <conduct> <data-model> — 1 when the write-capable rules state the care, else 0.
+chr_e1_eval() {
+  local cls
+  cls="$(ft_rows "$2" | cut -f4 | sort -u)"
+  if ! grep -qxF 'PERSON' <<<"$cls"; then printf '0\n'; return 0; fi
+  ta_e1 "$1" '## What only a write-capable session adds' | LC_ALL=C awk "$WD_FN"'
+    index($0, "`PERSON`") { n = wd_words($0, W); s = " " wd_join(W, n, 1, n) " "; if (index(s, " say once ") && index(s, " without saying the value ")) c++ }
+    END { print (c > 0) ? 1 : 0 }'
+}
+chre1_assert() {   # chre1_assert <conduct> <data-model>
+  local v
+  v="$(chr_e1_eval "$1" "$2")"
+  if [ "$v" = "1" ]; then
+    PASS "CHR.E1: the write-capable rules of ${1#"$ROOT/"} state the care — a sentence carrying \`PERSON\`, a Class value the field table holds, with say once and without saying the value"
+  else
+    FAIL "CHR.E1: the write-capable rules of ${1#"$ROOT/"} hold no sentence carrying \`PERSON\` (a Class value ft_rows returns), say once and without saying the value — read '${v:-nothing}'"
+  fi
+}
+chre1_assert "$PC_VERB" "$ROOT/reference/data-model.md"
+chrj_assert() {
+  local m n bad
+  m="$(ta_model "$ROOT" "$WORK/wd")"
+  n="$(awk -F'\t' '$1 == "J"' <<<"$m" | awk 'END { print NR }')"
+  bad="$(awk -F'\t' '$1 == "J" && $5 != "ONE" { printf "[%s · %s · %s: %s] ", $2, $3, $4, $5 }' <<<"$m")"
+  if [ "$n" -eq 0 ]; then
+    FAIL "CHR.J: no guided-form bullet reached the join — the form model read nothing"
+  elif [ -n "$bad" ]; then
+    FAIL "CHR.J: a bullet does not join exactly one classification row — $bad. A bullet that joins none is a field this suite cannot class"
+  else
+    PASS "CHR.J: all $n bullet(s) of both guided forms join exactly ONE classification row through ft_resolve, the join group FT uses"
+  fi
+}
+chrj_assert
+
+chr_plant_table() {
+  cat <<'PLANTS'
+N5	CHR.P1	FIRE	person	Needs	HIT=FAIL	Before each health question, offer to move it to text.
+N6	CHR.P2	FIRE	person	Getting there & back	HIT=FAIL	Read their passport answer back to confirm it.
+N7	CHR.P4	FIRE	person	Needs	HIT=FAIL	On a must-have, give an example of your own.
+N8	CHR.P4	PASS	person	Needs		If they ask, give an example of your own on a must-have.
+N9	CHR.P2	PASS	person	Needs		In speech, a confirmation of such a field names the field and asks for assent without saying the value again.
+PLANTS
+}
+CHR_PLANTS_F="$WORK/ta/chr-plants.tsv"; chr_plant_table > "$CHR_PLANTS_F"
+chrctl_assert() {
+  local out res id st why
+  out="$(ta_plants "$TA_MODEL_F" "$TA_A2_F" < "$CHR_PLANTS_F")"
+  if [ -z "$out" ]; then
+    FAIL "CHR-CTL: the plant table produced no verdict — the arms did not grade a single planted control"
+    return 0
+  fi
+  printf '%s\n' "$out" > "$WORK/ta/chr-plants.out"
+  res="$(ta_plant_grade "$CHR_PLANTS_F" "$WORK/ta/chr-plants.out")"
+  while IFS=$'\t' read -r id st why; do
+    if [ "$st" = "ok" ]; then PASS "CHR-CTL[$id]: $why"; else FAIL "CHR-CTL[$id]: $why"; fi
+  done <<<"$res"
+}
+chrctl_assert
+
+# ── The seams of the class read live — each a flip of reference/data-model.md on a copy under $WORK.
+chr_pop() { awk -F'\t' '$1 == "POP"' "$1" | awk 'END { print NR }'; }
+chr_hits() { awk -F'\t' '$1 == "HIT" && $2 != "FB-OBS" { print $2 "\t" $8 }' "$1" | sort; }
+chrseam_assert() {
+  local dm='reference/data-model.md' r p0 b0 g got s34 m34 j
+  p0="$(chr_pop "$TA_OUT_F")"; b0="$(chr_hits "$TA_OUT_F")"
+  r="$(ta_root S3a)"
+  if ta_mutate "$r" "$dm" '| 21 | ⭐ `Desire` | Desires | **TRIP** |' '| 21 | ⭐ `Desire` | Desires | **PERSON** |'; then
+    g="$(ta_run "$r" "$LG_LEDGER_F")"; got="$(awk -F'\t' '$1 == "LG1" { print $2 }' <<<"$g" | sort -u | tr '\n' ' ')"
+    if [ "$got" = "CHR.P3 FB-T.P1 " ]; then PASS "CHR-SEAM[S3a]: SEAM-3 forward — Desire flipped TRIP to PERSON on a copy makes BO-1 (\"Then make each one specific to them.\") a directed follow-up on a PERSON field: undeclared exactly on FB-T.P1 and CHR.P3"; else FAIL "CHR-SEAM[S3a]: SEAM-3 forward — Desire flipped TRIP to PERSON read undeclared limbs [${got:-none}], where exactly CHR.P3 and FB-T.P1 are predicted"; fi
+  else FAIL "CHR-SEAM[S3a]: the flip did not LAND on the copy"; fi
+  r="$(ta_root S3b)"
+  if ta_mutate "$r" "$dm" '| 18 | `Category` | Needs | **PERSON** |' '| 18 | `Category` | Needs | **DEFAULT** |' && ta_mutate "$r" "$dm" '| 19 | ⭐ `Specific` | Needs | **PERSON** |' '| 19 | ⭐ `Specific` | Needs | **DEFAULT** |'; then
+    ta_run "$r" "$LG_LEDGER_F" > /dev/null
+    if [ "$(chr_pop "$r/out.tsv")" -lt "$p0" ] && [ "$(chr_hits "$r/out.tsv")" = "$b0" ]; then PASS "CHR-SEAM[S3b]: rows 18 and 19 flipped PERSON to DEFAULT — the population falls $p0 → $(chr_pop "$r/out.tsv") and no hit moves"; else FAIL "CHR-SEAM[S3b]: rows 18 and 19 flipped read population $p0 → $(chr_pop "$r/out.tsv"), hits identical: $([ "$(chr_hits "$r/out.tsv")" = "$b0" ] && echo yes || echo no) — the population must fall and no hit move"; fi
+  else FAIL "CHR-SEAM[S3b]: the flip did not LAND on the copy"; fi
+  r="$(ta_root S3c)"
+  if ta_mutate "$r" "$dm" '| 13 | `Passport` | Getting there & back | **PERSON** |' '| 13 | `Passport` | Getting there & back | **DEFAULT** |'; then
+    ta_run "$r" "$LG_LEDGER_F" > /dev/null
+    if [ "$(chr_pop "$r/out.tsv")" -lt "$p0" ] && [ "$(chr_hits "$r/out.tsv")" = "$b0" ]; then PASS "CHR-SEAM[S3c]: row 13 flipped PERSON to DEFAULT — the population falls $p0 → $(chr_pop "$r/out.tsv") and no hit moves"; else FAIL "CHR-SEAM[S3c]: row 13 flipped read population $p0 → $(chr_pop "$r/out.tsv") — it must fall with no hit moving"; fi
+  else FAIL "CHR-SEAM[S3c]: the flip did not LAND on the copy"; fi
+  r="$(ta_root S34)"
+  if ta_mutate "$r" "$dm" '| 34 | `Group time` | People dynamics | **TRIP** |' '| 34 | `Group time` | People dynamics | **PERSON** |'; then
+    ta_run "$r" "$LG_LEDGER_F" > /dev/null
+    m34="$(printf 'S34\tFB-T.P1\tFIRE\ttrip\tPeople dynamics\t-\t%s\n' "Follow up on their group time answer.")"
+    s34="$(ta_plants "$r/model.tsv" "$r/a2.tsv" <<<"$m34" | cut -f3,4)"
+    j="$(ta_plants "$TA_MODEL_F" "$TA_A2_F" <<<"$m34" | cut -f3,4)"
+    if [ "$(chr_pop "$r/out.tsv")" -gt "$p0" ] && [ "$s34" = $'1\tPERSON-SPEECH=FAIL' ] && [ "$j" = $'0\tDIRECTED=observation' ]; then PASS "CHR-SEAM[S34]: Group time flipped TRIP to PERSON — the population rises $p0 → $(chr_pop "$r/out.tsv"), and \"Follow up on their group time answer.\" goes DIRECTED to PERSON-SPEECH FAIL, the join reaching People dynamics & togetherness through ft_lead"; else FAIL "CHR-SEAM[S34]: Group time flipped read population $p0 → $(chr_pop "$r/out.tsv") and the plant [$j] → [$s34], where the population must rise and the plant go DIRECTED to PERSON-SPEECH"; fi
+  else FAIL "CHR-SEAM[S34]: the flip did not LAND on the copy"; fi
+  r="$(ta_root S36)"
+  if ta_mutate "$r" "$dm" "| 36 | \`Solo, I'd\` | People dynamics | **DEFAULT** |" "| 36 | \`Solo, I'd\` | People dynamics | **PERSON** |"; then
+    ta_run "$r" "$LG_LEDGER_F" > /dev/null
+    if [ "$(chr_pop "$r/out.tsv")" -gt "$p0" ]; then PASS "CHR-SEAM[S36]: row 36 flipped DEFAULT to PERSON — the population rises $p0 → $(chr_pop "$r/out.tsv")"; else FAIL "CHR-SEAM[S36]: row 36 flipped read population $p0 → $(chr_pop "$r/out.tsv"), where it must rise"; fi
+  else FAIL "CHR-SEAM[S36]: the flip did not LAND on the copy"; fi
+  r="$(ta_root CHRJ)"
+  if ta_mutate "$r" "$dm" '| 34 | `Group time` | People dynamics | **TRIP** |' '| 34 | `Group time` | People dynamic | **TRIP** |'; then
+    got="$(ta_model "$r" "$r" | awk -F'\t' '$1 == "J" && $5 != "ONE" { print $3 " · " $4 ": " $5 }')"
+    if [ "$got" = "People dynamics & togetherness · Group time: NONE" ]; then PASS "CHR-SEAM[CHRJ]: row 34's Section read People dynamic — no token boundary — leaves Group time joining NONE, and CHR.J would name it; the tracked table joins every bullet"; else FAIL "CHR-SEAM[CHRJ]: row 34's Section read People dynamic gave [${got:-every bullet ONE}], where exactly Group time must join NONE"; fi
+  else FAIL "CHR-SEAM[CHRJ]: the flip did not LAND on the copy"; fi
+  r="$(ta_root R1)"
+  awk '!/^- \*\*W10/' "$r/skills/trip-record/interview-conduct.md" > "$r/c.md"
+  if [ "$(chr_e1_eval "$r/c.md" "$r/reference/data-model.md")" = "0" ] && [ "$(chr_e1_eval "$PC_VERB" "$ROOT/reference/data-model.md")" = "1" ]; then PASS "CHR-SEAM[R1]: with W10 deleted from a copy of the conduct file CHR.E1 reads the care unstated"; else FAIL "CHR-SEAM[R1]: with W10 deleted CHR.E1 still reads the care stated, so the limb cannot see its own subject"; fi
+}
+chrseam_assert
+
+md_flips ta_grade    'CHR'     chr_assert
+md_flips chr_e1_eval 'CHR.E1'  chre1_assert "$PC_VERB" "$ROOT/reference/data-model.md"
+md_flips ta_model    'CHR.J'   chrj_assert
+md_flips ta_plants   'CHR-CTL' chrctl_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RS — the group rosters that DESCRIBE this suite, asserted against the run.
