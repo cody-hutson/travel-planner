@@ -178,6 +178,10 @@ takes after the PR opens are the sections that `.github/workflows/integration-no
 two jobs ask for — an integration note and a conduct suite result — because those checks
 read the body and nothing else; each is written as plain lines.
 
+**Before a release merges, read the `conduct-suite` job's summary.** A `regrade: pending`
+outcome is cleared by the regrade, after which the section names the fresh grade record; it
+is never merged over.
+
 **Nothing in a release is committed to `main` directly** — not the CHANGELOG, not
 anything else. A direct push to `main` skips the pull-request requirement and all
 ten required checks in a single step; see [SECURITY.md](SECURITY.md), *Branch

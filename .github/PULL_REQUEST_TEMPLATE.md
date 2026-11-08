@@ -20,6 +20,7 @@
 - [ ] If this changes agent behavior, I exercised it in Claude Code and the output is sensible
 - [ ] Markdown links resolve (local files exist; external links load)
 - [ ] No personal data, secrets, or private-repo references introduced
+- [ ] If the Conduct suite result job warned `regrade: pending`, the regrade has run and the section names the fresh grade record
 
 ## Conduct suite result
 

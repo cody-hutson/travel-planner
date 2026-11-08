@@ -53,12 +53,37 @@ form, one declaring form-version 2. A change above a guided form's boundary is n
 here, even where it alters what the ask-prose refers to: a stated residual that errs toward not
 asking. On a flag, the body's "Conduct suite result" section -- read by the same reader as the note,
 from its heading to the next heading of any level, a thematic break or the end of the body -- must be
-present (P1) and carry a letter or digit outside comments (P2). Both limbs bind on a pull request
+present (P1) and carry a letter or digit outside comments (P2). Every limb binds on a pull request
 that is not a draft. On a draft a failing limb is a notice and exits 0: it says the limb binds once
 the pull request is ready for review, which the workflow's ready_for_review trigger runs again.
 PR_DRAFT carries the draft state, as --draft does locally. Exit 1 names the failing limb, and exit 2
-is a refusal, as for --check. GRADED: that the section is present and not empty. NOT GRADED: whether
-the result it records is right, which is the operator's adjudication.
+is a refusal, as for --check.
+
+THE FRESHNESS LIMB. Once P1 and P2 hold, the job reads the grade record's freshness on every flagged
+pull request, whatever lines its change was. Each changed line of a flagged file, read on its side of
+the diff against that side's file, is R -- read by the generated route: any line of the card, a line
+of the conduct file's shared rules (from its "The rules every interview shares" heading, at any level,
+to the next heading of any level), a guided form's line at or below its boundary -- or N, not read by
+it: the conduct file outside its shared rules, a block-owned form's > line. The record is
+examples/interview-conversations/grade-record.txt at the head; a block opens at a line "grade:
+<conversation id>", and its one conduct-revision line names the card's blob and its form's. The
+block's form is the one its conversation, examples/interview-conversations/<conversation id>.txt,
+names on the form: line of its header at the head. FRESH: every block's two blobs equal the head's
+blobs of the card and of that form, where a blob of 7 to 40 lower-case hex characters equals the
+head's when it begins it. A record with no block is stale, and so is a block whose conversation, form
+or conduct-revision line cannot be read. The first outcome that applies decides: stale, and the
+section declares on a line of its own "regrade: pending" then an em dash and where it is tracked,
+carrying a letter or digit -> 0, with a ::warning::; stale otherwise -> 1; fresh, and an R line
+changed -> 0, whether or not the section names the record's revision; fresh, only N lines changed,
+and the section declares on a line of its own "not exercised by the generated route" -> 0, with a
+notice; fresh, only N lines changed, undeclared -> 1. For each stale block the run prints, and so the
+job summary carries, the path, the blob it graded, the head's blob, and the commit at which the
+path's blob left the graded one: walking git log -- <path> from the head, the first commit whose
+parent's blob of the path (<commit>^:<path>) is the graded blob. The tracking reference is the body's
+text and is never printed. A stated residual: an unflagged edit that stales the record -- above a
+guided form's boundary, say -- is seen only at the next flagged pull request, which then reads stale
+and names that commit. GRADED: that a result is recorded and current. NOT GRADED: whether the grades
+are right, which is the operator's adjudication.
 
 INPUTS. In --check, PR_BASE_SHA, PR_HEAD_SHA and PR_BODY come from the environment the workflow
 step sets; the body never passes through a shell and is never printed. --base, --head and
@@ -474,15 +499,26 @@ def run_check(args):
 
 
 # ---------------------------------------------------------------- the conduct suite (--check-conduct)
-CONDUCT_FILES = ("skills/trip-record/interview-conduct.md", "templates/interview-card.md")
+CONDUCT = "skills/trip-record/interview-conduct.md"
+CARD = "templates/interview-card.md"
+CONDUCT_FILES = (CONDUCT, CARD)
 FORM_GLOB = re.compile(r"^templates/[^/]+\.template\.md$")
 BOUNDARY = "<!-- PROFILE-END -->"
+SHARED_HEADING = "The rules every interview shares"
+CONVERSATIONS = "examples/interview-conversations/"
+RECORD = CONVERSATIONS + "grade-record.txt"
+REVISION_RE = re.compile(r"^conduct-revision:[ \t]+([0-9a-f]{7,40})[ \t]+([0-9a-f]{7,40})[ \t]*$")
+PENDING = "regrade: pending"
+NOT_EXERCISED = "not exercised by the generated route"
 CS_PREFIX = "conduct-suite: "
 CS_HEADING_RE = re.compile(r"^ {0,3}#{1,6}[ \t]+conduct[ \t]+suite[ \t]+result[ \t]*:?(?:[ \t]+#+)?[ \t]*$",
                            re.IGNORECASE)
 CS_ERROR = "::error::conduct suite result {} while this pull request changes the interview's conduct"
-CS_GRADED = ("Graded: that the section is present and not empty. Not graded: whether the result it "
-             "records is right, which is the operator's adjudication.")
+FRESH_ERROR = "::error::conduct suite freshness: {}"
+FRESH_WARNING = ("::warning::conduct suite freshness: the grade record is stale and the section declares a "
+                 "pending regrade; before a release merges the regrade clears it, and it is never merged over")
+CS_GRADED = ("Graded: that a result is recorded and current. Not graded: whether the grades are right, "
+             "which is the operator's adjudication.")
 
 
 def form_version(text):
@@ -527,8 +563,26 @@ def hunks(root, mb, head, path):
     return out
 
 
+def shared_rules(text):
+    """The 1-based lines of the conduct file's shared rules: from each heading, at any level, whose
+    text is exactly SHARED_HEADING, through the line before the next heading of any level."""
+    found, inside = set(), False
+    for n, line in enumerate(text.split("\n"), 1):
+        if ATX_RE.match(line):
+            words = re.sub(r"[ \t]+#+[ \t]*$", "", re.sub(r"^ {0,3}#{1,6}", "", line)).strip()
+            inside = words == SHARED_HEADING
+        if inside:
+            found.add(n)
+    return found
+
+
 def conduct_flags(root, base, head):
-    """(merge base, [(path, why)]) for every file whose change touches the interview's conduct."""
+    """(merge base, [(path, why, classes)]) for every file whose change touches the interview's
+    conduct. `why` names the first flagged line. `classes` is the R/N reading of every changed line:
+    R for a line the generated route reads -- any line of the card, a line of the conduct file's
+    shared rules, a guided form's line at or below its boundary -- and N for one it does not -- the
+    conduct file outside its shared rules, a block-owned form's > line. Each line is read on its
+    side of the diff, against that side's file."""
     base, head = commit_of(root, "base", base), commit_of(root, "head", head)
     rc, out = git(root, "merge-base", base, head, ok=(0, 1))
     if rc:
@@ -538,41 +592,48 @@ def conduct_flags(root, base, head):
     raw = git(root, "diff", "--name-only", "-z", "--no-renames", mb, head)[1]
     flagged = []
     for path in sorted(p for p in raw.decode("utf-8", "surrogateescape").split("\0") if p):
-        if path in CONDUCT_FILES:
-            flagged.append((path, "a line of the conduct"))
-            continue
-        if not FORM_GLOB.match(path):
+        if path not in CONDUCT_FILES and not FORM_GLOB.match(path):
             continue
         sides = {"-": blob(root, mb, path), "+": blob(root, head, path)}
+        shared = {s: shared_rules(src) for s, src in sides.items() if src is not None and path == CONDUCT}
+        why, classes = ("a line of the conduct" if path in CONDUCT_FILES else None), set()
         for side, n, text in hunks(root, mb, head, path):
             src = sides[side]
             if src is None:
                 continue
+            if path == CARD:
+                classes.add("R")
+                continue
+            if path == CONDUCT:
+                classes.add("R" if n in shared[side] else "N")
+                continue
             version = form_version(src)
             if version == 2 and text.lstrip().startswith(">"):
-                flagged.append((path, "a > line of a block-owned form ({} line {})".format(
-                    "head" if side == "+" else "merge-base", n)))
-                break
-            if version == 1:
-                b = boundary_line(src)
-                if b is not None and n >= b:
-                    flagged.append((path, "a line at or below the boundary ({} line {})".format(
-                        "head" if side == "+" else "merge-base", n)))
-                    break
+                cls, what = "N", "a > line of a block-owned form ({} line {})"
+            elif version == 1 and boundary_line(src) is not None and n >= boundary_line(src):
+                cls, what = "R", "a line at or below the boundary ({} line {})"
+            else:
+                continue
+            classes.add(cls)
+            if why is None:
+                why = what.format("head" if side == "+" else "merge-base", n)
+        if why is not None:
+            flagged.append((path, why, frozenset(classes)))
     return mb, flagged
 
 
 def conduct_block(body):
     """(status, info) of the body's Conduct suite result section: absent, empty or present. The
     section runs from its heading to the next heading of any level, a thematic break or the end of
-    the body, read by the integration note's own comment-, fence- and heading-aware reader."""
+    the body, read by the integration note's own comment-, fence- and heading-aware reader. Its
+    content lines, as they render, are info["lines"], which the freshness limb's declarations read."""
     lines = read_lines(body)
     head = None
     for n, (kind, text) in enumerate(lines):
         if kind == "text" and CS_HEADING_RE.match(text):
             head = n
             break
-    info = {"head": head, "end": None, "why": None, "words": 0, "next": None}
+    info = {"head": head, "end": None, "why": None, "words": 0, "next": None, "lines": []}
     if head is None:
         return "absent", info
     content, end, why = [], len(lines), "end of body"
@@ -586,23 +647,176 @@ def conduct_block(body):
             break
         if kind != "fence":
             content.append(text)
-    info["end"], info["why"] = end, why
+    info["end"], info["why"], info["lines"] = end, why, content
     info["words"] = sum(1 for text in content if any(ch.isalnum() for ch in text))
     return ("present" if info["words"] else "empty"), info
 
 
+def record_blocks(text):
+    """[{id, card, form, problem}] for each grade block of the record. A block opens at a line
+    'grade: <conversation id>' and holds the lines up to the next; its conduct-revision line names
+    the card's blob and its form's. `problem` says why the block's revision cannot be read, or is
+    None."""
+    blocks = []
+    for line in text.replace("\r\n", "\n").split("\n"):
+        if line.startswith("grade:"):
+            blocks.append({"id": line[len("grade:"):].strip(), "revisions": []})
+        elif line.startswith("conduct-revision:") and blocks:
+            blocks[-1]["revisions"].append(line)
+    for b in blocks:
+        b["card"] = b["form"] = b["problem"] = None
+        m = REVISION_RE.match(b["revisions"][0]) if len(b["revisions"]) == 1 else None
+        if not re.fullmatch(r"\S+", b["id"]):
+            b["problem"] = "its grade line names no single conversation id"
+        elif len(b["revisions"]) != 1:
+            b["problem"] = "it carries {} conduct-revision line(s), not one".format(len(b["revisions"]))
+        elif not m:
+            b["problem"] = ("its conduct-revision line is not two blobs of 7 to 40 lower-case hex "
+                            "characters")
+        else:
+            b["card"], b["form"] = m.group(1), m.group(2)
+    return blocks
+
+
+def conversation_form(root, head, cid):
+    """(form path, None) from the form: line of the block's conversation's header at the head --
+    the lines before its first turn -- or (None, why not)."""
+    path = CONVERSATIONS + cid + ".txt"
+    text = blob(root, head, path)
+    if text is None:
+        return None, "its conversation {} is absent at the head".format(show(path))
+    forms = []
+    for line in text.replace("\r\n", "\n").split("\n"):
+        if re.match(r"^T[0-9]+ ", line):
+            break
+        m = re.match(r"^form:[ \t]*(\S+)[ \t]*$", line)
+        if m:
+            forms.append(m.group(1))
+    if len(forms) != 1:
+        return None, "its conversation {}'s header names {} form(s), not one".format(show(path), len(forms))
+    return forms[0], None
+
+
+def head_blob(root, rev, path):
+    """The full blob id of `path` at `rev`, or None when `rev` holds no such blob."""
+    rc, out = git(root, "rev-parse", "--verify", "--quiet", "{}:{}".format(rev, path), ok=(0, 1, 128))
+    return out.decode().strip() if rc == 0 else None
+
+
+def left_commit(root, head, path, graded):
+    """The commit at which the path's blob left the graded one: walking git log -- <path> from the
+    head, the first commit whose parent's blob of the path (<commit>^:<path>) is the graded blob."""
+    raw = git(root, "log", "--no-show-signature", "--format=%H", head, "--", path)[1].decode()
+    for commit in raw.split():
+        held = head_blob(root, commit + "^", path)
+        if held is not None and held.startswith(graded):
+            return commit
+    return None
+
+
+def declarations(lines):
+    """(pending with a reference, pending with none, not exercised) from the section's lines, each
+    declaration a line of its own. A reference is text after the em dash carrying a letter or digit."""
+    pending = bare = notex = False
+    for text in lines:
+        s = text.strip()
+        if s == NOT_EXERCISED:
+            notex = True
+        elif s == PENDING or s.startswith(PENDING + " ") or s.startswith(PENDING + "\t"):
+            m = re.match(r"^[ \t]+—(.*)$", s[len(PENDING):])
+            if m and any(ch.isalnum() for ch in m.group(1)):
+                pending = True
+            else:
+                bare = True
+    return pending, bare, notex
+
+
+def freshness(root, head, flagged, lines, draft, out):
+    """The freshness limb, run once P1 and P2 hold: 0 or 1, the first outcome that applies deciding.
+    Every stale block's path, graded blob, head blob and left commit is printed, and so reaches the
+    job summary; the body's tracking reference is never printed."""
+    reads = any("R" in classes for _path, _why, classes in flagged)
+    out(CS_PREFIX + "freshness: a line the generated route reads changed: {}".format("yes" if reads else "no"))
+    text = blob(root, head, RECORD)
+    blocks = [] if text is None else record_blocks(text)
+    stale = []
+    if not blocks:
+        stale.append("the grade record {} holds no block: {}".format(
+            RECORD, "it is absent at the head" if text is None else "it carries no grade line"))
+    held = {CARD: head_blob(root, head, CARD)}
+    for b in blocks:
+        name = "block " + show(b["id"])
+        form, why = (None, b["problem"]) if b["problem"] else conversation_form(root, head, b["id"])
+        if form is None:
+            stale.append("{}: {}, so it cannot be read as fresh".format(name, why))
+            continue
+        rows = []
+        for path, graded in ((CARD, b["card"]), (form, b["form"])):
+            if path not in held:
+                held[path] = head_blob(root, head, path)
+            now = held[path]
+            if now is None or not now.startswith(graded):
+                left = left_commit(root, head, path, graded)
+                rows.append("{}: {} graded {}; the head holds {}; its blob left the graded one at {}".format(
+                    name, show(path), graded, now or "no such file",
+                    left or "no commit in the head's history"))
+        if rows:
+            stale.extend(rows)
+        else:
+            out(CS_PREFIX + "FRESH  {}: the card and {} at the blobs it graded".format(name, show(form)))
+    for row in stale:
+        out(CS_PREFIX + "STALE  " + row)
+    out(CS_PREFIX + "freshness: {} grade block(s) in {}; {}".format(
+        len(blocks), RECORD, "stale" if stale else "fresh"))
+    pending, bare, notex = declarations(lines)
+    n = len(flagged)
+    if stale and pending:
+        out(FRESH_WARNING)
+        out(CS_PREFIX + "WARNING -- the grade record is stale, and the section declares regrade: pending "
+            "with a tracking reference, so this exits 0. Before a release merges, the regrade clears it and "
+            "the section names the fresh grade record; it is never merged over. {}".format(CS_GRADED))
+        return 0
+    if stale:
+        label = ("the grade record is stale, and its regrade: pending names no tracking reference" if bare
+                 else "the grade record is stale, and the section declares no pending regrade")
+        remedy = ("run the regrade, after which the section names the fresh grade record; until it runs, "
+                  "declare on a line of its own: regrade: pending — <where it is tracked>")
+    elif reads:
+        out(CS_PREFIX + "PASS -- {} file(s) flagged; the conduct suite result is present and not empty, and "
+            "the grade record is fresh: a line the generated route reads changed. {}".format(n, CS_GRADED))
+        return 0
+    elif notex:
+        out(CS_PREFIX + "NOTICE -- fresh, and only lines the generated route does not read changed, as the "
+            "section declares: {}. {}".format(NOT_EXERCISED, CS_GRADED))
+        return 0
+    else:
+        label = ("the grade record is fresh, but only lines the generated route does not read changed, and "
+                 "the section does not declare '{}'".format(NOT_EXERCISED))
+        remedy = "declare on a line of its own: " + NOT_EXERCISED
+    if draft:
+        out(CS_PREFIX + "NOTICE -- draft: freshness: {}. It binds once the pull request is ready for review, "
+            "when this job runs again. {}".format(label, CS_GRADED))
+        return 0
+    out(FRESH_ERROR.format(label))
+    out(CS_PREFIX + "FAIL -- {} file(s) flagged and {}. {}".format(n, label, CS_GRADED))
+    out(CS_PREFIX + "To clear this in the '## Conduct suite result' section, {}. Editing the body re-runs "
+        "this check.".format(remedy))
+    return 1
+
+
 def check_conduct(root, base, head, body, draft, out):
-    """The presence limbs P1 and P2: 0, 1, or 2 for a refusal. P1 and P2 bind on a pull request
-    that is not a draft; on a draft a failing limb is a notice and exits 0."""
+    """The presence limbs P1 and P2, then the freshness limb: 0, 1, or 2 for a refusal. Every limb
+    binds on a pull request that is not a draft; on a draft a failing limb is a notice and exits 0."""
     try:
         mb, flagged = conduct_flags(root, base, head)
+        head = commit_of(root, "head", head)
     except Refusal as exc:
         out(REFUSAL_ERROR)
         out(CS_PREFIX + "NOT EVALUATED -- " + str(exc) + ". Nothing was graded.")
         return 2
     out(CS_PREFIX + "range {}..{} (merge base of base and head); draft: {}".format(
-        mb[:12], commit_of(root, "head", head)[:12], "yes" if draft else "no"))
-    for path, why in flagged:
+        mb[:12], head[:12], "yes" if draft else "no"))
+    for path, why, _classes in flagged:
         out(CS_PREFIX + "FLAG  {}  ({})".format(show(path), why))
     if not flagged:
         out(CS_PREFIX + "PASS -- no change touches the interview's conduct, so no result is asked for.")
@@ -618,9 +832,14 @@ def check_conduct(root, base, head, body, draft, out):
             "a letter or digit once comments are removed".format(
                 info["head"] + 1, info["end"] + 1, info["why"], info["words"]))
     if limb is None:
-        out(CS_PREFIX + "PASS -- {} file(s) flagged; the conduct suite result is present and not "
-            "empty. {}".format(len(flagged), CS_GRADED))
-        return 0
+        out(CS_PREFIX + "P1 and P2 hold -- the conduct suite result is present and not empty; the "
+            "freshness limb reads the grade record next.")
+        try:
+            return freshness(root, head, flagged, info["lines"], draft, out)
+        except Refusal as exc:
+            out(REFUSAL_ERROR)
+            out(CS_PREFIX + "NOT EVALUATED -- " + str(exc) + ". Nothing was graded.")
+            return 2
     if draft:
         out(CS_PREFIX + "NOTICE -- draft: {}. It binds once the pull request is ready for review, "
             "when this job runs again. {}".format(limb, CS_GRADED))
@@ -1232,8 +1451,21 @@ def arms_exit(t):
     t.arm("ST-ENTRY", entry)
 
 
-def conduct_repo(t, name):
-    """A history whose base holds the conduct file, the card, a guided form and a block-owned form."""
+def conduct_regrade(repo, short=None):
+    """Write the grade record's one block against the working tree's card and guided form: their
+    blobs as git hash-object reads them, abbreviated to `short` hex characters when it is given."""
+    card, form = (git(repo.root, "hash-object", "--", p)[1].decode().strip()[:short]
+                  for p in ("templates/interview-card.md", "templates/guided.template.md"))
+    repo.write("examples/interview-conversations/grade-record.txt",
+               "grade: gen-af\ngrade-date: 2000-01-01\nconduct-revision: {} {}\ngrader-draw: 1\n"
+               "verdict = PASS\n".format(card, form))
+
+
+def conduct_repo(t, name, record=False, before=()):
+    """A history whose base holds the conduct file, its shared rules and a section after them, the
+    card, a guided form and a block-owned form. With `record` the base also holds one generated
+    conversation on the guided form and a grade record whose one block is fresh there. Each edit in
+    `before` is committed on main after the base, and the pull request branches from the last."""
     boundary = "<!-- PROFILE-END -->"
     guided = ("---\nwriter: human\n---\n\n```intake-form\nform-version: 1\nboundary: " + boundary + "\n```\n\n"
               "## About you\n\n- **Name:** [your name]\n\n" + boundary + "\n\n"
@@ -1241,22 +1473,41 @@ def conduct_repo(t, name):
     owned = ("---\nwriter: human\n---\n\n```intake-form\nform-version: 2\n```\n\n## Trip\n\n"
              "Some prose a reader keeps.\n\n> Ask what the trip is for, in their words.\n")
     repo = Repo(t.tmp, name, None)
-    repo.write("skills/trip-record/interview-conduct.md", "# Conduct\n\n1. Ask one question a turn.\n")
+    repo.write("skills/trip-record/interview-conduct.md",
+               "# Conduct\n\n## The rules every interview shares\n\n1. Ask one question a turn.\n\n"
+               "## What only a write-capable session adds\n\n1. Write each answer as it is settled.\n")
     repo.write("templates/interview-card.md", "# Card\n\n1. Ask one question a turn.\n")
     repo.write("templates/guided.template.md", guided)
     repo.write("templates/owned.template.md", owned)
     repo.write("README.md", "# A repository\n")
+    if record:
+        repo.write("examples/interview-conversations/gen-af.txt",
+                   "conversation: gen-af\norigin: generated\nform: templates/guided.template.md\n"
+                   "T1 I | What name do you go by?\nL4 put=- kind=ask example=no\n--- record\n")
+        conduct_regrade(repo)
     base = repo.commit("base")
+    for path, old, new in before:
+        repo.write(path, repo.read(path).replace(old, new, 1))
+        base = repo.commit("an earlier change on main")
     repo.branch("pr", base)
     return repo, base
 
 
-def conduct_run(t, name, edit, body, draft=False):
-    """(exit status, printed lines) of --check-conduct over one edit to the conduct repository."""
-    repo, base = conduct_repo(t, name)
-    path, old, new = edit
-    repo.write(path, repo.read(path).replace(old, new, 1))
-    head = repo.commit("pr")
+def conduct_pr(t, name, edits, record=False, before=(), regrade=False, short=None):
+    """(repository, base, head) of one pull request over the conduct repository: `edits` applied,
+    and with `regrade` the grade record rewritten against the head's card and guided form."""
+    repo, base = conduct_repo(t, name, record, before)
+    for path, old, new in edits:
+        repo.write(path, repo.read(path).replace(old, new, 1))
+    if regrade:
+        conduct_regrade(repo, short)
+    return repo, base, repo.commit("pr")
+
+
+def conduct_run(t, name, edit, body, draft=False, **kw):
+    """(exit status, printed lines) of --check-conduct over an edit, or a list of them, to the
+    conduct repository."""
+    repo, base, head = conduct_pr(t, name, edit if isinstance(edit, list) else [edit], **kw)
     lines = []
     return check_conduct(repo.root, base, head, body, draft, lines.append), lines
 
@@ -1280,14 +1531,17 @@ def arms_conduct(t):
     t.arm("CS-FORM-BELOW", lambda: flag("CS-FORM-BELOW", below, "", "P1:"))
     t.arm("CS-QUOTE", lambda: flag("CS-QUOTE", quote, "", "P1:"))
 
-    def passes(label, edit, body, draft, said):
-        rc, lines = conduct_run(t, label.lower(), edit, body, draft)
+    def passes(label, edit, body, draft, said, **kw):
+        rc, lines = conduct_run(t, label.lower(), edit, body, draft, **kw)
         return (rc == 0 and any(said in l for l in lines) and not any(l.startswith("::error::") for l in lines),
                 "exits {}, saying '{}'".format(rc, said))
     t.arm("CS-NOT-FLAGGED", lambda: passes("CS-NOT-FLAGGED", readme, "", False, "no change touches"))
     t.arm("CS-ABOVE-BOUNDARY", lambda: passes("CS-ABOVE-BOUNDARY", above, "", False, "no change touches"))
     t.arm("CS-BLOCK-OWNED-PROSE", lambda: passes("CS-BLOCK-OWNED-PROSE", prose, "", False, "no change touches"))
-    t.arm("CS-PRESENT", lambda: passes("CS-PRESENT", card, filled, False, "PASS -- 1 file(s) flagged"))
+    # The card edit regrades the record in the same pull request, so the freshness limb reads it
+    # fresh and the presence limbs decide: a stale record would exit 1 whatever the section said.
+    t.arm("CS-PRESENT", lambda: passes("CS-PRESENT", card, filled, False, "PASS -- 1 file(s) flagged",
+                                       record=True, regrade=True))
     t.arm("CS-EMPTY-ON-DRAFT", lambda: passes("CS-EMPTY-ON-DRAFT", card, t.template, True,
                                               "NOTICE -- draft: P2:"))
 
@@ -1307,6 +1561,100 @@ def arms_conduct(t):
         return (rc == 2 and REFUSAL_ERROR in lines and any("no merge base" in l for l in lines),
                 "a pull request with no merge base is refused: exit {}".format(rc))
     t.arm("CS-NO-MERGE-BASE", no_merge_base)
+
+    # The freshness limb's arms (#2199 F5). Each is graded from the pull request it plants, through
+    # check_conduct, by its exit and by the outcome line only the limb prints, so none can pass on a
+    # job that reads presence alone. `section` fills the real template's conduct section.
+    def section(*lines):
+        return t.template.replace("## Conduct suite result\n", "## Conduct suite result\n\n"
+                                  + "".join(l + "\n" for l in lines), 1)
+    shared = ("skills/trip-record/interview-conduct.md", "Ask one question a turn.", "Ask a single question a turn.")
+    outside = ("skills/trip-record/interview-conduct.md", "Write each answer", "Record each answer")
+    pending = "regrade: pending — tracked on the release's own sub-task"
+    notex = "not exercised by the generated route"
+    graded = section("Graded: every generated conversation PASS.")
+    stale_undeclared = "the grade record is stale, and the section declares no pending regrade"
+
+    def run(label, edits, body, draft=False, **kw):
+        repo, base, head = conduct_pr(t, label.lower(), edits, **kw)
+        lines = []
+        return check_conduct(repo.root, base, head, body, draft, lines.append), lines, base, head
+
+    def reads(rc, lines, want, said, warn=False):
+        """Exit `want`, a line carrying `said`, an ::error:: line exactly when it exits 1, a
+        ::warning:: line exactly when `warn`, and no line carrying the body's tracking reference."""
+        return (rc == want and any(said in l for l in lines)
+                and any(l.startswith("::error::") for l in lines) == (want == 1)
+                and any(l.startswith("::warning::") for l in lines) == warn
+                and not any("own sub-task" in l for l in lines))
+
+    def plants(label, cases):
+        """Every (edits, body, want, said, options) case planted and read; the detail names each exit."""
+        seen = []
+        for n, (edits, body, want, said, kw) in enumerate(cases, 1):
+            kw = dict(kw)
+            draft, warn = kw.pop("draft", False), kw.pop("warn", False)
+            rc, lines, _b, _h = run("{}-{}".format(label, n), edits, body, draft, **kw)
+            seen.append((reads(rc, lines, want, said, warn), "{} ('{}'{})".format(
+                rc, said, "" if reads(rc, lines, want, said, warn) else ": misread")))
+        return all(ok for ok, _ in seen), "exits " + ", ".join(what for _, what in seen)
+
+    fresh = "the grade record is fresh: a line the generated route reads changed"
+    t.arm("CS-FRESH", lambda: plants("CS-FRESH", [
+        ([card], section("Regraded: the grade record names the card's new blob."), 0, fresh,
+         dict(record=True, regrade=True))]))
+    t.arm("CS-FRESH-UNNAMED", lambda: plants("CS-FRESH-UNNAMED", [
+        ([card], graded, 0, fresh, dict(record=True, regrade=True, short=12)),
+        ([shared], graded, 0, fresh, dict(record=True))]))
+
+    def stale_pending():
+        rc, lines, _base, head = run("cs-stale-pending", [card], section(pending), record=True)
+        row = [l for l in lines if "STALE" in l and "block gen-af" in l and "templates/interview-card.md" in l]
+        return (reads(rc, lines, 0, "WARNING -- the grade record is stale", warn=True)
+                and any(head in l for l in row),
+                "exits {}, with the ::warning:: and a summary row naming the card and the commit its "
+                "blob left the graded one at ({})".format(rc, "named" if any(head in l for l in row) else "absent"))
+    t.arm("CS-STALE-PENDING", stale_pending)
+    t.arm("CS-STALE-PENDING-NO-REF", lambda: plants("CS-STALE-PENDING-NO-REF", [
+        ([card], section("regrade: pending"), 1, "names no tracking reference", dict(record=True)),
+        ([card], section("regrade: pending —"), 1, "names no tracking reference", dict(record=True)),
+        ([card], section("regrade: pending — —"), 1, "names no tracking reference", dict(record=True))]))
+    t.arm("CS-STALE-UNDECLARED", lambda: plants("CS-STALE-UNDECLARED", [
+        ([card], graded, 1, stale_undeclared, dict(record=True))]))
+    t.arm("CS-STALE-UNDECLARED-DRAFT", lambda: plants("CS-STALE-UNDECLARED-DRAFT", [
+        ([card], graded, 0, "NOTICE -- draft: freshness: " + stale_undeclared, dict(record=True, draft=True))]))
+
+    n_only = "NOTICE -- fresh, and only lines the generated route does not read changed"
+    undeclared_n = "does not declare 'not exercised by the generated route'"
+    t.arm("CS-W-ONLY-DECLARED", lambda: plants("CS-W-ONLY-DECLARED", [
+        ([outside], section(notex), 0, n_only, dict(record=True)),
+        ([quote], section(notex), 0, n_only, dict(record=True))]))
+    t.arm("CS-W-ONLY-UNDECLARED", lambda: plants("CS-W-ONLY-UNDECLARED", [
+        ([outside], graded, 1, undeclared_n, dict(record=True)),
+        ([quote], graded, 1, undeclared_n, dict(record=True)),
+        ([outside], section(pending), 1, undeclared_n, dict(record=True))]))
+    t.arm("CS-MIXED-W-AND-CARD-STALE", lambda: plants("CS-MIXED-W-AND-CARD-STALE", [
+        ([outside, card], section(notex), 1, stale_undeclared, dict(record=True))]))
+
+    # Q11: an unflagged edit on main -- the guided form above its boundary -- staled the record before
+    # this pull request branched, and the pull request changes only lines the route does not read.
+    def earlier(label, body, want, said, warn):
+        rc, lines, fork, _head = run(label, [outside], body, record=True, before=[above])
+        row = [l for l in lines if "STALE" in l and "block gen-af" in l and "templates/guided.template.md" in l]
+        return (reads(rc, lines, want, said, warn) and any(fork in l for l in row),
+                "exits {}; the summary row names the guided form and the earlier commit {}".format(
+                    rc, "it left the graded blob at" if any(fork in l for l in row) else "(absent)"))
+    t.arm("CS-W-ONLY-DECLARED-STALE", lambda: earlier("cs-w-only-declared-stale", section(notex), 1,
+                                                       stale_undeclared, False))
+    t.arm("CS-W-ONLY-STALE-PENDING", lambda: earlier("cs-w-only-stale-pending", section(notex, pending), 0,
+                                                      "WARNING -- the grade record is stale", True))
+
+    # A record with no block is stale: absent at the head, or present with no grade line.
+    blockless = ("examples/interview-conversations/grade-record.txt", "grade: gen-af\n", "")
+    t.arm("CS-NO-RECORD", lambda: plants("CS-NO-RECORD", [
+        ([card], graded, 1, "holds no block", {}),
+        ([card], section(pending), 0, "WARNING -- the grade record is stale", dict(warn=True)),
+        ([card, blockless], graded, 1, "holds no block", dict(record=True))]))
 
 
 def self_test(root):
