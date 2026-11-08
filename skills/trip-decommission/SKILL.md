@@ -304,6 +304,20 @@ the verbs that existed when it was written.
    it admits no `ALLOW_PLAINTEXT`, no `--yes` to `unpublish`, and no overwrite or deletion of
    existing trip content, each of which rules 1 and 5 above and `ADR-007` § 2 forbid
    unconditionally.
+10. **A run nobody can answer writes only what its verb writes without asking.** A run is
+    non-interactive where no later message can reach the session: print mode, or a scheduled task.
+    An answer arrives only in a later message, and `allowed-tools` clears when one does
+    (`reference/adr/ADR-007-command-entry-point.md` § *Context*). So where a verb's section reaches
+    a write without asking anything, the write runs in this turn, under this turn's grants, because
+    typing the verb is what asked for it. Where the section asks first — a question, a choice of
+    routes, a confirmation, a typed token — the verb stops there: it names what it would have asked,
+    writes nothing past that point, and takes no default, no assumed answer and no flag in the
+    answer's place. What it wrote before that point stands, and it says so. A write the harness
+    denies is relayed as a denial and never reported as done. **A session need not recognise print
+    mode for this to hold**, because a question nobody answers writes nothing either way, and a
+    verb's own non-interactive row stands, and stops no later than this rule would.
+    `reference/adr/ADR-051-a-verb-runs-until-it-asks.md` records the decision; this rule is its
+    operative statement. **This rule is followed, not enforced.**
 
 **Extension rule.** A later slice may append a numbered rule **only** where it genuinely binds every
 verb of this command, present and future, and must say in its own design that it did so and why. A
@@ -462,6 +476,7 @@ That is what could not be established, and the remedy. It is not a report that t
 
 **Reads:** nothing beyond the blocks above. It reads no `trip-context.md`, no `trip-log.md`, no
 `trips/<slug>/.publish-slug` and **no `trips/<slug>/.passphrase`**. **Dispatches no agent.**
+**Non-interactive: the standing clause's *run nobody can answer*.**
 
 Takes the trip's site offline and leaves the local tree untouched.
 
@@ -519,6 +534,7 @@ lifecycle marker line or, where it is absent, the title-line anchor the insert u
 `trips/<slug>/.passphrase`**, and reads `trips/<slug>/.publish-slug` not at all — the resolver reads
 it, this verb does not, and reading it here would let this command form its own view of publication
 state, which § *The stop-message rule* forbids. Dispatches no agent.
+**Non-interactive: the standing clause's *run nobody can answer*.**
 
 Concludes a trip: the same takedown `temporary` performs, then the lifecycle marker, then a closing
 entry in the trip's log.
@@ -611,6 +627,7 @@ this verb's output as the further option and never run from here. Adds no headin
 value before that value is changed, so the outgoing value can be echoed. Reads no `trip-log.md`, no
 `trips/<slug>/.publish-slug` and **no `trips/<slug>/.passphrase`**. Runs no script and dispatches no
 agent.
+**Non-interactive: the standing clause's *run nobody can answer*.**
 
 Returns an archived trip to `ACTIVE`. Its row declares `lifecycle: ARCHIVED`, which is what lets it
 run on a trip whose lifecycle the defaulted rows refuse. **Which verbs run on an archived trip is

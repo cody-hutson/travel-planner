@@ -374,6 +374,21 @@ protects only the verbs that existed when it was written.
    what makes an act they forbid available: it admits no `ALLOW_PLAINTEXT`, no `--yes` to
    `unpublish`, and no overwrite or deletion of existing trip content, each of which
    rules 2 and 5 above and `ADR-007` § 2 forbid unconditionally.
+9. **A run nobody can answer writes only what its verb writes without asking.** A run is
+   non-interactive where no later message can reach the session: print mode, or a scheduled
+   task. An answer arrives only in a later message, and `allowed-tools` clears when one does
+   (`reference/adr/ADR-007-command-entry-point.md` § *Context*). So where a verb's section
+   reaches a write without asking anything, the write runs in this turn, under this turn's
+   grants, because typing the verb is what asked for it. Where the section asks first — a
+   question, a choice of routes, a confirmation, a typed token — the verb stops there: it
+   names what it would have asked, writes nothing past that point, and takes no default, no
+   assumed answer and no flag in the answer's place. What it wrote before that point stands,
+   and it says so. A write the harness denies is relayed as a denial and never reported as
+   done. **A session need not recognise print mode for this to hold**, because a question
+   nobody answers writes nothing either way, and a verb's own non-interactive row stands,
+   and stops no later than this rule would.
+   `reference/adr/ADR-051-a-verb-runs-until-it-asks.md` records the decision; this rule is
+   its operative statement. **This rule is followed, not enforced.**
 
 **Extension rule.** A later slice may append a numbered rule above only where it genuinely
 binds every verb of this command, present and future, and must say so in its own design; a
@@ -465,6 +480,7 @@ value**, on this verb or anywhere in this file. Limb (ii) reads no path at all: 
 environment variable, which is an observation of this process's environment rather than of
 the filesystem, and it is named here so its absence from the path list is not read as an
 omission. Runs `scripts/publish-trip-site.sh update` and dispatches no agent.
+**Non-interactive: the standing clause's *run nobody can answer*.**
 
 **What it is.** Re-encrypt an already-published trip site and push only ciphertext to the
 per-trip repo that already exists. It creates no per-trip GitHub repo, which is what keeps

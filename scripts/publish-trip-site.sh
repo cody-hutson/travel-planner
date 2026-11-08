@@ -3083,8 +3083,9 @@ _legacy_itinerary_digest() { # <html_file> -> the pre-#719 CRC-32 identity token
 pending_change_path()     { printf '%s' "$1/outputs/change-summary.md"; }
 # The organizer's recorded approval, digest-bound to the itinerary it approves.
 change_confirmation_path() { printf '%s' "$1/.change-confirmed"; }
-# The itinerary content as of the last successful push. Written by cmd_publish and
-# cmd_update; read only here.
+# The plan as of the last successful push: its digest and the date, on two lines. Written by
+# record_published_itinerary, which cmd_publish, cmd_update and cmd_rotate each call after a
+# push, beside the staged twin staged_record_path names.
 published_itinerary_path() { printf '%s' "$1/.published-itinerary"; }
 # The two approval sidecars (#719, ADR-029 § Decisions 2–4), under the same trip dir in the data root
 # and, like the three above, never copied into the per-trip repo. The site build reads NEITHER:

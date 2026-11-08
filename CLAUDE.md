@@ -64,12 +64,12 @@ This file is the primary session bridge. It captures what trip-context.md does n
 > canonical lifecycle-class tokens and their definitions have one home,
 > `reference/data-architecture.md` § *Lifecycle Classes*, and the satisfaction-layer subsection
 > below cites it rather than defining anything. **The default-and-exception model in the rest of
-> this section is not a duplicate of that home — it is a live input read back by the engine**, in
-> two places: that section's own absence rule derives a class for an artifact its exception set
-> does not name, and `skills/trip/SKILL.md` derives the `/trip research` agent key by filtering
-> the roster to the rows this section leaves in the accumulating default. Deleting or collapsing
-> this prose would break both reads. Where the two overlap, the engine-wide tokens and definitions
-> govern; **editing the exception set below changes what that command dispatches.**
+> this section is not a duplicate of that home — it is a live input read back by the engine**:
+> that section's own absence rule derives a class for an artifact its exception set does not name.
+> Deleting or collapsing this prose would break that read. Where the two overlap, the engine-wide
+> tokens and definitions govern. `/trip research` does not read this section: its agent key comes
+> from `reference/data-architecture.md` § 1.1's `researched` classes, so **editing the exception
+> set below does not change what that command dispatches.**
 
 **Agent outputs accumulate. They do not overwrite.**
 
@@ -165,8 +165,9 @@ a trip is archived — a reopened trip absorbs current state, never a replay.
 > paragraph as a claim that four surfaces parse this section. It sits beside
 > § *Output Versioning* because that section is the corpus's derivation-policy home and carries the
 > sentence this rule qualifies — but **deliberately outside it**, because the exception sets inside
-> that section are machine-read by `skills/trip/SKILL.md` to derive the `/trip research` agent
-> key, and **this rule declares no artifact class and must never be read as a file-exception list.**
+> that section are read back by `reference/data-architecture.md` § *Lifecycle Classes*' absence
+> rule to assign a class, and **this rule declares no artifact class and must never be read as a
+> file-exception list.**
 > It is **not** in § *Resolving a trip*, which is the gate ladder: the freeze stops no resolution and
 > returns no `trip.stop_gate`, and `G8` is reserved and report-only. It is **not** in
 > `reference/data-architecture.md` § *Lifecycle Classes*, whose `lifecycle` is the **artifact** axis
@@ -261,7 +262,8 @@ Before doing anything, determine what kind of request this is:
 
 | Request | Read scope | Class |
 |---|---|---|
-| `/trip status` · `/trip-publish list` · `/trip-decommission temporary` | that verb's `**Reads:**` line | none beyond the evidence entries |
+| `/trip-publish list` · `/trip-decommission temporary` | that verb's `**Reads:**` line | none beyond the evidence entries |
+| `/trip status` | that verb's `**Reads:**` line — beyond the evidence entries, an order-only listing of the trip's outputs and, for one freshness relation's source side, the rows of `reference/data-architecture.md` § 1.1's class table | own |
 | `/trip plan` · `replan` · `reorder` · `research` · `check` · `ideas` | that verb's `**Reads:**` line, **including its attributed-agent clause** | own + attributed-agent |
 | `/trip site` | that verb's `**Reads:**` line | own |
 | `/trip schema` | that verb's `**Reads:**` line | own |
@@ -365,7 +367,7 @@ The construct has two halves and each does a different job. `|| printf '<sentine
 
 **No entry is wrapped in a group, and the omission is load-bearing.** Each entry is a bare list — `<read> 2>&1 || printf '<sentinel>\n'; true` — and never `{ …; } ; true` or `( … ) ; true`. The shell already parses the bare list as the group did, so a wrapper adds no meaning: output and exit status are identical, measured over healthy, empty, unreadable and absent `trips/` directories and a trip whose context matches no arm, under both `bash` and `zsh`. What a wrapper adds is a refusal. Claude Code refuses a brace group that contains a quote character on its shape — under the consuming file's grants, and again with those grants widened to name `printf` and `true` — and refuses a parenthesised subshell with or without grants, while within the session's allowed working directories it admits the same list unwrapped. No grant buys the wrapper back, so the spelling, not the grant set, is what this list fixes. That refusal is the harness's behaviour, not the shell's — measured on Claude Code 2.1.233 at `b199dc1` — and it is meant to be re-derived against the harness in use rather than carried.
 
-**The evidence grants are each verb's declared minimum privilege, and in print mode, under the default permission mode, they do not decide whether an evidence read is admitted.** A command declares `Bash(ls:*)` where it carries E1 and `Bash(grep:*)` where it carries E2, and nothing wider for them (`ADR-007` §2, bound 2) — each grant names the tool one of its entries runs — so `/trip-new`, which carries the E1-only prefix, correctly stays at `Bash(ls:*)`. In print mode, under the default permission mode, the session's allowed working directories decide whether an evidence read is admitted: inside them the evidence reads ran with no `Bash` grant at all, measured on Claude Code 2.1.233 at `b199dc1`, and the refusal of an evidence read outside them is stated in the `<data-root>` paragraph below, as it was measured on Claude Code 2.1.233 and again on 2.1.280, the second time with `permissions.blockReadsOutsideWorkingDirectories` set and without it. What a grant does at runtime is recorded in `ADR-007` § *Context*, and how a directory is admitted to the session's allowed working directories is stated in the `<data-root>` paragraph below.
+**The evidence grants are each verb's declared minimum privilege, and in print mode, under the default permission mode, they do not decide whether an evidence read is admitted.** A command declares `Bash(ls:*)` where it carries E1 and `Bash(grep:*)` where it carries E2, and nothing wider for them (`ADR-007` §2, bound 2) — each grant names the tool one of its entries runs — so `/trip-new`, which carries the E1-only prefix, correctly stays at `Bash(ls:*)`. In print mode, under the default permission mode, the session's allowed working directories decide whether an evidence read is admitted: inside them the evidence reads ran with no `Bash` grant at all, measured on Claude Code 2.1.233 at `b199dc1`, and the refusal of an evidence read outside them is stated in the `<data-root>` paragraph below, as it was measured on Claude Code 2.1.233 and again on 2.1.280, the second time with `permissions.blockReadsOutsideWorkingDirectories` set and without it. What a grant does at runtime is recorded in `ADR-007` § *Context*, and how a directory is admitted to the session's allowed working directories is stated in the `<data-root>` paragraph below. **This paragraph speaks for evidence reads and for nothing else.** What a non-interactive run of a verb does about a write is stated in that verb's command file, by the rule opening *A run nobody can answer*.
 
 **`<data-root>` — what the entries resolve against, and where its value comes from.** Every entry above names `<data-root>`, and the agent substitutes one resolved absolute path for it before issuing the call. **The three operator stores are `<data-root>/trips/`, `<data-root>/people/` and `<data-root>/groups/`** — three children of one root, which is what they already are. **The only thing that changes here is how that root is named: no store moves, and nothing in this section relocates, copies or deletes operator data.** **The resolved root must also be a directory the session may read without asking, and so must the pointer's own directory, `${HOME}/.travel-planner/` — for `/trip-publish`, which reads the pointer with a Bash `grep`, and for every verb wherever `permissions.blockReadsOutsideWorkingDirectories` is set, since on Claude Code 2.1.280 that setting refused the `Read` tool's read of the pointer too.** Claude Code refuses — in print mode, under its default permission mode — any evidence read of a path outside the session's allowed working directories, whatever the entry's spelling and whatever grants the consuming file holds, and it refused `/trip-publish`'s `grep` of a pointer that lay outside them. Measured on Claude Code 2.1.233 at `b199dc1`. **Measured again on Claude Code 2.1.280, at engine `17e15af`, in print mode under the default permission mode:** with `permissions.blockReadsOutsideWorkingDirectories` unset, the Bash evidence reads of a path outside those directories were refused, 9 of 9 across the five verbs and both of those a probe issued holding no `Bash` grant, while a `Read` of a pointer outside them ran, 4 of 4; with that setting set in the user settings, that `Read` was refused too, 4 of 4. So on that harness the setting is not what refuses an evidence read outside the directories: what it added was the refusal of the `Read` tool's read of an outside pointer. The setting is documented from Claude Code 2.1.257. On the same harness `/trip-publish`'s pointer read, as this section then spelled it with `${HOME}`, did not run in any state measured, its directory admitted or not, the harness returning a result opening `Contains expansion` — which is why the pointer rule below now spells that read with a literal path. A directory outside the launch directory is admitted once it is passed with `--add-dir` or listed, as an absolute path, under `permissions.additionalDirectories` in a settings layer the harness honours. In print mode, which layers it honours depends on whether the workspace has been trusted: an untrusted workspace ignores that entry in its project `.claude/settings.json` and honours it in `.claude/settings.local.json`, measured on Claude Code 2.1.233 at `b199dc1`, and honours it in the user settings, `~/.claude/settings.json` — the layer the README's install writes — measured on Claude Code 2.1.233 under the default permission mode. Where a read is admitted and where it is refused is the harness's behaviour, and it is meant to be re-derived against the harness in use rather than carried.
 
@@ -700,6 +702,8 @@ travel-planner/
             ├── event-status.md        ← per-event status — persist-mutable, survives re-runs
             ├── satisfaction-metrics.md ← coverage metrics (validator + hub)
             ├── cost-estimate.md       ← per-traveler cost projection (C21) — written by the hub, after event-status.md
+            ├── change-summary.md      ← what a re-bake moved, for the group (C20) — written by the hub
+            ├── <slug>.md              ← targeted research a spoke re-ran (C18)
             ├── final-itinerary.md     ← current version (previous versions preserved as v1, v2...)
             ├── validation-report.md
             └── [destination]-travel-site.html   ← bespoke, Claude-generated

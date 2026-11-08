@@ -287,6 +287,11 @@ name: Artifact schema
 #        and every tracked C14 instance, found by the class's own selector, is byte-identical
 #        to it; an empty instance selection FAILS. Not graded: a statement removed whole,
 #        heading and table together, leaves the population
+#   PM   a changed profile reaches the recovery behaviours — the fixture's subject, read from the
+#        `profile-replan-fixture` fence in `examples/data-architecture-demo/README.md` and never held
+#        in the suite, as a real one-line difference against the model; § replan's mode test and dispatch
+#        order; and that § Modes, the hub, the validator and `/trip-record` § travelers still name
+#        the signal. It grades the tree: no arm observes an agent firing anything
 #   RP   the returning-party fixture set and the two read verbs over it — the set's declared states,
 #        read from the `returning-party-fixture` fence in `examples/returning-party-demo/README.md`
 #        and never held in the suite, against the files; a reference reader of the coverage table by
