@@ -393,7 +393,8 @@
 #        read through group WD's word definition and sentence engine: a class table where the first
 #        class that holds decides and an unclassified occurrence fails closed, R9's reach of an offer,
 #        the AC8 result recorded beside its plants, and every planted control of the design pinned at
-#        its verdict, the stated bounds pinned as bounds
+#        its verdict, the stated bounds pinned as bounds; and, last among the CH-2 groups, WT-ADR26:
+#        ADR-026 § 5's CH-2 enforcement cell held to the groups that grade CH-2 on the same run
 #   LG   the declared ledger of the forms' known sentences, graded both ways — an undeclared hit, a row
 #        that no longer trips, an anchor that is not unique, a row keying more than one hit, a
 #        malformed row, the readers' file set — with the ledger mutations on copies under $WORK
@@ -26526,6 +26527,60 @@ md_flips ta_grade    'CHR'     chr_assert
 md_flips chr_e1_eval 'CHR.E1'  chre1_assert "$PC_VERB" "$ROOT/reference/data-model.md"
 md_flips ta_model    'CHR.J'   chrj_assert
 md_flips ta_plants   'CHR-CTL' chrctl_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# WT-ADR26 — the record and the check agree (SEAM-6), run after every CH-2 text group
+#
+# reference/adr/ADR-026-channel-architecture.md § Decision 5 states each channel's enforcement
+# strength in one table cell. This arm holds CH-2's cell to what this run did: it fails when the
+# cell, trimmed, still equals **prose** — the cell's old value, so an accurate cell may still use the
+# word, as in ask-prose — when it names fewer than the three conduct inputs (the conduct file, the
+# interview card and each interviewable form's own conduct), or when any of groups WT, OW, FB, CHR
+# and LG emitted no verdict in this run, read from the emission record. It runs after them for that
+# reason. CONTROL (SEAM-6): the same reading over this run's emission record with group CHR's
+# verdicts taken out fails, naming CHR; and a copy of the cell that says ask-prose stays green.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "WT-ADR26 — ADR-026 § 5's CH-2 enforcement cell agrees with the groups that grade CH-2"
+
+WTA_ADR="$ROOT/reference/adr/ADR-026-channel-architecture.md"
+# wtadr26_cell <adr-026> — CH-2's enforcement-strength cell in § Decision 5's table, trimmed.
+wtadr26_cell() {
+  awk -F'|' 'index($0, "### 5. ") == 1 { on = 1; next } on && /^#/ { on = 0 } on && index($0, "| **CH-2** |") == 1 { c = $(NF - 1); gsub(/^[ \t]+|[ \t]+$/, "", c); print c; on = 0 }' "$1"
+}
+# wtadr26_eval <cell> <emission-record> — one problem per line; nothing when the cell agrees.
+wtadr26_eval() {
+  local g
+  [ -n "$1" ] || { printf 'no CH-2 row in the table of § Decision 5\n'; return 0; }
+  [ "$1" != '**prose**' ] || printf 'the cell still reads **prose**, its old value\n'
+  case "$1" in *"the conduct file"*) ;; *) printf 'the cell does not name the conduct file\n' ;; esac
+  case "$1" in *"the interview card"*) ;; *) printf 'the cell does not name the interview card\n' ;; esac
+  case "$1" in *"each interviewable form"*) ;; *) printf 'the cell does not name each interviewable form\n' ;; esac
+  for g in WT OW FB CHR LG; do
+    awk -v g="$g" '{ for (i = 1; i <= NF; i++) { x = $i; if (match(x, /^[A-Z]+/) && substr(x, 1, RLENGTH) == g) f = 1 } } END { exit !f }' <<<"$2" || printf 'group %s emitted no verdict in this run\n' "$g"
+  done
+}
+wtadr26_assert() {
+  local cell p noc seam ap
+  cell="$(wtadr26_cell "$WTA_ADR")"
+  p="$(wtadr26_eval "$cell" "$SEEN")"
+  noc="$(tr ' ' '\n' <<<"$SEEN" | awk 'NF && !/^CHR/' | tr '\n' ' ')"
+  seam="$(wtadr26_eval "$cell" "$noc")"
+  ap="$(wtadr26_eval "${cell/conduct text/ask-prose and conduct text}" "$SEEN")"
+  if [ -z "$cell" ]; then
+    FAIL "WT-ADR26: no CH-2 row was read from ${WTA_ADR#"$ROOT/"} § Decision 5 — the record and the check cannot be compared"
+  elif [ -n "$p" ]; then
+    FAIL "WT-ADR26: ${WTA_ADR#"$ROOT/"} § Decision 5's CH-2 enforcement cell disagrees with this run — $(tr '\n' ';' <<<"$p") The cell reads: $cell"
+  elif [ "$seam" != "group CHR emitted no verdict in this run" ]; then
+    FAIL "WT-ADR26: CONTROL (SEAM-6) did not fire as specified — with group CHR's verdicts taken out of a copy of the emission record the reading is '${seam:-agreement}'"
+  elif [ -n "$ap" ]; then
+    FAIL "WT-ADR26: CONTROL did not hold — a copy of the cell that says ask-prose reads '$ap', so the arm keys on the word rather than on the old value"
+  else
+    PASS "WT-ADR26: ${WTA_ADR#"$ROOT/"} § Decision 5's CH-2 enforcement cell names the conduct file, the interview card and each interviewable form's own conduct, no longer reads **prose**, and every one of groups WT, OW, FB, CHR and LG emitted in this run. CONTROL (SEAM-6): with group CHR's verdicts taken out of a copy of the record the arm names CHR; a copy of the cell that says ask-prose stays green"
+  fi
+}
+wtadr26_assert
+md_flips wtadr26_cell 'WT-ADR26' wtadr26_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RS — the group rosters that DESCRIBE this suite, asserted against the run.
