@@ -1,6 +1,6 @@
 # ADR-051: A verb runs until it asks — what a run nobody can answer writes, stated in each command file's standing clause, cited by every verb on the declared-intent side, and holding whether or not a session recognises print mode
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-08)
 - **Deciders:** repo maintainer
 - **Driving work:** #1671 (carrying #1947), in the *Each verb's reads and writes are stated truly*
   milestone. Its design placed the rule and stated what it says, and the operator ruled at that
