@@ -64,9 +64,7 @@ pages.
 
 **Size fence.** Nothing moved: no row was re-pinned.
 - `CLAUDE.md` grew 1,107 bytes to 140,742, beneath its row of 153,381.
-- `reference/adr/ADR-007-command-entry-point.md` grew 366 bytes to 53,875, beneath its row of 58,860.
-- `reference/adr/README.md` grew 47 bytes to 26,070, beneath its row of 28,177, with the
-  decision-record number taken on `main` since 0.62.0.
+- `reference/adr/ADR-007-command-entry-point.md` grew 480 bytes to 53,989, beneath its row of 58,860.
 - `skills/trip-publish/SKILL.md` shrank 2,491 bytes to 41,791.
 
 **What it doesn't reach.** Commands run on one trip at the same time are still not serialized.
