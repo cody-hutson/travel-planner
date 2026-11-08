@@ -1,0 +1,39 @@
+# The bound across repeat units: one follow-up a field, a unit label being a field, and two a section
+conversation: case-repeat-units
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: AF — answers freely, an invented traveller
+answered-before: none
+T1 I | What do you want from this trip?
+L4 put=Desires › Desire#1 kind=ask example=no
+T2 P | Markets.
+L3 Desires › Desire#1 = thin
+T3 I | You said markets — which kind?
+L4 put=Desires › Desire#1 kind=follow-up example=no carries=«markets»
+T4 P | Food markets, early.
+L3 Desires › Desire#1 = answer
+T5 I | And a second thing you want?
+L4 put=Desires › Desire#2 kind=ask example=no
+T6 P | Music.
+L3 Desires › Desire#2 = thin
+T7 I | You said music — what sort?
+L4 put=Desires › Desire#2 kind=follow-up example=no carries=«music»
+T8 P | Live jazz, one night.
+L3 Desires › Desire#2 = answer
+T9 I | Any word or two that groups the first one?
+L4 put=Desires › Theme tag(s)#1 kind=ask example=no
+T10 P | Food.
+L3 Desires › Theme tag(s)#1 = thin
+T11 I | You said food — any other tag?
+L4 put=Desires › Theme tag(s)#1 kind=follow-up example=no carries=«food»
+T12 P | Mornings.
+L3 Desires › Theme tag(s)#1 = answer
+--- record
+V Desires › Desire#1 = markets, food markets, early
+V Desires › Desire#2 = music, live jazz, one night
+V Desires › Theme tag(s)#1 = food, mornings
+X FB-C Desires › Theme tag(s)#1 = fail:1

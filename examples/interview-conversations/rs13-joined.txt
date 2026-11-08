@@ -1,0 +1,17 @@
+# RS-13, joined: a value that joins two of their words fails on an authored fixture
+conversation: rs13-joined
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: AF — answers freely, an invented traveller
+answered-before: none
+T1 I | What do you want from this trip?
+L4 put=Desires › Desire#1 kind=ask example=no
+T2 P | A day on a river boat.
+L3 Desires › Desire#1 = answer
+--- record
+V Desires › Desire#1 = a day on a riverboat
+X OW-C Desires › Desire#1 = fail:riverboat

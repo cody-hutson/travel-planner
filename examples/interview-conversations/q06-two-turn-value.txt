@@ -1,0 +1,25 @@
+# Q-6: a value built over two turns, written in another order than said, and reported reordered
+conversation: q06-two-turn-value
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: AF — answers freely, an invented traveller
+answered-before: none
+T1 I | How do you feel about rooming?
+L4 put=Where you stay › Rooming kind=ask example=no
+T2 P | With Sam.
+L3 Where you stay › Rooming = thin
+T3 I | You said with Sam — anything more about rooming?
+L4 put=Where you stay › Rooming kind=follow-up example=no carries=«Sam»
+T4 P | Happy to share.
+L3 Where you stay › Rooming = answer
+T5 I | I have rooming down, from what you said. On we go.
+L4 put=- kind=confirmation example=no
+T6 P | Great.
+L3 - = answer
+--- record
+V Where you stay › Rooming = happy to share with Sam
+X OW-C Where you stay › Rooming = pass

@@ -1,0 +1,21 @@
+# Q-10: a skip written as the em dash, and the field never put again
+conversation: q10-skip
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: SK — skips often, an invented traveller
+answered-before: none
+T1 I | Have you been to this destination before — never, once, a few times, or do you know it well?
+L4 put=Interests & tastes › Been here before? kind=ask example=no carries=«never, once, a few times, know it well»
+T2 P | Skip it.
+L3 Interests & tastes › Been here before? = skip
+T3 I | Is there anything you have already done there that you would not repeat?
+L4 put=Interests & tastes › Already done kind=ask example=no
+T4 P | The old fort.
+L3 Interests & tastes › Already done = answer
+--- record
+V Interests & tastes › Been here before? = —
+V Interests & tastes › Already done = the old fort

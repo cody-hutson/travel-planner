@@ -402,14 +402,25 @@
 #        admitted non-utterances (OW-T.P2) with OW-T.P2's evaluator set held to ADR-045 both ways
 #        (OW-T.P2a), and the own-words rule stated in both carriers (OW-T.E1, group PC called for
 #        the carriers' equality): D6's value span, coordinator and coordinates, its class table, and
-#        every planted control of the design pinned at its verdict
+#        every planted control of the design pinned at its verdict; and (the conversation block)
+#        OW-C over every test conversation — each authored verdict its fixture's, ADR-045's worked
+#        rows reproduced, the evaluators held to ADR-045 through nu_list, ND read as ND, and the
+#        observations never deciding
 #   FB   (the text block) no licence for a further question (FB-T.P1): D8's triggers, its class table
 #        and its marker rule, the one directed follow-up reported as an observation, and every planted
-#        control of the design pinned at its verdict
+#        control of the design pinned at its verdict; and (the conversation block) FB-C over every
+#        test conversation — each authored verdict its fixture's, ADR-045's worked rows reproduced,
+#        and the PERSON class read through the one form model, its seam flipped on a copy
 #   CHR  CH-2's R-test keyed on the class PERSON read live — one offer, a narrowed confirmation, no
 #        follow-up on a PERSON field in speech, an example only on request, the care stated in the
 #        write-capable rules, and every guided-form bullet joining one classification row — with the
 #        seams of the class flipped on copies, and what it does not reach printed on its verdict line
+#   CF   the interview conversation fixtures under examples/interview-conversations/: the README
+#        fence and the files both ways, AC2's travellers among the authored rows, the grammar read
+#        positionally with its plants refused, each declared kind the one the person's side
+#        derives, the kind lists held to ADR-045 through nu_list and disjoint, the verdict stream
+#        under every engine and the reader under every locale, no ND in a count, a generated
+#        verdict reported and never failed, and the compound and typography probes pinned
 #   RB   the interview rubric, reference/interview-rubric.md: its dimension table parses, every row
 #        carrying a unique id, its traces, a pass level and an NA condition; its conversation rule and
 #        its not-graded lines anchored; ADR-045's A1..A5 and kinds cited by name and held by neither;
@@ -2628,13 +2639,20 @@ if [ "$PS_OK" -eq 1 ]; then
   # all, and the other two are archived trips whose outputs/ holds a coverage file and nothing
   # else — so all three are outside this predicate and land in PS3's derived list. The
   # partition closed at 1 + 1 + 10 = 12. Only the denominator moved.
+  #
+  # It moved 12 -> 13 with examples/interview-conversations/, and that re-read was performed
+  # against the failing run: PS1 still selects examples/tokyo-2026 ALONE and PS2 still names
+  # examples/data-architecture-demo ALONE, both observed in the run that reported the pin
+  # mismatch. The directory holds synthetic interview conversations and no trip — no
+  # trip-context.md and no outputs/ — so it is outside this predicate and lands in PS3's
+  # derived list. The partition closed at 1 + 1 + 11 = 13. Only the denominator moved.
   if [ "$((PS_NFIRE + PS_NSIL + PS_NOUT))" -ne "$PS_NTRIP" ]; then
     FAIL "PS4: the partition does not close — $PS_NFIRE + $PS_NSIL + $PS_NOUT != $PS_NTRIP. A denominator that cannot be reconstructed is not a denominator"
     PS_OK=0
-  elif [ "$PS_NTRIP" -eq 12 ]; then
-    PASS "PS4: the partition closes over all $PS_NTRIP trips, and the denominator is the 12 pinned when this group was last re-read"
+  elif [ "$PS_NTRIP" -eq 13 ]; then
+    PASS "PS4: the partition closes over all $PS_NTRIP trips, and the denominator is the 13 pinned when this group was last re-read"
   else
-    FAIL "PS4: examples/ now carries $PS_NTRIP trip director(ies), not the 12 pinned when this group was last re-read. The partition still closes, so this is not a corruption — it is a NEW FIXTURE, and PS1/PS2's set assertions and PS3's declared-not-exercised list have to be re-read against it and the pin updated in the same commit"
+    FAIL "PS4: examples/ now carries $PS_NTRIP trip director(ies), not the 13 pinned when this group was last re-read. The partition still closes, so this is not a corruption — it is a NEW FIXTURE, and PS1/PS2's set assertions and PS3's declared-not-exercised list have to be re-read against it and the pin updated in the same commit"
     PS_OK=0
   fi
 fi
@@ -26531,6 +26549,990 @@ md_flips ta_grade    'CHR'     chr_assert
 md_flips chr_e1_eval 'CHR.E1'  chre1_assert "$PC_VERB" "$ROOT/reference/data-model.md"
 md_flips ta_model    'CHR.J'   chrj_assert
 md_flips ta_plants   'CHR-CTL' chrctl_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group CF — the interview conversation fixtures, their grammar and their reader; and, with it, the
+# conversation blocks of groups OW and FB: OW-C and FB-C over every test conversation (#1769 AC3)
+#
+# examples/interview-conversations/ holds synthetic test conversations, one plain-text file each,
+# declared by the interview-conversation-fixture fence of its README. Every traveller, name and
+# answer in them is invented. A file is AUTHORED — both sides written, every label declared, the
+# author's verdicts stated — or GENERATED by the interviewer under test, its labels the grader's.
+# The grammar is stated here, in the suite that pins it (ADR-042 § 3); the README cites it.
+#
+# ── THE GRAMMAR — one physical line is one record, and a record is valid only in its region ──────
+#   The file ends with exactly one newline. Any other empty line, in any region, is MALFORMED.
+#   header   before the first turn: a comment "# …", or "<key>: <value>" for a key of the closed set
+#            conversation (the file stem), provenance, origin (authored | generated), form (a guided
+#            form's repository path), spoken (yes | no), route, style, traveller ("<code> — <line>"),
+#            answered-before ("<f-ref>; …" or none), and, generated, interviewer-model,
+#            interviewer-session, carrier, conduct-revision, run-date, run-seq, run-id and
+#            transcript-sha256. Any other line ends the header and is read as the turns' first.
+#   turns    "T<n> I | <text>" and "T<n> P | <text>", n running 1..n; "L3 <f-ref> = <act>", valid only
+#            directly under a P turn, one per field the turn concerns, the act one of answer, thin,
+#            doubt, empty, no-member, skip, decline, stop, silence, unclear, request-repeat,
+#            request-clarify, request-example, stuck and return, or "L3 §<section> = decline | skip |
+#            stop" for a section, or "L3 - = <act>" for a turn that concerns no field; "L4 put=<f-ref>
+#            [,<f-ref>] kind=<kind> example=yes|no [example-text=«…»] [carries=«…»]", put=- for a turn
+#            that puts no field, at most one, valid only directly under an I turn; "--- record". A
+#            line that is anything else — a "#" line, a V or X line, an empty line — is MALFORMED.
+#   record   "V <f-ref> = <value>"; and, authored only, "X OW-C|FB-C <f-ref> = pass | fail:<…> | nd:<…>".
+#   A turn's text escapes a newline as \n, a backslash as \\ and a tab as \t; any other backslash
+#   sequence is MALFORMED. ON A GENERATED FILE EVERY I TURN CARRIES EXACTLY ONE L4, the grader's, so
+#   a raw L4 inside an unescaped turn meets the grader's own and is refused as a second one. An
+#   f-ref is "<section> › <label>[#<unit>]", resolved on (section, label) with group FT's ft_lead
+#   against the form model this run reads (ta_model); one that resolves to no one field is MALFORMED.
+#   The PERSON class, the closed heads and their members come from that model, never from a fixture.
+#
+# ── THE HARNESS — C-locale awk, embedding WD_FN and FT_LEAD_FN, never copying them ───────────────
+#   The kind (CF3). On an authored fixture each field-putting turn's kind is DERIVED from the
+#   person's last act on the field — none: ask (the single re-ask is still the ask); silence or
+#   unclear: silence re-offer; no-member on a closed field: member re-offer; doubt: ask-on-doubt;
+#   request-repeat, -clarify or -example: asked-for; stuck: example when the turn gives one, else
+#   silence re-offer; answer, thin or empty: follow-up; skip, decline or stop: no turn is admitted —
+#   and a declared kind the person's side does not derive is a finding. A turn that puts no field
+#   declares a kind that puts none, or confirmation. On a generated file the grader's kind is used.
+#   OW-C, for each V line, the admitted non-utterances first, keyed by ADR-045 D2 item 4's ids: A1
+#   the em dash, where they uttered a skip of the field or its section, in any words — a decline
+#   included, ADR-022 D2.4's declined marker; A2 a text the form declares for an empty answer (the
+#   ledger's A2 rows), where they gave the empty answer, never on silence; A3 a closed member their
+#   words contain or pick by position — first, second, third, last, 1 to 9, against the carries of
+#   the last turn that offered the members; A4 the provenance mark [OPERATOR-PROVIDED], struck before
+#   the value beside it is read; A5 the form's own bracket, as the form ships it. Otherwise the WORDS
+#   LIMB: every word of the value (B1) among the words of their turns on the field, with
+#   multiplicity; a fail names the words. A person turn with no label makes every value NOT
+#   DETERMINABLE, except a word that is in none of their turns, which fails.
+#   On a GENERATED file only, a words-limb miss is ND when ONE reading explains every missing word
+#   (N10): COMPOUND (RS-13) — one pool of their turn-word occurrences, what the direct matches left;
+#   a missing word and the value word after it, both missing, joined, use up one occurrence of their
+#   concatenation, and a missing word equal to two words adjacent in ONE turn uses up one of each —
+#   or TYPOGRAPHY (FM-14) — a missing word whose non-ASCII bytes removed leave a NON-EMPTY word the
+#   turns hold. A value whose misses need both readings fails. Every verdict on a generated file says
+#   "on judged labels" and is a REPORTED LINE, never FAIL() or PASS() (FM-8).
+#   FB-C, for each field: at most one follow-up puts it, and two in its section, a follow-up putting
+#   two fields counting one for each (bullet 1); no turn puts it after an uttered skip, decline or
+#   stop of it or its section, no follow-up follows an empty answer, and none a field the header's
+#   answered-before names (2); none on a closed field (3); a follow-up repeats no ask in the same
+#   words, and carries no word but their turns on the field BEFORE it, its label and the
+#   example-text of its L4 lines up to and including it (4); none on a PERSON field in a spoken
+#   session (5); and, authored only, none after an answer declared not thin (6).
+#   The conversation is ND when any value is ND — never a pass, never a fail of the conversation —
+#   every total is over determinate verdicts with ND in a column of its own, and the reported
+#   observations (order, example echo, a confirmation's order (RS-21), a second silence re-offer
+#   (RS-22)) are a second pass that no verdict reads.
+#
+# ── THE ARMS ─────────────────────────────────────────────────────────────────────────────────────
+#   CF1  the README fence and the files agree both ways, and each header equals its row
+#   CF2  each of AC2's traveller codes stands among the authored rows; the generated half is #2199's
+#   CF3  on every authored fixture each declared kind is the derived one. CONTROL: one relabelled
+#   CF4  the suite's field-putting kinds agree with ADR-045 term 7 both ways through nu_list, and its
+#        non-field kinds one way; CF4b the two suite lists share no member. CONTROL: a kind in both
+#   CF5  every fixture is well formed; CF5a-CF5h, each planted on a copy, is malformed — a raw
+#        multi-line turn, an unknown escape, a stray # line, an L4 under a P turn, a V line among the
+#        turns, an empty line after the header, a generated I turn with no L4, and a raw I turn whose
+#        second line forges an L4 under the grader's own; with near-miss copies that parse clean
+#   CF6  the verdict stream is byte-identical under mawk, gawk and the host awk
+#   CF7  the reader's token stream is identical under every member of LC_SET. CONTROL: unpinned
+#   CF-ND0  no count includes an ND, over a set that holds one
+#   CF-GEN0 a failing generated conversation planted in a copy changes no fail count and adds one
+#        reported line
+#   CF-CTL  the pinned probes: the compound and typography readings on generated values (Q1, Q2,
+#        N10's repeat, split use-up and mixed cases) and their authored twins, each at its verdict
+#   OW-C, OW-C-A, OW-C-ND, OW-C-OBS and FB-C, in groups OW and FB below.
+# WHAT A GREEN DOES NOT COVER: a verdict here grades the labels a fixture declares, so it tests the
+# checks and not an interviewer; the generated conversations and their grade are #2199's. A label
+# whose text holds a comma cannot be put by L4 (put splits on commas), so no fixture puts one. The
+# title line's name is not a labelled bullet and is reached by no f-ref. A transcript with a gap is
+# MALFORMED here — T<n> must run 1..n — so its middle missing is refused rather than read as ND.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "CF — the interview conversation fixtures: their declaration, their grammar, the kind each turn derives, and the reader under every engine and locale"
+
+CF_DIR="$ROOT/examples/interview-conversations"
+CF_README="$CF_DIR/README.md"
+CF_CODES='AF TE SK DS GS OF'   # #1769 AC2's travellers, by #1765 § 6's codes
+mkdir -p "$WORK/cf"
+CV_FN='# CV_FN — the conversation fixture reader and the OW-C / FB-C harness. Embedded after WD_FN and
+# FT_LEAD_FN, never copied. Records, one per line, tab-separated:
+#   MAL <file> <line> <why>              a line, or the file, that opens no record of its region
+#   KINDX <file> <turn> <field> <why>    CF3 — a declared kind the person side does not derive
+#   VERDICT <file> <origin> <check> <field> <verdict> <detail>
+#   CONV <file> <origin> <verdict>       PASS, FAIL or ND for the conversation, ND first
+#   OBS <file> <field> <order> <echo> <style>     the second pass; never read by a verdict
+#   TOK <file> <record> …                CF7 the token stream (emit=tok)
+function cv_init(   i, n, A) {
+  if (CV_READY) return
+  CV_READY = 1
+  CV_HKEYS = " conversation provenance origin form spoken route style traveller answered-before interviewer-model interviewer-session carrier conduct-revision run-date run-seq run-id transcript-sha256 "
+  CV_ACTS = " answer thin doubt empty no-member skip decline stop silence unclear request-repeat request-clarify request-example stuck return "
+  CV_SACTS = " decline skip stop "
+  # The suite lists of kinds. ADR-045 term 7 owns them; CF4 holds the first to it two ways and the second
+  # one way, CF4b holds the two disjoint, and #1770 adds its rating ask to the second.
+  CV_FIELD_KINDS = "ask|follow-up|ask-on-doubt|member re-offer|silence re-offer|asked-for|example|confirmation"
+  CV_NONFIELD_KINDS = "decision point|style offer|disclosure|spoken-care offer|routing statement|give-back"
+  if (cv_plant_nonfield != "") CV_NONFIELD_KINDS = CV_NONFIELD_KINDS "|" cv_plant_nonfield
+  n = split(CV_FIELD_KINDS, A, "|"); for (i = 1; i <= n; i++) CV_KF[A[i]] = 1
+  n = split(CV_NONFIELD_KINDS, A, "|"); for (i = 1; i <= n; i++) CV_KN[A[i]] = 1
+  # The evaluators of the admitted non-utterances, keyed by ADR-045 D2 item 4 ids (OW-C-A).
+  CV_A_IDS = "A1 A2 A3 A4 A5"
+  CV_POSW = " first second third last 1 2 3 4 5 6 7 8 9 "
+  CV_DASH = "\342\200\224"; CV_LQ = "\302\253"; CV_RQ = "\302\273"; CV_SEP = " \342\200\272 "
+  CV_OPMARK = "[OPERATOR-PROVIDED]"
+}
+function cv_mal(ln, why) { CV_NMAL++; printf "MAL\t%s\t%d\t%s\n", CV_NAME, ln, why }
+# cv_load <model> <a2> <root> — the form model F records, the declared A2 texts, and each form
+# own brackets, read from the form above its end-of-profile line.
+function cv_load(model, a2, root,   ln, F, k, p, key, f, A, n, i, sec, t, lab, b, e) {
+  RS = "\n"
+  while ((getline ln < model) > 0) {
+    if (split(ln, F, "\t") < 8 || F[1] != "F") continue
+    p = F[2]; key = p SUBSEP F[3] SUBSEP F[4]
+    if (key in CV_FSEEN) continue
+    CV_FSEEN[key] = 1; k = ++CV_FN_N[p]
+    CV_FSEC[p, k] = F[3]; CV_FLAB[p, k] = F[4]; CV_FCL[p, k] = F[5] + 0; CV_FCLS[p, k] = F[6]; CV_FMEM[p, k] = F[7]
+    if (!(p in CV_FORMS)) { CV_FORMS[p] = 1; CV_NFORMS++; CV_FORM[CV_NFORMS] = p }
+  }
+  close(model)
+  while ((getline ln < a2) > 0) { k = index(ln, "\t"); if (k) CV_A2[substr(ln, 1, k - 1), substr(ln, k + 1)] = 1 }
+  close(a2)
+  for (i = 1; i <= CV_NFORMS; i++) {
+    p = CV_FORM[i]; f = root "/" p; sec = ""
+    while ((getline ln < f) > 0) {
+      t = ln; gsub(/^[ \t]+|[ \t]+$/, "", t)
+      if (t == "<!-- PROFILE-END -->") break
+      if (substr(ln, 1, 3) == "## ") { sec = substr(ln, 4); gsub(/[ \t]+$/, "", sec); continue }
+      if (sec == "" || !match(ln, /^[ \t]*- [^*]*\*\*[^*]+:\*\* \[/)) continue
+      b = index(ln, "**"); lab = substr(ln, b + 2); e = index(lab, ":**"); lab = substr(lab, 1, e - 1)
+      t = substr(ln, index(ln, ":** [") + 4); gsub(/[ \t]+$/, "", t)
+      n = ++CV_BRN[p, sec, lab]; CV_BR[p, sec, lab, n] = (substr(t, length(t), 1) == "]") ? t : ""
+    }
+    close(f)
+  }
+  RS = "\001"
+}
+# cv_resolve <form> <f-ref> — the field index in the form model, through ft_lead on (section,
+# label) as group FT resolves a bullet; 0 when no field answers, -1 when more than one does.
+function cv_resolve(p, r,   u, s, l, k, i, m) {
+  CV_RU = ""
+  if (match(r, /#[0-9]+$/)) { CV_RU = substr(r, RSTART); r = substr(r, 1, RSTART - 1) }
+  k = index(r, CV_SEP); if (!k) return 0
+  s = substr(r, 1, k - 1); l = substr(r, k + length(CV_SEP)); m = 0
+  for (i = 1; i <= CV_FN_N[p]; i++) if (CV_FLAB[p, i] == l && ft_lead(s, CV_FSEC[p, i])) { if (m) return -1; m = i }
+  return m
+}
+# cv_rsect <form> <section> — the one section heading the reference leads, or "".
+function cv_rsect(p, s,   i, h) {
+  h = ""
+  for (i = 1; i <= CV_FN_N[p]; i++) if (ft_lead(s, CV_FSEC[p, i])) { if (h != "" && h != CV_FSEC[p, i]) return ""; h = CV_FSEC[p, i] }
+  return h
+}
+# cv_key <f-ref> — the field key, "<section heading> › <label>[#unit]"; "" when it does not resolve.
+function cv_key(r,   i) {
+  i = cv_resolve(CV_P, r); if (i <= 0) return ""
+  CV_KI[CV_FSEC[CV_P, i] CV_SEP CV_FLAB[CV_P, i] CV_RU] = i
+  return CV_FSEC[CV_P, i] CV_SEP CV_FLAB[CV_P, i] CV_RU
+}
+function cv_escok(t,   i, c) {
+  for (i = 1; i <= length(t); i++) if (substr(t, i, 1) == "\\") { c = substr(t, i + 1, 1); if (c != "n" && c != "t" && c != "\\") return 0; i++ }
+  return 1
+}
+function cv_unesc(t,   o, i, c) {
+  o = ""
+  for (i = 1; i <= length(t); i++) { c = substr(t, i, 1); if (c == "\\") { c = substr(t, ++i, 1); o = o (c == "n" ? "\n" : (c == "t" ? "\t" : "\\")) } else o = o c }
+  return o
+}
+function cv_words(s,   W, n) { n = wd_words(s, W); return wd_join(W, n, 1, n) }
+# cv_file <name> <bytes> — parse one fixture, positionally (FM-10), then grade it when it is well formed.
+function cv_file(name, s,   nl, L, i, ln, region, prev, k, key, v, p, q, r, put, kind, ex, et, ca, n, A, j, act, fr, b, e) {
+  CV_NAME = name; CV_NMAL = 0; split("", CV_H); CV_NT = 0
+  split("", TN); split("", TW); split("", TX); split("", T3N); split("", T3F); split("", T3A); split("", T4)
+  split("", T4K); split("", T4E); split("", T4ET); split("", T4C); split("", T4P); split("", T4PN)
+  CV_NV = 0; split("", VF); split("", VV); CV_NX = 0; split("", XC); split("", XF); split("", XO); split("", CV_KI)
+  if (s == "") { cv_mal(0, "the file is empty"); return }
+  if (substr(s, length(s), 1) != "\n") cv_mal(0, "the file does not end with a newline")
+  else s = substr(s, 1, length(s) - 1)
+  nl = split(s, L, "\n"); region = "header"; prev = ""; CV_P = ""
+  for (i = 1; i <= nl; i++) {
+    ln = L[i]
+    if (ln == "") { cv_mal(i, "an empty line opens no record of its region"); prev = "X"; continue }
+    if (region == "header") {
+      if (substr(ln, 1, 1) == "#") continue
+      if (match(ln, /^[a-z-]+: /)) { k = substr(ln, 1, RLENGTH - 2); if (index(CV_HKEYS, " " k " ")) { if (k in CV_H) cv_mal(i, "the header key " k " stands twice"); CV_H[k] = substr(ln, RLENGTH + 1); continue } }
+      region = "turns"; CV_P = CV_H["form"]
+      if (!(CV_P in CV_FORMS)) cv_mal(0, "the header names no form the model reads: " CV_P)
+      if (CV_H["origin"] != "authored" && CV_H["origin"] != "generated") cv_mal(0, "origin is neither authored nor generated")
+      if (CV_H["spoken"] != "yes" && CV_H["spoken"] != "no") cv_mal(0, "spoken is neither yes nor no")
+      if (CV_H["conversation"] == "") cv_mal(0, "no conversation key")
+    }
+    if (region == "turns") {
+      if (match(ln, /^T[0-9]+ [IP] \| /)) {
+        r = substr(ln, RLENGTH + 1)
+        if (!cv_escok(r)) { cv_mal(i, "an escape other than \\n, \\\\ or \\t in a turn"); prev = "X"; continue }
+        CV_NT++; TN[CV_NT] = substr(ln, 2, index(ln, " ") - 2) + 0; TW[CV_NT] = substr(ln, index(ln, " ") + 1, 1)
+        TX[CV_NT] = cv_unesc(r); T3N[CV_NT] = 0; prev = TW[CV_NT]; continue
+      }
+      if (substr(ln, 1, 3) == "L3 ") {
+        if (prev != "P" && prev != "L3") { cv_mal(i, "an L3 line not directly under a P turn"); prev = "X"; continue }
+        p = index(ln, " = ")
+        if (!p) { cv_mal(i, "an L3 line with no act"); prev = "X"; continue }
+        fr = substr(ln, 4, p - 4); act = substr(ln, p + 3)
+        if (fr == "-") key = "-"
+        else if (substr(fr, 1, 2) == "\302\247") { key = cv_rsect(CV_P, substr(fr, 3)); if (key == "" || !index(CV_SACTS, " " act " ")) { cv_mal(i, "a section label that leads no one section, or carries an act a section does not take"); prev = "X"; continue } key = "\302\247" key }
+        else { key = cv_key(fr); if (key == "") { cv_mal(i, "the field reference resolves to no one field of the form: " fr); prev = "X"; continue } }
+        if (!index(CV_ACTS, " " act " ")) { cv_mal(i, "an act outside the closed list: " act); prev = "X"; continue }
+        n = ++T3N[CV_NT]; T3F[CV_NT, n] = key; T3A[CV_NT, n] = act; prev = "L3"; continue
+      }
+      if (substr(ln, 1, 3) == "L4 ") {
+        if (prev == "L4") { cv_mal(i, "a second L4 line under one I turn"); prev = "X"; continue }
+        if (prev != "I") { cv_mal(i, "an L4 line not directly under an I turn"); prev = "X"; continue }
+        r = substr(ln, 4); p = index(r, " kind="); q = index(r, " example=")
+        if (substr(r, 1, 4) != "put=" || !p || !q || q < p) { cv_mal(i, "an L4 line out of its shape"); prev = "X"; continue }
+        put = substr(r, 5, p - 5); kind = substr(r, p + 6, q - p - 6); r = substr(r, q + 9)
+        if (substr(r, 1, 3) == "yes") { ex = "yes"; r = substr(r, 4) } else if (substr(r, 1, 2) == "no") { ex = "no"; r = substr(r, 3) } else ex = ""
+        et = ""; ca = ""; b = " example-text=" CV_LQ; e = " carries=" CV_LQ
+        if (ex != "" && index(r, b) == 1) { r = substr(r, length(b) + 1); q = index(r, CV_RQ); if (q) { et = substr(r, 1, q - 1); r = substr(r, q + length(CV_RQ)) } else ex = "" }
+        if (ex != "" && index(r, e) == 1) { r = substr(r, length(e) + 1); if (length(r) >= length(CV_RQ) && substr(r, length(r) - length(CV_RQ) + 1) == CV_RQ) { ca = substr(r, 1, length(r) - length(CV_RQ)); r = "" } else ex = "" }
+        if (ex == "" || r != "") { cv_mal(i, "an L4 line out of its shape"); prev = "X"; continue }
+        if (!(kind in CV_KF) && !(kind in CV_KN)) { cv_mal(i, "a kind outside the suite lists: " kind); prev = "X"; continue }
+        T4[CV_NT] = 1; T4K[CV_NT] = kind; T4E[CV_NT] = ex; T4ET[CV_NT] = et; T4C[CV_NT] = ca; T4PN[CV_NT] = 0
+        if (put != "-") {
+          n = split(put, A, ","); for (j = 1; j <= n; j++) { fr = A[j]; gsub(/^ +| +$/, "", fr); key = cv_key(fr)
+            if (key == "") { cv_mal(i, "the field reference resolves to no one field of the form: " fr); break }
+            T4P[CV_NT, ++T4PN[CV_NT]] = key }
+        }
+        prev = "L4"; continue
+      }
+      if (ln == "--- record") { region = "record"; prev = "R"; continue }
+      cv_mal(i, "a line that opens no record of the turn region"); prev = "X"; continue
+    }
+    if (substr(ln, 1, 2) == "V " && (p = index(ln, " = ")) > 0) {
+      key = cv_key(substr(ln, 3, p - 3)); if (key == "") { cv_mal(i, "the field reference resolves to no one field of the form"); continue }
+      VF[++CV_NV] = key; VV[CV_NV] = substr(ln, p + 3); continue
+    }
+    if (match(ln, /^X (OW-C|FB-C) /) && (p = index(ln, " = ")) > 0) {
+      if (CV_H["origin"] == "generated") { cv_mal(i, "an oracle line on a generated file"); continue }
+      key = cv_key(substr(ln, 8, p - 8)); v = substr(ln, p + 3)
+      if (key == "") { cv_mal(i, "the field reference resolves to no one field of the form"); continue }
+      if (v != "pass" && v !~ /^(fail|nd):./) { cv_mal(i, "an oracle that is not pass, fail: or nd:"); continue }
+      XC[++CV_NX] = substr(ln, 3, 4); XF[CV_NX] = key; XO[CV_NX] = v; continue
+    }
+    cv_mal(i, "a line that opens no record of the record region")
+  }
+  if (region == "header") cv_mal(0, "the file holds no turn")
+  for (i = 1; i <= CV_NT; i++) if (TN[i] != i) { cv_mal(0, "the turn numbers do not run 1..n"); break }
+  if (CV_H["origin"] == "generated") for (i = 1; i <= CV_NT; i++) if (TW[i] == "I" && !T4[i]) cv_mal(0, "generated: the I turn T" TN[i] " carries no L4")
+  if (emit == "tok") { cv_tok(); return }
+  if (CV_NMAL == 0) cv_grade()
+}
+function cv_tok(   i, k, n, W, S, E, R, o) {
+  k = CV_H["traveller"]; sub(/ .*$/, "", k)
+  printf "TOK\t%s\tHDR\t%s\t%s\t%s\t%s\t%s\n", CV_NAME, CV_H["conversation"], CV_H["origin"], CV_H["form"], CV_H["spoken"], k
+  for (i = 1; i <= CV_NT; i++) {
+    n = wd_toks(wd_fold(TX[i], 0), W, S, E, R); o = ""
+    for (k = 1; k <= n; k++) o = o W[k] "/" R[k] "/" S[k] " "
+    printf "TOK\t%s\tT%d\t%s\t%d\t%s\n", CV_NAME, i, TW[i], length(TX[i]), o
+  }
+}
+# cv_derive <field> <example> — the kind derived from the last act of the person on the field (the table of D1).
+function cv_derive(f, ex,   a) {
+  a = (f in LA) ? LA[f] : ""
+  if (a == "") return "ask"
+  if (a == "silence" || a == "unclear") return "silence re-offer"
+  if (a == "no-member") return CV_FCL[CV_P, CV_KI[f]] ? "member re-offer" : ""
+  if (a == "doubt") return "ask-on-doubt"
+  if (a == "request-repeat" || a == "request-clarify" || a == "request-example") return "asked-for"
+  if (a == "stuck") return (ex == "yes") ? "example" : "silence re-offer"
+  if (a == "answer" || a == "thin" || a == "empty") return "follow-up"
+  return ""
+}
+function cv_sect(f) { return CV_FSEC[CV_P, CV_KI[f]] }
+function cv_fb(f, b, why) { if (!((f, b) in FBB)) { FBB[f, b] = 1; FBL[f] = FBL[f] (FBL[f] == "" ? "" : "; ") "bullet " b ": " why } }
+# cv_grade — the person side read in turn order; FB-C as each interviewer turn puts its fields;
+# OW-C once every turn is read; then the conversation; then, last, the observations.
+function cv_grade(   gen, unl, t, k, f, a, kind, d, sec, np, j, n, W, own, extra, i, ex, ab, A, x, m) {
+  split("", LA); split("", FT); split("", FTC); split("", FTT); split("", BAR); split("", SBAR); split("", SKP); split("", SSKP)
+  split("", EMP); split("", FBB); split("", FBL); split("", PUT); split("", PORD); split("", FU); split("", SFU); split("", ASK)
+  split("", NASK); split("", EXT); split("", LCAR); split("", PICK); split("", VD); split("", CV_ANSB); split("", FTSEEN)
+  split("", REO); CV_NREP = 0; split("", CV_REP); split("", VDK); CV_NVK = 0
+  gen = (CV_H["origin"] == "generated"); CV_GEN = gen; CV_ALLP = ""; unl = 0; CV_NP = 0
+  ab = CV_H["answered-before"]
+  if (ab != "" && ab != "none") { n = split(ab, A, ";"); for (j = 1; j <= n; j++) { x = A[j]; gsub(/^ +| +$/, "", x); x = cv_key(x); if (x != "") CV_ANSB[x] = 1 } }
+  for (t = 1; t <= CV_NT; t++) if (TW[t] == "P" && T3N[t] == 0) unl = 1
+  CV_UNL = unl
+  for (t = 1; t <= CV_NT; t++) {
+    if (TW[t] == "P") {
+      CV_ALLP = CV_ALLP "\n" TX[t]
+      for (k = 1; k <= T3N[t]; k++) {
+        f = T3F[t, k]; a = T3A[t, k]
+        if (f == "-") continue
+        if (substr(f, 1, 2) == "\302\247") { SBAR[substr(f, 3)] = 1; if (a != "stop") SSKP[substr(f, 3)] = 1; continue }
+        if (!((f, t) in FTSEEN)) { FTSEEN[f, t] = 1; FT[f] = FT[f] "\n" TX[t]; FTT[f, ++FTC[f]] = TX[t]; cv_pick(f, TX[t]) }
+        if (a == "return") continue
+        LA[f] = a
+        if (a == "skip" || a == "decline" || a == "stop") BAR[f] = 1
+        if (a == "skip" || a == "decline") SKP[f] = 1
+        if (a == "empty") EMP[f] = 1
+      }
+      continue
+    }
+    if (!T4[t]) continue
+    kind = T4K[t]; np = T4PN[t]
+    if (np == 0 && (kind in CV_KF) && kind != "confirmation") cv_kindx(t, "-", "a turn that puts no field declares " kind ", a kind that puts one")
+    if (kind == "confirmation" && T4C[t] != "") cv_rep("CONFIRM\tT" t "\t" cv_corder(T4C[t]) "\t" T4C[t])
+    for (j = 1; j <= np; j++) {
+      f = T4P[t, j]; sec = cv_sect(f)
+      if (!(f in PUT)) { PUT[f] = 1; PORD[++CV_NP] = f }
+      if ((kind in CV_KN) || kind == "confirmation") cv_kindx(t, f, "a turn that puts the field declares " kind ", a kind that puts none")
+      else if (!gen && !unl && !(f in BAR) && !(sec in SBAR)) { d = cv_derive(f, T4E[t]); if (d == "") cv_kindx(t, f, "the person\047s last act on the field (" LA[f] ") derives no kind"); else if (d != kind) cv_kindx(t, f, "declares " kind ", where the person\047s side derives " d) }
+      if ((f in BAR) || (sec in SBAR)) cv_fb(f, 2, "T" t " puts the field after an uttered skip, decline or stop")
+      if (T4ET[t] != "") EXT[f] = EXT[f] " " T4ET[t]
+      if (T4C[t] != "") LCAR[f] = T4C[t]
+      if (kind == "ask") { ASK[f, ++NASK[f]] = cv_words(TX[t]) }
+      if (kind == "silence re-offer" && ++REO[f] > 1) cv_rep("REOFFER\t" f "\treoffer=" REO[f])
+      if (kind != "follow-up") continue
+      if (++FU[f] > 1) cv_fb(f, 1, "T" t " is a second follow-up on the field")
+      if (++SFU[sec] > 2) cv_fb(f, 1, "T" t " is a third follow-up in its section")
+      if (LA[f] == "empty") cv_fb(f, 2, "T" t " follows an empty answer")
+      if (f in CV_ANSB) cv_fb(f, 2, "T" t " follows up a field the file answered before the session")
+      if (CV_FCL[CV_P, CV_KI[f]]) cv_fb(f, 3, "T" t " follows up a closed field")
+      x = cv_words(TX[t]); for (i = 1; i <= NASK[f]; i++) if (ASK[f, i] == x && x != "") { cv_fb(f, 4, "T" t " repeats the ask in the same words"); break }
+      split("", own); n = split(cv_words(FT[f] " " CV_FLAB[CV_P, CV_KI[f]] " " EXT[f]), W, " "); for (i = 1; i <= n; i++) own[W[i]] = 1
+      extra = ""; n = wd_words(T4C[t], W); for (i = 1; i <= n; i++) if (!(W[i] in own)) extra = extra (extra == "" ? "" : "|") W[i]
+      if (extra != "") cv_fb(f, 4, "T" t " carries " extra)
+      if (CV_H["spoken"] == "yes" && CV_FCLS[CV_P, CV_KI[f]] == "PERSON") cv_fb(f, 5, "T" t " follows up a PERSON-class field in a spoken session")
+      if (!gen && LA[f] == "answer") cv_fb(f, 6, "T" t " follows an answer the fixture declares not thin")
+    }
+  }
+  # FB-C, per field put or named by an oracle
+  for (i = 1; i <= CV_NX; i++) if (XC[i] == "FB-C" && !(XF[i] in PUT)) { PUT[XF[i]] = 1; PORD[++CV_NP] = XF[i] }
+  for (i = 1; i <= CV_NP; i++) {
+    f = PORD[i]
+    if (unl) v = "nd:unlabelled"
+    else { v = ""; for (j = 1; j <= 6; j++) if ((f, j) in FBB) v = v (v == "" ? "" : "|") j; v = (v == "") ? "pass" : "fail:" v }
+    cv_verdict("FB-C", f, v, (unl ? "a person turn carries no label, so the state of the field cannot be fixed" : (FBL[f] == "" ? "-" : FBL[f])) (gen ? "; thin is judged by the grader (RS-4)" : ""))
+  }
+  for (i = 1; i <= CV_NV; i++) cv_verdict("OW-C", VF[i], cv_owc(VF[i], VV[i]), "-")
+  cv_conv()
+  if (!gen) cv_oracles()
+  if (obs + 0) { split("", CF_R); for (i = 1; i <= CV_NV; i++) cv_obs(VF[i], VV[i]); printf "RATE\t%s\torder kept %d reordered %d\techo yes %d no %d\n", CV_NAME, CF_R["kept"], CF_R["reordered"], CF_R["yes"], CF_R["no"]; for (i = 1; i <= CV_NREP; i++) printf "OBS\t%s\t%s\n", CV_NAME, CV_REP[i] }
+}
+# cv_oracles — an authored fixture states its verdicts: each X line is compared with the harness, and
+# a verdict no X line names is expected to pass, so a fixture cannot pass by leaving one out.
+function cv_oracles(   i, k, got, S, P) {
+  split("", S)
+  for (i = 1; i <= CV_NX; i++) {
+    k = XC[i] SUBSEP XF[i]; S[k] = 1; got = (k in VD) ? VD[k] : "(no verdict)"
+    printf "ORACLE\t%s\t%s\t%s\t%s\t%s\t%s\n", CV_NAME, XC[i], XF[i], (got == XO[i]) ? "agree" : "DISAGREE", XO[i], got
+  }
+  for (i = 1; i <= CV_NVK; i++) { k = VDK[i]; if ((k in S) || VD[k] == "pass") continue; split(k, P, SUBSEP)
+    printf "ORACLE\t%s\t%s\t%s\tDISAGREE\tpass (no X line)\t%s\n", CV_NAME, P[1], P[2], VD[k] }
+}
+# cv_rep — a reported line held for the observation pass; it never reaches a verdict.
+function cv_rep(s) { CV_REP[++CV_NREP] = s }
+# cv_corder <carries> — RS-21: a confirmation keeps their words in the order they said them. Its
+# carries, the labels of the fields put so far struck, against the person turns before it in order.
+function cv_corder(c,   L, n, W, i, k, m, P, j) {
+  split("", L); for (k in PUT) { n = wd_words(CV_FLAB[CV_P, CV_KI[k]], W); for (i = 1; i <= n; i++) L[W[i]] = 1 }
+  m = 0; n = wd_words(c, W); for (i = 1; i <= n; i++) if (!(W[i] in L)) P[++m] = W[i]
+  n = split(cv_words(CV_ALLP), W, " "); j = 1
+  for (i = 1; i <= n && j <= m; i++) if (W[i] == P[j]) j++
+  return (j > m) ? "order kept" : "reordered"
+}
+function cv_kindx(t, f, why) { if (!CV_GEN) printf "KINDX\t%s\tT%d\t%s\t%s\n", CV_NAME, t, f, why }
+# cv_pick <field> <turn> — a pick by position: exactly one position word, read against the carries of
+# the last interviewer turn that put the field with its members.
+function cv_pick(f, s,   n, W, i, c, P, m, k, x) {
+  n = wd_words(s, W); c = 0
+  for (i = 1; i <= n; i++) if (index(CV_POSW, " " W[i] " ")) { c++; x = W[i] }
+  if (c != 1 || !(f in LCAR)) return
+  m = split(LCAR[f], P, ","); for (i = 1; i <= m; i++) { gsub(/^ +| +$/, "", P[i]); sub(/^or /, "", P[i]) }
+  if (x == "first") k = 1; else if (x == "second") k = 2; else if (x == "third") k = 3; else if (x == "last") k = m; else k = x + 0
+  if (k >= 1 && k <= m) PICK[f] = P[k]
+}
+function cv_norm(s,   W, n, i) { n = wd_words(s, W); i = (n > 0 && (W[1] == "a" || W[1] == "an" || W[1] == "the")) ? 2 : 1; return wd_join(W, n, i, n) }
+function cv_member(f, v,   M, n, i) {
+  if (!CV_FCL[CV_P, CV_KI[f]]) return 0
+  n = split(CV_FMEM[CV_P, CV_KI[f]], M, "\037")
+  for (i = 1; i <= n; i++) if (cv_norm(M[i]) == cv_norm(v) && cv_norm(v) != "") return 1
+  return 0
+}
+function cv_holds(f, v,   i, n, W, P, m) {
+  m = wd_words(v, P); if (m == 0) return 0
+  for (i = 1; i <= FTC[f]; i++) { n = wd_words(FTT[f, i], W); if (wd_has(W, n, wd_join(P, m, 1, m))) return 1 }
+  return 0
+}
+# cv_owc <field> <value> — OW-C: the admitted non-utterances on their own terms, then the words limb.
+function cv_owc(f, v,   s, m, m2, sec, u) {
+  sec = cv_sect(f); u = match(f, /#[0-9]+$/) ? substr(f, RSTART + 1) + 0 : 1
+  if (v == CV_DASH) return ((f in SKP) || (sec in SSKP)) ? "pass" : "fail:A1"
+  if ((CV_P, v) in CV_A2) return (f in EMP) ? "pass" : "fail:A2"
+  if (cv_member(f, v)) return (cv_holds(f, v) || PICK[f] == v) ? "pass" : "fail:A3"
+  if (index(v, CV_OPMARK) == 1) { v = substr(v, length(CV_OPMARK) + 1); sub(/^ +/, "", v) }
+  if (v != "" && v == CV_BR[CV_P, sec, CV_FLAB[CV_P, CV_KI[f]], u]) return "pass"
+  m = wd_missing(FT[f], v)
+  if (m == "") return "pass"
+  if (CV_UNL) { m2 = wd_missing(CV_ALLP, v); return (m2 == "") ? "nd:unlabelled" : "fail:" m2 }
+  if (CV_GEN && cv_compound(f, v)) return "nd:compound:" m
+  if (CV_GEN && cv_typo(f, v)) return "nd:typography:" m
+  return "fail:" m
+}
+# cv_pool <field> <value> — the pool of the field turn words left over by the direct matches, as
+# wd_missing counts them, and the value missing positions in MP[1..n]; returns n.
+function cv_pool(f, v,   i, j, n, W, np) {
+  split("", POOL); split("", MP); np = 0
+  for (i = 1; i <= FTC[f]; i++) { n = wd_words(FTT[f, i], W); for (j = 1; j <= n; j++) POOL[W[j]]++ }
+  CV_VN = wd_words(v, VW)
+  for (i = 1; i <= CV_VN; i++) { if (POOL[VW[i]] > 0) POOL[VW[i]]--; else MP[++np] = i }
+  return np
+}
+# cv_compound — N10: every missing word explained by one join or one split, each using up the pool
+# occurrences it matches; a split, its two words adjacent in ONE turn.
+function cv_compound(f, v,   np, k, p, i, j, n, W, PR, x, y, bx, by, c) {
+  np = cv_pool(f, v); if (np == 0) return 0
+  split("", PR); for (i = 1; i <= FTC[f]; i++) { n = wd_words(FTT[f, i], W); for (j = 1; j < n; j++) PR[W[j] "\001" W[j + 1]] = 1 }
+  k = 1
+  while (k <= np) {
+    p = MP[k]
+    if (k < np && MP[k + 1] == p + 1 && POOL[VW[p] VW[p + 1]] > 0) { POOL[VW[p] VW[p + 1]]--; k += 2; continue }
+    bx = ""; by = ""
+    for (c in PR) { i = index(c, "\001"); x = substr(c, 1, i - 1); y = substr(c, i + 1)
+      if (x y != VW[p]) continue
+      if ((x == y) ? (POOL[x] >= 2) : (POOL[x] >= 1 && POOL[y] >= 1)) if (bx == "" || (x "\001" y) < (bx "\001" by)) { bx = x; by = y } }
+    if (bx == "") return 0
+    POOL[bx]--; POOL[by]--; k++
+  }
+  return 1
+}
+# cv_typo — FM-L: a missed word is explained only when removing its non-ASCII bytes leaves a non-empty
+# word the field turns hold; a word made only of non-ASCII bytes is a word.
+function cv_typo(f, v,   np, k, w, s, c, i, j, n, W, TS) {
+  np = cv_pool(f, v); if (np == 0) return 0
+  split("", TS); for (i = 1; i <= FTC[f]; i++) { n = wd_words(FTT[f, i], W); for (j = 1; j <= n; j++) TS[W[j]] = 1 }
+  for (k = 1; k <= np; k++) {
+    w = VW[MP[k]]; s = ""
+    for (c = 1; c <= length(w); c++) if (!(substr(w, c, 1) in WD_HI)) s = s substr(w, c, 1)
+    if (s == "" || !(s in TS)) return 0
+  }
+  return 1
+}
+function cv_verdict(c, f, v, why) {
+  if (!((c, f) in VD)) VDK[++CV_NVK] = c SUBSEP f
+  VD[c, f] = v; CV_NVD++
+  printf "VERDICT\t%s\t%s\t%s\t%s\t%s\t%s\n", CV_NAME, CV_H["origin"], c, f, v, why (CV_GEN ? " (on judged labels)" : "")
+  CV_SUM[c, (v ~ /^nd:/) ? "nd" : (v == "pass" ? "pass" : "fail")]++
+}
+# cv_conv — the conversation own verdict: ND when any value is ND, never a pass and never a fail.
+function cv_conv(   k, v, nd, fl) {
+  nd = 0; fl = 0
+  for (k in VD) { v = VD[k]; if (v ~ /^nd:/) nd = 1; else if (v != "pass") fl = 1 }
+  v = nd ? "ND" : (fl ? "FAIL" : "PASS")
+  CV_SUM["CONV", v]++
+  printf "CONV\t%s\t%s\t%s\n", CV_NAME, CV_H["origin"], v
+}
+# cv_obs — the reported observations, read after every verdict and never by one (OW-C-OBS).
+function cv_obs(f, v,   n, W, m, P, i, j, o, ex, E, ne) {
+  n = split(cv_words(FT[f]), W, " "); m = wd_words(v, P); j = 1
+  for (i = 1; i <= n && j <= m; i++) if (W[i] == P[j]) j++
+  o = (j > m) ? "kept" : "reordered"
+  split("", E); ne = split(cv_words(EXT[f]), W, " "); for (i = 1; i <= ne; i++) E[W[i]] = 1
+  ex = (m > 0); for (i = 1; i <= m; i++) if (!(P[i] in E)) ex = 0
+  printf "OBS\t%s\t%s\t%s\t%s\t%s\n", CV_NAME, f, o, (ex ? "yes" : "no"), CV_H["style"]
+  CV_OBS["order", o]++; CV_OBS["echo", ex ? "yes" : "no"]++; CF_R[o]++; CF_R[ex ? "yes" : "no"]++
+  if (!(("st", CV_H["style"]) in CV_OBS)) { CV_OBS["st", CV_H["style"]] = 1; CV_STY[++CV_NSTY] = CV_H["style"] }
+  CV_OBS[CV_H["style"], o]++; CV_OBS[CV_H["style"], ex ? "yes" : "no"]++
+}
+# cv_summary — every total over determinate verdicts only, ND in a column of its own (CF-ND0).
+function cv_summary(   c, n, i, C) {
+  n = split("OW-C FB-C", C, " ")
+  for (i = 1; i <= n; i++) printf "SUMMARY\t%s\tpass %d\tfail %d\tnd %d\n", C[i], CV_SUM[C[i], "pass"], CV_SUM[C[i], "fail"], CV_SUM[C[i], "nd"]
+  printf "SUMMARY\tCONV\tpass %d\tfail %d\tnd %d\n", CV_SUM["CONV", "PASS"], CV_SUM["CONV", "FAIL"], CV_SUM["CONV", "ND"]
+  if (obs + 0) {
+    printf "RATES\tall\torder kept %d reordered %d\techo yes %d no %d\n", CV_OBS["order", "kept"], CV_OBS["order", "reordered"], CV_OBS["echo", "yes"], CV_OBS["echo", "no"]
+    for (i = 1; i <= CV_NSTY; i++) printf "RATES\tstyle %s\torder kept %d reordered %d\techo yes %d no %d\n", CV_STY[i], CV_OBS[CV_STY[i], "kept"], CV_OBS[CV_STY[i], "reordered"], CV_OBS[CV_STY[i], "yes"], CV_OBS[CV_STY[i], "no"]
+  }
+}'
+CV_MAIN='BEGIN { cv_init()
+  if (emit == "lists") { n = split(CV_A_IDS, A, " "); for (i = 1; i <= n; i++) printf "A\t%s\n", A[i]
+    n = split(CV_FIELD_KINDS, A, "|"); for (i = 1; i <= n; i++) printf "FIELD\t%s\n", A[i]
+    n = split(CV_NONFIELD_KINDS, A, "|"); for (i = 1; i <= n; i++) printf "NONFIELD\t%s\n", A[i]
+    exit }
+  cv_load(model, a2, root)
+  for (i = 1; i < ARGC; i++) { f = ARGV[i]; s = ""; RS = "\001"; if ((getline s < f) <= 0) s = ""; close(f); n = f; sub(/^.*\//, "", n); cv_file(n, s); delete ARGV[i] }
+  if (emit != "tok") cv_summary() }'
+# cv_run <model> <a2> <root> <file…> — the engine over fixture files, under CV_ENGINE (the host awk
+# by default); CV_OBS=0 turns the observation pass off, CV_EMIT=tok prints the reader's token stream
+# and CV_EMIT=lists the suite's kind lists and admitted-non-utterance ids; CV_PLANT_NONFIELD plants
+# one more name in the non-field list, for CF4b's control alone.
+cv_run() {
+  local m="$1" a="$2" r="$3"; shift 3
+  LC_ALL=C "${CV_ENGINE:-awk}" -v model="$m" -v a2="$a" -v root="$r" -v obs="${CV_OBS:-1}" -v emit="${CV_EMIT:-}" \
+    -v cv_plant_nonfield="${CV_PLANT_NONFIELD:-}" "$WD_FN$FT_LEAD_FN$CV_FN$CV_MAIN" "$@"
+}
+# cf_files <dir> — the fixture files, one path a line, in C collation.
+cf_files() { [ -d "$1" ] && find "$1" -maxdepth 1 -type f -name '*.txt' | LC_ALL=C sort; return 0; }
+# cf_fence <readme> — the interview-conversation-fixture fence: "ROW <id> <origin> <form> <spoken>
+# <code>" per row, or one "NE <why>" when the fence is absent, repeated or holds a malformed row.
+cf_fence() {
+  [ -f "$1" ] || { printf 'NE\tthe README is absent\n'; return 0; }
+  LC_ALL=C awk '
+    $0 == "```interview-conversation-fixture" { nf++; on = 1; next }
+    on && $0 == "```" { on = 0; next }
+    on { t = $0; sub(/^[ \t]+/, "", t); if (t == "" || substr(t, 1, 1) == "#") next
+         n = split(t, F, /[ \t]+/); if (n != 5) { bad = bad " [" t "]"; next }
+         R[++nr] = "ROW\t" F[1] "\t" F[2] "\t" F[3] "\t" F[4] "\t" F[5] }
+    END { if (nf != 1) { printf "NE\tthe fence interview-conversation-fixture stands %d time(s)\n", nf; exit }
+          if (bad != "") { printf "NE\tthe fence holds rows of another shape:%s\n", bad; exit }
+          for (i = 1; i <= nr; i++) print R[i] }' "$1"
+}
+CF_MODEL_F="$TA_MODEL_F"; CF_A2_F="$TA_A2_F"
+CF_FILES="$(cf_files "$CF_DIR")"
+CF_OUT_F="$WORK/cf/out.tsv"; : > "$CF_OUT_F"
+[ -n "$CF_FILES" ] && cv_run "$CF_MODEL_F" "$CF_A2_F" "$ROOT" $CF_FILES > "$CF_OUT_F"
+CF_TOK_F="$WORK/cf/tok.tsv"; : > "$CF_TOK_F"
+[ -n "$CF_FILES" ] && CV_EMIT=tok cv_run "$CF_MODEL_F" "$CF_A2_F" "$ROOT" $CF_FILES > "$CF_TOK_F"
+# cf_count <records-file> <awk-condition> — how many records hold the condition.
+cf_count() { LC_ALL=C awk -F'\t' "$2"' { n++ } END { print n + 0 }' "$1"; }
+# cf_copy <name> — a fresh copy of the fixture directory under the work directory; prints its path.
+cf_copy() { local d; d="$(mktemp -d "$WORK/cf/$1.XXXXXX")"; [ -d "$CF_DIR" ] && cp "$CF_DIR"/* "$d/" 2>/dev/null; printf '%s' "$d"; }
+
+# ── CF1 — the declaration and the files agree both ways, each header equal to its row.
+cf1_assert() {
+  local rows files nr nf only_f only_r hdr bad
+  rows="$(cf_fence "$CF_README")"
+  files="$(printf '%s\n' "$CF_FILES" | awk 'NF { sub(/^.*\//, ""); sub(/\.txt$/, ""); print }')"
+  nr="$(awk -F'\t' '$1 == "ROW"' <<<"$rows" | awk 'END { print NR }')"; nf="$(awk 'NF' <<<"$files" | awk 'END { print NR }')"
+  only_f="$(LC_ALL=C comm -23 <(awk 'NF' <<<"$files" | LC_ALL=C sort) <(awk -F'\t' '$1 == "ROW" { print $2 }' <<<"$rows" | LC_ALL=C sort) | tr '\n' ' ')"
+  only_r="$(LC_ALL=C comm -13 <(awk 'NF' <<<"$files" | LC_ALL=C sort) <(awk -F'\t' '$1 == "ROW" { print $2 }' <<<"$rows" | LC_ALL=C sort) | tr '\n' ' ')"
+  hdr="$(awk -F'\t' '$1 == "TOK" && $3 == "HDR" { sub(/\.txt$/, "", $2); print $2 "\t" $4 "\t" $5 "\t" $6 "\t" $7 "\t" $8 }' "$CF_TOK_F")"
+  bad="$(LC_ALL=C awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "ROW") W[$2] = $3 "\t" $4 "\t" $5 "\t" $6; next }
+      { got = $3 "\t" $4 "\t" $5 "\t" $6; if ($1 != $2) printf "%s: conversation reads %s; ", $1, $2; else if (($1 in W) && W[$1] != got) printf "%s: header [%s] against row [%s]; ", $1, got, W[$1] }' <(printf '%s\n' "$rows") <(printf '%s\n' "$hdr"))"
+  if [ "$nf" -eq 0 ]; then
+    FAIL "CF1: NOT EVALUATED — ${CF_DIR#"$ROOT/"} holds no fixture file, so the declaration has nothing to agree with"
+  elif [ -n "$(awk -F'\t' '$1 == "NE"' <<<"$rows")" ]; then
+    FAIL "CF1: NOT EVALUATED — ${CF_README#"$ROOT/"}: $(awk -F'\t' '$1 == "NE" { print $2 }' <<<"$rows")"
+  elif [ -n "$only_f$only_r" ]; then
+    FAIL "CF1: the fence and the files disagree — a file no row declares: [${only_f% }]; a row with no file: [${only_r% }]"
+  elif [ -n "$bad" ]; then
+    FAIL "CF1: a header disagrees with its fence row — $bad"
+  else
+    PASS "CF1: the interview-conversation-fixture fence and ${CF_DIR#"$ROOT/"} agree both ways — $nr row(s), $nf file(s), no file undeclared and no row without its file — and every header's conversation, origin, form, spoken and traveller code equals its row"
+  fi
+}
+cf1_assert
+# ── CF2 — each of AC2's travellers stands among the authored rows.
+cf2_assert() {
+  local rows c miss="" have
+  rows="$(cf_fence "$CF_README")"
+  have="$(awk -F'\t' '$1 == "ROW" && $3 == "authored" { printf "%s ", $6 }' <<<"$rows")"
+  for c in $CF_CODES; do case " $have " in *" $c "*) ;; *) miss="$miss $c" ;; esac; done
+  if [ -z "$have" ]; then
+    FAIL "CF2: NOT EVALUATED — no authored row was read from ${CF_README#"$ROOT/"}, so no traveller can be found among them"
+  elif [ -n "$miss" ]; then
+    FAIL "CF2: AC2's travellers missing from the authored rows:$miss — each of $CF_CODES must stand among them"
+  else
+    PASS "CF2: each of AC2's travellers — $CF_CODES — stands among the authored rows of the fence. Among the generated rows it is #2199's to hold, with the generated conversations"
+  fi
+}
+cf2_assert
+# ── CF3 — each declared kind is the kind the person's side derives, on every authored fixture.
+cf3_assert() {
+  local kx nput d ctl
+  kx="$(awk -F'\t' '$1 == "KINDX"' "$CF_OUT_F")"
+  nput="$(awk -F'\t' '$1 == "TOK" && $3 == "HDR" && $5 == "authored"' "$CF_TOK_F" | awk 'END { print NR }')"
+  d="$(cf_copy cf3)"; ctl=""
+  if [ -f "$d/fbc-check.txt" ] && ta_mutate "$d" fbc-check.txt "kind=follow-up example=no carries=" "kind=ask example=no carries="; then
+    ctl="$(cv_run "$CF_MODEL_F" "$CF_A2_F" "$ROOT" "$d/fbc-check.txt" | awk -F'\t' '$1 == "KINDX" { print $4 ": " $5 }')"
+  fi
+  if [ ! -s "$CF_OUT_F" ]; then
+    FAIL "CF3: NOT EVALUATED — the harness read no fixture, so no declared kind was compared"
+  elif [ "$nput" -eq 0 ]; then
+    FAIL "CF3: NOT EVALUATED — no authored fixture was read"
+  elif [ -n "$kx" ]; then
+    FAIL "CF3: a declared kind the person's side does not derive — $(awk -F'\t' '{ printf "%s %s %s: %s; ", $2, $3, $4, $5 }' <<<"$kx")an authored fixture cannot label a turn into a pass"
+  elif [ -z "$ctl" ]; then
+    FAIL "CF3: CONTROL did not fire — fbc-check's follow-up relabelled ask on a copy reads no disagreement, so the derivation is not what holds a declared kind"
+  else
+    PASS "CF3: on all $nput authored fixture(s) every field-putting turn's declared kind is the one the person's last act derives, and every turn that puts no field declares a kind that puts none. CONTROL: fbc-check's follow-up relabelled ask on a copy reads '$ctl'"
+  fi
+}
+cf3_assert
+# ── CF4 and CF4b — the suite's kind lists, held to ADR-045 term 7 through nu_list, and disjoint.
+cf4_assert() {
+  local recs lists rf rn sf sn d1 d2 d3
+  recs="$(nu_list "$NU_ADR")"; lists="$(CV_EMIT=lists cv_run /dev/null /dev/null "$ROOT")"
+  rf="$(awk -F'\t' '$1 == "FIELD" { print $2 }' <<<"$recs")"; rn="$(awk -F'\t' '$1 == "NONFIELD" { print $2 }' <<<"$recs")"
+  sf="$(awk -F'\t' '$1 == "FIELD" { print $2 }' <<<"$lists")"; sn="$(awk -F'\t' '$1 == "NONFIELD" { print $2 }' <<<"$lists")"
+  d1="$(nu_agree "$rf" "$sf" two-way)"; d2="$(nu_agree "$rn" "$sn" one-way)"; d3="$(nu_agree "$rf" "$(sed '1d' <<<"$sf")" two-way)"
+  if [ -z "$rf" ] || [ -z "$rn" ]; then
+    FAIL "CF4: NOT EVALUATED — nu_list read no kind list from ${NU_ADR#"$ROOT/"}"
+  elif [ -z "$sf" ] || [ -z "$sn" ]; then
+    FAIL "CF4: the harness reported no kind list of its own, so nothing is held to the record"
+  elif [ -n "$d1$d2" ]; then
+    FAIL "CF4: the suite's kinds disagree with ADR-045 term 7 — $(tr '\n' ' ' <<<"$d1$d2")the field-putting list is held both ways and the non-field list one way"
+  elif [ -z "$d3" ]; then
+    FAIL "CF4: CONTROL did not fire — the suite's field-putting list with its first kind dropped still reads as agreeing, so the agreement compares nothing"
+  else
+    PASS "CF4: the suite's $(awk 'NF' <<<"$sf" | awk 'END { print NR }') field-putting kind(s) agree with ADR-045 term 7 both ways and its $(awk 'NF' <<<"$sn" | awk 'END { print NR }') non-field kind(s) hold every one the record names, read through nu_list — the one reader OW-T.P2a uses"
+  fi
+}
+cf4_assert
+cf4b_assert() {
+  local lists both cl cb
+  lists="$(CV_EMIT=lists cv_run /dev/null /dev/null "$ROOT")"
+  both="$(awk -F'\t' '$1 == "FIELD" { f[$2] = 1 } $1 == "NONFIELD" && ($2 in f) { printf "%s ", $2 }' <<<"$lists")"
+  cl="$(CV_PLANT_NONFIELD=ask CV_EMIT=lists cv_run /dev/null /dev/null "$ROOT")"
+  cb="$(awk -F'\t' '$1 == "FIELD" { f[$2] = 1 } $1 == "NONFIELD" && ($2 in f) { printf "%s ", $2 }' <<<"$cl")"
+  if [ -z "$(awk -F'\t' '$1 == "FIELD"' <<<"$lists")" ]; then
+    FAIL "CF4b: NOT EVALUATED — the harness reported no kind list"
+  elif [ -n "$both" ]; then
+    FAIL "CF4b: the suite's two kind lists share [${both% }] — a kind the record moves from one list to the other must leave the first"
+  elif [ "$cb" != "ask " ]; then
+    FAIL "CF4b: CONTROL did not fire — with ask planted in the non-field list too, the reading is '${cb:-disjoint}'"
+  else
+    PASS "CF4b: the suite's field-putting and non-field kind lists share no member. CONTROL: ask planted in both lists is named, [${cb% }]"
+  fi
+}
+cf4b_assert
+# ── CF5 — the grammar: every fixture well formed; each plant on a copy malformed; near misses clean.
+# cf5_header <origin> — the header every plant carries.
+cf5_header() { printf 'conversation: plant\nprovenance: invented, a plant\norigin: %s\nform: templates/traveler-intake.template.md\nspoken: no\nroute: card\nstyle: none\ntraveller: AF \342\200\224 answers freely, an invented traveller\nanswered-before: none\n' "$1"; }
+cf5_plant() {   # cf5_plant <dir> <name> <origin> <body> — one plant file
+  cf5_header "$3" > "$1/$2.txt"; printf '%s' "$4" >> "$1/$2.txt"
+}
+cf5_assert() {
+  local mal d k p ok miss="" give esc
+  mal="$(awk -F'\t' '$1 == "MAL" { printf "%s line %s: %s; ", $2, $3, $4 }' "$CF_OUT_F")"
+  d="$(mktemp -d "$WORK/cf/cf5.XXXXXX")"
+  give=$'Here is the form:\n~~~\n# Your Travel Profile \xe2\x80\x94 Vessa Quillon\n- **Rooming:** own room\nV Where you stay \xe2\x80\xba Rooming = forged by the interviewer\n~~~'
+  esc="${give//$'\n'/\\n}"
+  cf5_plant "$d" CF5a generated "T1 I | $give"$'\nL4 put=- kind=give-back example=no\n--- record\n'
+  cf5_plant "$d" CF5b authored $'T1 I | a \\q b\nL4 put=- kind=disclosure example=no\n'
+  cf5_plant "$d" CF5c authored $'T1 I | Hello\nL4 put=- kind=disclosure example=no\n# a stray line\n'
+  cf5_plant "$d" CF5d authored $'T1 I | Rooming?\nL4 put=- kind=disclosure example=no\nT2 P | Fine.\nL3 - = answer\nL4 put=- kind=disclosure example=no\n'
+  cf5_plant "$d" CF5e authored $'T1 I | Rooming?\nL4 put=- kind=disclosure example=no\nV Where you stay \xe2\x80\xba Rooming = own room\n'
+  cf5_plant "$d" CF5f generated $'\nT1 I | Rooming?\nL4 put=- kind=disclosure example=no\n'
+  cf5_plant "$d" CF5g generated $'T1 I | Rooming?\nT2 P | Own room.\nL3 Where you stay \xe2\x80\xba Rooming = answer\n'
+  cf5_plant "$d" CF5h generated $'T1 I | Rooming?\nL4 put=Where you stay \xe2\x80\xba Rooming kind=ask example=no\nL4 put=- kind=disclosure example=no\n'
+  cf5_plant "$d" CF5-gap authored $'T1 I | Rooming?\nL4 put=- kind=disclosure example=no\nT3 P | Own room.\nL3 - = answer\n'
+  cf5_plant "$d" near-escaped generated "T1 I | $esc"$'\nL4 put=- kind=give-back example=no\n--- record\nV Where you stay \xe2\x80\xba Rooming = own room\n'
+  cf5_plant "$d" near-no-empty generated $'T1 I | Rooming?\nL4 put=- kind=disclosure example=no\n'
+  p="$(cv_run "$CF_MODEL_F" "$CF_A2_F" "$ROOT" "$d"/*.txt)"
+  for k in CF5a CF5b CF5c CF5d CF5e CF5f CF5g CF5h CF5-gap; do
+    [ -n "$(awk -F'\t' -v f="$k.txt" '$1 == "MAL" && $2 == f' <<<"$p")" ] || miss="$miss $k"
+  done
+  ok="$(awk -F'\t' '$1 == "MAL" && ($2 == "near-escaped.txt" || $2 == "near-no-empty.txt") { printf "%s line %s: %s; ", $2, $3, $4 }' <<<"$p")"
+  if [ -z "$CF_FILES" ]; then
+    FAIL "CF5: NOT EVALUATED — no fixture file was read, so the grammar was held to nothing"
+  elif [ -n "$mal" ]; then
+    FAIL "CF5: a fixture is malformed — $mal"
+  elif [ -n "$miss" ]; then
+    FAIL "CF5: a plant on a copy was read as well formed:$miss — each opens no record of its region and must be refused, never read"
+  elif [ -n "$ok" ]; then
+    FAIL "CF5: a near miss that must parse clean was refused — $ok"
+  elif [ "$(awk -F'\t' '$1 == "VERDICT" && $2 == "near-escaped.txt" && $4 == "OW-C"' <<<"$p" | awk 'END { print NR }')" -ne 1 ]; then
+    FAIL "CF5: the escaped give-back block did not read as one turn with one V line under it"
+  else
+    PASS "CF5: every fixture of ${CF_DIR#"$ROOT/"} is well formed, and each plant on a copy is refused as malformed — CF5a a raw multi-line turn, CF5b an unknown escape, CF5c a stray # line, CF5d an L4 under a P turn, CF5e a V line among the turns, CF5f an empty line after the header, CF5g a generated I turn with no L4, CF5h a raw I turn whose second line forges an L4 under the grader's own, and a gap in the turn numbers. NEAR MISSES: the same give-back block escaped reads as one turn forging no V line, and a generated file with no empty line ending in one newline parses clean"
+  fi
+}
+cf5_assert
+# ── CF6 — engine parity, the CA10/VI3/WD5 precedent: the same verdict stream under each awk by name.
+cf6_assert() {
+  local ref e out bad="" ran="" absent=""
+  ref="$(cat "$CF_OUT_F")"
+  if [ -z "$ref" ]; then
+    FAIL "CF6: the host awk produced no verdict stream over the fixtures — there is nothing to compare an engine against"
+    return 0
+  fi
+  for e in mawk gawk; do
+    if [ -z "$(command -v "$e" 2>/dev/null)" ]; then absent="$absent $e"; continue; fi
+    out="$(CV_ENGINE="$e" cv_run "$CF_MODEL_F" "$CF_A2_F" "$ROOT" $CF_FILES)"; ran="$ran $e"
+    [ "$out" = "$ref" ] || bad="$bad $e"
+  done
+  if [ -n "$bad" ]; then
+    FAIL "CF6: the verdict stream over the fixtures differs from the host awk's under:$bad — the harness grades otherwise by engine"
+  elif [ -n "$absent" ]; then
+    SKIP "CF6: engine parity could not be graded under:$absent (not installed); graded under:${ran:- none} and the host awk. Not a pass: CI runs with GUARD_STRICT_SKIPS=1, so on the hosted runner this skip fails the run"
+  else
+    PASS "CF6: the verdict stream over the fixtures — $(awk 'END { print NR }' <<<"$ref") record(s) — is byte-identical under the host awk and under$ran, each invoked by name"
+  fi
+}
+cf6_assert
+# ── CF7 — the locale posture, graded at the reader's own entry point (CD-8).
+cf7_assert() {
+  local ref m out bad="" n=0 unp=""
+  ref="$(cat "$CF_TOK_F")"
+  if [ -z "$ref" ]; then
+    FAIL "CF7: the reader produced no token stream under C — there is nothing to hold the other locales to"
+    return 0
+  fi
+  while IFS= read -r m; do
+    [ -n "$m" ] || continue
+    n=$((n + 1)); out="$( ( export LC_ALL="$m"; CV_EMIT=tok cv_run "$CF_MODEL_F" "$CF_A2_F" "$ROOT" $CF_FILES ) 2>/dev/null )"
+    [ "$out" = "$ref" ] || bad="$bad $m"
+  done <<<"$LC_SET"
+  if [ -n "$LC_MB" ] && [ -n "$(command -v gawk 2>/dev/null)" ]; then
+    unp="$(LC_ALL="$LC_MB" gawk -v model="$CF_MODEL_F" -v a2="$CF_A2_F" -v root="$ROOT" -v obs=1 -v emit=tok -v cv_plant_nonfield="" "$WD_FN$FT_LEAD_FN$CV_FN$CV_MAIN" $CF_FILES 2>/dev/null)"
+  fi
+  if [ -n "$bad" ]; then
+    FAIL "CF7: the token stream differs from the C reading under the caller locale(s):$bad — the reader does not pin its own locale"
+  elif [ -z "$LC_MB" ] || [ -z "$(command -v gawk 2>/dev/null)" ]; then
+    SKIP "CF7: the stream agreed under all $n member(s) of LC_SET, but the control needs a multibyte member and gawk by name, and this host lacks ${LC_MB:+gawk}${LC_MB:-a multibyte locale}. Not a pass: CI runs strict, so this skip fails the hosted run"
+  elif [ "$unp" = "$ref" ]; then
+    FAIL "CF7: CONTROL did not fire — the same program with LC_ALL=C removed, run under $LC_MB through gawk by name, reads the fixtures exactly as C does, so agreement across LC_SET shows nothing about the pin"
+  else
+    PASS "CF7: the reader's token stream over the fixtures — $(awk 'END { print NR }' <<<"$ref") record(s) — is byte-identical under all $n member(s) of group LC's LC_SET, the multibyte $LC_MB among them. CONTROL: the same program with its LC_ALL=C removed, run under $LC_MB through gawk by name, reads them otherwise"
+  fi
+}
+cf7_assert
+# ── CF-ND0 — no count includes an ND: each total recounted from the verdict records, ND in its own.
+cfnd0_assert() {
+  local bad nd
+  bad="$(LC_ALL=C awk -F'\t' '$1 == "VERDICT" { c = $4; if ($6 ~ /^nd:/) nd[c]++; else if ($6 == "pass") p[c]++; else f[c]++ }
+      $1 == "CONV" { if ($4 == "ND") nd["CONV"]++; else if ($4 == "PASS") p["CONV"]++; else f["CONV"]++ }
+      $1 == "SUMMARY" { split($3, A, " "); split($4, B, " "); split($5, C, " "); c = $2; S[c] = 1; sp[c] = A[2]; sf[c] = B[2]; sn[c] = C[2] }
+      END { for (c in S) if (sp[c] != p[c] + 0 || sf[c] != f[c] + 0 || sn[c] != nd[c] + 0) printf "%s summary pass %s fail %s nd %s against records %d, %d, %d; ", c, sp[c], sf[c], sn[c], p[c], f[c], nd[c]
+            if (length(S) == 0) print "no summary line" }' "$CF_OUT_F")"
+  nd="$(cf_count "$CF_OUT_F" '$1 == "VERDICT" && $6 ~ /^nd:/')"
+  if [ ! -s "$CF_OUT_F" ]; then
+    FAIL "CF-ND0: NOT EVALUATED — the harness read no fixture"
+  elif [ -n "$bad" ]; then
+    FAIL "CF-ND0: a total disagrees with the verdicts it counts — $bad"
+  elif [ "$nd" -eq 0 ]; then
+    FAIL "CF-ND0: the fixtures hold no ND verdict, so a summary that excludes one is not shown to"
+  else
+    PASS "CF-ND0: every total in the summary — $(awk -F'\t' '$1 == "SUMMARY" { printf "%s %s %s %s; ", $2, $3, $4, $5 }' "$CF_OUT_F")— recounts from the verdict records with ND in its own column, over a set holding $nd ND verdict(s): ND is never counted as a pass or as a fail"
+  fi
+}
+cfnd0_assert
+# ── CF-GEN0 — a failing generated conversation, planted in a copy, is a reported line and no fail (FM-8).
+cfgen0_assert() {
+  local d f0 f1 r0 r1 out1
+  d="$(cf_copy gen0)"
+  cf5_header generated > "$d/plant-generated.txt"
+  printf 'T1 I | How do you feel about rooming?\nL4 put=- kind=disclosure example=no\nT2 P | Own room.\nL3 Where you stay \342\200\272 Rooming = answer\n--- record\nV Where you stay \342\200\272 Rooming = a suite with a view\n' >> "$d/plant-generated.txt"
+  out1="$(cv_run "$CF_MODEL_F" "$CF_A2_F" "$ROOT" "$d"/*.txt)"
+  f0="$(cf_count "$CF_OUT_F" '($1 == "ORACLE" && $5 == "DISAGREE") || $1 == "MAL" || $1 == "KINDX"')"
+  f1="$(awk -F'\t' '($1 == "ORACLE" && $5 == "DISAGREE") || $1 == "MAL" || $1 == "KINDX"' <<<"$out1" | awk 'END { print NR }')"
+  r0="$(cf_count "$CF_OUT_F" '$1 == "VERDICT" && $3 == "generated"')"
+  r1="$(awk -F'\t' '$1 == "VERDICT" && $3 == "generated"' <<<"$out1" | awk 'END { print NR }')"
+  if [ -z "$CF_FILES" ]; then
+    FAIL "CF-GEN0: NOT EVALUATED — no fixture file was read"
+  elif [ "$f1" -ne "$f0" ]; then
+    FAIL "CF-GEN0: a failing generated conversation planted in a copy moved the suite's fail count $f0 → $f1 — a verdict on judged labels reached the aggregate"
+  elif [ "$r1" -ne $((r0 + 1)) ]; then
+    FAIL "CF-GEN0: the planted generated conversation added $((r1 - r0)) reported line(s), where exactly one is required"
+  else
+    PASS "CF-GEN0: a failing generated conversation planted in a copy leaves the fail count at $f0 and adds one reported line ($r0 → $r1), '$(awk -F'\t' '$1 == "VERDICT" && $3 == "generated" { print $6 " " $7 }' <<<"$out1")' — a verdict on judged labels is reported and never reaches the aggregate (FM-8)"
+  fi
+}
+cfgen0_assert
+# ── CF-CTL — the pinned probes, each a one-field plant read through the harness at its pinned verdict.
+CF_CTL_TABLE=$'Q1-four\tgenerated\ta riverboat trip\triver boat to Lisbon\tfail:river|boat|to|Lisbon
+Q1-two\tgenerated\ta riverboat trip\triver boat\tnd:compound:river|boat
+FM9-authored\tauthored\ta riverboat trip\triver boat\tfail:river|boat
+Q2-cjk\tgenerated\ta quiet room\t\xe6\xb9\x96\xe7\x95\x94\tfail:\xe6\xb9\x96\xe7\x95\x94
+Q2-glued\tgenerated\tslow mornings\t\xe2\x8c\x98slow mornings\tnd:typography:\xe2\x8c\x98slow
+FM14-authored\tauthored\tslow mornings\t\xe2\x8c\x98slow mornings\tfail:\xe2\x8c\x98slow
+FM14-fold\tgenerated\tslow mornings\t\xe2\x86\x92slow mornings\tpass
+FM14-letter\tgenerated\tthe cafe\tcaf\xc3\xa9\tfail:caf\xc3\xa9
+N10-repeat\tgenerated\ta seaview\tsea view sea view\tfail:sea|view|sea|view
+N10-repeat-two\tgenerated\ta seaview, a seaview\tsea view sea view\tnd:compound:sea|view|sea|view
+N10-direct-first\tgenerated\ta riverboat\triver boat riverboat\tfail:river|boat
+N10-split-twice\tgenerated\ta river boat\triverboat riverboat\tfail:riverboat|riverboat
+N10-split-once\tgenerated\ta river boat\triverboat\tnd:compound:riverboat
+N10-mixed\tgenerated\ta riverboat slow\triver boat \xe2\x8c\x98slow\tfail:river|boat|\xe2\x8c\x98slow'
+cfctl_eval() {   # stdout "<id> <ok|MISS> <pinned> <read>"
+  local d id o t v
+  d="$(mktemp -d "$WORK/cf/ctl.XXXXXX")"
+  while IFS=$'\t' read -r id o t v _; do
+    [ -n "$id" ] || continue
+    cf5_header "$o" > "$d/$id.txt"
+    printf 'T1 I | What do you want from this trip?\nL4 put=Desires \342\200\272 Desire#1 kind=ask example=no\nT2 P | %s\nL3 Desires \342\200\272 Desire#1 = answer\n--- record\nV Desires \342\200\272 Desire#1 = %s\n' "$t" "$v" >> "$d/$id.txt"
+  done <<<"$CF_CTL_TABLE"
+  cv_run "$CF_MODEL_F" "$CF_A2_F" "$ROOT" "$d"/*.txt | LC_ALL=C awk -F'\t' 'FILENAME == ARGV[1] { pin[$1 ".txt"] = $5; ord[++n] = $1 ".txt"; next }
+      $1 == "VERDICT" && $4 == "OW-C" { got[$2] = $6 }
+      END { for (i = 1; i <= n; i++) { k = ord[i]; printf "%s\t%s\t%s\t%s\n", k, (k in got && got[k] == pin[k]) ? "ok" : "MISS", pin[k], (k in got) ? got[k] : "no verdict" } }' <(printf '%s\n' "$CF_CTL_TABLE") -
+}
+cfctl_assert() {
+  local out n m
+  out="$(cfctl_eval)"
+  n="$(awk 'NF' <<<"$out" | awk 'END { print NR }')"; m="$(awk -F'\t' '$2 != "ok"' <<<"$out")"
+  if [ "$n" -eq 0 ]; then
+    FAIL "CF-CTL: no pinned probe produced a verdict"
+  elif [ -n "$m" ]; then
+    FAIL "CF-CTL: a probe reads at a verdict other than its pin — $(awk -F'\t' '{ printf "%s pinned %s, read %s; ", $1, $3, $4 }' <<<"$m")"
+  else
+    PASS "CF-CTL: all $n pinned probe(s) read at their pins — $(awk -F'\t' '{ sub(/\.txt$/, "", $1); printf "%s %s; ", $1, $3 }' <<<"$out")the compound and typography readings are ND on a generated value only when one reading explains every missing word, and fail on an authored one"
+  fi
+}
+cfctl_assert
+
+md_flips cf_fence    'CF1'     cf1_assert
+md_flips cf_fence    'CF2'     cf2_assert
+md_flips cv_run      'CF3'     cf3_assert
+md_flips cv_run      'CF4'     cf4_assert
+md_flips nu_agree    'CF4-agree' cf4_assert
+md_flips cv_run      'CF4b'    cf4b_assert
+md_flips cv_run      'CF5'     cf5_assert
+md_flips cv_run      'CF-GEN0' cfgen0_assert
+md_flips cfctl_eval  'CF-CTL'  cfctl_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group OW (the conversation block) — OW-C over every test conversation, read through group CF's
+# harness (ADR-045 § On a conversation). The text block, OW-T, is above.
+#   OW-C      every authored value's verdict equals its fixture's stated one, and a verdict no X line
+#             names is a pass; ADR-045's worked rows reproduce — the check row passes, the cross row
+#             fails naming it's and affordable. CONTROL: the cross row's oracle flipped to pass on a
+#             copy is a disagreement. A verdict on a generated value is printed as a REPORTED line
+#   OW-C-A    the evaluators of the admitted non-utterances agree with ADR-045 D2 item 4 both ways,
+#             read through nu_list. CONTROL (SEAM-2): a sixth row planted in a copy is refused
+#   OW-C-ND   a fixture whose oracle says nd: reads ND. CONTROL: that oracle flipped to pass disagrees
+#   OW-C-OBS  the verdict stream is byte-identical with the observation pass off, and the pass, on,
+#             reports order and echo for every value and their rates per conversation and per style
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "OW — (the conversation block) OW-C: each recorded value is the answering person's own words, or an admitted non-utterance on its own terms"
+
+# cf_reported <records-file> <check> — the verdicts on generated conversations, printed as lines
+# that are neither PASS nor FAIL (FM-8).
+cf_reported() { awk -F'\t' -v c="$2" '$1 == "VERDICT" && $3 == "generated" && $4 == c { printf "  REPORTED %s %s %s: %s — %s\n", $2, $4, $5, $6, $7 }' "$1"; }
+cf_reported "$CF_OUT_F" OW-C
+# cf_flip <name> <file> <old oracle line> <new oracle line> — a copy of one fixture with an oracle
+# flipped; prints the harness's DISAGREE records over it, or "NOT-LANDED".
+cf_flip() {
+  local d; d="$(cf_copy "$1")"
+  if [ -f "$d/$2" ] && ta_mutate "$d" "$2" "$3" "$4"; then cv_run "$CF_MODEL_F" "$CF_A2_F" "$ROOT" "$d/$2" | awk -F'\t' '$1 == "ORACLE" && $5 == "DISAGREE" { print $3 " " $4 ": oracle " $6 ", read " $7 }'
+  else printf 'NOT-LANDED\n'; fi
+}
+owc_assert() {
+  local n dis ck cx ctl by
+  n="$(cf_count "$CF_OUT_F" '$1 == "VERDICT" && $3 == "authored" && $4 == "OW-C"')"
+  dis="$(awk -F'\t' '$1 == "ORACLE" && $3 == "OW-C" && $5 == "DISAGREE" { printf "%s %s: oracle %s, read %s; ", $2, $4, $6, $7 }' "$CF_OUT_F")"
+  ck="$(awk -F'\t' '$1 == "VERDICT" && $2 == "owc-check.txt" && $4 == "OW-C" { print $6 }' "$CF_OUT_F")"
+  cx="$(awk -F'\t' '$1 == "VERDICT" && $2 == "owc-cross.txt" && $4 == "OW-C" { print $6 }' "$CF_OUT_F")"
+  ctl="$(cf_flip owc owc-cross.txt "X OW-C Where you stay › Rooming = fail:it's|affordable" "X OW-C Where you stay › Rooming = pass")"
+  by="$(awk -F'\t' '$1 == "VERDICT" && $3 == "authored" && $4 == "OW-C" { v = $6; sub(/:.*/, "", v); c[v]++ } END { for (k in c) printf "%s %d, ", k, c[k] }' "$CF_OUT_F")"
+  if [ "$n" -eq 0 ]; then
+    FAIL "OW-C: NOT EVALUATED — no authored value was graded, so the check has an empty population"
+  elif [ -n "$dis" ]; then
+    FAIL "OW-C: a verdict disagrees with its fixture — ${dis}an authored fixture states what the check must say"
+  elif [ "$ck" != "pass" ] || [ "$cx" != "fail:it's|affordable" ]; then
+    FAIL "OW-C: ADR-045's worked rows do not reproduce as worded — the check row reads '${ck:-nothing}' where pass is required, the cross row '${cx:-nothing}' where it must fail naming it's and affordable"
+  elif [ -z "$ctl" ] || [ "$ctl" = "NOT-LANDED" ]; then
+    FAIL "OW-C: CONTROL did not fire — the cross row's oracle flipped to pass on a copy reads '${ctl:-no disagreement}', so an oracle the harness contradicts is not caught"
+  else
+    PASS "OW-C: all $n authored value(s) graded agree with their fixtures — by verdict: ${by%, } — every one an X line names and every one it leaves to pass. ADR-045's worked rows reproduce: the check row passes, the cross row fails naming it's and affordable. CONTROL: the cross row's oracle flipped to pass on a copy reads '$ctl'"
+  fi
+}
+owc_assert
+owca_assert() {
+  local rec lists sa d seam
+  rec="$(nu_list "$NU_ADR" | awk -F'\t' '$1 == "A" { print $2 }')"
+  lists="$(CV_EMIT=lists cv_run /dev/null /dev/null "$ROOT")"; sa="$(awk -F'\t' '$1 == "A" { print $2 }' <<<"$lists")"
+  d="$(nu_agree "$rec" "$sa" two-way)"
+  awk '{ print } /^   \| `A5` \|/ && !done { print "   | `A6` | a planted sixth | never | — |"; done = 1 }' "$NU_ADR" > "$WORK/cf/adr045-a6.md"
+  seam="$(nu_agree "$(nu_list "$WORK/cf/adr045-a6.md" | awk -F'\t' '$1 == "A" { print $2 }')" "$sa" two-way)"
+  if [ -z "$rec" ]; then
+    FAIL "OW-C-A: nu_list read no admitted non-utterance from ${NU_ADR#"$ROOT/"}, so OW-C's evaluators are held to nothing"
+  elif [ -z "$sa" ]; then
+    FAIL "OW-C-A: the harness reported no evaluator ids"
+  elif [ -n "$d" ]; then
+    FAIL "OW-C-A: OW-C's evaluators [$(tr '\n' ' ' <<<"$sa")] disagree with ADR-045 D2 item 4 — $(tr '\n' ' ' <<<"$d")"
+  elif [ "$seam" != "RECORD-ONLY A6" ]; then
+    FAIL "OW-C-A: CONTROL (SEAM-2) did not fire as specified — a sixth row planted in a copy of ADR-045 reads '${seam:-no difference}'"
+  else
+    PASS "OW-C-A: OW-C's evaluators of the admitted non-utterances [$(tr '\n' ' ' <<<"$sa")] agree with ADR-045 D2 item 4 both ways, read through nu_list — the one reader OW-T.P2a holds its own set to. CONTROL (SEAM-2): a sixth row planted in a copy is refused, naming A6"
+  fi
+}
+owca_assert
+owcnd_assert() {
+  local nd ctl
+  nd="$(awk -F'\t' '$1 == "ORACLE" && $3 == "OW-C" && $6 ~ /^nd:/ && $5 == "agree" { printf "%s %s %s; ", $2, $4, $7 }' "$CF_OUT_F")"
+  ctl="$(cf_flip owcnd unlabelled-complete.txt "X OW-C Where you stay › Rooming = nd:unlabelled" "X OW-C Where you stay › Rooming = pass")"
+  if [ -z "$nd" ]; then
+    FAIL "OW-C-ND: no authored fixture states an nd: verdict that the harness reproduces, so not determinable is never shown to be read"
+  elif [ -z "$ctl" ] || [ "$ctl" = "NOT-LANDED" ]; then
+    FAIL "OW-C-ND: CONTROL did not fire — an nd: oracle flipped to pass on a copy reads '${ctl:-no disagreement}', so ND would pass as a pass"
+  else
+    PASS "OW-C-ND: every authored nd: oracle reads ND — ${nd}— branched on before any count. CONTROL: that oracle flipped to pass on a copy disagrees, '$ctl'"
+  fi
+}
+owcnd_assert
+owcobs_assert() {
+  local on off nobs
+  on="$(awk -F'\t' '$1 != "OBS" && $1 != "RATES" && $1 != "RATE"' "$CF_OUT_F")"
+  off="$(CV_OBS=0 cv_run "$CF_MODEL_F" "$CF_A2_F" "$ROOT" $CF_FILES)"
+  nobs="$(cf_count "$CF_OUT_F" '$1 == "OBS"')"
+  if [ -z "$on" ]; then
+    FAIL "OW-C-OBS: NOT EVALUATED — the harness produced no verdict stream"
+  elif [ "$nobs" -eq 0 ] || [ -z "$(awk -F'\t' '$1 == "RATES"' "$CF_OUT_F")" ]; then
+    FAIL "OW-C-OBS: the observation pass reported nothing, so its independence from the verdicts is a statement about an empty pass"
+  elif [ "$on" != "$off" ]; then
+    FAIL "OW-C-OBS: the verdict stream with the observation pass off differs from the stream with it on — a reported observation moved a verdict"
+  else
+    PASS "OW-C-OBS: the verdict stream is byte-identical with the observation pass off and on, and the pass reports $nobs observation(s) — $(awk -F'\t' '$1 == "RATES" { printf "%s %s %s; ", $2, $3, $4 }' "$CF_OUT_F")— so order and example echo are reported and never decide"
+  fi
+}
+owcobs_assert
+
+md_flips cv_run      'OW-C'     owc_assert
+md_flips cv_run      'OW-C-A'   owca_assert
+md_flips nu_list     'OW-C-A-reader' owca_assert
+md_flips cv_run      'OW-C-ND'  owcnd_assert
+md_flips cv_run      'OW-C-OBS' owcobs_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group FB (the conversation block) — FB-C over every test conversation, read through group CF's
+# harness (ADR-045 § On a conversation). The text block, FB-T, is above.
+#   FB-C   every authored field's verdict equals its fixture's stated one, a verdict no X line names
+#          being a pass; ADR-045's worked rows reproduce — the check row passes, the cross row fails
+#          twice, a second follow-up and twin and double carried; a follow-up carrying the example
+#          its L4 gave passes bullet 4. CONTROL: the cross row's oracle flipped on a copy disagrees.
+#          SEAM-3: seam3-spoken-desire passes while Desire is TRIP, and fails bullet 5 once Desire is
+#          flipped to PERSON in a copy of reference/data-model.md — the PERSON class read through the
+#          one form model FB-T.P1 and CHR read (ta_model)
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "FB — (the conversation block) FB-C: the follow-up bound and its exclusions over every test conversation"
+
+cf_reported "$CF_OUT_F" FB-C
+fbc_assert() {
+  local n dis ck cx cxd q9 ctl by r s3 s3r
+  n="$(cf_count "$CF_OUT_F" '$1 == "VERDICT" && $3 == "authored" && $4 == "FB-C"')"
+  dis="$(awk -F'\t' '$1 == "ORACLE" && $3 == "FB-C" && $5 == "DISAGREE" { printf "%s %s: oracle %s, read %s; ", $2, $4, $6, $7 }' "$CF_OUT_F")"
+  ck="$(awk -F'\t' '$1 == "VERDICT" && $2 == "fbc-check.txt" && $4 == "FB-C" { print $6 }' "$CF_OUT_F")"
+  cx="$(awk -F'\t' '$1 == "VERDICT" && $2 == "fbc-cross.txt" && $4 == "FB-C" { print $6 }' "$CF_OUT_F")"
+  cxd="$(awk -F'\t' '$1 == "VERDICT" && $2 == "fbc-cross.txt" && $4 == "FB-C" { print $7 }' "$CF_OUT_F")"
+  q9="$(awk -F'\t' '$1 == "VERDICT" && $2 == "q09-follow-up-with-example.txt" && $4 == "FB-C" { print $6 }' "$CF_OUT_F")"
+  ctl="$(cf_flip fbc fbc-cross.txt "X FB-C Where you stay › Rooming = fail:1|4" "X FB-C Where you stay › Rooming = pass")"
+  r="$(ta_root SEAM3-FBC)"; s3=""; s3r=""
+  if ta_mutate "$r" reference/data-model.md '| 21 | ⭐ `Desire` | Desires | **TRIP** |' '| 21 | ⭐ `Desire` | Desires | **PERSON** |'; then
+    ta_model "$r" "$r" > "$r/model.tsv"
+    s3="$(cv_run "$r/model.tsv" "$CF_A2_F" "$ROOT" "$CF_DIR/seam3-spoken-desire.txt" | awk -F'\t' '$1 == "VERDICT" && $4 == "FB-C" { print $6 }')"
+  fi
+  s3r="$(awk -F'\t' '$1 == "VERDICT" && $2 == "seam3-spoken-desire.txt" && $4 == "FB-C" { print $6 }' "$CF_OUT_F")"
+  by="$(awk -F'\t' '$1 == "VERDICT" && $3 == "authored" && $4 == "FB-C" { v = $6; sub(/:.*/, "", v); c[v]++ } END { for (k in c) printf "%s %d, ", k, c[k] }' "$CF_OUT_F")"
+  if [ "$n" -eq 0 ]; then
+    FAIL "FB-C: NOT EVALUATED — no authored field was graded, so the check has an empty population"
+  elif [ -n "$dis" ]; then
+    FAIL "FB-C: a verdict disagrees with its fixture — ${dis}an authored fixture states what the check must say"
+  elif [ "$ck" != "pass" ] || [ "$cx" != "fail:1|4" ] || [ "${cxd#*carries twin|double}" = "$cxd" ]; then
+    FAIL "FB-C: ADR-045's worked rows do not reproduce as worded — the check row reads '${ck:-nothing}', the cross row '${cx:-nothing}' ($cxd), where it must fail twice, a second follow-up and twin and double carried"
+  elif [ "$q9" != "pass" ]; then
+    FAIL "FB-C: a follow-up that carries the example its own L4 gave reads '${q9:-nothing}', where bullet 4 admits an example-text"
+  elif [ -z "$ctl" ] || [ "$ctl" = "NOT-LANDED" ]; then
+    FAIL "FB-C: CONTROL did not fire — the cross row's oracle flipped to pass on a copy reads '${ctl:-no disagreement}'"
+  elif [ "$s3r" != "pass" ] || [ "$s3" != "fail:5" ]; then
+    FAIL "FB-C: SEAM-3 did not move as specified — seam3-spoken-desire reads '${s3r:-nothing}' with Desire TRIP, and '${s3:-nothing, or the flip did not land}' with Desire flipped to PERSON on a copy, where it must pass and then fail bullet 5"
+  else
+    PASS "FB-C: all $n authored field(s) graded agree with their fixtures — by verdict: ${by%, }. ADR-045's worked rows reproduce: the check row passes, the cross row fails twice ($cxd); a follow-up carrying its own example-text passes bullet 4. CONTROL: the cross row's oracle flipped on a copy reads '$ctl'. SEAM-3: seam3-spoken-desire passes while Desire is TRIP and fails bullet 5 with Desire flipped to PERSON in a copy of the data model, the class read through the one form model"
+  fi
+}
+fbc_assert
+
+md_flips cv_run      'FB-C'     fbc_assert
+md_flips ta_model    'FB-C-class' fbc_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RB — the interview rubric: its dimension table, its conversation rule and its not-graded

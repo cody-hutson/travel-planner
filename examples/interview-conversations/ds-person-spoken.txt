@@ -1,0 +1,36 @@
+# DS on the person form, spoken: the spoken-care offer, a PERSON-class field asked, and the needs section declined whole
+conversation: ds-person-spoken
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/person-intake.template.md
+spoken: yes
+route: card
+style: none
+traveller: DS — declines a whole section, an invented traveller
+answered-before: none
+T1 I | This is spoken, so anyone near you will hear your answers. A few questions are about health or documents; you can type those, or skip them.
+L4 put=- kind=spoken-care offer example=no
+T2 P | Speaking is fine.
+L3 - = answer
+T3 I | Where would you set out from?
+L4 put=Getting there & back › Leaving from kind=ask example=no
+T4 P | Austin.
+L3 Getting there & back › Leaving from = answer
+T5 I | For an international trip: which country issued your passport, and what month is it valid through?
+L4 put=Getting there & back › Passport kind=ask example=no
+T6 P | United States, valid through March.
+L3 Getting there & back › Passport = answer
+T7 I | Next are the must-haves, what you need on any trip.
+L4 put=Needs › Category#1 kind=ask example=no
+T8 P | I'd rather skip that whole section.
+L3 §Needs = decline
+T9 I | Of course. How do you like to pace a trip?
+L4 put=Travel style & pace › Pace kind=ask example=no
+T10 P | Balanced, with room to breathe.
+L3 Travel style & pace › Pace = answer
+--- record
+V Getting there & back › Leaving from = Austin
+V Getting there & back › Passport = United States, valid through March
+V Needs › Category#1 = —
+V Needs › Specific#1 = —
+V Travel style & pace › Pace = balanced, with room to breathe

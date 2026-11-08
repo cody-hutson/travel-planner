@@ -1,0 +1,20 @@
+# OF on the person form, typed: an answer to a question the form does not ask, routed and not written
+conversation: of-person-typed
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/person-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: OF — answers a question the form does not ask, an invented traveller
+answered-before: none
+T1 I | How do you lean on lodging — hotel, rental or hostel, and anything that is a must?
+L4 put=Where you stay › Lodging style kind=ask example=no
+T2 P | A rental with a kitchen. And we're going in October, for my sister's birthday.
+L3 Where you stay › Lodging style = answer
+T3 I | October and the birthday belong on the trip's own form, which the organiser sends; this one keeps what stays true from trip to trip.
+L4 put=- kind=routing statement example=no
+T4 P | Oh, fine.
+L3 - = answer
+--- record
+V Where you stay › Lodging style = a rental with a kitchen

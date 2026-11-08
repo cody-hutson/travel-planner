@@ -1,0 +1,61 @@
+# AF on the trip form, typed: a grouped ask, two follow-ups in two sections, a confirmation and the decision point
+conversation: af-trip-typed
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: AF — answers freely, an invented traveller
+answered-before: none
+T1 I | Before we start: I go through the form a section at a time, and you can skip anything. How do you fit in the group?
+L4 put=About you › Relationship kind=ask example=no
+T2 P | A friend of Teodora's, we sang in the same choir for years.
+L3 About you › Relationship = answer
+T3 I | Is anyone travelling with you who won't fill in their own form?
+L4 put=About you › Party kind=ask example=no
+T4 P | Nobody else, just me.
+L3 About you › Party = answer
+T5 I | What kind of trip are you after?
+L4 put=Destination leanings › Trip vibe kind=ask example=no
+T6 P | A mix, mostly city.
+L3 Destination leanings › Trip vibe = thin
+T7 I | You said a mix — what would the rest of it be?
+L4 put=Destination leanings › Trip vibe kind=follow-up example=no carries=«mix»
+T8 P | A city I can walk, and a day near the sea.
+L3 Destination leanings › Trip vibe = answer
+T9 I | When can you travel, and are there dates you can't do?
+L4 put=Dates & availability › Can travel,Dates & availability › Blackout kind=ask example=no
+T10 P | Any time from late September to mid October, but not the second week of October.
+L3 Dates & availability › Can travel = answer
+L3 Dates & availability › Blackout = answer
+T11 I | How do you feel about rooming?
+L4 put=Where you stay › Rooming kind=ask example=no
+T12 P | With Teodora.
+L3 Where you stay › Rooming = thin
+T13 I | You said with Teodora — anything more on rooming?
+L4 put=Where you stay › Rooming kind=follow-up example=no carries=«Teodora»
+T14 P | Happy to share.
+L3 Where you stay › Rooming = answer
+T15 I | So for rooming: happy to share, with Teodora. Is that right?
+L4 put=- kind=confirmation example=no carries=«rooming: happy to share, with Teodora»
+T16 P | Yes, that's right.
+L3 - = answer
+T17 I | That covers the starred questions. Keep going, or stop here?
+L4 put=- kind=decision point example=no
+T18 P | Keep going, please.
+L3 - = answer
+T19 I | Is the trip marking anything special?
+L4 put=Anything else › Special occasion? kind=ask example=no
+T20 P | It's Teodora's fortieth, on the Saturday.
+L3 Anything else › Special occasion? = answer
+T21 I | Here is your form, filled in.
+L4 put=- kind=give-back example=no
+--- record
+V About you › Relationship = a friend of Teodora's, we sang in the same choir for years
+V About you › Party = just me
+V Destination leanings › Trip vibe = a mix, mostly city; a city I can walk, and a day near the sea
+V Dates & availability › Can travel = any time from late September to mid October
+V Dates & availability › Blackout = not the second week of October
+V Where you stay › Rooming = happy to share with Teodora
+V Anything else › Special occasion? = Teodora's fortieth, on the Saturday

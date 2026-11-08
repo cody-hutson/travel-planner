@@ -1,0 +1,30 @@
+# QA step 4 row 4: a follow-up putting two fields counts one for each and two toward the section, so a third there fails
+conversation: qa-two-field-follow-up
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: TE — terse, an invented traveller
+answered-before: none
+T1 I | When can you travel, are there dates you can't do, and how long feels right?
+L4 put=Dates & availability › Can travel,Dates & availability › Blackout,Dates & availability › Trip length kind=ask example=no
+T2 P | Autumn, not October, about a week.
+L3 Dates & availability › Can travel = thin
+L3 Dates & availability › Blackout = thin
+L3 Dates & availability › Trip length = thin
+T3 I | You said not October and about a week — anything more on either?
+L4 put=Dates & availability › Blackout,Dates & availability › Trip length kind=follow-up example=no carries=«not October, about a week»
+T4 P | Not the second week of October; seven nights.
+L3 Dates & availability › Blackout = answer
+L3 Dates & availability › Trip length = answer
+T5 I | You said autumn — which part of it?
+L4 put=Dates & availability › Can travel kind=follow-up example=no carries=«autumn»
+T6 P | Late September.
+L3 Dates & availability › Can travel = answer
+--- record
+V Dates & availability › Can travel = autumn, late September
+V Dates & availability › Blackout = not October, not the second week of October
+V Dates & availability › Trip length = about a week, seven nights
+X FB-C Dates & availability › Can travel = fail:1

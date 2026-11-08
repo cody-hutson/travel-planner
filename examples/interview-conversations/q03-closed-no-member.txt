@@ -1,0 +1,20 @@
+# Q-3: a closed field, two replies naming no member, nothing written and the bracket kept
+conversation: q03-closed-no-member
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: TE — terse, an invented traveller
+answered-before: none
+T1 I | For your second want, how high does it rank — an anchor, a wish or a nice-to-have?
+L4 put=Desires › Priority tier#2 kind=ask example=no carries=«anchor, wish, nice-to-have»
+T2 P | Pretty important, I guess.
+L3 Desires › Priority tier#2 = no-member
+T3 I | That isn't one of the three. Is it an anchor, a wish or a nice-to-have?
+L4 put=Desires › Priority tier#2 kind=member re-offer example=no carries=«anchor, wish, nice-to-have»
+T4 P | Somewhere in between.
+L3 Desires › Priority tier#2 = no-member
+--- record
+V Desires › Priority tier#2 = [closed: anchor / wish / nice-to-have]
