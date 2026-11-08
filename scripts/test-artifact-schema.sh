@@ -25212,7 +25212,7 @@ function wt_contains_floor(item, FL, nfl,   IW, ni, f, FW, nw, s, j, ok, k, fw) 
   return 0
 }
 # wt_class — D4: the first class that holds decides. Sets WT_C (class), WT_V (pass | FAIL) and WT_N (names).
-function wt_class(p, st, k, ntg, TG,   NOEX, LV, e, i, a, b, obj, nobj, OB, rawobj, LX, LP, nl, MS, FS, FL, nfl, bad, j, RI, nr, head, ex, IT, ni, allb, OUT, nm) {
+function wt_class(p, st, k, ntg, TG,   NOEX, LV, e, i, a, b, obj, nobj, OB, rawobj, LX, LP, nl, MS, FSET, FL, nfl, bad, j, RI, nr, head, ex, IT, ni, allb, OUT, nm) {
   e = NT + 1; for (i = 1; i <= ntg; i++) if (TG[i] > k) { e = TG[i]; break }
   nobj = 0; for (i = k + 1; i < e; i++) OB[++nobj] = TW[i]
   a = TE[k]; b = (e <= NT) ? TS[e] : CL_L + 1; rawobj = substr(CL_RAW, a, b - a)
@@ -25224,14 +25224,14 @@ function wt_class(p, st, k, ntg, TG,   NOEX, LV, e, i, a, b, obj, nobj, OB, rawo
   nl = cl_lits(a, b, LX, LP); j = 0
   for (i = 1; i <= nl; i++) if (LX[i] != "\342\200\224" && !wt_is_branch(LX[i])) LV[++j] = LX[i]
   if (j > 0) {
-    m_memset(p, st, MS); nfl = m_floor(p, st, FL); split("", FS); for (i = 1; i <= nfl; i++) FS[m_norm(FL[i])] = 1
-    bad = ""; for (i = 1; i <= j; i++) if (!(m_norm(LV[i]) in MS) || (m_norm(LV[i]) in FS)) bad = bad (bad == "" ? "" : "|") LV[i]
+    m_memset(p, st, MS); nfl = m_floor(p, st, FL); split("", FSET); for (i = 1; i <= nfl; i++) FSET[m_norm(FL[i])] = 1
+    bad = ""; for (i = 1; i <= j; i++) if (!(m_norm(LV[i]) in MS) || (m_norm(LV[i]) in FSET)) bad = bad (bad == "" ? "" : "|") LV[i]
     WT_C = "LITERAL"; WT_V = (bad == "" ? "pass" : "FAIL"); WT_N = bad; return
   }
   for (i = 1; i <= nobj; i++) if (cl_in(OB[i], WT_OPTION)) {
     nr = wt_reach(k, e, a, b, 1, RI)
-    m_memset(p, st, MS); nfl = m_floor(p, st, FL); split("", FS); for (j = 1; j <= nfl; j++) FS[m_norm(FL[j])] = 1
-    bad = ""; for (j = 1; j <= nr; j++) if (!(m_norm(RI[j]) in MS) || (m_norm(RI[j]) in FS)) bad = bad (bad == "" ? "" : "|") RI[j]
+    m_memset(p, st, MS); nfl = m_floor(p, st, FL); split("", FSET); for (j = 1; j <= nfl; j++) FSET[m_norm(FL[j])] = 1
+    bad = ""; for (j = 1; j <= nr; j++) if (!(m_norm(RI[j]) in MS) || (m_norm(RI[j]) in FSET)) bad = bad (bad == "" ? "" : "|") RI[j]
     WT_C = "OPTION"; WT_V = (bad == "" ? "pass" : "FAIL"); WT_N = bad; return
   }
   for (i = 1; i <= nobj; i++) if (cl_in(OB[i], WT_NONOPT)) { WT_C = "NON-OPTION SOURCE"; WT_V = "FAIL"; return }
