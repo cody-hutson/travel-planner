@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-11-07 — Publishing never quietly undoes a takedown or a key
+## [0.65.0] — 2026-11-07 — Publishing never quietly undoes a takedown or a key
 
 No trip verb plans or records a trip differently in this release. What changes is met by whoever
 publishes, updates or rotates a trip's site. Publishing no longer puts back a page a takedown
@@ -63,9 +63,9 @@ them, `unpublish` the site, which deletes the repository, then `publish` it agai
 pages.
 
 **Size fence.** Nothing moved: no row was re-pinned.
-- `CLAUDE.md` grew 1,107 bytes to 141,383, beneath its row of 153,381.
+- `CLAUDE.md` grew 1,274 bytes to 141,550, beneath its row of 153,381.
 - `reference/adr/ADR-007-command-entry-point.md` grew 480 bytes to 53,989, beneath its row of 58,860.
-- `skills/trip-publish/SKILL.md` shrank 2,491 bytes to 43,160.
+- `skills/trip-publish/SKILL.md` shrank 2,233 bytes to 43,418.
 
 **What it doesn't reach.** Commands run on one trip at the same time are still not serialized.
 When GitHub can't be read as `publish` asks whether a repository is empty, `publish` takes its
