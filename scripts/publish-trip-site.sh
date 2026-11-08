@@ -352,19 +352,24 @@ discard_own_commit() { # <pub_dir> <this-run's-own-commit>
   git -C "$1" update-ref -m "discard own commit: key of record changed" refs/heads/main "$parent" "$2"
 }
 
-# The key of record, re-read immediately before a push. If .passphrase no longer holds the key
-# this run encrypted under, another rotate or update recorded a different key after this run
-# resolved its own, and pushing now would put a revoked key back over it. So stop — and take
-# this run's own commit back out first: it is a page under the replaced key, and the clone is
-# reused as it stands, so a commit left there rides the next push. A trip with no .passphrase
-# (the variable supplies its key) has no record to compare, and passes.
-require_key_of_record() { # <trip_dir> <passphrase-this-run-encrypted-under> <pub_dir> <this-run's-own-commit>
+# The key of record, re-read immediately before a push, and again after a push that reported failure.
+# If .passphrase no longer holds the key this run encrypted under, another rotate or update recorded a
+# different key after this run resolved its own, and pushing now would put a revoked key back over it.
+# So stop — and take this run's own commit back out first: it is a page under the replaced key, and the
+# clone is reused as it stands, so a commit left there rides the next push. A trip with no .passphrase
+# (the variable supplies its key) has no record to compare, and passes. Before a push the refusal says
+# this run pushed nothing, which is then true. After a push that reported failure that is not known — a
+# push that reports failure may still have landed — so that caller passes the sentence that says so and
+# names the remedy, and the refusal says it in place of claiming nothing was pushed.
+require_key_of_record() { # <trip_dir> <passphrase-this-run-encrypted-under> <pub_dir> <this-run's-own-commit> [<after-the-push sentence>]
   local pf="$1/.passphrase"
   [ -e "$pf" ] || return 0
   passphrase_file_holds "$pf" "$2" && return 0
   if discard_own_commit "$3" "$4"; then
+    [ -z "${5:-}" ] || die "$pf changed while this update was running — another rotate or update recorded a different key after this run resolved its own. This run discarded its own commit from $3. $5"
     die "$pf changed while this update was running — another rotate or update recorded a different key after this run resolved its own. This run pushed nothing and discarded its own commit, so no later push can carry its page under the replaced key. Re-run update."
   fi
+  [ -z "${5:-}" ] || die "$pf changed while this update was running — another rotate or update recorded a different key after this run resolved its own. This run could not confirm its own commit in $3 and take it back — another command may have committed on top of it. $5"
   die "$pf changed while this update was running — another rotate or update recorded a different key after this run resolved its own. This run pushed nothing itself, but could not confirm its own commit in $3 and take it back — another command may have committed on top of it, and may already have published it. Remove $3 before re-running update, so no later push from it carries a page under the replaced key."
 }
 
@@ -4537,9 +4542,13 @@ cmd_update() { # <trip_dir>
   # the plan this push carries comes back in `staged`, and the recorder records exactly that plan.
   stage_baseline_record "$trip_dir" "$site_html" update staged
   if ! push_trip_site "$pub_dir" "$mine" update "$lease"; then
-    # The remote moved after the check. A rotation that recorded a new key meanwhile is caught
-    # here, and this run takes its own commit back and says so; otherwise the push simply failed.
-    require_key_of_record "$trip_dir" "$passphrase" "$pub_dir" "$mine"
+    # The push reported failure: the remote moved after the check, or the network failed, and it may
+    # still have landed. A rotation that recorded a new key meanwhile is caught here: this run takes its
+    # own commit back out of the clone and says the push may still have reached the site, which would
+    # leave its page under the replaced key live. The remedy it names is a fresh clone, not a bare re-run:
+    # after a landed push the re-run's commit does not descend from the site's tip, and it stops at the
+    # descent check above. Otherwise the refusal below says the same of the push alone.
+    require_key_of_record "$trip_dir" "$passphrase" "$pub_dir" "$mine" "Its push reported failure, and it may still have reached the site: a connection dropped after the server accepted a push reports failure here too, so the live page may be this run's, under the replaced key. Remove $pub_dir (it is cloned again from the published site) and re-run update, which publishes under the key now recorded."
     die "update: the push to the per-trip repository failed — the site changed after this run checked it, or the network did — and it may still have reached the site: a connection dropped after the server accepted a push reports failure here too. Re-run update: it re-reads the site first, and converges on whatever reached it."
   fi
   # The push succeeded, so this itinerary content IS what is published now. Recorded

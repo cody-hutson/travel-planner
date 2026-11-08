@@ -14065,10 +14065,16 @@ rv33_assert() { # <id> <site-moved|unrecorded|head-behind>
 for rv_b in site-moved unrecorded head-behind; do rv33_assert "RV33-$rv_b" "$rv_b"; done
 
 # ── RV34 — absorbed #1615. A push that fails after a fetch that succeeded. Each command's refusal allows
-# that the push may have reached the site and never says nothing was published; rotate's says .passphrase
-# already holds the new key and names update, without printing it; and the next update converges, against
-# whatever baseline record the failed push left staged: the staged file is gone, the baseline names the
-# plan, and the live page is under the key .passphrase holds.
+# that the push may have reached the site and never says nothing was pushed or published; rotate's says
+# .passphrase already holds the new key and names update, without printing it; and the next update
+# converges, against whatever baseline record the failed push left staged: the staged file is gone, the
+# baseline names the plan, and the live page is under the key .passphrase holds. RV34-update-rekey is the
+# branch where update's key re-check answers first: its push lands and reports failure while another command
+# records a different key, so the refusal is the key check's, and it must still allow that the push reached
+# the site, the live page being this run's under the replaced key; the remedy it names, the clone removed and
+# update, ends at a site under the key .passphrase holds.
+# The claim a failed push may not make, in each wording it has taken.
+rv34_nothing() { rv_has "$1" 'published nothing' || rv_has "$1" 'pushed nothing' || rv_has "$1" 'Nothing was pushed'; }
 rv34_assert() { # <id> <rotate|update>
   local id="$1" verb="$2" name d bare out rc rc2 h0 h1 live pf nothing=0 may=0 names=0 leak=0 stg=0 stg2=0 base now
   local k1='rv-push-fails-synthetic-key-45'
@@ -14076,7 +14082,7 @@ rv34_assert() { # <id> <rotate|update>
   h0="$(rv_head "$bare")"; rv_reject_pushes "$bare"
   out="$( ( unset STATICRYPT_PASSWORD; set -e; "cmd_$verb" "$d" ) 2>&1 )"; rc=$?
   rv_allow_pushes "$bare"; h1="$(rv_head "$bare")"; now="$(cat "$d/.passphrase" 2>/dev/null)"
-  rv_has "$out" 'published nothing' && nothing=1
+  rv34_nothing "$out" && nothing=1
   rv_has "$out" 'may still have reached the site' && may=1
   [ -e "$d/.published-itinerary.next" ] && stg=1
   if [ "$verb" = rotate ]; then
@@ -14092,7 +14098,7 @@ rv34_assert() { # <id> <rotate|update>
   if [ "$rc" -ne 1 ] || [ "$h0" != "$h1" ]; then
     FAIL "$id: $verb with its push refused by the site read rc=$rc, site moved=$([ "$h0" = "$h1" ] && echo 0 || echo 1) — the failure was not the one this arm grades. VERDICT WITHHELD"
   elif [ "$nothing" -eq 1 ]; then
-    FAIL "$id: $verb's refusal says nothing was published, and a failed push may have reached the site"
+    FAIL "$id: $verb's refusal says nothing was pushed or published, and a failed push may have reached the site"
   elif [ "$may" -eq 0 ] || [ "$names" -eq 0 ]; then
     FAIL "$id: $verb's refusal did not allow that the push may have reached the site (may=$may) or did not name what comes next (names=$names)"
   elif [ "$leak" -eq 1 ]; then
@@ -14104,10 +14110,62 @@ rv34_assert() { # <id> <rotate|update>
   elif [ "$stg2" -eq 1 ] || [ "$base" = absent ]; then
     FAIL "$id: the next update published but left the staged record outstanding ($stg2) or recorded no baseline ('$base')"
   else
-    PASS "$id: $verb's failed push is reported as one that may have reached the site, never as nothing published; the next update converges against the staged record, under the key .passphrase holds"
+    PASS "$id: $verb's failed push is reported as one that may have reached the site, never as nothing pushed or published; the next update converges against the staged record, under the key .passphrase holds"
   fi
 }
 for rv_c in rotate update; do rv34_assert "RV34-$rv_c" "$rv_c"; done
+# The push lands and then reports failure, as a connection dropped after the server accepted it does, and the
+# other command records its key: the record of the remote is left at the lease, where a client that saw the
+# failure leaves it. Stacked on the real function and defined here, as rv42_wrap is.
+rv34k_wrap() { # (inside a subject's subshell) rv34k_k2 is the key the other command records, rv34k_pf its file
+  rv34k_def="$(declare -f push_trip_site)"; eval "rv34k_real_push ${rv34k_def#push_trip_site}"
+  push_trip_site() {
+    local lease; lease="$(git -C "$1" rev-parse -q --verify refs/remotes/origin/main)"
+    rv34k_real_push "$@" || return 2
+    git -C "$1" update-ref refs/remotes/origin/main "$lease"
+    printf '%s\n' "$rv34k_k2" > "$rv34k_pf"
+    return 1
+  }
+}
+rv34k_assert() { # <id>
+  local id="$1" name d bare out rc rc2 h0 h1 live live2 now nothing=0 may=0 keyed=0 names=0 leak=0 stg=0 stg2=0 base
+  local k1='rv-push-lands-old-synthetic-key-46' k2='rv-push-lands-new-synthetic-key-47'
+  name="rv34k-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"
+  h0="$(rv_head "$bare")"
+  out="$( ( unset STATICRYPT_PASSWORD; rv34k_k2="$k2"; rv34k_pf="$d/.passphrase"; rv34k_wrap; set -e; cmd_update "$d" ) 2>&1 )"; rc=$?
+  h1="$(rv_head "$bare")"; live="$(rv_pushed_key "$bare")"; now="$(cat "$d/.passphrase" 2>/dev/null)"
+  rv34_nothing "$out" && nothing=1
+  rv_has "$out" 'may still have reached the site' && may=1
+  rv_has "$out" 'changed while this update was running' && keyed=1
+  { rv_has "$out" "Remove $d/.publish" && rv_has "$out" 're-run update'; } && names=1
+  { rv_has "$out" "$k1" || rv_has "$out" "$k2"; } && leak=1
+  [ -e "$d/.published-itinerary.next" ] && stg=1
+  rm -rf "$d/.publish"
+  ( unset STATICRYPT_PASSWORD; RV_CLONE_BARE="$bare"; rv_gh_clones; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc2=$?
+  live2="$(rv_pushed_key "$bare")"
+  [ -e "$d/.published-itinerary.next" ] && stg2=1
+  base="$(_baseline_record "$d/.published-itinerary")"
+  if [ "$rc" -ne 1 ] || [ "$h0" = "$h1" ] || [ "$live" != "$k1" ] || [ "$now" != "$k2" ]; then
+    FAIL "$id: update read rc=$rc, landed=$([ "$h0" = "$h1" ] && echo 0 || echo 1), live page under the replaced key=$([ "$live" = "$k1" ] && echo 1 || echo 0), new key recorded=$([ "$now" = "$k2" ] && echo 1 || echo 0) — the state this limb grades was not built. VERDICT WITHHELD"
+  elif [ "$keyed" -eq 0 ]; then
+    FAIL "$id: update's refusal does not say .passphrase changed under it, so its key re-check after the push is not what refused. VERDICT WITHHELD"
+  elif [ "$nothing" -eq 1 ]; then
+    FAIL "$id: the push landed, and update's refusal says nothing was pushed or published"
+  elif [ "$may" -eq 0 ] || [ "$names" -eq 0 ]; then
+    FAIL "$id: update's refusal did not allow that the push may have reached the site (may=$may) or did not name the clone's removal and update (names=$names)"
+  elif [ "$leak" -eq 1 ]; then
+    FAIL "$id: the refusal carries a passphrase VALUE"
+  elif [ "$stg" -eq 0 ]; then
+    FAIL "$id: the failed push left no baseline record staged, so convergence against one is not what this limb observed. VERDICT WITHHELD"
+  elif [ "$rc2" -ne 0 ] || [ -z "$live2" ] || [ "$live2" != "$k2" ]; then
+    FAIL "$id: the remedy the refusal names, the clone removed and update, did not converge (rc=$rc2): the live page is not under the key .passphrase holds"
+  elif [ "$stg2" -eq 1 ] || [ "$base" = absent ]; then
+    FAIL "$id: the remedy published but left the staged record outstanding ($stg2) or recorded no baseline ('$base')"
+  else
+    PASS "$id: an update whose push landed and reported failure while another command recorded a new key says the push may still have reached the site, never that nothing was pushed; the remedy it names, the clone removed and update, ends at a site under the key .passphrase holds"
+  fi
+}
+rv34k_assert "RV34-update-rekey"
 
 # ── RV35 — what the lease and the descent check are for, each by the one interleaving only it stops.
 # rewound-after-read: the site is rewound after rotate read it and before its push. Unleased, that push is a
@@ -14843,6 +14901,8 @@ md_flips require_current_site_record "RV32-read" rv32_assert "RV32-read"
 for rv_b in site-moved unrecorded head-behind; do md_flips require_current_site_record "RV33-$rv_b" rv33_assert "RV33-$rv_b" "$rv_b"; done
 md_flips cmd_rotate "RV34-rotate" rv34_assert "RV34-rotate" rotate
 md_flips cmd_update "RV34-update" rv34_assert "RV34-update" update
+# RV34-update-rekey grades the key check's words after a push, so it is registered against that check.
+md_flips require_key_of_record "RV34-update-rekey" rv34k_assert "RV34-update-rekey"
 for rv_b in rewound-after-read head-moved; do md_flips cmd_rotate "RV35-$rv_b" rv35_assert "RV35-$rv_b" "$rv_b"; done
 md_flips require_current_site_record "RV28-rotate" rv28r_assert "RV28-rotate"
 for rv_b in absent plaintext unreadable dangling; do md_flips cmd_update "RV37-$rv_b" rv37_assert "RV37-$rv_b" "$rv_b"; done
