@@ -443,6 +443,21 @@ they forbid available: it admits no `ALLOW_PLAINTEXT`, no `--yes` to `unpublish`
 overwrite or deletion of existing trip content, each of which the publishing and overwrite
 paragraphs above and `ADR-007` § 2 forbid unconditionally.
 
+**A run nobody can answer writes only what its verb writes without asking.** A run is
+non-interactive where no later message can reach the session: print mode, or a scheduled task.
+An answer arrives only in a later message, and `allowed-tools` clears when one does
+(`reference/adr/ADR-007-command-entry-point.md` § *Context*). So where a verb's section
+reaches a write without asking anything, the write runs in this turn, under this turn's
+grants, because typing the verb is what asked for it. Where the section asks first — a
+question, a choice of routes, a confirmation, a typed token — the verb stops there: it names
+what it would have asked, writes nothing past that point, and takes no default, no assumed
+answer and no flag in the answer's place. What it wrote before that point stands, and it says
+so. A write the harness denies is relayed as a denial and never reported as done. **A session
+need not recognise print mode for this to hold**, because a question nobody answers writes
+nothing either way, and a verb's own non-interactive row stands, and stops no later than this
+rule would. `reference/adr/ADR-051-a-verb-runs-until-it-asks.md` records the decision; this
+rule is its operative statement. **This rule is followed, not enforced.**
+
 ## Selecting the verb
 
 A literal lookup. Every step below is lexical, and the matching step — step 4 — has a
@@ -530,7 +545,12 @@ to be inferred from a wider silence. It does not read
 carried **by value** by the record block above, and a read here would give the render a
 second source of fields the ladder has already resolved, free to disagree with it. It reads
 no **content** under `trips/<slug>/outputs/` and opens no artifact there. It
-does not read `agents/<name>.md`, having no agent to supply a prompt to.
+does not read `agents/<name>.md`, having no agent to supply a prompt to. For
+`research-to-placement`'s source side alone it reads the rows of
+`reference/data-architecture.md` § 1.1's class table, taken with `Read` over a line range from
+its `### 1.1 ` heading and never the whole file, where `research`'s derivation finds them;
+that is an engine document and shows nothing of the trip. A table that cannot be read makes
+that relation `UNDETERMINED`, naming the file.
 **Reading a column live is not reading a file.** Step 1's `Command` column and this file's
 requirement table are taken from what is in context — this file's body is the body being run,
 and `CLAUDE.md` is loaded beside it when this repository is the workspace; an installed engine
@@ -669,7 +689,9 @@ re-read it for the trip's mode or destination — the record block above carries
 It reads nothing under `trips/<slug>/outputs/` itself: those artifacts are read by the agents
 that consume them, and a read here would give the itinerary a second reader with no write to
 justify it. **Agent reads, attributed:** enrichment reads `trips/<slug>/travelers/*.md`,
-`trips/<slug>/trip-context.md` and `trips/<slug>/outputs/traveler-model.md`, the model it is
+`<store-root>/people/<person-id>.md`, the durable record a file's `person:` line references,
+and the survivor where that record is a `merged-into:` stub, `trips/<slug>/trip-context.md`
+and `trips/<slug>/outputs/traveler-model.md`, the model it is
 about to replace, read before it rebuilds it; each spoke reads `trips/<slug>/trip-context.md`,
 `trips/<slug>/trip-log.md`, `trips/<slug>/outputs/traveler-model.md` and its own accumulated
 output file; the hub reads the spoke outputs, `trips/<slug>/outputs/traveler-model.md` and
@@ -678,6 +700,7 @@ output file; the hub reads the spoke outputs, `trips/<slug>/outputs/traveler-mod
 **Dispatches** enrichment, the spokes § *Modes* admits for the resolved mode, the hub, and the
 validator where that mode runs it — each in the role or roles its roster row states, each
 writing exactly the file or files that row names and nothing else.
+**Non-interactive: the standing clause's *run nobody can answer*.**
 
 **The chain is § *Modes*' to decide, not this section's.** Read the resolved mode's row there
 and dispatch what it says runs, in the pipeline order § *Dispatching agents* states. The
@@ -738,19 +761,27 @@ verdict this run did not change.
 **Reads:** `agents/<name>.md` — the prompt of each agent this verb dispatches, the path taken
 from that agent's own row in `CLAUDE.md`'s roster; `trips/<slug>/trip-context.md` — the
 `## Mode` block alone, read before it is written, for the reason `plan`'s section gives. It
-reads no other block of that file and nothing under `trips/<slug>/outputs/` itself. **Agent
-reads, attributed:** each affected spoke reads `trips/<slug>/trip-context.md`,
+reads no other block of that file. Where the resolved mode is not already `ITERATION`, it also
+reads under `trips/<slug>/outputs/` itself, for the mode test below and nothing else:
+`final-itinerary.md`, for whether it exists, taken with `Bash(ls:*)`
+as `ls -1 "<data-root>/trips/<slug>/outputs/final-itinerary.md"` before the first dispatch;
+and, on a run that dispatches the reconciler, the `## Update signals [DERIVED]` block of
+`traveler-model.md` alone, immediately after that leg. That block names a field and never its
+value (`agents/00-enrichment.md` § *Profile-change detection*). **Agent
+reads, attributed:** enrichment, where a changed profile is what triggered the run, reads
+`trips/<slug>/travelers/*.md`, `<store-root>/people/<person-id>.md`, the durable record a
+file's `person:` line references, and the survivor where that record is a `merged-into:` stub,
+`trips/<slug>/trip-context.md` and `trips/<slug>/outputs/traveler-model.md`, the model it is
+about to replace; each affected spoke reads `trips/<slug>/trip-context.md`,
 `trips/<slug>/trip-log.md`, `trips/<slug>/outputs/traveler-model.md` and its own accumulated
-output file; enrichment, where a changed profile is what triggered the run, reads
-`trips/<slug>/travelers/*.md`, `trips/<slug>/trip-context.md` and
-`trips/<slug>/outputs/traveler-model.md`, the model it is about to replace; the hub reads the
-spoke outputs, `trips/<slug>/outputs/traveler-model.md` and
+output file; the hub reads the spoke outputs, `trips/<slug>/outputs/traveler-model.md` and
 `trips/<slug>/outputs/event-status.md`; the validator reads the itinerary the hub produced,
 `trips/<slug>/outputs/traveler-model.md` and `trips/<slug>/outputs/event-status.md`.
 **Dispatches** enrichment where a changed profile is what triggered the run, in its reconciler
 role, writing `trips/<slug>/outputs/traveler-model.md` alone; the spokes the coupling
 conditions admit, the hub and the validator — each in the role its roster row states, each
 writing exactly the file or files that row names.
+**Non-interactive: the standing clause's *run nobody can answer*.**
 
 **What it evaluates before it dispatches anything.** Each coupling condition below, with the
 evidence that decided it, announced per the standing clause:
@@ -780,21 +811,54 @@ named writer of `outputs/final-itinerary.md` and the primary writer of
 the hub just produced — so a run that skipped either would leave the itinerary unreconciled
 or the status-integrity guarantee unaudited. The announcement names the floor as such.
 
-**The mode.** The value is `ITERATION`. The artifact that makes the transition observable is
-the research the affected spokes appended, named by path in the announcement. Apply the
-placement rule: the hub's equity-aware disruption recovery and the validator's recovery-equity
-check both branch on `ITERATION` and are both legs of this chain, so the write precedes the
-first of them; and no remaining leg must run under the outgoing mode, because this run is the
-iteration. Writing at the end of the chain would strand exactly the readers the carve-out
-exists to reach.
+**The reconciler leg.** A changed profile is what the operator states in this run's argument
+text. Nothing here looks for one, so a run that states none dispatches no reconciler, whatever
+the traveller files hold. Where one is stated, the reconciler runs first, ahead of any spoke.
 
-**Where it writes no mode.** Where the coupling evaluation admitted no spoke, the floor runs
-alone and **this run produced no artifact of its own before the hub leg** — so no mode is
-written and none is announced. Say so, and name `/trip-record mode`: a transition with no
-artifact behind it rests on a statement only the operator can make, which is that command's
-evidence and its territory. `DISCOVERY` and `ENRICHMENT` are states this verb's own row
-admits, and the floor-only path is reachable from either, so this is a branch the verb enters
-rather than a sentence it carries.
+**The mode.** The value is `ITERATION`: an existing plan the user wants changes to, with a
+changed-profile delta among § *Modes*' triggers. So the write needs a plan,
+`trips/<slug>/outputs/final-itinerary.md` shown on file by the probe above, and the first
+artifact this run produces that shows the change, named by path in the announcement:
+
+| the leg, in dispatch order | the artifact | what makes it evidence |
+|---|---|---|
+| the reconciler | `trips/<slug>/outputs/traveler-model.md` | its `## Update signals [DERIVED]` block carries, after a leg that wrote the model, a line above its `###` partition naming a changed need or a changed desire. `skills/trip-record/SKILL.md` § `travelers` owns those two classes and routes them to this verb. A rebuilt model with no such line shows nothing for the hub to recover from. A leg that stopped or declined its write produced no artifact, so a block it left standing is not this run's evidence |
+| the spokes the coupling conditions admit | the research they appended | the dated section each one appended |
+
+Nothing else this chain writes is evidence. Apply the placement rule: the hub's equity-aware
+disruption recovery and the validator's recovery-equity check both branch on `ITERATION` and
+are both legs of this chain, so the write precedes the first of them; and no remaining leg
+must run under the outgoing mode, because this run is the iteration. So a qualifying model
+takes the write straight after the reconciler, ahead of any spoke, and on a run that also
+admits spokes they then run under `ITERATION`; otherwise it lands after the spokes. Writing at
+the end of the chain would strand exactly the readers the carve-out exists to reach. On a run
+that dispatches the reconciler, the announcement states this test rather than a result.
+
+`Mode notes`, written in the same act, names the artifact by path and then the scope, because
+the hub and the spokes read their `ITERATION` scope from it: the change the coupling
+evaluation recorded, if any, and on the reconciler's artifact "for the hub, the days its
+disruption recovery reaches from the update signals". It names no traveller and no field,
+since a `[THIRD-PARTY]` member is never named in `trip-context.md`, and no `locked` or
+`firmed` event the user's argument text does not name, since the hub's preservation test reads
+this field.
+
+**Where it writes no mode.** No mode is written and none is announced on any path below, and
+the floor still runs. Say which path this run reached, and name what the last column names.
+`DISCOVERY` and `ENRICHMENT` are states this verb's own row admits, and each path is reachable
+from either, so these are branches the verb enters rather than sentences it carries.
+
+| what this run found | why nothing is observable | what the run names |
+|---|---|---|
+| no spoke admitted and no changed profile stated | the floor runs alone, so this run produced no artifact of its own before the hub leg | `/trip-record mode` |
+| no spoke admitted, a changed profile stated, and no qualifying line in a model the reconciler leg wrote | the reconciler ran, but its artifact shows no change for the hub to recover from: no composed value moved, an earlier reconcile already took the change in, the leg stopped or declined its write, or the lines are all a journey facet or `PROFILE MISSING` | `/trip-record mode`, and that where an earlier reconcile took the change in, its signal is gone until the next change, because this run's reconcile rebuilt the model without it; where the leg stopped or declined its write, say so, since no model was rebuilt and an earlier signal may still stand |
+| no `outputs/final-itinerary.md` on file when this run started, shown absent, not refused | `ITERATION` is an existing plan being changed, and there is none: the hub's patch and both recovery behaviours compare against a prior version | `/trip plan`, and `/trip-record mode` for a transition only the operator can state |
+
+Where more than one row holds, the lowest governs, because the plan is what the write needs
+first. A path no row names takes the standing clause's test: no artifact, no mode.
+`/trip-record mode` is named because a transition with no artifact behind it rests on a
+statement only the operator can make, which is that command's evidence and its territory.
+Where the resolved mode already reads `ITERATION`, the value would not change: nothing is
+written, nothing further is named, and neither read under `outputs/` is taken.
 
 **`outputs/event-status.md`.** Read through the agents this verb dispatches — the hub and the
 validator both read it — and on a disruption recovery a `locked → planned` regression in it
@@ -825,6 +889,7 @@ reads, attributed:** transport reads `trips/<slug>/trip-context.md`,
 `trips/<slug>/outputs/traveler-model.md` and `trips/<slug>/outputs/event-status.md`.
 **Dispatches** transport, scheduling, the hub and the validator — each in the role its roster
 row states, each writing exactly the file or files that row names.
+**Non-interactive: the standing clause's *run nobody can answer*.**
 
 **The chain: `transport → scheduling → hub → validator`.** Each link precedes the next because
 of the artifact the next link consumes, not because the order feels right.
@@ -875,36 +940,55 @@ because this chain reaches the hub; only `planned` events move.
 
 ## research
 
-**Reads:** `agents/<name>.md` — the prompt of the spoke the agent key selects, the path taken
-from that spoke's own row in `CLAUDE.md`'s roster. It reads nothing else: not
+**Reads:** the rows of `reference/data-architecture.md` § 1.1's class table, taken with `Read`
+over a line range from its `### 1.1 ` heading and never the whole file, which the agent key is
+derived from; and `agents/<name>.md` — the prompt of the spoke the agent key selects, the path
+taken from that spoke's own row in `CLAUDE.md`'s roster. It reads nothing else: not
 `trip-context.md`, whose mode and destination the record block already carries by value, and
 nothing under `trips/<slug>/outputs/` — the spoke reads its own accumulated output file and
 appending to it is the spoke's write, not this verb's. **Agent reads, attributed:** the spoke
-reads what **its own prompt** declares — at minimum `trips/<slug>/trip-context.md`,
-`trips/<slug>/trip-log.md` and its own accumulated output file, and for some spokes more:
-`agents/03-scheduling.md` also declares `outputs/traveler-model.md` in every mode and, in
-`ITERATION` and `RESEQUENCING`, `outputs/activities-list.md`, `outputs/food-list.md` and
-`outputs/event-status.md`. That list is the spoke's, not this verb's, so it is cited rather
-than closed here — a spoke's reads are read from its prompt at dispatch time.
-**Dispatches** that one spoke, in the role its roster row states, writing exactly the file
-that row names.
+reads what **its own prompt** declares and what the dispatch carries — at minimum
+`trips/<slug>/trip-context.md`, `trips/<slug>/trip-log.md`,
+`trips/<slug>/outputs/traveler-model.md` and its own accumulated output file, and for some
+spokes more: `agents/03-scheduling.md` also declares, in `ITERATION` and `RESEQUENCING`,
+`outputs/activities-list.md`, `outputs/food-list.md` and `outputs/event-status.md`. That list
+is the spoke's, not this verb's, so it is cited rather than closed here — a spoke's reads are
+read from its prompt at dispatch time.
+**Dispatches** that one spoke, in the role its roster row states, appending to exactly the
+file its `researched` class names.
+**Non-interactive: the standing clause's *run nobody can answer*.**
 
 **The agent key.** Positional — the first token of the argument string, ASCII-case-folded —
 matched by **exact string equality** against a set of **tokens** derived live from
-`CLAUDE.md`'s agent roster. The derivation has two stages, and they must not be collapsed: a
-row filter, then a cell that supplies the token. **Filter to the rows whose `Output File` cell
-names exactly one path under `outputs/`, whose file § *Output Versioning* leaves in the
-accumulating default — naming it in none of that section's replaced, rebuilt or
-persist-mutable exceptions — and whose `When to dispatch` cell does not confine the row to a
-state this verb's own row excludes. The token of an admitted row is its `Agent` cell,
-ASCII-case-folded.** The filter yields rows; the `Agent` cell yields the comparand — **a typed
-key is never compared against a row.** That set is **not written into this file and not
-counted**, and it is what keeps a spoke a later release adds from needing an edit here.
-Everything after the key is the topic, passed to the spoke and interpreted by it.
+`reference/data-architecture.md` § 1.1 and `CLAUDE.md`'s agent roster. The derivation has two
+stages, and they must not be collapsed: a filter that yields rows, then a cell that supplies
+the token. **Filter § 1.1 to the classes whose `Prov` cell is `researched` and whose `L` cell
+is `accumulate-append`. Admit a roster row when its `Agent` cell, ASCII-case-folded, stands as
+a whole token in the `W` cell of one of those classes; that class's `Class` cell is the file
+the spoke appends to, and that token is the row's key. The token of an admitted row is its
+`Agent` cell, ASCII-case-folded.** The filter yields rows; the `Agent` cell yields the
+comparand — **a typed key is never compared against a row.** That set is **not written into
+this file and not counted**, and it is what keeps a spoke a later release adds from needing an
+edit here. Everything after the key is the topic, passed to the spoke and interpreted by it.
+
+**That test decides, and the cells it does not read do not.** The `Output File` cell is the
+row's complete write list, so a further file named there leaves the spoke in the key. The
+`When to dispatch` cell says when the agent is reached for, not what it produces. `C18`, the
+targeted-research class `outputs/<slug>.md`, is `researched` and `accumulate-append` and
+supplies no row: its `W` cell reads *the spoke that re-ran*, which is no prompt's id, because
+the class has no producer (`reference/schemas/targeted-research.md`).
+
+**Working out the set opens no prompt.** An admitted row's `Agent` cell, case-folded, is its
+prompt's `writer:` id, so the set is read from § 1.1's `W` cells and the roster's `Agent`
+cells, and the one prompt opened is the one dispatched. `scripts/test-command-taxonomy.sh`
+group J holds that equality and this set on every push.
 
 A key matching nothing is **this verb's own refusal**: render the token verbatim, render the
-set read live from the roster, and stop. **No near-match, no *"did you mean"*, no fallback** —
-the reasons § *When the token is not a verb of this command* gives hold identically here.
+set read live from § 1.1 and the roster, and stop. **No near-match, no *"did you mean"*, no
+fallback** — the reasons § *When the token is not a verb of this command* gives hold
+identically here. A class table that cannot be read, or that admits no row, is the same
+refusal: name `reference/data-architecture.md` and stop. The set is never taken from the
+roster's paths instead.
 
 **It places nothing.** The spoke **appends** its research to its own output file under a new
 dated section; it rewrites nothing, reorders nothing, and deletes no prior research. Research
@@ -929,12 +1013,14 @@ not quantify over it.
 taken only to establish whether there is an itinerary to audit, which is a read and is
 declared. It reads no content under that directory itself, and it reads no block of
 `trip-context.md`: the audit is the validator's and the constraint set is the validator's read.
-**Agent reads, attributed:** the validator reads the current itinerary, the constraint set in
-`trips/<slug>/trip-context.md`, and `trips/<slug>/outputs/event-status.md`, which it never
-writes. **Dispatches** the validator alone, in the role its roster row states. **The dispatch
-names no output path and instructs the validator, in terms, to write neither of the two files
-its own prompt declares** — `outputs/validation-report.md` and `outputs/satisfaction-metrics.md`
-— **and to return its findings in the response instead.**
+**Agent reads, attributed:** the validator reads what **its own prompt** declares — at minimum
+the current itinerary, the constraint set in `trips/<slug>/trip-context.md`,
+`trips/<slug>/outputs/traveler-model.md` and `trips/<slug>/outputs/event-status.md`, which it
+never writes. **Dispatches** the validator alone, in the role its roster row states. **The
+dispatch names no output path and instructs the validator, in terms, to write neither of the
+two files its own prompt declares** — `outputs/validation-report.md` and
+`outputs/satisfaction-metrics.md` — **and to return its findings in the response instead.**
+**Non-interactive: the standing clause's *run nobody can answer*.**
 
 **No output path, on purpose — and the dispatch has to say so.** § Step 1 states this audit
 *"reports findings. No spokes, no hub, no edits."* `agents/06-validator.md` declares its writes
@@ -986,11 +1072,15 @@ so the per-event status bound does not quantify over it.
 row in `CLAUDE.md`'s roster. It reads nothing else: not `trip-context.md`, whose mode and
 destination the record block already carries by value, and nothing under
 `trips/<slug>/outputs/` — the shortlist is the agent's to write and this verb never reads it
-back. **Agent reads, attributed:** the ideation agent reads `trips/<slug>/travelers/*.md` for
-the group's leanings and `trips/<slug>/trip-context.md` for the dates and party.
+back. **Agent reads, attributed:** the ideation agent reads
+`trips/<slug>/outputs/traveler-model.md` for the group's leanings, falling back to the leaning
+fields of `trips/<slug>/travelers/*.md` where that model has not been built,
+`trips/<slug>/trip-context.md` for the dates and party, and the frontmatter of
+`trips/<slug>/outputs/destination-shortlist.md`, read before it is replaced.
 **Dispatches** Destination Ideation, in the role its roster row states, writing
 `outputs/destination-shortlist.md` alone. That artifact is `rebuilt-each-synthesis`: on a
 re-run the agent replaces it with the current ranking rather than appending to it.
+**Non-interactive: the standing clause's *run nobody can answer*.**
 
 **Why the row's destination cell reads `UNDECIDED`.** A decided destination means the ideation
 question is already answered, and running the pipeline anyway spends it re-ranking a settled
@@ -1047,6 +1137,7 @@ as one this verb follows, not one an inspection of the tree can settle afterward
 `trips/<slug>/trip-log.md`: the log carries the reasoning behind choices, and the site renders
 what was chosen. **Dispatches no agent** — the site is authored directly, which is why this
 verb reaches `Write` for its own output rather than for an agent's.
+**Non-interactive: the standing clause's *run nobody can answer*.**
 
 **Update, do not regenerate.** Where the site exists, **patch the affected sections** and
 preserve design tweaks already approved; `Write` is reached only where the file does not
@@ -1110,13 +1201,13 @@ plan's own count and code after a revert or that exception and with none after a
 run.** `confirm` writes `confirmed=` at the instant the approval event is recorded — the
 organizer's CONFIRM, or, on a trip that declares approvers, the last terminal act that leaves the
 declared threshold met before the plan it names is published — and no later path re-stamps it:
-`publish` and `update` write `.published-itinerary`, a different sidecar, and once the record names
-the published plan a later terminal act rewrites only its count. So a date read from it moves only
-at the organizer's own act, and never for a plan that has already published — with two exceptions,
-both reached once a change is abandoned and the working copy is back on the published plan. The
-first is a revert: where the record names the abandoned plan, `confirm` re-anchors the record to
-the published plan — or, where that plan's own approvals fall short, offers to retire it. The
-second is a change abandoned before any approval: on a trip that declares approvers, where the
+`publish`, `update` and `rotate` write `.published-itinerary`, a different sidecar, and once the
+record names the published plan a later terminal act rewrites only its count. So a date read from it
+moves only at the organizer's own act, and never for a plan that has already published — with two
+exceptions, both reached once a change is abandoned and the working copy is back on the published
+plan. The first is a revert: where the record names the abandoned plan, `confirm` re-anchors the
+record to the published plan — or, where that plan's own approvals fall short, offers to retire it.
+The second is a change abandoned before any approval: on a trip that declares approvers, where the
 record still names the published plan and `trips/<slug>/outputs/change-summary.md` holds an entry
 dated after the `YYYY-MM-DD` prefix of its `confirmed=` — the entry that change raised, read
 exactly as the mapping above reads entries, and never through `status` — a terminal act that

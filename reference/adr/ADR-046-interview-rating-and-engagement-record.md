@@ -885,7 +885,7 @@ table name one thing by one number; a number missing from the run is a residual 
 | RR-12 | **A held card's stated blast radius and reversibility are overtaken.** It describes a change contained to the interview's ending and the save path; the class has a row in each root | #1770, at its own planning |
 | RR-13 | **Nothing says which conduct produced a rating.** The card carries no revision of its own, so ratings from before and after a change to the conduct cannot be told apart | #1770 |
 | RR-14 | **The interim.** From the merge that lands this record, `ADR-040` D1 carries a mark while the card returns nothing from the heading down, and `ADR-022` D1.1 carries one while no class exists | #1770 |
-| RR-15 | **`.approvers`, `.approvals`, `.change-confirmed` and `.published-itinerary`, in a trip's directory, are in no row of the data architecture's closed enumeration**, measured at `5d50eb5`. The class decided here does not add to that | the operator; outside this record's scope |
+| RR-15 | **`.approvers`, `.approvals`, `.change-confirmed`, `.published-itinerary` and `.published-itinerary.next`, in a trip's directory, are in no row of the data architecture's closed enumeration**, measured at `5b293df`. The class decided here does not add to that | the operator; outside this record's scope |
 | RR-16 | **The message a returned block travels in, and the assistant's own history,** hold the return and are in no row of the reach table — the same class at the same boundary as the answers (`ADR-022` D6.4) | #1770 |
 | RR-17 | **A run of `erase` interrupted before the class's row** leaves the subject's file of entries standing, and the next run reads the trip as already erased — the residue the reach table already states for the approval sidecars' row | #1770 |
 | RR-18 | **The name.** *Engagement* is used in more than one sense across the records | the operator |
@@ -969,3 +969,13 @@ trailing newline.
 
 **The cards.** #1768, this record's; #1205, the epic; #1767, the conduct record's. #1770, #1327,
 #1330, #1771 and #1769, which read it.
+
+## Amendment history
+
+**Amendment (2026-11-07, Saturday) — § *Residuals*, RR-15: the list names the staged baseline record
+too, and its measurement is re-anchored; no decision changes.** RR-15 read *"`.approvers`,
+`.approvals`, `.change-confirmed` and `.published-itinerary`, in a trip's directory, are in no row
+of the data architecture's closed enumeration"*, measured at `5d50eb5`. That list was short:
+`scripts/publish-trip-site.sh` also keeps `.published-itinerary.next` in a trip's directory, the
+staged twin of `.published-itinerary`, and `reference/data-architecture.md` names it in no row. The
+row names all five, measured at `5b293df`. This records a residual and takes no decision.
