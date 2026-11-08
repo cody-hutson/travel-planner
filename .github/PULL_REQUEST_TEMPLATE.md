@@ -21,6 +21,20 @@
 - [ ] Markdown links resolve (local files exist; external links load)
 - [ ] No personal data, secrets, or private-repo references introduced
 
+## Conduct suite result
+
+<!-- Asked for only when .github/workflows/integration-note.yml's conduct-suite job flags this pull -->
+<!-- request: a change to skills/trip-record/interview-conduct.md or templates/interview-card.md, a -->
+<!-- guided form's line at or below its end-of-profile marker, or a block-owned form's > line. -->
+<!-- Write it as plain lines, with no heading, no bold-led block and no task-list item: the -->
+<!-- mechanical suite's status by reference (its required check reports on this pull request), the -->
+<!-- grade record's revision, and each generated conversation's verdict. Left as these comments, -->
+<!-- the section reads as empty; on a draft that is a notice, and it binds once ready for review. -->
+<!-- The job also reads freshness on every flagged pull request. Where it applies, say so on a line -->
+<!-- of its own: regrade: pending — <where it is tracked>, or: not exercised by the generated route -->
+<!-- To know before opening whether it is asked for, run -->
+<!-- ./scripts/check-integration-note.py --check-conduct --base origin/main --head HEAD --body-file <draft body> -->
+
 ## Integration note
 
 <!-- Asked for only when .github/workflows/integration-note.yml flags a file: a large addition to -->

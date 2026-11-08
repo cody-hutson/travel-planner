@@ -4,6 +4,7 @@ for a note on what it reconciled.
 
     ./scripts/check-integration-note.py --check
     ./scripts/check-integration-note.py --check --base REV --head REV --body-file PATH   (local)
+    ./scripts/check-integration-note.py --check-conduct [--base REV --head REV --body-file PATH --draft]
     ./scripts/check-integration-note.py --self-test [--root DIR]
 
 THE PREDICATE. Per tracked markdown file changed between the merge base of the pull request's
@@ -41,6 +42,23 @@ asking for a note, never toward passing without one; the self-test pins all thre
 today, and the template's own '## Integration note' heading is the form that is read. GRADED:
 that the note is present and not empty. NOT GRADED: whether it is true -- this job cannot see
 that, and says so on every run that asks for a note.
+
+THE CONDUCT SUITE RESULT (--check-conduct). A second predicate over the same range, on the same
+pull request: a change to the interview's conduct records the conduct suite's result in its body.
+A pull request is FLAGGED when, between the merge base of its base and head and its head, it changes
+a line of skills/trip-record/interview-conduct.md or templates/interview-card.md; a line of a guided
+form -- a templates/*.template.md file whose intake-form fence declares form-version 1 -- at or below
+its whole-line <!-- PROFILE-END --> boundary, on either side of the diff; or a > line of a block-owned
+form, one declaring form-version 2. A change above a guided form's boundary is not a conduct change
+here, even where it alters what the ask-prose refers to: a stated residual that errs toward not
+asking. On a flag, the body's "Conduct suite result" section -- read by the same reader as the note,
+from its heading to the next heading of any level, a thematic break or the end of the body -- must be
+present (P1) and carry a letter or digit outside comments (P2). Both limbs bind on a pull request
+that is not a draft. On a draft a failing limb is a notice and exits 0: it says the limb binds once
+the pull request is ready for review, which the workflow's ready_for_review trigger runs again.
+PR_DRAFT carries the draft state, as --draft does locally. Exit 1 names the failing limb, and exit 2
+is a refusal, as for --check. GRADED: that the section is present and not empty. NOT GRADED: whether
+the result it records is right, which is the operator's adjudication.
 
 INPUTS. In --check, PR_BASE_SHA, PR_HEAD_SHA and PR_BODY come from the environment the workflow
 step sets; the body never passes through a shell and is never printed. --base, --head and
@@ -442,6 +460,196 @@ def run_check(args):
         body = os.environ.get("PR_BODY", "")
     if body is not None:
         rc = check(repo_root(), base, head, body, lines.append)
+    for line in lines:
+        print(line)
+    summary = os.environ.get("GITHUB_STEP_SUMMARY")
+    if summary:
+        shown = [line for line in lines if not line.startswith("::")]
+        longest = max([len(m) for line in shown for m in re.findall(r"`+", line)] + [2])
+        fence = "`" * (longest + 1)
+        with open(summary, "a", encoding="utf-8") as fh:
+            fh.write(fence + "text\n" + "\n".join(shown) + "\n" + fence + "\n")
+    return rc
+
+
+
+# ---------------------------------------------------------------- the conduct suite (--check-conduct)
+CONDUCT_FILES = ("skills/trip-record/interview-conduct.md", "templates/interview-card.md")
+FORM_GLOB = re.compile(r"^templates/[^/]+\.template\.md$")
+BOUNDARY = "<!-- PROFILE-END -->"
+CS_PREFIX = "conduct-suite: "
+CS_HEADING_RE = re.compile(r"^ {0,3}#{1,6}[ \t]+conduct[ \t]+suite[ \t]+result[ \t]*:?(?:[ \t]+#+)?[ \t]*$",
+                           re.IGNORECASE)
+CS_ERROR = "::error::conduct suite result {} while this pull request changes the interview's conduct"
+CS_GRADED = ("Graded: that the section is present and not empty. Not graded: whether the result it "
+             "records is right, which is the operator's adjudication.")
+
+
+def form_version(text):
+    """A form's declared form-version from its intake-form fence, or None for a file that is no form."""
+    for line in fence_lines(text, "intake-form"):
+        m = re.match(r"^[ \t]*form-version:[ \t]*([0-9]+)[ \t]*$", line)
+        if m:
+            return int(m.group(1))
+    return None
+
+
+def boundary_line(text):
+    """The 1-based line of a guided form's whole-line boundary, or None."""
+    for n, line in enumerate(text.split("\n"), 1):
+        if line.strip() == BOUNDARY:
+            return n
+    return None
+
+
+def blob(root, rev, path):
+    rc, out = git(root, "cat-file", "blob", "{}:{}".format(rev, path), ok=(0, 128))
+    return None if rc else out.decode("utf-8", "replace")
+
+
+def hunks(root, mb, head, path):
+    """[(side, line number, text)] for every changed line: side - is the merge base's, + the head's."""
+    raw = git(root, "diff", "-U0", "--no-renames", "--no-color", mb, head, "--", path)[1]
+    out, old, new = [], 0, 0
+    for line in raw.decode("utf-8", "replace").split("\n"):
+        m = re.match(r"^@@ -([0-9]+)(?:,[0-9]+)? \+([0-9]+)(?:,[0-9]+)? @@", line)
+        if m:
+            old, new = int(m.group(1)), int(m.group(2))
+            continue
+        if line.startswith("---") or line.startswith("+++"):
+            continue
+        if line.startswith("-"):
+            out.append(("-", old, line[1:]))
+            old += 1
+        elif line.startswith("+"):
+            out.append(("+", new, line[1:]))
+            new += 1
+    return out
+
+
+def conduct_flags(root, base, head):
+    """(merge base, [(path, why)]) for every file whose change touches the interview's conduct."""
+    base, head = commit_of(root, "base", base), commit_of(root, "head", head)
+    rc, out = git(root, "merge-base", base, head, ok=(0, 1))
+    if rc:
+        raise Refusal("the base and head share no merge base (unrelated histories); there is "
+                      "no range, and the two-dot range is never substituted for one")
+    mb = out.decode().strip()
+    raw = git(root, "diff", "--name-only", "-z", "--no-renames", mb, head)[1]
+    flagged = []
+    for path in sorted(p for p in raw.decode("utf-8", "surrogateescape").split("\0") if p):
+        if path in CONDUCT_FILES:
+            flagged.append((path, "a line of the conduct"))
+            continue
+        if not FORM_GLOB.match(path):
+            continue
+        sides = {"-": blob(root, mb, path), "+": blob(root, head, path)}
+        for side, n, text in hunks(root, mb, head, path):
+            src = sides[side]
+            if src is None:
+                continue
+            version = form_version(src)
+            if version == 2 and text.lstrip().startswith(">"):
+                flagged.append((path, "a > line of a block-owned form ({} line {})".format(
+                    "head" if side == "+" else "merge-base", n)))
+                break
+            if version == 1:
+                b = boundary_line(src)
+                if b is not None and n >= b:
+                    flagged.append((path, "a line at or below the boundary ({} line {})".format(
+                        "head" if side == "+" else "merge-base", n)))
+                    break
+    return mb, flagged
+
+
+def conduct_block(body):
+    """(status, info) of the body's Conduct suite result section: absent, empty or present. The
+    section runs from its heading to the next heading of any level, a thematic break or the end of
+    the body, read by the integration note's own comment-, fence- and heading-aware reader."""
+    lines = read_lines(body)
+    head = None
+    for n, (kind, text) in enumerate(lines):
+        if kind == "text" and CS_HEADING_RE.match(text):
+            head = n
+            break
+    info = {"head": head, "end": None, "why": None, "words": 0, "next": None}
+    if head is None:
+        return "absent", info
+    content, end, why = [], len(lines), "end of body"
+    for n in range(head + 1, len(lines)):
+        kind, text = lines[n]
+        if kind == "text" and ATX_RE.match(text):
+            end, why, info["next"] = n, "heading", text.strip()
+            break
+        if kind == "text" and BREAK_RE.match(text):
+            end, why = n, "thematic break"
+            break
+        if kind != "fence":
+            content.append(text)
+    info["end"], info["why"] = end, why
+    info["words"] = sum(1 for text in content if any(ch.isalnum() for ch in text))
+    return ("present" if info["words"] else "empty"), info
+
+
+def check_conduct(root, base, head, body, draft, out):
+    """The presence limbs P1 and P2: 0, 1, or 2 for a refusal. P1 and P2 bind on a pull request
+    that is not a draft; on a draft a failing limb is a notice and exits 0."""
+    try:
+        mb, flagged = conduct_flags(root, base, head)
+    except Refusal as exc:
+        out(REFUSAL_ERROR)
+        out(CS_PREFIX + "NOT EVALUATED -- " + str(exc) + ". Nothing was graded.")
+        return 2
+    out(CS_PREFIX + "range {}..{} (merge base of base and head); draft: {}".format(
+        mb[:12], commit_of(root, "head", head)[:12], "yes" if draft else "no"))
+    for path, why in flagged:
+        out(CS_PREFIX + "FLAG  {}  ({})".format(show(path), why))
+    if not flagged:
+        out(CS_PREFIX + "PASS -- no change touches the interview's conduct, so no result is asked for.")
+        return 0
+    status_, info = conduct_block(body)
+    limb = None
+    if status_ == "absent":
+        limb = "P1: the body holds no 'Conduct suite result' section"
+    elif status_ == "empty":
+        limb = "P2: the 'Conduct suite result' section carries no letter or digit outside comments"
+    else:
+        out(CS_PREFIX + "section: heading at body line {}; it ends at line {} ({}); {} line(s) with "
+            "a letter or digit once comments are removed".format(
+                info["head"] + 1, info["end"] + 1, info["why"], info["words"]))
+    if limb is None:
+        out(CS_PREFIX + "PASS -- {} file(s) flagged; the conduct suite result is present and not "
+            "empty. {}".format(len(flagged), CS_GRADED))
+        return 0
+    if draft:
+        out(CS_PREFIX + "NOTICE -- draft: {}. It binds once the pull request is ready for review, "
+            "when this job runs again. {}".format(limb, CS_GRADED))
+        return 0
+    out(CS_ERROR.format(status_))
+    out(CS_PREFIX + "FAIL -- {} file(s) flagged and {}. {}".format(len(flagged), limb, CS_GRADED))
+    out(CS_PREFIX + "To clear this, write the result under the '## Conduct suite result' heading "
+        "the template carries, as plain lines: editing the body re-runs this check.")
+    return 1
+
+
+def run_check_conduct(args):
+    base = args.base if args.base is not None else os.environ.get("PR_BASE_SHA", "")
+    head = args.head if args.head is not None else os.environ.get("PR_HEAD_SHA", "")
+    draft = (args.draft or os.environ.get("PR_DRAFT", "") == "true")
+    lines, rc = [], 2
+    if args.body_file is not None:
+        try:
+            with open(args.body_file, encoding="utf-8", errors="replace") as fh:
+                body = fh.read()
+        except OSError as exc:
+            body = None
+            lines.append(REFUSAL_ERROR)
+            lines.append(CS_PREFIX + "NOT EVALUATED -- the body file could not be read: {}. Nothing "
+                         "was graded.".format(show(str(exc))))
+    else:
+        body = os.environ.get("PR_BODY", "")
+    if body is not None:
+        rc = check_conduct(repo_root(), base, head, body, draft, lines.append)
     for line in lines:
         print(line)
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
@@ -1024,6 +1232,83 @@ def arms_exit(t):
     t.arm("ST-ENTRY", entry)
 
 
+def conduct_repo(t, name):
+    """A history whose base holds the conduct file, the card, a guided form and a block-owned form."""
+    boundary = "<!-- PROFILE-END -->"
+    guided = ("---\nwriter: human\n---\n\n```intake-form\nform-version: 1\nboundary: " + boundary + "\n```\n\n"
+              "## About you\n\n- **Name:** [your name]\n\n" + boundary + "\n\n"
+              "### Assistant \u2014 the sections, in order\n\nAsk for the name, and never offer one.\n")
+    owned = ("---\nwriter: human\n---\n\n```intake-form\nform-version: 2\n```\n\n## Trip\n\n"
+             "Some prose a reader keeps.\n\n> Ask what the trip is for, in their words.\n")
+    repo = Repo(t.tmp, name, None)
+    repo.write("skills/trip-record/interview-conduct.md", "# Conduct\n\n1. Ask one question a turn.\n")
+    repo.write("templates/interview-card.md", "# Card\n\n1. Ask one question a turn.\n")
+    repo.write("templates/guided.template.md", guided)
+    repo.write("templates/owned.template.md", owned)
+    repo.write("README.md", "# A repository\n")
+    base = repo.commit("base")
+    repo.branch("pr", base)
+    return repo, base
+
+
+def conduct_run(t, name, edit, body, draft=False):
+    """(exit status, printed lines) of --check-conduct over one edit to the conduct repository."""
+    repo, base = conduct_repo(t, name)
+    path, old, new = edit
+    repo.write(path, repo.read(path).replace(old, new, 1))
+    head = repo.commit("pr")
+    lines = []
+    return check_conduct(repo.root, base, head, body, draft, lines.append), lines
+
+
+def arms_conduct(t):
+    filled = t.template.replace("## Conduct suite result\n",
+                                "## Conduct suite result\n\nRegraded: every generated conversation PASS.\n", 1)
+    card = ("templates/interview-card.md", "one question", "a single question")
+    below = ("templates/guided.template.md", "never offer one", "never suggest one")
+    above = ("templates/guided.template.md", "[your name]", "[the name you go by]")
+    quote = ("templates/owned.template.md", "> Ask what the trip is for", "> Ask what the trip is mainly for")
+    prose = ("templates/owned.template.md", "Some prose a reader keeps.", "Some prose the reader keeps.")
+    readme = ("README.md", "# A repository", "# The repository")
+
+    def flag(label, edit, body, why):
+        rc, lines = conduct_run(t, label.lower(), edit, body)
+        return (rc == 1 and any(why in l for l in lines) and any(l.startswith("::error::conduct suite result") for l in lines),
+                "exits {} naming {}".format(rc, why))
+    t.arm("CS-ABSENT", lambda: flag("CS-ABSENT", card, "## Summary\n\nA card edit.\n", "P1:"))
+    t.arm("CS-EMPTY", lambda: flag("CS-EMPTY", card, t.template, "P2:"))
+    t.arm("CS-FORM-BELOW", lambda: flag("CS-FORM-BELOW", below, "", "P1:"))
+    t.arm("CS-QUOTE", lambda: flag("CS-QUOTE", quote, "", "P1:"))
+
+    def passes(label, edit, body, draft, said):
+        rc, lines = conduct_run(t, label.lower(), edit, body, draft)
+        return (rc == 0 and any(said in l for l in lines) and not any(l.startswith("::error::") for l in lines),
+                "exits {}, saying '{}'".format(rc, said))
+    t.arm("CS-NOT-FLAGGED", lambda: passes("CS-NOT-FLAGGED", readme, "", False, "no change touches"))
+    t.arm("CS-ABOVE-BOUNDARY", lambda: passes("CS-ABOVE-BOUNDARY", above, "", False, "no change touches"))
+    t.arm("CS-BLOCK-OWNED-PROSE", lambda: passes("CS-BLOCK-OWNED-PROSE", prose, "", False, "no change touches"))
+    t.arm("CS-PRESENT", lambda: passes("CS-PRESENT", card, filled, False, "PASS -- 1 file(s) flagged"))
+    t.arm("CS-EMPTY-ON-DRAFT", lambda: passes("CS-EMPTY-ON-DRAFT", card, t.template, True,
+                                              "NOTICE -- draft: P2:"))
+
+    def template_arm():
+        st, info = conduct_block(t.template)
+        nst, ninfo = note_block(t.template)
+        return (st == "empty" and info["why"] == "heading" and info["next"] == "## Integration note"
+                and nst == "empty" and ninfo["why"] == "thematic break",
+                "the real template: the conduct section reads empty and ends at the '## Integration "
+                "note' heading, and the integration note still ends at the --- above Issue References")
+    t.arm("CS-TEMPLATE", template_arm)
+
+    def no_merge_base():
+        repo, base, other = orphan_repo(t, "cs-orphan")
+        lines = []
+        rc = check_conduct(repo.root, base, other, "", False, lines.append)
+        return (rc == 2 and REFUSAL_ERROR in lines and any("no merge base" in l for l in lines),
+                "a pull request with no merge base is refused: exit {}".format(rc))
+    t.arm("CS-NO-MERGE-BASE", no_merge_base)
+
+
 def self_test(root):
     """Exit 0 when every arm passes, 1 when one misread, 2 when the self-test could not run."""
     try:
@@ -1049,7 +1334,7 @@ def self_test(root):
         tmp = tempfile.mkdtemp(prefix="integration-note-selftest-")
         git(tmp, "--version")
         t = Arms(tmp, params, floor, nfloors, template)
-        for group in (arms_predicate, arms_refusals, arms_reader, arms_exit):
+        for group in (arms_predicate, arms_refusals, arms_reader, arms_exit, arms_conduct):
             group(t)
     except (OSError, Refusal) as exc:
         print("SELF-TEST NOT EVALUATED -- the self-test could not run: {}".format(show(str(exc))))
@@ -1075,21 +1360,27 @@ def main(argv):
     parser = Parser(add_help=False, allow_abbrev=False)
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--check", action="store_true")
+    mode.add_argument("--check-conduct", action="store_true")
     mode.add_argument("--self-test", action="store_true")
     parser.add_argument("--base")
     parser.add_argument("--head")
     parser.add_argument("--body-file")
+    parser.add_argument("--draft", action="store_true")
     parser.add_argument("--root")
     args = parser.parse_args(argv)
     if args.self_test:
-        if args.base is not None or args.head is not None or args.body_file is not None:
-            parser.error("--base, --head and --body-file apply to --check only")
+        if args.base is not None or args.head is not None or args.body_file is not None or args.draft:
+            parser.error("--base, --head, --body-file and --draft apply to --check and --check-conduct only")
         rc = self_test(args.root or repo_root())
         if rc:
             print(SELF_TEST_ERROR)
         return rc
     if args.root is not None:
         parser.error("--root applies to --self-test only")
+    if args.check_conduct:
+        return run_check_conduct(args)
+    if args.draft:
+        parser.error("--draft applies to --check-conduct only")
     return run_check(args)
 
 

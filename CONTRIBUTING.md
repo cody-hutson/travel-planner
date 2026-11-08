@@ -64,7 +64,7 @@ one's habit across.
 | Suite | Posture | When you run it |
 |---|---|---|
 | `scripts/test-corpus-hygiene.sh`, `scripts/test-adr-conformance.sh` | export `LC_ALL=C` at the top of the file | your shell's locale never reaches them |
-| `scripts/test-artifact-schema.sh` | unpinned; `LC_ALL=C` on the individual calls that need byte semantics, and group `LC` sets each member's locale inside the arm that compares under it | Group `LC` asserts on every run that `va_type_ok`'s slug predicate and `ca_delta`'s range parse answer the same under C and under a UTF-8 locale the host lists, and fails the run if none loads. The rest of the suite reads your locale: its verdict set was measured identical under `LC_ALL=C` and a UTF-8 default when this row was written, and that is not asserted. On an awk that answers the same in every locale, the `ca_delta` half of group `LC` skips instead, and `CA10` grades the engine by name, running `ca_delta` under mawk and gawk. |
+| `scripts/test-artifact-schema.sh` | unpinned; `LC_ALL=C` on the individual calls that need byte semantics, and group `LC` sets each member's locale inside the arm that compares under it | Group `LC` asserts on every run that `va_type_ok`'s slug predicate and `ca_delta`'s range parse answer the same under C and under a UTF-8 locale the host lists, and fails the run if none loads. The rest of the suite reads your locale: its verdict set was measured identical under `LC_ALL=C` and a UTF-8 default when this row was written, and that is not asserted. On an awk that answers the same in every locale, the `ca_delta` half of group `LC` skips instead, and `CA10` grades the engine by name, running `ca_delta` under mawk and gawk. `WD7` and `CF7` assert that the word engine and the conversation reader answer the same under every locale group `LC` derives. |
 | `scripts/test-command-taxonomy.sh` | unpinned; `LC_ALL=C` on the calls that need byte semantics, group `W`'s awk program and the command-order sort, and its locale arms set each member's locale inside the subshell that reads under it | Its edge trims read no locale: `trim` and group J's `rj_trimv` strip one fixed set, ASCII whitespace and U+00A0; its readers of a verb's frontmatter strip ASCII whitespace alone, so a frontmatter edge carrying U+00A0 is kept and reported, and the guided-entry carrier's two flag readers take `trim`'s set, because there the flag's presence is the defect, so a flag key led by U+00A0 is reported whichever way the runtime reads it. Arms `GQL`, `GJU` and `GQF` assert this on every run under C and under a UTF-8 locale the host lists, and fail the run if none loads. The rest of the suite reads your locale — every POSIX character class and bracket range it matches with, `collapse`, `lower`, the delimiter-row test and group J's class-row match among them, and every awk program and sort not pinned to C: its verdict set was measured identical under `LC_ALL=C` and a UTF-8 locale when this row was written, and that is not asserted. |
 | `scripts/test-publish-guard.sh`, `scripts/test-trip-resolution-contract.sh` | unpinned; `LC_ALL=C` on the individual calls that need byte semantics | your shell's locale reaches everything except those calls |
 
@@ -173,10 +173,10 @@ those records. Write it when the PR opens and leave it that way: a later slice, 
 remediation round or a re-review belongs where the rest of its stage's detail
 already lives, or in a comment on the PR — not appended to the body. Appending
 makes the body a moving target for whoever is reviewing it, and stores a second
-copy of something that was never at risk of being lost. The only addition the body
-takes after the PR opens is an integration note that the integration-note check
-(`.github/workflows/integration-note.yml`) asks for, because that check reads the
-body and nothing else.
+copy of something that was never at risk of being lost. The only additions the body
+takes after the PR opens are the sections that `.github/workflows/integration-note.yml`'s
+two jobs ask for — an integration note and a conduct suite result — because those checks
+read the body and nothing else; each is written as plain lines.
 
 **Nothing in a release is committed to `main` directly** — not the CHANGELOG, not
 anything else. A direct push to `main` skips the pull-request requirement and all
