@@ -498,7 +498,9 @@ is actively wrong for them: it is the corpus's established word for *holds no in
 which is precisely what a research list is not. `enrich` was unavailable, being bound to the
 enrichment agent's own rollups.
 
-**Members of `researched`: C5, C6, C7, C8, C9, C18.** The discriminator is the corpus's own
+**Members of `researched`: C5, C6, C7, C8, C9, C18.** `skills/trip/SKILL.md` § *research* derives
+`/trip research`'s agent key from this column and § 1.1's `W` and `L` columns, so moving a class in
+or out of this set changes what that command dispatches. The discriminator is the corpus's own
 language. Each of those six carries **no** `[DERIVED]` declaration anywhere. By contrast C4 is
 tagged `[DERIVED]` and declared to *hold no independent state* by its own writing agent, so it stays
 `derived` despite being produced by a research-capable agent — **the classification follows the
@@ -910,10 +912,8 @@ second home by being migrated.
 `CLAUDE.md` § *Output Versioning* cites it too — its § *Satisfaction-layer artifacts* subsection
 says in terms that it assigns and does not define — but the rest of that section **still states the
 engine's default-and-exception model in its own words, and is retained deliberately for it.** That
-statement is a **live input**, not a leftover: this section's own absence rule below reads it, and
-`skills/trip/SKILL.md` derives the `/trip research` agent key from it, admitting exactly the
-roster rows it leaves in the accumulating default. Where the two overlap, the tokens and
-definitions above govern.
+statement is a **live input**, not a leftover: this section's own absence rule below reads it.
+Where the two overlap, the tokens and definitions above govern.
 
 **What is not a restatement, and what is.** The twenty-three per-class schemas in `reference/schemas/`
 each carry `field lifecycle: required enum [accumulate-append|rebuilt-each-synthesis|versioned|persist-mutable|output]`
@@ -1171,8 +1171,8 @@ because nothing is positioned to do it.
   the scaffold has no next write for an upgrade to ride.
 - **C18 `outputs/<slug>.md`** — the targeted-research class is named on no writer surface at all,
   and for this class that is more than a missing emitter: **no surface produces an instance of it
-  either.** The one targeted-research verb dispatches a spoke to append to the single output file
-  that spoke's roster row names, and each spoke's own `## Output Format` names that same one file —
+  either.** The one targeted-research verb dispatches a spoke to append to the one file that
+  spoke's `researched` class names, and each spoke's own `## Output Format` names that same file —
   so nothing in the engine opens a new slug file to carry a topic. **C18 is therefore a
   selector-reachable class with no producer**, which is a different position from C1's and C2's and
   is stated as such in `reference/schemas/targeted-research.md` → "Reachability", its own home. What
@@ -1471,7 +1471,7 @@ with no site carries no row.
 ```count-assertion-digest
 # sites  path
 35      CHANGELOG.md
-9       CLAUDE.md
+8       CLAUDE.md
 1       CONTRIBUTING.md
 5       SECURITY.md
 3       agents/00-enrichment.md
@@ -1533,7 +1533,7 @@ with no site carries no row.
 1       reference/site-layout-spec.md
 4       skills/trip-decommission/SKILL.md
 7       skills/trip-new/SKILL.md
-12      skills/trip-record/SKILL.md
+14      skills/trip-record/SKILL.md
 6       skills/trip/SKILL.md
 1       templates/person-intake.template.md
 1       templates/traveler-intake.template.md

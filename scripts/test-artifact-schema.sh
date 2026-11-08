@@ -370,6 +370,11 @@
 #        tracked C14 instance, found by the class's own selector, is byte-identical to it; an
 #        empty instance selection FAILS. Not graded: a statement removed whole, heading and
 #        table together, leaves the population.
+#   PM   a changed profile reaches the recovery behaviours — the fixture's subject, read from the
+#        `profile-replan-fixture` fence in `examples/data-architecture-demo/README.md` and never held
+#        here, as a real one-line difference against the model; § replan's mode test and dispatch
+#        order; and that § Modes, the hub, the validator and `/trip-record` § travelers still name
+#        the signal. It grades the tree: no arm observes an agent firing anything
 #   RP   the returning-party fixture set and the two read verbs over it — the set's declared states,
 #        read from the `returning-party-fixture` fence in `examples/returning-party-demo/README.md`
 #        and never held here, against the files; a reference reader of the coverage table by header
@@ -23876,6 +23881,323 @@ not a table line"
     FAIL "RP16: limb (ii) — the \`## $RP_GVERB\` section carries, as a code span, what it cites and must not restate:$RP16_FOUND. Looked for: the relation's verdict tokens its own outcome table does not carry [$(printf '%s' "$RP16_ONLY" | tr '\n' ' ')], and the header labels and cell values the reference reader takes from the \`## $RP_VERB\` section. The relation, the coverage-table read and the readings have one home"
   else
     PASS "RP16: MUST FIRE — in the \`## $RP_GVERB\` section, limb (i): all $RP16_N citation(s) behind the section sign were sorted by the code span directly before them — $RP16_NA naming a section of this file, across $RP16_HEADS distinct section-and-heading pair(s); $RP16_NC naming a sub-heading of the section itself; $RP16_NB naming another file, passed over and counted — and every one of the first two kinds resolves to exactly one \`###\` heading of its own section, by its whole text or by its leading segment before an em dash. With '$RP16_MFH', a sub-heading both sections carry, reworded inside \`$RP16_MFS\` alone on a copy under the work directory, the citation naming that section resolves nowhere while the section's own still resolves once. Limb (iii): the $RP16_NT citation(s) of a table by its header cell each find exactly one pipe table opening with that cell under the cited sub-heading; with '$RP16_TX' reworded on a copy and its heading left, the heading still resolves and no table is found. Limb (ii): none of the $RP16_NFORB string(s) looked for — the $RP16_NONLY verdict token(s) of the relation that this section's outcome table does not carry, and the labels and cell values the reference reader takes from the \`## $RP_VERB\` section — occurs here as a code span, while each occurs in that section; the $RP16_NSHARED token(s) both carry [$(printf '%s' "$RP16_SHARED" | tr '\n' ' ')] were left out of the list and occur here $RP16_SHAREDHITS time(s)"
+  fi
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group PM — a changed profile reaches the recovery behaviours: what a tree can grade.
+#
+# Group MG grades that the hub's and the validator's recovery behaviours are declared and gated on
+# the modes the register names. It says nothing about how a trip reaches those modes on a changed
+# profile, nor about the second condition both behaviours carry, the enrichment agent's update
+# signal. This group grades that chain over the tree: the fixture's declared subject is a real
+# difference between a traveller file and the model, the verb's mode test names the artifact and
+# the classes, and every reader on the chain still names the signal.
+#
+# WHAT THIS GROUP DOES NOT ESTABLISH. No arm here observes an agent firing anything. `CLAUDE.md`
+# § Modes states why a tree of prompt files cannot, and what would: a live dispatch against a trip
+# at the branching mode. These arms keep that dispatch's preconditions true between runs.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "PM — a changed profile reaches the recovery behaviours: the fixture's subject, the verb's mode test, and the readers on the chain"
+
+PM_SET='examples/data-architecture-demo'
+PM_DOC="$ROOT/$PM_SET/README.md"
+PM_VERB="$ROOT/skills/trip/SKILL.md"
+PM_ROUTER="$ROOT/skills/trip-record/SKILL.md"
+PM_CHARTER="$ROOT/CLAUDE.md"
+PM_HUB="$ROOT/agents/05-hub-planner.md"
+PM_VAL="$ROOT/agents/06-validator.md"
+mkdir -p "$WORK/pm"
+
+# pm_fence <key> <file> — the value of one key in the file's `profile-replan-fixture` fence.
+pm_fence() {
+  awk -v k="$1" '
+    /^```profile-replan-fixture[ \t]*$/ { inb = 1; next }
+    inb && /^```[ \t]*$/                { exit }
+    inb && $1 == k { $1 = ""; sub(/^[ \t]+/, ""); sub(/[ \t\r]+$/, ""); print; exit }
+  ' "$2"
+}
+# pm_section <heading> <file> — the body of one `## ` section, heading line excluded.
+pm_section() {
+  awk -v h="## $1" '
+    $0 == h       { inb = 1; next }
+    inb && /^## / { exit }
+    inb           { print }
+  ' "$2"
+}
+# pm_flat <heading> <file> — that section with its line breaks read as spaces, so a phrase is
+# found wherever the file's wrap falls.
+pm_flat() { pm_section "$1" "$2" | tr '\n' ' '; }
+# pm_traveller_tier <desire> <file> — the tier on the line after that desire's `**Desire:**` line.
+pm_traveller_tier() {
+  awk -v d="$1" '
+    index($0, "**Desire:** " d) > 0 { want = 1; next }
+    want && index($0, "**Priority tier:**") > 0 { sub(/^.*\*\*Priority tier:\*\*[ \t]*/, ""); sub(/[ \t\r]+$/, ""); print; exit }
+  ' "$2"
+}
+# pm_model_tier <desire> <file> — the second cell of the first table row whose first cell is it.
+pm_model_tier() {
+  awk -F'|' -v d="$1" '
+    NF > 3 { a = $2; gsub(/^[ \t]+|[ \t]+$/, "", a); if (a == d) { b = $3; gsub(/^[ \t]+|[ \t]+$/, "", b); print b; exit } }
+  ' "$2"
+}
+# pm_set_tier <desire> <tier> <in> <out> — the traveller file with that desire's tier changed.
+pm_set_tier() {
+  awk -v d="$1" -v t="$2" '
+    index($0, "**Desire:** " d) > 0 { want = 1; print; next }
+    want && index($0, "**Priority tier:**") > 0 { sub(/\*\*Priority tier:\*\*.*$/, "**Priority tier:** " t); want = 0 }
+    { print }
+  ' "$3" > "$4"
+}
+# pm_differs <desire> <traveller-file> <model-file> — status 0 where the two tiers differ, 1 where
+# they agree, 2 where either is absent. Callers grade the exact status, so an absent function's 127
+# is never read as an answer.
+pm_differs() {
+  local a b
+  a="$(pm_traveller_tier "$1" "$2")"
+  b="$(pm_model_tier "$1" "$3")"
+  if [ -z "$a" ]; then
+    return 2
+  elif [ -z "$b" ]; then
+    return 2
+  elif [ "$a" != "$b" ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+PM_MODE="$(pm_fence outgoing-mode "$PM_DOC")"
+PM_TRV="$(pm_fence traveller "$PM_DOC")"
+PM_DES="$(pm_fence desire "$PM_DOC")"
+PM_T0="$(pm_fence tier-before "$PM_DOC")"
+PM_T1="$(pm_fence tier-after "$PM_DOC")"
+
+pm0_assert() {
+  local m t d a b
+  m="$(pm_fence outgoing-mode "$PM_DOC")"
+  t="$(pm_fence traveller "$PM_DOC")"
+  d="$(pm_fence desire "$PM_DOC")"
+  a="$(pm_fence tier-before "$PM_DOC")"
+  b="$(pm_fence tier-after "$PM_DOC")"
+  if [ -z "$m" ]; then
+    FAIL "PM0: the \`profile-replan-fixture\` fence in $PM_SET/README.md declares no outgoing-mode, so every later arm of this group is withheld"
+  elif [ -z "$t" ]; then
+    FAIL "PM0: the fence declares no traveller, so every later arm of this group is withheld"
+  elif [ -z "$d" ]; then
+    FAIL "PM0: the fence declares no desire, so every later arm of this group is withheld"
+  elif [ -z "$a" ]; then
+    FAIL "PM0: the fence declares no tier-before, so every later arm of this group is withheld"
+  elif [ -z "$b" ]; then
+    FAIL "PM0: the fence declares no tier-after, so every later arm of this group is withheld"
+  else
+    PASS "PM0: the fence in $PM_SET/README.md declares the outgoing mode ($m), the traveller ($t), the desire and both tiers, and this suite holds no copy of any of them"
+  fi
+}
+
+pm1_assert() {
+  local cell
+  cell="$(awk -F'|' '{ a = $2; gsub(/^[ \t]+|[ \t]+$/, "", a); if (a == "replan") { print $4; exit } }' "$PM_VERB" | tr -d ' \t')"
+  if [ -z "$cell" ]; then
+    FAIL "PM1: the requirement table in skills/trip/SKILL.md has no \`replan\` row with a mode cell, so nothing says which outgoing mode a replan runs from"
+  elif [ "$PM_MODE" = 'ITERATION' ]; then
+    FAIL "PM1: the fixture declares ITERATION as its outgoing mode. A write from ITERATION to ITERATION is a no-op, so the fixture could not show the transition"
+  elif [[ ",$cell," != *",$PM_MODE,"* ]]; then
+    FAIL "PM1: the fixture's outgoing mode $PM_MODE is not one the replan row admits ($cell), so the verb would refuse the run"
+  else
+    PASS "PM1: the outgoing mode $PM_MODE is admitted by the replan row ($cell) and is not ITERATION, so the transition is not vacuous"
+  fi
+}
+
+pm2_assert() {
+  local n
+  n="$(grep -c '^\*\*Current mode:\*\*' "$ROOT/$PM_SET/trip-context.md")"
+  if [ ! -r "$ROOT/$PM_SET/outputs/final-itinerary.md" ]; then
+    FAIL "PM2: $PM_SET holds no outputs/final-itinerary.md, so the run the fixture declares would take the no-plan path and write no mode"
+  elif [ ! -r "$ROOT/$PM_SET/outputs/event-status.md" ]; then
+    FAIL "PM2: $PM_SET holds no outputs/event-status.md, so the hub's patch under ITERATION has no status to honour"
+  elif [ "$n" -ne 1 ]; then
+    FAIL "PM2: $PM_SET/trip-context.md carries $n \`**Current mode:**\` lines, where the run's first step needs exactly 1"
+  else
+    PASS "PM2: $PM_SET holds a plan and a status file, and exactly one \`**Current mode:**\` line for the run's first step to set"
+  fi
+}
+
+pm3_assert() {
+  local a b
+  a="$(pm_traveller_tier "$PM_DES" "$ROOT/$PM_SET/$PM_TRV")"
+  b="$(pm_model_tier "$PM_DES" "$ROOT/$PM_SET/outputs/traveler-model.md")"
+  if [ -z "$a" ]; then
+    FAIL "PM3: $PM_TRV carries no \`**Priority tier:**\` under the declared desire, so the run's edit has no line to change"
+  elif [ -z "$b" ]; then
+    FAIL "PM3: the model carries no row for the declared desire, so a reconcile has nothing to compare the edit against"
+  elif [ "$a" != "$PM_T0" ]; then
+    FAIL "PM3: $PM_TRV reads tier '$a' where the fence declares tier-before '$PM_T0'"
+  elif [ "$b" != "$PM_T0" ]; then
+    FAIL "PM3: the model reads tier '$b' where the fence declares tier-before '$PM_T0', so the fixture already differs before the edit and the control run would show a change"
+  elif [ "$PM_T1" = "$PM_T0" ]; then
+    FAIL "PM3: tier-after equals tier-before, so the run's edit changes nothing"
+  else
+    PASS "PM3: the traveller file and the model agree on '$PM_T0' for the declared desire, so the unedited fixture has no difference to signal, and tier-after is '$PM_T1'"
+  fi
+}
+
+pm4_assert() {
+  local trv="$ROOT/$PM_SET/$PM_TRV" model="$ROOT/$PM_SET/outputs/traveler-model.md" out="$WORK/pm/edited.md" n before after
+  : > "$out"
+  pm_set_tier "$PM_DES" "$PM_T1" "$trv" "$out"
+  if [ ! -s "$out" ]; then
+    FAIL "PM4: the run's edit produced no file, so nothing below would be a measurement"
+    return 0
+  fi
+  n="$(diff "$trv" "$out" | grep -c '^[<>]')"
+  pm_differs "$PM_DES" "$trv" "$model"; before=$?
+  pm_differs "$PM_DES" "$out" "$model"; after=$?
+  if [ "$n" -ne 2 ]; then
+    FAIL "PM4: the run's edit changes $n diff lines where it must change exactly one line (2 diff lines), so it does more than the fence declares"
+  elif [ "$before" -ne 1 ]; then
+    FAIL "PM4: the UNEDITED traveller file does not agree with the model (comparator status $before), so a difference here cannot be attributed to the edit"
+  elif [ "$after" -ne 0 ]; then
+    FAIL "PM4: the edited traveller file does not differ from the model (comparator status $after), so the reconcile would find nothing and the subject run could not write the mode"
+  else
+    PASS "PM4: the run's edit is one line, the unedited file does not differ from the model, and the edited file does. That difference is the changed desire a reconcile reports"
+  fi
+}
+
+# pm5_check <flattened § replan> — the verb's mode test, read from the text it is handed.
+pm5_check() {
+  local s="$1"
+  if [ -z "$s" ]; then
+    FAIL "PM5: skills/trip/SKILL.md carries no \`## replan\` section"
+  elif [[ "$s" == *'admitted no spoke, the floor runs alone'* ]]; then
+    FAIL "PM5: § replan still says the floor runs alone wherever no spoke was admitted, which is false where a changed profile dispatched the reconciler"
+  elif [[ "$s" != *'`trips/<slug>/outputs/traveler-model.md` | its `## Update signals [DERIVED]` block'* ]]; then
+    FAIL "PM5: § replan's mode test does not name the model's update-signal block as the reconciler's artifact"
+  elif [[ "$s" != *'a changed need or a changed desire'* ]]; then
+    FAIL "PM5: § replan's mode test does not name the two classes that qualify"
+  elif [[ "$s" != *'no changed profile stated'* ]]; then
+    FAIL "PM5: § replan's no-mode paths do not separate a run that stated no changed profile"
+  elif [[ "$s" != *'no `outputs/final-itinerary.md` on file'* ]]; then
+    FAIL "PM5: § replan's no-mode paths do not name the trip with no plan"
+  elif [[ "$s" != *'`/trip-record mode`'* ]]; then
+    FAIL "PM5: § replan does not name /trip-record mode for a transition only the operator can state"
+  else
+    PASS "PM5: § replan names the update-signal block as the reconciler's artifact and the two qualifying classes, keeps the no-change and no-plan paths apart, and names /trip-record mode"
+  fi
+}
+pm5_assert() { pm5_check "$(pm_flat replan "$PM_VERB")"; }
+
+# pm6_check <flattened § replan> — one order, enrichment before the spokes before the floor.
+pm6_check() {
+  local s="$1" d e k h
+  d="${s#*\*\*Dispatches\*\* }"
+  if [ "$d" = "$s" ]; then
+    FAIL "PM6: § replan has no \`**Dispatches**\` sentence, so the order this group grades is not stated"
+    return 0
+  fi
+  d="${d%%each writing*}"
+  e="${d%%enrichment*}"
+  k="${d%%the spokes the coupling conditions admit*}"
+  h="${d%%the hub and the validator*}"
+  if [ "$e" = "$d" ]; then
+    FAIL "PM6: § replan's Dispatches sentence does not name the enrichment leg"
+  elif [ "$k" = "$d" ]; then
+    FAIL "PM6: § replan's Dispatches sentence does not name the admitted spokes"
+  elif [ "$h" = "$d" ]; then
+    FAIL "PM6: § replan's Dispatches sentence does not name the hub and the validator"
+  elif [ "${#e}" -ge "${#k}" ]; then
+    FAIL "PM6: § replan's Dispatches sentence names the spokes before the enrichment leg"
+  elif [ "${#k}" -ge "${#h}" ]; then
+    FAIL "PM6: § replan's Dispatches sentence names the hub and the validator before the spokes"
+  elif [[ "$s" != *'the reconciler runs first'* ]]; then
+    FAIL "PM6: § replan's reconciler paragraph does not say the reconciler runs first"
+  else
+    PASS "PM6: § replan's Dispatches sentence and its reconciler paragraph state one order: enrichment, then the admitted spokes, then the hub and the validator"
+  fi
+}
+pm6_assert() { pm6_check "$(pm_flat replan "$PM_VERB")"; }
+
+pm7_assert() {
+  local modes hub val rt
+  modes="$(awk '/^### Modes/ { f = 1; next } f && /^### / { exit } f' "$PM_CHARTER")"
+  hub="$(awk '/^\*\*ITERATION:\*\*/ { f = 1 } f && /^\*\*RESEQUENCING:\*\*/ { exit } f' "$PM_HUB" | tr '\n' ' ')"
+  val="$(awk '/^\*\*Recovery-equity check/ { f = 1 } f && /^\*\*Price-tier preservation/ { exit } f' "$PM_VAL" | tr '\n' ' ')"
+  rt="$(pm_section travelers "$PM_ROUTER")"
+  if [[ "$modes" != *'a changed-profile delta'* ]]; then
+    FAIL "PM7: CLAUDE.md § Modes no longer names a changed-profile delta as an ITERATION trigger"
+  elif [[ "$hub" != *'changed-profile delta'* ]]; then
+    FAIL "PM7: the hub's ITERATION behaviour no longer names a changed-profile delta, so the signal would not reach its recovery"
+  elif [[ "$val" != *'changed-profile update signal'* ]]; then
+    FAIL "PM7: the validator's recovery-equity check no longer names a changed-profile update signal"
+  elif [[ "$rt" != *'| a changed need | `/trip replan`'* ]]; then
+    FAIL "PM7: skills/trip-record/SKILL.md § travelers no longer routes a changed need to /trip replan, and § replan's mode test cites that class"
+  elif [[ "$rt" != *'| a changed desire | `/trip replan`'* ]]; then
+    FAIL "PM7: skills/trip-record/SKILL.md § travelers no longer routes a changed desire to /trip replan, and § replan's mode test cites that class"
+  else
+    PASS "PM7: § Modes, the hub's ITERATION behaviour, the validator's recovery-equity check and § travelers' two rows all still name the signal or the classes § replan's mode test rests on"
+  fi
+}
+
+pm0_assert
+if [ -z "$PM_MODE" ]; then
+  FAIL "PM: the fence did not yield its outgoing-mode, so PM1 to PM7 are withheld rather than passed"
+elif [ -z "$PM_TRV" ]; then
+  FAIL "PM: the fence did not yield its traveller, so PM1 to PM7 are withheld rather than passed"
+elif [ -z "$PM_DES" ]; then
+  FAIL "PM: the fence did not yield its desire, so PM1 to PM7 are withheld rather than passed"
+elif [ -z "$PM_T0" ]; then
+  FAIL "PM: the fence did not yield its tier-before, so PM1 to PM7 are withheld rather than passed"
+elif [ -z "$PM_T1" ]; then
+  FAIL "PM: the fence did not yield its tier-after, so PM1 to PM7 are withheld rather than passed"
+else
+  pm1_assert
+  pm2_assert
+  pm3_assert
+  pm4_assert
+  pm5_assert
+  pm6_assert
+  pm7_assert
+
+  # Each arm is shown able to fail with its subject removed.
+  md_flips pm_fence          'PM0'       pm0_assert
+  md_flips pm_traveller_tier 'PM3'       pm3_assert
+  md_flips pm_model_tier     'PM3-model' pm3_assert
+  md_flips pm_set_tier       'PM4'       pm4_assert
+  md_flips pm_flat           'PM5'       pm5_assert
+  md_flips pm_flat           'PM6'       pm6_assert
+  md_flips pm_section        'PM7'       pm7_assert
+
+  # CTL-PM4 — the comparator PM3 and PM4 share, on inputs whose answer is known.
+  printf -- '- **Desire:** X\n- **Priority tier:** wish\n' > "$WORK/pm/ct.md"
+  printf '| X | wish |\n' > "$WORK/pm/cm-same.md"
+  printf '| X | anchor |\n' > "$WORK/pm/cm-diff.md"
+  pm_differs X "$WORK/pm/ct.md" "$WORK/pm/cm-same.md"; PM_RC=$?
+  if [ "$PM_RC" -eq 1 ]; then
+    PASS "CTL-PM4-same: the comparator returns 1, agree, on two equal tiers"
+  else
+    FAIL "CTL-PM4-same: the comparator returns $PM_RC on two equal tiers where 1 was expected, so PM4's 'unedited' limb is not a measurement"
+  fi
+  pm_differs X "$WORK/pm/ct.md" "$WORK/pm/cm-diff.md"; PM_RC=$?
+  if [ "$PM_RC" -eq 0 ]; then
+    PASS "CTL-PM4-diff: the comparator returns 0, differ, on two different tiers"
+  else
+    FAIL "CTL-PM4-diff: the comparator returns $PM_RC on two different tiers where 0 was expected, so PM4's 'edited' limb could never pass honestly"
+  fi
+
+  # CTL-PM5 / CTL-PM6 — the defects themselves, planted in a copy of § replan's text.
+  PM_LIVE="$(pm_flat replan "$PM_VERB")"
+  PM_C5="$(md_probe pm_no_subject pm5_check "$PM_LIVE Where the coupling evaluation admitted no spoke, the floor runs alone and this run produced no artifact.")"
+  if [ "$PM_C5" = '0 1' ]; then
+    PASS "CTL-PM5: § replan with the retired sentence planted reports one FAIL and no PASS, so PM5 can see the defect it exists for"
+  else
+    FAIL "CTL-PM5: § replan with the retired sentence planted reports '$PM_C5' where '0 1' was expected"
+  fi
+  PM_C6="$(md_probe pm_no_subject pm6_check "**Dispatches** the hub and the validator, the spokes the coupling conditions admit, and enrichment; each writing the reconciler runs first")"
+  if [ "$PM_C6" = '0 1' ]; then
+    PASS "CTL-PM6: a Dispatches sentence in the wrong order reports one FAIL and no PASS, so PM6 can see the order it grades"
+  else
+    FAIL "CTL-PM6: a Dispatches sentence in the wrong order reports '$PM_C6' where '0 1' was expected"
   fi
 fi
 

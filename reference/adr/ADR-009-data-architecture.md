@@ -349,9 +349,8 @@ is authoritative for the shape and `reference/data-model.md` for the satisfactio
 restates none of them. `CLAUDE.md § Output Versioning` cites it too, and its satisfaction-layer
 subsection assigns without defining — but the rest of that section **states the engine's
 default-and-exception model in its own words and is retained deliberately**, because it is a live
-input rather than a leftover: the lifecycle section's own absence rule reads it, and
-`skills/trip/SKILL.md` derives the `/trip research` agent key from it. Where the two overlap,
-the engine-wide tokens and definitions govern.
+input rather than a leftover: the lifecycle section's own absence rule reads it. Where the two
+overlap, the engine-wide tokens and definitions govern.
 
 **The ordering rule — normative, and binding on every slice that edits `reference/data-model.md`.**
 
@@ -834,3 +833,11 @@ fail-closed paths are non-negotiable.
   definitions** this ADR's lifecycle classification takes over as the single home — leaving
   `CLAUDE.md § Output Versioning` standing as a live input, not superseded, per Decision 1:
   `CLAUDE.md`.
+
+## Amendment history
+
+**Amendment (2026-11-07, Saturday) — *Decision* 1: what reads `CLAUDE.md § Output Versioning`; no
+decision changes.** It said of that section that "the lifecycle section's own absence rule reads it,
+and `skills/trip/SKILL.md` derives the `/trip research` agent key from it". The second limb stopped
+being true when that key moved to `reference/data-architecture.md` § 1.1, whose table is what declares
+a class's lifecycle. The section stays a live input through the absence rule, so its retention stands.

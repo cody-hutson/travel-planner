@@ -3,6 +3,53 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.64.0] — 2026-11-08 — Each verb's reads and writes are stated truly
+
+No trip is planned or recorded differently in this release, except where a verb used to stall on,
+or skip, something its own text said it would do. What changes is what each verb's text says it
+reads, lists and writes, and what a run nobody can answer does.
+
+**Six `/trip-record` verbs take the listings they declare.** `extract`, `group-new`, `history`,
+`group-list`, `erase` and `group-expand` each declare a listing of the store or of a traveller
+directory. Each now names the call that takes the listing, and refuses where it cannot be taken.
+Before, three of them declared a listing their own text forbade, so a run could stall on it.
+
+**A run nobody can answer writes only what its verb writes without asking.** A run is
+non-interactive where no later message can reach the session: print mode, or a scheduled task.
+Each command file now states one rule for it. Where a verb reaches a write without asking
+anything, the write runs. Where the verb would ask first, it stops there, names what it would have
+asked, and writes nothing past that point. It takes no default and no assumed answer in place of a
+reply. A verb's own non-interactive row still stands, and stops no later than the rule would.
+ADR-051, added in this release as Proposed, records the decision. The rule is followed, not
+enforced.
+
+**The attributed reads and the file tree name what the agents read and write.** The sites that
+left out a model or a file now name it, including four found by an earlier release. ADR-046 is
+amended to match.
+
+**`/trip replan` writes `ITERATION` on a profile-triggered run.** Where a changed profile shows in
+the model the reconciler rebuilt in this run, and a plan is on file, replan now writes the
+`ITERATION` mode, which the recovery behaviours read. Where the reconciler stopped or declined its
+write, replan says so, because no model was rebuilt and an earlier signal may still stand.
+
+**A second output file no longer removes a spoke from `/trip research`.** The verb took its agent
+key from a cell that mixed paths, so a spoke given a second output file dropped out of the run.
+The key now comes from the `researched` classes in `reference/data-architecture.md` § 1.1. ADR-009
+is amended to match.
+
+**Size fence.** Nothing moved: all 50 rows were kept and none was re-pinned.
+`skills/trip/SKILL.md` grew 8,185 bytes to 104,637, beneath its row of 106,098, and
+`skills/trip-record/SKILL.md` grew 5,975 bytes to 450,369, beneath its row of 470,268. The other
+files it changed grew beneath their rows, and `reference/data-model.md` shrank by 70 bytes. ADR-051,
+at 10,362 bytes, is below the floor at which a record owes a row.
+
+**What it doesn't reach.** Nothing in this release was run live before the tag. The headless runs
+that observe the changed listings and replan's mode are made on this tagged tree, against synthetic
+data; until then, both changes are stated in text and graded by the tests. A census found more than
+this release fixes: 13 store-root probes no verb declares, partial attributed reads on `plan`,
+`replan` and `reorder`, and the scan tool `erase` uses, which it does not name. Those three,
+replan's `locked → planned` route and the update signal's lifetime are left for a later release.
+
 ## [0.63.0] — 2026-11-07 — Every identity that reaches the public repository is checked
 
 No trip verb plans or records a trip differently in this release. What changes is met by whoever

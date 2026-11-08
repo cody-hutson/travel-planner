@@ -445,3 +445,24 @@ Saturday's is `Casa de Pasto Central` — but that content is researched in
 column therefore carries the Saturday night card beside it and is labelled
 *food · night*. Inventing restaurants to fill it would still have put content in the
 figure that the fixture does not have.
+
+## A changed profile, run on a copy
+
+This trip is the fixture for a profile-triggered `/trip replan`. The run takes a copy, never these
+files. On disk the trip reads `ITERATION` and its model agrees with its traveller files, so a run
+first sets the mode back and then makes the one edit the fence below declares.
+`scripts/test-artifact-schema.sh` group `PM` reads the fence and holds this trip to it. That is
+all a tree can grade: `CLAUDE.md` § *Modes* says what settles the rest, a live dispatch.
+
+```profile-replan-fixture
+# key          value
+outgoing-mode  ENRICHMENT
+traveller      travelers/robin.md
+desire         Hear live fado
+tier-before    nice-to-have
+tier-after     anchor
+```
+
+*Hear live fado* is the desire this fixture leaves uncovered, so raising it to an anchor gives the
+hub a delta to recover from. The edit names no zone, reservation, day or venue, so the coupling
+evaluation admits no spoke.
