@@ -85,7 +85,8 @@ name: Corpus hygiene
 #        refused rather than skipped, and the declared boundary — what the detector does not
 #        reach — is stated in the suite's class-F banner entry and is not restated here
 #   G    RELEASE TAGS. Every v* tag's own tree carries its own CHANGELOG heading as the newest
-#        version heading. The group runs scripts/check-release-tag.sh — the check the release
+#        version heading, and every v* tag is annotated with its tagger in the no-reply form.
+#        The group runs scripts/check-release-tag.sh — the check the release
 #        procedure runs at tag time — over every tag, and asserts its failures against the
 #        release-tag-declaration fence in CONTRIBUTING.md in both directions
 #   H    ONE ENUMERATION, BOUND AND CITED. The top-level entries of reference/ are enumerated
