@@ -525,7 +525,10 @@ surface are the same pattern, already ratified.
 **When the trip was never published, or its per-trip repository exists and is empty**, the script
 refuses before the passphrase is touched: it resolves the per-trip clone and asks the host about
 an empty repository before it resolves the passphrase, so it creates no repository, pushes
-nothing, mints no passphrase, and its own message names the remedy — a first publish. (Resolving
+nothing and mints no passphrase. Where the host answers, its own message names the remedy — a
+first publish. Where the host cannot be read about an empty clone, it refuses as for a clone with
+no record of the site, naming the clone's removal and a re-run, and writes nothing; the re-run
+reaches the first-publish refusal once the host answers. (Resolving
 the clone does clear a stale scratch clone first; that is rule 5's scope, and it is not a
 publish.) This verb relies on that refusal rather than duplicating it; a second, weaker
 pre-check would be a guard for a failure the script already guards precisely.

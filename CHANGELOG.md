@@ -47,7 +47,7 @@ page source as two flat keys, which GitHub refuses, so a first publish did not e
 printed "Pages may already be enabled, or will activate shortly." instead. A site published before
 this release is served only if Pages was turned on in its repository's settings;
 `gh api repos/<owner>/<repo>/pages` answers 404 for one that was not. When Pages still can't be
-turned on, `publish` prints no `Published:` line, names the one command that serves the site, and
+turned on, `publish` prints no `Published:` line, says how to serve the site, and
 exits 1.
 
 **No commit the engine makes carries your signature.** `publish`, `update` and `rotate` commit with

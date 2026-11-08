@@ -4234,8 +4234,8 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   info "Enabling GitHub Pages…"
   # The push has landed, so what follows is recorded whatever the host says about Pages, and what is
   # printed says whether the site is served (see the function).
-  local served=1
-  enable_pages "${owner}/${slug}" || served=0
+  local served=1 pages_src=""
+  enable_pages "${owner}/${slug}" pages_src || served=0
 
   # First publish establishes the baseline the #552 gate compares against. cmd_publish
   # itself stays UNGATED — it dies above when the per-trip repo holds anything, so it
@@ -4253,6 +4253,11 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
     printf '  To change it later: rotate %s\n\n' "$trip_dir"
   fi
   # Last, so it is the line the operator reads last: the page is pushed and recorded, and nothing is served.
+  # Where the read-back found a Pages site built from elsewhere, the call that creates a site is no remedy, so
+  # the repository's Pages settings are named, with the source the host reported; where no site could be read
+  # back, the create call is named.
+  [ "$served" = 1 ] || [ -z "$pages_src" ] \
+    || die "publish: the page was pushed to ${owner}/${slug} and recorded, but GitHub Pages is not serving it: the repository already has a Pages site, which the host reports as \"${pages_src}\" (its build type, branch and folder), and this engine serves from the branch main at its root. Everything else is done, and update works as usual. To serve the site, open the repository's settings under Pages and set it to deploy from a branch: the branch main, folder / (root). It is then at https://${owner}.github.io/${slug}/"
   [ "$served" = 1 ] \
     || die "publish: the page was pushed to ${owner}/${slug} and recorded, but GitHub Pages is not serving it: the call that enables Pages failed, and the repository reports no Pages site built from main at its root. Everything else is done, and update works as usual. To serve the site, run  gh api -X POST repos/${owner}/${slug}/pages -f \"source[branch]=main\" -f \"source[path]=/\"  or, in the repository's settings under Pages, deploy from the branch main, folder / (root). It is then at https://${owner}.github.io/${slug}/"
 }
@@ -4435,11 +4440,17 @@ refuse_emptied_repository() { # <pub_dir> <owner/slug> <verb> <trip_dir> [<this 
 # built from main at the root, however it came to exist: an HTTP 409 means Pages is already enabled, and the
 # read says from where. gh prints the host's error body on stdout when a read fails, so only the exact answer
 # passes. Returns non-zero when the host reports no such site; the caller says what that leaves, because the
-# push has landed by then.
-enable_pages() { # <owner/slug>
-  local ep_src
+# push has landed by then. A read-back that succeeds is passed, as the host reported it, to the variable named
+# second: where it names another source, a Pages site exists, and the call above is the one that creates a site,
+# which the host answered with HTTP 409 where Pages was already on (the scope lock's check), so the caller names
+# the repository's Pages settings instead. A read-back that fails leaves that variable empty: gh exits 1 for a
+# site that does not exist and for a host that cannot be read alike, so both are told as no site.
+enable_pages() { # <owner/slug> [<variable receiving the Pages source the read-back found>]
+  local ep_src ep_rc=0
+  [ -z "${2:-}" ] || printf -v "$2" '%s' ''
   gh api -X POST "repos/$1/pages" -f "source[branch]=main" -f "source[path]=/" >/dev/null 2>&1 && return 0
-  ep_src="$(gh api "repos/$1/pages" --jq '"\(.build_type) \(.source.branch) \(.source.path)"' 2>/dev/null)"
+  ep_src="$(gh api "repos/$1/pages" --jq '"\(.build_type) \(.source.branch) \(.source.path)"' 2>/dev/null)" || ep_rc=$?
+  if [ "$ep_rc" -eq 0 ] && [ -n "$ep_src" ] && [ -n "${2:-}" ]; then printf -v "$2" '%s' "$ep_src"; fi
   [ "$ep_src" = "legacy main /" ] || return 1
   info "GitHub Pages was already enabled for $1, serving main at its root."
 }

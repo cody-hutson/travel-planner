@@ -14664,7 +14664,19 @@ for rv_b in create empty; do rv44_assert "RV44-$rv_b" "$rv_b"; done
 # source still reads main at the root, so what is served is that workflow's output and not this push's branch.
 # folder: Pages built from main but from /docs, so the page this push put at the root is not what is served.
 # The read-back compares three fields, and elsewhere, workflow and folder each differ from already in one of
-# them alone — the branch, the build type and the path — so each field is pinned by a limb of its own.
+# them alone — the branch, the build type and the path — so each field is pinned by a limb of its own. In those
+# three a Pages site exists, built from elsewhere, so the refusal names the repository's Pages settings and the
+# source the read-back found, and no -X POST line, which is the call that creates a site; absent, where no site
+# is found, keeps the nested POST line.
+rv45_readback() { # <how> -> the Pages read-back that limb's host answers; non-zero where it reports no site
+  case "$1" in
+    already)   printf 'legacy main /' ;;
+    elsewhere) printf 'legacy gh-pages /' ;;
+    workflow)  printf 'workflow main /' ;;
+    folder)    printf 'legacy main /docs' ;;
+    *)         return 1 ;;
+  esac
+}
 rv45_gh() { # (inside a subject's subshell) RV45_PAGES names the read-back
   gh() {
     printf '%s\n' "$*" >> "$RV_GHLOG"
@@ -14678,23 +14690,22 @@ rv45_gh() { # (inside a subject's subshell) RV45_PAGES names the read-back
                    printf 'gh: GitHub Pages is already enabled. (HTTP 409)\n' >&2; return 1 ;;
         esac ;;
       "api repos/"*)
-        case "${RV45_PAGES:-}" in
-          already)   printf 'legacy main /' ;;
-          elsewhere) printf 'legacy gh-pages /' ;;
-          workflow)  printf 'workflow main /' ;;
-          folder)    printf 'legacy main /docs' ;;
-          *)         printf '{"message":"Not Found","status":"404"}'; printf 'gh: Not Found (HTTP 404)\n' >&2; return 1 ;;
-        esac ;;
+        rv45_readback "${RV45_PAGES:-}" \
+          || { printf '{"message":"Not Found","status":"404"}'; printf 'gh: Not Found (HTTP 404)\n' >&2; return 1; } ;;
       *)             return 0 ;;
     esac
   }
 }
 rv45_assert() { # <id> <already|absent|elsewhere|workflow|folder>
-  local id="$1" how="$2" name d out rc want=1 told=0 named=0 ann=0 noted=0 base
+  local id="$1" how="$2" name d out rc want=1 told=0 named=0 ann=0 noted=0 base found="" post=0 settings=0 src=0
   name="rv45-$how-$RANDOM"; d="$RVW/$name"; mkdir -p "$d/outputs"; cp "$SRC" "$d/outputs/$name-travel-site.html"; : > "$RV_GHLOG"
   out="$( ( unset STATICRYPT_PASSWORD; RV45_PAGES="$how"; rv45_gh; set -e; cmd_publish "$d" ) 2>&1 )"; rc=$?
+  found="$(rv45_readback "$how")" || found=""
   rv_has "$out" 'Published:' && told=1
   rv_has "$out" "gh api -X POST repos/testowner/$name-trip/pages -f \"source[branch]=main\" -f \"source[path]=/\"" && named=1
+  rv_has "$out" '-X POST' && post=1
+  rv_has "$out" 'settings under Pages' && settings=1
+  if [ -n "$found" ] && rv_has "$out" "\"$found\""; then src=1; fi
   rv_has "$out" "Passphrase saved to: $d/.passphrase" && ann=1
   rv_has "$out" 'GitHub Pages was already enabled' && noted=1
   base="$(_baseline_record "$d/.published-itinerary")"
@@ -14709,8 +14720,10 @@ rv45_assert() { # <id> <already|absent|elsewhere|workflow|folder>
     FAIL "$id: publish did not say that Pages was already enabled"
   elif [ "$how" != already ] && [ "$told" -eq 1 ]; then
     FAIL "$id: with Pages $how publish printed Published — it claimed a site the host does not serve"
-  elif [ "$how" != already ] && [ "$named" -eq 0 ]; then
-    FAIL "$id: with Pages $how publish did not name the one gh line, in the nested form, that serves the site"
+  elif [ "$how" != already ] && [ -z "$found" ] && [ "$named" -eq 0 ]; then
+    FAIL "$id: with Pages $how publish did not name the one gh line, in the nested form, that creates the site"
+  elif [ "$how" != already ] && [ -n "$found" ] && { [ "$post" -eq 1 ] || [ "$settings" -eq 0 ] || [ "$src" -eq 0 ]; }; then
+    FAIL "$id: with a Pages site already built from elsewhere ($how) publish named the create call (-X POST)=$post, or did not name the repository's Pages settings=$settings and the source it found, '$found'=$src"
   else
     PASS "$id: with Pages $how publish records what it pushed, announces the passphrase file, and says truthfully whether the site is served"
   fi
