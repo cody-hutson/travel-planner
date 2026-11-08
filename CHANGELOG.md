@@ -12,6 +12,77 @@ the rule that turns a conversation's dimensions into its grade, a mechanical che
 included. No interviewer reads it. Group `RB` of `scripts/test-artifact-schema.sh` holds its shape
 and its isolation from every interviewer input.
 
+## [0.65.0] — 2026-11-07 — Publishing never quietly undoes a takedown or a key
+
+No trip verb plans or records a trip differently in this release. What changes is met by whoever
+publishes, updates or rotates a trip's site. Publishing no longer puts back a page a takedown
+withdrew, no longer lets `update` make a passphrase of its own, and reports what actually reached
+the site.
+
+**`rotate` reads the site before it writes.** Before, when a site's pages were withdrawn by a
+rewind from another clone, a `rotate` from a clone that still held them pushed them back, which
+`update` has refused to do since 0.46.1. Now `rotate` fetches the site first and refuses, before it
+writes anything, a site it can't reach, one rewound since this clone last recorded it, and one this
+clone is behind. For the last two, remove the trip's `.publish` directory and run it again. Its push
+is leased, so a site that moves between the read and the push is refused too.
+
+**A failed push says what may have happened.** When the push of `update` or `rotate` fails, the
+message no longer says nothing was published: a push that reports failure may still have reached
+the site. After a `rotate` whose push failed, `.passphrase` already holds the new passphrase, and
+`update` finishes the rotation.
+
+**`update` never makes a passphrase.** Before, an `update` on a trip with no readable `.passphrase`
+and `STATICRYPT_PASSWORD` unset generated a new passphrase, re-encrypted the site under it and said
+nothing, locking out everyone holding the old one. Now it refuses before it encrypts anything. Put
+the current passphrase back or set the variable; if it is lost, run `rotate`, which announces the
+one it sets. For a site published with `--plaintext`, the refusal also names `unpublish` followed by
+`publish --plaintext`, which keeps it plaintext. A `.passphrase` that exists but can't be read is
+refused in its own words and left untouched. `update` encrypts under the passphrase it reads and
+never makes one: `publish` makes a trip's first passphrase, and `rotate` is how you change it.
+ADR-007 is amended in place to say where the refusal sits.
+
+**`publish` takes an empty repository you name.** With an empty public repository named in
+`.publish-slug`, `publish` now makes its first push: it asks GitHub whether the repository is empty,
+never inferring it from the clone, then makes `main` its default branch and turns Pages on. Before,
+`publish` said the repository already existed and `update` refused it, so an empty repository had no
+way in. `update` and `rotate` on an empty repository now refuse and name `publish`, and `publish`
+refuses one that isn't public. When a first push reports failure, `publish` reads the repository
+back before saying anything: a push that landed carries on as the success it was, and one that
+didn't says to run `publish` again. A clone that remembers a site whose repository is now empty
+names its own removal and `publish`.
+
+**A first publish now turns GitHub Pages on.** Until this release the call that does it sent the
+page source as two flat keys, which GitHub refuses, so a first publish did not enable Pages and
+printed "Pages may already be enabled, or will activate shortly." instead. A site published before
+this release is served only if Pages was turned on in its repository's settings;
+`gh api repos/<owner>/<repo>/pages` answers 404 for one that was not. When Pages still can't be
+turned on, `publish` prints no `Published:` line, says how to serve the site, and
+exits 1.
+
+**No commit the engine makes carries your signature.** `publish`, `update` and `rotate` commit with
+signing turned off, whatever your git configuration says: a signature on a public per-trip
+repository identifies you as surely as an email address. The guard suite checks its own whole run
+for a signed commit on every CI run, and a local run no longer reads your git signing, hooks or
+identity.
+
+**Commits made before this release keep their signatures.** A per-trip repository published while
+git's global `commit.gpgsign` was on still carries the operator's signature on every commit it
+already holds, because `update` and `rotate` add commits and never rewrite history. To withdraw
+them, `unpublish` the site, which deletes the repository, then `publish` it again, as for earlier
+pages.
+
+**Size fence.** Nothing moved: no row was re-pinned.
+- `CLAUDE.md` grew 1,274 bytes to 141,550, beneath its row of 153,381.
+- `reference/adr/ADR-007-command-entry-point.md` grew 480 bytes to 53,989, beneath its row of 58,860.
+- `skills/trip-publish/SKILL.md` shrank 2,233 bytes to 43,418.
+
+**What it doesn't reach.** Commands run on one trip at the same time are still not serialized.
+When GitHub can't be read as `publish` asks whether a repository is empty, `publish` takes its
+create path as it always did. On a trip with no passphrase yet whose repository already exists,
+GitHub's refusal then stops it, but the passphrase it generated stays, and a later `update` would
+encrypt under it, as it would under a `.passphrase` restored from an older backup. A later release
+closes these.
+
 ## [0.64.0] — 2026-11-08 — Each verb's reads and writes are stated truly
 
 No trip is planned or recorded differently in this release, except where a verb used to stall on,
