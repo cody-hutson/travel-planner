@@ -13206,9 +13206,10 @@ rv9_assert "RV9"
 
 # ── RV10 — FM-6. Another rotation changes .passphrase after this update resolved its key and
 # before it pushes (simulated inside the encrypt step). update must re-read the key of record
-# and stop, or it pushes the revoked key over the rotation.
+# and stop, or it pushes the revoked key over the rotation. No push ran, so its refusal says this
+# run pushed nothing and carries none of the after-the-push sentence the push-failure caller passes.
 rv10_assert() { # <id>
-  local id="$1" name d bare out rc h0 h1 seen=0
+  local id="$1" name d bare out rc h0 h1 seen=0 said=0 after=0
   name="rv10-$RANDOM"; d="$(rv_fixture "$name" 'rv-resolved-synthetic-key-14')"; bare="$RVW/origin/$name-trip.git"
   h0="$(rv_head "$bare")"
   out="$( ( unset STATICRYPT_PASSWORD; rv10_pf="$d/.passphrase"
@@ -13216,12 +13217,16 @@ rv10_assert() { # <id>
             set -e; cmd_update "$d" ) 2>&1 )"; rc=$?
   h1="$(rv_head "$bare")"
   rv_has "$out" 'changed while this update was running' && seen=1
+  rv_has "$out" 'pushed nothing' && said=1
+  { rv_has "$out" 'may still have reached the site' || rv_has "$out" 'Its push reported failure'; } && after=1
   if [ "$rc" -ne 1 ]; then
     FAIL "$id: update carried on although .passphrase changed under it (rc=$rc) — it would push the revoked key over a concurrent rotation"
   elif [ "$h0" != "$h1" ]; then
     FAIL "$id: the per-trip repository moved although the key of record changed mid-update"
   elif [ "$seen" -eq 0 ]; then
     FAIL "$id: update exited 1 without the key-of-record message — the check was not the cause. VERDICT WITHHELD"
+  elif [ "$said" -eq 0 ] || [ "$after" -eq 1 ]; then
+    FAIL "$id: the update stopped before its push, and its refusal does not say it pushed nothing (said=$said) or carries the after-the-push sentence (after=$after)"
   else
     PASS "$id: update re-reads the key of record before its push and stops when it has changed — the revoked key is never pushed over a rotation"
   fi
@@ -13234,15 +13239,18 @@ rv10_assert "RV10"
 # routine update is the refusal's own remedy. So abort one update exactly as RV10 does, run a
 # second, and read the key of EVERY revision the bare repository's main now holds — the page at
 # the tip is the control that the walk reads keys at all. None may be the key the aborted run
-# resolved.
+# resolved. The aborted run's refusal says it pushed nothing and carries none of the after-the-push
+# sentence, as RV10's does.
 rv10b_assert() { # <id>
-  local id="$1" name d bare o1 rc1 rc2 revs rev html n line head_key="" carried=0 seen=0
+  local id="$1" name d bare o1 rc1 rc2 revs rev html n line head_key="" carried=0 seen=0 said=0 after=0
   local k1='rv-resolved-synthetic-key-16' k2='rv-concurrent-rotation-key-17' re='staticryptEncrypted="(rv[0-9a-f]+)"'
   name="rv10b-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"
   o1="$( ( unset STATICRYPT_PASSWORD; rv10b_pf="$d/.passphrase"; rv10b_k2="$k2"
            encrypt_to_tmp() { rv_enc_shim "$@"; printf '%s\n' "$rv10b_k2" > "$rv10b_pf"; }
            set -e; cmd_update "$d" ) 2>&1 )"; rc1=$?
   rv_has "$o1" 'changed while this update was running' && seen=1
+  rv_has "$o1" 'pushed nothing' && said=1
+  { rv_has "$o1" 'may still have reached the site' || rv_has "$o1" 'Its push reported failure'; } && after=1
   ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc2=$?
   head_key="$(rv_pushed_key "$bare")"
   revs="$(git -C "$bare" rev-list main 2>/dev/null)"
@@ -13257,6 +13265,8 @@ rv10b_assert() { # <id>
   done <<< "$revs"
   if [ "$rc1" -ne 1 ] || [ "$seen" -eq 0 ]; then
     FAIL "$id: the first update did not stop at the key-of-record re-check (rc=$rc1) — nothing to follow up. VERDICT WITHHELD"
+  elif [ "$said" -eq 0 ] || [ "$after" -eq 1 ]; then
+    FAIL "$id: the first update stopped before its push, and its refusal does not say it pushed nothing (said=$said) or carries the after-the-push sentence (after=$after)"
   elif [ "$rc2" -ne 0 ] || [ "$head_key" != "$k2" ]; then
     FAIL "$id: the follow-up update did not publish under the key of record (rc=$rc2) — the history walk has no control. VERDICT WITHHELD"
   elif [ "$carried" -eq 1 ]; then
