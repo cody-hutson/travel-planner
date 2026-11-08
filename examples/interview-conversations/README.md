@@ -10,8 +10,10 @@ person, group or transcript is an input to any file in this directory, and none 
 **Two kinds of file.** An **authored** conversation has both sides written by its author, who
 declares every label and states the verdict each check must give. A **generated** conversation is
 produced by the interviewer under test, its labels assigned by an independent grader, and every
-verdict on it is reported as resting on judged labels. The generated conversations and their grade
-arrive with #2199; the ones here are authored.
+verdict on it is reported as resting on judged labels. Six here are generated, one for each
+traveller, and `grade-record.txt` beside them holds their grades: it is the one file here that is not
+a conversation, and its grammar is stated in group `RB`'s banner in `scripts/test-artifact-schema.sh`.
+Every other file here is authored.
 
 ## How to read a file
 
@@ -25,8 +27,8 @@ pins them; this file cites them and does not restate them.
 
 ## The set
 
-Every file here is declared below, and group `CF` holds the fence and the directory to each other
-both ways, each file's header to its row.
+Every conversation here is declared below, and group `CF` holds the fence and the conversations to
+each other both ways, each file's header to its row.
 
 ```interview-conversation-fixture
 # <conversation> <origin> <form> <spoken> <traveller code>
@@ -84,4 +86,10 @@ case-single-re-ask                 authored  templates/traveler-intake.template.
 case-second-follow-up-as-doubt     authored  templates/traveler-intake.template.md  no  TE
 case-directed-follow-up            authored  templates/traveler-intake.template.md  no  AF
 case-follow-up-per-field           authored  templates/person-intake.template.md    no  TE
+gen-af                             generated templates/traveler-intake.template.md  no  AF
+gen-te                             generated templates/person-intake.template.md    no  TE
+gen-sk                             generated templates/traveler-intake.template.md  no  SK
+gen-ds                             generated templates/person-intake.template.md    no  DS
+gen-gs                             generated templates/traveler-intake.template.md  no  GS
+gen-of                             generated templates/person-intake.template.md    no  OF
 ```
