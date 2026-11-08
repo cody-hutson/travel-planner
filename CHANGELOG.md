@@ -63,9 +63,9 @@ them, `unpublish` the site, which deletes the repository, then `publish` it agai
 pages.
 
 **Size fence.** Nothing moved: no row was re-pinned.
-- `CLAUDE.md` grew 1,107 bytes to 140,742, beneath its row of 153,381.
+- `CLAUDE.md` grew 1,107 bytes to 141,383, beneath its row of 153,381.
 - `reference/adr/ADR-007-command-entry-point.md` grew 480 bytes to 53,989, beneath its row of 58,860.
-- `skills/trip-publish/SKILL.md` shrank 2,491 bytes to 41,791.
+- `skills/trip-publish/SKILL.md` shrank 2,491 bytes to 43,160.
 
 **What it doesn't reach.** Commands run on one trip at the same time are still not serialized.
 When GitHub can't be read as `publish` asks whether a repository is empty, `publish` takes its
