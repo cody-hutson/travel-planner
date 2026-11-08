@@ -71,3 +71,72 @@ Each of these is left to the operator, and the rubric says why:
   `ADR-045` D4 lets an interview style vary what is said around a question.
 - **`R-8`'s *implicit confirmation by default*.** No record decides it, so it stays the grader's own
   reading, never a dimension's pass level.
+
+## How a grade is produced
+
+A grade is produced over a **generated** conversation: one the interviewer under test produced
+itself, from the interview card `templates/interview-card.md` and a guided form, while a scripted
+traveller replied. An authored conversation is not graded here, because its author declares its
+labels and its verdicts. Each role runs in a session of its own:
+
+- **The interviewer** reads the card, the form and the replies it is sent, and nothing of this
+  rubric, of any label, of the traveller's script or of the grader.
+- **The traveller** replies to each interviewer turn verbatim from a script written before the run
+  and independently of the interviewer, and notes beside each of its turns the field it judged that
+  turn to put. That field is a judged label.
+- **The grader** is an independent session. It reads this rubric at a committed revision, the
+  conversation's turn records, the person's `L3` labels, and the form as the repository holds it at
+  the sitting's pinned commit, and nothing else — never the interviewer's session, the traveller's
+  script or its notes. It writes one `L4` for each interviewer turn — the fields the turn puts, its
+  kind, whether it gave an example and the example's words, and the value-bearing words it carries
+  — and a value for each dimension above, citing the turns the value rests on, with `ND` where the
+  transcript cannot settle it. It judges `R-1`, `R-2` and `R-6` against the form's own option lists.
+  It returns all of it through a schema that holds no verdict.
+
+**From the labels to a verdict.** Whoever runs the sitting writes the grader's labels into the
+conversation's file and its values into the grade record beside the conversations, and derives the
+conversation's verdict from them by the conversation rule above; it never takes a verdict from the
+grader. `OW-C` and `FB-C` run over the grader's labels, and a fail or an `ND` of theirs enters the
+grade as that rule says. Every verdict resting on a judged label — the grader's, or the field the
+traveller noted — says *on judged labels*. The operator rules at Stage 9 on a disputed dimension,
+on a mechanical fail or `ND`, and on a dimension no check reaches.
+
+**No re-roll.** A conduct revision is the card and the form the interviewer read. For each conduct
+revision and each traveller, the graded conversation is the first run started after that revision
+that no carrier stop voids, recorded whether it passes or fails; a run that meets a conduct ending
+before the give-back is that graded conversation, and grades `FAIL`. A grade is replaced only when
+its rubric revision changes or under the operator's `regrade` ruling, and the repository's history
+keeps the grade it replaced.
+
+## Its limits
+
+- **A grade is judgment over synthetic conversations, and says nothing of a real traveller.** Every
+  traveller graded is invented.
+- **A grade is of one model on one route** — the model its conversation names, on the card route —
+  and says nothing of another model or another route.
+- **A grade is dated.** It is stale once the rubric, the card, the form or the model changes, and a
+  stale grade is reported, never failed.
+- **`ND` is never a pass.**
+- **The generated route exercises the shared rules as the card carries them and the form's own
+  ask-prose, and nothing else.** So it leaves unexercised, among others: the conduct file's
+  write-capable rules and their spoken care; a spoken session; the interview verb itself and its
+  pre-write re-read; the block-owned trip-context form; resumption across sessions, and every write,
+  since the give-back stands in for the file; the worked example, which is not sent; the
+  interviewer's production context; interview styles; any other model; and a real traveller. An
+  item this list leaves out is decided by the sentence before it, never by its absence here.
+- **The grader reads the interviewer's own narration inside the turns it labels**, so an
+  interviewer's account of a turn can shape the label that turn is given.
+- **Separate session ids for the interviewer and the grader prove separate processes, and no more.**
+- **A conversation's `transcript-sha256` is a consistency check** computed by whoever runs the
+  sitting, **not tamper evidence**.
+
+## The threshold #1330 reads
+
+The third signal of #1330 reads this sentence, and this rubric holds it: *every generated
+conversation in the grade record grades `PASS`, at the rubric and conduct revisions its block names,
+after the operator's adjudication, over the graded draws of that conduct revision.*
+
+- **An `ended:` draw is a graded `FAIL`** — a run that met a conduct ending before the give-back.
+- **An unruled mechanical fail or `ND`, or an unruled dimension, counts as `ND`**, which is not a
+  pass.
+- **It is binary and takes no average**, because an average would let a `NOT MET` hide.

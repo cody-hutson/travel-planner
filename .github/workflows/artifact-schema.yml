@@ -328,7 +328,8 @@ name: Artifact schema
 #        verdicts under every engine and locale, no ND counted, a generated verdict only reported
 #   RB   the interview rubric's shape — every dimension row carrying its traces, a pass level and an
 #        NA condition, the conversation rule and the not-graded lines anchored — its citations of
-#        ADR-045's closed lists, held by neither, and its isolation from every interviewer input
+#        ADR-045's closed lists, held by neither, its isolation from every interviewer input, and its
+#        grading sections — how a grade is produced, its limits, and the threshold sentence word for word
 #   RS   this coverage boundary itself, and the suite's own header roster, each set-diffed
 #        BOTH WAYS against the groups the run actually emitted. The executing set comes from
 #        the RUN, never from a static read of the suite. A group added and left undeclared

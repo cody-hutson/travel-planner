@@ -429,7 +429,8 @@
 #   RB   the interview rubric, reference/interview-rubric.md: its dimension table parses, every row
 #        carrying a unique id, its traces, a pass level and an NA condition; its conversation rule and
 #        its not-graded lines anchored; ADR-045's A1..A5 and kinds cited by name and held by neither;
-#        and no interviewer input naming it, each with a control on a copy
+#        no interviewer input naming it; and its grading sections anchored, the threshold sentence
+#        word for word — each with a control on a copy
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -27858,7 +27859,8 @@ md_flips ta_model    'FB-C-class' fbc_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RB — the interview rubric: its dimension table, its conversation rule and its not-graded
-# lines; its citations of ADR-045's closed lists; and its isolation from every interviewer input
+# lines; its citations of ADR-045's closed lists; its isolation from every interviewer input; and its
+# grading sections, the threshold sentence above all
 #
 # reference/interview-rubric.md is what a grader reads an interview conversation against. Its
 # dimensions are #1765 § 6's, each traced to the finding's items read with the corrections first,
@@ -27884,6 +27886,15 @@ md_flips ta_model    'FB-C-class' fbc_assert
 #        conduct file, the interview card, the three forms, skills/trip-record/SKILL.md and the root
 #        SKILL.md, each opened. CONTROL: the rubric's path planted on a copy of the interview verb's
 #        **Reads:** line is found.
+#   RB6  the rubric's grading sections stand, each heading exactly once and below the dimension
+#        table, and each anchored: "## How a grade is produced" on the grader's inputs, the form at
+#        the sitting's pinned commit among them, its L4 for each interviewer turn, R-1, R-2 and R-6
+#        judged against the form's own option lists, the verdict derived by the conversation rule and
+#        never taken from the grader, "on judged labels" and the no-re-roll rule; "## Its limits" on
+#        each of its limits, each in exactly one bullet; and "## The threshold #1330 reads" on the
+#        threshold sentence, held here word for word as the design states it and standing exactly
+#        once in its section and once in the file, and on its three bullets. CONTROL: a copy whose
+#        threshold sentence grades MET where it grades PASS is red, naming the sentence.
 # Each arm is NOT EVALUATED — a FAIL — when the rubric is absent, so an absent file never reads as a
 # shape that holds or an isolation that holds.
 #
@@ -27893,7 +27904,7 @@ md_flips ta_model    'FB-C-class' fbc_assert
 # engine, is the residual this leaves, and it is stated here rather than graded.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
-echo "RB — the interview rubric: its table, its conversation rule, its citations of ADR-045, and its isolation from every interviewer input"
+echo "RB — the interview rubric: its table, its conversation rule, its citations of ADR-045, its isolation from every interviewer input, and its grading sections"
 
 RB_RUBRIC="$ROOT/reference/interview-rubric.md"
 mkdir -p "$WORK/rb"
@@ -28070,11 +28081,118 @@ rb3_assert() {
   fi
 }
 rb3_assert
+# rb_section <rubric> <heading> — "AT<TAB><the heading's line><TAB><the dimension table's heading
+# line><TAB><times the heading stands>", then "TXT<TAB><the section's lines, each trimmed, joined with
+# one space>" and "ALL<TAB><every line of the file, joined the same way>"; nothing when the rubric is
+# absent. Joining is what lets an anchor be read across the line a wrapped sentence breaks at.
+rb_section() {
+  [ -f "$1" ] || return 0
+  LC_ALL=C awk -v h="$2" '
+    { t = $0; sub(/^[ \t]+/, "", t); sub(/[ \t]+$/, "", t); if (t != "") all = (all == "" ? t : all " " t) }
+    $0 == "## The dimensions" && !d { d = NR }
+    $0 == h { hn++; if (!at) at = NR; on = 1; next }
+    on && substr($0, 1, 3) == "## " { on = 0 }
+    on && t != "" { x = (x == "" ? t : x " " t) }
+    END { printf "AT\t%d\t%d\t%d\n", at, d, hn; printf "TXT\t%s\n", x; printf "ALL\t%s\n", all }' "$1"
+}
+# rb6_count <text> <anchor> — how many times the anchor stands in the text, read without overlap.
+rb6_count() {
+  LC_ALL=C awk -v a="$2" 'BEGIN { s = ARGV[1]; ARGV[1] = ""; c = 0; if (a != "") while ((i = index(s, a)) > 0) { c++; s = substr(s, i + length(a)) } print c }' "$1"
+}
+RB6_PRODUCED_H='## How a grade is produced'
+RB6_LIMITS_H='## Its limits'
+RB6_THRESH_H='## The threshold #1330 reads'
+# How a grade is produced — #2199's F2 and E2, and F3's no-re-roll rule (#2200).
+RB6_PRODUCED_ANCHORS="the form as the repository holds it at the sitting's pinned commit
+It writes one \`L4\` for each interviewer turn
+It judges \`R-1\`, \`R-2\` and \`R-6\` against the form's own option lists
+it never takes a verdict from the grader
+says *on judged labels*
+the first run started after that revision that no carrier stop voids"
+# Its limits — the first design's D5 list (#2185), then F2's named limits (#2200).
+RB6_LIMIT_ANCHORS="says nothing of a real traveller
+A grade is of one model on one route
+A grade is dated.
+\`ND\` is never a pass.
+The generated route exercises the shared rules as the card carries them and the form's own ask-prose, and nothing else.
+The grader reads the interviewer's own narration inside the turns it labels
+prove separate processes, and no more
+not tamper evidence"
+# The threshold — F3's sentence, word for word (INT-9), and its bullets.
+RB6_THRESHOLD="every generated conversation in the grade record grades \`PASS\`, at the rubric and conduct revisions its block names, after the operator's adjudication, over the graded draws of that conduct revision."
+RB6_THRESH_ANCHORS="An \`ended:\` draw is a graded \`FAIL\`
+An unruled mechanical fail or \`ND\`, or an unruled dimension, counts as \`ND\`
+It is binary and takes no average"
+# rb6_eval <rubric> — one "P<TAB><problem>" per defect, or one "NE<TAB><why>"; then "N<TAB><anchors read>".
+rb6_eval() {
+  local h r t all b a k n
+  [ -f "$1" ] || { printf 'NE\tthe rubric is absent\n'; return 0; }
+  n=0
+  for h in "$RB6_PRODUCED_H" "$RB6_LIMITS_H" "$RB6_THRESH_H"; do
+    r="$(rb_section "$1" "$h")"
+    if [ -z "$(awk -F'\t' '$1 == "AT"' <<<"$r")" ]; then printf 'P\tthe section reader read nothing under %s\n' "$h"; continue; fi
+    if [ -z "$(awk -F'\t' '$1 == "AT" && $4 == 1' <<<"$r")" ]; then printf 'P\tthe heading %s stands %s time(s), where exactly once is required\n' "$h" "$(awk -F'\t' '$1 == "AT" { print $4 }' <<<"$r")"; continue; fi
+    [ -n "$(awk -F'\t' '$1 == "AT" && $3 > 0 && $2 > $3' <<<"$r")" ] || printf 'P\t%s does not stand below the dimension table\n' "$h"
+    t="$(awk -F'\t' '$1 == "TXT" { print substr($0, 5) }' <<<"$r")"
+    case "$h" in
+      "$RB6_PRODUCED_H")
+        while IFS= read -r a; do
+          [ -n "$a" ] || continue
+          n=$((n + 1)); k="$(rb6_count "$t" "$a")"
+          [ "${k:-0}" -eq 1 ] || printf 'P\tunder %s, the anchor "%s" stands %s time(s), where exactly once is required\n' "$h" "$a" "${k:-0}"
+        done <<<"$RB6_PRODUCED_ANCHORS" ;;
+      "$RB6_LIMITS_H")
+        b="$(rb_bullets "$1" "$h")"
+        while IFS= read -r a; do
+          [ -n "$a" ] || continue
+          n=$((n + 1))
+          awk -F'\t' -v a="$a" -v g="$h" '$1 == "B" && index($2, a) { c++ } END { if (c != 1) printf "P\tunder %s, the anchor \"%s\" stands in %d bullet(s), where exactly one is required\n", g, a, c }' <<<"$b"
+        done <<<"$RB6_LIMIT_ANCHORS" ;;
+      "$RB6_THRESH_H")
+        all="$(awk -F'\t' '$1 == "ALL" { print substr($0, 5) }' <<<"$r")"
+        n=$((n + 1)); k="$(rb6_count "$t" "$RB6_THRESHOLD")"
+        [ "${k:-0}" -eq 1 ] || printf 'P\tunder %s, the threshold sentence stands %s time(s), where exactly once is required\n' "$h" "${k:-0}"
+        k="$(rb6_count "$all" "$RB6_THRESHOLD")"
+        [ "${k:-0}" -le 1 ] || printf 'P\tthe threshold sentence stands %s time(s) in the rubric, where it is held once\n' "$k"
+        b="$(rb_bullets "$1" "$h")"
+        while IFS= read -r a; do
+          [ -n "$a" ] || continue
+          n=$((n + 1))
+          awk -F'\t' -v a="$a" -v g="$h" '$1 == "B" && index($2, a) { c++ } END { if (c != 1) printf "P\tunder %s, the anchor \"%s\" stands in %d bullet(s), where exactly one is required\n", g, a, c }' <<<"$b"
+        done <<<"$RB6_THRESH_ANCHORS" ;;
+    esac
+  done
+  printf 'N\t%d\n' "$n"
+}
+rb6_assert() {
+  local p c ctl n
+  p="$(rb6_eval "$RB_RUBRIC")"
+  ctl="$WORK/rb/rubric-threshold-met.md"; : > "$ctl"
+  [ -f "$RB_RUBRIC" ] && LC_ALL=C awk -v h="$RB6_THRESH_H" '$0 == h { on = 1 } on && !done && (i = index($0, "`PASS`")) { $0 = substr($0, 1, i - 1) "`MET`" substr($0, i + 6); done = 1 } { print }' "$RB_RUBRIC" > "$ctl"
+  c="$(rb6_eval "$ctl")"
+  n="$(awk -F'\t' '$1 == "N" { print $2 }' <<<"$p")"
+  if [ ! -f "$RB_RUBRIC" ]; then
+    FAIL "RB6: NOT EVALUATED — ${RB_RUBRIC#"$ROOT/"} is absent, so no grading section can be read"
+  elif [ -n "$(awk -F'\t' '$1 == "P"' <<<"$p")" ]; then
+    FAIL "RB6: ${RB_RUBRIC#"$ROOT/"}'s grading sections — $(awk -F'\t' '$1 == "P" { printf "%s; ", $2 }' <<<"$p")the threshold sentence and every anchor are held as #2199's design states them"
+  elif [ "${n:-0}" -eq 0 ]; then
+    FAIL "RB6: the reading of ${RB_RUBRIC#"$ROOT/"}'s grading sections read no anchor — '${p:-no output}'"
+  elif [ "$(cksum < "$ctl")" = "$(cksum < "$RB_RUBRIC")" ]; then
+    FAIL "RB6: CONTROL did not LAND — the copy meant to grade MET in the threshold sentence is byte-identical to the rubric, so its verdict shows nothing"
+  elif [ -z "$(awk -F'\t' '$1 == "P" && index($2, "the threshold sentence")' <<<"$c")" ]; then
+    FAIL "RB6: CONTROL did not fire as specified — with the threshold sentence grading MET in a copy, the reading is '$(tr '\n' ' ' <<<"${c:-nothing}")', where it must name the threshold sentence"
+  else
+    PASS "RB6: ${RB_RUBRIC#"$ROOT/"}'s grading sections — $RB6_PRODUCED_H, $RB6_LIMITS_H and $RB6_THRESH_H — each stand once, below the dimension table, and their $n anchor(s) hold: the grader's inputs with the form at the pinned commit, its L4 for each interviewer turn, R-1, R-2 and R-6 against the form's option lists, the verdict never taken from the grader, on judged labels and no re-roll; each limit in exactly one bullet; and the threshold sentence word for word, once in its section and once in the file, with its bullets. CONTROL: a copy whose threshold sentence grades MET reads '$(awk -F'\t' '$1 == "P" { printf "%s; ", $2 }' <<<"$c")'"
+  fi
+}
+rb6_assert
 
 md_flips rb_table     'RB1' rb1_assert
 md_flips rb_bullets   'RB1' rb1_assert
 md_flips rb_cites     'RB2' rb2_assert
 md_flips rb_isolation 'RB3' rb3_assert
+md_flips rb_section   'RB6' rb6_assert
+md_flips rb_bullets   'RB6' rb6_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # WT-ADR26 — the record and the check agree (SEAM-6), run after every CH-2 text group
