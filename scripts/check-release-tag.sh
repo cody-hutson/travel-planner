@@ -7,7 +7,8 @@
 #
 # A release tag is the last step of a release and is not rewritten once it is pushed, so what a
 # tag must carry is checked against the tag itself, before the push. This script is that check.
-# CONTRIBUTING.md, Cutting a release, step 6 runs it on the tag it has just created locally.
+# scripts/push-release-tag.sh runs it on the tag CONTRIBUTING.md, Cutting a release, step 6 has
+# just created locally, and pushes only on exit 0.
 # scripts/test-corpus-hygiene.sh group G runs it over every tag on every push and pull request,
 # and holds the tags known to fail against the release-tag-declaration fence in CONTRIBUTING.md.
 # The predicate lives here and nowhere else: group G compares this script's verdicts with that
@@ -27,6 +28,23 @@
 #              tag's version to be the newest entry in its own tree refuses that tag, and refuses
 #              a tag whose heading was not restamped after the slot moved.
 #
+#   tagger     The tag is an annotated tag whose tagger address is in the no-reply form. The form
+#              is identity_in_form in scripts/check-identity-form.sh, the one definition the
+#              personal-data gate applies to a commit's author and committer. The gate's exception
+#              for the host's committer binds commits alone, so that address fails here. The tagger
+#              graded is the tag object's own, as git reads it.
+#
+#              WHY A LIGHTWEIGHT TAG FAILS. It has no tagger to read, and a tag that cannot show
+#              one is refused under a reason of its own rather than passed: a Release published on
+#              a new tag name makes a lightweight tag on the host, and passing them would let that
+#              one through unread.
+#
+#              WHAT THIS LIMB CANNOT SEE. The identity a signing key is bound to. A tag object holds
+#              its tagger line and its signature; the identity a signature verifies to is supplied
+#              only by a verifier's own mapping, on the verifier's machine. No check here reads that
+#              mapping, so a tag can pass this limb and verify under another address. Nor can it see
+#              whose address the tagger's is: this reads text, and a no-reply address is public.
+#
 #   Before any limb runs, the tag itself is checked, under the name `ref`: the name must be
 #   vX.Y.Z and the tag must peel to a commit. A tag failing either is reported with no limb run.
 #
@@ -41,14 +59,20 @@
 # ── EXIT STATUS ───────────────────────────────────────────────────────────────────────
 #   0  every graded tag passed every limb
 #   1  at least one tag failed — a FINDING, and every failing tag is printed
-#   2  NOT-EVALUATED — no tag was found, a named tag is absent, the argument is not vX.Y.Z, or a
-#      read failed. Nothing is graded on this status and no count is printed: it is never a
-#      clean result, and the census never reports one.
+#   2  NOT-EVALUATED — no tag was found, a named tag is absent, the argument is not vX.Y.Z, a read
+#      failed, or the form's definition is not beside this script, cannot be run, or did not answer
+#      1 and 0 for the two addresses it is asked first. Nothing is graded on this status and no
+#      count is printed: it is never a clean result, and the census never reports one.
 #
 # ── WHAT IT READS, AND WHAT IT NEVER WRITES ──────────────────────────────────────────
 # Refs and objects only, through git plumbing (for-each-ref, rev-parse, ls-tree, cat-file), in
-# the repository of the working directory, as git itself resolves it. No working-tree file is
-# read, and no ref, object, index entry or file is written; there is no network. A CI checkout
+# the repository of the working directory, as git itself resolves it. No working-tree file of that
+# repository is read, and no ref, object, index entry or file is written; there is no network. The
+# one file it uses is scripts/check-identity-form.sh, beside this script, which it runs as a
+# command rather than sourcing it: twice before any tag is graded, on one planted address outside
+# the form and one in it, then once per tagger. Sourced, a line that ended that file early would end
+# this check with it, at exit 0 and silent, on every tag; run, the same line answers 0 for the
+# address outside the form, and the check says NOT-EVALUATED. A CI checkout
 # carries tags only at fetch-depth: 0 — at any lower depth the census finds none and says
 # NOT-EVALUATED rather than reading an empty set as clean.
 #
@@ -64,6 +88,8 @@
 #           changelog  no-changelog    the tagged tree has no CHANGELOG.md
 #                      no-entry        no `## [X.Y.Z]` heading for the version, outside a fence
 #                      not-newest      the heading is there, and another version's comes first
+#           tagger     no-tagger       the tag is lightweight, or its tag object names no address
+#                      out-of-form     the tagger's address is outside the no-reply form
 #
 # Pure bash and POSIX awk, written for bash 3.2 as well as 5, and for any POSIX awk. It holds no
 # pipe: every reader is fed by a here-string or a file, so no writer can die on a closed pipe.
@@ -71,7 +97,7 @@
 set -uo pipefail
 export LC_ALL=C
 
-LIMBS=(changelog)
+LIMBS=(changelog tagger)
 RELEASE_TAG_RE='^v[0-9]+\.[0-9]+\.[0-9]+$'
 
 usage() {
@@ -128,6 +154,30 @@ limb_changelog() {
   return 0
 }
 
+# ── limb_tagger <tag> <version> <commit> ──────────────────────────────────────────────
+# Git's own reader, so an address means what it means to every other git command. A lightweight
+# tag's object is its commit, and git prints no address for it.
+limb_tagger() {
+  local tag="$1" entry kind address
+  if ! entry="$(git for-each-ref --format='%(objecttype) %(taggeremail)' "refs/tags/$tag")"; then
+    return 2
+  fi
+  [ -n "$entry" ] || return 2
+  read -r kind address <<<"$entry"
+  address="${address#<}"
+  address="${address%>}"
+  if [ -z "$address" ]; then
+    printf 'TAG %s tagger FAIL no-tagger object=%s\n' "$tag" "$kind"
+    return 1
+  fi
+  if ! identity_in_form "$address"; then
+    printf 'TAG %s tagger FAIL out-of-form address=%s\n' "$tag" "$address"
+    return 1
+  fi
+  printf 'TAG %s tagger PASS in-form\n' "$tag"
+  return 0
+}
+
 # ── grade <tag> — the ref checks, then every limb. Appends to OUT; sets TAG_FAILED. ──────
 OUT=''
 TAG_FAILED=0
@@ -159,6 +209,18 @@ grade() {
 
 [ "$#" -eq 1 ] || { usage; exit 2; }
 git rev-parse --git-dir >/dev/null 2>&1 || not_evaluated "the working directory is not inside a git repository"
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || not_evaluated "this script could not locate its own directory"
+[ -x "$HERE/check-identity-form.sh" ] || not_evaluated "scripts/check-identity-form.sh is not beside this script, or cannot be run, so the tagger limb has no rule to apply"
+identity_in_form() { "$HERE/check-identity-form.sh" "$1" >/dev/null; }  # identity_in_form <address> — 0 when it is in the form
+# Asked before any tag is graded. A definition that answered 0, or 1, to every address would grade
+# every tagger alike, so nothing is graded unless it refuses the host's committer address and takes a
+# synthetic one in the form: GitHub issues no account the id 0 and no login a doubled hyphen.
+identity_in_form 'noreply@github.com'; form_out=$?
+identity_in_form '0+release-tag--selftest@users.noreply.github.com'; form_in=$?
+if [ "$form_out" -ne 1 ] || [ "$form_in" -ne 0 ]; then
+  not_evaluated "scripts/check-identity-form.sh answered $form_out for an address outside the form and $form_in for one in it, where it must answer 1 and 0, so the tagger limb has no rule it can apply"
+fi
 
 case "$1" in
   --all)
