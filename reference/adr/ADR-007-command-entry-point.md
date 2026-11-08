@@ -561,8 +561,9 @@ rather than collapsed.
   not a retraction.
 - `update` pushes a commit to an already-public repo. The commit timestamp is a metadata residual no
   revert reaches. **Reversal:** re-run from the prior build; the site was already public.
-- `update` never generates a key, so it cannot re-key a trip silently: **the refusal is in the script**, before its passphrase
-  resolution, whenever the trip's passphrase file cannot be read and the environment override is unset.
+- `update` never generates a key, so no key of its own making re-encrypts a trip: **the refusal is in the script**,
+  before its passphrase resolution, whenever the trip's passphrase file cannot be read and the environment override
+  is unset. Whether the key it does read is the one the live site is under is not checked, and stays a residual.
   `update` stays inside the addressed partition under limb (i): addressing it needs nothing of the
   script that the script does not do.
 - `list` writes local trip directory names into the session transcript. The session protocol already

@@ -7,7 +7,7 @@ follows Keep a Changelog; versions follow Semantic Versioning.
 
 No trip verb plans or records a trip differently in this release. What changes is met by whoever
 publishes, updates or rotates a trip's site. Publishing no longer puts back a page a takedown
-withdrew, never changes a trip's passphrase without saying so, and reports what actually reached
+withdrew, no longer lets `update` make a passphrase of its own, and reports what actually reached
 the site.
 
 **`rotate` reads the site before it writes.** Before, when a site's pages were withdrawn by a
@@ -28,8 +28,9 @@ nothing, locking out everyone holding the old one. Now it refuses before it encr
 the current passphrase back or set the variable; if it is lost, run `rotate`, which announces the
 one it sets. For a site published with `--plaintext`, the refusal also names `unpublish` followed by
 `publish --plaintext`, which keeps it plaintext. A `.passphrase` that exists but can't be read is
-refused in its own words and left untouched. Only `publish` makes a trip's first passphrase, and
-only `rotate` changes one. ADR-007 is amended in place to say where the refusal sits.
+refused in its own words and left untouched. `update` encrypts under the passphrase it reads and
+never makes one: `publish` makes a trip's first passphrase, and `rotate` is how you change it.
+ADR-007 is amended in place to say where the refusal sits.
 
 **`publish` takes an empty repository you name.** With an empty public repository named in
 `.publish-slug`, `publish` now makes its first push: it asks GitHub whether the repository is empty,
@@ -72,7 +73,8 @@ pages.
 When GitHub can't be read as `publish` asks whether a repository is empty, `publish` takes its
 create path as it always did. On a trip with no passphrase yet whose repository already exists,
 GitHub's refusal then stops it, but the passphrase it generated stays, and a later `update` would
-encrypt under it. A later release closes both.
+encrypt under it, as it would under a `.passphrase` restored from an older backup. A later release
+closes these.
 
 ## [0.62.0] — 2026-10-29 — A plaintext publish never lets through a value the guard used to catch
 
