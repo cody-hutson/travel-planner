@@ -27709,7 +27709,7 @@ cfgen0_assert() {
   elif [ "$r1" -ne $((r0 + 1)) ]; then
     FAIL "CF-GEN0: the planted generated conversation added $((r1 - r0)) reported line(s), where exactly one is required"
   else
-    PASS "CF-GEN0: a failing generated conversation planted in a copy leaves the fail count at $f0 and adds one reported line ($r0 → $r1), '$(awk -F'\t' '$1 == "VERDICT" && $3 == "generated" { print $6 " " $7 }' <<<"$out1")' — a verdict on judged labels is reported and never reaches the aggregate (FM-8)"
+    PASS "CF-GEN0: a failing generated conversation planted in a copy leaves the fail count at $f0 and adds one reported line ($r0 → $r1), '$(awk -F'\t' '$1 == "VERDICT" && $3 == "generated" && $2 == "plant-generated.txt" { print $4 " " $5 ": " $6 }' <<<"$out1")' — a verdict on judged labels is reported and never reaches the aggregate (FM-8)"
   fi
 }
 cfgen0_assert
