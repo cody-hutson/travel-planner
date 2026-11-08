@@ -14464,15 +14464,17 @@ rv41_assert() { # <id>
 rv41_assert "RV41"
 
 # ── RV42 — the first push fails. publish must stop itself and say so: no "Published", nothing claimed, and the
-# words allow that the push may have reached the site. The repository is still empty here, so the remedy the
-# refusal names first, publish again, takes it, under the key the first run recorded.
+# words allow that the push may have reached the site. Where the push did not land the repository is still
+# empty, so the remedy the refusal names first, publish again, takes it, under the key the first run recorded.
 # A failed push reads the remote before anything is said (review FM-1, CD-3), so each limb puts the remote in
 # one state behind a push_trip_site that reports failure: refused, the bare repository refuses it; landed, the
 # push lands and then reports failure, as a connection dropped after the server accepted it does; unreadable,
 # nothing is pushed and the remote cannot be read back; unreadable-landed, the push lands and the remote then
-# cannot be read. The wrapper stacks on the real function, RV30's way, and is defined here rather than inside
-# the command substitution below, where bash 3.2 misreads a case pattern's parenthesis. errexit is off: the
-# stop is the command's own.
+# cannot be read; another, another publish's commit reaches the remote's main first, and the real push is then
+# refused as a non-fast-forward, so the remote holds a commit this run did not make, and the record of the
+# remote must stay as the push found it. The wrapper stacks on the real function, RV30's way, and is defined
+# here rather than inside the command substitution below, where bash 3.2 misreads a case pattern's
+# parenthesis. errexit is off: the stop is the command's own.
 # A push that landed and reported failure leaves no record of the remote in the clone: the client that saw the
 # failure never wrote one. The real push below writes it, as a push that succeeds does, so the wrapper deletes it.
 rv42_wrap() { # (inside a subject's subshell) rv42_how names the limb, RV39_BARE the site
@@ -14484,12 +14486,19 @@ rv42_wrap() { # (inside a subject's subshell) rv42_how names the limb, RV39_BARE
       unreadable)        mv "$RV39_BARE" "$RV39_BARE.away"; return 1 ;;
       unreadable-landed) rv42_real_push "$@"; git -C "$1" update-ref -d refs/remotes/origin/main
                          mv "$RV39_BARE" "$RV39_BARE.away"; return 1 ;;
+      another)           git -C "$1" rev-parse -q --verify refs/remotes/origin/main > "$RV39_BARE.rec0"
+                         git init -q "$RV39_BARE.other"; cp "$ENC_OK" "$RV39_BARE.other/index.html"
+                         git -C "$RV39_BARE.other" add index.html
+                         git -C "$RV39_BARE.other" -c user.name=t -c user.email=t@example.invalid commit -q -m 'another publish'
+                         git -C "$RV39_BARE.other" push -q "$RV39_BARE" HEAD:refs/heads/main
+                         git -C "$RV39_BARE" rev-parse main > "$RV39_BARE.other-tip"
+                         rv42_real_push "$@" ;;
     esac
   }
 }
-rv42_assert() { # <id> <refused|landed|unreadable|unreadable-landed>
+rv42_assert() { # <id> <refused|landed|unreadable|unreadable-landed|another>
   local id="$1" how="$2" name d bare out rc rc2=0 rc3=0 n=0 n3=0 key pf k1 told=0 said=0 rec=0 pat=0 pages=0 base log out2=""
-  local slug
+  local slug rec0 rec1 other
   name="rv42-$how-$RANDOM"; d="$(rv39_site "$name" main)"; bare="$RVW/origin/$name-site.git"; slug="$name-site"; : > "$RV_GHLOG"
   [ "$how" != refused ] || rv_reject_pushes "$bare"
   out="$( ( unset STATICRYPT_PASSWORD; RV39_BARE="$bare"; rv39_gh; rv42_how="$how"; rv42_wrap
@@ -14511,10 +14520,14 @@ rv42_assert() { # <id> <refused|landed|unreadable|unreadable-landed>
                   && rv_has "$out" 'If the repository is still empty, publish takes it' \
                   && rv_has "$out" "gh api -X PATCH repos/testowner/$slug -f default_branch=main" \
                   && rv_has "$out" "gh api -X POST repos/testowner/$slug/pages -f \"source[branch]=main\" -f \"source[path]=/\"" && said=1 ;;
+    another)    rv_has "$out" 'another publish reached it first' && said=1 ;;
   esac
+  rec0="$(cat "$bare.rec0" 2>/dev/null)"; other="$(cat "$bare.other-tip" 2>/dev/null)"
+  rec1="$(git -C "$d/.publish" rev-parse -q --verify refs/remotes/origin/main 2>/dev/null)"
   # The remedy each text names, walked. refused and unreadable: publish again, on the repository still empty.
   # unreadable-landed: publish again answers that the repository exists, and the text's route from there is
   # its two gh lines, then the clone's removal and update. landed: no remedy, so the next update is the control.
+  # another: none is walked, because the route the text names turns on which passphrase the other publish used.
   case "$how" in
     refused|unreadable)
       ( unset STATICRYPT_PASSWORD; RV39_BARE="$bare"; rv39_gh; set -e; cmd_publish "$d" ) >/dev/null 2>&1; rc2=$? ;;
@@ -14546,13 +14559,21 @@ rv42_assert() { # <id> <refused|landed|unreadable|unreadable-landed>
     else
       PASS "$id: a first push that landed with the remote unreadable stops, names both routes, and the route for the landed state — the two gh lines in the nested form, the clone removed, update — ends at a site under the recorded key"
     fi
+  elif [ "$how" = another ]; then
+    if [ -z "$other" ] || [ "$n" != 1 ] || [ "$(git -C "$bare" rev-parse -q --verify main 2>/dev/null)" != "$other" ]; then
+      FAIL "$id: after the run the remote's main is not the other publish's one commit ($n commit(s)): this run's push moved it, or the state this limb grades was not built"
+    elif [ "$rec1" != "$rec0" ]; then
+      FAIL "$id: the record of the remote moved from '${rec0:-none}' to '${rec1:-none}' — publish recorded as landed a commit the remote does not hold"
+    else
+      PASS "$id: a first push that another publish beat stops publish by itself, claims nothing, says another publish reached the repository first, and leaves the record of the remote as the push found it"
+    fi
   elif [ "$rc2" -ne 0 ] || [ "$n" != 1 ] || [ -z "$key" ] || [ "$key" != "$pf" ] || [ "$pf" != "$k1" ]; then
     FAIL "$id: the named remedy, publish again on the repository still empty, read rc=$rc2 with $n commit(s), the page under the key the first run recorded=$([ -n "$key" ] && [ "$key" = "$k1" ] && echo 1 || echo 0)"
   else
     PASS "$id: a first push that did not land ($how) stops publish by itself, claims nothing and says so; publish again takes the repository under the key already recorded"
   fi
 }
-for rv_b in refused landed unreadable unreadable-landed; do rv42_assert "RV42-$rv_b" "$rv_b"; done
+for rv_b in refused landed unreadable unreadable-landed another; do rv42_assert "RV42-$rv_b" "$rv_b"; done
 # ── RV43 — the first push under --plaintext, the form the operator's own terminal runs. Its two controls are not
 # this arm's subject: the content guard is groups L to O's, stubbed in the subject's subshell, and the typed gate
 # is a terminal's, so the non-interactive limb stands in, on a bare repository. No key is generated.
@@ -14611,7 +14632,9 @@ for rv_b in create empty; do rv44_assert "RV44-$rv_b" "$rv_b"; done
 # is announced; what changes is whether the run claims a served site. A failed POST takes real gh's shape: exit
 # 1, the host's error body on stdout, gh's own line on stderr. already: a 409, and a read-back of Pages built
 # from main at the root, which is served. absent: the read-back is a 404, so nothing is served. elsewhere: Pages
-# built from another branch, so nothing this push carried is served.
+# built from another branch, so nothing this push carried is served. workflow: Pages built by a workflow, whose
+# source still reads main at the root, so what is served is that workflow's output and not this push's branch:
+# it differs from already in its build type alone, which is what pins the read-back's comparison to all three.
 rv45_gh() { # (inside a subject's subshell) RV45_PAGES names the read-back
   gh() {
     printf '%s\n' "$*" >> "$RV_GHLOG"
@@ -14628,13 +14651,14 @@ rv45_gh() { # (inside a subject's subshell) RV45_PAGES names the read-back
         case "${RV45_PAGES:-}" in
           already)   printf 'legacy main /' ;;
           elsewhere) printf 'legacy gh-pages /' ;;
+          workflow)  printf 'workflow main /' ;;
           *)         printf '{"message":"Not Found","status":"404"}'; printf 'gh: Not Found (HTTP 404)\n' >&2; return 1 ;;
         esac ;;
       *)             return 0 ;;
     esac
   }
 }
-rv45_assert() { # <id> <already|absent|elsewhere>
+rv45_assert() { # <id> <already|absent|elsewhere|workflow>
   local id="$1" how="$2" name d out rc want=1 told=0 named=0 ann=0 noted=0 base
   name="rv45-$how-$RANDOM"; d="$RVW/$name"; mkdir -p "$d/outputs"; cp "$SRC" "$d/outputs/$name-travel-site.html"; : > "$RV_GHLOG"
   out="$( ( unset STATICRYPT_PASSWORD; RV45_PAGES="$how"; rv45_gh; set -e; cmd_publish "$d" ) 2>&1 )"; rc=$?
@@ -14660,7 +14684,7 @@ rv45_assert() { # <id> <already|absent|elsewhere>
     PASS "$id: with Pages $how publish records what it pushed, announces the passphrase file, and says truthfully whether the site is served"
   fi
 }
-for rv_b in already absent elsewhere; do rv45_assert "RV45-$rv_b" "$rv_b"; done
+for rv_b in already absent elsewhere workflow; do rv45_assert "RV45-$rv_b" "$rv_b"; done
 
 # ── RV46 — #1614 under CD-1: the resolver reads a key and never makes one. Called directly on a trip with no
 # key and the variable unset it refuses and writes no .passphrase; the control reads a key back once one is
@@ -14916,12 +14940,12 @@ for rv_b in rotate-nokey rotate-key; do md_flips cmd_rotate "RV40-$rv_b" rv40_as
 for rv_b in publish-private publish-populated publish-nohost; do md_flips cmd_publish "RV40-$rv_b" rv40_assert "RV40-$rv_b" "$rv_b"; done
 md_flips refuse_empty_repository "RV40-fn" rv40_assert "RV40-fn" update-key
 md_flips cmd_publish "RV41" rv41_assert "RV41"
-for rv_b in refused landed unreadable unreadable-landed; do md_flips cmd_publish "RV42-$rv_b" rv42_assert "RV42-$rv_b" "$rv_b"; done
+for rv_b in refused landed unreadable unreadable-landed another; do md_flips cmd_publish "RV42-$rv_b" rv42_assert "RV42-$rv_b" "$rv_b"; done
 md_flips read_back_first_push "RV42-fn" rv42_assert "RV42-fn" landed
 md_flips cmd_publish "RV43" rv43_assert "RV43"
 md_flips ensure_first_key "RV38-fn" rv38_assert "RV38-fn"
 for rv_b in create empty; do md_flips cmd_publish "RV44-$rv_b" rv44_assert "RV44-$rv_b" "$rv_b"; done
-for rv_b in already absent elsewhere; do md_flips cmd_publish "RV45-$rv_b" rv45_assert "RV45-$rv_b" "$rv_b"; done
+for rv_b in already absent elsewhere workflow; do md_flips cmd_publish "RV45-$rv_b" rv45_assert "RV45-$rv_b" "$rv_b"; done
 md_flips enable_pages "RV45-fn" rv45_assert "RV45-fn" already
 md_flips get_passphrase "RV46" rv46_assert "RV46"
 md_flips ensure_first_key "RV46s" rv46s_assert "RV46s"
