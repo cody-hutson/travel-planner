@@ -26305,7 +26305,7 @@ lg_ctl() {
     return 0
   fi
   g="$(ta_run "$r" "${7:-$LG_LEDGER_F}")"
-  for a in LG1 LG3 LG6; do [ -z "$(awk -F'\t' -v a="$a" '$1 == a' <<<"$g")" ] || got="$got $a"; done
+  for a in LG1 LG3 LG4 LG6; do [ -z "$(awk -F'\t' -v a="$a" '$1 == a' <<<"$g")" ] || got="$got $a"; done
   [ -z "$(awk -F'\t' '$1 == "ROW" && $4 !~ /^TRIPS/' <<<"$g")" ] || got="$got LG2"
   got="$(tr ' ' '\n' <<<"$got" | sort | tr '\n' ' ' | sed 's/^ *//; s/ *$//')"
   if [ -z "$g" ]; then
@@ -26317,14 +26317,16 @@ lg_ctl() {
   fi
 }
 lgctl_assert() {
-  local tmpl='templates/traveler-intake.template.md' lw5="$WORK/ta/ledger-wo-bh5.txt"
+  local tmpl='templates/traveler-intake.template.md' lw5="$WORK/ta/ledger-wo-bh5.txt" ld5="$WORK/ta/ledger-dup-bh5.txt"
   awk '$1 != "BH-5"' "$LG_LEDGER_F" > "$lw5"
+  awk '{ print } $1 == "BH-5" { print }' "$LG_LEDGER_F" > "$ld5"
   lg_ctl L1 'LG2' "BH-2 denied with its anchor kept reads NO-LONGER-TRIPS" "$tmpl" 'Offer the archetype menu from the section as starting points' 'Never offer the archetype menu from the section as starting points'
   lg_ctl L2 'LG2 LG3' "BH-2 reworded away reads ANCHOR-GONE, its anchor then occurring zero times, which LG3 reports beside it" "$tmpl" 'Offer the archetype menu from the section as starting points' 'Describe what the archetype list covers, and never read it out'
   lg_ctl L3 'LG1' "a new menu offer planted in trip Step 6 is undeclared" "$tmpl" 'Leave **Overlap** blank.' 'Leave **Overlap** blank. Offer the archetype menu again at the end.'
   lg_ctl L4 'LG1' "BH-5's row deleted leaves its hit undeclared" '' '' '' "$lw5"
   lg_ctl L5 'LG3 LG6' "BH-2's anchor duplicated in the same file is not a unique key" "$tmpl" 'Leave **Overlap** blank.' 'Leave **Overlap** blank. Offer the archetype menu from the section again.'
   lg_ctl L6 'LG1' "FM-5: a second offer inside BH-4's sentence is undeclared, never absorbed by its row" "$tmpl" 'it fits. Leave' 'it fits, and offer the menu too. Leave'
+  lg_ctl L9 'LG4' "BH-5's row declared twice is a duplicate (id, limb); its one hit matches each copy once and its anchor still occurs once, so no other arm moves" '' '' '' "$ld5"
 }
 lgctl_assert
 
