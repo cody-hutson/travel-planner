@@ -2,7 +2,8 @@
 # ledger (#2199 F3, F4). Group RB of scripts/test-artifact-schema.sh states its grammar and reads it.
 # A dimension line holds the grader's value alone, or, where an unruled mech line cites the dimension,
 # the conversation rule's value with the grader's beside it, as "R-<n> = <rule's> ; grader <grader's>".
-# Where an adjudication entry overturns a dimension, its line holds the operator's value first instead.
+# Where an adjudication entry overturns a dimension that no unruled mech line cites, its line holds
+# the operator's value first instead.
 draws: 3083f093c6237ae3f2f4b17b12f2ab2355280d12 08fe6e0bc32fea46d8af608160f443e59a681c67 AF = 1:2a833c1c-0a6a-47da-b470-b8b305595e3c:graded
 draws: 3083f093c6237ae3f2f4b17b12f2ab2355280d12 f26fe503a636884832517423eb900634ed3ffbc2 TE = 1:693403a3-3e52-4056-b404-458e51685e23:graded
 draws: 3083f093c6237ae3f2f4b17b12f2ab2355280d12 08fe6e0bc32fea46d8af608160f443e59a681c67 SK = 1:6fdb5fdf-db7a-4b4d-ab3a-d7acc0fa5c7b:graded
