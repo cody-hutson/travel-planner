@@ -56,7 +56,7 @@ and `CF` red, which is meant.
 
 **Runtime.** `scripts/test-artifact-schema.sh`, timed with `/usr/bin/time -p` three times at
 `af6b0ea`, the `main` this release is measured against, and three times at `1a5c040`, whose suite
-and grade record this entry's commit keeps unchanged, took a median of 314.04 real seconds before
+this entry's commit keeps unchanged, took a median of 314.04 real seconds before
 and 349.87 after, on an arm64 macOS host with 14 CPUs and other sessions live on it.
 
 **What it doesn't reach.** A grade is judgment over synthetic conversations: every traveller is
