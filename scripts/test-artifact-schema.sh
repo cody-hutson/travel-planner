@@ -28329,10 +28329,12 @@ md_flips rb_bullets   'RB6' rb6_assert
 #        two-value line's grader value dropped, a grader value spelled as the grader's own output
 #        spells it ("NOT MET") and a rule's value the rule does not derive, each red; a block's
 #        mech lines ruled by an adjudication line, red while its lines hold two values, and green
-#        once each holds its grader's value alone and the verdict is the rule's; and a line of the
-#        first generated conversation overturned, green in the two-value form with its verdict the
-#        rule's, red with its first value other than its ruling's and red in the one-value form, and
-#        a ruling that names no line of its block, red. The two-value and overturn controls plant on
+#        once each holds its grader's value alone and the verdict is the rule's; a line of the first
+#        generated conversation overturned, green in the two-value form with its verdict the rule's,
+#        red with its first value other than its ruling's and red in the one-value form; a ruling
+#        that names no line of its block, one neither upheld nor overturned to a value, and a
+#        dimension ruled twice, each red; and a line an unruled mech line cites, overturned, green,
+#        the mech line outranking the overturn. The two-value and overturn controls plant on
 #        a base: the record, where a line of it holds a grader value because an unruled mech line
 #        cites it; otherwise a copy on which the first block whose mech lines are all ruled and which
 #        overturns nothing is put back to pending, each line they cite in the two-value form and its
@@ -28733,21 +28735,21 @@ rb_dimset() { LC_ALL=C awk -F'\t' -v OFS='\t' -v k="$2" -v w="$3" '{ $k = w; pri
 # rb_cited2 <rb_rule output> <rb_record output> — the first dimension line holding a grader value
 # because an unruled mech line cites it: a base the two-value controls can plant on.
 rb_cited2() { { printf '%s\n' "$1"; printf '%s\n' "$2"; } | LC_ALL=C awk -F'\t' '$1 == "HIT" { H[$2, $3] = 1; next } !w && $1 == "DIM" && $7 != "-" && (($2, $3) in H) { print; w = 1 }'; }
-# rb4_ovr <name> <base> <adjudication> <new adjudication> <line> <new line> — on a copy of <base>, the
-# first generated conversation's adjudication and one of its lines replaced and its verdict set to
-# the rule's; prints rb4_eval over the copy, or one "P NOT-LANDED" record when an edit did not land.
+# rb4_ovr <name> <base> <block> <adjudication> <new adjudication> <line> <new line> — on a copy of
+# <base>, the block's adjudication and one of its lines replaced and its verdict set to the rule's;
+# prints rb4_eval over the copy, or one "P NOT-LANDED" record when an edit did not land.
 rb4_ovr() {
   local d v rv
   d="$(rb_rec_copy "$1" "$2")"
-  if ! rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "adjudication: $3" "adjudication: $4" || ! rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "$5" "$6"; then printf 'P\tNOT-LANDED: a plant did not land on its copy\n'; return 0; fi
-  v="$(rb_record "$d/$CF_RECORD" | awk -F'\t' -v id="$RB_GEN1" '$1 == "KEY" && $2 == id && $3 == "verdict" { print $4 }')"
-  rv="$({ rb_record "$d/$CF_RECORD"; rb_citemap "$RB_RUBRIC"; } | rb_rule | awk -F'\t' -v id="$RB_GEN1" '$1 == "RULE" && $2 == id { print $3 }')"
-  if [ -z "$rv" ] || ! rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "verdict = $v" "verdict = $rv"; then printf 'P\tNOT-LANDED: no verdict of the rule to set on its copy\n'; return 0; fi
+  if ! rb_blockset "$d/$CF_RECORD" "$3" "adjudication: $4" "adjudication: $5" || ! rb_blockset "$d/$CF_RECORD" "$3" "$6" "$7"; then printf 'P\tNOT-LANDED: a plant did not land on its copy\n'; return 0; fi
+  v="$(rb_record "$d/$CF_RECORD" | awk -F'\t' -v id="$3" '$1 == "KEY" && $2 == id && $3 == "verdict" { print $4 }')"
+  rv="$({ rb_record "$d/$CF_RECORD"; rb_citemap "$RB_RUBRIC"; } | rb_rule | awk -F'\t' -v id="$3" '$1 == "RULE" && $2 == id { print $3 }')"
+  if [ -z "$rv" ] || ! rb_blockset "$d/$CF_RECORD" "$3" "verdict = $v" "verdict = $rv"; then printf 'P\tNOT-LANDED: no verdict of the rule to set on its copy\n'; return 0; fi
   rb4_eval "$d/$CF_RECORD" "$CF_OUT_F" "$CF_TOK_F" "$RB_RUBRIC" "$d"
 }
 rb4_assert() {
-  local p d1 d2 d3 d4 d5 d9 c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12 c13 c14 st n mid vl vn uv tv hl hb ur adj av rv row ok
-  local bd br bh bb bp bok bv rr ol od og oo oa oc nx nc bs
+  local p d1 d2 d3 d4 d5 d9 c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12 c13 c14 c15 c16 c17 st n mid vl vn uv tv hl hb ur adj av rv row ok
+  local bd br bh bb bp bok bv rr ol od og oo oa oc nx nc n15 n16 pd px pa pc bs
   p="$(rb4_eval "$RB_RECORD" "$CF_OUT_F" "$CF_TOK_F" "$RB_RUBRIC" "$CF_DIR")"
   awk -F'\t' '$1 == "STALE" { printf "  REPORTED RB4 STALE %s: %s\n", $2, $3 }' <<<"$p"
   st="$(awk -F'\t' '$1 == "STALE"' <<<"$p" | awk 'END { print NR }')"
@@ -28825,18 +28827,33 @@ rb4_assert() {
   fi
   # The overturn (#2200, Stage 12's B-2), each limb on a copy of the base: ol overturned to oo by an
   # adjudication entry, its line in the two-value form with the grader's og beside it and its verdict
-  # the rule's, green; its first value left og, red; in the one-value form, red; and a ruling on nx,
-  # one past the rubric's last dimension, which names no line, red.
+  # the rule's, green; its first value left og, red; in the one-value form, red; a ruling on nx, one
+  # past the rubric's last dimension, which names no line, red; a ruling on ol neither upheld nor
+  # overturned to a value, red; and ol ruled twice, red.
   if [ -n "$ol" ]; then
     od="$(cut -f3 <<<"$ol")"; og="$(cut -f4 <<<"$ol")"; oo="MET"; [ "$og" = "MET" ] && oo="NOT-MET"
     oa="$(awk -F'\t' -v id="$RB_GEN1" '$1 == "KEY" && $2 == id && $3 == "adjudication" { print $4 }' <<<"$br")"
     oc="2026-11-09 $od overturned to $oo planted"; [ "$oa" = "pending" ] || oc="$oa; $oc"
-    c11="$(rb4_ovr rb4-overturn "$bd" "$oa" "$oc" "$(rb_dimline <<<"$ol")" "$(rb_dimset "$(rb_dimset "$ol" 7 "$og")" 4 "$oo" | rb_dimline)" | awk -F'\t' '$1 == "P" { print $2 }')"
-    c12="$(rb4_ovr rb4-overturn-other "$bd" "$oa" "$oc" "$(rb_dimline <<<"$ol")" "$(rb_dimset "$ol" 7 "$og" | rb_dimline)" | awk -F'\t' '$1 == "P" && index($2, "where its ruling overturns it to")')"
-    c14="$(rb4_ovr rb4-overturn-one "$bd" "$oa" "$oc" "$(rb_dimline <<<"$ol")" "$(rb_dimset "$ol" 4 "$oo" | rb_dimline)" | awk -F'\t' '$1 == "P" && index($2, "shows one value, where its ruling overturns it")')"
+    c11="$(rb4_ovr rb4-overturn "$bd" "$RB_GEN1" "$oa" "$oc" "$(rb_dimline <<<"$ol")" "$(rb_dimset "$(rb_dimset "$ol" 7 "$og")" 4 "$oo" | rb_dimline)" | awk -F'\t' '$1 == "P" { print $2 }')"
+    c12="$(rb4_ovr rb4-overturn-other "$bd" "$RB_GEN1" "$oa" "$oc" "$(rb_dimline <<<"$ol")" "$(rb_dimset "$ol" 7 "$og" | rb_dimline)" | awk -F'\t' '$1 == "P" && index($2, "where its ruling overturns it to")')"
+    c14="$(rb4_ovr rb4-overturn-one "$bd" "$RB_GEN1" "$oa" "$oc" "$(rb_dimline <<<"$ol")" "$(rb_dimset "$ol" 4 "$oo" | rb_dimline)" | awk -F'\t' '$1 == "P" && index($2, "shows one value, where its ruling overturns it")')"
     nx="$(awk -F'\t' '$1 == "DIM" { k = substr($3, 3) + 0; if (k > m) m = k } END { print "R-" (m + 1) }' <<<"$br")"
     nc="2026-11-09 $nx upheld planted"; [ "$oa" = "pending" ] || nc="$oa; $nc"
-    c13="$(rb4_ovr rb4-ruling-lineless "$bd" "$oa" "$nc" "$(rb_dimline <<<"$ol")" "$(rb_dimline <<<"$ol")" | awk -F'\t' '$1 == "P" && index($2, "names no line of the block")')"
+    c13="$(rb4_ovr rb4-ruling-lineless "$bd" "$RB_GEN1" "$oa" "$nc" "$(rb_dimline <<<"$ol")" "$(rb_dimline <<<"$ol")" | awk -F'\t' '$1 == "P" && index($2, "names no line of the block")')"
+    n15="2026-11-09 $od reconsidered planted"; [ "$oa" = "pending" ] || n15="$oa; $n15"
+    c15="$(rb4_ovr rb4-ruling-neither "$bd" "$RB_GEN1" "$oa" "$n15" "$(rb_dimline <<<"$ol")" "$(rb_dimline <<<"$ol")" | awk -F'\t' '$1 == "P" && index($2, "is neither upheld nor overturned to")')"
+    n16="2026-11-09 $od upheld planted; 2026-11-09 $od upheld again planted"; [ "$oa" = "pending" ] || n16="$oa; $n16"
+    c16="$(rb4_ovr rb4-ruled-twice "$bd" "$RB_GEN1" "$oa" "$n16" "$(rb_dimline <<<"$ol")" "$(rb_dimline <<<"$ol")" | awk -F'\t' '$1 == "P" && index($2, "is ruled 2 times")')"
+  fi
+  # The precedence, on a copy of the base: tv's dimension, which an unruled mech line cites, overturned
+  # to px by an adjudication entry, its line and verdict as they stand; green, because the unruled mech
+  # line outranks the overturn, and no first value is held to a ruling a mech line outranks.
+  c17="unplanted"
+  if [ -n "$tv" ]; then
+    pd="$(cut -f3 <<<"$tv")"; px="MET"; [ "$(cut -f4 <<<"$tv")" = "MET" ] && px="NA"
+    pa="$(awk -F'\t' -v id="$hb" '$1 == "KEY" && $2 == id && $3 == "adjudication" { print $4 }' <<<"$br")"
+    pc="2026-11-09 $pd overturned to $px planted"; [ "$pa" = "pending" ] || pc="$pa; $pc"
+    c17="$(rb4_ovr rb4-precedence "$bd" "$hb" "$pa" "$pc" "$hl" "$hl" | awk -F'\t' '$1 == "P" { print $2 }')"
   fi
   if [ -n "$bb" ]; then bs="on a copy of the record with $bb put back to pending, each line its mech lines cite in two values and its verdict the rule's, which reads clean"; else bs="on the record itself"; fi
   if [ ! -f "$RB_RECORD" ]; then
@@ -28881,8 +28898,14 @@ rb4_assert() {
     FAIL "RB4: CONTROL did not fire — $RB_GEN1's $od overturned to $oo on a copy, its line in the one-value form '$od = $oo', reads nothing"
   elif [ -z "$c13" ]; then
     FAIL "RB4: CONTROL did not fire — a ruling on $nx, which names no line of $RB_GEN1, on a copy reads nothing"
+  elif [ -z "$c15" ]; then
+    FAIL "RB4: CONTROL did not fire — a ruling '$od reconsidered', neither upheld nor overturned to a value, in $RB_GEN1's adjudication on a copy reads nothing"
+  elif [ -z "$c16" ]; then
+    FAIL "RB4: CONTROL did not fire — $od ruled twice in $RB_GEN1's adjudication on a copy reads nothing"
+  elif [ -n "$c17" ]; then
+    FAIL "RB4: CONTROL did not hold — $hb's $pd overturned to $px on a copy while an unruled mech line still cites it reads '$(tr '\n' ' ' <<<"$c17")', where the unruled mech line outranks the overturn and nothing is reported"
   else
-    PASS "RB4: ${RB_RECORD#"$ROOT/"} — $n — holds exactly one block for each generated conversation and none for another; each block carries its keys once, every value in its closed set; every transcript hash recomputes and equals its header's; every conduct revision is its header's; the dimension ids equal the rubric's both ways; every value but NA cites a turn, or an unruled mech line that cites the dimension; a line holds a grader value exactly where an unruled mech line cites its dimension or a ruling overturns it, and its first value is the one the rule derives, its ruling's on an overturn; every ruling is upheld or overturned to a value, names a line and stands once; the mech lines are the suite's own readings both ways; and every verdict is the conversation rule's. $st block(s) STALE, reported and never failed. CONTROLS on copies: a turn byte changed reads '$(head -1 <<<"$c1" | cut -f2)'; a mech line dropped reads '$(head -1 <<<"$c2" | cut -f2)'; a verdict flipped reads '$(head -1 <<<"$c3" | cut -f2)'; a rubric revision changed is reported '$(awk -F'\t' '$1 == "STALE" { print $3; exit }' <<<"$c4")' and fails nothing. The two-value and overturn controls are planted $bs: a grader value on an uncited line reads '$(head -1 <<<"$c5" | cut -f2)'; a grader value dropped reads '$(head -1 <<<"$c6" | cut -f2)'; a grader value spelled NOT MET reads '$(head -1 <<<"$c7" | cut -f2)'; a rule's value the rule does not derive reads '$(head -1 <<<"$c8" | cut -f2)'; $hb's mech lines ruled read '$(head -1 <<<"$c9" | cut -f2)', and with its lines restored to the grader's values alone and its verdict to the rule's $rv, read clean; $RB_GEN1's $od overturned to $oo reads clean as '$od = $oo ; grader $og' with its verdict the rule's, reads '$(head -1 <<<"$c12" | cut -f2)' with its first value left $og and '$(head -1 <<<"$c14" | cut -f2)' in the one-value form; a ruling on $nx reads '$(head -1 <<<"$c13" | cut -f2)'"
+    PASS "RB4: ${RB_RECORD#"$ROOT/"} — $n — holds exactly one block for each generated conversation and none for another; each block carries its keys once, every value in its closed set; every transcript hash recomputes and equals its header's; every conduct revision is its header's; the dimension ids equal the rubric's both ways; every value but NA cites a turn, or an unruled mech line that cites the dimension; a line holds a grader value exactly where an unruled mech line cites its dimension or a ruling overturns it, and its first value is the one the rule derives, its ruling's on an overturn; every ruling is upheld or overturned to a value, names a line and stands once; the mech lines are the suite's own readings both ways; and every verdict is the conversation rule's. $st block(s) STALE, reported and never failed. CONTROLS on copies: a turn byte changed reads '$(head -1 <<<"$c1" | cut -f2)'; a mech line dropped reads '$(head -1 <<<"$c2" | cut -f2)'; a verdict flipped reads '$(head -1 <<<"$c3" | cut -f2)'; a rubric revision changed is reported '$(awk -F'\t' '$1 == "STALE" { print $3; exit }' <<<"$c4")' and fails nothing. The two-value and overturn controls are planted $bs: a grader value on an uncited line reads '$(head -1 <<<"$c5" | cut -f2)'; a grader value dropped reads '$(head -1 <<<"$c6" | cut -f2)'; a grader value spelled NOT MET reads '$(head -1 <<<"$c7" | cut -f2)'; a rule's value the rule does not derive reads '$(head -1 <<<"$c8" | cut -f2)'; $hb's mech lines ruled read '$(head -1 <<<"$c9" | cut -f2)', and with its lines restored to the grader's values alone and its verdict to the rule's $rv, read clean; $RB_GEN1's $od overturned to $oo reads clean as '$od = $oo ; grader $og' with its verdict the rule's, reads '$(head -1 <<<"$c12" | cut -f2)' with its first value left $og and '$(head -1 <<<"$c14" | cut -f2)' in the one-value form; a ruling on $nx reads '$(head -1 <<<"$c13" | cut -f2)'; a ruling '$od reconsidered' reads '$(head -1 <<<"$c15" | cut -f2)'; $od ruled twice reads '$(head -1 <<<"$c16" | cut -f2)'; and $hb's $pd overturned to $px while an unruled mech line cites it reads clean, the mech line outranking the overturn"
   fi
 }
 rb4_assert
