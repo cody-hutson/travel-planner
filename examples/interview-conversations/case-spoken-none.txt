@@ -1,0 +1,20 @@
+# A spoken none said in other words: the declared none written passes as A2
+conversation: case-spoken-none
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/person-intake.template.md
+spoken: yes
+route: card
+style: none
+traveller: DS — declines a whole section, an invented traveller
+answered-before: none
+T1 I | This is spoken, so anyone near you will hear. The next questions are about health; you can type those instead.
+L4 put=- kind=spoken-care offer example=no
+T2 P | That's fine.
+L3 - = answer
+T3 I | Is there anything you must have on a trip?
+L4 put=Needs › Specific#1 kind=ask example=no
+T4 P | There's nothing I need.
+L3 Needs › Specific#1 = empty
+--- record
+V Needs › Specific#1 = none

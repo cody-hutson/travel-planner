@@ -1,0 +1,16 @@
+# Q-11: words deleted from their turn and none added
+conversation: q11-delete-only
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: AF — answers freely, an invented traveller
+answered-before: none
+T1 I | How do you feel about rooming?
+L4 put=Where you stay › Rooming kind=ask example=no
+T2 P | I'd want my own room if it isn't too expensive.
+L3 Where you stay › Rooming = answer
+--- record
+V Where you stay › Rooming = own room if it isn't too expensive

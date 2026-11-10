@@ -26,6 +26,16 @@ name: Integration note
 # on any branch behind its base. A merge base needs history, so the checkout fetches all of it.
 # Lowering the depth makes the checker refuse, loudly, rather than grade a range it cannot read.
 #
+# THE SECOND JOB, conduct-suite, asks a pull request that changes the interview's conduct — the
+# conduct file, the interview card, a guided form's lines at or below its end-of-profile boundary,
+# or a block-owned form's > lines — to record the conduct suite's result in the body's "Conduct
+# suite result" section, which the template carries. It runs the same checker in --check-conduct
+# mode, whose header states the predicate; the section must be present and carry a word, and then the
+# grade record must be fresh against the head's card and forms, or the section must declare why not.
+# On a draft a failing limb is a notice that binds once the pull request is ready for review. It
+# grades that a result is recorded and current, never that the grades are right. Its body reaches it
+# the same way, through its step's env: map, and the draft state with it.
+#
 # WHY A WORKFLOW OF ITS OWN. Its subject is the pull request as a whole, its diff and its body, which
 # no existing workflow grades together; the body gate (pr-body-parser-clean.yml) reads the body
 # alone at the default depth, and the required suites read the tree. A separate job keeps a red run
@@ -73,3 +83,35 @@ jobs:
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: ./scripts/check-integration-note.py --check
+
+  # gate-efficacy: posture=advisory
+  #   Advisory by #1769's design, and never a required context, so no branch-protection rule
+  #   holds a merge on it. It asks a conduct change's pull request to record the conduct suite's
+  #   result, and grades that the section is there and not empty and that the grade record is
+  #   current, never that the grades are right, which is the operator's adjudication. Its subject is
+  #   a pull request, so it has no verdict on a direct push to main.
+  conduct-suite:
+    name: Conduct suite result (check-integration-note.py)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Load-bearing, as for the job above: the merge base needs history.
+          fetch-depth: 0
+
+      # The same self-test as the job above, which grades both predicates' instrument.
+      - name: Self-test
+        run: ./scripts/check-integration-note.py --self-test
+
+      # Exit 1 is a flagged change whose section is absent or empty, or whose freshness outcome is 1
+      # (the checker's header lists them), on a pull request that is not a draft; exit 2 is a
+      # refusal. On a draft a failing limb prints a notice and exits 0. A stale record with a
+      # pending regrade declared exits 0 with a warning, and the job summary names each stale block.
+      - name: Grade the pull request
+        if: ${{ !cancelled() }}
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_DRAFT: ${{ github.event.pull_request.draft }}
+        run: ./scripts/check-integration-note.py --check-conduct

@@ -1,0 +1,21 @@
+# QA-01: a follow-up that re-offers members of the field own list fails, as the bullet is written
+conversation: qa01-follow-up-reoffers-member
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: TE — terse, an invented traveller
+answered-before: none
+T1 I | What kind of trip are you after?
+L4 put=Destination leanings › Trip vibe kind=ask example=no
+T2 P | City.
+L3 Destination leanings › Trip vibe = thin
+T3 I | You said city — or would beach or nature suit too?
+L4 put=Destination leanings › Trip vibe kind=follow-up example=no carries=«city, beach, nature»
+T4 P | Just the city.
+L3 Destination leanings › Trip vibe = answer
+--- record
+V Destination leanings › Trip vibe = city, just the city
+X FB-C Destination leanings › Trip vibe = fail:4

@@ -1,0 +1,30 @@
+# After a skip of a field, and after a decline of its section, no turn of any kind puts it
+conversation: case-put-after-skip
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/person-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: SK — skips often, an invented traveller
+answered-before: none
+T1 I | Where would you set out from?
+L4 put=Getting there & back › Leaving from kind=ask example=no
+T2 P | Skip.
+L3 Getting there & back › Leaving from = skip
+T3 I | Sorry — where would you set out from?
+L4 put=Getting there & back › Leaving from kind=ask example=no
+T4 P | I said skip.
+L3 Getting there & back › Leaving from = skip
+T5 I | Next are the must-haves.
+L4 put=Needs › Category#1 kind=ask example=no
+T6 P | Not that section, thanks.
+L3 §Needs = decline
+T7 I | Just one: anything about heat?
+L4 put=Needs › Specific#1 kind=ask example=no
+T8 P | No.
+L3 §Needs = decline
+--- record
+V Getting there & back › Leaving from = —
+X FB-C Getting there & back › Leaving from = fail:2
+X FB-C Needs › Specific#1 = fail:2

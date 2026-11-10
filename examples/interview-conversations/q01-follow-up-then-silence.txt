@@ -1,0 +1,24 @@
+# Q-1: a thin answer taken, one follow-up, then silence, the re-offer, and silence again
+conversation: q01-follow-up-then-silence
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: TE — terse, an invented traveller
+answered-before: none
+T1 I | How do you feel about rooming?
+L4 put=Where you stay › Rooming kind=ask example=no
+T2 P | Own room.
+L3 Where you stay › Rooming = thin
+T3 I | You said your own room — anything more on that?
+L4 put=Where you stay › Rooming kind=follow-up example=no carries=«own room»
+T4 P | (silence)
+L3 Where you stay › Rooming = silence
+T5 I | You can answer, skip it, or stop here.
+L4 put=Where you stay › Rooming kind=silence re-offer example=no
+T6 P | (silence)
+L3 Where you stay › Rooming = silence
+--- record
+V Where you stay › Rooming = own room

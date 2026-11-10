@@ -1,0 +1,16 @@
+# A3: a closed member picked by position, read against the order the members were offered
+conversation: a3-position-pick
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: TE — terse, an invented traveller
+answered-before: none
+T1 I | How high does that want rank — an anchor, a wish or a nice-to-have?
+L4 put=Desires › Priority tier#1 kind=ask example=no carries=«anchor, wish, nice-to-have»
+T2 P | The second one.
+L3 Desires › Priority tier#1 = answer
+--- record
+V Desires › Priority tier#1 = wish

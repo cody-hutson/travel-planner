@@ -1,0 +1,22 @@
+# Folded forms and transcript variants: a curly apostrophe and an en dash pass; a variant spelling fails
+conversation: case-folds-and-variants
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: AF — answers freely, an invented traveller
+answered-before: none
+T1 I | Is the trip marking anything special?
+L4 put=Anything else › Special occasion? kind=ask example=no
+T2 P | It's my sister's 40th - on the Saturday.
+L3 Anything else › Special occasion? = answer
+T3 I | Where would you most like to go, if the group asks?
+L4 put=Destination leanings › Trip vibe kind=ask example=no
+T4 P | Lisbon, for the food.
+L3 Destination leanings › Trip vibe = answer
+--- record
+V Anything else › Special occasion? = my sister’s 40th – on the Saturday
+V Destination leanings › Trip vibe = Lisboa, for the food
+X OW-C Destination leanings › Trip vibe = fail:Lisboa

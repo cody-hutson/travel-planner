@@ -1,0 +1,16 @@
+# A meaning reversed by deletion passes: the check guards words, not meaning (RS-6, not graded)
+conversation: case-reversal-by-deletion
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: AF — answers freely, an invented traveller
+answered-before: none
+T1 I | What kind of trip are you after?
+L4 put=Destination leanings › Trip vibe kind=ask example=no
+T2 P | The beach, not the city.
+L3 Destination leanings › Trip vibe = answer
+--- record
+V Destination leanings › Trip vibe = the city

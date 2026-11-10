@@ -1,0 +1,28 @@
+# Q-4: spoken, a PERSON-class field: the one offer, the ask with the form kinds, the ask-on-doubt, a confirmation naming the field, and no follow-up
+conversation: q04-spoken-person-doubt
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/person-intake.template.md
+spoken: yes
+route: card
+style: none
+traveller: DS — declines a whole section, an invented traveller
+answered-before: none
+T1 I | This is spoken, so anyone near you will hear. The next questions are about health; you can type those instead.
+L4 put=- kind=spoken-care offer example=no
+T2 P | Spoken is fine.
+L3 - = answer
+T3 I | Is there anything you must have on a trip — about heat, walking, food or rest, for example?
+L4 put=Needs › Specific#1 kind=ask example=yes example-text=«heat, walking, food or rest»
+T4 P | The sun, sort of.
+L3 Needs › Specific#1 = doubt
+T5 I | When you say the sun, what do you mean?
+L4 put=Needs › Specific#1 kind=ask-on-doubt example=no
+T6 P | No direct sun after early afternoon.
+L3 Needs › Specific#1 = answer
+T7 I | I have that down for your first must-have. On to the next section.
+L4 put=- kind=confirmation example=no
+T8 P | Good.
+L3 - = answer
+--- record
+V Needs › Specific#1 = no direct sun after early afternoon

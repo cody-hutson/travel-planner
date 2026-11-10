@@ -3,6 +3,68 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.66.0] — 2026-11-10 — The intake channel is checked, not asserted
+
+No trip verb plans or records a trip differently in this release. What changes is met by whoever
+changes how the interviewer behaves: the consent rules it follows are now checks that can fail, a
+rubric grades the conversations it holds, and a change to its conduct records the result.
+
+**The interviewer's consent rules are checks that can fail.** New groups in
+`scripts/test-artifact-schema.sh` grade CH-2's two tests over the conduct text a session follows:
+no value in a prompt, silence is not assent, no licence to record from a non-utterance or to ask
+again, and the spoken bound on a `PERSON`-class field. Groups `WD`, `WT`, `LG`, `OW`, `FB` and `CHR`
+carry them, and every arm has a control that turns it red. `ADR-026` § 5's cell for CH-2's
+enforcement now names the groups that grade it, and `WT-ADR26` holds the two together.
+
+**An interview conversation now has a rubric to be graded against.** `reference/interview-rubric.md`
+holds the dimensions a grader reads one conversation against — `#1765 § 6`'s, each traced to the
+finding's items with its corrections read first, each with a pass level and an `NA` condition — and
+the rule that turns a conversation's dimensions into its grade, a mechanical check's fail or `ND`
+included. No interviewer reads it. Group `RB` of `scripts/test-artifact-schema.sh` holds its shape
+and its isolation from every interviewer input.
+
+**Sixty test conversations exercise the rules.** `examples/interview-conversations/` holds 54
+authored conversations, each declaring its labels and verdicts, and 6 the interviewer produced
+itself against a scripted traveller, graded by a separate session. Group `CF` runs `OW-C` and
+`FB-C` over every one. The grade record beside them holds one block per generated conversation and
+the ledger of every draw, so a re-roll shows. The grader's measured cost was $4.181 over the six
+gradings (API-rate estimates; the account is a subscription).
+
+**Four of the six generated conversations fail.** After the operator's rulings, `gen-af` and
+`gen-sk` pass, and `gen-te`, `gen-ds`, `gen-gs` and `gen-of` fail. Each failure rests on the
+interviewer quoting the form's placeholder example values for a field whose bracket lists no
+options, which `ADR-045` already rejects. The operator overturned two of `gen-gs`'s dimensions,
+`R-6` and `R-9`, and the record shows each with the operator's value first and the grader's
+beside it. A later release takes up the interviewer's example quoting, and its regrade shows
+whether that worked.
+
+**A change to the conduct records its result.** A pull request that changes the interview card,
+the interview conduct file, a guided form at or below its boundary or a block-owned form's `>` line
+is asked, by the advisory `conduct-suite` job, for a `Conduct suite result` section in its body. The
+job also reads the grade record against the head's card and forms, and a stale record passes only
+when the section declares `regrade: pending` and where it is tracked.
+
+**`ADR-045` has a machine reader.** Group `OW`'s `nu_list` and group `CF`'s kind reader read
+`ADR-045`'s tables, the first scripts to do so. An amendment that reshapes those rows turns `OW`
+and `CF` red, which is meant.
+
+**Size fence.** Nothing moved: all 50 rows were kept and none was re-pinned.
+- `CLAUDE.md` grew 221 bytes to 141,771, beneath its row of 153,381.
+- `reference/adr/ADR-026-channel-architecture.md` grew 1,880 bytes to 78,846, beneath its row of 84,663.
+- `reference/interview-rubric.md`, new at 11,878 bytes, and `examples/interview-conversations/README.md`,
+  new at 7,547, are below the floor at which a file owes a row.
+
+**Runtime.** `scripts/test-artifact-schema.sh`, timed with `/usr/bin/time -p` three times at
+`af6b0ea`, the `main` this release is measured against, and three times at `1a5c040`, whose suite
+this entry's commit keeps unchanged, took a median of 314.04 real seconds before
+and 349.87 after, on an arm64 macOS host with 14 CPUs and other sessions live on it.
+
+**What it doesn't reach.** A grade is judgment over synthetic conversations: every traveller is
+invented, and a grade is of one model on the card route. The generated route leaves the conduct
+file's write-capable rules, a spoken session, the interview verb itself and resumption across
+sessions unexercised. The `conduct-suite` job is advisory, and it reads that a result is recorded
+and current, never that the grades are right; that stays the operator's adjudication.
+
 ## [0.65.0] — 2026-11-07 — Publishing never quietly undoes a takedown or a key
 
 No trip verb plans or records a trip differently in this release. What changes is met by whoever

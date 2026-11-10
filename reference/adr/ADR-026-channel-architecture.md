@@ -727,7 +727,7 @@ the rule."*
 | Channel | **W-test** | **R-test** | Enforcement strength today |
 |---|---|---|---|
 | **CH-1** | **N/A — no inbound limb exists.** Stated as N/A rather than invented, so adding one becomes a visible change to this record | `verify_ciphertext` on the encrypted limb; `verify_publishable_content` on the `--plaintext` limb — both grading the relation between `P` and C19 | **shipped shell predicates + regression suite** |
-| **CH-2** | a prompt may name a field and a remedy; it may **never carry, quote, or offer a candidate value**. *(Superseded in part (2026-10-09, Friday) by [ADR-045](ADR-045-interview-conversation-conduct.md), as far as this sentence reaches an example; the rest of this row stands.)* **Silence is not assent** in a spoken modality | what is said aloud is bounded — needs include medical facts, and a spoken interview is audible to a room | **prose** |
+| **CH-2** | a prompt may name a field and a remedy; it may **never carry, quote, or offer a candidate value**. *(Superseded in part (2026-10-09, Friday) by [ADR-045](ADR-045-interview-conversation-conduct.md), as far as this sentence reaches an example; the rest of this row stands.)* **Silence is not assent** in a spoken modality | what is said aloud is bounded — needs include medical facts, and a spoken interview is audible to a room | **shipped text predicates over the authored conduct text — the conduct file, the interview card and each interviewable form's own conduct, the last against a declared ledger — + regression suite**; the predicates grade that text, not a live session |
 | **CH-3** | provenance-marking records that a value is **second-hand** and **never establishes consent** (`ADR-006`) | the standing rule on the passphrase **value**; `ADR-007` § 2 — no command may set `ALLOW_PLAINTEXT`, none may pass `--yes` to `unpublish` | **shipped text predicates over the authored command and conduct text + regression suite**, with per-verb `allowed-tools`; the predicates grade that text, not a live session |
 
 **Why two rules rather than one.** `ADR-015` clause 7 sits at the intersection: a report line is an
@@ -735,12 +735,16 @@ engine→human **emission** whose prohibition exists to protect **authorship**. 
 record needed a subsection titled *"Why clause 7 is not a carve-out."* A one-rule model cannot
 explain that subsection; a two-rule model predicts it.
 
-**The residual, recorded rather than smoothed over.** The three R-tests are enforced at
-**materially different strengths** — CH-1's pair of shell predicates over the published artifact,
-with their own regression suite; CH-3's predicates over the authored command and conduct text, in a
-required suite; and CH-2's prose. Closing CH-2's is not this record's work. Stating it is what lets
-a reader see that the claim is checked on CH-1 and CH-3 — on CH-3 against the text a session
-follows rather than the session — and unchecked on CH-2.
+**The residual, recorded rather than smoothed over.** The three R-tests are not enforced at one
+strength — CH-1's pair of shell predicates over the published artifact, with their own regression
+suite; CH-3's predicates over the authored command and conduct text, and CH-2's over its authored
+conduct text, each in a required suite. Stating it is what lets a reader see that the claim is
+checked on all three channels — on CH-2 and CH-3 against the text a session follows, not the
+session. CH-2's predicates are lexical: a paraphrase outside their word lists is not seen. What
+CH-2's do not reach: a live session; the route that cannot write, which carries no spoken care; and
+health-shaped fields typed `TRIP`. The W-test they check is
+[`ADR-045`](ADR-045-interview-conversation-conduct.md)'s restatement, and the supersession takes
+effect as that record states.
 
 ### 6. The names, each with its measured collision
 
@@ -828,8 +832,9 @@ read**, and each proposed zero carries a
 - **`may-carry` is three-valued, and a binary consumer of it is a defect.** Any slice grading
   against it must handle UNDETERMINED as an outcome distinct from both admit and deny. This is
   stated here because a binary reading is the easy mistake and it fails toward *admit*.
-- **Three R-tests at three enforcement strengths.** Named in § *Decision* 5. CH-3's is graded
-  against its authored text; CH-2's is closed nowhere.
+- **The R-tests are graded against different subjects.** Named in § *Decision* 5. CH-1's are
+  graded against the published artifact; CH-2's and CH-3's against their authored text, not a
+  session.
 - **K4's row will still read as a defect to someone.** That is precisely why it is written down,
   split into its arms, and grounded on the one fact true of both.
 - **The record carries a finding it does not repair** — the crossing artifact's missing class. A
@@ -914,9 +919,8 @@ here.
 - **A § 1.1 row for the published artifact.** Finding 1. Owned by whichever card next amends § 1.1.
 - **A fixture that exercises the unsourced arm.** Finding 2, against `CLAUDE.md`:131-133's fixture
   completeness rule.
-- **An observable test worth the name on CH-2.** The § *Decision* 5 residual: one of the three
-  R-tests is prose. CH-3's W-test and R-test are graded against the authored command and conduct
-  text, not against a live session.
+- **An observable test of a session.** The § *Decision* 5 residual: CH-2's and CH-3's tests grade
+  the text a session follows, and no required check grades a session.
 
 ## References
 
@@ -987,3 +991,18 @@ beyond its argument route, and group `W` grades the W-test. Both groups pin thei
 this record does not restate them. The cell is corrected in place, and each passage that counted
 CH-3 among the unchecked channels now counts CH-2 alone. What the predicates do not reach is
 unchanged in kind: they grade the authored text a session follows, not a session.
+
+**Amendment (2026-11-08, Sunday) — CH-2's enforcement strength corrected in § *Decision* 5, and
+that section's residual paragraph, the *Trade-offs* bullet on the R-tests and the *Follow-on*
+bullet on an observable test reconciled with it; no decision changes.** § *Decision* 5's table gave
+CH-2's enforcement strength as `**prose**`. That understated nothing when it was written; the change
+that made this correction raised it. `scripts/test-artifact-schema.sh` groups `WT`, `OW`, `FB`,
+`CHR` and `LG` grade CH-2's W-test as `ADR-045` D1 item 8 restates it, the own-words and follow-up
+limbs, the R-test, and a declared ledger of the forms' known sentences. The groups pin their
+predicates, and this record restates none of them. The cell is corrected in place, on its own row.
+The wordings it replaced were, in the residual paragraph, "and CH-2's prose. Closing CH-2's is not
+this record's work" and "and unchecked on CH-2"; in *Trade-offs*, "Three R-tests at three
+enforcement strengths" and "CH-2's is closed nowhere"; and in *Follow-on*, "An observable test worth
+the name on CH-2" and "one of the three R-tests is prose". What the predicates do not reach is
+unchanged in kind: they grade the authored text a session follows, not a session. The W-rule, the
+R-rule, CH-2's W-test cell and its marker are unchanged.

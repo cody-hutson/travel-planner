@@ -1,0 +1,20 @@
+# Q-9: a follow-up that carries an example, one of its kinds said back, recorded, its echo reported
+conversation: q09-follow-up-with-example
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: AF — answers freely, an invented traveller
+answered-before: none
+T1 I | What do you want from this trip?
+L4 put=Desires › Desire#1 kind=ask example=no
+T2 P | Good food.
+L3 Desires › Desire#1 = thin
+T3 I | You said good food — for example, a market morning or one standout dinner. Anything like that?
+L4 put=Desires › Desire#1 kind=follow-up example=yes example-text=«a market morning or one standout dinner» carries=«good food, a market morning or one standout dinner»
+T4 P | One standout dinner.
+L3 Desires › Desire#1 = answer
+--- record
+V Desires › Desire#1 = good food, one standout dinner

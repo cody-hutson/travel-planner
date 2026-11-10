@@ -1,0 +1,28 @@
+# A follow-up putting two fields, then a second on one of them: bullet 1 fails for that field only
+conversation: case-follow-up-per-field
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/person-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: TE — terse, an invented traveller
+answered-before: none
+T1 I | Where would you set out from, and what can you take on a travel day?
+L4 put=Getting there & back › Leaving from,Getting there & back › Journey comfort kind=ask example=no
+T2 P | Leeds; trains.
+L3 Getting there & back › Leaving from = thin
+L3 Getting there & back › Journey comfort = thin
+T3 I | You said Leeds and trains — anything more on either?
+L4 put=Getting there & back › Leaving from,Getting there & back › Journey comfort kind=follow-up example=no carries=«Leeds, trains»
+T4 P | Leeds station; trains over planes.
+L3 Getting there & back › Leaving from = answer
+L3 Getting there & back › Journey comfort = thin
+T5 I | You said trains — for how long?
+L4 put=Getting there & back › Journey comfort kind=follow-up example=no carries=«trains»
+T6 P | Up to four hours.
+L3 Getting there & back › Journey comfort = answer
+--- record
+V Getting there & back › Leaving from = Leeds, Leeds station
+V Getting there & back › Journey comfort = trains, trains over planes, up to four hours
+X FB-C Getting there & back › Journey comfort = fail:1

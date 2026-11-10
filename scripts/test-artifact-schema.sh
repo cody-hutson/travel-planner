@@ -385,6 +385,54 @@
 #        terminal-set table of the decision record it builds; and the group section's citations of
 #        the person section, which must resolve and must restate nothing. NOT ESTABLISHED: that
 #        either verb reads or renders as these references do — no suite executes a verb.
+#   WD   what a word is (B1), the sentence engine (C0), the readers and the form model every CH-2 text
+#        arm reads through — one definition each, WD_FN embedded in every awk program that reads words
+#        and never copied: each fold-table row shown load-bearing, ADR-045's OW-C worked rows as worded,
+#        the boundary pins and multiplicity, engine parity under mawk, gawk and the host awk, and the
+#        same tokens under every member of group LC's locale set; C0's blocks, sentences and clauses
+#        on a fixture; the three readers over the conduct file, the card and each interviewable form's
+#        own conduct, NOT EVALUATED on a heading they cannot find; procedure X; the raw PERSON marker;
+#        and nu_list, the one reader of ADR-045's closed lists, with the agreement it offers consumers
+#   WT   CH-2's W-test over the authored conduct text — no value in a prompt (WT.P1) and silence is not
+#        assent (WT.P2) — over the conduct file, the card and each interviewable form's own conduct,
+#        read through group WD's word definition and sentence engine: a class table where the first
+#        class that holds decides and an unclassified occurrence fails closed, R9's reach of an offer,
+#        the AC8 result recorded beside its plants, and every planted control of the design pinned at
+#        its verdict, the stated bounds pinned as bounds; and, last among the CH-2 groups, WT-ADR26:
+#        ADR-026 § 5's CH-2 enforcement cell held to the groups that grade CH-2 on the same run
+#   LG   the declared ledger of the forms' known sentences, graded both ways — an undeclared hit, a row
+#        that no longer trips, an anchor that is not unique, a row keying more than one hit, a
+#        malformed row, the readers' file set — with the ledger mutations on copies under $WORK
+#   OW   (the text block) no licence to record from a non-utterance (OW-T.P1), the closure of the
+#        admitted non-utterances (OW-T.P2) with OW-T.P2's evaluator set held to ADR-045 both ways
+#        (OW-T.P2a), and the own-words rule stated in both carriers (OW-T.E1, group PC called for
+#        the carriers' equality): D6's value span, coordinator and coordinates, its class table, and
+#        every planted control of the design pinned at its verdict; and (the conversation block)
+#        OW-C over every test conversation — each authored verdict its fixture's, ADR-045's worked
+#        rows reproduced, the evaluators held to ADR-045 through nu_list, ND read as ND, and the
+#        observations never deciding
+#   FB   (the text block) no licence for a further question (FB-T.P1): D8's triggers, its class table
+#        and its marker rule, the one directed follow-up reported as an observation, and every planted
+#        control of the design pinned at its verdict; and (the conversation block) FB-C over every
+#        test conversation — each authored verdict its fixture's, ADR-045's worked rows reproduced,
+#        and the PERSON class read through the one form model, its seam flipped on a copy
+#   CHR  CH-2's R-test keyed on the class PERSON read live — one offer, a narrowed confirmation, no
+#        follow-up on a PERSON field in speech, an example only on request, the care stated in the
+#        write-capable rules, and every guided-form bullet joining one classification row — with the
+#        seams of the class flipped on copies, and what it does not reach printed on its verdict line
+#   CF   the interview conversation fixtures under examples/interview-conversations/: the README
+#        fence and the files both ways, AC2's travellers among the authored rows and the generated
+#        ones, the grammar read positionally with its plants refused, each declared kind the one the
+#        person's side derives, the kind lists held to ADR-045 through nu_list and disjoint, the
+#        verdict stream under every engine and the reader under every locale, no ND in a count, a
+#        generated verdict reported and never failed, and the compound and typography probes pinned
+#   RB   the interview rubric, reference/interview-rubric.md: its dimension table parses, every row
+#        carrying a unique id, its traces, a pass level and an NA condition; its conversation rule and
+#        its not-graded lines anchored; ADR-045's A1..A5 and kinds cited by name and held by neither;
+#        no interviewer input naming it; its grading sections anchored, the threshold sentence word
+#        for word; and the grade record — one block per generated conversation, its verdict the
+#        conversation rule's over its mech lines, no MET against an unruled mechanical fail or ND, and
+#        no re-roll — each with a control on a copy
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -2599,13 +2647,20 @@ if [ "$PS_OK" -eq 1 ]; then
   # all, and the other two are archived trips whose outputs/ holds a coverage file and nothing
   # else — so all three are outside this predicate and land in PS3's derived list. The
   # partition closed at 1 + 1 + 10 = 12. Only the denominator moved.
+  #
+  # It moved 12 -> 13 with examples/interview-conversations/, and that re-read was performed
+  # against the failing run: PS1 still selects examples/tokyo-2026 ALONE and PS2 still names
+  # examples/data-architecture-demo ALONE, both observed in the run that reported the pin
+  # mismatch. The directory holds synthetic interview conversations and no trip — no
+  # trip-context.md and no outputs/ — so it is outside this predicate and lands in PS3's
+  # derived list. The partition closed at 1 + 1 + 11 = 13. Only the denominator moved.
   if [ "$((PS_NFIRE + PS_NSIL + PS_NOUT))" -ne "$PS_NTRIP" ]; then
     FAIL "PS4: the partition does not close — $PS_NFIRE + $PS_NSIL + $PS_NOUT != $PS_NTRIP. A denominator that cannot be reconstructed is not a denominator"
     PS_OK=0
-  elif [ "$PS_NTRIP" -eq 12 ]; then
-    PASS "PS4: the partition closes over all $PS_NTRIP trips, and the denominator is the 12 pinned when this group was last re-read"
+  elif [ "$PS_NTRIP" -eq 13 ]; then
+    PASS "PS4: the partition closes over all $PS_NTRIP trips, and the denominator is the 13 pinned when this group was last re-read"
   else
-    FAIL "PS4: examples/ now carries $PS_NTRIP trip director(ies), not the 12 pinned when this group was last re-read. The partition still closes, so this is not a corruption — it is a NEW FIXTURE, and PS1/PS2's set assertions and PS3's declared-not-exercised list have to be re-read against it and the pin updated in the same commit"
+    FAIL "PS4: examples/ now carries $PS_NTRIP trip director(ies), not the 13 pinned when this group was last re-read. The partition still closes, so this is not a corruption — it is a NEW FIXTURE, and PS1/PS2's set assertions and PS3's declared-not-exercised list have to be re-read against it and the pin updated in the same commit"
     PS_OK=0
   fi
 fi
@@ -24200,6 +24255,4844 @@ else
     FAIL "CTL-PM6: a Dispatches sentence in the wrong order reports '$PM_C6' where '0 1' was expected"
   fi
 fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group WD — what a word is, the sentence engine, and the three readers every text arm reads through
+#
+# #1353 grades CH-2's conduct text — the interview conduct file, the interview card and each
+# interviewable form's own conduct — with text arms in groups WT, LG, OW, FB and CHR. All of them read
+# words through ONE definition and sentences through ONE engine, and this group is where both are
+# defined and held. The definition is ADR-045 D2 item 5's "settled design": the suite pins it.
+#
+# ── B1 — WHAT A WORD IS. WD_FN, embedded in every awk program that reads words, never copied ──────
+#   1. Fold, by bytes: a closed table, applied before anything else. Each row is matched as a
+#      LITERAL BYTE STRING and never inside a bracket expression (consentmark_check's ENGINE PARITY
+#      rule in scripts/test-command-taxonomy.sh). The typographic apostrophes and quotes fold to
+#      their ASCII forms, the dashes, the ellipsis and the special spaces to a space, the two
+#      non-breaking hyphens to a hyphen, the fi and fl ligatures to their letters, and the arrows,
+#      bullets, guillemets, currency, degree, section, pilcrow, dagger, per-mille, prime, check and
+#      star marks (FM-14) to a space.
+#   2. Case: ASCII A-Z become a-z.
+#   3. An in-word apostrophe — one with a word character on both sides — is removed and the word
+#      joins: it's reads its, isn't reads isnt. A bracket expression cannot say "on both sides", so
+#      this is a loop, which WD1, WD5 and WD7 pin.
+#   4. Word characters: ASCII letters and digits, plus every byte of 0x80 and above left after the
+#      folds, so a non-ASCII letter sits inside its word and is compared byte for byte.
+#   5. Everything else separates words and is never compared — the hyphen included.
+#   6. Nothing is joined, split, stemmed, repaired or translated. A digit for a word is another word.
+#   7. A failure names each unmatched word as the value spells it, after the folds.
+# WHAT A GREEN OF THIS GROUP DOES NOT COVER: a non-ASCII letter is never case-folded, so ZOË and Zoë
+# are two words, and a compatibility form outside the table (a full-width letter, for one) is not
+# folded. Both fail closed and visibly, as WD3 pins. On an authored fixture its author chooses the
+# spelling; on a generated value the miss is the interviewer's own, which #1769's harness reports.
+# RS-13's compound case is left neutral by ADR-045 and pinned here as a fail both ways (WD3); whether
+# a joined or split compound SHOULD pass is the operator's question, and a change of answer is a
+# change to this suite, never to the record.
+#
+# ── C0 — THE SENTENCE ENGINE, restated from consentmark_check rather than sourced ────────────────
+#   R1 sentences  A block is a paragraph, blank-line-delimited, its lines joined with one space. A
+#                 fenced line is its own block, and so is a heading line (#-######). A line opening
+#                 "- " or "<n>. " once its leading whitespace is stripped ends the block before it
+#                 and opens a new one; a line opening neither joins the block it follows, so a
+#                 wrapped list item stays one block. A block is cut after . ! or ?, plus any closing
+#                 * ` ) " ' or ], where whitespace and then an uppercase letter or one of * ` [ _ ( "
+#                 ' follows.
+#   R5 clauses    A sentence is split at ; : a spaced em dash, a spaced en dash, a spaced hyphen and
+#                 ", so" before a word boundary. A separator inside a backtick code span does not cut.
+#   R6 negated    Remove first, then take five: the window is the five words nearest before the
+#                 trigger in its clause, counted after removing (a) every closed-condition segment —
+#                 a comma segment that closes before the trigger and opens with if, when, where,
+#                 unless, once, until or while, or with or / and followed by one of those (K3) — and
+#                 (b) for WT.P2 the word positions of every occurrence of the clause silence phrases.
+#                 A negator in the window denies the trigger unless forget, hesitate or fail follows
+#                 it inside the window; its distance counts back from the trigger, 1 being adjacent.
+#                 Object negation: the first word is none, nothing or no, with none of but, than,
+#                 fewer, more, other, except in the next two. At a marker, never at a trigger (D8),
+#                 the window also stops at the nearest comma (A3) and loses every concessive span
+#                 (K4); there the object-negation exception words also undeny.
+#   R7 triggers   A word inside a code span is never a trigger.
+#   R8 the object A trigger object runs to the end of its clause or to the next trigger of its limb.
+#                 Literals are read with the em dash kept, so a backticked em dash reads as itself.
+#   Negators      never not no nor cannot can't doesn't isn't don't without neither nothing none,
+#                 compared after B1 folds the in-word apostrophe out.
+# Its deltas from consentmark_check's rules 1, 5 and 6 are the heading line, the list-item rule, the
+# code span, the closed-condition and concessive removals, the occurrence removal, the comma stop and
+# object negation. Nothing asserts the two copies agree — a cross-suite parity arm would couple two
+# required contexts, which the artifact-schema workflow's SHARED FATE rule argues against — and that
+# is a named posture rather than an oversight. R9, the reach of an offer, is WT's (D4) and lands there.
+#
+# ── THE READERS — each reports the files it opened, and a heading it cannot find is NOT EVALUATED ──
+#   (i)   skills/trip-record/interview-conduct.md: "## The rules every interview shares" and "## What
+#         only a write-capable session adds", each to the next "## " heading.
+#   (ii)  templates/interview-card.md: "## The rules every interview shares" and "## Giving back the
+#         finished form".
+#   (iii) each guided form from its "### Assistant — the sections, in order" line to its end, a step
+#         section being its "### Step <n> — " heading text; and the block-owned form's > lines in the
+#         regions whose verdict is YES or CONDITIONAL, computed by group FT's ft_regions ON THIS RUN —
+#         never read from the committed reference/region-reference.md — a run of adjacent such lines in
+#         one region being one paragraph.
+# A heading absent or repeated, or an input that cannot be read, is NOT EVALUATED: a FAIL, never a pass.
+#
+# ── THE FORM MODEL, AND THE PERSON SCOPE (D3) ────────────────────────────────────────────────────
+# Procedure X reads a headed bracket's members: strip the open: or closed: head and a leading *(…)*
+# note; a list of bold items is the members and nothing else; otherwise every backticked item but
+# the em dash is a member, and so is each piece of the text split on " / " (its first piece after
+# its last "e.g.,", ":" or " — ", its last before its first " — ", "," or a sentence end), or, with
+# no slash, of the text before its first " — ", "e.g." or sentence end, cut after its last ":" and
+# split on "," and " or " — the two forms unioned, in that order, duplicates dropped. Items match
+# members when their B1 words are equal once one leading a / an / the is dropped. A section floor
+# items are its menu line items and every quoted string of its brackets that is no member. The join
+# is group FT's own: a bullet joins reference/data-model.md § The classification on (section,
+# label) through ft_resolve, and a plant names its step by a Section value that leads exactly one of
+# its form headings. A sentence is PERSON-scoped when its RAW text holds the token PERSON with no
+# ASCII letter, digit or underscore beside it, or "person-class", or "health- or document-shaped";
+# or, in a step, it names a label of that step own bullets and a named label is PERSON; or it names
+# none and the section holds a PERSON field. Y14 is the stated bound of that scope: a field named by
+# a word that is not its label escapes it, because the scope reads labels and never meanings.
+#
+# ── nu_list — THE ONE READER OF ADR-045'S CLOSED LISTS ───────────────────────────────────────────
+# The record is the home of A1..A5 (D2 item 4's table) and of the kinds of interviewer turn (term 7);
+# this suite holds no copy. nu_list reads ids and italic names only, de-duplicated, joining term 7's
+# lines first, so a whitespace-only reformat reads the same members (WD-NU1) and a re-wrap inside a
+# hyphenated name is reported rather than absorbed. nu_agree holds a consumer to the record: two-way
+# on A1..A5 and on the kinds that put or concern a field, one-way on the kinds that put none, where
+# the record's must be among the suite's and the suite may hold more (WD-NU2). Its consumers land
+# later, OW-T.P2's in group OW and #1769's in its own groups; this group grades the reader and the
+# agreement it offers them. An amendment of ADR-045 that reshapes those rows turns them red, loudly.
+#
+# ── THE ARMS ─────────────────────────────────────────────────────────────────────────────────────
+#   WD1   ADR-045's OW-C worked rows, as worded: the check row passes with every word in the turn,
+#         the cross row fails naming exactly it's and affordable. CONTROL: with the apostrophe made a
+#         separator (SEAM-1) the cross row names s instead
+#   WD2   per fold-table row: a value carrying the form, glued, passes against the turn holding its
+#         folded spelling, and fails with that row removed — so each row is shown to be load-bearing
+#   WD3   the boundary pins, each a must-FAIL: non-ASCII case, a joined compound, a split compound, a
+#         digit for a word, a stem
+#   WD4   multiplicity: a word the value carries twice must stand twice in the turn
+#   WD5   engine parity: the token stream over this group fixture is byte-identical under mawk, gawk
+#         and the host awk, each invoked by name; it SKIPs on a host lacking one, which strict mode fails
+#   WD6   C0 on a fixture: its blocks, sentences and clauses; a fenced line, a heading and a list item
+#         each their own block; a separator in a code span not cutting. CONTROL: with R1's list rule
+#         off on a scratch run, the two list items merge
+#   WD7   the token stream is the same under every member of group LC's LC_SET. CONTROL: the same
+#         program with its LC_ALL=C removed, run under the multibyte member through gawk by name, differs
+#   WD8   the readers over the tracked tree open exactly the five inputs, raise nothing, and read a
+#         non-empty population from each. CONTROL (INT-3): a copy whose conduct file renames "## The
+#         rules every interview shares" is NOT EVALUATED, naming the heading
+#   WD9   the form model: every guided-form bullet read, and procedure X on synthetic brackets — X3
+#         and X4 unioned, an unheaded bracket holding no members, a quoted e.g. list read as members
+#   WD10  the PERSON scope's raw token: PERSON scopes, a lower-case person or a longer token does not,
+#         person-class does
+#   WD-NU0 nu_list reads the record's ids and both kind lists, each non-empty, the lists disjoint
+#   WD-NU1 whitespace-only reformats read the same members; a re-wrap inside a hyphenated name does not
+#   WD-NU2 nu_agree: two-way and one-way agreement, each shown able to fail
+# Each assertion is registered with md_flips, so removing its subject flips it to exactly one FAIL.
+# No count of the tracked tree is spelled in this group: every population is printed as observed.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "WD — what a word is (B1), the sentence engine (C0), the readers and the form model: one definition each, embedded and never copied"
+
+mkdir -p "$WORK/wd"
+WD_FN='function wd_row(a, b) { WD_N++; WD_F[WD_N] = a; WD_T[WD_N] = b }
+function wd_init(   i) {
+  if (WD_READY) return
+  WD_READY = 1; WD_N = 0
+  # Step 1, the fold table: one row per form, each matched as a literal byte string and never
+  # inside a bracket expression. The first eighteen rows are the first design (B1), the rest FM-14.
+  wd_row("\342\200\231", "\047")   # U+2019
+  wd_row("\342\200\230", "\047")   # U+2018
+  wd_row("\312\274", "\047")       # U+02BC
+  wd_row("\342\200\234", "\042")   # U+201C
+  wd_row("\342\200\235", "\042")   # U+201D
+  wd_row("\342\200\223", " ")      # U+2013
+  wd_row("\342\200\224", " ")      # U+2014, the em dash
+  wd_row("\342\210\222", " ")      # U+2212
+  wd_row("\342\200\225", " ")      # U+2015
+  wd_row("\342\200\246", " ")      # U+2026
+  wd_row("\342\200\220", "-")      # U+2010
+  wd_row("\342\200\221", "-")      # U+2011
+  wd_row("\302\240", " ")          # U+00A0
+  wd_row("\342\200\257", " ")      # U+202F
+  wd_row("\342\200\211", " ")      # U+2009
+  wd_row("\342\200\212", " ")      # U+200A
+  wd_row("\357\254\201", "fi")     # U+FB01
+  wd_row("\357\254\202", "fl")     # U+FB02
+  wd_row("\342\206\222", " ")      # U+2192
+  wd_row("\342\206\220", " ")      # U+2190
+  wd_row("\342\206\221", " ")      # U+2191
+  wd_row("\342\206\223", " ")      # U+2193
+  wd_row("\342\207\222", " ")      # U+21D2
+  wd_row("\342\200\242", " ")      # U+2022
+  wd_row("\302\267", " ")          # U+00B7
+  wd_row("\342\200\243", " ")      # U+2023
+  wd_row("\342\201\203", " ")      # U+2043
+  wd_row("\302\253", " ")          # U+00AB
+  wd_row("\302\273", " ")          # U+00BB
+  wd_row("\342\200\271", " ")      # U+2039
+  wd_row("\342\200\272", " ")      # U+203A
+  wd_row("\342\202\254", " ")      # U+20AC
+  wd_row("\302\243", " ")          # U+00A3
+  wd_row("\302\245", " ")          # U+00A5
+  wd_row("\302\242", " ")          # U+00A2
+  wd_row("\302\260", " ")          # U+00B0
+  wd_row("\302\251", " ")          # U+00A9
+  wd_row("\302\256", " ")          # U+00AE
+  wd_row("\342\204\242", " ")      # U+2122
+  wd_row("\302\247", " ")          # U+00A7
+  wd_row("\302\266", " ")          # U+00B6
+  wd_row("\342\200\240", " ")      # U+2020
+  wd_row("\342\200\241", " ")      # U+2021
+  wd_row("\342\200\260", " ")      # U+2030
+  wd_row("\342\200\262", " ")      # U+2032
+  wd_row("\342\200\263", " ")      # U+2033
+  wd_row("\342\234\223", " ")      # U+2713
+  wd_row("\342\234\224", " ")      # U+2714
+  wd_row("\342\234\227", " ")      # U+2717
+  wd_row("\342\234\230", " ")      # U+2718
+  wd_row("\342\230\205", " ")      # U+2605
+  wd_row("\342\230\206", " ")      # U+2606
+  WD_DASH = "\342\200\224"
+  WD_LO = "abcdefghijklmnopqrstuvwxyz"; WD_UP = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  WD_AN = "0123456789" WD_LO WD_UP
+  # Step 4: every byte of 0x80 and above is a word byte, listed one by one rather than as a range.
+  for (i = 128; i < 256; i++) WD_HI[sprintf("%c", i)] = 1
+  if (wd_apos == "") wd_apos = 1
+}
+function wd_repl(s, a, b,   out, p, la) {
+  la = length(a); out = ""
+  while ((p = index(s, a)) > 0) { out = out substr(s, 1, p - 1) b; s = substr(s, p + la) }
+  return out s
+}
+# wd_fold <s> <lit> — step 1. With lit set, the em dash is kept as the one byte \001, so a literal
+# reads it as the em dash and every offset still agrees with the folded text (R8).
+function wd_fold(s, lit,   i) {
+  wd_init()
+  for (i = 1; i <= WD_N; i++) {
+    if (i == wd_drop) continue
+    if (lit && WD_F[i] == WD_DASH) s = wd_repl(s, WD_F[i], "\001")
+    else s = wd_repl(s, WD_F[i], WD_T[i])
+  }
+  return s
+}
+function wd_isw(ch) { return (index(WD_AN, ch) > 0 || (ch in WD_HI)) }
+# wd_toks <raw> <W> <S> <E> <R> — steps 2 to 5 over text already folded: W[i] the compared form,
+# S[i] its first byte, E[i] one past its last, R[i] its surface. An in-word apostrophe is removed
+# and joins the word (step 3), which a bracket expression cannot say, so it is a loop.
+function wd_toks(raw, W, S, E, R,   n, i, j, L, ch, w, k) {
+  wd_init(); n = 0; i = 1; L = length(raw)
+  while (i <= L) {
+    ch = substr(raw, i, 1)
+    if (!wd_isw(ch)) { i++; continue }
+    j = i; w = ""
+    while (j <= L) {
+      ch = substr(raw, j, 1)
+      if (wd_isw(ch)) { k = index(WD_UP, ch); w = w (k ? substr(WD_LO, k, 1) : ch); j++ }
+      else if (ch == "\047" && wd_apos + 0 && w != "" && j < L && wd_isw(substr(raw, j + 1, 1))) j++
+      else break
+    }
+    n++; W[n] = w; S[n] = i; E[n] = j; R[n] = substr(raw, i, j - i); i = j
+  }
+  return n
+}
+# wd_words <s> <A> — the compared words of s, folded; returns how many.
+function wd_words(s, A,   S, E, R) { return wd_toks(wd_fold(s, 0), A, S, E, R) }
+function wd_join(A, n, a, b,   i, o) { o = ""; for (i = a; i <= b && i <= n; i++) o = o (o == "" ? "" : " ") A[i]; return o }
+# wd_has <A> <n> <phrase> — the phrase, split on spaces, stands contiguously in A[1..n].
+function wd_has(A, n, ph,   P, m, i, j) {
+  m = split(ph, P, " ")
+  for (i = 1; i + m - 1 <= n; i++) { for (j = 1; j <= m; j++) if (A[i + j - 1] != P[j]) break; if (j > m) return i }
+  return 0
+}
+# wd_missing <turn> <value> — the words limb as B1 states it: every word of the value stands in
+# the turn, as often as the value carries it. Each one that does not is named as the value spells
+# it, after the folds (step 7), in the value order, separated by "|". Empty when every word stands.
+function wd_missing(turn, value,   TW, VW, VS, VE, VR, nt, nv, i, j, out, used) {
+  nt = wd_toks(wd_fold(turn, 0), TW, VS, VE, VR)
+  nv = wd_toks(wd_fold(value, 0), VW, VS, VE, VR)
+  out = ""; split("", used)
+  for (i = 1; i <= nv; i++) {
+    for (j = 1; j <= nt; j++) if (!(j in used) && TW[j] == VW[i]) break
+    if (j <= nt) used[j] = 1; else out = out (out == "" ? "" : "|") VR[i]
+  }
+  return out
+}'
+C0_FN='function c0_trim(s) { gsub(/^[ \t\r\n\f\v]+/, "", s); gsub(/[ \t\r\n\f\v]+$/, "", s); return s }
+# c0_blocks <LINES> <n> <B> — R1: a block is a paragraph, its lines joined with one space; a fenced
+# line, a heading line, and (c0_bullets unset to 0 only on a scratch run) a list item open their own.
+function c0_blocks(LN, n, B,   nb, buf, inf, i, ln, t) {
+  nb = 0; buf = ""; inf = 0
+  for (i = 1; i <= n; i++) {
+    ln = LN[i]; t = c0_trim(ln)
+    if (substr(ln, 1, 3) == "```") { if (buf != "") { B[++nb] = buf; buf = "" }; inf = !inf; continue }
+    if (inf) { if (t != "") B[++nb] = t; continue }
+    if (t == "") { if (buf != "") { B[++nb] = buf; buf = "" }; continue }
+    if (t ~ /^#+ / && match(t, /^#+/) && RLENGTH <= 6) { if (buf != "") { B[++nb] = buf; buf = "" }; B[++nb] = t; continue }
+    if (c0_bullets != "0" && (substr(t, 1, 2) == "- " || t ~ /^[0-9]+\. /)) { if (buf != "") { B[++nb] = buf; buf = "" } }
+    buf = (buf == "" ? t : buf " " t)
+  }
+  if (buf != "") B[++nb] = buf
+  return nb
+}
+# c0_sents <block> <S> — R1: cut after . ! or ?, plus any closing * ` ) " \047 ], where whitespace and
+# then an uppercase letter or one of * ` [ _ ( " \047 follows.
+function c0_sents(b, S,   n, L, i, q, r, pos, s, ch) {
+  n = 0; L = length(b); pos = 1; i = 1
+  while (i <= L) {
+    ch = substr(b, i, 1)
+    if (ch != "." && ch != "!" && ch != "?") { i++; continue }
+    q = i + 1
+    while (q <= L && index("]*`)\042\047", substr(b, q, 1))) q++
+    r = q
+    while (r <= L && (substr(b, r, 1) == " " || substr(b, r, 1) == "\t")) r++
+    if (r == q || r > L || !index("ABCDEFGHIJKLMNOPQRSTUVWXYZ*`[_(\042\047", substr(b, r, 1))) { i++; continue }
+    s = c0_trim(substr(b, pos, q - pos)); if (s != "") S[++n] = s
+    pos = r; i = r
+  }
+  s = c0_trim(substr(b, pos)); if (s != "") S[++n] = s
+  return n
+}
+function c0_isspace(ch) { return (ch == " " || ch == "\t" || ch == "\n" || ch == "\r" || ch == "\f" || ch == "\v") }
+# c0_codes <s> <A> <B> — the backtick code spans of s: A[k] the opening backtick, B[k] one past the closing one.
+function c0_codes(s, A, B,   n, i, j, L) {
+  n = 0; i = 1; L = length(s)
+  while (i <= L) {
+    if (substr(s, i, 1) != "`") { i++; continue }
+    j = index(substr(s, i + 1), "`")
+    if (j == 0) break
+    n++; A[n] = i; B[n] = i + j + 1; i = i + j + 1
+  }
+  return n
+}
+# c0_clauses <s> <O> <T> <P> — R5: cut at ; : a spaced em dash, en dash or hyphen, and ", so" before
+# a word boundary, never at a separator inside a code span. O[k] is the clause offset (bytes before
+# it), T[k] its text, P[k] the separator that ended it, empty for the last.
+function c0_clauses(s, O, T, P,   n, i, L, ch, m, pos, nc, CA, CB, k, ins, c2) {
+  nc = c0_codes(s, CA, CB); n = 0; pos = 1; i = 1; L = length(s)
+  while (i <= L) {
+    ch = substr(s, i, 1); m = 0
+    if (ch == ";" || ch == ":") m = 1
+    else if (c0_isspace(ch)) {
+      if ((substr(s, i + 1, 3) == "\342\200\224" || substr(s, i + 1, 3) == "\342\200\223") && c0_isspace(substr(s, i + 4, 1))) m = 5
+      else if (substr(s, i + 1, 1) == "-" && c0_isspace(substr(s, i + 2, 1))) m = 3
+    } else if (substr(s, i, 4) == ", so") {
+      c2 = substr(s, i + 4, 1)
+      if (c2 == "" || !index("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_", c2)) m = 4
+    }
+    if (!m) { i++; continue }
+    ins = 0; for (k = 1; k <= nc; k++) if (CA[k] < i && i < CB[k]) { ins = 1; break }
+    if (!ins) { n++; O[n] = pos - 1; T[n] = substr(s, pos, i - pos); P[n] = substr(s, i, m); pos = i + m }
+    i += m
+  }
+  n++; O[n] = pos - 1; T[n] = substr(s, pos); P[n] = ""
+  return n
+}'
+TA_RD_FN='# The three readers (i)-(iii). Every file is opened here and nowhere else, and each opening is
+# reported as an OPEN record. Records: OPEN <path> · NE <why> · S <path> <step> <sentence>.
+function rd_load(f, A,   n, ln, rc) {
+  n = 0
+  while ((rc = (getline ln < f)) > 0) A[++n] = ln
+  close(f)
+  if (rc < 0) return -1
+  return n
+}
+function rd_emit(path, step, LN, n,   nb, B, b, ns, S, s) {
+  nb = c0_blocks(LN, n, B)
+  for (b = 1; b <= nb; b++) { ns = c0_sents(B[b], S); for (s = 1; s <= ns; s++) printf "S\t%s\t%s\t%s\n", path, step, S[s] }
+}
+# rd_section <A> <n> <head> <OUT> — the lines after the one "## " line equal to <head>, to the next "## " line.
+function rd_section(A, n, head, OUT,   i, on, k) {
+  on = 0; k = 0
+  for (i = 1; i <= n; i++) {
+    if (substr(A[i], 1, 3) == "## ") { if (on) break; if (c0_trim(A[i]) == head) { on = 1; continue } }
+    if (on) OUT[++k] = A[i]
+  }
+  return k
+}
+function rd_carrier(f, path, h1, h2,   A, n, h, H, i, c, k, SEC) {
+  n = rd_load(f, A); printf "OPEN\t%s\n", path
+  if (n < 0) { printf "NE\t%s: not readable\n", path; return }
+  H[1] = h1; H[2] = h2
+  for (h = 1; h <= 2; h++) {
+    c = 0; for (i = 1; i <= n; i++) if (c0_trim(A[i]) == H[h]) c++
+    if (c != 1) { printf "NE\t%s: heading %s read %d times\n", path, H[h], c; continue }
+    split("", SEC); k = rd_section(A, n, H[h], SEC); rd_emit(path, "-", SEC, k)
+  }
+}
+function rd_form(f, path,   A, n, i, ks, k, L, nb, B, b, step, ns, S, s, m) {
+  n = rd_load(f, A); printf "OPEN\t%s\n", path
+  if (n < 0) { printf "NE\t%s: not readable\n", path; return }
+  ks = 0; for (i = 1; i <= n; i++) if (index(A[i], "### Assistant \342\200\224 the sections, in order") == 1) { ks++; k = i }
+  if (ks != 1) { printf "NE\t%s: ask-prose opener read %d times\n", path, ks; return }
+  m = 0; for (i = k; i <= n; i++) L[++m] = A[i]
+  nb = c0_blocks(L, m, B); step = "-"
+  for (b = 1; b <= nb; b++) {
+    if (substr(B[b], 1, 4) == "### ") {
+      step = "-"
+      if (B[b] ~ /^### Step [0-9]+ \342\200\224 /) { step = B[b]; sub(/^### Step [0-9]+ \342\200\224 /, "", step); step = c0_trim(step); if (step == "") step = "-" }
+    }
+    ns = c0_sents(B[b], S); for (s = 1; s <= ns; s++) printf "S\t%s\t%s\t%s\n", path, step, S[s]
+  }
+}
+# The block-owned form: its > lines in regions whose verdict is YES or CONDITIONAL, from the
+# REGION records ft_regions computed on this run. A run of adjacent such lines in one region is
+# one paragraph, so a region change ends it.
+function rd_flush(path,   step) {
+  if (RUN_N == 0) return
+  rd_emit(path, RUN_STEP, RUN, RUN_N); RUN_N = 0; split("", RUN)
+}
+function rd_owned(f, path, rg,   A, n, R, nr, i, j, best, fl, t, NA, NZ, NV, NH, cur) {
+  n = rd_load(f, A); printf "OPEN\t%s\n", path
+  if (n < 0) { printf "NE\t%s: not readable\n", path; return }
+  nr = 0
+  while ((getline t < rg) > 0) { split(t, fl, "\t"); if (fl[1] != "REGION") continue; nr++; NA[nr] = fl[2] + 0; NZ[nr] = fl[3] + 0; NV[nr] = fl[7]; NH[nr] = fl[9] }
+  close(rg)
+  if (nr == 0) { printf "NE\t%s: no REGION record was read\n", path; return }
+  RUN_N = 0; cur = 0
+  for (i = 1; i <= n; i++) {
+    best = 0
+    for (j = 1; j <= nr; j++) if (NA[j] <= i && i <= NZ[j] && (best == 0 || NA[j] > NA[best])) best = j
+    if (substr(A[i], 1, 1) == ">" && best && (NV[best] == "YES" || NV[best] == "CONDITIONAL")) {
+      if (RUN_N && best != cur) rd_flush(path)
+      cur = best; RUN_STEP = c0_trim(NH[best]); if (RUN_STEP == "") RUN_STEP = "-"
+      RUN[++RUN_N] = (c0_trim(A[i]) == ">") ? "" : c0_trim(substr(A[i], 2))
+    } else rd_flush(path)
+  }
+  rd_flush(path)
+}'
+TA_FM_FN='# The form model: every headed field of a guided form, above its end-of-profile line, with its
+# members (procedure X), its quoted strings and the menu items of its section. Records, one per line:
+#   FLD <section> <label> <path> <closed> <members> <quoted>      (members "\036" for no head)
+#   MENU <path> <section> <items>
+# Lists are joined by \037. The FLD records go through ft_resolve, which reads heading TAB label.
+function x_strip(x) {
+  x = c0_trim(x); gsub(/^\042+|\042+$/, "", x); gsub(/^`+|`+$/, "", x); x = c0_trim(x)
+  sub(/\.+$/, "", x); x = c0_trim(x); gsub(/^\042+|\042+$/, "", x); return c0_trim(x)
+}
+function x_add(L, n, v,   i) { if (v == "") return n; for (i = 1; i <= n; i++) if (L[i] == v) return n; L[++n] = v; return n }
+# x_after_last <s> <re> — the text after the last match of re; s when re does not match.
+function x_after_last(s, re,   out) { out = s; while (match(out, re) && RLENGTH > 0) out = substr(out, RSTART + RLENGTH); return out }
+function x_before_first(s, re) { if (match(s, re)) return substr(s, 1, RSTART - 1); return s }
+function x_members(body,   b, h, k, n, M, L, i, j, y, segs, ns, P, np, p, line, NL, nl) {
+  b = body; sub(/^[ \t\r\n\f\v]+/, "", b)
+  if (substr(b, 1, 5) == "open:") h = 5; else if (substr(b, 1, 7) == "closed:") h = 7; else return "\036"
+  b = c0_trim(substr(b, h + 1))
+  if (match(b, /^\*\([^)]*\)\*[ \t\r\n\f\v]*/)) b = substr(b, RLENGTH + 1)
+  n = 0
+  nl = split(b, NL, "\n")
+  for (i = 1; i <= nl; i++) if (NL[i] ~ /^[ \t\r\f\v]*- \*\*[^*]+\*\*/) { line = NL[i]; sub(/^[ \t\r\f\v]*- \*\*/, "", line); k = index(line, "**"); n = x_add(M, n, c0_trim(substr(line, 1, k - 1))) }
+  if (n > 0) return x_list(M, n)
+  y = b
+  while ((i = index(y, "`")) > 0) {
+    j = index(substr(y, i + 1), "`"); if (j == 0) break
+    if (j == 1) { y = substr(y, i + 1); continue }
+    p = x_strip(substr(y, i + 1, j - 1)); if (p != "\342\200\224") n = x_add(M, n, p)
+    y = substr(y, i + j + 1)
+  }
+  if (index(b, " / ")) {
+    ns = 0; y = b
+    while ((i = index(y, " / ")) > 0) { segs[++ns] = substr(y, 1, i - 1); y = substr(y, i + 3) }
+    segs[++ns] = y
+    np = 0; P[++np] = x_after_last(segs[1], "e\\.g\\.,[ \t\r\n\f\v]*|:[ \t\r\n\f\v]*| \342\200\224 ")
+    for (i = 2; i < ns; i++) P[++np] = segs[i]
+    P[++np] = x_before_first(segs[ns], " \342\200\224 |\\.[\042\047]?([ \t\r\n\f\v]|$)|,")
+  } else {
+    y = x_before_first(b, " \342\200\224 |\\.[\042\047]?([ \t\r\n\f\v]|$)|e\\.g\\.")
+    k = split(y, segs, ":"); y = segs[k]
+    np = 0
+    while (match(y, /[ \t\r\n\f\v]*,[ \t\r\n\f\v]*(or[ \t\r\n\f\v]+)?|[ \t\r\n\f\v]+or[ \t\r\n\f\v]+/)) { P[++np] = substr(y, 1, RSTART - 1); y = substr(y, RSTART + RLENGTH) }
+    P[++np] = y
+  }
+  for (i = 1; i <= np; i++) n = x_add(M, n, x_strip(P[i]))
+  return x_list(M, n)
+}
+function x_list(M, n,   i, o) { o = ""; for (i = 1; i <= n; i++) o = o (i > 1 ? "\037" : "") M[i]; return o }
+# x_quoted <body> — every double-quoted or backticked string of the body, in order, stripped;
+# the em dash and the empty string left out.
+function x_quoted(b,   i, L, ch, j, n, Q, q) {
+  n = 0; i = 1; L = length(b)
+  while (i <= L) {
+    ch = substr(b, i, 1)
+    if (ch == "\042" || ch == "`") {
+      j = index(substr(b, i + 1), ch)
+      if (j > 1) { q = x_strip(substr(b, i + 1, j - 1)); if (q != "" && q != "\342\200\224") Q[++n] = q; i = i + j + 1; continue }
+    }
+    i++
+  }
+  return x_list(Q, n)
+}
+function fm_form(f, path,   A, n, i, e, sect, ln, lab, body, j, mm, rest, k, items, y, p, q) {
+  n = 0; while ((getline ln < f) > 0) A[++n] = ln; close(f)
+  e = 0; for (i = 1; i <= n; i++) if (c0_trim(A[i]) == "<!-- PROFILE-END -->") { e = i; break }
+  if (e == 0) { printf "NE\t%s: no end-of-profile line\n", path; return }
+  sect = ""; i = 1
+  while (i < e) {
+    ln = A[i]
+    if (ln ~ /^## ./) { sect = c0_trim(substr(ln, 4)); i++; continue }
+    if (sect != "" && substr(ln, 1, 1) == ">" && index(ln, " \302\267 ")) {
+      items = ""; y = ln
+      while ((p = index(y, "`")) > 0) { q = index(substr(y, p + 1), "`"); if (q == 0) break; if (q == 1) { y = substr(y, p + 1); continue }; items = items (items == "" ? "" : "\037") substr(y, p + 1, q - 1); y = substr(y, p + q + 1) }
+      if (items != "") MENU[sect] = (sect in MENU && MENU[sect] != "" ? MENU[sect] "\037" : "") items
+      if (!(sect in MORD)) { MORD[sect] = 1; MSEQ[++NM] = sect }
+    }
+    if (sect != "" && match(ln, /^[ \t\r\n\f\v]*- (\342\255\220 )?\*\*[^*]+:\*\* \[/)) {
+      rest = substr(ln, RSTART, RLENGTH); sub(/^[ \t\r\n\f\v]*- (\342\255\220 )?\*\*/, "", rest); k = index(rest, ":** [")
+      lab = substr(rest, 1, k - 1); body = substr(ln, RLENGTH + 1); j = i
+      while (1) { y = body; sub(/[ \t\r\n\f\v]+$/, "", y); if (substr(y, length(y), 1) == "]" || j + 1 >= e) break; j++; body = body "\n" A[j] }
+      y = body; sub(/[ \t\r\n\f\v]+$/, "", y); y = substr(y, 1, length(y) - 1)
+      printf "FLD\t%s\t%s\t%s\t%d\t%s\t%s\n", sect, lab, path, (substr(c0_trim(y), 1, 7) == "closed:"), x_members(y), x_quoted(y)
+      i = j + 1; continue
+    }
+    i++
+  }
+  for (k = 1; k <= NM; k++) printf "MENU\t%s\t%s\t%s\n", path, MSEQ[k], MENU[MSEQ[k]]
+  split("", MENU); split("", MORD); NM = 0
+}'
+TA_CORE_FN='# ---- the model and the clause, read by every text arm ----
+function m_load(f,   t, F, k, p, s) {
+  while ((getline t < f) > 0) {
+    split(t, F, "\t")
+    if (F[1] == "F") {
+      p = F[2]; s = F[3]; k = ++MF[p, s]; MLAB[p, s, k] = F[4]; MCL[p, s, k] = F[5] + 0; MCLS[p, s, k] = F[6]; MMEM[p, s, k] = F[7]; MQ[p, s, k] = F[8]
+      MPATH[p] = 1; if (!((p, s) in MSEC)) { MSEC[p, s] = 1; MNS[p]++; MSN[p, MNS[p]] = s }
+    } else if (F[1] == "MENU") MMENU[F[2], F[3]] = F[4]
+  }
+  close(f)
+}
+function m_split(s, A) { if (s == "" || s == "\036") return 0; return split(s, A, "\037") }
+# norm_item: the compared words of an item, one leading a / an / the dropped (procedure X matching).
+function m_norm(s,   A, n, a) { n = wd_words(s, A); a = (n > 0 && (A[1] == "a" || A[1] == "an" || A[1] == "the")) ? 2 : 1; return wd_join(A, n, a, n) }
+function m_members(p, st, OUT,   k, i, n, A, j, c) {
+  c = 0
+  if (st == "-" || !((p, st) in MSEC)) return 0
+  for (k = 1; k <= MF[p, st]; k++) { n = m_split(MMEM[p, st, k], A); for (j = 1; j <= n; j++) OUT[++c] = A[j] }
+  return c
+}
+function m_memset(p, st, SET,   OUT, n, i) { n = m_members(p, st, OUT); for (i = 1; i <= n; i++) SET[m_norm(OUT[i])] = 1; return n }
+function m_floor(p, st, OUT,   c, n, A, j, k, MS) {
+  c = 0
+  if (st == "-" || !((p, st) in MSEC)) return 0
+  n = m_split(MMENU[p, st], A); for (j = 1; j <= n; j++) OUT[++c] = A[j]
+  m_memset(p, st, MS)
+  for (k = 1; k <= MF[p, st]; k++) { n = m_split(MQ[p, st, k], A); for (j = 1; j <= n; j++) if (!(m_norm(A[j]) in MS)) OUT[++c] = A[j] }
+  return c
+}
+function m_labelwords(lab) { gsub(/\(s\)|\?/, "", lab); return lab }
+# The PERSON scope (D3). The marker is read in the RAW sentence, case-sensitive and never through
+# B1; a named label of the form own section decides where one is named; else the section does.
+function m_person_raw(s,   q, a, b, c2) {
+  if (index(s, "person-class") || index(s, "health- or document-shaped")) return 1
+  q = 0
+  while ((a = index(substr(s, q + 1), "PERSON")) > 0) {
+    q = q + a; b = (q > 1) ? substr(s, q - 1, 1) : ""; c2 = substr(s, q + 6, 1)
+    if ((b == "" || !index(WD_AN "_", b)) && (c2 == "" || !index(WD_AN "_", c2))) return 1
+  }
+  return 0
+}
+function m_person(p, st, sent,   SW, n, k, LW, named, any, sec) {
+  if (m_person_raw(sent)) return 1
+  if (st == "-" || !((p, st) in MSEC)) return 0
+  n = wd_words(sent, SW); named = 0; any = 0
+  for (k = 1; k <= MF[p, st]; k++) {
+    if (wd_has(SW, n, wd_wordstr(m_labelwords(MLAB[p, st, k])))) { named++; if (MCLS[p, st, k] == "PERSON") any = 1 }
+  }
+  if (named) return any
+  for (k = 1; k <= MF[p, st]; k++) if (MCLS[p, st, k] == "PERSON") return 1
+  return 0
+}
+function wd_wordstr(s,   A, n) { n = wd_words(s, A); return wd_join(A, n, 1, n) }
+# A plant names its step by a Section value: the one heading of its form the value leads.
+function m_plant_step(p, name,   i, k, h) {
+  if (name == "-" || !(p in MPATH)) return name
+  k = 0; for (i = 1; i <= MNS[p]; i++) if (ft_lead(name, MSN[p, i])) { k++; h = MSN[p, i] }
+  if (k != 1) { TA_NE = "plant step " name " leads " k " headings of " p; return "-" }
+  return h
+}
+# cl_set — one clause, R5-R8: its raw text folded (CL_RAW), its literal reading with the em dash
+# kept as \001 (CL_LIT), its tokens, the sentence words (SW), its offset in the folded sentence,
+# its code spans, the separator that ended it and the next clause (R9).
+function cl_set(sent, off, raw, sep, nxt, hasnxt) {
+  split("", TW); split("", TS); split("", TE); split("", TR); split("", SW); split("", CA); split("", CB)
+  CL_SENT = sent; CL_SEP = sep; CL_HASNXT = hasnxt; CL_NXT = hasnxt ? wd_fold(nxt, 0) : ""
+  CL_RAW = wd_fold(raw, 0); CL_LIT = wd_fold(raw, 1); CL_L = length(CL_RAW)
+  NT = wd_toks(CL_RAW, TW, TS, TE, TR); NSW = wd_words(sent, SW)
+  CL_OFF = length(wd_fold(substr(sent, 1, off), 0)); NCS = c0_codes(CL_RAW, CA, CB)
+}
+function cl_incode(i,   k) { for (k = 1; k <= NCS; k++) if (CA[k] < TS[i] && TS[i] < CB[k]) return 1; return 0 }
+function cl_punct(i, j,   g) { g = substr(CL_RAW, TE[i], TS[j] - TE[i]); return (g ~ /[^ \t\n\r\f\v]/) }
+function cl_in(x, list) { return index(" " list " ", " " x " ") > 0 }
+# R6 (a), as K3 amends it: each comma segment that closes before token k and opens with a
+# condition word, or with or/and followed by one. SEGS[s] holds its first and last token.
+function cl_closed(k, SA, SZ,   cps, B, nb, i, p, s, a, z, ns) {
+  nb = 1; B[1] = 1
+  for (i = 1; i <= CL_L; i++) if (substr(CL_RAW, i, 1) == ",") B[++nb] = i + 1
+  B[++nb] = CL_L + 2; ns = 0
+  for (s = 1; s < nb; s++) {
+    a = 0; z = 0
+    for (i = 1; i <= NT; i++) if (B[s] <= TS[i] && TS[i] < B[s + 1]) { if (!a) a = i; z = i }
+    if (!a || z >= k) continue
+    if (cl_in(TW[a], TA_COND) || ((TW[a] == "or" || TW[a] == "and") && a + 1 <= z && cl_in(TW[a + 1], TA_COND))) { ns++; SA[ns] = a; SZ[ns] = z }
+  }
+  return ns
+}
+# K4: at a marker, even if / even when / even though / though / although open a span to the
+# next comma or to the marker.
+function cl_concessive(k, EX,   i, j, p, stop) {
+  for (i = 1; i < k; i++) {
+    if ((TW[i] == "even" && i + 1 < k && (TW[i + 1] == "if" || TW[i + 1] == "when" || TW[i + 1] == "though")) || TW[i] == "though" || TW[i] == "although") {
+      p = index(substr(CL_RAW, TS[i]), ","); stop = p ? TS[i] + p - 1 : CL_L + 1
+      for (j = i; j < k; j++) if (TS[j] < stop) EX[j] = 1
+    }
+  }
+}
+# R6: remove first (closed conditions, the excluded positions, and at a marker the concessive spans
+# and every word before the nearest comma), then take the five nearest words before token k.
+# Returns the denying negator distance, 1 adjacent, or 0.
+function cl_denial(k, EXCL, marker,   EX, SA, SZ, ns, s, i, lo, p, WIN, nw, j, b, brk, q) {
+  split("", EX); ns = cl_closed(k, SA, SZ)
+  for (s = 1; s <= ns; s++) for (i = SA[s]; i <= SZ[s]; i++) EX[i] = 1
+  for (i in EXCL) EX[i] = 1
+  lo = 0
+  if (marker) { for (p = TS[k] - 1; p >= 1; p--) if (substr(CL_RAW, p, 1) == ",") { lo = p; break }; cl_concessive(k, EX) }
+  nw = 0
+  for (i = 1; i < k; i++) if (!(i in EX) && TS[i] > lo) WIN[++nw] = i
+  s = (nw > TA_WINDOW) ? nw - TA_WINDOW + 1 : 1
+  for (j = s; j <= nw; j++) {
+    i = WIN[j]
+    if (!cl_in(TW[i], TA_NEG)) continue
+    brk = 0; for (b = j + 1; b <= nw; b++) if (cl_in(TW[WIN[b]], TA_BREAK)) brk = 1
+    if (brk) continue
+    if (marker && cl_in(TW[i], TA_OBJNEG)) { q = 0; for (b = i + 1; b <= i + 2 && b <= NT; b++) if (cl_in(TW[b], TA_OBJNEG_EXCEPT)) q = 1; if (q) continue }
+    return nw - j + 1
+  }
+  return 0
+}
+function cl_denied(k, marker,   NOEX) { split("", NOEX); return cl_denial(k, NOEX, marker) > 0 }
+# Object negation: the object first word is none / nothing / no and no exception word follows within two.
+function cl_objneg(a, lim,   b) {
+  if (a >= lim || a > NT || !cl_in(TW[a], TA_OBJNEG)) return 0
+  for (b = a + 1; b <= a + 2 && b < lim && b <= NT; b++) if (cl_in(TW[b], TA_OBJNEG_EXCEPT)) return 0
+  return 1
+}
+# cl_lits <a> <b> <LX> <LP> — R8: each backticked or double-quoted value of the literal reading
+# opening in [a, b), the em dash read as itself; never closed: or open: or empty.
+function cl_lits(a, b, LX, LP,   n, i, ch, j, x) {
+  n = 0; i = 1
+  while (i <= CL_L) {
+    ch = substr(CL_LIT, i, 1)
+    if (ch == "`" || ch == "\042") {
+      j = index(substr(CL_LIT, i + 1), ch)
+      if (j > 1) {
+        if (i >= a && i < b) { x = c0_trim(wd_repl(substr(CL_LIT, i + 1, j - 1), "\001", "\342\200\224")); if (x != "" && x != "closed:" && x != "open:") { n++; LX[n] = x; LP[n] = i } }
+        i = i + j + 1; continue
+      }
+    }
+    i++
+  }
+  return n
+}
+function ta_init() {
+  TA_WINDOW = 5
+  TA_NEG = "never not no nor cannot cant doesnt isnt dont without neither nothing none"
+  TA_COND = "if when where unless once until while"
+  TA_BREAK = "forget hesitate fail"
+  TA_OBJNEG = "none nothing no"; TA_OBJNEG_EXCEPT = "but than fewer more other except"
+  TA_DET = "a an the this that its their your one"
+}'
+NU_FN='# nu_list over ADR-045: the ids of D2 item 4, and the two lists of term 7, ids and italic names
+# only, de-duplicated. Records: A <id> · FIELD <name> · NONFIELD <name> · NE <why>
+function nu_item(L, n, from, num, OUT,   i, k, on, t) {
+  on = 0; k = 0
+  for (i = from; i <= n; i++) {
+    t = L[i]
+    if (!on) { if (t ~ ("^" num "\\. ")) on = 1; else continue }
+    else if (t ~ /^[0-9]+\. / || t ~ /^#/) break
+    OUT[++k] = t
+  }
+  return k
+}
+function nu_join(A, n,   i, o, t) { o = ""; for (i = 1; i <= n; i++) { t = A[i]; gsub(/^[ \t]+|[ \t]+$/, "", t); if (t != "") o = (o == "" ? t : o " " t) }; return o }
+function nu_italics(s, tag,   x, k, SEEN) {
+  gsub(/\*\*[^*]*\*\*/, " ", s)
+  while (match(s, /\*[^*]+\*/)) {
+    x = substr(s, RSTART + 1, RLENGTH - 2); s = substr(s, RSTART + RLENGTH)
+    if (!(x in SEEN)) { SEEN[x] = 1; printf "%s\t%s\n", tag, x; NU_N[tag]++ }
+  }
+}
+{ L[++n] = $0 }
+END {
+  dec = 0; d2 = 0; tm = 0
+  for (i = 1; i <= n; i++) { if (L[i] == "## Decision") dec = i; if (dec && !d2 && index(L[i], "### D2 ") == 1) d2 = i; if (index(L[i], "### The terms this record fixes") == 1) tm = i }
+  if (!d2) { print "NE\tno D2 heading under ## Decision"; exit }
+  if (!tm) { print "NE\tno terms heading"; exit }
+  k = nu_item(L, n, d2 + 1, 4, IT)
+  for (i = 1; i <= k; i++) if (match(IT[i], /^[ \t]*\| `A[0-9]+` \|/)) { id = substr(IT[i], RSTART, RLENGTH); sub(/^[ \t]*\| `/, "", id); sub(/` \|$/, "", id); if (!(id in SA)) { SA[id] = 1; printf "A\t%s\n", id; NA++ } }
+  k = nu_item(L, n, tm + 1, 7, T7); s = nu_join(T7, k)
+  f = index(s, "Those that put or concern a field:"); g = index(s, "Those that put no field:")
+  if (!f || !g || g < f) { print "NE\tterm 7 carries neither list marker in order"; exit }
+  nu_italics(substr(s, f, g - f), "FIELD"); nu_italics(substr(s, g), "NONFIELD")
+}'
+
+# wd_stream [engine] — the token stream of each stdin line, "<compared>/<surface>" per word, under C.
+wd_stream() {
+  LC_ALL=C "${1:-awk}" "$WD_FN"'{ n = wd_toks(wd_fold($0, 0), W, S, E, R); o = ""; for (i = 1; i <= n; i++) o = o W[i] "/" R[i] " "; print o }'
+}
+# wd_pairs — stdin "<id>TAB<turn>TAB<value>", stdout "<id>TAB<the value words the turn does not hold>".
+wd_pairs() {
+  LC_ALL=C awk -F'\t' -v wd_apos="${WD_APOS:-1}" "$WD_FN"'{ printf "%s\t%s\n", $1, wd_missing($2, $3) }'
+}
+# wd_rows — each fold-table row: "<n> <form> <value> <turn> <missing with it> <missing without it>", the
+# fields separated by the unit-separator byte, so an empty one survives a read (a tab would collapse it).
+wd_rows() {
+  LC_ALL=C awk "$WD_FN"'BEGIN {
+    wd_init()
+    for (i = 1; i <= WD_N; i++) {
+      f = WD_F[i]; t = WD_T[i]
+      if (t == " ") { v = "quiet" f "room"; u = "quiet room" }
+      else if (t == "\047") { v = "it" f "s"; u = "its" }
+      else if (t == "\042") { v = f "quiet"; u = "quiet" }
+      else if (t == "-") { v = "nice" f "to"; u = "nice to" }
+      else { v = f "x"; u = t "x" }
+      wd_drop = 0; m1 = wd_missing(u, v); wd_drop = i; m2 = wd_missing(u, v); wd_drop = 0
+      printf "%d\037%s\037%s\037%s\037%s\037%s\n", i, f, v, u, m1, m2
+    }
+  }'
+}
+# c0_split — stdin a text, stdout its BLOCK, SENT and CLAUSE records; C0_BULLETS=0 turns R1's list rule off.
+c0_split() {
+  LC_ALL=C awk -v c0_bullets="${C0_BULLETS:-1}" "$WD_FN$C0_FN"'{ L[++n] = $0 }
+    END { nb = c0_blocks(L, n, B)
+      for (b = 1; b <= nb; b++) { printf "BLOCK\t%s\n", B[b]; ns = c0_sents(B[b], S)
+        for (s = 1; s <= ns; s++) { printf "SENT\t%s\n", S[s]; nc = c0_clauses(S[s], O, T, P); for (c = 1; c <= nc; c++) printf "CLAUSE\t%s\t%s\n", T[c], P[c] } } }'
+}
+# ta_regions <root> — the block-owned form's REGION records, from group FT's ft_regions, on this run.
+ta_regions() { ft_regions "$1/templates/trip-context.template.md" "$1/CLAUDE.md" | awk -F'\t' '$1 == "REGION"'; }
+# ta_read <root> <regions-file> — the three readers: OPEN, NE and S records; C0_BULLETS=0 turns R1's
+# list rule off for a scratch run, never for the tracked tree.
+ta_read() {
+  LC_ALL=C awk -v c0_bullets="${C0_BULLETS:-1}" -v conduct="$1/skills/trip-record/interview-conduct.md" -v card="$1/templates/interview-card.md" \
+    -v trip="$1/templates/traveler-intake.template.md" -v person="$1/templates/person-intake.template.md" \
+    -v tc="$1/templates/trip-context.template.md" -v regions="$2" "$WD_FN$C0_FN$TA_RD_FN"'
+    BEGIN {
+      rd_carrier(conduct, "skills/trip-record/interview-conduct.md", "## The rules every interview shares", "## What only a write-capable session adds")
+      rd_carrier(card, "templates/interview-card.md", "## The rules every interview shares", "## Giving back the finished form")
+      rd_form(trip, "templates/traveler-intake.template.md")
+      rd_form(person, "templates/person-intake.template.md")
+      rd_owned(tc, "templates/trip-context.template.md", regions)
+    }'
+}
+# ta_model <root> <scratch-dir> — the form model, F, J and MENU records, joined through ft_rows and ft_resolve.
+ta_model() {
+  local tm_fm
+  ft_rows "$1/reference/data-model.md" > "$2/rows.tsv"
+  tm_fm="$(LC_ALL=C awk -v trip="$1/templates/traveler-intake.template.md" -v person="$1/templates/person-intake.template.md" "$WD_FN$C0_FN$TA_FM_FN"'
+    BEGIN { fm_form(trip, "templates/traveler-intake.template.md"); fm_form(person, "templates/person-intake.template.md") }')"
+  awk -F'\t' '$1 == "FLD"' <<<"$tm_fm" | cut -f2- | ft_resolve "$2/rows.tsv" |
+    awk -F'\t' 'FILENAME == ARGV[1] { cls[$1] = $4; next }
+      { c = ($1 == "ONE") ? cls[$2] : ""; printf "F\t%s\t%s\t%s\t%s\t%s\t%s\t%s\nJ\t%s\t%s\t%s\t%s\n", $5, $3, $4, $6, c, $7, $8, $5, $3, $4, $1 }' "$2/rows.tsv" -
+  awk -F'\t' '$1 == "MENU" || $1 == "NE"' <<<"$tm_fm"
+}
+# ta_members <body…> — procedure X on each stdin line taken as a bracket body: its members, "|"-joined.
+ta_members() {
+  LC_ALL=C awk "$WD_FN$C0_FN$TA_FM_FN"'{ m = x_members($0); if (m == "\036") print "<no head>"; else { gsub(/\037/, "|", m); print m } }'
+}
+# ta_scope — stdin "<raw sentence>", stdout 1 when the raw PERSON marker scopes it, else 0.
+ta_scope() {
+  LC_ALL=C awk "$WD_FN$C0_FN$FT_LEAD_FN$TA_CORE_FN"'BEGIN { wd_init() } { print m_person_raw($0) }'
+}
+# nu_list <ADR-045> — A, FIELD, NONFIELD and NE records.
+nu_list() { LC_ALL=C awk "$NU_FN" "$1"; }
+# nu_agree <record-members> <suite-members> <two-way|one-way> — the members on each side the other
+# lacks, as "RECORD-ONLY <m>" and "SUITE-ONLY <m>" lines; one-way reports only the record's.
+nu_agree() {
+  local na_m na_out=""
+  while IFS= read -r na_m; do
+    [ -n "$na_m" ] || continue
+    grep -qxF -- "$na_m" <<<"$2" || na_out="${na_out}RECORD-ONLY $na_m"$'\n'
+  done <<<"$1"
+  if [ "$3" = "two-way" ]; then
+    while IFS= read -r na_m; do
+      [ -n "$na_m" ] || continue
+      grep -qxF -- "$na_m" <<<"$1" || na_out="${na_out}SUITE-ONLY $na_m"$'\n'
+    done <<<"$2"
+  fi
+  printf '%s' "$na_out"
+}
+
+# ── WD1 — ADR-045's OW-C worked rows, as worded (D2 item 5), and SEAM-1 beside them.
+WD1_TURN="I'd want my own room if it isn't too expensive."
+wd1_assert() {
+  local out ck cx ap n
+  out="$(printf '%s\t%s\t%s\n%s\t%s\t%s\n' ck "$WD1_TURN" "own room if it isn't too expensive" cx "$WD1_TURN" "own room if it's affordable" | wd_pairs)"
+  ck="$(awk -F'\t' '$1 == "ck" { print $2 "#" }' <<<"$out")"; cx="$(awk -F'\t' '$1 == "cx" { print $2 }' <<<"$out")"
+  ap="$(printf '%s\t%s\t%s\n' cx "$WD1_TURN" "own room if it's affordable" | WD_APOS=0 wd_pairs | cut -f2)"
+  n="$(wd_stream <<<"own room if it isn't too expensive" | awk '{ print NF }')"
+  if [ -z "$out" ]; then
+    FAIL "WD1: the words limb produced no record for either worked row — the definition did not run, so neither row is graded"
+  elif [ "$ck" != "#" ]; then
+    FAIL "WD1: the record's check row fails, naming '${ck%#}' — every word of \"own room if it isn't too expensive\" stands in their turn, so B1 is not the definition ADR-045 D2 item 5 settles"
+  elif [ "$cx" != "it's|affordable" ]; then
+    FAIL "WD1: the record's cross row names '$cx', where it must name exactly it's and affordable — the definition misnames the row the record worked"
+  elif [ "$ap" = "$cx" ]; then
+    FAIL "WD1: CONTROL did not fire — with the apostrophe made a separator (SEAM-1) the cross row still names '$ap', so this arm cannot see the in-word apostrophe rule it exists for"
+  else
+    PASS "WD1: ADR-045's OW-C worked rows reproduce as worded — the check row's $n value words each stand in the turn, and the cross row fails naming exactly it's and affordable, each as the value spells it after the folds. CONTROL (SEAM-1): with the apostrophe made a separator the same row names '$ap', so the join of an in-word apostrophe is what this verdict rests on"
+  fi
+}
+wd1_assert
+
+# ── WD2 — one arm per fold-table row: the row is load-bearing.
+wd2_assert() {
+  local rows n=0 r_i r_f r_v r_u r_m1 r_m2
+  rows="$(wd_rows)"
+  if [ -z "$rows" ]; then
+    FAIL "WD2: the fold table yielded no row — B1 step 1 is absent, so no typographic form is folded"
+    return 0
+  fi
+  while IFS=$'\037' read -r r_i r_f r_v r_u r_m1 r_m2; do
+    n=$((n + 1))
+    if [ -n "$r_m1" ]; then
+      FAIL "WD2[$r_i $r_f]: the value '$r_v' does not match the turn '$r_u' with the row in place — it names '$r_m1', so this fold does not hold"
+    elif [ -z "$r_m2" ]; then
+      FAIL "WD2[$r_i $r_f]: with the row removed the value '$r_v' still matches '$r_u' — the row folds nothing a word reads, so the table carries a row with no effect"
+    else
+      PASS "WD2[$r_i $r_f]: '$r_v' matches the turn '$r_u' through this row, and with the row removed it names '$r_m2' — the row is load-bearing"
+    fi
+  done <<<"$rows"
+}
+wd2_assert
+
+# ── WD3 — the boundary pins, each a must-FAIL; and WD4, multiplicity.
+wd3_assert() {
+  local out bad="" id m
+  out="$(printf '%s\t%s\t%s\n' case 'Zoë' 'ZOË' joined 'river boat' 'riverboat' split 'riverboat' 'river boat' digit 'two nights' '2 nights' stem 'walk' 'walking' | wd_pairs)"
+  if [ -z "$out" ]; then
+    FAIL "WD3: the words limb produced no record for any boundary pin — the definition did not run"
+    return 0
+  fi
+  while IFS=$'\t' read -r id m; do [ -n "$m" ] || bad="$bad $id"; done <<<"$out"
+  if [ -n "$bad" ]; then
+    FAIL "WD3: these boundary pins PASSED where B1 must fail them:$bad — the definition joins, splits, stems, translates or case-folds beyond ASCII, which clause 6 forbids"
+  else
+    PASS "WD3: every boundary pin fails, naming the word — non-ASCII case (ZOË against Zoë), a joined compound (riverboat against river boat), a split one (river boat against riverboat; RS-13, neutral in the record and pinned here both ways), a digit for a word (2 against two) and a stem (walking against walk): $(awk -F'\t' '{ printf "%s=%s ", $1, $2 }' <<<"$out")"
+  fi
+}
+wd3_assert
+wd4_assert() {
+  local m
+  m="$(printf '%s\t%s\t%s\n' mult 'very quiet' 'very very quiet' | wd_pairs | cut -f2)"
+  if [ "$m" = "very" ]; then
+    PASS "WD4: multiplicity — 'very very quiet' from a turn reading 'very quiet' fails, naming the one 'very' the turn does not carry twice"
+  else
+    FAIL "WD4: multiplicity — 'very very quiet' from 'very quiet' named '${m:-nothing}', where it must name exactly one 'very'"
+  fi
+}
+wd4_assert
+
+# The group fixture: every fold form, an apostrophe both ways, non-ASCII letters, digits and punctuation.
+WD_FX=$'It\xe2\x80\x99s "quiet" \xe2\x80\x94 a ZO\xc3\x8b and Zo\xc3\xab, nice\xe2\x80\x90to\xe2\x80\x91have \xef\xac\x81ne \xef\xac\x82at.\nI\'d want my own room if it isn\'t too expensive \xe2\x86\x92 caf\xc3\xa9 \xc2\xb7 2 nights \xe2\x80\x9cnow\xe2\x80\x9d, river-boat; ok.\n\xe2\x80\x98Tis\xc2\xa0done\xe2\x80\xa6 \xe2\x9c\x93 \xe2\x82\xac30 \xc2\xab yes \xc2\xbb\'s end Erd\xc5\x91s'
+
+# ── WD5 — engine parity, the CA10/VI3 precedent: the same program under each interpreter by name.
+wd5_assert() {
+  local ref e out bad="" ran="" absent=""
+  ref="$(wd_stream awk <<<"$WD_FX")"
+  if [ -z "$ref" ]; then
+    FAIL "WD5: the host awk produced no token stream over the group fixture — there is nothing to compare an engine against"
+    return 0
+  fi
+  for e in mawk gawk; do
+    if [ -z "$(command -v "$e" 2>/dev/null)" ]; then absent="$absent $e"; continue; fi
+    out="$(wd_stream "$e" <<<"$WD_FX")"; ran="$ran $e"
+    [ "$out" = "$ref" ] || bad="$bad $e"
+  done
+  if [ -n "$bad" ]; then
+    FAIL "WD5: the token stream over the group fixture differs from the host awk's under:$bad — WD_FN reads words differently by engine, so a run on another host would grade other words"
+  elif [ -n "$absent" ]; then
+    SKIP "WD5: engine parity could not be graded under:$absent (not installed); graded under:${ran:- none} and the host awk. Not a pass: CI runs with GUARD_STRICT_SKIPS=1, so on the hosted runner this skip fails the run"
+  else
+    PASS "WD5: the token stream over the group fixture — $(awk '{ n += NF } END { print n + 0 }' <<<"$ref") tokens over $(awk 'END { print NR }' <<<"$ref") lines, every fold form, an in-word apostrophe both ways, non-ASCII letters and digits — is byte-identical under the host awk and under$ran, each invoked by name"
+  fi
+}
+wd5_assert
+
+# ── WD6 — C0 on a fixture, and R1's list rule shown load-bearing.
+WD6_FX=$'A first sentence. "Quoted" one; with a clause \xe2\x80\x94 and a dash, so on.\n- A list item.\n- Another item, wrapped\n  onto a second line.\n```\nfenced. Line\n```\n### A heading. Inside\n`a; b` stays one clause: then this.'
+WD6_WANT=$'BLOCK\tA first sentence. "Quoted" one; with a clause \xe2\x80\x94 and a dash, so on.\nSENT\tA first sentence.\nCLAUSE\tA first sentence.\t\nSENT\t"Quoted" one; with a clause \xe2\x80\x94 and a dash, so on.\nCLAUSE\t"Quoted" one\t;\nCLAUSE\t with a clause\t \xe2\x80\x94 \nCLAUSE\tand a dash\t, so\nCLAUSE\t on.\t\nBLOCK\t- A list item.\nSENT\t- A list item.\nCLAUSE\t- A list item.\t\nBLOCK\t- Another item, wrapped onto a second line.\nSENT\t- Another item, wrapped onto a second line.\nCLAUSE\t- Another item, wrapped onto a second line.\t\nBLOCK\tfenced. Line\nSENT\tfenced.\nCLAUSE\tfenced.\t\nSENT\tLine\nCLAUSE\tLine\t\nBLOCK\t### A heading. Inside\nSENT\t### A heading.\nCLAUSE\t### A heading.\t\nSENT\tInside\nCLAUSE\tInside\t\nBLOCK\t`a; b` stays one clause: then this.\nSENT\t`a; b` stays one clause: then this.\nCLAUSE\t`a; b` stays one clause\t:\nCLAUSE\t then this.\t'
+wd6_assert() {
+  local got off nb_on nb_off
+  got="$(c0_split <<<"$WD6_FX")"
+  off="$(C0_BULLETS=0 c0_split <<<"$WD6_FX")"
+  nb_on="$(awk -F'\t' '$1 == "BLOCK"' <<<"$got" | awk 'END { print NR }')"
+  nb_off="$(awk -F'\t' '$1 == "BLOCK"' <<<"$off" | awk 'END { print NR }')"
+  if [ -z "$got" ]; then
+    FAIL "WD6: the sentence engine produced nothing over its fixture — C0 is absent, so every text arm would read an empty population"
+  elif [ "$got" != "$WD6_WANT" ]; then
+    FAIL "WD6: C0 reads its fixture otherwise than R1 and R5 state — got: $(tr '\t\n' '|;' <<<"$got")"
+  elif [ "$nb_off" -ge "$nb_on" ]; then
+    FAIL "WD6: CONTROL did not fire — with R1's list rule off the fixture still reads $nb_off block(s) against $nb_on, so the rule that a list item opens its own block is not what keeps the two items apart"
+  else
+    PASS "WD6: C0 reads its fixture exactly as R1 and R5 state — $nb_on blocks, each fenced line, the heading line and each list item its own block, a wrapped item joined to its item, a separator inside a code span not cutting, and the spaced em dash, the colon, the semicolon and ', so' each ending a clause. CONTROL (FM-G's mechanism): with R1's list rule off on a scratch run the two list items merge, $nb_on blocks becoming $nb_off; FM-G's SOURCE-and-LG1 form of the same seam is OW's, in group OW"
+  fi
+}
+wd6_assert
+
+# ── WD7 — the locale posture, graded at WD_FN's own entry point (CD-8).
+wd7_assert() {
+  local ref m out bad="" n=0 unp=""
+  ref="$( ( export LC_ALL=C; wd_stream ) <<<"$WD_FX" )"
+  if [ -z "$ref" ]; then
+    FAIL "WD7: the entry point produced no token stream under C — there is nothing to hold the other locales to"
+    return 0
+  fi
+  while IFS= read -r m; do
+    [ -n "$m" ] || continue
+    n=$((n + 1)); out="$( ( export LC_ALL="$m"; wd_stream ) <<<"$WD_FX" 2>/dev/null )"
+    [ "$out" = "$ref" ] || bad="$bad $m"
+  done <<<"$LC_SET"
+  if [ -n "$LC_MB" ] && [ -n "$(command -v gawk 2>/dev/null)" ]; then
+    unp="$(LC_ALL="$LC_MB" gawk "$WD_FN"'{ n = wd_toks(wd_fold($0, 0), W, S, E, R); o = ""; for (i = 1; i <= n; i++) o = o W[i] "/" R[i] " "; print o }' <<<"$WD_FX" 2>/dev/null)"
+  fi
+  if [ -n "$bad" ]; then
+    FAIL "WD7: the token stream differs from the C reading under the caller locale(s):$bad — the entry point does not pin its own locale"
+  elif [ -z "$LC_MB" ] || [ -z "$(command -v gawk 2>/dev/null)" ]; then
+    SKIP "WD7: the stream agreed under all $n member(s) of LC_SET, but the control needs a multibyte member and gawk by name, and this host lacks ${LC_MB:+gawk}${LC_MB:-a multibyte locale}. Not a pass: CI runs strict, so this skip fails the hosted run"
+  elif [ "$unp" = "$ref" ]; then
+    FAIL "WD7: CONTROL did not fire — the same program with LC_ALL=C removed, run under $LC_MB through gawk by name, reads the fixture exactly as C does, so agreement across LC_SET shows nothing about the pin"
+  else
+    PASS "WD7: the token stream over the group fixture is byte-identical under all $n member(s) of group LC's LC_SET, the multibyte $LC_MB among them. CONTROL: the same program with its LC_ALL=C removed, run under $LC_MB through gawk by name, reads it otherwise — so the pin inside the entry point is what makes the agreement"
+  fi
+}
+wd7_assert
+
+# ── WD8 — the readers over the tracked tree, and INT-3 on a copy.
+TA_REG="$WORK/wd/regions.tsv"
+ta_regions "$ROOT" > "$TA_REG"
+wd8_assert() {
+  local recs open ne want got pops copy cne
+  recs="$(ta_read "$ROOT" "$TA_REG")"
+  open="$(awk -F'\t' '$1 == "OPEN" { print $2 }' <<<"$recs" | sort)"
+  want="$(printf '%s\n' skills/trip-record/interview-conduct.md templates/interview-card.md templates/traveler-intake.template.md templates/person-intake.template.md templates/trip-context.template.md | sort)"
+  ne="$(awk -F'\t' '$1 == "NE" { print $2 }' <<<"$recs")"
+  pops="$(awk -F'\t' '$1 == "S" { n[$2]++ } END { for (p in n) printf "%s=%d ", p, n[p] }' <<<"$recs")"
+  got="$(awk -F'\t' '$1 == "S" { print $2 }' <<<"$recs" | sort -u)"
+  copy="$WORK/wd/int3"; mkdir -p "$copy/skills/trip-record" "$copy/templates"
+  sed 's/^## The rules every interview shares$/## The rules each interview shares/' "$ROOT/skills/trip-record/interview-conduct.md" > "$copy/skills/trip-record/interview-conduct.md"
+  cp "$ROOT/templates/interview-card.md" "$ROOT/templates/traveler-intake.template.md" "$ROOT/templates/person-intake.template.md" "$ROOT/templates/trip-context.template.md" "$copy/templates/"
+  cne="$(ta_read "$copy" "$TA_REG" | awk -F'\t' '$1 == "NE" { print $2 }')"
+  if [ -z "$recs" ]; then
+    FAIL "WD8: the readers produced no record at all — they did not run, so every text arm would grade an empty population"
+  elif [ -n "$ne" ]; then
+    FAIL "WD8: NOT EVALUATED — $ne"
+  elif [ "$open" != "$want" ]; then
+    FAIL "WD8: the readers opened [$(tr '\n' ' ' <<<"$open")] where the input set is exactly inputs (i)-(iii) [$(tr '\n' ' ' <<<"$want")]"
+  elif [ "$got" != "$want" ]; then
+    FAIL "WD8: an input yielded no sentence — read from [$(tr '\n' ' ' <<<"$got")]; a reader grading zero sentences is NOT EVALUATED, never a pass"
+  elif [ "$cne" != "skills/trip-record/interview-conduct.md: heading ## The rules every interview shares read 0 times" ]; then
+    FAIL "WD8: CONTROL (INT-3) did not fire as specified — with the conduct file's shared-rules heading renamed on a copy, the readers raised '${cne:-nothing}'"
+  else
+    PASS "WD8: the readers opened exactly the five inputs and raised nothing, reading sentences ${pops}— the block-owned form's > lines through ft_regions on this run. CONTROL (INT-3): a copy renaming the conduct file's shared-rules heading is NOT EVALUATED, naming the heading"
+  fi
+}
+wd8_assert
+
+# ── WD9 — the form model and procedure X.
+wd9_assert() {
+  local model nf nm got want
+  model="$(ta_model "$ROOT" "$WORK/wd")"
+  nf="$(awk -F'\t' '$1 == "F"' <<<"$model" | awk 'END { print NR }')"
+  nm="$(awk -F'\t' '$1 == "F" && $7 != "\036"' <<<"$model" | awk 'END { print NR }')"
+  got="$(printf '%s\n' 'open: e.g., `alpha` / beta / gamma.' 'not headed `x`, `y`' 'open: *(a note)* e.g., "Mostly together" / "Some solo" / "Lots of time"' 'closed: `one-off` / `daily`' 'open: keep it lean, mid-range, or spend freely — say which' | ta_members)"
+  want=$'alpha|beta|gamma\n<no head>\nMostly together|Some solo|Lots of time\none-off|daily\nkeep it lean|mid-range|spend freely'
+  if [ "$nf" -eq 0 ]; then
+    FAIL "WD9: the form model read no field from either guided form — procedure X and the join have nothing to read"
+  elif [ -n "$(awk -F'\t' '$1 == "NE"' <<<"$model")" ]; then
+    FAIL "WD9: NOT EVALUATED — $(awk -F'\t' '$1 == "NE" { print $2 }' <<<"$model")"
+  elif [ "$got" != "$want" ]; then
+    FAIL "WD9: procedure X reads its synthetic brackets otherwise than D3 states — got $(tr '\n' ';' <<<"$got")"
+  else
+    PASS "WD9: the form model reads $nf field(s) across both guided forms, $nm of them headed brackets with members, each joined through ft_resolve; procedure X reads its synthetic brackets as D3 states — X3 and X4 unioned (alpha · beta · gamma), an unheaded bracket holding no members, a quoted e.g. slash list read as members after its note, a backticked slash list, and a comma-or list cut at its dash"
+  fi
+}
+wd9_assert
+
+# ── WD10 — the PERSON scope's raw, case-sensitive token.
+wd10_assert() {
+  local got
+  got="$(printf '%s\n' 'Follow up on a `PERSON` field.' 'Follow up on a person field.' 'A PERSONAL note.' 'The PERSON_X token.' 'A person-class field.' 'health- or document-shaped text' | ta_scope | tr '\n' ' ')"
+  if [ -z "$got" ]; then
+    FAIL "WD10: the scope reader produced nothing — the PERSON marker test did not run"
+  elif [ "$got" != "1 0 0 0 1 1 " ]; then
+    FAIL "WD10: the raw marker test reads [$got] where D3 requires [1 0 0 0 1 1] — the token PERSON scopes, a lower-case person or a longer token does not, and the two named substrings do"
+  else
+    PASS "WD10: the PERSON marker is read in the RAW sentence, case-sensitive — the token PERSON scopes, a lower-case person, PERSONAL and PERSON_X do not, and person-class and health- or document-shaped do"
+  fi
+}
+wd10_assert
+
+# ── WD-NU0 to WD-NU2 — nu_list over ADR-045, reformats on copies, and the agreement it offers.
+NU_ADR="$ROOT/reference/adr/ADR-045-interview-conversation-conduct.md"
+nu0_assert() {
+  local recs na nf nn both
+  recs="$(nu_list "$NU_ADR")"
+  na="$(awk -F'\t' '$1 == "A"' <<<"$recs" | awk 'END { print NR }')"
+  nf="$(awk -F'\t' '$1 == "FIELD"' <<<"$recs" | awk 'END { print NR }')"
+  nn="$(awk -F'\t' '$1 == "NONFIELD"' <<<"$recs" | awk 'END { print NR }')"
+  both="$(awk -F'\t' '$1 == "FIELD" { f[$2] = 1 } $1 == "NONFIELD" && ($2 in f) { print $2 }' <<<"$recs")"
+  if [ -z "$recs" ]; then
+    FAIL "WD-NU0: nu_list read nothing from ${NU_ADR#"$ROOT/"} — the record's lists have no reader"
+  elif [ -n "$(awk -F'\t' '$1 == "NE"' <<<"$recs")" ]; then
+    FAIL "WD-NU0: NOT EVALUATED — $(awk -F'\t' '$1 == "NE" { print $2 }' <<<"$recs")"
+  elif [ "$na" -eq 0 ] || [ "$nf" -eq 0 ] || [ "$nn" -eq 0 ]; then
+    FAIL "WD-NU0: a list read EMPTY — $na admitted non-utterance id(s), $nf kind(s) that put or concern a field, $nn that put none"
+  elif [ -n "$both" ]; then
+    FAIL "WD-NU0: a kind stands in both of term 7's lists: $both"
+  else
+    PASS "WD-NU0: nu_list reads from ADR-045 $na admitted non-utterance id(s) [$(awk -F'\t' '$1 == "A" { printf "%s ", $2 }' <<<"$recs")], $nf kind(s) that put or concern a field and $nn that put none, the two lists disjoint — ids and italic names only, de-duplicated; the suite holds no copy"
+  fi
+}
+nu0_assert
+nu1_assert() {
+  local ref c0 c5 cj cw cb a l5 lb
+  ref="$(nu_list "$NU_ADR")"
+  c0="$WORK/wd/nu-indent0.md"; c5="$WORK/wd/nu-indent5.md"; cj="$WORK/wd/nu-joined.md"; cw="$WORK/wd/nu-wrap52.md"; cb="$WORK/wd/nu-break.md"
+  sed -E 's/^[ \t]+(\| `A[0-9]+` \|)/\1/' "$NU_ADR" > "$c0"
+  sed -E 's/^[ \t]*(\| `A[0-9]+` \|)/     \1/' "$NU_ADR" > "$c5"
+  awk '/^7\. \*\*the kinds of interviewer turn/ { on = 1; buf = $0; next } on && (/^[0-9]+\. / || /^#/) { print buf; on = 0 } on { t = $0; sub(/^[ \t]+/, "", t); buf = buf " " t; next } { print } END { if (on) print buf }' "$NU_ADR" > "$cj"
+  awk '/^7\. \*\*the kinds of interviewer turn/ { on = 1; buf = $0; next } on && (/^[0-9]+\. / || /^#/) { n = split(buf, w, " "); line = ""; for (i = 1; i <= n; i++) { if (line != "" && length(line) + 1 + length(w[i]) > 52) { print line; line = "   " w[i] } else line = (line == "" ? w[i] : line " " w[i]) }; print line; on = 0 } on { t = $0; sub(/^[ \t]+/, "", t); buf = buf " " t; next } { print }' "$NU_ADR" > "$cw"
+  awk '{ s = $0; i = index(s, "*ask-on-doubt*, *member"); if (!done && i && substr(s, i - 1, 1) != "*") { s = substr(s, 1, i - 1) "*ask-on-\n   doubt*" substr(s, i + 14); done = 1 } print s }' "$NU_ADR" > "$cb"
+  a=""; l5=1; lb=1
+  cmp -s "$c5" "$NU_ADR" && l5=0
+  cmp -s "$cb" "$NU_ADR" && lb=0
+  [ "$(nu_list "$c0")" = "$ref" ] || a="$a indent-0"
+  [ "$(nu_list "$c5")" = "$ref" ] || a="$a indent-5"
+  [ "$(nu_list "$cj")" = "$ref" ] || a="$a term-7-joined"
+  [ "$(nu_list "$cw")" = "$ref" ] || a="$a term-7-wrapped-at-52"
+  if [ -z "$ref" ]; then
+    FAIL "WD-NU1: nu_list read nothing from the record, so no reformat can be compared with it"
+  elif [ "$(awk 'END { print NR }' "$cj")" -ge "$(awk 'END { print NR }' "$NU_ADR")" ] || [ "$(awk 'END { print NR }' "$cw")" -eq "$(awk 'END { print NR }' "$NU_ADR")" ] || [ "$l5" -eq 0 ]; then
+    FAIL "WD-NU1: a reformat did not LAND on its copy — the joined, wrapped or re-indented copy is not a reformat of the record, so agreement with it shows nothing"
+  elif [ -n "$a" ]; then
+    FAIL "WD-NU1: a whitespace-only reformat reads OTHER members:$a — the reader is keyed on layout, so a re-wrap of the record moves the lists it reports"
+  elif [ "$lb" -eq 0 ] || [ "$(nu_list "$cb")" = "$ref" ]; then
+    FAIL "WD-NU1: the boundary did not fire — a re-wrap breaking inside term 7's *ask-on-doubt* did not land on its copy, or reads the same members, so the reader absorbed a change to the rendered text"
+  else
+    PASS "WD-NU1: four whitespace-only reformats on copies read the same members as the record — the table at indent 0 and at 5, term 7 joined onto one line, and term 7 re-wrapped at 52 columns. The boundary: a re-wrap breaking inside *ask-on-doubt* changes the rendered name and is REPORTED, reading [$(nu_list "$cb" | awk -F'\t' '$1 == "FIELD" && /ask-on/ { print $2 }')], never absorbed"
+  fi
+}
+nu1_assert
+nu2_assert() {
+  local recs ra rf rn plant pn d1 d2 d3 d4 d5
+  recs="$(nu_list "$NU_ADR")"
+  ra="$(awk -F'\t' '$1 == "A" { print $2 }' <<<"$recs")"; rf="$(awk -F'\t' '$1 == "FIELD" { print $2 }' <<<"$recs")"; rn="$(awk -F'\t' '$1 == "NONFIELD" { print $2 }' <<<"$recs")"
+  plant="$WORK/wd/nu-seventh.md"
+  awk '{ s = $0; if (!done && index(s, "*routing statement*")) { sub(/\*routing statement\*/, "*routing statement*, *hold notice*", s); done = 1 } print s }' "$NU_ADR" > "$plant"
+  pn="$(nu_list "$plant" | awk -F'\t' '$1 == "NONFIELD" { print $2 }')"
+  d1="$(nu_agree "$ra" "$ra" two-way)"
+  d2="$(nu_agree "$ra" "$(sed '$d' <<<"$ra")" two-way)"
+  d3="$(nu_agree "$rf" "$rf"$'\nrating ask' two-way)"
+  d4="$(nu_agree "$rn" "$rn"$'\nrating ask' one-way)"
+  d5="$(nu_agree "$pn" "$rn"$'\nrating ask' one-way)"
+  if [ -z "$ra" ] || [ -z "$rf" ] || [ -z "$rn" ]; then
+    FAIL "WD-NU2: a record list read EMPTY, so no agreement over it is a measurement"
+  elif [ "$pn" = "$rn" ]; then
+    FAIL "WD-NU2: the planted seventh kind did not LAND on its copy of the record"
+  elif [ -n "$d1" ] || [ -n "$d4" ]; then
+    FAIL "WD-NU2: agreement over identical sets reports a difference [$d1$d4] — the comparison is broken"
+  elif [ -z "$d2" ] || [ -z "$d3" ] || [ -z "$d5" ]; then
+    FAIL "WD-NU2: a CONTROL did not fire — a dropped id [$d2], an extra field kind [$d3] and a seventh non-field kind planted in the record [$d5] must each disagree"
+  else
+    PASS "WD-NU2: nu_agree holds a consumer to the record — two-way on A1..A5 and on the kinds that put or concern a field (an id dropped from the suite reports '$(tr '\n' ' ' <<<"$d2")', a field kind the record lacks reports '$(tr '\n' ' ' <<<"$d3")'), one-way on the kinds that put none (the suite may hold #1770's rating ask and agrees, while a seventh kind planted in a copy of the record reports '$(tr '\n' ' ' <<<"$d5")')"
+  fi
+}
+nu2_assert
+
+md_flips wd_pairs   'WD1'    wd1_assert
+md_flips wd_rows    'WD2'    wd2_assert
+md_flips wd_pairs   'WD3'    wd3_assert
+md_flips wd_pairs   'WD4'    wd4_assert
+md_flips wd_stream  'WD5'    wd5_assert
+md_flips c0_split   'WD6'    wd6_assert
+md_flips wd_stream  'WD7'    wd7_assert
+md_flips ta_read    'WD8'    wd8_assert
+md_flips ta_model   'WD9'    wd9_assert
+md_flips ta_members 'WD9b'   wd9_assert
+md_flips ta_scope   'WD10'   wd10_assert
+md_flips nu_list    'WD-NU0' nu0_assert
+md_flips nu_list    'WD-NU1' nu1_assert
+md_flips nu_agree   'WD-NU2' nu2_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group WT — CH-2's W-test over the authored conduct text: WT.P1, no value in a prompt, and WT.P2,
+# silence is not assent (ADR-045 § The predicates — On the conduct's text)
+#
+# WT.P1 grades every directive offer the readers reach, against D1 item 8's restated sentence: a
+# prompt carries no value outside clause (a), an option the form lists, and clause (b), their own
+# words, and no value under the name of an example. WT.P2 grades every clause that carries both a
+# silence phrase and an assent marker. Both read words through group WD's WD_FN and sentences
+# through its C0, and a hit is LG's to declare: the forms' known sentences are rows of the ledger,
+# so a new hit is red and a reworded one leaves a row that no longer trips.
+#
+# ── WT.P1's TRIGGERS ─────────────────────────────────────────────────────────────────────────────
+# offer(s), suggest(s), propose(s), recommend(s), mention(s); read with out within four words after
+# it; give(s) with example(s), option(s) or choice(s) within six; offered, suggested, proposed,
+# recommended or mentioned directly after be, is or are. A word inside a code span is never one (R7).
+#
+# ── WT.P1's CLASSES — a rule over an enumeration (CLAUDE.md § Rules over an enumeration) ──────────
+# Precedence: tested on the trigger object (R8), plus R9 where a class says so, THE FIRST CLASS
+# THAT HOLDS DECIDES, in this order. Admission: an occurrence no class names is UNCLASSIFIED and
+# fails closed; a class is added here and nowhere else.
+#   0  NOUN        the trigger stands directly after a determiner (a an the this that its their your
+#                  one) with no punctuation between — counted, not graded
+#   1  DENIED      R6, or object negation — pass
+#   2  ENUMERATION the object is empty — pass
+#   3  OWN         the object holds what they said, what they say, their words, their own words — pass
+#   4  LITERAL     the object backticked or double-quoted values, not closed:, open: or the em dash,
+#                  less every value that is a branch item (class 9). Each must match a member of the
+#                  step section (procedure X) and be no floor item of it — FAIL naming each failing value
+#   5  OPTION      the object holds choices, choice, options, option, members, member, those or
+#                  shapes. Its offered items, R9 (a)-(c), must each match a member and be no floor
+#                  item; with none it passes; on a step-less input any offered item fails
+#   6  NON-OPTION SOURCE  menu, tick, archetype(s), placeholder(s), wording, guidance, worked, or e.g. — FAIL
+#   7  VALUE       tag(s), value(s), guess — FAIL
+#   8  EXAMPLE     the clause carries only examples, as an example, as examples, said as an example,
+#                  never a list to choose from or never offered as a choice; or the object first
+#                  content word (after a an the some one two three) is example(s); or it holds example(s)
+#                  of your own or your own example. No item of the object or of R9 (a) and (b) may
+#                  CONTAIN a floor item of the section — FAIL naming each item that does
+#   9  BRANCH      a closed vocabulary: at least one item, and every item holds a remedy phrase (answer
+#                  it, skip it, skip, stop, stop here, keep going, named section, to text, for later,
+#                  later, defer, once more, again, branches, branch) with every word a remedy word, a
+#                  function word (it them to for move leave go exactly a an the) or a numeral one to
+#                  five standing directly before branch or branches — pass
+#   10 ITEMS       two or more items, tiled exactly by members of the step section and or / and, one
+#                  article allowed before each member, the first included — FAIL naming the items
+#                  that are no member. Inputs (i) and (ii) have no members
+#   11 UNCLASSIFIED none of the above — FAIL
+#
+# ── R9 — THE REACH OF AN OPTION OR EXAMPLE DIRECTIVE (FM-A, FM-B; A1) ─────────────────────────────
+# The offered items are read from up to three places beyond the object. (a) Each parenthesis opened in
+# the object, to its matching ) or, unclosed, to the object end — except one whose WHOLE text, trimmed,
+# matches ^ADR-[0-9]+( D[0-9]+(.[0-9]+)*)?$, a citation and nothing else. (b) The next clause, when no
+# later trigger stands in the clause and R5 ended it at : or at a spaced em dash, en dash or hyphen,
+# unless it is prose: its first word is and, but, or, so, then, if, when, while, because, which, who or
+# where, or its first item — to its first , or " or " — holds is, are, was or were. (c) For OPTION
+# only, the object text after its last option word, parentheses left out, unless that is empty or
+# opens on a frame word (the this that these those their its them they it which who whom again also
+# only never not no but from of for to in on at by with after before quoted listed given shown named
+# above below here there). Items are split at , (an or / and after it included), " or " and " and ",
+# trimmed and read through B1. Stated bounds, each a plant that PASSES with the bound named: "Offer
+# the members — Lisbon is one." (a continuation worded as prose), and "Suggest a stop again." (stop
+# and again are remedy words).
+#
+# ── WT.P2 (D5) ───────────────────────────────────────────────────────────────────────────────────
+# Population: a clause holding a silence phrase — silence, silent, no reply / replies / response,
+# say / says / said / saying nothing, go / goes / went / gone / going / stay / stays quiet, stays
+# silent, do / does / did not answer / reply / respond, don't / doesn't / didn't answer / reply /
+# respond — and an assent marker, the first in the clause deciding: a word opening assent, agree,
+# consent or accept, or yes; take / took / taking / treat… + it / that / this / silence + as; count /
+# counts / counted + as; means with an assent word in the next two. FAIL unless R6 denies the marker,
+# the word positions of each silence-phrase occurrence removed — never every word of the same
+# spelling. No modality limb: the restated sentence says silence is not assent, unqualified, so the
+# scope difference from ADR-026's cell (in a spoken modality) is recorded here and not reconciled.
+#
+# WHAT A GREEN DOES NOT COVER: a negation inside the window that does not bind the trigger reads as
+# negated; a negation further than five words away reads as not negated, which fails closed; a
+# paraphrase outside the lexicon is not seen — "Put forward the archetype menu" (Y14c) is the stated
+# lexical bound; an offered list is read only where R9 reaches it — a parenthesis, the next clause
+# after a colon or a spaced dash, the words after the option word — so a list placed elsewhere, a
+# continuation worded as prose, or a value placed after a separator inside a parenthesis is not seen;
+# and the subject is the authored text a session follows, not a session.
+#
+# AC8: Been here before? — once / a few times offered from a visit count: PASS under clause (a) and
+# term 2 (class LITERAL, members by procedure X); which member a derivation offers is ADR-017 § 4's,
+# not graded here. The plants beside it: offering know it well passes (D7), offering twice fails
+# naming twice (D4).
+#
+# ── THE ARMS ─────────────────────────────────────────────────────────────────────────────────────
+#   WT.P1     every trigger occurrence over inputs (i)-(iii) classified, the population, the classes
+#             and R9's reaches printed; its hits are graded by group LG
+#   WT.P2     the same over the silence-and-assent population
+#   WT-AC8    the AC8 sentence passes as LITERAL, both members
+#   WT-CTL[…] every planted control of D13 on the two limbs, each graded under its stated step at its
+#             pinned verdict — the plant built into $WORK, never into a tracked file — must-fire and
+#             must-not-fire alike, the stated bounds pinned as bounds
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "WT — CH-2's W-test over the conduct text: no value in a prompt (WT.P1), silence is not assent (WT.P2)"
+
+# ── THE TEXT ARMS' ENGINE — every arm's classifier, composed into ONE awk program and run once over
+# the readers' sentences, so each group below grades the same records. TA_ARMS_FN names the arm
+# libraries the run composes; each group's library lands here, ahead of the first run.
+TA_WT_FN='# ---- WT.P1 (D4, with R9) and WT.P2 (D5) ----
+function wt_init(   i, j) {
+  WT_TRIG = "offer offers suggest suggests propose proposes recommend recommends mention mentions"
+  WT_GIVE_OBJ = "example examples option options choice choices"
+  WT_PART = "offered suggested proposed recommended mentioned"; WT_PART_AUX = "be is are"
+  WT_OWN_N = split("what they said|what they say|their words|their own words", WT_OWN, "|")
+  WT_OPTION = "choices choice options option members member those shapes"
+  WT_NONOPT = "menu tick archetype archetypes placeholder placeholders wording guidance worked"
+  WT_VALUE = "tag tags value values guess"
+  WT_EXMARK_N = split("only examples|as an example|as examples|said as an example|never a list to choose from|never offered as a choice", WT_EXMARK, "|")
+  WT_EXOBJ_N = split("example of your own|your own example|examples of your own", WT_EXOBJ, "|")
+  WT_EXSKIP = "a an the some one two three"
+  WT_REM_N = split("answer it|skip it|skip|stop|stop here|keep going|named section|to text|for later|later|defer|once more|again|branches|branch", WT_REM, "|")
+  WT_VOCAB = "it them to for move leave go exactly a an the"
+  for (i = 1; i <= WT_REM_N; i++) WT_VOCAB = WT_VOCAB " " WT_REM[i]
+  WT_NUMERAL = "one two three four five"
+  WT_PROSE_FIRST = "and but or so then if when while because which who where"; WT_PROSE_ANY = "is are was were"
+  WT_FRAME = "the this that these those their its them they it which who whom again also only never not no but from of for to in on at by with after before quoted listed given shown named above below here there"
+  WT_SIL_N = 0
+  wt_sil("silence"); wt_sil("silent"); wt_sil("no reply"); wt_sil("no replies"); wt_sil("no response")
+  split("say says said saying", WTI_A, " "); for (i = 1; i <= 4; i++) wt_sil(WTI_A[i] " nothing")
+  split("go goes went gone going stay stays", WTI_A, " "); for (i = 1; i <= 7; i++) wt_sil(WTI_A[i] " quiet")
+  wt_sil("stays silent")
+  split("do does did", WTI_A, " "); split("answer reply respond", WTI_V, " ")
+  for (i = 1; i <= 3; i++) for (j = 1; j <= 3; j++) wt_sil(WTI_A[i] " not " WTI_V[j])
+  split("dont doesnt didnt", WTI_A, " "); for (i = 1; i <= 3; i++) for (j = 1; j <= 3; j++) wt_sil(WTI_A[i] " " WTI_V[j])
+}
+function wt_sil(p) { WT_SIL[++WT_SIL_N] = p }
+function wt_triggers(TG,   n, k, j, hit) {
+  n = 0
+  for (k = 1; k <= NT; k++) {
+    if (cl_incode(k)) continue
+    hit = 0
+    if (cl_in(TW[k], WT_TRIG)) hit = 1
+    else if (TW[k] == "read") { for (j = k + 1; j <= k + 4 && j <= NT; j++) if (TW[j] == "out") hit = 1 }
+    else if (TW[k] == "give" || TW[k] == "gives") { for (j = k + 1; j <= k + 6 && j <= NT; j++) if (cl_in(TW[j], WT_GIVE_OBJ)) hit = 1 }
+    else if (cl_in(TW[k], WT_PART) && k > 1 && cl_in(TW[k - 1], WT_PART_AUX)) hit = 1
+    if (hit) TG[++n] = k
+  }
+  return n
+}
+# items_of: split at a comma (an or / and after it included), at " or " and at " and ".
+function wt_items(s, IT,   n, x) {
+  n = 0
+  while (match(s, /[ \t\n\r\f\v]*,[ \t\n\r\f\v]*(or[ \t\n\r\f\v]+|and[ \t\n\r\f\v]+)?|[ \t\n\r\f\v]+or[ \t\n\r\f\v]+|[ \t\n\r\f\v]+and[ \t\n\r\f\v]+/)) {
+    x = wt_strip3(substr(s, 1, RSTART - 1)); if (x != "") IT[++n] = x; s = substr(s, RSTART + RLENGTH)
+  }
+  x = wt_strip3(s); if (x != "") IT[++n] = x
+  return n
+}
+function wt_strip3(x) { gsub(/^[ .;]+|[ .;]+$/, "", x); return x }
+function wt_is_branch(x,   A, n, i, ok, any) {
+  n = wd_words(x, A); if (n == 0) return 0
+  any = 0; for (i = 1; i <= WT_REM_N; i++) if (wd_has(A, n, WT_REM[i])) { any = 1; break }
+  if (!any) return 0
+  for (i = 1; i <= n; i++) {
+    ok = cl_in(A[i], WT_VOCAB) || (cl_in(A[i], WT_NUMERAL) && i < n && (A[i + 1] == "branch" || A[i + 1] == "branches"))
+    if (!ok) return 0
+  }
+  return 1
+}
+# D4 class 10: the words tiled exactly by members and or / and, one article before each member.
+function wt_tile(s, p, st,   OW, n, OUT, nm, MS, MW, i, ok, m, k, j, len, good) {
+  n = wd_words(s, OW); nm = m_members(p, st, OUT)
+  for (i = 1; i <= nm; i++) { k = m_norm(OUT[i]); if (k != "") MS[k] = 1 }
+  for (i = 0; i <= n; i++) ok[i] = 0
+  ok[0] = 1
+  for (i = 0; i < n; i++) {
+    if (!ok[i]) continue
+    if (OW[i + 1] == "or" || OW[i + 1] == "and") ok[i + 1] = 1
+    for (m in MS) {
+      len = split(m, MW, " ")
+      good = 1; for (j = 1; j <= len; j++) if (OW[i + j] != MW[j] || i + j > n) { good = 0; break }
+      if (good) ok[i + len] = 1
+      if (OW[i + 1] == "a" || OW[i + 1] == "an" || OW[i + 1] == "the") {
+        good = 1; for (j = 1; j <= len; j++) if (OW[i + 1 + j] != MW[j] || i + 1 + j > n) { good = 0; break }
+        if (good) ok[i + 1 + len] = 1
+      }
+    }
+  }
+  return ok[n]
+}
+# R9 (a): each parenthesis opened in [a, b): PA its opening, PB its closing or 0 when it runs to b.
+function wt_parens(a, b, PA, PB,   n, i, j) {
+  n = 0; i = a
+  while (i < b) {
+    if (substr(CL_RAW, i, 1) == "(") {
+      j = index(substr(CL_RAW, i + 1), ")")
+      if (j > 0 && i + j < b) { n++; PA[n] = i; PB[n] = i + j; i = i + j + 1; continue }
+      n++; PA[n] = i; PB[n] = 0; break
+    }
+    i++
+  }
+  return n
+}
+function wt_inside(pos, np, PA, PB,   q) { for (q = 1; q <= np; q++) if (PA[q] <= pos && (PB[q] == 0 || pos <= PB[q])) return 1; return 0 }
+# R9: the offered items beyond the object of trigger k (object end token e, raw span [a, b)).
+function wt_reach(k, e, a, b, option, RI,   n, PA, PB, np, q, txt, t, NW, nn, fi, FW, nf, prose, last, i, start, pos, out, x, IT, ni, y, cpos, opos) {
+  n = 0; RCH = ""
+  np = wt_parens(a, b, PA, PB)
+  for (q = 1; q <= np; q++) {
+    txt = substr(CL_RAW, PA[q] + 1, (PB[q] ? PB[q] : b) - PA[q] - 1)
+    if (c0_trim(txt) !~ /^ADR-[0-9]+([ \t\n\r\f\v]+D[0-9]+(\.[0-9]+)*)?$/) { n = wt_reach_add(txt, RI, n); RCH = RCH " paren" }
+  }
+  if (e == NT + 1 && (CL_SEP == ":" || CL_SEP == " \342\200\224 " || CL_SEP == " \342\200\223 " || CL_SEP == " - ") && CL_HASNXT) {
+    nn = wd_words(CL_NXT, NW); t = c0_trim(CL_NXT)
+    cpos = index(t, ","); opos = match(t, /[ \t\n\r\f\v]+or[ \t\n\r\f\v]+/) ? RSTART : 0
+    fi = t; if (cpos && (!opos || cpos < opos)) fi = substr(t, 1, cpos - 1); else if (opos) fi = substr(t, 1, opos - 1)
+    nf = wd_words(fi, FW); prose = 0; for (i = 1; i <= nf; i++) if (cl_in(FW[i], WT_PROSE_ANY)) prose = 1
+    if (nn > 0 && !cl_in(NW[1], WT_PROSE_FIRST) && !prose) { n = wt_reach_add(CL_NXT, RI, n); RCH = RCH " cont" }
+  }
+  if (option) {
+    last = 0; for (i = k + 1; i < e; i++) if (cl_in(TW[i], WT_OPTION)) last = i
+    start = TE[last]; fi = 0
+    for (i = last + 1; i < e; i++) if (!wt_inside(TS[i], np, PA, PB)) { fi = i; break }
+    if (fi && !cl_in(TW[fi], WT_FRAME)) {
+      out = ""; for (pos = start; pos < b; pos++) if (!wt_inside(pos, np, PA, PB)) out = out substr(CL_RAW, pos, 1)
+      n = wt_reach_add(out, RI, n); RCH = RCH " appos"
+    }
+  }
+  return n
+}
+function wt_reach_add(txt, RI, n,   IT, ni, i, y) {
+  ni = wt_items(txt, IT)
+  for (i = 1; i <= ni; i++) { y = IT[i]; gsub(/^[() ]+|[() ]+$/, "", y); y = x_strip(y); if (y != "") RI[++n] = y }
+  return n
+}
+function wt_contains_floor(item, FL, nfl,   IW, ni, f, FW, nw, s, j, ok, k, fw) {
+  ni = wd_words(item, IW)
+  for (f = 1; f <= nfl; f++) {
+    fw = m_norm(FL[f]); if (fw == "") continue
+    nw = split(fw, FW, " ")
+    for (s = 1; s + nw - 1 <= ni; s++) { ok = 1; for (j = 1; j <= nw; j++) if (IW[s + j - 1] != FW[j]) { ok = 0; break }; if (ok) return 1 }
+  }
+  return 0
+}
+# wt_class — D4: the first class that holds decides. Sets WT_C (class), WT_V (pass | FAIL) and WT_N (names).
+function wt_class(p, st, k, ntg, TG,   NOEX, LV, e, i, a, b, obj, nobj, OB, rawobj, LX, LP, nl, MS, FSET, FL, nfl, bad, j, RI, nr, head, ex, IT, ni, allb, OUT, nm) {
+  e = NT + 1; for (i = 1; i <= ntg; i++) if (TG[i] > k) { e = TG[i]; break }
+  nobj = 0; for (i = k + 1; i < e; i++) OB[++nobj] = TW[i]
+  a = TE[k]; b = (e <= NT) ? TS[e] : CL_L + 1; rawobj = substr(CL_RAW, a, b - a)
+  WT_N = ""
+  if (k > 1 && cl_in(TW[k - 1], TA_DET) && !cl_punct(k - 1, k)) { WT_C = "NOUN"; WT_V = "-"; return }
+  if (cl_denied(k, 0) || cl_objneg(k + 1, e)) { WT_C = "DENIED"; WT_V = "pass"; split("", NOEX); WT_N = "d=" cl_denial(k, NOEX, 0); return }
+  if (nobj == 0) { WT_C = "ENUMERATION"; WT_V = "pass"; return }
+  for (i = 1; i <= WT_OWN_N; i++) if (wd_has(OB, nobj, WT_OWN[i])) { WT_C = "OWN"; WT_V = "pass"; return }
+  nl = cl_lits(a, b, LX, LP); j = 0
+  for (i = 1; i <= nl; i++) if (LX[i] != "\342\200\224" && !wt_is_branch(LX[i])) LV[++j] = LX[i]
+  if (j > 0) {
+    m_memset(p, st, MS); nfl = m_floor(p, st, FL); split("", FSET); for (i = 1; i <= nfl; i++) FSET[m_norm(FL[i])] = 1
+    bad = ""; for (i = 1; i <= j; i++) if (!(m_norm(LV[i]) in MS) || (m_norm(LV[i]) in FSET)) bad = bad (bad == "" ? "" : "|") LV[i]
+    WT_C = "LITERAL"; WT_V = (bad == "" ? "pass" : "FAIL"); WT_N = bad; return
+  }
+  for (i = 1; i <= nobj; i++) if (cl_in(OB[i], WT_OPTION)) {
+    nr = wt_reach(k, e, a, b, 1, RI)
+    m_memset(p, st, MS); nfl = m_floor(p, st, FL); split("", FSET); for (j = 1; j <= nfl; j++) FSET[m_norm(FL[j])] = 1
+    bad = ""; for (j = 1; j <= nr; j++) if (!(m_norm(RI[j]) in MS) || (m_norm(RI[j]) in FSET)) bad = bad (bad == "" ? "" : "|") RI[j]
+    WT_C = "OPTION"; WT_V = (bad == "" ? "pass" : "FAIL"); WT_N = bad; return
+  }
+  for (i = 1; i <= nobj; i++) if (cl_in(OB[i], WT_NONOPT)) { WT_C = "NON-OPTION SOURCE"; WT_V = "FAIL"; return }
+  if (wd_has(OB, nobj, "e g")) { WT_C = "NON-OPTION SOURCE"; WT_V = "FAIL"; return }
+  for (i = 1; i <= nobj; i++) if (cl_in(OB[i], WT_VALUE)) { WT_C = "VALUE"; WT_V = "FAIL"; return }
+  head = ""; for (i = 1; i <= nobj; i++) if (!cl_in(OB[i], WT_EXSKIP)) { head = OB[i]; break }
+  ex = (head == "example" || head == "examples")
+  for (i = 1; i <= WT_EXMARK_N && !ex; i++) if (wd_has(TW, NT, WT_EXMARK[i])) ex = 1
+  for (i = 1; i <= WT_EXOBJ_N && !ex; i++) if (wd_has(OB, nobj, WT_EXOBJ[i])) ex = 1
+  if (ex) {
+    nfl = m_floor(p, st, FL); ni = wt_items(rawobj, IT); nr = wt_reach(k, e, a, b, 0, RI)
+    for (j = 1; j <= nr; j++) IT[++ni] = RI[j]
+    bad = ""; for (j = 1; j <= ni; j++) if (wt_contains_floor(IT[j], FL, nfl)) bad = bad (bad == "" ? "" : "|") IT[j]
+    WT_C = "EXAMPLE"; WT_V = (bad == "" ? "pass" : "FAIL"); WT_N = bad; return
+  }
+  ni = wt_items(rawobj, IT)
+  allb = (ni > 0); for (j = 1; j <= ni; j++) if (!wt_is_branch(IT[j])) allb = 0
+  if (allb) { WT_C = "BRANCH"; WT_V = "pass"; return }
+  if (ni >= 2) {
+    if (wt_tile(rawobj, p, st)) { WT_C = "ITEMS"; WT_V = "pass"; return }
+    m_memset(p, st, MS); bad = ""; for (j = 1; j <= ni; j++) if (!(m_norm(IT[j]) in MS)) bad = bad (bad == "" ? "" : "|") IT[j]
+    WT_C = "ITEMS"; WT_V = "FAIL"; WT_N = bad; return
+  }
+  WT_C = "UNCLASSIFIED"; WT_V = "FAIL"
+}
+function wt_assent_word(x) { return (x ~ /^(assent|agree|consent|accept)/ || x == "yes") }
+# wt2 — D5: a clause with a silence phrase and an assent marker fails unless R6 denies the marker,
+# the word positions of each silence phrase occurrence removed. Returns 0 when not in the population.
+function wt2(   i, j, s, m, P, any, k, EX, d) {
+  any = 0; for (s = 1; s <= WT_SIL_N; s++) if (wd_has(TW, NT, WT_SIL[s])) any = 1
+  if (!any) return 0
+  k = 0
+  for (i = 1; i <= NT && !k; i++) {
+    if (wt_assent_word(TW[i])) k = i
+    else if (cl_in(TW[i], "take takes took taking treat treats treated treating") && i + 2 <= NT && cl_in(TW[i + 1], "it that this silence") && TW[i + 2] == "as") k = i
+    else if (cl_in(TW[i], "count counts counted") && i + 1 <= NT && TW[i + 1] == "as") k = i
+    else if (TW[i] == "means") { for (j = i + 1; j <= i + 2 && j <= NT; j++) if (wt_assent_word(TW[j])) k = i }
+  }
+  if (!k) return 0
+  split("", EX)
+  for (s = 1; s <= WT_SIL_N; s++) {
+    m = split(WT_SIL[s], P, " ")
+    for (i = 1; i + m - 1 <= NT; i++) { d = 1; for (j = 1; j <= m; j++) if (TW[i + j - 1] != P[j]) { d = 0; break }; if (d) for (j = 0; j < m; j++) EX[i + j] = 1 }
+  }
+  if (cl_denial(k, EX, 0) > 0) { WT2_C = "DENIED"; WT2_V = "pass" } else { WT2_C = "ASSENT"; WT2_V = "FAIL" }
+  return k
+}'
+TA_OW_FN='# ---- OW-T.P1 / OW-T.P2 (D6) ----
+function ow_init() {
+  OW_TRIG = "record records recorded write writes written put take takes taken fill enter"
+  OW_STOP = "in into on onto under at beside above below inside within with by from when if where while because after before until unless once then and or but"
+  OW_UTTER_N = split("when they say so|if they say so|what they said|what they say|their words|their own words|the member their words contain", OW_UTTER, "|")
+  OW_OWN_N = split("what they said|what they say|their words|their own words|the member their words contain|when they say so", OW_OWN, "|")
+  OW_SKIP_N = split("skip|skips|skipped|does not apply|decline|declines", OW_SKIP, "|")
+  OW_RELAY = "operator relayed behalf"
+  OW_SOURCE = "example examples guess assent nod nods nodded nodding"
+  OW_SRCP_N = split("another field|an option they did not choose|whatever the group|as their answer", OW_SRCP, "|")
+  split("first second third last nearest", OWI_O, " "); split("option member one choice", OWI_N, " ")
+  for (i = 1; i <= 5; i++) for (j = 1; j <= 4; j++) OW_SRCP[++OW_SRCP_N] = "the " OWI_O[i] " " OWI_N[j]
+}
+function ow_triggers(TG,   n, k) {
+  n = 0
+  for (k = 1; k <= NT; k++) {
+    if (!cl_in(TW[k], OW_TRIG) || cl_incode(k)) continue
+    if (k > 1 && cl_in(TW[k - 1], TA_DET) && !cl_punct(k - 1, k)) continue
+    if (k > 2 && cl_in(TW[k - 2], TA_DET) && !cl_punct(k - 2, k - 1) && !cl_punct(k - 1, k)) continue
+    TG[++n] = k
+  }
+  return n
+}
+function ow_sp(ch) { return (ch == " " || ch == "\t" || ch == "\n" || ch == "\r" || ch == "\f" || ch == "\v") }
+function ow_wordch(ch) { return (ch != "" && !ow_sp(ch) && !index("`\042.,;:!?()", ch)) }
+# ow_gap <t> <lim> — the coordinator lookahead: up to three words, each with an optional comma and
+# then whitespace, and then a literal opening quote or backtick, all before lim (K1, K12).
+function ow_gap(t, lim,   c, w0, s0) {
+  for (c = 0; c <= 3; c++) {
+    if (t < lim && index("`\042", substr(CL_LIT, t, 1))) return 1
+    if (c == 3) return 0
+    w0 = t; while (t < lim && ow_wordch(substr(CL_LIT, t, 1))) t++
+    if (t == w0) return 0
+    if (t < lim && substr(CL_LIT, t, 1) == ",") t++
+    s0 = t; while (t < lim && ow_sp(substr(CL_LIT, t, 1))) t++
+    if (t == s0) return 0
+  }
+  return 0
+}
+function ow_tail(q, lim,   r) {
+  if (q < lim && substr(CL_LIT, q, 1) == ",") q++
+  r = q; while (r < lim && ow_sp(substr(CL_LIT, r, 1))) r++
+  if (r == q) return 0
+  return ow_gap(r, lim) ? r : 0
+}
+# ow_coord_at <p> <lim> — D6 coordinator matched at p, the text visible only before lim: an optional
+# comma, whitespace, or / and, an optional else, an optional comma and whitespace. Its end, or 0.
+function ow_coord_at(p, lim,   q, r, s2, t) {
+  q = p
+  if (q < lim && substr(CL_LIT, q, 1) == ",") q++
+  r = q; while (r < lim && ow_sp(substr(CL_LIT, r, 1))) r++
+  if (r == q) return 0
+  if (r + 1 < lim && substr(CL_LIT, r, 2) == "or") q = r + 2
+  else if (r + 2 < lim && substr(CL_LIT, r, 3) == "and") q = r + 3
+  else return 0
+  s2 = q; while (s2 < lim && ow_sp(substr(CL_LIT, s2, 1))) s2++
+  if (s2 > q && s2 + 3 < lim && substr(CL_LIT, s2, 4) == "else") { t = ow_tail(s2 + 4, lim); if (t) return t }
+  return ow_tail(q, lim)
+}
+function ow_coords(a, lim, CE,   n, p, m) {
+  n = 0; p = a
+  while (p < lim) { m = ow_coord_at(p, lim); if (m) { CE[++n] = m; p = m } else p++ }
+  return n
+}
+# the gap after a coordinator, read without the object bound: the position of the literal it stands before.
+function ow_at(p,   q, w0, s0, c) {
+  for (c = 1; c <= 3; c++) {
+    q = p; w0 = q; while (q <= CL_L && ow_wordch(substr(CL_LIT, q, 1))) q++
+    if (q == w0) break
+    if (q <= CL_L && substr(CL_LIT, q, 1) == ",") q++
+    s0 = q; while (q <= CL_L && ow_sp(substr(CL_LIT, q, 1))) q++
+    if (q == s0) break
+    p = q
+  }
+  return p
+}
+function ow_lower(s,   o, i, ch, k) { o = ""; for (i = 1; i <= length(s); i++) { ch = substr(s, i, 1); k = index(WD_UP, ch); o = o (k ? substr(WD_LO, k, 1) : ch) }; return o }
+function ow_default(sent,   s) {
+  s = ow_lower(wd_fold(sent, 0))
+  return (s ~ /(anything else is|otherwise( (write|record|put))?|by default|defaults? to)[ \t\n\r\f\v]*(`[^`]+`|"[^"]+")/)
+}
+function ow_empty(sent,   s, L, i, w, lw, pre, post, j, span, A, n, k) {
+  s = ow_lower(wd_fold(sent, 0)); L = length(s)
+  for (i = 1; i <= L; i++) {
+    for (w = 1; w <= 3; w++) {
+      lw = (w == 1) ? "if" : (w == 2 ? "when" : "where")
+      if (substr(s, i, length(lw)) != lw) continue
+      pre = (i > 1) ? substr(s, i - 1, 1) : ""; post = substr(s, i + length(lw), 1)
+      if ((pre != "" && (wd_isw(pre) || pre == "_")) || (post != "" && (wd_isw(post) || post == "_"))) continue
+      span = substr(s, i); j = match(span, /[,;:]/); if (j) span = substr(span, 1, j - 1)
+      n = wd_words(span, A); for (k = 1; k <= n; k++) if (cl_in(A[k], "no nothing none")) return 1
+    }
+  }
+  return 0
+}
+# ow_class — D6, the first class that holds decides. Sets OW_C, OW_V1 (OW-T.P1), OW_V2 (OW-T.P2), OW_N.
+function ow_class(k, ntg, TG, path, sent,   NOEX, e, oe, i, a, b, ob, LX, LP, nl, CE, nc, c, at, MX, MP, nm, j, t, x, ok, bad, cuts, nk, SA, SZ, ns, lead, lw, coord, CW, ncw, u, found, sw, hit) {
+  oe = NT + 1; for (i = 1; i <= ntg; i++) if (TG[i] > k) { oe = TG[i]; break }
+  e = NT + 1; for (i = k + 1; i <= NT; i++) if (i == oe || cl_in(TW[i], OW_STOP)) { e = i; break }
+  a = TE[k]; b = (e <= NT) ? TS[e] : CL_L + 1; ob = (oe <= NT) ? TS[oe] : CL_L + 1
+  nl = cl_lits(a, b, LX, LP)
+  nc = ow_coords(a, ob, CE)
+  for (c = 1; c <= nc; c++) {
+    at = ow_at(CE[c]); nm = cl_lits(CE[c], ob, MX, MP)
+    for (j = 1; j <= nm; j++) if (MP[j] == at) { found = 0; for (t = 1; t <= nl; t++) if (LP[t] == MP[j]) found = 1; if (!found) { nl++; LX[nl] = MX[j]; LP[nl] = MP[j] } }
+  }
+  for (i = 2; i <= nl; i++) for (j = i; j > 1 && LP[j - 1] > LP[j]; j--) { t = LP[j]; LP[j] = LP[j - 1]; LP[j - 1] = t; t = LX[j]; LX[j] = LX[j - 1]; LX[j - 1] = t }
+  OW_N = ""
+  if (ow_default(sent)) { OW_C = "DEFAULT"; OW_V1 = "FAIL"; OW_V2 = "FAIL"; return }
+  j = 0; for (i = 1; i <= nl; i++) if (LX[i] != "\342\200\224") j++
+  if (j > 0 && ow_empty(sent)) {
+    ok = ""; bad = ""
+    for (i = 1; i <= nl; i++) if (LX[i] != "\342\200\224") { if (((path, LX[i]) in A2ROW)) ok = ok (ok == "" ? "" : "|") LX[i]; else bad = bad (bad == "" ? "" : "|") LX[i] }
+    if (bad == "") { OW_C = "A2"; OW_V1 = "pass"; OW_V2 = "pass:A2"; OW_N = ok; return }
+    OW_C = "A2-UNDECLARED"; OW_V1 = "FAIL"; OW_V2 = "FAIL"; OW_N = bad; return
+  }
+  if (cl_denied(k, 0) || cl_objneg(k + 1, NT + 1)) { OW_C = "DENIED"; OW_V1 = "pass"; OW_V2 = "pass"; split("", NOEX); OW_N = "d=" cl_denial(k, NOEX, 0); return }
+  if (nl > 0) {
+    nk = 1; cuts[1] = a; for (c = 1; c <= nc; c++) cuts[++nk] = CE[c]; cuts[++nk] = ob
+    ns = cl_closed(k, SA, SZ); lead = 0
+    if (ns == 1) { lw = ""; for (i = SA[1]; i <= SZ[1]; i++) lw = lw (lw == "" ? "" : " ") TW[i]; lead = (lw == "if they say so" || lw == "when they say so") }
+    bad = ""
+    for (i = 1; i <= nl; i++) {
+      x = LX[i]
+      if (x == "\342\200\224") {
+        hit = 0; for (u = 1; u <= OW_SKIP_N; u++) if (wd_has(SW, NSW, OW_SKIP[u])) hit = 1
+        if (!hit) bad = bad (bad == "" ? "" : "|") "A1-without-a-skip"
+        continue
+      }
+      coord = ""; for (c = 1; c < nk; c++) if (cuts[c] <= LP[i] && LP[i] < cuts[c + 1]) { coord = substr(CL_LIT, cuts[c], cuts[c + 1] - cuts[c]); break }
+      ncw = wd_words(coord, CW); hit = 0
+      for (u = 1; u <= OW_UTTER_N; u++) if (wd_has(CW, ncw, OW_UTTER[u])) hit = 1
+      if (hit) continue
+      if (lead && cuts[1] <= LP[i] && LP[i] < cuts[2]) continue
+      if (x == "[OPERATOR-PROVIDED]") { hit = 0; for (u = 1; u <= NSW; u++) if (cl_in(SW[u], OW_RELAY)) hit = 1; if (hit) continue }
+      bad = bad (bad == "" ? "" : "|") x
+    }
+    OW_C = "LITERAL"; OW_V1 = (bad == "" ? "pass" : "FAIL"); OW_V2 = OW_V1; OW_N = bad; return
+  }
+  for (u = 1; u <= OW_OWN_N; u++) if (wd_has(SW, NSW, OW_OWN[u])) { OW_C = "OWN"; OW_V1 = "pass"; OW_V2 = "pass"; return }
+  for (u = 1; u <= NSW; u++) if (cl_in(SW[u], OW_SOURCE)) { OW_C = "SOURCE"; OW_V1 = "FAIL"; OW_V2 = "-"; return }
+  for (u = 1; u <= OW_SRCP_N; u++) if (wd_has(SW, NSW, OW_SRCP[u])) { OW_C = "SOURCE"; OW_V1 = "FAIL"; OW_V2 = "-"; return }
+  OW_C = "NEUTRAL"; OW_V1 = "pass"; OW_V2 = "pass"
+}
+# ---- FB-T.P1 (D8) ----
+function fb_triggers(TG,   n, k, j, hit) {
+  n = 0
+  for (k = 1; k <= NT; k++) {
+    if (cl_incode(k)) continue
+    hit = 0
+    if (TW[k] == "follow" && TW[k + 1] == "up" && k + 1 <= NT) hit = 1
+    else if (TW[k] == "ask") { for (j = k + 1; j <= k + 4 && j <= NT; j++) if (cl_in(TW[j], "again more further")) hit = 1; if (k + 2 <= NT && TW[k + 1] == "one" && TW[k + 2] == "more") hit = 1 }
+    else if (TW[k] == "keep" && k + 1 <= NT && TW[k + 1] == "asking") hit = 1
+    else if (cl_in(TW[k], "press pressing probe push sharpen")) hit = 1
+    else if (TW[k] == "make" && ((k + 3 <= NT && TW[k + 1] == "each" && TW[k + 2] == "one" && TW[k + 3] == "specific") || (k + 2 <= NT && TW[k + 1] == "it" && TW[k + 2] == "specific"))) hit = 1
+    if (hit) TG[++n] = k
+  }
+  return n
+}
+function fb_objstart(k) {
+  if (TW[k] == "make") return (TW[k + 1] == "each" && TW[k + 2] == "one" && TW[k + 3] == "specific") ? k + 4 : k + 3
+  if (TW[k] == "follow" || TW[k] == "keep") return k + 2
+  return k + 1
+}
+# fb_markers <sent> <phrases> <count> — D8 marker rule: an occurrence counts only where R6 at the
+# marker does not deny it, in its own clause. Returns 1/0, or with count set the occurrences.
+function fb_markers(sent, list, count,   PH, np, nc, O, T, P, c, h, m, W2, i, j, ok, n) {
+  np = split(list, PH, "|"); nc = c0_clauses(sent, O, T, P); n = 0
+  for (c = 1; c <= nc; c++) {
+    cl_set(sent, O[c], T[c], "", "", 0)
+    for (h = 1; h <= np; h++) {
+      m = split(PH[h], W2, " "); if (m == 0) continue
+      for (i = 1; i + m - 1 <= NT; i++) {
+        ok = 1; for (j = 1; j <= m; j++) if (TW[i + j - 1] != W2[j]) { ok = 0; break }
+        if (ok && !cl_denied(i, 1)) { n++; if (!count) { fb_restore(); return 1 } }
+      }
+    }
+  }
+  fb_restore()
+  return count ? n : 0
+}
+function fb_save(sent, off, raw, sep, nxt, hn) { FBS_S = sent; FBS_O = off; FBS_R = raw; FBS_P = sep; FBS_N = nxt; FBS_H = hn }
+function fb_restore() { cl_set(FBS_S, FBS_O, FBS_R, FBS_P, FBS_N, FBS_H) }
+function fb_class(p, st, k, sent,   k2, cl, i, u) {
+  if (cl_denied(k, 0) || cl_objneg(fb_objstart(k), NT + 1) || wd_has(TW, NT, "rather than pressing")) { FB_C = "DENIED"; FB_V = "pass"; return }
+  if (fb_markers(sent, "keep|until|repeatedly|as many|again and again|each time|every time", 0)) { FB_C = "UNBOUNDED"; FB_V = "FAIL"; return }
+  if (fb_markers(sent, "second|another|twice|further", 0)) { FB_C = "SECOND"; FB_V = "FAIL"; return }
+  if (fb_markers(sent, "once|one more", 1) >= 2) { FB_C = "SECOND"; FB_V = "FAIL"; return }
+  if (fb_markers(sent, "after a skip|after a decline|after a stop|after a empty answer|if they skip|if they decline|if they stop", 0)) { FB_C = "AFTER"; FB_V = "FAIL"; return }
+  if (fb_markers(sent, "already answers|already answered|earlier session", 0)) { FB_C = "ANSWERED"; FB_V = "FAIL"; return }
+  cl = "closed field|closed fields|closed list|closed question"
+  if (st != "-" && ((p, st) in MSEC)) for (i = 1; i <= MF[p, st]; i++) if (MCL[p, st, i]) cl = cl "|" wd_wordstr(m_labelwords(MLAB[p, st, i]))
+  if (fb_markers(sent, cl, 0)) { FB_C = "CLOSED"; FB_V = "FAIL"; return }
+  if (fb_markers(sent, "same question|repeat the question|in the same words", 0)) { FB_C = "REPEAT"; FB_V = "FAIL"; return }
+  if (m_person(p, st, sent) && !wd_has(SW, NSW, "typed session") && !wd_has(SW, NSW, "in text")) { FB_C = "PERSON-SPEECH"; FB_V = "FAIL"; return }
+  if (wd_has(SW, NSW, "never a second") || wd_has(SW, NSW, "one more") || wd_has(SW, NSW, "once")) { FB_C = "BOUNDED"; FB_V = "pass"; return }
+  FB_C = "DIRECTED"; FB_V = "observation"
+}'
+TA_CHR_FN='# ---- CHR: the CH-2 R-test (D9) ----
+function chr_p1(HK,   n, k, a, i, care, rep, TL, nt) {
+  n = 0
+  for (k = 1; k <= NT; k++) {
+    if (TW[k] != "offer" && TW[k] != "offers") continue
+    nt = 0; for (i = k + 1; i <= NT; i++) TL[++nt] = TW[i]
+    care = (wd_has(TL, nt, "to move") && wd_has(TL, nt, "text")) || (wd_has(TL, nt, "to leave") && wd_has(TL, nt, "later")) || wd_has(TL, nt, "to defer")
+    rep = wd_has(TW, NT, "each") || wd_has(TW, NT, "every") || wd_has(TW, NT, "per field") || wd_has(TW, NT, "again") || wd_has(TW, NT, "before each") || wd_has(TW, NT, "every time")
+    if (care && rep && !cl_denied(k, 0)) HK[++n] = k
+  }
+  return n
+}
+function chr_occ(list, HK, n,   PH, np, h, m, W2, i, j, ok) {
+  np = split(list, PH, "|")
+  for (h = 1; h <= np; h++) {
+    m = split(PH[h], W2, " ")
+    for (i = 1; i + m - 1 <= NT; i++) { ok = 1; for (j = 1; j <= m; j++) if (TW[i + j - 1] != W2[j]) { ok = 0; break }; if (ok && !cl_denied(i, 0)) HK[++n] = i }
+  }
+  return n
+}
+function chr_p2(HK,   n, i, j, back) {
+  n = chr_occ("repeat their answer|repeat the value|say it again|say the value|saying the value|confirm by repeating|read it back", HK, 0)
+  for (i = 1; i <= NT; i++) if (TW[i] == "read") { back = 0; for (j = i + 1; j <= i + 4 && j <= NT; j++) if (TW[j] == "back") back = 1; if (back && !cl_denied(i, 0)) HK[++n] = i }
+  return n
+}
+function chr_p4(HK,   r) {
+  if (wd_has(SW, NSW, "if they ask") || wd_has(SW, NSW, "on request") || wd_has(SW, NSW, "when asked") || wd_has(SW, NSW, "if asked") || wd_has(SW, NSW, "when they ask")) return 0
+  return chr_occ("your own example|example of your own|examples of your own|make up|compose|invent", HK, 0)
+}'
+TA_ARMS_FN="$TA_WT_FN$TA_OW_FN$TA_CHR_FN"
+TA_MAIN_FN='# ---- the run: every sentence of the readers (mode real), or each planted control (mode plant) ----
+function ta_word_index(k,   S2, E2, R2, A2w, n, i, t) {
+  n = wd_toks(wd_fold(CL_SENT, 0), A2w, S2, E2, R2); t = CL_OFF + TS[k]
+  for (i = 1; i <= n; i++) if (S2[i] == t) return i
+  return 0
+}
+function ta_hit(limb, p, st, ti, c, nm, sent) { printf "HIT\t%s\t%s\t%s\t%d\t%s\t%s\t%s\n", limb, p, st, ti, c, nm, sent }
+function ta_seen(arm, p, st, c, v, nm, sent) { printf "SEEN\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", arm, p, st, c, v, nm, sent }
+# ta_sentence — grade one sentence under its step. With a plant arm set, only that arm grades and
+# each verdict is collected into PL_OUT / PL_FIRED rather than written.
+function ta_sentence(p, st, sent, arm,   ps, nc, O, T, P, c, TG, ntg, i, k, r, OG, nog, FG, nfg, HK, nh) {
+  ps = m_person(p, st, sent)
+  nc = c0_clauses(sent, O, T, P)
+  for (c = 1; c <= nc; c++) {
+    cl_set(sent, O[c], T[c], P[c], (c < nc ? T[c + 1] : ""), (c < nc))
+    if (arm == "" || arm == "WT.P1") {
+      split("", TG); ntg = wt_triggers(TG)
+      for (i = 1; i <= ntg; i++) {
+        k = TG[i]; wt_class(p, st, k, ntg, TG)
+        if (arm != "") { ta_pl(WT_C, WT_V, WT_N); continue }
+        ta_seen("WT.P1", p, st, WT_C, WT_V, WT_N, sent)
+        if (WT_C == "OPTION" || WT_C == "EXAMPLE") printf "REACH\t%s\t%s\t%s\n", p, (RCH == "" ? "none" : substr(RCH, 2)), sent
+        if (WT_V == "FAIL") ta_hit("WT.P1", p, st, ta_word_index(k), WT_C, WT_N, sent)
+      }
+    }
+    if (arm == "" || arm == "WT.P2") {
+      if (wt2()) {
+        if (arm != "") ta_pl(WT2_C, WT2_V, "")
+        else { ta_seen("WT.P2", p, st, WT2_C, WT2_V, "", sent); if (WT2_V == "FAIL") ta_hit("WT.P2", p, st, 1, WT2_C, "", sent) }
+      }
+    }
+    if (arm == "" || arm == "OW-T.P1" || arm == "OW-T.P2") {
+      split("", OG); nog = ow_triggers(OG)
+      for (i = 1; i <= nog; i++) {
+        k = OG[i]; ow_class(k, nog, OG, p, sent)
+        if (arm == "OW-T.P1") { ta_pl(OW_C, OW_V1, OW_N); continue }
+        if (arm == "OW-T.P2") { ta_pl(OW_C, OW_V2, OW_N); continue }
+        ta_seen("OW", p, st, OW_C, OW_V1 ";" OW_V2, OW_N, sent)
+        if (OW_V1 == "FAIL") ta_hit("OW-T.P1", p, st, ta_word_index(k), OW_C, OW_N, sent)
+        if (OW_V2 == "FAIL") ta_hit("OW-T.P2", p, st, ta_word_index(k), OW_C, OW_N, sent)
+        if (OW_C == "A2") ta_hit("A2", p, st, 0, OW_C, OW_N, sent)
+      }
+    }
+    if (arm == "" || arm == "FB-T.P1") {
+      split("", FG); nfg = fb_triggers(FG)
+      for (i = 1; i <= nfg; i++) {
+        k = FG[i]; fb_save(sent, O[c], T[c], P[c], (c < nc ? T[c + 1] : ""), (c < nc)); fb_class(p, st, k, sent)
+        if (arm != "") { ta_pl(FB_C, FB_V, ""); continue }
+        ta_seen("FB", p, st, FB_C, FB_V, "", sent)
+        if (FB_V == "FAIL") ta_hit("FB-T.P1", p, st, ta_word_index(k), FB_C, "", sent)
+        if (FB_V == "observation") ta_hit("FB-OBS", p, st, ta_word_index(k), FB_C, "", sent)
+        if (FB_C == "PERSON-SPEECH") ta_hit("CHR.P3", p, st, ta_word_index(k), FB_C, "", sent)
+      }
+    }
+    if (arm == "CHR.P1" || arm == "CHR.P2" || arm == "CHR.P4") {
+      if (!ps) { ta_pl("NOT-SCOPED", "pass", ""); continue }
+      split("", HK); nh = (arm == "CHR.P1") ? chr_p1(HK) : ((arm == "CHR.P2") ? chr_p2(HK) : chr_p4(HK))
+      for (i = 1; i <= nh; i++) ta_pl("HIT", "FAIL", "")
+      continue
+    }
+    if (arm == "" && ps) {
+      printf "POP\tCHR\t%s\t%s\t%s\n", p, st, T[c]
+      split("", HK); nh = chr_p1(HK); for (i = 1; i <= nh; i++) ta_hit("CHR.P1", p, st, ta_word_index(HK[i]), "P1", "", sent)
+      split("", HK); nh = chr_p2(HK); for (i = 1; i <= nh; i++) ta_hit("CHR.P2", p, st, ta_word_index(HK[i]), "P2", "", sent)
+      split("", HK); nh = chr_p4(HK); for (i = 1; i <= nh; i++) ta_hit("CHR.P4", p, st, ta_word_index(HK[i]), "P4", "", sent)
+    }
+  }
+}
+function ta_pl(c, v, nm) { PL_OUT = PL_OUT (PL_OUT == "" ? "" : ";") c "=" v (nm == "" ? "" : "(" nm ")"); if (substr(v, 1, 4) == "FAIL") PL_FIRED = 1 }
+BEGIN {
+  FS = "\t"; wd_init(); ta_init(); wt_init(); ow_init()
+  m_load(model)
+  if (a2 != "") { while ((getline t < a2) > 0) { split(t, F2, "\t"); A2ROW[F2[1], F2[2]] = 1 }; close(a2) }
+}
+$1 == "S" && mode == "real" { ta_sentence($2, $3, $4, "") }
+$1 == "P" && mode == "plant" {
+  PL_OUT = ""; PL_FIRED = 0; TA_NE = ""
+  st = m_plant_step($4, $5)
+  if (TA_NE != "") { printf "PLANT\t%s\tNE\t%s\n", $2, TA_NE; next }
+  ns = c0_sents($6, PS)
+  for (q = 1; q <= ns; q++) ta_sentence($4, st, PS[q], $3)
+  printf "PLANT\t%s\t%d\t%s\n", $2, PL_FIRED, PL_OUT
+}'
+mkdir -p "$WORK/ta"
+# ta_grade <model-file> <a2-file> <reader-records-file> — the text arms over every sentence the
+# readers read: SEEN, HIT, REACH and POP records.
+ta_grade() {
+  LC_ALL=C awk -v mode=real -v model="$1" -v a2="$2" "$WD_FN$C0_FN$TA_FM_FN$FT_LEAD_FN$TA_CORE_FN$TA_ARMS_FN$TA_MAIN_FN" "$3"
+}
+# ta_plants <model-file> <a2-file> — WD_APOS=0 makes the apostrophe a separator for SEAM-1; stdin the plant table "id TAB arm TAB must TAB form TAB step TAB
+# pinned TAB plant", stdout one PLANT record per plant: "<id> <fired 0|1> <verdicts>", or "<id> NE <why>".
+ta_plants() {
+  awk -F'\t' -v c="skills/trip-record/interview-conduct.md" -v t="templates/traveler-intake.template.md" -v p="templates/person-intake.template.md" \
+    '{ printf "P\t%s\t%s\t%s\t%s\t%s\n", $1, $2, ($4 == "trip" ? t : ($4 == "person" ? p : c)), $5, $7 }' |
+    LC_ALL=C awk -v mode=plant -v wd_apos="${WD_APOS:-1}" -v model="$1" -v a2="$2" "$WD_FN$C0_FN$TA_FM_FN$FT_LEAD_FN$TA_CORE_FN$TA_ARMS_FN$TA_MAIN_FN"
+}
+# ta_a2 <ledger-file> — the declared A2 texts, "<path> TAB <text>", read from the ledger rows.
+ta_a2() {
+  awk '{ t = $0; sub(/^[ \t]+/, "", t); if (t == "" || substr(t, 1, 1) == "#") next; n = split(t, f, /[ \t]+/); if (n < 4 || f[2] != "A2") next
+         if (match(t, /`[^`]+`/) || match(t, /"[^"]+"/)) printf "%s\t%s\n", f[3], substr(t, RSTART + 1, RLENGTH - 2) }' "$1"
+}
+# ta_plant_grade <table> <out> — each plant's verdict against its pinned one, "<id> <ok|MISS> <why>".
+ta_plant_grade() {
+  awk -F'\t' 'FILENAME == ARGV[1] { must[$1] = $3; pin[$1] = $6; arm[$1] = $2; txt[$1] = $7; ord[++n] = $1; next }
+    $1 == "PLANT" { fired[$2] = $3; got[$2] = $4; seen[$2] = 1 }
+    END { for (i = 1; i <= n; i++) { id = ord[i]
+        if (!(id in seen)) { printf "%s\tMISS\tno verdict was produced\n", id; continue }
+        if (fired[id] == "NE") { printf "%s\tMISS\tNOT EVALUATED: %s\n", id, got[id]; continue }
+        w = (must[id] == "FIRE") ? 1 : 0
+        if (fired[id] + 0 != w) printf "%s\tMISS\tmust %s, and it %s: %s\n", id, must[id], (fired[id] ? "fired" : "passed"), got[id]
+        else if (got[id] != pin[id]) printf "%s\tMISS\tpinned %s, read %s\n", id, pin[id], got[id]
+        else printf "%s\tok\t%s %s :: %s\n", id, arm[id], got[id], txt[id] } }' "$1" "$2"
+}
+
+TA_MODEL_F="$WORK/ta/model.tsv"; ta_model "$ROOT" "$WORK/wd" > "$TA_MODEL_F"
+TA_RECS_F="$WORK/ta/records.tsv"; ta_read "$ROOT" "$TA_REG" > "$TA_RECS_F"
+
+# ── THE LEDGER (group LG's declaration block) — read here so the A2 texts reach the engine.
+lg_ledger() {
+  cat <<'LEDGER'
+# id   limb     path                                   anchor
+BH-1  OW-T.P1  templates/traveler-intake.template.md  whatever the group books, record that as their answer
+BH-2  WT.P1    templates/traveler-intake.template.md  Offer the archetype menu from the section
+BH-3  OW-T.P1  templates/traveler-intake.template.md  Record `daily` only when they say so; anything else is `one-off`
+BH-3  OW-T.P2  templates/traveler-intake.template.md  Record `daily` only when they say so; anything else is `one-off`
+BH-4  WT.P1    templates/traveler-intake.template.md  Suggest a theme tag or two
+BH-5  WT.P1    templates/person-intake.template.md    Read out the tick list
+A2-1  A2       templates/person-intake.template.md    write `none` rather than leaving it blank
+A2-2  A2       templates/trip-context.template.md     write "None identified"
+LEDGER
+}
+LG_LEDGER_F="$WORK/ta/ledger.txt"; lg_ledger > "$LG_LEDGER_F"
+TA_A2_F="$WORK/ta/a2.tsv"; ta_a2 "$LG_LEDGER_F" > "$TA_A2_F"
+TA_OUT="$(ta_grade "$TA_MODEL_F" "$TA_A2_F" "$TA_RECS_F")"
+
+wtp1_assert() {
+  local out n cls reach hits
+  out="$(ta_grade "$TA_MODEL_F" "$TA_A2_F" "$TA_RECS_F")"
+  n="$(awk -F'\t' '$1 == "SEEN" && $2 == "WT.P1"' <<<"$out" | awk 'END { print NR }')"
+  cls="$(awk -F'\t' '$1 == "SEEN" && $2 == "WT.P1" { c[$5]++ } END { for (k in c) printf "%s %d · ", k, c[k] }' <<<"$out")"
+  reach="$(awk -F'\t' '$1 == "REACH" { c[$3]++ } END { for (k in c) printf "%s %d · ", k, c[k] }' <<<"$out")"
+  hits="$(awk -F'\t' '$1 == "HIT" && $2 == "WT.P1" { printf "[%s %s: %s] ", $6, $3, substr($8, 1, 60) }' <<<"$out")"
+  if [ "$n" -eq 0 ]; then
+    FAIL "WT.P1: no trigger occurrence was graded over inputs (i)-(iii) — an empty population is NOT EVALUATED, never a pass"
+  else
+    PASS "WT.P1: $n trigger occurrence(s) graded over inputs (i)-(iii), by class: ${cls% · }; R9 reached ${reach:-nothing}; FAIL: ${hits:-none} — each is group LG's to declare. WHAT A GREEN DOES NOT COVER is stated in this group's banner"
+  fi
+}
+wtp1_assert
+wtp2_assert() {
+  local out n cls hits
+  out="$(ta_grade "$TA_MODEL_F" "$TA_A2_F" "$TA_RECS_F")"
+  n="$(awk -F'\t' '$1 == "SEEN" && $2 == "WT.P2"' <<<"$out" | awk 'END { print NR }')"
+  cls="$(awk -F'\t' '$1 == "SEEN" && $2 == "WT.P2" { c[$5]++ } END { for (k in c) printf "%s %d ", k, c[k] }' <<<"$out")"
+  hits="$(awk -F'\t' '$1 == "HIT" && $2 == "WT.P2" { printf "[%s: %s] ", $3, substr($8, 1, 60) }' <<<"$out")"
+  if [ -z "$out" ]; then
+    FAIL "WT.P2: the text arms produced no record — they did not run"
+  elif [ "$n" -eq 0 ]; then
+    VACUOUS "WT.P2: no clause over inputs (i)-(iii) carries both a silence phrase and an assent marker, so the population is empty and this verdict proves nothing about the tree; the WT-CTL plants carry the arm"
+  else
+    PASS "WT.P2: $n clause(s) carry a silence phrase and an assent marker, by class: $cls; FAIL: ${hits:-none} — each is group LG's to declare. No modality limb: the restated sentence is unqualified, and ADR-026's spoken-modality cell is recorded beside it, not reconciled"
+  fi
+}
+wtp2_assert
+wtac8_assert() {
+  local c
+  c="$(awk -F'\t' '$1 == "SEEN" && $2 == "WT.P1" && index($8, "Where this traveler is already linked") == 1 { print $5 "=" $6 }' <<<"$(ta_grade "$TA_MODEL_F" "$TA_A2_F" "$TA_RECS_F")")"
+  if [ "$c" = "LITERAL=pass" ]; then
+    PASS "WT-AC8: Been here before? — once / a few times offered from a visit count: PASS under clause (a) and term 2 (class LITERAL, members by procedure X); which member a derivation offers is ADR-017 § 4's, not graded here"
+  else
+    FAIL "WT-AC8: the AC8 sentence reads '${c:-absent}', where it must pass as LITERAL with both of its values members of Been here before?"
+  fi
+}
+wtac8_assert
+
+# The planted controls of D13 on the two limbs: id, arm, must, form, step (a Section value, - for a
+# step-less input), the pinned verdict, and the plant. A bound is a plant that passes with its bound
+# named in the design; it is pinned here like any other.
+wt_plant_table() {
+  cat <<'PLANTS'
+D1	WT.P1	FIRE	trip	Desires	NON-OPTION SOURCE=FAIL	Suggest a theme tag or two, reusing the archetype wording where it fits.
+D2	WT.P1	FIRE	trip	Desires	NON-OPTION SOURCE=FAIL	Offer the placeholder's example wording as an example.
+D3	WT.P1	FIRE	trip	Desires	NON-OPTION SOURCE=FAIL	Read out the menu from the section.
+D4	WT.P1	FIRE	trip	Interests & tastes	LITERAL=FAIL(twice)	Offer `twice` or `a few times` from what that comes to.
+D5	WT.P1	FIRE	trip	Desires	VALUE=FAIL	Suggest a value from another field.
+D6	WT.P1	PASS	trip	Desires	EXAMPLE=pass	When an answer is thin you may offer an example that names two or three kinds of answer, said as an example and never a list to choose from.
+D7	WT.P1	PASS	trip	Interests & tastes	LITERAL=pass	Offer `know it well` from what that comes to.
+D8	WT.P2	FIRE	trip	-	ASSENT=FAIL	If they say nothing, take that as a yes.
+D9	WT.P2	FIRE	trip	-	ASSENT=FAIL	In a typed session, silence means they agree.
+D10	WT.P2	PASS	trip	-	DENIED=pass	A silence is never read as assent.
+X1	WT.P1	FIRE	trip	Desires	LITERAL=FAIL(beach|mountains)	Offer `beach` or `mountains` as examples.
+X2	WT.P1	FIRE	trip	Desires	LITERAL=FAIL(Lisbon);EXAMPLE=pass	Suggest `Lisbon` for the destination, and give the kinds of trip as examples.
+X3	WT.P1	FIRE	trip	Desires	LITERAL=FAIL(a slow morning|a big view)	Mention `a slow morning` and `a big view` as examples.
+X4	WT.P1	FIRE	trip	Desires	NON-OPTION SOURCE=FAIL	If they have nothing in mind, offer the archetype menu.
+X5	WT.P1	FIRE	trip	Desires	VALUE=FAIL	If they can't decide, suggest a theme tag.
+X6	WT.P1	FIRE	trip	Desires	NON-OPTION SOURCE=FAIL	Don't forget to offer the archetype menu.
+X7	WT.P1	FIRE	trip	Desires	NON-OPTION SOURCE=FAIL	Offer nothing but the archetype menu.
+X8	WT.P1	FIRE	trip	Desires	VALUE=FAIL	Offer no fewer than two theme tags.
+X9	WT.P1	PASS	person	Needs	EXAMPLE=pass	If they ask, give an example of your own on a must-have.
+X10	WT.P2	FIRE	trip	-	ASSENT=FAIL	When they go quiet, treat it as a yes.
+X11	WT.P2	FIRE	trip	-	ASSENT=FAIL	If they don't answer, carry on as if they agreed.
+X12	WT.P2	FIRE	trip	-	ASSENT=FAIL	No reply means they agree.
+N2	WT.P1	PASS	trip	Desires	DENIED=pass(d=5)	Never in a spoken session offer the archetype menu.
+N3	WT.P1	FIRE	trip	Desires	NON-OPTION SOURCE=FAIL	Never in a quiet spoken session offer the archetype menu.
+N10	WT.P1	FIRE	person	Interests & tastes	LITERAL=FAIL(museums)	Give `museums` as an example.
+Z1	WT.P1	PASS	trip	Desires	DENIED=pass(d=1)	Never, when they are not sure, offer the archetype menu.
+Z2	WT.P2	PASS	trip	-	DENIED=pass	If they do not reply, do not take that as a yes.
+Z2b	WT.P2	PASS	trip	-	DENIED=pass	When they did not answer, do not count that as agreement.
+Y9	WT.P1	PASS	trip	Destination leanings	ITEMS=pass	Offer beach, city, nature, culture, food, or a mix.
+Y1	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(Lisbon)	Offer the vibe options — beach, city, or Lisbon.
+Y2	WT.P1	FIRE	person	Budget appetite	OPTION=FAIL(luxury)	Offer the three shapes — keep it lean, mid-range, or luxury.
+Y3	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(Lisbon)	Offer the options beach or Lisbon.
+Y4	WT.P1	FIRE	trip	Desires	EXAMPLE=FAIL(things like a slow morning as examples)	Mention things like a slow morning as examples.
+Y5	WT.P1	FIRE	trip	Desires	EXAMPLE=FAIL(a slow morning|a big view)	Give some kinds of trip as examples — a slow morning, a big view.
+Y6	WT.P1	FIRE	trip	Desires	EXAMPLE=FAIL(a slow morning)	Give an example: a slow morning.
+Y28	WT.P1	FIRE	trip	Desires	EXAMPLE=FAIL(a slow morning|a big view)	Give examples — a slow morning, a big view.
+Y7	WT.P1	FIRE	trip	Destination leanings	UNCLASSIFIED=FAIL	Suggest Lisbon again.
+Y8b	WT.P1	FIRE	trip	Destination leanings	ITEMS=FAIL(Lisbon again|skip it)	Offer Lisbon again, or skip it.
+Y10	WT.P1	PASS	conduct	-	BRANCH=pass	Offer `keep going`, `stop here` or `go to a named section`.
+Y14c	WT.P1	PASS	trip	Desires		Put forward the archetype menu as starting points.
+Y15c	WT.P1	PASS	trip	Destination leanings	LITERAL=pass	Offer `beach` or `city`.
+Y17c	WT.P2	FIRE	trip	-	ASSENT=FAIL	If they stay silent, take it as agreement.
+Y19c	WT.P2	PASS	trip	-	DENIED=pass	If they stay silent, never take it as agreement.
+NM1	WT.P1	PASS	trip	Destination leanings	OPTION=pass	Offer the vibe options — beach, city, or nature.
+NM2	WT.P1	PASS	conduct	-	OPTION=pass	Offer those quoted — the head is a note and never a member.
+NM3	WT.P1	FIRE	conduct	-	OPTION=FAIL(beach|Lisbon)	Offer those quoted — beach or Lisbon.
+NM4	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(Lisbon)	Offer the vibe options - beach, city, or Lisbon.
+NM5	WT.P1	FIRE	trip	Interests & tastes	OPTION=FAIL(twice)	Offer the four options (never, once, twice).
+NM6	WT.P1	FIRE	trip	Interests & tastes	OPTION=FAIL(Lisbon)	Offer the four options (never, once, Lisbon
+NM7	WT.P1	PASS	trip	Destination leanings	OPTION=pass	Offer the options beach or city.
+NM8	WT.P1	PASS	conduct	-	OPTION=pass	Offer the options again.
+NM9	WT.P1	PASS	trip	Desires	EXAMPLE=pass	Mention things like a long lunch as examples.
+NM10	WT.P1	PASS	trip	Desires	EXAMPLE=pass	Give an example: a long lunch.
+NM11	WT.P1	PASS	trip	Destination leanings	BRANCH=pass	Suggest it again.
+NM12	WT.P1	FIRE	conduct	-	LITERAL=FAIL(Lisbon)	Offer `keep going`, `stop here` or `Lisbon`.
+NM16	WT.P1	FIRE	trip	Desires	NON-OPTION SOURCE=FAIL	Never in a quiet spoken session, when unsure, offer the archetype menu.
+NM17	WT.P2	FIRE	trip	-	ASSENT=FAIL	If they do not reply, take that as a yes.
+NM19	WT.P1	FIRE	trip	Destination leanings	ITEMS=FAIL(a lake)	Offer beach, city, or a lake.
+Y15	WT.P1	PASS	trip	Desires	LITERAL=pass	Offer `anchor`, `wish` or `nice-to-have`.
+Y17	WT.P2	FIRE	conduct	-	ASSENT=FAIL	Treat no reply as a yes.
+Y19	WT.P2	PASS	conduct	-	DENIED=pass	If they don't reply, it is not assent.
+Y27	WT.P1	PASS	person	Needs	EXAMPLE=pass	When they ask what counts, give examples: heat, mobility, rest.
+Y18s	WT.P2	PASS	conduct	-	DENIED=pass	Never take silence as a yes.
+Y20s	WT.P2	PASS	conduct	-	DENIED=pass	When silence follows, never count it as a yes.
+N1a	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(ADR-022 D5.3|Lisbon)	Offer the members (ADR-022 D5.3, or Lisbon).
+N1a-ctl	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(Lisbon)	Offer the members (Lisbon).
+N1a-nm	WT.P1	PASS	trip	Destination leanings	OPTION=pass	Offer the members (ADR-022 D5.3).
+N1b	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(Lisbon|Porto|which are both lovely)	Offer the members: Lisbon or Porto, which are both lovely.
+N1b-ctl	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(Lisbon|Porto)	Offer the members: Lisbon or Porto.
+N1b-bound	WT.P1	PASS	trip	Destination leanings	OPTION=pass	Offer the members — Lisbon is one.
+U1	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(Lisbon)	Offer the vibe options and Lisbon.
+U2c	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(somewhere new)	Offer the vibe options or somewhere new.
+U3	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(then Lisbon)	Offer the options, then Lisbon.
+U3bc	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(as well as Lisbon)	Offer the options as well as Lisbon.
+U13	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(Lisbon too)	Offer the members, and Lisbon too.
+U14	WT.P1	FIRE	trip	Destination leanings	OPTION=FAIL(Lisbon)	Offer those (beach or city) and Lisbon.
+N1-ctl	WT.P1	PASS	trip	Destination leanings	OPTION=pass	Offer the vibe options — beach or city.
+U5	WT.P1	PASS	trip	Destination leanings	BRANCH=pass	Suggest a stop again.
+U5b	WT.P1	FIRE	trip	Destination leanings	UNCLASSIFIED=FAIL	Suggest three again.
+N7-ctl	WT.P1	PASS	trip	Destination leanings	BRANCH=pass	Suggest three branches again.
+PLANTS
+}
+WT_PLANTS_F="$WORK/ta/wt-plants.tsv"; wt_plant_table > "$WT_PLANTS_F"
+wtctl_assert() {
+  local out res id st why n=0
+  out="$(ta_plants "$TA_MODEL_F" "$TA_A2_F" < "$WT_PLANTS_F")"
+  if [ -z "$out" ]; then
+    FAIL "WT-CTL: the plant table produced no verdict — the arms did not grade a single planted control"
+    return 0
+  fi
+  printf '%s\n' "$out" > "$WORK/ta/wt-plants.out"
+  res="$(ta_plant_grade "$WT_PLANTS_F" "$WORK/ta/wt-plants.out")"
+  while IFS=$'\t' read -r id st why; do
+    n=$((n + 1))
+    if [ "$st" = "ok" ]; then PASS "WT-CTL[$id]: $why"; else FAIL "WT-CTL[$id]: $why"; fi
+  done <<<"$res"
+}
+wtctl_assert
+
+md_flips ta_grade  'WT.P1'  wtp1_assert
+md_flips ta_grade  'WT.P2'  wtp2_assert
+md_flips ta_grade  'WT-AC8' wtac8_assert
+md_flips ta_plants 'WT-CTL' wtctl_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group LG — the declared ledger of the forms' known sentences, graded both ways
+#
+# The forms carry sentences the W-test fails today — the known hits #1330 rewords. They are declared
+# here, in the suite that pins the predicates (ADR-045's marks table; ADR-042 § 3 counts a ledger as
+# settled design), one row per trigger occurrence, so the text arms can ship red-free while every
+# NEW hit turns this group red.
+#
+# GRAMMAR (reference/adr/README.md § Number declarations, extended by one free column):
+#   <id> <limb> <path> <anchor…>   whitespace-separated; the rest of the line is the anchor
+# A line whose first non-blank character is # is a comment and a blank line is ignored; a row with
+# fewer than four fields is no declaration, and its hit reads undeclared. The key is (id, limb) and
+# never a line number. A row MATCHES a hit when path and limb are equal and the anchor's B1 words occur
+# in the hit's sentence at a span that covers the hit's trigger word — for an A2 row, its declared
+# literal — so a row keys exactly one trigger occurrence.
+#
+#   LG0  the block is absent, or parses to zero lines: NOT EVALUATED. A block present with zero rows
+#        is legitimate — the state #1330 leaves
+#   LG1  a hit of a listed limb, or an A2-shaped hit, matches no row: an UNDECLARED hit
+#   LG2  a row matches no hit; each row's state prints, TRIPS, NO-LONGER-TRIPS or ANCHOR-GONE
+#   LG3  an anchor occurs other than once in its path's input region (the key is not unique)
+#   LG4  a malformed row, a duplicate (id, limb), an unknown limb, or a path outside the input set
+#   LG5  SEAM-4: the readers opened a file set other than inputs (i)-(iii)
+#   LG6  a row matches more than one hit
+#   LG-CTL[…] the ledger mutations, each on a copy under $WORK, never the tracked tree
+#
+# THE ONE INSTRUCTION A REWORDING OWES: delete the sentence's rows in the same commit. LG2 ANCHOR-GONE
+# is cleared only by a sentence that passes for the arm's reason. Deleting the row while the reworded
+# sentence still trips turns LG1 red — the arm working, never a step to work round. The coordinator
+# reaches three gap words: a default four words past its coordinator — "…, or else you should mark it
+# `one-off`." — is not a value literal, and passes. The ledger sees only what a trigger of the closed
+# lists reaches: a default written without one — "Mark it `one-off` if they say nothing." — is not
+# read by any arm, so no row can stand for it.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "LG — the declared ledger of the forms' known sentences, graded both ways"
+
+LG_FN='# The ledger, graded both ways. Inputs, keyed on FILENAME: the declaration block, the readers
+# records (S), the engine records (HIT). Records out: LG4 <why> · LG1 <limb> <path> <sentence>
+# · LG3 <id> <limb> <n> · LG6 <id> <limb> <n> · ROW <id> <limb> <state> · NROWS <n>
+function lg_words(s, A) { return wd_words(s, A) }
+function lg_find(SW, ns, AW, na, POS,   i, j, k, ok) {
+  k = 0
+  for (i = 1; i + na - 1 <= ns; i++) { ok = 1; for (j = 1; j <= na; j++) if (SW[i + j - 1] != AW[j]) { ok = 0; break }; if (ok && na > 0) POS[++k] = i }
+  return k
+}
+BEGIN { FS = "\t"; wd_init(); split(lg_limbs, LMB, " "); for (i in LMB) LIMB[LMB[i]] = 1; split(lg_paths, PTH, " "); for (i in PTH) PATH[PTH[i]] = 1 }
+FILENAME == ARGV[1] {
+  t = $0; sub(/^[ \t]+/, "", t); sub(/[ \t\r]+$/, "", t)
+  if (t == "" || substr(t, 1, 1) == "#") next
+  n = split(t, F, /[ \t]+/)
+  if (n < 4) { printf "LG4\tshort row: %s\n", t; next }
+  a = t; for (q = 1; q <= 3; q++) { sub(/^[^ \t]+[ \t]+/, "", a) }
+  nr++; RID[nr] = F[1]; RLM[nr] = F[2]; RPT[nr] = F[3]; RAN[nr] = a
+  if ((F[1], F[2]) in KEY) printf "LG4\tduplicate (id, limb): %s %s\n", F[1], F[2]
+  KEY[F[1], F[2]] = 1
+  if (!(F[2] in LIMB)) printf "LG4\tunknown limb: %s %s\n", F[1], F[2]
+  if (!(F[3] in PATH)) printf "LG4\tpath outside the input set: %s %s\n", F[1], F[3]
+  next
+}
+FILENAME == ARGV[2] { if ($1 == "S") { ns++; SP[ns] = $2; SS[ns] = $4 }; next }
+$1 == "HIT" && $2 != "FB-OBS" { nh++; HL[nh] = $2; HP[nh] = $3; HT[nh] = $5; HN[nh] = $7; HS[nh] = $8 }
+END {
+  printf "NROWS\t%d\n", nr
+  for (h = 1; h <= nh; h++) {
+    ns2 = lg_words(HS[h], SW)
+    ti = HT[h] + 0
+    if (HL[h] == "A2") { na = lg_words(HN[h], AW); k = lg_find(SW, ns2, AW, na, POS); ti = (k ? POS[1] : -1) }
+    any = 0
+    for (r = 1; r <= nr; r++) {
+      if (RLM[r] != HL[h] || RPT[r] != HP[h]) continue
+      na = lg_words(RAN[r], AW); k = lg_find(SW, ns2, AW, na, POS)
+      for (q = 1; q <= k; q++) if (POS[q] <= ti && ti < POS[q] + na) { any = 1; M[r]++; break }
+    }
+    if (!any) printf "LG1\t%s\t%s\t%s\n", HL[h], HP[h], HS[h]
+  }
+  for (r = 1; r <= nr; r++) {
+    na = lg_words(RAN[r], AW); c = 0
+    for (s = 1; s <= ns; s++) if (SP[s] == RPT[r]) { ns2 = lg_words(SS[s], SW); c += lg_find(SW, ns2, AW, na, POS) }
+    if (c != 1) printf "LG3\t%s\t%s\t%d\n", RID[r], RLM[r], c
+    if (!M[r]) printf "ROW\t%s\t%s\t%s\n", RID[r], RLM[r], (c == 0 ? "ANCHOR-GONE" : "NO-LONGER-TRIPS")
+    else if (M[r] > 1) { printf "LG6\t%s\t%s\t%d\n", RID[r], RLM[r], M[r]; printf "ROW\t%s\t%s\tTRIPS x%d\n", RID[r], RLM[r], M[r] }
+    else printf "ROW\t%s\t%s\tTRIPS\n", RID[r], RLM[r]
+  }
+}'
+LG_LIMBS='WT.P1 WT.P2 OW-T.P1 OW-T.P2 FB-T.P1 CHR.P1 CHR.P2 CHR.P3 CHR.P4 A2'
+LG_PATHS='skills/trip-record/interview-conduct.md templates/interview-card.md templates/traveler-intake.template.md templates/person-intake.template.md templates/trip-context.template.md'
+# lg_grade <ledger-file> <reader-records-file> <engine-records-file> — LG1, LG3, LG4, LG6, ROW, NROWS.
+lg_grade() {
+  LC_ALL=C awk -v lg_limbs="$LG_LIMBS" -v lg_paths="$LG_PATHS" "$WD_FN$LG_FN" "$1" "$2" "$3"
+}
+TA_OUT_F="$WORK/ta/out.tsv"; printf '%s\n' "$TA_OUT" > "$TA_OUT_F"
+lg_assert() {   # lg_assert <ledger-file> <reader-records-file> <engine-records-file> — LG0 to LG4 and LG6
+  local g nl rows st lg1 lg3 lg4 lg6
+  nl="$(awk 'END { print NR }' "$1")"
+  g="$(lg_grade "$1" "$2" "$3")"
+  rows="$(awk -F'\t' '$1 == "NROWS" { print $2 }' <<<"$g")"
+  st="$(awk -F'\t' '$1 == "ROW" { printf "%s %s %s · ", $2, $3, $4 }' <<<"$g")"
+  lg1="$(awk -F'\t' '$1 == "LG1" { printf "[%s %s: %s] ", $2, $3, substr($4, 1, 70) }' <<<"$g")"
+  lg3="$(awk -F'\t' '$1 == "LG3" { printf "[%s %s ×%s] ", $2, $3, $4 }' <<<"$g")"
+  lg4="$(awk -F'\t' '$1 == "LG4" { printf "[%s] ", $2 }' <<<"$g")"
+  lg6="$(awk -F'\t' '$1 == "LG6" { printf "[%s %s ×%s] ", $2, $3, $4 }' <<<"$g")"
+  if [ "$nl" -eq 0 ] || [ -z "$rows" ]; then
+    FAIL "LG0: NOT EVALUATED — the declaration block is absent or parses to nothing, so no hit can be declared or undeclared"
+    return 0
+  else
+    PASS "LG0: the declaration block parses — $nl line(s), $rows row(s)"
+  fi
+  if [ -n "$lg4" ]; then FAIL "LG4: a malformed row — $lg4"; else PASS "LG4: every row is well-formed, its (id, limb) unique, its limb one of [$LG_LIMBS] and its path one of the five inputs"; fi
+  if [ -n "$lg1" ]; then FAIL "LG1: an UNDECLARED hit — $lg1. A new violation of the W-test is red until it is reworded; a known one is declared by a row of this block"; else PASS "LG1: every hit of the text arms matches a declared row — none is undeclared"; fi
+  if [ -n "$(awk -F'\t' '$1 == "ROW" && $4 !~ /^TRIPS/' <<<"$g")" ]; then
+    FAIL "LG2: a declared row no longer trips — remove it in the change that rewords the sentence. States: ${st% · }"
+  else
+    PASS "LG2: every declared row trips — ${st% · }"
+  fi
+  if [ -n "$lg3" ]; then FAIL "LG3: an anchor is not unique in its path's input region — $lg3"; else PASS "LG3: every anchor occurs exactly once in its path's input region"; fi
+  if [ -n "$lg6" ]; then FAIL "LG6: a row matches more than one hit — $lg6; a row keys one trigger occurrence"; else PASS "LG6: every row matches at most one hit"; fi
+}
+lg_assert "$LG_LEDGER_F" "$TA_RECS_F" "$TA_OUT_F"
+lg5_assert() {
+  local open want
+  open="$(awk -F'\t' '$1 == "OPEN" { print $2 }' <<<"$(ta_read "$ROOT" "$TA_REG")" | sort)"
+  want="$(printf '%s\n' $LG_PATHS | sort)"
+  if [ -n "$open" ] && [ "$open" = "$want" ]; then
+    PASS "LG5: SEAM-4 — the readers opened exactly inputs (i)-(iii), so no plant under \$WORK and no example tree can read as a finding of the tracked tree"
+  else
+    FAIL "LG5: SEAM-4 — the readers opened [$(tr '\n' ' ' <<<"$open")] where the input set is [$LG_PATHS]"
+  fi
+}
+lg5_assert
+
+# ── LG-CTL — the ledger mutations, each on a copy of the inputs under $WORK, asserted to have LANDED.
+# ta_root <name> — a fresh copy of the five inputs, the field table and the charter; prints its path.
+ta_root() {
+  local r="$WORK/ta/mut/$1"
+  mkdir -p "$r/skills/trip-record" "$r/templates" "$r/reference"
+  cp "$ROOT/skills/trip-record/interview-conduct.md" "$r/skills/trip-record/"
+  cp "$ROOT/templates/interview-card.md" "$ROOT/templates/traveler-intake.template.md" "$ROOT/templates/person-intake.template.md" "$ROOT/templates/trip-context.template.md" "$r/templates/"
+  cp "$ROOT/reference/data-model.md" "$r/reference/"; cp "$ROOT/CLAUDE.md" "$r/"
+  printf '%s' "$r"
+}
+# ta_mutate <root> <relative-file> <old> <new> — replace the one occurrence of <old>; 1 when it is not exactly one.
+ta_mutate() {
+  local f="$1/$2" n
+  n="$(LIT_OLD="$3" awk 'BEGIN { RS = "\001" } { s = $0; while ((i = index(s, ENVIRON["LIT_OLD"])) > 0) { n++; s = substr(s, i + length(ENVIRON["LIT_OLD"])) } } END { print n + 0 }' "$f")"
+  [ "$n" -eq 1 ] || return 1
+  LIT_OLD="$3" LIT_NEW="$4" awk 'BEGIN { RS = "\001"; ORS = "" } { s = $0; i = index(s, ENVIRON["LIT_OLD"]); print substr(s, 1, i - 1) ENVIRON["LIT_NEW"] substr(s, i + length(ENVIRON["LIT_OLD"])) }' "$f" > "$f.new" && mv "$f.new" "$f"
+}
+# ta_run <root> <ledger-file> — the whole chain on a root: regions, readers, model, arms, ledger.
+ta_run() {
+  local r="$1"
+  ta_regions "$r" > "$r/regions.tsv"
+  ta_read "$r" "$r/regions.tsv" > "$r/records.tsv"
+  ta_model "$r" "$r" > "$r/model.tsv"
+  ta_a2 "$2" > "$r/a2.tsv"
+  ta_grade "$r/model.tsv" "$r/a2.tsv" "$r/records.tsv" > "$r/out.tsv"
+  lg_grade "$2" "$r/records.tsv" "$r/out.tsv"
+}
+# lg_ctl <id> <want-arms> <prose> <file> <old> <new> [ledger-file] — one mutation, graded on the LG arms it must turn red.
+lg_ctl() {
+  local id="$1" want="$2" prose="$3" r g got="" a
+  r="$(ta_root "$id")"
+  if [ -n "$4" ] && ! ta_mutate "$r" "$4" "$5" "$6"; then
+    FAIL "LG-CTL[$id]: the mutation did not LAND — '$5' does not occur exactly once in $4, so this control grades the unmutated tree"
+    return 0
+  fi
+  g="$(ta_run "$r" "${7:-$LG_LEDGER_F}")"
+  for a in LG1 LG3 LG4 LG6; do [ -z "$(awk -F'\t' -v a="$a" '$1 == a' <<<"$g")" ] || got="$got $a"; done
+  [ -z "$(awk -F'\t' '$1 == "ROW" && $4 !~ /^TRIPS/' <<<"$g")" ] || got="$got LG2"
+  got="$(tr ' ' '\n' <<<"$got" | sort | tr '\n' ' ' | sed 's/^ *//; s/ *$//')"
+  if [ -z "$g" ]; then
+    FAIL "LG-CTL[$id]: the chain produced nothing on the mutated copy — no arm ran"
+  elif [ "$got" != "$want" ]; then
+    FAIL "LG-CTL[$id]: $prose — expected exactly [$want] red, read [${got:-none}]. States: $(awk -F'\t' '$1 == "ROW" && $4 != "TRIPS" { printf "%s %s %s ", $2, $3, $4 }' <<<"$g")"
+  else
+    PASS "LG-CTL[$id]: $prose — exactly [$want] red, as predicted. States: $(awk -F'\t' '$1 == "ROW" && $4 != "TRIPS" { printf "%s %s %s ", $2, $3, $4 }' <<<"$g")"
+  fi
+}
+lgctl_assert() {
+  local tmpl='templates/traveler-intake.template.md' lw5="$WORK/ta/ledger-wo-bh5.txt" ld5="$WORK/ta/ledger-dup-bh5.txt"
+  awk '$1 != "BH-5"' "$LG_LEDGER_F" > "$lw5"
+  awk '{ print } $1 == "BH-5" { print }' "$LG_LEDGER_F" > "$ld5"
+  lg_ctl L1 'LG2' "BH-2 denied with its anchor kept reads NO-LONGER-TRIPS" "$tmpl" 'Offer the archetype menu from the section as starting points' 'Never offer the archetype menu from the section as starting points'
+  lg_ctl L2 'LG2 LG3' "BH-2 reworded away reads ANCHOR-GONE, its anchor then occurring zero times, which LG3 reports beside it" "$tmpl" 'Offer the archetype menu from the section as starting points' 'Describe what the archetype list covers, and never read it out'
+  lg_ctl L3 'LG1' "a new menu offer planted in trip Step 6 is undeclared" "$tmpl" 'Leave **Overlap** blank.' 'Leave **Overlap** blank. Offer the archetype menu again at the end.'
+  lg_ctl L4 'LG1' "BH-5's row deleted leaves its hit undeclared" '' '' '' "$lw5"
+  lg_ctl L5 'LG3 LG6' "BH-2's anchor duplicated in the same file is not a unique key" "$tmpl" 'Leave **Overlap** blank.' 'Leave **Overlap** blank. Offer the archetype menu from the section again.'
+  lg_ctl L6 'LG1' "FM-5: a second offer inside BH-4's sentence is undeclared, never absorbed by its row" "$tmpl" 'it fits. Leave' 'it fits, and offer the menu too. Leave'
+  lg_ctl L9 'LG4' "BH-5's row declared twice is a duplicate (id, limb); its one hit matches each copy once and its anchor still occurs once, so no other arm moves" '' '' '' "$ld5"
+}
+lgctl_assert
+
+md_flips lg_grade 'LG'     lg_assert "$LG_LEDGER_F" "$TA_RECS_F" "$TA_OUT_F"
+md_flips ta_read  'LG5'    lg5_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group OW (the text block) — no licence to record from a non-utterance (OW-T.P1), the closure of
+# the admitted non-utterances (OW-T.P2, OW-T.P2a), and the rule stated in both carriers (OW-T.E1)
+#
+# OW-T.P1 grades every record-family directive the readers reach for a source other than the
+# person's own words, A1..A5 apart; OW-T.P2 for an admitted non-utterance that is none of A1..A5.
+# One class table serves both limbs; a hit is group LG's to declare. #1769's conversation block
+# joins this group later and reads A1..A5 through the same reader.
+#
+# ── TRIGGERS AND THE VALUE SPAN (D6) ─────────────────────────────────────────────────────────────
+# record(s), recorded, write(s), written, put, take(s), taken, fill, enter — never inside a code span,
+# and never after a determiner, or a determiner and one word, with no punctuation between (a noun).
+# The value span is the object up to the first stop word — in into on onto under at beside above
+# below inside within with by from when if where while because after before until unless once then
+# and or but — so "put it in the `# ` heading" carries no value literal.
+#
+# ── THE COORDINATOR AND THE VALUE LITERALS (D6, K1, K12, A2) ─────────────────────────────────────
+# A coordinator matches ,?\s+(or|and)(\s+else)?,?\s+ — or / and, a comma optional before it, an else
+# optional after it, and a comma optional after that. It STANDS BEFORE A LITERAL when the text after
+# it is up to three words, each optionally followed by a comma and then whitespace, and then a
+# literal opening backtick or double quote. A word is a run of characters holding no whitespace,
+# double quote, backtick or any of . , ; : ! ? ( ) — an apostrophe is part of a word, so it's is one.
+# The value literals are those in the value span plus each literal a coordinator stands before,
+# anywhere in the object; the object is cut after each such coordinator and only after those, and a
+# literal's coordinate is the piece that holds it. The coordinator reaches three gap words: four is
+# the stated bound, and passes (K1-bound).
+#
+# ── THE CLASSES — the first that holds decides; an occurrence no class names is NEUTRAL ──────────
+#   0  NOUN       the noun rule — not graded
+#   1  DEFAULT    anything else is / otherwise (write, record, put) / by default / default(s) to,
+#                 immediately followed by a literal — FAIL on both limbs (a default is a sixth non-utterance)
+#   2  A2         a value literal, the em dash apart, under an if / when / where span carrying no,
+#                 nothing or none, the literal one the ledger DECLARES as an A2 text for its path —
+#                 pass, counted A2
+#   2' A2-UNDECLARED  the same shape with a literal the ledger does not declare — FAIL on both limbs
+#   3  DENIED     R6 in the clause, or object negation — pass
+#   4  LITERAL    a value literal passes when an utterance phrase stands in its own coordinate (when
+#                 they say so, if they say so, what they said, what they say, their words, their own
+#                 words, the member their words contain); or it is in the object's FIRST coordinate and
+#                 the clause has EXACTLY ONE closed-condition segment before the trigger and that
+#                 segment's words are exactly if they say so or when they say so (K2); or it is the em
+#                 dash and the sentence names a skip (A1); or it is [OPERATOR-PROVIDED] and the sentence
+#                 names operator, relayed or behalf (A4). Otherwise FAIL, naming it. A second coordinated
+#                 literal needs its own phrase — "Record `daily` and `one-off` when they say so." fails on
+#                 daily, failing closed (U12)
+#   5  OWN        the sentence holds a their-words phrase — pass
+#   6  SOURCE     example(s), guess, assent, nod(s / ded / ding), another field, an option they did
+#                 not choose, whatever the group, as their answer, the first / second / third / last /
+#                 nearest option / member / one / choice — FAIL on OW-T.P1
+#   7  NEUTRAL    a record directive naming no source — pass
+# Stated bound (K5): "Record what they said, and use `Edit` for the change." fails on Edit — a tool
+# name after and use reads as a value — and fails closed.
+#
+# ── A1..A5 — OW-T.P2's evaluator per member, keyed by id, held to ADR-045 by OW-T.P2a ────────────
+#   A1  the em dash, admitted where the sentence names a skip (class 4)
+#   A2  the declared empty-answer texts (class 2), graded both ways by group LG
+#   A3  a member their words contain — the utterance phrase "the member their words contain" (class 4)
+#   A4  [OPERATOR-PROVIDED], admitted where the sentence names a relay (class 4)
+#   A5  the form's own fixed text — a literal past the value span's first stop word is no value
+#       literal, so "put it in the `# ` heading" admits the heading text and records nothing
+# The ids are the record's: nu_list reads them, and OW-T.P2a holds this set to them both ways, so an
+# id added to ADR-045 D2 item 4 with no evaluator here is red, and so is the reverse (SEAM-2).
+#
+# ── OW-T.E1 (D7) ─────────────────────────────────────────────────────────────────────────────────
+# Each carrier's shared rules hold a sentence carrying only, a their-words phrase, and a record-family
+# verb or take; and group PC's own comparison, called rather than restated, reports the carriers equal.
+#
+# WHAT A GREEN DOES NOT COVER: as group WT's banner states it, for these limbs too — a paraphrase
+# outside the lexicon is not seen, a default written without a trigger of the closed list is read by
+# no arm, and the subject is the authored text a session follows, not a session. RS-13's compound
+# case reaches a conversation, which is #1769's to grade.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "OW — no licence to record from a non-utterance (OW-T.P1), closure of the admitted non-utterances (OW-T.P2), the rule stated in both carriers (OW-T.E1)"
+
+OW_A_IDS='A1 A2 A3 A4 A5'
+owp_assert() {
+  local out n cls h1 h2 a2
+  out="$(ta_grade "$TA_MODEL_F" "$TA_A2_F" "$TA_RECS_F")"
+  n="$(awk -F'\t' '$1 == "SEEN" && $2 == "OW"' <<<"$out" | awk 'END { print NR }')"
+  cls="$(awk -F'\t' '$1 == "SEEN" && $2 == "OW" { c[$5]++ } END { for (k in c) printf "%s %d · ", k, c[k] }' <<<"$out")"
+  h1="$(awk -F'\t' '$1 == "HIT" && $2 == "OW-T.P1" { printf "[%s %s: %s] ", $6, $3, substr($8, 1, 60) }' <<<"$out")"
+  h2="$(awk -F'\t' '$1 == "HIT" && $2 == "OW-T.P2" { printf "[%s %s: %s] ", $6, $3, substr($8, 1, 60) }' <<<"$out")"
+  a2="$(awk -F'\t' '$1 == "HIT" && $2 == "A2" { printf "[%s in %s] ", $7, $3 }' <<<"$out")"
+  if [ "$n" -eq 0 ]; then
+    FAIL "OW-T.P1: no record-family directive was graded over inputs (i)-(iii) — an empty population is NOT EVALUATED, never a pass"
+  else
+    PASS "OW-T.P1: $n record-family directive(s) graded over inputs (i)-(iii), by class: ${cls% · }; OW-T.P1 FAIL: ${h1:-none}; OW-T.P2 FAIL: ${h2:-none}; A2 counted: ${a2:-none} — trip-context's \"None identified\" (BH-6) is one, a pass and no ledger row of its own. Each hit is group LG's to declare"
+  fi
+}
+owp_assert
+owp2a_assert() {
+  local rec d seam
+  rec="$(nu_list "$NU_ADR" | awk -F'\t' '$1 == "A" { print $2 }')"
+  d="$(nu_agree "$rec" "$(tr ' ' '\n' <<<"$OW_A_IDS")" two-way)"
+  awk '{ print } /^   \| `A5` \|/ && !done { print "   | `A6` | a planted sixth | never | — |"; done = 1 }' "$NU_ADR" > "$WORK/ta/adr045-a6.md"
+  seam="$(nu_agree "$(nu_list "$WORK/ta/adr045-a6.md" | awk -F'\t' '$1 == "A" { print $2 }')" "$(tr ' ' '\n' <<<"$OW_A_IDS")" two-way)"
+  if [ -z "$rec" ]; then
+    FAIL "OW-T.P2a: nu_list read no admitted non-utterance from ${NU_ADR#"$ROOT/"}, so OW-T.P2's evaluator set is held to nothing"
+  elif [ -n "$d" ]; then
+    FAIL "OW-T.P2a: OW-T.P2's evaluator set [$OW_A_IDS] disagrees with ADR-045 D2 item 4 — $(tr '\n' ' ' <<<"$d"). An id the record names that no evaluator implements fails, and so does the reverse: an addition is a new decision, made in the record"
+  elif [ "$seam" != "RECORD-ONLY A6" ]; then
+    FAIL "OW-T.P2a: CONTROL (SEAM-2) did not fire as specified — a sixth row planted in a copy of ADR-045 reads '${seam:-no difference}', where the agreement must name A6"
+  else
+    PASS "OW-T.P2a: OW-T.P2's evaluator set [$OW_A_IDS] agrees with ADR-045 D2 item 4 both ways, read through nu_list. CONTROL (SEAM-2): a sixth row planted in a copy of the record is refused, naming A6"
+  fi
+}
+owp2a_assert
+# ta_e1 <file> <heading> — the sentences of one section of a carrier, one per line.
+ta_e1() {
+  LC_ALL=C awk -v f="$1" -v h="$2" "$WD_FN$C0_FN$TA_RD_FN"'BEGIN { n = rd_load(f, A); if (n < 0) exit; k = rd_section(A, n, h, SEC); nb = c0_blocks(SEC, k, B); for (b = 1; b <= nb; b++) { ns = c0_sents(B[b], S); for (s = 1; s <= ns; s++) print S[s] } }'
+}
+# ow_e1_count <file> — the shared-rules sentences carrying only, a their-words phrase and a record-family verb or take.
+ow_e1_count() {
+  ta_e1 "$1" '## The rules every interview shares' | LC_ALL=C awk "$WD_FN"'
+    { n = wd_words($0, W); o = 0; v = 0; t = 0; s = " " wd_join(W, n, 1, n) " "
+      for (i = 1; i <= n; i++) { if (W[i] == "only") o = 1; if (index(" record records recorded write writes written take takes ", " " W[i] " ")) v = 1 }
+      if (index(s, " what they said ") || index(s, " what they say ") || index(s, " their words ") || index(s, " their own words ")) t = 1
+      if (o && v && t) c++ }
+    END { print c + 0 }'
+}
+# owe1_eval <conduct> <card> — "<rule sentences in the conduct file> <in the card> <PC's rc> <PC's findings>".
+owe1_eval() {
+  local nv nc pf prc
+  nv="$(ow_e1_count "$1")"; nc="$(ow_e1_count "$2")"
+  pf="$(pc_findings "$1" "$2")"; prc=$?
+  local pfn=0
+  [ -z "$pf" ] || pfn="$(awk 'END { print NR }' <<<"$pf")"
+  printf '%s %s %s %s\n' "${nv:--}" "${nc:--}" "$prc" "$pfn"
+}
+owe1_assert() {   # owe1_assert <conduct> <card>
+  local nv nc pf prc
+  nv="$(ow_e1_count "$1")"; nc="$(ow_e1_count "$2")"
+  pf="$(pc_findings "$1" "$2")"; prc=$?
+  if [ -z "$nv" ] || [ -z "$nc" ]; then
+    FAIL "OW-T.E1: the carriers could not be read for the rule — no count came back"
+  elif [ "$nv" -eq 0 ] || [ "$nc" -eq 0 ]; then
+    FAIL "OW-T.E1: the rule that a recorded value is only what they said is NOT STATED in the shared rules of ${1#"$ROOT/"} ($nv) or ${2#"$ROOT/"} ($nc)"
+  elif [ "$prc" -ne 0 ] || [ -n "$pf" ]; then
+    FAIL "OW-T.E1: the rule is stated on each side, but group PC's comparison reports the carriers UNEQUAL (rc=$prc: $(tr '\t\n' ' ;' <<<"$pf")) — \"in the same words in both carriers\" is PC's assertion"
+  else
+    PASS "OW-T.E1: each carrier's shared rules state that a recorded value is only what they said — $nv sentence(s) in ${1#"$ROOT/"}, $nc in ${2#"$ROOT/"} — and group PC's comparison reports the two carriers equal"
+  fi
+}
+owe1_assert "$PC_VERB" "$PC_CARD"
+owe1ctl_assert() {
+  local r1 r2 g1 g2 landed
+  r1="$WORK/ta/e1-both"; r2="$WORK/ta/e1-one"; mkdir -p "$r1" "$r2"
+  awk '{ s = $0; gsub(/Take only what they said\. /, "", s); print s }' "$PC_VERB" > "$r1/conduct.md"
+  awk '{ s = $0; gsub(/Take only what they said\. /, "", s); print s }' "$PC_CARD" > "$r1/card.md"
+  cp "$r1/conduct.md" "$r2/conduct.md"; cp "$PC_CARD" "$r2/card.md"
+  g1="$(owe1_eval "$r1/conduct.md" "$r1/card.md")"; g2="$(owe1_eval "$r2/conduct.md" "$r2/card.md")"
+  landed=1; cmp -s "$r1/conduct.md" "$PC_VERB" && landed=0; cmp -s "$r1/card.md" "$PC_CARD" && landed=0
+  if [ "$landed" -eq 0 ]; then
+    FAIL "OW-T.E1-CTL: the deletion did not LAND on a copy — the rule sentence is not where this control expects it"
+  elif [ "$(cut -d' ' -f1 <<<"$g1")" != "0" ] || [ "$(cut -d' ' -f2 <<<"$g1")" != "0" ]; then
+    FAIL "OW-T.E1-CTL[E1a]: with the rule deleted from both carriers the counts read [$g1], where both must be 0"
+  elif [ "$(cut -d' ' -f1 <<<"$g2")" != "0" ] || [ "$(cut -d' ' -f4 <<<"$g2")" = "0" ]; then
+    FAIL "OW-T.E1-CTL[E1b]: with the rule deleted from one carrier the reading is [$g2], where that carrier must read 0 and group PC must report the carriers unequal"
+  else
+    PASS "OW-T.E1-CTL: MUST FIRE — with \"Take only what they said.\" deleted from both carriers on copies the rule reads unstated on each side [$g1] (E1a), and deleted from the conduct file alone that side reads 0 and group PC reports the carriers unequal [$g2] (E1b)"
+  fi
+}
+owe1ctl_assert
+
+ow_plant_table() {
+  cat <<'PLANTS'
+D11	OW-T.P1	FIRE	trip	-	SOURCE=FAIL	If they like one of the examples, put it down.
+D12	OW-T.P1	FIRE	trip	-	DEFAULT=FAIL;DEFAULT=FAIL	Record `daily` only when they say so; otherwise write `one-off`.
+D13	OW-T.P2	FIRE	trip	-	DEFAULT=FAIL;DEFAULT=FAIL	Record `daily` only when they say so; otherwise write `one-off`.
+D14	OW-T.P1	FIRE	trip	-	SOURCE=FAIL	If they nod, record the first option.
+D15	OW-T.P1	PASS	trip	-	DENIED=pass(d=1);DENIED=pass(d=1)	An example they did not take up in their own words is never recorded.
+D16	OW-T.P1	PASS	trip	-	DENIED=pass(d=1)	It doesn't record an example they did not say.
+D17	OW-T.P1	PASS	person	-	A2=pass(none)	If they have no must-haves, write `none` rather than leaving it blank.
+D18	OW-T.P2	PASS	person	-	A2=pass:A2(none)	If they have no must-haves, write `none` rather than leaving it blank.
+X13	OW-T.P2	FIRE	trip	-	A2-UNDECLARED=FAIL(mid-range)	If no budget is given, write `mid-range`.
+X14	OW-T.P1	FIRE	trip	-	A2-UNDECLARED=FAIL(daily)	If they give no answer, record `daily`.
+X15	OW-T.P1	FIRE	trip	-	SOURCE=FAIL	If they don't say, record the first member.
+X16	OW-T.P1	FIRE	trip	-	A2-UNDECLARED=FAIL(one-off)	When nothing is said, put down `one-off`.
+N1	OW-T.P1	FIRE	person	Budget appetite	A2-UNDECLARED=FAIL(mid-range)	If no budget is given, write `mid-range`.
+N11	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(A1-without-a-skip)	Write `—` for the field.
+N12	OW-T.P1	PASS	trip	-	LITERAL=pass	If they skip it, write `—`.
+Z6	OW-T.P1	PASS	trip	Desires	DENIED=pass(d=1)	Never, if they are not sure, record a guess.
+Y11	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(daily)	Record their words, or `daily` if they are unsure.
+Y12	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(none)	Write what they said, or `none`.
+Y30	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(one-off)	Record `daily` when they say so, or else `one-off`.
+Y30-P2	OW-T.P2	FIRE	trip	-	LITERAL=FAIL(one-off)	Record `daily` when they say so, or else `one-off`.
+NM13	OW-T.P1	PASS	trip	-	LITERAL=pass	Record `daily` when they say so, or else `one-off` when they say so.
+NM14	OW-T.P1	PASS	trip	-	LITERAL=pass	Record their words, or `daily` if they say so.
+Y18s-OW	OW-T.P1	PASS	conduct	-	DENIED=pass(d=1)	Never take silence as a yes.
+Y21s	OW-T.P1	PASS	conduct	-	DENIED=pass(d=1);OWN=pass	Never record a guess; record what they said.
+N2a	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(one-off)	Record `daily` when they say so, or else leave `one-off`.
+N2b	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(one-off)	Record `daily` when they say so, or else mark it `one-off`.
+N2c	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(daily)	Record `daily`, or leave `one-off` when they say so.
+V1	OW-T.P1	PASS	trip	-	LITERAL=pass	Record `daily` or leave it blank, when they say so.
+V2	OW-T.P1	PASS	trip	-	LITERAL=pass	Record `daily` and nothing else, if they say so.
+N2-ctl	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(one-off)	Record `daily` when they say so, or `one-off` otherwise.
+N2-bound1	OW-T.P1	PASS	trip	-		Mark it `one-off` if they say nothing.
+N2-bound2	OW-T.P1	PASS	trip	-		Leave `one-off` in place unless they say otherwise.
+U6	OW-T.P1	PASS	trip	-	LITERAL=pass	If they say so, record `daily`.
+U7	OW-T.P1	PASS	trip	-	LITERAL=pass	When they say so, write `daily`; otherwise leave the bracket.
+U12	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(daily)	Record `daily` and `one-off` when they say so.
+N9-nm	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(daily)	If they ask, record `daily`.
+K1a	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(daily)	Record their words, or if unsure, `daily`.
+K1b	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(none)	Write what they said, or else, `none`.
+K2a	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(daily)	If they say so or stay quiet, record `daily`.
+K2b	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(daily)	When they say so or not, write `daily`.
+K3	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(daily)	If they say so, or if they don't, record `daily`.
+K1-bound	OW-T.P1	PASS	trip	-	LITERAL=pass	Record `daily` when they say so, or else you should mark it `one-off`.
+K12-apos	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(one-off)	Record `daily` when they say so, or else it's `one-off`.
+K5a	OW-T.P1	FIRE	trip	-	LITERAL=FAIL(Edit)	Record what they said, and use `Edit` for the change.
+PLANTS
+}
+OW_PLANTS_F="$WORK/ta/ow-plants.tsv"; ow_plant_table > "$OW_PLANTS_F"
+owctl_assert() {
+  local out res id st why
+  out="$(ta_plants "$TA_MODEL_F" "$TA_A2_F" < "$OW_PLANTS_F")"
+  if [ -z "$out" ]; then
+    FAIL "OW-CTL: the plant table produced no verdict — the arms did not grade a single planted control"
+    return 0
+  fi
+  printf '%s\n' "$out" > "$WORK/ta/ow-plants.out"
+  res="$(ta_plant_grade "$OW_PLANTS_F" "$WORK/ta/ow-plants.out")"
+  while IFS=$'\t' read -r id st why; do
+    if [ "$st" = "ok" ]; then PASS "OW-CTL[$id]: $why"; else FAIL "OW-CTL[$id]: $why"; fi
+  done <<<"$res"
+}
+owctl_assert
+owseam1_assert() {
+  local on off
+  on="$(printf 'S1\tOW-T.P1\tPASS\tconduct\t-\t-\t%s\n' "It doesn't record an example they did not say." | ta_plants "$TA_MODEL_F" "$TA_A2_F")"
+  off="$(printf 'S1\tOW-T.P1\tPASS\tconduct\t-\t-\t%s\n' "It doesn't record an example they did not say." | WD_APOS=0 ta_plants "$TA_MODEL_F" "$TA_A2_F")"
+  if [ -z "$on" ]; then
+    FAIL "OW-SEAM1: the plant produced no verdict"
+  elif [ "$(cut -f3 <<<"$on")" != "0" ] || [ "$(cut -f3 <<<"$off")" != "1" ]; then
+    FAIL "OW-SEAM1: SEAM-1 did not behave — the denial plant reads '$(cut -f4 <<<"$on")' with the apostrophe joining and '$(cut -f4 <<<"$off")' with it separating, where it must pass and then fire"
+  else
+    PASS "OW-SEAM1: SEAM-1 — the denial plant D16 passes ($(cut -f4 <<<"$on")) while an in-word apostrophe joins, and with the apostrophe made a separator its doesn't reads as doesn + t, the negation is lost and it fires ($(cut -f4 <<<"$off"))"
+  fi
+}
+owseam1_assert
+
+md_flips ta_grade  'OW-T.P1'  owp_assert
+md_flips nu_agree  'OW-T.P2a' owp2a_assert
+md_flips ta_e1     'OW-T.E1'  owe1_assert "$PC_VERB" "$PC_CARD"
+md_flips ta_plants 'OW-CTL'   owctl_assert
+md_flips ta_plants 'OW-SEAM1' owseam1_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group FB (the text block) — no licence for a further question (FB-T.P1)
+#
+# FB-T.P1 grades every follow-up directive the readers reach against ADR-045 D3's six follow-up
+# exclusions and the second follow-up. #1769's conversation block joins this group later.
+#
+# ── TRIGGERS (D8) ────────────────────────────────────────────────────────────────────────────────
+# follow up / follow-up; ask with again, more or further within four words after it, or ask one more;
+# keep asking; press, pressing, probe, push, sharpen; make each one specific, make it specific.
+#
+# ── THE CLASSES — the first that holds decides; a follow-up no other class names is DIRECTED ──────
+#   1  DENIED        R6 at the trigger; or object negation of the words after the trigger phrase;
+#                    or rather than pressing — pass
+#   2  UNBOUNDED     keep, until, repeatedly, as many, again and again, each time, every time — FAIL
+#   3  SECOND        second, another, twice, further, each per occurrence; or a SECOND occurrence in
+#                    the sentence of a counting bound marker, once or one more counted together — FAIL.
+#                    never a second is class 9's denial and is not counted (D24 passes)
+#   4  AFTER         after a skip / decline / stop / empty answer; if they skip / decline / stop — FAIL
+#   5  ANSWERED      already answers, already answered, earlier session — FAIL
+#   6  CLOSED        closed field(s), closed list, closed question, or a label of the step section whose
+#                    bracket opens closed: — FAIL
+#   7  REPEAT        same question, repeat the question, in the same words — FAIL
+#   8  PERSON-SPEECH the sentence is PERSON-scoped (group WD's scope) and neither typed session nor in
+#                    text restricts it — FAIL; the clause group CHR consumes as CHR.P3
+#   9  BOUNDED       never a second, one more, once — pass
+#   10 DIRECTED      any other follow-up — pass, reported as an observation
+# THE MARKER RULE (classes 2-7): each marker is matched within one clause and counts only where it is
+# not denied at its own first word by R6's window, taken only from the words after the nearest comma
+# before the marker (A3), with closed-condition segments removed, every concessive span removed (even
+# if, even when, even though, though and although each open a span to the next comma or to the marker,
+# K4), and forget / hesitate / fail breaking. A negator none, nothing or no followed within two words by
+# but, than, fewer, more, other or except denies no marker. The comma stop and the concessive spans
+# apply at a marker only, never at a trigger. Stated bounds (K5), each failing closed: "Follow up once,
+# never, even briefly, after a skip." and "You may follow up once, but never, after a skip." fail AFTER,
+# because a negator must stand in its marker's own comma segment.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "FB — no licence for a further question (FB-T.P1)"
+
+fbp_assert() {
+  local out n cls hits obs
+  out="$(ta_grade "$TA_MODEL_F" "$TA_A2_F" "$TA_RECS_F")"
+  n="$(awk -F'\t' '$1 == "SEEN" && $2 == "FB"' <<<"$out" | awk 'END { print NR }')"
+  cls="$(awk -F'\t' '$1 == "SEEN" && $2 == "FB" { c[$5]++ } END { for (k in c) printf "%s %d · ", k, c[k] }' <<<"$out")"
+  hits="$(awk -F'\t' '$1 == "HIT" && $2 == "FB-T.P1" { printf "[%s %s: %s] ", $6, $3, substr($8, 1, 60) }' <<<"$out")"
+  obs="$(awk -F'\t' '$1 == "HIT" && $2 == "FB-OBS" { printf "[%s, %s: %s] ", $3, $4, substr($8, 1, 60) }' <<<"$out")"
+  if [ "$n" -eq 0 ]; then
+    FAIL "FB-T.P1: no follow-up directive was graded over inputs (i)-(iii) — an empty population is NOT EVALUATED, never a pass"
+  else
+    PASS "FB-T.P1: $n follow-up directive(s) graded over inputs (i)-(iii), by class: ${cls% · }; FAIL: ${hits:-none}; DIRECTED, reported as an observation and counted against FB-C's section limit: ${obs:-none}"
+  fi
+}
+fbp_assert
+fb_plant_table() {
+  cat <<'PLANTS'
+D19	FB-T.P1	FIRE	trip	-	UNBOUNDED=FAIL	If the answer is short, keep asking until you have enough detail.
+D20	FB-T.P1	FIRE	trip	-	AFTER=FAIL	If they skip, ask once more.
+D21	FB-T.P1	FIRE	trip	-	REPEAT=FAIL	Ask the same question again, in the same words.
+D22	FB-T.P1	FIRE	trip	-	CLOSED=FAIL	On a closed field, follow up once.
+D23	FB-T.P1	FIRE	person	Getting there & back	PERSON-SPEECH=FAIL	Follow up on their passport answer.
+D24	FB-T.P1	PASS	trip	-	BOUNDED=pass	When an answer is thin you may ask one more question about it, and never a second.
+D25	FB-T.P1	PASS	person	Needs	BOUNDED=pass	In a typed session only, you may follow up once on a must-have; never in a spoken one.
+X17	FB-T.P1	FIRE	trip	-	UNBOUNDED=FAIL	If they are not sure, keep asking until they are.
+X18	FB-T.P1	FIRE	trip	-	UNBOUNDED=FAIL	If they don't elaborate, push for more each time.
+N4	FB-T.P1	PASS	person	Getting there & back	BOUNDED=pass	If their journey comfort answer is thin, follow up once on Journey comfort.
+Z5	FB-T.P1	PASS	trip	-	DENIED=pass	Ask nothing again after a skip.
+Y24	FB-T.P1	PASS	trip	-	BOUNDED=pass	You may follow up once on an open field, never on a closed field.
+Y25c	FB-T.P1	PASS	trip	-	BOUNDED=pass	You may follow up once on an open field, never after a skip.
+Y26c	FB-T.P1	PASS	trip	-	BOUNDED=pass	You may follow up once, never if they skip.
+Y13	FB-T.P1	FIRE	person	Getting there & back	PERSON-SPEECH=FAIL	Follow up once on their answer.
+Y22c	FB-T.P1	FIRE	trip	Desires	CLOSED=FAIL	Follow up on their recurrence answer.
+NM15	FB-T.P1	FIRE	trip	-	CLOSED=FAIL	You may follow up once on an open field, and on a closed field.
+NM18	FB-T.P1	FIRE	trip	-	AFTER=FAIL	Ask nothing but more questions after a skip.
+NM20	FB-T.P1	FIRE	trip	-	PERSON-SPEECH=FAIL	Follow up on a `PERSON` field.
+NM21	FB-T.P1	PASS	trip	-	DIRECTED=observation	Follow up on a person field.
+NM22	FB-T.P1	PASS	trip	Getting there & back	DIRECTED=observation	Follow up on their passport answer.
+Y14	FB-T.P1	PASS	person	Getting there & back	DIRECTED=observation	Follow up on their journey comfort and their nationality.
+Y22	FB-T.P1	FIRE	trip	Desires	CLOSED=FAIL	Follow up once on Priority tier.
+Y25	FB-T.P1	PASS	conduct	-	DIRECTED=observation	A follow-up comes only after a thin answer, never after a skip.
+Y26	FB-T.P1	PASS	conduct	-	BOUNDED=pass	Follow up once, never a second time and never after a skip.
+Y23s	FB-T.P1	PASS	conduct	-	BOUNDED=pass	If they have not answered, follow up once.
+N3S	FB-T.P1	FIRE	conduct	-	SECOND=FAIL	Follow up a second time if it stays thin, never a second time after a skip.
+N4a	FB-T.P1	FIRE	conduct	-	AFTER=FAIL	Follow up even if they do not say why, after a skip.
+N4b	FB-T.P1	FIRE	conduct	-	AFTER=FAIL	Follow up even though nothing was said, after a skip.
+N4-ctl	FB-T.P1	FIRE	conduct	-	AFTER=FAIL	Follow up, if they did not answer, after a skip.
+N4-nm	FB-T.P1	PASS	conduct	-	BOUNDED=pass	Follow up once, never after a skip.
+K4a	FB-T.P1	FIRE	conduct	-	AFTER=FAIL	Follow up even if they do not say why after a skip.
+K4b	FB-T.P1	FIRE	conduct	-	AFTER=FAIL	Follow up even though nothing was said after a skip.
+K5b	FB-T.P1	FIRE	conduct	-	AFTER=FAIL	Follow up once, never, even briefly, after a skip.
+K5c	FB-T.P1	FIRE	conduct	-	AFTER=FAIL	You may follow up once, but never, after a skip.
+K6a	FB-T.P1	FIRE	conduct	-	SECOND=FAIL	Follow up once more, and then once more after that.
+K6b	FB-T.P1	FIRE	conduct	-	SECOND=FAIL	Follow up twice on a thin answer.
+K6c	FB-T.P1	FIRE	conduct	-	SECOND=FAIL	Follow up a further time if it stays thin.
+K6-nm	FB-T.P1	PASS	conduct	-	BOUNDED=pass	Follow up once more on a thin answer.
+PLANTS
+}
+FB_PLANTS_F="$WORK/ta/fb-plants.tsv"; fb_plant_table > "$FB_PLANTS_F"
+fbctl_assert() {
+  local out res id st why
+  out="$(ta_plants "$TA_MODEL_F" "$TA_A2_F" < "$FB_PLANTS_F")"
+  if [ -z "$out" ]; then
+    FAIL "FB-CTL: the plant table produced no verdict — the arms did not grade a single planted control"
+    return 0
+  fi
+  printf '%s\n' "$out" > "$WORK/ta/fb-plants.out"
+  res="$(ta_plant_grade "$FB_PLANTS_F" "$WORK/ta/fb-plants.out")"
+  while IFS=$'\t' read -r id st why; do
+    if [ "$st" = "ok" ]; then PASS "FB-CTL[$id]: $why"; else FAIL "FB-CTL[$id]: $why"; fi
+  done <<<"$res"
+}
+fbctl_assert
+md_flips ta_grade  'FB-T.P1' fbp_assert
+md_flips ta_plants 'FB-CTL'  fbctl_assert
+
+# ── The ledger seams OW makes reachable (LG-CTL), each on a copy under $WORK.
+lgctl3_assert() {
+  local p='templates/person-intake.template.md' t='templates/traveler-intake.template.md' c='skills/trip-record/interview-conduct.md' wo3="$WORK/ta/ledger-wo-bh3.txt" r g on off
+  awk '$1 != "BH-3"' "$LG_LEDGER_F" > "$wo3"
+  lg_ctl L7 'LG1' "FM-4: an A2-shaped default planted in person Step 4 is undeclared on both limbs" "$p" "not any group's budget." "not any group's budget. If no budget is given, write \`mid-range\`."
+  lg_ctl L8 'LG1 LG2 LG3' "the declared A2 text changed (none to nothing) is undeclared, and its row reads ANCHOR-GONE" "$p" 'write `none` rather' 'write `nothing` rather'
+  lg_ctl BH3-RW 'LG1 LG2 LG3' "BH-3 reworded to Y30's text — LG1 on both limbs, LG2 ANCHOR-GONE on both rows, LG3 on both" "$t" $'Record `daily` only when they say so; anything else is\n`one-off`.' $'Record `daily` when they say so, or else\n`one-off`.'
+  lg_ctl A2-SECOND 'LG1' "a second declared-none sentence on the person form is undeclared, its row still TRIPS" "$p" 'Offer packed, balanced, or relaxed.' 'Offer packed, balanced, or relaxed. If they have no pace preference, write `none`.'
+  lg_ctl BH3-RW2 'LG1 LG2 LG3' "re-check N2: BH-3 reworded to '…, or else leave \`one-off\`.'" "$t" $'Record `daily` only when they say so; anything else is\n`one-off`.' $'Record `daily` when they say so, or else leave\n`one-off`.'
+  lg_ctl BH3-RW2-CLEANUP 'LG1' "the same rewording with both BH-3 rows deleted stays red — the clean-up path cannot turn it green" "$t" $'Record `daily` only when they say so; anything else is\n`one-off`.' $'Record `daily` when they say so, or else leave\n`one-off`.' "$wo3"
+  lg_ctl Y16 'LG1' "re-check Y16: a second declared-none sentence after person Step 7 is undeclared, A2-1 still TRIPS" "$p" 'including anything they avoid.' 'including anything they avoid. If they give no answer, write `none`.'
+  r="$(ta_root FMG)"
+  if ! ta_mutate "$r" "$c" '- **W10 —' $'- Keep what they said.\n- Record the nearest member.\n- **W10 —'; then
+    FAIL "LG-CTL[FMG]: the mutation did not LAND — the W10 bullet is not where this control expects it"
+  else
+    on="$(ta_run "$r" "$LG_LEDGER_F" | awk -F'\t' '$1 == "LG1" && $2 == "OW-T.P1" && $4 == "- Record the nearest member."')"
+    off="$(C0_BULLETS=0 ta_run "$r" "$LG_LEDGER_F" | awk -F'\t' '$1 == "LG1" && $2 == "OW-T.P1" && index($4, "nearest member")')"
+    if [ -n "$on" ] && [ -z "$off" ]; then
+      PASS "LG-CTL[FMG]: FM-G's seam — the bullets \"- Keep what they said.\" and \"- Record the nearest member.\" planted before W10 read as two blocks and the second fires SOURCE, undeclared; with R1's list rule off the two merge and the bullet passes as OWN"
+    else
+      FAIL "LG-CTL[FMG]: FM-G's seam did not behave — with the list rule on the planted bullet's LG1 read '${on:-nothing}', and with it off '${off:-nothing}', where it must fire on and pass off"
+    fi
+  fi
+}
+lgctl3_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group CHR — CH-2's R-test, keyed on the class PERSON read live (ADR-026 § 5's CH-2 R-test cell)
+#
+# What it binds: ADR-022 D6.3 — one offer, once a session, and a narrowed confirmation, the trigger
+# being the class read live; W10, the conduct's own statement of D6.3; FB-T.P1's PERSON clause,
+# consumed here and not restated; and ADR-045 D1 item 6 — a composed example on a PERSON-class field
+# in speech only on request. ADR-045 names no R predicate, so the limb ids are this suite's. Not RT:
+# that is the name of one of #1770's checks.
+#
+# POPULATION: the R5 clauses of every PERSON-scoped sentence (group WD's scope, read per sentence).
+#   CHR.P1  one offer — offer(s) followed by to move … text, to leave … later or to defer, in a clause
+#           carrying each, every, per field, again, before each or every time, not denied
+#   CHR.P2  narrowed confirmation — repeat their answer, repeat the value, say it again, say the value,
+#           saying the value, confirm by repeating, read it back, or read with back within four words,
+#           not denied. W10's "without saying the value again" is the denial
+#   CHR.P3  FB-T.P1's class 8 (PERSON-SPEECH) on any sentence
+#   CHR.P4  example only on request — your own example, example(s) of your own, make up, compose or
+#           invent, not denied, in a sentence carrying none of if they ask, on request, when asked, if
+#           asked, when they ask
+#   CHR.E1  the care is stated: the write-capable rules hold a sentence carrying `PERSON` — a Class
+#           value ft_rows returns, so a renamed class fails this limb — say once and without saying
+#           the value
+#   CHR.J   every bullet of both guided forms joins exactly one classification row through group FT's
+#           join, the join group WD's form model uses; NONE or AMBIG names the bullet
+# Hits are group LG's to declare.
+#
+# WHAT IT DOES NOT REACH, printed on its verdict line: a live session; the route that cannot write,
+# which carries no spoken care — the card's gap, RS-15, carried by #1327 and never read as a pass;
+# health-shaped fields the trip-context form types TRIP (RS-23 and QA-02, answered not now; reopening
+# signal: a recorded spoken run on the trip form); and whether anyone is in the room. Y14 is the
+# scope's stated bound (group WD).
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "CHR — CH-2's R-test, keyed on the class PERSON read live"
+
+chr_assert() {
+  local out pop hits
+  out="$(ta_grade "$TA_MODEL_F" "$TA_A2_F" "$TA_RECS_F")"
+  pop="$(awk -F'\t' '$1 == "POP"' <<<"$out" | awk 'END { print NR }')"
+  hits="$(awk -F'\t' '$1 == "HIT" && $2 ~ /^CHR\./ { printf "[%s %s: %s] ", $2, $3, substr($8, 1, 60) }' <<<"$out")"
+  if [ "$pop" -eq 0 ]; then
+    FAIL "CHR: no PERSON-scoped clause was read — the population the R-test grades is empty, so CHR.P1 to CHR.P4 would be true of nothing. A class PERSON renamed in the data model lands here"
+  else
+    PASS "CHR: $pop PERSON-scoped clause(s) graded by CHR.P1, CHR.P2 and CHR.P4, and CHR.P3 read from FB-T.P1's class 8 on every sentence; hits: ${hits:-none} — each is group LG's to declare. NOT REACHED: a live session; the route that cannot write, which carries no spoken care (RS-15, #1327 — the card's gap, a stated residual and never a pass); health-shaped TRIP fields (RS-23, QA-02 — not now; reopening signal: a recorded spoken run on the trip form); whether anyone is in the room"
+  fi
+}
+chr_assert
+# chr_e1_eval <conduct> <data-model> — 1 when the write-capable rules state the care, else 0.
+chr_e1_eval() {
+  local cls
+  cls="$(ft_rows "$2" | cut -f4 | sort -u)"
+  if ! grep -qxF 'PERSON' <<<"$cls"; then printf '0\n'; return 0; fi
+  ta_e1 "$1" '## What only a write-capable session adds' | LC_ALL=C awk "$WD_FN"'
+    index($0, "`PERSON`") { n = wd_words($0, W); s = " " wd_join(W, n, 1, n) " "; if (index(s, " say once ") && index(s, " without saying the value ")) c++ }
+    END { print (c > 0) ? 1 : 0 }'
+}
+chre1_assert() {   # chre1_assert <conduct> <data-model>
+  local v
+  v="$(chr_e1_eval "$1" "$2")"
+  if [ "$v" = "1" ]; then
+    PASS "CHR.E1: the write-capable rules of ${1#"$ROOT/"} state the care — a sentence carrying \`PERSON\`, a Class value the field table holds, with say once and without saying the value"
+  else
+    FAIL "CHR.E1: the write-capable rules of ${1#"$ROOT/"} hold no sentence carrying \`PERSON\` (a Class value ft_rows returns), say once and without saying the value — read '${v:-nothing}'"
+  fi
+}
+chre1_assert "$PC_VERB" "$ROOT/reference/data-model.md"
+chrj_assert() {
+  local m n bad
+  m="$(ta_model "$ROOT" "$WORK/wd")"
+  n="$(awk -F'\t' '$1 == "J"' <<<"$m" | awk 'END { print NR }')"
+  bad="$(awk -F'\t' '$1 == "J" && $5 != "ONE" { printf "[%s · %s · %s: %s] ", $2, $3, $4, $5 }' <<<"$m")"
+  if [ "$n" -eq 0 ]; then
+    FAIL "CHR.J: no guided-form bullet reached the join — the form model read nothing"
+  elif [ -n "$bad" ]; then
+    FAIL "CHR.J: a bullet does not join exactly one classification row — $bad. A bullet that joins none is a field this suite cannot class"
+  else
+    PASS "CHR.J: all $n bullet(s) of both guided forms join exactly ONE classification row through ft_resolve, the join group FT uses"
+  fi
+}
+chrj_assert
+
+chr_plant_table() {
+  cat <<'PLANTS'
+N5	CHR.P1	FIRE	person	Needs	HIT=FAIL	Before each health question, offer to move it to text.
+N6	CHR.P2	FIRE	person	Getting there & back	HIT=FAIL	Read their passport answer back to confirm it.
+N7	CHR.P4	FIRE	person	Needs	HIT=FAIL	On a must-have, give an example of your own.
+N8	CHR.P4	PASS	person	Needs		If they ask, give an example of your own on a must-have.
+N9	CHR.P2	PASS	person	Needs		In speech, a confirmation of such a field names the field and asks for assent without saying the value again.
+PLANTS
+}
+CHR_PLANTS_F="$WORK/ta/chr-plants.tsv"; chr_plant_table > "$CHR_PLANTS_F"
+chrctl_assert() {
+  local out res id st why
+  out="$(ta_plants "$TA_MODEL_F" "$TA_A2_F" < "$CHR_PLANTS_F")"
+  if [ -z "$out" ]; then
+    FAIL "CHR-CTL: the plant table produced no verdict — the arms did not grade a single planted control"
+    return 0
+  fi
+  printf '%s\n' "$out" > "$WORK/ta/chr-plants.out"
+  res="$(ta_plant_grade "$CHR_PLANTS_F" "$WORK/ta/chr-plants.out")"
+  while IFS=$'\t' read -r id st why; do
+    if [ "$st" = "ok" ]; then PASS "CHR-CTL[$id]: $why"; else FAIL "CHR-CTL[$id]: $why"; fi
+  done <<<"$res"
+}
+chrctl_assert
+
+# ── The seams of the class read live — each a flip of reference/data-model.md on a copy under $WORK.
+chr_pop() { awk -F'\t' '$1 == "POP"' "$1" | awk 'END { print NR }'; }
+chr_hits() { awk -F'\t' '$1 == "HIT" && $2 != "FB-OBS" { print $2 "\t" $8 }' "$1" | sort; }
+chrseam_assert() {
+  local dm='reference/data-model.md' r p0 b0 g got s34 m34 j
+  p0="$(chr_pop "$TA_OUT_F")"; b0="$(chr_hits "$TA_OUT_F")"
+  r="$(ta_root S3a)"
+  if ta_mutate "$r" "$dm" '| 21 | ⭐ `Desire` | Desires | **TRIP** |' '| 21 | ⭐ `Desire` | Desires | **PERSON** |'; then
+    g="$(ta_run "$r" "$LG_LEDGER_F")"; got="$(awk -F'\t' '$1 == "LG1" { print $2 }' <<<"$g" | sort -u | tr '\n' ' ')"
+    if [ "$got" = "CHR.P3 FB-T.P1 " ]; then PASS "CHR-SEAM[S3a]: SEAM-3 forward — Desire flipped TRIP to PERSON on a copy makes BO-1 (\"Then make each one specific to them.\") a directed follow-up on a PERSON field: undeclared exactly on FB-T.P1 and CHR.P3"; else FAIL "CHR-SEAM[S3a]: SEAM-3 forward — Desire flipped TRIP to PERSON read undeclared limbs [${got:-none}], where exactly CHR.P3 and FB-T.P1 are predicted"; fi
+  else FAIL "CHR-SEAM[S3a]: the flip did not LAND on the copy"; fi
+  r="$(ta_root S3b)"
+  if ta_mutate "$r" "$dm" '| 18 | `Category` | Needs | **PERSON** |' '| 18 | `Category` | Needs | **DEFAULT** |' && ta_mutate "$r" "$dm" '| 19 | ⭐ `Specific` | Needs | **PERSON** |' '| 19 | ⭐ `Specific` | Needs | **DEFAULT** |'; then
+    ta_run "$r" "$LG_LEDGER_F" > /dev/null
+    if [ "$(chr_pop "$r/out.tsv")" -lt "$p0" ] && [ "$(chr_hits "$r/out.tsv")" = "$b0" ]; then PASS "CHR-SEAM[S3b]: rows 18 and 19 flipped PERSON to DEFAULT — the population falls $p0 → $(chr_pop "$r/out.tsv") and no hit moves"; else FAIL "CHR-SEAM[S3b]: rows 18 and 19 flipped read population $p0 → $(chr_pop "$r/out.tsv"), hits identical: $([ "$(chr_hits "$r/out.tsv")" = "$b0" ] && echo yes || echo no) — the population must fall and no hit move"; fi
+  else FAIL "CHR-SEAM[S3b]: the flip did not LAND on the copy"; fi
+  r="$(ta_root S3c)"
+  if ta_mutate "$r" "$dm" '| 13 | `Passport` | Getting there & back | **PERSON** |' '| 13 | `Passport` | Getting there & back | **DEFAULT** |'; then
+    ta_run "$r" "$LG_LEDGER_F" > /dev/null
+    if [ "$(chr_pop "$r/out.tsv")" -lt "$p0" ] && [ "$(chr_hits "$r/out.tsv")" = "$b0" ]; then PASS "CHR-SEAM[S3c]: row 13 flipped PERSON to DEFAULT — the population falls $p0 → $(chr_pop "$r/out.tsv") and no hit moves"; else FAIL "CHR-SEAM[S3c]: row 13 flipped read population $p0 → $(chr_pop "$r/out.tsv") — it must fall with no hit moving"; fi
+  else FAIL "CHR-SEAM[S3c]: the flip did not LAND on the copy"; fi
+  r="$(ta_root S34)"
+  if ta_mutate "$r" "$dm" '| 34 | `Group time` | People dynamics | **TRIP** |' '| 34 | `Group time` | People dynamics | **PERSON** |'; then
+    ta_run "$r" "$LG_LEDGER_F" > /dev/null
+    m34="$(printf 'S34\tFB-T.P1\tFIRE\ttrip\tPeople dynamics\t-\t%s\n' "Follow up on their group time answer.")"
+    s34="$(ta_plants "$r/model.tsv" "$r/a2.tsv" <<<"$m34" | cut -f3,4)"
+    j="$(ta_plants "$TA_MODEL_F" "$TA_A2_F" <<<"$m34" | cut -f3,4)"
+    if [ "$(chr_pop "$r/out.tsv")" -gt "$p0" ] && [ "$s34" = $'1\tPERSON-SPEECH=FAIL' ] && [ "$j" = $'0\tDIRECTED=observation' ]; then PASS "CHR-SEAM[S34]: Group time flipped TRIP to PERSON — the population rises $p0 → $(chr_pop "$r/out.tsv"), and \"Follow up on their group time answer.\" goes DIRECTED to PERSON-SPEECH FAIL, the join reaching People dynamics & togetherness through ft_lead"; else FAIL "CHR-SEAM[S34]: Group time flipped read population $p0 → $(chr_pop "$r/out.tsv") and the plant [$j] → [$s34], where the population must rise and the plant go DIRECTED to PERSON-SPEECH"; fi
+  else FAIL "CHR-SEAM[S34]: the flip did not LAND on the copy"; fi
+  r="$(ta_root S36)"
+  if ta_mutate "$r" "$dm" "| 36 | \`Solo, I'd\` | People dynamics | **DEFAULT** |" "| 36 | \`Solo, I'd\` | People dynamics | **PERSON** |"; then
+    ta_run "$r" "$LG_LEDGER_F" > /dev/null
+    if [ "$(chr_pop "$r/out.tsv")" -gt "$p0" ]; then PASS "CHR-SEAM[S36]: row 36 flipped DEFAULT to PERSON — the population rises $p0 → $(chr_pop "$r/out.tsv")"; else FAIL "CHR-SEAM[S36]: row 36 flipped read population $p0 → $(chr_pop "$r/out.tsv"), where it must rise"; fi
+  else FAIL "CHR-SEAM[S36]: the flip did not LAND on the copy"; fi
+  r="$(ta_root CHRJ)"
+  if ta_mutate "$r" "$dm" '| 34 | `Group time` | People dynamics | **TRIP** |' '| 34 | `Group time` | People dynamic | **TRIP** |'; then
+    got="$(ta_model "$r" "$r" | awk -F'\t' '$1 == "J" && $5 != "ONE" { print $3 " · " $4 ": " $5 }')"
+    if [ "$got" = "People dynamics & togetherness · Group time: NONE" ]; then PASS "CHR-SEAM[CHRJ]: row 34's Section read People dynamic — no token boundary — leaves Group time joining NONE, and CHR.J would name it; the tracked table joins every bullet"; else FAIL "CHR-SEAM[CHRJ]: row 34's Section read People dynamic gave [${got:-every bullet ONE}], where exactly Group time must join NONE"; fi
+  else FAIL "CHR-SEAM[CHRJ]: the flip did not LAND on the copy"; fi
+  r="$(ta_root R1)"
+  awk '!/^- \*\*W10/' "$r/skills/trip-record/interview-conduct.md" > "$r/c.md"
+  if [ "$(chr_e1_eval "$r/c.md" "$r/reference/data-model.md")" = "0" ] && [ "$(chr_e1_eval "$PC_VERB" "$ROOT/reference/data-model.md")" = "1" ]; then PASS "CHR-SEAM[R1]: with W10 deleted from a copy of the conduct file CHR.E1 reads the care unstated"; else FAIL "CHR-SEAM[R1]: with W10 deleted CHR.E1 still reads the care stated, so the limb cannot see its own subject"; fi
+}
+chrseam_assert
+
+md_flips ta_grade    'CHR'     chr_assert
+md_flips chr_e1_eval 'CHR.E1'  chre1_assert "$PC_VERB" "$ROOT/reference/data-model.md"
+md_flips ta_model    'CHR.J'   chrj_assert
+md_flips ta_plants   'CHR-CTL' chrctl_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group CF — the interview conversation fixtures, their grammar and their reader; and, with it, the
+# conversation blocks of groups OW and FB: OW-C and FB-C over every test conversation (#1769 AC3)
+#
+# examples/interview-conversations/ holds synthetic test conversations, one plain-text file each,
+# declared by the interview-conversation-fixture fence of its README. Every traveller, name and
+# answer in them is invented. A file is AUTHORED — both sides written, every label declared, the
+# author's verdicts stated — or GENERATED by the interviewer under test, its labels the grader's.
+# Beside them stands grade-record.txt, the grade of each generated conversation, which is no
+# conversation: group RB reads it, and CF_RECORD keeps every CF arm off it.
+# The grammar is stated here, in the suite that pins it (ADR-042 § 3); the README cites it.
+#
+# ── THE GRAMMAR — one physical line is one record, and a record is valid only in its region ──────
+#   The file ends with exactly one newline. Any other empty line, in any region, is MALFORMED.
+#   header   before the first turn: a comment "# …", or "<key>: <value>" for a key of the closed set
+#            conversation (the file stem), provenance, origin (authored | generated), form (a guided
+#            form's repository path), spoken (yes | no), route, style, traveller ("<code> — <line>"),
+#            answered-before ("<f-ref>; …" or none), and, generated, interviewer-model,
+#            interviewer-session, carrier, conduct-revision, run-date, run-seq, run-id and
+#            transcript-sha256. Any other line ends the header and is read as the turns' first.
+#   turns    "T<n> I | <text>" and "T<n> P | <text>", n running 1..n; "L3 <f-ref> = <act>", valid only
+#            directly under a P turn, one per field the turn concerns, the act one of answer, thin,
+#            doubt, empty, no-member, skip, decline, stop, silence, unclear, request-repeat,
+#            request-clarify, request-example, stuck and return, or "L3 §<section> = decline | skip |
+#            stop" for a section, or "L3 - = <act>" for a turn that concerns no field; "L4 put=<f-ref>
+#            [,<f-ref>] kind=<kind> example=yes|no [example-text=«…»] [carries=«…»]", put=- for a turn
+#            that puts no field, at most one, valid only directly under an I turn — in put, an f-ref
+#            whose text holds a comma is written inside «…» and read whole (#2185 amendment 2), and
+#            one not closed before a comma or the end is MALFORMED; "--- record". A
+#            line that is anything else — a "#" line, a V or X line, an empty line — is MALFORMED.
+#   record   "V <f-ref> = <value>"; and, authored only, "X OW-C|FB-C <f-ref> = pass | fail:<…> | nd:<…>".
+#   A turn's text escapes a newline as \n, a backslash as \\ and a tab as \t; any other backslash
+#   sequence is MALFORMED. ON A GENERATED FILE EVERY I TURN CARRIES EXACTLY ONE L4, the grader's, so
+#   a raw L4 inside an unescaped turn meets the grader's own and is refused as a second one. An
+#   f-ref is "<section> › <label>[#<unit>]", resolved on (section, label) with group FT's ft_lead
+#   against the form model this run reads (ta_model); one that resolves to no one field is MALFORMED.
+#   The PERSON class, the closed heads and their members come from that model, never from a fixture.
+#
+# ── THE HARNESS — C-locale awk, embedding WD_FN and FT_LEAD_FN, never copying them ───────────────
+#   The kind (CF3). On an authored fixture each field-putting turn's kind is DERIVED from the
+#   person's last act on the field — none: ask (the single re-ask is still the ask); silence or
+#   unclear: silence re-offer; no-member on a closed field: member re-offer; doubt: ask-on-doubt;
+#   request-repeat, -clarify or -example: asked-for; stuck: example when the turn gives one, else
+#   silence re-offer; answer, thin or empty: follow-up; skip, decline or stop: no turn is admitted —
+#   and a declared kind the person's side does not derive is a finding. A turn that puts no field
+#   declares a kind that puts none, or confirmation. On a generated file the grader's kind is used.
+#   OW-C, for each V line, the admitted non-utterances first, keyed by ADR-045 D2 item 4's ids: A1
+#   the em dash, where they uttered a skip of the field or its section, in any words — a decline
+#   included, ADR-022 D2.4's declined marker; A2 a text the form declares for an empty answer (the
+#   ledger's A2 rows), where they gave the empty answer, never on silence; A3 a closed member their
+#   words contain or pick by position — first, second, third, last, 1 to 9, against the carries of
+#   the last turn that offered the members; A4 the provenance mark [OPERATOR-PROVIDED], struck before
+#   the value beside it is read; A5 the form's own bracket, as the form ships it. Otherwise the WORDS
+#   LIMB: every word of the value (B1) among the words of their turns on the field, with
+#   multiplicity; a fail names the words. A person turn with no label makes every value NOT
+#   DETERMINABLE, except a word that is in none of their turns, which fails.
+#   On a GENERATED file only, a words-limb miss is ND when ONE reading explains every missing word
+#   (N10): COMPOUND (RS-13) — one pool of their turn-word occurrences, what the direct matches left;
+#   a missing word and the value word after it, both missing, joined, use up one occurrence of their
+#   concatenation, and a missing word equal to two words adjacent in ONE turn uses up one of each —
+#   or TYPOGRAPHY (FM-14) — a missing word whose non-ASCII bytes removed leave a NON-EMPTY word the
+#   turns hold. A value whose misses need both readings fails. Every verdict on a generated file says
+#   "on judged labels" and is a REPORTED LINE, never FAIL() or PASS() (FM-8).
+#   FB-C, for each field: at most one follow-up puts it, and two in its section, a follow-up putting
+#   two fields counting one for each (bullet 1); no turn puts it after an uttered skip, decline or
+#   stop of it or its section, no follow-up follows an empty answer, and none a field the header's
+#   answered-before names (2); none on a closed field (3); a follow-up repeats no ask in the same
+#   words, and carries no word but their turns on the field BEFORE it, its label and the
+#   example-text of its L4 lines up to and including it (4); none on a PERSON field in a spoken
+#   session (5); and, authored only, none after an answer declared not thin (6).
+#   The conversation is ND when any value is ND — never a pass, never a fail of the conversation —
+#   every total is over determinate verdicts with ND in a column of its own, and the reported
+#   observations (order, example echo, a confirmation's order (RS-21), a second silence re-offer
+#   (RS-22)) are a second pass that no verdict reads.
+#
+# ── THE ARMS ─────────────────────────────────────────────────────────────────────────────────────
+#   CF1  the README fence and the files agree both ways, and each header equals its row
+#   CF2  each of AC2's traveller codes stands among the authored rows, and among the generated ones.
+#        CONTROL: a generated row removed from a copy of the README
+#   CF3  on every authored fixture each declared kind is the derived one. CONTROL: one relabelled
+#   CF4  the suite's field-putting kinds agree with ADR-045 term 7 both ways through nu_list, and its
+#        non-field kinds one way; CF4b the two suite lists share no member. CONTROL: a kind in both
+#   CF5  every fixture is well formed; CF5a-CF5i, each planted on a copy, is malformed — a raw
+#        multi-line turn, an unknown escape, a stray # line, an L4 under a P turn, a V line among the
+#        turns, an empty line after the header, a generated I turn with no L4, a raw I turn whose
+#        second line forges an L4 under the grader's own, and a comma-bearing f-ref put unquoted; with
+#        near-miss copies that parse clean, the same f-ref quoted among them, read whole and resolved
+#   CF6  the verdict stream is byte-identical under mawk, gawk and the host awk
+#   CF7  the reader's token stream is identical under every member of LC_SET. CONTROL: unpinned
+#   CF-ND0  no count includes an ND, over a set that holds one
+#   CF-GEN0 a failing generated conversation planted in a copy changes no fail count and adds one
+#        reported line
+#   CF-CTL  the pinned probes: the compound and typography readings on generated values (Q1, Q2,
+#        N10's repeat, split use-up and mixed cases) and their authored twins, each at its verdict
+#   OW-C, OW-C-A, OW-C-ND, OW-C-OBS and FB-C, in groups OW and FB below.
+# WHAT A GREEN DOES NOT COVER: a verdict on an authored fixture grades the labels it declares, so it
+# tests the checks and not an interviewer; a verdict on a generated conversation rests on the
+# grader's labels, is reported and never failed, and enters that conversation's grade in group RB. A
+# label whose text holds a comma is put by L4 only quoted, a stopgap until a field has a key that
+# does not change with its label's wording (#2211). The title line's name is not a labelled bullet
+# and is reached by no f-ref. A transcript with a gap is MALFORMED here — T<n> must run 1..n — so its
+# middle missing is refused rather than read as ND.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "CF — the interview conversation fixtures: their declaration, their grammar, the kind each turn derives, and the reader under every engine and locale"
+
+CF_DIR="$ROOT/examples/interview-conversations"
+CF_README="$CF_DIR/README.md"
+CF_CODES='AF TE SK DS GS OF'   # #1769 AC2's travellers, by #1765 § 6's codes
+mkdir -p "$WORK/cf"
+CV_FN='# CV_FN — the conversation fixture reader and the OW-C / FB-C harness. Embedded after WD_FN and
+# FT_LEAD_FN, never copied. Records, one per line, tab-separated:
+#   MAL <file> <line> <why>              a line, or the file, that opens no record of its region
+#   KINDX <file> <turn> <field> <why>    CF3 — a declared kind the person side does not derive
+#   VERDICT <file> <origin> <check> <field> <verdict> <detail>
+#   CONV <file> <origin> <verdict>       PASS, FAIL or ND for the conversation, ND first
+#   OBS <file> <field> <order> <echo> <style>     the second pass; never read by a verdict
+#   TOK <file> <record> …                CF7 the token stream (emit=tok)
+function cv_init(   i, n, A) {
+  if (CV_READY) return
+  CV_READY = 1
+  CV_HKEYS = " conversation provenance origin form spoken route style traveller answered-before interviewer-model interviewer-session carrier conduct-revision run-date run-seq run-id transcript-sha256 "
+  CV_ACTS = " answer thin doubt empty no-member skip decline stop silence unclear request-repeat request-clarify request-example stuck return "
+  CV_SACTS = " decline skip stop "
+  # The suite lists of kinds. ADR-045 term 7 owns them; CF4 holds the first to it two ways and the second
+  # one way, CF4b holds the two disjoint, and #1770 adds its rating ask to the second.
+  CV_FIELD_KINDS = "ask|follow-up|ask-on-doubt|member re-offer|silence re-offer|asked-for|example|confirmation"
+  CV_NONFIELD_KINDS = "decision point|style offer|disclosure|spoken-care offer|routing statement|give-back"
+  if (cv_plant_nonfield != "") CV_NONFIELD_KINDS = CV_NONFIELD_KINDS "|" cv_plant_nonfield
+  n = split(CV_FIELD_KINDS, A, "|"); for (i = 1; i <= n; i++) CV_KF[A[i]] = 1
+  n = split(CV_NONFIELD_KINDS, A, "|"); for (i = 1; i <= n; i++) CV_KN[A[i]] = 1
+  # The evaluators of the admitted non-utterances, keyed by ADR-045 D2 item 4 ids (OW-C-A).
+  CV_A_IDS = "A1 A2 A3 A4 A5"
+  CV_POSW = " first second third last 1 2 3 4 5 6 7 8 9 "
+  CV_DASH = "\342\200\224"; CV_LQ = "\302\253"; CV_RQ = "\302\273"; CV_SEP = " \342\200\272 "
+  CV_OPMARK = "[OPERATOR-PROVIDED]"
+}
+function cv_mal(ln, why) { CV_NMAL++; printf "MAL\t%s\t%d\t%s\n", CV_NAME, ln, why }
+# cv_load <model> <a2> <root> — the form model F records, the declared A2 texts, and each form
+# own brackets, read from the form above its end-of-profile line.
+function cv_load(model, a2, root,   ln, F, k, p, key, f, A, n, i, sec, t, lab, b, e) {
+  RS = "\n"
+  while ((getline ln < model) > 0) {
+    if (split(ln, F, "\t") < 8 || F[1] != "F") continue
+    p = F[2]; key = p SUBSEP F[3] SUBSEP F[4]
+    if (key in CV_FSEEN) continue
+    CV_FSEEN[key] = 1; k = ++CV_FN_N[p]
+    CV_FSEC[p, k] = F[3]; CV_FLAB[p, k] = F[4]; CV_FCL[p, k] = F[5] + 0; CV_FCLS[p, k] = F[6]; CV_FMEM[p, k] = F[7]
+    if (!(p in CV_FORMS)) { CV_FORMS[p] = 1; CV_NFORMS++; CV_FORM[CV_NFORMS] = p }
+  }
+  close(model)
+  while ((getline ln < a2) > 0) { k = index(ln, "\t"); if (k) CV_A2[substr(ln, 1, k - 1), substr(ln, k + 1)] = 1 }
+  close(a2)
+  for (i = 1; i <= CV_NFORMS; i++) {
+    p = CV_FORM[i]; f = root "/" p; sec = ""
+    while ((getline ln < f) > 0) {
+      t = ln; gsub(/^[ \t]+|[ \t]+$/, "", t)
+      if (t == "<!-- PROFILE-END -->") break
+      if (substr(ln, 1, 3) == "## ") { sec = substr(ln, 4); gsub(/[ \t]+$/, "", sec); continue }
+      if (sec == "" || !match(ln, /^[ \t]*- [^*]*\*\*[^*]+:\*\* \[/)) continue
+      b = index(ln, "**"); lab = substr(ln, b + 2); e = index(lab, ":**"); lab = substr(lab, 1, e - 1)
+      t = substr(ln, index(ln, ":** [") + 4); gsub(/[ \t]+$/, "", t)
+      n = ++CV_BRN[p, sec, lab]; CV_BR[p, sec, lab, n] = (substr(t, length(t), 1) == "]") ? t : ""
+    }
+    close(f)
+  }
+  RS = "\001"
+}
+# cv_resolve <form> <f-ref> — the field index in the form model, through ft_lead on (section,
+# label) as group FT resolves a bullet; 0 when no field answers, -1 when more than one does.
+function cv_resolve(p, r,   u, s, l, k, i, m) {
+  CV_RU = ""
+  if (match(r, /#[0-9]+$/)) { CV_RU = substr(r, RSTART); r = substr(r, 1, RSTART - 1) }
+  k = index(r, CV_SEP); if (!k) return 0
+  s = substr(r, 1, k - 1); l = substr(r, k + length(CV_SEP)); m = 0
+  for (i = 1; i <= CV_FN_N[p]; i++) if (CV_FLAB[p, i] == l && ft_lead(s, CV_FSEC[p, i])) { if (m) return -1; m = i }
+  return m
+}
+# cv_rsect <form> <section> — the one section heading the reference leads, or "".
+function cv_rsect(p, s,   i, h) {
+  h = ""
+  for (i = 1; i <= CV_FN_N[p]; i++) if (ft_lead(s, CV_FSEC[p, i])) { if (h != "" && h != CV_FSEC[p, i]) return ""; h = CV_FSEC[p, i] }
+  return h
+}
+# cv_key <f-ref> — the field key, "<section heading> › <label>[#unit]"; "" when it does not resolve.
+function cv_key(r,   i) {
+  i = cv_resolve(CV_P, r); if (i <= 0) return ""
+  CV_KI[CV_FSEC[CV_P, i] CV_SEP CV_FLAB[CV_P, i] CV_RU] = i
+  return CV_FSEC[CV_P, i] CV_SEP CV_FLAB[CV_P, i] CV_RU
+}
+function cv_escok(t,   i, c) {
+  for (i = 1; i <= length(t); i++) if (substr(t, i, 1) == "\\") { c = substr(t, i + 1, 1); if (c != "n" && c != "t" && c != "\\") return 0; i++ }
+  return 1
+}
+function cv_unesc(t,   o, i, c) {
+  o = ""
+  for (i = 1; i <= length(t); i++) { c = substr(t, i, 1); if (c == "\\") { c = substr(t, ++i, 1); o = o (c == "n" ? "\n" : (c == "t" ? "\t" : "\\")) } else o = o c }
+  return o
+}
+function cv_words(s,   W, n) { n = wd_words(s, W); return wd_join(W, n, 1, n) }
+# cv_puts <put> <A> — the field references of an L4 put, split on its commas, each trimmed; one
+# opening with «, a reference whose text holds a comma, is read whole to its » (#2185 amendment 2).
+# Returns how many, or -1 when a quoted one does not close before a comma or the end.
+function cv_puts(s, A,   n, k, x) {
+  n = 0; if (s == "") return 0
+  while (1) {
+    sub(/^ +/, "", s)
+    if (index(s, CV_LQ) == 1) {
+      s = substr(s, length(CV_LQ) + 1); k = index(s, CV_RQ); if (!k) return -1
+      x = substr(s, 1, k - 1); s = substr(s, k + length(CV_RQ)); sub(/^ +/, "", s)
+      if (s != "" && substr(s, 1, 1) != ",") return -1
+    } else { k = index(s, ","); x = k ? substr(s, 1, k - 1) : s; s = k ? substr(s, k) : ""; sub(/ +$/, "", x) }
+    A[++n] = x
+    if (s == "") return n
+    s = substr(s, 2)
+  }
+}
+# cv_file <name> <bytes> — parse one fixture, positionally (FM-10), then grade it when it is well formed.
+function cv_file(name, s,   nl, L, i, ln, region, prev, k, key, v, p, q, r, put, kind, ex, et, ca, n, A, j, act, fr, b, e) {
+  CV_NAME = name; CV_NMAL = 0; split("", CV_H); CV_NT = 0
+  split("", TN); split("", TW); split("", TX); split("", T3N); split("", T3F); split("", T3A); split("", T4)
+  split("", T4K); split("", T4E); split("", T4ET); split("", T4C); split("", T4P); split("", T4PN)
+  CV_NV = 0; split("", VF); split("", VV); CV_NX = 0; split("", XC); split("", XF); split("", XO); split("", CV_KI)
+  if (s == "") { cv_mal(0, "the file is empty"); return }
+  if (substr(s, length(s), 1) != "\n") cv_mal(0, "the file does not end with a newline")
+  else s = substr(s, 1, length(s) - 1)
+  nl = split(s, L, "\n"); region = "header"; prev = ""; CV_P = ""
+  for (i = 1; i <= nl; i++) {
+    ln = L[i]
+    if (ln == "") { cv_mal(i, "an empty line opens no record of its region"); prev = "X"; continue }
+    if (region == "header") {
+      if (substr(ln, 1, 1) == "#") continue
+      if (match(ln, /^[a-z0-9-]+: /)) { k = substr(ln, 1, RLENGTH - 2); if (index(CV_HKEYS, " " k " ")) { if (k in CV_H) cv_mal(i, "the header key " k " stands twice"); CV_H[k] = substr(ln, RLENGTH + 1); continue } }
+      region = "turns"; CV_P = CV_H["form"]
+      if (!(CV_P in CV_FORMS)) cv_mal(0, "the header names no form the model reads: " CV_P)
+      if (CV_H["origin"] != "authored" && CV_H["origin"] != "generated") cv_mal(0, "origin is neither authored nor generated")
+      if (CV_H["spoken"] != "yes" && CV_H["spoken"] != "no") cv_mal(0, "spoken is neither yes nor no")
+      if (CV_H["conversation"] == "") cv_mal(0, "no conversation key")
+    }
+    if (region == "turns") {
+      if (match(ln, /^T[0-9]+ [IP] \| /)) {
+        r = substr(ln, RLENGTH + 1)
+        if (!cv_escok(r)) { cv_mal(i, "an escape other than \\n, \\\\ or \\t in a turn"); prev = "X"; continue }
+        CV_NT++; TN[CV_NT] = substr(ln, 2, index(ln, " ") - 2) + 0; TW[CV_NT] = substr(ln, index(ln, " ") + 1, 1)
+        TX[CV_NT] = cv_unesc(r); T3N[CV_NT] = 0; prev = TW[CV_NT]; continue
+      }
+      if (substr(ln, 1, 3) == "L3 ") {
+        if (prev != "P" && prev != "L3") { cv_mal(i, "an L3 line not directly under a P turn"); prev = "X"; continue }
+        p = index(ln, " = ")
+        if (!p) { cv_mal(i, "an L3 line with no act"); prev = "X"; continue }
+        fr = substr(ln, 4, p - 4); act = substr(ln, p + 3)
+        if (fr == "-") key = "-"
+        else if (substr(fr, 1, 2) == "\302\247") { key = cv_rsect(CV_P, substr(fr, 3)); if (key == "" || !index(CV_SACTS, " " act " ")) { cv_mal(i, "a section label that leads no one section, or carries an act a section does not take"); prev = "X"; continue } key = "\302\247" key }
+        else { key = cv_key(fr); if (key == "") { cv_mal(i, "the field reference resolves to no one field of the form: " fr); prev = "X"; continue } }
+        if (!index(CV_ACTS, " " act " ")) { cv_mal(i, "an act outside the closed list: " act); prev = "X"; continue }
+        n = ++T3N[CV_NT]; T3F[CV_NT, n] = key; T3A[CV_NT, n] = act; prev = "L3"; continue
+      }
+      if (substr(ln, 1, 3) == "L4 ") {
+        if (prev == "L4") { cv_mal(i, "a second L4 line under one I turn"); prev = "X"; continue }
+        if (prev != "I") { cv_mal(i, "an L4 line not directly under an I turn"); prev = "X"; continue }
+        r = substr(ln, 4); p = index(r, " kind="); q = index(r, " example=")
+        if (substr(r, 1, 4) != "put=" || !p || !q || q < p) { cv_mal(i, "an L4 line out of its shape"); prev = "X"; continue }
+        put = substr(r, 5, p - 5); kind = substr(r, p + 6, q - p - 6); r = substr(r, q + 9)
+        if (substr(r, 1, 3) == "yes") { ex = "yes"; r = substr(r, 4) } else if (substr(r, 1, 2) == "no") { ex = "no"; r = substr(r, 3) } else ex = ""
+        et = ""; ca = ""; b = " example-text=" CV_LQ; e = " carries=" CV_LQ
+        if (ex != "" && index(r, b) == 1) { r = substr(r, length(b) + 1); q = index(r, CV_RQ); if (q) { et = substr(r, 1, q - 1); r = substr(r, q + length(CV_RQ)) } else ex = "" }
+        if (ex != "" && index(r, e) == 1) { r = substr(r, length(e) + 1); if (length(r) >= length(CV_RQ) && substr(r, length(r) - length(CV_RQ) + 1) == CV_RQ) { ca = substr(r, 1, length(r) - length(CV_RQ)); r = "" } else ex = "" }
+        if (ex == "" || r != "") { cv_mal(i, "an L4 line out of its shape"); prev = "X"; continue }
+        if (!(kind in CV_KF) && !(kind in CV_KN)) { cv_mal(i, "a kind outside the suite lists: " kind); prev = "X"; continue }
+        T4[CV_NT] = 1; T4K[CV_NT] = kind; T4E[CV_NT] = ex; T4ET[CV_NT] = et; T4C[CV_NT] = ca; T4PN[CV_NT] = 0
+        if (put != "-") {
+          n = cv_puts(put, A)
+          if (n < 0) { cv_mal(i, "a quoted field reference in put that does not close before a comma or the end"); prev = "X"; continue }
+          for (j = 1; j <= n; j++) { fr = A[j]; key = cv_key(fr)
+            if (key == "") { cv_mal(i, "the field reference resolves to no one field of the form: " fr); break }
+            T4P[CV_NT, ++T4PN[CV_NT]] = key }
+        }
+        prev = "L4"; continue
+      }
+      if (ln == "--- record") { region = "record"; prev = "R"; continue }
+      cv_mal(i, "a line that opens no record of the turn region"); prev = "X"; continue
+    }
+    if (substr(ln, 1, 2) == "V " && (p = index(ln, " = ")) > 0) {
+      key = cv_key(substr(ln, 3, p - 3)); if (key == "") { cv_mal(i, "the field reference resolves to no one field of the form"); continue }
+      VF[++CV_NV] = key; VV[CV_NV] = substr(ln, p + 3); continue
+    }
+    if (match(ln, /^X (OW-C|FB-C) /) && (p = index(ln, " = ")) > 0) {
+      if (CV_H["origin"] == "generated") { cv_mal(i, "an oracle line on a generated file"); continue }
+      key = cv_key(substr(ln, 8, p - 8)); v = substr(ln, p + 3)
+      if (key == "") { cv_mal(i, "the field reference resolves to no one field of the form"); continue }
+      if (v != "pass" && v !~ /^(fail|nd):./) { cv_mal(i, "an oracle that is not pass, fail: or nd:"); continue }
+      XC[++CV_NX] = substr(ln, 3, 4); XF[CV_NX] = key; XO[CV_NX] = v; continue
+    }
+    cv_mal(i, "a line that opens no record of the record region")
+  }
+  if (region == "header") cv_mal(0, "the file holds no turn")
+  for (i = 1; i <= CV_NT; i++) if (TN[i] != i) { cv_mal(0, "the turn numbers do not run 1..n"); break }
+  if (CV_H["origin"] == "generated") for (i = 1; i <= CV_NT; i++) if (TW[i] == "I" && !T4[i]) cv_mal(0, "generated: the I turn T" TN[i] " carries no L4")
+  if (emit == "tok") { cv_tok(); return }
+  if (CV_NMAL == 0) cv_grade()
+}
+function cv_tok(   i, k, n, W, S, E, R, o) {
+  k = CV_H["traveller"]; sub(/ .*$/, "", k)
+  printf "TOK\t%s\tHDR\t%s\t%s\t%s\t%s\t%s\n", CV_NAME, CV_H["conversation"], CV_H["origin"], CV_H["form"], CV_H["spoken"], k
+  for (i = 1; i <= CV_NT; i++) {
+    n = wd_toks(wd_fold(TX[i], 0), W, S, E, R); o = ""
+    for (k = 1; k <= n; k++) o = o W[k] "/" R[k] "/" S[k] " "
+    printf "TOK\t%s\tT%d\t%s\t%d\t%s\n", CV_NAME, i, TW[i], length(TX[i]), o
+  }
+}
+# cv_derive <field> <example> — the kind derived from the last act of the person on the field (the table of D1).
+function cv_derive(f, ex,   a) {
+  a = (f in LA) ? LA[f] : ""
+  if (a == "") return "ask"
+  if (a == "silence" || a == "unclear") return "silence re-offer"
+  if (a == "no-member") return CV_FCL[CV_P, CV_KI[f]] ? "member re-offer" : ""
+  if (a == "doubt") return "ask-on-doubt"
+  if (a == "request-repeat" || a == "request-clarify" || a == "request-example") return "asked-for"
+  if (a == "stuck") return (ex == "yes") ? "example" : "silence re-offer"
+  if (a == "answer" || a == "thin" || a == "empty") return "follow-up"
+  return ""
+}
+function cv_sect(f) { return CV_FSEC[CV_P, CV_KI[f]] }
+function cv_fb(f, b, why) { if (!((f, b) in FBB)) { FBB[f, b] = 1; FBL[f] = FBL[f] (FBL[f] == "" ? "" : "; ") "bullet " b ": " why } }
+# cv_grade — the person side read in turn order; FB-C as each interviewer turn puts its fields;
+# OW-C once every turn is read; then the conversation; then, last, the observations.
+function cv_grade(   gen, unl, t, k, f, a, kind, d, sec, np, j, n, W, own, extra, i, ex, ab, A, x, m) {
+  split("", LA); split("", FT); split("", FTC); split("", FTT); split("", BAR); split("", SBAR); split("", SKP); split("", SSKP)
+  split("", EMP); split("", FBB); split("", FBL); split("", PUT); split("", PORD); split("", FU); split("", SFU); split("", ASK)
+  split("", NASK); split("", EXT); split("", LCAR); split("", PICK); split("", VD); split("", CV_ANSB); split("", FTSEEN)
+  split("", REO); CV_NREP = 0; split("", CV_REP); split("", VDK); CV_NVK = 0
+  gen = (CV_H["origin"] == "generated"); CV_GEN = gen; CV_ALLP = ""; unl = 0; CV_NP = 0
+  ab = CV_H["answered-before"]
+  if (ab != "" && ab != "none") { n = split(ab, A, ";"); for (j = 1; j <= n; j++) { x = A[j]; gsub(/^ +| +$/, "", x); x = cv_key(x); if (x != "") CV_ANSB[x] = 1 } }
+  for (t = 1; t <= CV_NT; t++) if (TW[t] == "P" && T3N[t] == 0) unl = 1
+  CV_UNL = unl
+  for (t = 1; t <= CV_NT; t++) {
+    if (TW[t] == "P") {
+      CV_ALLP = CV_ALLP "\n" TX[t]
+      for (k = 1; k <= T3N[t]; k++) {
+        f = T3F[t, k]; a = T3A[t, k]
+        if (f == "-") continue
+        if (substr(f, 1, 2) == "\302\247") { SBAR[substr(f, 3)] = 1; if (a != "stop") SSKP[substr(f, 3)] = 1; continue }
+        if (!((f, t) in FTSEEN)) { FTSEEN[f, t] = 1; FT[f] = FT[f] "\n" TX[t]; FTT[f, ++FTC[f]] = TX[t]; cv_pick(f, TX[t]) }
+        if (a == "return") continue
+        LA[f] = a
+        if (a == "skip" || a == "decline" || a == "stop") BAR[f] = 1
+        if (a == "skip" || a == "decline") SKP[f] = 1
+        if (a == "empty") EMP[f] = 1
+      }
+      continue
+    }
+    if (!T4[t]) continue
+    kind = T4K[t]; np = T4PN[t]
+    if (np == 0 && (kind in CV_KF) && kind != "confirmation") cv_kindx(t, "-", "a turn that puts no field declares " kind ", a kind that puts one")
+    if (kind == "confirmation" && T4C[t] != "") cv_rep("CONFIRM\tT" t "\t" cv_corder(T4C[t]) "\t" T4C[t])
+    for (j = 1; j <= np; j++) {
+      f = T4P[t, j]; sec = cv_sect(f)
+      if (!(f in PUT)) { PUT[f] = 1; PORD[++CV_NP] = f }
+      if ((kind in CV_KN) || kind == "confirmation") cv_kindx(t, f, "a turn that puts the field declares " kind ", a kind that puts none")
+      else if (!gen && !unl && !(f in BAR) && !(sec in SBAR)) { d = cv_derive(f, T4E[t]); if (d == "") cv_kindx(t, f, "the person\047s last act on the field (" LA[f] ") derives no kind"); else if (d != kind) cv_kindx(t, f, "declares " kind ", where the person\047s side derives " d) }
+      if ((f in BAR) || (sec in SBAR)) cv_fb(f, 2, "T" t " puts the field after an uttered skip, decline or stop")
+      if (T4ET[t] != "") EXT[f] = EXT[f] " " T4ET[t]
+      if (T4C[t] != "") LCAR[f] = T4C[t]
+      if (kind == "ask") { ASK[f, ++NASK[f]] = cv_words(TX[t]) }
+      if (kind == "silence re-offer" && ++REO[f] > 1) cv_rep("REOFFER\t" f "\treoffer=" REO[f])
+      if (kind != "follow-up") continue
+      if (++FU[f] > 1) cv_fb(f, 1, "T" t " is a second follow-up on the field")
+      if (++SFU[sec] > 2) cv_fb(f, 1, "T" t " is a third follow-up in its section")
+      if (LA[f] == "empty") cv_fb(f, 2, "T" t " follows an empty answer")
+      if (f in CV_ANSB) cv_fb(f, 2, "T" t " follows up a field the file answered before the session")
+      if (CV_FCL[CV_P, CV_KI[f]]) cv_fb(f, 3, "T" t " follows up a closed field")
+      x = cv_words(TX[t]); for (i = 1; i <= NASK[f]; i++) if (ASK[f, i] == x && x != "") { cv_fb(f, 4, "T" t " repeats the ask in the same words"); break }
+      split("", own); n = split(cv_words(FT[f] " " CV_FLAB[CV_P, CV_KI[f]] " " EXT[f]), W, " "); for (i = 1; i <= n; i++) own[W[i]] = 1
+      extra = ""; n = wd_words(T4C[t], W); for (i = 1; i <= n; i++) if (!(W[i] in own)) extra = extra (extra == "" ? "" : "|") W[i]
+      if (extra != "") cv_fb(f, 4, "T" t " carries " extra)
+      if (CV_H["spoken"] == "yes" && CV_FCLS[CV_P, CV_KI[f]] == "PERSON") cv_fb(f, 5, "T" t " follows up a PERSON-class field in a spoken session")
+      if (!gen && LA[f] == "answer") cv_fb(f, 6, "T" t " follows an answer the fixture declares not thin")
+    }
+  }
+  # FB-C, per field put or named by an oracle
+  for (i = 1; i <= CV_NX; i++) if (XC[i] == "FB-C" && !(XF[i] in PUT)) { PUT[XF[i]] = 1; PORD[++CV_NP] = XF[i] }
+  for (i = 1; i <= CV_NP; i++) {
+    f = PORD[i]
+    if (unl) v = "nd:unlabelled"
+    else { v = ""; for (j = 1; j <= 6; j++) if ((f, j) in FBB) v = v (v == "" ? "" : "|") j; v = (v == "") ? "pass" : "fail:" v }
+    cv_verdict("FB-C", f, v, (unl ? "a person turn carries no label, so the state of the field cannot be fixed" : (FBL[f] == "" ? "-" : FBL[f])) (gen ? "; thin is judged by the grader (RS-4)" : ""))
+  }
+  for (i = 1; i <= CV_NV; i++) cv_verdict("OW-C", VF[i], cv_owc(VF[i], VV[i]), "-")
+  cv_conv()
+  if (!gen) cv_oracles()
+  if (obs + 0) { split("", CF_R); for (i = 1; i <= CV_NV; i++) cv_obs(VF[i], VV[i]); printf "RATE\t%s\torder kept %d reordered %d\techo yes %d no %d\n", CV_NAME, CF_R["kept"], CF_R["reordered"], CF_R["yes"], CF_R["no"]; for (i = 1; i <= CV_NREP; i++) printf "OBS\t%s\t%s\n", CV_NAME, CV_REP[i] }
+}
+# cv_oracles — an authored fixture states its verdicts: each X line is compared with the harness, and
+# a verdict no X line names is expected to pass, so a fixture cannot pass by leaving one out.
+function cv_oracles(   i, k, got, S, P) {
+  split("", S)
+  for (i = 1; i <= CV_NX; i++) {
+    k = XC[i] SUBSEP XF[i]; S[k] = 1; got = (k in VD) ? VD[k] : "(no verdict)"
+    printf "ORACLE\t%s\t%s\t%s\t%s\t%s\t%s\n", CV_NAME, XC[i], XF[i], (got == XO[i]) ? "agree" : "DISAGREE", XO[i], got
+  }
+  for (i = 1; i <= CV_NVK; i++) { k = VDK[i]; if ((k in S) || VD[k] == "pass") continue; split(k, P, SUBSEP)
+    printf "ORACLE\t%s\t%s\t%s\tDISAGREE\tpass (no X line)\t%s\n", CV_NAME, P[1], P[2], VD[k] }
+}
+# cv_rep — a reported line held for the observation pass; it never reaches a verdict.
+function cv_rep(s) { CV_REP[++CV_NREP] = s }
+# cv_corder <carries> — RS-21: a confirmation keeps their words in the order they said them. Its
+# carries, the labels of the fields put so far struck, against the person turns before it in order.
+function cv_corder(c,   L, n, W, i, k, m, P, j) {
+  split("", L); for (k in PUT) { n = wd_words(CV_FLAB[CV_P, CV_KI[k]], W); for (i = 1; i <= n; i++) L[W[i]] = 1 }
+  m = 0; n = wd_words(c, W); for (i = 1; i <= n; i++) if (!(W[i] in L)) P[++m] = W[i]
+  n = split(cv_words(CV_ALLP), W, " "); j = 1
+  for (i = 1; i <= n && j <= m; i++) if (W[i] == P[j]) j++
+  return (j > m) ? "order kept" : "reordered"
+}
+function cv_kindx(t, f, why) { if (!CV_GEN) printf "KINDX\t%s\tT%d\t%s\t%s\n", CV_NAME, t, f, why }
+# cv_pick <field> <turn> — a pick by position: exactly one position word, read against the carries of
+# the last interviewer turn that put the field with its members.
+function cv_pick(f, s,   n, W, i, c, P, m, k, x) {
+  n = wd_words(s, W); c = 0
+  for (i = 1; i <= n; i++) if (index(CV_POSW, " " W[i] " ")) { c++; x = W[i] }
+  if (c != 1 || !(f in LCAR)) return
+  m = split(LCAR[f], P, ","); for (i = 1; i <= m; i++) { gsub(/^ +| +$/, "", P[i]); sub(/^or /, "", P[i]) }
+  if (x == "first") k = 1; else if (x == "second") k = 2; else if (x == "third") k = 3; else if (x == "last") k = m; else k = x + 0
+  if (k >= 1 && k <= m) PICK[f] = P[k]
+}
+function cv_norm(s,   W, n, i) { n = wd_words(s, W); i = (n > 0 && (W[1] == "a" || W[1] == "an" || W[1] == "the")) ? 2 : 1; return wd_join(W, n, i, n) }
+function cv_member(f, v,   M, n, i) {
+  if (!CV_FCL[CV_P, CV_KI[f]]) return 0
+  n = split(CV_FMEM[CV_P, CV_KI[f]], M, "\037")
+  for (i = 1; i <= n; i++) if (cv_norm(M[i]) == cv_norm(v) && cv_norm(v) != "") return 1
+  return 0
+}
+function cv_holds(f, v,   i, n, W, P, m) {
+  m = wd_words(v, P); if (m == 0) return 0
+  for (i = 1; i <= FTC[f]; i++) { n = wd_words(FTT[f, i], W); if (wd_has(W, n, wd_join(P, m, 1, m))) return 1 }
+  return 0
+}
+# cv_owc <field> <value> — OW-C: the admitted non-utterances on their own terms, then the words limb.
+function cv_owc(f, v,   s, m, m2, sec, u) {
+  sec = cv_sect(f); u = match(f, /#[0-9]+$/) ? substr(f, RSTART + 1) + 0 : 1
+  if (v == CV_DASH) return ((f in SKP) || (sec in SSKP)) ? "pass" : "fail:A1"
+  if ((CV_P, v) in CV_A2) return (f in EMP) ? "pass" : "fail:A2"
+  if (cv_member(f, v)) return (cv_holds(f, v) || PICK[f] == v) ? "pass" : "fail:A3"
+  if (index(v, CV_OPMARK) == 1) { v = substr(v, length(CV_OPMARK) + 1); sub(/^ +/, "", v) }
+  if (v != "" && v == CV_BR[CV_P, sec, CV_FLAB[CV_P, CV_KI[f]], u]) return "pass"
+  m = wd_missing(FT[f], v)
+  if (m == "") return "pass"
+  if (CV_UNL) { m2 = wd_missing(CV_ALLP, v); return (m2 == "") ? "nd:unlabelled" : "fail:" m2 }
+  if (CV_GEN && cv_compound(f, v)) return "nd:compound:" m
+  if (CV_GEN && cv_typo(f, v)) return "nd:typography:" m
+  return "fail:" m
+}
+# cv_pool <field> <value> — the pool of the field turn words left over by the direct matches, as
+# wd_missing counts them, and the value missing positions in MP[1..n]; returns n.
+function cv_pool(f, v,   i, j, n, W, np) {
+  split("", POOL); split("", MP); np = 0
+  for (i = 1; i <= FTC[f]; i++) { n = wd_words(FTT[f, i], W); for (j = 1; j <= n; j++) POOL[W[j]]++ }
+  CV_VN = wd_words(v, VW)
+  for (i = 1; i <= CV_VN; i++) { if (POOL[VW[i]] > 0) POOL[VW[i]]--; else MP[++np] = i }
+  return np
+}
+# cv_compound — N10: every missing word explained by one join or one split, each using up the pool
+# occurrences it matches; a split, its two words adjacent in ONE turn.
+function cv_compound(f, v,   np, k, p, i, j, n, W, PR, x, y, bx, by, c) {
+  np = cv_pool(f, v); if (np == 0) return 0
+  split("", PR); for (i = 1; i <= FTC[f]; i++) { n = wd_words(FTT[f, i], W); for (j = 1; j < n; j++) PR[W[j] "\001" W[j + 1]] = 1 }
+  k = 1
+  while (k <= np) {
+    p = MP[k]
+    if (k < np && MP[k + 1] == p + 1 && POOL[VW[p] VW[p + 1]] > 0) { POOL[VW[p] VW[p + 1]]--; k += 2; continue }
+    bx = ""; by = ""
+    for (c in PR) { i = index(c, "\001"); x = substr(c, 1, i - 1); y = substr(c, i + 1)
+      if (x y != VW[p]) continue
+      if ((x == y) ? (POOL[x] >= 2) : (POOL[x] >= 1 && POOL[y] >= 1)) if (bx == "" || (x "\001" y) < (bx "\001" by)) { bx = x; by = y } }
+    if (bx == "") return 0
+    POOL[bx]--; POOL[by]--; k++
+  }
+  return 1
+}
+# cv_typo — FM-L: a missed word is explained only when removing its non-ASCII bytes leaves a non-empty
+# word the field turns hold; a word made only of non-ASCII bytes is a word.
+function cv_typo(f, v,   np, k, w, s, c, i, j, n, W, TS) {
+  np = cv_pool(f, v); if (np == 0) return 0
+  split("", TS); for (i = 1; i <= FTC[f]; i++) { n = wd_words(FTT[f, i], W); for (j = 1; j <= n; j++) TS[W[j]] = 1 }
+  for (k = 1; k <= np; k++) {
+    w = VW[MP[k]]; s = ""
+    for (c = 1; c <= length(w); c++) if (!(substr(w, c, 1) in WD_HI)) s = s substr(w, c, 1)
+    if (s == "" || !(s in TS)) return 0
+  }
+  return 1
+}
+function cv_verdict(c, f, v, why) {
+  if (!((c, f) in VD)) VDK[++CV_NVK] = c SUBSEP f
+  VD[c, f] = v; CV_NVD++
+  printf "VERDICT\t%s\t%s\t%s\t%s\t%s\t%s\n", CV_NAME, CV_H["origin"], c, f, v, why (CV_GEN ? " (on judged labels)" : "")
+  CV_SUM[c, (v ~ /^nd:/) ? "nd" : (v == "pass" ? "pass" : "fail")]++
+}
+# cv_conv — the conversation own verdict: ND when any value is ND, never a pass and never a fail.
+function cv_conv(   k, v, nd, fl) {
+  nd = 0; fl = 0
+  for (k in VD) { v = VD[k]; if (v ~ /^nd:/) nd = 1; else if (v != "pass") fl = 1 }
+  v = nd ? "ND" : (fl ? "FAIL" : "PASS")
+  CV_SUM["CONV", v]++
+  printf "CONV\t%s\t%s\t%s\n", CV_NAME, CV_H["origin"], v
+}
+# cv_obs — the reported observations, read after every verdict and never by one (OW-C-OBS).
+function cv_obs(f, v,   n, W, m, P, i, j, o, ex, E, ne) {
+  n = split(cv_words(FT[f]), W, " "); m = wd_words(v, P); j = 1
+  for (i = 1; i <= n && j <= m; i++) if (W[i] == P[j]) j++
+  o = (j > m) ? "kept" : "reordered"
+  split("", E); ne = split(cv_words(EXT[f]), W, " "); for (i = 1; i <= ne; i++) E[W[i]] = 1
+  ex = (m > 0); for (i = 1; i <= m; i++) if (!(P[i] in E)) ex = 0
+  printf "OBS\t%s\t%s\t%s\t%s\t%s\n", CV_NAME, f, o, (ex ? "yes" : "no"), CV_H["style"]
+  CV_OBS["order", o]++; CV_OBS["echo", ex ? "yes" : "no"]++; CF_R[o]++; CF_R[ex ? "yes" : "no"]++
+  if (!(("st", CV_H["style"]) in CV_OBS)) { CV_OBS["st", CV_H["style"]] = 1; CV_STY[++CV_NSTY] = CV_H["style"] }
+  CV_OBS[CV_H["style"], o]++; CV_OBS[CV_H["style"], ex ? "yes" : "no"]++
+}
+# cv_summary — every total over determinate verdicts only, ND in a column of its own (CF-ND0).
+function cv_summary(   c, n, i, C) {
+  n = split("OW-C FB-C", C, " ")
+  for (i = 1; i <= n; i++) printf "SUMMARY\t%s\tpass %d\tfail %d\tnd %d\n", C[i], CV_SUM[C[i], "pass"], CV_SUM[C[i], "fail"], CV_SUM[C[i], "nd"]
+  printf "SUMMARY\tCONV\tpass %d\tfail %d\tnd %d\n", CV_SUM["CONV", "PASS"], CV_SUM["CONV", "FAIL"], CV_SUM["CONV", "ND"]
+  if (obs + 0) {
+    printf "RATES\tall\torder kept %d reordered %d\techo yes %d no %d\n", CV_OBS["order", "kept"], CV_OBS["order", "reordered"], CV_OBS["echo", "yes"], CV_OBS["echo", "no"]
+    for (i = 1; i <= CV_NSTY; i++) printf "RATES\tstyle %s\torder kept %d reordered %d\techo yes %d no %d\n", CV_STY[i], CV_OBS[CV_STY[i], "kept"], CV_OBS[CV_STY[i], "reordered"], CV_OBS[CV_STY[i], "yes"], CV_OBS[CV_STY[i], "no"]
+  }
+}'
+CV_MAIN='BEGIN { cv_init()
+  if (emit == "lists") { n = split(CV_A_IDS, A, " "); for (i = 1; i <= n; i++) printf "A\t%s\n", A[i]
+    n = split(CV_FIELD_KINDS, A, "|"); for (i = 1; i <= n; i++) printf "FIELD\t%s\n", A[i]
+    n = split(CV_NONFIELD_KINDS, A, "|"); for (i = 1; i <= n; i++) printf "NONFIELD\t%s\n", A[i]
+    exit }
+  cv_load(model, a2, root)
+  for (i = 1; i < ARGC; i++) { f = ARGV[i]; s = ""; RS = "\001"; if ((getline s < f) <= 0) s = ""; close(f); n = f; sub(/^.*\//, "", n); cv_file(n, s); delete ARGV[i] }
+  if (emit != "tok") cv_summary() }'
+# cv_run <model> <a2> <root> <file…> — the engine over fixture files, under CV_ENGINE (the host awk
+# by default); CV_OBS=0 turns the observation pass off, CV_EMIT=tok prints the reader's token stream
+# and CV_EMIT=lists the suite's kind lists and admitted-non-utterance ids; CV_PLANT_NONFIELD plants
+# one more name in the non-field list, for CF4b's control alone.
+cv_run() {
+  local m="$1" a="$2" r="$3"; shift 3
+  LC_ALL=C "${CV_ENGINE:-awk}" -v model="$m" -v a2="$a" -v root="$r" -v obs="${CV_OBS:-1}" -v emit="${CV_EMIT:-}" \
+    -v cv_plant_nonfield="${CV_PLANT_NONFIELD:-}" "$WD_FN$FT_LEAD_FN$CV_FN$CV_MAIN" "$@"
+}
+# The grade record (#2199 F4) lives beside the conversations and is none of them: group RB below reads
+# it, and no CF arm does.
+CF_RECORD='grade-record.txt'
+# cf_files <dir> — the fixture files, one path a line, in C collation; never the grade record.
+cf_files() { [ -d "$1" ] && find "$1" -maxdepth 1 -type f -name '*.txt' ! -name "$CF_RECORD" | LC_ALL=C sort; return 0; }
+# cf_fence <readme> — the interview-conversation-fixture fence: "ROW <id> <origin> <form> <spoken>
+# <code>" per row, or one "NE <why>" when the fence is absent, repeated or holds a malformed row.
+cf_fence() {
+  [ -f "$1" ] || { printf 'NE\tthe README is absent\n'; return 0; }
+  LC_ALL=C awk '
+    $0 == "```interview-conversation-fixture" { nf++; on = 1; next }
+    on && $0 == "```" { on = 0; next }
+    on { t = $0; sub(/^[ \t]+/, "", t); if (t == "" || substr(t, 1, 1) == "#") next
+         n = split(t, F, /[ \t]+/); if (n != 5) { bad = bad " [" t "]"; next }
+         R[++nr] = "ROW\t" F[1] "\t" F[2] "\t" F[3] "\t" F[4] "\t" F[5] }
+    END { if (nf != 1) { printf "NE\tthe fence interview-conversation-fixture stands %d time(s)\n", nf; exit }
+          if (bad != "") { printf "NE\tthe fence holds rows of another shape:%s\n", bad; exit }
+          for (i = 1; i <= nr; i++) print R[i] }' "$1"
+}
+CF_MODEL_F="$TA_MODEL_F"; CF_A2_F="$TA_A2_F"
+CF_FILES="$(cf_files "$CF_DIR")"
+CF_OUT_F="$WORK/cf/out.tsv"; : > "$CF_OUT_F"
+[ -n "$CF_FILES" ] && cv_run "$CF_MODEL_F" "$CF_A2_F" "$ROOT" $CF_FILES > "$CF_OUT_F"
+CF_TOK_F="$WORK/cf/tok.tsv"; : > "$CF_TOK_F"
+[ -n "$CF_FILES" ] && CV_EMIT=tok cv_run "$CF_MODEL_F" "$CF_A2_F" "$ROOT" $CF_FILES > "$CF_TOK_F"
+# cf_count <records-file> <awk-condition> — how many records hold the condition.
+cf_count() { LC_ALL=C awk -F'\t' "$2"' { n++ } END { print n + 0 }' "$1"; }
+# cf_copy <name> — a fresh copy of the fixture directory under the work directory, the grade record
+# left out; prints its path.
+cf_copy() { local d; d="$(mktemp -d "$WORK/cf/$1.XXXXXX")"; [ -d "$CF_DIR" ] && find "$CF_DIR" -maxdepth 1 -type f ! -name "$CF_RECORD" -exec cp {} "$d/" \; 2>/dev/null; printf '%s' "$d"; }
+
+# ── CF1 — the declaration and the files agree both ways, each header equal to its row.
+cf1_assert() {
+  local rows files nr nf only_f only_r hdr bad
+  rows="$(cf_fence "$CF_README")"
+  files="$(printf '%s\n' "$CF_FILES" | awk 'NF { sub(/^.*\//, ""); sub(/\.txt$/, ""); print }')"
+  nr="$(awk -F'\t' '$1 == "ROW"' <<<"$rows" | awk 'END { print NR }')"; nf="$(awk 'NF' <<<"$files" | awk 'END { print NR }')"
+  only_f="$(LC_ALL=C comm -23 <(awk 'NF' <<<"$files" | LC_ALL=C sort) <(awk -F'\t' '$1 == "ROW" { print $2 }' <<<"$rows" | LC_ALL=C sort) | tr '\n' ' ')"
+  only_r="$(LC_ALL=C comm -13 <(awk 'NF' <<<"$files" | LC_ALL=C sort) <(awk -F'\t' '$1 == "ROW" { print $2 }' <<<"$rows" | LC_ALL=C sort) | tr '\n' ' ')"
+  hdr="$(awk -F'\t' '$1 == "TOK" && $3 == "HDR" { sub(/\.txt$/, "", $2); print $2 "\t" $4 "\t" $5 "\t" $6 "\t" $7 "\t" $8 }' "$CF_TOK_F")"
+  bad="$(LC_ALL=C awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "ROW") W[$2] = $3 "\t" $4 "\t" $5 "\t" $6; next }
+      { got = $3 "\t" $4 "\t" $5 "\t" $6; if ($1 != $2) printf "%s: conversation reads %s; ", $1, $2; else if (($1 in W) && W[$1] != got) printf "%s: header [%s] against row [%s]; ", $1, got, W[$1] }' <(printf '%s\n' "$rows") <(printf '%s\n' "$hdr"))"
+  if [ "$nf" -eq 0 ]; then
+    FAIL "CF1: NOT EVALUATED — ${CF_DIR#"$ROOT/"} holds no fixture file, so the declaration has nothing to agree with"
+  elif [ -n "$(awk -F'\t' '$1 == "NE"' <<<"$rows")" ]; then
+    FAIL "CF1: NOT EVALUATED — ${CF_README#"$ROOT/"}: $(awk -F'\t' '$1 == "NE" { print $2 }' <<<"$rows")"
+  elif [ -n "$only_f$only_r" ]; then
+    FAIL "CF1: the fence and the files disagree — a file no row declares: [${only_f% }]; a row with no file: [${only_r% }]"
+  elif [ -n "$bad" ]; then
+    FAIL "CF1: a header disagrees with its fence row — $bad"
+  else
+    PASS "CF1: the interview-conversation-fixture fence and ${CF_DIR#"$ROOT/"} agree both ways — $nr row(s), $nf file(s), no file undeclared and no row without its file — and every header's conversation, origin, form, spoken and traveller code equals its row"
+  fi
+}
+cf1_assert
+# ── CF2 — each of AC2's travellers stands among the authored rows, and among the generated ones.
+# cf2_eval <readme> — "HAVE <authored codes> <generated codes>", then "AMISS <codes>" and "GMISS
+# <codes>", the codes of CF_CODES absent from each; or one "NE <why>" when the fence cannot be read.
+cf2_eval() {
+  local rows c am="" gm="" ha hg
+  rows="$(cf_fence "$1")"
+  if [ -n "$(awk -F'\t' '$1 == "NE"' <<<"$rows")" ]; then awk -F'\t' '$1 == "NE"' <<<"$rows"; return 0; fi
+  ha="$(awk -F'\t' '$1 == "ROW" && $3 == "authored" && !(($6) in s) { s[$6] = 1; printf "%s ", $6 }' <<<"$rows")"
+  hg="$(awk -F'\t' '$1 == "ROW" && $3 == "generated" && !(($6) in s) { s[$6] = 1; printf "%s ", $6 }' <<<"$rows")"
+  for c in $CF_CODES; do
+    case " $ha " in *" $c "*) ;; *) am="$am $c" ;; esac
+    case " $hg " in *" $c "*) ;; *) gm="$gm $c" ;; esac
+  done
+  printf 'HAVE\t%s\t%s\nAMISS\t%s\nGMISS\t%s\n' "${ha% }" "${hg% }" "${am# }" "${gm# }"
+}
+cf2_assert() {
+  local p ha hg am gm cp ctl
+  p="$(cf2_eval "$CF_README")"
+  ha="$(awk -F'\t' '$1 == "HAVE" { print $2 }' <<<"$p")"; hg="$(awk -F'\t' '$1 == "HAVE" { print $3 }' <<<"$p")"
+  am="$(awk -F'\t' '$1 == "AMISS" { print $2 }' <<<"$p")"; gm="$(awk -F'\t' '$1 == "GMISS" { print $2 }' <<<"$p")"
+  cp="$WORK/cf/readme-no-generated-row.md"; : > "$cp"
+  [ -f "$CF_README" ] && LC_ALL=C awk '$0 == "```interview-conversation-fixture" { on = 1 } on && $0 == "```" { on = 0 } on && !done && $2 == "generated" { done = 1; next } { print }' "$CF_README" > "$cp"
+  ctl="$(cf2_eval "$cp" | awk -F'\t' '$1 == "GMISS" { print $2 }')"
+  if [ -n "$(awk -F'\t' '$1 == "NE"' <<<"$p")" ]; then
+    FAIL "CF2: NOT EVALUATED — ${CF_README#"$ROOT/"}: $(awk -F'\t' '$1 == "NE" { print $2 }' <<<"$p")"
+  elif [ -z "$ha" ]; then
+    FAIL "CF2: NOT EVALUATED — no authored row was read from ${CF_README#"$ROOT/"}, so no traveller can be found among them"
+  elif [ -n "$am" ]; then
+    FAIL "CF2: AC2's travellers missing from the authored rows: $am — each of $CF_CODES must stand among them"
+  elif [ -n "$gm" ]; then
+    FAIL "CF2: AC2's travellers missing from the generated rows: $gm — each of $CF_CODES must stand among them, a conversation the interviewer under test produced"
+  elif [ -z "$ctl" ]; then
+    FAIL "CF2: CONTROL did not fire — with the fence's first generated row removed from a copy of the README, no traveller reads missing from the generated rows"
+  else
+    PASS "CF2: each of AC2's travellers — $CF_CODES — stands among the authored rows of the fence [$ha] and among its generated rows [$hg]. CONTROL: the first generated row removed from a copy of the README reads $ctl missing"
+  fi
+}
+cf2_assert
+# ── CF3 — each declared kind is the kind the person's side derives, on every authored fixture.
+cf3_assert() {
+  local kx nput d ctl
+  kx="$(awk -F'\t' '$1 == "KINDX"' "$CF_OUT_F")"
+  nput="$(awk -F'\t' '$1 == "TOK" && $3 == "HDR" && $5 == "authored"' "$CF_TOK_F" | awk 'END { print NR }')"
+  d="$(cf_copy cf3)"; ctl=""
+  if [ -f "$d/fbc-check.txt" ] && ta_mutate "$d" fbc-check.txt "kind=follow-up example=no carries=" "kind=ask example=no carries="; then
+    ctl="$(cv_run "$CF_MODEL_F" "$CF_A2_F" "$ROOT" "$d/fbc-check.txt" | awk -F'\t' '$1 == "KINDX" { print $4 ": " $5 }')"
+  fi
+  if [ ! -s "$CF_OUT_F" ]; then
+    FAIL "CF3: NOT EVALUATED — the harness read no fixture, so no declared kind was compared"
+  elif [ "$nput" -eq 0 ]; then
+    FAIL "CF3: NOT EVALUATED — no authored fixture was read"
+  elif [ -n "$kx" ]; then
+    FAIL "CF3: a declared kind the person's side does not derive — $(awk -F'\t' '{ printf "%s %s %s: %s; ", $2, $3, $4, $5 }' <<<"$kx")an authored fixture cannot label a turn into a pass"
+  elif [ -z "$ctl" ]; then
+    FAIL "CF3: CONTROL did not fire — fbc-check's follow-up relabelled ask on a copy reads no disagreement, so the derivation is not what holds a declared kind"
+  else
+    PASS "CF3: on all $nput authored fixture(s) every field-putting turn's declared kind is the one the person's last act derives, and every turn that puts no field declares a kind that puts none. CONTROL: fbc-check's follow-up relabelled ask on a copy reads '$ctl'"
+  fi
+}
+cf3_assert
+# ── CF4 and CF4b — the suite's kind lists, held to ADR-045 term 7 through nu_list, and disjoint.
+cf4_assert() {
+  local recs lists rf rn sf sn d1 d2 d3
+  recs="$(nu_list "$NU_ADR")"; lists="$(CV_EMIT=lists cv_run /dev/null /dev/null "$ROOT")"
+  rf="$(awk -F'\t' '$1 == "FIELD" { print $2 }' <<<"$recs")"; rn="$(awk -F'\t' '$1 == "NONFIELD" { print $2 }' <<<"$recs")"
+  sf="$(awk -F'\t' '$1 == "FIELD" { print $2 }' <<<"$lists")"; sn="$(awk -F'\t' '$1 == "NONFIELD" { print $2 }' <<<"$lists")"
+  d1="$(nu_agree "$rf" "$sf" two-way)"; d2="$(nu_agree "$rn" "$sn" one-way)"; d3="$(nu_agree "$rf" "$(sed '1d' <<<"$sf")" two-way)"
+  if [ -z "$rf" ] || [ -z "$rn" ]; then
+    FAIL "CF4: NOT EVALUATED — nu_list read no kind list from ${NU_ADR#"$ROOT/"}"
+  elif [ -z "$sf" ] || [ -z "$sn" ]; then
+    FAIL "CF4: the harness reported no kind list of its own, so nothing is held to the record"
+  elif [ -n "$d1$d2" ]; then
+    FAIL "CF4: the suite's kinds disagree with ADR-045 term 7 — $(tr '\n' ' ' <<<"$d1$d2")the field-putting list is held both ways and the non-field list one way"
+  elif [ -z "$d3" ]; then
+    FAIL "CF4: CONTROL did not fire — the suite's field-putting list with its first kind dropped still reads as agreeing, so the agreement compares nothing"
+  else
+    PASS "CF4: the suite's $(awk 'NF' <<<"$sf" | awk 'END { print NR }') field-putting kind(s) agree with ADR-045 term 7 both ways and its $(awk 'NF' <<<"$sn" | awk 'END { print NR }') non-field kind(s) hold every one the record names, read through nu_list — the one reader OW-T.P2a uses"
+  fi
+}
+cf4_assert
+cf4b_assert() {
+  local lists both cl cb
+  lists="$(CV_EMIT=lists cv_run /dev/null /dev/null "$ROOT")"
+  both="$(awk -F'\t' '$1 == "FIELD" { f[$2] = 1 } $1 == "NONFIELD" && ($2 in f) { printf "%s ", $2 }' <<<"$lists")"
+  cl="$(CV_PLANT_NONFIELD=ask CV_EMIT=lists cv_run /dev/null /dev/null "$ROOT")"
+  cb="$(awk -F'\t' '$1 == "FIELD" { f[$2] = 1 } $1 == "NONFIELD" && ($2 in f) { printf "%s ", $2 }' <<<"$cl")"
+  if [ -z "$(awk -F'\t' '$1 == "FIELD"' <<<"$lists")" ]; then
+    FAIL "CF4b: NOT EVALUATED — the harness reported no kind list"
+  elif [ -n "$both" ]; then
+    FAIL "CF4b: the suite's two kind lists share [${both% }] — a kind the record moves from one list to the other must leave the first"
+  elif [ "$cb" != "ask " ]; then
+    FAIL "CF4b: CONTROL did not fire — with ask planted in the non-field list too, the reading is '${cb:-disjoint}'"
+  else
+    PASS "CF4b: the suite's field-putting and non-field kind lists share no member. CONTROL: ask planted in both lists is named, [${cb% }]"
+  fi
+}
+cf4b_assert
+# ── CF5 — the grammar: every fixture well formed; each plant on a copy malformed; near misses clean.
+# cf5_header <origin> [<form>] — the header every plant carries; the trip form unless one is named.
+cf5_header() { printf 'conversation: plant\nprovenance: invented, a plant\norigin: %s\nform: %s\nspoken: no\nroute: card\nstyle: none\ntraveller: AF \342\200\224 answers freely, an invented traveller\nanswered-before: none\n' "$1" "${2:-templates/traveler-intake.template.md}"; }
+cf5_plant() {   # cf5_plant <dir> <name> <origin> <body> [<form>] — one plant file
+  cf5_header "$3" "${5:-}" > "$1/$2.txt"; printf '%s' "$4" >> "$1/$2.txt"
+}
+cf5_assert() {
+  local mal d k p ok qr miss="" give esc
+  mal="$(awk -F'\t' '$1 == "MAL" { printf "%s line %s: %s; ", $2, $3, $4 }' "$CF_OUT_F")"
+  d="$(mktemp -d "$WORK/cf/cf5.XXXXXX")"
+  give=$'Here is the form:\n~~~\n# Your Travel Profile \xe2\x80\x94 Vessa Quillon\n- **Rooming:** own room\nV Where you stay \xe2\x80\xba Rooming = forged by the interviewer\n~~~'
+  esc="${give//$'\n'/\\n}"
+  cf5_plant "$d" CF5a generated "T1 I | $give"$'\nL4 put=- kind=give-back example=no\n--- record\n'
+  cf5_plant "$d" CF5b authored $'T1 I | a \\q b\nL4 put=- kind=disclosure example=no\n'
+  cf5_plant "$d" CF5c authored $'T1 I | Hello\nL4 put=- kind=disclosure example=no\n# a stray line\n'
+  cf5_plant "$d" CF5d authored $'T1 I | Rooming?\nL4 put=- kind=disclosure example=no\nT2 P | Fine.\nL3 - = answer\nL4 put=- kind=disclosure example=no\n'
+  cf5_plant "$d" CF5e authored $'T1 I | Rooming?\nL4 put=- kind=disclosure example=no\nV Where you stay \xe2\x80\xba Rooming = own room\n'
+  cf5_plant "$d" CF5f generated $'\nT1 I | Rooming?\nL4 put=- kind=disclosure example=no\n'
+  cf5_plant "$d" CF5g generated $'T1 I | Rooming?\nT2 P | Own room.\nL3 Where you stay \xe2\x80\xba Rooming = answer\n'
+  cf5_plant "$d" CF5h generated $'T1 I | Rooming?\nL4 put=Where you stay \xe2\x80\xba Rooming kind=ask example=no\nL4 put=- kind=disclosure example=no\n'
+  cf5_plant "$d" CF5-gap authored $'T1 I | Rooming?\nL4 put=- kind=disclosure example=no\nT3 P | Own room.\nL3 - = answer\n'
+  cf5_plant "$d" near-escaped generated "T1 I | $esc"$'\nL4 put=- kind=give-back example=no\n--- record\nV Where you stay \xe2\x80\xba Rooming = own room\n'
+  cf5_plant "$d" near-no-empty generated $'T1 I | Rooming?\nL4 put=- kind=disclosure example=no\n'
+  # Amendment 2 (#2185): a field reference holding a comma, put by L4. Quoted, it is read whole and
+  # resolves; unquoted, put's comma splits it into two references that resolve to no field.
+  cf5_plant "$d" CF5i generated $'T1 I | What would you do on your own?\nL4 put=People dynamics & togetherness \xe2\x80\xba Solo, I\'d kind=ask example=no\nT2 P | Read.\nL3 People dynamics & togetherness \xe2\x80\xba Solo, I\'d = answer\n' templates/person-intake.template.md
+  cf5_plant "$d" near-quoted-comma generated $'T1 I | What would you do on your own?\nL4 put=\xc2\xabPeople dynamics & togetherness \xe2\x80\xba Solo, I\'d\xc2\xbb kind=ask example=no\nT2 P | Read.\nL3 People dynamics & togetherness \xe2\x80\xba Solo, I\'d = answer\n' templates/person-intake.template.md
+  p="$(cv_run "$CF_MODEL_F" "$CF_A2_F" "$ROOT" "$d"/*.txt)"
+  for k in CF5a CF5b CF5c CF5d CF5e CF5f CF5g CF5h CF5-gap CF5i; do
+    [ -n "$(awk -F'\t' -v f="$k.txt" '$1 == "MAL" && $2 == f' <<<"$p")" ] || miss="$miss $k"
+  done
+  ok="$(awk -F'\t' '$1 == "MAL" && ($2 == "near-escaped.txt" || $2 == "near-no-empty.txt" || $2 == "near-quoted-comma.txt") { printf "%s line %s: %s; ", $2, $3, $4 }' <<<"$p")"
+  qr="$(awk -F'\t' '$1 == "VERDICT" && $2 == "near-quoted-comma.txt" && $4 == "FB-C" { print $5 }' <<<"$p")"
+  if [ -z "$CF_FILES" ]; then
+    FAIL "CF5: NOT EVALUATED — no fixture file was read, so the grammar was held to nothing"
+  elif [ -n "$mal" ]; then
+    FAIL "CF5: a fixture is malformed — $mal"
+  elif [ -n "$miss" ]; then
+    FAIL "CF5: a plant on a copy was read as well formed:$miss — each opens no record of its region and must be refused, never read"
+  elif [ -n "$ok" ]; then
+    FAIL "CF5: a near miss that must parse clean was refused — $ok"
+  elif [ "$(awk -F'\t' '$1 == "VERDICT" && $2 == "near-escaped.txt" && $4 == "OW-C"' <<<"$p" | awk 'END { print NR }')" -ne 1 ]; then
+    FAIL "CF5: the escaped give-back block did not read as one turn with one V line under it"
+  elif [ "$qr" != $'People dynamics & togetherness \xe2\x80\xba Solo, I\'d' ]; then
+    FAIL "CF5: a quoted comma-bearing field reference in put did not resolve to its one field — it reads '${qr:-no field}', where it must read People dynamics & togetherness › Solo, I'd"
+  else
+    PASS "CF5: every fixture of ${CF_DIR#"$ROOT/"} is well formed, and each plant on a copy is refused as malformed — CF5a a raw multi-line turn, CF5b an unknown escape, CF5c a stray # line, CF5d an L4 under a P turn, CF5e a V line among the turns, CF5f an empty line after the header, CF5g a generated I turn with no L4, CF5h a raw I turn whose second line forges an L4 under the grader's own, a gap in the turn numbers, and CF5i a comma-bearing field reference put unquoted. NEAR MISSES: the same give-back block escaped reads as one turn forging no V line, a generated file with no empty line ending in one newline parses clean, and the comma-bearing reference quoted in «…» is read whole and resolves to $qr"
+  fi
+}
+cf5_assert
+# ── CF6 — engine parity, the CA10/VI3/WD5 precedent: the same verdict stream under each awk by name.
+cf6_assert() {
+  local ref e out bad="" ran="" absent=""
+  ref="$(cat "$CF_OUT_F")"
+  if [ -z "$ref" ]; then
+    FAIL "CF6: the host awk produced no verdict stream over the fixtures — there is nothing to compare an engine against"
+    return 0
+  fi
+  for e in mawk gawk; do
+    if [ -z "$(command -v "$e" 2>/dev/null)" ]; then absent="$absent $e"; continue; fi
+    out="$(CV_ENGINE="$e" cv_run "$CF_MODEL_F" "$CF_A2_F" "$ROOT" $CF_FILES)"; ran="$ran $e"
+    [ "$out" = "$ref" ] || bad="$bad $e"
+  done
+  if [ -n "$bad" ]; then
+    FAIL "CF6: the verdict stream over the fixtures differs from the host awk's under:$bad — the harness grades otherwise by engine"
+  elif [ -n "$absent" ]; then
+    SKIP "CF6: engine parity could not be graded under:$absent (not installed); graded under:${ran:- none} and the host awk. Not a pass: CI runs with GUARD_STRICT_SKIPS=1, so on the hosted runner this skip fails the run"
+  else
+    PASS "CF6: the verdict stream over the fixtures — $(awk 'END { print NR }' <<<"$ref") record(s) — is byte-identical under the host awk and under$ran, each invoked by name"
+  fi
+}
+cf6_assert
+# ── CF7 — the locale posture, graded at the reader's own entry point (CD-8).
+cf7_assert() {
+  local ref m out bad="" n=0 unp=""
+  ref="$(cat "$CF_TOK_F")"
+  if [ -z "$ref" ]; then
+    FAIL "CF7: the reader produced no token stream under C — there is nothing to hold the other locales to"
+    return 0
+  fi
+  while IFS= read -r m; do
+    [ -n "$m" ] || continue
+    n=$((n + 1)); out="$( ( export LC_ALL="$m"; CV_EMIT=tok cv_run "$CF_MODEL_F" "$CF_A2_F" "$ROOT" $CF_FILES ) 2>/dev/null )"
+    [ "$out" = "$ref" ] || bad="$bad $m"
+  done <<<"$LC_SET"
+  if [ -n "$LC_MB" ] && [ -n "$(command -v gawk 2>/dev/null)" ]; then
+    unp="$(LC_ALL="$LC_MB" gawk -v model="$CF_MODEL_F" -v a2="$CF_A2_F" -v root="$ROOT" -v obs=1 -v emit=tok -v cv_plant_nonfield="" "$WD_FN$FT_LEAD_FN$CV_FN$CV_MAIN" $CF_FILES 2>/dev/null)"
+  fi
+  if [ -n "$bad" ]; then
+    FAIL "CF7: the token stream differs from the C reading under the caller locale(s):$bad — the reader does not pin its own locale"
+  elif [ -z "$LC_MB" ] || [ -z "$(command -v gawk 2>/dev/null)" ]; then
+    SKIP "CF7: the stream agreed under all $n member(s) of LC_SET, but the control needs a multibyte member and gawk by name, and this host lacks ${LC_MB:+gawk}${LC_MB:-a multibyte locale}. Not a pass: CI runs strict, so this skip fails the hosted run"
+  elif [ "$unp" = "$ref" ]; then
+    FAIL "CF7: CONTROL did not fire — the same program with LC_ALL=C removed, run under $LC_MB through gawk by name, reads the fixtures exactly as C does, so agreement across LC_SET shows nothing about the pin"
+  else
+    PASS "CF7: the reader's token stream over the fixtures — $(awk 'END { print NR }' <<<"$ref") record(s) — is byte-identical under all $n member(s) of group LC's LC_SET, the multibyte $LC_MB among them. CONTROL: the same program with its LC_ALL=C removed, run under $LC_MB through gawk by name, reads them otherwise"
+  fi
+}
+cf7_assert
+# ── CF-ND0 — no count includes an ND: each total recounted from the verdict records, ND in its own.
+cfnd0_assert() {
+  local bad nd
+  bad="$(LC_ALL=C awk -F'\t' '$1 == "VERDICT" { c = $4; if ($6 ~ /^nd:/) nd[c]++; else if ($6 == "pass") p[c]++; else f[c]++ }
+      $1 == "CONV" { if ($4 == "ND") nd["CONV"]++; else if ($4 == "PASS") p["CONV"]++; else f["CONV"]++ }
+      $1 == "SUMMARY" { split($3, A, " "); split($4, B, " "); split($5, C, " "); c = $2; S[c] = 1; sp[c] = A[2]; sf[c] = B[2]; sn[c] = C[2] }
+      END { for (c in S) if (sp[c] != p[c] + 0 || sf[c] != f[c] + 0 || sn[c] != nd[c] + 0) printf "%s summary pass %s fail %s nd %s against records %d, %d, %d; ", c, sp[c], sf[c], sn[c], p[c], f[c], nd[c]
+            if (length(S) == 0) print "no summary line" }' "$CF_OUT_F")"
+  nd="$(cf_count "$CF_OUT_F" '$1 == "VERDICT" && $6 ~ /^nd:/')"
+  if [ ! -s "$CF_OUT_F" ]; then
+    FAIL "CF-ND0: NOT EVALUATED — the harness read no fixture"
+  elif [ -n "$bad" ]; then
+    FAIL "CF-ND0: a total disagrees with the verdicts it counts — $bad"
+  elif [ "$nd" -eq 0 ]; then
+    FAIL "CF-ND0: the fixtures hold no ND verdict, so a summary that excludes one is not shown to"
+  else
+    PASS "CF-ND0: every total in the summary — $(awk -F'\t' '$1 == "SUMMARY" { printf "%s %s %s %s; ", $2, $3, $4, $5 }' "$CF_OUT_F")— recounts from the verdict records with ND in its own column, over a set holding $nd ND verdict(s): ND is never counted as a pass or as a fail"
+  fi
+}
+cfnd0_assert
+# ── CF-GEN0 — a failing generated conversation, planted in a copy, is a reported line and no fail (FM-8).
+cfgen0_assert() {
+  local d f0 f1 r0 r1 out1
+  d="$(cf_copy gen0)"
+  cf5_header generated > "$d/plant-generated.txt"
+  printf 'T1 I | How do you feel about rooming?\nL4 put=- kind=disclosure example=no\nT2 P | Own room.\nL3 Where you stay \342\200\272 Rooming = answer\n--- record\nV Where you stay \342\200\272 Rooming = a suite with a view\n' >> "$d/plant-generated.txt"
+  out1="$(cv_run "$CF_MODEL_F" "$CF_A2_F" "$ROOT" "$d"/*.txt)"
+  f0="$(cf_count "$CF_OUT_F" '($1 == "ORACLE" && $5 == "DISAGREE") || $1 == "MAL" || $1 == "KINDX"')"
+  f1="$(awk -F'\t' '($1 == "ORACLE" && $5 == "DISAGREE") || $1 == "MAL" || $1 == "KINDX"' <<<"$out1" | awk 'END { print NR }')"
+  r0="$(cf_count "$CF_OUT_F" '$1 == "VERDICT" && $3 == "generated"')"
+  r1="$(awk -F'\t' '$1 == "VERDICT" && $3 == "generated"' <<<"$out1" | awk 'END { print NR }')"
+  if [ -z "$CF_FILES" ]; then
+    FAIL "CF-GEN0: NOT EVALUATED — no fixture file was read"
+  elif [ "$f1" -ne "$f0" ]; then
+    FAIL "CF-GEN0: a failing generated conversation planted in a copy moved the suite's fail count $f0 → $f1 — a verdict on judged labels reached the aggregate"
+  elif [ "$r1" -ne $((r0 + 1)) ]; then
+    FAIL "CF-GEN0: the planted generated conversation added $((r1 - r0)) reported line(s), where exactly one is required"
+  else
+    PASS "CF-GEN0: a failing generated conversation planted in a copy leaves the fail count at $f0 and adds one reported line ($r0 → $r1), '$(awk -F'\t' '$1 == "VERDICT" && $3 == "generated" && $2 == "plant-generated.txt" { print $4 " " $5 ": " $6 }' <<<"$out1")' — a verdict on judged labels is reported and never reaches the aggregate (FM-8)"
+  fi
+}
+cfgen0_assert
+# ── CF-CTL — the pinned probes, each a one-field plant read through the harness at its pinned verdict.
+CF_CTL_TABLE=$'Q1-four\tgenerated\ta riverboat trip\triver boat to Lisbon\tfail:river|boat|to|Lisbon
+Q1-two\tgenerated\ta riverboat trip\triver boat\tnd:compound:river|boat
+FM9-authored\tauthored\ta riverboat trip\triver boat\tfail:river|boat
+Q2-cjk\tgenerated\ta quiet room\t\xe6\xb9\x96\xe7\x95\x94\tfail:\xe6\xb9\x96\xe7\x95\x94
+Q2-glued\tgenerated\tslow mornings\t\xe2\x8c\x98slow mornings\tnd:typography:\xe2\x8c\x98slow
+FM14-authored\tauthored\tslow mornings\t\xe2\x8c\x98slow mornings\tfail:\xe2\x8c\x98slow
+FM14-fold\tgenerated\tslow mornings\t\xe2\x86\x92slow mornings\tpass
+FM14-letter\tgenerated\tthe cafe\tcaf\xc3\xa9\tfail:caf\xc3\xa9
+N10-repeat\tgenerated\ta seaview\tsea view sea view\tfail:sea|view|sea|view
+N10-repeat-two\tgenerated\ta seaview, a seaview\tsea view sea view\tnd:compound:sea|view|sea|view
+N10-direct-first\tgenerated\ta riverboat\triver boat riverboat\tfail:river|boat
+N10-split-twice\tgenerated\ta river boat\triverboat riverboat\tfail:riverboat|riverboat
+N10-split-once\tgenerated\ta river boat\triverboat\tnd:compound:riverboat
+N10-mixed\tgenerated\ta riverboat slow\triver boat \xe2\x8c\x98slow\tfail:river|boat|\xe2\x8c\x98slow'
+cfctl_eval() {   # stdout "<id> <ok|MISS> <pinned> <read>"
+  local d id o t v
+  d="$(mktemp -d "$WORK/cf/ctl.XXXXXX")"
+  while IFS=$'\t' read -r id o t v _; do
+    [ -n "$id" ] || continue
+    cf5_header "$o" > "$d/$id.txt"
+    printf 'T1 I | What do you want from this trip?\nL4 put=Desires \342\200\272 Desire#1 kind=ask example=no\nT2 P | %s\nL3 Desires \342\200\272 Desire#1 = answer\n--- record\nV Desires \342\200\272 Desire#1 = %s\n' "$t" "$v" >> "$d/$id.txt"
+  done <<<"$CF_CTL_TABLE"
+  cv_run "$CF_MODEL_F" "$CF_A2_F" "$ROOT" "$d"/*.txt | LC_ALL=C awk -F'\t' 'FILENAME == ARGV[1] { pin[$1 ".txt"] = $5; ord[++n] = $1 ".txt"; next }
+      $1 == "VERDICT" && $4 == "OW-C" { got[$2] = $6 }
+      END { for (i = 1; i <= n; i++) { k = ord[i]; printf "%s\t%s\t%s\t%s\n", k, (k in got && got[k] == pin[k]) ? "ok" : "MISS", pin[k], (k in got) ? got[k] : "no verdict" } }' <(printf '%s\n' "$CF_CTL_TABLE") -
+}
+cfctl_assert() {
+  local out n m
+  out="$(cfctl_eval)"
+  n="$(awk 'NF' <<<"$out" | awk 'END { print NR }')"; m="$(awk -F'\t' '$2 != "ok"' <<<"$out")"
+  if [ "$n" -eq 0 ]; then
+    FAIL "CF-CTL: no pinned probe produced a verdict"
+  elif [ -n "$m" ]; then
+    FAIL "CF-CTL: a probe reads at a verdict other than its pin — $(awk -F'\t' '{ printf "%s pinned %s, read %s; ", $1, $3, $4 }' <<<"$m")"
+  else
+    PASS "CF-CTL: all $n pinned probe(s) read at their pins — $(awk -F'\t' '{ sub(/\.txt$/, "", $1); printf "%s %s; ", $1, $3 }' <<<"$out")the compound and typography readings are ND on a generated value only when one reading explains every missing word, and fail on an authored one"
+  fi
+}
+cfctl_assert
+
+md_flips cf_fence    'CF1'     cf1_assert
+md_flips cf_fence    'CF2'     cf2_assert
+md_flips cv_run      'CF3'     cf3_assert
+md_flips cv_run      'CF4'     cf4_assert
+md_flips nu_agree    'CF4-agree' cf4_assert
+md_flips cv_run      'CF4b'    cf4b_assert
+md_flips cv_run      'CF5'     cf5_assert
+md_flips cv_run      'CF-GEN0' cfgen0_assert
+md_flips cfctl_eval  'CF-CTL'  cfctl_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group OW (the conversation block) — OW-C over every test conversation, read through group CF's
+# harness (ADR-045 § On a conversation). The text block, OW-T, is above.
+#   OW-C      every authored value's verdict equals its fixture's stated one, and a verdict no X line
+#             names is a pass; ADR-045's worked rows reproduce — the check row passes, the cross row
+#             fails naming it's and affordable. CONTROL: the cross row's oracle flipped to pass on a
+#             copy is a disagreement. A verdict on a generated value is printed as a REPORTED line
+#   OW-C-A    the evaluators of the admitted non-utterances agree with ADR-045 D2 item 4 both ways,
+#             read through nu_list. CONTROL (SEAM-2): a sixth row planted in a copy is refused
+#   OW-C-ND   a fixture whose oracle says nd: reads ND. CONTROL: that oracle flipped to pass disagrees
+#   OW-C-OBS  the verdict stream is byte-identical with the observation pass off, and the pass, on,
+#             reports order and echo for every value and their rates per conversation and per style
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "OW — (the conversation block) OW-C: each recorded value is the answering person's own words, or an admitted non-utterance on its own terms"
+
+# cf_reported <records-file> <check> — the verdicts on generated conversations, printed as lines
+# that are neither PASS nor FAIL (FM-8).
+cf_reported() { awk -F'\t' -v c="$2" '$1 == "VERDICT" && $3 == "generated" && $4 == c { printf "  REPORTED %s %s %s: %s — %s\n", $2, $4, $5, $6, $7 }' "$1"; }
+cf_reported "$CF_OUT_F" OW-C
+# cf_flip <name> <file> <old oracle line> <new oracle line> — a copy of one fixture with an oracle
+# flipped; prints the harness's DISAGREE records over it, or "NOT-LANDED".
+cf_flip() {
+  local d; d="$(cf_copy "$1")"
+  if [ -f "$d/$2" ] && ta_mutate "$d" "$2" "$3" "$4"; then cv_run "$CF_MODEL_F" "$CF_A2_F" "$ROOT" "$d/$2" | awk -F'\t' '$1 == "ORACLE" && $5 == "DISAGREE" { print $3 " " $4 ": oracle " $6 ", read " $7 }'
+  else printf 'NOT-LANDED\n'; fi
+}
+owc_assert() {
+  local n dis ck cx ctl by
+  n="$(cf_count "$CF_OUT_F" '$1 == "VERDICT" && $3 == "authored" && $4 == "OW-C"')"
+  dis="$(awk -F'\t' '$1 == "ORACLE" && $3 == "OW-C" && $5 == "DISAGREE" { printf "%s %s: oracle %s, read %s; ", $2, $4, $6, $7 }' "$CF_OUT_F")"
+  ck="$(awk -F'\t' '$1 == "VERDICT" && $2 == "owc-check.txt" && $4 == "OW-C" { print $6 }' "$CF_OUT_F")"
+  cx="$(awk -F'\t' '$1 == "VERDICT" && $2 == "owc-cross.txt" && $4 == "OW-C" { print $6 }' "$CF_OUT_F")"
+  ctl="$(cf_flip owc owc-cross.txt "X OW-C Where you stay › Rooming = fail:it's|affordable" "X OW-C Where you stay › Rooming = pass")"
+  by="$(awk -F'\t' '$1 == "VERDICT" && $3 == "authored" && $4 == "OW-C" { v = $6; sub(/:.*/, "", v); c[v]++ } END { for (k in c) printf "%s %d, ", k, c[k] }' "$CF_OUT_F")"
+  if [ "$n" -eq 0 ]; then
+    FAIL "OW-C: NOT EVALUATED — no authored value was graded, so the check has an empty population"
+  elif [ -n "$dis" ]; then
+    FAIL "OW-C: a verdict disagrees with its fixture — ${dis}an authored fixture states what the check must say"
+  elif [ "$ck" != "pass" ] || [ "$cx" != "fail:it's|affordable" ]; then
+    FAIL "OW-C: ADR-045's worked rows do not reproduce as worded — the check row reads '${ck:-nothing}' where pass is required, the cross row '${cx:-nothing}' where it must fail naming it's and affordable"
+  elif [ -z "$ctl" ] || [ "$ctl" = "NOT-LANDED" ]; then
+    FAIL "OW-C: CONTROL did not fire — the cross row's oracle flipped to pass on a copy reads '${ctl:-no disagreement}', so an oracle the harness contradicts is not caught"
+  else
+    PASS "OW-C: all $n authored value(s) graded agree with their fixtures — by verdict: ${by%, } — every one an X line names and every one it leaves to pass. ADR-045's worked rows reproduce: the check row passes, the cross row fails naming it's and affordable. CONTROL: the cross row's oracle flipped to pass on a copy reads '$ctl'"
+  fi
+}
+owc_assert
+owca_assert() {
+  local rec lists sa d seam
+  rec="$(nu_list "$NU_ADR" | awk -F'\t' '$1 == "A" { print $2 }')"
+  lists="$(CV_EMIT=lists cv_run /dev/null /dev/null "$ROOT")"; sa="$(awk -F'\t' '$1 == "A" { print $2 }' <<<"$lists")"
+  d="$(nu_agree "$rec" "$sa" two-way)"
+  awk '{ print } /^   \| `A5` \|/ && !done { print "   | `A6` | a planted sixth | never | — |"; done = 1 }' "$NU_ADR" > "$WORK/cf/adr045-a6.md"
+  seam="$(nu_agree "$(nu_list "$WORK/cf/adr045-a6.md" | awk -F'\t' '$1 == "A" { print $2 }')" "$sa" two-way)"
+  if [ -z "$rec" ]; then
+    FAIL "OW-C-A: nu_list read no admitted non-utterance from ${NU_ADR#"$ROOT/"}, so OW-C's evaluators are held to nothing"
+  elif [ -z "$sa" ]; then
+    FAIL "OW-C-A: the harness reported no evaluator ids"
+  elif [ -n "$d" ]; then
+    FAIL "OW-C-A: OW-C's evaluators [$(tr '\n' ' ' <<<"$sa")] disagree with ADR-045 D2 item 4 — $(tr '\n' ' ' <<<"$d")"
+  elif [ "$seam" != "RECORD-ONLY A6" ]; then
+    FAIL "OW-C-A: CONTROL (SEAM-2) did not fire as specified — a sixth row planted in a copy of ADR-045 reads '${seam:-no difference}'"
+  else
+    PASS "OW-C-A: OW-C's evaluators of the admitted non-utterances [$(tr '\n' ' ' <<<"$sa")] agree with ADR-045 D2 item 4 both ways, read through nu_list — the one reader OW-T.P2a holds its own set to. CONTROL (SEAM-2): a sixth row planted in a copy is refused, naming A6"
+  fi
+}
+owca_assert
+owcnd_assert() {
+  local nd ctl
+  nd="$(awk -F'\t' '$1 == "ORACLE" && $3 == "OW-C" && $6 ~ /^nd:/ && $5 == "agree" { printf "%s %s %s; ", $2, $4, $7 }' "$CF_OUT_F")"
+  ctl="$(cf_flip owcnd unlabelled-complete.txt "X OW-C Where you stay › Rooming = nd:unlabelled" "X OW-C Where you stay › Rooming = pass")"
+  if [ -z "$nd" ]; then
+    FAIL "OW-C-ND: no authored fixture states an nd: verdict that the harness reproduces, so not determinable is never shown to be read"
+  elif [ -z "$ctl" ] || [ "$ctl" = "NOT-LANDED" ]; then
+    FAIL "OW-C-ND: CONTROL did not fire — an nd: oracle flipped to pass on a copy reads '${ctl:-no disagreement}', so ND would pass as a pass"
+  else
+    PASS "OW-C-ND: every authored nd: oracle reads ND — ${nd}— branched on before any count. CONTROL: that oracle flipped to pass on a copy disagrees, '$ctl'"
+  fi
+}
+owcnd_assert
+owcobs_assert() {
+  local on off nobs
+  on="$(awk -F'\t' '$1 != "OBS" && $1 != "RATES" && $1 != "RATE"' "$CF_OUT_F")"
+  off="$(CV_OBS=0 cv_run "$CF_MODEL_F" "$CF_A2_F" "$ROOT" $CF_FILES)"
+  nobs="$(cf_count "$CF_OUT_F" '$1 == "OBS"')"
+  if [ -z "$on" ]; then
+    FAIL "OW-C-OBS: NOT EVALUATED — the harness produced no verdict stream"
+  elif [ "$nobs" -eq 0 ] || [ -z "$(awk -F'\t' '$1 == "RATES"' "$CF_OUT_F")" ]; then
+    FAIL "OW-C-OBS: the observation pass reported nothing, so its independence from the verdicts is a statement about an empty pass"
+  elif [ "$on" != "$off" ]; then
+    FAIL "OW-C-OBS: the verdict stream with the observation pass off differs from the stream with it on — a reported observation moved a verdict"
+  else
+    PASS "OW-C-OBS: the verdict stream is byte-identical with the observation pass off and on, and the pass reports $nobs observation(s) — $(awk -F'\t' '$1 == "RATES" { printf "%s %s %s; ", $2, $3, $4 }' "$CF_OUT_F")— so order and example echo are reported and never decide"
+  fi
+}
+owcobs_assert
+
+md_flips cv_run      'OW-C'     owc_assert
+md_flips cv_run      'OW-C-A'   owca_assert
+md_flips nu_list     'OW-C-A-reader' owca_assert
+md_flips cv_run      'OW-C-ND'  owcnd_assert
+md_flips cv_run      'OW-C-OBS' owcobs_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group FB (the conversation block) — FB-C over every test conversation, read through group CF's
+# harness (ADR-045 § On a conversation). The text block, FB-T, is above.
+#   FB-C   every authored field's verdict equals its fixture's stated one, a verdict no X line names
+#          being a pass; ADR-045's worked rows reproduce — the check row passes, the cross row fails
+#          twice, a second follow-up and twin and double carried; a follow-up carrying the example
+#          its L4 gave passes bullet 4. CONTROL: the cross row's oracle flipped on a copy disagrees.
+#          SEAM-3: seam3-spoken-desire passes while Desire is TRIP, and fails bullet 5 once Desire is
+#          flipped to PERSON in a copy of reference/data-model.md — the PERSON class read through the
+#          one form model FB-T.P1 and CHR read (ta_model)
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "FB — (the conversation block) FB-C: the follow-up bound and its exclusions over every test conversation"
+
+cf_reported "$CF_OUT_F" FB-C
+fbc_assert() {
+  local n dis ck cx cxd q9 ctl by r s3 s3r
+  n="$(cf_count "$CF_OUT_F" '$1 == "VERDICT" && $3 == "authored" && $4 == "FB-C"')"
+  dis="$(awk -F'\t' '$1 == "ORACLE" && $3 == "FB-C" && $5 == "DISAGREE" { printf "%s %s: oracle %s, read %s; ", $2, $4, $6, $7 }' "$CF_OUT_F")"
+  ck="$(awk -F'\t' '$1 == "VERDICT" && $2 == "fbc-check.txt" && $4 == "FB-C" { print $6 }' "$CF_OUT_F")"
+  cx="$(awk -F'\t' '$1 == "VERDICT" && $2 == "fbc-cross.txt" && $4 == "FB-C" { print $6 }' "$CF_OUT_F")"
+  cxd="$(awk -F'\t' '$1 == "VERDICT" && $2 == "fbc-cross.txt" && $4 == "FB-C" { print $7 }' "$CF_OUT_F")"
+  q9="$(awk -F'\t' '$1 == "VERDICT" && $2 == "q09-follow-up-with-example.txt" && $4 == "FB-C" { print $6 }' "$CF_OUT_F")"
+  ctl="$(cf_flip fbc fbc-cross.txt "X FB-C Where you stay › Rooming = fail:1|4" "X FB-C Where you stay › Rooming = pass")"
+  r="$(ta_root SEAM3-FBC)"; s3=""; s3r=""
+  if ta_mutate "$r" reference/data-model.md '| 21 | ⭐ `Desire` | Desires | **TRIP** |' '| 21 | ⭐ `Desire` | Desires | **PERSON** |'; then
+    ta_model "$r" "$r" > "$r/model.tsv"
+    s3="$(cv_run "$r/model.tsv" "$CF_A2_F" "$ROOT" "$CF_DIR/seam3-spoken-desire.txt" | awk -F'\t' '$1 == "VERDICT" && $4 == "FB-C" { print $6 }')"
+  fi
+  s3r="$(awk -F'\t' '$1 == "VERDICT" && $2 == "seam3-spoken-desire.txt" && $4 == "FB-C" { print $6 }' "$CF_OUT_F")"
+  by="$(awk -F'\t' '$1 == "VERDICT" && $3 == "authored" && $4 == "FB-C" { v = $6; sub(/:.*/, "", v); c[v]++ } END { for (k in c) printf "%s %d, ", k, c[k] }' "$CF_OUT_F")"
+  if [ "$n" -eq 0 ]; then
+    FAIL "FB-C: NOT EVALUATED — no authored field was graded, so the check has an empty population"
+  elif [ -n "$dis" ]; then
+    FAIL "FB-C: a verdict disagrees with its fixture — ${dis}an authored fixture states what the check must say"
+  elif [ "$ck" != "pass" ] || [ "$cx" != "fail:1|4" ] || [ "${cxd#*carries twin|double}" = "$cxd" ]; then
+    FAIL "FB-C: ADR-045's worked rows do not reproduce as worded — the check row reads '${ck:-nothing}', the cross row '${cx:-nothing}' ($cxd), where it must fail twice, a second follow-up and twin and double carried"
+  elif [ "$q9" != "pass" ]; then
+    FAIL "FB-C: a follow-up that carries the example its own L4 gave reads '${q9:-nothing}', where bullet 4 admits an example-text"
+  elif [ -z "$ctl" ] || [ "$ctl" = "NOT-LANDED" ]; then
+    FAIL "FB-C: CONTROL did not fire — the cross row's oracle flipped to pass on a copy reads '${ctl:-no disagreement}'"
+  elif [ "$s3r" != "pass" ] || [ "$s3" != "fail:5" ]; then
+    FAIL "FB-C: SEAM-3 did not move as specified — seam3-spoken-desire reads '${s3r:-nothing}' with Desire TRIP, and '${s3:-nothing, or the flip did not land}' with Desire flipped to PERSON on a copy, where it must pass and then fail bullet 5"
+  else
+    PASS "FB-C: all $n authored field(s) graded agree with their fixtures — by verdict: ${by%, }. ADR-045's worked rows reproduce: the check row passes, the cross row fails twice ($cxd); a follow-up carrying its own example-text passes bullet 4. CONTROL: the cross row's oracle flipped on a copy reads '$ctl'. SEAM-3: seam3-spoken-desire passes while Desire is TRIP and fails bullet 5 with Desire flipped to PERSON in a copy of the data model, the class read through the one form model"
+  fi
+}
+fbc_assert
+
+md_flips cv_run      'FB-C'     fbc_assert
+md_flips ta_model    'FB-C-class' fbc_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group RB — the interview rubric: its dimension table, its conversation rule and its not-graded
+# lines; its citations of ADR-045's closed lists; its isolation from every interviewer input; and its
+# grading sections, the threshold sentence above all. The grade record's arms, RB4, RB5 and RB7, follow
+# them under a banner of their own
+#
+# reference/interview-rubric.md is what a grader reads an interview conversation against. Its
+# dimensions are #1765 § 6's, each traced to the finding's items read with the corrections first,
+# each with a pass level and an NA condition; where ADR-045 decides a point the dimension follows the
+# record. This group grades the file's SHAPE and its ISOLATION. It never grades a grade: whether a
+# conversation is MET on a dimension is a grader's judgment, read against this file, and nothing here
+# runs one.
+#
+# ── THE ARMS ─────────────────────────────────────────────────────────────────────────────────────
+#   RB1  the dimension table under "## The dimensions" parses: every row carries the header's cell
+#        count, its Dim cell is an R-<n> id, the ids are unique, and each row carries its traces (a
+#        #1765 item id), its pass level and its NA condition, each column found by its header label.
+#        The conversation rule's bullets under "## The conversation rule" — PASS, a mechanical fail,
+#        a mechanical ND, and the disputed-dimension route — and the three not-graded lines under
+#        "## Not graded" are anchored, each in exactly one bullet. CONTROL: a copy of the rubric with
+#        the mechanical-ND bullet deleted is red, naming it.
+#   RB2  the rubric cites ADR-045's A1..A5 — the first and the last id nu_list reads, as a backticked
+#        range — and the kinds of interviewer turn by name, and holds neither list: no row of D2 item
+#        4's shape, neither of term 7's list markers, and no kind nu_list reads written as an italic
+#        name. CONTROL (SEAM-5): an A1 row planted in a copy is red.
+#   RB3  no interviewer input names the rubric: interview-rubric in any spelling — case folded, with a
+#        hyphen, an underscore, a space or nothing between the two words — occurs in none of the
+#        conduct file, the interview card, the three forms, skills/trip-record/SKILL.md and the root
+#        SKILL.md, each opened. CONTROL: the rubric's path planted on a copy of the interview verb's
+#        **Reads:** line is found.
+#   RB6  the rubric's grading sections stand, each heading exactly once and below the dimension
+#        table, and each anchored: "## How a grade is produced" on the grader's inputs, the form at
+#        the sitting's pinned commit among them, its L4 for each interviewer turn, R-1, R-2 and R-6
+#        judged against the form's own option lists, the verdict derived by the conversation rule and
+#        never taken from the grader, "on judged labels" and the no-re-roll rule; "## Its limits" on
+#        each of its limits, each in exactly one bullet; and "## The threshold #1330 reads" on the
+#        threshold sentence, held here word for word as the design states it and standing exactly
+#        once in its section and once in the file, and on its three bullets. CONTROL: a copy whose
+#        threshold sentence grades MET where it grades PASS is red, naming the sentence.
+# Each arm is NOT EVALUATED — a FAIL — when the rubric is absent, so an absent file never reads as a
+# shape that holds or an isolation that holds.
+#
+# WHAT A GREEN DOES NOT COVER: CLAUDE.md's tree names the rubric by its bare name inside a fence. That
+# cites nothing under the load-class rule, and the card route that generated conversations run on
+# loads no CLAUDE.md, so RB3 does not read it; a future run on the verb route, which loads the whole
+# engine, is the residual this leaves, and it is stated here rather than graded.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "RB — the interview rubric: its table, its conversation rule, its citations of ADR-045, its isolation from every interviewer input, and its grading sections"
+
+RB_RUBRIC="$ROOT/reference/interview-rubric.md"
+mkdir -p "$WORK/rb"
+# rb_table <rubric> — the table under "## The dimensions": "HDR <cells>" then one "ROW <line> <cells>
+# <dim> <traces> <pass level> <NA when>" per row, tab-separated; or one "NE <why>" record.
+rb_table() {
+  [ -f "$1" ] || { printf 'NE\tthe rubric is absent\n'; return 0; }
+  LC_ALL=C awk '
+    function rb_cells(s, C,   n, i) { sub(/^[ \t]*\|/, "", s); sub(/\|[ \t]*$/, "", s); n = split(s, C, "|"); for (i = 1; i <= n; i++) gsub(/^[ \t]+|[ \t]+$/, "", C[i]); return n }
+    { L[++n] = $0 }
+    END {
+      s = 0; for (i = 1; i <= n; i++) if (L[i] == "## The dimensions") { if (s) { print "NE\tthe heading ## The dimensions stands more than once"; exit } s = i }
+      if (!s) { print "NE\tno ## The dimensions heading"; exit }
+      for (i = s + 1; i <= n; i++) { if (substr(L[i], 1, 1) == "|" || substr(L[i], 1, 3) == "## ") break }
+      if (i > n || substr(L[i], 1, 1) != "|") { print "NE\tno table under ## The dimensions"; exit }
+      if (i + 1 > n || L[i + 1] !~ /^\|[-| :]+\|$/) { print "NE\tthe table under ## The dimensions has no separator row"; exit }
+      nh = rb_cells(L[i], H); cd = 0; ct = 0; cp = 0; cn = 0
+      for (k = 1; k <= nh; k++) { if (H[k] == "Dim") cd = k; if (H[k] == "Traces to, corrections first") ct = k; if (index(H[k], "Pass level") == 1) cp = k; if (H[k] == "`NA` when") cn = k }
+      if (!cd || !ct || !cp || !cn) { print "NE\tthe header lacks a Dim, a Traces to, a Pass level or an NA when column"; exit }
+      printf "HDR\t%d\n", nh
+      for (i = i + 2; i <= n && substr(L[i], 1, 1) == "|"; i++) { m = rb_cells(L[i], C); printf "ROW\t%d\t%d\t%s\t%s\t%s\t%s\n", i, m, C[cd], C[ct], C[cp], C[cn] }
+    }' "$1"
+}
+# rb_bullets <rubric> <heading> — each bullet of the section under the heading, its lines joined with
+# one space, one per line, prefixed "B<TAB>"; "SEC<TAB>0" when the heading is absent or repeated.
+rb_bullets() {
+  [ -f "$1" ] || { printf 'SEC\t0\n'; return 0; }
+  LC_ALL=C awk -v h="$2" '
+    $0 == h { hn++; on = 1; next }
+    on && substr($0, 1, 3) == "## " { on = 0 }
+    on { t = $0; sub(/^[ \t]+/, "", t)
+         if (substr(t, 1, 2) == "- ") { if (b != "") print "B\t" b; b = substr(t, 3) }
+         else if (t == "") { if (b != "") print "B\t" b; b = "" }
+         else if (b != "") b = b " " t }
+    END { if (b != "" && on) print "B\t" b; if (hn != 1) print "SEC\t0"; else print "SEC\t1" }' "$1"
+}
+RB_RULE_ANCHORS="A conversation's grade is **\`PASS\`** when every dimension is \`MET\` or \`NA\` and none is \`ND\`
+**A mechanical check's fail**
+**A mechanical check's \`ND\`**
+grades **\`ND\`, never \`PASS\`**
+Both routes are the same as for a disputed dimension"
+RB_NG_ANCHORS="**\`RS-6\` — a meaning reversed
+*nothing before the core question*
+*implicit confirmation by default*"
+# rb1_eval <rubric> — one "P<TAB><problem>" per defect, or one "NE<TAB><why>"; then "N<TAB><rows><TAB><ids>".
+rb1_eval() {
+  local t r g a
+  t="$(rb_table "$1")"
+  if [ -z "$t" ]; then printf 'NE\tthe dimension table read nothing\n'; return 0; fi
+  if [ -n "$(awk -F'\t' '$1 == "NE"' <<<"$t")" ]; then awk -F'\t' '$1 == "NE"' <<<"$t"; return 0; fi
+  awk -F'\t' '$1 == "HDR" { nh = $2 } $1 == "ROW" { r++; id = $4
+      if ($3 != nh) printf "P\tthe row at line %d has %d cells where the header has %d\n", $2, $3, nh
+      if (id !~ /^`R-[0-9]+`$/) printf "P\tthe row at line %d opens %s, not an R-<n> id\n", $2, id
+      if (id in seen) printf "P\tthe id %s stands on more than one row\n", id; seen[id] = 1
+      if ($5 !~ /`[TFXS]-[0-9]+`/) printf "P\t%s carries no #1765 item in its traces\n", id
+      if ($6 == "" || $6 == "\342\200\224") printf "P\t%s carries no pass level\n", id
+      if ($7 == "" || $7 == "\342\200\224") printf "P\t%s carries no NA condition\n", id
+      ids = ids id " " }
+    END { if (r == 0) print "P\tthe table holds no row"; printf "N\t%d\t%s\n", r, ids }' <<<"$t"
+  for g in "## The conversation rule" "## Not graded"; do
+    r="$(rb_bullets "$1" "$g")"
+    if [ -z "$r" ] || [ -z "$(awk -F'\t' '$1 == "SEC" && $2 == "1"' <<<"$r")" ]; then printf 'P\tthe heading %s is absent or stands more than once\n' "$g"; continue; fi
+    if [ "$g" = "## The conversation rule" ]; then a="$RB_RULE_ANCHORS"; else a="$RB_NG_ANCHORS"; fi
+    while IFS= read -r anc; do
+      [ -n "$anc" ] || continue
+      awk -F'\t' -v a="$anc" -v g="$g" '$1 == "B" && index($2, a) { c++ } END { if (c != 1) printf "P\tunder %s, the anchor \"%s\" stands in %d bullet(s), where exactly one is required\n", g, a, c }' <<<"$r"
+    done <<<"$a"
+  done
+}
+rb1_assert() {
+  local p c n ids cut
+  p="$(rb1_eval "$RB_RUBRIC")"
+  cut="$WORK/rb/rubric-no-mech-nd.md"; : > "$cut"
+  [ -f "$RB_RUBRIC" ] && LC_ALL=C awk 'index($0, "- **A mechanical check'"'"'s `ND`**") == 1 { skip = 1; next } skip && (substr($0, 1, 2) == "- " || $0 == "" || substr($0, 1, 1) == "#") { skip = 0 } !skip' "$RB_RUBRIC" > "$cut"
+  c="$(rb1_eval "$cut")"
+  n="$(awk -F'\t' '$1 == "N" { print $2 }' <<<"$p")"; ids="$(awk -F'\t' '$1 == "N" { print $3 }' <<<"$p")"
+  if [ ! -f "$RB_RUBRIC" ]; then
+    FAIL "RB1: NOT EVALUATED — ${RB_RUBRIC#"$ROOT/"} is absent, so no dimension table, conversation rule or not-graded line can be read"
+  elif [ -n "$(awk -F'\t' '$1 == "NE"' <<<"$p")" ]; then
+    FAIL "RB1: NOT EVALUATED — $(awk -F'\t' '$1 == "NE" { print $2 }' <<<"$p")"
+  elif [ -n "$(awk -F'\t' '$1 == "P"' <<<"$p")" ]; then
+    FAIL "RB1: ${RB_RUBRIC#"$ROOT/"} — $(awk -F'\t' '$1 == "P" { printf "%s; ", $2 }' <<<"$p")"
+  elif [ "$(wc -l < "$cut")" -ge "$(wc -l < "$RB_RUBRIC")" ]; then
+    FAIL "RB1: CONTROL did not LAND — the copy with the mechanical-ND bullet deleted is no shorter than the rubric, so its verdict shows nothing"
+  elif [ -z "$(awk -F'\t' '$1 == "P" && index($2, "A mechanical check")' <<<"$c")" ]; then
+    FAIL "RB1: CONTROL did not fire as specified — with the mechanical-ND bullet deleted from a copy, the reading is '$(tr '\n' ' ' <<<"${c:-nothing}")', where it must name that bullet's anchor"
+  else
+    PASS "RB1: ${RB_RUBRIC#"$ROOT/"}'s dimension table parses — $n row(s) [${ids% }], every row carrying the header's cells, a unique R-<n> id, its #1765 traces, a pass level and an NA condition, each column found by its header label; the conversation rule's PASS, mechanical-fail, mechanical-ND and disputed-dimension bullets and the three not-graded lines each stand in exactly one bullet. CONTROL: a copy with the mechanical-ND bullet deleted reads '$(awk -F'\t' '$1 == "P" { printf "%s; ", $2 }' <<<"$c")'"
+  fi
+}
+rb1_assert
+# rb_cites <rubric> <first-id> <last-id> <kinds> — "SCANNED <lines>", then "CITE <what>" for each
+# citation found and "HOLDS <what>" for each list row or italic kind name the rubric carries.
+rb_cites() {
+  [ -f "$1" ] || return 0
+  LC_ALL=C awk -v a1="$2" -v an="$3" -v kinds="$4" '
+    BEGIN { nk = split(kinds, K, "|"); rng = "`" a1 "`\342\200\223`" an "`" }
+    { n++; s = $0
+      if (index(s, "ADR-045")) adr = 1
+      if (a1 != "" && an != "" && index(s, rng)) r = 1
+      if (index(s, "kinds of interviewer turn")) kt = 1
+      if (s ~ /^[ \t]*\|[ \t]*`A[0-9]+`[ \t]*\|/) printf "HOLDS\tline %d is a row of ADR-045 D2 item 4: %s\n", NR, substr(s, 1, 60)
+      if (index(s, "Those that put or concern a field:") || index(s, "Those that put no field:")) printf "HOLDS\tline %d carries a list marker of term 7\n", NR
+      u = s; gsub(/\*\*[^*]*\*\*/, " ", u)
+      for (k = 1; k <= nk; k++) if (K[k] != "" && index(u, "*" K[k] "*")) printf "HOLDS\tline %d writes the kind *%s* as an italic name\n", NR, K[k] }
+    END { printf "SCANNED\t%d\n", n; if (adr) print "CITE\tADR-045"; if (r) print "CITE\t" rng; if (kt) print "CITE\tthe kinds of interviewer turn" }' "$1"
+}
+rb2_assert() {
+  local recs a1 an kinds out ctl plant nc
+  recs="$(nu_list "$NU_ADR")"
+  a1="$(awk -F'\t' '$1 == "A" && !d { print $2; d = 1 }' <<<"$recs")"; an="$(awk -F'\t' '$1 == "A" { x = $2 } END { print x }' <<<"$recs")"
+  kinds="$(awk -F'\t' '$1 == "FIELD" || $1 == "NONFIELD" { printf "%s%s", (n++ ? "|" : ""), $2 }' <<<"$recs")"
+  out="$(rb_cites "$RB_RUBRIC" "$a1" "$an" "$kinds")"
+  plant="$WORK/rb/rubric-a1-row.md"; : > "$plant"
+  [ -f "$RB_RUBRIC" ] && LC_ALL=C awk '{ print } $0 == "## Pass levels" && !done { print ""; print "| `A1` | the em dash | they uttered a skip | ADR-022 D5.5 |"; done = 1 }' "$RB_RUBRIC" > "$plant"
+  ctl="$(rb_cites "$plant" "$a1" "$an" "$kinds")"
+  nc="$(awk -F'\t' '$1 == "CITE"' <<<"$out" | awk 'END { print NR }')"
+  if [ ! -f "$RB_RUBRIC" ]; then
+    FAIL "RB2: NOT EVALUATED — ${RB_RUBRIC#"$ROOT/"} is absent, so its citations of ADR-045 cannot be read"
+  elif [ -z "$a1" ] || [ -z "$kinds" ]; then
+    FAIL "RB2: NOT EVALUATED — nu_list read no admitted non-utterance or no kind from ${NU_ADR#"$ROOT/"}, so there is nothing to hold the rubric's citations to"
+  elif [ -z "$(awk -F'\t' '$1 == "SCANNED" && $2 > 0' <<<"$out")" ]; then
+    FAIL "RB2: the scan of ${RB_RUBRIC#"$ROOT/"} read nothing — '${out:-no output}'"
+  elif [ -n "$(awk -F'\t' '$1 == "HOLDS"' <<<"$out")" ]; then
+    FAIL "RB2: ${RB_RUBRIC#"$ROOT/"} holds what it must cite — $(awk -F'\t' '$1 == "HOLDS" { printf "%s; ", $2 }' <<<"$out")ADR-045's lists have one home"
+  elif [ "$nc" -ne 3 ]; then
+    FAIL "RB2: ${RB_RUBRIC#"$ROOT/"} does not cite ADR-045, its range \`$a1\`–\`$an\` and the kinds of interviewer turn by name — it cites [$(awk -F'\t' '$1 == "CITE" { printf "%s; ", $2 }' <<<"$out")]"
+  elif [ -z "$(awk -F'\t' '$1 == "HOLDS" && index($2, "row of ADR-045 D2 item 4")' <<<"$ctl")" ]; then
+    FAIL "RB2: CONTROL (SEAM-5) did not fire as specified — an A1 row planted in a copy of the rubric reads '$(tr '\n' ' ' <<<"${ctl:-nothing}")'"
+  else
+    PASS "RB2: ${RB_RUBRIC#"$ROOT/"} cites ADR-045, the range \`$a1\`–\`$an\` nu_list reads from it, and the kinds of interviewer turn by name, and holds neither list — no row of D2 item 4's shape, no term 7 list marker, and none of the $(awk -F'|' '{ print NF }' <<<"$kinds") kind(s) nu_list reads written as an italic name. CONTROL (SEAM-5): an A1 row planted in a copy is refused, '$(awk -F'\t' '$1 == "HOLDS" && !d { print $2; d = 1 }' <<<"$ctl")'"
+  fi
+}
+rb2_assert
+RB_INPUTS="skills/trip-record/interview-conduct.md
+templates/interview-card.md
+templates/traveler-intake.template.md
+templates/person-intake.template.md
+templates/trip-context.template.md
+skills/trip-record/SKILL.md
+SKILL.md"
+# rb_isolation <root> — "OPEN <path>" for each interviewer input read, "MISS <path>" for one that is
+# not there, and "HIT <path> <line>" for each line naming the rubric in any spelling.
+rb_isolation() {
+  local f
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    if [ -f "$1/$f" ]; then
+      printf 'OPEN\t%s\n' "$f"
+      LC_ALL=C awk -v p="$f" 'tolower($0) ~ /interview[-_ ]?rubric/ { printf "HIT\t%s\t%d\n", p, FNR }' "$1/$f"
+    else printf 'MISS\t%s\n' "$f"; fi
+  done <<<"$RB_INPUTS"
+}
+rb3_assert() {
+  local out ctl r n nin f
+  out="$(rb_isolation "$ROOT")"
+  r="$(mktemp -d "$WORK/rb/root.XXXXXX")"; mkdir -p "$r/skills/trip-record" "$r/templates"
+  while IFS= read -r f; do [ -n "$f" ] && [ -f "$ROOT/$f" ] && cp "$ROOT/$f" "$r/$f"; done <<<"$RB_INPUTS"
+  [ -f "$r/skills/trip-record/SKILL.md" ] && LC_ALL=C awk '/^## interview / { on = 1 } on && index($0, "**Reads:**") == 1 && !done { $0 = "**Reads:** `reference/interview-rubric.md` — planted; " substr($0, 11); done = 1 } { print }' "$ROOT/skills/trip-record/SKILL.md" > "$r/skills/trip-record/SKILL.md"
+  ctl="$(rb_isolation "$r")"
+  n="$(awk -F'\t' '$1 == "OPEN"' <<<"$out" | awk 'END { print NR }')"; nin="$(awk 'NF' <<<"$RB_INPUTS" | awk 'END { print NR }')"
+  if [ ! -f "$RB_RUBRIC" ]; then
+    FAIL "RB3: NOT EVALUATED — ${RB_RUBRIC#"$ROOT/"} is absent, so its isolation from the interviewer's inputs is a statement about nothing"
+  elif [ -z "$out" ]; then
+    FAIL "RB3: the isolation scan read nothing"
+  elif [ -n "$(awk -F'\t' '$1 == "MISS"' <<<"$out")" ] || [ "$n" -ne "$nin" ]; then
+    FAIL "RB3: NOT EVALUATED — of the $nin interviewer input(s), $n were opened; missing: $(awk -F'\t' '$1 == "MISS" { printf "%s ", $2 }' <<<"$out")"
+  elif [ -n "$(awk -F'\t' '$1 == "HIT"' <<<"$out")" ]; then
+    FAIL "RB3: an interviewer input names the rubric — $(awk -F'\t' '$1 == "HIT" { printf "%s line %s; ", $2, $3 }' <<<"$out")no interviewer reads what it is graded against"
+  elif [ -z "$(awk -F'\t' '$1 == "HIT" && $2 == "skills/trip-record/SKILL.md"' <<<"$ctl")" ]; then
+    FAIL "RB3: CONTROL did not fire as specified — the rubric's path planted on a copy of the interview verb's **Reads:** line was not found, so a zero above shows nothing"
+  else
+    PASS "RB3: none of the $n interviewer input(s) opened — $(awk -F'\t' '$1 == "OPEN" { printf "%s ", $2 }' <<<"$out")— names the rubric in any spelling. CONTROL: the rubric's path planted on a copy of the interview verb's **Reads:** line is found at line $(awk -F'\t' '$1 == "HIT" && !d { print $3; d = 1 }' <<<"$ctl")"
+  fi
+}
+rb3_assert
+# rb_section <rubric> <heading> — "AT<TAB><the heading's line><TAB><the dimension table's heading
+# line><TAB><times the heading stands>", then "TXT<TAB><the section's lines, each trimmed, joined with
+# one space>" and "ALL<TAB><every line of the file, joined the same way>"; nothing when the rubric is
+# absent. Joining is what lets an anchor be read across the line a wrapped sentence breaks at.
+rb_section() {
+  [ -f "$1" ] || return 0
+  LC_ALL=C awk -v h="$2" '
+    { t = $0; sub(/^[ \t]+/, "", t); sub(/[ \t]+$/, "", t); if (t != "") all = (all == "" ? t : all " " t) }
+    $0 == "## The dimensions" && !d { d = NR }
+    $0 == h { hn++; if (!at) at = NR; on = 1; next }
+    on && substr($0, 1, 3) == "## " { on = 0 }
+    on && t != "" { x = (x == "" ? t : x " " t) }
+    END { printf "AT\t%d\t%d\t%d\n", at, d, hn; printf "TXT\t%s\n", x; printf "ALL\t%s\n", all }' "$1"
+}
+# rb6_count <text> <anchor> — how many times the anchor stands in the text, read without overlap.
+rb6_count() {
+  LC_ALL=C awk -v a="$2" 'BEGIN { s = ARGV[1]; ARGV[1] = ""; c = 0; if (a != "") while ((i = index(s, a)) > 0) { c++; s = substr(s, i + length(a)) } print c }' "$1"
+}
+RB6_PRODUCED_H='## How a grade is produced'
+RB6_LIMITS_H='## Its limits'
+RB6_THRESH_H='## The threshold #1330 reads'
+# How a grade is produced — #2199's F2 and E2, and F3's no-re-roll rule (#2200).
+RB6_PRODUCED_ANCHORS="the form as the repository holds it at the sitting's pinned commit
+It writes one \`L4\` for each interviewer turn
+It judges \`R-1\`, \`R-2\` and \`R-6\` against the form's own option lists
+it never takes a verdict from the grader
+says *on judged labels*
+the first run started after that revision that no carrier stop voids"
+# Its limits — the first design's D5 list (#2185), then F2's named limits (#2200).
+RB6_LIMIT_ANCHORS="says nothing of a real traveller
+A grade is of one model on one route
+A grade is dated.
+\`ND\` is never a pass.
+The generated route exercises the shared rules as the card carries them and the form's own ask-prose, and nothing else.
+The grader reads the interviewer's own narration inside the turns it labels
+prove separate processes, and no more
+not tamper evidence"
+# The threshold — F3's sentence, word for word (INT-9), and its bullets.
+RB6_THRESHOLD="every generated conversation in the grade record grades \`PASS\`, at the rubric and conduct revisions its block names, after the operator's adjudication, over the graded draws of that conduct revision."
+RB6_THRESH_ANCHORS="An \`ended:\` draw is a graded \`FAIL\`
+An unruled mechanical fail or \`ND\`, or an unruled dimension, counts as \`ND\`
+It is binary and takes no average"
+# rb6_eval <rubric> — one "P<TAB><problem>" per defect, or one "NE<TAB><why>"; then "N<TAB><anchors read>".
+rb6_eval() {
+  local h r t all b a k n
+  [ -f "$1" ] || { printf 'NE\tthe rubric is absent\n'; return 0; }
+  n=0
+  for h in "$RB6_PRODUCED_H" "$RB6_LIMITS_H" "$RB6_THRESH_H"; do
+    r="$(rb_section "$1" "$h")"
+    if [ -z "$(awk -F'\t' '$1 == "AT"' <<<"$r")" ]; then printf 'P\tthe section reader read nothing under %s\n' "$h"; continue; fi
+    if [ -z "$(awk -F'\t' '$1 == "AT" && $4 == 1' <<<"$r")" ]; then printf 'P\tthe heading %s stands %s time(s), where exactly once is required\n' "$h" "$(awk -F'\t' '$1 == "AT" { print $4 }' <<<"$r")"; continue; fi
+    [ -n "$(awk -F'\t' '$1 == "AT" && $3 > 0 && $2 > $3' <<<"$r")" ] || printf 'P\t%s does not stand below the dimension table\n' "$h"
+    t="$(awk -F'\t' '$1 == "TXT" { print substr($0, 5) }' <<<"$r")"
+    case "$h" in
+      "$RB6_PRODUCED_H")
+        while IFS= read -r a; do
+          [ -n "$a" ] || continue
+          n=$((n + 1)); k="$(rb6_count "$t" "$a")"
+          [ "${k:-0}" -eq 1 ] || printf 'P\tunder %s, the anchor "%s" stands %s time(s), where exactly once is required\n' "$h" "$a" "${k:-0}"
+        done <<<"$RB6_PRODUCED_ANCHORS" ;;
+      "$RB6_LIMITS_H")
+        b="$(rb_bullets "$1" "$h")"
+        while IFS= read -r a; do
+          [ -n "$a" ] || continue
+          n=$((n + 1))
+          awk -F'\t' -v a="$a" -v g="$h" '$1 == "B" && index($2, a) { c++ } END { if (c != 1) printf "P\tunder %s, the anchor \"%s\" stands in %d bullet(s), where exactly one is required\n", g, a, c }' <<<"$b"
+        done <<<"$RB6_LIMIT_ANCHORS" ;;
+      "$RB6_THRESH_H")
+        all="$(awk -F'\t' '$1 == "ALL" { print substr($0, 5) }' <<<"$r")"
+        n=$((n + 1)); k="$(rb6_count "$t" "$RB6_THRESHOLD")"
+        [ "${k:-0}" -eq 1 ] || printf 'P\tunder %s, the threshold sentence stands %s time(s), where exactly once is required\n' "$h" "${k:-0}"
+        k="$(rb6_count "$all" "$RB6_THRESHOLD")"
+        [ "${k:-0}" -le 1 ] || printf 'P\tthe threshold sentence stands %s time(s) in the rubric, where it is held once\n' "$k"
+        b="$(rb_bullets "$1" "$h")"
+        while IFS= read -r a; do
+          [ -n "$a" ] || continue
+          n=$((n + 1))
+          awk -F'\t' -v a="$a" -v g="$h" '$1 == "B" && index($2, a) { c++ } END { if (c != 1) printf "P\tunder %s, the anchor \"%s\" stands in %d bullet(s), where exactly one is required\n", g, a, c }' <<<"$b"
+        done <<<"$RB6_THRESH_ANCHORS" ;;
+    esac
+  done
+  printf 'N\t%d\n' "$n"
+}
+rb6_assert() {
+  local p c ctl n
+  p="$(rb6_eval "$RB_RUBRIC")"
+  ctl="$WORK/rb/rubric-threshold-met.md"; : > "$ctl"
+  [ -f "$RB_RUBRIC" ] && LC_ALL=C awk -v h="$RB6_THRESH_H" '$0 == h { on = 1 } on && !done && (i = index($0, "`PASS`")) { $0 = substr($0, 1, i - 1) "`MET`" substr($0, i + 6); done = 1 } { print }' "$RB_RUBRIC" > "$ctl"
+  c="$(rb6_eval "$ctl")"
+  n="$(awk -F'\t' '$1 == "N" { print $2 }' <<<"$p")"
+  if [ ! -f "$RB_RUBRIC" ]; then
+    FAIL "RB6: NOT EVALUATED — ${RB_RUBRIC#"$ROOT/"} is absent, so no grading section can be read"
+  elif [ -n "$(awk -F'\t' '$1 == "P"' <<<"$p")" ]; then
+    FAIL "RB6: ${RB_RUBRIC#"$ROOT/"}'s grading sections — $(awk -F'\t' '$1 == "P" { printf "%s; ", $2 }' <<<"$p")the threshold sentence and every anchor are held as #2199's design states them"
+  elif [ "${n:-0}" -eq 0 ]; then
+    FAIL "RB6: the reading of ${RB_RUBRIC#"$ROOT/"}'s grading sections read no anchor — '${p:-no output}'"
+  elif [ "$(cksum < "$ctl")" = "$(cksum < "$RB_RUBRIC")" ]; then
+    FAIL "RB6: CONTROL did not LAND — the copy meant to grade MET in the threshold sentence is byte-identical to the rubric, so its verdict shows nothing"
+  elif [ -z "$(awk -F'\t' '$1 == "P" && index($2, "the threshold sentence")' <<<"$c")" ]; then
+    FAIL "RB6: CONTROL did not fire as specified — with the threshold sentence grading MET in a copy, the reading is '$(tr '\n' ' ' <<<"${c:-nothing}")', where it must name the threshold sentence"
+  else
+    PASS "RB6: ${RB_RUBRIC#"$ROOT/"}'s grading sections — $RB6_PRODUCED_H, $RB6_LIMITS_H and $RB6_THRESH_H — each stand once, below the dimension table, and their $n anchor(s) hold: the grader's inputs with the form at the pinned commit, its L4 for each interviewer turn, R-1, R-2 and R-6 against the form's option lists, the verdict never taken from the grader, on judged labels and no re-roll; each limit in exactly one bullet; and the threshold sentence word for word, once in its section and once in the file, with its bullets. CONTROL: a copy whose threshold sentence grades MET reads '$(awk -F'\t' '$1 == "P" { printf "%s; ", $2 }' <<<"$c")'"
+  fi
+}
+rb6_assert
+
+md_flips rb_table     'RB1' rb1_assert
+md_flips rb_bullets   'RB1' rb1_assert
+md_flips rb_cites     'RB2' rb2_assert
+md_flips rb_isolation 'RB3' rb3_assert
+md_flips rb_section   'RB6' rb6_assert
+md_flips rb_bullets   'RB6' rb6_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group RB, continued — the grade record (#2199 F3, F4): RB4, RB5 and RB7
+#
+# examples/interview-conversations/grade-record.txt holds one block for each generated conversation,
+# and before them the draws ledger (#2199 F4, GRADE-RECORD-OWN-FILE). Group CF reads the
+# conversations and never this file as one of them (CF_RECORD). These arms grade the record's shape,
+# its agreement with the conversations and with the suite's own mechanical readings of them, and
+# that no draw was re-rolled. They never grade a grade: a dimension's value is the grader's
+# judgment, or the conversation rule's over a mechanical line, and the operator rules at Stage 9.
+#
+# ── THE GRAMMAR — one physical line is one record ────────────────────────────────────────────────
+#   The file ends with exactly one newline, and any other empty line is MALFORMED. A "# …" line is a
+#   comment, anywhere. Before the first block, the ledger, in any order:
+#     "draws: <card blob> <form blob> <archetype> = <seq>:<run-id>:graded|voided:<stop>|ended:<ending>; …"
+#     "grader-draws: <conversation id> <rubric blob> = <n>:<grader-session>[:voided:<stop>]; …"
+#     "grader-result: <grader-session> = is_error | check:<name> | graded"
+#   A block opens at "grade: <conversation id>" and runs to the next. It carries each of these once —
+#   transcript-sha256, rubric-revision, conduct-revision ("<card blob> <form blob>"), grader-model,
+#   grader-session, grade-date, grader-draw, carrier-evidence-sha256, "verdict = …" and
+#   "adjudication: …" — the rubric's dimension lines, "R-<n> = <value> ; turns T<a>[,T<b>…] ;
+#   «<ground>»", or "R-<n> = <first value> ; grader <grader's value> ; turns … ; «<ground>»", whose
+#   first value is the rule's where an unruled mech line cites the dimension (#2200, the operator's
+#   ruling on F4's line) and the operator's where a ruling overturns it (#2200, the operator's ruling
+#   on Stage 12's B-2), each value MET|NOT-MET|ND|NA, with "turns -" where a value cites no turn, and
+#   a line "mech OW-C|FB-C <field> = fail:<…>|nd:<…> (on judged labels)" for each mechanical fail or
+#   ND. The adjudication is "pending", or entries split on ";", each opening with its date; an entry
+#   "<date> R-<n> …" is a ruling on that dimension, read "upheld" or "overturned to <value>" next, the
+#   value in the same closed set; any other entry is free text. A ledger
+#   line inside a block, or any other line, is MALFORMED. A blob is 7 to 40 lower-case hex
+#   characters. A conversation's transcript-sha256 is the sha256 of its T<n> lines, each with its
+#   newline, in file order — the turn records the grader read, not the labels beneath them — and its
+#   header carries the same value.
+#
+# ── THE CONVERSATION RULE, AS RB4 RECOMPUTES IT ──────────────────────────────────────────────────
+#   reference/interview-rubric.md § The conversation rule. Which dimension a mech line cites is read
+#   from the rubric's "Check it cites" column, never listed here: a cell naming `OW-C` or `FB-C`
+#   cites every fail of that check, and one naming `FB-C` bullet <n> the FB-C fails that name bullet
+#   <n>; an FB-C ND names no bullet, so it reaches every citer of FB-C. A mech line the adjudication
+#   names ("mech <check> <field>") is ruled, and moves nothing. A ruling "R-<n> overturned to <value>"
+#   puts the operator's value in place of the grader's, and "R-<n> upheld" keeps the grader's.
+#   PRECEDENCE, because more than one can hold for one dimension: an unruled ND makes the dimension
+#   ND; otherwise an unruled fail makes it NOT-MET; otherwise an overturn makes it the operator's
+#   value; otherwise it keeps the grader's value its line holds. The conversation is then ND when any
+#   dimension is ND, FAIL when any is NOT-MET, and PASS when every one is MET or NA — ND first, as
+#   group CF's cv_conv reads a conversation.
+#   A dimension no unruled mech line cites and no ruling overturns shows one value, the grader's. One
+#   that an unruled mech line cites shows the rule's value so derived and the grader's beside it, the
+#   grader's turns and ground kept, so the value the rule restores once the citing lines are ruled is
+#   on the line itself. One a ruling overturns, and no unruled mech line cites, shows the operator's
+#   value and the grader's beside it, so a reader sees both the decision and what the grader said.
+#
+# ── THE ARMS ─────────────────────────────────────────────────────────────────────────────────────
+#   RB4  every generated conversation has exactly one block, and each block names one; the record
+#        parses; each block carries its keys once, each value in its closed set; the transcript hash
+#        recomputes and equals the header's; the conduct revision is the header's; the dimension ids
+#        equal the rubric's both ways; every value but NA cites a turn the conversation holds, or is
+#        cited by an unruled mech line, which is then its citation; a line holds a grader value
+#        exactly where an unruled mech line cites its dimension or a ruling overturns it, that value
+#        in the closed set; each first value is the one the rule derives, so an overturned line's is
+#        its ruling's; every ruling is upheld or overturned to a value of the closed set, names a
+#        line of its block and stands once there; the
+#        mech lines are the suite's own OW-C and FB-C readings of that conversation, both ways; and
+#        the verdict follows the rule. A block whose rubric or conduct revision is not the head's is
+#        STALE, reported through a plain line and never failed. CONTROLS on copies: a transcript
+#        byte changed, a mech line dropped and a verdict flipped, each red; a rubric revision
+#        changed, reported STALE and green; a grader value on a line no unruled mech line cites, a
+#        two-value line's grader value dropped, a grader value spelled as the grader's own output
+#        spells it ("NOT MET") and a rule's value the rule does not derive, each red; a block's
+#        mech lines ruled by an adjudication line, red while its lines hold two values, and green
+#        once each holds its grader's value alone and the verdict is the rule's; a line of the first
+#        generated conversation overturned, green in the two-value form with its verdict the rule's,
+#        red with its first value other than its ruling's and red in the one-value form; a ruling
+#        that names no line of its block, one neither upheld nor overturned to a value, and a
+#        dimension ruled twice, each red; and a line an unruled mech line cites, overturned, green,
+#        the mech line outranking the overturn. The two-value and overturn controls plant on
+#        a base: the record, where a line of it holds a grader value because an unruled mech line
+#        cites it; otherwise a copy on which the first block whose mech lines are all ruled and which
+#        overturns nothing is put back to pending, each line they cite in the two-value form and its
+#        verdict the rule's — a base that must itself read clean (#2200, Stage 12's B-1)
+#   RB5  SEAM-5: no dimension shows MET against an unruled mechanical fail or ND that cites it, read
+#        on the line's first value in either form — the rule's, or the operator's on an overturn.
+#        CONTROLS on copies: MET planted against a fail on a one-value line, against an ND, as a
+#        two-value line's rule's value and as an overturn's operator's value, each red; a two-value
+#        line whose grader's value alone is MET, green; the ND with the operator's ruling on the
+#        planted line, green
+#   RB7  no re-roll (#2200 F3, B3, K10): each draws line's seq runs 1..k; exactly one entry is graded
+#        or ended, the first not voided and the last; a void names a carrier stop and an ending a
+#        conduct ending; each generated conversation's run-id names its graded entry, with an equal
+#        run-seq, on the line of its own conduct revision and traveller code, and an ended entry's
+#        block grades FAIL. Each grader-draws line runs 1..k; a void names a carrier stop and cites
+#        its session's grader-result line, which is not graded; every grader session named has one
+#        result line; each block has its key at its rubric revision, its grader-draw is that key's
+#        last draw not voided, its grader-session is that draw's, and every draw not voided after the
+#        first carries the operator's regrade <n>. CONTROLS on copies: a second graded draw, a
+#        run-seq gap, a voided:carrier-calls, a regrade with no adjudication, a void whose session
+#        recorded a grade and a void citing no result line, each red; that regrade adjudicated, and a
+#        void citing its session's failed check, green
+# Each arm is NOT EVALUATED — a FAIL — when the record is absent, so an absent record never reads as
+# one that holds.
+#
+# WHAT A GREEN DOES NOT COVER: the record cannot show a run that was never written down. A run
+# renumbered to hide a discard is visible only against the per-call evidence posted on #2200, which
+# each block names by its carrier-evidence-sha256; nothing here fetches it. No arm here judges a
+# dimension's value. Nor does any arm read the grader's own output, which the sitting's hand-off holds
+# outside the repository: a grader value replaced by another in its closed set, which the rule derives
+# to the same rule's value, reads green. Nor is a ruling judged: an overturn to any value of the closed
+# set reads green, and a ruling's ground is text no arm reads.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "RB — (the grade record) one block per generated conversation, its verdict by the conversation rule, no MET against a mechanical fail, and no re-roll"
+
+RB_RECORD="$CF_DIR/$CF_RECORD"
+# The carrier stops (#2200 F1) and the conduct endings (F3), closed lists: the record is their one
+# reader in this suite, so they are named here. A name in neither is no stop and no ending.
+RB_STOPS=' carrier-version carrier-init carrier-hook carrier-canary carrier-auth carrier-resume carrier-identity carrier-policy '
+RB_ENDINGS=' calls budget no-give-back '
+RB_KEYS='transcript-sha256 rubric-revision conduct-revision grader-model grader-session grade-date grader-draw carrier-evidence-sha256 verdict adjudication'
+# rb_record <record> — the record, one tab-separated record a line: "MAL <line> <why>"; "DRAWS <line>
+# <card> <form> <archetype> <entries>"; "GDRAWS <line> <conversation> <rubric> <entries>"; "GRES <line>
+# <session> <state>"; "BLK <line> <conversation>"; "KEY <conversation> <key> <value>"; "DIM <conversation>
+# <R-n> <value> <turns> <ground> <grader value, or - on a one-value line>"; "MECH <conversation> <check>
+# <field> <verdict>"; or one "NE <why>".
+rb_record() {
+  [ -f "$1" ] || { printf 'NE\tthe grade record is absent\n'; return 0; }
+  LC_ALL=C awk -v f="$1" -v keys="$RB_KEYS" '
+    function mal(i, why) { printf "MAL\t%d\t%s\n", i, why }
+    BEGIN {
+      RS = "\001"; if ((getline s < f) <= 0) s = ""; close(f)
+      if (s == "") { print "NE\tthe grade record is empty"; exit }
+      if (substr(s, length(s), 1) != "\n") mal(0, "the file does not end with a newline"); else s = substr(s, 1, length(s) - 1)
+      n = split(s, L, "\n"); id = ""; nk = split(keys, KS, " "); for (k = 1; k <= nk; k++) KEY[KS[k]] = 1
+      LQ = "\302\253"; RQ = "\302\273"; SUF = " (on judged labels)"
+      for (i = 1; i <= n; i++) {
+        ln = L[i]
+        if (ln == "") { mal(i, "an empty line opens no record"); continue }
+        if (substr(ln, 1, 1) == "#") continue
+        if (substr(ln, 1, 7) == "grade: ") { id = substr(ln, 8); printf "BLK\t%d\t%s\n", i, id; continue }
+        led = ""
+        if (substr(ln, 1, 7) == "draws: ") led = "draws"; else if (substr(ln, 1, 14) == "grader-draws: ") led = "grader-draws"; else if (substr(ln, 1, 15) == "grader-result: ") led = "grader-result"
+        if (led != "") {
+          if (id != "") { mal(i, "a ledger line inside a block"); continue }
+          r = substr(ln, length(led) + 3); p = index(r, " = ")
+          if (!p) { mal(i, "a " led " line with no \" = \""); continue }
+          m = split(substr(r, 1, p - 1), F, " "); e = substr(r, p + 3)
+          if (led == "draws") { if (m != 3) { mal(i, "a draws line whose key is not a card blob, a form blob and an archetype"); continue } printf "DRAWS\t%d\t%s\t%s\t%s\t%s\n", i, F[1], F[2], F[3], e }
+          else if (led == "grader-draws") { if (m != 2) { mal(i, "a grader-draws line whose key is not a conversation id and a rubric blob"); continue } printf "GDRAWS\t%d\t%s\t%s\t%s\n", i, F[1], F[2], e }
+          else { if (m != 1) { mal(i, "a grader-result line whose key is not one session"); continue } printf "GRES\t%d\t%s\t%s\n", i, F[1], e }
+          continue
+        }
+        if (id == "") { mal(i, "a line before the first block that is no ledger line"); continue }
+        if (match(ln, /^R-[0-9]+ = /)) {
+          d = substr(ln, 1, index(ln, " ") - 1); r = substr(ln, RLENGTH + 1); p = index(r, " ; turns "); q = index(r, " ; " LQ)
+          if (!p || !q || q < p || length(r) < length(RQ) || substr(r, length(r) - length(RQ) + 1) != RQ) { mal(i, "a dimension line out of its shape"); continue }
+          v = substr(r, 1, p - 1); t = substr(r, p + 9, q - p - 9); g = substr(r, q + 3 + length(LQ)); g = substr(g, 1, length(g) - length(RQ))
+          gv = "-"; o = index(v, " ; grader ")
+          if (o) { gv = substr(v, o + 10); v = substr(v, 1, o - 1)
+            if (gv == "" || gv == "-" || index(gv, " ; ")) { mal(i, "a dimension line whose grader value is out of its shape"); continue } }
+          if ((id SUBSEP "R" SUBSEP d) in SEEN) { mal(i, "the dimension " d " stands twice in its block"); continue }
+          SEEN[id, "R", d] = 1; printf "DIM\t%s\t%s\t%s\t%s\t%s\t%s\n", id, d, v, t, g, gv; continue
+        }
+        if (substr(ln, 1, 5) == "mech ") {
+          c = substr(ln, 6, 4); r = substr(ln, 11)
+          if ((c != "OW-C" && c != "FB-C") || substr(ln, 10, 1) != " " || length(r) <= length(SUF) || substr(r, length(r) - length(SUF) + 1) != SUF) { mal(i, "a mech line out of its shape"); continue }
+          r = substr(r, 1, length(r) - length(SUF)); k = 0
+          for (j = length(r) - 2; j >= 1; j--) if (substr(r, j, 3) == " = ") { k = j; break }
+          if (!k) { mal(i, "a mech line with no \" = \""); continue }
+          printf "MECH\t%s\t%s\t%s\t%s\n", id, c, substr(r, 1, k - 1), substr(r, k + 3); continue
+        }
+        if (substr(ln, 1, 10) == "verdict = ") { k = "verdict"; v = substr(ln, 11) }
+        else if ((p = index(ln, ": ")) > 0 && (substr(ln, 1, p - 1) in KEY) && substr(ln, 1, p - 1) != "verdict") { k = substr(ln, 1, p - 1); v = substr(ln, p + 2) }
+        else { mal(i, "a line that opens no record of a block"); continue }
+        if ((id SUBSEP k) in SEEN) { mal(i, "the key " k " stands twice in its block"); continue }
+        SEEN[id, k] = 1; printf "KEY\t%s\t%s\t%s\n", id, k, v
+      }
+    }'
+}
+# rb_sha — the sha256 of stdin, 64 lower-case hex; core perl, as scripts/publish-trip-site.sh's _digest_of.
+rb_sha() { perl -MDigest::SHA=sha256_hex -e 'binmode STDIN; local $/; my $s = <STDIN>; $s = q() unless defined $s; print sha256_hex($s)'; }
+# rb_gen <dir> <tok-file> — one "GEN <id> <header transcript-sha256> <recomputed> <conduct-revision>
+# <run-id> <run-seq> <traveller code> <form> <turns>" per generated conversation group CF read, its
+# file read from <dir>; "GEN-MISS <id>" when that file is not there.
+rb_gen() {
+  local id f h
+  while IFS= read -r id; do
+    [ -n "$id" ] || continue
+    f="$1/$id.txt"
+    if [ ! -f "$f" ]; then printf 'GEN-MISS\t%s\n' "$id"; continue; fi
+    h="$(LC_ALL=C awk '/^T[0-9]+ [IP] \| /' "$f" | rb_sha)"
+    LC_ALL=C awk -v id="$id" -v h="$h" '
+      /^T[0-9]+ [IP] \| / { t++; hd = 1; next }
+      hd { next }
+      { k = index($0, ": "); if (!k) next; key = substr($0, 1, k - 1); V[key] = substr($0, k + 2) }
+      END { c = V["traveller"]; sub(/ .*$/, "", c)
+            printf "GEN\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d\n", id, V["transcript-sha256"], h, V["conduct-revision"], V["run-id"], V["run-seq"], c, V["form"], t }' "$f"
+  done < <(awk -F'\t' '$1 == "TOK" && $3 == "HDR" && $5 == "generated" { f = $2; sub(/\.txt$/, "", f); print f }' "$2")
+}
+# rb_citemap <rubric> — "CITE <R-n> <check> <bullet or *>" for each check a dimension row's Check it
+# cites cell names; "NE <why>" when the table has no such column.
+rb_citemap() {
+  [ -f "$1" ] || { printf 'NE\tthe rubric is absent\n'; return 0; }
+  LC_ALL=C awk '
+    function cells(s, C,   n, i) { sub(/^[ \t]*\|/, "", s); sub(/\|[ \t]*$/, "", s); n = split(s, C, "|"); for (i = 1; i <= n; i++) gsub(/^[ \t]+|[ \t]+$/, "", C[i]); return n }
+    $0 == "## The dimensions" { on = 1; next }
+    on && substr($0, 1, 3) == "## " { on = 0 }
+    on && substr($0, 1, 1) == "|" {
+      if (!hd) { nh = cells($0, H); for (k = 1; k <= nh; k++) { if (H[k] == "Dim") cd = k; if (H[k] == "Check it cites") cc = k } hd = 1; next }
+      if ($0 ~ /^\|[-| :]+\|$/ || !cd || !cc) next
+      cells($0, C); d = C[cd]; gsub(/`/, "", d); x = C[cc]
+      while (match(x, /`(OW-C|FB-C)`/)) { c = substr(x, RSTART + 1, 4); x = substr(x, RSTART + RLENGTH); b = "*"
+        if (match(x, /^ bullet [0-9]+/)) b = substr(x, 9, RLENGTH - 8)
+        printf "CITE\t%s\t%s\t%s\n", d, c, b }
+    }
+    END { if (!cc) print "NE\tthe dimension table has no Check it cites column" }' "$1"
+}
+# rb_rule — over rb_record's and rb_citemap's records on stdin: "RULING <id> <R-n> <upheld|overturned|
+# other> <the overturn's value, or ->" for each "<date> R-<n> …" entry of a block's adjudication, the
+# dimension read as the entry's token after the date; "HIT <id> <R-n> <check> <field> <fail|nd> <the
+# value its line shows>" for each unruled mech line and each dimension citing it, the line's first
+# value on a two-value line; "DERIVE <id> <R-n> <value>" by the precedence above, from the grader's
+# value the line holds or the overturn's; and "RULE <id> <verdict>".
+rb_rule() {
+  LC_ALL=C awk -F'\t' '
+    $1 == "CITE" { nc++; CD[nc] = $2; CC[nc] = $3; CB[nc] = $4; next }
+    $1 == "BLK" { B[++nb] = $3; next }
+    $1 == "DIM" { S[$2, $3] = $4; V[$2, $3] = ($7 == "" || $7 == "-") ? $4 : $7; DL[$2] = DL[$2] " " $3; next }
+    $1 == "KEY" && $3 == "adjudication" { ADJ[$2] = $4; next }
+    $1 == "MECH" { nm++; MI[nm] = $2; MC[nm] = $3; MF[nm] = $4; MV[nm] = $5; next }
+    END {
+      for (b = 1; b <= nb; b++) {
+        id = B[b]; if (ADJ[id] == "pending") continue; n = split(ADJ[id], AE, ";")
+        for (k = 1; k <= n; k++) {
+          x = AE[k]; gsub(/^ +| +$/, "", x)
+          if (x !~ /^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] R-[0-9]/) continue
+          r = substr(x, 12); p = index(r, " "); d = p ? substr(r, 1, p - 1) : r; r = p ? substr(r, p + 1) : ""
+          kd = "other"; ov = "-"
+          if (r == "upheld" || substr(r, 1, 7) ~ /^upheld[^A-Za-z0-9-]$/) kd = "upheld"
+          else if (substr(r, 1, 14) == "overturned to ") {
+            ov = substr(r, 15); p = index(ov, " "); if (p) ov = substr(ov, 1, p - 1); sub(/[,.:]$/, "", ov)
+            if (ov == "MET" || ov == "NOT-MET" || ov == "ND" || ov == "NA") kd = "overturned"
+          }
+          printf "RULING\t%s\t%s\t%s\t%s\n", id, d, kd, ov
+          if (kd == "overturned") OV[id, d] = ov
+        }
+      }
+      for (m = 1; m <= nm; m++) {
+        id = MI[m]; if (index(ADJ[id], "mech " MC[m] " " MF[m])) continue
+        kind = (substr(MV[m], 1, 3) == "nd:") ? "nd" : "fail"; split("", BU)
+        if (MC[m] == "FB-C" && kind == "fail") { k = split(substr(MV[m], 6), X, "|"); for (j = 1; j <= k; j++) BU[X[j]] = 1 }
+        for (c = 1; c <= nc; c++) {
+          if (CC[c] != MC[m] || (CB[c] != "*" && kind == "fail" && !(CB[c] in BU))) continue
+          d = CD[c]; printf "HIT\t%s\t%s\t%s\t%s\t%s\t%s\n", id, d, MC[m], MF[m], kind, ((id, d) in S) ? S[id, d] : "(no line)"
+          if (kind == "nd") NDH[id, d] = 1; else NMH[id, d] = 1
+        }
+      }
+      for (b = 1; b <= nb; b++) {
+        id = B[b]; k = split(DL[id], D, " "); nd = 0; fl = 0; bad = 0
+        for (j = 1; j <= k; j++) { d = D[j]; v = V[id, d]; if ((id, d) in OV) v = OV[id, d]
+          if ((id, d) in NDH) v = "ND"; else if ((id, d) in NMH) v = "NOT-MET"
+          printf "DERIVE\t%s\t%s\t%s\n", id, d, v
+          if (v == "ND") nd = 1; else if (v == "NOT-MET") fl = 1; else if (v != "MET" && v != "NA") bad = 1 }
+        printf "RULE\t%s\t%s\n", id, (nd ? "ND" : (fl ? "FAIL" : (bad || k == 0 ? "(no rule)" : "PASS")))
+      }
+    }'
+}
+# rb4_eval <record> <cf-out> <cf-tok> <rubric> <dir> — "P <problem>" per defect, "STALE <id> <what>"
+# per block not at the head's revisions, then "N <blocks> <generated> <mech lines>"; or one "NE <why>".
+rb4_eval() {
+  local rec gen ids head_card head_rub fb
+  rec="$(rb_record "$1")"
+  if [ -z "$rec" ]; then printf 'NE\tthe record reader read nothing\n'; return 0; fi
+  if [ -n "$(awk -F'\t' '$1 == "NE"' <<<"$rec")" ]; then awk -F'\t' '$1 == "NE"' <<<"$rec"; return 0; fi
+  gen="$(rb_gen "$5" "$3")"
+  head_card="$(git hash-object "$ROOT/templates/interview-card.md" 2>/dev/null)"; head_rub="$(git hash-object "$4" 2>/dev/null)"
+  fb="$(awk -F'\t' '$1 == "GEN" { print $9 }' <<<"$gen" | LC_ALL=C sort -u | while IFS= read -r f; do [ -n "$f" ] && printf 'FBLOB\t%s\t%s\n' "$f" "$(git hash-object "$ROOT/$f" 2>/dev/null)"; done)"
+  { printf '%s\n' "$rec"; printf '%s\n' "$gen"; printf '%s\n' "$fb"
+    printf 'HEAD\t%s\t%s\n' "$head_card" "$head_rub"
+    rb_table "$4" | awk -F'\t' '$1 == "ROW" { d = $4; gsub(/`/, "", d); print "RID\t" d }'
+    awk -F'\t' '$1 == "VERDICT" && $3 == "generated" && $6 != "pass" { f = $2; sub(/\.txt$/, "", f); print "CFV\t" f "\t" $4 "\t" $5 "\t" $6 }' "$2"
+    { printf '%s\n' "$rec"; rb_citemap "$4"; } | rb_rule
+  } | LC_ALL=C awk -F'\t' -v keys="$RB_KEYS" '
+    function hex(s, lo, hi) { return length(s) >= lo && length(s) <= hi && s !~ /[^0-9a-f]/ }
+    $1 == "MAL" { printf "P\tline %s: %s\n", $2, $3; next }
+    $1 == "BLK" { nb++; B[nb] = $3; NB[$3]++; next }
+    $1 == "KEY" { K[$2, $3] = $4; next }
+    $1 == "DIM" { DV[$2, $3] = $4; DT[$2, $3] = $5; DG[$2, $3] = ($7 == "") ? "-" : $7; DS[$2] = DS[$2] " " $3; next }
+    $1 == "MECH" { nmech++; M[$2 "\t" $3 "\t" $4 "\t" $5] = 1; MB[$2] = MB[$2] "\n" $3 "\t" $4 "\t" $5; next }
+    $1 == "GEN" { ng++; G[ng] = $2; GHS[$2] = $3; GH[$2] = $4; GC[$2] = $5; GF[$2] = $9; GT[$2] = $10; GS[$2] = 1; next }
+    $1 == "GEN-MISS" { printf "P\tthe generated conversation %s.txt group CF read is not in the directory read\n", $2; next }
+    $1 == "FBLOB" { FB[$2] = $3; next }
+    $1 == "HEAD" { HC = $2; HR = $3; next }
+    $1 == "RID" { nr++; RID[nr] = $2; RIDS[$2] = 1; next }
+    $1 == "CFV" { CF[$2 "\t" $3 "\t" $4 "\t" $5] = 1; CFB[$2] = CFB[$2] "\n" $3 "\t" $4 "\t" $5; next }
+    $1 == "RULE" { RU[$2] = $3; next }
+    $1 == "DERIVE" { DR[$2, $3] = $4; next }
+    $1 == "HIT" { HD[$2, $3] = 1; next }
+    $1 == "RULING" { if (!(($2, $3) in RN)) RL[$2] = RL[$2] " " $3; RN[$2, $3]++; RK[$2, $3] = $4; RV[$2, $3] = $5; next }
+    END {
+      nk = split(keys, KS, " ")
+      if (ng == 0) print "P\tgroup CF read no generated conversation, so no block has one to name"
+      if (nr == 0) print "P\tthe rubric dimension table read no id"
+      if (HC == "" || HR == "") print "P\tthe head\047s blob of the card or of the rubric could not be read, so no block can be read as fresh or stale"
+      for (i = 1; i <= ng; i++) if (NB[G[i]] != 1) printf "P\tthe generated conversation %s has %d block(s), where exactly one is required\n", G[i], NB[G[i]] + 0
+      for (b = 1; b <= nb; b++) {
+        id = B[b]; if (!(id in GS)) { printf "P\tthe block %s names no generated conversation\n", id; continue }
+        for (k = 1; k <= nk; k++) if (!((id, KS[k]) in K)) printf "P\t%s: the block lacks its %s line\n", id, KS[k]
+        if (!hex(K[id, "transcript-sha256"], 64, 64)) printf "P\t%s: transcript-sha256 is not 64 lower-case hex\n", id
+        else if (K[id, "transcript-sha256"] != GH[id]) printf "P\t%s: the transcript recomputes to %s, where the block holds %s\n", id, GH[id], K[id, "transcript-sha256"]
+        if (GHS[id] != GH[id]) printf "P\t%s: its header holds transcript-sha256 %s, where the transcript recomputes to %s\n", id, GHS[id], GH[id]
+        if (!hex(K[id, "rubric-revision"], 7, 40)) printf "P\t%s: rubric-revision is not a blob\n", id
+        n = split(K[id, "conduct-revision"], CR, " ")
+        if (n != 2 || !hex(CR[1], 7, 40) || !hex(CR[2], 7, 40)) printf "P\t%s: conduct-revision is not a card blob and a form blob\n", id
+        else if (K[id, "conduct-revision"] != GC[id]) printf "P\t%s: conduct-revision is %s, where its conversation header reads %s\n", id, K[id, "conduct-revision"], GC[id]
+        if (!hex(K[id, "carrier-evidence-sha256"], 64, 64)) printf "P\t%s: carrier-evidence-sha256 is not 64 lower-case hex\n", id
+        if (K[id, "grade-date"] !~ /^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$/) printf "P\t%s: grade-date is not a date\n", id
+        if (K[id, "grader-draw"] !~ /^[1-9][0-9]*$/) printf "P\t%s: grader-draw is not a draw number\n", id
+        if (K[id, "grader-model"] == "" || K[id, "grader-model"] ~ /[ \t]/) printf "P\t%s: grader-model is not one name\n", id
+        if (K[id, "grader-session"] == "" || K[id, "grader-session"] ~ /[ \t]/) printf "P\t%s: grader-session is not one id\n", id
+        v = K[id, "verdict"]; if (v != "PASS" && v != "FAIL" && v != "ND") printf "P\t%s: the verdict %s is none of PASS, FAIL and ND\n", id, v
+        a = K[id, "adjudication"]
+        if (a != "pending") { n = split(a, AE, ";"); for (k = 1; k <= n; k++) { x = AE[k]; gsub(/^ +| +$/, "", x); if (x !~ /^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] [^ ]/) printf "P\t%s: the adjudication entry [%s] does not open with its date\n", id, x } }
+        split("", SEEN); n = split(DS[id], DD, " ")
+        for (k = 1; k <= n; k++) { d = DD[k]; SEEN[d] = 1
+          if (!(d in RIDS)) printf "P\t%s: the dimension %s is not the rubric\047s\n", id, d
+          w = DV[id, d]; if (w != "MET" && w != "NOT-MET" && w != "ND" && w != "NA") printf "P\t%s: %s = %s is none of MET, NOT-MET, ND and NA\n", id, d, w
+          gv = DG[id, d]; ot = (((id, d) in RK) && RK[id, d] == "overturned"); hc = ((id, d) in HD)
+          if (gv != "-" && gv != "MET" && gv != "NOT-MET" && gv != "ND" && gv != "NA") printf "P\t%s: %s grader %s is none of MET, NOT-MET, ND and NA\n", id, d, gv
+          if (gv != "-" && !hc && !ot) printf "P\t%s: %s holds a grader value, where no unruled mech line cites it and no ruling overturns it, so its one value is the grader\047s\n", id, d
+          if (gv == "-" && hc) printf "P\t%s: %s = %s shows one value, where an unruled mech line cites it, so its line holds the grader\047s value beside the rule\047s\n", id, d, w
+          if (gv == "-" && ot && !hc) printf "P\t%s: %s = %s shows one value, where its ruling overturns it, so its line holds the grader\047s value beside the operator\047s\n", id, d, w
+          if (ot && !hc && w != RV[id, d]) printf "P\t%s: %s = %s, where its ruling overturns it to %s\n", id, d, w, RV[id, d]
+          if (((id, d) in DR) && DR[id, d] != w) printf "P\t%s: %s = %s, where the conversation rule derives %s from the grader\047s value its line holds, or its overturn\n", id, d, w, DR[id, d]
+          t = DT[id, d]
+          if (t == "-") { if (w != "NA" && !((id, d) in HD)) printf "P\t%s: %s = %s cites no turn, and no unruled mech line cites it\n", id, d, w }
+          else { m = split(t, TL, ","); for (j = 1; j <= m; j++) if (TL[j] !~ /^T[1-9][0-9]*$/ || substr(TL[j], 2) + 0 > GT[id]) printf "P\t%s: %s cites %s, which is no turn of the conversation\n", id, d, TL[j] } }
+        for (k = 1; k <= nr; k++) if (!(RID[k] in SEEN)) printf "P\t%s: the block carries no line for the rubric\047s %s\n", id, RID[k]
+        n = split(RL[id], RR, " ")
+        for (k = 1; k <= n; k++) { d = RR[k]
+          if (!(d in SEEN)) printf "P\t%s: its ruling on %s names no line of the block\n", id, d
+          if (RN[id, d] > 1) printf "P\t%s: %s is ruled %d times, where a ruling stands once for a dimension\n", id, d, RN[id, d]
+          if (RK[id, d] == "other") printf "P\t%s: the ruling on %s is neither upheld nor overturned to MET, NOT-MET, ND or NA\n", id, d }
+        n = split(MB[id], X, "\n"); for (k = 1; k <= n; k++) if (X[k] != "" && !((id "\t" X[k]) in CF)) { y = X[k]; gsub(/\t/, " ", y); printf "P\t%s: mech [%s] is no OW-C or FB-C reading of the suite on the conversation\n", id, y }
+        n = split(CFB[id], X, "\n"); for (k = 1; k <= n; k++) if (X[k] != "" && !((id "\t" X[k]) in M)) { y = X[k]; gsub(/\t/, " ", y); printf "P\t%s: the suite reads [%s] on the conversation, and the block carries no mech line for it\n", id, y }
+        if ((id in RU) && RU[id] != v) printf "P\t%s: the verdict reads %s, where the conversation rule derives %s\n", id, v, RU[id]
+        if (!(id in RU)) printf "P\t%s: the conversation rule derived no verdict\n", id
+        if (HR != "" && index(HR, K[id, "rubric-revision"]) != 1) printf "STALE\t%s\tthe rubric revision %s is not the head\047s %s\n", id, K[id, "rubric-revision"], substr(HR, 1, 7)
+        if (split(K[id, "conduct-revision"], CR, " ") == 2) {
+          if (HC != "" && index(HC, CR[1]) != 1) printf "STALE\t%s\tthe card blob %s is not the head\047s %s\n", id, CR[1], substr(HC, 1, 7)
+          if (FB[GF[id]] != "" && index(FB[GF[id]], CR[2]) != 1) printf "STALE\t%s\tthe form blob %s is not the head\047s %s of %s\n", id, CR[2], substr(FB[GF[id]], 1, 7), GF[id] }
+      }
+      printf "N\t%d\t%d\t%d\n", nb, ng, nmech
+    }'
+}
+# rb5_eval <record> <rubric> — "P <problem>" for each dimension shown MET against an unruled mech
+# line that cites it, then "N <mech lines> <citations reached>"; or one "NE <why>".
+rb5_eval() {
+  local rec cm
+  rec="$(rb_record "$1")"; cm="$(rb_citemap "$2")"
+  if [ -z "$rec" ]; then printf 'NE\tthe record reader read nothing\n'; return 0; fi
+  if [ -n "$(awk -F'\t' '$1 == "NE"' <<<"$rec")" ]; then awk -F'\t' '$1 == "NE"' <<<"$rec"; return 0; fi
+  if [ -z "$(awk -F'\t' '$1 == "CITE"' <<<"$cm")" ]; then printf 'NE\tno dimension of the rubric cites a mechanical check: %s\n' "$(awk -F'\t' '$1 == "NE" { print $2 }' <<<"$cm")"; return 0; fi
+  { printf '%s\n' "$rec"; printf '%s\n' "$cm"; } | rb_rule | LC_ALL=C awk -F'\t' -v nm="$(awk -F'\t' '$1 == "MECH"' <<<"$rec" | awk 'END { print NR }')" '
+    $1 == "HIT" { h++; if ($7 == "MET") printf "P\t%s: %s shows MET against the unruled %s of %s on %s\n", $2, $3, ($6 == "nd" ? "ND" : "fail"), $4, $5 }
+    END { printf "N\t%d\t%d\n", nm, h }'
+}
+# rb7_eval <record> <cf-tok> <dir> — "P <problem>" per defect of the draws ledger, then "N <draws lines>
+# <grader-draws lines> <grader-result lines>"; or one "NE <why>".
+rb7_eval() {
+  local rec gen
+  rec="$(rb_record "$1")"
+  if [ -z "$rec" ]; then printf 'NE\tthe record reader read nothing\n'; return 0; fi
+  if [ -n "$(awk -F'\t' '$1 == "NE"' <<<"$rec")" ]; then awk -F'\t' '$1 == "NE"' <<<"$rec"; return 0; fi
+  gen="$(rb_gen "$3" "$2")"
+  { printf '%s\n' "$rec"; printf '%s\n' "$gen"; } | LC_ALL=C awk -F'\t' -v stops="$RB_STOPS" -v endings="$RB_ENDINGS" -v codes=" $CF_CODES " '
+    function hex(s, lo, hi) { return length(s) >= lo && length(s) <= hi && s !~ /[^0-9a-f]/ }
+    function ents(s, E,   n, i) { n = split(s, E, ";"); for (i = 1; i <= n; i++) gsub(/^ +| +$/, "", E[i]); return n }
+    $1 == "DRAWS" { nd++; DC[nd] = $3; DF[nd] = $4; DA[nd] = $5; DE[nd] = $6; next }
+    $1 == "GDRAWS" { ngd++; GI[ngd] = $3; GB[ngd] = $4; GE[ngd] = $5; next }
+    $1 == "GRES" { ngr++; if ($3 in RES) printf "P\tgrader-result %s stands twice\n", $3; RES[$3] = $4
+                   if ($4 != "is_error" && $4 != "graded" && $4 !~ /^check:[^ ]+$/) printf "P\tgrader-result %s: %s is none of is_error, check:<name> and graded\n", $3, $4; next }
+    $1 == "BLK" { nb++; B[nb] = $3; next }
+    $1 == "KEY" { K[$2, $3] = $4; next }
+    $1 == "GEN" { ng++; G[ng] = $2; GC[$2] = $5; GR[$2] = $6; GS[$2] = $7; GA[$2] = $8; next }
+    END {
+      for (i = 1; i <= nd; i++) {
+        key = "draws " DA[i] " at " substr(DC[i], 1, 7) "/" substr(DF[i], 1, 7)
+        if (!hex(DC[i], 7, 40) || !hex(DF[i], 7, 40)) printf "P\t%s: its card or form blob is not 7 to 40 lower-case hex\n", key
+        if (DA[i] !~ /^[A-Z][A-Z]$/ || !index(codes, " " DA[i] " ")) printf "P\t%s: the archetype is none of%s\n", key, codes
+        n = ents(DE[i], E); g = 0; gi = 0; fv = 0; bad = 0
+        for (j = 1; j <= n; j++) {
+          if (!match(E[j], /^[0-9]+:[^: \t]+:/)) { printf "P\t%s: the entry [%s] is out of its shape\n", key, E[j]; bad = 1; continue }
+          q = index(E[j], ":"); s = substr(E[j], 1, q - 1) + 0; x = substr(E[j], q + 1); q = index(x, ":"); run = substr(x, 1, q - 1); st = substr(x, q + 1)
+          if (s != j) bad = 2
+          if (st == "graded" || substr(st, 1, 6) == "ended:") { g++; gi = j; if (!fv) fv = j; GRUN[run] = i; GSEQ[run] = s; GST[run] = st
+            if (substr(st, 1, 6) == "ended:" && !index(endings, " " substr(st, 7) " ")) printf "P\t%s: ending %d names %s, not a conduct ending\n", key, j, substr(st, 7) }
+          else if (substr(st, 1, 7) == "voided:") { if (!index(stops, " " substr(st, 8) " ")) printf "P\t%s: void %d names %s, not a carrier stop\n", key, j, substr(st, 8) }
+          else { if (!fv) fv = j; printf "P\t%s: the entry [%s] is neither graded, voided nor ended\n", key, E[j] }
+        }
+        if (bad == 2) printf "P\t%s: its seq does not run 1..k\n", key
+        if (g != 1) printf "P\t%s: %d entries graded or ended, where exactly one is required\n", key, g
+        else { if (gi != fv) printf "P\t%s: the graded entry is not the first not voided\n", key
+               if (gi != n) printf "P\t%s: an entry follows the graded one\n", key }
+      }
+      for (i = 1; i <= ng; i++) {
+        id = G[i]; r = GR[id]
+        if (!(r in GRUN)) { printf "P\t%s: no draws entry graded or ended names its run-id %s\n", id, r; continue }
+        if (GSEQ[r] "" != GS[id] "") printf "P\t%s: its run-seq %s is not its draws entry\047s %s\n", id, GS[id], GSEQ[r]
+        d = GRUN[r]; split(GC[id], X, " "); if (index(X[1], DC[d]) != 1 || index(X[2], DF[d]) != 1) printf "P\t%s: its draws line is at %s %s, where its header reads %s\n", id, DC[d], DF[d], GC[id]
+        if (DA[d] != GA[id]) printf "P\t%s: its draws line is for %s, where its header names %s\n", id, DA[d], GA[id]
+        if (substr(GST[r], 1, 6) == "ended:" && K[id, "verdict"] != "FAIL") printf "P\t%s: an ended draw whose block grades %s, not FAIL\n", id, K[id, "verdict"]
+      }
+      for (i = 1; i <= ngd; i++) {
+        key = "grader-draws " GI[i] " at " substr(GB[i], 1, 7)
+        if (GI[i] ~ /[ \t]/ || GI[i] == "") printf "P\t%s: the conversation id is not one word\n", key
+        if (!hex(GB[i], 7, 40)) printf "P\t%s: the rubric blob is not 7 to 40 lower-case hex\n", key
+        n = ents(GE[i], E); live = ""; nl = 0
+        for (j = 1; j <= n; j++) {
+          if (!match(E[j], /^[0-9]+:[^: \t]+(:voided:[^ \t]+)?$/)) { printf "P\t%s: the entry [%s] is out of its shape\n", key, E[j]; continue }
+          q = index(E[j], ":"); s = substr(E[j], 1, q - 1) + 0; x = substr(E[j], q + 1); q = index(x, ":"); ses = q ? substr(x, 1, q - 1) : x
+          if (s != j) sq = 1
+          NAMED[ses] = 1
+          if (q) { st = substr(x, q + 8)
+            if (!index(stops, " " st " ")) printf "P\t%s: void %d names %s, not a carrier stop\n", key, j, st
+            if (!(ses in RES)) printf "P\t%s: void %d cites no grader-result line for %s\n", key, j, ses
+            else if (RES[ses] == "graded") printf "P\t%s: void %d\047s session %s recorded a grade\n", key, j, ses }
+          else { nl++; LV[i, nl] = s; LS[i, nl] = ses }
+        }
+        if (sq) { printf "P\t%s: its draws do not run 1..k\n", key; sq = 0 }
+        NL[i] = nl
+      }
+      for (z in NAMED) if (!(z in RES)) printf "P\tthe grader session %s has no grader-result line\n", z
+      for (b = 1; b <= nb; b++) {
+        id = B[b]; rv = K[id, "rubric-revision"]; hit = 0
+        for (i = 1; i <= ngd; i++) if (GI[i] == id && rv != "" && (index(rv, GB[i]) == 1 || index(GB[i], rv) == 1)) { hit++; w = i }
+        if (hit != 1) { printf "P\t%s: %d grader-draws line(s) name it at its rubric revision, where exactly one is required\n", id, hit; continue }
+        nl = NL[w]
+        if (nl == 0) { printf "P\t%s: its grader-draws line holds no draw not voided\n", id; continue }
+        if (K[id, "grader-draw"] + 0 != LV[w, nl]) printf "P\t%s: its grader-draw %s is not the last draw not voided, %d\n", id, K[id, "grader-draw"], LV[w, nl]
+        else if (K[id, "grader-session"] != LS[w, nl]) printf "P\t%s: its grader-session %s is not the session of its grader-draw, %s\n", id, K[id, "grader-session"], LS[w, nl]
+        else if (RES[LS[w, nl]] != "graded") printf "P\t%s: its grader session recorded %s, not graded\n", id, (LS[w, nl] in RES) ? RES[LS[w, nl]] : "no result"
+        for (j = 2; j <= nl; j++) if (!index(K[id, "adjudication"], "regrade " LV[w, j])) printf "P\t%s: draw %d replaced a grade at the same rubric revision with no regrade %d\n", id, LV[w, j], LV[w, j]
+      }
+      if (ng == 0) print "P\tgroup CF read no generated conversation, so no draw is named by one"
+      printf "N\t%d\t%d\t%d\n", nd, ngd, ngr
+    }'
+}
+# rb_rec_copy <name> [<dir>] — a fresh copy of the conversations directory, the record with it, or of
+# <dir>, a copy made so before; prints its path.
+rb_rec_copy() { local d s="${2:-$CF_DIR}"; d="$(mktemp -d "$WORK/rb/$1.XXXXXX")"; [ -d "$s" ] && cp "$s"/* "$d/" 2>/dev/null; printf '%s' "$d"; }
+# rb_blockset <file> <id> <old line> <new line> — in the block of <id>, the first line equal to <old>
+# replaced by <new> (an empty <new> deletes it); 1 when no such line stands there.
+rb_blockset() {
+  local f="$1"
+  LIT_ID="$2" LIT_OLD="$3" LIT_NEW="$4" LC_ALL=C awk 'BEGIN { id = ENVIRON["LIT_ID"]; o = ENVIRON["LIT_OLD"]; w = ENVIRON["LIT_NEW"] }
+    substr($0, 1, 7) == "grade: " { on = (substr($0, 8) == id) }
+    on && !done && $0 == o { done = 1; if (w != "") print w; next }
+    { print }
+    END { exit !done }' "$f" > "$f.new" && mv "$f.new" "$f"
+}
+# rb_ledger_add <file> <line> — the line added to the ledger, before the first block.
+rb_ledger_add() {
+  local f="$1"
+  LIT_NEW="$2" LC_ALL=C awk '!done && substr($0, 1, 7) == "grade: " { print ENVIRON["LIT_NEW"]; done = 1 } { print }' "$f" > "$f.new" && mv "$f.new" "$f"
+}
+mkdir -p "$WORK/rb"
+RB_REC_ROWS="$(rb_record "$RB_RECORD")"
+RB_GEN1="$(awk -F'\t' '$1 == "TOK" && $3 == "HDR" && $5 == "generated" { f = $2; sub(/\.txt$/, "", f); print f; exit }' "$CF_TOK_F")"
+# rb_p <eval output> — its problems, joined.
+rb_p() { awk -F'\t' '$1 == "P" { printf "%s; ", $2 }' <<<"$1"; }
+# rb_dimline — over rb_record's DIM records on stdin, each one's line as the record writes it.
+rb_dimline() { LC_ALL=C awk -F'\t' '$1 == "DIM" { print $3 " = " $4 ($7 != "-" ? " ; grader " $7 : "") " ; turns " $5 " ; \302\253" $6 "\302\273" }'; }
+# rb_dimset <DIM record> <field> <value> — the record with that field set, for rb_dimline to write.
+rb_dimset() { LC_ALL=C awk -F'\t' -v OFS='\t' -v k="$2" -v w="$3" '{ $k = w; print }' <<<"$1"; }
+# rb_cited2 <rb_rule output> <rb_record output> — the first dimension line holding a grader value
+# because an unruled mech line cites it: a base the two-value controls can plant on.
+rb_cited2() { { printf '%s\n' "$1"; printf '%s\n' "$2"; } | LC_ALL=C awk -F'\t' '$1 == "HIT" { H[$2, $3] = 1; next } !w && $1 == "DIM" && $7 != "-" && (($2, $3) in H) { print; w = 1 }'; }
+# rb4_ovr <name> <base> <block> <adjudication> <new adjudication> <line> <new line> — on a copy of
+# <base>, the block's adjudication and one of its lines replaced and its verdict set to the rule's;
+# prints rb4_eval over the copy, or one "P NOT-LANDED" record when an edit did not land.
+rb4_ovr() {
+  local d v rv
+  d="$(rb_rec_copy "$1" "$2")"
+  if ! rb_blockset "$d/$CF_RECORD" "$3" "adjudication: $4" "adjudication: $5" || ! rb_blockset "$d/$CF_RECORD" "$3" "$6" "$7"; then printf 'P\tNOT-LANDED: a plant did not land on its copy\n'; return 0; fi
+  v="$(rb_record "$d/$CF_RECORD" | awk -F'\t' -v id="$3" '$1 == "KEY" && $2 == id && $3 == "verdict" { print $4 }')"
+  rv="$({ rb_record "$d/$CF_RECORD"; rb_citemap "$RB_RUBRIC"; } | rb_rule | awk -F'\t' -v id="$3" '$1 == "RULE" && $2 == id { print $3 }')"
+  if [ -z "$rv" ] || ! rb_blockset "$d/$CF_RECORD" "$3" "verdict = $v" "verdict = $rv"; then printf 'P\tNOT-LANDED: no verdict of the rule to set on its copy\n'; return 0; fi
+  rb4_eval "$d/$CF_RECORD" "$CF_OUT_F" "$CF_TOK_F" "$RB_RUBRIC" "$d"
+}
+rb4_assert() {
+  local p d1 d2 d3 d4 d5 d9 c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12 c13 c14 c15 c16 c17 st n mid vl vn uv tv hl hb ur adj av rv row ok
+  local bd br bh bb bp bok bv rr ol od og oo oa oc nx nc n15 n16 pd px pa pc bs
+  p="$(rb4_eval "$RB_RECORD" "$CF_OUT_F" "$CF_TOK_F" "$RB_RUBRIC" "$CF_DIR")"
+  awk -F'\t' '$1 == "STALE" { printf "  REPORTED RB4 STALE %s: %s\n", $2, $3 }' <<<"$p"
+  st="$(awk -F'\t' '$1 == "STALE"' <<<"$p" | awk 'END { print NR }')"
+  n="$(awk -F'\t' '$1 == "N" { print $2 " block(s) over " $3 " generated conversation(s), " $4 " mech line(s)" }' <<<"$p")"
+  # The controls, each on a copy of the directory and the record.
+  d1="$(rb_rec_copy rb4-byte)"; c1=""
+  [ -n "$RB_GEN1" ] && ta_mutate "$d1" "$RB_GEN1.txt" $'\nT2 P | ' $'\nT2 P | ~' && c1="$(rb4_eval "$d1/$CF_RECORD" "$CF_OUT_F" "$CF_TOK_F" "$RB_RUBRIC" "$d1" | awk -F'\t' '$1 == "P" && index($2, "the transcript recomputes")')"
+  d2="$(rb_rec_copy rb4-mech)"; c2=""; mid="$(awk -F'\t' '$1 == "MECH" { print $2 "\t" $3 "\t" $4 "\t" $5; exit }' <<<"$RB_REC_ROWS")"
+  if [ -n "$mid" ]; then
+    rb_blockset "$d2/$CF_RECORD" "${mid%%$'\t'*}" "mech $(cut -f2 <<<"$mid") $(cut -f3 <<<"$mid") = $(cut -f4 <<<"$mid") (on judged labels)" "" && c2="$(rb4_eval "$d2/$CF_RECORD" "$CF_OUT_F" "$CF_TOK_F" "$RB_RUBRIC" "$d2" | awk -F'\t' '$1 == "P" && index($2, "carries no mech line")')"
+  fi
+  d3="$(rb_rec_copy rb4-verdict)"; c3=""; vl="$(awk -F'\t' '$1 == "KEY" && $2 == "'"$RB_GEN1"'" && $3 == "verdict" { print $4 }' <<<"$RB_REC_ROWS")"
+  vn="PASS"; [ "$vl" = "PASS" ] && vn="FAIL"
+  [ -n "$vl" ] && rb_blockset "$d3/$CF_RECORD" "$RB_GEN1" "verdict = $vl" "verdict = $vn" && c3="$(rb4_eval "$d3/$CF_RECORD" "$CF_OUT_F" "$CF_TOK_F" "$RB_RUBRIC" "$d3" | awk -F'\t' '$1 == "P" && index($2, "where the conversation rule derives")')"
+  d4="$(rb_rec_copy rb4-stale)"; c4=""
+  rb_blockset "$d4/$CF_RECORD" "$RB_GEN1" "rubric-revision: $(awk -F'\t' '$1 == "KEY" && $2 == "'"$RB_GEN1"'" && $3 == "rubric-revision" { print $4 }' <<<"$RB_REC_ROWS")" "rubric-revision: 0000000" && c4="$(rb4_eval "$d4/$CF_RECORD" "$CF_OUT_F" "$CF_TOK_F" "$RB_RUBRIC" "$d4")"
+  # The base the two-value and overturn controls plant on (#2200, Stage 12's B-1): the record, where a
+  # line of it holds a grader value because an unruled mech line cites it; otherwise a copy on which
+  # the first block whose mech lines are all ruled, and which overturns nothing, is put back to pending,
+  # each line its mech lines then cite written in the two-value form and its verdict set to the rule's.
+  # A base built so must read clean before anything is planted on it. tv is the base's first such
+  # line, hb its block; ur a line of the first generated conversation no unruled mech line cites, and
+  # ol one of its lines with a turn that no unruled mech line cites and no ruling names.
+  bd="$CF_DIR"; br="$RB_REC_ROWS"; bb=""; bp=""; bok=1
+  bh="$({ printf '%s\n' "$br"; rb_citemap "$RB_RUBRIC"; } | rb_rule)"
+  tv="$(rb_cited2 "$bh" "$br")"
+  [ -n "$tv" ] || bb="$({ printf '%s\n' "$bh"; printf '%s\n' "$br"; } | LC_ALL=C awk -F'\t' '$1 == "RULING" && $4 == "overturned" { X[$2] = 1; next } $1 == "BLK" { B[++nb] = $3; next } $1 == "KEY" && $3 == "adjudication" { A[$2] = $4; next } $1 == "MECH" { M[$2] = 1; next } END { for (b = 1; b <= nb; b++) if ((B[b] in M) && (B[b] in A) && A[B[b]] != "pending" && !(B[b] in X)) { print B[b]; exit } }')"
+  if [ -n "$bb" ]; then
+    bd="$(rb_rec_copy rb4-base)"
+    av="$(awk -F'\t' -v id="$bb" '$1 == "KEY" && $2 == id && $3 == "adjudication" { print $4 }' <<<"$br")"
+    bv="$(awk -F'\t' -v id="$bb" '$1 == "KEY" && $2 == id && $3 == "verdict" { print $4 }' <<<"$br")"
+    rb_blockset "$bd/$CF_RECORD" "$bb" "adjudication: $av" "adjudication: pending" || bok=0
+    rr="$({ rb_record "$bd/$CF_RECORD"; rb_citemap "$RB_RUBRIC"; } | rb_rule)"
+    while IFS= read -r row; do
+      [ -n "$row" ] || continue
+      rb_blockset "$bd/$CF_RECORD" "$bb" "$(rb_dimline <<<"$row")" "$(rb_dimset "$(rb_dimset "$row" 7 "$(cut -f4 <<<"$row")")" 4 "$(cut -f8 <<<"$row")" | rb_dimline)" || bok=0
+    done <<<"$({ printf '%s\n' "$rr"; printf '%s\n' "$br"; } | LC_ALL=C awk -F'\t' -v id="$bb" '$1 == "HIT" && $2 == id { H[$3] = 1; next } $1 == "DERIVE" && $2 == id { D[$3] = $4; next } $1 == "DIM" && $2 == id && $7 == "-" && ($3 in H) { print $0 "\t" D[$3] }')"
+    rv="$({ rb_record "$bd/$CF_RECORD"; rb_citemap "$RB_RUBRIC"; } | rb_rule | awk -F'\t' -v id="$bb" '$1 == "RULE" && $2 == id { print $3 }')"
+    { [ -n "$rv" ] && rb_blockset "$bd/$CF_RECORD" "$bb" "verdict = $bv" "verdict = $rv"; } || bok=0
+    br="$(rb_record "$bd/$CF_RECORD")"
+    bh="$({ printf '%s\n' "$br"; rb_citemap "$RB_RUBRIC"; } | rb_rule)"
+    tv="$(rb_cited2 "$bh" "$br")"
+    bp="$(rb4_eval "$bd/$CF_RECORD" "$CF_OUT_F" "$CF_TOK_F" "$RB_RUBRIC" "$bd" | awk -F'\t' '$1 == "P" || $1 == "NE" { print $2 }')"
+  fi
+  hl="$(rb_dimline <<<"$tv")"; hb="$(cut -f2 <<<"$tv")"
+  ur="$({ printf '%s\n' "$bh"; printf '%s\n' "$br"; } | LC_ALL=C awk -F'\t' -v id="$RB_GEN1" '$1 == "HIT" { H[$2, $3] = 1; next } !w && $1 == "DIM" && $2 == id && $7 == "-" && !(($2, $3) in H) { print; w = 1 }')"
+  ol="$({ printf '%s\n' "$bh"; printf '%s\n' "$br"; } | LC_ALL=C awk -F'\t' -v id="$RB_GEN1" '($1 == "HIT" || $1 == "RULING") && $2 == id { H[$3] = 1; next } !w && $1 == "DIM" && $2 == id && $7 == "-" && $5 != "-" && !($3 in H) { print; w = 1 }')"
+  c5=""; c6=""; c7=""; c8=""; c9=""; c10="unplanted"; c11="unplanted"; c12=""; c13=""; c14=""
+  if [ -n "$ur" ]; then
+    d5="$(rb_rec_copy rb4-uncited "$bd")"
+    rb_blockset "$d5/$CF_RECORD" "$RB_GEN1" "$(rb_dimline <<<"$ur")" "$(rb_dimset "$ur" 7 "$(cut -f4 <<<"$ur")" | rb_dimline)" && c5="$(rb4_eval "$d5/$CF_RECORD" "$CF_OUT_F" "$CF_TOK_F" "$RB_RUBRIC" "$d5" | awk -F'\t' '$1 == "P" && index($2, "holds a grader value, where no unruled mech line cites it")')"
+  fi
+  if [ -n "$tv" ]; then
+    d5="$(rb_rec_copy rb4-dropped "$bd")"
+    rb_blockset "$d5/$CF_RECORD" "$hb" "$hl" "$(rb_dimset "$tv" 7 - | rb_dimline)" && c6="$(rb4_eval "$d5/$CF_RECORD" "$CF_OUT_F" "$CF_TOK_F" "$RB_RUBRIC" "$d5" | awk -F'\t' '$1 == "P" && index($2, "shows one value, where an unruled mech line cites it")')"
+    d5="$(rb_rec_copy rb4-spelled "$bd")"
+    rb_blockset "$d5/$CF_RECORD" "$hb" "$hl" "$(rb_dimset "$tv" 7 'NOT MET' | rb_dimline)" && c7="$(rb4_eval "$d5/$CF_RECORD" "$CF_OUT_F" "$CF_TOK_F" "$RB_RUBRIC" "$d5" | awk -F'\t' '$1 == "P" && index($2, "grader NOT MET is none of")')"
+    uv="NOT-MET"; [ "$(cut -f4 <<<"$tv")" = "NOT-MET" ] && uv="ND"
+    d5="$(rb_rec_copy rb4-underived "$bd")"
+    rb_blockset "$d5/$CF_RECORD" "$hb" "$hl" "$(rb_dimset "$tv" 4 "$uv" | rb_dimline)" && c8="$(rb4_eval "$d5/$CF_RECORD" "$CF_OUT_F" "$CF_TOK_F" "$RB_RUBRIC" "$d5" | awk -F'\t' '$1 == "P" && index($2, "where the conversation rule derives")')"
+    # The Stage 9 ruling: every mech line of hb ruled by an adjudication line, then each of its
+    # two-value lines restored to its grader's value alone and its verdict to the rule's.
+    d9="$(rb_rec_copy rb4-ruled "$bd")"; ok=1
+    av="$(awk -F'\t' -v id="$hb" '$1 == "KEY" && $2 == id && $3 == "adjudication" { print $4 }' <<<"$br")"
+    adj="$(awk -F'\t' -v id="$hb" '$1 == "MECH" && $2 == id { printf "%s2026-11-09 mech %s %s ruled", (n++ ? "; " : ""), $3, $4 }' <<<"$br")"
+    [ "$av" = "pending" ] || adj="$av; $adj"
+    rb_blockset "$d9/$CF_RECORD" "$hb" "adjudication: $av" "adjudication: $adj" && c9="$(rb4_eval "$d9/$CF_RECORD" "$CF_OUT_F" "$CF_TOK_F" "$RB_RUBRIC" "$d9" | awk -F'\t' '$1 == "P" && index($2, "holds a grader value, where no unruled mech line cites it")')"
+    while IFS= read -r row; do
+      [ -n "$row" ] || continue
+      rb_blockset "$d9/$CF_RECORD" "$hb" "$(rb_dimline <<<"$row")" "$(rb_dimset "$(rb_dimset "$row" 4 "$(cut -f7 <<<"$row")")" 7 - | rb_dimline)" || ok=0
+    done <<<"$(awk -F'\t' -v id="$hb" '$1 == "DIM" && $2 == id && $7 != "-"' <<<"$br")"
+    rv="$({ rb_record "$d9/$CF_RECORD"; rb_citemap "$RB_RUBRIC"; } | rb_rule | awk -F'\t' -v id="$hb" '$1 == "RULE" && $2 == id { print $3 }')"
+    [ "$ok" = 1 ] && [ -n "$rv" ] && rb_blockset "$d9/$CF_RECORD" "$hb" "verdict = $(awk -F'\t' -v id="$hb" '$1 == "KEY" && $2 == id && $3 == "verdict" { print $4 }' <<<"$br")" "verdict = $rv" \
+      && c10="$(rb4_eval "$d9/$CF_RECORD" "$CF_OUT_F" "$CF_TOK_F" "$RB_RUBRIC" "$d9" | awk -F'\t' '$1 == "P"')"
+  fi
+  # The overturn (#2200, Stage 12's B-2), each limb on a copy of the base: ol overturned to oo by an
+  # adjudication entry, its line in the two-value form with the grader's og beside it and its verdict
+  # the rule's, green; its first value left og, red; in the one-value form, red; a ruling on nx, one
+  # past the rubric's last dimension, which names no line, red; a ruling on ol neither upheld nor
+  # overturned to a value, red; and ol ruled twice, red.
+  if [ -n "$ol" ]; then
+    od="$(cut -f3 <<<"$ol")"; og="$(cut -f4 <<<"$ol")"; oo="MET"; [ "$og" = "MET" ] && oo="NOT-MET"
+    oa="$(awk -F'\t' -v id="$RB_GEN1" '$1 == "KEY" && $2 == id && $3 == "adjudication" { print $4 }' <<<"$br")"
+    oc="2026-11-09 $od overturned to $oo planted"; [ "$oa" = "pending" ] || oc="$oa; $oc"
+    c11="$(rb4_ovr rb4-overturn "$bd" "$RB_GEN1" "$oa" "$oc" "$(rb_dimline <<<"$ol")" "$(rb_dimset "$(rb_dimset "$ol" 7 "$og")" 4 "$oo" | rb_dimline)" | awk -F'\t' '$1 == "P" { print $2 }')"
+    c12="$(rb4_ovr rb4-overturn-other "$bd" "$RB_GEN1" "$oa" "$oc" "$(rb_dimline <<<"$ol")" "$(rb_dimset "$ol" 7 "$og" | rb_dimline)" | awk -F'\t' '$1 == "P" && index($2, "where its ruling overturns it to")')"
+    c14="$(rb4_ovr rb4-overturn-one "$bd" "$RB_GEN1" "$oa" "$oc" "$(rb_dimline <<<"$ol")" "$(rb_dimset "$ol" 4 "$oo" | rb_dimline)" | awk -F'\t' '$1 == "P" && index($2, "shows one value, where its ruling overturns it")')"
+    nx="$(awk -F'\t' '$1 == "DIM" { k = substr($3, 3) + 0; if (k > m) m = k } END { print "R-" (m + 1) }' <<<"$br")"
+    nc="2026-11-09 $nx upheld planted"; [ "$oa" = "pending" ] || nc="$oa; $nc"
+    c13="$(rb4_ovr rb4-ruling-lineless "$bd" "$RB_GEN1" "$oa" "$nc" "$(rb_dimline <<<"$ol")" "$(rb_dimline <<<"$ol")" | awk -F'\t' '$1 == "P" && index($2, "names no line of the block")')"
+    n15="2026-11-09 $od reconsidered planted"; [ "$oa" = "pending" ] || n15="$oa; $n15"
+    c15="$(rb4_ovr rb4-ruling-neither "$bd" "$RB_GEN1" "$oa" "$n15" "$(rb_dimline <<<"$ol")" "$(rb_dimline <<<"$ol")" | awk -F'\t' '$1 == "P" && index($2, "is neither upheld nor overturned to")')"
+    n16="2026-11-09 $od upheld planted; 2026-11-09 $od upheld again planted"; [ "$oa" = "pending" ] || n16="$oa; $n16"
+    c16="$(rb4_ovr rb4-ruled-twice "$bd" "$RB_GEN1" "$oa" "$n16" "$(rb_dimline <<<"$ol")" "$(rb_dimline <<<"$ol")" | awk -F'\t' '$1 == "P" && index($2, "is ruled 2 times")')"
+  fi
+  # The precedence, on a copy of the base: tv's dimension, which an unruled mech line cites, overturned
+  # to px by an adjudication entry, its line and verdict as they stand; green, because the unruled mech
+  # line outranks the overturn, and no first value is held to a ruling a mech line outranks.
+  c17="unplanted"
+  if [ -n "$tv" ]; then
+    pd="$(cut -f3 <<<"$tv")"; px="MET"; [ "$(cut -f4 <<<"$tv")" = "MET" ] && px="NA"
+    pa="$(awk -F'\t' -v id="$hb" '$1 == "KEY" && $2 == id && $3 == "adjudication" { print $4 }' <<<"$br")"
+    pc="2026-11-09 $pd overturned to $px planted"; [ "$pa" = "pending" ] || pc="$pa; $pc"
+    c17="$(rb4_ovr rb4-precedence "$bd" "$hb" "$pa" "$pc" "$hl" "$hl" | awk -F'\t' '$1 == "P" { print $2 }')"
+  fi
+  if [ -n "$bb" ]; then bs="on a copy of the record with $bb put back to pending, each line its mech lines cite in two values and its verdict the rule's, which reads clean"; else bs="on the record itself"; fi
+  if [ ! -f "$RB_RECORD" ]; then
+    FAIL "RB4: NOT EVALUATED — ${RB_RECORD#"$ROOT/"} is absent, so no generated conversation has a block"
+  elif [ -n "$(awk -F'\t' '$1 == "NE"' <<<"$p")" ]; then
+    FAIL "RB4: NOT EVALUATED — $(awk -F'\t' '$1 == "NE" { print $2 }' <<<"$p")"
+  elif [ -z "$n" ]; then
+    FAIL "RB4: the record's reading produced no count — '$(tr '\n' ' ' <<<"${p:-nothing}")'"
+  elif [ -n "$(rb_p "$p")" ]; then
+    FAIL "RB4: ${RB_RECORD#"$ROOT/"} — $(rb_p "$p")a block is what the conversation and the suite's own readings of it say"
+  elif [ -z "$c1" ]; then
+    FAIL "RB4: CONTROL did not fire — a byte of a turn of $RB_GEN1 changed on a copy reads no transcript disagreement, so the hash compares nothing"
+  elif [ -z "$c2" ]; then
+    FAIL "RB4: CONTROL did not fire — a mech line dropped from a copy reads no missing reading, or the record holds no mech line to drop (first mech line: '${mid:-none}'), so the both-ways comparison is not shown to read the suite"
+  elif [ -z "$c3" ]; then
+    FAIL "RB4: CONTROL did not fire — $RB_GEN1's verdict flipped to $vn on a copy reads no disagreement with the rule"
+  elif [ -n "$(rb_p "$c4")" ] || [ -z "$(awk -F'\t' '$1 == "STALE" && $2 == "'"$RB_GEN1"'"' <<<"$c4")" ]; then
+    FAIL "RB4: CONTROL did not hold — a rubric revision changed on a copy must be reported STALE and fail nothing; it reads '$(tr '\n' ' ' <<<"${c4:-nothing}")'"
+  elif [ -n "$bb" ] && { [ "$bok" != 1 ] || [ -n "$bp" ]; }; then
+    FAIL "RB4: CONTROLS NOT EVALUATED — the record holds no line whose grader value an unruled mech line cites, and the base built on a copy, $bb put back to pending with each line its mech lines cite in two values, $(if [ "$bok" = 1 ]; then printf "reads '%s'" "$(tr '\n' ' ' <<<"$bp")"; else printf 'did not land'; fi), where it must read clean"
+  elif [ -z "$tv" ] || [ -z "$ur" ]; then
+    FAIL "RB4: CONTROLS NOT EVALUATED — no base holds a line whose grader value an unruled mech line cites ('${hl:-none}'): the record holds none, and no block whose mech lines are all ruled and which overturns nothing was put back to pending on a copy ('${bb:-none}'); or no line of $RB_GEN1 that no unruled mech line cites, to plant on"
+  elif [ -z "$c5" ]; then
+    FAIL "RB4: CONTROL did not fire — a grader value added on a copy to '$(rb_dimline <<<"$ur" | cut -c1-40)…', which no unruled mech line cites, reads nothing"
+  elif [ -z "$c6" ]; then
+    FAIL "RB4: CONTROL did not fire — the grader value dropped on a copy from $hb's two-value line '$(cut -c1-40 <<<"$hl")…' reads nothing"
+  elif [ -z "$c7" ]; then
+    FAIL "RB4: CONTROL did not fire — $hb's grader value spelled NOT MET on a copy reads nothing"
+  elif [ -z "$c8" ]; then
+    FAIL "RB4: CONTROL did not fire — $hb's rule's value set to $uv on a copy, which the rule does not derive, reads nothing"
+  elif [ -z "$c9" ]; then
+    FAIL "RB4: CONTROL did not fire — $hb's mech lines ruled by an adjudication line on a copy read no two-value line left uncited"
+  elif [ -n "$c10" ]; then
+    FAIL "RB4: CONTROL did not hold — $hb's mech lines ruled, its two-value lines restored to the grader's values alone and its verdict to the rule's '${rv:-none}' on a copy read '$(tr '\n' ' ' <<<"$c10")', where they must read clean"
+  elif [ -z "$ol" ]; then
+    FAIL "RB4: CONTROLS NOT EVALUATED — $RB_GEN1 holds no one-value line with a turn that no unruled mech line cites and no ruling names, to plant an overturn on"
+  elif [ -n "$c11" ]; then
+    FAIL "RB4: CONTROL did not hold — $RB_GEN1's $od overturned to $oo by an adjudication entry on a copy, its line '$od = $oo ; grader $og' and its verdict the rule's, reads '$(tr '\n' ' ' <<<"$c11")', where it must read clean"
+  elif [ -z "$c12" ]; then
+    FAIL "RB4: CONTROL did not fire — $RB_GEN1's $od overturned to $oo on a copy, its line's first value left $og, reads no disagreement with its ruling"
+  elif [ -z "$c14" ]; then
+    FAIL "RB4: CONTROL did not fire — $RB_GEN1's $od overturned to $oo on a copy, its line in the one-value form '$od = $oo', reads nothing"
+  elif [ -z "$c13" ]; then
+    FAIL "RB4: CONTROL did not fire — a ruling on $nx, which names no line of $RB_GEN1, on a copy reads nothing"
+  elif [ -z "$c15" ]; then
+    FAIL "RB4: CONTROL did not fire — a ruling '$od reconsidered', neither upheld nor overturned to a value, in $RB_GEN1's adjudication on a copy reads nothing"
+  elif [ -z "$c16" ]; then
+    FAIL "RB4: CONTROL did not fire — $od ruled twice in $RB_GEN1's adjudication on a copy reads nothing"
+  elif [ -n "$c17" ]; then
+    FAIL "RB4: CONTROL did not hold — $hb's $pd overturned to $px on a copy while an unruled mech line still cites it reads '$(tr '\n' ' ' <<<"$c17")', where the unruled mech line outranks the overturn and nothing is reported"
+  else
+    PASS "RB4: ${RB_RECORD#"$ROOT/"} — $n — holds exactly one block for each generated conversation and none for another; each block carries its keys once, every value in its closed set; every transcript hash recomputes and equals its header's; every conduct revision is its header's; the dimension ids equal the rubric's both ways; every value but NA cites a turn, or an unruled mech line that cites the dimension; a line holds a grader value exactly where an unruled mech line cites its dimension or a ruling overturns it, and its first value is the one the rule derives, its ruling's on an overturn; every ruling is upheld or overturned to a value, names a line and stands once; the mech lines are the suite's own readings both ways; and every verdict is the conversation rule's. $st block(s) STALE, reported and never failed. CONTROLS on copies: a turn byte changed reads '$(head -1 <<<"$c1" | cut -f2)'; a mech line dropped reads '$(head -1 <<<"$c2" | cut -f2)'; a verdict flipped reads '$(head -1 <<<"$c3" | cut -f2)'; a rubric revision changed is reported '$(awk -F'\t' '$1 == "STALE" { print $3; exit }' <<<"$c4")' and fails nothing. The two-value and overturn controls are planted $bs: a grader value on an uncited line reads '$(head -1 <<<"$c5" | cut -f2)'; a grader value dropped reads '$(head -1 <<<"$c6" | cut -f2)'; a grader value spelled NOT MET reads '$(head -1 <<<"$c7" | cut -f2)'; a rule's value the rule does not derive reads '$(head -1 <<<"$c8" | cut -f2)'; $hb's mech lines ruled read '$(head -1 <<<"$c9" | cut -f2)', and with its lines restored to the grader's values alone and its verdict to the rule's $rv, read clean; $RB_GEN1's $od overturned to $oo reads clean as '$od = $oo ; grader $og' with its verdict the rule's, reads '$(head -1 <<<"$c12" | cut -f2)' with its first value left $og and '$(head -1 <<<"$c14" | cut -f2)' in the one-value form; a ruling on $nx reads '$(head -1 <<<"$c13" | cut -f2)'; a ruling '$od reconsidered' reads '$(head -1 <<<"$c15" | cut -f2)'; $od ruled twice reads '$(head -1 <<<"$c16" | cut -f2)'; and $hb's $pd overturned to $px while an unruled mech line cites it reads clean, the mech line outranking the overturn"
+  fi
+}
+rb4_assert
+rb5_assert() {
+  local p d a c1 c2 c3 c4 c5 c6 n r2 f="Where you stay › Rooming"
+  p="$(rb5_eval "$RB_RECORD" "$RB_RUBRIC")"
+  n="$(awk -F'\t' '$1 == "N" { print $2 " mech line(s) reaching " $3 " citing dimension(s)" }' <<<"$p")"
+  # The plants: R-2, which cites OW-C, shown MET against a planted OW-C fail and against a planted ND,
+  # on a one-value line and as a two-value line's rule's value. r2 is R-2's line as the record holds it.
+  r2="$(awk -F'\t' -v id="$RB_GEN1" '$1 == "DIM" && $2 == id && $3 == "R-2"' <<<"$RB_REC_ROWS" | rb_dimline)"
+  d="$(rb_rec_copy rb5-fail)"; c1=""
+  rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "grade: $RB_GEN1" "grade: $RB_GEN1"$'\n'"mech OW-C $f = fail:planted (on judged labels)" \
+    && rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "$r2" "R-2 = MET ; turns T1 ; «planted»" \
+    && c1="$(rb5_eval "$d/$CF_RECORD" "$RB_RUBRIC" | awk -F'\t' -v f="$f" '$1 == "P" && index($2, "R-2 shows MET against the unruled fail of OW-C on " f)')"
+  d="$(rb_rec_copy rb5-nd)"; c2=""
+  rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "grade: $RB_GEN1" "grade: $RB_GEN1"$'\n'"mech OW-C $f = nd:compound:planted (on judged labels)" \
+    && rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "$r2" "R-2 = MET ; turns T1 ; «planted»" \
+    && c2="$(rb5_eval "$d/$CF_RECORD" "$RB_RUBRIC" | awk -F'\t' -v f="$f" '$1 == "P" && index($2, "R-2 shows MET against the unruled ND of OW-C on " f)')"
+  c3="unplanted"
+  rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "$(awk -F'\t' '$1 == "KEY" && $2 == "'"$RB_GEN1"'" && $3 == "adjudication" { print "adjudication: " $4 }' <<<"$RB_REC_ROWS")" "adjudication: 2026-11-09 mech OW-C $f planted, ruled" \
+    && c3="$(rb5_eval "$d/$CF_RECORD" "$RB_RUBRIC" | awk -F'\t' -v f="$f" '$1 == "P" && index($2, "R-2 shows MET") && index($2, " on " f)')"
+  d="$(rb_rec_copy rb5-two)"; c4=""
+  rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "grade: $RB_GEN1" "grade: $RB_GEN1"$'\n'"mech OW-C $f = fail:planted (on judged labels)" \
+    && rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "$r2" "R-2 = MET ; grader MET ; turns T1 ; «planted»" \
+    && c4="$(rb5_eval "$d/$CF_RECORD" "$RB_RUBRIC" | awk -F'\t' -v f="$f" '$1 == "P" && index($2, "R-2 shows MET against the unruled fail of OW-C on " f)')"
+  d="$(rb_rec_copy rb5-grader)"; c5="unplanted"
+  rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "grade: $RB_GEN1" "grade: $RB_GEN1"$'\n'"mech OW-C $f = fail:planted (on judged labels)" \
+    && rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "$r2" "R-2 = NOT-MET ; grader MET ; turns T1 ; «planted»" \
+    && c5="$(rb5_eval "$d/$CF_RECORD" "$RB_RUBRIC" | awk -F'\t' '$1 == "P" && index($2, "R-2 shows MET")')"
+  # An overturn's operator's value, which SEAM-5 reads as it reads the rule's: R-2 overturned to MET by
+  # an adjudication entry, its line "R-2 = MET ; grader NOT-MET", against a planted OW-C fail.
+  d="$(rb_rec_copy rb5-overturn)"; c6=""; a="$(awk -F'\t' -v id="$RB_GEN1" '$1 == "KEY" && $2 == id && $3 == "adjudication" { print $4 }' <<<"$RB_REC_ROWS")"
+  rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "grade: $RB_GEN1" "grade: $RB_GEN1"$'\n'"mech OW-C $f = fail:planted (on judged labels)" \
+    && rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "$r2" "R-2 = MET ; grader NOT-MET ; turns T1 ; «planted»" \
+    && rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "adjudication: $a" "adjudication: $([ "$a" = "pending" ] || printf '%s; ' "$a")2026-11-09 R-2 overturned to MET planted" \
+    && c6="$(rb5_eval "$d/$CF_RECORD" "$RB_RUBRIC" | awk -F'\t' -v f="$f" '$1 == "P" && index($2, "R-2 shows MET against the unruled fail of OW-C on " f)')"
+  if [ ! -f "$RB_RECORD" ]; then
+    FAIL "RB5: NOT EVALUATED — ${RB_RECORD#"$ROOT/"} is absent, so no dimension can be held to a mechanical line"
+  elif [ -n "$(awk -F'\t' '$1 == "NE"' <<<"$p")" ]; then
+    FAIL "RB5: NOT EVALUATED — $(awk -F'\t' '$1 == "NE" { print $2 }' <<<"$p")"
+  elif [ -z "$n" ]; then
+    FAIL "RB5: the reading produced no count — '$(tr '\n' ' ' <<<"${p:-nothing}")'"
+  elif [ -n "$(rb_p "$p")" ]; then
+    FAIL "RB5: SEAM-5 — $(rb_p "$p")no dimension shows MET against a mechanical fail or ND the operator has not ruled on"
+  elif [ -z "$c1" ]; then
+    FAIL "RB5: CONTROL did not fire — R-2 shown MET on a one-value line against a planted OW-C fail on a copy reads nothing, or its line '${r2:-none}' did not land"
+  elif [ -z "$c2" ]; then
+    FAIL "RB5: CONTROL did not fire — R-2 shown MET against a planted OW-C ND on a copy reads nothing"
+  elif [ -n "$c3" ]; then
+    FAIL "RB5: CONTROL did not hold — the planted ND, ruled by an adjudication line on the copy, still reads '$c3'"
+  elif [ -z "$c4" ]; then
+    FAIL "RB5: CONTROL did not fire — R-2 shown MET as a two-value line's rule's value against a planted OW-C fail on a copy reads nothing"
+  elif [ -n "$c5" ]; then
+    FAIL "RB5: CONTROL did not hold — a two-value R-2 whose grader's value alone is MET, against a planted OW-C fail on a copy, reads '$c5', where SEAM-5 is held on the rule's value"
+  elif [ -z "$c6" ]; then
+    FAIL "RB5: CONTROL did not fire — R-2 overturned to MET by an adjudication entry, its line 'R-2 = MET ; grader NOT-MET', against a planted OW-C fail on a copy reads nothing, so SEAM-5 is not shown to read an overturn's first value"
+  else
+    PASS "RB5: SEAM-5 — over $n, no dimension shows MET against an unruled mechanical fail or ND, read on the line's first value in either form — the rule's, or the operator's on an overturn — and the citation read from the rubric's Check it cites column. CONTROLS on copies: R-2 shown MET on a one-value line against a planted fail reads '$(head -1 <<<"$c1" | cut -f2)'; against a planted ND, '$(head -1 <<<"$c2" | cut -f2)'; as a two-value line's rule's value, '$(head -1 <<<"$c4" | cut -f2)'; as an overturn's operator's value, '$(head -1 <<<"$c6" | cut -f2)'; a two-value line whose grader's value alone is MET reads nothing; the ND ruled by an adjudication line reads nothing"
+  fi
+}
+rb5_assert
+# rb7_ctl <name> <want> <edits…> — a copy of the directory and record, the edits applied in order, each
+# "L <old> <new>" a literal replacement in the record, "A <line>" a ledger line added, or "B <old> <new>"
+# a line of the first generated conversation's block replaced; prints the problems that hold <want>,
+# or "NOT-LANDED" when an edit did not land.
+rb7_ctl() {
+  local d e op a b
+  d="$(rb_rec_copy "$1")"; local want="$2"; shift 2
+  for e in "$@"; do
+    op="${e%%$'\t'*}"; e="${e#*$'\t'}"; a="${e%%$'\t'*}"; b="${e#*$'\t'}"
+    case "$op" in
+      L) ta_mutate "$d" "$CF_RECORD" "$a" "$b" || { printf 'NOT-LANDED\n'; return 0; } ;;
+      A) rb_ledger_add "$d/$CF_RECORD" "$a" ;;
+      B) rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "$a" "$b" || { printf 'NOT-LANDED\n'; return 0; } ;;
+    esac
+  done
+  rb7_eval "$d/$CF_RECORD" "$CF_TOK_F" "$d" | awk -F'\t' -v w="$want" '$1 == "P" && (w == "" || index($2, w)) { print $2 }'
+}
+rb7_assert() {
+  local p n de ge gs gd c1 c2 c3 c4 c4n c5 c5n c6 T=$'\t'
+  p="$(rb7_eval "$RB_RECORD" "$CF_TOK_F" "$CF_DIR")"
+  n="$(awk -F'\t' '$1 == "N" { print $2 " draws line(s), " $3 " grader-draws line(s) and " $4 " grader-result line(s)" }' <<<"$p")"
+  de="$(awk -F'\t' '$1 == "DRAWS" { print $6; exit }' <<<"$RB_REC_ROWS")"
+  ge="$(awk -F'\t' '$1 == "GDRAWS" && $3 == "'"$RB_GEN1"'" { print $5; exit }' <<<"$RB_REC_ROWS")"
+  gd="$(awk -F'\t' '$1 == "KEY" && $2 == "'"$RB_GEN1"'" && $3 == "grader-draw" { print $4 }' <<<"$RB_REC_ROWS")"
+  gs="$(awk -F'\t' '$1 == "KEY" && $2 == "'"$RB_GEN1"'" && $3 == "adjudication" { print $4 }' <<<"$RB_REC_ROWS")"
+  c1="$(rb7_ctl rb7-second "entries graded or ended" "L$T = $de$T = $de; 2:planted-run:graded")"
+  c2="$(rb7_ctl rb7-gap "does not run 1..k" "L$T = $de$T = 2${de#1}")"
+  c3="$(rb7_ctl rb7-calls "carrier-calls, not a carrier stop" "L$T = $de$T = 1:planted-run:voided:carrier-calls; 2${de#1}")"
+  c4="$(rb7_ctl rb7-regrade "with no regrade 2" "L$T = $ge$T = 1:planted-gs; 2${ge#1}" "A${T}grader-result: planted-gs = graded$T" "B${T}grader-draw: $gd${T}grader-draw: 2")"
+  c4n="$(rb7_ctl rb7-regrade-ruled "" "L$T = $ge$T = 1:planted-gs; 2${ge#1}" "A${T}grader-result: planted-gs = graded$T" "B${T}grader-draw: $gd${T}grader-draw: 2" "B${T}adjudication: $gs${T}adjudication: 2026-11-09 regrade 2 planted")"
+  c5="$(rb7_ctl rb7-void-graded "recorded a grade" "L$T = $ge$T = 1:planted-gs:voided:carrier-auth; 2${ge#1}" "A${T}grader-result: planted-gs = graded$T" "B${T}grader-draw: $gd${T}grader-draw: 2")"
+  c5n="$(rb7_ctl rb7-void-check "" "L$T = $ge$T = 1:planted-gs:voided:carrier-auth; 2${ge#1}" "A${T}grader-result: planted-gs = check:json-schema$T" "B${T}grader-draw: $gd${T}grader-draw: 2")"
+  c6="$(rb7_ctl rb7-void-none "cites no grader-result line" "L$T = $ge$T = 1:planted-gs:voided:carrier-auth; 2${ge#1}" "B${T}grader-draw: $gd${T}grader-draw: 2")"
+  if [ ! -f "$RB_RECORD" ]; then
+    FAIL "RB7: NOT EVALUATED — ${RB_RECORD#"$ROOT/"} is absent, so no draw is recorded"
+  elif [ -n "$(awk -F'\t' '$1 == "NE"' <<<"$p")" ]; then
+    FAIL "RB7: NOT EVALUATED — $(awk -F'\t' '$1 == "NE" { print $2 }' <<<"$p")"
+  elif [ -z "$n" ]; then
+    FAIL "RB7: the ledger's reading produced no count — '$(tr '\n' ' ' <<<"${p:-nothing}")'"
+  elif [ -n "$(rb_p "$p")" ]; then
+    FAIL "RB7: the draws ledger — $(rb_p "$p")a graded draw is the first a carrier stop does not void, and none is re-rolled"
+  elif [ -z "$de" ] || [ -z "$ge" ]; then
+    FAIL "RB7: CONTROLS NOT EVALUATED — the record holds no draws line or no grader-draws line for $RB_GEN1 to plant on"
+  elif [ -z "$c1" ] || [ "$c1" = "NOT-LANDED" ]; then
+    FAIL "RB7: CONTROL did not fire — a second graded draw on a copy reads '${c1:-nothing}'"
+  elif [ -z "$c2" ] || [ "$c2" = "NOT-LANDED" ]; then
+    FAIL "RB7: CONTROL did not fire — a run-seq gap on a copy reads '${c2:-nothing}'"
+  elif [ -z "$c3" ] || [ "$c3" = "NOT-LANDED" ]; then
+    FAIL "RB7: CONTROL did not fire — a voided:carrier-calls on a copy reads '${c3:-nothing}'"
+  elif [ -z "$c4" ] || [ "$c4" = "NOT-LANDED" ]; then
+    FAIL "RB7: CONTROL did not fire — a regrade with no adjudication on a copy reads '${c4:-nothing}'"
+  elif [ -n "$c4n" ]; then
+    FAIL "RB7: CONTROL did not hold — the same regrade adjudicated by the operator on a copy reads '$c4n', where it must read clean"
+  elif [ -z "$c5" ] || [ "$c5" = "NOT-LANDED" ]; then
+    FAIL "RB7: CONTROL did not fire — a void whose session recorded a grade on a copy reads '${c5:-nothing}'"
+  elif [ -n "$c5n" ]; then
+    FAIL "RB7: CONTROL did not hold — a void citing its session's failed check on a copy reads '$c5n', where it must read clean"
+  elif [ -z "$c6" ] || [ "$c6" = "NOT-LANDED" ]; then
+    FAIL "RB7: CONTROL did not fire — a void citing no result line on a copy reads '${c6:-nothing}'"
+  else
+    PASS "RB7: the draws ledger — $n — holds no re-roll: every draws line runs 1..k with one graded entry, first and last; every generated conversation names its graded entry with an equal run-seq under its own revision and code; every block is its key's last grader draw, its session's result graded, no void unruled. CONTROLS on copies: a second graded draw reads '$c1'; a run-seq gap '$c2'; a voided:carrier-calls '$c3'; a regrade with no adjudication '$c4', and adjudicated reads clean; a void whose session recorded a grade '$c5'; a void citing no result line '$c6'; a void citing its session's failed check reads clean"
+  fi
+}
+rb7_assert
+
+md_flips rb_record    'RB4' rb4_assert
+md_flips rb_rule      'RB4' rb4_assert
+md_flips rb_gen       'RB4' rb4_assert
+md_flips rb_record    'RB5' rb5_assert
+md_flips rb_citemap   'RB5' rb5_assert
+md_flips rb_record    'RB7' rb7_assert
+md_flips rb_gen       'RB7' rb7_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# WT-ADR26 — the record and the check agree (SEAM-6), run after every CH-2 text group
+#
+# reference/adr/ADR-026-channel-architecture.md § Decision 5 states each channel's enforcement
+# strength in one table cell. This arm holds CH-2's cell to what this run did: it fails when the
+# cell, trimmed, still equals **prose** — the cell's old value, so an accurate cell may still use the
+# word, as in ask-prose — when it names fewer than the three conduct inputs (the conduct file, the
+# interview card and each interviewable form's own conduct), or when any of groups WT, OW, FB, CHR
+# and LG emitted no verdict in this run, read from the emission record. It runs after them for that
+# reason. CONTROL (SEAM-6): the same reading over this run's emission record with group CHR's
+# verdicts taken out fails, naming CHR; and a copy of the cell that says ask-prose stays green.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "WT-ADR26 — ADR-026 § 5's CH-2 enforcement cell agrees with the groups that grade CH-2"
+
+WTA_ADR="$ROOT/reference/adr/ADR-026-channel-architecture.md"
+# wtadr26_cell <adr-026> — CH-2's enforcement-strength cell in § Decision 5's table, trimmed.
+wtadr26_cell() {
+  awk -F'|' 'index($0, "### 5. ") == 1 { on = 1; next } on && /^#/ { on = 0 } on && index($0, "| **CH-2** |") == 1 { c = $(NF - 1); gsub(/^[ \t]+|[ \t]+$/, "", c); print c; on = 0 }' "$1"
+}
+# wtadr26_eval <cell> <emission-record> — one problem per line; nothing when the cell agrees.
+wtadr26_eval() {
+  local g
+  [ -n "$1" ] || { printf 'no CH-2 row in the table of § Decision 5\n'; return 0; }
+  [ "$1" != '**prose**' ] || printf 'the cell still reads **prose**, its old value\n'
+  case "$1" in *"the conduct file"*) ;; *) printf 'the cell does not name the conduct file\n' ;; esac
+  case "$1" in *"the interview card"*) ;; *) printf 'the cell does not name the interview card\n' ;; esac
+  case "$1" in *"each interviewable form"*) ;; *) printf 'the cell does not name each interviewable form\n' ;; esac
+  for g in WT OW FB CHR LG; do
+    awk -v g="$g" '{ for (i = 1; i <= NF; i++) { x = $i; if (match(x, /^[A-Z]+/) && substr(x, 1, RLENGTH) == g) f = 1 } } END { exit !f }' <<<"$2" || printf 'group %s emitted no verdict in this run\n' "$g"
+  done
+}
+wtadr26_assert() {
+  local cell p noc seam ap
+  cell="$(wtadr26_cell "$WTA_ADR")"
+  p="$(wtadr26_eval "$cell" "$SEEN")"
+  noc="$(tr ' ' '\n' <<<"$SEEN" | awk 'NF && !/^CHR/' | tr '\n' ' ')"
+  seam="$(wtadr26_eval "$cell" "$noc")"
+  ap="$(wtadr26_eval "${cell/conduct text/ask-prose and conduct text}" "$SEEN")"
+  if [ -z "$cell" ]; then
+    FAIL "WT-ADR26: no CH-2 row was read from ${WTA_ADR#"$ROOT/"} § Decision 5 — the record and the check cannot be compared"
+  elif [ -n "$p" ]; then
+    FAIL "WT-ADR26: ${WTA_ADR#"$ROOT/"} § Decision 5's CH-2 enforcement cell disagrees with this run — $(tr '\n' ';' <<<"$p") The cell reads: $cell"
+  elif [ "$seam" != "group CHR emitted no verdict in this run" ]; then
+    FAIL "WT-ADR26: CONTROL (SEAM-6) did not fire as specified — with group CHR's verdicts taken out of a copy of the emission record the reading is '${seam:-agreement}'"
+  elif [ -n "$ap" ]; then
+    FAIL "WT-ADR26: CONTROL did not hold — a copy of the cell that says ask-prose reads '$ap', so the arm keys on the word rather than on the old value"
+  else
+    PASS "WT-ADR26: ${WTA_ADR#"$ROOT/"} § Decision 5's CH-2 enforcement cell names the conduct file, the interview card and each interviewable form's own conduct, no longer reads **prose**, and every one of groups WT, OW, FB, CHR and LG emitted in this run. CONTROL (SEAM-6): with group CHR's verdicts taken out of a copy of the record the arm names CHR; a copy of the cell that says ask-prose stays green"
+  fi
+}
+wtadr26_assert
+md_flips wtadr26_cell 'WT-ADR26' wtadr26_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RS — the group rosters that DESCRIBE this suite, asserted against the run.

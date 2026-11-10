@@ -1,0 +1,21 @@
+# Assent to an example with no words of their own, the example recorded: the words limb fails
+conversation: case-assent-recorded
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: TE — terse, an invented traveller
+answered-before: none
+T1 I | What do you want from this trip?
+L4 put=Desires › Desire#1 kind=ask example=no
+T2 P | Like what?
+L3 Desires › Desire#1 = request-example
+T3 I | Only examples: some people want a slow morning somewhere, others a day on the water. What would yours be?
+L4 put=Desires › Desire#1 kind=asked-for example=yes example-text=«a slow morning somewhere, a day on the water»
+T4 P | Yes, that.
+L3 Desires › Desire#1 = unclear
+--- record
+V Desires › Desire#1 = a slow morning somewhere
+X OW-C Desires › Desire#1 = fail:a|slow|morning|somewhere

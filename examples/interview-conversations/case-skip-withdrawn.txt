@@ -1,0 +1,23 @@
+# A skip withdrawn a turn later: their own return, and the later answer is the value
+conversation: case-skip-withdrawn
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: SK — skips often, an invented traveller
+answered-before: none
+T1 I | How do you feel about rooming?
+L4 put=Where you stay › Rooming kind=ask example=no
+T2 P | Skip.
+L3 Where you stay › Rooming = skip
+T3 I | Is there anything you'd want everyone there for?
+L4 put=People dynamics › Whole-group moments kind=ask example=no
+T4 P | The first dinner. And back on rooming: my own room, please.
+L3 People dynamics › Whole-group moments = answer
+L3 Where you stay › Rooming = return
+L3 Where you stay › Rooming = answer
+--- record
+V Where you stay › Rooming = my own room
+V People dynamics › Whole-group moments = the first dinner

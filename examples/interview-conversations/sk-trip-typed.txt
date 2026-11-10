@@ -1,0 +1,31 @@
+# SK on the trip form, typed: skips and a decline written as the em dash, and nothing put again
+conversation: sk-trip-typed
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: SK — skips often, an invented traveller
+answered-before: none
+T1 I | How do you fit in the group?
+L4 put=About you › Relationship kind=ask example=no
+T2 P | Skip that one.
+L3 About you › Relationship = skip
+T3 I | Is anyone travelling with you who won't fill in their own form?
+L4 put=About you › Party kind=ask example=no
+T4 P | Skip.
+L3 About you › Party = skip
+T5 I | What kind of trip are you after?
+L4 put=Destination leanings › Trip vibe kind=ask example=no
+T6 P | Beach, mostly.
+L3 Destination leanings › Trip vibe = answer
+T7 I | When can you travel?
+L4 put=Dates & availability › Can travel kind=ask example=no
+T8 P | I'd rather not say.
+L3 Dates & availability › Can travel = decline
+--- record
+V About you › Relationship = —
+V About you › Party = —
+V Destination leanings › Trip vibe = beach, mostly
+V Dates & availability › Can travel = —

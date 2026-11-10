@@ -1,0 +1,25 @@
+# ADR-045 FB-C cross row: a second follow-up on the field, carrying values neither theirs nor the form
+conversation: fbc-cross
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: TE — terse, an invented traveller
+answered-before: none
+T1 I | How do you feel about rooming?
+L4 put=Where you stay › Rooming kind=ask example=no
+T2 P | Share.
+L3 Where you stay › Rooming = thin
+T3 I | You said 'share' — anyone in particular?
+L4 put=Where you stay › Rooming kind=follow-up example=no carries=«share»
+T4 P | With Sam.
+L3 Where you stay › Rooming = thin
+T5 I | And would a twin or a double suit you both?
+L4 put=Where you stay › Rooming kind=follow-up example=no carries=«twin, double»
+T6 P | A twin, I suppose.
+L3 Where you stay › Rooming = answer
+--- record
+V Where you stay › Rooming = Share with Sam
+X FB-C Where you stay › Rooming = fail:1|4

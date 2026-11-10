@@ -1,0 +1,24 @@
+# Q-14: a skip said at a follow-up, clarified by an ask-on-doubt, then the field skipped
+conversation: q14-skip-at-follow-up
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: SK — skips often, an invented traveller
+answered-before: none
+T1 I | Who would you especially enjoy peeling off with?
+L4 put=People dynamics › Split off with kind=ask example=no
+T2 P | Jordan.
+L3 People dynamics › Split off with = thin
+T3 I | You said Jordan — for anything in particular?
+L4 put=People dynamics › Split off with kind=follow-up example=no carries=«Jordan»
+T4 P | Skip.
+L3 People dynamics › Split off with = doubt
+T5 I | Do you mean leave this follow-up, or skip the whole question?
+L4 put=People dynamics › Split off with kind=ask-on-doubt example=no
+T6 P | The whole question, please.
+L3 People dynamics › Split off with = skip
+--- record
+V People dynamics › Split off with = —

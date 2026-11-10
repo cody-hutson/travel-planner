@@ -1,0 +1,29 @@
+# GS on the trip form, spoken: one re-offer into a silence, then a second silence that ends the session, the field left in its bracket
+conversation: gs-trip-spoken
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: yes
+route: card
+style: none
+traveller: GS — goes silent, an invented traveller
+answered-before: none
+T1 I | What kind of trip are you after?
+L4 put=Destination leanings › Trip vibe kind=ask example=no
+T2 P | (silence)
+L3 Destination leanings › Trip vibe = silence
+T3 I | Take your time. You can answer, skip it, or stop here.
+L4 put=Destination leanings › Trip vibe kind=silence re-offer example=no
+T4 P | Somewhere quiet.
+L3 Destination leanings › Trip vibe = answer
+T5 I | When can you travel?
+L4 put=Dates & availability › Can travel kind=ask example=no
+T6 P | (silence)
+L3 Dates & availability › Can travel = silence
+T7 I | You can answer, skip it, or stop here.
+L4 put=Dates & availability › Can travel kind=silence re-offer example=no
+T8 P | (silence)
+L3 Dates & availability › Can travel = silence
+--- record
+V Destination leanings › Trip vibe = somewhere quiet
+V Dates & availability › Can travel = [The windows that work for you — e.g., "any time in May", "the week of June 8", "weekends only". Skip if you're flexible.]

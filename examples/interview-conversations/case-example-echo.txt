@@ -1,0 +1,20 @@
+# An example they asked for, said back in their own turn: the value passes and its echo is reported
+conversation: case-example-echo
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: TE — terse, an invented traveller
+answered-before: none
+T1 I | What do you want from this trip?
+L4 put=Desires › Desire#1 kind=ask example=no
+T2 P | What sort of thing do people say?
+L3 Desires › Desire#1 = request-example
+T3 I | Only examples: a slow morning somewhere, or a day on the water. What would yours be?
+L4 put=Desires › Desire#1 kind=asked-for example=yes example-text=«a slow morning somewhere, or a day on the water»
+T4 P | A day on the water.
+L3 Desires › Desire#1 = answer
+--- record
+V Desires › Desire#1 = a day on the water

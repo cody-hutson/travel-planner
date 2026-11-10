@@ -1,0 +1,29 @@
+# Q-12: stuck, an example handed back, unclear twice, the field left open in its bracket
+conversation: q12-stuck-left-open
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: TE — terse, an invented traveller
+answered-before: none
+T1 I | What is the second thing you want from this trip?
+L4 put=Desires › Desire#2 kind=ask example=no
+T2 P | I don't know what to put.
+L3 Desires › Desire#2 = stuck
+T3 I | Only as examples: some want a slow breakfast somewhere, some a day on a boat. What would yours be?
+L4 put=Desires › Desire#2 kind=example example=yes example-text=«a slow breakfast somewhere, a day on a boat»
+T4 P | Still not sure.
+L3 Desires › Desire#2 = unclear
+T5 I | You can answer, skip it, or stop here.
+L4 put=Desires › Desire#2 kind=silence re-offer example=no
+T6 P | I really don't know.
+L3 Desires › Desire#2 = unclear
+T7 I | I'll leave that one open. Is there anything you have already done there that you would not repeat?
+L4 put=Interests & tastes › Already done kind=ask example=no
+T8 P | No.
+L3 Interests & tastes › Already done = answer
+--- record
+V Desires › Desire#2 = [Second thing you want — e.g., "explore the local markets."]
+V Interests & tastes › Already done = no

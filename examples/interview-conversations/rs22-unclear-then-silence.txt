@@ -1,0 +1,26 @@
+# RS-22 in the second order: unclear, the re-offer, then one silence, which does not end the session, and an em dash where no skip was said
+conversation: rs22-unclear-then-silence
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: GS — goes silent, an invented traveller
+answered-before: none
+T1 I | Is there anything you'd want everyone there for?
+L4 put=People dynamics › Whole-group moments kind=ask example=no
+T2 P | Hmm, the thing, maybe.
+L3 People dynamics › Whole-group moments = unclear
+T3 I | You can answer, skip it, or stop here.
+L4 put=People dynamics › Whole-group moments kind=silence re-offer example=no
+T4 P | (silence)
+L3 People dynamics › Whole-group moments = silence
+T5 I | I'll leave that one open. Is the trip marking anything special?
+L4 put=Anything else › Special occasion? kind=ask example=no
+T6 P | No.
+L3 Anything else › Special occasion? = answer
+--- record
+V People dynamics › Whole-group moments = —
+V Anything else › Special occasion? = no
+X OW-C People dynamics › Whole-group moments = fail:A1

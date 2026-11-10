@@ -1,0 +1,16 @@
+# Q-5: the needs block, the empty answer in other words, and the declared none written
+conversation: q05-needs-none
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/person-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: TE — terse, an invented traveller
+answered-before: none
+T1 I | Is there anything you must have on a trip?
+L4 put=Needs › Specific#1 kind=ask example=no
+T2 P | No, nothing like that.
+L3 Needs › Specific#1 = empty
+--- record
+V Needs › Specific#1 = none

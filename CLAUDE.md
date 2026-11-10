@@ -662,7 +662,7 @@ travel-planner/
 │   ├── 06-validator.md
 │   ├── 07-nightlife.md
 │   └── destination-ideation.md
-├── examples/                 ← worked examples, sanitized: tokyo-2026, ideation-demo, two-origin-demo, data-architecture-demo, single-origin-demo, archived-trip-demo, erasure-reach-demo, evening-boundary-demo, people-library-demo, returning-party-demo, returning-party-first-demo, returning-party-second-demo
+├── examples/                 ← worked examples, sanitized: tokyo-2026, ideation-demo, two-origin-demo, data-architecture-demo, single-origin-demo, archived-trip-demo, erasure-reach-demo, evening-boundary-demo, people-library-demo, returning-party-demo, returning-party-first-demo, returning-party-second-demo, interview-conversations
 ├── people/                   ← skeleton of the durable cross-trip person store — ships README.md only; real records live under <data-root>/people/
 ├── reference/                ← engine reference specs
 │   ├── adr/                       ← architecture decision records (one file per decision)
@@ -670,6 +670,7 @@ travel-planner/
 │   ├── command-reference.md       ← the whole command surface in one table (verb, arguments, required trip state)
 │   ├── data-architecture.md       ← engine-wide data architecture (artifact model, identity, serialization, publishability, lifecycle classes, schema version)
 │   ├── data-model.md              ← satisfaction-layer data architecture (storage homes, reconciliation, write ownership)
+│   ├── interview-rubric.md        ← the interview rubric (the dimensions a grader reads an interview conversation against, each with its traces and pass level; no interviewer reads it)
 │   ├── load-class-model.md        ← load-class model (what loads a file and when, the classification rule, the byte parameters a size assertion reads)
 │   ├── region-reference.md        ← every block-owned form's regions in one table, each with its writer-table row and verdict (derived — what /trip-record interview reads)
 │   ├── replan-protocol.md         ← the behaviour a replan takes when the trip is near

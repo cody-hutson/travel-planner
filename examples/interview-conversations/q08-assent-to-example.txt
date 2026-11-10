@@ -1,0 +1,24 @@
+# Q-8: an example asked for, assent to it with no words of their own, nothing recorded, the re-offer, and a skip
+conversation: q08-assent-to-example
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: no
+route: card
+style: none
+traveller: TE — terse, an invented traveller
+answered-before: none
+T1 I | What do you want from this trip?
+L4 put=Desires › Desire#1 kind=ask example=no
+T2 P | Like what?
+L3 Desires › Desire#1 = request-example
+T3 I | Only examples: some people want a slow morning somewhere, others a day on the water. What would yours be?
+L4 put=Desires › Desire#1 kind=asked-for example=yes example-text=«a slow morning somewhere, a day on the water»
+T4 P | Yes, that.
+L3 Desires › Desire#1 = unclear
+T5 I | You can tell me in your own words, skip it, or stop here.
+L4 put=Desires › Desire#1 kind=silence re-offer example=no
+T6 P | I'll skip it.
+L3 Desires › Desire#1 = skip
+--- record
+V Desires › Desire#1 = —

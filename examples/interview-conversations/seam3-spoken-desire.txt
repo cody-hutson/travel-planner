@@ -1,0 +1,20 @@
+# SEAM-3: spoken, the trip form Desire, one follow-up after a thin answer; it passes while Desire is typed TRIP
+conversation: seam3-spoken-desire
+provenance: invented traveller and invented answers, authored at Stage 6
+origin: authored
+form: templates/traveler-intake.template.md
+spoken: yes
+route: card
+style: none
+traveller: AF — answers freely, an invented traveller
+answered-before: none
+T1 I | What do you want from this trip?
+L4 put=Desires › Desire#1 kind=ask example=no
+T2 P | A boat day.
+L3 Desires › Desire#1 = thin
+T3 I | You said a boat day — anything more about it?
+L4 put=Desires › Desire#1 kind=follow-up example=no carries=«boat day»
+T4 P | A few hours out on the water.
+L3 Desires › Desire#1 = answer
+--- record
+V Desires › Desire#1 = a boat day, a few hours out on the water
