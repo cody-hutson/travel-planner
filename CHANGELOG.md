@@ -54,11 +54,10 @@ and `CF` red, which is meant.
 - `reference/interview-rubric.md`, new at 11,878 bytes, and `examples/interview-conversations/README.md`,
   new at 7,547, are below the floor at which a file owes a row.
 
-**Runtime.** `scripts/test-artifact-schema.sh`, timed with `/usr/bin/time -p` three times at the
-branch's first commit, `deeed09`, and three times at `1ab8277`, whose suite and grade record this
-entry's commit keeps unchanged, took a median of 271.64 real seconds before and 303.28 after, on an
-arm64 macOS host with 14 CPUs and other sessions live on it. The suite reads 60 fixtures, so the
-after-median is 5.05 real seconds per fixture, the figure #1770's checks can budget against.
+**Runtime.** `scripts/test-artifact-schema.sh`, timed with `/usr/bin/time -p` three times at
+`af6b0ea`, the `main` this release is measured against, and three times at `1a5c040`, whose suite
+and grade record this entry's commit keeps unchanged, took a median of 314.04 real seconds before
+and 349.87 after, on an arm64 macOS host with 14 CPUs and other sessions live on it.
 
 **What it doesn't reach.** A grade is judgment over synthetic conversations: every traveller is
 invented, and a grade is of one model on the card route. The generated route leaves the conduct
