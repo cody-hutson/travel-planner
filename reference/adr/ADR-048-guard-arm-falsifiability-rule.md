@@ -1,6 +1,6 @@
 # ADR-048: The guard-arm falsifiability rule — no verdict guard reaches PASS through a disjunction, graded by group FZ in each guard suite over its own top-level code, with the tautological class declared out of reach
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-10)
 - **Deciders:** repo maintainer
 - **Driving work:** the *Controls point at the population at risk* milestone — its card that
   carries the falsifiability rule from the suite where it was founded to the sibling guard suites
