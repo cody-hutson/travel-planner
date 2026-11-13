@@ -62,8 +62,10 @@
 # selector and either carries a `:`, its text before the colon being the label, or is the
 # selector alone. A row with a later cell that begins with a selector but holds no label is a
 # hit only as a header row, over a `|---|` delimiter row; any other such row is kept, so
-# `| Need | Documents for … |` stays. The first cell of a row with no leading pipe is the
-# line's own opening, and the line rule reads it. Every test reads the line with
+# `| Need | Documents for … |` stays. A row's leading pipe is read once the blockquote
+# markers and one list marker are taken off, so `- | Passport number | … |` is a row whose
+# key cell is `Passport number`; the first cell of a row with no leading pipe is the line's
+# own opening, and the line rule reads it. Every test reads the line with
 # a trailing carriage return taken off, a byte-order mark taken off the first line, and each
 # no-break space read as a space; what is printed is the line as read. The comparison is a
 # substring test, never a regex built from a selector: a selector is corpus text, and one
@@ -75,7 +77,8 @@
 #     of the same or a higher level that sits outside a fenced block, at an indent of three
 #     or less, and in no deeper blockquote than its own;
 #   a TABLE ROW takes itself, and where it is the header row above a `|---|` delimiter row
-#     it takes the whole table;
+#     it takes the whole table; a row inside a list item takes that and, as the list item
+#     it opens, what any other hit takes;
 #   any other hit takes every following line until one of these ends it: a list item at the
 #     label's own indent or shallower; a heading no deeper than the label; a blank line, but
 #     only when the next line that is not blank is no deeper than the label, so a loose
@@ -282,6 +285,9 @@ pj_project_file() {   # pj_project_file <selectors> <file>
     }
     function blank(s) { return s ~ /^[ \t]*$/ }
     function item(s) { return s ~ /^[ \t]*([-*+]|[0-9]+[.)])([ \t]|$)/ }
+    # A list item holding a table row: one list marker, then a pipe. RLENGTH is left at that
+    # pipe, so the row is what follows the marker.
+    function lrow(s) { return match(s, /^[ \t]*([-*+]|[0-9]+[.)])[ \t]+\|/) }
     # The level of a `#` heading, 0 for any other line.
     function hlevel(s) {
       if (!match(s, /^[ \t]*#+([ \t]|$)/)) return 0
@@ -349,12 +355,14 @@ pj_project_file() {   # pj_project_file <selectors> <file>
       return 0
     }
     # A hit: the stripped line opens with a selector, or, where it holds a `|`, the first cell
-    # opens with one, as a list item does, or a later cell holds a label. Past a leading pipe
-    # the first cell is the second field of the split; with none, the line rule has read it.
+    # opens with one, as a list item does, or a later cell holds a label. Past a leading pipe,
+    # which may follow one list marker, the first cell is the second field of the split; with
+    # none, the line rule has read it.
     function label(u,   s, k, i, j, cell) {
       if (opens(cut(u))) return 1
       if (!index(u, "|")) return 0
       s = u; gsub(/\\\|/, "", s)
+      if (lrow(s)) s = substr(s, RLENGTH)
       k = split(s, cell, "|")
       j = (cell[1] ~ /^[ \t]*$/) ? 2 : 1
       if (j <= k && opens(cut(cell[j]))) return 1
@@ -416,6 +424,9 @@ pj_project_file() {   # pj_project_file <selectors> <file>
       if (label(u)) {
         if (!inf && !infm && hlevel(u) > 0) { taking = 2; lvl = hlevel(u); sq = qd; next }
         if (!inf && !infm && u ~ /^[ \t]*\|/) { thd = 1; next }
+        # A row inside a list item: over a delimiter row its table goes, and otherwise the
+        # payload of its list item, as below.
+        if (!inf && !infm && lrow(u)) thd = 1
         taking = 1; at = width(u); hitf = inf; para = !inf && !infm && !item(u); hq = qd
         if (opened) payf = 1
         next
