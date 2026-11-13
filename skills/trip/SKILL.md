@@ -283,7 +283,9 @@ is given, inline in its prompt, the stdout of
 ${CLAUDE_SKILL_DIR}/../../scripts/project-traveler-data.sh --trip <slug>
 ```
 
-with `--data-root <trip.data_root>` appended. Its reads are the dispatching verb's own. Pass it
+with `--data-root <trip.data_root>` appended. Its reads — `reference/data-architecture.md` § 5.6's
+fence, the trip directory, and `trips/<slug>/outputs/traveler-model.md`, or
+`trips/<slug>/travelers/*.md` where none is on file — are the dispatching verb's own. Pass it
 through verbatim: never quote, summarise or write it to any file. Exit 0 and 3 are passed as
 printed; on any other outcome, a refused run included, relay it, dispatch nothing, and pass no
 traveller file in its place. The dispatch tells the agent to open no
@@ -699,8 +701,7 @@ instructions; `trips/<slug>/trip-context.md` — the `## Mode` block alone, read
 written because `Current mode` and `Mode notes` are replaced in one act and the outgoing
 `Mode notes` is echoed before it goes. It reads no other block of that file and does not
 re-read it for the trip's mode or destination — the record block above carries both by value.
-Its one other read is the traveller projection's, for the hub: `trips/<slug>/outputs/traveler-model.md`,
-or `trips/<slug>/travelers/*.md` where none is on file. Every other artifact under
+Its other reads are the traveller projection's reads (§ *Standing clause*), for the hub. Every other artifact under
 `trips/<slug>/outputs/` is read by the agents that consume it, and a read here would give the
 itinerary a second reader with no write to justify it. **Agent reads, attributed:** enrichment's reconciler reads `trips/<slug>/travelers/*.md`,
 `<store-root>/people/<person-id>.md`, the durable record a file's `person:` line references,
@@ -785,9 +786,8 @@ as `ls -1 "<data-root>/trips/<slug>/outputs/final-itinerary.md"` before the firs
 and, on a run that dispatches the reconciler, the `## Update signals [DERIVED]` block of
 `traveler-model.md` alone, immediately after that leg. That block names a field and never its
 value (`agents/00-enrichment.md` § *Profile-change detection*). Beyond that mode test, on a run
-whose chain reaches the hub, it takes the traveller projection's reads, for the hub:
-`trips/<slug>/outputs/traveler-model.md`, or `trips/<slug>/travelers/*.md` where none is on file. **Agent
-reads, attributed:** enrichment, where a changed profile is what triggered the run, reads
+whose chain reaches the hub, it takes the traveller projection's reads (§ *Standing clause*), for the hub.
+**Agent reads, attributed:** enrichment, where a changed profile is what triggered the run, reads
 `trips/<slug>/travelers/*.md`, `<store-root>/people/<person-id>.md`, the durable record a
 file's `person:` line references, and the survivor where that record is a `merged-into:` stub,
 `trips/<slug>/trip-context.md` and `trips/<slug>/outputs/traveler-model.md`, the model it is
@@ -898,9 +898,8 @@ relations and still announces them.
 **Reads:** `agents/<name>.md` — the prompt of each agent in the chain below, the path taken
 from that agent's own row in `CLAUDE.md`'s roster; `trips/<slug>/trip-context.md` — the
 `## Mode` block alone, read before it is written, for the reason `plan`'s section gives. It
-reads no other block of that file, and otherwise only the traveller projection's reads, for the
-hub: `trips/<slug>/outputs/traveler-model.md`, or `trips/<slug>/travelers/*.md` where none is on
-file. **Agent reads, attributed:** transport reads `trips/<slug>/trip-context.md`,
+reads no other block of that file, and otherwise only the traveller projection's reads
+(§ *Standing clause*), for the hub. **Agent reads, attributed:** transport reads `trips/<slug>/trip-context.md`,
 `trips/<slug>/outputs/traveler-model.md` and its own accumulated output file; scheduling reads
 `trips/<slug>/trip-context.md`, `trips/<slug>/outputs/transport-brief.md`,
 `trips/<slug>/outputs/traveler-model.md` and its own accumulated output file; the hub reads
@@ -1089,9 +1088,8 @@ so the per-event status bound does not quantify over it.
 ## ideas
 
 **Reads:** `agents/<name>.md` — the Destination Ideation prompt, the path taken from its own
-row in `CLAUDE.md`'s roster; and the traveller projection's reads, for the ideation agent:
-`trips/<slug>/outputs/traveler-model.md`, or `trips/<slug>/travelers/*.md` where none is on
-file. It reads nothing else: not `trip-context.md`, whose mode and destination the record block
+row in `CLAUDE.md`'s roster; and the traveller projection's reads (§ *Standing clause*), for the
+ideation agent. It reads nothing else: not `trip-context.md`, whose mode and destination the record block
 already carries by value, and not the shortlist, which is the agent's to write and this verb
 never reads back. **Agent reads, attributed:** the ideation agent reads the traveller projection
 for the group's leanings, `trips/<slug>/trip-context.md` for the dates and party, and the frontmatter of
