@@ -333,6 +333,9 @@ name: Artifact schema
 #        grading sections — how a grade is produced, its limits, and the threshold sentence word for word
 #        — and the grade record: one block per generated conversation, its verdict the conversation
 #        rule's, no MET against an unruled mechanical fail or ND, and no re-roll
+#   PJ   the traveller projection — scripts/project-traveler-data.sh prints no line a § 5.6
+#        field row labels and keeps every other, reads its selectors from the fence, and
+#        refuses with exit 2 and empty stdout on zero field rows or a malformed row
 #   RS   this coverage boundary itself, and the suite's own header roster, each set-diffed
 #        BOTH WAYS against the groups the run actually emitted. The executing set comes from
 #        the RUN, never from a static read of the suite. A group added and left undeclared

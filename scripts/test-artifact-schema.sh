@@ -433,6 +433,11 @@
 #        for word; and the grade record — one block per generated conversation, its verdict the
 #        conversation rule's over its mech lines, no MET against an unruled mechanical fail or ND, and
 #        no re-roll — each with a control on a copy
+#   PJ   the traveller projection, scripts/project-traveler-data.sh, sourced and driven over a
+#        fixture model: no line a § 5.6 field row labels reaches what it prints and every other
+#        line does, its selectors read from the fence row by row, a new field row joining with no
+#        edit, and a refusal — exit 2, empty stdout, a stated cause — on zero field rows or a
+#        malformed row; each control on a copy of the fence
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -29093,6 +29098,366 @@ wtadr26_assert() {
 }
 wtadr26_assert
 md_flips wtadr26_cell 'WT-ADR26' wtadr26_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group PJ — the traveller projection, scripts/project-traveler-data.sh.
+#
+# ADR-030 § 6 safeguard 7: no dispatched agent that writes a file the site build reads receives
+# a passport or documents value. `/trip` runs the projection script and passes its stdout to
+# each agent CLAUDE.md § *Dispatching agents* admits, so this group grades the one thing that
+# promise rests on mechanically — that the projection leaves out every line a
+# reference/data-architecture.md § 5.6 `field` row labels, keeps everything else, and refuses
+# rather than passing anything when it cannot read its own class. What an agent OPENS is not
+# graded here and cannot be: that rule is followed, not enforced, as the script's header says.
+#
+# THE SUBJECT IS SOURCED, as group CTL sources the validator, so the arms drive THE SAME pj_*
+# functions the verb runs, each handed an explicit declaration path. The suite does NOT source
+# scripts/publish-trip-site.sh: no arm here compares the projection with the guard's own parser
+# (the review's optional eighth arm, declined at the scope-lock), so agreement between the two
+# label matchers rests on the planted shapes below.
+#
+# THE FIXTURE is built in $WORK on every run, on the pattern of the publish-guard suite's
+# passport fixtures, and no example directory is added. Its model plants ten canaries, each a
+# distinctive token of one fixed width so none is a substring of another:
+#   passport-labelled (6)  `- **Passport:**`; `* passport:`; `- Passport :`; a `Passport:` line
+#                          under the reserved `## Update signals [DERIVED]` heading;
+#                          `- **Passports held:**` and `- **Passport-country note**`, the two
+#                          near misses the guard's own parser keeps, which the projection omits
+#   documents-labelled (4) a `- **Documents:**` value; its wrapped, deeper-indented line; a
+#                          nested sub-list item under a second `- **Documents:**`; and an
+#                          UNINDENTED line after a third, markdown's lazy continuation
+# beside kept labels that sit right after each payload, so an over-broad omission fails too.
+#
+# THE ARMS, every one reaching PASS or FAIL on every host and never SKIP:
+#   PJ0  the subject is present and sourceable, its three functions are defined, the real
+#        fence offers rows and carries at least one `field` row, and the fixture is not
+#        degenerate — every canary and every kept marker counted in the SOURCE. An absent
+#        script is reported here as ABSENT, never as a rejection.
+#   PJ1  over the real fence: exit exactly 0, a header naming the model as the source, and
+#        0 of the 10 canaries in the projection.                          (registered: MD)
+#   PJ2  the complement: every kept label, the third-party heading with both marks and its
+#        need line, and the frontmatter byte-identical — and the two near misses OMITTED.
+#   PJ3  CONTROL (the card's): every `field` row deleted from a copy of the document. PJ1's
+#        own predicate must FAIL there, and the cause must be the one under test — exit
+#        exactly 2, empty stdout, and `PJ0: zero field rows` on stderr. (registered: MD)
+#   PJ4  CONTROL: the Passport rows' selector renamed to an unused token in a copy — the six
+#        passport canaries come back and the four documents canaries stay out, so the
+#        selectors are READ FROM the fence, row by row.
+#   PJ5  CONTROL: a synthetic `field Rooming` row added to a copy — the Rooming line is
+#        omitted with no script edit, so a new `field` row joins with no code change.
+#   PJ6  the fallback: with no model, the traveller files are projected under a per-file
+#        header with their Passport line omitted (exit exactly 0); with no model and an empty
+#        travelers/, exit exactly 3 and one header line.
+#   PJ7  fail closed: a fence row cut to three fields in a copy — exit exactly 2, empty stdout.
+#
+# EVERY ARM IS A CHAIN, by rule (ADR-048): one condition and one message per branch, PASS on
+# the last `else` only. PJ0, PJ2 and PJ4 to PJ7 are top-level code, which group FZ walks. PJ1
+# and PJ3 live in functions because md_flips takes an assertion FUNCTION, and ADR-048 § 3
+# records that the FZ walk does not read inside one — so those two are FZ-ungraded, and MD's
+# dynamic arm covers them instead: MD[PJ1] removes pj_project_file and MD[PJ3] removes
+# pj_selectors, and each must flip its arm to exactly one FAIL and no PASS. PJ3 asserts the
+# cause token, not only the status, because exit 2 is the code for every fail-closed cause:
+# without the token, a removed pj_selectors would reach the same branch as the control and
+# MD[PJ3] would read BLIND. The registrations run only once the subject has been sourced; on
+# an absent subject PJ0 is the arm that reports it, and every other arm fails with it.
+#
+# A FENCE COPY is changed inside the `publish-contract-values` fence only: the document also
+# carries lines whose first word is `field` outside it. Each control counts the rows its
+# mutation changed and fails when that count is zero, so a mutation that silently missed
+# cannot read as a control that held.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group PJ — the traveller projection leaves out every line a § 5.6 field row labels."
+
+PJT_SCRIPT="$ROOT/scripts/project-traveler-data.sh"
+PJT_DECL="$ROOT/reference/data-architecture.md"
+PJT_FX="$WORK/pj"
+PJT_TRIP="$PJT_FX/trips/canary-2099"
+PJT_FALL="$PJT_FX/trips/fallback-2099"
+PJT_NONE="$PJT_FX/trips/none-2099"
+PJT_P="CNRY-PJ01 CNRY-PJ05 CNRY-PJ06 CNRY-PJ07 CNRY-PJ08 CNRY-PJ09"
+PJT_D="CNRY-PJ02 CNRY-PJ03 CNRY-PJ04 CNRY-PJ10"
+PJT_ALL="$PJT_P $PJT_D"
+PJT_KEEP=(
+  '- **Would love:** tide pools at dawn · KEEP-PJ-LOVE'
+  '- **Pace:** slow mornings · KEEP-PJ-PACE'
+  '- **Rooming:** happy to share with Sam · KEEP-PJ-ROOM'
+  '## Sam [OPERATOR-PROVIDED] [THIRD-PARTY]'
+  '- **Needs:** a step-free route · KEEP-PJ-NEED'
+)
+mkdir -p "$PJT_TRIP/outputs" "$PJT_FALL/travelers" "$PJT_NONE/travelers"
+printf '%s\n' \
+  '---' \
+  'artifact: outputs/traveler-model.md' \
+  'schema-version: 1' \
+  'trip: canary-2099' \
+  'writer: enrichment' \
+  'lifecycle: rebuilt-each-synthesis' \
+  'provenance: derived' \
+  'publish: internal-hard' \
+  '---' \
+  '' \
+  '# Traveler Model [DERIVED]' \
+  '' \
+  '## Rowan' \
+  '- **Passport:** Zorvanian, valid to 2033 · CNRY-PJ01' \
+  '- **Documents:** entry registration · CNRY-PJ02' \
+  '  file before travel · CNRY-PJ03' \
+  '- **Documents:**' \
+  '  - transit visa note · CNRY-PJ04' \
+  "${PJT_KEEP[0]}" \
+  '* passport: CNRY-PJ05' \
+  '- Passport : CNRY-PJ06' \
+  '- **Documents:** transit permit' \
+  'carried on an unindented line · CNRY-PJ10' \
+  "${PJT_KEEP[1]}" \
+  "${PJT_KEEP[2]}" \
+  '- **Passports held:** two · CNRY-PJ08' \
+  '- **Passport-country note** issued abroad · CNRY-PJ09' \
+  '' \
+  "${PJT_KEEP[3]}" \
+  "${PJT_KEEP[4]}" \
+  '' \
+  '## Update signals [DERIVED]' \
+  '- Passport: CNRY-PJ07' > "$PJT_TRIP/outputs/traveler-model.md"
+printf '%s\n' \
+  '# Rowan' \
+  '' \
+  '- **Would love:** tide pools at dawn · KEEP-PJ-FALL' \
+  '- **Passport:** Zorvanian, valid to 2033 · CNRY-PJ11' > "$PJT_FALL/travelers/rowan.md"
+
+# pjt_hits <text> <token…> — the tokens that occur in <text>, space-separated, by index().
+pjt_hits() {
+  local text="$1"; shift
+  LC_ALL=C awk -v toks="$*" 'BEGIN { n = split(toks, t, " ") } { b = b $0 "\n" }
+    END { for (i = 1; i <= n; i++) if (index(b, t[i])) printf "%s ", t[i] }' <<<"$text"
+}
+# pjt_count <space-separated list> — how many items it holds.
+pjt_count() { LC_ALL=C awk '{ print NF + 0 }' <<<"$1"; }
+# pjt_frontmatter <text> — the lines from the first `---` through the second, verbatim.
+pjt_frontmatter() {
+  LC_ALL=C awk '$0 == "---" { n++; print; if (n == 2) exit; next } n == 1 { print }' <<<"$1"
+}
+# pjt_mutate <mode> <src> <dst> — a copy of the declaration with its fence changed, and the
+# number of fence rows the change touched on stdout. drop: every `field` row deleted.
+# rename: the Passport rows' selector renamed. add: one synthetic `field Rooming` row.
+# short: the first `field` row cut to three fields.
+pjt_mutate() {
+  LC_ALL=C awk -v mode="$1" -v dst="$3" '
+    $0 == "```publish-contract-values" { inf = 1; print > dst; next }
+    inf && $0 == "```" {
+      if (mode == "add") { print "field    Rooming         outputs/traveler-model.md   conjunctive" > dst; c++ }
+      inf = 0; print > dst; next
+    }
+    inf && $1 == "field" && mode == "drop" { c++; next }
+    inf && $1 == "field" && mode == "rename" && $2 == "Passport" { sub(/Passport/, "PJZZUNUSED"); c++ }
+    inf && $1 == "field" && mode == "short" && !done { print $1, $2, $3 > dst; done = 1; c++; next }
+    { print > dst }
+    END { print c + 0 }' "$2"
+}
+# pjt_eval <declaration> <trip-dir> — run the projection in this process and record its exit
+# status, stdout, stderr and which canaries reached stdout.
+pjt_eval() {
+  PJT_OUT="$(pj_project_trip "$1" "$2" 2>"$PJT_FX/eval.err")"
+  PJT_RC=$?
+  PJT_ERR="$(tr '\n' ' ' < "$PJT_FX/eval.err")"
+  PJT_LEAKED="$(pjt_hits "$PJT_OUT" $PJT_ALL)"
+  PJT_LEAK="$(pjt_count "$PJT_LEAKED")"
+  PJT_HEAD="${PJT_OUT%%$'\n'*}"
+}
+
+# ── PJ0 — the subject, the fence and the fixture.
+PJT_SRC_RC=127; PJT_DEFS=0; PJT_NROWS=0; PJT_NFIELD=0; PJT_NSEL=0; PJT_SEL=""; PJT_SEL_RC=127
+if [ -f "$PJT_SCRIPT" ] && [ -r "$PJT_SCRIPT" ]; then
+  # shellcheck source=project-traveler-data.sh
+  source "$PJT_SCRIPT"
+  PJT_SRC_RC=$?
+fi
+for pjt_f in pj_fence_block pj_selectors pj_project_file pj_project_trip; do
+  declare -F "$pjt_f" >/dev/null 2>&1 && PJT_DEFS=$((PJT_DEFS + 1))
+done
+PJT_LOADED=0
+[ "$PJT_SRC_RC" -eq 0 ] && [ "$PJT_DEFS" -eq 4 ] && PJT_LOADED=1
+if [ "$PJT_LOADED" -eq 1 ]; then
+  PJT_ROWS="$(pj_fence_block "$PJT_DECL" 'publish-contract-values' '### 5.6 The declaration')"
+  PJT_NROWS="$(LC_ALL=C awk 'NF && $1 !~ /^#/ { c++ } END { print c + 0 }' <<<"$PJT_ROWS")"
+  PJT_NFIELD="$(LC_ALL=C awk '$1 == "field" { c++ } END { print c + 0 }' <<<"$PJT_ROWS")"
+  PJT_SEL="$(pj_selectors "$PJT_DECL" 2>/dev/null)"
+  PJT_SEL_RC=$?
+  PJT_NSEL="$(LC_ALL=C awk 'NF { c++ } END { print c + 0 }' <<<"$PJT_SEL")"
+fi
+PJT_SRCTXT="$(cat "$PJT_TRIP/outputs/traveler-model.md")"
+PJT_SRC_CAN="$(pjt_count "$(pjt_hits "$PJT_SRCTXT" $PJT_ALL)")"
+PJT_SRC_KEEP="$(pjt_count "$(pjt_hits "$PJT_SRCTXT" KEEP-PJ-LOVE KEEP-PJ-PACE KEEP-PJ-ROOM KEEP-PJ-NEED)")"
+if [ ! -f "$PJT_SCRIPT" ]; then
+  FAIL "PJ0: scripts/project-traveler-data.sh is ABSENT — the subject does not exist, so this group has nothing to grade and every arm below fails with it. This is an absent subject, never a rejection"
+elif [ "$PJT_SRC_RC" -ne 0 ]; then
+  FAIL "PJ0: scripts/project-traveler-data.sh exists but sourcing it returned $PJT_SRC_RC — the library did not load"
+elif [ "$PJT_DEFS" -ne 4 ]; then
+  FAIL "PJ0: sourcing scripts/project-traveler-data.sh defined $PJT_DEFS of its 4 library functions (pj_fence_block, pj_selectors, pj_project_file, pj_project_trip)"
+elif [ "$PJT_NROWS" -lt 1 ]; then
+  FAIL "PJ0: the § 5.6 publish-contract-values fence offered 0 rows to the projection's reader — there is no class to project against"
+elif [ "$PJT_NFIELD" -lt 1 ]; then
+  FAIL "PJ0: the § 5.6 fence carries $PJT_NROWS row(s) and 0 field rows — the projection would have nothing to omit"
+elif [ "$PJT_SEL_RC" -ne 0 ]; then
+  FAIL "PJ0: pj_selectors refused the real declaration with status $PJT_SEL_RC"
+elif [ "$PJT_NSEL" -lt 1 ]; then
+  FAIL "PJ0: pj_selectors returned no selector from $PJT_NFIELD field row(s)"
+elif [ "$PJT_SRC_CAN" -ne 10 ]; then
+  FAIL "PJ0: the fixture model carries $PJT_SRC_CAN of its 10 canaries — a projection graded over it would prove nothing"
+elif [ "$PJT_SRC_KEEP" -ne 4 ]; then
+  FAIL "PJ0: the fixture model carries $PJT_SRC_KEEP of its 4 kept markers"
+else
+  PASS "PJ0: the subject is present and sourced, all 4 library functions are defined; the real fence offers $PJT_NROWS row(s), $PJT_NFIELD of them field rows, read as $PJT_NSEL distinct selector(s) ($(tr '\n' ' ' <<<"$PJT_SEL")); the fixture model carries 10 of 10 canaries and 4 of 4 kept markers"
+fi
+
+# ── PJ1 — over the real fence: exit 0, the model named as the source, no canary.
+pjt_pj1() {
+  pjt_eval "$PJT_DECL" "$PJT_TRIP"
+  if [ "$PJT_RC" -eq 127 ]; then
+    FAIL "PJ1: rc=127 — pj_project_trip is NOT DEFINED. The subject is ABSENT, not rejecting, so this assertion has nothing to grade"
+  elif [ "$PJT_RC" -ne 0 ]; then
+    FAIL "PJ1: the projection of the fixture model exited $PJT_RC, expected exactly 0 — stderr: $PJT_ERR"
+  elif [ "$PJT_LEAK" -ne 0 ]; then
+    FAIL "PJ1: $PJT_LEAK of the 10 canaries reached the projection: $PJT_LEAKED"
+  elif [ "$PJT_HEAD" = "${PJT_HEAD#'<!-- projection: source=outputs/traveler-model.md;'}" ]; then
+    FAIL "PJ1: the projection's first line does not name outputs/traveler-model.md as its source — it reads: $PJT_HEAD"
+  else
+    PASS "PJ1: the projection of the fixture model exits 0 [rc=0, expected 0], names the model as its source, and carries 0 of the 10 canaries — 6 passport-labelled and 4 documents-labelled, among them a wrapped line, a nested sub-list item and an unindented lazy-continuation line"
+  fi
+}
+pjt_pj1
+
+# ── PJ2 — the complement: what must survive, and the two near misses that must not.
+pjt_eval "$PJT_DECL" "$PJT_TRIP"
+PJT_MISS=""
+for pjt_l in "${PJT_KEEP[@]}"; do
+  case $'\n'"$PJT_OUT"$'\n' in *$'\n'"$pjt_l"$'\n'*) ;; *) PJT_MISS="${PJT_MISS}[${pjt_l}] " ;; esac
+done
+PJT_NEAR="$(pjt_hits "$PJT_OUT" CNRY-PJ08 CNRY-PJ09)"
+PJT_FM_SRC="$(pjt_frontmatter "$PJT_SRCTXT")"
+PJT_FM_OUT="$(pjt_frontmatter "${PJT_OUT#*$'\n'}")"
+if [ "$PJT_RC" -ne 0 ]; then
+  FAIL "PJ2: the projection exited $PJT_RC, so there is no output to read the kept set from"
+elif [ -n "$PJT_MISS" ]; then
+  FAIL "PJ2: the projection dropped line(s) it must keep — over-broad omission: $PJT_MISS"
+elif [ -n "$PJT_NEAR" ]; then
+  FAIL "PJ2: a near miss reached the projection — $PJT_NEAR. Passports held: and Passport-country note are passport lines, and the label rule omits a selector followed by a plural s or any non-letter"
+elif [ -z "$PJT_FM_SRC" ]; then
+  FAIL "PJ2: the fixture's frontmatter read as empty, so the byte-identity below would compare nothing"
+elif [ "$PJT_FM_OUT" != "$PJT_FM_SRC" ]; then
+  FAIL "PJ2: the projection's frontmatter is not byte-identical to the source's"
+else
+  PASS "PJ2: the projection keeps all ${#PJT_KEEP[@]} kept lines verbatim — Would love, Pace and Rooming beside each omitted payload, the [OPERATOR-PROVIDED] [THIRD-PARTY] heading with both marks and its need line — keeps the frontmatter byte-identical, and omits both near misses (Passports held:, Passport-country note)"
+fi
+
+# ── PJ3 — CONTROL: no field row, so PJ1's predicate must fail, for the reason under test.
+PJT_C3="$PJT_FX/decl-nofield.md"
+PJT_N3="$(pjt_mutate drop "$PJT_DECL" "$PJT_C3")"
+pjt_pj3() {
+  local tok=0
+  pjt_eval "$PJT_C3" "$PJT_TRIP"
+  case "$PJT_ERR" in *'PJ0: zero field rows'*) tok=1 ;; esac
+  if [ "$PJT_N3" -lt 1 ]; then
+    FAIL "PJ3: the mutation deleted 0 field rows from the copy, so this control has nothing to grade"
+  elif [ "$PJT_RC" -eq 0 ] && [ "$PJT_LEAK" -eq 0 ]; then
+    FAIL "PJ3: CONTROL did not fire — with every field row deleted, PJ1's own predicate (exit 0, 0 of 10 canaries) still held"
+  elif [ "$PJT_RC" -ne 2 ]; then
+    FAIL "PJ3: with every field row deleted the projection exited $PJT_RC, expected exactly 2 (undetermined)"
+  elif [ -n "$PJT_OUT" ]; then
+    FAIL "PJ3: the projection exited 2 but printed to stdout — a fail-closed exit must pass nothing on"
+  elif [ "$tok" -ne 1 ]; then
+    FAIL "PJ3: the projection exited 2 with empty stdout, but not for the reason under test — stderr does not carry 'PJ0: zero field rows': $PJT_ERR"
+  else
+    PASS "PJ3: CONTROL — with all $PJT_N3 field row(s) deleted from a copy of the declaration, PJ1's predicate fails: exit exactly 2 [rc=2, expected 2], empty stdout, and the cause token 'PJ0: zero field rows' on stderr"
+  fi
+}
+pjt_pj3
+
+# ── PJ4 — CONTROL: the Passport selector renamed, row by row.
+PJT_C4="$PJT_FX/decl-rename.md"
+PJT_N4="$(pjt_mutate rename "$PJT_DECL" "$PJT_C4")"
+pjt_eval "$PJT_C4" "$PJT_TRIP"
+PJT_NP="$(pjt_count "$(pjt_hits "$PJT_OUT" $PJT_P)")"
+PJT_ND="$(pjt_count "$(pjt_hits "$PJT_OUT" $PJT_D)")"
+if [ "$PJT_N4" -lt 1 ]; then
+  FAIL "PJ4: the mutation renamed 0 Passport rows in the copy, so this control has nothing to grade"
+elif [ "$PJT_RC" -ne 0 ]; then
+  FAIL "PJ4: with the Passport selector renamed the projection exited $PJT_RC, expected exactly 0"
+elif [ "$PJT_NP" -ne 6 ]; then
+  FAIL "PJ4: with the Passport selector renamed, $PJT_NP of the 6 passport canaries came back — the selector is not being read from the fence row by row"
+elif [ "$PJT_ND" -ne 0 ]; then
+  FAIL "PJ4: renaming the Passport selector let $PJT_ND documents canaries through — one row's change moved another row's omission"
+else
+  PASS "PJ4: CONTROL — with the selector of $PJT_N4 Passport row(s) renamed in a copy, all 6 passport canaries come back and 0 of the 4 documents canaries do, so each selector is read from the fence"
+fi
+
+# ── PJ5 — CONTROL: one synthetic field row, no script edit.
+PJT_C5="$PJT_FX/decl-add.md"
+PJT_N5="$(pjt_mutate add "$PJT_DECL" "$PJT_C5")"
+pjt_eval "$PJT_C5" "$PJT_TRIP"
+PJT_ROOM="$(pjt_hits "$PJT_OUT" KEEP-PJ-ROOM)"
+if [ "$PJT_N5" -ne 1 ]; then
+  FAIL "PJ5: the mutation added $PJT_N5 rows to the copy, expected exactly 1"
+elif [ "$PJT_RC" -ne 0 ]; then
+  FAIL "PJ5: with a field Rooming row added the projection exited $PJT_RC, expected exactly 0"
+elif [ -n "$PJT_ROOM" ]; then
+  FAIL "PJ5: a field Rooming row was added to the fence and the Rooming line still reached the projection — a new row did not join it"
+elif [ "$PJT_LEAK" -ne 0 ]; then
+  FAIL "PJ5: adding a row let $PJT_LEAK canaries through: $PJT_LEAKED"
+else
+  PASS "PJ5: CONTROL — one synthetic 'field Rooming' row added to a copy of the fence omits the Rooming line with no script edit, and 0 of the 10 canaries reach the projection"
+fi
+
+# ── PJ6 — the fallback, and the no-source state.
+pjt_eval "$PJT_DECL" "$PJT_FALL"
+PJT_F11="$(pjt_hits "$PJT_OUT" CNRY-PJ11)"
+PJT_FKEEP="$(pjt_hits "$PJT_OUT" KEEP-PJ-FALL)"
+PJT_FHDR=0
+case "$PJT_OUT" in *'<!-- projection of travelers/rowan.md -->'*) PJT_FHDR=1 ;; esac
+PJT_FSRC=0
+case "$PJT_HEAD" in '<!-- projection: source=travelers/*.md'*) PJT_FSRC=1 ;; esac
+PJT_FRC="$PJT_RC"
+pjt_eval "$PJT_DECL" "$PJT_NONE"
+PJT_NLINES="$(LC_ALL=C awk 'END { print NR + 0 }' <<<"$PJT_OUT")"
+if [ "$PJT_FRC" -ne 0 ]; then
+  FAIL "PJ6: with no model on file the projection of travelers/*.md exited $PJT_FRC, expected exactly 0"
+elif [ "$PJT_FSRC" -ne 1 ]; then
+  FAIL "PJ6: the fallback projection's header does not name travelers/*.md as its source"
+elif [ "$PJT_FHDR" -ne 1 ]; then
+  FAIL "PJ6: the fallback projection carries no per-file header for travelers/rowan.md"
+elif [ -n "$PJT_F11" ]; then
+  FAIL "PJ6: the Passport line planted in travelers/rowan.md reached the fallback projection"
+elif [ -z "$PJT_FKEEP" ]; then
+  FAIL "PJ6: the fallback projection dropped the traveller's Would love line"
+elif [ "$PJT_RC" -ne 3 ]; then
+  FAIL "PJ6: with no model and an empty travelers/ the projection exited $PJT_RC, expected exactly 3 (no source on file)"
+elif [ "$PJT_NLINES" -ne 1 ]; then
+  FAIL "PJ6: the no-source projection printed $PJT_NLINES line(s), expected its one header line"
+else
+  PASS "PJ6: with no model the traveller files are projected [rc=0, expected 0] under a source header and a per-file header, the planted Passport line omitted and the leaning kept; with no model and an empty travelers/ the projection exits 3 [rc=3, expected 3] with its one header line"
+fi
+
+# ── PJ7 — fail closed on a malformed row.
+PJT_C7="$PJT_FX/decl-short.md"
+PJT_N7="$(pjt_mutate short "$PJT_DECL" "$PJT_C7")"
+pjt_eval "$PJT_C7" "$PJT_TRIP"
+if [ "$PJT_N7" -ne 1 ]; then
+  FAIL "PJ7: the mutation cut $PJT_N7 rows in the copy, expected exactly 1"
+elif [ "$PJT_RC" -ne 2 ]; then
+  FAIL "PJ7: with one fence row cut to three fields the projection exited $PJT_RC, expected exactly 2 (undetermined)"
+elif [ -n "$PJT_OUT" ]; then
+  FAIL "PJ7: the projection exited 2 on a malformed row but printed to stdout"
+else
+  PASS "PJ7: one fence row cut to three fields in a copy — the projection fails closed, exit exactly 2 [rc=2, expected 2] with empty stdout"
+fi
+
+# ── The registrations. Run only over a sourced subject: removing a function that was never
+# defined would flip an arm that was already failing, and read as a measurement.
+if [ "$PJT_LOADED" -eq 1 ]; then
+  md_flips pj_project_file 'PJ1' pjt_pj1
+  md_flips pj_selectors    'PJ3' pjt_pj3
+fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RS — the group rosters that DESCRIBE this suite, asserted against the run.
