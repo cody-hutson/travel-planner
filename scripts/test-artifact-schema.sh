@@ -29169,8 +29169,10 @@ md_flips wtadr26_cell 'WT-ADR26' wtadr26_assert
 #                header naming the field in more than one word, a blockquoted heading inside
 #                a section, which does not end it, a setext heading over a paragraph of
 #                more than one line, a passport heading and a setext heading inside a
-#                blockquote, each ended by a heading in that quote, and a key cell holding
-#                the plural selector alone (19 shapes, 40 canaries).
+#                blockquote, each ended by a heading in that quote, a key cell holding
+#                the plural selector alone, a key cell opening with a selector word in a body
+#                row, as a list item does, and a later cell holding the selector alone,
+#                singular and plural, its value in the cell after it (21 shapes, 45 canaries).
 #          PJ11  the delimiters a payload must stop at, each with kept lines after it: CRLF
 #                line endings, the closer of a fenced block the label sits in, and the
 #                frontmatter's closing `---`, with and without a byte-order mark, a key after
@@ -29178,12 +29180,13 @@ md_flips wtadr26_cell 'WT-ADR26' wtadr26_assert
 #                closer is read by — a closer as long as its opener's run, with nothing after
 #                it, of the opener's own character, an opener a tilde run can make, no
 #                opener made by an inline code span, and a heading mark inside a fence, a
-#                label there and never a section; table rows whose text opens with a
-#                selector word but holds no label, which are kept, and a cell carrying a colon
-#                that opens with no selector; a thematic break after a list item, after a
-#                blank line in a payload, or after a list-item label, none of which is a
-#                setext underline; and a line of two backticks, which opens no fence
-#                (16 shapes, 23 canaries).
+#                label there and never a section; needs rows whose text opens with a
+#                selector word, left out where that text is the key cell, the named cost, and
+#                kept where it is a later cell holding no label, mid-table and last in the
+#                file, and a cell carrying a colon that opens with no selector; a thematic
+#                break after a list item, after a blank line in a payload, or after a
+#                list-item label, none of which is a setext underline; and a line of two
+#                backticks, which opens no fence (16 shapes, 25 canaries).
 #   PJ12 fail closed: a source holding a carriage return that no line feed follows — a model
 #        of bare-CR lines ending in a line feed, and a traveller file whose last byte is one,
 #        each the only case its own test can refuse — exits exactly 2 with
@@ -29744,6 +29747,23 @@ printf '%s\n' '## Rowan' \
   '|---|---|' \
   '| Passports | two, Zorvanian and Ostrian · CNRY-PJS69 |' \
   '| Pace | slow mornings · KEEP-PJS71 |' > "$PJT_SF"
+pjt_shape 'PJ10[table-key]' shape-table-key model 'CNRY-PJS76 CNRY-PJS77 CNRY-PJS78' 'KEEP-PJS79 KEEP-PJS80' '| Passport number |' - - 'body rows whose key cell opens with a selector word, as a list item does, and holds no colon'
+printf '%s\n' '## Rowan' \
+  '| Field | Value |' \
+  '|---|---|' \
+  '| Pace | slow mornings · KEEP-PJS79 |' \
+  '| Passport number | Z1234567 · CNRY-PJS76 |' \
+  '| Passports held | two · CNRY-PJS77 |' \
+  '| Passport-country note | issued abroad · CNRY-PJS78 |' \
+  '| Rooming | own room · KEEP-PJS80 |' > "$PJT_SF"
+pjt_shape 'PJ10[table-later]' shape-table-later model 'CNRY-PJS79 CNRY-PJS80' 'KEEP-PJS81 KEEP-PJS82' '| Rowan | Passports |' - - 'a later cell holding the selector alone, singular and plural, in a body row, its value in the cell after it'
+printf '%s\n' '## Rowan' \
+  '| Traveller | Field | Value |' \
+  '|---|---|---|' \
+  '| Rowan | Pace | slow mornings · KEEP-PJS81 |' \
+  '| Rowan | Passport | Zorvanian · CNRY-PJS79 |' \
+  '| Rowan | Passports | two, Zorvanian and Ostrian · CNRY-PJS80 |' \
+  '| Rowan | Rooming | own room · KEEP-PJS82 |' > "$PJT_SF"
 
 pjt_shape 'PJ11[crlf]' shape-crlf model 'CNRY-PJS26 CNRY-PJS27' 'KEEP-PJS24 KEEP-PJS25' "${PJT_CR}
 ${PJT_CR}
@@ -29836,14 +29856,20 @@ printf '%s\n' '## Rowan' \
   '' \
   '## Sam [OPERATOR-PROVIDED] [THIRD-PARTY]' \
   '- **Needs:** a step-free route · KEEP-PJS51' > "$PJT_SF"
-pjt_shape 'PJ11[table-need]' shape-table-need model 'CNRY-PJS57' 'KEEP-PJS56 KEEP-PJS57 KEEP-PJS58' '| Documents for insulin' - - 'needs rows whose text opens with a selector word and holds no label, one mid-table and one last in the file, beside a row the field labels'
+pjt_shape 'PJ11[table-need]' shape-table-need model 'CNRY-PJS57 CNRY-PJS81 CNRY-PJS82' 'KEEP-PJS56 KEEP-PJS57 KEEP-PJS58 KEEP-PJS83' '| Documents for insulin' - - 'needs rows whose text opens with a selector word: in the key cell, left out, the named cost; in a later cell holding no label, kept, one mid-table and one last in the file; beside a row the field labels'
 printf '%s\n' '## Rowan' \
   '| Need | Category | Governing constraint |' \
   '|---|---|---|' \
-  '| Documents for insulin pens carried through security · KEEP-PJS56 | dietary-health | DH-2 |' \
+  '| Documents for insulin pens carried through security · CNRY-PJS81 | dietary-health | DH-2 |' \
   '| Passport | Zorvanian · CNRY-PJS57 | none |' \
   '| Stairs are hard; level approaches only · KEEP-PJS57 | mobility | HC-1 |' \
-  '| Documents kept with the group leader on day trips · KEEP-PJS58 | logistics | HC-2 |' > "$PJT_SF"
+  '| Documents kept with the group leader on day trips · CNRY-PJS82 | logistics | HC-2 |' \
+  '' \
+  '| Field | Need |' \
+  '|---|---|' \
+  '| Need | Documents for insulin pens carried through security · KEEP-PJS56 |' \
+  '| Pace | slow mornings · KEEP-PJS83 |' \
+  '| Need | Documents kept with the group leader on day trips · KEEP-PJS58 |' > "$PJT_SF"
 pjt_shape 'PJ11[setext-list]' shape-setext-list model 'CNRY-PJS65 CNRY-PJS66' 'KEEP-PJS65 KEEP-PJS66' '  - issued abroad · CNRY-PJS66
 ---' - - 'a thematic break after a list item in a paragraph label payload, which is no setext underline, with a kept line after it'
 printf '%s\n' '## Rowan' \
