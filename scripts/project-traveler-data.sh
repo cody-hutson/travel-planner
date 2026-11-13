@@ -34,21 +34,36 @@
 # § 5 says an OUT value stays out wherever it is carried, and omitting more than the publish
 # guard's four literal (limb, scope) pairs is the fail-safe direction for what an agent sees.
 #
-# A LINE IS OMITTED when its STRIPPED text begins with a selector, case-insensitively,
-# optionally followed by a plural `s`, and then by a character that is not a letter, or by
-# the end of the line. No trailing `:` is required, so `Passport number:`, `Passports held:`
-# and `Passport-country note` are all omitted. STRIPPED means: leading blockquote markers,
-# whitespace, one list marker, then any run of emphasis characters and bracketed marks,
-# taken off the front. A heading is never a label. The comparison is a substring test,
-# never a regex built from a selector: a selector is corpus text, and one carrying a regex
-# metacharacter must not silently become a pattern.
+# A LINE IS A HIT, and is omitted, when its STRIPPED text begins with a selector,
+# case-insensitively, optionally followed by a plural `s`, and then by a character that is
+# not a letter, or by the end of the line. No trailing `:` is required, so `Passport
+# number:`, `Passports held:` and `Passport-country note` are all hits. STRIPPED means:
+# leading blockquote markers, whitespace, one list marker, then any run of emphasis
+# characters, heading marks (`#`), bracketed marks and `<!--` comment openers, taken off the
+# front. A table row is a hit when any one of its cells, stripped the same way, begins with a
+# selector. Every test reads the line with a trailing carriage return taken off, a byte-order
+# mark taken off the first line, and each no-break space read as a space; what is printed is
+# the line as read. The comparison is a substring test, never a regex built from a selector:
+# a selector is corpus text, and one carrying a regex metacharacter must not silently become
+# a pattern.
 #
-# WHAT A HIT TAKES WITH IT: every following line until a blank line or a heading, except
-# that a list item at the label's own indent or shallower ends it too (a selector line found
-# inside that payload is taken with it, and never moves the indent the payload ends at). So a deeper-indented
-# line goes (a wrapped value, a nested sub-list), and so does an unindented line that is not
-# blank, a list item or a heading (markdown's lazy continuation). This is WIDER than the
-# publish guard's continuation limb, and a slightly over-broad omission is the accepted cost.
+# WHAT A HIT TAKES WITH IT depends on the markdown shape it sits in:
+#   a HEADING — `#` to `######`, or a hit line underlined with `===` or `---` — takes its
+#     whole section, up to the next heading of the same or a higher level;
+#   a TABLE ROW takes itself, and where it is the header row above a `|---|` delimiter row
+#     it takes the whole table;
+#   any other hit takes every following line until one of these ends it: a list item at the
+#     label's own indent or shallower; a heading no deeper than the label; a blank line, but
+#     only when the next line that is not blank is no deeper than the label, so a loose
+#     sub-item past a blank line goes too; the closing delimiter of a fenced block the label
+#     sits inside; and, in the frontmatter, its closing `---` or the next key at the label's
+#     indent. So a deeper-indented line goes (a wrapped value, a nested sub-list, a heading
+#     nested in the payload, a fenced block it opens, which goes whole), and so does a line no
+#     deeper that is not a list item (markdown's lazy continuation). A selector line found
+#     inside the payload is taken with it and never raises the indent the payload ends at: it
+#     can lower it, so a shallower selector line's own sub-items go too.
+# This is WIDER than the publish guard's continuation limb, and a slightly over-broad
+# omission is the accepted cost: a heading's section goes whole, kept lines in it included.
 #
 # KEPT, verbatim: everything else — the frontmatter, so the tolerant-read rule still
 # applies; every `entry`-limb entry, `[THIRD-PARTY]` included, with its marks, because the
@@ -77,8 +92,11 @@
 # It decides what an agent is GIVEN, never what the agent OPENS. A dispatched agent keeps
 # `Read`, and nothing here takes it away: that it opens none of these files itself is a
 # rule its prompt, its dispatch line and CLAUDE.md state — FOLLOWED, NOT ENFORCED. It reads
-# labels, not values: a passport written into prose under some other label is kept. It does
-# not cover trips/<slug>/trip-context.md or trip-log.md, which no § 5.6 row scopes.
+# labels, not values, so three shapes still pass it: a label behind an emoji, a homoglyph or
+# any other non-ASCII character but a no-break space; a value written as prose under some
+# other label; and a camel-case key such as `passportNumber:`, which the whole-word rule
+# keeps. It does not cover trips/<slug>/trip-context.md or trip-log.md, which no § 5.6 row
+# scopes.
 #
 # ── THE LIFTED FENCE READER, AND ITS DEBT ────────────────────────────────────────
 # pj_fence_block is the repository's fenced-block reader, lifted from
@@ -183,6 +201,15 @@ pj_project_file() {   # pj_project_file <selectors> <file>
       k = split(ENVIRON["PJ_SEL"], raw, "\n")
       for (i = 1; i <= k; i++) if (raw[i] != "") sel[++m] = tolower(raw[i])
       if (m == 0) exit 2
+      NB = "\302\240"; BOM = "\357\273\277"
+    }
+    # The line every test reads: a trailing carriage return off, a byte-order mark off the
+    # first line, and each no-break space read as a space. What is printed is $0, as read.
+    function norm(s,   i) {
+      sub(/\r$/, "", s)
+      if (NR == 1 && substr(s, 1, 3) == BOM) s = substr(s, 4)
+      while ((i = index(s, NB)) > 0) s = substr(s, 1, i - 1) " " substr(s, i + 2)
+      return s
     }
     # The line with any blockquote markers taken off its front.
     function unquote(s) {
@@ -201,22 +228,32 @@ pj_project_file() {   # pj_project_file <selectors> <file>
       return w
     }
     function blank(s) { return s ~ /^[ \t]*$/ }
-    function heading(s) { return s ~ /^[ \t]*#+([ \t]|$)/ }
     function item(s) { return s ~ /^[ \t]*([-*+]|[0-9]+[.)])([ \t]|$)/ }
-    function stripped(s) {
-      s = unquote(s)
+    # The level of a `#` heading, 0 for any other line.
+    function hlevel(s) {
+      if (!match(s, /^[ \t]*#+([ \t]|$)/)) return 0
+      s = substr(s, 1, RLENGTH); gsub(/[^#]/, "", s)
+      return length(s)
+    }
+    # A setext underline: a run of `=` or of `-` alone on its line.
+    function setext(s) { return s ~ /^[ \t]*(=+|-+)[ \t]*$/ }
+    # The first three characters after the indent, for the fence tests.
+    function lead(s) { sub(/^[ \t]+/, "", s); return substr(s, 1, 3) }
+    # A table delimiter row, such as |---|:--:|.
+    function delimrow(s) { return s ~ /^[ \t]*[|: \t-]+$/ && index(s, "|") && index(s, "-") }
+    function cut(s) {
       sub(/^[ \t]+/, "", s)
       if (match(s, /^([-*+]|[0-9]+[.)])([ \t]+|$)/)) s = substr(s, RLENGTH + 1)
       while (1) {
-        if (match(s, /^[*_`~ \t]+/)) { s = substr(s, RLENGTH + 1); continue }
+        if (match(s, /^[*_`~# \t]+/)) { s = substr(s, RLENGTH + 1); continue }
         if (match(s, /^\[[^]]*\]/)) { s = substr(s, RLENGTH + 1); continue }
+        if (substr(s, 1, 4) == "<!--") { s = substr(s, 5); continue }
         break
       }
       return s
     }
-    function label(s,   t, i, n, c) {
-      if (heading(unquote(s))) return 0
-      t = tolower(stripped(s))
+    function opens(t,   i, n, c) {
+      t = tolower(t)
       for (i = 1; i <= m; i++) {
         n = length(sel[i])
         if (substr(t, 1, n) != sel[i]) continue
@@ -226,18 +263,63 @@ pj_project_file() {   # pj_project_file <selectors> <file>
       }
       return 0
     }
+    # A hit: the stripped line opens with a selector, or, where it holds a `|`, a cell does.
+    function label(u,   s, k, i, cell) {
+      if (opens(cut(u))) return 1
+      if (!index(u, "|")) return 0
+      s = u; gsub(/\\\|/, "", s)
+      k = split(s, cell, "|")
+      for (i = 1; i <= k; i++) if (opens(cut(cell[i]))) return 1
+      return 0
+    }
     {
-      u = unquote($0)
-      if (taking) {
-        if (blank(u) || heading(u)) taking = 0
-        else if (label($0)) { w = width(u); if (w < at) at = w; next }
-        else if (width(u) > at) next
-        else if (!item(u)) next
+      t = norm($0); u = unquote(t)
+      infm = fm; inf = fence; opened = 0; closed = 0
+      if (NR == 1 && t == "---") fm = 1
+      else if (fm) { if (t == "---") fm = 0 }
+      else if (!fence && (lead(u) == "```" || lead(u) == "~~~")) { fence = 1; fch = lead(u); opened = 1 }
+      else if (fence && lead(u) == fch) { fence = 0; closed = 1 }
+      # A fenced block opened inside a payload is literal text: it goes whole, closer included.
+      if (payf) { if (closed) payf = 0; next }
+      # Blank lines inside a payload wait for the next line that is not blank: deeper, and
+      # the payload goes on past them; no deeper, and they ended it.
+      if (pend) {
+        if (blank(u)) { pbuf = pbuf $0 "\n"; next }
+        pend = 0
+        if (width(u) > at) pbuf = ""
+        else { printf "%s", pbuf; pbuf = ""; taking = 0 }
+      }
+      # A table: after a header-row hit its delimiter row and every row below it go.
+      if (tbl) { if (!blank(u) && index(u, "|")) next; tbl = 0 }
+      if (thd) { thd = 0; if (delimrow(u)) { tbl = 1; next } }
+      # A heading hit: its section, up to a heading of the same or a higher level.
+      if (taking == 2) {
+        lv = hlevel(u)
+        if (inf || infm || lv == 0 || lv > lvl || width(u) > 3) next
+        taking = 0
+      }
+      if (taking == 1) {
+        first = fst; fst = 0
+        if (infm && t == "---") taking = 0
+        else if (hitf && closed) taking = 0
+        else if (blank(u)) { pend = 1; pbuf = $0 "\n"; next }
+        else if (first && plain && setext(u)) { taking = 2; lvl = index(u, "=") ? 1 : 2; next }
+        else if (!inf && !infm && hlevel(u) > 0 && width(u) <= at) taking = 0
+        else if (label(u)) { w = width(u); if (w < at) at = w; if (opened) payf = 1; next }
+        else if (infm && width(u) <= at && u ~ /^[ \t]*[A-Za-z0-9_][A-Za-z0-9_.-]*[ \t]*:/) taking = 0
+        else if (infm || width(u) > at || !item(u)) { if (opened) payf = 1; next }
         else taking = 0
       }
-      if (label($0)) { taking = 1; at = width(u); next }
+      if (label(u)) {
+        if (!inf && !infm && hlevel(u) > 0) { taking = 2; lvl = hlevel(u); next }
+        if (!inf && !infm && u ~ /^[ \t]*\|/) { thd = 1; next }
+        taking = 1; at = width(u); hitf = inf; plain = !inf && !infm && !item(u); fst = 1
+        if (opened) payf = 1
+        next
+      }
       print
-    }' "$f"
+    }
+    END { if (pend) printf "%s", pbuf }' "$f"
 }
 
 # A trip's projection: the source choice, the header, and the buffered output. Prints
