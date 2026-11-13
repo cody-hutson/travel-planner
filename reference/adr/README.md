@@ -194,6 +194,7 @@ record until the change that lands the held one.
 049       ADR-049-what-a-rebuild-owes.md
 050       ADR-050-reading-by-shape-as-a-fourth-arm.md
 051       ADR-051-a-verb-runs-until-it-asks.md
+052       ADR-052-a-body-ends-where-the-browser-ends-it.md
 ```
 
 Records numbered below the register's first row predate it and carry no row. Why a register,
