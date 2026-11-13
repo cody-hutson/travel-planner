@@ -193,10 +193,10 @@ STAGING DIRECTORY
     Pass `--staging <dir>`; the tool writes `<dir>/prot-PRE.json`,
     `<dir>/rsc-PRE.json`, `<dir>/rsc-PATCH.json`, `<dir>/rsc-RESTORE.json` and,
     after a write, `<dir>/prot-POST.json`. --restore stages the body it sends
-    in a temporary file there and removes it once the write returns. No path is
-    compiled in, so the artifacts land wherever the operator keeps them --
-    deliberately NOT in this repository, which is public and where a protection
-    snapshot would both disclose configuration and rot as corpus.
+    in a file in the system's temporary directory and removes it once the write
+    returns. No path is compiled in, so the artifacts land wherever the operator
+    keeps them -- deliberately NOT in this repository, which is public and where
+    a protection snapshot would both disclose configuration and rot as corpus.
 
     A staging directory holds one rollback point. --plan, --apply and
     --register refuse at exit 3, before writing anything, when the rsc-PRE.json
@@ -2200,6 +2200,82 @@ def restore_arms():
         return problems, "plan rc {}, apply rc {}, third capture rc {}".format(
             rc_plan, rc_apply, rc_third)
 
+    def h17():
+        payload = compose_restore(capture_null)
+        problems, seen = [], []
+        for label, staged in (("rsc-RESTORE.json exactly the payload", payload),
+                              ("rsc-RESTORE.json with a member beside the payload",
+                               dict(payload, contexts=["Bogus context"]))):
+            used = []
+
+            def _path_writer(path, payload_file, used=used):
+                used.append(payload_file)
+                return (True, "{}", "")
+
+            sink = io.StringIO()
+            with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+                _stage(tmp, capture_null, staged)
+                rc = run_restore(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                                 staging=tmp, confirm=True,
+                                 fetch=_fetcher([(True, json.dumps(capture_null), "")]),
+                                 write=_path_writer, stream=sink)
+                staged_path = os.path.realpath(os.path.join(tmp, "rsc-RESTORE.json"))
+                inside = [p for p in used
+                          if os.path.realpath(os.path.dirname(p)) == os.path.realpath(tmp)]
+            seen.append("{}: rc {}".format(label, rc))
+            if rc != 0 or len(used) != 1:
+                problems.append("{}: rc {}, {} write(s), want rc 0 and 1".format(
+                    label, rc, len(used)))
+            if [p for p in used if os.path.realpath(p) == staged_path]:
+                problems.append("{}: the write was sent from rsc-RESTORE.json "
+                                "itself".format(label))
+            if inside:
+                problems.append("{}: the body was staged in the staging "
+                                "directory".format(label))
+            if [p for p in used if os.path.exists(p)]:
+                problems.append("{}: the body file was left behind".format(label))
+            noted = "nothing else in that file is sent" in sink.getvalue()
+            if noted != (staged is not payload):
+                problems.append("{}: the note that only the payload is sent is {}, "
+                                "want it {}".format(label,
+                                                    "printed" if noted else "absent",
+                                                    "absent" if noted else "printed"))
+        return problems, "; ".join(seen)
+
+    def h18():
+        problems, seen = [], []
+        err = "HTTP 422: Validation Failed \N{EM DASH} the host's own text"
+
+        def _refusing_writer(path, payload_file):
+            return (False, "", err)
+
+        for label in ("--restore", "--apply"):
+            raw = io.BytesIO()
+            sink = io.TextIOWrapper(raw, encoding="ascii", errors="strict",
+                                    write_through=True)
+            with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+                try:
+                    if label == "--restore":
+                        _stage(tmp, capture_null, compose_restore(capture_null))
+                        rc = run_restore(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                                         staging=tmp, confirm=True, fetch=_fetcher([]),
+                                         write=_refusing_writer, stream=sink)
+                    else:
+                        host = _FakeHost(_pre_pairs())
+                        rc = run_apply(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                                       staging=tmp, confirm=True, fetch=host.fetch,
+                                       write=_refusing_writer, stream=sink,
+                                       run_self_test=False)
+                except Exception as exc:           # noqa: BLE001 - a raise is graded
+                    problems.append("{}: raised {}".format(label, type(exc).__name__))
+                    continue
+            seen.append("{} rc {}".format(label, rc))
+            if rc != 7:
+                problems.append("{}: rc {}, want 7".format(label, rc))
+            if "HTTP 422" not in raw.getvalue().decode("ascii"):
+                problems.append("{}: the host's error is not in the output".format(label))
+        return problems, "; ".join(seen)
+
     return [
         ("H0", "the write predicate: the doubled path refused, the narrow path "
                "admitted, and nine near-misses refused, a dot-segment in each of the "
@@ -2260,6 +2336,13 @@ def restore_arms():
         ("H16", "--plan then --apply in one directory, then a third capture: the "
                 "dry run's equal capture replaced, one write, and the third capture "
                 "refused at exit 3 with no .pending file left", h16),
+        ("H17", "rsc-RESTORE.json exactly the payload, and with a member beside it: "
+                "each restore sends from a file outside the staging directory that is "
+                "gone once the write returns, never from rsc-RESTORE.json itself, and "
+                "says only the payload is sent where that file is not it exactly", h17),
+        ("H18", "--restore and --apply on an ASCII stream, the host refusing the write "
+                "with text the stream cannot encode: each exits 7 and reports the "
+                "error, nothing raised", h18),
     ]
 
 
@@ -2868,6 +2951,52 @@ def seam_arms():
                                 "VIOLATION".format(label, rc, len(host.writes)))
         return problems, "; ".join(seen)
 
+    def m5():
+        carried = ("Personal-data gate", CONTEXT_ORDER[0])
+        moved = CONTEXT_ORDER[1]
+        problems, seen = [], []
+
+        host = _FakeHost([(c, None if c in carried else APP_ID) for c in CONTEXT_ORDER])
+
+        def _two_views(path):
+            if host.writes and path == _FakeHost.PROT_PATH:
+                host.fetches.append(path)
+                view = json.loads(json.dumps(host.state))
+                for entry in view["required_status_checks"]["checks"]:
+                    if entry["context"] in (CONTEXT_ORDER[0], moved):
+                        entry["app_id"] = None
+                return (True, json.dumps(view), "")
+            return host.fetch(path)
+
+        sink = io.StringIO()
+        with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+            rc = run_apply(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH, staging=tmp,
+                           confirm=True, fetch=_two_views, write=host.write,
+                           stream=sink, run_self_test=False)
+        seen.append("another entry's app_id moved instead rc {}".format(rc))
+        if rc != 1 or "SCOPE VIOLATION" not in sink.getvalue():
+            problems.append("the full object moved {}'s app_id and left {}'s, the same "
+                            "count of leaves: rc {}, want 1 and SCOPE VIOLATION".format(
+                                moved, CONTEXT_ORDER[0], rc))
+
+        host2 = _FakeHost([(c, {"id": APP_ID} if c == "Personal-data gate" else APP_ID)
+                           for c in CONTEXT_ORDER])
+        sink2 = io.StringIO()
+        with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+            try:
+                rc2 = run_apply(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                                staging=tmp, confirm=True, fetch=host2.fetch,
+                                write=host2.write, stream=sink2, run_self_test=False)
+            except Exception as exc:               # noqa: BLE001 - a raise is graded
+                problems.append("a captured app_id that is an object: raised {}".format(
+                    type(exc).__name__))
+                rc2 = None
+        seen.append("an object app_id rc {}".format(rc2))
+        if rc2 is not None and (rc2 != 1 or "SCOPE VIOLATION" not in sink2.getvalue()):
+            problems.append("a captured app_id that is an object: rc {}, want 1 and "
+                            "SCOPE VIOLATION".format(rc2))
+        return problems, "; ".join(seen)
+
     return [
         ("M0", "register-then-restore on one stateful host: both exit 0, both "
                "writes narrow, the host returned to the capture in checks and "
@@ -2889,6 +3018,10 @@ def seam_arms():
                "carried entry, and again while it pins two: each a SCOPE VIOLATION, "
                "exit 1, the expected leaves being two for each entry pinned and "
                "nothing else", m4),
+        ("M5", "--apply's scope check reads the capture's own entries: a full object "
+               "that moves another entry's app_id in place of a carried one, at the "
+               "same count of leaves, is a SCOPE VIOLATION, and so is a captured app_id "
+               "that is an object, nothing raised", m5),
     ]
 
 
@@ -5086,11 +5219,12 @@ def run_restore(repo, branch, staging, confirm, fetch=gh_fetch_json,
         return 6
     # The body sent is the payload composed from rsc-PRE.json, never the staged
     # file's bytes: provenance compares rsc-RESTORE.json on its key alone, so a
-    # member beside that key would otherwise reach the host unchecked.
+    # member beside that key would otherwise reach the host unchecked. It is
+    # staged in the system's temporary directory rather than the staging one, so
+    # a rollback from a staging directory it cannot write to still runs.
     body_f = None
     try:
-        fd, body_f = tempfile.mkstemp(prefix="rsc-RESTORE-sent.", suffix=".json",
-                                      dir=staging)
+        fd, body_f = tempfile.mkstemp(prefix="rsc-RESTORE-sent.", suffix=".json")
         with os.fdopen(fd, "w", encoding="utf-8") as fh:
             json.dump(payload, fh, indent=2)
     except OSError as exc:
