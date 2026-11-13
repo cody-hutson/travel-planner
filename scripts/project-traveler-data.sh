@@ -78,7 +78,8 @@
 #     or less, and in no deeper blockquote than its own;
 #   a TABLE ROW takes itself, and where it is the header row above a `|---|` delimiter row
 #     it takes the whole table; a row inside a list item takes that and, as the list item
-#     it opens, what any other hit takes;
+#     it opens, what any other hit takes, inside another hit's payload too; and a list item
+#     a table takes as one of its rows, where it is a hit, still takes what that hit takes;
 #   any other hit takes every following line until one of these ends it: a list item at the
 #     label's own indent or shallower; a heading no deeper than the label; a blank line, but
 #     only when the next line that is not blank is no deeper than the label, so a loose
@@ -396,6 +397,10 @@ pj_project_file() {   # pj_project_file <selectors> <file>
         else { printf "%s", pbuf; pbuf = ""; taking = 0 }
       }
       # A table: after a header-row hit its delimiter row and every row below it go.
+      # A list item a table takes as a row, when it is a hit, still opens its own payload.
+      if (tbl && !blank(u) && index(u, "|") && !inf && !infm && item(u) && label(u)) {
+        w = width(u); if (taking != 1 || w < at) at = w; taking = 1; hitf = 0; para = 0; hq = qd
+      }
       if (tbl) { if (!blank(u) && index(u, "|")) next; tbl = 0 }
       if (thd) { thd = 0; if (delimrow(u)) { tbl = 1; next } }
       # A row held for the line after it: over a delimiter row it is a header row, and its
@@ -409,7 +414,8 @@ pj_project_file() {   # pj_project_file <selectors> <file>
         taking = 0
       }
       # para: the payload is still the paragraph a paragraph-line hit opened, so a setext
-      # underline makes it a heading. A blank line or a list item ends that paragraph.
+      # underline makes it a heading. A blank line or a list item ends that paragraph. A row
+      # inside a list item that the payload reaches arms the delimiter check, so its table goes.
       if (taking == 1) {
         if (para && item(u)) para = 0
         if (infm && t == "---") taking = 0
@@ -417,6 +423,7 @@ pj_project_file() {   # pj_project_file <selectors> <file>
         else if (blank(u)) { pend = 1; pbuf = $0 "\n"; para = 0; next }
         else if (para && setext(u)) { taking = 2; lvl = index(u, "=") ? 1 : 2; sq = hq; next }
         else if (!inf && !infm && hlevel(u) > 0 && width(u) <= at) taking = 0
+        else if (!inf && !infm && lrow(u) && label(u)) { w = width(u); if (w < at) at = w; thd = 1; next }
         else if (label(u)) { w = width(u); if (w < at) at = w; if (opened) payf = 1; next }
         else if (infm || width(u) > at || !item(u)) { if (opened) payf = 1; next }
         else taking = 0
