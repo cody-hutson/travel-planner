@@ -37,8 +37,9 @@
 # THE GUARANTEE is a criterion, not a list. The projection leaves out every line whose label
 # begins with a § 5.6 `field` selector, when that label opens one of these: a list item at
 # any depth, including behind `>` quotes, a `[ ]` or `[x]` task box, or a bracketed mark; a
-# paragraph line; an ATX or setext heading, which takes its section with it; a table cell,
-# as the TABLE ROW sentence below reads one; or the inside of a one-line HTML comment. This
+# paragraph line; an ATX or setext heading, which takes its section with it, save one that
+# holds a pipe inside a table run; a table cell, as the TABLE and TABLE ROW sentences below
+# read one; or the inside of a one-line HTML comment. This
 # holds after the ASCII emphasis and markup the strip class removes, and behind a no-break
 # space, and each such line goes together with its continuation, as WHAT A HIT TAKES WITH IT
 # below defines continuation. ANY OTHER SHAPE IS NOT READ, AND ITS LINE IS KEPT: the
@@ -55,17 +56,18 @@
 # front. A bracket is tested before it is taken off: where its content, stripped the same
 # way, begins with a selector, that content is the label, so `[Passport] …`, link text and
 # `**[Documents]:**` are hits, and so is an all-capitals mark that opens with a selector;
-# any other bracket, `[ ]`, `[x]` and `[OPERATOR-PROVIDED]` among them, is a mark. A TABLE ROW
+# any other bracket, `[ ]`, `[x]` and `[OPERATOR-PROVIDED]` among them, is a mark. A TABLE is
+# defined as this script reads one: a line whose first character is `|`, once its blockquote
+# markers and ONE list marker are taken off, together with the run of such lines around it.
+# So `- | Passport number | … |` is a row whose key cell is `Passport number`. A TABLE ROW
 # is a hit when its first cell, the key cell, stripped the same way, begins with a selector
 # by the whole-word rule a list item follows, so `| Passport number | … |` is a hit in every
 # row; or when a later cell holds a label: its text, stripped the same way, begins with a
 # selector and either carries a `:`, its text before the colon being the label, or is the
 # selector alone. A row with a later cell that begins with a selector but holds no label is a
 # hit only as a header row, over a `|---|` delimiter row; any other such row is kept, so
-# `| Need | Documents for … |` stays. A row's leading pipe is read once the blockquote
-# markers and one list marker are taken off, so `- | Passport number | … |` is a row whose
-# key cell is `Passport number`; the first cell of a row with no leading pipe is the line's
-# own opening, and the line rule reads it. Every test reads the line with
+# `| Need | Documents for … |` stays. The first cell of a row with no leading pipe is the
+# line's own opening, and the line rule reads it. Every test reads the line with
 # a trailing carriage return taken off, a byte-order mark taken off the first line, and each
 # no-break space read as a space; what is printed is the line as read. The comparison is a
 # substring test, never a regex built from a selector: a selector is corpus text, and one
@@ -139,7 +141,11 @@
 # ordinal (`### 1. Passport:`); a camel-case key such as `passportNumber:`, which the
 # whole-word rule keeps; a table cell after the first holding a label of more than one word
 # and no colon, outside a header row (`| Rowan | Passport number Z123 |`); a table row whose
-# key cell is empty; and a value written as prose under some other label. They are
+# key cell is empty; a row whose leading pipe sits behind a task box, behind a second list
+# marker or behind a quote opened inside a list item (`- [ ] | Passport number | … |`,
+# `- - | … |`, `- > | … |`), none of which is a TABLE as defined above; a heading that holds
+# a pipe, inside a table run (`## Passport | notes` below a `| Passport | … |` header row);
+# and a value written as prose under some other label. They are
 # residuals: this criterion names them, a follow-on card is to carry them, and milestone
 # 97's content check is their backstop. It does not cover trips/<slug>/trip-context.md or
 # trip-log.md, which no § 5.6 row scopes.
