@@ -51,12 +51,13 @@ MODES
         of required checks to CONTEXT_ORDER in both directions (group F). Every
         census arm builds and grades a synthetic tree in a temporary directory,
         never this repository's workflows. It runs the assertion matrix, the
-        conjunct-removal matrix, the orchestrator guard arms, the census arms and
-        the SECURITY.md arm. This is the arm that makes the tool trustworthy before
-        it is ever pointed at a live branch, and it is the arm to run in CI: the
-        census step in .github/workflows/security.yml runs it ahead of the census
-        on every pull request. It needs PyYAML for the census arms; without it the
-        census group reports itself NOT-EVALUATED and the self-test fails.
+        conjunct-removal matrix, the orchestrator guard arms, the restore arms,
+        the census arms and the SECURITY.md arm. This is the arm that makes the
+        tool trustworthy before it is ever pointed at a live branch, and it is
+        the arm to run in CI: the census step in .github/workflows/security.yml
+        runs it ahead of the census on every pull request. It needs PyYAML for
+        the census arms; without it the census group reports itself
+        NOT-EVALUATED and the self-test fails.
 
     --census [--root DIR]
         Offline. Reads every workflow under .github/workflows through a YAML
@@ -105,8 +106,25 @@ MODES
         anything is written.
 
     --restore --staging DIR --confirm-write
-        Rollback. Re-applies the captured pre-change sub-resource verbatim,
-        `app_id: null` included.
+        Rollback. Re-applies the sub-resource captured before the write it
+        rolls back -- rsc-PRE.json, as rsc-RESTORE.json composes it --
+        verbatim, `app_id: null` included, to the same narrow endpoint, and
+        reads it back: the read-back must equal that payload (exit 1
+        otherwise, exit 7 when it cannot be read). It refuses at exit 3 when
+        rsc-PRE.json is missing or unreadable, or when an rsc-RESTORE.json
+        already in the directory is not the payload rsc-PRE.json composes;
+        an rsc-RESTORE.json with no rsc-PRE.json beside it is refused too,
+        and copying it to rsc-PRE.json is how to say that it is the capture.
+        It does not run the self-test: a rollback is never refused for a
+        reason that has nothing to do with it, and its arms run in CI on
+        every pull request. Whether the host accepts `app_id: null` on that
+        write was not measured. If it refuses, nothing changes (exit 7). If
+        it treats null as omitted, as its documentation describes for an
+        omitted `app_id`, the write lands with that entry pinned to an app,
+        the read-back differs (exit 1), and the same write cannot return it.
+        Either way the restore prints the fallback: PATCH the pinned
+        contexts, then POST each unpinned context name to
+        .../required_status_checks/contexts.
 
 EXIT CODES
     0  the mode's assertion held
@@ -117,9 +135,12 @@ EXIT CODES
        each refusal carries a code from REFUSAL_CODES and names the file.
        "I cannot vouch for this file" is a refusal, never a finding, so it
        never shares exit 1)
-    3  CAPTURE REFUSED -- no rollback artifact, so nothing was written
+    3  CAPTURE REFUSED -- no rollback artifact, one whose provenance does not
+       hold, or a staging directory that already holds a different one, so
+       nothing was written
     4  the live required-context set has drifted from the expected set
-    5  the self-test did not pass, so no live mode may run
+    5  the self-test did not pass, so no mode that writes, nor --plan, may run
+       (--plan, --apply; --restore does not consult it)
     6  a write was required but `--confirm-write` was not given (nothing written)
     7  the write itself, or its read-back, failed at the transport layer
 
@@ -130,6 +151,13 @@ STAGING DIRECTORY
     artifacts land wherever the operator keeps them -- deliberately NOT in this
     repository, which is public and where a protection snapshot would both
     disclose configuration and rot as corpus.
+
+    A staging directory holds one rollback point. --plan and --apply refuse at
+    exit 3, before writing anything, when the rsc-PRE.json already there differs
+    from their new capture, its checks compared in any order: that file is the
+    rollback point of an earlier run, and --restore reads it. Restore from it, or
+    pass a fresh directory. An equal capture -- a dry run followed by the
+    confirmed run -- replaces it.
 """
 
 import argparse
@@ -1162,6 +1190,31 @@ def _open_counts(text):
 # Transport
 # ==========================================================================
 
+def protection_paths(repo, branch):
+    """The two paths the tool addresses, built here once for every mode: the
+    full protection object, which it only reads, and the required_status_checks
+    sub-resource, the one path it writes."""
+    base = "repos/{}/branches/{}".format(repo, branch)
+    return (base + "/protection", base + SUBRESOURCE_SUFFIX)
+
+
+# The one path shape gh_patch_json writes, matched in full. A suffix test also
+# admits a path that doubles /protection, which is the path --restore once wrote.
+_RE_RSC_WRITE_PATH = re.compile(
+    r"repos/[^/]+/[^/]+/branches/[^/]+/protection/required_status_checks")
+
+
+def rsc_write_path_ok(path):
+    """True only for repos/OWNER/NAME/branches/BRANCH/protection/required_status_checks.
+
+    A full match of that shape rather than a suffix test, because `endswith`
+    admits the doubled path. A branch name containing `/` is refused: the tool
+    guards `main`, and refusing a shape nobody foresaw is the fail-closed
+    direction.
+    """
+    return bool(_RE_RSC_WRITE_PATH.fullmatch(path))
+
+
 def gh_fetch_json(path):
     """GET `path` through `gh api`. Returns (ok, text, err). Never raises."""
     try:
@@ -1180,11 +1233,13 @@ def gh_patch_json(path, payload_file):
 
     The narrow-endpoint invariant is re-checked HERE, at the point of the write,
     rather than only where the path is built -- so a later edit that widens the
-    target has to defeat the check at the write itself.
+    target has to defeat the check at the write itself. The check is
+    rsc_write_path_ok, a full match of the one path shape the tool writes.
     """
-    if not path.endswith(SUBRESOURCE_SUFFIX):
+    if not rsc_write_path_ok(path):
         return (False, "", "INVARIANT VIOLATED: refusing to write to {!r}; this "
-                           "tool writes only to {}".format(path, SUBRESOURCE_SUFFIX))
+                           "tool writes only to repos/OWNER/NAME/branches/BRANCH"
+                           "{}".format(path, SUBRESOURCE_SUFFIX))
     try:
         proc = subprocess.run(
             ["gh", "api", "-X", "PATCH", path, "--input", payload_file],
@@ -1310,6 +1365,111 @@ def _normalise(obj):
         if isinstance(rsc.get("contexts"), list):
             rsc["contexts"] = sorted(rsc["contexts"], key=str)
     return out
+
+
+def _rollback_digest(rsc_obj):
+    """The digest rollback points are compared by: canonical, with `checks` and
+    `contexts` sorted as _normalise sorts them, so an equal capture returned in
+    another order reads as equal."""
+    return canonical_digest(_normalise({"required_status_checks": rsc_obj}))
+
+
+def capture_rollback_point(fetch, prot_path, rsc_path, staging):
+    """Capture the full object and the sub-resource into `staging`, and refuse,
+    before either file is written, when the directory already holds a different
+    rollback point. Returns (pre_full, pre_rsc); raises CaptureRefused.
+
+    Every mode that captures does so through here, so none can depart from the
+    rule: a staging directory holds one rollback point, and --restore reads it.
+    When an rsc-PRE.json is already there and its _rollback_digest differs from
+    the new capture's, the earlier run's rollback point is kept and nothing is
+    written; an equal capture, such as a dry run followed by the confirmed run,
+    replaces it. An rsc-PRE.json that cannot be read is refused the same way,
+    because nothing can show that it is not a rollback point.
+    """
+    pre_full_f = os.path.join(staging, "prot-PRE.json")
+    pre_rsc_f = os.path.join(staging, "rsc-PRE.json")
+    prior = None
+    if os.path.exists(pre_rsc_f):
+        try:
+            with open(pre_rsc_f, encoding="utf-8") as fh:
+                prior = json.load(fh)
+        except (OSError, ValueError) as exc:
+            raise CaptureRefused(
+                "an rsc-PRE.json is already in {} and cannot be read ({}), so it may "
+                "be the rollback point of an earlier run -- restore from it, or pass "
+                "a fresh --staging directory".format(staging, exc))
+    pending = (pre_full_f + ".pending", pre_rsc_f + ".pending")
+    try:
+        pre_full = capture(fetch, prot_path, pending[0], "full protection object")
+        pre_rsc = capture(fetch, rsc_path, pending[1], "required_status_checks")
+        if prior is not None and _rollback_digest(prior) != _rollback_digest(pre_rsc):
+            raise CaptureRefused(
+                "this directory holds the rollback point of an earlier run; restore "
+                "from it, or pass a fresh --staging directory. Its rsc-PRE.json "
+                "digests to {} and this capture to {} (sha256, canonical, checks "
+                "sorted)".format(_rollback_digest(prior), _rollback_digest(pre_rsc)))
+        try:
+            os.replace(pending[0], pre_full_f)
+            os.replace(pending[1], pre_rsc_f)
+        except OSError as exc:
+            raise CaptureRefused("could not move the capture into {} -- {}".format(
+                staging, exc))
+    finally:
+        for path in pending:
+            if os.path.exists(path):
+                os.remove(path)
+    return pre_full, pre_rsc
+
+
+def _restore_key(obj):
+    """`strict` and the sorted (context, json.dumps(app_id)) pairs of a payload or
+    a sub-resource, or None when it is not one. json.dumps keeps 15368, "15368",
+    true and null apart, so a changed type reads as a difference."""
+    if not isinstance(obj, dict):
+        return None
+    rsc = obj.get("required_status_checks", obj)
+    checks = rsc.get("checks") if isinstance(rsc, dict) else None
+    if not isinstance(checks, list):
+        return None
+    if not all(isinstance(c, dict) and isinstance(c.get("context"), str) for c in checks):
+        return None
+    return (rsc.get("strict", False),
+            sorted((c["context"], json.dumps(c.get("app_id"))) for c in checks))
+
+
+def read_rollback_point(staging):
+    """rsc-PRE.json, read as the rollback point --restore re-applies.
+
+    Raises CaptureRefused when it is missing, unreadable, not JSON, or carries no
+    non-empty checks array, so a malformed file is a refusal and never a
+    traceback. An rsc-RESTORE.json with no rsc-PRE.json beside it is refused too:
+    nothing vouches for it, and copying it to rsc-PRE.json is how to say that it
+    is the capture.
+    """
+    pre_f = os.path.join(staging, "rsc-PRE.json")
+    if not os.path.exists(pre_f):
+        if os.path.exists(os.path.join(staging, "rsc-RESTORE.json")):
+            raise CaptureRefused(
+                "{} holds an rsc-RESTORE.json and no rsc-PRE.json, so nothing vouches "
+                "for that payload. If it is the capture, copy it to rsc-PRE.json, "
+                "which says so, and re-run".format(staging))
+        raise CaptureRefused("no rollback artifact in {} -- nothing to restore "
+                             "from".format(staging))
+    try:
+        with open(pre_f, encoding="utf-8") as fh:
+            text = fh.read()
+    except (OSError, ValueError) as exc:
+        raise CaptureRefused("rsc-PRE.json could not be read -- {}".format(exc))
+    try:
+        obj = json.loads(text)
+    except ValueError as exc:
+        raise CaptureRefused("rsc-PRE.json does not parse -- {}".format(exc))
+    key = _restore_key(obj)
+    if key is None or not key[1]:
+        raise CaptureRefused("rsc-PRE.json carries no non-empty checks array of "
+                             "named contexts, so it is not a rollback artifact")
+    return obj
 
 
 def _leaves(obj, prefix=""):
@@ -3465,7 +3625,10 @@ def self_test(stream=sys.stdout):
         return 1
     out("SELF-TEST PASSED -- 11 degenerate arms all failed on exactly their named "
         "conjuncts, the positive arm passed, every named conjunct is individually "
-        "load-bearing, every capture failure refused the write, the registration "
+        "load-bearing, every capture failure refused the write, the restore wrote "
+        "to and read back the narrow sub-resource and refused every rollback "
+        "artifact it could not vouch for, a second capture refused to replace an "
+        "earlier rollback point, the registration "
         "census graded every arm the stated way with a control that reached rc 0, "
         "SECURITY.md's required-check list is set-equal to CONTEXT_ORDER in both "
         "directions, and no text E9 reads counts an open set.")
@@ -3492,10 +3655,7 @@ def run_apply(repo, branch, staging, confirm, fetch=gh_fetch_json,
                 "to grade a live write.")
             return 5
 
-    prot_path = "repos/{}/branches/{}/protection".format(repo, branch)
-    rsc_path = "repos/{}/branches/{}{}".format(repo, branch, SUBRESOURCE_SUFFIX)
-    pre_full_f = os.path.join(staging, "prot-PRE.json")
-    pre_rsc_f = os.path.join(staging, "rsc-PRE.json")
+    prot_path, rsc_path = protection_paths(repo, branch)
     patch_f = os.path.join(staging, "rsc-PATCH.json")
     restore_f = os.path.join(staging, "rsc-RESTORE.json")
     post_full_f = os.path.join(staging, "prot-POST.json")
@@ -3503,13 +3663,12 @@ def run_apply(repo, branch, staging, confirm, fetch=gh_fetch_json,
     # 1. CAPTURE. This is the precondition, not a courtesy.
     out("[1/6] capture -- the rollback artifact, before anything is written")
     try:
-        pre_full = capture(fetch, prot_path, pre_full_f, "full protection object")
-        pre_rsc = capture(fetch, rsc_path, pre_rsc_f, "required_status_checks")
+        pre_full, pre_rsc = capture_rollback_point(fetch, prot_path, rsc_path, staging)
     except CaptureRefused as exc:
         out("CAPTURE REFUSED: {}".format(exc))
         out("Nothing was written. Branch protection has no restore API, so without "
             "a verified pre-change artifact this change would be recoverable only "
-            "from memory. Fix the capture and re-run.")
+            "from memory. Act on the reason above and re-run.")
         return 3
     out("      prot-PRE.json  sha256(canonical) = {}".format(canonical_digest(pre_full)))
     out("      rsc-PRE.json   sha256(canonical) = {}".format(canonical_digest(pre_rsc)))
@@ -3603,43 +3762,107 @@ def run_apply(repo, branch, staging, confirm, fetch=gh_fetch_json,
     return 0
 
 
+def _restore_fallback(rsc_path, when):
+    """The hand route back to an unpinned entry, which a PATCH cannot always take."""
+    return ("Fallback, {}: PATCH the pinned contexts, then POST each unpinned context "
+            "NAME to {}/contexts -- that endpoint produces an unpinned context by "
+            "construction, which is the pre-change shape.".format(when, rsc_path))
+
+
 def run_restore(repo, branch, staging, confirm, fetch=gh_fetch_json,
                 write=gh_patch_json, stream=sys.stdout):
+    """provenance -> [write] -> read-back compared with the payload written.
+
+    It re-applies rsc-PRE.json, as rsc-RESTORE.json composes it, to the narrow
+    path. Before any write it refuses at exit 3 when rsc-PRE.json cannot vouch
+    for itself, or when an rsc-RESTORE.json already in the directory is not the
+    payload rsc-PRE.json composes. After the write it reads the sub-resource
+    back: unreadable is exit 7, different from the payload is exit 1, and only a
+    read-back equal to the payload prints RESTORED. The read-back is compared
+    with the payload and never graded by evaluate(), because restoring a capture
+    that held app_id null, or one taken before a registration, fails the
+    --assert conjuncts by design. It does not run the self-test; the module
+    docstring's --restore entry says why.
+    """
     def out(msg):
         stream.write(msg + "\n")
 
-    rsc_path = "repos/{}/branches/{}/protection{}".format(
-        repo, branch, SUBRESOURCE_SUFFIX)
+    def refuse(reason):
+        out("ROLLBACK ARTIFACT REFUSED: {}".format(reason))
+        out("Nothing was written.")
+        return 3
+
+    _prot_path, rsc_path = protection_paths(repo, branch)
     restore_f = os.path.join(staging, "rsc-RESTORE.json")
-    if not os.path.exists(restore_f):
-        pre_rsc_f = os.path.join(staging, "rsc-PRE.json")
-        if not os.path.exists(pre_rsc_f):
-            out("No rollback artifact in {} -- nothing to restore from.".format(staging))
-            return 3
-        with open(pre_rsc_f, encoding="utf-8") as fh:
-            with open(restore_f, "w", encoding="utf-8") as wfh:
-                json.dump(compose_restore(json.load(fh)), wfh, indent=2)
-    with open(restore_f, encoding="utf-8") as fh:
-        payload = json.load(fh)
+    try:
+        pre = read_rollback_point(staging)
+    except CaptureRefused as exc:
+        return refuse(exc)
+    out("rsc-PRE.json   sha256(canonical) = {}".format(canonical_digest(pre)))
+    payload = compose_restore(pre)
+    want = _restore_key(payload)
+    if os.path.exists(restore_f):
+        try:
+            with open(restore_f, encoding="utf-8") as fh:
+                staged = json.load(fh)
+        except (OSError, ValueError) as exc:
+            return refuse("rsc-RESTORE.json could not be read -- {}".format(exc))
+        if _restore_key(staged) != want:
+            return refuse(
+                "rsc-RESTORE.json in {} is not the payload rsc-PRE.json beside it "
+                "composes, so the two are not from one run. rsc-PRE.json is the "
+                "capture this restore re-applies: if it is the right one, remove "
+                "rsc-RESTORE.json and re-run, and the payload is composed from "
+                "it".format(staging))
+    else:
+        try:
+            with open(restore_f, "w", encoding="utf-8") as fh:
+                json.dump(payload, fh, indent=2)
+        except OSError as exc:
+            return refuse("could not write rsc-RESTORE.json -- {}".format(exc))
+    unpinned = [c["context"] for c in payload["checks"] if c.get("app_id") is None]
     out("restore payload: {} contexts, {} of them unpinned".format(
-        len(payload.get("checks", [])),
-        sum(1 for c in payload.get("checks", []) if c.get("app_id") is None)))
+        len(payload["checks"]), len(unpinned)))
     if not confirm:
         out("STOPPING -- --confirm-write was not given. Nothing was written.")
         return 6
+    out("PATCH {} (narrow sub-resource; never PUT .../protection)".format(rsc_path))
     ok, _text, err = write(rsc_path, restore_f)
     if not ok:
         out("RESTORE FAILED: {}".format(err))
-        out("Fallback, if app_id: null is rejected on the write path: PATCH the "
-            "pinned contexts, then POST each unpinned context NAME to "
-            "{}/contexts -- that endpoint produces an unpinned context by "
-            "construction, which is the pre-change shape.".format(rsc_path))
+        out(_restore_fallback(rsc_path, "if app_id: null is rejected on the write path"))
         return 7
-    ok, text, _err = fetch(rsc_path)
-    if ok:
-        checks, _ = sub_checks(json.loads(text))
-        out("read-back: {} contexts, {} unpinned".format(
-            len(checks), sum(1 for c in checks if c.get("app_id") is None)))
+    ok, text, err = fetch(rsc_path)
+    if not ok:
+        out("READ-BACK FAILED: {} -- the restore is UNVERIFIED.".format(err))
+        return 7
+    try:
+        got = _restore_key(json.loads(text))
+    except ValueError as exc:
+        out("READ-BACK FAILED: it does not parse ({}) -- the restore is "
+            "UNVERIFIED.".format(exc))
+        return 7
+    if got is None:
+        out("READ-BACK FAILED: it carries no checks array of named contexts -- the "
+            "restore is UNVERIFIED.")
+        return 7
+    if got != want:
+        out("RESTORE NOT VERIFIED -- the read-back differs from the payload written.")
+        if got[0] != want[0]:
+            out("  strict: written {}, read back {}".format(
+                json.dumps(want[0]), json.dumps(got[0])))
+        out("  written only:   {}".format(sorted(set(want[1]) - set(got[1]))))
+        out("  read back only: {}".format(sorted(set(got[1]) - set(want[1]))))
+        read_back = dict(got[1])
+        pinned = sorted(c for c in unpinned if read_back.get(c, "null") != "null")
+        if pinned:
+            out("The read-back pins {}, which this payload wrote with app_id null: "
+                "the host treated the null as an omitted app_id, so this write "
+                "cannot return those entries.".format(pinned))
+            out(_restore_fallback(rsc_path, "for those entries"))
+        return 1
+    out("read-back: {} contexts, {} unpinned -- equal to the payload written".format(
+        len(got[1]), sum(1 for _c, a in got[1] if a == "null")))
     out("RESTORED.")
     return 0
 
