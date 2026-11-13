@@ -29167,7 +29167,10 @@ md_flips wtadr26_cell 'WT-ADR26' wtadr26_assert
 #          PJ11  the delimiters a payload must stop at, each with kept lines after it: CRLF
 #                line endings, the closer of a fenced block the label sits in, and the
 #                frontmatter's closing `---`, with and without a byte-order mark, a key after
-#                the passport key going with it as the safe side (4 shapes, 6 canaries).
+#                the passport key going with it as the safe side; and the fence grammar a
+#                closer is read by — a closer as long as its opener's run, with nothing after
+#                it, of the opener's own character, an opener a tilde run can make, and no
+#                opener made by an inline code span (9 shapes, 13 canaries).
 #        PJ8 is not used: the scope-lock declined the review's eighth arm, the guard
 #        comparison, and leaving its id empty keeps these arms from reading as that one.
 #
@@ -29656,6 +29659,55 @@ printf '%s\n' "${PJT_BOM}---" \
   'passport: Zorvanian · CNRY-PJS30' \
   '---' \
   'Rowan travels light · KEEP-PJS30' > "$PJT_SF"
+pjt_shape 'PJ11[fence-long]' shape-fence-long model 'CNRY-PJS34' 'KEEP-PJS33 KEEP-PJS34' '````text' '````' 1 'a four-backtick fence holding a three-backtick line, its label before that line and the value after it'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS33' \
+  '````text' \
+  'Passport:' \
+  '```' \
+  'Zorvanian · CNRY-PJS34' \
+  '````' \
+  '- **Pace:** slow mornings · KEEP-PJS34' > "$PJT_SF"
+pjt_shape 'PJ11[fence-info]' shape-fence-info model 'CNRY-PJS35' 'KEEP-PJS35 KEEP-PJS36' '```text' '```' 2 'a fence holding a line that carries an info string, which is no closer, the label before it and the value after it'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS35' \
+  '```' \
+  'Passport:' \
+  '```text' \
+  'Zorvanian · CNRY-PJS35' \
+  '```' \
+  '- **Pace:** slow mornings · KEEP-PJS36' > "$PJT_SF"
+pjt_shape 'PJ11[fence-inline]' shape-fence-inline model 'CNRY-PJS36 CNRY-PJS37' 'KEEP-PJS37 KEEP-PJS38' '```inline```' - - 'a line opening with an inline code span, which opens no fence, then a heading naming the field over a two-paragraph value'
+printf '%s\n' '## Rowan' \
+  '```inline``` code note · KEEP-PJS37' \
+  '' \
+  '## Passport' \
+  'Zorvanian · CNRY-PJS36' \
+  '' \
+  'valid to 2031 · CNRY-PJS37' \
+  '' \
+  '## Sam [OPERATOR-PROVIDED] [THIRD-PARTY]' \
+  '- **Needs:** a step-free route · KEEP-PJS38' > "$PJT_SF"
+pjt_shape 'PJ11[fence-payload-long]' shape-fence-payload-long model 'CNRY-PJS38 CNRY-PJS39' 'KEEP-PJS39 KEEP-PJS40' '````
+- entry' - - 'a four-backtick fence a label opens, holding a three-backtick line and a list item after it'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS39' \
+  '- **Documents:**' \
+  '````' \
+  '- entry registration · CNRY-PJS38' \
+  '```' \
+  '- transit permit · CNRY-PJS39' \
+  '````' \
+  '- **Pace:** slow mornings · KEEP-PJS40' > "$PJT_SF"
+pjt_shape 'PJ11[fence-tilde]' shape-fence-tilde model 'CNRY-PJS40' 'KEEP-PJS41 KEEP-PJS42' '~~~' '~~~' 2 'a tilde fence holding a backtick line, which is no closer, the label before it and the value after it'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS41' \
+  '~~~' \
+  'Passport:' \
+  '```' \
+  'Zorvanian · CNRY-PJS40' \
+  '~~~' \
+  '- **Pace:** slow mornings · KEEP-PJS42' > "$PJT_SF"
 
 pjt_i=0
 while [ "$pjt_i" -lt "${#PJT_SN[@]}" ]; do
