@@ -29164,8 +29164,9 @@ md_flips wtadr26_cell 'WT-ADR26' wtadr26_assert
 #                heading over its value, a setext heading, a heading in a traveller file,
 #                a heading inside a payload, a loose payload past a blank line, a table, a
 #                one-line comment, a no-break space, a fenced block a label opens at its
-#                own indent, and a fenced block and an indented code line inside a heading's
-#                section, neither of which ends it (12 shapes, 26 canaries).
+#                own indent, a fenced block and an indented code line inside a heading's
+#                section, neither of which ends it, and a label inside a bracket
+#                (13 shapes, 30 canaries).
 #          PJ11  the delimiters a payload must stop at, each with kept lines after it: CRLF
 #                line endings, the closer of a fenced block the label sits in, and the
 #                frontmatter's closing `---`, with and without a byte-order mark, a key after
@@ -29660,6 +29661,16 @@ printf '%s\n' '## Rowan' \
   'valid to 2031 · CNRY-PJS49' \
   '### Rooming' \
   '- own room · KEEP-PJS48' > "$PJT_SF"
+pjt_shape 'PJ10[bracket]' shape-bracket model 'CNRY-PJS51 CNRY-PJS52 CNRY-PJS53 CNRY-PJS54' 'KEEP-PJS52 KEEP-PJS53 KEEP-PJS54 KEEP-PJS55' '- [Passport] ' - - 'a label inside a bracket — a bracketed label, link text, a whole bracketed value and a bold bracketed label — beside a task box and a mark, still taken off as marks'
+printf '%s\n' '## Rowan' \
+  '- [Passport] Zorvanian, valid to 2031 · CNRY-PJS51' \
+  '- **Pace:** slow mornings · KEEP-PJS52' \
+  '- [Passport](#passport): Zorvanian · CNRY-PJS52' \
+  '- **Rooming:** own room · KEEP-PJS53' \
+  '- [Passport: Zorvanian, valid to 2031 · CNRY-PJS53]' \
+  '- [ ] **Would love:** tide pools at dawn · KEEP-PJS54' \
+  '- **[Documents]:** entry registration · CNRY-PJS54' \
+  '- [OPERATOR-PROVIDED] **Group time:** mornings together · KEEP-PJS55' > "$PJT_SF"
 
 pjt_shape 'PJ11[crlf]' shape-crlf model 'CNRY-PJS26 CNRY-PJS27' 'KEEP-PJS24 KEEP-PJS25' "${PJT_CR}
 ${PJT_CR}
