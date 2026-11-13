@@ -42,10 +42,12 @@
 # the guard before 0.60.0 blocked is blocked at the head, read by a recorder that wraps the guard
 # from group L to M6.
 # M7 = the guard's fourth arm (#2068, ADR-050): the published projection as the guard before 0.60.0
-# wrote it, read last and credited last, blocks again the pages it blocked — a value whose words
+# wrote it, read and credited after the joined arm, blocks again the pages it blocked — a value whose words
 # tags and attribute names push apart inside a script string, a comment or an attribute value —
 # while criterion 5's `=` render is still named for the published arm (M7g), and a page the joined
 # arm catches too is still named for the joined arm (M7i).
+# M9 = the guard's fifth and sixth arms (#2117): the visible and joined projections over a copy whose
+# <script>/<style> bodies end where a browser ends them, read and credited after the shape arm.
 # M8 = the anchors (#2072): every projection reads a long run after a `<` and a long name run in
 # time proportional to its length, under a CPU cap, and the name-run anchor reads what it read.
 # R = the change-summary (#550). R1-R5 grade its CONTENT guard (AC 5) —
@@ -3012,8 +3014,12 @@ M1T_EX="$WORK/m1t_script_exact.html";  mrender "$M1T_EX" "<script>var a = 1;</sc
 m1t_unfixed() { # <render> <trip_dir> -> the guard's status with the published lookahead put back to the exact closing tag
   # The fourth arm (ADR-050) reads what the mutated projection reads, for M1t's and M1u's
   # ARMED-RED and for M6d: it drops a tag on neither list by shape, so it would catch the leak page.
+  # The fifth and sixth (#2117) read the stretch as visible text and would catch it too, so each
+  # reads as its twin here: the mutation is of the published program, and nothing else may catch.
   ( eval "$(declare -f strip_to_published_text | sed 's#</\\3\\s\*>#</\\3>#')"
     strip_to_shape_text() { strip_to_published_text "$@"; }
+    strip_to_text_blocks_at_browser_end() { strip_to_text_blocks "$@"; }
+    strip_to_joined_text_at_browser_end() { strip_to_joined_text "$@"; }
     verify_publishable_content "$1" "$2" >/dev/null 2>&1; printf '%s' "$?" )
 }
 m1t_run() { # <projection> <render> -> how many times MV's twelve words stand in its stream as one run
@@ -3029,9 +3035,9 @@ m1t_assert() { # one verdict
   oth=$(( $(m1t_run strip_to_text_blocks "$M1T_SC") + $(m1t_run strip_to_joined_text "$M1T_SC") + $(m1t_run strip_to_text_blocks "$M1T_ST") + $(m1t_run strip_to_joined_text "$M1T_ST") ))
   nf="$(awk '{ c += gsub(/<font>/, "&") } END { print c + 0 }' "$M1T_SC" "$M1T_ST" "$M1T_EX")"
   if [ "$rs" -eq 1 ] && [ "$ps" = "$M1EQ_PRJ" ] && [ "$rt" -eq 1 ] && [ "$pt" = "$M1EQ_PRJ" ] && [ "$rx" -eq 1 ] && [ "$ms" = "0" ] && [ "$mt" = "0" ] && [ "$oth" -eq 0 ] && [ "$nf" -eq 6 ]; then
-    PASS "M1t: a value written after a spaced closing tag is read — the need split twice by a tag on neither list, after '</script >', aborts as a HIT (rc=$rs) named '$ps', so does the same after '</style >' (rc=$rt), and the exact-close twin aborts too (rc=$rx); ARMED-RED — with the published lookahead put back to the exact closing tag both spaced renders publish (rc=$ms, rc=$mt). The visible and joined arms carry the need as one run $oth time(s) on the spaced renders, so the HIT is the published arm's"
+    PASS "M1t: a value written after a spaced closing tag is read — the need split twice by a tag on neither list, after '</script >', aborts as a HIT (rc=$rs) named '$ps', so does the same after '</style >' (rc=$rt), and the exact-close twin aborts too (rc=$rx); ARMED-RED — with the published lookahead put back to the exact closing tag and the two browser-ended readings read as their twins, both spaced renders publish (rc=$ms, rc=$mt). The HIT is the published arm's by its name, '$ps': the visible and joined arms carry the need as one run $oth time(s) on the spaced renders, and the browser-ended readings are read and credited after it"
   else
-    FAIL "M1t: spaced script render rc=$rs '$ps', spaced style render rc=$rt '$pt' (want 1 and '$M1EQ_PRJ' for both), exact-close twin rc=$rx (want 1); with the lookahead put back rc=$ms and rc=$mt (want 0 and 0); the need as one run on the visible and joined arms $oth (want 0); splitting tags in the renders $nf (want 6). A value after a spaced closing tag publishes, or this arm can no longer tell"
+    FAIL "M1t: spaced script render rc=$rs '$ps', spaced style render rc=$rt '$pt' (want 1 and '$M1EQ_PRJ' for both), exact-close twin rc=$rx (want 1); with the published lookahead put back and the two browser-ended readings read as their twins rc=$ms and rc=$mt (want 0 and 0); the need as one run on the visible and joined arms $oth (want 0); splitting tags in the renders $nf (want 6). A value after a spaced closing tag publishes, or this arm can no longer tell"
   fi
 }
 m1t_assert
@@ -3107,6 +3113,129 @@ m1bc_assert() { # <id> <shape> <spaced render> <exact-close twin> <the projectio
 }
 m1bc_assert M1x "a value split mid-word by an inline tag"            "$M1X_SP" "$M1X_EX" 'joined markup (an inline tag split a word)'
 m1bc_assert M1y "a value with an attribute-carrying tag around a word" "$M1Y_SP" "$M1Y_EX" 'visible text'
+
+# ── M9a–M9e (#2117, the record on ending a body where the browser does) — a body ends where the
+# browser ends it, on two added readings ──
+#
+# A browser ends a <script> or <style> body at the first `</` and the element's name followed by
+# whitespace, a `/` or a `>`. The visible and joined projections end one at the exact tag alone, so
+# they delete the stretch after an end tag of another form and before an exact one. A value in plain
+# words there is caught by the published arm; one split mid-word by an inline tag, or with an
+# attribute-carrying tag around one of its words, published in every release that carried the guard.
+# The guard adds two arms: the visible and the joined projection, each run over a copy whose bodies
+# end where a browser ends them (_browser_end_tags). M9a must fire; M9b keeps every earlier name; M9c
+# must not fire — the added streams equal their twins' wherever no end tag of another form stands,
+# and where a form a browser does not take as an end tag stands; M9d refuses an added arm that could
+# not run; M9e credits the added arms after the earlier ones.
+M9_CLOSERS=( '</script >' $'</script\t>' $'</script\n>' '</script/>' '</script x>' '</SCRIPT >' )
+M9_SPLIT='<p>Note: cannot manage more than o<b>ne</b> flight of stairs i<b>n</b> a single stretch.</p>'
+M9_ATTR='<p>Note: cannot manage more than <span title="see note">one</span> flight of stairs <span title="see note">in</span> a single stretch.</p>'
+M9_PLAIN='<p>Note: cannot manage more than one flight of stairs in a single stretch.</p>'
+M9_VPRJ='visible text, a script or style body ended where a browser ends it'
+M9_JPRJ='joined markup, a script or style body ended where a browser ends it'
+m9_off() { # <render> <trip_dir> -> the guard's status with the two added readings reading as their twins
+  ( strip_to_text_blocks_at_browser_end() { strip_to_text_blocks "$@"; }
+    strip_to_joined_text_at_browser_end() { strip_to_joined_text "$@"; }
+    verify_publishable_content "$1" "$2" >/dev/null 2>&1; printf '%s' "$?" )
+}
+m9a_assert() { # one verdict
+  local c i=0 hit=0 named=0 off=0 bad="" f shape
+  for c in "${M9_CLOSERS[@]}" '</style >'; do
+    for shape in split attr; do
+      i=$((i+1)); f="$WORK/m9a_$i.html"
+      if [ "$c" = '</style >' ]; then
+        if [ "$shape" = split ]; then mrender "$f" "<style>.a{color:#333}$c$M9_SPLIT<style>.b{color:#444}</style>"
+        else mrender "$f" "<style>.a{color:#333}$c$M9_ATTR<style>.b{color:#444}</style>"; fi
+      elif [ "$shape" = split ]; then mrender "$f" "<script>var a = 1;$c$M9_SPLIT<script>var b = 2;</script>"
+      else mrender "$f" "<script>var a = 1;$c$M9_ATTR<script>var b = 2;</script>"; fi
+      mguard "$f" "$MTD"
+      if [ "$MRC" -eq 1 ]; then hit=$((hit+1)); else bad="$bad $i:$shape=rc$MRC"; fi
+      case "$shape:$(m1eq_prj)" in "split:$M9_JPRJ"|"attr:$M9_VPRJ") named=$((named+1)) ;; esac
+      [ "$(m9_off "$f" "$MTD")" = "0" ] && off=$((off+1))
+    done
+  done
+  if [ "$i" -eq 14 ] && [ "$hit" -eq 14 ] && [ "$named" -eq 14 ] && [ "$off" -eq 14 ]; then
+    PASS "M9a: a value written after a <script> or <style> end tag of another form and before an exact one aborts as a HIT on all 14 pages — split mid-word by an inline tag, named '$M9_JPRJ', or with an attribute-carrying tag around a word, named '$M9_VPRJ', after each of six script end-tag forms (spaced, tab, line feed, '/', an attribute, upper case) and after '</style >'; ARMED-RED — with the two added readings reading as their twins, all 14 publish"
+  else
+    FAIL "M9a: of $i pages $hit aborted as a HIT (want 14:${bad:- none}), $named named by the added reading (want 14), and with the added readings as their twins $off published (want 14)"
+  fi
+}
+m9a_assert
+m9b_assert() { # one verdict — every earlier arm keeps its name
+  local r1 r2 r3 n1 n2 n3 x y
+  mrender "$WORK/m9b_plain.html" "<script>var a = 1;</script >$M9_PLAIN<script>var b = 2;</script>"
+  mrender "$WORK/m9b_xsplit.html" "<script>var a = 1;</script>$M9_SPLIT<script>var b = 2;</script>"
+  mrender "$WORK/m9b_xattr.html"  "<script>var a = 1;</script>$M9_ATTR<script>var b = 2;</script>"
+  mguard "$WORK/m9b_plain.html" "$MTD";  r1="$MRC"; n1="$(m1eq_prj)" || n1=NONE
+  mguard "$WORK/m9b_xsplit.html" "$MTD"; r2="$MRC"; n2="$(m1eq_prj)" || n2=NONE
+  mguard "$WORK/m9b_xattr.html" "$MTD";  r3="$MRC"; n3="$(m1eq_prj)" || n3=NONE
+  mguard "$M1X_SP" "$MTD"; x="$MRC:$(m1eq_prj)"
+  mguard "$M1Y_SP" "$MTD"; y="$MRC:$(m1eq_prj)"
+  if [ "$r1$r2$r3" = 111 ] && [ "$n1" = "$M1EQ_PRJ" ] && [ "$n2" = 'joined markup (an inline tag split a word)' ] && [ "$n3" = 'visible text' ] && [ "$x" = '1:joined markup (an inline tag split a word)' ] && [ "$y" = '1:visible text' ]; then
+    PASS "M9b: every page an earlier arm catches keeps its name — a plain value after '</script >' is named '$n1', the exact-close twins of M9a's two shapes are named '$n2' and '$n3', and M1x's and M1y's pages, a value inside a body closed only by a spaced tag, keep their joined and visible names"
+  else
+    FAIL "M9b: plain rc=$r1 '$n1' (want 1 '$M1EQ_PRJ'), exact split rc=$r2 '$n2', exact attr rc=$r3 '$n3' (want joined and visible), M1x '$x', M1y '$y' (want their joined and visible names)"
+  fi
+}
+m9b_assert
+m9_stream() { "$1" "$2" | _decode_entities | _norm_words | tr '\n' ' '; }   # <projection> <render> -> its words on one line
+m9c_assert() { # one verdict — the added streams are their twins' wherever no end tag of another form stands
+  local f i=0 same=0 diff=0 bad="" c
+  for f in "$M1X_EX" "$M1Y_EX" "$WORK/m9b_xsplit.html"; do
+    i=$((i+1))
+    if [ "$(m9_stream strip_to_text_blocks_at_browser_end "$f")" = "$(m9_stream strip_to_text_blocks "$f")" ] && [ "$(m9_stream strip_to_joined_text_at_browser_end "$f")" = "$(m9_stream strip_to_joined_text "$f")" ]; then same=$((same+1)); else bad="$bad ${f##*/}"; fi
+  done
+  for c in '</scriptx>' '</script-x>' $'</script\v>'; do
+    i=$((i+1)); f="$WORK/m9c_$i.html"; mrender "$f" "<script>var a = 1;$c$M9_SPLIT<script>var b = 2;</script>"
+    if [ "$(m9_stream strip_to_joined_text_at_browser_end "$f")" = "$(m9_stream strip_to_joined_text "$f")" ]; then same=$((same+1)); else bad="$bad $i"; fi
+  done
+  f="$WORK/m9a_1.html"
+  [ "$(m9_stream strip_to_joined_text_at_browser_end "$f")" != "$(m9_stream strip_to_joined_text "$f")" ] && diff=1
+  mrender "$WORK/m9c_clean.html" "<script>var a = 1;</script ><p>Note: the tile museum opens at ten on weekdays.</p><script>var b = 2;</script>"
+  mguard "$WORK/m9c_clean.html" "$MTD"
+  if [ "$i" -eq 6 ] && [ "$same" -eq 6 ] && [ "$diff" -eq 1 ] && [ "$MRC" -eq 0 ]; then
+    PASS "M9c: wherever no end tag of another form stands — three pages with exact end tags — and where a browser takes none as one — '</scriptx>', '</script-x>' and a vertical tab — each added stream is its twin's word for word, so the added arms can add no abort there; CONTROL — on M9a's first page the joined streams differ; and a clean page after '</script >' publishes (rc=$MRC)"
+  else
+    FAIL "M9c: $same of $i pages read the added streams as their twins (want 6:${bad:- none}), the control page differs=$diff (want 1), the clean page rc=$MRC (want 0)"
+  fi
+}
+m9c_assert
+m9d_assert() { # one verdict — an added arm that could not run is UNDETERMINED, and its refusal names it
+  local f="$WORK/m9a_1.html" r1 r2 r3 n1 n2 n3
+  r1="$( ( _browser_end_tags() { return 1; }; verify_publishable_content "$f" "$MTD" >/dev/null 2>"$WORK/m9d1.err"; printf '%s' "$?" ) )"
+  r2="$( ( strip_to_text_blocks_at_browser_end() { :; }; verify_publishable_content "$f" "$MTD" >/dev/null 2>"$WORK/m9d2.err"; printf '%s' "$?" ) )"
+  r3="$( ( strip_to_joined_text_at_browser_end() { :; }; verify_publishable_content "$f" "$MTD" >/dev/null 2>"$WORK/m9d3.err"; printf '%s' "$?" ) )"
+  n1=0; case "$(cat "$WORK/m9d1.err")" in *"could not be read ($M9_VPRJ): its pipeline exited "*) n1=1 ;; esac
+  n2=0; case "$(cat "$WORK/m9d2.err")" in *"could not be read ($M9_VPRJ): its pipeline exited 0 and yielded 0 words"*) n2=1 ;; esac
+  n3=0; case "$(cat "$WORK/m9d3.err")" in *"could not be read ($M9_JPRJ): its pipeline exited 0 and yielded 0 words"*) n3=1 ;; esac
+  if [ "$r1$r2$r3" = 222 ] && [ "$n1$n2$n3" = 111 ]; then
+    PASS "M9d: an added arm the guard could not read is UNDETERMINED (rc=2) — the pre-pass failing, the visible reading yielding nothing and the joined reading yielding nothing — on a page that is otherwise a HIT, and each refusal names its projection from the closed enum"
+  else
+    FAIL "M9d: statuses $r1/$r2/$r3 (want 2/2/2) and named $n1/$n2/$n3 (want 1/1/1) — an added arm that did not run reached a verdict"
+  fi
+}
+m9d_assert
+# M9e — the order, and only the order: the attribution's joined branch and the added joined branch
+# swapped in the production guard's text (pp_body), in a subshell, name M9b's exact-close split page
+# for the added reading, which the shipped order names for the joined arm.
+M9E_SWAP='s/if \[ "\$rcj" -eq 0 \]/if [ "$rck" -eq 0 ]/
+s/loc="\$locj"/loc="\$lock@"/
+s/loc="\$lock"/loc="\$locj"/
+s/loc="\$lock@"/loc="\$lock"/
+s/proj="joined markup (an inline tag split a word)"/proj="@"/
+s/proj="joined markup, a script or style body ended where a browser ends it"/proj="joined markup (an inline tag split a word)"/
+s/proj="@"/proj="joined markup, a script or style body ended where a browser ends it"/'
+m9e_assert() { # one verdict
+  local f="$WORK/m9b_xsplit.html" rh ph rw pw
+  mguard "$f" "$MTD"; rh="$MRC"; ph="$(m1eq_prj)" || ph=NONE
+  rw="$( ( eval "$(pp_body verify_publishable_content | sed "$M9E_SWAP")"; verify_publishable_content "$f" "$MTD" >/dev/null 2>"$MOUT"; printf '%s' "$?" ) )"; pw="$(m1eq_prj)" || pw=NONE
+  if [ "$rh" -eq 1 ] && [ "$ph" = 'joined markup (an inline tag split a word)' ] && [ "$rw" = "1" ] && [ "$pw" = "$M9_JPRJ" ]; then
+    PASS "M9e: the added arms are credited after the earlier ones — an exact-close page the joined arm and the added joined reading both catch is named '$ph'; ARMED-RED — with the two branches swapped in the guard's text, the same page is named '$pw'"
+  else
+    FAIL "M9e: the page rc=$rh '$ph' (want 1 and the joined arm's name); with the branches swapped rc=$rw '$pw' (want 1 and '$M9_JPRJ')"
+  fi
+}
+m9e_assert
 
 # ── M2 (CD-2) — is_stop in the token branch; a stopword-only name is a declared non-key ──
 MSTOP="$WORK/porto-stopword"; mkdir -p "$MSTOP/outputs"
@@ -3512,12 +3641,20 @@ m5lj="$(strip_to_joined_text "$M5LINES" | _decode_entities | wc -l | tr -d ' ')"
 m5lv="$(strip_to_text_blocks "$M5LINES" | _decode_entities | wc -l | tr -d ' ')"
 m5lp="$(strip_to_published_text "$M5LINES" | _decode_entities | wc -l | tr -d ' ')"
 m5ls="$(strip_to_shape_text "$M5LINES" | _decode_entities | wc -l | tr -d ' ')"
+m5lb="$(strip_to_text_blocks_at_browser_end "$M5LINES" | _decode_entities | wc -l | tr -d ' ')"
+m5lk="$(strip_to_joined_text_at_browser_end "$M5LINES" | _decode_entities | wc -l | tr -d ' ')"
+# The pre-pass re-emits the newlines an end tag spans: an end tag broken over two lines, then text.
+M5BLINES="$WORK/m5_browser_lines.html"
+printf '<p>Filler one.</p>\n<script>var a = 1;</script\n>\n<p>Filler four.</p>\n<script>var b = 2;</script>\n<p>Filler six.</p>\n' > "$M5BLINES"
+m5bsrc="$(wc -l < "$M5BLINES" | tr -d ' ')"
+m5bb="$(strip_to_text_blocks_at_browser_end "$M5BLINES" | _decode_entities | wc -l | tr -d ' ')"
+m5bk="$(strip_to_joined_text_at_browser_end "$M5BLINES" | _decode_entities | wc -l | tr -d ' ')"
 printf 'alpha &#10; beta &#13; gamma &#32; delta &#38; epsilon &#82;ho\n' > "$WORK/m5_adv.txt"
 m5adv="$(_decode_entities < "$WORK/m5_adv.txt" | wc -l | tr -d ' ')"
-if [ "$m5src" -ge 13 ] && [ "$m5lj" = "$m5src" ] && [ "$m5lv" = "$m5src" ] && [ "$m5lp" = "$m5src" ] && [ "$m5ls" = "$m5src" ] && [ "$m5adv" = "1" ]; then
-  PASS "M5d: all four projections are line-count-preserving THROUGH the decoder — a $m5src-line render carrying a <script> block, a tag spanning three lines, a split word and a character reference yields $m5lj / $m5lv / $m5lp / $m5ls lines. The adversarial arm fires too: a single line of newline-yielding references (&#10;, &#13;) decodes to $m5adv line, so no locator downstream of an encoded value can shift"
+if [ "$m5src" -ge 13 ] && [ "$m5lj" = "$m5src" ] && [ "$m5lv" = "$m5src" ] && [ "$m5lp" = "$m5src" ] && [ "$m5ls" = "$m5src" ] && [ "$m5lb" = "$m5src" ] && [ "$m5lk" = "$m5src" ] && [ "$m5bsrc" -eq 6 ] && [ "$m5bb" = "$m5bsrc" ] && [ "$m5bk" = "$m5bsrc" ] && [ "$m5adv" = "1" ]; then
+  PASS "M5d: all six projections are line-count-preserving THROUGH the decoder, the two browser-ended readings over an end tag broken across lines as well ($m5bb and $m5bk of $m5bsrc) — a $m5src-line render carrying a <script> block, a tag spanning three lines, a split word and a character reference yields $m5lj / $m5lv / $m5lp / $m5ls lines. The adversarial arm fires too: a single line of newline-yielding references (&#10;, &#13;) decodes to $m5adv line, so no locator downstream of an encoded value can shift"
 else
-  FAIL "M5d: a projection is no longer line-count-preserving (source=$m5src joined=$m5lj visible=$m5lv published=$m5lp shape=$m5ls; newline-reference arm=$m5adv, want 1). A transform that consumes a newline shifts every reported line after it while the token stream stays valid — the suite would not notice"
+  FAIL "M5d: a projection is no longer line-count-preserving (source=$m5src joined=$m5lj visible=$m5lv published=$m5lp shape=$m5ls browser-visible=$m5lb browser-joined=$m5lk; over a broken end tag $m5bb and $m5bk of $m5bsrc; newline-reference arm=$m5adv, want 1). A transform that consumes a newline shifts every reported line after it while the token stream stays valid — the suite would not notice"
 fi
 
 # M5e — THE FAIL DIRECTION OF EACH NEW SUBJECT, and both directions are CLOSED. Removing
@@ -3536,7 +3673,7 @@ else
   FAIL "M5e: a removal did not fail closed (no decoder: rc=$m5_dec_rc want 2; no joined arm: rc=$m5_join_rc want 2) — rc=0 on either is the guard certifying a render one of its own projections never read"
 fi
 
-# ── M7a–M7i (#2068, ADR-050) — the guard's fourth arm, a reading by shape, read and credited last ──
+# ── M7a–M7i (#2068, ADR-050) — the guard's fourth arm, a reading by shape, read and credited after the joined arm ──
 #
 # The published projection finds machinery by its place, which keeps a key token written directly
 # before `=` (M1e–M1h), and so keeps as text words a page around a value can carry: a `word=`
@@ -3545,7 +3682,7 @@ fi
 # page the guard before 0.60.0 blocked published. The bytes such a page needs dropped and the bytes
 # criterion 5 needs kept are the same shape, so no one reading holds both (ADR-050); the guard
 # carries a fourth arm instead, strip_to_shape_text, the earlier published program with #2072's
-# anchors, read last and credited last. Each arm grades its page against the guard as it stands
+# anchors, read and credited after the joined arm. Each arm grades its page against the guard as it stands
 # and carries the defect inside it (ARMED-RED): with the fourth arm made to read what the published
 # projection reads, in a subshell, the guard reads as it did before this change, and the page must
 # publish again. A twin on the same fixture shows what the shape needs. Every page is rendered on
@@ -3707,7 +3844,8 @@ m7g_assert
 # sort comparator whose `=>` ends that tag's list. A site is given back by a projection when its
 # name stands in that projection's stream fewer times than in the source, which is the assignment's
 # name dropped as an attribute name. The guard ORs its arms, so it gives a site back only when
-# every arm does: the count on its verdict is the sites all four give back. Fixture integrity is
+# every arm does: the count on its verdict is the sites all six give back — the two browser-ended
+# readings equal their twins on this page, whose end tags are all exact. Fixture integrity is
 # the site count, and its control is the earlier published program, which gives every site back.
 # One site the published arm keeps carries the Passport value's key token in a twin, which the
 # guard must still abort on, named for the published arm: the fourth arm, which drops it, removes
@@ -3826,7 +3964,7 @@ M8_RUN_OLD='s/(?<!\[-A-Za-z0-9_:\.\])(\[0-9\.\]\*+)(\[-A-Za-z_:\]\[-A-Za-z0-9_:\
 M8_RUN_LB='s/(?<!\[-A-Za-z0-9_:\.\])(\[0-9\.\]\*+)/()(?<![-A-Za-z0-9_:.])/'
 m8_shape_assert() { # <id> <what> <shape file> <control file> <mutant sed> <mutant file> <mutant marker> — one verdict
   local id="$1" what="$2" sf="$3" cf="$4" sed_old="$5" mf="$6" mark="$7" p st ok=0 n=0 bad="" ms mk sz
-  for p in strip_to_published_text strip_to_text_blocks strip_to_joined_text strip_to_shape_text; do
+  for p in strip_to_published_text strip_to_text_blocks strip_to_joined_text strip_to_shape_text strip_to_text_blocks_at_browser_end strip_to_joined_text_at_browser_end; do
     for f in "$sf" "$cf"; do
       n=$((n+1)); st="$(m8_cap "$p" "$f")"
       if [ "$st" = "0" ]; then ok=$((ok+1)); else bad="$bad $p:${f##*/}=$st"; fi
@@ -3835,10 +3973,10 @@ m8_shape_assert() { # <id> <what> <shape file> <control file> <mutant sed> <muta
   mk="$(declare -f strip_to_published_text | sed "$sed_old" | grep -c -F -- "$mark")"
   ms="$( ulimit -t 5; eval "$(declare -f strip_to_published_text | sed "$sed_old")"; strip_to_published_text "$mf" >/dev/null 2>&1; printf '%s' "$?" )"
   sz=$(( $(wc -c < "$sf") + 0 ))
-  if [ "$n" -eq 8 ] && [ "$ok" -eq 8 ] && [ "$sz" -gt 262144 ] && [ "$mk" -ge 1 ] && [ "$ms" -gt 128 ]; then
-    PASS "$id: $what — each of the four projections reads $sz bytes of it, and the same length of its control, inside a five-second CPU cap ($ok of $n complete with status 0); ARMED-RED — the old pattern put back into the published projection ($mk site(s) changed) does not finish 64 KB of it inside the cap (status $ms)"
+  if [ "$n" -eq 12 ] && [ "$ok" -eq 12 ] && [ "$sz" -gt 262144 ] && [ "$mk" -ge 1 ] && [ "$ms" -gt 128 ]; then
+    PASS "$id: $what — each of the six projections reads $sz bytes of it, and the same length of its control, inside a five-second CPU cap ($ok of $n complete with status 0); ARMED-RED — the old pattern put back into the published projection ($mk site(s) changed) does not finish 64 KB of it inside the cap (status $ms)"
   else
-    FAIL "$id: $what — $ok of $n projection runs completed inside the cap (want 8 of 8:${bad:- none failed}), shape bytes $sz (want more than 262144), the old pattern put back at $mk site(s) (want at least 1) and its run over 64 KB status $ms (want the cap to stop it, above 128). A projection is quadratic on this shape again, or this arm can no longer tell"
+    FAIL "$id: $what — $ok of $n projection runs completed inside the cap (want 12 of 12:${bad:- none failed}), shape bytes $sz (want more than 262144), the old pattern put back at $mk site(s) (want at least 1) and its run over 64 KB status $ms (want the cap to stop it, above 128). A projection is quadratic on this shape again, or this arm can no longer tell"
   fi
 }
 m8_shape_assert M8a "a '<' followed by a long run of spaces (the tag head)" "$M8_S1" "$M8_C1" "$M8_HEAD_OLD" "$M8_S1M" '\s*/?\s*'
@@ -5199,9 +5337,9 @@ m6d_assert() { # one verdict
   g="$(pp_legacy_verify "$M1T_SC" "$MTD")"
   if pp_regressed "${M1T_SC##*/}" "$h" "$g" "$PP_FENCE"; then fl=yes; fi
   if [ "$h" = "0" ] && [ "$g" = "1" ] && [ "$fl" = "yes" ]; then
-    PASS "M6d: pre-0.60.0 parity — ARMED-RED: #2055's leak page, graded with the published lookahead put back to the exact closing tag, publishes (rc=$h) where the guard before 0.60.0 blocks it (rc=$g), and M6b's predicate flags the pair, so the cells can fail"
+    PASS "M6d: pre-0.60.0 parity — ARMED-RED: #2055's leak page, graded with the published lookahead put back to the exact closing tag and the two browser-ended readings read as their twins, publishes (rc=$h) where the guard before 0.60.0 blocks it (rc=$g), and M6b's predicate flags the pair, so the cells can fail on that two-part mutant"
   else
-    FAIL "M6d: pre-0.60.0 parity — the unfixed published program gives rc=$h (want 0), the legacy guard rc=$g (want 1), M6b's predicate flagged it: $fl (want yes). The cells could not see the regression #2055 repairs"
+    FAIL "M6d: pre-0.60.0 parity — with the published lookahead put back to the exact closing tag and the two browser-ended readings read as their twins the guard gives rc=$h (want 0), the legacy guard rc=$g (want 1), M6b's predicate flagged it: $fl (want yes). The cells could not see the regression #2055 repairs, with the readings #2117 adds taken out of the way"
   fi
 }
 m6d_assert
@@ -7350,7 +7488,7 @@ fi
 # construction: perl invoked through a variable or by a path (`$PERL`, `/usr/bin/perl`),
 # and a change that removes one program while adding another, because it compares a count
 # and not a set.
-S15I_FNS='strip_to_text strip_to_published_text strip_to_text_blocks strip_to_joined_text strip_to_shape_text _decode_entities strip_to_itinerary_text _digest_of'
+S15I_FNS='strip_to_text strip_to_published_text strip_to_text_blocks strip_to_joined_text strip_to_shape_text _browser_end_tags _decode_entities strip_to_itinerary_text _digest_of'
 S15I_RE='(^|[[:space:](|;`$])perl[[:space:]]+-'
 s15_perl_lines() { # <file> -> the number of non-comment lines that invoke perl by name
   local line t n=0
@@ -9024,10 +9162,10 @@ SA17H_NFN=0; for sad in $S15I_FNS; do SA17H_NFN=$((SA17H_NFN+1)); done
 SA17H_NLINE="$(s15_perl_lines "$SELF_PUBLISH")"
 printf 'digest=4294967295-1234\nconfirmed=2027-06-01T00:00:00Z\n' > "$WORK/sa17h.rec"
 SA17H_CRC="$(_record_digest "$WORK/sa17h.rec")"
-if [ "$SA17H_DN$SA17H_FB" = 00 ] && [ "$SA17H_RE" -eq 1 ] && [ "$SA17H_NFN" -eq 8 ] && [ "$SA17H_NLINE" -eq 8 ] && [ "$SA17H_CRC" = '4294967295-1234' ]; then
-  PASS "S17h: _digest_of's parsed body reads discard/fallback 00, invokes perl by S15i's own regex (F4 — the listed body is a perl program, so the count cannot be balanced by a substitution), S15I_FNS lists 8 and the script has 8 perl-invoking lines; the CRC token still parses for group T and for a pre-swap record"
+if [ "$SA17H_DN$SA17H_FB" = 00 ] && [ "$SA17H_RE" -eq 1 ] && [ "$SA17H_NFN" -eq 9 ] && [ "$SA17H_NLINE" -eq 9 ] && [ "$SA17H_CRC" = '4294967295-1234' ]; then
+  PASS "S17h: _digest_of's parsed body reads discard/fallback 00, invokes perl by S15i's own regex (F4 — the listed body is a perl program, so the count cannot be balanced by a substitution), S15I_FNS lists 9 and the script has 9 perl-invoking lines; the CRC token still parses for group T and for a pre-swap record"
 else
-  FAIL "S17h: bits $SA17H_DN$SA17H_FB (want 00), regex match $SA17H_RE (want 1), listed $SA17H_NFN and counted $SA17H_NLINE (want 8 and 8), CRC parse '$SA17H_CRC'"
+  FAIL "S17h: bits $SA17H_DN$SA17H_FB (want 00), regex match $SA17H_RE (want 1), listed $SA17H_NFN and counted $SA17H_NLINE (want 9 and 9), CRC parse '$SA17H_CRC'"
 fi
 
 # ── S18a — MUST REFUSE. Ten lines the grammar must not admit, each refused with nothing printed:
@@ -11074,6 +11212,28 @@ s32c_assert() { # one verdict — the one-time cost the change states, measured 
   fi
 }
 s32c_assert
+s32d_agree() { # -> how many of the end-tag forms the digest's limb and the guard's added visible reading end a body at alike
+  local c n=0 ok=0 f="$WORK/s32_d.html" it vb
+  for c in "${S32_END[@]}" "${S32_NOT[@]}"; do
+    n=$((n+1))
+    printf '<html><body><h1>Synthetic Trip</h1><p>Lead paragraph of the day.</p><script>var a = 1;%s<p>zzqmarker</p><script>var b = 2;</script></body></html>\n' "$c" > "$f"
+    it=0; case "$(strip_to_itinerary_text "$f")" in *zzqmarker*) it=1 ;; esac
+    vb=0; case "$(strip_to_text_blocks_at_browser_end "$f")" in *zzqmarker*) vb=1 ;; esac
+    [ "$it" = "$vb" ] && ok=$((ok+1))
+  done
+  printf '%d %d' "$ok" "$n"
+}
+s32d_assert() { # one verdict
+  local ok n mok mn
+  read -r ok n <<<"$(s32d_agree)"
+  read -r mok mn <<<"$( eval "$(declare -f _browser_end_tags | perl -pe 'BEGIN{$o=q{\t\n\f\r}} my $i=index($_,$o); substr($_,$i,length $o)=q{\t\n\r} if $i>=0')"; s32d_agree )"
+  if [ "$n" -eq 12 ] && [ "$ok" -eq 12 ] && [ "$mn" -eq 12 ] && [ "$mok" -eq 11 ]; then
+    PASS "S32d: one end-tag rule — over 12 forms, the 9 a browser ends a body at and the 3 it does not, the digest's limb and the guard's added visible reading agree on whether the text after the tag is the page's; ARMED-RED — with the form feed dropped from the pre-pass's class, the two disagree on exactly that form"
+  else
+    FAIL "S32d: the limb and the added reading agree on $ok of $n forms (want 12 of 12); with the form feed dropped they agree on $mok of $mn (want 11 of 12)"
+  fi
+}
+s32d_assert
 md_flips strip_to_itinerary_text    "S32a" s32a_assert
 
 # ── S30 — CASE 1: THE ITINERARY DIGEST NO LONGER DEPENDS ON THE CALLER'S LOCALE (#1468). The
@@ -11863,6 +12023,11 @@ md_flips strip_to_shape_text        "M7c" m7c_assert
 md_flips strip_to_shape_text        "M7d" m7d_assert
 md_flips strip_to_shape_text        "M7e" m7e_assert
 md_flips strip_to_shape_text        "M6b" m6b_assert
+# The guard's added readings (#2117). M9a grades an EXACT status on pages only those readings block,
+# so with the pre-pass removed both readings fail, the guard refuses them (rc=2), and the arm's one
+# verdict is a FAIL; M9c reads the streams the pre-pass shapes.
+md_flips _browser_end_tags          "M9a" m9a_assert
+md_flips _browser_end_tags          "M9c" m9c_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group FZ — every verdict arm in this file must be able to FAIL.

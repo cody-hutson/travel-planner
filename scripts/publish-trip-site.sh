@@ -609,7 +609,7 @@ strip_to_text() { # <html_file> -> visible text on stdout
 # the tag-name rule still drops a word written directly after a `<`, with nothing but spaces or a
 # `/` between them — the spaced form included, which a browser shows as text — the visible and
 # joined projections read the same span as a tag up to the next `>`, and the shape projection drops
-# the word as a tag name, so such a word can go unread by all four arms. Markup after a <script> or <style> closing tag written with a space before its
+# the word as a tag name, so such a word can go unread by all six arms. Markup after a <script> or <style> closing tag written with a space before its
 # `>` is markup like any other, so a word written directly after a `<` there is read as a tag name,
 # as everywhere else in markup.
 #
@@ -702,7 +702,9 @@ strip_to_published_text() { # <html_file> -> retrievable non-machinery content o
 # Its <script>/<style> deletion ends at an exact closing tag only, where a browser also ends a
 # body at one written with a space, because ending it there too would delete a body whose only
 # closing tag is spaced and so let through a class of pages the guard before 0.60.0 blocked by
-# reading that body as visible text (M1x, M1y).
+# reading that body as visible text (M1x, M1y). The reading that ends the body where the browser
+# does is the guard's fifth arm, strip_to_text_blocks_at_browser_end — this projection, unchanged,
+# over the copy _browser_end_tags writes; the guard ORs the two, so neither catch is lost (M9a).
 strip_to_text_blocks() { # <html_file> -> visible text with block sentinels on stdout
   perl -0777 -pe "
     s{<(script|style)\b[^>]*>.*?</\1>}{ \$& =~ tr/\n//cdr }gise;
@@ -735,6 +737,7 @@ strip_to_text_blocks() { # <html_file> -> visible text with block sentinels on s
 # Its stderr is kept, by the rule stated above strip_to_published_text: no fallback, no discard.
 # Its <script>/<style> deletion ends at an exact closing tag only, as strip_to_text_blocks's does,
 # because ending it at a spaced one too would let through pages the guard before 0.60.0 blocked.
+# Its browser-ended twin is the guard's sixth arm, strip_to_joined_text_at_browser_end (M9a).
 strip_to_joined_text() { # <html_file> -> visible text with INLINE tags removed, NO space
   perl -0777 -pe "
     s{<(script|style)\b[^>]*>.*?</\1>}{ \$& =~ tr/\n//cdr }gise;
@@ -742,6 +745,34 @@ strip_to_joined_text() { # <html_file> -> visible text with INLINE tags removed,
     s{<[^>\n]+>}{}g;
     s{<[^>]+>}{ ' ' . (\$& =~ tr/\n//cdr) }ge;
   " "$1"
+}
+
+# A <script> OR <style> BODY ENDED WHERE A BROWSER ENDS IT (#2117, the record on ending a body where the
+# browser does). A browser ends such a body at the first `</` followed by the element's name, in any
+# letter case, and then whitespace (tab, line feed, form feed, carriage return or space), a `/` or a
+# `>`; the end tag then runs to its `>`. The visible and joined projections end a body at the exact
+# tag alone, `</script>` or `</style>`, so they delete the stretch between an end tag of another form
+# and a later exact one, and read as visible text a body whose only end tag is of another form. This
+# pre-pass writes each body's first browser end tag in the exact form, so either projection, run over
+# its output, ends the body where the browser does. It changes nothing else: on a page whose every
+# end tag is already exact its output is byte-identical to its input. Newline-preserving, for the
+# reason stated above strip_to_published_text: the newlines an end tag spans are re-emitted after it.
+_browser_end_tags() { # <html_file> -> the file, each <script>/<style> body's first browser end tag written exactly, on stdout
+  perl -0777 -pe 's{(<(script|style)\b[^>]*>.*?)(</\2(?=[\t\n\f\r />])[^>]*>)}{ $1 . "</" . $2 . ">" . ($3 =~ tr/\n//cdr) }gise' "$1"
+}
+
+# The FIFTH and SIXTH projections: the visible and the joined projection, each over a copy whose
+# <script>/<style> bodies end where a browser ends them. Each is its twin, unchanged, read over
+# _browser_end_tags's output, so the guard ORs two readings of where a body ends and keeps every
+# catch each makes: the twin's reading of a body whose only end tag is of another form (M1x, M1y),
+# and this reading of the stretch after such an end tag, which the twin deletes. On a page whose end
+# tags are all exact each stream is byte-identical to its twin's. `pipefail` is set inside, so a
+# pre-pass that fails is this projection's failure, which the guard refuses.
+strip_to_text_blocks_at_browser_end() { # <html_file> -> strip_to_text_blocks over the browser-ended copy, on stdout
+  ( set -o pipefail; _browser_end_tags "$1" | strip_to_text_blocks /dev/stdin )
+}
+strip_to_joined_text_at_browser_end() { # <html_file> -> strip_to_joined_text over the browser-ended copy, on stdout
+  ( set -o pipefail; _browser_end_tags "$1" | strip_to_joined_text /dev/stdin )
 }
 
 # The FOURTH projection: the published projection as the guard before 0.60.0 wrote it, kept as
@@ -754,8 +785,9 @@ strip_to_joined_text() { # <html_file> -> visible text with INLINE tags removed,
 # (`title="k= m="` against `title="Ruritanian= passport, valid to 2033"`), so no one reading can
 # hold both. The guard ORs its arms, so this one can only add a catch: it restores every catch the
 # earlier reading made, among them a value split by a tag on neither list inside a script string,
-# and it can bring back only that reading's own false aborts. It is read last and credited last,
-# so a page another arm catches keeps that arm's name. It is the earlier program with #2072's
+# and it can bring back only that reading's own false aborts. It is read and credited after the
+# joined arm and before the two browser-ended readings (#2117), so a page another arm catches keeps
+# that arm's name. It is the earlier program with #2072's
 # anchors, a possessive tag head and a `=` rule anchored at the start of a name run, which change
 # none of its output and make it linear on a long run of either. Newline-preserving, for the
 # reason stated above strip_to_published_text, and verify_publishable_content is its one reader.
@@ -2352,8 +2384,8 @@ $rmerge	$rtarget"
 # field only. Stage 8: this is a decision, not an inconsistency to fix.
 verify_publishable_content() { # <site_html> <trip_dir>
   local site_html="${1:-}" trip_dir="${2:-}"
-  local recs rc rcv rcp rcj rcs work rfile pfile jfile sfile vfile n np nj ns field rule value hit=0 undet=0
-  local locv="" locp="" locj="" locs="" loc="" proj="" stv=0 stp=0 stj=0 sts=0
+  local recs rc rcv rcp rcj rcs rcb rck work rfile pfile jfile sfile bfile kfile vfile n np nj ns nb nk field rule value hit=0 undet=0
+  local locv="" locp="" locj="" locs="" locb="" lock="" loc="" proj="" stv=0 stp=0 stj=0 sts=0 stb=0 stk=0
 
   if [ -z "$site_html" ] || [ -z "$trip_dir" ]; then
     warn "guard: content check needs a rendered site and a trip dir"; return 2
@@ -2363,17 +2395,19 @@ verify_publishable_content() { # <site_html> <trip_dir>
   fi
 
   work="$(mktemp -d)" || { warn "guard: could not stage the content check"; return 2; }
-  rfile="$work/render.words"; pfile="$work/published.words"; jfile="$work/joined.words"; sfile="$work/shape.words"; vfile="$work/value.words"
+  rfile="$work/render.words"; pfile="$work/published.words"; jfile="$work/joined.words"; sfile="$work/shape.words"; bfile="$work/browser-visible.words"; kfile="$work/browser-joined.words"; vfile="$work/value.words"
 
-  # FOUR projections of the same file, matched independently, because publish copies the
+  # SIX projections of the same file, matched independently, because publish copies the
   # file and not the painting of it. The visible arm is what a reader sees; the published
   # arm is what a reader can retrieve; the joined arm is what a reader sees once an inline
   # tag that SPLIT A WORD is closed up; the shape arm is what a reader can retrieve read as the
   # guard before 0.60.0 read it, every tag and attribute name found by its shape, so a page that
-  # guard blocked is blocked still (ADR-050). Each runs through _guard_arm in `decode` mode, so all
-  # four use the SAME _norm_words on both sides of the comparison — one normalization, eight
-  # streams, no chance of the sides drifting — and all four resolve a character reference
-  # before tokenization rather than on whichever arm was remembered.
+  # guard blocked is blocked still (ADR-050); the fifth and sixth are the visible and the joined
+  # arm over a copy whose <script>/<style> bodies end where a browser ends them, so the stretch
+  # after an end tag of another form is read as the page it is (#2117). Each runs through
+  # _guard_arm in `decode` mode, so all six use the SAME _norm_words on both sides of the
+  # comparison — one normalization, twelve streams, no chance of the sides drifting — and all six
+  # resolve a character reference before tokenization rather than on whichever arm was remembered.
   #
   # EACH ARM'S STATUS IS READ, AND AN ARM THE GUARD COULD NOT READ IS UNDETERMINED — NEVER A
   # PASS. An arm is a pipeline of four stages — projection, entity decoding, line sentinels,
@@ -2434,12 +2468,32 @@ verify_publishable_content() { # <site_html> <trip_dir>
   fi
   # No word floor and no empty stream on the shape arm, for the published arm's reason: it removes
   # only machinery, so after the floor above it carries the visible words too, and an empty one is
-  # refused as a failed one is. Read last, so every refusal still comes before the class is read.
+  # refused as a failed one is. Read after the joined arm and before the two browser-ended readings,
+  # so every refusal still comes before the class is read.
   _guard_arm decode strip_to_shape_text "$site_html" "$sfile" || sts=$?
   ns="$(_guard_words "$sfile")"; ns="${ns:-0}"
   if [ "$sts" -ne 0 ] || [ "$ns" -eq 0 ]; then
     rm -rf "$work"
     warn "guard: a projection of $site_html could not be read (markup read by shape (every tag and attribute name dropped)): its pipeline exited $sts and yielded $ns words. A projection that failed or yielded nothing has not read the render, so what would be published cannot be certified, and an undetermined result is a failure, never a clean pass. The PROJECTION is the subject here, not the render or a model record: editing either clears nothing until the projection runs."
+    return 2
+  fi
+  # The two readings of a body ended where a browser ends it (#2117). No word floor: on a render that
+  # cleared the floor above, a stream with no words means a projection that did not run, or a render
+  # whose every visible word sits inside a <script> or <style> body closed only by an end tag of
+  # another form, which a browser does not show; both are refused, the second a false abort in the
+  # closed direction. Read after the shape arm, so every refusal still comes before the class is read.
+  _guard_arm decode strip_to_text_blocks_at_browser_end "$site_html" "$bfile" || stb=$?
+  nb="$(_guard_words "$bfile")"; nb="${nb:-0}"
+  if [ "$stb" -ne 0 ] || [ "$nb" -eq 0 ]; then
+    rm -rf "$work"
+    warn "guard: a projection of $site_html could not be read (visible text, a script or style body ended where a browser ends it): its pipeline exited $stb and yielded $nb words. A projection that failed or yielded nothing has not read the render, so what would be published cannot be certified, and an undetermined result is a failure, never a clean pass. The PROJECTION is the subject here, not the render or a model record: editing either clears nothing until the projection runs."
+    return 2
+  fi
+  _guard_arm decode strip_to_joined_text_at_browser_end "$site_html" "$kfile" || stk=$?
+  nk="$(_guard_words "$kfile")"; nk="${nk:-0}"
+  if [ "$stk" -ne 0 ] || [ "$nk" -eq 0 ]; then
+    rm -rf "$work"
+    warn "guard: a projection of $site_html could not be read (joined markup, a script or style body ended where a browser ends it): its pipeline exited $stk and yielded $nk words. A projection that failed or yielded nothing has not read the render, so what would be published cannot be certified, and an undetermined result is a failure, never a clean pass. The PROJECTION is the subject here, not the render or a model record: editing either clears nothing until the projection runs."
     return 2
   fi
 
@@ -2454,7 +2508,7 @@ verify_publishable_content() { # <site_html> <trip_dir>
     [ -n "${rule:-}" ] || continue
     printf '%s' "$value" | _norm_words > "$vfile"
     # _guard_match now writes the winning render position to stdout on a HIT and nothing
-    # at all otherwise, so all four arms are captured. The exit-status contract is unchanged,
+    # at all otherwise, so all six arms are captured. The exit-status contract is unchanged,
     # and so is the errexit behaviour: this function already runs as the left operand of
     # `||` at its call site, which suspends errexit through the whole body — the same
     # property the `rcv=$?` idiom depended on before.
@@ -2462,7 +2516,9 @@ verify_publishable_content() { # <site_html> <trip_dir>
     locp="$(_guard_match "$rule" "$vfile" "$pfile")"; rcp=$?
     locj="$(_guard_match "$rule" "$vfile" "$jfile")"; rcj=$?
     locs="$(_guard_match "$rule" "$vfile" "$sfile")"; rcs=$?
-    # Combine the four arms. A hit on ANY projection is a hit — the value is in the
+    locb="$(_guard_match "$rule" "$vfile" "$bfile")"; rcb=$?
+    lock="$(_guard_match "$rule" "$vfile" "$kfile")"; rck=$?
+    # Combine the six arms. A hit on ANY projection is a hit — the value is in the
     # file either way. Otherwise the first arm, in the arms' own order, whose code is not a
     # plain no-match carries the verdict. Every such code but one is a property of the VALUE
     # (its keyability floor, its distinctiveness) rather than of the projection, so the arms
@@ -2473,10 +2529,12 @@ verify_publishable_content() { # <site_html> <trip_dir>
     # a no-match — unless the visible arm reports the value a declared non-key (4), which carries
     # the verdict before any other arm's code is read, so a matcher failure there is not
     # reported. No value can pass that way: a declared non-key is unmatched on every arm.
-    if   [ "$rcv" -eq 0 ] || [ "$rcp" -eq 0 ] || [ "$rcj" -eq 0 ] || [ "$rcs" -eq 0 ]; then rc=0
+    if   [ "$rcv" -eq 0 ] || [ "$rcp" -eq 0 ] || [ "$rcj" -eq 0 ] || [ "$rcs" -eq 0 ] || [ "$rcb" -eq 0 ] || [ "$rck" -eq 0 ]; then rc=0
     elif [ "$rcv" -eq 1 ] && [ "$rcp" -ne 1 ]; then rc="$rcp"
     elif [ "$rcv" -eq 1 ] && [ "$rcj" -ne 1 ]; then rc="$rcj"
     elif [ "$rcv" -eq 1 ] && [ "$rcs" -ne 1 ]; then rc="$rcs"
+    elif [ "$rcv" -eq 1 ] && [ "$rcb" -ne 1 ]; then rc="$rcb"
+    elif [ "$rcv" -eq 1 ] && [ "$rck" -ne 1 ]; then rc="$rck"
     else rc="$rcv"; fi
     # The HIT arm reports a position in the EVALUAND — the file the guard was asked to
     # certify — because that is the artifact the operator has to edit. The model
@@ -2490,18 +2548,20 @@ verify_publishable_content() { # <site_html> <trip_dir>
     # about the record, so the model coordinate is the right one and each says which
     # surface its remedy is on.
     #
-    # INT-1 — THE PROJECTION ENUM IS CLOSED AND NOW CARRIES FOUR VALUES. It shipped as a
-    # closed TWO-value enum; the joined arm required a third and the shape arm a fourth
-    # (ADR-050), and the selection order is the arms' own order so the attribution names the
-    # WEAKEST projection that saw it — visible text first, because that is the one the
-    # operator can read on the page, and the shape arm last, so a page another arm catches
-    # keeps that arm's name. The tag stays a structural fact carrying no class content: a
+    # INT-1 — THE PROJECTION ENUM IS CLOSED AND NOW CARRIES SIX VALUES. It shipped as a
+    # closed TWO-value enum; the joined arm required a third, the shape arm a fourth (ADR-050)
+    # and the two browser-ended readings a fifth and a sixth (#2117), and the selection order is
+    # the arms' own order so the attribution names the WEAKEST projection that saw it — visible
+    # text first, because that is the one the operator can read on the page, and each added arm
+    # after every earlier one, so a page another arm catches keeps that arm's name. The tag stays a structural fact carrying no class content: a
     # path, an integer and one enum value, never the matched text.
     case "$rc" in
       0) if   [ "$rcv" -eq 0 ]; then loc="$locv"; proj="visible text"
          elif [ "$rcp" -eq 0 ]; then loc="$locp"; proj="retrievable markup (comment, attribute or script body)"
          elif [ "$rcj" -eq 0 ]; then loc="$locj"; proj="joined markup (an inline tag split a word)"
-         else loc="$locs"; proj="markup read by shape (every tag and attribute name dropped)"; fi
+         elif [ "$rcs" -eq 0 ]; then loc="$locs"; proj="markup read by shape (every tag and attribute name dropped)"
+         elif [ "$rcb" -eq 0 ]; then loc="$locb"; proj="visible text, a script or style body ended where a browser ends it"
+         else loc="$lock"; proj="joined markup, a script or style body ended where a browser ends it"; fi
          [ -n "${loc:-}" ] && [ "$loc" != "0" ] || loc="?"
          warn "guard: a non-publishable value reached the published file at $site_html:$loc ($proj)."
          warn "guard: fix the RENDER at that line — deleting the model record clears this abort WITHOUT clearing the leak."
@@ -2528,7 +2588,7 @@ EOF
 # ── WHY A SECOND EVALUAND AND NOT A SECOND MECHANISM ─────────────────────────
 # outputs/change-summary.md (C20) is `publish: internal`. It is shared by the
 # organizer out of band and never reaches the render, so verify_publishable_content
-# never sees it: that function is HTML-bound on all four of its projections and is called
+# never sees it: that function is HTML-bound on all six of its projections and is called
 # from exactly one site, cmd_publish's plaintext limb, on the file being published.
 # Reusing it here would mean either widening it to a second evaluand class or calling
 # it on a file it was not written for.
