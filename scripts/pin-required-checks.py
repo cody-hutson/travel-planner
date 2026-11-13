@@ -2091,15 +2091,25 @@ def restore_arms():
         return problems, summary
 
     def h12():
-        priors = ('{"checks": ["x"]}', '{"checks": [null]}', "not json at all")
+        # (name, the prior's bytes, whether --restore reads it). The last prior is
+        # the control: a valid rollback point that differs from the new capture,
+        # whose refusal may send the operator to --restore because --restore reads
+        # it. It shows that the remedy limb sees a working remedy, so a clean H12
+        # is a measurement and not a refusal text that names no remedy at all.
+        priors = (('{"checks": ["x"]}', '{"checks": ["x"]}', False),
+                  ('{"checks": [null]}', '{"checks": [null]}', False),
+                  ("not json at all", "not json at all", False),
+                  ('{"checks": []}', '{"checks": []}', False),
+                  ("a valid, different rollback point (the control)",
+                   json.dumps(capture_pinned), True))
         modes = (("--plan", run_apply, {"confirm": False}),
                  ("--apply", run_apply, {"confirm": True}),
                  ("--register", globals().get("run_register"),
                   {"confirm": True, "names": [CONTEXT_ORDER[-1]]}))
-        problems, runs = [], 0
-        for prior in priors:
+        problems, runs, control = [], 0, []
+        for name, prior, restorable in priors:
             for label, mode, extra in modes:
-                where = "{} over a prior {}".format(label, prior)
+                where = "{} over a prior {}".format(label, name)
                 if mode is None:
                     problems.append("{}: absent -- the mode is not defined".format(where))
                     continue
@@ -2124,13 +2134,45 @@ def restore_arms():
                             problems.append("{}: the prior was overwritten".format(where))
                     if [n for n in os.listdir(tmp) if n.endswith(".pending")]:
                         problems.append("{}: a .pending file was left".format(where))
+                    # The remedy the refusal names, graded by what --restore does in
+                    # this same directory rather than by the refusal's wording alone.
+                    refusal = " ".join(line for line in sink.getvalue().split("\n")
+                                       if line.startswith("CAPTURE REFUSED"))
+                    names_restore = "restore from" in " ".join(refusal.split()).lower()
+                    try:
+                        rhost = _FakeHost(_pre_pairs())
+                        rc_restore = run_restore(repo=_FakeHost.REPO,
+                                                 branch=_FakeHost.BRANCH, staging=tmp,
+                                                 confirm=True, fetch=rhost.fetch,
+                                                 write=rhost.write, stream=io.StringIO())
+                    except Exception as exc:       # noqa: BLE001 - a raise is graded
+                        problems.append("{}: --restore in that directory raised "
+                                        "{}".format(where, type(exc).__name__))
+                        rc_restore = None
                 if rc != 3:
                     problems.append("{}: rc {}, want 3".format(where, rc))
                 if host.writes:
                     problems.append("{}: {} write(s), want 0".format(where, len(host.writes)))
-                if "CAPTURE REFUSED" not in sink.getvalue():
+                if not refusal:
                     problems.append("{}: the output does not say CAPTURE REFUSED".format(where))
-        return problems, "{} run(s) returned".format(runs)
+                elif "fresh --staging" not in " ".join(refusal.split()):
+                    problems.append("{}: the refusal does not name a fresh --staging "
+                                    "directory".format(where))
+                if names_restore and rc_restore == 3:
+                    problems.append("{}: the refusal says to restore from it, and "
+                                    "--restore in that directory refuses at exit "
+                                    "3".format(where))
+                if restorable:
+                    control.append("{} restore rc {}".format(label, rc_restore))
+                    if not names_restore or rc_restore != 0:
+                        problems.append("control, {}: the refusal {} --restore, and "
+                                        "--restore in that directory returned rc {} -- "
+                                        "want it named and rc 0, or this arm cannot see "
+                                        "a working remedy".format(
+                                            where, "names" if names_restore else
+                                            "does not name", rc_restore))
+        return problems, "{} run(s) returned; the control's {}".format(
+            runs, ", ".join(control))
 
     def h13():
         payload = compose_restore(capture_null)
@@ -2276,6 +2318,77 @@ def restore_arms():
                 problems.append("{}: the host's error is not in the output".format(label))
         return problems, "; ".join(seen)
 
+    def h19():
+        class _ClosedPipe(io.StringIO):
+            """A stream that raises on the PATCH line, as a closed pipe does."""
+
+            def __init__(self):
+                io.StringIO.__init__(self)
+                self.raised = False
+
+            def write(self, s):
+                if s.startswith("PATCH "):
+                    self.raised = True
+                    raise BrokenPipeError(32, "Broken pipe")
+                return io.StringIO.write(self, s)
+
+        problems, used, writes = [], [], []
+
+        def _path_writer(path, payload_file):
+            used.append(payload_file)
+            return (True, "{}", "")
+
+        def _counting_writer(path, payload_file):
+            writes.append(path)
+            return (True, "{}", "")
+
+        outcome, pipe, left, ctl_rc = "returned", _ClosedPipe(), [], None
+        real_tempdir = tempfile.tempdir
+        with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+            with tempfile.TemporaryDirectory(prefix="prc-selftest-") as body_dir:
+                _stage(tmp, capture_null, compose_restore(capture_null))
+                try:
+                    # The body is staged in the system's temporary directory, so this
+                    # arm points that at a directory of its own and lists it after.
+                    tempfile.tempdir = body_dir
+                    # Control: an ordinary stream, so the body is shown to be staged
+                    # where this arm looks, and a clean listing is a measurement.
+                    ctl_rc = run_restore(
+                        repo=_FakeHost.REPO, branch=_FakeHost.BRANCH, staging=tmp,
+                        confirm=True,
+                        fetch=_fetcher([(True, json.dumps(capture_null), "")]),
+                        write=_path_writer, stream=io.StringIO())
+                    try:
+                        run_restore(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                                    staging=tmp, confirm=True,
+                                    fetch=_fetcher([(True, json.dumps(capture_null), "")]),
+                                    write=_counting_writer, stream=pipe)
+                    except BrokenPipeError:
+                        outcome = "raised BrokenPipeError, as the stream did"
+                    except Exception as exc:       # noqa: BLE001 - a raise is graded
+                        outcome = "raised {}".format(type(exc).__name__)
+                        problems.append("the closed pipe: raised {} ({}), want the "
+                                        "stream's own error or none".format(
+                                            type(exc).__name__, exc))
+                finally:
+                    tempfile.tempdir = real_tempdir
+                left = sorted(n for n in os.listdir(body_dir)
+                              if n.startswith("rsc-RESTORE-sent."))
+        if ctl_rc != 0 or len(used) != 1:
+            problems.append("control: rc {}, {} write(s), want rc 0 and 1".format(
+                ctl_rc, len(used)))
+        elif os.path.realpath(os.path.dirname(used[0])) != os.path.realpath(body_dir):
+            problems.append("control: the body was not staged in the directory this arm "
+                            "lists, so a clean listing would measure nothing")
+        if not pipe.raised:
+            problems.append("the stream never received the PATCH line, so nothing was "
+                            "measured")
+        if left:
+            problems.append("the request body was left behind when printing the PATCH "
+                            "line raised: {}".format(left))
+        return problems, "control rc {}; the closed pipe {}, {} write(s), {} body " \
+                         "file(s) left".format(ctl_rc, outcome, len(writes), len(left))
+
     return [
         ("H0", "the write predicate: the doubled path refused, the narrow path "
                "admitted, and nine near-misses refused, a dot-segment in each of the "
@@ -2316,9 +2429,13 @@ def restore_arms():
         ("H11", "a null the host pins on the write: not verified, and the POST "
                 ".../contexts fallback printed", h11),
         ("H12", "a prior rsc-PRE.json a capture cannot key, its checks not an array of "
-                "named contexts, or one that does not parse: --plan, --apply and "
-                "--register each refuse at exit 3, nothing written, the prior "
-                "unchanged, no .pending file left, nothing raised", h12),
+                "named contexts, one that does not parse, or one whose checks array is "
+                "empty: --plan, --apply and --register each refuse at exit 3, nothing "
+                "written, the prior unchanged, no .pending file left, nothing raised, "
+                "and the refusal names a fresh --staging directory and never says to "
+                "restore from a file --restore in that directory refuses; a valid, "
+                "different prior is the control, its refusal naming --restore and "
+                "--restore there returning 0", h12),
         ("H13", "an rsc-RESTORE.json that agrees with rsc-PRE.json on its key but "
                 "carries other members: the restore sends the payload rsc-PRE.json "
                 "composes, and nothing else in that file", h13),
@@ -2343,6 +2460,10 @@ def restore_arms():
         ("H18", "--restore and --apply on an ASCII stream, the host refusing the write "
                 "with text the stream cannot encode: each exits 7 and reports the "
                 "error, nothing raised", h18),
+        ("H19", "--restore on a stream that raises on the PATCH line, as a closed pipe "
+                "does: the request body staged for the write is removed all the same, "
+                "and nothing is left in the temporary directory; a control run on an "
+                "ordinary stream shows the body is staged where the arm looks", h19),
     ]
 
 
