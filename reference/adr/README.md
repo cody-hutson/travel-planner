@@ -262,7 +262,7 @@ so each group stays in number order.
 | [ADR-037](ADR-037-group-snapshot.md) | The group snapshot — what travellers share with the group before a plan, whose it is, who writes it, and where it shows | Accepted |
 | [ADR-038](ADR-038-contact-emergency-group-visibility.md) | Contact and emergency information on the private site — what the group sees, the emergency contact as a third party, and the carrier | Accepted |
 | [ADR-050](ADR-050-reading-by-shape-as-a-fourth-arm.md) | Reading by shape as a fourth arm — the published projection the guard before 0.60.0 wrote, kept beside the one that replaced it, read and credited last, and named by a fourth projection value, superseding ADR-008 Decisions 3 and 4 in part | Accepted |
-| [ADR-052](ADR-052-a-body-ends-where-the-browser-ends-it.md) | A body ends where the browser ends it — the visible and joined readings of a script or style body ended at the browser's end tag, kept beside the readings that end it at the exact tag, read and credited after every earlier arm, and named by two further projection values, superseding ADR-050 Decisions 1, 2 and 3 in part | Proposed |
+| [ADR-052](ADR-052-a-body-ends-where-the-browser-ends-it.md) | A body ends where the browser ends it — the visible and joined readings of a script or style body ended at the browser's end tag, kept beside the readings that end it at the exact tag, read and credited after every earlier arm, and named by two further projection values, superseding ADR-050 Decisions 1, 2 and 3 in part | Accepted |
 
 ### Group coordination and approval
 

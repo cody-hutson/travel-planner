@@ -1,6 +1,6 @@
 # ADR-052: A body ends where the browser ends it — the visible and joined readings of a script or style body ended at the browser's end tag, kept beside the readings that end it at the exact tag, read and credited after every earlier arm, and named by two further projection values, superseding ADR-050 Decisions 1, 2 and 3 in part
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-13)
 - **Deciders:** repo maintainer
 - **Driving work:** #2117, in the *Approvals stay true when the roster or the plan changes*
   milestone. Its triage measured two shapes of a protected value publishing after a `<script>` or
