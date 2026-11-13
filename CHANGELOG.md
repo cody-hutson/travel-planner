@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-11-13 — The required-check tooling is pinned and can register and roll back what it declares
+## [0.68.0] — 2026-11-13 — The required-check tooling is pinned and can register and roll back what it declares
 
 No trip verb plans or records a trip differently in this release. What changes is met by whoever
 changes this repository's workflows, and by the operator who registers, pins or rolls back the
