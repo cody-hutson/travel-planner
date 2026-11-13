@@ -52,7 +52,8 @@ MODES
         census arm builds and grades a synthetic tree in a temporary directory,
         never this repository's workflows. It runs the assertion matrix, the
         conjunct-removal matrix, the orchestrator guard arms, the restore arms,
-        the census arms and the SECURITY.md arm. This is the arm that makes the
+        the registration, keyed-scope and register-then-restore arms, the
+        census arms and the SECURITY.md arm. This is the arm that makes the
         tool trustworthy before it is ever pointed at a live branch, and it is
         the arm to run in CI: the census step in .github/workflows/security.yml
         runs it ahead of the census on every pull request. It needs PyYAML for
@@ -103,7 +104,40 @@ MODES
         It pins a context set that already equals CONTEXT_ORDER and never adds
         one: a live set that differs -- a context declared and not yet
         registered, or one retired -- stops at the drift guard (exit 4) before
-        anything is written.
+        anything is written. A declared context not yet registered is added
+        by --register.
+
+    --register --context NAME [--context NAME ...] --staging DIR --confirm-write
+        Registration. Adds the named contexts to the branch's required checks
+        through the required_status_checks endpoint, pinned to APP_ID, and
+        changes nothing else. It admits the write only when the live set
+        lies inside CONTEXT_ORDER with no duplicate and the contexts named
+        are exactly the declared ones the live set lacks, and refuses at exit
+        4 otherwise, before anything is written. The payload adds the delta
+        the tool derives; the write is then graded against the names, so two
+        sources must agree before anything is written. When the live set
+        already holds every declared context it writes nothing. A live
+        context not pinned to APP_ID is carried over as it is read, and
+        --apply pins it afterwards. Exit 0 means the branch then passes the
+        --assert conjuncts: a run that leaves such an entry unpinned, after a
+        verified write or with nothing to add, prints NOT PINNED with the
+        entries, names --apply next, and exits 1. Whether the host accepts
+        `app_id: null` on that write was not measured. If it refuses, nothing
+        changes (exit 7). If it treats null as omitted, as its documentation
+        describes for an omitted `app_id`, the write lands with that entry
+        pinned to an app, the read-back differs from the payload (exit 1), and
+        --restore cannot return that entry by the same write; it prints the
+        POST .../contexts fallback. The sequence is --apply's: self-test,
+        capture (refused at exit 3 when the staging directory already holds a
+        different rollback point; rsc-RESTORE.json is written from it before
+        admission), admission, compose, write, a read-back that must equal the
+        payload and pass the --assert conjuncts, and a scope check keyed by
+        context name across `checks` and `contexts` that fails on any other
+        added, removed or changed context and on any other moved setting.
+        --restore is its rollback. Run it from a checkout of the protected
+        branch once the change that declares the context has merged: a
+        context registered before a workflow on that branch reports it blocks
+        every pull request, and the mode cannot see where it runs.
 
     --restore --staging DIR --confirm-write
         Rollback. Re-applies the sub-resource captured before the write it
@@ -138,9 +172,10 @@ EXIT CODES
     3  CAPTURE REFUSED -- no rollback artifact, one whose provenance does not
        hold, or a staging directory that already holds a different one, so
        nothing was written
-    4  the live required-context set has drifted from the expected set
+    4  the live required-context set has drifted from the expected set, or is
+       not one --register admits
     5  the self-test did not pass, so no mode that writes, nor --plan, may run
-       (--plan, --apply; --restore does not consult it)
+       (--plan, --apply, --register; --restore does not consult it)
     6  a write was required but `--confirm-write` was not given (nothing written)
     7  the write itself, or its read-back, failed at the transport layer
 
@@ -152,12 +187,12 @@ STAGING DIRECTORY
     repository, which is public and where a protection snapshot would both
     disclose configuration and rot as corpus.
 
-    A staging directory holds one rollback point. --plan and --apply refuse at
-    exit 3, before writing anything, when the rsc-PRE.json already there differs
-    from their new capture, its checks compared in any order: that file is the
-    rollback point of an earlier run, and --restore reads it. Restore from it, or
-    pass a fresh directory. An equal capture -- a dry run followed by the
-    confirmed run -- replaces it.
+    A staging directory holds one rollback point. --plan, --apply and
+    --register refuse at exit 3, before writing anything, when the rsc-PRE.json
+    already there differs from their new capture, its checks compared in any
+    order: that file is the rollback point of an earlier run, and --restore
+    reads it. Restore from it, or pass a fresh directory. An equal capture -- a
+    dry run followed by the confirmed run -- replaces it.
 """
 
 import argparse
@@ -478,10 +513,10 @@ def evaluate(raw, disabled=frozenset()):
 # WHAT A GREEN CENSUS DOES NOT MEAN. `GITHUB_TOKEN` cannot read the branch
 # protection API, so no check running in this repository's CI can confirm that
 # a context is REGISTERED. Registration remains an operator act outside any pull
-# request: --apply pins the contexts already registered, and a new context is
-# registered through the required_status_checks endpoint and read back with
-# --assert. The census makes an omission visible at pull-request time; it cannot
-# make one impossible.
+# request: --apply pins the contexts already registered, and --register adds a
+# declared context that is not yet registered, through the required_status_checks
+# endpoint, reading it back with the --assert conjuncts. The census makes an
+# omission visible at pull-request time; it cannot make one impossible.
 # ==========================================================================
 
 def repo_root():
@@ -640,9 +675,10 @@ CENSUS_PRINT = {
 
 CENSUS_REMEDY = (
     "  UNREGISTERED  a job claims to bind and the declaration does not carry it.",
-    "                Add the context to CONTEXT_ORDER in this file AND ask the",
-    "                operator to register it in branch protection -- or declare",
-    "                the job `posture=advisory` and say why in the line beneath.",
+    "                Add the context to CONTEXT_ORDER in this file and to",
+    "                SECURITY.md; once that change merges, the operator",
+    "                registers it with --register -- or declare the job",
+    "                `posture=advisory` and say why in the line beneath.",
     "  ABSENT        the declaration carries a context no job claims. The job was",
     "                renamed or removed; protection now waits on a check that",
     "                can never report.",
@@ -677,9 +713,9 @@ def _load_yaml():
     """The YAML parser the census reads with: PyYAML, imported here and only here.
 
     A function rather than a module-level import, so --assert and --restore never
-    need the parser -- --plan and --apply run the self-test first, and its census
-    arms do -- and so the self-test can hand the census a loader that fails (X95)
-    and watch it refuse.
+    need the parser -- --plan, --apply and --register run the self-test first,
+    and its census arms do -- and so the self-test can hand the census a loader
+    that fails (X95) and watch it refuse.
     """
     import yaml
     return yaml
@@ -1098,7 +1134,8 @@ def run_census(root, stream=sys.stdout, load=_load_yaml):
 _CENSUS_LIMIT = (
     "WHAT THIS DOES NOT ESTABLISH: `GITHUB_TOKEN` cannot read the branch protection",
     "API, so this census cannot confirm that any context is REGISTERED.",
-    "Registration remains an operator act outside any pull request.",
+    "Registration remains an operator act outside any pull request, made with",
+    "--register once the change that declares the context has merged.",
     "",
     "HOW IT READS. Every workflow file is read through a YAML parser -- PyYAML's",
     "pure-Python SafeLoader, composed to nodes and never constructed into objects --",
@@ -1495,6 +1532,109 @@ def scope_diff(pre_obj, post_obj):
     # the diff this tool exists to produce.
     return sorted(set(a.items()) ^ set(b.items()),
                   key=lambda kv: (kv[0], repr(kv[1])))
+
+
+def _pinned(app_id):
+    """True only for the integer APP_ID; bool is excluded, as C4 excludes it."""
+    return isinstance(app_id, int) and not isinstance(app_id, bool) and app_id == APP_ID
+
+
+def registration_scope(pre_full, post_full, names):
+    """The registration's scope check over the full protection objects captured
+    before and after the write. Returns (ok, problems, notes).
+
+    `checks` is compared keyed by context name, never by index: the contexts added
+    must be exactly `names`, each pinned to APP_ID; none is removed; no existing
+    entry's app_id changes; and no context is listed twice afterwards. `contexts`
+    is compared by name the same way. Where `contexts` is absent before and after
+    it is not graded, and a note says so: it is the API's older form, and a correct
+    write must not fail the day the host stops returning it. Present on one side
+    only, it fails. Every other leaf goes through scope_diff over copies with
+    `checks` and `contexts` removed, and none may differ. scope_diff cannot grade
+    `checks` itself: it compares indexed leaves, so an insertion shifts every
+    later index, and --apply's expectation of exactly the app_id leaves it moves
+    stays as it is.
+    """
+    problems, notes = [], []
+    want = set(names)
+    if len(want) != len(names):
+        problems.append("a context is named more than once: {}".format(sorted(names)))
+
+    def _rsc(obj, when):
+        rsc = obj.get("required_status_checks") if isinstance(obj, dict) else None
+        if not isinstance(rsc, dict) or not isinstance(rsc.get("checks"), list):
+            problems.append("{} the write: no required_status_checks object with a "
+                            "checks array".format(when))
+            return None
+        return rsc
+
+    pre_rsc, post_rsc = _rsc(pre_full, "before"), _rsc(post_full, "after")
+    if pre_rsc is None or post_rsc is None:
+        return False, problems, notes
+
+    def _keyed_checks(rsc):
+        keyed = {}
+        for entry in rsc["checks"]:
+            entry = entry if isinstance(entry, dict) else {}
+            keyed.setdefault(str(entry.get("context")), []).append(entry.get("app_id"))
+        return keyed
+
+    pre_c, post_c = _keyed_checks(pre_rsc), _keyed_checks(post_rsc)
+    twice = sorted(c for c, apps in post_c.items() if len(apps) > 1)
+    if twice:
+        problems.append("checks: listed more than once after the write: {}".format(twice))
+    added, removed = set(post_c) - set(pre_c), set(pre_c) - set(post_c)
+    if added != want:
+        problems.append("checks: added {}, want exactly the contexts named {}".format(
+            sorted(added), sorted(want)))
+    if removed:
+        problems.append("checks: removed {}".format(sorted(removed)))
+    changed = sorted(c for c in set(pre_c) & set(post_c)
+                     if json.dumps(pre_c[c]) != json.dumps(post_c[c]))
+    if changed:
+        problems.append("checks: an existing entry changed: {}".format(
+            ["{} app_id {} -> {}".format(c, json.dumps(pre_c[c]), json.dumps(post_c[c]))
+             for c in changed]))
+    off_app = sorted(c for c in added if not all(_pinned(a) for a in post_c[c]))
+    if off_app:
+        problems.append("checks: added and not pinned to {}: {}".format(
+            APP_ID, ["{} app_id {}".format(c, json.dumps(post_c[c])) for c in off_app]))
+
+    has_pre, has_post = "contexts" in pre_rsc, "contexts" in post_rsc
+    if not has_pre and not has_post:
+        notes.append("contexts: absent before and after the write, so not graded; "
+                     "checks and every other leaf were")
+    elif has_pre != has_post:
+        problems.append("contexts: present {} the write only".format(
+            "before" if has_pre else "after"))
+    else:
+        pre_x, post_x = pre_rsc["contexts"], post_rsc["contexts"]
+        if not (isinstance(pre_x, list) and isinstance(post_x, list)
+                and all(isinstance(c, str) for c in pre_x + post_x)):
+            problems.append("contexts: not an array of context names on both sides")
+        else:
+            if len(set(post_x)) != len(post_x):
+                problems.append("contexts: a name listed more than once after the "
+                                "write")
+            if set(post_x) - set(pre_x) != want:
+                problems.append("contexts: added {}, want exactly the contexts named "
+                                "{}".format(sorted(set(post_x) - set(pre_x)),
+                                            sorted(want)))
+            if set(pre_x) - set(post_x):
+                problems.append("contexts: removed {}".format(
+                    sorted(set(pre_x) - set(post_x))))
+
+    def _rest(obj):
+        copy = json.loads(json.dumps(obj))
+        copy["required_status_checks"].pop("checks", None)
+        copy["required_status_checks"].pop("contexts", None)
+        return copy
+
+    moved = scope_diff(_rest(pre_full), _rest(post_full))
+    if moved:
+        problems.append("another setting moved: {}".format(
+            ", ".join("{} = {!r}".format(k, v) for k, v in moved)))
+    return not problems, problems, notes
 
 
 # ==========================================================================
@@ -3966,7 +4106,7 @@ def self_test(stream=sys.stdout):
     # NO_PARSER_REMEDY, FINDING_TEXT, MARKER_NOTE, CENSUS_PRINT, CENSUS_REMEDY --
     # rather than a string built inside a function. It goes red wherever
     # --self-test runs: in CI, where the census step runs it on every pull
-    # request, and in --plan and --apply, which refuse at exit 5.
+    # request, and in --plan, --apply and --register, which refuse at exit 5.
     planted = ("They come apart two further ways, and naming only the first",
                "Three mechanisms for that are measured",
                "and the three classes that still escape both the reader",
@@ -4048,8 +4188,13 @@ def self_test(stream=sys.stdout):
         "load-bearing, every capture failure refused the write, the restore wrote "
         "to and read back the narrow sub-resource and refused every rollback "
         "artifact it could not vouch for, a second capture refused to replace an "
-        "earlier rollback point, the registration "
-        "census graded every arm the stated way with a control that reached rc 0, "
+        "earlier rollback point, the registration mode added exactly the named "
+        "contexts, carried every other live entry as it was, refused every live "
+        "set and every naming it does not admit, and exited 0 only where --assert "
+        "held, the keyed scope check failed every change beside the contexts "
+        "named, register-then-restore returned the host to its capture, the "
+        "registration census graded every arm the stated way with a control that "
+        "reached rc 0, "
         "SECURITY.md's required-check list is set-equal to CONTEXT_ORDER in both "
         "directions, and no text E9 reads counts an open set.")
     return 0
@@ -4109,7 +4254,10 @@ def run_apply(repo, branch, staging, confirm, fetch=gh_fetch_json,
         out("       unexpected = {}".format(sorted(live_names - EXPECTED_CONTEXTS)))
         out("Nothing was written. A set that changed is a set a person has to look "
             "at: re-derive CONTEXT_ORDER, re-run --self-test, and reconcile "
-            "SECURITY.md's Branch Protection Posture record in the same change.")
+            "SECURITY.md's Branch Protection Posture record in the same change. A "
+            "declared context the live set lacks is added with --register; a live "
+            "context outside CONTEXT_ORDER is removed by an edit this tool does not "
+            "make.")
         return 4
     out("      {} contexts, set-equal to the expected set".format(len(checks)))
 
@@ -4179,6 +4327,231 @@ def run_apply(repo, branch, staging, confirm, fetch=gh_fetch_json,
     out("      exactly two differing leaves, both the one app_id -- no sibling "
         "protection setting moved")
     out("DONE -- the required-context set is pinned, and the write is scope-contained.")
+    return 0
+
+
+def run_register(repo, branch, staging, names, confirm, fetch=gh_fetch_json,
+                 write=gh_patch_json, stream=sys.stdout, run_self_test=True):
+    """self-test -> capture -> admission -> compose -> [write] -> read-back -> scope check.
+
+    It adds the declared contexts the live set lacks, and only when the operator
+    has named exactly those. The payload is composed from the delta this function
+    derives; the scope check is graded against the names the operator gave, so
+    the write and its check stand on separate sources that must agree before
+    anything is written. The module docstring's --register entry states what it
+    admits, what each exit code means and when to run it. `fetch` and `write` are
+    injected so the self-test drives every branch with no network.
+    """
+    def out(msg):
+        stream.write(msg + "\n")
+
+    if run_self_test:
+        if self_test(stream) != 0:
+            out("ABORT: the self-test did not pass, so this tool is not trusted "
+                "to grade a live write.")
+            return 5
+
+    names = list(names or [])
+    prot_path, rsc_path = protection_paths(repo, branch)
+    patch_f = os.path.join(staging, "rsc-PATCH.json")
+    restore_f = os.path.join(staging, "rsc-RESTORE.json")
+    post_full_f = os.path.join(staging, "prot-POST.json")
+
+    # 1. CAPTURE, through the helper every capturing mode shares.
+    out("[1/7] capture -- the rollback artifact, before anything is written")
+    try:
+        pre_full, pre_rsc = capture_rollback_point(fetch, prot_path, rsc_path, staging)
+    except CaptureRefused as exc:
+        out("CAPTURE REFUSED: {}".format(exc))
+        out("Nothing was written. Branch protection has no restore API, so without "
+            "a verified pre-change artifact this change would be recoverable only "
+            "from memory. Act on the reason above and re-run.")
+        return 3
+    out("      prot-PRE.json  sha256(canonical) = {}".format(canonical_digest(pre_full)))
+    out("      rsc-PRE.json   sha256(canonical) = {}".format(canonical_digest(pre_rsc)))
+    # Written before admission, as --apply writes it, so a refused or interrupted
+    # run leaves a pair --restore's provenance check accepts.
+    with open(restore_f, "w", encoding="utf-8") as fh:
+        json.dump(compose_restore(pre_rsc), fh, indent=2)
+    out("      rsc-RESTORE.json written -- the rollback payload, from the capture")
+
+    # 2. ADMISSION.
+    # A rule over an enumeration (CLAUDE.md § Rules over an enumeration): the
+    # criterion, the order of the tests and what an unnamed state resolves to are
+    # stated here.
+    # Criterion: the write is admitted when the live set read at capture holds no
+    # context twice, holds nothing outside CONTEXT_ORDER, and the contexts named
+    # are exactly CONTEXT_ORDER minus the live set, which is not empty.
+    # Precedence, the first test that holds decides:
+    #   (1) the capture is refused -> exit 3 (above);
+    #   (2) the live set holds a context twice -> exit 4;
+    #   (3) it holds a context outside CONTEXT_ORDER -> exit 4, since this mode never
+    #       removes one; where (2) and (3) both hold both are printed, and the exit
+    #       is the same;
+    #   (4) the delta is empty: where every context named is live, nothing is
+    #       written -- exit 0 when the live set passes the --assert conjuncts, and
+    #       exit 1, naming --apply, when it fails them only on entries not pinned to
+    #       APP_ID; otherwise exit 4;
+    #   (5) the contexts named differ from the delta -> exit 4, printing each side;
+    #   (6) admitted.
+    # The refusals come before (4), so a live set that cannot be registered is
+    # never reported as already registered. Exit 0 means the branch passes the
+    # --assert conjuncts, after a write or with nothing to add.
+    # An unnamed state, one the tests above do not admit, is refused at exit 4. An
+    # app_id that is not the integer APP_ID is not a test here: a live entry is
+    # carried over as it is read, and --apply pins it afterwards.
+    checks, strict = sub_checks(pre_rsc)
+    live = [c.get("context") if isinstance(c, dict) else None for c in checks]
+    unpinned = [str(c.get("context")) for c in checks
+                if isinstance(c, dict) and not _pinned(c.get("app_id"))]
+    out("[2/7] admission -- the live set, and the contexts named, against "
+        "CONTEXT_ORDER")
+    twice = sorted(set(str(n) for n in live if live.count(n) > 1))
+    outside = sorted(set(str(n) for n in live if n not in EXPECTED_CONTEXTS))
+    if twice or outside:
+        out("REFUSED: the live set is not one --register admits.")
+        if twice:
+            out("       listed more than once = {}".format(twice))
+        if outside:
+            out("       outside CONTEXT_ORDER = {}".format(outside))
+        out("Nothing was written. This mode adds declared contexts and never removes "
+            "one: a live context CONTEXT_ORDER does not carry, or carries twice, is "
+            "removed by an edit this tool does not make.")
+        return 4
+    delta = [c for c in CONTEXT_ORDER if c not in live]
+    if not delta:
+        stray = sorted(set(names) - set(live))
+        rc, failed, _lines = evaluate(json.dumps(pre_rsc))
+        if stray:
+            out("REFUSED: every declared context is already live, and the contexts "
+                "named include {}, which CONTEXT_ORDER does not carry.".format(stray))
+            out("Nothing was written.")
+            return 4
+        if rc == 0:
+            out("ALREADY REGISTERED -- every declared context is live and pinned. "
+                "Nothing was written.")
+            return 0
+        if unpinned and set(failed) <= {"C3", "C4"}:
+            out("NOTHING TO REGISTER — NOT PINNED: {}; run --apply next".format(
+                ", ".join(unpinned)))
+            out("Every declared context is live and nothing was written, but the "
+                "entries above are not pinned to APP_ID, so --assert fails on them "
+                "until --apply pins them.")
+            return 1
+        out("REFUSED: the live set fails the --assert conjuncts {} in a way this "
+            "mode does not admit. Nothing was written.".format(sorted(failed)))
+        return 4
+    if sorted(names) != sorted(delta):
+        out("REFUSED: the contexts named are not the declared contexts the live set "
+            "lacks.")
+        out("       named, not to be added = {}".format(sorted(set(names) - set(delta))))
+        out("       to be added, not named = {}".format(sorted(set(delta) - set(names))))
+        repeated = sorted(set(n for n in names if names.count(n) > 1))
+        if repeated:
+            out("       named more than once   = {}".format(repeated))
+        out("Nothing was written. Name each declared context the live set lacks, once, "
+            "exactly as CONTEXT_ORDER spells it.")
+        return 4
+    out("      admitted: {} to add -- {}".format(len(delta), delta))
+
+    # 3. COMPOSE: the live entries as read, then the delta at APP_ID. Never
+    # POST .../contexts, which produces an unpinned context by construction.
+    out("[3/7] compose -- the live entries as read, then each context to add at "
+        "APP_ID")
+    payload = {"strict": strict,
+               "checks": [{"context": c.get("context"), "app_id": c.get("app_id")}
+                          for c in checks]
+                         + [{"context": c, "app_id": APP_ID} for c in delta]}
+    if len(payload["checks"]) != EXPECTED_COUNT or \
+            set(c["context"] for c in payload["checks"]) != EXPECTED_CONTEXTS:
+        out("ABORT: composed payload failed its own shape check. Nothing was written.")
+        return 1
+    with open(patch_f, "w", encoding="utf-8") as fh:
+        json.dump(payload, fh, indent=2)
+    out("      rsc-PATCH.json -- {} contexts: {} carried as read, {} added at "
+        "APP_ID".format(len(payload["checks"]), len(checks), len(delta)))
+
+    if not confirm:
+        out("STOPPING BEFORE THE WRITE -- --confirm-write was not given.")
+        out("Everything above ran; nothing was written. Re-run with --confirm-write "
+            "to perform the one non-git-reversible action in this change.")
+        return 6
+
+    # 4. WRITE -- narrow endpoint only.
+    out("[4/7] PATCH {} (narrow sub-resource; never PUT .../protection, never POST "
+        ".../contexts)".format(rsc_path))
+    ok, _text, err = write(rsc_path, patch_f)
+    if not ok:
+        out("WRITE FAILED: {}".format(err))
+        out("Restore from {} if the branch is in a partial state.".format(restore_f))
+        return 7
+
+    # 5. FRESH read-back: equal to the payload, then the --assert conjuncts.
+    out("[5/7] fresh read-back -- it must equal the payload written, then pass the "
+        "--assert conjuncts")
+    ok, text, err = fetch(rsc_path)
+    if not ok:
+        out("READ-BACK FAILED: {} -- the write is UNVERIFIED.".format(err))
+        return 7
+    try:
+        got = _restore_key(json.loads(text))
+    except ValueError as exc:
+        out("READ-BACK FAILED: it does not parse ({}) -- the write is "
+            "UNVERIFIED.".format(exc))
+        return 7
+    if got is None:
+        out("READ-BACK FAILED: it carries no checks array of named contexts -- the "
+            "write is UNVERIFIED.")
+        return 7
+    want = _restore_key(payload)
+    if got != want:
+        out("REGISTRATION NOT VERIFIED -- the read-back differs from the payload "
+            "written.")
+        if got[0] != want[0]:
+            out("  strict: written {}, read back {}".format(
+                json.dumps(want[0]), json.dumps(got[0])))
+        out("  written only:   {}".format(sorted(set(want[1]) - set(got[1]))))
+        out("  read back only: {}".format(sorted(set(got[1]) - set(want[1]))))
+        out("Restore from {}.".format(restore_f))
+        return 1
+    rc, failed, lines = evaluate(text)
+    for line in lines:
+        out("      " + line)
+    if rc != 0 and (rc == 2 or set(failed) - {"C3", "C4"} or not unpinned):
+        out("REGISTRATION NOT VERIFIED -- the read-back fails the --assert conjuncts "
+            "{}, and not only on an entry carried over unpinned. Restore from "
+            "{}.".format(sorted(failed), restore_f))
+        return 1
+
+    # 6. The post-change capture, then 7. the scope check, keyed by name.
+    out("[6/7] post-change capture -- the full protection object")
+    try:
+        post_full = capture(fetch, prot_path, post_full_f, "post-change protection")
+    except CaptureRefused as exc:
+        out("      post-capture unavailable ({}) -- the read-back held, but the scope "
+            "check could not be run.".format(exc))
+        return 1
+    out("[7/7] scope check -- keyed by context name across checks and contexts")
+    ok, problems, notes = registration_scope(pre_full, post_full, names)
+    for note in notes:
+        out("      " + note)
+    for problem in problems:
+        out("      " + problem)
+    if not ok:
+        out("SCOPE VIOLATION: the write changed something other than adding the "
+            "contexts named. Restore from {}.".format(restore_f))
+        return 1
+    out("      added exactly {}; no other context and no sibling setting "
+        "moved".format(names))
+    if rc != 0:
+        out("REGISTERED — NOT PINNED: {}; run --apply next".format(
+            ", ".join(unpinned)))
+        out("The contexts named were added and the write is scope-contained. The "
+            "entries above were carried over as they were read and are not pinned "
+            "to APP_ID, so --assert fails on them until --apply pins them.")
+        return 1
+    out("REGISTERED -- the contexts named are live and pinned to APP_ID, --assert "
+        "holds, and the write is scope-contained.")
     return 0
 
 
@@ -4306,8 +4679,14 @@ def main(argv):
                       help="capture and compose; stop before the write")
     mode.add_argument("--apply", action="store_true",
                       help="the full sequence; needs --confirm-write to write")
+    mode.add_argument("--register", action="store_true",
+                      help="add the named declared-but-unregistered contexts; needs "
+                           "--context and --confirm-write to write")
     mode.add_argument("--restore", action="store_true",
                       help="re-apply the captured pre-change sub-resource")
+    ap.add_argument("--context", dest="contexts", action="append",
+                    help="--register: a context to add, by its exact name; repeat "
+                         "for each")
     ap.add_argument("--stdin", action="store_true", help="--assert reads stdin")
     ap.add_argument("--file", help="--assert reads this file")
     ap.add_argument("--root", help="--census grades this tree; default: the "
@@ -4318,6 +4697,10 @@ def main(argv):
     ap.add_argument("--confirm-write", dest="confirm", action="store_true",
                     help="required before any write is attempted")
     args = ap.parse_args(argv)
+    if args.contexts and not args.register:
+        ap.error("--context is read by --register alone")
+    if args.register and not args.contexts:
+        ap.error("--register needs --context NAME, once for each context to add")
 
     if args.self_test:
         return self_test()
@@ -4349,6 +4732,9 @@ def main(argv):
         return 3
     print("repository: {}   branch: {}".format(repo, args.branch))
 
+    if args.register:
+        return run_register(repo, args.branch, args.staging, args.contexts,
+                            confirm=args.confirm)
     if args.restore:
         return run_restore(repo, args.branch, args.staging, args.confirm)
     return run_apply(repo, args.branch, args.staging,
