@@ -56,8 +56,10 @@
 # a pattern.
 #
 # WHAT A HIT TAKES WITH IT depends on the markdown shape it sits in:
-#   a HEADING — `#` to `######`, or a hit line underlined with `===` or `---` — takes its
-#     whole section, up to the next heading of the same or a higher level;
+#   a HEADING — `#` to `######`, or a paragraph a hit line opens, underlined with `===` or
+#     `---` however many lines it runs to — takes its whole section, up to the next heading
+#     of the same or a higher level that sits outside a fenced block, at an indent of three
+#     or less, and in no deeper blockquote than its own;
 #   a TABLE ROW takes itself, and where it is the header row above a `|---|` delimiter row
 #     it takes the whole table;
 #   any other hit takes every following line until one of these ends it: a list item at the
@@ -237,9 +239,10 @@ pj_project_file() {   # pj_project_file <selectors> <file>
       while ((i = index(s, NB)) > 0) s = substr(s, 1, i - 1) " " substr(s, i + 2)
       return s
     }
-    # The line with any blockquote markers taken off its front.
+    # The line with any blockquote markers taken off its front; qd is left holding how many.
     function unquote(s) {
-      while (match(s, /^[ \t]*>/)) { s = substr(s, RLENGTH + 1); sub(/^ /, "", s) }
+      qd = 0
+      while (match(s, /^[ \t]*>/)) { s = substr(s, RLENGTH + 1); sub(/^ /, "", s); qd++ }
       return s
     }
     # Indent width of an unquoted line; a tab advances to the next multiple of four.
@@ -362,27 +365,30 @@ pj_project_file() {   # pj_project_file <selectors> <file>
       # A row held for the line after it: over a delimiter row it is a header row, and its
       # table goes; over anything else it is printed.
       if (thc) { thc = 0; if (delimrow(u)) { tbl = 1; next }; print hold }
-      # A heading hit: its section, up to a heading of the same or a higher level.
+      # A heading hit: its section, up to a heading of the same or a higher level, at no
+      # deeper blockquote than its own.
       if (taking == 2) {
         lv = hlevel(u)
-        if (inf || infm || lv == 0 || lv > lvl || width(u) > 3) next
+        if (inf || infm || lv == 0 || lv > lvl || width(u) > 3 || qd > sq) next
         taking = 0
       }
+      # para: the payload is still the paragraph a paragraph-line hit opened, so a setext
+      # underline makes it a heading. A blank line or a list item ends that paragraph.
       if (taking == 1) {
-        first = fst; fst = 0
+        if (para && item(u)) para = 0
         if (infm && t == "---") taking = 0
         else if (hitf && closed) taking = 0
-        else if (blank(u)) { pend = 1; pbuf = $0 "\n"; next }
-        else if (first && plain && setext(u)) { taking = 2; lvl = index(u, "=") ? 1 : 2; next }
+        else if (blank(u)) { pend = 1; pbuf = $0 "\n"; para = 0; next }
+        else if (para && setext(u)) { taking = 2; lvl = index(u, "=") ? 1 : 2; sq = hq; next }
         else if (!inf && !infm && hlevel(u) > 0 && width(u) <= at) taking = 0
         else if (label(u)) { w = width(u); if (w < at) at = w; if (opened) payf = 1; next }
         else if (infm || width(u) > at || !item(u)) { if (opened) payf = 1; next }
         else taking = 0
       }
       if (label(u)) {
-        if (!inf && !infm && hlevel(u) > 0) { taking = 2; lvl = hlevel(u); next }
+        if (!inf && !infm && hlevel(u) > 0) { taking = 2; lvl = hlevel(u); sq = qd; next }
         if (!inf && !infm && u ~ /^[ \t]*\|/) { thd = 1; next }
-        taking = 1; at = width(u); hitf = inf; plain = !inf && !infm && !item(u); fst = 1
+        taking = 1; at = width(u); hitf = inf; para = !inf && !infm && !item(u); hq = qd
         if (opened) payf = 1
         next
       }
