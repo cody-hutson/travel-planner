@@ -31,6 +31,11 @@ what it refuses and why. This table says which verbs exist and what each one nee
 run — it does not replace the per-verb sections, and a verb's own section is where its behaviour is
 stated.
 
+**One row is read twice.** The `site` row's Mode and Destination cells are also the states the
+site's round-trip check covers: the render table in `reference/site-layout-spec.md` § 9.2 needs a
+row for every `bound` artifact in each state they admit, so a change to either cell is a change to
+that table too.
+
 `/trip-new` takes a destination and year rather than a verb; its single row records the create
 branch so the table stays total over the command surface.
 

@@ -331,7 +331,10 @@
 #        deliberately does NOT anchor § 9.4's prose the way group RM anchors its rule — that
 #        shape fits a rule whose text can be reverted while its mechanism keeps working,
 #        and this rule had no mechanism at all, so the prose is replaced by an executable
-#        and anchored by its consumer instead. No count is spelled anywhere in this file
+#        and anchored by its consumer instead. It also grades the render table's ARTIFACT
+#        grain — rows against § 1.1's bound set and the states the site row admits, both
+#        directions (RT7) — and controls the SHAPE pass (RT8), whose population is empty on
+#        this tree and, today, on every render. No count is spelled anywhere in this file
 #        for this group: every set is read
 #   NC   the five never-carries of ADR-025 § Decision 3, graded as class facts at their live
 #        membership: a rebuilt-each-synthesis instance carrying prior passes (EB-0) — graded
@@ -17874,7 +17877,10 @@ fi
 #   reference/schemas/travel-site.md carries a no-witness clause it calls TERMINAL rather than
 #   pending, naming a committed site fixture as "exactly the wrong repair". W4 renders that as
 #   VACUOUS WITH ITS DENOMINATOR rather than as a PASS, and the control arms below carry the
-#   whole load for RT3-RT6 over synthetic pairs.
+#   whole load for RT3-RT6 and RT8 over synthetic pairs.
+#   The artifact grain's contract half (RT7) is real and graded on every run as well; the
+#   shape pass (RT8) is instance-only and joins RT3-RT6 on the VACUOUS side, and W14 states why
+#   even a real render cannot carry it today.
 #
 # ── WHY THIS GROUP IS HERE, AND WHY IT IS NOT A SUITE OF ITS OWN ─────────────────
 # The group goes where the functions it drives are sourced — group T in the publish-guard
@@ -17938,6 +17944,29 @@ fi
 #   W12       the inventory, derived BOTH ways from the walker's own emission sites and from
 #             the codes the arms actually OBSERVED — never from a list held here. A code added
 #             to the walker with no arm behind it is RED rather than latent
+#   W3i       the INVOCATION line, counted apart from the grant and the prose mentions: exactly
+#             ONE fenced invocation of the walk in the verb's § site region
+#   W5        the artifact grain's instrument: the render table opens at ONE site, and the bound
+#             set, the state vocabulary and the admitted states each read NON-ZERO
+#   W6        the render table's artifacts against § 1.1's bound classes, BOTH directions
+#   W7        every state key against the modes and dispositions CLAUDE.md G5 and G6 declare, and
+#             every bound class, and every scaffolding token the table names, dispositioned once in
+#             each admitted state. A token whose every row is deleted is not seen: stated, not closed
+#   W8        every rendered home against the § 3 catalog, DERIVED; `—` only on a scaffolding row
+#             whose token § 3 does not define
+#   W9        CX-2: ONE line appends the state, spelled with the walker's own RT_STATE_FLAG, and it
+#             names no script — one σ, one spelling — and its paragraph names, as code spans, every
+#             disposition token the walker's vocabulary reader returns
+#   W9c       CX-2's second surface: CLAUDE.md § Updating the site invokes the walk on ONE line,
+#             and that line appends the state with the same flag
+#   W10       the shape pass's marker readers against a differently-shaped read of § 3, both ways,
+#             and every heading marker joined to the component catalog
+#   W14       the shape pass's population on the real table, MEASURED: VACUOUS while every admitted
+#             state admits every component some state admits, which is so today
+#   W-CTL-DERIVE, -RT7a…d, -RT7ds, -RT7dn, -RT8, -RT8s1/s2, -KEY, -ANY, -TOK, -DASH, -DASH3, -DUP,
+#   -VOCAB, -VOCABd, -SITEROW, -CLEAN(rc), -NORUN(rc), -UNADM, -ECHO(v), -REPEAT(rc), -READ
+#             the artifact grain's and the shape pass's controls, each over a copy under $WORK,
+#             each input DERIVED from the walker's readers rather than held here
 #
 # Every control builds its subject under $WORK by COPY-THEN-MUTATE, asserts the mutation
 # LANDED before any verdict is read, and drives THE SAME rt_* functions the live arms drive. A
@@ -18116,7 +18145,7 @@ W_POP="$(va_population "$ROOT" tracked)"
 W_NPOP="$(w_count "$W_POP")"
 W_NSITE="$(awk '/-travel-site\.html$/ { n++ } END { print n+0 }' <<<"$W_POP")"
 if [ "$W_NSITE" -eq 0 ]; then
-  VACUOUS "W4: the instance half — RT3, RT4, RT5 and RT6 — has NO population on this tree and cannot acquire one. 0 rendered site file(s) among $W_NPOP tracked file(s). .gitignore puts every real render outside the checkout, and reference/schemas/travel-site.md carries a no-witness clause it calls TERMINAL rather than pending, naming a committed site fixture as exactly the wrong repair. This renders VACUOUS and never a PASS: an empty population is a real measurement of the tree, a PASS over it would be a green nothing earned, and the whole load for those four codes is carried by the control arms below"
+  VACUOUS "W4: the instance half — RT3, RT4, RT5, RT6, RT8 and the artifact pass's readability read — has NO population on this tree and cannot acquire one. 0 rendered site file(s) among $W_NPOP tracked file(s). .gitignore puts every real render outside the checkout, and reference/schemas/travel-site.md carries a no-witness clause it calls TERMINAL rather than pending, naming a committed site fixture as exactly the wrong repair. This renders VACUOUS and never a PASS: an empty population is a real measurement of the tree, a PASS over it would be a green nothing earned, and the whole load for them is carried by the control arms below"
 else
   FAIL "W4: $W_NSITE rendered site file(s) are tracked in this repository. That is the repair reference/schemas/travel-site.md names as the wrong one — committing a site file to satisfy a gate — and it is graded here rather than welcomed"
 fi
@@ -18379,6 +18408,376 @@ else
     -- rt_instance_walk "$W_FX/plan.md" "$W_FX/site-add.html" "$W_D/wk-add"
 fi
 
+
+# ═════ THE ARTIFACT GRAIN AND THE SHAPE PASS — RT7, RT8 and the RT0 branches the render table adds. ═════
+#
+# The synthetic engine root above carries the grammar and the spec. The artifact grain also reads
+# the charter's G5 and G6, the verb's `site` row and § 1.1, so those are copied in too: a control
+# whose copy lacked them would fire RT0 for the wrong reason and read as a working control.
+mkdir -p "$W_FXR/skills/trip"
+cp "$ROOT/CLAUDE.md"                      "$W_FXR/CLAUDE.md"
+cp "$W_VERB"                              "$W_FXR/skills/trip/SKILL.md"
+cp "$ROOT/reference/data-architecture.md" "$W_FXR/reference/data-architecture.md"
+
+# EVERY INPUT BELOW IS DERIVED from the walker's own readers over the real tree. No control holds
+# a row, a mode, a state, a class or a home, so a change to the `site` row, to § 1.1 or to the
+# table moves the controls with it rather than leaving them grading a world that is gone.
+W_ADM="$(rt_admitted "$ROOT")"
+W_VOC="$(rt_state_vocab "$ROOT")"
+W_KEYS="$(rt_artifact_keys "$W_SPEC")"
+# THE CLEAN STATES are chosen by what a state RENDERS, never by where it stands in the `site` row
+# or in the table: the admitted states in which the artifact bound to the itinerary's element fence
+# renders. The synthetic pair above is a render of that artifact, so in a state that does not
+# render it the clean pair would read as a site left from another state. W_S0 is one of them.
+W_PLAN_ART="$(awk -F'\t' -v t="elements:$(rt_decl_first 1)" '$4 == "rendered" && index("|" $5 "|", "|" t "|") && !s { print $1; s = 1 }' <<<"$W_KEYS")"
+W_CLEAN_ST="$(awk -F'\t' -v a="$W_PLAN_ART" 'NR == FNR { if ($1 == a && $4 == "rendered") R[$2 ":" $3] = 1; next } NF && (($1 ":" $2) in R) { print $1 ":" $2 }' \
+  <(printf '%s\n' "$W_KEYS") <(printf '%s\n' "$W_ADM"))"
+W_S0="$(awk 'NF && !s { print; s = 1 }' <<<"$W_CLEAN_ST")"
+W_M0="${W_S0%%:*}"; W_D0="${W_S0#*:}"
+# w_row_covers <modes-cell> <destination-cell> <MODE> <DEST> — the row's cells name that state,
+# read through the walker's own cell reader rather than a second copy of G7's cell grammar.
+w_row_covers() { grep -qxF -- "$3" <<<"$(rt_cell_tokens "$1")" && grep -qxF -- "$4" <<<"$(rt_cell_tokens "$2")"; }
+# A state the vocabulary allows and the `site` row does not admit.
+W_UNADM="$(awk -F'\t' 'NR == FNR { if (NF) A[$1 ":" $2] = 1; next }
+  ($1 == "mode" || $1 == "mode-any") { M[++m] = $2 } ($1 == "dest" || $1 == "dest-any") { D[++d] = $2 }
+  END { for (i = 1; i <= m; i++) for (j = 1; j <= d; j++) if (!((M[i] ":" D[j]) in A) && !o) { print M[i] ":" D[j]; o = 1 } }' \
+  <(printf '%s\n' "$W_ADM") <(printf '%s\n' "$W_VOC"))"
+# A plain row: a bound class rendered in the clean state, its home § 3 components only. It is the
+# row that covers W_S0, so a control adding a second row for the class there duplicates a key the
+# table already holds, and the in-place controls rewrite THIS row and no other row of its class.
+W_A1=""; W_R1M=""; W_R1D=""; W_H1=""
+while IFS="$W_TAB" read -r w_a w_mc w_dc w_disp w_home; do
+  [ -z "$W_A1" ] || break
+  case "$w_a" in ''|'!'|'<'*) continue ;; esac
+  [ "$w_disp" = rendered ] || continue
+  case "$w_home" in *elements:*|'—') continue ;; esac
+  w_row_covers "$w_mc" "$w_dc" "$W_M0" "$W_D0" || continue
+  W_A1="$w_a"; W_R1M="$w_mc"; W_R1D="$w_dc"; W_H1="$w_home"
+done <<<"$(rt_artifact_rows "$W_SPEC")"
+W_NONBOUND="$(va_class_rows "$ROOT" | awk -F'\t' '$6 != "" && $6 != "bound" && !s { print $2; s = 1 }')"
+# A bound class other than the itinerary's: removing every row of THAT one leaves its element fence
+# unbound, which is RT0 before RT7 is reached.
+W_BOUND0="$(rt_bound_classes "$ROOT" | awk -v p="$W_PLAN_ART" 'NF && $0 != p && !s { print; s = 1 }')"
+# The plant for RT8, split off ANY rendered row rather than off an artifact with one row: a row of an
+# artifact other than the itinerary's that covers W_S0 and a second clean state, whose home names a
+# component § 3 gives a class, that no other artifact admits in W_S0 and whose class the clean site
+# does not carry. No other component of that home may be one the clean site carries and nothing
+# else admits in W_S0, or the clean render would read as surplus there too. W_S0 is split off that
+# row and nothing else: the clean state then excludes the artifact, and every other row stands.
+W_CLEAN_CLS="$(rt_site_classes "$W_FX/site.html")"
+W_MARKS="$(rt_component_markers "$W_SPEC")"; W_CTOK="$(rt_class_tokens "$W_SPEC")"
+w_marker() { local m; m="$(awk -F'\t' -v t="$1" '$1 == t && !s { print $2; s = 1 }' <<<"$W_MARKS")"; if [ -z "$m" ] && grep -qxF -- "$1" <<<"$W_CTOK"; then m="$1"; fi; printf '%s' "$m"; }
+W_SP_A=""; W_SP_MC=""; W_SP_DC=""; W_SP_H=""; W_SP_MK=""; W_SP_S1=""
+while IFS="$W_TAB" read -r w_a w_mc w_dc w_disp w_home; do
+  [ -z "$W_SP_A" ] || break
+  case "$w_a" in ''|'!') continue ;; esac
+  [ "$w_disp" = rendered ] || continue
+  [ "$w_a" != "$W_PLAN_ART" ] || continue
+  w_row_covers "$w_mc" "$w_dc" "$W_M0" "$W_D0" || continue
+  w_s1=""
+  while IFS= read -r w_m; do
+    [ -n "$w_m" ] || continue
+    while IFS= read -r w_d; do
+      [ -n "$w_d" ] || continue
+      [ "$w_m:$w_d" != "$W_S0" ] || continue
+      grep -qxF -- "$w_m:$w_d" <<<"$W_CLEAN_ST" && { w_s1="$w_m:$w_d"; break; }
+    done <<<"$(rt_cell_tokens "$w_dc")"
+    [ -z "$w_s1" ] || break
+  done <<<"$(rt_cell_tokens "$w_mc")"
+  [ -n "$w_s1" ] || continue
+  w_others="$(awk -F'\t' -v a="$w_a" -v m="$W_M0" -v d="$W_D0" '$1 != a && $2 == m && $3 == d && $4 == "rendered" { print $5 }' <<<"$W_KEYS" | sort -u | while IFS= read -r w_h; do rt_home_components "$W_SPEC" "$w_h"; done | sort -u)"
+  w_pick=""; w_pmk=""; w_spoil=0
+  while IFS= read -r w_c; do
+    [ -n "$w_c" ] || continue
+    grep -qxF -- "$w_c" <<<"$w_others" && continue
+    w_mk="$(w_marker "$w_c")"
+    [ -n "$w_mk" ] || continue
+    if grep -qxF -- "$w_mk" <<<"$W_CLEAN_CLS"; then w_spoil=1; break; fi
+    [ -n "$w_pick" ] || { w_pick="$w_c"; w_pmk="$w_mk"; }
+  done <<<"$(rt_home_components "$W_SPEC" "$w_home")"
+  [ "$w_spoil" -eq 0 ] || continue
+  [ -n "$w_pick" ] || continue
+  W_SP_A="$w_a"; W_SP_MC="$w_mc"; W_SP_DC="$w_dc"; W_SP_H="$w_home"; W_SP_MK="$w_pmk"; W_SP_S1="$w_s1"
+done <<<"$(rt_artifact_rows "$W_SPEC")"
+W_SP_M0="$W_M0"; W_SP_D0="$W_D0"
+W_SP_ROWS="$(while IFS= read -r w_m; do
+  [ -n "$w_m" ] || continue
+  while IFS= read -r w_d; do
+    [ -n "$w_d" ] || continue
+    if [ "$w_m:$w_d" = "$W_S0" ]; then printf '%s  %s  %s  excluded  §9.3\n' "$W_SP_A" "$w_m" "$w_d"; else printf '%s  %s  %s  rendered  %s\n' "$W_SP_A" "$w_m" "$w_d" "$W_SP_H"; fi
+  done <<<"$(rt_cell_tokens "$W_SP_DC")"
+done <<<"$(rt_cell_tokens "$W_SP_MC")")"
+export W_SP_ROWS
+# A disposition other than the clean state's, for the § 9.3 near-miss below: one axis away from it.
+W_SP_DX="$(awk -F'\t' -v d="$W_D0" '($1 == "dest" || $1 == "dest-any") && $2 != d && !s { print $2; s = 1 }' <<<"$W_VOC")"
+# The FM-1 plant: a scaffolding row whose bare token § 3 defines as a component, rendered with a home.
+W_COMPS="$(rt_components "$W_SPEC" | sort -u)"
+W_SC_A=""; W_SC_MC=""; W_SC_DC=""
+while IFS="$W_TAB" read -r w_a w_mc w_dc w_disp w_home; do
+  [ -z "$W_SC_A" ] || break
+  case "$w_a" in '<'*) ;; *) continue ;; esac
+  [ "$w_disp" = rendered ] || continue
+  [ "$w_home" != '—' ] || continue
+  w_t="${w_a#<}"; w_t="${w_t%>}"
+  grep -qxF -- "$w_t" <<<"$W_COMPS" || continue
+  W_SC_A="$w_a"; W_SC_MC="$w_mc"; W_SC_DC="$w_dc"
+done <<<"$(rt_artifact_rows "$W_SPEC")"
+W_DERIVED_OK=1
+for w_v in "$W_S0" "$W_UNADM" "$W_A1" "$W_H1" "$W_NONBOUND" "$W_BOUND0" "$W_SP_A" "$W_SP_MK" "$W_SP_S1" "$W_SP_DX" "$W_SC_A"; do
+  [ -n "$w_v" ] || W_DERIVED_OK=0
+done
+if [ "$W_DERIVED_OK" -eq 1 ]; then
+  PASS "W-CTL-DERIVE: every control input below was derived on this run from the walker's readers — a clean state, admitted and rendering the artifact the itinerary's element fence is bound to ($W_S0), a state the vocabulary allows and the site row does not admit ($W_UNADM), a plain bound row covering the clean state, a class that is not bound, a rendered row of $W_SP_A to split the clean state off, whose home carries a class the clean site lacks, and a scaffolding row whose token § 3 defines ($W_SC_A) — and none is held in this file"
+else
+  FAIL "W-CTL-DERIVE: a control input could not be derived from the tree (clean='$W_S0' unadmitted='$W_UNADM' plain-row='$W_A1' non-bound='$W_NONBOUND' bound='$W_BOUND0' split='$W_SP_A' marker='$W_SP_MK' second-state='$W_SP_S1' other-disposition='$W_SP_DX' defined-scaffolding='$W_SC_A') — the controls below would grade a fabricated input"
+fi
+
+# Two synthetic DATA homes for the invocation controls. The full one holds the clean pair above as
+# the artifact the itinerary's element fence is bound to, and one-line stand-ins for every other
+# artifact the table renders in the clean state above — only their readability is read. The
+# second is built the same way and leaves one rendered artifact out.
+W_REND="$(awk -F'\t' -v m="$W_M0" -v d="$W_D0" '$4 == "rendered" && $2 == m && $3 == d && $1 !~ /^</ { print $1 }' <<<"$W_KEYS" | sort -u)"
+W_GONE="$(awk -v p="$W_PLAN_ART" 'NF && $0 != p { g = $0 } END { print g }' <<<"$W_REND")"
+W_FXD="$W_D/fxdata"; W_FXN="$W_D/fxdata-noread"
+for w_home in "$W_FXD" "$W_FXN"; do
+  mkdir -p "$w_home/trips/fx/outputs"
+  cp "$W_FX/site.html" "$w_home/trips/fx/outputs/fx-travel-site.html"
+  while IFS= read -r w_f; do
+    [ -n "$w_f" ] || continue
+    [ "$w_home" = "$W_FXN" ] && [ "$w_f" = "$W_GONE" ] && continue
+    mkdir -p "$(dirname "$w_home/trips/fx/$w_f")"
+    if [ "$w_f" = "$W_PLAN_ART" ]; then cp "$W_FX/plan.md" "$w_home/trips/fx/$w_f"; else printf 'synthetic stand-in\n' > "$w_home/trips/fx/$w_f"; fi
+  done <<<"$W_REND"
+done
+
+# w_spec_mut <arm-id> <awk-program> — a mutated copy of the spec into the synthetic root, reporting
+# whether it landed. The program receives the derived inputs as awk variables. A mutation that did
+# not land is a FAIL of the arm, never a silent pass.
+w_spec_mut() {
+  awk -v a1="$W_A1" -v r1m="$W_R1M" -v r1d="$W_R1D" -v h1="$W_H1" -v m0="$W_M0" -v d0="$W_D0" -v um="${W_UNADM%%:*}" -v ud="${W_UNADM#*:}" \
+      -v sam="$W_SP_MC" -v sad="$W_SP_DC" -v sca="$W_SC_A" -v scm="$W_SC_MC" -v scd="$W_SC_DC" \
+      -v s1="${W_SP_S1%%:*} × ${W_SP_S1#*:}" -v dx="$W_SP_DX" \
+      -v nb="$W_NONBOUND" -v b0="$W_BOUND0" -v sa="$W_SP_A" -v st="$W_SP_M0 × $W_SP_D0" \
+      -v open='```'"$RT_ARTIFACT_TAG" "$2" "$W_SPEC" > "$W_FXR/reference/site-layout-spec.md"
+  if cmp -s "$W_SPEC" "$W_FXR/reference/site-layout-spec.md"; then
+    FAIL "$1: the mutation did not land — the spec copy is byte-identical to the original, so this control proves nothing"
+    return 1
+  fi
+  return 0
+}
+w_spec_reset() { cp "$W_SPEC" "$W_FXR/reference/site-layout-spec.md"; }
+# The fence-scoped preamble every mutation program shares: `inf` is true on a render-table row, and
+# F[1..5] are its columns as the walker splits them.
+W_IN='$0 == open { inf = 1; print; next } inf && $0 == "```" { inf = 0; print; next } inf { l = $0; sub(/^[[:space:]]+/, "", l); n = split(l, F, /[[:space:]][[:space:]]+/) } '
+
+# w_ctl_rc <arm-id> <want-rc> <prose> -- <cmd…> — the exit status a NOT-RUN or a clean run must give.
+w_ctl_rc() {
+  local id="$1" want="$2" prose="$3"; shift 3
+  [ "${1:-}" = "--" ] && shift
+  local got
+  "$@" >/dev/null 2>&1; got=$?
+  if [ "$got" -eq "$want" ]; then
+    PASS "$id: control — $prose. The walk exited $got, as it must"
+  else
+    FAIL "$id: the control did not behave — $prose; expected exit $want, observed $got"
+  fi
+}
+
+# W-CTL-RT7a — a bound class with no row: every row of one bound class is removed from a copy.
+if w_spec_mut 'W-CTL-RT7a' "$W_IN"'inf && F[1] == b0 { next } { print }'; then
+  w_ctl_fire 'W-CTL-RT7a' RT7 1 "every render-table row of one bound class is removed from a copy of the spec, every other row intact — a class with no disposition in any admitted state" \
+    -- rt_artifact_contract "$W_FXR"
+fi
+w_spec_reset
+
+# W-CTL-RT7b — the pin's other direction: a row for a class § 1.1 does not hold as bound.
+if w_spec_mut 'W-CTL-RT7b' "$W_IN"'{ print } inf && F[1] == a1 && !d { printf "%s  %s  %s  rendered  %s\n", nb, m0, d0, h1; d = 1 }'; then
+  w_ctl_fire 'W-CTL-RT7b' RT7 1 "a row is added for a class § 1.1 holds as not bound, every real row intact — a class excluded by its class takes no row" \
+    -- rt_artifact_contract "$W_FXR"
+fi
+w_spec_reset
+
+# W-CTL-RT7c — a row for a state the vocabulary allows and the `site` row does not admit.
+if w_spec_mut 'W-CTL-RT7c' "$W_IN"'{ print } inf && F[1] == a1 && !d { printf "%s  %s  %s  rendered  %s\n", a1, um, ud, h1; d = 1 }'; then
+  w_ctl_fire 'W-CTL-RT7c' RT7 1 "a row is added on a copy for a state G5 and G6 allow and the site row does not admit — a declaration with no live state" \
+    -- rt_artifact_contract "$W_FXR"
+fi
+w_spec_reset
+
+# W-CTL-RT7d — an excluded row with no § 9.3 reason: the plant row above is split so the clean
+# state excludes its artifact, and § 9.3 gains no row for it.
+W_SPLIT="$W_IN"'inf && F[1] == sa && F[2] == sam && F[3] == sad { if (!d) { printf "%s\n", ENVIRON["W_SP_ROWS"]; d = 1 } next } { print }'
+if w_spec_mut 'W-CTL-RT7d' "$W_SPLIT"; then
+  w_ctl_fire 'W-CTL-RT7d' RT7 1 "one row is split on a copy so the clean state excludes its artifact, and § 9.3 names no reason there — an exclusion that is not named is a silent drop" \
+    -- rt_artifact_contract "$W_FXR"
+fi
+w_spec_reset
+
+# W-CTL-RT7ds — specificity: the same split WITH its § 9.3 row is clean. It is also the plant the
+# RT8 arms read, so it stays in place until they have run.
+W_SPLIT93="$W_IN"'inf && F[1] == sa && F[2] == sam && F[3] == sad { if (!d) { printf "%s\n", ENVIRON["W_SP_ROWS"]; d = 1 } next }
+  /^### 9\.3 / { s93 = 1 } s93 && /^\|---/ && !p { print; printf "| `%s` | %s | synthetic control: a state that does not render it |\n", sa, st; p = 1; next } { print }'
+if w_spec_mut 'W-CTL-RT7ds' "$W_SPLIT93"; then
+  if grep -qF "| \`$W_SP_A\` | $W_SP_M0 × $W_SP_D0 |" "$W_FXR/reference/site-layout-spec.md"; then
+    w_ctl_silent 'W-CTL-RT7ds' "the same split with a § 9.3 row naming the artifact in the state it excludes — an exclusion that is named closes the grain" \
+      -- rt_artifact_contract "$W_FXR"
+  else
+    FAIL "W-CTL-RT7ds: the § 9.3 row did not land in the copy, so this specificity control proves nothing"
+  fi
+
+  # W-CTL-RT8 — the surplus component: a copy of the clean site gains an element carrying the split
+  # artifact's class, read in the state that excludes it.
+  awk -v c="$W_SP_MK" '/<section class="hero-section">/ { print; printf "<div class=\"%s\">synthetic surplus</div>\n", c; next } { print }' \
+    "$W_FX/site.html" > "$W_FX/site-rt8.html"
+  if cmp -s "$W_FX/site.html" "$W_FX/site-rt8.html"; then
+    FAIL "W-CTL-RT8: the planted element did not land in the site copy, so this control proves nothing"
+  else
+    w_ctl_fire 'W-CTL-RT8' RT8 1 "a copy of the site carries a component in a state the split table does not admit it in — a section left from another state" \
+      -- rt_shape_pass "$W_FXR" "$W_FX/site-rt8.html" "$W_SP_M0" "$W_SP_D0"
+    w_ctl_silent 'W-CTL-RT8s1' "the same render read in another state the split row still renders — the pass grades the state, not the class word" \
+      -- rt_shape_pass "$W_FXR" "$W_FX/site-rt8.html" "${W_SP_S1%%:*}" "${W_SP_S1#*:}"
+    w_ctl_silent 'W-CTL-RT8s2' "the clean render, without the planted element, read in the excluding state — a component the render does not carry is never surplus" \
+      -- rt_shape_pass "$W_FXR" "$W_FX/site.html" "$W_SP_M0" "$W_SP_D0"
+  fi
+fi
+w_spec_reset
+
+# W-CTL-RT7dn — the same split, with § 9.3 naming the artifact one axis away from the state it
+# excludes: in a second state the row still renders, and in the excluding mode with the other
+# disposition. A § 9.3 state reader blind to either axis would read the exclusion as named, so the
+# control the split itself plants (W-CTL-RT7ds) could not see it. This one must fire.
+W_SPLIT93N="$W_IN"'inf && F[1] == sa && F[2] == sam && F[3] == sad { if (!d) { printf "%s\n", ENVIRON["W_SP_ROWS"]; d = 1 } next }
+  /^### 9\.3 / { s93 = 1 } s93 && /^\|---/ && !p { print; printf "| `%s` | %s; %s × %s | synthetic control: one axis away from the state it excludes |\n", sa, s1, m0, dx; p = 1; next } { print }'
+if w_spec_mut 'W-CTL-RT7dn' "$W_SPLIT93N"; then
+  if grep -qF "| \`$W_SP_A\` | ${W_SP_S1%%:*} × ${W_SP_S1#*:}; $W_M0 × $W_SP_DX |" "$W_FXR/reference/site-layout-spec.md"; then
+    w_ctl_fire 'W-CTL-RT7dn' RT7 1 "the split's § 9.3 row names the artifact only in states one axis away from the one it excludes — a reader that matched on the artifact, the mode or the disposition alone would read the exclusion as named" \
+      -- rt_artifact_contract "$W_FXR"
+  else
+    FAIL "W-CTL-RT7dn: the near-miss § 9.3 row did not land in the copy, so this control proves nothing"
+  fi
+fi
+w_spec_reset
+
+# W-CTL-KEY — a state key outside the vocabulary is refused, not read as an uncovered state.
+if w_spec_mut 'W-CTL-KEY' "$W_IN"'{ print } inf && F[1] == a1 && !d { printf "%s  %sQ  %s  rendered  %s\n", a1, m0, d0, h1; d = 1 }'; then
+  w_ctl_fire 'W-CTL-KEY' RT0 1 "a row whose mode is no mode G5 resolves is added on a copy — a table that cannot be read" \
+    -- rt_artifact_contract "$W_FXR"
+fi
+w_spec_reset
+
+# W-CTL-ANY — `any` in a state cell.
+if w_spec_mut 'W-CTL-ANY' "$W_IN"'{ print } inf && F[1] == a1 && !d { printf "%s  any  %s  rendered  %s\n", a1, d0, h1; d = 1 }'; then
+  w_ctl_fire 'W-CTL-ANY' RT0 1 "a row whose mode cell reads any is added on a copy — under G7 any admits UNSET, so a row names its states" \
+    -- rt_artifact_contract "$W_FXR"
+fi
+w_spec_reset
+
+# W-CTL-TOK — a home token § 3 does not define, in place on the plain row.
+if w_spec_mut 'W-CTL-TOK' "$W_IN"'inf && F[1] == a1 && F[2] == r1m && F[3] == r1d && !d { printf "%s  %s  %s  %s  zzq-no-such-component\n", F[1], F[2], F[3], F[4]; d = 1; next } { print }'; then
+  w_ctl_fire 'W-CTL-TOK' RT0 1 "the plain row's home is re-pointed at a token the § 3 catalog does not define" \
+    -- rt_artifact_contract "$W_FXR"
+fi
+w_spec_reset
+
+# W-CTL-DASH — `—` on a row that is not scaffolding, in place on the plain row.
+if w_spec_mut 'W-CTL-DASH' "$W_IN"'inf && F[1] == a1 && F[2] == r1m && F[3] == r1d && !d { printf "%s  %s  %s  %s  —\n", F[1], F[2], F[3], F[4]; d = 1; next } { print }'; then
+  w_ctl_fire 'W-CTL-DASH' RT0 1 "a bound class's row renders with no component on a copy — only a scaffolding row may" \
+    -- rt_artifact_contract "$W_FXR"
+fi
+w_spec_reset
+
+# W-CTL-DASH3 — `—` on a scaffolding row whose bare token § 3 defines as a component, in place. Read
+# clean, it would take that component out of the shape pass's population without a finding (FM-1).
+if w_spec_mut 'W-CTL-DASH3' "$W_IN"'inf && F[1] == sca && F[2] == scm && F[3] == scd && !d { printf "%s  %s  %s  %s  —\n", F[1], F[2], F[3], F[4]; d = 1; next } { print }'; then
+  w_ctl_fire 'W-CTL-DASH3' RT0 1 "a scaffolding row whose token § 3 defines as a component renders with no component on a copy — '—' stands only on a scaffolding row § 3 gives no component" \
+    -- rt_artifact_contract "$W_FXR"
+fi
+w_spec_reset
+
+# W-CTL-DUP — two rows covering one artifact in one state.
+if w_spec_mut 'W-CTL-DUP' "$W_IN"'{ print } inf && F[1] == a1 && !d { printf "%s  %s  %s  rendered  %s\n", a1, m0, d0, h1; d = 1 }'; then
+  w_ctl_fire 'W-CTL-DUP' RT0 1 "a second row for one artifact in one admitted state is added on a copy — precedence is refusal, never a ranking" \
+    -- rt_artifact_contract "$W_FXR"
+fi
+w_spec_reset
+
+# W-CTL-VOCAB — the charter's G5 loses its parenthesised list of modes on a copy.
+awk 'index($0, "- **G5 ") == 1 { sub(/ \([A-Z]+( \/ [A-Z]+)+\)/, "") } { print }' "$ROOT/CLAUDE.md" > "$W_FXR/CLAUDE.md"
+if cmp -s "$ROOT/CLAUDE.md" "$W_FXR/CLAUDE.md"; then
+  FAIL "W-CTL-VOCAB: the mutation did not land, so this control proves nothing"
+else
+  w_ctl_fire 'W-CTL-VOCAB' RT0 1 "G5's list of modes is removed from a copy of the charter — an empty vocabulary is a broken reader, never a table with nothing to check" \
+    -- rt_artifact_contract "$W_FXR"
+fi
+cp "$ROOT/CLAUDE.md" "$W_FXR/CLAUDE.md"
+
+# W-CTL-VOCABd — the charter's G6 writes its decided disposition as a word on a copy, not as the
+# bolded code span the reader takes it from: the decided axis reads empty, which is a broken reader.
+# The span is the one the reader returned on this run, so this control holds no disposition.
+W_DTOK="$(awk -F'\t' '$1 == "dest" && !s { print $2; s = 1 }' <<<"$W_VOC")"
+awk -v n="→ **\`$W_DTOK\`**" 'index($0, "- **G6 ") == 1 && n != "→ **``**" { i = index($0, n); if (i) $0 = substr($0, 1, i - 1) "→ decided" substr($0, i + length(n)) } { print }' "$ROOT/CLAUDE.md" > "$W_FXR/CLAUDE.md"
+if cmp -s "$ROOT/CLAUDE.md" "$W_FXR/CLAUDE.md"; then
+  FAIL "W-CTL-VOCABd: the mutation did not land, so this control proves nothing"
+else
+  w_ctl_fire 'W-CTL-VOCABd' RT0 1 "G6's decided disposition is reworded out of its code span on a copy of the charter — a decided axis read empty is a broken reader, never a table with nothing decided" \
+    -- rt_artifact_contract "$W_FXR"
+fi
+cp "$ROOT/CLAUDE.md" "$W_FXR/CLAUDE.md"
+
+# W-CTL-SITEROW — the `site` row is removed from a copy of the verb.
+awk '!/^\| site \|/' "$W_VERB" > "$W_FXR/skills/trip/SKILL.md"
+if cmp -s "$W_VERB" "$W_FXR/skills/trip/SKILL.md"; then
+  FAIL "W-CTL-SITEROW: the mutation did not land, so this control proves nothing"
+else
+  w_ctl_fire 'W-CTL-SITEROW' RT0 1 "the site row is removed from a copy of the verb — the table has no denominator, which is a broken read" \
+    -- rt_artifact_contract "$W_FXR"
+fi
+cp "$W_VERB" "$W_FXR/skills/trip/SKILL.md"
+
+# The invocation controls drive rt_main, the walker's own CLI, over the synthetic data homes.
+w_ctl_silent 'W-CTL-CLEAN' "the synthetic trip read in an admitted state with every artifact that state renders present — every pass runs and closes" \
+  -- rt_main --root "$ROOT" --trip fx --data-root "$W_FXD" "$RT_STATE_FLAG" "$W_S0"
+w_ctl_rc 'W-CTL-CLEANrc' 0 "the same clean run" \
+  -- rt_main --root "$ROOT" --trip fx --data-root "$W_FXD" "$RT_STATE_FLAG" "$W_S0"
+w_ctl_fire 'W-CTL-NORUN' RT0 2 "the same trip with no state given — the artifact pass's instance half and the shape pass are each reported NOT RUN" \
+  -- rt_main --root "$ROOT" --trip fx --data-root "$W_FXD"
+w_ctl_rc 'W-CTL-NORUNrc' 2 "the same run without a state — not run is never read as clean" \
+  -- rt_main --root "$ROOT" --trip fx --data-root "$W_FXD"
+w_ctl_fire 'W-CTL-UNADM' RT0 2 "the same trip read in a state the vocabulary allows and the site row does not admit — both state passes NOT RUN" \
+  -- rt_main --root "$ROOT" --trip fx --data-root "$W_FXD" "$RT_STATE_FLAG" "$W_UNADM"
+W_SIGMA_VAL='Placeholdia'
+w_ctl_fire 'W-CTL-ECHO' RT0 1 "a destination VALUE passed where the disposition belongs — refused before anything is read" \
+  -- rt_main --root "$ROOT" --trip fx --data-root "$W_FXD" "$RT_STATE_FLAG" "$W_M0:$W_SIGMA_VAL"
+# W-CTL-ECHOv — the value is counted in the walker's whole output in each form it can arrive in:
+# in the disposition's place; unquoted across two words, so the second word reaches the
+# unknown-argument branch alone; and joined to the flag by `=`, which that branch receives whole.
+w_echo_n() { "$@" 2>&1 | awk -v v="$W_SIGMA_VAL" 'index($0, v) > 0 { n++ } END { print n+0 }'; }
+W_ECHO_N="$(w_echo_n rt_main --root "$ROOT" --trip fx --data-root "$W_FXD" "$RT_STATE_FLAG" "$W_M0:$W_SIGMA_VAL")"
+W_ECHO_N2="$(w_echo_n rt_main --root "$ROOT" --trip fx --data-root "$W_FXD" "$RT_STATE_FLAG" "$W_M0:$W_SIGMA_VAL" "$W_SIGMA_VAL")"
+W_ECHO_NE="$(w_echo_n rt_main --root "$ROOT" --trip fx --data-root "$W_FXD" "$RT_STATE_FLAG=$W_M0:$W_SIGMA_VAL")"
+W_ECHO_CTL="$(printf 'FINDING RT0 x %s\n' "$W_SIGMA_VAL" | awk -v v="$W_SIGMA_VAL" 'index($0, v) > 0 { n++ } END { print n+0 }')"
+if [ "$W_ECHO_CTL" -ne 1 ]; then
+  FAIL "W-CTL-ECHOv: the no-echo probe could not see the value in a line known to carry it (observed $W_ECHO_CTL), so its zero would prove nothing"
+elif [ "$W_ECHO_N" -eq 0 ] && [ "$W_ECHO_N2" -eq 0 ] && [ "$W_ECHO_NE" -eq 0 ]; then
+  PASS "W-CTL-ECHOv: in each of three refused runs — the value in the disposition's place, the same value split across two words, and the value joined to the flag by '=' — the output carries the passed value 0 times, against a control line where the same probe counts it once. A destination value given to the walker does not reach its output by any of those routes"
+else
+  FAIL "W-CTL-ECHOv: the walker echoed the passed destination value — $W_ECHO_N time(s) in the disposition's place, $W_ECHO_N2 split across two words, $W_ECHO_NE joined to the flag by '='"
+fi
+# W-CTL-REPEAT — the state given twice, each time the clean state: a second state is refused, never
+# either value taken. Last-wins would let an earlier malformed value pass unread.
+w_ctl_fire 'W-CTL-REPEAT' RT0 1 "the clean trip read with the state given twice, each time the clean state — a second state is refused rather than either value taken" \
+  -- rt_main --root "$ROOT" --trip fx --data-root "$W_FXD" "$RT_STATE_FLAG" "$W_S0" "$RT_STATE_FLAG" "$W_S0"
+w_ctl_rc 'W-CTL-REPEATrc' 2 "the same run with the state given twice — a refusal, never a clean run" \
+  -- rt_main --root "$ROOT" --trip fx --data-root "$W_FXD" "$RT_STATE_FLAG" "$W_S0" "$RT_STATE_FLAG" "$W_S0"
+if [ -z "$W_GONE" ]; then
+  FAIL "W-CTL-READ: no rendered artifact other than the itinerary's could be named to leave out, so this control could not be built"
+elif [ -e "$W_FXN/trips/fx/$W_GONE" ]; then
+  FAIL "W-CTL-READ: the copy carries the artifact it was built without, so this control proves nothing"
+else
+  w_ctl_fire 'W-CTL-READ' RT0 1 "a copy of the synthetic trip built without one artifact the state renders — a degraded read, never a smaller site" \
+    -- rt_main --root "$ROOT" --trip fx --data-root "$W_FXN" "$RT_STATE_FLAG" "$W_S0"
+fi
+
 # ── THE LIVE ARMS. They run AFTER the controls so every one of them is read against an
 # instrument already demonstrated to fire and to stay silent on the right inputs.
 w0_assert  "$W_GRAMMAR" "$W_SPEC"
@@ -18386,6 +18785,207 @@ w1_assert  "$W_GRAMMAR" "$W_SPEC"
 w2_assert  "$W_SPEC"
 w3_assert  "$W_VERB"
 w3c_assert "$W_VERB"
+
+# ── W5 — the artifact grain's instrument, graded before anything it feeds.
+w5_assert() {   # w5_assert <engine-root>
+  local r="$1" s="$1/reference/site-layout-spec.md" sites nrow nb nm nd na nx
+  sites="$(rt_fence_sites "$s" "$RT_ARTIFACT_TAG")"
+  nrow="$(w_count "$(rt_artifact_rows "$s")")"
+  nx="$(awk -F'\t' '$4 == "excluded" { n++ } END { print n+0 }' <<<"$(rt_artifact_rows "$s")")"
+  nb="$(w_count "$(rt_bound_classes "$r")")"
+  nm="$(awk -F'\t' '$1 == "mode" { n++ } END { print n+0 }' <<<"$(rt_state_vocab "$r")")"
+  nd="$(awk -F'\t' '$1 == "dest" { n++ } END { print n+0 }' <<<"$(rt_state_vocab "$r")")"
+  na="$(w_count "$(rt_admitted "$r")")"
+  if [ "$sites" = "1" ] && [ "$nrow" -gt 0 ] && [ "$nb" -gt 0 ] && [ "$nm" -gt 0 ] && [ "$nd" -gt 0 ] && [ "$na" -gt 0 ]; then
+    PASS "W5: the artifact grain's instrument is live — the render table opens at ONE site with $nrow row(s), $nx of them excluded and each held to § 9.3 by RT7, § 1.1 yields $nb bound class(es), CLAUDE.md G5 and G6 yield $nm mode(s) and $nd decided disposition(s), and the site row admits $na state(s). Every set is read on this run; none is held here"
+  else
+    FAIL "W5: the artifact grain's instrument is broken (render-table sites=$sites, rows=$nrow, bound classes=$nb, modes=$nm, decided dispositions=$nd, admitted states=$na) — a zero here makes every comparison below vacuous"
+  fi
+}
+
+# ── W6 — the rows against § 1.1's bound set, BOTH directions.
+w6_assert() {   # w6_assert <engine-root>
+  local r="$1" b rows a ob oa nb na
+  b="$(rt_bound_classes "$r")"
+  rows="$(awk -F'\t' 'NF > 1 && $1 != "!" && $1 !~ /^</ { print $1 }' <<<"$(rt_artifact_rows "$r/reference/site-layout-spec.md")" | sort -u)"
+  ob="$(w_linediff "$b" "$rows")"; oa="$(w_linediff "$rows" "$b")"
+  nb="$(w_count "$b")"; na="$(w_count "$rows")"
+  if [ "$nb" -eq 0 ]; then
+    FAIL "W6: the § 1.1 reader returned ZERO bound classes, so there is nothing to compare the rows against"
+  elif [ "$(w_count "$ob")" -eq 0 ] && [ "$(w_count "$oa")" -eq 0 ]; then
+    PASS "W6: the render table's artifacts and § 1.1's bound classes are the SAME set, in BOTH directions — $nb bound class(es) against $na artifact(s) with rows, zero on each side. A class turned bound without rows fails here, and so does a row outliving its class's bound status"
+  else
+    FAIL "W6: the render table and § 1.1 disagree — bound class(es) with no row [$(w_join "$ob")], row(s) for class(es) not bound [$(w_join "$oa")]"
+  fi
+}
+
+# ── W7 — the state keys against the vocabulary CLAUDE.md declares, and coverage of every admitted state.
+w7_assert() {   # w7_assert <engine-root>
+  local r="$1" vocab keys bad nk na out n7
+  vocab="$(rt_state_vocab "$r")"
+  keys="$(rt_artifact_keys "$r/reference/site-layout-spec.md")"
+  nk="$(w_count "$keys")"; na="$(w_count "$(rt_admitted "$r")")"
+  bad="$(awk -F'\t' 'NR == FNR { V[$1 SUBSEP $2] = 1; next } NF && !((("mode" SUBSEP $2) in V) || (("mode-any" SUBSEP $2) in V)) { print "mode:" $2 } NF && !((("dest" SUBSEP $3) in V) || (("dest-any" SUBSEP $3) in V)) { print "destination-key" }' <(printf '%s\n' "$vocab") <(printf '%s\n' "$keys") | sort -u)"
+  out="$(rt_artifact_contract "$r" 2>&1)"
+  n7="$(awk '$1 == "FINDING" && ($2 == "RT7" || $2 == "RT0") { n++ } END { print n+0 }' <<<"$out")"
+  if [ "$(w_count "$vocab")" -eq 0 ]; then
+    FAIL "W7: the state vocabulary read from CLAUDE.md is EMPTY, so no key can be graded"
+  elif [ "$nk" -eq 0 ]; then
+    FAIL "W7: the render table expands to ZERO (artifact, state) keys, so there is nothing to grade"
+  elif [ -n "$bad" ]; then
+    FAIL "W7: render-table state key(s) outside the modes and dispositions CLAUDE.md G5 and G6 declare [$(w_join "$bad")]"
+  elif [ "$n7" -ne 0 ]; then
+    FAIL "W7: the artifact grain does not close — $n7 RT7/RT0 finding(s) from the walker's contract half"
+  else
+    PASS "W7: every one of the $nk (artifact, state) key(s) the render table declares names a mode G5 resolves and a disposition G6 yields, read from CLAUDE.md on this run, and every bound class, and every scaffolding token the table names, is dispositioned exactly once in each of the $na state(s) the site row admits"
+  fi
+}
+
+# ── W8 — every home token against § 3's catalog, read live; `—` only on scaffolding.
+w8_assert() {   # w8_assert <engine-root>
+  local r="$1" s="$1/reference/site-layout-spec.md" comps rows nbad=0 detail="" a disp home part n t
+  comps="$(rt_components "$s" | sort -u)"; n="$(w_count "$comps")"
+  rows="$(rt_artifact_rows "$s")"
+  while IFS="$W_TAB" read -r a _ _ disp home; do
+    [ -n "$a" ] || continue
+    [ "$a" = "!" ] && { nbad=$((nbad+1)); detail="$detail malformed-row"; continue; }
+    [ "$disp" = rendered ] || continue
+    if [ "$home" = "—" ]; then
+      case "$a" in
+        '<'*) t="${a#<}"; t="${t%>}"; grep -qxF -- "$t" <<<"$comps" && { nbad=$((nbad+1)); detail="$detail '$a'->no-component-for-a-defined-token"; } ;;
+        *) nbad=$((nbad+1)); detail="$detail '$a'->no-component" ;;
+      esac
+      continue
+    fi
+    while IFS= read -r part; do
+      [ -n "$part" ] || continue
+      case "$part" in
+        elements:*) [ -n "$(rt_decl_get "${part#elements:}" 1)" ] || { nbad=$((nbad+1)); detail="$detail '$a'->undeclared:$part"; } ;;
+        *) grep -qxF -- "$part" <<<"$comps" || { nbad=$((nbad+1)); detail="$detail '$a'->$part"; } ;;
+      esac
+    done <<<"$(tr '|' '\n' <<<"$home")"
+  done <<<"$rows"
+  if [ "$(w_count "$rows")" -eq 0 ]; then
+    FAIL "W8: the render table parsed to ZERO rows, so there is no home to grade"
+  elif [ "$nbad" -eq 0 ] && [ "$n" -gt 0 ]; then
+    PASS "W8: every rendered home in the render table names a component the § 3 catalog defines ($n distinct token(s), DERIVED on this run) or an element fence the walker declares, and '—' stands only on a scaffolding row whose token § 3 does not define"
+  else
+    FAIL "W8: the render table does not resolve against the component catalog (offending part(s)=$nbad, distinct catalog tokens=$n)$detail"
+  fi
+}
+
+# ── W10 — the shape pass's marker readers, against a differently-shaped read of § 3. The RT8 plant
+# is derived from these readers, so a mis-mapped marker would pass its own control: this arm is the
+# one that does not share the reader. It re-reads § 3 by splitting on the code-span delimiters rather
+# than by the walker's pattern match, and joins every marker to the component catalog. It grades the
+# parse, never whether a class § 3 declares is the class a real render carries.
+w10_heads() {   # w10_heads <spec-file> -> the class each § 3 heading's parenthetical names, unique
+  awk 'substr($0, 1, 5) == "## 3." { s = 1; next } s && substr($0, 1, 3) == "## " { s = 0 }
+    s && substr($0, 1, 4) == "### " { i = index($0, "(`."); if (!i) next; r = substr($0, i + 3); j = index(r, "`)"); if (j > 1) print substr(r, 1, j - 1) }' "$1" | sort -u
+}
+w10_ctoks() {   # w10_ctoks <spec-file> -> every code span in § 3 that is one class, unique
+  awk 'substr($0, 1, 5) == "## 3." { s = 1; next } s && substr($0, 1, 3) == "## " { s = 0 }
+    s { n = split($0, P, "`"); for (i = 2; i <= n; i += 2) if (P[i] ~ /^\.[a-z0-9][a-z0-9-]*$/) print substr(P[i], 2) }' "$1" | sort -u
+}
+w10_assert() {   # w10_assert <spec-file>
+  local s="$1" mk mh ih rc ic comps k nk=0 dh dc
+  mk="$(rt_component_markers "$s")"
+  mh="$(cut -f2 <<<"$mk" | sort -u)"; ih="$(w10_heads "$s")"
+  rc="$(rt_class_tokens "$s")"; ic="$(w10_ctoks "$s")"
+  comps="$(rt_components "$s" | sort -u)"
+  while IFS= read -r k; do
+    [ -n "$k" ] || continue
+    grep -qxF -- "$k" <<<"$comps" || nk=$((nk+1))
+  done <<<"$(cut -f1 <<<"$mk")"
+  dh=$(( $(w_count "$(w_linediff "$mh" "$ih")") + $(w_count "$(w_linediff "$ih" "$mh")") ))
+  dc=$(( $(w_count "$(w_linediff "$rc" "$ic")") + $(w_count "$(w_linediff "$ic" "$rc")") ))
+  if [ "$(w_count "$mk")" -eq 0 ] || [ "$(w_count "$rc")" -eq 0 ]; then
+    FAIL "W10: a marker reader returned nothing (heading markers=$(w_count "$mk"), class tokens=$(w_count "$rc")) — the shape pass would see no component, and its controls would plant nothing"
+  elif [ "$(w_count "$mk")" -ne "$(w_count "$ih")" ]; then
+    FAIL "W10: rt_component_markers yields $(w_count "$mk") heading marker(s) and a split on the code-span delimiters reads $(w_count "$ih") heading parenthetical(s) in § 3"
+  elif [ "$dh" -ne 0 ] || [ "$dc" -ne 0 ]; then
+    FAIL "W10: the marker readers and a differently-shaped read of § 3 disagree — $dh heading class(es) and $dc class token(s) in one and not the other"
+  elif [ "$nk" -ne 0 ]; then
+    FAIL "W10: $nk heading marker(s) are keyed on a slug the § 3 component catalog does not hold, so the shape pass can never find them"
+  else
+    PASS "W10: the shape pass's marker readers agree with a differently-shaped read of § 3 — $(w_count "$mk") heading marker(s), each keyed on a component the catalog holds, and $(w_count "$rc") class token(s), the same set both ways. A mis-mapped or mis-scoped marker turns this arm red rather than passing the control planted from it"
+  fi
+}
+
+# ── W3i — the INVOCATION line, counted apart from the grant line and the prose mentions.
+w3i_assert() {   # w3i_assert <verb-file>
+  local n
+  n="$(w_site_region "$1" | awk -v g="$W_GRANT" '/^```/ { fd = !fd; next } fd { t = $0; sub(/^[[:space:]]+/, "", t); if (index(t, g) == 1) n++ } END { print n+0 }')"
+  if [ "$n" -eq 1 ]; then
+    PASS "W3i: the site verb's § site region carries exactly ONE fenced invocation of the walk — the state and the data root are appended on lines of their own, so the invocation is still a single line"
+  else
+    FAIL "W3i: the site verb's § site region carries $n fenced invocation line(s) of the walk, expected exactly 1"
+  fi
+}
+
+# ── W9 — CX-2: one σ, one spelling. The flag the verb appends is the flag the walker parses, and the
+# paragraph that appends it names every disposition token the walker's vocabulary reader returns,
+# each as a code span — `UNDECIDED` carries `DECIDED` as a substring, so a bare word match could not
+# see the decided token go. No token is held here: they are read from the walker on this run.
+w9_assert() {   # w9_assert <verb-file> <engine-root>
+  local region n ns para toks nt t miss=""
+  region="$(w_site_region "$1")"
+  n="$(awk -v f="$RT_STATE_FLAG <trip.mode>:" 'index($0, f) > 0 { n++ } END { print n+0 }' <<<"$region")"
+  ns="$(awk -v f="$RT_STATE_FLAG <trip.mode>:" -v s="$W_SCRIPT" 'index($0, f) > 0 && index($0, s) > 0 { n++ } END { print n+0 }' <<<"$region")"
+  para="$(awk -v f="$RT_STATE_FLAG <trip.mode>:" 'index($0, f) > 0 { p = 1 } p && !NF { exit } p { print }' <<<"$region")"
+  toks="$(awk -F'\t' '($1 == "dest" || $1 == "dest-any") && $2 != "" { print $2 }' <<<"$(rt_state_vocab "$2")")"
+  nt="$(w_count "$toks")"
+  while IFS= read -r t; do
+    [ -n "$t" ] || continue
+    awk -v c="\`$t\`" 'index($0, c) > 0 { f = 1 } END { exit f ? 0 : 1 }' <<<"$para" || miss="$miss $t"
+  done <<<"$toks"
+  if [ "$n" -eq 1 ] && [ "$ns" -eq 0 ] && [ "$nt" -gt 0 ] && [ -z "$miss" ]; then
+    PASS "W9: the site verb appends the state on exactly ONE line of its § site region, spelled '$RT_STATE_FLAG <trip.mode>:' — the spelling read from the walker's own constant — that line names no script path, and its paragraph names each of the $nt disposition token(s) the walker's vocabulary reader returns"
+  else
+    FAIL "W9: the site verb's § site region carries $n line(s) appending '$RT_STATE_FLAG <trip.mode>:' (expected 1), $ns of them also naming the script (expected 0); the walker's vocabulary reader returned $nt disposition token(s) (expected at least 1), and the paragraph does not name [${miss# }]"
+  fi
+}
+
+# ── W9c — CX-2's second surface. The charter's free-form patch path runs the same walk, so its one
+# invocation in CLAUDE.md § Updating the site appends the state with the walker's own flag.
+w_update_region() {   # w_update_region <charter-file> -> the ### Updating the site section body
+  awk '/^### Updating the site$/ { inreg = 1; next } inreg && /^##/ { inreg = 0 } inreg { print }' "$1"
+}
+w9c_assert() {   # w9c_assert <charter-file>
+  local region nl nf
+  region="$(w_update_region "$1")"
+  nl="$(awk -v s="$W_SCRIPT" 'index($0, s) > 0 { n++ } END { print n+0 }' <<<"$region")"
+  nf="$(awk -v s="$W_SCRIPT" -v f=" $RT_STATE_FLAG <" 'index($0, s) > 0 && index($0, f) > 0 { n++ } END { print n+0 }' <<<"$region")"
+  if [ "$nl" -eq 1 ] && [ "$nf" -eq 1 ]; then
+    PASS "W9c: CLAUDE.md § Updating the site invokes the walk on exactly ONE line, and that line appends the state spelled '$RT_STATE_FLAG <…>' — the walker's own constant — so the free-form patch path passes σ as the verb does"
+  else
+    FAIL "W9c: CLAUDE.md § Updating the site carries $nl line(s) invoking the walk (expected 1), $nf of them appending the state as '$RT_STATE_FLAG <…>' (expected 1)"
+  fi
+}
+
+# ── W14 — the shape pass's population on the real table, MEASURED, and VACUOUS while it is empty.
+W_SH_N=0; W_SH_K=0
+while IFS="$W_TAB" read -r w_m w_d; do
+  [ -n "$w_m" ] || continue
+  W_SH_N=$((W_SH_N+1))
+  w_forb="$(w_linediff "$(rt_shape_population "$W_SPEC")" "$(rt_state_components "$W_SPEC" "$w_m" "$w_d")")"
+  [ "$(w_count "$w_forb")" -gt 0 ] && W_SH_K=$((W_SH_K+1))
+done <<<"$(rt_admitted "$ROOT")"
+if [ "$W_SH_N" -eq 0 ]; then
+  FAIL "W14: the site row admits ZERO states, so the shape pass's population was not measured"
+elif [ "$W_SH_K" -eq 0 ]; then
+  VACUOUS "W14: in every one of the $W_SH_N state(s) the site row admits, the render table admits every component any state admits — RT8 has no component it could report on a real render at this release. The whole load for RT8 is carried by W-CTL-RT8, which plants a split table on a copy"
+else
+  PASS "W14: in $W_SH_K of the $W_SH_N state(s) the site row admits, some component another state admits is not admitted — RT8 has a real population"
+fi
+w3i_assert "$W_VERB"
+w5_assert  "$ROOT"
+w6_assert  "$ROOT"
+w7_assert  "$ROOT"
+w8_assert  "$ROOT"
+w9_assert  "$W_VERB" "$ROOT"
+w9c_assert "$ROOT/CLAUDE.md"
+w10_assert "$W_SPEC"
 
 # ── W12 — the inventory, derived from the walker's own emission sites and from what the arms
 # OBSERVED. Neither side is a list held in this file.
@@ -18436,7 +19036,11 @@ ps_dne "W: no arm in this group establishes that a site build INVOKED the walk. 
 # scripts/test-publish-guard.sh.
 #
 #   $WORK/w/fx/plan.md · site.html    -> W-CTL-RT3 / RT4 / RT5 / RT6 / ADD / BOTH
-#   $WORK/w/fxroot/…                  -> W-CTL-RT0b / RT1 / RT2 / ENUM / COMP / SEC
+#   $WORK/w/fxroot/…                  -> W-CTL-RT0b / RT1 / RT2 / ENUM / COMP / SEC, and the
+#                                        artifact grain's RT7a-d / RT7ds / RT7dn / KEY / ANY / TOK / DASH /
+#                                        DASH3 / DUP / VOCAB / VOCABd / SITEROW
+#   $WORK/w/fx/site-rt8.html          -> W-CTL-RT8 / RT8s1 / RT8s2
+#   $WORK/w/fxdata, fxdata-noread     -> W-CTL-CLEAN / NORUN / UNADM / ECHO / REPEAT / READ
 #
 # The compensating control is W0, which runs over the REAL documents and proves the fence
 # resolves at one site and both extractions are non-zero — so every control verdict above is
@@ -18453,6 +19057,16 @@ md_flips rt_grammar_labels 'W1'  w1_assert  "$W_GRAMMAR" "$W_SPEC"
 md_flips rt_components     'W2'  w2_assert  "$W_SPEC"
 md_flips w_site_region     'W3'  w3_assert  "$W_VERB"
 md_flips w_site_region     'W3c' w3c_assert "$W_VERB"
+md_flips w_site_region     'W3i' w3i_assert "$W_VERB"
+md_flips rt_state_vocab    'W5'  w5_assert  "$ROOT"
+md_flips rt_bound_classes  'W6'  w6_assert  "$ROOT"
+md_flips rt_admitted       'W7'  w7_assert  "$ROOT"
+md_flips rt_artifact_rows  'W8'  w8_assert  "$ROOT"
+md_flips w_site_region     'W9'  w9_assert  "$W_VERB" "$ROOT"
+md_flips rt_state_vocab    'W9'  w9_assert  "$W_VERB" "$ROOT"
+md_flips w_update_region   'W9c' w9c_assert "$ROOT/CLAUDE.md"
+md_flips rt_component_markers 'W10' w10_assert "$W_SPEC"
+md_flips rt_class_tokens   'W10' w10_assert "$W_SPEC"
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group NC — the five never-carries of ADR-025 § Decision 3, graded as class facts.
@@ -29180,9 +29794,9 @@ md_flips wtadr26_cell 'WT-ADR26' wtadr26_assert
 echo
 # ── MD6 / MD7 — THE REGISTRATION TOTAL, DERIVED AND CROSS-CHECKED. ───────────────
 # Emitted HERE rather than with the rest of group MD because it must run after the LAST
-# md_flips call in the file, and group W makes five of them. Group MD already emits in more
-# than one place for the same reason — its MD[...] arms render wherever their registration
-# sits — so this is that pattern and not a new one.
+# md_flips call in the file, and group W's registrations come after group MD's. Group MD
+# already emits in more than one place for the same reason — its MD[...] arms render wherever
+# their registration sits — so this is that pattern and not a new one.
 #
 # THE ASSERTION IS THAT TWO INDEPENDENT READINGS AGREE. One is the counter md_flips increments
 # at each call; the other is the run's own emission record, reduced to the MD[...] verdicts it
