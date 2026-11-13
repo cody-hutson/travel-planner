@@ -334,7 +334,8 @@ name: Artifact schema
 #        — and the grade record: one block per generated conversation, its verdict the conversation
 #        rule's, no MET against an unruled mechanical fail or ND, and no re-roll
 #   PJ   the traveller projection — scripts/project-traveler-data.sh prints no line a § 5.6
-#        field row labels and keeps every other, reads its selectors from the fence, and
+#        field row labels in a shape its header's criterion reaches, keeps every line its
+#        criterion does not take, reads its selectors from the fence, and
 #        refuses with exit 2 and empty stdout on zero field rows or a malformed row
 #   RN   the roster edit's approver notice: § `group` reads the approver declaration on a removal,
 #        says before the echo whether it still names the removed row's key, asks nothing and writes

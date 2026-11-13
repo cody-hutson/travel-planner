@@ -36,7 +36,8 @@
 #
 # THE GUARANTEE is a criterion, not a list. The projection leaves out every line whose label
 # begins with a § 5.6 `field` selector, when that label opens one of these: a list item at
-# any depth, including behind `>` quotes, a `[ ]` or `[x]` task box, or a bracketed mark; a
+# any indent, once its blockquote markers and ONE list marker are taken off, including
+# behind `>` quotes, a `[ ]` or `[x]` task box, or a bracketed mark; a
 # paragraph line; an ATX or setext heading, which takes its section with it, save one that
 # holds a pipe inside a table run; a table cell, as the TABLE and TABLE ROW sentences below
 # read one; or the inside of a one-line HTML comment. This
@@ -140,7 +141,9 @@
 # space; a label behind an HTML tag, an entity or a closed comment, or behind a heading's
 # ordinal (`### 1. Passport:`); a camel-case key such as `passportNumber:`, which the
 # whole-word rule keeps; a table cell after the first holding a label of more than one word
-# and no colon, outside a header row (`| Rowan | Passport number Z123 |`); a table row whose
+# and no colon, outside a header row (`| Rowan | Passport number Z123 |`); a label behind a
+# second list marker or behind a quote opened inside a list item (`- - Passport number:`,
+# `- > Passport number:`), since ONE list marker is taken off; a table row whose
 # key cell is empty; a row whose leading pipe sits behind a task box, behind a second list
 # marker or behind a quote opened inside a list item (`- [ ] | Passport number | … |`,
 # `- - | … |`, `- > | … |`), none of which is a TABLE as defined above; a heading that holds

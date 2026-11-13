@@ -30,8 +30,8 @@ generated conversation recorded.
 no model is on file, with every line a `field` row of `reference/data-architecture.md` § 5.6
 labels left out — today `Passport` and `Documents`, its plural included. What it leaves out is a
 criterion, not a list: every line whose label begins with one of those selectors, where that label
-opens a list item at any depth (behind `>` quotes, a `[ ]` or `[x]` task box, or a bracketed mark
-included), a paragraph line, an ATX or setext heading, save one that holds a pipe inside a table
+opens a list item at any indent, once its quote markers and one list marker are taken off (behind
+`>` quotes, a `[ ]` or `[x]` task box, or a bracketed mark included), a paragraph line, an ATX or setext heading, save one that holds a pipe inside a table
 run, a table row's first cell, a later cell that holds the label and a colon or the label alone, or
 the inside of a one-line HTML comment, after the ASCII emphasis and markup it strips and behind a
 no-break space. Each such line goes with what continues it: a label's wrapped, nested and loose
@@ -76,8 +76,8 @@ A shape outside the projection's criterion is not read, so its line still reache
 ideation agent. For example: a label behind an emoji, a homoglyph or any other non-ASCII character
 but a no-break space; a label behind an HTML tag, an entity or a closed comment, or behind a
 heading's ordinal; a camel-case key such as `passportNumber:`; a table cell after the first holding
-a label of more than one word and no colon, outside a header row; a table row whose key cell is
-empty; a row whose leading pipe sits behind a task box, behind a second list marker or behind a
+a label of more than one word and no colon, outside a header row; a label behind a second list
+marker or behind a quote opened inside a list item; a table row whose key cell is empty; a row whose leading pipe sits behind a task box, behind a second list marker or behind a
 quote opened inside a list item, none of which is a table as the script reads one; a heading that
 holds a pipe, inside a table run; and a value written as prose under some other label. These are
 residuals the criterion

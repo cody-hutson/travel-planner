@@ -829,8 +829,9 @@ of them.
 
 **The fence has a second executable reader, the traveller projection.**
 `scripts/project-traveler-data.sh` reads every `field` row here, whatever its artifact scope, and
-prints a trip's traveller model — or its traveller files, where no model is on file — with every
-line those selectors label left out, keeping the `entry` rows' content. It refuses, printing
+prints a trip's traveller model — or its traveller files, where no model is on file — with the
+lines those selectors label left out, in the shapes its header's criterion reaches, keeping the
+`entry` rows' content. It refuses, printing
 nothing, on zero `field` rows or a malformed row. A `field` row added here joins it with no edit,
 and which dispatches take it is the test in `CLAUDE.md` § *Dispatching agents*.
 

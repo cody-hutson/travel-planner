@@ -706,8 +706,9 @@ Required inputs:
    `/trip-record group`, or `/trip-record person` withdraws a member who no
    longer travels. A brief with no such clause is carried as before)
 6. the traveller projection the dispatch carries: `outputs/traveler-model.md` with
-   every line a `field` row of `reference/data-architecture.md` § 5.6 labels left
-   out (`skills/trip/SKILL.md` § *Standing clause*). It is the `[DERIVED]`
+   the lines a `field` row of `reference/data-architecture.md` § 5.6 labels left
+   out, in the shapes the projection's criterion reaches (`skills/trip/SKILL.md`
+   § *Standing clause*). It is the `[DERIVED]`
    per-traveler needs + desires — the source for the satisfaction-coverage read:
    anchors/wishes → covered/not, needs → pass/fail. Its desire-overlap signal now
    also carries the attention lens — shared desires are efficient to cover, unique
