@@ -29158,19 +29158,22 @@ md_flips wtadr26_cell 'WT-ADR26' wtadr26_assert
 #        in the SOURCE, so a fixture that failed to plant its shape cannot read as a pass.
 #          PJ9   the behaviour the label rule already shipped: a bracketed provenance mark,
 #                a task box, a blockquote with its in-quote continuation, a shallower wrap,
-#                and a fenced block as a payload (5 shapes, 7 canaries).
+#                a fenced block as a payload, and a shallower selector line inside a
+#                payload, which lowers the indent it ends at (6 shapes, 10 canaries).
 #          PJ10  the shapes the label rule first missed: a heading and its section, a
 #                heading over its value, a setext heading, a heading in a traveller file,
 #                a heading inside a payload, a loose payload past a blank line, a table, a
-#                one-line comment, a no-break space, and a fenced block a label opens at its
-#                own indent (10 shapes, 20 canaries).
+#                one-line comment, a no-break space, a fenced block a label opens at its
+#                own indent, and a fenced block and an indented code line inside a heading's
+#                section, neither of which ends it (12 shapes, 26 canaries).
 #          PJ11  the delimiters a payload must stop at, each with kept lines after it: CRLF
 #                line endings, the closer of a fenced block the label sits in, and the
 #                frontmatter's closing `---`, with and without a byte-order mark, a key after
 #                the passport key going with it as the safe side; and the fence grammar a
 #                closer is read by — a closer as long as its opener's run, with nothing after
-#                it, of the opener's own character, an opener a tilde run can make, and no
-#                opener made by an inline code span (9 shapes, 13 canaries).
+#                it, of the opener's own character, an opener a tilde run can make, no
+#                opener made by an inline code span, and a heading mark inside a fence, a
+#                label there and never a section (10 shapes, 14 canaries).
 #        PJ8 is not used: the scope-lock declined the review's eighth arm, the guard
 #        comparison, and leaving its id empty keeps these arms from reading as that one.
 #
@@ -29533,6 +29536,14 @@ printf '%s\n' '## Rowan' \
   '  entry registration · CNRY-PJS07' \
   '  ```' \
   '- **Pace:** slow mornings · KEEP-PJS06' > "$PJT_SF"
+pjt_shape 'PJ9[lower]' shape-lower model 'CNRY-PJS41 CNRY-PJS42 CNRY-PJS43' 'KEEP-PJS43 KEEP-PJS44' 'CNRY-PJS41
+- **Passport:**' - - 'a shallower selector line inside a payload, which lowers the indent it ends at, and its own sub-item'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS43' \
+  '  - **Documents:** entry registration · CNRY-PJS41' \
+  '- **Passport:** Zorvanian · CNRY-PJS42' \
+  '  - validity note · CNRY-PJS43' \
+  '- **Pace:** slow mornings · KEEP-PJS44' > "$PJT_SF"
 
 pjt_shape 'PJ10[heading]' shape-heading model 'CNRY-PJS08 CNRY-PJS09 CNRY-PJS10' 'KEEP-PJS07 KEEP-PJS08' '### Passport:' - - 'a heading carrying the value, with its section and a deeper heading inside it'
 printf '%s\n' '# Traveler Model [DERIVED]' '' '## Rowan' \
@@ -29627,6 +29638,28 @@ printf '%s\n' '## Rowan' \
   '# transit permit · CNRY-PJS32' \
   '```' \
   '- **Pace:** slow mornings · KEEP-PJS32' > "$PJT_SF"
+pjt_shape 'PJ10[sec-fence]' shape-sec-fence model 'CNRY-PJS44 CNRY-PJS45 CNRY-PJS46' 'KEEP-PJS45 KEEP-PJS46' '```
+## not a heading' - - 'a fenced block inside a passport heading section, a heading mark in it that does not end the section'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS45' \
+  '### Passport' \
+  'Zorvanian · CNRY-PJS44' \
+  '```' \
+  '## not a heading, inside a fence · CNRY-PJS45' \
+  '```' \
+  'valid to 2031 · CNRY-PJS46' \
+  '### Rooming' \
+  '- own room · KEEP-PJS46' > "$PJT_SF"
+pjt_shape 'PJ10[sec-indent]' shape-sec-indent model 'CNRY-PJS47 CNRY-PJS48 CNRY-PJS49' 'KEEP-PJS47 KEEP-PJS48' '    ## indented' - - 'an indented code line inside a passport heading section, a heading mark in it that does not end the section'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS47' \
+  '### Passport' \
+  'Zorvanian · CNRY-PJS47' \
+  '' \
+  '    ## indented code, not a heading · CNRY-PJS48' \
+  'valid to 2031 · CNRY-PJS49' \
+  '### Rooming' \
+  '- own room · KEEP-PJS48' > "$PJT_SF"
 
 pjt_shape 'PJ11[crlf]' shape-crlf model 'CNRY-PJS26 CNRY-PJS27' 'KEEP-PJS24 KEEP-PJS25' "${PJT_CR}
 ${PJT_CR}
@@ -29708,6 +29741,17 @@ printf '%s\n' '## Rowan' \
   'Zorvanian · CNRY-PJS40' \
   '~~~' \
   '- **Pace:** slow mornings · KEEP-PJS42' > "$PJT_SF"
+pjt_shape 'PJ11[fence-label]' shape-fence-label model 'CNRY-PJS50' 'KEEP-PJS49 KEEP-PJS50 KEEP-PJS51' '```
+# Passport:' '```' 2 'a heading mark inside a fenced block, a label there and never a section, with kept lines after the closer'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS49' \
+  '```' \
+  '# Passport: Zorvanian · CNRY-PJS50' \
+  '```' \
+  '- **Pace:** slow mornings · KEEP-PJS50' \
+  '' \
+  '## Sam [OPERATOR-PROVIDED] [THIRD-PARTY]' \
+  '- **Needs:** a step-free route · KEEP-PJS51' > "$PJT_SF"
 
 pjt_i=0
 while [ "$pjt_i" -lt "${#PJT_SN[@]}" ]; do
