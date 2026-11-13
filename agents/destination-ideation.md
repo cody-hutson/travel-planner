@@ -57,17 +57,18 @@ re-open destination selection unless the group explicitly returns to it.
 ## Inputs
 
 Read each traveler's destination leanings — the stable field labels
-`Would love:` / `Rather skip:` / `Trip vibe:` — from the reconciled
-`outputs/traveler-model.md` (the enrichment agent carries every traveler's
-leanings there per-traveler; the engines and hub read the derived model, not
-raw profiles, and so do you). If the derived model has not been built yet, fall
-back to reading the leaning fields directly from each
-`trips/<destination>-<year>/travelers/<traveler>.md` — you need only those three
-fields. A traveler who left all three blank simply contributes no leanings yet;
-that is a normal state, not an error (see *Missing leanings* below).
+`Would love:` / `Rather skip:` / `Trip vibe:` — from the traveller projection the
+dispatch carries (`skills/trip/SKILL.md` § *Standing clause*): the reconciled
+`outputs/traveler-model.md`, where the enrichment agent carries every traveler's
+leanings per-traveler, or, where that model has not been built yet, each
+`trips/<destination>-<year>/travelers/<traveler>.md` under a header naming it —
+with every line a `field` row of `reference/data-architecture.md` § 5.6 labels
+left out. You need only those three fields. Open none of those files yourself.
+A traveler who left all three blank simply contributes no leanings yet; that is
+a normal state, not an error (see *Missing leanings* below).
 
-**Versioned artifacts.** `outputs/traveler-model.md`, and any traveler file you
-fall back to, may carry a `schema-version`. Apply the tolerant-read rule exactly
+**Versioned artifacts.** The projection keeps its source's frontmatter, which
+may carry a `schema-version`. Apply the tolerant-read rule exactly
 as stated in `reference/data-architecture.md` → "Tolerant read"; do not restate it
 here and do not reinterpret it.
 
