@@ -3058,8 +3058,9 @@ _COORD_NOTICE_CAP=512
 # reading is the one that misses the edit. The guard's two added readings end a body by the same
 # rule (_browser_end_tags), and S32d holds the two to it. Graded by S32a–S32d.
 #
-# WHAT STILL STAYS OUT OF THE DIGEST, NAMED SO THIS LIMB IS NOT READ AS THE WHOLE ANSWER. Three
-# classes of text a reader can see leave the digest unmoved:
+# WHAT STILL STAYS OUT OF THE DIGEST, NAMED SO THIS LIMB IS NOT READ AS THE WHOLE ANSWER. Four
+# classes of text a reader can see are known to leave the digest unmoved; the list is what has
+# been found, not a proof that nothing else does:
 #   (a) text after an opening tag that only looks like a script or style one. A body opens wherever
 #       `<script` or `<style` stands before a word boundary and runs to the next end tag, so a custom
 #       element whose name begins `script` or `style` (`<script-card>`), and an unclosed `<script>`
@@ -3070,9 +3071,13 @@ _COORD_NOTICE_CAP=512
 #       text and the tag strip below reads as a tag's start, dropping everything up to the next `>`.
 #   (c) text a script or style draws — a map pop-up, a CSS `content:` label — which this projection
 #       does not read, by design: it reads the page's text, not what its code makes of it.
-# (a) and (b) are one family, the digest dropping text a browser shows, and one follow-up card owns
-# both; (c) stays out by design. How many renders carry (a) or (b) is unmeasured: the repository
-# tracks no render.
+#   (d) text a browser shows from an attribute — an `<input>` or button `value`, a `placeholder`,
+#       an `<option>` `label`, an `<img>` `alt` — which the tag strip below removes with its tag;
+#       and the body of a closed `<script>` written inside a text box such as `<textarea>`, which a
+#       browser shows as the box's text and the script-and-style limb removes.
+# (a), (b) and (d) are one family, the digest dropping text a browser shows, and one follow-up card
+# owns them; (c) stays out by design. How many renders carry (a), (b) or (d) is unmeasured: the
+# repository tracks no render.
 strip_to_itinerary_text() { # <html_file> -> visible itinerary text on stdout, or nothing on failure
   COORD_CLASS="$_COORD_NOTICE_CLASS" COORD_CAP="$_COORD_NOTICE_CAP" \
   perl -0777 -pe '

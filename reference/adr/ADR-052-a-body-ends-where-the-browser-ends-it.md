@@ -135,13 +135,17 @@ the enum at four values; the rest of that decision stands.
   the guard's arms counts six, and the comments above the visible and joined projections name the
   reading that now ends a body where the browser does.
 - The itinerary digest's projection reads the same end tag, and the suite holds the two to one rule.
-  Three classes of text a reader can see stay outside that digest, named here so the rule is not
-  read as the whole answer: **(a)** text after an opening tag that only looks like a script or style
-  one, the class above; **(b)** text after a stray `<` in the page's text, which the digest's tag
-  strip reads as a tag's start, dropping everything up to the next `>`; and **(c)** text a script or
-  style draws — a map pop-up, a CSS `content:` label — which the digest does not read, by design.
-  One follow-up card owns (a) and (b), the digest dropping text a browser shows; (c) stays out by
-  design. How many renders carry (a) or (b) is unmeasured: the repository tracks no render.
+  Four classes of text a reader can see are known to stay outside that digest, named here so the
+  rule is not read as the whole answer — the list is what has been found, not a proof that nothing
+  else does: **(a)** text after an opening tag that only looks like a script or style one, the
+  class above; **(b)** text after a stray `<` in the page's text, which the digest's tag strip
+  reads as a tag's start, dropping everything up to the next `>`; **(c)** text a script or style
+  draws — a map pop-up, a CSS `content:` label — which the digest does not read, by design; and
+  **(d)** text a browser shows from an attribute — an `<input>` or button `value`, a
+  `placeholder`, an `<option>` `label`, an `<img>` `alt` — and the body of a closed `<script>`
+  written inside a text box such as `<textarea>`, which a browser shows as the box's text. One
+  follow-up card owns (a), (b) and (d), the digest dropping text a browser shows; (c) stays out by
+  design. How many renders carry (a), (b) or (d) is unmeasured: the repository tracks no render.
 - A render with an end tag of another form reads as changed once under that digest, and the gate's
   `unconfirmed` message then says its itinerary content differs from the published plan, when what
   moved is the reading. The remedy is one `confirm`, which the release's changelog entry states.
