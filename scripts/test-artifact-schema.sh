@@ -29173,9 +29173,11 @@ md_flips wtadr26_cell 'WT-ADR26' wtadr26_assert
 #                the plural selector alone, a key cell opening with a selector word in a body
 #                row, as a list item does, a later cell holding the selector alone,
 #                singular and plural, its value in the cell after it, a table row inside a
-#                list item or behind a quote, its key cell read as an unwrapped row's is, and a
+#                list item or behind a quote, its key cell read as an unwrapped row's is, a
 #                header row inside a list item over a delimiter row, its whole table going
-#                with it (23 shapes, 53 canaries).
+#                with it, and a hit a list-wrapped table takes as a row, its payload still
+#                going, beside such a header row inside a payload, its table still going
+#                (24 shapes, 57 canaries).
 #          PJ11  the delimiters a payload must stop at, each with kept lines after it: CRLF
 #                line endings, the closer of a fenced block the label sits in, and the
 #                frontmatter's closing `---`, with and without a byte-order mark, a key after
@@ -29795,6 +29797,29 @@ printf '%s\n' '## Rowan' \
   '- | Z7654321 · CNRY-PJS90 | slow |' \
   '' \
   '- | Pace | slow mornings · KEEP-PJS91 |' > "$PJT_SF"
+pjt_shape 'PJ10[table-list-payload]' shape-table-list-payload model 'CNRY-PJS91 CNRY-PJS92 CNRY-PJS93 CNRY-PJS94' 'KEEP-PJS92 KEEP-PJS93 KEEP-PJS94 KEEP-PJS95 KEEP-PJS96' '  - |---|---|
+- | Documents |' - - 'a hit that a table inside a list item takes as a row, a row and a bold label, its payload still going, and a header row inside a list item that a payload reaches, its table still going'
+printf '%s\n' '## Rowan' \
+  '- Rowan · KEEP-PJS92' \
+  '  - | Passport | Value |' \
+  '  - |---|---|' \
+  '- | Documents | see below |' \
+  '  - entry registration · CNRY-PJS91' \
+  '- **Pace:** slow mornings · KEEP-PJS93' \
+  '' \
+  '- Sam · KEEP-PJS94' \
+  '  - | Passport | Value |' \
+  '  - |---|---|' \
+  '- **Documents:** visa | pending' \
+  '  - entry registration · CNRY-PJS92' \
+  '- **Pace:** slow · KEEP-PJS95' \
+  '' \
+  '- **Documents:** entry registration · CNRY-PJS93' \
+  '- | Passport number | Pace |' \
+  '- |---|---|' \
+  '- | Z1234567 · CNRY-PJS94 | slow |' \
+  '' \
+  '- **Rooming:** own room · KEEP-PJS96' > "$PJT_SF"
 
 pjt_shape 'PJ11[crlf]' shape-crlf model 'CNRY-PJS26 CNRY-PJS27' 'KEEP-PJS24 KEEP-PJS25' "${PJT_CR}
 ${PJT_CR}
