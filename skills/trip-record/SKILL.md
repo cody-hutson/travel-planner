@@ -1411,7 +1411,7 @@ test the readers.
 
 ## group [<name>]
 
-**Reads:** `trips/<slug>/trip-context.md` — the whole of `## Group`, read before it is written because the presence probe on the roster's person column selects adding a row from editing one, the table's own header row fixes the shape a new row is written in, the disposition for `- **Total travelers:**` is chosen from that field's current value and the counted floor, and a row being removed is echoed verbatim before it goes; and `trips/<slug>/outputs/traveler-model.md` — for the outside-roster count and nothing else, read before that disposition is chosen because the counted floor adds it, and on a removal read only once the reconcile that runs before the row comes off has returned, counted from the marks on its `## ` headings and never from a name, and read as zero where the file is absent (§ *Roster standing of a third-party member*). Reads nothing under `trips/<slug>/travelers/` itself — the roster is the traveler denominator and a file count there is not, for the reason stated below. **On a removal, and on no other change**, dispatches `agents/00-enrichment.md` in the same reconciler role `travelers` dispatches — before the row comes off, and once more after it where the row is taken off as a stale row or the person leaving the party is recorded through `/trip-record person` and no stop on their row held the first, supplying for that person the statement that they are not travelling (§ *Removing a row*) — which reads `trips/<slug>/travelers/*.md`, `<store-root>/people/<person-id>.md`, the durable record a file's `person:` line references, and the survivor where that record is a `merged-into:` stub, `trips/<slug>/trip-context.md` and `trips/<slug>/outputs/traveler-model.md` — the model it is about to replace, read before that write because that read is what carries the `[THIRD-PARTY]` entry forward, and that entry has no source file to be re-derived from; and writes `outputs/traveler-model.md` alone. **Non-interactive: the standing clause's *run nobody can answer*.**
+**Reads:** `trips/<slug>/trip-context.md` — the whole of `## Group`, read before it is written because the presence probe on the roster's person column selects adding a row from editing one, the table's own header row fixes the shape a new row is written in, the disposition for `- **Total travelers:**` is chosen from that field's current value and the counted floor, and a row being removed is echoed verbatim before it goes; and `trips/<slug>/outputs/traveler-model.md` — for the outside-roster count and nothing else, read before that disposition is chosen because the counted floor adds it, and on a removal read only once the reconcile that runs before the row comes off has returned, counted from the marks on its `## ` headings and never from a name, and read as zero where the file is absent (§ *Roster standing of a third-party member*). Reads nothing under `trips/<slug>/travelers/` itself — the roster is the traveler denominator and a file count there is not, for the reason stated below. **On a removal, and on no other change**, dispatches `agents/00-enrichment.md` in the same reconciler role `travelers` dispatches — before the row comes off, and once more after it where the row is taken off as a stale row or the person leaving the party is recorded through `/trip-record person` and no stop on their row held the first, supplying for that person the statement that they are not travelling (§ *Removing a row*) — which reads `trips/<slug>/travelers/*.md`, `<store-root>/people/<person-id>.md`, the durable record a file's `person:` line references, and the survivor where that record is a `merged-into:` stub, `trips/<slug>/trip-context.md` and `trips/<slug>/outputs/traveler-model.md` — the model it is about to replace, read before that write because that read is what carries the `[THIRD-PARTY]` entry forward, and that entry has no source file to be re-derived from; and writes `outputs/traveler-model.md` alone. **On a removal, and on no other change**, it also reads `trips/<slug>/.approvers` — the existence probe, and then the whole file, its shape held against the one § `.approvers` writes and its `approver=` keys compared — to say whether the declaration still names the key the removed row's person cell resolves to; it never writes that file, and it does not read `trips/<slug>/.approvals`. **Non-interactive: the standing clause's *run nobody can answer*.**
 
 **Scope — the whole of `## Group`:** the roster table, `- **Total travelers:**`, `- **Travel
 mode:**` and `- **Subgroup notes:**`. § *Write ownership* names the roster and the traveler count on
@@ -1619,11 +1619,28 @@ whose withdrawal this verb carries is decided by its removal rows, once**, again
 floor the first reconcile left, whether or not that second run completes. **Never delete anything
 under `travelers/`**: that file is Layer-1 source and this verb has no delete path to it. Then, for
 a removal no second run followed, name where the person may still appear, without touching any of
-the three: `outputs/traveler-model.md`, until `/trip-record travelers` reconciles it, `## Group`'s
+the four: `outputs/traveler-model.md`, until `/trip-record travelers` reconciles it, `## Group`'s
 prose sub-fields, where the publish guard no longer refuses their name once a withdrawal this verb
-carried drops their entry (`reference/data-architecture.md` § 5.3), and any constraint's
-`Applies to:` line, which is `fact`'s; after a departure whose withdrawal this verb carried, name
-only the last two.
+carried drops their entry (`reference/data-architecture.md` § 5.3), any constraint's
+`Applies to:` line, which is `fact`'s, and `trips/<slug>/.approvers`, where the notice below found
+their key, which is `.approvers`'s; after a departure whose withdrawal this verb carried, name only
+the last three.
+
+**Every removal says whether the approver declaration still names the person, before the row is
+echoed.** The rule is the removal, whichever path above takes the row off; a departure, a duplicate
+or erroneous row, a stale or pending row and a row a reconcile stop names are examples. Read
+`trips/<slug>/.approvers` as the `**Reads:**` line declares, and compare the removed row's person
+cell, normalized as § `.approvers` normalizes a name (`reference/data-architecture.md` § 3.2), with
+each `approver=` key. Where one is equal, say: *the approver declaration still names <name> (key
+`<key>`), and this removal leaves it as it stands; a plan change waits for their approval wherever
+the threshold counts on it, and `/trip-record .approvers` replaces the declaration.* Where the file
+is present but cannot be read, say that whether it names them is unknown, and name the same verb.
+A file that can be read but is not in the exact shape § `.approvers` writes is treated as one that
+cannot be read — its answer is unknown, and `/trip-record .approvers` is named — because the gate
+reads it as malformed and holds every plan change until it is repaired.
+Where it is absent, or no key is equal, say nothing about it. Ask nothing, and write neither
+`.approvers` nor `.approvals`: the declaration is the operator's to restate (`ADR-029`
+§ *Decision* 3; § *Roster standing of a third-party member*, second state).
 
 **After any roster change.** Report `### Per-Traveler Planning Days [DERIVED]` as **stale** and
 **name no command** — that block has no writer in § *Write ownership*, so its staleness is reported

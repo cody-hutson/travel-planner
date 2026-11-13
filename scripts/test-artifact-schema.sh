@@ -433,6 +433,11 @@
 #        for word; and the grade record — one block per generated conversation, its verdict the
 #        conversation rule's over its mech lines, no MET against an unruled mechanical fail or ND, and
 #        no re-roll — each with a control on a copy
+#   RN   the roster edit's approver notice (#1555): § `group` reads the approver declaration on a
+#        removal, says before the echo whether it still names the removed row's key, asks nothing,
+#        writes neither sidecar, and names the declaration in its closing note; the charter's
+#        Step 2 row restates the read. Phrase arms with a strip control each; firing is observed
+#        by a live exercise, never by this tree
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -13402,6 +13407,82 @@ fi
 # own rationale uses to declare a field bullet-less.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
+# ── RN — THE ROSTER EDIT'S APPROVER NOTICE (#1555) ────────────────────────────────────────────
+# A removal from `## Group` that leaves the approver declaration naming the removed person says so,
+# before the row is echoed, and changes nothing. What this group grades is the TREE: the rule, its
+# read and its closing note are stated in § `group`, and the charter's Step 2 row restates the read.
+# It cannot observe the notice firing — a tree of prompt files does not run — so firing is observed
+# by a live exercise of the verb, not here. Each arm counts literal phrases over its section and
+# carries a strip control: each phrase the section carries, taken out of a copy, must drop the count
+# by exactly 1 — so a phrase that is missing reads as missing, not as a broken probe — and a section
+# that never states the rule must count 0.
+echo "RN — the roster edit's approver notice (#1555)"
+rn_count() { # <text> <phrase>... -> how many of the phrases the text carries, read as one line
+  local t n=0 ph
+  t="$(tr '\n' ' ' <<<"$1" | tr -s ' ')"; shift
+  for ph in "$@"; do case "$t" in *"$ph"*) n=$((n + 1)) ;; esac; done
+  printf '%d' "$n"
+}
+rn_strips() { # <text> <phrase>... -> how many phrases, stripped one at a time, drop the count by exactly 1
+  # Stripped through er_sub1, an awk index() splice: bash's ${var/pat/rep} is quadratic on a section this long.
+  local t n0 ph ok=0 c
+  t="$(tr '\n' ' ' <<<"$1" | tr -s ' ')"; shift
+  n0="$(rn_count "$t" "$@")"
+  for ph in "$@"; do
+    c="$(rn_count "$(er_sub1 "$t" "$ph" zzq-stripped)" "$@")"
+    [ "$c" -eq $((n0 - 1)) ] && ok=$((ok + 1))
+  done
+  printf '%d' "$ok"
+}
+RN_SEC="$(er_section "$ER_CMD" "group [")"
+RN_APP="$(er_section "$ER_CMD" ".approvers ")"
+RN_READS="$(grep -m1 '^\*\*Reads:\*\*' <<<"$RN_SEC")"
+RN_RULE=( 'Every removal says whether the approver declaration still names the person, before the row is echoed.'
+          'normalized as § `.approvers` normalizes a name'
+          'the approver declaration still names <name>'
+          '`/trip-record .approvers` replaces the declaration'
+          'say that whether it names them is unknown'
+          'A file that can be read but is not in the exact shape § `.approvers` writes is treated as one that cannot be read'
+          'Where it is absent, or no key is equal, say nothing about it.'
+          'Ask nothing, and write neither `.approvers` nor `.approvals`' )
+RN_READ=( '**On a removal, and on no other change**, it also reads `trips/<slug>/.approvers`'
+          'then the whole file, its shape held against the one § `.approvers` writes'
+          'it does not read `trips/<slug>/.approvals`' )
+RN_NOTE=( 'without touching any of the four'
+          '`trips/<slug>/.approvers`, where the notice below found their key'
+          'name only the last three' )
+RN_OLD=( 'without touching any of the three' 'name only the last two' )
+RN_R_N="$(rn_count "$RN_SEC" "${RN_RULE[@]}")";  RN_R_S="$(rn_strips "$RN_SEC" "${RN_RULE[@]}")";  RN_R_X="$(rn_count "$RN_APP" "${RN_RULE[@]}")"
+RN_D_N="$(rn_count "$RN_READS" "${RN_READ[@]}")"; RN_D_S="$(rn_strips "$RN_READS" "${RN_READ[@]}")"; RN_D_X="$(rn_count "$(grep -m1 '^\*\*Reads:\*\*' <<<"$RN_APP")" "${RN_READ[@]}")"
+RN_N_N="$(rn_count "$RN_SEC" "${RN_NOTE[@]}")";  RN_N_S="$(rn_strips "$RN_SEC" "${RN_NOTE[@]}")";  RN_N_OLD="$(rn_count "$RN_SEC" "${RN_OLD[@]}")"
+RN_N_PLANT="$(rn_count "$RN_SEC zzq without touching any of the three zzq" "${RN_OLD[@]}")"
+if [ -z "$RN_SEC" ] || [ -z "$RN_APP" ] || [ -z "$RN_READS" ]; then
+  FAIL "RN1: measured nothing — § \`group\` read=$([ -n "$RN_SEC" ] && echo 1 || echo 0), § \`.approvers\` read=$([ -n "$RN_APP" ] && echo 1 || echo 0), its read line found=$([ -n "$RN_READS" ] && echo 1 || echo 0) in $ER_CMD"
+elif [ "$RN_R_S" -ne "$RN_R_N" ] || [ "$RN_R_X" -ne 0 ]; then
+  FAIL "RN1: BROKEN PROBE — $RN_R_S of the $RN_R_N phrases § \`group\` carries, stripped one at a time from a copy, dropped the count by exactly 1, and § \`.approvers\` carries $RN_R_X of them (want $RN_R_N and 0)"
+elif [ "$RN_R_N" -ne "${#RN_RULE[@]}" ]; then
+  FAIL "RN1: § \`group\` carries $RN_R_N of the notice rule's ${#RN_RULE[@]} operative phrases — a removal that leaves the declaration naming the person can go silent, or the notice can ask, or write a sidecar"
+else
+  PASS "RN1: § \`group\` states the notice as a rule over every removal — all ${#RN_RULE[@]} operative phrases: said before the echo, keyed by the § 3.2 key against each approver= key, naming \`/trip-record .approvers\`, unknown named where the file cannot be read or is off the shape § \`.approvers\` writes, silent where nothing is declared or no key is equal, asking nothing and writing neither sidecar; each phrase stripped drops the count by 1, and § \`.approvers\` carries none"
+fi
+if [ "$RN_D_S" -ne "$RN_D_N" ] || [ "$RN_D_X" -ne 0 ]; then
+  FAIL "RN2: BROKEN PROBE — $RN_D_S of the $RN_D_N read-line phrases the line carries, stripped one at a time, dropped the count by exactly 1, and § \`.approvers\`'s read line carries $RN_D_X of them (want $RN_D_N and 0)"
+elif [ "$RN_D_N" -ne "${#RN_READ[@]}" ]; then
+  FAIL "RN2: § \`group\`'s **Reads:** line carries $RN_D_N of the ${#RN_READ[@]} phrases declaring the declaration read — the notice reads a file its read line does not declare"
+else
+  PASS "RN2: § \`group\`'s **Reads:** line declares the read the notice needs — \`.approvers\` on a removal alone, the whole file held against § \`.approvers\`'s shape, and no \`.approvals\` read; each phrase stripped drops the count by 1, and § \`.approvers\`'s own read line carries none"
+fi
+RN_ROW="$(grep -F '| `/trip-record group` |' "$ROOT/CLAUDE.md")"
+RN_ROW_N="$(rn_count "$RN_ROW" 'the shape and the `approver=` keys of `.approvers`')"
+RN_ROW_X="$(rn_count "$(er_sub1 "$RN_ROW" 'approver=' 'zzq=')" 'the shape and the `approver=` keys of `.approvers`')"
+if [ "$RN_N_S" -ne "$RN_N_N" ] || [ "$RN_N_PLANT" -ne 1 ] || [ -z "$RN_ROW" ] || [ "$RN_ROW_X" -ne 0 ]; then
+  FAIL "RN3: BROKEN PROBE — $RN_N_S of the $RN_N_N closing-note phrases the section carries stripped dropped the count by 1, an old count phrase planted was counted $RN_N_PLANT time(s) (want 1), the charter's Step 2 row was found=$([ -n "$RN_ROW" ] && echo 1 || echo 0) and its phrase stripped counts $RN_ROW_X (want 0)"
+elif [ "$RN_N_N" -ne "${#RN_NOTE[@]}" ] || [ "$RN_N_OLD" -ne 0 ] || [ "$RN_ROW_N" -ne 1 ]; then
+  FAIL "RN3: the closing note carries $RN_N_N of ${#RN_NOTE[@]} phrases and $RN_N_OLD of the old counts (want ${#RN_NOTE[@]} and 0), and the charter's Step 2 row names the declaration read $RN_ROW_N time(s) (want 1)"
+else
+  PASS "RN3: the removal's closing note names the declaration among the places the person may still appear, its counts read four and three with no old count left, and the charter's Step 2 row restates the read; every phrase stripped drops its count, and a planted old count is found"
+fi
+
 echo "RL — reconcile-on-link: the survey's two witnesses"
 
 RL_RAN=0
