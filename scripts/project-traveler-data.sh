@@ -43,8 +43,13 @@
 # front. A bracket is tested before it is taken off: where its content, stripped the same
 # way, begins with a selector, that content is the label, so `[Passport] …`, link text and
 # `**[Documents]:**` are hits, and so is an all-capitals mark that opens with a selector;
-# any other bracket, `[ ]`, `[x]` and `[OPERATOR-PROVIDED]` among them, is a mark. A table row is a hit when any one of its cells, stripped the same way, begins with a
-# selector. Every test reads the line with a trailing carriage return taken off, a byte-order
+# any other bracket, `[ ]`, `[x]` and `[OPERATOR-PROVIDED]` among them, is a mark. A TABLE ROW
+# is a hit when a cell holds a label: its text, stripped the same way, begins with a
+# selector and either carries a `:`, its text before the colon being the label, or is the
+# selector alone. A row with a cell that begins with a selector but holds no label is a hit
+# only as a header row, over a `|---|` delimiter row; any other such row is kept, so a needs
+# row whose text opens with `Documents for …` stays. The first cell of a row with no leading
+# pipe is the line's own opening, and the line rule reads it. Every test reads the line with a trailing carriage return taken off, a byte-order
 # mark taken off the first line, and each no-break space read as a space; what is printed is
 # the line as read. The comparison is a substring test, never a regex built from a selector:
 # a selector is corpus text, and one carrying a regex metacharacter must not silently become
@@ -306,9 +311,28 @@ pj_project_file() {   # pj_project_file <selectors> <file>
       }
       return 0
     }
-    # A hit: the stripped line opens with a selector, or, where it holds a `|`, a cell does.
+    # A table cell holds a label when it opens with a selector and either carries a `:`, so
+    # that its text before the colon is the label, or holds the selector alone.
+    function cellhit(t,   i, r) {
+      if (!opens(t)) return 0
+      if (index(t, ":")) return 1
+      r = tolower(t); gsub(/[*_`~ \t]/, "", r)
+      for (i = 1; i <= m; i++) if (r == sel[i] || r == sel[i] "s") return 1
+      return 0
+    }
+    # A hit: the stripped line opens with a selector, or, where it holds a `|`, a cell holds
+    # a label.
     function label(u,   s, k, i, cell) {
       if (opens(cut(u))) return 1
+      if (!index(u, "|")) return 0
+      s = u; gsub(/\\\|/, "", s)
+      k = split(s, cell, "|")
+      for (i = 1; i <= k; i++) if (cellhit(cut(cell[i]))) return 1
+      return 0
+    }
+    # A row with a cell that opens with a selector, a label or not: the header row of a
+    # table when the line after it is a delimiter row.
+    function hrow(u,   s, k, i, cell) {
       if (!index(u, "|")) return 0
       s = u; gsub(/\\\|/, "", s)
       k = split(s, cell, "|")
@@ -335,6 +359,9 @@ pj_project_file() {   # pj_project_file <selectors> <file>
       # A table: after a header-row hit its delimiter row and every row below it go.
       if (tbl) { if (!blank(u) && index(u, "|")) next; tbl = 0 }
       if (thd) { thd = 0; if (delimrow(u)) { tbl = 1; next } }
+      # A row held for the line after it: over a delimiter row it is a header row, and its
+      # table goes; over anything else it is printed.
+      if (thc) { thc = 0; if (delimrow(u)) { tbl = 1; next }; print hold }
       # A heading hit: its section, up to a heading of the same or a higher level.
       if (taking == 2) {
         lv = hlevel(u)
@@ -359,9 +386,12 @@ pj_project_file() {   # pj_project_file <selectors> <file>
         if (opened) payf = 1
         next
       }
+      # A row with a cell that opens with a selector but holds no label waits for the line
+      # after it, which decides whether it is a header row.
+      if (!inf && !infm && hrow(u)) { hold = $0; thc = 1; next }
       print
     }
-    END { if (pend) printf "%s", pbuf }' "$f"
+    END { if (pend) printf "%s", pbuf; if (thc) print hold }' "$f"
 }
 
 # A trip's projection: the source choice, the header, and the buffered output. Prints
