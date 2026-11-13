@@ -947,11 +947,11 @@ never listed.
 At **site build** and again at every **site update**, the walk runs three passes over σ, the
 trip's resolved mode and its destination's disposition:
 
-1. **Artifact pass.** Contract half, on the tracked tree: every `bound` class and scaffolding
-   token has a render-table row for each state the `site` row admits, each row names one of them
-   and an admitted state, and each `excluded` row is named in § 9.3 in that state. Instance half,
-   at the verb: every artifact the table renders in σ is readable; one that is not is a degraded
-   read, never a smaller site.
+1. **Artifact pass.** Contract half, on the tracked tree: every `bound` class, and every
+   scaffolding token the table names, has a render-table row for each state the `site` row admits,
+   each row names one of them and an admitted state, and each `excluded` row is named in § 9.3 in
+   that state. Instance half, at the verb: every artifact the table renders in σ is readable; one
+   that is not is a degraded read, never a smaller site.
 2. **Element pass.** The walk below, once per rendered artifact, against its own element fence.
 3. **Shape pass.** The render carries no § 3 component σ does not admit — the surplus direction;
    the deficit stays with the element pass. A section a patch leaves behind across a change of
