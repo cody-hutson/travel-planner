@@ -40,7 +40,10 @@
 # number:`, `Passports held:` and `Passport-country note` are all hits. STRIPPED means:
 # leading blockquote markers, whitespace, one list marker, then any run of emphasis
 # characters, heading marks (`#`), bracketed marks and `<!--` comment openers, taken off the
-# front. A table row is a hit when any one of its cells, stripped the same way, begins with a
+# front. A bracket is tested before it is taken off: where its content, stripped the same
+# way, begins with a selector, that content is the label, so `[Passport] …`, link text and
+# `**[Documents]:**` are hits, and so is an all-capitals mark that opens with a selector;
+# any other bracket, `[ ]`, `[x]` and `[OPERATOR-PROVIDED]` among them, is a mark. A table row is a hit when any one of its cells, stripped the same way, begins with a
 # selector. Every test reads the line with a trailing carriage return taken off, a byte-order
 # mark taken off the first line, and each no-break space read as a space; what is printed is
 # the line as read. The comparison is a substring test, never a regex built from a selector:
@@ -262,12 +265,18 @@ pj_project_file() {   # pj_project_file <selectors> <file>
     }
     # A table delimiter row, such as |---|:--:|.
     function delimrow(s) { return s ~ /^[ \t]*[|: \t-]+$/ && index(s, "|") && index(s, "-") }
-    function cut(s) {
+    function cut(s,   r, b) {
       sub(/^[ \t]+/, "", s)
       if (match(s, /^([-*+]|[0-9]+[.)])([ \t]+|$)/)) s = substr(s, RLENGTH + 1)
       while (1) {
         if (match(s, /^[*_`~# \t]+/)) { s = substr(s, RLENGTH + 1); continue }
-        if (match(s, /^\[[^]]*\]/)) { s = substr(s, RLENGTH + 1); continue }
+        # A bracket is tested as a label before it is taken off as a mark: one whose content
+        # opens with a selector is that label.
+        if (match(s, /^\[[^]]*\]/)) {
+          r = RLENGTH; b = cut(substr(s, 2, r - 2))
+          if (opens(b)) return b
+          s = substr(s, r + 1); continue
+        }
         if (substr(s, 1, 4) == "<!--") { s = substr(s, 5); continue }
         break
       }
