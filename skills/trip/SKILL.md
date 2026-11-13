@@ -126,14 +126,11 @@ reading `DECIDED` names `G6`'s decided disposition — the complement of `UNDECI
 value set the contract declares for `trip.destination`, which is the value or `UNDECIDED` —
 and it is written as a value rather than as `any` because `any` admits the
 non-nominal state by `G7`'s own rule, and a verb that must not run without a settled
-destination has to say so in its own row. The token is a convention of this file until the
-contract registers one for that disposition. What the guards read of this column is its
-**name**: `scripts/test-command-taxonomy.sh` matches the header row against the five column
-names and freezes them, while the cell beneath carries no value either guard goes on to
-consume — the depth cell and the verb cell are the ones they read. So the convention costs
-nothing while it waits, and any token naming `G6`'s decided disposition serves in its
-place; a consumer of the cell is what would end that, and is what registering the token
-would be for.
+destination has to say so in its own row. `G6` declares the token. What the guards read of
+this column is its **name**: `scripts/test-command-taxonomy.sh` matches the header row against
+the five column names and freezes them, and of the cells beneath they read the depth cell and
+the verb cell. The one destination cell read is the `site` row's: `scripts/check-round-trip.sh`
+holds it to the dispositions `G6` declares.
 
 **The read ceiling, stated for this file.** Exactly two prohibitions hold file-general, and
 both are checkable against every `**Reads:**` line below: **no verb reads `trip-context.md`
@@ -1140,8 +1137,9 @@ the plan was published, save the later acts the paragraph on what dates the `upd
 a revert, and the act after a change abandoned before any approval — and
 because a date taken from this build instead would restart § 3's window on every rebuild; `reference/site-layout-spec.md` — the responsive architecture, the card
 system, the booking indicators and the § 9 round-trip rules; that same document's § 9.2
-round-trip contract fence and § 3 component catalog, together with
-`agents/05-hub-planner.md`'s itinerary grammar — read by `scripts/check-round-trip.sh`, the
+round-trip fences, § 9.3 and § 3 component catalog, together with
+`agents/05-hub-planner.md`'s itinerary grammar, `reference/data-architecture.md` § 1.1,
+`CLAUDE.md`'s `G5` and `G6` and this file's `site` row — read by `scripts/check-round-trip.sh`, the
 script the completeness check below invokes, rather than by this verb; the itinerary sources the
 § *Site References* table names, read as the quality bar rather than as templates;
 `trips/<slug>/outputs/<destination>-travel-site.html` — the **existence probe** that selects
@@ -1297,6 +1295,10 @@ and carries the itinerary grammar and the site-layout spec the walk grades again
 is the **trip** root and carries the plan and the render. The script defaults `--root` to its own
 parent directory, which is correct for an installed engine, so only `--data-root` is appended
 here — the same seam `schema` states below for the same reason.
+
+**Append `--state <trip.mode>:<disposition>` to the line above as well**: σ, the state the walk
+checks the page's shape against. The disposition is `UNDECIDED` where `trip.destination` is
+`UNDECIDED`, and `DECIDED` otherwise — never the destination itself.
 
 **What it reports.** The script's own findings, rendered unaltered. This verb adds no verdict of
 its own and suppresses none of the script's. **Where the check does not close, say which element

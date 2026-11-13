@@ -61,6 +61,7 @@ same reader. Rows stand in byte order of the path.
 ```size-ceiling
 # ceiling  path
 153381     CLAUDE.md
+22215      CONTRIBUTING.md
 82813      agents/00-enrichment.md
 26506      agents/01-activities.md
 32180      agents/02-food.md

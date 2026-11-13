@@ -51,7 +51,10 @@ that also claim `required`, sits in a workflow that `pull_request` triggers with
 `branches:` list that leaves out `main`, no `branches-ignore:` list that names it unless an entry opens with `!`
 and no `types:` list that leaves out `synchronize`, and is listed both in `CONTEXT_ORDER` in
 `scripts/pin-required-checks.py` and in [SECURITY.md](SECURITY.md), *Branch Protection
-Posture*.
+Posture*. Once the change that adds a required job merges, the operator registers its
+context with `scripts/pin-required-checks.py --register`; a renamed job's old context is
+removed from the branch's required checks by hand, since `--register` refuses a live context
+the declaration no longer carries.
 
 ### Locale posture of the guard suites
 
@@ -183,8 +186,8 @@ outcome is cleared by the regrade, after which the section names the fresh grade
 is never merged over.
 
 **Nothing in a release is committed to `main` directly** — not the CHANGELOG, not
-anything else. A direct push to `main` skips the pull-request requirement and all
-ten required checks in a single step; see [SECURITY.md](SECURITY.md), *Branch
+anything else. A direct push to `main` skips the pull-request requirement and every
+required check in a single step; see [SECURITY.md](SECURITY.md), *Branch
 Protection Posture*, for why that is possible and what it costs. The personal-data
 gate also runs on pushes to `main`, so such a push is scanned and reported — but
 after it has landed, not before.

@@ -51,12 +51,14 @@ MODES
         of required checks to CONTEXT_ORDER in both directions (group F). Every
         census arm builds and grades a synthetic tree in a temporary directory,
         never this repository's workflows. It runs the assertion matrix, the
-        conjunct-removal matrix, the orchestrator guard arms, the census arms and
-        the SECURITY.md arm. This is the arm that makes the tool trustworthy before
-        it is ever pointed at a live branch, and it is the arm to run in CI: the
-        census step in .github/workflows/security.yml runs it ahead of the census
-        on every pull request. It needs PyYAML for the census arms; without it the
-        census group reports itself NOT-EVALUATED and the self-test fails.
+        conjunct-removal matrix, the orchestrator guard arms, the restore arms,
+        the registration, keyed-scope and register-then-restore arms, the
+        census arms and the SECURITY.md arm. This is the arm that makes the
+        tool trustworthy before it is ever pointed at a live branch, and it is
+        the arm to run in CI: the census step in .github/workflows/security.yml
+        runs it ahead of the census on every pull request. It needs PyYAML for
+        the census arms; without it the census group reports itself
+        NOT-EVALUATED and the self-test fails.
 
     --census [--root DIR]
         Offline. Reads every workflow under .github/workflows through a YAML
@@ -96,17 +98,81 @@ MODES
     --apply --staging DIR --confirm-write
         The full sequence: self-test, capture, drift-check, compose, write,
         fresh read-back assert, and a scope-containment diff of the full
-        protection object. `--confirm-write` is mandatory: without it `--apply`
-        runs every step up to the write and then stops, so the dangerous mode
-        cannot be reached by a typo or a stale shell-history line.
+        protection object, which must differ at the app_id of each entry the
+        write pins and nowhere else: two leaves for each such entry, its app_id
+        as captured and at APP_ID. `--confirm-write` is mandatory: without it
+        `--apply` runs every step up to the write and then stops, so the
+        dangerous mode cannot be reached by a typo or a stale shell-history
+        line.
         It pins a context set that already equals CONTEXT_ORDER and never adds
         one: a live set that differs -- a context declared and not yet
         registered, or one retired -- stops at the drift guard (exit 4) before
-        anything is written.
+        anything is written. A declared context not yet registered is added
+        by --register.
+
+    --register --context NAME [--context NAME ...] --staging DIR --confirm-write
+        Registration. Adds the named contexts to the branch's required checks
+        through the required_status_checks endpoint, pinned to APP_ID, and
+        changes nothing else. It admits the write only when the live set
+        lies inside CONTEXT_ORDER with no duplicate and the contexts named
+        are exactly the declared ones the live set lacks, and refuses at exit
+        4 otherwise, before anything is written. The payload adds the delta
+        the tool derives; the write is then graded against the names, so two
+        sources must agree before anything is written. When the live set
+        already holds every declared context it writes nothing. A live
+        context not pinned to APP_ID is carried over as it is read, and
+        --apply pins it afterwards. Exit 0 means the branch then passes the
+        --assert conjuncts: a run that leaves such an entry unpinned, after a
+        verified write or with nothing to add, prints NOT PINNED with the
+        entries, names --apply next, and exits 1. After a write, that --apply
+        runs from a fresh --staging directory: this one then holds the
+        registration's rollback point, which --apply refuses to replace and
+        --restore reads, and the output says so. Whether the host accepts
+        `app_id: null` on that write was not measured. If it refuses, nothing
+        changes (exit 7). If it treats null as omitted, as its documentation
+        describes for an omitted `app_id`, the write lands with that entry
+        pinned to an app, the read-back differs from the payload (exit 1), and
+        --restore cannot return that entry by the same write; it prints the
+        POST .../contexts fallback. The sequence is --apply's: self-test,
+        capture (refused at exit 3 when the staging directory already holds a
+        different rollback point; rsc-RESTORE.json is written from it before
+        admission), admission, compose, write, a read-back that must equal the
+        payload and pass the --assert conjuncts, and a scope check keyed by
+        context name across `checks` and `contexts` that fails on any other
+        added, removed or changed context and on any other moved setting.
+        --restore is its rollback. Run it from a checkout of the protected
+        branch once the change that declares the context has merged: a
+        context registered before a workflow on that branch reports it blocks
+        every pull request, and the mode cannot see where it runs.
 
     --restore --staging DIR --confirm-write
-        Rollback. Re-applies the captured pre-change sub-resource verbatim,
-        `app_id: null` included.
+        Rollback. Re-applies the sub-resource captured before the write it
+        rolls back -- rsc-PRE.json, composed into the payload rsc-RESTORE.json
+        holds -- verbatim, `app_id: null` included, to the same narrow
+        endpoint, and reads it back: the read-back must equal that payload
+        (exit 1 otherwise, exit 7 when it cannot be read). The body it sends
+        is that payload, composed from rsc-PRE.json, never the bytes of an
+        rsc-RESTORE.json already in the directory, so a member that file
+        carries beside strict and the checks is not sent. It refuses at exit 3
+        when rsc-PRE.json is missing or unreadable, or when an
+        rsc-RESTORE.json already in the directory is not the payload
+        rsc-PRE.json composes; an rsc-RESTORE.json with no rsc-PRE.json beside
+        it is refused too, and copying it to rsc-PRE.json is how to say that
+        it is the capture. It refuses at exit 3 as well, nothing written, when
+        it cannot write the rsc-RESTORE.json it composes where none is there,
+        so a staging directory it cannot write to refuses unless that file is
+        already present, as --apply and --register leave it, and when it
+        cannot stage the body it sends in the system's temporary directory.
+        It does not run the self-test: a rollback is never refused for a
+        reason that has nothing to do with it, and its arms run in CI on
+        every pull request. Whether the host accepts `app_id: null` on that
+        write was not measured. If it refuses, nothing changes (exit 7). If
+        it treats null as omitted, as its documentation describes for an
+        omitted `app_id`, the write lands with that entry pinned to an app,
+        the read-back differs (exit 1), and the same write cannot return it.
+        Either way the restore prints the fallback: PATCH the pinned
+        contexts, then POST each unpinned context name to
+        .../required_status_checks/contexts.
 
 EXIT CODES
     0  the mode's assertion held
@@ -117,23 +183,41 @@ EXIT CODES
        each refusal carries a code from REFUSAL_CODES and names the file.
        "I cannot vouch for this file" is a refusal, never a finding, so it
        never shares exit 1)
-    3  CAPTURE REFUSED -- no rollback artifact, so nothing was written
-    4  the live required-context set has drifted from the expected set
-    5  the self-test did not pass, so no live mode may run
+    3  CAPTURE REFUSED -- no rollback artifact, one whose provenance does not
+       hold, or a staging directory that already holds a different one, so
+       nothing was written; for --restore, also a file it could not write or
+       stage before the write
+    4  the live required-context set has drifted from the expected set, or is
+       not one --register admits
+    5  the self-test did not pass, so no mode that writes, nor --plan, may run
+       (--plan, --apply, --register; --restore does not consult it)
     6  a write was required but `--confirm-write` was not given (nothing written)
     7  the write itself, or its read-back, failed at the transport layer
 
 STAGING DIRECTORY
     Pass `--staging <dir>`; the tool writes `<dir>/prot-PRE.json`,
     `<dir>/rsc-PRE.json`, `<dir>/rsc-PATCH.json`, `<dir>/rsc-RESTORE.json` and,
-    after a write, `<dir>/prot-POST.json`. No path is compiled in, so the
-    artifacts land wherever the operator keeps them -- deliberately NOT in this
-    repository, which is public and where a protection snapshot would both
-    disclose configuration and rot as corpus.
+    after a write, `<dir>/prot-POST.json`. --restore stages the body it sends
+    in a file in the system's temporary directory and removes it before that
+    step ends, however it ends. No path is compiled in, so the artifacts land
+    wherever the operator keeps them -- deliberately NOT in this repository,
+    which is public and where a protection snapshot would both disclose
+    configuration and rot as corpus.
+
+    A staging directory holds one rollback point. --plan, --apply and
+    --register refuse at exit 3, before writing anything, when the rsc-PRE.json
+    already there differs from their new capture, its checks compared in any
+    order: that file is the rollback point of an earlier run, and --restore
+    reads it. Restore from it, or pass a fresh directory. They refuse the same
+    way when that file cannot be read and keyed as a sub-resource, or carries no
+    checks: it may be an earlier run's rollback point, and --restore cannot read
+    it either, so keep it, inspect it by hand, and pass a fresh directory. An
+    equal capture -- a dry run followed by the confirmed run -- replaces it.
 """
 
 import argparse
 import hashlib
+import io
 import json
 import os
 import re
@@ -449,10 +533,10 @@ def evaluate(raw, disabled=frozenset()):
 # WHAT A GREEN CENSUS DOES NOT MEAN. `GITHUB_TOKEN` cannot read the branch
 # protection API, so no check running in this repository's CI can confirm that
 # a context is REGISTERED. Registration remains an operator act outside any pull
-# request: --apply pins the contexts already registered, and a new context is
-# registered through the required_status_checks endpoint and read back with
-# --assert. The census makes an omission visible at pull-request time; it cannot
-# make one impossible.
+# request: --apply pins the contexts already registered, and --register adds a
+# declared context that is not yet registered, through the required_status_checks
+# endpoint, reading it back with the --assert conjuncts. The census makes an
+# omission visible at pull-request time; it cannot make one impossible.
 # ==========================================================================
 
 def repo_root():
@@ -611,9 +695,10 @@ CENSUS_PRINT = {
 
 CENSUS_REMEDY = (
     "  UNREGISTERED  a job claims to bind and the declaration does not carry it.",
-    "                Add the context to CONTEXT_ORDER in this file AND ask the",
-    "                operator to register it in branch protection -- or declare",
-    "                the job `posture=advisory` and say why in the line beneath.",
+    "                Add the context to CONTEXT_ORDER in this file and to",
+    "                SECURITY.md; once that change merges, the operator",
+    "                registers it with --register -- or declare the job",
+    "                `posture=advisory` and say why in the line beneath.",
     "  ABSENT        the declaration carries a context no job claims. The job was",
     "                renamed or removed; protection now waits on a check that",
     "                can never report.",
@@ -648,9 +733,9 @@ def _load_yaml():
     """The YAML parser the census reads with: PyYAML, imported here and only here.
 
     A function rather than a module-level import, so --assert and --restore never
-    need the parser -- --plan and --apply run the self-test first, and its census
-    arms do -- and so the self-test can hand the census a loader that fails (X95)
-    and watch it refuse.
+    need the parser -- --plan, --apply and --register run the self-test first,
+    and its census arms do -- and so the self-test can hand the census a loader
+    that fails (X95) and watch it refuse.
     """
     import yaml
     return yaml
@@ -1069,7 +1154,8 @@ def run_census(root, stream=sys.stdout, load=_load_yaml):
 _CENSUS_LIMIT = (
     "WHAT THIS DOES NOT ESTABLISH: `GITHUB_TOKEN` cannot read the branch protection",
     "API, so this census cannot confirm that any context is REGISTERED.",
-    "Registration remains an operator act outside any pull request.",
+    "Registration remains an operator act outside any pull request, made with",
+    "--register once the change that declares the context has merged.",
     "",
     "HOW IT READS. Every workflow file is read through a YAML parser -- PyYAML's",
     "pure-Python SafeLoader, composed to nodes and never constructed into objects --",
@@ -1161,6 +1247,35 @@ def _open_counts(text):
 # Transport
 # ==========================================================================
 
+def protection_paths(repo, branch):
+    """The two paths the tool addresses, built here once for every mode: the
+    full protection object, which it only reads, and the required_status_checks
+    sub-resource, the one path it writes."""
+    base = "repos/{}/branches/{}".format(repo, branch)
+    return (base + "/protection", base + SUBRESOURCE_SUFFIX)
+
+
+# The one path shape gh_patch_json writes, matched in full. A suffix test also
+# admits a path that doubles /protection, which is the path --restore once wrote.
+# Each segment is letters, digits, ".", "_" and "-", and is never "." or "..".
+_RSC_SEGMENT = r"(?!\.\.?/)[A-Za-z0-9._-]+"
+_RE_RSC_WRITE_PATH = re.compile(
+    r"repos/{0}/{0}/branches/{0}/protection/required_status_checks".format(_RSC_SEGMENT))
+
+
+def rsc_write_path_ok(path):
+    """True only for repos/OWNER/NAME/branches/BRANCH/protection/required_status_checks.
+
+    A full match of that shape rather than a suffix test, because `endswith`
+    admits the doubled path. Each segment is letters, digits, `.`, `_` and `-`,
+    and is never `.` or `..`, so a branch name containing `/`, a dot-segment, a
+    query string and a percent-encoded separator are each refused: the tool
+    guards `main`, and refusing a shape nobody foresaw is the fail-closed
+    direction.
+    """
+    return bool(_RE_RSC_WRITE_PATH.fullmatch(path))
+
+
 def gh_fetch_json(path):
     """GET `path` through `gh api`. Returns (ok, text, err). Never raises."""
     try:
@@ -1179,11 +1294,13 @@ def gh_patch_json(path, payload_file):
 
     The narrow-endpoint invariant is re-checked HERE, at the point of the write,
     rather than only where the path is built -- so a later edit that widens the
-    target has to defeat the check at the write itself.
+    target has to defeat the check at the write itself. The check is
+    rsc_write_path_ok, a full match of the one path shape the tool writes.
     """
-    if not path.endswith(SUBRESOURCE_SUFFIX):
+    if not rsc_write_path_ok(path):
         return (False, "", "INVARIANT VIOLATED: refusing to write to {!r}; this "
-                           "tool writes only to {}".format(path, SUBRESOURCE_SUFFIX))
+                           "tool writes only to repos/OWNER/NAME/branches/BRANCH"
+                           "{}".format(path, SUBRESOURCE_SUFFIX))
     try:
         proc = subprocess.run(
             ["gh", "api", "-X", "PATCH", path, "--input", payload_file],
@@ -1311,6 +1428,122 @@ def _normalise(obj):
     return out
 
 
+def _rollback_digest(rsc_obj):
+    """The digest rollback points are compared by: canonical, with `checks` and
+    `contexts` sorted as _normalise sorts them, so an equal capture returned in
+    another order reads as equal."""
+    return canonical_digest(_normalise({"required_status_checks": rsc_obj}))
+
+
+def capture_rollback_point(fetch, prot_path, rsc_path, staging):
+    """Capture the full object and the sub-resource into `staging`, and refuse,
+    before either file is written, when the directory already holds a different
+    rollback point. Returns (pre_full, pre_rsc); raises CaptureRefused.
+
+    Every mode that captures does so through here, so none can depart from the
+    rule: a staging directory holds one rollback point, and --restore reads it.
+    When an rsc-PRE.json is already there and its _rollback_digest differs from
+    the new capture's, the earlier run's rollback point is kept and nothing is
+    written; an equal capture, such as a dry run followed by the confirmed run,
+    replaces it. An rsc-PRE.json that cannot be read, whose checks _restore_key
+    cannot key, or whose checks array is empty is refused the same way, before
+    anything is fetched, because nothing can show that it is not a rollback
+    point. Those are the files read_rollback_point refuses, so that refusal
+    names a fresh directory alone: --restore cannot read the file either. The
+    refusal of a different rollback point names --restore, which reads it.
+    """
+    pre_full_f = os.path.join(staging, "prot-PRE.json")
+    pre_rsc_f = os.path.join(staging, "rsc-PRE.json")
+    prior, unreadable = None, None
+    if os.path.exists(pre_rsc_f):
+        try:
+            with open(pre_rsc_f, encoding="utf-8") as fh:
+                prior = json.load(fh)
+        except (OSError, ValueError) as exc:
+            unreadable = str(exc)
+        else:
+            key = _restore_key(prior)
+            if key is None or not key[1]:
+                unreadable = "it carries no non-empty checks array of named contexts"
+        if unreadable is not None:
+            raise CaptureRefused(
+                "an rsc-PRE.json is already in {} and cannot be read ({}), so it may "
+                "be the rollback point of an earlier run, and --restore cannot read it "
+                "either -- keep it, inspect it by hand, and pass a fresh --staging "
+                "directory".format(staging, unreadable))
+    pending = (pre_full_f + ".pending", pre_rsc_f + ".pending")
+    try:
+        pre_full = capture(fetch, prot_path, pending[0], "full protection object")
+        pre_rsc = capture(fetch, rsc_path, pending[1], "required_status_checks")
+        if prior is not None and _rollback_digest(prior) != _rollback_digest(pre_rsc):
+            raise CaptureRefused(
+                "this directory holds the rollback point of an earlier run; restore "
+                "from it, or pass a fresh --staging directory. Its rsc-PRE.json "
+                "digests to {} and this capture to {} (sha256, canonical, checks "
+                "sorted)".format(_rollback_digest(prior), _rollback_digest(pre_rsc)))
+        try:
+            os.replace(pending[0], pre_full_f)
+            os.replace(pending[1], pre_rsc_f)
+        except OSError as exc:
+            raise CaptureRefused("could not move the capture into {} -- {}".format(
+                staging, exc))
+    finally:
+        for path in pending:
+            if os.path.exists(path):
+                os.remove(path)
+    return pre_full, pre_rsc
+
+
+def _restore_key(obj):
+    """`strict` and the sorted (context, json.dumps(app_id)) pairs of a payload or
+    a sub-resource, or None when it is not one. json.dumps keeps 15368, "15368",
+    true and null apart, so a changed type reads as a difference."""
+    if not isinstance(obj, dict):
+        return None
+    rsc = obj.get("required_status_checks", obj)
+    checks = rsc.get("checks") if isinstance(rsc, dict) else None
+    if not isinstance(checks, list):
+        return None
+    if not all(isinstance(c, dict) and isinstance(c.get("context"), str) for c in checks):
+        return None
+    return (rsc.get("strict", False),
+            sorted((c["context"], json.dumps(c.get("app_id"))) for c in checks))
+
+
+def read_rollback_point(staging):
+    """rsc-PRE.json, read as the rollback point --restore re-applies.
+
+    Raises CaptureRefused when it is missing, unreadable, not JSON, or carries no
+    non-empty checks array, so a malformed file is a refusal and never a
+    traceback. An rsc-RESTORE.json with no rsc-PRE.json beside it is refused too:
+    nothing vouches for it, and copying it to rsc-PRE.json is how to say that it
+    is the capture.
+    """
+    pre_f = os.path.join(staging, "rsc-PRE.json")
+    if not os.path.exists(pre_f):
+        if os.path.exists(os.path.join(staging, "rsc-RESTORE.json")):
+            raise CaptureRefused(
+                "{} holds an rsc-RESTORE.json and no rsc-PRE.json, so nothing vouches "
+                "for that payload. If it is the capture, copy it to rsc-PRE.json, "
+                "which says so, and re-run".format(staging))
+        raise CaptureRefused("no rollback artifact in {} -- nothing to restore "
+                             "from".format(staging))
+    try:
+        with open(pre_f, encoding="utf-8") as fh:
+            text = fh.read()
+    except (OSError, ValueError) as exc:
+        raise CaptureRefused("rsc-PRE.json could not be read -- {}".format(exc))
+    try:
+        obj = json.loads(text)
+    except ValueError as exc:
+        raise CaptureRefused("rsc-PRE.json does not parse -- {}".format(exc))
+    key = _restore_key(obj)
+    if key is None or not key[1]:
+        raise CaptureRefused("rsc-PRE.json carries no non-empty checks array of "
+                             "named contexts, so it is not a rollback artifact")
+    return obj
+
+
 def _leaves(obj, prefix=""):
     if isinstance(obj, dict):
         for k in sorted(obj):
@@ -1334,6 +1567,136 @@ def scope_diff(pre_obj, post_obj):
     # the diff this tool exists to produce.
     return sorted(set(a.items()) ^ set(b.items()),
                   key=lambda kv: (kv[0], repr(kv[1])))
+
+
+def _pinned(app_id):
+    """True only for the integer APP_ID; bool is excluded, as C4 excludes it."""
+    return isinstance(app_id, int) and not isinstance(app_id, bool) and app_id == APP_ID
+
+
+def pin_leaves(pre_full):
+    """The differing leaves --apply's write may produce, keyed as scope_diff keys
+    them. Returns (entries, leaves).
+
+    For each entry of the captured `checks` not pinned to APP_ID, its app_id leaf
+    as captured and the same leaf at APP_ID: two for each entry the write pins,
+    every one an app_id. `checks` is sorted by context first, as _normalise sorts
+    it, so an index here is the index scope_diff reads. An entry whose app_id is
+    an object or an array has no single leaf to expect, so none is expected for
+    it, and a write that pins it reads as a scope violation: the fail-closed
+    direction.
+    """
+    entries, leaves = [], set()
+    rsc = _normalise(pre_full).get("required_status_checks")
+    checks = rsc.get("checks") if isinstance(rsc, dict) else None
+    for i, entry in enumerate(checks if isinstance(checks, list) else []):
+        if not isinstance(entry, dict) or _pinned(entry.get("app_id")):
+            continue
+        entries.append(str(entry.get("context")))
+        app_id = entry.get("app_id")
+        if not isinstance(app_id, (dict, list)):
+            leaf = ".required_status_checks.checks[{}].app_id".format(i)
+            leaves |= {(leaf, app_id), (leaf, APP_ID)}
+    return entries, leaves
+
+
+def registration_scope(pre_full, post_full, names):
+    """The registration's scope check over the full protection objects captured
+    before and after the write. Returns (ok, problems, notes).
+
+    `checks` is compared keyed by context name, never by index: the contexts added
+    must be exactly `names`, each pinned to APP_ID; none is removed; no existing
+    entry's app_id changes; and no context is listed twice afterwards. `contexts`
+    is compared by name the same way. Where `contexts` is absent before and after
+    it is not graded, and a note says so: it is the API's older form, and a correct
+    write must not fail the day the host stops returning it. Present on one side
+    only, it fails. Every other leaf goes through scope_diff over copies with
+    `checks` and `contexts` removed, and none may differ. scope_diff cannot grade
+    `checks` itself: it compares indexed leaves, so an insertion shifts every
+    later index. --apply can grade with it because its write inserts nothing: it
+    expects exactly the app_id leaves it moves, two for each entry it pins
+    (pin_leaves).
+    """
+    problems, notes = [], []
+    want = set(names)
+    if len(want) != len(names):
+        problems.append("a context is named more than once: {}".format(sorted(names)))
+
+    def _rsc(obj, when):
+        rsc = obj.get("required_status_checks") if isinstance(obj, dict) else None
+        if not isinstance(rsc, dict) or not isinstance(rsc.get("checks"), list):
+            problems.append("{} the write: no required_status_checks object with a "
+                            "checks array".format(when))
+            return None
+        return rsc
+
+    pre_rsc, post_rsc = _rsc(pre_full, "before"), _rsc(post_full, "after")
+    if pre_rsc is None or post_rsc is None:
+        return False, problems, notes
+
+    def _keyed_checks(rsc):
+        keyed = {}
+        for entry in rsc["checks"]:
+            entry = entry if isinstance(entry, dict) else {}
+            keyed.setdefault(str(entry.get("context")), []).append(entry.get("app_id"))
+        return keyed
+
+    pre_c, post_c = _keyed_checks(pre_rsc), _keyed_checks(post_rsc)
+    twice = sorted(c for c, apps in post_c.items() if len(apps) > 1)
+    if twice:
+        problems.append("checks: listed more than once after the write: {}".format(twice))
+    added, removed = set(post_c) - set(pre_c), set(pre_c) - set(post_c)
+    if added != want:
+        problems.append("checks: added {}, want exactly the contexts named {}".format(
+            sorted(added), sorted(want)))
+    if removed:
+        problems.append("checks: removed {}".format(sorted(removed)))
+    changed = sorted(c for c in set(pre_c) & set(post_c)
+                     if json.dumps(pre_c[c]) != json.dumps(post_c[c]))
+    if changed:
+        problems.append("checks: an existing entry changed: {}".format(
+            ["{} app_id {} -> {}".format(c, json.dumps(pre_c[c]), json.dumps(post_c[c]))
+             for c in changed]))
+    off_app = sorted(c for c in added if not all(_pinned(a) for a in post_c[c]))
+    if off_app:
+        problems.append("checks: added and not pinned to {}: {}".format(
+            APP_ID, ["{} app_id {}".format(c, json.dumps(post_c[c])) for c in off_app]))
+
+    has_pre, has_post = "contexts" in pre_rsc, "contexts" in post_rsc
+    if not has_pre and not has_post:
+        notes.append("contexts: absent before and after the write, so not graded; "
+                     "checks and every other leaf were")
+    elif has_pre != has_post:
+        problems.append("contexts: present {} the write only".format(
+            "before" if has_pre else "after"))
+    else:
+        pre_x, post_x = pre_rsc["contexts"], post_rsc["contexts"]
+        if not (isinstance(pre_x, list) and isinstance(post_x, list)
+                and all(isinstance(c, str) for c in pre_x + post_x)):
+            problems.append("contexts: not an array of context names on both sides")
+        else:
+            if len(set(post_x)) != len(post_x):
+                problems.append("contexts: a name listed more than once after the "
+                                "write")
+            if set(post_x) - set(pre_x) != want:
+                problems.append("contexts: added {}, want exactly the contexts named "
+                                "{}".format(sorted(set(post_x) - set(pre_x)),
+                                            sorted(want)))
+            if set(pre_x) - set(post_x):
+                problems.append("contexts: removed {}".format(
+                    sorted(set(pre_x) - set(post_x))))
+
+    def _rest(obj):
+        copy = json.loads(json.dumps(obj))
+        copy["required_status_checks"].pop("checks", None)
+        copy["required_status_checks"].pop("contexts", None)
+        return copy
+
+    moved = scope_diff(_rest(pre_full), _rest(post_full))
+    if moved:
+        problems.append("another setting moved: {}".format(
+            ", ".join("{} = {!r}".format(k, v) for k, v in moved)))
+    return not problems, problems, notes
 
 
 # ==========================================================================
@@ -1452,6 +1815,1347 @@ def guard_arms():
         ("G7", "the happy path, with the read-back array returned in a different order",
          [(True, full_pre, ""), (True, pre, ""), (True, post, ""),
           (True, full_post_reordered, "")], True, 0, 1),
+    ]
+
+
+class _FakeHost(object):
+    """A stateful stand-in for the branch-protection API, for the self-test only.
+
+    It is shaped after a GET of the live object: the sub-resource carries `url`,
+    `strict`, `checks`, `contexts` and `contexts_url`, inside a full object that
+    also carries `enforce_admins`, `required_conversation_resolution` and
+    `allow_force_pushes`. Every value is synthetic: repository owner/name, branch
+    main, URLs under https://api.example.invalid/. `fetch` answers the full-object
+    path and the narrow path and answers anything else with a 404. `write` accepts
+    the narrow path only; it replaces `checks` and `strict` from the payload,
+    derives `contexts` from the new `checks` as the host does, and then applies the
+    optional `mutate(state)` hook, which models a host that misbehaves.
+    `reject_write=True` answers every write with a 422. Every write attempted is
+    recorded with the path it addressed, whatever that path is, so an arm counts
+    the attempts and reads where each one went.
+    """
+
+    REPO = "owner/name"
+    BRANCH = "main"
+    PROT_PATH = "repos/owner/name/branches/main/protection"
+    RSC_PATH = "repos/owner/name/branches/main/protection/required_status_checks"
+    DOUBLED_PATH = ("repos/owner/name/branches/main/protection/protection/"
+                    "required_status_checks")
+
+    def __init__(self, pairs, strict=False, mutate=None, reject_write=False):
+        url = "https://api.example.invalid/" + self.PROT_PATH
+        self.state = {
+            "url": url,
+            "required_status_checks": {
+                "url": url + "/required_status_checks",
+                "strict": strict,
+                "checks": [{"context": c, "app_id": a} for c, a in pairs],
+                "contexts": [c for c, _ in pairs],
+                "contexts_url": url + "/required_status_checks/contexts",
+            },
+            "enforce_admins": {"url": url + "/enforce_admins", "enabled": False},
+            "required_conversation_resolution": {"enabled": True},
+            "allow_force_pushes": {"enabled": False},
+        }
+        self.mutate = mutate
+        self.reject_write = reject_write
+        self.writes = []
+        self.fetches = []
+
+    def sub(self):
+        """A copy of the sub-resource, as a GET of the narrow path returns it."""
+        return json.loads(json.dumps(self.state["required_status_checks"]))
+
+    def pairs(self):
+        """The host's checks, keyed as the restore's read-back compares them."""
+        return sorted((c.get("context"), json.dumps(c.get("app_id")))
+                      for c in self.state["required_status_checks"]["checks"])
+
+    def fetch(self, path):
+        self.fetches.append(path)
+        if path == self.PROT_PATH:
+            return (True, json.dumps(self.state), "")
+        if path == self.RSC_PATH:
+            return (True, json.dumps(self.state["required_status_checks"]), "")
+        return (False, "", "HTTP 404: Not Found ({})".format(path))
+
+    def write(self, path, payload_file):
+        self.writes.append(path)
+        if path != self.RSC_PATH:
+            return (False, "", "HTTP 404: Not Found ({})".format(path))
+        if self.reject_write:
+            return (False, "", "HTTP 422: Validation Failed")
+        with open(payload_file, encoding="utf-8") as fh:
+            payload = json.load(fh)
+        rsc = self.state["required_status_checks"]
+        rsc["strict"] = payload.get("strict", False)
+        rsc["checks"] = [{"context": c.get("context"), "app_id": c.get("app_id")}
+                         for c in payload.get("checks", [])]
+        rsc["contexts"] = [c["context"] for c in rsc["checks"]]
+        if self.mutate is not None:
+            self.mutate(self.state)
+        return (True, json.dumps(rsc), "")
+
+
+def _keyed(pairs):
+    """Context and app_id pairs, keyed as the restore's read-back compares them."""
+    return sorted((c, json.dumps(a)) for c, a in pairs)
+
+
+def restore_arms():
+    """The rollback, driven through injected I/O: --restore itself, and the capture
+    that must not overwrite the rollback point --restore reads.
+
+    Each arm is (id, label, drive). `drive` returns the limbs it found failing, in
+    the order it checks them, and a summary of what it observed; an arm passes only
+    when no limb failed, so a FAIL names every limb that did. H1 and H10 run on the
+    stateful fake host, which answers every path but the narrow one with a 404. The
+    provenance and read-back arms run on the path-agnostic recording writer and
+    scripted fetcher, so each of them fails on its own defect and never on the path.
+    No arm reaches gh: H0s replaces subprocess.run with a recording stub for its own
+    calls, and every other arm injects its fetch and its write.
+    """
+    def _stage(tmp, pre=None, restore=None):
+        for name, value in (("rsc-PRE.json", pre), ("rsc-RESTORE.json", restore)):
+            if value is None:
+                continue
+            with open(os.path.join(tmp, name), "w", encoding="utf-8") as fh:
+                fh.write(value if isinstance(value, str) else json.dumps(value, indent=2))
+
+    def _restore(tmp, confirm, script):
+        log, sink = [], io.StringIO()
+        rc = run_restore(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH, staging=tmp,
+                         confirm=confirm, fetch=_fetcher(script),
+                         write=_rec_writer(log), stream=sink)
+        return rc, len(log), sink.getvalue()
+
+    def _want(problems, rc, writes, want_rc, want_writes):
+        if rc != want_rc:
+            problems.append("rc {}, want {}".format(rc, want_rc))
+        if writes != want_writes:
+            problems.append("{} write(s), want {}".format(writes, want_writes))
+        return "rc {}, {} write(s)".format(rc, writes)
+
+    def _guarded(pre, restore, confirm, script, want_rc, want_writes):
+        def drive():
+            problems = []
+            with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+                _stage(tmp, pre, restore)
+                rc, writes, _text = _restore(tmp, confirm, script)
+            return problems, _want(problems, rc, writes, want_rc, want_writes)
+        return drive
+
+    capture_null = _FakeHost(_pre_pairs()).sub()
+    capture_pinned = _FakeHost(_correct_pairs()).sub()
+    read_back_dropped = _FakeHost(_correct_pairs()[:-1]).sub()
+
+    def h0():
+        ok = globals().get("rsc_write_path_ok")
+        if ok is None:
+            return ["absent -- rsc_write_path_ok is not defined"], ""
+        problems = []
+        cases = [(_FakeHost.DOUBLED_PATH, False), (_FakeHost.RSC_PATH, True),
+                 (_FakeHost.PROT_PATH, False), (_FakeHost.RSC_PATH + "/contexts", False),
+                 ("repos/owner/name/branches/release/x/protection/required_status_checks",
+                  False),
+                 ("repos/owner/name/branches/../protection/required_status_checks", False),
+                 ("repos/owner/name/branches/./protection/required_status_checks", False),
+                 ("repos/../name/branches/main/protection/required_status_checks", False),
+                 ("repos/owner/../branches/main/protection/required_status_checks", False),
+                 ("repos/owner/name/branches/main?x=1/protection/required_status_checks",
+                  False),
+                 ("repos/owner/name/branches/main%2Fx/protection/required_status_checks",
+                  False)]
+        for path, want in cases:
+            got = bool(ok(path))
+            if got != want:
+                problems.append("{} {}, want {}".format(
+                    path, "admitted" if got else "refused",
+                    "admitted" if want else "refused"))
+        return problems, "{} paths graded".format(len(cases))
+
+    def h0s():
+        calls = []
+
+        def _stub_run(*args, **kwargs):
+            argv = args[0] if args else kwargs.get("args", [])
+            calls.append(argv)
+            return subprocess.CompletedProcess(argv, 0, stdout="{}", stderr="")
+
+        def _stub_popen(*args, **kwargs):
+            calls.append(args[0] if args else kwargs.get("args"))
+            raise OSError("the self-test's transport stub refuses Popen")
+
+        problems = []
+        real_run, real_popen = subprocess.run, subprocess.Popen
+        with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+            absent = os.path.join(tmp, "absent-payload.json")
+            try:
+                subprocess.run, subprocess.Popen = _stub_run, _stub_popen
+                if subprocess.run is not _stub_run or subprocess.Popen is not _stub_popen:
+                    return (["the transport stub is not bound, so gh_patch_json was "
+                             "not driven"], "")
+                ok_d, _text, err_d = gh_patch_json(_FakeHost.DOUBLED_PATH, absent)
+                doubled_calls = len(calls)
+                ok_n, _text, _err = gh_patch_json(_FakeHost.RSC_PATH, absent)
+                narrow_calls = len(calls) - doubled_calls
+            finally:
+                subprocess.run, subprocess.Popen = real_run, real_popen
+        if ok_d:
+            problems.append("the doubled path was admitted")
+        if "INVARIANT VIOLATED" not in err_d:
+            problems.append("no INVARIANT VIOLATED refusal for the doubled path")
+        if doubled_calls != 0:
+            problems.append("the doubled path reached the transport ({} call(s)), "
+                            "want 0".format(doubled_calls))
+        if narrow_calls != 1 or not ok_n:
+            problems.append("control: the narrow path reached the stubbed transport "
+                            "{} time(s), want 1 -- the stub is not where the write "
+                            "goes".format(narrow_calls))
+        return problems, "doubled path {} call(s), narrow path {} call(s)".format(
+            doubled_calls, narrow_calls)
+
+    def h1():
+        capture_pairs = [(c, APP_ID) for c in CONTEXT_ORDER[:-1]]
+        capture = _FakeHost(capture_pairs).sub()
+        host = _FakeHost(_correct_pairs())
+        problems = []
+        with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+            _stage(tmp, capture, compose_restore(capture))
+            rc = run_restore(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH, staging=tmp,
+                             confirm=True, fetch=host.fetch, write=host.write,
+                             stream=io.StringIO())
+        summary = _want(problems, rc, len(host.writes), 0, 1)
+        if [w for w in host.writes if w != _FakeHost.RSC_PATH]:
+            problems.append("wrote to {}, want the narrow path only".format(host.writes))
+        if not host.fetches or [f for f in host.fetches if f != _FakeHost.RSC_PATH]:
+            problems.append("read back {}, want the narrow path".format(host.fetches))
+        if host.pairs() != _keyed(capture_pairs):
+            problems.append("the host does not hold the capture's checks")
+        rsc = host.state["required_status_checks"]
+        if sorted(rsc["contexts"]) != sorted(c for c, _ in capture_pairs):
+            problems.append("the host does not hold the capture's contexts")
+        return problems, summary
+
+    def h7():
+        problems = []
+        with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+            _stage(tmp, pre="not json at all")
+            rc, writes, _text = _restore(tmp, True, [])
+        return problems, _want(problems, rc, writes, 3, 0)
+
+    def h10():
+        host = _FakeHost(_pre_pairs())
+        first_capture = host.pairs()
+        problems = []
+        with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+            pre_f = os.path.join(tmp, "rsc-PRE.json")
+            restore_f = os.path.join(tmp, "rsc-RESTORE.json")
+            sink = io.StringIO()
+            rc_apply = run_apply(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                                 staging=tmp, confirm=True, fetch=host.fetch,
+                                 write=host.write, stream=sink, run_self_test=False)
+            writes_apply = len(host.writes)
+            if rc_apply != 0 or writes_apply != 1:
+                problems.append("the first --apply: rc {}, {} write(s), want rc 0 and "
+                                "1 write".format(rc_apply, writes_apply))
+            with open(pre_f, "rb") as fh:
+                pre_bytes = fh.read()
+            with open(restore_f, "rb") as fh:
+                restore_bytes = fh.read()
+            rc_plan = run_apply(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                                staging=tmp, confirm=False, fetch=host.fetch,
+                                write=host.write, stream=sink, run_self_test=False)
+            if rc_plan != 3:
+                problems.append("the second capture (--plan) returned rc {}, want 3 "
+                                "-- it must refuse a directory holding a different "
+                                "rollback point".format(rc_plan))
+            if len(host.writes) != writes_apply:
+                problems.append("the second capture wrote to the host")
+            with open(pre_f, "rb") as fh:
+                if fh.read() != pre_bytes:
+                    problems.append("the second capture overwrote rsc-PRE.json")
+            with open(restore_f, "rb") as fh:
+                if fh.read() != restore_bytes:
+                    problems.append("the second capture overwrote rsc-RESTORE.json")
+            rc_restore = run_restore(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                                     staging=tmp, confirm=True, fetch=host.fetch,
+                                     write=host.write, stream=sink)
+        if rc_restore != 0 or len(host.writes) != writes_apply + 1:
+            problems.append("--restore: rc {}, {} write(s), want rc 0 and 1 "
+                            "write".format(rc_restore, len(host.writes) - writes_apply))
+        if host.pairs() != first_capture:
+            problems.append("the host does not end at the first capture")
+        return problems, "apply rc {}, second capture rc {}, restore rc {}, {} " \
+                         "write(s)".format(rc_apply, rc_plan, rc_restore, len(host.writes))
+
+    def h11():
+        problems = []
+        with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+            _stage(tmp, capture_null, compose_restore(capture_null))
+            rc, writes, text = _restore(tmp, True,
+                                        [(True, json.dumps(capture_pinned), "")])
+        summary = _want(problems, rc, writes, 1, 1)
+        fallback = _FakeHost.RSC_PATH + "/contexts"
+        if "POST" not in text or fallback not in text:
+            problems.append("the POST {} fallback is not printed".format(fallback))
+        if "/protection/protection" in text:
+            problems.append("the output names the doubled path")
+        return problems, summary
+
+    def h12():
+        # (name, the prior's bytes, whether --restore reads it). The last prior is
+        # the control: a valid rollback point that differs from the new capture,
+        # whose refusal may send the operator to --restore because --restore reads
+        # it. It shows that the remedy limb sees a working remedy, so a clean H12
+        # is a measurement and not a refusal text that names no remedy at all.
+        priors = (('{"checks": ["x"]}', '{"checks": ["x"]}', False),
+                  ('{"checks": [null]}', '{"checks": [null]}', False),
+                  ("not json at all", "not json at all", False),
+                  ('{"checks": []}', '{"checks": []}', False),
+                  ("a valid, different rollback point (the control)",
+                   json.dumps(capture_pinned), True))
+        modes = (("--plan", run_apply, {"confirm": False}),
+                 ("--apply", run_apply, {"confirm": True}),
+                 ("--register", globals().get("run_register"),
+                  {"confirm": True, "names": [CONTEXT_ORDER[-1]]}))
+        problems, runs, control = [], 0, []
+        for name, prior, restorable in priors:
+            for label, mode, extra in modes:
+                where = "{} over a prior {}".format(label, name)
+                if mode is None:
+                    problems.append("{}: absent -- the mode is not defined".format(where))
+                    continue
+                host, sink = _FakeHost(_pre_pairs()), io.StringIO()
+                with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+                    pre_f = os.path.join(tmp, "rsc-PRE.json")
+                    with open(pre_f, "w", encoding="utf-8") as fh:
+                        fh.write(prior)
+                    with open(pre_f, "rb") as fh:
+                        before = fh.read()
+                    try:
+                        rc = mode(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                                  staging=tmp, fetch=host.fetch, write=host.write,
+                                  stream=sink, run_self_test=False, **extra)
+                    except Exception as exc:       # noqa: BLE001 - a raise is graded
+                        problems.append("{}: raised {} after {} write(s)".format(
+                            where, type(exc).__name__, len(host.writes)))
+                        continue
+                    runs += 1
+                    with open(pre_f, "rb") as fh:
+                        if fh.read() != before:
+                            problems.append("{}: the prior was overwritten".format(where))
+                    if [n for n in os.listdir(tmp) if n.endswith(".pending")]:
+                        problems.append("{}: a .pending file was left".format(where))
+                    # The remedy the refusal names, graded by what --restore does in
+                    # this same directory rather than by the refusal's wording alone.
+                    refusal = " ".join(line for line in sink.getvalue().split("\n")
+                                       if line.startswith("CAPTURE REFUSED"))
+                    names_restore = "restore from" in " ".join(refusal.split()).lower()
+                    try:
+                        rhost = _FakeHost(_pre_pairs())
+                        rc_restore = run_restore(repo=_FakeHost.REPO,
+                                                 branch=_FakeHost.BRANCH, staging=tmp,
+                                                 confirm=True, fetch=rhost.fetch,
+                                                 write=rhost.write, stream=io.StringIO())
+                    except Exception as exc:       # noqa: BLE001 - a raise is graded
+                        problems.append("{}: --restore in that directory raised "
+                                        "{}".format(where, type(exc).__name__))
+                        rc_restore = None
+                if rc != 3:
+                    problems.append("{}: rc {}, want 3".format(where, rc))
+                if host.writes:
+                    problems.append("{}: {} write(s), want 0".format(where, len(host.writes)))
+                if not refusal:
+                    problems.append("{}: the output does not say CAPTURE REFUSED".format(where))
+                elif "fresh --staging" not in " ".join(refusal.split()):
+                    problems.append("{}: the refusal does not name a fresh --staging "
+                                    "directory".format(where))
+                if names_restore and rc_restore == 3:
+                    problems.append("{}: the refusal says to restore from it, and "
+                                    "--restore in that directory refuses at exit "
+                                    "3".format(where))
+                if restorable:
+                    control.append("{} restore rc {}".format(label, rc_restore))
+                    if not names_restore or rc_restore != 0:
+                        problems.append("control, {}: the refusal {} --restore, and "
+                                        "--restore in that directory returned rc {} -- "
+                                        "want it named and rc 0, or this arm cannot see "
+                                        "a working remedy".format(
+                                            where, "names" if names_restore else
+                                            "does not name", rc_restore))
+        return problems, "{} run(s) returned; the control's {}".format(
+            runs, ", ".join(control))
+
+    def h13():
+        payload = compose_restore(capture_null)
+        want = canonical_digest(payload)
+        staged_forms = (
+            ("an extra top-level member", dict(payload, contexts=["Bogus context"])),
+            ("an extra member in each entry",
+             {"strict": payload["strict"],
+              "checks": [dict(c, note="not a field of the payload")
+                         for c in payload["checks"]]}))
+        problems, seen = [], []
+        for label, staged in staged_forms:
+            sent = []
+
+            def _sent_writer(path, payload_file, sent=sent):
+                with open(payload_file, encoding="utf-8") as fh:
+                    sent.append(json.load(fh))
+                return (True, "{}", "")
+
+            with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+                _stage(tmp, capture_null, staged)
+                rc = run_restore(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                                 staging=tmp, confirm=True,
+                                 fetch=_fetcher([(True, json.dumps(capture_null), "")]),
+                                 write=_sent_writer, stream=io.StringIO())
+            seen.append("{}: rc {}, {} write(s)".format(label, rc, len(sent)))
+            if rc != 0 or len(sent) != 1:
+                problems.append("{}: rc {}, {} write(s), want rc 0 and 1".format(
+                    label, rc, len(sent)))
+            if sent and canonical_digest(sent[0]) != want:
+                body = sent[0] if isinstance(sent[0], dict) else {}
+                entry_keys = set()
+                for entry in body.get("checks") or []:
+                    entry_keys |= set(entry) if isinstance(entry, dict) else set()
+                problems.append("{}: the body sent is not the payload rsc-PRE.json "
+                                "composes -- it carries {} beside strict and checks, and "
+                                "{} beside context and app_id".format(
+                                    label, sorted(set(body) - {"strict", "checks"}),
+                                    sorted(entry_keys - {"context", "app_id"})))
+        return problems, "; ".join(seen)
+
+    def h16():
+        host = _FakeHost(_pre_pairs())
+        problems = []
+        with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+            def _capture(confirm):
+                return run_apply(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                                 staging=tmp, confirm=confirm, fetch=host.fetch,
+                                 write=host.write, stream=io.StringIO(),
+                                 run_self_test=False)
+            rc_plan = _capture(False)
+            rc_apply = _capture(True)
+            writes = len(host.writes)
+            if (rc_plan, rc_apply, writes) != (6, 0, 1):
+                problems.append("--plan rc {}, then --apply in the same directory rc "
+                                "{}, {} write(s) -- want 6, 0 and 1: an equal capture "
+                                "replaces the rollback point".format(rc_plan, rc_apply,
+                                                                     writes))
+            rc_third = _capture(False)
+            if rc_third != 3 or len(host.writes) != writes:
+                problems.append("a third capture after the write: rc {}, {} write(s) -- "
+                                "want 3 and none".format(rc_third,
+                                                         len(host.writes) - writes))
+            left = sorted(n for n in os.listdir(tmp) if n.endswith(".pending"))
+            if left:
+                problems.append("the refused capture left {}".format(left))
+        return problems, "plan rc {}, apply rc {}, third capture rc {}".format(
+            rc_plan, rc_apply, rc_third)
+
+    def h17():
+        payload = compose_restore(capture_null)
+        problems, seen = [], []
+        for label, staged in (("rsc-RESTORE.json exactly the payload", payload),
+                              ("rsc-RESTORE.json with a member beside the payload",
+                               dict(payload, contexts=["Bogus context"]))):
+            used = []
+
+            def _path_writer(path, payload_file, used=used):
+                used.append(payload_file)
+                return (True, "{}", "")
+
+            sink = io.StringIO()
+            with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+                _stage(tmp, capture_null, staged)
+                rc = run_restore(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                                 staging=tmp, confirm=True,
+                                 fetch=_fetcher([(True, json.dumps(capture_null), "")]),
+                                 write=_path_writer, stream=sink)
+                staged_path = os.path.realpath(os.path.join(tmp, "rsc-RESTORE.json"))
+                inside = [p for p in used
+                          if os.path.realpath(os.path.dirname(p)) == os.path.realpath(tmp)]
+            seen.append("{}: rc {}".format(label, rc))
+            if rc != 0 or len(used) != 1:
+                problems.append("{}: rc {}, {} write(s), want rc 0 and 1".format(
+                    label, rc, len(used)))
+            if [p for p in used if os.path.realpath(p) == staged_path]:
+                problems.append("{}: the write was sent from rsc-RESTORE.json "
+                                "itself".format(label))
+            if inside:
+                problems.append("{}: the body was staged in the staging "
+                                "directory".format(label))
+            if [p for p in used if os.path.exists(p)]:
+                problems.append("{}: the body file was left behind".format(label))
+            noted = "nothing else in that file is sent" in sink.getvalue()
+            if noted != (staged is not payload):
+                problems.append("{}: the note that only the payload is sent is {}, "
+                                "want it {}".format(label,
+                                                    "printed" if noted else "absent",
+                                                    "absent" if noted else "printed"))
+        return problems, "; ".join(seen)
+
+    def h18():
+        problems, seen = [], []
+        err = "HTTP 422: Validation Failed \N{EM DASH} the host's own text"
+
+        def _refusing_writer(path, payload_file):
+            return (False, "", err)
+
+        for label in ("--restore", "--apply"):
+            raw = io.BytesIO()
+            sink = io.TextIOWrapper(raw, encoding="ascii", errors="strict",
+                                    write_through=True)
+            with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+                try:
+                    if label == "--restore":
+                        _stage(tmp, capture_null, compose_restore(capture_null))
+                        rc = run_restore(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                                         staging=tmp, confirm=True, fetch=_fetcher([]),
+                                         write=_refusing_writer, stream=sink)
+                    else:
+                        host = _FakeHost(_pre_pairs())
+                        rc = run_apply(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                                       staging=tmp, confirm=True, fetch=host.fetch,
+                                       write=_refusing_writer, stream=sink,
+                                       run_self_test=False)
+                except Exception as exc:           # noqa: BLE001 - a raise is graded
+                    problems.append("{}: raised {}".format(label, type(exc).__name__))
+                    continue
+            seen.append("{} rc {}".format(label, rc))
+            if rc != 7:
+                problems.append("{}: rc {}, want 7".format(label, rc))
+            if "HTTP 422" not in raw.getvalue().decode("ascii"):
+                problems.append("{}: the host's error is not in the output".format(label))
+        return problems, "; ".join(seen)
+
+    def h19():
+        class _ClosedPipe(io.StringIO):
+            """A stream that raises on the PATCH line, as a closed pipe does."""
+
+            def __init__(self):
+                io.StringIO.__init__(self)
+                self.raised = False
+
+            def write(self, s):
+                if s.startswith("PATCH "):
+                    self.raised = True
+                    raise BrokenPipeError(32, "Broken pipe")
+                return io.StringIO.write(self, s)
+
+        problems, used, writes = [], [], []
+
+        def _path_writer(path, payload_file):
+            used.append(payload_file)
+            return (True, "{}", "")
+
+        def _counting_writer(path, payload_file):
+            writes.append(path)
+            return (True, "{}", "")
+
+        outcome, pipe, left, ctl_rc = "returned", _ClosedPipe(), [], None
+        real_tempdir = tempfile.tempdir
+        with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+            with tempfile.TemporaryDirectory(prefix="prc-selftest-") as body_dir:
+                _stage(tmp, capture_null, compose_restore(capture_null))
+                try:
+                    # The body is staged in the system's temporary directory, so this
+                    # arm points that at a directory of its own and lists it after.
+                    tempfile.tempdir = body_dir
+                    # Control: an ordinary stream, so the body is shown to be staged
+                    # where this arm looks, and a clean listing is a measurement.
+                    ctl_rc = run_restore(
+                        repo=_FakeHost.REPO, branch=_FakeHost.BRANCH, staging=tmp,
+                        confirm=True,
+                        fetch=_fetcher([(True, json.dumps(capture_null), "")]),
+                        write=_path_writer, stream=io.StringIO())
+                    try:
+                        run_restore(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                                    staging=tmp, confirm=True,
+                                    fetch=_fetcher([(True, json.dumps(capture_null), "")]),
+                                    write=_counting_writer, stream=pipe)
+                    except BrokenPipeError:
+                        outcome = "raised BrokenPipeError, as the stream did"
+                    except Exception as exc:       # noqa: BLE001 - a raise is graded
+                        outcome = "raised {}".format(type(exc).__name__)
+                        problems.append("the closed pipe: raised {} ({}), want the "
+                                        "stream's own error or none".format(
+                                            type(exc).__name__, exc))
+                finally:
+                    tempfile.tempdir = real_tempdir
+                left = sorted(n for n in os.listdir(body_dir)
+                              if n.startswith("rsc-RESTORE-sent."))
+        if ctl_rc != 0 or len(used) != 1:
+            problems.append("control: rc {}, {} write(s), want rc 0 and 1".format(
+                ctl_rc, len(used)))
+        elif os.path.realpath(os.path.dirname(used[0])) != os.path.realpath(body_dir):
+            problems.append("control: the body was not staged in the directory this arm "
+                            "lists, so a clean listing would measure nothing")
+        if not pipe.raised:
+            problems.append("the stream never received the PATCH line, so nothing was "
+                            "measured")
+        if left:
+            problems.append("the request body was left behind when printing the PATCH "
+                            "line raised: {}".format(left))
+        return problems, "control rc {}; the closed pipe {}, {} write(s), {} body " \
+                         "file(s) left".format(ctl_rc, outcome, len(writes), len(left))
+
+    return [
+        ("H0", "the write predicate: the doubled path refused, the narrow path "
+               "admitted, and nine near-misses refused, a dot-segment in each of the "
+               "owner, name and branch positions, a query string and a percent-encoded "
+               "separator among them", h0),
+        ("H0s", "gh_patch_json with its transport stubbed: the doubled path refused "
+                "before the transport, the narrow path reaching it", h0s),
+        ("H1", "--restore on the stateful host, its capture the declared set less one "
+               "context: one write, to the narrow path, read back there, and the host "
+               "returned to the capture", h1),
+        ("H2", "no --confirm-write: nothing is written",
+         _guarded(capture_null, compose_restore(capture_null), False, [], 6, 0)),
+        ("H3", "neither rollback artifact present: refused, nothing written",
+         _guarded(None, None, True, [], 3, 0)),
+        ("H4", "a stale rsc-RESTORE.json beside a different rsc-PRE.json: refused, "
+               "nothing written",
+         _guarded(capture_null, compose_restore(capture_pinned), True,
+                  [(True, json.dumps(capture_pinned), "")], 3, 0)),
+        ("H5", "the read-back fails at the transport layer: the restore is unverified",
+         _guarded(capture_null, compose_restore(capture_null), True,
+                  [(False, "", "HTTP 502")], 7, 1)),
+        ("H6", "the read-back differs from the payload written: not verified",
+         _guarded(capture_pinned, compose_restore(capture_pinned), True,
+                  [(True, json.dumps(read_back_dropped), "")], 1, 1)),
+        ("H7", "rsc-PRE.json does not parse: refused, nothing written, nothing raised",
+         h7),
+        ("H8", "a capture carrying app_id null restores and verifies against the "
+               "payload, never against CONTEXT_ORDER",
+         _guarded(capture_null, compose_restore(capture_null), True,
+                  [(True, json.dumps(capture_null), "")], 0, 1)),
+        ("H9", "an rsc-RESTORE.json with no rsc-PRE.json beside it: refused, nothing "
+               "written",
+         _guarded(None, compose_restore(capture_null), True,
+                  [(True, json.dumps(capture_null), "")], 3, 0)),
+        ("H10", "--apply writes, a second capture runs in the same directory, then "
+                "--restore: the second capture refused, the rollback point unchanged, "
+                "and the host returned to the first capture", h10),
+        ("H11", "a null the host pins on the write: not verified, and the POST "
+                ".../contexts fallback printed", h11),
+        ("H12", "a prior rsc-PRE.json a capture cannot key, its checks not an array of "
+                "named contexts, one that does not parse, or one whose checks array is "
+                "empty: --plan, --apply and --register each refuse at exit 3, nothing "
+                "written, the prior unchanged, no .pending file left, nothing raised, "
+                "and the refusal names a fresh --staging directory and never says to "
+                "restore from a file --restore in that directory refuses; a valid, "
+                "different prior is the control, its refusal naming --restore and "
+                "--restore there returning 0", h12),
+        ("H13", "an rsc-RESTORE.json that agrees with rsc-PRE.json on its key but "
+                "carries other members: the restore sends the payload rsc-PRE.json "
+                "composes, and nothing else in that file", h13),
+        ("H14", "the read-back does not parse: the restore is unverified, exit 7",
+         _guarded(capture_null, compose_restore(capture_null), True,
+                  [(True, "not json at all", "")], 7, 1)),
+        ("H14b", "the read-back carries no checks array: the restore is unverified, "
+                 "exit 7",
+         _guarded(capture_null, compose_restore(capture_null), True,
+                  [(True, "{}", "")], 7, 1)),
+        ("H15", "the read-back equals the payload in every check and differs in "
+                "strict: not verified, exit 1",
+         _guarded(capture_null, compose_restore(capture_null), True,
+                  [(True, json.dumps(dict(capture_null, strict=True)), "")], 1, 1)),
+        ("H16", "--plan then --apply in one directory, then a third capture: the "
+                "dry run's equal capture replaced, one write, and the third capture "
+                "refused at exit 3 with no .pending file left", h16),
+        ("H17", "rsc-RESTORE.json exactly the payload, and with a member beside it: "
+                "each restore sends from a file outside the staging directory that is "
+                "gone once the write returns, never from rsc-RESTORE.json itself, and "
+                "says only the payload is sent where that file is not it exactly", h17),
+        ("H18", "--restore and --apply on an ASCII stream, the host refusing the write "
+                "with text the stream cannot encode: each exits 7 and reports the "
+                "error, nothing raised", h18),
+        ("H19", "--restore on a stream that raises on the PATCH line, as a closed pipe "
+                "does: the request body staged for the write is removed all the same, "
+                "and nothing is left in the temporary directory; a control run on an "
+                "ordinary stream shows the body is staged where the arm looks", h19),
+    ]
+
+
+def _read_staged(staging, name):
+    """A staged artifact for an arm to grade: its parsed JSON, None when the file
+    is absent, or the string "<unparseable>" when it does not parse."""
+    path = os.path.join(staging, name)
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return json.load(fh)
+    except (OSError, ValueError):
+        return "<unparseable>"
+
+
+def _protection_full(pairs, strict=False):
+    """A full protection object shaped as _FakeHost holds it, for the arms that
+    grade the keyed scope check as a unit; `contexts` is derived from `pairs`."""
+    return json.loads(json.dumps(_FakeHost(pairs, strict=strict).state))
+
+
+def register_arms():
+    """The registration mode, --register, driven through injected I/O on the
+    stateful fake host.
+
+    Each arm is (id, label, drive). `drive` returns the limbs it found failing and
+    a summary of what it observed, and an arm passes only when no limb failed. The
+    mode is looked up by name, so where it does not exist every arm grades it
+    absent rather than raising. Each arm passes run_self_test=False, as group D
+    does for run_apply, so an arm never re-enters the self-test it belongs to. The
+    write count is graded beside the exit code: a mode that returned the right code
+    after writing is indistinguishable, by its code alone, from one that refused.
+    """
+    last = CONTEXT_ORDER[-1]
+    first_sorted = min(CONTEXT_ORDER)
+    unpinned = "Personal-data gate"
+    extra = "Extra check (never declared)"
+
+    def _live(*missing):
+        return [(c, APP_ID) for c in CONTEXT_ORDER if c not in missing]
+
+    def _sibling_moved(state):
+        state["enforce_admins"]["enabled"] = True
+
+    def _context_dropped(state):
+        rsc = state["required_status_checks"]
+        rsc["checks"] = rsc["checks"][:-1]
+        rsc["contexts"] = [c["context"] for c in rsc["checks"]]
+
+    def _transport_down(path):
+        return (False, "", "HTTP 403")
+
+    def _after_write(path, response):
+        """A fetch for the host that answers `path` with `response` once the host
+        has taken a write, and reads the host for everything else."""
+        def bind(host):
+            def fetch(p):
+                if host.writes and p == path:
+                    host.fetches.append(p)
+                    return response
+                return host.fetch(p)
+            return fetch
+        return bind
+
+    def _arm(pairs, names, want_rc, want_writes, confirm=True, strict=False,
+             mutate=None, reject_write=False, fetch=None, check=None,
+             bind_fetch=None):
+        def drive():
+            register = globals().get("run_register")
+            if register is None:
+                return ["absent -- run_register is not defined"], ""
+            host = _FakeHost(pairs, strict=strict, mutate=mutate,
+                             reject_write=reject_write)
+            capture = host.sub()
+            problems, sink = [], io.StringIO()
+            if bind_fetch is not None:
+                fetch_used = bind_fetch(host)
+            else:
+                fetch_used = fetch or host.fetch
+            with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+                rc = register(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                              staging=tmp, names=list(names), confirm=confirm,
+                              fetch=fetch_used, write=host.write,
+                              stream=sink, run_self_test=False)
+                staged = dict((n, _read_staged(tmp, n))
+                              for n in ("rsc-PATCH.json", "rsc-RESTORE.json"))
+            writes = len(host.writes)
+            if rc != want_rc:
+                problems.append("rc {}, want {}".format(rc, want_rc))
+            if writes != want_writes:
+                problems.append("{} write(s), want {}".format(writes, want_writes))
+            if [w for w in host.writes if w != _FakeHost.RSC_PATH]:
+                problems.append("wrote to {}, want the narrow path only".format(
+                    host.writes))
+            if check is not None:
+                check(problems, host, capture, staged, sink.getvalue())
+            return problems, "rc {}, {} write(s)".format(rc, writes)
+        return drive
+
+    def _registered(problems, host, capture, staged, text):
+        rc, failed, _lines = evaluate(json.dumps(host.sub()))
+        if rc != 0:
+            problems.append("the host fails the --assert conjuncts {} after the "
+                            "registration".format(failed))
+        if staged["rsc-RESTORE.json"] != compose_restore(capture):
+            problems.append("rsc-RESTORE.json is not compose_restore of the capture")
+
+    def _strict_kept(problems, host, capture, staged, text):
+        _registered(problems, host, capture, staged, text)
+        if host.state["required_status_checks"]["strict"] is not True:
+            problems.append("strict was not kept as read")
+
+    def _refused(problems, host, capture, staged, text):
+        if staged["rsc-RESTORE.json"] != compose_restore(capture):
+            problems.append("a refused run left no rsc-RESTORE.json composed from its "
+                            "capture, so --restore could not vouch for the directory")
+        if staged["rsc-PATCH.json"] is not None:
+            problems.append("a refused run composed rsc-PATCH.json")
+
+    def _not_pinned(problems, host, capture, staged, text):
+        if host.pairs() != _keyed([(c, None if c == unpinned else APP_ID)
+                                   for c in CONTEXT_ORDER]):
+            problems.append("the host does not hold the unpinned entry carried over "
+                            "as read beside the context added at APP_ID")
+        _rc, failed, _lines = evaluate(json.dumps(host.sub()))
+        if set(failed) != {"C3", "C4"}:
+            problems.append("--assert on the host fails {}, want exactly C3 and "
+                            "C4".format(sorted(failed)))
+        for want in ("NOT PINNED", unpinned, "run --apply next"):
+            if want not in text:
+                problems.append("the output does not say {!r}".format(want))
+        for wrong in ("NOT VERIFIED", "SCOPE VIOLATION", "Restore from"):
+            if wrong in text:
+                problems.append("the output says {!r}, which is not what an "
+                                "unpinned carried entry means".format(wrong))
+
+    def _nothing_to_add(problems, host, capture, staged, text):
+        for want in ("NOT PINNED", unpinned, "run --apply next"):
+            if want not in text:
+                problems.append("the output does not say {!r}".format(want))
+
+    def _staged(problems, host, capture, staged, text):
+        patch = staged["rsc-PATCH.json"]
+        want = _keyed(_live(last) + [(last, APP_ID)])
+        if not isinstance(patch, dict) or _restore_key(patch) != (False, want):
+            problems.append("rsc-PATCH.json is not the live entries plus {} at "
+                            "APP_ID".format(last))
+        if staged["rsc-RESTORE.json"] != compose_restore(capture):
+            problems.append("rsc-RESTORE.json is not compose_restore of the capture")
+
+    def _says(word):
+        def check(problems, host, capture, staged, text):
+            if word not in text:
+                problems.append("the output does not say {!r}".format(word))
+        return check
+
+    def _unverified(word):
+        def check(problems, host, capture, staged, text):
+            if word not in text:
+                problems.append("the output does not say {!r}".format(word))
+            if [ln for ln in text.splitlines() if ln.startswith("REGISTERED")]:
+                problems.append("the output reports the registration as made")
+        return check
+
+    def _null_pinned(state):
+        for entry in state["required_status_checks"]["checks"]:
+            if entry["app_id"] is None:
+                entry["app_id"] = APP_ID
+
+    def _read_back_differs(problems, host, capture, staged, text):
+        if "REGISTRATION NOT VERIFIED -- the read-back differs" not in text:
+            problems.append("the read-back's equality with the payload did not report it")
+        if "SCOPE VIOLATION" in text:
+            problems.append("it reached the scope check, so the equality limb did not "
+                            "stop it")
+        if unpinned not in text:
+            problems.append("the output does not name {}".format(unpinned))
+
+    def _refused_twice(problems, host, capture, staged, text):
+        _refused(problems, host, capture, staged, text)
+        if "named more than once" not in text:
+            problems.append("the output does not say a context was named more than once")
+
+    def j17():
+        register = globals().get("run_register")
+        if register is None:
+            return ["absent -- run_register is not defined"], ""
+        problems, seen = [], []
+        for encoding in ("ascii", "latin-1"):
+            host = _FakeHost([(c, a) for c, a in _pre_pairs() if c != last])
+            raw = io.BytesIO()
+            sink = io.TextIOWrapper(raw, encoding=encoding, errors="strict",
+                                    write_through=True)
+            with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+                try:
+                    rc = register(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                                  staging=tmp, names=[last], confirm=True,
+                                  fetch=host.fetch, write=host.write, stream=sink,
+                                  run_self_test=False)
+                except Exception as exc:           # noqa: BLE001 - a raise is graded
+                    problems.append("{} stream: raised {} after {} write(s)".format(
+                        encoding, type(exc).__name__, len(host.writes)))
+                    continue
+            text = raw.getvalue().decode(encoding)
+            seen.append("{} stream rc {}, {} write(s)".format(encoding, rc,
+                                                              len(host.writes)))
+            if rc != 1 or len(host.writes) != 1:
+                problems.append("{} stream: rc {}, {} write(s), want rc 1 and 1".format(
+                    encoding, rc, len(host.writes)))
+            if "NOT PINNED" not in text or unpinned not in text:
+                problems.append("{} stream: the output does not say NOT PINNED and "
+                                "name {}".format(encoding, unpinned))
+        return problems, "; ".join(seen)
+
+    return [
+        ("J0", "the live set is the declaration less its last context, and that "
+               "context is named: one write, to the narrow path, the host then "
+               "passing --assert with strict kept as read, and rsc-RESTORE.json "
+               "composed from the capture",
+         _arm(_live(last), [last], 0, 1, strict=True, check=_strict_kept)),
+        ("J0b", "the missing context is the one that sorts first, so the insertion "
+                "shifts every later index: registered, and the keyed scope check "
+                "passes it", _arm(_live(first_sorted), [first_sorted], 0, 1,
+                                  check=_registered)),
+        ("J1", "a context already live is named: refused, nothing written",
+         _arm(_live(last), [first_sorted], 4, 0, check=_refused)),
+        ("J2", "one of two missing contexts is named: refused, nothing written",
+         _arm(_live(last, first_sorted), [last], 4, 0, check=_refused)),
+        ("J3", "the live set holds a context outside the declaration: refused, "
+               "nothing written",
+         _arm(_live(last) + [(extra, APP_ID)], [last], 4, 0, check=_refused)),
+        ("J4", "the live set holds an unpinned context and lacks another: the "
+               "missing context added, the unpinned entry carried as read, --assert "
+               "failing exactly C3 and C4, and exit 1 naming --apply next",
+         _arm([(c, a) for c, a in _pre_pairs() if c != last], [last], 1, 1,
+              check=_not_pinned)),
+        ("J5", "the live set already equals the declaration, every entry pinned: "
+               "nothing written, exit 0", _arm(_live(), [last], 0, 0,
+                                               check=_says("ALREADY REGISTERED"))),
+        ("J5b", "the live set already equals the declaration with an unpinned entry: "
+                "nothing written, and exit 1 naming --apply next, because exit 0 "
+                "means --assert holds", _arm(_pre_pairs(), [last], 1, 0,
+                                             check=_nothing_to_add)),
+        ("J6", "no --confirm-write: nothing written, rsc-PATCH.json and "
+               "rsc-RESTORE.json staged",
+         _arm(_live(last), [last], 6, 0, confirm=False, check=_staged)),
+        ("J7", "the first capture fails at the transport layer: refused, nothing "
+               "written", _arm(_live(last), [last], 3, 0, fetch=_transport_down)),
+        ("J8", "the host rejects the write: exit 7",
+         _arm(_live(last), [last], 7, 1, reject_write=True)),
+        ("J9", "the host moves a sibling setting during the write: the scope check "
+               "fails it", _arm(_live(last), [last], 1, 1, mutate=_sibling_moved,
+                                check=_says("SCOPE VIOLATION"))),
+        ("J10", "the host drops a context during the write: the read-back differs "
+                "from the payload", _arm(_live(last), [last], 1, 1,
+                                         mutate=_context_dropped,
+                                         check=_says("NOT VERIFIED"))),
+        ("J11", "the live set holds a context twice: refused, nothing written",
+         _arm(_live(last) + [(first_sorted, APP_ID)], [last], 4, 0, check=_refused)),
+        ("J12", "the read-back fails at the transport layer: exit 7, and the "
+                "registration is never reported as made",
+         _arm(_live(last), [last], 7, 1, check=_unverified("READ-BACK FAILED"),
+              bind_fetch=_after_write(_FakeHost.RSC_PATH, (False, "", "HTTP 502")))),
+        ("J13", "the read-back does not parse: exit 7, and the registration is never "
+                "reported as made",
+         _arm(_live(last), [last], 7, 1, check=_unverified("READ-BACK FAILED"),
+              bind_fetch=_after_write(_FakeHost.RSC_PATH,
+                                      (True, "not json at all", "")))),
+        ("J14", "the host pins the carried null on the write: the read-back differs "
+                "from the payload and that limb reports it, exit 1, before any scope "
+                "check", _arm([(c, a) for c, a in _pre_pairs() if c != last], [last],
+                              1, 1, mutate=_null_pinned, check=_read_back_differs)),
+        ("J15", "the post-change capture fails: exit 1, and the registration is never "
+                "reported as made",
+         _arm(_live(last), [last], 1, 1, check=_unverified("post-capture unavailable"),
+              bind_fetch=_after_write(_FakeHost.PROT_PATH, (False, "", "HTTP 500")))),
+        ("J16", "the missing context is named twice: refused, nothing written",
+         _arm(_live(last), [last, last], 4, 0, check=_refused_twice)),
+        ("J17", "J4's state, written to an ASCII stream and to a Latin-1 stream, "
+                "neither of which encodes the em dash in the ruled NOT PINNED text: exit "
+                "1 after the one write, nothing raised, and the output still says NOT "
+                "PINNED and names the entry", j17),
+        ("J18", "every declared context is live and pinned, and the context named is "
+                "one the declaration does not carry: refused, nothing written",
+         _arm(_live(), [extra], 4, 0, check=_refused)),
+    ]
+
+
+def scope_arms():
+    """registration_scope as a unit, over full protection objects built the way
+    _FakeHost holds them.
+
+    Each arm is (id, label, drive), graded as register_arms grades its own. The
+    check is looked up by name, so where it does not exist every arm grades it
+    absent rather than raising, except K-ctl, which drives scope_diff and is the
+    control: it shows why the keyed check exists, since an insertion read as
+    indexed leaves differs at more leaves than --apply could expect even were it
+    to pin every entry, two for each.
+    """
+    last = CONTEXT_ORDER[-1]
+    first_sorted = min(CONTEXT_ORDER)
+    unpinned = "Personal-data gate"
+    extra = "Extra check (never declared)"
+
+    def _live(*missing):
+        return [(c, APP_ID) for c in CONTEXT_ORDER if c not in missing]
+
+    pre = _protection_full(_live(last))
+    post = _protection_full(_live(last) + [(last, APP_ID)])
+    pre_first = _protection_full(_live(first_sorted))
+    post_first = _protection_full(_live(first_sorted) + [(first_sorted, APP_ID)])
+
+    def _edited(obj, edit):
+        copy = json.loads(json.dumps(obj))
+        edit(copy)
+        return copy
+
+    def _graded(pre_obj, post_obj, names, want_ok, want_note=False):
+        def drive():
+            scope = globals().get("registration_scope")
+            if scope is None:
+                return ["absent -- registration_scope is not defined"], ""
+            ok, found, notes = scope(pre_obj, post_obj, list(names))
+            problems = []
+            if bool(ok) != want_ok:
+                problems.append("graded ok={}, want ok={} ({})".format(
+                    bool(ok), want_ok, "; ".join(found) or "no problem named"))
+            if not want_ok and not found:
+                problems.append("it failed and named no problem")
+            if want_ok and found:
+                problems.append("it passed and named problems {}".format(found))
+            if want_note and not any("not graded" in n for n in notes):
+                problems.append("contexts went ungraded and no note says so")
+            return problems, "ok={}, {} problem(s), {} note(s)".format(
+                bool(ok), len(found), len(notes))
+        return drive
+
+    def _both(*limbs):
+        def drive():
+            problems, summaries = [], []
+            for limb in limbs:
+                found, summary = limb()
+                problems += found
+                summaries.append(summary)
+            return problems, "; ".join(summaries)
+        return drive
+
+    def k_ctl():
+        diff = scope_diff(pre_first, post_first)
+        ceiling = 2 * len(pre_first["required_status_checks"]["checks"])
+        problems = []
+        if len(diff) <= ceiling:
+            problems.append("scope_diff reads {} differing leaves over an insertion "
+                            "that shifts every index, want more than {}, two for each "
+                            "captured entry".format(len(diff), ceiling))
+        return problems, "scope_diff reads {} differing leaves, against {} were " \
+                         "--apply to pin every entry".format(len(diff), ceiling)
+
+    def _drop_contexts(obj):
+        del obj["required_status_checks"]["contexts"]
+
+    no_contexts_pre = _edited(pre, _drop_contexts)
+    no_contexts_post = _edited(post, _drop_contexts)
+
+    return [
+        ("K0", "a correct registration of the last context: passes",
+         _graded(pre, post, [last], True)),
+        ("K1", "an insertion of the context that sorts first, shifting every later "
+               "index: passes, keyed by name", _graded(pre_first, post_first,
+                                                       [first_sorted], True)),
+        ("K-ctl", "scope_diff over K1's pair reads more leaves than --apply could "
+                  "expect even pinning every entry, two for each, which is why the "
+                  "keyed check exists", k_ctl),
+        ("K2", "a context beside the one named is added: fails",
+         _graded(pre, _protection_full(_live(last) + [(last, APP_ID),
+                                                      ("Extra check (never declared)",
+                                                       APP_ID)]), [last], False)),
+        ("K3", "an existing context is removed: fails",
+         _graded(pre, _protection_full(_live(last, CONTEXT_ORDER[0])
+                                       + [(last, APP_ID)]), [last], False)),
+        ("K4", "an existing entry's app_id changes, an unpinned entry pinned in "
+               "passing: fails",
+         _graded(_protection_full([(c, None if c == unpinned else APP_ID)
+                                   for c in CONTEXT_ORDER if c != last]),
+                 post, [last], False)),
+        ("K5", "contexts diverges from checks, the name added to checks only: fails",
+         _graded(pre, _edited(post, lambda o: o["required_status_checks"].__setitem__(
+             "contexts", list(pre["required_status_checks"]["contexts"]))),
+                 [last], False)),
+        ("K6", "a sibling protection setting moves: fails",
+         _graded(pre, _edited(post, lambda o: o["enforce_admins"].__setitem__(
+             "enabled", True)), [last], False)),
+        ("K7", "the context added is pinned to another app: fails",
+         _graded(pre, _protection_full(_live(last) + [(last, 99999)]), [last],
+                 False)),
+        ("K8", "contexts absent before and after is not graded, and a note says so; "
+               "absent after only, it fails",
+         _both(_graded(no_contexts_pre, no_contexts_post, [last], True, want_note=True),
+               _graded(pre, no_contexts_post, [last], False))),
+        ("K9", "a context is listed twice after the write: fails",
+         _graded(pre, _protection_full(_live(last) + [(last, APP_ID),
+                                                      (CONTEXT_ORDER[0], APP_ID)]),
+                 [last], False)),
+        ("K10", "a correct write graded against a context named twice: fails, on the "
+                "naming alone", _graded(pre, post, [last, last], False)),
+        ("Kc", "contexts absent before and after, so checks alone is graded: a context "
+               "beside the one named added, an existing one removed, and the one named "
+               "listed twice each fail",
+         _both(_graded(no_contexts_pre,
+                       _edited(_protection_full(_live(last) + [(last, APP_ID),
+                                                               (extra, APP_ID)]),
+                               _drop_contexts), [last], False),
+               _graded(no_contexts_pre,
+                       _edited(_protection_full(_live(last, CONTEXT_ORDER[0])
+                                                + [(last, APP_ID)]),
+                               _drop_contexts), [last], False),
+               _graded(no_contexts_pre,
+                       _edited(_protection_full(_live(last) + [(last, APP_ID),
+                                                               (last, APP_ID)]),
+                               _drop_contexts), [last], False))),
+        ("Kx", "checks correct and contexts wrong: contexts drops an existing name, or "
+               "lists one twice, and each fails",
+         _both(_graded(pre, _edited(post, lambda o: o["required_status_checks"]
+                                    ["contexts"].remove(CONTEXT_ORDER[0])),
+                       [last], False),
+               _graded(pre, _edited(post, lambda o: o["required_status_checks"]
+                                    ["contexts"].append(CONTEXT_ORDER[0])),
+                       [last], False))),
+    ]
+
+
+def seam_arms():
+    """register-then-restore and register-then-apply: the registration, its
+    rollback and the --apply its NOT PINNED output names, on one stateful host.
+
+    Each arm is (id, label, drive), graded as register_arms grades its own, and
+    looks the mode up by name. The rollback is verified against the capture, never
+    against CONTEXT_ORDER: a host returned to a capture taken before a
+    registration fails --assert by design, and M0 requires that it does. M2 and
+    M3 follow the step NOT PINNED prints, and M4 holds --apply's scope check to
+    the app_id leaves of the entries it pins.
+    """
+    last = CONTEXT_ORDER[-1]
+
+    def _register(host, tmp, sink):
+        return globals()["run_register"](
+            repo=_FakeHost.REPO, branch=_FakeHost.BRANCH, staging=tmp, names=[last],
+            confirm=True, fetch=host.fetch, write=host.write, stream=sink,
+            run_self_test=False)
+
+    def _restore(host, tmp, sink):
+        return run_restore(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH, staging=tmp,
+                           confirm=True, fetch=host.fetch, write=host.write,
+                           stream=sink)
+
+    def _at_capture(problems, host, capture):
+        if host.pairs() != _keyed([(c["context"], c["app_id"])
+                                   for c in capture["checks"]]):
+            problems.append("the host's checks are not the capture's")
+        if sorted(host.state["required_status_checks"]["contexts"]) != \
+                sorted(capture["contexts"]):
+            problems.append("the host's contexts are not the capture's")
+        if [w for w in host.writes if w != _FakeHost.RSC_PATH]:
+            problems.append("wrote to {}, want the narrow path only".format(host.writes))
+
+    def m0():
+        if globals().get("run_register") is None:
+            return ["absent -- run_register is not defined"], ""
+        host = _FakeHost([(c, APP_ID) for c in CONTEXT_ORDER if c != last])
+        capture = host.sub()
+        problems, sink = [], io.StringIO()
+        with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+            rc_reg = _register(host, tmp, sink)
+            rc_res = _restore(host, tmp, sink)
+        if (rc_reg, rc_res, len(host.writes)) != (0, 0, 2):
+            problems.append("register rc {}, restore rc {}, {} write(s) -- want rc 0, "
+                            "rc 0 and 2".format(rc_reg, rc_res, len(host.writes)))
+        _at_capture(problems, host, capture)
+        rc_assert, _failed, _lines = evaluate(json.dumps(host.sub()))
+        if rc_assert != 1:
+            problems.append("--assert on the restored host is rc {}, want 1: the "
+                            "rollback is verified against the capture".format(rc_assert))
+        return problems, "register rc {}, restore rc {}, {} write(s), --assert rc " \
+                         "{}".format(rc_reg, rc_res, len(host.writes), rc_assert)
+
+    def m1():
+        if globals().get("run_register") is None:
+            return ["absent -- run_register is not defined"], ""
+        host = _FakeHost([(c, APP_ID) for c in CONTEXT_ORDER if c != last])
+        capture = host.sub()
+        problems, sink = [], io.StringIO()
+        with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+            rc_reg = _register(host, tmp, sink)
+            writes_reg = len(host.writes)
+            before = {}
+            for name in ("rsc-PRE.json", "rsc-RESTORE.json"):
+                with open(os.path.join(tmp, name), "rb") as fh:
+                    before[name] = fh.read()
+            rc_again = _register(host, tmp, sink)
+            if rc_again != 3:
+                problems.append("the second --register returned rc {}, want 3 -- it "
+                                "must refuse a directory holding a different rollback "
+                                "point".format(rc_again))
+            if len(host.writes) != writes_reg:
+                problems.append("the second --register wrote to the host")
+            for name, blob in sorted(before.items()):
+                with open(os.path.join(tmp, name), "rb") as fh:
+                    if fh.read() != blob:
+                        problems.append("the second --register overwrote " + name)
+            rc_res = _restore(host, tmp, sink)
+        if rc_reg != 0 or writes_reg != 1:
+            problems.append("the first --register: rc {}, {} write(s), want rc 0 and "
+                            "1".format(rc_reg, writes_reg))
+        if rc_res != 0 or len(host.writes) != writes_reg + 1:
+            problems.append("--restore: rc {}, {} write(s), want rc 0 and 1".format(
+                rc_res, len(host.writes) - writes_reg))
+        _at_capture(problems, host, capture)
+        return problems, "register rc {}, second register rc {}, restore rc {}, {} " \
+                         "write(s)".format(rc_reg, rc_again, rc_res, len(host.writes))
+
+    def _apply(host, tmp):
+        return run_apply(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH, staging=tmp,
+                         confirm=True, fetch=host.fetch, write=host.write,
+                         stream=io.StringIO(), run_self_test=False)
+
+    def m2():
+        if globals().get("run_register") is None:
+            return ["absent -- run_register is not defined"], ""
+        host = _FakeHost([(c, a) for c, a in _pre_pairs() if c != last])
+        problems, sink = [], io.StringIO()
+        with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp, \
+                tempfile.TemporaryDirectory(prefix="prc-selftest-") as fresh:
+            rc_reg = _register(host, tmp, sink)
+            text = sink.getvalue()
+            rc_same = _apply(host, tmp)
+            writes_before = len(host.writes)
+            rc_fresh = _apply(host, fresh)
+        rc_assert, _failed, _lines = evaluate(json.dumps(host.sub()))
+        if rc_reg != 1 or "NOT PINNED" not in text:
+            problems.append("--register: rc {}, want 1 and NOT PINNED".format(rc_reg))
+        if "fresh --staging" not in text:
+            problems.append("the NOT PINNED output does not say that --apply runs from "
+                            "a fresh --staging directory")
+        if rc_same != 3:
+            problems.append("--apply in the registration's own directory: rc {}, want "
+                            "3, the refusal that makes a fresh directory the "
+                            "step".format(rc_same))
+        if rc_fresh != 0 or len(host.writes) != writes_before + 1 or rc_assert != 0:
+            problems.append("--apply from a fresh --staging directory: rc {}, {} "
+                            "write(s), --assert on the host rc {}, want 0, 1 and "
+                            "0".format(rc_fresh, len(host.writes) - writes_before,
+                                       rc_assert))
+        return problems, "register rc {}, apply in its directory rc {}, apply fresh " \
+                         "rc {}, --assert rc {}".format(rc_reg, rc_same, rc_fresh,
+                                                        rc_assert)
+
+    def m3():
+        if globals().get("run_register") is None:
+            return ["absent -- run_register is not defined"], ""
+        carried = ("Personal-data gate", CONTEXT_ORDER[0])
+        host = _FakeHost([(c, None if c in carried else APP_ID)
+                          for c in CONTEXT_ORDER if c != last])
+        problems, sink = [], io.StringIO()
+        with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp, \
+                tempfile.TemporaryDirectory(prefix="prc-selftest-") as fresh:
+            rc_reg = _register(host, tmp, sink)
+            apply_sink = io.StringIO()
+            rc_apply = run_apply(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                                 staging=fresh, confirm=True, fetch=host.fetch,
+                                 write=host.write, stream=apply_sink,
+                                 run_self_test=False)
+        rc_assert, _failed, _lines = evaluate(json.dumps(host.sub()))
+        if rc_reg != 1:
+            problems.append("--register: rc {}, want 1, NOT PINNED".format(rc_reg))
+        if rc_apply != 0:
+            problems.append("--apply from a fresh --staging directory: rc {}, want 0{}"
+                            .format(rc_apply,
+                                    " -- it reported SCOPE VIOLATION after pinning both"
+                                    if "SCOPE VIOLATION" in apply_sink.getvalue() else ""))
+        if rc_assert != 0 or len(host.writes) != 2:
+            problems.append("--assert on the host rc {} after {} write(s), want 0 after "
+                            "2".format(rc_assert, len(host.writes)))
+        return problems, "register rc {}, apply rc {}, --assert rc {}, {} " \
+                         "write(s)".format(rc_reg, rc_apply, rc_assert, len(host.writes))
+
+    def m4():
+        def _sibling_moved(state):
+            state["enforce_admins"]["enabled"] = True
+
+        problems, seen = [], []
+        for label, carried in (("one carried entry", ("Personal-data gate",)),
+                               ("two carried entries",
+                                ("Personal-data gate", CONTEXT_ORDER[0]))):
+            host = _FakeHost([(c, None if c in carried else APP_ID)
+                              for c in CONTEXT_ORDER], mutate=_sibling_moved)
+            sink = io.StringIO()
+            with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+                rc = run_apply(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                               staging=tmp, confirm=True, fetch=host.fetch,
+                               write=host.write, stream=sink, run_self_test=False)
+            seen.append("{} rc {}".format(label, rc))
+            if rc != 1 or len(host.writes) != 1 or \
+                    "SCOPE VIOLATION" not in sink.getvalue():
+                problems.append("{}: rc {}, {} write(s), want rc 1 after 1 and SCOPE "
+                                "VIOLATION".format(label, rc, len(host.writes)))
+        return problems, "; ".join(seen)
+
+    def m5():
+        carried = ("Personal-data gate", CONTEXT_ORDER[0])
+        moved = CONTEXT_ORDER[1]
+        problems, seen = [], []
+
+        host = _FakeHost([(c, None if c in carried else APP_ID) for c in CONTEXT_ORDER])
+
+        def _two_views(path):
+            if host.writes and path == _FakeHost.PROT_PATH:
+                host.fetches.append(path)
+                view = json.loads(json.dumps(host.state))
+                for entry in view["required_status_checks"]["checks"]:
+                    if entry["context"] in (CONTEXT_ORDER[0], moved):
+                        entry["app_id"] = None
+                return (True, json.dumps(view), "")
+            return host.fetch(path)
+
+        sink = io.StringIO()
+        with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+            rc = run_apply(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH, staging=tmp,
+                           confirm=True, fetch=_two_views, write=host.write,
+                           stream=sink, run_self_test=False)
+        seen.append("another entry's app_id moved instead rc {}".format(rc))
+        if rc != 1 or "SCOPE VIOLATION" not in sink.getvalue():
+            problems.append("the full object moved {}'s app_id and left {}'s, the same "
+                            "count of leaves: rc {}, want 1 and SCOPE VIOLATION".format(
+                                moved, CONTEXT_ORDER[0], rc))
+
+        host2 = _FakeHost([(c, {"id": APP_ID} if c == "Personal-data gate" else APP_ID)
+                           for c in CONTEXT_ORDER])
+        sink2 = io.StringIO()
+        with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+            try:
+                rc2 = run_apply(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                                staging=tmp, confirm=True, fetch=host2.fetch,
+                                write=host2.write, stream=sink2, run_self_test=False)
+            except Exception as exc:               # noqa: BLE001 - a raise is graded
+                problems.append("a captured app_id that is an object: raised {}".format(
+                    type(exc).__name__))
+                rc2 = None
+        seen.append("an object app_id rc {}".format(rc2))
+        if rc2 is not None and (rc2 != 1 or "SCOPE VIOLATION" not in sink2.getvalue()):
+            problems.append("a captured app_id that is an object: rc {}, want 1 and "
+                            "SCOPE VIOLATION".format(rc2))
+        return problems, "; ".join(seen)
+
+    return [
+        ("M0", "register-then-restore on one stateful host: both exit 0, both "
+               "writes narrow, the host returned to the capture in checks and "
+               "contexts, and --assert on it then rc 1 by design", m0),
+        ("M1", "register-then-restore with a second --register in between, in the "
+               "same directory: the second refused at exit 3 with nothing written and "
+               "the rollback point unchanged, and the restore returning the host to "
+               "the first capture", m1),
+        ("M2", "--register on a host lacking a context and holding an unpinned entry, "
+               "then the step it prints: its NOT PINNED output says --apply runs from a "
+               "fresh --staging directory, --apply in the registration's own directory "
+               "refuses at exit 3, and from a fresh one it pins the entry and --assert "
+               "holds on the host", m2),
+        ("M3", "the walk with two carried entries not at APP_ID and the last context "
+               "missing: --register adds the context and exits 1, NOT PINNED, and "
+               "--apply from a fresh --staging directory then pins both, exits 0, and "
+               "leaves --assert holding on the host", m3),
+        ("M4", "--apply on a host that moves a sibling setting while it pins one "
+               "carried entry, and again while it pins two: each a SCOPE VIOLATION, "
+               "exit 1, the expected leaves being two for each entry pinned and "
+               "nothing else", m4),
+        ("M5", "--apply's scope check reads the capture's own entries: a full object "
+               "that moves another entry's app_id in place of a carried one, at the "
+               "same count of leaves, is a SCOPE VIOLATION, and so is a captured app_id "
+               "that is an object, nothing raised", m5),
     ]
 
 
@@ -3034,6 +4738,49 @@ def self_test(stream=sys.stdout):
             out("  PASS {}: rc {} and {} write(s) attempted -- {}".format(
                 gid, rc, len(log), what))
 
+    # -- H: the rollback --------------------------------------------------
+    # Every arm runs inside its own try, and a raise is a graded FAIL, so a
+    # restore defect that throws cannot end the self-test before groups E and F
+    # report.
+    out("")
+    out("H -- the rollback: --restore driven through injected I/O, on the narrow "
+        "path, verified against what it wrote")
+    for hid, what, drive in restore_arms():
+        try:
+            problems, summary = drive()
+        except Exception as exc:                   # noqa: BLE001 - a raise is graded
+            problems, summary = ["raised {} ({})".format(type(exc).__name__, exc)], ""
+        if problems:
+            failures.append("{}: {}".format(hid, "; ".join(problems)))
+            out("  FAIL {}: {} -- {}".format(hid, "; ".join(problems), what))
+        else:
+            out("  PASS {}: {} -- {}".format(hid, summary, what))
+
+    # -- J, K, M: the registration, its keyed scope check, and the seam ----
+    # Each arm looks its function up by name and runs inside its own try, so a
+    # mode that does not exist is a graded FAIL and never a traceback that ends
+    # the self-test before groups E and F report.
+    for header, group_arms in (
+            ("J -- the registration mode: --register driven through injected I/O",
+             register_arms()),
+            ("K -- the registration scope check, keyed by context name across checks "
+             "and contexts", scope_arms()),
+            ("M -- register-then-restore and register-then-apply: the "
+             "registration's rollback and its next step, on one stateful host",
+             seam_arms())):
+        out("")
+        out(header)
+        for aid, what, drive in group_arms:
+            try:
+                problems, summary = drive()
+            except Exception as exc:               # noqa: BLE001 - a raise is graded
+                problems, summary = ["raised {} ({})".format(type(exc).__name__, exc)], ""
+            if problems:
+                failures.append("{}: {}".format(aid, "; ".join(problems)))
+                out("  FAIL {}: {} -- {}".format(aid, "; ".join(problems), what))
+            else:
+                out("  PASS {}: {} -- {}".format(aid, summary, what))
+
     c_arms = _census_group(out, failures)
 
     # E9 guards the census's TEXT rather than its verdicts: the limit block,
@@ -3051,7 +4798,7 @@ def self_test(stream=sys.stdout):
     # NO_PARSER_REMEDY, FINDING_TEXT, MARKER_NOTE, CENSUS_PRINT, CENSUS_REMEDY --
     # rather than a string built inside a function. It goes red wherever
     # --self-test runs: in CI, where the census step runs it on every pull
-    # request, and in --plan and --apply, which refuse at exit 5.
+    # request, and in --plan, --apply and --register, which refuse at exit 5.
     planted = ("They come apart two further ways, and naming only the first",
                "Three mechanisms for that are measured",
                "and the three classes that still escape both the reader",
@@ -3085,7 +4832,9 @@ def self_test(stream=sys.stdout):
               if hasattr(obj, "__code__")
               and getattr(obj, "__module__", None) == __name__]
     texts += [("arm {}'s label".format(a[0]), a[1])
-              for a in list(arms) + [positive] + list(guard_arms()) + list(c_arms)]
+              for a in list(arms) + [positive] + list(guard_arms()) + list(c_arms)
+              + list(restore_arms()) + list(register_arms()) + list(scope_arms())
+              + list(seam_arms())]
     texts += [("census text {} {}".format(table, key), value)
               for table, entries in (("REFUSAL_TEXT", REFUSAL_TEXT),
                                      ("REFUSAL_REMEDY", REFUSAL_REMEDY),
@@ -3128,7 +4877,21 @@ def self_test(stream=sys.stdout):
         return 1
     out("SELF-TEST PASSED -- 11 degenerate arms all failed on exactly their named "
         "conjuncts, the positive arm passed, every named conjunct is individually "
-        "load-bearing, every capture failure refused the write, the registration "
+        "load-bearing, every capture failure refused the write, the write path "
+        "admitted only the narrow sub-resource's shape, the restore wrote to and "
+        "read back the narrow sub-resource, sent the payload its capture composes, "
+        "left no copy of that body behind when its output failed, and refused "
+        "every rollback artifact it could not vouch for, a second capture refused "
+        "to replace an earlier rollback point or one it could not key, and named "
+        "--restore as the remedy only where --restore reads that file, the "
+        "registration mode added exactly the named contexts, carried "
+        "every other live entry as it was, refused every live set and every "
+        "naming it does not admit, exited 0 only where --assert held, and "
+        "reported a landed write on a stream that cannot encode its text, the "
+        "keyed scope check failed every change beside the contexts named, "
+        "register-then-restore returned the host to its capture, the --apply that "
+        "NOT PINNED names pinned every carried entry from a fresh staging "
+        "directory and failed a write that moved anything else, the registration "
         "census graded every arm the stated way with a control that reached rc 0, "
         "SECURITY.md's required-check list is set-equal to CONTEXT_ORDER in both "
         "directions, and no text E9 reads counts an open set.")
@@ -3139,6 +4902,28 @@ def self_test(stream=sys.stdout):
 # Live modes
 # ==========================================================================
 
+def _write_line(stream, msg):
+    """Write one line of a live mode's output, replacing what the stream cannot
+    encode rather than raising.
+
+    The ruled NOT PINNED text carries an em dash, and an error the host returns
+    can carry anything, while an operator's stdout may be ASCII or Latin-1. A
+    mode that has already written must still report how the write ended, so a
+    character the stream cannot encode is replaced and never ends the run in a
+    traceback.
+    """
+    line = msg + "\n"
+    try:
+        stream.write(line)
+    except UnicodeEncodeError:
+        encoding = getattr(stream, "encoding", None) or "ascii"
+        try:
+            line = line.encode(encoding, "replace").decode(encoding)
+        except LookupError:
+            line = line.encode("ascii", "replace").decode("ascii")
+        stream.write(line)
+
+
 def run_apply(repo, branch, staging, confirm, fetch=gh_fetch_json,
               write=gh_patch_json, stream=sys.stdout, run_self_test=True):
     """capture -> drift-check -> compose -> [write] -> read-back assert -> scope diff.
@@ -3147,7 +4932,7 @@ def run_apply(repo, branch, staging, confirm, fetch=gh_fetch_json,
     this function with no network and count the writes it attempted.
     """
     def out(msg):
-        stream.write(msg + "\n")
+        _write_line(stream, msg)
 
     if run_self_test:
         if self_test(stream) != 0:
@@ -3155,10 +4940,7 @@ def run_apply(repo, branch, staging, confirm, fetch=gh_fetch_json,
                 "to grade a live write.")
             return 5
 
-    prot_path = "repos/{}/branches/{}/protection".format(repo, branch)
-    rsc_path = "repos/{}/branches/{}{}".format(repo, branch, SUBRESOURCE_SUFFIX)
-    pre_full_f = os.path.join(staging, "prot-PRE.json")
-    pre_rsc_f = os.path.join(staging, "rsc-PRE.json")
+    prot_path, rsc_path = protection_paths(repo, branch)
     patch_f = os.path.join(staging, "rsc-PATCH.json")
     restore_f = os.path.join(staging, "rsc-RESTORE.json")
     post_full_f = os.path.join(staging, "prot-POST.json")
@@ -3166,13 +4948,12 @@ def run_apply(repo, branch, staging, confirm, fetch=gh_fetch_json,
     # 1. CAPTURE. This is the precondition, not a courtesy.
     out("[1/6] capture -- the rollback artifact, before anything is written")
     try:
-        pre_full = capture(fetch, prot_path, pre_full_f, "full protection object")
-        pre_rsc = capture(fetch, rsc_path, pre_rsc_f, "required_status_checks")
+        pre_full, pre_rsc = capture_rollback_point(fetch, prot_path, rsc_path, staging)
     except CaptureRefused as exc:
         out("CAPTURE REFUSED: {}".format(exc))
         out("Nothing was written. Branch protection has no restore API, so without "
             "a verified pre-change artifact this change would be recoverable only "
-            "from memory. Fix the capture and re-run.")
+            "from memory. Act on the reason above and re-run.")
         return 3
     out("      prot-PRE.json  sha256(canonical) = {}".format(canonical_digest(pre_full)))
     out("      rsc-PRE.json   sha256(canonical) = {}".format(canonical_digest(pre_rsc)))
@@ -3193,7 +4974,10 @@ def run_apply(repo, branch, staging, confirm, fetch=gh_fetch_json,
         out("       unexpected = {}".format(sorted(live_names - EXPECTED_CONTEXTS)))
         out("Nothing was written. A set that changed is a set a person has to look "
             "at: re-derive CONTEXT_ORDER, re-run --self-test, and reconcile "
-            "SECURITY.md's Branch Protection Posture record in the same change.")
+            "SECURITY.md's Branch Protection Posture record in the same change. A "
+            "declared context the live set lacks is added with --register; a live "
+            "context outside CONTEXT_ORDER is removed by an edit this tool does not "
+            "make.")
         return 4
     out("      {} contexts, set-equal to the expected set".format(len(checks)))
 
@@ -3253,56 +5037,382 @@ def run_apply(repo, branch, staging, confirm, fetch=gh_fetch_json,
             "the scope-containment diff could not be run.".format(exc))
         return 1
     diff = scope_diff(pre_full, post_full)
+    pinning, expected = pin_leaves(pre_full)
     out("      differing leaves: {}".format(len(diff)))
     for k, v in diff:
         out("        {} = {!r}".format(k, v))
-    if len(diff) != 2 or not all("app_id" in k for k, _ in diff):
-        out("SCOPE VIOLATION: the write changed something other than the one app_id. "
-            "Restore from {}.".format(restore_f))
+    if set(diff) != expected:
+        out("SCOPE VIOLATION: the write changed something other than the app_id of "
+            "each entry it pinned -- {} differing leaves, want {}, two for each of {}. "
+            "Restore from {}.".format(len(diff), len(expected), pinning, restore_f))
         return 1
-    out("      exactly two differing leaves, both the one app_id -- no sibling "
-        "protection setting moved")
+    out("      {} differing leaves, two for each entry pinned, every one that entry's "
+        "app_id -- {}; no sibling protection setting moved".format(
+            len(diff), ", ".join(pinning)))
     out("DONE -- the required-context set is pinned, and the write is scope-contained.")
     return 0
 
 
+def run_register(repo, branch, staging, names, confirm, fetch=gh_fetch_json,
+                 write=gh_patch_json, stream=sys.stdout, run_self_test=True):
+    """self-test -> capture -> admission -> compose -> [write] -> read-back -> scope check.
+
+    It adds the declared contexts the live set lacks, and only when the operator
+    has named exactly those. The payload is composed from the delta this function
+    derives; the scope check is graded against the names the operator gave, so
+    the write and its check stand on separate sources that must agree before
+    anything is written. The module docstring's --register entry states what it
+    admits, what each exit code means and when to run it. `fetch` and `write` are
+    injected so the self-test drives every branch with no network.
+    """
+    def out(msg):
+        _write_line(stream, msg)
+
+    if run_self_test:
+        if self_test(stream) != 0:
+            out("ABORT: the self-test did not pass, so this tool is not trusted "
+                "to grade a live write.")
+            return 5
+
+    names = list(names or [])
+    prot_path, rsc_path = protection_paths(repo, branch)
+    patch_f = os.path.join(staging, "rsc-PATCH.json")
+    restore_f = os.path.join(staging, "rsc-RESTORE.json")
+    post_full_f = os.path.join(staging, "prot-POST.json")
+
+    # 1. CAPTURE, through the helper every capturing mode shares.
+    out("[1/7] capture -- the rollback artifact, before anything is written")
+    try:
+        pre_full, pre_rsc = capture_rollback_point(fetch, prot_path, rsc_path, staging)
+    except CaptureRefused as exc:
+        out("CAPTURE REFUSED: {}".format(exc))
+        out("Nothing was written. Branch protection has no restore API, so without "
+            "a verified pre-change artifact this change would be recoverable only "
+            "from memory. Act on the reason above and re-run.")
+        return 3
+    out("      prot-PRE.json  sha256(canonical) = {}".format(canonical_digest(pre_full)))
+    out("      rsc-PRE.json   sha256(canonical) = {}".format(canonical_digest(pre_rsc)))
+    # Written before admission, as --apply writes it, so a refused or interrupted
+    # run leaves a pair --restore's provenance check accepts.
+    with open(restore_f, "w", encoding="utf-8") as fh:
+        json.dump(compose_restore(pre_rsc), fh, indent=2)
+    out("      rsc-RESTORE.json written -- the rollback payload, from the capture")
+
+    # 2. ADMISSION.
+    # A rule over an enumeration (CLAUDE.md § Rules over an enumeration): the
+    # criterion, the order of the tests and what an unnamed state resolves to are
+    # stated here.
+    # Criterion: the write is admitted when the live set read at capture holds no
+    # context twice, holds nothing outside CONTEXT_ORDER, and the contexts named
+    # are exactly CONTEXT_ORDER minus the live set, which is not empty.
+    # Precedence, the first test that holds decides:
+    #   (1) the capture is refused -> exit 3 (above);
+    #   (2) the live set holds a context twice -> exit 4;
+    #   (3) it holds a context outside CONTEXT_ORDER -> exit 4, since this mode never
+    #       removes one; where (2) and (3) both hold both are printed, and the exit
+    #       is the same;
+    #   (4) the delta is empty: where every context named is live, nothing is
+    #       written -- exit 0 when the live set passes the --assert conjuncts, and
+    #       exit 1, naming --apply, when it fails them only on entries not pinned to
+    #       APP_ID; otherwise exit 4;
+    #   (5) the contexts named differ from the delta -> exit 4, printing each side;
+    #   (6) admitted.
+    # The refusals come before (4), so a live set that cannot be registered is
+    # never reported as already registered. Exit 0 means the branch passes the
+    # --assert conjuncts, after a write or with nothing to add.
+    # An unnamed state, one the tests above do not admit, is refused at exit 4. An
+    # app_id that is not the integer APP_ID is not a test here: a live entry is
+    # carried over as it is read, and --apply pins it afterwards.
+    checks, strict = sub_checks(pre_rsc)
+    live = [c.get("context") if isinstance(c, dict) else None for c in checks]
+    unpinned = [str(c.get("context")) for c in checks
+                if isinstance(c, dict) and not _pinned(c.get("app_id"))]
+    out("[2/7] admission -- the live set, and the contexts named, against "
+        "CONTEXT_ORDER")
+    twice = sorted(set(str(n) for n in live if live.count(n) > 1))
+    outside = sorted(set(str(n) for n in live if n not in EXPECTED_CONTEXTS))
+    if twice or outside:
+        out("REFUSED: the live set is not one --register admits.")
+        if twice:
+            out("       listed more than once = {}".format(twice))
+        if outside:
+            out("       outside CONTEXT_ORDER = {}".format(outside))
+        out("Nothing was written. This mode adds declared contexts and never removes "
+            "one: a live context CONTEXT_ORDER does not carry, or carries twice, is "
+            "removed by an edit this tool does not make.")
+        return 4
+    delta = [c for c in CONTEXT_ORDER if c not in live]
+    if not delta:
+        stray = sorted(set(names) - set(live))
+        rc, failed, _lines = evaluate(json.dumps(pre_rsc))
+        if stray:
+            out("REFUSED: every declared context is already live, and the contexts "
+                "named include {}, which CONTEXT_ORDER does not carry.".format(stray))
+            out("Nothing was written.")
+            return 4
+        if rc == 0:
+            out("ALREADY REGISTERED -- every declared context is live and pinned. "
+                "Nothing was written.")
+            return 0
+        if unpinned and set(failed) <= {"C3", "C4"}:
+            out("NOTHING TO REGISTER — NOT PINNED: {}; run --apply next".format(
+                ", ".join(unpinned)))
+            out("Every declared context is live and nothing was written, but the "
+                "entries above are not pinned to APP_ID, so --assert fails on them "
+                "until --apply pins them.")
+            return 1
+        out("REFUSED: the live set fails the --assert conjuncts {} in a way this "
+            "mode does not admit. Nothing was written.".format(sorted(failed)))
+        return 4
+    if sorted(names) != sorted(delta):
+        out("REFUSED: the contexts named are not the declared contexts the live set "
+            "lacks.")
+        out("       named, not to be added = {}".format(sorted(set(names) - set(delta))))
+        out("       to be added, not named = {}".format(sorted(set(delta) - set(names))))
+        repeated = sorted(set(n for n in names if names.count(n) > 1))
+        if repeated:
+            out("       named more than once   = {}".format(repeated))
+        out("Nothing was written. Name each declared context the live set lacks, once, "
+            "exactly as CONTEXT_ORDER spells it.")
+        return 4
+    out("      admitted: {} to add -- {}".format(len(delta), delta))
+
+    # 3. COMPOSE: the live entries as read, then the delta at APP_ID. Never
+    # POST .../contexts, which produces an unpinned context by construction.
+    out("[3/7] compose -- the live entries as read, then each context to add at "
+        "APP_ID")
+    payload = {"strict": strict,
+               "checks": [{"context": c.get("context"), "app_id": c.get("app_id")}
+                          for c in checks]
+                         + [{"context": c, "app_id": APP_ID} for c in delta]}
+    if len(payload["checks"]) != EXPECTED_COUNT or \
+            set(c["context"] for c in payload["checks"]) != EXPECTED_CONTEXTS:
+        out("ABORT: composed payload failed its own shape check. Nothing was written.")
+        return 1
+    with open(patch_f, "w", encoding="utf-8") as fh:
+        json.dump(payload, fh, indent=2)
+    out("      rsc-PATCH.json -- {} contexts: {} carried as read, {} added at "
+        "APP_ID".format(len(payload["checks"]), len(checks), len(delta)))
+
+    if not confirm:
+        out("STOPPING BEFORE THE WRITE -- --confirm-write was not given.")
+        out("Everything above ran; nothing was written. Re-run with --confirm-write "
+            "to perform the one non-git-reversible action in this change.")
+        return 6
+
+    # 4. WRITE -- narrow endpoint only.
+    out("[4/7] PATCH {} (narrow sub-resource; never PUT .../protection, never POST "
+        ".../contexts)".format(rsc_path))
+    ok, _text, err = write(rsc_path, patch_f)
+    if not ok:
+        out("WRITE FAILED: {}".format(err))
+        out("Restore from {} if the branch is in a partial state.".format(restore_f))
+        return 7
+
+    # 5. FRESH read-back: equal to the payload, then the --assert conjuncts.
+    out("[5/7] fresh read-back -- it must equal the payload written, then pass the "
+        "--assert conjuncts")
+    ok, text, err = fetch(rsc_path)
+    if not ok:
+        out("READ-BACK FAILED: {} -- the write is UNVERIFIED.".format(err))
+        return 7
+    try:
+        got = _restore_key(json.loads(text))
+    except ValueError as exc:
+        out("READ-BACK FAILED: it does not parse ({}) -- the write is "
+            "UNVERIFIED.".format(exc))
+        return 7
+    if got is None:
+        out("READ-BACK FAILED: it carries no checks array of named contexts -- the "
+            "write is UNVERIFIED.")
+        return 7
+    want = _restore_key(payload)
+    if got != want:
+        out("REGISTRATION NOT VERIFIED -- the read-back differs from the payload "
+            "written.")
+        if got[0] != want[0]:
+            out("  strict: written {}, read back {}".format(
+                json.dumps(want[0]), json.dumps(got[0])))
+        out("  written only:   {}".format(sorted(set(want[1]) - set(got[1]))))
+        out("  read back only: {}".format(sorted(set(got[1]) - set(want[1]))))
+        out("Restore from {}.".format(restore_f))
+        return 1
+    rc, failed, lines = evaluate(text)
+    for line in lines:
+        out("      " + line)
+    if rc != 0 and (rc == 2 or set(failed) - {"C3", "C4"} or not unpinned):
+        out("REGISTRATION NOT VERIFIED -- the read-back fails the --assert conjuncts "
+            "{}, and not only on an entry carried over unpinned. Restore from "
+            "{}.".format(sorted(failed), restore_f))
+        return 1
+
+    # 6. The post-change capture, then 7. the scope check, keyed by name.
+    out("[6/7] post-change capture -- the full protection object")
+    try:
+        post_full = capture(fetch, prot_path, post_full_f, "post-change protection")
+    except CaptureRefused as exc:
+        out("      post-capture unavailable ({}) -- the read-back held, but the scope "
+            "check could not be run.".format(exc))
+        return 1
+    out("[7/7] scope check -- keyed by context name across checks and contexts")
+    ok, problems, notes = registration_scope(pre_full, post_full, names)
+    for note in notes:
+        out("      " + note)
+    for problem in problems:
+        out("      " + problem)
+    if not ok:
+        out("SCOPE VIOLATION: the write changed something other than adding the "
+            "contexts named. Restore from {}.".format(restore_f))
+        return 1
+    out("      added exactly {}; no other context and no sibling setting "
+        "moved".format(names))
+    if rc != 0:
+        out("REGISTERED — NOT PINNED: {}; run --apply next".format(
+            ", ".join(unpinned)))
+        out("Run it from a fresh --staging directory: this one holds the "
+            "registration's rollback point, which --restore reads and --apply "
+            "refuses to replace.")
+        out("The contexts named were added and the write is scope-contained. The "
+            "entries above were carried over as they were read and are not pinned "
+            "to APP_ID, so --assert fails on them until --apply pins them.")
+        return 1
+    out("REGISTERED -- the contexts named are live and pinned to APP_ID, --assert "
+        "holds, and the write is scope-contained.")
+    return 0
+
+
+def _restore_fallback(rsc_path, when):
+    """The hand route back to an unpinned entry, which a PATCH cannot always take."""
+    return ("Fallback, {}: PATCH the pinned contexts, then POST each unpinned context "
+            "NAME to {}/contexts -- that endpoint produces an unpinned context by "
+            "construction, which is the pre-change shape.".format(when, rsc_path))
+
+
 def run_restore(repo, branch, staging, confirm, fetch=gh_fetch_json,
                 write=gh_patch_json, stream=sys.stdout):
-    def out(msg):
-        stream.write(msg + "\n")
+    """provenance -> [write] -> read-back compared with the payload written.
 
-    rsc_path = "repos/{}/branches/{}/protection{}".format(
-        repo, branch, SUBRESOURCE_SUFFIX)
+    It re-applies rsc-PRE.json, composed as compose_restore composes it, to the
+    narrow path, and sends that payload rather than the bytes of the staged
+    rsc-RESTORE.json. Before any write it refuses at exit 3 when rsc-PRE.json
+    cannot vouch for itself, when an rsc-RESTORE.json already in the
+    directory is not the payload rsc-PRE.json composes, when it cannot write
+    rsc-RESTORE.json where none is there, or when it cannot stage the body it
+    sends. That body file is removed however the step that sends it ends, an
+    output that fails included. After the write it reads
+    the sub-resource back: unreadable is exit 7, different from the payload is
+    exit 1, and only a read-back equal to the payload prints RESTORED. The
+    read-back is compared with the payload and never graded by evaluate(),
+    because restoring a capture that held app_id null, or one taken before a
+    registration, fails the --assert conjuncts by design. It does not run the
+    self-test; the module docstring's --restore entry says why.
+    """
+    def out(msg):
+        _write_line(stream, msg)
+
+    def refuse(reason):
+        out("ROLLBACK ARTIFACT REFUSED: {}".format(reason))
+        out("Nothing was written.")
+        return 3
+
+    _prot_path, rsc_path = protection_paths(repo, branch)
     restore_f = os.path.join(staging, "rsc-RESTORE.json")
-    if not os.path.exists(restore_f):
-        pre_rsc_f = os.path.join(staging, "rsc-PRE.json")
-        if not os.path.exists(pre_rsc_f):
-            out("No rollback artifact in {} -- nothing to restore from.".format(staging))
-            return 3
-        with open(pre_rsc_f, encoding="utf-8") as fh:
-            with open(restore_f, "w", encoding="utf-8") as wfh:
-                json.dump(compose_restore(json.load(fh)), wfh, indent=2)
-    with open(restore_f, encoding="utf-8") as fh:
-        payload = json.load(fh)
+    try:
+        pre = read_rollback_point(staging)
+    except CaptureRefused as exc:
+        return refuse(exc)
+    out("rsc-PRE.json   sha256(canonical) = {}".format(canonical_digest(pre)))
+    payload = compose_restore(pre)
+    want = _restore_key(payload)
+    if os.path.exists(restore_f):
+        try:
+            with open(restore_f, encoding="utf-8") as fh:
+                staged = json.load(fh)
+        except (OSError, ValueError) as exc:
+            return refuse("rsc-RESTORE.json could not be read -- {}".format(exc))
+        if _restore_key(staged) != want:
+            return refuse(
+                "rsc-RESTORE.json in {} is not the payload rsc-PRE.json beside it "
+                "composes, so the two are not from one run. rsc-PRE.json is the "
+                "capture this restore re-applies: if it is the right one, remove "
+                "rsc-RESTORE.json and re-run, and the payload is composed from "
+                "it".format(staging))
+        staged_exact = canonical_digest(staged) == canonical_digest(payload)
+    else:
+        try:
+            with open(restore_f, "w", encoding="utf-8") as fh:
+                json.dump(payload, fh, indent=2)
+        except OSError as exc:
+            return refuse("could not write rsc-RESTORE.json -- {}".format(exc))
+        staged_exact = True
+    unpinned = [c["context"] for c in payload["checks"] if c.get("app_id") is None]
     out("restore payload: {} contexts, {} of them unpinned".format(
-        len(payload.get("checks", [])),
-        sum(1 for c in payload.get("checks", []) if c.get("app_id") is None)))
+        len(payload["checks"]), len(unpinned)))
+    if not staged_exact:
+        out("rsc-RESTORE.json agrees with rsc-PRE.json on strict and on each "
+            "context's app_id, and is not that payload exactly: the body sent is the "
+            "payload composed from rsc-PRE.json, and nothing else in that file is "
+            "sent.")
     if not confirm:
         out("STOPPING -- --confirm-write was not given. Nothing was written.")
         return 6
-    ok, _text, err = write(rsc_path, restore_f)
+    # The body sent is the payload composed from rsc-PRE.json, never the staged
+    # file's bytes: provenance compares rsc-RESTORE.json on its key alone, so a
+    # member beside that key would otherwise reach the host unchecked. It is
+    # staged in the system's temporary directory rather than the staging one, so
+    # a rollback from a staging directory it cannot write to still runs when
+    # rsc-RESTORE.json is already there, as --apply and --register leave it;
+    # without that file, the write of it above refuses first. The finally covers
+    # the whole step, from mkstemp to the write's return, so the file is removed
+    # however the step ends, the PATCH line failing to print included.
+    body_f = None
+    try:
+        try:
+            fd, body_f = tempfile.mkstemp(prefix="rsc-RESTORE-sent.", suffix=".json")
+            with os.fdopen(fd, "w", encoding="utf-8") as fh:
+                json.dump(payload, fh, indent=2)
+        except OSError as exc:
+            return refuse("could not stage the body to send -- {}".format(exc))
+        out("PATCH {} (narrow sub-resource; never PUT .../protection)".format(rsc_path))
+        ok, _text, err = write(rsc_path, body_f)
+    finally:
+        if body_f is not None and os.path.exists(body_f):
+            os.remove(body_f)
     if not ok:
         out("RESTORE FAILED: {}".format(err))
-        out("Fallback, if app_id: null is rejected on the write path: PATCH the "
-            "pinned contexts, then POST each unpinned context NAME to "
-            "{}/contexts -- that endpoint produces an unpinned context by "
-            "construction, which is the pre-change shape.".format(rsc_path))
+        out(_restore_fallback(rsc_path, "if app_id: null is rejected on the write path"))
         return 7
-    ok, text, _err = fetch(rsc_path)
-    if ok:
-        checks, _ = sub_checks(json.loads(text))
-        out("read-back: {} contexts, {} unpinned".format(
-            len(checks), sum(1 for c in checks if c.get("app_id") is None)))
+    ok, text, err = fetch(rsc_path)
+    if not ok:
+        out("READ-BACK FAILED: {} -- the restore is UNVERIFIED.".format(err))
+        return 7
+    try:
+        got = _restore_key(json.loads(text))
+    except ValueError as exc:
+        out("READ-BACK FAILED: it does not parse ({}) -- the restore is "
+            "UNVERIFIED.".format(exc))
+        return 7
+    if got is None:
+        out("READ-BACK FAILED: it carries no checks array of named contexts -- the "
+            "restore is UNVERIFIED.")
+        return 7
+    if got != want:
+        out("RESTORE NOT VERIFIED -- the read-back differs from the payload written.")
+        if got[0] != want[0]:
+            out("  strict: written {}, read back {}".format(
+                json.dumps(want[0]), json.dumps(got[0])))
+        out("  written only:   {}".format(sorted(set(want[1]) - set(got[1]))))
+        out("  read back only: {}".format(sorted(set(got[1]) - set(want[1]))))
+        read_back = dict(got[1])
+        pinned = sorted(c for c in unpinned if read_back.get(c, "null") != "null")
+        if pinned:
+            out("The read-back pins {}, which this payload wrote with app_id null: "
+                "the host treated the null as an omitted app_id, so this write "
+                "cannot return those entries.".format(pinned))
+            out(_restore_fallback(rsc_path, "for those entries"))
+        return 1
+    out("read-back: {} contexts, {} unpinned -- equal to the payload written".format(
+        len(got[1]), sum(1 for _c, a in got[1] if a == "null")))
     out("RESTORED.")
     return 0
 
@@ -3326,8 +5436,14 @@ def main(argv):
                       help="capture and compose; stop before the write")
     mode.add_argument("--apply", action="store_true",
                       help="the full sequence; needs --confirm-write to write")
+    mode.add_argument("--register", action="store_true",
+                      help="add the named declared-but-unregistered contexts; needs "
+                           "--context and --confirm-write to write")
     mode.add_argument("--restore", action="store_true",
                       help="re-apply the captured pre-change sub-resource")
+    ap.add_argument("--context", dest="contexts", action="append",
+                    help="--register: a context to add, by its exact name; repeat "
+                         "for each")
     ap.add_argument("--stdin", action="store_true", help="--assert reads stdin")
     ap.add_argument("--file", help="--assert reads this file")
     ap.add_argument("--root", help="--census grades this tree; default: the "
@@ -3338,6 +5454,10 @@ def main(argv):
     ap.add_argument("--confirm-write", dest="confirm", action="store_true",
                     help="required before any write is attempted")
     args = ap.parse_args(argv)
+    if args.contexts and not args.register:
+        ap.error("--context is read by --register alone")
+    if args.register and not args.contexts:
+        ap.error("--register needs --context NAME, once for each context to add")
 
     if args.self_test:
         return self_test()
@@ -3369,6 +5489,9 @@ def main(argv):
         return 3
     print("repository: {}   branch: {}".format(repo, args.branch))
 
+    if args.register:
+        return run_register(repo, args.branch, args.staging, args.contexts,
+                            confirm=args.confirm)
     if args.restore:
         return run_restore(repo, args.branch, args.staging, args.confirm)
     return run_apply(repo, args.branch, args.staging,

@@ -85,6 +85,118 @@ nationality keeps it until the research role next rewrites that field. An interv
 not yet read the notice: that route is a follow-on, to travel with the next regrade of the
 generated conversations.
 
+## [0.68.0] — 2026-11-13 — The required-check tooling is pinned and can register and roll back what it declares
+
+No trip verb plans or records a trip differently in this release. What changes is met by whoever
+changes this repository's workflows, and by the operator who registers, pins or rolls back the
+checks branch protection requires.
+
+**The required security jobs download only release assets this repository pinned.**
+`Workflow SAST (actionlint)` and `Secret scanning (gitleaks)` download actionlint 1.7.1 and gitleaks
+8.21.2 as upstream release assets, each refused unless its SHA-256 matches the digest recorded
+beside its version, read from that release's own checksums file. Before, actionlint came from an
+installer script fetched from the project's moving default branch, and the gitleaks archive was
+unpacked unchecked. Nothing falls back to an unverified download. actionlint's shellcheck is not
+downloaded: a step before actionlint refuses unless dpkg records `/usr/bin/shellcheck` as installed
+by the runner image's shellcheck package and that file reports 0.9.0, and actionlint is pointed at
+it. An image that moves that version, or drops shellcheck, now turns the check red, where before
+actionlint went on linting with whatever shellcheck the image carried, or with none, and said
+nothing. The workflow's header names what each job runs, and no sentence in `SECURITY.md` or
+`CONTRIBUTING.md` counts the required checks except the row the self-test reads.
+
+**`--restore` writes the endpoint it names, and proves what it wrote.** It addressed a path that
+doubled `/protection`, so a rollback could never land. It now writes the
+`required_status_checks` sub-resource, reads it back, and prints `RESTORED.` only when the read-back
+equals what it wrote. It refuses a rollback artifact it cannot vouch for, and where the host pins a
+context the capture held unpinned it says so and prints the hand route back. `--plan` and `--apply`,
+and the new `--register`, now refuse at exit 3 a staging directory that already holds a different
+rollback point, where they used to overwrite it: restore from that directory, or pass a fresh one.
+An rsc-PRE.json they cannot read is refused the same way, and since `--restore` cannot read it
+either, the remedy is a fresh directory.
+
+**Registering a declared check is a tested mode.**
+`scripts/pin-required-checks.py --register --context NAME` adds exactly the declared contexts the
+branch lacks, pinned to the GitHub Actions app, and refuses before writing anything when the
+contexts named are not those, or when the live set holds a context twice or one the declaration does
+not carry. It keeps every other live entry as it reads it, reads the write back, and checks its
+scope by context name, so an insertion that shifts every later position is not misread as a change
+to each. Exit 0 means `--assert` holds: where an entry it carried is not pinned to the app, it
+prints `NOT PINNED` with those entries, names `--apply` next, from a fresh `--staging` directory
+once it has written, and exits 1. `--apply`'s scope check now expects the app_id of each entry the
+write pins to move, two leaves for each, so a run that pins several carried entries reports
+scope-contained, where it reported a SCOPE VIOLATION, and advised a restore, once more than one had
+moved. `--restore` is its rollback. `CONTRIBUTING.md` and the flip recipe in
+`.github/workflows/adr-conformance.yml` name the mode, to be run once the change that declares the
+context has merged, and the tool's own registration texts do too. The next registration is a tested
+command, where the last one was a payload composed by hand.
+
+**Size fence.** `CONTRIBUTING.md` grew 290 bytes to 20,195 and crossed the floor at which a file owes
+a row, so it gains one at 22,215, the value the fence prints. Its new clause says how a context is
+registered and that a renamed job's old context is removed by hand; squeezing that under the floor
+would have left the next edit to cross it with no row planned, and with the row, the file's later
+growth is a decision. The other 50 rows were kept and none was re-pinned;
+`reference/data-architecture.md` shrank 24 bytes to 133,751.
+
+**What it doesn't reach.** No stage ran `--register`, `--apply` or `--restore` against the live
+branch protection: each is proved by self-test arms through injected reads and writes on a stand-in
+host. Whether the host accepts `app_id: null` on that write is still unmeasured, and both modes
+state either outcome. No tested mode removes a context, so a renamed or retired job's context is
+still removed by hand. The shellcheck pin is by version, not by digest, and its ownership check
+reads dpkg's record of the file, not the file. Every job's `actions/checkout@v7` step still runs
+that action at its moving major tag, outside these pins. A digest read from the release's own
+checksums file means a later change to what upstream serves is noticed; it does not show that the
+release was sound.
+
+## [0.67.0] — 2026-11-13 — Every site build is checked against the shape its trip's state declares
+
+No trip verb plans or records a trip differently in this release. What changes is met by whoever
+builds or patches a trip's site: the round-trip check now reads which state the site was built
+for, and checks the page against what that state declares.
+
+**The site spec says what each state renders.** `reference/site-layout-spec.md` § 9.2 gains a
+render table, fence `round-trip-contract-artifacts`. For each state the `site` verb admits, it says
+whether each `bound` class renders and where, and which scaffolding the state emits. Its rows cover
+every `bound` class and every scaffolding row, in each plan mode with a decided destination. The
+itinerary's element fence is unchanged, byte for byte. § 9.3 gains a State column, and § 9.4 now
+runs the walk in three passes: artifact, element and shape.
+
+**The walk takes the trip's state.** `scripts/check-round-trip.sh` takes
+`--state <MODE>:<DECIDED|UNDECIDED>`: the trip's mode and whether its destination is decided, never
+the destination itself. The `site` verb appends it on its own line, and `CLAUDE.md` § *Updating the
+site* passes it on the free-form patch path, with `--data-root`. Without it, the artifact pass's
+instance half and the shape pass are reported as not run, and the run exits 2, never 0. An unknown
+argument is named by its position rather than its text, and a second `--state` is refused, so a
+value given by mistake does not reach the output.
+
+**A class turned `bound` with no home fails the merge.** The walker holds the render table to
+§ 1.1's `bound` classes and to the states the `site` row admits, in both directions, and reports
+RT7 where it does not close. Group `W` of `scripts/test-artifact-schema.sh` grades it on every run,
+so a class that becomes renderable without a row turns the required check red.
+
+**A section left from another state is reported.** The shape pass reports RT8 when the page carries
+a component its state does not admit, and the verb then does not call the site current. It sees a
+component by the class § 3 declares for it, so it cannot see the seven components § 3 gives no class.
+A clean run says so: its last line ends "shape: 11 of 18 components observable".
+
+**`G6` declares `DECIDED`.** `CLAUDE.md` § *Resolving a trip* now writes the decided destination as
+the token every requirement table already uses, and says the walker reads it. `ADR-032` § *Consequences*
+is corrected in place to say which passes run without the state, with an entry in its
+`## Amendment history`. No decision changes.
+
+**Size fence.** Nothing moved: all 50 rows were kept and none was re-pinned.
+- `reference/site-layout-spec.md` grew 5,730 bytes to 63,900, beneath its row of 63,987.
+- `CLAUDE.md` grew 879 bytes to 142,650, beneath its row of 153,381.
+- `skills/trip/SKILL.md` grew 138 bytes to 104,775, beneath its row of 106,098.
+- `reference/adr/ADR-032-site-round-trip-contract.md`, `README.md` and `reference/command-reference.md`
+  are below the floor at which a file owes a row.
+
+**What it doesn't reach.** No rendered site is tracked, so the instance half of the walk, RT8
+included, has no population in CI and is carried by synthetic controls. Today every state the
+`site` row admits renders the same components, so RT8 cannot fire on a real page until a state
+renders a different shape; milestone 98's IDEATION rows are the first. A scaffolding token whose
+every row is deleted is not detected. The plan modes with an undecided destination take a declared
+non-row, which #2158 builds.
+
 ## [0.66.0] — 2026-11-10 — The intake channel is checked, not asserted
 
 No trip verb plans or records a trip differently in this release. What changes is met by whoever
