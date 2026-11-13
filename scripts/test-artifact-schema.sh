@@ -29166,8 +29166,8 @@ md_flips wtadr26_cell 'WT-ADR26' wtadr26_assert
 #                own indent (10 shapes, 20 canaries).
 #          PJ11  the delimiters a payload must stop at, each with kept lines after it: CRLF
 #                line endings, the closer of a fenced block the label sits in, and the
-#                frontmatter's next key and closing `---`, with and without a byte-order
-#                mark (4 shapes, 5 canaries).
+#                frontmatter's closing `---`, with and without a byte-order mark, a key after
+#                the passport key going with it as the safe side (4 shapes, 6 canaries).
 #        PJ8 is not used: the scope-lock declined the review's eighth arm, the guard
 #        comparison, and leaving its id empty keeps these arms from reading as that one.
 #
@@ -29643,11 +29643,11 @@ printf '%s\n' '## Rowan' \
   'Passport: Zorvanian · CNRY-PJS28' \
   '```' \
   'Needs: a step-free route · KEEP-PJS27' > "$PJT_SF"
-pjt_shape 'PJ11[frontmatter]' shape-frontmatter model 'CNRY-PJS29' 'KEEP-PJS28 KEEP-PJS29' 'passport: Zorvanian' '---' 2 'a frontmatter passport key, the next key, the closer and the line after it'
+pjt_shape 'PJ11[frontmatter]' shape-frontmatter model 'CNRY-PJS29 CNRY-PJS33' 'KEEP-PJS28 KEEP-PJS29' 'passport: Zorvanian' '---' 2 'a frontmatter passport key, the key after it, the closer and the line after that'
 printf '%s\n' '---' \
-  'artifact: outputs/traveler-model.md' \
-  'passport: Zorvanian · CNRY-PJS29' \
   'note: KEEP-PJS28' \
+  'passport: Zorvanian · CNRY-PJS29' \
+  'number: Z1234567 · CNRY-PJS33' \
   '---' \
   'Rowan travels light · KEEP-PJS29' > "$PJT_SF"
 pjt_shape 'PJ11[frontmatter-bom]' shape-frontmatter-bom model 'CNRY-PJS30' 'KEEP-PJS30' "${PJT_BOM}---" '---' 1 'a frontmatter passport key behind a byte-order mark, the closer and the line after it'
