@@ -11007,6 +11007,75 @@ md_flips record_published_itinerary  "S31e" s31e_assert
 md_flips stage_baseline_record       "S31h" s31h_assert
 md_flips require_change_confirmation "S31i" s31i_assert
 
+# ── S32a–S32d (#2117) — THE ITINERARY DIGEST ENDS A BODY WHERE THE BROWSER ENDS IT. strip_to_itinerary_text
+# ended a <script> or <style> body only at the exact tag, so an edit written after an end tag of
+# another form and before a later exact one left the digest unmoved and the gate read the plan as the
+# published one. The limb now ends a body at the browser's end tag: `</` and the name, then
+# whitespace (tab, line feed, form feed, carriage return, space), `/` or `>`, then up to the tag's `>`.
+# S32a must fire; S32b must not; S32c pins the one-time cost the change states; S32d holds the digest
+# and the guard's added readings to one end-tag rule.
+s32_page() { # <file> <closer> <time> -> Day 1 after <closer>, before a later exact </script>
+  printf '<!DOCTYPE html><html><body><section class="hero"><h1>Synthetic Trip</h1></section>\n<script>var a = 1;%s<section class="day">Synthetic Day 1 Dinner at %s</section>\n<script>var b = 2;</script><section class="day">Synthetic Day 2 Free day</section></body></html>\n' "$2" "$3" > "$1"
+}
+s32_spage() { # <file> <closer> <time> -> the same, through a <style> body
+  printf '<html><body><h1>Synthetic Trip</h1><style>.a{}%s<section>Synthetic Day 1 Dinner at %s</section><style>.b{}</style><section>Synthetic Day 2</section></body></html>\n' "$2" "$3" > "$1"
+}
+s32_moves() { # <builder> <closer> -> 1 when an edit inside the stretch moves itinerary_digest, else 0
+  "$1" "$WORK/s32_a.html" "$2" 19:00; "$1" "$WORK/s32_b.html" "$2" 20:00
+  if [ "$(itinerary_digest "$WORK/s32_a.html")" != "$(itinerary_digest "$WORK/s32_b.html")" ]; then printf 1; else printf 0; fi
+}
+s32_old() { # <command…> -> the command, run with the limb's end tag put back to the exact one, in a subshell
+  ( eval "$(declare -f strip_to_itinerary_text | perl -pe 'BEGIN{$o=q{(?=[\t\n\f\r \/>])[^>]*>}} my $i=index($_,$o); substr($_,$i,length $o)=">" if $i>=0')"; "$@" )
+}
+S32_END=( '</script >' $'</script\t>' $'</script\n>' $'</script\r>' $'</script\f>' '</script/>' '</script x>' '</SCRIPT >' '</script x=">">' )
+S32_NOT=( '</scriptx>' '</script-x>' $'</script\v>' )
+s32a_assert() { # one verdict
+  local c n=0 mv=0 old=0 st so cx co mk
+  for c in "${S32_END[@]}"; do
+    n=$((n+1))
+    [ "$(s32_moves s32_page "$c")" = 1 ] && mv=$((mv+1))
+    [ "$(s32_old s32_moves s32_page "$c")" = 0 ] && old=$((old+1))
+  done
+  st="$(s32_moves s32_spage '</style >')"; so="$(s32_old s32_moves s32_spage '</style >')"
+  cx="$(s32_moves s32_page '</script>')"; co="$(s32_old s32_moves s32_page '</script>')"
+  mk="$(declare -f strip_to_itinerary_text | grep -c -F -- '(?=[\t\n\f\r \/>])')"
+  if [ "$n" -eq 9 ] && [ "$mv" -eq 9 ] && [ "$st" = 1 ] && [ "$old" -eq 9 ] && [ "$so" = 0 ] && [ "$cx$co" = 11 ] && [ "$mk" -eq 1 ]; then
+    PASS "S32a: an itinerary edit written after a <script> end tag of another form and before an exact one moves the digest, after each of 9 forms — a space, a tab, a line feed, a carriage return, a form feed, '/', an attribute, upper case, a quoted '>' in an attribute — and after '</style >'; ARMED-RED — with the limb's end tag put back to the exact one, none of the ten moves; CONTROL — after an exact end tag the edit moves the digest under both"
+  else
+    FAIL "S32a: moved after $mv of $n end-tag forms and the style one=$st (want 9 and 1); with the exact tag put back $old of $n and style=$so stayed blind (want 9 and 0); exact control $cx$co (want 11); limb class present $mk time(s) (want 1)"
+  fi
+}
+s32a_assert
+s32b_assert() { # one verdict
+  local c n=0 blind=0 eq dif
+  for c in "${S32_NOT[@]}"; do n=$((n+1)); [ "$(s32_moves s32_page "$c")" = 0 ] && blind=$((blind+1)); done
+  s32_page "$WORK/s32_x.html" '</script>' 19:00
+  eq=0; [ "$(strip_to_itinerary_text "$WORK/s32_x.html")" = "$(s32_old strip_to_itinerary_text "$WORK/s32_x.html")" ] && eq=1
+  s32_page "$WORK/s32_y.html" '</script >' 19:00
+  dif=0; [ "$(strip_to_itinerary_text "$WORK/s32_y.html")" != "$(s32_old strip_to_itinerary_text "$WORK/s32_y.html")" ] && dif=1
+  if [ "$n" -eq 3 ] && [ "$blind" -eq 3 ] && [ "$eq" -eq 1 ] && [ "$dif" -eq 1 ]; then
+    PASS "S32b: the limb ends no body where a browser does not — after '</scriptx>', '</script-x>' and a vertical tab the stretch is script text and an edit there leaves the digest as it was — and on a page whose end tags are exact the projection is the limb-before's byte for byte, so such a trip reads no change; CONTROL — on a page carrying '</script >' the two projections differ"
+  else
+    FAIL "S32b: blind after $blind of $n forms a browser does not end a body at (want 3), exact page projection equal=$eq (want 1), spaced page differs=$dif (want 1)"
+  fi
+}
+s32b_assert
+s32c_assert() { # one verdict — the one-time cost the change states, measured on both digests
+  local f="$WORK/s32_c.html" g="$WORK/s32_cx.html" a b la lb xa xb
+  printf '<html><body><h1>Synthetic Trip</h1><script>var a = 1;</script ><section>Synthetic Day 1</section></body></html>\n' > "$f"
+  s32_page "$g" '</script>' 19:00
+  a="$(itinerary_digest "$f")"; b="$(s32_old itinerary_digest "$f")"
+  la="$(_legacy_itinerary_digest "$f")"; lb="$(s32_old _legacy_itinerary_digest "$f")"
+  xa="$(itinerary_digest "$g")"; xb="$(s32_old itinerary_digest "$g")"
+  if [ -n "$a" ] && [ -n "$b" ] && [ "$a" != "$b" ] && [ -n "$la" ] && [ "$la" != "$lb" ] && [ "$xa" = "$xb" ]; then
+    PASS "S32c: the stated one-time cost — a render whose only <script> end tag is of another form digests differently under the limb and under the limb before it, on the SHA-256 digest and on the legacy CRC token both, so such a trip reads as changed once; a render with exact end tags digests the same under both"
+  else
+    FAIL "S32c: spaced-only render digests differ=$([ "$a" != "$b" ] && echo 1 || echo 0) (want 1), legacy differ=$([ "$la" != "$lb" ] && echo 1 || echo 0) (want 1), exact render equal=$([ "$xa" = "$xb" ] && echo 1 || echo 0) (want 1)"
+  fi
+}
+s32c_assert
+md_flips strip_to_itinerary_text    "S32a" s32a_assert
+
 # ── S30 — CASE 1: THE ITINERARY DIGEST NO LONGER DEPENDS ON THE CALLER'S LOCALE (#1468). The
 # normalization runs under LC_ALL=C, with the 18 non-ASCII code points macOS's UTF-8 [:space:]
 # holds rewritten to an ASCII space first. s30_render writes S0's 14:00 render with the given

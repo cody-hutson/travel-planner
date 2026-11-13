@@ -2979,15 +2979,46 @@ _COORD_NOTICE_CAP=512
 # THE REPLACEMENT IS A SPACE, not nothing — the tag strip's idiom, and what keeps
 # `foo<!--c-->bar` from digesting as a single token.
 #
-# A <script>/<style> block ends here at an exact closing tag only, and deliberately so: reading the
-# spaced one as strip_to_published_text does would move the digest of every render that carries
-# one, and with it every recorded baseline and approval code for such a trip.
+# A <script>/<style> BODY ENDS HERE WHERE A BROWSER ENDS IT (#2117): at the first `</` followed by the
+# element's name, in any letter case, and then a tab, a line feed, a form feed, a carriage return, a
+# space, a `/` or a `>`, the end tag running to its `>`. The class is written out rather than `\s`,
+# because perl's `\s` also takes a vertical tab and a browser does not. Ending a body only at the
+# exact tag left out the stretch between an end tag of another form and a later exact one — page
+# content a reader sees — so an itinerary edit written only there left the digest unmoved and the
+# gate read a changed plan as the published one: the open direction.
+#
+# THE COST, PAID ONCE AND STATED. A render whose body is ended by a tag of another form digests
+# differently from before — with a later exact tag, because the stretch is now in the digest, and
+# without one, because the body is now out of it — and so does its legacy CRC token,
+# _legacy_itinerary_digest reading this projection too. Such a trip reads as changed once. On a trip
+# that declares no approvers the next update stops as `unconfirmed`, or `stale` where an earlier
+# confirmation is on record, and the remedy is one `confirm` — not a revert, because the plan did
+# not move. On a trip that declares approvers its approval code changes, approvals recorded for the
+# old code stop counting, and the group approves once more. No shim accepts the old digest: the old
+# reading is the one that misses the edit. The guard's two added readings end a body by the same
+# rule (_browser_end_tags), and S32d holds the two to it. Graded by S32a–S32d.
+#
+# WHAT STILL STAYS OUT OF THE DIGEST, NAMED SO THIS LIMB IS NOT READ AS THE WHOLE ANSWER. Three
+# classes of text a reader can see leave the digest unmoved:
+#   (a) text after an opening tag that only looks like a script or style one. A body opens wherever
+#       `<script` or `<style` stands before a word boundary and runs to the next end tag, so a custom
+#       element whose name begins `script` or `style` (`<script-card>`), and an unclosed `<script>`
+#       written inside a comment, an attribute value or a text box such as `<textarea>` or
+#       `<noscript>`, hide what follows them up to that tag. A commented-out script that carries its
+#       own end tag is not in this class: its body ends at that tag, and an edit after it is seen.
+#   (b) text after a stray `<` in the page's text — `arrive < 18:30` — which a browser shows as
+#       text and the tag strip below reads as a tag's start, dropping everything up to the next `>`.
+#   (c) text a script or style draws — a map pop-up, a CSS `content:` label — which this projection
+#       does not read, by design: it reads the page's text, not what its code makes of it.
+# (a) and (b) are one family, the digest dropping text a browser shows, and one follow-up card owns
+# both; (c) stays out by design. How many renders carry (a) or (b) is unmeasured: the repository
+# tracks no render.
 strip_to_itinerary_text() { # <html_file> -> visible itinerary text on stdout, or nothing on failure
   COORD_CLASS="$_COORD_NOTICE_CLASS" COORD_CAP="$_COORD_NOTICE_CAP" \
   perl -0777 -pe '
     my $c = quotemeta($ENV{COORD_CLASS}); my $cap = 0 + $ENV{COORD_CAP};
     s{<\s*([A-Za-z][-A-Za-z0-9]*)\b[^>]*\bclass\s*=\s*(["\x27])[^"\x27]*(?<![-\w])$c(?![-\w])[^"\x27]*\2[^>]*>.{0,$cap}?<\s*/\s*\1\s*>}{ }gis;
-    s/<(script|style)\b[^>]*>.*?<\/\1>//gis;
+    s/<(script|style)\b[^>]*>.*?<\/\1(?=[\t\n\f\r \/>])[^>]*>//gis;
     s/\A<!--\n(?:.*?\n)?-->(?=\n|\z)/ /s;
     s/<[^>]+>/ /g;
   ' "$1"
