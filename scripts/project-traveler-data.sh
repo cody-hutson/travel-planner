@@ -55,13 +55,18 @@
 #   any other hit takes every following line until one of these ends it: a list item at the
 #     label's own indent or shallower; a heading no deeper than the label; a blank line, but
 #     only when the next line that is not blank is no deeper than the label, so a loose
-#     sub-item past a blank line goes too; the closing delimiter of a fenced block the label
-#     sits inside; and, in the frontmatter, its closing `---`, so every key after a selector
+#     sub-item past a blank line goes too; the closer of a fenced block the label sits
+#     inside; and, in the frontmatter, its closing `---`, so every key after a selector
 #     key goes with it. So a deeper-indented line goes (a wrapped value, a nested sub-list, a
 #     heading nested in the payload, a fenced block it opens, which goes whole), and so does a
 #     line no deeper that is not a list item (markdown's lazy continuation). A selector line
 #     found inside the payload is taken with it and never raises the indent the payload ends
 #     at: it can lower it, so a shallower selector line's own sub-items go too.
+# A FENCED BLOCK is read by CommonMark's fence grammar, at any indent: it opens on a run of
+# three or more backticks or tildes, except a backtick run whose info string carries a
+# backtick, which is an inline code span; it closes only on a run of the opener's own
+# character, at least as long as the opener's, with nothing after it but whitespace, or at
+# the end of the file. Inside one, a `#` line is a label and never a heading.
 # This is WIDER than the publish guard's continuation limb, and a slightly over-broad
 # omission is the accepted cost: a heading's section goes whole, kept lines in it included.
 #
@@ -237,8 +242,24 @@ pj_project_file() {   # pj_project_file <selectors> <file>
     }
     # A setext underline: a run of `=` or of `-` alone on its line.
     function setext(s) { return s ~ /^[ \t]*(=+|-+)[ \t]*$/ }
-    # The first three characters after the indent, for the fence tests.
-    function lead(s) { sub(/^[ \t]+/, "", s); return substr(s, 1, 3) }
+    # A fence opener: after the indent, a run of three or more backticks or tildes, where a
+    # backtick run carries no backtick in its info string (that line opens an inline code
+    # span). Returns the length of the run, or 0, and leaves its character in fc.
+    function fenceopen(s,   n) {
+      sub(/^[ \t]+/, "", s); fc = substr(s, 1, 1)
+      if (fc != "`" && fc != "~") return 0
+      n = 1; while (substr(s, n + 1, 1) == fc) n++
+      if (n < 3) return 0
+      if (fc == "`" && index(substr(s, n + 1), "`")) return 0
+      return n
+    }
+    # The closer of the open fence: a run of the character that opened it, at least as long
+    # as the opening run, with nothing after it but whitespace.
+    function fenceclose(s,   n) {
+      sub(/^[ \t]+/, "", s)
+      n = 0; while (substr(s, n + 1, 1) == fch) n++
+      return n >= flen && substr(s, n + 1) ~ /^[ \t]*$/
+    }
     # A table delimiter row, such as |---|:--:|.
     function delimrow(s) { return s ~ /^[ \t]*[|: \t-]+$/ && index(s, "|") && index(s, "-") }
     function cut(s) {
@@ -277,8 +298,8 @@ pj_project_file() {   # pj_project_file <selectors> <file>
       infm = fm; inf = fence; opened = 0; closed = 0
       if (NR == 1 && t == "---") fm = 1
       else if (fm) { if (t == "---") fm = 0 }
-      else if (!fence && (lead(u) == "```" || lead(u) == "~~~")) { fence = 1; fch = lead(u); opened = 1 }
-      else if (fence && lead(u) == fch) { fence = 0; closed = 1 }
+      else if (!fence && (fl = fenceopen(u)) > 0) { fence = 1; fch = fc; flen = fl; opened = 1 }
+      else if (fence && fenceclose(u)) { fence = 0; closed = 1 }
       # A fenced block opened inside a payload is literal text: it goes whole, closer included.
       if (payf) { if (closed) payf = 0; next }
       # Blank lines inside a payload wait for the next line that is not blank: deeper, and
