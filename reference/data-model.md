@@ -926,7 +926,7 @@ outputs/traveler-model.md  [DERIVED]            (reconciled model + desire-overl
         │◀─┘  prior revision in, rewritten model out — the read grants no authoring
         │  read by ...
         ├────────────► engines        (read the model; nothing optimizes yet)
-        ├────────────► hub            (coverage view)
+        ├────────────► hub            (its projection — coverage view)
         │
         ├──► outputs/event-status.md            (per-event status — persist-mutable, survives re-runs)
         └──► outputs/satisfaction-metrics.md    (coverage metrics — validator + hub)
@@ -935,7 +935,7 @@ outputs/traveler-model.md  [DERIVED]            (reconciled model + desire-overl
         ▲  referenced by "Applies to" links — the trip-level constraint SSOT, never copied into the above
 ```
 
-The chain in one line: **intake template → per-traveler source file (human) → enrichment reconciles → derived traveler model (`[DERIVED]`, model + overlap) → engines + hub read it**; per-event status lives in `outputs/event-status.md`; metrics live in `outputs/satisfaction-metrics.md`; all of it links back to — never copies — the trip-level constraints in `trip-context.md`.
+The chain in one line: **intake template → per-traveler source file (human) → enrichment reconciles → derived traveler model (`[DERIVED]`, model + overlap) → engines read it, the hub its projection**; per-event status lives in `outputs/event-status.md`; metrics live in `outputs/satisfaction-metrics.md`; all of it links back to — never copies — the trip-level constraints in `trip-context.md`.
 
 ---
 
@@ -1012,7 +1012,7 @@ The note above says what this layer does not **compute**. This section says what
 | **`subgroup`** | The hub's placement record — who a given event is for on a day that divides the party. `reference/site-layout-spec.md` governs how that renders: a split day carrying one Parallel Track block per track, each track labelled with its members verbatim. |
 | **hard constraints** | `trip-context.md` § *Hard Constraints* — the heat, mobility, rest, timing and sensory non-negotiables the Need-category table above routes there. |
 
-**The joins already exist.** The `Venue` column carries the venue's `ven-<token>` and is *a reference, not this table's key* (below) — it resolves to that venue's researched entry, which carries that entry's own money line — `Price` in `outputs/food-list.md`, `Price range` in `outputs/nightlife-list.md`, `Cost` in `outputs/transport-brief.md`, each per its writing agent's declaration. The desire an event serves resolves through `outputs/traveler-model.md`, the derived per-traveler projection the hub and the validator already read. This section adds no key and asks for none.
+**The joins already exist.** The `Venue` column carries the venue's `ven-<token>` and is *a reference, not this table's key* (below) — it resolves to that venue's researched entry, which carries that entry's own money line — `Price` in `outputs/food-list.md`, `Price range` in `outputs/nightlife-list.md`, `Cost` in `outputs/transport-brief.md`, each per its writing agent's declaration. The desire an event serves resolves through `outputs/traveler-model.md`, the derived per-traveler model the validator already reads and the hub reads through its projection. This section adds no key and asks for none.
 
 **Why the prior value is still recoverable after a replan — by construction, not by anything added here.** The research lists are `accumulate-append` (`reference/data-architecture.md`, class 6 `outputs/food-list.md`), and `CLAUDE.md` § *Output Versioning* binds the rule directly: agent outputs accumulate, they do not overwrite, previous research is **never** deleted, and a re-source appends a dated section rather than editing what it supersedes. So the superseded entry and its price range are still in the file once the replacement lands. The itinerary is `versioned` (class 15), so the pre-replan placement is on disk too. Intent survives a replan because of the lifecycle classes this architecture already chose — not because the status model started carrying a copy of it.
 
