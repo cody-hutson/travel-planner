@@ -29185,7 +29185,8 @@ md_flips wtadr26_cell 'WT-ADR26' wtadr26_assert
 #                setext underline; and a line of two backticks, which opens no fence
 #                (16 shapes, 23 canaries).
 #   PJ12 fail closed: a source holding a carriage return that no line feed follows — a model
-#        of bare-CR lines, and a traveller file whose last byte is one — exits exactly 2 with
+#        of bare-CR lines ending in a line feed, and a traveller file whose last byte is one,
+#        each the only case its own test can refuse — exits exactly 2 with
 #        empty stdout and its own cause token on stderr, never a projection of a file read as
 #        fewer lines than it holds.
 #        PJ8 is not used: the scope-lock declined the review's eighth arm, the guard
@@ -29928,17 +29929,18 @@ done
 
 # ── PJ12 — fail closed on a source holding a carriage return no line feed follows. The reader
 # takes such a file as fewer lines than it holds, so it cannot find the labels in it; it is
-# refused, never read. [model] is a model whose lines end in a bare carriage return; [trav] is
-# a traveller file, with no model on file, whose one bare carriage return is its last byte.
+# refused, never read. [model] is a model whose lines are parted by bare carriage returns and
+# whose last byte is a line feed, so only the test inside the file can refuse it; [trav] is a
+# traveller file, with no model on file, whose one bare carriage return is its last byte.
 PJT_B12M="$PJT_FX/trips/bare-cr-model"; PJT_B12T="$PJT_FX/trips/bare-cr-trav"
 mkdir -p "$PJT_B12M/outputs" "$PJT_B12T/travelers"
-printf '## Rowan\r- **Passport:** Zorvanian · CNRY-PJS55\r- **Pace:** slow mornings\r' > "$PJT_B12M/outputs/traveler-model.md"
+printf '## Rowan\r- **Passport:** Zorvanian · CNRY-PJS55\r- **Pace:** slow mornings\n' > "$PJT_B12M/outputs/traveler-model.md"
 printf '# Rowan\n\n- **Pace:** slow mornings\n- **Passport:** Zorvanian · CNRY-PJS56\r' > "$PJT_B12T/travelers/rowan.md"
 PJT_B12_TOK='PJ0: a source holds a carriage return with no line feed after it'
 for pjt_c in model trav; do
   if [ "$pjt_c" = model ]; then
     pjt_d="$PJT_B12M"; pjt_f="$PJT_B12M/outputs/traveler-model.md"; pjt_k='CNRY-PJS55'
-    pjt_w='a model whose lines end in a bare carriage return'
+    pjt_w='a model whose lines are parted by bare carriage returns, its last byte a line feed'
   else
     pjt_d="$PJT_B12T"; pjt_f="$PJT_B12T/travelers/rowan.md"; pjt_k='CNRY-PJS56'
     pjt_w='a traveller file, with no model on file, whose last byte is a bare carriage return'
