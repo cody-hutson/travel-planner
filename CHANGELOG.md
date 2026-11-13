@@ -65,6 +65,56 @@ that action at its moving major tag, outside these pins. A digest read from the 
 checksums file means a later change to what upstream serves is noticed; it does not show that the
 release was sound.
 
+## [0.67.0] — 2026-11-13 — Every site build is checked against the shape its trip's state declares
+
+No trip verb plans or records a trip differently in this release. What changes is met by whoever
+builds or patches a trip's site: the round-trip check now reads which state the site was built
+for, and checks the page against what that state declares.
+
+**The site spec says what each state renders.** `reference/site-layout-spec.md` § 9.2 gains a
+render table, fence `round-trip-contract-artifacts`. For each state the `site` verb admits, it says
+whether each `bound` class renders and where, and which scaffolding the state emits. Its rows cover
+every `bound` class and every scaffolding row, in each plan mode with a decided destination. The
+itinerary's element fence is unchanged, byte for byte. § 9.3 gains a State column, and § 9.4 now
+runs the walk in three passes: artifact, element and shape.
+
+**The walk takes the trip's state.** `scripts/check-round-trip.sh` takes
+`--state <MODE>:<DECIDED|UNDECIDED>`: the trip's mode and whether its destination is decided, never
+the destination itself. The `site` verb appends it on its own line, and `CLAUDE.md` § *Updating the
+site* passes it on the free-form patch path, with `--data-root`. Without it, the artifact pass's
+instance half and the shape pass are reported as not run, and the run exits 2, never 0. An unknown
+argument is named by its position rather than its text, and a second `--state` is refused, so a
+value given by mistake does not reach the output.
+
+**A class turned `bound` with no home fails the merge.** The walker holds the render table to
+§ 1.1's `bound` classes and to the states the `site` row admits, in both directions, and reports
+RT7 where it does not close. Group `W` of `scripts/test-artifact-schema.sh` grades it on every run,
+so a class that becomes renderable without a row turns the required check red.
+
+**A section left from another state is reported.** The shape pass reports RT8 when the page carries
+a component its state does not admit, and the verb then does not call the site current. It sees a
+component by the class § 3 declares for it, so it cannot see the seven components § 3 gives no class.
+A clean run says so: its last line ends "shape: 11 of 18 components observable".
+
+**`G6` declares `DECIDED`.** `CLAUDE.md` § *Resolving a trip* now writes the decided destination as
+the token every requirement table already uses, and says the walker reads it. `ADR-032` § *Consequences*
+is corrected in place to say which passes run without the state, with an entry in its
+`## Amendment history`. No decision changes.
+
+**Size fence.** Nothing moved: all 50 rows were kept and none was re-pinned.
+- `reference/site-layout-spec.md` grew 5,730 bytes to 63,900, beneath its row of 63,987.
+- `CLAUDE.md` grew 879 bytes to 142,650, beneath its row of 153,381.
+- `skills/trip/SKILL.md` grew 138 bytes to 104,775, beneath its row of 106,098.
+- `reference/adr/ADR-032-site-round-trip-contract.md`, `README.md` and `reference/command-reference.md`
+  are below the floor at which a file owes a row.
+
+**What it doesn't reach.** No rendered site is tracked, so the instance half of the walk, RT8
+included, has no population in CI and is carried by synthetic controls. Today every state the
+`site` row admits renders the same components, so RT8 cannot fire on a real page until a state
+renders a different shape; milestone 98's IDEATION rows are the first. A scaffolding token whose
+every row is deleted is not detected. The plan modes with an undecided destination take a declared
+non-row, which #2158 builds.
+
 ## [0.66.0] — 2026-11-10 — The intake channel is checked, not asserted
 
 No trip verb plans or records a trip differently in this release. What changes is met by whoever
