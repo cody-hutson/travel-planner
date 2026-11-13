@@ -158,7 +158,11 @@ MODES
         rsc-RESTORE.json already in the directory is not the payload
         rsc-PRE.json composes; an rsc-RESTORE.json with no rsc-PRE.json beside
         it is refused too, and copying it to rsc-PRE.json is how to say that
-        it is the capture.
+        it is the capture. It refuses at exit 3 as well, nothing written, when
+        it cannot write the rsc-RESTORE.json it composes where none is there,
+        so a staging directory it cannot write to refuses unless that file is
+        already present, as --apply and --register leave it, and when it
+        cannot stage the body it sends in the system's temporary directory.
         It does not run the self-test: a rollback is never refused for a
         reason that has nothing to do with it, and its arms run in CI on
         every pull request. Whether the host accepts `app_id: null` on that
@@ -181,7 +185,8 @@ EXIT CODES
        never shares exit 1)
     3  CAPTURE REFUSED -- no rollback artifact, one whose provenance does not
        hold, or a staging directory that already holds a different one, so
-       nothing was written
+       nothing was written; for --restore, also a file it could not write or
+       stage before the write
     4  the live required-context set has drifted from the expected set, or is
        not one --register admits
     5  the self-test did not pass, so no mode that writes, nor --plan, may run
@@ -193,18 +198,21 @@ STAGING DIRECTORY
     Pass `--staging <dir>`; the tool writes `<dir>/prot-PRE.json`,
     `<dir>/rsc-PRE.json`, `<dir>/rsc-PATCH.json`, `<dir>/rsc-RESTORE.json` and,
     after a write, `<dir>/prot-POST.json`. --restore stages the body it sends
-    in a file in the system's temporary directory and removes it once the write
-    returns. No path is compiled in, so the artifacts land wherever the operator
-    keeps them -- deliberately NOT in this repository, which is public and where
-    a protection snapshot would both disclose configuration and rot as corpus.
+    in a file in the system's temporary directory and removes it before that
+    step ends, however it ends. No path is compiled in, so the artifacts land
+    wherever the operator keeps them -- deliberately NOT in this repository,
+    which is public and where a protection snapshot would both disclose
+    configuration and rot as corpus.
 
     A staging directory holds one rollback point. --plan, --apply and
     --register refuse at exit 3, before writing anything, when the rsc-PRE.json
     already there differs from their new capture, its checks compared in any
-    order, or cannot be read and keyed as a sub-resource: that file is the
-    rollback point of an earlier run, and --restore reads it. Restore from it,
-    or pass a fresh directory. An equal capture -- a dry run followed by the
-    confirmed run -- replaces it.
+    order: that file is the rollback point of an earlier run, and --restore
+    reads it. Restore from it, or pass a fresh directory. They refuse the same
+    way when that file cannot be read and keyed as a sub-resource, or carries no
+    checks: it may be an earlier run's rollback point, and --restore cannot read
+    it either, so keep it, inspect it by hand, and pass a fresh directory. An
+    equal capture -- a dry run followed by the confirmed run -- replaces it.
 """
 
 import argparse
@@ -1437,9 +1445,12 @@ def capture_rollback_point(fetch, prot_path, rsc_path, staging):
     When an rsc-PRE.json is already there and its _rollback_digest differs from
     the new capture's, the earlier run's rollback point is kept and nothing is
     written; an equal capture, such as a dry run followed by the confirmed run,
-    replaces it. An rsc-PRE.json that cannot be read, or whose checks
-    _restore_key cannot key, is refused the same way, because nothing can show
-    that it is not a rollback point, and its digest cannot be compared.
+    replaces it. An rsc-PRE.json that cannot be read, whose checks _restore_key
+    cannot key, or whose checks array is empty is refused the same way, before
+    anything is fetched, because nothing can show that it is not a rollback
+    point. Those are the files read_rollback_point refuses, so that refusal
+    names a fresh directory alone: --restore cannot read the file either. The
+    refusal of a different rollback point names --restore, which reads it.
     """
     pre_full_f = os.path.join(staging, "prot-PRE.json")
     pre_rsc_f = os.path.join(staging, "rsc-PRE.json")
@@ -1451,13 +1462,15 @@ def capture_rollback_point(fetch, prot_path, rsc_path, staging):
         except (OSError, ValueError) as exc:
             unreadable = str(exc)
         else:
-            if _restore_key(prior) is None:
-                unreadable = "it carries no checks array of named contexts"
+            key = _restore_key(prior)
+            if key is None or not key[1]:
+                unreadable = "it carries no non-empty checks array of named contexts"
         if unreadable is not None:
             raise CaptureRefused(
                 "an rsc-PRE.json is already in {} and cannot be read ({}), so it may "
-                "be the rollback point of an earlier run -- restore from it, or pass "
-                "a fresh --staging directory".format(staging, unreadable))
+                "be the rollback point of an earlier run, and --restore cannot read it "
+                "either -- keep it, inspect it by hand, and pass a fresh --staging "
+                "directory".format(staging, unreadable))
     pending = (pre_full_f + ".pending", pre_rsc_f + ".pending")
     try:
         pre_full = capture(fetch, prot_path, pending[0], "full protection object")
@@ -4866,10 +4879,12 @@ def self_test(stream=sys.stdout):
         "conjuncts, the positive arm passed, every named conjunct is individually "
         "load-bearing, every capture failure refused the write, the write path "
         "admitted only the narrow sub-resource's shape, the restore wrote to and "
-        "read back the narrow sub-resource, sent the payload its capture composes "
-        "and refused every rollback artifact it could not vouch for, a second "
-        "capture refused to replace an earlier rollback point or one it could not "
-        "key, the registration mode added exactly the named contexts, carried "
+        "read back the narrow sub-resource, sent the payload its capture composes, "
+        "left no copy of that body behind when its output failed, and refused "
+        "every rollback artifact it could not vouch for, a second capture refused "
+        "to replace an earlier rollback point or one it could not key, and named "
+        "--restore as the remedy only where --restore reads that file, the "
+        "registration mode added exactly the named contexts, carried "
         "every other live entry as it was, refused every live set and every "
         "naming it does not admit, exited 0 only where --assert held, and "
         "reported a landed write on a stream that cannot encode its text, the "
@@ -5280,8 +5295,11 @@ def run_restore(repo, branch, staging, confirm, fetch=gh_fetch_json,
     It re-applies rsc-PRE.json, composed as compose_restore composes it, to the
     narrow path, and sends that payload rather than the bytes of the staged
     rsc-RESTORE.json. Before any write it refuses at exit 3 when rsc-PRE.json
-    cannot vouch for itself, or when an rsc-RESTORE.json already in the
-    directory is not the payload rsc-PRE.json composes. After the write it reads
+    cannot vouch for itself, when an rsc-RESTORE.json already in the
+    directory is not the payload rsc-PRE.json composes, when it cannot write
+    rsc-RESTORE.json where none is there, or when it cannot stage the body it
+    sends. That body file is removed however the step that sends it ends, an
+    output that fails included. After the write it reads
     the sub-resource back: unreadable is exit 7, different from the payload is
     exit 1, and only a read-back equal to the payload prints RESTORED. The
     read-back is compared with the payload and never graded by evaluate(),
@@ -5342,21 +5360,23 @@ def run_restore(repo, branch, staging, confirm, fetch=gh_fetch_json,
     # file's bytes: provenance compares rsc-RESTORE.json on its key alone, so a
     # member beside that key would otherwise reach the host unchecked. It is
     # staged in the system's temporary directory rather than the staging one, so
-    # a rollback from a staging directory it cannot write to still runs.
+    # a rollback from a staging directory it cannot write to still runs when
+    # rsc-RESTORE.json is already there, as --apply and --register leave it;
+    # without that file, the write of it above refuses first. The finally covers
+    # the whole step, from mkstemp to the write's return, so the file is removed
+    # however the step ends, the PATCH line failing to print included.
     body_f = None
     try:
-        fd, body_f = tempfile.mkstemp(prefix="rsc-RESTORE-sent.", suffix=".json")
-        with os.fdopen(fd, "w", encoding="utf-8") as fh:
-            json.dump(payload, fh, indent=2)
-    except OSError as exc:
-        if body_f is not None and os.path.exists(body_f):
-            os.remove(body_f)
-        return refuse("could not stage the body to send -- {}".format(exc))
-    out("PATCH {} (narrow sub-resource; never PUT .../protection)".format(rsc_path))
-    try:
+        try:
+            fd, body_f = tempfile.mkstemp(prefix="rsc-RESTORE-sent.", suffix=".json")
+            with os.fdopen(fd, "w", encoding="utf-8") as fh:
+                json.dump(payload, fh, indent=2)
+        except OSError as exc:
+            return refuse("could not stage the body to send -- {}".format(exc))
+        out("PATCH {} (narrow sub-resource; never PUT .../protection)".format(rsc_path))
         ok, _text, err = write(rsc_path, body_f)
     finally:
-        if os.path.exists(body_f):
+        if body_f is not None and os.path.exists(body_f):
             os.remove(body_f)
     if not ok:
         out("RESTORE FAILED: {}".format(err))
