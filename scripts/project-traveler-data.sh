@@ -34,6 +34,18 @@
 # § 5 says an OUT value stays out wherever it is carried, and omitting more than the publish
 # guard's four literal (limb, scope) pairs is the fail-safe direction for what an agent sees.
 #
+# THE GUARANTEE is a criterion, not a list. The projection leaves out every line whose label
+# begins with a § 5.6 `field` selector, when that label opens one of these: a list item at
+# any depth, including behind `>` quotes, a `[ ]` or `[x]` task box, or a bracketed mark; a
+# paragraph line; an ATX or setext heading, which takes its section with it; a table cell,
+# as the TABLE ROW sentence below reads one; or the inside of a one-line HTML comment. This
+# holds after the ASCII emphasis and markup the strip class removes, and behind a no-break
+# space, and each such line goes together with its continuation, as WHAT A HIT TAKES WITH IT
+# below defines continuation. ANY OTHER SHAPE IS NOT READ, AND ITS LINE IS KEPT: the
+# residuals are named under WHAT THIS DOES NOT DO. The rules that follow are how the
+# criterion is met; where they and it disagree, the criterion is the claim and the
+# disagreement is a defect.
+#
 # A LINE IS A HIT, and is omitted, when its STRIPPED text begins with a selector,
 # case-insensitively, optionally followed by a plural `s`, and then by a character that is
 # not a letter, or by the end of the line. No trailing `:` is required, so `Passport
@@ -49,11 +61,11 @@
 # selector alone. A row with a cell that begins with a selector but holds no label is a hit
 # only as a header row, over a `|---|` delimiter row; any other such row is kept, so a needs
 # row whose text opens with `Documents for …` stays. The first cell of a row with no leading
-# pipe is the line's own opening, and the line rule reads it. Every test reads the line with a trailing carriage return taken off, a byte-order
-# mark taken off the first line, and each no-break space read as a space; what is printed is
-# the line as read. The comparison is a substring test, never a regex built from a selector:
-# a selector is corpus text, and one carrying a regex metacharacter must not silently become
-# a pattern.
+# pipe is the line's own opening, and the line rule reads it. Every test reads the line with
+# a trailing carriage return taken off, a byte-order mark taken off the first line, and each
+# no-break space read as a space; what is printed is the line as read. The comparison is a
+# substring test, never a regex built from a selector: a selector is corpus text, and one
+# carrying a regex metacharacter must not silently become a pattern.
 #
 # WHAT A HIT TAKES WITH IT depends on the markdown shape it sits in:
 #   a HEADING — `#` to `######`, or a paragraph a hit line opens, underlined with `===` or
@@ -78,7 +90,9 @@
 # character, at least as long as the opener's, with nothing after it but whitespace, or at
 # the end of the file. Inside one, a `#` line is a label and never a heading.
 # This is WIDER than the publish guard's continuation limb, and a slightly over-broad
-# omission is the accepted cost: a heading's section goes whole, kept lines in it included.
+# omission is the accepted cost, in two named forms: a heading's section goes whole, kept
+# lines in it included, and a column header naming the field takes its whole table, the
+# kept cells of its other columns included.
 #
 # KEPT, verbatim: everything else — the frontmatter, so the tolerant-read rule still
 # applies; every `entry`-limb entry, `[THIRD-PARTY]` included, with its marks, because the
@@ -109,12 +123,17 @@
 # ── WHAT THIS DOES NOT DO, STATED PLAINLY ────────────────────────────────────────
 # It decides what an agent is GIVEN, never what the agent OPENS. A dispatched agent keeps
 # `Read`, and nothing here takes it away: that it opens none of these files itself is a
-# rule its prompt, its dispatch line and CLAUDE.md state — FOLLOWED, NOT ENFORCED. It reads
-# labels, not values, so three shapes still pass it: a label behind an emoji, a homoglyph or
-# any other non-ASCII character but a no-break space; a value written as prose under some
-# other label; and a camel-case key such as `passportNumber:`, which the whole-word rule
-# keeps. It does not cover trips/<slug>/trip-context.md or trip-log.md, which no § 5.6 row
-# scopes.
+# rule its prompt, its dispatch line and CLAUDE.md state — FOLLOWED, NOT ENFORCED. A shape
+# outside THE GUARANTEE is not read, and its line is kept. These are examples, not the set:
+# a label behind an emoji, a homoglyph or any other non-ASCII character but a no-break
+# space; a label behind an HTML tag, an entity or a closed comment, or behind a heading's
+# ordinal (`### 1. Passport:`); a camel-case key such as `passportNumber:`, which the
+# whole-word rule keeps; a table cell holding a label of more than one word and no colon,
+# outside a header row (`| Passport number | … |`); a table row whose key cell is empty;
+# and a value written as prose under some other label. They are residuals: this criterion
+# names them, a follow-on card is to carry them, and milestone 97's content check is their
+# backstop. It does not cover trips/<slug>/trip-context.md or trip-log.md, which no § 5.6
+# row scopes.
 #
 # ── THE LIFTED FENCE READER, AND ITS DEBT ────────────────────────────────────────
 # pj_fence_block is the repository's fenced-block reader, lifted from

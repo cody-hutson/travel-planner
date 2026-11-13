@@ -7,9 +7,9 @@ follows Keep a Changelog; versions follow Semantic Versioning.
 
 A traveller filling in an intake form is now told who may see what they share, and the hub and
 the destination-ideation agent, the planning agents dispatched to write what a trip's site is
-built from, are given the traveller data with every line the § 5.6 fence labels left out, in any
-markdown shape the projection reads. No trip is re-planned by this release: what changes is the
-next dispatch.
+built from, are given the traveller data with every line the § 5.6 fence labels left out, in each
+markdown shape the projection's criterion names. No trip is re-planned by this release: what
+changes is the next dispatch.
 
 **Both intake forms say who may see what.** The trip form and the person form each open with a
 four-point notice in place of their one *never published* line: the form itself is never
@@ -28,12 +28,18 @@ generated conversation recorded.
 **The planning agents that write group pages are given a projection.**
 `scripts/project-traveler-data.sh` prints a trip's traveller model, or its traveller files where
 no model is on file, with every line a `field` row of `reference/data-architecture.md` § 5.6
-labels left out — today `Passport` and `Documents`, its plural included, matched as the opening
-word of a list item, a paragraph line, a heading, a table cell or a one-line comment, together
-with what continues it: a label's wrapped, nested and loose lines, a heading's whole section and
-a header row's whole table. Where it errs, it errs toward leaving out, so a kept line written
-inside a passport heading's section goes with it. It reads its class from that fence, so a new
-`field` row joins with no edit, and it refuses, printing nothing, when it cannot read one. `/trip`
+labels left out — today `Passport` and `Documents`, its plural included. What it leaves out is a
+criterion, not a list: every line whose label begins with one of those selectors, where that label
+opens a list item at any depth (behind `>` quotes, a `[ ]` or `[x]` task box, or a bracketed mark
+included), a paragraph line, an ATX or setext heading, a table cell that holds the label and a
+colon or the label alone, or the inside of a one-line HTML comment, after the ASCII emphasis and
+markup it strips and behind a no-break space. Each such line goes with what continues it: a
+label's wrapped, nested and loose lines, a heading's whole section and a header row's whole table.
+Any other shape is not read, and its line is kept. Where it errs inside the criterion, it errs
+toward leaving out: a kept line written inside a passport heading's section goes with it, and so
+do the kept cells of a table whose column header names the field. It reads its class from that
+fence, so a new `field` row joins with no edit, and it refuses, printing nothing, when it cannot
+read one or when a source holds a carriage return that no line feed follows. `/trip`
 gives its output inline to the hub and the destination-ideation agent and writes it to no file.
 Which dispatches take it is a test in `CLAUDE.md` § *Dispatching agents* — an agent that writes a
 class the site build reads — not a list. Under `/trip plan`, enrichment is now two dispatches: the
@@ -60,15 +66,20 @@ or issuing country is now a finding rather than exempt destination guidance.
 
 **What it doesn't reach.** A dispatched agent keeps `Read`: what it is given is the projection,
 and that it opens none of the traveller files itself is a rule it follows, which nothing enforces.
-The projection reads labels, not values, so three shapes still reach the hub and the ideation
-agent: a label behind an emoji, a homoglyph or any other non-ASCII character but a no-break space;
-a value written as prose under some other label; and a camel-case key such as `passportNumber:`.
-The encrypted site carries no content check until milestone 97's safeguard-6 check ships, so the
-publish guard's refusal binds only an open page. A passport typed into `trip-log.md` still reaches
-the hub and the ideation agent, and a trip whose `Visa / entry` text was filled per nationality
-keeps it until the research role next rewrites that field. An interviewed traveller is not yet
-read the notice: that route is a follow-on, to travel with the next regrade of the generated
-conversations.
+A shape outside the projection's criterion is not read, so its line still reaches the hub and the
+ideation agent. For example: a label behind an emoji, a homoglyph or any other non-ASCII character
+but a no-break space; a label behind an HTML tag, an entity or a closed comment, or behind a
+heading's ordinal; a camel-case key such as `passportNumber:`; a table cell holding a label of more
+than one word and no colon, outside a header row; a table row whose key cell is empty; and a value
+written as prose under some other label. These are residuals the criterion names, for a follow-on
+card, and milestone 97's content check is their backstop. The open-publish guard reads a passport
+value only from a list-labelled line, so for a value written in a heading, a table or a comment it
+cannot refuse an open page that repeats it. The encrypted site carries no content check until
+milestone 97's safeguard-6 check ships, so the publish guard's refusal binds only an open page. A
+passport typed into `trip-log.md` still reaches the hub and the ideation agent, and a trip whose
+`Visa / entry` text was filled per nationality keeps it until the research role next rewrites that
+field. An interviewed traveller is not yet read the notice: that route is a follow-on, to travel
+with the next regrade of the generated conversations.
 
 ## [0.66.0] — 2026-11-10 — The intake channel is checked, not asserted
 
