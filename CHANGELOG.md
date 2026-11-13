@@ -5,9 +5,11 @@ follows Keep a Changelog; versions follow Semantic Versioning.
 
 ## [Unreleased] — 2026-11-12 — Travellers are told what the group may see, and no writer of a group page receives a passport
 
-A traveller filling in an intake form is now told who may see what they share, and the planning
-agents that write what a trip's site is built from are no longer given a passport or documents
-value. No trip is re-planned by this release: what changes is the next dispatch.
+A traveller filling in an intake form is now told who may see what they share, and the hub and
+the destination-ideation agent, the planning agents dispatched to write what a trip's site is
+built from, are given the traveller data with every line the § 5.6 fence labels left out, in any
+markdown shape the projection reads. No trip is re-planned by this release: what changes is the
+next dispatch.
 
 **Both intake forms say who may see what.** The trip form and the person form each open with a
 four-point notice in place of their one *never published* line: the form itself is never
@@ -26,15 +28,19 @@ generated conversation recorded.
 **The planning agents that write group pages are given a projection.**
 `scripts/project-traveler-data.sh` prints a trip's traveller model, or its traveller files where
 no model is on file, with every line a `field` row of `reference/data-architecture.md` § 5.6
-labels left out — today `Passport` and `Documents`, matched as a line's opening word, its plural
-included, together with the lines that continue it. It reads its class from that fence, so a new
+labels left out — today `Passport` and `Documents`, its plural included, matched as the opening
+word of a list item, a paragraph line, a heading, a table cell or a one-line comment, together
+with what continues it: a label's wrapped, nested and loose lines, a heading's whole section and
+a header row's whole table. Where it errs, it errs toward leaving out, so a kept line written
+inside a passport heading's section goes with it. It reads its class from that fence, so a new
 `field` row joins with no edit, and it refuses, printing nothing, when it cannot read one. `/trip`
 gives its output inline to the hub and the destination-ideation agent and writes it to no file.
 Which dispatches take it is a test in `CLAUDE.md` § *Dispatching agents* — an agent that writes a
 class the site build reads — not a list. Under `/trip plan`, enrichment is now two dispatches: the
 reconciler, which holds the traveller sources and writes only the traveller model, and the
 research role and setup seed, which is given `trip-context.md` and nothing else. Group `PJ` of
-`scripts/test-artifact-schema.sh` grades the projection, with each control on a copy of the fence.
+`scripts/test-artifact-schema.sh` grades the projection, with each control on a copy of the fence
+and one small trip for each markdown shape, red where a value leaks and where a kept line is lost.
 
 **Entry text names no traveller's passport.** The trip-context template's `Visa / entry` line asks
 for the destination's entry rules for visitors, where it asked for a traveller's passport
@@ -42,9 +48,10 @@ nationality. The transport spoke states immigration timing by queue, the validat
 field-class finding without quoting it, and a `Visa / entry` line naming a traveller's nationality
 or issuing country is now a finding rather than exempt destination guidance.
 
-**Size fence.** Nothing was re-pinned: all 50 rows were kept, as `CH_EMIT=growth` prints them.
-- `skills/trip/SKILL.md` grew 1,387 bytes to 106,024, beneath its row of 106,098 — 74 bytes of
-  headroom, so the next release to grow it will need to re-pin it.
+**Size fence.** Nothing was re-pinned: all 50 rows were kept, as
+`CH_EMIT=growth bash scripts/test-corpus-hygiene.sh` prints them.
+- `skills/trip/SKILL.md` grew 1,269 bytes to 105,906, beneath its row of 106,098 — 192 bytes of
+  headroom, so a release that grows it by more than that will need to re-pin it.
 - `CLAUDE.md` grew 1,149 bytes to 142,920, beneath its row of 153,381; `agents/00-enrichment.md`
   grew 1,198 to 77,411, beneath 82,813; `templates/traveler-intake.template.md` grew 916 to 21,016,
   beneath 22,110.
@@ -53,6 +60,9 @@ or issuing country is now a finding rather than exempt destination guidance.
 
 **What it doesn't reach.** A dispatched agent keeps `Read`: what it is given is the projection,
 and that it opens none of the traveller files itself is a rule it follows, which nothing enforces.
+The projection reads labels, not values, so three shapes still reach the hub and the ideation
+agent: a label behind an emoji, a homoglyph or any other non-ASCII character but a no-break space;
+a value written as prose under some other label; and a camel-case key such as `passportNumber:`.
 The encrypted site carries no content check until milestone 97's safeguard-6 check ships, so the
 publish guard's refusal binds only an open page. A passport typed into `trip-log.md` still reaches
 the hub and the ideation agent, and a trip whose `Visa / entry` text was filled per nationality
