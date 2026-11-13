@@ -29165,8 +29165,10 @@ md_flips wtadr26_cell 'WT-ADR26' wtadr26_assert
 #                a heading inside a payload, a loose payload past a blank line, a table, a
 #                one-line comment, a no-break space, a fenced block a label opens at its
 #                own indent, a fenced block and an indented code line inside a heading's
-#                section, neither of which ends it, a label inside a bracket, and a column
-#                header naming the field in more than one word (14 shapes, 33 canaries).
+#                section, neither of which ends it, a label inside a bracket, a column
+#                header naming the field in more than one word, a blockquoted heading inside
+#                a section, which does not end it, and a setext heading over a paragraph of
+#                more than one line (16 shapes, 37 canaries).
 #          PJ11  the delimiters a payload must stop at, each with kept lines after it: CRLF
 #                line endings, the closer of a fenced block the label sits in, and the
 #                frontmatter's closing `---`, with and without a byte-order mark, a key after
@@ -29174,8 +29176,9 @@ md_flips wtadr26_cell 'WT-ADR26' wtadr26_assert
 #                closer is read by — a closer as long as its opener's run, with nothing after
 #                it, of the opener's own character, an opener a tilde run can make, no
 #                opener made by an inline code span, and a heading mark inside a fence, a
-#                label there and never a section; and table rows whose text opens with a
-#                selector word but holds no label, which are kept (11 shapes, 15 canaries).
+#                label there and never a section; table rows whose text opens with a
+#                selector word but holds no label, which are kept; and a thematic break after
+#                a list item in a payload, which is no setext underline (12 shapes, 17 canaries).
 #   PJ12 fail closed: a source holding a carriage return that no line feed follows — a model
 #        of bare-CR lines, and a traveller file whose last byte is one — exits exactly 2 with
 #        empty stdout and its own cause token on stderr, never a projection of a file read as
@@ -29689,6 +29692,29 @@ printf '%s\n' '## Rowan' \
   'Rowan | entry registration · CNRY-PJS60' \
   '' \
   '- **Rooming:** own room · KEEP-PJS60' > "$PJT_SF"
+pjt_shape 'PJ10[sec-quote]' shape-sec-quote model 'CNRY-PJS61 CNRY-PJS62' 'KEEP-PJS61 KEEP-PJS62' '> ## Aside' - - 'a blockquoted heading inside a passport heading section, which does not end it'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS61' \
+  '### Passport' \
+  'Zorvanian · CNRY-PJS61' \
+  '> ## Aside' \
+  'valid to 2031 · CNRY-PJS62' \
+  '### Rooming' \
+  '- own room · KEEP-PJS62' > "$PJT_SF"
+pjt_shape 'PJ10[setext-para]' shape-setext-para model 'CNRY-PJS63 CNRY-PJS64' 'KEEP-PJS63 KEEP-PJS64' 'Passport
+Zorvanian · CNRY-PJS63
+--------' - - 'a setext heading whose paragraph runs to a second line above its underline, with its section'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS63' \
+  '' \
+  'Passport' \
+  'Zorvanian · CNRY-PJS63' \
+  '--------' \
+  '' \
+  'valid to 2031 · CNRY-PJS64' \
+  '' \
+  '## Sam [OPERATOR-PROVIDED] [THIRD-PARTY]' \
+  '- **Needs:** a step-free route · KEEP-PJS64' > "$PJT_SF"
 
 pjt_shape 'PJ11[crlf]' shape-crlf model 'CNRY-PJS26 CNRY-PJS27' 'KEEP-PJS24 KEEP-PJS25' "${PJT_CR}
 ${PJT_CR}
@@ -29789,6 +29815,15 @@ printf '%s\n' '## Rowan' \
   '| Passport | Zorvanian · CNRY-PJS57 | none |' \
   '| Stairs are hard; level approaches only · KEEP-PJS57 | mobility | HC-1 |' \
   '| Documents kept with the group leader on day trips · KEEP-PJS58 | logistics | HC-2 |' > "$PJT_SF"
+pjt_shape 'PJ11[setext-list]' shape-setext-list model 'CNRY-PJS65 CNRY-PJS66' 'KEEP-PJS65 KEEP-PJS66' '  - issued abroad · CNRY-PJS66
+---' - - 'a thematic break after a list item in a paragraph label payload, which is no setext underline, with a kept line after it'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS65' \
+  '' \
+  'Passport: Zorvanian · CNRY-PJS65' \
+  '  - issued abroad · CNRY-PJS66' \
+  '---' \
+  '- **Pace:** slow mornings · KEEP-PJS66' > "$PJT_SF"
 
 pjt_i=0
 while [ "$pjt_i" -lt "${#PJT_SN[@]}" ]; do
