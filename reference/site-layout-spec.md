@@ -188,11 +188,12 @@ projection excises the band by a bounded, lazy match to the first closing tag of
 name: a nested element of that name, or a band longer than the cap, is left in the digest, and every
 republish that changes only the marker then aborts.
 
-**Neither §9 table gains a row.** This component is **site-additive scaffolding**, which §9.2
+**Neither §9 element table gains a row.** This component is **site-additive scaffolding**, which §9.2
 permits in terms. §9.2's completeness rule is surjective plan → site, so an element with no
 `final-itinerary.md` source needs no mapping-table row; §9.3's exclusion list is for plan
 elements the site does not render, which this is not. Stated because editing both tables is the
-obvious wrong move, and because the §9.4 completeness walk is unaffected either way.
+obvious wrong move. Its one §9 row is the render table's `<coordination-notice>` row, naming the
+states that may emit it; it is still not emitted when its state is `none`.
 
 **The value comes from one place, and this section does not say where.** `coordination-state`
 and `coordination-since` are declared on C19's frontmatter in
@@ -880,24 +881,87 @@ per-traveler model. Naming them here is what keeps the both-directions compariso
 them implicit would make that diff permanently non-empty and train a reader to ignore it, which
 is how a pin decays into decoration.
 
+**The artifact grain.** The fence above is the element grain: one fence per rendered artifact,
+mode-blind. The fence below is the artifact grain: for each state σ the `site` verb admits —
+the trip's mode and its destination's disposition (`CLAUDE.md` § *Resolving a trip*, `G5` and
+`G6`) — whether each `bound` class renders and where, and which scaffolding the state emits.
+`reference/adr/ADR-031-site-phase-model.md` § 2 decided the rows and
+`reference/adr/ADR-032-site-round-trip-contract.md` the table; `scripts/check-round-trip.sh`
+reads it. Columns are separated by two or more spaces:
+
+- **`artifact`**: a § 1.1 class as § 1.1 spells it, or an angle-bracketed scaffolding token.
+- **`modes`**, **`destination`**: `G7`'s cell grammar, comma-separated. A mode is one `G5`
+  resolves, or `UNSET`; a destination is `DECIDED` (`G6`'s decided branch) or `UNDECIDED`.
+  **Never `any`**, which under `G7` admits `UNSET`.
+- **`disposition`**: `rendered` or `excluded`, as in the fence above.
+- **`home`**: for `rendered`, § 3 components joined by `|`, where `elements:<fence-tag>` stands
+  for the components that element fence names, and `—` only on a scaffolding row § 3 gives no
+  component. For `excluded`, `§9.3`, where the reason is named.
+
+**The rule over its rows** (`CLAUDE.md` § *Rules over an enumeration*). *Criterion:* the classes
+that take rows are § 1.1's `bound` classes, read there; a class that is `internal`,
+`internal-hard` or `output` is excluded by its class and takes no row. The states rows cover are
+those the `site` row of `skills/trip/SKILL.md` admits, read there. *Precedence:* one row per
+artifact and state; two rows covering one are refused, never ranked. *Admission:* a `bound` class,
+or a scaffolding token the table names, with no row for an admitted state is undispositioned, and
+so is a row for a class that is not `bound` or for a state the `site` row does not admit; the walk
+reports each. A row is added here and nowhere else.
+
+```round-trip-contract-artifacts
+# artifact                  modes                                           destination  disposition  home
+trip-context.md             DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING  DECIDED      rendered     hero-section|overview-dashboard
+outputs/final-itinerary.md  DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING  DECIDED      rendered     elements:round-trip-contract-elements
+outputs/links-reference.md  DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING  DECIDED      rendered     map-link
+outputs/venue-matrix.md     DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING  DECIDED      rendered     day-grid|alt-grid
+outputs/event-status.md     DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING  DECIDED      rendered     booking-checklist
+<sticky-navigation>         DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING  DECIDED      rendered     sticky-navigation
+<coordination-notice>       DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING  DECIDED      rendered     coordination-notice
+<reference-matter>          DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING  DECIDED      rendered     —
+```
+
+`<reference-matter>` is the site-additive reference content described above. § 3 defines no
+component for it, so its row names none and the shape pass cannot see it.
+
 ### 9.3 Intentional exclusions — named, so nothing is silent
 
 Some itinerary elements are **deliberately not reader-facing.** They are named here so that "not
 rendered" is an explicit decision with a reason — not a silent drop. Excluding a listed element is
 correct; dropping an *unlisted* plan element is the defect.
 
-| Excluded element | Why it is not on the site |
-|---|---|
-| Spoke Deviations | The planner's trace of why the plan diverged from a specialist's recommendation. Audit-trail, not reader content. |
-| Open Decisions | Pre-decision options for the planner, not finalized plan. Not a reader-facing commitment. |
-| Itinerary Version Log | Document metadata. |
-| Per-traveler model + satisfaction metrics | Internal coverage view carrying personal detail; kept out of the published surface by design (see 9.1). |
-| Artifact frontmatter — the YAML block a plan artifact opens with | Machine-readable identity, lifecycle, provenance and publishability, read by the schema gate and by the agents. It is metadata *about* the artifact rather than plan content in it, and has no reader-facing form. Named here because 9.2's completeness rule is total over every element of `final-itinerary.md`, so once a migrated itinerary carries a block, an unlisted block would read as a silent drop on every build. |
+| Excluded element | State | Why it is not on the site |
+|---|---|---|
+| Spoke Deviations | wherever its artifact renders | The planner's trace of why the plan diverged from a specialist's recommendation. Audit-trail, not reader content. |
+| Open Decisions | wherever its artifact renders | Pre-decision options for the planner, not finalized plan. Not a reader-facing commitment. |
+| Itinerary Version Log | wherever its artifact renders | Document metadata. |
+| Per-traveler model + satisfaction metrics | wherever its artifact renders | Internal coverage view carrying personal detail; kept out of the published surface by design (see 9.1). |
+| Artifact frontmatter — the YAML block a plan artifact opens with | wherever its artifact renders | Machine-readable identity, lifecycle, provenance and publishability, read by the schema gate and by the agents. It is metadata *about* the artifact rather than plan content in it, and has no reader-facing form. Named here because 9.2's completeness rule is total over every element of `final-itinerary.md`, so once a migrated itinerary carries a block, an unlisted block would read as a silent drop on every build. |
+
+**The State column.** The rows above are elements of `final-itinerary.md` and apply wherever it
+renders. A row for a class a state does not render names the class as a code span, as § 1.1
+spells it, and its states as `<modes> × <destinations>` in the render table's cell grammar,
+groups separated by `;`; the walk reads that cell. A class excluded by its own class value is
+never listed.
 
 ### 9.4 The completeness check — run at build and at update
 
-At **site build** and again at every **site update**, walk 9.2's mapping against the current
-`final-itinerary.md`:
+At **site build** and again at every **site update**, the walk runs three passes over σ, the
+trip's resolved mode and its destination's disposition:
+
+1. **Artifact pass.** Contract half, on the tracked tree: every `bound` class and scaffolding
+   token has a render-table row for each state the `site` row admits, each row names one of them
+   and an admitted state, and each `excluded` row is named in § 9.3 in that state. Instance half,
+   at the verb: every artifact the table renders in σ is readable; one that is not is a degraded
+   read, never a smaller site.
+2. **Element pass.** The walk below, once per rendered artifact, against its own element fence.
+3. **Shape pass.** The render carries no § 3 component σ does not admit — the surplus direction;
+   the deficit stays with the element pass. A section a patch leaves behind across a change of
+   state is this pass's finding. It sees a component by a class § 3 declares for it, in its
+   heading or as its own class token, so it cannot see a component § 3 gives no class, nor
+   reference matter.
+
+**Without σ, the artifact pass's instance half and the shape pass are reported as not run, never
+as clean, and the check does not close.** The walk never infers σ. The element pass walks 9.2's
+mapping against the current `final-itinerary.md`:
 
 - Every day resolves to a Day Hero Banner and a day body — a day grid, a `.split-day` region,
   or both; every card-bearing element (anchor, supporting, bailout, alternative, food,
@@ -925,6 +989,13 @@ The completeness check separates two failures that look alike but scope differen
   structurally unrepresentable element — is a **component gap.** Designing the missing component is
   a **fast-follow**, tracked as its own work item and shipped in a later patch release. It is
   **not** an in-scope expansion of this single-sourcing contract.
+
+**Per state, the same two cases hold, and a third is neither.** A component the render table
+admits in a state and the build did not place is the first case. An artifact a state renders with
+an element type no component represents is the second; `reference/adr/ADR-033-site-section-ceiling.md`
+decides whether its component becomes a section, a region or a field. **An artifact whose class
+forbids rendering is never a gap**, in any state. This section routes no class change: an artifact
+reaches the build only through a record that lands in § 1.1 and the § 9.1 fence together.
 
 This contract's job is to make the mapping **total over the elements today's components can
 render**, and to **surface** any structural gap as a named finding — not to build new components
