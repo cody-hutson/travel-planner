@@ -20,12 +20,44 @@ permissions:
 # Whether a job here binds a merge is declared BY THAT JOB, on the
 # `# gate-efficacy: posture=` line above its key, and graded against the committed
 # context list by the registration census step in the actionlint job below.
+#
+# ── WHAT THIS WORKFLOW DOWNLOADS, AND HOW EACH DOWNLOAD IS PINNED ─────────────────
+# actionlint and gitleaks are upstream release assets. Each is fixed by a version and refused
+# unless its SHA-256 matches the digest beside that version in its job's env, before it is
+# unpacked or run; a mismatch fails the step, and nothing falls back to an unverified download.
+# Each digest was read from the checksums file that same upstream release publishes. That
+# proves the bytes run here are the bytes the release served when its pin was read, so any later
+# change to what upstream serves under that name fails this check instead of running. It does
+# not prove the release itself was sound: a compromised release that published a matching
+# checksums file would have been pinned as readily. Moving a pin is one edit to a version and
+# its digest together, read from that version's checksums file.
+#
+# ── WHICH SHELLCHECK ACTIONLINT RUNS, AND HOW IT IS PINNED ───────────────────────
+# Not a download. actionlint runs the shellcheck the ubuntu-24.04 runner image installs from
+# Ubuntu's package archive, whose packages apt checks against the archive's signed index when
+# the image is built. It is pinned BY VERSION, not by a digest in this file: the step before
+# actionlint refuses unless dpkg records the file at SHELLCHECK_PATH as installed by the
+# image's shellcheck package and that file reports SHELLCHECK_EXPECT_VERSION, and actionlint
+# is pointed at that same path. A missing binary is refused too, because actionlint would
+# otherwise lint without shellcheck and say nothing. Findings differ between shellcheck
+# versions, so an image that moves the version turns this check red instead of changing its
+# verdict silently; a rebuild of the package at the same upstream version passes. It is not
+# the version shell-lint.yml downloads for scripts/*.sh, by design: moving actionlint onto
+# that pin can change this check's findings on every workflow, so it is a change of its own.
 
 jobs:
   # gate-efficacy: posture=required
   actionlint:
     name: Workflow SAST (actionlint)
     runs-on: ubuntu-24.04
+    env:
+      # The download pin: one upstream release of actionlint, and the SHA-256 of its linux amd64
+      # tarball as that release's checksums file lists it. Move both together.
+      ACTIONLINT_VERSION: '1.7.1'
+      ACTIONLINT_SHA256: 'f53c34493657dfea83b657e4b62cc68c25fbc383dff64c8d581613b037aacaa3'
+      # The shellcheck actionlint runs: the runner image's own, pinned by version (header).
+      SHELLCHECK_PATH: '/usr/bin/shellcheck'
+      SHELLCHECK_EXPECT_VERSION: '0.9.0'
     steps:
       - uses: actions/checkout@v7
 
@@ -54,14 +86,56 @@ jobs:
           echo "self-test exit $st, census exit $ce"
           [ "$st" -eq 0 ] && [ "$ce" -eq 0 ]
 
+      # No fallback to an unverified download: a mismatch fails this step, nothing is
+      # unpacked, and actionlint below does not run.
       - name: Install actionlint
+        id: actionlint_install
         if: ${{ !cancelled() }}
         run: |
-          # actionlint binary installer (upstream-recommended path)
-          bash <(curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) 1.7.1
-          ./actionlint -version
-      - name: Run actionlint
+          set -euo pipefail
+          tarball="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/$tarball" \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/$tarball"
+          printf '%s  %s\n' "$ACTIONLINT_SHA256" "$RUNNER_TEMP/$tarball" | sha256sum --strict -c -
+          tar -xzf "$RUNNER_TEMP/$tarball" -C "$RUNNER_TEMP" actionlint
+          "$RUNNER_TEMP/actionlint" -version
+
+      # The shellcheck actionlint runs, asserted before it runs (header). It reads what the
+      # image installed and downloads nothing; actionlint below is pointed at the same path.
+      # The ownership limb reads dpkg's record of the file, not the file's content.
+      - name: Assert actionlint's shellcheck
+        id: shellcheck_assert
         if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          printf 'shellcheck on PATH: %s\n' "$(command -v shellcheck || echo none)"
+          if [ ! -x "$SHELLCHECK_PATH" ]; then
+            echo "::error::no executable at $SHELLCHECK_PATH -- actionlint would lint without shellcheck and say nothing"
+            exit 1
+          fi
+          if ! owner="$(dpkg-query -S "$SHELLCHECK_PATH" 2>&1)"; then
+            echo "::error::no installed package owns $SHELLCHECK_PATH ($owner) -- actionlint would lint without the shellcheck this job pins"
+            exit 1
+          fi
+          # dpkg-query -S prints "<package>[:<arch>]: <path>". The architecture qualifier is
+          # tolerated; any other package, a second line or another path is refused.
+          owner_pkg="${owner%%: *}"
+          owner_path="${owner#*: }"
+          if [ "${owner_pkg%%:*}" != "shellcheck" ] || [ "$owner_path" != "$SHELLCHECK_PATH" ]; then
+            echo "::error::dpkg does not record $SHELLCHECK_PATH as installed by the image's shellcheck package ($owner)"
+            exit 1
+          fi
+          pkg_version="$(dpkg-query -W -f="\${Version}" shellcheck)"
+          sc_version="$("$SHELLCHECK_PATH" --version | awk '$1 == "version:" { print $2 }')"
+          printf 'shellcheck at %s: package shellcheck %s, reports %s\n' \
+            "$SHELLCHECK_PATH" "$pkg_version" "${sc_version:-no version}"
+          if [ "$sc_version" != "$SHELLCHECK_EXPECT_VERSION" ]; then
+            echo "::error::shellcheck reports ${sc_version:-no version}, not the pinned $SHELLCHECK_EXPECT_VERSION -- findings differ between versions"
+            exit 1
+          fi
+
+      - name: Run actionlint
+        if: ${{ !cancelled() && steps.actionlint_install.outcome == 'success' && steps.shellcheck_assert.outcome == 'success' }}
         # The -ignore flag suppresses shellcheck SC2016 propagation out of
         # pr-body-parser-clean.yml. The justification is structural rather than
         # provenance: that workflow echoes the override marker into the step
@@ -74,7 +148,7 @@ jobs:
         # documentation only; the runtime -ignore flag is the load-bearing
         # suppression mechanism on the current v1.7.1 pin.
         run: |
-          ./actionlint -color -ignore 'shellcheck reported issue in this script: SC2016:.+'
+          "$RUNNER_TEMP/actionlint" -color -shellcheck "$SHELLCHECK_PATH" -ignore 'shellcheck reported issue in this script: SC2016:.+'
 
   # gate-efficacy: posture=required
   markdown-link-check:
@@ -110,6 +184,11 @@ jobs:
   gitleaks:
     name: Secret scanning (gitleaks)
     runs-on: ubuntu-latest
+    env:
+      # The download pin: one upstream release of gitleaks, and the SHA-256 of its linux x64
+      # tarball as that release's checksums file lists it. Move both together.
+      GITLEAKS_VERSION: '8.21.2'
+      GITLEAKS_SHA256: '5bc41815076e6ed6ef8fbecc9d9b75bcae31f39029ceb55da08086315316e3ba'
     steps:
       - uses: actions/checkout@v7
         with:
@@ -140,10 +219,17 @@ jobs:
           [ "$fail" -eq 0 ] || exit 1
           echo "Trip-data ignore invariant holds: signpost tracked, trip data ignored, control arm fires."
 
+      # No fallback to an unverified download: a mismatch fails this step, nothing is
+      # unpacked, and gitleaks below does not run.
       - name: Install gitleaks
         run: |
-          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz | tar -xz gitleaks
-          sudo mv gitleaks /usr/local/bin/
+          set -euo pipefail
+          tarball="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/$tarball" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/$tarball"
+          printf '%s  %s\n' "$GITLEAKS_SHA256" "$RUNNER_TEMP/$tarball" | sha256sum --strict -c -
+          tar -xzf "$RUNNER_TEMP/$tarball" -C "$RUNNER_TEMP" gitleaks
+          sudo mv "$RUNNER_TEMP/gitleaks" /usr/local/bin/
           gitleaks version
       - name: Run gitleaks (full history)
         run: gitleaks detect --source . --no-banner --redact --verbose
