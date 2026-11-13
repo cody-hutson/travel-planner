@@ -38,9 +38,9 @@ name: ADR conformance
 #   2. ONE FULL RELEASE SHIPS WITH THIS CHECK GREEN — the same shakedown the sibling gates
 #      took before their own flip.
 #   3. THE FLIP IS EXECUTED AS THREE EDITS PLUS ONE OPERATOR ACT, all together: the required
-#      -check registry gains this job's context; SECURITY.md's required-check count and its
-#      count of workflows carrying a required check each move by one, with this filename
-#      added to its list; and the branch-protection rule is amended, which
+#      -check registry gains this job's context; SECURITY.md's Required status checks row
+#      gains it, its numeral raised to match, and this filename joins that file's list of the
+#      workflows that carry a required check; and the branch-protection rule is amended, which
 #      scripts/pin-required-checks.py --apply already mechanizes.
 #   ORDERING IS NOT OPTIONAL, and corpus-hygiene.yml already records why: registering the
 #   context BEFORE the workflow can report wedges the repository. Register last.
