@@ -1895,6 +1895,14 @@ def restore_arms():
         cases = [(_FakeHost.DOUBLED_PATH, False), (_FakeHost.RSC_PATH, True),
                  (_FakeHost.PROT_PATH, False), (_FakeHost.RSC_PATH + "/contexts", False),
                  ("repos/owner/name/branches/release/x/protection/required_status_checks",
+                  False),
+                 ("repos/owner/name/branches/../protection/required_status_checks", False),
+                 ("repos/owner/name/branches/./protection/required_status_checks", False),
+                 ("repos/../name/branches/main/protection/required_status_checks", False),
+                 ("repos/owner/../branches/main/protection/required_status_checks", False),
+                 ("repos/owner/name/branches/main?x=1/protection/required_status_checks",
+                  False),
+                 ("repos/owner/name/branches/main%2Fx/protection/required_status_checks",
                   False)]
         for path, want in cases:
             got = bool(ok(path))
@@ -2033,9 +2041,93 @@ def restore_arms():
             problems.append("the output names the doubled path")
         return problems, summary
 
+    def h12():
+        priors = ('{"checks": ["x"]}', '{"checks": [null]}', "not json at all")
+        modes = (("--plan", run_apply, {"confirm": False}),
+                 ("--apply", run_apply, {"confirm": True}),
+                 ("--register", globals().get("run_register"),
+                  {"confirm": True, "names": [CONTEXT_ORDER[-1]]}))
+        problems, runs = [], 0
+        for prior in priors:
+            for label, mode, extra in modes:
+                where = "{} over a prior {}".format(label, prior)
+                if mode is None:
+                    problems.append("{}: absent -- the mode is not defined".format(where))
+                    continue
+                host, sink = _FakeHost(_pre_pairs()), io.StringIO()
+                with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+                    pre_f = os.path.join(tmp, "rsc-PRE.json")
+                    with open(pre_f, "w", encoding="utf-8") as fh:
+                        fh.write(prior)
+                    with open(pre_f, "rb") as fh:
+                        before = fh.read()
+                    try:
+                        rc = mode(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                                  staging=tmp, fetch=host.fetch, write=host.write,
+                                  stream=sink, run_self_test=False, **extra)
+                    except Exception as exc:       # noqa: BLE001 - a raise is graded
+                        problems.append("{}: raised {} after {} write(s)".format(
+                            where, type(exc).__name__, len(host.writes)))
+                        continue
+                    runs += 1
+                    with open(pre_f, "rb") as fh:
+                        if fh.read() != before:
+                            problems.append("{}: the prior was overwritten".format(where))
+                    if [n for n in os.listdir(tmp) if n.endswith(".pending")]:
+                        problems.append("{}: a .pending file was left".format(where))
+                if rc != 3:
+                    problems.append("{}: rc {}, want 3".format(where, rc))
+                if host.writes:
+                    problems.append("{}: {} write(s), want 0".format(where, len(host.writes)))
+                if "CAPTURE REFUSED" not in sink.getvalue():
+                    problems.append("{}: the output does not say CAPTURE REFUSED".format(where))
+        return problems, "{} run(s) returned".format(runs)
+
+    def h13():
+        payload = compose_restore(capture_null)
+        want = canonical_digest(payload)
+        staged_forms = (
+            ("an extra top-level member", dict(payload, contexts=["Bogus context"])),
+            ("an extra member in each entry",
+             {"strict": payload["strict"],
+              "checks": [dict(c, note="not a field of the payload")
+                         for c in payload["checks"]]}))
+        problems, seen = [], []
+        for label, staged in staged_forms:
+            sent = []
+
+            def _sent_writer(path, payload_file, sent=sent):
+                with open(payload_file, encoding="utf-8") as fh:
+                    sent.append(json.load(fh))
+                return (True, "{}", "")
+
+            with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+                _stage(tmp, capture_null, staged)
+                rc = run_restore(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                                 staging=tmp, confirm=True,
+                                 fetch=_fetcher([(True, json.dumps(capture_null), "")]),
+                                 write=_sent_writer, stream=io.StringIO())
+            seen.append("{}: rc {}, {} write(s)".format(label, rc, len(sent)))
+            if rc != 0 or len(sent) != 1:
+                problems.append("{}: rc {}, {} write(s), want rc 0 and 1".format(
+                    label, rc, len(sent)))
+            if sent and canonical_digest(sent[0]) != want:
+                body = sent[0] if isinstance(sent[0], dict) else {}
+                entry_keys = set()
+                for entry in body.get("checks") or []:
+                    entry_keys |= set(entry) if isinstance(entry, dict) else set()
+                problems.append("{}: the body sent is not the payload rsc-PRE.json "
+                                "composes -- it carries {} beside strict and checks, and "
+                                "{} beside context and app_id".format(
+                                    label, sorted(set(body) - {"strict", "checks"}),
+                                    sorted(entry_keys - {"context", "app_id"})))
+        return problems, "; ".join(seen)
+
     return [
         ("H0", "the write predicate: the doubled path refused, the narrow path "
-               "admitted, and three near-misses refused", h0),
+               "admitted, and nine near-misses refused, a dot-segment in each of the "
+               "owner, name and branch positions, a query string and a percent-encoded "
+               "separator among them", h0),
         ("H0s", "gh_patch_json with its transport stubbed: the doubled path refused "
                 "before the transport, the narrow path reaching it", h0s),
         ("H1", "--restore on the stateful host, its capture the declared set less one "
@@ -2070,6 +2162,13 @@ def restore_arms():
                 "and the host returned to the first capture", h10),
         ("H11", "a null the host pins on the write: not verified, and the POST "
                 ".../contexts fallback printed", h11),
+        ("H12", "a prior rsc-PRE.json a capture cannot key, its checks not an array of "
+                "named contexts, or one that does not parse: --plan, --apply and "
+                "--register each refuse at exit 3, nothing written, the prior "
+                "unchanged, no .pending file left, nothing raised", h12),
+        ("H13", "an rsc-RESTORE.json that agrees with rsc-PRE.json on its key but "
+                "carries other members: the restore sends the payload rsc-PRE.json "
+                "composes, and nothing else in that file", h13),
     ]
 
 
@@ -2210,6 +2309,37 @@ def register_arms():
                 problems.append("the output does not say {!r}".format(word))
         return check
 
+    def j17():
+        register = globals().get("run_register")
+        if register is None:
+            return ["absent -- run_register is not defined"], ""
+        problems, seen = [], []
+        for encoding in ("ascii", "latin-1"):
+            host = _FakeHost([(c, a) for c, a in _pre_pairs() if c != last])
+            raw = io.BytesIO()
+            sink = io.TextIOWrapper(raw, encoding=encoding, errors="strict",
+                                    write_through=True)
+            with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+                try:
+                    rc = register(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                                  staging=tmp, names=[last], confirm=True,
+                                  fetch=host.fetch, write=host.write, stream=sink,
+                                  run_self_test=False)
+                except Exception as exc:           # noqa: BLE001 - a raise is graded
+                    problems.append("{} stream: raised {} after {} write(s)".format(
+                        encoding, type(exc).__name__, len(host.writes)))
+                    continue
+            text = raw.getvalue().decode(encoding)
+            seen.append("{} stream rc {}, {} write(s)".format(encoding, rc,
+                                                              len(host.writes)))
+            if rc != 1 or len(host.writes) != 1:
+                problems.append("{} stream: rc {}, {} write(s), want rc 1 and 1".format(
+                    encoding, rc, len(host.writes)))
+            if "NOT PINNED" not in text or unpinned not in text:
+                problems.append("{} stream: the output does not say NOT PINNED and "
+                                "name {}".format(encoding, unpinned))
+        return problems, "; ".join(seen)
+
     return [
         ("J0", "the live set is the declaration less its last context, and that "
                "context is named: one write, to the narrow path, the host then "
@@ -2255,6 +2385,10 @@ def register_arms():
                                          check=_says("NOT VERIFIED"))),
         ("J11", "the live set holds a context twice: refused, nothing written",
          _arm(_live(last) + [(first_sorted, APP_ID)], [last], 4, 0, check=_refused)),
+        ("J17", "J4's state, written to an ASCII stream and to a Latin-1 stream, "
+                "neither of which encodes the em dash in the ruled NOT PINNED text: exit "
+                "1 after the one write, nothing raised, and the output still says NOT "
+                "PINNED and names the entry", j17),
     ]
 
 
@@ -2457,6 +2591,71 @@ def seam_arms():
         return problems, "register rc {}, second register rc {}, restore rc {}, {} " \
                          "write(s)".format(rc_reg, rc_again, rc_res, len(host.writes))
 
+    def _apply(host, tmp):
+        return run_apply(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH, staging=tmp,
+                         confirm=True, fetch=host.fetch, write=host.write,
+                         stream=io.StringIO(), run_self_test=False)
+
+    def m2():
+        if globals().get("run_register") is None:
+            return ["absent -- run_register is not defined"], ""
+        host = _FakeHost([(c, a) for c, a in _pre_pairs() if c != last])
+        problems, sink = [], io.StringIO()
+        with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp, \
+                tempfile.TemporaryDirectory(prefix="prc-selftest-") as fresh:
+            rc_reg = _register(host, tmp, sink)
+            text = sink.getvalue()
+            rc_same = _apply(host, tmp)
+            writes_before = len(host.writes)
+            rc_fresh = _apply(host, fresh)
+        rc_assert, _failed, _lines = evaluate(json.dumps(host.sub()))
+        if rc_reg != 1 or "NOT PINNED" not in text:
+            problems.append("--register: rc {}, want 1 and NOT PINNED".format(rc_reg))
+        if "fresh --staging" not in text:
+            problems.append("the NOT PINNED output does not say that --apply runs from "
+                            "a fresh --staging directory")
+        if rc_same != 3:
+            problems.append("--apply in the registration's own directory: rc {}, want "
+                            "3, the refusal that makes a fresh directory the "
+                            "step".format(rc_same))
+        if rc_fresh != 0 or len(host.writes) != writes_before + 1 or rc_assert != 0:
+            problems.append("--apply from a fresh --staging directory: rc {}, {} "
+                            "write(s), --assert on the host rc {}, want 0, 1 and "
+                            "0".format(rc_fresh, len(host.writes) - writes_before,
+                                       rc_assert))
+        return problems, "register rc {}, apply in its directory rc {}, apply fresh " \
+                         "rc {}, --assert rc {}".format(rc_reg, rc_same, rc_fresh,
+                                                        rc_assert)
+
+    def m3():
+        if globals().get("run_register") is None:
+            return ["absent -- run_register is not defined"], ""
+        carried = ("Personal-data gate", CONTEXT_ORDER[0])
+        host = _FakeHost([(c, None if c in carried else APP_ID)
+                          for c in CONTEXT_ORDER if c != last])
+        problems, sink = [], io.StringIO()
+        with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp, \
+                tempfile.TemporaryDirectory(prefix="prc-selftest-") as fresh:
+            rc_reg = _register(host, tmp, sink)
+            apply_sink = io.StringIO()
+            rc_apply = run_apply(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                                 staging=fresh, confirm=True, fetch=host.fetch,
+                                 write=host.write, stream=apply_sink,
+                                 run_self_test=False)
+        rc_assert, _failed, _lines = evaluate(json.dumps(host.sub()))
+        if rc_reg != 1:
+            problems.append("--register: rc {}, want 1, NOT PINNED".format(rc_reg))
+        if rc_apply != 0:
+            problems.append("--apply from a fresh --staging directory: rc {}, want 0{}"
+                            .format(rc_apply,
+                                    " -- it reported SCOPE VIOLATION after pinning both"
+                                    if "SCOPE VIOLATION" in apply_sink.getvalue() else ""))
+        if rc_assert != 0 or len(host.writes) != 2:
+            problems.append("--assert on the host rc {} after {} write(s), want 0 after "
+                            "2".format(rc_assert, len(host.writes)))
+        return problems, "register rc {}, apply rc {}, --assert rc {}, {} " \
+                         "write(s)".format(rc_reg, rc_apply, rc_assert, len(host.writes))
+
     return [
         ("M0", "register-then-restore on one stateful host: both exit 0, both "
                "writes narrow, the host returned to the capture in checks and "
@@ -2465,6 +2664,15 @@ def seam_arms():
                "same directory: the second refused at exit 3 with nothing written and "
                "the rollback point unchanged, and the restore returning the host to "
                "the first capture", m1),
+        ("M2", "--register on a host lacking a context and holding an unpinned entry, "
+               "then the step it prints: its NOT PINNED output says --apply runs from a "
+               "fresh --staging directory, --apply in the registration's own directory "
+               "refuses at exit 3, and from a fresh one it pins the entry and --assert "
+               "holds on the host", m2),
+        ("M3", "the walk with two carried entries not at APP_ID and the last context "
+               "missing: --register adds the context and exits 1, NOT PINNED, and "
+               "--apply from a fresh --staging directory then pins both, exits 0, and "
+               "leaves --assert holding on the host", m3),
     ]
 
 
