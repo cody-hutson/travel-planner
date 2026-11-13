@@ -73,13 +73,14 @@ heading's ordinal; a camel-case key such as `passportNumber:`; a table cell hold
 than one word and no colon, outside a header row; a table row whose key cell is empty; and a value
 written as prose under some other label. These are residuals the criterion names, for a follow-on
 card, and milestone 97's content check is their backstop. The open-publish guard reads a passport
-value only from a list-labelled line, so for a value written in a heading, a table or a comment it
-cannot refuse an open page that repeats it. The encrypted site carries no content check until
-milestone 97's safeguard-6 check ships, so the publish guard's refusal binds only an open page. A
-passport typed into `trip-log.md` still reaches the hub and the ideation agent, and a trip whose
-`Visa / entry` text was filled per nationality keeps it until the research role next rewrites that
-field. An interviewed traveller is not yet read the notice: that route is a follow-on, to travel
-with the next regrade of the generated conversations.
+value only where its label opens a line, once a list marker and bold are taken off, so for a value
+written in a heading, a table or a comment it cannot refuse an open page that repeats it. The
+encrypted site carries no content check until milestone 97's safeguard-6 check ships, so the
+publish guard's refusal binds only an open page. A passport typed into `trip-log.md` still reaches
+the hub and the ideation agent, and a trip whose `Visa / entry` text was filled per nationality
+keeps it until the research role next rewrites that field. An interviewed traveller is not yet
+read the notice: that route is a follow-on, to travel with the next regrade of the generated
+conversations.
 
 ## [0.66.0] — 2026-11-10 — The intake channel is checked, not asserted
 
