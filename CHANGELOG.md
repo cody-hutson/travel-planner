@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-11-12 — Travellers are told what the group may see, and no writer of a group page receives a passport
+## [0.70.0] — 2026-11-12 — Travellers are told what the group may see, and no writer of a group page receives a passport
 
 A traveller filling in an intake form is now told who may see what they share, and the hub and
 the destination-ideation agent, the planning agents dispatched to write what a trip's site is
@@ -69,7 +69,7 @@ or issuing country is now a finding rather than exempt destination guidance.
   grew 1,198 to 77,411, beneath 82,813; `templates/traveler-intake.template.md` grew 916 to 21,016,
   beneath 22,110.
 - `templates/person-intake.template.md` grew to 19,225 bytes and `agents/destination-ideation.md`
-  to 11,365, both below the floor at which a file owes a row.
+  to 11,414, both below the floor at which a file owes a row.
 
 **What it doesn't reach.** A dispatched agent keeps `Read`: what it is given is the projection,
 and that it opens none of the traveller files itself is a rule it follows, which nothing enforces.
