@@ -89,8 +89,11 @@
 #        fields; a row's limb is outside field/entry; ZERO `field` rows (an empty omit set is
 #        indistinguishable from a field limb that failed to read — data-architecture § 5.4,
 #        "an empty read is not an empty class"); the trip directory is missing; a source
-#        exists but is not a readable, non-empty file; travelers/ exists but cannot be read;
-#        a flag is missing, unknown or empty.
+#        exists but is not a readable, non-empty file; a source holds a carriage return that
+#        no line feed follows, which would read as fewer lines than it holds; travelers/
+#        exists but cannot be read; a flag is missing, unknown or empty. They are tested in
+#        the order the script reaches them, and the first that holds is the one named. A
+#        failure this list does not name exits 2 as well, with stdout empty.
 #   3  NO SOURCE on file — no traveller model and no travelers/*.md. One header line saying
 #      so, and nothing else. A legal state the ideation agent already degrades on.
 # `/trip` dispatches only on 0 or 3. On anything else, a status of 127 and a refused run
@@ -202,6 +205,16 @@ pj_project_file() {   # pj_project_file <selectors> <file>
   fi
   if [ -z "$f" ] || [ ! -f "$f" ] || [ ! -r "$f" ]; then
     printf 'PJ0: a source is not a readable file\n' >&2
+    return 2
+  fi
+  # A carriage return that no line feed follows: the reader below would take the file as
+  # fewer lines than it holds, and could not find a label in it. Refused, never read.
+  if LC_ALL=C awk 'index(substr($0, 1, length($0) - 1), "\r") { f = 1; exit } END { exit !f }' "$f"; then
+    printf 'PJ0: a source holds a carriage return with no line feed after it\n' >&2
+    return 2
+  fi
+  if [ "$(LC_ALL=C tail -c 1 "$f")" = "$(printf '\r')" ]; then
+    printf 'PJ0: a source holds a carriage return with no line feed after it\n' >&2
     return 2
   fi
   PJ_SEL="$sel" LC_ALL=C awk '
