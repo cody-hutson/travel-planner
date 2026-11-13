@@ -333,6 +333,10 @@ name: Artifact schema
 #        grading sections — how a grade is produced, its limits, and the threshold sentence word for word
 #        — and the grade record: one block per generated conversation, its verdict the conversation
 #        rule's, no MET against an unruled mechanical fail or ND, and no re-roll
+#   RN   the roster edit's approver notice: § `group` reads the approver declaration on a removal,
+#        says before the echo whether it still names the removed row's key, asks nothing and writes
+#        neither sidecar, and names it in its closing note; the charter's Step 2 row restates the
+#        read. Phrase arms over the tree, each with a strip control
 #   RS   this coverage boundary itself, and the suite's own header roster, each set-diffed
 #        BOTH WAYS against the groups the run actually emitted. The executing set comes from
 #        the RUN, never from a static read of the suite. A group added and left undeclared

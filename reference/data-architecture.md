@@ -1470,7 +1470,7 @@ with no site carries no row.
 
 ```count-assertion-digest
 # sites  path
-35      CHANGELOG.md
+39      CHANGELOG.md
 8       CLAUDE.md
 1       SECURITY.md
 3       agents/00-enrichment.md

@@ -397,8 +397,9 @@ Answers #718's second criterion. The flow, as a numbered step table:
   its own count and code, for up to seven days — the trade a revert already makes.
 - **Privilege split.** Declaring who approves is policy, and may be agent-addressable. Recording
   that someone approved is an attestation: **EXCLUDED `ADR-007 §2`, terminal-only, with no override
-  flag** — the reason `ADR-007` § 4 row 11 already gives for `confirm`. With no declaration,
-  `confirm` is unchanged byte for byte.
+  flag** — the reason `ADR-007` § 4 row 11 already gives for `confirm`. With no declaration, this
+  decision adds nothing to `confirm`; what `confirm` does there is stated in `skills/trip/SKILL.md`
+  § *site* and in `cmd_confirm` in `scripts/publish-trip-site.sh`.
 - **CHEAP · HIGH.**
 
 ### 4. Attribution, the local half
@@ -691,3 +692,14 @@ Stated rather than smoothed over:
 - #718, its milestone (#34) and the group-approval epic (#1297); #719, the collection build;
   #708, whose candidate designs are re-read here; #88, whose second criterion this record delivers
   as detectability.
+
+## Amendment history
+
+**Amendment (2026-11-13, Friday) — § *Decision* 3, the privilege-split bullet: a claim about
+`confirm` on a trip that declares no approvers, corrected to this decision's scope; no decision
+changes.** The bullet ended "With no declaration, `confirm` is unchanged byte for byte." That stopped
+being true once `confirm` gained, on such a trip, a way out of the `pending` notice a change
+abandoned before any approval leaves, and this record takes no decision on that exit. The sentence
+now says what this decision adds to such a trip, which is nothing, and names where `confirm`'s
+behaviour there is stated. Decision 3's step table, its privilege split and the declared path's
+exit stand as decided.

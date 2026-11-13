@@ -42,10 +42,12 @@
 # the guard before 0.60.0 blocked is blocked at the head, read by a recorder that wraps the guard
 # from group L to M6.
 # M7 = the guard's fourth arm (#2068, ADR-050): the published projection as the guard before 0.60.0
-# wrote it, read last and credited last, blocks again the pages it blocked — a value whose words
+# wrote it, read and credited after the joined arm, blocks again the pages it blocked — a value whose words
 # tags and attribute names push apart inside a script string, a comment or an attribute value —
 # while criterion 5's `=` render is still named for the published arm (M7g), and a page the joined
 # arm catches too is still named for the joined arm (M7i).
+# M9 = the guard's fifth and sixth arms (#2117): the visible and joined projections over a copy whose
+# <script>/<style> bodies end where a browser ends them, read and credited after the shape arm.
 # M8 = the anchors (#2072): every projection reads a long run after a `<` and a long name run in
 # time proportional to its length, under a CPU cap, and the name-run anchor reads what it read.
 # R = the change-summary (#550). R1-R5 grade its CONTENT guard (AC 5) —
@@ -3012,8 +3014,12 @@ M1T_EX="$WORK/m1t_script_exact.html";  mrender "$M1T_EX" "<script>var a = 1;</sc
 m1t_unfixed() { # <render> <trip_dir> -> the guard's status with the published lookahead put back to the exact closing tag
   # The fourth arm (ADR-050) reads what the mutated projection reads, for M1t's and M1u's
   # ARMED-RED and for M6d: it drops a tag on neither list by shape, so it would catch the leak page.
+  # The fifth and sixth (#2117) read the stretch as visible text and would catch it too, so each
+  # reads as its twin here: the mutation is of the published program, and nothing else may catch.
   ( eval "$(declare -f strip_to_published_text | sed 's#</\\3\\s\*>#</\\3>#')"
     strip_to_shape_text() { strip_to_published_text "$@"; }
+    strip_to_text_blocks_at_browser_end() { strip_to_text_blocks "$@"; }
+    strip_to_joined_text_at_browser_end() { strip_to_joined_text "$@"; }
     verify_publishable_content "$1" "$2" >/dev/null 2>&1; printf '%s' "$?" )
 }
 m1t_run() { # <projection> <render> -> how many times MV's twelve words stand in its stream as one run
@@ -3029,9 +3035,9 @@ m1t_assert() { # one verdict
   oth=$(( $(m1t_run strip_to_text_blocks "$M1T_SC") + $(m1t_run strip_to_joined_text "$M1T_SC") + $(m1t_run strip_to_text_blocks "$M1T_ST") + $(m1t_run strip_to_joined_text "$M1T_ST") ))
   nf="$(awk '{ c += gsub(/<font>/, "&") } END { print c + 0 }' "$M1T_SC" "$M1T_ST" "$M1T_EX")"
   if [ "$rs" -eq 1 ] && [ "$ps" = "$M1EQ_PRJ" ] && [ "$rt" -eq 1 ] && [ "$pt" = "$M1EQ_PRJ" ] && [ "$rx" -eq 1 ] && [ "$ms" = "0" ] && [ "$mt" = "0" ] && [ "$oth" -eq 0 ] && [ "$nf" -eq 6 ]; then
-    PASS "M1t: a value written after a spaced closing tag is read — the need split twice by a tag on neither list, after '</script >', aborts as a HIT (rc=$rs) named '$ps', so does the same after '</style >' (rc=$rt), and the exact-close twin aborts too (rc=$rx); ARMED-RED — with the published lookahead put back to the exact closing tag both spaced renders publish (rc=$ms, rc=$mt). The visible and joined arms carry the need as one run $oth time(s) on the spaced renders, so the HIT is the published arm's"
+    PASS "M1t: a value written after a spaced closing tag is read — the need split twice by a tag on neither list, after '</script >', aborts as a HIT (rc=$rs) named '$ps', so does the same after '</style >' (rc=$rt), and the exact-close twin aborts too (rc=$rx); ARMED-RED — with the published lookahead put back to the exact closing tag and the two browser-ended readings read as their twins, both spaced renders publish (rc=$ms, rc=$mt). The HIT is the published arm's by its name, '$ps': the visible and joined arms carry the need as one run $oth time(s) on the spaced renders, and the browser-ended readings are read and credited after it"
   else
-    FAIL "M1t: spaced script render rc=$rs '$ps', spaced style render rc=$rt '$pt' (want 1 and '$M1EQ_PRJ' for both), exact-close twin rc=$rx (want 1); with the lookahead put back rc=$ms and rc=$mt (want 0 and 0); the need as one run on the visible and joined arms $oth (want 0); splitting tags in the renders $nf (want 6). A value after a spaced closing tag publishes, or this arm can no longer tell"
+    FAIL "M1t: spaced script render rc=$rs '$ps', spaced style render rc=$rt '$pt' (want 1 and '$M1EQ_PRJ' for both), exact-close twin rc=$rx (want 1); with the published lookahead put back and the two browser-ended readings read as their twins rc=$ms and rc=$mt (want 0 and 0); the need as one run on the visible and joined arms $oth (want 0); splitting tags in the renders $nf (want 6). A value after a spaced closing tag publishes, or this arm can no longer tell"
   fi
 }
 m1t_assert
@@ -3107,6 +3113,129 @@ m1bc_assert() { # <id> <shape> <spaced render> <exact-close twin> <the projectio
 }
 m1bc_assert M1x "a value split mid-word by an inline tag"            "$M1X_SP" "$M1X_EX" 'joined markup (an inline tag split a word)'
 m1bc_assert M1y "a value with an attribute-carrying tag around a word" "$M1Y_SP" "$M1Y_EX" 'visible text'
+
+# ── M9a–M9e (#2117, the record on ending a body where the browser does) — a body ends where the
+# browser ends it, on two added readings ──
+#
+# A browser ends a <script> or <style> body at the first `</` and the element's name followed by
+# whitespace, a `/` or a `>`. The visible and joined projections end one at the exact tag alone, so
+# they delete the stretch after an end tag of another form and before an exact one. A value in plain
+# words there is caught by the published arm; one split mid-word by an inline tag, or with an
+# attribute-carrying tag around one of its words, published in every release that carried the guard.
+# The guard adds two arms: the visible and the joined projection, each run over a copy whose bodies
+# end where a browser ends them (_browser_end_tags). M9a must fire; M9b keeps every earlier name; M9c
+# must not fire — the added streams equal their twins' wherever no end tag of another form stands,
+# and where a form a browser does not take as an end tag stands; M9d refuses an added arm that could
+# not run; M9e credits the added arms after the earlier ones.
+M9_CLOSERS=( '</script >' $'</script\t>' $'</script\n>' '</script/>' '</script x>' '</SCRIPT >' )
+M9_SPLIT='<p>Note: cannot manage more than o<b>ne</b> flight of stairs i<b>n</b> a single stretch.</p>'
+M9_ATTR='<p>Note: cannot manage more than <span title="see note">one</span> flight of stairs <span title="see note">in</span> a single stretch.</p>'
+M9_PLAIN='<p>Note: cannot manage more than one flight of stairs in a single stretch.</p>'
+M9_VPRJ='visible text, a script or style body ended where a browser ends it'
+M9_JPRJ='joined markup, a script or style body ended where a browser ends it'
+m9_off() { # <render> <trip_dir> -> the guard's status with the two added readings reading as their twins
+  ( strip_to_text_blocks_at_browser_end() { strip_to_text_blocks "$@"; }
+    strip_to_joined_text_at_browser_end() { strip_to_joined_text "$@"; }
+    verify_publishable_content "$1" "$2" >/dev/null 2>&1; printf '%s' "$?" )
+}
+m9a_assert() { # one verdict
+  local c i=0 hit=0 named=0 off=0 bad="" f shape
+  for c in "${M9_CLOSERS[@]}" '</style >'; do
+    for shape in split attr; do
+      i=$((i+1)); f="$WORK/m9a_$i.html"
+      if [ "$c" = '</style >' ]; then
+        if [ "$shape" = split ]; then mrender "$f" "<style>.a{color:#333}$c$M9_SPLIT<style>.b{color:#444}</style>"
+        else mrender "$f" "<style>.a{color:#333}$c$M9_ATTR<style>.b{color:#444}</style>"; fi
+      elif [ "$shape" = split ]; then mrender "$f" "<script>var a = 1;$c$M9_SPLIT<script>var b = 2;</script>"
+      else mrender "$f" "<script>var a = 1;$c$M9_ATTR<script>var b = 2;</script>"; fi
+      mguard "$f" "$MTD"
+      if [ "$MRC" -eq 1 ]; then hit=$((hit+1)); else bad="$bad $i:$shape=rc$MRC"; fi
+      case "$shape:$(m1eq_prj)" in "split:$M9_JPRJ"|"attr:$M9_VPRJ") named=$((named+1)) ;; esac
+      [ "$(m9_off "$f" "$MTD")" = "0" ] && off=$((off+1))
+    done
+  done
+  if [ "$i" -eq 14 ] && [ "$hit" -eq 14 ] && [ "$named" -eq 14 ] && [ "$off" -eq 14 ]; then
+    PASS "M9a: a value written after a <script> or <style> end tag of another form and before an exact one aborts as a HIT on all 14 pages — split mid-word by an inline tag, named '$M9_JPRJ', or with an attribute-carrying tag around a word, named '$M9_VPRJ', after each of six script end-tag forms (spaced, tab, line feed, '/', an attribute, upper case) and after '</style >'; ARMED-RED — with the two added readings reading as their twins, all 14 publish"
+  else
+    FAIL "M9a: of $i pages $hit aborted as a HIT (want 14:${bad:- none}), $named named by the added reading (want 14), and with the added readings as their twins $off published (want 14)"
+  fi
+}
+m9a_assert
+m9b_assert() { # one verdict — every earlier arm keeps its name
+  local r1 r2 r3 n1 n2 n3 x y
+  mrender "$WORK/m9b_plain.html" "<script>var a = 1;</script >$M9_PLAIN<script>var b = 2;</script>"
+  mrender "$WORK/m9b_xsplit.html" "<script>var a = 1;</script>$M9_SPLIT<script>var b = 2;</script>"
+  mrender "$WORK/m9b_xattr.html"  "<script>var a = 1;</script>$M9_ATTR<script>var b = 2;</script>"
+  mguard "$WORK/m9b_plain.html" "$MTD";  r1="$MRC"; n1="$(m1eq_prj)" || n1=NONE
+  mguard "$WORK/m9b_xsplit.html" "$MTD"; r2="$MRC"; n2="$(m1eq_prj)" || n2=NONE
+  mguard "$WORK/m9b_xattr.html" "$MTD";  r3="$MRC"; n3="$(m1eq_prj)" || n3=NONE
+  mguard "$M1X_SP" "$MTD"; x="$MRC:$(m1eq_prj)"
+  mguard "$M1Y_SP" "$MTD"; y="$MRC:$(m1eq_prj)"
+  if [ "$r1$r2$r3" = 111 ] && [ "$n1" = "$M1EQ_PRJ" ] && [ "$n2" = 'joined markup (an inline tag split a word)' ] && [ "$n3" = 'visible text' ] && [ "$x" = '1:joined markup (an inline tag split a word)' ] && [ "$y" = '1:visible text' ]; then
+    PASS "M9b: every page an earlier arm catches keeps its name — a plain value after '</script >' is named '$n1', the exact-close twins of M9a's two shapes are named '$n2' and '$n3', and M1x's and M1y's pages, a value inside a body closed only by a spaced tag, keep their joined and visible names"
+  else
+    FAIL "M9b: plain rc=$r1 '$n1' (want 1 '$M1EQ_PRJ'), exact split rc=$r2 '$n2', exact attr rc=$r3 '$n3' (want joined and visible), M1x '$x', M1y '$y' (want their joined and visible names)"
+  fi
+}
+m9b_assert
+m9_stream() { "$1" "$2" | _decode_entities | _norm_words | tr '\n' ' '; }   # <projection> <render> -> its words on one line
+m9c_assert() { # one verdict — the added streams are their twins' wherever no end tag of another form stands
+  local f i=0 same=0 diff=0 bad="" c
+  for f in "$M1X_EX" "$M1Y_EX" "$WORK/m9b_xsplit.html"; do
+    i=$((i+1))
+    if [ "$(m9_stream strip_to_text_blocks_at_browser_end "$f")" = "$(m9_stream strip_to_text_blocks "$f")" ] && [ "$(m9_stream strip_to_joined_text_at_browser_end "$f")" = "$(m9_stream strip_to_joined_text "$f")" ]; then same=$((same+1)); else bad="$bad ${f##*/}"; fi
+  done
+  for c in '</scriptx>' '</script-x>' $'</script\v>'; do
+    i=$((i+1)); f="$WORK/m9c_$i.html"; mrender "$f" "<script>var a = 1;$c$M9_SPLIT<script>var b = 2;</script>"
+    if [ "$(m9_stream strip_to_joined_text_at_browser_end "$f")" = "$(m9_stream strip_to_joined_text "$f")" ]; then same=$((same+1)); else bad="$bad $i"; fi
+  done
+  f="$WORK/m9a_1.html"
+  [ "$(m9_stream strip_to_joined_text_at_browser_end "$f")" != "$(m9_stream strip_to_joined_text "$f")" ] && diff=1
+  mrender "$WORK/m9c_clean.html" "<script>var a = 1;</script ><p>Note: the tile museum opens at ten on weekdays.</p><script>var b = 2;</script>"
+  mguard "$WORK/m9c_clean.html" "$MTD"
+  if [ "$i" -eq 6 ] && [ "$same" -eq 6 ] && [ "$diff" -eq 1 ] && [ "$MRC" -eq 0 ]; then
+    PASS "M9c: wherever no end tag of another form stands — three pages with exact end tags — and where a browser takes none as one — '</scriptx>', '</script-x>' and a vertical tab — each added stream is its twin's word for word, so the added arms can add no abort there; CONTROL — on M9a's first page the joined streams differ; and a clean page after '</script >' publishes (rc=$MRC)"
+  else
+    FAIL "M9c: $same of $i pages read the added streams as their twins (want 6:${bad:- none}), the control page differs=$diff (want 1), the clean page rc=$MRC (want 0)"
+  fi
+}
+m9c_assert
+m9d_assert() { # one verdict — an added arm that could not run is UNDETERMINED, and its refusal names it
+  local f="$WORK/m9a_1.html" r1 r2 r3 n1 n2 n3
+  r1="$( ( _browser_end_tags() { return 1; }; verify_publishable_content "$f" "$MTD" >/dev/null 2>"$WORK/m9d1.err"; printf '%s' "$?" ) )"
+  r2="$( ( strip_to_text_blocks_at_browser_end() { :; }; verify_publishable_content "$f" "$MTD" >/dev/null 2>"$WORK/m9d2.err"; printf '%s' "$?" ) )"
+  r3="$( ( strip_to_joined_text_at_browser_end() { :; }; verify_publishable_content "$f" "$MTD" >/dev/null 2>"$WORK/m9d3.err"; printf '%s' "$?" ) )"
+  n1=0; case "$(cat "$WORK/m9d1.err")" in *"could not be read ($M9_VPRJ): its pipeline exited "*) n1=1 ;; esac
+  n2=0; case "$(cat "$WORK/m9d2.err")" in *"could not be read ($M9_VPRJ): its pipeline exited 0 and yielded 0 words"*) n2=1 ;; esac
+  n3=0; case "$(cat "$WORK/m9d3.err")" in *"could not be read ($M9_JPRJ): its pipeline exited 0 and yielded 0 words"*) n3=1 ;; esac
+  if [ "$r1$r2$r3" = 222 ] && [ "$n1$n2$n3" = 111 ]; then
+    PASS "M9d: an added arm the guard could not read is UNDETERMINED (rc=2) — the pre-pass failing, the visible reading yielding nothing and the joined reading yielding nothing — on a page that is otherwise a HIT, and each refusal names its projection from the closed enum"
+  else
+    FAIL "M9d: statuses $r1/$r2/$r3 (want 2/2/2) and named $n1/$n2/$n3 (want 1/1/1) — an added arm that did not run reached a verdict"
+  fi
+}
+m9d_assert
+# M9e — the order, and only the order: the attribution's joined branch and the added joined branch
+# swapped in the production guard's text (pp_body), in a subshell, name M9b's exact-close split page
+# for the added reading, which the shipped order names for the joined arm.
+M9E_SWAP='s/if \[ "\$rcj" -eq 0 \]/if [ "$rck" -eq 0 ]/
+s/loc="\$locj"/loc="\$lock@"/
+s/loc="\$lock"/loc="\$locj"/
+s/loc="\$lock@"/loc="\$lock"/
+s/proj="joined markup (an inline tag split a word)"/proj="@"/
+s/proj="joined markup, a script or style body ended where a browser ends it"/proj="joined markup (an inline tag split a word)"/
+s/proj="@"/proj="joined markup, a script or style body ended where a browser ends it"/'
+m9e_assert() { # one verdict
+  local f="$WORK/m9b_xsplit.html" rh ph rw pw
+  mguard "$f" "$MTD"; rh="$MRC"; ph="$(m1eq_prj)" || ph=NONE
+  rw="$( ( eval "$(pp_body verify_publishable_content | sed "$M9E_SWAP")"; verify_publishable_content "$f" "$MTD" >/dev/null 2>"$MOUT"; printf '%s' "$?" ) )"; pw="$(m1eq_prj)" || pw=NONE
+  if [ "$rh" -eq 1 ] && [ "$ph" = 'joined markup (an inline tag split a word)' ] && [ "$rw" = "1" ] && [ "$pw" = "$M9_JPRJ" ]; then
+    PASS "M9e: the added arms are credited after the earlier ones — an exact-close page the joined arm and the added joined reading both catch is named '$ph'; ARMED-RED — with the two branches swapped in the guard's text, the same page is named '$pw'"
+  else
+    FAIL "M9e: the page rc=$rh '$ph' (want 1 and the joined arm's name); with the branches swapped rc=$rw '$pw' (want 1 and '$M9_JPRJ')"
+  fi
+}
+m9e_assert
 
 # ── M2 (CD-2) — is_stop in the token branch; a stopword-only name is a declared non-key ──
 MSTOP="$WORK/porto-stopword"; mkdir -p "$MSTOP/outputs"
@@ -3512,12 +3641,20 @@ m5lj="$(strip_to_joined_text "$M5LINES" | _decode_entities | wc -l | tr -d ' ')"
 m5lv="$(strip_to_text_blocks "$M5LINES" | _decode_entities | wc -l | tr -d ' ')"
 m5lp="$(strip_to_published_text "$M5LINES" | _decode_entities | wc -l | tr -d ' ')"
 m5ls="$(strip_to_shape_text "$M5LINES" | _decode_entities | wc -l | tr -d ' ')"
+m5lb="$(strip_to_text_blocks_at_browser_end "$M5LINES" | _decode_entities | wc -l | tr -d ' ')"
+m5lk="$(strip_to_joined_text_at_browser_end "$M5LINES" | _decode_entities | wc -l | tr -d ' ')"
+# The pre-pass re-emits the newlines an end tag spans: an end tag broken over two lines, then text.
+M5BLINES="$WORK/m5_browser_lines.html"
+printf '<p>Filler one.</p>\n<script>var a = 1;</script\n>\n<p>Filler four.</p>\n<script>var b = 2;</script>\n<p>Filler six.</p>\n' > "$M5BLINES"
+m5bsrc="$(wc -l < "$M5BLINES" | tr -d ' ')"
+m5bb="$(strip_to_text_blocks_at_browser_end "$M5BLINES" | _decode_entities | wc -l | tr -d ' ')"
+m5bk="$(strip_to_joined_text_at_browser_end "$M5BLINES" | _decode_entities | wc -l | tr -d ' ')"
 printf 'alpha &#10; beta &#13; gamma &#32; delta &#38; epsilon &#82;ho\n' > "$WORK/m5_adv.txt"
 m5adv="$(_decode_entities < "$WORK/m5_adv.txt" | wc -l | tr -d ' ')"
-if [ "$m5src" -ge 13 ] && [ "$m5lj" = "$m5src" ] && [ "$m5lv" = "$m5src" ] && [ "$m5lp" = "$m5src" ] && [ "$m5ls" = "$m5src" ] && [ "$m5adv" = "1" ]; then
-  PASS "M5d: all four projections are line-count-preserving THROUGH the decoder — a $m5src-line render carrying a <script> block, a tag spanning three lines, a split word and a character reference yields $m5lj / $m5lv / $m5lp / $m5ls lines. The adversarial arm fires too: a single line of newline-yielding references (&#10;, &#13;) decodes to $m5adv line, so no locator downstream of an encoded value can shift"
+if [ "$m5src" -ge 13 ] && [ "$m5lj" = "$m5src" ] && [ "$m5lv" = "$m5src" ] && [ "$m5lp" = "$m5src" ] && [ "$m5ls" = "$m5src" ] && [ "$m5lb" = "$m5src" ] && [ "$m5lk" = "$m5src" ] && [ "$m5bsrc" -eq 6 ] && [ "$m5bb" = "$m5bsrc" ] && [ "$m5bk" = "$m5bsrc" ] && [ "$m5adv" = "1" ]; then
+  PASS "M5d: all six projections are line-count-preserving THROUGH the decoder, the two browser-ended readings over an end tag broken across lines as well ($m5bb and $m5bk of $m5bsrc) — a $m5src-line render carrying a <script> block, a tag spanning three lines, a split word and a character reference yields $m5lj / $m5lv / $m5lp / $m5ls lines. The adversarial arm fires too: a single line of newline-yielding references (&#10;, &#13;) decodes to $m5adv line, so no locator downstream of an encoded value can shift"
 else
-  FAIL "M5d: a projection is no longer line-count-preserving (source=$m5src joined=$m5lj visible=$m5lv published=$m5lp shape=$m5ls; newline-reference arm=$m5adv, want 1). A transform that consumes a newline shifts every reported line after it while the token stream stays valid — the suite would not notice"
+  FAIL "M5d: a projection is no longer line-count-preserving (source=$m5src joined=$m5lj visible=$m5lv published=$m5lp shape=$m5ls browser-visible=$m5lb browser-joined=$m5lk; over a broken end tag $m5bb and $m5bk of $m5bsrc; newline-reference arm=$m5adv, want 1). A transform that consumes a newline shifts every reported line after it while the token stream stays valid — the suite would not notice"
 fi
 
 # M5e — THE FAIL DIRECTION OF EACH NEW SUBJECT, and both directions are CLOSED. Removing
@@ -3536,7 +3673,7 @@ else
   FAIL "M5e: a removal did not fail closed (no decoder: rc=$m5_dec_rc want 2; no joined arm: rc=$m5_join_rc want 2) — rc=0 on either is the guard certifying a render one of its own projections never read"
 fi
 
-# ── M7a–M7i (#2068, ADR-050) — the guard's fourth arm, a reading by shape, read and credited last ──
+# ── M7a–M7i (#2068, ADR-050) — the guard's fourth arm, a reading by shape, read and credited after the joined arm ──
 #
 # The published projection finds machinery by its place, which keeps a key token written directly
 # before `=` (M1e–M1h), and so keeps as text words a page around a value can carry: a `word=`
@@ -3545,7 +3682,7 @@ fi
 # page the guard before 0.60.0 blocked published. The bytes such a page needs dropped and the bytes
 # criterion 5 needs kept are the same shape, so no one reading holds both (ADR-050); the guard
 # carries a fourth arm instead, strip_to_shape_text, the earlier published program with #2072's
-# anchors, read last and credited last. Each arm grades its page against the guard as it stands
+# anchors, read and credited after the joined arm. Each arm grades its page against the guard as it stands
 # and carries the defect inside it (ARMED-RED): with the fourth arm made to read what the published
 # projection reads, in a subshell, the guard reads as it did before this change, and the page must
 # publish again. A twin on the same fixture shows what the shape needs. Every page is rendered on
@@ -3707,7 +3844,8 @@ m7g_assert
 # sort comparator whose `=>` ends that tag's list. A site is given back by a projection when its
 # name stands in that projection's stream fewer times than in the source, which is the assignment's
 # name dropped as an attribute name. The guard ORs its arms, so it gives a site back only when
-# every arm does: the count on its verdict is the sites all four give back. Fixture integrity is
+# every arm does: the count on its verdict is the sites all six give back — the two browser-ended
+# readings equal their twins on this page, whose end tags are all exact. Fixture integrity is
 # the site count, and its control is the earlier published program, which gives every site back.
 # One site the published arm keeps carries the Passport value's key token in a twin, which the
 # guard must still abort on, named for the published arm: the fourth arm, which drops it, removes
@@ -3826,7 +3964,7 @@ M8_RUN_OLD='s/(?<!\[-A-Za-z0-9_:\.\])(\[0-9\.\]\*+)(\[-A-Za-z_:\]\[-A-Za-z0-9_:\
 M8_RUN_LB='s/(?<!\[-A-Za-z0-9_:\.\])(\[0-9\.\]\*+)/()(?<![-A-Za-z0-9_:.])/'
 m8_shape_assert() { # <id> <what> <shape file> <control file> <mutant sed> <mutant file> <mutant marker> — one verdict
   local id="$1" what="$2" sf="$3" cf="$4" sed_old="$5" mf="$6" mark="$7" p st ok=0 n=0 bad="" ms mk sz
-  for p in strip_to_published_text strip_to_text_blocks strip_to_joined_text strip_to_shape_text; do
+  for p in strip_to_published_text strip_to_text_blocks strip_to_joined_text strip_to_shape_text strip_to_text_blocks_at_browser_end strip_to_joined_text_at_browser_end; do
     for f in "$sf" "$cf"; do
       n=$((n+1)); st="$(m8_cap "$p" "$f")"
       if [ "$st" = "0" ]; then ok=$((ok+1)); else bad="$bad $p:${f##*/}=$st"; fi
@@ -3835,10 +3973,10 @@ m8_shape_assert() { # <id> <what> <shape file> <control file> <mutant sed> <muta
   mk="$(declare -f strip_to_published_text | sed "$sed_old" | grep -c -F -- "$mark")"
   ms="$( ulimit -t 5; eval "$(declare -f strip_to_published_text | sed "$sed_old")"; strip_to_published_text "$mf" >/dev/null 2>&1; printf '%s' "$?" )"
   sz=$(( $(wc -c < "$sf") + 0 ))
-  if [ "$n" -eq 8 ] && [ "$ok" -eq 8 ] && [ "$sz" -gt 262144 ] && [ "$mk" -ge 1 ] && [ "$ms" -gt 128 ]; then
-    PASS "$id: $what — each of the four projections reads $sz bytes of it, and the same length of its control, inside a five-second CPU cap ($ok of $n complete with status 0); ARMED-RED — the old pattern put back into the published projection ($mk site(s) changed) does not finish 64 KB of it inside the cap (status $ms)"
+  if [ "$n" -eq 12 ] && [ "$ok" -eq 12 ] && [ "$sz" -gt 262144 ] && [ "$mk" -ge 1 ] && [ "$ms" -gt 128 ]; then
+    PASS "$id: $what — each of the six projections reads $sz bytes of it, and the same length of its control, inside a five-second CPU cap ($ok of $n complete with status 0); ARMED-RED — the old pattern put back into the published projection ($mk site(s) changed) does not finish 64 KB of it inside the cap (status $ms)"
   else
-    FAIL "$id: $what — $ok of $n projection runs completed inside the cap (want 8 of 8:${bad:- none failed}), shape bytes $sz (want more than 262144), the old pattern put back at $mk site(s) (want at least 1) and its run over 64 KB status $ms (want the cap to stop it, above 128). A projection is quadratic on this shape again, or this arm can no longer tell"
+    FAIL "$id: $what — $ok of $n projection runs completed inside the cap (want 12 of 12:${bad:- none failed}), shape bytes $sz (want more than 262144), the old pattern put back at $mk site(s) (want at least 1) and its run over 64 KB status $ms (want the cap to stop it, above 128). A projection is quadratic on this shape again, or this arm can no longer tell"
   fi
 }
 m8_shape_assert M8a "a '<' followed by a long run of spaces (the tag head)" "$M8_S1" "$M8_C1" "$M8_HEAD_OLD" "$M8_S1M" '\s*/?\s*'
@@ -5199,9 +5337,9 @@ m6d_assert() { # one verdict
   g="$(pp_legacy_verify "$M1T_SC" "$MTD")"
   if pp_regressed "${M1T_SC##*/}" "$h" "$g" "$PP_FENCE"; then fl=yes; fi
   if [ "$h" = "0" ] && [ "$g" = "1" ] && [ "$fl" = "yes" ]; then
-    PASS "M6d: pre-0.60.0 parity — ARMED-RED: #2055's leak page, graded with the published lookahead put back to the exact closing tag, publishes (rc=$h) where the guard before 0.60.0 blocks it (rc=$g), and M6b's predicate flags the pair, so the cells can fail"
+    PASS "M6d: pre-0.60.0 parity — ARMED-RED: #2055's leak page, graded with the published lookahead put back to the exact closing tag and the two browser-ended readings read as their twins, publishes (rc=$h) where the guard before 0.60.0 blocks it (rc=$g), and M6b's predicate flags the pair, so the cells can fail on that two-part mutant"
   else
-    FAIL "M6d: pre-0.60.0 parity — the unfixed published program gives rc=$h (want 0), the legacy guard rc=$g (want 1), M6b's predicate flagged it: $fl (want yes). The cells could not see the regression #2055 repairs"
+    FAIL "M6d: pre-0.60.0 parity — with the published lookahead put back to the exact closing tag and the two browser-ended readings read as their twins the guard gives rc=$h (want 0), the legacy guard rc=$g (want 1), M6b's predicate flagged it: $fl (want yes). The cells could not see the regression #2055 repairs, with the readings #2117 adds taken out of the way"
   fi
 }
 m6d_assert
@@ -7350,7 +7488,7 @@ fi
 # construction: perl invoked through a variable or by a path (`$PERL`, `/usr/bin/perl`),
 # and a change that removes one program while adding another, because it compares a count
 # and not a set.
-S15I_FNS='strip_to_text strip_to_published_text strip_to_text_blocks strip_to_joined_text strip_to_shape_text _decode_entities strip_to_itinerary_text _digest_of'
+S15I_FNS='strip_to_text strip_to_published_text strip_to_text_blocks strip_to_joined_text strip_to_shape_text _browser_end_tags _decode_entities strip_to_itinerary_text _digest_of'
 S15I_RE='(^|[[:space:](|;`$])perl[[:space:]]+-'
 s15_perl_lines() { # <file> -> the number of non-comment lines that invoke perl by name
   local line t n=0
@@ -8631,7 +8769,7 @@ fi
 # Every production function an arm below stubs or mutates, saved before any arm runs. sa_restore
 # re-evaluates the saved text; S26a compares each against it, so a stub that outlives its arm is
 # found by name rather than by the arms after it going quietly wrong.
-SA_SAVED_FNS='_iso_now _approval_tally _approvals_grammar _approval_policy _ledger_append _record_threshold_met _baseline_matches _digest_of _approval_line_parse _confirm_has_terminal change_confirmation_state require_render_approval_code _undecided_entry'
+SA_SAVED_FNS='_iso_now _approval_tally _approvals_grammar _approval_policy _ledger_append _record_threshold_met _baseline_matches _digest_of _approval_line_parse _confirm_has_terminal change_confirmation_state require_render_approval_code _undecided_entry _undeclared_band'
 for safn in $SA_SAVED_FNS; do
   eval "SA_SAVED_${safn}=\"\$(declare -f ${safn})\""
 done
@@ -9024,10 +9162,10 @@ SA17H_NFN=0; for sad in $S15I_FNS; do SA17H_NFN=$((SA17H_NFN+1)); done
 SA17H_NLINE="$(s15_perl_lines "$SELF_PUBLISH")"
 printf 'digest=4294967295-1234\nconfirmed=2027-06-01T00:00:00Z\n' > "$WORK/sa17h.rec"
 SA17H_CRC="$(_record_digest "$WORK/sa17h.rec")"
-if [ "$SA17H_DN$SA17H_FB" = 00 ] && [ "$SA17H_RE" -eq 1 ] && [ "$SA17H_NFN" -eq 8 ] && [ "$SA17H_NLINE" -eq 8 ] && [ "$SA17H_CRC" = '4294967295-1234' ]; then
-  PASS "S17h: _digest_of's parsed body reads discard/fallback 00, invokes perl by S15i's own regex (F4 — the listed body is a perl program, so the count cannot be balanced by a substitution), S15I_FNS lists 8 and the script has 8 perl-invoking lines; the CRC token still parses for group T and for a pre-swap record"
+if [ "$SA17H_DN$SA17H_FB" = 00 ] && [ "$SA17H_RE" -eq 1 ] && [ "$SA17H_NFN" -eq 9 ] && [ "$SA17H_NLINE" -eq 9 ] && [ "$SA17H_CRC" = '4294967295-1234' ]; then
+  PASS "S17h: _digest_of's parsed body reads discard/fallback 00, invokes perl by S15i's own regex (F4 — the listed body is a perl program, so the count cannot be balanced by a substitution), S15I_FNS lists 9 and the script has 9 perl-invoking lines; the CRC token still parses for group T and for a pre-swap record"
 else
-  FAIL "S17h: bits $SA17H_DN$SA17H_FB (want 00), regex match $SA17H_RE (want 1), listed $SA17H_NFN and counted $SA17H_NLINE (want 8 and 8), CRC parse '$SA17H_CRC'"
+  FAIL "S17h: bits $SA17H_DN$SA17H_FB (want 00), regex match $SA17H_RE (want 1), listed $SA17H_NFN and counted $SA17H_NLINE (want 9 and 9), CRC parse '$SA17H_CRC'"
 fi
 
 # ── S18a — MUST REFUSE. Ten lines the grammar must not admit, each refused with nothing printed:
@@ -9601,7 +9739,7 @@ fi
 # recording act's functions, name no traveller file, person record, derived model or provenance
 # mark. Sensitivity: the class-source function that does read the derived model names it.
 # Specificity: a fabricated token is in none of them.
-SA22_FNS='change_confirmation_state _approval_policy _approvers_grammar _approvals_grammar _approval_tally _baseline_matches _legacy_itinerary_digest _legacy_digest_of itinerary_digest strip_to_itinerary_text _digest_of _record_digest _baseline_record staged_record_path published_itinerary_path change_confirmation_path approver_declaration_path approval_ledger_path resolve_site_html _confirm_declared _approval_line_parse _ledger_append _record_threshold_met _published_record_date _undecided_entry'
+SA22_FNS='change_confirmation_state _approval_policy _approvers_grammar _approvals_grammar _approval_tally _baseline_matches _legacy_itinerary_digest _legacy_digest_of itinerary_digest strip_to_itinerary_text _digest_of _record_digest _baseline_record staged_record_path published_itinerary_path change_confirmation_path approver_declaration_path approval_ledger_path resolve_site_html _confirm_declared _approval_line_parse _ledger_append _record_threshold_met _published_record_date _undecided_entry _undeclared_band _itinerary_digest_pair'
 SA22_EMPTY=0; SA22_HIT=""; SA22_SPEC=0; SA22_N=0
 for safn in $SA22_FNS; do
   SA22_N=$((SA22_N+1))
@@ -9831,8 +9969,8 @@ fi
 # 2027-05-30 and the approval's own day keep the date, so "later than" is strict, as the mapping's
 # is; a summary that cannot be read (a dangling link) keeps it, and so does one whose only later
 # headings are not dated entries — the stated fail direction, which never puts a false "recently
-# updated" on the site; and a trip that declares nobody, with the same history, is refused by
-# confirm with the shipped message word for word, its record byte-unchanged. The push mocks S21l
+# updated" on the site; and a trip that declares nobody, with the same history, run with no terminal,
+# is refused by the terminal test word for word, its record byte-unchanged (S23j grades the exit). The push mocks S21l
 # withdrew are re-evaluated for this arm and withdrawn again at its end.
 sa23i_fixture() { # <name> [<entry-date>...] -> a declaring trip at 2 of 3, published, approved 3 of 3, record dated 06-01
   local d n="$1" sak; shift
@@ -9893,7 +10031,7 @@ s_record "$SA23IU/.change-confirmed" "$SA_P16" confirmed
 t6_trip "$SA23IU" 2027-05-30 2027-06-05 >/dev/null
 cp "$SA23IU/.change-confirmed" "$WORK/sa23iu.before"
 SA23IU_ERR="$( ( cmd_confirm "$SA23IU" ) </dev/null 2>&1 >/dev/null )"; SA23IU_RC=$?
-SA23IU_SHIPPED="nothing to confirm for $SA23IU — the itinerary content of the outgoing render is the plan that is already published (or the trip has never been published). Confirmation binds to a change; there is none."
+SA23IU_SHIPPED="confirm requires a terminal — it records a human decision, and there is deliberately no flag to skip it. Run it yourself:  $(basename "$0") confirm ${SA23IU}"
 SA23IU_SAME=0; case "$SA23IU_ERR" in *"$SA23IU_SHIPPED") SA23IU_SAME=1 ;; esac
 SA23IU_KEPT=0; cmp -s "$WORK/sa23iu.before" "$SA23IU/.change-confirmed" && SA23IU_KEPT=1
 unset -f gh npx
@@ -9904,9 +10042,183 @@ if [ "$SA23I_ST0" = none-pending ] && [ "$SA23I_B0" = pending ] && [ "$SA23I_RC"
    && [ "$SA23ID_RC" -eq 0 ] && [ "$SA23ID_REC" = "$SA23I_KEPT_WANT" ] \
    && [ "$SA23IH_RC" -eq 0 ] && [ "$SA23IH_REC" = "$SA23I_KEPT_WANT" ] && [ "$SA23IH_MAP" = 2027-05-30 ] \
    && [ "$SA23IU_RC" -ne 0 ] && [ "$SA23IU_SAME" -eq 1 ] && [ "$SA23IU_KEPT" -eq 1 ]; then
-  PASS "S23i: item 8 — on a published plan at 2 of 3 whose record is dated before an abandoned change's entry, the build reads 'pending'; a bare Enter re-stamps confirmed= to the act, adds no ledger line and says 'dated now'; the render built through the mapping resolves 'updated' · 2027-06-10 with the plan's own count and code, update passes both guards to the clone, and the gate reads none-pending throughout. ARMED-RED — a writer reading no entry keeps the date and the band stays 'pending'; CONTROLS — an entry on or before the record's day keeps the date, an unreadable summary and later non-entry headings keep it (the fail direction), and an undeclared trip with the same history is refused word for word with its record untouched"
+  PASS "S23i: item 8 — on a published plan at 2 of 3 whose record is dated before an abandoned change's entry, the build reads 'pending'; a bare Enter re-stamps confirmed= to the act, adds no ledger line and says 'dated now'; the render built through the mapping resolves 'updated' · 2027-06-10 with the plan's own count and code, update passes both guards to the clone, and the gate reads none-pending throughout. ARMED-RED — a writer reading no entry keeps the date and the band stays 'pending'; CONTROLS — an entry on or before the record's day keeps the date, an unreadable summary and later non-entry headings keep it (the fail direction), and an undeclared trip with the same history, run with no terminal, is refused by the terminal test word for word with its record untouched — S23j grades its exit"
 else
   FAIL "S23i: gate before '$SA23I_ST0' (want none-pending), first build '$SA23I_B0' (want pending), Enter rc=$SA23I_RC record [${SA23I_REC//$'\n'/ | }] (want [${SA23I_WANT//$'\n'/ | }]), ledger lines $SA23I_L0 -> $SA23I_L1, 'dated now'=$SA23I_NOW 'keeps the date'=$SA23I_KEEPS (want 1 and 0); rebuilt '$SA23I_B1' since '$SA23I_SINCE' (want updated, 2027-06-10), pair $SA23I_NC/$SA23I_NK code-own=$([ "$SA23I_CODE" = "$SA_P16" ] && echo 1 || echo 0), clone=$SA23I_CL, gate after '$SA23I_ST1'; mutant kept the date=$SA23IM_KEPT band '$SA23IM_B' (want 1, pending); no-later-entry control rc=$SA23IC_RC record [${SA23IC_REC//$'\n'/ | }] keeps-message=$SA23IC_KEEPS; dangling-link control rc=$SA23ID_RC record [${SA23ID_REC//$'\n'/ | }]; non-entry-heading control rc=$SA23IH_RC record [${SA23IH_REC//$'\n'/ | }] mapping newest '$SA23IH_MAP'; undeclared control rc=$SA23IU_RC shipped-message=$SA23IU_SAME record untouched=$SA23IU_KEPT"
+fi
+
+# ── S23j–S23m (#1556) — THE UNDECLARED EXIT. A change raised and abandoned before any approval, on a
+# trip that declares nobody, leaves the working copy back on the published plan and an entry the
+# mapping reads as undecided: the band reads `pending`. confirm, at none-pending with a present,
+# usable baseline and that band held, offers the re-dating behind CONFIRM at a terminal and writes a
+# record naming the published plan's digest, dated at the act. S23j must fire; S23k must not; S23l
+# reads the terminal seam and the order from the parsed body; S23m holds the exit's check to the
+# digest its record names on a legacy baseline. The push mocks are re-evaluated for S23j and
+# withdrawn again at its end.
+s23j_trip() { # <name> [<entry-date>...] -> an undeclared trip, published on SA_P16, its band raised
+  local d n="$1"; shift
+  d="$(sa_ptrip "$n" '' '' 16:30 "$SA_P16" pending)"
+  if [ $# -gt 0 ]; then t6_trip "$d" "$@" >/dev/null; fi
+  printf '%s' "$d"
+}
+eval "$SA_MOCK_GH"; eval "$SA_MOCK_NPX"
+S23J_WANT="$(printf 'digest=%s\nconfirmed=2027-06-10T09:00:00Z' "$SA_P16")"
+# J1 — a record dated before the abandoned change's entry.
+S23J1="$(s23j_trip s23j1 2027-05-30 2027-06-05)"; s_record "$S23J1/.change-confirmed" "$SA_P16" confirmed
+S23J1_ST0="$(sa_state "$S23J1")"; S23J1_B0="$(sa_build "$S23J1" 16:30 2027-06-06)"
+sa_confirm "$S23J1" CONFIRM '2027-06-10T09:00:00Z'; S23J1_RC=$?
+S23J1_EXIT=0; case "$(cat "$WORK/sa_conf.out")" in *'Clearing the pending notice'*) S23J1_EXIT=1 ;; esac
+S23J1_REC="$(cat "$S23J1/.change-confirmed")"
+S23J1_B1="$(sa_build "$S23J1" 16:30 2027-06-11)"
+read -r S23J1_NC S23J1_NK _ <<<"$(_render_approval_pair "$S23J1/outputs/porto-travel-site.html")"
+S23J1_SINCE=''; while IFS= read -r saline; do case "$saline" in coordination-since:*) S23J1_SINCE="${saline#coordination-since: }" ;; esac; done < "$S23J1/outputs/porto-travel-site.html"
+read -r SA_RC S23J1_CL _ _ <<<"$(sa_push update "$S23J1")"
+S23J1_ST1="$(sa_state "$S23J1")"; S23J1_LEDGER=0; [ -e "$S23J1/.approvals" ] && S23J1_LEDGER=1
+# J2 — no record at all: the first one is written.
+S23J2="$(s23j_trip s23j2 2027-06-05)"; S23J2_B0="$(sa_build "$S23J2" 16:30 2027-06-06)"
+sa_confirm "$S23J2" CONFIRM '2027-06-10T09:00:00Z'; S23J2_RC=$?
+S23J2_REC="$(cat "$S23J2/.change-confirmed" 2>/dev/null)"; S23J2_B1="$(sa_build "$S23J2" 16:30 2027-06-11)"
+# J3 — a legacy CRC baseline: the record carries the plan's SHA-256 digest, the legacy token that meets the
+# baseline and that digest coming from one read (S23m grades the binding).
+S23J3="$(s23j_trip s23j3 2027-06-05)"
+printf 'digest=%s\npublished=2027-05-30T09:00:00Z\n' "$(_legacy_itinerary_digest "$S23J3/outputs/porto-travel-site.html")" > "$S23J3/.published-itinerary"
+sa_confirm "$S23J3" CONFIRM '2027-06-10T09:00:00Z'; S23J3_RC=$?; S23J3_REC="$(cat "$S23J3/.change-confirmed" 2>/dev/null)"
+# ARMED-RED — the band read as clear: the exit is not offered, and J1's history is refused as before.
+S23JM="$(s23j_trip s23jm 2027-05-30 2027-06-05)"; s_record "$S23JM/.change-confirmed" "$SA_P16" confirmed
+cp "$S23JM/.change-confirmed" "$WORK/s23jm.before"
+_undeclared_band() { printf clear; }
+sa_confirm "$S23JM" CONFIRM '2027-06-10T09:00:00Z'; S23JM_RC=$?
+sa_restore _undeclared_band
+S23JM_NOTHING=0; case "$(cat "$WORK/sa_conf.err")" in *'nothing to confirm for'*) S23JM_NOTHING=1 ;; esac
+S23JM_SAME=0; cmp -s "$WORK/s23jm.before" "$S23JM/.change-confirmed" && S23JM_SAME=1
+unset -f gh npx
+if [ "$S23J1_ST0" = none-pending ] && [ "$S23J1_B0" = pending ] && [ "$S23J1_RC" -eq 0 ] && [ "$S23J1_EXIT" -eq 1 ] && [ "$S23J1_REC" = "$S23J_WANT" ] && [ "$S23J1_LEDGER" -eq 0 ] \
+   && [ "$S23J1_B1" = updated ] && [ "$S23J1_SINCE" = 2027-06-10 ] && [ "$S23J1_NC$S23J1_NK" = 00 ] && [ "$S23J1_CL" -eq 1 ] && [ "$S23J1_ST1" = none-pending ] \
+   && [ "$S23J2_B0" = pending ] && [ "$S23J2_RC" -eq 0 ] && [ "$S23J2_REC" = "$S23J_WANT" ] && [ "$S23J2_B1" = updated ] \
+   && [ "$S23J3_RC" -eq 0 ] && [ "$S23J3_REC" = "$S23J_WANT" ] \
+   && [ "$S23JM_RC" -ne 0 ] && [ "$S23JM_NOTHING" -eq 1 ] && [ "$S23JM_SAME" -eq 1 ]; then
+  PASS "S23j: the undeclared exit — on a trip that declares nobody, published, with the band 'pending' from an entry dated after the record or with no record at all, confirm offers the exit and at CONFIRM writes a two-line record naming the published plan, dated at the act, and no ledger; the build through the mapping reads 'updated' since 2027-06-10 with no approval pair, update reaches the clone, and the gate reads none-pending throughout; a legacy CRC baseline is met by the legacy token taken from the same read as the SHA-256 digest the record carries. ARMED-RED — with the band read as clear the same history is refused 'nothing to confirm', its record byte-unchanged"
+else
+  FAIL "S23j: J1 gate '$S23J1_ST0' build '$S23J1_B0' rc=$S23J1_RC exit-prompt=$S23J1_EXIT record [${S23J1_REC//$'\n'/ | }] ledger=$S23J1_LEDGER rebuilt '$S23J1_B1' since '$S23J1_SINCE' pair $S23J1_NC/$S23J1_NK clone=$S23J1_CL gate after '$S23J1_ST1'; J2 build '$S23J2_B0' rc=$S23J2_RC record [${S23J2_REC//$'\n'/ | }] rebuilt '$S23J2_B1'; J3 rc=$S23J3_RC record [${S23J3_REC//$'\n'/ | }] (want [${S23J_WANT//$'\n'/ | }]); mutant rc=$S23JM_RC nothing=$S23JM_NOTHING unchanged=$S23JM_SAME"
+fi
+
+# S23k — MUST NOT FIRE: every state the exit is not for, one cell each, and the CIAC-1 cell; then
+# the ordinary path's pin (cell m) and the exit's replace-with-preservation (cell n), which fires.
+s23k_cell() { # <trip> <stdin> -> "rc:exit-prompt:record-unchanged"
+  local d="$1" rc ex=0 same=0
+  if [ -e "$d/.change-confirmed" ] && [ ! -d "$d/.change-confirmed" ]; then cp "$d/.change-confirmed" "$WORK/s23k.before"; else : > "$WORK/s23k.before"; fi
+  sa_confirm "$d" "$2" '2027-06-10T09:00:00Z'; rc=$?
+  case "$(cat "$WORK/sa_conf.out")" in *'Clearing the pending notice'*) ex=1 ;; esac
+  if [ -d "$d/.change-confirmed" ]; then same=1
+  elif [ -e "$d/.change-confirmed" ]; then cmp -s "$WORK/s23k.before" "$d/.change-confirmed" && same=1
+  elif [ ! -s "$WORK/s23k.before" ]; then same=1; fi
+  printf '%s:%s:%s' "$rc" "$ex" "$same"
+}
+s23k_err() { case "$(cat "$WORK/sa_conf.err")" in *"$1"*) printf 1 ;; *) printf 0 ;; esac; }
+S23K=""; S23K_MSG=""
+d="$(s23j_trip s23ka 2027-05-30 2027-06-01)"; s_record "$d/.change-confirmed" "$SA_P16" confirmed
+S23K="$S23K a=$(s23k_cell "$d" CONFIRM)"; S23K_MSG="$S23K_MSG$(s23k_err 'nothing to confirm for')"
+d="$(sa_ptrip s23kb '' '' 16:30 '' pending)"; t6_trip "$d" 2027-06-05 >/dev/null
+S23K="$S23K b=$(s23k_cell "$d" CONFIRM)"; S23K_MSG="$S23K_MSG$(s23k_err 'nothing to confirm for')"
+d="$(sa_ptrip s23kc '' '' 16:30 '' pending)"; t6_trip "$d" 2027-06-05 >/dev/null; s_record "$d/.published-itinerary.next" "$SA_P16" published
+S23K="$S23K c=$(s23k_cell "$d" CONFIRM)"; S23K_MSG="$S23K_MSG$(s23k_err 'nothing to confirm for')"
+d="$(s23j_trip s23kd 2027-06-05)"; cp "$d/.published-itinerary" "$d/.published-itinerary.next"
+S23K="$S23K d=$(s23k_cell "$d" CONFIRM)"; S23K_MSG="$S23K_MSG$(s23k_err 'cannot confirm for')"
+d="$(sa_ptrip s23ke '' '' 14:00 "$SA_P16" pending)"; t6_trip "$d" 2027-06-05 >/dev/null; s_record "$d/.change-confirmed" "$SA_P16" confirmed
+S23K="$S23K e=$(s23k_cell "$d" '')"; S23K_MSG="$S23K_MSG$(s23k_err 'aborted — nothing confirmed')"
+d="$(s23j_trip s23kf 2027-06-05)"; s_record "$d/.change-confirmed" "$SA_P16" confirmed; printf 'threshold=all\napprover=Not A Key\n' > "$d/.approvers"
+S23K="$S23K f=$(s23k_cell "$d" CONFIRM)"; S23K_MSG="$S23K_MSG$(s23k_err 'nothing to confirm for')"
+d="$(s23j_trip s23kg 2027-06-05)"; printf 'digest=%s\n' "$SA_P16" > "$d/.change-confirmed"
+S23K="$S23K g=$(s23k_cell "$d" CONFIRM)"; S23K_MSG="$S23K_MSG$(s23k_err 'cannot be read as a dated confirmation')"
+d="$(s23j_trip s23kh 2027-06-05)"; mkdir "$d/.change-confirmed"
+S23K="$S23K h=$(s23k_cell "$d" CONFIRM)"; S23K_MSG="$S23K_MSG$(s23k_err 'cannot be read as a dated confirmation')"
+d="$(s23j_trip s23ki 2027-05-30 2027-06-05)"; s_record "$d/.change-confirmed" "$SA_P16" confirmed
+S23K="$S23K i=$(s23k_cell "$d" no)"; S23K_MSG="$S23K_MSG$(s23k_err 'aborted — nothing confirmed')"
+# j — the render moves while the organizer is at the prompt: every digest read after the organizer
+# answers is another plan's. The move is keyed on the prompt's own read, not on a count of reads, so
+# the cell holds however many reads come before the prompt. The marker sits beside the trip, which
+# each cell builds fresh.
+S23K_REAL="$(declare -f itinerary_digest | sed '1s/^itinerary_digest/s23k_real_digest/')"
+s23k_moving() { # <trip> <stdin> — confirm, with the render moving once the prompt's answer is read
+  ( eval "$S23K_REAL"
+    S23K_MV="$1.moved"
+    read() { builtin read "$@"; local rc=$?; if [ "${1:-}" = -r ] && [ "${2:-}" = ans ]; then : > "$S23K_MV"; fi; return "$rc"; }
+    itinerary_digest() { if [ -e "$S23K_MV" ]; then printf '%s' "$SA_WRONG"; else s23k_real_digest "$1"; fi; }
+    _confirm_has_terminal() { return 0; }; _iso_now() { printf '2027-06-10T09:00:00Z'; }
+    printf '%s\n' "$2" | cmd_confirm "$1" ) >"$WORK/sa_conf.out" 2>"$WORK/sa_conf.err"
+}
+d="$(s23j_trip s23kj 2027-05-30 2027-06-05)"; s_record "$d/.change-confirmed" "$SA_P16" confirmed; cp "$d/.change-confirmed" "$WORK/s23kj.before"
+s23k_moving "$d" CONFIRM
+S23K_J=0; cmp -s "$WORK/s23kj.before" "$d/.change-confirmed" && S23K_J=1; S23K_MSG="$S23K_MSG$(s23k_err 'changed while you were confirming')"
+# k — CIAC-1: the working copy differs from the published plan only after a spaced closing tag.
+s23k_page() { sa_page "$1.t" '' '' 16:30 pending; sed "s#<script>var mapReady=1;</script>#<script>var a = 1;</script ><p>Day 1 dinner at $2.</p><script>var b = 2;</script>#" "$1.t" > "$1"; }
+d="$WORK/sa-s23kk"; mkdir -p "$d/outputs"; s23k_page "$d/outputs/porto-travel-site.html" 20:00; s23k_page "$WORK/s23kk_pub.html" 19:00
+s_record "$d/.published-itinerary" "$(itinerary_digest "$WORK/s23kk_pub.html")" published; t6_trip "$d" 2027-06-05 >/dev/null; s_record "$d/.change-confirmed" "$SA_P16" confirmed
+S23K="$S23K k=$(s23k_cell "$d" '')"
+S23K_KM="$( eval "$(declare -f strip_to_itinerary_text | perl -pe 'BEGIN{$o=q{(?=[\t\n\f\r \/>])[^>]*>}} my $i=index($_,$o); substr($_,$i,length $o)=">" if $i>=0')"
+  s_record "$d/.published-itinerary" "$(itinerary_digest "$WORK/s23kk_pub.html")" published
+  _confirm_has_terminal() { return 0; }; printf '\n' | cmd_confirm "$d" 2>/dev/null | grep -c 'Clearing the pending notice' )"
+# m — the ordinary path, on a working copy that differs from the published plan, with the render
+# moving once the organizer answers: the code printed before the prompt is the plan's, and the read
+# after CONFIRM differs, so nothing is written. CONTROL: the same trip with no move records the plan.
+# Cells m and n stand after cell k's armed-red, which reads `$d` as cell k's trip.
+d="$(sa_ptrip s23km '' '' 14:00 "$SA_P16" pending)"; s_record "$d/.change-confirmed" "$SA_P16" confirmed; cp "$d/.change-confirmed" "$WORK/s23km.before"
+S23K_M_DG="$(itinerary_digest "$d/outputs/porto-travel-site.html")"
+s23k_moving "$d" CONFIRM; S23K_M_RC=$?
+S23K_M=0; cmp -s "$WORK/s23km.before" "$d/.change-confirmed" && S23K_M=1; S23K_MSG="$S23K_MSG$(s23k_err 'changed while you were confirming')"
+S23K_M_CODE=0; case "$(cat "$WORK/sa_conf.out")" in *"Code, for comparing by eye: $(_code_prefix "$S23K_M_DG")"*) S23K_M_CODE=1 ;; esac
+d="$(sa_ptrip s23kmc '' '' 14:00 "$SA_P16" pending)"; s_record "$d/.change-confirmed" "$SA_P16" confirmed
+sa_confirm "$d" CONFIRM '2027-06-10T09:00:00Z'; S23K_MC_RC=$?; S23K_MC_REC="$(cat "$d/.change-confirmed")"
+# n — the record the exit replaces names another plan: the prompt names it by its code, and the bytes
+# it replaces are kept beside the record (ADR-007 § 2, the declared path's shape). CONTROL: J1, whose
+# record names the published plan, keeps nothing.
+d="$(s23j_trip s23kn 2027-05-30 2027-06-05)"; s_record "$d/.change-confirmed" "$SA_WRONG" confirmed; cp "$d/.change-confirmed" "$WORK/s23kn.before"
+sa_confirm "$d" CONFIRM '2027-06-10T09:00:00Z'; S23K_N_RC=$?
+S23K_N_NAMED=0; case "$(cat "$WORK/sa_conf.out")" in *"names another version of the plan (code $(_code_prefix "$SA_WRONG"))"*) S23K_N_NAMED=1 ;; esac
+S23K_N_REC="$(cat "$d/.change-confirmed")"
+S23K_N_KEPT=0; for f in "$d"/.change-confirmed.replaced-*; do if [ -f "$f" ] && cmp -s "$WORK/s23kn.before" "$f"; then S23K_N_KEPT=$((S23K_N_KEPT + 1)); fi; done
+S23K_N_CTL=0; for f in "$S23J1"/.change-confirmed.replaced-*; do if [ -e "$f" ]; then S23K_N_CTL=$((S23K_N_CTL + 1)); fi; done
+if [ "$S23K" = ' a=1:0:1 b=1:0:1 c=1:0:1 d=1:0:1 e=1:0:1 f=1:0:1 g=1:0:1 h=1:0:1 i=1:1:1 k=1:0:1' ] && [ "$S23K_MSG" = 11111111111 ] && [ "$S23K_J" -eq 1 ] && [ "$S23K_KM" = 1 ] \
+   && [ "$S23K_M_RC" -ne 0 ] && [ "$S23K_M" -eq 1 ] && [ "$S23K_M_CODE" -eq 1 ] && [ "$S23K_MC_RC" -eq 0 ] && [ "$S23K_MC_REC" = "$(printf 'digest=%s\nconfirmed=2027-06-10T09:00:00Z' "$S23K_M_DG")" ] \
+   && [ "$S23K_N_RC" -eq 0 ] && [ "$S23K_N_NAMED" -eq 1 ] && [ "$S23K_N_REC" = "$S23J_WANT" ] && [ "$S23K_N_KEPT" -eq 1 ] && [ "$S23K_N_CTL" -eq 0 ]; then
+  PASS "S23k: the exit is not offered where it is not for, and writes nothing — no entry later than the record, no baseline, no baseline with a staged record naming the plan, a baseline with a staged record (undetermined), a working copy that differs from the published plan, a malformed declaration, a record with no confirmed= date, a record that is a directory, a declined CONFIRM, and a render that moved while the organizer was at the prompt — each refused with its own message and its record byte-unchanged; CIAC-1 — a working copy that differs only after a spaced closing tag meets the change confirmation, not the exit, and ARMED-RED, with the digest's end tag put back to the exact one, the same trip is offered the exit. On the ordinary path the plan's code is printed before the prompt, and a render that moves at the prompt is refused, while the same trip unmoved records its plan; and where the record the exit replaces names another plan, the prompt names it by its code, the record then names the published plan, and the replaced bytes are kept beside it, which a record naming the published plan never leaves"
+else
+  FAIL "S23k: cells (rc:exit-prompt:record-unchanged)$S23K (want each 1:0:1, and i — the exit offered and declined — 1:1:1), messages $S23K_MSG (want 11111111111), mid-prompt record unchanged=$S23K_J (want 1), CIAC-1 armed-red exit offered=$S23K_KM (want 1); ordinary path moved at the prompt rc=$S23K_M_RC record unchanged=$S23K_M code printed=$S23K_M_CODE (want non-zero, 1, 1), unmoved control rc=$S23K_MC_RC record [${S23K_MC_REC//$'\n'/ | }]; another plan's record replaced rc=$S23K_N_RC named=$S23K_N_NAMED record [${S23K_N_REC//$'\n'/ | }] kept copies=$S23K_N_KEPT (want 0, 1, the published plan, 1), J1's kept copies=$S23K_N_CTL (want 0)"
+fi
+
+# S23l — THE SEAM AND THE ORDER, from the parsed body: both paths call _confirm_has_terminal, no
+# literal terminal test is left in cmd_confirm, and the test precedes the record write.
+S23L_C="$(declare -f cmd_confirm)"
+S23L_LIT=0; case "$S23L_C" in *'[ -t 0 ]'*) S23L_LIT=1 ;; esac
+S23L_SEAM=0; case "$S23L_C" in *_confirm_has_terminal*) S23L_SEAM=1 ;; esac
+S23L_AT_T="${S23L_C%%_confirm_has_terminal*}"; S23L_AT_W="${S23L_C%%digest=%s*}"
+S23L_SENS=0; case "$(declare -f _confirm_has_terminal)" in *'[ -t 0 ]'*) S23L_SENS=1 ;; esac
+if [ "$S23L_LIT" -eq 0 ] && [ "$S23L_SEAM" -eq 1 ] && [ "${#S23L_AT_T}" -lt "${#S23L_AT_W}" ] && [ "$S23L_SENS" -eq 1 ]; then
+  PASS "S23l: cmd_confirm's parsed body carries no literal terminal test and calls _confirm_has_terminal (byte ${#S23L_AT_T}) before its record write (byte ${#S23L_AT_W}); the same scan finds the literal in _confirm_has_terminal itself, so the zero is a measurement"
+else
+  FAIL "S23l: literal left=$S23L_LIT (want 0), seam called=$S23L_SEAM (want 1), test at ${#S23L_AT_T} before write at ${#S23L_AT_W}, literal in the seam=$S23L_SENS (want 1)"
+fi
+
+# S23m — THE EXIT'S CHECK BINDS THE DIGEST ITS RECORD NAMES, ON A LEGACY BASELINE (the scope-lock's
+# amendment 2). A legacy CRC baseline, and every itinerary_digest read after the first (the state's)
+# returns another plan's digest. The exit takes the SHA-256 token it records and the legacy token it
+# checks against the baseline from one projection read (_itinerary_digest_pair), so the read after
+# CONFIRM differs from the pinned plan and is refused, writing nothing. Through the shim the check
+# re-read the render on its own and never saw the token the record would carry, and the record named
+# the other plan. CONTROL: S23j's J3, the same baseline with no stub, records the plan.
+d="$(s23j_trip s23m 2027-06-05)"
+printf 'digest=%s\npublished=2027-05-30T09:00:00Z\n' "$(_legacy_itinerary_digest "$d/outputs/porto-travel-site.html")" > "$d/.published-itinerary"
+: > "$WORK/s23m.n"
+( eval "$S23K_REAL"
+  itinerary_digest() { printf x >> "$WORK/s23m.n"; if [ "$(wc -c < "$WORK/s23m.n")" -ge 2 ]; then printf '%s' "$SA_WRONG"; else s23k_real_digest "$1"; fi; }
+  _confirm_has_terminal() { return 0; }; _iso_now() { printf '2027-06-10T09:00:00Z'; }; printf 'CONFIRM\n' | cmd_confirm "$d" ) >"$WORK/sa_conf.out" 2>"$WORK/sa_conf.err"; S23M_RC=$?
+S23M_NONE=0; [ ! -e "$d/.change-confirmed" ] && [ ! -L "$d/.change-confirmed" ] && S23M_NONE=1
+S23M_MSG="$(s23k_err 'changed while you were confirming')"
+S23M_REC="$(cat "$d/.change-confirmed" 2>/dev/null)"
+if [ "$S23M_RC" -ne 0 ] && [ "$S23M_NONE" -eq 1 ] && [ "$S23M_MSG" = 1 ] && [ "$S23J3_RC" -eq 0 ] && [ "$S23J3_REC" = "$S23J_WANT" ]; then
+  PASS "S23m: on a legacy CRC baseline the exit's check binds the digest its record names — with every digest read after the state's naming another plan, confirm refuses at the write ('changed while you were confirming', rc=$S23M_RC) and no record is written, because the legacy token met against the baseline and the SHA-256 token recorded come from one read; CONTROL — the same baseline with no stub (S23j's J3) records the published plan"
+else
+  FAIL "S23m: legacy baseline with every later read naming another plan rc=$S23M_RC (want non-zero), no record=$S23M_NONE (want 1) record [${S23M_REC//$'\n'/ | }], refusal message=$S23M_MSG (want 1); control J3 rc=$S23J3_RC record [${S23J3_REC//$'\n'/ | }] (want 0 and [${S23J_WANT//$'\n'/ | }]). The record can name a plan the check never compared with the baseline"
 fi
 
 # ── S24a — ERASURE (#719 INT-10). Substituting one approver's key with the erasure token's key
@@ -11007,6 +11319,97 @@ md_flips record_published_itinerary  "S31e" s31e_assert
 md_flips stage_baseline_record       "S31h" s31h_assert
 md_flips require_change_confirmation "S31i" s31i_assert
 
+# ── S32a–S32d (#2117) — THE ITINERARY DIGEST ENDS A BODY WHERE THE BROWSER ENDS IT. strip_to_itinerary_text
+# ended a <script> or <style> body only at the exact tag, so an edit written after an end tag of
+# another form and before a later exact one left the digest unmoved and the gate read the plan as the
+# published one. The limb now ends a body at the browser's end tag: `</` and the name, then
+# whitespace (tab, line feed, form feed, carriage return, space), `/` or `>`, then up to the tag's `>`.
+# S32a must fire; S32b must not; S32c pins the one-time cost the change states; S32d holds the digest
+# and the guard's added readings to one end-tag rule.
+s32_page() { # <file> <closer> <time> -> Day 1 after <closer>, before a later exact </script>
+  printf '<!DOCTYPE html><html><body><section class="hero"><h1>Synthetic Trip</h1></section>\n<script>var a = 1;%s<section class="day">Synthetic Day 1 Dinner at %s</section>\n<script>var b = 2;</script><section class="day">Synthetic Day 2 Free day</section></body></html>\n' "$2" "$3" > "$1"
+}
+s32_spage() { # <file> <closer> <time> -> the same, through a <style> body
+  printf '<html><body><h1>Synthetic Trip</h1><style>.a{}%s<section>Synthetic Day 1 Dinner at %s</section><style>.b{}</style><section>Synthetic Day 2</section></body></html>\n' "$2" "$3" > "$1"
+}
+s32_moves() { # <builder> <closer> -> 1 when an edit inside the stretch moves itinerary_digest, else 0
+  "$1" "$WORK/s32_a.html" "$2" 19:00; "$1" "$WORK/s32_b.html" "$2" 20:00
+  if [ "$(itinerary_digest "$WORK/s32_a.html")" != "$(itinerary_digest "$WORK/s32_b.html")" ]; then printf 1; else printf 0; fi
+}
+s32_old() { # <command…> -> the command, run with the limb's end tag put back to the exact one, in a subshell
+  ( eval "$(declare -f strip_to_itinerary_text | perl -pe 'BEGIN{$o=q{(?=[\t\n\f\r \/>])[^>]*>}} my $i=index($_,$o); substr($_,$i,length $o)=">" if $i>=0')"; "$@" )
+}
+S32_END=( '</script >' $'</script\t>' $'</script\n>' $'</script\r>' $'</script\f>' '</script/>' '</script x>' '</SCRIPT >' '</script x=">">' )
+S32_NOT=( '</scriptx>' '</script-x>' $'</script\v>' )
+s32a_assert() { # one verdict
+  local c n=0 mv=0 old=0 st so cx co mk
+  for c in "${S32_END[@]}"; do
+    n=$((n+1))
+    [ "$(s32_moves s32_page "$c")" = 1 ] && mv=$((mv+1))
+    [ "$(s32_old s32_moves s32_page "$c")" = 0 ] && old=$((old+1))
+  done
+  st="$(s32_moves s32_spage '</style >')"; so="$(s32_old s32_moves s32_spage '</style >')"
+  cx="$(s32_moves s32_page '</script>')"; co="$(s32_old s32_moves s32_page '</script>')"
+  mk="$(declare -f strip_to_itinerary_text | grep -c -F -- '(?=[\t\n\f\r \/>])')"
+  if [ "$n" -eq 9 ] && [ "$mv" -eq 9 ] && [ "$st" = 1 ] && [ "$old" -eq 9 ] && [ "$so" = 0 ] && [ "$cx$co" = 11 ] && [ "$mk" -eq 1 ]; then
+    PASS "S32a: an itinerary edit written after a <script> end tag of another form and before an exact one moves the digest, after each of 9 forms — a space, a tab, a line feed, a carriage return, a form feed, '/', an attribute, upper case, a quoted '>' in an attribute — and after '</style >'; ARMED-RED — with the limb's end tag put back to the exact one, none of the ten moves; CONTROL — after an exact end tag the edit moves the digest under both"
+  else
+    FAIL "S32a: moved after $mv of $n end-tag forms and the style one=$st (want 9 and 1); with the exact tag put back $old of $n and style=$so stayed blind (want 9 and 0); exact control $cx$co (want 11); limb class present $mk time(s) (want 1)"
+  fi
+}
+s32a_assert
+s32b_assert() { # one verdict
+  local c n=0 blind=0 eq dif
+  for c in "${S32_NOT[@]}"; do n=$((n+1)); [ "$(s32_moves s32_page "$c")" = 0 ] && blind=$((blind+1)); done
+  s32_page "$WORK/s32_x.html" '</script>' 19:00
+  eq=0; [ "$(strip_to_itinerary_text "$WORK/s32_x.html")" = "$(s32_old strip_to_itinerary_text "$WORK/s32_x.html")" ] && eq=1
+  s32_page "$WORK/s32_y.html" '</script >' 19:00
+  dif=0; [ "$(strip_to_itinerary_text "$WORK/s32_y.html")" != "$(s32_old strip_to_itinerary_text "$WORK/s32_y.html")" ] && dif=1
+  if [ "$n" -eq 3 ] && [ "$blind" -eq 3 ] && [ "$eq" -eq 1 ] && [ "$dif" -eq 1 ]; then
+    PASS "S32b: the limb ends no body where a browser does not — after '</scriptx>', '</script-x>' and a vertical tab the stretch is script text and an edit there leaves the digest as it was — and on a page whose end tags are exact the projection is the limb-before's byte for byte, so such a trip reads no change; CONTROL — on a page carrying '</script >' the two projections differ"
+  else
+    FAIL "S32b: blind after $blind of $n forms a browser does not end a body at (want 3), exact page projection equal=$eq (want 1), spaced page differs=$dif (want 1)"
+  fi
+}
+s32b_assert
+s32c_assert() { # one verdict — the one-time cost the change states, measured on both digests
+  local f="$WORK/s32_c.html" g="$WORK/s32_cx.html" a b la lb xa xb
+  printf '<html><body><h1>Synthetic Trip</h1><script>var a = 1;</script ><section>Synthetic Day 1</section></body></html>\n' > "$f"
+  s32_page "$g" '</script>' 19:00
+  a="$(itinerary_digest "$f")"; b="$(s32_old itinerary_digest "$f")"
+  la="$(_legacy_itinerary_digest "$f")"; lb="$(s32_old _legacy_itinerary_digest "$f")"
+  xa="$(itinerary_digest "$g")"; xb="$(s32_old itinerary_digest "$g")"
+  if [ -n "$a" ] && [ -n "$b" ] && [ "$a" != "$b" ] && [ -n "$la" ] && [ "$la" != "$lb" ] && [ "$xa" = "$xb" ]; then
+    PASS "S32c: the stated one-time cost — a render whose only <script> end tag is of another form digests differently under the limb and under the limb before it, on the SHA-256 digest and on the legacy CRC token both, so such a trip reads as changed once; a render with exact end tags digests the same under both"
+  else
+    FAIL "S32c: spaced-only render digests differ=$([ "$a" != "$b" ] && echo 1 || echo 0) (want 1), legacy differ=$([ "$la" != "$lb" ] && echo 1 || echo 0) (want 1), exact render equal=$([ "$xa" = "$xb" ] && echo 1 || echo 0) (want 1)"
+  fi
+}
+s32c_assert
+s32d_agree() { # -> how many of the end-tag forms the digest's limb and the guard's added visible reading end a body at alike
+  local c n=0 ok=0 f="$WORK/s32_d.html" it vb
+  for c in "${S32_END[@]}" "${S32_NOT[@]}"; do
+    n=$((n+1))
+    printf '<html><body><h1>Synthetic Trip</h1><p>Lead paragraph of the day.</p><script>var a = 1;%s<p>zzqmarker</p><script>var b = 2;</script></body></html>\n' "$c" > "$f"
+    it=0; case "$(strip_to_itinerary_text "$f")" in *zzqmarker*) it=1 ;; esac
+    vb=0; case "$(strip_to_text_blocks_at_browser_end "$f")" in *zzqmarker*) vb=1 ;; esac
+    [ "$it" = "$vb" ] && ok=$((ok+1))
+  done
+  printf '%d %d' "$ok" "$n"
+}
+s32d_assert() { # one verdict
+  local ok n mok mn
+  read -r ok n <<<"$(s32d_agree)"
+  read -r mok mn <<<"$( eval "$(declare -f _browser_end_tags | perl -pe 'BEGIN{$o=q{\t\n\f\r}} my $i=index($_,$o); substr($_,$i,length $o)=q{\t\n\r} if $i>=0')"; s32d_agree )"
+  if [ "$n" -eq 12 ] && [ "$ok" -eq 12 ] && [ "$mn" -eq 12 ] && [ "$mok" -eq 11 ]; then
+    PASS "S32d: one end-tag rule — over 12 forms, the 9 a browser ends a body at and the 3 it does not, the digest's limb and the guard's added visible reading agree on whether the text after the tag is the page's; ARMED-RED — with the form feed dropped from the pre-pass's class, the two disagree on exactly that form"
+  else
+    FAIL "S32d: the limb and the added reading agree on $ok of $n forms (want 12 of 12); with the form feed dropped they agree on $mok of $mn (want 11 of 12)"
+  fi
+}
+s32d_assert
+md_flips strip_to_itinerary_text    "S32a" s32a_assert
+
 # ── S30 — CASE 1: THE ITINERARY DIGEST NO LONGER DEPENDS ON THE CALLER'S LOCALE (#1468). The
 # normalization runs under LC_ALL=C, with the 18 non-ASCII code points macOS's UTF-8 [:space:]
 # holds rewritten to an ASCII space first. s30_render writes S0's 14:00 render with the given
@@ -11794,6 +12197,11 @@ md_flips strip_to_shape_text        "M7c" m7c_assert
 md_flips strip_to_shape_text        "M7d" m7d_assert
 md_flips strip_to_shape_text        "M7e" m7e_assert
 md_flips strip_to_shape_text        "M6b" m6b_assert
+# The guard's added readings (#2117). M9a grades an EXACT status on pages only those readings block,
+# so with the pre-pass removed both readings fail, the guard refuses them (rc=2), and the arm's one
+# verdict is a FAIL; M9c reads the streams the pre-pass shapes.
+md_flips _browser_end_tags          "M9a" m9a_assert
+md_flips _browser_end_tags          "M9c" m9c_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group FZ — every verdict arm in this file must be able to FAIL.
@@ -12501,12 +12909,12 @@ pp_cannot_disclose_assert "PP4"
 
 # ── PP5 — single-limb: the announcement is not conditional on the CALLER. This is the arm
 # that fails the day a `[ -t 1 ]` gate is reintroduced. Its sensitivity arm runs the
-# identical scan over cmd_confirm, which does gate on a terminal, so the zero here is a
-# measurement rather than a scan that matches nothing.
+# identical scan over _confirm_has_terminal, the terminal test both of confirm's paths call, so the
+# zero here is a measurement rather than a scan that matches nothing.
 pp_single_limb_assert() { # <id>
   local id="$1" body="" ctl="" nd n_gate=0 n_ctl=0
   body="$(declare -f announce_passphrase_file 2>/dev/null)"
-  ctl="$(declare -f cmd_confirm 2>/dev/null)"
+  ctl="$(declare -f _confirm_has_terminal 2>/dev/null)"
   for nd in '-t 0' '-t 1' '/dev/tty'; do
     n_gate=$(( n_gate + $(pp_count "$body" "$nd") ))
   done
@@ -12514,11 +12922,11 @@ pp_single_limb_assert() { # <id>
   if [ "${#body}" -lt 300 ]; then
     FAIL "$id: announce_passphrase_file's parsed body is ${#body} bytes, below the 300-byte floor — the subject is absent or a stub and the terminal-gate zero below would be an empty scan"
   elif [ "$n_ctl" -lt 1 ]; then
-    FAIL "$id: SENSITIVITY ARM DID NOT FIRE — the identical scan over cmd_confirm, which does gate on a terminal, found $n_ctl '-t 0' site(s). The detector is not reading what it claims, so the zero over the announcer proves nothing"
+    FAIL "$id: SENSITIVITY ARM DID NOT FIRE — the identical scan over _confirm_has_terminal, the terminal test both of confirm's paths call, found $n_ctl '-t 0' site(s) in _confirm_has_terminal. The detector is not reading what it claims, so the zero over the announcer proves nothing"
   elif [ "$n_gate" -ne 0 ]; then
     FAIL "$id: the announcer branches on the CALLER — $n_gate terminal-or-tty construct(s) in its body. A privacy property that depends on how the script was invoked takes its disclosing limb on any host that allocates a pseudo-terminal, so the same script withholds or discloses according to how it was run — and a property the caller decides is not a property this guard holds"
   else
-    PASS "$id: the announcement is UNCONDITIONAL on the caller — 0 '-t 0' / '-t 1' / '/dev/tty' constructs over a ${#body}-byte parsed body, while the identical scan over cmd_confirm found $n_ctl, so the zero is a measurement"
+    PASS "$id: the announcement is UNCONDITIONAL on the caller — 0 '-t 0' / '-t 1' / '/dev/tty' constructs over a ${#body}-byte parsed body, while the identical scan over _confirm_has_terminal, the terminal test both of confirm's paths call, found $n_ctl, so the zero is a measurement"
   fi
 }
 pp_single_limb_assert "PP5"
