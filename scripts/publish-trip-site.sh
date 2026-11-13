@@ -3104,17 +3104,19 @@ strip_to_itinerary_text() { # <html_file> -> visible itinerary text on stdout, o
 # an empty projection must still yield the real empty-string token, as S11d and S15e require. It
 # carries no fallback limb and discards no stderr — S15i's rule for every perl program here.
 #
-# The CRC-32 body survives only as _legacy_digest_of below, for the legacy-baseline shim.
+# The CRC-32 body survives only as _legacy_digest_of below, for the legacy-baseline shim and for
+# confirm's undeclared exit, which meets a legacy baseline with it (_itinerary_digest_pair).
 _digest_of() { # (stdin) -> one stable identity token: SHA-256 of the bytes, 64 lowercase hex
   perl -MDigest::SHA=sha256_hex -e 'binmode STDIN; local $/; my $s = <STDIN>; $s = q() unless defined $s; print sha256_hex($s)'
 }
 
-# The pre-#719 digest primitive, kept for ONE reader: the legacy-baseline shim, _baseline_matches.
+# The pre-#719 digest primitive, kept for TWO readers of one comparison: the legacy-baseline shim,
+# _baseline_matches, and confirm's undeclared exit, through _itinerary_digest_pair (#1556).
 # A baseline recorded before the swap reads `<digits>-<digits>` — CRC-32 and byte length, a shape
-# disjoint from 64 lowercase hex — and the shim compares it with this function's answer over the
+# disjoint from 64 lowercase hex — and each reader compares it with this function's answer over the
 # same projection, so a published plan that did not move is never re-read as a plan change merely
-# because the digest function changed. It is never an approval's digest: nothing that records or
-# counts an approval calls it.
+# because the digest function changed. It is never an approval's digest: no record is written with
+# its token, and nothing that counts an approval calls it.
 _legacy_digest_of() { # (stdin) -> the pre-#719 CRC-32-plus-length token
   cksum | awk '{ printf "%s-%s", $1, $2 }'
 }
@@ -3202,6 +3204,26 @@ _legacy_itinerary_digest() { # <html_file> -> the pre-#719 CRC-32 identity token
   printf '%s' "$dg"
 }
 
+# BOTH TOKENS FROM ONE READ, for confirm's undeclared exit alone (#1556; the scope-lock's
+# amendment 2). The exit checks the plan it is about to record against the published baseline,
+# and a baseline recorded before #719 is a CRC token, which only _legacy_itinerary_digest can
+# meet. Read through itinerary_digest and then through _baseline_matches, the two tokens came
+# from two reads of the render, and the shim's legacy branch read it again: the token checked
+# was not the token recorded. Here one projection read yields both, so the SHA-256 token the
+# exit records is the one whose plan the check found published, under either baseline shape.
+# The normalization and both digest primitives are the two functions' own, run over the same
+# text; neither function's shape moves (S11 and S15 grade itinerary_digest's). It prints the
+# two tokens on one line, SHA-256 first, or NOTHING where either stage fails.
+_itinerary_digest_pair() { # <html_file> -> "<sha256-token> <legacy-token>" from one read, or nothing
+  [ -r "${1:-}" ] || return 0
+  local text dg lg
+  text="$(strip_to_itinerary_text "$1")" || return 0
+  dg="$(set -o pipefail; printf '%s' "$text" | LC_ALL=C sed "$_ITINERARY_WS_SED" | LC_ALL=C tr -s '[:space:]' ' ' | LC_ALL=C sed 's/^ *//; s/ *$//' | _digest_of)" || return 0
+  lg="$(set -o pipefail; printf '%s' "$text" | LC_ALL=C sed "$_ITINERARY_WS_SED" | LC_ALL=C tr -s '[:space:]' ' ' | LC_ALL=C sed 's/^ *//; s/ *$//' | _legacy_digest_of)" || return 0
+  [ -n "$dg" ] && [ -n "$lg" ] || return 0
+  printf '%s %s' "$dg" "$lg"
+}
+
 # The three sidecars, one resolver each. All three sit inside the trip dir, which
 # .gitignore excludes (`trips/*`) and which no subcommand ever copies into the
 # per-trip repo — so none of them is a publish surface.
@@ -3215,7 +3237,9 @@ _legacy_itinerary_digest() { # <html_file> -> the pre-#719 CRC-32 identity token
 # entry headings and nothing else, through _undecided_entry. The reason is the site's
 # `pending` band: a change raised after the published plan's approval record was dated,
 # and abandoned before any approval, leaves an entry the site's mapping reads as
-# undecided, and only a record re-dated past that entry lets the band clear. `status` is
+# undecided, and only a record re-dated past that entry lets the band clear. On a trip that
+# declares no approvers, confirm's exit reads the same headings, through _undeclared_band, for the
+# same reason (#1556). `status` is
 # still read by nothing: nothing ever moves it off `pending`, which is why
 # skills/trip/SKILL.md § site does not read it either.
 pending_change_path()     { printf '%s' "$1/outputs/change-summary.md"; }
@@ -3890,7 +3914,9 @@ _ledger_append() { # <trip_dir> <key> <approve|withdraw> <digest> -> 0, or non-z
 # entry is a dated heading — a line opening `## ` and then a YYYY-MM-DD date, the heading the hub
 # appends for each change (agents/05-hub-planner.md § Output: outputs/change-summary.md) and the
 # only part of the file the mapping reads. `status` is never read; § site records why it is not
-# the signal. This is the record writer's one read of the summary, and SEAM S2 makes none.
+# the signal. This is the declared writer's read of the summary; the undeclared exit reads it
+# through _undeclared_band, which calls this only with a confirmed= it has read as a date; SEAM
+# S2 makes none.
 #
 # THE FAIL DIRECTION IS "NO UNDECIDED ENTRY", and it is chosen rather than defaulted. It keeps the
 # record's date, which is what the writer did before this read existed, and it can never put a
@@ -3917,6 +3943,43 @@ _undecided_entry() { # <trip_dir> <confirmed-value> -> 0 when the change summary
     esac
   done < "$f"
   return 1
+}
+
+# THE UNDECLARED EXIT'S READING OF THE BAND (#1556). On a trip that declares no approvers, whether the
+# site's `pending` band stands for a change the working copy no longer carries: one token on stdout,
+# read the one way skills/trip/SKILL.md § site's mapping reads it.
+#   held      outputs/change-summary.md holds a dated entry, and either no .change-confirmed exists
+#             (no file and no link: the mapping has no approval to measure the entry against) or the
+#             record's confirmed= date is earlier than an entry's (_undecided_entry)
+#   clear     no readable summary, no dated entry in it, or no entry later than the record's date —
+#             the mapping reads no undecided entry
+#   unusable  a dated entry stands and a .change-confirmed is present but cannot be read as a dated
+#             confirmation: not a readable regular file, no well-formed digest= line, or a confirmed=
+#             value that does not open YYYY-MM-DD. The mapping reads the band pending there; the exit
+#             refuses it and names the file, because absence and a malformed record are different
+#             conditions and never the same branch (ADR-007 § 2)
+# _undecided_entry's own fail direction is untouched: it is the declared writer's reading, and this
+# function calls it only with a confirmed= value it has already read as a date. Read-only, and 0 on
+# every path. Graded by S23j.
+_undeclared_band() { # <trip_dir> -> held | clear | unusable
+  local f rec line conf="" n=0 D='[0123456789]'
+  f="$(pending_change_path "$1")"
+  if [ ! -f "$f" ] || [ ! -r "$f" ]; then printf 'clear'; return 0; fi
+  while IFS= read -r line || [ -n "$line" ]; do
+    # shellcheck disable=SC2254  # $D is the spelled digit set, as in _undecided_entry
+    case "$line" in "## "$D$D$D$D-$D$D-$D$D*) n=1; break ;; esac
+  done < "$f"
+  if [ "$n" -eq 0 ]; then printf 'clear'; return 0; fi
+  rec="$(change_confirmation_path "$1")"
+  if [ ! -e "$rec" ] && [ ! -L "$rec" ]; then printf 'held'; return 0; fi
+  if [ ! -f "$rec" ] || [ ! -r "$rec" ] || [ -z "$(_record_digest "$rec")" ]; then printf 'unusable'; return 0; fi
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in confirmed=*) conf="${line#confirmed=}"; break ;; esac
+  done < "$rec"
+  # shellcheck disable=SC2254  # as above
+  case "${conf:0:10}" in $D$D$D$D-$D$D-$D$D) ;; *) printf 'unusable'; return 0 ;; esac
+  if _undecided_entry "$1" "$conf"; then printf 'held'; else printf 'clear'; fi
+  return 0
 }
 
 # The date an approval record KEEPS once its plan is published (#719's Stage 7 F-02, decided
@@ -4679,7 +4742,7 @@ cmd_confirm() { # <trip_dir>
   # to confirm against it.) Graded by S11i, which reads the ORDER and not just the call.
   require_perl
 
-  local site_html state pending rec tmp dg ans pol
+  local site_html state pending rec tmp dg ans pol band="" base_dg="" pair="" pin="" rec_dg="" keep=""
   site_html="$(resolve_site_html "$trip_dir")"
   state="$(change_confirmation_state "$trip_dir")"
 
@@ -4691,20 +4754,34 @@ cmd_confirm() { # <trip_dir>
   # plan reverted after an approval re-anchors the approval record to itself. An undetermined
   # state is still refused below before anything binds, on either path. _confirm_declared keeps
   # the terminal-only, no-override-flag rule. A trip that declares no approvers takes neither of
-  # these branches and is unchanged in every byte it prints and writes.
+  # these branches; its way out of an abandoned change's band is the exit below.
   pol="$(_approval_policy "$trip_dir" 2>/dev/null)"   # the state read above already printed any diagnostic
   if [ "$pol" = declared ] && [ "$state" != undetermined ]; then
     _confirm_declared "$trip_dir" "$site_html" "$state"
     return $?
   fi
 
-  # Refuse when there is no itinerary change in front of the organizer. A
-  # confirmation recorded now would be a PRE-AUTHORISATION of an unseen future
-  # change, and the gate would then wave through whatever the next bake produces.
-  # Expressed through the resolver rather than through a second definition of
-  # "pending", so there is exactly one answer to "has the plan moved?".
-  [ "$state" != "none-pending" ] \
-    || die "nothing to confirm for $trip_dir — the itinerary content of the outgoing render is the plan that is already published (or the trip has never been published). Confirmation binds to a change; there is none."
+  # Where the plan going out is the published one (`none-pending`) there is no change to confirm,
+  # and the refusal below stands — save on a trip that declares no approvers whose baseline is
+  # present and usable and whose change summary holds an entry the site's mapping reads as
+  # undecided (_undeclared_band, #1556): the site still announces a change that is not coming.
+  # There the exit records the published plan as confirmed now, the act that dates the record
+  # past that entry. It pre-authorises nothing: the record names the published plan's own digest,
+  # checked against the baseline in the same read that yields it (_itinerary_digest_pair) and
+  # refused if the read after CONFIRM differs, and the gate compares the baseline first. A record it
+  # replaces that names another plan is named by its code in the prompt and kept beside the record,
+  # as the declared path keeps a record it retires (ADR-007 § 2's replace-with-preservation shape).
+  # "Back on the published plan" is the resolver's answer and a present baseline, never a second
+  # definition of it (CIAC-1).
+  if [ "$state" = none-pending ]; then
+    base_dg="$(_baseline_record "$(published_itinerary_path "$trip_dir")")"
+    if [ "$pol" = none ] && [ "$base_dg" != absent ]; then band="$(_undeclared_band "$trip_dir")"; fi
+    case "$band" in
+      held) ;;
+      unusable) die "cannot clear the pending notice for $trip_dir — the itinerary content of the outgoing render is the published plan, and its change summary holds an entry the site reads as pending, but its confirmation record $(change_confirmation_path "$trip_dir") is present and cannot be read as a dated confirmation: it is not a readable regular file, or it carries no well-formed digest= line or no confirmed= date. Nothing was recorded. Repair that file, or delete it; then re-run confirm." ;;
+      *) die "nothing to confirm for $trip_dir — the itinerary content of the outgoing render is the plan that is already published (or the trip has never been published). Confirmation binds to a change; there is none." ;;
+    esac
+  fi
 
   # Refuse an UNDETERMINED state here, BEFORE the terminal check and the prompt (#1184; #1468
   # case 5 and D-6). A confirmation is recorded against an identified itinerary and a known
@@ -4743,23 +4820,57 @@ cmd_confirm() { # <trip_dir>
   # later slice. A third such override would be precisely the class of thing that
   # bound forbids, so this requirement is hard: no automation can attest a group's
   # consensus on the group's behalf.
-  [ -t 0 ] || die "confirm requires a terminal — it records a human decision, and there is deliberately no flag to skip it. Run it yourself:  $(basename "$0") confirm ${trip_dir}"
+  _confirm_has_terminal || die "confirm requires a terminal — it records a human decision, and there is deliberately no flag to skip it. Run it yourself:  $(basename "$0") confirm ${trip_dir}"
 
-  printf '\n  Confirming the itinerary change for: %s\n' "$trip_dir"
-  printf '  Site render     : %s\n' "$site_html"
+  # BOTH PATHS PIN THE PLAN BEFORE THEIR PROMPT (#1556; the scope-lock's amendments 1–3). The digest
+  # is read before the organizer is asked, its code is printed, and the read after CONFIRM must equal
+  # it: a render rebuilt while the organizer is at the prompt is refused, never confirmed unseen —
+  # the PRE-AUTHORISATION of an unseen future change this function refuses. The record write
+  # below is the one line both paths share (T6c and S23b read its format).
   pending="$(pending_change_path "$trip_dir")"
-  if [ -r "$pending" ]; then
+  rec="$(change_confirmation_path "$trip_dir")"
+  if [ "$band" = held ]; then
+    pair="$(_itinerary_digest_pair "$site_html")"
+    pin="${pair%% *}"
+    { [ -n "$pair" ] && { [ "$base_dg" = "$pin" ] || [ "$base_dg" = "${pair#* }" ]; }; } \
+      || die "cannot clear the pending notice for $trip_dir — the outgoing render $site_html no longer reads as the published plan; nothing was recorded. Re-run confirm."
+    rec_dg="$(_record_digest "$rec")"
+    printf '\n  Clearing the pending notice for: %s\n' "$trip_dir"
+    printf '  Site render     : %s\n' "$site_html"
     printf '  Change summary  : %s\n' "$pending"
+    printf '  Gate state      : %s — the plan going out is the published one\n' "$state"
+    printf '  Code, for comparing by eye: %s\n' "$(_code_prefix "$pin")"
+    printf '  The change summary holds a change the site shows as pending, and the plan going out is the published one, so that change is not coming.\n'
+    if [ -n "$rec_dg" ] && [ "$rec_dg" != "$pin" ] && [ "$rec_dg" != "${pair#* }" ]; then
+      printf '  The confirmation record names another version of the plan (code %s). Recording replaces it, and the record it replaces is kept beside it.\n' "$(_code_prefix "$rec_dg")"
+    else
+      rec_dg=""
+    fi
+    printf '  Type CONFIRM to record the published plan as confirmed now, which clears that notice at the next build: '; read -r ans
   else
-    warn "no change summary at $pending — confirming from the render alone."
+    pin="$(itinerary_digest "$site_html")"
+    [ -n "$pin" ] || die "could not identify the itinerary content of $site_html — it could not be read, its itinerary text could not be projected, or that text could not be normalized; any error printed above names the cause. Nothing was recorded."
+    printf '\n  Confirming the itinerary change for: %s\n' "$trip_dir"
+    printf '  Site render     : %s\n' "$site_html"
+    if [ -r "$pending" ]; then
+      printf '  Change summary  : %s\n' "$pending"
+    else
+      warn "no change summary at $pending — confirming from the render alone."
+    fi
+    printf '  Gate state      : %s\n' "$state"
+    printf '  Code, for comparing by eye: %s\n' "$(_code_prefix "$pin")"
+    printf '  Type CONFIRM to record the group'"'"'s approval of this itinerary: '; read -r ans
   fi
-  printf '  Gate state      : %s\n' "$state"
-  printf '  Type CONFIRM to record the group'"'"'s approval of this itinerary: '; read -r ans
   [ "${ans:-}" = "CONFIRM" ] || die "aborted — nothing confirmed. The published plan is unchanged."
 
   dg="$(itinerary_digest "$site_html")"
   [ -n "$dg" ] || die "could not identify the itinerary content of $site_html — it could not be read, its itinerary text could not be projected, or that text could not be normalized; any error printed above names the cause. Nothing was recorded."
-  rec="$(change_confirmation_path "$trip_dir")"
+  [ "$dg" = "$pin" ] \
+    || die "nothing was recorded for $trip_dir — the outgoing render changed while you were confirming, so it is no longer the plan whose code is shown above. Re-run confirm."
+  if [ -n "$rec_dg" ]; then
+    keep="$(mktemp "${rec}.replaced-XXXXXX")" || die "could not stage a copy of $rec — nothing was recorded."
+    if ! cat "$rec" > "$keep"; then rm -f "$keep"; die "could not keep a copy of $rec — nothing was recorded."; fi
+  fi
   tmp="$(mktemp "${rec}.XXXXXX")" || die "could not stage the confirmation record beside $rec"
   printf 'digest=%s\nconfirmed=%s\n' "$dg" "$(_iso_now)" > "$tmp"
   mv -f "$tmp" "$rec"
@@ -4770,13 +4881,21 @@ cmd_confirm() { # <trip_dir>
   # decision lives. No post-republish cleanup is needed anywhere either: a later
   # re-bake moves the itinerary content, the digest stops matching, and the state
   # resolves `stale` on its own.
+  if [ "$band" = held ]; then
+    ok "Recorded. The published plan is confirmed as of now, so the change summary's entries read as decided: rebuild the site, and the next  $(basename "$0") update ${trip_dir}  publishes it with no pending notice."
+    [ -z "$keep" ] || info "the confirmation record it replaced is kept at $keep."
+    [ "$(_undeclared_band "$trip_dir")" != held ] \
+      || warn "the change summary holds an entry dated after today; the site goes on reading it as pending until a confirmation is recorded on or after that date."
+    return 0
+  fi
   ok "Confirmed. The next  $(basename "$0") update ${trip_dir}  will publish this itinerary; a further edit re-opens the gate."
 }
 
 # The terminal test of confirm's declared branch. A function rather than an inline test so that
 # the publish-guard suite can drive the branch end to end with the test stubbed (S19a) — it is not
 # a flag and not an override: a caller that RUNS this script cannot redefine it, because the script
-# defines it after anything the environment could supply. The undeclared path keeps its literal.
+# defines it after anything the environment could supply. Both of confirm's paths call it, and
+# PP5 reads its literal as its scan's sensitivity arm.
 _confirm_has_terminal() { [ -t 0 ]; }
 
 # CONFIRM ON A TRIP THAT DECLARES APPROVERS (#719, ADR-029 § Decision 3, as corrected by the

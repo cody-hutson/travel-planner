@@ -8769,7 +8769,7 @@ fi
 # Every production function an arm below stubs or mutates, saved before any arm runs. sa_restore
 # re-evaluates the saved text; S26a compares each against it, so a stub that outlives its arm is
 # found by name rather than by the arms after it going quietly wrong.
-SA_SAVED_FNS='_iso_now _approval_tally _approvals_grammar _approval_policy _ledger_append _record_threshold_met _baseline_matches _digest_of _approval_line_parse _confirm_has_terminal change_confirmation_state require_render_approval_code _undecided_entry'
+SA_SAVED_FNS='_iso_now _approval_tally _approvals_grammar _approval_policy _ledger_append _record_threshold_met _baseline_matches _digest_of _approval_line_parse _confirm_has_terminal change_confirmation_state require_render_approval_code _undecided_entry _undeclared_band'
 for safn in $SA_SAVED_FNS; do
   eval "SA_SAVED_${safn}=\"\$(declare -f ${safn})\""
 done
@@ -9739,7 +9739,7 @@ fi
 # recording act's functions, name no traveller file, person record, derived model or provenance
 # mark. Sensitivity: the class-source function that does read the derived model names it.
 # Specificity: a fabricated token is in none of them.
-SA22_FNS='change_confirmation_state _approval_policy _approvers_grammar _approvals_grammar _approval_tally _baseline_matches _legacy_itinerary_digest _legacy_digest_of itinerary_digest strip_to_itinerary_text _digest_of _record_digest _baseline_record staged_record_path published_itinerary_path change_confirmation_path approver_declaration_path approval_ledger_path resolve_site_html _confirm_declared _approval_line_parse _ledger_append _record_threshold_met _published_record_date _undecided_entry'
+SA22_FNS='change_confirmation_state _approval_policy _approvers_grammar _approvals_grammar _approval_tally _baseline_matches _legacy_itinerary_digest _legacy_digest_of itinerary_digest strip_to_itinerary_text _digest_of _record_digest _baseline_record staged_record_path published_itinerary_path change_confirmation_path approver_declaration_path approval_ledger_path resolve_site_html _confirm_declared _approval_line_parse _ledger_append _record_threshold_met _published_record_date _undecided_entry _undeclared_band _itinerary_digest_pair'
 SA22_EMPTY=0; SA22_HIT=""; SA22_SPEC=0; SA22_N=0
 for safn in $SA22_FNS; do
   SA22_N=$((SA22_N+1))
@@ -9969,8 +9969,8 @@ fi
 # 2027-05-30 and the approval's own day keep the date, so "later than" is strict, as the mapping's
 # is; a summary that cannot be read (a dangling link) keeps it, and so does one whose only later
 # headings are not dated entries — the stated fail direction, which never puts a false "recently
-# updated" on the site; and a trip that declares nobody, with the same history, is refused by
-# confirm with the shipped message word for word, its record byte-unchanged. The push mocks S21l
+# updated" on the site; and a trip that declares nobody, with the same history, run with no terminal,
+# is refused by the terminal test word for word, its record byte-unchanged (S23j grades the exit). The push mocks S21l
 # withdrew are re-evaluated for this arm and withdrawn again at its end.
 sa23i_fixture() { # <name> [<entry-date>...] -> a declaring trip at 2 of 3, published, approved 3 of 3, record dated 06-01
   local d n="$1" sak; shift
@@ -10031,7 +10031,7 @@ s_record "$SA23IU/.change-confirmed" "$SA_P16" confirmed
 t6_trip "$SA23IU" 2027-05-30 2027-06-05 >/dev/null
 cp "$SA23IU/.change-confirmed" "$WORK/sa23iu.before"
 SA23IU_ERR="$( ( cmd_confirm "$SA23IU" ) </dev/null 2>&1 >/dev/null )"; SA23IU_RC=$?
-SA23IU_SHIPPED="nothing to confirm for $SA23IU — the itinerary content of the outgoing render is the plan that is already published (or the trip has never been published). Confirmation binds to a change; there is none."
+SA23IU_SHIPPED="confirm requires a terminal — it records a human decision, and there is deliberately no flag to skip it. Run it yourself:  $(basename "$0") confirm ${SA23IU}"
 SA23IU_SAME=0; case "$SA23IU_ERR" in *"$SA23IU_SHIPPED") SA23IU_SAME=1 ;; esac
 SA23IU_KEPT=0; cmp -s "$WORK/sa23iu.before" "$SA23IU/.change-confirmed" && SA23IU_KEPT=1
 unset -f gh npx
@@ -10042,9 +10042,183 @@ if [ "$SA23I_ST0" = none-pending ] && [ "$SA23I_B0" = pending ] && [ "$SA23I_RC"
    && [ "$SA23ID_RC" -eq 0 ] && [ "$SA23ID_REC" = "$SA23I_KEPT_WANT" ] \
    && [ "$SA23IH_RC" -eq 0 ] && [ "$SA23IH_REC" = "$SA23I_KEPT_WANT" ] && [ "$SA23IH_MAP" = 2027-05-30 ] \
    && [ "$SA23IU_RC" -ne 0 ] && [ "$SA23IU_SAME" -eq 1 ] && [ "$SA23IU_KEPT" -eq 1 ]; then
-  PASS "S23i: item 8 — on a published plan at 2 of 3 whose record is dated before an abandoned change's entry, the build reads 'pending'; a bare Enter re-stamps confirmed= to the act, adds no ledger line and says 'dated now'; the render built through the mapping resolves 'updated' · 2027-06-10 with the plan's own count and code, update passes both guards to the clone, and the gate reads none-pending throughout. ARMED-RED — a writer reading no entry keeps the date and the band stays 'pending'; CONTROLS — an entry on or before the record's day keeps the date, an unreadable summary and later non-entry headings keep it (the fail direction), and an undeclared trip with the same history is refused word for word with its record untouched"
+  PASS "S23i: item 8 — on a published plan at 2 of 3 whose record is dated before an abandoned change's entry, the build reads 'pending'; a bare Enter re-stamps confirmed= to the act, adds no ledger line and says 'dated now'; the render built through the mapping resolves 'updated' · 2027-06-10 with the plan's own count and code, update passes both guards to the clone, and the gate reads none-pending throughout. ARMED-RED — a writer reading no entry keeps the date and the band stays 'pending'; CONTROLS — an entry on or before the record's day keeps the date, an unreadable summary and later non-entry headings keep it (the fail direction), and an undeclared trip with the same history, run with no terminal, is refused by the terminal test word for word with its record untouched — S23j grades its exit"
 else
   FAIL "S23i: gate before '$SA23I_ST0' (want none-pending), first build '$SA23I_B0' (want pending), Enter rc=$SA23I_RC record [${SA23I_REC//$'\n'/ | }] (want [${SA23I_WANT//$'\n'/ | }]), ledger lines $SA23I_L0 -> $SA23I_L1, 'dated now'=$SA23I_NOW 'keeps the date'=$SA23I_KEEPS (want 1 and 0); rebuilt '$SA23I_B1' since '$SA23I_SINCE' (want updated, 2027-06-10), pair $SA23I_NC/$SA23I_NK code-own=$([ "$SA23I_CODE" = "$SA_P16" ] && echo 1 || echo 0), clone=$SA23I_CL, gate after '$SA23I_ST1'; mutant kept the date=$SA23IM_KEPT band '$SA23IM_B' (want 1, pending); no-later-entry control rc=$SA23IC_RC record [${SA23IC_REC//$'\n'/ | }] keeps-message=$SA23IC_KEEPS; dangling-link control rc=$SA23ID_RC record [${SA23ID_REC//$'\n'/ | }]; non-entry-heading control rc=$SA23IH_RC record [${SA23IH_REC//$'\n'/ | }] mapping newest '$SA23IH_MAP'; undeclared control rc=$SA23IU_RC shipped-message=$SA23IU_SAME record untouched=$SA23IU_KEPT"
+fi
+
+# ── S23j–S23m (#1556) — THE UNDECLARED EXIT. A change raised and abandoned before any approval, on a
+# trip that declares nobody, leaves the working copy back on the published plan and an entry the
+# mapping reads as undecided: the band reads `pending`. confirm, at none-pending with a present,
+# usable baseline and that band held, offers the re-dating behind CONFIRM at a terminal and writes a
+# record naming the published plan's digest, dated at the act. S23j must fire; S23k must not; S23l
+# reads the terminal seam and the order from the parsed body; S23m holds the exit's check to the
+# digest its record names on a legacy baseline. The push mocks are re-evaluated for S23j and
+# withdrawn again at its end.
+s23j_trip() { # <name> [<entry-date>...] -> an undeclared trip, published on SA_P16, its band raised
+  local d n="$1"; shift
+  d="$(sa_ptrip "$n" '' '' 16:30 "$SA_P16" pending)"
+  if [ $# -gt 0 ]; then t6_trip "$d" "$@" >/dev/null; fi
+  printf '%s' "$d"
+}
+eval "$SA_MOCK_GH"; eval "$SA_MOCK_NPX"
+S23J_WANT="$(printf 'digest=%s\nconfirmed=2027-06-10T09:00:00Z' "$SA_P16")"
+# J1 — a record dated before the abandoned change's entry.
+S23J1="$(s23j_trip s23j1 2027-05-30 2027-06-05)"; s_record "$S23J1/.change-confirmed" "$SA_P16" confirmed
+S23J1_ST0="$(sa_state "$S23J1")"; S23J1_B0="$(sa_build "$S23J1" 16:30 2027-06-06)"
+sa_confirm "$S23J1" CONFIRM '2027-06-10T09:00:00Z'; S23J1_RC=$?
+S23J1_EXIT=0; case "$(cat "$WORK/sa_conf.out")" in *'Clearing the pending notice'*) S23J1_EXIT=1 ;; esac
+S23J1_REC="$(cat "$S23J1/.change-confirmed")"
+S23J1_B1="$(sa_build "$S23J1" 16:30 2027-06-11)"
+read -r S23J1_NC S23J1_NK _ <<<"$(_render_approval_pair "$S23J1/outputs/porto-travel-site.html")"
+S23J1_SINCE=''; while IFS= read -r saline; do case "$saline" in coordination-since:*) S23J1_SINCE="${saline#coordination-since: }" ;; esac; done < "$S23J1/outputs/porto-travel-site.html"
+read -r SA_RC S23J1_CL _ _ <<<"$(sa_push update "$S23J1")"
+S23J1_ST1="$(sa_state "$S23J1")"; S23J1_LEDGER=0; [ -e "$S23J1/.approvals" ] && S23J1_LEDGER=1
+# J2 — no record at all: the first one is written.
+S23J2="$(s23j_trip s23j2 2027-06-05)"; S23J2_B0="$(sa_build "$S23J2" 16:30 2027-06-06)"
+sa_confirm "$S23J2" CONFIRM '2027-06-10T09:00:00Z'; S23J2_RC=$?
+S23J2_REC="$(cat "$S23J2/.change-confirmed" 2>/dev/null)"; S23J2_B1="$(sa_build "$S23J2" 16:30 2027-06-11)"
+# J3 — a legacy CRC baseline: the record carries the plan's SHA-256 digest, the legacy token that meets the
+# baseline and that digest coming from one read (S23m grades the binding).
+S23J3="$(s23j_trip s23j3 2027-06-05)"
+printf 'digest=%s\npublished=2027-05-30T09:00:00Z\n' "$(_legacy_itinerary_digest "$S23J3/outputs/porto-travel-site.html")" > "$S23J3/.published-itinerary"
+sa_confirm "$S23J3" CONFIRM '2027-06-10T09:00:00Z'; S23J3_RC=$?; S23J3_REC="$(cat "$S23J3/.change-confirmed" 2>/dev/null)"
+# ARMED-RED — the band read as clear: the exit is not offered, and J1's history is refused as before.
+S23JM="$(s23j_trip s23jm 2027-05-30 2027-06-05)"; s_record "$S23JM/.change-confirmed" "$SA_P16" confirmed
+cp "$S23JM/.change-confirmed" "$WORK/s23jm.before"
+_undeclared_band() { printf clear; }
+sa_confirm "$S23JM" CONFIRM '2027-06-10T09:00:00Z'; S23JM_RC=$?
+sa_restore _undeclared_band
+S23JM_NOTHING=0; case "$(cat "$WORK/sa_conf.err")" in *'nothing to confirm for'*) S23JM_NOTHING=1 ;; esac
+S23JM_SAME=0; cmp -s "$WORK/s23jm.before" "$S23JM/.change-confirmed" && S23JM_SAME=1
+unset -f gh npx
+if [ "$S23J1_ST0" = none-pending ] && [ "$S23J1_B0" = pending ] && [ "$S23J1_RC" -eq 0 ] && [ "$S23J1_EXIT" -eq 1 ] && [ "$S23J1_REC" = "$S23J_WANT" ] && [ "$S23J1_LEDGER" -eq 0 ] \
+   && [ "$S23J1_B1" = updated ] && [ "$S23J1_SINCE" = 2027-06-10 ] && [ "$S23J1_NC$S23J1_NK" = 00 ] && [ "$S23J1_CL" -eq 1 ] && [ "$S23J1_ST1" = none-pending ] \
+   && [ "$S23J2_B0" = pending ] && [ "$S23J2_RC" -eq 0 ] && [ "$S23J2_REC" = "$S23J_WANT" ] && [ "$S23J2_B1" = updated ] \
+   && [ "$S23J3_RC" -eq 0 ] && [ "$S23J3_REC" = "$S23J_WANT" ] \
+   && [ "$S23JM_RC" -ne 0 ] && [ "$S23JM_NOTHING" -eq 1 ] && [ "$S23JM_SAME" -eq 1 ]; then
+  PASS "S23j: the undeclared exit — on a trip that declares nobody, published, with the band 'pending' from an entry dated after the record or with no record at all, confirm offers the exit and at CONFIRM writes a two-line record naming the published plan, dated at the act, and no ledger; the build through the mapping reads 'updated' since 2027-06-10 with no approval pair, update reaches the clone, and the gate reads none-pending throughout; a legacy CRC baseline is met by the legacy token taken from the same read as the SHA-256 digest the record carries. ARMED-RED — with the band read as clear the same history is refused 'nothing to confirm', its record byte-unchanged"
+else
+  FAIL "S23j: J1 gate '$S23J1_ST0' build '$S23J1_B0' rc=$S23J1_RC exit-prompt=$S23J1_EXIT record [${S23J1_REC//$'\n'/ | }] ledger=$S23J1_LEDGER rebuilt '$S23J1_B1' since '$S23J1_SINCE' pair $S23J1_NC/$S23J1_NK clone=$S23J1_CL gate after '$S23J1_ST1'; J2 build '$S23J2_B0' rc=$S23J2_RC record [${S23J2_REC//$'\n'/ | }] rebuilt '$S23J2_B1'; J3 rc=$S23J3_RC record [${S23J3_REC//$'\n'/ | }] (want [${S23J_WANT//$'\n'/ | }]); mutant rc=$S23JM_RC nothing=$S23JM_NOTHING unchanged=$S23JM_SAME"
+fi
+
+# S23k — MUST NOT FIRE: every state the exit is not for, one cell each, and the CIAC-1 cell; then
+# the ordinary path's pin (cell m) and the exit's replace-with-preservation (cell n), which fires.
+s23k_cell() { # <trip> <stdin> -> "rc:exit-prompt:record-unchanged"
+  local d="$1" rc ex=0 same=0
+  if [ -e "$d/.change-confirmed" ] && [ ! -d "$d/.change-confirmed" ]; then cp "$d/.change-confirmed" "$WORK/s23k.before"; else : > "$WORK/s23k.before"; fi
+  sa_confirm "$d" "$2" '2027-06-10T09:00:00Z'; rc=$?
+  case "$(cat "$WORK/sa_conf.out")" in *'Clearing the pending notice'*) ex=1 ;; esac
+  if [ -d "$d/.change-confirmed" ]; then same=1
+  elif [ -e "$d/.change-confirmed" ]; then cmp -s "$WORK/s23k.before" "$d/.change-confirmed" && same=1
+  elif [ ! -s "$WORK/s23k.before" ]; then same=1; fi
+  printf '%s:%s:%s' "$rc" "$ex" "$same"
+}
+s23k_err() { case "$(cat "$WORK/sa_conf.err")" in *"$1"*) printf 1 ;; *) printf 0 ;; esac; }
+S23K=""; S23K_MSG=""
+d="$(s23j_trip s23ka 2027-05-30 2027-06-01)"; s_record "$d/.change-confirmed" "$SA_P16" confirmed
+S23K="$S23K a=$(s23k_cell "$d" CONFIRM)"; S23K_MSG="$S23K_MSG$(s23k_err 'nothing to confirm for')"
+d="$(sa_ptrip s23kb '' '' 16:30 '' pending)"; t6_trip "$d" 2027-06-05 >/dev/null
+S23K="$S23K b=$(s23k_cell "$d" CONFIRM)"; S23K_MSG="$S23K_MSG$(s23k_err 'nothing to confirm for')"
+d="$(sa_ptrip s23kc '' '' 16:30 '' pending)"; t6_trip "$d" 2027-06-05 >/dev/null; s_record "$d/.published-itinerary.next" "$SA_P16" published
+S23K="$S23K c=$(s23k_cell "$d" CONFIRM)"; S23K_MSG="$S23K_MSG$(s23k_err 'nothing to confirm for')"
+d="$(s23j_trip s23kd 2027-06-05)"; cp "$d/.published-itinerary" "$d/.published-itinerary.next"
+S23K="$S23K d=$(s23k_cell "$d" CONFIRM)"; S23K_MSG="$S23K_MSG$(s23k_err 'cannot confirm for')"
+d="$(sa_ptrip s23ke '' '' 14:00 "$SA_P16" pending)"; t6_trip "$d" 2027-06-05 >/dev/null; s_record "$d/.change-confirmed" "$SA_P16" confirmed
+S23K="$S23K e=$(s23k_cell "$d" '')"; S23K_MSG="$S23K_MSG$(s23k_err 'aborted — nothing confirmed')"
+d="$(s23j_trip s23kf 2027-06-05)"; s_record "$d/.change-confirmed" "$SA_P16" confirmed; printf 'threshold=all\napprover=Not A Key\n' > "$d/.approvers"
+S23K="$S23K f=$(s23k_cell "$d" CONFIRM)"; S23K_MSG="$S23K_MSG$(s23k_err 'nothing to confirm for')"
+d="$(s23j_trip s23kg 2027-06-05)"; printf 'digest=%s\n' "$SA_P16" > "$d/.change-confirmed"
+S23K="$S23K g=$(s23k_cell "$d" CONFIRM)"; S23K_MSG="$S23K_MSG$(s23k_err 'cannot be read as a dated confirmation')"
+d="$(s23j_trip s23kh 2027-06-05)"; mkdir "$d/.change-confirmed"
+S23K="$S23K h=$(s23k_cell "$d" CONFIRM)"; S23K_MSG="$S23K_MSG$(s23k_err 'cannot be read as a dated confirmation')"
+d="$(s23j_trip s23ki 2027-05-30 2027-06-05)"; s_record "$d/.change-confirmed" "$SA_P16" confirmed
+S23K="$S23K i=$(s23k_cell "$d" no)"; S23K_MSG="$S23K_MSG$(s23k_err 'aborted — nothing confirmed')"
+# j — the render moves while the organizer is at the prompt: every digest read after the organizer
+# answers is another plan's. The move is keyed on the prompt's own read, not on a count of reads, so
+# the cell holds however many reads come before the prompt. The marker sits beside the trip, which
+# each cell builds fresh.
+S23K_REAL="$(declare -f itinerary_digest | sed '1s/^itinerary_digest/s23k_real_digest/')"
+s23k_moving() { # <trip> <stdin> — confirm, with the render moving once the prompt's answer is read
+  ( eval "$S23K_REAL"
+    S23K_MV="$1.moved"
+    read() { builtin read "$@"; local rc=$?; if [ "${1:-}" = -r ] && [ "${2:-}" = ans ]; then : > "$S23K_MV"; fi; return "$rc"; }
+    itinerary_digest() { if [ -e "$S23K_MV" ]; then printf '%s' "$SA_WRONG"; else s23k_real_digest "$1"; fi; }
+    _confirm_has_terminal() { return 0; }; _iso_now() { printf '2027-06-10T09:00:00Z'; }
+    printf '%s\n' "$2" | cmd_confirm "$1" ) >"$WORK/sa_conf.out" 2>"$WORK/sa_conf.err"
+}
+d="$(s23j_trip s23kj 2027-05-30 2027-06-05)"; s_record "$d/.change-confirmed" "$SA_P16" confirmed; cp "$d/.change-confirmed" "$WORK/s23kj.before"
+s23k_moving "$d" CONFIRM
+S23K_J=0; cmp -s "$WORK/s23kj.before" "$d/.change-confirmed" && S23K_J=1; S23K_MSG="$S23K_MSG$(s23k_err 'changed while you were confirming')"
+# k — CIAC-1: the working copy differs from the published plan only after a spaced closing tag.
+s23k_page() { sa_page "$1.t" '' '' 16:30 pending; sed "s#<script>var mapReady=1;</script>#<script>var a = 1;</script ><p>Day 1 dinner at $2.</p><script>var b = 2;</script>#" "$1.t" > "$1"; }
+d="$WORK/sa-s23kk"; mkdir -p "$d/outputs"; s23k_page "$d/outputs/porto-travel-site.html" 20:00; s23k_page "$WORK/s23kk_pub.html" 19:00
+s_record "$d/.published-itinerary" "$(itinerary_digest "$WORK/s23kk_pub.html")" published; t6_trip "$d" 2027-06-05 >/dev/null; s_record "$d/.change-confirmed" "$SA_P16" confirmed
+S23K="$S23K k=$(s23k_cell "$d" '')"
+S23K_KM="$( eval "$(declare -f strip_to_itinerary_text | perl -pe 'BEGIN{$o=q{(?=[\t\n\f\r \/>])[^>]*>}} my $i=index($_,$o); substr($_,$i,length $o)=">" if $i>=0')"
+  s_record "$d/.published-itinerary" "$(itinerary_digest "$WORK/s23kk_pub.html")" published
+  _confirm_has_terminal() { return 0; }; printf '\n' | cmd_confirm "$d" 2>/dev/null | grep -c 'Clearing the pending notice' )"
+# m — the ordinary path, on a working copy that differs from the published plan, with the render
+# moving once the organizer answers: the code printed before the prompt is the plan's, and the read
+# after CONFIRM differs, so nothing is written. CONTROL: the same trip with no move records the plan.
+# Cells m and n stand after cell k's armed-red, which reads `$d` as cell k's trip.
+d="$(sa_ptrip s23km '' '' 14:00 "$SA_P16" pending)"; s_record "$d/.change-confirmed" "$SA_P16" confirmed; cp "$d/.change-confirmed" "$WORK/s23km.before"
+S23K_M_DG="$(itinerary_digest "$d/outputs/porto-travel-site.html")"
+s23k_moving "$d" CONFIRM; S23K_M_RC=$?
+S23K_M=0; cmp -s "$WORK/s23km.before" "$d/.change-confirmed" && S23K_M=1; S23K_MSG="$S23K_MSG$(s23k_err 'changed while you were confirming')"
+S23K_M_CODE=0; case "$(cat "$WORK/sa_conf.out")" in *"Code, for comparing by eye: $(_code_prefix "$S23K_M_DG")"*) S23K_M_CODE=1 ;; esac
+d="$(sa_ptrip s23kmc '' '' 14:00 "$SA_P16" pending)"; s_record "$d/.change-confirmed" "$SA_P16" confirmed
+sa_confirm "$d" CONFIRM '2027-06-10T09:00:00Z'; S23K_MC_RC=$?; S23K_MC_REC="$(cat "$d/.change-confirmed")"
+# n — the record the exit replaces names another plan: the prompt names it by its code, and the bytes
+# it replaces are kept beside the record (ADR-007 § 2, the declared path's shape). CONTROL: J1, whose
+# record names the published plan, keeps nothing.
+d="$(s23j_trip s23kn 2027-05-30 2027-06-05)"; s_record "$d/.change-confirmed" "$SA_WRONG" confirmed; cp "$d/.change-confirmed" "$WORK/s23kn.before"
+sa_confirm "$d" CONFIRM '2027-06-10T09:00:00Z'; S23K_N_RC=$?
+S23K_N_NAMED=0; case "$(cat "$WORK/sa_conf.out")" in *"names another version of the plan (code $(_code_prefix "$SA_WRONG"))"*) S23K_N_NAMED=1 ;; esac
+S23K_N_REC="$(cat "$d/.change-confirmed")"
+S23K_N_KEPT=0; for f in "$d"/.change-confirmed.replaced-*; do if [ -f "$f" ] && cmp -s "$WORK/s23kn.before" "$f"; then S23K_N_KEPT=$((S23K_N_KEPT + 1)); fi; done
+S23K_N_CTL=0; for f in "$S23J1"/.change-confirmed.replaced-*; do if [ -e "$f" ]; then S23K_N_CTL=$((S23K_N_CTL + 1)); fi; done
+if [ "$S23K" = ' a=1:0:1 b=1:0:1 c=1:0:1 d=1:0:1 e=1:0:1 f=1:0:1 g=1:0:1 h=1:0:1 i=1:1:1 k=1:0:1' ] && [ "$S23K_MSG" = 11111111111 ] && [ "$S23K_J" -eq 1 ] && [ "$S23K_KM" = 1 ] \
+   && [ "$S23K_M_RC" -ne 0 ] && [ "$S23K_M" -eq 1 ] && [ "$S23K_M_CODE" -eq 1 ] && [ "$S23K_MC_RC" -eq 0 ] && [ "$S23K_MC_REC" = "$(printf 'digest=%s\nconfirmed=2027-06-10T09:00:00Z' "$S23K_M_DG")" ] \
+   && [ "$S23K_N_RC" -eq 0 ] && [ "$S23K_N_NAMED" -eq 1 ] && [ "$S23K_N_REC" = "$S23J_WANT" ] && [ "$S23K_N_KEPT" -eq 1 ] && [ "$S23K_N_CTL" -eq 0 ]; then
+  PASS "S23k: the exit is not offered where it is not for, and writes nothing — no entry later than the record, no baseline, no baseline with a staged record naming the plan, a baseline with a staged record (undetermined), a working copy that differs from the published plan, a malformed declaration, a record with no confirmed= date, a record that is a directory, a declined CONFIRM, and a render that moved while the organizer was at the prompt — each refused with its own message and its record byte-unchanged; CIAC-1 — a working copy that differs only after a spaced closing tag meets the change confirmation, not the exit, and ARMED-RED, with the digest's end tag put back to the exact one, the same trip is offered the exit. On the ordinary path the plan's code is printed before the prompt, and a render that moves at the prompt is refused, while the same trip unmoved records its plan; and where the record the exit replaces names another plan, the prompt names it by its code, the record then names the published plan, and the replaced bytes are kept beside it, which a record naming the published plan never leaves"
+else
+  FAIL "S23k: cells (rc:exit-prompt:record-unchanged)$S23K (want each 1:0:1, and i — the exit offered and declined — 1:1:1), messages $S23K_MSG (want 11111111111), mid-prompt record unchanged=$S23K_J (want 1), CIAC-1 armed-red exit offered=$S23K_KM (want 1); ordinary path moved at the prompt rc=$S23K_M_RC record unchanged=$S23K_M code printed=$S23K_M_CODE (want non-zero, 1, 1), unmoved control rc=$S23K_MC_RC record [${S23K_MC_REC//$'\n'/ | }]; another plan's record replaced rc=$S23K_N_RC named=$S23K_N_NAMED record [${S23K_N_REC//$'\n'/ | }] kept copies=$S23K_N_KEPT (want 0, 1, the published plan, 1), J1's kept copies=$S23K_N_CTL (want 0)"
+fi
+
+# S23l — THE SEAM AND THE ORDER, from the parsed body: both paths call _confirm_has_terminal, no
+# literal terminal test is left in cmd_confirm, and the test precedes the record write.
+S23L_C="$(declare -f cmd_confirm)"
+S23L_LIT=0; case "$S23L_C" in *'[ -t 0 ]'*) S23L_LIT=1 ;; esac
+S23L_SEAM=0; case "$S23L_C" in *_confirm_has_terminal*) S23L_SEAM=1 ;; esac
+S23L_AT_T="${S23L_C%%_confirm_has_terminal*}"; S23L_AT_W="${S23L_C%%digest=%s*}"
+S23L_SENS=0; case "$(declare -f _confirm_has_terminal)" in *'[ -t 0 ]'*) S23L_SENS=1 ;; esac
+if [ "$S23L_LIT" -eq 0 ] && [ "$S23L_SEAM" -eq 1 ] && [ "${#S23L_AT_T}" -lt "${#S23L_AT_W}" ] && [ "$S23L_SENS" -eq 1 ]; then
+  PASS "S23l: cmd_confirm's parsed body carries no literal terminal test and calls _confirm_has_terminal (byte ${#S23L_AT_T}) before its record write (byte ${#S23L_AT_W}); the same scan finds the literal in _confirm_has_terminal itself, so the zero is a measurement"
+else
+  FAIL "S23l: literal left=$S23L_LIT (want 0), seam called=$S23L_SEAM (want 1), test at ${#S23L_AT_T} before write at ${#S23L_AT_W}, literal in the seam=$S23L_SENS (want 1)"
+fi
+
+# S23m — THE EXIT'S CHECK BINDS THE DIGEST ITS RECORD NAMES, ON A LEGACY BASELINE (the scope-lock's
+# amendment 2). A legacy CRC baseline, and every itinerary_digest read after the first (the state's)
+# returns another plan's digest. The exit takes the SHA-256 token it records and the legacy token it
+# checks against the baseline from one projection read (_itinerary_digest_pair), so the read after
+# CONFIRM differs from the pinned plan and is refused, writing nothing. Through the shim the check
+# re-read the render on its own and never saw the token the record would carry, and the record named
+# the other plan. CONTROL: S23j's J3, the same baseline with no stub, records the plan.
+d="$(s23j_trip s23m 2027-06-05)"
+printf 'digest=%s\npublished=2027-05-30T09:00:00Z\n' "$(_legacy_itinerary_digest "$d/outputs/porto-travel-site.html")" > "$d/.published-itinerary"
+: > "$WORK/s23m.n"
+( eval "$S23K_REAL"
+  itinerary_digest() { printf x >> "$WORK/s23m.n"; if [ "$(wc -c < "$WORK/s23m.n")" -ge 2 ]; then printf '%s' "$SA_WRONG"; else s23k_real_digest "$1"; fi; }
+  _confirm_has_terminal() { return 0; }; _iso_now() { printf '2027-06-10T09:00:00Z'; }; printf 'CONFIRM\n' | cmd_confirm "$d" ) >"$WORK/sa_conf.out" 2>"$WORK/sa_conf.err"; S23M_RC=$?
+S23M_NONE=0; [ ! -e "$d/.change-confirmed" ] && [ ! -L "$d/.change-confirmed" ] && S23M_NONE=1
+S23M_MSG="$(s23k_err 'changed while you were confirming')"
+S23M_REC="$(cat "$d/.change-confirmed" 2>/dev/null)"
+if [ "$S23M_RC" -ne 0 ] && [ "$S23M_NONE" -eq 1 ] && [ "$S23M_MSG" = 1 ] && [ "$S23J3_RC" -eq 0 ] && [ "$S23J3_REC" = "$S23J_WANT" ]; then
+  PASS "S23m: on a legacy CRC baseline the exit's check binds the digest its record names — with every digest read after the state's naming another plan, confirm refuses at the write ('changed while you were confirming', rc=$S23M_RC) and no record is written, because the legacy token met against the baseline and the SHA-256 token recorded come from one read; CONTROL — the same baseline with no stub (S23j's J3) records the published plan"
+else
+  FAIL "S23m: legacy baseline with every later read naming another plan rc=$S23M_RC (want non-zero), no record=$S23M_NONE (want 1) record [${S23M_REC//$'\n'/ | }], refusal message=$S23M_MSG (want 1); control J3 rc=$S23J3_RC record [${S23J3_REC//$'\n'/ | }] (want 0 and [${S23J_WANT//$'\n'/ | }]). The record can name a plan the check never compared with the baseline"
 fi
 
 # ── S24a — ERASURE (#719 INT-10). Substituting one approver's key with the erasure token's key
@@ -12735,12 +12909,12 @@ pp_cannot_disclose_assert "PP4"
 
 # ── PP5 — single-limb: the announcement is not conditional on the CALLER. This is the arm
 # that fails the day a `[ -t 1 ]` gate is reintroduced. Its sensitivity arm runs the
-# identical scan over cmd_confirm, which does gate on a terminal, so the zero here is a
-# measurement rather than a scan that matches nothing.
+# identical scan over _confirm_has_terminal, the terminal test both of confirm's paths call, so the
+# zero here is a measurement rather than a scan that matches nothing.
 pp_single_limb_assert() { # <id>
   local id="$1" body="" ctl="" nd n_gate=0 n_ctl=0
   body="$(declare -f announce_passphrase_file 2>/dev/null)"
-  ctl="$(declare -f cmd_confirm 2>/dev/null)"
+  ctl="$(declare -f _confirm_has_terminal 2>/dev/null)"
   for nd in '-t 0' '-t 1' '/dev/tty'; do
     n_gate=$(( n_gate + $(pp_count "$body" "$nd") ))
   done
@@ -12748,11 +12922,11 @@ pp_single_limb_assert() { # <id>
   if [ "${#body}" -lt 300 ]; then
     FAIL "$id: announce_passphrase_file's parsed body is ${#body} bytes, below the 300-byte floor — the subject is absent or a stub and the terminal-gate zero below would be an empty scan"
   elif [ "$n_ctl" -lt 1 ]; then
-    FAIL "$id: SENSITIVITY ARM DID NOT FIRE — the identical scan over cmd_confirm, which does gate on a terminal, found $n_ctl '-t 0' site(s). The detector is not reading what it claims, so the zero over the announcer proves nothing"
+    FAIL "$id: SENSITIVITY ARM DID NOT FIRE — the identical scan over _confirm_has_terminal, the terminal test both of confirm's paths call, found $n_ctl '-t 0' site(s) in _confirm_has_terminal. The detector is not reading what it claims, so the zero over the announcer proves nothing"
   elif [ "$n_gate" -ne 0 ]; then
     FAIL "$id: the announcer branches on the CALLER — $n_gate terminal-or-tty construct(s) in its body. A privacy property that depends on how the script was invoked takes its disclosing limb on any host that allocates a pseudo-terminal, so the same script withholds or discloses according to how it was run — and a property the caller decides is not a property this guard holds"
   else
-    PASS "$id: the announcement is UNCONDITIONAL on the caller — 0 '-t 0' / '-t 1' / '/dev/tty' constructs over a ${#body}-byte parsed body, while the identical scan over cmd_confirm found $n_ctl, so the zero is a measurement"
+    PASS "$id: the announcement is UNCONDITIONAL on the caller — 0 '-t 0' / '-t 1' / '/dev/tty' constructs over a ${#body}-byte parsed body, while the identical scan over _confirm_has_terminal, the terminal test both of confirm's paths call, found $n_ctl, so the zero is a measurement"
   fi
 }
 pp_single_limb_assert "PP5"

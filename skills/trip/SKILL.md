@@ -1186,16 +1186,15 @@ to `is-updated` alone, the pending band would never decay either. It would **lat
 organizer confirms, the plan republishes, and the site goes on telling every traveller a change
 is pending, indefinitely. **What clears `pending` is an approval recorded later than the newest
 entry** — an event with its own moment, recorded by `confirm` at a terminal, and nothing rewritten.
-A change abandoned before any approval is the case to state: it leaves the working copy back on the
-published plan with nothing new to approve, and what clears the band then turns on whether the trip
-declares approvers. On a trip that declares them it is still one `confirm` away — a terminal act that
-leaves the published plan's own approvals meeting the threshold re-dates the approval record past
-the abandoned change's entry, the exception the paragraph below names — and where those approvals
-have fallen short of the threshold since publication, the band stays until an act meets it again.
-On a trip that declares nobody, `confirm` refuses the unchanged plan, so the band stays until a new
-change is confirmed and published. Where a revert, a retire or that exception clears the band, the
-next build shows an unchanged published plan as *recently updated* for up to seven days, with the
-plan's own count and code after a revert or that exception and with none after a retire.
+A change abandoned before any approval leaves the working copy back on the published plan with
+nothing new to approve, and one rule clears its band on both paths: `confirm`, run on the published
+plan, dates the approval record past the abandoned change's entry — the exception the paragraph
+below names. Where a trip declares approvers it does so once the plan's own approvals meet the
+threshold, and the band otherwise stays until an act meets it; where it declares nobody it does so
+at the organizer's CONFIRM, and refuses only a record present that it cannot read as dated. After a
+revert, a retire or that exception the next build shows the unchanged plan as *recently updated* for
+up to seven days, with the plan's own count and code after a revert or after that exception on a
+trip that declares approvers, and with none otherwise.
 
 **The same record dates the `updated` state, and it is why that limb does not anchor to this
 run.** `confirm` writes `confirmed=` at the instant the approval event is recorded — the
@@ -1207,12 +1206,13 @@ moves only at the organizer's own act, and never for a plan that has already pub
 exceptions, both reached once a change is abandoned and the working copy is back on the published
 plan. The first is a revert: where the record names the abandoned plan, `confirm` re-anchors the
 record to the published plan — or, where that plan's own approvals fall short, offers to retire it.
-The second is a change abandoned before any approval: on a trip that declares approvers, where the
-record still names the published plan and `trips/<slug>/outputs/change-summary.md` holds an entry
-dated after the `YYYY-MM-DD` prefix of its `confirmed=` — the entry that change raised, read
-exactly as the mapping above reads entries, and never through `status` — a terminal act that
-leaves that plan's own approvals meeting the threshold re-stamps `confirmed=` at the act instead of
-keeping it. Each of those writes is dated at its act, because only that date post-dates the entry
+The second is a change abandoned before any approval, where
+`trips/<slug>/outputs/change-summary.md` holds an entry the mapping above reads as undecided — the
+entry that change raised, read exactly as the mapping reads entries, and never through `status`:
+on a trip that declares approvers, where the record still names the published plan, a terminal act
+that leaves that plan's own approvals meeting the threshold re-stamps `confirmed=` at the act
+instead of keeping it; on a trip that declares nobody, `confirm` records the published plan as
+confirmed at the act. Each of those writes is dated at its act, because only that date post-dates the entry
 raised for the abandoned change. A
 `coordination-since` re-derived from the build would be re-stamped on every later rebuild:
 § 3's window would restart each time instead of decaying, and a trip rebuilt months later would
