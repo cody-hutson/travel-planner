@@ -56,12 +56,12 @@
 #     label's own indent or shallower; a heading no deeper than the label; a blank line, but
 #     only when the next line that is not blank is no deeper than the label, so a loose
 #     sub-item past a blank line goes too; the closing delimiter of a fenced block the label
-#     sits inside; and, in the frontmatter, its closing `---` or the next key at the label's
-#     indent. So a deeper-indented line goes (a wrapped value, a nested sub-list, a heading
-#     nested in the payload, a fenced block it opens, which goes whole), and so does a line no
-#     deeper that is not a list item (markdown's lazy continuation). A selector line found
-#     inside the payload is taken with it and never raises the indent the payload ends at: it
-#     can lower it, so a shallower selector line's own sub-items go too.
+#     sits inside; and, in the frontmatter, its closing `---`, so every key after a selector
+#     key goes with it. So a deeper-indented line goes (a wrapped value, a nested sub-list, a
+#     heading nested in the payload, a fenced block it opens, which goes whole), and so does a
+#     line no deeper that is not a list item (markdown's lazy continuation). A selector line
+#     found inside the payload is taken with it and never raises the indent the payload ends
+#     at: it can lower it, so a shallower selector line's own sub-items go too.
 # This is WIDER than the publish guard's continuation limb, and a slightly over-broad
 # omission is the accepted cost: a heading's section goes whole, kept lines in it included.
 #
@@ -306,7 +306,6 @@ pj_project_file() {   # pj_project_file <selectors> <file>
         else if (first && plain && setext(u)) { taking = 2; lvl = index(u, "=") ? 1 : 2; next }
         else if (!inf && !infm && hlevel(u) > 0 && width(u) <= at) taking = 0
         else if (label(u)) { w = width(u); if (w < at) at = w; if (opened) payf = 1; next }
-        else if (infm && width(u) <= at && u ~ /^[ \t]*[A-Za-z0-9_][A-Za-z0-9_.-]*[ \t]*:/) taking = 0
         else if (infm || width(u) > at || !item(u)) { if (opened) payf = 1; next }
         else taking = 0
       }
