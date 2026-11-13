@@ -29167,8 +29167,10 @@ md_flips wtadr26_cell 'WT-ADR26' wtadr26_assert
 #                own indent, a fenced block and an indented code line inside a heading's
 #                section, neither of which ends it, a label inside a bracket, a column
 #                header naming the field in more than one word, a blockquoted heading inside
-#                a section, which does not end it, and a setext heading over a paragraph of
-#                more than one line (16 shapes, 37 canaries).
+#                a section, which does not end it, a setext heading over a paragraph of
+#                more than one line, a passport heading and a setext heading inside a
+#                blockquote, each ended by a heading in that quote, and a key cell holding
+#                the plural selector alone (19 shapes, 40 canaries).
 #          PJ11  the delimiters a payload must stop at, each with kept lines after it: CRLF
 #                line endings, the closer of a fenced block the label sits in, and the
 #                frontmatter's closing `---`, with and without a byte-order mark, a key after
@@ -29177,8 +29179,11 @@ md_flips wtadr26_cell 'WT-ADR26' wtadr26_assert
 #                it, of the opener's own character, an opener a tilde run can make, no
 #                opener made by an inline code span, and a heading mark inside a fence, a
 #                label there and never a section; table rows whose text opens with a
-#                selector word but holds no label, which are kept; and a thematic break after
-#                a list item in a payload, which is no setext underline (12 shapes, 17 canaries).
+#                selector word but holds no label, which are kept, and a cell carrying a colon
+#                that opens with no selector; a thematic break after a list item, after a
+#                blank line in a payload, or after a list-item label, none of which is a
+#                setext underline; and a line of two backticks, which opens no fence
+#                (16 shapes, 23 canaries).
 #   PJ12 fail closed: a source holding a carriage return that no line feed follows — a model
 #        of bare-CR lines, and a traveller file whose last byte is one — exits exactly 2 with
 #        empty stdout and its own cause token on stderr, never a projection of a file read as
@@ -29715,6 +29720,29 @@ printf '%s\n' '## Rowan' \
   '' \
   '## Sam [OPERATOR-PROVIDED] [THIRD-PARTY]' \
   '- **Needs:** a step-free route · KEEP-PJS64' > "$PJT_SF"
+pjt_shape 'PJ10[sec-quoted]' shape-sec-quoted model 'CNRY-PJS67' 'KEEP-PJS67 KEEP-PJS68' '> ### Passport' - - 'a passport heading inside a blockquote, its section ended by a heading of the same level in that quote'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS67' \
+  '> ### Passport' \
+  '> Zorvanian · CNRY-PJS67' \
+  '> ### Rooming' \
+  '> - own room · KEEP-PJS68' > "$PJT_SF"
+pjt_shape 'PJ10[setext-quoted]' shape-setext-quoted model 'CNRY-PJS68' 'KEEP-PJS69 KEEP-PJS70' '> Passport
+> --------' - - 'a setext heading inside a blockquote, its section ended by a heading of the same level in that quote'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS69' \
+  '' \
+  '> Passport' \
+  '> --------' \
+  '> valid to 2031 · CNRY-PJS68' \
+  '> ## Pace' \
+  '> - slow mornings · KEEP-PJS70' > "$PJT_SF"
+pjt_shape 'PJ10[table-plural]' shape-table-plural model 'CNRY-PJS69' 'KEEP-PJS71' '| Passports |' - - 'a key cell holding the plural selector alone, its value in the next cell'
+printf '%s\n' '## Rowan' \
+  '| Field | Value |' \
+  '|---|---|' \
+  '| Passports | two, Zorvanian and Ostrian · CNRY-PJS69 |' \
+  '| Pace | slow mornings · KEEP-PJS71 |' > "$PJT_SF"
 
 pjt_shape 'PJ11[crlf]' shape-crlf model 'CNRY-PJS26 CNRY-PJS27' 'KEEP-PJS24 KEEP-PJS25' "${PJT_CR}
 ${PJT_CR}
@@ -29824,6 +29852,41 @@ printf '%s\n' '## Rowan' \
   '  - issued abroad · CNRY-PJS66' \
   '---' \
   '- **Pace:** slow mornings · KEEP-PJS66' > "$PJT_SF"
+pjt_shape 'PJ11[setext-blank]' shape-setext-blank model 'CNRY-PJS70 CNRY-PJS71' 'KEEP-PJS72 KEEP-PJS73' '    issued abroad · CNRY-PJS71
+---' - - 'a thematic break after a blank line in a paragraph label payload, which is no setext underline, with a kept line after it'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS72' \
+  '' \
+  'Passport: Zorvanian · CNRY-PJS70' \
+  '' \
+  '    issued abroad · CNRY-PJS71' \
+  '---' \
+  '- **Pace:** slow mornings · KEEP-PJS73' > "$PJT_SF"
+pjt_shape 'PJ11[setext-item]' shape-setext-item model 'CNRY-PJS72' 'KEEP-PJS74 KEEP-PJS75' '- **Passport:** Zorvanian · CNRY-PJS72
+---' - - 'a thematic break after a list-item label, which is no setext underline, with a kept line after it'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS74' \
+  '- **Passport:** Zorvanian · CNRY-PJS72' \
+  '---' \
+  '- **Pace:** slow mornings · KEEP-PJS75' > "$PJT_SF"
+pjt_shape 'PJ11[table-colon]' shape-table-colon model 'CNRY-PJS73' 'KEEP-PJS76' 'mornings: no early' - - 'a cell carrying a colon whose text opens with no selector, kept, beside a row the field labels'
+printf '%s\n' '## Rowan' \
+  '| Field | Value |' \
+  '|---|---|' \
+  '| Passport | Zorvanian · CNRY-PJS73 |' \
+  '| Pace | slow mornings: no early starts · KEEP-PJS76 |' > "$PJT_SF"
+pjt_shape 'PJ11[fence-short]' shape-fence-short model 'CNRY-PJS74 CNRY-PJS75' 'KEEP-PJS77 KEEP-PJS78' '``
+## Passport' - - 'a line of two backticks, which opens no fence, then a heading naming the field over a two-paragraph value'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS77' \
+  '``' \
+  '## Passport' \
+  'Zorvanian · CNRY-PJS74' \
+  '' \
+  'valid to 2031 · CNRY-PJS75' \
+  '' \
+  '## Sam [OPERATOR-PROVIDED] [THIRD-PARTY]' \
+  '- **Needs:** a step-free route · KEEP-PJS78' > "$PJT_SF"
 
 pjt_i=0
 while [ "$pjt_i" -lt "${#PJT_SN[@]}" ]; do
