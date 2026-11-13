@@ -609,7 +609,7 @@ strip_to_text() { # <html_file> -> visible text on stdout
 # the tag-name rule still drops a word written directly after a `<`, with nothing but spaces or a
 # `/` between them — the spaced form included, which a browser shows as text — the visible and
 # joined projections read the same span as a tag up to the next `>`, and the shape projection drops
-# the word as a tag name, so such a word can go unread by all four arms. Markup after a <script> or <style> closing tag written with a space before its
+# the word as a tag name, so such a word can go unread by all six arms. Markup after a <script> or <style> closing tag written with a space before its
 # `>` is markup like any other, so a word written directly after a `<` there is read as a tag name,
 # as everywhere else in markup.
 #
@@ -702,7 +702,9 @@ strip_to_published_text() { # <html_file> -> retrievable non-machinery content o
 # Its <script>/<style> deletion ends at an exact closing tag only, where a browser also ends a
 # body at one written with a space, because ending it there too would delete a body whose only
 # closing tag is spaced and so let through a class of pages the guard before 0.60.0 blocked by
-# reading that body as visible text (M1x, M1y).
+# reading that body as visible text (M1x, M1y). The reading that ends the body where the browser
+# does is the guard's fifth arm, strip_to_text_blocks_at_browser_end — this projection, unchanged,
+# over the copy _browser_end_tags writes; the guard ORs the two, so neither catch is lost (M9a).
 strip_to_text_blocks() { # <html_file> -> visible text with block sentinels on stdout
   perl -0777 -pe "
     s{<(script|style)\b[^>]*>.*?</\1>}{ \$& =~ tr/\n//cdr }gise;
@@ -735,6 +737,7 @@ strip_to_text_blocks() { # <html_file> -> visible text with block sentinels on s
 # Its stderr is kept, by the rule stated above strip_to_published_text: no fallback, no discard.
 # Its <script>/<style> deletion ends at an exact closing tag only, as strip_to_text_blocks's does,
 # because ending it at a spaced one too would let through pages the guard before 0.60.0 blocked.
+# Its browser-ended twin is the guard's sixth arm, strip_to_joined_text_at_browser_end (M9a).
 strip_to_joined_text() { # <html_file> -> visible text with INLINE tags removed, NO space
   perl -0777 -pe "
     s{<(script|style)\b[^>]*>.*?</\1>}{ \$& =~ tr/\n//cdr }gise;
@@ -742,6 +745,34 @@ strip_to_joined_text() { # <html_file> -> visible text with INLINE tags removed,
     s{<[^>\n]+>}{}g;
     s{<[^>]+>}{ ' ' . (\$& =~ tr/\n//cdr) }ge;
   " "$1"
+}
+
+# A <script> OR <style> BODY ENDED WHERE A BROWSER ENDS IT (#2117, the record on ending a body where the
+# browser does). A browser ends such a body at the first `</` followed by the element's name, in any
+# letter case, and then whitespace (tab, line feed, form feed, carriage return or space), a `/` or a
+# `>`; the end tag then runs to its `>`. The visible and joined projections end a body at the exact
+# tag alone, `</script>` or `</style>`, so they delete the stretch between an end tag of another form
+# and a later exact one, and read as visible text a body whose only end tag is of another form. This
+# pre-pass writes each body's first browser end tag in the exact form, so either projection, run over
+# its output, ends the body where the browser does. It changes nothing else: on a page whose every
+# end tag is already exact its output is byte-identical to its input. Newline-preserving, for the
+# reason stated above strip_to_published_text: the newlines an end tag spans are re-emitted after it.
+_browser_end_tags() { # <html_file> -> the file, each <script>/<style> body's first browser end tag written exactly, on stdout
+  perl -0777 -pe 's{(<(script|style)\b[^>]*>.*?)(</\2(?=[\t\n\f\r />])[^>]*>)}{ $1 . "</" . $2 . ">" . ($3 =~ tr/\n//cdr) }gise' "$1"
+}
+
+# The FIFTH and SIXTH projections: the visible and the joined projection, each over a copy whose
+# <script>/<style> bodies end where a browser ends them. Each is its twin, unchanged, read over
+# _browser_end_tags's output, so the guard ORs two readings of where a body ends and keeps every
+# catch each makes: the twin's reading of a body whose only end tag is of another form (M1x, M1y),
+# and this reading of the stretch after such an end tag, which the twin deletes. On a page whose end
+# tags are all exact each stream is byte-identical to its twin's. `pipefail` is set inside, so a
+# pre-pass that fails is this projection's failure, which the guard refuses.
+strip_to_text_blocks_at_browser_end() { # <html_file> -> strip_to_text_blocks over the browser-ended copy, on stdout
+  ( set -o pipefail; _browser_end_tags "$1" | strip_to_text_blocks /dev/stdin )
+}
+strip_to_joined_text_at_browser_end() { # <html_file> -> strip_to_joined_text over the browser-ended copy, on stdout
+  ( set -o pipefail; _browser_end_tags "$1" | strip_to_joined_text /dev/stdin )
 }
 
 # The FOURTH projection: the published projection as the guard before 0.60.0 wrote it, kept as
@@ -754,8 +785,9 @@ strip_to_joined_text() { # <html_file> -> visible text with INLINE tags removed,
 # (`title="k= m="` against `title="Ruritanian= passport, valid to 2033"`), so no one reading can
 # hold both. The guard ORs its arms, so this one can only add a catch: it restores every catch the
 # earlier reading made, among them a value split by a tag on neither list inside a script string,
-# and it can bring back only that reading's own false aborts. It is read last and credited last,
-# so a page another arm catches keeps that arm's name. It is the earlier program with #2072's
+# and it can bring back only that reading's own false aborts. It is read and credited after the
+# joined arm and before the two browser-ended readings (#2117), so a page another arm catches keeps
+# that arm's name. It is the earlier program with #2072's
 # anchors, a possessive tag head and a `=` rule anchored at the start of a name run, which change
 # none of its output and make it linear on a long run of either. Newline-preserving, for the
 # reason stated above strip_to_published_text, and verify_publishable_content is its one reader.
@@ -2352,8 +2384,8 @@ $rmerge	$rtarget"
 # field only. Stage 8: this is a decision, not an inconsistency to fix.
 verify_publishable_content() { # <site_html> <trip_dir>
   local site_html="${1:-}" trip_dir="${2:-}"
-  local recs rc rcv rcp rcj rcs work rfile pfile jfile sfile vfile n np nj ns field rule value hit=0 undet=0
-  local locv="" locp="" locj="" locs="" loc="" proj="" stv=0 stp=0 stj=0 sts=0
+  local recs rc rcv rcp rcj rcs rcb rck work rfile pfile jfile sfile bfile kfile vfile n np nj ns nb nk field rule value hit=0 undet=0
+  local locv="" locp="" locj="" locs="" locb="" lock="" loc="" proj="" stv=0 stp=0 stj=0 sts=0 stb=0 stk=0
 
   if [ -z "$site_html" ] || [ -z "$trip_dir" ]; then
     warn "guard: content check needs a rendered site and a trip dir"; return 2
@@ -2363,17 +2395,19 @@ verify_publishable_content() { # <site_html> <trip_dir>
   fi
 
   work="$(mktemp -d)" || { warn "guard: could not stage the content check"; return 2; }
-  rfile="$work/render.words"; pfile="$work/published.words"; jfile="$work/joined.words"; sfile="$work/shape.words"; vfile="$work/value.words"
+  rfile="$work/render.words"; pfile="$work/published.words"; jfile="$work/joined.words"; sfile="$work/shape.words"; bfile="$work/browser-visible.words"; kfile="$work/browser-joined.words"; vfile="$work/value.words"
 
-  # FOUR projections of the same file, matched independently, because publish copies the
+  # SIX projections of the same file, matched independently, because publish copies the
   # file and not the painting of it. The visible arm is what a reader sees; the published
   # arm is what a reader can retrieve; the joined arm is what a reader sees once an inline
   # tag that SPLIT A WORD is closed up; the shape arm is what a reader can retrieve read as the
   # guard before 0.60.0 read it, every tag and attribute name found by its shape, so a page that
-  # guard blocked is blocked still (ADR-050). Each runs through _guard_arm in `decode` mode, so all
-  # four use the SAME _norm_words on both sides of the comparison — one normalization, eight
-  # streams, no chance of the sides drifting — and all four resolve a character reference
-  # before tokenization rather than on whichever arm was remembered.
+  # guard blocked is blocked still (ADR-050); the fifth and sixth are the visible and the joined
+  # arm over a copy whose <script>/<style> bodies end where a browser ends them, so the stretch
+  # after an end tag of another form is read as the page it is (#2117). Each runs through
+  # _guard_arm in `decode` mode, so all six use the SAME _norm_words on both sides of the
+  # comparison — one normalization, twelve streams, no chance of the sides drifting — and all six
+  # resolve a character reference before tokenization rather than on whichever arm was remembered.
   #
   # EACH ARM'S STATUS IS READ, AND AN ARM THE GUARD COULD NOT READ IS UNDETERMINED — NEVER A
   # PASS. An arm is a pipeline of four stages — projection, entity decoding, line sentinels,
@@ -2434,12 +2468,32 @@ verify_publishable_content() { # <site_html> <trip_dir>
   fi
   # No word floor and no empty stream on the shape arm, for the published arm's reason: it removes
   # only machinery, so after the floor above it carries the visible words too, and an empty one is
-  # refused as a failed one is. Read last, so every refusal still comes before the class is read.
+  # refused as a failed one is. Read after the joined arm and before the two browser-ended readings,
+  # so every refusal still comes before the class is read.
   _guard_arm decode strip_to_shape_text "$site_html" "$sfile" || sts=$?
   ns="$(_guard_words "$sfile")"; ns="${ns:-0}"
   if [ "$sts" -ne 0 ] || [ "$ns" -eq 0 ]; then
     rm -rf "$work"
     warn "guard: a projection of $site_html could not be read (markup read by shape (every tag and attribute name dropped)): its pipeline exited $sts and yielded $ns words. A projection that failed or yielded nothing has not read the render, so what would be published cannot be certified, and an undetermined result is a failure, never a clean pass. The PROJECTION is the subject here, not the render or a model record: editing either clears nothing until the projection runs."
+    return 2
+  fi
+  # The two readings of a body ended where a browser ends it (#2117). No word floor: on a render that
+  # cleared the floor above, a stream with no words means a projection that did not run, or a render
+  # whose every visible word sits inside a <script> or <style> body closed only by an end tag of
+  # another form, which a browser does not show; both are refused, the second a false abort in the
+  # closed direction. Read after the shape arm, so every refusal still comes before the class is read.
+  _guard_arm decode strip_to_text_blocks_at_browser_end "$site_html" "$bfile" || stb=$?
+  nb="$(_guard_words "$bfile")"; nb="${nb:-0}"
+  if [ "$stb" -ne 0 ] || [ "$nb" -eq 0 ]; then
+    rm -rf "$work"
+    warn "guard: a projection of $site_html could not be read (visible text, a script or style body ended where a browser ends it): its pipeline exited $stb and yielded $nb words. A projection that failed or yielded nothing has not read the render, so what would be published cannot be certified, and an undetermined result is a failure, never a clean pass. The PROJECTION is the subject here, not the render or a model record: editing either clears nothing until the projection runs."
+    return 2
+  fi
+  _guard_arm decode strip_to_joined_text_at_browser_end "$site_html" "$kfile" || stk=$?
+  nk="$(_guard_words "$kfile")"; nk="${nk:-0}"
+  if [ "$stk" -ne 0 ] || [ "$nk" -eq 0 ]; then
+    rm -rf "$work"
+    warn "guard: a projection of $site_html could not be read (joined markup, a script or style body ended where a browser ends it): its pipeline exited $stk and yielded $nk words. A projection that failed or yielded nothing has not read the render, so what would be published cannot be certified, and an undetermined result is a failure, never a clean pass. The PROJECTION is the subject here, not the render or a model record: editing either clears nothing until the projection runs."
     return 2
   fi
 
@@ -2454,7 +2508,7 @@ verify_publishable_content() { # <site_html> <trip_dir>
     [ -n "${rule:-}" ] || continue
     printf '%s' "$value" | _norm_words > "$vfile"
     # _guard_match now writes the winning render position to stdout on a HIT and nothing
-    # at all otherwise, so all four arms are captured. The exit-status contract is unchanged,
+    # at all otherwise, so all six arms are captured. The exit-status contract is unchanged,
     # and so is the errexit behaviour: this function already runs as the left operand of
     # `||` at its call site, which suspends errexit through the whole body — the same
     # property the `rcv=$?` idiom depended on before.
@@ -2462,7 +2516,9 @@ verify_publishable_content() { # <site_html> <trip_dir>
     locp="$(_guard_match "$rule" "$vfile" "$pfile")"; rcp=$?
     locj="$(_guard_match "$rule" "$vfile" "$jfile")"; rcj=$?
     locs="$(_guard_match "$rule" "$vfile" "$sfile")"; rcs=$?
-    # Combine the four arms. A hit on ANY projection is a hit — the value is in the
+    locb="$(_guard_match "$rule" "$vfile" "$bfile")"; rcb=$?
+    lock="$(_guard_match "$rule" "$vfile" "$kfile")"; rck=$?
+    # Combine the six arms. A hit on ANY projection is a hit — the value is in the
     # file either way. Otherwise the first arm, in the arms' own order, whose code is not a
     # plain no-match carries the verdict. Every such code but one is a property of the VALUE
     # (its keyability floor, its distinctiveness) rather than of the projection, so the arms
@@ -2473,10 +2529,12 @@ verify_publishable_content() { # <site_html> <trip_dir>
     # a no-match — unless the visible arm reports the value a declared non-key (4), which carries
     # the verdict before any other arm's code is read, so a matcher failure there is not
     # reported. No value can pass that way: a declared non-key is unmatched on every arm.
-    if   [ "$rcv" -eq 0 ] || [ "$rcp" -eq 0 ] || [ "$rcj" -eq 0 ] || [ "$rcs" -eq 0 ]; then rc=0
+    if   [ "$rcv" -eq 0 ] || [ "$rcp" -eq 0 ] || [ "$rcj" -eq 0 ] || [ "$rcs" -eq 0 ] || [ "$rcb" -eq 0 ] || [ "$rck" -eq 0 ]; then rc=0
     elif [ "$rcv" -eq 1 ] && [ "$rcp" -ne 1 ]; then rc="$rcp"
     elif [ "$rcv" -eq 1 ] && [ "$rcj" -ne 1 ]; then rc="$rcj"
     elif [ "$rcv" -eq 1 ] && [ "$rcs" -ne 1 ]; then rc="$rcs"
+    elif [ "$rcv" -eq 1 ] && [ "$rcb" -ne 1 ]; then rc="$rcb"
+    elif [ "$rcv" -eq 1 ] && [ "$rck" -ne 1 ]; then rc="$rck"
     else rc="$rcv"; fi
     # The HIT arm reports a position in the EVALUAND — the file the guard was asked to
     # certify — because that is the artifact the operator has to edit. The model
@@ -2490,18 +2548,20 @@ verify_publishable_content() { # <site_html> <trip_dir>
     # about the record, so the model coordinate is the right one and each says which
     # surface its remedy is on.
     #
-    # INT-1 — THE PROJECTION ENUM IS CLOSED AND NOW CARRIES FOUR VALUES. It shipped as a
-    # closed TWO-value enum; the joined arm required a third and the shape arm a fourth
-    # (ADR-050), and the selection order is the arms' own order so the attribution names the
-    # WEAKEST projection that saw it — visible text first, because that is the one the
-    # operator can read on the page, and the shape arm last, so a page another arm catches
-    # keeps that arm's name. The tag stays a structural fact carrying no class content: a
+    # INT-1 — THE PROJECTION ENUM IS CLOSED AND NOW CARRIES SIX VALUES. It shipped as a
+    # closed TWO-value enum; the joined arm required a third, the shape arm a fourth (ADR-050)
+    # and the two browser-ended readings a fifth and a sixth (#2117), and the selection order is
+    # the arms' own order so the attribution names the WEAKEST projection that saw it — visible
+    # text first, because that is the one the operator can read on the page, and each added arm
+    # after every earlier one, so a page another arm catches keeps that arm's name. The tag stays a structural fact carrying no class content: a
     # path, an integer and one enum value, never the matched text.
     case "$rc" in
       0) if   [ "$rcv" -eq 0 ]; then loc="$locv"; proj="visible text"
          elif [ "$rcp" -eq 0 ]; then loc="$locp"; proj="retrievable markup (comment, attribute or script body)"
          elif [ "$rcj" -eq 0 ]; then loc="$locj"; proj="joined markup (an inline tag split a word)"
-         else loc="$locs"; proj="markup read by shape (every tag and attribute name dropped)"; fi
+         elif [ "$rcs" -eq 0 ]; then loc="$locs"; proj="markup read by shape (every tag and attribute name dropped)"
+         elif [ "$rcb" -eq 0 ]; then loc="$locb"; proj="visible text, a script or style body ended where a browser ends it"
+         else loc="$lock"; proj="joined markup, a script or style body ended where a browser ends it"; fi
          [ -n "${loc:-}" ] && [ "$loc" != "0" ] || loc="?"
          warn "guard: a non-publishable value reached the published file at $site_html:$loc ($proj)."
          warn "guard: fix the RENDER at that line — deleting the model record clears this abort WITHOUT clearing the leak."
@@ -2528,7 +2588,7 @@ EOF
 # ── WHY A SECOND EVALUAND AND NOT A SECOND MECHANISM ─────────────────────────
 # outputs/change-summary.md (C20) is `publish: internal`. It is shared by the
 # organizer out of band and never reaches the render, so verify_publishable_content
-# never sees it: that function is HTML-bound on all four of its projections and is called
+# never sees it: that function is HTML-bound on all six of its projections and is called
 # from exactly one site, cmd_publish's plaintext limb, on the file being published.
 # Reusing it here would mean either widening it to a second evaluand class or calling
 # it on a file it was not written for.
@@ -2979,15 +3039,51 @@ _COORD_NOTICE_CAP=512
 # THE REPLACEMENT IS A SPACE, not nothing — the tag strip's idiom, and what keeps
 # `foo<!--c-->bar` from digesting as a single token.
 #
-# A <script>/<style> block ends here at an exact closing tag only, and deliberately so: reading the
-# spaced one as strip_to_published_text does would move the digest of every render that carries
-# one, and with it every recorded baseline and approval code for such a trip.
+# A <script>/<style> BODY ENDS HERE WHERE A BROWSER ENDS IT (#2117): at the first `</` followed by the
+# element's name, in any letter case, and then a tab, a line feed, a form feed, a carriage return, a
+# space, a `/` or a `>`, the end tag running to its `>`. The class is written out rather than `\s`,
+# because perl's `\s` also takes a vertical tab and a browser does not. Ending a body only at the
+# exact tag left out the stretch between an end tag of another form and a later exact one — page
+# content a reader sees — so an itinerary edit written only there left the digest unmoved and the
+# gate read a changed plan as the published one: the open direction.
+#
+# THE COST, PAID ONCE AND STATED. A render whose body is ended by a tag of another form digests
+# differently from before — with a later exact tag, because the stretch is now in the digest, and
+# without one, because the body is now out of it — and so does its legacy CRC token,
+# _legacy_itinerary_digest reading this projection too. Such a trip reads as changed once. On a trip
+# that declares no approvers the next update stops as `unconfirmed`, or `stale` where an earlier
+# confirmation is on record, and the remedy is one `confirm` — not a revert, because the plan did
+# not move. On a trip that declares approvers its approval code changes, approvals recorded for the
+# old code stop counting, and the group approves once more. No shim accepts the old digest: the old
+# reading is the one that misses the edit. The guard's two added readings end a body by the same
+# rule (_browser_end_tags), and S32d holds the two to it. Graded by S32a–S32d.
+#
+# WHAT STILL STAYS OUT OF THE DIGEST, NAMED SO THIS LIMB IS NOT READ AS THE WHOLE ANSWER. Four
+# classes of text a reader can see are known to leave the digest unmoved; the list is what has
+# been found, not a proof that nothing else does:
+#   (a) text after an opening tag that only looks like a script or style one. A body opens wherever
+#       `<script` or `<style` stands before a word boundary and runs to the next end tag, so a custom
+#       element whose name begins `script` or `style` (`<script-card>`), and an unclosed `<script>`
+#       written inside a comment, an attribute value or a text box such as `<textarea>` or
+#       `<noscript>`, hide what follows them up to that tag. A commented-out script that carries its
+#       own end tag is not in this class: its body ends at that tag, and an edit after it is seen.
+#   (b) text after a stray `<` in the page's text — `arrive < 18:30` — which a browser shows as
+#       text and the tag strip below reads as a tag's start, dropping everything up to the next `>`.
+#   (c) text a script or style draws — a map pop-up, a CSS `content:` label — which this projection
+#       does not read, by design: it reads the page's text, not what its code makes of it.
+#   (d) text a browser shows from an attribute — an `<input>` or button `value`, a `placeholder`,
+#       an `<option>` `label`, an `<img>` `alt` — which the tag strip below removes with its tag;
+#       and the body of a closed `<script>` written inside a text box such as `<textarea>`, which a
+#       browser shows as the box's text and the script-and-style limb removes.
+# (a), (b) and (d) are one family, the digest dropping text a browser shows, and one follow-up card
+# owns them; (c) stays out by design. How many renders carry (a), (b) or (d) is unmeasured: the
+# repository tracks no render.
 strip_to_itinerary_text() { # <html_file> -> visible itinerary text on stdout, or nothing on failure
   COORD_CLASS="$_COORD_NOTICE_CLASS" COORD_CAP="$_COORD_NOTICE_CAP" \
   perl -0777 -pe '
     my $c = quotemeta($ENV{COORD_CLASS}); my $cap = 0 + $ENV{COORD_CAP};
     s{<\s*([A-Za-z][-A-Za-z0-9]*)\b[^>]*\bclass\s*=\s*(["\x27])[^"\x27]*(?<![-\w])$c(?![-\w])[^"\x27]*\2[^>]*>.{0,$cap}?<\s*/\s*\1\s*>}{ }gis;
-    s/<(script|style)\b[^>]*>.*?<\/\1>//gis;
+    s/<(script|style)\b[^>]*>.*?<\/\1(?=[\t\n\f\r \/>])[^>]*>//gis;
     s/\A<!--\n(?:.*?\n)?-->(?=\n|\z)/ /s;
     s/<[^>]+>/ /g;
   ' "$1"
@@ -3013,17 +3109,19 @@ strip_to_itinerary_text() { # <html_file> -> visible itinerary text on stdout, o
 # an empty projection must still yield the real empty-string token, as S11d and S15e require. It
 # carries no fallback limb and discards no stderr — S15i's rule for every perl program here.
 #
-# The CRC-32 body survives only as _legacy_digest_of below, for the legacy-baseline shim.
+# The CRC-32 body survives only as _legacy_digest_of below, for the legacy-baseline shim and for
+# confirm's undeclared exit, which meets a legacy baseline with it (_itinerary_digest_pair).
 _digest_of() { # (stdin) -> one stable identity token: SHA-256 of the bytes, 64 lowercase hex
   perl -MDigest::SHA=sha256_hex -e 'binmode STDIN; local $/; my $s = <STDIN>; $s = q() unless defined $s; print sha256_hex($s)'
 }
 
-# The pre-#719 digest primitive, kept for ONE reader: the legacy-baseline shim, _baseline_matches.
+# The pre-#719 digest primitive, kept for TWO readers of one comparison: the legacy-baseline shim,
+# _baseline_matches, and confirm's undeclared exit, through _itinerary_digest_pair (#1556).
 # A baseline recorded before the swap reads `<digits>-<digits>` — CRC-32 and byte length, a shape
-# disjoint from 64 lowercase hex — and the shim compares it with this function's answer over the
+# disjoint from 64 lowercase hex — and each reader compares it with this function's answer over the
 # same projection, so a published plan that did not move is never re-read as a plan change merely
-# because the digest function changed. It is never an approval's digest: nothing that records or
-# counts an approval calls it.
+# because the digest function changed. It is never an approval's digest: no record is written with
+# its token, and nothing that counts an approval calls it.
 _legacy_digest_of() { # (stdin) -> the pre-#719 CRC-32-plus-length token
   cksum | awk '{ printf "%s-%s", $1, $2 }'
 }
@@ -3111,6 +3209,26 @@ _legacy_itinerary_digest() { # <html_file> -> the pre-#719 CRC-32 identity token
   printf '%s' "$dg"
 }
 
+# BOTH TOKENS FROM ONE READ, for confirm's undeclared exit alone (#1556; the scope-lock's
+# amendment 2). The exit checks the plan it is about to record against the published baseline,
+# and a baseline recorded before #719 is a CRC token, which only _legacy_itinerary_digest can
+# meet. Read through itinerary_digest and then through _baseline_matches, the two tokens came
+# from two reads of the render, and the shim's legacy branch read it again: the token checked
+# was not the token recorded. Here one projection read yields both, so the SHA-256 token the
+# exit records is the one whose plan the check found published, under either baseline shape.
+# The normalization and both digest primitives are the two functions' own, run over the same
+# text; neither function's shape moves (S11 and S15 grade itinerary_digest's). It prints the
+# two tokens on one line, SHA-256 first, or NOTHING where either stage fails.
+_itinerary_digest_pair() { # <html_file> -> "<sha256-token> <legacy-token>" from one read, or nothing
+  [ -r "${1:-}" ] || return 0
+  local text dg lg
+  text="$(strip_to_itinerary_text "$1")" || return 0
+  dg="$(set -o pipefail; printf '%s' "$text" | LC_ALL=C sed "$_ITINERARY_WS_SED" | LC_ALL=C tr -s '[:space:]' ' ' | LC_ALL=C sed 's/^ *//; s/ *$//' | _digest_of)" || return 0
+  lg="$(set -o pipefail; printf '%s' "$text" | LC_ALL=C sed "$_ITINERARY_WS_SED" | LC_ALL=C tr -s '[:space:]' ' ' | LC_ALL=C sed 's/^ *//; s/ *$//' | _legacy_digest_of)" || return 0
+  [ -n "$dg" ] && [ -n "$lg" ] || return 0
+  printf '%s %s' "$dg" "$lg"
+}
+
 # The three sidecars, one resolver each. All three sit inside the trip dir, which
 # .gitignore excludes (`trips/*`) and which no subcommand ever copies into the
 # per-trip repo — so none of them is a publish surface.
@@ -3124,7 +3242,9 @@ _legacy_itinerary_digest() { # <html_file> -> the pre-#719 CRC-32 identity token
 # entry headings and nothing else, through _undecided_entry. The reason is the site's
 # `pending` band: a change raised after the published plan's approval record was dated,
 # and abandoned before any approval, leaves an entry the site's mapping reads as
-# undecided, and only a record re-dated past that entry lets the band clear. `status` is
+# undecided, and only a record re-dated past that entry lets the band clear. On a trip that
+# declares no approvers, confirm's exit reads the same headings, through _undeclared_band, for the
+# same reason (#1556). `status` is
 # still read by nothing: nothing ever moves it off `pending`, which is why
 # skills/trip/SKILL.md § site does not read it either.
 pending_change_path()     { printf '%s' "$1/outputs/change-summary.md"; }
@@ -3799,7 +3919,9 @@ _ledger_append() { # <trip_dir> <key> <approve|withdraw> <digest> -> 0, or non-z
 # entry is a dated heading — a line opening `## ` and then a YYYY-MM-DD date, the heading the hub
 # appends for each change (agents/05-hub-planner.md § Output: outputs/change-summary.md) and the
 # only part of the file the mapping reads. `status` is never read; § site records why it is not
-# the signal. This is the record writer's one read of the summary, and SEAM S2 makes none.
+# the signal. This is the declared writer's read of the summary; the undeclared exit reads it
+# through _undeclared_band, which calls this only with a confirmed= it has read as a date; SEAM
+# S2 makes none.
 #
 # THE FAIL DIRECTION IS "NO UNDECIDED ENTRY", and it is chosen rather than defaulted. It keeps the
 # record's date, which is what the writer did before this read existed, and it can never put a
@@ -3826,6 +3948,43 @@ _undecided_entry() { # <trip_dir> <confirmed-value> -> 0 when the change summary
     esac
   done < "$f"
   return 1
+}
+
+# THE UNDECLARED EXIT'S READING OF THE BAND (#1556). On a trip that declares no approvers, whether the
+# site's `pending` band stands for a change the working copy no longer carries: one token on stdout,
+# read the one way skills/trip/SKILL.md § site's mapping reads it.
+#   held      outputs/change-summary.md holds a dated entry, and either no .change-confirmed exists
+#             (no file and no link: the mapping has no approval to measure the entry against) or the
+#             record's confirmed= date is earlier than an entry's (_undecided_entry)
+#   clear     no readable summary, no dated entry in it, or no entry later than the record's date —
+#             the mapping reads no undecided entry
+#   unusable  a dated entry stands and a .change-confirmed is present but cannot be read as a dated
+#             confirmation: not a readable regular file, no well-formed digest= line, or a confirmed=
+#             value that does not open YYYY-MM-DD. The mapping reads the band pending there; the exit
+#             refuses it and names the file, because absence and a malformed record are different
+#             conditions and never the same branch (ADR-007 § 2)
+# _undecided_entry's own fail direction is untouched: it is the declared writer's reading, and this
+# function calls it only with a confirmed= value it has already read as a date. Read-only, and 0 on
+# every path. Graded by S23j.
+_undeclared_band() { # <trip_dir> -> held | clear | unusable
+  local f rec line conf="" n=0 D='[0123456789]'
+  f="$(pending_change_path "$1")"
+  if [ ! -f "$f" ] || [ ! -r "$f" ]; then printf 'clear'; return 0; fi
+  while IFS= read -r line || [ -n "$line" ]; do
+    # shellcheck disable=SC2254  # $D is the spelled digit set, as in _undecided_entry
+    case "$line" in "## "$D$D$D$D-$D$D-$D$D*) n=1; break ;; esac
+  done < "$f"
+  if [ "$n" -eq 0 ]; then printf 'clear'; return 0; fi
+  rec="$(change_confirmation_path "$1")"
+  if [ ! -e "$rec" ] && [ ! -L "$rec" ]; then printf 'held'; return 0; fi
+  if [ ! -f "$rec" ] || [ ! -r "$rec" ] || [ -z "$(_record_digest "$rec")" ]; then printf 'unusable'; return 0; fi
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in confirmed=*) conf="${line#confirmed=}"; break ;; esac
+  done < "$rec"
+  # shellcheck disable=SC2254  # as above
+  case "${conf:0:10}" in $D$D$D$D-$D$D-$D$D) ;; *) printf 'unusable'; return 0 ;; esac
+  if _undecided_entry "$1" "$conf"; then printf 'held'; else printf 'clear'; fi
+  return 0
 }
 
 # The date an approval record KEEPS once its plan is published (#719's Stage 7 F-02, decided
@@ -4588,7 +4747,7 @@ cmd_confirm() { # <trip_dir>
   # to confirm against it.) Graded by S11i, which reads the ORDER and not just the call.
   require_perl
 
-  local site_html state pending rec tmp dg ans pol
+  local site_html state pending rec tmp dg ans pol band="" base_dg="" pair="" pin="" rec_dg="" keep=""
   site_html="$(resolve_site_html "$trip_dir")"
   state="$(change_confirmation_state "$trip_dir")"
 
@@ -4600,20 +4759,34 @@ cmd_confirm() { # <trip_dir>
   # plan reverted after an approval re-anchors the approval record to itself. An undetermined
   # state is still refused below before anything binds, on either path. _confirm_declared keeps
   # the terminal-only, no-override-flag rule. A trip that declares no approvers takes neither of
-  # these branches and is unchanged in every byte it prints and writes.
+  # these branches; its way out of an abandoned change's band is the exit below.
   pol="$(_approval_policy "$trip_dir" 2>/dev/null)"   # the state read above already printed any diagnostic
   if [ "$pol" = declared ] && [ "$state" != undetermined ]; then
     _confirm_declared "$trip_dir" "$site_html" "$state"
     return $?
   fi
 
-  # Refuse when there is no itinerary change in front of the organizer. A
-  # confirmation recorded now would be a PRE-AUTHORISATION of an unseen future
-  # change, and the gate would then wave through whatever the next bake produces.
-  # Expressed through the resolver rather than through a second definition of
-  # "pending", so there is exactly one answer to "has the plan moved?".
-  [ "$state" != "none-pending" ] \
-    || die "nothing to confirm for $trip_dir — the itinerary content of the outgoing render is the plan that is already published (or the trip has never been published). Confirmation binds to a change; there is none."
+  # Where the plan going out is the published one (`none-pending`) there is no change to confirm,
+  # and the refusal below stands — save on a trip that declares no approvers whose baseline is
+  # present and usable and whose change summary holds an entry the site's mapping reads as
+  # undecided (_undeclared_band, #1556): the site still announces a change that is not coming.
+  # There the exit records the published plan as confirmed now, the act that dates the record
+  # past that entry. It pre-authorises nothing: the record names the published plan's own digest,
+  # checked against the baseline in the same read that yields it (_itinerary_digest_pair) and
+  # refused if the read after CONFIRM differs, and the gate compares the baseline first. A record it
+  # replaces that names another plan is named by its code in the prompt and kept beside the record,
+  # as the declared path keeps a record it retires (ADR-007 § 2's replace-with-preservation shape).
+  # "Back on the published plan" is the resolver's answer and a present baseline, never a second
+  # definition of it (CIAC-1).
+  if [ "$state" = none-pending ]; then
+    base_dg="$(_baseline_record "$(published_itinerary_path "$trip_dir")")"
+    if [ "$pol" = none ] && [ "$base_dg" != absent ]; then band="$(_undeclared_band "$trip_dir")"; fi
+    case "$band" in
+      held) ;;
+      unusable) die "cannot clear the pending notice for $trip_dir — the itinerary content of the outgoing render is the published plan, and its change summary holds an entry the site reads as pending, but its confirmation record $(change_confirmation_path "$trip_dir") is present and cannot be read as a dated confirmation: it is not a readable regular file, or it carries no well-formed digest= line or no confirmed= date. Nothing was recorded. Repair that file, or delete it; then re-run confirm." ;;
+      *) die "nothing to confirm for $trip_dir — the itinerary content of the outgoing render is the plan that is already published (or the trip has never been published). Confirmation binds to a change; there is none." ;;
+    esac
+  fi
 
   # Refuse an UNDETERMINED state here, BEFORE the terminal check and the prompt (#1184; #1468
   # case 5 and D-6). A confirmation is recorded against an identified itinerary and a known
@@ -4652,23 +4825,57 @@ cmd_confirm() { # <trip_dir>
   # later slice. A third such override would be precisely the class of thing that
   # bound forbids, so this requirement is hard: no automation can attest a group's
   # consensus on the group's behalf.
-  [ -t 0 ] || die "confirm requires a terminal — it records a human decision, and there is deliberately no flag to skip it. Run it yourself:  $(basename "$0") confirm ${trip_dir}"
+  _confirm_has_terminal || die "confirm requires a terminal — it records a human decision, and there is deliberately no flag to skip it. Run it yourself:  $(basename "$0") confirm ${trip_dir}"
 
-  printf '\n  Confirming the itinerary change for: %s\n' "$trip_dir"
-  printf '  Site render     : %s\n' "$site_html"
+  # BOTH PATHS PIN THE PLAN BEFORE THEIR PROMPT (#1556; the scope-lock's amendments 1–3). The digest
+  # is read before the organizer is asked, its code is printed, and the read after CONFIRM must equal
+  # it: a render rebuilt while the organizer is at the prompt is refused, never confirmed unseen —
+  # the PRE-AUTHORISATION of an unseen future change this function refuses. The record write
+  # below is the one line both paths share (T6c and S23b read its format).
   pending="$(pending_change_path "$trip_dir")"
-  if [ -r "$pending" ]; then
+  rec="$(change_confirmation_path "$trip_dir")"
+  if [ "$band" = held ]; then
+    pair="$(_itinerary_digest_pair "$site_html")"
+    pin="${pair%% *}"
+    { [ -n "$pair" ] && { [ "$base_dg" = "$pin" ] || [ "$base_dg" = "${pair#* }" ]; }; } \
+      || die "cannot clear the pending notice for $trip_dir — the outgoing render $site_html no longer reads as the published plan; nothing was recorded. Re-run confirm."
+    rec_dg="$(_record_digest "$rec")"
+    printf '\n  Clearing the pending notice for: %s\n' "$trip_dir"
+    printf '  Site render     : %s\n' "$site_html"
     printf '  Change summary  : %s\n' "$pending"
+    printf '  Gate state      : %s — the plan going out is the published one\n' "$state"
+    printf '  Code, for comparing by eye: %s\n' "$(_code_prefix "$pin")"
+    printf '  The change summary holds a change the site shows as pending, and the plan going out is the published one, so that change is not coming.\n'
+    if [ -n "$rec_dg" ] && [ "$rec_dg" != "$pin" ] && [ "$rec_dg" != "${pair#* }" ]; then
+      printf '  The confirmation record names another version of the plan (code %s). Recording replaces it, and the record it replaces is kept beside it.\n' "$(_code_prefix "$rec_dg")"
+    else
+      rec_dg=""
+    fi
+    printf '  Type CONFIRM to record the published plan as confirmed now, which clears that notice at the next build: '; read -r ans
   else
-    warn "no change summary at $pending — confirming from the render alone."
+    pin="$(itinerary_digest "$site_html")"
+    [ -n "$pin" ] || die "could not identify the itinerary content of $site_html — it could not be read, its itinerary text could not be projected, or that text could not be normalized; any error printed above names the cause. Nothing was recorded."
+    printf '\n  Confirming the itinerary change for: %s\n' "$trip_dir"
+    printf '  Site render     : %s\n' "$site_html"
+    if [ -r "$pending" ]; then
+      printf '  Change summary  : %s\n' "$pending"
+    else
+      warn "no change summary at $pending — confirming from the render alone."
+    fi
+    printf '  Gate state      : %s\n' "$state"
+    printf '  Code, for comparing by eye: %s\n' "$(_code_prefix "$pin")"
+    printf '  Type CONFIRM to record the group'"'"'s approval of this itinerary: '; read -r ans
   fi
-  printf '  Gate state      : %s\n' "$state"
-  printf '  Type CONFIRM to record the group'"'"'s approval of this itinerary: '; read -r ans
   [ "${ans:-}" = "CONFIRM" ] || die "aborted — nothing confirmed. The published plan is unchanged."
 
   dg="$(itinerary_digest "$site_html")"
   [ -n "$dg" ] || die "could not identify the itinerary content of $site_html — it could not be read, its itinerary text could not be projected, or that text could not be normalized; any error printed above names the cause. Nothing was recorded."
-  rec="$(change_confirmation_path "$trip_dir")"
+  [ "$dg" = "$pin" ] \
+    || die "nothing was recorded for $trip_dir — the outgoing render changed while you were confirming, so it is no longer the plan whose code is shown above. Re-run confirm."
+  if [ -n "$rec_dg" ]; then
+    keep="$(mktemp "${rec}.replaced-XXXXXX")" || die "could not stage a copy of $rec — nothing was recorded."
+    if ! cat "$rec" > "$keep"; then rm -f "$keep"; die "could not keep a copy of $rec — nothing was recorded."; fi
+  fi
   tmp="$(mktemp "${rec}.XXXXXX")" || die "could not stage the confirmation record beside $rec"
   printf 'digest=%s\nconfirmed=%s\n' "$dg" "$(_iso_now)" > "$tmp"
   mv -f "$tmp" "$rec"
@@ -4679,13 +4886,21 @@ cmd_confirm() { # <trip_dir>
   # decision lives. No post-republish cleanup is needed anywhere either: a later
   # re-bake moves the itinerary content, the digest stops matching, and the state
   # resolves `stale` on its own.
+  if [ "$band" = held ]; then
+    ok "Recorded. The published plan is confirmed as of now, so the change summary's entries read as decided: rebuild the site, and the next  $(basename "$0") update ${trip_dir}  publishes it with no pending notice."
+    [ -z "$keep" ] || info "the confirmation record it replaced is kept at $keep."
+    [ "$(_undeclared_band "$trip_dir")" != held ] \
+      || warn "the change summary holds an entry dated after today; the site goes on reading it as pending until a confirmation is recorded on or after that date."
+    return 0
+  fi
   ok "Confirmed. The next  $(basename "$0") update ${trip_dir}  will publish this itinerary; a further edit re-opens the gate."
 }
 
 # The terminal test of confirm's declared branch. A function rather than an inline test so that
 # the publish-guard suite can drive the branch end to end with the test stubbed (S19a) — it is not
 # a flag and not an override: a caller that RUNS this script cannot redefine it, because the script
-# defines it after anything the environment could supply. The undeclared path keeps its literal.
+# defines it after anything the environment could supply. Both of confirm's paths call it, and
+# PP5 reads its literal as its scan's sensitivity arm.
 _confirm_has_terminal() { [ -t 0 ]; }
 
 # CONFIRM ON A TRIP THAT DECLARES APPROVERS (#719, ADR-029 § Decision 3, as corrected by the

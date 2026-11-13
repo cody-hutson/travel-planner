@@ -85,6 +85,73 @@ nationality keeps it until the research role next rewrites that field. An interv
 not yet read the notice: that route is a follow-on, to travel with the next regrade of the
 generated conversations.
 
+## [0.69.0] — 2026-11-13 — Approvals stay true when the roster or the plan changes
+
+**Some trips are asked to confirm their plan once, though nothing in it changed.** The digest that
+tells a changed plan from the published one now ends a `<script>` or `<style>` body where a browser
+ends it, so an itinerary edit written after an end tag such as `</script >` and before a later
+`</script>` is seen. A trip whose site carries an end tag of that kind therefore reads as changed
+once. On a trip that declares no approvers, the next `update` stops and asks for a confirmation,
+and its message says the itinerary content differs from the published plan: what changed is how the
+page is read, not the plan, so run `confirm` once. There is nothing to revert, because nothing
+moved. On a trip that declares approvers, the approval code changes, approvals recorded for the old
+code stop counting, and the group approves once more. No prompt, template or reference file of this
+engine writes such an end tag; a site carries one only through a hand edit or an unprompted spelling
+in its build. At least four kinds of text a reader can see are known still to leave the digest
+unmoved; the list is what has been found, not a proof that nothing else does. Text after an opening
+tag that only looks like a script or style one — a custom element such as `<script-card>`, or an
+unclosed `<script>` inside a comment, an attribute or a text box such as `<textarea>` — text after a
+stray `<` in the page's text, which hides everything up to the next `>`, and text a browser shows
+from an attribute — an input or button value, a placeholder, an option's label, an image's alt
+text — or the body of a closed `<script>` inside a text box are tracked together for a later
+release. Text a script or style draws, such as a map pop-up or a CSS label, is not read, by design.
+
+**A trip that declares nobody can clear a change it abandoned.** When a change is raised and then
+dropped before anyone confirms it, the working copy is back on the published plan while the site
+still says a change is pending. `confirm`, run then, records the published plan as confirmed now,
+and the next build shows no pending notice for it, as a trip that declares approvers has been able
+to since 0.44.0. It is the one step; there is nothing to revert. Where the confirmation it replaces
+names another version of the plan, it says so by that version's code before it asks, and keeps the
+old record beside the new one.
+
+**`confirm` records the plan it showed you.** On a trip that declares no approvers, `confirm` now
+prints the plan's code before it asks, and if the plan in the site's render changes while you are at
+the prompt it records nothing and asks you to run it again. Before, it recorded whatever the render
+held at the moment you typed `CONFIRM`.
+
+**Removing a declared approver from the roster says so.** When `/trip-record group` takes off a row
+whose person the approver declaration still names, it says so before the row goes, and names
+`/trip-record .approvers` as the way to update the declaration. It changes neither the declaration
+nor any recorded approval.
+
+**A plaintext publish reads a page two more ways.** A value split mid-word by an inline tag, or with
+an attribute-carrying tag around one of its words, written after a `<script>` or `<style>` end tag
+of another form and before an exact one, now stops a plaintext publish. Before, it published, in
+every release that carried the guard. ADR-052, added as Proposed, records the decision and partly
+supersedes ADR-050's Decisions 1, 2 and 3. Stated limits: an opening tag that only looks like a
+script or style one, as above, still opens a body that runs to the next end tag, for these readings
+as for the digest; and a page whose every visible word sits inside a body closed only by an end tag
+of another form is refused as undetermined.
+
+**The 0.62.0 entry is corrected.** Its paragraph on a closing tag written with a space said a value
+written between the two tags stops the publish. That held for a value with a tag on neither of the
+guard's lists around one of its words, which 0.62.0 restored; a value split mid-word by an inline
+tag, or with an attribute-carrying tag around one of its words, still published, in every release
+before this one. The paragraph now says so.
+
+**The change summary's `status` is described as it is.** Three documents said the site's pending
+notice and the republish gate read it. Nothing reads it and nothing moves it off `pending`: the
+notice is decided by the confirmation record read against the summary's dated entries, and the gate
+by the published baseline, `.published-itinerary`, with the organizer's confirmation record,
+`.change-confirmed`, on a trip that declares no approvers, or with the approval records, `.approvers`
+and `.approvals`, on one that declares them. The field stays, unchanged. ADR-029's Decision 3 no
+longer says `confirm` is unchanged on a trip that declares no approvers.
+
+**Size fence.** All 51 rows were kept, none was added and none was re-pinned. `skills/trip-record/SKILL.md`
+grew 1,902 bytes to 452,271, ADR-029 856 to 59,195, `reference/adr/README.md` 400 to 26,816 with
+ADR-052's index row, `CLAUDE.md` 71 to 142,721 and `agents/05-hub-planner.md` 29 to 83,215;
+`skills/trip/SKILL.md` shrank 77 bytes to 104,698. Each stays under its row.
+
 ## [0.68.0] — 2026-11-13 — The required-check tooling is pinned and can register and roll back what it declares
 
 No trip verb plans or records a trip differently in this release. What changes is met by whoever
@@ -462,7 +529,10 @@ publishes a trip's site in plaintext. The content guard again refuses every page
 **A closing tag written with a space no longer hides what follows it.** A `<script>` or `<style>`
 body can be closed by a tag with a space before its bracket (`</script >`) and followed later by an
 exact `</script>`. The published projection now ends the body at the spaced tag, so a value written
-between the two stops the publish, as it did before 0.60.0. The visible and joined projections
+between the two with a tag on neither of the guard's lists around one of its words stops the
+publish, which 0.60.0 and 0.61.0 let through. A value written there split mid-word by an inline tag,
+or with an attribute-carrying tag around one of its words, still publishes, as it did in every
+earlier release that carried the guard. The visible and joined projections
 still end such a body only at the exact tag, as before 0.60.0. Changing them alone would give up
 values the guard before 0.60.0 caught inside such a body, so that stretch is a stated limit. A word
 written directly after a `<` in markup after such a spaced tag is read as a tag name, as everywhere

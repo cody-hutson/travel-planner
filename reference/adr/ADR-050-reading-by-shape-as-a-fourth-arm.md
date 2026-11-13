@@ -1,6 +1,10 @@
 # ADR-050: Reading by shape as a fourth arm — the published projection the guard before 0.60.0 wrote, kept beside the one that replaced it, read and credited last, and named by a fourth projection value, superseding ADR-008 Decisions 3 and 4 in part
 
-- **Status:** Accepted (2026-10-29)
+- **Status:** Accepted (2026-10-29). **Superseded in part (2026-11-13, Friday)** — § *Decision* 1, as far as it
+  sets the projection count at four, § *Decision* 2, as far as it reads and credits this record's arm
+  last, and § *Decision* 3, as far as it closes the projection enum at four values, by
+  [ADR-052](ADR-052-a-body-ends-where-the-browser-ends-it.md). The rest of all three decisions, and
+  every other part of this record, stands.
 - **Deciders:** repo maintainer
 - **Driving work:** #2068 (carrying #2070), in the *A plaintext publish never lets through a value
   the guard used to catch* milestone. Its design measured that no reading of the published file in
@@ -111,7 +115,9 @@ no seam, and its program re-emits every newline it consumes, so its locator is a
 
 ## Decision
 
-**1. The guard matches four projections.** Beside the visible, published and joined projections
+**1. The guard matches four projections.** *(Superseded in part (2026-11-13, Friday) by
+[ADR-052](ADR-052-a-body-ends-where-the-browser-ends-it.md), as far as this decision sets the count
+at four; the rest of this decision stands.)* Beside the visible, published and joined projections
 of [ADR-008](ADR-008-publish-content-guard.md) § *Decision* 3, `verify_publishable_content` matches
 `strip_to_shape_text`: the published projection as the guard before 0.60.0 wrote it — the doctype,
 the comment delimiters, every tag name found by shape with the block boundary emitted before it, and
@@ -121,7 +127,9 @@ supersedes the part of [ADR-008](ADR-008-publish-content-guard.md) § *Decision*
 projection count at three, and the rest of that decision stands: the evaluand is the published file,
 a hit on any projection is a hit, and the three return codes are unchanged.
 
-**2. It is read last and credited last.** The arm runs after the joined arm's refusal and before
+**2. It is read last and credited last.** *(Superseded in part (2026-11-13, Friday) by
+[ADR-052](ADR-052-a-body-ends-where-the-browser-ends-it.md), whose two arms are read and credited
+after this one; the rest of this decision stands.)* The arm runs after the joined arm's refusal and before
 the class is read, through the same arm helper and the same word count as every other arm. Like the
 published arm it carries no word floor and refuses a pipeline that failed or a stream that came back
 empty: on a render that cleared the visible floor its stream carries the visible words, so empty
@@ -130,7 +138,9 @@ joined arm's, as the arms' own order reads each. In the attribution, it is named
 arm hit, so a page another arm catches keeps the name it carried before this record.
 
 **3. Its name is a fourth value of the projection enum:** `markup read by shape (every tag and
-attribute name dropped)`. A hit attributed to the arm is named with it, and a refusal of the arm
+attribute name dropped)`. *(Superseded in part (2026-11-13, Friday) by
+[ADR-052](ADR-052-a-body-ends-where-the-browser-ends-it.md), which adds a fifth and a sixth value;
+the rest of this decision stands.)* A hit attributed to the arm is named with it, and a refusal of the arm
 names it, from the same closed enum the other three values belong to. This supersedes the part of
 [ADR-008](ADR-008-publish-content-guard.md) § *Decision* 4 that closes the enum at three values; the
 rest of that decision stands: the abort names a position in the evaluand, keeps the model coordinate
@@ -186,3 +196,13 @@ as provenance, and never echoes the value.
   `scripts/publish-trip-site.sh`. Regression coverage: `scripts/test-publish-guard.sh` group M, arms
   M7a–M7h for the four shapes and criterion 5's name, M6a–M6e for the pre-0.60.0 parity cells, and
   group L's L17 cells for the arm's refusals.
+
+## Amendment history
+
+**Amendment (2026-11-13, Friday) — the `Status:` line and § *Decision* 1, 2 and 3: the partial supersession by
+[ADR-052](ADR-052-a-body-ends-where-the-browser-ends-it.md) recorded; no decision changes here.**
+ADR-052 adds two projections to the set § *Decision* 1 counts, reads and credits them after this
+record's arm, and adds two values to the enum § *Decision* 3 closes, and leaves the rest of all three
+standing. This amendment records that decision and takes none: the `Status:` line carries the
+supersession, and an inline marker points forward at each of the three decisions. The superseded text
+is retained as decided, so no wording is replaced.

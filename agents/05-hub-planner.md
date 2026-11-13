@@ -857,9 +857,10 @@ status: pending
 ```
 
 **`status` is this class's one per-class field, and you only ever write `pending`.**
-It is the state the organizer-confirm surface reads and moves to `confirmed` or
-`rejected`. Promoting your own summary would make the confirmation a formality;
-the decision is the organizer's, and the field is how it is recorded.
+Nothing moves it afterwards and nothing reads it: the organizer's decision is recorded
+by `confirm` in the trip's `.change-confirmed`, never in this file
+(`reference/schemas/change-summary.md`). Promoting your own summary would record a
+decision nobody made.
 
 **`accumulate-append`, and the reason is a safety property rather than a style.**
 Each emission appends a new dated section and deletes nothing, so a change nobody
