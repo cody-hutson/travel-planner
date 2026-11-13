@@ -54,10 +54,10 @@ jobs:
       # The download pin: one upstream release of actionlint, and the SHA-256 of its linux amd64
       # tarball as that release's checksums file lists it. Move both together.
       ACTIONLINT_VERSION: '1.7.1'
-      ACTIONLINT_SHA256: '0000000000000000000000000000000000000000000000000000000000000000'
+      ACTIONLINT_SHA256: 'f53c34493657dfea83b657e4b62cc68c25fbc383dff64c8d581613b037aacaa3'
       # The shellcheck actionlint runs: the runner image's own, pinned by version (header).
       SHELLCHECK_PATH: '/usr/bin/shellcheck'
-      SHELLCHECK_EXPECT_VERSION: '0.0.0'
+      SHELLCHECK_EXPECT_VERSION: '0.9.0'
     steps:
       - uses: actions/checkout@v7
 
@@ -188,7 +188,7 @@ jobs:
       # The download pin: one upstream release of gitleaks, and the SHA-256 of its linux x64
       # tarball as that release's checksums file lists it. Move both together.
       GITLEAKS_VERSION: '8.21.2'
-      GITLEAKS_SHA256: '0000000000000000000000000000000000000000000000000000000000000000'
+      GITLEAKS_SHA256: '5bc41815076e6ed6ef8fbecc9d9b75bcae31f39029ceb55da08086315316e3ba'
     steps:
       - uses: actions/checkout@v7
         with:
