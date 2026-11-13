@@ -166,8 +166,9 @@ arms that grade the render table are Wave 1's to specify.
 
 - **The contract surface grows** by one render-table fence, a family of walker passes, two finding codes
   and their arms — each bounded, declared and graded.
-- **The walker needs σ from the verb.** A standalone run without it gets only the element pass, and says
-  so.
+- **The walker needs σ from the verb.** Only the element pass and the artifact pass's contract half, which
+  reads the tracked tree, run without it. A standalone run without σ never reports the artifact pass's
+  instance half or the shape pass as clean; `reference/site-layout-spec.md` § 9.4 states what it reports.
 - **Reference matter has no § 3 component**, so the shape pass cannot see it.
 
 **Aggregation trace — what consumes each new evaluand.**
@@ -246,3 +247,12 @@ Wave-1 working notes on its Stage-6 sub-task, #1392:
 - Provenance: the card, #1296; its design sub-task, #1388, carrying the first pass; the plan, its
   surface map, the fit review, CR-2 and R2 on #1369; and the Wave-1 working notes this record's
   build detail moved to, on #1392.
+
+## Amendment history
+
+**Amendment (2026-11-13, Friday) — § *Consequences*, the run without σ; no decision changes.** The
+residual read "A standalone run without it gets only the element pass, and says so." § *Decision*
+places the artifact pass's contract half on the tracked tree, and the aggregation trace in
+§ *Consequences* has the walker's contract run exit with findings, so that half needs no σ and runs
+without it; the sentence said less than the record does. It now names both passes that run without σ, and names where the
+specification states what a run without σ reports, rather than restating it.
