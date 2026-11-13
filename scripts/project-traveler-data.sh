@@ -43,7 +43,8 @@
 # read one; or the inside of a one-line HTML comment. This
 # holds after the ASCII emphasis and markup the strip class removes, and behind a no-break
 # space, and each such line goes together with its continuation, as WHAT A HIT TAKES WITH IT
-# below defines continuation. ANY OTHER SHAPE IS NOT READ, AND ITS LINE IS KEPT: the
+# below defines continuation, save a hit line that holds a pipe inside a table run, which is
+# left out without what continues it. ANY OTHER SHAPE IS NOT READ, AND ITS LINE IS KEPT: the
 # residuals are named under WHAT THIS DOES NOT DO. The rules that follow are how the
 # criterion is met; where they and it disagree, the criterion is the claim and the
 # disagreement is a defect.
@@ -146,8 +147,10 @@
 # `- > Passport number:`), since ONE list marker is taken off; a table row whose
 # key cell is empty; a row whose leading pipe sits behind a task box, behind a second list
 # marker or behind a quote opened inside a list item (`- [ ] | Passport number | … |`,
-# `- - | … |`, `- > | … |`), none of which is a TABLE as defined above; a heading that holds
-# a pipe, inside a table run (`## Passport | notes` below a `| Passport | … |` header row);
+# `- - | … |`, `- > | … |`), none of which is a TABLE as defined above; what continues a
+# label line that holds a pipe inside a table run — a heading (`## Passport | notes` below a
+# `| Passport | … |` header row), a paragraph line or a one-line comment — which prints while
+# the line itself is left out;
 # and a value written as prose under some other label. They are
 # residuals: this criterion names them, a follow-on card is to carry them, and milestone
 # 97's content check is their backstop. It does not cover trips/<slug>/trip-context.md or

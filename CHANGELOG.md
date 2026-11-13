@@ -35,7 +35,8 @@ opens a list item at any indent, once its quote markers and one list marker are 
 run, a table row's first cell, a later cell that holds the label and a colon or the label alone, or
 the inside of a one-line HTML comment, after the ASCII emphasis and markup it strips and behind a
 no-break space. Each such line goes with what continues it: a label's wrapped, nested and loose
-lines, a heading's whole section and a header row's whole table. Any other shape is not read, and
+lines, a heading's whole section and a header row's whole table, save a hit line that holds a pipe
+inside a table run, which is left out without what continues it. Any other shape is not read, and
 its line is kept. A table is defined as the script reads one: a line whose first character is `|`,
 once its blockquote markers and one list marker are taken off, together with the run of such lines
 around it. Where it errs inside the
@@ -78,8 +79,9 @@ but a no-break space; a label behind an HTML tag, an entity or a closed comment,
 heading's ordinal; a camel-case key such as `passportNumber:`; a table cell after the first holding
 a label of more than one word and no colon, outside a header row; a label behind a second list
 marker or behind a quote opened inside a list item; a table row whose key cell is empty; a row whose leading pipe sits behind a task box, behind a second list marker or behind a
-quote opened inside a list item, none of which is a table as the script reads one; a heading that
-holds a pipe, inside a table run; and a value written as prose under some other label. These are
+quote opened inside a list item, none of which is a table as the script reads one; what continues a
+label line that holds a pipe inside a table run, whether a heading, a paragraph line or a one-line
+comment, which prints while the line itself is left out; and a value written as prose under some other label. These are
 residuals the criterion
 names, for a follow-on card, and milestone 97's content check is their backstop. The open-publish
 guard reads a passport value only where its label opens a line, once a list marker and bold are
