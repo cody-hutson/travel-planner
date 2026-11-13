@@ -29165,8 +29165,8 @@ md_flips wtadr26_cell 'WT-ADR26' wtadr26_assert
 #                a heading inside a payload, a loose payload past a blank line, a table, a
 #                one-line comment, a no-break space, a fenced block a label opens at its
 #                own indent, a fenced block and an indented code line inside a heading's
-#                section, neither of which ends it, and a label inside a bracket
-#                (13 shapes, 30 canaries).
+#                section, neither of which ends it, a label inside a bracket, and a column
+#                header naming the field in more than one word (14 shapes, 33 canaries).
 #          PJ11  the delimiters a payload must stop at, each with kept lines after it: CRLF
 #                line endings, the closer of a fenced block the label sits in, and the
 #                frontmatter's closing `---`, with and without a byte-order mark, a key after
@@ -29174,7 +29174,8 @@ md_flips wtadr26_cell 'WT-ADR26' wtadr26_assert
 #                closer is read by — a closer as long as its opener's run, with nothing after
 #                it, of the opener's own character, an opener a tilde run can make, no
 #                opener made by an inline code span, and a heading mark inside a fence, a
-#                label there and never a section (10 shapes, 14 canaries).
+#                label there and never a section; and table rows whose text opens with a
+#                selector word but holds no label, which are kept (11 shapes, 15 canaries).
 #   PJ12 fail closed: a source holding a carriage return that no line feed follows — a model
 #        of bare-CR lines, and a traveller file whose last byte is one — exits exactly 2 with
 #        empty stdout and its own cause token on stderr, never a projection of a file read as
@@ -29675,6 +29676,19 @@ printf '%s\n' '## Rowan' \
   '- [ ] **Would love:** tide pools at dawn · KEEP-PJS54' \
   '- **[Documents]:** entry registration · CNRY-PJS54' \
   '- [OPERATOR-PROVIDED] **Group time:** mornings together · KEEP-PJS55' > "$PJT_SF"
+pjt_shape 'PJ10[table-header]' shape-table-header model 'CNRY-PJS58 CNRY-PJS59 CNRY-PJS60' 'KEEP-PJS59 KEEP-PJS60' '| Passport number |' - - 'a column header naming the field in more than one word, with and without a leading pipe, its whole table going with it'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS59' \
+  '| Traveller | Passport number | Pace |' \
+  '|---|---|---|' \
+  '| Rowan | Z1234567 · CNRY-PJS58 | slow |' \
+  '| Ines | Y7654321 · CNRY-PJS59 | brisk |' \
+  '' \
+  'Traveller | Documents held' \
+  '---|---' \
+  'Rowan | entry registration · CNRY-PJS60' \
+  '' \
+  '- **Rooming:** own room · KEEP-PJS60' > "$PJT_SF"
 
 pjt_shape 'PJ11[crlf]' shape-crlf model 'CNRY-PJS26 CNRY-PJS27' 'KEEP-PJS24 KEEP-PJS25' "${PJT_CR}
 ${PJT_CR}
@@ -29767,6 +29781,14 @@ printf '%s\n' '## Rowan' \
   '' \
   '## Sam [OPERATOR-PROVIDED] [THIRD-PARTY]' \
   '- **Needs:** a step-free route · KEEP-PJS51' > "$PJT_SF"
+pjt_shape 'PJ11[table-need]' shape-table-need model 'CNRY-PJS57' 'KEEP-PJS56 KEEP-PJS57 KEEP-PJS58' '| Documents for insulin' - - 'needs rows whose text opens with a selector word and holds no label, one mid-table and one last in the file, beside a row the field labels'
+printf '%s\n' '## Rowan' \
+  '| Need | Category | Governing constraint |' \
+  '|---|---|---|' \
+  '| Documents for insulin pens carried through security · KEEP-PJS56 | dietary-health | DH-2 |' \
+  '| Passport | Zorvanian · CNRY-PJS57 | none |' \
+  '| Stairs are hard; level approaches only · KEEP-PJS57 | mobility | HC-1 |' \
+  '| Documents kept with the group leader on day trips · KEEP-PJS58 | logistics | HC-2 |' > "$PJT_SF"
 
 pjt_i=0
 while [ "$pjt_i" -lt "${#PJT_SN[@]}" ]; do
