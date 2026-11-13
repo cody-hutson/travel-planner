@@ -3,6 +3,61 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [Unreleased] — 2026-11-13 — The required-check tooling is pinned and can register and roll back what it declares
+
+No trip verb plans or records a trip differently in this release. What changes is met by whoever
+changes this repository's workflows, and by the operator who registers, pins or rolls back the
+checks branch protection requires.
+
+**The required security jobs run only what this repository pinned.** `Workflow SAST (actionlint)`
+and `Secret scanning (gitleaks)` download actionlint 1.7.1 and gitleaks 8.21.2 as upstream release
+assets, each refused unless its SHA-256 matches the digest recorded beside its version, read from
+that release's own checksums file. Before, actionlint came from an installer script fetched from
+the project's moving default branch, and the gitleaks archive was unpacked unchecked. Nothing falls
+back to an unverified download. actionlint's shellcheck is not downloaded: a step before actionlint
+refuses unless dpkg records `/usr/bin/shellcheck` as installed by the runner image's shellcheck
+package and that file reports 0.9.0, and actionlint is pointed at it. An image that moves that
+version, or drops shellcheck, now turns the check red, where before actionlint went on linting
+without shellcheck and said nothing. The workflow's header names what each job runs, and no
+sentence in `SECURITY.md` or `CONTRIBUTING.md` counts the required checks except the row the
+self-test reads.
+
+**`--restore` writes the endpoint it names, and proves what it wrote.** It addressed a path that
+doubled `/protection`, so a rollback could never land. It now writes the
+`required_status_checks` sub-resource, reads it back, and prints `RESTORED.` only when the read-back
+equals what it wrote. It refuses a rollback artifact it cannot vouch for, and where the host pins a
+context the capture held unpinned it says so and prints the hand route back. `--plan` and `--apply`
+now refuse at exit 3 a staging directory that already holds a different rollback point, where they
+used to overwrite it: restore from that directory, or pass a fresh one.
+
+**Registering a declared check is a tested mode.** `scripts/pin-required-checks.py --register
+--context NAME` adds exactly the declared contexts the branch lacks, pinned to the GitHub Actions
+app, and refuses before writing anything when the contexts named are not those, or when the live
+set holds a context twice or one the declaration does not carry. It keeps every other live entry as
+it reads it, reads the write back, and checks its scope by context name, so an insertion that shifts
+every later position is not misread as a change to each. Exit 0 means `--assert` holds: where an
+entry it carried is not pinned to the app, it prints `NOT PINNED` with those entries, names
+`--apply` next, and exits 1. `--restore` is its rollback. `CONTRIBUTING.md` and the flip recipe in
+`.github/workflows/adr-conformance.yml` name the mode, to be run once the change that declares the
+context has merged, and the tool's own registration texts do too. The next registration is a tested
+command, where the last one was a payload composed by hand.
+
+**Size fence.** `CONTRIBUTING.md` grew 290 bytes to 20,195 and crossed the floor at which a file owes
+a row, so it gains one at 22,215, the value the fence prints. Its new clause says how a context is
+registered and that a renamed job's old context is removed by hand; squeezing that under the floor
+would have left the next edit to cross it with no row planned, and with the row, the file's later
+growth is a decision. The other 50 rows were kept and none was re-pinned;
+`reference/data-architecture.md` shrank 24 bytes to 133,751.
+
+**What it doesn't reach.** No stage ran `--register`, `--apply` or `--restore` against the live
+branch protection: each is proved by self-test arms through injected reads and writes on a
+stand-in host. Whether the host accepts `app_id: null` on that write is still unmeasured, and both
+modes state either outcome. No tested mode removes a context, so a renamed or retired job's context
+is still removed by hand. The shellcheck pin is by version, not by digest, and its ownership check
+reads dpkg's record of the file, not the file. A digest read from the release's own checksums file
+means a later change to what upstream serves is noticed; it does not show that the release was
+sound.
+
 ## [0.66.0] — 2026-11-10 — The intake channel is checked, not asserted
 
 No trip verb plans or records a trip differently in this release. What changes is met by whoever
