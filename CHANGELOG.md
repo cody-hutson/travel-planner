@@ -57,11 +57,11 @@ nationality. The transport spoke states immigration timing by queue, the validat
 field-class finding without quoting it, and a `Visa / entry` line naming a traveller's nationality
 or issuing country is now a finding rather than exempt destination guidance.
 
-**Size fence.** Nothing was re-pinned: all 50 rows were kept, as
+**Size fence.** Nothing was re-pinned: all 51 rows were kept, as
 `CH_EMIT=growth bash scripts/test-corpus-hygiene.sh` prints them.
-- `skills/trip/SKILL.md` grew 1,269 bytes to 105,906, beneath its row of 106,098 — 192 bytes of
+- `skills/trip/SKILL.md` grew 1,269 bytes to 105,967, beneath its row of 106,098 — 131 bytes of
   headroom, so a release that grows it by more than that will need to re-pin it.
-- `CLAUDE.md` grew 1,149 bytes to 142,920, beneath its row of 153,381; `agents/00-enrichment.md`
+- `CLAUDE.md` grew 1,149 bytes to 143,870, beneath its row of 153,381; `agents/00-enrichment.md`
   grew 1,198 to 77,411, beneath 82,813; `templates/traveler-intake.template.md` grew 916 to 21,016,
   beneath 22,110.
 - `templates/person-intake.template.md` grew to 19,225 bytes and `agents/destination-ideation.md`
