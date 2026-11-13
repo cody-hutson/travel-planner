@@ -25,7 +25,7 @@ permissions:
 # `# gate-efficacy: posture=` line above its key, and graded against the committed
 # context list by the registration census step in the actionlint job below.
 #
-# ── WHAT THIS WORKFLOW DOWNLOADS, AND HOW EACH DOWNLOAD IS PINNED ─────────────────
+# ── WHICH RELEASE ASSETS THIS WORKFLOW DOWNLOADS, AND HOW EACH IS PINNED ──────────
 # actionlint and gitleaks are upstream release assets. Each is fixed by a version and refused
 # unless its SHA-256 matches the digest beside that version in its job's env, before it is
 # unpacked or run; a mismatch fails the step, and nothing falls back to an unverified download.
@@ -35,6 +35,8 @@ permissions:
 # not prove the release itself was sound: a compromised release that published a matching
 # checksums file would have been pinned as readily. Moving a pin is one edit to a version and
 # its digest together, read from that version's checksums file.
+# The actions/checkout step every job opens with is not one of these: it runs that action at
+# its moving major tag, v7, which nothing here pins, and pinning it is a change of its own.
 #
 # ── WHICH SHELLCHECK ACTIONLINT RUNS, AND HOW IT IS PINNED ───────────────────────
 # Not a download. actionlint runs the shellcheck the ubuntu-24.04 runner image installs from
