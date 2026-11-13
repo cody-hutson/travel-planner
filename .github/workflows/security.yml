@@ -12,10 +12,14 @@ permissions:
   contents: read
 
 # travel-planner ships no application source code, so the conventional SAST +
-# dependency-audit + secret-scan triple is adapted for a markdown agent-prompt repo:
-#   1. actionlint          — SAST for the workflow YAML (the only executable surface)
-#   2. markdown-link-check  — integrity of cross-references in the agent prompts / docs
-#   3. gitleaks            — secret scanning (universal; full history)
+# dependency-audit + secret-scan triple is adapted for a markdown agent-prompt repo. What each
+# job runs, in order:
+#   actionlint           the required-check registration census step, which runs
+#                        scripts/pin-required-checks.py --self-test and then --census; then
+#                        actionlint over every workflow file, after the step that asserts the
+#                        shellcheck actionlint runs on each run: block
+#   markdown-link-check  every local [text](path) link in a tracked markdown file resolves
+#   gitleaks             the trip-data ignore invariant; then gitleaks over the full history
 #
 # Whether a job here binds a merge is declared BY THAT JOB, on the
 # `# gate-efficacy: posture=` line above its key, and graded against the committed
