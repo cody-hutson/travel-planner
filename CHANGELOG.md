@@ -18,17 +18,19 @@ unpacked unchecked. Nothing falls back to an unverified download. actionlint's s
 downloaded: a step before actionlint refuses unless dpkg records `/usr/bin/shellcheck` as installed
 by the runner image's shellcheck package and that file reports 0.9.0, and actionlint is pointed at
 it. An image that moves that version, or drops shellcheck, now turns the check red, where before
-actionlint went on linting without shellcheck and said nothing. The workflow's header names what
-each job runs, and no sentence in `SECURITY.md` or `CONTRIBUTING.md` counts the required checks
-except the row the self-test reads.
+actionlint went on linting with whatever shellcheck the image carried, or with none, and said
+nothing. The workflow's header names what each job runs, and no sentence in `SECURITY.md` or
+`CONTRIBUTING.md` counts the required checks except the row the self-test reads.
 
 **`--restore` writes the endpoint it names, and proves what it wrote.** It addressed a path that
 doubled `/protection`, so a rollback could never land. It now writes the
 `required_status_checks` sub-resource, reads it back, and prints `RESTORED.` only when the read-back
 equals what it wrote. It refuses a rollback artifact it cannot vouch for, and where the host pins a
-context the capture held unpinned it says so and prints the hand route back. `--plan` and `--apply`
-now refuse at exit 3 a staging directory that already holds a different rollback point, where they
-used to overwrite it: restore from that directory, or pass a fresh one.
+context the capture held unpinned it says so and prints the hand route back. `--plan` and `--apply`,
+and the new `--register`, now refuse at exit 3 a staging directory that already holds a different
+rollback point, where they used to overwrite it: restore from that directory, or pass a fresh one.
+An rsc-PRE.json they cannot read is refused the same way, and since `--restore` cannot read it
+either, the remedy is a fresh directory.
 
 **Registering a declared check is a tested mode.**
 `scripts/pin-required-checks.py --register --context NAME` adds exactly the declared contexts the
@@ -38,10 +40,13 @@ not carry. It keeps every other live entry as it reads it, reads the write back,
 scope by context name, so an insertion that shifts every later position is not misread as a change
 to each. Exit 0 means `--assert` holds: where an entry it carried is not pinned to the app, it
 prints `NOT PINNED` with those entries, names `--apply` next, from a fresh `--staging` directory
-once it has written, and exits 1. `--restore` is its rollback. `CONTRIBUTING.md` and the flip recipe
-in `.github/workflows/adr-conformance.yml` name the mode, to be run once the change that declares
-the context has merged, and the tool's own registration texts do too. The next registration is a
-tested command, where the last one was a payload composed by hand.
+once it has written, and exits 1. `--apply`'s scope check now expects the app_id of each entry the
+write pins to move, two leaves for each, so a run that pins several carried entries reports
+scope-contained, where it reported a SCOPE VIOLATION, and advised a restore, once more than one had
+moved. `--restore` is its rollback. `CONTRIBUTING.md` and the flip recipe in
+`.github/workflows/adr-conformance.yml` name the mode, to be run once the change that declares the
+context has merged, and the tool's own registration texts do too. The next registration is a tested
+command, where the last one was a payload composed by hand.
 
 **Size fence.** `CONTRIBUTING.md` grew 290 bytes to 20,195 and crossed the floor at which a file owes
 a row, so it gains one at 22,215, the value the fence prints. Its new clause says how a context is
