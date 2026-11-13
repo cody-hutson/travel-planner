@@ -274,8 +274,10 @@ never the second.
 **What is not a finding.** The check keys on a *specific traveler's captured
 value*, never on the word "passport". Destination-level guidance that belongs on
 a published plan — tax-free-shopping notes, a packing-list line, the entry
-requirements enriched into `trip-context.md` `## Destination Baseline`
-(`Visa / entry`) — is correct content and is never flagged.
+rules for visitors enriched into `trip-context.md` `## Destination Baseline`
+(`Visa / entry`) — is correct content and is never flagged. A `Visa / entry` line
+that names a specific traveler's nationality or issuing country is not
+destination-level: it is a finding under this check.
 
 Nor is a **first-party** traveler's need reaching `trip-context.md`
 `## Hard Constraints`: that is the designed escalation path and it stays open,
@@ -1250,7 +1252,10 @@ Format: Date — Event — Impact on itinerary — Action if any]
 
 ### Hub Agent Remediation Instructions
 
-> Prioritized action list for the hub agent's remediation pass.
+> Prioritized action list for the hub agent's remediation pass. A finding of a
+> value a `field` row of `reference/data-architecture.md` § 5.6 labels — here and in
+> its **[C<n>]** entry above — is located by artifact, day and line, and never quotes
+> the value.
 
 1. [Critical issue — specific fix instruction]
 2. [Critical issue — specific fix instruction]

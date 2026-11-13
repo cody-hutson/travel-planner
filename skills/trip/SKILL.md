@@ -702,18 +702,21 @@ re-read it for the trip's mode or destination — the record block above carries
 Its one other read is the traveller projection's, for the hub: `trips/<slug>/outputs/traveler-model.md`,
 or `trips/<slug>/travelers/*.md` where none is on file. Every other artifact under
 `trips/<slug>/outputs/` is read by the agents that consume it, and a read here would give the
-itinerary a second reader with no write to justify it. **Agent reads, attributed:** enrichment reads `trips/<slug>/travelers/*.md`,
+itinerary a second reader with no write to justify it. **Agent reads, attributed:** enrichment's reconciler reads `trips/<slug>/travelers/*.md`,
 `<store-root>/people/<person-id>.md`, the durable record a file's `person:` line references,
 and the survivor where that record is a `merged-into:` stub, `trips/<slug>/trip-context.md`
 and `trips/<slug>/outputs/traveler-model.md`, the model it is
-about to replace, read before it rebuilds it; each spoke reads `trips/<slug>/trip-context.md`,
+about to replace, read before it rebuilds it; its research role and setup seed read
+`trips/<slug>/trip-context.md` alone; each spoke reads `trips/<slug>/trip-context.md`,
 `trips/<slug>/trip-log.md`, `trips/<slug>/outputs/traveler-model.md` and its own accumulated
 output file; the hub reads the spoke outputs, the traveller projection and
 `trips/<slug>/outputs/event-status.md`; the validator reads the itinerary the hub produced,
 `trips/<slug>/outputs/traveler-model.md` and `trips/<slug>/outputs/event-status.md`.
-**Dispatches** enrichment, the spokes § *Modes* admits for the resolved mode, the hub, and the
-validator where that mode runs it — each in the role or roles its roster row states, each
-writing exactly the file or files that row names and nothing else.
+**Dispatches** enrichment twice — its reconciler role, then its research role and setup seed,
+given `trips/<slug>/trip-context.md` and nothing else, not `trip-log.md` — then the spokes
+§ *Modes* admits for the resolved mode, the hub, and the validator where that mode runs it —
+each in the role or roles its roster row states, each writing exactly the file or files that
+row names and nothing else.
 **Non-interactive: the standing clause's *run nobody can answer*.**
 
 **The chain is § *Modes*' to decide, not this section's.** Read the resolved mode's row there
