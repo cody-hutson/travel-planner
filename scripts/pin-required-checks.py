@@ -98,9 +98,12 @@ MODES
     --apply --staging DIR --confirm-write
         The full sequence: self-test, capture, drift-check, compose, write,
         fresh read-back assert, and a scope-containment diff of the full
-        protection object. `--confirm-write` is mandatory: without it `--apply`
-        runs every step up to the write and then stops, so the dangerous mode
-        cannot be reached by a typo or a stale shell-history line.
+        protection object, which must differ at the app_id of each entry the
+        write pins and nowhere else: two leaves for each such entry, its app_id
+        as captured and at APP_ID. `--confirm-write` is mandatory: without it
+        `--apply` runs every step up to the write and then stops, so the
+        dangerous mode cannot be reached by a typo or a stale shell-history
+        line.
         It pins a context set that already equals CONTEXT_ORDER and never adds
         one: a live set that differs -- a context declared and not yet
         registered, or one retired -- stops at the drift guard (exit 4) before
@@ -121,7 +124,10 @@ MODES
         --apply pins it afterwards. Exit 0 means the branch then passes the
         --assert conjuncts: a run that leaves such an entry unpinned, after a
         verified write or with nothing to add, prints NOT PINNED with the
-        entries, names --apply next, and exits 1. Whether the host accepts
+        entries, names --apply next, and exits 1. After a write, that --apply
+        runs from a fresh --staging directory: this one then holds the
+        registration's rollback point, which --apply refuses to replace and
+        --restore reads, and the output says so. Whether the host accepts
         `app_id: null` on that write was not measured. If it refuses, nothing
         changes (exit 7). If it treats null as omitted, as its documentation
         describes for an omitted `app_id`, the write lands with that entry
@@ -141,14 +147,18 @@ MODES
 
     --restore --staging DIR --confirm-write
         Rollback. Re-applies the sub-resource captured before the write it
-        rolls back -- rsc-PRE.json, as rsc-RESTORE.json composes it --
-        verbatim, `app_id: null` included, to the same narrow endpoint, and
-        reads it back: the read-back must equal that payload (exit 1
-        otherwise, exit 7 when it cannot be read). It refuses at exit 3 when
-        rsc-PRE.json is missing or unreadable, or when an rsc-RESTORE.json
-        already in the directory is not the payload rsc-PRE.json composes;
-        an rsc-RESTORE.json with no rsc-PRE.json beside it is refused too,
-        and copying it to rsc-PRE.json is how to say that it is the capture.
+        rolls back -- rsc-PRE.json, composed into the payload rsc-RESTORE.json
+        holds -- verbatim, `app_id: null` included, to the same narrow
+        endpoint, and reads it back: the read-back must equal that payload
+        (exit 1 otherwise, exit 7 when it cannot be read). The body it sends
+        is that payload, composed from rsc-PRE.json, never the bytes of an
+        rsc-RESTORE.json already in the directory, so a member that file
+        carries beside strict and the checks is not sent. It refuses at exit 3
+        when rsc-PRE.json is missing or unreadable, or when an
+        rsc-RESTORE.json already in the directory is not the payload
+        rsc-PRE.json composes; an rsc-RESTORE.json with no rsc-PRE.json beside
+        it is refused too, and copying it to rsc-PRE.json is how to say that
+        it is the capture.
         It does not run the self-test: a rollback is never refused for a
         reason that has nothing to do with it, and its arms run in CI on
         every pull request. Whether the host accepts `app_id: null` on that
@@ -182,17 +192,19 @@ EXIT CODES
 STAGING DIRECTORY
     Pass `--staging <dir>`; the tool writes `<dir>/prot-PRE.json`,
     `<dir>/rsc-PRE.json`, `<dir>/rsc-PATCH.json`, `<dir>/rsc-RESTORE.json` and,
-    after a write, `<dir>/prot-POST.json`. No path is compiled in, so the
-    artifacts land wherever the operator keeps them -- deliberately NOT in this
-    repository, which is public and where a protection snapshot would both
-    disclose configuration and rot as corpus.
+    after a write, `<dir>/prot-POST.json`. --restore stages the body it sends
+    in a temporary file there and removes it once the write returns. No path is
+    compiled in, so the artifacts land wherever the operator keeps them --
+    deliberately NOT in this repository, which is public and where a protection
+    snapshot would both disclose configuration and rot as corpus.
 
     A staging directory holds one rollback point. --plan, --apply and
     --register refuse at exit 3, before writing anything, when the rsc-PRE.json
     already there differs from their new capture, its checks compared in any
-    order: that file is the rollback point of an earlier run, and --restore
-    reads it. Restore from it, or pass a fresh directory. An equal capture -- a
-    dry run followed by the confirmed run -- replaces it.
+    order, or cannot be read and keyed as a sub-resource: that file is the
+    rollback point of an earlier run, and --restore reads it. Restore from it,
+    or pass a fresh directory. An equal capture -- a dry run followed by the
+    confirmed run -- replaces it.
 """
 
 import argparse
@@ -1237,15 +1249,19 @@ def protection_paths(repo, branch):
 
 # The one path shape gh_patch_json writes, matched in full. A suffix test also
 # admits a path that doubles /protection, which is the path --restore once wrote.
+# Each segment is letters, digits, ".", "_" and "-", and is never "." or "..".
+_RSC_SEGMENT = r"(?!\.\.?/)[A-Za-z0-9._-]+"
 _RE_RSC_WRITE_PATH = re.compile(
-    r"repos/[^/]+/[^/]+/branches/[^/]+/protection/required_status_checks")
+    r"repos/{0}/{0}/branches/{0}/protection/required_status_checks".format(_RSC_SEGMENT))
 
 
 def rsc_write_path_ok(path):
     """True only for repos/OWNER/NAME/branches/BRANCH/protection/required_status_checks.
 
     A full match of that shape rather than a suffix test, because `endswith`
-    admits the doubled path. A branch name containing `/` is refused: the tool
+    admits the doubled path. Each segment is letters, digits, `.`, `_` and `-`,
+    and is never `.` or `..`, so a branch name containing `/`, a dot-segment, a
+    query string and a percent-encoded separator are each refused: the tool
     guards `main`, and refusing a shape nobody foresaw is the fail-closed
     direction.
     """
@@ -1421,21 +1437,27 @@ def capture_rollback_point(fetch, prot_path, rsc_path, staging):
     When an rsc-PRE.json is already there and its _rollback_digest differs from
     the new capture's, the earlier run's rollback point is kept and nothing is
     written; an equal capture, such as a dry run followed by the confirmed run,
-    replaces it. An rsc-PRE.json that cannot be read is refused the same way,
-    because nothing can show that it is not a rollback point.
+    replaces it. An rsc-PRE.json that cannot be read, or whose checks
+    _restore_key cannot key, is refused the same way, because nothing can show
+    that it is not a rollback point, and its digest cannot be compared.
     """
     pre_full_f = os.path.join(staging, "prot-PRE.json")
     pre_rsc_f = os.path.join(staging, "rsc-PRE.json")
-    prior = None
+    prior, unreadable = None, None
     if os.path.exists(pre_rsc_f):
         try:
             with open(pre_rsc_f, encoding="utf-8") as fh:
                 prior = json.load(fh)
         except (OSError, ValueError) as exc:
+            unreadable = str(exc)
+        else:
+            if _restore_key(prior) is None:
+                unreadable = "it carries no checks array of named contexts"
+        if unreadable is not None:
             raise CaptureRefused(
                 "an rsc-PRE.json is already in {} and cannot be read ({}), so it may "
                 "be the rollback point of an earlier run -- restore from it, or pass "
-                "a fresh --staging directory".format(staging, exc))
+                "a fresh --staging directory".format(staging, unreadable))
     pending = (pre_full_f + ".pending", pre_rsc_f + ".pending")
     try:
         pre_full = capture(fetch, prot_path, pending[0], "full protection object")
@@ -1539,6 +1561,32 @@ def _pinned(app_id):
     return isinstance(app_id, int) and not isinstance(app_id, bool) and app_id == APP_ID
 
 
+def pin_leaves(pre_full):
+    """The differing leaves --apply's write may produce, keyed as scope_diff keys
+    them. Returns (entries, leaves).
+
+    For each entry of the captured `checks` not pinned to APP_ID, its app_id leaf
+    as captured and the same leaf at APP_ID: two for each entry the write pins,
+    every one an app_id. `checks` is sorted by context first, as _normalise sorts
+    it, so an index here is the index scope_diff reads. An entry whose app_id is
+    an object or an array has no single leaf to expect, so none is expected for
+    it, and a write that pins it reads as a scope violation: the fail-closed
+    direction.
+    """
+    entries, leaves = [], set()
+    rsc = _normalise(pre_full).get("required_status_checks")
+    checks = rsc.get("checks") if isinstance(rsc, dict) else None
+    for i, entry in enumerate(checks if isinstance(checks, list) else []):
+        if not isinstance(entry, dict) or _pinned(entry.get("app_id")):
+            continue
+        entries.append(str(entry.get("context")))
+        app_id = entry.get("app_id")
+        if not isinstance(app_id, (dict, list)):
+            leaf = ".required_status_checks.checks[{}].app_id".format(i)
+            leaves |= {(leaf, app_id), (leaf, APP_ID)}
+    return entries, leaves
+
+
 def registration_scope(pre_full, post_full, names):
     """The registration's scope check over the full protection objects captured
     before and after the write. Returns (ok, problems, notes).
@@ -1552,8 +1600,9 @@ def registration_scope(pre_full, post_full, names):
     only, it fails. Every other leaf goes through scope_diff over copies with
     `checks` and `contexts` removed, and none may differ. scope_diff cannot grade
     `checks` itself: it compares indexed leaves, so an insertion shifts every
-    later index, and --apply's expectation of exactly the app_id leaves it moves
-    stays as it is.
+    later index. --apply can grade with it because its write inserts nothing: it
+    expects exactly the app_id leaves it moves, two for each entry it pins
+    (pin_leaves).
     """
     problems, notes = [], []
     want = set(names)
@@ -2123,6 +2172,34 @@ def restore_arms():
                                     sorted(entry_keys - {"context", "app_id"})))
         return problems, "; ".join(seen)
 
+    def h16():
+        host = _FakeHost(_pre_pairs())
+        problems = []
+        with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+            def _capture(confirm):
+                return run_apply(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                                 staging=tmp, confirm=confirm, fetch=host.fetch,
+                                 write=host.write, stream=io.StringIO(),
+                                 run_self_test=False)
+            rc_plan = _capture(False)
+            rc_apply = _capture(True)
+            writes = len(host.writes)
+            if (rc_plan, rc_apply, writes) != (6, 0, 1):
+                problems.append("--plan rc {}, then --apply in the same directory rc "
+                                "{}, {} write(s) -- want 6, 0 and 1: an equal capture "
+                                "replaces the rollback point".format(rc_plan, rc_apply,
+                                                                     writes))
+            rc_third = _capture(False)
+            if rc_third != 3 or len(host.writes) != writes:
+                problems.append("a third capture after the write: rc {}, {} write(s) -- "
+                                "want 3 and none".format(rc_third,
+                                                         len(host.writes) - writes))
+            left = sorted(n for n in os.listdir(tmp) if n.endswith(".pending"))
+            if left:
+                problems.append("the refused capture left {}".format(left))
+        return problems, "plan rc {}, apply rc {}, third capture rc {}".format(
+            rc_plan, rc_apply, rc_third)
+
     return [
         ("H0", "the write predicate: the doubled path refused, the narrow path "
                "admitted, and nine near-misses refused, a dot-segment in each of the "
@@ -2169,6 +2246,20 @@ def restore_arms():
         ("H13", "an rsc-RESTORE.json that agrees with rsc-PRE.json on its key but "
                 "carries other members: the restore sends the payload rsc-PRE.json "
                 "composes, and nothing else in that file", h13),
+        ("H14", "the read-back does not parse: the restore is unverified, exit 7",
+         _guarded(capture_null, compose_restore(capture_null), True,
+                  [(True, "not json at all", "")], 7, 1)),
+        ("H14b", "the read-back carries no checks array: the restore is unverified, "
+                 "exit 7",
+         _guarded(capture_null, compose_restore(capture_null), True,
+                  [(True, "{}", "")], 7, 1)),
+        ("H15", "the read-back equals the payload in every check and differs in "
+                "strict: not verified, exit 1",
+         _guarded(capture_null, compose_restore(capture_null), True,
+                  [(True, json.dumps(dict(capture_null, strict=True)), "")], 1, 1)),
+        ("H16", "--plan then --apply in one directory, then a third capture: the "
+                "dry run's equal capture replaced, one write, and the third capture "
+                "refused at exit 3 with no .pending file left", h16),
     ]
 
 
@@ -2222,8 +2313,21 @@ def register_arms():
     def _transport_down(path):
         return (False, "", "HTTP 403")
 
+    def _after_write(path, response):
+        """A fetch for the host that answers `path` with `response` once the host
+        has taken a write, and reads the host for everything else."""
+        def bind(host):
+            def fetch(p):
+                if host.writes and p == path:
+                    host.fetches.append(p)
+                    return response
+                return host.fetch(p)
+            return fetch
+        return bind
+
     def _arm(pairs, names, want_rc, want_writes, confirm=True, strict=False,
-             mutate=None, reject_write=False, fetch=None, check=None):
+             mutate=None, reject_write=False, fetch=None, check=None,
+             bind_fetch=None):
         def drive():
             register = globals().get("run_register")
             if register is None:
@@ -2232,10 +2336,14 @@ def register_arms():
                              reject_write=reject_write)
             capture = host.sub()
             problems, sink = [], io.StringIO()
+            if bind_fetch is not None:
+                fetch_used = bind_fetch(host)
+            else:
+                fetch_used = fetch or host.fetch
             with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
                 rc = register(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
                               staging=tmp, names=list(names), confirm=confirm,
-                              fetch=fetch or host.fetch, write=host.write,
+                              fetch=fetch_used, write=host.write,
                               stream=sink, run_self_test=False)
                 staged = dict((n, _read_staged(tmp, n))
                               for n in ("rsc-PATCH.json", "rsc-RESTORE.json"))
@@ -2308,6 +2416,33 @@ def register_arms():
             if word not in text:
                 problems.append("the output does not say {!r}".format(word))
         return check
+
+    def _unverified(word):
+        def check(problems, host, capture, staged, text):
+            if word not in text:
+                problems.append("the output does not say {!r}".format(word))
+            if [ln for ln in text.splitlines() if ln.startswith("REGISTERED")]:
+                problems.append("the output reports the registration as made")
+        return check
+
+    def _null_pinned(state):
+        for entry in state["required_status_checks"]["checks"]:
+            if entry["app_id"] is None:
+                entry["app_id"] = APP_ID
+
+    def _read_back_differs(problems, host, capture, staged, text):
+        if "REGISTRATION NOT VERIFIED -- the read-back differs" not in text:
+            problems.append("the read-back's equality with the payload did not report it")
+        if "SCOPE VIOLATION" in text:
+            problems.append("it reached the scope check, so the equality limb did not "
+                            "stop it")
+        if unpinned not in text:
+            problems.append("the output does not name {}".format(unpinned))
+
+    def _refused_twice(problems, host, capture, staged, text):
+        _refused(problems, host, capture, staged, text)
+        if "named more than once" not in text:
+            problems.append("the output does not say a context was named more than once")
 
     def j17():
         register = globals().get("run_register")
@@ -2385,10 +2520,32 @@ def register_arms():
                                          check=_says("NOT VERIFIED"))),
         ("J11", "the live set holds a context twice: refused, nothing written",
          _arm(_live(last) + [(first_sorted, APP_ID)], [last], 4, 0, check=_refused)),
+        ("J12", "the read-back fails at the transport layer: exit 7, and the "
+                "registration is never reported as made",
+         _arm(_live(last), [last], 7, 1, check=_unverified("READ-BACK FAILED"),
+              bind_fetch=_after_write(_FakeHost.RSC_PATH, (False, "", "HTTP 502")))),
+        ("J13", "the read-back does not parse: exit 7, and the registration is never "
+                "reported as made",
+         _arm(_live(last), [last], 7, 1, check=_unverified("READ-BACK FAILED"),
+              bind_fetch=_after_write(_FakeHost.RSC_PATH,
+                                      (True, "not json at all", "")))),
+        ("J14", "the host pins the carried null on the write: the read-back differs "
+                "from the payload and that limb reports it, exit 1, before any scope "
+                "check", _arm([(c, a) for c, a in _pre_pairs() if c != last], [last],
+                              1, 1, mutate=_null_pinned, check=_read_back_differs)),
+        ("J15", "the post-change capture fails: exit 1, and the registration is never "
+                "reported as made",
+         _arm(_live(last), [last], 1, 1, check=_unverified("post-capture unavailable"),
+              bind_fetch=_after_write(_FakeHost.PROT_PATH, (False, "", "HTTP 500")))),
+        ("J16", "the missing context is named twice: refused, nothing written",
+         _arm(_live(last), [last, last], 4, 0, check=_refused_twice)),
         ("J17", "J4's state, written to an ASCII stream and to a Latin-1 stream, "
                 "neither of which encodes the em dash in the ruled NOT PINNED text: exit "
                 "1 after the one write, nothing raised, and the output still says NOT "
                 "PINNED and names the entry", j17),
+        ("J18", "every declared context is live and pinned, and the context named is "
+                "one the declaration does not carry: refused, nothing written",
+         _arm(_live(), [extra], 4, 0, check=_refused)),
     ]
 
 
@@ -2400,11 +2557,13 @@ def scope_arms():
     check is looked up by name, so where it does not exist every arm grades it
     absent rather than raising, except K-ctl, which drives scope_diff and is the
     control: it shows why the keyed check exists, since an insertion read as
-    indexed leaves differs at far more than the two leaves --apply expects.
+    indexed leaves differs at more leaves than --apply could expect even were it
+    to pin every entry, two for each.
     """
     last = CONTEXT_ORDER[-1]
     first_sorted = min(CONTEXT_ORDER)
     unpinned = "Personal-data gate"
+    extra = "Extra check (never declared)"
 
     def _live(*missing):
         return [(c, APP_ID) for c in CONTEXT_ORDER if c not in missing]
@@ -2451,11 +2610,14 @@ def scope_arms():
 
     def k_ctl():
         diff = scope_diff(pre_first, post_first)
+        ceiling = 2 * len(pre_first["required_status_checks"]["checks"])
         problems = []
-        if len(diff) <= 2:
+        if len(diff) <= ceiling:
             problems.append("scope_diff reads {} differing leaves over an insertion "
-                            "that shifts every index, want more than 2".format(len(diff)))
-        return problems, "scope_diff reads {} differing leaves".format(len(diff))
+                            "that shifts every index, want more than {}, two for each "
+                            "captured entry".format(len(diff), ceiling))
+        return problems, "scope_diff reads {} differing leaves, against {} were " \
+                         "--apply to pin every entry".format(len(diff), ceiling)
 
     def _drop_contexts(obj):
         del obj["required_status_checks"]["contexts"]
@@ -2469,8 +2631,9 @@ def scope_arms():
         ("K1", "an insertion of the context that sorts first, shifting every later "
                "index: passes, keyed by name", _graded(pre_first, post_first,
                                                        [first_sorted], True)),
-        ("K-ctl", "scope_diff over K1's pair reads more than the two leaves --apply "
-                  "expects, which is why the keyed check exists", k_ctl),
+        ("K-ctl", "scope_diff over K1's pair reads more leaves than --apply could "
+                  "expect even pinning every entry, two for each, which is why the "
+                  "keyed check exists", k_ctl),
         ("K2", "a context beside the one named is added: fails",
          _graded(pre, _protection_full(_live(last) + [(last, APP_ID),
                                                       ("Extra check (never declared)",
@@ -2501,17 +2664,44 @@ def scope_arms():
          _graded(pre, _protection_full(_live(last) + [(last, APP_ID),
                                                       (CONTEXT_ORDER[0], APP_ID)]),
                  [last], False)),
+        ("K10", "a correct write graded against a context named twice: fails, on the "
+                "naming alone", _graded(pre, post, [last, last], False)),
+        ("Kc", "contexts absent before and after, so checks alone is graded: a context "
+               "beside the one named added, an existing one removed, and the one named "
+               "listed twice each fail",
+         _both(_graded(no_contexts_pre,
+                       _edited(_protection_full(_live(last) + [(last, APP_ID),
+                                                               (extra, APP_ID)]),
+                               _drop_contexts), [last], False),
+               _graded(no_contexts_pre,
+                       _edited(_protection_full(_live(last, CONTEXT_ORDER[0])
+                                                + [(last, APP_ID)]),
+                               _drop_contexts), [last], False),
+               _graded(no_contexts_pre,
+                       _edited(_protection_full(_live(last) + [(last, APP_ID),
+                                                               (last, APP_ID)]),
+                               _drop_contexts), [last], False))),
+        ("Kx", "checks correct and contexts wrong: contexts drops an existing name, or "
+               "lists one twice, and each fails",
+         _both(_graded(pre, _edited(post, lambda o: o["required_status_checks"]
+                                    ["contexts"].remove(CONTEXT_ORDER[0])),
+                       [last], False),
+               _graded(pre, _edited(post, lambda o: o["required_status_checks"]
+                                    ["contexts"].append(CONTEXT_ORDER[0])),
+                       [last], False))),
     ]
 
 
 def seam_arms():
-    """register-then-restore: the registration and its rollback on one stateful
-    host, from one staging directory.
+    """register-then-restore and register-then-apply: the registration, its
+    rollback and the --apply its NOT PINNED output names, on one stateful host.
 
     Each arm is (id, label, drive), graded as register_arms grades its own, and
     looks the mode up by name. The rollback is verified against the capture, never
     against CONTEXT_ORDER: a host returned to a capture taken before a
-    registration fails --assert by design, and M0 requires that it does.
+    registration fails --assert by design, and M0 requires that it does. M2 and
+    M3 follow the step NOT PINNED prints, and M4 holds --apply's scope check to
+    the app_id leaves of the entries it pins.
     """
     last = CONTEXT_ORDER[-1]
 
@@ -2656,6 +2846,28 @@ def seam_arms():
         return problems, "register rc {}, apply rc {}, --assert rc {}, {} " \
                          "write(s)".format(rc_reg, rc_apply, rc_assert, len(host.writes))
 
+    def m4():
+        def _sibling_moved(state):
+            state["enforce_admins"]["enabled"] = True
+
+        problems, seen = [], []
+        for label, carried in (("one carried entry", ("Personal-data gate",)),
+                               ("two carried entries",
+                                ("Personal-data gate", CONTEXT_ORDER[0]))):
+            host = _FakeHost([(c, None if c in carried else APP_ID)
+                              for c in CONTEXT_ORDER], mutate=_sibling_moved)
+            sink = io.StringIO()
+            with tempfile.TemporaryDirectory(prefix="prc-selftest-") as tmp:
+                rc = run_apply(repo=_FakeHost.REPO, branch=_FakeHost.BRANCH,
+                               staging=tmp, confirm=True, fetch=host.fetch,
+                               write=host.write, stream=sink, run_self_test=False)
+            seen.append("{} rc {}".format(label, rc))
+            if rc != 1 or len(host.writes) != 1 or \
+                    "SCOPE VIOLATION" not in sink.getvalue():
+                problems.append("{}: rc {}, {} write(s), want rc 1 after 1 and SCOPE "
+                                "VIOLATION".format(label, rc, len(host.writes)))
+        return problems, "; ".join(seen)
+
     return [
         ("M0", "register-then-restore on one stateful host: both exit 0, both "
                "writes narrow, the host returned to the capture in checks and "
@@ -2673,6 +2885,10 @@ def seam_arms():
                "missing: --register adds the context and exits 1, NOT PINNED, and "
                "--apply from a fresh --staging directory then pins both, exits 0, and "
                "leaves --assert holding on the host", m3),
+        ("M4", "--apply on a host that moves a sibling setting while it pins one "
+               "carried entry, and again while it pins two: each a SCOPE VIOLATION, "
+               "exit 1, the expected leaves being two for each entry pinned and "
+               "nothing else", m4),
     ]
 
 
@@ -4282,8 +4498,9 @@ def self_test(stream=sys.stdout):
              register_arms()),
             ("K -- the registration scope check, keyed by context name across checks "
              "and contexts", scope_arms()),
-            ("M -- register-then-restore: the registration's rollback, on one "
-             "stateful host", seam_arms())):
+            ("M -- register-then-restore and register-then-apply: the "
+             "registration's rollback and its next step, on one stateful host",
+             seam_arms())):
         out("")
         out(header)
         for aid, what, drive in group_arms:
@@ -4393,16 +4610,20 @@ def self_test(stream=sys.stdout):
         return 1
     out("SELF-TEST PASSED -- 11 degenerate arms all failed on exactly their named "
         "conjuncts, the positive arm passed, every named conjunct is individually "
-        "load-bearing, every capture failure refused the write, the restore wrote "
-        "to and read back the narrow sub-resource and refused every rollback "
-        "artifact it could not vouch for, a second capture refused to replace an "
-        "earlier rollback point, the registration mode added exactly the named "
-        "contexts, carried every other live entry as it was, refused every live "
-        "set and every naming it does not admit, and exited 0 only where --assert "
-        "held, the keyed scope check failed every change beside the contexts "
-        "named, register-then-restore returned the host to its capture, the "
-        "registration census graded every arm the stated way with a control that "
-        "reached rc 0, "
+        "load-bearing, every capture failure refused the write, the write path "
+        "admitted only the narrow sub-resource's shape, the restore wrote to and "
+        "read back the narrow sub-resource, sent the payload its capture composes "
+        "and refused every rollback artifact it could not vouch for, a second "
+        "capture refused to replace an earlier rollback point or one it could not "
+        "key, the registration mode added exactly the named contexts, carried "
+        "every other live entry as it was, refused every live set and every "
+        "naming it does not admit, exited 0 only where --assert held, and "
+        "reported a landed write on a stream that cannot encode its text, the "
+        "keyed scope check failed every change beside the contexts named, "
+        "register-then-restore returned the host to its capture, the --apply that "
+        "NOT PINNED names pinned every carried entry from a fresh staging "
+        "directory and failed a write that moved anything else, the registration "
+        "census graded every arm the stated way with a control that reached rc 0, "
         "SECURITY.md's required-check list is set-equal to CONTEXT_ORDER in both "
         "directions, and no text E9 reads counts an open set.")
     return 0
@@ -4412,6 +4633,28 @@ def self_test(stream=sys.stdout):
 # Live modes
 # ==========================================================================
 
+def _write_line(stream, msg):
+    """Write one line of a live mode's output, replacing what the stream cannot
+    encode rather than raising.
+
+    The ruled NOT PINNED text carries an em dash, and an error the host returns
+    can carry anything, while an operator's stdout may be ASCII or Latin-1. A
+    mode that has already written must still report how the write ended, so a
+    character the stream cannot encode is replaced and never ends the run in a
+    traceback.
+    """
+    line = msg + "\n"
+    try:
+        stream.write(line)
+    except UnicodeEncodeError:
+        encoding = getattr(stream, "encoding", None) or "ascii"
+        try:
+            line = line.encode(encoding, "replace").decode(encoding)
+        except LookupError:
+            line = line.encode("ascii", "replace").decode("ascii")
+        stream.write(line)
+
+
 def run_apply(repo, branch, staging, confirm, fetch=gh_fetch_json,
               write=gh_patch_json, stream=sys.stdout, run_self_test=True):
     """capture -> drift-check -> compose -> [write] -> read-back assert -> scope diff.
@@ -4420,7 +4663,7 @@ def run_apply(repo, branch, staging, confirm, fetch=gh_fetch_json,
     this function with no network and count the writes it attempted.
     """
     def out(msg):
-        stream.write(msg + "\n")
+        _write_line(stream, msg)
 
     if run_self_test:
         if self_test(stream) != 0:
@@ -4525,15 +4768,18 @@ def run_apply(repo, branch, staging, confirm, fetch=gh_fetch_json,
             "the scope-containment diff could not be run.".format(exc))
         return 1
     diff = scope_diff(pre_full, post_full)
+    pinning, expected = pin_leaves(pre_full)
     out("      differing leaves: {}".format(len(diff)))
     for k, v in diff:
         out("        {} = {!r}".format(k, v))
-    if len(diff) != 2 or not all("app_id" in k for k, _ in diff):
-        out("SCOPE VIOLATION: the write changed something other than the one app_id. "
-            "Restore from {}.".format(restore_f))
+    if set(diff) != expected:
+        out("SCOPE VIOLATION: the write changed something other than the app_id of "
+            "each entry it pinned -- {} differing leaves, want {}, two for each of {}. "
+            "Restore from {}.".format(len(diff), len(expected), pinning, restore_f))
         return 1
-    out("      exactly two differing leaves, both the one app_id -- no sibling "
-        "protection setting moved")
+    out("      {} differing leaves, two for each entry pinned, every one that entry's "
+        "app_id -- {}; no sibling protection setting moved".format(
+            len(diff), ", ".join(pinning)))
     out("DONE -- the required-context set is pinned, and the write is scope-contained.")
     return 0
 
@@ -4551,7 +4797,7 @@ def run_register(repo, branch, staging, names, confirm, fetch=gh_fetch_json,
     injected so the self-test drives every branch with no network.
     """
     def out(msg):
-        stream.write(msg + "\n")
+        _write_line(stream, msg)
 
     if run_self_test:
         if self_test(stream) != 0:
@@ -4754,6 +5000,9 @@ def run_register(repo, branch, staging, names, confirm, fetch=gh_fetch_json,
     if rc != 0:
         out("REGISTERED — NOT PINNED: {}; run --apply next".format(
             ", ".join(unpinned)))
+        out("Run it from a fresh --staging directory: this one holds the "
+            "registration's rollback point, which --restore reads and --apply "
+            "refuses to replace.")
         out("The contexts named were added and the write is scope-contained. The "
             "entries above were carried over as they were read and are not pinned "
             "to APP_ID, so --assert fails on them until --apply pins them.")
@@ -4774,19 +5023,20 @@ def run_restore(repo, branch, staging, confirm, fetch=gh_fetch_json,
                 write=gh_patch_json, stream=sys.stdout):
     """provenance -> [write] -> read-back compared with the payload written.
 
-    It re-applies rsc-PRE.json, as rsc-RESTORE.json composes it, to the narrow
-    path. Before any write it refuses at exit 3 when rsc-PRE.json cannot vouch
-    for itself, or when an rsc-RESTORE.json already in the directory is not the
-    payload rsc-PRE.json composes. After the write it reads the sub-resource
-    back: unreadable is exit 7, different from the payload is exit 1, and only a
-    read-back equal to the payload prints RESTORED. The read-back is compared
-    with the payload and never graded by evaluate(), because restoring a capture
-    that held app_id null, or one taken before a registration, fails the
-    --assert conjuncts by design. It does not run the self-test; the module
-    docstring's --restore entry says why.
+    It re-applies rsc-PRE.json, composed as compose_restore composes it, to the
+    narrow path, and sends that payload rather than the bytes of the staged
+    rsc-RESTORE.json. Before any write it refuses at exit 3 when rsc-PRE.json
+    cannot vouch for itself, or when an rsc-RESTORE.json already in the
+    directory is not the payload rsc-PRE.json composes. After the write it reads
+    the sub-resource back: unreadable is exit 7, different from the payload is
+    exit 1, and only a read-back equal to the payload prints RESTORED. The
+    read-back is compared with the payload and never graded by evaluate(),
+    because restoring a capture that held app_id null, or one taken before a
+    registration, fails the --assert conjuncts by design. It does not run the
+    self-test; the module docstring's --restore entry says why.
     """
     def out(msg):
-        stream.write(msg + "\n")
+        _write_line(stream, msg)
 
     def refuse(reason):
         out("ROLLBACK ARTIFACT REFUSED: {}".format(reason))
@@ -4815,20 +5065,44 @@ def run_restore(repo, branch, staging, confirm, fetch=gh_fetch_json,
                 "capture this restore re-applies: if it is the right one, remove "
                 "rsc-RESTORE.json and re-run, and the payload is composed from "
                 "it".format(staging))
+        staged_exact = canonical_digest(staged) == canonical_digest(payload)
     else:
         try:
             with open(restore_f, "w", encoding="utf-8") as fh:
                 json.dump(payload, fh, indent=2)
         except OSError as exc:
             return refuse("could not write rsc-RESTORE.json -- {}".format(exc))
+        staged_exact = True
     unpinned = [c["context"] for c in payload["checks"] if c.get("app_id") is None]
     out("restore payload: {} contexts, {} of them unpinned".format(
         len(payload["checks"]), len(unpinned)))
+    if not staged_exact:
+        out("rsc-RESTORE.json agrees with rsc-PRE.json on strict and on each "
+            "context's app_id, and is not that payload exactly: the body sent is the "
+            "payload composed from rsc-PRE.json, and nothing else in that file is "
+            "sent.")
     if not confirm:
         out("STOPPING -- --confirm-write was not given. Nothing was written.")
         return 6
+    # The body sent is the payload composed from rsc-PRE.json, never the staged
+    # file's bytes: provenance compares rsc-RESTORE.json on its key alone, so a
+    # member beside that key would otherwise reach the host unchecked.
+    body_f = None
+    try:
+        fd, body_f = tempfile.mkstemp(prefix="rsc-RESTORE-sent.", suffix=".json",
+                                      dir=staging)
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            json.dump(payload, fh, indent=2)
+    except OSError as exc:
+        if body_f is not None and os.path.exists(body_f):
+            os.remove(body_f)
+        return refuse("could not stage the body to send -- {}".format(exc))
     out("PATCH {} (narrow sub-resource; never PUT .../protection)".format(rsc_path))
-    ok, _text, err = write(rsc_path, restore_f)
+    try:
+        ok, _text, err = write(rsc_path, body_f)
+    finally:
+        if os.path.exists(body_f):
+            os.remove(body_f)
     if not ok:
         out("RESTORE FAILED: {}".format(err))
         out(_restore_fallback(rsc_path, "if app_id: null is rejected on the write path"))
