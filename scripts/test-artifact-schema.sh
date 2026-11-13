@@ -29175,11 +29175,15 @@ md_flips wtadr26_cell 'WT-ADR26' wtadr26_assert
 #                it, of the opener's own character, an opener a tilde run can make, no
 #                opener made by an inline code span, and a heading mark inside a fence, a
 #                label there and never a section (10 shapes, 14 canaries).
+#   PJ12 fail closed: a source holding a carriage return that no line feed follows — a model
+#        of bare-CR lines, and a traveller file whose last byte is one — exits exactly 2 with
+#        empty stdout and its own cause token on stderr, never a projection of a file read as
+#        fewer lines than it holds.
 #        PJ8 is not used: the scope-lock declined the review's eighth arm, the guard
 #        comparison, and leaving its id empty keeps these arms from reading as that one.
 #
 # EVERY ARM IS A CHAIN, by rule (ADR-048): one condition and one message per branch, PASS on
-# the last `else` only. PJ0, PJ2, PJ4 to PJ7 and PJ9 to PJ11 are top-level code, which group
+# the last `else` only. PJ0, PJ2, PJ4 to PJ7 and PJ9 to PJ12 are top-level code, which group
 # FZ walks. PJ1 and PJ3 live in functions because md_flips takes an assertion FUNCTION, and
 # ADR-048 § 3 records that the FZ walk does not read inside one — so those two are
 # FZ-ungraded, and MD's dynamic arm covers them instead: MD[PJ1] removes pj_project_file and
@@ -29800,6 +29804,46 @@ while [ "$pjt_i" -lt "${#PJT_SN[@]}" ]; do
     PASS "$pjt_id: $pjt_what — exit 0 [rc=0, expected 0], 0 of its $pjt_nc canaries in the projection and $pjt_nk of $pjt_nk kept lines in it"
   fi
   pjt_i=$((pjt_i + 1))
+done
+
+# ── PJ12 — fail closed on a source holding a carriage return no line feed follows. The reader
+# takes such a file as fewer lines than it holds, so it cannot find the labels in it; it is
+# refused, never read. [model] is a model whose lines end in a bare carriage return; [trav] is
+# a traveller file, with no model on file, whose one bare carriage return is its last byte.
+PJT_B12M="$PJT_FX/trips/bare-cr-model"; PJT_B12T="$PJT_FX/trips/bare-cr-trav"
+mkdir -p "$PJT_B12M/outputs" "$PJT_B12T/travelers"
+printf '## Rowan\r- **Passport:** Zorvanian · CNRY-PJS55\r- **Pace:** slow mornings\r' > "$PJT_B12M/outputs/traveler-model.md"
+printf '# Rowan\n\n- **Pace:** slow mornings\n- **Passport:** Zorvanian · CNRY-PJS56\r' > "$PJT_B12T/travelers/rowan.md"
+PJT_B12_TOK='PJ0: a source holds a carriage return with no line feed after it'
+for pjt_c in model trav; do
+  if [ "$pjt_c" = model ]; then
+    pjt_d="$PJT_B12M"; pjt_f="$PJT_B12M/outputs/traveler-model.md"; pjt_k='CNRY-PJS55'
+    pjt_w='a model whose lines end in a bare carriage return'
+  else
+    pjt_d="$PJT_B12T"; pjt_f="$PJT_B12T/travelers/rowan.md"; pjt_k='CNRY-PJS56'
+    pjt_w='a traveller file, with no model on file, whose last byte is a bare carriage return'
+  fi
+  pjt_eval "$PJT_DECL" "$pjt_d"
+  pjt_bare="$(LC_ALL=C awk 'index(substr($0, 1, length($0) - 1), "\r") { f = 1 } END { print f + 0 }' "$pjt_f")"
+  [ "$(LC_ALL=C tail -c 1 "$pjt_f")" = "$PJT_CR" ] && pjt_bare=1
+  pjt_can="$(pjt_hits "$(cat "$pjt_f")" "$pjt_k")"
+  pjt_tok=0
+  case "$PJT_ERR" in *"$PJT_B12_TOK"*) pjt_tok=1 ;; esac
+  if [ "$PJT_LOADED" -ne 1 ]; then
+    FAIL "PJ12[$pjt_c]: $pjt_w — the subject did not load (PJ0 says why), so this case has nothing to grade"
+  elif [ "$pjt_bare" -ne 1 ]; then
+    FAIL "PJ12[$pjt_c]: $pjt_w — the fixture holds no carriage return without a line feed after it, so this case would grade some other file"
+  elif [ -z "$pjt_can" ]; then
+    FAIL "PJ12[$pjt_c]: $pjt_w — the fixture does not carry its canary"
+  elif [ "$PJT_RC" -ne 2 ]; then
+    FAIL "PJ12[$pjt_c]: $pjt_w — the projection exited $PJT_RC, expected exactly 2 (undetermined): a file read as fewer lines than it holds was projected"
+  elif [ -n "$PJT_OUT" ]; then
+    FAIL "PJ12[$pjt_c]: $pjt_w — the projection refused but printed to stdout"
+  elif [ "$pjt_tok" -ne 1 ]; then
+    FAIL "PJ12[$pjt_c]: $pjt_w — the projection exited 2 with empty stdout, but not for the reason under test: stderr does not carry '$PJT_B12_TOK': $PJT_ERR"
+  else
+    PASS "PJ12[$pjt_c]: $pjt_w — refused, exit 2 [rc=2, expected 2] with empty stdout and the cause on stderr"
+  fi
 done
 
 # ── The registrations. Run only over a sourced subject: removing a function that was never
