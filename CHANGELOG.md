@@ -268,7 +268,10 @@ publishes a trip's site in plaintext. The content guard again refuses every page
 **A closing tag written with a space no longer hides what follows it.** A `<script>` or `<style>`
 body can be closed by a tag with a space before its bracket (`</script >`) and followed later by an
 exact `</script>`. The published projection now ends the body at the spaced tag, so a value written
-between the two stops the publish, as it did before 0.60.0. The visible and joined projections
+between the two with a tag on neither of the guard's lists around one of its words stops the
+publish, which 0.60.0 and 0.61.0 let through. A value written there split mid-word by an inline tag,
+or with an attribute-carrying tag around one of its words, still publishes, as it did in every
+earlier release that carried the guard. The visible and joined projections
 still end such a body only at the exact tag, as before 0.60.0. Changing them alone would give up
 values the guard before 0.60.0 caught inside such a body, so that stretch is a stated limit. A word
 written directly after a `<` in markup after such a spaced tag is read as a tag name, as everywhere
