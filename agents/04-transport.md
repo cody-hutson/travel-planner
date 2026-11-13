@@ -358,7 +358,8 @@ copes with bags — the bags themselves, on this stream, on this day. Three thin
 - **The arrival-side flow before transport**, where it changes the plan.
   Immigration and customs, and where the bags are actually collected, decide when
   this stream reaches the transport you are recommending — say so where that moves
-  a time or a mode, and leave it out where it does not.
+  a time or a mode, and leave it out where it does not. State that timing by queue,
+  never by a traveler's passport, nationality or document status.
 - **The pre-check-in window.** Read the `Check-in time:` from § *Input* against
   this stream's arrival and say whether the party can get into the room on
   landing. Where they cannot, the bags need a named home for those hours — the

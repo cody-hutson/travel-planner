@@ -3,6 +3,96 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.70.0] — 2026-11-12 — Travellers are told what the group may see, and no writer of a group page receives a passport
+
+A traveller filling in an intake form is now told who may see what they share, and the hub and
+the destination-ideation agent, the planning agents dispatched to write what a trip's site is
+built from, are given the traveller data with every line the § 5.6 fence labels left out, in each
+markdown shape the projection's criterion names. No trip is re-planned by this release: what
+changes is the next dispatch.
+
+**Both intake forms say who may see what.** The trip form and the person form each open with a
+four-point notice in place of their one *never published* line: the form itself is never
+published; the plan it shapes can be published as an encrypted private site, which opens for
+whoever holds the passphrase, so anyone it is passed on to can open it; a change reaches the site
+when the organizer next re-plans the trip and republishes it, while earlier versions and saved
+copies keep what they showed; and an open page anyone can read is the organizer's own deliberate
+step. What the site may show is the part of `ADR-030` § 2's list each form carries, and the notice
+says plainly that other answers shape the plan too, and that the plan can say whose need or wish a
+step serves. The person form's passport note now promises only what holds: the planning agents
+the organizer dispatches are given the answers with that line taken out, and an open publish is
+refused while a page repeats it. Three example answers lose the half that carried money, a need or
+someone else's occasion, and the grade record carries the operator's rulings on the two that a
+generated conversation recorded.
+
+**The planning agents that write group pages are given a projection.**
+`scripts/project-traveler-data.sh` prints a trip's traveller model, or its traveller files where
+no model is on file, with every line a `field` row of `reference/data-architecture.md` § 5.6
+labels left out — today `Passport` and `Documents`, its plural included. What it leaves out is a
+criterion, not a list: every line whose label begins with one of those selectors, where that label
+opens a list item at any indent, once its quote markers and one list marker are taken off (behind
+`>` quotes, a `[ ]` or `[x]` task box, or a bracketed mark included), a paragraph line, an ATX or setext heading, save one that holds a pipe inside a table
+run, a table row's first cell, a later cell that holds the label and a colon or the label alone, or
+the inside of a one-line HTML comment, after the ASCII emphasis and markup it strips and behind a
+no-break space. Each such line goes with what continues it: a label's wrapped, nested and loose
+lines, a heading's whole section and a header row's whole table, save a hit line that holds a pipe
+inside a table run, which is left out without what continues it. Any other shape is not read, and
+its line is kept. A table is defined as the script reads one: a line whose first character is `|`,
+once its blockquote markers and one list marker are taken off, together with the run of such lines
+around it. Where it errs inside the
+criterion, it errs toward leaving out: a kept line written inside a passport heading's section goes
+with it, so do the kept cells of a table whose column header names the field, and so does a
+needs-table row whose need text in the first column opens with one of those words, such as
+`Documents for insulin pens carried through security`, which the hub is then not given, though the
+validator still checks needs against the full model. It reads its class from that fence, so a new
+`field` row joins with no edit, and it refuses, printing nothing, when it cannot read one or when a
+source holds a carriage return that no line feed follows. `/trip` gives its output inline to the
+hub and the destination-ideation agent and writes it to no file. Which dispatches take it is a test
+in `CLAUDE.md` § *Dispatching agents* — an agent that writes a class the site build reads — not a
+list. Under `/trip plan`, enrichment is now two dispatches: the reconciler, which holds the
+traveller sources and writes only the traveller model, and the research role and setup seed, which
+is given `trip-context.md` and nothing else. Group `PJ` of `scripts/test-artifact-schema.sh` grades
+the projection, with each control on a copy of the fence and one small trip for each markdown
+shape, red where a value leaks and where a kept line is lost.
+
+**Entry text names no traveller's passport.** The trip-context template's `Visa / entry` line asks
+for the destination's entry rules for visitors, where it asked for a traveller's passport
+nationality. The transport spoke states immigration timing by queue, the validator locates a
+field-class finding without quoting it, and a `Visa / entry` line naming a traveller's nationality
+or issuing country is now a finding rather than exempt destination guidance.
+
+**Size fence.** Nothing was re-pinned: all 51 rows were kept, as
+`CH_EMIT=growth bash scripts/test-corpus-hygiene.sh` prints them.
+- `skills/trip/SKILL.md` grew 1,269 bytes to 105,967, beneath its row of 106,098 — 131 bytes of
+  headroom, so a release that grows it by more than that will need to re-pin it.
+- `CLAUDE.md` grew 1,149 bytes to 143,870, beneath its row of 153,381; `agents/00-enrichment.md`
+  grew 1,198 to 77,411, beneath 82,813; `templates/traveler-intake.template.md` grew 916 to 21,016,
+  beneath 22,110.
+- `templates/person-intake.template.md` grew to 19,225 bytes and `agents/destination-ideation.md`
+  to 11,414, both below the floor at which a file owes a row.
+
+**What it doesn't reach.** A dispatched agent keeps `Read`: what it is given is the projection,
+and that it opens none of the traveller files itself is a rule it follows, which nothing enforces.
+A shape outside the projection's criterion is not read, so its line still reaches the hub and the
+ideation agent. For example: a label behind an emoji, a homoglyph or any other non-ASCII character
+but a no-break space; a label behind an HTML tag, an entity or a closed comment, or behind a
+heading's ordinal; a camel-case key such as `passportNumber:`; a table cell after the first holding
+a label of more than one word and no colon, outside a header row; a label behind a second list
+marker or behind a quote opened inside a list item; a table row whose key cell is empty; a row whose leading pipe sits behind a task box, behind a second list marker or behind a
+quote opened inside a list item, none of which is a table as the script reads one; what continues a
+label line that holds a pipe inside a table run, whether a heading, a paragraph line or a one-line
+comment, which prints while the line itself is left out; and a value written as prose under some other label. These are
+residuals the criterion
+names, for a follow-on card, and milestone 97's content check is their backstop. The open-publish
+guard reads a passport value only where its label opens a line, once a list marker and bold are
+taken off, so for a value written in a heading, a table or a comment it cannot refuse an open page
+that repeats it. The encrypted site carries no content check until milestone 97's safeguard-6 check
+ships, so the publish guard's refusal binds only an open page. A passport typed into `trip-log.md`
+still reaches the hub and the ideation agent, and a trip whose `Visa / entry` text was filled per
+nationality keeps it until the research role next rewrites that field. An interviewed traveller is
+not yet read the notice: that route is a follow-on, to travel with the next regrade of the
+generated conversations.
+
 ## [0.69.0] — 2026-11-13 — Approvals stay true when the roster or the plan changes
 
 **Some trips are asked to confirm their plan once, though nothing in it changed.** The digest that

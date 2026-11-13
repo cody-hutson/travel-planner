@@ -705,13 +705,20 @@ Required inputs:
    all, carry that flag here as a `VERIFY` with no number and no name, naming
    `/trip-record group`, or `/trip-record person` withdraws a member who no
    longer travels. A brief with no such clause is carried as before)
-6. outputs/traveler-model.md (the `[DERIVED]` per-traveler needs + desires — the
-   source for the satisfaction-coverage read: anchors/wishes → covered/not,
-   needs → pass/fail. Its desire-overlap signal now also carries the attention
-   lens — shared desires are efficient to cover, unique desires are protected —
-   which the selection-layer agents (01/02) already read to bias their menus;
-   weighing desire-coverage through that lens is the hub's job under issue #17,
-   not per-engine work done here)
+6. the traveller projection the dispatch carries: `outputs/traveler-model.md` with
+   the lines a `field` row of `reference/data-architecture.md` § 5.6 labels left
+   out, in the shapes the projection's criterion reaches (`skills/trip/SKILL.md`
+   § *Standing clause*). It is the `[DERIVED]`
+   per-traveler needs + desires — the source for the satisfaction-coverage read:
+   anchors/wishes → covered/not, needs → pass/fail. Its desire-overlap signal now
+   also carries the attention lens — shared desires are efficient to cover, unique
+   desires are protected — which the selection-layer agents (01/02) already read to
+   bias their menus; weighing desire-coverage through that lens is the hub's job
+   under issue #17, not per-engine work done here. Wherever else this prompt reads
+   `outputs/traveler-model.md`, it means that projection. Open no
+   `outputs/traveler-model.md`, `travelers/` file or `people/` record yourself, and
+   carry no value those rows label into a file you write, whichever input it
+   reached you in.
 7. outputs/nightlife-list.md (the desire-gated going-out menu — pure nightlife only;
    food-forward drinking stays in food-list.md and non-nightlife evening experiences
    stay in activities-list.md, per the primary-draw partition. Consume it exactly like

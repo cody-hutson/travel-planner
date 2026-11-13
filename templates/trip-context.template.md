@@ -334,7 +334,7 @@ already put them rather than deciding a new home:
 - **Payment norms:** [Cash vs. card by context — restaurants / markets / transit / taxis]
 - **Tipping culture:** [By context — restaurants / taxis / hotels / guides]
 - **Key etiquette:** [3-5 specific, actionable notes relevant to this group's activity profile]
-- **Visa / entry:** [Requirements for traveler's passport nationality; any current restrictions]
+- **Visa / entry:** [Entry rules for visitors to the destination; any current restrictions — a traveller's own documents are their line in the traveller model]
 - **Pre-arrival apps:** [5 max — each with one-line rationale specific to this destination]
 - **Connectivity:** [SIM / eSIM recommendation; local wifi norms]
 

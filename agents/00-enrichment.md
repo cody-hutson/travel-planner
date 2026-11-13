@@ -56,11 +56,55 @@ travel dates. Regardless, **re-run profile-change detection** (diff each
 signal for any traveler whose profile changed — a changed profile is a replanning
 trigger even when dates and lodging did not move.
 
+## Two dispatches, never one
+
+Under `/trip plan` you are dispatched **twice, in serial**, because the step that
+holds a traveler's passport and documents must not be the step that writes a file
+the site build reads (`CLAUDE.md` § *Dispatching agents*, the test for which
+dispatches take traveller data):
+
+1. **The reconciler dispatch** reads the traveller files, the person records they
+   reference, the outgoing model and `trip-context.md` (§ *Second Role* below), and
+   writes `outputs/traveler-model.md` and nothing else.
+2. **The research-and-seed dispatch** is given `trip-context.md` and nothing else —
+   no traveller file, person record, model or `trip-log.md`. It writes the `[ENRICH]`
+   fields (§ *Task*) and, on initial setup, the seed below.
+
+Every other verb that dispatches you dispatches the reconciler alone.
+**`Visa / entry` states the destination's entry rules for visitors in general** and
+names no traveler's passport, nationality or document status: a traveler's own
+requirements are their `- **Documents:**` line in the model.
+
 ## Task
 
 Complete all fields marked [ENRICH] in trip-context.md. Replace every
 [ENRICH] placeholder with researched, specific, actionable content.
 Do not alter any field not marked [ENRICH].
+
+### Setup-only seed of initial `locked` event status
+
+In the research-and-seed dispatch, on **initial setup**, **seed initial `locked` rows** into
+`outputs/event-status.md` from the trip-context `## Locked Elements` notes
+**whenever that section names at least one fixed event** — turning a free-text
+"Day 4 dinner: 7 PM confirmed" into a structured `locked` row for the
+already-booked events. **Where it names none you write nothing, and that is not
+a finding** — the hub creates the file at its own bootstrap edge on the first
+full synthesis. This is a **one-time bootstrap seed only**:
+after setup, the **hub is the primary writer** of `event-status.md` and owns it
+(your seed may be the first write that creates the file; if the hub runs first it
+creates it instead — the *if it does not already exist* guard makes either order
+safe; the hub reads-then-updates it in place thereafter); you do not keep writing
+status rows on later passes. This seed is the **only** thing you write to `event-status.md`, and
+it does **not** widen your trip-context surface in any way:
+
+- You still touch **only** `[ENRICH]` fields in trip-context.md. The
+  `## Locked Elements` and `## Current Itinerary Status` notes are **not**
+  `[ENRICH]`-tagged — they are the **operator's own** human summary, and you do
+  **not** write or maintain them. You *read* `## Locked Elements` to seed
+  structured `locked` rows; you never author the free-text notes themselves.
+- The structured `event-status.md` is the source of truth for the three
+  consumers (scheduler, hub, validator); the free-text notes stay the operator's
+  plain-language summary. Full model: `reference/data-model.md`.
 
 ## Second Role — Reader / Reconciler of the Per-Traveler Model
 
@@ -68,7 +112,8 @@ You have a second, distinct job, and the two never blur. The first is the
 [ENRICH] contract above: it stands exactly as written — you still touch
 **only** [ENRICH] fields in trip-context.md, and you never author or rewrite
 a traveler's own words. The second is to read the per-traveler source files
-and produce the reconciled, machine-usable model the engines and hub read.
+and produce the reconciled, machine-usable model the engines read, and the hub and
+the ideation agent through its projection.
 
 Per-traveler needs and desires are human-authored — one file per traveler at
 `trips/<destination>-<year>/travelers/<traveler>.md`. You do not write those
@@ -309,8 +354,8 @@ link against. Specifically:
   exception:** the `[THIRD-PARTY]` entry admitted through the operator fallback has
   no source file to be refreshed from, and is carried forward instead — see
   *A party member who will never file* below.
-  The engines and hub read this file — they do not parse the raw per-traveler
-  files.
+  The engines read this file, and the hub its projection — neither parses the
+  raw per-traveler files.
 
 This role is **read-and-reconcile only**: source files in, derived model out.
 **One stated exception to that input list:** the model you are about to replace
@@ -597,31 +642,6 @@ model; you do **not** compute either:
 
 Both stay individual-only in the derived model — no group split is ever authored
 into a per-traveler file or computed in this reconciliation.
-
-### Setup-only seed of initial `locked` event status
-
-On **initial setup**, **seed initial `locked` rows** into
-`outputs/event-status.md` from the trip-context `## Locked Elements` notes
-**whenever that section names at least one fixed event** — turning a free-text
-"Day 4 dinner: 7 PM confirmed" into a structured `locked` row for the
-already-booked events. **Where it names none you write nothing, and that is not
-a finding** — the hub creates the file at its own bootstrap edge on the first
-full synthesis. This is a **one-time bootstrap seed only**:
-after setup, the **hub is the primary writer** of `event-status.md` and owns it
-(your seed may be the first write that creates the file; if the hub runs first it
-creates it instead — the *if it does not already exist* guard makes either order
-safe; the hub reads-then-updates it in place thereafter); you do not keep writing
-status rows on later passes. This seed is the **only** thing you write to `event-status.md`, and
-it does **not** widen your trip-context surface in any way:
-
-- You still touch **only** `[ENRICH]` fields in trip-context.md. The
-  `## Locked Elements` and `## Current Itinerary Status` notes are **not**
-  `[ENRICH]`-tagged — they are the **operator's own** human summary, and you do
-  **not** write or maintain them. You *read* `## Locked Elements` to seed
-  structured `locked` rows; you never author the free-text notes themselves.
-- The structured `event-status.md` is the source of truth for the three
-  consumers (scheduler, hub, validator); the free-text notes stay the operator's
-  plain-language summary. Full model: `reference/data-model.md`.
 
 ### Where the source files come from
 
@@ -1088,11 +1108,11 @@ Preserve all other content exactly. Do not restructure or reformat.
 Flag uncertain content with:
 > VERIFY: [what needs verification and how to verify it]
 
-Where `## Locked Elements` named fixed events at setup, this run also wrote the
-seeded `locked` rows into `outputs/event-status.md` — a file this role does not
-own, per § *Setup-only seed of initial `locked` event status*. Say so.
+Where `## Locked Elements` named fixed events at setup, the research-and-seed
+dispatch also wrote the seeded `locked` rows into `outputs/event-status.md` — a file
+this role does not own, per § *Setup-only seed of initial `locked` event status*. Say so.
 
-This run also emits the derived `- **Documents:**` line on every first-party
+The reconciler dispatch also emits the derived `- **Documents:**` line on every first-party
 entry of `outputs/traveler-model.md`, per § *Derive the per-traveler document
 set* — one line per entry, dated, and never on a `[THIRD-PARTY]` entry.
 

@@ -37,8 +37,19 @@ publish: internal
 >   leading or trailing `-` — so Dana Smith saves as `dana-smith.md`. **That stem is how the
 >   planner joins your file to your roster entry**, so a name it cannot match reads as an
 >   unresolved profile rather than as yours.
-> - It lives under `trips/` in your data folder and is **private — never published**,
->   so put your real details here.
+> - **This file itself is never published.** It lives under `trips/` in your data folder, so
+>   put your real details here. It shapes the trip's plan, and the plan can be published as the
+>   trip's **private site**. The private site is encrypted: it opens for whoever holds the
+>   trip's passphrase, which your organizer gives the group, so anyone it is passed on to can
+>   open it.
+> - **The site may show the group** who is coming, your destination leanings, your dates and
+>   when you arrive and leave, your rooming, and your interests and tastes. Your other answers
+>   shape the plan too, and the plan on the site can reflect them and say whose need or wish a
+>   step serves — a rest stop, or who heads off together on a free afternoon.
+> - **A change reaches the site when your organizer next re-plans the trip and republishes
+>   it.** Earlier versions of the site, and any copy someone saved, keep what they showed.
+> - **Your organizer can also publish the plan as an open page that anyone can read.** That is
+>   their own deliberate step.
 > - **Fill in the parts that fit where your trip is right now.** If the destination
 >   isn't picked yet, the "Destination leanings" section matters most; if dates and a
 >   hotel are already booked, you can skip it. A few lines is fine; a lot is fine too.
@@ -141,7 +152,7 @@ output: travelers/<traveler>.md
 > genuinely don't mind. What kind of place you like is a durable answer and lives in your
 > person profile.
 
-- **Rooming:** [Whether you'd want your own room, are happy sharing, and with whom — e.g., "own room if it's affordable", "happy to share with Sam". Skip if you're travelling alone or don't know the group yet.]
+- **Rooming:** [Whether you'd want your own room, are happy sharing, and with whom — e.g., "my own room", "happy to share with Sam". Skip if you're travelling alone or don't know the group yet.]
 
 > This refines the trip's Accommodation — it doesn't choose it. The property, the
 > booking, and the room list stay in the trip's own file.
@@ -227,7 +238,7 @@ output: travelers/<traveler>.md
 > Anything the questions above didn't capture? One quick prompt, then free text —
 > say it however you like, or leave it blank.
 
-- **Special occasion?:** [Is the trip marking anything — a birthday, an anniversary, a honeymoon, a milestone? e.g., "Mum's 70th, on the Thursday". Skip if it's just a trip.]
+- **Special occasion?:** [Is the trip marking anything — a birthday, an anniversary, a honeymoon, a milestone? e.g., "my 40th, on the Thursday". Skip if it's just a trip.]
 
 [Anything else worth knowing — a quirk, a hope, a worry, a "by the way." Skip if nothing comes to mind.]
 

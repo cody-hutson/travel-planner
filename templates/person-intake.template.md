@@ -33,8 +33,20 @@ publish: internal-hard
 > - Copy this template to `people/psn-<token>.md`, then fill it in — or just ask, and an
 >   agent will walk you through it question by question. `<token>` is four hex characters
 >   minted once for you: **the filename carries your id, the title line carries your name.**
-> - It lives in the `people/` store of your data folder and is **never published**, so put your
->   real details here.
+> - **This record itself is never published.** It lives in the `people/` store of your data
+>   folder, so put your real details here. It shapes each trip's plan, and a plan can be published
+>   as its trip's **private site**. The private site is encrypted: it opens for whoever holds that
+>   trip's passphrase, which the organizer gives the group, so anyone it is passed on to can open
+>   it.
+> - **A trip's site may show its group** your destination leanings, where you set out from, how
+>   you like to travel there, the kind of place you sleep in, your interests and tastes, and your
+>   pace and day rhythm. Your other answers shape the plan too, and the plan on the site can
+>   reflect them and say whose need or wish a step serves — a rest stop, or a step-free route.
+>   The passport line is handled differently, as the note under it says.
+> - **A change reaches a site when its organizer next re-plans that trip and republishes it.**
+>   Earlier versions of the site, and any copy someone saved, keep what they showed.
+> - **An organizer can also publish a plan as an open page that anyone can read.** That is
+>   their own deliberate step.
 > - **This record is used by every trip and is never trip-specific.** Anything true of only
 >   one trip — your dates, what you want to do there, who you are rooming with — belongs on
 >   that trip's own form, `templates/traveler-intake.template.md`, not here.
@@ -107,9 +119,9 @@ output: people/<person>.md
 > exactly one person: you. **Never put a second person's passport on yours.** Anyone else
 > whose entry requirements need checking has a record of their own, and their passport goes
 > on their own line there. This line is a **declared non-publishable field** — its class is
-> declared in `reference/data-architecture.md` § *Publishability*, and both the publish guard
-> and the validator read it from there — so what you write here shapes a plan and never
-> reaches a published page, in named or anonymised form.
+> declared in `reference/data-architecture.md` § *Publishability*. The planning agents the
+> organizer dispatches to write what a trip's site is built from are given your answers with
+> this line taken out, and an open publish is refused while a page repeats it.
 
 ---
 
@@ -118,7 +130,7 @@ output: people/<person>.md
 > The kind of place you're comfortable sleeping in. Who you share a room with is a
 > per-trip answer and is asked on the trip form instead.
 
-- ⭐ **Lodging style:** [open: Hotel, rental, or hostel — plus anything that's a must for you — e.g., "rental with a kitchen", "hotel; need a lift rather than stairs", "anywhere quiet". Skip if you're happy with whatever the group picks.]
+- ⭐ **Lodging style:** [open: Hotel, rental, or hostel — plus anything that's a must for you — e.g., "rental with a kitchen", "a small hotel over a big one", "anywhere quiet". Skip if you're happy with whatever the group picks.]
 
 > This refines a trip's Accommodation — it doesn't choose it. The property, the booking, and
 > the room list stay in each trip's own file.

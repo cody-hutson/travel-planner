@@ -436,6 +436,11 @@
 #        for word; and the grade record — one block per generated conversation, its verdict the
 #        conversation rule's over its mech lines, no MET against an unruled mechanical fail or ND, and
 #        no re-roll — each with a control on a copy
+#   PJ   the traveller projection, scripts/project-traveler-data.sh, sourced and driven over a
+#        fixture model: no line a § 5.6 field row labels reaches what it prints and every other
+#        line does, its selectors read from the fence row by row, a new field row joining with no
+#        edit, and a refusal — exit 2, empty stdout, a stated cause — on zero field rows or a
+#        malformed row; each control on a copy of the fence
 #   RN   the roster edit's approver notice (#1555): § `group` reads the approver declaration on a
 #        removal, says before the echo whether it still names the removed row's key, asks nothing,
 #        writes neither sidecar, and names the declaration in its closing note; the charter's
@@ -29788,6 +29793,964 @@ wtadr26_assert() {
 }
 wtadr26_assert
 md_flips wtadr26_cell 'WT-ADR26' wtadr26_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group PJ — the traveller projection, scripts/project-traveler-data.sh.
+#
+# ADR-030 § 6 safeguard 7: no dispatched agent that writes a file the site build reads receives
+# a passport or documents value. `/trip` runs the projection script and passes its stdout to
+# each agent CLAUDE.md § *Dispatching agents* admits, so this group grades the one thing that
+# promise rests on mechanically — that the projection leaves out every line a
+# reference/data-architecture.md § 5.6 `field` row labels, keeps everything else, and refuses
+# rather than passing anything when it cannot read its own class. What an agent OPENS is not
+# graded here and cannot be: that rule is followed, not enforced, as the script's header says.
+#
+# THE SUBJECT IS SOURCED, as group CTL sources the validator, so the arms drive THE SAME pj_*
+# functions the verb runs, each handed an explicit declaration path. The suite does NOT source
+# scripts/publish-trip-site.sh: no arm here compares the projection with the guard's own parser
+# (the review's optional eighth arm, declined at the scope-lock), so agreement between the two
+# label matchers rests on the planted shapes below.
+#
+# THE FIXTURE is built in $WORK on every run, on the pattern of the publish-guard suite's
+# passport fixtures, and no example directory is added. Its model plants ten canaries, each a
+# distinctive token of one fixed width so none is a substring of another:
+#   passport-labelled (6)  `- **Passport:**`; `* passport:`; `- Passport :`; a `Passport:` line
+#                          under the reserved `## Update signals [DERIVED]` heading;
+#                          `- **Passports held:**` and `- **Passport-country note**`, the two
+#                          near misses the guard's own parser keeps, which the projection omits
+#   documents-labelled (4) a `- **Documents:**` value; its wrapped, deeper-indented line; a
+#                          nested sub-list item under a second `- **Documents:**`; and an
+#                          UNINDENTED line after a third, markdown's lazy continuation
+# beside kept labels that sit right after each payload, so an over-broad omission fails too.
+#
+# THE ARMS, every one reaching PASS or FAIL on every host and never SKIP:
+#   PJ0  the subject is present and sourceable, its three functions are defined, the real
+#        fence offers rows and carries at least one `field` row, and the fixture is not
+#        degenerate — every canary and every kept marker counted in the SOURCE. An absent
+#        script is reported here as ABSENT, never as a rejection.
+#   PJ1  over the real fence: exit exactly 0, a header naming the model as the source, and
+#        0 of the 10 canaries in the projection.                          (registered: MD)
+#   PJ2  the complement: every kept label, the third-party heading with both marks and its
+#        need line, and the frontmatter byte-identical — and the two near misses OMITTED.
+#   PJ3  CONTROL (the card's): every `field` row deleted from a copy of the document. PJ1's
+#        own predicate must FAIL there, and the cause must be the one under test — exit
+#        exactly 2, empty stdout, and `PJ0: zero field rows` on stderr. (registered: MD)
+#   PJ4  CONTROL: the Passport rows' selector renamed to an unused token in a copy — the six
+#        passport canaries come back and the four documents canaries stay out, so the
+#        selectors are READ FROM the fence, row by row.
+#   PJ5  CONTROL: a synthetic `field Rooming` row added to a copy — the Rooming line is
+#        omitted with no script edit, so a new `field` row joins with no code change.
+#   PJ6  the fallback: with no model, the traveller files are projected under a per-file
+#        header with their Passport line omitted (exit exactly 0); with no model and an empty
+#        travelers/, exit exactly 3 and one header line.
+#   PJ7  fail closed: a fence row cut to three fields in a copy — exit exactly 2, empty stdout.
+#   PJ9, PJ10, PJ11  the markdown SHAPES a label can sit in, one arm per shape, written
+#        PJ<n>[<shape>]. Each shape is its own small trip, so no shape's rule can be met by
+#        another's: a heading's section cannot swallow the table below it and read as the
+#        table's omission. Every arm reads exit exactly 0, 0 of its canaries in the
+#        projection and every one of its KEEP markers in it, so an over-broad rule is as red
+#        as a leak, and it first counts its canaries, its markers and the shape's own bytes
+#        in the SOURCE, so a fixture that failed to plant its shape cannot read as a pass.
+#          PJ9   the behaviour the label rule already shipped: a bracketed provenance mark,
+#                a task box, a blockquote with its in-quote continuation, a shallower wrap,
+#                a fenced block as a payload, and a shallower selector line inside a
+#                payload, which lowers the indent it ends at (6 shapes, 10 canaries).
+#          PJ10  the shapes the label rule first missed: a heading and its section, a
+#                heading over its value, a setext heading, a heading in a traveller file,
+#                a heading inside a payload, a loose payload past a blank line, a table, a
+#                one-line comment, a no-break space, a fenced block a label opens at its
+#                own indent, a fenced block and an indented code line inside a heading's
+#                section, neither of which ends it, a label inside a bracket, a column
+#                header naming the field in more than one word, a blockquoted heading inside
+#                a section, which does not end it, a setext heading over a paragraph of
+#                more than one line, a passport heading and a setext heading inside a
+#                blockquote, each ended by a heading in that quote, a key cell holding
+#                the plural selector alone, a key cell opening with a selector word in a body
+#                row, as a list item does, a later cell holding the selector alone,
+#                singular and plural, its value in the cell after it, a table row inside a
+#                list item or behind a quote, its key cell read as an unwrapped row's is, a
+#                header row inside a list item over a delimiter row, its whole table going
+#                with it, and a hit a list-wrapped table takes as a row, its payload still
+#                going, beside such a header row inside a payload, its table still going
+#                (24 shapes, 57 canaries).
+#          PJ11  the delimiters a payload must stop at, each with kept lines after it: CRLF
+#                line endings, the closer of a fenced block the label sits in, and the
+#                frontmatter's closing `---`, with and without a byte-order mark, a key after
+#                the passport key going with it as the safe side; and the fence grammar a
+#                closer is read by — a closer as long as its opener's run, with nothing after
+#                it, of the opener's own character, an opener a tilde run can make, no
+#                opener made by an inline code span, and a heading mark inside a fence, a
+#                label there and never a section; needs rows whose text opens with a
+#                selector word, left out where that text is the key cell, the named cost, and
+#                kept where it is a later cell holding no label, mid-table and last in the
+#                file, and a cell carrying a colon that opens with no selector; a thematic
+#                break after a list item, after a blank line in a payload, or after a
+#                list-item label, none of which is a setext underline; and a line of two
+#                backticks, which opens no fence (16 shapes, 25 canaries).
+#   PJ12 fail closed: a source holding a carriage return that no line feed follows — a model
+#        of bare-CR lines ending in a line feed, and a traveller file whose last byte is one,
+#        each the only case its own test can refuse — exits exactly 2 with
+#        empty stdout and its own cause token on stderr, never a projection of a file read as
+#        fewer lines than it holds.
+#        PJ8 is not used: the scope-lock declined the review's eighth arm, the guard
+#        comparison, and leaving its id empty keeps these arms from reading as that one.
+#
+# EVERY ARM IS A CHAIN, by rule (ADR-048): one condition and one message per branch, PASS on
+# the last `else` only. PJ0, PJ2, PJ4 to PJ7 and PJ9 to PJ12 are top-level code, which group
+# FZ walks. PJ1 and PJ3 live in functions because md_flips takes an assertion FUNCTION, and
+# ADR-048 § 3 records that the FZ walk does not read inside one — so those two are
+# FZ-ungraded, and MD's dynamic arm covers them instead: MD[PJ1] removes pj_project_file and
+# MD[PJ3] removes pj_selectors, and each must flip its arm to exactly one FAIL and no PASS.
+# PJ3 asserts the cause token, not only the status, because exit 2 is the code for every
+# fail-closed cause: without the token, a removed pj_selectors would reach the same branch as
+# the control and MD[PJ3] would read BLIND. The registrations run only once the subject has
+# been sourced; on an absent subject PJ0 is the arm that reports it, and every other arm
+# fails with it.
+#
+# A FENCE COPY is changed inside the `publish-contract-values` fence only: the document also
+# carries lines whose first word is `field` outside it. Each control counts the rows its
+# mutation changed and fails when that count is zero, so a mutation that silently missed
+# cannot read as a control that held.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group PJ — the traveller projection leaves out every line a § 5.6 field row labels."
+
+PJT_SCRIPT="$ROOT/scripts/project-traveler-data.sh"
+PJT_DECL="$ROOT/reference/data-architecture.md"
+PJT_FX="$WORK/pj"
+PJT_TRIP="$PJT_FX/trips/canary-2099"
+PJT_FALL="$PJT_FX/trips/fallback-2099"
+PJT_NONE="$PJT_FX/trips/none-2099"
+PJT_P="CNRY-PJ01 CNRY-PJ05 CNRY-PJ06 CNRY-PJ07 CNRY-PJ08 CNRY-PJ09"
+PJT_D="CNRY-PJ02 CNRY-PJ03 CNRY-PJ04 CNRY-PJ10"
+PJT_ALL="$PJT_P $PJT_D"
+PJT_KEEP=(
+  '- **Would love:** tide pools at dawn · KEEP-PJ-LOVE'
+  '- **Pace:** slow mornings · KEEP-PJ-PACE'
+  '- **Rooming:** happy to share with Sam · KEEP-PJ-ROOM'
+  '## Sam [OPERATOR-PROVIDED] [THIRD-PARTY]'
+  '- **Needs:** a step-free route · KEEP-PJ-NEED'
+)
+mkdir -p "$PJT_TRIP/outputs" "$PJT_FALL/travelers" "$PJT_NONE/travelers"
+printf '%s\n' \
+  '---' \
+  'artifact: outputs/traveler-model.md' \
+  'schema-version: 1' \
+  'trip: canary-2099' \
+  'writer: enrichment' \
+  'lifecycle: rebuilt-each-synthesis' \
+  'provenance: derived' \
+  'publish: internal-hard' \
+  '---' \
+  '' \
+  '# Traveler Model [DERIVED]' \
+  '' \
+  '## Rowan' \
+  '- **Passport:** Zorvanian, valid to 2033 · CNRY-PJ01' \
+  '- **Documents:** entry registration · CNRY-PJ02' \
+  '  file before travel · CNRY-PJ03' \
+  '- **Documents:**' \
+  '  - transit visa note · CNRY-PJ04' \
+  "${PJT_KEEP[0]}" \
+  '* passport: CNRY-PJ05' \
+  '- Passport : CNRY-PJ06' \
+  '- **Documents:** transit permit' \
+  'carried on an unindented line · CNRY-PJ10' \
+  "${PJT_KEEP[1]}" \
+  "${PJT_KEEP[2]}" \
+  '- **Passports held:** two · CNRY-PJ08' \
+  '- **Passport-country note** issued abroad · CNRY-PJ09' \
+  '' \
+  "${PJT_KEEP[3]}" \
+  "${PJT_KEEP[4]}" \
+  '' \
+  '## Update signals [DERIVED]' \
+  '- Passport: CNRY-PJ07' > "$PJT_TRIP/outputs/traveler-model.md"
+printf '%s\n' \
+  '# Rowan' \
+  '' \
+  '- **Would love:** tide pools at dawn · KEEP-PJ-FALL' \
+  '- **Passport:** Zorvanian, valid to 2033 · CNRY-PJ11' > "$PJT_FALL/travelers/rowan.md"
+
+# pjt_hits <text> <token…> — the tokens that occur in <text>, space-separated, by index().
+pjt_hits() {
+  local text="$1"; shift
+  LC_ALL=C awk -v toks="$*" 'BEGIN { n = split(toks, t, " ") } { b = b $0 "\n" }
+    END { for (i = 1; i <= n; i++) if (index(b, t[i])) printf "%s ", t[i] }' <<<"$text"
+}
+# pjt_count <space-separated list> — how many items it holds.
+pjt_count() { LC_ALL=C awk '{ print NF + 0 }' <<<"$1"; }
+# pjt_frontmatter <text> — the lines from the first `---` through the second, verbatim.
+pjt_frontmatter() {
+  LC_ALL=C awk '$0 == "---" { n++; print; if (n == 2) exit; next } n == 1 { print }' <<<"$1"
+}
+# pjt_mutate <mode> <src> <dst> — a copy of the declaration with its fence changed, and the
+# number of fence rows the change touched on stdout. drop: every `field` row deleted.
+# rename: the Passport rows' selector renamed. add: one synthetic `field Rooming` row.
+# short: the first `field` row cut to three fields.
+pjt_mutate() {
+  LC_ALL=C awk -v mode="$1" -v dst="$3" '
+    $0 == "```publish-contract-values" { inf = 1; print > dst; next }
+    inf && $0 == "```" {
+      if (mode == "add") { print "field    Rooming         outputs/traveler-model.md   conjunctive" > dst; c++ }
+      inf = 0; print > dst; next
+    }
+    inf && $1 == "field" && mode == "drop" { c++; next }
+    inf && $1 == "field" && mode == "rename" && $2 == "Passport" { sub(/Passport/, "PJZZUNUSED"); c++ }
+    inf && $1 == "field" && mode == "short" && !done { print $1, $2, $3 > dst; done = 1; c++; next }
+    { print > dst }
+    END { print c + 0 }' "$2"
+}
+# pjt_eval <declaration> <trip-dir> — run the projection in this process and record its exit
+# status, stdout, stderr and which canaries reached stdout.
+pjt_eval() {
+  PJT_OUT="$(pj_project_trip "$1" "$2" 2>"$PJT_FX/eval.err")"
+  PJT_RC=$?
+  PJT_ERR="$(tr '\n' ' ' < "$PJT_FX/eval.err")"
+  PJT_LEAKED="$(pjt_hits "$PJT_OUT" $PJT_ALL)"
+  PJT_LEAK="$(pjt_count "$PJT_LEAKED")"
+  PJT_HEAD="${PJT_OUT%%$'\n'*}"
+}
+
+# ── PJ0 — the subject, the fence and the fixture.
+PJT_SRC_RC=127; PJT_DEFS=0; PJT_NROWS=0; PJT_NFIELD=0; PJT_NSEL=0; PJT_SEL=""; PJT_SEL_RC=127
+if [ -f "$PJT_SCRIPT" ] && [ -r "$PJT_SCRIPT" ]; then
+  # shellcheck source=project-traveler-data.sh
+  source "$PJT_SCRIPT"
+  PJT_SRC_RC=$?
+fi
+for pjt_f in pj_fence_block pj_selectors pj_project_file pj_project_trip; do
+  declare -F "$pjt_f" >/dev/null 2>&1 && PJT_DEFS=$((PJT_DEFS + 1))
+done
+PJT_LOADED=0
+[ "$PJT_SRC_RC" -eq 0 ] && [ "$PJT_DEFS" -eq 4 ] && PJT_LOADED=1
+if [ "$PJT_LOADED" -eq 1 ]; then
+  PJT_ROWS="$(pj_fence_block "$PJT_DECL" 'publish-contract-values' '### 5.6 The declaration')"
+  PJT_NROWS="$(LC_ALL=C awk 'NF && $1 !~ /^#/ { c++ } END { print c + 0 }' <<<"$PJT_ROWS")"
+  PJT_NFIELD="$(LC_ALL=C awk '$1 == "field" { c++ } END { print c + 0 }' <<<"$PJT_ROWS")"
+  PJT_SEL="$(pj_selectors "$PJT_DECL" 2>/dev/null)"
+  PJT_SEL_RC=$?
+  PJT_NSEL="$(LC_ALL=C awk 'NF { c++ } END { print c + 0 }' <<<"$PJT_SEL")"
+fi
+PJT_SRCTXT="$(cat "$PJT_TRIP/outputs/traveler-model.md")"
+PJT_SRC_CAN="$(pjt_count "$(pjt_hits "$PJT_SRCTXT" $PJT_ALL)")"
+PJT_SRC_KEEP="$(pjt_count "$(pjt_hits "$PJT_SRCTXT" KEEP-PJ-LOVE KEEP-PJ-PACE KEEP-PJ-ROOM KEEP-PJ-NEED)")"
+if [ ! -f "$PJT_SCRIPT" ]; then
+  FAIL "PJ0: scripts/project-traveler-data.sh is ABSENT — the subject does not exist, so this group has nothing to grade and every arm below fails with it. This is an absent subject, never a rejection"
+elif [ "$PJT_SRC_RC" -ne 0 ]; then
+  FAIL "PJ0: scripts/project-traveler-data.sh exists but sourcing it returned $PJT_SRC_RC — the library did not load"
+elif [ "$PJT_DEFS" -ne 4 ]; then
+  FAIL "PJ0: sourcing scripts/project-traveler-data.sh defined $PJT_DEFS of its 4 library functions (pj_fence_block, pj_selectors, pj_project_file, pj_project_trip)"
+elif [ "$PJT_NROWS" -lt 1 ]; then
+  FAIL "PJ0: the § 5.6 publish-contract-values fence offered 0 rows to the projection's reader — there is no class to project against"
+elif [ "$PJT_NFIELD" -lt 1 ]; then
+  FAIL "PJ0: the § 5.6 fence carries $PJT_NROWS row(s) and 0 field rows — the projection would have nothing to omit"
+elif [ "$PJT_SEL_RC" -ne 0 ]; then
+  FAIL "PJ0: pj_selectors refused the real declaration with status $PJT_SEL_RC"
+elif [ "$PJT_NSEL" -lt 1 ]; then
+  FAIL "PJ0: pj_selectors returned no selector from $PJT_NFIELD field row(s)"
+elif [ "$PJT_SRC_CAN" -ne 10 ]; then
+  FAIL "PJ0: the fixture model carries $PJT_SRC_CAN of its 10 canaries — a projection graded over it would prove nothing"
+elif [ "$PJT_SRC_KEEP" -ne 4 ]; then
+  FAIL "PJ0: the fixture model carries $PJT_SRC_KEEP of its 4 kept markers"
+else
+  PASS "PJ0: the subject is present and sourced, all 4 library functions are defined; the real fence offers $PJT_NROWS row(s), $PJT_NFIELD of them field rows, read as $PJT_NSEL distinct selector(s) ($(tr '\n' ' ' <<<"$PJT_SEL")); the fixture model carries 10 of 10 canaries and 4 of 4 kept markers"
+fi
+
+# ── PJ1 — over the real fence: exit 0, the model named as the source, no canary.
+pjt_pj1() {
+  pjt_eval "$PJT_DECL" "$PJT_TRIP"
+  if [ "$PJT_RC" -eq 127 ]; then
+    FAIL "PJ1: rc=127 — pj_project_trip is NOT DEFINED. The subject is ABSENT, not rejecting, so this assertion has nothing to grade"
+  elif [ "$PJT_RC" -ne 0 ]; then
+    FAIL "PJ1: the projection of the fixture model exited $PJT_RC, expected exactly 0 — stderr: $PJT_ERR"
+  elif [ "$PJT_LEAK" -ne 0 ]; then
+    FAIL "PJ1: $PJT_LEAK of the 10 canaries reached the projection: $PJT_LEAKED"
+  elif [ "$PJT_HEAD" = "${PJT_HEAD#'<!-- projection: source=outputs/traveler-model.md;'}" ]; then
+    FAIL "PJ1: the projection's first line does not name outputs/traveler-model.md as its source — it reads: $PJT_HEAD"
+  else
+    PASS "PJ1: the projection of the fixture model exits 0 [rc=0, expected 0], names the model as its source, and carries 0 of the 10 canaries — 6 passport-labelled and 4 documents-labelled, among them a wrapped line, a nested sub-list item and an unindented lazy-continuation line"
+  fi
+}
+pjt_pj1
+
+# ── PJ2 — the complement: what must survive, and the two near misses that must not.
+pjt_eval "$PJT_DECL" "$PJT_TRIP"
+PJT_MISS=""
+for pjt_l in "${PJT_KEEP[@]}"; do
+  case $'\n'"$PJT_OUT"$'\n' in *$'\n'"$pjt_l"$'\n'*) ;; *) PJT_MISS="${PJT_MISS}[${pjt_l}] " ;; esac
+done
+PJT_NEAR="$(pjt_hits "$PJT_OUT" CNRY-PJ08 CNRY-PJ09)"
+PJT_FM_SRC="$(pjt_frontmatter "$PJT_SRCTXT")"
+PJT_FM_OUT="$(pjt_frontmatter "${PJT_OUT#*$'\n'}")"
+if [ "$PJT_RC" -ne 0 ]; then
+  FAIL "PJ2: the projection exited $PJT_RC, so there is no output to read the kept set from"
+elif [ -n "$PJT_MISS" ]; then
+  FAIL "PJ2: the projection dropped line(s) it must keep — over-broad omission: $PJT_MISS"
+elif [ -n "$PJT_NEAR" ]; then
+  FAIL "PJ2: a near miss reached the projection — $PJT_NEAR. Passports held: and Passport-country note are passport lines, and the label rule omits a selector followed by a plural s or any non-letter"
+elif [ -z "$PJT_FM_SRC" ]; then
+  FAIL "PJ2: the fixture's frontmatter read as empty, so the byte-identity below would compare nothing"
+elif [ "$PJT_FM_OUT" != "$PJT_FM_SRC" ]; then
+  FAIL "PJ2: the projection's frontmatter is not byte-identical to the source's"
+else
+  PASS "PJ2: the projection keeps all ${#PJT_KEEP[@]} kept lines verbatim — Would love, Pace and Rooming beside each omitted payload, the [OPERATOR-PROVIDED] [THIRD-PARTY] heading with both marks and its need line — keeps the frontmatter byte-identical, and omits both near misses (Passports held:, Passport-country note)"
+fi
+
+# ── PJ3 — CONTROL: no field row, so PJ1's predicate must fail, for the reason under test.
+PJT_C3="$PJT_FX/decl-nofield.md"
+PJT_N3="$(pjt_mutate drop "$PJT_DECL" "$PJT_C3")"
+pjt_pj3() {
+  local tok=0
+  pjt_eval "$PJT_C3" "$PJT_TRIP"
+  case "$PJT_ERR" in *'PJ0: zero field rows'*) tok=1 ;; esac
+  if [ "$PJT_N3" -lt 1 ]; then
+    FAIL "PJ3: the mutation deleted 0 field rows from the copy, so this control has nothing to grade"
+  elif [ "$PJT_RC" -eq 0 ] && [ "$PJT_LEAK" -eq 0 ]; then
+    FAIL "PJ3: CONTROL did not fire — with every field row deleted, PJ1's own predicate (exit 0, 0 of 10 canaries) still held"
+  elif [ "$PJT_RC" -ne 2 ]; then
+    FAIL "PJ3: with every field row deleted the projection exited $PJT_RC, expected exactly 2 (undetermined)"
+  elif [ -n "$PJT_OUT" ]; then
+    FAIL "PJ3: the projection exited 2 but printed to stdout — a fail-closed exit must pass nothing on"
+  elif [ "$tok" -ne 1 ]; then
+    FAIL "PJ3: the projection exited 2 with empty stdout, but not for the reason under test — stderr does not carry 'PJ0: zero field rows': $PJT_ERR"
+  else
+    PASS "PJ3: CONTROL — with all $PJT_N3 field row(s) deleted from a copy of the declaration, PJ1's predicate fails: exit exactly 2 [rc=2, expected 2], empty stdout, and the cause token 'PJ0: zero field rows' on stderr"
+  fi
+}
+pjt_pj3
+
+# ── PJ4 — CONTROL: the Passport selector renamed, row by row.
+PJT_C4="$PJT_FX/decl-rename.md"
+PJT_N4="$(pjt_mutate rename "$PJT_DECL" "$PJT_C4")"
+pjt_eval "$PJT_C4" "$PJT_TRIP"
+PJT_NP="$(pjt_count "$(pjt_hits "$PJT_OUT" $PJT_P)")"
+PJT_ND="$(pjt_count "$(pjt_hits "$PJT_OUT" $PJT_D)")"
+if [ "$PJT_N4" -lt 1 ]; then
+  FAIL "PJ4: the mutation renamed 0 Passport rows in the copy, so this control has nothing to grade"
+elif [ "$PJT_RC" -ne 0 ]; then
+  FAIL "PJ4: with the Passport selector renamed the projection exited $PJT_RC, expected exactly 0"
+elif [ "$PJT_NP" -ne 6 ]; then
+  FAIL "PJ4: with the Passport selector renamed, $PJT_NP of the 6 passport canaries came back — the selector is not being read from the fence row by row"
+elif [ "$PJT_ND" -ne 0 ]; then
+  FAIL "PJ4: renaming the Passport selector let $PJT_ND documents canaries through — one row's change moved another row's omission"
+else
+  PASS "PJ4: CONTROL — with the selector of $PJT_N4 Passport row(s) renamed in a copy, all 6 passport canaries come back and 0 of the 4 documents canaries do, so each selector is read from the fence"
+fi
+
+# ── PJ5 — CONTROL: one synthetic field row, no script edit.
+PJT_C5="$PJT_FX/decl-add.md"
+PJT_N5="$(pjt_mutate add "$PJT_DECL" "$PJT_C5")"
+pjt_eval "$PJT_C5" "$PJT_TRIP"
+PJT_ROOM="$(pjt_hits "$PJT_OUT" KEEP-PJ-ROOM)"
+if [ "$PJT_N5" -ne 1 ]; then
+  FAIL "PJ5: the mutation added $PJT_N5 rows to the copy, expected exactly 1"
+elif [ "$PJT_RC" -ne 0 ]; then
+  FAIL "PJ5: with a field Rooming row added the projection exited $PJT_RC, expected exactly 0"
+elif [ -n "$PJT_ROOM" ]; then
+  FAIL "PJ5: a field Rooming row was added to the fence and the Rooming line still reached the projection — a new row did not join it"
+elif [ "$PJT_LEAK" -ne 0 ]; then
+  FAIL "PJ5: adding a row let $PJT_LEAK canaries through: $PJT_LEAKED"
+else
+  PASS "PJ5: CONTROL — one synthetic 'field Rooming' row added to a copy of the fence omits the Rooming line with no script edit, and 0 of the 10 canaries reach the projection"
+fi
+
+# ── PJ6 — the fallback, and the no-source state.
+pjt_eval "$PJT_DECL" "$PJT_FALL"
+PJT_F11="$(pjt_hits "$PJT_OUT" CNRY-PJ11)"
+PJT_FKEEP="$(pjt_hits "$PJT_OUT" KEEP-PJ-FALL)"
+PJT_FHDR=0
+case "$PJT_OUT" in *'<!-- projection of travelers/rowan.md -->'*) PJT_FHDR=1 ;; esac
+PJT_FSRC=0
+case "$PJT_HEAD" in '<!-- projection: source=travelers/*.md'*) PJT_FSRC=1 ;; esac
+PJT_FRC="$PJT_RC"
+pjt_eval "$PJT_DECL" "$PJT_NONE"
+PJT_NLINES="$(LC_ALL=C awk 'END { print NR + 0 }' <<<"$PJT_OUT")"
+if [ "$PJT_FRC" -ne 0 ]; then
+  FAIL "PJ6: with no model on file the projection of travelers/*.md exited $PJT_FRC, expected exactly 0"
+elif [ "$PJT_FSRC" -ne 1 ]; then
+  FAIL "PJ6: the fallback projection's header does not name travelers/*.md as its source"
+elif [ "$PJT_FHDR" -ne 1 ]; then
+  FAIL "PJ6: the fallback projection carries no per-file header for travelers/rowan.md"
+elif [ -n "$PJT_F11" ]; then
+  FAIL "PJ6: the Passport line planted in travelers/rowan.md reached the fallback projection"
+elif [ -z "$PJT_FKEEP" ]; then
+  FAIL "PJ6: the fallback projection dropped the traveller's Would love line"
+elif [ "$PJT_RC" -ne 3 ]; then
+  FAIL "PJ6: with no model and an empty travelers/ the projection exited $PJT_RC, expected exactly 3 (no source on file)"
+elif [ "$PJT_NLINES" -ne 1 ]; then
+  FAIL "PJ6: the no-source projection printed $PJT_NLINES line(s), expected its one header line"
+else
+  PASS "PJ6: with no model the traveller files are projected [rc=0, expected 0] under a source header and a per-file header, the planted Passport line omitted and the leaning kept; with no model and an empty travelers/ the projection exits 3 [rc=3, expected 3] with its one header line"
+fi
+
+# ── PJ7 — fail closed on a malformed row.
+PJT_C7="$PJT_FX/decl-short.md"
+PJT_N7="$(pjt_mutate short "$PJT_DECL" "$PJT_C7")"
+pjt_eval "$PJT_C7" "$PJT_TRIP"
+if [ "$PJT_N7" -ne 1 ]; then
+  FAIL "PJ7: the mutation cut $PJT_N7 rows in the copy, expected exactly 1"
+elif [ "$PJT_RC" -ne 2 ]; then
+  FAIL "PJ7: with one fence row cut to three fields the projection exited $PJT_RC, expected exactly 2 (undetermined)"
+elif [ -n "$PJT_OUT" ]; then
+  FAIL "PJ7: the projection exited 2 on a malformed row but printed to stdout"
+else
+  PASS "PJ7: one fence row cut to three fields in a copy — the projection fails closed, exit exactly 2 [rc=2, expected 2] with empty stdout"
+fi
+
+# ── PJ9 to PJ11 — the shapes. Each is registered, then its source is written to its own trip.
+# The no-break space, the carriage return and the byte-order mark are written as escapes, and
+# each arm's first branches confirm the bytes landed.
+PJT_NB="$(printf '\302\240')"
+PJT_BOM="$(printf '\357\273\277')"
+PJT_CR="$(printf '\r')"
+PJT_SN=(); PJT_ST=(); PJT_SS=(); PJT_SC=(); PJT_SK=(); PJT_SW=(); PJT_SL=(); PJT_SM=(); PJT_SX=()
+# pjt_shape <arm id> <trip> <model|trav> <canaries> <keeps> <witness> <line> <count> <what>
+# registers one shape and leaves the path its source is to be written to in PJT_SF. <witness>
+# is a byte string the source must carry for the shape to be planted at all; <line> and
+# <count>, where not `-`, are a delimiter line the projection must carry exactly that often.
+pjt_shape() {
+  local n="${#PJT_SN[@]}" d="$PJT_FX/trips/$2"
+  if [ "$3" = trav ]; then mkdir -p "$d/travelers"; PJT_SF="$d/travelers/rowan.md"
+  else mkdir -p "$d/outputs"; PJT_SF="$d/outputs/traveler-model.md"; fi
+  PJT_SN[n]="$1"; PJT_ST[n]="$2"; PJT_SS[n]="$PJT_SF"; PJT_SC[n]="$4"; PJT_SK[n]="$5"
+  PJT_SW[n]="$6"; PJT_SL[n]="$7"; PJT_SM[n]="$8"; PJT_SX[n]="$9"
+}
+# pjt_miss <text> <token…> — the tokens that do NOT occur in <text>, space-separated.
+pjt_miss() {
+  local text="$1"; shift
+  LC_ALL=C awk -v toks="$*" 'BEGIN { n = split(toks, t, " ") } { b = b $0 "\n" }
+    END { for (i = 1; i <= n; i++) if (!index(b, t[i])) printf "%s ", t[i] }' <<<"$text"
+}
+
+pjt_shape 'PJ9[mark]' shape-mark model 'CNRY-PJS01' 'KEEP-PJS01' '- [OPERATOR-PROVIDED] Passport:' - - 'a bracketed provenance mark before the label'
+printf '%s\n' '# Traveler Model [DERIVED]' '' '## Rowan' \
+  '- [OPERATOR-PROVIDED] Passport: Zorvanian, valid to 2033 · CNRY-PJS01' \
+  '- **Pace:** slow mornings · KEEP-PJS01' > "$PJT_SF"
+pjt_shape 'PJ9[task]' shape-task model 'CNRY-PJS02 CNRY-PJS03' 'KEEP-PJS02' '- [x] Documents:' - - 'a task box, open and checked, before the label'
+printf '%s\n' '## Rowan' \
+  '- [ ] **Passport:** Zorvanian · CNRY-PJS02' \
+  '- [x] Documents: entry registration · CNRY-PJS03' \
+  '- [ ] **Pace:** slow mornings · KEEP-PJS02' > "$PJT_SF"
+pjt_shape 'PJ9[quote]' shape-quote model 'CNRY-PJS04 CNRY-PJS05' 'KEEP-PJS03 KEEP-PJS04' '> > Documents:' - - 'a blockquoted label, and a doubly quoted one with its in-quote continuation'
+printf '%s\n' '## Rowan' \
+  '> - **Passport:** Zorvanian · CNRY-PJS04' \
+  '> - **Pace:** slow mornings · KEEP-PJS03' \
+  '>' \
+  '> > Documents: entry registration' \
+  '> > carried on inside the quote · CNRY-PJS05' \
+  '' \
+  '- **Rooming:** own room · KEEP-PJS04' > "$PJT_SF"
+pjt_shape 'PJ9[wrap]' shape-wrap model 'CNRY-PJS06' 'KEEP-PJS05' '  filed before travel' - - 'a wrap at a shallower indent than its nested label'
+printf '%s\n' '## Rowan' \
+  '- **Travel papers**' \
+  '    - **Documents:** entry registration' \
+  '  filed before travel · CNRY-PJS06' \
+  '- **Pace:** slow mornings · KEEP-PJS05' > "$PJT_SF"
+pjt_shape 'PJ9[fenced]' shape-fenced model 'CNRY-PJS07' 'KEEP-PJS06' '  ```' - - 'a fenced block as the payload of a label'
+printf '%s\n' '## Rowan' \
+  '- **Documents:**' \
+  '  ```' \
+  '  entry registration · CNRY-PJS07' \
+  '  ```' \
+  '- **Pace:** slow mornings · KEEP-PJS06' > "$PJT_SF"
+pjt_shape 'PJ9[lower]' shape-lower model 'CNRY-PJS41 CNRY-PJS42 CNRY-PJS43' 'KEEP-PJS43 KEEP-PJS44' 'CNRY-PJS41
+- **Passport:**' - - 'a shallower selector line inside a payload, which lowers the indent it ends at, and its own sub-item'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS43' \
+  '  - **Documents:** entry registration · CNRY-PJS41' \
+  '- **Passport:** Zorvanian · CNRY-PJS42' \
+  '  - validity note · CNRY-PJS43' \
+  '- **Pace:** slow mornings · KEEP-PJS44' > "$PJT_SF"
+
+pjt_shape 'PJ10[heading]' shape-heading model 'CNRY-PJS08 CNRY-PJS09 CNRY-PJS10' 'KEEP-PJS07 KEEP-PJS08' '### Passport:' - - 'a heading carrying the value, with its section and a deeper heading inside it'
+printf '%s\n' '# Traveler Model [DERIVED]' '' '## Rowan' \
+  '- **Pace:** slow mornings · KEEP-PJS07' \
+  '### Passport: Zorvanian, valid to 2031 · CNRY-PJS08' \
+  'issued abroad · CNRY-PJS09' \
+  '' \
+  '#### Renewal' \
+  'due in 2031 · CNRY-PJS10' \
+  '### Rooming' \
+  '- own room · KEEP-PJS08' > "$PJT_SF"
+pjt_shape 'PJ10[heading-body]' shape-heading-body model 'CNRY-PJS11 CNRY-PJS12' 'KEEP-PJS09 KEEP-PJS10' '## Passport' - - 'a heading naming the field, its value in the section below'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS09' \
+  '' \
+  '## Passport' \
+  'Zorvanian · CNRY-PJS11' \
+  '' \
+  'valid to 2031 · CNRY-PJS12' \
+  '' \
+  '## Sam [OPERATOR-PROVIDED] [THIRD-PARTY]' \
+  '- **Needs:** a step-free route · KEEP-PJS10' > "$PJT_SF"
+pjt_shape 'PJ10[setext]' shape-setext model 'CNRY-PJS13' 'KEEP-PJS11 KEEP-PJS12' 'Passport
+--------' - - 'a setext heading naming the field, its value below a blank line'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS11' \
+  '' \
+  'Passport' \
+  '--------' \
+  '' \
+  'Zorvanian, valid to 2031 · CNRY-PJS13' \
+  '' \
+  '## Sam [OPERATOR-PROVIDED] [THIRD-PARTY]' \
+  '- **Needs:** a step-free route · KEEP-PJS12' > "$PJT_SF"
+pjt_shape 'PJ10[heading-file]' shape-heading-file trav 'CNRY-PJS14' 'KEEP-PJS13' '### Passport:' - - 'a heading carrying the value in a traveller file, with no model on file'
+printf '%s\n' '# Rowan' '' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS13' \
+  '' \
+  '### Passport: Zorvanian · CNRY-PJS14' > "$PJT_SF"
+pjt_shape 'PJ10[heading-nested]' shape-heading-nested model 'CNRY-PJS15' 'KEEP-PJS14' '  #### Entry' - - 'a heading nested inside a payload, deeper than its label'
+printf '%s\n' '## Rowan' \
+  '- **Documents:**' \
+  '  #### Entry' \
+  '  - registration filed before travel · CNRY-PJS15' \
+  '- **Pace:** slow mornings · KEEP-PJS14' > "$PJT_SF"
+pjt_shape 'PJ10[loose]' shape-loose model 'CNRY-PJS16 CNRY-PJS17 CNRY-PJS18' 'KEEP-PJS15 KEEP-PJS16' '- **Documents:**
+
+  - entry' - - 'a loose payload, its sub-items past blank lines, and a kept line past one'
+printf '%s\n' '## Rowan' \
+  '- **Documents:**' \
+  '' \
+  '  - entry registration · CNRY-PJS16' \
+  '' \
+  '  - transit permit · CNRY-PJS17' \
+  '- **Pace:** slow mornings · KEEP-PJS15' \
+  '- **Passport:** Zorvanian · CNRY-PJS18' \
+  '' \
+  'Needs: a step-free route · KEEP-PJS16' > "$PJT_SF"
+pjt_shape 'PJ10[table]' shape-table model 'CNRY-PJS19 CNRY-PJS20 CNRY-PJS21' 'KEEP-PJS17 KEEP-PJS18 KEEP-PJS19' '| Passport |' - - 'a table — a selector in a first cell, in a later cell, and as a column header'
+printf '%s\n' '## Rowan' \
+  '| Field | Value |' \
+  '|---|---|' \
+  '| Passport | Zorvanian · CNRY-PJS19 |' \
+  '| Pace | slow mornings · KEEP-PJS17 |' \
+  '| Rowan | Documents: entry registration · CNRY-PJS20 |' \
+  '| Rooming | own room · KEEP-PJS18 |' \
+  '' \
+  '| Name | Passport | Pace |' \
+  '|---|---|---|' \
+  '| Rowan | Zorvanian · CNRY-PJS21 | slow |' \
+  '' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS19' > "$PJT_SF"
+pjt_shape 'PJ10[comment]' shape-comment model 'CNRY-PJS22 CNRY-PJS23' 'KEEP-PJS20 KEEP-PJS21' '<!-- Passport:' - - 'a one-line HTML comment carrying the label, alone and as a list item'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS20' \
+  '<!-- Passport: Zorvanian, valid to 2031 · CNRY-PJS22 -->' \
+  '- <!-- Documents: entry registration · CNRY-PJS23 -->' \
+  '- **Pace:** slow mornings · KEEP-PJS21' > "$PJT_SF"
+pjt_shape 'PJ10[nbsp]' shape-nbsp model 'CNRY-PJS24 CNRY-PJS25' 'KEEP-PJS22 KEEP-PJS23' "-${PJT_NB}**Passport:**" - - 'a no-break space after the list marker, and as the indent'
+printf '%s\n' '## Rowan' \
+  "-${PJT_NB}**Passport:** Zorvanian · CNRY-PJS24" \
+  '- **Pace:** slow mornings · KEEP-PJS22' \
+  "${PJT_NB}${PJT_NB}- Documents: entry registration · CNRY-PJS25" \
+  '- **Rooming:** own room · KEEP-PJS23' > "$PJT_SF"
+pjt_shape 'PJ10[fence-payload]' shape-fence-payload model 'CNRY-PJS31 CNRY-PJS32' 'KEEP-PJS31 KEEP-PJS32' '- **Documents:**
+```' - - 'a fenced block a label opens at its own indent, a list item and a heading mark inside it'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS31' \
+  '- **Documents:**' \
+  '```' \
+  '- entry registration · CNRY-PJS31' \
+  '# transit permit · CNRY-PJS32' \
+  '```' \
+  '- **Pace:** slow mornings · KEEP-PJS32' > "$PJT_SF"
+pjt_shape 'PJ10[sec-fence]' shape-sec-fence model 'CNRY-PJS44 CNRY-PJS45 CNRY-PJS46' 'KEEP-PJS45 KEEP-PJS46' '```
+## not a heading' - - 'a fenced block inside a passport heading section, a heading mark in it that does not end the section'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS45' \
+  '### Passport' \
+  'Zorvanian · CNRY-PJS44' \
+  '```' \
+  '## not a heading, inside a fence · CNRY-PJS45' \
+  '```' \
+  'valid to 2031 · CNRY-PJS46' \
+  '### Rooming' \
+  '- own room · KEEP-PJS46' > "$PJT_SF"
+pjt_shape 'PJ10[sec-indent]' shape-sec-indent model 'CNRY-PJS47 CNRY-PJS48 CNRY-PJS49' 'KEEP-PJS47 KEEP-PJS48' '    ## indented' - - 'an indented code line inside a passport heading section, a heading mark in it that does not end the section'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS47' \
+  '### Passport' \
+  'Zorvanian · CNRY-PJS47' \
+  '' \
+  '    ## indented code, not a heading · CNRY-PJS48' \
+  'valid to 2031 · CNRY-PJS49' \
+  '### Rooming' \
+  '- own room · KEEP-PJS48' > "$PJT_SF"
+pjt_shape 'PJ10[bracket]' shape-bracket model 'CNRY-PJS51 CNRY-PJS52 CNRY-PJS53 CNRY-PJS54' 'KEEP-PJS52 KEEP-PJS53 KEEP-PJS54 KEEP-PJS55' '- [Passport] ' - - 'a label inside a bracket — a bracketed label, link text, a whole bracketed value and a bold bracketed label — beside a task box and a mark, still taken off as marks'
+printf '%s\n' '## Rowan' \
+  '- [Passport] Zorvanian, valid to 2031 · CNRY-PJS51' \
+  '- **Pace:** slow mornings · KEEP-PJS52' \
+  '- [Passport](#passport): Zorvanian · CNRY-PJS52' \
+  '- **Rooming:** own room · KEEP-PJS53' \
+  '- [Passport: Zorvanian, valid to 2031 · CNRY-PJS53]' \
+  '- [ ] **Would love:** tide pools at dawn · KEEP-PJS54' \
+  '- **[Documents]:** entry registration · CNRY-PJS54' \
+  '- [OPERATOR-PROVIDED] **Group time:** mornings together · KEEP-PJS55' > "$PJT_SF"
+pjt_shape 'PJ10[table-header]' shape-table-header model 'CNRY-PJS58 CNRY-PJS59 CNRY-PJS60' 'KEEP-PJS59 KEEP-PJS60' '| Passport number |' - - 'a column header naming the field in more than one word, with and without a leading pipe, its whole table going with it'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS59' \
+  '| Traveller | Passport number | Pace |' \
+  '|---|---|---|' \
+  '| Rowan | Z1234567 · CNRY-PJS58 | slow |' \
+  '| Ines | Y7654321 · CNRY-PJS59 | brisk |' \
+  '' \
+  'Traveller | Documents held' \
+  '---|---' \
+  'Rowan | entry registration · CNRY-PJS60' \
+  '' \
+  '- **Rooming:** own room · KEEP-PJS60' > "$PJT_SF"
+pjt_shape 'PJ10[sec-quote]' shape-sec-quote model 'CNRY-PJS61 CNRY-PJS62' 'KEEP-PJS61 KEEP-PJS62' '> ## Aside' - - 'a blockquoted heading inside a passport heading section, which does not end it'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS61' \
+  '### Passport' \
+  'Zorvanian · CNRY-PJS61' \
+  '> ## Aside' \
+  'valid to 2031 · CNRY-PJS62' \
+  '### Rooming' \
+  '- own room · KEEP-PJS62' > "$PJT_SF"
+pjt_shape 'PJ10[setext-para]' shape-setext-para model 'CNRY-PJS63 CNRY-PJS64' 'KEEP-PJS63 KEEP-PJS64' 'Passport
+Zorvanian · CNRY-PJS63
+--------' - - 'a setext heading whose paragraph runs to a second line above its underline, with its section'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS63' \
+  '' \
+  'Passport' \
+  'Zorvanian · CNRY-PJS63' \
+  '--------' \
+  '' \
+  'valid to 2031 · CNRY-PJS64' \
+  '' \
+  '## Sam [OPERATOR-PROVIDED] [THIRD-PARTY]' \
+  '- **Needs:** a step-free route · KEEP-PJS64' > "$PJT_SF"
+pjt_shape 'PJ10[sec-quoted]' shape-sec-quoted model 'CNRY-PJS67' 'KEEP-PJS67 KEEP-PJS68' '> ### Passport' - - 'a passport heading inside a blockquote, its section ended by a heading of the same level in that quote'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS67' \
+  '> ### Passport' \
+  '> Zorvanian · CNRY-PJS67' \
+  '> ### Rooming' \
+  '> - own room · KEEP-PJS68' > "$PJT_SF"
+pjt_shape 'PJ10[setext-quoted]' shape-setext-quoted model 'CNRY-PJS68' 'KEEP-PJS69 KEEP-PJS70' '> Passport
+> --------' - - 'a setext heading inside a blockquote, its section ended by a heading of the same level in that quote'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS69' \
+  '' \
+  '> Passport' \
+  '> --------' \
+  '> valid to 2031 · CNRY-PJS68' \
+  '> ## Pace' \
+  '> - slow mornings · KEEP-PJS70' > "$PJT_SF"
+pjt_shape 'PJ10[table-plural]' shape-table-plural model 'CNRY-PJS69' 'KEEP-PJS71' '| Passports |' - - 'a key cell holding the plural selector alone, its value in the next cell'
+printf '%s\n' '## Rowan' \
+  '| Field | Value |' \
+  '|---|---|' \
+  '| Passports | two, Zorvanian and Ostrian · CNRY-PJS69 |' \
+  '| Pace | slow mornings · KEEP-PJS71 |' > "$PJT_SF"
+pjt_shape 'PJ10[table-key]' shape-table-key model 'CNRY-PJS76 CNRY-PJS77 CNRY-PJS78' 'KEEP-PJS79 KEEP-PJS80' '| Passport number |' - - 'body rows whose key cell opens with a selector word, as a list item does, and holds no colon'
+printf '%s\n' '## Rowan' \
+  '| Field | Value |' \
+  '|---|---|' \
+  '| Pace | slow mornings · KEEP-PJS79 |' \
+  '| Passport number | Z1234567 · CNRY-PJS76 |' \
+  '| Passports held | two · CNRY-PJS77 |' \
+  '| Passport-country note | issued abroad · CNRY-PJS78 |' \
+  '| Rooming | own room · KEEP-PJS80 |' > "$PJT_SF"
+pjt_shape 'PJ10[table-later]' shape-table-later model 'CNRY-PJS79 CNRY-PJS80' 'KEEP-PJS81 KEEP-PJS82' '| Rowan | Passports |' - - 'a later cell holding the selector alone, singular and plural, in a body row, its value in the cell after it'
+printf '%s\n' '## Rowan' \
+  '| Traveller | Field | Value |' \
+  '|---|---|---|' \
+  '| Rowan | Pace | slow mornings · KEEP-PJS81 |' \
+  '| Rowan | Passport | Zorvanian · CNRY-PJS79 |' \
+  '| Rowan | Passports | two, Zorvanian and Ostrian · CNRY-PJS80 |' \
+  '| Rowan | Rooming | own room · KEEP-PJS82 |' > "$PJT_SF"
+pjt_shape 'PJ10[table-list]' shape-table-list model 'CNRY-PJS83 CNRY-PJS84 CNRY-PJS85 CNRY-PJS86 CNRY-PJS87 CNRY-PJS88' 'KEEP-PJS84 KEEP-PJS85 KEEP-PJS86 KEEP-PJS87 KEEP-PJS88 KEEP-PJS89 KEEP-PJS90' '- | Passport number |' - - 'a table row inside a list item, at the top level, nested and behind a quote, and a row behind a quote alone, its key cell read as an unwrapped row reads it, beside list-wrapped rows kept'
+printf '%s\n' '## Rowan' \
+  '- | Pace | slow mornings · KEEP-PJS84 |' \
+  '- | Passport number | Z1234567 · CNRY-PJS83 |' \
+  '- | Pace | slow · KEEP-PJS85 |' \
+  '> | Passport number | Z7654321 · CNRY-PJS84 |' \
+  '> | Rooming | own room · KEEP-PJS86 |' \
+  '> - | Passport number | Z1112223 · CNRY-PJS85 |' \
+  '> - | Rooming | own room · KEEP-PJS87 |' \
+  '' \
+  '- | Documents | entry registration · CNRY-PJS86 |' \
+  '- | Diet | no shellfish · KEEP-PJS88 |' \
+  '  - | Passport | Zorvanian · CNRY-PJS87 |' \
+  '  - | Rooming | own room · KEEP-PJS89 |' \
+  '  - | Passport number | Z4445556 · CNRY-PJS88 |' \
+  '- | Rooming | own room · KEEP-PJS90 |' > "$PJT_SF"
+pjt_shape 'PJ10[table-list-header]' shape-table-list-header model 'CNRY-PJS89 CNRY-PJS90' 'KEEP-PJS91' '- | Passport | Value |
+- |---|---|' - - 'a header row inside a list item naming the field, in more than one word and alone, over a delimiter row inside one, its whole table going with it'
+printf '%s\n' '## Rowan' \
+  '- | Passport number | Pace |' \
+  '- |---|---|' \
+  '- | Z1234567 · CNRY-PJS89 | slow |' \
+  '' \
+  '- | Passport | Value |' \
+  '- |---|---|' \
+  '- | Z7654321 · CNRY-PJS90 | slow |' \
+  '' \
+  '- | Pace | slow mornings · KEEP-PJS91 |' > "$PJT_SF"
+pjt_shape 'PJ10[table-list-payload]' shape-table-list-payload model 'CNRY-PJS91 CNRY-PJS92 CNRY-PJS93 CNRY-PJS94' 'KEEP-PJS92 KEEP-PJS93 KEEP-PJS94 KEEP-PJS95 KEEP-PJS96' '  - |---|---|
+- | Documents |' - - 'a hit that a table inside a list item takes as a row, a row and a bold label, its payload still going, and a header row inside a list item that a payload reaches, its table still going'
+printf '%s\n' '## Rowan' \
+  '- Rowan · KEEP-PJS92' \
+  '  - | Passport | Value |' \
+  '  - |---|---|' \
+  '- | Documents | see below |' \
+  '  - entry registration · CNRY-PJS91' \
+  '- **Pace:** slow mornings · KEEP-PJS93' \
+  '' \
+  '- Sam · KEEP-PJS94' \
+  '  - | Passport | Value |' \
+  '  - |---|---|' \
+  '- **Documents:** visa | pending' \
+  '  - entry registration · CNRY-PJS92' \
+  '- **Pace:** slow · KEEP-PJS95' \
+  '' \
+  '- **Documents:** entry registration · CNRY-PJS93' \
+  '- | Passport number | Pace |' \
+  '- |---|---|' \
+  '- | Z1234567 · CNRY-PJS94 | slow |' \
+  '' \
+  '- **Rooming:** own room · KEEP-PJS96' > "$PJT_SF"
+
+pjt_shape 'PJ11[crlf]' shape-crlf model 'CNRY-PJS26 CNRY-PJS27' 'KEEP-PJS24 KEEP-PJS25' "${PJT_CR}
+${PJT_CR}
+Needs:" - - 'CRLF line endings throughout, a kept line past a blank one'
+printf '%s\r\n' '# Traveler Model [DERIVED]' '' '## Rowan' \
+  '- **Passport:** Zorvanian · CNRY-PJS26' \
+  '- **Documents:** entry registration' \
+  '  filed before travel · CNRY-PJS27' \
+  '' \
+  'Needs: a step-free route · KEEP-PJS24' \
+  '' \
+  '- **Pace:** slow mornings · KEEP-PJS25' > "$PJT_SF"
+pjt_shape 'PJ11[fence]' shape-fence model 'CNRY-PJS28' 'KEEP-PJS26 KEEP-PJS27' '```text' '```' 1 'a label inside a fenced block, the fence closed, a kept line after it'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS26' \
+  '```text' \
+  'Passport: Zorvanian · CNRY-PJS28' \
+  '```' \
+  'Needs: a step-free route · KEEP-PJS27' > "$PJT_SF"
+pjt_shape 'PJ11[frontmatter]' shape-frontmatter model 'CNRY-PJS29 CNRY-PJS33' 'KEEP-PJS28 KEEP-PJS29' 'passport: Zorvanian' '---' 2 'a frontmatter passport key, the key after it, the closer and the line after that'
+printf '%s\n' '---' \
+  'note: KEEP-PJS28' \
+  'passport: Zorvanian · CNRY-PJS29' \
+  'number: Z1234567 · CNRY-PJS33' \
+  '---' \
+  'Rowan travels light · KEEP-PJS29' > "$PJT_SF"
+pjt_shape 'PJ11[frontmatter-bom]' shape-frontmatter-bom model 'CNRY-PJS30' 'KEEP-PJS30' "${PJT_BOM}---" '---' 1 'a frontmatter passport key behind a byte-order mark, the closer and the line after it'
+printf '%s\n' "${PJT_BOM}---" \
+  'artifact: outputs/traveler-model.md' \
+  'passport: Zorvanian · CNRY-PJS30' \
+  '---' \
+  'Rowan travels light · KEEP-PJS30' > "$PJT_SF"
+pjt_shape 'PJ11[fence-long]' shape-fence-long model 'CNRY-PJS34' 'KEEP-PJS33 KEEP-PJS34' '````text' '````' 1 'a four-backtick fence holding a three-backtick line, its label before that line and the value after it'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS33' \
+  '````text' \
+  'Passport:' \
+  '```' \
+  'Zorvanian · CNRY-PJS34' \
+  '````' \
+  '- **Pace:** slow mornings · KEEP-PJS34' > "$PJT_SF"
+pjt_shape 'PJ11[fence-info]' shape-fence-info model 'CNRY-PJS35' 'KEEP-PJS35 KEEP-PJS36' '```text' '```' 2 'a fence holding a line that carries an info string, which is no closer, the label before it and the value after it'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS35' \
+  '```' \
+  'Passport:' \
+  '```text' \
+  'Zorvanian · CNRY-PJS35' \
+  '```' \
+  '- **Pace:** slow mornings · KEEP-PJS36' > "$PJT_SF"
+pjt_shape 'PJ11[fence-inline]' shape-fence-inline model 'CNRY-PJS36 CNRY-PJS37' 'KEEP-PJS37 KEEP-PJS38' '```inline```' - - 'a line opening with an inline code span, which opens no fence, then a heading naming the field over a two-paragraph value'
+printf '%s\n' '## Rowan' \
+  '```inline``` code note · KEEP-PJS37' \
+  '' \
+  '## Passport' \
+  'Zorvanian · CNRY-PJS36' \
+  '' \
+  'valid to 2031 · CNRY-PJS37' \
+  '' \
+  '## Sam [OPERATOR-PROVIDED] [THIRD-PARTY]' \
+  '- **Needs:** a step-free route · KEEP-PJS38' > "$PJT_SF"
+pjt_shape 'PJ11[fence-payload-long]' shape-fence-payload-long model 'CNRY-PJS38 CNRY-PJS39' 'KEEP-PJS39 KEEP-PJS40' '````
+- entry' - - 'a four-backtick fence a label opens, holding a three-backtick line and a list item after it'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS39' \
+  '- **Documents:**' \
+  '````' \
+  '- entry registration · CNRY-PJS38' \
+  '```' \
+  '- transit permit · CNRY-PJS39' \
+  '````' \
+  '- **Pace:** slow mornings · KEEP-PJS40' > "$PJT_SF"
+pjt_shape 'PJ11[fence-tilde]' shape-fence-tilde model 'CNRY-PJS40' 'KEEP-PJS41 KEEP-PJS42' '~~~' '~~~' 2 'a tilde fence holding a backtick line, which is no closer, the label before it and the value after it'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS41' \
+  '~~~' \
+  'Passport:' \
+  '```' \
+  'Zorvanian · CNRY-PJS40' \
+  '~~~' \
+  '- **Pace:** slow mornings · KEEP-PJS42' > "$PJT_SF"
+pjt_shape 'PJ11[fence-label]' shape-fence-label model 'CNRY-PJS50' 'KEEP-PJS49 KEEP-PJS50 KEEP-PJS51' '```
+# Passport:' '```' 2 'a heading mark inside a fenced block, a label there and never a section, with kept lines after the closer'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS49' \
+  '```' \
+  '# Passport: Zorvanian · CNRY-PJS50' \
+  '```' \
+  '- **Pace:** slow mornings · KEEP-PJS50' \
+  '' \
+  '## Sam [OPERATOR-PROVIDED] [THIRD-PARTY]' \
+  '- **Needs:** a step-free route · KEEP-PJS51' > "$PJT_SF"
+pjt_shape 'PJ11[table-need]' shape-table-need model 'CNRY-PJS57 CNRY-PJS81 CNRY-PJS82' 'KEEP-PJS56 KEEP-PJS57 KEEP-PJS58 KEEP-PJS83' '| Documents for insulin' - - 'needs rows whose text opens with a selector word: in the key cell, left out, the named cost; in a later cell holding no label, kept, one mid-table and one last in the file; beside a row the field labels'
+printf '%s\n' '## Rowan' \
+  '| Need | Category | Governing constraint |' \
+  '|---|---|---|' \
+  '| Documents for insulin pens carried through security · CNRY-PJS81 | dietary-health | DH-2 |' \
+  '| Passport | Zorvanian · CNRY-PJS57 | none |' \
+  '| Stairs are hard; level approaches only · KEEP-PJS57 | mobility | HC-1 |' \
+  '| Documents kept with the group leader on day trips · CNRY-PJS82 | logistics | HC-2 |' \
+  '' \
+  '| Field | Need |' \
+  '|---|---|' \
+  '| Need | Documents for insulin pens carried through security · KEEP-PJS56 |' \
+  '| Pace | slow mornings · KEEP-PJS83 |' \
+  '| Need | Documents kept with the group leader on day trips · KEEP-PJS58 |' > "$PJT_SF"
+pjt_shape 'PJ11[setext-list]' shape-setext-list model 'CNRY-PJS65 CNRY-PJS66' 'KEEP-PJS65 KEEP-PJS66' '  - issued abroad · CNRY-PJS66
+---' - - 'a thematic break after a list item in a paragraph label payload, which is no setext underline, with a kept line after it'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS65' \
+  '' \
+  'Passport: Zorvanian · CNRY-PJS65' \
+  '  - issued abroad · CNRY-PJS66' \
+  '---' \
+  '- **Pace:** slow mornings · KEEP-PJS66' > "$PJT_SF"
+pjt_shape 'PJ11[setext-blank]' shape-setext-blank model 'CNRY-PJS70 CNRY-PJS71' 'KEEP-PJS72 KEEP-PJS73' '    issued abroad · CNRY-PJS71
+---' - - 'a thematic break after a blank line in a paragraph label payload, which is no setext underline, with a kept line after it'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS72' \
+  '' \
+  'Passport: Zorvanian · CNRY-PJS70' \
+  '' \
+  '    issued abroad · CNRY-PJS71' \
+  '---' \
+  '- **Pace:** slow mornings · KEEP-PJS73' > "$PJT_SF"
+pjt_shape 'PJ11[setext-item]' shape-setext-item model 'CNRY-PJS72' 'KEEP-PJS74 KEEP-PJS75' '- **Passport:** Zorvanian · CNRY-PJS72
+---' - - 'a thematic break after a list-item label, which is no setext underline, with a kept line after it'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS74' \
+  '- **Passport:** Zorvanian · CNRY-PJS72' \
+  '---' \
+  '- **Pace:** slow mornings · KEEP-PJS75' > "$PJT_SF"
+pjt_shape 'PJ11[table-colon]' shape-table-colon model 'CNRY-PJS73' 'KEEP-PJS76' 'mornings: no early' - - 'a cell carrying a colon whose text opens with no selector, kept, beside a row the field labels'
+printf '%s\n' '## Rowan' \
+  '| Field | Value |' \
+  '|---|---|' \
+  '| Passport | Zorvanian · CNRY-PJS73 |' \
+  '| Pace | slow mornings: no early starts · KEEP-PJS76 |' > "$PJT_SF"
+pjt_shape 'PJ11[fence-short]' shape-fence-short model 'CNRY-PJS74 CNRY-PJS75' 'KEEP-PJS77 KEEP-PJS78' '``
+## Passport' - - 'a line of two backticks, which opens no fence, then a heading naming the field over a two-paragraph value'
+printf '%s\n' '## Rowan' \
+  '- **Would love:** tide pools at dawn · KEEP-PJS77' \
+  '``' \
+  '## Passport' \
+  'Zorvanian · CNRY-PJS74' \
+  '' \
+  'valid to 2031 · CNRY-PJS75' \
+  '' \
+  '## Sam [OPERATOR-PROVIDED] [THIRD-PARTY]' \
+  '- **Needs:** a step-free route · KEEP-PJS78' > "$PJT_SF"
+
+pjt_i=0
+while [ "$pjt_i" -lt "${#PJT_SN[@]}" ]; do
+  pjt_id="${PJT_SN[$pjt_i]}"; pjt_what="${PJT_SX[$pjt_i]}"
+  pjt_eval "$PJT_DECL" "$PJT_FX/trips/${PJT_ST[$pjt_i]}"
+  pjt_src="$(cat "${PJT_SS[$pjt_i]}")"
+  pjt_nc="$(pjt_count "${PJT_SC[$pjt_i]}")"; pjt_nk="$(pjt_count "${PJT_SK[$pjt_i]}")"
+  pjt_sc="$(pjt_count "$(pjt_hits "$pjt_src" ${PJT_SC[$pjt_i]})")"
+  pjt_sk="$(pjt_count "$(pjt_hits "$pjt_src" ${PJT_SK[$pjt_i]})")"
+  pjt_lk="$(pjt_hits "$PJT_OUT" ${PJT_SC[$pjt_i]})"
+  pjt_ls="$(pjt_miss "$PJT_OUT" ${PJT_SK[$pjt_i]})"
+  pjt_wok=0
+  case "$pjt_src" in *"${PJT_SW[$pjt_i]}"*) pjt_wok=1 ;; esac
+  pjt_lc=0
+  if [ "${PJT_SL[$pjt_i]}" != - ]; then
+    pjt_lc="$(LC_ALL=C awk -v l="${PJT_SL[$pjt_i]}" '{ sub(/\r$/, "") } $0 == l { c++ } END { print c + 0 }' <<<"$PJT_OUT")"
+  fi
+  if [ "$PJT_LOADED" -ne 1 ]; then
+    FAIL "$pjt_id: $pjt_what — the subject did not load (PJ0 says why), so this shape has nothing to grade"
+  elif [ "$pjt_sc" -ne "$pjt_nc" ]; then
+    FAIL "$pjt_id: $pjt_what — the fixture carries $pjt_sc of its $pjt_nc canaries, so a projection graded over it would prove nothing"
+  elif [ "$pjt_sk" -ne "$pjt_nk" ]; then
+    FAIL "$pjt_id: $pjt_what — the fixture carries $pjt_sk of its $pjt_nk kept markers"
+  elif [ "$pjt_wok" -ne 1 ]; then
+    FAIL "$pjt_id: $pjt_what — the fixture does not carry the bytes of the shape it names, so this arm would grade some other shape"
+  elif [ "$PJT_RC" -ne 0 ]; then
+    FAIL "$pjt_id: $pjt_what — the projection exited $PJT_RC, expected exactly 0 — stderr: $PJT_ERR"
+  elif [ -n "$pjt_lk" ]; then
+    FAIL "$pjt_id: $pjt_what — $(pjt_count "$pjt_lk") of its $pjt_nc canaries reached the projection: $pjt_lk"
+  elif [ -n "$pjt_ls" ]; then
+    FAIL "$pjt_id: $pjt_what — the projection dropped $(pjt_count "$pjt_ls") of its $pjt_nk kept lines, an over-broad omission: $pjt_ls"
+  elif [ "${PJT_SL[$pjt_i]}" != - ] && [ "$pjt_lc" -ne "${PJT_SM[$pjt_i]}" ]; then
+    FAIL "$pjt_id: $pjt_what — the delimiter line '${PJT_SL[$pjt_i]}' appears $pjt_lc time(s) in the projection, expected exactly ${PJT_SM[$pjt_i]}"
+  else
+    PASS "$pjt_id: $pjt_what — exit 0 [rc=0, expected 0], 0 of its $pjt_nc canaries in the projection and $pjt_nk of $pjt_nk kept lines in it"
+  fi
+  pjt_i=$((pjt_i + 1))
+done
+
+# ── PJ12 — fail closed on a source holding a carriage return no line feed follows. The reader
+# takes such a file as fewer lines than it holds, so it cannot find the labels in it; it is
+# refused, never read. [model] is a model whose lines are parted by bare carriage returns and
+# whose last byte is a line feed, so only the test inside the file can refuse it; [trav] is a
+# traveller file, with no model on file, whose one bare carriage return is its last byte.
+PJT_B12M="$PJT_FX/trips/bare-cr-model"; PJT_B12T="$PJT_FX/trips/bare-cr-trav"
+mkdir -p "$PJT_B12M/outputs" "$PJT_B12T/travelers"
+printf '## Rowan\r- **Passport:** Zorvanian · CNRY-PJS55\r- **Pace:** slow mornings\n' > "$PJT_B12M/outputs/traveler-model.md"
+printf '# Rowan\n\n- **Pace:** slow mornings\n- **Passport:** Zorvanian · CNRY-PJS56\r' > "$PJT_B12T/travelers/rowan.md"
+PJT_B12_TOK='PJ0: a source holds a carriage return with no line feed after it'
+for pjt_c in model trav; do
+  if [ "$pjt_c" = model ]; then
+    pjt_d="$PJT_B12M"; pjt_f="$PJT_B12M/outputs/traveler-model.md"; pjt_k='CNRY-PJS55'
+    pjt_w='a model whose lines are parted by bare carriage returns, its last byte a line feed'
+  else
+    pjt_d="$PJT_B12T"; pjt_f="$PJT_B12T/travelers/rowan.md"; pjt_k='CNRY-PJS56'
+    pjt_w='a traveller file, with no model on file, whose last byte is a bare carriage return'
+  fi
+  pjt_eval "$PJT_DECL" "$pjt_d"
+  pjt_bare="$(LC_ALL=C awk 'index(substr($0, 1, length($0) - 1), "\r") { f = 1 } END { print f + 0 }' "$pjt_f")"
+  [ "$(LC_ALL=C tail -c 1 "$pjt_f")" = "$PJT_CR" ] && pjt_bare=1
+  pjt_can="$(pjt_hits "$(cat "$pjt_f")" "$pjt_k")"
+  pjt_tok=0
+  case "$PJT_ERR" in *"$PJT_B12_TOK"*) pjt_tok=1 ;; esac
+  if [ "$PJT_LOADED" -ne 1 ]; then
+    FAIL "PJ12[$pjt_c]: $pjt_w — the subject did not load (PJ0 says why), so this case has nothing to grade"
+  elif [ "$pjt_bare" -ne 1 ]; then
+    FAIL "PJ12[$pjt_c]: $pjt_w — the fixture holds no carriage return without a line feed after it, so this case would grade some other file"
+  elif [ -z "$pjt_can" ]; then
+    FAIL "PJ12[$pjt_c]: $pjt_w — the fixture does not carry its canary"
+  elif [ "$PJT_RC" -ne 2 ]; then
+    FAIL "PJ12[$pjt_c]: $pjt_w — the projection exited $PJT_RC, expected exactly 2 (undetermined): a file read as fewer lines than it holds was projected"
+  elif [ -n "$PJT_OUT" ]; then
+    FAIL "PJ12[$pjt_c]: $pjt_w — the projection refused but printed to stdout"
+  elif [ "$pjt_tok" -ne 1 ]; then
+    FAIL "PJ12[$pjt_c]: $pjt_w — the projection exited 2 with empty stdout, but not for the reason under test: stderr does not carry '$PJT_B12_TOK': $PJT_ERR"
+  else
+    PASS "PJ12[$pjt_c]: $pjt_w — refused, exit 2 [rc=2, expected 2] with empty stdout and the cause on stderr"
+  fi
+done
+
+# ── The registrations. Run only over a sourced subject: removing a function that was never
+# defined would flip an arm that was already failing, and read as a measurement.
+if [ "$PJT_LOADED" -eq 1 ]; then
+  md_flips pj_project_file 'PJ1' pjt_pj1
+  md_flips pj_selectors    'PJ3' pjt_pj3
+fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RS — the group rosters that DESCRIBE this suite, asserted against the run.

@@ -3,7 +3,7 @@ name: trip
 description: Plan, research, check, replan or reorder a trip, capture ideas, build its site, validate its artifacts, report where it stands. The entry point.
 argument-hint: status|plan|replan|reorder|research|check|ideas|site|schema
 disable-model-invocation: true
-allowed-tools: Bash(ls:*), Bash(grep:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/validate-artifacts.sh:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/check-round-trip.sh:*), Read, Task, Edit, Write
+allowed-tools: Bash(ls:*), Bash(grep:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/validate-artifacts.sh:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/check-round-trip.sh:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/project-traveler-data.sh:*), Read, Task, Edit, Write
 disallowed-tools: [Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh:*), Bash(bash:*), Bash(sh:*), NotebookEdit]
 ---
 
@@ -272,6 +272,21 @@ against the argument string** — never an inference from the wording of the req
 from which events would be convenient to move. `outputs/event-status.md` is persist-mutable:
 the hub reads existing status and never regenerates it, so a human flip survives the pass.
 **No verb of this file writes that file itself.**
+
+**The traveller projection.** A dispatch the test in `CLAUDE.md` § *Dispatching agents* admits
+is given, inline in its prompt, the stdout of
+
+```
+${CLAUDE_SKILL_DIR}/../../scripts/project-traveler-data.sh --trip <slug>
+```
+
+with `--data-root <trip.data_root>` appended. Its reads — `reference/data-architecture.md` § 5.6's
+fence, the trip directory, and `trips/<slug>/outputs/traveler-model.md`, or
+`trips/<slug>/travelers/*.md` where none is on file — are the dispatching verb's own. Pass it
+through verbatim: never quote, summarise or write it to any file. Exit 0 and 3 are passed as
+printed; on any other outcome, a refused run included, relay it, dispatch nothing, and pass no
+traveller file in its place. The dispatch tells the agent to open no
+`outputs/traveler-model.md`, `travelers/` file or `people/` record itself.
 
 **Derived-state freshness — this file's relations, and which verbs observe them.** The
 contract's last gate is evaluated **after** resolution, never changes `trip.resolution`, and
@@ -683,20 +698,23 @@ instructions; `trips/<slug>/trip-context.md` — the `## Mode` block alone, read
 written because `Current mode` and `Mode notes` are replaced in one act and the outgoing
 `Mode notes` is echoed before it goes. It reads no other block of that file and does not
 re-read it for the trip's mode or destination — the record block above carries both by value.
-It reads nothing under `trips/<slug>/outputs/` itself: those artifacts are read by the agents
-that consume them, and a read here would give the itinerary a second reader with no write to
-justify it. **Agent reads, attributed:** enrichment reads `trips/<slug>/travelers/*.md`,
+Its other reads are the traveller projection's reads (§ *Standing clause*), for the hub. Every other artifact under
+`trips/<slug>/outputs/` is read by the agents that consume it, and a read here would give the
+itinerary a second reader with no write to justify it. **Agent reads, attributed:** enrichment's reconciler reads `trips/<slug>/travelers/*.md`,
 `<store-root>/people/<person-id>.md`, the durable record a file's `person:` line references,
 and the survivor where that record is a `merged-into:` stub, `trips/<slug>/trip-context.md`
 and `trips/<slug>/outputs/traveler-model.md`, the model it is
-about to replace, read before it rebuilds it; each spoke reads `trips/<slug>/trip-context.md`,
+about to replace, read before it rebuilds it; its research role and setup seed read
+`trips/<slug>/trip-context.md` alone; each spoke reads `trips/<slug>/trip-context.md`,
 `trips/<slug>/trip-log.md`, `trips/<slug>/outputs/traveler-model.md` and its own accumulated
-output file; the hub reads the spoke outputs, `trips/<slug>/outputs/traveler-model.md` and
+output file; the hub reads the spoke outputs, the traveller projection and
 `trips/<slug>/outputs/event-status.md`; the validator reads the itinerary the hub produced,
 `trips/<slug>/outputs/traveler-model.md` and `trips/<slug>/outputs/event-status.md`.
-**Dispatches** enrichment, the spokes § *Modes* admits for the resolved mode, the hub, and the
-validator where that mode runs it — each in the role or roles its roster row states, each
-writing exactly the file or files that row names and nothing else.
+**Dispatches** enrichment twice — its reconciler role, then its research role and setup seed,
+given `trips/<slug>/trip-context.md` and nothing else, not `trip-log.md` — then the spokes
+§ *Modes* admits for the resolved mode, the hub, and the validator where that mode runs it —
+each in the role or roles its roster row states, each writing exactly the file or files that
+row names and nothing else.
 **Non-interactive: the standing clause's *run nobody can answer*.**
 
 **The chain is § *Modes*' to decide, not this section's.** Read the resolved mode's row there
@@ -764,14 +782,15 @@ reads under `trips/<slug>/outputs/` itself, for the mode test below and nothing 
 as `ls -1 "<data-root>/trips/<slug>/outputs/final-itinerary.md"` before the first dispatch;
 and, on a run that dispatches the reconciler, the `## Update signals [DERIVED]` block of
 `traveler-model.md` alone, immediately after that leg. That block names a field and never its
-value (`agents/00-enrichment.md` § *Profile-change detection*). **Agent
-reads, attributed:** enrichment, where a changed profile is what triggered the run, reads
+value (`agents/00-enrichment.md` § *Profile-change detection*). Beyond that mode test, on a run
+whose chain reaches the hub, it takes the traveller projection's reads (§ *Standing clause*), for the hub.
+**Agent reads, attributed:** enrichment, where a changed profile is what triggered the run, reads
 `trips/<slug>/travelers/*.md`, `<store-root>/people/<person-id>.md`, the durable record a
 file's `person:` line references, and the survivor where that record is a `merged-into:` stub,
 `trips/<slug>/trip-context.md` and `trips/<slug>/outputs/traveler-model.md`, the model it is
 about to replace; each affected spoke reads `trips/<slug>/trip-context.md`,
 `trips/<slug>/trip-log.md`, `trips/<slug>/outputs/traveler-model.md` and its own accumulated
-output file; the hub reads the spoke outputs, `trips/<slug>/outputs/traveler-model.md` and
+output file; the hub reads the spoke outputs, the traveller projection and
 `trips/<slug>/outputs/event-status.md`; the validator reads the itinerary the hub produced,
 `trips/<slug>/outputs/traveler-model.md` and `trips/<slug>/outputs/event-status.md`.
 **Dispatches** enrichment where a changed profile is what triggered the run, in its reconciler
@@ -876,12 +895,12 @@ relations and still announces them.
 **Reads:** `agents/<name>.md` — the prompt of each agent in the chain below, the path taken
 from that agent's own row in `CLAUDE.md`'s roster; `trips/<slug>/trip-context.md` — the
 `## Mode` block alone, read before it is written, for the reason `plan`'s section gives. It
-reads no other block of that file and nothing under `trips/<slug>/outputs/` itself. **Agent
-reads, attributed:** transport reads `trips/<slug>/trip-context.md`,
+reads no other block of that file, and otherwise only the traveller projection's reads
+(§ *Standing clause*), for the hub. **Agent reads, attributed:** transport reads `trips/<slug>/trip-context.md`,
 `trips/<slug>/outputs/traveler-model.md` and its own accumulated output file; scheduling reads
 `trips/<slug>/trip-context.md`, `trips/<slug>/outputs/transport-brief.md`,
 `trips/<slug>/outputs/traveler-model.md` and its own accumulated output file; the hub reads
-`trips/<slug>/outputs/scheduling-framework.md`, `trips/<slug>/outputs/traveler-model.md` and
+`trips/<slug>/outputs/scheduling-framework.md`, the traveller projection and
 `trips/<slug>/outputs/event-status.md`; the validator reads the itinerary the hub produced,
 `trips/<slug>/outputs/traveler-model.md` and `trips/<slug>/outputs/event-status.md`.
 **Dispatches** transport, scheduling, the hub and the validator — each in the role its roster
@@ -1066,13 +1085,11 @@ so the per-event status bound does not quantify over it.
 ## ideas
 
 **Reads:** `agents/<name>.md` — the Destination Ideation prompt, the path taken from its own
-row in `CLAUDE.md`'s roster. It reads nothing else: not `trip-context.md`, whose mode and
-destination the record block already carries by value, and nothing under
-`trips/<slug>/outputs/` — the shortlist is the agent's to write and this verb never reads it
-back. **Agent reads, attributed:** the ideation agent reads
-`trips/<slug>/outputs/traveler-model.md` for the group's leanings, falling back to the leaning
-fields of `trips/<slug>/travelers/*.md` where that model has not been built,
-`trips/<slug>/trip-context.md` for the dates and party, and the frontmatter of
+row in `CLAUDE.md`'s roster; and the traveller projection's reads (§ *Standing clause*), for the
+ideation agent. It reads nothing else: not `trip-context.md`, whose mode and destination the record block
+already carries by value, and not the shortlist, which is the agent's to write and this verb
+never reads back. **Agent reads, attributed:** the ideation agent reads the traveller projection
+for the group's leanings, `trips/<slug>/trip-context.md` for the dates and party, and the frontmatter of
 `trips/<slug>/outputs/destination-shortlist.md`, read before it is replaced.
 **Dispatches** Destination Ideation, in the role its roster row states, writing
 `outputs/destination-shortlist.md` alone. That artifact is `rebuilt-each-synthesis`: on a

@@ -317,6 +317,19 @@ Read the relevant agent prompt from `agents/<name>.md` (see the roster below) an
 
 **Pipeline flow (full pipeline only):** Enrichment → Spokes → Hub → Validator → Remediation (if criticals found). **The spokes run in parallel with one exception: transport precedes scheduling, always.** Scheduling reads transport's output file, `outputs/transport-brief.md`, and the routing signal it emits is arithmetic over that file's leg matrix — so a scheduling-first run has no matrix at all on a first pass, and a stale one on a re-run. `skills/trip/SKILL.md` § *reorder* carries that constraint and its consequence in full and is cited here rather than restated; the same dependency binds every verb that dispatches both spokes, not only that one. Every other pair of spokes is independent. The Hub step is where the three optimizer-engine signals are **reconciled** into one itinerary — needs first as hard constraints, then routing / desire-coverage / experiential arc resolved by a documented policy (R3); the spokes only emit signals, they do not synthesize.
 
+**Which dispatches take the traveller projection — a test, not a list.** A dispatched agent is
+given the traveller projection (`skills/trip/SKILL.md` § *Standing clause*), or no traveller data
+at all, when it writes a class whose `P` cell in `reference/data-architecture.md` § 1.1 reads
+`bound`, or one `ADR-030` § 4 has decided will read `bound`. *Precedence:* a step that both writes
+such a class and needs a `field` value for its own work is split — the `bound` writer takes the
+projection, and the step that needs the value writes no such class. *Admission:* an agent this
+paragraph does not name is decided by the test (§ *Rules over an enumeration*). Today the test
+admits the hub and the destination-ideation agent, while enrichment's research role and setup
+seed take no traveller data at all; enrichment's reconciler, the spokes and the validator write no
+such class and keep their inputs. Those are examples, and a writer the test admits later is
+decided with no edit to this test. An admitted agent opens no `outputs/traveler-model.md`,
+`travelers/` file or `people/` record itself — a rule it follows, which nothing enforces.
+
 **For Agent tool calls:** Pass the agent's prompt file content as the agent's instructions. Include the trip-context.md, trip-log.md (for decision context), and any required input files as context. Write the output to the correct file path, following the output versioning rules.
 
 ### Modes
