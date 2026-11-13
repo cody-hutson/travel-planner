@@ -242,7 +242,7 @@ Targeted research runs one agent. Keeping a trip current costs a small fraction 
 | `agents/` | One prompt per agent |
 | `templates/` | The blank trip context, the two traveler intake forms, and the interview card the portable hand-off sends |
 | `reference/` | The engine's reference documents, from architecture and schemas to specifications and decision records. Browse them in [`reference/`](reference/); the *File Structure* section of [`CLAUDE.md`](CLAUDE.md) lists the folder's top-level entries |
-| `scripts/` | The publish script, the checks `/trip site` and `/trip schema` run, and the CI test suites. The site check confirms that every part of the plan has a place on the page, and that the page shows no section the trip's current stage does not call for |
+| `scripts/` | The publish script, the checks `/trip site` and `/trip schema` run, and the CI test suites. The site check confirms that every part of the plan has a place on the page, and flags any section it can recognise that the trip's current stage does not call for |
 | `examples/` | Worked examples. `tokyo-2026/` is a real trip, kept exactly as an earlier version of the engine planned it. `evening-boundary-demo/` shows how evenings are routed now |
 | `trips/`, `people/`, `groups/` | Empty skeletons that install step 3 copies into your data folder |
 | `analysis/` | Local scratch space for reviews of this repo. Git-ignored |
