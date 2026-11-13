@@ -29171,8 +29171,11 @@ md_flips wtadr26_cell 'WT-ADR26' wtadr26_assert
 #                more than one line, a passport heading and a setext heading inside a
 #                blockquote, each ended by a heading in that quote, a key cell holding
 #                the plural selector alone, a key cell opening with a selector word in a body
-#                row, as a list item does, and a later cell holding the selector alone,
-#                singular and plural, its value in the cell after it (21 shapes, 45 canaries).
+#                row, as a list item does, a later cell holding the selector alone,
+#                singular and plural, its value in the cell after it, a table row inside a
+#                list item or behind a quote, its key cell read as an unwrapped row's is, and a
+#                header row inside a list item over a delimiter row, its whole table going
+#                with it (23 shapes, 53 canaries).
 #          PJ11  the delimiters a payload must stop at, each with kept lines after it: CRLF
 #                line endings, the closer of a fenced block the label sits in, and the
 #                frontmatter's closing `---`, with and without a byte-order mark, a key after
@@ -29764,6 +29767,34 @@ printf '%s\n' '## Rowan' \
   '| Rowan | Passport | Zorvanian · CNRY-PJS79 |' \
   '| Rowan | Passports | two, Zorvanian and Ostrian · CNRY-PJS80 |' \
   '| Rowan | Rooming | own room · KEEP-PJS82 |' > "$PJT_SF"
+pjt_shape 'PJ10[table-list]' shape-table-list model 'CNRY-PJS83 CNRY-PJS84 CNRY-PJS85 CNRY-PJS86 CNRY-PJS87 CNRY-PJS88' 'KEEP-PJS84 KEEP-PJS85 KEEP-PJS86 KEEP-PJS87 KEEP-PJS88 KEEP-PJS89 KEEP-PJS90' '- | Passport number |' - - 'a table row inside a list item, at the top level, nested and behind a quote, and a row behind a quote alone, its key cell read as an unwrapped row reads it, beside list-wrapped rows kept'
+printf '%s\n' '## Rowan' \
+  '- | Pace | slow mornings · KEEP-PJS84 |' \
+  '- | Passport number | Z1234567 · CNRY-PJS83 |' \
+  '- | Pace | slow · KEEP-PJS85 |' \
+  '> | Passport number | Z7654321 · CNRY-PJS84 |' \
+  '> | Rooming | own room · KEEP-PJS86 |' \
+  '> - | Passport number | Z1112223 · CNRY-PJS85 |' \
+  '> - | Rooming | own room · KEEP-PJS87 |' \
+  '' \
+  '- | Documents | entry registration · CNRY-PJS86 |' \
+  '- | Diet | no shellfish · KEEP-PJS88 |' \
+  '  - | Passport | Zorvanian · CNRY-PJS87 |' \
+  '  - | Rooming | own room · KEEP-PJS89 |' \
+  '  - | Passport number | Z4445556 · CNRY-PJS88 |' \
+  '- | Rooming | own room · KEEP-PJS90 |' > "$PJT_SF"
+pjt_shape 'PJ10[table-list-header]' shape-table-list-header model 'CNRY-PJS89 CNRY-PJS90' 'KEEP-PJS91' '- | Passport | Value |
+- |---|---|' - - 'a header row inside a list item naming the field, in more than one word and alone, over a delimiter row inside one, its whole table going with it'
+printf '%s\n' '## Rowan' \
+  '- | Passport number | Pace |' \
+  '- |---|---|' \
+  '- | Z1234567 · CNRY-PJS89 | slow |' \
+  '' \
+  '- | Passport | Value |' \
+  '- |---|---|' \
+  '- | Z7654321 · CNRY-PJS90 | slow |' \
+  '' \
+  '- | Pace | slow mornings · KEEP-PJS91 |' > "$PJT_SF"
 
 pjt_shape 'PJ11[crlf]' shape-crlf model 'CNRY-PJS26 CNRY-PJS27' 'KEEP-PJS24 KEEP-PJS25' "${PJT_CR}
 ${PJT_CR}
