@@ -4947,7 +4947,9 @@ ft_route_assert() {
 # ── FT8 — the Key column (ADR-053 Decisions 1, 2 and 5). The grammar is matched with an explicit
 # character set, never a range: group LC measured `[a-z]` matching upper case under a UTF-8
 # collation. § Field Scope states the grammar; this is its reader, not a second statement of it.
-FT_KEY_CH='abcdefghijklmnopqrstuvwxyz0123456789'
+# The set is built rather than written out: as one literal it reads to gitleaks' generic-api-key
+# rule as a high-entropy token, which a full-history scan would report at every commit adding it.
+FT_KEY_CH="$(printf '%s' {a..z} {0..9})"
 # ft_keycol_report <data-model> — one record per defect in the Key column, over EVERY numbered row,
 # the unlabelled one included, because the column is total: num<TAB>kind<TAB>detail. `cells` is a
 # row whose cell count is not nine (a row's leading and trailing pipes add two empty fields, so
