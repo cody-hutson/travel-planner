@@ -101,8 +101,10 @@
 #     E5 script unreadable · E6 sentinel · E7 cross-surface · E8 §4 cell grammar
 #
 #   F   the invocation limb, VERB-ATTRIBUTED                               (group F)
-#     F1 excluded form · F2 unpublish without the pages-only flag · F3 forbidden flag
-#     F4 sets the plaintext override · F5 parse coverage · F6 a finding that could name
+#     F1 excluded form · F2 unpublish without the pages-only flag · F3 forbidden flag,
+#     on a line or on a fenced invocation wrapped with a trailing backslash
+#     F4 sets the plaintext override, by an assignment or an append, a default-assigning
+#     expansion, printf -v or an export · F5 parse coverage · F6 a finding that could name
 #     only a FILE and not a (command, verb) pair — the measure that must fall to zero
 #     F7 a construct directs anything but the presence probe at a passphrase home
 #
@@ -292,15 +294,31 @@
 # as prose across a hard wrap, with a forbidden flag named inside a NEGATING sentence in
 # the same paragraph, no per-line, per-paragraph or whole-section literal scan separates
 # use from mention. The flag and arm limbs reach the FENCED rendering and the whole-line
-# code span, and nothing else. That is a declared uncovered region, not an omission, and
+# code span, and nothing else. A fenced invocation continued by a trailing backslash is
+# read as one logical line; any other multi-line rendering — a here-document, a line broken
+# without a backslash — is not. That is a declared uncovered region, not an omission, and
 # this guard prints the count of invocations it attributed so a reader can see what it did
 # and did not reach.
+#
+# OUT OF SCOPE — SETTINGS OF THE OVERRIDE THAT NEED EVALUATION. F4 reads the override set by
+# an assignment or an append, a default-assigning expansion, printf -v or an export, each on
+# one physical line, and reads a comparison of the variable as a setting, fail-closed. It does
+# not read `read`, `mapfile`, a name built by eval or declare -n indirection, nor a setting
+# whose name is on a continuation line (`export \` then the name): each needs evaluation, not
+# a pattern, and the join opens only on a line naming the publish script.
 #
 # OUT OF SCOPE — A SESSION'S OWN READ OF A PASSPHRASE HOME. F7 grades CONSTRUCTS: a fenced
 # line, or a whole-line code span, that directs a command at `.passphrase` or at
 # STATICRYPT_PASSWORD. It does not grade a session's Read-tool read of that path, which is
 # a tool some verbs grant and a standing rule bounds; nothing in a command file's text
 # separates that read from any other.
+#
+# OUT OF SCOPE — A PASSPHRASE HOME NOT SPELLED LITERALLY. F7 reads only a construct whose
+# text spells `.passphrase` or STATICRYPT_PASSWORD. A construct that spells neither is not
+# read: a variable holding the name, a glob, a partial or concatenated name, indirect
+# expansion, or an environment dump (env, printenv, declare -p, set) that reaches the value
+# without naming it. Deciding those needs glob expansion or shell evaluation, which a line
+# reader does not do.
 #
 # OUT OF SCOPE — PER-VERB ARM BINDING. That verb A does not invoke verb B's granted arm
 # is a rule a file follows, not a property this guard can derive: of the surfaces this
@@ -2138,6 +2156,34 @@ region_of() {
 # names (command, file) instead, and its lines never join an INV record's key — an INV key
 # is a line of the verb file, and a bundled file's line number could otherwise collide with
 # it. Arms GF3c and GF4c plant in a bundled file and require the finding.
+#
+# A WRAPPED INVOCATION IS ONE LINE. Inside a fence, a line naming the script that ends in an
+# unescaped backslash opens a LOGICAL line, joined by the shell's own rule, transcribed: the
+# backslash and its newline are dropped and the next fenced line is appended VERBATIM, nothing
+# inserted, so `--pass\` then `phrase secret` reads `--passphrase secret`, as the shell reads it.
+# It stays open while each appended line also ends in an unescaped backslash; the first fenced
+# line that does not, a closing fence, or the end of the file closes it. A backslash followed by
+# whitespace escapes the space and continues nothing. The logical line keeps its FIRST line's
+# number, which is the line an INV record is keyed on, and is parsed exactly as one physical line
+# is. Every physical line still passes the F4 test as it is read, so the join is a buffer inside
+# the read loop rather than a read-ahead. Arms GF3w and GF3wm plant it.
+#
+# F4 READS FOUR FORMS OF SETTING THE OVERRIDE, each assignment syntax, so a line that only names
+# the variable stays a mention: an assignment or an append assignment, a default-assigning
+# expansion, printf -v, and an export. A comparison of the variable is read as a setting too,
+# deliberately — a command file that compares the forbidden variable is itself suspect, and the
+# fail-closed reading is kept rather than narrowed. Arms GF4, GF4p, GF4d, GF4v and GF4x plant one
+# form each.
+F4_SET_ASSIGN='(^|[^A-Za-z0-9_])ALLOW_PLAINTEXT[[:space:]]*\+?='
+F4_SET_DEFAULT='\$\{ALLOW_PLAINTEXT:?='
+F4_SET_PRINTFV='(^|[^A-Za-z0-9_])printf([[:space:]]+-[^[:space:]]+)*[[:space:]]+-v[[:space:]]*ALLOW_PLAINTEXT([^A-Za-z0-9_]|$)'
+F4_SET_EXPORT='export[[:space:]]+ALLOW_PLAINTEXT'
+# inv_continues <line> — the line ends in an unescaped backslash: an odd run of them, nothing after.
+inv_continues() {
+  local s="$1" n=0
+  while [ "${s%\\}" != "$s" ]; do s="${s%\\}"; n=$((n+1)); done
+  [ $((n % 2)) -eq 1 ]
+}
 # ─────────────────────────────────────────────────────────────────────────────────
 invocation_check() {
   local cdir="$1" recs="$2"
@@ -2167,6 +2213,7 @@ invocation_check() {
   regions_load "$recs"
 
   local f base cmd fname where fd lno t cand bare rest sub tok found=0 i owner
+  local f4form jopen jbuf jno pl pfd
   local -a ARGV=()
   for f in "$cdir"/*/*.md; do
     [ -e "$f" ] || continue
@@ -2175,15 +2222,39 @@ invocation_check() {
     # The verb file is named by its command alone, as it always was; a file bundled beside it
     # is named by command AND file, so a line number is never read against the wrong file.
     where="$cmd"; [ "$fname" = 'SKILL.md' ] || where="$cmd/$fname"
-    lno=0; fd=0
+    lno=0; fd=0; jopen=''; jbuf=''; jno=0
+    # The file is read with one empty line appended, so a logical line still open at the end of
+    # the file is closed and parsed exactly as a fence would close it.
     while IFS= read -r line || [ -n "$line" ]; do
       lno=$((lno+1))
       if [[ "$line" == '```'* ]]; then fd=$((1-fd)); fi
-      t="$(trim "$line")"
 
-      if [[ "$line" =~ (^|[^A-Za-z0-9_])ALLOW_PLAINTEXT[[:space:]]*= ]] || [[ "$line" =~ export[[:space:]]+ALLOW_PLAINTEXT ]]; then
-        printf 'FINDING F4 %s:%d SETS the plaintext override — ADR-007 §2 forbids it in any command file\n' "$where" "$lno"; rc=1
+      # F4 — one form per test, so the finding names the form it read.
+      f4form=''
+      if [[ "$line" =~ $F4_SET_ASSIGN ]]; then f4form='an assignment'
+      elif [[ "$line" =~ $F4_SET_DEFAULT ]]; then f4form='a default-assigning expansion'
+      elif [[ "$line" =~ $F4_SET_PRINTFV ]]; then f4form='printf -v'
+      elif [[ "$line" =~ $F4_SET_EXPORT ]]; then f4form='an export'
       fi
+      if [ -n "$f4form" ]; then
+        printf 'FINDING F4 %s:%d SETS the plaintext override, through %s — ADR-007 §2 forbids it in any command file\n' "$where" "$lno" "$f4form"; rc=1
+      fi
+
+      # The logical line. pl and pfd are the line number and fence depth the rest of this loop
+      # parses under: the physical line's own, or, for a joined line, its first line's.
+      pl=$lno; pfd=$fd
+      if [ -n "$jopen" ]; then
+        if [ "$fd" -eq 0 ]; then
+          line="$jbuf"; pl=$jno; pfd=1; jopen=''
+        elif inv_continues "$line"; then
+          jbuf="$jbuf${line%\\}"; continue
+        else
+          line="$jbuf$line"; pl=$jno; pfd=1; jopen=''
+        fi
+      elif [ "$fd" -eq 1 ] && [[ "$line" == *"$SCRIPT_REL"* ]] && inv_continues "$line"; then
+        jopen=1; jbuf="${line%\\}"; jno=$lno; continue
+      fi
+      t="$(trim "$line")"
 
       case "$line" in *"$SCRIPT_REL"*) ;; *) continue ;; esac
       n_men=$((n_men+1))
@@ -2195,7 +2266,7 @@ invocation_check() {
       # is WHOLE a single code span at fence depth 0. Any other rendering yields no candidate
       # and falls through to the PROSE test below, exactly as before.
       cand=''
-      if [ "$fd" -eq 1 ]; then
+      if [ "$pfd" -eq 1 ]; then
         cand="$t"
       elif [ "${#t}" -gt 2 ] && [ "${t:0:1}" = "$BT" ] && [ "${t:${#t}-1:1}" = "$BT" ]; then
         cand="${t:1:${#t}-2}"
@@ -2208,16 +2279,16 @@ invocation_check() {
         owner='-'
         if [ "$fname" != 'SKILL.md' ]; then
           owner="$fname"
-        elif [ "$fd" -eq 1 ]; then
+        elif [ "$pfd" -eq 1 ]; then
           for (( i=0; i<${#IL[@]}; i++ )); do
-            [ "${IL[$i]}" = "$cmd:$lno" ] && owner="${IO[$i]}"
+            [ "${IL[$i]}" = "$cmd:$pl" ] && owner="${IO[$i]}"
           done
         else
-          region_of "$cmd" "$lno"; owner="$RG_OWNER"
+          region_of "$cmd" "$pl"; owner="$RG_OWNER"
         fi
         if [ "$owner" = '-' ]; then
           n_orphan=$((n_orphan+1))
-          printf 'FINDING F6 %s:%d an invocation — a fenced line or a whole-line code span — resolves to no declared verb region, so a finding on it could name only the FILE and not a (command, verb) pair\n' "$cmd" "$lno"; rc=1
+          printf 'FINDING F6 %s:%d an invocation — a fenced line or a whole-line code span — resolves to no declared verb region, so a finding on it could name only the FILE and not a (command, verb) pair\n' "$cmd" "$pl"; rc=1
         fi
         IFS=' ' read -r -a ARGV <<< "$rest"
         sub=""
@@ -2225,16 +2296,16 @@ invocation_check() {
           case "$tok" in -*) continue ;; '') continue ;; *) sub="$tok"; break ;; esac
         done
         if [ -z "$sub" ]; then
-          printf 'FINDING F1 (%s, %s) at line %d invokes the publish script with no subcommand token\n' "$cmd" "$owner" "$lno"; rc=1
+          printf 'FINDING F1 (%s, %s) at line %d invokes the publish script with no subcommand token\n' "$cmd" "$owner" "$pl"; rc=1
         elif ! in_list "$sub" "${ALLOWED_SUBS[@]}"; then
-          printf 'FINDING F1 (%s, %s) at line %d invokes the EXCLUDED form "%s" — ADR-007 §4 dispositions it EXCLUDED\n' "$cmd" "$owner" "$lno" "$sub"; rc=1
+          printf 'FINDING F1 (%s, %s) at line %d invokes the EXCLUDED form "%s" — ADR-007 §4 dispositions it EXCLUDED\n' "$cmd" "$owner" "$pl" "$sub"; rc=1
         elif [ "$sub" = 'unpublish' ] && [[ "$rest" != *'--disable-pages-only'* ]]; then
-          printf 'FINDING F2 (%s, %s) at line %d invokes unpublish WITHOUT the pages-only flag on the same invocation — that is the repo-delete form, which is EXCLUDED\n' "$cmd" "$owner" "$lno"; rc=1
+          printf 'FINDING F2 (%s, %s) at line %d invokes unpublish WITHOUT the pages-only flag on the same invocation — that is the repo-delete form, which is EXCLUDED\n' "$cmd" "$owner" "$pl"; rc=1
         fi
         for tok in "${ARGV[@]+"${ARGV[@]}"}"; do
           case "$tok" in
             '--plaintext'|'--passphrase'|'--yes'|'-y')
-              printf 'FINDING F3 (%s, %s) at line %d passes the forbidden flag %s on a publish-script invocation\n' "$cmd" "$owner" "$lno" "$tok"; rc=1 ;;
+              printf 'FINDING F3 (%s, %s) at line %d passes the forbidden flag %s on a publish-script invocation\n' "$cmd" "$owner" "$pl" "$tok"; rc=1 ;;
           esac
         done
         continue
@@ -2245,8 +2316,8 @@ invocation_check() {
       fi
 
       n_unc=$((n_unc+1))
-      printf 'FINDING F5 PARSE COVERAGE — %s:%d mentions the publish script in a shape this guard cannot resolve (variable, alias or heredoc?). An unresolved mention is a failure, not a skip\n' "$where" "$lno"; rc=1
-    done < "$f"
+      printf 'FINDING F5 PARSE COVERAGE — %s:%d mentions the publish script in a shape this guard cannot resolve (variable, alias or heredoc?). An unresolved mention is a failure, not a skip\n' "$where" "$pl"; rc=1
+    done < <(cat "$f"; printf '\n\n')
   done
 
   if [ "$found" -eq 0 ]; then
