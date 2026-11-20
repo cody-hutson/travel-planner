@@ -423,9 +423,17 @@ announce_passphrase_file() { # <label> <passphrase_file>
 # ─────────────────────────────────────────────────────────────────────────────
 # Locate the trip's generated site HTML and derive the per-trip repo slug.
 # ─────────────────────────────────────────────────────────────────────────────
+# The newest render, by modification order: the member publish, update and rotate take, and the source
+# side of list's build-to-published relation (#2157). One function for both, so the relation compares the
+# page as last pushed with the render a push would take, by construction rather than by two copies of
+# one selection agreeing. Prints the path, or nothing.
+newest_site_html() { # <trip_dir>
+  ls -1t "$1"/outputs/*-travel-site.html 2>/dev/null | awk 'NR == 1' || true
+}
+
 resolve_site_html() { # <trip_dir>
   local trip_dir="$1" hit
-  hit=$(ls -1t "$trip_dir"/outputs/*-travel-site.html 2>/dev/null | awk 'NR == 1' || true)
+  hit="$(newest_site_html "$trip_dir")"
   [ -n "$hit" ] || die "no *-travel-site.html found in $trip_dir/outputs/ — build the site first."
   printf '%s' "$hit"
 }
@@ -5658,8 +5666,69 @@ _ymd_of_epoch()  { # <epoch> -> YYYY-MM-DD, or '-' when empty
   [ -n "${1:-}" ] || { printf '%s' '-'; return; }
   date -r "$1" +%Y-%m-%d 2>/dev/null || date -d "@$1" +%Y-%m-%d 2>/dev/null || printf '%s' '-'
 }
-# stale = a live site whose local build (edited epoch) is newer than the deployed commit.
+# Orders two epochs: true when the first is strictly later. The guard's freshness gates read it (a
+# profile, a person record or a render newer than the traveller model); list no longer does, since its
+# build-to-published relation compares content rather than clocks (#2157).
 _is_stale() { [ -n "${1:-}" ] && [ -n "${2:-}" ] && [ "$1" -gt "$2" ]; }
+
+# THE RELATION build-to-published (#2157; ADR-035 § 1), one cell per trip: whether the page as last pushed
+# is the newest local build, by content. Its declaration is skills/trip-publish/SKILL.md § list, and its
+# registration reference/channel-and-engagement-model.md § 2. The derived side is the digest every push
+# records in .published-itinerary (D-3), so no publish verb gains a write; the source side is
+# newest_site_html, the render a push takes. The verdict is the first row that holds:
+#   1  a staged twin .published-itinerary.next is present — a push's record is outstanding, and the record
+#      may lag the page (F14 of the review: checked first, so a first publish whose record is still staged
+#      is not reported as one never pushed)
+#   2  the record is absent — no push recorded on this machine (a site published before the record
+#      existed reads this until its next push)
+#   3  the record is present and unusable
+#   4  no local render
+#   5  the render cannot be projected — no perl, an unreadable render, a projection that failed
+#   6  the digests are equal: CURRENT
+#   7  a legacy (pre-#719 CRC) record that differs reads UNDETERMINED, never BEHIND: that record was taken
+#      under a projection that has since moved, so a difference proves nothing about the plan
+#   8  otherwise BEHIND, naming the render
+# Rows 1 to 5 and 7 are UNDETERMINED, each naming the operand it could not read; a state no row names cannot
+# arise, because row 8 is reached only with both tokens read. It reads only: _baseline_record, the staged
+# twin's presence, newest_site_html and the two digests, and no gh. No publish verb calls it, and nothing
+# may branch on it (CLAUDE.md § Resolving a trip, G8: report-only). Blind spots, declared in the SKILL:
+# a push from another machine; a takedown, since unpublish leaves the record; text outside the projection
+# (the coordination band, the declaration block, and text a browser shows that the projection drops); and
+# a projection that moved after the record was written, which reads as a change once.
+build_to_published() { # <trip_dir> -> one cell
+  local trip_dir="$1" bp_nx bp_twin=0 bp_rec bp_site bp_rel bp_dg
+  bp_nx="$(staged_record_path "$trip_dir")"
+  if [ -e "$bp_nx" ] || [ -L "$bp_nx" ]; then bp_twin=1; fi
+  if [ "$bp_twin" -eq 1 ]; then
+    printf "UNDETERMINED: a push's record is outstanding"; return 0
+  fi
+  bp_rec="$(_baseline_record "$(published_itinerary_path "$trip_dir")")"
+  case "$bp_rec" in
+    absent) printf 'UNDETERMINED: no push recorded'; return 0 ;;
+    unusable|'') printf 'UNDETERMINED: the push record cannot be read'; return 0 ;;
+  esac
+  bp_site="$(newest_site_html "$trip_dir")"
+  if [ -z "$bp_site" ]; then
+    printf 'UNDETERMINED: no local render'; return 0
+  fi
+  bp_rel="${bp_site#"$trip_dir"/}"
+  if [ "${#bp_rec}" -ne 64 ]; then
+    bp_dg="$(_legacy_itinerary_digest "$bp_site")"
+  else
+    bp_dg="$(itinerary_digest "$bp_site")"
+  fi
+  if [ -z "$bp_dg" ]; then
+    printf 'UNDETERMINED: %s cannot be projected' "$bp_rel"; return 0
+  fi
+  if [ "$bp_dg" = "$bp_rec" ]; then
+    printf 'CURRENT'; return 0
+  fi
+  if [ "${#bp_rec}" -ne 64 ]; then
+    printf 'UNDETERMINED: the push record predates the current digest; the next push records one'; return 0
+  fi
+  printf 'BEHIND: %s' "$bp_rel"
+  return 0
+}
 
 # ─────────────────────────────────────────────────────────────────────────────
 # list — read-only inventory of every trip under ./trips/. Never writes/encrypts/pushes.
@@ -5677,23 +5746,23 @@ cmd_list() { # (no args, beyond the shared --data-root seam main strips)
   [ "$_GUARD_DATA_ROOT_EXPLICIT" = "1" ] && _lroot="$_GUARD_DATA_ROOT"
   # Local first: scanning <root>/trips/ needs no GitHub. Only the publish-state columns do.
   [ -d "$_lroot/trips" ] || die "no trips/ directory under $_lroot — trips/ ships with the repo, so this is probably not the repo root. cd there and re-run, or pass --data-root <dir>."
-  # Publish state (STATUS/PUBLISHED/STALE) needs gh; the local inventory does not.
+  # Publish state (STATUS/PUBLISHED) needs gh; the local inventory and BUILD-TO-PUBLISHED do not.
   # Degrade instead of dying, so list still works on a fresh clone with no gh.
   local owner="" online=0
   if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
     owner="$(gh api user --jq '.login' 2>/dev/null || true)"
     [ -n "$owner" ] && online=1
   fi
-  [ "$online" = "1" ] || warn "gh unavailable or not authenticated — showing local trips only. STATUS/PUBLISHED/STALE need: gh auth login"
+  [ "$online" = "1" ] || warn "gh unavailable or not authenticated — showing local trips only. STATUS and PUBLISHED need: gh auth login. BUILD-TO-PUBLISHED needs no network."
 
   printf '\n\033[1m%-22s %-24s %-14s %-12s %-12s %s\033[0m\n' \
-    "TRIP" "REPO" "STATUS" "PUBLISHED" "EDITED" "STALE"
-  local any=0 trip_dir base slug site edited_epoch pub_iso pub_epoch status stale
+    "TRIP" "REPO" "STATUS" "PUBLISHED" "EDITED" "BUILD-TO-PUBLISHED"
+  local any=0 trip_dir base slug site edited_epoch pub_iso pub_epoch status
   for trip_dir in "$_lroot"/trips/*/; do
     [ -d "$trip_dir" ] || continue
     trip_dir="${trip_dir%/}"; base="$(basename "$trip_dir")"; any=1
     slug="$(slug_for "$trip_dir" 2>/dev/null || printf '?')"
-    site="$(ls -1t "$trip_dir"/outputs/*-travel-site.html 2>/dev/null | awk 'NR == 1' || true)"
+    site="$(newest_site_html "$trip_dir")"
     edited_epoch=""; [ -n "$site" ] && edited_epoch="$(_epoch_of_file "$site")"
     status="-"; pub_epoch=""
     if [ "$online" = "1" ]; then
@@ -5705,16 +5774,13 @@ cmd_list() { # (no args, beyond the shared --data-root seam main strips)
         status="not published"
       fi
     fi
-    # Stale = a live site whose local build is newer than the deployed commit.
-    # Left as "-" (indeterminate) unless both timestamps are known.
-    stale="-"
-    if [ "$status" = "live" ] && [ -n "$edited_epoch" ] && [ -n "$pub_epoch" ]; then
-      if _is_stale "$edited_epoch" "$pub_epoch"; then stale="⚠ stale"; else stale="ok"; fi
-    fi
+    # The last column is the build-to-published relation, read locally and computed for every trip,
+    # online or not (see build_to_published).
     printf '%-22s %-24s %-14s %-12s %-12s %s\n' \
-      "$base" "$slug" "$status" "$(_ymd_of_epoch "$pub_epoch")" "$(_ymd_of_epoch "$edited_epoch")" "$stale"
+      "$base" "$slug" "$status" "$(_ymd_of_epoch "$pub_epoch")" "$(_ymd_of_epoch "$edited_epoch")" "$(build_to_published "$trip_dir")"
   done
   [ "$any" = "1" ] || info "No trips under $_lroot/trips/ — see trips/README.md to start one."
+  [ "$any" != "1" ] || printf '%s\n' "build-to-published: the page as last pushed against the newest local build, compared by content; evaluated here, outside trip.freshness; report-only."
   printf '\n'
 }
 

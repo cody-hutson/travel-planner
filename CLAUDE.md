@@ -561,7 +561,7 @@ Rotation re-encrypts under a new passphrase — never `$STATICRYPT_PASSWORD` —
 ```bash
 <engine-root>/scripts/publish-trip-site.sh list --data-root <data-root>
 ```
-Prints every trip under `<data-root>/trips/` with its repo, live URL (or "not published"), last-published vs last-edited, and a **stale** flag when your local build is newer than what's deployed.
+Prints every trip under `<data-root>/trips/` with its repo, live URL (or "not published"), last-published vs last-edited dates, and `build-to-published`: whether the page last pushed is the newest local build, compared by content rather than by clock. It is evaluated outside `trip.freshness`, is report-only, and needs no network (`skills/trip-publish/SKILL.md` § *list* declares it).
 
 **Taking a site down:**
 ```bash
