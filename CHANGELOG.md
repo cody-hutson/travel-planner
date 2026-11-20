@@ -3,6 +3,60 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [Unreleased] — 2026-11-20 — A public page refuses the group's content, and every publish checks what the build reads
+
+An open publish now refuses a page carrying a section only the group may see, every publish,
+update and rotate first checks the files the site is built from for a passport or documents value,
+and `list` says whether the page last pushed is the newest local build by what it shows rather than
+by the clock. No trip is re-planned and no published site changes by this release: what changes is
+what the next publish allows and what `list` reports.
+
+**An open publish refuses a group-only section by its presence.** `publish --plaintext` reads a new
+fence, `group-only-components`, under its own heading at the end of `reference/site-layout-spec.md`
+§ 3, which names the sections the private-site record keeps off every public page, and refuses,
+with exit status 3 and the message `GROUP-ONLY REFUSED`, a render in which any start tag carries one
+of them as a class (`ADR-030` § 6 safeguard 2). It reads the raw page as a browser's tokenizer
+does: every `<` and letter starts its own candidate, so script text ahead of a section cannot hide
+it; attributes, character references and a second reading through JavaScript string escapes are
+decoded as the browser decodes them; comments, scripts and templates are read too, because a
+plaintext page's bytes are public whether they render or not. It runs before any network call, so
+`ALLOW_PLAINTEXT` reaches none of it, and again on the copy about to be pushed, so a render rebuilt
+in between is refused rather than pushed. A declaration it cannot read refuses as one that names a
+section would. The encrypted limb does not run it. Once the group-contacts card ships, that section
+renders in every state the site builds, so `--plaintext` refuses every render, a solo trip's
+included: § 3 now says so, and that the share-mark card ships with or after it.
+
+**Every publish, update and rotate checks what the build reads.** Before anything is encrypted or
+sent, the script reads the files `reference/site-layout-spec.md` § 9.1 marks `bound` and stops,
+naming the file, the line and the field and never the value, where one carries a value of the field
+class `reference/data-architecture.md` § 5.6 declares: by its label with a value stated, or exactly,
+where a part of a value holds a number of three or more digits or a word of it is an email address,
+a run of five or more digits or a token mixing letters with three or more digits. It reads the
+traveller files, the traveller model and the referenced person records directly, so a stale or
+missing model neither stops a publish nor hides a value a present one holds. A bound file absent
+from the trip is skipped and named; one present but unreadable stops. This is the first content
+check the encrypted limb carries; the previous release's entry named it as owed to this milestone.
+
+**`list` reports `build-to-published` in place of the stale flag.** The column compares the digest
+every push already records with the newest local render, the one `publish` would take, so a rebuild
+or a touch that changes nothing visible reads current, and a record that cannot settle it — none on
+this machine, unreadable, outstanding, or written under an older digest — names what it could not
+read. It needs no network, writes nothing, is evaluated outside `trip.freshness` and decides nothing;
+its verdicts are the shipped freshness family's, owned by `skills/trip/SKILL.md`. The relation is
+declared in `skills/trip-publish/SKILL.md` § *list* and registered in
+`reference/channel-and-engagement-model.md` § 2.
+
+**Size fence.** Read with `CH_EMIT=growth ./scripts/test-corpus-hygiene.sh` at 005008a against 0.70.0. `reference/site-layout-spec.md`'s row is re-pinned from 63,987 to 71,892, its size of 65,496 bytes plus its class headroom: the § 3 fence and the § 9.1 reconciliation are declared homes this release adds, and § 3 holds nothing this release owns to move out. Every other row is kept. Beneath their ceilings, `reference/data-architecture.md` grew by 952 bytes to 135,292 of 147,099, `CLAUDE.md` by 998 to 144,868 of 153,381, and `skills/trip-publish/SKILL.md` by 1,847 to 45,265 of 48,711.
+
+**What it does not do, stated so a green check is not read as more.** A section a script builds with
+no tag string, or whose class it assembles by concatenation, is not seen by the refusal; nor is
+group content rendered without its token, which the § 3 render contract binds. The source check
+does not see an ordinary-word value restated without its label, a label mid-line, in a table cell or
+with a word before its colon, a value wrapped or paraphrased, or a full date carried with other words
+around it; and a trip with no bound file present passes it with every one named as absent. `list`
+reads the record a push left on this machine, so a push from elsewhere, a takedown and text outside
+the projection are not seen.
+
 ## [0.70.0] — 2026-11-12 — Travellers are told what the group may see, and no writer of a group page receives a passport
 
 A traveller filling in an intake form is now told who may see what they share, and the hub and
