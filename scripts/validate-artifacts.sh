@@ -137,7 +137,7 @@ examples/*/README.md|examples/*/README.md|### 1.3 In-repo files carrying no per-
 
 VA_ARCH_DOC='reference/data-architecture.md'
 VA_SCHEMA_DIR='reference/schemas'
-VA_CLASS_HEADING='### 1.1 In-model — artifact classes (23)'
+VA_CLASS_HEADING='### 1.1 In-model — artifact classes (24)'
 # The internal record separator, named rather than written. A literal tab inside shell
 # quoting is invisible in a diff, and one editor pass that converts it to spaces would
 # silently break every field split in this file without producing an error.
@@ -675,8 +675,8 @@ EOF
     fi
 
     # S5/S6/S7 — the coverage declaration.
-    wit="$(va_schema_get "$lines" witness)"   # va-capture: tolerant(1) — witness and no-witness-because are mutually exclusive by S7, so exactly one of this pair IS empty for every schema: 1 of 23 here
-    nowit="$(va_schema_get "$lines" no-witness-because)"   # va-capture: tolerant(1) — the complement of the witness read above: 22 of 23 here
+    wit="$(va_schema_get "$lines" witness)"   # va-capture: tolerant(1) — witness and no-witness-because are mutually exclusive by S7, so exactly one of this pair IS empty for every schema: 1 of 24 here
+    nowit="$(va_schema_get "$lines" no-witness-because)"   # va-capture: tolerant(1) — the complement of the witness read above: 23 of 24 here
     if [ -n "$wit" ] && [ -n "$nowit" ]; then
       printf 'FINDING S7 %s declares both witness and no-witness-because; they are mutually exclusive\n' "$rel"; rc=1
     elif [ -z "$wit" ] && [ -z "$nowit" ]; then

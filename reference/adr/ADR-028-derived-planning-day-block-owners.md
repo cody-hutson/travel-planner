@@ -1,6 +1,9 @@
 # ADR-028: Owners for the derived planning-day blocks — the trip window to the verb that records its inputs, and each traveller's window to a presence file the reconciler rebuilds
 
-- **Status:** Accepted (2026-09-25)
+- **Status:** Accepted (2026-09-25). **Superseded in part (2026-11-20, Friday)** — § *Decision* 4, as far as
+  its clause keeps the enrichment row's `Output File` cell from naming the presence file, by
+  [ADR-054](ADR-054-a-roster-row-names-what-its-agent-writes.md). The rest of that decision, and every
+  other part of this record, stands.
 - **Deciders:** repo maintainer
 - **Driving work:** the *derived blocks get an owner* milestone. This record is its gating decision.
 - **What this record is.** It decides the owner, inputs, repair and provenance of both derived
@@ -552,7 +555,10 @@ Decision 6.
 contract on `trip-context.md` does not widen, and the research role widens nowhere (D-3).
 
 **Not widened, on purpose: the enrichment row's `Output File` cell** in `CLAUDE.md`'s agent roster
-(`:294`). A path under `outputs/` in that cell enters `/trip research`'s agent-key filter
+(`:294`). *(Superseded in part (2026-11-20, Friday) by
+[ADR-054](ADR-054-a-roster-row-names-what-its-agent-writes.md), as far as this clause keeps the cell
+from naming the presence file; the rest of this decision stands.)* A path under `outputs/` in that
+cell enters `/trip research`'s agent-key filter
 (`skills/trip/SKILL.md`:877-880). The presence file is declared where the cost estimate is — in
 `reference/data-architecture.md` § 1.1 and in `CLAUDE.md`'s File Structure tree — and not in
 § *Output Versioning*, whose absence rule yields to § 1.1 (`reference/data-architecture.md`:985-1005).
@@ -1074,3 +1080,14 @@ schema, a witness, a reach row and the reader re-points — and this record pays
   - #1337 — the template's *Recompute trigger* label, which leaves with its block
   - #1360 — the proposal that decision records carry no planning content; this record states
     consequences and schedules none
+
+## Amendment history
+
+**Amendment (2026-11-20, Friday) — the `Status:` line and § *Decision* 4: the partial supersession by
+[ADR-054](ADR-054-a-roster-row-names-what-its-agent-writes.md) recorded; no decision changes here.**
+ADR-054 has the enrichment row's `Output File` cell name the presence file — in a declared form until
+the Cutover, and as a file the reconciler rebuilds from then — and leaves the rest of Decision 4
+standing. This amendment records that decision and takes none: the `Status:` line carries the
+supersession, and an inline marker points forward at the clause *"Not widened, on purpose: the
+enrichment row's `Output File` cell"*. The superseded text is retained as decided, so no wording is
+replaced.

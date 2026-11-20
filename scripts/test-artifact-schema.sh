@@ -2526,7 +2526,8 @@ fi
 # depends on rather than before it.
 #
 # ── WHAT THE `HASOUT` LIMB IS, AND WHAT IT IS NOT ────────────────────────────────
-# LS1 below gates on HASOUT — the trip has at least one file under its outputs/. That is
+# LS1 below gates on HASOUT — the trip has a file under its outputs/ that a writer other than
+# the enrichment agent produced (ps_hasout states the set it sets aside). That is
 # a FIXTURE-POPULATION selector and NOT a statement of the enrichment seed's shipped
 # semantics. The seed's obligation fires at INITIAL SETUP, which is exactly when
 # outputs/ does not yet exist, so HASOUT would be wrong as a rule. It is used here to
@@ -2884,7 +2885,25 @@ ps_locked_bullets() {
     END { print n+0 }
   ' "$1" 2>/dev/null
 }
-ps_hasout() { [ -d "$1/outputs" ] && [ -n "$(ls -A "$1/outputs" 2>/dev/null)" ]; }
+# ps_hasout <trip-dir> — the trip holds a file under outputs/ that some writer other than the
+# enrichment agent produced. A file whose § 1.1 class names the enrichment agent alone as its
+# writer is no evidence of synthesis: /trip-record travelers rebuilds the reconciler's files with
+# no plan behind them. The excluded set is DERIVED from § 1.1's W cells (SC_CLASSES, read in group
+# SC), never listed here, so a later class whose W cell is exactly `enrichment` is decided by the
+# criterion rather than by an edit (CLAUDE.md § Rules over an enumeration). It holds a basename per
+# line; LS-E below fails, naming the parse, when it comes back empty. Pipe-free on purpose: a pipe
+# into a reader that can stop early is group PF's finding here and corpus hygiene's F1.
+PS_ENRICH_ONLY="$(awk -F'\t' '$3 == "enrichment" { n = $2; sub(/^.*\//, "", n); print n }' <<<"$SC_CLASSES")"
+ps_hasout() {
+  local b
+  [ -d "$1/outputs" ] || return 1
+  while IFS= read -r b; do
+    [ -n "$b" ] || continue
+    case $'\n'"$PS_ENRICH_ONLY"$'\n' in *$'\n'"$b"$'\n'*) continue ;; esac
+    return 0
+  done <<<"$(ls -A "$1/outputs" 2>/dev/null)"
+  return 1
+}
 
 # ps_lock_sets <base-dir> — "<triggered>\t<silent>\t<presynth>\t<naive>". ONE comparator
 # again, driven by the real arm and by the two control trees built above.
@@ -2915,6 +2934,15 @@ PS_NAIVE="$(printf '%s' "$PS_LR" | cut -f4)"
 PS_NNAIVE="$(printf '%s\n' $PS_NAIVE | grep -c '[^[:space:]]')"
 PS_NPRE="$(printf '%s\n' $PS_PRE | grep -c '[^[:space:]]')"
 
+# LS-E — the excluded set is not empty. Were the § 1.1 parse to return nothing, ps_hasout would
+# exclude nothing and LS1 would fail naming a fixture, where the cause is the parse.
+PS_NEO="$(grep -c '[^[:space:]]' <<<"$PS_ENRICH_ONLY")"
+if [ "$PS_NEO" -eq 0 ]; then
+  FAIL "LS-E: § 1.1 yields no class whose W cell is exactly 'enrichment' (va_class_rows read $SC_NCLASS row(s)), so ps_hasout excludes nothing and a reconciler-only outputs/ would read as synthesis. The cause is that parse, not a fixture"
+else
+  PASS "LS-E: § 1.1 yields $PS_NEO class file(s) whose W cell is exactly 'enrichment' — $(tr '\n' ' ' <<<"$PS_ENRICH_ONLY")— and ps_hasout reads none of them as evidence of synthesis"
+fi
+
 if [ "$PS_NNAIVE" -eq 0 ]; then
   FAIL "LS0: no fixture carries a '## Locked Elements' section with bullets, so every seed verdict below would be over the empty set — this fails rather than passing quietly"
 else
@@ -2942,7 +2970,7 @@ EOF
   # rather than assumed. A limb that removed nothing on this corpus would be unmotivated,
   # and this arm says so rather than carrying it quietly.
   if [ "$PS_NPRE" -gt 0 ] && [ "$PS_NNAIVE" -gt "$PS_NPRE" ]; then
-    PASS "PS-N: the naive trigger — 'bullets >= 1' with no population limb — selects $PS_NNAIVE trip(s), of which $PS_NPRE carry no outputs/ at all. The limb removes real false positives rather than hypothetical ones, and the count is read from the corpus rather than asserted here"
+    PASS "PS-N: the naive trigger — 'bullets >= 1' with no population limb — selects $PS_NNAIVE trip(s), of which $PS_NPRE carry no outputs/ file a writer other than the enrichment agent produced. The limb removes real false positives rather than hypothetical ones, and the count is read from the corpus rather than asserted here"
   else
     FAIL "PS-N: the naive trigger selects $PS_NNAIVE with $PS_NPRE pre-synthesis — on this corpus the population limb removes nothing, so it is unmotivated and should be dropped rather than kept unmeasured"
   fi
@@ -2966,6 +2994,32 @@ if [ "$PS_OK" -eq 1 ]; then
     PASS "LS-D2: control — over the tree built without outputs/event-status.md under the silent trip, the trigger set rises to $PS_ND2 including examples/data-architecture-demo. LS2's silence is earned: the selector reaches that trip"
   else
     FAIL "LS-D2: the arm did not behave (triggered='$PS_D2', hit=$PS_D2HIT, n=$PS_ND2, expected 2 including examples/data-architecture-demo)"
+  fi
+
+  # LS-D3 / LS-D4 — the exclusion, both ways, on examples/two-origin-demo: a trip carrying
+  # Locked Elements whose outputs/ holds only the presence file, a class the enrichment agent alone
+  # writes. LS-D3 adds the traveller model, the other such class, and the trigger set must stay
+  # examples/tokyo-2026 alone: neither file is read as synthesis. LS-D4 adds outputs/final-itinerary.md,
+  # which the hub writes, and the trip must join the trigger set: the selector reaches the trip, so
+  # its silence in LS1 and LS-D3 is the exclusion's and not a trip the selector never read.
+  PS_C4DIR="$WORK/ps-c4"; PS_C5DIR="$WORK/ps-c5"
+  ps_build "$PS_C4DIR" "" "examples/two-origin-demo/outputs/traveler-model.md"
+  ps_build "$PS_C5DIR" "" "examples/two-origin-demo/outputs/final-itinerary.md"
+  PS_D3="$(printf '%s' "$(ps_lock_sets "$PS_C4DIR")" | cut -f1)"
+  if [ ! -r "$PS_C4DIR/examples/two-origin-demo/outputs/traveler-model.md" ]; then
+    FAIL "LS-D3: the control tree was not built — examples/two-origin-demo/outputs/traveler-model.md is absent from it, so the arm proves nothing"
+  elif [ "$PS_D3" = "examples/tokyo-2026" ]; then
+    PASS "LS-D3: control — with outputs/traveler-model.md added beside the presence file under examples/two-origin-demo, the trigger set is still examples/tokyo-2026 alone. Neither file the enrichment agent alone writes reads as synthesis"
+  else
+    FAIL "LS-D3: a file the enrichment agent alone writes was read as synthesis (triggered='$PS_D3', expected examples/tokyo-2026 alone)"
+  fi
+  PS_D4="$(printf '%s' "$(ps_lock_sets "$PS_C5DIR")" | cut -f1)"
+  PS_ND4="$(grep -c '[^[:space:]]' <<<"$(printf '%s\n' $PS_D4)")"
+  case " $PS_D4 " in *" examples/two-origin-demo "*) PS_D4HIT=1 ;; *) PS_D4HIT=0 ;; esac
+  if [ "$PS_D4HIT" -eq 1 ] && [ "$PS_ND4" -eq 2 ]; then
+    PASS "LS-D4: control — with outputs/final-itinerary.md added under examples/two-origin-demo, the trigger set rises to $PS_ND4 including that trip. The selector reaches it, so LS1's and LS-D3's silence on it is the exclusion's"
+  else
+    FAIL "LS-D4: the arm did not behave (triggered='$PS_D4', hit=$PS_D4HIT, n=$PS_ND4, expected 2 including examples/two-origin-demo)"
   fi
 fi
 

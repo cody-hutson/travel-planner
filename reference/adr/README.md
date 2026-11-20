@@ -247,6 +247,7 @@ so each group stays in number order.
 | [ADR-018](ADR-018-cost-estimation-method.md) | Cost estimation method — the commitment axis, the C13 read edge, and ADR-011's three deferred questions | Accepted |
 | [ADR-028](ADR-028-derived-planning-day-block-owners.md) | Owners for the derived planning-day blocks — the trip window to the verb that records its inputs, and each traveller's window to a presence file the reconciler rebuilds | Accepted |
 | [ADR-049](ADR-049-what-a-rebuild-owes.md) | What a rebuild owes — bound 5 read per unit: a unit no surviving input can rebuild is preserved or named before the write, and erasure is the bound's one exception | Proposed |
+| [ADR-054](ADR-054-a-roster-row-names-what-its-agent-writes.md) | A roster row names what its agent writes — the enrichment row's `Output File` cell names the presence file, superseding ADR-028 Decision 4 in part | Proposed |
 
 ### The published site and the publish path
 
