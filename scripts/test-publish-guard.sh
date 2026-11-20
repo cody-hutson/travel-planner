@@ -15471,10 +15471,18 @@ l18_enc() { # <token> <what each '-' becomes>
 }
 L18T1_UP="$(printf '%s' "$L18T1" | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')"
 L18T1_MIX="$(printf '%s' "$L18T1" | perl -pe 's/(^|-)([a-z])/$1\u$2/g' 2>/dev/null)"
+# A section carrying the first token, encoded as a nested document or a decoder would carry it: base64 (B64),
+# every non-alphanumeric byte percent-encoded (PCT), and an SVG document holding it, in base64 (SVG). None of
+# the three carries the token as a class a start tag of the page holds.
+L18_SEC7="<section class=\"$L18T1\"><h2>Picks</h2><p>x</p></section>"
+L18_B64="$(perl -MMIME::Base64 -e 'print encode_base64($ARGV[0], "")' "$L18_SEC7" 2>/dev/null)"
+L18_PCT="$(perl -e '(my $s = $ARGV[0]) =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord $1)/ge; print $s' "$L18_SEC7" 2>/dev/null)"
+L18_SVG="$(perl -MMIME::Base64 -e 'print encode_base64($ARGV[0], "")' "<svg xmlns=\"http://www.w3.org/2000/svg\"><foreignObject><section xmlns=\"http://www.w3.org/1999/xhtml\" class=\"$L18T1\">x</section></foreignObject></svg>" 2>/dev/null)"
 
-l18_frag() { # <fragment with @T@ @T2@ @T3@ @TU@ @TM@ @K@ @K5@ @KX@ @K0@ @NL@> -> the fragment, tokens filled
+l18_frag() { # <fragment with @T@ @T2@ @T3@ @TU@ @TM@ @K@ @K5@ @KX@ @K0@ @B64@ @PCT@ @SVG@ @NL@> -> the fragment, tokens filled
   local f="$1" nl='
 '
+  f="$(l18_sub "$f" '@B64@' "$L18_B64")"; f="$(l18_sub "$f" '@PCT@' "$L18_PCT")"; f="$(l18_sub "$f" '@SVG@' "$L18_SVG")"
   f="$(l18_sub "$f" '@T2@' "$L18T2")"; f="$(l18_sub "$f" '@T3@' "$L18T3")"
   f="$(l18_sub "$f" '@TU@' "$L18T1_UP")"; f="$(l18_sub "$f" '@TM@' "$L18T1_MIX")"
   f="$(l18_sub "$f" '@K5@' "$(l18_enc "$L18T1" '&#45')")"
@@ -15495,14 +15503,16 @@ l18_page() { # <out_file> <fragment>
 # from a quoted here-document so no fixture is shell text. Columns: id, the verdict the rule gives, fragment.
 # refuse — any start tag carries a listed token as a class, so the plaintext limb refuses the render.
 # pass   — no start tag does: the token is prose, another attribute, a stylesheet selector or escaped text.
-# R-a, R-c — a declared residual: a class a script builds with no tag string, or by concatenation, is not seen.
+# R-run  — the declared residual, one rule: a section a script builds at run time (classList, className,
+#          concatenation, interpolation, or decoding such as atob, decodeURIComponent and String.fromCharCode)
+#          is not seen.
 L18_FIX="$L18W/fixtures.tsv"
 cat > "$L18_FIX" <<'L18FIX'
 L18f-A	refuse	<section class="@T@"><h2>Where we might go</h2><p>Lisbon, loved by Wren.</p></section>
 L18c-B	pass	<p>The @T@ idea was raised once in conversation and nothing else.</p>
 L18f-C	refuse	<section class=@T@><h2>Where we might go</h2></section>
 L18c-D	pass	<a href="#@T@" id="@T@" data-x="@T@" title="@T@">jump</a>
-L18g-a	R-a	<script>document.body.classList.add("@T@");</script>
+L18g-a	R-run	<script>document.body.classList.add("@T@");</script>
 L18f-F	refuse	<!-- <section class="@T@"><p>old</p></section> -->
 L18f-G	refuse	<section class="@TM@"><h2>Where we might go</h2></section>
 L18c-H	pass	<section class="@T@-note"><p>note</p></section>
@@ -15534,7 +15544,7 @@ L18c-B01	pass	<p>The <code>@T@</code> section is private; see class="@T@" in the
 L18c-B02	pass	<p data-note="&lt;section class=&quot;@T@&quot;&gt;">x</p>
 L18c-B04	pass	<p>a < b and c > d; class="@T@" written in prose between angle signs</p>
 L18f-B05	refuse	<p>Compare: x<y class="@T@" z>w</p>
-L18g-c	R-c	<script>root.innerHTML = "<section class=\"" + "@T@" + "\">";</script>
+L18g-c	R-run	<script>root.innerHTML = "<section class=\"" + "@T@" + "\">";</script>
 L18FIX
 while IFS="	" read -r l18id l18want l18frag; do
   [ -n "$l18id" ] || continue
@@ -15544,7 +15554,7 @@ done < "$L18_FIX"
 # The detector's verdict on one fixture, read directly: rc 0 and the expected tokens, or the residual named.
 # An absent detector is rc 127 and a FAIL, and so is an undetermined read, so no row passes on a probe that
 # did not run.
-l18_scan_assert() { # <id> <refuse|pass|R-a|R-c>
+l18_scan_assert() { # <id> <refuse|pass|R-run>
   local id="$1" want="$2" got rc
   got="$(group_only_sections "$L18W/$id.html" 2>/dev/null)"; rc=$?
   if [ -z "$L18T1" ]; then
@@ -15564,7 +15574,7 @@ l18_scan_assert() { # <id> <refuse|pass|R-a|R-c>
   elif [ "$want" = pass ]; then
     PASS "$id: no start tag carries a listed class here, and the detector reads it clean (rc=0, nothing found)"
   else
-    PASS "$id: the declared residual $want holds — a class a script assembles without a tag string is not seen (rc=0, nothing found); a change that closes it turns this arm red, so the declaration is updated rather than left stale"
+    PASS "$id: the declared residual $want holds — a section a script builds at run time is not seen (rc=0, nothing found); a change that closes it turns this arm red, so the declaration is updated rather than left stale"
   fi
 }
 while IFS="	" read -r l18id l18want l18frag; do
@@ -15784,8 +15794,10 @@ l18k_assert() { # <id>
 l18k_assert "L18k"
 
 # ── L18m — the scan is bounded: a long run of tag openers and a long unclosed quote each read determinate
-# under a five-second CPU cap, and a shape that would scan quadratically reads undetermined (rc=2, which the
-# refusal turns into a refusal) rather than running on. The shapes are built by perl, not by a shell loop.
+# under a five-second CPU cap, and a shape that would scan quadratically stops at the scan's own byte budget,
+# its status 4 (which the refusal turns into a refusal), rather than running on. The shapes are built by perl,
+# not by a shell loop. L18m-budget grades the scan's own status, never the cap's: the cap is a hang guard only,
+# and a scan it kills exits 152, which is not 4, so the arm goes red when the budget is gone (S7-02).
 perl -e 'print "<a" x 500000' > "$L18W/cap-run.html" 2>/dev/null
 perl -e 'print "<a x=\"", "<b y " x 200000' > "$L18W/cap-quote.html" 2>/dev/null
 perl -e 'print "<a/x=" x 200000' > "$L18W/cap-budget.html" 2>/dev/null
@@ -15802,7 +15814,138 @@ l18m_assert() { # <id> <file> <want rc>
 }
 l18m_assert "L18m-run" "$L18W/cap-run.html" 0
 l18m_assert "L18m-quote" "$L18W/cap-quote.html" 0
-l18m_assert "L18m-budget" "$L18W/cap-budget.html" 2
+L18_TOKLINE="$(printf '%s ' $L18_TOKS)"
+l18m_budget_assert() { # <id> <file>
+  local id="$1" f="$2" st
+  st="$( ulimit -t 5; _group_only_scan "$f" "$L18_TOKLINE" >/dev/null 2>&1; printf '%s' "$?" )"
+  if [ -z "$L18_TOKS" ]; then
+    FAIL "$id: the group-only fence read no token, so the scan has no class to look for. VERDICT WITHHELD"
+  elif [ "$st" = 127 ]; then
+    FAIL "$id: _group_only_scan is NOT DEFINED (rc=127)"
+  elif [ "$st" != 4 ]; then
+    FAIL "$id: a $(wc -c < "$f" | tr -d ' ')-byte page that would scan quadratically exited $st, want the scan's own byte-budget status 4 — the budget did not stop it (152 is the five-second hang guard's SIGXCPU)"
+  else
+    PASS "$id: a $(wc -c < "$f" | tr -d ' ')-byte page that would scan quadratically stops at the scan's own byte budget (status 4), inside the five-second hang guard"
+  fi
+}
+l18m_budget_assert "L18m-budget" "$L18W/cap-budget.html"
+
+# ── L18f / L18g / L18c, Stage 7's shapes (S7-01, S7-08). A nested document — a srcdoc attribute on any start
+# tag, or a data: URL as the src or data of an iframe, frame, object or embed, read after entity decoding,
+# tab and newline removal and leading whitespace — and a render opening with a UTF-16 or UTF-32 byte-order mark
+# read UNDETERMINED, each by a status of the scan's own that the detector's warn line names (5 and 6), so an
+# unreadable fence or a budget hit (rc 2 alike) cannot pass for one. An octal escape in a script string is
+# decoded by the second reading. Run-time decoding is the declared residual. An image's or a link's data: URL
+# is not a nested document, and a page with neither passes.
+# nested — the detector reads the render undetermined, by the scan's status 5.
+L18_FIX7="$L18W/fixtures-s7.tsv"
+cat > "$L18_FIX7" <<'L18FIX7'
+L18f-srcdoc	nested	<iframe srcdoc="&lt;section class=&quot;@T@&quot;&gt;&lt;h2&gt;Picks&lt;/h2&gt;&lt;/section&gt;"></iframe>
+L18f-srcdoc-empty	nested	<iframe srcdoc=""></iframe><p>An empty nested document.</p>
+L18f-data-iframe	nested	<iframe src="data:text/html;base64,@B64@"></iframe>
+L18f-data-pct	nested	<iframe src="data:text/html,@PCT@"></iframe>
+L18f-data-object	nested	<object data="data:text/html;base64,@B64@"></object>
+L18f-data-embed	nested	<embed src="data:text/html;base64,@B64@">
+L18f-data-frame	nested	<frame src="data:text/html;base64,@B64@">
+L18f-data-svg	nested	<object data="data:image/svg+xml;base64,@SVG@"></object>
+L18f-data-colon	nested	<iframe src="data&colon;text/html;base64,@B64@"></iframe>
+L18f-data-tab	nested	<iframe src="da&Tab;ta:text/html;base64,@B64@"></iframe>
+L18f-data-case	nested	<IFRAME SRC=" &#68;ATA:text/html;base64,@B64@"></IFRAME>
+L18f-data-memo	nested	<script>var s = '<b c="';</script><iframe a="1" b="2" src="data:text/html;base64,@B64@"></iframe>
+L18f-octal	refuse	<script>root.innerHTML = "\74section class=\42@T@\42\76";</script>
+L18f-octal-3	refuse	<script>root.innerHTML = "\074section class=\042@T@\042\076";</script>
+L18g-atob	R-run	<script>root.innerHTML = atob("@B64@");</script>
+L18g-uri	R-run	<script>root.innerHTML = decodeURIComponent("@PCT@");</script>
+L18g-fcc	R-run	<script>root.innerHTML = String.fromCharCode(60,115,101,99,116,105,111,110,32,99,108,97,115,115,61,34) + "@T@" + "\">";</script>
+L18c-img-data	pass	<img src="data:image/png;base64,iVBORw0KGgo=" alt="dot"><p>A picture.</p>
+L18c-a-data	pass	<a href="data:text/html;base64,@B64@">open</a>
+L18c-iframe-url	pass	<iframe src="https://example.com/map"></iframe>
+L18FIX7
+while IFS="	" read -r l18id l18want l18frag; do
+  [ -n "$l18id" ] || continue
+  l18_page "$L18W/$l18id.html" "$l18frag"
+done < "$L18_FIX7"
+# A render re-encoded whole behind a byte-order mark. The UTF-8 page carries a listed section, so the only
+# thing between it and a refusal is the encoding.
+l18_bom() { # <utf-8 page> <out> <16le|16be|32le|32be|8>
+  perl -MEncode -e 'local $/; open(my $i, "<:raw", $ARGV[0]) or die "unreadable\n"; my $s = decode("UTF-8", scalar <$i>);
+    my %e = ("16le" => ["\xFF\xFE", "UTF-16LE"], "16be" => ["\xFE\xFF", "UTF-16BE"], "32le" => ["\xFF\xFE\x00\x00", "UTF-32LE"],
+             "32be" => ["\x00\x00\xFE\xFF", "UTF-32BE"], "8" => ["\xEF\xBB\xBF", "UTF-8"]);
+    my $k = $e{$ARGV[2]} or die "no such mark\n"; open(my $o, ">:raw", $ARGV[1]) or die "unwritable\n"; print $o $k->[0], encode($k->[1], $s)' "$1" "$2" "$3"
+}
+l18_page "$L18W/bom-src.html" "$L18_SECTION"
+for l18c in 16le 16be 32le 32be; do l18_bom "$L18W/bom-src.html" "$L18W/L18f-bom-$l18c.html" "$l18c"; done
+l18_bom "$L18W/bom-src.html" "$L18W/L18f-bom-utf8.html" 8
+l18_page "$L18W/bom-clean.html" ""
+l18_bom "$L18W/bom-clean.html" "$L18W/L18c-bom-utf8.html" 8
+
+# The detector's verdict on a render it must read undetermined, by the scan's own status in its warn line.
+l18n_scan_assert() { # <id> <nested|bom>
+  local id="$1" want="$2" got rc st=5 err why=0 what="a nested document"
+  if [ "$want" = bom ]; then st=6; what="a UTF-16 or UTF-32 byte-order mark"; fi
+  got="$(group_only_sections "$L18W/$id.html" 2>"$L18ERR")"; rc=$?
+  err="$(cat "$L18ERR")"
+  case "$err" in *"(status $st)"*) why=1 ;; esac
+  if [ -z "$L18T1" ]; then
+    FAIL "$id: the group-only fence read no token, so this fixture carries no listed class and its verdict would be about nothing. VERDICT WITHHELD"
+  elif [ "$rc" -eq 127 ]; then
+    FAIL "$id: group_only_sections is NOT DEFINED (rc=127) — there is no detector to grade"
+  elif [ "$rc" -ne 2 ]; then
+    FAIL "$id: the detector read a render carrying $what as rc=$rc ('$got'), want 2 (undetermined) — the plaintext limb would publish what the scan cannot read"
+  elif [ "$why" -ne 1 ]; then
+    FAIL "$id: the detector read rc=2, but not by the scan's status $st for $what: $(printf '%s' "$err" | tr '\n' ' ' | cut -c1-200)"
+  else
+    PASS "$id: a render carrying $what reads undetermined (rc=2) by the scan's own status $st, so the plaintext limb refuses it"
+  fi
+}
+while IFS="	" read -r l18id l18want l18frag; do
+  [ -n "$l18id" ] || continue
+  case "$l18want" in
+    nested) l18n_scan_assert "$l18id" nested ;;
+    *)      l18_scan_assert "$l18id" "$l18want" ;;
+  esac
+done < "$L18_FIX7"
+for l18c in 16le 16be 32le 32be; do l18n_scan_assert "L18f-bom-$l18c" bom; done
+# A UTF-8 byte-order mark leaves the page readable as it is: the section behind one is refused, a clean page
+# behind one passes, so the mark rule is not a rule about every mark.
+l18_scan_assert "L18f-bom-utf8" refuse
+l18_scan_assert "L18c-bom-utf8" pass
+
+# ── L18n — end to end: each nested document, each octal escape and each byte-order mark, in a render on a trip
+# whose content guard would pass (a fresh clean model, ALLOW_PLAINTEXT=1), exits 3 from publish --plaintext,
+# saying why, with no repository call in the gh log and nothing created or committed. Without the refusal these
+# renders reach the push.
+l18n_assert() { # <id> <fragment> <undet|found> [<byte-order mark>]
+  local id="$1" frag="$2" how="$3" bom="${4:-}" d site rc lead=0 why=0 probe=0 pushed
+  d="$(l18_trip "$id" "$frag" model)"; site="$d/outputs/$id-travel-site.html"
+  if [ -n "$bom" ]; then l18_bom "$site" "$site.enc" "$bom" && mv "$site.enc" "$site"; touch -t 202001010000 "$site"; fi
+  L18_ALLOW=1 l18_publish "$d" --plaintext; rc=$?
+  l18_has "GROUP-ONLY REFUSED publish --plaintext" && lead=1
+  case "$how" in
+    undet) l18_has "could not be determined" && l18_has "(status $( [ -n "$bom" ] && printf 6 || printf 5 ))" && why=1 ;;
+    found) l18_has "group-only section(s) $L18T1" && why=1 ;;
+  esac
+  case "$(cat "$RV_GHLOG")" in *"repo "*) probe=1 ;; esac
+  pushed="$(l18_pushed "$d")"
+  if [ -z "$L18T1" ]; then
+    FAIL "$id: the group-only fence read no token. VERDICT WITHHELD"
+  elif [ "$rc" -ne 3 ] || [ "$lead" -ne 1 ] || [ "$why" -ne 1 ]; then
+    FAIL "$id: publish --plaintext of this render read rc=$rc, the refusal's lead=$lead and its reason ($how)=$why (want 3, 1, 1): $(awk '/ERROR|GUARD/ { print; exit }' "$L18ERR" | cut -c1-160)"
+  elif [ "$probe" -ne 0 ] || [ "$pushed" -ne 0 ]; then
+    FAIL "$id: the refusal exited 3 but the per-trip repository was probed ($probe) or something was created or committed ($pushed)"
+  else
+    PASS "$id: publish --plaintext of this render exits 3 and says why ($how), with no repository call and nothing created or committed"
+  fi
+}
+L18N_CASES='srcdoc srcdoc-empty data-iframe data-pct data-object data-embed data-frame data-svg'
+l18n_frag() { # <L18_FIX7 id> -> its fragment
+  awk -F'\t' -v k="$1" '$1 == k { print $3 }' "$L18_FIX7"
+}
+for l18c in $L18N_CASES; do l18n_assert "L18n-$l18c" "$(l18n_frag "L18f-$l18c")" undet; done
+for l18c in octal octal-3; do l18n_assert "L18n-$l18c" "$(l18n_frag "L18f-$l18c")" found; done
+for l18c in 16le 16be 32le 32be; do l18n_assert "L18n-bom-$l18c" "$L18_SECTION" undet "$l18c"; done
+# The over-refusal control, end to end: an image's and a link's data: URL pass the refusal and reach the guard.
+l18b_assert "L18c-e2e-data" '<img src="data:image/png;base64,iVBORw0KGgo=" alt="dot"><a href="data:text/html;base64,@B64@">open</a>' nomodel "GUARD ABORTED publish"
 
 # ── L18i — one home: no function this card adds, the scan program and cmd_publish carry a fence token. The
 # control plants one in a copy of the bodies and the count must see it, so the zero is a measurement.
@@ -15950,7 +16093,21 @@ md_flips refuse_group_only_render "L18j" l18j_assert "L18j"
 md_flips refuse_group_only_render "L18k" l18k_assert "L18k"
 md_flips group_only_sections "L18m-run" l18m_assert "L18m-run" "$L18W/cap-run.html" 0
 md_flips group_only_sections "L18m-quote" l18m_assert "L18m-quote" "$L18W/cap-quote.html" 0
-md_flips group_only_sections "L18m-budget" l18m_assert "L18m-budget" "$L18W/cap-budget.html" 2
+md_flips _group_only_scan "L18m-budget" l18m_budget_assert "L18m-budget" "$L18W/cap-budget.html"
+while IFS="	" read -r l18id l18want l18frag; do
+  [ -n "$l18id" ] || continue
+  case "$l18want" in
+    nested) md_flips group_only_sections "$l18id" l18n_scan_assert "$l18id" nested ;;
+    *)      md_flips group_only_sections "$l18id" l18_scan_assert "$l18id" "$l18want" ;;
+  esac
+done < "$L18_FIX7"
+for l18c in 16le 16be 32le 32be; do md_flips group_only_sections "L18f-bom-$l18c" l18n_scan_assert "L18f-bom-$l18c" bom; done
+md_flips group_only_sections "L18f-bom-utf8" l18_scan_assert "L18f-bom-utf8" refuse
+md_flips group_only_sections "L18c-bom-utf8" l18_scan_assert "L18c-bom-utf8" pass
+for l18c in $L18N_CASES; do md_flips refuse_group_only_render "L18n-$l18c" l18n_assert "L18n-$l18c" "$(l18n_frag "L18f-$l18c")" undet; done
+for l18c in octal octal-3; do md_flips refuse_group_only_render "L18n-$l18c" l18n_assert "L18n-$l18c" "$(l18n_frag "L18f-$l18c")" found; done
+for l18c in 16le 16be 32le 32be; do md_flips refuse_group_only_render "L18n-bom-$l18c" l18n_assert "L18n-bom-$l18c" "$L18_SECTION" undet "$l18c"; done
+md_flips group_only_sections "L18c-e2e-data" l18b_assert "L18c-e2e-data" '<img src="data:image/png;base64,iVBORw0KGgo=" alt="dot"><a href="data:text/html;base64,@B64@">open</a>' nomodel "GUARD ABORTED publish"
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # L19 — every publish, update and rotate checks what the build reads (#2156; ADR-030 § 6 safeguard 6).
