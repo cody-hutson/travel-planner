@@ -57,10 +57,8 @@ header, so a statement placed under another heading is graded. Its failure names
 cannot tell apart: a drifted copy, or a different table sharing the labels.
 
 **Size fence.** Nothing was re-pinned: all 51 rows were kept, as
-`CH_EMIT=growth bash scripts/test-corpus-hygiene.sh` prints them at this branch's tip. This
-release changes no file the fence holds. The one row that grew, `reference/adr/README.md`, grew
-43 bytes to 26,859, beneath its row of 28,177, on `main` before this branch was cut, with the
-declaration of decision record 053's number.
+`CH_EMIT=growth bash scripts/test-corpus-hygiene.sh` prints them at this branch's tip against
+`v0.71.0`. This release changes no file the fence holds, and no row grew against that base.
 
 **What it doesn't reach.** A code reached through a variable, a `%s` conversion or assembled at
 run time is read only when it is tab-terminated. An unmeasured form-contract arm reads as
