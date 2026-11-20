@@ -8014,6 +8014,64 @@ st_cf_once_drill() {
   st_cf_recon_assert 'CTL-ST-CF-UNMEASURED-ONCE-RECON'
 }
 
+# st_cf_eprobe <fn> [args…] — runs <fn> in a subshell with PASS, FAIL and VACUOUS rebound to append one
+# line each, "<P|F|V> <message>", and prints those lines in the order they were rendered. The ORDER is what
+# the frame controls grade — where a report lands among the members' verdicts, as a reader of the run
+# meets it — and st_cf_vprobe keeps counts, not order. Nothing reaches the run's counters, output or SEEN.
+st_cf_eprobe() {
+  ( ep=""
+    PASS() { ep="${ep}P $*
+"; }
+    FAIL() { ep="${ep}F $*
+"; }
+    VACUOUS() { ep="${ep}V $*
+"; }
+    "$@" >/dev/null 2>&1
+    printf '%s' "$ep" )
+}
+
+# st_cf_frame — the per-member loop's FRAME, read from this file ($SELF) rather than restated: the loop's
+# head line through the member reset's empty-member test, then one line standing for the whole body,
+# `st_cf_frame_member || continue`, then the loop's `done <<EOF`, its population line and its `EOF`, and
+# every line straight after them that is blank, a comment or a call of st_cf_unmeas_flush. Both report
+# points the loop wires — the flush at each member's reset and the flush after the loop — are therefore
+# in the frame exactly when they are in the loop. Prints nothing when the head, the reset test or the
+# loop's end is not found, so a control reading it fails rather than replaying a frame it did not find.
+st_cf_frame() {
+  awk '
+    st == 0 && $0 == "while IFS= read -r ST_CF_REL; do" { st = 1; h = $0 "\n"; next }
+    st == 1 { h = h $0 "\n"; if ($0 == "[ -n \"$ST_CF_REL\" ] || continue") st = 2; next }
+    st == 2 && $0 == "done <<EOF" { d = $0; k = 0; next }
+    st == 2 && d != "" { k++
+      if (k == 1 && $0 == "$ST_CF_FORMS") { d = d "\n" $0; next }
+      if (k == 2 && $0 == "EOF") { t = d "\n" $0 "\n"; st = 3; next }
+      d = ""; next }
+    st == 3 { if ($0 ~ /^[ \t]*$/ || $0 ~ /^[ \t]*#/ || $0 ~ /^st_cf_unmeas_flush[ \t]*$/) { t = t $0 "\n"; next } st = 4 }
+    END { if (st == 4) printf "%sst_cf_frame_member || continue\n%s", h, t }
+  ' "$SELF"
+}
+
+# st_cf_frame_drill <frame> — the frame st_cf_frame read, run over three synthetic members, with the
+# residual planted through the real st_cf_unmeas_record: ZZ-FORM-A leaves two unmeasured arms of Q1,
+# ZZ-FORM-B none, and ZZ-FORM-C — the LAST member — one of Q6, leaving the body by `continue` as a
+# version-2 member does. Each member's first verdict is ZZ-ST-CF-FRAME-FIRST[<member>], standing where
+# st_cf_assert stands in a real member. Run only inside st_cf_eprobe.
+st_cf_frame_drill() {
+  local ST_CF_FORMS='ZZ-FORM-A
+ZZ-FORM-B
+ZZ-FORM-C'
+  ST_CF_UNMEAS=""; ST_CF_UNMEAS_NREC=0; ST_CF_UNMEAS_NREP=0
+  st_cf_frame_member() {
+    PASS "ZZ-ST-CF-FRAME-FIRST[$ST_CF_REL]: the member's first verdict"
+    case "$ST_CF_REL" in
+      ZZ-FORM-A) st_cf_unmeas_record ZZ-FORM-A Q1 ZZ-ARM-A-ONE; st_cf_unmeas_record ZZ-FORM-A Q1 ZZ-ARM-A-TWO ;;
+      ZZ-FORM-C) st_cf_unmeas_record ZZ-FORM-C Q6 ZZ-ARM-C-ONE; return 1 ;;
+    esac
+    return 0
+  }
+  eval "$1"
+}
+
 # st_cf_rise <code> <live> <copy> — the sites of <code> the copy raises over the live reading, as
 # "<key> +<n>" space-joined; empty when none rises. The unattributed key <code>#? is excluded: a
 # must-fire arm may not pass on a record its reader cannot explain, which ST-CF-SITE reports instead.
@@ -9140,6 +9198,37 @@ else
   FAIL "CTL-ST-CF-UNMEASURED-ONCE: MUST FIRE once per (form, question) — the drill rendered [pass fail vacuous pending] = [$ST_CF_ONCE1] where [1 0 2 0] is owed, with $ST_CF_ONCEA report(s) naming the first form's two arms and $ST_CF_ONCEB naming the second form's one, where one each is owed. An arm that could not be measured would be reported per arm, or not at all"
 fi
 st_cf_recon_assert 'CTL-ST-CF-UNMEASURED-RECON'
+
+# ── The residual's two report points, graded where they stand: in the per-member loop above. ──
+# CTL-ST-CF-UNMEASURED-ONCE calls st_cf_unmeas_flush itself, so it proves the function and not the two
+# lines in the loop that call it, and no form on this tree reaches the residual. These controls re-run
+# the loop's own frame (st_cf_frame) over three synthetic members (st_cf_frame_drill) and read the order
+# of what it renders. AT-RESET: the first member's report lands after its own first verdict and before
+# the next member's, under the form it names — the flush at the top of each member. AFTER-LOOP: the last
+# member's report is rendered at all — the flush after the loop, which no member reset follows. Deleting
+# or moving either call in the loop turns the control named for it.
+ST_CF_FRM="$(st_cf_frame)"
+ST_CF_FRT=""; [ -z "$ST_CF_FRM" ] || ST_CF_FRT="$(st_cf_eprobe st_cf_frame_drill "$ST_CF_FRM")"
+read -r ST_CF_FRA ST_CF_FRB ST_CF_FRC ST_CF_FRVA ST_CF_FRNA ST_CF_FRVC ST_CF_FRNC <<<"$(awk '
+  index($0, "P ZZ-ST-CF-FRAME-FIRST[ZZ-FORM-A]:") == 1 { a = NR }
+  index($0, "P ZZ-ST-CF-FRAME-FIRST[ZZ-FORM-B]:") == 1 { b = NR }
+  index($0, "P ZZ-ST-CF-FRAME-FIRST[ZZ-FORM-C]:") == 1 { c = NR }
+  index($0, "V CTL-ST-CF-UNMEASURED[ZZ-FORM-A/Q1]:") == 1 { va = NR; na++ }
+  index($0, "V CTL-ST-CF-UNMEASURED[ZZ-FORM-C/Q6]:") == 1 { vc = NR; nc++ }
+  END { print a + 0, b + 0, c + 0, va + 0, na + 0, vc + 0, nc + 0 }' <<<"$ST_CF_FRT")"
+ST_CF_FRL="$(printf '%s\n' "$ST_CF_FRM" | grep -c '[^[:space:]]')"
+# The replay ran its members, in order: without that, neither control below is about a report point.
+ST_CF_FRRAN=0; [ "$ST_CF_FRA" -gt 0 ] && [ "$ST_CF_FRA" -lt "$ST_CF_FRB" ] && [ "$ST_CF_FRB" -lt "$ST_CF_FRC" ] && ST_CF_FRRAN=1
+if [ "$ST_CF_FRRAN" -eq 1 ] && [ "$ST_CF_FRNA" -eq 1 ] && [ "$ST_CF_FRVA" -gt "$ST_CF_FRA" ] && [ "$ST_CF_FRVA" -lt "$ST_CF_FRB" ]; then
+  PASS "CTL-ST-CF-UNMEASURED-AT-RESET: MUST FIRE in place — the per-member loop's own frame, read from this file and run over three synthetic members, reports the first member's two unmeasured arms once, after that member's first verdict and before the next member's (trace lines $ST_CF_FRA < $ST_CF_FRVA < $ST_CF_FRB). So a form's residual is reported under the form it names, by the flush at the top of the next member"
+else
+  FAIL "CTL-ST-CF-UNMEASURED-AT-RESET: MUST FIRE in place — over the loop's own frame ($ST_CF_FRL line(s) read, members ran in order=$ST_CF_FRRAN), the first member's unmeasured report was rendered $ST_CF_FRNA time(s), at trace line $ST_CF_FRVA, against that member's first verdict at line $ST_CF_FRA and the next member's at line $ST_CF_FRB, where exactly one report between them is owed. Without the flush at each member's reset, a form's residual is reported after a later form's verdicts, under a form it does not name; with no frame read, the loop's head, reset test or end has moved"
+fi
+if [ "$ST_CF_FRRAN" -eq 1 ] && [ "$ST_CF_FRNC" -eq 1 ] && [ "$ST_CF_FRVC" -gt "$ST_CF_FRC" ]; then
+  PASS "CTL-ST-CF-UNMEASURED-AFTER-LOOP: MUST FIRE — in the same replay the LAST member leaves one unmeasured arm and the loop body by \`continue\`, as a version-2 member does, and its report is rendered once, after its first verdict (trace lines $ST_CF_FRC < $ST_CF_FRVC). So the flush after the loop reaches the last member's residual, which no member reset follows"
+else
+  FAIL "CTL-ST-CF-UNMEASURED-AFTER-LOOP: MUST FIRE — over the loop's own frame ($ST_CF_FRL line(s) read, members ran in order=$ST_CF_FRRAN), the last member's unmeasured report was rendered $ST_CF_FRNC time(s), at trace line $ST_CF_FRVC, against its first verdict at line $ST_CF_FRC, where exactly one report after it is owed. Without the flush after the loop, the last member's residual leaves no verdict, no report and no line in the run summary"
+fi
 
 # ── RUN LEVEL, after every member: the conformance arm's coverage, graded once over every arm that
 # ran on any member (D-12 of the seam), at the code rung and at the site rung.
