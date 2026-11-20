@@ -15952,6 +15952,543 @@ md_flips group_only_sections "L18m-run" l18m_assert "L18m-run" "$L18W/cap-run.ht
 md_flips group_only_sections "L18m-quote" l18m_assert "L18m-quote" "$L18W/cap-quote.html" 0
 md_flips group_only_sections "L18m-budget" l18m_assert "L18m-budget" "$L18W/cap-budget.html" 2
 
+# ═════════════════════════════════════════════════════════════════════════════════
+# L19 — every publish, update and rotate checks what the build reads (#2156; ADR-030 § 6 safeguard 6).
+# Group L by id, in the same block as L18 and for the same reasons. The source check reads two declarations
+# and this file holds a copy of neither: the bound artifacts come through _build_source_rows from
+# reference/site-layout-spec.md § 9.1, and the field selectors through _guard_declared_rows from
+# reference/data-architecture.md § 5.6. The value sources are named by the guard's own scope constants. Every
+# planted value is synthetic. A declaration that reads nothing leaves the arms without a subject, and each says
+# so rather than passing.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group L, L19 — every publish, update and rotate checks the files the site build reads (#2156)."
+
+L19W="$RVW/l19"; mkdir -p "$L19W"
+L19OUT="$L19W/out"
+L19_BOUND=""
+if declare -F _build_source_rows >/dev/null 2>&1; then L19_BOUND="$(_build_source_rows)"; fi
+L19_SELS="$(_guard_declared_rows | awk '$1 == "field" && !seen[$2]++ { print $2 }')"
+L19B1=""; L19B2=""; L19BL=""; l19i=0
+for l19p in $L19_BOUND; do
+  l19i=$((l19i+1)); L19BL="$l19p"
+  case "$l19i" in 1) L19B1="$l19p" ;; 2) L19B2="$l19p" ;; esac
+done
+L19S1=""; L19S2=""; l19i=0
+for l19s in $L19_SELS; do
+  l19i=$((l19i+1))
+  case "$l19i" in 1) L19S1="$l19s" ;; 2) L19S2="$l19s" ;; esac
+done
+[ -n "$L19S2" ] || L19S2="$L19S1"
+L19_PROFILE="$(l18_sub "${_GUARD_DECL_ARTIFACT_PROFILE:-}" '<traveler>' rowan)"
+L19_MODEL="${_GUARD_DECL_ARTIFACT_MODEL:-}"
+L19_S1LOW="$(printf '%s' "$L19S1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')"
+
+l19_trip() { # <name> -> a trip dir holding one clean render and nothing the check reads
+  local d="$L19W/$1"
+  rm -rf "$d"; mkdir -p "$d/outputs"
+  cp "$SRC" "$d/outputs/$1-travel-site.html"; touch -t 202001010000 "$d/outputs/$1-travel-site.html"
+  printf '%s' "$d"
+}
+l19_put() { # <trip_dir> <trip-relative path> <line…> -> the file, one line per argument
+  local d="$1" p="$2"; shift 2
+  [ -n "$p" ] || return 0
+  mkdir -p "$(dirname "$d/$p")"; printf '%s\n' "$@" > "$d/$p"
+}
+# The check run alone, as the script runs it: errexit on, in a subshell, L19_PRE evaluated first.
+l19_check() { # <trip_dir> -> its status; both streams in L19OUT
+  ( [ -z "${L19_PRE:-}" ] || eval "$L19_PRE"; set -e; require_clean_build_sources "$1" ) >"$L19OUT" 2>&1
+}
+l19_has() { case "$(cat "$L19OUT")" in *"$1"*) return 0 ;; esac; return 1; }
+# One verdict over one run: the status, the needles that must appear and the ones that must not, each list
+# |-joined. Case-insensitive on the must-not list, so a value cannot pass by changing case.
+l19_assert() { # <id> <prose> <trip_dir> <want rc> <must appear> <must not appear>
+  local id="$1" prose="$2" d="$3" want="$4" ins="$5" outs="$6" rc miss="" extra="" n out low nl
+  l19_check "$d"; rc=$?
+  out="$(cat "$L19OUT")"; low="$(printf '%s' "$out" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')"
+  while [ -n "$ins" ]; do
+    n="${ins%%|*}"; case "$ins" in *"|"*) ins="${ins#*|}" ;; *) ins="" ;; esac
+    [ -z "$n" ] || case "$out" in *"$n"*) ;; *) miss="${miss}[$n] " ;; esac
+  done
+  while [ -n "$outs" ]; do
+    n="${outs%%|*}"; case "$outs" in *"|"*) outs="${outs#*|}" ;; *) outs="" ;; esac
+    nl="$(printf '%s' "$n" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')"
+    [ -z "$nl" ] || case "$low" in *"$nl"*) extra="${extra}[$n] " ;; esac
+  done
+  if [ -z "$L19_BOUND" ] || [ -z "$L19S1" ]; then
+    FAIL "$id: the build-source fence or the field declaration read nothing (bound='${L19B1}', selector='${L19S1}'), so this fixture plants nothing the check would read. VERDICT WITHHELD"
+  elif [ "$rc" -eq 127 ]; then
+    FAIL "$id: require_clean_build_sources is NOT DEFINED (rc=127) — there is no source check to grade"
+  elif [ "$rc" -ne "$want" ]; then
+    FAIL "$id: $prose — read rc=$rc, want $want: $(awk 'NR == 1' "$L19OUT" | cut -c1-200)"
+  elif [ -n "$miss" ]; then
+    FAIL "$id: $prose — rc=$rc as wanted, but the output lacks ${miss% }: $(awk 'NR == 1' "$L19OUT" | cut -c1-200)"
+  elif [ -n "$extra" ]; then
+    FAIL "$id: $prose — the output carries what it must not: ${extra% }"
+  else
+    PASS "$id: $prose [rc=$rc]"
+  fi
+}
+l19_b1_clean() { l19_put "$1" "$L19B1" '# Trip' '' 'A quiet week by the sea, with the usual papers in the hotel safe.'; }
+
+# ── L19a — must-fire, distinctive: a value's distinctive component carried exactly into a bound file stops,
+# naming the file, the line and the selector, and never the value.
+l19a_trip() {
+  local d; d="$(l19_trip l19a)"
+  l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, valid through March 2031"
+  l19_put "$d" "$L19B2" '# Itinerary' '' 'Remember: valid through March 2031 is the date to watch.'
+  printf '%s' "$d"
+}
+l19a_assert() { l19_assert "$1" "a distinctive part of a value carried exactly into a bound file stops the publish, naming the file, the line and the selector" "$(l19a_trip)" 1 "SOURCE CHECK STOPPED|$L19B2 line 3|${L19S1} value|matched exactly|Nothing was published" "Ruritania|valid through|March 2031"; }
+l19a_assert "L19a"
+
+# ── L19b — must-fire, ordinary word: a bound line carrying a selector as a label with a stated value stops,
+# by its label, under each line shape the strip reads (F10: bulleted, numbered, quoted, heading, emphasis).
+l19b_trip() { # <name> <the label line>
+  local d; d="$(l19_trip "$1")"
+  l19_put "$d" "$L19B1" '# Trip' '' "$2"
+  printf '%s' "$d"
+}
+l19b_assert() { # <id> <name> <line shape>
+  local line
+  case "$3" in
+    bullet) line="- **${L19S1}:** Ruritania" ;;
+    num)    line="1. ${L19S1}: Ruritania" ;;
+    quote)  line="> ${L19S1}: Ruritania" ;;
+    head)   line="### ${L19S1}: Ruritania" ;;
+    em)     line="*${L19S1}:* Ruritania" ;;
+  esac
+  l19_assert "$1" "a ${3}-shaped line carrying the ${L19S1:-?} label with a value stops the publish by its label" "$(l19b_trip "$2" "$line")" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} label with a value" "Ruritania"
+}
+for l19c in bullet num quote head em; do l19b_assert "L19b-$l19c" "l19b-$l19c" "$l19c"; done
+
+# ── L19c — the control: L19a's trip without its plant passes, and prints the pass line.
+l19c_assert() {
+  local d; d="$(l19_trip l19c)"
+  l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, valid through March 2031"
+  l19_put "$d" "$L19B2" '# Itinerary' '' 'Remember to bring the usual documents.'
+  l19_b1_clean "$d"
+  l19_assert "$1" "the same trip without its plants passes the source check and says what it read" "$d" 0 "Source check: no value of the non-publishable field class|2 read" "STOPPED"
+}
+l19c_assert "L19c"
+
+# ── L19d — discrimination: the projection's over-broad lines (a selector as a word, as a bolded phrase, in
+# prose) do not stop.
+l19d_assert() {
+  local d; d="$(l19_trip l19d)"
+  l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, valid through March 2031"
+  l19_put "$d" "$L19B2" '# Itinerary' '' "- ${L19S1} + copy · credit card · cash" "- **${L19S1} required** for tax-free shopping" "Keep your ${L19_S1LOW} with you at all times."
+  l19_assert "$1" "a selector used as a word, a bolded phrase or prose is not a label, and nothing distinctive is carried" "$d" 0 "Source check:" "STOPPED"
+}
+l19d_assert "L19d"
+
+# ── L19e — discrimination: a Documents-shaped value's derivation stamp, the run's generated: date and an
+# ordinary policy reminder do not stop (the stamp exclusion, the component rule and the date-shape skip).
+l19e_assert() {
+  local d; d="$(l19_trip l19e)"
+  l19_put "$d" "$L19_MODEL" '# Traveler Model [DERIVED]' '' '## Rowan' "- ${L19S2}: passport — have (valid 6 months beyond stay); visa — obtain · checked 2026-01-05"
+  l19_put "$d" "$L19B2" '---' 'generated: 2026-01-05' '---' '# Itinerary' '' 'Status · checked 2026-01-05' 'Your passport must be valid 6 months beyond stay.'
+  l19_assert "$1" "a derivation stamp, a generated: date equal to it and a policy reminder do not stop the publish" "$d" 0 "Source check:" "STOPPED"
+}
+l19e_assert "L19e"
+
+# ── L19f / L19g — the build-source fence emptied, or carrying a malformed row, in a scratch spec stops.
+l19_spec() { # <case> <out_file> — a scratch copy of the build-source declaration
+  local c="$1" o="$2" src="${_BUILD_SOURCES_SPEC:-}" head="${_BUILD_SOURCES_HEADING:-}" open='```'"${_BUILD_SOURCES_FENCE:-}"
+  [ -r "$src" ] || { : > "$o"; return 0; }
+  awk -v c="$c" -v h="$head" -v op="$open" '
+    $0 == h { insec = 1 }
+    insec && $0 == op { infence = 1; print; if (c == "malformed") print "outputs/one-field-row.md"; next }
+    infence && $0 == "```" { infence = 0; insec = 0 }
+    infence && c == "empty" && $0 !~ /^[[:space:]]*#/ && NF > 0 { next }
+    { print }' "$src" > "$o"
+}
+for l19c in empty malformed; do l19_spec "$l19c" "$L19W/spec-$l19c.md"; done
+l19f_assert() {
+  local d; d="$(l19a_trip)"
+  L19_PRE="_BUILD_SOURCES_SPEC=\"$L19W/spec-empty.md\"" l19_assert "$1" "a build-source fence that names no bound artifact stops the publish — an empty read is not an empty set" "$d" 1 "SOURCE CHECK STOPPED|could not be listed" ""
+}
+l19g_assert() {
+  local d; d="$(l19a_trip)"
+  L19_PRE="_BUILD_SOURCES_SPEC=\"$L19W/spec-malformed.md\"" l19_assert "$1" "a build-source fence carrying a row that does not parse stops the publish as a partial read" "$d" 1 "SOURCE CHECK STOPPED|partial read" ""
+}
+l19f_assert "L19f"
+l19g_assert "L19g"
+
+# ── L19h — phase-absent (D-2): an IDEATION-shaped trip, only the first bound artifact present, passes and the
+# pass line names every bound artifact it did not find.
+l19h_assert() {
+  local d ins="Source check:|1 read" p; d="$(l19_trip l19h)"
+  l19_b1_clean "$d"
+  for p in $L19_BOUND; do [ "$p" = "$L19B1" ] || ins="$ins|$p"; done
+  l19_assert "$1" "a trip holding only the first bound artifact passes, and the pass line names each one absent" "$d" 0 "$ins|not in this trip:" "STOPPED"
+}
+l19h_assert "L19h"
+
+# ── L19i — present but unreadable (D-2): the last bound artifact as a directory stops, naming it.
+l19i_assert() {
+  local d; d="$(l19_trip l19i)"
+  l19_b1_clean "$d"; mkdir -p "$d/$L19BL"
+  l19_assert "$1" "a bound artifact present but not a readable regular file stops the publish, naming it" "$d" 1 "SOURCE CHECK STOPPED|$L19BL is present but cannot be read" ""
+}
+l19i_assert "L19i"
+
+# ── L19j — the field class unreadable: a scratch declaration carrying the shipped entry rows and no field row
+# stops. Its rows are read from the live declaration, never written here.
+L19DECL_NOFIELD="$L19W/decl-nofield.md"
+_guard_declared_rows | awk '$1 == "entry"' | ldecl_write "$L19DECL_NOFIELD"
+l19j_assert() {
+  local d; d="$(l19a_trip)"
+  L19_PRE="_GUARD_DECLARATION=\"$L19DECL_NOFIELD\"" l19_assert "$1" "a field class that reads no field row stops the publish — an empty read is not an empty class" "$d" 1 "SOURCE CHECK STOPPED|field class could not be read" ""
+}
+l19j_assert "L19j"
+
+# ── L19k — a value source present but unreadable stops, named by its scope and never by a traveller's name.
+l19k_assert() {
+  local d; d="$(l19a_trip)"
+  mkdir -p "$d/$L19_MODEL"
+  l19_assert "$1" "the traveller model present as a directory stops the publish, named by its scope and by no traveller file's name" "$d" 1 "SOURCE CHECK STOPPED|$L19_MODEL is present but cannot be read" "rowan"
+}
+l19k_assert "L19k"
+
+# ── L19l — never echoes: over L19a's and L19b's stops, both streams carry no planted value, while the planted
+# files do carry them (fixture integrity, so the absence is a measurement).
+l19l_assert() {
+  local id="$1" da db oa ob rca rcb fix=0 leak=0
+  da="$(l19a_trip)"; l19_check "$da"; rca=$?; oa="$(cat "$L19OUT")"
+  db="$(l19b_trip l19l-b "- **${L19S1}:** Ruritania")"; l19_check "$db"; rcb=$?; ob="$(cat "$L19OUT")"
+  case "$(cat "$da/$L19B2" "$db/$L19B1" 2>/dev/null)" in *Ruritania*) ;; *) fix=1 ;; esac
+  case "$(cat "$da/$L19B2" 2>/dev/null)" in *"March 2031"*) ;; *) fix=1 ;; esac
+  case "$oa$ob" in *Ruritania*|*ruritania*|*"March 2031"*|*"march 2031"*) leak=1 ;; esac
+  if [ "$fix" -ne 0 ]; then
+    FAIL "$id: fixture integrity — the planted files do not carry the values, so an absence below would prove nothing. VERDICT WITHHELD"
+  elif [ "$rca" -ne 1 ] || [ "$rcb" -ne 1 ]; then
+    FAIL "$id: the two planted trips read rc=$rca and rc=$rcb, want 1 and 1 — there was no stop whose message could leak"
+  elif [ "$leak" -ne 0 ]; then
+    FAIL "$id: a stop message carries a planted value"
+  else
+    PASS "$id: two stops (rc=1 each) carry neither planted value on either stream, though the planted files carry both"
+  fi
+}
+l19l_assert "L19l"
+
+# ── L19m — must-not-fire, R9: each shape on which nonpublishable_values reads UNDETERMINED passes the source
+# check when the bound sources are clean (T1 a profile and no model; T1b nothing; T2 a profile newer than the
+# model; T5 a model with no entry; T6b an empty class with the render newer than the model; T7 a person
+# reference that does not resolve; T8 an empty model).
+l19m_trip() { # <shape> -> trip dir
+  local s="$1" d; d="$(l19_trip "l19m-$s")"
+  l19_b1_clean "$d"
+  case "$s" in
+    T1)  l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, valid through March 2031" ;;
+    T1b) ;;
+    T2)  l19_put "$d" "$L19_MODEL" '# Traveler Model [DERIVED]' '' '## Rowan' "- ${L19S1}: Ruritania, valid through March 2031"
+         touch -t 202001010000 "$d/$L19_MODEL"
+         l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, valid through March 2031" ;;
+    T5)  l19_put "$d" "$L19_MODEL" '# Traveler Model [DERIVED]' '' "- ${L19S1}: Ruritania, valid through March 2031" ;;
+    T6b) l19_put "$d" "$L19_MODEL" '# Traveler Model [DERIVED]' '' '## Rowan' '- Interests: markets, museums'
+         touch -t 202001010000 "$d/$L19_MODEL"; touch "$d/outputs/l19m-T6b-travel-site.html" ;;
+    T7)  l19_put "$d" "$L19_PROFILE" '---' "person: psn-0000" '---' '# Rowan' '' '- Interests: markets' ;;
+    T8)  mkdir -p "$d/$(dirname "$L19_MODEL")"; : > "$d/$L19_MODEL" ;;
+  esac
+  printf '%s' "$d"
+}
+l19m_assert() { # <id> <shape>
+  l19_assert "$1" "the R9 shape $2, on which the content guard's class reads undetermined, passes the source check with clean bound sources" "$(l19m_trip "$2")" 0 "Source check:" "STOPPED"
+}
+for l19c in T1 T1b T2 T5 T6b T7 T8; do l19m_assert "L19m-$l19c" "$l19c"; done
+# The same, end to end: an encrypted publish and an update of the T1 shape go past the check to the push.
+l19m_e2e_assert() { # <id> <publish|update>
+  local id="$1" v="$2" d name bare rc out pass=0 h0 h1
+  name="l19m-$v-$RANDOM"
+  if [ "$v" = update ]; then
+    d="$(rv_fixture "$name" 'rv-l19-synthetic-key-0001')"; bare="$RVW/origin/$name-trip.git"
+  else
+    d="$RVW/$name"; mkdir -p "$d/outputs"; cp "$SRC" "$d/outputs/$name-travel-site.html"; bare=""
+  fi
+  l19_b1_clean "$d"
+  l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, valid through March 2031"
+  h0="$( [ -z "$bare" ] || rv_head "$bare")"; : > "$RV_GHLOG"
+  out="$( ( unset STATICRYPT_PASSWORD; set -e; "cmd_$v" "$d" ) 2>&1 )"; rc=$?
+  h1="$( [ -z "$bare" ] || rv_head "$bare")"
+  case "$out" in *"Source check: no value"*) pass=1 ;; esac
+  if [ "$rc" -ne 0 ]; then
+    FAIL "$id: $v of an R9 shape (a profile, no model) read rc=$rc, want 0: $(printf '%s' "$out" | awk '/STOPPED|ERROR/ { print; exit }' | cut -c1-200)"
+  elif [ "$pass" -ne 1 ]; then
+    FAIL "$id: $v exited 0 but printed no source-check pass line — the check did not run on this path"
+  elif [ "$v" = update ] && [ "$h0" = "$h1" ]; then
+    FAIL "$id: update exited 0 but the site's main did not move — nothing was pushed, so the arm graded no push"
+  else
+    PASS "$id: $v of an R9 shape passes the source check (its pass line printed) and goes on to the push (rc=0)"
+  fi
+}
+for l19c in publish update; do l19m_e2e_assert "L19m-$l19c" "$l19c"; done
+
+# ── L19n — per verb and limb: L19a's planted trip stops under publish encrypted, publish --plaintext, update and
+# rotate, with nothing created, cloned, committed or pushed, and rotate leaves .passphrase byte-identical.
+l19n_assert() { # <id> <publish|plaintext|update|rotate>
+  local id="$1" v="$2" d name bare rc out stop=0 h0 h1 c0 c1 same=1 create=0
+  name="l19n-$v-$RANDOM"
+  case "$v" in
+    update|rotate) d="$(rv_fixture "$name" 'rv-l19-synthetic-key-0002')"; bare="$RVW/origin/$name-trip.git"
+                   cp -p "$d/.passphrase" "$RVW/$name.before" ;;
+    *)             d="$RVW/$name"; mkdir -p "$d/outputs"; cp "$SRC" "$d/outputs/$name-travel-site.html"; bare="" ;;
+  esac
+  l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, valid through March 2031"
+  l19_put "$d" "$L19B2" '# Itinerary' '' 'Remember: valid through March 2031 is the date to watch.'
+  h0="$( [ -z "$bare" ] || rv_head "$bare")"; c0="$(git -C "$d/.publish" rev-parse -q --verify HEAD 2>/dev/null)"
+  : > "$RV_GHLOG"
+  case "$v" in
+    plaintext) out="$( ( unset STATICRYPT_PASSWORD ALLOW_PLAINTEXT; set -e; cmd_publish "$d" --plaintext ) </dev/null 2>&1 )"; rc=$? ;;
+    publish)   out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_publish "$d" ) </dev/null 2>&1 )"; rc=$? ;;
+    *)         out="$( ( unset STATICRYPT_PASSWORD; set -e; "cmd_$v" "$d" ) </dev/null 2>&1 )"; rc=$? ;;
+  esac
+  h1="$( [ -z "$bare" ] || rv_head "$bare")"; c1="$(git -C "$d/.publish" rev-parse -q --verify HEAD 2>/dev/null)"
+  case "$out" in *"SOURCE CHECK STOPPED"*"matched exactly"*) stop=1 ;; esac
+  case "$(cat "$RV_GHLOG")" in *"repo create"*|*"repo clone"*) create=1 ;; esac
+  if [ "$v" = rotate ] && ! cmp -s "$d/.passphrase" "$RVW/$name.before"; then same=0; fi
+  if [ "$rc" -ne 1 ] || [ "$stop" -ne 1 ]; then
+    FAIL "$id: $v of a trip whose bound file carries a value read rc=$rc and the source-check stop=$stop (want 1 and 1): $(printf '%s' "$out" | awk '/ERROR/ { print; exit }' | cut -c1-200)"
+  elif [ "$create" -ne 0 ] || [ "$h0" != "$h1" ] || [ "$c0" != "$c1" ]; then
+    FAIL "$id: $v stopped, but a repository was created or cloned ($create), the site moved ($h0 -> $h1) or the clone committed ($c0 -> $c1)"
+  elif [ "$same" -ne 1 ]; then
+    FAIL "$id: rotate stopped, but .passphrase is not byte-identical to what it was"
+  else
+    PASS "$id: $v stops at the source check (rc=1), before anything is created, cloned, committed or pushed$( [ "$v" != rotate ] || printf ', and .passphrase is byte-identical')"
+  fi
+}
+for l19c in publish plaintext update rotate; do l19n_assert "L19n-$l19c" "$l19c"; done
+
+# ── L19o — position: require_publish_guards runs the check after the baseline guard, and cmd_publish after
+# the group-only refusal and before slug_for and the first gh call. A fabricated name is the control.
+l19o_g="$(declare -f require_publish_guards 2>/dev/null)"; l19o_p="$(declare -f cmd_publish 2>/dev/null)"
+l19o_gb="$(l18_line "$l19o_g" 'require_recordable_baseline')"; l19o_gc="$(l18_line "$l19o_g" 'require_clean_build_sources')"
+l19o_pr="$(l18_line "$l19o_p" 'refuse_group_only_render "$site_html"')"; l19o_pc="$(l18_line "$l19o_p" 'require_clean_build_sources')"
+l19o_ps="$(l18_line "$l19o_p" 'slug_for')"; l19o_pg="$(l18_line "$l19o_p" 'gh api user')"
+l19o_fab="$(l18_line "$l19o_g$l19o_p" 'zzq_l19o_fabricated_call')"
+if [ "${#l19o_g}" -lt 100 ] || [ "${#l19o_p}" -lt 1000 ]; then
+  FAIL "L19o: the parsed bodies are ${#l19o_g} and ${#l19o_p} bytes — a subject is absent or a stub. VERDICT WITHHELD"
+elif [ -n "$l19o_fab" ]; then
+  FAIL "L19o: CONTROL — a fabricated name was found, so the line probe matches anything"
+elif [ -z "$l19o_gc" ] || [ -z "$l19o_pc" ]; then
+  FAIL "L19o: the source check is not called in require_publish_guards (line '${l19o_gc}') or in cmd_publish (line '${l19o_pc}')"
+elif [ "$l19o_gc" -le "$l19o_gb" ] || [ "$l19o_pc" -le "$l19o_pr" ] || [ "$l19o_pc" -ge "$l19o_ps" ] || [ "$l19o_pc" -ge "$l19o_pg" ]; then
+  FAIL "L19o: out of order — in require_publish_guards the check is at $l19o_gc after the baseline guard at $l19o_gb; in cmd_publish it is at $l19o_pc, which must follow the refusal ($l19o_pr) and precede slug_for ($l19o_ps) and the first gh call ($l19o_pg)"
+else
+  PASS "L19o: require_publish_guards runs the source check last (line $l19o_gc, after the baseline guard at $l19o_gb), and cmd_publish runs it after the group-only refusal ($l19o_pr) and before slug_for ($l19o_ps) and the first gh call ($l19o_pg); a fabricated name is found nowhere"
+fi
+
+# ── L19p — a field row added to the declaration joins both halves with no shell edit: a scratch declaration
+# carrying the live rows and one synthetic row stops on its label, and on its value carried exactly.
+L19DECL_PLUS="$L19W/decl-plus.md"
+{ _guard_declared_rows; printf 'field Visa-number %s conjunctive\n' "${_GUARD_DECL_ARTIFACT_PROFILE:-}"; } | ldecl_write "$L19DECL_PLUS"
+l19p_assert() { # <id> <label|exact>
+  local d; d="$(l19_trip "l19p-$2")"
+  l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' '- **Visa-number:** VX44A912'
+  if [ "$2" = label ]; then
+    l19_put "$d" "$L19B1" '# Trip' '' '- Visa-number: VX44A912'
+    L19_PRE="_GUARD_DECLARATION=\"$L19DECL_PLUS\"" l19_assert "$1" "a field row added to the declaration is matched as a label with no shell edit" "$d" 1 "SOURCE CHECK STOPPED|Visa-number label with a value" "VX44A912"
+  else
+    l19_put "$d" "$L19B2" '# Itinerary' '' 'Bring the slip VX44A912 to the consulate.'
+    L19_PRE="_GUARD_DECLARATION=\"$L19DECL_PLUS\"" l19_assert "$1" "a field row added to the declaration has its values matched exactly with no shell edit" "$d" 1 "SOURCE CHECK STOPPED|Visa-number value, matched exactly" "VX44A912"
+  fi
+}
+for l19c in label exact; do l19p_assert "L19p-$l19c" "$l19c"; done
+
+# ── L19q — L8's predicate list carries every function the source check adds, so its one-home seam covers them.
+l19q_miss=""
+for l19f in _field_class_values _build_source_hits require_clean_build_sources; do
+  case " $L8_PREDICATES " in *" $l19f "*) ;; *) l19q_miss="$l19q_miss$l19f " ;; esac
+done
+if [ -n "$l19q_miss" ]; then
+  FAIL "L19q: L8_PREDICATES does not name ${l19q_miss% } — a selector written into a source-check function would be a second home L8 never reads"
+else
+  PASS "L19q: L8_PREDICATES names every source-check function (_field_class_values _build_source_hits require_clean_build_sources), so L8 grades them for a copied selector"
+fi
+
+# ── L19r — a present, readable model contributes its values whatever its age or entry structure (F8): a stale
+# model, and separately an entry-less one, each carrying a value a bound file repeats, stop the publish.
+l19r_assert() { # <id> <stale|entryless>
+  local d; d="$(l19_trip "l19r-$2")"
+  if [ "$2" = stale ]; then
+    l19_put "$d" "$L19_MODEL" '# Traveler Model [DERIVED]' '' '## Rowan' "- ${L19S1}: Ruritania, passport no. RT884421, valid through June 2032"
+    touch -t 202001010000 "$d/$L19_MODEL"
+    l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** —"
+  else
+    l19_put "$d" "$L19_MODEL" '# Traveler Model [DERIVED]' '' "- ${L19S1}: Ruritania, passport no. RT884421, valid through June 2032"
+  fi
+  l19_put "$d" "$L19B2" '# Itinerary' '' 'Bring passport RT884421 to the desk.'
+  l19_assert "$1" "a $2 model's value carried into a bound file stops the publish" "$d" 1 "SOURCE CHECK STOPPED|matched exactly" "RT884421"
+}
+for l19c in stale entryless; do l19r_assert "L19r-$l19c" "$l19c"; done
+
+# ── L19s — CIAC-1, the S2 half (F6): a render tripping all three content controls shows only the refusal's
+# message (rc=3), and one tripping the source check and the content guard shows only the source check's (rc=1).
+l19s_assert() { # <id> <three|two>
+  local id="$1" c="$2" d rc lead=0 src=0 guard=0 frag='<p>Passport: Ruritanian, valid to 2033</p>'
+  [ "$c" = two ] || frag="$L18_SECTION$frag"
+  d="$(l18_trip "l19s-$c" "$frag" model)"
+  printf '# Trip\n\n- **%s:** Ruritanian\n' "$L19S1" > "$d/$L19B1"
+  l18_publish "$d" --plaintext; rc=$?
+  l18_has "GROUP-ONLY REFUSED" && lead=1
+  l18_has "SOURCE CHECK STOPPED" && src=1
+  l18_has "GUARD ABORTED" && guard=1
+  if [ -z "$L19B1" ] || [ -z "$L18T1" ]; then
+    FAIL "$id: a declaration read nothing (bound='${L19B1}', token='${L18T1}'). VERDICT WITHHELD"
+  elif [ "$c" = three ] && { [ "$rc" -ne 3 ] || [ "$lead" -ne 1 ] || [ "$src" -ne 0 ] || [ "$guard" -ne 0 ]; }; then
+    FAIL "$id: a render tripping all three controls read rc=$rc with refusal=$lead, source check=$src, content guard=$guard (want 3, 1, 0, 0) — the refusal is not first"
+  elif [ "$c" = two ] && { [ "$rc" -ne 1 ] || [ "$lead" -ne 0 ] || [ "$src" -ne 1 ] || [ "$guard" -ne 0 ]; }; then
+    FAIL "$id: a render tripping the source check and the content guard read rc=$rc with refusal=$lead, source check=$src, content guard=$guard (want 1, 0, 1, 0) — the source check is not ahead of the content guard"
+  else
+    PASS "$id: CIAC-1 holds for $c controls — only the first control's message is shown (rc=$rc)"
+  fi
+}
+for l19c in three two; do l19s_assert "L19s-$l19c" "$l19c"; done
+
+# ── L19t — the word rule (D-NEW-1): an email, a phone number's digits and a document number, each a value of a
+# field row and carried into a bound file with other words around it, stop the publish.
+L19DECL_REACH="$L19W/decl-reach.md"
+{ _guard_declared_rows; printf 'field Reach %s conjunctive\n' "${_GUARD_DECL_ARTIFACT_PROFILE:-}"; } | ldecl_write "$L19DECL_REACH"
+l19t_assert() { # <id> <email|phone|docno>
+  local d val line sel="Reach"; d="$(l19_trip "l19t-$2")"
+  case "$2" in
+    email) val='alex.morgan@example.com';  line='Emergency: alex.morgan@example.com' ;;
+    phone) val='+44 20 7946 0958';         line='Call +442079460958 on arrival' ;;
+    docno) val='US, passport no. X1234567, valid'; line='Bring passport X1234567 to the desk'; sel="$L19S1" ;;
+  esac
+  l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${sel}:** $val"
+  l19_put "$d" "$L19B2" '# Itinerary' '' "$line"
+  L19_PRE="_GUARD_DECLARATION=\"$L19DECL_REACH\"" l19_assert "$1" "a $2 carried with other words around it stops the publish by the word rule" "$d" 1 "SOURCE CHECK STOPPED|${sel} value, matched exactly" "7946|X1234567|alex.morgan"
+}
+for l19c in email phone docno; do l19t_assert "L19t-$l19c" "$l19c"; done
+
+# ── L19u — byte-exact under every locale (F19): a value split at U+2014 and U+00B7, holding U+2019 and U+00A0,
+# reads the same under C and under a multibyte locale the host lists — the stop at the same line, and the
+# clean twin clean. No multibyte locale is a FAIL: one locale compared with nothing shows nothing.
+l19u_mb_pick() {
+  local ll m=''
+  while IFS= read -r ll; do
+    [ -n "$ll" ] || continue
+    [ "$(LC_ALL="$ll" bash -c 'x="$(printf "\302\240")"; printf "%s" "${#x}"' 2>/dev/null)" = 1 ] || continue
+    case "$ll" in C.UTF-8|C.utf8|C.UTF8) m="$ll"; break ;; esac
+    [ -n "$m" ] || m="$ll"
+  done <<L19LOC
+C.UTF-8
+C.utf8
+$(locale -a 2>/dev/null)
+L19LOC
+  printf '%s' "$m"
+}
+L19U_MB="$(l19u_mb_pick)"
+l19u_assert() {
+  local id="$1" d dc rc1 rc2="" o1 o2="" cc1 cc2="" nb at rq
+  nb="$(printf '\302\240')"; rq="$(printf '\342\200\231')"
+  d="$(l19_trip l19u)"
+  l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania${rq}s office — valid${nb}through March 2031 · renew early"
+  l19_put "$d" "$L19B2" '# Itinerary' '' "Ruritania${rq}s office is near the hotel." 'Remember: valid through March 2031 is the date to watch.'
+  dc="$(l19_trip l19u-clean)"
+  l19_put "$dc" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania${rq}s office — valid${nb}through March 2031 · renew early"
+  l19_put "$dc" "$L19B2" '# Itinerary' '' "Ruritania${rq}s office is near the hotel." 'Renew early, as ever.'
+  rc1="$( export LC_ALL=C; l19_check "$d"; printf '%s' "$?" )"; o1="$(cat "$L19OUT")"
+  cc1="$( export LC_ALL=C; l19_check "$dc"; printf '%s' "$?" )"
+  if [ -n "$L19U_MB" ]; then
+    rc2="$( export LC_ALL="$L19U_MB"; l19_check "$d"; printf '%s' "$?" )"; o2="$(cat "$L19OUT")"
+    cc2="$( export LC_ALL="$L19U_MB"; l19_check "$dc"; printf '%s' "$?" )"
+  fi
+  at=0; case "$o1" in *"$L19B2 line 4"*) at=1 ;; esac
+  if [ -z "$L19S1" ] || [ -z "$L19B2" ]; then
+    FAIL "$id: a declaration read nothing. VERDICT WITHHELD"
+  elif [ -z "$L19U_MB" ]; then
+    FAIL "$id: NO MULTIBYTE LOCALE — neither C.UTF-8 spelling loads and locale -a lists no name under which U+00A0 reads as one character, so C was compared with nothing"
+  elif [ "$rc1" != 1 ] || [ "$rc2" != 1 ] || [ "$o1" != "$o2" ]; then
+    FAIL "$id: the multibyte-separated value read rc=$rc1 under C and rc=$rc2 under $L19U_MB, outputs identical=$( [ "$o1" = "$o2" ] && printf yes || printf no ) (want 1, 1, yes)"
+  elif [ "$cc1" != 0 ] || [ "$cc2" != 0 ]; then
+    FAIL "$id: the clean twin read rc=$cc1 under C and rc=$cc2 under $L19U_MB, want 0 and 0 — a multibyte character was split into a false match"
+  elif [ "$at" -ne 1 ]; then
+    FAIL "$id: the stop under both locales did not name $L19B2 line 4: $(awk 'NR == 1' <<<"$o1" | cut -c1-160)"
+  else
+    PASS "$id: a value split at U+2014 and U+00B7 and holding U+2019 and U+00A0 stops at the same line under C and under $L19U_MB with byte-identical output, and its clean twin passes under both"
+  fi
+}
+l19u_assert "L19u"
+
+# ── L19v — the declared residuals, each asserted so a change that closes one updates its declaration rather
+# than leaving it stale: a full date carried with other words; a trip with no bound artifact present
+# (D-NEW-3); a word between the selector and its colon; a label mid-line.
+l19v_assert() { # <id> <date|none|interposed|midline>
+  local d; d="$(l19_trip "l19v-$2")"
+  case "$2" in
+    date)       l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** United States, expires 2031-04-12"
+                l19_put "$d" "$L19B2" '# Itinerary' '' 'Alex: passport expiry 2031-04-12' ;;
+    none)       ;;
+    interposed) l19_put "$d" "$L19B1" '# Trip' '' "- ${L19S1} country: Ruritania" ;;
+    midline)    l19_put "$d" "$L19B1" '# Trip' '' "Alex — ${L19S1}: Ruritania" ;;
+  esac
+  l19_assert "$1" "the declared residual '$2' holds: this shape passes the source check, as declared at the function and in the PR" "$d" 0 "Source check:" "STOPPED"
+}
+for l19c in date none interposed midline; do l19v_assert "L19v-$l19c" "$l19c"; done
+
+# ── ARMED-RED controls for L19: each arm under the mutation its design row names reports pass=0 fail=1.
+l19_m_noexact()  { l18_rewrite _build_source_hits 'if (exact_hit(i, nl, ld, lt))' 'if (0)'; }
+l19_m_nolabel()  { l18_rewrite _build_source_hits 'if (label_hit(lab, S[i]))' 'if (0)'; }
+l19_m_prefix()   { l18_rewrite _build_source_hits 'if (label_hit(lab, S[i]))' 'if (index(tolower(lab), tolower(S[i])) == 1)'; }
+l19_m_nostamp()  { l18_rewrite _build_source_hits 'if (c ~ /^checked [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$/) return 0' ''; }
+l19_m_nodate()   { l18_rewrite _build_source_hits '!datelike(r)' '1'; }
+l19_m_nowcore()  { l18_rewrite _build_source_hits 'wcore(val, sel)' '0'; }
+l19_m_zero()     { l18_rewrite require_clean_build_sources 'if [ "$bs_n" -eq 0 ]; then' 'if false; then'; }
+l19_m_partial()  { l18_rewrite require_clean_build_sources 'if [ "${bs_cand:-0}" -ne "${bs_wf:-0}" ]; then' 'if false; then'; }
+l19_m_absent()   { l18_rewrite require_clean_build_sources 'if [ ! -e "$bs_f" ] && [ ! -L "$bs_f" ]; then' 'if false; then'; }
+l19_m_unread()   { l18_rewrite require_clean_build_sources 'if [ ! -f "$bs_f" ] || [ ! -r "$bs_f" ]; then' 'if [ ! -f "$bs_f" ] || [ ! -r "$bs_f" ]; then continue;'; }
+l19_m_classok()  { l18_rewrite _field_class_values 'if [ "$fc_n" -eq 0 ]; then' 'if false; then'; }
+l19_m_unreadnote() { l18_rewrite require_clean_build_sources 'if [ -n "$bs_unread" ]; then' 'if false; then'; }
+l19_m_guardrm()  { l18_rewrite require_publish_guards 'require_clean_build_sources "$trip_dir"' ':'; }
+l19_m_r9()       { require_clean_build_sources() { nonpublishable_values "$1" >/dev/null || die "SOURCE CHECK STOPPED — the class read UNDETERMINED"; info "Source check: no value"; }; }
+L19KEEP="$(printf '%s' "$L19_SELS" | tr '\n' ' ')"
+l19_m_fixed()    { eval "$(declare -f _guard_declared_rows | sed '1s/^_guard_declared_rows/l19_real_rows/')"
+                   _guard_declared_rows() { l19_real_rows | awk -v K=" $L19KEEP " 'index(K, " " $2 " ")'; }; }
+l19_m_refusal_late() { l18_rewrite cmd_publish '[ "$plaintext" != "1" ] || refuse_group_only_render "$site_html"' ':'
+                       l18_rewrite cmd_publish 'require_clean_build_sources "$trip_dir"' 'require_clean_build_sources "$trip_dir"; [ "$plaintext" != "1" ] || refuse_group_only_render "$site_html"'; }
+l19_m_source_late() { l18_rewrite cmd_publish 'require_clean_build_sources "$trip_dir"' ':'; }
+l18_mut_assert "L19a-mut" "the exact half disabled" l19_m_noexact l19a_assert "L19a-mut"
+l18_mut_assert "L19b-mut" "the label half disabled" l19_m_nolabel l19b_assert "L19b-mut" l19b-mut bullet
+l19_pair="$(l18_mut_probe l19_m_noexact l19c_assert "L19c-pair")"
+if [ "$l19_pair" = "1 0" ]; then
+  PASS "L19c-pair: CONTROL — with the exact half disabled L19a turns red while L19c stays green (pass=1 fail=0), so the pair discriminates the matcher, not the fixture"
+else
+  FAIL "L19c-pair: CONTROL — with the exact half disabled L19c reports '$l19_pair' (want '1 0')"
+fi
+l18_mut_assert "L19d-mut" "the label rule swapped for the projection's prefix rule" l19_m_prefix l19d_assert "L19d-mut"
+l18_mut_assert "L19e-mut-stamp" "the derivation-stamp exclusion removed" l19_m_nostamp l19e_assert "L19e-mut-stamp"
+l18_mut_assert "L19e-mut-date" "the word rule's date-shape skip removed (the full-date rule)" l19_m_nodate l19e_assert "L19e-mut-date"
+l18_mut_assert "L19f-mut" "the zero-row branch made to pass" l19_m_zero l19f_assert "L19f-mut"
+l18_mut_assert "L19g-mut" "the candidate and well-formed comparison removed" l19_m_partial l19g_assert "L19g-mut"
+l18_mut_assert "L19h-mut" "an absent bound artifact treated as unreadable" l19_m_absent l19h_assert "L19h-mut"
+l18_mut_assert "L19i-mut" "a present, unreadable bound artifact treated as absent" l19_m_unread l19i_assert "L19i-mut"
+l18_mut_assert "L19j-mut" "the zero field-row branch made to pass" l19_m_classok l19j_assert "L19j-mut"
+l18_mut_assert "L19k-mut" "an unreadable value source treated as not on file" l19_m_unreadnote l19k_assert "L19k-mut"
+l18_mut_assert "L19m-mut" "the check swapped for nonpublishable_values (the R9 regression)" l19_m_r9 l19m_assert "L19m-mut" T1
+l18_mut_assert "L19n-mut-update" "the check's line removed from require_publish_guards" l19_m_guardrm l19n_assert "L19n-mut-update" update
+l18_mut_assert "L19n-mut-rotate" "the check's line removed from require_publish_guards" l19_m_guardrm l19n_assert "L19n-mut-rotate" rotate
+l18_mut_assert "L19p-mut" "the selectors replaced by a fixed list of today's" l19_m_fixed l19p_assert "L19p-mut" label
+l18_mut_assert "L19s-mut-three" "the refusal moved after the source check" l19_m_refusal_late l19s_assert "L19s-mut-three" three
+l18_mut_assert "L19s-mut-two" "the source check removed from cmd_publish, so the content guard runs first" l19_m_source_late l19s_assert "L19s-mut-two" two
+for l19c in email phone docno; do l18_mut_assert "L19t-mut-$l19c" "the word rule removed" l19_m_nowcore l19t_assert "L19t-mut-$l19c" "$l19c"; done
+
+# ── The MD registrations: each arm with require_clean_build_sources removed reports exactly one FAIL.
+md_flips require_clean_build_sources "L19a" l19a_assert "L19a"
+for l19c in bullet num quote head em; do md_flips require_clean_build_sources "L19b-$l19c" l19b_assert "L19b-$l19c" "l19b-$l19c" "$l19c"; done
+for l19f in c d e f g h i j k l; do md_flips require_clean_build_sources "L19$l19f" "l19${l19f}_assert" "L19$l19f"; done
+for l19c in T1 T1b T2 T5 T6b T7 T8; do md_flips require_clean_build_sources "L19m-$l19c" l19m_assert "L19m-$l19c" "$l19c"; done
+for l19c in publish update; do md_flips require_clean_build_sources "L19m-$l19c" l19m_e2e_assert "L19m-$l19c" "$l19c"; done
+for l19c in publish plaintext update rotate; do md_flips require_clean_build_sources "L19n-$l19c" l19n_assert "L19n-$l19c" "$l19c"; done
+for l19c in label exact; do md_flips require_clean_build_sources "L19p-$l19c" l19p_assert "L19p-$l19c" "$l19c"; done
+for l19c in stale entryless; do md_flips require_clean_build_sources "L19r-$l19c" l19r_assert "L19r-$l19c" "$l19c"; done
+md_flips require_clean_build_sources "L19s-two" l19s_assert "L19s-two" two
+md_flips refuse_group_only_render "L19s-three" l19s_assert "L19s-three" three
+for l19c in email phone docno; do md_flips require_clean_build_sources "L19t-$l19c" l19t_assert "L19t-$l19c" "$l19c"; done
+md_flips require_clean_build_sources "L19u" l19u_assert "L19u"
+for l19c in date none interposed midline; do md_flips require_clean_build_sources "L19v-$l19c" l19v_assert "L19v-$l19c" "$l19c"; done
+
 # Teardown: mocks go; the shimmed production functions are RE-DEFINED from the saved
 # definitions, never unset — `unset -f` here would delete the real ones.
 unset -f gh npx
