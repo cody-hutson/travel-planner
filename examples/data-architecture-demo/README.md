@@ -56,7 +56,8 @@ that reference finds no line and says so; it never supplies a delta of its own.
 ## Depth
 
 **This fixture is deliberately uneven, on a declared rule rather than by accident.**
-Reproducing a full worked example for twenty classes would put a second copy of
+Reproducing a full worked example for every class `reference/data-architecture.md` § 1.1
+declares would put a second copy of
 `examples/tokyo-2026/` in the repository, and a second copy is a second thing to
 keep true.
 

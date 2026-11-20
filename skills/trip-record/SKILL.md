@@ -2475,8 +2475,8 @@ what keep it there.
    must reach **by content rather than by address** — so a rendered pair having no address is not an
    exemption from it. Unreachable-by-address is precisely the harm it names, never the defence, and
    citing address-reach here would answer the ground with the property the ground calls inadequate.
-   § `erase` row 24 types **the session transcript** as one of those locations — its rows 1–28 are
-   the erasure-reach table — `REPORT` rather than `REACH`: named and not swept, its remedy *never
+   § `erase` row 24 types **the session transcript** as one of those locations — its rows are the
+   erasure-reach table, which its own accounting sentence counts — `REPORT` rather than `REACH`: named and not swept, its remedy *never
    echo a subject value*, which is exactly what a rendered pair does. It is disclosure into this
    trip's own session, it survives the operator declining, and it is carried as a stated residual of
    rendering the values at all — not a cost this paragraph may claim is zero. That report goes on

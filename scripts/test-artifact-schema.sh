@@ -20,7 +20,8 @@
 #        count INSIDE that heading equals the number of rows the validator extracts. The
 #        failure this closes is not a wrong answer but an answer over the empty set: a
 #        correct doc edit that leaves the constant behind makes va_class_rows return zero,
-#        and SC2/SC3/CA/PB/UF then all go green over nothing.
+#        and SC2/SC3/CA/PB/UF then all go green over nothing. HC3 holds the three prose
+#        sites that restate the count — § 1's, § 4.4's range, § 7.6's partition — to it.
 #   XC   every selector exclusion the validator applies is declared in the architecture
 #        document, IN THE SECTION the validator names for it (S9). An exclusion is a
 #        statement about what the gate does not adjudicate, so an undeclared one is the
@@ -795,8 +796,8 @@ fi
 # HC2 — the COUNT INSIDE the heading equals the number of rows the validator extracts.
 # HC1 proves the two homes agree with each other; it does not prove either of them is
 # TRUE. A heading reading (19) above twenty rows would satisfy HC1 perfectly, with the
-# constant faithfully matching a document that misstates its own enumeration — and § 1's
-# prose count, § 4.4's range and § 7.6's arithmetic are all read against that number.
+# constant faithfully matching a document that misstates its own enumeration — and `HC3`
+# reads § 1's prose count, § 4.4's range and § 7.6's arithmetic against that number.
 hc_declared="$(printf '%s' "$VA_CLASS_HEADING" | sed -n 's/.*(\([0-9][0-9]*\)).*/\1/p')"
 if [ -n "$hc_declared" ] && [ "$hc_declared" -eq "$SC_NCLASS" ]; then
   PASS "HC2: the heading declares $hc_declared in-model classes and va_class_rows extracts $SC_NCLASS — the literal count is the row count, not a number that once was"
@@ -817,6 +818,113 @@ if [ "$hc_ctl_got" = "$hc_ctl_want" ] && [ "$hc_ctl_got" -ne "$SC_NCLASS" ]; the
   PASS "HC2-CTL: MUST FIRE — the same extractor reads $hc_ctl_got from a heading declaring $hc_ctl_want, a value different from the live $SC_NCLASS, so HC2 reads the count OUT OF the string rather than reporting a fixed number"
 else
   FAIL "HC2-CTL: MUST FIRE — the extractor returned '${hc_ctl_got:-<empty>}' for a heading declaring $hc_ctl_want; HC2's equality is not reading the heading and grades nothing"
+fi
+
+# HC3 — the three prose sites that restate the in-model count, each read against SC_NCLASS.
+# HC2 holds the heading's count to the rows; these three restate the same number in prose and
+# would otherwise be held by whoever edits the heading. § 1's opening sentence
+# (`**closed at <A>**: <M> in-model artifact classes, and <K> classes explicitly`), the § 4.4
+# heading's range (`every in-model class (C1–C<M4>)`), and § 7.6's partition (`Partitioning the <M7>
+# in-model classes` and its `**<a> + <b> + <c> + <d> = <S>.**`). Each site must be found exactly
+# once; M = M4 = M7 = S = SC_NCLASS; a + b + c + d = S; and A = M + K. The verdict is aggregated PER
+# SITE: one record per site, carrying every reason that site fails, so one wrong number at a site
+# is one failing site however many equalities it breaks. WHAT THIS DOES NOT ESTABLISH: that each of
+# § 7.6's four row counts is right — it grades their sum, not each row's membership — or that § 1's
+# out-of-model count K is right, beyond A = M + K. Every reader takes a file; nothing is piped.
+hc3_read() {   # hc3_read <file> — one line per site: "<site> <n found> <values...>"
+  LC_ALL=C awk '
+    /^## / { s1 = ($0 ~ /^## 1\. /) }
+    /^### / || /^## / { s76 = ($0 ~ /^### 7\.6 /) }
+    s1 && match($0, /\*\*closed at [0-9]+\*\*: [0-9]+ in-model artifact classes, and [0-9]+ classes explicitly/) {
+      n1++; split(substr($0, RSTART, RLENGTH), w, /[^0-9]+/); A = w[2]; M = w[3]; K = w[4]
+    }
+    /^#+ / && index($0, "every in-model class (C1–C") > 0 {
+      n44++; r = substr($0, index($0, "every in-model class (C1–C") + length("every in-model class (C1–C"))
+      M4 = (match(r, /^[0-9]+\)/) ? substr(r, 1, RLENGTH - 1) : "?")
+    }
+    s76 && match($0, /Partitioning the [0-9]+ in-model classes/) {
+      n76p++; split(substr($0, RSTART, RLENGTH), w, /[^0-9]+/); M7 = w[2]
+    }
+    s76 && match($0, /^\*\*[0-9]+ \+ [0-9]+ \+ [0-9]+ \+ [0-9]+ = [0-9]+\.\*\*/) {
+      n76s++; split(substr($0, RSTART, RLENGTH), w, /[^0-9]+/); a = w[2]; b = w[3]; c = w[4]; d = w[5]; S = w[6]
+    }
+    END {
+      printf "S1 %d %s %s %s\n", n1 + 0, (A == "" ? "?" : A), (M == "" ? "?" : M), (K == "" ? "?" : K)
+      printf "S44 %d %s\n", n44 + 0, (M4 == "" ? "?" : M4)
+      printf "S76 %d %d %s %s %s %s %s %s\n", n76p + 0, n76s + 0, (M7 == "" ? "?" : M7), (a == "" ? "?" : a), (b == "" ? "?" : b), (c == "" ? "?" : c), (d == "" ? "?" : d), (S == "" ? "?" : S)
+    }' "$1"
+}
+hc3_bad() {    # hc3_bad <hc3_read output> <N> — one line per FAILING site: "<site name>: <reasons>"
+  LC_ALL=C awk -v N="$2" '
+    function isn(x) { return x ~ /^[0-9]+$/ }
+    $1 == "S1" {
+      r = ""
+      if ($2 != 1) r = r sprintf(" the sentence was found %d time(s), expected 1;", $2)
+      else {
+        if (!isn($4) || $4 + 0 != N + 0) r = r sprintf(" it states %s in-model classes against %s rows;", $4, N)
+        if (!isn($3) || !isn($5) || $3 + 0 != $4 + $5) r = r sprintf(" closed at %s is not %s + %s;", $3, $4, $5)
+      }
+      if (r != "") print "§ 1:" r
+    }
+    $1 == "S44" {
+      r = ""
+      if ($2 != 1) r = r sprintf(" the heading range was found %d time(s), expected 1;", $2)
+      else if (!isn($3) || $3 + 0 != N + 0) r = r sprintf(" its range ends at C%s against %s rows;", $3, N)
+      if (r != "") print "§ 4.4:" r
+    }
+    $1 == "S76" {
+      r = ""
+      if ($2 != 1) r = r sprintf(" the partition sentence was found %d time(s), expected 1;", $2)
+      if ($3 != 1) r = r sprintf(" the sum line was found %d time(s), expected 1;", $3)
+      if ($2 == 1 && (!isn($4) || $4 + 0 != N + 0)) r = r sprintf(" it partitions %s in-model classes against %s rows;", $4, N)
+      if ($3 == 1) {
+        if (!isn($9) || $9 + 0 != N + 0) r = r sprintf(" its total reads %s against %s rows;", $9, N)
+        if (isn($5) && isn($6) && isn($7) && isn($8) && isn($9) && $5 + $6 + $7 + $8 != $9 + 0) r = r sprintf(" %s + %s + %s + %s is not %s;", $5, $6, $7, $8, $9)
+      }
+      if (r != "") print "§ 7.6:" r
+    }' <<<"$1"
+}
+HC3_RECS="$(hc3_read "$ROOT/$VA_ARCH_DOC")"
+HC3_BAD="$(hc3_bad "$HC3_RECS" "$SC_NCLASS")"
+if [ -z "$HC3_BAD" ]; then
+  PASS "HC3: § 1's prose count, § 4.4's range and § 7.6's partition and sum each stand exactly once in $VA_ARCH_DOC and agree with the $SC_NCLASS rows va_class_rows extracts — $(tr '\n' ';' <<<"$HC3_RECS")"
+else
+  FAIL "HC3: $(LC_ALL=C awk 'END { print NR }' <<<"$HC3_BAD") of 3 site(s) in $VA_ARCH_DOC disagree with the $SC_NCLASS rows va_class_rows extracts — $(tr '\n' ' ' <<<"$HC3_BAD")"
+fi
+
+# HC3-CTL — MUST FIRE: a copy of the document with § 7.6's total raised by one. That breaks two
+# equalities at one site, and the per-site aggregation must report it as exactly one failing site,
+# § 7.6, naming its total.
+HC3_DIR="$WORK/hc3"; mkdir -p "$HC3_DIR"
+LC_ALL=C awk -v want="$(( SC_NCLASS + 1 ))" '
+  /^### / || /^## / { s76 = ($0 ~ /^### 7\.6 /) }
+  s76 && !done && match($0, /^\*\*[0-9]+ \+ [0-9]+ \+ [0-9]+ \+ [0-9]+ = [0-9]+\.\*\*/) {
+    $0 = substr($0, 1, index($0, " = ") + 2) want ".**" substr($0, RSTART + RLENGTH); done = 1
+  }
+  { print } END { exit (done == 1 ? 0 : 3) }' "$ROOT/$VA_ARCH_DOC" > "$HC3_DIR/ctl.md"; HC3_CMUT=$?
+HC3_CBAD="$(hc3_bad "$(hc3_read "$HC3_DIR/ctl.md")" "$SC_NCLASS")"
+HC3_CN="$(LC_ALL=C awk 'NF { c++ } END { print c + 0 }' <<<"$HC3_CBAD")"
+HC3_C76="$(LC_ALL=C awk -v t="its total reads $(( SC_NCLASS + 1 )) against" 'index($0, "§ 7.6:") == 1 && index($0, t) > 0 { c++ } END { print c + 0 }' <<<"$HC3_CBAD")"
+if [ "$HC3_CMUT" -ne 0 ]; then
+  FAIL "HC3-CTL: the mutation did not land on § 7.6's sum line in the copy (awk rc=$HC3_CMUT), so this control grades nothing"
+elif [ "$HC3_CN" -eq 1 ] && [ "$HC3_C76" -eq 1 ]; then
+  PASS "HC3-CTL: MUST FIRE — § 7.6's total raised to $(( SC_NCLASS + 1 )) in a copy is reported as exactly one failing site, § 7.6, naming its total — $HC3_CBAD"
+else
+  FAIL "HC3-CTL: raising § 7.6's total in a copy did not yield exactly one failing site naming § 7.6's total — $HC3_CN failing site(s): $HC3_CBAD"
+fi
+
+# HC3-CTL2 — MUST FIRE: a copy of the document with the § 4.4 heading removed. A site that is not
+# there must FAIL as not found, never pass as vacuous.
+LC_ALL=C awk '/^#+ / && index($0, "every in-model class (C1–C") > 0 { m++; next } { print } END { exit (m == 1 ? 0 : 3) }' \
+  "$ROOT/$VA_ARCH_DOC" > "$HC3_DIR/ctl2.md"; HC3_C2MUT=$?
+HC3_C2BAD="$(hc3_bad "$(hc3_read "$HC3_DIR/ctl2.md")" "$SC_NCLASS")"
+HC3_C2N="$(LC_ALL=C awk 'index($0, "§ 4.4: the heading range was found 0 time(s)") == 1 { c++ } END { print c + 0 }' <<<"$HC3_C2BAD")"
+if [ "$HC3_C2MUT" -ne 0 ]; then
+  FAIL "HC3-CTL2: the § 4.4 heading was not removed exactly once from the copy (awk rc=$HC3_C2MUT), so this control grades nothing"
+elif [ "$HC3_C2N" -eq 1 ]; then
+  PASS "HC3-CTL2: MUST FIRE — with the § 4.4 heading removed from a copy, that site FAILS as not found rather than passing as vacuous — $HC3_C2BAD"
+else
+  FAIL "HC3-CTL2: removing the § 4.4 heading from a copy did not fail that site as not found — $HC3_C2BAD"
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────────
@@ -1715,7 +1823,8 @@ fi
 #
 # ── `writer` IS DELIBERATELY NOT COMPARED, AND THE OMISSION IS MEASURED ──────────
 # § 1.1 states the writer as PROSE carrying qualifiers, while the frontmatter states a token
-# or an inline list. Two of the twenty witnessed classes are correct AND unequal by
+# or an inline list. Two of the witnessed classes — those whose schema declares `witness:`,
+# which the gate's `CV` line counts — are correct AND unequal by
 # design: the section-owned class renders as a two-writer prose phrase against a two-value
 # list, and the residual targeted-research class names its writer generically because the
 # writer varies per instance while its witness names the concrete spoke that produced it. A
@@ -14019,8 +14128,9 @@ if [ "$RL_OK" -eq 1 ]; then
   #                      rules are named as governing different surfaces.
   #   ground-attrib    — the surviving residual is filed under ground (2) ERASURE
   #                      REACH, which is the ground `erase` row 24 belongs to:
-  #                      rows 1-28 of that table are the locations a copy of the
-  #                      person's data can reach. Filed under (3) instead, the
+  #                      every row of that table but the person's own record, as
+  #                      its accounting sentence names it, is a location a copy of
+  #                      the person's data can reach. Filed under (3) instead, the
   #                      next reader reconciling this paragraph against the data
   #                      model meets the contradiction rather than the rule.
   #

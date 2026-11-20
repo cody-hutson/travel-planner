@@ -197,10 +197,10 @@ The migration is complete and the split reads **23 witness / 1 no-witness / 24 t
 It got there in three moves, and only the first was a change to the *corpus* alone. All
 three are worth stating, because the corpus spent a release unable to declare coverage it
 had already earned, and because the third one falsified a prediction this section used to
-make. **Three classes have joined since, each arriving with its own witness rather than
-through those moves** — C20 `outputs/change-summary.md` and C21 `outputs/cost-estimate.md`,
-both fixtured in `examples/data-architecture-demo/` on the commit that declared them, and
-C22 `people/<person>.md`, fixtured in a **new** root, `examples/people-library-demo/`. That
+make. **Every class added since has arrived with its own witness rather than through those
+moves** — each class `reference/data-architecture.md` § 1.1 numbers after C19, fixtured on
+the commit that declared it at the witness its schema names; C22's opened a **new** root,
+`examples/people-library-demo/`. That
 is the intended shape for a class added after the migration: **a class ships with a witness
 or with a terminal `no-witness-because:` clause, never with a pending one.**
 
