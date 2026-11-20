@@ -8220,11 +8220,17 @@ $ST_CF_ADR1" "$ST_CF_ADD0
 $ST_CF_ADR1")"
 ST_CF_ADGOT="$ST_CF_ADGOT unattr=$(st_cf_ad_sig "$ST_CF_ADD0" "$ST_CF_ADD0
 $ST_CF_ADRU")"
-ST_CF_ADWANT="add=${ST_CF_ADK1:-} swap=${ST_CF_ADK2:-} remove=- offset=- unattr=${ST_CF_ADC:-}#?"
+# The must-fire rule's two cases, read through st_cf_rise: an addition at a site of the code rises;
+# a record no site explains does not, so a must-fire arm cannot pass on it.
+st_cf_rise_sig() { local r; r="$(st_cf_rise "$1" "$2" "$3" | awk '{ for (i = 1; i <= NF; i += 2) printf "%s%s", (n++ ? "," : ""), $i }')"; printf '%s' "${r:--}"; }
+ST_CF_ADGOT="$ST_CF_ADGOT rise=$(st_cf_rise_sig "${ST_CF_ADC:-}" "$ST_CF_ADD0" "$ST_CF_ADD0
+$ST_CF_ADR1") rise-unattr=$(st_cf_rise_sig "${ST_CF_ADC:-}" "$ST_CF_ADD0" "$ST_CF_ADD0
+$ST_CF_ADRU")"
+ST_CF_ADWANT="add=${ST_CF_ADK1:-} swap=${ST_CF_ADK2:-} remove=- offset=- unattr=${ST_CF_ADC:-}#? rise=${ST_CF_ADK1:-} rise-unattr=-"
 if [ -z "$ST_CF_AD" ]; then
   FAIL "CTL-ST-CF-ADDED: no code of st_cf_violations has two emission sites with non-empty literal heads, so the per-site predicate's exact signature cannot be built from real prefixes and is UNMEASURED"
 elif [ "$ST_CF_ADGOT" = "$ST_CF_ADWANT" ]; then
-  PASS "CTL-ST-CF-ADDED: over synthetic readings at two real sites of $ST_CF_ADC, st_cf_added answers exactly '$ST_CF_ADWANT' — an addition reports its site, a finding moved to another site of its code reports that site, a removal and an addition offset at its own site report nothing (the class the must-not-fire predicate gives up, recorded rather than claimed), and a record no site explains reports $ST_CF_ADC#?"
+  PASS "CTL-ST-CF-ADDED: over synthetic readings at two real sites of $ST_CF_ADC, st_cf_added answers exactly '$ST_CF_ADWANT' — an addition reports its site, a finding moved to another site of its code reports that site, a removal and an addition offset at its own site report nothing (the class the must-not-fire predicate gives up, recorded rather than claimed), a record no site explains reports $ST_CF_ADC#?, and the must-fire rule reads the addition as a rise and the unexplained record as none"
 else
   FAIL "CTL-ST-CF-ADDED: st_cf_added answered '$ST_CF_ADGOT' where '$ST_CF_ADWANT' is owed. The per-site predicate does not grade what the must-fire and must-not-fire arms say it grades"
 fi
