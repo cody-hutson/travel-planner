@@ -8055,7 +8055,9 @@ st_cf_frame() {
 # residual planted through the real st_cf_unmeas_record: ZZ-FORM-A leaves two unmeasured arms of Q1,
 # ZZ-FORM-B none, and ZZ-FORM-C — the LAST member — one of Q6, leaving the body by `continue` as a
 # version-2 member does. Each member's first verdict is ZZ-ST-CF-FRAME-FIRST[<member>], standing where
-# st_cf_assert stands in a real member. Run only inside st_cf_eprobe.
+# st_cf_assert stands in a real member. After the frame, st_cf_recon_assert renders the reconciliation
+# under ZZ-ST-CF-FRAME-RECON, and ZZ-ST-CF-FRAME-COUNTS carries the two counts it compared. Run only
+# inside st_cf_eprobe.
 st_cf_frame_drill() {
   local ST_CF_FORMS='ZZ-FORM-A
 ZZ-FORM-B
@@ -8070,6 +8072,8 @@ ZZ-FORM-C'
     return 0
   }
   eval "$1"
+  st_cf_recon_assert 'ZZ-ST-CF-FRAME-RECON'
+  PASS "ZZ-ST-CF-FRAME-COUNTS: $ST_CF_UNMEAS_NREC $ST_CF_UNMEAS_NREP"
 }
 
 # st_cf_rise <code> <live> <copy> — the sites of <code> the copy raises over the live reading, as
@@ -9228,6 +9232,25 @@ if [ "$ST_CF_FRRAN" -eq 1 ] && [ "$ST_CF_FRNC" -eq 1 ] && [ "$ST_CF_FRVC" -gt "$
   PASS "CTL-ST-CF-UNMEASURED-AFTER-LOOP: MUST FIRE — in the same replay the LAST member leaves one unmeasured arm and the loop body by \`continue\`, as a version-2 member does, and its report is rendered once, after its first verdict (trace lines $ST_CF_FRC < $ST_CF_FRVC). So the flush after the loop reaches the last member's residual, which no member reset follows"
 else
   FAIL "CTL-ST-CF-UNMEASURED-AFTER-LOOP: MUST FIRE — over the loop's own frame ($ST_CF_FRL line(s) read, members ran in order=$ST_CF_FRRAN), the last member's unmeasured report was rendered $ST_CF_FRNC time(s), at trace line $ST_CF_FRVC, against its first verdict at line $ST_CF_FRC, where exactly one report after it is owed. Without the flush after the loop, the last member's residual leaves no verdict, no report and no line in the run summary"
+fi
+
+# CTL-ST-CF-UNMEASURED-RECON-N — the reconciliation, graded over the same replay, where it has something to
+# reconcile. CTL-ST-CF-UNMEASURED-RECON grades this run's own counts, and on a tree no form of which reaches
+# the residual those read 0 recorded and 0 reported: a pass over nothing, which a reconciliation that
+# compared nothing would render too. In the replay three arms are recorded through the real
+# st_cf_unmeas_record and reported through the loop's own two flushes, and st_cf_recon_assert — the
+# function RECON calls — must render one PASS at 3 recorded and 3 reported, with no FAIL anywhere in the
+# trace. A report lost at either flush, or a record lost before its flush, leaves the counts unequal.
+read -r ST_CF_FRRP ST_CF_FRRF ST_CF_FRREC ST_CF_FRREP ST_CF_FRNF <<<"$(awk '
+  index($0, "P ZZ-ST-CF-FRAME-RECON:") == 1 { p++ }
+  index($0, "F ZZ-ST-CF-FRAME-RECON:") == 1 { f++ }
+  index($0, "P ZZ-ST-CF-FRAME-COUNTS: ") == 1 { rec = $3; rep = $4 }
+  /^F / { nf++ }
+  END { print p + 0, f + 0, rec + 0, rep + 0, nf + 0 }' <<<"$ST_CF_FRT")"
+if [ "$ST_CF_FRRAN" -eq 1 ] && [ "$ST_CF_FRRP" -eq 1 ] && [ "$ST_CF_FRRF" -eq 0 ] && [ "$ST_CF_FRNF" -eq 0 ] && [ "$ST_CF_FRREC" -eq 3 ] && [ "$ST_CF_FRREP" -eq 3 ]; then
+  PASS "CTL-ST-CF-UNMEASURED-RECON-N: MUST FIRE at N = 3 — over the loop's own frame, with three unmeasured arms recorded across two members and reported through the flush at the reset and the flush after the loop, the reconciliation renders one PASS at $ST_CF_FRREC recorded and $ST_CF_FRREP reported, and nothing in the trace fails. So RECON's equality is shown comparing counts that are not zero; its own verdict above reads this run's counts, which are zero wherever every form conforms"
+else
+  FAIL "CTL-ST-CF-UNMEASURED-RECON-N: MUST FIRE at N = 3 — over the loop's own frame (members ran in order=$ST_CF_FRRAN), the reconciliation rendered $ST_CF_FRRP PASS and $ST_CF_FRRF FAIL at $ST_CF_FRREC recorded and $ST_CF_FRREP reported, with $ST_CF_FRNF FAIL(s) in the trace, where one PASS at 3 and 3 and no FAIL are owed. Unequal counts mean a report or a record was lost between the residual and its report"
 fi
 
 # ── RUN LEVEL, after every member: the conformance arm's coverage, graded once over every arm that
