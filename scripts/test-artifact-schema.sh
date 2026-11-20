@@ -5660,6 +5660,46 @@ st_n() { printf '%s\n' "$2" | awk -F'\t' -v k="$1" '$1 == k { n++ } END { print 
 # mutation below aims at a site the probe FOUND rather than at a line this file names.
 st_field() { awk -F'\t' -v k="$1" -v o="$2" -v c="$3" '$1 == k { n++; if (n == o) { print $c; exit } }' <<<"$4"; }
 
+# ── CODE_TERM_AWK — THE ONE DECLARED TERMINATOR CLASS, SHARED BY BOTH CODE READERS ─
+#
+# What ENDS a code, declared once: an escape sequence (a backslash and a lower-case letter, so `\t`
+# and `\n`), a literal tab, a space, a colon, or either quote. st_codes and ctl_codes below both
+# splice this text into their awk programs, so the two readers run identical bytes and cannot drift
+# apart on what a terminator is. term_len(r) returns the length of the member r OPENS on — 2 for an
+# escape, 1 for a single character — and 0 when r opens on no member.
+#
+# It is an awk FUNCTION and not a regex, and that was measured rather than preferred. An ERE handed
+# in through awk -v and used as a dynamic regex sits at two escape levels — -v processes escapes and
+# a dynamic regex needs its backslashes doubled — and the awks this suite runs under disagree there.
+# A regex fragment spliced into a single-quoted program has to escape both quotes, and both are
+# members of the class. term_len tests characters with substr and index, so nothing is escaped
+# twice. It calls no match(), so it cannot overwrite the caller's RSTART/RLENGTH; a CALLER in turn
+# runs no further match() between its own match() and the last use of RSTART/RLENGTH — a first
+# transcription of a reader below that did so read nothing. The `c != ""` guard keeps index(s, "")
+# out of play, because awks disagree on what it returns.
+#
+# Each reader runs it under LC_ALL=C, the posture CONTRIBUTING.md states for the individual calls
+# that need byte semantics. Unpinned, the class answered differently by locale, measured over a
+# backslash before a non-ASCII letter: under en_US.UTF-8 macOS awk aborted (towc: multibyte
+# conversion failure) and read nothing, and gawk read the pair as an escape and returned a false
+# code. Pinned, every engine gives the same answer in every locale.
+#
+# A misspelt name does not pass silently: each reader runs inside $( … ), where an unset variable
+# ends the substitution with an empty set, and the coverage verdict's emptiness gate then FAILs.
+#
+# CODE_TERM_SPELLINGS names one test spelling per member, for the per-spelling controls cov_term_controls
+# renders: a shaper writes each one, and the reader must read every one.
+CODE_TERM_AWK='
+function term_len(r,   c) {
+  c = substr(r, 1, 1)
+  if (c == "\\" && substr(r, 2, 1) ~ /^[[:lower:]]$/) return 2
+  if (c != "" && index(" \t:\"\047", c) > 0) return 1
+  return 0
+}'
+readonly CODE_TERM_AWK
+CODE_TERM_SPELLINGS='esc-t tab space colon dquote squote esc-n'
+readonly CODE_TERM_SPELLINGS
+
 # st_codes <text> — the violation codes a text can EMIT, one per line, first-occurrence order,
 # deduplicated. A code is exactly what st_has looks one up BY: the first TAB-DELIMITED FIELD of an
 # emitted record. So the shape read here is a double-quoted format string whose content up to its
@@ -5859,6 +5899,27 @@ EOF
 cov_emit_tab()     { printf '  printf "%s\\t a synthetic emission that no arm covers\\n"\n' "$1"; }
 cov_emit_finding() { printf '  printf "FINDING %s a synthetic emission that no arm covers\\n"\n' "$1"; }
 
+# cov_emit_term <spelling> <code> / cov_emit_finding_term <spelling> <code> — the same synthetic
+# emission, ended by ONE member of the declared terminator class instead of by the tab escape.
+# <spelling> is a member of CODE_TERM_SPELLINGS, and `squote` opens the format on a single quote, as
+# a bash-side evaluator's format does. Each is a matched pair with its extractor, for the reason
+# given above. An unknown spelling writes the code with NO terminator, which no reader reads, so its
+# control FAILs rather than passing on a spelling it never wrote.
+cov_term_shape() {   # cov_term_shape <spelling> — sets COV_TQ (the quote) and COV_TT (the terminator)
+  COV_TQ='"'; COV_TT=''
+  case "$1" in
+    esc-t)  COV_TT='\t' ;;
+    tab)    COV_TT="$(printf '\t')" ;;
+    space)  COV_TT=' ' ;;
+    colon)  COV_TT=':' ;;
+    dquote) COV_TT='"' ;;
+    squote) COV_TQ="'"; COV_TT="'" ;;
+    esc-n)  COV_TT='\n' ;;
+  esac
+}
+cov_emit_term()         { cov_term_shape "$1"; printf '  printf %s%s%s a synthetic emission that no arm covers\\n%s\n' "$COV_TQ" "$2" "$COV_TT" "$COV_TQ"; }
+cov_emit_finding_term() { cov_term_shape "$1"; printf '  printf %sFINDING %s%s a synthetic emission that no arm covers\\n%s\n' "$COV_TQ" "$2" "$COV_TT" "$COV_TQ"; }
+
 # cov_verdict <verdict-id> <control-stem> <subject> <codes> <armed> — the coverage verdict, and
 # the ONLY verdict this function renders.
 #
@@ -5932,7 +5993,7 @@ cov_assert() {
   # costs its existing consumers nothing — which is the property that let a fourth and fifth
   # consumer arrive without a second implementation of the comparison.
   local probekey="${12:-${10}}" unit="${13:-code}"
-  local cov_nc cov_nu cov_np cov_mut cov_landed cov_mu cov_mn cov_hit
+  local cov_nc cov_nu cov_np
   local cov_ma cov_al cov_mp cov_pn cov_phit
   cov_nc="$(printf '%s\n' "$codes" | grep -c '[^[:space:]]')"
   cov_nu="$(st_setdiff "$codes" "$armed")"; cov_nu="$(printf '%s\n' "$cov_nu" | grep -c '[^[:space:]]')"
@@ -5941,20 +6002,10 @@ cov_assert() {
   cov_verdict "$id" "$stem" "$subj" "$codes" "$armed" "$unit"
   [ "$cov_nc" -gt 0 ] || return 0
 
-  # Control 1 — the UNCOVERED direction. One synthetic emission is appended to a copy of the
-  # emitter's body and the SAME extractor and the SAME st_setdiff read it, so what is graded is
-  # the shipping comparison with one input changed.
-  cov_mut="$body
-$("$shaper" "$probe")"
-  cov_landed=0; [ "$cov_mut" != "$body" ] && cov_landed=1
-  cov_mu="$(st_setdiff "$("$ex" "$cov_mut")" "$armed")"
-  cov_mn="$(printf '%s\n' "$cov_mu" | grep -c '[^[:space:]]')"
-  cov_hit="$(printf '%s\n' "$cov_mu" | grep -c "^${probekey}$")"
-  if [ "$cov_landed" -eq 1 ] && [ "$cov_mn" -eq $((cov_nu + 1)) ] && [ "$cov_hit" -eq 1 ]; then
-    PASS "${stem}1${tag}: MUST FIRE — one unarmed $unit appended to a COPY of the body of $subj takes the uncovered set from $cov_nu to $cov_mn and the new member IS that $unit ($probekey). Any $unit added to the real emitter with no arm behind it turns $id red, which is the property this group could otherwise only state. The mutation is asserted to have landed before the verdict is read"
-  else
-    FAIL "${stem}1${tag}: MUST FIRE — an unarmed $unit appended to a copy of the body of $subj was not reported (mutation-landed=$cov_landed, uncovered=$cov_mn against $((cov_nu + 1)) expected, probe-key=$probekey, probe-found=$cov_hit). $id's zero above does not respond to a known hole and therefore proves nothing"
-  fi
+  # Control 1 — the UNCOVERED direction, in cov_control1 below so cov_term_controls grades its
+  # per-spelling mutations through the same three limbs rather than a second copy of them.
+  cov_control1 "${stem}1${tag}" "$id" "$subj" "$ex" "$body" "$("$shaper" "$probe")" \
+               "$armed" "$cov_nu" "$probekey" "$unit" ''
 
   # Control 2 — the PHANTOM direction, the one that keeps the zero from resting on a reader that
   # has gone quiet. Without it an extractor returning nothing would leave the uncovered set empty
@@ -5970,6 +6021,52 @@ $phantom"
   else
     FAIL "${stem}2${tag}: MUST FIRE — a phantom arm was not reported (mutation-landed=$cov_al, phantom=$cov_pn against $((cov_np + 1)) expected, probe-found=$cov_phit). $id cannot distinguish a covered $unit set from a reader that returned nothing"
   fi
+}
+
+# cov_control1 <control-id> <verdict-id> <subject> <extractor> <body> <mutation> <armed> <base>
+#              <probe-key> <unit> <shape> — Control 1's three limbs, rendering exactly one verdict.
+#
+# One synthetic emission <mutation> is appended to a copy of the emitter's body and the SAME
+# extractor and the SAME st_setdiff read it, so what is graded is the shipping comparison with one
+# input changed. The limbs: the mutation LANDED; the uncovered set grew from <base> by exactly one;
+# and the new member IS <probe-key>. cov_assert calls it with an empty <shape>, which keeps that
+# helper's text as it was; cov_term_controls names the terminator its mutation is ended by.
+cov_control1() {
+  local cid="$1" id="$2" subj="$3" ex="$4" body="$5" mline="$6" armed="$7" base="$8"
+  local probekey="$9" unit="${10}" shape="${11}"
+  local cov_mut cov_landed cov_mu cov_mn cov_hit
+  cov_mut="$body
+$mline"
+  cov_landed=0; [ "$cov_mut" != "$body" ] && cov_landed=1
+  cov_mu="$(st_setdiff "$("$ex" "$cov_mut")" "$armed")"
+  cov_mn="$(printf '%s\n' "$cov_mu" | grep -c '[^[:space:]]')"
+  cov_hit="$(printf '%s\n' "$cov_mu" | grep -c "^${probekey}$")"
+  if [ "$cov_landed" -eq 1 ] && [ "$cov_mn" -eq $((base + 1)) ] && [ "$cov_hit" -eq 1 ]; then
+    PASS "$cid: MUST FIRE — one unarmed $unit${shape:+, $shape,} appended to a COPY of the body of $subj takes the uncovered set from $base to $cov_mn and the new member IS that $unit ($probekey). Any $unit added to the real emitter with no arm behind it turns $id red, which is the property this group could otherwise only state. The mutation is asserted to have landed before the verdict is read"
+  else
+    FAIL "$cid: MUST FIRE — an unarmed $unit${shape:+, $shape,} appended to a copy of the body of $subj was not reported (mutation-landed=$cov_landed, uncovered=$cov_mn against $((base + 1)) expected, probe-key=$probekey, probe-found=$cov_hit). $id's zero above does not respond to a known hole and therefore proves nothing"
+  fi
+}
+
+# cov_term_controls <stem> <subject> <extractor> <shaper> <body> <armed> <probe> <verdict-id> — one
+# MUST-FIRE control per member of the declared terminator class, rendered as <stem>[<spelling>].
+#
+# Each appends ONE emission of <probe>, ended by that spelling and written by <shaper>, to a copy of
+# <body>, and requires the uncovered set to grow by exactly that probe: cov_control1's predicate,
+# graded through cov_control1 itself, so there is no second comparison to drift from the first. The
+# base is this run's own uncovered count over the unmutated body, so a control on a tree that
+# already carries an uncovered code grades the delta rather than inheriting that state. A reader
+# that lost a member of the class reads its spelling as nothing, and that spelling's control FAILs
+# naming it — which is what the declared class owes: each member is read, by each reader.
+cov_term_controls() {
+  local stem="$1" subj="$2" ex="$3" shaper="$4" body="$5" armed="$6" probe="$7" id="$8"
+  local ct_base ct_sp
+  ct_base="$(st_setdiff "$("$ex" "$body")" "$armed")"
+  ct_base="$(printf '%s\n' "$ct_base" | grep -c '[^[:space:]]')"
+  for ct_sp in $CODE_TERM_SPELLINGS; do
+    cov_control1 "$stem[$ct_sp]" "$id" "$subj" "$ex" "$body" "$("$shaper" "$ct_sp" "$probe")" \
+                 "$armed" "$ct_base" "$probe" 'code' "ended by the $ct_sp member of the declared terminator class"
+  done
 }
 
 # site_cov_assert <verdict-id> <control-stem> <subject> <body> <armed-sites> — the SITE coverage
@@ -6679,6 +6776,16 @@ fi
 done <<EOF
 $ST_TEMPLATES
 EOF
+
+# ── CTL-ST-COV-TERM[<spelling>] — the code reader's declared terminator class, one MUST-FIRE control
+# per member. Graded ONCE, outside the per-form loop, because the subject is the READER and not a
+# form: each control appends one emission ended by its spelling to a copy of st_violations' body and
+# requires st_codes to read it. The armed set passed is ST_CODES itself, so the base is zero by
+# construction and the control isolates the reader from any one member's arms.
+echo
+echo "  ── the code reader's declared terminator class, one control per member"
+cov_term_controls 'CTL-ST-COV-TERM' 'st_violations' st_codes cov_emit_term \
+                  "$(declare -f st_violations)" "$ST_CODES" 'ZZTERMPROBE' 'ST-COV'
 
 # ── ST4 and its two RUN-LEVEL arms. They sit outside the per-form loop because the proposition
 # is about the union ACROSS members, and because the input ST3 cannot see is one no single
@@ -10598,6 +10705,10 @@ CTL_CODES="$(ctl_codes "$CTL_BODY")"
 cov_assert 'CTL-COV' 'CTL-COV-MUT' '' 'the validator' \
            ctl_codes cov_emit_finding "$CTL_BODY" \
            "$CTL_CODES" "$CTL_ARMED" "$CTL_COV_PROBE" "$CTL_COV_PHANTOM"
+# CTL-COV-TERM[<spelling>] — the same declared terminator class held for this group's reader, one
+# MUST-FIRE control per member, over the validator's body and the armed set CTL-COV just graded.
+cov_term_controls 'CTL-COV-TERM' 'the validator' ctl_codes cov_emit_finding_term \
+                  "$CTL_BODY" "$CTL_ARMED" 'ZZTERMPROBE' 'CTL-COV'
 
 if [ "$CTL_RAN" -ne 1 ]; then
   FAIL "X1: group CTL did not execute — a run without it is a failure, never a pass"
