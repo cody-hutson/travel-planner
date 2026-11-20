@@ -196,6 +196,7 @@ record until the change that lands the held one.
 051       ADR-051-a-verb-runs-until-it-asks.md
 052       ADR-052-a-body-ends-where-the-browser-ends-it.md
 053       ADR-053-a-field-keeps-its-key.md
+054       ADR-054-a-roster-row-names-what-its-agent-writes.md
 ```
 
 Records numbered below the register's first row predate it and carry no row. Why a register,
@@ -305,3 +306,4 @@ so each group stays in number order.
 | [ADR-041](ADR-041-third-party-roster-standing.md) | A third-party member's roster standing — no `## Group` row, and one unnamed place in `Total travelers` | Accepted |
 | [ADR-045](ADR-045-interview-conversation-conduct.md) | The interviewer's conversation conduct — examples by kind, own words as a predicate, a follow-up bound and a chosen interview style, superseding ADR-022 D5.3 and ADR-026 § 5's CH-2 W-test in part | Accepted |
 | [ADR-046](ADR-046-interview-rating-and-engagement-record.md) | What comes back beside the profile — a rating asked at the end, an engagement record of identifiers and counts, a tagged return and a governed class, superseding ADR-040 D1 and ADR-022 D1.1 in part | Accepted |
+| [ADR-053](ADR-053-a-field-keeps-its-key.md) | A field keeps its key — an authored key on its row of the classification table, its former labels declared beside it, and a test that decides which readers name a field by it | Accepted |
