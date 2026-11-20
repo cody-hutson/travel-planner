@@ -634,9 +634,10 @@ md_flips() {   # md_flips <subject-fn> <id> <assertion-fn> [args…]
 # VACUOUS also records the ID of every arm that rendered it, separately from SEEN, so the
 # closing NOTE can NAME those arms rather than assert a compensating group. The footer used to
 # hardcode one group as the basis whenever any vacuous verdict existed; the group that
-# compensates is a property of the ARM, not of the suite — this suite's only vacuous arm is
-# W4, carried by the W-CTL-* arms in its own group — so a literal there was a claim about a
-# run it had never read, and it was wrong here from the moment the first VACUOUS shipped.
+# compensates is a property of the ARM, not of the suite — W4 is carried by the W-CTL-* arms
+# in its own group, and an unmeasured ST-CF arm by ST-CF[<form>] in its — so a literal there was
+# a claim about a run it had never read, and it was wrong here from the moment the first VACUOUS
+# shipped.
 VACUOUS() { printf '  \033[1;36mVACUOUS\033[0m %s\n' "$*"; vacuous=$((vacuous+1)); SEEN="$SEEN${*%%:*} "; VACUOUS_IDS="$VACUOUS_IDS${*%%:*} "; }
 
 WORK="$(mktemp -d)"
@@ -7026,20 +7027,28 @@ fi
 # is ONE region, its whole profile half, so it renders no region id; a version-2 form renders
 # one per region, after its form verdict.
 #
-# ── EVERY ARM IS A DELTA, AND EVERY MEMBER'S ARMS ARE GATED ON ITS BOUNDARY ─────
-# Each must-fire arm mutates ONE thing on a copy of a member and passes only if its code RISES
-# against that member's own live reading; each must-not-fire arm passes only if the copy's
-# findings EQUAL the live reading's. So no arm can pass on a finding it inherited: that is what
-# the delta guarantees, and it makes an arm's green evidence. It does not make every red evidence.
-# A delta measures an arm's mutation only where the form does not already fail the arm's question
-# AT THE ARM'S OWN TARGET: the evaluator emits at most one Q6 finding per bullet, an unusable
-# fence replaces every key-level Q1 finding with one fence-level finding, and a mutation that
-# touches the failing site can remove the live finding. There an arm can go red with its control
-# and the evaluator both sound, and its message may then blame one of them. Such a red fails
-# closed: ST-CF[<form>] is red in the same run and names the true finding, and once the form is
-# fixed the arm reads honestly again. Every arm mutates a copy of a form whose boundary
-# resolves — for version 2, whose regions resolve and hold a graded field — so a member that
-# does not is named ONCE, by its entry gate, while ST-CF[<form>] names the question.
+# ── EVERY ARM IS A DELTA PER EMISSION SITE, AND EVERY MEMBER'S ARMS ARE GATED ON ITS BOUNDARY ─
+# Each must-fire arm mutates ONE thing on a copy of a member and passes only if it RAISES an
+# emission site of its code against that member's own live reading — per site, never per code, so
+# no arm can pass on a finding it inherited or on one that merely moved, and a record no site
+# explains counts for nothing. A bullet-targeted arm aims at the first bullet no live finding of its
+# code names, so on a form that already fails the code at the first bullet it still measures a rise
+# elsewhere. Each must-not-fire arm passes only if NO emission site's count rises. That catches every
+# copy in which a code's count rises, and a finding that moves to another site of its code, which
+# whole-tally equality could not; it gives up, by construction, any copy in which no site's count
+# rises — a pure removal, or an addition offset at its own site by removals there — which can exist
+# only on a form that already fails, where ST-CF[<form>] is red in the same run.
+# THE RESIDUAL: a must-fire arm whose landed copy raises no site of its code, on a form that ALREADY
+# fails that code at the arm's only site, made no measurement. It is recorded and reported ONCE per
+# (form, question) as VACUOUS, CTL-ST-CF-UNMEASURED[<form>/<code>], naming its arms, at the next
+# member's reset or after the loop — so a member that leaves the loop by `continue` is reported too —
+# and CTL-ST-CF-UNMEASURED-RECON holds every recorded arm to a report. It is VACUOUS and not a PASS,
+# a divergence from CTL-ST-CF-DECL-V2 recorded here so the two read as a choice: DECL-V2's PASS
+# reports a measurement its own arm made of the real record, and an arm in the residual made none, so
+# a PASS there would report a control firing where none did (ADR-019). The run is red regardless,
+# through ST-CF[<form>]. Every arm mutates a copy of a form whose boundary resolves — for version 2,
+# whose regions resolve and hold a graded field — so a member that does not is named ONCE, by its
+# entry gate, while ST-CF[<form>] names the question.
 #
 # ── COVERAGE IS GRADED ONCE, OVER THE RUN ───────────────────────────────────────
 # The codes and emission sites of st_cf_violations are read from its own body, and the arms
@@ -7637,44 +7646,89 @@ st_cf_proj_assert() {
 }
 
 # st_cf_mustfire <arm> <member> <fixture> <code> <what> [data-model] [charter] — ONE thing mutated on a
-# copy of the member, of the data model or of the charter, and the SAME evaluator must then report MORE
-# <code> findings than
-# the member's own live reading does. A DELTA, never an absolute, so it cannot pass on an inherited
-# finding. Where the member already fails the question at this arm's own target the count may not
-# rise, and the ST-CF block's header says what that red is. Coverage is recorded on the CALL — the
-# code before the verdict, the SITES from what the evaluator actually emitted — into run-level
-# accumulators, graded once after the last member.
+# copy of the member, of the data model or of the charter, and the SAME evaluator must then RAISE at
+# least one emission site of <code> over the member's own live reading: st_cf_rise, per site, never a
+# whole-code count, so it cannot pass on an inherited finding or on one that merely moved, and a record
+# no site explains (<code>#?) does not count. Graded as a chain: a landed copy raising a site of <code>
+# PASSes, naming it; a landed copy raising none on a form that ALREADY fails <code> is the residual —
+# it is recorded once in ST_CF_UNMEAS and reported once per (form, question) as unmeasured, at the next
+# member's reset or after the loop, with no verdict here; anything else FAILs. Coverage is recorded on
+# the CALL — the code before the verdict, the SITES from what the evaluator actually emitted — into
+# run-level accumulators, graded once after the last member.
 st_cf_mustfire() {
-  local id="$1" member="$2" fx="$3" want="$4" what="$5" dm="${6:-$ST_DM}" chart="${7:-$ST_CF_OWN}" landed=0 v n0 n1
+  local id="$1" member="$2" fx="$3" want="$4" what="$5" dm="${6:-$ST_DM}" chart="${7:-$ST_CF_OWN}" landed=0 v n0 rise
   ST_CF_ARMED="$ST_CF_ARMED
 $want"
   { cmp -s "$ST_CF_FILE" "$fx" && cmp -s "$ST_DM" "$dm" && cmp -s "$ST_CF_OWN" "$chart"; } || landed=1
   v="$(st_cf_violations "$fx" "$member" "$dm" "$chart")"
   n0="$(awk -F'\t' -v c="$want" '$1 == c { n++ } END { print n + 0 }' <<<"$ST_CF_LIVE")"
-  n1="$(awk -F'\t' -v c="$want" '$1 == c { n++ } END { print n + 0 }' <<<"$v")"
   ST_CF_ARMED_SITES="$ST_CF_ARMED_SITES
 $(st_attrib "$v" "$ST_CF_SITEMAP")"
-  if [ "$landed" -eq 1 ] && [ "$n1" -gt "$n0" ]; then
-    PASS "$id: MUST FIRE — $what, and the same evaluator raises $want from $n0 to $n1 finding(s) against this form's own live reading. The mutation is asserted to have landed before the verdict is read"
+  rise="$(st_cf_rise "$want" "$ST_CF_LIVE" "$v")"
+  if [ "$landed" -eq 1 ] && [ -n "$rise" ]; then
+    PASS "$id: MUST FIRE — $what, and the same evaluator raises $want at site(s) ${rise% } against this form's own live reading. The mutation is asserted to have landed before the verdict is read"
+  elif [ "$landed" -eq 1 ] && [ "$n0" -gt 0 ]; then
+    st_cf_unmeas_record "$ST_CF_TAG" "$want" "$id"
   else
-    FAIL "$id: MUST FIRE — $what, but $want went from $n0 to $n1 finding(s) with mutation-landed=$landed, where a rise is owed. ST-CF's verdict on this question has no control behind it"
+    FAIL "$id: MUST FIRE — $what, but no emission site of $want rose against this form's own live reading ($n0 live $want finding(s), mutation-landed=$landed), where a rise is owed. ST-CF's verdict on this question has no control behind it"
   fi
 }
 
-# st_cf_mustnotfire <arm> <member> <fixture> <edit-expected> <what> [charter] — the copy's findings must EQUAL
-# the member's live reading, over a non-zero count of graded bullets: what tells an evaluator that
-# grades the contract from one that reddens on any edit. Records no coverage, because a must-not-fire
-# arm asserts that nothing new was emitted.
+# st_cf_unmeas_record <form-tag> <code> <arm-id> — one must-fire arm the residual took: its copy raised
+# no site of <code> on a form that already fails <code>. Counted at record time for the reconciliation.
+st_cf_unmeas_record() {
+  ST_CF_UNMEAS="$ST_CF_UNMEAS
+$1 $2 $3"
+  ST_CF_UNMEAS_NREC=$((${ST_CF_UNMEAS_NREC:-0} + 1))
+}
+
+# st_cf_unmeas_flush — one VACUOUS per (form, question) recorded since the last flush, naming its arms,
+# then clears. Called at the top of every member and once after the loop, so a member that leaves the
+# loop body by `continue` is reported too. VACUOUS and not a PASS: the arm made NO measurement — its copy
+# raised nothing, and that is all it observed — so a PASS would report a control firing where none did,
+# which ADR-019 forbids. CTL-ST-CF-DECL-V2's PASS differs in kind: it reports a measurement its own arm
+# made of the real record. The run is red regardless, through ST-CF[<form>].
+st_cf_unmeas_flush() {
+  local uq un uids
+  if [ -z "$(printf '%s' "${ST_CF_UNMEAS:-}" | tr -d '[:space:]')" ]; then ST_CF_UNMEAS=""; return 0; fi
+  for uq in $(awk 'NF && !seen[$1 "/" $2]++ { print $1 "/" $2 }' <<<"$ST_CF_UNMEAS"); do
+    un="$(awk -v k="$uq" 'NF && ($1 "/" $2) == k { n++ } END { print n + 0 }' <<<"$ST_CF_UNMEAS")"
+    uids="$(awk -v k="$uq" 'NF && ($1 "/" $2) == k { printf "%s ", $3 }' <<<"$ST_CF_UNMEAS")"
+    ST_CF_UNMEAS_NREP=$((${ST_CF_UNMEAS_NREP:-0} + un))
+    VACUOUS "CTL-ST-CF-UNMEASURED[$uq]: $un must-fire arm(s) could not be measured on this form — ${uids% } — because the form already fails ${uq#*/} at each arm's only site, so the copy could raise no site of it. ST-CF[${uq%%/*}] carries that red in this run; these arms made no measurement, so they are reported as unmeasured rather than passed"
+  done
+  ST_CF_UNMEAS=""
+}
+
+# st_cf_mustnotfire <arm> <member> <fixture> <edit-expected> <what> [charter] — no emission site's count
+# may rise: for every site key st_attrib derives over ST_CF_SITEMAP, the copy's count must not exceed
+# the member's live reading's, over exactly one DENOM record and a non-zero count of graded bullets. That
+# is what tells an evaluator that grades the contract from one that reddens on any edit. It FAILs iff
+# some site rises, so it catches every copy in which some code's count rises, and one whole-tally
+# equality cannot: a finding that moves to another site of its code. It gives up, by construction, any
+# copy in which no site's count rises — a pure removal, or an addition offset at its own site by
+# removals there. Such a copy can exist only on a form that already fails, where ST-CF[<form>] is red in
+# the same run; on a conforming form the live reading holds no finding, so the two predicates are one.
+# CTL-ST-CF-ADDED pins the given-up class. Records no coverage, because a must-not-fire arm asserts that
+# nothing new was emitted.
 st_cf_mustnotfire() {
-  local id="$1" member="$2" fx="$3" wantedit="$4" what="$5" chart="${6:-$ST_CF_OWN}" landed=0 v t0 t1 nb
+  local id="$1" member="$2" fx="$3" wantedit="$4" what="$5" chart="${6:-$ST_CF_OWN}" landed=0 v t0 t1 nb nd add
   { cmp -s "$ST_CF_FILE" "$fx" && cmp -s "$ST_CF_OWN" "$chart"; } || landed=1
   v="$(st_cf_violations "$fx" "$member" "$ST_DM" "$chart")"
   t0="$(st_cf_tally "$ST_CF_LIVE" | tr '\n' ' ')"; t1="$(st_cf_tally "$v" | tr '\n' ' ')"
   nb="$(awk '$1 == "DENOM" { print $2 + 0; exit }' <<<"$v")"
-  if [ "$landed" -eq "$wantedit" ] && [ "$t1" = "$t0" ] && [ "${nb:-0}" -gt 0 ]; then
-    PASS "$id: MUST NOT FIRE — $what, and the copy reads exactly the findings the form itself reads [${t0% }] over ${nb} graded bullet(s)"
+  nd="$(awk '$1 == "DENOM" { n++ } END { print n + 0 }' <<<"$v")"
+  add="$(st_cf_added "$ST_CF_LIVE" "$v" | tr '\n' ' ')"
+  if [ "$landed" -ne "$wantedit" ]; then
+    FAIL "$id: MUST NOT FIRE — $what, but differs-from-original=$landed where $wantedit is expected, so the copy is not the edit this arm names"
+  elif [ "$nd" -ne 1 ]; then
+    FAIL "$id: MUST NOT FIRE — $what, but the copy's reading carries $nd DENOM record(s) where exactly one is owed, so it was not graded to its end"
+  elif [ "${nb:-0}" -le 0 ]; then
+    FAIL "$id: MUST NOT FIRE — $what, but the copy graded ${nb:-0} bullet(s), so its silence is a statement over nothing"
+  elif [ -n "$add" ]; then
+    FAIL "$id: MUST NOT FIRE — $what, but the copy raises emission site(s) ${add% } — it reads [${t1% }] against the form's own [${t0% }]"
   else
-    FAIL "$id: MUST NOT FIRE — $what, but the copy reads [${t1% }] against the form's own [${t0% }], with differs-from-original=$landed where $wantedit is expected and ${nb:-0} graded bullet(s)"
+    PASS "$id: MUST NOT FIRE — $what, and no emission site's count rises over the form's own reading — [${t1% }] against [${t0% }], over ${nb} graded bullet(s)"
   fi
 }
 
@@ -7732,6 +7786,22 @@ st_cf_once_drill() {
 # must-fire arm may not pass on a record its reader cannot explain, which ST-CF-SITE reports instead.
 st_cf_rise() { st_cf_added "$2" "$3" | awk -v c="$1" 'index($1, c "#") == 1 && $1 != c "#?" { printf "%s ", $0 }'; }
 
+# st_cf_clean_bullet <code> / st_cf_clean_graded <code> — the RETARGET. A bullet-targeted must-fire
+# arm aims at the first bullet no live <code> finding names (a bullet-specific finding carries
+# "at line <n>"), so on a form that already fails <code> at the first bullet the arm still measures a
+# site rise elsewhere. st_cf_clean_bullet answers a version-1 member's BULLET line from ST_CF_SURF;
+# st_cf_clean_graded answers the 1-based index of a version-2 member's graded bullet in ST_CF_GR, for
+# st_cf_gr. On a conforming form each answers exactly the first bullet; where every candidate already
+# fails each answers nothing, the caller falls back to the first bullet, and the arm takes the residual.
+st_cf_clean_bullet() {
+  awk -F'\t' -v c="$1" 'FILENAME == ARGV[1] { if ($1 == c && match($2, /at line [0-9]+/)) bad[substr($2, RSTART + 8, RLENGTH - 8)] = 1; next }
+    $1 == "BULLET" && !($2 in bad) { print $2; exit }' <(printf '%s\n' "$ST_CF_LIVE") <(printf '%s\n' "$ST_CF_SURF")
+}
+st_cf_clean_graded() {
+  awk -F'\t' -v c="$1" 'FILENAME == ARGV[1] { if ($1 == c && match($2, /at line [0-9]+/)) bad[substr($2, RSTART + 8, RLENGTH - 8)] = 1; next }
+    NF && !($1 in bad) { print FNR; exit }' <(printf '%s\n' "$ST_CF_LIVE") <(printf '%s\n' "$ST_CF_GR")
+}
+
 # st_cf_clean0_drill <fixture> <code> — st_cf_mustfire driven against a live reading holding only
 # its DENOM record, so the code's live count is zero by construction whatever the form's own state.
 # Run only inside st_cf_vprobe.
@@ -7741,26 +7811,31 @@ st_cf_clean0_drill() {
   st_cf_mustfire "CTL-ST-CF-MUSTFIRE-CLEAN0-PROBE" "$ST_CF_REL" "$1" "$2" "a landed copy that raises nothing"
 }
 
-# st_cf_strict_assert <relaxation> <old> <new> <fixture> <what> — CTL-ST-CF-Q1-KEYSPACE-STRICT: the
-# key-line reader with ONE of its relaxations taken out (<old> replaced by <new> in ST_CF_FENCE_FN, in
-# a subshell) must read the KEYSPACE copy as a Q1 defect, raising a Q1 site against the form's own
-# reading. The substitution must land, or the control FAILs loudly: a rewritten reader is named here,
-# never silently read as strict. On a form that already fails Q1 at the site the strict reader raises,
-# the arm is the residual, as any single-site must-fire arm is. Records no coverage: the strict
-# reader is not the shipping evaluator.
+# st_cf_strict_assert <relaxation> <code> <old> <new> <fixture> <plants> <what> — CTL-ST-CF-Q1-KEYSPACE-
+# STRICT: the key-line reader with ONE of its relaxations taken out (<old> replaced by <new> in
+# ST_CF_FENCE_FN, in a subshell) must read the KEYSPACE copy as a defect, raising an emission site of
+# <code> against the form's own reading. The replacement is spliced as prefix, <new>, suffix, never
+# through ${v/pattern/replacement}: bash 3.2 keeps a quoted replacement's quotes in the result, so that
+# form hands awk a regex wrapped in quote marks — a reader broken for every line, not one relaxation
+# removed. The splice must LAND — <old> found, and the text's length moved by exactly the difference —
+# and all three plants must be in the copy (<plants> = 3), or the control FAILs loudly. On a form that
+# already fails <code> at the site the strict reader raises, the arm is the residual, as any
+# single-site must-fire arm is. Records no coverage: the strict reader is not the shipping evaluator.
 st_cf_strict_assert() {
-  local rx="$1" old="$2" new="$3" fx="$4" what="$5" ss_fn ss_v ss_rise ss_n0 ss_landed=0
-  ss_fn="${ST_CF_FENCE_FN/"$old"/"$new"}"
-  case "$ST_CF_FENCE_FN" in *"$old"*) [ "$ss_fn" != "$ST_CF_FENCE_FN" ] && ss_landed=1 ;; esac
+  local rx="$1" code="$2" old="$3" new="$4" fx="$5" plants="$6" what="$7" ss_pre ss_post ss_fn ss_v ss_rise ss_add ss_n0 ss_landed=0
+  ss_pre="${ST_CF_FENCE_FN%%"$old"*}"; ss_post="${ST_CF_FENCE_FN#*"$old"}"
+  ss_fn="$ss_pre$new$ss_post"
+  if [ "$ss_pre" != "$ST_CF_FENCE_FN" ] && [ "${#ss_fn}" -eq $(( ${#ST_CF_FENCE_FN} - ${#old} + ${#new} )) ] && [ "$plants" -eq 3 ]; then ss_landed=1; fi
   ss_v="$( ST_CF_FENCE_FN="$ss_fn"; st_cf_violations "$fx" "$ST_CF_REL" "$ST_DM" 2>/dev/null )"
-  ss_rise="$(st_cf_rise Q1 "$ST_CF_LIVE" "$ss_v")"
-  ss_n0="$(awk -F'\t' '$1 == "Q1" { n++ } END { print n + 0 }' <<<"$ST_CF_LIVE")"
+  ss_rise="$(st_cf_rise "$code" "$ST_CF_LIVE" "$ss_v")"
+  ss_add="$(st_cf_added "$ST_CF_LIVE" "$ss_v" | tr '\n' ' ')"
+  ss_n0="$(awk -F'\t' -v c="$code" '$1 == c { n++ } END { print n + 0 }' <<<"$ST_CF_LIVE")"
   if [ "$ss_landed" -eq 1 ] && [ -n "$ss_rise" ]; then
-    PASS "CTL-ST-CF-Q1-KEYSPACE-STRICT[$rx][$ST_CF_TAG]: MUST FIRE — with the $rx relaxation taken out of the key-line reader, the KEYSPACE copy ($what) raises Q1 at ${ss_rise% } against the form's own reading. So CTL-ST-CF-Q1-KEYSPACE's silence rests on that relaxation"
+    PASS "CTL-ST-CF-Q1-KEYSPACE-STRICT[$rx][$ST_CF_TAG]: MUST FIRE — with the $rx relaxation taken out of the key-line reader, the KEYSPACE copy ($what) raises $code at ${ss_rise% } against the form's own reading. So CTL-ST-CF-Q1-KEYSPACE's silence rests on that relaxation"
   elif [ "$ss_landed" -eq 1 ] && [ "$ss_n0" -gt 0 ]; then
-    st_cf_unmeas_record "$ST_CF_TAG" Q1 "CTL-ST-CF-Q1-KEYSPACE-STRICT[$rx][$ST_CF_TAG]"
+    st_cf_unmeas_record "$ST_CF_TAG" "$code" "CTL-ST-CF-Q1-KEYSPACE-STRICT[$rx][$ST_CF_TAG]"
   else
-    FAIL "CTL-ST-CF-Q1-KEYSPACE-STRICT[$rx][$ST_CF_TAG]: MUST FIRE — with the $rx relaxation taken out (substitution-landed=$ss_landed), the KEYSPACE copy raised no Q1 site. Either the key-line reader was rewritten and this control no longer names its relaxation, or the relaxation is not what keeps the copy silent"
+    FAIL "CTL-ST-CF-Q1-KEYSPACE-STRICT[$rx][$ST_CF_TAG]: MUST FIRE — with the $rx relaxation taken out (splice-landed=$ss_landed, plants in the copy=$plants of 3), the KEYSPACE copy raised no $code site; the sites it raised were [${ss_add% }]. Either the key-line reader was rewritten and this control no longer names its relaxation, or the relaxation is not what keeps the copy silent"
   fi
 }
 
@@ -8196,9 +8271,14 @@ trip-context | a block not listed above | UNREACHABLE (by construction)'
 # Run-level, per D-12 of the seam: every member's arms land in ONE armed set, graded after the loop.
 ST_CF_ARMED=""
 ST_CF_ARMED_SITES=""
+# The residual's record, and the two counts its reconciliation compares (st_cf_unmeas_record, _flush).
+ST_CF_UNMEAS=""; ST_CF_UNMEAS_NREC=0; ST_CF_UNMEAS_NREP=0
 
 # ── PER MEMBER: the form verdict, then — behind the member's own boundary — every arm ────────────
 while IFS= read -r ST_CF_REL; do
+# The previous member's residual is reported here, at the reset, whichever way that member left the
+# loop body — a version-2 member leaves it by `continue`, so a report placed before `done` would miss it.
+st_cf_unmeas_flush
 [ -n "$ST_CF_REL" ] || continue
 ST_CF_FILE="$ROOT/$ST_CF_REL"
 ST_CF_TAG="$(st_cf_tag "$ST_CF_REL")"
@@ -8234,7 +8314,11 @@ if [ "${ST_CF_NT:-0}" -lt 1 ] || [ "${ST_CF_NG:-0}" -lt 1 ] || [ "${ST_CF_NGB:-0
   continue
 fi
 st_cf_gr() { awk -F'\t' -v c="$2" -v k="$1" 'NR == k + 0 { print $c; exit }' <<<"$ST_CF_GR"; }
-ST_CF_G1L="$(st_cf_gr 1 1)"; ST_CF_G1B="$(st_cf_gr 1 2)"; ST_CF_G1ROW="$(st_cf_gr 1 4)"
+# The retarget, per code: the first graded bullet no live finding of that code names.
+ST_CF_GK3="$(st_cf_clean_graded Q3)"; ST_CF_GK3="${ST_CF_GK3:-1}"
+ST_CF_G3L="$(st_cf_gr "$ST_CF_GK3" 1)"; ST_CF_G3B="$(st_cf_gr "$ST_CF_GK3" 2)"; ST_CF_G3ROW="$(st_cf_gr "$ST_CF_GK3" 4)"
+ST_CF_GK5="$(st_cf_clean_graded Q5)"; ST_CF_G5L="$(st_cf_gr "${ST_CF_GK5:-1}" 1)"
+ST_CF_GK6="$(st_cf_clean_graded Q6)"; ST_CF_G6L="$(st_cf_gr "${ST_CF_GK6:-1}" 1)"
 ST_CF_G1RL="$(st_cf_gr 1 5)"; ST_CF_G1HOW="$(st_cf_gr 1 6)"; ST_CF_G1WR="$(st_cf_gr 1 7)"
 ST_CF_GDL="$(awk -F'\t' '$6 == "default" { print $1; exit }' <<<"$ST_CF_GR")"
 ST_CF_GDB="$(awk -F'\t' '$6 == "default" { print $2; exit }' <<<"$ST_CF_GR")"
@@ -8306,11 +8390,11 @@ ST_CF_FX="$(st_cf_fixture q2-label)"; [ -n "$ST_CF_LB" ] && st_cf_ins_after "$ST
 st_cf_mustfire "CTL-ST-CF-Q2-LABEL[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q2 "a line opening on the bold label ${ST_CF_LB:-(none)}, which the writer table gives to a row no heading can reach, is inserted under the first region (line $ST_CF_R1) — the probe of that row's zero"
 
 # ── Q3: the join inside every interviewable region, the reverse join, and the address ──
-ST_CF_FX="$(st_cf_fixture q3-unjoined-v2)"; st_cf_relabel "$ST_CF_FX" "$ST_CF_G1L" 'ZZ-ST-CF-UNCLASSIFIED'
-st_cf_mustfire "CTL-ST-CF-Q3-UNJOINED-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the first graded bullet ('$ST_CF_G1B', line $ST_CF_G1L) is relabelled with a label no field-table row carries"
-ST_CF_ROWL="$(ft_rows "$ST_DM" | awk -F'\t' -v r="$ST_CF_G1ROW" '$1 == r && n == 0 { print $9; n = 1 }')"
+ST_CF_FX="$(st_cf_fixture q3-unjoined-v2)"; st_cf_relabel "$ST_CF_FX" "$ST_CF_G3L" 'ZZ-ST-CF-UNCLASSIFIED'
+st_cf_mustfire "CTL-ST-CF-Q3-UNJOINED-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the first graded bullet no live Q3 finding names ('$ST_CF_G3B', line $ST_CF_G3L) is relabelled with a label no field-table row carries"
+ST_CF_ROWL="$(ft_rows "$ST_DM" | awk -F'\t' -v r="$ST_CF_G3ROW" '$1 == r && n == 0 { print $9; n = 1 }')"
 ST_CF_FX="$(st_cf_fixture q3-ambig-v2)"; ST_CF_DMFX="$(st_cf_dm_fixture q3-ambig-v2)"; st_cf_dup_range "$ST_CF_DMFX" "${ST_CF_ROWL:-0}" "${ST_CF_ROWL:-0}"
-st_cf_mustfire "CTL-ST-CF-Q3-AMBIG-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the field-table row the first graded bullet joins (row ${ST_CF_G1ROW:-none}) is duplicated on a COPY of the data model, so that bullet reaches two rows" "$ST_CF_DMFX"
+st_cf_mustfire "CTL-ST-CF-Q3-AMBIG-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the field-table row the first graded bullet no live Q3 finding names joins (row ${ST_CF_G3ROW:-none}, line ${ST_CF_G3L:-none}) is duplicated on a COPY of the data model, so that bullet reaches two rows" "$ST_CF_DMFX"
 # Q3-EMPTY-V2 — every field deleted. Graded on the empty-set finding ITSELF rather than on every Q3:
 # deleting every field also deletes whatever Q3 findings the live reading carried, so a count of the
 # whole code can fall on a form already failing question 3 while this site fires.
@@ -8323,8 +8407,11 @@ ST_CF_ARMED_SITES="$ST_CF_ARMED_SITES
 $(st_attrib "$ST_CF_EV" "$ST_CF_SITEMAP")"
 st_cf_empty() { awk -F'\t' '$1 == "Q3" && index($2, "no field-shaped bullet sits in an interviewable region") == 1 { n++ } END { print n + 0 }' <<<"$1"; }
 ST_CF_EV0="$(st_cf_empty "$ST_CF_LIVE")"; ST_CF_EV1="$(st_cf_empty "$ST_CF_EV")"
-if ! cmp -s "$ST_CF_FILE" "$ST_CF_FX" && [ "$ST_CF_EV1" -gt "$ST_CF_EV0" ]; then
+ST_CF_EVL=0; cmp -s "$ST_CF_FILE" "$ST_CF_FX" || ST_CF_EVL=1
+if [ "$ST_CF_EVL" -eq 1 ] && [ "$ST_CF_EV1" -gt "$ST_CF_EV0" ]; then
   PASS "CTL-ST-CF-Q3-EMPTY-V2[$ST_CF_TAG]: MUST FIRE — every field-shaped bullet is deleted, at any indent, and the evaluator says the join would be graded over the empty set ($ST_CF_EV0 → $ST_CF_EV1), rather than reading an empty join as a clean one"
+elif [ "$ST_CF_EVL" -eq 1 ] && [ "$ST_CF_EV0" -gt 0 ]; then
+  st_cf_unmeas_record "$ST_CF_TAG" Q3 "CTL-ST-CF-Q3-EMPTY-V2[$ST_CF_TAG]"
 else
   FAIL "CTL-ST-CF-Q3-EMPTY-V2[$ST_CF_TAG]: MUST FIRE — with every field-shaped bullet deleted, the empty-set finding went $ST_CF_EV0 → $ST_CF_EV1, where a rise is owed. A join graded over nothing would read as clean"
 fi
@@ -8343,6 +8430,8 @@ ST_CF_RV0="$(awk -F'\t' '$1 == "Q3" && index($2, "the (section, label) resolver 
 ST_CF_RV1="$(awk -F'\t' '$1 == "Q3" && index($2, "the (section, label) resolver answered 0 of") == 1 { n++ } END { print n + 0 }' <<<"$ST_CF_RV")"
 if [ "$ST_CF_RV1" -gt "$ST_CF_RV0" ]; then
   PASS "CTL-ST-CF-Q3-RESOLVER-V2[$ST_CF_TAG]: MUST FIRE — with ft_resolve removed, the evaluator over the unmutated form reports that the resolver answered none of its fields ($ST_CF_RV0 → $ST_CF_RV1), so question 3 cannot pass on a join that never ran"
+elif [ "$ST_CF_RV0" -gt 0 ]; then
+  st_cf_unmeas_record "$ST_CF_TAG" Q3 "CTL-ST-CF-Q3-RESOLVER-V2[$ST_CF_TAG]"
 else
   FAIL "CTL-ST-CF-Q3-RESOLVER-V2[$ST_CF_TAG]: MUST FIRE — with ft_resolve removed the evaluator's 'resolver answered 0 of' finding went $ST_CF_RV0 → $ST_CF_RV1, where a rise is owed. A join the resolver never made would read as a clean one"
 fi
@@ -8355,12 +8444,12 @@ ST_CF_DV="$(st_cf_violations "$ST_CF_FX" "$ST_CF_REL" "$ST_DM")"
 ST_CF_ARMED_SITES="$ST_CF_ARMED_SITES
 $(st_attrib "$ST_CF_DV" "$ST_CF_SITEMAP")"
 ST_CF_DV0="$(awk -F'\t' '$1 == "Q3" { n++ } END { print n + 0 }' <<<"$ST_CF_LIVE")"
-ST_CF_DV1="$(awk -F'\t' '$1 == "Q3" { n++ } END { print n + 0 }' <<<"$ST_CF_DV")"
 ST_CF_DVC="$(awk -F'\t' '$1 == "Q3" && index($2, "ZZ-ST-CF-NEW-BLOCK-FIELD") && index($2, "resolved to the default row") && index($2, "rules: ") { n++ } END { print n + 0 }' <<<"$ST_CF_DV")"
-if [ -n "$ST_CF_GDL" ] && [ "$ST_CF_DV1" -gt "$ST_CF_DV0" ] && [ "$ST_CF_DVC" -eq 1 ]; then
-  PASS "CTL-ST-CF-Q3-DEFAULT-V2[$ST_CF_TAG]: MUST FIRE — the graded bullet '$ST_CF_GDB' at line $ST_CF_GDL, in a region that resolved by default, is relabelled with a label no field-table row carries: Q3 rises $ST_CF_DV0 → $ST_CF_DV1, and the finding cites the writer table's own rule for a block it does not list, read from the table — the rule a new block meets at the moment it is added"
+ST_CF_DVR="$(st_cf_rise Q3 "$ST_CF_LIVE" "$ST_CF_DV")"
+if [ -n "$ST_CF_GDL" ] && [ -n "$ST_CF_DVR" ] && [ "$ST_CF_DVC" -eq 1 ]; then
+  PASS "CTL-ST-CF-Q3-DEFAULT-V2[$ST_CF_TAG]: MUST FIRE — the graded bullet '$ST_CF_GDB' at line $ST_CF_GDL, in a region that resolved by default, is relabelled with a label no field-table row carries: Q3 rises at site(s) ${ST_CF_DVR% } against the form's own reading, and the finding cites the writer table's own rule for a block it does not list, read from the table — the rule a new block meets at the moment it is added"
 else
-  FAIL "CTL-ST-CF-Q3-DEFAULT-V2[$ST_CF_TAG]: MUST FIRE — with a default-resolved bullet (line ${ST_CF_GDL:-none}) relabelled, Q3 went $ST_CF_DV0 → $ST_CF_DV1 and $ST_CF_DVC finding(s) cited the table's rule for an unlisted block, where a rise and one citing finding are owed"
+  FAIL "CTL-ST-CF-Q3-DEFAULT-V2[$ST_CF_TAG]: MUST FIRE — with a default-resolved bullet (line ${ST_CF_GDL:-none}) relabelled, no Q3 site rose (rose: [${ST_CF_DVR% }], $ST_CF_DV0 live Q3 finding(s)) and $ST_CF_DVC finding(s) cited the table's rule for an unlisted block, where a site rise and one citing finding are owed"
 fi
 
 # ── Q4: nothing declared in a region the interviewer does not own ──
@@ -8389,12 +8478,12 @@ else
 fi
 
 # ── Q5 and Q6: the fence against the frontmatter, a marked graded bullet, and its marker ──
-ST_CF_FX="$(st_cf_fixture q5-bullet)"; st_line_sub "$ST_CF_FX" "$ST_CF_G1L" "[ \t]*$" " [ENRICH]"
-st_cf_mustfire "CTL-ST-CF-Q5-BULLET[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q5 "the first graded bullet gains an [ENRICH] marker (line $ST_CF_G1L), so an agent-owned field sits in an interviewable region"
+ST_CF_FX="$(st_cf_fixture q5-bullet)"; st_line_sub "$ST_CF_FX" "$ST_CF_G5L" "[ \t]*$" " [ENRICH]"
+st_cf_mustfire "CTL-ST-CF-Q5-BULLET[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q5 "the first graded bullet no live Q5 finding names gains an [ENRICH] marker (line $ST_CF_G5L), so an agent-owned field sits in an interviewable region"
 ST_CF_FX="$(st_cf_fixture q5-output-v2)"; st_line_sub "$ST_CF_FX" "$ST_CF_KO" "[.]md[ \t]*$" ".elsewhere.md"
 st_cf_mustfire "CTL-ST-CF-Q5-OUTPUT-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q5 "the fence's output: no longer names the frontmatter's artifact (line $ST_CF_KO)"
-ST_CF_FX="$(st_cf_fixture q6-v2)"; st_cf_plant "$ST_CF_FX" "$ST_CF_G1L" 'Closed: '
-st_cf_mustfire "CTL-ST-CF-Q6-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q6 "a marker in the wrong case is planted at the head of the first graded bullet's bracket (line $ST_CF_G1L)"
+ST_CF_FX="$(st_cf_fixture q6-v2)"; st_cf_plant "$ST_CF_FX" "$ST_CF_G6L" 'Closed: '
+st_cf_mustfire "CTL-ST-CF-Q6-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q6 "a marker in the wrong case is planted at the head of the first graded bullet no live Q6 finding names (line $ST_CF_G6L)"
 
 # ── VERSION: an unsupported version is named as that, and as nothing else ──
 ST_CF_ARMED="$ST_CF_ARMED
@@ -8441,10 +8530,12 @@ ST_CF_CL1="$(awk -F'\t' '$1 == "ROW" { printf "%s:%s/%s ", $2, $3, $4 }' <<<"$ST
 ST_CF_CA="$(awk -F'\t' -v r="$ST_CF_AR" -v s="$ST_CF_AS" '$1 == "ROW" && $2 == r { print (index($11, s) ? "kept" : "gone"); exit }' <<<"$ST_CF_CG")"
 ST_CF_CN="$(awk -F'\t' -v r="$ST_CF_NR" -v s="$ST_CF_AS" '$1 == "ROW" && $2 == r { print (index($11, s) ? "carried" : "absent"); exit }' <<<"$ST_CF_CG")"
 ST_CF_CV0="$(st_cf_row_vector "$ST_CF_RG" | cut -f1-3)"; ST_CF_CV1="$(st_cf_row_vector "$ST_CF_CG" | cut -f1-3)"
-ST_CF_CT0="$(st_cf_tally "$ST_CF_LIVE" | tr '\n' ' ')"; ST_CF_CT1="$(st_cf_tally "$(st_cf_violations "$ST_CF_FILE" "$ST_CF_REL" "$ST_DM" "$ST_CF_CX")" | tr '\n' ' ')"
+ST_CF_CTV="$(st_cf_violations "$ST_CF_FILE" "$ST_CF_REL" "$ST_DM" "$ST_CF_CX")"
+ST_CF_CT0="$(st_cf_tally "$ST_CF_LIVE" | tr '\n' ' ')"; ST_CF_CT1="$(st_cf_tally "$ST_CF_CTV" | tr '\n' ' ')"
+ST_CF_CTADD="$(st_cf_added "$ST_CF_LIVE" "$ST_CF_CTV" | tr '\n' ' ')"
 if [ -z "$ST_CF_AR" ] || [ -z "$ST_CF_NR" ] || [ -z "$ST_CF_AS" ]; then
   VACUOUS "CTL-ST-CF-CONDITION-CELL[$ST_CF_TAG]: the writer table carries no AGENT row with a contract span (${ST_CF_AR:-none}) or no addressed row naming no writer (${ST_CF_NR:-none}), so there is no Condition-cell citation to move between them"
-elif [ "$ST_CF_CA" = gone ] && [ "$ST_CF_CN" = carried ] && [ -n "${ST_CF_CL0% }" ] && [ "$ST_CF_CL1" = "$ST_CF_CL0" ] && [ "$ST_CF_CV1" = "$ST_CF_CV0" ] && [ "$ST_CF_CT1" = "$ST_CF_CT0" ]; then
+elif [ "$ST_CF_CA" = gone ] && [ "$ST_CF_CN" = carried ] && [ -n "${ST_CF_CL0% }" ] && [ "$ST_CF_CL1" = "$ST_CF_CL0" ] && [ "$ST_CF_CV1" = "$ST_CF_CV0" ] && [ -z "$ST_CF_CTADD" ]; then
   PASS "CTL-ST-CF-CONDITION-CELL[$ST_CF_TAG]: MUST NOT FIRE — on a COPY of the charter the agent contract span $ST_CF_AS leaves the Condition cell of row $ST_CF_AR and is written into that of row $ST_CF_NR, and every row's class reads as before [${ST_CF_CL0% }], every realized verdict with it, and the evaluator's findings [${ST_CF_CT0% }]. A writer's class is read from its Writer and Block cells alone, so the column that explains cannot move a verdict"
 else
   FAIL "CTL-ST-CF-CONDITION-CELL[$ST_CF_TAG]: MUST NOT FIRE — with the agent contract span moved between Condition cells on a COPY of the charter (source row ${ST_CF_AR:-none} $ST_CF_CA, target row ${ST_CF_NR:-none} $ST_CF_CN), the classes read [${ST_CF_CL1% }] against [${ST_CF_CL0% }] and the findings [${ST_CF_CT1% }] against [${ST_CF_CT0% }], where both are owed unchanged. A class read from the Condition column moves a verdict with the explanation of a row rather than its declaration"
@@ -8571,8 +8662,12 @@ ST_CF_KF="$(st_cf_key_line "$ST_CF_FILE" form)"
 ST_CF_KV="$(st_cf_key_line "$ST_CF_FILE" form-version)"
 ST_CF_KO="$(st_cf_key_line "$ST_CF_FILE" output)"
 ST_CF_SURF="$(st_surfaces "$ST_CF_FILE")"
-ST_CF_B1L="$(st_field BULLET 1 2 "$ST_CF_SURF")"; ST_CF_B1B="$(st_field BULLET 1 3 "$ST_CF_SURF")"
-ST_CF_B1H="$(st_field BULLET 1 4 "$ST_CF_SURF")"
+ST_CF_B1L="$(st_field BULLET 1 2 "$ST_CF_SURF")"
+# The retarget, per code: the first labelled bullet no live finding of that code names.
+ST_CF_Q3L="$(st_cf_clean_bullet Q3)"; ST_CF_Q3L="${ST_CF_Q3L:-$ST_CF_B1L}"
+ST_CF_Q3B="$(awk -F'\t' -v l="$ST_CF_Q3L" '$1 == "BULLET" && $2 == l { print $3; exit }' <<<"$ST_CF_SURF")"
+ST_CF_Q3H="$(awk -F'\t' -v l="$ST_CF_Q3L" '$1 == "BULLET" && $2 == l { print $4; exit }' <<<"$ST_CF_SURF")"
+ST_CF_Q6L="$(st_cf_clean_bullet Q6)"; ST_CF_Q6L="${ST_CF_Q6L:-$ST_CF_B1L}"
 ST_CF_MKL="$(awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "BULLET") b[$2] = 1; next } (FNR in b) && ($0 ~ /:\*\* \[(closed|open): /) { print FNR; exit }' <(printf '%s\n' "$ST_CF_SURF") "$ST_CF_FILE")"
 ST_CF_H1L="$(awk -v bl="$ST_CF_BL" 'FNR < bl + 0 && /^## / { print FNR; exit }' "$ST_CF_FILE")"
 ST_CF_BLIT="$(awk -v n="$ST_CF_BL" 'FNR == n + 0 { print; exit }' "$ST_CF_FILE")"
@@ -8595,10 +8690,17 @@ st_line_sub "$ST_CF_FX" "${ST_CF_KW:-0}" "^writer:[ ]+" "writer:\t"
 st_line_sub "$ST_CF_FX" "${ST_CF_KV:-0}" "^form-version:[ ]+" "form-version:  "
 st_line_sub "$ST_CF_FX" "${ST_CF_KF:-0}" "[ \t]*$" "   "
 ST_CF_KSW="a tab after writer: (line ${ST_CF_KW:-none}), two spaces after form-version: (line ${ST_CF_KV:-none}) and trailing spaces after the form: value (line ${ST_CF_KF:-none})"
-st_cf_mustnotfire "CTL-ST-CF-Q1-KEYSPACE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "$ST_CF_KSW — each a spelling the key-line reader relaxes"
-st_cf_strict_assert tab '/^[ \t]+[^ \t\r]/' '/^ +[^ \t\r]/' "$ST_CF_FX" "$ST_CF_KSW"
-st_cf_strict_assert double '/^[ \t]+[^ \t\r]/' '/^[ \t][^ \t\r]/' "$ST_CF_FX" "$ST_CF_KSW"
-st_cf_strict_assert trail '; sub(/[ \t\r]+$/, "", v)' '' "$ST_CF_FX" "$ST_CF_KSW"
+# The three plants, each read back from the copy: a tab after writer:, two spaces after form-version:,
+# trailing spaces after the form: value. A copy that merely differs is not this copy.
+ST_CF_KSP="$(awk -v w="${ST_CF_KW:-0}" -v v="${ST_CF_KV:-0}" -v f="${ST_CF_KF:-0}" 'NR == w + 0 && /^writer:\t[^ \t]/ { n++ } NR == v + 0 && /^form-version:  [^ \t]/ { n++ } NR == f + 0 && /^form: .*[^ ]   $/ { n++ } END { print n + 0 }' "$ST_CF_FX")"
+if [ "$ST_CF_KSP" -ne 3 ]; then
+  FAIL "CTL-ST-CF-Q1-KEYSPACE[$ST_CF_TAG]: MUST NOT FIRE — only $ST_CF_KSP of the three spellings landed in the copy ($ST_CF_KSW), so its silence would not be about them"
+else
+  st_cf_mustnotfire "CTL-ST-CF-Q1-KEYSPACE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "$ST_CF_KSW — each a spelling the key-line reader relaxes"
+fi
+st_cf_strict_assert tab Q1 '/^[ \t]+[^ \t\r]/' '/^ +[^ \t\r]/' "$ST_CF_FX" "$ST_CF_KSP" "$ST_CF_KSW"
+st_cf_strict_assert double Q1 '/^[ \t]+[^ \t\r]/' '/^[ \t][^ \t\r]/' "$ST_CF_FX" "$ST_CF_KSP" "$ST_CF_KSW"
+st_cf_strict_assert trail Q1 '; sub(/[ \t\r]+$/, "", v)' '' "$ST_CF_FX" "$ST_CF_KSP" "$ST_CF_KSW"
 
 # CTL-ST-CF-MUSTFIRE-CLEAN0 — MUST FIRE a FAIL. st_cf_mustfire is driven, in a subshell, against a live
 # reading holding only its DENOM record, with a landed copy that carries none of the chosen code: a
@@ -8606,7 +8708,7 @@ st_cf_strict_assert trail '; sub(/[ \t\r]+$/, "", v)' '' "$ST_CF_FX" "$ST_CF_KSW
 # report the residual. The code is the first this member's copy does not emit, so the live form's own
 # state cannot reach the verdict.
 ST_CF_FX="$(st_cf_fixture clean0)"; printf '\n' >> "$ST_CF_FX"
-ST_CF_C0C="$(st_setdiff "$ST_CF_CODES" "$(awk -F'\t' 'NF > 1 { print $1 }' <<<"$(st_cf_violations "$ST_CF_FX" "$ST_CF_REL" "$ST_DM")")" | awk 'NF { print; exit }')"
+ST_CF_C0C="$(awk 'NF { print; exit }' <<<"$(st_setdiff "$ST_CF_CODES" "$(awk -F'\t' 'NF > 1 { print $1 }' <<<"$(st_cf_violations "$ST_CF_FX" "$ST_CF_REL" "$ST_DM")")")")"
 ST_CF_C0R="$(awk 'NR == 1' <<<"$(st_cf_vprobe st_cf_clean0_drill "$ST_CF_FX" "${ST_CF_C0C:-}")")"
 if [ -n "$ST_CF_C0C" ] && [ "$ST_CF_C0R" = "0 1 0 0" ]; then
   PASS "CTL-ST-CF-MUSTFIRE-CLEAN0[$ST_CF_TAG]: MUST FIRE a FAIL — a landed copy raising no $ST_CF_C0C site, graded against a live reading that holds none, renders one FAIL, no PASS, no unmeasured report and no unmeasured record. So the residual is reachable only where the form already fails the code"
@@ -8642,12 +8744,12 @@ ST_CF_FX="$(st_cf_fixture q2-gone)"; st_line_del "$ST_CF_FX" "$ST_CF_BL"
 st_cf_mustfire "CTL-ST-CF-Q2-GONE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q2 "the boundary line is deleted (line $ST_CF_BL), so the literal its fence names occurs nowhere as a whole line"
 
 # ── Q3: the join, and the address it is made through ──
-ST_CF_FX="$(st_cf_fixture q3-unjoined)"; st_cf_relabel "$ST_CF_FX" "$ST_CF_B1L" 'ZZ-ST-CF-UNCLASSIFIED'
-st_cf_mustfire "CTL-ST-CF-Q3-UNJOINED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the first labelled bullet ('$ST_CF_B1B', line $ST_CF_B1L) is relabelled with a label no field-table row carries"
-ST_CF_ROW="$(printf '%s\t%s\n' "$ST_CF_B1H" "$ST_CF_B1B" | ft_resolve <(ft_rows "$ST_DM") | awk -F'\t' '$1 == "ONE" && n == 0 { print $2; n = 1 }')"
+ST_CF_FX="$(st_cf_fixture q3-unjoined)"; st_cf_relabel "$ST_CF_FX" "$ST_CF_Q3L" 'ZZ-ST-CF-UNCLASSIFIED'
+st_cf_mustfire "CTL-ST-CF-Q3-UNJOINED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the first labelled bullet no live Q3 finding names ('$ST_CF_Q3B', line $ST_CF_Q3L) is relabelled with a label no field-table row carries"
+ST_CF_ROW="$(printf '%s\t%s\n' "$ST_CF_Q3H" "$ST_CF_Q3B" | ft_resolve <(ft_rows "$ST_DM") | awk -F'\t' '$1 == "ONE" && n == 0 { print $2; n = 1 }')"
 ST_CF_ROWL="$(ft_rows "$ST_DM" | awk -F'\t' -v r="$ST_CF_ROW" '$1 == r && n == 0 { print $9; n = 1 }')"
 ST_CF_FX="$(st_cf_fixture q3-ambig)"; ST_CF_DMFX="$(st_cf_dm_fixture q3-ambig)"; st_cf_dup_range "$ST_CF_DMFX" "${ST_CF_ROWL:-0}" "${ST_CF_ROWL:-0}"
-st_cf_mustfire "CTL-ST-CF-Q3-AMBIG[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the field-table row the first bullet joins (row ${ST_CF_ROW:-none}) is duplicated on a COPY of the data model, the form left byte-untouched, so that bullet reaches two rows" "$ST_CF_DMFX"
+st_cf_mustfire "CTL-ST-CF-Q3-AMBIG[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the field-table row the first labelled bullet no live Q3 finding names joins (row ${ST_CF_ROW:-none}, line $ST_CF_Q3L) is duplicated on a COPY of the data model, the form left byte-untouched, so that bullet reaches two rows" "$ST_CF_DMFX"
 ST_CF_FX="$(st_cf_fixture q3-address)"; st_line_sub "$ST_CF_FX" "$ST_CF_KC" "The classification" "The classifications"
 st_cf_mustfire "CTL-ST-CF-Q3-ADDRESS[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the classification: anchor is edited so its last segment leads no heading of the data model (line $ST_CF_KC)"
 ST_CF_FX="$(st_cf_fixture q3-table)"; st_line_sub "$ST_CF_FX" "$ST_CF_KC" "reference/data-model[.]md" "reference/elsewhere.md"
@@ -8666,6 +8768,8 @@ ST_CF_RV0="$(awk -F'\t' '$1 == "Q3" && index($2, "the (section, label) resolver 
 ST_CF_RV1="$(awk -F'\t' '$1 == "Q3" && index($2, "the (section, label) resolver answered 0 of") == 1 { n++ } END { print n + 0 }' <<<"$ST_CF_RV")"
 if [ "$ST_CF_RV1" -gt "$ST_CF_RV0" ]; then
   PASS "CTL-ST-CF-Q3-RESOLVER[$ST_CF_TAG]: MUST FIRE — with ft_resolve removed, the evaluator over the unmutated form reports that the resolver answered none of its bullets ($ST_CF_RV0 → $ST_CF_RV1), so question 3 cannot pass on a join that never ran"
+elif [ "$ST_CF_RV0" -gt 0 ]; then
+  st_cf_unmeas_record "$ST_CF_TAG" Q3 "CTL-ST-CF-Q3-RESOLVER[$ST_CF_TAG]"
 else
   FAIL "CTL-ST-CF-Q3-RESOLVER[$ST_CF_TAG]: MUST FIRE — with ft_resolve removed the evaluator's 'resolver answered 0 of' finding went $ST_CF_RV0 → $ST_CF_RV1, where a rise is owed. A join the resolver never made would read as a clean one"
 fi
@@ -8683,12 +8787,12 @@ ST_CF_FX="$(st_cf_fixture q5-marked)"; st_line_sub "$ST_CF_FX" "$ST_CF_H1L" "[ \
 st_cf_mustfire "CTL-ST-CF-Q5-MARKED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q5 "the first section heading gains an [ENRICH] marker (line $ST_CF_H1L), so an agent-owned field sits in the profile half"
 
 # ── Q6: the head of a bracket, and only its head ──
-ST_CF_FX="$(st_cf_fixture q6-malformed)"; st_cf_plant "$ST_CF_FX" "$ST_CF_B1L" 'Closed: '
-st_cf_mustfire "CTL-ST-CF-Q6-MALFORMED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q6 "a marker in the wrong case is planted at the head of the first bullet's bracket (line $ST_CF_B1L)"
-ST_CF_FX="$(st_cf_fixture q6-double)"; st_cf_plant "$ST_CF_FX" "$ST_CF_B1L" 'closed: closed: '
-st_cf_mustfire "CTL-ST-CF-Q6-DOUBLE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q6 "two markers are planted at the head of the first bullet's bracket (line $ST_CF_B1L)"
-ST_CF_FX="$(st_cf_fixture q6-middle)"; st_cf_plant "$ST_CF_FX" "$ST_CF_B1L" 'e.g., "open: any weekend", '
-st_cf_mustnotfire "CTL-ST-CF-Q6-MIDDLE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "the text open: is planted in the MIDDLE of the first bullet's bracket, after an example that opens it (line $ST_CF_B1L) — later text in a bracket is prose, and the contract grades the marker at its head alone"
+ST_CF_FX="$(st_cf_fixture q6-malformed)"; st_cf_plant "$ST_CF_FX" "$ST_CF_Q6L" 'Closed: '
+st_cf_mustfire "CTL-ST-CF-Q6-MALFORMED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q6 "a marker in the wrong case is planted at the head of the bracket of the first bullet no live Q6 finding names (line $ST_CF_Q6L)"
+ST_CF_FX="$(st_cf_fixture q6-double)"; st_cf_plant "$ST_CF_FX" "$ST_CF_Q6L" 'closed: closed: '
+st_cf_mustfire "CTL-ST-CF-Q6-DOUBLE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q6 "two markers are planted at the head of the bracket of the first bullet no live Q6 finding names (line $ST_CF_Q6L)"
+ST_CF_FX="$(st_cf_fixture q6-middle)"; st_cf_plant "$ST_CF_FX" "$ST_CF_Q6L" 'e.g., "open: any weekend", '
+st_cf_mustnotfire "CTL-ST-CF-Q6-MIDDLE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "the text open: is planted in the MIDDLE of the bracket of the first bullet no live Q6 finding names, after an example that opens it (line $ST_CF_Q6L) — later text in a bracket is prose, and the contract grades the marker at its head alone"
 # Q6-NOMARK — every marker removed from a copy must leave the form conforming, since the contract
 # never grades whether a field owes one; and the Q6 arms must still be constructible on that copy,
 # because they plant a marker rather than needing one to exist. EVERY marker at the head of the
@@ -8705,10 +8809,11 @@ ST_CF_NMP="$ST_CF_DIR/q6-nomark-planted.md"; cp "$ST_CF_FX" "$ST_CF_NMP"; st_cf_
 ST_CF_NMQ0="$(awk -F'\t' '$1 == "Q6" { n++ } END { print n + 0 }' <<<"$ST_CF_NMV")"
 ST_CF_NMQ1="$(awk -F'\t' '$1 == "Q6" { n++ } END { print n + 0 }' <<<"$(st_cf_violations "$ST_CF_NMP" "$ST_CF_REL" "$ST_DM")")"
 ST_CF_NML=0; cmp -s "$ST_CF_FILE" "$ST_CF_FX" || ST_CF_NML=1
-if [ "$ST_CF_NML" -eq 1 ] && [ "$ST_CF_NMK" -eq 0 ] && [ "$ST_CF_NMT1" = "$ST_CF_NMT0" ] && [ "$ST_CF_NMQ1" -gt "$ST_CF_NMQ0" ]; then
-  PASS "CTL-ST-CF-Q6-NOMARK[$ST_CF_TAG]: MUST NOT FIRE — with every closed/open marker removed from a copy of the form it reads exactly the form's own findings [${ST_CF_NMT0% }]: a form with no option-bearing field passes question 6, because whether a field owes a marker is a reviewer's call. The Q6 arms need no marker to exist either — a marker planted on that same copy still raises Q6 ($ST_CF_NMQ0 → $ST_CF_NMQ1)"
+ST_CF_NMADD="$(st_cf_added "$ST_CF_LIVE" "$ST_CF_NMV" | tr '\n' ' ')"
+if [ "$ST_CF_NML" -eq 1 ] && [ "$ST_CF_NMK" -eq 0 ] && [ -z "$ST_CF_NMADD" ] && [ "$ST_CF_NMQ1" -gt "$ST_CF_NMQ0" ]; then
+  PASS "CTL-ST-CF-Q6-NOMARK[$ST_CF_TAG]: MUST NOT FIRE — with every closed/open marker removed from a copy of the form no emission site's count rises over the form's own reading — [${ST_CF_NMT1% }] against [${ST_CF_NMT0% }]: a form with no option-bearing field passes question 6, because whether a field owes a marker is a reviewer's call. The Q6 arms need no marker to exist either — a marker planted on that same copy still raises Q6 ($ST_CF_NMQ0 → $ST_CF_NMQ1)"
 else
-  FAIL "CTL-ST-CF-Q6-NOMARK[$ST_CF_TAG]: MUST NOT FIRE — the marker-free copy (landed=$ST_CF_NML, markers left=$ST_CF_NMK) read [${ST_CF_NMT1% }] against the form's own [${ST_CF_NMT0% }], and a planted marker moved Q6 $ST_CF_NMQ0 → $ST_CF_NMQ1. Those numbers tell three causes apart. A copy reading MORE findings than the form means question 6 grades whether a marker is owed, which the contract leaves to a reviewer; a planted marker that does not raise Q6 means its arms cannot be built on a form without one; and a copy reading FEWER Q6 findings than the form means this form already fails question 6 at a marker the copy removed, so that finding went with the marker and this arm cannot be measured on this form until ST-CF[$ST_CF_TAG]'s Q6 finding is fixed"
+  FAIL "CTL-ST-CF-Q6-NOMARK[$ST_CF_TAG]: MUST NOT FIRE — the marker-free copy (landed=$ST_CF_NML, markers left=$ST_CF_NMK) raised emission site(s) [${ST_CF_NMADD% }] — it read [${ST_CF_NMT1% }] against the form's own [${ST_CF_NMT0% }] — and a planted marker moved Q6 $ST_CF_NMQ0 → $ST_CF_NMQ1. Those numbers tell two causes apart. A copy raising a site means question 6 grades whether a marker is owed, which the contract leaves to a reviewer; a planted marker that does not raise Q6 means its arms cannot be built on a form without one"
 fi
 
 # ── VERSION: the dispatch ──
@@ -8751,6 +8856,8 @@ fi
 done <<EOF
 $ST_CF_FORMS
 EOF
+# The last member's residual, reported once after the loop.
+st_cf_unmeas_flush
 
 # ── The residual's report, reconciled. CTL-ST-CF-UNMEASURED-ONCE drives the record and report path on
 # synthetic arms across two forms and both report points — a member's reset and the end of the loop —
@@ -31671,7 +31778,7 @@ printf 'SELECTOR: %d files selected / %d excluded / %d unmatched = %d tracked; %
   "$AR_NSEL" "$AR_NEXC" "$AR_NUNM" "$AR_NPOP" "$AR_NVER" "$AR_NSKIP"
 printf 'COVERAGE: %d witness / %d no-witness / %d total.\n' "$CV_W" "$CV_N" "$SC_NFILES"
 if [ "$vacuous" -gt 0 ]; then
-  printf 'NOTE: %d assertion(s) had an EMPTY POPULATION and proved nothing about this tree: %s. Read each named arm and its own verdict above for what carries it. This line names the vacuous ARMS rather than a compensating group, because the arms that compensate are not always in the group the vacuous arm belongs to, and a hardcoded group here was a claim about a run it had not read.\n' "$vacuous" "${VACUOUS_IDS% }"
+  printf 'NOTE: %d assertion(s) had an EMPTY POPULATION or could not be measured on this run, and proved nothing about this tree: %s. Read each named arm and its own verdict above for what carries it. This line names the vacuous ARMS rather than a compensating group, because the arms that compensate are not always in the group the vacuous arm belongs to, and a hardcoded group here was a claim about a run it had not read.\n' "$vacuous" "${VACUOUS_IDS% }"
 fi
 rc=0
 [ "$fail" -eq 0 ] || rc=1
