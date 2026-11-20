@@ -16570,9 +16570,11 @@ l19u_assert() {
 l19u_assert "L19u"
 
 # ── L19v — the declared residuals, each asserted so a change that closes one updates its declaration rather
-# than leaving it stale: a full date carried with other words; a trip with no bound artifact present
-# (D-NEW-3); a word between the selector and its colon; a label mid-line.
-l19v_assert() { # <id> <date|none|interposed|midline>
+# than leaving it stale: a calendar-valid date carried with other words; a trip with no bound artifact present
+# (D-NEW-3); a word between the selector and its colon; a label mid-line; a label whose colon is a dash, in
+# either spelling (S7-04); a number joined by three characters or by a comma (S7-04); and a value-source line
+# the guard's profile parse does not read as a label (a task box in a traveller file), which harvests nothing.
+l19v_assert() { # <id> <date|none|interposed|midline|emdash|dash|sep3|comma|harvest>
   local d; d="$(l19_trip "l19v-$2")"
   case "$2" in
     date)       l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** United States, expires 2031-04-12"
@@ -16580,10 +16582,104 @@ l19v_assert() { # <id> <date|none|interposed|midline>
     none)       ;;
     interposed) l19_put "$d" "$L19B1" '# Trip' '' "- ${L19S1} country: Ruritania" ;;
     midline)    l19_put "$d" "$L19B1" '# Trip' '' "Alex — ${L19S1}: Ruritania" ;;
+    emdash)     l19_put "$d" "$L19B1" '# Trip' '' "${L19S1} — Ruritania" ;;
+    dash)       l19_put "$d" "$L19B1" '# Trip' '' "- ${L19S1} - Ruritania" ;;
+    sep3)       l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. 12345678"
+                l19_put "$d" "$L19B1" '# Trip' '' 'Ref 1234 - 5678 on file.' ;;
+    comma)      l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. 12345678"
+                l19_put "$d" "$L19B1" '# Trip' '' 'Ref 1234,5678 on file.' ;;
+    harvest)    l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- [ ] **${L19S1}:** Ruritania, document no. X1234567"
+                l19_put "$d" "$L19B1" '# Trip' '' 'Bring X1234567 to the desk.' ;;
   esac
   l19_assert "$1" "the declared residual '$2' holds: this shape passes the source check, as declared at the function and in the PR" "$d" 0 "Source check:" "STOPPED"
 }
-for l19c in date none interposed midline; do l19v_assert "L19v-$l19c" "$l19c"; done
+for l19c in date none interposed midline emdash dash sep3 comma harvest; do l19v_assert "L19v-$l19c" "$l19c"; done
+
+# ── L19w — the word rule skips a calendar-valid date and nothing else (Stage 7's S7-03, operator ruling C): a
+# number grouped like a date whose groups are no calendar date, carried with other words in a bound line, stops;
+# a calendar-valid date in each order, and the derivation stamp, stay skipped, as declared.
+l19w_assert() { # <id> <trip name> <the number, as written> <stop|skip>
+  local d; d="$(l19_trip "$2")"
+  l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. $3"
+  l19_put "$d" "$L19B1" '# Trip' '' "Visa reference $3 confirmed by the consulate."
+  if [ "$4" = stop ]; then
+    l19_assert "$1" "a number grouped like a date whose groups are no calendar date ($3), carried with other words, stops by the word rule" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} value, matched exactly" ""
+  else
+    l19_assert "$1" "the declared residual holds: a calendar-valid date ($3) carried with other words is skipped by the word rule" "$d" 0 "Source check:" "STOPPED"
+  fi
+}
+l19w_assert "L19w-stop-242" l19w-stop-242 '07 2019 55' stop
+l19w_assert "L19w-stop-422" l19w-stop-422 '2031 55 12' stop
+l19w_assert "L19w-stop-224" l19w-stop-224 '55 12 2031' stop
+l19w_assert "L19w-stop-24" l19w-stop-24 '19 2031' stop
+l19w_assert "L19w-skip-ymd" l19w-skip-ymd '2031-03-15' skip
+l19w_assert "L19w-skip-dmy" l19w-skip-dmy '15/03/2031' skip
+l19w_assert "L19w-skip-dmy-dot" l19w-skip-dmy-dot '31.12.2031' skip
+l19w_assert "L19w-skip-mdy" l19w-skip-mdy '03/15/2031' skip
+l19w_assert "L19w-skip-ym" l19w-skip-ym '2031-07' skip
+l19w_assert "L19w-skip-ym-1999" l19w-skip-ym-1999 '1999-12' skip
+l19w_stamp_assert() {
+  local d; d="$(l19_trip l19w-skip-stamp)"
+  l19_put "$d" "$L19_MODEL" '# Traveler Model [DERIVED]' '' '## Rowan' "- ${L19S2}: passport — have; visa — obtain · checked 2031-03-15"
+  l19_put "$d" "$L19B1" '# Trip' '' 'Status · checked 2031-03-15 by the consulate.'
+  l19_assert "$1" "the declared residual holds: the derivation stamp checked <date> carried with other words is skipped" "$d" 0 "Source check:" "STOPPED"
+}
+l19w_stamp_assert "L19w-skip-stamp"
+
+# ── L19x — the label half reads through look-alikes (S7-04, label half): a task box after the list marker, in
+# either case and under either bullet; a non-breaking space or a zero-width space before the colon; a full-width
+# colon; and a list marker ahead of a quote marker. Each stops by its label.
+l19x_assert() { # <id> <trip name> <the label line> <what it is>
+  l19_assert "$1" "a bound line carrying the ${L19S1:-?} label behind $4 stops the publish by its label" "$(l19b_trip "$2" "$3")" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} label with a value" "Ruritania"
+}
+L19NB="$(printf '\302\240')"; L19FC="$(printf '\357\274\232')"; L19ZW="$(printf '\342\200\213')"
+l19x_assert "L19x-box" l19x-box "- [ ] ${L19S1}: Ruritania" "an open task box"
+l19x_assert "L19x-box-x" l19x-box-x "- [x] ${L19S1}: Ruritania" "a checked task box"
+l19x_assert "L19x-box-star" l19x-box-star "* [ ] ${L19S1}: Ruritania" "a task box under an asterisk bullet"
+l19x_assert "L19x-nbsp" l19x-nbsp "${L19S1}${L19NB}: Ruritania" "a non-breaking space before its colon"
+l19x_assert "L19x-fwcolon" l19x-fwcolon "${L19S1}${L19FC} Ruritania" "a full-width colon"
+l19x_assert "L19x-zw" l19x-zw "${L19S1}${L19ZW}: Ruritania" "a zero-width space before its colon"
+l19x_assert "L19x-list-quote" l19x-list-quote "- > ${L19S1}: Ruritania" "a list marker ahead of a quote marker"
+
+# ── L19y — the exact half reads through invisibles and other digits (S7-04, value half): a zero-width space,
+# non-joiner or joiner, a byte-order mark or a soft hyphen inside the value, and the value in full-width or
+# Arabic-Indic digits, each in a bound line, stops, matched exactly.
+l19y_assert() { # <id> <trip name> <the value on file> <the bound line>
+  local d; d="$(l19_trip "$2")"
+  l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** $3"
+  l19_put "$d" "$L19B2" '# Itinerary' '' "$4"
+  l19_assert "$1" "a value written with invisible or non-ASCII-digit characters in a bound file stops the publish, matched exactly" "$d" 1 "SOURCE CHECK STOPPED|$L19B2 line 3|${L19S1} value, matched exactly" "X1234567|12345678"
+}
+L19VX='Ruritania, document no. X1234567'; L19VD='Ruritania, document no. 12345678'
+l19y_assert "L19y-zwsp" l19y-zwsp "$L19VX" "Bring X123$(printf '\342\200\213')4567 to the desk."
+l19y_assert "L19y-zwnj" l19y-zwnj "$L19VX" "Bring X123$(printf '\342\200\214')4567 to the desk."
+l19y_assert "L19y-zwj" l19y-zwj "$L19VX" "Bring X123$(printf '\342\200\215')4567 to the desk."
+l19y_assert "L19y-feff" l19y-feff "$L19VX" "Bring X123$(printf '\357\273\277')4567 to the desk."
+l19y_assert "L19y-shy" l19y-shy "$L19VX" "Bring X123$(printf '\302\255')4567 to the desk."
+l19y_assert "L19y-fw" l19y-fw "$L19VD" "Ref $(printf '\357\274\221\357\274\222\357\274\223\357\274\224\357\274\225\357\274\226\357\274\227\357\274\230') on file."
+l19y_assert "L19y-arabic" l19y-arabic "$L19VD" "Ref $(printf '\331\241\331\242\331\243\331\244\331\245\331\246\331\247\331\250') on file."
+
+# ── L19z — a merge chain is read one hop and a longer one is named (S7-07): a traveller whose person reference
+# is merged into a record that is itself merged on passes with a NOTE naming a merge chain longer than one hop,
+# and the one-hop control, whose target's value a bound file carries, stops.
+l19z_assert() { # <id> <1|2>
+  local d st="${_GUARD_PERSON_STORE:-people}" mk="${_GUARD_MERGE_KEY:-merged-into}"; d="$(l19_trip "l19z-hop$2")"
+  l19_put "$d" "$L19_PROFILE" '---' "${_GUARD_REF_KEY:-person}: psn-a9b9" '---' '# Rowan' '' '- Interests: markets'
+  if [ "$2" = 2 ]; then
+    l19_put "$d" "$st/psn-a9b9.md" '---' "$mk: psn-a9ba" '---' '# Rowan'
+    l19_put "$d" "$st/psn-a9ba.md" '---' "$mk: psn-a9bb" '---' '# Rowan'
+  else
+    l19_put "$d" "$st/psn-a9b9.md" '---' "$mk: psn-a9bb" '---' '# Rowan'
+  fi
+  l19_put "$d" "$st/psn-a9bb.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X7654326"
+  l19_put "$d" "$L19B1" '# Trip' '' 'Bring X7654326 to the consulate.'
+  if [ "$2" = 2 ]; then
+    l19_assert "$1" "a person reference whose merge chain runs two hops is named in a NOTE rather than read as clean" "$d" 0 "Source check:|a merge chain longer than one hop" "STOPPED|X7654326"
+  else
+    l19_assert "$1" "a person reference merged one hop is followed: the target's value in a bound file stops, matched exactly" "$d" 1 "SOURCE CHECK STOPPED|${L19S1} value, matched exactly" "X7654326"
+  fi
+}
+for l19c in 1 2; do l19z_assert "L19z-hop$l19c" "$l19c"; done
 
 # ── ARMED-RED controls for L19: each arm under the mutation its design row names reports pass=0 fail=1.
 l19_m_noexact()  { l18_rewrite _build_source_hits 'if (exact_hit(i, nl, ld, lt))' 'if (0)'; }
@@ -16644,7 +16740,29 @@ md_flips require_clean_build_sources "L19s-two" l19s_assert "L19s-two" two
 md_flips refuse_group_only_render "L19s-three" l19s_assert "L19s-three" three
 for l19c in email phone docno; do md_flips require_clean_build_sources "L19t-$l19c" l19t_assert "L19t-$l19c" "$l19c"; done
 md_flips require_clean_build_sources "L19u" l19u_assert "L19u"
-for l19c in date none interposed midline; do md_flips require_clean_build_sources "L19v-$l19c" l19v_assert "L19v-$l19c" "$l19c"; done
+for l19c in date none interposed midline emdash dash sep3 comma harvest; do md_flips require_clean_build_sources "L19v-$l19c" l19v_assert "L19v-$l19c" "$l19c"; done
+for l19c in stop-242:'07 2019 55':stop stop-422:'2031 55 12':stop stop-224:'55 12 2031':stop stop-24:'19 2031':stop \
+            skip-ymd:2031-03-15:skip skip-dmy:15/03/2031:skip skip-dmy-dot:31.12.2031:skip skip-mdy:03/15/2031:skip \
+            skip-ym:2031-07:skip skip-ym-1999:1999-12:skip; do
+  l19n_="${l19c%%:*}"; l19r_="${l19c#*:}"; l19v_="${l19r_%:*}"; l19k_="${l19r_##*:}"
+  md_flips require_clean_build_sources "L19w-$l19n_" l19w_assert "L19w-$l19n_" "l19w-$l19n_" "$l19v_" "$l19k_"
+done
+md_flips require_clean_build_sources "L19w-skip-stamp" l19w_stamp_assert "L19w-skip-stamp"
+md_flips require_clean_build_sources "L19x-box" l19x_assert "L19x-box" l19x-box "- [ ] ${L19S1}: Ruritania" "an open task box"
+md_flips require_clean_build_sources "L19x-box-x" l19x_assert "L19x-box-x" l19x-box-x "- [x] ${L19S1}: Ruritania" "a checked task box"
+md_flips require_clean_build_sources "L19x-box-star" l19x_assert "L19x-box-star" l19x-box-star "* [ ] ${L19S1}: Ruritania" "a task box under an asterisk bullet"
+md_flips require_clean_build_sources "L19x-nbsp" l19x_assert "L19x-nbsp" l19x-nbsp "${L19S1}${L19NB}: Ruritania" "a non-breaking space before its colon"
+md_flips require_clean_build_sources "L19x-fwcolon" l19x_assert "L19x-fwcolon" l19x-fwcolon "${L19S1}${L19FC} Ruritania" "a full-width colon"
+md_flips require_clean_build_sources "L19x-zw" l19x_assert "L19x-zw" l19x-zw "${L19S1}${L19ZW}: Ruritania" "a zero-width space before its colon"
+md_flips require_clean_build_sources "L19x-list-quote" l19x_assert "L19x-list-quote" l19x-list-quote "- > ${L19S1}: Ruritania" "a list marker ahead of a quote marker"
+md_flips require_clean_build_sources "L19y-zwsp" l19y_assert "L19y-zwsp" l19y-zwsp "$L19VX" "Bring X123$(printf '\342\200\213')4567 to the desk."
+md_flips require_clean_build_sources "L19y-zwnj" l19y_assert "L19y-zwnj" l19y-zwnj "$L19VX" "Bring X123$(printf '\342\200\214')4567 to the desk."
+md_flips require_clean_build_sources "L19y-zwj" l19y_assert "L19y-zwj" l19y-zwj "$L19VX" "Bring X123$(printf '\342\200\215')4567 to the desk."
+md_flips require_clean_build_sources "L19y-feff" l19y_assert "L19y-feff" l19y-feff "$L19VX" "Bring X123$(printf '\357\273\277')4567 to the desk."
+md_flips require_clean_build_sources "L19y-shy" l19y_assert "L19y-shy" l19y-shy "$L19VX" "Bring X123$(printf '\302\255')4567 to the desk."
+md_flips require_clean_build_sources "L19y-fw" l19y_assert "L19y-fw" l19y-fw "$L19VD" "Ref $(printf '\357\274\221\357\274\222\357\274\223\357\274\224\357\274\225\357\274\226\357\274\227\357\274\230') on file."
+md_flips require_clean_build_sources "L19y-arabic" l19y_assert "L19y-arabic" l19y-arabic "$L19VD" "Ref $(printf '\331\241\331\242\331\243\331\244\331\245\331\246\331\247\331\250') on file."
+for l19c in 1 2; do md_flips require_clean_build_sources "L19z-hop$l19c" l19z_assert "L19z-hop$l19c" "$l19c"; done
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # I6 — list reports build-to-published: whether the page as last pushed is the newest local build, by content
