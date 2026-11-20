@@ -33,7 +33,7 @@ Three things follow, each met in the tree:
 - **A label can hold a separator.** The test-conversation format separates the fields a turn puts with
   commas, so `People dynamics › Solo, I'd` cannot be written as designed. Milestone 61 met this at
   Stage 6 (#2201, finding F-1) and quoted that name as a stopgap.
-- **One label is carried by two rows.** At `fe637d8`, `Applies to` is the label of a `Needs` row and
+- **A label can be shared between rows.** At `fe637d8`, `Applies to` is the label of a `Needs` row and
   of a `Hard Constraints` row, which differ only by section.
 
 A profile already written does not say which version of its form it came from: no tracked example
@@ -246,8 +246,8 @@ Decision 7 does not rewrite decision records.
 
 **The reach, measured.** Measured by what it moves, the build this decision opens covers:
 
-- 796 field references in 61 conversation files and group `CF`'s grammar;
-- 38 declaration rows and the two prose readers;
+- 796 field references in 61 conversation files at `fe637d8`, and group `CF`'s grammar;
+- 38 declaration rows at `fe637d8`, and the prose readers of that record;
 - the readers of written profiles;
 - the registry itself.
 
@@ -261,8 +261,9 @@ slices are written on #2211, because an Accepted record carries no schedule (`re
   grammar, and the operator's confirmation of Decision 4's ranking, of the guarded-label consequence
   and of where the build's slices are written: the Stage 4 and Stage 5 decision records on the release's
   planning sub-task, #2376, and its scope-lock record.
-- [ADR-023](ADR-023-interviewer-authored-home-and-form-contract.md) D2.1 (the form's shape), D2.4
-  (rejected option (b)), D2.6 question 3 (the join), D6.1 (the row a new label costs).
+- [ADR-023](ADR-023-interviewer-authored-home-and-form-contract.md): D2.1 on the form's shape, D2.4 on
+  its rejected option (b), D2.6 on the join a bullet makes to its row, and D6.1 on what a new label
+  costs.
 - [ADR-030](ADR-030-what-the-private-site-may-show.md) § *Decision* 2, and its amendment of
   2026-10-08, which added the `private-site-field-declaration` fence.
 - `reference/data-architecture.md` §§ 2–3, the entity model and its identity rule.
