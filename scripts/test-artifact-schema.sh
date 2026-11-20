@@ -23464,6 +23464,45 @@ EOF
   printf 'COUNT\t%s\n' "$dcs_n"
 }
 
+# dc_census <home-row> <file>... — DC7's reading, the census. The home row is written to a file
+# under $WORK/dc and passed FIRST, split from the population BY FILENAME — an awk -v value is never
+# a comparison input here — and its trimmed cells are the home LABELS, read on every run. A PIPE ROW
+# is any line whose first non-blank character is `|`, fenced or not, indented or not; its leading
+# whitespace is trimmed before its cells are split. A pipe row is a MEMBER when more than half the
+# home labels' count of its trimmed cells exactly equal a home label (2k > n), so the threshold moves
+# with the home and no number is spelled here. A member is SAME when the row, trimmed at both ends,
+# is byte-equal to the home row, and DIFF otherwise. One TAB record per member,
+#   MEMBER <file> <line> <k> SAME|DIFF <row>
+# then ONE closing record, COUNT <rows-scanned> <members>, so "no member" is told from "did not
+# finish". A statement is found here by its ROW, the property DC1 deliberately does not use, so a
+# statement under a heading DC1 cannot see is reached here.
+dc_census() {
+  local dcc_row="$1" dcc_hf="$WORK/dc/census-home.txt"
+  shift
+  mkdir -p "$WORK/dc"
+  printf '%s\n' "$dcc_row" > "$dcc_hf"
+  awk -F'|' -v HOMEFILE="$dcc_hf" '
+    function trim(x) { sub(/^[ \t]+/, "", x); sub(/[ \t]+$/, "", x); return x }
+    FILENAME == HOMEFILE {
+      home = trim($0)
+      for (i = 2; i < NF; i++) { c = trim($i); if (c != "" && !(c in lab)) { lab[c] = 1; nl++ } }
+      next
+    }
+    {
+      t = $0; sub(/^[ \t]+/, "", t)
+      if (substr(t, 1, 1) != "|") next
+      rows++
+      m = split(t, rc, "|"); k = 0
+      for (i = 2; i <= m; i++) { c = trim(rc[i]); if (c in lab) k++ }
+      if (nl > 0 && 2 * k > nl) {
+        members++
+        printf "MEMBER\t%s\t%d\t%d\t%s\t%s\n", FILENAME, FNR, k, (trim(t) == home ? "SAME" : "DIFF"), trim(t)
+      }
+    }
+    END { printf "COUNT\t%d\t%d\n", rows + 0, members + 0 }
+  ' "$dcc_hf" "$@"
+}
+
 # dc_instances <home-row> <root> <path-list> — DC2's reading. <path-list> is one path per
 # line, each relative to <root>. One TAB record per instance:
 #   SAME   <path> <line>
@@ -23584,6 +23623,42 @@ EOF
       $1 == "UNREAD" { printf "      %s -> not readable\n", $2 }' <<<"$DC_IN"
   else
     PASS "DC2: all $DC_NSEL tracked instance(s) of \`$DC_ART\` — $(printf '%s' "$DC_SEL" | tr '\n' ' ') — carry exactly one heading leading with '$DC_SEG', and the first pipe row under it is byte-identical to the home row at ${DC_DOC#"$ROOT/"} line $DC_HLINE. The selection is the class's own, so a tracked instance added later is graded with no edit here"
+  fi
+
+  # ── DC8 — MUST FIRE. A statement DC1 cannot see: a copy of a tracked file, under $WORK/dc, given
+  # a heading that does NOT lead with the section's name and, under it, the home row with its first
+  # two cells exchanged. DC7's own function over that copy alone must render one FAIL and no PASS,
+  # and the census must read exactly one DIFF member there; the same copy through DC1's own function
+  # must report no DIFF, which shows the plant sits exactly where DC1 is blind.
+  DC8_FX="$WORK/dc/dc8-statement-under-another-heading.md"
+  mkdir -p "$WORK/dc"
+  cp "$ROOT/README.md" "$DC8_FX" 2>/dev/null || : > "$DC8_FX"
+  DC8_ROW="$(awk -F'|' '{ t = $2; $2 = $3; $3 = t; print }' OFS='|' <<<"$DC_HROW")"
+  printf '\n## Coverage of what each traveller wanted\n\n%s\n' "$DC8_ROW" >> "$DC8_FX"
+  DC8_CEN="$(dc_census "$DC_HROW" "$DC8_FX")"
+  DC8_NDIFF="$(dc_count "$DC8_CEN" MEMBER)"
+  DC8_DIFF="$(awk -F'\t' '$1 == "MEMBER" && $5 == "DIFF" { n++ } END { print n + 0 }' <<<"$DC8_CEN")"
+  DC8_DC1="$(dc_count "$(dc_statements "$DC_HROW" "$DC_DOC" "$DC_HHEAD" "$DC8_FX")" DIFF)"
+  DC8_PR="$(md_probe zz_dc8_no_subject dc7_assert 'DC7' "$DC_HROW" "$DC8_FX")"
+  if [ "$DC8_ROW" != "$DC_HROW" ] && [ "$DC8_DIFF" -eq 1 ] && [ "$DC8_DC1" -eq 0 ] && [ "$DC8_PR" = "0 1" ]; then
+    PASS "DC8: MUST FIRE — the home row with its first two cells exchanged, under a heading that does not lead with '$DC_SEG', is a census member that is not equal: DC7's function over that copy renders one FAIL and no PASS, while DC1's function over the same copy reports no DIFF. So the census reaches the statement DC1 cannot see"
+  else
+    FAIL "DC8: CONTROL on DC7 did not fire as owed — over the planted copy the census read $DC8_DIFF DIFF member(s) of $DC8_NDIFF, DC1's function reported $DC8_DC1 DIFF, and DC7's function rendered [pass fail] = [$DC8_PR], where one DIFF, no DC1 DIFF and [0 1] are owed"
+  fi
+
+  # ── DC9 — MUST NOT FIRE. Near misses: a pipe row carrying one home label and one carrying two, of
+  # the home's labels, are below the majority, so the census reads neither as a member.
+  DC9_FX="$WORK/dc/dc9-near-misses.md"
+  DC9_L1="$(awk -F'|' '{ print $2 }' <<<"$DC_HROW" | sed 's/^ *//; s/ *$//')"
+  DC9_L2="$(awk -F'|' '{ print $3 }' <<<"$DC_HROW" | sed 's/^ *//; s/ *$//')"
+  printf '# Near misses\n\n| %s | Need (category) | Notes |\n| %s | %s | Notes |\n' "$DC9_L1" "$DC9_L1" "$DC9_L2" > "$DC9_FX"
+  DC9_CEN="$(dc_census "$DC_HROW" "$DC9_FX")"
+  DC9_ROWS="$(awk -F'\t' '$1 == "COUNT" { print $2 + 0 }' <<<"$DC9_CEN")"
+  DC9_MEM="$(dc_count "$DC9_CEN" MEMBER)"
+  if [ "${DC9_ROWS:-0}" -eq 2 ] && [ "$DC9_MEM" -eq 0 ]; then
+    PASS "DC9: MUST NOT FIRE — two pipe rows carrying one and two of the home row's labels are read by the census (2 rows) and neither is a member: below the majority, a row sharing vocabulary is not a statement"
+  else
+    FAIL "DC9: specificity failed — over two near-miss rows the census read ${DC9_ROWS:-0} row(s) and $DC9_MEM member(s), where 2 rows and no member are owed. A census that admits a row sharing one or two labels reads unrelated tables as statements"
   fi
 
   # ── DC3 — MUST FIRE. The control the gap asks for: a copy of the first selected instance
