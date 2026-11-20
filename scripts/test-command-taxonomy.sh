@@ -4596,12 +4596,17 @@ gen_cmd() {  # gen_cmd <dir> <tuple> <defect>
           # ALONE: every other invoking region keeps its conforming line, and the world
           # carries exactly one defect. badflagyes is the form F2 must stay silent on — the
           # pages-only flag is present, so the only thing wrong with it is the flag F3 grades.
-          badflagyes|badflagy|badflagplain)
+          # wrapflag / wrapmidword — the update invocation WRAPPED with a trailing backslash, the
+          # forbidden flag on the continuation line: whole in wrapflag, and in wrapmidword split
+          # mid-word, so only a join that inserts nothing between the halves reads the flag.
+          badflagyes|badflagy|badflagplain|wrapflag|wrapmidword)
             if [ "${IDS[$i]}" = 'update' ]; then
               case "$defect" in
                 badflagyes)   printf -- '```\n%s unpublish trips/x --disable-pages-only --yes\n```\n\n' "$SCRIPT_REL" ;;
                 badflagy)     printf -- '```\n%s update trips/x -y\n```\n\n' "$SCRIPT_REL" ;;
                 badflagplain) printf -- '```\n%s update trips/x --plaintext\n```\n\n' "$SCRIPT_REL" ;;
+                wrapflag)     printf -- '```\n%s update trips/x \\\n  --yes\n```\n\n' "$SCRIPT_REL" ;;
+                wrapmidword)  printf -- '```\n%s update trips/x --pass\\\nphrase secret\n```\n\n' "$SCRIPT_REL" ;;
               esac
             else
               printf -- '```\n%s update trips/x\n```\n\n' "$SCRIPT_REL"
@@ -4676,6 +4681,16 @@ gen_cmd() {  # gen_cmd <dir> <tuple> <defect>
     # exportplain — F4's OTHER alternative: the override exported, with no `=` anywhere on the
     # line, so an arm over the assignment form alone would not see it. One file only.
     if [ "$defect" = 'exportplain' ] && [ "$name" = 'trip' ]; then printf -- '```\nexport ALLOW_PLAINTEXT\n```\n\n'; fi
+    # colonassign / plusassign / printfv — three more ways a shell line SETS the override, each
+    # assignment syntax and none spelled `ALLOW_PLAINTEXT=`: the default-assigning expansion, the
+    # append assignment and printf -v. One file only, as exportplain is.
+    if [ "$name" = 'trip' ]; then
+      case "$defect" in
+        colonassign) printf -- '```\n: "${ALLOW_PLAINTEXT:=1}"\n```\n\n' ;;
+        plusassign)  printf -- '```\nALLOW_PLAINTEXT+=1\n```\n\n' ;;
+        printfv)     printf -- '```\nprintf -v ALLOW_PLAINTEXT %%s 1\n```\n\n' ;;
+      esac
+    fi
     if [ "$defect" = 'varmention' ]; then printf -- 'SCRIPT=%s\n\n' "$SCRIPT_REL"; fi
   } > "$f"
 
@@ -6352,6 +6367,14 @@ ctl GF3y F3 "the --yes alternative, on an unpublish that DOES carry the pages-on
 ctl GF3s F3 "the -y alternative — the short spelling of the same flag" ok badflagy 'grep -qxF -- "${SCRIPT_REL} update trips/x -y" "$WORK/GF3s/skills/trip-publish/SKILL.md"'
 ctl GF3p F3 "the --plaintext alternative on a publish-script invocation" ok badflagplain 'grep -qxF -- "${SCRIPT_REL} update trips/x --plaintext" "$WORK/GF3p/skills/trip-publish/SKILL.md"'
 ctl GF4x F4 "the override EXPORTED with no assignment on the line — the second form F4 fails" ok exportplain 'grep -qx "export ALLOW_PLAINTEXT" "$WORK/GF4x/skills/trip/SKILL.md"'
+# GF3w and GF3wm are the arms for an invocation WRAPPED with a trailing backslash, which the shell
+# reads as one line; GF3wm splits the flag mid-word, so a join that inserts a space misses it.
+# GF4d, GF4p and GF4v are one arm per further assignment form F4 reads.
+ctl GF3w  F3 "a forbidden flag on the continuation line of a fenced invocation wrapped with a trailing backslash" ok wrapflag 'grep -qxF -- "${SCRIPT_REL} update trips/x \\" "$WORK/GF3w/skills/trip-publish/SKILL.md" && grep -qxF -- "  --yes" "$WORK/GF3w/skills/trip-publish/SKILL.md"'
+ctl GF3wm F3 "a forbidden flag split mid-word across a trailing-backslash continuation — the shell joins the halves with nothing between them" ok wrapmidword 'grep -qxF -- "${SCRIPT_REL} update trips/x --pass\\" "$WORK/GF3wm/skills/trip-publish/SKILL.md" && grep -qxF -- "phrase secret" "$WORK/GF3wm/skills/trip-publish/SKILL.md"'
+ctl GF4d F4 "the override SET by a default-assigning expansion" ok colonassign 'grep -qxF ": \"\${ALLOW_PLAINTEXT:=1}\"" "$WORK/GF4d/skills/trip/SKILL.md"'
+ctl GF4p F4 "the override SET by an append assignment" ok plusassign 'grep -qxF "ALLOW_PLAINTEXT+=1" "$WORK/GF4p/skills/trip/SKILL.md"'
+ctl GF4v F4 "the override SET through printf -v" ok printfv 'grep -qxF "printf -v ALLOW_PLAINTEXT %s 1" "$WORK/GF4v/skills/trip/SKILL.md"'
 ctl GF3e F3 "a forbidden flag on an invocation rendered as a WHOLE-LINE CODE SPAN at fence depth 0 — the evidence-entry rendering is use, like a fenced line" ok spaninv 'grep -qxF -- "${BT}${SCRIPT_REL} update trips/x --yes${BT}" "$WORK/GF3e/skills/trip-publish/SKILL.md"'
 ctl GF3c F3 "a forbidden flag on an invocation fenced in a file BUNDLED beside a verb file" ok flagconduct 'grep -qxF -- "${SCRIPT_REL} update trips/x --yes" "$WORK/GF3c/skills/trip-record/interview-conduct.md"'
 ctl GF4c F4 "the plaintext override SET in a file bundled beside a verb file" ok allowconduct 'grep -qxF "ALLOW_PLAINTEXT=1 x" "$WORK/GF4c/skills/trip-record/interview-conduct.md"'
