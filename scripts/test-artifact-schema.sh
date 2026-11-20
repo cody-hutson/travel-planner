@@ -8097,6 +8097,27 @@ st_cf_clean_graded() {
     NF && !($1 in bad) { print FNR; exit }' <(printf '%s\n' "$ST_CF_LIVE") <(printf '%s\n' "$ST_CF_GR")
 }
 
+# st_cf_src_block <first-line> — this file's ($SELF) own lines from the first line equal to <first-line>
+# through every line straight after it that assigns an ST_CF_ variable; nothing when <first-line> is not
+# found. It lets a control re-run a member's retarget lines as the loop runs them, rather than a copy.
+st_cf_src_block() {
+  awk -v want="$1" 'st == 0 && $0 == want { st = 1; print; next } st == 1 { if ($0 ~ /^ST_CF_[A-Z0-9_]+=/) { print; next } exit }' "$SELF"
+}
+
+# st_cf_retarget_drill <block> <first-line> <codes> <var>… — a member's retarget block (st_cf_src_block)
+# re-run in a subshell over its live reading with one stubbed finding of each of <codes> naming
+# <first-line>, the first candidate bullet; prints "<var>=<value>" for each <var> the block then holds.
+# The stub carries the "at line <n>" a bullet-specific finding carries, which is all the retarget reads.
+st_cf_retarget_drill() {
+  ( rt_block="$1"; rt_first="$2"; rt_codes="$3"; shift 3
+    for rt_c in $rt_codes; do
+      ST_CF_LIVE="$ST_CF_LIVE
+$(printf '%s\t%s at line %s' "$rt_c" 'ZZ-ST-CF-RETARGET-STUB' "$rt_first")"
+    done
+    eval "$rt_block" >/dev/null 2>&1
+    for rt_v in "$@"; do printf '%s=%s\n' "$rt_v" "${!rt_v:-}"; done )
+}
+
 # st_cf_clean0_drill <fixture> <code> — st_cf_mustfire driven against a live reading holding only
 # its DENOM record, so the code's live count is zero by construction whatever the form's own state.
 # Run only inside st_cf_vprobe.
@@ -8653,6 +8674,21 @@ ST_CF_GDL="$(awk -F'\t' '$6 == "default" { print $1; exit }' <<<"$ST_CF_GR")"
 ST_CF_GDB="$(awk -F'\t' '$6 == "default" { print $2; exit }' <<<"$ST_CF_GR")"
 # the first graded bullet that is the ONLY graded bullet reaching its field-table row
 ST_CF_GUL="$(awk -F'\t' '{ L[NR] = $1; R[NR] = $4; c[$4]++ } END { for (i = 1; i <= NR; i++) if (c[R[i]] == 1) { print L[i]; exit } }' <<<"$ST_CF_GR")"
+# CTL-ST-CF-RETARGET-V2 — MUST FIRE: the version-2 retarget, graded as CTL-ST-CF-RETARGET grades the
+# version-1 one: this member's own retarget lines above, read from this file and re-run with one stubbed
+# Q3, Q5 and Q6 finding naming the first graded bullet, must aim all three graded-bullet targets at the
+# second graded bullet, the first no live finding of their code names.
+ST_CF_RV1="$(st_cf_gr 1 1)"; ST_CF_RV2="$(st_cf_gr 2 1)"
+ST_CF_RVB="$(st_cf_src_block '# The retarget, per code: the first graded bullet no live finding of that code names.')"
+ST_CF_RVGOT=""; [ -z "$ST_CF_RVB" ] || ST_CF_RVGOT="$(st_cf_retarget_drill "$ST_CF_RVB" "$ST_CF_RV1" 'Q3 Q5 Q6' ST_CF_G3L ST_CF_G5L ST_CF_G6L | tr '\n' ' ')"
+ST_CF_RVWANT="ST_CF_G3L=$ST_CF_RV2 ST_CF_G5L=$ST_CF_RV2 ST_CF_G6L=$ST_CF_RV2 "
+if [ -z "$ST_CF_RV2" ]; then
+  FAIL "CTL-ST-CF-RETARGET-V2[$ST_CF_TAG]: $ST_CF_REL has fewer than two graded bullets, so no retarget can move off the first and the version-2 retarget is UNMEASURED on this member"
+elif [ -n "$ST_CF_RVB" ] && [ "$ST_CF_RVGOT" = "$ST_CF_RVWANT" ]; then
+  PASS "CTL-ST-CF-RETARGET-V2[$ST_CF_TAG]: MUST FIRE — this member's own retarget lines, read from this file and re-run with one stubbed Q3, Q5 and Q6 finding naming its first graded bullet (line $ST_CF_RV1), aim all three graded-bullet arms at the next one (line $ST_CF_RV2), the first no live finding of their code names. So on a form already failing the code at its first graded bullet, Q3-UNJOINED-V2, Q3-AMBIG-V2, Q5-BULLET and Q6-V2 measure a site rise elsewhere rather than taking the residual"
+else
+  FAIL "CTL-ST-CF-RETARGET-V2[$ST_CF_TAG]: MUST FIRE — with one stubbed Q3, Q5 and Q6 finding naming the first graded bullet (line $ST_CF_RV1), this member's retarget lines ($(printf '%s\n' "$ST_CF_RVB" | grep -c '^ST_CF_') read) set [${ST_CF_RVGOT% }] where [${ST_CF_RVWANT% }] is owed. A target left on the first graded bullet aims the arm at the live finding's own site, so on a form already failing the code there the arm records a residual instead of measuring; no lines read means the block's opening comment has moved"
+fi
 ST_CF_FA="$(st_cf_fence_at "$ST_CF_FILE")"; ST_CF_FO="${ST_CF_FA%% *}"; ST_CF_FC="${ST_CF_FA##* }"
 ST_CF_KA="$(st_cf_key_line "$ST_CF_FILE" "$ST_CF_V2_KEY")"
 ST_CF_KF="$(st_cf_key_line "$ST_CF_FILE" form)"
@@ -9000,6 +9036,25 @@ ST_CF_Q6L="$(st_cf_clean_bullet Q6)"; ST_CF_Q6L="${ST_CF_Q6L:-$ST_CF_B1L}"
 ST_CF_MKL="$(awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "BULLET") b[$2] = 1; next } (FNR in b) && ($0 ~ /:\*\* \[(closed|open): /) { print FNR; exit }' <(printf '%s\n' "$ST_CF_SURF") "$ST_CF_FILE")"
 ST_CF_H1L="$(awk -v bl="$ST_CF_BL" 'FNR < bl + 0 && /^## / { print FNR; exit }' "$ST_CF_FILE")"
 ST_CF_BLIT="$(awk -v n="$ST_CF_BL" 'FNR == n + 0 { print; exit }' "$ST_CF_FILE")"
+
+# CTL-ST-CF-RETARGET — MUST FIRE: the retarget, graded through this member's own retarget lines above,
+# read from this file and re-run with one stubbed Q3 and one stubbed Q6 finding naming the first labelled
+# bullet. Both bullet-targeted targets must then name the SECOND bullet, the first no live finding of
+# their code names. On a conforming form the retarget answers the first bullet whether or not it works,
+# so only a form already failing the code there can show it; the stub is that form, at no cost. Without
+# the retarget, Q6-DOUBLE on such a form lands on the live finding's own site and takes the residual —
+# measured on the S11-B1 replay: CTL-ST-CF-UNMEASURED[person-intake/Q6] in place of its PASS.
+ST_CF_RT1="$(st_field BULLET 1 2 "$ST_CF_SURF")"; ST_CF_RT2="$(st_field BULLET 2 2 "$ST_CF_SURF")"
+ST_CF_RTB="$(st_cf_src_block '# The retarget, per code: the first labelled bullet no live finding of that code names.')"
+ST_CF_RTGOT=""; [ -z "$ST_CF_RTB" ] || ST_CF_RTGOT="$(st_cf_retarget_drill "$ST_CF_RTB" "$ST_CF_RT1" 'Q3 Q6' ST_CF_Q3L ST_CF_Q6L | tr '\n' ' ')"
+ST_CF_RTWANT="ST_CF_Q3L=$ST_CF_RT2 ST_CF_Q6L=$ST_CF_RT2 "
+if [ -z "$ST_CF_RT2" ]; then
+  FAIL "CTL-ST-CF-RETARGET[$ST_CF_TAG]: $ST_CF_REL has fewer than two labelled bullets, so no retarget can move off the first and the retarget is UNMEASURED on this member"
+elif [ -n "$ST_CF_RTB" ] && [ "$ST_CF_RTGOT" = "$ST_CF_RTWANT" ]; then
+  PASS "CTL-ST-CF-RETARGET[$ST_CF_TAG]: MUST FIRE — this member's own retarget lines, read from this file and re-run with one stubbed Q3 and one stubbed Q6 finding naming its first labelled bullet (line $ST_CF_RT1), aim both bullet-targeted arms at the next one (line $ST_CF_RT2), the first no live finding of their code names. So on a form already failing the code at its first bullet, Q3-UNJOINED, Q3-AMBIG and the Q6 arms measure a site rise elsewhere rather than taking the residual"
+else
+  FAIL "CTL-ST-CF-RETARGET[$ST_CF_TAG]: MUST FIRE — with one stubbed Q3 and one stubbed Q6 finding naming the first labelled bullet (line $ST_CF_RT1), this member's retarget lines ($(printf '%s\n' "$ST_CF_RTB" | grep -c '^ST_CF_') read) set [${ST_CF_RTGOT% }] where [${ST_CF_RTWANT% }] is owed. A target left on the first bullet aims the arm at the live finding's own site, so on a form already failing the code there the arm records a residual instead of measuring; no lines read means the block's opening comment has moved"
+fi
 
 # ── Q1: the fence and its keys ──
 ST_CF_FX="$(st_cf_fixture q1-absent)"; st_cf_del_range "$ST_CF_FX" "$ST_CF_FO" "$ST_CF_FC"
