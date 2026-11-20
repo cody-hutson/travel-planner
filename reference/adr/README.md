@@ -246,6 +246,7 @@ so each group stays in number order.
 | [ADR-011](ADR-011-per-traveler-cost-estimation.md) | Per-traveler cost estimation — a new in-model class, and the one field the entry marker admits | Accepted |
 | [ADR-018](ADR-018-cost-estimation-method.md) | Cost estimation method — the commitment axis, the C13 read edge, and ADR-011's three deferred questions | Accepted |
 | [ADR-028](ADR-028-derived-planning-day-block-owners.md) | Owners for the derived planning-day blocks — the trip window to the verb that records its inputs, and each traveller's window to a presence file the reconciler rebuilds | Accepted |
+| [ADR-049](ADR-049-what-a-rebuild-owes.md) | What a rebuild owes — bound 5 read per unit: a unit no surviving input can rebuild is preserved or named before the write, and erasure is the bound's one exception | Proposed |
 
 ### The published site and the publish path
 
