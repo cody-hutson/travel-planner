@@ -196,6 +196,7 @@ record until the change that lands the held one.
 051       ADR-051-a-verb-runs-until-it-asks.md
 052       ADR-052-a-body-ends-where-the-browser-ends-it.md
 053       ADR-053-a-field-keeps-its-key.md
+054       ADR-054-a-roster-row-names-what-its-agent-writes.md
 ```
 
 Records numbered below the register's first row predate it and carry no row. Why a register,
