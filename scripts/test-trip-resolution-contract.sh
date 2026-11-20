@@ -2531,12 +2531,15 @@ fi
 # in file mode, as `LC_ALL=C "$BASH" <child>`, so the shell message link 2 reads is the C locale's.
 # Part 2 asks whether that function is the guard of THIS run: link a reads the shell's actual EXIT
 # trap, captured in the main shell and passed in, because a capture inside a subshell reads empty;
-# link b reads the sentinel at arm time; link c reads this file's text for an exit after every line
-# that sets the sentinel; link d reads the install order — WORK cleared, then the trap, then WORK
-# assigned. Registered with md_flips below, so removing guard_on_exit must turn it.
+# link b reads the sentinel at arm time; link c reads this file's text, outside this arm's own child
+# fixture — opened by a cat <<'MDEXIT…' line, which must be found — for at least one line setting the
+# sentinel, with an exit straight after each. Link c does not see one of several sentinels dropped:
+# the exit that lost it prints ABORT: and exits non-zero at run time, as the guard's header states.
+# Link d reads the install order — WORK cleared, then the trap, then WORK assigned. Registered with
+# md_flips below, so removing guard_on_exit must turn it.
 md_exit_abort_assert() {
   local ea_trap="$1" ea_g="$WORK/md-exit-abort-guarded.sh" ea_c="$WORK/md-exit-abort-complement.sh"
-  local ea_go ea_ge ea_grc ea_co ea_crc ea_sent ea_lc ea_ld ea_want
+  local ea_go ea_ge ea_grc ea_co ea_crc ea_sent ea_lc ea_ln ea_lb ea_ls ea_ld ea_want
   {
     printf '%s\n' 'set -uo pipefail' 'unset WORK' 'pass=0; fail=1'
     declare -f guard_on_exit
@@ -2555,7 +2558,12 @@ MDEXITCHILD
   ea_co="$(LC_ALL=C "$BASH" "$ea_c" 2>&1)"; ea_crc=$?
   ea_want="trap -- 'guard_on_exit' EXIT"
   ea_sent="${GUARD_REACHED_END:-unset}"
-  ea_lc="$(awk '/^[[:space:]]*GUARD_REACHED_END=1[[:space:]]*$/ { n++; if ((getline nx) <= 0 || nx !~ /^[[:space:]]*exit([[:space:]]|$)/) bad++ } END { print (n + 0 > 0 && bad + 0 == 0) ? "ok " n : "bad " n + 0 " " bad + 0 }' "$SELF")"
+  ea_lc="$(awk -v q="'" '
+    sk != "" { if ($0 == sk) sk = ""; next }
+    $0 ~ ("^[[:space:]]*cat <<" q "MDEXIT[A-Z]+" q "[[:space:]]*$") { sk = $0; sub("^[^" q "]*" q, "", sk); sub(q ".*$", "", sk); sp++; next }
+    /^[[:space:]]*GUARD_REACHED_END=1[[:space:]]*$/ { n++; if ((getline nx) <= 0 || nx !~ /^[[:space:]]*exit([[:space:]]|$)/) bad++ }
+    END { print n + 0, bad + 0, sp + 0 }' "$SELF")"
+  read -r ea_ln ea_lb ea_ls <<<"$ea_lc"
   ea_ld="$(awk '!w && $0 == "WORK=\"\"" { w = NR } !t && $0 == "trap guard_on_exit EXIT" { t = NR } !m && index($0, "WORK=\"$(mktemp -d)\"") == 1 { m = NR } END { print (w && t && m && w < t && t < m) ? "ok" : "bad " w + 0 " " t + 0 " " m + 0 }' "$SELF")"
   if grep -q '^Result:' <<<"$ea_go"; then
     FAIL "MD-EXIT-ABORT: the guarded child printed its Result line, so the planted abort did not abort and nothing here was measured"
@@ -2571,12 +2579,14 @@ MDEXITCHILD
     FAIL "MD-EXIT-ABORT: this run's EXIT trap reads [$ea_trap] where [$ea_want] is owed, so the running suite's guard is not guard_on_exit"
   elif [ "$ea_sent" != 0 ]; then
     FAIL "MD-EXIT-ABORT: the completion sentinel reads [$ea_sent] at this arm, before the end of the run, so an abort from here on would read as a completed run"
-  elif [ "${ea_lc%% *}" != ok ]; then
-    FAIL "MD-EXIT-ABORT: this file's text sets the completion sentinel on a line not followed by an exit, or never [$ea_lc] — a sentinel standing without its exit marks a run complete that may still abort"
+  elif [ "$ea_ls" != 1 ]; then
+    FAIL "MD-EXIT-ABORT: this file's text holds [$ea_ls] heredoc span(s) opened by a cat <<'MDEXIT…' line, where this arm's own child fixture alone is owed, so the count of the suite's own sentinel lines cannot leave those fixtures out"
+  elif [ "$ea_ln" -eq 0 ] || [ "$ea_lb" -ne 0 ]; then
+    FAIL "MD-EXIT-ABORT: read outside this arm's own child fixture, this file's text sets the completion sentinel on a line not followed by an exit, or never [$ea_ln line(s), $ea_lb not followed by an exit] — a sentinel standing without its exit marks a run complete that may still abort, and a file that never sets it has no exit a run can complete through. One of several sentinels dropped is not caught here: the exit that lost it prints ABORT: and exits non-zero at run time"
   elif [ "$ea_ld" != ok ]; then
     FAIL "MD-EXIT-ABORT: the install order in this file's text is [$ea_ld] (WORK cleared, trap, WORK assigned, by line) where WORK=\"\" must precede the trap and the trap precede the assignment, so the cleanup could reach a directory inherited from the caller"
   else
-    PASS "MD-EXIT-ABORT: on bash ${BASH_VERSION:-unknown} the guarded child aborted through set -u and exited $ea_grc with an ABORT: line while the complement, with no trap, exited $ea_crc and printed none; this run's EXIT trap is guard_on_exit, the sentinel reads 0 at this arm, every line setting it is followed by an exit (${ea_lc#ok }), and WORK is cleared before the trap is installed and assigned after"
+    PASS "MD-EXIT-ABORT: on bash ${BASH_VERSION:-unknown} the guarded child aborted through set -u and exited $ea_grc with an ABORT: line while the complement, with no trap, exited $ea_crc and printed none; this run's EXIT trap is guard_on_exit, the sentinel reads 0 at this arm, each of the $ea_ln line(s) setting it outside this arm's own child fixture is followed by an exit, and WORK is cleared before the trap is installed and assigned after"
   fi
 }
 md_exit_abort_assert "$(trap -p EXIT)"
