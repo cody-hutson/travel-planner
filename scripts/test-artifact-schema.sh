@@ -378,8 +378,9 @@
 #        reference/data-model.md § `outputs/satisfaction-metrics.md` shape — read from there on
 #        every run and never held here. Every other statement of it, found by SHAPE, and every
 #        tracked C14 instance, found by the class's own selector, is byte-identical to it; an
-#        empty instance selection FAILS. Not graded: a statement removed whole, heading and
-#        table together, leaves the population.
+#        empty instance selection FAILS. A statement under another heading is graded by its
+#        row (DC7), when the row carries a majority of the home labels. Not graded: a statement
+#        removed whole, heading and table together, leaves the population.
 #   PM   a changed profile reaches the recovery behaviours — the fixture's subject, read from the
 #        `profile-replan-fixture` fence in `examples/data-architecture-demo/README.md` and never held
 #        here, as a real one-line difference against the model; § replan's mode test and dispatch
@@ -23331,8 +23332,17 @@ fi
 #
 # ── WHAT IS NOT GRADED, DECLARED RATHER THAN LEFT TO BE FOUND ────────────────────
 # A statement removed WHOLE — heading and table together — leaves the discovered population
-# instead of failing; one that keeps its heading and loses its table does fail. The separator
-# row under the header and any emphasis on a cell are not read at all, which DC6 shows.
+# instead of failing; one that keeps its heading and loses its table does fail. A statement under
+# a heading that does not lead with the section's name IS graded, by DC7's census, when its row
+# carries a majority of the home row's labels as exact cells; the census reads every line whose
+# first non-blank character is a pipe, so an indented statement is reached by the census and not by
+# DC1's shape scan, which reads column-0 rows. NOT graded: a row carrying fewer than a majority of
+# the labels; a label wrapped in markup — emphasis, a code span — because cells are compared as exact
+# text after trimming; and a single-label mention in prose. A KNOWN FALSE-RED MODE, declared: a
+# different table whose header legitimately carries a majority of the home labels (three of five
+# today) is a census member and is not equal, so DC7 FAILs on it; its message names that cause
+# beside drift, and the remedy is to re-label that table. The separator row under the header and any
+# emphasis on a cell are not read by DC1 at all, which DC6 shows.
 #
 # ── THE ARMS ─────────────────────────────────────────────────────────────────────
 #   DC0  the home resolves to exactly one row. Every later arm is withheld when it does not
@@ -23345,8 +23355,13 @@ fi
 #   DC5  MUST FIRE — a statement whose row has its leading cells exchanged
 #   DC6  MUST NOT FIRE — a matching instance dashed and emphasised differently, and a file of
 #        near-misses that carries no statement site
-# Each live arm's reading is a function — dc_home, dc_statements, dc_instances — and DC3 to
-# DC6 re-run those same functions over inputs built on this run: copies under $WORK, and an
+#   DC7  the census: every pipe row, over every tracked markdown file, that carries a majority of
+#        the home row's labels as exact cells equals the home row. Finding no member FAILs — the
+#        home's own row is always one
+#   DC8  MUST FIRE — the home row with its leading cells exchanged, under a heading DC1 cannot see
+#   DC9  MUST NOT FIRE — near-miss rows carrying one and two of the home labels
+# Each live arm's reading is a function — dc_home, dc_statements, dc_instances, dc_census — and
+# DC3 to DC6, DC8 and DC9 re-run those same functions over inputs built on this run: copies under $WORK, and an
 # empty list. The arms are not registered with md_flips: what each grades is a tracked
 # document, which that primitive cannot remove, and DC3 to DC6 are its standing controls. No
 # count is spelled anywhere in this file for this group: the row, the statements and the
@@ -23503,6 +23518,35 @@ dc_census() {
   ' "$dcc_hf" "$@"
 }
 
+# dc7_assert <id> <home-row> <file>... — DC7, the census verdict, exactly one: a chain with one
+# condition and one message per branch. No closing record FAILs; zero rows scanned FAILs (an empty
+# population is a broken probe); zero members FAILs, because the home's own row is always a member,
+# so the reader is broken; any DIFF member FAILs, naming both causes the census cannot tell apart;
+# else PASS.
+dc7_assert() {
+  local id="$1" home="$2" d7_c d7_end d7_rows d7_mem d7_nl d7_files d7_where
+  shift 2
+  d7_c="$(dc_census "$home" "$@")"
+  d7_end="$(dc_count "$d7_c" COUNT)"
+  d7_rows="$(awk -F'\t' '$1 == "COUNT" { print $2 + 0 }' <<<"$d7_c")"
+  d7_mem="$(awk -F'\t' '$1 == "COUNT" { print $3 + 0 }' <<<"$d7_c")"
+  d7_nl="$(awk -F'|' '{ for (i = 2; i < NF; i++) { c = $i; gsub(/^[ \t]+|[ \t]+$/, "", c); if (c != "") n++ } } END { print n + 0 }' <<<"$home")"
+  d7_files="$#"
+  d7_where="$(awk -F'\t' -v r="$ROOT/" '$1 == "MEMBER" && $5 == "SAME" { p = $2; if (index(p, r) == 1) p = substr(p, length(r) + 1); printf "%s%s line %s", (n++ ? ", " : ""), p, $3 }' <<<"$d7_c")"
+  if [ "$d7_end" -ne 1 ]; then
+    FAIL "$id: the census over $d7_files file(s) did not reach its closing record, so an empty member list here would not be agreement"
+  elif [ "${d7_rows:-0}" -eq 0 ]; then
+    FAIL "$id: the census read no pipe row across $d7_files file(s) — an empty population is a broken probe, never agreement"
+  elif [ "${d7_mem:-0}" -eq 0 ]; then
+    FAIL "$id: the census found no row carrying a majority of the home row's $d7_nl label(s) across $d7_rows pipe row(s), so it did not even find the home row itself, which is always a member — the reader is broken"
+  elif [ "$(dc_count "$(awk -F'\t' '$1 == "MEMBER" && $5 == "DIFF"' <<<"$d7_c")" MEMBER)" -ne 0 ]; then
+    FAIL "$id: a pipe row carries a majority of the home row's $d7_nl label(s) as exact cells and does not equal the home row [$home]. Either (a) it is a statement of the declared header that has drifted — restore it to the home row; or (b) it is a different table whose header legitimately shares a majority of the home's labels — re-label that table's columns so it carries at most half of them. The census cannot tell a drifted copy from a different table sharing vocabulary, so it names both:"
+    awk -F'\t' -v r="$ROOT/" '$1 == "MEMBER" && $5 == "DIFF" { p = $2; if (index(p, r) == 1) p = substr(p, length(r) + 1); printf "      %s line %s (%s label(s)) -> [%s]\n", p, $3, $4, $6 }' <<<"$d7_c"
+  else
+    PASS "$id: all $d7_mem pipe row(s) carrying a majority of the home row's $d7_nl label(s), across $d7_files tracked file(s) and $d7_rows pipe row(s) — $d7_where — equal it, one of them the home. Statements found by heading are DC1's; this finds them by row, so a statement under a heading DC1 cannot see is graded too"
+  fi
+}
+
 # dc_instances <home-row> <root> <path-list> — DC2's reading. <path-list> is one path per
 # line, each relative to <root>. One TAB record per instance:
 #   SAME   <path> <line>
@@ -23624,6 +23668,15 @@ EOF
   else
     PASS "DC2: all $DC_NSEL tracked instance(s) of \`$DC_ART\` — $(printf '%s' "$DC_SEL" | tr '\n' ' ') — carry exactly one heading leading with '$DC_SEG', and the first pipe row under it is byte-identical to the home row at ${DC_DOC#"$ROOT/"} line $DC_HLINE. The selection is the class's own, so a tracked instance added later is graded with no edit here"
   fi
+
+  # ── DC7 — the census, over every tracked markdown file: DC1's population and DC2's selection.
+  DC7_ALL=(${DC_FILES[@]+"${DC_FILES[@]}"})
+  while IFS= read -r dcf; do
+    [ -n "$dcf" ] && [ -r "$ROOT/$dcf" ] && DC7_ALL+=("$ROOT/$dcf")
+  done <<EOF
+$DC_SEL
+EOF
+  dc7_assert 'DC7' "$DC_HROW" ${DC7_ALL[@]+"${DC7_ALL[@]}"}
 
   # ── DC8 — MUST FIRE. A statement DC1 cannot see: a copy of a tracked file, under $WORK/dc, given
   # a heading that does NOT lead with the section's name and, under it, the home row with its first
