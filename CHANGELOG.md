@@ -38,12 +38,12 @@ space, or exactly, where a part of a value holds a number of three or more digit
 an email address, a run of five or more digits or a token mixing letters with three or more digits,
 read through zero-width characters and full-width and Arabic-Indic digits. A run of digits whose
 groups form a calendar-valid date is skipped, so a date the plan carries does not stop a publish; a
-number grouped like a date that is no calendar date is matched. It reads the
-traveller files, the traveller model and the referenced person records directly, so a stale or
-missing model neither stops a publish nor hides a value a present one holds. A bound file absent
-from the trip is skipped and named; one present but unreadable stops. A person reference merged
-more than one hop is named, and its second hop is not read. This is the first content
-check the encrypted limb carries; the previous release's entry named it as owed to this milestone.
+number grouped like a date that is no calendar date is matched. It reads the traveller files, the
+traveller model and the referenced person records directly, so a stale or missing model neither
+stops a publish nor hides a value a present one holds. A bound file absent from the trip is skipped
+and named; one present but unreadable stops. A person reference merged more than one hop is named,
+and its second hop is not read. This is the first content check the encrypted limb carries;
+release 0.70.0 named it as owed to this milestone.
 
 **`list` reports `build-to-published` in place of the stale flag.** The column compares the digest
 every push already records with the newest local render, the one `publish` would take, so a rebuild
@@ -54,20 +54,26 @@ its verdicts are the shipped freshness family's, owned by `skills/trip/SKILL.md`
 declared in `skills/trip-publish/SKILL.md` § *list* and registered in
 `reference/channel-and-engagement-model.md` § 2.
 
-**Size fence.** Read with `CH_EMIT=growth ./scripts/test-corpus-hygiene.sh` at 005008a against 0.70.0. `reference/site-layout-spec.md`'s row is re-pinned from 63,987 to 71,892, its size of 65,496 bytes plus its class headroom: the § 3 fence and the § 9.1 reconciliation are declared homes this release adds, and § 3 holds nothing this release owns to move out. Every other row is kept. Beneath their ceilings, `reference/data-architecture.md` grew by 952 bytes to 135,292 of 147,099, `CLAUDE.md` by 998 to 144,868 of 153,381, and `skills/trip-publish/SKILL.md` by 1,847 to 45,265 of 48,711.
+**Size fence.** Read with `CH_EMIT=growth bash scripts/test-corpus-hygiene.sh` at 05f97d9 against
+0.71.0. `reference/site-layout-spec.md`'s row is re-pinned from 63,987 to 71,892: its size of 65,356
+bytes at the re-pin commit 429e71f plus its class headroom, 65,356 × 1.1 rounded up. The § 3 fence and
+the § 9.1 reconciliation are declared homes this release adds, and § 3 holds nothing this release owns
+to move out; the file is 66,307 bytes at 05f97d9, beneath the new ceiling. Every other row is kept.
+Beneath their ceilings, `reference/data-architecture.md` grew by 1,581 bytes to 135,921 of 147,099,
+`CLAUDE.md` by 1,028 to 144,898 of 153,381, and `skills/trip-publish/SKILL.md` by 1,855 to 45,273 of
+48,711.
 
 **What it does not do, stated so a green check is not read as more.** A section a script builds at
 run time — classList, className, concatenation, interpolation, or decoding such as atob,
 decodeURIComponent and String.fromCharCode — is not seen by the refusal; nor is group content
-rendered without its token, which the § 3 render contract binds. The source check
-does not see an ordinary-word value restated without its label, a label mid-line, in a table cell,
-with a word before its colon or with a dash in place of it, a value wrapped or paraphrased, a
-calendar-valid date carried with other words around it, a number joined by a comma or by three
-characters such as ` - `, or a value written in another script's letters, full-width letters or
-digits other than ASCII, full-width and Arabic-Indic; and a trip with no bound file present passes it
-with every one named as absent. `list`
-reads the record a push left on this machine, so a push from elsewhere, a takedown and text outside
-the projection are not seen.
+rendered without its token, which the § 3 render contract binds. The source check does not see an
+ordinary-word value restated without its label, a label mid-line, in a table cell, with a word
+before its colon or with a dash in place of it, a value wrapped or paraphrased, a calendar-valid
+date carried with other words around it, a number joined by a comma or by three characters such as
+` - `, or a value written in another script's letters, full-width letters or digits other than
+ASCII, full-width and Arabic-Indic; and a trip with no bound file present passes it with every one
+named as absent. `list` reads the record a push left on this machine, so a push from elsewhere, a
+takedown and text outside the projection are not seen.
 
 ## [0.71.0] — 2026-11-20 — A form field keeps its key when its label is reworded
 
