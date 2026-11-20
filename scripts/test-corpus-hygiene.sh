@@ -545,6 +545,35 @@ set -uo pipefail
 # C-locale run would not — CI would then enforce a rule an operator's own run did not.
 export LC_ALL=C
 
+# ── THE EXIT GUARD — a run that ends before its last line exits non-zero ─────────
+# Under `set -u`, bash 3.2 ends a script on an unset name inside an arithmetic context — `$(( ))`,
+# a `(( ))` command, `[[ … -eq … ]]`, a substring offset — with the status of the command BEFORE
+# the abort, so a run that stopped mid-group could exit 0 having printed no Result line, and a
+# required check went green over a run that was never graded. guard_on_exit, installed here,
+# immediately after the shell-option lines, closes that: it removes the work directory and, unless
+# GUARD_REACHED_END was set, prints an ABORT: line naming the status at the abort and exits
+# non-zero. It keys on that sentinel and never on `$?`, because `$?` at the abort is the earlier
+# command's and reads 0; an ERR trap was measured not to run on this abort at all. The sentinel is
+# set immediately before each deliberate top-level exit, and that set of exits is the bound: an
+# exit added without the sentinel prints ABORT: and exits non-zero on the path that takes it.
+# WORK="" precedes the trap, so the cleanup only ever reaches this run's own directory and never
+# one inherited from the caller's environment; WORK is assigned its directory below, with no trap
+# of its own. A subshell does not run this trap, so an abort inside `( … )` or `$( … )` ends only
+# that subshell, a separate class. MD-EXIT-ABORT, at the end of group MD, holds the guard and its
+# wiring.
+WORK=""
+GUARD_REACHED_END=0
+guard_on_exit() {
+  local rc=$?
+  [ -n "${WORK:-}" ] && rm -rf "$WORK"
+  if [ "${GUARD_REACHED_END:-0}" != 1 ]; then
+    printf 'ABORT: this run ended before its last line, with status %s at the abort and %s passed, %s failed so far; nothing after the abort ran, so this run is not a result. The shell message above names the line.\n' "$rc" "${pass:-0}" "${fail:-0}"
+    [ "$rc" -ne 0 ] || rc=1
+    exit "$rc"
+  fi
+}
+trap guard_on_exit EXIT
+
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
 # Resolved absolutely and BEFORE anything reads it: group Y reads this file.
@@ -772,7 +801,7 @@ ch_vacuity_rc() {
   return "$rc"
 }
 
-WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
+WORK="$(mktemp -d)"
 ARM_LOG="$WORK/arms";  : > "$ARM_LOG"
 SURF_LOG="$WORK/surf"; : > "$SURF_LOG"
 
@@ -3783,6 +3812,7 @@ if [ "${CH_EMIT:-}" = "census" ] || [ "${CH_EMIT:-}" = "sites" ] || [ "${CH_EMIT
   # gate, and an environment variable that turns a required check green without running it
   # is a bypass however well-intentioned. The status below cannot be mistaken for a pass.
   printf 'NOTE: this was a %s emission, not a test run. Nothing was asserted.\n' "$CH_EMIT" >&2
+  GUARD_REACHED_END=1
   exit 2
 fi
 
@@ -8804,4 +8834,5 @@ if [ "${GUARD_STRICT_SKIPS:-0}" = "1" ]; then
     printf 'STRICT: every skip was declared (%s) — no group vanished silently.\n' "${GUARD_EXPECTED_SKIPS:-none}"
   fi
 fi
+GUARD_REACHED_END=1
 exit "$rc"
