@@ -302,7 +302,9 @@
 #
 # OUT OF SCOPE — SETTINGS OF THE OVERRIDE THAT NEED EVALUATION. F4 reads the override set by
 # an assignment or an append, a default-assigning expansion, printf -v or an export, each on
-# one physical line, and reads a comparison of the variable as a setting, fail-closed. It does
+# one physical line, and reads as a setting, fail-closed, a comparison in which the bare name,
+# unquoted and unbraced, is followed by `=`, `==` or `=~`; a comparison that quotes or braces
+# the name, or uses `!=` or `-eq`, is not read, and is not a setting. It does
 # not read `read`, `mapfile`, a name built by eval or declare -n indirection, nor a setting
 # whose name is on a continuation line (`export \` then the name): each needs evaluation, not
 # a pattern, and the join opens only on a line naming the publish script.
@@ -2199,10 +2201,13 @@ region_of() {
 #
 # F4 READS FOUR FORMS OF SETTING THE OVERRIDE, each assignment syntax, so a line that only names
 # the variable stays a mention: an assignment or an append assignment, a default-assigning
-# expansion, printf -v, and an export. A comparison of the variable is read as a setting too,
-# deliberately — a command file that compares the forbidden variable is itself suspect, and the
-# fail-closed reading is kept rather than narrowed. Arms GF4, GF4p, GF4d, GF4v and GF4x plant one
-# form each.
+# expansion, printf -v, and an export. A comparison in which the bare name, unquoted and
+# unbraced, is followed by `=`, `==` or `=~` is read as a setting too, deliberately — a command
+# file that compares the forbidden variable is itself suspect, and that fail-closed reading is kept
+# rather than narrowed. A comparison that quotes or braces the name, or uses `!=` or `-eq`, is not
+# read: the assignment pattern wants `=` next after the bare name, past any spaces, and such a
+# comparison is not a setting, so no setting escapes through it. Arms GF4, GF4p, GF4d, GF4v and
+# GF4x plant one form each.
 F4_SET_ASSIGN='(^|[^A-Za-z0-9_])ALLOW_PLAINTEXT[[:space:]]*\+?='
 F4_SET_DEFAULT='\$\{ALLOW_PLAINTEXT:?='
 F4_SET_PRINTFV='(^|[^A-Za-z0-9_])printf([[:space:]]+-[^[:space:]]+)*[[:space:]]+-v[[:space:]]*ALLOW_PLAINTEXT([^A-Za-z0-9_]|$)'
