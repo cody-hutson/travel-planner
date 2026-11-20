@@ -8,3 +8,7 @@
 9ad91d7c0d62b7949d48db4feb8f65a9c03dadd7:scripts/test-publish-guard.sh:generic-api-key:7582
 9ad91d7c0d62b7949d48db4feb8f65a9c03dadd7:scripts/test-publish-guard.sh:generic-api-key:7584
 9ad91d7c0d62b7949d48db4feb8f65a9c03dadd7:scripts/test-publish-guard.sh:generic-api-key:7626
+# The key grammar's character set in scripts/test-artifact-schema.sh (group FT, FT8), which the
+# same rule reports as a high-entropy token. It is the letters a-z and the digits 0-9, not a secret;
+# the line now builds the set by brace expansion, so this fingerprint is the commit that first wrote it.
+9bb008a976417b527028500d34c5f039fcb2c542:scripts/test-artifact-schema.sh:generic-api-key:4949
