@@ -8466,6 +8466,34 @@ elif [ "$ST_CF_ADGOT" = "$ST_CF_ADWANT" ]; then
 else
   FAIL "CTL-ST-CF-ADDED: st_cf_added answered '$ST_CF_ADGOT' where '$ST_CF_ADWANT' is owed. The per-site predicate does not grade what the must-fire and must-not-fire arms say it grades"
 fi
+# CTL-ST-CF-MUSTNOTFIRE-SWAP — st_cf_mustnotfire ITSELF, over stubbed evaluator readings at the two real
+# sites CTL-ST-CF-ADDED reads. That control grades st_cf_added; this one grades the arm that consumes it,
+# so a must-not-fire arm whose per-site limb went back to whole-tally equality turns red here, where on a
+# conforming form every real must-not-fire arm reads the same either way. One stub, two cases: a finding
+# moved from the first site to the second, the whole tally equal, must render one FAIL and no PASS; the
+# same finding left where it was must render one PASS and no FAIL. The second case is what makes the
+# first FAIL the site limb's: the stub clears the three guards ahead of that limb (the copy landed, one
+# DENOM record, a graded bullet), and a stub that tripped one would fail both cases.
+st_cf_swap_drill() {   # st_cf_swap_drill <live> <copy> — run only inside st_cf_vprobe
+  local sw_copy="$2"
+  ST_CF_LIVE="$1"; ST_CF_FILE="$WORK/st-cf-swap-live.md"
+  st_cf_violations() { printf '%s\n' "$sw_copy"; }
+  st_cf_mustnotfire 'CTL-ST-CF-MUSTNOTFIRE-SWAP-PROBE' ZZ-ST-CF-SWAP-MEMBER "$WORK/st-cf-swap-copy.md" 1 "a stubbed copy reading"
+}
+printf 'live\n' > "$WORK/st-cf-swap-live.md"; printf 'copy\n' > "$WORK/st-cf-swap-copy.md"
+ST_CF_SWM="$(awk 'NR == 1' <<<"$(st_cf_vprobe st_cf_swap_drill "$ST_CF_ADD0
+$ST_CF_ADR1" "$ST_CF_ADD0
+$ST_CF_ADR2")")"
+ST_CF_SWS="$(awk 'NR == 1' <<<"$(st_cf_vprobe st_cf_swap_drill "$ST_CF_ADD0
+$ST_CF_ADR1" "$ST_CF_ADD0
+$ST_CF_ADR1")")"
+if [ -z "$ST_CF_AD" ]; then
+  FAIL "CTL-ST-CF-MUSTNOTFIRE-SWAP: no code of st_cf_violations has two emission sites with non-empty literal heads, so a finding moved between two sites of one code cannot be built from real prefixes, and the must-not-fire arm's site limb is UNMEASURED"
+elif [ "$ST_CF_SWM" = "0 1 0 0" ] && [ "$ST_CF_SWS" = "1 0 0 0" ]; then
+  PASS "CTL-ST-CF-MUSTNOTFIRE-SWAP: MUST FIRE a FAIL — st_cf_mustnotfire itself, over a stubbed copy reading in which one $ST_CF_ADC finding moved from $ST_CF_ADK1 to $ST_CF_ADK2 with the whole tally equal, renders one FAIL and no PASS, and over the same stub with the finding left at $ST_CF_ADK1 renders one PASS and no FAIL. So the arm decides by site; a whole-tally comparison in its place would pass the moved finding"
+else
+  FAIL "CTL-ST-CF-MUSTNOTFIRE-SWAP: MUST FIRE a FAIL — over stubbed readings at $ST_CF_ADK1 and $ST_CF_ADK2, st_cf_mustnotfire rendered [pass fail vacuous pending] = [$ST_CF_SWM] for a finding moved between them, where [0 1 0 0] is owed, and [$ST_CF_SWS] for the finding left where it was, where [1 0 0 0] is owed. A moved finding that passes means the arm compares whole tallies; a finding left in place that fails means the stub tripped a guard ahead of the site limb, so the first verdict says nothing about sites"
+fi
 ST_CF_COV_PROBE='ZZ-ST-CF-COVERAGE-PROBE'
 ST_CF_COV_PHANTOM='ZZ-ST-CF-PHANTOM-ARM'
 ST_CF_SITE_PROBE='ZZ-ST-CF-SITE-PROBE'
