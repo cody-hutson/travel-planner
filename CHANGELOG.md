@@ -3,6 +3,46 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.71.0] — 2026-11-20 — A form field keeps its key when its label is reworded
+
+Every field the intake forms and the trip context can ask now has a key of its own: a short readable
+name that stays put when the words a person reads are changed. This release records the decision and
+gives every field its key. No reader uses the keys yet; moving the declarations and the test
+conversations onto them is the work of the next milestone, *A label edit touches only the label*.
+
+**Where a field's key lives, and why there.** `ADR-053` records the operator's ruling of 2026-11-13.
+The key is a new last column of the classification table in `reference/data-model.md`
+§ *Field Scope*. It is not on the form, where a person filling it in would see it, and not in the
+form's own declaration, which `ADR-023` keeps flat as fields grow. A form's bullet still finds its row
+by section and label. A reader that names a field to the suite will cite the key, and which readers
+those are is a test, not a list: a name matched against what a person wrote or will read stays on the
+label (the forms, written profiles, the publish guard's selectors, the prompts), and a name a reader
+resolves against the table in a declaration or fixture moves to the key. The record also decides that
+`ADR-030`'s field declaration will be keyed by an amendment, not a new record. It decides that the
+readers of `ADR-030`'s prose accept a field's former labels, so the record is never rewritten when a
+label changes. And it states the couplings a reword must wait for. Above all, every reader of a
+written profile has to accept a former label first, because an answer read as absent drops a need
+silently.
+
+**Every row has a key.** Every row of the classification table carries one: an authored slug in
+lowercase letters and digits joined by hyphens, unique across the whole table, and never re-derived
+from the label. The comma-bearing `Solo, I'd` is `solo`. The two `Applies to` rows are
+`need-applies-to` and `constraint-applies-to`. Beside the table, a declaration holds each reworded
+field's former labels, so an old profile, or a form sent before a reword and returned after it, is
+still read as the field it was. It is empty, because no field has been reworded.
+
+**The suite holds both.** Group FT of `scripts/test-artifact-schema.sh` gains FT8 and FT9, landed
+failing first. FT8 requires every row's last cell to be one code span holding a well-formed key that no other
+row carries, matched with an explicit character set. FT9 requires the former-label declaration
+exactly once, each row naming a key the table carries and reusing no label another field in its
+section carries now or carried before. FT9 renders VACUOUS today and is carried by controls on a
+synthetic table. The pair report and its assertion are renamed `ft_pair_report` and
+`ft_pair_assert`, because "key" now names the column.
+
+**Size fence.** Nothing was re-pinned: all rows were kept. `reference/data-model.md` grew with the
+key column and the former-label declaration, and `reference/adr/README.md` with ADR-053's index row;
+each stays under its row. `ADR-053` is below its class floor and owes no row.
+
 ## [0.70.0] — 2026-11-12 — Travellers are told what the group may see, and no writer of a group page receives a passport
 
 A traveller filling in an intake form is now told who may see what they share, and the hub and
