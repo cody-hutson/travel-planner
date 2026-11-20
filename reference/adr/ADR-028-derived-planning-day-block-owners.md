@@ -634,9 +634,9 @@ change, and no arm ties the reach table to the class enumeration. What moves wit
 the change carries all of it:
 
 - **The accounting is the tally sentence.** The tally group `ER14` grades against the table
-  (`scripts/test-artifact-schema.sh`:7047-7095) moves with the row. The sentence after it — *"Every
-  row but row 29 is a location a copy of the person's data can reach"* — names row 29 alone as the
-  person's own record, which the new row leaves true.
+  (`scripts/test-artifact-schema.sh`:7047-7095) moves with the row. The sentence after it
+  (`skills/trip-record/SKILL.md`:2266) — *"Every row but row 29 is a location a copy of the person's
+  data can reach"* — names row 29 alone as the person's own record, which the new row leaves true.
 - **The row joins Phase A** (`:2298`) **and step 5 of the write order** (`:2286`), beside row 10, and
   step 5 keeps row 10 as its first row reference: `ER12` finds the model's write step by the first
   `row N` in each step (`scripts/test-artifact-schema.sh`:6982-6996, `:7002`).
