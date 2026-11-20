@@ -514,8 +514,9 @@ It replaces the trip window's half of row 4. The per-traveller half leaves the t
   one. That is `ADR-007` § 2 bound 5's *say before writing what will not survive*
   (`reference/adr/ADR-007-command-entry-point.md`:330-337), and `/trip`'s standing clause puts the
   obligation on the verb that dispatches a replacement (`skills/trip/SKILL.md`:193-201, `:928-931`).
-  **The announce is surfaced at every verb that dispatches the rebuild:** `/trip-record travelers`,
-  `/trip-record person`, `/trip plan`, and `/trip replan` when a changed profile triggered it.
+  **The announce is surfaced at every verb that dispatches the rebuild** — at `54586fd`, those verbs
+  were `/trip-record travelers`, `/trip-record person`, `/trip plan`, and `/trip replan` when a changed
+  profile triggered it.
 - **The class-wide question is routed, not decided here.** Read this way, bound 5 reaches every
   `rebuilt-each-synthesis` class a dispatched agent replaces — the traveller model rebuilt in the same
   pass, and the hub's and the validator's rebuilds that `plan` replaces — while the data architecture
@@ -632,10 +633,10 @@ exists. The table's accounting, the Phase A list and the write order take the ro
 change, and no arm ties the reach table to the class enumeration. What moves with the row, named so
 the change carries all of it:
 
-- **The accounting is two sentences, not one.** The tally group `ER14` grades against the table
-  (`scripts/test-artifact-schema.sh`:7047-7095) moves; so does the sentence after it — *"Rows 1–28
-  and row 30 are the locations a copy of the person's data can reach"*
-  (`skills/trip-record/SKILL.md`:2266) — which no arm grades and which the new row makes false.
+- **The accounting is the tally sentence.** The tally group `ER14` grades against the table
+  (`scripts/test-artifact-schema.sh`:7047-7095) moves with the row. The sentence after it — *"Every
+  row but row 29 is a location a copy of the person's data can reach"* — names row 29 alone as the
+  person's own record, which the new row leaves true.
 - **The row joins Phase A** (`:2298`) **and step 5 of the write order** (`:2286`), beside row 10, and
   step 5 keeps row 10 as its first row reference: `ER12` finds the model's write step by the first
   `row N` in each step (`scripts/test-artifact-schema.sh`:6982-6996, `:7002`).
@@ -681,15 +682,15 @@ re-points, and what stays byte-identical:
 | Reader | Re-points | Stays byte-identical |
 |---|---|---|
 | scheduling | the presence pointer (`agents/03-scheduling.md`:39-42); input item 4 (`:314-319`); the Day-key sentence (`:489-491`); the cross-reference inside the model read's first bullet (`:345-347`), which names where the *other* limb comes from | *"two reads, and only these two"* (`:344`), and both reads |
-| transport | input item 3 (`agents/04-transport.md`:188-190); the membership sentence that follows item 7's scope (`:206-210`), below — item 7's bytes change there, its read of the model does not | item 7's read scope, *"for the depth signal and for nothing else"* (`:202-205`) |
+| transport | input item 3 (`agents/04-transport.md`:188-190); the membership sentence that follows item 7's scope (`:206-210`), below — item 7's bytes change there, its read of the model does not | item 7's read scope, *"for the depth signal and for one count, and for nothing else"* (`:202-205`) |
 | hub | the presence read in § *What you read* (`agents/05-hub-planner.md`:1009-1010); the Presence row (`:1108`); step 5 (`:1134`) | *"`outputs/traveler-model.md` is not read into this artifact"* (`:1018-1020`), and the carry bound |
 | validator | the window limb (`agents/06-validator.md`:620-621); the input list gains the file as an appended item, with nothing renumbered | input item 8 (`:842-844`) |
 | data-model § *Presence* | each line of the section that names the per-traveller block — the trip-day set's scope, the window's one-home sentence, the window limb, the partial-day reading, the assumed-window paragraph and the no-presence-data paragraph — edited in place, one physical line each, at equal line count (`ADR-009`'s ordering rule); the no-presence-data paragraph carries the no-entry default below | every rule the section states |
 
 **Transport's membership sentence.** Today it reads *"Stream membership comes from `## Logistics`
-and the `## Group` roster, never from here: …"*. After the re-point it reads *"Stream membership
+and the `## Group` roster, never from here. …"*. After the re-point it reads *"Stream membership
 comes from `## Logistics`, the `## Group` roster and item 3's windows in
-`outputs/traveler-presence.md`, never from here: …"*, and the rest stays verbatim. It changes because
+`outputs/traveler-presence.md`, never from here. …"*, and the rest stays verbatim. It changes because
 `## Logistics` covered item 3 only while the block sat inside it. The `[THIRD-PARTY]` ground still
 holds: *here* is still the model, and its scope is unchanged. The new source cannot drop a real
 passenger — it never carries a `[THIRD-PARTY]` entry and writes no origin, and a roster member with
@@ -863,7 +864,7 @@ label leaves with its block, and the mechanism it named becomes the presence fil
 **Legacy trip files.** A trip file carrying the old per-traveller block keeps an unowned, unread
 block whose names erasure does not reach today. This record does not widen that.
 
-**The rest of the consumer set, named so that the set closes.**
+**The rest of the consumer set at `54586fd`, named so that the set closes there.**
 
 - `reference/replan-protocol.md` reads the trip window's arrival line for the trip's first day
   (`:31-34`). The line and its input are unchanged, so it stays true.
@@ -1091,3 +1092,19 @@ standing. This amendment records that decision and takes none: the `Status:` lin
 supersession, and an inline marker points forward at the clause *"Not widened, on purpose: the
 enrichment row's `Output File` cell"*. The superseded text is retained as decided, so no wording is
 replaced.
+
+**Amendment (2026-11-20, Friday) — five spans re-read at `aee9621`, on the branch that declares the
+presence class; no decision moves.** § *Decision* 12: transport's item 7 now reads *"for the depth
+signal and for one count, and for nothing else"*, and its membership sentence ends *"never from
+here."* ahead of a count clause a later release added. The table quoted *"for the depth signal and
+for nothing else"* and both quotations ended *"never from here: …"*; each quotation is corrected
+where it stands, its locator kept, and what stays byte-identical and what the re-point inserts are
+unchanged. § *Decision* 9: the bullet said the accounting was two sentences and that the new row
+makes *"Rows 1–28 and row 30 are the locations a copy of the person's data can reach"* false. The
+erase table's accounting has since been rewritten, and the new row leaves its successor sentence
+true, so the bullet now says the tally moves and that the sentence after it stays true.
+§ *Decision* 2's list of the verbs that dispatch the rebuild, and § *Consequences*' closing consumer
+set, are scoped to `54586fd`, where each was measured. Later releases added a dispatching verb and
+lines the decisions reach, and the criterion each list instances reaches them unedited. Line
+locators and the numbers rule 15, rule 16 and reach row 31 are not amended: the Baseline paragraph
+scopes every locator to `54586fd`, and § *Decision* has each slice derive its number at its own base.
