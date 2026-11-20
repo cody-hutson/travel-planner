@@ -523,6 +523,84 @@
 # two would hide one behind the other.
 #
 set -uo pipefail
+
+# ── THE EXIT GUARD — a run that ends before its last line exits non-zero ─────────
+# Under `set -u`, bash 3.2 ends a script on an unset name inside an arithmetic context — `$(( ))`,
+# a `(( ))` command, `[[ … -eq … ]]`, a substring offset — with the status of the command BEFORE
+# the abort, so a run that stopped mid-group could exit 0 having printed no Result line, and a
+# required check went green over a run that was never graded. guard_on_exit, installed here,
+# immediately after the shell-option lines, closes that: it removes the work directory and, unless
+# GUARD_REACHED_END was set, prints an ABORT: line naming the status at the abort and exits
+# non-zero. It keys on that sentinel and never on `$?`, because `$?` at the abort is the earlier
+# command's and reads 0; an ERR trap was measured not to run on this abort at all. The sentinel is
+# set immediately before each deliberate top-level exit, and that set of exits is the bound: an
+# exit added without the sentinel prints ABORT: and exits non-zero on the path that takes it.
+# WORK="" precedes the trap, so the cleanup only ever reaches this run's own directory and never
+# one inherited from the caller's environment; WORK is assigned its directory below, with no trap
+# of its own. A subshell does not run this trap, so an abort inside `( … )` or `$( … )` ends only
+# that subshell, a separate class. MD-EXIT-ABORT, at the end of group MD, holds the guard and its
+# wiring.
+#
+# In this suite the guard is also where group RS's ordering invariant is read, so both live in
+# guard_on_exit: the ordering check first, then the completion sentinel.
+WORK=""
+GUARD_REACHED_END=0
+# ── THE EXIT TRAP, AND WHY THE ORDERING INVARIANT IS READ FROM INSIDE IT ─────────
+#
+# Group RS grades emission COVERAGE by reading the emission record, so it has to be the last
+# group to emit: anything emitting after it is invisible to the arms that grade coverage, and
+# the suite exits 0 with a group unseen.
+#
+# RS10 asserts that ordering STATICALLY, over this file's own text — every verdict call site
+# below RS's banner belongs to RS. A static positional reader is the right shape for the edit
+# it is aimed at, and it is defeated by two shapes that emit a verdict without writing one
+# where the reader looks. A COMPOUND FORM puts the call somewhere other than the start of a
+# line, so a reader anchored at `^` never sees it. A HELPER that emits on its caller's behalf
+# — `expect_rc` and everything like it — writes no verdict literal after the banner at all,
+# because the literal lives in the helper's own body, far above. Neither is exotic; both are
+# ordinary style in this file, and a positional check cannot be made to see either without
+# becoming a parser for the language.
+#
+# So the ordering is asserted TWICE, on two different kinds of evidence, and this is the half
+# that does not depend on where a call site is written. At process exit — after every group
+# has run, including any added later by any means — the emission record is compared against
+# the snapshot RS took when it read it. Whatever appended to that record after RS read it is
+# reported here, whatever line shape produced it. The static arm says the FILE is ordered; the
+# trap says the RUN was, which is the claim RS's coverage arms actually rest on.
+#
+# It runs in the trap rather than at the end of the body for the reason the invariant exists:
+# a check written as the last statement is a check the next appended statement displaces. An
+# EXIT trap cannot be appended past.
+RS_ORDER_ARMED=0
+RS_ORDER_SNAPSHOT=""
+guard_on_exit() {
+  local rc_in=$? tail_ids="" x g foreign=""
+  if [ "${RS_ORDER_ARMED:-0}" -eq 1 ]; then
+    # SEEN only ever appends, so the record written after RS read it is the literal suffix.
+    tail_ids="${SEEN#"$RS_ORDER_SNAPSHOT"}"
+    # shellcheck disable=SC2086
+    for x in $tail_ids; do
+      g="${x%%[!A-Z]*}"
+      [ -n "$g" ] || continue
+      [ "$g" = "RS" ] && continue
+      case " $foreign " in *" $g "*) continue ;; esac
+      foreign="$foreign$g "
+    done
+    if [ -n "$foreign" ]; then
+      printf '  \033[1;31mFAIL\033[0m RS-EXIT: group(s) emitted a verdict AFTER group RS read the emission record: %s. RS0, RS1, RS2, RS3 and RS8 graded coverage over a record that did not yet contain them, so this run'"'"'s coverage verdicts are true of the run only up to the point RS read it. This is read AT PROCESS EXIT rather than from this file'"'"'s text, so it fires on an emission whose call site RS10'"'"'s positional reader cannot see — a compound-form call, or a verdict emitted by a helper on its caller'"'"'s behalf. REMEDY: move the group'"'"'s block ABOVE group RS'"'"'s banner.\n' "${foreign% }"
+      [ -n "${WORK:-}" ] && rm -rf "$WORK"
+      exit 1
+    fi
+  fi
+  [ -n "${WORK:-}" ] && rm -rf "$WORK"
+  # THE COMPLETION SENTINEL — read after the ordering check, so that defect is still named first.
+  if [ "${GUARD_REACHED_END:-0}" != 1 ]; then
+    printf 'ABORT: this run ended before its last line, with status %s at the abort and %s passed, %s failed so far; nothing after the abort ran, so this run is not a result. The shell message above names the line.\n' "$rc_in" "${pass:-0}" "${fail:-0}"
+    [ "$rc_in" -ne 0 ] || rc_in=1
+  fi
+  exit "$rc_in"
+}
+trap guard_on_exit EXIT
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
 # Resolved BEFORE the source below, and absolutely: group PF reads this file and the
@@ -642,58 +720,6 @@ md_flips() {   # md_flips <subject-fn> <id> <assertion-fn> [args…]
 VACUOUS() { printf '  \033[1;36mVACUOUS\033[0m %s\n' "$*"; vacuous=$((vacuous+1)); SEEN="$SEEN${*%%:*} "; VACUOUS_IDS="$VACUOUS_IDS${*%%:*} "; }
 
 WORK="$(mktemp -d)"
-
-# ── THE EXIT TRAP, AND WHY THE ORDERING INVARIANT IS READ FROM INSIDE IT ─────────
-#
-# Group RS grades emission COVERAGE by reading the emission record, so it has to be the last
-# group to emit: anything emitting after it is invisible to the arms that grade coverage, and
-# the suite exits 0 with a group unseen.
-#
-# RS10 asserts that ordering STATICALLY, over this file's own text — every verdict call site
-# below RS's banner belongs to RS. A static positional reader is the right shape for the edit
-# it is aimed at, and it is defeated by two shapes that emit a verdict without writing one
-# where the reader looks. A COMPOUND FORM puts the call somewhere other than the start of a
-# line, so a reader anchored at `^` never sees it. A HELPER that emits on its caller's behalf
-# — `expect_rc` and everything like it — writes no verdict literal after the banner at all,
-# because the literal lives in the helper's own body, far above. Neither is exotic; both are
-# ordinary style in this file, and a positional check cannot be made to see either without
-# becoming a parser for the language.
-#
-# So the ordering is asserted TWICE, on two different kinds of evidence, and this is the half
-# that does not depend on where a call site is written. At process exit — after every group
-# has run, including any added later by any means — the emission record is compared against
-# the snapshot RS took when it read it. Whatever appended to that record after RS read it is
-# reported here, whatever line shape produced it. The static arm says the FILE is ordered; the
-# trap says the RUN was, which is the claim RS's coverage arms actually rest on.
-#
-# It runs in the trap rather than at the end of the body for the reason the invariant exists:
-# a check written as the last statement is a check the next appended statement displaces. An
-# EXIT trap cannot be appended past.
-RS_ORDER_ARMED=0
-RS_ORDER_SNAPSHOT=""
-guard_on_exit() {
-  local rc_in=$? tail_ids="" x g foreign=""
-  if [ "$RS_ORDER_ARMED" -eq 1 ]; then
-    # SEEN only ever appends, so the record written after RS read it is the literal suffix.
-    tail_ids="${SEEN#"$RS_ORDER_SNAPSHOT"}"
-    # shellcheck disable=SC2086
-    for x in $tail_ids; do
-      g="${x%%[!A-Z]*}"
-      [ -n "$g" ] || continue
-      [ "$g" = "RS" ] && continue
-      case " $foreign " in *" $g "*) continue ;; esac
-      foreign="$foreign$g "
-    done
-    if [ -n "$foreign" ]; then
-      printf '  \033[1;31mFAIL\033[0m RS-EXIT: group(s) emitted a verdict AFTER group RS read the emission record: %s. RS0, RS1, RS2, RS3 and RS8 graded coverage over a record that did not yet contain them, so this run'"'"'s coverage verdicts are true of the run only up to the point RS read it. This is read AT PROCESS EXIT rather than from this file'"'"'s text, so it fires on an emission whose call site RS10'"'"'s positional reader cannot see — a compound-form call, or a verdict emitted by a helper on its caller'"'"'s behalf. REMEDY: move the group'"'"'s block ABOVE group RS'"'"'s banner.\n' "${foreign% }"
-      rm -rf "$WORK"
-      exit 1
-    fi
-  fi
-  rm -rf "$WORK"
-  exit "$rc_in"
-}
-trap guard_on_exit EXIT
 
 # has_finding <output> <code> — the code appears as a FINDING token, not as a substring of
 # some longer word. A substring test would let A1 match A10 and read as a pass.
@@ -31875,4 +31901,5 @@ if [ "${GUARD_STRICT_SKIPS:-0}" = "1" ]; then
     printf 'STRICT: every skip was declared (%s) — no group vanished silently.\n' "${GUARD_EXPECTED_SKIPS:-none}"
   fi
 fi
+GUARD_REACHED_END=1
 exit "$rc"
