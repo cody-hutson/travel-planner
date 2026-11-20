@@ -79,7 +79,7 @@ answered*, never as an answer. What is answered is exactly what
 - **Passport:** —
 
 Single origin, one booking — both journey fields elect the group, so both bases
-resolve `ASSERTED-SAME` in `trip-context.md` § *Per-Traveler Planning Days*.
+resolve `ASSERTED-SAME` in `outputs/traveler-presence.md`.
 
 **`Passport:` is answered with an em dash on purpose.** It is a **declared
 non-publishable field** — `reference/data-architecture.md` § 5.6 carries a row for

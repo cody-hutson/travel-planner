@@ -7831,17 +7831,18 @@ ST_CF_MD_V2="$(while IFS= read -r st_cf_m; do [ -n "$st_cf_m" ] && [ "$(st_cf_ve
 # counts the lines of the form opening on its bold label.
 #
 # ADR-028 (Accepted) rewrites the `[DERIVED]` row twice, and each change moves the realized vector
-# there, so each must update this pin in the same change. The change that names `/trip-record` for
-# `### Effective Planning Days` — that record's Decision 1 row — adds a row whose region realizes
-# NO (marked) and narrows the `[DERIVED]` row's Block text to the per-traveller block. Its Retire
-# landing set, no earlier than the Cutover set that first emits the traveller-presence file, then
-# removes that half of the row together with its block.
+# there, so each updates this pin in the same change. Its Retire landing set came first: landing
+# after the Cutover set that first emitted the traveller-presence file, it removed the
+# per-traveller half of the row together with its block, so the row's Block text names the trip
+# window alone. The change that names `/trip-record` for `### Effective Planning Days` — that
+# record's Decision 1 row — comes second: it gives the trip window a row whose region realizes
+# NO (marked), and updates this pin in the same change.
 #
 # One line per row: `<form tag> | <Block cell, verbatim> | <realized verdict>`.
 ST_CF_PIN='trip-context | Title line · `## Group` roster · `Total travelers` | CONDITIONAL (condition)
 trip-context | `## Mode` → `Current mode` and `Mode notes` | NO (writer-set)
 trip-context | `[ENRICH]` fields — `### Transit Access`, `### Walkable Proximity`, `## Weather Context`, `## Destination Baseline`, `## Events & Calendar` | NO (marked)
-trip-context | `[DERIVED]` blocks — `### Effective Planning Days`, `### Per-Traveler Planning Days` | EXCLUDED (no-writer)
+trip-context | `[DERIVED]` block — `### Effective Planning Days` | EXCLUDED (no-writer)
 trip-context | `## Destination` | YES (interviewer)
 trip-context | `## Locked Elements` · `## Current Itinerary Status` | YES (interviewer)
 trip-context | `**Lifecycle:**` — the lifecycle marker line | UNREACHABLE (by construction)
@@ -30826,8 +30827,9 @@ fi
 #        entry carries a count of its own — every other cell is by reference — so only those are
 #        graded, and a population with none graded is a FAIL, never a pass.
 #   PW2  each of the four readers — scheduling, transport, the hub and the validator — names the
-#        file at least once and no longer names the retired `Per-Traveler Planning Days` block,
-#        whitespace folded so a name wrapped across a line break is still read.
+#        file at least once and no longer names the retired per-traveller block, whose name is
+#        read from ADR-028 rather than spelled here, whitespace folded so a name wrapped across a
+#        line break is still read.
 #   PW3  each reader's closed read scope still stands, exactly once, located by its content with
 #        whitespace folded, because transport's sentence is wrapped.
 #
@@ -31025,13 +31027,29 @@ pw_count() {
 
 PW_READERS=(agents/03-scheduling.md agents/04-transport.md agents/05-hub-planner.md agents/06-validator.md)
 
+# The retired block's name — PW2's needle — is read from the record that retired it, never spelled
+# here. ADR-028 § Consequences opens its template entry on the template's path and names the
+# section that retires; that one sentence is the needle's source. Once the Retire set lands, the
+# name stands only in the decision records, CHANGELOG.md and the kept transition specimen,
+# examples/single-origin-demo/, and a live suite spelling it would be one more surface carrying
+# it. A needle not read exactly once is empty, and every PW2 arm then FAILs on it, so the
+# retired-block limb is never read as clean without having been read.
+PW_ADR028='reference/adr/ADR-028-derived-planning-day-block-owners.md'
+PW_RETIRED="$(LC_ALL=C awk -v lead='**`templates/trip-context.template.md`.** § *' -v tail=' [DERIVED]* retires' '
+  index($0, lead) == 1 && index($0, tail) > length(lead) {
+    s = substr($0, length(lead) + 1); v = substr(s, 1, index(s, tail) - 1); c++
+  }
+  END { if (c == 1 && v != "") print v }' "$ROOT/$PW_ADR028" 2>/dev/null)"
+
 # pw2_scan <root> — one line per reader: "<path> <names-file count> <retired-block count>", or
-# "<path> UNREADABLE".
+# "<path> UNREADABLE", or "<path> NONEEDLE" when the retired block's name could not be read.
 pw2_scan() {
   local f
   for f in "${PW_READERS[@]}"; do
-    if [ -r "$1/$f" ]; then
-      printf '%s %s %s\n' "$f" "$(pw_count "$1/$f" 'outputs/traveler-presence.md')" "$(pw_count "$1/$f" 'Per-Traveler Planning Days')"
+    if [ -z "$PW_RETIRED" ]; then
+      printf '%s NONEEDLE\n' "$f"
+    elif [ -r "$1/$f" ]; then
+      printf '%s %s %s\n' "$f" "$(pw_count "$1/$f" 'outputs/traveler-presence.md')" "$(pw_count "$1/$f" "$PW_RETIRED")"
     else
       printf '%s UNREADABLE\n' "$f"
     fi
@@ -31042,10 +31060,12 @@ pw2_verdict() {   # pw2_verdict <id> <scan> — one verdict
   local id="$1" scan="$2" n_ok n_bad
   n_ok="$(LC_ALL=C awk 'NF == 3 && $2 >= 1 && $3 == 0 { c++ } END { print c + 0 }' <<<"$scan")"
   n_bad="$(LC_ALL=C awk 'NF != 3 || $2 < 1 || $3 != 0 { printf "%s; ", $0 }' <<<"$scan")"
-  if [ "$n_ok" -eq 4 ]; then
-    PASS "$id: each of the 4 readers names outputs/traveler-presence.md and none names the retired Per-Traveler Planning Days block — $(tr '\n' ';' <<<"$scan")"
+  if [ -z "$PW_RETIRED" ]; then
+    FAIL "$id: the retired block's name was not read exactly once from $PW_ADR028 (the sentence opening on the template's path and naming the section that retires), so the retired-block limb cannot be read: $n_bad"
+  elif [ "$n_ok" -eq 4 ]; then
+    PASS "$id: each of the 4 readers names outputs/traveler-presence.md and none names the retired $PW_RETIRED block, its name read from $PW_ADR028 — $(tr '\n' ';' <<<"$scan")"
   else
-    FAIL "$id: $n_ok of the 4 readers name outputs/traveler-presence.md and no longer name Per-Traveler Planning Days (whitespace folded); each line reads <file> <presence-file count> <retired-block count>: $n_bad"
+    FAIL "$id: $n_ok of the 4 readers name outputs/traveler-presence.md and no longer name $PW_RETIRED (whitespace folded); each line reads <file> <presence-file count> <retired-block count>: $n_bad"
   fi
 }
 
@@ -31054,7 +31074,7 @@ pw2_verdict 'PW2' "$(pw2_scan "$ROOT")"
 # PW2-CTL — MUST FIRE: a copy of the four readers with transport's item 3 reverted to the block.
 PW_R2="$PW_WORK/r2"; mkdir -p "$PW_R2/agents"
 for pw_f in "${PW_READERS[@]}"; do cp "$ROOT/$pw_f" "$PW_R2/$pw_f"; done
-LC_ALL=C awk 'index($0, "3. `outputs/traveler-presence.md`, read beside this file") == 1 { sub(/`outputs\/traveler-presence.md`, read beside this file/, "Per-Traveler Planning Days"); m++ } { print } END { exit (m == 1 ? 0 : 3) }' \
+LC_ALL=C awk -v r="$PW_RETIRED" 'index($0, "3. `outputs/traveler-presence.md`, read beside this file") == 1 { sub(/`outputs\/traveler-presence.md`, read beside this file/, r); m++ } { print } END { exit (m == 1 ? 0 : 3) }' \
   "$ROOT/agents/04-transport.md" > "$PW_R2/agents/04-transport.md"; PW_R2MUT=$?
 PW_R2SCAN="$(pw2_scan "$PW_R2")"
 PW_R2T="$(LC_ALL=C awk '$1 == "agents/04-transport.md" && $3 >= 1 { c++ } END { print c + 0 }' <<<"$PW_R2SCAN")"

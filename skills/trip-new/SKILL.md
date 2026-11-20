@@ -433,9 +433,9 @@ contracts are specified as if the number already existed:
    `[Name]` rows and a bracketed total it has no enumeration to complement: it either writes four
    ghost entries or writes none and silently loses the gap. The roster is the **denominator** for
    profile-gap detection and there is no second source for it.
-2. **`templates/trip-context.template.md` — `### Per-Traveler Planning Days [DERIVED]`.** One row per
-   traveler, and it reads each traveler's own profile **by link** — the `## Group` roster carries the
-   path, so the roster is its input. Its single-origin collapse line is a count, not a description.
+2. **`outputs/traveler-presence.md` — each traveler's window.** One entry per roster member, rebuilt
+   by the enrichment agent's reconciler from each traveler's own profile, read **by link** — the
+   `## Group` roster carries the path, so the roster is its input.
 3. **`reference/data-model.md` — the satisfaction layer.** Desire-coverage is graded per traveler and
    group-equity is a balance signal across travelers; both take the party as their denominator, and
    needs-compliance has nothing to intersect without a traveler.
@@ -505,7 +505,7 @@ establishes **nothing**: omission is not prohibition, so no bound below is claim
   by a later slice.
 - **It writes no `[ENRICH]` block, no `[DERIVED]` block, and no lifecycle marker line.** A **rule**,
   resting on `CLAUDE.md` § *Write ownership*: the `[ENRICH]` fields belong to the enrichment agent,
-  the `[DERIVED]` blocks to no writer at all, and the `**Lifecycle:**` line to `/trip-decommission`.
+  the `[DERIVED]` block to no writer at all, and the `**Lifecycle:**` line to `/trip-decommission`.
 - **It writes only under `trips/<slug>/`, and only files that do not already exist.** A **rule**, and
   the one that satisfies `ADR-007` § 2, **bound 5**. It is the create-only rule stated at the top of
   this file, restated here as a bound rather than re-derived — and, as there, it holds on the rule

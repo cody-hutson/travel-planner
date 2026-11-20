@@ -110,5 +110,4 @@ same reader. Rows stand in byte order of the path.
 470268     skills/trip-record/SKILL.md
 118008     skills/trip/SKILL.md
 22110      templates/traveler-intake.template.md
-22251      templates/trip-context.template.md
 ```

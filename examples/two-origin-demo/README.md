@@ -1,8 +1,9 @@
 # Two-Origin Demo — per-traveler planning days
 
-A minimal worked example for `### Per-Traveler Planning Days [DERIVED]`. It exists to
-show the derivation on a party that does **not** all leave from one place or land at
-one time — and to exercise all three basis values on **both** axes, window and origin.
+A minimal worked example for each traveler's window lines in `outputs/traveler-presence.md`;
+the file here is the presence class's witness. It exists to show the derivation on a party
+that does **not** all leave from one place or land at one time — and to exercise all three
+basis values on **both** axes, window and origin.
 
 Not a real trip. Placeholder people, a placeholder destination, a placeholder window.
 Companion to `examples/ideation-demo/`, which is minimal in the same way.
@@ -56,8 +57,30 @@ and Riley did not, so Jordan's is pinned and Riley's tracks. If the group rebook
 of Dallas, Riley would move with it and Jordan would not. Classification follows what
 a traveler bound their answer to, never whether two values happen to agree today.
 
+## What the presence file derives
+
+`outputs/traveler-presence.md` holds an entry for each traveler, and every line an entry
+does not pin reads by reference to the trip-level window in `trip-context.md`.
+
+- **Jordan and Pat hold the same window for different reasons.** Jordan said so; Pat said
+  nothing, so Pat's window lines read `(assumed)` and stay open to correction. Pat's
+  **timezone delta is their own**, derived from `Origin B` rather than the group's origin,
+  and across these dates it is zero: a jet-lag model that gave Pat the group's +6 would be
+  wrong on day one.
+- **Sam's window is pinned** to their own dates and does not move if the group's flights
+  change. Its count is clipped to the trip's own days: Sam arrives on Apr 8, before the trip
+  begins, so `Effective window (local)` keeps Sam's own instants while `Full + partial` counts
+  only the days from Apr 9 on. Sam's timezone delta is `(assumed)`, because they never said
+  where they set out from.
+- **Riley's timezone delta carries no `(assumed)` marker** — an `ASSERTED-SAME` origin is
+  asserted, not assumed — while Riley's window lines do, because Riley's Window basis is
+  `UNKNOWN`.
+- **Whole-group anchors on Apr 13–15 fall outside Sam's window.** Naming who is absent is the
+  scheduler's job, not the presence file's.
+
 Dates are 2026: Wed Apr 8, Thu Apr 9, Sun Apr 12, Wed Apr 15 — days of week verified.
 Manchester is on BST (UTC+1) and Lisbon on WEST (UTC+1) across this window, so Pat's
 delta is genuinely zero; Austin is on CDT (UTC-5), so the group's is +6.
 
-See `trip-context.md` in this folder for the derived result.
+See `outputs/traveler-presence.md` in this folder for the derived result, and
+`trip-context.md` for the trip-level window it reads.

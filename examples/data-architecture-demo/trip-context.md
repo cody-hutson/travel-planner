@@ -59,33 +59,6 @@ re-plan would have had to preserve.
 - **May 17 (Sun):** Departure day — morning available, depart accommodation by ~1:00 PM
 - **Total:** 2 full days + 2 partial days = 4 effective planning days
 
-### Per-Traveler Planning Days [DERIVED]
-
-> Derived block. Not manually edited — see `CLAUDE.md` § *Write ownership*.
-
-Single origin, one booking, no independent legs, so no traveler pins a window or
-an origin of their own and each per-traveler day set equals the trip-level
-one. This is the degenerate case `examples/two-origin-demo/` exists to contrast:
-there the two axes diverge, here they cannot.
-
-| Traveler | Window basis | Origin basis | At-destination days |
-|----------|--------------|--------------|---------------------|
-| Alex | `ASSERTED-SAME` | `ASSERTED-SAME` | May 14–17 (all 4) |
-| Robin | `ASSERTED-SAME` | `ASSERTED-SAME` | May 14–17 (all 4) |
-| Sam | `UNKNOWN` | `UNKNOWN` | May 14–17 (all 4, from the group booking) |
-
-**Deliberate non-collapse.** Every basis above is `ASSERTED-SAME` or `UNKNOWN`, which is
-the single-origin collapse precondition in `templates/trip-context.template.md` — under that
-rule a real trip context deletes this table and keeps only the `**All travelers:**` line.
-This example keeps the table on purpose, to show the per-traveller basis values the collapse
-hides. It is a teaching projection, not a conforming render; the worked instance of the
-collapse itself is `examples/single-origin-demo/`.
-
-Sam's two bases read `UNKNOWN` rather than `ASSERTED-SAME`: with no profile there is
-no answer to have asserted anything, and *unknown* is not *same as the group*. The day
-set is still the trip-level one, because it comes from the group booking rather than
-from Sam.
-
 ## Accommodation
 
 - **Property name:** [Illustrative — central guesthouse]
