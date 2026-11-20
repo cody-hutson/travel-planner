@@ -821,9 +821,14 @@ AWK
 # ── a.awk — class A, the citation-form scan ──────────────────────────────────────
 cat > "$WORK/a.awk" <<'AWK'
 # ARGV[1] homes TSV, ARGV[2] newline-separated relative path list. -v ROOT=<dir>
+# -v HOMEFILE=<path of ARGV[1]>
 # Emits "FINDING A1 <path> <line> <basename> <home>" per bare citation, and reports its
 # own denominator on a DENOM line so a zero can be told from an empty scan.
-FNR == NR { split($0, h, "\t"); if (h[1] != "") { HOME[h[1]] = h[2]; nhome++ }; next }
+#
+# The two inputs are split BY FILENAME, for the reason d.awk records: an empty home map is a
+# case this program must report — it is A0's own premise, and CTL-A0's fixture builds it on
+# purpose — and `FNR == NR` would read the whole path list as home rows.
+FILENAME == HOMEFILE { split($0, h, "\t"); if (h[1] != "") { HOME[h[1]] = h[2]; nhome++ }; next }
 { if ($0 != "") FILES[++nf] = $0 }
 END {
   total = 0; bare = 0
@@ -1221,8 +1226,15 @@ AWK
 # directly.
 cat > "$WORK/cmp.awk" <<'AWK'
 # ARGV[1] the declaration TSV fence.awk extracts, ARGV[2] the COUNT lines c.awk writes.
-# -v root=<dir> -v tag=<fence-tag>
-    FNR == NR { split($0, d, "\t"); if (d[2] != "") { DEC[d[2]] = d[1] + 0; nrow++ }; next }
+# -v root=<dir> -v tag=<fence-tag> -v DECFILE=<path of ARGV[1]>
+#
+# The two inputs are split BY FILENAME. The declaration is written EMPTY whenever the fence
+# document is unreadable or carries no rows, and `FNR == NR` would then read every observation
+# as a declaration row. The comparison answered correctly under that idiom only because c.awk
+# writes its COUNT rows with no tab and END exits on an empty declaration before it reads an
+# observation — two properties no arm protected. CTL-C0-SPLIT drives this program with a
+# tab-bearing row, so the split is what is graded.
+    FILENAME == DECFILE { split($0, d, "\t"); if (d[2] != "") { DEC[d[2]] = d[1] + 0; nrow++ }; next }
     $1 == "COUNT" { OBS[$2] = $3 + 0 }
     END {
       if (nrow == 0) { print "FINDING C0 the " tag " fence yielded zero rows"; exit }
@@ -3523,7 +3535,7 @@ ch_list_dir()  { ( cd "$1" && find . -name '*.md' -type f | sed 's|^\./||' | sor
 
 ch_scan_a() {  # ch_scan_a <root> <listfile>
   awk -v ROOT="$1" -f "$WORK/homes.awk" < "$2" > "$WORK/homes.tsv"
-  awk -v ROOT="$1" -f "$WORK/a.awk" "$WORK/homes.tsv" "$2"
+  awk -v ROOT="$1" -v HOMEFILE="$WORK/homes.tsv" -f "$WORK/a.awk" "$WORK/homes.tsv" "$2"
 }
 ch_scan_b() { awk -v ROOT="$1" -f "$WORK/b.awk" "$2"; }
 # The governance distance is a CONSTANT of the detector, deliberately not an environment
@@ -3738,7 +3750,8 @@ ch_compare_c() {
   local root="$1" doc="$2" listfile="$3"
   ch_scan_c "$root" "$listfile" | grep '^COUNT ' > "$WORK/obs.txt" || true
   if [ -r "$doc" ]; then ch_fence "$doc" > "$WORK/dec.tsv"; else : > "$WORK/dec.tsv"; fi
-  awk -v root="$root" -v tag="$CH_FENCE_TAG" -f "$WORK/cmp.awk" "$WORK/dec.tsv" "$WORK/obs.txt" | sort
+  awk -v root="$root" -v tag="$CH_FENCE_TAG" -v DECFILE="$WORK/dec.tsv" \
+      -f "$WORK/cmp.awk" "$WORK/dec.tsv" "$WORK/obs.txt" | sort
 }
 
 # ── THE EMITTERS ─────────────────────────────────────────────────────────────────
