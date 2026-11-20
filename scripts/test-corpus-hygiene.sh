@@ -1215,6 +1215,30 @@ infence {
 }
 AWK
 
+# ── cmp.awk — class C, the fence compared with the observations, in both directions ──
+# Written once here, beside the extractors it compares, for the rule this file states for them:
+# the real-tree arm and every control arm drive the SAME program, and CTL-C0-SPLIT drives it
+# directly.
+cat > "$WORK/cmp.awk" <<'AWK'
+# ARGV[1] the declaration TSV fence.awk extracts, ARGV[2] the COUNT lines c.awk writes.
+# -v root=<dir> -v tag=<fence-tag>
+    FNR == NR { split($0, d, "\t"); if (d[2] != "") { DEC[d[2]] = d[1] + 0; nrow++ }; next }
+    $1 == "COUNT" { OBS[$2] = $3 + 0 }
+    END {
+      if (nrow == 0) { print "FINDING C0 the " tag " fence yielded zero rows"; exit }
+      for (p in OBS) {
+        if (!(p in DEC))          { printf "FINDING C3 %s observed %d declared none\n", p, OBS[p]; continue }
+        if (OBS[p] > DEC[p])      printf "FINDING C1 %s observed %d declared %d\n", p, OBS[p], DEC[p]
+        else if (OBS[p] < DEC[p]) printf "FINDING C2 %s observed %d declared %d\n", p, OBS[p], DEC[p]
+      }
+      for (p in DEC) {
+        cmd = "test -r \"" root "/" p "\""
+        if (system(cmd) != 0) { printf "FINDING C4 %s declared %d but the path is absent\n", p, DEC[p]; continue }
+        if (!(p in OBS) && DEC[p] > 0) printf "FINDING C2 %s observed 0 declared %d\n", p, DEC[p]
+      }
+    }
+AWK
+
 # ── d.awk — class D, the ADR record-number scan ──────────────────────────────────
 cat > "$WORK/d.awk" <<'AWK'
 # ARGV[1] the declared-gap TSV, already extracted from the index by fence.awk — the SAME
@@ -3714,23 +3738,7 @@ ch_compare_c() {
   local root="$1" doc="$2" listfile="$3"
   ch_scan_c "$root" "$listfile" | grep '^COUNT ' > "$WORK/obs.txt" || true
   if [ -r "$doc" ]; then ch_fence "$doc" > "$WORK/dec.tsv"; else : > "$WORK/dec.tsv"; fi
-  awk -v root="$root" -v tag="$CH_FENCE_TAG" '
-    FNR == NR { split($0, d, "\t"); if (d[2] != "") { DEC[d[2]] = d[1] + 0; nrow++ }; next }
-    $1 == "COUNT" { OBS[$2] = $3 + 0 }
-    END {
-      if (nrow == 0) { print "FINDING C0 the " tag " fence yielded zero rows"; exit }
-      for (p in OBS) {
-        if (!(p in DEC))          { printf "FINDING C3 %s observed %d declared none\n", p, OBS[p]; continue }
-        if (OBS[p] > DEC[p])      printf "FINDING C1 %s observed %d declared %d\n", p, OBS[p], DEC[p]
-        else if (OBS[p] < DEC[p]) printf "FINDING C2 %s observed %d declared %d\n", p, OBS[p], DEC[p]
-      }
-      for (p in DEC) {
-        cmd = "test -r \"" root "/" p "\""
-        if (system(cmd) != 0) { printf "FINDING C4 %s declared %d but the path is absent\n", p, DEC[p]; continue }
-        if (!(p in OBS) && DEC[p] > 0) printf "FINDING C2 %s observed 0 declared %d\n", p, DEC[p]
-      }
-    }
-  ' "$WORK/dec.tsv" "$WORK/obs.txt" | sort
+  awk -v root="$root" -v tag="$CH_FENCE_TAG" -f "$WORK/cmp.awk" "$WORK/dec.tsv" "$WORK/obs.txt" | sort
 }
 
 # ── THE EMITTERS ─────────────────────────────────────────────────────────────────
@@ -4494,10 +4502,38 @@ ctl_mustnot "CTL-A1-FENCE" A1 "$O" "the bare basename sits inside a fenced code 
 # lives at reference/data-architecture.md — writing it would itself be a directory-qualified
 # markdown file and would populate the very map this arm requires to be empty. Group A reads
 # no fence, so the fixture correctly carries none.
+#
+# The fixture CITES a basename, and one with no home, so the extractor reads one file and one
+# citation over an empty home map: of A0's three conditions only the empty home map holds, and a
+# fire isolates it. So the arm reads A0's own operands before its verdict, and a fire through any
+# other path FAILs naming that path — the path list read as home rows reads files=0, and a fixture
+# that lost its citation reads citations=0. A missing operand reads as unparsed, never as zero.
+a0_pos() { [[ "$1" =~ ^[1-9][0-9]*$ ]]; }
 D="$(ctl_mk a0)"
-printf 'nothing to cite here\n' > "$D/README.md"
+printf 'See notes.md for the list.\n' > "$D/README.md"
 O="$(ch_scan_a "$D" "$(ctl_list "$D")")"
-ctl_mustfire "CTL-A0" A0 "$O" "a fixture whose every markdown file sits at the ROOT yields an empty home map — the state A0 refuses to report as clean, which is what makes the real tree's green a measurement" 1
+ctl_arm A0
+A0_N="$(n_code "$O" A0)"
+A0_OPS="$(awk '$1 == "FINDING" && $2 == "A0" {
+  f = "unparsed"; c = "unparsed"; h = "unparsed"
+  for (i = 3; i <= NF; i++) {
+    split($i, kv, "=")
+    if (kv[1] == "files") f = kv[2]; else if (kv[1] == "citations") c = kv[2]; else if (kv[1] == "homes") h = kv[2]
+  }
+  print f, c, h; exit }' <<<"$O")"
+A0_F="unparsed"; A0_C="unparsed"; A0_H="unparsed"
+[ -n "$A0_OPS" ] && read -r A0_F A0_C A0_H <<<"$A0_OPS"
+if [ "$A0_N" -ne 1 ]; then
+  FAIL "CTL-A0: MUST FIRE once — a fixture whose only markdown file sits at the ROOT and cites a basename with no home, and the extractor reported A0 $A0_N time(s). It did not fire, or fired more than once"
+elif ! a0_pos "$A0_F"; then
+  FAIL "CTL-A0: A0 fired with files=$A0_F — the path list was read as home rows rather than as files, so the fire came through an empty walk and not through the empty home map this arm names"
+elif ! a0_pos "$A0_C"; then
+  FAIL "CTL-A0: A0 fired with citations=$A0_C — the fixture no longer carries its citation, so a fire is over-determined and no longer isolates the home-map limb"
+elif [ "$A0_H" != 0 ]; then
+  FAIL "CTL-A0: A0 fired with homes=$A0_H — the home map is not empty, so the fixture no longer builds the state this arm names"
+else
+  PASS "CTL-A0: A0 fired once with files=$A0_F citations=$A0_C homes=0 — an empty home map over a non-empty, citing file list is the sole cause, the state A0 refuses to report as clean, which is what makes the real tree's green a measurement"
+fi
 ch_scan_a "$ROOT" "$WORK/list.real" > /dev/null   # restore homes.tsv for any later reader
 
 # ── B ────────────────────────────────────────────────────────────────────────────
@@ -4598,6 +4634,26 @@ ctl_c_doc "$D" docs/notes.md 'The guard walks the corpus.'
 ctl_fence "$D"
 O="$(ch_compare_c "$D" "$D/$CH_FENCE_DOC" "$(ctl_list "$D")")"
 ctl_mustfire "CTL-C0" C0 "$O" "the fence is present and carries ZERO rows — an empty declaration asserts nothing, and every comparison behind it would be vacuously green" 1
+
+# CTL-C0-SPLIT — the comparator's own input split, driven directly through cmp.awk with an EMPTY
+# declaration and ONE observation row whose fields are tab-separated. The comparator must report
+# the empty fence and nothing else. The row is tab-bearing on purpose: c.awk writes its COUNT rows
+# space-separated, and that spelling hides a split that reads the observations as declaration rows
+# — CTL-C0 above stays green under either split, so this arm is the one that can tell them apart.
+ctl_arm C0
+: > "$WORK/c0split-dec.tsv"
+printf 'COUNT\tdocs/x.md\t2\n' > "$WORK/c0split-obs.txt"
+O="$(awk -v root="$WORK/fx/c0split" -v tag="$CH_FENCE_TAG" -v DECFILE="$WORK/c0split-dec.tsv" \
+         -f "$WORK/cmp.awk" "$WORK/c0split-dec.tsv" "$WORK/c0split-obs.txt")"
+C0S_N="$(n_code "$O" C0)"
+C0S_ALL="$(awk '$1 == "FINDING" { n++ } END { print n + 0 }' <<<"$O")"
+if [ "$C0S_N" -ne 1 ]; then
+  FAIL "CTL-C0-SPLIT: MUST FIRE once — an empty declaration beside one tab-bearing observation row, and the comparator reported C0 $C0S_N time(s) [$(awk '$1 == "FINDING" { printf "%s ", $2 }' <<<"$O")]. That is the answer of a split reading the observations as declaration rows, under which an unreadable or empty fence is not reported as one"
+elif [ "$C0S_ALL" -ne 1 ]; then
+  FAIL "CTL-C0-SPLIT: the comparator reported C0 beside $((C0S_ALL - 1)) other finding(s) [$(awk '$1 == "FINDING" { printf "%s ", $2 }' <<<"$O")] over an empty declaration — it compared observations against a fence that yielded nothing"
+else
+  PASS "CTL-C0-SPLIT: an empty declaration beside one tab-bearing observation row reports the empty fence and nothing else — the comparator splits its two inputs by file, so no observation is read as a declaration row"
+fi
 
 # CTL-C-WRAP — the motivating defect, wrapped across a line break exactly as it shipped.
 # The break falls BEFORE the cardinal, between `all` and `twelve`, so `twelve places` lands
