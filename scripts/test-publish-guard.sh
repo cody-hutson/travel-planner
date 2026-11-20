@@ -15419,6 +15419,538 @@ md_flips require_key_of_record "RV29" rv29_assert "RV29"
 md_flips write_passphrase_file "RV30" rv30_assert "RV30"
 for rv_p in noreply publish update rotate; do md_flips commit_noreply "RV31-$rv_p" rv31_assert "RV31-$rv_p" "$rv_p"; done
 
+# ═════════════════════════════════════════════════════════════════════════════════
+# L18 — a plaintext publish refuses a render carrying a group-only section, by that section's presence
+# (#2155; ADR-030 § 6 safeguard 2). Group L by id; placed here, inside group RV's mock scope, because its
+# end-to-end arms drive cmd_publish offline and so take RV's gh and npx stand-ins, its gh call log, its
+# encryption shim and its signing pins (an unpinned commit here would fail RV31-run), and because the parity
+# recorder ended at M6e, so the content guard these arms reach is the production one.
+#
+# THE TOKENS ARE READ, NEVER WRITTEN HERE. Every fixture carries a token from reference/site-layout-spec.md
+# § Group-only components, read through the production reader; this file holds no copy of the fence, its
+# heading or any row of it, which is the one-home property L18i asserts of the script. A fence that reads
+# no token leaves every arm below without a subject, and each one says so rather than passing.
+#
+# EACH ARM IS ONE VERDICT, REGISTERED FOR md_flips ON ITS SUBJECT (F20). The structural arms L18i and L18l
+# grade a function's text and are not registered: removing a function does not remove its name from the
+# text of its caller. The ARMED-RED controls run an arm under the mutation the design names and require it
+# to report exactly one FAIL, so each green arm above is a measurement of the property and not of its
+# fixture. Fixtures are synthetic.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group L, L18 — a plaintext publish refuses a render carrying a group-only section, by its presence (#2155)."
+
+L18W="$RVW/l18"; mkdir -p "$L18W"
+L18ERR="$L18W/stderr"
+L18_TOKS=""
+if declare -F _group_only_rows >/dev/null 2>&1; then L18_TOKS="$(_group_only_rows)"; fi
+L18T1=""; L18T2=""; L18T3=""; l18i=0
+for l18t in $L18_TOKS; do
+  l18i=$((l18i+1))
+  case "$l18i" in 1) L18T1="$l18t" ;; 2) L18T2="$l18t" ;; 3) L18T3="$l18t" ;; esac
+done
+[ -n "$L18T2" ] || L18T2="$L18T1"; [ -n "$L18T3" ] || L18T3="$L18T2"
+
+# Placeholder substitution with no ${var//pat/rep}: bash 5.2 reads an unquoted '&' in a replacement as the
+# match, and the fixtures below carry character references.
+l18_sub() { # <text> <placeholder> <value> -> the text with every placeholder replaced
+  local s="$1" p="$2" v="$3" o=""
+  while :; do
+    case "$s" in *"$p"*) o="$o${s%%"$p"*}$v"; s="${s#*"$p"}" ;; *) break ;; esac
+  done
+  printf '%s' "$o$s"
+}
+# A token with each '-' written another way — the character-reference spellings a browser decodes.
+l18_enc() { # <token> <what each '-' becomes>
+  local s="$1" r="$2" o="" c i
+  for (( i=0; i<${#s}; i++ )); do
+    c="${s:i:1}"
+    if [ "$c" = "-" ]; then o="$o$r"; else o="$o$c"; fi
+  done
+  printf '%s' "$o"
+}
+L18T1_UP="$(printf '%s' "$L18T1" | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')"
+L18T1_MIX="$(printf '%s' "$L18T1" | perl -pe 's/(^|-)([a-z])/$1\u$2/g' 2>/dev/null)"
+
+l18_frag() { # <fragment with @T@ @T2@ @T3@ @TU@ @TM@ @K@ @K5@ @KX@ @K0@ @NL@> -> the fragment, tokens filled
+  local f="$1" nl='
+'
+  f="$(l18_sub "$f" '@T2@' "$L18T2")"; f="$(l18_sub "$f" '@T3@' "$L18T3")"
+  f="$(l18_sub "$f" '@TU@' "$L18T1_UP")"; f="$(l18_sub "$f" '@TM@' "$L18T1_MIX")"
+  f="$(l18_sub "$f" '@K5@' "$(l18_enc "$L18T1" '&#45')")"
+  f="$(l18_sub "$f" '@KX@' "$(l18_enc "$L18T1" '&#X2D;')")"
+  f="$(l18_sub "$f" '@K0@' "$(l18_enc "$L18T1" '&#00045;')")"
+  f="$(l18_sub "$f" '@K@' "$(l18_enc "$L18T1" '&#45;')")"
+  f="$(l18_sub "$f" '@T@' "$L18T1")"
+  l18_sub "$f" '@NL@' "$nl"
+}
+# A render: this suite's synthetic itinerary with the fragment placed before </body>.
+l18_page() { # <out_file> <fragment>
+  local body pre post
+  body="$(cat "$SRC")"; pre="${body%%</body>*}"; post="${body#"$pre"}"
+  printf '%s%s%s\n' "$pre" "$(l18_frag "$2")" "$post" > "$1"
+}
+
+# The design's thirteen fixtures (A to N) and the review's F1/F2 fixtures (A02 to B05), as one table read
+# from a quoted here-document so no fixture is shell text. Columns: id, the verdict the rule gives, fragment.
+# refuse — any start tag carries a listed token as a class, so the plaintext limb refuses the render.
+# pass   — no start tag does: the token is prose, another attribute, a stylesheet selector or escaped text.
+# R-a, R-c — a declared residual: a class a script builds with no tag string, or by concatenation, is not seen.
+L18_FIX="$L18W/fixtures.tsv"
+cat > "$L18_FIX" <<'L18FIX'
+L18f-A	refuse	<section class="@T@"><h2>Where we might go</h2><p>Lisbon, loved by Wren.</p></section>
+L18c-B	pass	<p>The @T@ idea was raised once in conversation and nothing else.</p>
+L18f-C	refuse	<section class=@T@><h2>Where we might go</h2></section>
+L18c-D	pass	<a href="#@T@" id="@T@" data-x="@T@" title="@T@">jump</a>
+L18g-a	R-a	<script>document.body.classList.add("@T@");</script>
+L18f-F	refuse	<!-- <section class="@T@"><p>old</p></section> -->
+L18f-G	refuse	<section class="@TM@"><h2>Where we might go</h2></section>
+L18c-H	pass	<section class="@T@-note"><p>note</p></section>
+L18f-I	refuse	<div class="card @T2@ is-open"><p>snap</p></div>
+L18c-J	pass	<style>.@T@{display:block}</style><p>no section here at all</p>
+L18f-K	refuse	<section class="@K@"><h2>Where</h2></section>
+L18c-L	pass	<p><code>&lt;section class="@T@"&gt;</code> is how it is written.</p>
+L18f-N	refuse	<template><section class="@T3@"><p>x</p></section></template>
+L18f-A02	refuse	<script>for (var i=0; i<n; i++) { msg = 'Today\'s plan'; }</script>@NL@<section class="@T@"><h2>Picks</h2><p>Sam's favourite</p></section>
+L18f-A03	refuse	<section class="card&Tab;@T@"><h2>Picks</h2></section>
+L18f-A04	refuse	<section class="card&NewLine;@T@"><h2>Picks</h2></section>
+L18f-A05	refuse	<section class="@K5@"><h2>Picks</h2></section>
+L18f-A06	refuse	<section class="@KX@"><h2>Picks</h2></section>
+L18f-A07	refuse	<section class="@K0@"><h2>Picks</h2></section>
+L18f-A08	refuse	<section id="picks"class="@T@"><h2>Picks</h2></section>
+L18f-A09	refuse	<section/class="@T@"><h2>Picks</h2></section>
+L18f-A10	refuse	<section class = "@T@"><h2>Picks</h2></section>
+L18f-A11	refuse	<section@NL@class="@T@"><h2>Picks</h2></section>
+L18f-A12	refuse	<section title="a>b" class="@T@"><h2>Picks</h2></section>
+L18f-A13	refuse	<section data-x=a"b class="@T@"><h2>Picks</h2></section>
+L18f-A14	refuse	<script>root.innerHTML = "<section class=\"@T@\"><h2>Picks</h2></section>";</script>
+L18f-A15	refuse	<script>root.innerHTML = "\u003csection class=\u0022@T@\u0022\u003e";</script>
+L18f-A16	refuse	<section class="x" class="@T@"><h2>Picks</h2></section>
+L18f-A17	refuse	<section class="@T@" class="x"><h2>Picks</h2></section>
+L18f-A18	refuse	<SECTION CLASS="@TU@"><h2>Picks</h2></SECTION>
+L18c-A19	pass	<div class=@T3@/><p>x</p>
+L18f-A20	refuse	<div class="@T3@"/><p>x</p>
+L18c-B01	pass	<p>The <code>@T@</code> section is private; see class="@T@" in the spec.</p>
+L18c-B02	pass	<p data-note="&lt;section class=&quot;@T@&quot;&gt;">x</p>
+L18c-B04	pass	<p>a < b and c > d; class="@T@" written in prose between angle signs</p>
+L18f-B05	refuse	<p>Compare: x<y class="@T@" z>w</p>
+L18g-c	R-c	<script>root.innerHTML = "<section class=\"" + "@T@" + "\">";</script>
+L18FIX
+while IFS="	" read -r l18id l18want l18frag; do
+  [ -n "$l18id" ] || continue
+  l18_page "$L18W/$l18id.html" "$l18frag"
+done < "$L18_FIX"
+
+# The detector's verdict on one fixture, read directly: rc 0 and the expected tokens, or the residual named.
+# An absent detector is rc 127 and a FAIL, and so is an undetermined read, so no row passes on a probe that
+# did not run.
+l18_scan_assert() { # <id> <refuse|pass|R-a|R-c>
+  local id="$1" want="$2" got rc
+  got="$(group_only_sections "$L18W/$id.html" 2>/dev/null)"; rc=$?
+  if [ -z "$L18T1" ]; then
+    FAIL "$id: the group-only fence read no token, so this fixture carries no listed class and its verdict would be about nothing. VERDICT WITHHELD"
+  elif [ "$rc" -eq 127 ]; then
+    FAIL "$id: group_only_sections is NOT DEFINED (rc=127) — there is no detector to grade"
+  elif [ "$rc" -ne 0 ]; then
+    FAIL "$id: the detector read this fixture as undetermined (rc=$rc), where the rule decides it ($want)"
+  elif [ "$want" = refuse ] && [ -z "$got" ]; then
+    FAIL "$id: a start tag carries a listed token as a class, and the detector found none — the plaintext limb would publish it"
+  elif [ "$want" = pass ] && [ -n "$got" ]; then
+    FAIL "$id: the detector found '$got' where no start tag carries a listed class — the plaintext limb would refuse a page the rule passes"
+  elif [ "$want" != refuse ] && [ -n "$got" ]; then
+    FAIL "$id: the detector found '$got' on the shape the declared residual $want names — the residual is closed: update its declaration at the reader and in the PR rather than leave it stale"
+  elif [ "$want" = refuse ]; then
+    PASS "$id: the detector finds the listed class this fixture's start tag carries ('$got', rc=0)"
+  elif [ "$want" = pass ]; then
+    PASS "$id: no start tag carries a listed class here, and the detector reads it clean (rc=0, nothing found)"
+  else
+    PASS "$id: the declared residual $want holds — a class a script assembles without a tag string is not seen (rc=0, nothing found); a change that closes it turns this arm red, so the declaration is updated rather than left stale"
+  fi
+}
+while IFS="	" read -r l18id l18want l18frag; do
+  [ -n "$l18id" ] || continue
+  l18_scan_assert "$l18id" "$l18want"
+done < "$L18_FIX"
+
+# ── The end-to-end harness: cmd_publish run offline under RV's stand-ins, in a subshell with errexit on as
+# the script runs. L18_ALLOW sets ALLOW_PLAINTEXT, L18_PRE is evaluated in the subshell first (a constant
+# re-pointed, a function stood in for), and stdin is never a terminal.
+l18_trip() { # <name> <fragment> [model] -> trip dir with one render, and a fresh synthetic traveller model when asked
+  local d="$L18W/$1"
+  rm -rf "$d"; mkdir -p "$d/outputs"
+  l18_page "$d/outputs/$1-travel-site.html" "$2"
+  touch -t 202001010000 "$d/outputs/$1-travel-site.html"
+  if [ "${3:-}" = model ]; then
+    printf '# Traveler Model — L18 [DERIVED]\n\n## Rowan\n- Passport: Ruritanian, valid to 2033\n- Interests: markets, museums\n' > "$d/outputs/traveler-model.md"
+  fi
+  printf '%s' "$d"
+}
+l18_publish() { # <trip_dir> [publish args…] -> the command's status; its stderr in L18ERR
+  local d="$1"; shift
+  : > "$RV_GHLOG"; : > "$L18ERR"
+  ( unset STATICRYPT_PASSWORD ALLOW_PLAINTEXT
+    [ -z "${L18_ALLOW:-}" ] || export ALLOW_PLAINTEXT=1
+    [ -z "${L18_PRE:-}" ] || eval "$L18_PRE"
+    set -e; cmd_publish "$d" "$@" ) </dev/null >/dev/null 2>"$L18ERR"
+}
+l18_has() { case "$(cat "$L18ERR")" in *"$1"*) return 0 ;; esac; return 1; }
+l18_pushed() { # <trip_dir> -> 1 when a repository was created or a commit staged for a push, else 0
+  local log; log="$(cat "$RV_GHLOG")"
+  case "$log" in *"repo create"*) printf 1; return 0 ;; esac
+  if [ -d "$1/.publish/.git" ] && git -C "$1/.publish" rev-parse --verify -q HEAD >/dev/null 2>&1; then printf 1; return 0; fi
+  printf 0
+}
+L18_SECTION='<section class="@T@"><h2>Where we might go</h2><p>Lisbon, loved by Wren.</p></section>'
+
+# ── L18a — one arm per fence token, read live: publish --plaintext exits 3, names that token and says
+# nothing was published, and nothing was created or committed.
+l18a_assert() { # <id> <token>
+  local id="$1" t="$2" d rc tok=0 none=0 pushed lead=0
+  d="$(l18_trip "l18a-${t:-none}" "$(l18_sub "$L18_SECTION" '@T@' "$t")")"
+  l18_publish "$d" --plaintext; rc=$?
+  l18_has "GROUP-ONLY REFUSED publish --plaintext" && lead=1
+  [ -z "$t" ] || { l18_has "$t" && tok=1; }
+  l18_has "Nothing was published" && none=1
+  pushed="$(l18_pushed "$d")"
+  if [ -z "$t" ]; then
+    FAIL "$id: the group-only fence read no token, so no render here carries a listed class. VERDICT WITHHELD"
+  elif [ "$rc" -ne 3 ]; then
+    FAIL "$id: publish --plaintext of a render carrying the listed class read rc=$rc, want 3 (the named refusal)"
+  elif [ "$lead" -ne 1 ] || [ "$tok" -ne 1 ] || [ "$none" -ne 1 ]; then
+    FAIL "$id: the refusal is not the typed one — its lead=$lead, the token named=$tok, 'Nothing was published'=$none (want 1 each)"
+  elif [ "$pushed" -ne 0 ]; then
+    FAIL "$id: the refusal exited 3 but a repository was created or a commit staged for a push"
+  else
+    PASS "$id: publish --plaintext of a render carrying this listed class exits 3, names it and says nothing was published; no repository was created and nothing was committed"
+  fi
+}
+if [ -n "$L18_TOKS" ]; then
+  for l18t in $L18_TOKS; do l18a_assert "L18a-$l18t" "$l18t"; done
+else
+  l18a_assert "L18a" ""
+fi
+
+# ── L18b — the control pair for L18a: the same render without the section passes the refusal and reaches
+# the next control, with no model (the content guard's own refusal) and with a fresh clean model (the typed
+# confirmation's non-interactive refusal). The detector is read directly as well, so the arm has evidence it
+# ran: a refusal that never ran would reach the same downstream message.
+l18b_assert() { # <id> <fragment> <nomodel|model> <the downstream message>
+  local id="$1" frag="$2" how="$3" want="$4" d site rc got grc lead=0 down=0
+  d="$(l18_trip "${id}" "$frag" "$how")"; site="$d/outputs/$id-travel-site.html"
+  got="$(group_only_sections "$site" 2>/dev/null)"; grc=$?
+  l18_publish "$d" --plaintext; rc=$?
+  l18_has "GROUP-ONLY REFUSED" && lead=1
+  l18_has "$want" && down=1
+  if [ -z "$L18T1" ]; then
+    FAIL "$id: the group-only fence read no token, so the detector has no class to look for. VERDICT WITHHELD"
+  elif [ "$grc" -ne 0 ]; then
+    FAIL "$id: the detector did not read this render (rc=$grc) — a refusal that never ran reaches the same downstream message, so the arm has no evidence"
+  elif [ -n "$got" ]; then
+    FAIL "$id: the detector found '$got' on a render that carries no listed class"
+  elif [ "$rc" -ne 1 ] || [ "$lead" -ne 0 ] || [ "$down" -ne 1 ]; then
+    FAIL "$id: publish --plaintext read rc=$rc, the group-only lead=$lead and the downstream message '$want'=$down (want rc=1, 0, 1)"
+  else
+    PASS "$id: a render with no listed class passes the refusal (detector rc=0, nothing found) and reaches the next control ('$want', rc=1)"
+  fi
+}
+l18b_assert "L18b-nomodel" "" nomodel "GUARD ABORTED publish"
+l18b_assert "L18b-model" "" model "refusing non-interactive plaintext publish"
+# L18c, end to end: the token as prose, href, id, data-* and title passes the refusal and reaches the guard.
+l18b_assert "L18c-e2e" '<a href="#@T@" id="@T@" data-x="@T@" title="@T@">jump</a><p>The @T@ idea.</p>' nomodel "GUARD ABORTED publish"
+
+# ── L18d — ALLOW_PLAINTEXT cannot override the refusal: L18a's render, a fresh clean model, the variable set
+# and stdin not a terminal, exits 3 with nothing pushed.
+l18d_assert() { # <id>
+  local id="$1" d rc lead=0 pushed
+  d="$(l18_trip l18d "$L18_SECTION" model)"
+  L18_ALLOW=1 l18_publish "$d" --plaintext; rc=$?
+  l18_has "GROUP-ONLY REFUSED publish --plaintext" && lead=1
+  pushed="$(l18_pushed "$d")"
+  if [ -z "$L18T1" ]; then
+    FAIL "$id: the group-only fence read no token. VERDICT WITHHELD"
+  elif [ "$rc" -ne 3 ] || [ "$lead" -ne 1 ]; then
+    FAIL "$id: with ALLOW_PLAINTEXT=1 a render carrying a listed class read rc=$rc and the refusal's lead=$lead (want 3 and 1) — the variable reached past the refusal"
+  elif [ "$pushed" -ne 0 ]; then
+    FAIL "$id: with ALLOW_PLAINTEXT=1 the refusal exited 3 but something was created or committed"
+  else
+    PASS "$id: ALLOW_PLAINTEXT=1 does not override the refusal — rc=3, its lead, nothing created or committed, on a trip whose content guard would pass"
+  fi
+}
+l18d_assert "L18d"
+
+# ── L18e — fail-closed: a fence emptied, its heading renamed, one malformed row added, or the declaring file
+# absent (F17), each in a scratch copy the refusal is pointed at, refuses a render that carries no listed class.
+# The copies are built from the production constants, so no heading or fence name is written here.
+l18e_spec() { # <case> <out_file>
+  local c="$1" o="$2" src="${_GROUP_ONLY_SPEC:-}" head="${_GROUP_ONLY_HEADING:-}" open='```'"${_GROUP_ONLY_FENCE:-}"
+  case "$c" in
+    absent) rm -f "$o"; return 0 ;;
+  esac
+  [ -r "$src" ] || { : > "$o"; return 0; }
+  awk -v c="$c" -v h="$head" -v op="$open" '
+    $0 == h { insec = 1; if (c == "heading") { print h " (renamed)"; next } }
+    insec && $0 == op { infence = 1; print; if (c == "malformed") print "extra-row second-field"; next }
+    infence && $0 == "```" { infence = 0; insec = 0 }
+    infence && c == "empty" && $0 !~ /^[[:space:]]*#/ && NF > 0 { next }
+    { print }' "$src" > "$o"
+}
+for l18c in empty heading malformed absent; do l18e_spec "$l18c" "$L18W/spec-$l18c.md"; done
+l18e_assert() { # <id> <case>
+  local id="$1" c="$2" d rc lead=0 unread=0 pushed
+  d="$(l18_trip "l18e-$c" "")"
+  L18_PRE="_GROUP_ONLY_SPEC=\"$L18W/spec-$c.md\"" l18_publish "$d" --plaintext; rc=$?
+  l18_has "GROUP-ONLY REFUSED publish --plaintext" && lead=1
+  l18_has "could not be read" && unread=1
+  pushed="$(l18_pushed "$d")"
+  if [ "$rc" -ne 3 ] || [ "$lead" -ne 1 ] || [ "$unread" -ne 1 ]; then
+    FAIL "$id: with the group-only declaration $c, a plaintext publish read rc=$rc, the refusal's lead=$lead and 'could not be read'=$unread (want 3, 1, 1) — a declaration that reads no component must refuse like a found section"
+  elif [ "$pushed" -ne 0 ]; then
+    FAIL "$id: the declaration-$c refusal exited 3 but something was created or committed"
+  else
+    PASS "$id: a group-only declaration read $c refuses the plaintext publish as undetermined (rc=3), nothing created or committed — an empty read is not an empty set"
+  fi
+}
+for l18c in empty heading malformed absent; do l18e_assert "L18e-$l18c" "$l18c"; done
+
+# ── L18h — the encrypted limb is unchanged: L18a's render, published encrypted, reaches the ciphertext guard
+# and the push (rc=0) though the detector reads the section on it.
+l18h_assert() { # <id>
+  local id="$1" d site rc got grc create=0 enc=0
+  d="$(l18_trip l18h "$L18_SECTION")"; site="$d/outputs/l18h-travel-site.html"
+  got="$(group_only_sections "$site" 2>/dev/null)"; grc=$?
+  l18_publish "$d"; rc=$?
+  case "$(cat "$RV_GHLOG")" in *"repo create"*) create=1 ;; esac
+  case "$(cat "$d/.publish/index.html" 2>/dev/null)" in *staticryptEncrypted*) enc=1 ;; esac
+  if [ -z "$L18T1" ]; then
+    FAIL "$id: the group-only fence read no token. VERDICT WITHHELD"
+  elif [ "$grc" -ne 0 ] || [ "$got" != "$L18T1" ]; then
+    FAIL "$id: the detector read this render as rc=$grc '$got' (want rc=0 and the listed class) — without it the encrypted publish proves nothing about the refusal"
+  elif [ "$rc" -ne 0 ] || [ "$create" -ne 1 ] || [ "$enc" -ne 1 ]; then
+    FAIL "$id: the encrypted publish of a render carrying a listed class read rc=$rc, created=$create, ciphertext staged=$enc (want 0, 1, 1) — the refusal reached the encrypted limb"
+  else
+    PASS "$id: the encrypted limb is unchanged — a render the detector reads as carrying a listed class publishes encrypted (rc=0, ciphertext staged, repository created)"
+  fi
+}
+l18h_assert "L18h"
+
+# ── L18j — CIAC-1, the S1 half (F6): the refusal stands ahead of the content guard. A render carrying a listed
+# class and a passport value the trip's model holds, with a bound source carrying a passport label, exits 3 with
+# the refusal's message and neither the source check's nor the content guard's.
+l18j_assert() { # <id>
+  local id="$1" d rc lead=0 guard=0 src=0 pushed
+  d="$(l18_trip l18j "$L18_SECTION<p>Passport: Ruritanian, valid to 2033</p>" model)"
+  printf '# Trip\n\n- **Passport:** Ruritanian\n' > "$d/trip-context.md"
+  l18_publish "$d" --plaintext; rc=$?
+  l18_has "GROUP-ONLY REFUSED publish --plaintext" && lead=1
+  l18_has "GUARD ABORTED" && guard=1
+  l18_has "SOURCE CHECK STOPPED" && src=1
+  pushed="$(l18_pushed "$d")"
+  if [ -z "$L18T1" ]; then
+    FAIL "$id: the group-only fence read no token. VERDICT WITHHELD"
+  elif [ "$rc" -ne 3 ] || [ "$lead" -ne 1 ]; then
+    FAIL "$id: a render tripping the refusal and the content guard read rc=$rc with the refusal's lead=$lead (want 3, 1) — another control ran first"
+  elif [ "$guard" -ne 0 ] || [ "$src" -ne 0 ]; then
+    FAIL "$id: the refusal's message is joined by the content guard's ($guard) or the source check's ($src) — the refusal must be the first control"
+  elif [ "$pushed" -ne 0 ]; then
+    FAIL "$id: the refusal exited 3 but something was created or committed"
+  else
+    PASS "$id: the refusal is the first content control — rc=3 with its message only, ahead of the content guard"
+  fi
+}
+l18j_assert "L18j"
+
+# ── L18k — the bytes this push carries are the bytes checked (F18): a render clean when the refusal runs, then
+# rebuilt with a group-only section before the copy, is refused at the staged copy, exits 3, and leaves nothing
+# created or committed. The rebuild is a stand-in for the content guard that writes the section and passes.
+l18k_assert() { # <id>
+  local id="$1" d rc lead=0 pushed staged=0
+  d="$(l18_trip l18k "" model)"
+  L18_ALLOW=1 L18_PRE='verify_publishable_content() { printf "<section class=\"%s\"><p>x</p></section>\n" "$L18T1" >> "$1"; return 0; }' \
+    l18_publish "$d" --plaintext; rc=$?
+  l18_has "GROUP-ONLY REFUSED publish --plaintext" && lead=1
+  [ ! -e "$d/.publish/index.html" ] || staged=1
+  pushed="$(l18_pushed "$d")"
+  if [ -z "$L18T1" ]; then
+    FAIL "$id: the group-only fence read no token. VERDICT WITHHELD"
+  elif [ "$rc" -ne 3 ] || [ "$lead" -ne 1 ]; then
+    FAIL "$id: a render rebuilt with a group-only section after the first check read rc=$rc and the refusal's lead=$lead (want 3, 1) — the bytes published were not the bytes checked"
+  elif [ "$pushed" -ne 0 ] || [ "$staged" -ne 0 ]; then
+    FAIL "$id: the staged-copy refusal exited 3 but something was created or committed ($pushed), or the plaintext copy was left staged ($staged)"
+  else
+    PASS "$id: the staged copy is re-checked before the push — a render rebuilt with a group-only section after the first check is refused (rc=3), and the copy is removed with nothing created or committed"
+  fi
+}
+l18k_assert "L18k"
+
+# ── L18m — the scan is bounded: a long run of tag openers and a long unclosed quote each read determinate
+# under a five-second CPU cap, and a shape that would scan quadratically reads undetermined (rc=2, which the
+# refusal turns into a refusal) rather than running on. The shapes are built by perl, not by a shell loop.
+perl -e 'print "<a" x 500000' > "$L18W/cap-run.html" 2>/dev/null
+perl -e 'print "<a x=\"", "<b y " x 200000' > "$L18W/cap-quote.html" 2>/dev/null
+perl -e 'print "<a/x=" x 200000' > "$L18W/cap-budget.html" 2>/dev/null
+l18m_assert() { # <id> <file> <want rc>
+  local id="$1" f="$2" want="$3" st
+  st="$( ulimit -t 5; group_only_sections "$f" >/dev/null 2>&1; printf '%s' "$?" )"
+  if [ "$st" = 127 ]; then
+    FAIL "$id: group_only_sections is NOT DEFINED (rc=127)"
+  elif [ "$st" != "$want" ]; then
+    FAIL "$id: a $(wc -c < "$f" | tr -d ' ')-byte pathological page read rc=$st under a five-second CPU cap, want $want — the scan ran on or failed in a way the refusal cannot name"
+  else
+    PASS "$id: a $(wc -c < "$f" | tr -d ' ')-byte pathological page reads rc=$st under a five-second CPU cap, as the bound requires"
+  fi
+}
+l18m_assert "L18m-run" "$L18W/cap-run.html" 0
+l18m_assert "L18m-quote" "$L18W/cap-quote.html" 0
+l18m_assert "L18m-budget" "$L18W/cap-budget.html" 2
+
+# ── L18i — one home: no function this card adds, the scan program and cmd_publish carry a fence token. The
+# control plants one in a copy of the bodies and the count must see it, so the zero is a measurement.
+l18_count() { # <haystack> <needle> -> occurrences, no pipeline
+  local h="$1" n="$2" c=0
+  [ -n "$n" ] || { printf 0; return 0; }
+  while [ -n "$h" ]; do
+    case "$h" in *"$n"*) c=$((c+1)); h="${h#*"$n"}" ;; *) break ;; esac
+  done
+  printf '%s' "$c"
+}
+L18_FNS='_group_only_rows _group_only_candidates group_only_sections refuse_group_only_render refuse_group_only cmd_publish'
+l18i_bodies=""; l18i_absent=""
+for l18f in $L18_FNS; do
+  if declare -F "$l18f" >/dev/null 2>&1; then l18i_bodies="$l18i_bodies$(declare -f "$l18f")"; else l18i_absent="$l18i_absent$l18f "; fi
+done
+l18i_bodies="$l18i_bodies${_GROUP_ONLY_SCAN:-}"
+l18i_hits=0; l18i_ctl=0
+for l18t in $L18_TOKS; do
+  l18i_hits=$(( l18i_hits + $(l18_count "$l18i_bodies" "$l18t") ))
+  l18i_ctl=$(( l18i_ctl + $(l18_count "$l18i_bodies x$l18t" "$l18t") ))
+done
+if [ -z "$L18_TOKS" ]; then
+  FAIL "L18i: the group-only fence read no token, so the one-home probe has nothing to look for. VERDICT WITHHELD"
+elif [ -n "$l18i_absent" ] || [ -z "${_GROUP_ONLY_SCAN:-}" ]; then
+  FAIL "L18i: function(s) or the scan program absent ('${l18i_absent}'), so a zero count would be read off an empty haystack"
+elif [ "$l18i_ctl" -lt 1 ]; then
+  FAIL "L18i: CONTROL — a token planted in a copy of the bodies was not counted, so the probe cannot see a token. VERDICT WITHHELD"
+elif [ "$l18i_hits" -ne 0 ]; then
+  FAIL "L18i: $l18i_hits fence token occurrence(s) in the refusal's functions, its scan program or cmd_publish — a second home for the group-only set"
+else
+  PASS "L18i: the group-only set has one home — no fence token in $L18_FNS or the scan program (${#l18i_bodies} bytes read), and the planted control is counted"
+fi
+
+# ── L18l — position (F4's structural half): in cmd_publish the refusal follows the baseline guard and precedes
+# slug_for, the first gh call, the content guard and the ALLOW_PLAINTEXT read; and the staged copy's re-check
+# follows the copy and precedes the commit. A fabricated name found nowhere is the specificity control.
+l18_line() { # <body> <needle> -> the line number of its first occurrence, or nothing
+  printf '%s\n' "$1" | awk -v n="$2" 'index($0, n) { print NR; exit }'
+}
+l18l_b="$(declare -f cmd_publish 2>/dev/null)"
+l18l_base="$(l18_line "$l18l_b" 'require_recordable_baseline')"
+l18l_ref="$(l18_line "$l18l_b" 'refuse_group_only_render "$site_html"')"
+l18l_slug="$(l18_line "$l18l_b" 'slug_for')"
+l18l_gh="$(l18_line "$l18l_b" 'gh api user')"
+l18l_cg="$(l18_line "$l18l_b" 'verify_publishable_content')"
+l18l_ap="$(l18_line "$l18l_b" 'ALLOW_PLAINTEXT')"
+l18l_cp="$(l18_line "$l18l_b" 'cp "$site_html"')"
+l18l_re="$(l18_line "$l18l_b" 'refuse_group_only_render "$pub_dir/index.html"')"
+l18l_ci="$(l18_line "$l18l_b" 'commit_noreply')"
+l18l_fab="$(l18_line "$l18l_b" 'zzq_l18l_fabricated_call')"
+if [ "${#l18l_b}" -lt 1000 ]; then
+  FAIL "L18l: cmd_publish's parsed body is ${#l18l_b} bytes — absent or a stub. VERDICT WITHHELD"
+elif [ -n "$l18l_fab" ]; then
+  FAIL "L18l: CONTROL — a fabricated name was found at line $l18l_fab, so the line probe matches anything"
+elif [ -z "$l18l_ref" ] || [ -z "$l18l_re" ]; then
+  FAIL "L18l: cmd_publish does not call the refusal on the render (line '${l18l_ref}') and on the staged copy (line '${l18l_re}')"
+elif [ "$l18l_ref" -le "$l18l_base" ] || [ "$l18l_ref" -ge "$l18l_slug" ] || [ "$l18l_ref" -ge "$l18l_gh" ] || [ "$l18l_ref" -ge "$l18l_cg" ] || [ "$l18l_ref" -ge "$l18l_ap" ]; then
+  FAIL "L18l: the refusal is at line $l18l_ref of cmd_publish; it must follow the baseline guard ($l18l_base) and precede slug_for ($l18l_slug), the first gh call ($l18l_gh), the content guard ($l18l_cg) and the ALLOW_PLAINTEXT read ($l18l_ap)"
+elif [ "$l18l_re" -le "$l18l_cp" ] || [ "$l18l_re" -ge "$l18l_ci" ]; then
+  FAIL "L18l: the staged copy's re-check is at line $l18l_re; it must follow the copy ($l18l_cp) and precede the commit ($l18l_ci)"
+else
+  PASS "L18l: in cmd_publish the refusal (line $l18l_ref) follows the baseline guard ($l18l_base) and precedes slug_for, the first gh call, the content guard and the ALLOW_PLAINTEXT read; the staged copy's re-check ($l18l_re) sits between the copy ($l18l_cp) and the commit ($l18l_ci); a fabricated name is found nowhere"
+fi
+
+# ── ARMED-RED controls: each arm run under the mutation its design row names must report pass=0 fail=1.
+l18_mut_probe() { # <mutation, evaluated in the probe's subshell> <assertion-fn> [args…] -> "<pass> <fail>"
+  local mut="$1"; shift
+  ( eval "$mut"
+    pass=0; fail=0
+    PASS() { pass=$((pass+1)); }
+    FAIL() { fail=$((fail+1)); }
+    "$@" >/dev/null 2>&1
+    printf '%d %d' "$pass" "$fail" )
+}
+l18_mut_assert() { # <id> <what the mutation is> <mutation> <assertion-fn> [args…]
+  local id="$1" what="$2" out; shift 2
+  out="$(l18_mut_probe "$@")"
+  if [ "$out" = "0 1" ]; then
+    PASS "$id: ARMED-RED — with $what, the arm reports pass=0 fail=1, so its green is the property's"
+  else
+    FAIL "$id: ARMED-RED did not fire — with $what, the arm reports '$out' (want '0 1'), so its green proves nothing about the property"
+  fi
+}
+# A function's definition with one text replaced, re-evaluated: the mutation helper the controls share.
+l18_rewrite() { # <function> <old text> <new text>
+  local b; b="$(declare -f "$1" 2>/dev/null)"
+  eval "$(l18_sub "$b" "$2" "$3")"
+}
+L18_M_EMPTY='group_only_sections() { return 0; }'
+L18_M_PUB='group_only_sections() { local t o="" p; p="$(strip_to_published_text "$1")"; for t in $L18_TOKS; do case "$p" in *"$t"*) o="$o${o:+ }$t" ;; esac; done; printf "%s" "$o"; return 0; }'
+L18_M_ALLOW='eval "$(declare -f refuse_group_only_render | sed "1s/^refuse_group_only_render/l18_real_refuse/")"; refuse_group_only_render() { [ "${ALLOW_PLAINTEXT:-}" != 1 ] || return 0; l18_real_refuse "$@"; }'
+L18_M_ZERO='l18_rewrite group_only_sections "if [ \"\$go_n\" -eq 0 ]; then" "if [ \"\$go_n\" -eq 0 ]; then return 0;"'
+L18_M_LIMB='l18_rewrite cmd_publish "[ \"\$plaintext\" != \"1\" ] || refuse_group_only_render" "refuse_group_only_render"'
+L18_M_LATE='l18_rewrite cmd_publish "[ \"\$plaintext\" != \"1\" ] || refuse_group_only_render \"\$site_html\"" ":"'
+L18_M_RECHECK='l18_rewrite cmd_publish "refuse_group_only_render \"\$pub_dir/index.html\"" ": "'
+# The scan program's candidate line, as the reader writes it, and the non-overlapping, quote-aware idiom that
+# would replace it (F1's mutation); and its reference-decode line (L18f's). Prefix-matched, so a moved line
+# leaves the program unchanged and the control reports that it did not fire. These are the mutations' targets,
+# not a copy of the program: a control that names the line it breaks has to name the line.
+l18_scan_rewrite() { # <line prefix> [replacement line] -> _GROUP_ONLY_SCAN with that line replaced, or dropped
+  _GROUP_ONLY_SCAN="$(printf '%s\n' "${_GROUP_ONLY_SCAN:-}" | L18P="$1" L18R="${2-}" L18D="${2+x}" \
+    awk 'index($0, ENVIRON["L18P"]) == 1 { if (ENVIRON["L18D"] != "") print ENVIRON["L18R"]; next } { print }')"
+}
+L18_OVERLAP_PRE='  while ($s =~ /<(?=[A-Za-z])/g)'
+L18_OVERLAP_NEW='  while ($s =~ /<[A-Za-z](?:[^>"\x27]|"[^"]*"|\x27[^\x27]*\x27)*>?/g) { push @cand, $-[0] }'
+L18_DECODE_PRE='  $v =~ s/&(?:'
+l18_m_nonoverlap() { l18_scan_rewrite "$L18_OVERLAP_PRE" "$L18_OVERLAP_NEW"; }
+l18_m_nodecode()   { l18_scan_rewrite "$L18_DECODE_PRE"; }
+L18_M_NONOVERLAP='l18_m_nonoverlap'
+L18_M_NODECODE='l18_m_nodecode'
+l18_mut_assert "L18a-mut" "the detector returning an empty token set" "$L18_M_EMPTY" l18a_assert "L18a-mut" "$L18T1"
+l18_pair="$(l18_mut_probe "$L18_M_EMPTY" l18b_assert "L18b-pair" "" nomodel "GUARD ABORTED publish")"
+if [ "$l18_pair" = "1 0" ]; then
+  PASS "L18b-pair: CONTROL — under the same mutation L18a turns red while L18b stays green (pass=1 fail=0), so the pair discriminates the detector, not the fixture"
+else
+  FAIL "L18b-pair: CONTROL — under the empty-detector mutation L18b reports '$l18_pair' (want '1 0'), so the pair does not discriminate the detector"
+fi
+l18_mut_assert "L18c-mut" "the detector pointed at strip_to_published_text instead of raw start tags" "$L18_M_PUB" l18_scan_assert "L18c-D" pass
+l18_mut_assert "L18d-mut" "ALLOW_PLAINTEXT reaching the refusal" "$L18_M_ALLOW" l18d_assert "L18d-mut"
+l18_mut_assert "L18e-mut" "the zero-row branch returning an empty token set as a clean read" "$L18_M_ZERO" l18e_assert "L18e-mut" empty
+l18_mut_assert "L18f-A02-mut" "the scan made non-overlapping (the quote-aware idiom over whole tags)" "$L18_M_NONOVERLAP" l18_scan_assert "L18f-A02" refuse
+l18_mut_assert "L18f-K-mut" "the character-reference decode removed" "$L18_M_NODECODE" l18_scan_assert "L18f-K" refuse
+l18_mut_assert "L18h-mut" "the plaintext condition removed from the refusal's call" "$L18_M_LIMB" l18h_assert "L18h-mut"
+l18_mut_assert "L18j-mut" "the refusal's early call removed, so the content guard runs first" "$L18_M_LATE" l18j_assert "L18j-mut"
+l18_mut_assert "L18k-mut" "the staged copy's re-check removed" "$L18_M_RECHECK" l18k_assert "L18k-mut"
+
+# ── The MD registrations: each arm re-run with its subject removed must report exactly one FAIL.
+while IFS="	" read -r l18id l18want l18frag; do
+  [ -n "$l18id" ] || continue
+  md_flips group_only_sections "$l18id" l18_scan_assert "$l18id" "$l18want"
+done < "$L18_FIX"
+if [ -n "$L18_TOKS" ]; then
+  for l18t in $L18_TOKS; do md_flips group_only_sections "L18a-$l18t" l18a_assert "L18a-$l18t" "$l18t"; done
+else
+  md_flips group_only_sections "L18a" l18a_assert "L18a" ""
+fi
+md_flips group_only_sections "L18b-nomodel" l18b_assert "L18b-nomodel" "" nomodel "GUARD ABORTED publish"
+md_flips group_only_sections "L18b-model" l18b_assert "L18b-model" "" model "refusing non-interactive plaintext publish"
+md_flips group_only_sections "L18c-e2e" l18b_assert "L18c-e2e" '<a href="#@T@" id="@T@" data-x="@T@" title="@T@">jump</a><p>The @T@ idea.</p>' nomodel "GUARD ABORTED publish"
+md_flips refuse_group_only_render "L18d" l18d_assert "L18d"
+for l18c in empty heading malformed absent; do md_flips refuse_group_only_render "L18e-$l18c" l18e_assert "L18e-$l18c" "$l18c"; done
+md_flips group_only_sections "L18h" l18h_assert "L18h"
+md_flips refuse_group_only_render "L18j" l18j_assert "L18j"
+md_flips refuse_group_only_render "L18k" l18k_assert "L18k"
+md_flips group_only_sections "L18m-run" l18m_assert "L18m-run" "$L18W/cap-run.html" 0
+md_flips group_only_sections "L18m-quote" l18m_assert "L18m-quote" "$L18W/cap-quote.html" 0
+md_flips group_only_sections "L18m-budget" l18m_assert "L18m-budget" "$L18W/cap-budget.html" 2
+
 # Teardown: mocks go; the shimmed production functions are RE-DEFINED from the saved
 # definitions, never unset — `unset -f` here would delete the real ones.
 unset -f gh npx
