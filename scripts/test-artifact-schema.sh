@@ -4244,7 +4244,8 @@ st_cf_unres_note() { [ -z "$ST_CF_UNRES" ] || printf '%s — ' "$ST_CF_UNRES"; }
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group FT — reference/data-model.md's field table: the extractor that reads it by index, the
 # (section, label) resolver every group reading it goes through, and the table's own integrity
-# — its row count, its key, its vocabulary and its coverage — asserted rather than assumed.
+# — its row count, its (section, label) pair, its Key column, its vocabulary and its coverage —
+# asserted rather than assumed.
 #
 # ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
 # The field table used to be read by index in several places, each carrying its own copy of the
@@ -4268,8 +4269,9 @@ st_cf_unres_note() { [ -z "$ST_CF_UNRES" ] || printf '%s — ' "$ST_CF_UNRES"; }
 # extract verb in skills/trip-record/SKILL.md; FT6 grades that both still say it.
 #
 # ── THE INTERFACE, WHICH LATER GROUPS REUSE RATHER THAN RE-DERIVE ────────────────
-#   ft_rows <data-model> [all]   num section label class ovr scope horizon star line rationale,
-#                                one TAB record per row; `all` admits the unlabelled row too
+#   ft_rows <data-model> [all]   num section label class ovr scope horizon star line rationale key,
+#                                one TAB record per row; `all` admits the unlabelled row too; key is
+#                                the slug inside the Key cell's code span, empty where it is not one
 #   ft_resolve <rows-file>       reads `heading<TAB>label[<TAB>passthrough…]` on stdin and
 #                                writes, in input order, ONE<TAB>num, NONE<TAB>- or
 #                                AMBIG<TAB>n,m, each followed by the input line. It never
@@ -4306,6 +4308,14 @@ st_cf_unres_note() { [ -z "$ST_CF_UNRES" ] || printf '%s — ' "$ST_CF_UNRES"; }
 #        exactly one row in the data model's signal-route-declaration fence, every row names
 #        such a section, every value is inside the fence's declared vocabulary, and no row
 #        declares a value the table's own Class column refuses for its section
+#   FT8  the Key column (ADR-053): every numbered row carries a ninth cell holding exactly one
+#        code span, its slug inside the grammar § Field Scope states, and no two rows share a key
+#        — total, as Class, Scope and Horizon are. Its controls APPEND rows to a copy, so they land
+#        whether or not the column is complete
+#   FT9  the former-label declaration: one fence; each row two cells, naming a key the table
+#        carries, unlike its field's current label, and reusing no label another field carries now
+#        or carried before under a section one of which leads the other. It holds no row until a
+#        field is reworded, so it renders VACUOUS, and its controls plant rows on a synthetic table
 # Every arm has a standing control on a COPY under $WORK, asserted to have LANDED, and graded
 # as a DELTA against this run's own live reading — never against a clean-table literal — so a
 # mutation replayed on the tracked table turns the arm it targets red, and every control whose
@@ -4314,7 +4324,7 @@ st_cf_unres_note() { [ -z "$ST_CF_UNRES" ] || printf '%s — ' "$ST_CF_UNRES"; }
 # No count is spelled in this group: the declared row count is read from the document.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
-echo "FT — the field table: read through ft_rows, resolved on (section, label), its row count declared and its key unique"
+echo "FT — the field table: read through ft_rows, resolved on (section, label), its row count declared, its pair unique, its Key column total and its former labels declared"
 
 FT_RAN=0
 FT_OK=1
@@ -4343,7 +4353,9 @@ ft_rows() {
       sec = $4; gsub(/^[ \t]+|[ \t]+$/, "", sec); cls = $5; gsub(/[ \t*]/, "", cls)
       ovr = $6; gsub(/[ \t*]/, "", ovr); scp = $7; gsub(/[ \t`]/, "", scp)
       hor = $8; gsub(/[ \t`*]/, "", hor); rat = $9; gsub(/^[ \t]+|[ \t]+$/, "", rat)
-      printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d\t%s\n", num, sec, lbl, cls, ovr, scp, hor, (index($3, star) > 0) ? 1 : 0, FNR, rat }' "$1"
+      key = (NF >= 11) ? $10 : ""; gsub(/^[ \t]+|[ \t]+$/, "", key)
+      if (key ~ /^`[^`]+`$/) key = substr(key, 2, length(key) - 2); else key = ""
+      printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d\t%s\t%s\n", num, sec, lbl, cls, ovr, scp, hor, (index($3, star) > 0) ? 1 : 0, FNR, rat, key }' "$1"
 }
 ft_resolve() {
   awk -F'\t' "$FT_LEAD_FN"'
@@ -4608,9 +4620,9 @@ ft_count_report() {
   printf '%s\t%s\t%s\t%s\n' "$r" "$(awk 'NF { print; exit }' <<<"$d")" "$nd" "$sq"
 }
 
-# ft_key_report <data-model> — one record per pair of labelled rows sharing a label under
+# ft_pair_report <data-model> — one record per pair of labelled rows sharing a label under
 # sections one of which leads the other: num-a<TAB>num-b<TAB>label<TAB>section-a<TAB>section-b.
-ft_key_report() {
+ft_pair_report() {
   ft_rows "$1" | awk -F'\t' "$FT_LEAD_FN"'
     { n++; num[n] = $1; sec[n] = $2; lab[n] = $3 }
     END { for (i = 1; i <= n; i++) for (j = i + 1; j <= n; j++)
@@ -4649,10 +4661,10 @@ ft_count_assert() {
     PASS "FT1: the field table carries exactly the $d row(s) its denominator rule declares, numbered 1..N in file order. The count is READ from the reconciliation's own '= <N> answerable slots' rather than spelled here, so a row added or removed alone turns this red — CTL-FT1-OVER and CTL-FT1-UNDER show both directions, and CTL-FT1-REWORD shows a rationale edit does not"
   fi
 }
-ft_key_assert() {
+ft_pair_assert() {
   local nl rep nk
   nl="$(ft_rows "$1" | grep -c '[^[:space:]]')"
-  rep="$(ft_key_report "$1")"
+  rep="$(ft_pair_report "$1")"
   nk="$(printf '%s\n' "$rep" | grep -c '[^[:space:]]')"
   if [ "${nl:-0}" -lt 1 ]; then
     FAIL "FT2: the field table parsed to 0 labelled rows, so an empty key report here would certify a key over nothing"
@@ -4660,7 +4672,7 @@ ft_key_assert() {
     FAIL "FT2: $nk pair(s) of labelled rows share a label under sections one of which leads the other, so a bullet under a heading both sections lead resolves to BOTH rows — AMBIG, which every reader of this table treats as FAIL:"
     printf '%s\n' "$rep" | awk -F'\t' 'NF >= 5 { printf "      rows %s and %s: `%s` under `%s` and `%s`\n", $1, $2, $3, $4, $5 }'
   else
-    PASS "FT2: no two of the $nl labelled row(s) share a label under sections one of which leads the other, so no bullet can resolve to two rows and ft_resolve's AMBIG is unreachable on the tracked table. A label MAY repeat across unrelated sections — \`Applies to\` does — which is why the key is (section, label). CTL-FT2-DUP, CTL-FT2-LEAD and CTL-FT2-NEAR show this failing on a duplicate and on a glossed section, and staying silent across a token boundary"
+    PASS "FT2: no two of the $nl labelled row(s) share a label under sections one of which leads the other, so no bullet can resolve to two rows and ft_resolve's AMBIG is unreachable on the tracked table. A label MAY repeat across unrelated sections — \`Applies to\` does — which is why a bullet joins its row on (section, label); the field's own key is the Key column, which FT8 grades. CTL-FT2-DUP, CTL-FT2-LEAD and CTL-FT2-NEAR show this failing on a duplicate and on a glossed section, and staying silent across a token boundary"
   fi
 }
 ft_vocab_assert() {
@@ -4931,6 +4943,109 @@ ft_route_assert() {
   fi
 }
 
+# ── FT8 — the Key column (ADR-053 Decisions 1, 2 and 5). The grammar is matched with an explicit
+# character set, never a range: group LC measured `[a-z]` matching upper case under a UTF-8
+# collation. § Field Scope states the grammar; this is its reader, not a second statement of it.
+FT_KEY_CH='abcdefghijklmnopqrstuvwxyz0123456789'
+# ft_keycol_report <data-model> — one record per defect in the Key column, over EVERY numbered row,
+# the unlabelled one included, because the column is total: num<TAB>kind<TAB>detail. `cells` is a
+# row whose cell count is not nine (a row's leading and trailing pipes add two empty fields, so
+# nine cells read NF == 11); `nospan` a Key cell that is not exactly one code span; `shape` a span
+# holding something outside the grammar; `dup` a key a later row repeats, naming the first row.
+ft_keycol_report() {
+  awk -F'|' -v ch="$FT_KEY_CH" '
+    BEGIN { re = "^[" ch "]+(-[" ch "]+)*$" }
+    NF < 9 { next }
+    { num = $2; gsub(/[ \t]/, "", num); if (num !~ /^[0-9]+$/) next
+      if (NF != 11) { print num "\tcells\t" (NF - 2); next }
+      c = $10; gsub(/^[ \t]+|[ \t]+$/, "", c)
+      if (c !~ /^`[^`]+`$/) { print num "\tnospan\t" ((c == "") ? "-" : c); next }
+      k = substr(c, 2, length(c) - 2)
+      if (k !~ re) { print num "\tshape\t" k; next }
+      if (k in first) { print num "\tdup\t" k " (row " first[k] ")"; next }
+      first[k] = num }' "$1"
+}
+ft_keycol_assert() {
+  local nr rep nd
+  nr="$(ft_rows "$1" all | grep -c '[^[:space:]]')"
+  rep="$(ft_keycol_report "$1")"
+  nd="$(printf '%s\n' "$rep" | grep -c '[^[:space:]]')"
+  if [ "${nr:-0}" -lt 1 ]; then
+    FAIL "FT8: the field table parsed to 0 rows, so an empty Key-column report here would certify a column over nothing"
+  elif [ "$nd" -ne 0 ]; then
+    FAIL "FT8: $nd row(s) of the field table break the Key column — a row without its ninth cell, a Key cell that is not one code span, a key outside the slug grammar § Field Scope states, or a key a second row repeats:"
+    printf '%s\n' "$rep" | awk -F'\t' 'NR <= 12 && NF >= 3 { printf "      row %s: %s %s\n", $1, $2, $3 } NR == 13 { print "      …" }'
+  else
+    PASS "FT8: all $nr row(s) of the field table carry a Key cell, last, holding one code span whose slug is inside the grammar § Field Scope states, and no two rows share a key — the column is total, as Class, Scope and Horizon are. CTL-FT8-MISSING, -NOSPAN, -SPACE, -SHAPE, -DUP and -CELLS show it failing, and CTL-FT8-FRESH shows a new row with an unused valid key leaving it green"
+  fi
+}
+
+# ── FT9 — the former-label declaration (ADR-053 Decision 3). ft_former_rows ALWAYS prints its
+# `F<TAB><openers>` record first, so a removed extractor (no F record) is told apart from an empty
+# fence (an F record and no R): the first is a FAIL, the second a VACUOUS.
+FT_FORMER_TAG='field-former-label-declaration'
+# ft_former_rows <data-model> — F<TAB>openers; then R<TAB>line<TAB>key<TAB>former per row and
+# M<TAB>line per row that is not two non-empty pipe-separated cells. Comment and blank lines skip.
+ft_former_rows() {
+  awk -v tag='```'"$FT_FORMER_TAG" '
+    { l = $0; sub(/[ \t\r]+$/, "", l) }
+    !on && l == tag { o++; on = 1; next }
+    on && substr(l, 1, 3) == "```" { on = 0; next }
+    on { t = l; sub(/^[ \t]+/, "", t)
+         if (t == "" || substr(t, 1, 1) == "#") next
+         n = split(l, c, "|")
+         k = c[1]; f = c[2]; gsub(/^[ \t]+|[ \t]+$/, "", k); gsub(/^[ \t]+|[ \t]+$/, "", f)
+         if (n != 2 || k == "" || f == "") { m[++nm] = FNR; next }
+         r[++nr] = FNR "\t" k "\t" f }
+    END { print "F\t" (o + 0)
+          for (i = 1; i <= nr; i++) print "R\t" r[i]
+          for (i = 1; i <= nm; i++) print "M\t" m[i] }' "$1"
+}
+# ft_former_report <data-model> — one record per defect, joined to the table: kind<TAB>line<TAB>
+# detail. `unresolved` names no key the table carries; `current` repeats its own field's current
+# label; `reuse` is another field's current label, and `reuse-former` another former label, under
+# sections one of which leads the other — FT2's condition, so a former label resolves to exactly one
+# field wherever a bullet would. A repeated (key, former) row is caught as `reuse-former`. Two
+# inputs keyed on FILENAME, never on NR == FNR, so an empty table cannot be read as the declaration.
+ft_former_report() {
+  awk -F'\t' "$FT_LEAD_FN"'
+    FILENAME == ARGV[1] { if ($11 != "") { n++; rk[n] = $11; rs[n] = $2; rl[n] = $3; sec[$11] = $2; lab[$11] = $3 }; next }
+    $1 != "R" { next }
+    { ln = $2; k = $3; fl = $4; hit = ""
+      if (!(k in sec)) { print "unresolved\t" ln "\t" k; next }
+      if (fl == lab[k]) { print "current\t" ln "\t" k " is already `" fl "`"; next }
+      s = sec[k]
+      for (i = 1; i <= n; i++) if (hit == "" && rk[i] != k && rl[i] == fl && (ft_lead(rs[i], s) || ft_lead(s, rs[i]))) hit = rk[i]
+      if (hit != "") { print "reuse\t" ln "\t`" fl "` is the current label of " hit; next }
+      for (j = 1; j <= nf; j++) if (hit == "" && ff[j] == fl && (ft_lead(fs[j], s) || ft_lead(s, fs[j]))) hit = fk[j]
+      if (hit != "") { print "reuse-former\t" ln "\t`" fl "` is also a former label of " hit; next }
+      nf++; fk[nf] = k; fs[nf] = s; ff[nf] = fl }' <(ft_rows "$1" all) <(ft_former_rows "$1")
+}
+ft_former_assert() {
+  local dec nfr opn nm nrow rep nd
+  dec="$(ft_former_rows "$1")"
+  nfr="$(printf '%s\n' "$dec" | awk -F'\t' '$1 == "F" { n++ } END { print n + 0 }')"
+  opn="$(awk -F'\t' '$1 == "F" { print $2 + 0; exit }' <<<"$dec")"
+  nm="$(printf '%s\n' "$dec" | awk -F'\t' '$1 == "M" { n++ } END { print n + 0 }')"
+  nrow="$(printf '%s\n' "$dec" | awk -F'\t' '$1 == "R" { n++ } END { print n + 0 }')"
+  rep="$(ft_former_report "$1")"
+  nd="$(printf '%s\n' "$rep" | grep -c '[^[:space:]]')"
+  if [ "$nfr" -ne 1 ]; then
+    FAIL "FT9: the former-label extractor returned no fence record, so nothing below was read — a broken extractor, never an empty declaration"
+  elif [ "${opn:-0}" -ne 1 ]; then
+    FAIL "FT9: the data model carries ${opn:-0} \`$FT_FORMER_TAG\` fence(s) where exactly one is owed — none leaves a reworded field's former labels with no home, and two leave a reader free to read either"
+  elif [ "$nm" -ne 0 ]; then
+    FAIL "FT9: $nm row(s) of the former-label declaration are not two non-empty pipe-separated cells, \`key | former label\`, so their key or their former label cannot be read"
+  elif [ "$nd" -ne 0 ]; then
+    FAIL "FT9: $nd row(s) of the former-label declaration name no key the table carries, repeat their field's current label, or reuse a label another field carries now or carried before under a section one of which leads the other:"
+    printf '%s\n' "$rep" | awk -F'\t' 'NF >= 3 { printf "      line %s: %s — %s\n", $2, $1, $3 }'
+  elif [ "$nrow" -eq 0 ]; then
+    VACUOUS "FT9: the former-label declaration is present once and holds no row — no field has been reworded since keys were declared, so its resolution and reuse limbs had an EMPTY POPULATION here and proved nothing about this tree. CTL-FT9-ROW, -OTHER-SECTION, -UNRESOLVED, -CURRENT, -REUSE, -REUSE-FORMER and -DUP-ROW plant rows on a synthetic table and carry them"
+  else
+    PASS "FT9: the former-label declaration is present once, and each of its $nrow row(s) names a key the table carries, differs from that field's current label, and reuses no label another field carries now or carried before under a section one of which leads the other. CTL-FT9-UNRESOLVED, -CURRENT, -REUSE, -REUSE-FORMER, -DUP-ROW, -MALFORMED, -TWICE and -NOFENCE show it failing, and CTL-FT9-ROW and -OTHER-SECTION show it passing"
+  fi
+}
+
 # ── FT0 — the extraction is non-empty. The rest of the group, and every group that resolves
 # through this one, would otherwise grade an empty table.
 FT_ROWS0="$WORK/ft/rows.tsv"
@@ -4954,20 +5069,23 @@ FT_FORMS="$(ft_declared)"
 FT_FORM_C="$(awk -F'\t' '$1 == "whole" { print $2; exit }' <<<"$FT_FORMS")"
 
 ft_count_assert "$FT_DOC"
-ft_key_assert "$FT_DOC"
+ft_pair_assert "$FT_DOC"
 ft_vocab_assert "$FT_DOC"
 ft_resolve_assert
 ft_cover_assert "$FT_DOC" "$FT_FORMS"
 ft_rule_assert "$FT_DOC" "$FT_SKILL"
 ft_route_assert "$FT_DOC" "$FT_FORMS"
+ft_keycol_assert "$FT_DOC"
+ft_former_assert "$FT_DOC"
 
 # ── The controls. Each mutates a COPY under $WORK, asserts the mutation LANDED, and compares the
 # copy's report with this run's LIVE report as a delta, so replaying a mutation on the tracked
 # table reddens the arm it targets and leaves standing each control whose target it leaves alone.
 if [ "$FT_OK" -eq 1 ]; then
   FT_REP0="$(ft_count_report "$FT_DOC")"
-  FT_KR0="$(ft_key_report "$FT_DOC")"
+  FT_PR0="$(ft_pair_report "$FT_DOC")"
   FT_VR0="$(ft_vocab_report "$FT_DOC")"
+  FT_KC0="$(ft_keycol_report "$FT_DOC")"
   FT_CR0="$(ft_rows "$FT_DOC" all | awk -F'\t' '$1 + 0 > m { m = $1 + 0 } END { print m + 0 }')"
   FT_NEXT=$((FT_CR0 + 1))
   FT_LASTLN="$(ft_rows "$FT_DOC" all | awk -F'\t' 'END { print $9 + 0 }')"
@@ -4979,7 +5097,9 @@ if [ "$FT_OK" -eq 1 ]; then
       !past { if ($0 != "") a[$0] = 1; next }
       $0 != "" && !($0 in a) { print }'
   }
-  ft_row_line() { printf '| %s | `%s` | %s | **%s** | %s | `%s` | `admissible` | %s |\n' "$@"; }
+  # A synthetic row carries the ninth cell every row now has; its key defaults to one derived from
+  # its number, so no control's row collides with a live key or with another control's.
+  ft_row_line() { printf '| %s | `%s` | %s | **%s** | %s | `%s` | `admissible` | %s | `%s` |\n' "$1" "$2" "$3" "$4" "$5" "$6" "$7" "${8:-zz-ft-row-$1}"; }
 
   # CTL-FT1-OVER / -UNDER — MUST FIRE, one row added and one row removed, each alone.
   FT_FX="$WORK/ft/over.md"; cp "$FT_DOC" "$FT_FX"
@@ -5002,17 +5122,19 @@ if [ "$FT_OK" -eq 1 ]; then
   else
     FAIL "CTL-FT1-UNDER: MUST FIRE — landed=$FT_LD, the count report read '$(printf '%s' "$FT_R" | tr '\t' ' ')' where '$(printf '%s' "$FT_WANT" | tr '\t' ' ')' was owed. The instrument FT1 grades does not see a removed row"
   fi
-  # CTL-FT1-REWORD — MUST NOT FIRE. A rationale edit changes the document and no count, key or cell.
+  # CTL-FT1-REWORD — MUST NOT FIRE. A rationale edit changes the document and no count, pair, key or
+  # cell. The rationale is the ninth field by position (`$9`, as ft_rows reads it), no longer the
+  # last cell: the Key cell follows it.
   FT_FX="$WORK/ft/reword.md"
-  awk -v ln="$FT_LASTLN" 'FNR == ln { sub(/[ ][|][ \t]*$/, " zzq-ft-reworded |") } { print }' "$FT_DOC" > "$FT_FX"
+  awk -F'|' -v OFS='|' -v ln="$FT_LASTLN" 'FNR == ln { $9 = $9 "zzq-ft-reworded " } { print }' "$FT_DOC" > "$FT_FX"
   FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
   FT_SAME=0
-  [ "$(ft_count_report "$FT_FX")" = "$FT_REP0" ] && [ "$(ft_key_report "$FT_FX")" = "$FT_KR0" ] \
-    && [ "$(ft_vocab_report "$FT_FX")" = "$FT_VR0" ] && FT_SAME=1
+  [ "$(ft_count_report "$FT_FX")" = "$FT_REP0" ] && [ "$(ft_pair_report "$FT_FX")" = "$FT_PR0" ] \
+    && [ "$(ft_vocab_report "$FT_FX")" = "$FT_VR0" ] && [ "$(ft_keycol_report "$FT_FX")" = "$FT_KC0" ] && FT_SAME=1
   if [ "$FT_LD" -eq 1 ] && [ "$FT_SAME" -eq 1 ]; then
-    PASS "CTL-FT1-REWORD: MUST NOT FIRE — the last row's rationale reworded on a copy of the model leaves the count, key and vocabulary reports byte-equal to this run's live ones. The arms grade the table's structure, not its prose"
+    PASS "CTL-FT1-REWORD: MUST NOT FIRE — the last row's rationale reworded on a copy of the model leaves the count, pair, vocabulary and Key-column reports byte-equal to this run's live ones. The arms grade the table's structure, not its prose"
   else
-    FAIL "CTL-FT1-REWORD: MUST NOT FIRE — landed=$FT_LD reports-unchanged=$FT_SAME: a rationale edit moved a structural report, so FT1-FT3 would redden on prose"
+    FAIL "CTL-FT1-REWORD: MUST NOT FIRE — landed=$FT_LD reports-unchanged=$FT_SAME: a rationale edit moved a structural report, so FT1-FT3 or FT8 would redden on prose"
   fi
 
   # CTL-FT2-DUP — MUST FIRE, and it is the milestone's own worked hazard: a second row for a label
@@ -5025,7 +5147,7 @@ if [ "$FT_OK" -eq 1 ]; then
   FT_FX="$WORK/ft/dup.md"; cp "$FT_DOC" "$FT_FX"
   ft_row_line "$FT_NEXT" "$FT_DUPL" "$FT_DUPS" PERSON '**N**' block 'a synthetic second row for a label the table already carries' >> "$FT_FX"
   FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
-  FT_ADD="$(ft_delta "$FT_KR0" "$(ft_key_report "$FT_FX")")"
+  FT_ADD="$(ft_delta "$FT_PR0" "$(ft_pair_report "$FT_FX")")"
   FT_NADD="$(printf '%s\n' "$FT_ADD" | grep -c '[^[:space:]]')"
   FT_OFF="$(printf '%s\n' "$FT_ADD" | awk -F'\t' -v n="$FT_NEXT" -v l="$FT_DUPL" 'NF && !(($1 == n || $2 == n) && $3 == l) { k++ } END { print k + 0 }')"
   if [ "$FT_LD" -eq 1 ] && [ "$FT_NADD" -ge 1 ] && [ "$FT_OFF" -eq 0 ]; then
@@ -5038,7 +5160,7 @@ if [ "$FT_OK" -eq 1 ]; then
   { ft_row_line "$FT_NEXT" 'ZZ-FT-LEAD' 'ZZ-FT-SECTION' TRIP n/a slot 'synthetic'
     ft_row_line "$((FT_NEXT + 1))" 'ZZ-FT-LEAD' 'ZZ-FT-SECTION — a gloss' TRIP n/a slot 'synthetic'; } >> "$FT_FX"
   FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
-  FT_NL="$(ft_key_report "$FT_FX" | awk -F'\t' '$3 == "ZZ-FT-LEAD" { n++ } END { print n + 0 }')"
+  FT_NL="$(ft_pair_report "$FT_FX" | awk -F'\t' '$3 == "ZZ-FT-LEAD" { n++ } END { print n + 0 }')"
   if [ "$FT_LD" -eq 1 ] && [ "$FT_NL" -eq 1 ]; then
     PASS "CTL-FT2-LEAD: MUST FIRE — one label under \`ZZ-FT-SECTION\` and under \`ZZ-FT-SECTION — a gloss\` on a copy of the model yields exactly 1 key record: the gloss opens on a dash, so the shorter section leads the longer and one heading would reach both rows"
   else
@@ -5049,7 +5171,7 @@ if [ "$FT_OK" -eq 1 ]; then
   { ft_row_line "$FT_NEXT" 'ZZ-FT-NEAR' 'ZZ-FT-SECTION' TRIP n/a slot 'synthetic'
     ft_row_line "$((FT_NEXT + 1))" 'ZZ-FT-NEAR' 'ZZ-FT-SECTION leanings' TRIP n/a slot 'synthetic'; } >> "$FT_FX"
   FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
-  FT_NN="$(ft_key_report "$FT_FX" | awk -F'\t' '$3 == "ZZ-FT-NEAR" { n++ } END { print n + 0 }')"
+  FT_NN="$(ft_pair_report "$FT_FX" | awk -F'\t' '$3 == "ZZ-FT-NEAR" { n++ } END { print n + 0 }')"
   if [ "$FT_LD" -eq 1 ] && [ "$FT_NN" -eq 0 ]; then
     PASS "CTL-FT2-NEAR: MUST NOT FIRE — one label under \`ZZ-FT-SECTION\` and under \`ZZ-FT-SECTION leanings\` on a copy of the model yields 0 key records: the rest of the longer section opens on a letter, so the shorter does not lead it — the \`Destination\` / \`Destination leanings\` shape, which a string-prefix key would have convicted"
   else
@@ -5076,7 +5198,7 @@ if [ "$FT_OK" -eq 1 ]; then
   FT_FX="$WORK/ft/notable.md"
   awk -F'|' '{ ok = 1; if (NF >= 8) { num = $2; gsub(/[ \t]/, "", num); if (num ~ /^[0-9]+$/) ok = 0 } if (ok) print }' "$FT_DOC" > "$FT_FX"
   FT_X1="$(md_probe zzq_ft_no_such_subject ft_count_assert "$FT_FX")"
-  FT_X2="$(md_probe zzq_ft_no_such_subject ft_key_assert "$FT_FX")"
+  FT_X2="$(md_probe zzq_ft_no_such_subject ft_pair_assert "$FT_FX")"
   FT_X3="$(md_probe zzq_ft_no_such_subject ft_vocab_assert "$FT_FX")"
   FT_XR="$(md_probe zzq_ft_no_such_subject ft_count_assert "$FT_DOC")"
   FT_XRN="$(printf '%s' "$FT_XR" | awk '{ print $1 + $2 }')"
@@ -5363,6 +5485,86 @@ if [ "$FT_OK" -eq 1 ]; then
   else
     FAIL "CTL-FT7-NOFENCE: MUST FIRE — landed=$FT_LD, FT7 read '$FT_X1' on the copy where '0 1' is owed, and '$FT_XR' on the real document where exactly one verdict is owed"
   fi
+
+  # ── FT8's controls. Each APPENDS rows to a copy of the model, numbered past the live table, and
+  # compares the copy's Key-column report with this run's live one as a delta: the delta must be
+  # exactly the records the appended rows owe. Appending rather than editing a live key is what lets
+  # them land on any tree — the column complete or not — while a replay of the same mutation on the
+  # tracked table reddens FT8 alone.
+  ft_kc_row() { printf '| %s | `%s` | ZZ-FT-SECTION | **TRIP** | n/a | `slot` | `admissible` | synthetic | %s |\n' "$1" "$2" "$3"; }
+  ft_kc_case() {   # ft_kc_case <id> <must> <file-tag> <want-delta> — the rows are already in $FT_FX
+    local id="$1" must="$2" want="$4" add ld=0
+    cmp -s "$FT_DOC" "$FT_FX" || ld=1
+    add="$(ft_delta "$FT_KC0" "$(ft_keycol_report "$FT_FX")")"
+    if [ "$ld" -eq 1 ] && [ "$add" = "$want" ]; then
+      PASS "CTL-FT8-$id: $must — rows appended from row $FT_NEXT to a copy of the model add exactly '$(printf '%s' "$want" | tr '\t\n' ' ;')' to the Key-column report FT8 reads"
+    else
+      FAIL "CTL-FT8-$id: $must — landed=$ld, the Key-column report gained '$(printf '%s' "$add" | tr '\t\n' ' ;')' where '$(printf '%s' "$want" | tr '\t\n' ' ;')' was owed"
+    fi
+  }
+  FT_FX="$WORK/ft/kc-missing.md"; cp "$FT_DOC" "$FT_FX"
+  ft_kc_row "$FT_NEXT" 'ZZ-FT-KC' '' >> "$FT_FX"
+  ft_kc_case MISSING 'MUST FIRE' missing "$(printf '%s\tnospan\t-' "$FT_NEXT")"
+  FT_FX="$WORK/ft/kc-nospan.md"; cp "$FT_DOC" "$FT_FX"
+  ft_kc_row "$FT_NEXT" 'ZZ-FT-KC' 'zz-ft-kc-nospan' >> "$FT_FX"
+  ft_kc_case NOSPAN 'MUST FIRE' nospan "$(printf '%s\tnospan\tzz-ft-kc-nospan' "$FT_NEXT")"
+  FT_FX="$WORK/ft/kc-space.md"; cp "$FT_DOC" "$FT_FX"
+  ft_kc_row "$FT_NEXT" 'ZZ-FT-KC' '`zz ft-kc`' >> "$FT_FX"
+  ft_kc_case SPACE 'MUST FIRE' space "$(printf '%s\tshape\tzz ft-kc' "$FT_NEXT")"
+  FT_FX="$WORK/ft/kc-shape.md"; cp "$FT_DOC" "$FT_FX"
+  { ft_kc_row "$FT_NEXT" 'ZZ-FT-KC-1' '`ZZ-ft-kc`'
+    ft_kc_row "$((FT_NEXT + 1))" 'ZZ-FT-KC-2' '`zz_ft_kc`'
+    ft_kc_row "$((FT_NEXT + 2))" 'ZZ-FT-KC-3' '`zz--ft-kc`'
+    ft_kc_row "$((FT_NEXT + 3))" 'ZZ-FT-KC-4' '`-zz-ft-kc`'; } >> "$FT_FX"
+  ft_kc_case SHAPE 'MUST FIRE' shape "$(printf '%s\tshape\tZZ-ft-kc\n%s\tshape\tzz_ft_kc\n%s\tshape\tzz--ft-kc\n%s\tshape\t-zz-ft-kc' "$FT_NEXT" "$((FT_NEXT + 1))" "$((FT_NEXT + 2))" "$((FT_NEXT + 3))")"
+  FT_FX="$WORK/ft/kc-dup.md"; cp "$FT_DOC" "$FT_FX"
+  { ft_kc_row "$FT_NEXT" 'ZZ-FT-KC-A' '`zz-ft-kc-dup`'
+    ft_kc_row "$((FT_NEXT + 1))" 'ZZ-FT-KC-B' '`zz-ft-kc-dup`'; } >> "$FT_FX"
+  ft_kc_case DUP 'MUST FIRE' dup "$(printf '%s\tdup\tzz-ft-kc-dup (row %s)' "$((FT_NEXT + 1))" "$FT_NEXT")"
+  FT_FX="$WORK/ft/kc-cells.md"; cp "$FT_DOC" "$FT_FX"
+  printf '| %s | `ZZ-FT-KC` | ZZ-FT-SECTION | **TRIP** | n/a | `slot` | `admissible` | synthetic |\n' "$FT_NEXT" >> "$FT_FX"
+  ft_kc_case CELLS 'MUST FIRE' cells "$(printf '%s\tcells\t8' "$FT_NEXT")"
+  FT_FX="$WORK/ft/kc-fresh.md"; cp "$FT_DOC" "$FT_FX"
+  ft_kc_row "$FT_NEXT" 'ZZ-FT-KC' '`zz-ft-kc-fresh`' >> "$FT_FX"
+  ft_kc_case FRESH 'MUST NOT FIRE' fresh ''
+
+  # ── FT9's controls. The live declaration holds no row until a field is reworded, so a delta over
+  # it is a delta over nothing. Each control instead builds a three-row synthetic table — two
+  # fields under one section, one under another — with the fence beside it, as FT4 grades the
+  # resolver on a synthetic table, and reads the verdict ft_former_assert renders over it.
+  ft_f9_doc() {   # ft_f9_doc <out> <fences> [row…] — <fences> is 0, 1 or 2 copies of the fence
+    local out="$1" nfence="$2" i; shift 2
+    { printf '| 1 | `ZZ Alpha` | ZZ Sec A | **TRIP** | n/a | `slot` | `admissible` | synthetic | `zz-alpha` |\n'
+      printf '| 2 | `ZZ Beta` | ZZ Sec A | **TRIP** | n/a | `slot` | `admissible` | synthetic | `zz-beta` |\n'
+      printf '| 3 | `ZZ Gamma` | ZZ Sec B | **TRIP** | n/a | `slot` | `admissible` | synthetic | `zz-gamma` |\n'
+      for ((i = 0; i < nfence; i++)); do
+        printf '\n```%s\n# key | former label\n' "$FT_FORMER_TAG"
+        [ "$i" -eq 0 ] && [ "$#" -gt 0 ] && printf '%s\n' "$@"
+        printf '```\n'
+      done; } > "$out"
+  }
+  ft_f9_case() {   # ft_f9_case <id> <must> <want "pass fail"> <fences> [row…]
+    local id="$1" must="$2" want="$3" nfence="$4" f got; shift 4
+    f="$WORK/ft/f9-$id.md"
+    ft_f9_doc "$f" "$nfence" "$@"
+    got="$(md_probe zzq_ft_no_such_subject ft_former_assert "$f")"
+    if [ -s "$f" ] && [ "$got" = "$want" ]; then
+      PASS "CTL-FT9-$id: $must — over a synthetic three-row table with $nfence fence(s)$( [ "$#" -gt 0 ] && printf ' holding %s' "$(printf '%s; ' "$@")" ), FT9 reports '$got' (pass fail), as owed"
+    else
+      FAIL "CTL-FT9-$id: $must — FT9 reported '$got' (pass fail) over the synthetic table where '$want' is owed"
+    fi
+  }
+  ft_f9_case EMPTY 'MUST NOT FIRE, and renders VACUOUS rather than PASS' '0 0' 1
+  ft_f9_case ROW 'MUST NOT FIRE' '1 0' 1 'zz-alpha | ZZ Old Alpha'
+  ft_f9_case OTHER-SECTION 'MUST NOT FIRE' '1 0' 1 'zz-gamma | ZZ Alpha'
+  ft_f9_case UNRESOLVED 'MUST FIRE' '0 1' 1 'zz-zeta | ZZ Old Zeta'
+  ft_f9_case CURRENT 'MUST FIRE' '0 1' 1 'zz-alpha | ZZ Alpha'
+  ft_f9_case REUSE 'MUST FIRE' '0 1' 1 'zz-alpha | ZZ Beta'
+  ft_f9_case REUSE-FORMER 'MUST FIRE' '0 1' 1 'zz-alpha | ZZ Old X' 'zz-beta | ZZ Old X'
+  ft_f9_case DUP-ROW 'MUST FIRE' '0 1' 1 'zz-alpha | ZZ Old X' 'zz-alpha | ZZ Old X'
+  ft_f9_case MALFORMED 'MUST FIRE' '0 1' 1 'zz-alpha'
+  ft_f9_case TWICE 'MUST FIRE' '0 1' 2
+  ft_f9_case NOFENCE 'MUST FIRE' '0 1' 0
 fi
 
 if [ "$FT_RAN" -ne 1 ]; then
@@ -17331,13 +17533,15 @@ md_flips st_dm_starred 'ST4'        st4_assert "$ST_ALLMARKED" "$ST_DM" "$ST_NRE
 md_flips ft_resolve    'ST3-resolve' st3_assert "$ST_MD_FORM" "$ST_DM"
 md_flips ft_resolve    'ST4-resolve' st4_assert "$ST_ALLMARKED" "$ST_DM" "$ST_NREAD"
 md_flips ft_rows       'FT1'        ft_count_assert "$FT_DOC"
-md_flips ft_rows       'FT2'        ft_key_assert "$FT_DOC"
+md_flips ft_rows       'FT2'        ft_pair_assert "$FT_DOC"
 md_flips ft_rows       'FT3'        ft_vocab_assert "$FT_DOC"
 md_flips ft_resolve    'FT4'        ft_resolve_assert
 md_flips ft_resolve    'FT5'        ft_cover_assert "$FT_DOC" "$FT_FORMS"
 md_flips ft_region     'FT6'        ft_rule_assert "$FT_DOC" "$FT_SKILL"
 md_flips ft_route_rows 'FT7'         ft_route_assert "$FT_DOC" "$FT_FORMS"
 md_flips ft_rows       'FT7-table'   ft_route_assert "$FT_DOC" "$FT_FORMS"
+md_flips ft_rows       'FT8'         ft_keycol_assert "$FT_DOC"
+md_flips ft_former_rows 'FT9'        ft_former_assert "$FT_DOC"
 md_flips ft_resolve    'FT7-resolve' ft_route_assert "$FT_DOC" "$FT_FORMS"
 # ── Group ST's conformance arm, REGISTERED on every function its form verdict rests on — the
 # evaluator, the boundary resolver, the surface reader the stop lives in, the resolver the join goes
