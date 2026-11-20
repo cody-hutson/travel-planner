@@ -6550,6 +6550,66 @@ else
   ST_OK=0
 fi
 
+# st_cf_vprobe <fn> [args…] — runs <fn> in a subshell with PASS, FAIL and VACUOUS rebound to silent
+# counters, as md_probe does for the first two, and prints "<pass> <fail> <vacuous> <unmeasured>"
+# on its first line — <unmeasured> the records left in ST_CF_UNMEAS when <fn> returns — then each
+# VACUOUS message on a line of its own. md_probe cannot count VACUOUS, which these controls grade.
+st_cf_vprobe() {
+  ( pass=0; fail=0; vacuous=0; vp_msg=""
+    PASS() { pass=$((pass+1)); }
+    FAIL() { fail=$((fail+1)); }
+    VACUOUS() { vacuous=$((vacuous+1)); vp_msg="$vp_msg$*
+"; }
+    "$@" >/dev/null 2>&1
+    printf '%d %d %d %d\n%s' "$pass" "$fail" "$vacuous" "$(printf '%s\n' "${ST_CF_UNMEAS:-}" | grep -c '[^[:space:]]')" "$vp_msg" )
+}
+
+# site0_gate <id> <body> <empty-msg> <collision-msg> <pass-msg> — the site entry gate both ST-SITE0
+# and ST-CF-SITE0 render, and the one CTL-ST-SITE0-DUP and CTL-ST-CF-SITE0-DUP drive on a planted
+# copy, so a control grades the shipping chain rather than a second copy of it. Exactly one verdict,
+# a chain: no raw site FAILs; raw sites collapsing to fewer distinct keys FAILs; else PASS. Each
+# message is the caller's, with @RAW@, @NK@ and @DUP@ standing for the two counts and the colliding
+# keys. Returns 0 on PASS and 1 on FAIL, so the caller can gate its site comparison on it.
+site0_gate() {
+  local id="$1" body="$2" me="$3" md="$4" mp="$5" sg_map sg_raw sg_nk sg_dup sg_m
+  sg_map="$(st_sitemap "$body")"
+  sg_raw="$(printf '%s\n' "$sg_map" | grep -c '[^[:space:]]')"
+  sg_nk="$(printf '%s\n' "$(st_sites "$body")" | grep -c '[^[:space:]]')"
+  sg_dup="$(awk -F'\t' 'NF > 1 { n[$1]++; c[$1] = $2 } END { for (k in n) if (n[k] > 1) printf "%s (code %s) ", k, c[k] }' <<<"$sg_map")"
+  sg_dup="${sg_dup% }"
+  if [ "$sg_raw" -eq 0 ]; then
+    sg_m="${me//@RAW@/$sg_raw}"; sg_m="${sg_m//@NK@/$sg_nk}"; sg_m="${sg_m//@DUP@/$sg_dup}"
+    FAIL "$id: $sg_m"
+    return 1
+  elif [ "$sg_nk" -ne "$sg_raw" ]; then
+    sg_m="${md//@RAW@/$sg_raw}"; sg_m="${sg_m//@NK@/$sg_nk}"; sg_m="${sg_m//@DUP@/$sg_dup}"
+    FAIL "$id: $sg_m"
+    return 1
+  else
+    sg_m="${mp//@RAW@/$sg_raw}"; sg_m="${sg_m//@NK@/$sg_nk}"; sg_m="${sg_m//@DUP@/$sg_dup}"
+    PASS "$id: $sg_m"
+    return 0
+  fi
+}
+
+# site0_dup_assert <id> <subject> <body> <empty-msg> <collision-msg> <pass-msg> — MUST FIRE: the
+# first tab-headed emission line of <body> is planted a second time in a COPY, which adds a raw site
+# resolving to an existing key, and site0_gate must render one FAIL and no PASS on that copy.
+site0_dup_assert() {
+  local id="$1" subj="$2" body="$3" sd_line sd_mut sd_out sd_planted=no
+  sd_line="$(awk '/["\047][A-Z][A-Z0-9]*(-[A-Z0-9]+)*\\t/ { print; exit }' <<<"$body")"
+  [ -n "$sd_line" ] && sd_planted=yes
+  sd_mut="$body
+$sd_line"
+  sd_out="$(st_cf_vprobe site0_gate "$id" "$sd_mut" "$4" "$5" "$6")"
+  sd_out="$(awk 'NR == 1' <<<"$sd_out")"
+  if [ "$sd_planted" = yes ] && [ "$sd_out" = "0 1 0 0" ]; then
+    PASS "$id: MUST FIRE — the first tab-headed emission of $subj, planted a second time in a COPY of its body, collapses two raw sites into one key, and the site gate renders one FAIL and no PASS. So the gate's PASS is an equality it can refuse, not a reading it cannot fail"
+  else
+    FAIL "$id: MUST FIRE — with the first tab-headed emission of $subj duplicated in a copy (planted=$sd_planted), the site gate rendered [pass fail vacuous pending] = [$sd_out] where [0 1 0 0] is owed. The gate cannot tell colliding sites from distinct ones"
+  fi
+}
+
 # ── ST-SITE0 — the ENTRY GATE for the site comparison, graded before anything rests on it, on
 # the shape this suite already ships nine times. It is NOT a zero: it is an EQUALITY between two
 # counts that must both be non-zero, so it cannot pass over an empty read.
@@ -6566,19 +6626,12 @@ fi
 # st_surfaces returns MORE raw sites than distinct keys, because PROSE is emitted twice from two
 # formats that are byte-identical after the tab.
 ST_SITE_OK=1
-ST_SITE_RAW="$(printf '%s\n' "$ST_SITEMAP" | grep -c '[^[:space:]]')"
 ST_SITE_KEYS="$(st_sites "$ST_SITE_BODY")"
-ST_SITE_NK="$(printf '%s\n' "$ST_SITE_KEYS" | grep -c '[^[:space:]]')"
-ST_SITE_DUP="$(awk -F'\t' 'NF > 1 { n[$1]++; c[$1] = $2 } END { for (k in n) if (n[k] > 1) printf "%s (code %s) ", k, c[k] }' <<<"$ST_SITEMAP")"
-if [ "$ST_SITE_RAW" -eq 0 ]; then
-  FAIL "ST-SITE0[$ST_TAG]: the emission-site reader returned NO sites over the body of st_violations, so every site verdict below would be a statement over the empty set — either the evaluator is no longer reachable by that name or its emission shape has moved, and either way this group's site coverage is UNMEASURED rather than complete"
-  ST_SITE_OK=0
-elif [ "$ST_SITE_NK" -ne "$ST_SITE_RAW" ]; then
-  FAIL "ST-SITE0[$ST_TAG]: $ST_SITE_RAW raw emission site(s) collapse to only $ST_SITE_NK distinct key(s) — key(s) ${ST_SITE_DUP% } are each produced by TWO OR MORE emission sites whose detail opens with the same literal, so those sites are indistinguishable in the output and the population below is UNDER-REPORTED. Give one of them a distinguishing literal head; a smaller denominator reading as full coverage is exactly the failure this arm exists to refuse"
-  ST_SITE_OK=0
-else
-  PASS "ST-SITE0[$ST_TAG]: the emission-site reader is non-degenerate and unambiguous — $ST_SITE_RAW raw site(s) resolving to $ST_SITE_NK distinct key(s), an EQUALITY between two non-zero counts rather than a zero, so it cannot pass over an empty read. The $ST_SITE_NK site(s) sit one rung below the $ST_NCODES code(s) ST-COV grades: a code emitted from several places is ONE member of that set and several of this one. What ST-SITE compares this against is recorded from what the evaluator ACTUALLY EMITTED when each arm ran, never from the code an arm declared it wanted — an arm can name a code and cannot name a site"
-fi
+# The three messages, held so CTL-ST-SITE0-DUP grades this gate on a planted copy through the same text.
+ST_SITE0_ME="the emission-site reader returned NO sites over the body of st_violations, so every site verdict below would be a statement over the empty set — either the evaluator is no longer reachable by that name or its emission shape has moved, and either way this group's site coverage is UNMEASURED rather than complete"
+ST_SITE0_MD="@RAW@ raw emission site(s) collapse to only @NK@ distinct key(s) — key(s) @DUP@ are each produced by TWO OR MORE emission sites whose detail opens with the same literal, so those sites are indistinguishable in the output and the population below is UNDER-REPORTED. Give one of them a distinguishing literal head; a smaller denominator reading as full coverage is exactly the failure this arm exists to refuse"
+ST_SITE0_MP="the emission-site reader is non-degenerate and unambiguous — @RAW@ raw site(s) resolving to @NK@ distinct key(s), an EQUALITY between two non-zero counts rather than a zero, so it cannot pass over an empty read. The @NK@ site(s) sit one rung below the $ST_NCODES code(s) ST-COV grades: a code emitted from several places is ONE member of that set and several of this one. What ST-SITE compares this against is recorded from what the evaluator ACTUALLY EMITTED when each arm ran, never from the code an arm declared it wanted — an arm can name a code and cannot name a site"
+site0_gate "ST-SITE0[$ST_TAG]" "$ST_SITE_BODY" "$ST_SITE0_ME" "$ST_SITE0_MD" "$ST_SITE0_MP" || ST_SITE_OK=0
 
 if [ "$ST_OK" -eq 1 ]; then
   ST_VIOL="$(st_violations "$ST_SURF")"
@@ -6823,6 +6876,9 @@ echo
 echo "  ── the code reader's declared terminator class, one control per member"
 cov_term_controls 'CTL-ST-COV-TERM' 'st_violations' st_codes cov_emit_term \
                   "$(declare -f st_violations)" "$ST_CODES" 'ZZTERMPROBE' 'ST-COV'
+# CTL-ST-SITE0-DUP — the site gate's collision limb, driven on a planted copy of st_violations' body
+# through the gate and the messages ST-SITE0 renders. Once: the subject is the evaluator.
+site0_dup_assert 'CTL-ST-SITE0-DUP' 'st_violations' "$ST_SITE_BODY" "$ST_SITE0_ME" "$ST_SITE0_MD" "$ST_SITE0_MP"
 
 # ── ST4 and its two RUN-LEVEL arms. They sit outside the per-form loop because the proposition
 # is about the union ACROSS members, and because the input ST3 cannot see is one no single
@@ -7622,6 +7678,92 @@ st_cf_mustnotfire() {
   fi
 }
 
+# st_cf_added <live> <copy> — one "<site-key> +<n>" per emission site whose count the copy RAISES
+# over the live reading, sorted. Both readings are attributed with the shipping st_attrib over
+# ST_CF_SITEMAP; a record no site explains attributes to <CODE>#?, which the live reading never
+# holds, so it is always reported — st_attrib's fail-closed rule. The SITE is the unit, measured
+# against two others: per code misses a finding that moves to another site of its code, and per
+# record reports a finding whose line merely shifted. A site key is the code plus an ordinal over
+# its literal format head, so it is line-independent and finer than the code.
+st_cf_added() {
+  local ad_mark
+  ad_mark="$(printf '\034')"
+  awk -v mark="$ad_mark" '
+    $0 == mark { side = 1; next }
+    NF { if (side) c[$0]++; else l[$0]++ }
+    END { for (k in c) if (c[k] > l[k] + 0) print k " +" (c[k] - l[k]) }
+  ' <<EOF | sort
+$(st_attrib "$1" "$ST_CF_SITEMAP")
+$ad_mark
+$(st_attrib "$2" "$ST_CF_SITEMAP")
+EOF
+}
+
+# st_cf_recon_assert <id> — every must-fire arm recorded as unmeasured over the run was named in an
+# unmeasured report: the arms recorded (counted at record time) equal the arm ids reported (counted
+# at report time), and nothing is left unreported. Exactly one verdict.
+st_cf_recon_assert() {
+  local rec="${ST_CF_UNMEAS_NREC:-0}" rep="${ST_CF_UNMEAS_NREP:-0}" left
+  left="$(printf '%s\n' "${ST_CF_UNMEAS:-}" | grep -c '[^[:space:]]')"
+  if [ "$rec" -ne "$rep" ]; then
+    FAIL "$1: $rec must-fire arm(s) were recorded as unmeasured and $rep were named in an unmeasured report — an arm that could not be measured left no verdict, no report and no line in the run summary, while ST-CF-COV and ST-CF-SITE still counted it"
+  elif [ "$left" -ne 0 ]; then
+    FAIL "$1: $left unmeasured record(s) are still pending after the last report — a member left the loop without its residual being reported"
+  else
+    PASS "$1: every one of the $rec must-fire arm(s) recorded as unmeasured in this run was named in an unmeasured report ($rec recorded, $rep reported), and none is pending. CTL-ST-CF-UNMEASURED-ONCE drives a run in which both counts are non-zero"
+  fi
+}
+
+# st_cf_once_drill — the residual's record and report path driven on synthetic arms: two arms
+# recorded under one form, the report a member's reset makes, one arm under a second form, the
+# report made after the loop, and the reconciliation. Run only inside st_cf_vprobe.
+st_cf_once_drill() {
+  ST_CF_UNMEAS=""; ST_CF_UNMEAS_NREC=0; ST_CF_UNMEAS_NREP=0
+  st_cf_unmeas_record ZZ-FORM-A Q1 ZZ-ARM-ONE
+  st_cf_unmeas_record ZZ-FORM-A Q1 ZZ-ARM-TWO
+  st_cf_unmeas_flush
+  st_cf_unmeas_record ZZ-FORM-B Q6 ZZ-ARM-THREE
+  st_cf_unmeas_flush
+  st_cf_recon_assert 'CTL-ST-CF-UNMEASURED-ONCE-RECON'
+}
+
+# st_cf_rise <code> <live> <copy> — the sites of <code> the copy raises over the live reading, as
+# "<key> +<n>" space-joined; empty when none rises. The unattributed key <code>#? is excluded: a
+# must-fire arm may not pass on a record its reader cannot explain, which ST-CF-SITE reports instead.
+st_cf_rise() { st_cf_added "$2" "$3" | awk -v c="$1" 'index($1, c "#") == 1 && $1 != c "#?" { printf "%s ", $0 }'; }
+
+# st_cf_clean0_drill <fixture> <code> — st_cf_mustfire driven against a live reading holding only
+# its DENOM record, so the code's live count is zero by construction whatever the form's own state.
+# Run only inside st_cf_vprobe.
+st_cf_clean0_drill() {
+  ST_CF_LIVE="$(awk '$1 == "DENOM"' <<<"$ST_CF_LIVE")"
+  ST_CF_UNMEAS=""
+  st_cf_mustfire "CTL-ST-CF-MUSTFIRE-CLEAN0-PROBE" "$ST_CF_REL" "$1" "$2" "a landed copy that raises nothing"
+}
+
+# st_cf_strict_assert <relaxation> <old> <new> <fixture> <what> — CTL-ST-CF-Q1-KEYSPACE-STRICT: the
+# key-line reader with ONE of its relaxations taken out (<old> replaced by <new> in ST_CF_FENCE_FN, in
+# a subshell) must read the KEYSPACE copy as a Q1 defect, raising a Q1 site against the form's own
+# reading. The substitution must land, or the control FAILs loudly: a rewritten reader is named here,
+# never silently read as strict. On a form that already fails Q1 at the site the strict reader raises,
+# the arm is the residual, as any single-site must-fire arm is. Records no coverage: the strict
+# reader is not the shipping evaluator.
+st_cf_strict_assert() {
+  local rx="$1" old="$2" new="$3" fx="$4" what="$5" ss_fn ss_v ss_rise ss_n0 ss_landed=0
+  ss_fn="${ST_CF_FENCE_FN/"$old"/"$new"}"
+  case "$ST_CF_FENCE_FN" in *"$old"*) [ "$ss_fn" != "$ST_CF_FENCE_FN" ] && ss_landed=1 ;; esac
+  ss_v="$( ST_CF_FENCE_FN="$ss_fn"; st_cf_violations "$fx" "$ST_CF_REL" "$ST_DM" 2>/dev/null )"
+  ss_rise="$(st_cf_rise Q1 "$ST_CF_LIVE" "$ss_v")"
+  ss_n0="$(awk -F'\t' '$1 == "Q1" { n++ } END { print n + 0 }' <<<"$ST_CF_LIVE")"
+  if [ "$ss_landed" -eq 1 ] && [ -n "$ss_rise" ]; then
+    PASS "CTL-ST-CF-Q1-KEYSPACE-STRICT[$rx][$ST_CF_TAG]: MUST FIRE — with the $rx relaxation taken out of the key-line reader, the KEYSPACE copy ($what) raises Q1 at ${ss_rise% } against the form's own reading. So CTL-ST-CF-Q1-KEYSPACE's silence rests on that relaxation"
+  elif [ "$ss_landed" -eq 1 ] && [ "$ss_n0" -gt 0 ]; then
+    st_cf_unmeas_record "$ST_CF_TAG" Q1 "CTL-ST-CF-Q1-KEYSPACE-STRICT[$rx][$ST_CF_TAG]"
+  else
+    FAIL "CTL-ST-CF-Q1-KEYSPACE-STRICT[$rx][$ST_CF_TAG]: MUST FIRE — with the $rx relaxation taken out (substitution-landed=$ss_landed), the KEYSPACE copy raised no Q1 site. Either the key-line reader was rewritten and this control no longer names its relaxation, or the relaxation is not what keeps the copy silent"
+  fi
+}
+
 # ── The mutators. Each rewrites ONE copy under $WORK in place, and none takes a value through awk -v
 # that could carry a literal newline; an inserted text uses \n escapes instead.
 st_cf_fixture() { cp "$ST_CF_FILE" "$ST_CF_DIR/$1.md" && printf '%s\n' "$ST_CF_DIR/$1.md"; }
@@ -7893,19 +8035,13 @@ ST_CF_CODES="$(st_cf_codes "$ST_CF_SITE_BODY")"
 ST_CF_NCODES="$(printf '%s\n' "$ST_CF_CODES" | grep -c '[^[:space:]]')"
 ST_CF_SITEMAP="$(st_sitemap "$ST_CF_SITE_BODY")"
 ST_CF_SITE_KEYS="$(st_sites "$ST_CF_SITE_BODY")"
-ST_CF_SITE_RAW="$(printf '%s\n' "$ST_CF_SITEMAP" | grep -c '[^[:space:]]')"
-ST_CF_SITE_NK="$(printf '%s\n' "$ST_CF_SITE_KEYS" | grep -c '[^[:space:]]')"
-ST_CF_SITE_DUP="$(awk -F'\t' 'NF > 1 { n[$1]++; c[$1] = $2 } END { for (k in n) if (n[k] > 1) printf "%s (code %s) ", k, c[k] }' <<<"$ST_CF_SITEMAP")"
+ST_CF_SITE0_ME="the emission-site reader returned NO sites over the body of st_cf_violations, so every site verdict below would be a statement over the empty set and the conformance arm's site coverage is UNMEASURED rather than complete"
+ST_CF_SITE0_MD="@RAW@ raw emission site(s) collapse to only @NK@ distinct key(s) — key(s) @DUP@ are each produced by two or more sites whose detail opens with the same literal, so the population below is UNDER-REPORTED. Give one of them a distinguishing literal head"
+ST_CF_SITE0_MP="the emission-site reader is non-degenerate and unambiguous over st_cf_violations — @RAW@ raw site(s) resolving to @NK@ distinct key(s), one rung below its $ST_CF_NCODES code(s), an EQUALITY between two non-zero counts rather than a zero. ST-CF-SITE compares this against what the evaluator ACTUALLY EMITTED when each arm ran, never against the code an arm declared it wanted"
 ST_CF_SITE_OK=1
-if [ "$ST_CF_SITE_RAW" -eq 0 ]; then
-  FAIL "ST-CF-SITE0: the emission-site reader returned NO sites over the body of st_cf_violations, so every site verdict below would be a statement over the empty set and the conformance arm's site coverage is UNMEASURED rather than complete"
-  ST_CF_SITE_OK=0
-elif [ "$ST_CF_SITE_NK" -ne "$ST_CF_SITE_RAW" ]; then
-  FAIL "ST-CF-SITE0: $ST_CF_SITE_RAW raw emission site(s) collapse to only $ST_CF_SITE_NK distinct key(s) — key(s) ${ST_CF_SITE_DUP% } are each produced by two or more sites whose detail opens with the same literal, so the population below is UNDER-REPORTED. Give one of them a distinguishing literal head"
-  ST_CF_SITE_OK=0
-else
-  PASS "ST-CF-SITE0: the emission-site reader is non-degenerate and unambiguous over st_cf_violations — $ST_CF_SITE_RAW raw site(s) resolving to $ST_CF_SITE_NK distinct key(s), one rung below its $ST_CF_NCODES code(s), an EQUALITY between two non-zero counts rather than a zero. ST-CF-SITE compares this against what the evaluator ACTUALLY EMITTED when each arm ran, never against the code an arm declared it wanted"
-fi
+site0_gate "ST-CF-SITE0" "$ST_CF_SITE_BODY" "$ST_CF_SITE0_ME" "$ST_CF_SITE0_MD" "$ST_CF_SITE0_MP" || ST_CF_SITE_OK=0
+# CTL-ST-CF-SITE0-DUP — the same collision limb, driven on a planted copy of st_cf_violations' body.
+site0_dup_assert 'CTL-ST-CF-SITE0-DUP' 'st_cf_violations' "$ST_CF_SITE_BODY" "$ST_CF_SITE0_ME" "$ST_CF_SITE0_MD" "$ST_CF_SITE0_MP"
 
 # ── ST-CF-KINDS — the record-kind declaration, held both ways, graded once beside ST-CF-SITE0 ───────
 #
@@ -7977,6 +8113,44 @@ if [ "$ST_CF_KS_DECL" != "$ST_CF_RECORD_KINDS" ] && [ "${ST_CF_KS_ADD% }" = "$ST
   PASS "CTL-ST-CF-KINDS-STALE: MUST FIRE — a kind the evaluator never writes, $ST_CF_KS_KIND, added to a COPY of the declaration enters ST-CF-KINDS' stale limb, and it is the only kind that does. So a declaration cannot outlive the record it names"
 else
   FAIL "CTL-ST-CF-KINDS-STALE: MUST FIRE — a kind the evaluator never writes added to a copy of the declaration did not enter the stale limb alone (added=[${ST_CF_KS_ADD% }]). ST-CF-KINDS cannot tell a stale declaration from a sound one"
+fi
+
+# CTL-ST-CF-ADDED — st_cf_added's exact signature, over synthetic readings built from two real site
+# prefixes of ST_CF_SITEMAP: the first code with two sites, neither of whose literal heads is empty,
+# so a detail matching neither attributes nowhere. Five cases, one answer each, and each case is a
+# claim the per-site predicate makes: an addition reports its site; a finding that MOVES to another
+# site of its code reports the new site, which whole-tally equality is blind to; a removal reports
+# nothing; an addition offset at its own site by removals there reports nothing — the class the
+# must-not-fire predicate gives up, pinned here so it is recorded as given up and not claimed as
+# caught; and a record no site explains reports <CODE>#?.
+ST_CF_AD="$(awk -F'\t' 'NF > 2 { if (!($2 in seen)) { seen[$2] = 1; ord[++n] = $2 } k[$2, ++c[$2]] = $1; p[$2, c[$2]] = $3; if ($3 == "") e[$2] = 1 }
+  END { for (i = 1; i <= n; i++) { x = ord[i]; if (c[x] >= 2 && !(x in e)) { print x "\t" k[x, 1] "\t" p[x, 1] "\t" k[x, 2] "\t" p[x, 2]; exit } } }' <<<"$ST_CF_SITEMAP")"
+IFS="$(printf '\t')" read -r ST_CF_ADC ST_CF_ADK1 ST_CF_ADP1 ST_CF_ADK2 ST_CF_ADP2 <<<"$ST_CF_AD"
+st_cf_ad_sig() { local r; r="$(st_cf_added "$1" "$2" | awk '{ printf "%s%s", (n++ ? "," : ""), $1 }')"; printf '%s' "${r:--}"; }
+ST_CF_ADD0='DENOM 1 1'
+ST_CF_ADR1="$(printf '%s\t%s' "${ST_CF_ADC:-}" "${ST_CF_ADP1:-}")"
+ST_CF_ADR2="$(printf '%s\t%s' "${ST_CF_ADC:-}" "${ST_CF_ADP2:-}")"
+ST_CF_ADRU="$(printf '%s\t%s' "${ST_CF_ADC:-}" 'ZZ-NO-SITE-PREFIX')"
+ST_CF_ADGOT="add=$(st_cf_ad_sig "$ST_CF_ADD0" "$ST_CF_ADD0
+$ST_CF_ADR1")"
+ST_CF_ADGOT="$ST_CF_ADGOT swap=$(st_cf_ad_sig "$ST_CF_ADD0
+$ST_CF_ADR1" "$ST_CF_ADD0
+$ST_CF_ADR2")"
+ST_CF_ADGOT="$ST_CF_ADGOT remove=$(st_cf_ad_sig "$ST_CF_ADD0
+$ST_CF_ADR1" "$ST_CF_ADD0")"
+ST_CF_ADGOT="$ST_CF_ADGOT offset=$(st_cf_ad_sig "$ST_CF_ADD0
+$ST_CF_ADR1
+$ST_CF_ADR1" "$ST_CF_ADD0
+$ST_CF_ADR1")"
+ST_CF_ADGOT="$ST_CF_ADGOT unattr=$(st_cf_ad_sig "$ST_CF_ADD0" "$ST_CF_ADD0
+$ST_CF_ADRU")"
+ST_CF_ADWANT="add=${ST_CF_ADK1:-} swap=${ST_CF_ADK2:-} remove=- offset=- unattr=${ST_CF_ADC:-}#?"
+if [ -z "$ST_CF_AD" ]; then
+  FAIL "CTL-ST-CF-ADDED: no code of st_cf_violations has two emission sites with non-empty literal heads, so the per-site predicate's exact signature cannot be built from real prefixes and is UNMEASURED"
+elif [ "$ST_CF_ADGOT" = "$ST_CF_ADWANT" ]; then
+  PASS "CTL-ST-CF-ADDED: over synthetic readings at two real sites of $ST_CF_ADC, st_cf_added answers exactly '$ST_CF_ADWANT' — an addition reports its site, a finding moved to another site of its code reports that site, a removal and an addition offset at its own site report nothing (the class the must-not-fire predicate gives up, recorded rather than claimed), and a record no site explains reports $ST_CF_ADC#?"
+else
+  FAIL "CTL-ST-CF-ADDED: st_cf_added answered '$ST_CF_ADGOT' where '$ST_CF_ADWANT' is owed. The per-site predicate does not grade what the must-fire and must-not-fire arms say it grades"
 fi
 ST_CF_COV_PROBE='ZZ-ST-CF-COVERAGE-PROBE'
 ST_CF_COV_PHANTOM='ZZ-ST-CF-PHANTOM-ARM'
@@ -8410,6 +8584,35 @@ ST_CF_FX="$(st_cf_fixture q1-twice)"; st_cf_dup_range "$ST_CF_FX" "$ST_CF_FO" "$
 st_cf_mustfire "CTL-ST-CF-Q1-TWICE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q1 "the intake-form fence is duplicated in place, so the form carries two"
 ST_CF_FX="$(st_cf_fixture q1-unclosed)"; st_line_del "$ST_CF_FX" "$ST_CF_FC"
 st_cf_mustfire "CTL-ST-CF-Q1-UNCLOSED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q1 "the fence's closing line is deleted (line $ST_CF_FC), so its body runs into the text after it"
+# Q1-KEYSPACE — MUST NOT FIRE: one copy carries a tab after writer:, two spaces after form-version:
+# and trailing spaces after the form: value, each a spelling the key-line reader relaxes, so the
+# fence reads exactly as before and no emission site rises. Each STRICT control takes ONE relaxation
+# out of that reader and requires the same copy to raise a Q1 site, so the silence is shown to rest
+# on the relaxation rather than on a reader that never looked.
+ST_CF_KW="$(st_cf_key_line "$ST_CF_FILE" writer)"
+ST_CF_FX="$(st_cf_fixture q1-keyspace)"
+st_line_sub "$ST_CF_FX" "${ST_CF_KW:-0}" "^writer:[ ]+" "writer:\t"
+st_line_sub "$ST_CF_FX" "${ST_CF_KV:-0}" "^form-version:[ ]+" "form-version:  "
+st_line_sub "$ST_CF_FX" "${ST_CF_KF:-0}" "[ \t]*$" "   "
+ST_CF_KSW="a tab after writer: (line ${ST_CF_KW:-none}), two spaces after form-version: (line ${ST_CF_KV:-none}) and trailing spaces after the form: value (line ${ST_CF_KF:-none})"
+st_cf_mustnotfire "CTL-ST-CF-Q1-KEYSPACE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "$ST_CF_KSW — each a spelling the key-line reader relaxes"
+st_cf_strict_assert tab '/^[ \t]+[^ \t\r]/' '/^ +[^ \t\r]/' "$ST_CF_FX" "$ST_CF_KSW"
+st_cf_strict_assert double '/^[ \t]+[^ \t\r]/' '/^[ \t][^ \t\r]/' "$ST_CF_FX" "$ST_CF_KSW"
+st_cf_strict_assert trail '; sub(/[ \t\r]+$/, "", v)' '' "$ST_CF_FX" "$ST_CF_KSW"
+
+# CTL-ST-CF-MUSTFIRE-CLEAN0 — MUST FIRE a FAIL. st_cf_mustfire is driven, in a subshell, against a live
+# reading holding only its DENOM record, with a landed copy that carries none of the chosen code: a
+# must-fire arm whose copy raises nothing on a form that does not fail the code must FAIL, never
+# report the residual. The code is the first this member's copy does not emit, so the live form's own
+# state cannot reach the verdict.
+ST_CF_FX="$(st_cf_fixture clean0)"; printf '\n' >> "$ST_CF_FX"
+ST_CF_C0C="$(st_setdiff "$ST_CF_CODES" "$(awk -F'\t' 'NF > 1 { print $1 }' <<<"$(st_cf_violations "$ST_CF_FX" "$ST_CF_REL" "$ST_DM")")" | awk 'NF { print; exit }')"
+ST_CF_C0R="$(awk 'NR == 1' <<<"$(st_cf_vprobe st_cf_clean0_drill "$ST_CF_FX" "${ST_CF_C0C:-}")")"
+if [ -n "$ST_CF_C0C" ] && [ "$ST_CF_C0R" = "0 1 0 0" ]; then
+  PASS "CTL-ST-CF-MUSTFIRE-CLEAN0[$ST_CF_TAG]: MUST FIRE a FAIL — a landed copy raising no $ST_CF_C0C site, graded against a live reading that holds none, renders one FAIL, no PASS, no unmeasured report and no unmeasured record. So the residual is reachable only where the form already fails the code"
+else
+  FAIL "CTL-ST-CF-MUSTFIRE-CLEAN0[$ST_CF_TAG]: MUST FIRE a FAIL — with code '${ST_CF_C0C:-none}' and a live reading holding only its DENOM record, a copy raising nothing rendered [pass fail vacuous pending] = [${ST_CF_C0R:-}] where [0 1 0 0] is owed. A must-fire arm that cannot fail on a conforming form proves nothing"
+fi
 ST_CF_FX="$(st_cf_fixture q1-malformed)"; st_line_sub "$ST_CF_FX" "$ST_CF_KW" "^writer:[ ]*" "writer "
 st_cf_mustfire "CTL-ST-CF-Q1-MALFORMED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q1 "the fence's writer line loses its colon (line $ST_CF_KW), so it is no key line and no layout either, and the fence ends there unclosed"
 ST_CF_FX="$(st_cf_fixture q1-keys)"; st_line_del "$ST_CF_FX" "$ST_CF_KC"
@@ -8548,6 +8751,21 @@ fi
 done <<EOF
 $ST_CF_FORMS
 EOF
+
+# ── The residual's report, reconciled. CTL-ST-CF-UNMEASURED-ONCE drives the record and report path on
+# synthetic arms across two forms and both report points — a member's reset and the end of the loop —
+# and requires exactly one report per (form, question), each naming its arms, and the reconciliation
+# green inside the drill. CTL-ST-CF-UNMEASURED-RECON then grades this run's own counts.
+ST_CF_ONCE="$(st_cf_vprobe st_cf_once_drill)"
+ST_CF_ONCE1="$(awk 'NR == 1' <<<"$ST_CF_ONCE")"
+ST_CF_ONCEA="$(awk 'NR > 1 && index($0, "ZZ-ARM-ONE") && index($0, "ZZ-ARM-TWO") && !index($0, "ZZ-ARM-THREE") { n++ } END { print n + 0 }' <<<"$ST_CF_ONCE")"
+ST_CF_ONCEB="$(awk 'NR > 1 && index($0, "ZZ-ARM-THREE") && !index($0, "ZZ-ARM-ONE") { n++ } END { print n + 0 }' <<<"$ST_CF_ONCE")"
+if [ "$ST_CF_ONCE1" = "1 0 2 0" ] && [ "$ST_CF_ONCEA" -eq 1 ] && [ "$ST_CF_ONCEB" -eq 1 ]; then
+  PASS "CTL-ST-CF-UNMEASURED-ONCE: MUST FIRE once per (form, question) — two unmeasured arms recorded under one form and reported at the next member's reset, and one under a second form reported after the loop, render exactly two unmeasured reports, one naming both arms of the first form and one naming the arm of the second; recording renders nothing, and the reconciliation inside the drill is green"
+else
+  FAIL "CTL-ST-CF-UNMEASURED-ONCE: MUST FIRE once per (form, question) — the drill rendered [pass fail vacuous pending] = [$ST_CF_ONCE1] where [1 0 2 0] is owed, with $ST_CF_ONCEA report(s) naming the first form's two arms and $ST_CF_ONCEB naming the second form's one, where one each is owed. An arm that could not be measured would be reported per arm, or not at all"
+fi
+st_cf_recon_assert 'CTL-ST-CF-UNMEASURED-RECON'
 
 # ── RUN LEVEL, after every member: the conformance arm's coverage, graded once over every arm that
 # ran on any member (D-12 of the seam), at the code rung and at the site rung.
