@@ -440,7 +440,7 @@ if _is_stale 200 100 && ! _is_stale 100 200 && ! _is_stale "" 100; then PASS "I4
 # and a clean verdict on an rc=2 would be an empty scan wearing a pass.
 i5_assert() {
   local body mrc
-  body="$(declare -f cmd_list 2>/dev/null)"
+  body="$(declare -f cmd_list build_to_published newest_site_html 2>/dev/null)"
   grep -qE 'git |commit_noreply|staticrypt|repo create|repo delete|api -X|rm -' <<<"$body" >/dev/null 2>&1; mrc=$?
   if ! declare -f cmd_list >/dev/null 2>&1; then
     FAIL "I5: cmd_list is NOT DEFINED — the read-only verdict below would have no subject, so it would certify a subcommand that does not exist"
@@ -451,7 +451,7 @@ i5_assert() {
   elif [ "$mrc" -ne 1 ]; then
     FAIL "I5: the mutating-verb probe exited rc=$mrc — neither match (0) nor no-match (1), so the scan did not run and a clean verdict would be an empty scan"
   else
-    PASS "I5: cmd_list is read-only (no git/push/encrypt/create/delete/write verbs) — subject present, body ${#body}B and non-degenerate, verb probe ran and returned no-match"
+    PASS "I5: cmd_list and the helpers its build-to-published column calls are read-only (no git/push/encrypt/create/delete/write verbs) — subject present, body ${#body}B and non-degenerate, verb probe ran and returned no-match"
   fi
 }
 i5_assert
@@ -16488,6 +16488,214 @@ md_flips refuse_group_only_render "L19s-three" l19s_assert "L19s-three" three
 for l19c in email phone docno; do md_flips require_clean_build_sources "L19t-$l19c" l19t_assert "L19t-$l19c" "$l19c"; done
 md_flips require_clean_build_sources "L19u" l19u_assert "L19u"
 for l19c in date none interposed midline; do md_flips require_clean_build_sources "L19v-$l19c" l19v_assert "L19v-$l19c" "$l19c"; done
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# I6 — list reports build-to-published: whether the page as last pushed is the newest local build, by content
+# (#2157; ADR-035 § 1). Group I by id. Placed here rather than beside I5 so the unreadable-render case takes
+# rv_make_unreadable, which falls back to a dangling link where mode 000 is still readable (F20), and so list
+# runs under RV's gh stand-in, never a real account. The verdict arms read build_to_published directly; I6k and
+# I6n run list itself over a scratch data root that holds only these fixtures. The renders are synthetic, each
+# with a leading declaration comment and a script, which the itinerary projection drops.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group I, I6 — list reports build-to-published, compared by content (#2157)."
+
+I6W="$RVW/i6"; rm -rf "$I6W"; mkdir -p "$I6W/trips"
+i6_render() { # <file> <visible sentence> <declaration date> <script value>
+  printf '<!DOCTYPE html><html><head><title>Porto</title></head><body>\n<!-- generated: %s -->\n<script>var v = "%s";</script>\n<h1>Itinerary</h1>\n<p>%s</p>\n</body></html>\n' "$3" "$4" "$2" > "$1"
+}
+I6_DAY='Day 1: the harbour museum in the morning, then a long lunch by the water.'
+i6_trip() { # <name> -> a trip dir under the scratch data root, holding one render
+  local d="$I6W/trips/$1"
+  rm -rf "$d"; mkdir -p "$d/outputs"
+  i6_render "$d/outputs/$1-travel-site.html" "$I6_DAY" 2026-11-01 a
+  printf '%s' "$d"
+}
+i6_record() { # <trip_dir> <token> — the record a push leaves
+  printf 'digest=%s\npublished=2026-01-01T00:00:00Z\n' "$2" > "$1/.published-itinerary"
+}
+i6_fixture() { # <case> -> trip dir in the state the case names
+  local c="$1" d site
+  d="$(i6_trip "i6-$c")"; site="$d/outputs/i6-$c-travel-site.html"
+  case "$c" in
+    equal)    i6_record "$d" "$(itinerary_digest "$site")" ;;
+    rebuild)  i6_record "$d" "$(itinerary_digest "$site")"; i6_render "$site" "$I6_DAY" 2026-11-02 b ;;
+    visible)  i6_record "$d" "$(itinerary_digest "$site")"; i6_render "$site" "$I6_DAY And a walk up to the old cathedral before dark." 2026-11-01 a ;;
+    norecord) ;;
+    touch)    i6_record "$d" "$(itinerary_digest "$site")"; touch -t 203001010000 "$site" ;;
+    legacy-eq) i6_record "$d" "$(_legacy_itinerary_digest "$site")" ;;
+    legacy-ne) i6_record "$d" "$(_legacy_itinerary_digest "$site")"; i6_render "$site" "$I6_DAY And a walk up to the old cathedral before dark." 2026-11-01 a ;;
+    twin)     i6_record "$d" "$(itinerary_digest "$site")"; printf 'digest=%s\npublished=2026-01-02T00:00:00Z\n' "$(itinerary_digest "$site")" > "$d/.published-itinerary.next" ;;
+    twin-norecord) printf 'digest=%s\npublished=2026-01-02T00:00:00Z\n' "$(itinerary_digest "$site")" > "$d/.published-itinerary.next" ;;
+    dir)      mkdir -p "$d/.published-itinerary" ;;
+    garbage)  printf 'digest=not-a-token!\npublished=2026-01-01T00:00:00Z\n' > "$d/.published-itinerary" ;;
+    norender) i6_record "$d" "$(itinerary_digest "$site")"; rm -f "$site" ;;
+    unreadable) i6_record "$d" "$(itinerary_digest "$site")"; rv_make_unreadable "$site" 'unreadable render' >/dev/null 2>&1 ;;
+  esac
+  printf '%s' "$d"
+}
+# One verdict over build_to_published's cell for a fixture: the cell begins with what is wanted, and carries
+# nothing it must not. An absent helper prints nothing, which is a FAIL, never a match.
+i6_cell_assert() { # <id> <case> <wanted prefix> [<must not contain>]
+  local id="$1" c="$2" want="$3" not="${4:-}" d cell ok=0 bad=0
+  d="$(i6_fixture "$c")"
+  cell="$(build_to_published "$d" 2>/dev/null)"
+  case "$cell" in "$want"*) ok=1 ;; esac
+  [ -z "$not" ] || case "$cell" in *"$not"*) bad=1 ;; esac
+  if [ -z "$cell" ]; then
+    FAIL "$id: build_to_published printed no cell for the $c fixture — the helper is absent or its table held no row. VERDICT WITHHELD"
+  elif [ "$ok" -ne 1 ]; then
+    FAIL "$id: the $c fixture reads '$cell', want a cell beginning '$want'"
+  elif [ "$bad" -ne 0 ]; then
+    FAIL "$id: the $c fixture reads '$cell', which carries '$not'"
+  else
+    PASS "$id: the $c fixture reads '$cell'"
+  fi
+}
+I6_CASES='I6a|equal|CURRENT|
+I6b|rebuild|CURRENT|
+I6c|visible|BEHIND: outputs/i6-visible-travel-site.html|
+I6d|norecord|UNDETERMINED: no push recorded|BEHIND
+I6e|touch|CURRENT|
+I6f|legacy-eq|CURRENT|
+I6g|legacy-ne|UNDETERMINED: the push record predates the current digest|BEHIND
+I6h|twin|UNDETERMINED: a push|BEHIND
+I6h-norecord|twin-norecord|UNDETERMINED: a push|no push recorded
+I6i-dir|dir|UNDETERMINED: the push record cannot be read|BEHIND
+I6i-garbage|garbage|UNDETERMINED: the push record cannot be read|BEHIND
+I6j|norender|UNDETERMINED: no local render|BEHIND
+I6o|unreadable|UNDETERMINED: outputs/i6-unreadable-travel-site.html cannot be projected|BEHIND'
+while IFS='|' read -r i6id i6c i6want i6not; do
+  [ -n "$i6id" ] || continue
+  i6_cell_assert "$i6id" "$i6c" "$i6want" "$i6not"
+done <<<"$I6_CASES"
+
+# ── I6k — network-free and read-only: build_to_published makes no gh call; list's cells are the same with gh
+# answering and with gh failing; and list leaves every file under the scratch data root as it found it.
+i6_list() { # -> list's output over the scratch data root, under whichever gh is in scope
+  ( _GUARD_DATA_ROOT="$I6W"; _GUARD_DATA_ROOT_EXPLICIT=1; cmd_list ) 2>&1
+}
+i6_cells() { # <list output> -> "<trip> <cell>" lines, the cell read from its fixed column
+  awk 'substr($1, 1, 3) == "i6-" { print $1 " " substr($0, 90) }' <<<"$1"
+}
+i6_tree() { # -> one line per entry under the scratch root: path, type, mode, size and content digest
+  local f
+  find "$I6W" -print 2>/dev/null | LC_ALL=C sort | while IFS= read -r f; do
+    if [ -f "$f" ] && [ -r "$f" ]; then
+      printf '%s f %s %s\n' "${f#"$I6W"}" "$(ls -ld "$f" | awk '{ print $1, $5 }')" "$(cksum < "$f")"
+    else
+      printf '%s %s\n' "${f#"$I6W"}" "$(ls -ld "$f" 2>/dev/null | awk '{ print $1 }')"
+    fi
+  done
+}
+i6k_assert() { # <id>
+  local id="$1" d calls on off before after cells_on cells_off cell
+  for d in equal visible norecord twin; do i6_fixture "$d" >/dev/null; done
+  : > "$I6W.ghlog"
+  cell="$( gh() { printf '%s\n' "$*" >> "$I6W.ghlog"; return 1; }; build_to_published "$I6W/trips/i6-equal" 2>/dev/null )"
+  calls="$(rv_lines "$I6W.ghlog")"
+  before="$(i6_tree)"
+  on="$(i6_list)"
+  off="$( gh() { return 1; }; i6_list )"
+  after="$(i6_tree)"
+  cells_on="$(i6_cells "$on")"; cells_off="$(i6_cells "$off")"
+  if [ -z "$cell" ]; then
+    FAIL "$id: build_to_published printed no cell. VERDICT WITHHELD"
+  elif [ "$calls" != 0 ]; then
+    FAIL "$id: build_to_published made $calls gh call(s) — the relation must need no network"
+  elif [ -z "$cells_on" ] || [ "$cells_on" != "$cells_off" ]; then
+    FAIL "$id: list's build-to-published cells differ with gh answering and with gh failing (or none were read): '$(printf '%s' "$cells_on" | tr '\n' ';')' against '$(printf '%s' "$cells_off" | tr '\n' ';')'"
+  elif [ "$before" != "$after" ]; then
+    FAIL "$id: list changed a file under the scratch data root — it must write nothing"
+  else
+    PASS "$id: build_to_published makes no gh call, list's cells are identical with gh answering and failing ($(printf '%s\n' "$cells_on" | grep -c .) row(s)), and every entry under the data root is unchanged by list"
+  fi
+}
+i6k_assert "I6k"
+
+# ── I6l — no publish verb reads the relation; I6m — list and publish take the newest render through one function.
+i6l_bodies="$(declare -f cmd_publish cmd_update cmd_rotate require_publish_guards 2>/dev/null)"
+i6l_list="$(declare -f cmd_list 2>/dev/null)"
+i6l_n="$(l18_count "$i6l_bodies" 'build_to_published')"; i6l_s="$(l18_count "$i6l_list" 'build_to_published')"
+i6l_fab="$(l18_count "$i6l_bodies$i6l_list" 'zzq_i6l_fabricated')"
+if [ "${#i6l_bodies}" -lt 2000 ] || [ "${#i6l_list}" -lt 200 ]; then
+  FAIL "I6l: the parsed bodies are ${#i6l_bodies} and ${#i6l_list} bytes — a subject is absent or a stub. VERDICT WITHHELD"
+elif [ "$i6l_fab" -ne 0 ] || [ "$i6l_s" -lt 1 ]; then
+  FAIL "I6l: CONTROL — cmd_list names build_to_published $i6l_s time(s) (want at least 1) and a fabricated name was counted $i6l_fab time(s) (want 0), so the count cannot tell"
+elif [ "$i6l_n" -ne 0 ]; then
+  FAIL "I6l: a publish verb or the guard's call line names build_to_published $i6l_n time(s) — the relation is report-only, and nothing may branch on it"
+else
+  PASS "I6l: no publish verb and not require_publish_guards names build_to_published, while cmd_list does ($i6l_s), and a fabricated name is counted nowhere"
+fi
+i6m_r="$(declare -f resolve_site_html 2>/dev/null)"
+i6m_rn="$(l18_count "$i6m_r" 'newest_site_html')"; i6m_ln="$(l18_count "$i6l_list" 'newest_site_html')"
+i6m_ls="$(l18_count "$i6m_r$i6l_list" 'ls -1t')"; i6m_fab="$(l18_count "$i6m_r$i6l_list" 'zzq_i6m_fabricated')"
+if [ "${#i6m_r}" -lt 50 ] || [ "${#i6l_list}" -lt 200 ]; then
+  FAIL "I6m: resolve_site_html or cmd_list is absent or a stub. VERDICT WITHHELD"
+elif [ "$i6m_fab" -ne 0 ]; then
+  FAIL "I6m: CONTROL — a fabricated name was counted"
+elif [ "$i6m_rn" -lt 1 ] || [ "$i6m_ln" -lt 1 ] || [ "$i6m_ls" -ne 0 ]; then
+  FAIL "I6m: resolve_site_html names newest_site_html $i6m_rn time(s) and cmd_list $i6m_ln, and $i6m_ls copy of the selection remains in them (want at least 1, at least 1, 0)"
+else
+  PASS "I6m: resolve_site_html and cmd_list both take the newest render through newest_site_html, and neither carries its own copy of the selection"
+fi
+
+# ── I6n — report-only: list over fixtures yielding every verdict exits 0, carries the column and the footer
+# and no STALE column, and its cell for a fixture is the helper's.
+i6n_assert() { # <id>
+  local id="$1" d out rc row want hdr=0 foot=0 stale=0
+  for d in equal visible norecord legacy-ne; do i6_fixture "$d" >/dev/null; done
+  out="$(i6_list)"; rc=$?
+  want="$(build_to_published "$I6W/trips/i6-visible" 2>/dev/null)"
+  row="$(awk '$1 == "i6-visible" { print substr($0, 90) }' <<<"$out")"
+  case "$out" in *BUILD-TO-PUBLISHED*) hdr=1 ;; esac
+  case "$out" in *"outside trip.freshness"*) foot=1 ;; esac
+  case "$out" in *STALE*) stale=1 ;; esac
+  if [ "$rc" -ne 0 ]; then
+    FAIL "$id: list over fixtures yielding each verdict exited rc=$rc, want 0 — a verdict must never reach the status"
+  elif [ "$hdr" -ne 1 ] || [ "$foot" -ne 1 ] || [ "$stale" -ne 0 ]; then
+    FAIL "$id: list's table carries the BUILD-TO-PUBLISHED header=$hdr and the footer=$foot, and a STALE column=$stale (want 1, 1, 0)"
+  elif [ -z "$want" ] || [ "$row" != "$want" ]; then
+    FAIL "$id: list's cell for the visible-change fixture is '$row', and the helper's is '$want' — the column is not the relation"
+  else
+    PASS "$id: list exits 0 over every verdict (rc=0), carries the column and the footer and no STALE column, and its cell is the helper's ('$row')"
+  fi
+}
+i6n_assert "I6n"
+
+# ── ARMED-RED controls for I6.
+i6_m_mtime() { build_to_published() { local s e p; s="$(newest_site_html "$1")"; e="$(_epoch_of_file "$s")"; p="$(_epoch_of_iso 2026-01-01T00:00:00Z)"; if _is_stale "$e" "$p"; then printf 'BEHIND: x'; else printf 'CURRENT'; fi; }; }
+i6_m_equal()   { l18_rewrite build_to_published 'if [ "$bp_dg" = "$bp_rec" ]; then' 'if true; then'; }
+i6_m_absent()  { l18_rewrite build_to_published 'absent)' 'zzq-absent)'; }
+i6_m_legacy()  { l18_rewrite build_to_published 'if [ "${#bp_rec}" -ne 64 ]; then' 'if false; then'; }
+i6_m_legbehind() { l18_rewrite build_to_published "printf 'UNDETERMINED: the push record predates the current digest; the next push records one'" "printf 'BEHIND: %s' \"\$bp_rel\""; }
+i6_m_twin()    { l18_rewrite build_to_published 'if [ "$bp_twin" -eq 1 ]; then' 'if false; then'; }
+i6_m_unusable() { l18_rewrite build_to_published "printf 'UNDETERMINED: the push record cannot be read'" "printf 'UNDETERMINED: no push recorded'"; }
+i6_m_norender() { l18_rewrite build_to_published 'if [ -z "$bp_site" ]; then' 'if false; then'; }
+i6_m_noproj()  { l18_rewrite build_to_published 'if [ -z "$bp_dg" ]; then' 'if false; then'; }
+i6_m_writes()  { eval "$(declare -f build_to_published | sed '1s/^build_to_published/i6_real_btp/')"
+                 build_to_published() { : > "$1/.i6-marker"; i6_real_btp "$@"; }; }
+i6_m_status()  { l18_rewrite cmd_list "printf '\n'" "printf '\n'; return 7"; }
+l18_mut_assert "I6a-mut-rebuild" "build_to_published replaced by the old modification-time rule" i6_m_mtime i6_cell_assert "I6b-mut" rebuild CURRENT
+l18_mut_assert "I6a-mut-touch" "build_to_published replaced by the old modification-time rule" i6_m_mtime i6_cell_assert "I6e-mut" touch CURRENT
+l18_mut_assert "I6c-mut" "the comparison forced equal" i6_m_equal i6_cell_assert "I6c-mut" visible "BEHIND: outputs/i6-visible-travel-site.html"
+l18_mut_assert "I6d-mut" "the absent row removed, so the record falls through to the comparison" i6_m_absent i6_cell_assert "I6d-mut" norecord "UNDETERMINED: no push recorded" BEHIND
+l18_mut_assert "I6f-mut" "the legacy branch removed, so a CRC token meets the SHA-256 digest" i6_m_legacy i6_cell_assert "I6f-mut" legacy-eq CURRENT
+l18_mut_assert "I6g-mut" "a legacy mismatch mapped to BEHIND" i6_m_legbehind i6_cell_assert "I6g-mut" legacy-ne "UNDETERMINED: the push record predates the current digest" BEHIND
+l18_mut_assert "I6h-mut" "the staged-twin row removed" i6_m_twin i6_cell_assert "I6h-mut" twin "UNDETERMINED: a push" BEHIND
+l18_mut_assert "I6i-mut" "an unusable record given the absent record's text" i6_m_unusable i6_cell_assert "I6i-mut" dir "UNDETERMINED: the push record cannot be read" BEHIND
+l18_mut_assert "I6j-mut" "the no-local-render row removed" i6_m_norender i6_cell_assert "I6j-mut" norender "UNDETERMINED: no local render" BEHIND
+l18_mut_assert "I6o-mut" "the unprojectable-render row removed" i6_m_noproj i6_cell_assert "I6o-mut" unreadable "UNDETERMINED: outputs/i6-unreadable-travel-site.html cannot be projected" BEHIND
+l18_mut_assert "I6k-mut" "a helper that writes a marker file" i6_m_writes i6k_assert "I6k-mut"
+l18_mut_assert "I6n-mut" "a verdict made to set a non-zero exit" i6_m_status i6n_assert "I6n-mut"
+
+# ── The MD registrations.
+while IFS='|' read -r i6id i6c i6want i6not; do
+  [ -n "$i6id" ] || continue
+  md_flips build_to_published "$i6id" i6_cell_assert "$i6id" "$i6c" "$i6want" "$i6not"
+done <<<"$I6_CASES"
+md_flips build_to_published "I6k" i6k_assert "I6k"
+md_flips cmd_list "I6n" i6n_assert "I6n"
 
 # Teardown: mocks go; the shimmed production functions are RE-DEFINED from the saved
 # definitions, never unset — `unset -f` here would delete the real ones.
