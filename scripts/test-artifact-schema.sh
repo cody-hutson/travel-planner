@@ -343,14 +343,15 @@
 #        this tree and, today, on every render. No count is spelled anywhere in this file
 #        for this group: every set is read
 #   NC   the five never-carries of ADR-025 § Decision 3, graded as class facts at their live
-#        membership: a rebuilt-each-synthesis instance carrying prior passes (EB-0) — graded
-#        on tracked instances only, never on conduct that would accumulate into one; the
+#        membership: a rebuilt-each-synthesis instance carrying prior passes (EB-0), read as
+#        dated sections at heading levels 2 and 3 only — graded on tracked instances only,
+#        never on conduct that would accumulate into one; the
 #        internal-hard class against the site build's read set, a C12 value with no
 #        first-party source found verbatim in a bound artifact, and synthetic renders through
 #        ADR-030's reading and any record superseding part of never-carry 2; both-marks values
 #        and DEST-class fields in cross-trip records, and every store writer's both-marks
 #        guard (EB-2); and the engagement axis's tokens on every stored-value surface, its
-#        carrier included. Every arm carries a control that must fire and one that must not
+#        carrier included, matched case-sensitively. Every arm carries a control that must fire and one that must not
 #   MC   may-carry, typed per side (ADR-026 § Decision 3): the envelope side over the channel
 #        table and ADR-030 § 2's private-site-field-declaration fence, keyed on the field's
 #        (section, label) pair and held to § 2's prose in both directions, including the one
@@ -20082,7 +20083,9 @@ if [ "$NC_OK" -eq 1 ]; then
   # ── NC-1 — never-carry 1: an instance of a rebuilt class carrying prior passes ──────
   # nc1_scan <root> <instances> <members> <class-token> <subject|others> — counts dated
   # section headings, the accumulate signature CLAUDE.md § Output Versioning describes, at
-  # heading level two or three and outside a fence. `subject` grades the instances of the
+  # heading level two or three and outside a fence. A dated heading at level 1 or at levels 4-6
+  # is not counted: level 1 is the title, and below level 3 a dated heading is an item inside a
+  # pass, not a pass. `subject` grades the instances of the
   # named lifecycle; `others` grades every other instance, which is the sensitivity arm.
   # Records: HIT <path> <class> <lifecycle> <n> · UNREAD <path> <class> · GRADED <n>.
   nc1_scan() {
@@ -20545,9 +20548,11 @@ fi
 # correctness requirement as well as a principle: the executables are one of the surfaces
 # scanned, this file among them, so a token written here would be a finding against itself.
 #
-# THE MATCH is the whole token, case-sensitive, with no letter, digit, underscore or hyphen
-# on either side — never a word-boundary operator, which matches inside a longer hyphenated
-# token. Arm NC5k plants a token with a hyphenated suffix and requires silence.
+# THE MATCH is the whole token, case-sensitive, so a token in another case is not read — the
+# axis is declared upper-case, and its lower-case spellings are ordinary words this suite and the
+# conduct text use — with no letter, digit, underscore or hyphen on either side — never a
+# word-boundary operator, which matches inside a longer hyphenated token. Arm NC5k plants a token
+# with a hyphenated suffix and requires silence.
 #
 # THE SURFACE IS A POSITIVE LIST, built from the tracked file list and the validator's own
 # selector, so an instance is what the selector says it is and never what a fresh glob finds:
