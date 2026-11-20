@@ -6064,7 +6064,7 @@ cov_term_controls() {
   ct_base="$(st_setdiff "$("$ex" "$body")" "$armed")"
   ct_base="$(printf '%s\n' "$ct_base" | grep -c '[^[:space:]]')"
   for ct_sp in $CODE_TERM_SPELLINGS; do
-    cov_control1 "$stem[$ct_sp]" "$id" "$subj" "$ex" "$body" "$("$shaper" "$ct_sp" "$probe")" \
+    cov_control1 "${stem}[$ct_sp]" "$id" "$subj" "$ex" "$body" "$("$shaper" "$ct_sp" "$probe")" \
                  "$armed" "$ct_base" "$probe" 'code' "ended by the $ct_sp member of the declared terminator class"
   done
 }
@@ -6988,10 +6988,19 @@ st_cf_decl_read() {
 st_cf_decl_keys() { awk -F'\t' '$1 == "KEY" { print $2 }' <<<"$(st_cf_decl_read "$1")"; }
 st_cf_decl_why() { awk -F'\t' '$1 == "FAIL" { print $2 }' <<<"$(st_cf_decl_read "$1")"; }
 
+# ST_CF_RECORD_KINDS — the record kinds st_cf_violations writes that are NOT findings, declared as data
+# beside the evaluator rather than left to a property of their spelling. st_cf_codes passes them to
+# st_codes, which drops a head named here; ST-CF-KINDS holds the declaration both ways, so a kind the
+# evaluator stops writing FAILs as stale and a kind written tab-terminated, as a finding is, FAILs as
+# a real code the declaration would hide.
+ST_CF_RECORD_KINDS='DENOM GRADED'
+
 # st_cf_violations <form> <member> <data-model> [charter] — one "<CODE><TAB><detail>" record per
-# finding, codes Q1 to Q6 and VERSION, closed by ONE record `DENOM <graded-bullets> <version>`,
-# space-separated so it is never read as a code. A version-2 reading also carries one `GRADED` record
-# per region, space-separated for the same reason, which the region renderer below reads. Six inputs
+# finding, codes Q1 to Q6 and VERSION, closed by ONE record `DENOM <graded-bullets> <version>`. A
+# version-2 reading also carries one `GRADED` record per region, which the region renderer below
+# reads. Neither is a finding: each is space-separated, so no tab-keyed consumer — st_has, the tally,
+# the site reader — reads it as one, and each is declared in ST_CF_RECORD_KINDS above, because the
+# code reader's terminator class admits a space and would otherwise read it as a code. Six inputs
 # arrive as one stream separated by FS-byte marker lines, because awk -v aborts on a multi-line value:
 # the contract's keys, the form's surfaces, the resolver's answers for its bullets, the data model's
 # unfenced headings, the region contract ft_regions reads from the form and the charter, and the data
@@ -7855,6 +7864,78 @@ elif [ "$ST_CF_SITE_NK" -ne "$ST_CF_SITE_RAW" ]; then
   ST_CF_SITE_OK=0
 else
   PASS "ST-CF-SITE0: the emission-site reader is non-degenerate and unambiguous over st_cf_violations — $ST_CF_SITE_RAW raw site(s) resolving to $ST_CF_SITE_NK distinct key(s), one rung below its $ST_CF_NCODES code(s), an EQUALITY between two non-zero counts rather than a zero. ST-CF-SITE compares this against what the evaluator ACTUALLY EMITTED when each arm ran, never against the code an arm declared it wanted"
+fi
+
+# ── ST-CF-KINDS — the record-kind declaration, held both ways, graded once beside ST-CF-SITE0 ───────
+#
+# st_cf_kinds_read <body> <kinds> — one line per declared kind that breaks the declaration, by limb:
+#   STALE <kind>   st_codes, handed NO kinds, does not read <kind> from the body, so the evaluator no
+#                  longer writes it in a shape the code reader reads and the declaration has outlived
+#                  its premise;
+#   HIDDEN <kind>  the site reader reads <kind> as a tab-terminated code — the shape every finding
+#                  takes — so declaring it would hide a real finding code from the coverage arms.
+# Each limb is a SET, so a control grades the delta its mutation adds against this run's own reading.
+st_cf_kinds_read() {
+  local body="$1" kinds="$2" kr_all kr_sm kr_k
+  kr_all="$(st_codes "$body")"
+  kr_sm="$(awk -F'\t' 'NF > 1 { print $2 }' <<<"$(st_sitemap "$body")")"
+  for kr_k in $kinds; do
+    grep -qxF -- "$kr_k" <<<"$kr_all" || printf 'STALE %s\n' "$kr_k"
+  done
+  for kr_k in $kinds; do
+    if grep -qxF -- "$kr_k" <<<"$kr_sm"; then printf 'HIDDEN %s\n' "$kr_k"; fi
+  done
+}
+# st_cf_kinds_limb <limb> <reading> — the kinds one limb names, one per line.
+st_cf_kinds_limb() { awk -v l="$1" '$1 == l { print $2 }' <<<"$2"; }
+
+# st_cf_kinds_assert <id> <body> <kinds> — exactly one verdict, a chain with one condition and one
+# message per branch. An EMPTY declaration FAILs first: the evaluator writes record kinds by design,
+# and a declaration naming none would pass both limbs over nothing.
+st_cf_kinds_assert() {
+  local id="$1" body="$2" kinds="$3" ka_r ka_stale ka_hidden ka_n
+  ka_n="$(awk '{ n += NF } END { print n + 0 }' <<<"$kinds")"
+  ka_r="$(st_cf_kinds_read "$body" "$kinds")"
+  ka_stale="$(st_cf_kinds_limb STALE "$ka_r" | tr '\n' ' ')"
+  ka_hidden="$(st_cf_kinds_limb HIDDEN "$ka_r" | tr '\n' ' ')"
+  if [ "$ka_n" -eq 0 ]; then
+    FAIL "$id: ST_CF_RECORD_KINDS declares no record kind, so both limbs would pass over the empty set — the evaluator writes record kinds by design, and an empty declaration lets each reach the code set as an uncovered code"
+  elif [ -n "$ka_stale" ]; then
+    FAIL "$id: declared record kind(s) ${ka_stale% } are not read by st_codes from the body of st_cf_violations — the evaluator no longer writes them in a shape the code reader reads, so the declaration has outlived its premise. Remove the kind from ST_CF_RECORD_KINDS, or restore the record the evaluator stopped writing"
+  elif [ -n "$ka_hidden" ]; then
+    FAIL "$id: declared record kind(s) ${ka_hidden% } are written TAB-terminated in the body of st_cf_violations, the shape every finding takes, so the site reader reads each as a code and the declaration would hide a real finding from ST-CF-COV and ST-CF-SITE. Write the record space-separated, or take it out of ST_CF_RECORD_KINDS"
+  else
+    PASS "$id: each of the $ka_n declared record kind(s) [$kinds] is read by st_codes from the body of st_cf_violations, so none is stale, and none is a tab-terminated code at the site rung, so the declaration hides no finding. CTL-ST-CF-KINDS and CTL-ST-CF-KINDS-STALE show each limb failing"
+  fi
+}
+st_cf_kinds_assert 'ST-CF-KINDS' "$ST_CF_SITE_BODY" "$ST_CF_RECORD_KINDS"
+
+# CTL-ST-CF-KINDS — MUST FIRE, the HIDDEN limb. One declared kind is appended to a COPY of the body
+# as a tab-terminated emission, by the shaper the code rung's controls use, and the HIDDEN set must
+# gain exactly that kind against this run's own reading of the unmutated body.
+ST_CF_KC_KIND="${ST_CF_RECORD_KINDS%% *}"
+ST_CF_KC_MUT="$ST_CF_SITE_BODY
+$(cov_emit_tab "$ST_CF_KC_KIND")"
+ST_CF_KC_LANDED=0; [ "$ST_CF_KC_MUT" != "$ST_CF_SITE_BODY" ] && ST_CF_KC_LANDED=1
+ST_CF_KC_ADD="$(st_setdiff "$(st_cf_kinds_limb HIDDEN "$(st_cf_kinds_read "$ST_CF_KC_MUT" "$ST_CF_RECORD_KINDS")")" \
+                           "$(st_cf_kinds_limb HIDDEN "$(st_cf_kinds_read "$ST_CF_SITE_BODY" "$ST_CF_RECORD_KINDS")")" | tr '\n' ' ')"
+if [ -n "$ST_CF_KC_KIND" ] && [ "$ST_CF_KC_LANDED" -eq 1 ] && [ "${ST_CF_KC_ADD% }" = "$ST_CF_KC_KIND" ]; then
+  PASS "CTL-ST-CF-KINDS: MUST FIRE — the declared kind $ST_CF_KC_KIND written tab-terminated into a COPY of the body of st_cf_violations enters ST-CF-KINDS' hidden limb, and it is the only kind that does. The mutation is asserted to have landed before the limb is read"
+else
+  FAIL "CTL-ST-CF-KINDS: MUST FIRE — the declared kind '$ST_CF_KC_KIND' written tab-terminated into a copy of the body did not enter the hidden limb alone (mutation-landed=$ST_CF_KC_LANDED, added=[${ST_CF_KC_ADD% }]). ST-CF-KINDS cannot tell a declaration hiding a real code from a sound one"
+fi
+
+# CTL-ST-CF-KINDS-STALE — MUST FIRE, the STALE limb. A kind the evaluator never writes is added to a
+# COPY of the declaration, and the STALE set must gain exactly that kind against this run's own
+# reading of the real declaration.
+ST_CF_KS_KIND='ZZKIND'
+ST_CF_KS_DECL="$ST_CF_RECORD_KINDS $ST_CF_KS_KIND"
+ST_CF_KS_ADD="$(st_setdiff "$(st_cf_kinds_limb STALE "$(st_cf_kinds_read "$ST_CF_SITE_BODY" "$ST_CF_KS_DECL")")" \
+                           "$(st_cf_kinds_limb STALE "$(st_cf_kinds_read "$ST_CF_SITE_BODY" "$ST_CF_RECORD_KINDS")")" | tr '\n' ' ')"
+if [ "$ST_CF_KS_DECL" != "$ST_CF_RECORD_KINDS" ] && [ "${ST_CF_KS_ADD% }" = "$ST_CF_KS_KIND" ]; then
+  PASS "CTL-ST-CF-KINDS-STALE: MUST FIRE — a kind the evaluator never writes, $ST_CF_KS_KIND, added to a COPY of the declaration enters ST-CF-KINDS' stale limb, and it is the only kind that does. So a declaration cannot outlive the record it names"
+else
+  FAIL "CTL-ST-CF-KINDS-STALE: MUST FIRE — a kind the evaluator never writes added to a copy of the declaration did not enter the stale limb alone (added=[${ST_CF_KS_ADD% }]). ST-CF-KINDS cannot tell a stale declaration from a sound one"
 fi
 ST_CF_COV_PROBE='ZZ-ST-CF-COVERAGE-PROBE'
 ST_CF_COV_PHANTOM='ZZ-ST-CF-PHANTOM-ARM'
