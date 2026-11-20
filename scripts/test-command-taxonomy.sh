@@ -2252,8 +2252,10 @@ invocation_check() {
     # is named by command AND file, so a line number is never read against the wrong file.
     where="$cmd"; [ "$fname" = 'SKILL.md' ] || where="$cmd/$fname"
     lno=0; fd=0; jopen=''; jbuf=''; jno=0
-    # The file is read with one empty line appended, so a logical line still open at the end of
-    # the file is closed and parsed exactly as a fence would close it.
+    # The file is read with two newlines appended, printf '\n\n'. The first ends a last line that
+    # has no newline of its own; the second is an empty line, so a logical line still open at the
+    # end of the file is closed and parsed exactly as a fence would close it. A file that already
+    # ends in a newline gets two empty lines; the second names no script and is passed over.
     while IFS= read -r line || [ -n "$line" ]; do
       lno=$((lno+1))
       if [[ "$line" == '```'* ]]; then fd=$((1-fd)); fi
