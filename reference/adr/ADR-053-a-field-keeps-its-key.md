@@ -3,7 +3,7 @@
 - **Status:** Accepted (2026-11-20)
 - **Deciders:** repo maintainer
 - **Driving work:** #2244, at the head of the *A form field keeps its key when its label is reworded*
-  milestone. The build that reads the key is #2211. The operator ruled the direction on 2026-11-13,
+  milestone. #2211 is the card whose criteria this record reads. The operator ruled the direction on 2026-11-13,
   in the card's *Settled direction* section, after a decision packet tested four homes for the key
   against the cards' criteria and against `ADR-023`. This record transcribes that ruling as
   decisions. It adds the operator's refinement of the key's grammar from the release's plan gate,
@@ -214,6 +214,8 @@ Decision 7 does not rewrite decision records.
 - **Residual: a reader that stays on labels goes stale at a reword unless something reports it.** The
   agent prompts and the skill prose are such readers. Nothing reports a former label still named
   there, so a reword leaves them stale silently, until a check of that kind exists.
+- **Residual: nothing checks that a key stays as it was written.** A key renamed at a reword reads
+  green until a reader cites it; once readers resolve by key, a renamed key fails to resolve.
 - **Residual: nothing marks which form version a written profile came from.** The former-label rows
   carry what a reader needs instead.
 
@@ -258,9 +260,9 @@ slices are written on #2211, because an Accepted record carries no schedule (`re
 ## References
 
 - The ruling: #2244, § *Settled direction* (the operator, 2026-11-13). The refinement of the key's
-  grammar, and the operator's confirmation of Decision 4's ranking, of the guarded-label consequence
-  and of where the build's slices are written: the Stage 4 and Stage 5 decision records on the release's
-  planning sub-task, #2376, and its scope-lock record.
+  grammar: the Stage 4 decision record on the release's planning sub-task, #2376. The operator's
+  confirmation of Decision 4's ranking, of the guarded-label consequence and of where the build's
+  slices are written: the Collective Review scope-lock record on the record's Stage 5 sub-task, #2377.
 - [ADR-023](ADR-023-interviewer-authored-home-and-form-contract.md): D2.1 on the form's shape, D2.4 on
   its rejected option (b), D2.6 on the join a bullet makes to its row, and D6.1 on what a new label
   costs.
@@ -269,6 +271,7 @@ slices are written on #2211, because an Accepted record carries no schedule (`re
 - `reference/data-architecture.md` §§ 2–3, the entity model and its identity rule.
 - `CLAUDE.md` § *Rules over an enumeration*, and [ADR-047](ADR-047-rules-over-an-enumeration.md).
 - `reference/adr/README.md` § *Convention*: *Scheduling content* and *What an amendment may add*.
-- The cards and the observation: #2211, the build; #2201's finding F-1, the comma stopgap.
+- The cards and the observation: #2211, where the build's size and slices are written; #2201's finding
+  F-1, the comma stopgap.
 - Implementation: `reference/data-model.md` § *Field Scope*. Regression coverage:
   `scripts/test-artifact-schema.sh` group FT.

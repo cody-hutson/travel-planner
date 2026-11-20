@@ -4316,8 +4316,9 @@ st_cf_unres_note() { [ -z "$ST_CF_UNRES" ] || printf '%s — ' "$ST_CF_UNRES"; }
 #        carries, unlike its field's current label, and reusing no label another field carries now
 #        or carried before under a section one of which leads the other. It holds no row until a
 #        field is reworded, so it renders VACUOUS, and its controls plant rows on a synthetic table
-# Every arm has a standing control on a COPY under $WORK, asserted to have LANDED, and graded
-# as a DELTA against this run's own live reading — never against a clean-table literal — so a
+# Every arm but FT4 and FT9 has a standing control on a COPY under $WORK, asserted to have LANDED,
+# and graded as a DELTA against this run's own live reading — FT4's and FT9's are graded on synthetic
+# tables, as their entries above say — never against a clean-table literal — so a
 # mutation replayed on the tracked table turns the arm it targets red, and every control whose
 # target the replay leaves alone stays green; a replay on a row a control itself targets may
 # turn that control, or a sibling targeting the same row, red with it.
