@@ -4514,30 +4514,39 @@ refuse_group_only_render() {
 #     read through _guard_declared_rows. Its selectors are matched as labels, and its values are taken from
 #     the files the rows scope — every scope a trip-relative path except the person store, whose records are
 #     reached through the `person:` references the traveller files carry (trip root first, then the data root,
-#     one merge hop). A `field` row added there joins both halves below with no edit here, wherever its scope
-#     is a trip-relative path or the person store.
+#     one merge hop; a longer chain is named, not followed). A `field` row added there joins both halves
+#     below with no edit here, wherever its scope is a trip-relative path or the person store.
 # A value is the text after a label's colon on the label's own line, after clean(), admitted by stated() —
 # exactly the guard's profile parse, through the same shared helpers.
 #
 # THE TWO HALVES (D-2156-MATCH, with D-NEW-1). A bound line stops the publish when:
-#   1. LABEL. Stripped of a list marker (bulleted or numbered), a blockquote marker, a heading marker and
-#      emphasis, it is a declared selector used as a label — field_hit — with a stated value after the colon.
-#      An ordinary-word value, a country, is caught only this way.
-#   2. EXACT. It carries, case-folded and with emphasis, U+00A0 and runs of whitespace normalized, either
+#   1. LABEL. With U+00A0 read as a space, U+FF1A as a colon, and the zero-width characters U+200B–U+200D and
+#      U+FEFF and the soft hyphen U+00AD dropped, and stripped of every leading list marker (bulleted or
+#      numbered), task box (`[ ]`, `[x]`), blockquote marker and heading marker, in any order, and of emphasis,
+#      it is a declared selector used as a label — field_hit, unchanged, reached by the normalized line — with
+#      a stated value after the colon. An ordinary-word value, a country, is caught only this way.
+#   2. EXACT. It carries, case-folded, with emphasis, U+00A0 and runs of whitespace normalized, the zero-width
+#      characters and the soft hyphen dropped, and full-width (U+FF10–U+FF19) and Arabic-Indic (U+0660–U+0669)
+#      digits read as ASCII digits — the same normalization applied to the values — either
 #      (a) a distinctive component of a stated value: the value split at `,` `;` `·` `(` `)` `:` and `—`, a
 #          component distinctive when one of its words holds three or more digits — except a component that is
 #          nothing but a number of four or fewer digits (a year, a day: the trip's own), and the Documents
 #          grammar's derivation stamp `checked <YYYY-MM-DD>` (agents/00-enrichment.md), which is provenance and
 #          by construction the run's `generated:` date; or
-#      (b) a word distinctive in itself: an email-shaped token; a run of five or more digits once its
-#          separators are dropped (a phone or a document number), compared within the line's own runs; a mixed
-#          token of six or more letters and digits holding at least three digits, compared whole.
-#   The two exclusions in (a), and the date-shaped runs (b) skips — two or three groups, one a four-digit year,
-#   the rest one or two digits — are NARROWING controls: each removes values from what is matched. That is why
-#   they are here, in code behind a diff, and not in the declaration, which only widens (the rule § 5.6 states
-#   for narrowing controls). The date skip is what keeps (b) from becoming the full-date rule the operator
-#   declined (D-NEW-1): a full date reaches the match only inside a distinctive component, so a date carried
-#   with other words around it is a declared residual.
+#      (b) a word distinctive in itself: an email-shaped token; a run of five or more digits whose groups are
+#          joined by one or two of space `.` `/` `(` `)` `+` `-`, once those are dropped (a phone or a document
+#          number), compared within the line's own runs; a mixed token of six or more letters and digits
+#          holding at least three digits, compared whole.
+#   The two exclusions in (a), and the calendar-valid dates (b) skips, are NARROWING controls: each removes
+#   values from what is matched. That is why they are here, in code behind a diff, and not in the declaration,
+#   which only widens (the rule § 5.6 states for narrowing controls). A run is a calendar-valid date, and
+#   skipped, only when it has two or three groups, exactly one of them a four-digit year 19xx or 20xx standing
+#   first or last, and the rest read as a valid month (1–12), or a month and a day (1–31) in year-month-day,
+#   day-month-year or month-day-year order (the operator's ruling on Stage 7's S7-03, option C). A number
+#   grouped like a date whose groups are no calendar date — a phone number written 07 2019 55, an account
+#   number written 19 2031 — is matched. The skip is what keeps (b) from becoming the full-date rule the
+#   operator declined (D-NEW-1): a full date reaches the match only inside a distinctive component, so a
+#   calendar-valid date carried with other words around it is a declared residual.
 # The split and the normalization run under LC_ALL=C, with each multibyte separator replaced by its exact byte
 # string before an ASCII split (#2156's review, F19), so a host's locale and awk cannot move a verdict.
 #
@@ -4552,10 +4561,20 @@ refuse_group_only_render() {
 #
 # DECLARED RESIDUALS, each asserted by an arm of test-publish-guard.sh group L (L19v):
 #   • an ordinary-word value restated without its label (ADR-030 § 6 safeguard 6 names it);
-#   • a label written mid-line, in a table cell, or with a word between the selector and its colon;
+#   • a label written mid-line, in a table cell, or with a word between the selector and its colon; a label
+#     whose colon is replaced by a dash (`Passport — X`, `- Passport - X`); and a label behind a leading
+#     marker other than those the strip names;
 #   • a value wrapped across two lines, and a paraphrase;
-#   • a full date, or any distinctive part, carried with other words around it;
+#   • a calendar-valid date, or any distinctive part, carried with other words around it;
+#   • a number whose groups are joined otherwise than by one or two of the characters (b) names — a comma, or
+#     three characters such as ` - `;
+#   • a value written in characters the normalization does not fold: letters in another script or a
+#     full-width form, and digits other than ASCII, full-width and Arabic-Indic;
 #   • a value held only in a value source that is absent or unresolved, which the label half alone covers;
+#   • a value-source line the guard's profile parse does not read as a label — a task box, or a look-alike
+#     colon, in a traveller file — which contributes no value, so the label half alone covers it;
+#   • a person reference whose merge chain runs past one hop, which is named in a NOTE (a merge chain longer
+#     than one hop) and whose second hop is not read;
 #   • a trip with no `bound` artifact present, which passes with every one named as not in the trip (D-NEW-3).
 # Over-stops fail closed: a distinctive component that happens to occur in a bound file, such as an expiry
 # month and year equal to the trip's own, stops the publish, and the remedy is one edit.
@@ -4630,6 +4649,7 @@ _field_class_values() { # <trip_dir>
         if [ ! -e "$fc_tgt" ] && [ ! -L "$fc_tgt" ]; then printf 'NOTE\tperson record %s\n' "$fc_merge"; continue; fi
         if [ ! -f "$fc_tgt" ] || [ ! -r "$fc_tgt" ]; then printf 'UNREAD\tperson record %s\n' "$fc_merge"; continue; fi
         fc_srcs="$fc_srcs$fc_tgt$tab"
+        [ -z "$(_guard_frontmatter_key "$fc_tgt" "$_GUARD_MERGE_KEY")" ] || printf 'NOTE\ta merge chain longer than one hop\n'
       done
       continue
     fi
@@ -4674,9 +4694,11 @@ EOF
 # exact bytes, in octal, so the split is byte-exact on every host.
 _build_source_hits() { # <file>
   LC_ALL=C awk "$_GUARD_AWK_HELPERS"'
-    function norm(s) {
+    function norm(s,   k) {
       s = tolower(s)
       gsub(/\302\240/, " ", s)
+      gsub(/\342\200\213|\342\200\214|\342\200\215|\357\273\277|\302\255/, "", s)
+      for (k = 1; k <= 10; k++) { gsub(FWD[k], k - 1, s); gsub(AID[k], k - 1, s) }
       gsub(/[*_`]/, " ", s)
       gsub(/[ \t]+/, " ", s); sub(/^ /, "", s); sub(/ $/, "", s)
       return s
@@ -4689,14 +4711,19 @@ _build_source_hits() { # <file>
       for (k = 1; k <= nw; k++) if (length(digits(w[k])) >= 3) hit = 1
       return hit
     }
-    function datelike(r,   g, ng, k, y, ok) {
-      ng = split(r, g, /[^0-9]+/); y = 0; ok = 1
+    function cal_month(x) { return (x + 0 >= 1 && x + 0 <= 12) }
+    function cal_day(x) { return (x + 0 >= 1 && x + 0 <= 31) }
+    function datelike(r,   g, ng, k, y, yi) {
+      ng = split(r, g, /[^0-9]+/); y = 0; yi = 0
       if (ng < 2 || ng > 3) return 0
       for (k = 1; k <= ng; k++) {
-        if (length(g[k]) == 4 && g[k] ~ /^(19|20)/) y++
-        else if (length(g[k]) < 1 || length(g[k]) > 2) ok = 0
+        if (length(g[k]) == 4 && g[k] ~ /^(19|20)/) { y++; yi = k }
+        else if (length(g[k]) < 1 || length(g[k]) > 2) return 0
       }
-      return (ok && y == 1)
+      if (y != 1 || (yi != 1 && yi != ng)) return 0
+      if (ng == 2) return (yi == 1) ? cal_month(g[2]) : cal_month(g[1])
+      if (yi == 1) return (cal_month(g[2]) && cal_day(g[3]))
+      return ((cal_day(g[1]) && cal_month(g[2])) || (cal_month(g[1]) && cal_day(g[2])))
     }
     function add(kind, needle, sel) { NN++; NK[NN] = kind; NV[NN] = needle; NS[NN] = sel }
     function wcore(v, sel,   t, nt, k, x, s, r, d, a) {
@@ -4719,6 +4746,8 @@ _build_source_hits() { # <file>
       return 0
     }
     BEGIN {
+      split("\357\274\220 \357\274\221 \357\274\222 \357\274\223 \357\274\224 \357\274\225 \357\274\226 \357\274\227 \357\274\230 \357\274\231", FWD, " ")
+      split("\331\240 \331\241 \331\242 \331\243 \331\244 \331\245 \331\246 \331\247 \331\250 \331\251", AID, " ")
       ns = split(ENVIRON["BS_SELS"], S, " ")
       nv = split(ENVIRON["BS_VALS"], VL, "\n")
       for (i = 1; i <= nv; i++) {
@@ -4733,9 +4762,15 @@ _build_source_hits() { # <file>
     }
     {
       lab = $0
-      sub(/^[ \t]*(>[ \t]*)*/, "", lab)
-      sub(/^#+[ \t]+/, "", lab)
-      sub(/^([-*+]|[0-9]+[.)])[ \t]+/, "", lab)
+      gsub(/\302\240/, " ", lab); gsub(/\357\274\232/, ":", lab)
+      gsub(/\342\200\213|\342\200\214|\342\200\215|\357\273\277|\302\255/, "", lab)
+      do {
+        was = lab
+        sub(/^[ \t]*(>[ \t]*)*/, "", lab)
+        sub(/^#+[ \t]+/, "", lab)
+        sub(/^([-*+]|[0-9]+[.)])[ \t]+/, "", lab)
+        sub(/^\[[ xX]\][ \t]+/, "", lab)
+      } while (lab != was)
       gsub(/[*_]/, "", lab)
       sub(/^[ \t]+/, "", lab)
       for (i = 1; i <= ns; i++) {

@@ -840,8 +840,14 @@ it before every `publish`, `update` and `rotate`, on both limbs. It reads every 
 its artifact scope, takes each selector's stated values from the files the rows scope, and stops the
 publish where a file `reference/site-layout-spec.md` § 9.1 marks `bound` carries the label with a
 value, or carries a value exactly (`ADR-030` § 6 safeguard 6): a part of it holding a number of three
-or more digits, or a word of it that is an email address, a run of five or more digits, or a token
-mixing letters with at least three digits. Any other value is matched by its label alone. A value
+or more digits, or a word of it that is an email address, a run of five or more digits joined by one or
+two of a space, `.`, `/`, `(`, `)`, `+` and `-`, or a token mixing letters with at least three digits.
+Any other value is matched by its label alone. A run whose groups form a calendar-valid date — a year
+19xx or 20xx first or last, with a valid month, or a month and day, in year-month-day, day-month-year
+or month-day-year order — is skipped, so a date the plan carries is not matched; a run joined otherwise,
+by a comma or by three characters such as ` - `, is not matched, and neither is a label whose colon is
+a dash. A full-width colon and a non-breaking space read as their ASCII forms, zero-width characters and
+the soft hyphen are dropped, and full-width and Arabic-Indic digits read as ASCII digits. A value
 source that is absent contributes no values and is named; a field class that reads empty stops the
 publish. A `field` row added here joins both matches with no edit to any shell script, wherever its
 scope is a trip-relative path or the person store.

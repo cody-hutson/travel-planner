@@ -32,12 +32,17 @@ included: § 3 now says so, and that the share-mark card ships with or after it.
 **Every publish, update and rotate checks what the build reads.** Before anything is encrypted or
 pushed, the script reads the files `reference/site-layout-spec.md` § 9.1 marks `bound` and stops,
 naming the file, the line and the field and never the value, where one carries a value of the field
-class `reference/data-architecture.md` § 5.6 declares: by its label with a value stated, or exactly,
-where a part of a value holds a number of three or more digits or a word of it is an email address,
-a run of five or more digits or a token mixing letters with three or more digits. It reads the
+class `reference/data-architecture.md` § 5.6 declares: by its label with a value stated, behind any
+list marker, task box, quote or heading marker and through a full-width colon or a non-breaking
+space, or exactly, where a part of a value holds a number of three or more digits or a word of it is
+an email address, a run of five or more digits or a token mixing letters with three or more digits,
+read through zero-width characters and full-width and Arabic-Indic digits. A run of digits whose
+groups form a calendar-valid date is skipped, so a date the plan carries does not stop a publish; a
+number grouped like a date that is no calendar date is matched. It reads the
 traveller files, the traveller model and the referenced person records directly, so a stale or
 missing model neither stops a publish nor hides a value a present one holds. A bound file absent
-from the trip is skipped and named; one present but unreadable stops. This is the first content
+from the trip is skipped and named; one present but unreadable stops. A person reference merged
+more than one hop is named, and its second hop is not read. This is the first content
 check the encrypted limb carries; the previous release's entry named it as owed to this milestone.
 
 **`list` reports `build-to-published` in place of the stale flag.** The column compares the digest
@@ -55,9 +60,12 @@ declared in `skills/trip-publish/SKILL.md` § *list* and registered in
 run time — classList, className, concatenation, interpolation, or decoding such as atob,
 decodeURIComponent and String.fromCharCode — is not seen by the refusal; nor is group content
 rendered without its token, which the § 3 render contract binds. The source check
-does not see an ordinary-word value restated without its label, a label mid-line, in a table cell or
-with a word before its colon, a value wrapped or paraphrased, or a full date carried with other words
-around it; and a trip with no bound file present passes it with every one named as absent. `list`
+does not see an ordinary-word value restated without its label, a label mid-line, in a table cell,
+with a word before its colon or with a dash in place of it, a value wrapped or paraphrased, a
+calendar-valid date carried with other words around it, a number joined by a comma or by three
+characters such as ` - `, or a value written in another script's letters, full-width letters or
+digits other than ASCII, full-width and Arabic-Indic; and a trip with no bound file present passes it
+with every one named as absent. `list`
 reads the record a push left on this machine, so a push from elsewhere, a takedown and text outside
 the projection are not seen.
 
