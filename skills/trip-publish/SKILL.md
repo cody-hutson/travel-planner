@@ -565,8 +565,9 @@ ladder resolved, and stop. Do not re-publish an archived trip.
 ### Report
 
 Report what the script reported, and add no conclusion it did not make. On success its
-completion line names the live URL. If its pre-push guard aborts, say that nothing was
-pushed and name what the script named — a guard abort is not a partial publish.
+completion line names the live URL. If its source check or its pre-push guard stops it, say
+that nothing was pushed and name what the script named — the file and the field for the source
+check, never a value. A stop is not a partial publish.
 
 ## list
 
@@ -635,7 +636,7 @@ confirmation on that branch is gated on stdin being a terminal, and a command Cl
 never has one — so setting the variable does not confirm non-interactively, it **skips the
 confirmation entirely**. The charter also records that the plaintext branch does not run
 the pre-push ciphertext guard, running content controls instead — a refusal of any render
-carrying a group-only section, then the content guard.
+carrying a group-only section, the source check every publish runs, then the content guard.
 
 So this is an operator action. The hand-off: point at `CLAUDE.md` → *Publishing to GitHub
 Pages* → the opt-out paragraph, **print that paragraph's command for the operator to run

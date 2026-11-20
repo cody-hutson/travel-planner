@@ -835,6 +835,17 @@ lines those selectors label left out, in the shapes its header's criterion reach
 nothing, on zero `field` rows or a malformed row. A `field` row added here joins it with no edit,
 and which dispatches take it is the test in `CLAUDE.md` § *Dispatching agents*.
 
+**The fence has a third executable reader, the source check.** `scripts/publish-trip-site.sh` runs
+it before every `publish`, `update` and `rotate`, on both limbs. It reads every `field` row, whatever
+its artifact scope, takes each selector's stated values from the files the rows scope, and stops the
+publish where a file `reference/site-layout-spec.md` § 9.1 marks `bound` carries the label with a
+value, or carries a value exactly (`ADR-030` § 6 safeguard 6): a part of it holding a number of three
+or more digits, or a word of it that is an email address, a run of five or more digits, or a token
+mixing letters with at least three digits. Any other value is matched by its label alone. A value
+source that is absent contributes no values and is named; a field class that reads empty stops the
+publish. A `field` row added here joins both matches with no edit to any shell script, wherever its
+scope is a trip-relative path or the person store.
+
 **Adding a member of the class inside the queried set is one row here and no edit to any shell
 script.** The evaluator asks exactly four `(limb, artifact-scope)` questions — `entry` and `field`
 against `outputs/traveler-model.md`, and `field` against `travelers/<traveler>.md` and

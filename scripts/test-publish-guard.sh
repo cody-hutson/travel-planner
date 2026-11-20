@@ -1134,7 +1134,7 @@ l8n="$(printf '%s\n' "$l8sel" | grep -c .)"
 # Every function that must hold ZERO selectors. Two predicates, the projection the summary
 # predicate adds, and the two helpers every arm of both runs through: an arm's stages moved out
 # of the predicates' bodies into those two, and a selector could be hardcoded there as easily.
-L8_PREDICATES='verify_publishable_content verify_summary_content strip_md_to_text_blocks _guard_arm _guard_words'
+L8_PREDICATES='verify_publishable_content verify_summary_content strip_md_to_text_blocks _guard_arm _guard_words _field_class_values _build_source_hits require_clean_build_sources'
 l8absent=""
 # Each body is read through pp_body, so the guard graded is the production one and not the
 # parity cells' recorder standing in for it from group L to M6.
@@ -16213,7 +16213,7 @@ l19m_e2e_assert() { # <id> <publish|update>
   h1="$( [ -z "$bare" ] || rv_head "$bare")"
   case "$out" in *"Source check: no value"*) pass=1 ;; esac
   if [ "$rc" -ne 0 ]; then
-    FAIL "$id: $v of an R9 shape (a profile, no model) read rc=$rc, want 0: $(printf '%s' "$out" | awk '/STOPPED|ERROR/ { print; exit }' | cut -c1-200)"
+    FAIL "$id: $v of an R9 shape (a profile, no model) read rc=$rc, want 0: $(awk '/STOPPED|ERROR/ { print; exit }' <<<"$out" | cut -c1-200)"
   elif [ "$pass" -ne 1 ]; then
     FAIL "$id: $v exited 0 but printed no source-check pass line — the check did not run on this path"
   elif [ "$v" = update ] && [ "$h0" = "$h1" ]; then
@@ -16248,7 +16248,7 @@ l19n_assert() { # <id> <publish|plaintext|update|rotate>
   case "$(cat "$RV_GHLOG")" in *"repo create"*|*"repo clone"*) create=1 ;; esac
   if [ "$v" = rotate ] && ! cmp -s "$d/.passphrase" "$RVW/$name.before"; then same=0; fi
   if [ "$rc" -ne 1 ] || [ "$stop" -ne 1 ]; then
-    FAIL "$id: $v of a trip whose bound file carries a value read rc=$rc and the source-check stop=$stop (want 1 and 1): $(printf '%s' "$out" | awk '/ERROR/ { print; exit }' | cut -c1-200)"
+    FAIL "$id: $v of a trip whose bound file carries a value read rc=$rc and the source-check stop=$stop (want 1 and 1): $(awk '/ERROR/ { print; exit }' <<<"$out" | cut -c1-200)"
   elif [ "$create" -ne 0 ] || [ "$h0" != "$h1" ] || [ "$c0" != "$c1" ]; then
     FAIL "$id: $v stopped, but a repository was created or cloned ($create), the site moved ($h0 -> $h1) or the clone committed ($c0 -> $c1)"
   elif [ "$same" -ne 1 ]; then

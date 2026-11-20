@@ -1879,6 +1879,12 @@ _GROUP_ONLY_SPEC="$_GUARD_REPO_ROOT/reference/site-layout-spec.md"
 _GROUP_ONLY_FENCE='group-only-components'
 _GROUP_ONLY_HEADING='### Group-only components'
 _EXIT_GROUP_ONLY=3
+# The files the site build reads (#2156): the `bound` rows of the site spec's § 9.1 fence, read by
+# _build_source_rows. The heading is copied byte for byte, because fence_block matches it exactly. Plain
+# assignments for the same reason as the declaration's; the suite re-points the path inside its own process.
+_BUILD_SOURCES_SPEC="$_GUARD_REPO_ROOT/reference/site-layout-spec.md"
+_BUILD_SOURCES_FENCE='publish-contract-artifacts'
+_BUILD_SOURCES_HEADING='### 9.1 Single-source authority — which artifact owns which element'
 
 # The reference grammar the walk below resolves against. Consumed from
 # reference/data-model.md § Composition and reference/schemas/traveler-profile.md; declared
@@ -4455,17 +4461,332 @@ refuse_group_only_render() {
   return 0
 }
 
-# THE REPUBLISH PATH'S GUARDS, AS ONE CALL LINE (#719, the scope-lock's C5; #1468). update calls this
-# and nothing else at the gate's position: S3 exactly as it was, then the render's approval-code
-# guard, then the baseline guard. #85 relocates the gate onto its event-driven path by moving that
-# one line, as S3's own banner promises, so neither guard can be left behind by a relocation that
-# carries S3 alone. publish calls the code guard and the baseline guard on its own: S3 does not
-# gate publish, by design.
+# ─────────────────────────────────────────────────────────────────────────────
+# THE SOURCE CHECK (#2156; ADR-030 § 6 safeguard 6). Before anything is encrypted or sent, every publish,
+# update and rotate — both limbs, every phase — reads the files the site build reads and stops where one
+# carries a value of the non-publishable field class. A render reaches a page; these files reach the render,
+# so a value stopped here never reaches a page at all, private or public.
+#
+# WHAT IT READS, AND FROM WHERE. Two declarations, each read and never copied:
+#   • the files the build reads: the `bound` rows of reference/site-layout-spec.md § 9.1's
+#     `publish-contract-artifacts` fence, each a trip-relative path, a `<token>` read as `*`;
+#   • the field class: every `field` row of reference/data-architecture.md § 5.6, whatever its artifact scope,
+#     read through _guard_declared_rows. Its selectors are matched as labels, and its values are taken from
+#     the files the rows scope — every scope a trip-relative path except the person store, whose records are
+#     reached through the `person:` references the traveller files carry (trip root first, then the data root,
+#     one merge hop). A `field` row added there joins both halves below with no edit here, wherever its scope
+#     is a trip-relative path or the person store.
+# A value is the text after a label's colon on the label's own line, after clean(), admitted by stated() —
+# exactly the guard's profile parse, through the same shared helpers.
+#
+# THE TWO HALVES (D-2156-MATCH, with D-NEW-1). A bound line stops the publish when:
+#   1. LABEL. Stripped of a list marker (bulleted or numbered), a blockquote marker, a heading marker and
+#      emphasis, it is a declared selector used as a label — field_hit — with a stated value after the colon.
+#      An ordinary-word value, a country, is caught only this way.
+#   2. EXACT. It carries, case-folded and with emphasis, U+00A0 and runs of whitespace normalized, either
+#      (a) a distinctive component of a stated value: the value split at `,` `;` `·` `(` `)` `:` and `—`, a
+#          component distinctive when one of its words holds three or more digits — except a component that is
+#          nothing but a number of four or fewer digits (a year, a day: the trip's own), and the Documents
+#          grammar's derivation stamp `checked <YYYY-MM-DD>` (agents/00-enrichment.md), which is provenance and
+#          by construction the run's `generated:` date; or
+#      (b) a word distinctive in itself: an email-shaped token; a run of five or more digits once its
+#          separators are dropped (a phone or a document number), compared within the line's own runs; a mixed
+#          token of six or more letters and digits holding at least three digits, compared whole.
+#   The two exclusions in (a), and the date-shaped runs (b) skips — two or three groups, one a four-digit year,
+#   the rest one or two digits — are NARROWING controls: each removes values from what is matched. That is why
+#   they are here, in code behind a diff, and not in the declaration, which only widens (the rule § 5.6 states
+#   for narrowing controls). The date skip is what keeps (b) from becoming the full-date rule the operator
+#   declined (D-NEW-1): a full date reaches the match only inside a distinctive component, so a date carried
+#   with other words around it is a declared residual.
+# The split and the normalization run under LC_ALL=C, with each multibyte separator replaced by its exact byte
+# string before an ASCII split (#2156's review, F19), so a host's locale and awk cannot move a verdict.
+#
+# ABSENT IS NOT UNREADABLE (D-2). A fence that reads no `bound` row, or reads in part, stops; a field class
+# that reads no `field` row, or reads in part, stops. A `bound` artifact absent from the trip — no file and no
+# link, as an IDEATION trip's itinerary is — is skipped and named; one present but not a readable regular
+# file stops, naming it. A value source absent, or a person reference unresolvable or malformed, is named
+# and contributes no values (D-2156-VALSRC): this check reads the sources of record directly, so it needs no
+# freshness inference, and a present, readable source contributes its values whatever its age or its entry
+# structure (#2156's review, F8). A value source present but not readable stops, named by its scope, never
+# by a traveller file's name. Nothing it prints is a value.
+#
+# DECLARED RESIDUALS, each asserted by an arm of test-publish-guard.sh group L (L19v):
+#   • an ordinary-word value restated without its label (ADR-030 § 6 safeguard 6 names it);
+#   • a label written mid-line, in a table cell, or with a word between the selector and its colon;
+#   • a value wrapped across two lines, and a paraphrase;
+#   • a full date, or any distinctive part, carried with other words around it;
+#   • a value held only in a value source that is absent or unresolved, which the label half alone covers;
+#   • a trip with no `bound` artifact present, which passes with every one named as not in the trip (D-NEW-3).
+# Over-stops fail closed: a distinctive component that happens to occur in a bound file, such as an expiry
+# month and year equal to the trip's own, stops the publish, and the remedy is one edit.
+#
+# PLACEMENT (D-2156-PLACE). require_publish_guards runs it last, so update and rotate run it and a relocation
+# of that one call line carries it; cmd_publish runs it on both limbs after the group-only refusal and before
+# any network call. It writes nothing and needs no network.
+
+# The `bound` rows' paths, one per line; and the fence's candidate and well-formed row counts, whose
+# difference is a partial read. Shaped as _guard_declared_rows, with its explicit `return 0`.
+_build_source_rows() {
+  [ -f "$_BUILD_SOURCES_SPEC" ] && [ -r "$_BUILD_SOURCES_SPEC" ] || return 0
+  fence_block "$_BUILD_SOURCES_SPEC" "$_BUILD_SOURCES_FENCE" "$_BUILD_SOURCES_HEADING" \
+    | awk 'NF == 2 && $1 !~ /^#/ && $2 == "bound" { print $1 }'
+  return 0
+}
+_build_source_candidates() {
+  [ -f "$_BUILD_SOURCES_SPEC" ] && [ -r "$_BUILD_SOURCES_SPEC" ] || { printf '0'; return 0; }
+  fence_block "$_BUILD_SOURCES_SPEC" "$_BUILD_SOURCES_FENCE" "$_BUILD_SOURCES_HEADING" \
+    | awk 'NF > 0 && $1 !~ /^#/ { c++ } END { print c + 0 }'
+  return 0
+}
+_build_source_wellformed() {
+  [ -f "$_BUILD_SOURCES_SPEC" ] && [ -r "$_BUILD_SOURCES_SPEC" ] || { printf '0'; return 0; }
+  fence_block "$_BUILD_SOURCES_SPEC" "$_BUILD_SOURCES_FENCE" "$_BUILD_SOURCES_HEADING" \
+    | awk 'NF == 2 && $1 !~ /^#/ { c++ } END { print c + 0 }'
+  return 0
+}
+
+# _field_class_values <trip_dir> -> records on stdout, tab-separated:
+#   V  <selector> <value>   a stated value of a declared field, from a value source on file
+#   NOTE <what>             a value source not on file, or a person reference that does not resolve
+#   UNREAD <what>           a value source present but not a readable regular file — the caller stops
+# <what> is a scope as the declaration writes it, or `person record <id>` for a minted id; never a file name.
+# Returns 2 when the declaration yields no `field` row, or reads in part.
+_field_class_values() { # <trip_dir>
+  local trip_dir="$1" fc_rows fc_n fc_all fc_cand fc_scope fc_glob fc_f fc_any fc_pf fc_refs fc_key fc_store
+  local fc_rec fc_merge fc_tgt fc_srcs="" fc_sels tab
+  tab="$(printf '\t')"
+  fc_all="$(_guard_declared_rows)"
+  fc_cand="$(_guard_declared_candidates)"
+  if [ "${fc_cand:-0}" -ne "$(printf '%s' "$fc_all" | awk 'NF { c++ } END { print c + 0 }')" ]; then return 2; fi
+  fc_rows="$(printf '%s\n' "$fc_all" | awk '$1 == "field"')"
+  fc_n="$(printf '%s' "$fc_rows" | awk 'NF { c++ } END { print c + 0 }')"
+  if [ "$fc_n" -eq 0 ]; then return 2; fi
+  fc_sels="$(printf '%s\n' "$fc_rows" | awk '!seen[$2]++ { printf "%s%s", (n++ ? " " : ""), $2 }')"
+  while IFS= read -r fc_scope; do
+    [ -n "$fc_scope" ] || continue
+    if [ "$fc_scope" = "$_GUARD_DECL_ARTIFACT_PERSON" ]; then
+      # shellcheck disable=SC2086  # the scope's `<token>` is a glob by the declaration's own column grammar
+      for fc_pf in "$trip_dir"/$(printf '%s' "$_GUARD_DECL_ARTIFACT_PROFILE" | sed 's/<[^>]*>/*/g'); do
+        [ -f "$fc_pf" ] && [ -r "$fc_pf" ] || continue
+        fc_refs="$(_guard_frontmatter_key "$fc_pf" "$_GUARD_REF_KEY")"
+        [ -n "$fc_refs" ] || continue
+        if [ "$(printf '%s\n' "$fc_refs" | awk 'NF { c++ } END { print c + 0 }')" -ne 1 ]; then
+          printf 'NOTE\ta person reference that is not single-valued\n'; continue
+        fi
+        fc_key="$fc_refs"
+        # shellcheck disable=SC2254  # the person-key glob is a pattern held in a variable; quoted, it would match only its own text
+        case "$fc_key" in $_GUARD_PERSON_KEY_GLOB) ;; *) printf 'NOTE\ta person reference that is not a minted id\n'; continue ;; esac
+        if [ -d "$trip_dir/$_GUARD_PERSON_STORE" ]; then fc_store="$trip_dir/$_GUARD_PERSON_STORE"; else fc_store="$_GUARD_DATA_ROOT/$_GUARD_PERSON_STORE"; fi
+        fc_rec="$fc_store/$fc_key.md"
+        if [ ! -e "$fc_rec" ] && [ ! -L "$fc_rec" ]; then printf 'NOTE\tperson record %s\n' "$fc_key"; continue; fi
+        if [ ! -f "$fc_rec" ] || [ ! -r "$fc_rec" ]; then printf 'UNREAD\tperson record %s\n' "$fc_key"; continue; fi
+        fc_srcs="$fc_srcs$fc_rec$tab"
+        fc_merge="$(_guard_frontmatter_key "$fc_rec" "$_GUARD_MERGE_KEY")"
+        [ -n "$fc_merge" ] || continue
+        # shellcheck disable=SC2254  # the person-key glob is a pattern held in a variable; quoted, it would match only its own text
+        case "$fc_merge" in $_GUARD_PERSON_KEY_GLOB) ;; *) printf 'NOTE\ta merge target that is not a minted id\n'; continue ;; esac
+        fc_tgt="$fc_store/$fc_merge.md"
+        if [ ! -e "$fc_tgt" ] && [ ! -L "$fc_tgt" ]; then printf 'NOTE\tperson record %s\n' "$fc_merge"; continue; fi
+        if [ ! -f "$fc_tgt" ] || [ ! -r "$fc_tgt" ]; then printf 'UNREAD\tperson record %s\n' "$fc_merge"; continue; fi
+        fc_srcs="$fc_srcs$fc_tgt$tab"
+      done
+      continue
+    fi
+    fc_glob="$(printf '%s' "$fc_scope" | sed 's/<[^>]*>/*/g')"
+    fc_any=0
+    # shellcheck disable=SC2086  # the scope's `<token>` is a glob by the declaration's own column grammar
+    for fc_f in "$trip_dir"/$fc_glob; do
+      [ -e "$fc_f" ] || [ -L "$fc_f" ] || continue
+      fc_any=1
+      if [ ! -f "$fc_f" ] || [ ! -r "$fc_f" ]; then printf 'UNREAD\t%s\n' "$fc_scope"; continue; fi
+      fc_srcs="$fc_srcs$fc_f$tab"
+    done
+    [ "$fc_any" -eq 1 ] || printf 'NOTE\t%s\n' "$fc_scope"
+  done <<EOF
+$(printf '%s\n' "$fc_rows" | awk '!seen[$3]++ { print $3 }')
+EOF
+  [ -n "$fc_srcs" ] || return 0
+  printf '%s' "$fc_srcs" | tr '\t' '\n' | awk 'NF && !seen[$0]++' | while IFS= read -r fc_f; do
+    LC_ALL=C awk -v SELS="$fc_sels" "$_GUARD_AWK_HELPERS"'
+      BEGIN { n = split(SELS, S, " ") }
+      {
+        lab = $0
+        sub(/^[ \t]*[-*+][ \t]+/, "", lab)
+        gsub(/\*\*/, "", lab)
+        sub(/^[ \t]+/, "", lab)
+        for (i = 1; i <= n; i++) {
+          if (field_hit(lab, S[i])) {
+            val = lab; sub(/^[^:]*:[ \t]*/, "", val); val = clean(val)
+            if (stated(val)) printf "V\t%s\t%s\n", S[i], val
+            break
+          }
+        }
+      }' "$fc_f" || printf 'UNREAD\ta value source that could not be parsed\n'
+  done
+  return 0
+}
+
+# _build_source_hits <file> -> the first line of a bound file that stops the publish, as
+# "<line>\t<selector>\t<label|exact>", or nothing. The selectors arrive in BS_SELS, space-joined, and the stated
+# values in BS_VALS as "<selector>\t<value>" lines, both through the environment and compared with index(),
+# never as a pattern. One program, run under LC_ALL=C: the multibyte separators and U+00A0 are named by their
+# exact bytes, in octal, so the split is byte-exact on every host.
+_build_source_hits() { # <file>
+  LC_ALL=C awk "$_GUARD_AWK_HELPERS"'
+    function norm(s) {
+      s = tolower(s)
+      gsub(/\302\240/, " ", s)
+      gsub(/[*_`]/, " ", s)
+      gsub(/[ \t]+/, " ", s); sub(/^ /, "", s); sub(/ $/, "", s)
+      return s
+    }
+    function digits(s) { gsub(/[^0-9]/, "", s); return s }
+    function distinctive(c,   w, nw, k, hit) {
+      if (c ~ /^[0-9]+$/ && length(c) <= 4) return 0
+      if (c ~ /^checked [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$/) return 0
+      nw = split(c, w, " "); hit = 0
+      for (k = 1; k <= nw; k++) if (length(digits(w[k])) >= 3) hit = 1
+      return hit
+    }
+    function datelike(r,   g, ng, k, y, ok) {
+      ng = split(r, g, /[^0-9]+/); y = 0; ok = 1
+      if (ng < 2 || ng > 3) return 0
+      for (k = 1; k <= ng; k++) {
+        if (length(g[k]) == 4 && g[k] ~ /^(19|20)/) y++
+        else if (length(g[k]) < 1 || length(g[k]) > 2) ok = 0
+      }
+      return (ok && y == 1)
+    }
+    function add(kind, needle, sel) { NN++; NK[NN] = kind; NV[NN] = needle; NS[NN] = sel }
+    function wcore(v, sel,   t, nt, k, x, s, r, d, a) {
+      nt = split(v, t, /[ ,;()<>"\047]+/)
+      for (k = 1; k <= nt; k++) {
+        x = t[k]; sub(/[.:]+$/, "", x)
+        if (x ~ /^[^@]+@[^@]+\.[^@]+$/) add("E", x, sel)
+      }
+      s = v
+      while (match(s, /[0-9]+([ .\/()+-][ .\/()+-]?[0-9]+)*/)) {
+        r = substr(s, RSTART, RLENGTH); s = substr(s, RSTART + RLENGTH)
+        d = digits(r)
+        if (length(d) >= 5 && !datelike(r)) add("D", d, sel)
+      }
+      nt = split(v, a, /[^a-z0-9]+/)
+      for (k = 1; k <= nt; k++) {
+        x = a[k]; d = digits(x)
+        if (length(x) >= 6 && length(d) >= 3 && x ~ /[a-z]/) add("M", x, sel)
+      }
+      return 0
+    }
+    BEGIN {
+      ns = split(ENVIRON["BS_SELS"], S, " ")
+      nv = split(ENVIRON["BS_VALS"], VL, "\n")
+      for (i = 1; i <= nv; i++) {
+        p = index(VL[i], "\t"); if (p == 0) continue
+        sel = substr(VL[i], 1, p - 1); val = norm(substr(VL[i], p + 1))
+        v = val
+        gsub(/\302\267/, ",", v); gsub(/\342\200\224/, ",", v)
+        nc = split(v, C, /[,;():]/)
+        for (j = 1; j <= nc; j++) { c = C[j]; sub(/^ /, "", c); sub(/ $/, "", c); if (c != "" && distinctive(c)) add("C", c, sel) }
+        wcore(val, sel)
+      }
+    }
+    {
+      lab = $0
+      sub(/^[ \t]*(>[ \t]*)*/, "", lab)
+      sub(/^#+[ \t]+/, "", lab)
+      sub(/^([-*+]|[0-9]+[.)])[ \t]+/, "", lab)
+      gsub(/[*_]/, "", lab)
+      sub(/^[ \t]+/, "", lab)
+      for (i = 1; i <= ns; i++) {
+        if (label_hit(lab, S[i])) { printf "%d\t%s\tlabel\n", FNR, S[i]; exit }
+      }
+      if (NN == 0) next
+      nl = norm($0)
+      ld = " "; s = nl
+      while (match(s, /[0-9]+([ .\/()+-][ .\/()+-]?[0-9]+)*/)) { ld = ld digits(substr(s, RSTART, RLENGTH)) " "; s = substr(s, RSTART + RLENGTH) }
+      lt = " "; nt = split(nl, a, /[^a-z0-9]+/); for (k = 1; k <= nt; k++) if (a[k] != "") lt = lt a[k] " "
+      for (i = 1; i <= NN; i++) {
+        if (exact_hit(i, nl, ld, lt)) { printf "%d\t%s\texact\n", FNR, NS[i]; exit }
+      }
+    }
+    function label_hit(lab, sel,   val) {
+      if (!field_hit(lab, sel)) return 0
+      val = lab; sub(/^[^:]*:[ \t]*/, "", val)
+      return stated(clean(val))
+    }
+    function exact_hit(i, nl, ld, lt) {
+      if (NK[i] == "C" || NK[i] == "E") return (index(nl, NV[i]) > 0)
+      if (NK[i] == "D") return (index(ld, NV[i]) > 0)
+      return (index(lt, " " NV[i] " ") > 0)
+    }' "$1"
+}
+
+# require_clean_build_sources <trip_dir> — returns 0 on a clean read, printing one pass line; dies otherwise.
+require_clean_build_sources() { # <trip_dir>
+  local trip_dir="$1" bs_rows bs_n bs_cand bs_wf bs_vals bs_vrc bs_unread bs_sels bs_v bs_p bs_g bs_f bs_rel bs_any
+  local bs_hit bs_hrc bs_read=0 bs_absent="" bs_notes bs_line bs_sel bs_kind
+  bs_rows="$(_build_source_rows)"
+  bs_n="$(printf '%s' "$bs_rows" | awk 'NF { c++ } END { print c + 0 }')"
+  if [ "$bs_n" -eq 0 ]; then
+    die "SOURCE CHECK STOPPED — the files the site build reads could not be listed: reference/site-layout-spec.md § 9.1's $_BUILD_SOURCES_FENCE fence was unreadable or named no bound artifact. An empty read is not an empty set. Nothing was published."
+  fi
+  bs_cand="$(_build_source_candidates)"; bs_wf="$(_build_source_wellformed)"
+  if [ "${bs_cand:-0}" -ne "${bs_wf:-0}" ]; then
+    die "SOURCE CHECK STOPPED — the files the site build reads could not be listed: reference/site-layout-spec.md § 9.1's $_BUILD_SOURCES_FENCE fence offers ${bs_cand:-0} rows but only ${bs_wf:-0} parse as an artifact and a class — a partial read is not a smaller set. Nothing was published."
+  fi
+  bs_vals="$(_field_class_values "$trip_dir")" && bs_vrc=0 || bs_vrc=$?
+  if [ "$bs_vrc" -ne 0 ]; then
+    die "SOURCE CHECK STOPPED — the field class could not be read: reference/data-architecture.md § 5.6's declaration yielded no field row, or reads in part. An empty read is not an empty class. Nothing was published."
+  fi
+  bs_unread="$(awk -F'\t' '$1 == "UNREAD" && !seen[$2]++ { printf "%s%s", (n++ ? ", " : ""), $2 }' <<<"$bs_vals")"
+  if [ -n "$bs_unread" ]; then
+    die "SOURCE CHECK STOPPED — the value source $bs_unread is present but cannot be read, so the values to check for are not known. Nothing was published. Make it readable, or remove it, and re-run."
+  fi
+  bs_sels="$(_guard_declared_rows | awk '$1 == "field" && !seen[$2]++ { printf "%s%s", (n++ ? " " : ""), $2 }')"
+  bs_v="$(awk -F'\t' '$1 == "V" { print $2 "\t" $3 }' <<<"$bs_vals")"
+  while IFS= read -r bs_p; do
+    [ -n "$bs_p" ] || continue
+    bs_g="$(printf '%s' "$bs_p" | sed 's/<[^>]*>/*/g')"
+    bs_any=0
+    # shellcheck disable=SC2086  # a row's `<token>` is a glob by the fence's own grammar
+    for bs_f in "$trip_dir"/$bs_g; do
+      if [ ! -e "$bs_f" ] && [ ! -L "$bs_f" ]; then continue; fi
+      bs_any=1; bs_rel="${bs_f#"$trip_dir"/}"
+      if [ ! -f "$bs_f" ] || [ ! -r "$bs_f" ]; then
+        die "SOURCE CHECK STOPPED — $bs_rel is present but cannot be read, so whether it carries a value of the non-publishable field class cannot be checked. Nothing was published. Make it readable, or remove it, and re-run."
+      fi
+      bs_hit="$(BS_SELS="$bs_sels" BS_VALS="$bs_v" _build_source_hits "$bs_f")" && bs_hrc=0 || bs_hrc=$?
+      if [ "$bs_hrc" -ne 0 ]; then
+        die "SOURCE CHECK STOPPED — $bs_rel could not be scanned (status $bs_hrc), so whether it carries a value of the non-publishable field class cannot be checked. Nothing was published."
+      fi
+      if [ -n "$bs_hit" ]; then
+        IFS="$(printf '\t')" read -r bs_line bs_sel bs_kind <<<"$bs_hit"
+        if [ "$bs_kind" = "label" ]; then
+          die "SOURCE CHECK STOPPED — $bs_rel line $bs_line carries the $bs_sel label with a value. The site build reads that file, and a value of the non-publishable field class (reference/data-architecture.md § 5.6) must not reach any page, private or public. Nothing was published. Take it out of that file, rebuild the site, and re-run."
+        fi
+        die "SOURCE CHECK STOPPED — $bs_rel line $bs_line carries a $bs_sel value, matched exactly. The site build reads that file, and a value of the non-publishable field class (reference/data-architecture.md § 5.6) must not reach any page, private or public. Nothing was published. Take it out of that file, rebuild the site, and re-run."
+      fi
+      bs_read=$((bs_read + 1))
+    done
+    [ "$bs_any" -eq 1 ] || bs_absent="$bs_absent${bs_absent:+, }$bs_p"
+  done <<<"$bs_rows"
+  bs_notes="$(awk -F'\t' '$1 == "NOTE" && !seen[$2]++ { printf "%s%s", (n++ ? ", " : ""), $2 }' <<<"$bs_vals")"
+  info "Source check: no value of the non-publishable field class in the files the site build reads (${bs_read} read${bs_absent:+; not in this trip: ${bs_absent}}${bs_notes:+; values not on file: ${bs_notes}})."
+  return 0
+}
+
+# THE REPUBLISH PATH'S GUARDS, AS ONE CALL LINE (#719, the scope-lock's C5; #1468; #2156). update and
+# rotate call this and nothing else at the gate's position: S3 exactly as it was, then the render's
+# approval-code guard, then the baseline guard, then the source check. #85 relocates the gate onto its
+# event-driven path by moving that one line, as S3's own banner promises, so no guard can be left behind
+# by a relocation that carries S3 alone. publish calls the code guard, the baseline guard and the source
+# check on its own: S3 does not gate publish, by design.
 require_publish_guards() { # <trip_dir> <site_html>
   local trip_dir="$1" site_html="$2"
   require_change_confirmation "$trip_dir"
   require_render_approval_code "$trip_dir" "$site_html" update
   require_recordable_baseline "$trip_dir" "$site_html"
+  require_clean_build_sources "$trip_dir"
   return 0
 }
 
@@ -4505,9 +4826,12 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   require_recordable_baseline "$trip_dir" "$site_html"
   # The group-only refusal (#2155; ADR-030 § 6 safeguard 2), first of the plaintext limb's content controls
   # and before any network call, so ALLOW_PLAINTEXT, read only at the confirmation below, reaches none of
-  # them. On --plaintext the order is this refusal, the content guard, the typed confirmation, and this
-  # refusal again on the staged copy. The encrypted limb never runs it (ADR-031 S4): the same page ships there.
+  # them. On --plaintext the order is this refusal, the source check, the content guard, the typed
+  # confirmation, and this refusal again on the staged copy. The encrypted limb never runs it (ADR-031 S4): the same page ships there.
   [ "$plaintext" != "1" ] || refuse_group_only_render "$site_html"
+  # The source check (#2156; ADR-030 § 6 safeguard 6), on both limbs and before any network call — the same
+  # check update and rotate run inside require_publish_guards.
+  require_clean_build_sources "$trip_dir"
   slug="$(slug_for "$trip_dir")"
   pub_dir="$trip_dir/.publish"
   owner="$(gh api user --jq '.login')"
@@ -4532,8 +4856,8 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
 
   if [ "$plaintext" = "1" ]; then
     warn "PLAINTEXT publish requested — the itinerary will be WORLD-READABLE, no passphrase."
-    # The content guard is the second content control on this limb — the group-only refusal ran above,
-    # before any network call — and it runs BEFORE the human gate, not after: one insertion covers both
+    # The content guard is the third content control on this limb — the group-only refusal and the source
+    # check ran above, before any network call — and it runs BEFORE the human gate, not after: one insertion covers both
     # the interactive typed-PUBLISH limb and the ALLOW_PLAINTEXT non-interactive limb,
     # and asking someone to type PUBLISH and THEN refusing trains them to read the prompt
     # as noise. Nothing has been copied to the publish dir at this point.
@@ -4867,13 +5191,13 @@ cmd_update() { # <trip_dir>
 
   local site_html pub_dir passphrase owner slug mine="" lease="" prior="" staged=""
   site_html="$(resolve_site_html "$trip_dir")"
-  # THE APPROVAL GATE AND THE RENDER'S APPROVAL-CODE GUARD, as ONE call line (#552; #719 under
-  # ADR-029 and the scope-lock's C5). Its position is exact and load-bearing: after the render
-  # is resolved (both read it) and BEFORE ensure_pub_clone, which performs network I/O and can
-  # remove the publish dir. S3 runs first and decides whether the plan may publish; the code
-  # guard follows it because it needs the render's identity and must still precede the clone.
-  # On an abort nothing has been cloned, encrypted, copied or pushed — the same discipline the
-  # plaintext gate states for itself in cmd_publish. #85 relocates both by moving this line.
+  # THE APPROVAL GATE, THE RENDER'S APPROVAL-CODE GUARD, THE BASELINE GUARD AND THE SOURCE CHECK, as ONE
+  # call line (#552; #719 under ADR-029 and the scope-lock's C5; #1468; #2156). Its position is exact and
+  # load-bearing: after the render is resolved (the guards read it) and BEFORE ensure_pub_clone, which
+  # performs network I/O and can remove the publish dir. S3 runs first and decides whether the plan may
+  # publish; the code guard follows it because it needs the render's identity and must still precede the
+  # clone. On an abort nothing has been cloned, encrypted, copied or pushed — the same discipline the
+  # plaintext gate states for itself in cmd_publish. #85 relocates all four by moving this line.
   require_publish_guards "$trip_dir" "$site_html"
   pub_dir="$(ensure_pub_clone "$trip_dir")"
   owner="$(gh api user --jq '.login')"; slug="$(slug_for "$trip_dir")"
@@ -5260,9 +5584,10 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   preflight; resolve_noreply_identity
   site_html="$(resolve_site_html "$trip_dir")"
   # rotate re-publishes the same render, so it applies update's own guards itself, as the same one
-  # call line (S8; ADR-029 and #719): the approval gate, then the render's approval-code guard. Both
-  # run before anything is cloned or written, so a refusal leaves .passphrase exactly as it was —
-  # with an itinerary change pending, confirm or revert it first, then rotate.
+  # call line (S8; ADR-029, #719 and #2156): the approval gate, the render's approval-code guard, the
+  # baseline guard and the source check. All run before anything is cloned or written, so a refusal
+  # leaves .passphrase exactly as it was — with an itinerary change pending, confirm or revert it first,
+  # then rotate.
   require_publish_guards "$trip_dir" "$site_html"
   pub_dir="$(ensure_pub_clone "$trip_dir")"
   owner="$(gh api user --jq '.login')"; slug="$(slug_for "$trip_dir")"

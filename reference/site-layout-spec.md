@@ -799,14 +799,15 @@ what keeps this the single home of the assignment rather than a list of what the
 touch. **The cross-trip half of that set grows with the model rather than staying at one**, which is
 why this paragraph names the property those rows share instead of naming the one class that had it.
 
-**The publish guard does not read this fence.** It reads the field/entry declaration in
-`reference/data-architecture.md` § 5.6, which is what decides *which values* are in class. This
-fence declares *which artifacts* the site build may read. **One of its two intended consumers now
-reads it:** the artifact-schema gate, in group `PB`. The other does not — `agents/06-validator.md`
-still restates the five `bound` artifact names inline, in the same file that cites § 5.6's sibling
-fence as the single home of the class it does read. The fence predated the gate, so it shipped as a
-forward reference; the gate has since arrived, and the validator's inline restatement is the one
-second enumeration that remains.
+**The artifact-schema gate and the source check both read this fence.** The gate, in group `PB`,
+asserts it against § 1.1 in both directions; and the source check that `scripts/publish-trip-site.sh` runs before every
+`publish`, `update` and `rotate` reads its `bound` rows as the set of files the site build reads, and
+stops where one carries a value of the field class `reference/data-architecture.md` § 5.6 declares. A
+`bound` artifact absent from a trip is skipped and named; a fence that yields no `bound` row stops the
+publish. The content guard reads § 5.6 alone, not this fence. A third intended consumer does not read
+it: `agents/06-validator.md` still restates the five `bound` artifact names inline, in the same file
+that cites § 5.6's sibling fence as the single home of the class it does read — the one second
+enumeration that remains.
 
 ### 9.2 Round-trip completeness — every plan element has a rendered home
 
