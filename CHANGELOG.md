@@ -17,9 +17,12 @@ fence, `group-only-components`, under its own heading at the end of `reference/s
 with exit status 3 and the message `GROUP-ONLY REFUSED`, a render in which any start tag carries one
 of them as a class (`ADR-030` § 6 safeguard 2). It reads the raw page as a browser's tokenizer
 does: every `<` and letter starts its own candidate, so script text ahead of a section cannot hide
-it; attributes, character references and a second reading through JavaScript string escapes are
-decoded as the browser decodes them; comments, scripts and templates are read too, because a
-plaintext page's bytes are public whether they render or not. It runs before the per-trip repository is probed, created or pushed, so
+it; attribute values have their character references decoded, and a second reading decodes
+JavaScript string escapes, octal ones included; comments, scripts and templates are read too, because
+a plaintext page's bytes are public whether they render or not. A nested document — a `srcdoc`
+attribute, or a `data:` URL as the `src` or `data` of an iframe, frame, object or embed — and a page
+opening with a UTF-16 or UTF-32 byte-order mark are refused as undetermined, since the refusal does
+not read what they hold. It runs before the per-trip repository is probed, created or pushed, so
 `ALLOW_PLAINTEXT` reaches none of it, and again on the copy about to be pushed, so a render rebuilt
 in between is refused rather than pushed. A declaration it cannot read refuses as one that names a
 section would. The encrypted limb does not run it. Once the group-contacts card ships, that section
@@ -48,9 +51,10 @@ declared in `skills/trip-publish/SKILL.md` § *list* and registered in
 
 **Size fence.** Read with `CH_EMIT=growth ./scripts/test-corpus-hygiene.sh` at 005008a against 0.70.0. `reference/site-layout-spec.md`'s row is re-pinned from 63,987 to 71,892, its size of 65,496 bytes plus its class headroom: the § 3 fence and the § 9.1 reconciliation are declared homes this release adds, and § 3 holds nothing this release owns to move out. Every other row is kept. Beneath their ceilings, `reference/data-architecture.md` grew by 952 bytes to 135,292 of 147,099, `CLAUDE.md` by 998 to 144,868 of 153,381, and `skills/trip-publish/SKILL.md` by 1,847 to 45,265 of 48,711.
 
-**What it does not do, stated so a green check is not read as more.** A section a script builds with
-no tag string, or whose class it assembles by concatenation, is not seen by the refusal; nor is
-group content rendered without its token, which the § 3 render contract binds. The source check
+**What it does not do, stated so a green check is not read as more.** A section a script builds at
+run time — classList, className, concatenation, interpolation, or decoding such as atob,
+decodeURIComponent and String.fromCharCode — is not seen by the refusal; nor is group content
+rendered without its token, which the § 3 render contract binds. The source check
 does not see an ordinary-word value restated without its label, a label mid-line, in a table cell or
 with a word before its colon, a value wrapped or paraphrased, or a full date carried with other words
 around it; and a trip with no bound file present passes it with every one named as absent. `list`

@@ -572,6 +572,15 @@ the rows are its instances. A component this fence does not name is not refused,
 the commit that first renders it. Any one listed component refuses, and every one present is named; no
 member outranks another, because each resolves to the same refusal.
 
+The refusal reads the raw page as a browser's tokenizer reads start tags: every class attribute, its
+character references decoded, and again after JavaScript string escapes, octal ones included, are
+decoded, through comments, scripts and templates alike. A nested document — a `srcdoc` attribute on any
+start tag, or a `data:` URL as the `src` or `data` of an `iframe`, `frame`, `object` or `embed` — and a
+page opening with a UTF-16 or UTF-32 byte-order mark are refused as undetermined, because the refusal does
+not read what they hold. It does not see, by declaration, a section a script builds at run time
+(classList, className, concatenation, interpolation, or decoding such as atob, decodeURIComponent and
+String.fromCharCode), nor group content rendered without its token, which this section binds.
+
 Content the plan itself carries for the group, a marked desire or a shared occasion, has no token of its
 own: the refusal keys on the group contacts section. That holds by the order two cards ship in — the
 share-mark card ships with or after the group-contacts card — and not by anything the hub reads. Its

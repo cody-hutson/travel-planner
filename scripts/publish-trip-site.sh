@@ -4313,19 +4313,35 @@ require_recordable_baseline() { # <trip_dir> <site_html>
 #   • COMMENT, SCRIPT, STYLE AND TEMPLATE BODIES ARE READ. A plaintext page's bytes are world-readable whether
 #     or not a browser renders them, so a section commented out, held in a template or written into a script
 #     string is still carried by the page. A second reading decodes JavaScript string escapes first (`\"`,
-#     `\'`, `\uXXXX`, `\u{…}`, `\xXX`), so a section written into a string with escaped quotes or brackets is
-#     seen; what either reading finds is refused.
+#     `\'`, `\uXXXX`, `\u{…}`, `\xXX`, and a backslash followed by one to three octal digits, read as a
+#     sloppy-mode string literal reads it), so a section written literally into a string, its quotes or
+#     brackets escaped in any of those forms, is seen; what either reading finds is refused.
+#   • A NESTED DOCUMENT IS UNDETERMINED (S7-01). A start tag carrying a `srcdoc` attribute, empty or not, or an
+#     iframe, frame, object or embed whose `src` or `data` value — character references decoded (`&colon;`
+#     among them), tab and newline removed, leading space and controls dropped, as a browser's URL parser reads
+#     it — opens with `data:`, holds a document this scan does not read, so the render is refused as
+#     undetermined (status 5). A conformant render carries neither. An image's or a link's `data:` URL is not
+#     a nested document and is not refused. The test that needs a tag name is applied after each candidate's
+#     walk, from a tag-independent flag remembered beside the class mask, so a tail an earlier candidate
+#     walked first cannot hide a later iframe's `src`; the tag name is read only when it is six bytes or
+#     fewer, so a candidate inside a long shared name costs nothing (case L18m-run).
+#   • A RENDER OPENING WITH A UTF-16 OR UTF-32 BYTE-ORDER MARK IS UNDETERMINED (S7-08). A browser decodes it by
+#     the mark, and this scan reads bytes as ASCII-compatible text, so it is refused (status 6), never read
+#     as clean. A UTF-8 mark leaves the bytes readable and is scanned.
+#   A section the scan finds is named before a nested document is reported: both refuse with status 3, and
+#   the found one names more.
 # DECLARED RESIDUALS, each asserted by an arm so a change that closes one updates this list (group N's pattern):
-#   R-a  a class a script adds with no tag string (classList.add, a className assignment) — case L18g-a;
-#   R-b  group content rendered without its token: a non-conformant build, which the § 3 render contract binds
-#        and this check cannot see, because it reads structure and never content;
-#   R-c  a class value a script assembles by concatenation — case L18g-c.
+#   R-run  a section a script builds at run time — by classList or className, by concatenation or
+#          interpolation, or by decoding such as atob, decodeURIComponent and String.fromCharCode — is not
+#          seen (cases L18g-a, L18g-c, L18g-atob, L18g-uri, L18g-fcc);
+#   R-b    group content rendered without its token: a non-conformant build, which the § 3 render contract
+#          binds and this check cannot see, because it reads structure and never content.
 # A `<` and a letter in script text can open a bogus tag that picks up a class; that over-refuses the
 # plaintext limb only, and the encrypted limb is the remedy.
 #
 # BOUNDED. Each candidate's attribute walk is remembered by position, so candidates that share a tail scan it
 # once, and the scan stops at a budget of 64 bytes read per byte of page. A page that would cost more is
-# UNDETERMINED and refused rather than scanned on (case L18m).
+# UNDETERMINED and refused rather than scanned on (status 4; case L18m-budget reads that status itself).
 #
 # THE STATUS IS NAMED (D-2155-EXIT): 3, from refuse_group_only and nowhere else in this file, for a found
 # section and for an undetermined read alike. Both have one remedy, the encrypted limb, so one status serves
@@ -4334,13 +4350,15 @@ require_recordable_baseline() { # <trip_dir> <site_html>
 
 # The scan program. perl is asserted by preflight before any render is read. The tokens arrive through the
 # environment, one space-separated list, and are compared as strings — never interpolated into a pattern.
-# Status 0 prints what was found (possibly nothing); any other status is UNDETERMINED to the caller.
+# Status 0 prints what was found (possibly nothing); any other status is UNDETERMINED to the caller: 2 the
+# render or the tokens could not be read, 4 the byte budget, 5 a nested document, 6 a UTF-16 or UTF-32 mark.
 _GROUP_ONLY_SCAN='
 no warnings;
 my $f = $ARGV[0];
 open(my $fh, "<:raw", $f) or exit 2;
 local $/; my $raw = <$fh>; close $fh;
 defined $raw or exit 2;
+exit 6 if $raw =~ /\A(?:\xFF\xFE|\xFE\xFF|\x00\x00\xFE\xFF)/;
 my @tok = split " ", lc($ENV{GROUP_ONLY_TOKENS} // "");
 @tok or exit 2;
 @tok <= 60 or exit 2;
@@ -4352,19 +4370,21 @@ sub classmask {
   $m |= ($bit{lc $_} // 0) for split /[\t\n\f\r ]+/, $v;
   return $m;
 }
-my $over = 0;
+sub dataurl { my $v = shift; $v =~ s/&(?:#[xX]0*([0-9a-fA-F]{1,8})(?![0-9a-fA-F]);?|#0*([0-9]{1,9})(?![0-9]);?|(Tab|NewLine|colon|amp|AMP);)/defined $1 ? cp(hex $1) : defined $2 ? cp($2) : $3 eq "Tab" ? "\t" : $3 eq "NewLine" ? "\n" : $3 eq "colon" ? ":" : "&"/ge; $v =~ s/[\t\n\r]//g; $v =~ s/\A[\x00-\x20]+//; return ($v =~ /\Adata:/i) ? 1 : 0 }
+my $over = 0; my $nested = 0;
 sub scan {
   my $s = shift; my $n = length $s; my $budget = 64 * $n + 1000000; my $spent = 0;
-  my (@cand, %memo); my $mask = 0; my $tn = -1;
+  my (@cand, %memo, %dmemo); my $mask = 0; my $tn = -1;
   while ($s =~ /<(?=[A-Za-z])/g) { push @cand, pos($s) - 1 }
   for my $p (@cand) {
     my $e;
     if ($tn > $p + 1) { $e = $tn } else { pos($s) = $p + 1; $s =~ /\G[A-Za-z][^\t\n\f\r \/>]*/gc; $e = pos($s); $spent += $e - $p; $tn = $e }
-    my $q = $e; my @path; my $m = 0;
+    my $tl = $e - $p - 1; my $tag = $tl <= 6 ? lc substr($s, $p + 1, $tl) : "";
+    my $q = $e; my @path; my $m = 0; my $d = 0;
     while (1) {
-      if (exists $memo{$q}) { $m = $memo{$q}; last }
+      if (exists $memo{$q}) { $m = $memo{$q}; $d = $dmemo{$q}; last }
       pos($s) = $q; $s =~ /\G[\t\n\f\r \/]*/gc;
-      if (pos($s) >= $n || $s =~ /\G>/gc) { push @path, [$q, 0]; last }
+      if (pos($s) >= $n || $s =~ /\G>/gc) { push @path, [$q, 0, 0]; last }
       $s =~ /\G([\s\S][^\t\n\f\r \/>=]*)/gc; my $name = $1;
       $s =~ /\G[\t\n\f\r ]*/gc;
       my $val;
@@ -4375,21 +4395,25 @@ sub scan {
         elsif ($s =~ /\G(?=>)/gc)              { $val = "" }
         else  { $s =~ /\G([^\t\n\f\r >]*)/gc; $val = $1 }
       }
-      push @path, [$q, (lc($name) eq "class" && defined $val) ? classmask($val) : 0];
+      my $ln = lc $name;
+      $nested = 1 if $ln eq "srcdoc";
+      push @path, [$q, ($ln eq "class" && defined $val) ? classmask($val) : 0, (($ln eq "src" || $ln eq "data") && defined $val) ? dataurl($val) : 0];
       $spent += pos($s) - $q + 1;
       if ($spent > $budget) { $over = 1; return 0 }
       $q = pos($s);
     }
-    for my $pe (reverse @path) { $m |= $pe->[1]; $memo{$pe->[0]} = $m }
+    for my $pe (reverse @path) { $m |= $pe->[1]; $d ||= $pe->[2]; $memo{$pe->[0]} = $m; $dmemo{$pe->[0]} = $d }
     $mask |= $m;
+    $nested = 1 if $d && $tag =~ /\A(?:iframe|frame|object|embed)\z/;
   }
   return $mask;
 }
 my $mask = scan($raw);
 exit 4 if $over;
-(my $js = $raw) =~ s/\\(?:u\{0*([0-9a-fA-F]{1,6})\}|u([0-9a-fA-F]{4})|x([0-9a-fA-F]{2})|([\s\S]))/defined $1 ? cp(hex $1) : defined $2 ? cp(hex $2) : defined $3 ? chr(hex $3) : ($4 eq "n" ? "\n" : $4 eq "t" ? "\t" : $4 eq "r" ? "\r" : $4 eq "f" ? "\f" : $4)/ge;
+(my $js = $raw) =~ s/\\(?:u\{0*([0-9a-fA-F]{1,6})\}|u([0-9a-fA-F]{4})|x([0-9a-fA-F]{2})|([0-3][0-7]{0,2}|[4-7][0-7]?)|([\s\S]))/defined $1 ? cp(hex $1) : defined $2 ? cp(hex $2) : defined $3 ? chr(hex $3) : defined $4 ? chr(oct $4) : ($5 eq "n" ? "\n" : $5 eq "t" ? "\t" : $5 eq "r" ? "\r" : $5 eq "f" ? "\f" : $5)/ge;
 $mask |= scan($js) if $js ne $raw;
 exit 4 if $over;
+exit 5 if $nested && !$mask;
 print join(" ", grep { $mask & $bit{$_} } @tok), "\n";
 exit 0;
 '
@@ -4422,10 +4446,11 @@ _group_only_scan() { # <html_file> <tokens, space-joined>
 # space-joined, on stdout.
 #   return 0  the read succeeded; an empty output is a render that carries none
 #          2  UNDETERMINED — the fence could not be read, is empty or reads in part, or the render could
-#             not be read or scanned
+#             not be read or scanned, carries a nested document, or opens with a UTF-16 or UTF-32 mark;
+#             the warn line names which, by the scan's status
 # The scan's stderr is kept: a fail-closed control with no fallback limb says what went wrong (S15i's rule).
 group_only_sections() { # <html_file>
-  local html="${1:-}" go_rows go_n go_cand go_out go_rc
+  local html="${1:-}" go_rows go_n go_cand go_out go_rc go_why
   go_rows="$(_group_only_rows)"
   go_n="$(printf '%s' "$go_rows" | awk 'NF { c++ } END { print c + 0 }')"
   if [ "$go_n" -eq 0 ]; then
@@ -4440,7 +4465,13 @@ group_only_sections() { # <html_file>
   fi
   go_out="$(_group_only_scan "$html" "$(printf '%s' "$go_rows" | tr '\n' ' ')")" && go_rc=0 || go_rc=$?
   if [ "$go_rc" -ne 0 ]; then
-    warn "group-only: the start-tag scan of the render did not complete (status $go_rc; 4 is its byte budget) — UNDETERMINED"; return 2
+    case "$go_rc" in
+      4) go_why="reading it would pass the scan's byte budget" ;;
+      5) go_why="it carries a nested document — a srcdoc attribute, or a data: URL as the src or data of an iframe, frame, object or embed — whose markup the scan does not read" ;;
+      6) go_why="it opens with a UTF-16 or UTF-32 byte-order mark, so a browser reads its bytes in an encoding the scan does not" ;;
+      *) go_why="the start-tag scan of it did not complete" ;;
+    esac
+    warn "group-only: whether the render carries a group-only section could not be determined: $go_why (status $go_rc) — UNDETERMINED"; return 2
   fi
   printf '%s' "$go_out"
   return 0
@@ -4461,7 +4492,7 @@ refuse_group_only_render() {
   found="$(group_only_sections "$html")" && rc=0 || rc=$?
   if [ "$rc" -ne 0 ]; then
     [ -z "$discard" ] || rm -f "$discard"
-    refuse_group_only "GROUP-ONLY REFUSED publish --plaintext — whether $shown carries a group-only section could not be determined: the group-only component declaration could not be read or names no component, or the render could not be read or scanned; the line above names the cause. A plaintext publish that cannot rule out a group-only section is refused like one that carries one. Nothing was published. Publish it encrypted: drop --plaintext."
+    refuse_group_only "GROUP-ONLY REFUSED publish --plaintext — whether $shown carries a group-only section could not be determined: the group-only component declaration could not be read or names no component, or the render could not be read or scanned, or it carries a nested document or a byte-order mark whose content the scan does not read; the line above names the cause. A plaintext publish that cannot rule out a group-only section is refused like one that carries one. Nothing was published. Publish it encrypted: drop --plaintext."
   fi
   if [ -n "$found" ]; then
     [ -z "$discard" ] || rm -f "$discard"
