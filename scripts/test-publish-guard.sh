@@ -7488,7 +7488,7 @@ fi
 # construction: perl invoked through a variable or by a path (`$PERL`, `/usr/bin/perl`),
 # and a change that removes one program while adding another, because it compares a count
 # and not a set.
-S15I_FNS='strip_to_text strip_to_published_text strip_to_text_blocks strip_to_joined_text strip_to_shape_text _browser_end_tags _decode_entities strip_to_itinerary_text _digest_of'
+S15I_FNS='strip_to_text strip_to_published_text strip_to_text_blocks strip_to_joined_text strip_to_shape_text _browser_end_tags _decode_entities strip_to_itinerary_text _digest_of _group_only_scan'
 S15I_RE='(^|[[:space:](|;`$])perl[[:space:]]+-'
 s15_perl_lines() { # <file> -> the number of non-comment lines that invoke perl by name
   local line t n=0
@@ -9162,10 +9162,10 @@ SA17H_NFN=0; for sad in $S15I_FNS; do SA17H_NFN=$((SA17H_NFN+1)); done
 SA17H_NLINE="$(s15_perl_lines "$SELF_PUBLISH")"
 printf 'digest=4294967295-1234\nconfirmed=2027-06-01T00:00:00Z\n' > "$WORK/sa17h.rec"
 SA17H_CRC="$(_record_digest "$WORK/sa17h.rec")"
-if [ "$SA17H_DN$SA17H_FB" = 00 ] && [ "$SA17H_RE" -eq 1 ] && [ "$SA17H_NFN" -eq 9 ] && [ "$SA17H_NLINE" -eq 9 ] && [ "$SA17H_CRC" = '4294967295-1234' ]; then
-  PASS "S17h: _digest_of's parsed body reads discard/fallback 00, invokes perl by S15i's own regex (F4 — the listed body is a perl program, so the count cannot be balanced by a substitution), S15I_FNS lists 9 and the script has 9 perl-invoking lines; the CRC token still parses for group T and for a pre-swap record"
+if [ "$SA17H_DN$SA17H_FB" = 00 ] && [ "$SA17H_RE" -eq 1 ] && [ "$SA17H_NFN" -eq 10 ] && [ "$SA17H_NLINE" -eq 10 ] && [ "$SA17H_CRC" = '4294967295-1234' ]; then
+  PASS "S17h: _digest_of's parsed body reads discard/fallback 00, invokes perl by S15i's own regex (F4 — the listed body is a perl program, so the count cannot be balanced by a substitution), S15I_FNS lists 10 and the script has 10 perl-invoking lines; the CRC token still parses for group T and for a pre-swap record"
 else
-  FAIL "S17h: bits $SA17H_DN$SA17H_FB (want 00), regex match $SA17H_RE (want 1), listed $SA17H_NFN and counted $SA17H_NLINE (want 9 and 9), CRC parse '$SA17H_CRC'"
+  FAIL "S17h: bits $SA17H_DN$SA17H_FB (want 00), regex match $SA17H_RE (want 1), listed $SA17H_NFN and counted $SA17H_NLINE (want 10 and 10), CRC parse '$SA17H_CRC'"
 fi
 
 # ── S18a — MUST REFUSE. Ten lines the grammar must not admit, each refused with nothing printed:
@@ -15606,10 +15606,11 @@ L18_SECTION='<section class="@T@"><h2>Where we might go</h2><p>Lisbon, loved by 
 # nothing was published, and nothing was created or committed.
 l18a_assert() { # <id> <token>
   local id="$1" t="$2" d rc tok=0 none=0 pushed lead=0
-  d="$(l18_trip "l18a-${t:-none}" "$(l18_sub "$L18_SECTION" '@T@' "$t")")"
+  L18A_N=$(( ${L18A_N:-0} + 1 ))
+  d="$(l18_trip "l18a-$L18A_N" "$(l18_sub "$L18_SECTION" '@T@' "$t")")"
   l18_publish "$d" --plaintext; rc=$?
   l18_has "GROUP-ONLY REFUSED publish --plaintext" && lead=1
-  [ -z "$t" ] || { l18_has "$t" && tok=1; }
+  [ -z "$t" ] || { l18_has "group-only section(s) $t" && tok=1; }
   l18_has "Nothing was published" && none=1
   pushed="$(l18_pushed "$d")"
   if [ -z "$t" ]; then
@@ -15813,7 +15814,7 @@ l18_count() { # <haystack> <needle> -> occurrences, no pipeline
   done
   printf '%s' "$c"
 }
-L18_FNS='_group_only_rows _group_only_candidates group_only_sections refuse_group_only_render refuse_group_only cmd_publish'
+L18_FNS='_group_only_rows _group_only_candidates _group_only_scan group_only_sections refuse_group_only_render refuse_group_only cmd_publish'
 l18i_bodies=""; l18i_absent=""
 for l18f in $L18_FNS; do
   if declare -F "$l18f" >/dev/null 2>&1; then l18i_bodies="$l18i_bodies$(declare -f "$l18f")"; else l18i_absent="$l18i_absent$l18f "; fi
@@ -15840,7 +15841,7 @@ fi
 # slug_for, the first gh call, the content guard and the ALLOW_PLAINTEXT read; and the staged copy's re-check
 # follows the copy and precedes the commit. A fabricated name found nowhere is the specificity control.
 l18_line() { # <body> <needle> -> the line number of its first occurrence, or nothing
-  printf '%s\n' "$1" | awk -v n="$2" 'index($0, n) { print NR; exit }'
+  awk -v n="$2" 'index($0, n) { print NR; exit }' <<<"$1"
 }
 l18l_b="$(declare -f cmd_publish 2>/dev/null)"
 l18l_base="$(l18_line "$l18l_b" 'require_recordable_baseline')"

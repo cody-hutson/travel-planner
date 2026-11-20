@@ -634,7 +634,8 @@ The reason is the charter's own, and it is not that the branch is merely risky. 
 confirmation on that branch is gated on stdin being a terminal, and a command Claude runs
 never has one — so setting the variable does not confirm non-interactively, it **skips the
 confirmation entirely**. The charter also records that the plaintext branch does not run
-the pre-push ciphertext guard, running a content guard instead.
+the pre-push ciphertext guard, running content controls instead — a refusal of any render
+carrying a group-only section, then the content guard.
 
 So this is an operator action. The hand-off: point at `CLAUDE.md` → *Publishing to GitHub
 Pages* → the opt-out paragraph, **print that paragraph's command for the operator to run

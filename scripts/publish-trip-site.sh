@@ -1870,6 +1870,15 @@ _GUARD_DECL_HEADING='### 5.6 The declaration'
 _GUARD_DECL_ARTIFACT_MODEL='outputs/traveler-model.md'
 _GUARD_DECL_ARTIFACT_PROFILE='travelers/<traveler>.md'
 _GUARD_DECL_ARTIFACT_PERSON='people/<person>.md'
+# The group-only component declaration (#2155): the fence under its own heading in the site spec, read by
+# _group_only_rows, and the status its refusal exits with. Plain assignments, never environment-defaulted,
+# for the reason stated above for _GUARD_DECLARATION: a fail-closed control whose declaration a caller could
+# re-point is a fail-open surface. test-publish-guard.sh re-points the path inside its own process, which is
+# how L18e proves the reader fails closed.
+_GROUP_ONLY_SPEC="$_GUARD_REPO_ROOT/reference/site-layout-spec.md"
+_GROUP_ONLY_FENCE='group-only-components'
+_GROUP_ONLY_HEADING='### Group-only components'
+_EXIT_GROUP_ONLY=3
 
 # The reference grammar the walk below resolves against. Consumed from
 # reference/data-model.md § Composition and reference/schemas/traveler-profile.md; declared
@@ -4255,6 +4264,197 @@ require_recordable_baseline() { # <trip_dir> <site_html>
   return 0
 }
 
+# ─────────────────────────────────────────────────────────────────────────────
+# THE GROUP-ONLY REFUSAL (#2155; ADR-030 § 6 safeguard 2). publish --plaintext refuses a render that
+# carries a section the private-site record keeps off every public page, and it refuses by that section's
+# PRESENCE — by structure, never by value, never by redaction. It runs first of the plaintext limb's content
+# controls and before any network call (cmd_publish), and once more on the staged copy before the commit, so
+# the bytes pushed are the bytes checked: a render rebuilt between the two would otherwise reach the push
+# unchecked by it (F18). The encrypted limb never runs it, as ADR-031 S4 intends: the same page ships there.
+#
+# THE SET IS DECLARED, AND ONLY THERE. The components are the rows of the `group-only-components` fence in
+# reference/site-layout-spec.md § Group-only components, which states the criterion, the admission duty and
+# the precedence. No token is written in this file — test-publish-guard.sh case L18i asserts it — so a
+# component the fence admits is refused here with no edit to any shell script. The reader fails closed: a
+# file that is absent or unreadable, a heading that is not found, zero rows, or more candidate rows than
+# well-formed ones (a partial read, as _guard_declared_candidates guards the class) is UNDETERMINED, and an
+# undetermined read is refused exactly like a found section. An empty read is not an empty set.
+#
+# WHAT IT READS IS THE RAW PAGE, NEVER A PROJECTION. Measured at Stage 5 over thirteen fixtures: the visible
+# projections see a token only in prose, and the published and shape projections see it in prose, href, id,
+# data-* and title values, script strings and CSS selectors alike, so neither tells a marker from a mention.
+# The scan below reads start tags, and it reads them as a browser's tokenizer does:
+#   • EVERY `<` FOLLOWED BY AN ASCII LETTER STARTS ITS OWN CANDIDATE. Candidates overlap, so a quoted span in
+#     an earlier candidate never hides a later tag — a loop's `i<n` and an apostrophe in a script string ahead
+#     of a conformant section cannot mask it (F1). A bogus tag opened by script text can only add classes to
+#     what is read, never remove one, which fails closed.
+#   • ATTRIBUTES AS THE HTML TOKENIZER READS THEM. A name runs to whitespace, `/`, `>` or `=`; a value is
+#     double-quoted, single-quoted, or unquoted to whitespace or `>`; `/` and a closing quote separate
+#     attributes. Every `class` attribute is read, a repeated one included (a browser applies the first; the
+#     refusal takes all of them, failing closed).
+#   • EACH CLASS VALUE as a browser decodes it: numeric references, decimal or hexadecimal, with or without the
+#     `;` and with any leading zeros, and `&Tab;`, `&NewLine;` and `&amp;`; split on HTML whitespace (tab, line
+#     feed, form feed, carriage return, space); each class compared with each token case-insensitively, whole.
+#   • COMMENT, SCRIPT, STYLE AND TEMPLATE BODIES ARE READ. A plaintext page's bytes are world-readable whether
+#     or not a browser renders them, so a section commented out, held in a template or written into a script
+#     string is still carried by the page. A second reading decodes JavaScript string escapes first (`\"`,
+#     `\'`, `\uXXXX`, `\u{…}`, `\xXX`), so a section written into a string with escaped quotes or brackets is
+#     seen; what either reading finds is refused.
+# DECLARED RESIDUALS, each asserted by an arm so a change that closes one updates this list (group N's pattern):
+#   R-a  a class a script adds with no tag string (classList.add, a className assignment) — case L18g-a;
+#   R-b  group content rendered without its token: a non-conformant build, which the § 3 render contract binds
+#        and this check cannot see, because it reads structure and never content;
+#   R-c  a class value a script assembles by concatenation — case L18g-c.
+# A `<` and a letter in script text can open a bogus tag that picks up a class; that over-refuses the
+# plaintext limb only, and the encrypted limb is the remedy.
+#
+# BOUNDED. Each candidate's attribute walk is remembered by position, so candidates that share a tail scan it
+# once, and the scan stops at a budget of 64 bytes read per byte of page. A page that would cost more is
+# UNDETERMINED and refused rather than scanned on (case L18m).
+#
+# THE STATUS IS NAMED (D-2155-EXIT): 3, from refuse_group_only and nowhere else in this file, for a found
+# section and for an undetermined read alike. Both have one remedy, the encrypted limb, so one status serves
+# them; the message tells them apart, so a caller that must distinguish them reads it. The status is a
+# constant beside the declaration's (_EXIT_GROUP_ONLY).
+
+# The scan program. perl is asserted by preflight before any render is read. The tokens arrive through the
+# environment, one space-separated list, and are compared as strings — never interpolated into a pattern.
+# Status 0 prints what was found (possibly nothing); any other status is UNDETERMINED to the caller.
+_GROUP_ONLY_SCAN='
+no warnings;
+my $f = $ARGV[0];
+open(my $fh, "<:raw", $f) or exit 2;
+local $/; my $raw = <$fh>; close $fh;
+defined $raw or exit 2;
+my @tok = split " ", lc($ENV{GROUP_ONLY_TOKENS} // "");
+@tok or exit 2;
+@tok <= 60 or exit 2;
+my %bit; $bit{$tok[$_]} |= 1 << $_ for 0 .. $#tok;
+sub cp { my $c = shift; ($c == 0 || $c > 0x10FFFF || ($c >= 0xD800 && $c <= 0xDFFF)) ? "\x{FFFD}" : chr($c) }
+sub classmask {
+  my $v = shift; my $m = 0;
+  $v =~ s/&(?:#[xX]0*([0-9a-fA-F]{1,8})(?![0-9a-fA-F]);?|#0*([0-9]{1,9})(?![0-9]);?|(Tab|NewLine|amp|AMP);)/defined $1 ? cp(hex $1) : defined $2 ? cp($2) : $3 eq "Tab" ? "\t" : $3 eq "NewLine" ? "\n" : "&"/ge;
+  $m |= ($bit{lc $_} // 0) for split /[\t\n\f\r ]+/, $v;
+  return $m;
+}
+my $over = 0;
+sub scan {
+  my $s = shift; my $n = length $s; my $budget = 64 * $n + 1000000; my $spent = 0;
+  my (@cand, %memo); my $mask = 0; my $tn = -1;
+  while ($s =~ /<(?=[A-Za-z])/g) { push @cand, pos($s) - 1 }
+  for my $p (@cand) {
+    my $e;
+    if ($tn > $p + 1) { $e = $tn } else { pos($s) = $p + 1; $s =~ /\G[A-Za-z][^\t\n\f\r \/>]*/gc; $e = pos($s); $spent += $e - $p; $tn = $e }
+    my $q = $e; my @path; my $m = 0;
+    while (1) {
+      if (exists $memo{$q}) { $m = $memo{$q}; last }
+      pos($s) = $q; $s =~ /\G[\t\n\f\r \/]*/gc;
+      if (pos($s) >= $n || $s =~ /\G>/gc) { push @path, [$q, 0]; last }
+      $s =~ /\G([\s\S][^\t\n\f\r \/>=]*)/gc; my $name = $1;
+      $s =~ /\G[\t\n\f\r ]*/gc;
+      my $val;
+      if ($s =~ /\G=/gc) {
+        $s =~ /\G[\t\n\f\r ]*/gc;
+        if    ($s =~ /\G"([^"]*)"?/gc)        { $val = $1 }
+        elsif ($s =~ /\G\x27([^\x27]*)\x27?/gc) { $val = $1 }
+        elsif ($s =~ /\G(?=>)/gc)              { $val = "" }
+        else  { $s =~ /\G([^\t\n\f\r >]*)/gc; $val = $1 }
+      }
+      push @path, [$q, (lc($name) eq "class" && defined $val) ? classmask($val) : 0];
+      $spent += pos($s) - $q + 1;
+      if ($spent > $budget) { $over = 1; return 0 }
+      $q = pos($s);
+    }
+    for my $pe (reverse @path) { $m |= $pe->[1]; $memo{$pe->[0]} = $m }
+    $mask |= $m;
+  }
+  return $mask;
+}
+my $mask = scan($raw);
+exit 4 if $over;
+(my $js = $raw) =~ s/\\(?:u\{0*([0-9a-fA-F]{1,6})\}|u([0-9a-fA-F]{4})|x([0-9a-fA-F]{2})|([\s\S]))/defined $1 ? cp(hex $1) : defined $2 ? cp(hex $2) : defined $3 ? chr(hex $3) : ($4 eq "n" ? "\n" : $4 eq "t" ? "\t" : $4 eq "r" ? "\r" : $4 eq "f" ? "\f" : $4)/ge;
+$mask |= scan($js) if $js ne $raw;
+exit 4 if $over;
+print join(" ", grep { $mask & $bit{$_} } @tok), "\n";
+exit 0;
+'
+
+# The fence's well-formed rows, one token per line: exactly one field, a lowercase class token. A comment row
+# and a blank row are dropped; a row of any other shape is dropped here and counted by the next function, so
+# the difference is visible. Shaped as _guard_declared_rows, with its explicit `return 0`.
+_group_only_rows() {
+  [ -f "$_GROUP_ONLY_SPEC" ] && [ -r "$_GROUP_ONLY_SPEC" ] || return 0
+  fence_block "$_GROUP_ONLY_SPEC" "$_GROUP_ONLY_FENCE" "$_GROUP_ONLY_HEADING" \
+    | awk 'NF == 1 && $1 ~ /^[a-z][a-z0-9-]*$/ { print $1 }'
+  return 0
+}
+# Every row the fence offers: non-blank and non-comment, whatever its shape.
+_group_only_candidates() {
+  [ -f "$_GROUP_ONLY_SPEC" ] && [ -r "$_GROUP_ONLY_SPEC" ] || { printf '0'; return 0; }
+  fence_block "$_GROUP_ONLY_SPEC" "$_GROUP_ONLY_FENCE" "$_GROUP_ONLY_HEADING" \
+    | awk 'NF > 0 && $1 !~ /^#/ { c++ } END { print c + 0 }'
+  return 0
+}
+
+# The scan program run over one render, the tokens space-joined in its environment. A function of its own,
+# holding the perl invocation and nothing else, so S15i's policy reads it as the other perl programs are read:
+# it discards nothing, because it has no fallback limb, and its caller reads its status.
+_group_only_scan() { # <html_file> <tokens, space-joined>
+  GROUP_ONLY_TOKENS="$2" perl -e "$_GROUP_ONLY_SCAN" "$1"
+}
+
+# group_only_sections <html_file> -> the listed tokens a start tag in the render carries as a class,
+# space-joined, on stdout.
+#   return 0  the read succeeded; an empty output is a render that carries none
+#          2  UNDETERMINED — the fence could not be read, is empty or reads in part, or the render could
+#             not be read or scanned
+# The scan's stderr is kept: a fail-closed control with no fallback limb says what went wrong (S15i's rule).
+group_only_sections() { # <html_file>
+  local html="${1:-}" go_rows go_n go_cand go_out go_rc
+  go_rows="$(_group_only_rows)"
+  go_n="$(printf '%s' "$go_rows" | awk 'NF { c++ } END { print c + 0 }')"
+  if [ "$go_n" -eq 0 ]; then
+    warn "group-only: the declaration at $_GROUP_ONLY_SPEC (fence $_GROUP_ONLY_FENCE) could not be read or names no component — the set is UNDETERMINED, not empty"; return 2
+  fi
+  go_cand="$(_group_only_candidates)"
+  if [ "${go_cand:-0}" -ne "$go_n" ]; then
+    warn "group-only: the declaration at $_GROUP_ONLY_SPEC offers ${go_cand:-0} rows but only $go_n parse as one component token — a partial read is UNDETERMINED, not a smaller set"; return 2
+  fi
+  if [ ! -f "$html" ] || [ ! -r "$html" ]; then
+    warn "group-only: the render is not a readable regular file, so whether it carries a group-only section could not be determined"; return 2
+  fi
+  go_out="$(_group_only_scan "$html" "$(printf '%s' "$go_rows" | tr '\n' ' ')")" && go_rc=0 || go_rc=$?
+  if [ "$go_rc" -ne 0 ]; then
+    warn "group-only: the start-tag scan of the render did not complete (status $go_rc; 4 is its byte budget) — UNDETERMINED"; return 2
+  fi
+  printf '%s' "$go_out"
+  return 0
+}
+
+# Prints the refusal in die's format and exits with the named status. The only `exit 3` in this file.
+refuse_group_only() { # <message>
+  printf '\033[1;31m✗ ERROR:\033[0m %s\n' "$*" >&2
+  exit "$_EXIT_GROUP_ONLY"
+}
+
+# refuse_group_only_render <html_file> [<the render it is reported as>] [<a staged copy to remove first>]
+# Returns 0 when the render carries no listed section and the read succeeded; otherwise refuses, by status 3,
+# naming the tokens found or saying the read was undetermined. Its status is captured rather than left to
+# errexit, so a caller without errexit is refused as well.
+refuse_group_only_render() {
+  local html="$1" shown="${2:-$1}" discard="${3:-}" found rc
+  found="$(group_only_sections "$html")" && rc=0 || rc=$?
+  if [ "$rc" -ne 0 ]; then
+    [ -z "$discard" ] || rm -f "$discard"
+    refuse_group_only "GROUP-ONLY REFUSED publish --plaintext — whether $shown carries a group-only section could not be determined: the group-only component declaration could not be read or names no component, or the render could not be read or scanned; the line above names the cause. A plaintext publish that cannot rule out a group-only section is refused like one that carries one. Nothing was published. Publish it encrypted: drop --plaintext."
+  fi
+  if [ -n "$found" ]; then
+    [ -z "$discard" ] || rm -f "$discard"
+    refuse_group_only "GROUP-ONLY REFUSED publish --plaintext — $shown carries the group-only section(s) $found, which never go on a public page (ADR-030 § 6 safeguard 2; reference/site-layout-spec.md § Group-only components). Nothing was published. Publish it encrypted: drop --plaintext."
+  fi
+  return 0
+}
+
 # THE REPUBLISH PATH'S GUARDS, AS ONE CALL LINE (#719, the scope-lock's C5; #1468). update calls this
 # and nothing else at the gate's position: S3 exactly as it was, then the render's approval-code
 # guard, then the baseline guard. #85 relocates the gate onto its event-driven path by moving that
@@ -4303,6 +4503,11 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   # first publish that could not record its baseline would leave a trip that declares no
   # approvers with the gate NOT ACTIVE. It is not the gate, which still does not run here.
   require_recordable_baseline "$trip_dir" "$site_html"
+  # The group-only refusal (#2155; ADR-030 § 6 safeguard 2), first of the plaintext limb's content controls
+  # and before any network call, so ALLOW_PLAINTEXT, read only at the confirmation below, reaches none of
+  # them. On --plaintext the order is this refusal, the content guard, the typed confirmation, and this
+  # refusal again on the staged copy. The encrypted limb never runs it (ADR-031 S4): the same page ships there.
+  [ "$plaintext" != "1" ] || refuse_group_only_render "$site_html"
   slug="$(slug_for "$trip_dir")"
   pub_dir="$trip_dir/.publish"
   owner="$(gh api user --jq '.login')"
@@ -4327,7 +4532,8 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
 
   if [ "$plaintext" = "1" ]; then
     warn "PLAINTEXT publish requested — the itinerary will be WORLD-READABLE, no passphrase."
-    # The content guard runs BEFORE the human gate, not after: one insertion covers both
+    # The content guard is the second content control on this limb — the group-only refusal ran above,
+    # before any network call — and it runs BEFORE the human gate, not after: one insertion covers both
     # the interactive typed-PUBLISH limb and the ALLOW_PLAINTEXT non-interactive limb,
     # and asking someone to type PUBLISH and THEN refusing trains them to read the prompt
     # as noise. Nothing has been copied to the publish dir at this point.
@@ -4340,6 +4546,9 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
       die "refusing non-interactive plaintext publish; re-run with ALLOW_PLAINTEXT=1 to override."
     fi
     cp "$site_html" "$pub_dir/index.html"
+    # The bytes this push carries are the bytes checked (#2155's review, F18): the refusal reads the staged
+    # copy, so a render rebuilt since it first ran is refused rather than pushed, and the copy goes with it.
+    refuse_group_only_render "$pub_dir/index.html" "$site_html" "$pub_dir/index.html"
   else
     local passphrase enc boiler
     # A trip's first key, made here and nowhere else outside rotate, on both of publish's arms: the

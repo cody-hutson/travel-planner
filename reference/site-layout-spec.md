@@ -561,6 +561,31 @@ confirmations (for the validator), not reader content; the component does not re
 `.split-panel .warn-box` collapsible caution box above — different components; they share no
 selectors.
 
+### Group-only components
+
+**A section the private-site record keeps off every public page carries its token as a class on its
+root element, in every state it renders, its empty and degraded states included.** `publish
+--plaintext` reads this fence and refuses a render in which any start tag carries a listed token as a
+class (`ADR-030` § 6 safeguard 2): by structure, never by value, never by redaction. A component is
+group-only when that record admits its content to the private site and keeps it off every public page;
+the rows are its instances. A component this fence does not name is not refused, so one is added here in
+the commit that first renders it. Any one listed component refuses, and every one present is named; no
+member outranks another, because each resolves to the same refusal.
+
+Content the plan itself carries for the group, a marked desire or a shared occasion, has no token of its
+own: the refusal keys on the group contacts section. That holds by the order two cards ship in — the
+share-mark card ships with or after the group-contacts card — and not by anything the hub reads. Its
+consequence is stated here because no card can choose it away: from the group-contacts card on, that
+section renders in every state the site builds (`ADR-031`), so `--plaintext` refuses every render, a solo
+trip's included. Changing that takes a record.
+
+```group-only-components
+# component
+group-shortlist
+group-snapshot
+group-contacts
+```
+
 ---
 
 ## 4. Responsive Architecture
