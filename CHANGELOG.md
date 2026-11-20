@@ -53,7 +53,8 @@ case they read.
 with the status of the command before it, so a suite could stop mid-run, print no result line and
 exit 0. All six `set -u` suites now install an exit guard keyed on a completion sentinel: a run
 that ends before its last line prints an `ABORT:` line and exits non-zero. `MD-EXIT-ABORT` in each
-suite proves the guard on a planted abort and reads the suite's own wiring.
+suite proves the guard on a planted abort and on an exit taken without the sentinel, which a guard
+keyed on the exit status would let through on any shell, and reads the suite's own wiring.
 
 **Group DC reads a statement by its row.** A census arm, DC7, reads every tracked pipe row
 carrying a majority of the declared desire-coverage header's labels and requires it to equal the
