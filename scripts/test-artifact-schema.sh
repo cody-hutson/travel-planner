@@ -97,7 +97,12 @@
 #        mutating ONE surface alone and each required to turn it red, and edits that must not.
 #        That COVERAGE is itself asserted rather than maintained: each evaluator's code set is
 #        read from its own body on every run and compared, in both directions, against the
-#        arms that ran — so a code added with no arm behind it is RED rather than latent.
+#        arms that ran — so a code added with no arm behind it, in a shape the reader reads, is
+#        RED rather than latent. The reader reads a code heading an output statement's format
+#        and ended by any member of one declared terminator class (an escape sequence, a tab, a
+#        space, a colon or a quote), and a code after a quote ended by the tab escape anywhere;
+#        each member has its own must-fire control. A code assembled at run time, reached
+#        through a variable or ended otherwise is outside the reader, a stated bound.
 #        IT IS ASSERTED AT TWO GRANULARITIES, and where it stops is a recorded decision rather
 #        than something to be inferred from a green. The ladder is group -> code -> EMISSION
 #        SITE -> predicate direction. ST-COV and ST-CF-COV grade the code rung. ST-SITE and
@@ -151,7 +156,8 @@
 #        unlike constructs, and at least one code's only must-fire arm is written in a form
 #        none of the others reach — so a reader enumerating the shapes it knows about would
 #        report a covered code uncovered. A code added to the
-#        validator with no arm behind it is RED here rather than latent, and so is an arm
+#        validator with no arm behind it, written as `FINDING <CODE>` and ended by a member of
+#        the same declared terminator class, is RED here rather than latent, and so is an arm
 #        naming a code the validator cannot emit. The assertion is at CODE granularity and
 #        not at emission-site granularity — deleting one of a code's several emission sites
 #        leaves the code in the set and this arm green — and that boundary is declared here
@@ -6073,7 +6079,7 @@ $mline"
   cov_mn="$(printf '%s\n' "$cov_mu" | grep -c '[^[:space:]]')"
   cov_hit="$(printf '%s\n' "$cov_mu" | grep -c "^${probekey}$")"
   if [ "$cov_landed" -eq 1 ] && [ "$cov_mn" -eq $((base + 1)) ] && [ "$cov_hit" -eq 1 ]; then
-    PASS "$cid: MUST FIRE — one unarmed $unit${shape:+, $shape,} appended to a COPY of the body of $subj takes the uncovered set from $base to $cov_mn and the new member IS that $unit ($probekey). Any $unit added to the real emitter with no arm behind it turns $id red, which is the property this group could otherwise only state. The mutation is asserted to have landed before the verdict is read"
+    PASS "$cid: MUST FIRE — one unarmed $unit${shape:+, $shape,} appended to a COPY of the body of $subj takes the uncovered set from $base to $cov_mn and the new member IS that $unit ($probekey). Any $unit added to the real emitter, in a shape its reader reads, with no arm behind it turns $id red, which is the property this group could otherwise only state. The mutation is asserted to have landed before the verdict is read"
   else
     FAIL "$cid: MUST FIRE — an unarmed $unit${shape:+, $shape,} appended to a copy of the body of $subj was not reported (mutation-landed=$cov_landed, uncovered=$cov_mn against $((base + 1)) expected, probe-key=$probekey, probe-found=$cov_hit). $id's zero above does not respond to a known hole and therefore proves nothing"
   fi
