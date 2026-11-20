@@ -4282,7 +4282,8 @@ require_recordable_baseline() { # <trip_dir> <site_html>
 # THE GROUP-ONLY REFUSAL (#2155; ADR-030 § 6 safeguard 2). publish --plaintext refuses a render that
 # carries a section the private-site record keeps off every public page, and it refuses by that section's
 # PRESENCE — by structure, never by value, never by redaction. It runs first of the plaintext limb's content
-# controls and before any network call (cmd_publish), and once more on the staged copy before the commit, so
+# controls, before the per-trip repository is probed, created or pushed (cmd_publish), and once more on the
+# staged copy before the commit, so
 # the bytes pushed are the bytes checked: a render rebuilt between the two would otherwise reach the push
 # unchecked by it (F18). The encrypted limb never runs it, as ADR-031 S4 intends: the same page ships there.
 #
@@ -4470,7 +4471,7 @@ refuse_group_only_render() {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# THE SOURCE CHECK (#2156; ADR-030 § 6 safeguard 6). Before anything is encrypted or sent, every publish,
+# THE SOURCE CHECK (#2156; ADR-030 § 6 safeguard 6). Before anything is encrypted or pushed, every publish,
 # update and rotate — both limbs, every phase — reads the files the site build reads and stops where one
 # carries a value of the non-publishable field class. A render reaches a page; these files reach the render,
 # so a value stopped here never reaches a page at all, private or public.
@@ -4529,8 +4530,9 @@ refuse_group_only_render() {
 # month and year equal to the trip's own, stops the publish, and the remedy is one edit.
 #
 # PLACEMENT (D-2156-PLACE). require_publish_guards runs it last, so update and rotate run it and a relocation
-# of that one call line carries it; cmd_publish runs it on both limbs after the group-only refusal and before
-# any network call. It writes nothing and needs no network.
+# of that one call line carries it, ahead of any clone and of the key write; cmd_publish runs it on both limbs
+# after the group-only refusal and before the per-trip repository is probed, created or pushed. It writes
+# nothing and needs no network.
 
 # The `bound` rows' paths, one per line; and the fence's candidate and well-formed row counts, whose
 # difference is a partial read. Shaped as _guard_declared_rows, with its explicit `return 0`.
@@ -4833,11 +4835,13 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   # approvers with the gate NOT ACTIVE. It is not the gate, which still does not run here.
   require_recordable_baseline "$trip_dir" "$site_html"
   # The group-only refusal (#2155; ADR-030 § 6 safeguard 2), first of the plaintext limb's content controls
-  # and before any network call, so ALLOW_PLAINTEXT, read only at the confirmation below, reaches none of
+  # and before the per-trip repository is probed, created or pushed, so ALLOW_PLAINTEXT, read only at the
+  # confirmation below, reaches none of
   # them. On --plaintext the order is this refusal, the source check, the content guard, the typed
   # confirmation, and this refusal again on the staged copy. The encrypted limb never runs it (ADR-031 S4): the same page ships there.
   [ "$plaintext" != "1" ] || refuse_group_only_render "$site_html"
-  # The source check (#2156; ADR-030 § 6 safeguard 6), on both limbs and before any network call — the same
+  # The source check (#2156; ADR-030 § 6 safeguard 6), on both limbs and before the per-trip repository is
+  # probed, created or pushed — the same
   # check update and rotate run inside require_publish_guards.
   require_clean_build_sources "$trip_dir"
   slug="$(slug_for "$trip_dir")"
@@ -4865,7 +4869,7 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   if [ "$plaintext" = "1" ]; then
     warn "PLAINTEXT publish requested — the itinerary will be WORLD-READABLE, no passphrase."
     # The content guard is the third content control on this limb — the group-only refusal and the source
-    # check ran above, before any network call — and it runs BEFORE the human gate, not after: one insertion covers both
+    # check ran above, before the repository was probed — and it runs BEFORE the human gate, not after: one insertion covers both
     # the interactive typed-PUBLISH limb and the ALLOW_PLAINTEXT non-interactive limb,
     # and asking someone to type PUBLISH and THEN refusing trains them to read the prompt
     # as noise. Nothing has been copied to the publish dir at this point.

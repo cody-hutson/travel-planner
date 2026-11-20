@@ -19,7 +19,7 @@ of them as a class (`ADR-030` § 6 safeguard 2). It reads the raw page as a brow
 does: every `<` and letter starts its own candidate, so script text ahead of a section cannot hide
 it; attributes, character references and a second reading through JavaScript string escapes are
 decoded as the browser decodes them; comments, scripts and templates are read too, because a
-plaintext page's bytes are public whether they render or not. It runs before any network call, so
+plaintext page's bytes are public whether they render or not. It runs before the per-trip repository is probed, created or pushed, so
 `ALLOW_PLAINTEXT` reaches none of it, and again on the copy about to be pushed, so a render rebuilt
 in between is refused rather than pushed. A declaration it cannot read refuses as one that names a
 section would. The encrypted limb does not run it. Once the group-contacts card ships, that section
@@ -27,7 +27,7 @@ renders in every state the site builds, so `--plaintext` refuses every render, a
 included: § 3 now says so, and that the share-mark card ships with or after it.
 
 **Every publish, update and rotate checks what the build reads.** Before anything is encrypted or
-sent, the script reads the files `reference/site-layout-spec.md` § 9.1 marks `bound` and stops,
+pushed, the script reads the files `reference/site-layout-spec.md` § 9.1 marks `bound` and stops,
 naming the file, the line and the field and never the value, where one carries a value of the field
 class `reference/data-architecture.md` § 5.6 declares: by its label with a value stated, or exactly,
 where a part of a value holds a number of three or more digits or a word of it is an email address,

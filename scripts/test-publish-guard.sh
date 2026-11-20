@@ -15838,7 +15838,7 @@ else
 fi
 
 # ── L18l — position (F4's structural half): in cmd_publish the refusal follows the baseline guard and precedes
-# slug_for, the first gh call, the content guard and the ALLOW_PLAINTEXT read; and the staged copy's re-check
+# slug_for, cmd_publish's owner lookup (gh api user), the content guard and the ALLOW_PLAINTEXT read; and the staged copy's re-check
 # follows the copy and precedes the commit. A fabricated name found nowhere is the specificity control.
 l18_line() { # <body> <needle> -> the line number of its first occurrence, or nothing
   awk -v n="$2" 'index($0, n) { print NR; exit }' <<<"$1"
@@ -15861,11 +15861,11 @@ elif [ -n "$l18l_fab" ]; then
 elif [ -z "$l18l_ref" ] || [ -z "$l18l_re" ]; then
   FAIL "L18l: cmd_publish does not call the refusal on the render (line '${l18l_ref}') and on the staged copy (line '${l18l_re}')"
 elif [ "$l18l_ref" -le "$l18l_base" ] || [ "$l18l_ref" -ge "$l18l_slug" ] || [ "$l18l_ref" -ge "$l18l_gh" ] || [ "$l18l_ref" -ge "$l18l_cg" ] || [ "$l18l_ref" -ge "$l18l_ap" ]; then
-  FAIL "L18l: the refusal is at line $l18l_ref of cmd_publish; it must follow the baseline guard ($l18l_base) and precede slug_for ($l18l_slug), the first gh call ($l18l_gh), the content guard ($l18l_cg) and the ALLOW_PLAINTEXT read ($l18l_ap)"
+  FAIL "L18l: the refusal is at line $l18l_ref of cmd_publish; it must follow the baseline guard ($l18l_base) and precede slug_for ($l18l_slug), the owner lookup ($l18l_gh), the content guard ($l18l_cg) and the ALLOW_PLAINTEXT read ($l18l_ap)"
 elif [ "$l18l_re" -le "$l18l_cp" ] || [ "$l18l_re" -ge "$l18l_ci" ]; then
   FAIL "L18l: the staged copy's re-check is at line $l18l_re; it must follow the copy ($l18l_cp) and precede the commit ($l18l_ci)"
 else
-  PASS "L18l: in cmd_publish the refusal (line $l18l_ref) follows the baseline guard ($l18l_base) and precedes slug_for, the first gh call, the content guard and the ALLOW_PLAINTEXT read; the staged copy's re-check ($l18l_re) sits between the copy ($l18l_cp) and the commit ($l18l_ci); a fabricated name is found nowhere"
+  PASS "L18l: in cmd_publish the refusal (line $l18l_ref) follows the baseline guard ($l18l_base) and precedes slug_for, the owner lookup, the content guard and the ALLOW_PLAINTEXT read; the staged copy's re-check ($l18l_re) sits between the copy ($l18l_cp) and the commit ($l18l_ci); a fabricated name is found nowhere"
 fi
 
 # ── ARMED-RED controls: each arm run under the mutation its design row names must report pass=0 fail=1.
@@ -16260,7 +16260,7 @@ l19n_assert() { # <id> <publish|plaintext|update|rotate>
 for l19c in publish plaintext update rotate; do l19n_assert "L19n-$l19c" "$l19c"; done
 
 # ── L19o — position: require_publish_guards runs the check after the baseline guard, and cmd_publish after
-# the group-only refusal and before slug_for and the first gh call. A fabricated name is the control.
+# the group-only refusal and before slug_for and cmd_publish's owner lookup. A fabricated name is the control.
 l19o_g="$(declare -f require_publish_guards 2>/dev/null)"; l19o_p="$(declare -f cmd_publish 2>/dev/null)"
 l19o_gb="$(l18_line "$l19o_g" 'require_recordable_baseline')"; l19o_gc="$(l18_line "$l19o_g" 'require_clean_build_sources')"
 l19o_pr="$(l18_line "$l19o_p" 'refuse_group_only_render "$site_html"')"; l19o_pc="$(l18_line "$l19o_p" 'require_clean_build_sources')"
@@ -16273,9 +16273,9 @@ elif [ -n "$l19o_fab" ]; then
 elif [ -z "$l19o_gc" ] || [ -z "$l19o_pc" ]; then
   FAIL "L19o: the source check is not called in require_publish_guards (line '${l19o_gc}') or in cmd_publish (line '${l19o_pc}')"
 elif [ "$l19o_gc" -le "$l19o_gb" ] || [ "$l19o_pc" -le "$l19o_pr" ] || [ "$l19o_pc" -ge "$l19o_ps" ] || [ "$l19o_pc" -ge "$l19o_pg" ]; then
-  FAIL "L19o: out of order — in require_publish_guards the check is at $l19o_gc after the baseline guard at $l19o_gb; in cmd_publish it is at $l19o_pc, which must follow the refusal ($l19o_pr) and precede slug_for ($l19o_ps) and the first gh call ($l19o_pg)"
+  FAIL "L19o: out of order — in require_publish_guards the check is at $l19o_gc after the baseline guard at $l19o_gb; in cmd_publish it is at $l19o_pc, which must follow the refusal ($l19o_pr) and precede slug_for ($l19o_ps) and the owner lookup ($l19o_pg)"
 else
-  PASS "L19o: require_publish_guards runs the source check last (line $l19o_gc, after the baseline guard at $l19o_gb), and cmd_publish runs it after the group-only refusal ($l19o_pr) and before slug_for ($l19o_ps) and the first gh call ($l19o_pg); a fabricated name is found nowhere"
+  PASS "L19o: require_publish_guards runs the source check last (line $l19o_gc, after the baseline guard at $l19o_gb), and cmd_publish runs it after the group-only refusal ($l19o_pr) and before slug_for ($l19o_ps) and the owner lookup ($l19o_pg); a fabricated name is found nowhere"
 fi
 
 # ── L19p — a field row added to the declaration joins both halves with no shell edit: a scratch declaration
