@@ -8082,19 +8082,31 @@ ZZ-FORM-C'
 st_cf_rise() { st_cf_added "$2" "$3" | awk -v c="$1" 'index($1, c "#") == 1 && $1 != c "#?" { printf "%s ", $0 }'; }
 
 # st_cf_clean_bullet <code> / st_cf_clean_graded <code> — the RETARGET. A bullet-targeted must-fire
-# arm aims at the first bullet no live <code> finding names (a bullet-specific finding carries
-# "at line <n>"), so on a form that already fails <code> at the first bullet the arm still measures a
-# site rise elsewhere. st_cf_clean_bullet answers a version-1 member's BULLET line from ST_CF_SURF;
-# st_cf_clean_graded answers the 1-based index of a version-2 member's graded bullet in ST_CF_GR, for
-# st_cf_gr. On a conforming form each answers exactly the first bullet; where every candidate already
-# fails each answers nothing, the caller falls back to the first bullet, and the arm takes the residual.
+# arm aims at the first candidate bullet no live <code> finding names (a bullet-specific finding
+# carries "at line <n>"), so on a form that already fails <code> at the first bullet the arm still
+# measures a site rise elsewhere. Every bullet is a candidate for Q3 and Q5. For Q6 a candidate is a
+# bullet its plant can land on, one whose value opens with `[` after the bold label, read exactly as
+# q6_markers reads it: Q6 grades only the head of such a bracket, so a bullet without one is never
+# named by a Q6 finding, always looks clean, and takes no plant. Both helpers read the form,
+# ST_CF_FILE, for that test. st_cf_clean_bullet answers a version-1 member's BULLET line from
+# ST_CF_SURF; st_cf_clean_graded answers the 1-based index of a version-2 member's graded bullet in
+# ST_CF_GR, for st_cf_gr. On a conforming form each answers exactly the first candidate. Where every
+# candidate already fails, each still answers the first candidate, so the arm lands: it passes if its
+# copy raises another site of the code, and takes the residual if none rises. Each answers nothing
+# only on a form with no candidate at all, for Q6 one with no bullet whose value opens with `[`; the
+# caller then falls back to the first bullet, where the Q6 plant cannot land, and the arm FAILs
+# loudly with mutation-landed=0.
 st_cf_clean_bullet() {
   awk -F'\t' -v c="$1" 'FILENAME == ARGV[1] { if ($1 == c && match($2, /at line [0-9]+/)) bad[substr($2, RSTART + 8, RLENGTH - 8)] = 1; next }
-    $1 == "BULLET" && !($2 in bad) { print $2; exit }' <(printf '%s\n' "$ST_CF_LIVE") <(printf '%s\n' "$ST_CF_SURF")
+    FILENAME == ARGV[2] { if (c == "Q6") { p = index($0, ":**"); v = substr($0, p + 3); sub(/^[ \t]+/, "", v); if (substr(v, 1, 1) != "[") off[FNR] = 1 }; next }
+    $1 == "BULLET" && !($2 in off) { if (!($2 in bad)) { print $2; got = 1; exit } if (fb == "") fb = $2 }
+    END { if (!got && fb != "") print fb }' <(printf '%s\n' "$ST_CF_LIVE") "$ST_CF_FILE" <(printf '%s\n' "$ST_CF_SURF")
 }
 st_cf_clean_graded() {
   awk -F'\t' -v c="$1" 'FILENAME == ARGV[1] { if ($1 == c && match($2, /at line [0-9]+/)) bad[substr($2, RSTART + 8, RLENGTH - 8)] = 1; next }
-    NF && !($1 in bad) { print FNR; exit }' <(printf '%s\n' "$ST_CF_LIVE") <(printf '%s\n' "$ST_CF_GR")
+    FILENAME == ARGV[2] { if (c == "Q6") { p = index($0, ":**"); v = substr($0, p + 3); sub(/^[ \t]+/, "", v); if (substr(v, 1, 1) != "[") off[FNR] = 1 }; next }
+    NF && !($1 in off) { if (!($1 in bad)) { print FNR; got = 1; exit } if (fb == "") fb = FNR }
+    END { if (!got && fb != "") print fb }' <(printf '%s\n' "$ST_CF_LIVE") "$ST_CF_FILE" <(printf '%s\n' "$ST_CF_GR")
 }
 
 # st_cf_src_block <first-line> — this file's ($SELF) own lines from the first line equal to <first-line>
@@ -8581,6 +8593,41 @@ elif [ "$ST_CF_SWM" = "0 1 0 0" ] && [ "$ST_CF_SWS" = "1 0 0 0" ]; then
 else
   FAIL "CTL-ST-CF-MUSTNOTFIRE-SWAP: MUST FIRE a FAIL — over stubbed readings at $ST_CF_ADK1 and $ST_CF_ADK2, st_cf_mustnotfire rendered [pass fail vacuous pending] = [$ST_CF_SWM] for a finding moved between them, where [0 1 0 0] is owed, and [$ST_CF_SWS] for the finding left where it was, where [1 0 0 0] is owed. A moved finding that passes means the arm compares whole tallies; a finding left in place that fails means the stub tripped a guard ahead of the site limb, so the first verdict says nothing about sites"
 fi
+# CTL-ST-CF-RETARGET-LAND and CTL-ST-CF-RETARGET-LAND-V2 — the retarget's Q6 candidate set and its
+# fallback, through each helper itself, over a synthetic form: a heading line, then Alpha (line 2),
+# whose value opens with text and carries a bracket only later, so Q6 never reads it though a looser
+# test would take it, then Beta (line 3) and Gamma (line 4), whose values open with `[`. Three cases,
+# one answer each: with no stub, Q6 must answer Beta, the first bullet its plant can land on, after a
+# clean bullet it cannot; Q3 must answer Alpha, because only Q6 filters; and with Beta and Gamma both
+# stubbed as failing Q6, Q6 must answer Beta, the first candidate, never Alpha and never nothing, so the
+# arm lands and the residual stays reachable. Version 1 answers lines from a BULLET surface, version 2
+# indices into a graded-bullet list, so their owed answers are 3 2 3 and 2 1 2.
+st_cf_land_drill() {   # st_cf_land_drill <helper> <code> <bullet-list> [<stubbed-line>…] — one answer, or -
+  ( ld_h="$1"; ld_c="$2"; ST_CF_SURF="$3"; ST_CF_GR="$3"; shift 3
+    ST_CF_FILE="$WORK/st-cf-land.md"; ST_CF_LIVE=""
+    for ld_l in "$@"; do
+      ST_CF_LIVE="$ST_CF_LIVE
+$(printf '%s\t%s at line %s' "$ld_c" 'ZZ-ST-CF-LAND-STUB' "$ld_l")"
+    done
+    ld_a="$("$ld_h" "$ld_c" 2>/dev/null)"; printf '%s' "${ld_a:--}" )
+}
+printf '%s\n' '# ZZ synthetic retarget form' '- **Alpha:** see [x]' '- **Beta:** [y]' '- **Gamma:** [z]' > "$WORK/st-cf-land.md"
+ST_CF_LS="$(printf 'BULLET\t%s\tZZ\t-\n' 2 3 4)"
+ST_CF_LG="$(printf '%s\tZZ\n' 2 3 4)"
+ST_CF_LGOT="first=$(st_cf_land_drill st_cf_clean_bullet Q6 "$ST_CF_LS") q3=$(st_cf_land_drill st_cf_clean_bullet Q3 "$ST_CF_LS") all-failing=$(st_cf_land_drill st_cf_clean_bullet Q6 "$ST_CF_LS" 3 4)"
+ST_CF_LWANT='first=3 q3=2 all-failing=3'
+if [ "$ST_CF_LGOT" = "$ST_CF_LWANT" ]; then
+  PASS "CTL-ST-CF-RETARGET-LAND: over a synthetic version-1 form whose first labelled bullet carries a bracket only after its opening text, st_cf_clean_bullet answers exactly '$ST_CF_LWANT' — Q6 passes that bullet over for the first whose value opens with [, the only place its plant can land, Q3 does not, and with every such bullet failing Q6 the answer is still the first of them rather than the unplantable bullet or nothing. So a version-1 Q6 arm always aims where its plant lands, and on a form failing Q6 at every such bullet it measures or takes the residual rather than FAILing with mutation-landed=0"
+else
+  FAIL "CTL-ST-CF-RETARGET-LAND: over a synthetic version-1 form, st_cf_clean_bullet answered '$ST_CF_LGOT' where '$ST_CF_LWANT' is owed — first= is Q6's target with nothing failing, q3= is Q3's, all-failing= is Q6's with every bullet opening on [ failing. A Q6 answer of 2 aims the arm at a bullet whose value does not open with [, so the plant lands nowhere and the arm FAILs where it should measure or take the residual; a q3 answer other than 2 filters a code that needs no bracket; an all-failing answer of - leaves the caller's fallback to the first bullet, whichever it is"
+fi
+ST_CF_LGOT="first=$(st_cf_land_drill st_cf_clean_graded Q6 "$ST_CF_LG") q3=$(st_cf_land_drill st_cf_clean_graded Q3 "$ST_CF_LG") all-failing=$(st_cf_land_drill st_cf_clean_graded Q6 "$ST_CF_LG" 3 4)"
+ST_CF_LWANT='first=2 q3=1 all-failing=2'
+if [ "$ST_CF_LGOT" = "$ST_CF_LWANT" ]; then
+  PASS "CTL-ST-CF-RETARGET-LAND-V2: over a synthetic version-2 graded-bullet list whose first bullet carries a bracket only after its opening text, st_cf_clean_graded answers exactly '$ST_CF_LWANT' — Q6 passes that bullet over for the first whose value opens with [, the only place its plant can land, Q3 does not, and with every such bullet failing Q6 the answer is still the first of them rather than the unplantable bullet or nothing. So Q6-V2 always aims where its plant lands, and on a form failing Q6 at every such bullet it measures or takes the residual rather than FAILing with mutation-landed=0"
+else
+  FAIL "CTL-ST-CF-RETARGET-LAND-V2: over a synthetic version-2 graded-bullet list, st_cf_clean_graded answered '$ST_CF_LGOT' where '$ST_CF_LWANT' is owed — first= is Q6's target index with nothing failing, q3= is Q3's, all-failing= is Q6's with every bullet opening on [ failing. A Q6 answer of 1 aims Q6-V2 at a bullet whose value does not open with [, so the plant lands nowhere and the arm FAILs where it should measure or take the residual; a q3 answer other than 1 filters a code that needs no bracket; an all-failing answer of - leaves the caller's fallback to the first graded bullet, whichever it is"
+fi
 ST_CF_COV_PROBE='ZZ-ST-CF-COVERAGE-PROBE'
 ST_CF_COV_PHANTOM='ZZ-ST-CF-PHANTOM-ARM'
 ST_CF_SITE_PROBE='ZZ-ST-CF-SITE-PROBE'
@@ -8680,17 +8727,23 @@ ST_CF_GDB="$(awk -F'\t' '$6 == "default" { print $2; exit }' <<<"$ST_CF_GR")"
 ST_CF_GUL="$(awk -F'\t' '{ L[NR] = $1; R[NR] = $4; c[$4]++ } END { for (i = 1; i <= NR; i++) if (c[R[i]] == 1) { print L[i]; exit } }' <<<"$ST_CF_GR")"
 # CTL-ST-CF-RETARGET-V2 — MUST FIRE: the version-2 retarget, graded as CTL-ST-CF-RETARGET grades the
 # version-1 one: this member's own retarget lines above, read from this file and re-run over a live
-# reading holding only one stubbed Q3, Q5 and Q6 finding naming the first graded bullet, must aim all
-# three graded-bullet targets at the second graded bullet, the first no stub names. The form's own
-# findings never reach the drill, so they cannot move the target away from the owed value.
+# reading holding only one stubbed Q3, Q5 and Q6 finding naming the first graded bullet, must aim the
+# Q3 and Q5 targets at the second graded bullet, the first no stub names, and the Q6 target at the
+# first graded bullet after the stubbed one whose value opens with `[`, the first no stub names that
+# its plant can land on. The form's own findings never reach the drill, so they cannot move a target
+# away from its owed value, and the owed Q6 line is read here from the graded bullets and the form,
+# never through the helper under test.
 ST_CF_RV1="$(st_cf_gr 1 1)"; ST_CF_RV2="$(st_cf_gr 2 1)"
+ST_CF_RV6="$(awk -F'\t' -v x="$ST_CF_RV1" 'FILENAME == ARGV[1] { p = index($0, ":**"); v = substr($0, p + 3); sub(/^[ \t]+/, "", v); if (substr(v, 1, 1) == "[") ok[FNR] = 1; next } NF && $1 != x && ($1 in ok) { print $1; exit }' "$ST_CF_FILE" <(printf '%s\n' "$ST_CF_GR"))"
 ST_CF_RVB="$(st_cf_src_block '# The retarget, per code: the first graded bullet no live finding of that code names.')"
 ST_CF_RVGOT=""; [ -z "$ST_CF_RVB" ] || ST_CF_RVGOT="$(st_cf_retarget_drill "$ST_CF_RVB" "$ST_CF_RV1" 'Q3 Q5 Q6' ST_CF_G3L ST_CF_G5L ST_CF_G6L | tr '\n' ' ')"
-ST_CF_RVWANT="ST_CF_G3L=$ST_CF_RV2 ST_CF_G5L=$ST_CF_RV2 ST_CF_G6L=$ST_CF_RV2 "
+ST_CF_RVWANT="ST_CF_G3L=$ST_CF_RV2 ST_CF_G5L=$ST_CF_RV2 ST_CF_G6L=$ST_CF_RV6 "
 if [ -z "$ST_CF_RV2" ]; then
   FAIL "CTL-ST-CF-RETARGET-V2[$ST_CF_TAG]: $ST_CF_REL has fewer than two graded bullets, so no retarget can move off the first and the version-2 retarget is UNMEASURED on this member"
+elif [ -z "$ST_CF_RV6" ]; then
+  FAIL "CTL-ST-CF-RETARGET-V2[$ST_CF_TAG]: $ST_CF_REL has no graded bullet after its first (line $ST_CF_RV1) whose value opens with [, so no Q6 retarget can move off the first and the version-2 Q6 retarget is UNMEASURED on this member"
 elif [ -n "$ST_CF_RVB" ] && [ "$ST_CF_RVGOT" = "$ST_CF_RVWANT" ]; then
-  PASS "CTL-ST-CF-RETARGET-V2[$ST_CF_TAG]: MUST FIRE — this member's own retarget lines, read from this file and re-run over a live reading holding only one stubbed Q3, Q5 and Q6 finding naming its first graded bullet (line $ST_CF_RV1), aim all three graded-bullet arms at the next one (line $ST_CF_RV2), the first no stub names. So on a form already failing the code at its first graded bullet, Q3-UNJOINED-V2, Q3-AMBIG-V2, Q5-BULLET and Q6-V2 measure a site rise elsewhere rather than taking the residual"
+  PASS "CTL-ST-CF-RETARGET-V2[$ST_CF_TAG]: MUST FIRE — this member's own retarget lines, read from this file and re-run over a live reading holding only one stubbed Q3, Q5 and Q6 finding naming its first graded bullet (line $ST_CF_RV1), aim the Q3 and Q5 arms at the next one (line $ST_CF_RV2), the first no stub names, and Q6-V2 at the next whose value opens with [ (line $ST_CF_RV6), the first no stub names that its plant can land on. So on a form already failing the code at its first graded bullet, Q3-UNJOINED-V2, Q3-AMBIG-V2, Q5-BULLET and Q6-V2 measure a site rise elsewhere rather than taking the residual"
 else
   FAIL "CTL-ST-CF-RETARGET-V2[$ST_CF_TAG]: MUST FIRE — over a live reading holding only one stubbed Q3, Q5 and Q6 finding naming the first graded bullet (line $ST_CF_RV1), this member's retarget lines ($(printf '%s\n' "$ST_CF_RVB" | grep -c '^ST_CF_') read) set [${ST_CF_RVGOT% }] where [${ST_CF_RVWANT% }] is owed. The form's own findings are kept out of the drill, so this is the retarget's answer alone. A target left on the first graded bullet aims the arm at the stubbed finding's own site, so on a form already failing the code there the arm records a residual instead of measuring; no lines read means the block's opening comment has moved"
 fi
@@ -8853,7 +8906,7 @@ st_cf_mustfire "CTL-ST-CF-Q5-BULLET[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q5 "th
 ST_CF_FX="$(st_cf_fixture q5-output-v2)"; st_line_sub "$ST_CF_FX" "$ST_CF_KO" "[.]md[ \t]*$" ".elsewhere.md"
 st_cf_mustfire "CTL-ST-CF-Q5-OUTPUT-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q5 "the fence's output: no longer names the frontmatter's artifact (line $ST_CF_KO)"
 ST_CF_FX="$(st_cf_fixture q6-v2)"; st_cf_plant "$ST_CF_FX" "$ST_CF_G6L" 'Closed: '
-st_cf_mustfire "CTL-ST-CF-Q6-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q6 "a marker in the wrong case is planted at the head of the first graded bullet no live Q6 finding names (line $ST_CF_G6L)"
+st_cf_mustfire "CTL-ST-CF-Q6-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q6 "a marker in the wrong case is planted at the head of the first graded bullet whose value opens with [ and that no live Q6 finding names, or the first such bullet when every one is named (line $ST_CF_G6L)"
 
 # ── VERSION: an unsupported version is named as that, and as nothing else ──
 ST_CF_ARMED="$ST_CF_ARMED
@@ -9044,21 +9097,26 @@ ST_CF_BLIT="$(awk -v n="$ST_CF_BL" 'FNR == n + 0 { print; exit }' "$ST_CF_FILE")
 
 # CTL-ST-CF-RETARGET — MUST FIRE: the retarget, graded through this member's own retarget lines above,
 # read from this file and re-run over a live reading holding only one stubbed Q3 and one stubbed Q6
-# finding naming the first labelled bullet. Both bullet-targeted targets must then name the SECOND
-# bullet, the first no stub names; the form's own findings never reach the drill, so a live finding on
-# a later bullet cannot move the target away from the owed value and turn this control red for the
-# form's red. On a conforming form the retarget answers the first bullet whether or not it works,
+# finding naming the first labelled bullet. The Q3 target must then name the SECOND bullet, the first
+# no stub names, and the Q6 target the first bullet after the stubbed one whose value opens with `[`,
+# the first no stub names that its plant can land on; the owed Q6 line is read here from the surfaces
+# and the form, never through the helper under test. The form's own findings never reach the drill, so
+# a live finding on a later bullet cannot move a target away from its owed value and turn this control
+# red for the form's red. On a conforming form the retarget answers the first bullet whether or not it works,
 # so only a form already failing the code there can show it; the stub is that form, at no cost. Without
 # the retarget, Q6-DOUBLE on such a form lands on the live finding's own site and takes the residual —
 # measured on the S11-B1 replay: CTL-ST-CF-UNMEASURED[person-intake/Q6] in place of its PASS.
 ST_CF_RT1="$(st_field BULLET 1 2 "$ST_CF_SURF")"; ST_CF_RT2="$(st_field BULLET 2 2 "$ST_CF_SURF")"
+ST_CF_RT6="$(awk -F'\t' -v x="$ST_CF_RT1" 'FILENAME == ARGV[1] { p = index($0, ":**"); v = substr($0, p + 3); sub(/^[ \t]+/, "", v); if (substr(v, 1, 1) == "[") ok[FNR] = 1; next } $1 == "BULLET" && $2 != x && ($2 in ok) { print $2; exit }' "$ST_CF_FILE" <(printf '%s\n' "$ST_CF_SURF"))"
 ST_CF_RTB="$(st_cf_src_block '# The retarget, per code: the first labelled bullet no live finding of that code names.')"
 ST_CF_RTGOT=""; [ -z "$ST_CF_RTB" ] || ST_CF_RTGOT="$(st_cf_retarget_drill "$ST_CF_RTB" "$ST_CF_RT1" 'Q3 Q6' ST_CF_Q3L ST_CF_Q6L | tr '\n' ' ')"
-ST_CF_RTWANT="ST_CF_Q3L=$ST_CF_RT2 ST_CF_Q6L=$ST_CF_RT2 "
+ST_CF_RTWANT="ST_CF_Q3L=$ST_CF_RT2 ST_CF_Q6L=$ST_CF_RT6 "
 if [ -z "$ST_CF_RT2" ]; then
   FAIL "CTL-ST-CF-RETARGET[$ST_CF_TAG]: $ST_CF_REL has fewer than two labelled bullets, so no retarget can move off the first and the retarget is UNMEASURED on this member"
+elif [ -z "$ST_CF_RT6" ]; then
+  FAIL "CTL-ST-CF-RETARGET[$ST_CF_TAG]: $ST_CF_REL has no labelled bullet after its first (line $ST_CF_RT1) whose value opens with [, so no Q6 retarget can move off the first and the Q6 retarget is UNMEASURED on this member"
 elif [ -n "$ST_CF_RTB" ] && [ "$ST_CF_RTGOT" = "$ST_CF_RTWANT" ]; then
-  PASS "CTL-ST-CF-RETARGET[$ST_CF_TAG]: MUST FIRE — this member's own retarget lines, read from this file and re-run over a live reading holding only one stubbed Q3 and one stubbed Q6 finding naming its first labelled bullet (line $ST_CF_RT1), aim both bullet-targeted arms at the next one (line $ST_CF_RT2), the first no stub names. So on a form already failing the code at its first bullet, Q3-UNJOINED, Q3-AMBIG and the Q6 arms measure a site rise elsewhere rather than taking the residual"
+  PASS "CTL-ST-CF-RETARGET[$ST_CF_TAG]: MUST FIRE — this member's own retarget lines, read from this file and re-run over a live reading holding only one stubbed Q3 and one stubbed Q6 finding naming its first labelled bullet (line $ST_CF_RT1), aim the Q3 arms at the next one (line $ST_CF_RT2), the first no stub names, and the Q6 arms at the next whose value opens with [ (line $ST_CF_RT6), the first no stub names that their plant can land on. So on a form already failing the code at its first bullet, Q3-UNJOINED, Q3-AMBIG and the Q6 arms measure a site rise elsewhere rather than taking the residual"
 else
   FAIL "CTL-ST-CF-RETARGET[$ST_CF_TAG]: MUST FIRE — over a live reading holding only one stubbed Q3 and one stubbed Q6 finding naming the first labelled bullet (line $ST_CF_RT1), this member's retarget lines ($(printf '%s\n' "$ST_CF_RTB" | grep -c '^ST_CF_') read) set [${ST_CF_RTGOT% }] where [${ST_CF_RTWANT% }] is owed. The form's own findings are kept out of the drill, so this is the retarget's answer alone. A target left on the first bullet aims the arm at the stubbed finding's own site, so on a form already failing the code there the arm records a residual instead of measuring; no lines read means the block's opening comment has moved"
 fi
@@ -9179,11 +9237,11 @@ st_cf_mustfire "CTL-ST-CF-Q5-MARKED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q5 "th
 
 # ── Q6: the head of a bracket, and only its head ──
 ST_CF_FX="$(st_cf_fixture q6-malformed)"; st_cf_plant "$ST_CF_FX" "$ST_CF_Q6L" 'Closed: '
-st_cf_mustfire "CTL-ST-CF-Q6-MALFORMED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q6 "a marker in the wrong case is planted at the head of the bracket of the first bullet no live Q6 finding names (line $ST_CF_Q6L)"
+st_cf_mustfire "CTL-ST-CF-Q6-MALFORMED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q6 "a marker in the wrong case is planted at the head of the bracket of the first bullet whose value opens with [ and that no live Q6 finding names, or the first such bullet when every one is named (line $ST_CF_Q6L)"
 ST_CF_FX="$(st_cf_fixture q6-double)"; st_cf_plant "$ST_CF_FX" "$ST_CF_Q6L" 'closed: closed: '
-st_cf_mustfire "CTL-ST-CF-Q6-DOUBLE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q6 "two markers are planted at the head of the bracket of the first bullet no live Q6 finding names (line $ST_CF_Q6L)"
+st_cf_mustfire "CTL-ST-CF-Q6-DOUBLE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q6 "two markers are planted at the head of the bracket of the first bullet whose value opens with [ and that no live Q6 finding names, or the first such bullet when every one is named (line $ST_CF_Q6L)"
 ST_CF_FX="$(st_cf_fixture q6-middle)"; st_cf_plant "$ST_CF_FX" "$ST_CF_Q6L" 'e.g., "open: any weekend", '
-st_cf_mustnotfire "CTL-ST-CF-Q6-MIDDLE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "the text open: is planted in the MIDDLE of the bracket of the first bullet no live Q6 finding names, after an example that opens it (line $ST_CF_Q6L) — later text in a bracket is prose, and the contract grades the marker at its head alone"
+st_cf_mustnotfire "CTL-ST-CF-Q6-MIDDLE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "the text open: is planted in the MIDDLE of the bracket of the first bullet whose value opens with [ and that no live Q6 finding names, or the first such bullet when every one is named, after an example that opens it (line $ST_CF_Q6L) — later text in a bracket is prose, and the contract grades the marker at its head alone"
 # Q6-NOMARK — every marker removed from a copy must leave the form conforming, since the contract
 # never grades whether a field owes one; and the Q6 arms must still be constructible on that copy,
 # because they plant a marker rather than needing one to exist. EVERY marker at the head of the

@@ -25,10 +25,14 @@ evaluator and held both ways by `ST-CF-KINDS`. The five derived code sets are un
 emission site's count rises, which also catches a finding that moves to another site of its code.
 A must-fire arm passes when its copy raises a site of its code, aiming at the first bullet no live
 finding of that code names, so an arm still measures something on a form that already fails the
-question. An arm whose copy can raise nothing because the form already fails the question at its
-only site is reported once per form and question as unmeasured, at the next member or after the
-last, and a reconciliation holds every such arm to a report. The relaxations in the key-line
-reader each have a control, and each site gate is driven on a planted duplicate.
+question. Question 6's arms aim only at a bullet whose value opens with a bracket, the one place
+their plant can land, and fall back to the first such bullet where every one already fails. An arm
+whose copy can raise nothing because the form already fails the question at its only site is
+reported once per form and question as unmeasured, at the next member or after the last, and a
+reconciliation holds every such arm to a report. A form with no bullet whose value opens with a
+bracket gives question 6's arms nowhere to land, so they fail rather than report unmeasured. The
+relaxations in the key-line reader each have a control, and each site gate is driven on a planted
+duplicate.
 
 **Corpus hygiene's last two `FNR == NR` splits go by file.** The citation scan and the class-C
 comparison of each file's count assertions against the fence that declares them now tell their
