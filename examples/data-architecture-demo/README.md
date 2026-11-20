@@ -54,6 +54,14 @@ shape. The same exemption is stated in place, directly beneath that table.
 | `outputs/change-summary.md` | C20 | 1 | `accumulate-append` keeping a decided entry beside an undecided one; the keyed four-bucket difference and the unkeyed removal it cannot see; the one per-class field, `status` |
 | `outputs/cost-estimate.md` | C21 | 1 | the **`0 < N < M`** rendering limb — a total carrying its own `N of M` coverage, never presented as complete; the coverage pair `cost-bearing-items` / `priced-items` with N computed independently of M; the per-traveller `P of Q` that measures a **plan** where the frontmatter pair measures the **corpus**, and the two cases where they disagree; the commitment split drawn on `locked` versus the rest, with the two legs named as sitting outside C13's reach entirely; and `undetermined` rendered rather than a total of zero, on the one category nothing priced |
 
+**`outputs/traveler-presence.md` (C24) is here as the fixture the reconciler's presence rebuild is
+read against; it is not that class's witness**, which `examples/two-origin-demo/` holds. Every entry
+is by reference: Alex and Robin read `ASSERTED-SAME`, and Sam, who filed no profile, reads `UNKNOWN`,
+marked `(assumed)`. **A reference that resolves to nothing here, declared as a residual:** each
+entry's `Timezone delta` line reads `the trip-level delta`, and this trip window carries no
+`Timezone delta` line, because its origin is a placeholder with no zone to state. A reader resolving
+that reference finds no line and says so; it never supplies a delta of its own.
+
 ## Depth
 
 **This fixture is deliberately uneven, on a declared rule rather than by accident.**

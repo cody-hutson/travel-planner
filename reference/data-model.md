@@ -191,18 +191,18 @@ These facets do not relax the needs-vs-desires core or the link-don't-copy rule 
 
 Several consumers need to know whether a traveler is *at the destination* on a given day: the scheduler places whole-group anchors, the validator grades needs per applicable day and gates nightlife per night, and the hub mirrors the needs audit. The rule is stated **here once**; every consumer cites it and none re-derives it.
 
-**The trip-day set** is the trip's own days: the days published by `trip-context.md` `## Logistics` → `### Effective Planning Days [DERIVED]`, from its `Arrival day` line through its `Departure day` line inclusive, taken as published. That block is the one home for the trip's day span, exactly as the per-traveler block beside it is the one home for a window. **A trip day is a member of that set** — *trip day* and *trip-day set* are the singular and the set form of one term, and no reading turns on which spelling a sentence uses.
+**The trip-day set** is the trip's own days: the days published by `trip-context.md` `## Logistics` → `### Effective Planning Days [DERIVED]`, from its `Arrival day` line through its `Departure day` line inclusive, taken as published. That block is the one home for the trip's day span, exactly as `outputs/traveler-presence.md` is the one home for a window (§ *Traveler presence — the window lines*, below). **A trip day is a member of that set** — *trip day* and *trip-day set* are the singular and the set form of one term, and no reading turns on which spelling a sentence uses.
 
 **That block answers which days the trip has; it never answers who is present on one.** Its own scope note declines to be read as a guarantee that every traveler is present for all of it, and routes every presence question to each traveler's own derived window — which is this predicate's first limb below. The two compose rather than compete: the trip-day set is what the predicate ranges over, the per-traveler window is what decides membership on a day of it, and neither is read for the other's question.
 
-**A window reaching outside the trip-day set does not extend it.** Where a traveler's own effective window reaches a date the trip's days do not contain — an early arrival, a late departure — that date is **not** a trip day and is **not** in that traveler's present-day set. The traveler is at the destination and the trip is not planning there: no day shape exists to place into and no plan-day exists to honor or to breach, which is the same reading that makes **absent** the presence failure that removes a grade. Taking the trip's days as the union of the travelers' windows instead would let one traveler's window add a day to the trip, and would draw the trip's day population from the block that moves whenever who is present moves.
+**A window reaching outside the trip-day set does not extend it.** Where a traveler's own effective window reaches a date the trip's days do not contain — an early arrival, a late departure — that date is **not** a trip day and is **not** in that traveler's present-day set. The traveler is at the destination and the trip is not planning there: no day shape exists to place into and no plan-day exists to honor or to breach, which is the same reading that makes **absent** the presence failure that removes a grade. Taking the trip's days as the union of the travelers' windows instead would let one traveler's window add a day to the trip, and would draw the trip's day population from the file that moves whenever who is present moves.
 
 **A traveler's present-day set** is the set of trip days on which both limbs hold:
 
-- **In their window** — the day falls inside that traveler's own effective window in `trip-context.md` `## Logistics` → `### Per-Traveler Planning Days [DERIVED]`. That block is the one home for the window; take its values as published. The window is the derived block, **never** the raw `Arrive / leave:` profile field — a traveler whose window basis is `ASSERTED-SAME` tracks a group rebooking while an `ASSERTED-DIFFERENT` window stays pinned, so the raw field and the derived window diverge exactly when it matters.
+- **In their window** — the day falls inside that traveler's own effective window in `outputs/traveler-presence.md`. That file is the one home for the window; take its values as published. The window is the derived line, **never** the raw `Arrive / leave:` profile field — a traveler whose window basis is `ASSERTED-SAME` tracks a group rebooking while an `ASSERTED-DIFFERENT` window stays pinned, so the raw field and the derived window diverge exactly when it matters.
 - **Available that day** — their `Can travel:` / `Blackout:` facets in `outputs/traveler-model.md` do not exclude it.
 
-**A partial day is a whole day to this predicate.** A day the traveler's effective window reaches for **any part of it** — an arrival day from their arrival instant, a departure day up to their departure instant — is **in their window**; only a day the window does not reach at all is outside it. This is the reading the derived block already publishes: it counts a traveler's full **and** partial days together as their effective planning days, and a partial day is a real planning window rather than a fraction of one. **There is no coverage threshold** — a fraction of a day is never a fraction of a membership.
+**A partial day is a whole day to this predicate.** A day the traveler's effective window reaches for **any part of it** — an arrival day from their arrival instant, a departure day up to their departure instant — is **in their window**; only a day the window does not reach at all is outside it. This is the reading the presence file already publishes: its `Full + partial` line counts a traveler's full **and** partial days together as their effective planning days, and a partial day is a real planning window rather than a fraction of one. **There is no coverage threshold** — a fraction of a day is never a fraction of a membership.
 
 A day failing either limb is **not** in the set. The two failures differ and the distinction is carried, never flattened: **absent** (outside the window — not at the destination) versus **unavailable** (inside the window but excluded that day — here and not free). Only *unavailable* has a parallel track worth planning.
 
@@ -211,9 +211,9 @@ A day failing either limb is **not** in the set. The two failures differ and the
 - **Placement reads the present-day set — both limbs.** Deciding *where a thing goes* — a whole-group anchor, the standing slot of a recurring desire, an applicable nightlife night — needs the traveler there **and** free. A slot placed on a day someone is excluded is a slot nobody can take, so a placement that ignored the availability limb would plan for an empty chair.
 - **Needs-grading reads the at-destination day set — the window limb.** Deciding *whether a hard constraint is audited* needs only that the plan is doing something with that traveler that day. An **unavailable** traveler is at the destination and carries a full parallel track, so their needs bound that track exactly as they bound the main one — dropping their grade would leave the parallel track unaudited, the mirror of the every-calendar-day defect this rule exists to prevent. **Absent** is the only presence failure that removes a grade: there is no plan-day to honor or to breach.
 
-> **An assumed window never trims a grade.** Where a traveler's `Window basis` is `UNKNOWN`, the block marks the window *(assumed)* and any presence or absence read from it is an assumption, not a fact. On such a traveler, treat every trip day as present for grading and carry the *(assumed)* marking into anything that cites the set. A hard gate is never dropped on a guess.
+> **An assumed window never trims a grade.** Where a traveler's `Window basis` is `UNKNOWN`, the presence file marks the window *(assumed)* and any presence or absence read from it is an assumption, not a fact. On such a traveler, treat every trip day as present for grading and carry the *(assumed)* marking into anything that cites the set. A hard gate is never dropped on a guess.
 
-> **No presence data means every day, never no days.** A subject with no `### Per-Traveler Planning Days [DERIVED]` row and no availability facets has **no derivable window and no derivable availability** — the `[THIRD-PARTY]` party member admitted on needs only, who by design carries no facet at all, is exactly this case. Their at-destination day set is **every trip day**, so their needs are graded on every day the constraint factor admits. Absence of presence data is not evidence of absence, and reading it as an empty set would silently drop the **only** audit surface such a need has: it also has no governing trip-level constraint, so nothing would raise a Critical in its place either. This is the same fail-closed reading as the assumed window above — less data, not different data — and it grants no facet to that person, only a grading default.
+> **No presence data means every day, never no days.** A subject with no entry in `outputs/traveler-presence.md` and no availability facets has **no derivable window and no derivable availability** — the `[THIRD-PARTY]` party member admitted on needs only, who by design carries no facet at all, is exactly this case. Their at-destination day set is **every trip day**, so their needs are graded on every day the constraint factor admits. Absence of presence data is not evidence of absence, and reading it as an empty set would silently drop the **only** audit surface such a need has: it also has no governing trip-level constraint, so nothing would raise a Critical in its place either. This is the same fail-closed reading as the assumed window above — less data, not different data — and it grants no facet to that person, only a grading default. **The no-entry default reaches further than that member:** a roster member added since the last rebuild, and everyone on a trip whose presence file does not exist yet, have no entry either, so for the window limb each is present every trip day, read as an assumption exactly as an `UNKNOWN` basis is; where the file itself is absent, a reader says the windows are not yet derived, names `/trip-record travelers`, and blocks on nothing.
 
 > **This predicate is day-granular, and it settles membership only.** It says which days a traveler is present on; it never says what can be placed within one. Where an obligation is scoped to a **time block** — a constraint that reaches only an afternoon, a recurring desire that names a morning — whether that block exists inside a traveler's partial day is decided by **that obligation's own factor**, exactly as a need's applicable days are the constraint's days intersected with this set. The day stays in the set either way: a time block a traveler's window does not contain narrows what that obligation reaches, never whether the traveler is present.
 
@@ -331,16 +331,16 @@ The satisfaction layer preserves the system's **one-writer-per-file** convention
 | Layer | Tag | Written by | Files |
 |-------|-----|-----------|-------|
 | **Layer 1 — human source** | (untagged human input) | The traveler / planner, by hand | `travelers/<traveler>.md` |
-| **Derived — reconciled** | `[DERIVED]` | The enrichment agent (as reader / reconciler) | `outputs/traveler-model.md` |
+| **Derived — reconciled** | `[DERIVED]` | The enrichment agent (as reader / reconciler) | `outputs/traveler-model.md`, `outputs/traveler-presence.md` |
 | **Derived — status & metrics** | (derived) | Status: hub (primary writer), enrichment seeds initial `locked` rows, validator reads only · Metrics: hub + validator, **section-owned** (no clobber) | `outputs/event-status.md`, `outputs/satisfaction-metrics.md` |
 | **Enrichment rollups in trip-context** | `[ENRICH]` | The enrichment agent (unchanged) | `trip-context.md` `[ENRICH]` fields |
 
 Two roles for the enrichment agent, kept distinct:
 
-1. **Reader / reconciler of human input.** It reads every `travelers/<traveler>.md` **as its composed source** — the file together with the durable person record it references, per § *Composition — the trip-side read of a durable record*, which for a file carrying no reference is that file and nothing else, with no store read attempted — links each need to the governing `trip-context.md` constraint, computes the desire-overlap signal, and writes the result to `outputs/traveler-model.md` as `[DERIVED]`. **Its write set is unchanged: the source set widens, the write set does not.** **It also reads the model it is about to replace**, solely to carry the `[THIRD-PARTY]` entry admitted through the operator fallback forward verbatim — that entry has **no source file by design** (see the stated exception under **Needs**), so the model it last wrote is the only surviving record of it. That read grants no authoring: it does not author the source files and does not edit a traveler's desires.
+1. **Reader / reconciler of human input.** It reads every `travelers/<traveler>.md` **as its composed source** — the file together with the durable person record it references, per § *Composition — the trip-side read of a durable record*, which for a file carrying no reference is that file and nothing else, with no store read attempted — links each need to the governing `trip-context.md` constraint, computes the desire-overlap signal, and writes the result to `outputs/traveler-model.md` as `[DERIVED]`. **It writes the presence file too**, `outputs/traveler-presence.md`, rebuilt beside the model on every pass (§ *Traveler presence — the window lines*), so its write set is the model and that file. **It also reads the model it is about to replace**, solely to carry the `[THIRD-PARTY]` entry admitted through the operator fallback forward verbatim — that entry has **no source file by design** (see the stated exception under **Needs**), so the model it last wrote is the only surviving record of it. That read grants no authoring: it does not author the source files and does not edit a traveler's desires. It reads the presence file it is about to replace on the same terms, solely to say what the rebuild will not keep.
 2. **Writer of trip-context `[ENRICH]` rollups (unchanged).** Its existing `[ENRICH]`-only contract on `trip-context.md` is untouched — weather, baseline, events, transit access, and the other `[ENRICH]` fields still behave exactly as before.
 
-The derived traveler model is the **feed**: the engines read `outputs/traveler-model.md`, the hub reads its projection (`scripts/project-traveler-data.sh`, which leaves out the lines a `field` row of `reference/data-architecture.md` § 5.6 labels, in the shapes its header's criterion reaches), and it is the input from which the event-status and metrics homes are populated. Neither the engines nor the hub parse the raw per-traveler files.
+The derived traveler model is the **feed**: the engines read `outputs/traveler-model.md`, the hub reads its projection (`scripts/project-traveler-data.sh`, which leaves out the lines a `field` row of `reference/data-architecture.md` § 5.6 labels, in the shapes its header's criterion reaches), and it is the input from which the event-status and metrics homes are populated. For presence the feed is `outputs/traveler-presence.md`, which scheduling, transport, the hub and the validator read and never re-derive. Neither the engines nor the hub parse the raw per-traveler files.
 
 ---
 
@@ -1579,3 +1579,91 @@ two-appearance cap over it, stay in `outputs/venue-matrix.md`, which
 `reference/site-layout-spec.md` § 9.1 already names as that fact's single
 authority. The `Day` column above records where an event currently sits; it is
 not a second home for the placement matrix.
+
+---
+
+## Traveler presence — the window lines
+
+`outputs/traveler-presence.md` holds each traveler's planning-day window: one entry per
+first-party roster member, rebuilt whole by the enrichment agent in its reconciler role on every
+pass, and read — never re-derived — by scheduling, transport, the hub and the validator.
+§ *Presence* above is the rule those readers apply; this section is what the file holds, and the
+one home of its labels, warrant vocabulary, derivation rules, value shapes and by-reference forms.
+`reference/adr/ADR-028-derived-planning-day-block-owners.md` § 2 records the decision.
+
+**Shape.** The H1 is `# Traveler Presence [DERIVED]`. Every `##` heading is an entry, keyed by the
+`## Group` roster's display name — there is no reserved key and no collapse line. From the next
+rebuild after an erasure, an erased member's entry is `## per-<token>`, with `UNKNOWN` bases and
+by-reference cells.
+
+**Population.** Every roster member whose traveler-model entry is first-party — projected from a
+traveler file, or a `PROFILE MISSING` or `[OPERATOR-PROVIDED]`-only fallback — and **never** a
+member whose entry carries `[THIRD-PARTY]`, whether or not that member holds a roster row
+(`skills/trip-record/SKILL.md` § *Roster standing of a third-party member*).
+
+**The lines**, each whole on its label's line, in this order:
+
+- `- **Window basis:**` and `- **Origin basis:**` — one warrant token each, in a code span.
+  `Window basis` governs the window and the count; `Origin basis` governs the delta.
+- `- **Effective window (local):**` — under `ASSERTED-DIFFERENT`,
+  `<Mon> <D>, ~<time> – <Mon> <D>, ~<time>`.
+- `- **Full + partial:**` — under `ASSERTED-DIFFERENT`, `<N> full + <N> partial`.
+- `- **Timezone delta:**` — under `ASSERTED-DIFFERENT`,
+  `<origin zone> to <destination zone> = <+/- N hrs>, <eastbound or westbound>`. An origin sharing
+  the destination's offset reads `… = 0 hours, no shift`: a zero delta is a real result, not a
+  missing one, and direction applies only to a non-zero delta.
+
+**The warrant vocabulary — the trip's one.** `agents/00-enrichment.md` reads it here and describes
+warrant in no words of its own.
+
+| Basis | Meaning | Behaviour |
+|---|---|---|
+| `ASSERTED-DIFFERENT` | They stated their own arrival and departure, or their own origin | **Pinned** — does not move if the trip-level flights change |
+| `ASSERTED-SAME` | They stated they are on whatever the group books | **Tracks** the trip-level value |
+| `UNKNOWN` | They did not answer — blank, an em dash, or leftover placeholder text — or filed no profile at all | **Tracks** the trip-level value as a marked assumption |
+
+An empty field means **unknown**, never "matches the group": a traveler who says they are on the
+group's booking and one who said nothing inherit the same window, and only the first asserted it.
+
+**By reference.** A cell governed by `ASSERTED-SAME` or `UNKNOWN` carries no value of its own. It
+reads `the trip-level window`, `the trip-level total` or `the trip-level delta`, with ` (assumed)`
+appended under `UNKNOWN` and under no other basis, and it resolves to the matching line of
+`trip-context.md` `## Logistics` → `### Effective Planning Days [DERIVED]`, read and never
+re-derived. Only `ASSERTED-DIFFERENT` carries a value.
+
+**Derivation, under `ASSERTED-DIFFERENT`.**
+
+- **Effective window** — the traveler's stated arrival and departure, resolved against the anchor
+  legs and the trip dates into local instants. It keeps those instants as resolved, a date outside
+  the trip-day set included, because transport reads it to tell who is not on their origin's
+  booking.
+- **Full + partial** — counted over days of the trip-day set only: § *Presence* binds that a window
+  reaching outside that set does not extend it. A trip day the window covers whole is a full day;
+  a trip day it reaches for part of — the day of the traveler's own arrival, from that instant or
+  check-in, whichever is later, or the day of their own departure, up to that instant — is a
+  partial day; a day outside the set is not counted. So a window opening the evening before the
+  trip's first day makes that first day a full one, and the evening before counts for nothing.
+- **Timezone delta** — from that traveler's own origin to the destination, with its direction;
+  never the group's origin unless their `Origin basis` makes it theirs.
+
+**What a window is derived from — the test the re-derive rule reads.** A label is an input of a
+traveler's window when a line above is derived from it, whichever source its value composes from
+(`CLAUDE.md` § *Rules over an enumeration*). Each member's composed `Leaving from:` and
+`Arrive / leave:` are today's examples, beside the `## Group` roster, whether a member has a
+profile at all, `### Additional origins`, the anchor legs, the trip dates, and `Check-in time:` and
+`Check-out time:`. A change to one is rebuilt into the file on the next reconciler pass; a change
+to any other label leaves it as it stood.
+
+**The allowlist bound.** An entry carries its heading and the lines above, and nothing else drawn
+from any per-traveler source: no facet, no `Passport`, no `Documents`, no engagement value and no
+need text. An `ASSERTED-DIFFERENT` statement that does not resolve to instants takes the line's
+bracketed placeholder, and the reconciler raises a `VERIFY` in the traveler model's
+`## Update signals` block that names the field label and never quotes the statement; a statement's
+text is never written onto a window line.
+
+**The no-entry default.** A subject with no entry — a `[THIRD-PARTY]` member by rule, someone
+added to the roster since the last rebuild, and anyone on a trip whose presence file does not exist yet —
+has no derivable window. For the window limb they are present every trip day, read as an
+assumption exactly as an `UNKNOWN` basis is, and a placement reader carries `(assumed)` into
+whatever it places under that default. Where the file itself is absent, a reader says the windows
+are not yet derived, names `/trip-record travelers`, and blocks on nothing.

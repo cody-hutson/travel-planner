@@ -36,10 +36,10 @@ own presence before placing anything for everyone.
 Presence has two limbs and both must hold — **in their window** and **available that
 day**. The rule is defined once in `reference/data-model.md` → "Presence — a
 traveler's present-day set"; read it there and do not restate its limbs, its labels or
-its derivation rules here. Take the `### Per-Traveler Planning Days [DERIVED]` values
-as published. Where that block marks a traveler's window basis unknown, their window
+its derivation rules here. Take each traveler's window from `outputs/traveler-presence.md`
+as published. Where that file marks a traveler's window basis unknown, their window
 is inherited rather than stated — so any presence or absence you read from it is an
-**assumption**, and you say so in the same words the block uses.
+**assumption**, and you say so in the same words the file uses.
 
 **Absent is not the same as unavailable, and the remedies differ.**
 - **Absent** — outside their window. They are not at the destination. There is no
@@ -311,9 +311,12 @@ Read trip-context.md fully before producing output. Read in this order:
 3. Effective Planning Days — the anchor origin's window, and this trip's baseline
    day shape. Read it as the baseline, **not** as a guarantee that every traveler
    is present for all of it
-4. Per-Traveler Planning Days — who is present on which days, with each traveler's
-   own window, timezone delta and partial days. **This is the window limb's source;
-   the block above is not.** The presence rule itself is defined in
+4. `outputs/traveler-presence.md`, read beside this file — who is present on which
+   days, with each traveler's own window, timezone delta and partial days. **This is
+   the window limb's source; the block above is not.** Where the file does not exist
+   yet, say the windows are not yet derived and name `/trip-record travelers`; nothing
+   blocks on it, every traveler is then present every trip day, and you carry
+   `(assumed)` into the whole-group anchors you place under that default. The presence rule itself is defined in
    `reference/data-model.md` → "Presence — a traveler's present-day set".
    Take its values and its basis vocabulary as published —
    do not restate its labels or re-derive its numbers here
@@ -343,8 +346,8 @@ which produces none — also read:
 Also read, in every mode:
 - `outputs/traveler-model.md` — two reads, and only these two:
   - the availability facets (`Can travel:` / `Blackout:`). These are the second limb of
-    presence. The arrival-and-departure limb is the derived Per-Traveler Planning Days
-    window above — never the raw profile field
+    presence. The arrival-and-departure limb is the window item 4 reads from
+    `outputs/traveler-presence.md` — never the raw profile field
   - each traveler's desires marked `Recurrence: daily` — the desire text and whose it
     is, so you can place the standing slot below in the right time block. Nothing else
     from the desire record: not the priority tier, not the theme tags, not the overlap
@@ -405,7 +408,8 @@ Operational context for the hub — not promotional.
 
 ### Jet Lag & Travel Fatigue Model
 Timezone delta and direction — **per traveler where travelers differ**, taken from
-the per-traveler block's own delta values. One line per distinct delta, naming the
+each entry's `Timezone delta` line in `outputs/traveler-presence.md`. One line per
+distinct delta, naming the
 travelers it covers. A zero delta is a real result, not a missing one: a traveler
 who crosses no time zones needs no recovery window, and handing them the group's is
 the error this section exists to prevent. Where a delta is marked assumed, say so
@@ -487,7 +491,7 @@ day, and carrying the same key in each is exactly what lets the hub join them.
 `<YYYY-MM-DD>` is that day's own calendar date — the **Day** entity's natural key
 (`reference/data-architecture.md` → "The full assignment") — taken from
 `### Effective Planning Days`, this trip's baseline day shape, never invented. It
-is not taken from `### Per-Traveler Planning Days`: that block is the **window
+is not taken from `outputs/traveler-presence.md`: that file is the **window
 limb's source**, so a Day key drawn from it would vary with who is present.
 Where a framework is produced against a
 trip whose calendar dates are not yet fixed, write `day: undated`. `undated` is a

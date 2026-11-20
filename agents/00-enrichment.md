@@ -64,8 +64,9 @@ the site build reads (`CLAUDE.md` § *Dispatching agents*, the test for which
 dispatches take traveller data):
 
 1. **The reconciler dispatch** reads the traveller files, the person records they
-   reference, the outgoing model and `trip-context.md` (§ *Second Role* below), and
-   writes `outputs/traveler-model.md` and nothing else.
+   reference, the outgoing model, the outgoing presence file and `trip-context.md`
+   (§ *Second Role* below), and writes `outputs/traveler-model.md` and
+   `outputs/traveler-presence.md`, and nothing else.
 2. **The research-and-seed dispatch** is given `trip-context.md` and nothing else —
    no traveller file, person record, model or `trip-log.md`. It writes the `[ENRICH]`
    fields (§ *Task*) and, on initial setup, the seed below.
@@ -254,13 +255,11 @@ link against. Specifically:
     The basis records *what the person stated*, never whether the inheritance
     could have gone another way: a traveler who says they are on the group's
     booking and a traveler who said nothing both inherit the same origin, and
-    only the first one asserted it. So the inherited value carries `(assumed)`,
-    and on a single-origin trip that traveler counts toward the `[N] assumed`
-    half of the collapse line, never the `[N] asserted` half. The three basis
-    values and the `(assumed)` marker are defined once, in
-    `templates/trip-context.template.md` § *Per-Traveler Planning Days
-    [DERIVED]*; read them there rather than describing warrant in words of your
-    own. An empty `Leaving from:` means *unknown*, never *matches the group*.
+    only the first one asserted it. So the inherited value carries `(assumed)`.
+    The three basis values and the `(assumed)` marker are defined once, in
+    `reference/data-model.md` § *Traveler presence — the window lines*; read
+    them there rather than describing warrant in words of your own. An empty
+    `Leaving from:` means *unknown*, never *matches the group*.
     **A `[THIRD-PARTY]` entry is out of scope: it has no journey facet to
     resolve, inherits no origin, and contributes no origin signal in either
     direction.** A consumer that must still place such a person, as transport
@@ -274,22 +273,17 @@ link against. Specifically:
   so the origin can be added to `## Logistics` — do not create the block yourself,
   and do not let the traveler file become the de-facto home for a trip-level origin.
 
-  **A changed label that the per-traveler planning-days block is derived from is a
-  re-derive trigger — on every trip, not only multi-origin ones.** The block's own
-  header owns that test and names its examples —
-  `templates/trip-context.template.md` § *Per-Traveler Planning Days [DERIVED]*,
-  today `Leaving from:` and `Arrive / leave:`. When one of them changes, name it in
-  the update signal you already emit for that traveler
-  (see *Profile-change detection* below) and state that
-  `trip-context.md` `## Logistics` → `### Per-Traveler Planning Days [DERIVED]`
-  is now stale. A change to any other label leaves that block current, so say
-  nothing of the block on its line. You do **not** rewrite that block — journey & origin is still not
-  yours to write into trip-context.md, and the rule above is unchanged. **Report the
-  staleness and name no command.** That block has **no writer** in `CLAUDE.md`
-  § *Write ownership — trip-context.md, block by block*, so its staleness is reported
-  and never repaired in place: the update signal records that the block has fallen
-  behind its sources, and nothing re-runs the fill or brings the block's
-  `Last derived:` line back into date.
+  **A changed label that a traveler's window is derived from is rebuilt on this
+  pass — on every trip, not only multi-origin ones.** `reference/data-model.md`
+  § *Traveler presence — the window lines* owns that test and names its examples,
+  today `Leaving from:` and `Arrive / leave:`. When one of them changes, name the
+  label in the update signal you already emit for that traveler (see
+  *Profile-change detection* below) — the label, never its value, so the verb that
+  renders the block can tell a window input from any other facet — and rebuild
+  their entry in `outputs/traveler-presence.md` on this same pass. A change to any
+  other label leaves their window as it stood, so say nothing of it on its line.
+  Journey & origin is still not yours to write into trip-context.md, and the rule
+  above is unchanged.
 
   A traveler may also note a **Special occasion?** — a birthday, anniversary,
   honeymoon, or milestone the trip is marking. It is not a lifecycle facet and
@@ -357,13 +351,15 @@ link against. Specifically:
   The engines read this file, and the hub its projection — neither parses the
   raw per-traveler files.
 
-This role is **read-and-reconcile only**: source files in, derived model out.
+This role is **read-and-reconcile only**: source files in, derived model and presence file out.
 **One stated exception to that input list:** the model you are about to replace
 is read as well, solely to carry forward the `[THIRD-PARTY]` entry admitted
 through the operator fallback, which has **no source file by design** — see
 *A party member who will never file* below. The classification is unchanged:
 the read is still read-and-reconcile, it grants no authoring, and the derived
-model remains that entry's record rather than its authority.
+model remains that entry's record rather than its authority. The presence file you are
+about to replace is read the same way, solely to state before you write it what its
+rebuild will not keep (§ *Output*); that read grants no authoring either.
 It does not relax the [ENRICH]-only contract on trip-context.md in any way,
 and it never edits a traveler's own file.
 
@@ -519,7 +515,8 @@ Trigger"), which sanctions exactly this behavior:
 load-bearing rather than cosmetic.** `skills/trip-record/SKILL.md` renders this
 block and **names the next verb by signal class**, over a closed set: a changed **need**
 and a changed **desire** each name `/trip replan`; a changed **journey facet** is
-reported with no command named; a `PROFILE MISSING` names `/trip-record profile <name>`.
+reported with no command named, except one naming an input of a traveler's window, which
+names `/trip replan`; a `PROFILE MISSING` names `/trip-record profile <name>`.
 A divergence line left unpartitioned sits in front of that router as a peer of a
 changed-need line and is dispatched to `/trip replan` — turning information into exactly
 the replanning signal it is not. The `###` heading is what keeps the two classes apart.
@@ -1116,6 +1113,20 @@ The reconciler dispatch also emits the derived `- **Documents:**` line on every 
 entry of `outputs/traveler-model.md`, per § *Derive the per-traveler document
 set* — one line per entry, dated, and never on a `[THIRD-PARTY]` entry.
 
+The reconciler dispatch also writes `outputs/traveler-presence.md`: one entry for each
+first-party traveller on the roster and never one for a `[THIRD-PARTY]` member, each
+carrying its heading and the lines `reference/data-model.md` § *Traveler presence — the
+window lines* declares, in the shapes, vocabulary and by-reference forms it states, and nothing
+else — no facet, passport, documents, engagement value or need text. An
+`ASSERTED-DIFFERENT` statement that does not resolve to instants takes the line's
+bracketed placeholder, with a `VERIFY` in the model's `## Update signals` block that names
+the field label and never quotes the statement. **Before you write it, read the file you
+are replacing and state what will not survive the rebuild** — every line whose value
+changes, outgoing then incoming, and every entry the rebuild removes, by its heading and
+with its lines — or, where no presence file exists yet, that the rebuild creates it.
+Return that statement in your reply, for the verb that dispatched you to surface
+(`reference/adr/ADR-028-derived-planning-day-block-owners.md` § 2).
+
 Include a brief enrichment summary at the end of the file under:
 ## Enrichment Summary
 - Fields completed: [N]
@@ -1125,8 +1136,8 @@ Include a brief enrichment summary at the end of the file under:
 
 ## Artifact Frontmatter — what you emit on the traveler model
 
-`outputs/traveler-model.md` is the one artifact you write in your own name, and it
-carries a YAML frontmatter block as its first bytes. What frontmatter is, which
+`outputs/traveler-model.md` and `outputs/traveler-presence.md` are the artifacts you write
+in your own name, and each carries a YAML frontmatter block as its first bytes. What frontmatter is, which
 fields exist, and what belongs in it rather than in the body is stated once in
 `reference/data-architecture.md` → "Universal frontmatter" — read it there and do
 not restate it here. The **read** side is § *Versioned artifacts — the tolerant
@@ -1154,6 +1165,27 @@ spelled there. `generated` is the date of this reconciliation pass. Because you
 rebuild this file wholesale on every pass you rewrite the whole block every time —
 there is nothing to preserve across a rebuild beyond the entries the carry-forward
 rule already names.
+
+For `outputs/traveler-presence.md`, emit the same block above the
+`# Traveler Presence [DERIVED]` heading, with `artifact` and `publish` changed:
+
+```yaml
+---
+artifact: outputs/traveler-presence.md
+schema-version: 1
+trip: <trip-slug>
+writer: enrichment
+lifecycle: rebuilt-each-synthesis
+provenance: derived
+publish: internal
+generated: <YYYY-MM-DD>
+---
+```
+
+Its `publish: internal` is the value `reference/data-architecture.md` § 1.1 assigns that
+class: the file holds roster names, warrant tokens, instants, day counts and a delta, and
+no `[THIRD-PARTY]` entry. It too is rebuilt whole on every pass, with nothing carried
+forward.
 
 **`provenance:` takes the enum value and never a bracket mark.** Here that value is
 `derived`. A bracketed value such as `provenance: [THIRD-PARTY]` would put an

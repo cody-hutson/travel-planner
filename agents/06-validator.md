@@ -624,8 +624,8 @@ A night is **nightlife-applicable** when either limb holds:
 Presence is evaluated **per night**, against that night's date, using the **same**
 present-day set the needs audit uses — see `reference/data-model.md` → "Presence — a
 traveler's present-day set". Do not re-derive it here, and do not read the raw
-`Arrive / leave:` profile field: the window limb is the derived
-`### Per-Traveler Planning Days [DERIVED]` block. A traveler outside their window that
+`Arrive / leave:` profile field: the window limb is
+`outputs/traveler-presence.md`. A traveler outside their window that
 night, or whose blackout covers it, does not make the night applicable.
 
 **A ticked interest is not a desire.** The label decides, never the string
@@ -889,6 +889,10 @@ Also read:
     audit already reads; and, on a changed day, the § *Transit Cost & Routing Signal*
     entry — its `Ordered stop sequence` and `Per-leg transit cost` are what the
     transit-currency audit reads. You read that entry; you never re-derive it)
+11. outputs/traveler-presence.md (each traveler's window — the window limb of presence;
+    read, never re-derived. Where it does not exist yet, report the windows as not yet
+    derived and name `/trip-record travelers`; every traveler is then present every trip
+    day, as an assumption, and nothing blocks on it)
 
 Write: outputs/satisfaction-metrics.md — **your owned sections only**
 (Needs-compliance + the needs↔constraint agreement check); read-merge-write,

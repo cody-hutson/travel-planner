@@ -306,7 +306,7 @@ Read the relevant agent prompt from `agents/<name>.md` (see the roster below) an
 | Agent | Prompt File | Output File | When to dispatch |
 |-------|------------|-------------|-----------------|
 | Destination Ideation | `agents/destination-ideation.md` | `outputs/destination-shortlist.md` | IDEATION with no destination chosen yet — aggregate travelers' leanings into a ranked group shortlist |
-| Enrichment | `agents/00-enrichment.md` | Updates `trip-context.md` [ENRICH] fields (research role); rebuilds `outputs/traveler-model.md` (reconciler role); declares `outputs/traveler-presence.md`, not written before the Cutover; seeds the initial `locked` rows of `outputs/event-status.md` at setup only — the hub owns that file | New trip setup, destination/hotel change |
+| Enrichment | `agents/00-enrichment.md` | Updates `trip-context.md` [ENRICH] fields (research role); rebuilds `outputs/traveler-model.md` and `outputs/traveler-presence.md` (reconciler role); seeds the initial `locked` rows of `outputs/event-status.md` at setup only — the hub owns that file | New trip setup, destination/hotel change |
 | Activities | `agents/01-activities.md` | `outputs/activities-list.md` | User wants activity research or replacements |
 | Food | `agents/02-food.md` | `outputs/food-list.md` | User wants food research or replacements |
 | Nightlife | `agents/07-nightlife.md` | `outputs/nightlife-list.md` | User wants going-out research, or a full pipeline where a present traveler holds a nightlife/evening desire, or the trip contains at least one night a natural occasion would apply to (`weekend night`, `calendar occasion`), the members `agents/06-validator.md` owns in its occasion limb — the spoke resolves its own desire gate and writes a gate-result stub when nobody does |
@@ -712,6 +712,7 @@ travel-planner/
             ├── links-reference.md     ← rebuilt by hub each synthesis
             ├── venue-matrix.md        ← rebuilt by hub each synthesis
             ├── traveler-model.md      ← [DERIVED] reconciled per-traveler model + desire-overlap (rebuilt from source files)
+            ├── traveler-presence.md   ← [DERIVED] each traveller's planning-day window (rebuilt by the reconciler)
             ├── event-status.md        ← per-event status — persist-mutable, survives re-runs
             ├── satisfaction-metrics.md ← coverage metrics (validator + hub)
             ├── cost-estimate.md       ← per-traveler cost projection (C21) — written by the hub, after event-status.md

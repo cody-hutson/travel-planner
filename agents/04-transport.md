@@ -185,9 +185,12 @@ Read trip-context.md fully before producing output. Read in this order:
    the unlabelled Outbound/Return legs are the anchor origin, and an
    `### Additional origins` section, when present, carries one block per further
    departure origin with the same leg labels. Its absence means one origin
-3. Per-Traveler Planning Days — each traveler's own window, so a traveler who does
-   not travel on their origin's booking is not planned onto it. Take its values as
-   published; do not restate its labels here
+3. `outputs/traveler-presence.md`, read beside this file — each traveler's own
+   window, so a traveler who does not travel on their origin's booking is not planned
+   onto it. Take its values as published; do not restate its labels here. Where the
+   file does not exist yet, say the windows are not yet derived and name
+   `/trip-record travelers`; nothing blocks on it, every traveler rides their origin's
+   booking, and the stream you size and price under that default carries `(assumed)`
 4. Accommodation — transit access from enrichment, and that section's
    `Check-in time:` and `Check-out time:`. Take them as published; do not restate
    them as fields of this brief. They bound the two windows the brief has to plan:
@@ -203,8 +206,9 @@ Read trip-context.md fully before producing output. Read in this order:
    feeding the depth lens (first-time = lead with orientation, experienced =
    lead with what has changed). A blank or em-dashed answer is **unknown**,
    never `never`. **Read this file for the depth signal and for one count, and
-   for nothing else.** Stream membership comes from `## Logistics` and the
-   `## Group` roster, never from here. A `[THIRD-PARTY]` entry carries needs only
+   for nothing else.** Stream membership comes from `## Logistics`, the
+   `## Group` roster and item 3's windows in `outputs/traveler-presence.md`,
+   never from here. A `[THIRD-PARTY]` entry carries needs only
    and has no journey facet by rule (`agents/00-enrichment.md` → "Resolving
    origin on a multi-origin trip"), so an origin read off this file would
    silently drop a real passenger from a stream you are sizing and pricing.
