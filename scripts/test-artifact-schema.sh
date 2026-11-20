@@ -5700,11 +5700,28 @@ readonly CODE_TERM_AWK
 CODE_TERM_SPELLINGS='esc-t tab space colon dquote squote esc-n'
 readonly CODE_TERM_SPELLINGS
 
-# st_codes <text> — the violation codes a text can EMIT, one per line, first-occurrence order,
-# deduplicated. A code is exactly what st_has looks one up BY: the first TAB-DELIMITED FIELD of an
-# emitted record. So the shape read here is a double-quoted format string whose content up to its
-# first tab escape is an upper-case token — the reader and the consumer agree on what a code IS,
-# rather than agreeing by coincidence.
+# st_codes <text> [<record-kinds>] — the violation codes a text can EMIT, one per line,
+# first-occurrence order, deduplicated. A code is a code-shaped token — an upper-case letter, then
+# upper-case letters and digits, in hyphen-joined runs — read in one of two ways, in one
+# left-to-right pass:
+#   (i)  after an opening quote and ended by the `\t` escape, anywhere: the first TAB-DELIMITED
+#        FIELD of an emitted record, which is exactly what st_has looks a code up BY;
+#   (ii) HEADING the format of an output statement — print, printf or sprintf, an optional `(`,
+#        then a quote — and ended by ANY member of the declared terminator class, CODE_TERM_AWK.
+# A code (ii) reads on a member other than the tab is one st_has cannot look up and the tally does
+# not count, so no arm can fire on it: it reaches the code set uncovered and turns the coverage arm
+# RED. That is the class's purpose — a mis-terminated emission fails closed instead of going
+# unseen. The cure is to put the tab back, or to declare the record as a kind: a head named in
+# <record-kinds> is dropped, and ST_CF_RECORD_KINDS is the declaration in use.
+#
+# (ii) is ANCHORED, and the anchor was measured rather than argued: the class spliced in with no
+# anchor read every whole-token string comparison as a code — PROSE, YES, NO, an awk program's
+# opening NR — 30 false codes across four evaluators. Where the word before print is part of an
+# identifier (myprint), (ii) does not apply and the token is read only as (i) reads it, so this
+# reader stays a superset of the tab-only reader it replaced: broadening cannot lose a match.
+# WHERE IT STOPS, a stated bound and not a closed class: a code reached through a variable (printf
+# fmt), through a %s conversion, or assembled at run time is read only by (i), and only when it is
+# tab-terminated.
 #
 # Pointed at `declare -f st_violations`: the PARSED function as this shell holds it, never this
 # file's source text. Two consequences, and each is the reason. The header's spelling, the
@@ -5726,21 +5743,31 @@ readonly CODE_TERM_SPELLINGS
 # EMPTY SET over the second and its caller reports a covered group, which is exactly the failure
 # this class closes: group CE's evaluator is bash-side and read as ZERO codes until `\047` was
 # admitted. The quote character is incidental to the shape — what identifies a code is that it
-# HEADS a format string and is followed by the tab separating it from its detail. Broadening cannot
-# lose a match, and it was asserted not to move st_violations' own reading: both spellings return
-# the identical code set there.
+# HEADS a format string and is followed by a member of the declared terminator class, the tab
+# separating it from its detail among them. Broadening cannot lose a match, and it was asserted not
+# to move st_violations' own reading: both spellings return the identical code set there.
 #
-# Self-blindness survives by the same argument the narrow form used — the character following the
-# delimiter in the pattern below is a bracket, not an upper-case letter, so the reader cannot match
-# its own body and report a defect it had just introduced.
+# Self-blindness survives by the same argument the narrow form used — in either rule's pattern
+# below the character following the delimiter is a bracket, not an upper-case letter, and the words
+# print and sprintf are followed by a quantifier or a parenthesis, never by a quote, so the reader
+# cannot match its own body and report a defect it had just introduced.
 st_codes() {
-  awk '
+  LC_ALL=C awk -v kinds=" ${2:-} " "$CODE_TERM_AWK"'
     {
       s = $0
-      while (match(s, /["\047][A-Z][A-Z0-9]*(-[A-Z0-9]+)*\\t/)) {
-        c = substr(s, RSTART + 1, RLENGTH - 3)
+      while (match(s, /(printf?|sprintf)[ \t]*\(?[ \t]*["\047][A-Z][A-Z0-9]*(-[A-Z0-9]+)*|["\047][A-Z][A-Z0-9]*(-[A-Z0-9]+)*\\t/)) {
+        m = substr(s, RSTART, RLENGTH); rest = substr(s, RSTART + RLENGTH)
+        lead = (RSTART > 1) ? substr(s, RSTART - 1, 1) : ""
+        s = rest
+        if (m ~ /\\t$/) {
+          c = m; sub(/^["\047]/, "", c); sub(/\\t$/, "", c)
+        } else {
+          if (lead ~ /[[:alnum:]_]/) { if (substr(rest, 1, 2) != "\\t") continue }
+          else if (term_len(rest) == 0) continue
+          c = m; sub(/^.*["\047]/, "", c)
+        }
+        if (index(kinds, " " c " ") > 0) continue
         if (!seen[c]++) print c
-        s = substr(s, RSTART + RLENGTH)
       }
     }
   ' <<<"$1"
@@ -5786,8 +5813,12 @@ st_setdiff() {
 # makes attribution possible and it lives ONLY inside the sitemap, never in a verdict's set
 # arithmetic — the split is the point.
 #
-# st_sitemap reuses st_codes' needle, widened to capture the format that follows it, so it inherits
-# both of that reader's stated properties verbatim: it reads the PARSED body, so a reformat is a
+# st_sitemap reads the TAB-TERMINATED subset of what st_codes reads — that reader's rule (i), widened
+# to capture the format that follows it — and not the whole declared terminator class, on purpose.
+# A site attributes an emitted RECORD, and st_attrib splits a record on its tab, skipping one that
+# has none; a site reader widened to the class would derive sites no arm could ever reach. A code
+# emitted on another member of the class turns the CODE rung red instead, through st_codes. It
+# shares that reader's two stated properties: it reads the PARSED body, so a reformat is a
 # non-event; and the character after the quote class in its pattern is a BRACKET and not an
 # upper-case letter, so it cannot see itself and report a defect it had just introduced. The
 # conversion is located with a NAMED CLASS and never a collating range — group LC's standing
@@ -6994,6 +7025,10 @@ st_cf_decl_why() { awk -F'\t' '$1 == "FAIL" { print $2 }' <<<"$(st_cf_decl_read 
 # evaluator stops writing FAILs as stale and a kind written tab-terminated, as a finding is, FAILs as
 # a real code the declaration would hide.
 ST_CF_RECORD_KINDS='DENOM GRADED'
+# st_cf_codes <body> — the code set ST-CF grades: st_codes with the declared record kinds dropped. A
+# wrapper rather than an argument at each call site, because cov_assert's Control 1 calls its
+# extractor with the mutated body alone, and bare st_codes there would read the kinds back in.
+st_cf_codes() { st_codes "$1" "$ST_CF_RECORD_KINDS"; }
 
 # st_cf_violations <form> <member> <data-model> [charter] — one "<CODE><TAB><detail>" record per
 # finding, codes Q1 to Q6 and VERSION, closed by ONE record `DENOM <graded-bullets> <version>`. A
@@ -7848,7 +7883,7 @@ fi
 # ST-CF-SITE0 — the entry gate for the site comparison, graded exactly as ST-SITE0 is, once, because
 # the code and site sets are properties of the evaluator rather than of any one form.
 ST_CF_SITE_BODY="$(declare -f st_cf_violations)"
-ST_CF_CODES="$(st_codes "$ST_CF_SITE_BODY")"
+ST_CF_CODES="$(st_cf_codes "$ST_CF_SITE_BODY")"
 ST_CF_NCODES="$(printf '%s\n' "$ST_CF_CODES" | grep -c '[^[:space:]]')"
 ST_CF_SITEMAP="$(st_sitemap "$ST_CF_SITE_BODY")"
 ST_CF_SITE_KEYS="$(st_sites "$ST_CF_SITE_BODY")"
@@ -8521,7 +8556,7 @@ if [ "$ST_CF_NARMED" -eq 0 ]; then
   FAIL "ST-CF-COV: $(st_cf_unres_note)no member's conformance arms could be constructed in this run, so the code and site coverage of st_cf_violations is UNMEASURED — each member's entry gate above names why, once"
 else
   cov_assert 'ST-CF-COV' 'CTL-ST-CF-COV' '' 'st_cf_violations' \
-             st_codes cov_emit_tab "$ST_CF_SITE_BODY" \
+             st_cf_codes cov_emit_tab "$ST_CF_SITE_BODY" \
              "$ST_CF_CODES" "$ST_CF_ARMED" "$ST_CF_COV_PROBE" "$ST_CF_COV_PHANTOM"
   if [ "$ST_CF_SITE_OK" -eq 1 ]; then
     cov_assert 'ST-CF-SITE' 'CTL-ST-CF-SITE' '' 'st_cf_violations' \
@@ -9017,8 +9052,9 @@ run_fx() { va_main --root "$1" --scope dir . 2>&1; }
 #
 # ── THE DERIVATION IS THIS GROUP'S OWN, AND THAT IS THE CUT ──────────────────────
 # st_codes is not merely inconvenient here, it is INAPPLICABLE, and that was measured rather
-# than assumed: pointed at the validator it returns 3 matches, all of them false positives
-# (EXCLUDED, UNMATCHED) and ZERO real codes, because the emission shapes differ. st_violations
+# than assumed: pointed at the validator it returns 7 distinct tokens, all of them false positives
+# (FINDING SKIP POPULATION PREDICATE VACUOUS EXCLUDED UNMATCHED) and ZERO real codes, because the
+# emission shapes differ. st_violations
 # emits a code as the head of a format string followed by a TAB; the validator emits
 # `FINDING <CODE> `. So this group passes its own extractor to the shared comparison, which is
 # exactly the boundary the shared helper is drawn at: the comparison transfers, the derivation
@@ -9057,17 +9093,23 @@ ctl_body() {
 # `$` and a backtick, and a reader admitting only one spelling returns the empty set over the
 # other while its caller reports a covered group.
 #
+# The code is ENDED by any member of the declared terminator class, CODE_TERM_AWK, the one st_codes
+# splices in, so the two readers cannot disagree on what ends a code: a code followed by a tab, a
+# colon or an escape is read here, where a reader ending it on a space or a quote alone read nothing
+# and reported the group covered.
+#
 # The glyph after `FINDING ` in the pattern below is a BRACKET, not an upper-case letter, so this
 # reader cannot match its own body and report a defect it had just introduced — group PF's hazard,
 # avoided by shape rather than by scrubbing a needle.
 ctl_codes() {
-  awk '
+  LC_ALL=C awk "$CODE_TERM_AWK"'
     {
       s = $0
-      while (match(s, /["\047]FINDING [A-Z][A-Z0-9]*[ "\047]/)) {
-        c = substr(s, RSTART + 9, RLENGTH - 10)
+      while (match(s, /["\047]FINDING [A-Z][A-Z0-9]*/)) {
+        c = substr(s, RSTART + 9, RLENGTH - 9); rest = substr(s, RSTART + RLENGTH)
+        s = rest
+        if (term_len(rest) == 0) continue
         if (!seen[c]++) print c
-        s = substr(s, RSTART + RLENGTH)
       }
     }
   ' <<<"$1"
