@@ -48,11 +48,11 @@ release 0.70.0 named it as owed to this milestone.
 **`list` reports `build-to-published` in place of the stale flag.** The column compares the digest
 every push already records with the newest local render, the one `publish` would take, so a rebuild
 or a touch that changes nothing visible reads current, and a record that cannot settle it — none on
-this machine, unreadable, outstanding, or written under an older digest — names what it could not
-read. It needs no network, writes nothing, is evaluated outside `trip.freshness` and decides nothing;
-its verdicts are the shipped freshness family's, owned by `skills/trip/SKILL.md`. The relation is
-declared in `skills/trip-publish/SKILL.md` § *list* and registered in
-`reference/channel-and-engagement-model.md` § 2.
+this machine, unreadable, outstanding, or written under an older digest and no longer matching —
+names what it could not read. It needs no network, writes nothing, is evaluated outside
+`trip.freshness` and decides nothing; its verdicts are the shipped freshness family's, owned by
+`skills/trip/SKILL.md`. The relation is declared in `skills/trip-publish/SKILL.md` § *list* and
+registered in `reference/channel-and-engagement-model.md` § 2.
 
 **Size fence.** Read with `CH_EMIT=growth bash scripts/test-corpus-hygiene.sh` at 05f97d9 against
 0.71.0. `reference/site-layout-spec.md`'s row is re-pinned from 63,987 to 71,892: its size of 65,356
