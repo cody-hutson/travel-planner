@@ -8558,12 +8558,18 @@ ST_CF_ADGOT="$ST_CF_ADGOT rise=$(st_cf_rise_sig "${ST_CF_ADC:-}" "$ST_CF_ADD0" "
 $ST_CF_ADR1") rise-unattr=$(st_cf_rise_sig "${ST_CF_ADC:-}" "$ST_CF_ADD0" "$ST_CF_ADD0
 $ST_CF_ADRU")"
 ST_CF_ADWANT="add=${ST_CF_ADK1:-} swap=${ST_CF_ADK2:-} remove=- offset=- unattr=${ST_CF_ADC:-}#? rise=${ST_CF_ADK1:-} rise-unattr=-"
+# Gated on ST-CF-SITE0, as ST-CF-SITE is: this control and CTL-ST-CF-MUSTNOTFIRE-SWAP below read the
+# site map, and over collided keys their comparison is UNMEASURED and named ONCE, by the gate's own
+# loud FAIL, rather than a second time as a defect of the per-site predicate. So neither renders a
+# verdict when the gate is red, and neither can read green there.
+if [ "$ST_CF_SITE_OK" -eq 1 ]; then
 if [ -z "$ST_CF_AD" ]; then
   FAIL "CTL-ST-CF-ADDED: no code of st_cf_violations has two emission sites with non-empty literal heads, so the per-site predicate's exact signature cannot be built from real prefixes and is UNMEASURED"
 elif [ "$ST_CF_ADGOT" = "$ST_CF_ADWANT" ]; then
   PASS "CTL-ST-CF-ADDED: over synthetic readings at two real sites of $ST_CF_ADC, st_cf_added answers exactly '$ST_CF_ADWANT' — an addition reports its site, a finding moved to another site of its code reports that site, a removal and an addition offset at its own site report nothing (the class the must-not-fire predicate gives up, recorded rather than claimed), a record no site explains reports $ST_CF_ADC#?, and the must-fire rule reads the addition as a rise and the unexplained record as none"
 else
   FAIL "CTL-ST-CF-ADDED: st_cf_added answered '$ST_CF_ADGOT' where '$ST_CF_ADWANT' is owed. The per-site predicate does not grade what the must-fire and must-not-fire arms say it grades"
+fi
 fi
 # CTL-ST-CF-MUSTNOTFIRE-SWAP — st_cf_mustnotfire ITSELF, over stubbed evaluator readings at the two real
 # sites CTL-ST-CF-ADDED reads. That control grades st_cf_added; this one grades the arm that consumes it,
@@ -8586,12 +8592,15 @@ $ST_CF_ADR2")")"
 ST_CF_SWS="$(awk 'NR == 1' <<<"$(st_cf_vprobe st_cf_swap_drill "$ST_CF_ADD0
 $ST_CF_ADR1" "$ST_CF_ADD0
 $ST_CF_ADR1")")"
+# Gated on ST-CF-SITE0 for the reason CTL-ST-CF-ADDED is.
+if [ "$ST_CF_SITE_OK" -eq 1 ]; then
 if [ -z "$ST_CF_AD" ]; then
   FAIL "CTL-ST-CF-MUSTNOTFIRE-SWAP: no code of st_cf_violations has two emission sites with non-empty literal heads, so a finding moved between two sites of one code cannot be built from real prefixes, and the must-not-fire arm's site limb is UNMEASURED"
 elif [ "$ST_CF_SWM" = "0 1 0 0" ] && [ "$ST_CF_SWS" = "1 0 0 0" ]; then
   PASS "CTL-ST-CF-MUSTNOTFIRE-SWAP: MUST FIRE a FAIL — st_cf_mustnotfire itself, over a stubbed copy reading in which one $ST_CF_ADC finding moved from $ST_CF_ADK1 to $ST_CF_ADK2 with the whole tally equal, renders one FAIL and no PASS, and over the same stub with the finding left at $ST_CF_ADK1 renders one PASS and no FAIL. So the arm decides by site; a whole-tally comparison in its place would pass the moved finding"
 else
   FAIL "CTL-ST-CF-MUSTNOTFIRE-SWAP: MUST FIRE a FAIL — over stubbed readings at $ST_CF_ADK1 and $ST_CF_ADK2, st_cf_mustnotfire rendered [pass fail vacuous pending] = [$ST_CF_SWM] for a finding moved between them, where [0 1 0 0] is owed, and [$ST_CF_SWS] for the finding left where it was, where [1 0 0 0] is owed. A moved finding that passes means the arm compares whole tallies; a finding left in place that fails means the stub tripped a guard ahead of the site limb, so the first verdict says nothing about sites"
+fi
 fi
 # CTL-ST-CF-RETARGET-LAND and CTL-ST-CF-RETARGET-LAND-V2 — the retarget's Q6 candidate set and its
 # fallback, through each helper itself, over a synthetic form: a heading line, then Alpha (line 2),
