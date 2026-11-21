@@ -15559,7 +15559,7 @@ done < "$L18_FIX"
 # The detector's verdict on one fixture, read directly: rc 0 and the expected tokens, or the residual named.
 # An absent detector is rc 127 and a FAIL, and so is an undetermined read, so no row passes on a probe that
 # did not run.
-l18_scan_assert() { # <id> <refuse|pass|R-run>
+l18_scan_assert() { # <id> <refuse|pass|R-run|R-b>
   local id="$1" want="$2" got rc
   got="$(group_only_sections "$L18W/$id.html" 2>/dev/null)"; rc=$?
   if [ -z "$L18T1" ]; then
