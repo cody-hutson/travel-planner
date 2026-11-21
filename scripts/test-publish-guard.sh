@@ -17052,17 +17052,40 @@ done
 # a UTF-16 or UTF-32 byte-order mark, its passport line encoded behind it, or one holding a NUL byte after its
 # passport line, stops as present but unreadable, naming the file and never a value. The re-encoded files hold
 # NUL bytes, so each trips both halves of the byte test; L19i-mark16le is the file in UTF-8 behind a UTF-16LE
-# mark with no NUL byte, which pins the mark half alone, as L19i-nul pins the NUL half.
+# mark with no NUL byte, which pins the mark half alone, as L19i-nul pins the NUL half. L19i-lonecr is the file
+# with every line ended by a carriage return alone, holding no mark and no NUL byte, which pins the carriage-return
+# half alone: its label line is the label half's only subject, with no value source, so no exact match can stop
+# it. L19x-crlf, the same file in CRLF endings, is its control: it is read, and stops by its label.
+l19_eol_ok() { # <file> <lonecr|crlf> -> 0 when the file holds no byte-order mark and no NUL byte, and ends its
+  # lines as named: a carriage return alone on every line and no line feed, or CRLF on every line
+  local cr lf
+  case "$(LC_ALL=C od -An -tx1 -N4 "$1" | tr -d ' \n')" in efbbbf*|fffe*|feff*|0000feff) return 1 ;; esac
+  [ "$(($(wc -c < "$1")))" -eq "$(($(LC_ALL=C tr -d '\000' < "$1" | wc -c)))" ] || return 1
+  cr="$(($(LC_ALL=C tr -cd '\r' < "$1" | wc -c)))"; lf="$(($(LC_ALL=C tr -cd '\n' < "$1" | wc -c)))"
+  if [ "$2" = lonecr ]; then [ "$cr" -gt 0 ] && [ "$lf" -eq 0 ]; else [ "$lf" -gt 0 ] && [ "$cr" -eq "$lf" ]; fi
+}
 l19_enc() { # <file> <16le|16be|32le|32be> — the UTF-8 file re-encoded in place behind its mark
   perl -MEncode -e 'local $/; open(my $i, "<:raw", $ARGV[0]) or die "unreadable\n"; my $s = decode("UTF-8", scalar <$i>); close $i;
     my %e = ("16le" => ["\xFF\xFE", "UTF-16LE"], "16be" => ["\xFE\xFF", "UTF-16BE"], "32le" => ["\xFF\xFE\x00\x00", "UTF-32LE"], "32be" => ["\x00\x00\xFE\xFF", "UTF-32BE"]);
     my $k = $e{$ARGV[1]} or die "no such mark\n"; open(my $o, ">:raw", $ARGV[0]) or die "unwritable\n"; print $o $k->[0], encode($k->[1], $s)' "$1" "$2"
 }
-l19enc_assert() { # <id> <16le|16be|32le|32be|nul|mark16le>
+l19enc_assert() { # <id> <16le|16be|32le|32be|nul|mark16le|lonecr|crlf>
   local d; d="$(l19_trip "l19enc-$2")"
   l19_put "$d" "$L19B1" '# Trip' '' "- **${L19S1}:** Ruritania"
   case "$2" in
     nul)      printf 'A quiet week\000 by the sea.\n' >> "$d/$L19B1" ;;
+    lonecr|crlf)
+              if [ "$2" = lonecr ]; then LC_ALL=C tr '\n' '\r' < "$d/$L19B1" > "$d/$L19B1.eol"
+              else LC_ALL=C awk '{ printf "%s\r\n", $0 }' "$d/$L19B1" > "$d/$L19B1.eol"; fi
+              mv -f "$d/$L19B1.eol" "$d/$L19B1"
+              if ! l19_eol_ok "$d/$L19B1" "$2"; then
+                FAIL "$1: fixture integrity — the planted bound file holds a byte-order mark or a NUL byte, or does not end its lines as $2 names, so this arm would not grade the line endings alone. VERDICT WITHHELD"
+                return 0
+              fi
+              if [ "$2" = crlf ]; then
+                l19_assert "$1" "a bound file saved with CRLF line endings is read as UTF-8 text, and its label line stops the publish by its label, never as unreadable" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} label with a value" "cannot be read|Ruritania"
+                return 0
+              fi ;;
     mark16le) { printf '\377\376'; cat "$d/$L19B1"; } > "$d/$L19B1.mark"; mv -f "$d/$L19B1.mark" "$d/$L19B1"
               if [ "$(LC_ALL=C od -An -tx1 -N2 "$d/$L19B1" | tr -d ' \n')" != fffe ] || [ "$(($(wc -c < "$d/$L19B1")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$d/$L19B1" | wc -c)))" ]; then
                 FAIL "$1: fixture integrity — the planted bound file does not open with the mark16le mark, or holds a NUL byte, so this arm would not grade the mark alone. VERDICT WITHHELD"
@@ -17075,6 +17098,8 @@ l19enc_assert() { # <id> <16le|16be|32le|32be|nul|mark16le>
 for l19c in 16le 16be 32le 32be; do l19enc_assert "L19i-bom$l19c" "$l19c"; done
 l19enc_assert "L19i-nul" nul
 l19enc_assert "L19i-mark16le" mark16le
+l19enc_assert "L19i-lonecr" lonecr
+l19enc_assert "L19x-crlf" crlf
 
 # ── L19i-harvest16 / L19i-src-* — a value source the check cannot read as UTF-8: each value-source kind (the
 # traveller profile, a person record its reference reaches, that record's merge target, the traveller model)
@@ -17084,7 +17109,8 @@ l19enc_assert "L19i-mark16le" mark16le
 # unreadable, naming the source by its scope as the declaration writes it, or as
 # `person record <id>`, and never by a file name or a value. Each plants a stated value in the source and the bare
 # value in a bound file, so a harvest that read the source would stop the publish matched exactly; the verdict
-# wanted is the unreadable one, on every host, because the bytes are read before any awk reads a line.
+# wanted is the unreadable one, on every host, because the bytes are tested before any awk reads the file (the
+# carriage-return half reads od's hex, never the file).
 # L19i-harvest16 is the earlier L19v-harvest16, flipped from a declared pass. The order arms put the value in the
 # person record a UTF-16 profile references, and stop under the shipped declaration and under one listing the
 # person scope first. The L19y-src-* twins are the same sources in UTF-8, one with a non-ASCII letter: each
@@ -17106,6 +17132,14 @@ l19enc_assert "L19i-mark16le" mark16le
 # drops a trailing carriage return, the component rule does not), and L19y-src-line1-bom8, a traveller file whose
 # first line is the label line behind a UTF-8 mark, each stop matched exactly, as their UTF-8 twins
 # L19y-src-comp and L19y-src-line1 do.
+# A file whose lines end in a carriage return alone (lonecr), holding no mark and no NUL byte, is read by awk as
+# one line, so its reference, its labels and its merge key would go unread; it stops as unreadable instead, at
+# each admission point: the traveller file under the shipped declaration (L19i-src-order-lonecr, caught at two
+# points), the person record, the merge target and the traveller model (L19i-src-person-, -merge-, -model-lonecr,
+# each pinning its point alone), and the person branch's own read under the scratch declaration
+# (L19i-src-pbranch-lonecr). Each carries an integrity limb: no mark, no NUL byte, carriage returns and no line
+# feed. Its CRLF twin is read as today and stops matched exactly: L19y-src-order-crlf, L19y-src-person-, -merge-,
+# -model- and -pbranch-crlf.
 l19src_trip() { # <name> <profile|person|merge|stub|model|nul|order|latin|comp|line1> <encoding, as l19src_assert takes it> -> trip dir
   local d f st="${_GUARD_PERSON_STORE:-people}" rk="${_GUARD_REF_KEY:-person}" mk="${_GUARD_MERGE_KEY:-merged-into}"
   local bl='Bring X1234567 to the desk.'
@@ -17143,11 +17177,12 @@ l19src_trip() { # <name> <profile|person|merge|stub|model|nul|order|latin|comp|l
                        mv -f "$f.mark" "$f" ;;
     bom8) { printf '\357\273\277'; cat "$f"; } > "$f.mark"; mv -f "$f.mark" "$f" ;;
     crlf) LC_ALL=C awk '{ printf "%s\r\n", $0 }' "$f" > "$f.crlf"; mv -f "$f.crlf" "$f" ;;
+    lonecr) LC_ALL=C tr '\n' '\r' < "$f" > "$f.eol"; mv -f "$f.eol" "$f" ;;
     *) l19_enc "$f" "$3" ;;
   esac
   printf '%s' "$d"
 }
-l19src_assert() { # <id> <kind> <16le|16be|32le|32be|mark16le|mark16be|nul|utf8|bom8|crlf> [the declaration order, for the order kind]
+l19src_assert() { # <id> <kind> <16le|16be|32le|32be|mark16le|mark16be|nul|utf8|bom8|crlf|lonecr> [the declaration order, for the order kind]
   local id="$1" k="$2" e="$3" o="${4:-}" d sc mk ef why="" st="${_GUARD_PERSON_STORE:-people}" nv=X1234567
   [ "$k" != comp ] || nv='May 2032'
   d="$(l19src_trip "l19src-$k-$e${o:+-$o}" "$k" "$e")"
@@ -17174,6 +17209,8 @@ l19src_assert() { # <id> <kind> <16le|16be|32le|32be|mark16le|mark16be|nul|utf8|
       if [ "$(($(LC_ALL=C tr -cd '\r' < "$ef" | wc -c)))" -ne "$(($(LC_ALL=C tr -cd '\n' < "$ef" | wc -c)))" ] || [ "$(($(LC_ALL=C tr -cd '\n' < "$ef" | wc -c)))" -eq 0 ]; then
         why="does not end every line with CRLF, so this arm would not grade the line endings it names"
       fi ;;
+    lonecr)
+      l19_eol_ok "$ef" lonecr || why="holds a byte-order mark or a NUL byte, or does not end its lines in a carriage return alone, so this arm would not grade the carriage-return half alone" ;;
   esac
   if [ -n "$why" ]; then
     FAIL "$id: fixture integrity — the planted file $why. VERDICT WITHHELD"
@@ -17201,7 +17238,7 @@ L19DECL_PFIRST="$L19W/decl-person-first.md"
 # the traveller file is read only by the person branch, for its reference.
 L19DECL_NOPROF="$L19W/decl-no-profile.md"
 _guard_declared_rows | awk -v P="${_GUARD_DECL_ARTIFACT_PROFILE:-}" '!($1 == "field" && $3 == P)' | ldecl_write "$L19DECL_NOPROF"
-l19src_order_assert() { # <id> <shipped|person-first|noprofile> <16le|utf8|nul|mark16le>
+l19src_order_assert() { # <id> <shipped|person-first|noprofile> <16le|utf8|nul|mark16le|lonecr|crlf>
   local id="$1" o="$2" e="$3" pre="" want first cand rows np nr
   want="${_GUARD_DECL_ARTIFACT_PROFILE:-}"
   if [ "$o" = person-first ]; then pre="_GUARD_DECLARATION=\"$L19DECL_PFIRST\""; want="${_GUARD_DECL_ARTIFACT_PERSON:-}"; fi
@@ -17237,6 +17274,10 @@ for l19c in bom8 crlf; do for l19e in order stub; do l19src_assert "L19y-src-$l1
 for l19c in comp line1; do l19src_assert "L19y-src-$l19c" "$l19c" utf8; done
 l19src_assert "L19y-src-comp-crlf" comp crlf
 l19src_assert "L19y-src-line1-bom8" line1 bom8
+for l19c in order person merge model; do l19src_assert "L19i-src-$l19c-lonecr" "$l19c" lonecr; done
+for l19c in person merge model; do l19src_assert "L19y-src-$l19c-crlf" "$l19c" crlf; done
+l19src_order_assert "L19i-src-pbranch-lonecr" noprofile lonecr
+l19src_order_assert "L19y-src-pbranch-crlf" noprofile crlf
 
 # ── ARMED-RED controls for L19: each arm under the mutation its design row names reports pass=0 fail=1.
 l19_m_noexact()  { l18_rewrite _build_source_hits 'if (exact_hit(i, nl, ld, lt))' 'if (0)'; }
@@ -17340,6 +17381,8 @@ done
 for l19c in 16le 16be 32le 32be; do md_flips require_clean_build_sources "L19i-bom$l19c" l19enc_assert "L19i-bom$l19c" "$l19c"; done
 md_flips require_clean_build_sources "L19i-nul" l19enc_assert "L19i-nul" nul
 md_flips require_clean_build_sources "L19i-mark16le" l19enc_assert "L19i-mark16le" mark16le
+md_flips require_clean_build_sources "L19i-lonecr" l19enc_assert "L19i-lonecr" lonecr
+md_flips require_clean_build_sources "L19x-crlf" l19enc_assert "L19x-crlf" crlf
 md_flips require_clean_build_sources "L19i-harvest16" l19src_assert "L19i-harvest16" profile 16le
 for l19c in person merge model; do md_flips require_clean_build_sources "L19i-src-$l19c-16le" l19src_assert "L19i-src-$l19c-16le" "$l19c" 16le; done
 for l19c in 16be 32le 32be mark16le mark16be; do md_flips require_clean_build_sources "L19i-src-profile-$l19c" l19src_assert "L19i-src-profile-$l19c" profile "$l19c"; done
@@ -17354,6 +17397,10 @@ for l19c in bom8 crlf; do for l19e in order stub; do md_flips require_clean_buil
 for l19c in comp line1; do md_flips require_clean_build_sources "L19y-src-$l19c" l19src_assert "L19y-src-$l19c" "$l19c" utf8; done
 md_flips require_clean_build_sources "L19y-src-comp-crlf" l19src_assert "L19y-src-comp-crlf" comp crlf
 md_flips require_clean_build_sources "L19y-src-line1-bom8" l19src_assert "L19y-src-line1-bom8" line1 bom8
+for l19c in order person merge model; do md_flips require_clean_build_sources "L19i-src-$l19c-lonecr" l19src_assert "L19i-src-$l19c-lonecr" "$l19c" lonecr; done
+for l19c in person merge model; do md_flips require_clean_build_sources "L19y-src-$l19c-crlf" l19src_assert "L19y-src-$l19c-crlf" "$l19c" crlf; done
+md_flips require_clean_build_sources "L19i-src-pbranch-lonecr" l19src_order_assert "L19i-src-pbranch-lonecr" noprofile lonecr
+md_flips require_clean_build_sources "L19y-src-pbranch-crlf" l19src_order_assert "L19y-src-pbranch-crlf" noprofile crlf
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # I6 — list reports build-to-published: whether the page as last pushed is the newest local build, by content
