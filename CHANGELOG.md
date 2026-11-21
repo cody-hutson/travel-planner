@@ -3,6 +3,76 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.72.0] — 2026-11-20 — Guard readers and controls fail for the reason they name
+
+This release changes the guard suites and nothing else: no verb, agent, template or trip changes.
+Each change makes a reader or a control in them fail for the reason it names, where before it
+could pass over something it never read, or fail for a reason other than the one it states.
+
+**The two code readers share one terminator class.** The readers that derive each evaluator's
+code set in `scripts/test-artifact-schema.sh` now end a code on any member of one declared class:
+an escape such as `\t` or `\n`, a tab, a space, a colon or a quote. The class is one awk function
+both readers splice in, under the C locale, because two of the three awks the suite runs gave
+different answers by locale without the pin. A code heading a `print`, `printf` or `sprintf`
+format is read on any member; a code after a quote is still read on the tab escape anywhere, so
+the readers lose nothing they read before. A finding emitted with the wrong terminator, which a
+tab-keyed lookup cannot find, now reaches the code set uncovered and turns the coverage arm red
+instead of going unseen. One control per member per reader shows each reader reads each member.
+ST-CF's two record kinds that are not findings, `DENOM` and `GRADED`, are declared beside the
+evaluator and held both ways by `ST-CF-KINDS`. The five derived code sets are unchanged.
+
+**The form-contract arms grade per emission site.** An ST-CF must-not-fire arm now passes when no
+emission site's count rises, which also catches a finding that moves to another site of its code.
+A must-fire arm passes when its copy raises a site of its code, aiming at the first bullet no live
+finding of that code names, so an arm still measures something on a form that already fails the
+question. The Q6 arms aim only at a bullet whose value opens with a bracket, the one place their
+plant can land, and fall back to the first such bullet where every one already fails. An arm
+whose copy can raise nothing because the form already fails the question at its only site is
+reported once per form and question as unmeasured, at the next member or after the last, and a
+reconciliation holds every such arm to a report. A form with no bullet whose value opens with a
+bracket gives the Q6 arms nowhere to land, so they fail rather than report unmeasured. The
+relaxations in the key-line reader each have a control, and each site gate is driven on a planted
+duplicate.
+
+**Corpus hygiene's last two `FNR == NR` splits go by file.** The citation scan and the class-C
+comparison of each file's count assertions against the fence that declares them now tell their
+inputs apart by name, each with its reason beside it, so an empty first input is reported rather
+than read as the second. `CTL-A0` reads the extractor's own
+counts and fires only through the empty home map it names, and `CTL-C0-SPLIT` drives the
+comparison with an empty declaration so its split is graded.
+
+**The command-taxonomy guard reads a wrapped invocation and three more ways to set the override.**
+A fenced invocation continued with a trailing backslash is read as one line, joined as the shell
+joins it, so a forbidden flag on the continuation line, or split across it, is found. The
+plaintext-override check reads `+=`, a default-assigning expansion and `printf -v` beside the plain
+assignment and the export. A passphrase home not spelled literally is declared out of scope, as
+are settings that need evaluation, and the never-carry checks state the heading levels and the
+case they read.
+
+**An aborted run fails.** On bash 3.2 an unset name inside arithmetic ends a `set -u` script
+with the status of the command before it, so a suite could stop mid-run, print no result line and
+exit 0. All six `set -u` suites now install an exit guard keyed on a completion sentinel: a run
+that ends before its last line prints an `ABORT:` line and exits non-zero. `MD-EXIT-ABORT` in each
+suite proves the guard on a planted abort and on an exit taken without the sentinel, which a guard
+keyed on the exit status would let through on any shell, and reads the suite's own wiring.
+
+**Group DC reads a statement by its row.** A census arm, DC7, reads every tracked pipe row
+carrying a majority of the declared desire-coverage header's labels and requires it to equal the
+header, so a statement placed under another heading is graded. Its failure names both causes it
+cannot tell apart: a drifted copy, or a different table sharing the labels.
+
+**Size fence.** Nothing was re-pinned: all 51 rows were kept, as
+`CH_EMIT=growth bash scripts/test-corpus-hygiene.sh` prints them at this branch's tip against
+`v0.71.0`. This release changes no file the fence holds, and no row grew against that base.
+
+**What it doesn't reach.** A code reached through a variable, a `%s` conversion or assembled at
+run time is read only when it is tab-terminated. An unmeasured form-contract arm reads as
+unmeasured until its form is fixed, though the run is red through the form's own verdict. The
+taxonomy guard does not evaluate the shell: a here-document, an indirect name or an environment
+dump is still not read. The exit guard does not reach an abort inside a subshell, which ends only
+that subshell. A desire-coverage statement carrying fewer than a majority of the header's labels,
+or one wrapped in markup, is still not graded.
+
 ## [0.71.0] — 2026-11-20 — A form field keeps its key when its label is reworded
 
 Every field the intake forms and the trip context can ask now has a key of its own: a short readable
