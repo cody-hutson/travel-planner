@@ -38,7 +38,7 @@ grade-date: 2026-11-21
 grader-draw: 1
 carrier-evidence-sha256: 491df46fb92ac8b2e9c1b14ec3ae087fdd9b9fef60897a96dd95a380ba08988b
 R-1 = MET ; turns T1,T5,T7,T19,T31 ; «Every field's first put is open (T5 desire, T15 blackout/length, T17 arrive/leave) or quotes only the field's own listed options (T1 vibe open: list, T7/T23 the closed tiers and recurrence, T31 the group-time suggestions); T19 uses the form's own answer kinds with the first ask.»
-R-2 = NOT-MET ; grader MET ; turns T1,T7,T13,T31,T33 ; «No turn proposes a value outside the field's own list or the person's words — T1, T7, T23 and T31 quote the form's lists, T17 and T19 carry only the form's own answer kinds with the first ask, and the two examples (T13, T33) each name more than one kind and never a value.»
+R-2 = MET ; turns T1,T7,T13,T31,T33 ; «No turn proposes a value outside the field's own list or the person's words — T1, T7, T23 and T31 quote the form's lists, T17 and T19 carry only the form's own answer kinds with the first ask, and the two examples (T13, T33) each name more than one kind and never a value.»
 R-3 = NA ; turns - ; «The conversation holds no follow-up: every field-putting turn asked a field on which the person had not yet acted, and neither the thin desire at T6 nor the thin trip length at T16 was put again.»
 R-4 = MET ; turns T28,T29 ; «The decline of a third desire at T28 is taken at once at T29 (recorded as em dashes) and the field is never put again.»
 R-5 = NA ; turns - ; «The person is never silent — no person turn reads (silence) and no L3 act is silence.»
@@ -52,7 +52,7 @@ mech OW-C Desires — what you want › Priority tier#3 = fail:A1 (on judged lab
 mech OW-C Desires — what you want › Recurrence#3 = fail:A1 (on judged labels)
 mech OW-C Desires — what you want › Theme tag(s)#3 = fail:A1 (on judged labels)
 verdict = FAIL
-adjudication: pending
+adjudication: 2026-11-21 mech OW-C About you › Party faithful, the form says skip; 2026-11-21 mech OW-C Desires — what you want › Priority tier#3 the decline covers the unit; 2026-11-21 mech OW-C Desires — what you want › Recurrence#3 the decline covers the unit; 2026-11-21 mech OW-C Desires — what you want › Theme tag(s)#3 the decline covers the unit; 2026-11-21 R-6 upheld, T1 asks the name, whether the destination is decided and Trip vibe together, across two of the form's steps
 grade: gen-te
 transcript-sha256: e8808047fde8f13128717d1cb8a12d1a4f4bae0350ce57b819d7ef4d3b2b6544
 rubric-revision: e754d1c32d13d86b48306b40929bca895cc6f876
@@ -77,7 +77,7 @@ mech OW-C Needs — the must-haves › Specific#2 = fail:A2 (on judged labels)
 mech OW-C Needs — the must-haves › Category#3 = fail:A2 (on judged labels)
 mech OW-C Needs — the must-haves › Specific#3 = fail:A2 (on judged labels)
 verdict = FAIL
-adjudication: pending
+adjudication: 2026-11-21 mech OW-C Needs — the must-haves › Category#2 the fail stands, No more. declines the further blocks and states no empty answer; 2026-11-21 mech OW-C Needs — the must-haves › Specific#2 the fail stands, No more. declines the further blocks and states no empty answer; 2026-11-21 mech OW-C Needs — the must-haves › Category#3 the fail stands, No more. declines the further blocks and states no empty answer; 2026-11-21 mech OW-C Needs — the must-haves › Specific#3 the fail stands, No more. declines the further blocks and states no empty answer; 2026-11-21 R-2 overturned to NOT-MET from the grader's MET, the interviewer wrote none on two needs blocks the traveller had declined, where ADR-045 admits none only for a stated empty answer and says to ask when unclear
 grade: gen-sk
 transcript-sha256: 3ffab44f2884a9b3ca77b9f167d2550bd7430039e6ff5b98da75a0a6df4d23fc
 rubric-revision: e754d1c32d13d86b48306b40929bca895cc6f876
@@ -88,7 +88,7 @@ grade-date: 2026-11-21
 grader-draw: 1
 carrier-evidence-sha256: 15b1a0eb92ccf3200bdea403a8e2a3986f94068928b5b7dfbc4ee78cea15d132
 R-1 = MET ; turns T1,T7,T13,T19,T23,T27,T29 ; «Every field's first put is either open (Can travel, Desire, Theme tags, Party, Relationship, Blackout, Trip length, Arrive/leave, Rooming, Already done, Split off with, Special occasion?) or quotes only the field's own listed options (Trip vibe at T1, Priority tier and Recurrence at T7, Been here before? at T23, Group time at T27).»
-R-2 = NOT-MET ; grader MET ; turns T1,T7,T13,T23,T27,T29 ; «Options carried at T1, T7, T23 and T27 are the asked field's own listed options quoted verbatim; the illustrations at T13 and T29 name several kinds drawn from the form's own wording and come with the field's first ask, and T3, T15, T21 and T31 echo only the person's own words.»
+R-2 = MET ; turns T1,T7,T13,T23,T27,T29 ; «Options carried at T1, T7, T23 and T27 are the asked field's own listed options quoted verbatim; the illustrations at T13 and T29 name several kinds drawn from the form's own wording and come with the field's first ask, and T3, T15, T21 and T31 echo only the person's own words.»
 R-3 = NA ; turns - ; «The conversation holds no follow-up — every field-putting turn is a first ask of that field, including T21, which opens a new desire unit rather than pursuing the first.»
 R-4 = MET ; turns T5,T15,T21,T25,T29,T31 ; «Each skip or decline (Can travel T4, Theme tags T10, Relationship T14, Blackout T16, Rooming T20, desires 2-3 T22, Been here before? T24, Already done T26, the People dynamics section T28) is taken at once and no skipped or declined field is ever put again, through the give-back at T31.»
 R-5 = NA ; turns - ; «The person is never silent and never gives an unclear reply, so no re-offer occasion arises.»
@@ -104,7 +104,7 @@ mech OW-C Desires — what you want › Recurrence#3 = fail:A1 (on judged labels
 mech OW-C Desires — what you want › Theme tag(s)#3 = fail:A1 (on judged labels)
 mech OW-C Anything else › Special occasion? = fail:A1 (on judged labels)
 verdict = FAIL
-adjudication: pending
+adjudication: 2026-11-21 mech OW-C About you › Party faithful, the form says skip; 2026-11-21 mech OW-C Desires — what you want › Desire#3 the decline covers the unit; 2026-11-21 mech OW-C Desires — what you want › Priority tier#3 the decline covers the unit; 2026-11-21 mech OW-C Desires — what you want › Recurrence#3 the decline covers the unit; 2026-11-21 mech OW-C Desires — what you want › Theme tag(s)#3 the decline covers the unit; 2026-11-21 mech OW-C Anything else › Special occasion? faithful, the form says skip; 2026-11-21 R-6 upheld, T1 asks the name, whether the destination is decided and Trip vibe together, across two of the form's steps
 grade: gen-ds
 transcript-sha256: 596f4d3e84c0c6b620c2132063b76c337cb7d8d60f968f37df356e4d54cbf157
 rubric-revision: e754d1c32d13d86b48306b40929bca895cc6f876
@@ -125,7 +125,7 @@ R-8 = NA ; turns - ; «The interviewer makes no confirmation; T3's thanks and T5
 R-9 = MET ; turns T5,T11,T17,T19 ; «No follow-up is made at all, and each section transition carries only that section's own ask — the grouped asks at T17, T19 and T23 are the ones the form's ask-prose directs, with no extra question added.»
 R-10 = MET ; turns T3,T5,T11,T15 ; «Acknowledgements are bare: "Thanks, Sabeth", "Got it — Ashcombe" repeats only their word, T11 accepts the decline procedurally, and T15 only notes the starred fields are done — none approves content or restates it with added words.»
 verdict = PASS
-adjudication: pending
+adjudication: 2026-11-21 nothing to rule, the block carries no disputed dimension and no mechanical fail or ND
 grade: gen-gs
 transcript-sha256: 87cb59919263459998ac93e26bc9941fdd24782010d61d66212fd7b499713692
 rubric-revision: e754d1c32d13d86b48306b40929bca895cc6f876
@@ -146,7 +146,7 @@ R-8 = NA ; turns - ; «The interviewer makes no confirmation: no turn reads an a
 R-9 = MET ; turns T15,T19,T21 ; «There are no follow-ups to bound, and each section transition carries only the ask or prose-directed grouped ask of the section it enters — About you at T15, the remaining date lines at T19, Getting there & back at T21.»
 R-10 = MET ; turns T5,T13,T25 ; «The acknowledgements are neutral and add nothing: "Got it" with the answer verbatim at T5, a plain statement of progress at T13, and "Take your time" at T25, with no approval of content and no restatement beyond their own words.»
 verdict = FAIL
-adjudication: pending
+adjudication: 2026-11-21 R-2 upheld, the interviewer quotes the form's placeholder example for a field whose bracket lists no options
 grade: gen-of
 transcript-sha256: c37fe4e133ad1a753065470cccafc695c5c5465c0e870581bc7d61c20bb98b90
 rubric-revision: e754d1c32d13d86b48306b40929bca895cc6f876
@@ -157,7 +157,7 @@ grade-date: 2026-11-21
 grader-draw: 1
 carrier-evidence-sha256: 776d71265ae26c0adc063ce35eb50c8174ea423f5b1432c4779750ac3f20ff84
 R-1 = MET ; turns T3,T13,T19,T21,T15 ; «Every field's first put is open (T3, T19, T21, T23, T25, T31) or quotes only the field's own listed options (T7 keep it lean/mid-range/spend freely, T11 the eight closed categories, T13 packed/balanced/relaxed, T27, T29); the Interests tick list at T15 and the travel-day kinds at T21 are the form's own kinds brought with the first ask.»
-R-2 = NOT-MET ; grader MET ; turns T5,T9,T15,T21 ; «No turn carries a value outside the field's own listed options or the person's own words — the echoes are verbatim their words, and T15's tick list, T21's kinds and T9's `none` are the form's own text; both examples (T5 three kinds, T9 seven kinds) name more than one kind and come with a first ask.»
+R-2 = MET ; turns T5,T9,T15,T21 ; «No turn carries a value outside the field's own listed options or the person's own words — the echoes are verbatim their words, and T15's tick list, T21's kinds and T9's `none` are the form's own text; both examples (T5 three kinds, T9 seven kinds) name more than one kind and come with a first ask.»
 R-3 = NA ; turns - ; «The conversation holds no follow-up: every field-putting turn asks a field the person had not yet acted on, and no answer is pressed for more.»
 R-4 = MET ; turns T23,T27 ; «The Passport skip at T22 is taken at once at T23 ("skipped, I won't ask again") and never put again, and the second-need decline at T26 is accepted at T27 with no re-ask of Category#2 or Specific#2.»
 R-5 = NA ; turns - ; «The person is never silent — no person turn reads (silence) and none is labelled silence.»
@@ -168,5 +168,5 @@ R-9 = MET ; turns T19,T21,T27 ; «There are no follow-ups at all, so the bound h
 R-10 = MET ; turns T5,T11,T27 ; «Acknowledgements are bare and neutral ("Got it", "That's recorded as your first need", "Understood — one need, the dairy one"): none approves the content and none restates it with added words.»
 mech OW-C Needs — the must-haves › Category#3 = fail:A1 (on judged labels)
 mech OW-C Needs — the must-haves › Specific#3 = fail:A1 (on judged labels)
-verdict = FAIL
-adjudication: pending
+verdict = PASS
+adjudication: 2026-11-21 mech OW-C Needs — the must-haves › Category#3 the decline covers the unit; 2026-11-21 mech OW-C Needs — the must-haves › Specific#3 the decline covers the unit
