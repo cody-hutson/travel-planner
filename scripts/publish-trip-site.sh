@@ -4596,12 +4596,13 @@ refuse_group_only_render() {
 # structure (#2156's review, F8). A value source present but not a readable regular file, or one that opens with
 # a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not followed by a line feed,
 # stops, named by its scope, never by a traveller file's name; so does a traveller file read for its person
-# reference that is not a readable regular file, that opens with such a mark or holds such a byte, or whose front
-# matter does not open on its first line or holds a line other than a blank line, a comment or a plain key line,
-# which is named after the scope by what was found; and so does a person record whose front matter fails the same
-# way, named as the record by what was found. A traveller file or record with no front matter at all is not
-# absent: it stops, because a reference anywhere but in front matter opening on the first line would go unread.
-# Nothing it prints is a value.
+# reference that is not a readable regular file, that opens with such a mark or holds such a byte, whose front
+# matter opens on its first line but holds a line other than a blank line, a comment or a plain key line, or that
+# has no front matter on its first line and holds a minted person id, or a line starting with its key with a value
+# on it or beneath it (rule (b)), which is named after the scope by what was found; and so does a person record
+# that fails the same way, named as the record by what was found. A traveller file or record with no front matter
+# on its first line that fails neither is a version-0 file (reference/data-architecture.md § 7.2): it is read as
+# carrying no reference, and its values are harvested. Nothing it prints is a value.
 #
 # DECLARED RESIDUALS, worded alike in § 5.6, the CHANGELOG and the PR body; test-publish-guard.sh group L's
 # L19v arms assert a shape of every residual below but the first, the third and the eighth, and its L19z arms
@@ -4619,7 +4620,10 @@ refuse_group_only_render() {
 #     contributes no value, so the label half alone covers it;
 #   • a person reference whose merge chain runs past one hop, which is named in a note and whose second hop
 #     is not read;
-#   • a trip with no bound file present, which passes with every one named as absent.
+#   • a trip with no bound file present, which passes with every one named as absent;
+#   • a person reference or merge key in a traveller file, person record or merge target with no front matter
+#     on its first line, when no line opens with the key, indented or quoted, and none holds the id whole — a
+#     flow mapping, or a key after a U+2028 line separator, with the id escaped — which is read as carrying none.
 # Over-stops fail closed: a distinctive component that happens to occur in a bound file, such as an expiry
 # month and year equal to the trip's own, stops the publish, and the remedy is one edit.
 #
@@ -4961,7 +4965,7 @@ require_clean_build_sources() { # <trip_dir>
   fi
   bs_unread="$(awk -F'\t' '$1 == "UNREAD" && !seen[$2]++ { printf "%s%s", (n++ ? ", " : ""), $2 }' <<<"$bs_vals")"
   if [ -n "$bs_unread" ]; then
-    die "SOURCE CHECK STOPPED — the value source $bs_unread is present but cannot be read as UTF-8 text, or carries a reference the check cannot read: it is not a readable regular file; it opens with a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not followed by a line feed; or, as named beside it, its front matter does not open on its first line, or holds a line other than a blank line, a comment or a plain key: value line, so a person reference or a merge key in it might not be read. So the values to check for are not known. Nothing was published. Save it as readable UTF-8 text with LF or CRLF line endings, its front matter opening on its first line and written as plain key: value lines, or remove it, and re-run."
+    die "SOURCE CHECK STOPPED — the value source $bs_unread is present but cannot be read as UTF-8 text, or carries a reference the check cannot read: it is not a readable regular file; it opens with a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not followed by a line feed; or, as named beside it, its front matter opens on its first line but holds a line other than a blank line, a comment or a plain key: value line, or it has no front matter on its first line and holds a person id, or a line starting with the key it is read for with a value on it or beneath it, so a person reference or a merge key in it might not be read. So the values to check for are not known. Nothing was published. Save it as readable UTF-8 text with LF or CRLF line endings, with any person reference, merge key or person id in front matter that opens on its first line and is written as plain key: value lines, or remove it, and re-run."
   fi
   bs_sels="$(_guard_declared_rows | awk '$1 == "field" && !seen[$2]++ { printf "%s%s", (n++ ? " " : ""), $2 }')"
   bs_v="$(awk -F'\t' '$1 == "V" { print $2 "\t" $3 }' <<<"$bs_vals")"
