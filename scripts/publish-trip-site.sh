@@ -4588,8 +4588,10 @@ refuse_group_only_render() {
 # source absent, or a person reference unresolvable or malformed, is named
 # and contributes no values (D-2156-VALSRC): this check reads the sources of record directly, so it needs no
 # freshness inference, and a present, readable source contributes its values whatever its age or its entry
-# structure (#2156's review, F8). A value source present but not readable stops, named by its scope, never
-# by a traveller file's name. Nothing it prints is a value.
+# structure (#2156's review, F8). A value source present but not a readable regular file, or one that opens with
+# a UTF-16 or UTF-32 byte-order mark or holds a NUL byte, stops, named by its scope, never by a traveller file's
+# name; so does a traveller file read for its person reference that opens with such a mark or holds a NUL byte.
+# Nothing it prints is a value.
 #
 # DECLARED RESIDUALS, worded alike in § 5.6, the CHANGELOG and the PR body; test-publish-guard.sh group L's
 # L19v arms assert a shape of every residual below but the first, the third and the eighth, and its L19z arms
@@ -4640,17 +4642,23 @@ _build_source_wellformed() {
 # _field_class_values <trip_dir> -> records on stdout, tab-separated:
 #   V  <selector> <value>   a stated value of a declared field, from a value source on file
 #   NOTE <what>             a value source not on file, or a person reference that does not resolve
-#   UNREAD <what>           a value source present but not a readable regular file, or one that opens with a
-#                           UTF-16 or UTF-32 byte-order mark or holds a NUL byte — the caller stops
+#   UNREAD <what>           a value source present but not a readable regular file, or a value source, or a
+#                           traveller file read for its person reference, that opens with a UTF-16 or UTF-32
+#                           byte-order mark or holds a NUL byte — the caller stops
 # <what> is a scope as the declaration writes it, or `person record <id>` for a minted id; never a file name.
-# A file joins the value sources only after the byte test require_clean_build_sources applies to a bound file,
-# at each of the three places one joins (a scope's file, a person record, its merge target), so its bytes and
-# not the host's awk decide whether it is read.
+# A file is read only after the byte test require_clean_build_sources applies to a bound file, at each of the
+# four places one is read (a scope's file, a traveller file read for its person reference, a person record, its
+# merge target), so its bytes and not the host's awk decide whether it is read. Each reference — a traveller
+# file's person key, a record's merge key and its target's — is read with a leading UTF-8 byte-order mark and
+# trailing carriage returns removed, so a file saved with either resolves as its plain twin does.
 # Returns 2 when the declaration yields no `field` row, or reads in part.
 _field_class_values() { # <trip_dir>
   local trip_dir="$1" fc_rows fc_n fc_all fc_cand fc_scope fc_glob fc_f fc_any fc_pf fc_refs fc_key fc_store
-  local fc_rec fc_merge fc_tgt fc_srcs="" fc_sels fc_enc tab
+  local fc_rec fc_merge fc_tgt fc_srcs="" fc_sels fc_enc fc_bare tab
   tab="$(printf '\t')"
+  # The stream a reference is read from: the file with a leading UTF-8 byte-order mark and trailing carriage
+  # returns removed, handed to the unchanged _guard_frontmatter_key as its standard input.
+  fc_bare='NR == 1 { sub(/^\357\273\277/, "") } { sub(/\r+$/, ""); print }'
   fc_all="$(_guard_declared_rows)"
   fc_cand="$(_guard_declared_candidates)"
   if [ "${fc_cand:-0}" -ne "$(printf '%s' "$fc_all" | awk 'NF { c++ } END { print c + 0 }')" ]; then return 2; fi
@@ -4664,7 +4672,12 @@ _field_class_values() { # <trip_dir>
       # shellcheck disable=SC2086  # the scope's `<token>` is a glob by the declaration's own column grammar
       for fc_pf in "$trip_dir"/$(printf '%s' "$_GUARD_DECL_ARTIFACT_PROFILE" | sed 's/<[^>]*>/*/g'); do
         [ -f "$fc_pf" ] && [ -r "$fc_pf" ] || continue
-        fc_refs="$(_guard_frontmatter_key "$fc_pf" "$_GUARD_REF_KEY")"
+        # A traveller file is read for its reference only after the same byte test, so its bytes decide.
+        fc_enc=0
+        case "$(LC_ALL=C od -An -tx1 -N4 "$fc_pf" | tr -d ' \n')" in fffe*|feff*|0000feff) fc_enc=1 ;; esac
+        if [ "$fc_enc" -eq 0 ] && [ "$(($(wc -c < "$fc_pf")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$fc_pf" | wc -c)))" ]; then fc_enc=1; fi
+        if [ "$fc_enc" -ne 0 ]; then printf 'UNREAD\t%s\n' "$_GUARD_DECL_ARTIFACT_PROFILE"; continue; fi
+        fc_refs="$(_guard_frontmatter_key - "$_GUARD_REF_KEY" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_pf")")"
         [ -n "$fc_refs" ] || continue
         if [ "$(printf '%s\n' "$fc_refs" | awk 'NF { c++ } END { print c + 0 }')" -ne 1 ]; then
           printf 'NOTE\ta person reference that is not single-valued\n'; continue
@@ -4682,7 +4695,7 @@ _field_class_values() { # <trip_dir>
         if [ "$fc_enc" -eq 0 ] && [ "$(($(wc -c < "$fc_rec")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$fc_rec" | wc -c)))" ]; then fc_enc=1; fi
         if [ "$fc_enc" -ne 0 ]; then printf 'UNREAD\tperson record %s\n' "$fc_key"; continue; fi
         fc_srcs="$fc_srcs$fc_rec$tab"
-        fc_merge="$(_guard_frontmatter_key "$fc_rec" "$_GUARD_MERGE_KEY")"
+        fc_merge="$(_guard_frontmatter_key - "$_GUARD_MERGE_KEY" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_rec")")"
         [ -n "$fc_merge" ] || continue
         # shellcheck disable=SC2254  # the person-key glob is a pattern held in a variable; quoted, it would match only its own text
         case "$fc_merge" in $_GUARD_PERSON_KEY_GLOB) ;; *) printf 'NOTE\ta merge target that is not a minted id\n'; continue ;; esac
@@ -4694,7 +4707,7 @@ _field_class_values() { # <trip_dir>
         if [ "$fc_enc" -eq 0 ] && [ "$(($(wc -c < "$fc_tgt")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$fc_tgt" | wc -c)))" ]; then fc_enc=1; fi
         if [ "$fc_enc" -ne 0 ]; then printf 'UNREAD\tperson record %s\n' "$fc_merge"; continue; fi
         fc_srcs="$fc_srcs$fc_tgt$tab"
-        [ -z "$(_guard_frontmatter_key "$fc_tgt" "$_GUARD_MERGE_KEY")" ] || printf 'NOTE\ta merge chain longer than one hop\n'
+        [ -z "$(_guard_frontmatter_key - "$_GUARD_MERGE_KEY" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_tgt")")" ] || printf 'NOTE\ta merge chain longer than one hop\n'
       done
       continue
     fi
