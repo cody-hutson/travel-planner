@@ -98,8 +98,10 @@ a look-alike colon — which contributes no value, so the label half alone cover
 reference whose merge chain runs past one hop, which is named in a note and whose second hop is not
 read; a trip with no bound file present, which passes with every one named as absent; and a person
 reference or merge key in a traveller file, person record or merge target with no front matter on its
-first line, when no line opens with the key, indented or quoted, and none holds the id whole — a flow
-mapping, or a key after a U+2028 line separator, with the id escaped — which is read as carrying none. `list`
+first line, when no line opening with the key, indented or quoted, carries a value on it or on the next
+line that is neither blank nor a comment, indented or as a sequence entry, and none holds the id whole —
+a flow mapping, the key escaped after an empty key line, or a key after a U+2028 line separator, with
+the id escaped — which is read as carrying none. `list`
 reads the record a push left on this machine, so a push from elsewhere, a takedown and text outside
 the projection are not seen.
 

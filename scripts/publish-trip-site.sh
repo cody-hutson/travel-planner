@@ -4622,8 +4622,10 @@ refuse_group_only_render() {
 #     is not read;
 #   • a trip with no bound file present, which passes with every one named as absent;
 #   • a person reference or merge key in a traveller file, person record or merge target with no front matter
-#     on its first line, when no line opens with the key, indented or quoted, and none holds the id whole — a
-#     flow mapping, or a key after a U+2028 line separator, with the id escaped — which is read as carrying none.
+#     on its first line, when no line opening with the key, indented or quoted, carries a value on it or on the
+#     next line that is neither blank nor a comment, indented or as a sequence entry, and none holds the id
+#     whole — a flow mapping, the key escaped after an empty key line, or a key after a U+2028 line separator,
+#     with the id escaped — which is read as carrying none.
 # Over-stops fail closed: a distinctive component that happens to occur in a bound file, such as an expiry
 # month and year equal to the trip's own, stops the publish, and the remedy is one edit.
 #

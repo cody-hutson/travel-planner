@@ -864,9 +864,11 @@ read as a label — behind a task box or through a look-alike colon — which co
 label half alone covers it; a person reference whose merge chain runs past one hop, which is named in a
 note and whose second hop is not read; a trip with no bound file present, which passes with every one
 named as absent; and a person reference or merge key in a traveller file, person record or merge
-target with no front matter on its first line, when no line opens with the key, indented or quoted,
-and none holds the id whole — a flow mapping, or a key after a U+2028 line separator, with the id
-escaped — which is read as carrying none. A value source that is absent is named; a field class that
+target with no front matter on its first line, when no line opening with the key, indented or quoted,
+carries a value on it or on the next line that is neither blank nor a comment, indented or as a
+sequence entry, and none holds the id whole — a flow mapping, the key escaped after an empty key
+line, or a key after a U+2028 line separator, with the id escaped — which is read as carrying none.
+A value source that is absent is named; a field class that
 reads empty stops the
 publish. A `field` row added here joins both matches with no edit to any shell script, wherever its
 scope is a trip-relative path or the person store.
