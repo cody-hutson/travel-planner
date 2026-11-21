@@ -280,6 +280,9 @@ below, headed *Assistant — the sections, in order*, tell it how to ask about e
 
 ### Assistant — the sections, in order
 
+**Before Step 1 — who sees what.** Before the first question, read them the note at the top of
+this form on who can see what they share, in its own words.
+
 ### Step 1 — About you
 Ask whether anyone is travelling with them who will not fill in their own form — kids and
 ages, a partner who is not doing this. Relationship only matters if the rest of the group
