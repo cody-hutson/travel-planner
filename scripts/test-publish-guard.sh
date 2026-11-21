@@ -16846,13 +16846,20 @@ l19u_assert "L19u"
 # than leaving it stale: a calendar-valid date carried with other words; a trip with no bound artifact present
 # (D-NEW-3); a word between the selector and its colon; a label mid-line; a label whose colon is a dash, in
 # either spelling (S7-04); a number joined by three characters or by a comma (S7-04); a value-source line the
-# guard's profile parse does not read as a label (a task box, or a full-width colon, in a traveller file), which
-# harvests nothing; a person reference written in quotes, so not a minted id, which is named in a note and whose
-# record is not read (an unresolved value source); a label behind a marker the strip does not name (a code
-# span); and, as the folding's own boundary, a look-alike outside it (the Hangul filler before the colon) and
-# digits of another script (Devanagari).
-l19v_assert() { # <id> <date|none|interposed|midline|emdash|dash|sep3|comma|harvest|harvestcolon|quoted|marker|hangul|deva>
-  local d nt=""; d="$(l19_trip "l19v-$2")"
+# guard's profile parse does not read as a label, which harvests nothing — in a traveller file, a task box, a
+# full-width colon, and (S7P3-01) a narrow no-break space before the colon, a numbered, blockquote or heading
+# marker, and a word joiner inside the label, each of these five written on the plain line L19c-harvest-plain
+# stops on, so the form is the only difference; a person reference written in quotes, so not a minted id, which
+# is named in a note and whose record is not read (an unresolved value source); a label behind a marker the strip
+# does not name (a code span); and, as the folding's own boundary, a look-alike outside it (the Hangul filler
+# before the colon) and digits of another script (Devanagari).
+L19HV='Ruritania, document no. X1234567'
+l19_harvest_put() { # <trip_dir> <the traveller file's value line> -> that line in the traveller file, its number in a bound file
+  l19_put "$1" "$L19_PROFILE" '---' '---' '# Rowan' '' "$2"
+  l19_put "$1" "$L19B1" '# Trip' '' 'Bring X1234567 to the desk.'
+}
+l19v_assert() { # <id> <date|none|interposed|midline|emdash|dash|sep3|comma|harvest|harvestcolon|harvestspace|harvestnum|harvestquote|harvesthead|harvestinvis|quoted|marker|hangul|deva>
+  local d nt="" hb=""; d="$(l19_trip "l19v-$2")"
   case "$2" in
     date)       l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** United States, expires 2031-04-12"
                 l19_put "$d" "$L19B2" '# Itinerary' '' 'Alex: passport expiry 2031-04-12' ;;
@@ -16869,6 +16876,11 @@ l19v_assert() { # <id> <date|none|interposed|midline|emdash|dash|sep3|comma|harv
                 l19_put "$d" "$L19B1" '# Trip' '' 'Bring X1234567 to the desk.' ;;
     harvestcolon) l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}$(printf '\357\274\232')** Ruritania, document no. X1234567"
                 l19_put "$d" "$L19B1" '# Trip' '' 'Bring X1234567 to the desk.' ;;
+    harvestspace) hb='e2 80 af'; l19_harvest_put "$d" "- ${L19S1}$(printf '\342\200\257'): $L19HV" ;;
+    harvestnum)   l19_harvest_put "$d" "1. ${L19S1}: $L19HV" ;;
+    harvestquote) l19_harvest_put "$d" "> ${L19S1}: $L19HV" ;;
+    harvesthead)  l19_harvest_put "$d" "### ${L19S1}: $L19HV" ;;
+    harvestinvis) hb='e2 81 a0'; l19_harvest_put "$d" "- ${L19S1:0:4}$(printf '\342\201\240')${L19S1:4}: $L19HV" ;;
     quoted)     l19_put "$d" "$L19_PROFILE" '---' "${_GUARD_REF_KEY:-person}: \"psn-a9c4\"" '---' '# Rowan' '' '- Interests: markets'
                 l19_put "$d" "${_GUARD_PERSON_STORE:-people}/psn-a9c4.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X2468135"
                 l19_put "$d" "$L19B1" '# Trip' '' 'Bring X2468135 to the desk.'; nt="|a person reference that is not a minted id" ;;
@@ -16877,9 +16889,24 @@ l19v_assert() { # <id> <date|none|interposed|midline|emdash|dash|sep3|comma|harv
     deva)       l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. 12345678"
                 l19_put "$d" "$L19B1" '# Trip' '' "Ref $(printf '\340\245\247\340\245\250\340\245\251\340\245\252\340\245\253\340\245\254\340\245\255\340\245\256') on file." ;;
   esac
+  if [ -n "$hb" ]; then
+    case " $(LC_ALL=C od -An -v -tx1 "$d/$L19_PROFILE" | tr -s ' \n' '  ') " in
+      *" $hb "*) ;;
+      *) FAIL "$1: fixture integrity — the planted traveller file does not carry the bytes $hb its shape names, so this arm would not grade that form. VERDICT WITHHELD"; return 0 ;;
+    esac
+  fi
   l19_assert "$1" "the declared residual '$2' holds: this shape passes the source check, as declared at the function and in the PR" "$d" 0 "Source check:$nt" "STOPPED"
 }
-for l19c in date none interposed midline emdash dash sep3 comma harvest harvestcolon quoted marker hangul deva; do l19v_assert "L19v-$l19c" "$l19c"; done
+for l19c in date none interposed midline emdash dash sep3 comma harvest harvestcolon harvestspace harvestnum harvestquote harvesthead harvestinvis quoted marker hangul deva; do l19v_assert "L19v-$l19c" "$l19c"; done
+# ── L19c-harvest-plain — the control for the harvest arms above: the same value line written in the field
+# grammar's own form, `- <selector>: …`, is harvested, and the bound file carrying its number stops, matched
+# exactly. Each harvest arm differs from this trip by its label's form alone, so its pass is that form's.
+l19c_harvest_assert() { # <id>
+  local d; d="$(l19_trip l19c-harvest-plain)"
+  l19_harvest_put "$d" "- ${L19S1}: $L19HV"
+  l19_assert "$1" "the control for the harvest arms: a value-source line in the field grammar's own form is harvested, and the bound file carrying its number stops the publish, matched exactly" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} value, matched exactly" "X1234567|Ruritania"
+}
+l19c_harvest_assert "L19c-harvest-plain"
 
 # ── L19w — the word rule skips a calendar-valid date and nothing else (Stage 7's S7-03, operator ruling C): a
 # number grouped like a date whose groups are no calendar date, carried with other words in a bound line, stops;
@@ -17565,10 +17592,14 @@ l19v0_assert "L19c-read-empty-stub" read-empty-stub readempty-stub
 # resolves, and the id clause sees it only because it reads each line before the blank-and-comment skip. The tenth
 # declared residual holds for an empty key line followed by the key escaped (L19v-v0-dupkey): no line opening with
 # the key carries a value on it or on the next line that is neither blank nor a comment, indented or as a sequence
-# entry, and no line holds the id whole, so it passes, though a YAML reader takes the later key's value.
+# entry, and no line holds the id whole, so it passes, though a YAML reader takes the later key's value. It holds
+# with no empty key line too (L19v-v0-esckey, D-P3-3): a first line spelling the key with an escape, its id
+# escaped, opens no line with the key as written, so it passes, while the same line with the key as written stops
+# by rule (b) (L19i-v0-esckey-plain, its control).
 l19v0x_trip() { # <name> <shape> -> trip dir: a traveller file of that shape, the record it reaches, and the bare value in a bound file
-  local d st="${_GUARD_PERSON_STORE:-people}" rk="${_GUARD_REF_KEY:-person}" v ek
+  local d st="${_GUARD_PERSON_STORE:-people}" rk="${_GUARD_REF_KEY:-person}" v ek ek1
   v="- **${L19S1}:** Ruritania, document no. X8451037"; ek="${rk:0:1}\\x$(printf '%x' "'${rk:1:1}")${rk:2}"
+  ek1="\\x$(printf '%x' "'${rk:0:1}")${rk:1}"
   d="$(l19_trip "$1")"
   l19_put "$d" "$L19B1" '# Trip' '' 'Bring X8451037 to the desk.'
   case "$2" in
@@ -17576,18 +17607,33 @@ l19v0x_trip() { # <name> <shape> -> trip dir: a traveller file of that shape, th
             l19_put "$d" "$L19_PROFILE" '--- {x: "' "#\", $rk: psn-a9e7}" '# Rowan' ;;
     dupkey) l19_put "$d" "$st/psn-a9e8.md" '---' '---' '# Rowan' '' "$v"
             l19_put "$d" "$L19_PROFILE" "$rk:" "\"$ek\": \"\\x70sn-a9e8\"" ;;
+    esckey|esckey-plain)
+            l19_put "$d" "$st/psn-a9e9.md" '---' '---' '# Rowan' '' "$v"
+            if [ "$2" = esckey ]; then l19_put "$d" "$L19_PROFILE" "\"$ek1\": \"\\x70sn-a9e9\""
+            else l19_put "$d" "$L19_PROFILE" "\"$rk\": \"\\x70sn-a9e9\""; fi ;;
   esac
   printf '%s' "$d"
 }
-l19v0x_assert() { # <id> <shape> <stop|declared>
-  local id="$1" d sc="${_GUARD_DECL_ARTIFACT_PROFILE:-?}"; d="$(l19v0x_trip "l19v0x-$2" "$2")"
+l19v0x_assert() { # <id> <shape> <stop|declared|declared1|stop1>
+  local id="$1" d sc="${_GUARD_DECL_ARTIFACT_PROFILE:-?}" rk="${_GUARD_REF_KEY:-person}" l1; d="$(l19v0x_trip "l19v0x-$2" "$2")"
+  l1="$(LC_ALL=C awk 'NR == 1' "$d/$L19_PROFILE")"
+  case "$3:$l1" in
+    declared1:\"\\x*) case "$l1" in *"$rk"*) FAIL "$id: fixture integrity — the planted first line spells the key as written, so this arm would not grade an escaped key. VERDICT WITHHELD"; return 0 ;; esac ;;
+    declared1:*) FAIL "$id: fixture integrity — the planted first line does not open with an escaped key, so this arm would not grade one. VERDICT WITHHELD"; return 0 ;;
+    stop1:\"$rk\":*) ;;
+    stop1:*) FAIL "$id: fixture integrity — the planted first line does not open with the key as written, so this control would not grade it. VERDICT WITHHELD"; return 0 ;;
+  esac
   case "$3" in
     stop)     l19_assert "$id" "a traveller file with no front matter on its first line whose line opening with # holds a minted person id ($2) stops the publish, its id read before the blank-and-comment skip, naming the traveller scope and what it found, never a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source $sc (a person reference the check could not read from front matter opening on the first line) is present" "matched exactly|label with a value|$sc is present|Ruritania|X8451037|rowan|psn-a9e7" ;;
     declared) l19_assert "$id" "the declared residual holds: a person reference in a traveller file with no front matter on its first line, under the key escaped after an empty key line, whose id no line holds whole ($2), passes the source check, as declared at the function and in the PR, though the record it reaches holds a value the bound file carries" "$d" 0 "Source check:" "STOPPED|X8451037" ;;
+    declared1) l19_assert "$id" "the declared residual holds: a person reference in a traveller file with no front matter on its first line, whose first line spells the key with an escape and no empty key line before it, so no line opens with the key as written, and whose id no line holds whole ($2), passes the source check, as declared at the function and in the PR, though the record it reaches holds a value the bound file carries" "$d" 0 "Source check:" "STOPPED|X8451037" ;;
+    stop1)    l19_assert "$id" "the control for L19v-v0-esckey: the same first line with the key as written ($2) carries a value on it, so rule (b) stops the publish, naming the traveller scope and what it found, never a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source $sc (a person reference the check could not read from front matter opening on the first line) is present" "matched exactly|label with a value|$sc is present|Ruritania|X8451037|rowan|psn-a9e9" ;;
   esac
 }
 l19v0x_assert "L19i-v0-ord" ord stop
 l19v0x_assert "L19v-v0-dupkey" dupkey declared
+l19v0x_assert "L19v-v0-esckey" esckey declared1
+l19v0x_assert "L19i-v0-esckey-plain" esckey-plain stop1
 
 # ── ARMED-RED controls for L19: each arm under the mutation its design row names reports pass=0 fail=1.
 l19_m_noexact()  { l18_rewrite _build_source_hits 'if (exact_hit(i, nl, ld, lt))' 'if (0)'; }
@@ -17648,7 +17694,8 @@ md_flips require_clean_build_sources "L19s-two" l19s_assert "L19s-two" two
 md_flips refuse_group_only_render "L19s-three" l19s_assert "L19s-three" three
 for l19c in email phone docno; do md_flips require_clean_build_sources "L19t-$l19c" l19t_assert "L19t-$l19c" "$l19c"; done
 md_flips require_clean_build_sources "L19u" l19u_assert "L19u"
-for l19c in date none interposed midline emdash dash sep3 comma harvest harvestcolon quoted marker hangul deva; do md_flips require_clean_build_sources "L19v-$l19c" l19v_assert "L19v-$l19c" "$l19c"; done
+for l19c in date none interposed midline emdash dash sep3 comma harvest harvestcolon harvestspace harvestnum harvestquote harvesthead harvestinvis quoted marker hangul deva; do md_flips require_clean_build_sources "L19v-$l19c" l19v_assert "L19v-$l19c" "$l19c"; done
+md_flips require_clean_build_sources "L19c-harvest-plain" l19c_harvest_assert "L19c-harvest-plain"
 for l19c in stop-242:'07 2019 55':stop stop-422:'2031 55 12':stop stop-224:'55 12 2031':stop stop-24:'19 2031':stop \
             skip-ymd:2031-03-15:skip skip-dmy:15/03/2031:skip skip-dmy-dot:31.12.2031:skip skip-mdy:03/15/2031:skip \
             skip-ym:2031-07:skip skip-ym-1999:1999-12:skip; do
@@ -17738,6 +17785,8 @@ md_flips require_clean_build_sources "L19c-read-empty" l19v0_assert "L19c-read-e
 md_flips require_clean_build_sources "L19c-read-empty-stub" l19v0_assert "L19c-read-empty-stub" read-empty-stub readempty-stub
 md_flips require_clean_build_sources "L19i-v0-ord" l19v0x_assert "L19i-v0-ord" ord stop
 md_flips require_clean_build_sources "L19v-v0-dupkey" l19v0x_assert "L19v-v0-dupkey" dupkey declared
+md_flips require_clean_build_sources "L19v-v0-esckey" l19v0x_assert "L19v-v0-esckey" esckey declared1
+md_flips require_clean_build_sources "L19i-v0-esckey-plain" l19v0x_assert "L19i-v0-esckey-plain" esckey-plain stop1
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # I6 — list reports build-to-published: whether the page as last pushed is the newest local build, by content
