@@ -17227,7 +17227,7 @@ l19src_assert() { # <id> <kind> <16le|16be|32le|32be|mark16le|mark16be|nul|utf8|
   elif [ "$e" = bom8 ] || [ "$e" = crlf ]; then
     l19_assert "$id" "a value source saved with a UTF-8 byte-order mark or CRLF line endings ($k, $e${o:+, $o declaration}) is read as its UTF-8 twin is, and the bound file stops the publish matched exactly, never passing and never as unreadable" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} value, matched exactly" "cannot be read|$nv"
   else
-    l19_assert "$id" "a value source that cannot be read as UTF-8 text ($k, $e${o:+, $o declaration}) stops the publish as present but unreadable, named as ${sc}, never by a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source ${sc} is present but cannot be read as UTF-8 text" "matched exactly|label with a value|Ruritania|X1234567|rowan|psn-a9c1.md|psn-a9c2.md"
+    l19_assert "$id" "a value source that cannot be read as UTF-8 text ($k, $e${o:+, $o declaration}) stops the publish as present but unreadable, named as ${sc}, never by a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source ${sc} is present but cannot be read as UTF-8 text" "matched exactly|label with a value|(a person reference|Ruritania|X1234567|rowan|psn-a9c1.md|psn-a9c2.md"
   fi
 }
 # The person-first declaration: the live rows, the person scope's field rows moved ahead of every other row.
@@ -17278,6 +17278,57 @@ for l19c in order person merge model; do l19src_assert "L19i-src-$l19c-lonecr" "
 for l19c in person merge model; do l19src_assert "L19y-src-$l19c-crlf" "$l19c" crlf; done
 l19src_order_assert "L19i-src-pbranch-lonecr" noprofile lonecr
 l19src_order_assert "L19y-src-pbranch-crlf" noprofile crlf
+
+# ── L19i-src-ref-* / L19c-ref-* / L19y-src-mark-* — a person reference the reader cannot reach, and marker lines
+# followed by whitespace. The reader takes a traveller file's reference from front matter opening on its first
+# line, with the key at the start of its line and the colon straight after it. A reference written any other way
+# reaches a record holding the value and stops as unreadable, naming the traveller scope and what it found, never
+# a file name or a value: front matter after a blank first line; the key indented by spaces, or by a tab with a
+# tab before its colon; the key spaced before its colon, or quoted in either quote; or an empty key whose value is
+# continued beneath it, on an indented sequence entry, on one at the start of its line, or past a blank line and a
+# comment. The controls pass: a traveller file with no reference key; a block without the key whose body carries
+# a line starting with it, which is prose; an empty key with nothing beneath it, the ruling, which reads as YAML
+# reads it, no value, and is the exact complement of the continuation rule; and a file with no front matter whose
+# prose carries the key mid-line. A marker line followed by spaces or a tab reads as the marker: an opener
+# (L19y-src-mark-open) and a closer (L19y-src-mark-close, whose body carries a second reference that a reader
+# missing the closer would also take) resolve and stop matched exactly, as their plain twins
+# L19y-src-order-shipped and L19y-src-mark-plain do.
+l19ref_trip() { # <name> <shape> -> trip dir: a traveller file of that shape, a record its reference names holding the value, and the bare value in a bound file
+  local d st="${_GUARD_PERSON_STORE:-people}" rk="${_GUARD_REF_KEY:-person}" tb; tb="$(printf '\t')"
+  d="$(l19_trip "$1")"
+  l19_put "$d" "$st/psn-a9c1.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X1234567"
+  l19_put "$d" "$L19B1" '# Trip' '' 'Bring X1234567 to the desk.'
+  case "$2" in
+    blanklead)  l19_put "$d" "$L19_PROFILE" '' '---' "$rk: psn-a9c1" '---' '# Rowan' ;;
+    indent)     l19_put "$d" "$L19_PROFILE" '---' "  $rk: psn-a9c1" '---' '# Rowan' ;;
+    tab)        l19_put "$d" "$L19_PROFILE" '---' "$tb$rk$tb: psn-a9c1" '---' '# Rowan' ;;
+    spacecolon) l19_put "$d" "$L19_PROFILE" '---' "$rk : psn-a9c1" '---' '# Rowan' ;;
+    dquote)     l19_put "$d" "$L19_PROFILE" '---' "\"$rk\": psn-a9c1" '---' '# Rowan' ;;
+    squote)     l19_put "$d" "$L19_PROFILE" '---' "'$rk': psn-a9c1" '---' '# Rowan' ;;
+    list)       l19_put "$d" "$L19_PROFILE" '---' "$rk:" '  - psn-a9c1' '---' '# Rowan' ;;
+    list0)      l19_put "$d" "$L19_PROFILE" '---' "$rk:" '- psn-a9c1' '---' '# Rowan' ;;
+    gap)        l19_put "$d" "$L19_PROFILE" '---' "$rk:" '' '# the lead traveller' '  - psn-a9c1' '---' '# Rowan' ;;
+    nokey)      l19_put "$d" "$L19_PROFILE" '---' 'name: Rowan' '---' '# Rowan' ;;
+    body)       l19_put "$d" "$L19_PROFILE" '---' 'name: Rowan' '---' '# Rowan' '' "$rk: psn-a9c1" ;;
+    empty)      l19_put "$d" "$L19_PROFILE" '---' "$rk:" 'name: Rowan' '---' '# Rowan' ;;
+    prose)      l19_put "$d" "$L19_PROFILE" '# Rowan' '' "The contact $rk: psn-a9c1, at the desk." ;;
+    mark-open)  l19_put "$d" "$L19_PROFILE" '---  ' "$rk: psn-a9c1" '---' '# Rowan' ;;
+    mark-close) l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" "---$tb" '# Rowan' '' "$rk: psn-a9c5" ;;
+    mark-plain) l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" '---' '# Rowan' '' "$rk: psn-a9c5" ;;
+  esac
+  printf '%s' "$d"
+}
+l19ref_assert() { # <id> <shape> <stop|pass|exact>
+  local id="$1" d sc="${_GUARD_DECL_ARTIFACT_PROFILE:-?}"; d="$(l19ref_trip "l19ref-$2" "$2")"
+  case "$3" in
+    stop)  l19_assert "$id" "a person reference the reader cannot reach ($2) stops the publish, naming the traveller scope and what it found, never a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source $sc (a person reference the check could not read from front matter opening on the first line) is present" "matched exactly|label with a value|$sc is present|Ruritania|X1234567|rowan|psn-a9c1" ;;
+    pass)  l19_assert "$id" "the control ($2) carries no person reference the reader cannot reach: it passes, and the record no reference reaches is not read" "$d" 0 "Source check:" "STOPPED" ;;
+    exact) l19_assert "$id" "a marker line followed by whitespace ($2) reads as the marker: the reference resolves, and the bound file stops the publish matched exactly, as its plain twin does" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} value, matched exactly" "cannot be read|X1234567" ;;
+  esac
+}
+for l19c in blanklead indent tab spacecolon dquote squote list list0 gap; do l19ref_assert "L19i-src-ref-$l19c" "$l19c" stop; done
+for l19c in nokey body empty prose; do l19ref_assert "L19c-ref-$l19c" "$l19c" pass; done
+for l19c in mark-open mark-close mark-plain; do l19ref_assert "L19y-src-$l19c" "$l19c" exact; done
 
 # ── ARMED-RED controls for L19: each arm under the mutation its design row names reports pass=0 fail=1.
 l19_m_noexact()  { l18_rewrite _build_source_hits 'if (exact_hit(i, nl, ld, lt))' 'if (0)'; }
@@ -17401,6 +17452,9 @@ for l19c in order person merge model; do md_flips require_clean_build_sources "L
 for l19c in person merge model; do md_flips require_clean_build_sources "L19y-src-$l19c-crlf" l19src_assert "L19y-src-$l19c-crlf" "$l19c" crlf; done
 md_flips require_clean_build_sources "L19i-src-pbranch-lonecr" l19src_order_assert "L19i-src-pbranch-lonecr" noprofile lonecr
 md_flips require_clean_build_sources "L19y-src-pbranch-crlf" l19src_order_assert "L19y-src-pbranch-crlf" noprofile crlf
+for l19c in blanklead indent tab spacecolon dquote squote list list0 gap; do md_flips require_clean_build_sources "L19i-src-ref-$l19c" l19ref_assert "L19i-src-ref-$l19c" "$l19c" stop; done
+for l19c in nokey body empty prose; do md_flips require_clean_build_sources "L19c-ref-$l19c" l19ref_assert "L19c-ref-$l19c" "$l19c" pass; done
+for l19c in mark-open mark-close mark-plain; do md_flips require_clean_build_sources "L19y-src-$l19c" l19ref_assert "L19y-src-$l19c" "$l19c" exact; done
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # I6 — list reports build-to-published: whether the page as last pushed is the newest local build, by content
