@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-11-21 — An assisted interview reads the traveller who may see what they share
+## [0.74.0] — 2026-11-21 — An assisted interview reads the traveller who may see what they share
 
 This release changes how the two intake forms tell an interviewer to begin, and runs the
 generated interview conversations again on the forms as they now stand. No verb, agent, script,
@@ -39,7 +39,7 @@ now says that the maintainer running a regrade signs one dedicated configuration
 proves it clean before every sitting. Nobody who installs or uses the planner runs a sitting or
 takes any step for it.
 
-**Size fence:** nothing moved worth naming; no size-ceiling row changed against 0.72.0.
+**Size fence:** nothing moved worth naming; every size-ceiling row is unchanged against 0.73.0.
 
 ## [0.73.0] — 2026-11-20 — A public page refuses the group's content, and every publish checks what the build reads
 
