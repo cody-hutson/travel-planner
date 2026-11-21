@@ -423,9 +423,17 @@ announce_passphrase_file() { # <label> <passphrase_file>
 # ─────────────────────────────────────────────────────────────────────────────
 # Locate the trip's generated site HTML and derive the per-trip repo slug.
 # ─────────────────────────────────────────────────────────────────────────────
+# The newest render, by modification order: the member publish, update and rotate take, and the source
+# side of list's build-to-published relation (#2157). One function for both, so the relation compares the
+# page as last pushed with the render a push would take, by construction rather than by two copies of
+# one selection agreeing. Prints the path, or nothing.
+newest_site_html() { # <trip_dir>
+  ls -1t "$1"/outputs/*-travel-site.html 2>/dev/null | awk 'NR == 1' || true
+}
+
 resolve_site_html() { # <trip_dir>
   local trip_dir="$1" hit
-  hit=$(ls -1t "$trip_dir"/outputs/*-travel-site.html 2>/dev/null | awk 'NR == 1' || true)
+  hit="$(newest_site_html "$trip_dir")"
   [ -n "$hit" ] || die "no *-travel-site.html found in $trip_dir/outputs/ — build the site first."
   printf '%s' "$hit"
 }
@@ -1870,6 +1878,21 @@ _GUARD_DECL_HEADING='### 5.6 The declaration'
 _GUARD_DECL_ARTIFACT_MODEL='outputs/traveler-model.md'
 _GUARD_DECL_ARTIFACT_PROFILE='travelers/<traveler>.md'
 _GUARD_DECL_ARTIFACT_PERSON='people/<person>.md'
+# The group-only component declaration (#2155): the fence under its own heading in the site spec, read by
+# _group_only_rows, and the status its refusal exits with. Plain assignments, never environment-defaulted,
+# for the reason stated above for _GUARD_DECLARATION: a fail-closed control whose declaration a caller could
+# re-point is a fail-open surface. test-publish-guard.sh re-points the path inside its own process, which is
+# how L18e proves the reader fails closed.
+_GROUP_ONLY_SPEC="$_GUARD_REPO_ROOT/reference/site-layout-spec.md"
+_GROUP_ONLY_FENCE='group-only-components'
+_GROUP_ONLY_HEADING='### Group-only components'
+_EXIT_GROUP_ONLY=3
+# The files the site build reads (#2156): the `bound` rows of the site spec's § 9.1 fence, read by
+# _build_source_rows. The heading is copied byte for byte, because fence_block matches it exactly. Plain
+# assignments for the same reason as the declaration's; the suite re-points the path inside its own process.
+_BUILD_SOURCES_SPEC="$_GUARD_REPO_ROOT/reference/site-layout-spec.md"
+_BUILD_SOURCES_FENCE='publish-contract-artifacts'
+_BUILD_SOURCES_HEADING='### 9.1 Single-source authority — which artifact owns which element'
 
 # The reference grammar the walk below resolves against. Consumed from
 # reference/data-model.md § Composition and reference/schemas/traveler-profile.md; declared
@@ -4255,17 +4278,758 @@ require_recordable_baseline() { # <trip_dir> <site_html>
   return 0
 }
 
-# THE REPUBLISH PATH'S GUARDS, AS ONE CALL LINE (#719, the scope-lock's C5; #1468). update calls this
-# and nothing else at the gate's position: S3 exactly as it was, then the render's approval-code
-# guard, then the baseline guard. #85 relocates the gate onto its event-driven path by moving that
-# one line, as S3's own banner promises, so neither guard can be left behind by a relocation that
-# carries S3 alone. publish calls the code guard and the baseline guard on its own: S3 does not
-# gate publish, by design.
+# ─────────────────────────────────────────────────────────────────────────────
+# THE GROUP-ONLY REFUSAL (#2155; ADR-030 § 6 safeguard 2). publish --plaintext refuses a render that
+# carries a section the private-site record keeps off every public page, and it refuses by that section's
+# PRESENCE — by structure, never by value, never by redaction. It runs first of the plaintext limb's content
+# controls, before the per-trip repository is probed, created or pushed (cmd_publish), and once more on the
+# staged copy before the commit, so
+# the bytes pushed are the bytes checked: a render rebuilt between the two would otherwise reach the push
+# unchecked by it (F18). The encrypted limb never runs it, as ADR-031 S4 intends: the same page ships there.
+#
+# THE SET IS DECLARED, AND ONLY THERE. The components are the rows of the `group-only-components` fence in
+# reference/site-layout-spec.md § Group-only components, which states the criterion, the admission duty and
+# the precedence. No token is written in this file — test-publish-guard.sh case L18i asserts it — so a
+# component the fence admits is refused here with no edit to any shell script. The reader fails closed: a
+# file that is absent or unreadable, a heading that is not found, zero rows, or more candidate rows than
+# well-formed ones (a partial read, as _guard_declared_candidates guards the class) is UNDETERMINED, and an
+# undetermined read is refused exactly like a found section. An empty read is not an empty set.
+#
+# WHAT IT READS IS THE RAW PAGE, NEVER A PROJECTION. Measured at Stage 5 over thirteen fixtures: the visible
+# projections see a token only in prose, and the published and shape projections see it in prose, href, id,
+# data-* and title values, script strings and CSS selectors alike, so neither tells a marker from a mention.
+# The scan below reads start tags, and it reads them as a browser's tokenizer does:
+#   • EVERY `<` FOLLOWED BY AN ASCII LETTER STARTS ITS OWN CANDIDATE. Candidates overlap, so a quoted span in
+#     an earlier candidate never hides a later tag — a loop's `i<n` and an apostrophe in a script string ahead
+#     of a conformant section cannot mask it (F1). A bogus tag opened by script text can only add classes to
+#     what is read, never remove one, which fails closed.
+#   • ATTRIBUTES AS THE HTML TOKENIZER READS THEM. A name runs to whitespace, `/`, `>` or `=`; a value is
+#     double-quoted, single-quoted, or unquoted to whitespace or `>`; `/` and a closing quote separate
+#     attributes. Every `class` attribute is read, a repeated one included (a browser applies the first; the
+#     refusal takes all of them, failing closed).
+#   • EACH CLASS VALUE as a browser decodes it: numeric references, decimal or hexadecimal, with or without the
+#     `;` and with any leading zeros, and `&Tab;`, `&NewLine;` and `&amp;`; split on HTML whitespace (tab, line
+#     feed, form feed, carriage return, space); each class compared with each token case-insensitively, whole.
+#   • COMMENT, SCRIPT, STYLE AND TEMPLATE BODIES ARE READ. A plaintext page's bytes are world-readable whether
+#     or not a browser renders them, so a section commented out, held in a template or written into a script
+#     string is still carried by the page. A second reading decodes JavaScript string escapes first (`\"`,
+#     `\'`, `\uXXXX`, `\u{…}`, `\xXX`, and a backslash followed by one to three octal digits, read as a
+#     sloppy-mode string literal reads it), so a section written literally into a string, its quotes or
+#     brackets escaped in any of those forms, is seen; what either reading finds is refused.
+#   • A NESTED DOCUMENT IS UNDETERMINED (S7-01, S7P2-01). A `srcdoc` attribute on any start tag, empty or not;
+#     a `src` or `data` on an iframe, frame, object or embed, or a meta refresh URL, whose scheme is not http or
+#     https; or an `href`, `xlink:href`, `action` or `formaction` on an a, area, form, button or input whose
+#     scheme is not http, https, mailto or tel. Each holds or opens a document this scan does not read — a link,
+#     image-map area, form or button opens it on a reader's action, into the page or into a frame the page
+#     carries by a target, a formtarget or a <base target> — so the render is refused as undetermined (status
+#     5). The value is read as a browser's URL parser reads it: character references decoded (`&colon;`,
+#     `&semi;`, `&comma;`, `&equals;`, `&period;`, `&plus;` and the quotes among them), tab, line feed and
+#     carriage return removed, leading space and C0 controls dropped. A scheme is a letter, then letters,
+#     digits, `+`, `.` or `-`, then `:`, and it is compared with the allowed ones case-insensitively. A value
+#     with no scheme — relative, fragment or protocol-relative — names another document, not this page's
+#     bytes, and is not this rule's. A meta refresh is a meta start tag whose `http-equiv` is refresh; its URL
+#     is what follows the delay (digits and dots) and one `;` or `,` in its `content`, behind an optional
+#     `url=` and an optional quote, as the HTML refresh parser reads it. A conformant render carries none of
+#     these but its http, https, mailto and tel links. The test that needs a tag name is applied after each
+#     candidate's walk, from tag-independent flags remembered beside the class mask, so a tail an earlier
+#     candidate walked first cannot hide a later iframe's `src`, a meta's refresh or a link's `href`; the tag
+#     name is read only when it is six bytes or fewer, so a candidate inside a long shared name costs nothing
+#     (case L18m-run).
+#   • A RENDER OPENING WITH A UTF-16 OR UTF-32 BYTE-ORDER MARK IS UNDETERMINED (S7-08). A browser decodes it by
+#     the mark, and this scan reads bytes as ASCII-compatible text, so it is refused (status 6), never read
+#     as clean. A UTF-8 mark leaves the bytes readable and is scanned.
+#   A section the scan finds is named before a nested document is reported: both refuse with status 3, and
+#   the found one names more.
+# COVERAGE, worded identically in § 3, the CHANGELOG and the PR body: The refusal reads the page's start tags.
+# It refuses a start tag carrying a listed token as a class; a srcdoc attribute; a src or data on an iframe,
+# frame, object or embed, or a meta refresh URL, whose scheme is not http or https; an href, xlink:href, action
+# or formaction on an a, area, form, button or input whose scheme is not http, https, mailto or tel; and a page
+# it cannot read in full, one opening with a UTF-16 or UTF-32 byte-order mark included. Anything else is not
+# read: a script building markup at run time, an image (an SVG data: image included), group content rendered
+# without its token, or any other URL.
+# DECLARED RESIDUALS, that "anything else", each asserted by an arm so a change that closes or moves one updates
+# this list (group N's pattern):
+#   R-run  a script building markup at run time (cases L18g-a, L18g-c, L18g-atob, L18g-uri, L18g-fcc);
+#   R-b    an image, an SVG data: image included, and group content rendered without its token — a
+#          non-conformant build, which the § 3 render contract binds and this check cannot see, because it
+#          reads structure and never content (cases L18g-svg-img, L18g-svg-css, L18g-svg-use);
+#   R-url  any other URL, the coverage's own boundary (cases L18g-poster, L18g-link-href, L18g-svg-animate,
+#          L18g-svg-set).
+# A `<` and a letter in script text can open a bogus tag that picks up a class; that over-refuses the
+# plaintext limb only, and the encrypted limb is the remedy.
+#
+# BOUNDED. Each candidate's attribute walk is remembered by position, so candidates that share a tail scan it
+# once, and the scan stops at a budget of 64 bytes read per byte of page. A page that would cost more is
+# UNDETERMINED and refused rather than scanned on (status 4; case L18m-budget reads that status itself).
+#
+# THE STATUS IS NAMED (D-2155-EXIT): 3, from refuse_group_only and nowhere else in this file, for a found
+# section and for an undetermined read alike. Both have one remedy, the encrypted limb, so one status serves
+# them; the message tells them apart, so a caller that must distinguish them reads it. The status is a
+# constant beside the declaration's (_EXIT_GROUP_ONLY).
+
+# The scan program. perl is asserted by preflight before any render is read. The tokens arrive through the
+# environment, one space-separated list, and are compared as strings — never interpolated into a pattern.
+# Status 0 prints what was found (possibly nothing); any other status is UNDETERMINED to the caller: 2 the
+# render or the tokens could not be read, 4 the byte budget, 5 a nested document, 6 a UTF-16 or UTF-32 mark.
+_GROUP_ONLY_SCAN='
+no warnings;
+my $f = $ARGV[0];
+open(my $fh, "<:raw", $f) or exit 2;
+local $/; my $raw = <$fh>; close $fh;
+defined $raw or exit 2;
+exit 6 if $raw =~ /\A(?:\xFF\xFE|\xFE\xFF|\x00\x00\xFE\xFF)/;
+my @tok = split " ", lc($ENV{GROUP_ONLY_TOKENS} // "");
+@tok or exit 2;
+@tok <= 60 or exit 2;
+my %bit; $bit{$tok[$_]} |= 1 << $_ for 0 .. $#tok;
+sub cp { my $c = shift; ($c == 0 || $c > 0x10FFFF || ($c >= 0xD800 && $c <= 0xDFFF)) ? "\x{FFFD}" : chr($c) }
+sub classmask {
+  my $v = shift; my $m = 0;
+  $v =~ s/&(?:#[xX]0*([0-9a-fA-F]{1,8})(?![0-9a-fA-F]);?|#0*([0-9]{1,9})(?![0-9]);?|(Tab|NewLine|amp|AMP);)/defined $1 ? cp(hex $1) : defined $2 ? cp($2) : $3 eq "Tab" ? "\t" : $3 eq "NewLine" ? "\n" : "&"/ge;
+  $m |= ($bit{lc $_} // 0) for split /[\t\n\f\r ]+/, $v;
+  return $m;
+}
+my %nref = (Tab => "\t", NewLine => "\n", colon => ":", semi => ";", comma => ",", equals => "=", quot => "\"", QUOT => "\"", apos => "\x27", period => ".", plus => "+", amp => "&", AMP => "&");
+sub refs { my $v = shift; $v =~ s/&(?:#[xX]0*([0-9a-fA-F]{1,8})(?![0-9a-fA-F]);?|#0*([0-9]{1,9})(?![0-9]);?|(Tab|NewLine|colon|semi|comma|equals|quot|QUOT|apos|period|plus|amp|AMP);|(quot|QUOT|amp|AMP)(?![A-Za-z0-9=]))/defined $1 ? cp(hex $1) : defined $2 ? cp($2) : $nref{defined $3 ? $3 : $4}/ge; return $v }
+sub scheme { my ($v, $link) = @_; $v =~ s/[\t\n\r]//g; $v =~ s/\A[\x00-\x20]+//; return 0 unless $v =~ /\A([a-z][a-z0-9+.\-]*):/i; my $s = lc $1; return ($s eq "http" || $s eq "https" || ($link && ($s eq "mailto" || $s eq "tel"))) ? 0 : 1 }
+sub refresh { my $v = refs(shift); return ($v =~ /\A[\t\n\f\r ]*refresh[\t\n\f\r ]*\z/i) ? 1 : 0 }
+sub refreshurl { my $v = refs(shift); $v =~ s/\A[\t\n\f\r ]*[0-9.]*[\t\n\f\r ]*[;,]?[\t\n\f\r ]*//; $v =~ s/\A[Uu][Rr][Ll][\t\n\f\r ]*=[\t\n\f\r ]*//; if ($v =~ /\A(["\x27])/) { my $c = $1; $v = substr($v, 1); my $i = index($v, $c); $v = substr($v, 0, $i) if $i >= 0 } return $v }
+my $over = 0; my $nested = 0;
+sub scan {
+  my $s = shift; my $n = length $s; my $budget = 64 * $n + 1000000; my $spent = 0;
+  my (@cand, %memo, %dmemo); my $mask = 0; my $tn = -1;
+  while ($s =~ /<(?=[A-Za-z])/g) { push @cand, pos($s) - 1 }
+  for my $p (@cand) {
+    my $e;
+    if ($tn > $p + 1) { $e = $tn } else { pos($s) = $p + 1; $s =~ /\G[A-Za-z][^\t\n\f\r \/>]*/gc; $e = pos($s); $spent += $e - $p; $tn = $e }
+    my $tl = $e - $p - 1; my $tag = $tl <= 6 ? lc substr($s, $p + 1, $tl) : "";
+    my $q = $e; my @path; my $m = 0; my $d = 0;
+    while (1) {
+      if (exists $memo{$q}) { $m = $memo{$q}; $d = $dmemo{$q}; last }
+      pos($s) = $q; $s =~ /\G[\t\n\f\r \/]*/gc;
+      if (pos($s) >= $n || $s =~ /\G>/gc) { push @path, [$q, 0, 0]; last }
+      $s =~ /\G([\s\S][^\t\n\f\r \/>=]*)/gc; my $name = $1;
+      $s =~ /\G[\t\n\f\r ]*/gc;
+      my $val;
+      if ($s =~ /\G=/gc) {
+        $s =~ /\G[\t\n\f\r ]*/gc;
+        if    ($s =~ /\G"([^"]*)"?/gc)        { $val = $1 }
+        elsif ($s =~ /\G\x27([^\x27]*)\x27?/gc) { $val = $1 }
+        elsif ($s =~ /\G(?=>)/gc)              { $val = "" }
+        else  { $s =~ /\G([^\t\n\f\r >]*)/gc; $val = $1 }
+      }
+      my $ln = lc $name;
+      $nested = 1 if $ln eq "srcdoc";
+      push @path, [$q, ($ln eq "class" && defined $val) ? classmask($val) : 0, !defined $val ? 0 : ($ln eq "src" || $ln eq "data") ? scheme(refs($val)) : $ln eq "http-equiv" ? 2 * refresh($val) : $ln eq "content" ? 4 * scheme(refreshurl($val)) : ($ln eq "href" || $ln eq "xlink:href" || $ln eq "action" || $ln eq "formaction") ? 8 * scheme(refs($val), 1) : 0];
+      $spent += pos($s) - $q + 1;
+      if ($spent > $budget) { $over = 1; return 0 }
+      $q = pos($s);
+    }
+    for my $pe (reverse @path) { $m |= $pe->[1]; $d |= $pe->[2]; $memo{$pe->[0]} = $m; $dmemo{$pe->[0]} = $d }
+    $mask |= $m;
+    $nested = 1 if (($d & 1) && $tag =~ /\A(?:iframe|frame|object|embed)\z/) || (($d & 6) == 6 && $tag eq "meta") || (($d & 8) && $tag =~ /\A(?:a|area|form|button|input)\z/);
+  }
+  return $mask;
+}
+my $mask = scan($raw);
+exit 4 if $over;
+(my $js = $raw) =~ s/\\(?:u\{0*([0-9a-fA-F]{1,6})\}|u([0-9a-fA-F]{4})|x([0-9a-fA-F]{2})|([0-3][0-7]{0,2}|[4-7][0-7]?)|([\s\S]))/defined $1 ? cp(hex $1) : defined $2 ? cp(hex $2) : defined $3 ? chr(hex $3) : defined $4 ? chr(oct $4) : ($5 eq "n" ? "\n" : $5 eq "t" ? "\t" : $5 eq "r" ? "\r" : $5 eq "f" ? "\f" : $5)/ge;
+$mask |= scan($js) if $js ne $raw;
+exit 4 if $over;
+exit 5 if $nested && !$mask;
+print join(" ", grep { $mask & $bit{$_} } @tok), "\n";
+exit 0;
+'
+
+# The fence's well-formed rows, one token per line: exactly one field, a lowercase class token. A comment row
+# and a blank row are dropped; a row of any other shape is dropped here and counted by the next function, so
+# the difference is visible. Shaped as _guard_declared_rows, with its explicit `return 0`.
+_group_only_rows() {
+  [ -f "$_GROUP_ONLY_SPEC" ] && [ -r "$_GROUP_ONLY_SPEC" ] || return 0
+  fence_block "$_GROUP_ONLY_SPEC" "$_GROUP_ONLY_FENCE" "$_GROUP_ONLY_HEADING" \
+    | awk 'NF == 1 && $1 ~ /^[a-z][a-z0-9-]*$/ { print $1 }'
+  return 0
+}
+# Every row the fence offers: non-blank and non-comment, whatever its shape.
+_group_only_candidates() {
+  [ -f "$_GROUP_ONLY_SPEC" ] && [ -r "$_GROUP_ONLY_SPEC" ] || { printf '0'; return 0; }
+  fence_block "$_GROUP_ONLY_SPEC" "$_GROUP_ONLY_FENCE" "$_GROUP_ONLY_HEADING" \
+    | awk 'NF > 0 && $1 !~ /^#/ { c++ } END { print c + 0 }'
+  return 0
+}
+
+# The scan program run over one render, the tokens space-joined in its environment. A function of its own,
+# holding the perl invocation and nothing else, so S15i's policy reads it as the other perl programs are read:
+# it discards nothing, because it has no fallback limb, and its caller reads its status.
+_group_only_scan() { # <html_file> <tokens, space-joined>
+  GROUP_ONLY_TOKENS="$2" perl -e "$_GROUP_ONLY_SCAN" "$1"
+}
+
+# group_only_sections <html_file> -> the listed tokens a start tag in the render carries as a class,
+# space-joined, on stdout.
+#   return 0  the read succeeded; an empty output is a render that carries none
+#          2  UNDETERMINED — the fence could not be read, is empty or reads in part, or the render could
+#             not be read or scanned, carries a nested document, or opens with a UTF-16 or UTF-32 mark;
+#             the warn line names which, by the scan's status
+# The scan's stderr is kept: a fail-closed control with no fallback limb says what went wrong (S15i's rule).
+group_only_sections() { # <html_file>
+  local html="${1:-}" go_rows go_n go_cand go_out go_rc go_why
+  go_rows="$(_group_only_rows)"
+  go_n="$(printf '%s' "$go_rows" | awk 'NF { c++ } END { print c + 0 }')"
+  if [ "$go_n" -eq 0 ]; then
+    warn "group-only: the declaration at $_GROUP_ONLY_SPEC (fence $_GROUP_ONLY_FENCE) could not be read or names no component — the set is UNDETERMINED, not empty"; return 2
+  fi
+  go_cand="$(_group_only_candidates)"
+  if [ "${go_cand:-0}" -ne "$go_n" ]; then
+    warn "group-only: the declaration at $_GROUP_ONLY_SPEC offers ${go_cand:-0} rows but only $go_n parse as one component token — a partial read is UNDETERMINED, not a smaller set"; return 2
+  fi
+  if [ ! -f "$html" ] || [ ! -r "$html" ]; then
+    warn "group-only: the render is not a readable regular file, so whether it carries a group-only section could not be determined"; return 2
+  fi
+  go_out="$(_group_only_scan "$html" "$(printf '%s' "$go_rows" | tr '\n' ' ')")" && go_rc=0 || go_rc=$?
+  if [ "$go_rc" -ne 0 ]; then
+    case "$go_rc" in
+      4) go_why="reading it would pass the scan's byte budget" ;;
+      5) go_why="it carries a nested document — a srcdoc attribute; a src or data on an iframe, frame, object or embed, or a meta refresh URL, whose scheme is not http or https; or an href, xlink:href, action or formaction on an a, area, form, button or input whose scheme is not http, https, mailto or tel — whose markup the scan does not read" ;;
+      6) go_why="it opens with a UTF-16 or UTF-32 byte-order mark, so a browser reads its bytes in an encoding the scan does not" ;;
+      *) go_why="the start-tag scan of it did not complete" ;;
+    esac
+    warn "group-only: whether the render carries a group-only section could not be determined: $go_why (status $go_rc) — UNDETERMINED"; return 2
+  fi
+  printf '%s' "$go_out"
+  return 0
+}
+
+# Prints the refusal in die's format and exits with the named status. The only `exit 3` in this file.
+refuse_group_only() { # <message>
+  printf '\033[1;31m✗ ERROR:\033[0m %s\n' "$*" >&2
+  exit "$_EXIT_GROUP_ONLY"
+}
+
+# refuse_group_only_render <html_file> [<the render it is reported as>] [<a staged copy to remove first>]
+# Returns 0 when the render carries no listed section and the read succeeded; otherwise refuses, by status 3,
+# naming the tokens found or saying the read was undetermined. Its status is captured rather than left to
+# errexit, so a caller without errexit is refused as well.
+refuse_group_only_render() {
+  local html="$1" shown="${2:-$1}" discard="${3:-}" found rc
+  found="$(group_only_sections "$html")" && rc=0 || rc=$?
+  if [ "$rc" -ne 0 ]; then
+    [ -z "$discard" ] || rm -f "$discard"
+    refuse_group_only "GROUP-ONLY REFUSED publish --plaintext — whether $shown carries a group-only section could not be determined: the group-only component declaration could not be read or names no component, or the render could not be read or scanned, or it carries a nested document or a byte-order mark whose content the scan does not read; the line above names the cause. A plaintext publish that cannot rule out a group-only section is refused like one that carries one. Nothing was published. Publish it encrypted: drop --plaintext."
+  fi
+  if [ -n "$found" ]; then
+    [ -z "$discard" ] || rm -f "$discard"
+    refuse_group_only "GROUP-ONLY REFUSED publish --plaintext — $shown carries the group-only section(s) $found, which never go on a public page (ADR-030 § 6 safeguard 2; reference/site-layout-spec.md § Group-only components). Nothing was published. Publish it encrypted: drop --plaintext."
+  fi
+  return 0
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# THE SOURCE CHECK (#2156; ADR-030 § 6 safeguard 6). Before anything is encrypted or pushed, every publish,
+# update and rotate — both limbs, every phase — reads the files the site build reads and stops where one
+# carries a value of the non-publishable field class. A render reaches a page; these files reach the render,
+# so a value stopped here never reaches a page at all, private or public.
+#
+# WHAT IT READS, AND FROM WHERE. Two declarations, each read and never copied:
+#   • the files the build reads: the `bound` rows of reference/site-layout-spec.md § 9.1's
+#     `publish-contract-artifacts` fence, each a trip-relative path, a `<token>` read as `*`;
+#   • the field class: every `field` row of reference/data-architecture.md § 5.6, whatever its artifact scope,
+#     read through _guard_declared_rows. Its selectors are matched as labels, and its values are taken from
+#     the files the rows scope — every scope a trip-relative path except the person store, whose records are
+#     reached through the `person:` references the traveller files carry (trip root first, then the data root,
+#     one merge hop; a longer chain is named, not followed), each read only from front matter that opens on its
+#     file's first line and holds nothing but blank lines, comments and plain `key: value` lines (the shape gate,
+#     in _field_class_values). A `field` row added there joins both halves below with no edit here, wherever its
+#     scope is a trip-relative path or the person store.
+# A value is the text after a label's colon on the label's own line, after clean(), admitted by stated() —
+# the guard's profile parse, through the same shared helpers, on a line read with a leading UTF-8 byte-order
+# mark and its trailing carriage returns removed.
+#
+# FOLDING (S7P2-02, S7P2-06), worded identically in § 5.6, the CHANGELOG and the PR body: The check reads a bound
+# file's lines as UTF-8. Before matching, it reads every Unicode space separator as a space and the colons
+# U+FF1A, U+FE55, U+FE13, U+2236, U+A789, U+02D0, U+0589 and U+05C3 as a colon, drops every format character and
+# variation selector (Unicode 13.0 category Cf and property Variation_Selector), strips a backslash before a
+# colon, and folds full-width and Arabic-Indic digits. A bound file or a value source that opens with a UTF-16
+# or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not followed by a line feed, stops as
+# unreadable. Anything else is not folded: other scripts' letters and digits, full-width letters, other
+# look-alikes, a dash in place of the colon, a label behind a marker the strip does not name, and the declared
+# separators.
+# The folds are fold() in the program below, applied alike to every bound line and to every stated value; the
+# colon set is a set, not a class, and each class's byte sequences are generated from the Unicode 13.0 database.
+#
+# THE TWO HALVES (D-2156-MATCH, with D-NEW-1). A bound line, folded, stops the publish when:
+#   1. LABEL. Stripped of every leading list marker (bulleted or numbered), task box (`[ ]`, `[x]`), blockquote
+#      marker and heading marker, in any order, and of emphasis, it is a declared selector used as a label —
+#      field_hit, unchanged, reached by the folded line — with a stated value after the colon. An ordinary-word
+#      value, a country, is caught only this way.
+#   2. EXACT. It carries, case-folded, with emphasis and runs of whitespace normalized — the same normalization
+#      applied to the values — either
+#      (a) a distinctive component of a stated value: the value split at `,` `;` `·` `(` `)` `:` and `—`, a
+#          component distinctive when one of its words holds three or more digits — except a component that is
+#          nothing but a number of four or fewer digits (a year, a day: the trip's own), and the Documents
+#          grammar's derivation stamp `checked <YYYY-MM-DD>` (agents/00-enrichment.md), which is provenance and
+#          by construction the run's `generated:` date; or
+#      (b) a word distinctive in itself: an email-shaped token; a run of five or more digits whose groups are
+#          joined by one or two of space `.` `/` `(` `)` `+` `-`, once those are dropped (a phone or a document
+#          number), compared within the line's own runs; a mixed token of six or more letters and digits
+#          holding at least three digits, compared whole.
+#   The two exclusions in (a), and the calendar-valid dates (b) skips, are NARROWING controls: each removes
+#   values from what is matched. That is why they are here, in code behind a diff, and not in the declaration,
+#   which only widens (the rule § 5.6 states for narrowing controls). A run is a calendar-valid date, and
+#   skipped, only when it has two or three groups, exactly one of them a four-digit year 19xx or 20xx standing
+#   first or last, and the rest read as a valid month (1–12), or a month and a day (1–31) in year-month-day,
+#   day-month-year or month-day-year order (the operator's ruling on Stage 7's S7-03, option C). A number
+#   grouped like a date whose groups are no calendar date — a phone number written 07 2019 55, an account
+#   number written 19 2031 — is matched. The skip is what keeps (b) from becoming the full-date rule the
+#   operator declined (D-NEW-1): a full date reaches the match only inside a distinctive component, so a
+#   calendar-valid date carried with other words around it is a declared residual.
+# The split, the normalization and the folding run under LC_ALL=C, with each multibyte character named by its
+# exact bytes before an ASCII split (#2156's review, F19), so a host's locale and awk cannot move a verdict.
+#
+# ABSENT IS NOT UNREADABLE (D-2). A fence that reads no `bound` row, or reads in part, stops; a field class
+# that reads no `field` row, or reads in part, stops. A `bound` artifact absent from the trip — no file and no
+# link, as an IDEATION trip's itinerary is — is skipped and named; one present but not a readable regular
+# file, or one that opens with a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not
+# followed by a line feed, stops, naming it. A value
+# source absent, or a person reference unresolvable or whose value is malformed, is named
+# and contributes no values (D-2156-VALSRC): this check reads the sources of record directly, so it needs no
+# freshness inference, and a present, readable source contributes its values whatever its age or its entry
+# structure (#2156's review, F8). A value source present but not a readable regular file, or one that opens with
+# a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not followed by a line feed,
+# stops, named by its scope, never by a traveller file's name; so does a traveller file read for its person
+# reference that is not a readable regular file, that opens with such a mark or holds such a byte, whose front
+# matter opens on its first line but holds a line other than a blank line, a comment or a plain key line, or that
+# has no front matter on its first line and holds a minted person id, or a line opening with its key, indented or
+# quoted, that carries a value on it or on the next line that is neither blank nor a comment, indented or as a
+# sequence entry (rule (b)), which is named after the scope by what was found; and so does a person record
+# that fails the same way, named as the record by what was found. A traveller file or record with no front matter
+# on its first line that fails neither is a version-0 file (reference/data-architecture.md § 7.2): it is read as
+# carrying no reference, and its values are harvested. Nothing it prints is a value.
+#
+# DECLARED RESIDUALS, worded alike in § 5.6, the CHANGELOG and the PR body; test-publish-guard.sh group L's
+# L19v arms assert a shape of every residual below but the first, the third and the eighth, and its L19z arms
+# the eighth. The source check does not see:
+#   • an ordinary-word value restated without its label;
+#   • a label mid-line, in a table cell, with a word between the selector and its colon, with a dash in place
+#     of the colon, or behind a leading marker other than those the strip names;
+#   • a value wrapped or paraphrased;
+#   • a calendar-valid date, or any distinctive part, carried with other words around it;
+#   • a number whose groups are joined otherwise than by one or two of a space, `.`, `/`, `(`, `)`, `+` and
+#     `-`, such as by a comma or by three characters like ` - `;
+#   • a value written in characters the folding does not fold;
+#   • a value held only in a value source that is absent or unresolved, or on a value-source line the source
+#     check's harvest does not read as a label — it reads one only by § 5.6's field grammar, as the selector,
+#     case-insensitively, at the start of the line, followed by a colon with nothing but spaces or tabs between
+#     them, once leading spaces or tabs, one `-`, `*` or `+` bullet followed by a space or tab and every `**` are
+#     stripped, so it does not read, for example, a label behind a task box or a numbered, blockquote or heading
+#     marker, or with a look-alike space before its colon, a look-alike colon or an invisible character in it —
+#     which contributes no value, so the label half alone covers it;
+#   • a person reference whose merge chain runs past one hop, which is named in a note and whose second hop
+#     is not read;
+#   • a trip with no bound file present, which passes with every one named as absent;
+#   • a person reference or merge key in a traveller file, person record or merge target with no front matter
+#     on its first line, when no line opening with the key as written, indented or quoted, carries a value on it
+#     or on the next line that is neither blank nor a comment, indented or as a sequence entry, and none holds
+#     the id whole — for example a flow mapping, an escaped spelling of the key, whether or not after an empty
+#     key line, or a key after a U+2028 line separator, with the id escaped — which is read as carrying none.
+# Over-stops fail closed: a distinctive component that happens to occur in a bound file, such as an expiry
+# month and year equal to the trip's own, stops the publish, and the remedy is one edit.
+#
+# PLACEMENT (D-2156-PLACE). require_publish_guards runs it last, so update and rotate run it and a relocation
+# of that one call line carries it, ahead of any clone and of the key write; cmd_publish runs it on both limbs
+# after the group-only refusal and before the per-trip repository is probed, created or pushed. It writes
+# nothing and needs no network.
+
+# The `bound` rows' paths, one per line; and the fence's candidate and well-formed row counts, whose
+# difference is a partial read. Shaped as _guard_declared_rows, with its explicit `return 0`.
+_build_source_rows() {
+  [ -f "$_BUILD_SOURCES_SPEC" ] && [ -r "$_BUILD_SOURCES_SPEC" ] || return 0
+  fence_block "$_BUILD_SOURCES_SPEC" "$_BUILD_SOURCES_FENCE" "$_BUILD_SOURCES_HEADING" \
+    | awk 'NF == 2 && $1 !~ /^#/ && $2 == "bound" { print $1 }'
+  return 0
+}
+_build_source_candidates() {
+  [ -f "$_BUILD_SOURCES_SPEC" ] && [ -r "$_BUILD_SOURCES_SPEC" ] || { printf '0'; return 0; }
+  fence_block "$_BUILD_SOURCES_SPEC" "$_BUILD_SOURCES_FENCE" "$_BUILD_SOURCES_HEADING" \
+    | awk 'NF > 0 && $1 !~ /^#/ { c++ } END { print c + 0 }'
+  return 0
+}
+_build_source_wellformed() {
+  [ -f "$_BUILD_SOURCES_SPEC" ] && [ -r "$_BUILD_SOURCES_SPEC" ] || { printf '0'; return 0; }
+  fence_block "$_BUILD_SOURCES_SPEC" "$_BUILD_SOURCES_FENCE" "$_BUILD_SOURCES_HEADING" \
+    | awk 'NF == 2 && $1 !~ /^#/ { c++ } END { print c + 0 }'
+  return 0
+}
+
+# _field_class_values <trip_dir> -> records on stdout, tab-separated:
+#   V  <selector> <value>   a stated value of a declared field, from a value source on file
+#   NOTE <what>             a value source not on file, or a person reference that does not resolve
+#   UNREAD <what>           a value source, or a traveller file read for its person reference, present but not
+#                           a readable regular file, or that opens with a UTF-16 or UTF-32 byte-order mark, or
+#                           holds a NUL byte or a carriage return not followed by a line feed; or a traveller
+#                           file or person record that fails the front-matter check (below) — the caller stops
+# <what> is a scope as the declaration writes it, or `person record <id>` for a minted id; never a file name. A
+# file failing the front-matter check is named after its scope, in parentheses, by what was found.
+# A file is read only after the byte test require_clean_build_sources applies to a bound file, at each of the
+# four places one is read (a scope's file, a traveller file read for its person reference, a person record, its
+# merge target), so its bytes and not the host's awk decide whether it is read: the one awk the test runs reads
+# od's hex, never the file. A carriage return not followed by a line feed fails it, because every reader here
+# would take the file for one line, though a Markdown renderer ends a line there. Each reference — a traveller
+# file's person key, a record's merge key and its target's — and each value-source line is read with a leading
+# UTF-8 byte-order mark and trailing carriage returns removed, and a front-matter marker line followed by spaces
+# or tabs is read as the marker, so a file saved with any of these resolves and harvests as its plain twin does.
+# Each file a reference is read from — a traveller file, a person record, its merge target — must first pass the
+# front-matter check (fc_shape), whether or not the reader returns a value. Front matter opening on the file's
+# first line passes the shape gate when every line of it up to the closer is a blank line, a comment or a plain key
+# line: on such lines the top-level keys are exactly the literal keys, and the reader reads every one, so no
+# reference a YAML reader resolves goes unread. A file with no front matter on its first line is a version-0 file
+# (reference/data-architecture.md § 7.2): it is read as carrying no reference, as the reader reads it, and its
+# values are harvested as any file's are, unless a line holds a minted person id, or a line opening with the key,
+# indented or quoted, carries a value on it or on the next line that is neither blank nor a comment, indented or
+# as a sequence entry (rule (b)), either of which may be a reference the reader does not
+# read. A traveller file or person record that fails stops, named after its scope by what was found, rather than
+# passing as one with no reference; a merge target, whose key is never followed, is named as a longer chain, as
+# one carrying a key the reader reads is.
+# Returns 2 when the declaration yields no `field` row, or reads in part.
+_field_class_values() { # <trip_dir>
+  local trip_dir="$1" fc_rows fc_n fc_all fc_cand fc_scope fc_glob fc_f fc_any fc_pf fc_refs fc_key fc_store
+  local fc_rec fc_merge fc_tgt fc_srcs="" fc_sels fc_enc fc_bare fc_shape tab
+  tab="$(printf '\t')"
+  # The stream a reference is read from: the file with a leading UTF-8 byte-order mark and trailing carriage
+  # returns removed, and a marker line that is `---` followed only by spaces or tabs read as `---`, handed to the
+  # unchanged _guard_frontmatter_key as its standard input.
+  fc_bare='NR == 1 { sub(/^\357\273\277/, "") } { sub(/\r+$/, ""); sub(/^---[ \t]+$/, "---"); print }'
+  # The front-matter check, over that stream, for the key K: 0 when the file may be read for K, 1 otherwise. A
+  # stream opening with `---` meets the shape gate: 0 when every line up to the next `---`, or to the end where none
+  # closes it, is blank (spaces or tabs only), a comment (spaces or tabs, then `#`), or a plain key line — at column
+  # 0 a letter, digit or `_`, then letters, digits, `_`, `.` or `-`, then a colon followed by a space, a tab or the
+  # line's end — and none holds U+0085, U+2028 or U+2029, which a YAML 1.1 reader takes as line breaks. A `...`
+  # line is not a closer, so it fails. The body, after the closer, is not read. Any other stream has no front
+  # matter on its first line, and is read whole (rule (b) and the id clause): 1 when a line holds a minted person
+  # id — P, the shape _GUARD_PERSON_KEY_GLOB names, read as a pattern, every character of which is a literal or a
+  # bracket expression — or holds K at its start, after spaces or tabs and an optional quote, with an optional
+  # quote and spaces or tabs before its colon (keyed), with a value, or with an empty value continued on the next
+  # line that is neither blank nor a comment, indented or as a sequence entry. K is matched by index(), never as a
+  # pattern. No `exit`: it reads its input to the end.
+  fc_shape='
+    function keyed(s,  r) {
+      sub(/^[ \t]+/, "", s); sub(/^["\047]/, "", s)
+      if (index(s, K) != 1) return 0
+      r = substr(s, length(K) + 1); sub(/^["\047]/, "", r); sub(/^[ \t]+/, "", r)
+      return (substr(r, 1, 1) == ":")
+    }
+    NR == 1 { ok = 1; if ($0 == "---") { fm = 1; next }; v0 = 1 }
+    fm && $0 == "---" { fm = 0; next }
+    fm && /\302\205|\342\200\250|\342\200\251/ { ok = 0 }
+    fm && !(/^[ \t]*$/ || /^[ \t]*#/ || /^[A-Za-z0-9_][A-Za-z0-9_.-]*:([ \t]|$)/) { ok = 0 }
+    v0 && $0 ~ P { ok = 0 }
+    /^[ \t]*$/ || /^[ \t]*#/ { next }
+    pend { if (/^[ \t]/ || /^-[ \t]/ || $0 == "-") ok = 0; pend = 0 }
+    v0 && keyed($0) { if (substr($0, index($0, ":") + 1) ~ /^[ \t]*$/) pend = 1; else ok = 0 }
+    END { print ok ? 0 : 1 }'
+  fc_all="$(_guard_declared_rows)"
+  fc_cand="$(_guard_declared_candidates)"
+  if [ "${fc_cand:-0}" -ne "$(printf '%s' "$fc_all" | awk 'NF { c++ } END { print c + 0 }')" ]; then return 2; fi
+  fc_rows="$(printf '%s\n' "$fc_all" | awk '$1 == "field"')"
+  fc_n="$(printf '%s' "$fc_rows" | awk 'NF { c++ } END { print c + 0 }')"
+  if [ "$fc_n" -eq 0 ]; then return 2; fi
+  fc_sels="$(printf '%s\n' "$fc_rows" | awk '!seen[$2]++ { printf "%s%s", (n++ ? " " : ""), $2 }')"
+  while IFS= read -r fc_scope; do
+    [ -n "$fc_scope" ] || continue
+    if [ "$fc_scope" = "$_GUARD_DECL_ARTIFACT_PERSON" ]; then
+      # shellcheck disable=SC2086  # the scope's `<token>` is a glob by the declaration's own column grammar
+      for fc_pf in "$trip_dir"/$(printf '%s' "$_GUARD_DECL_ARTIFACT_PROFILE" | sed 's/<[^>]*>/*/g'); do
+        [ -e "$fc_pf" ] || [ -L "$fc_pf" ] || continue
+        if [ ! -f "$fc_pf" ] || [ ! -r "$fc_pf" ]; then printf 'UNREAD\t%s\n' "$_GUARD_DECL_ARTIFACT_PROFILE"; continue; fi
+        # A traveller file is read for its reference only after the same byte test, so its bytes decide.
+        fc_enc=0
+        case "$(LC_ALL=C od -An -tx1 -N4 "$fc_pf" | tr -d ' \n')" in fffe*|feff*|0000feff) fc_enc=1 ;; esac
+        if [ "$fc_enc" -eq 0 ] && [ "$(($(wc -c < "$fc_pf")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$fc_pf" | wc -c)))" ]; then fc_enc=1; fi
+        if [ "$fc_enc" -eq 0 ] && [ "$(LC_ALL=C od -An -v -tx1 "$fc_pf" | LC_ALL=C awk '{ for (i = 1; i <= NF; i++) { if (p == "0d" && $i != "0a") n++; p = $i } } END { print n + (p == "0d") }')" != 0 ]; then fc_enc=1; fi
+        if [ "$fc_enc" -ne 0 ]; then printf 'UNREAD\t%s\n' "$_GUARD_DECL_ARTIFACT_PROFILE"; continue; fi
+        if [ "$(LC_ALL=C awk -v K="$_GUARD_REF_KEY" -v P="$_GUARD_PERSON_KEY_GLOB" "$fc_shape" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_pf")")" != 0 ]; then
+          printf 'UNREAD\t%s (a person reference the check could not read from front matter opening on the first line)\n' "$_GUARD_DECL_ARTIFACT_PROFILE"; continue
+        fi
+        fc_refs="$(_guard_frontmatter_key - "$_GUARD_REF_KEY" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_pf")")"
+        [ -n "$fc_refs" ] || continue
+        if [ "$(printf '%s\n' "$fc_refs" | awk 'NF { c++ } END { print c + 0 }')" -ne 1 ]; then
+          printf 'NOTE\ta person reference that is not single-valued\n'; continue
+        fi
+        fc_key="$fc_refs"
+        # shellcheck disable=SC2254  # the person-key glob is a pattern held in a variable; quoted, it would match only its own text
+        case "$fc_key" in $_GUARD_PERSON_KEY_GLOB) ;; *) printf 'NOTE\ta person reference that is not a minted id\n'; continue ;; esac
+        if [ -d "$trip_dir/$_GUARD_PERSON_STORE" ]; then fc_store="$trip_dir/$_GUARD_PERSON_STORE"; else fc_store="$_GUARD_DATA_ROOT/$_GUARD_PERSON_STORE"; fi
+        fc_rec="$fc_store/$fc_key.md"
+        if [ ! -e "$fc_rec" ] && [ ! -L "$fc_rec" ]; then printf 'NOTE\tperson record %s\n' "$fc_key"; continue; fi
+        if [ ! -f "$fc_rec" ] || [ ! -r "$fc_rec" ]; then printf 'UNREAD\tperson record %s\n' "$fc_key"; continue; fi
+        # Read as UTF-8 or not at all: a UTF-16 or UTF-32 byte-order mark, or a NUL byte or a carriage return not
+        # followed by a line feed anywhere.
+        fc_enc=0
+        case "$(LC_ALL=C od -An -tx1 -N4 "$fc_rec" | tr -d ' \n')" in fffe*|feff*|0000feff) fc_enc=1 ;; esac
+        if [ "$fc_enc" -eq 0 ] && [ "$(($(wc -c < "$fc_rec")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$fc_rec" | wc -c)))" ]; then fc_enc=1; fi
+        if [ "$fc_enc" -eq 0 ] && [ "$(LC_ALL=C od -An -v -tx1 "$fc_rec" | LC_ALL=C awk '{ for (i = 1; i <= NF; i++) { if (p == "0d" && $i != "0a") n++; p = $i } } END { print n + (p == "0d") }')" != 0 ]; then fc_enc=1; fi
+        if [ "$fc_enc" -ne 0 ]; then printf 'UNREAD\tperson record %s\n' "$fc_key"; continue; fi
+        fc_srcs="$fc_srcs$fc_rec$tab"
+        if [ "$(LC_ALL=C awk -v K="$_GUARD_MERGE_KEY" -v P="$_GUARD_PERSON_KEY_GLOB" "$fc_shape" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_rec")")" != 0 ]; then
+          printf 'UNREAD\tperson record %s (a merge key the check could not read from front matter opening on the first line)\n' "$fc_key"; continue
+        fi
+        fc_merge="$(_guard_frontmatter_key - "$_GUARD_MERGE_KEY" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_rec")")"
+        [ -n "$fc_merge" ] || continue
+        # shellcheck disable=SC2254  # the person-key glob is a pattern held in a variable; quoted, it would match only its own text
+        case "$fc_merge" in $_GUARD_PERSON_KEY_GLOB) ;; *) printf 'NOTE\ta merge target that is not a minted id\n'; continue ;; esac
+        fc_tgt="$fc_store/$fc_merge.md"
+        if [ ! -e "$fc_tgt" ] && [ ! -L "$fc_tgt" ]; then printf 'NOTE\tperson record %s\n' "$fc_merge"; continue; fi
+        if [ ! -f "$fc_tgt" ] || [ ! -r "$fc_tgt" ]; then printf 'UNREAD\tperson record %s\n' "$fc_merge"; continue; fi
+        fc_enc=0
+        case "$(LC_ALL=C od -An -tx1 -N4 "$fc_tgt" | tr -d ' \n')" in fffe*|feff*|0000feff) fc_enc=1 ;; esac
+        if [ "$fc_enc" -eq 0 ] && [ "$(($(wc -c < "$fc_tgt")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$fc_tgt" | wc -c)))" ]; then fc_enc=1; fi
+        if [ "$fc_enc" -eq 0 ] && [ "$(LC_ALL=C od -An -v -tx1 "$fc_tgt" | LC_ALL=C awk '{ for (i = 1; i <= NF; i++) { if (p == "0d" && $i != "0a") n++; p = $i } } END { print n + (p == "0d") }')" != 0 ]; then fc_enc=1; fi
+        if [ "$fc_enc" -ne 0 ]; then printf 'UNREAD\tperson record %s\n' "$fc_merge"; continue; fi
+        fc_srcs="$fc_srcs$fc_tgt$tab"
+        if [ -n "$(_guard_frontmatter_key - "$_GUARD_MERGE_KEY" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_tgt")")" ] \
+          || [ "$(LC_ALL=C awk -v K="$_GUARD_MERGE_KEY" -v P="$_GUARD_PERSON_KEY_GLOB" "$fc_shape" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_tgt")")" != 0 ]; then
+          printf 'NOTE\ta merge chain longer than one hop\n'
+        fi
+      done
+      continue
+    fi
+    fc_glob="$(printf '%s' "$fc_scope" | sed 's/<[^>]*>/*/g')"
+    fc_any=0
+    # shellcheck disable=SC2086  # the scope's `<token>` is a glob by the declaration's own column grammar
+    for fc_f in "$trip_dir"/$fc_glob; do
+      [ -e "$fc_f" ] || [ -L "$fc_f" ] || continue
+      fc_any=1
+      if [ ! -f "$fc_f" ] || [ ! -r "$fc_f" ]; then printf 'UNREAD\t%s\n' "$fc_scope"; continue; fi
+      fc_enc=0
+      case "$(LC_ALL=C od -An -tx1 -N4 "$fc_f" | tr -d ' \n')" in fffe*|feff*|0000feff) fc_enc=1 ;; esac
+      if [ "$fc_enc" -eq 0 ] && [ "$(($(wc -c < "$fc_f")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$fc_f" | wc -c)))" ]; then fc_enc=1; fi
+      if [ "$fc_enc" -eq 0 ] && [ "$(LC_ALL=C od -An -v -tx1 "$fc_f" | LC_ALL=C awk '{ for (i = 1; i <= NF; i++) { if (p == "0d" && $i != "0a") n++; p = $i } } END { print n + (p == "0d") }')" != 0 ]; then fc_enc=1; fi
+      if [ "$fc_enc" -ne 0 ]; then printf 'UNREAD\t%s\n' "$fc_scope"; continue; fi
+      fc_srcs="$fc_srcs$fc_f$tab"
+    done
+    [ "$fc_any" -eq 1 ] || printf 'NOTE\t%s\n' "$fc_scope"
+  done <<EOF
+$(printf '%s\n' "$fc_rows" | awk '!seen[$3]++ { print $3 }')
+EOF
+  [ -n "$fc_srcs" ] || return 0
+  printf '%s' "$fc_srcs" | tr '\t' '\n' | awk 'NF && !seen[$0]++' | while IFS= read -r fc_f; do
+    LC_ALL=C awk -v SELS="$fc_sels" "$_GUARD_AWK_HELPERS"'
+      BEGIN { n = split(SELS, S, " ") }
+      {
+        lab = $0
+        if (NR == 1) sub(/^\357\273\277/, "", lab)
+        sub(/\r+$/, "", lab)
+        sub(/^[ \t]*[-*+][ \t]+/, "", lab)
+        gsub(/\*\*/, "", lab)
+        sub(/^[ \t]+/, "", lab)
+        for (i = 1; i <= n; i++) {
+          if (field_hit(lab, S[i])) {
+            val = lab; sub(/^[^:]*:[ \t]*/, "", val); val = clean(val)
+            if (stated(val)) printf "V\t%s\t%s\n", S[i], val
+            break
+          }
+        }
+      }' "$fc_f" || printf 'UNREAD\ta value source that could not be parsed\n'
+  done
+  return 0
+}
+
+# _build_source_hits <file> -> the first line of a bound file that stops the publish, as
+# "<line>\t<selector>\t<label|exact>", or nothing. The selectors arrive in BS_SELS, space-joined, and the stated
+# values in BS_VALS as "<selector>\t<value>" lines, both through the environment and compared with index(),
+# never as a pattern. One program, run under LC_ALL=C: every multibyte character it folds or splits at is
+# named by its exact bytes, in octal, so the split and the folding are byte-exact on every host and awk.
+_build_source_hits() { # <file>
+  LC_ALL=C awk "$_GUARD_AWK_HELPERS"'
+    # FOLDING (the function comment states it). Each class is named by its UTF-8 bytes in octal, generated from
+    # the Unicode 13.0 database and grouped by leading bytes: category Cf (U+00AD, U+0600–U+0605, U+061C, U+06DD,
+    # U+070F, U+08E2, U+180E, U+200B–U+200F, U+202A–U+202E, U+2060–U+2064, U+2066–U+206F, U+FEFF, U+FFF9–U+FFFB,
+    # U+110BD, U+110CD, U+13430–U+13438, U+1BCA0–U+1BCA3, U+1D173–U+1D17A, U+E0001, U+E0020–U+E007F) and property
+    # Variation_Selector (U+180B–U+180D, U+FE00–U+FE0F, U+E0100–U+E01EF) dropped; category Zs bar U+0020 (U+00A0,
+    # U+1680, U+2000–U+200A, U+202F, U+205F, U+3000) read as a space; the colon set read as `:`; a backslash
+    # before a colon stripped; full-width and Arabic-Indic digits read as ASCII digits.
+    function fold(s,   k) {
+      gsub(/\302\255|\330[\200-\205\234]|\333\235|\334\217|\340\243\242|\341\240\216|\342\200[\213-\217\252-\256]|\342\201[\240-\244\246-\257]|\357\273\277|\357\277[\271-\273]|\360\221\202\275|\360\221\203\215|\360\223\220[\260-\270]|\360\233\262[\240-\243]|\360\235\205[\263-\272]|\363\240\200[\201\240-\277]|\363\240\201[\200-\277]/, "", s)
+      gsub(/\341\240[\213-\215]|\357\270[\200-\217]|\363\240[\204-\206][\200-\277]|\363\240\207[\200-\257]/, "", s)
+      gsub(/\302\240|\341\232\200|\342\200[\200-\212\257]|\342\201\237|\343\200\200/, " ", s)
+      gsub(/\313\220|\326\211|\327\203|\342\210\266|\352\236\211|\357\270\223|\357\271\225|\357\274\232/, ":", s)
+      gsub(/\\:/, ":", s)
+      for (k = 1; k <= 10; k++) { gsub(FWD[k], k - 1, s); gsub(AID[k], k - 1, s) }
+      return s
+    }
+    function norm(s) {
+      s = fold(tolower(s))
+      gsub(/[*_`]/, " ", s)
+      gsub(/[ \t]+/, " ", s); sub(/^ /, "", s); sub(/ $/, "", s)
+      return s
+    }
+    function digits(s) { gsub(/[^0-9]/, "", s); return s }
+    function distinctive(c,   w, nw, k, hit) {
+      if (c ~ /^[0-9]+$/ && length(c) <= 4) return 0
+      if (c ~ /^checked [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$/) return 0
+      nw = split(c, w, " "); hit = 0
+      for (k = 1; k <= nw; k++) if (length(digits(w[k])) >= 3) hit = 1
+      return hit
+    }
+    function cal_month(x) { return (x + 0 >= 1 && x + 0 <= 12) }
+    function cal_day(x) { return (x + 0 >= 1 && x + 0 <= 31) }
+    function datelike(r,   g, ng, k, y, yi) {
+      ng = split(r, g, /[^0-9]+/); y = 0; yi = 0
+      if (ng < 2 || ng > 3) return 0
+      for (k = 1; k <= ng; k++) {
+        if (length(g[k]) == 4 && g[k] ~ /^(19|20)/) { y++; yi = k }
+        else if (length(g[k]) < 1 || length(g[k]) > 2) return 0
+      }
+      if (y != 1 || (yi != 1 && yi != ng)) return 0
+      if (ng == 2) return (yi == 1) ? cal_month(g[2]) : cal_month(g[1])
+      if (yi == 1) return (cal_month(g[2]) && cal_day(g[3]))
+      return ((cal_day(g[1]) && cal_month(g[2])) || (cal_month(g[1]) && cal_day(g[2])))
+    }
+    function add(kind, needle, sel) { NN++; NK[NN] = kind; NV[NN] = needle; NS[NN] = sel }
+    function wcore(v, sel,   t, nt, k, x, s, r, d, a) {
+      nt = split(v, t, /[ ,;()<>"\047]+/)
+      for (k = 1; k <= nt; k++) {
+        x = t[k]; sub(/[.:]+$/, "", x)
+        if (x ~ /^[^@]+@[^@]+\.[^@]+$/) add("E", x, sel)
+      }
+      s = v
+      while (match(s, /[0-9]+([ .\/()+-][ .\/()+-]?[0-9]+)*/)) {
+        r = substr(s, RSTART, RLENGTH); s = substr(s, RSTART + RLENGTH)
+        d = digits(r)
+        if (length(d) >= 5 && !datelike(r)) add("D", d, sel)
+      }
+      nt = split(v, a, /[^a-z0-9]+/)
+      for (k = 1; k <= nt; k++) {
+        x = a[k]; d = digits(x)
+        if (length(x) >= 6 && length(d) >= 3 && x ~ /[a-z]/) add("M", x, sel)
+      }
+      return 0
+    }
+    BEGIN {
+      split("\357\274\220 \357\274\221 \357\274\222 \357\274\223 \357\274\224 \357\274\225 \357\274\226 \357\274\227 \357\274\230 \357\274\231", FWD, " ")
+      split("\331\240 \331\241 \331\242 \331\243 \331\244 \331\245 \331\246 \331\247 \331\250 \331\251", AID, " ")
+      ns = split(ENVIRON["BS_SELS"], S, " ")
+      nv = split(ENVIRON["BS_VALS"], VL, "\n")
+      for (i = 1; i <= nv; i++) {
+        p = index(VL[i], "\t"); if (p == 0) continue
+        sel = substr(VL[i], 1, p - 1); val = norm(substr(VL[i], p + 1))
+        v = val
+        gsub(/\302\267/, ",", v); gsub(/\342\200\224/, ",", v)
+        nc = split(v, C, /[,;():]/)
+        for (j = 1; j <= nc; j++) { c = C[j]; sub(/^ /, "", c); sub(/ $/, "", c); if (c != "" && distinctive(c)) add("C", c, sel) }
+        wcore(val, sel)
+      }
+    }
+    {
+      lab = fold($0)
+      do {
+        was = lab
+        sub(/^[ \t]*(>[ \t]*)*/, "", lab)
+        sub(/^#+[ \t]+/, "", lab)
+        sub(/^([-*+]|[0-9]+[.)])[ \t]+/, "", lab)
+        sub(/^\[[ xX]\][ \t]+/, "", lab)
+      } while (lab != was)
+      gsub(/[*_]/, "", lab)
+      sub(/^[ \t]+/, "", lab)
+      for (i = 1; i <= ns; i++) {
+        if (label_hit(lab, S[i])) { printf "%d\t%s\tlabel\n", FNR, S[i]; exit }
+      }
+      if (NN == 0) next
+      nl = norm($0)
+      ld = " "; s = nl
+      while (match(s, /[0-9]+([ .\/()+-][ .\/()+-]?[0-9]+)*/)) { ld = ld digits(substr(s, RSTART, RLENGTH)) " "; s = substr(s, RSTART + RLENGTH) }
+      lt = " "; nt = split(nl, a, /[^a-z0-9]+/); for (k = 1; k <= nt; k++) if (a[k] != "") lt = lt a[k] " "
+      for (i = 1; i <= NN; i++) {
+        if (exact_hit(i, nl, ld, lt)) { printf "%d\t%s\texact\n", FNR, NS[i]; exit }
+      }
+    }
+    function label_hit(lab, sel,   val) {
+      if (!field_hit(lab, sel)) return 0
+      val = lab; sub(/^[^:]*:[ \t]*/, "", val)
+      return stated(clean(val))
+    }
+    function exact_hit(i, nl, ld, lt) {
+      if (NK[i] == "C" || NK[i] == "E") return (index(nl, NV[i]) > 0)
+      if (NK[i] == "D") return (index(ld, NV[i]) > 0)
+      return (index(lt, " " NV[i] " ") > 0)
+    }' "$1"
+}
+
+# require_clean_build_sources <trip_dir> — returns 0 on a clean read, printing one pass line; dies otherwise.
+require_clean_build_sources() { # <trip_dir>
+  local trip_dir="$1" bs_rows bs_n bs_cand bs_wf bs_vals bs_vrc bs_unread bs_sels bs_v bs_p bs_g bs_f bs_rel bs_any
+  local bs_hit bs_hrc bs_read=0 bs_absent="" bs_notes bs_line bs_sel bs_kind bs_enc
+  bs_rows="$(_build_source_rows)"
+  bs_n="$(printf '%s' "$bs_rows" | awk 'NF { c++ } END { print c + 0 }')"
+  if [ "$bs_n" -eq 0 ]; then
+    die "SOURCE CHECK STOPPED — the files the site build reads could not be listed: reference/site-layout-spec.md § 9.1's $_BUILD_SOURCES_FENCE fence was unreadable or named no bound artifact. An empty read is not an empty set. Nothing was published."
+  fi
+  bs_cand="$(_build_source_candidates)"; bs_wf="$(_build_source_wellformed)"
+  if [ "${bs_cand:-0}" -ne "${bs_wf:-0}" ]; then
+    die "SOURCE CHECK STOPPED — the files the site build reads could not be listed: reference/site-layout-spec.md § 9.1's $_BUILD_SOURCES_FENCE fence offers ${bs_cand:-0} rows but only ${bs_wf:-0} parse as an artifact and a class — a partial read is not a smaller set. Nothing was published."
+  fi
+  bs_vals="$(_field_class_values "$trip_dir")" && bs_vrc=0 || bs_vrc=$?
+  if [ "$bs_vrc" -ne 0 ]; then
+    die "SOURCE CHECK STOPPED — the field class could not be read: reference/data-architecture.md § 5.6's declaration yielded no field row, or reads in part. An empty read is not an empty class. Nothing was published."
+  fi
+  bs_unread="$(awk -F'\t' '$1 == "UNREAD" && !seen[$2]++ { printf "%s%s", (n++ ? ", " : ""), $2 }' <<<"$bs_vals")"
+  if [ -n "$bs_unread" ]; then
+    die "SOURCE CHECK STOPPED — the value source $bs_unread is present but cannot be read as UTF-8 text, or carries a reference the check cannot read: it is not a readable regular file; it opens with a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not followed by a line feed; or, as named beside it, its front matter opens on its first line but holds a line other than a blank line, a comment or a plain key: value line, or it has no front matter on its first line and holds a person id, or a line opening with the key it is read for, indented or quoted, that carries a value on it or on the next line that is neither blank nor a comment, indented or as a sequence entry, so a person reference or a merge key in it might not be read. So the values to check for are not known. Nothing was published. Save it as readable UTF-8 text with LF or CRLF line endings, with any person reference, merge key or person id in front matter that opens on its first line and is written as plain key: value lines, or remove it, and re-run."
+  fi
+  bs_sels="$(_guard_declared_rows | awk '$1 == "field" && !seen[$2]++ { printf "%s%s", (n++ ? " " : ""), $2 }')"
+  bs_v="$(awk -F'\t' '$1 == "V" { print $2 "\t" $3 }' <<<"$bs_vals")"
+  while IFS= read -r bs_p; do
+    [ -n "$bs_p" ] || continue
+    bs_g="$(printf '%s' "$bs_p" | sed 's/<[^>]*>/*/g')"
+    bs_any=0
+    # shellcheck disable=SC2086  # a row's `<token>` is a glob by the fence's own grammar
+    for bs_f in "$trip_dir"/$bs_g; do
+      if [ ! -e "$bs_f" ] && [ ! -L "$bs_f" ]; then continue; fi
+      bs_any=1; bs_rel="${bs_f#"$trip_dir"/}"
+      if [ ! -f "$bs_f" ] || [ ! -r "$bs_f" ]; then
+        die "SOURCE CHECK STOPPED — $bs_rel is present but cannot be read, so whether it carries a value of the non-publishable field class cannot be checked. Nothing was published. Make it readable, or remove it, and re-run."
+      fi
+      # Read as UTF-8 or not at all (S7P2-06): a UTF-16 or UTF-32 byte-order mark, or a NUL byte or a carriage
+      # return not followed by a line feed anywhere.
+      bs_enc=0
+      case "$(LC_ALL=C od -An -tx1 -N4 "$bs_f" | tr -d ' \n')" in fffe*|feff*|0000feff) bs_enc=1 ;; esac
+      if [ "$bs_enc" -eq 0 ] && [ "$(($(wc -c < "$bs_f")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$bs_f" | wc -c)))" ]; then bs_enc=1; fi
+      if [ "$bs_enc" -eq 0 ] && [ "$(LC_ALL=C od -An -v -tx1 "$bs_f" | LC_ALL=C awk '{ for (i = 1; i <= NF; i++) { if (p == "0d" && $i != "0a") n++; p = $i } } END { print n + (p == "0d") }')" != 0 ]; then bs_enc=1; fi
+      if [ "$bs_enc" -ne 0 ]; then
+        die "SOURCE CHECK STOPPED — $bs_rel is present but cannot be read as UTF-8 text: it opens with a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not followed by a line feed, so whether it carries a value of the non-publishable field class cannot be checked. Nothing was published. Save it as UTF-8 text with LF or CRLF line endings, or remove it, and re-run."
+      fi
+      bs_hit="$(BS_SELS="$bs_sels" BS_VALS="$bs_v" _build_source_hits "$bs_f")" && bs_hrc=0 || bs_hrc=$?
+      if [ "$bs_hrc" -ne 0 ]; then
+        die "SOURCE CHECK STOPPED — $bs_rel could not be scanned (status $bs_hrc), so whether it carries a value of the non-publishable field class cannot be checked. Nothing was published."
+      fi
+      if [ -n "$bs_hit" ]; then
+        IFS="$(printf '\t')" read -r bs_line bs_sel bs_kind <<<"$bs_hit"
+        if [ "$bs_kind" = "label" ]; then
+          die "SOURCE CHECK STOPPED — $bs_rel line $bs_line carries the $bs_sel label with a value. The site build reads that file, and a value of the non-publishable field class (reference/data-architecture.md § 5.6) must not reach any page, private or public. Nothing was published. Take it out of that file, rebuild the site, and re-run."
+        fi
+        die "SOURCE CHECK STOPPED — $bs_rel line $bs_line carries a $bs_sel value, matched exactly. The site build reads that file, and a value of the non-publishable field class (reference/data-architecture.md § 5.6) must not reach any page, private or public. Nothing was published. Take it out of that file, rebuild the site, and re-run."
+      fi
+      bs_read=$((bs_read + 1))
+    done
+    [ "$bs_any" -eq 1 ] || bs_absent="$bs_absent${bs_absent:+, }$bs_p"
+  done <<<"$bs_rows"
+  bs_notes="$(awk -F'\t' '$1 == "NOTE" && !seen[$2]++ { printf "%s%s", (n++ ? ", " : ""), $2 }' <<<"$bs_vals")"
+  info "Source check: no value of the non-publishable field class in the files the site build reads (${bs_read} read${bs_absent:+; not in this trip: ${bs_absent}}${bs_notes:+; values not on file: ${bs_notes}})."
+  return 0
+}
+
+# THE REPUBLISH PATH'S GUARDS, AS ONE CALL LINE (#719, the scope-lock's C5; #1468; #2156). update and
+# rotate call this and nothing else at the gate's position: S3 exactly as it was, then the render's
+# approval-code guard, then the baseline guard, then the source check. #85 relocates the gate onto its
+# event-driven path by moving that one line, as S3's own banner promises, so no guard can be left behind
+# by a relocation that carries S3 alone. publish calls the code guard, the baseline guard and the source
+# check on its own: S3 does not gate publish, by design.
 require_publish_guards() { # <trip_dir> <site_html>
   local trip_dir="$1" site_html="$2"
   require_change_confirmation "$trip_dir"
   require_render_approval_code "$trip_dir" "$site_html" update
   require_recordable_baseline "$trip_dir" "$site_html"
+  require_clean_build_sources "$trip_dir"
   return 0
 }
 
@@ -4303,6 +5067,16 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   # first publish that could not record its baseline would leave a trip that declares no
   # approvers with the gate NOT ACTIVE. It is not the gate, which still does not run here.
   require_recordable_baseline "$trip_dir" "$site_html"
+  # The group-only refusal (#2155; ADR-030 § 6 safeguard 2), first of the plaintext limb's content controls
+  # and before the per-trip repository is probed, created or pushed, so ALLOW_PLAINTEXT, read only at the
+  # confirmation below, reaches none of
+  # them. On --plaintext the order is this refusal, the source check, the content guard, the typed
+  # confirmation, and this refusal again on the staged copy. The encrypted limb never runs it (ADR-031 S4): the same page ships there.
+  [ "$plaintext" != "1" ] || refuse_group_only_render "$site_html"
+  # The source check (#2156; ADR-030 § 6 safeguard 6), on both limbs and before the per-trip repository is
+  # probed, created or pushed — the same
+  # check update and rotate run inside require_publish_guards.
+  require_clean_build_sources "$trip_dir"
   slug="$(slug_for "$trip_dir")"
   pub_dir="$trip_dir/.publish"
   owner="$(gh api user --jq '.login')"
@@ -4327,7 +5101,8 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
 
   if [ "$plaintext" = "1" ]; then
     warn "PLAINTEXT publish requested — the itinerary will be WORLD-READABLE, no passphrase."
-    # The content guard runs BEFORE the human gate, not after: one insertion covers both
+    # The content guard is the third content control on this limb — the group-only refusal and the source
+    # check ran above, before the repository was probed — and it runs BEFORE the human gate, not after: one insertion covers both
     # the interactive typed-PUBLISH limb and the ALLOW_PLAINTEXT non-interactive limb,
     # and asking someone to type PUBLISH and THEN refusing trains them to read the prompt
     # as noise. Nothing has been copied to the publish dir at this point.
@@ -4340,6 +5115,9 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
       die "refusing non-interactive plaintext publish; re-run with ALLOW_PLAINTEXT=1 to override."
     fi
     cp "$site_html" "$pub_dir/index.html"
+    # The bytes this push carries are the bytes checked (#2155's review, F18): the refusal reads the staged
+    # copy, so a render rebuilt since it first ran is refused rather than pushed, and the copy goes with it.
+    refuse_group_only_render "$pub_dir/index.html" "$site_html" "$pub_dir/index.html"
   else
     local passphrase enc boiler
     # A trip's first key, made here and nowhere else outside rotate, on both of publish's arms: the
@@ -4658,13 +5436,13 @@ cmd_update() { # <trip_dir>
 
   local site_html pub_dir passphrase owner slug mine="" lease="" prior="" staged=""
   site_html="$(resolve_site_html "$trip_dir")"
-  # THE APPROVAL GATE AND THE RENDER'S APPROVAL-CODE GUARD, as ONE call line (#552; #719 under
-  # ADR-029 and the scope-lock's C5). Its position is exact and load-bearing: after the render
-  # is resolved (both read it) and BEFORE ensure_pub_clone, which performs network I/O and can
-  # remove the publish dir. S3 runs first and decides whether the plan may publish; the code
-  # guard follows it because it needs the render's identity and must still precede the clone.
-  # On an abort nothing has been cloned, encrypted, copied or pushed — the same discipline the
-  # plaintext gate states for itself in cmd_publish. #85 relocates both by moving this line.
+  # THE APPROVAL GATE, THE RENDER'S APPROVAL-CODE GUARD, THE BASELINE GUARD AND THE SOURCE CHECK, as ONE
+  # call line (#552; #719 under ADR-029 and the scope-lock's C5; #1468; #2156). Its position is exact and
+  # load-bearing: after the render is resolved (the guards read it) and BEFORE ensure_pub_clone, which
+  # performs network I/O and can remove the publish dir. S3 runs first and decides whether the plan may
+  # publish; the code guard follows it because it needs the render's identity and must still precede the
+  # clone. On an abort nothing has been cloned, encrypted, copied or pushed — the same discipline the
+  # plaintext gate states for itself in cmd_publish. #85 relocates all four by moving this line.
   require_publish_guards "$trip_dir" "$site_html"
   pub_dir="$(ensure_pub_clone "$trip_dir")"
   owner="$(gh api user --jq '.login')"; slug="$(slug_for "$trip_dir")"
@@ -5051,9 +5829,10 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   preflight; resolve_noreply_identity
   site_html="$(resolve_site_html "$trip_dir")"
   # rotate re-publishes the same render, so it applies update's own guards itself, as the same one
-  # call line (S8; ADR-029 and #719): the approval gate, then the render's approval-code guard. Both
-  # run before anything is cloned or written, so a refusal leaves .passphrase exactly as it was —
-  # with an itinerary change pending, confirm or revert it first, then rotate.
+  # call line (S8; ADR-029, #719 and #2156): the approval gate, the render's approval-code guard, the
+  # baseline guard and the source check. All run before anything is cloned or written, so a refusal
+  # leaves .passphrase exactly as it was — with an itinerary change pending, confirm or revert it first,
+  # then rotate.
   require_publish_guards "$trip_dir" "$site_html"
   pub_dir="$(ensure_pub_clone "$trip_dir")"
   owner="$(gh api user --jq '.login')"; slug="$(slug_for "$trip_dir")"
@@ -5124,8 +5903,69 @@ _ymd_of_epoch()  { # <epoch> -> YYYY-MM-DD, or '-' when empty
   [ -n "${1:-}" ] || { printf '%s' '-'; return; }
   date -r "$1" +%Y-%m-%d 2>/dev/null || date -d "@$1" +%Y-%m-%d 2>/dev/null || printf '%s' '-'
 }
-# stale = a live site whose local build (edited epoch) is newer than the deployed commit.
+# Orders two epochs: true when the first is strictly later. The guard's freshness gates read it (a
+# profile, a person record or a render newer than the traveller model); list no longer does, since its
+# build-to-published relation compares content rather than clocks (#2157).
 _is_stale() { [ -n "${1:-}" ] && [ -n "${2:-}" ] && [ "$1" -gt "$2" ]; }
+
+# THE RELATION build-to-published (#2157; ADR-035 § 1), one cell per trip: whether the page as last pushed
+# is the newest local build, by content. Its declaration is skills/trip-publish/SKILL.md § list, and its
+# registration reference/channel-and-engagement-model.md § 2. The derived side is the digest every push
+# records in .published-itinerary (D-3), so no publish verb gains a write; the source side is
+# newest_site_html, the render a push takes. The verdict is the first row that holds:
+#   1  a staged twin .published-itinerary.next is present — a push's record is outstanding, and the record
+#      may lag the page (F14 of the review: checked first, so a first publish whose record is still staged
+#      is not reported as one never pushed)
+#   2  the record is absent — no push recorded on this machine (a site published before the record
+#      existed reads this until its next push)
+#   3  the record is present and unusable
+#   4  no local render
+#   5  the render cannot be projected — no perl, an unreadable render, a projection that failed
+#   6  the digests are equal: CURRENT
+#   7  a legacy (pre-#719 CRC) record that differs reads UNDETERMINED, never BEHIND: that record was taken
+#      under a projection that has since moved, so a difference proves nothing about the plan
+#   8  otherwise BEHIND, naming the render
+# Rows 1 to 5 and 7 are UNDETERMINED, each naming the operand it could not read; a state no row names cannot
+# arise, because row 8 is reached only with both tokens read. It reads only: _baseline_record, the staged
+# twin's presence, newest_site_html and the two digests, and no gh. No publish verb calls it, and nothing
+# may branch on it (CLAUDE.md § Resolving a trip, G8: report-only). Blind spots, declared in the SKILL:
+# a push from another machine; a takedown, since unpublish leaves the record; text outside the projection
+# (the coordination band, the declaration block, and text a browser shows that the projection drops); and
+# a projection that moved after the record was written, which reads as a change once.
+build_to_published() { # <trip_dir> -> one cell
+  local trip_dir="$1" bp_nx bp_twin=0 bp_rec bp_site bp_rel bp_dg
+  bp_nx="$(staged_record_path "$trip_dir")"
+  if [ -e "$bp_nx" ] || [ -L "$bp_nx" ]; then bp_twin=1; fi
+  if [ "$bp_twin" -eq 1 ]; then
+    printf "UNDETERMINED: a push's record is outstanding"; return 0
+  fi
+  bp_rec="$(_baseline_record "$(published_itinerary_path "$trip_dir")")"
+  case "$bp_rec" in
+    absent) printf 'UNDETERMINED: no push recorded'; return 0 ;;
+    unusable|'') printf 'UNDETERMINED: the push record cannot be read'; return 0 ;;
+  esac
+  bp_site="$(newest_site_html "$trip_dir")"
+  if [ -z "$bp_site" ]; then
+    printf 'UNDETERMINED: no local render'; return 0
+  fi
+  bp_rel="${bp_site#"$trip_dir"/}"
+  if [ "${#bp_rec}" -ne 64 ]; then
+    bp_dg="$(_legacy_itinerary_digest "$bp_site")"
+  else
+    bp_dg="$(itinerary_digest "$bp_site")"
+  fi
+  if [ -z "$bp_dg" ]; then
+    printf 'UNDETERMINED: %s cannot be projected' "$bp_rel"; return 0
+  fi
+  if [ "$bp_dg" = "$bp_rec" ]; then
+    printf 'CURRENT'; return 0
+  fi
+  if [ "${#bp_rec}" -ne 64 ]; then
+    printf 'UNDETERMINED: the push record predates the current digest; the next push records one'; return 0
+  fi
+  printf 'BEHIND: %s' "$bp_rel"
+  return 0
+}
 
 # ─────────────────────────────────────────────────────────────────────────────
 # list — read-only inventory of every trip under ./trips/. Never writes/encrypts/pushes.
@@ -5143,23 +5983,23 @@ cmd_list() { # (no args, beyond the shared --data-root seam main strips)
   [ "$_GUARD_DATA_ROOT_EXPLICIT" = "1" ] && _lroot="$_GUARD_DATA_ROOT"
   # Local first: scanning <root>/trips/ needs no GitHub. Only the publish-state columns do.
   [ -d "$_lroot/trips" ] || die "no trips/ directory under $_lroot — trips/ ships with the repo, so this is probably not the repo root. cd there and re-run, or pass --data-root <dir>."
-  # Publish state (STATUS/PUBLISHED/STALE) needs gh; the local inventory does not.
+  # Publish state (STATUS/PUBLISHED) needs gh; the local inventory and BUILD-TO-PUBLISHED do not.
   # Degrade instead of dying, so list still works on a fresh clone with no gh.
   local owner="" online=0
   if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
     owner="$(gh api user --jq '.login' 2>/dev/null || true)"
     [ -n "$owner" ] && online=1
   fi
-  [ "$online" = "1" ] || warn "gh unavailable or not authenticated — showing local trips only. STATUS/PUBLISHED/STALE need: gh auth login"
+  [ "$online" = "1" ] || warn "gh unavailable or not authenticated — showing local trips only. STATUS and PUBLISHED need: gh auth login. BUILD-TO-PUBLISHED needs no network."
 
   printf '\n\033[1m%-22s %-24s %-14s %-12s %-12s %s\033[0m\n' \
-    "TRIP" "REPO" "STATUS" "PUBLISHED" "EDITED" "STALE"
-  local any=0 trip_dir base slug site edited_epoch pub_iso pub_epoch status stale
+    "TRIP" "REPO" "STATUS" "PUBLISHED" "EDITED" "BUILD-TO-PUBLISHED"
+  local any=0 trip_dir base slug site edited_epoch pub_iso pub_epoch status
   for trip_dir in "$_lroot"/trips/*/; do
     [ -d "$trip_dir" ] || continue
     trip_dir="${trip_dir%/}"; base="$(basename "$trip_dir")"; any=1
     slug="$(slug_for "$trip_dir" 2>/dev/null || printf '?')"
-    site="$(ls -1t "$trip_dir"/outputs/*-travel-site.html 2>/dev/null | awk 'NR == 1' || true)"
+    site="$(newest_site_html "$trip_dir")"
     edited_epoch=""; [ -n "$site" ] && edited_epoch="$(_epoch_of_file "$site")"
     status="-"; pub_epoch=""
     if [ "$online" = "1" ]; then
@@ -5171,16 +6011,13 @@ cmd_list() { # (no args, beyond the shared --data-root seam main strips)
         status="not published"
       fi
     fi
-    # Stale = a live site whose local build is newer than the deployed commit.
-    # Left as "-" (indeterminate) unless both timestamps are known.
-    stale="-"
-    if [ "$status" = "live" ] && [ -n "$edited_epoch" ] && [ -n "$pub_epoch" ]; then
-      if _is_stale "$edited_epoch" "$pub_epoch"; then stale="⚠ stale"; else stale="ok"; fi
-    fi
+    # The last column is the build-to-published relation, read locally and computed for every trip,
+    # online or not (see build_to_published).
     printf '%-22s %-24s %-14s %-12s %-12s %s\n' \
-      "$base" "$slug" "$status" "$(_ymd_of_epoch "$pub_epoch")" "$(_ymd_of_epoch "$edited_epoch")" "$stale"
+      "$base" "$slug" "$status" "$(_ymd_of_epoch "$pub_epoch")" "$(_ymd_of_epoch "$edited_epoch")" "$(build_to_published "$trip_dir")"
   done
   [ "$any" = "1" ] || info "No trips under $_lroot/trips/ — see trips/README.md to start one."
+  [ "$any" != "1" ] || printf '%s\n' "build-to-published: the page as last pushed against the newest local build, compared by content; evaluated here, outside trip.freshness; report-only."
   printf '\n'
 }
 

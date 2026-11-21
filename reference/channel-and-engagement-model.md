@@ -79,6 +79,7 @@ reading's owner, and naming it beside the reading is the admission duty of
 itinerary-to-build    | skills/trip/SKILL.md
 research-to-placement | skills/trip/SKILL.md
 plan-to-coverage      | skills/trip-record/SKILL.md
+build-to-published    | skills/trip-publish/SKILL.md
 engagement(t)         | reference/adr/ADR-025-engagement-model-over-time.md
 ```
 
@@ -86,7 +87,8 @@ engagement(t)         | reference/adr/ADR-025-engagement-model-over-time.md
 table whose first column is headed *relation*. That table is its owner: a relation is added
 there, and its row here follows in the same change. The relations registered above are evaluated
 inside `trip.freshness` unless the file that declares one evaluates it outside, as
-`skills/trip-record/SKILL.md` does with `plan-to-coverage`
+`skills/trip-record/SKILL.md` does with `plan-to-coverage` and `skills/trip-publish/SKILL.md` with
+`build-to-published`
 (`CLAUDE.md` § *Rules over an enumeration*). A consumer that evaluates a relation outside
 `trip.freshness` says so in its own report, and declares it the same way.
 
