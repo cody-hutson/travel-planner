@@ -4541,15 +4541,24 @@ refuse_group_only_render() {
 # A value is the text after a label's colon on the label's own line, after clean(), admitted by stated() —
 # exactly the guard's profile parse, through the same shared helpers.
 #
-# THE TWO HALVES (D-2156-MATCH, with D-NEW-1). A bound line stops the publish when:
-#   1. LABEL. With U+00A0 read as a space, U+FF1A as a colon, and the zero-width characters U+200B–U+200D and
-#      U+FEFF and the soft hyphen U+00AD dropped, and stripped of every leading list marker (bulleted or
-#      numbered), task box (`[ ]`, `[x]`), blockquote marker and heading marker, in any order, and of emphasis,
-#      it is a declared selector used as a label — field_hit, unchanged, reached by the normalized line — with
-#      a stated value after the colon. An ordinary-word value, a country, is caught only this way.
-#   2. EXACT. It carries, case-folded, with emphasis, U+00A0 and runs of whitespace normalized, the zero-width
-#      characters and the soft hyphen dropped, and full-width (U+FF10–U+FF19) and Arabic-Indic (U+0660–U+0669)
-#      digits read as ASCII digits — the same normalization applied to the values — either
+# FOLDING (S7P2-02, S7P2-06), worded identically in § 5.6, the CHANGELOG and the PR body: The check reads a bound
+# file's lines as UTF-8. Before matching, it reads every Unicode space separator as a space and the colons
+# U+FF1A, U+FE55, U+FE13, U+2236, U+A789, U+02D0, U+0589 and U+05C3 as a colon, drops every format character and
+# variation selector (Unicode 13.0 category Cf and property Variation_Selector), strips a backslash before a
+# colon, and folds full-width and Arabic-Indic digits. A bound file that opens with a UTF-16 or UTF-32
+# byte-order mark, or holds a NUL byte, stops as unreadable. Anything else is not folded: other scripts' letters
+# and digits, full-width letters, other look-alikes, a dash in place of the colon, a label behind a marker the
+# strip does not name, and the declared separators.
+# The folds are fold() in the program below, applied alike to every bound line and to every stated value; the
+# colon set is a set, not a class, and each class's byte sequences are generated from the Unicode 13.0 database.
+#
+# THE TWO HALVES (D-2156-MATCH, with D-NEW-1). A bound line, folded, stops the publish when:
+#   1. LABEL. Stripped of every leading list marker (bulleted or numbered), task box (`[ ]`, `[x]`), blockquote
+#      marker and heading marker, in any order, and of emphasis, it is a declared selector used as a label —
+#      field_hit, unchanged, reached by the folded line — with a stated value after the colon. An ordinary-word
+#      value, a country, is caught only this way.
+#   2. EXACT. It carries, case-folded, with emphasis and runs of whitespace normalized — the same normalization
+#      applied to the values — either
 #      (a) a distinctive component of a stated value: the value split at `,` `;` `·` `(` `)` `:` and `—`, a
 #          component distinctive when one of its words holds three or more digits — except a component that is
 #          nothing but a number of four or fewer digits (a year, a day: the trip's own), and the Documents
@@ -4569,35 +4578,35 @@ refuse_group_only_render() {
 #   number written 19 2031 — is matched. The skip is what keeps (b) from becoming the full-date rule the
 #   operator declined (D-NEW-1): a full date reaches the match only inside a distinctive component, so a
 #   calendar-valid date carried with other words around it is a declared residual.
-# The split and the normalization run under LC_ALL=C, with each multibyte separator replaced by its exact byte
-# string before an ASCII split (#2156's review, F19), so a host's locale and awk cannot move a verdict.
+# The split, the normalization and the folding run under LC_ALL=C, with each multibyte character named by its
+# exact bytes before an ASCII split (#2156's review, F19), so a host's locale and awk cannot move a verdict.
 #
 # ABSENT IS NOT UNREADABLE (D-2). A fence that reads no `bound` row, or reads in part, stops; a field class
 # that reads no `field` row, or reads in part, stops. A `bound` artifact absent from the trip — no file and no
 # link, as an IDEATION trip's itinerary is — is skipped and named; one present but not a readable regular
-# file stops, naming it. A value source absent, or a person reference unresolvable or malformed, is named
+# file, or one that opens with a UTF-16 or UTF-32 byte-order mark or holds a NUL byte, stops, naming it. A value
+# source absent, or a person reference unresolvable or malformed, is named
 # and contributes no values (D-2156-VALSRC): this check reads the sources of record directly, so it needs no
 # freshness inference, and a present, readable source contributes its values whatever its age or its entry
 # structure (#2156's review, F8). A value source present but not readable stops, named by its scope, never
 # by a traveller file's name. Nothing it prints is a value.
 #
-# DECLARED RESIDUALS, each asserted by an arm of test-publish-guard.sh group L (L19v):
-#   • an ordinary-word value restated without its label (ADR-030 § 6 safeguard 6 names it);
-#   • a label written mid-line, in a table cell, or with a word between the selector and its colon; a label
-#     whose colon is replaced by a dash (`Passport — X`, `- Passport - X`); and a label behind a leading
-#     marker other than those the strip names;
-#   • a value wrapped across two lines, and a paraphrase;
+# DECLARED RESIDUALS, worded alike in § 5.6, the CHANGELOG and the PR body, each asserted by an arm of
+# test-publish-guard.sh group L (L19v). The source check does not see:
+#   • an ordinary-word value restated without its label;
+#   • a label mid-line, in a table cell, with a word between the selector and its colon, with a dash in place
+#     of the colon, or behind a leading marker other than those the strip names;
+#   • a value wrapped or paraphrased;
 #   • a calendar-valid date, or any distinctive part, carried with other words around it;
-#   • a number whose groups are joined otherwise than by one or two of the characters (b) names — a comma, or
-#     three characters such as ` - `;
-#   • a value written in characters the normalization does not fold: letters in another script or a
-#     full-width form, and digits other than ASCII, full-width and Arabic-Indic;
-#   • a value held only in a value source that is absent or unresolved, which the label half alone covers;
-#   • a value-source line the guard's profile parse does not read as a label — a task box, or a look-alike
-#     colon, in a traveller file — which contributes no value, so the label half alone covers it;
-#   • a person reference whose merge chain runs past one hop, which is named in a NOTE (a merge chain longer
-#     than one hop) and whose second hop is not read;
-#   • a trip with no `bound` artifact present, which passes with every one named as not in the trip (D-NEW-3).
+#   • a number whose groups are joined otherwise than by one or two of a space, `.`, `/`, `(`, `)`, `+` and
+#     `-`, such as by a comma or by three characters like ` - `;
+#   • a value written in characters the folding does not fold;
+#   • a value held only in a value source that is absent or unresolved, or on a value-source line the guard's
+#     profile parse does not read as a label — behind a task box, through a look-alike colon, or in a file
+#     written in UTF-16 or UTF-32 — which contributes no value, so the label half alone covers it;
+#   • a person reference whose merge chain runs past one hop, which is named in a note and whose second hop
+#     is not read;
+#   • a trip with no bound file present, which passes with every one named as absent.
 # Over-stops fail closed: a distinctive component that happens to occur in a bound file, such as an expiry
 # month and year equal to the trip's own, stops the publish, and the remedy is one edit.
 #
@@ -4712,15 +4721,28 @@ EOF
 # _build_source_hits <file> -> the first line of a bound file that stops the publish, as
 # "<line>\t<selector>\t<label|exact>", or nothing. The selectors arrive in BS_SELS, space-joined, and the stated
 # values in BS_VALS as "<selector>\t<value>" lines, both through the environment and compared with index(),
-# never as a pattern. One program, run under LC_ALL=C: the multibyte separators and U+00A0 are named by their
-# exact bytes, in octal, so the split is byte-exact on every host.
+# never as a pattern. One program, run under LC_ALL=C: every multibyte character it folds or splits at is
+# named by its exact bytes, in octal, so the split and the folding are byte-exact on every host and awk.
 _build_source_hits() { # <file>
   LC_ALL=C awk "$_GUARD_AWK_HELPERS"'
-    function norm(s,   k) {
-      s = tolower(s)
-      gsub(/\302\240/, " ", s)
-      gsub(/\342\200\213|\342\200\214|\342\200\215|\357\273\277|\302\255/, "", s)
+    # FOLDING (the function comment states it). Each class is named by its UTF-8 bytes in octal, generated from
+    # the Unicode 13.0 database and grouped by leading bytes: category Cf (U+00AD, U+0600–U+0605, U+061C, U+06DD,
+    # U+070F, U+08E2, U+180E, U+200B–U+200F, U+202A–U+202E, U+2060–U+2064, U+2066–U+206F, U+FEFF, U+FFF9–U+FFFB,
+    # U+110BD, U+110CD, U+13430–U+13438, U+1BCA0–U+1BCA3, U+1D173–U+1D17A, U+E0001, U+E0020–U+E007F) and property
+    # Variation_Selector (U+180B–U+180D, U+FE00–U+FE0F, U+E0100–U+E01EF) dropped; category Zs bar U+0020 (U+00A0,
+    # U+1680, U+2000–U+200A, U+202F, U+205F, U+3000) read as a space; the colon set read as `:`; a backslash
+    # before a colon stripped; full-width and Arabic-Indic digits read as ASCII digits.
+    function fold(s,   k) {
+      gsub(/\302\255|\330[\200-\205\234]|\333\235|\334\217|\340\243\242|\341\240\216|\342\200[\213-\217\252-\256]|\342\201[\240-\244\246-\257]|\357\273\277|\357\277[\271-\273]|\360\221\202\275|\360\221\203\215|\360\223\220[\260-\270]|\360\233\262[\240-\243]|\360\235\205[\263-\272]|\363\240\200[\201\240-\277]|\363\240\201[\200-\277]/, "", s)
+      gsub(/\341\240[\213-\215]|\357\270[\200-\217]|\363\240[\204-\206][\200-\277]|\363\240\207[\200-\257]/, "", s)
+      gsub(/\302\240|\341\232\200|\342\200[\200-\212\257]|\342\201\237|\343\200\200/, " ", s)
+      gsub(/\313\220|\326\211|\327\203|\342\210\266|\352\236\211|\357\270\223|\357\271\225|\357\274\232/, ":", s)
+      gsub(/\\:/, ":", s)
       for (k = 1; k <= 10; k++) { gsub(FWD[k], k - 1, s); gsub(AID[k], k - 1, s) }
+      return s
+    }
+    function norm(s) {
+      s = fold(tolower(s))
       gsub(/[*_`]/, " ", s)
       gsub(/[ \t]+/, " ", s); sub(/^ /, "", s); sub(/ $/, "", s)
       return s
@@ -4783,9 +4805,7 @@ _build_source_hits() { # <file>
       }
     }
     {
-      lab = $0
-      gsub(/\302\240/, " ", lab); gsub(/\357\274\232/, ":", lab)
-      gsub(/\342\200\213|\342\200\214|\342\200\215|\357\273\277|\302\255/, "", lab)
+      lab = fold($0)
       do {
         was = lab
         sub(/^[ \t]*(>[ \t]*)*/, "", lab)
@@ -4822,7 +4842,7 @@ _build_source_hits() { # <file>
 # require_clean_build_sources <trip_dir> — returns 0 on a clean read, printing one pass line; dies otherwise.
 require_clean_build_sources() { # <trip_dir>
   local trip_dir="$1" bs_rows bs_n bs_cand bs_wf bs_vals bs_vrc bs_unread bs_sels bs_v bs_p bs_g bs_f bs_rel bs_any
-  local bs_hit bs_hrc bs_read=0 bs_absent="" bs_notes bs_line bs_sel bs_kind
+  local bs_hit bs_hrc bs_read=0 bs_absent="" bs_notes bs_line bs_sel bs_kind bs_enc
   bs_rows="$(_build_source_rows)"
   bs_n="$(printf '%s' "$bs_rows" | awk 'NF { c++ } END { print c + 0 }')"
   if [ "$bs_n" -eq 0 ]; then
@@ -4852,6 +4872,13 @@ require_clean_build_sources() { # <trip_dir>
       bs_any=1; bs_rel="${bs_f#"$trip_dir"/}"
       if [ ! -f "$bs_f" ] || [ ! -r "$bs_f" ]; then
         die "SOURCE CHECK STOPPED — $bs_rel is present but cannot be read, so whether it carries a value of the non-publishable field class cannot be checked. Nothing was published. Make it readable, or remove it, and re-run."
+      fi
+      # Read as UTF-8 or not at all (S7P2-06): a UTF-16 or UTF-32 byte-order mark, or a NUL byte anywhere.
+      bs_enc=0
+      case "$(LC_ALL=C od -An -tx1 -N4 "$bs_f" | tr -d ' \n')" in fffe*|feff*|0000feff) bs_enc=1 ;; esac
+      if [ "$bs_enc" -eq 0 ] && [ "$(($(wc -c < "$bs_f")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$bs_f" | wc -c)))" ]; then bs_enc=1; fi
+      if [ "$bs_enc" -ne 0 ]; then
+        die "SOURCE CHECK STOPPED — $bs_rel is present but cannot be read as UTF-8 text: it opens with a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte, so whether it carries a value of the non-publishable field class cannot be checked. Nothing was published. Save it as UTF-8, or remove it, and re-run."
       fi
       bs_hit="$(BS_SELS="$bs_sels" BS_VALS="$bs_v" _build_source_hits "$bs_f")" && bs_hrc=0 || bs_hrc=$?
       if [ "$bs_hrc" -ne 0 ]; then

@@ -40,10 +40,16 @@ included: § 3 now says so, and that the share-mark card ships with or after it.
 pushed, the script reads the files `reference/site-layout-spec.md` § 9.1 marks `bound` and stops,
 naming the file, the line and the field and never the value, where one carries a value of the field
 class `reference/data-architecture.md` § 5.6 declares: by its label with a value stated, behind any
-list marker, task box, quote or heading marker and through a full-width colon or a non-breaking
-space, or exactly, where a part of a value holds a number of three or more digits or a word of it is
-an email address, a run of five or more digits or a token mixing letters with three or more digits,
-read through zero-width characters and full-width and Arabic-Indic digits. A run of digits whose
+list marker, task box, quote or heading marker, or exactly, where a part of a value holds a number of
+three or more digits or a word of it is an email address, a run of five or more digits or a token
+mixing letters with three or more digits. The check reads a bound file's lines as UTF-8. Before
+matching, it reads every Unicode space separator as a space and the colons U+FF1A, U+FE55, U+FE13,
+U+2236, U+A789, U+02D0, U+0589 and U+05C3 as a colon, drops every format character and variation
+selector (Unicode 13.0 category Cf and property Variation_Selector), strips a backslash before a
+colon, and folds full-width and Arabic-Indic digits. A bound file that opens with a UTF-16 or UTF-32
+byte-order mark, or holds a NUL byte, stops as unreadable. Anything else is not folded: other
+scripts' letters and digits, full-width letters, other look-alikes, a dash in place of the colon, a
+label behind a marker the strip does not name, and the declared separators. A run of digits whose
 groups form a calendar-valid date is skipped, so a date the plan carries does not stop a publish; a
 number grouped like a date that is no calendar date is matched. It reads the traveller files, the
 traveller model and the referenced person records directly, so a stale or missing model neither
@@ -73,13 +79,18 @@ Beneath their ceilings, `reference/data-architecture.md` grew by 1,581 bytes to 
 **What it does not do, stated so a green check is not read as more.** The refusal reads nothing its
 coverage above leaves out: a script building markup at run time, an image (an SVG data: image
 included), group content rendered without its token, which the § 3 render contract binds, or any
-other URL. The source check does not see an
-ordinary-word value restated without its label, a label mid-line, in a table cell, with a word
-before its colon or with a dash in place of it, a value wrapped or paraphrased, a calendar-valid
-date carried with other words around it, a number joined by a comma or by three characters such as
-` - `, or a value written in another script's letters, full-width letters or digits other than
-ASCII, full-width and Arabic-Indic; and a trip with no bound file present passes it with every one
-named as absent. `list` reads the record a push left on this machine, so a push from elsewhere, a
+other URL. The source check does not see: an ordinary-word value restated without its label; a
+label mid-line, in a table cell, with a word between the selector and its colon, with a dash in place
+of the colon, or behind a leading marker other than those the strip names; a value wrapped or
+paraphrased; a calendar-valid date, or any distinctive part, carried with other words around it; a
+number whose groups are joined otherwise than by one or two of a space, `.`, `/`, `(`, `)`, `+` and
+`-`, such as by a comma or by three characters like ` - `; a value written in characters the folding
+does not fold; a value held only in a value source that is absent or unresolved, or on a value-source
+line the guard's profile parse does not read as a label — behind a task box, through a look-alike
+colon, or in a file written in UTF-16 or UTF-32 — which contributes no value, so the label half alone
+covers it; a person reference whose merge chain runs past one hop, which is named in a note and whose
+second hop is not read; and a trip with no bound file present, which passes with every one named as
+absent. `list` reads the record a push left on this machine, so a push from elsewhere, a
 takedown and text outside the projection are not seen.
 
 ## [0.71.0] — 2026-11-20 — A form field keeps its key when its label is reworded
