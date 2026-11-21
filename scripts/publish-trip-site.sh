@@ -4617,16 +4617,20 @@ refuse_group_only_render() {
 #     `-`, such as by a comma or by three characters like ` - `;
 #   • a value written in characters the folding does not fold;
 #   • a value held only in a value source that is absent or unresolved, or on a value-source line the source
-#     check's harvest does not read as a label — behind a task box or through a look-alike colon — which
-#     contributes no value, so the label half alone covers it;
+#     check's harvest does not read as a label — it reads one only by § 5.6's field grammar, as the selector,
+#     case-insensitively, at the start of the line, followed by a colon with nothing but spaces or tabs between
+#     them, once leading spaces or tabs, one `-`, `*` or `+` bullet and every `**` are stripped, so it does not
+#     read, for example, a label behind a task box or a numbered, blockquote or heading marker, or with a
+#     look-alike space before its colon, a look-alike colon or an invisible character in it — which contributes
+#     no value, so the label half alone covers it;
 #   • a person reference whose merge chain runs past one hop, which is named in a note and whose second hop
 #     is not read;
 #   • a trip with no bound file present, which passes with every one named as absent;
 #   • a person reference or merge key in a traveller file, person record or merge target with no front matter
-#     on its first line, when no line opening with the key, indented or quoted, carries a value on it or on the
-#     next line that is neither blank nor a comment, indented or as a sequence entry, and none holds the id
-#     whole — a flow mapping, the key escaped after an empty key line, or a key after a U+2028 line separator,
-#     with the id escaped — which is read as carrying none.
+#     on its first line, when no line opening with the key as written, indented or quoted, carries a value on it
+#     or on the next line that is neither blank nor a comment, indented or as a sequence entry, and none holds
+#     the id whole — for example a flow mapping, an escaped spelling of the key, whether or not after an empty
+#     key line, or a key after a U+2028 line separator, with the id escaped — which is read as carrying none.
 # Over-stops fail closed: a distinctive component that happens to occur in a bound file, such as an expiry
 # month and year equal to the trip's own, stops the publish, and the remedy is one edit.
 #
