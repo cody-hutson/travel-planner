@@ -16950,8 +16950,8 @@ l19y_assert "L19y-arabic" l19y-arabic "$L19VD" "Ref $(printf '\331\241\331\242\3
 # and the one-hop control, whose target's value a bound file carries, stops. L19z-hop2-crlf is the two-hop
 # chain with its first target saved with CRLF line endings: the target's merge key is read as its plain twin's
 # is, so the longer chain is still named. L19z-hop2-indent is the two-hop chain with that target's merge key
-# indented, a spelling the reader does not read: the key is found when the target is read once more, and the
-# longer chain is still named, as its plain twin's is.
+# indented, a line the front-matter shape gate refuses: the target fails the gate, and the longer chain is still
+# named, as its plain twin's is.
 l19z_assert() { # <id> <1|2|2crlf|2indent>
   local d st="${_GUARD_PERSON_STORE:-people}" mk="${_GUARD_MERGE_KEY:-merged-into}"; d="$(l19_trip "l19z-hop$2")"
   l19_put "$d" "$L19_PROFILE" '---' "${_GUARD_REF_KEY:-person}: psn-a9b9" '---' '# Rowan' '' '- Interests: markets'
@@ -17133,9 +17133,9 @@ l19enc_assert "L19x-crlf" crlf
 # as its plain twin does and stops matched exactly: L19y-src-order-* against L19y-src-order-shipped, and
 # L19y-src-stub-* against L19y-src-merge. A value-source line is read the same way: L19y-src-comp-crlf, a
 # traveller file saved with CRLF endings whose value only the distinctive-component rule reaches (the word rule
-# drops a trailing carriage return, the component rule does not), and L19y-src-line1-bom8, a traveller file whose
-# first line is the label line behind a UTF-8 mark, each stop matched exactly, as their UTF-8 twins
-# L19y-src-comp and L19y-src-line1 do.
+# drops a trailing carriage return, the component rule does not), stops matched exactly, as its UTF-8 twin
+# L19y-src-comp does. A first line read behind a UTF-8 mark is pinned through the traveller model
+# (L19y-src-model-line1-bom8, below), since a traveller file's first line is its front matter's opener.
 # A file whose lines end in a carriage return alone (lonecr), holding no mark and no NUL byte, is read by awk as
 # one line, so its reference, its labels and its merge key would go unread; it stops as unreadable instead, at
 # each admission point: the traveller file under the shipped declaration (L19i-src-order-lonecr, caught at two
@@ -17147,7 +17147,7 @@ l19enc_assert "L19x-crlf" crlf
 # file, and stops as the scope-file loop does when it is not: L19i-src-pbranch-mode000 is a mode-000 traveller file
 # whose reference reaches a record holding the value, under the scratch declaration, where only the person branch
 # reads it. Its precondition limb skips it, saying why, where this run's user reads a mode-000 file.
-l19src_trip() { # <name> <profile|person|merge|stub|model|nul|order|latin|comp|line1> <encoding, as l19src_assert takes it> -> trip dir
+l19src_trip() { # <name> <profile|person|merge|stub|model|nul|order|latin|comp> <encoding, as l19src_assert takes it> -> trip dir
   local d f st="${_GUARD_PERSON_STORE:-people}" rk="${_GUARD_REF_KEY:-person}" mk="${_GUARD_MERGE_KEY:-merged-into}"
   local bl='Bring X1234567 to the desk.'
   d="$(l19_trip "$1")"; f="$d/$L19_PROFILE"
@@ -17174,7 +17174,6 @@ l19src_trip() { # <name> <profile|person|merge|stub|model|nul|order|latin|comp|l
     latin)   l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritani$(printf '\303\251') Gro$(printf '\303\237')mark, document no. X1234567" ;;
     comp)    l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, valid through May 2032"
              bl='Remember: valid through May 2032 is the date to watch.' ;;
-    line1)   l19_put "$d" "$L19_PROFILE" "- **${L19S1}:** Ruritania, document no. X1234567" '' '# Rowan' ;;
   esac
   l19_put "$d" "$L19B1" '# Trip' '' "$bl"
   case "$3" in
@@ -17285,9 +17284,8 @@ for l19c in person merge model; do for l19e in mark16le nul; do l19src_assert "L
 for l19c in 16le nul mark16le; do l19src_order_assert "L19i-src-pbranch-$l19c" noprofile "$l19c"; done
 l19src_order_assert "L19y-src-pbranch" noprofile utf8
 for l19c in bom8 crlf; do for l19e in order stub; do l19src_assert "L19y-src-$l19e-$l19c" "$l19e" "$l19c"; done; done
-for l19c in comp line1; do l19src_assert "L19y-src-$l19c" "$l19c" utf8; done
+l19src_assert "L19y-src-comp" comp utf8
 l19src_assert "L19y-src-comp-crlf" comp crlf
-l19src_assert "L19y-src-line1-bom8" line1 bom8
 for l19c in order person merge model; do l19src_assert "L19i-src-$l19c-lonecr" "$l19c" lonecr; done
 for l19c in person merge model; do l19src_assert "L19y-src-$l19c-crlf" "$l19c" crlf; done
 l19src_order_assert "L19i-src-pbranch-lonecr" noprofile lonecr
@@ -17302,21 +17300,19 @@ l19src_order_assert "L19i-src-pbranch-mode000" noprofile mode000
 # a file name or a value: front matter after a blank first line; the key indented by spaces, or by a tab with a
 # tab before its colon; the key spaced before its colon, or quoted in either quote; or an empty key whose value is
 # continued beneath it, on an indented sequence entry, on one at the start of its line, or past a blank line and a
-# comment. The controls pass: a traveller file with no reference key; a block without the key whose body carries
-# a line starting with it, which is prose; an empty key with nothing beneath it, the ruling, which reads as YAML
-# reads it, no value, and is the exact complement of the continuation rule; and a file with no front matter whose
-# prose carries the key mid-line. A marker line followed by spaces or a tab reads as the marker: an opener
+# comment. Each of these now stops through the front-matter shape gate below, whose line test every one of them
+# fails. The controls pass: a traveller file with no reference key; a block without the key whose body carries a
+# line starting with it, which is prose; and an empty key with nothing beneath it, the ruling, which reads as YAML
+# reads it, no value. A marker line followed by spaces or a tab reads as the marker: an opener
 # (L19y-src-mark-open) and a closer (L19y-src-mark-close, whose body carries a second reference that a reader
 # missing the closer would also take) resolve and stop matched exactly, as their plain twins
 # L19y-src-order-shipped and L19y-src-mark-plain do. A person record's merge key is read the same way: a record
 # whose merge key is indented (L19i-src-stub-ref-indent), or whose front matter follows a blank first line
 # (L19i-src-stub-ref-blanklead), with its target holding the value, stops as unreadable, named as the record and
 # by what was found; a record whose body carries a line starting with the merge key (L19c-ref-stub-body) passes,
-# its target unread. Three more controls pass, each pinning a boundary of that reading: a body line after a block
-# that closes, holding the key indented (L19c-ref-body-indent: the read ends at the closer); an empty key followed
-# by another key whose own value is continued beneath it (L19c-ref-empty-next: the continuation belongs to the
-# nearest key); and a key that only begins with the reference key's letters (L19c-ref-prefix: the colon must
-# follow the key).
+# its target unread. Two more controls pass, each pinning a boundary of that reading: a body line after a block
+# that closes, holding the key indented (L19c-ref-body-indent: the read ends at the closer); and a key that only
+# begins with the reference key's letters (L19c-ref-prefix: the colon must follow the key).
 l19ref_trip() { # <name> <shape> -> trip dir: a traveller file of that shape, a record its reference names holding the value, and the bare value in a bound file
   local d st="${_GUARD_PERSON_STORE:-people}" rk="${_GUARD_REF_KEY:-person}" mk="${_GUARD_MERGE_KEY:-merged-into}" tb; tb="$(printf '\t')"
   d="$(l19_trip "$1")"
@@ -17335,12 +17331,10 @@ l19ref_trip() { # <name> <shape> -> trip dir: a traveller file of that shape, a 
     nokey)      l19_put "$d" "$L19_PROFILE" '---' 'name: Rowan' '---' '# Rowan' ;;
     body)       l19_put "$d" "$L19_PROFILE" '---' 'name: Rowan' '---' '# Rowan' '' "$rk: psn-a9c1" ;;
     empty)      l19_put "$d" "$L19_PROFILE" '---' "$rk:" 'name: Rowan' '---' '# Rowan' ;;
-    prose)      l19_put "$d" "$L19_PROFILE" '# Rowan' '' "The contact $rk: psn-a9c1, at the desk." ;;
     mark-open)  l19_put "$d" "$L19_PROFILE" '---  ' "$rk: psn-a9c1" '---' '# Rowan' ;;
     mark-close) l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" "---$tb" '# Rowan' '' "$rk: psn-a9c5" ;;
     mark-plain) l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" '---' '# Rowan' '' "$rk: psn-a9c5" ;;
     body-indent) l19_put "$d" "$L19_PROFILE" '---' 'name: Rowan' '---' '# Rowan' '' "  $rk: psn-a9c1" ;;
-    empty-next) l19_put "$d" "$L19_PROFILE" '---' "$rk:" 'name:' '  - Rowan' '---' '# Rowan' ;;
     prefix)     l19_put "$d" "$L19_PROFILE" '---' "${rk}al: psn-a9c1" '---' '# Rowan' ;;
     stub-*)     l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" '---' '# Rowan'
                 l19_put "$d" "$st/psn-a9c2.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X1234567"
@@ -17362,11 +17356,11 @@ l19ref_assert() { # <id> <shape> <stop|stopm|pass|exact>
   esac
 }
 for l19c in blanklead indent tab spacecolon dquote squote list list0 gap; do l19ref_assert "L19i-src-ref-$l19c" "$l19c" stop; done
-for l19c in nokey body empty prose; do l19ref_assert "L19c-ref-$l19c" "$l19c" pass; done
+for l19c in nokey body empty; do l19ref_assert "L19c-ref-$l19c" "$l19c" pass; done
 for l19c in mark-open mark-close mark-plain; do l19ref_assert "L19y-src-$l19c" "$l19c" exact; done
 for l19c in indent blanklead; do l19ref_assert "L19i-src-stub-ref-$l19c" "stub-$l19c" stopm; done
 l19ref_assert "L19c-ref-stub-body" stub-body pass
-for l19c in body-indent empty-next prefix; do l19ref_assert "L19c-ref-$l19c" "$l19c" pass; done
+for l19c in body-indent prefix; do l19ref_assert "L19c-ref-$l19c" "$l19c" pass; done
 
 # ── L19i-src-shape-* / L19i-src-stub-shape-* / L19z-hop2-shape-* / L19c-shape-* / L19y-src-model-line1* — the
 # front-matter shape gate. A reference is read only from front matter opening on the first line, every line of
@@ -17574,9 +17568,8 @@ for l19c in person merge model; do for l19e in mark16le nul; do md_flips require
 for l19c in 16le nul mark16le; do md_flips require_clean_build_sources "L19i-src-pbranch-$l19c" l19src_order_assert "L19i-src-pbranch-$l19c" noprofile "$l19c"; done
 md_flips require_clean_build_sources "L19y-src-pbranch" l19src_order_assert "L19y-src-pbranch" noprofile utf8
 for l19c in bom8 crlf; do for l19e in order stub; do md_flips require_clean_build_sources "L19y-src-$l19e-$l19c" l19src_assert "L19y-src-$l19e-$l19c" "$l19e" "$l19c"; done; done
-for l19c in comp line1; do md_flips require_clean_build_sources "L19y-src-$l19c" l19src_assert "L19y-src-$l19c" "$l19c" utf8; done
+md_flips require_clean_build_sources "L19y-src-comp" l19src_assert "L19y-src-comp" comp utf8
 md_flips require_clean_build_sources "L19y-src-comp-crlf" l19src_assert "L19y-src-comp-crlf" comp crlf
-md_flips require_clean_build_sources "L19y-src-line1-bom8" l19src_assert "L19y-src-line1-bom8" line1 bom8
 for l19c in order person merge model; do md_flips require_clean_build_sources "L19i-src-$l19c-lonecr" l19src_assert "L19i-src-$l19c-lonecr" "$l19c" lonecr; done
 for l19c in person merge model; do md_flips require_clean_build_sources "L19y-src-$l19c-crlf" l19src_assert "L19y-src-$l19c-crlf" "$l19c" crlf; done
 md_flips require_clean_build_sources "L19i-src-pbranch-lonecr" l19src_order_assert "L19i-src-pbranch-lonecr" noprofile lonecr
@@ -17587,11 +17580,11 @@ else
   md_flips require_clean_build_sources "L19i-src-pbranch-mode000" l19src_order_assert "L19i-src-pbranch-mode000" noprofile mode000
 fi
 for l19c in blanklead indent tab spacecolon dquote squote list list0 gap; do md_flips require_clean_build_sources "L19i-src-ref-$l19c" l19ref_assert "L19i-src-ref-$l19c" "$l19c" stop; done
-for l19c in nokey body empty prose; do md_flips require_clean_build_sources "L19c-ref-$l19c" l19ref_assert "L19c-ref-$l19c" "$l19c" pass; done
+for l19c in nokey body empty; do md_flips require_clean_build_sources "L19c-ref-$l19c" l19ref_assert "L19c-ref-$l19c" "$l19c" pass; done
 for l19c in mark-open mark-close mark-plain; do md_flips require_clean_build_sources "L19y-src-$l19c" l19ref_assert "L19y-src-$l19c" "$l19c" exact; done
 for l19c in indent blanklead; do md_flips require_clean_build_sources "L19i-src-stub-ref-$l19c" l19ref_assert "L19i-src-stub-ref-$l19c" "stub-$l19c" stopm; done
 md_flips require_clean_build_sources "L19c-ref-stub-body" l19ref_assert "L19c-ref-stub-body" stub-body pass
-for l19c in body-indent empty-next prefix; do md_flips require_clean_build_sources "L19c-ref-$l19c" l19ref_assert "L19c-ref-$l19c" "$l19c" pass; done
+for l19c in body-indent prefix; do md_flips require_clean_build_sources "L19c-ref-$l19c" l19ref_assert "L19c-ref-$l19c" "$l19c" pass; done
 for l19c in flow qkey tag anchor esc dup merge dots ls ps nel lscomment nofm seq nospace; do md_flips require_clean_build_sources "L19i-src-shape-$l19c" l19shape_assert "L19i-src-shape-$l19c" "$l19c" stop; done
 for l19c in flow qkey nofm; do md_flips require_clean_build_sources "L19i-src-stub-shape-$l19c" l19shape_assert "L19i-src-stub-shape-$l19c" "stub-$l19c" stopm; done
 for l19c in flow qkey nofm; do md_flips require_clean_build_sources "L19z-hop2-shape-$l19c" l19shape_assert "L19z-hop2-shape-$l19c" "hop-$l19c" hop; done

@@ -4536,8 +4536,10 @@ refuse_group_only_render() {
 #     read through _guard_declared_rows. Its selectors are matched as labels, and its values are taken from
 #     the files the rows scope — every scope a trip-relative path except the person store, whose records are
 #     reached through the `person:` references the traveller files carry (trip root first, then the data root,
-#     one merge hop; a longer chain is named, not followed). A `field` row added there joins both halves
-#     below with no edit here, wherever its scope is a trip-relative path or the person store.
+#     one merge hop; a longer chain is named, not followed), each read only from front matter that opens on its
+#     file's first line and holds nothing but blank lines, comments and plain `key: value` lines (the shape gate,
+#     in _field_class_values). A `field` row added there joins both halves below with no edit here, wherever its
+#     scope is a trip-relative path or the person store.
 # A value is the text after a label's colon on the label's own line, after clean(), admitted by stated() —
 # the guard's profile parse, through the same shared helpers, on a line read with a leading UTF-8 byte-order
 # mark and its trailing carriage returns removed.
@@ -4594,10 +4596,11 @@ refuse_group_only_render() {
 # structure (#2156's review, F8). A value source present but not a readable regular file, or one that opens with
 # a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not followed by a line feed,
 # stops, named by its scope, never by a traveller file's name; so does a traveller file read for its person
-# reference that is not a readable regular file, that opens with such a mark or holds such a byte, or that carries
-# a person reference the check could not read from front matter opening on its first line, which is named after
-# the scope by what was found; and so does a person record whose merge key the check could not read so, named as
-# the record by what was found.
+# reference that is not a readable regular file, that opens with such a mark or holds such a byte, or whose front
+# matter does not open on its first line or holds a line other than a blank line, a comment or a plain key line,
+# which is named after the scope by what was found; and so does a person record whose front matter fails the same
+# way, named as the record by what was found. A traveller file or record with no front matter at all is not
+# absent: it stops, because a reference anywhere but in front matter opening on the first line would go unread.
 # Nothing it prints is a value.
 #
 # DECLARED RESIDUALS, worded alike in § 5.6, the CHANGELOG and the PR body; test-publish-guard.sh group L's
@@ -4652,10 +4655,10 @@ _build_source_wellformed() {
 #   UNREAD <what>           a value source, or a traveller file read for its person reference, present but not
 #                           a readable regular file, or that opens with a UTF-16 or UTF-32 byte-order mark, or
 #                           holds a NUL byte or a carriage return not followed by a line feed; or a traveller
-#                           file or person record carrying a person reference or merge key the check could not
-#                           read (below) — the caller stops
+#                           file or person record whose front matter fails the shape gate (below) — the caller
+#                           stops
 # <what> is a scope as the declaration writes it, or `person record <id>` for a minted id; never a file name. A
-# reference the check could not read is named after its scope, in parentheses, by what was found.
+# file failing the shape gate is named after its scope, in parentheses, by what was found.
 # A file is read only after the byte test require_clean_build_sources applies to a bound file, at each of the
 # four places one is read (a scope's file, a traveller file read for its person reference, a person record, its
 # merge target), so its bytes and not the host's awk decide whether it is read: the one awk the test runs reads
@@ -4664,44 +4667,35 @@ _build_source_wellformed() {
 # file's person key, a record's merge key and its target's — and each value-source line is read with a leading
 # UTF-8 byte-order mark and trailing carriage returns removed, and a front-matter marker line followed by spaces
 # or tabs is read as the marker, so a file saved with any of these resolves and harvests as its plain twin does.
-# A traveller file whose person key, or a person record whose merge key, the reader returns no value for is read
-# once more (fc_unreach): the key found in a spelling the reader does not read, or outside front matter opening on
-# the first line, is a reference the check could not read, and the file stops rather than passing as one with no
-# reference; on a merge target, whose key is never followed, the key so found is named as a longer chain, as one
-# the reader does read is.
+# Each file a reference is read from — a traveller file, a person record, its merge target — must first pass the
+# front-matter shape gate (fc_shape), whether or not the reader returns a value: front matter opening on its first
+# line, every line of it up to the closer a blank line, a comment or a plain key line. On such lines the top-level
+# keys are exactly the literal keys, and the reader reads every one, so no reference a YAML reader resolves goes
+# unread. A traveller file or person record that fails it stops, named after its scope by what was found, rather
+# than passing as one with no reference; a merge target, whose key is never followed, is named as a longer chain,
+# as one carrying a key the reader reads is. A file with no front matter on its first line fails it (the line-1
+# ruling): a reference anywhere else would go unread, and a front-matter block, empty if need be, is the remedy.
 # Returns 2 when the declaration yields no `field` row, or reads in part.
 _field_class_values() { # <trip_dir>
   local trip_dir="$1" fc_rows fc_n fc_all fc_cand fc_scope fc_glob fc_f fc_any fc_pf fc_refs fc_key fc_store
-  local fc_rec fc_merge fc_tgt fc_srcs="" fc_sels fc_enc fc_bare fc_unreach tab
+  local fc_rec fc_merge fc_tgt fc_srcs="" fc_sels fc_enc fc_bare fc_shape tab
   tab="$(printf '\t')"
   # The stream a reference is read from: the file with a leading UTF-8 byte-order mark and trailing carriage
   # returns removed, and a marker line that is `---` followed only by spaces or tabs read as `---`, handed to the
   # unchanged _guard_frontmatter_key as its standard input.
   fc_bare='NR == 1 { sub(/^\357\273\277/, "") } { sub(/\r+$/, ""); sub(/^---[ \t]+$/, "---"); print }'
-  # That stream read once more when it yields no value for a key: inside front matter opening on its first line,
-  # or in the whole stream when none does, a line holding the key K with a value, in a spelling the reader does
-  # not read — indented, quoted, or spaced before its colon, or outside such front matter — or with an empty
-  # value, in any spelling, continued on the next line that is neither blank nor a comment, indented or as a
-  # sequence entry. It prints 1 for such a line and 0 otherwise. K is matched by index(), never as a pattern; an
-  # empty key with nothing continued beneath it is no value, as YAML reads it, and a key line after the front
-  # matter is prose.
-  fc_unreach='
-    function keyed(s,  r) {
-      sub(/^[ \t]+/, "", s); sub(/^["\047]/, "", s)
-      if (index(s, K) != 1) return 0
-      r = substr(s, length(K) + 1); sub(/^["\047]/, "", r); sub(/^[ \t]+/, "", r)
-      return (substr(r, 1, 1) == ":")
-    }
-    NR == 1 && $0 == "---" { blk = 1; next }
-    blk && $0 == "---" { exit }
-    /^[ \t]*$/ || /^[ \t]*#/ { next }
-    pend { if (/^[ \t]/ || /^-[ \t]/ || $0 == "-") { hit = 1; exit }; pend = 0 }
-    keyed($0) {
-      v = substr($0, index($0, ":") + 1); sub(/^[ \t]+/, "", v); sub(/[ \t]+$/, "", v)
-      if (v == "") pend = 1
-      else if (!(blk && index($0, K ":") == 1)) { hit = 1; exit }
-    }
-    END { print hit + 0 }'
+  # The front-matter shape gate, over that stream: 0 when it opens with `---` and every line up to the next `---`,
+  # or to the end where none closes it, is blank (spaces or tabs only), a comment (spaces or tabs, then `#`), or a
+  # plain key line — at column 0 a letter, digit or `_`, then letters, digits, `_`, `.` or `-`, then a colon
+  # followed by a space, a tab or the line's end — and none holds U+0085, U+2028 or U+2029, which a YAML 1.1
+  # reader takes as line breaks; 1 otherwise, a first line other than `---` included. A `...` line is not a closer,
+  # so it fails. The body, after the closer, is not read. No `exit`: it reads its input to the end.
+  fc_shape='
+    NR == 1 { ok = ($0 == "---"); fm = ok; next }
+    fm && $0 == "---" { fm = 0; next }
+    fm && /\302\205|\342\200\250|\342\200\251/ { ok = 0 }
+    fm && !(/^[ \t]*$/ || /^[ \t]*#/ || /^[A-Za-z0-9_][A-Za-z0-9_.-]*:([ \t]|$)/) { ok = 0 }
+    END { print ok ? 0 : 1 }'
   fc_all="$(_guard_declared_rows)"
   fc_cand="$(_guard_declared_candidates)"
   if [ "${fc_cand:-0}" -ne "$(printf '%s' "$fc_all" | awk 'NF { c++ } END { print c + 0 }')" ]; then return 2; fi
@@ -4722,12 +4716,11 @@ _field_class_values() { # <trip_dir>
         if [ "$fc_enc" -eq 0 ] && [ "$(($(wc -c < "$fc_pf")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$fc_pf" | wc -c)))" ]; then fc_enc=1; fi
         if [ "$fc_enc" -eq 0 ] && [ "$(LC_ALL=C od -An -v -tx1 "$fc_pf" | LC_ALL=C awk '{ for (i = 1; i <= NF; i++) { if (p == "0d" && $i != "0a") n++; p = $i } } END { print n + (p == "0d") }')" != 0 ]; then fc_enc=1; fi
         if [ "$fc_enc" -ne 0 ]; then printf 'UNREAD\t%s\n' "$_GUARD_DECL_ARTIFACT_PROFILE"; continue; fi
-        fc_refs="$(_guard_frontmatter_key - "$_GUARD_REF_KEY" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_pf")")"
-        if [ -z "$fc_refs" ]; then
-          [ "$(LC_ALL=C awk -v K="$_GUARD_REF_KEY" "$fc_unreach" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_pf")")" = 0 ] \
-            || printf 'UNREAD\t%s (a person reference the check could not read from front matter opening on the first line)\n' "$_GUARD_DECL_ARTIFACT_PROFILE"
-          continue
+        if [ "$(LC_ALL=C awk "$fc_shape" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_pf")")" != 0 ]; then
+          printf 'UNREAD\t%s (a person reference the check could not read from front matter opening on the first line)\n' "$_GUARD_DECL_ARTIFACT_PROFILE"; continue
         fi
+        fc_refs="$(_guard_frontmatter_key - "$_GUARD_REF_KEY" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_pf")")"
+        [ -n "$fc_refs" ] || continue
         if [ "$(printf '%s\n' "$fc_refs" | awk 'NF { c++ } END { print c + 0 }')" -ne 1 ]; then
           printf 'NOTE\ta person reference that is not single-valued\n'; continue
         fi
@@ -4746,12 +4739,11 @@ _field_class_values() { # <trip_dir>
         if [ "$fc_enc" -eq 0 ] && [ "$(LC_ALL=C od -An -v -tx1 "$fc_rec" | LC_ALL=C awk '{ for (i = 1; i <= NF; i++) { if (p == "0d" && $i != "0a") n++; p = $i } } END { print n + (p == "0d") }')" != 0 ]; then fc_enc=1; fi
         if [ "$fc_enc" -ne 0 ]; then printf 'UNREAD\tperson record %s\n' "$fc_key"; continue; fi
         fc_srcs="$fc_srcs$fc_rec$tab"
-        fc_merge="$(_guard_frontmatter_key - "$_GUARD_MERGE_KEY" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_rec")")"
-        if [ -z "$fc_merge" ]; then
-          [ "$(LC_ALL=C awk -v K="$_GUARD_MERGE_KEY" "$fc_unreach" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_rec")")" = 0 ] \
-            || printf 'UNREAD\tperson record %s (a merge key the check could not read from front matter opening on the first line)\n' "$fc_key"
-          continue
+        if [ "$(LC_ALL=C awk "$fc_shape" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_rec")")" != 0 ]; then
+          printf 'UNREAD\tperson record %s (a merge key the check could not read from front matter opening on the first line)\n' "$fc_key"; continue
         fi
+        fc_merge="$(_guard_frontmatter_key - "$_GUARD_MERGE_KEY" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_rec")")"
+        [ -n "$fc_merge" ] || continue
         # shellcheck disable=SC2254  # the person-key glob is a pattern held in a variable; quoted, it would match only its own text
         case "$fc_merge" in $_GUARD_PERSON_KEY_GLOB) ;; *) printf 'NOTE\ta merge target that is not a minted id\n'; continue ;; esac
         fc_tgt="$fc_store/$fc_merge.md"
@@ -4764,7 +4756,7 @@ _field_class_values() { # <trip_dir>
         if [ "$fc_enc" -ne 0 ]; then printf 'UNREAD\tperson record %s\n' "$fc_merge"; continue; fi
         fc_srcs="$fc_srcs$fc_tgt$tab"
         if [ -n "$(_guard_frontmatter_key - "$_GUARD_MERGE_KEY" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_tgt")")" ] \
-          || [ "$(LC_ALL=C awk -v K="$_GUARD_MERGE_KEY" "$fc_unreach" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_tgt")")" != 0 ]; then
+          || [ "$(LC_ALL=C awk "$fc_shape" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_tgt")")" != 0 ]; then
           printf 'NOTE\ta merge chain longer than one hop\n'
         fi
       done
@@ -4951,7 +4943,7 @@ require_clean_build_sources() { # <trip_dir>
   fi
   bs_unread="$(awk -F'\t' '$1 == "UNREAD" && !seen[$2]++ { printf "%s%s", (n++ ? ", " : ""), $2 }' <<<"$bs_vals")"
   if [ -n "$bs_unread" ]; then
-    die "SOURCE CHECK STOPPED — the value source $bs_unread is present but cannot be read as UTF-8 text, or carries a reference the check cannot read: it is not a readable regular file; it opens with a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not followed by a line feed; or, as named beside it, it carries a person reference or a merge key the check could not read from front matter opening on the first line. So the values to check for are not known. Nothing was published. Save it as readable UTF-8 text with LF or CRLF line endings and any reference in front matter opening on its first line, or remove it, and re-run."
+    die "SOURCE CHECK STOPPED — the value source $bs_unread is present but cannot be read as UTF-8 text, or carries a reference the check cannot read: it is not a readable regular file; it opens with a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not followed by a line feed; or, as named beside it, its front matter does not open on its first line, or holds a line other than a blank line, a comment or a plain key: value line, so a person reference or a merge key in it might not be read. So the values to check for are not known. Nothing was published. Save it as readable UTF-8 text with LF or CRLF line endings, its front matter opening on its first line and written as plain key: value lines, or remove it, and re-run."
   fi
   bs_sels="$(_guard_declared_rows | awk '$1 == "field" && !seen[$2]++ { printf "%s%s", (n++ ? " " : ""), $2 }')"
   bs_v="$(awk -F'\t' '$1 == "V" { print $2 "\t" $3 }' <<<"$bs_vals")"
