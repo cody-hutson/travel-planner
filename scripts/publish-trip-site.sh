@@ -4594,8 +4594,9 @@ refuse_group_only_render() {
 # structure (#2156's review, F8). A value source present but not a readable regular file, or one that opens with
 # a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not followed by a line feed,
 # stops, named by its scope, never by a traveller file's name; so does a traveller file read for its person
-# reference that opens with such a mark or holds such a byte, or that carries a person reference the check could
-# not read from front matter opening on its first line, which is named after the scope by what was found.
+# reference that is not a readable regular file, that opens with such a mark or holds such a byte, or that carries
+# a person reference the check could not read from front matter opening on its first line, which is named after
+# the scope by what was found.
 # Nothing it prints is a value.
 #
 # DECLARED RESIDUALS, worded alike in § 5.6, the CHANGELOG and the PR body; test-publish-guard.sh group L's
@@ -4647,11 +4648,10 @@ _build_source_wellformed() {
 # _field_class_values <trip_dir> -> records on stdout, tab-separated:
 #   V  <selector> <value>   a stated value of a declared field, from a value source on file
 #   NOTE <what>             a value source not on file, or a person reference that does not resolve
-#   UNREAD <what>           a value source present but not a readable regular file, or a value source, or a
-#                           traveller file read for its person reference, that opens with a UTF-16 or UTF-32
-#                           byte-order mark, or holds a NUL byte or a carriage return not followed by a line
-#                           feed; or a traveller file carrying a person reference the check could not read
-#                           (below) — the caller stops
+#   UNREAD <what>           a value source, or a traveller file read for its person reference, present but not
+#                           a readable regular file, or that opens with a UTF-16 or UTF-32 byte-order mark, or
+#                           holds a NUL byte or a carriage return not followed by a line feed; or a traveller
+#                           file carrying a person reference the check could not read (below) — the caller stops
 # <what> is a scope as the declaration writes it, or `person record <id>` for a minted id; never a file name. A
 # reference the check could not read is named after its scope, in parentheses, by what was found.
 # A file is read only after the byte test require_clean_build_sources applies to a bound file, at each of the
@@ -4710,7 +4710,8 @@ _field_class_values() { # <trip_dir>
     if [ "$fc_scope" = "$_GUARD_DECL_ARTIFACT_PERSON" ]; then
       # shellcheck disable=SC2086  # the scope's `<token>` is a glob by the declaration's own column grammar
       for fc_pf in "$trip_dir"/$(printf '%s' "$_GUARD_DECL_ARTIFACT_PROFILE" | sed 's/<[^>]*>/*/g'); do
-        [ -f "$fc_pf" ] && [ -r "$fc_pf" ] || continue
+        [ -e "$fc_pf" ] || [ -L "$fc_pf" ] || continue
+        if [ ! -f "$fc_pf" ] || [ ! -r "$fc_pf" ]; then printf 'UNREAD\t%s\n' "$_GUARD_DECL_ARTIFACT_PROFILE"; continue; fi
         # A traveller file is read for its reference only after the same byte test, so its bytes decide.
         fc_enc=0
         case "$(LC_ALL=C od -An -tx1 -N4 "$fc_pf" | tr -d ' \n')" in fffe*|feff*|0000feff) fc_enc=1 ;; esac
