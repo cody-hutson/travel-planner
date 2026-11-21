@@ -574,12 +574,16 @@ member outranks another, because each resolves to the same refusal.
 
 The refusal reads the raw page as a browser's tokenizer reads start tags: every class attribute, its
 character references decoded, and again after JavaScript string escapes, octal ones included, are
-decoded, through comments, scripts and templates alike. A nested document — a `srcdoc` attribute on any
-start tag, or a `data:` URL as the `src` or `data` of an `iframe`, `frame`, `object` or `embed` — and a
-page opening with a UTF-16 or UTF-32 byte-order mark are refused as undetermined, because the refusal does
-not read what they hold. It does not see, by declaration, a section a script builds at run time
+decoded, through comments, scripts and templates alike. A nested document — a `srcdoc` attribute; or a
+`src` or `data` on an `iframe`, `frame`, `object` or `embed`, or a meta refresh URL, that carries a scheme
+other than `http` or `https` — and a page opening with a UTF-16 or UTF-32 byte-order mark are refused as
+undetermined, because the refusal does not read what they hold. A URL with no scheme names another
+document and is not refused. It does not see, by declaration, a section a script builds at run time
 (classList, className, concatenation, interpolation, or decoding such as atob, decodeURIComponent and
-String.fromCharCode), nor group content rendered without its token, which this section binds.
+String.fromCharCode), including a `javascript:` URL outside a frame, object or embed, such as a link or a
+form action, which runs on a reader's action; nor group content rendered without its token, which this
+section binds. An image, an SVG `data:` image included, whose content shows group material is not read;
+the refusal reads markup, not images.
 
 Content the plan itself carries for the group, a marked desire or a shared occasion, has no token of its
 own: the refusal keys on the group contacts section. That holds by the order two cards ship in — the
