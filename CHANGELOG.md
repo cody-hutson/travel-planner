@@ -96,10 +96,11 @@ number whose groups are joined otherwise than by one or two of a space, `.`, `/`
 does not fold; a value held only in a value source that is absent or unresolved, or on a
 value-source line the source check's harvest does not read as a label — it reads one only by § 5.6's
 field grammar, as the selector, case-insensitively, at the start of the line, followed by a colon with
-nothing but spaces or tabs between them, once leading spaces or tabs, one `-`, `*` or `+` bullet and
-every `**` are stripped, so it does not read, for example, a label behind a task box or a numbered,
-blockquote or heading marker, or with a look-alike space before its colon, a look-alike colon or an
-invisible character in it — which contributes no value, so the label half alone covers it; a person
+nothing but spaces or tabs between them, once leading spaces or tabs, one `-`, `*` or `+` bullet
+followed by a space or tab and every `**` are stripped, so it does not read, for example, a label
+behind a task box or a numbered, blockquote or heading marker, or with a look-alike space before its
+colon, a look-alike colon or an invisible character in it — which contributes no value, so the label
+half alone covers it; a person
 reference whose merge chain runs past one hop, which is named in a note and whose second hop is not
 read; a trip with no bound file present, which passes with every one named as absent; and a person
 reference or merge key in a traveller file, person record or merge target with no front matter on its
