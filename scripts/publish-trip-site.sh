@@ -4655,10 +4655,9 @@ _build_source_wellformed() {
 #   UNREAD <what>           a value source, or a traveller file read for its person reference, present but not
 #                           a readable regular file, or that opens with a UTF-16 or UTF-32 byte-order mark, or
 #                           holds a NUL byte or a carriage return not followed by a line feed; or a traveller
-#                           file or person record whose front matter fails the shape gate (below) — the caller
-#                           stops
+#                           file or person record that fails the front-matter check (below) — the caller stops
 # <what> is a scope as the declaration writes it, or `person record <id>` for a minted id; never a file name. A
-# file failing the shape gate is named after its scope, in parentheses, by what was found.
+# file failing the front-matter check is named after its scope, in parentheses, by what was found.
 # A file is read only after the byte test require_clean_build_sources applies to a bound file, at each of the
 # four places one is read (a scope's file, a traveller file read for its person reference, a person record, its
 # merge target), so its bytes and not the host's awk decide whether it is read: the one awk the test runs reads
@@ -4668,13 +4667,16 @@ _build_source_wellformed() {
 # UTF-8 byte-order mark and trailing carriage returns removed, and a front-matter marker line followed by spaces
 # or tabs is read as the marker, so a file saved with any of these resolves and harvests as its plain twin does.
 # Each file a reference is read from — a traveller file, a person record, its merge target — must first pass the
-# front-matter shape gate (fc_shape), whether or not the reader returns a value: front matter opening on its first
-# line, every line of it up to the closer a blank line, a comment or a plain key line. On such lines the top-level
-# keys are exactly the literal keys, and the reader reads every one, so no reference a YAML reader resolves goes
-# unread. A traveller file or person record that fails it stops, named after its scope by what was found, rather
-# than passing as one with no reference; a merge target, whose key is never followed, is named as a longer chain,
-# as one carrying a key the reader reads is. A file with no front matter on its first line fails it (the line-1
-# ruling): a reference anywhere else would go unread, and a front-matter block, empty if need be, is the remedy.
+# front-matter check (fc_shape), whether or not the reader returns a value. Front matter opening on the file's
+# first line passes the shape gate when every line of it up to the closer is a blank line, a comment or a plain key
+# line: on such lines the top-level keys are exactly the literal keys, and the reader reads every one, so no
+# reference a YAML reader resolves goes unread. A file with no front matter on its first line is a version-0 file
+# (reference/data-architecture.md § 7.2): it is read as carrying no reference, as the reader reads it, and its
+# values are harvested as any file's are, unless a line holds a minted person id, or holds the key at its start
+# with a value or with one continued beneath it (rule (b)), either of which may be a reference the reader does not
+# read. A traveller file or person record that fails stops, named after its scope by what was found, rather than
+# passing as one with no reference; a merge target, whose key is never followed, is named as a longer chain, as
+# one carrying a key the reader reads is.
 # Returns 2 when the declaration yields no `field` row, or reads in part.
 _field_class_values() { # <trip_dir>
   local trip_dir="$1" fc_rows fc_n fc_all fc_cand fc_scope fc_glob fc_f fc_any fc_pf fc_refs fc_key fc_store
@@ -4684,17 +4686,33 @@ _field_class_values() { # <trip_dir>
   # returns removed, and a marker line that is `---` followed only by spaces or tabs read as `---`, handed to the
   # unchanged _guard_frontmatter_key as its standard input.
   fc_bare='NR == 1 { sub(/^\357\273\277/, "") } { sub(/\r+$/, ""); sub(/^---[ \t]+$/, "---"); print }'
-  # The front-matter shape gate, over that stream: 0 when it opens with `---` and every line up to the next `---`,
-  # or to the end where none closes it, is blank (spaces or tabs only), a comment (spaces or tabs, then `#`), or a
-  # plain key line — at column 0 a letter, digit or `_`, then letters, digits, `_`, `.` or `-`, then a colon
-  # followed by a space, a tab or the line's end — and none holds U+0085, U+2028 or U+2029, which a YAML 1.1
-  # reader takes as line breaks; 1 otherwise, a first line other than `---` included. A `...` line is not a closer,
-  # so it fails. The body, after the closer, is not read. No `exit`: it reads its input to the end.
+  # The front-matter check, over that stream, for the key K: 0 when the file may be read for K, 1 otherwise. A
+  # stream opening with `---` meets the shape gate: 0 when every line up to the next `---`, or to the end where none
+  # closes it, is blank (spaces or tabs only), a comment (spaces or tabs, then `#`), or a plain key line — at column
+  # 0 a letter, digit or `_`, then letters, digits, `_`, `.` or `-`, then a colon followed by a space, a tab or the
+  # line's end — and none holds U+0085, U+2028 or U+2029, which a YAML 1.1 reader takes as line breaks. A `...`
+  # line is not a closer, so it fails. The body, after the closer, is not read. Any other stream has no front
+  # matter on its first line, and is read whole (rule (b) and the id clause): 1 when a line holds a minted person
+  # id — P, the shape _GUARD_PERSON_KEY_GLOB names, read as a pattern, every character of which is a literal or a
+  # bracket expression — or holds K at its start, after spaces or tabs and an optional quote, with an optional
+  # quote and spaces or tabs before its colon (keyed), with a value, or with an empty value continued on the next
+  # line that is neither blank nor a comment, indented or as a sequence entry. K is matched by index(), never as a
+  # pattern. No `exit`: it reads its input to the end.
   fc_shape='
-    NR == 1 { ok = ($0 == "---"); fm = ok; next }
+    function keyed(s,  r) {
+      sub(/^[ \t]+/, "", s); sub(/^["\047]/, "", s)
+      if (index(s, K) != 1) return 0
+      r = substr(s, length(K) + 1); sub(/^["\047]/, "", r); sub(/^[ \t]+/, "", r)
+      return (substr(r, 1, 1) == ":")
+    }
+    NR == 1 { ok = 1; if ($0 == "---") { fm = 1; next }; v0 = 1 }
     fm && $0 == "---" { fm = 0; next }
     fm && /\302\205|\342\200\250|\342\200\251/ { ok = 0 }
     fm && !(/^[ \t]*$/ || /^[ \t]*#/ || /^[A-Za-z0-9_][A-Za-z0-9_.-]*:([ \t]|$)/) { ok = 0 }
+    v0 && $0 ~ P { ok = 0 }
+    /^[ \t]*$/ || /^[ \t]*#/ { next }
+    pend { if (/^[ \t]/ || /^-[ \t]/ || $0 == "-") ok = 0; pend = 0 }
+    v0 && keyed($0) { if (substr($0, index($0, ":") + 1) ~ /^[ \t]*$/) pend = 1; else ok = 0 }
     END { print ok ? 0 : 1 }'
   fc_all="$(_guard_declared_rows)"
   fc_cand="$(_guard_declared_candidates)"
@@ -4716,7 +4734,7 @@ _field_class_values() { # <trip_dir>
         if [ "$fc_enc" -eq 0 ] && [ "$(($(wc -c < "$fc_pf")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$fc_pf" | wc -c)))" ]; then fc_enc=1; fi
         if [ "$fc_enc" -eq 0 ] && [ "$(LC_ALL=C od -An -v -tx1 "$fc_pf" | LC_ALL=C awk '{ for (i = 1; i <= NF; i++) { if (p == "0d" && $i != "0a") n++; p = $i } } END { print n + (p == "0d") }')" != 0 ]; then fc_enc=1; fi
         if [ "$fc_enc" -ne 0 ]; then printf 'UNREAD\t%s\n' "$_GUARD_DECL_ARTIFACT_PROFILE"; continue; fi
-        if [ "$(LC_ALL=C awk "$fc_shape" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_pf")")" != 0 ]; then
+        if [ "$(LC_ALL=C awk -v K="$_GUARD_REF_KEY" -v P="$_GUARD_PERSON_KEY_GLOB" "$fc_shape" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_pf")")" != 0 ]; then
           printf 'UNREAD\t%s (a person reference the check could not read from front matter opening on the first line)\n' "$_GUARD_DECL_ARTIFACT_PROFILE"; continue
         fi
         fc_refs="$(_guard_frontmatter_key - "$_GUARD_REF_KEY" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_pf")")"
@@ -4739,7 +4757,7 @@ _field_class_values() { # <trip_dir>
         if [ "$fc_enc" -eq 0 ] && [ "$(LC_ALL=C od -An -v -tx1 "$fc_rec" | LC_ALL=C awk '{ for (i = 1; i <= NF; i++) { if (p == "0d" && $i != "0a") n++; p = $i } } END { print n + (p == "0d") }')" != 0 ]; then fc_enc=1; fi
         if [ "$fc_enc" -ne 0 ]; then printf 'UNREAD\tperson record %s\n' "$fc_key"; continue; fi
         fc_srcs="$fc_srcs$fc_rec$tab"
-        if [ "$(LC_ALL=C awk "$fc_shape" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_rec")")" != 0 ]; then
+        if [ "$(LC_ALL=C awk -v K="$_GUARD_MERGE_KEY" -v P="$_GUARD_PERSON_KEY_GLOB" "$fc_shape" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_rec")")" != 0 ]; then
           printf 'UNREAD\tperson record %s (a merge key the check could not read from front matter opening on the first line)\n' "$fc_key"; continue
         fi
         fc_merge="$(_guard_frontmatter_key - "$_GUARD_MERGE_KEY" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_rec")")"
@@ -4756,7 +4774,7 @@ _field_class_values() { # <trip_dir>
         if [ "$fc_enc" -ne 0 ]; then printf 'UNREAD\tperson record %s\n' "$fc_merge"; continue; fi
         fc_srcs="$fc_srcs$fc_tgt$tab"
         if [ -n "$(_guard_frontmatter_key - "$_GUARD_MERGE_KEY" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_tgt")")" ] \
-          || [ "$(LC_ALL=C awk "$fc_shape" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_tgt")")" != 0 ]; then
+          || [ "$(LC_ALL=C awk -v K="$_GUARD_MERGE_KEY" -v P="$_GUARD_PERSON_KEY_GLOB" "$fc_shape" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_tgt")")" != 0 ]; then
           printf 'NOTE\ta merge chain longer than one hop\n'
         fi
       done
