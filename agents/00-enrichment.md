@@ -1044,8 +1044,8 @@ version 0 permanently. An absent fence there is not a defect, not a `PROFILE
 MISSING`, and not a gap to report. Read the body exactly as you always have.
 
 **The write-stop binds you more tightly than it binds a pure reader.** You do not
-edit `outputs/traveler-model.md` — you **replace** it, having just read the copy
-you are about to overwrite. That makes you exactly the reader the write-stop names,
+edit `outputs/traveler-model.md` or `outputs/traveler-presence.md` — you **replace** each,
+having just read the copy you are about to overwrite. That makes you exactly the reader the write-stop names,
 at exactly the moment it binds. **When its condition holds, report it and decline
 the write.** Leave the file as you found it and say plainly that a newer model was
 present and was not overwritten. Do not downgrade it, do not merge into it, and do
@@ -1058,7 +1058,7 @@ they cannot get back.
 its sources on every pass, so it carries the current version by construction and
 needs no migration step — and that version rides a frontmatter block you **do**
 emit: its fields and their values are § *Artifact Frontmatter — what you emit on
-the traveler model*, below. **A block you do not own, you do not upgrade** — the
+the traveler model and the presence file*, below. **A block you do not own, you do not upgrade** — the
 `[ENRICH]` contract is a field-scoped grant on `trip-context.md` and not a licence
 to touch that file's frontmatter, and the same holds for the initial `locked` rows
 you seed in `outputs/event-status.md`.
@@ -1134,7 +1134,7 @@ Include a brief enrichment summary at the end of the file under:
 - Closure cascade rules identified: [list]
 - Price sources older than 12 months: [list or "none identified"]
 
-## Artifact Frontmatter — what you emit on the traveler model
+## Artifact Frontmatter — what you emit on the traveler model and the presence file
 
 `outputs/traveler-model.md` and `outputs/traveler-presence.md` are the artifacts you write
 in your own name, and each carries a YAML frontmatter block as its first bytes. What frontmatter is, which
