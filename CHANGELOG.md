@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-11-20 — A public page refuses the group's content, and every publish checks what the build reads
+## [0.73.0] — 2026-11-20 — A public page refuses the group's content, and every publish checks what the build reads
 
 An open publish now refuses a page carrying a section only the group may see, every publish,
 update and rotate first checks the files the site is built from for a passport or documents value,
