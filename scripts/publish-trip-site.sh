@@ -4316,15 +4316,21 @@ require_recordable_baseline() { # <trip_dir> <site_html>
 #     `\'`, `\uXXXX`, `\u{…}`, `\xXX`, and a backslash followed by one to three octal digits, read as a
 #     sloppy-mode string literal reads it), so a section written literally into a string, its quotes or
 #     brackets escaped in any of those forms, is seen; what either reading finds is refused.
-#   • A NESTED DOCUMENT IS UNDETERMINED (S7-01). A start tag carrying a `srcdoc` attribute, empty or not, or an
-#     iframe, frame, object or embed whose `src` or `data` value — character references decoded (`&colon;`
-#     among them), tab and newline removed, leading space and controls dropped, as a browser's URL parser reads
-#     it — opens with `data:`, holds a document this scan does not read, so the render is refused as
-#     undetermined (status 5). A conformant render carries neither. An image's or a link's `data:` URL is not
-#     a nested document and is not refused. The test that needs a tag name is applied after each candidate's
-#     walk, from a tag-independent flag remembered beside the class mask, so a tail an earlier candidate
-#     walked first cannot hide a later iframe's `src`; the tag name is read only when it is six bytes or
-#     fewer, so a candidate inside a long shared name costs nothing (case L18m-run).
+#   • A NESTED DOCUMENT IS UNDETERMINED (S7-01). A `srcdoc` attribute on any start tag, empty or not; or a
+#     `src` or `data` on an iframe, frame, object or embed, or a meta refresh URL, that carries a scheme other
+#     than http or https. Each holds or opens a document this scan does not read, so the render is refused as
+#     undetermined (status 5). The value is read as a browser's URL parser reads it: character references
+#     decoded (`&colon;`, `&semi;`, `&equals;` and the quotes among them), tab and newline removed, leading
+#     space and controls dropped. A scheme is a letter, then letters, digits, `+`, `.` or `-`, then `:`, and it
+#     is compared with http and https case-insensitively. A value with no scheme, relative or
+#     protocol-relative, names another document, not this page's bytes, and is not this rule's. A meta refresh
+#     is a meta start tag whose `http-equiv` is refresh; its URL is what follows the delay in its `content`,
+#     behind an optional `url=` and an optional quote, as the HTML refresh parser reads it. A conformant
+#     render carries none of these. A URL on any other element, an image's or a link's, is not this rule's
+#     (R-run and R-b below). The test that needs a tag name is applied after each candidate's walk, from
+#     tag-independent flags remembered beside the class mask, so a tail an earlier candidate walked first
+#     cannot hide a later iframe's `src` or a meta's refresh; the tag name is read only when it is six bytes
+#     or fewer, so a candidate inside a long shared name costs nothing (case L18m-run).
 #   • A RENDER OPENING WITH A UTF-16 OR UTF-32 BYTE-ORDER MARK IS UNDETERMINED (S7-08). A browser decodes it by
 #     the mark, and this scan reads bytes as ASCII-compatible text, so it is refused (status 6), never read
 #     as clean. A UTF-8 mark leaves the bytes readable and is scanned.
@@ -4333,9 +4339,13 @@ require_recordable_baseline() { # <trip_dir> <site_html>
 # DECLARED RESIDUALS, each asserted by an arm so a change that closes one updates this list (group N's pattern):
 #   R-run  a section a script builds at run time — by classList or className, by concatenation or
 #          interpolation, or by decoding such as atob, decodeURIComponent and String.fromCharCode — is not
-#          seen (cases L18g-a, L18g-c, L18g-atob, L18g-uri, L18g-fcc);
+#          seen, including a javascript: URL outside a frame, object or embed, such as a link or a form
+#          action, which runs on a reader's action (cases L18g-a, L18g-c, L18g-atob, L18g-uri, L18g-fcc,
+#          L18g-js-a, L18g-js-form);
 #   R-b    group content rendered without its token: a non-conformant build, which the § 3 render contract
-#          binds and this check cannot see, because it reads structure and never content.
+#          binds and this check cannot see, because it reads structure and never content. An image, an SVG
+#          data: image included, whose content shows group material is not read; the refusal reads markup,
+#          not images (cases L18g-svg-img, L18g-svg-css, L18g-svg-use).
 # A `<` and a letter in script text can open a bogus tag that picks up a class; that over-refuses the
 # plaintext limb only, and the encrypted limb is the remedy.
 #
@@ -4370,7 +4380,11 @@ sub classmask {
   $m |= ($bit{lc $_} // 0) for split /[\t\n\f\r ]+/, $v;
   return $m;
 }
-sub dataurl { my $v = shift; $v =~ s/&(?:#[xX]0*([0-9a-fA-F]{1,8})(?![0-9a-fA-F]);?|#0*([0-9]{1,9})(?![0-9]);?|(Tab|NewLine|colon|amp|AMP);)/defined $1 ? cp(hex $1) : defined $2 ? cp($2) : $3 eq "Tab" ? "\t" : $3 eq "NewLine" ? "\n" : $3 eq "colon" ? ":" : "&"/ge; $v =~ s/[\t\n\r]//g; $v =~ s/\A[\x00-\x20]+//; return ($v =~ /\Adata:/i) ? 1 : 0 }
+my %nref = (Tab => "\t", NewLine => "\n", colon => ":", semi => ";", comma => ",", equals => "=", quot => "\"", QUOT => "\"", apos => "\x27", period => ".", plus => "+", amp => "&", AMP => "&");
+sub refs { my $v = shift; $v =~ s/&(?:#[xX]0*([0-9a-fA-F]{1,8})(?![0-9a-fA-F]);?|#0*([0-9]{1,9})(?![0-9]);?|(Tab|NewLine|colon|semi|comma|equals|quot|QUOT|apos|period|plus|amp|AMP);|(quot|QUOT|amp|AMP)(?![A-Za-z0-9=]))/defined $1 ? cp(hex $1) : defined $2 ? cp($2) : $nref{defined $3 ? $3 : $4}/ge; return $v }
+sub scheme { my $v = shift; $v =~ s/[\t\n\r]//g; $v =~ s/\A[\x00-\x20]+//; return ($v =~ /\A([a-z][a-z0-9+.\-]*):/i && lc($1) ne "http" && lc($1) ne "https") ? 1 : 0 }
+sub refresh { my $v = refs(shift); return ($v =~ /\A[\t\n\f\r ]*refresh[\t\n\f\r ]*\z/i) ? 1 : 0 }
+sub refreshurl { my $v = refs(shift); $v =~ s/\A[\t\n\f\r ]*[0-9.]*[\t\n\f\r ]*[;,]?[\t\n\f\r ]*//; $v =~ s/\A[Uu][Rr][Ll][\t\n\f\r ]*=[\t\n\f\r ]*//; if ($v =~ /\A(["\x27])/) { my $c = $1; $v = substr($v, 1); my $i = index($v, $c); $v = substr($v, 0, $i) if $i >= 0 } return $v }
 my $over = 0; my $nested = 0;
 sub scan {
   my $s = shift; my $n = length $s; my $budget = 64 * $n + 1000000; my $spent = 0;
@@ -4397,14 +4411,14 @@ sub scan {
       }
       my $ln = lc $name;
       $nested = 1 if $ln eq "srcdoc";
-      push @path, [$q, ($ln eq "class" && defined $val) ? classmask($val) : 0, (($ln eq "src" || $ln eq "data") && defined $val) ? dataurl($val) : 0];
+      push @path, [$q, ($ln eq "class" && defined $val) ? classmask($val) : 0, !defined $val ? 0 : ($ln eq "src" || $ln eq "data") ? scheme(refs($val)) : $ln eq "http-equiv" ? 2 * refresh($val) : $ln eq "content" ? 4 * scheme(refreshurl($val)) : 0];
       $spent += pos($s) - $q + 1;
       if ($spent > $budget) { $over = 1; return 0 }
       $q = pos($s);
     }
-    for my $pe (reverse @path) { $m |= $pe->[1]; $d ||= $pe->[2]; $memo{$pe->[0]} = $m; $dmemo{$pe->[0]} = $d }
+    for my $pe (reverse @path) { $m |= $pe->[1]; $d |= $pe->[2]; $memo{$pe->[0]} = $m; $dmemo{$pe->[0]} = $d }
     $mask |= $m;
-    $nested = 1 if $d && $tag =~ /\A(?:iframe|frame|object|embed)\z/;
+    $nested = 1 if (($d & 1) && $tag =~ /\A(?:iframe|frame|object|embed)\z/) || (($d & 6) == 6 && $tag eq "meta");
   }
   return $mask;
 }
@@ -4467,7 +4481,7 @@ group_only_sections() { # <html_file>
   if [ "$go_rc" -ne 0 ]; then
     case "$go_rc" in
       4) go_why="reading it would pass the scan's byte budget" ;;
-      5) go_why="it carries a nested document — a srcdoc attribute, or a data: URL as the src or data of an iframe, frame, object or embed — whose markup the scan does not read" ;;
+      5) go_why="it carries a nested document — a srcdoc attribute; or a src or data on an iframe, frame, object or embed, or a meta refresh URL, that carries a scheme other than http or https — whose markup the scan does not read" ;;
       6) go_why="it opens with a UTF-16 or UTF-32 byte-order mark, so a browser reads its bytes in an encoding the scan does not" ;;
       *) go_why="the start-tag scan of it did not complete" ;;
     esac
