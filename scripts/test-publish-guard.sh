@@ -16847,11 +16847,12 @@ l19u_assert "L19u"
 # (D-NEW-3); a word between the selector and its colon; a label mid-line; a label whose colon is a dash, in
 # either spelling (S7-04); a number joined by three characters or by a comma (S7-04); a value-source line the
 # guard's profile parse does not read as a label (a task box, or a full-width colon, in a traveller file), which
-# harvests nothing; a label behind a marker the strip does not name (a code span); and, as the
-# folding's own boundary, a look-alike outside it (the Hangul filler before the colon) and digits of another
-# script (Devanagari).
-l19v_assert() { # <id> <date|none|interposed|midline|emdash|dash|sep3|comma|harvest|harvestcolon|marker|hangul|deva>
-  local d; d="$(l19_trip "l19v-$2")"
+# harvests nothing; a person reference written in quotes, so not a minted id, which is named in a note and whose
+# record is not read (an unresolved value source); a label behind a marker the strip does not name (a code
+# span); and, as the folding's own boundary, a look-alike outside it (the Hangul filler before the colon) and
+# digits of another script (Devanagari).
+l19v_assert() { # <id> <date|none|interposed|midline|emdash|dash|sep3|comma|harvest|harvestcolon|quoted|marker|hangul|deva>
+  local d nt=""; d="$(l19_trip "l19v-$2")"
   case "$2" in
     date)       l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** United States, expires 2031-04-12"
                 l19_put "$d" "$L19B2" '# Itinerary' '' 'Alex: passport expiry 2031-04-12' ;;
@@ -16868,14 +16869,17 @@ l19v_assert() { # <id> <date|none|interposed|midline|emdash|dash|sep3|comma|harv
                 l19_put "$d" "$L19B1" '# Trip' '' 'Bring X1234567 to the desk.' ;;
     harvestcolon) l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}$(printf '\357\274\232')** Ruritania, document no. X1234567"
                 l19_put "$d" "$L19B1" '# Trip' '' 'Bring X1234567 to the desk.' ;;
+    quoted)     l19_put "$d" "$L19_PROFILE" '---' "${_GUARD_REF_KEY:-person}: \"psn-a9c4\"" '---' '# Rowan' '' '- Interests: markets'
+                l19_put "$d" "${_GUARD_PERSON_STORE:-people}/psn-a9c4.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X2468135"
+                l19_put "$d" "$L19B1" '# Trip' '' 'Bring X2468135 to the desk.'; nt="|a person reference that is not a minted id" ;;
     marker)     l19_put "$d" "$L19B1" '# Trip' '' "\`${L19S1}\`: Ruritania" ;;
     hangul)     l19_put "$d" "$L19B1" '# Trip' '' "${L19S1}$(printf '\343\205\244'): Ruritania" ;;
     deva)       l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. 12345678"
                 l19_put "$d" "$L19B1" '# Trip' '' "Ref $(printf '\340\245\247\340\245\250\340\245\251\340\245\252\340\245\253\340\245\254\340\245\255\340\245\256') on file." ;;
   esac
-  l19_assert "$1" "the declared residual '$2' holds: this shape passes the source check, as declared at the function and in the PR" "$d" 0 "Source check:" "STOPPED"
+  l19_assert "$1" "the declared residual '$2' holds: this shape passes the source check, as declared at the function and in the PR" "$d" 0 "Source check:$nt" "STOPPED"
 }
-for l19c in date none interposed midline emdash dash sep3 comma harvest harvestcolon marker hangul deva; do l19v_assert "L19v-$l19c" "$l19c"; done
+for l19c in date none interposed midline emdash dash sep3 comma harvest harvestcolon quoted marker hangul deva; do l19v_assert "L19v-$l19c" "$l19c"; done
 
 # ── L19w — the word rule skips a calendar-valid date and nothing else (Stage 7's S7-03, operator ruling C): a
 # number grouped like a date whose groups are no calendar date, carried with other words in a bound line, stops;
@@ -16943,11 +16947,13 @@ l19y_assert "L19y-arabic" l19y-arabic "$L19VD" "Ref $(printf '\331\241\331\242\3
 
 # ── L19z — a merge chain is read one hop and a longer one is named (S7-07): a traveller whose person reference
 # is merged into a record that is itself merged on passes with a NOTE naming a merge chain longer than one hop,
-# and the one-hop control, whose target's value a bound file carries, stops.
-l19z_assert() { # <id> <1|2>
+# and the one-hop control, whose target's value a bound file carries, stops. L19z-hop2-crlf is the two-hop
+# chain with its first target saved with CRLF line endings: the target's merge key is read as its plain twin's
+# is, so the longer chain is still named.
+l19z_assert() { # <id> <1|2|2crlf>
   local d st="${_GUARD_PERSON_STORE:-people}" mk="${_GUARD_MERGE_KEY:-merged-into}"; d="$(l19_trip "l19z-hop$2")"
   l19_put "$d" "$L19_PROFILE" '---' "${_GUARD_REF_KEY:-person}: psn-a9b9" '---' '# Rowan' '' '- Interests: markets'
-  if [ "$2" = 2 ]; then
+  if [ "$2" != 1 ]; then
     l19_put "$d" "$st/psn-a9b9.md" '---' "$mk: psn-a9ba" '---' '# Rowan'
     l19_put "$d" "$st/psn-a9ba.md" '---' "$mk: psn-a9bb" '---' '# Rowan'
   else
@@ -16955,13 +16961,21 @@ l19z_assert() { # <id> <1|2>
   fi
   l19_put "$d" "$st/psn-a9bb.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X7654326"
   l19_put "$d" "$L19B1" '# Trip' '' 'Bring X7654326 to the consulate.'
-  if [ "$2" = 2 ]; then
-    l19_assert "$1" "a person reference whose merge chain runs two hops is named in a NOTE rather than read as clean" "$d" 0 "Source check:|a merge chain longer than one hop" "STOPPED|X7654326"
+  if [ "$2" = 2crlf ]; then
+    LC_ALL=C awk '{ printf "%s\r\n", $0 }' "$d/$st/psn-a9ba.md" > "$d/$st/psn-a9ba.crlf"; mv -f "$d/$st/psn-a9ba.crlf" "$d/$st/psn-a9ba.md"
+    if [ "$(($(LC_ALL=C tr -cd '\r' < "$d/$st/psn-a9ba.md" | wc -c)))" -ne "$(($(LC_ALL=C tr -cd '\n' < "$d/$st/psn-a9ba.md" | wc -c)))" ]; then
+      FAIL "$1: fixture integrity — the planted merge target does not end every line with CRLF, so this arm would not grade it. VERDICT WITHHELD"
+      return 0
+    fi
+  fi
+  if [ "$2" != 1 ]; then
+    l19_assert "$1" "a person reference whose merge chain runs two hops ($2) is named in a NOTE rather than read as clean" "$d" 0 "Source check:|a merge chain longer than one hop" "STOPPED|X7654326"
   else
     l19_assert "$1" "a person reference merged one hop is followed: the target's value in a bound file stops, matched exactly" "$d" 1 "SOURCE CHECK STOPPED|${L19S1} value, matched exactly" "X7654326"
   fi
 }
 for l19c in 1 2; do l19z_assert "L19z-hop$l19c" "$l19c"; done
+l19z_assert "L19z-hop2-crlf" 2crlf
 
 # ── L19x / L19y, Stage 7 pass 2's look-alike shapes (S7P2-02), and the folding that closes their class: every
 # Unicode space separator read as a space, the named colon set read as a colon, every format character and
@@ -17034,22 +17048,33 @@ for l19c in $L19_SWEEPS; do
   l19r_="${l19c#*:}"; l19_sweep_assert "${l19c%%:*}" "${l19r_%%:*}" "${l19r_#*:}"
 done
 
-# ── L19i-bom* / L19i-nul — a bound file the check cannot read as UTF-8 (S7P2-06): one opening with a UTF-16 or
-# UTF-32 byte-order mark, its passport line encoded behind it, or one holding a NUL byte after its passport line,
-# stops as present but unreadable, naming the file and never a value.
+# ── L19i-bom* / L19i-nul / L19i-mark16le — a bound file the check cannot read as UTF-8 (S7P2-06): one opening with
+# a UTF-16 or UTF-32 byte-order mark, its passport line encoded behind it, or one holding a NUL byte after its
+# passport line, stops as present but unreadable, naming the file and never a value. The re-encoded files hold
+# NUL bytes, so each trips both halves of the byte test; L19i-mark16le is the file in UTF-8 behind a UTF-16LE
+# mark with no NUL byte, which pins the mark half alone, as L19i-nul pins the NUL half.
 l19_enc() { # <file> <16le|16be|32le|32be> — the UTF-8 file re-encoded in place behind its mark
   perl -MEncode -e 'local $/; open(my $i, "<:raw", $ARGV[0]) or die "unreadable\n"; my $s = decode("UTF-8", scalar <$i>); close $i;
     my %e = ("16le" => ["\xFF\xFE", "UTF-16LE"], "16be" => ["\xFE\xFF", "UTF-16BE"], "32le" => ["\xFF\xFE\x00\x00", "UTF-32LE"], "32be" => ["\x00\x00\xFE\xFF", "UTF-32BE"]);
     my $k = $e{$ARGV[1]} or die "no such mark\n"; open(my $o, ">:raw", $ARGV[0]) or die "unwritable\n"; print $o $k->[0], encode($k->[1], $s)' "$1" "$2"
 }
-l19enc_assert() { # <id> <16le|16be|32le|32be|nul>
+l19enc_assert() { # <id> <16le|16be|32le|32be|nul|mark16le>
   local d; d="$(l19_trip "l19enc-$2")"
   l19_put "$d" "$L19B1" '# Trip' '' "- **${L19S1}:** Ruritania"
-  if [ "$2" = nul ]; then printf 'A quiet week\000 by the sea.\n' >> "$d/$L19B1"; else l19_enc "$d/$L19B1" "$2"; fi
+  case "$2" in
+    nul)      printf 'A quiet week\000 by the sea.\n' >> "$d/$L19B1" ;;
+    mark16le) { printf '\377\376'; cat "$d/$L19B1"; } > "$d/$L19B1.mark"; mv -f "$d/$L19B1.mark" "$d/$L19B1"
+              if [ "$(LC_ALL=C od -An -tx1 -N2 "$d/$L19B1" | tr -d ' \n')" != fffe ] || [ "$(($(wc -c < "$d/$L19B1")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$d/$L19B1" | wc -c)))" ]; then
+                FAIL "$1: fixture integrity — the planted bound file does not open with the mark16le mark, or holds a NUL byte, so this arm would not grade the mark alone. VERDICT WITHHELD"
+                return 0
+              fi ;;
+    *)        l19_enc "$d/$L19B1" "$2" ;;
+  esac
   l19_assert "$1" "a bound file that cannot be read as UTF-8 text ($2) stops the publish as present but unreadable, naming the file" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 is present but cannot be read" "Ruritania"
 }
 for l19c in 16le 16be 32le 32be; do l19enc_assert "L19i-bom$l19c" "$l19c"; done
 l19enc_assert "L19i-nul" nul
+l19enc_assert "L19i-mark16le" mark16le
 
 # ── L19i-harvest16 / L19i-src-* — a value source the check cannot read as UTF-8: each value-source kind (the
 # traveller profile, a person record its reference reaches, that record's merge target, the traveller model)
@@ -17064,7 +17089,20 @@ l19enc_assert "L19i-nul" nul
 # person record a UTF-16 profile references, and stop under the shipped declaration and under one listing the
 # person scope first. The L19y-src-* twins are the same sources in UTF-8, one with a non-ASCII letter: each
 # harvests, and the bound file stops matched exactly, never as unreadable.
-l19src_trip() { # <name> <profile|person|merge|model|nul|order|latin> <encoding, as l19src_assert takes it> -> trip dir
+# Each half of the byte test is pinned alone at each admission point: the mark half by a UTF-8 file behind a
+# UTF-16LE mark with no NUL byte (mark16le), the NUL half by a UTF-8 file holding one NUL byte (nul), each with
+# an integrity limb on the file it encodes. The person branch tests every traveller file it reads for a
+# reference, so under the shipped declaration a profile arm is caught at two points and pins neither alone: the
+# scope-file loop is pinned through the traveller model, which only that loop reads (L19i-src-model-*); the
+# person record and its merge target by L19i-src-person-* and L19i-src-merge-*; and the person branch's own read
+# of a traveller file under a scratch declaration that drops that file's field row and keeps the person store's
+# (L19i-src-pbranch-*, where a UTF-16, NUL-holding or UTF-16-marked traveller file whose reference reaches a UTF-8
+# record holding the value stops as unreadable, named by the traveller file's scope; L19y-src-pbranch, its UTF-8
+# twin, shows that declaration reaches the record). A traveller file, or a person record whose merge key reaches
+# its target, saved with a UTF-8 byte-order mark (bom8) or with CRLF line endings (crlf) resolves its reference
+# as its plain twin does and stops matched exactly: L19y-src-order-* against L19y-src-order-shipped, and
+# L19y-src-stub-* against L19y-src-merge.
+l19src_trip() { # <name> <profile|person|merge|stub|model|nul|order|latin> <encoding, as l19src_assert takes it> -> trip dir
   local d f st="${_GUARD_PERSON_STORE:-people}" rk="${_GUARD_REF_KEY:-person}" mk="${_GUARD_MERGE_KEY:-merged-into}"
   d="$(l19_trip "$1")"; f="$d/$L19_PROFILE"
   case "$2" in
@@ -17073,6 +17111,10 @@ l19src_trip() { # <name> <profile|person|merge|model|nul|order|latin> <encoding,
              l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" '---' '# Rowan' '' '- Interests: markets'
              l19_put "$d" "$st/psn-a9c1.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X1234567" ;;
     merge)   f="$d/$st/psn-a9c2.md"
+             l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" '---' '# Rowan' '' '- Interests: markets'
+             l19_put "$d" "$st/psn-a9c1.md" '---' "$mk: psn-a9c2" '---' '# Rowan'
+             l19_put "$d" "$st/psn-a9c2.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X1234567" ;;
+    stub)    f="$d/$st/psn-a9c1.md"
              l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" '---' '# Rowan' '' '- Interests: markets'
              l19_put "$d" "$st/psn-a9c1.md" '---' "$mk: psn-a9c2" '---' '# Rowan'
              l19_put "$d" "$st/psn-a9c2.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X1234567" ;;
@@ -17087,22 +17129,46 @@ l19src_trip() { # <name> <profile|person|merge|model|nul|order|latin> <encoding,
   esac
   l19_put "$d" "$L19B1" '# Trip' '' 'Bring X1234567 to the desk.'
   case "$3" in
-    utf8|nul) ;;
+    utf8) ;;
+    nul) [ "$2" = nul ] || printf 'A quiet week\000 by the sea.\n' >> "$f" ;;
     mark16le|mark16be) { if [ "$3" = mark16le ]; then printf '\377\376'; else printf '\376\377'; fi; cat "$f"; } > "$f.mark"
                        mv -f "$f.mark" "$f" ;;
+    bom8) { printf '\357\273\277'; cat "$f"; } > "$f.mark"; mv -f "$f.mark" "$f" ;;
+    crlf) LC_ALL=C awk '{ printf "%s\r\n", $0 }' "$f" > "$f.crlf"; mv -f "$f.crlf" "$f" ;;
     *) l19_enc "$f" "$3" ;;
   esac
   printf '%s' "$d"
 }
-l19src_assert() { # <id> <kind> <16le|16be|32le|32be|mark16le|mark16be|nul|utf8> [the declaration order, for the order kind]
-  local id="$1" k="$2" e="$3" o="${4:-}" d sc mk
+l19src_assert() { # <id> <kind> <16le|16be|32le|32be|mark16le|mark16be|nul|utf8|bom8|crlf> [the declaration order, for the order kind]
+  local id="$1" k="$2" e="$3" o="${4:-}" d sc mk ef why="" st="${_GUARD_PERSON_STORE:-people}"
   d="$(l19src_trip "l19src-$k-$e${o:+-$o}" "$k" "$e")"
-  if [ "${e#mark}" != "$e" ]; then
-    mk=feff; [ "$e" = mark16le ] && mk=fffe
-    if [ "$(LC_ALL=C od -An -tx1 -N2 "$d/$L19_PROFILE" | tr -d ' \n')" != "$mk" ] || [ "$(($(wc -c < "$d/$L19_PROFILE")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$d/$L19_PROFILE" | wc -c)))" ]; then
-      FAIL "$id: fixture integrity — the planted profile does not open with the $e mark, or holds a NUL byte, so this arm would not grade the mark alone. VERDICT WITHHELD"
-      return 0
-    fi
+  case "$k" in
+    person|stub) ef="$d/$st/psn-a9c1.md" ;;
+    merge)       ef="$d/$st/psn-a9c2.md" ;;
+    model)       ef="$d/$L19_MODEL" ;;
+    *)           ef="$d/$L19_PROFILE" ;;
+  esac
+  case "$e" in
+    mark16le|mark16be)
+      mk=feff; [ "$e" = mark16le ] && mk=fffe
+      if [ "$(LC_ALL=C od -An -tx1 -N2 "$ef" | tr -d ' \n')" != "$mk" ] || [ "$(($(wc -c < "$ef")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$ef" | wc -c)))" ]; then
+        why="does not open with the $e mark, or holds a NUL byte, so this arm would not grade the mark alone"
+      fi ;;
+    nul)
+      case "$(LC_ALL=C od -An -tx1 -N4 "$ef" | tr -d ' \n')" in fffe*|feff*|0000feff) why="opens with a UTF-16 or UTF-32 mark, so this arm would not grade the NUL byte alone" ;; esac
+      [ "$(($(wc -c < "$ef") - $(LC_ALL=C tr -d '\000' < "$ef" | wc -c)))" -eq 1 ] || why="does not hold exactly one NUL byte, so this arm would not grade the NUL half as it names" ;;
+    bom8)
+      if [ "$(LC_ALL=C od -An -tx1 -N3 "$ef" | tr -d ' \n')" != efbbbf ] || [ "$(($(wc -c < "$ef")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$ef" | wc -c)))" ]; then
+        why="does not open with a UTF-8 byte-order mark, or holds a NUL byte, so this arm would not grade the mark it names"
+      fi ;;
+    crlf)
+      if [ "$(($(LC_ALL=C tr -cd '\r' < "$ef" | wc -c)))" -ne "$(($(LC_ALL=C tr -cd '\n' < "$ef" | wc -c)))" ] || [ "$(($(LC_ALL=C tr -cd '\n' < "$ef" | wc -c)))" -eq 0 ]; then
+        why="does not end every line with CRLF, so this arm would not grade the line endings it names"
+      fi ;;
+  esac
+  if [ -n "$why" ]; then
+    FAIL "$id: fixture integrity — the planted file $why. VERDICT WITHHELD"
+    return 0
   fi
   case "$k" in
     person) sc="person record psn-a9c1" ;;
@@ -17112,6 +17178,8 @@ l19src_assert() { # <id> <kind> <16le|16be|32le|32be|mark16le|mark16be|nul|utf8>
   esac
   if [ "$e" = utf8 ]; then
     l19_assert "$id" "the same value source ($k${o:+, $o declaration}) in UTF-8 harvests, and the bound file stops the publish matched exactly, never as unreadable" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} value, matched exactly" "cannot be read|X1234567"
+  elif [ "$e" = bom8 ] || [ "$e" = crlf ]; then
+    l19_assert "$id" "a value source saved with a UTF-8 byte-order mark or CRLF line endings ($k, $e${o:+, $o declaration}) resolves its reference as its UTF-8 twin does, and the bound file stops the publish matched exactly, never passing and never as unreadable" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} value, matched exactly" "cannot be read|X1234567"
   else
     l19_assert "$id" "a value source that cannot be read as UTF-8 text ($k, $e${o:+, $o declaration}) stops the publish as present but unreadable, named as ${sc}, never by a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source ${sc} is present but cannot be read as UTF-8 text" "matched exactly|label with a value|Ruritania|X1234567|rowan|psn-a9c1.md|psn-a9c2.md"
   fi
@@ -17120,14 +17188,27 @@ l19src_assert() { # <id> <kind> <16le|16be|32le|32be|mark16le|mark16be|nul|utf8>
 L19DECL_PFIRST="$L19W/decl-person-first.md"
 { _guard_declared_rows | awk -v P="${_GUARD_DECL_ARTIFACT_PERSON:-}" '$1 == "field" && $3 == P'
   _guard_declared_rows | awk -v P="${_GUARD_DECL_ARTIFACT_PERSON:-}" '!($1 == "field" && $3 == P)'; } | ldecl_write "$L19DECL_PFIRST"
-l19src_order_assert() { # <id> <shipped|person-first> <16le|utf8>
-  local id="$1" o="$2" e="$3" pre="" want first cand rows
+# The no-profile declaration: the live rows without the traveller file's field rows, the person store's kept, so
+# the traveller file is read only by the person branch, for its reference.
+L19DECL_NOPROF="$L19W/decl-no-profile.md"
+_guard_declared_rows | awk -v P="${_GUARD_DECL_ARTIFACT_PROFILE:-}" '!($1 == "field" && $3 == P)' | ldecl_write "$L19DECL_NOPROF"
+l19src_order_assert() { # <id> <shipped|person-first|noprofile> <16le|utf8|nul|mark16le>
+  local id="$1" o="$2" e="$3" pre="" want first cand rows np nr
   want="${_GUARD_DECL_ARTIFACT_PROFILE:-}"
   if [ "$o" = person-first ]; then pre="_GUARD_DECLARATION=\"$L19DECL_PFIRST\""; want="${_GUARD_DECL_ARTIFACT_PERSON:-}"; fi
+  if [ "$o" = noprofile ]; then pre="_GUARD_DECLARATION=\"$L19DECL_NOPROF\""; fi
   first="$( [ -z "$pre" ] || eval "$pre"; _guard_declared_rows | awk '$1 == "field" && !n++ { print $3 }')"
   cand="$( [ -z "$pre" ] || eval "$pre"; _guard_declared_candidates)"
   rows="$( [ -z "$pre" ] || eval "$pre"; _guard_declared_rows | awk 'NF { c++ } END { print c + 0 }')"
-  if [ -z "$want" ] || [ "$first" != "$want" ] || [ "${cand:-0}" != "$rows" ]; then
+  np="$( [ -z "$pre" ] || eval "$pre"; _guard_declared_rows | awk -v P="${_GUARD_DECL_ARTIFACT_PROFILE:-}" '$1 == "field" && $3 == P { c++ } END { print c + 0 }')"
+  nr="$( [ -z "$pre" ] || eval "$pre"; _guard_declared_rows | awk -v P="${_GUARD_DECL_ARTIFACT_PERSON:-}" '$1 == "field" && $3 == P { c++ } END { print c + 0 }')"
+  if [ "$o" = noprofile ]; then
+    if [ -z "${_GUARD_DECL_ARTIFACT_PROFILE:-}" ] || [ "${np:-1}" -ne 0 ] || [ "${nr:-0}" -lt 1 ] || [ "${cand:-0}" != "$rows" ]; then
+      FAIL "$id: fixture integrity — under the $o declaration ${np:-?} field row(s) scope the traveller file (want 0) and ${nr:-?} the person store (want at least 1), with ${cand:-0} candidate row(s) against $rows read, so this arm would not grade the person branch's own read. VERDICT WITHHELD"
+    else
+      L19_PRE="$pre" l19src_assert "$id" order "$e" "$o"
+    fi
+  elif [ -z "$want" ] || [ "$first" != "$want" ] || [ "${cand:-0}" != "$rows" ]; then
     FAIL "$id: fixture integrity — under the $o declaration the first field scope reads '$first' (want '$want'), with ${cand:-0} candidate row(s) against $rows read, so this arm would not grade the order it names. VERDICT WITHHELD"
   else
     L19_PRE="$pre" l19src_assert "$id" order "$e" "$o"
@@ -17140,6 +17221,10 @@ l19src_assert "L19i-src-nul" nul nul
 for l19c in shipped person-first; do l19src_order_assert "L19i-src-order-$l19c" "$l19c" 16le; done
 for l19c in profile person merge model nul latin; do l19src_assert "L19y-src-$l19c" "$l19c" utf8; done
 for l19c in shipped person-first; do l19src_order_assert "L19y-src-order-$l19c" "$l19c" utf8; done
+for l19c in person merge model; do for l19e in mark16le nul; do l19src_assert "L19i-src-$l19c-$l19e" "$l19c" "$l19e"; done; done
+for l19c in 16le nul mark16le; do l19src_order_assert "L19i-src-pbranch-$l19c" noprofile "$l19c"; done
+l19src_order_assert "L19y-src-pbranch" noprofile utf8
+for l19c in bom8 crlf; do for l19e in order stub; do l19src_assert "L19y-src-$l19e-$l19c" "$l19e" "$l19c"; done; done
 
 # ── ARMED-RED controls for L19: each arm under the mutation its design row names reports pass=0 fail=1.
 l19_m_noexact()  { l18_rewrite _build_source_hits 'if (exact_hit(i, nl, ld, lt))' 'if (0)'; }
@@ -17200,7 +17285,7 @@ md_flips require_clean_build_sources "L19s-two" l19s_assert "L19s-two" two
 md_flips refuse_group_only_render "L19s-three" l19s_assert "L19s-three" three
 for l19c in email phone docno; do md_flips require_clean_build_sources "L19t-$l19c" l19t_assert "L19t-$l19c" "$l19c"; done
 md_flips require_clean_build_sources "L19u" l19u_assert "L19u"
-for l19c in date none interposed midline emdash dash sep3 comma harvest harvestcolon marker hangul deva; do md_flips require_clean_build_sources "L19v-$l19c" l19v_assert "L19v-$l19c" "$l19c"; done
+for l19c in date none interposed midline emdash dash sep3 comma harvest harvestcolon quoted marker hangul deva; do md_flips require_clean_build_sources "L19v-$l19c" l19v_assert "L19v-$l19c" "$l19c"; done
 for l19c in stop-242:'07 2019 55':stop stop-422:'2031 55 12':stop stop-224:'55 12 2031':stop stop-24:'19 2031':stop \
             skip-ymd:2031-03-15:skip skip-dmy:15/03/2031:skip skip-dmy-dot:31.12.2031:skip skip-mdy:03/15/2031:skip \
             skip-ym:2031-07:skip skip-ym-1999:1999-12:skip; do
@@ -17223,6 +17308,7 @@ md_flips require_clean_build_sources "L19y-shy" l19y_assert "L19y-shy" l19y-shy 
 md_flips require_clean_build_sources "L19y-fw" l19y_assert "L19y-fw" l19y-fw "$L19VD" "Ref $(printf '\357\274\221\357\274\222\357\274\223\357\274\224\357\274\225\357\274\226\357\274\227\357\274\230') on file."
 md_flips require_clean_build_sources "L19y-arabic" l19y_assert "L19y-arabic" l19y-arabic "$L19VD" "Ref $(printf '\331\241\331\242\331\243\331\244\331\245\331\246\331\247\331\250') on file."
 for l19c in 1 2; do md_flips require_clean_build_sources "L19z-hop$l19c" l19z_assert "L19z-hop$l19c" "$l19c"; done
+md_flips require_clean_build_sources "L19z-hop2-crlf" l19z_assert "L19z-hop2-crlf" 2crlf
 md_flips require_clean_build_sources "L19x-nnbsp" l19x_assert "L19x-nnbsp" l19x-nnbsp "${L19S1}${L19X_NNB}: Ruritania" "a narrow no-break space before its colon"
 md_flips require_clean_build_sources "L19x-thin" l19x_assert "L19x-thin" l19x-thin "${L19S1}${L19X_THIN}: Ruritania" "a thin space before its colon"
 md_flips require_clean_build_sources "L19x-ideo" l19x_assert "L19x-ideo" l19x-ideo "${L19S1}${L19X_IDEO}${L19FC}Ruritania" "an ideographic space and a full-width colon"
@@ -17241,6 +17327,7 @@ for l19c in $L19_SWEEPS; do
 done
 for l19c in 16le 16be 32le 32be; do md_flips require_clean_build_sources "L19i-bom$l19c" l19enc_assert "L19i-bom$l19c" "$l19c"; done
 md_flips require_clean_build_sources "L19i-nul" l19enc_assert "L19i-nul" nul
+md_flips require_clean_build_sources "L19i-mark16le" l19enc_assert "L19i-mark16le" mark16le
 md_flips require_clean_build_sources "L19i-harvest16" l19src_assert "L19i-harvest16" profile 16le
 for l19c in person merge model; do md_flips require_clean_build_sources "L19i-src-$l19c-16le" l19src_assert "L19i-src-$l19c-16le" "$l19c" 16le; done
 for l19c in 16be 32le 32be mark16le mark16be; do md_flips require_clean_build_sources "L19i-src-profile-$l19c" l19src_assert "L19i-src-profile-$l19c" profile "$l19c"; done
@@ -17248,6 +17335,10 @@ md_flips require_clean_build_sources "L19i-src-nul" l19src_assert "L19i-src-nul"
 for l19c in shipped person-first; do md_flips require_clean_build_sources "L19i-src-order-$l19c" l19src_order_assert "L19i-src-order-$l19c" "$l19c" 16le; done
 for l19c in profile person merge model nul latin; do md_flips require_clean_build_sources "L19y-src-$l19c" l19src_assert "L19y-src-$l19c" "$l19c" utf8; done
 for l19c in shipped person-first; do md_flips require_clean_build_sources "L19y-src-order-$l19c" l19src_order_assert "L19y-src-order-$l19c" "$l19c" utf8; done
+for l19c in person merge model; do for l19e in mark16le nul; do md_flips require_clean_build_sources "L19i-src-$l19c-$l19e" l19src_assert "L19i-src-$l19c-$l19e" "$l19c" "$l19e"; done; done
+for l19c in 16le nul mark16le; do md_flips require_clean_build_sources "L19i-src-pbranch-$l19c" l19src_order_assert "L19i-src-pbranch-$l19c" noprofile "$l19c"; done
+md_flips require_clean_build_sources "L19y-src-pbranch" l19src_order_assert "L19y-src-pbranch" noprofile utf8
+for l19c in bom8 crlf; do for l19e in order stub; do md_flips require_clean_build_sources "L19y-src-$l19e-$l19c" l19src_assert "L19y-src-$l19e-$l19c" "$l19e" "$l19c"; done; done
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # I6 — list reports build-to-published: whether the page as last pushed is the newest local build, by content
