@@ -469,7 +469,7 @@ if _is_stale 200 100 && ! _is_stale 100 200 && ! _is_stale "" 100; then PASS "I4
 # and a clean verdict on an rc=2 would be an empty scan wearing a pass.
 i5_assert() {
   local body mrc
-  body="$(declare -f cmd_list 2>/dev/null)"
+  body="$(declare -f cmd_list build_to_published newest_site_html 2>/dev/null)"
   grep -qE 'git |commit_noreply|staticrypt|repo create|repo delete|api -X|rm -' <<<"$body" >/dev/null 2>&1; mrc=$?
   if ! declare -f cmd_list >/dev/null 2>&1; then
     FAIL "I5: cmd_list is NOT DEFINED — the read-only verdict below would have no subject, so it would certify a subcommand that does not exist"
@@ -480,7 +480,7 @@ i5_assert() {
   elif [ "$mrc" -ne 1 ]; then
     FAIL "I5: the mutating-verb probe exited rc=$mrc — neither match (0) nor no-match (1), so the scan did not run and a clean verdict would be an empty scan"
   else
-    PASS "I5: cmd_list is read-only (no git/push/encrypt/create/delete/write verbs) — subject present, body ${#body}B and non-degenerate, verb probe ran and returned no-match"
+    PASS "I5: cmd_list and the helpers its build-to-published column calls are read-only (no git/push/encrypt/create/delete/write verbs) — subject present, body ${#body}B and non-degenerate, verb probe ran and returned no-match"
   fi
 }
 i5_assert
@@ -1163,7 +1163,7 @@ l8n="$(printf '%s\n' "$l8sel" | grep -c .)"
 # Every function that must hold ZERO selectors. Two predicates, the projection the summary
 # predicate adds, and the two helpers every arm of both runs through: an arm's stages moved out
 # of the predicates' bodies into those two, and a selector could be hardcoded there as easily.
-L8_PREDICATES='verify_publishable_content verify_summary_content strip_md_to_text_blocks _guard_arm _guard_words'
+L8_PREDICATES='verify_publishable_content verify_summary_content strip_md_to_text_blocks _guard_arm _guard_words _field_class_values _build_source_hits require_clean_build_sources'
 l8absent=""
 # Each body is read through pp_body, so the guard graded is the production one and not the
 # parity cells' recorder standing in for it from group L to M6.
@@ -7517,7 +7517,7 @@ fi
 # construction: perl invoked through a variable or by a path (`$PERL`, `/usr/bin/perl`),
 # and a change that removes one program while adding another, because it compares a count
 # and not a set.
-S15I_FNS='strip_to_text strip_to_published_text strip_to_text_blocks strip_to_joined_text strip_to_shape_text _browser_end_tags _decode_entities strip_to_itinerary_text _digest_of'
+S15I_FNS='strip_to_text strip_to_published_text strip_to_text_blocks strip_to_joined_text strip_to_shape_text _browser_end_tags _decode_entities strip_to_itinerary_text _digest_of _group_only_scan'
 S15I_RE='(^|[[:space:](|;`$])perl[[:space:]]+-'
 s15_perl_lines() { # <file> -> the number of non-comment lines that invoke perl by name
   local line t n=0
@@ -9191,10 +9191,10 @@ SA17H_NFN=0; for sad in $S15I_FNS; do SA17H_NFN=$((SA17H_NFN+1)); done
 SA17H_NLINE="$(s15_perl_lines "$SELF_PUBLISH")"
 printf 'digest=4294967295-1234\nconfirmed=2027-06-01T00:00:00Z\n' > "$WORK/sa17h.rec"
 SA17H_CRC="$(_record_digest "$WORK/sa17h.rec")"
-if [ "$SA17H_DN$SA17H_FB" = 00 ] && [ "$SA17H_RE" -eq 1 ] && [ "$SA17H_NFN" -eq 9 ] && [ "$SA17H_NLINE" -eq 9 ] && [ "$SA17H_CRC" = '4294967295-1234' ]; then
-  PASS "S17h: _digest_of's parsed body reads discard/fallback 00, invokes perl by S15i's own regex (F4 — the listed body is a perl program, so the count cannot be balanced by a substitution), S15I_FNS lists 9 and the script has 9 perl-invoking lines; the CRC token still parses for group T and for a pre-swap record"
+if [ "$SA17H_DN$SA17H_FB" = 00 ] && [ "$SA17H_RE" -eq 1 ] && [ "$SA17H_NFN" -eq 10 ] && [ "$SA17H_NLINE" -eq 10 ] && [ "$SA17H_CRC" = '4294967295-1234' ]; then
+  PASS "S17h: _digest_of's parsed body reads discard/fallback 00, invokes perl by S15i's own regex (F4 — the listed body is a perl program, so the count cannot be balanced by a substitution), S15I_FNS lists 10 and the script has 10 perl-invoking lines; the CRC token still parses for group T and for a pre-swap record"
 else
-  FAIL "S17h: bits $SA17H_DN$SA17H_FB (want 00), regex match $SA17H_RE (want 1), listed $SA17H_NFN and counted $SA17H_NLINE (want 9 and 9), CRC parse '$SA17H_CRC'"
+  FAIL "S17h: bits $SA17H_DN$SA17H_FB (want 00), regex match $SA17H_RE (want 1), listed $SA17H_NFN and counted $SA17H_NLINE (want 10 and 10), CRC parse '$SA17H_CRC'"
 fi
 
 # ── S18a — MUST REFUSE. Ten lines the grammar must not admit, each refused with nothing printed:
@@ -15545,6 +15545,2486 @@ md_flips cmd_update "RV28" rv28_assert "RV28"
 md_flips require_key_of_record "RV29" rv29_assert "RV29"
 md_flips write_passphrase_file "RV30" rv30_assert "RV30"
 for rv_p in noreply publish update rotate; do md_flips commit_noreply "RV31-$rv_p" rv31_assert "RV31-$rv_p" "$rv_p"; done
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# L18 — a plaintext publish refuses a render carrying a group-only section, by that section's presence
+# (#2155; ADR-030 § 6 safeguard 2). Group L by id; placed here, inside group RV's mock scope, because its
+# end-to-end arms drive cmd_publish offline and so take RV's gh and npx stand-ins, its gh call log, its
+# encryption shim and its signing pins (an unpinned commit here would fail RV31-run), and because the parity
+# recorder ended at M6e, so the content guard these arms reach is the production one.
+#
+# THE TOKENS ARE READ, NEVER WRITTEN HERE. Every fixture carries a token from reference/site-layout-spec.md
+# § Group-only components, read through the production reader; this file holds no copy of the fence, its
+# heading or any row of it, which is the one-home property L18i asserts of the script. A fence that reads
+# no token leaves every arm below without a subject, and each one says so rather than passing.
+#
+# EACH ARM IS ONE VERDICT, REGISTERED FOR md_flips ON ITS SUBJECT (F20). The structural arms L18i and L18l
+# grade a function's text and are not registered: removing a function does not remove its name from the
+# text of its caller. The ARMED-RED controls run an arm under the mutation the design names and require it
+# to report exactly one FAIL, so each green arm above is a measurement of the property and not of its
+# fixture. Fixtures are synthetic.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group L, L18 — a plaintext publish refuses a render carrying a group-only section, by its presence (#2155)."
+
+L18W="$RVW/l18"; mkdir -p "$L18W"
+L18ERR="$L18W/stderr"
+L18_TOKS=""
+if declare -F _group_only_rows >/dev/null 2>&1; then L18_TOKS="$(_group_only_rows)"; fi
+L18T1=""; L18T2=""; L18T3=""; l18i=0
+for l18t in $L18_TOKS; do
+  l18i=$((l18i+1))
+  case "$l18i" in 1) L18T1="$l18t" ;; 2) L18T2="$l18t" ;; 3) L18T3="$l18t" ;; esac
+done
+[ -n "$L18T2" ] || L18T2="$L18T1"; [ -n "$L18T3" ] || L18T3="$L18T2"
+
+# Placeholder substitution with no ${var//pat/rep}: bash 5.2 reads an unquoted '&' in a replacement as the
+# match, and the fixtures below carry character references.
+l18_sub() { # <text> <placeholder> <value> -> the text with every placeholder replaced
+  local s="$1" p="$2" v="$3" o=""
+  while :; do
+    case "$s" in *"$p"*) o="$o${s%%"$p"*}$v"; s="${s#*"$p"}" ;; *) break ;; esac
+  done
+  printf '%s' "$o$s"
+}
+# A token with each '-' written another way — the character-reference spellings a browser decodes.
+l18_enc() { # <token> <what each '-' becomes>
+  local s="$1" r="$2" o="" c i
+  for (( i=0; i<${#s}; i++ )); do
+    c="${s:i:1}"
+    if [ "$c" = "-" ]; then o="$o$r"; else o="$o$c"; fi
+  done
+  printf '%s' "$o"
+}
+L18T1_UP="$(printf '%s' "$L18T1" | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')"
+L18T1_MIX="$(printf '%s' "$L18T1" | perl -pe 's/(^|-)([a-z])/$1\u$2/g' 2>/dev/null)"
+# A section carrying the first token, encoded as a nested document or a decoder would carry it: base64 (B64),
+# every non-alphanumeric byte percent-encoded (PCT), only its brackets and quotes percent-encoded, as a
+# javascript: URL's result string carries it (JSP), and an SVG document holding it, in base64 (SVG) and
+# percent-encoded (SVGP). None of them carries the token as a class a start tag of the page holds.
+L18_SEC7="<section class=\"$L18T1\"><h2>Picks</h2><p>x</p></section>"
+L18_B64="$(perl -MMIME::Base64 -e 'print encode_base64($ARGV[0], "")' "$L18_SEC7" 2>/dev/null)"
+L18_PCT="$(perl -e '(my $s = $ARGV[0]) =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord $1)/ge; print $s' "$L18_SEC7" 2>/dev/null)"
+L18_JSP="$(perl -e '(my $s = $ARGV[0]) =~ s/([<>"])/sprintf("%%%02X", ord $1)/ge; print $s' "$L18_SEC7" 2>/dev/null)"
+L18_SVGDOC="<svg xmlns=\"http://www.w3.org/2000/svg\"><foreignObject><section xmlns=\"http://www.w3.org/1999/xhtml\" class=\"$L18T1\">x</section></foreignObject></svg>"
+L18_SVG="$(perl -MMIME::Base64 -e 'print encode_base64($ARGV[0], "")' "$L18_SVGDOC" 2>/dev/null)"
+L18_SVGP="$(perl -e '(my $s = $ARGV[0]) =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord $1)/ge; print $s' "$L18_SVGDOC" 2>/dev/null)"
+
+l18_frag() { # <fragment with @T@ @T2@ @T3@ @TU@ @TM@ @K@ @K5@ @KX@ @K0@ @B64@ @PCT@ @JSP@ @SVG@ @SVGP@ @NL@ @TAB@> -> the fragment, tokens filled
+  local f="$1" nl='
+' tab='	'
+  f="$(l18_sub "$f" '@B64@' "$L18_B64")"; f="$(l18_sub "$f" '@PCT@' "$L18_PCT")"; f="$(l18_sub "$f" '@JSP@' "$L18_JSP")"
+  f="$(l18_sub "$f" '@SVGP@' "$L18_SVGP")"; f="$(l18_sub "$f" '@SVG@' "$L18_SVG")"; f="$(l18_sub "$f" '@TAB@' "$tab")"
+  f="$(l18_sub "$f" '@T2@' "$L18T2")"; f="$(l18_sub "$f" '@T3@' "$L18T3")"
+  f="$(l18_sub "$f" '@TU@' "$L18T1_UP")"; f="$(l18_sub "$f" '@TM@' "$L18T1_MIX")"
+  f="$(l18_sub "$f" '@K5@' "$(l18_enc "$L18T1" '&#45')")"
+  f="$(l18_sub "$f" '@KX@' "$(l18_enc "$L18T1" '&#X2D;')")"
+  f="$(l18_sub "$f" '@K0@' "$(l18_enc "$L18T1" '&#00045;')")"
+  f="$(l18_sub "$f" '@K@' "$(l18_enc "$L18T1" '&#45;')")"
+  f="$(l18_sub "$f" '@T@' "$L18T1")"
+  l18_sub "$f" '@NL@' "$nl"
+}
+# A render: this suite's synthetic itinerary with the fragment placed before </body>.
+l18_page() { # <out_file> <fragment>
+  local body pre post
+  body="$(cat "$SRC")"; pre="${body%%</body>*}"; post="${body#"$pre"}"
+  printf '%s%s%s\n' "$pre" "$(l18_frag "$2")" "$post" > "$1"
+}
+
+# The design's thirteen fixtures (A to N) and the review's F1/F2 fixtures (A02 to B05), as one table read
+# from a quoted here-document so no fixture is shell text. Columns: id, the verdict the rule gives, fragment.
+# refuse — any start tag carries a listed token as a class, so the plaintext limb refuses the render.
+# pass   — no start tag does: the token is prose, another attribute, a stylesheet selector or escaped text.
+# R-run  — the declared residual, one rule: a section a script builds at run time (classList, className,
+#          concatenation, interpolation, or decoding such as atob, decodeURIComponent and String.fromCharCode)
+#          is not seen.
+L18_FIX="$L18W/fixtures.tsv"
+cat > "$L18_FIX" <<'L18FIX'
+L18f-A	refuse	<section class="@T@"><h2>Where we might go</h2><p>Lisbon, loved by Wren.</p></section>
+L18c-B	pass	<p>The @T@ idea was raised once in conversation and nothing else.</p>
+L18f-C	refuse	<section class=@T@><h2>Where we might go</h2></section>
+L18c-D	pass	<a href="#@T@" id="@T@" data-x="@T@" title="@T@">jump</a>
+L18g-a	R-run	<script>document.body.classList.add("@T@");</script>
+L18f-F	refuse	<!-- <section class="@T@"><p>old</p></section> -->
+L18f-G	refuse	<section class="@TM@"><h2>Where we might go</h2></section>
+L18c-H	pass	<section class="@T@-note"><p>note</p></section>
+L18f-I	refuse	<div class="card @T2@ is-open"><p>snap</p></div>
+L18c-J	pass	<style>.@T@{display:block}</style><p>no section here at all</p>
+L18f-K	refuse	<section class="@K@"><h2>Where</h2></section>
+L18c-L	pass	<p><code>&lt;section class="@T@"&gt;</code> is how it is written.</p>
+L18f-N	refuse	<template><section class="@T3@"><p>x</p></section></template>
+L18f-A02	refuse	<script>for (var i=0; i<n; i++) { msg = 'Today\'s plan'; }</script>@NL@<section class="@T@"><h2>Picks</h2><p>Sam's favourite</p></section>
+L18f-A03	refuse	<section class="card&Tab;@T@"><h2>Picks</h2></section>
+L18f-A04	refuse	<section class="card&NewLine;@T@"><h2>Picks</h2></section>
+L18f-A05	refuse	<section class="@K5@"><h2>Picks</h2></section>
+L18f-A06	refuse	<section class="@KX@"><h2>Picks</h2></section>
+L18f-A07	refuse	<section class="@K0@"><h2>Picks</h2></section>
+L18f-A08	refuse	<section id="picks"class="@T@"><h2>Picks</h2></section>
+L18f-A09	refuse	<section/class="@T@"><h2>Picks</h2></section>
+L18f-A10	refuse	<section class = "@T@"><h2>Picks</h2></section>
+L18f-A11	refuse	<section@NL@class="@T@"><h2>Picks</h2></section>
+L18f-A12	refuse	<section title="a>b" class="@T@"><h2>Picks</h2></section>
+L18f-A13	refuse	<section data-x=a"b class="@T@"><h2>Picks</h2></section>
+L18f-A14	refuse	<script>root.innerHTML = "<section class=\"@T@\"><h2>Picks</h2></section>";</script>
+L18f-A15	refuse	<script>root.innerHTML = "\u003csection class=\u0022@T@\u0022\u003e";</script>
+L18f-A16	refuse	<section class="x" class="@T@"><h2>Picks</h2></section>
+L18f-A17	refuse	<section class="@T@" class="x"><h2>Picks</h2></section>
+L18f-A18	refuse	<SECTION CLASS="@TU@"><h2>Picks</h2></SECTION>
+L18c-A19	pass	<div class=@T3@/><p>x</p>
+L18f-A20	refuse	<div class="@T3@"/><p>x</p>
+L18c-B01	pass	<p>The <code>@T@</code> section is private; see class="@T@" in the spec.</p>
+L18c-B02	pass	<p data-note="&lt;section class=&quot;@T@&quot;&gt;">x</p>
+L18c-B04	pass	<p>a < b and c > d; class="@T@" written in prose between angle signs</p>
+L18f-B05	refuse	<p>Compare: x<y class="@T@" z>w</p>
+L18g-c	R-run	<script>root.innerHTML = "<section class=\"" + "@T@" + "\">";</script>
+L18FIX
+while IFS="	" read -r l18id l18want l18frag; do
+  [ -n "$l18id" ] || continue
+  l18_page "$L18W/$l18id.html" "$l18frag"
+done < "$L18_FIX"
+
+# The detector's verdict on one fixture, read directly: rc 0 and the expected tokens, or the residual named.
+# An absent detector is rc 127 and a FAIL, and so is an undetermined read, so no row passes on a probe that
+# did not run.
+l18_scan_assert() { # <id> <refuse|pass|R-run|R-b|R-url>
+  local id="$1" want="$2" got rc
+  got="$(group_only_sections "$L18W/$id.html" 2>/dev/null)"; rc=$?
+  if [ -z "$L18T1" ]; then
+    FAIL "$id: the group-only fence read no token, so this fixture carries no listed class and its verdict would be about nothing. VERDICT WITHHELD"
+  elif [ "$rc" -eq 127 ]; then
+    FAIL "$id: group_only_sections is NOT DEFINED (rc=127) — there is no detector to grade"
+  elif [ "$rc" -ne 0 ]; then
+    FAIL "$id: the detector read this fixture as undetermined (rc=$rc), where the rule decides it ($want)"
+  elif [ "$want" = refuse ] && [ -z "$got" ]; then
+    FAIL "$id: a start tag carries a listed token as a class, and the detector found none — the plaintext limb would publish it"
+  elif [ "$want" = pass ] && [ -n "$got" ]; then
+    FAIL "$id: the detector found '$got' where no start tag carries a listed class — the plaintext limb would refuse a page the rule passes"
+  elif [ "$want" != refuse ] && [ -n "$got" ]; then
+    FAIL "$id: the detector found '$got' on the shape the declared residual $want names — the residual is closed: update its declaration at the reader and in the PR rather than leave it stale"
+  elif [ "$want" = refuse ]; then
+    PASS "$id: the detector finds the listed class this fixture's start tag carries ('$got', rc=0)"
+  elif [ "$want" = pass ]; then
+    PASS "$id: no start tag carries a listed class here, and the detector reads it clean (rc=0, nothing found)"
+  elif [ "$want" = R-b ]; then
+    PASS "$id: the declared residual R-b holds — an image whose content shows group material, an SVG data: image included, is not read, because the refusal reads markup, not images (rc=0, nothing found); a change that closes it turns this arm red, so the declaration is updated rather than left stale"
+  elif [ "$want" = R-url ]; then
+    PASS "$id: the declared residual R-url holds — a URL outside the coverage's attributes and elements is not read (rc=0, nothing found); this arm pins the coverage's boundary, so a change that moves it turns this arm red and the declaration is updated rather than left stale"
+  else
+    PASS "$id: the declared residual $want holds — a script building markup at run time is not seen (rc=0, nothing found); a change that closes it turns this arm red, so the declaration is updated rather than left stale"
+  fi
+}
+while IFS="	" read -r l18id l18want l18frag; do
+  [ -n "$l18id" ] || continue
+  l18_scan_assert "$l18id" "$l18want"
+done < "$L18_FIX"
+
+# ── The end-to-end harness: cmd_publish run offline under RV's stand-ins, in a subshell with errexit on as
+# the script runs. L18_ALLOW sets ALLOW_PLAINTEXT, L18_PRE is evaluated in the subshell first (a constant
+# re-pointed, a function stood in for), and stdin is never a terminal.
+l18_trip() { # <name> <fragment> [model] -> trip dir with one render, and a fresh synthetic traveller model when asked
+  local d="$L18W/$1"
+  rm -rf "$d"; mkdir -p "$d/outputs"
+  l18_page "$d/outputs/$1-travel-site.html" "$2"
+  touch -t 202001010000 "$d/outputs/$1-travel-site.html"
+  if [ "${3:-}" = model ]; then
+    printf '# Traveler Model — L18 [DERIVED]\n\n## Rowan\n- Passport: Ruritanian, valid to 2033\n- Interests: markets, museums\n' > "$d/outputs/traveler-model.md"
+  fi
+  printf '%s' "$d"
+}
+l18_publish() { # <trip_dir> [publish args…] -> the command's status; its stderr in L18ERR
+  local d="$1"; shift
+  : > "$RV_GHLOG"; : > "$L18ERR"
+  ( unset STATICRYPT_PASSWORD ALLOW_PLAINTEXT
+    [ -z "${L18_ALLOW:-}" ] || export ALLOW_PLAINTEXT=1
+    [ -z "${L18_PRE:-}" ] || eval "$L18_PRE"
+    set -e; cmd_publish "$d" "$@" ) </dev/null >/dev/null 2>"$L18ERR"
+}
+l18_has() { case "$(cat "$L18ERR")" in *"$1"*) return 0 ;; esac; return 1; }
+l18_pushed() { # <trip_dir> -> 1 when a repository was created or a commit staged for a push, else 0
+  local log; log="$(cat "$RV_GHLOG")"
+  case "$log" in *"repo create"*) printf 1; return 0 ;; esac
+  if [ -d "$1/.publish/.git" ] && git -C "$1/.publish" rev-parse --verify -q HEAD >/dev/null 2>&1; then printf 1; return 0; fi
+  printf 0
+}
+L18_SECTION='<section class="@T@"><h2>Where we might go</h2><p>Lisbon, loved by Wren.</p></section>'
+
+# ── L18a — one arm per fence token, read live: publish --plaintext exits 3, names that token and says
+# nothing was published, and nothing was created or committed.
+l18a_assert() { # <id> <token>
+  local id="$1" t="$2" d rc tok=0 none=0 pushed lead=0
+  L18A_N=$(( ${L18A_N:-0} + 1 ))
+  d="$(l18_trip "l18a-$L18A_N" "$(l18_sub "$L18_SECTION" '@T@' "$t")")"
+  l18_publish "$d" --plaintext; rc=$?
+  l18_has "GROUP-ONLY REFUSED publish --plaintext" && lead=1
+  [ -z "$t" ] || { l18_has "group-only section(s) $t" && tok=1; }
+  l18_has "Nothing was published" && none=1
+  pushed="$(l18_pushed "$d")"
+  if [ -z "$t" ]; then
+    FAIL "$id: the group-only fence read no token, so no render here carries a listed class. VERDICT WITHHELD"
+  elif [ "$rc" -ne 3 ]; then
+    FAIL "$id: publish --plaintext of a render carrying the listed class read rc=$rc, want 3 (the named refusal)"
+  elif [ "$lead" -ne 1 ] || [ "$tok" -ne 1 ] || [ "$none" -ne 1 ]; then
+    FAIL "$id: the refusal is not the typed one — its lead=$lead, the token named=$tok, 'Nothing was published'=$none (want 1 each)"
+  elif [ "$pushed" -ne 0 ]; then
+    FAIL "$id: the refusal exited 3 but a repository was created or a commit staged for a push"
+  else
+    PASS "$id: publish --plaintext of a render carrying this listed class exits 3, names it and says nothing was published; no repository was created and nothing was committed"
+  fi
+}
+if [ -n "$L18_TOKS" ]; then
+  for l18t in $L18_TOKS; do l18a_assert "L18a-$l18t" "$l18t"; done
+else
+  l18a_assert "L18a" ""
+fi
+
+# ── L18b — the control pair for L18a: the same render without the section passes the refusal and reaches
+# the next control, with no model (the content guard's own refusal) and with a fresh clean model (the typed
+# confirmation's non-interactive refusal). The detector is read directly as well, so the arm has evidence it
+# ran: a refusal that never ran would reach the same downstream message.
+l18b_assert() { # <id> <fragment> <nomodel|model> <the downstream message>
+  local id="$1" frag="$2" how="$3" want="$4" d site rc got grc lead=0 down=0
+  d="$(l18_trip "${id}" "$frag" "$how")"; site="$d/outputs/$id-travel-site.html"
+  got="$(group_only_sections "$site" 2>/dev/null)"; grc=$?
+  l18_publish "$d" --plaintext; rc=$?
+  l18_has "GROUP-ONLY REFUSED" && lead=1
+  l18_has "$want" && down=1
+  if [ -z "$L18T1" ]; then
+    FAIL "$id: the group-only fence read no token, so the detector has no class to look for. VERDICT WITHHELD"
+  elif [ "$grc" -ne 0 ]; then
+    FAIL "$id: the detector did not read this render (rc=$grc) — a refusal that never ran reaches the same downstream message, so the arm has no evidence"
+  elif [ -n "$got" ]; then
+    FAIL "$id: the detector found '$got' on a render that carries no listed class"
+  elif [ "$rc" -ne 1 ] || [ "$lead" -ne 0 ] || [ "$down" -ne 1 ]; then
+    FAIL "$id: publish --plaintext read rc=$rc, the group-only lead=$lead and the downstream message '$want'=$down (want rc=1, 0, 1)"
+  else
+    PASS "$id: a render with no listed class passes the refusal (detector rc=0, nothing found) and reaches the next control ('$want', rc=1)"
+  fi
+}
+l18b_assert "L18b-nomodel" "" nomodel "GUARD ABORTED publish"
+l18b_assert "L18b-model" "" model "refusing non-interactive plaintext publish"
+# L18c, end to end: the token as prose, href, id, data-* and title passes the refusal and reaches the guard.
+l18b_assert "L18c-e2e" '<a href="#@T@" id="@T@" data-x="@T@" title="@T@">jump</a><p>The @T@ idea.</p>' nomodel "GUARD ABORTED publish"
+
+# ── L18d — ALLOW_PLAINTEXT cannot override the refusal: L18a's render, a fresh clean model, the variable set
+# and stdin not a terminal, exits 3 with nothing pushed.
+l18d_assert() { # <id>
+  local id="$1" d rc lead=0 pushed
+  d="$(l18_trip l18d "$L18_SECTION" model)"
+  L18_ALLOW=1 l18_publish "$d" --plaintext; rc=$?
+  l18_has "GROUP-ONLY REFUSED publish --plaintext" && lead=1
+  pushed="$(l18_pushed "$d")"
+  if [ -z "$L18T1" ]; then
+    FAIL "$id: the group-only fence read no token. VERDICT WITHHELD"
+  elif [ "$rc" -ne 3 ] || [ "$lead" -ne 1 ]; then
+    FAIL "$id: with ALLOW_PLAINTEXT=1 a render carrying a listed class read rc=$rc and the refusal's lead=$lead (want 3 and 1) — the variable reached past the refusal"
+  elif [ "$pushed" -ne 0 ]; then
+    FAIL "$id: with ALLOW_PLAINTEXT=1 the refusal exited 3 but something was created or committed"
+  else
+    PASS "$id: ALLOW_PLAINTEXT=1 does not override the refusal — rc=3, its lead, nothing created or committed, on a trip whose content guard would pass"
+  fi
+}
+l18d_assert "L18d"
+
+# ── L18e — fail-closed: a fence emptied, its heading renamed, one malformed row added, or the declaring file
+# absent (F17), each in a scratch copy the refusal is pointed at, refuses a render that carries no listed class.
+# The copies are built from the production constants, so no heading or fence name is written here.
+l18e_spec() { # <case> <out_file>
+  local c="$1" o="$2" src="${_GROUP_ONLY_SPEC:-}" head="${_GROUP_ONLY_HEADING:-}" open='```'"${_GROUP_ONLY_FENCE:-}"
+  case "$c" in
+    absent) rm -f "$o"; return 0 ;;
+  esac
+  [ -r "$src" ] || { : > "$o"; return 0; }
+  awk -v c="$c" -v h="$head" -v op="$open" '
+    $0 == h { insec = 1; if (c == "heading") { print h " (renamed)"; next } }
+    insec && $0 == op { infence = 1; print; if (c == "malformed") print "extra-row second-field"; next }
+    infence && $0 == "```" { infence = 0; insec = 0 }
+    infence && c == "empty" && $0 !~ /^[[:space:]]*#/ && NF > 0 { next }
+    { print }' "$src" > "$o"
+}
+for l18c in empty heading malformed absent; do l18e_spec "$l18c" "$L18W/spec-$l18c.md"; done
+l18e_assert() { # <id> <case>
+  local id="$1" c="$2" d rc lead=0 unread=0 pushed
+  d="$(l18_trip "l18e-$c" "")"
+  L18_PRE="_GROUP_ONLY_SPEC=\"$L18W/spec-$c.md\"" l18_publish "$d" --plaintext; rc=$?
+  l18_has "GROUP-ONLY REFUSED publish --plaintext" && lead=1
+  l18_has "could not be read" && unread=1
+  pushed="$(l18_pushed "$d")"
+  if [ "$rc" -ne 3 ] || [ "$lead" -ne 1 ] || [ "$unread" -ne 1 ]; then
+    FAIL "$id: with the group-only declaration $c, a plaintext publish read rc=$rc, the refusal's lead=$lead and 'could not be read'=$unread (want 3, 1, 1) — a declaration that reads no component must refuse like a found section"
+  elif [ "$pushed" -ne 0 ]; then
+    FAIL "$id: the declaration-$c refusal exited 3 but something was created or committed"
+  else
+    PASS "$id: a group-only declaration read $c refuses the plaintext publish as undetermined (rc=3), nothing created or committed — an empty read is not an empty set"
+  fi
+}
+for l18c in empty heading malformed absent; do l18e_assert "L18e-$l18c" "$l18c"; done
+
+# ── L18h — the encrypted limb is unchanged: L18a's render, published encrypted, reaches the ciphertext guard
+# and the push (rc=0) though the detector reads the section on it.
+l18h_assert() { # <id>
+  local id="$1" d site rc got grc create=0 enc=0
+  d="$(l18_trip l18h "$L18_SECTION")"; site="$d/outputs/l18h-travel-site.html"
+  got="$(group_only_sections "$site" 2>/dev/null)"; grc=$?
+  l18_publish "$d"; rc=$?
+  case "$(cat "$RV_GHLOG")" in *"repo create"*) create=1 ;; esac
+  case "$(cat "$d/.publish/index.html" 2>/dev/null)" in *staticryptEncrypted*) enc=1 ;; esac
+  if [ -z "$L18T1" ]; then
+    FAIL "$id: the group-only fence read no token. VERDICT WITHHELD"
+  elif [ "$grc" -ne 0 ] || [ "$got" != "$L18T1" ]; then
+    FAIL "$id: the detector read this render as rc=$grc '$got' (want rc=0 and the listed class) — without it the encrypted publish proves nothing about the refusal"
+  elif [ "$rc" -ne 0 ] || [ "$create" -ne 1 ] || [ "$enc" -ne 1 ]; then
+    FAIL "$id: the encrypted publish of a render carrying a listed class read rc=$rc, created=$create, ciphertext staged=$enc (want 0, 1, 1) — the refusal reached the encrypted limb"
+  else
+    PASS "$id: the encrypted limb is unchanged — a render the detector reads as carrying a listed class publishes encrypted (rc=0, ciphertext staged, repository created)"
+  fi
+}
+l18h_assert "L18h"
+
+# ── L18j — CIAC-1, the S1 half (F6): the refusal stands ahead of the content guard. A render carrying a listed
+# class and a passport value the trip's model holds, with a bound source carrying a passport label, exits 3 with
+# the refusal's message and neither the source check's nor the content guard's.
+l18j_assert() { # <id>
+  local id="$1" d rc lead=0 guard=0 src=0 pushed
+  d="$(l18_trip l18j "$L18_SECTION<p>Passport: Ruritanian, valid to 2033</p>" model)"
+  printf '# Trip\n\n- **Passport:** Ruritanian\n' > "$d/trip-context.md"
+  l18_publish "$d" --plaintext; rc=$?
+  l18_has "GROUP-ONLY REFUSED publish --plaintext" && lead=1
+  l18_has "GUARD ABORTED" && guard=1
+  l18_has "SOURCE CHECK STOPPED" && src=1
+  pushed="$(l18_pushed "$d")"
+  if [ -z "$L18T1" ]; then
+    FAIL "$id: the group-only fence read no token. VERDICT WITHHELD"
+  elif [ "$rc" -ne 3 ] || [ "$lead" -ne 1 ]; then
+    FAIL "$id: a render tripping the refusal and the content guard read rc=$rc with the refusal's lead=$lead (want 3, 1) — another control ran first"
+  elif [ "$guard" -ne 0 ] || [ "$src" -ne 0 ]; then
+    FAIL "$id: the refusal's message is joined by the content guard's ($guard) or the source check's ($src) — the refusal must be the first control"
+  elif [ "$pushed" -ne 0 ]; then
+    FAIL "$id: the refusal exited 3 but something was created or committed"
+  else
+    PASS "$id: the refusal is the first content control — rc=3 with its message only, ahead of the content guard"
+  fi
+}
+l18j_assert "L18j"
+
+# ── L18k — the bytes this push carries are the bytes checked (F18): a render clean when the refusal runs, then
+# rebuilt with a group-only section before the copy, is refused at the staged copy, exits 3, and leaves nothing
+# created or committed. The rebuild is a stand-in for the content guard that writes the section and passes.
+l18k_assert() { # <id>
+  local id="$1" d rc lead=0 pushed staged=0
+  d="$(l18_trip l18k "" model)"
+  L18_ALLOW=1 L18_PRE='verify_publishable_content() { printf "<section class=\"%s\"><p>x</p></section>\n" "$L18T1" >> "$1"; return 0; }' \
+    l18_publish "$d" --plaintext; rc=$?
+  l18_has "GROUP-ONLY REFUSED publish --plaintext" && lead=1
+  [ ! -e "$d/.publish/index.html" ] || staged=1
+  pushed="$(l18_pushed "$d")"
+  if [ -z "$L18T1" ]; then
+    FAIL "$id: the group-only fence read no token. VERDICT WITHHELD"
+  elif [ "$rc" -ne 3 ] || [ "$lead" -ne 1 ]; then
+    FAIL "$id: a render rebuilt with a group-only section after the first check read rc=$rc and the refusal's lead=$lead (want 3, 1) — the bytes published were not the bytes checked"
+  elif [ "$pushed" -ne 0 ] || [ "$staged" -ne 0 ]; then
+    FAIL "$id: the staged-copy refusal exited 3 but something was created or committed ($pushed), or the plaintext copy was left staged ($staged)"
+  else
+    PASS "$id: the staged copy is re-checked before the push — a render rebuilt with a group-only section after the first check is refused (rc=3), and the copy is removed with nothing created or committed"
+  fi
+}
+l18k_assert "L18k"
+
+# ── L18m — the scan is bounded: a long run of tag openers and a long unclosed quote each read determinate
+# under a five-second CPU cap, and a shape that would scan quadratically stops at the scan's own byte budget,
+# its status 4 (which the refusal turns into a refusal), rather than running on. The shapes are built by perl,
+# not by a shell loop. L18m-budget grades the scan's own status, never the cap's: the cap is a hang guard only,
+# and a scan it kills exits 152, which is not 4, so the arm goes red when the budget is gone (S7-02).
+perl -e 'print "<a" x 500000' > "$L18W/cap-run.html" 2>/dev/null
+perl -e 'print "<a x=\"", "<b y " x 200000' > "$L18W/cap-quote.html" 2>/dev/null
+perl -e 'print "<a/x=" x 200000' > "$L18W/cap-budget.html" 2>/dev/null
+l18m_assert() { # <id> <file> <want rc>
+  local id="$1" f="$2" want="$3" st
+  st="$( ulimit -t 5; group_only_sections "$f" >/dev/null 2>&1; printf '%s' "$?" )"
+  if [ "$st" = 127 ]; then
+    FAIL "$id: group_only_sections is NOT DEFINED (rc=127)"
+  elif [ "$st" != "$want" ]; then
+    FAIL "$id: a $(wc -c < "$f" | tr -d ' ')-byte pathological page read rc=$st under a five-second CPU cap, want $want — the scan ran on or failed in a way the refusal cannot name"
+  else
+    PASS "$id: a $(wc -c < "$f" | tr -d ' ')-byte pathological page reads rc=$st under a five-second CPU cap, as the bound requires"
+  fi
+}
+l18m_assert "L18m-run" "$L18W/cap-run.html" 0
+l18m_assert "L18m-quote" "$L18W/cap-quote.html" 0
+L18_TOKLINE="$(printf '%s ' $L18_TOKS)"
+l18m_budget_assert() { # <id> <file>
+  local id="$1" f="$2" st
+  st="$( ulimit -t 5; _group_only_scan "$f" "$L18_TOKLINE" >/dev/null 2>&1; printf '%s' "$?" )"
+  if [ -z "$L18_TOKS" ]; then
+    FAIL "$id: the group-only fence read no token, so the scan has no class to look for. VERDICT WITHHELD"
+  elif [ "$st" = 127 ]; then
+    FAIL "$id: _group_only_scan is NOT DEFINED (rc=127)"
+  elif [ "$st" != 4 ]; then
+    FAIL "$id: a $(wc -c < "$f" | tr -d ' ')-byte page that would scan quadratically exited $st, want the scan's own byte-budget status 4 — the budget did not stop it (152 is the five-second hang guard's SIGXCPU)"
+  else
+    PASS "$id: a $(wc -c < "$f" | tr -d ' ')-byte page that would scan quadratically stops at the scan's own byte budget (status 4), inside the five-second hang guard"
+  fi
+}
+l18m_budget_assert "L18m-budget" "$L18W/cap-budget.html"
+
+# ── L18f / L18g / L18c, Stage 7's shapes (S7-01, S7-08, S7P2-01, S7P2-04) and the scheme rules that close their
+# class. A nested document — a srcdoc attribute on any start tag; a src or data on an iframe, frame, object or
+# embed, or a meta refresh URL, whose scheme is not http or https; or an href, xlink:href, action or formaction on
+# an a, area, form, button or input whose scheme is not http, https, mailto or tel — each URL read as a browser's
+# URL parser reads it (character references decoded, tab, line feed and carriage return removed, leading space and
+# C0 controls dropped, the scheme compared case-insensitively), and a render opening with a UTF-16 or UTF-32
+# byte-order mark, read UNDETERMINED, each by a status of the scan's own that the detector's warn line names (5 and
+# 6), so an unreadable fence or a budget hit (rc 2 alike) cannot pass for one. A meta refresh URL is what follows
+# the delay (digits and dots) and one `;` or `,`, behind an optional url= and an optional quote. A value with no
+# scheme — relative, fragment or protocol-relative — names another document and passes, and so does an allowed
+# scheme. A link, area, form or button opening a data: or javascript: document is refused whatever frame it
+# targets, a target, a formtarget and a <base target> included. An octal escape in a script string is decoded by
+# the second reading. The memo arms place a bogus candidate ahead of the tag, walking its tail first.
+# nested — the detector reads the render undetermined, by the scan's status 5.
+# R-run  — declared: a script building markup at run time.
+# R-b    — declared: an image whose content shows group material, an SVG data: image included; the refusal
+#          reads markup, not images.
+# R-url  — declared, the coverage's own boundary: any other URL, such as a video's poster or a stylesheet link's href.
+#          An SVG <a target> whose href a declarative <animate> or <set> sets to a data: document, with the frame
+#          it names present on an https URL, is one (L18g-svg-animate, L18g-svg-set; Stage 7 pass 3, P14 and P15):
+#          the URL sits in that element's values or to, which the coverage does not name.
+L18_FIX7="$L18W/fixtures-s7.tsv"
+cat > "$L18_FIX7" <<'L18FIX7'
+L18f-srcdoc	nested	<iframe srcdoc="&lt;section class=&quot;@T@&quot;&gt;&lt;h2&gt;Picks&lt;/h2&gt;&lt;/section&gt;"></iframe>
+L18f-srcdoc-empty	nested	<iframe srcdoc=""></iframe><p>An empty nested document.</p>
+L18f-data-iframe	nested	<iframe src="data:text/html;base64,@B64@"></iframe>
+L18f-data-pct	nested	<iframe src="data:text/html,@PCT@"></iframe>
+L18f-data-object	nested	<object data="data:text/html;base64,@B64@"></object>
+L18f-data-embed	nested	<embed src="data:text/html;base64,@B64@">
+L18f-data-frame	nested	<frame src="data:text/html;base64,@B64@">
+L18f-data-svg	nested	<object data="data:image/svg+xml;base64,@SVG@"></object>
+L18f-data-colon	nested	<iframe src="data&colon;text/html;base64,@B64@"></iframe>
+L18f-data-tab	nested	<iframe src="da&Tab;ta:text/html;base64,@B64@"></iframe>
+L18f-data-case	nested	<IFRAME SRC=" &#68;ATA:text/html;base64,@B64@"></IFRAME>
+L18f-data-memo	nested	<script>var s = '<b c="';</script><iframe a="1" b="2" src="data:text/html;base64,@B64@"></iframe>
+L18f-octal	refuse	<script>root.innerHTML = "\74section class=\42@T@\42\76";</script>
+L18f-octal-3	refuse	<script>root.innerHTML = "\074section class=\042@T@\042\076";</script>
+L18g-atob	R-run	<script>root.innerHTML = atob("@B64@");</script>
+L18g-uri	R-run	<script>root.innerHTML = decodeURIComponent("@PCT@");</script>
+L18g-fcc	R-run	<script>root.innerHTML = String.fromCharCode(60,115,101,99,116,105,111,110,32,99,108,97,115,115,61,34) + "@T@" + "\">";</script>
+L18c-img-data	pass	<img src="data:image/png;base64,iVBORw0KGgo=" alt="dot"><p>A picture.</p>
+L18f-a-data	nested	<a href="data:text/html;base64,@B64@">open</a>
+L18c-iframe-url	pass	<iframe src="https://example.com/map"></iframe>
+L18f-js-iframe	nested	<iframe src="javascript:'@JSP@'"></iframe>
+L18f-js-frame	nested	<frame src="javascript:'@JSP@'">
+L18f-js-object	nested	<object data="javascript:'@JSP@'"></object>
+L18f-js-embed	nested	<embed src="javascript:'@JSP@'">
+L18f-js-case	nested	<iframe src=" JaVaScRiPt:'@JSP@'"></iframe>
+L18f-js-tab	nested	<iframe src="java@TAB@script:'@JSP@'"></iframe>
+L18f-js-colon	nested	<iframe src="javascript&colon;'@JSP@'"></iframe>
+L18f-vbscript	nested	<iframe src='vbscript:document.write("@JSP@")'></iframe>
+L18f-blob	nested	<iframe src="blob:https://example.org/3f2b8c1e-7d4a-4e6b-9c5f-1a2b3c4d5e6f"></iframe>
+L18f-meta-data	nested	<meta http-equiv="refresh" content="0;url=data:text/html;base64,@B64@">
+L18f-meta-js	nested	<meta http-equiv="refresh" content="0;url=javascript:'@JSP@'">
+L18f-meta-case	nested	<META HTTP-EQUIV="Refresh" CONTENT="0;URL=data:text/html;base64,@B64@">
+L18f-meta-quoted	nested	<meta http-equiv=refresh content="0; url='data:text/html;base64,@B64@'">
+L18f-meta-space	nested	<meta http-equiv="refresh" content="0 ; url = javascript:'@JSP@'">
+L18f-meta-nourl	nested	<meta http-equiv="refresh" content="0;data:text/html;base64,@B64@">
+L18f-meta-memo	nested	<script>var s = '<b c="';</script><meta a="1" b="2" http-equiv="refresh" content="0;url=data:text/html;base64,@B64@">
+L18c-iframe-http	pass	<iframe src="http://example.org/map"></iframe>
+L18c-iframe-https-case	pass	<iframe src=" HTTPS://example.org/map"></iframe>
+L18c-iframe-rel	pass	<iframe src="map.html"></iframe>
+L18c-iframe-proto	pass	<iframe src="//example.org/x"></iframe>
+L18c-object-rel	pass	<object data="map.html"></object>
+L18c-meta-https	pass	<meta http-equiv="refresh" content="0;url=https://example.org/">
+L18c-clean	pass	<p>A clean page, no nested document and no listed class.</p>
+L18f-js-a	nested	<a href="javascript:'@JSP@'">open</a>
+L18f-js-form	nested	<form action="javascript:'@JSP@'"><button>go</button></form>
+L18g-svg-img	R-b	<img src="data:image/svg+xml;base64,@SVG@" alt="map">
+L18g-svg-css	R-b	<div style="background:url(data:image/svg+xml,@SVGP@)"></div>
+L18g-svg-use	R-b	<svg><use href="data:image/svg+xml;base64,@SVG@#x"></use></svg>
+L18f-a-target	nested	<iframe name="f"></iframe><a href="data:text/html;base64,@B64@" target="f">open</a>
+L18f-form-target	nested	<iframe name="f" src="https://example.org/x"></iframe><form action="data:text/html,@PCT@" target="f"><button>go</button></form>
+L18f-base-target	nested	<iframe name="f"></iframe><base target="f"><a href="data:text/html;base64,@B64@">open</a>
+L18f-area-target	nested	<iframe name="f"></iframe><img src="map.png" usemap="#m" alt="map"><map name="m"><area shape="rect" coords="0,0,9,9" href="data:text/html;base64,@B64@" target="f" alt="open"></map>
+L18f-a-svg	nested	<iframe name="f"></iframe><a href="data:image/svg+xml;base64,@SVG@" target="f">open</a>
+L18f-button-formaction	nested	<iframe name="f"></iframe><form><button formaction="data:text/html,@PCT@" formtarget="f">go</button></form>
+L18f-input-formaction	nested	<iframe name="f"></iframe><form><input type="submit" formaction="data:text/html,@PCT@" formtarget="f" value="go"></form>
+L18f-svg-a	nested	<iframe name="f"></iframe><svg><a href="data:text/html;base64,@B64@" target="f"><text>open</text></a></svg>
+L18f-svg-xlink	nested	<iframe name="f"></iframe><svg xmlns:xlink="http://www.w3.org/1999/xlink"><a xlink:href="data:text/html;base64,@B64@" target="f"><text>open</text></a></svg>
+L18f-ref-comma	nested	<meta http-equiv="refresh" content="0&comma;url=data:text/html;base64,@B64@">
+L18f-ref-apos	nested	<meta http-equiv="refresh" content="0;url=&apos;data:text/html;base64,@B64@&apos;">
+L18f-ref-plus	nested	<iframe src="x&plus;y:z"></iframe>
+L18f-meta-comma	nested	<meta http-equiv="refresh" content="0,url=data:text/html;base64,@B64@">
+L18f-meta-decimal	nested	<meta http-equiv="refresh" content="1.5;url=data:text/html;base64,@B64@">
+L18f-js-c0	nested	<iframe src="&#1;&#31;javascript:'@JSP@'"></iframe>
+L18f-js-lf	nested	<iframe src="java&NewLine;script:'@JSP@'"></iframe>
+L18f-js-cr	nested	<iframe src="java&#13;script:'@JSP@'"></iframe>
+L18c-link-https	pass	<a href="https://www.google.com/maps/search/?api=1&amp;query=Belem+Tower" target="_blank" rel="noopener">map</a>
+L18c-link-maps	pass	<a href="{maps_url}" target="_blank" rel="noopener">map</a>
+L18c-link-frag	pass	<a href="#day-2">Day 2</a>
+L18c-link-rel	pass	<a href="day2.html">Day 2</a>
+L18c-link-proto	pass	<a href="//example.org/x">x</a><form action="/search"><button formaction="?q=1">go</button></form>
+L18c-link-mailto	pass	<a href="mailto:host@example.org">Write to the host</a>
+L18c-link-tel	pass	<a href="tel:+15550100">Call the host</a>
+L18c-link-case	pass	<a href=" HTTPS://example.org/">x</a><a href="MailTo:host@example.org">m</a><a href="TEL:+15550100">t</a>
+L18g-poster	R-url	<video poster="data:image/svg+xml;base64,@SVG@"></video>
+L18g-link-href	R-url	<link rel="stylesheet" href="data:text/css,section%7Bdisplay:block%7D">
+L18g-svg-animate	R-url	<iframe name="f" src="https://example.org/x"></iframe><svg><a target="f"><animate attributeName="href" values="data:text/html,@PCT@"/><text>open</text></a></svg>
+L18g-svg-set	R-url	<iframe name="f" src="https://example.org/x"></iframe><svg><a target="f"><set attributeName="href" to="data:text/html,@PCT@"/><text>open</text></a></svg>
+L18f-link-memo	nested	<script>var s = '<b c="';</script><a a="1" b="2" href="data:text/html;base64,@B64@">open</a>
+L18f-iframe-mailto	nested	<iframe src="mailto:host@example.org"></iframe>
+L18f-meta-tel	nested	<meta http-equiv="refresh" content="0;url=tel:+15550100">
+L18FIX7
+while IFS="	" read -r l18id l18want l18frag; do
+  [ -n "$l18id" ] || continue
+  l18_page "$L18W/$l18id.html" "$l18frag"
+done < "$L18_FIX7"
+# A render re-encoded whole behind a byte-order mark. The UTF-8 page carries a listed section, so the only
+# thing between it and a refusal is the encoding.
+l18_bom() { # <utf-8 page> <out> <16le|16be|32le|32be|8>
+  perl -MEncode -e 'local $/; open(my $i, "<:raw", $ARGV[0]) or die "unreadable\n"; my $s = decode("UTF-8", scalar <$i>);
+    my %e = ("16le" => ["\xFF\xFE", "UTF-16LE"], "16be" => ["\xFE\xFF", "UTF-16BE"], "32le" => ["\xFF\xFE\x00\x00", "UTF-32LE"],
+             "32be" => ["\x00\x00\xFE\xFF", "UTF-32BE"], "8" => ["\xEF\xBB\xBF", "UTF-8"]);
+    my $k = $e{$ARGV[2]} or die "no such mark\n"; open(my $o, ">:raw", $ARGV[1]) or die "unwritable\n"; print $o $k->[0], encode($k->[1], $s)' "$1" "$2" "$3"
+}
+l18_page "$L18W/bom-src.html" "$L18_SECTION"
+for l18c in 16le 16be 32le 32be; do l18_bom "$L18W/bom-src.html" "$L18W/L18f-bom-$l18c.html" "$l18c"; done
+l18_bom "$L18W/bom-src.html" "$L18W/L18f-bom-utf8.html" 8
+l18_page "$L18W/bom-clean.html" ""
+l18_bom "$L18W/bom-clean.html" "$L18W/L18c-bom-utf8.html" 8
+
+# The detector's verdict on a render it must read undetermined, by the scan's own status in its warn line.
+l18n_scan_assert() { # <id> <nested|bom>
+  local id="$1" want="$2" got rc st=5 err why=0 what="a nested document"
+  if [ "$want" = bom ]; then st=6; what="a UTF-16 or UTF-32 byte-order mark"; fi
+  got="$(group_only_sections "$L18W/$id.html" 2>"$L18ERR")"; rc=$?
+  err="$(cat "$L18ERR")"
+  case "$err" in *"(status $st)"*) why=1 ;; esac
+  if [ -z "$L18T1" ]; then
+    FAIL "$id: the group-only fence read no token, so this fixture carries no listed class and its verdict would be about nothing. VERDICT WITHHELD"
+  elif [ "$rc" -eq 127 ]; then
+    FAIL "$id: group_only_sections is NOT DEFINED (rc=127) — there is no detector to grade"
+  elif [ "$rc" -ne 2 ]; then
+    FAIL "$id: the detector read a render carrying $what as rc=$rc ('$got'), want 2 (undetermined) — the plaintext limb would publish what the scan cannot read"
+  elif [ "$why" -ne 1 ]; then
+    FAIL "$id: the detector read rc=2, but not by the scan's status $st for $what: $(printf '%s' "$err" | tr '\n' ' ' | cut -c1-200)"
+  else
+    PASS "$id: a render carrying $what reads undetermined (rc=2) by the scan's own status $st, so the plaintext limb refuses it"
+  fi
+}
+while IFS="	" read -r l18id l18want l18frag; do
+  [ -n "$l18id" ] || continue
+  case "$l18want" in
+    nested) l18n_scan_assert "$l18id" nested ;;
+    *)      l18_scan_assert "$l18id" "$l18want" ;;
+  esac
+done < "$L18_FIX7"
+for l18c in 16le 16be 32le 32be; do l18n_scan_assert "L18f-bom-$l18c" bom; done
+# A UTF-8 byte-order mark leaves the page readable as it is: the section behind one is refused, a clean page
+# behind one passes, so the mark rule is not a rule about every mark.
+l18_scan_assert "L18f-bom-utf8" refuse
+l18_scan_assert "L18c-bom-utf8" pass
+
+# ── L18f-link-grid / L18f-link-schemes / L18c-link-grid — the link rule over its whole coverage, one verdict
+# each: every pairing of href, xlink:href, action and formaction with a, area, form, button and input carrying a
+# data: URL reads undetermined by the scan's status 5; on an a, every scheme listed below outside http, https,
+# mailto and tel does too; and every pairing carrying one of those four schemes, in any case, or no scheme at all
+# (fragment, relative, protocol-relative, empty, valueless) passes.
+L18_LATTR='href xlink:href action formaction'
+L18_LELEM='a area form button input'
+L18_LSCHEMES='javascript:x vbscript:x data:text/html,x blob:https://example.org/x file:///x about:blank ftp://example.org/x ws://example.org/x x-y.z+w:q sms:+15550100 geo:0,0'
+l18_grid_assert() { # <id> <refuse-grid|scheme-grid|pass-grid>
+  local id="$1" kind="$2" a e s n=0 bad="" got rc err f="$L18W/$1.html" frag cases
+  for a in $L18_LATTR; do
+    for e in $L18_LELEM; do
+      case "$kind" in
+        refuse-grid) cases="data:text/html,x" ;;
+        scheme-grid) [ "$a$e" = hrefa ] || continue; cases="$L18_LSCHEMES" ;;
+        *)           cases="allowed" ;;
+      esac
+      for s in $cases; do
+        case "$kind" in
+          pass-grid) frag="<$e $a=\"https://example.org/\"><$e $a=\" HTTP://example.org/\"><$e $a=\"MAILTO:a@example.org\"><$e $a=\"tel:+15550100\"><$e $a=\"#x\"><$e $a=\"x.html\"><$e $a=\"//example.org/x\"><$e $a=\"\"><$e $a>" ;;
+          *)         frag="<$e $a=\"$s\">open</$e>" ;;
+        esac
+        l18_page "$f" "$frag"; n=$((n+1))
+        got="$(group_only_sections "$f" 2>"$L18ERR")"; rc=$?; err="$(cat "$L18ERR")"
+        case "$kind" in
+          pass-grid) [ "$rc" -eq 0 ] && [ -z "$got" ] || bad="${bad}[$e $a rc=$rc '$got'] " ;;
+          *) case "$rc:$err" in 2:*"(status 5)"*) ;; *) bad="${bad}[$e $a=${s%%:*}: rc=$rc] " ;; esac ;;
+        esac
+      done
+    done
+  done
+  if [ -z "$L18T1" ]; then
+    FAIL "$id: the group-only fence read no token. VERDICT WITHHELD"
+  elif [ "$n" -eq 0 ]; then
+    FAIL "$id: the grid generated no case, so its verdict would be about nothing"
+  elif [ -n "$bad" ]; then
+    case "$kind" in
+      pass-grid) FAIL "$id: of $n renders carrying only allowed schemes or none, these did not read clean (over-refusal): ${bad% }" ;;
+      *)         FAIL "$id: of $n renders carrying a link the coverage refuses, these did not read undetermined by status 5 — the plaintext limb would publish them: ${bad% }" ;;
+    esac
+  else
+    case "$kind" in
+      refuse-grid) PASS "$id: every pairing of $L18_LATTR with $L18_LELEM carrying a data: URL ($n of $n) reads undetermined by the scan's status 5" ;;
+      scheme-grid) PASS "$id: an a href carrying each scheme outside http, https, mailto and tel ($n of $n: $L18_LSCHEMES) reads undetermined by the scan's status 5" ;;
+      pass-grid)   PASS "$id: every pairing of $L18_LATTR with $L18_LELEM ($n renders) carrying http, https, mailto or tel in any case, or no scheme at all, reads clean" ;;
+    esac
+  fi
+}
+l18_grid_assert "L18f-link-grid" refuse-grid
+l18_grid_assert "L18f-link-schemes" scheme-grid
+l18_grid_assert "L18c-link-grid" pass-grid
+
+# ── L18n — end to end: each nested document, each octal escape and each byte-order mark, in a render on a trip
+# whose content guard would pass (a fresh clean model, ALLOW_PLAINTEXT=1), exits 3 from publish --plaintext,
+# saying why, with no repository call in the gh log and nothing created or committed. Without the refusal these
+# renders reach the push.
+l18n_assert() { # <id> <fragment> <undet|found> [<byte-order mark>]
+  local id="$1" frag="$2" how="$3" bom="${4:-}" d site rc lead=0 why=0 probe=0 pushed
+  d="$(l18_trip "$id" "$frag" model)"; site="$d/outputs/$id-travel-site.html"
+  if [ -n "$bom" ]; then l18_bom "$site" "$site.enc" "$bom" && mv "$site.enc" "$site"; touch -t 202001010000 "$site"; fi
+  L18_ALLOW=1 l18_publish "$d" --plaintext; rc=$?
+  l18_has "GROUP-ONLY REFUSED publish --plaintext" && lead=1
+  case "$how" in
+    undet) l18_has "could not be determined" && l18_has "(status $( [ -n "$bom" ] && printf 6 || printf 5 ))" && why=1 ;;
+    found) l18_has "group-only section(s) $L18T1" && why=1 ;;
+  esac
+  case "$(cat "$RV_GHLOG")" in *"repo "*) probe=1 ;; esac
+  pushed="$(l18_pushed "$d")"
+  if [ -z "$L18T1" ]; then
+    FAIL "$id: the group-only fence read no token. VERDICT WITHHELD"
+  elif [ "$rc" -ne 3 ] || [ "$lead" -ne 1 ] || [ "$why" -ne 1 ]; then
+    FAIL "$id: publish --plaintext of this render read rc=$rc, the refusal's lead=$lead and its reason ($how)=$why (want 3, 1, 1): $(awk '/ERROR|GUARD/ { print; exit }' "$L18ERR" | cut -c1-160)"
+  elif [ "$probe" -ne 0 ] || [ "$pushed" -ne 0 ]; then
+    FAIL "$id: the refusal exited 3 but the per-trip repository was probed ($probe) or something was created or committed ($pushed)"
+  else
+    PASS "$id: publish --plaintext of this render exits 3 and says why ($how), with no repository call and nothing created or committed"
+  fi
+}
+L18N_CASES='srcdoc srcdoc-empty data-iframe data-pct data-object data-embed data-frame data-svg
+  js-iframe js-frame js-object js-embed js-case js-tab js-colon vbscript blob
+  meta-data meta-js meta-case meta-quoted meta-space meta-nourl
+  a-data js-a js-form a-target form-target base-target area-target a-svg button-formaction input-formaction svg-a svg-xlink
+  ref-comma ref-apos ref-plus meta-comma meta-decimal js-c0 js-lf js-cr iframe-mailto meta-tel'
+l18n_frag() { # <L18_FIX7 id> -> its fragment
+  awk -F'\t' -v k="$1" '$1 == k { print $3 }' "$L18_FIX7"
+}
+for l18c in $L18N_CASES; do l18n_assert "L18n-$l18c" "$(l18n_frag "L18f-$l18c")" undet; done
+for l18c in octal octal-3; do l18n_assert "L18n-$l18c" "$(l18n_frag "L18f-$l18c")" found; done
+for l18c in 16le 16be 32le 32be; do l18n_assert "L18n-bom-$l18c" "$L18_SECTION" undet "$l18c"; done
+# The over-refusal controls, end to end: an image's data: URL, and links carrying http, https, mailto or tel or no
+# scheme at all, pass the refusal and reach the guard.
+L18_IMG_OK='<img src="data:image/png;base64,iVBORw0KGgo=" alt="dot">'
+L18_LINKS_OK='<a href="https://example.org/x" target="_blank" rel="noopener">x</a><a href="{maps_url}" target="_blank">map</a><a href="#day-2">d</a><a href="day2.html">d</a><a href="//example.org/x">p</a><a href="mailto:host@example.org">m</a><a href="tel:+15550100">t</a><form action="/search"><button formaction="?q=1">go</button></form>'
+l18b_assert "L18c-e2e-img" "$L18_IMG_OK" nomodel "GUARD ABORTED publish"
+l18b_assert "L18c-e2e-links" "$L18_LINKS_OK" nomodel "GUARD ABORTED publish"
+# The scheme rule's over-refusal control, end to end: a frame or object naming an http, https, relative or
+# protocol-relative document, and a meta refresh to https, pass the refusal and reach the guard.
+L18_SCHEME_OK='<iframe src="https://example.org/map"></iframe><iframe src="map.html"></iframe><iframe src="//example.org/x"></iframe><object data="map.html"></object><meta http-equiv="refresh" content="0;url=https://example.org/">'
+l18b_assert "L18c-e2e-scheme" "$L18_SCHEME_OK" nomodel "GUARD ABORTED publish"
+
+# ── L18i — one home: no function this card adds, the scan program and cmd_publish carry a fence token. The
+# control plants one in a copy of the bodies and the count must see it, so the zero is a measurement.
+l18_count() { # <haystack> <needle> -> occurrences, no pipeline
+  local h="$1" n="$2" c=0
+  [ -n "$n" ] || { printf 0; return 0; }
+  while [ -n "$h" ]; do
+    case "$h" in *"$n"*) c=$((c+1)); h="${h#*"$n"}" ;; *) break ;; esac
+  done
+  printf '%s' "$c"
+}
+L18_FNS='_group_only_rows _group_only_candidates _group_only_scan group_only_sections refuse_group_only_render refuse_group_only cmd_publish'
+l18i_bodies=""; l18i_absent=""
+for l18f in $L18_FNS; do
+  if declare -F "$l18f" >/dev/null 2>&1; then l18i_bodies="$l18i_bodies$(declare -f "$l18f")"; else l18i_absent="$l18i_absent$l18f "; fi
+done
+l18i_bodies="$l18i_bodies${_GROUP_ONLY_SCAN:-}"
+l18i_hits=0; l18i_ctl=0
+for l18t in $L18_TOKS; do
+  l18i_hits=$(( l18i_hits + $(l18_count "$l18i_bodies" "$l18t") ))
+  l18i_ctl=$(( l18i_ctl + $(l18_count "$l18i_bodies x$l18t" "$l18t") ))
+done
+if [ -z "$L18_TOKS" ]; then
+  FAIL "L18i: the group-only fence read no token, so the one-home probe has nothing to look for. VERDICT WITHHELD"
+elif [ -n "$l18i_absent" ] || [ -z "${_GROUP_ONLY_SCAN:-}" ]; then
+  FAIL "L18i: function(s) or the scan program absent ('${l18i_absent}'), so a zero count would be read off an empty haystack"
+elif [ "$l18i_ctl" -lt 1 ]; then
+  FAIL "L18i: CONTROL — a token planted in a copy of the bodies was not counted, so the probe cannot see a token. VERDICT WITHHELD"
+elif [ "$l18i_hits" -ne 0 ]; then
+  FAIL "L18i: $l18i_hits fence token occurrence(s) in the refusal's functions, its scan program or cmd_publish — a second home for the group-only set"
+else
+  PASS "L18i: the group-only set has one home — no fence token in $L18_FNS or the scan program (${#l18i_bodies} bytes read), and the planted control is counted"
+fi
+
+# ── L18l — position (F4's structural half): in cmd_publish the refusal follows the baseline guard and precedes
+# slug_for, cmd_publish's owner lookup (gh api user), the content guard and the ALLOW_PLAINTEXT read; and the staged copy's re-check
+# follows the copy and precedes the commit. A fabricated name found nowhere is the specificity control.
+l18_line() { # <body> <needle> -> the line number of its first occurrence, or nothing
+  awk -v n="$2" 'index($0, n) { print NR; exit }' <<<"$1"
+}
+l18l_b="$(declare -f cmd_publish 2>/dev/null)"
+l18l_base="$(l18_line "$l18l_b" 'require_recordable_baseline')"
+l18l_ref="$(l18_line "$l18l_b" 'refuse_group_only_render "$site_html"')"
+l18l_slug="$(l18_line "$l18l_b" 'slug_for')"
+l18l_gh="$(l18_line "$l18l_b" 'gh api user')"
+l18l_cg="$(l18_line "$l18l_b" 'verify_publishable_content')"
+l18l_ap="$(l18_line "$l18l_b" 'ALLOW_PLAINTEXT')"
+l18l_cp="$(l18_line "$l18l_b" 'cp "$site_html"')"
+l18l_re="$(l18_line "$l18l_b" 'refuse_group_only_render "$pub_dir/index.html"')"
+l18l_ci="$(l18_line "$l18l_b" 'commit_noreply')"
+l18l_fab="$(l18_line "$l18l_b" 'zzq_l18l_fabricated_call')"
+if [ "${#l18l_b}" -lt 1000 ]; then
+  FAIL "L18l: cmd_publish's parsed body is ${#l18l_b} bytes — absent or a stub. VERDICT WITHHELD"
+elif [ -n "$l18l_fab" ]; then
+  FAIL "L18l: CONTROL — a fabricated name was found at line $l18l_fab, so the line probe matches anything"
+elif [ -z "$l18l_ref" ] || [ -z "$l18l_re" ]; then
+  FAIL "L18l: cmd_publish does not call the refusal on the render (line '${l18l_ref}') and on the staged copy (line '${l18l_re}')"
+elif [ "$l18l_ref" -le "$l18l_base" ] || [ "$l18l_ref" -ge "$l18l_slug" ] || [ "$l18l_ref" -ge "$l18l_gh" ] || [ "$l18l_ref" -ge "$l18l_cg" ] || [ "$l18l_ref" -ge "$l18l_ap" ]; then
+  FAIL "L18l: the refusal is at line $l18l_ref of cmd_publish; it must follow the baseline guard ($l18l_base) and precede slug_for ($l18l_slug), the owner lookup ($l18l_gh), the content guard ($l18l_cg) and the ALLOW_PLAINTEXT read ($l18l_ap)"
+elif [ "$l18l_re" -le "$l18l_cp" ] || [ "$l18l_re" -ge "$l18l_ci" ]; then
+  FAIL "L18l: the staged copy's re-check is at line $l18l_re; it must follow the copy ($l18l_cp) and precede the commit ($l18l_ci)"
+else
+  PASS "L18l: in cmd_publish the refusal (line $l18l_ref) follows the baseline guard ($l18l_base) and precedes slug_for, the owner lookup, the content guard and the ALLOW_PLAINTEXT read; the staged copy's re-check ($l18l_re) sits between the copy ($l18l_cp) and the commit ($l18l_ci); a fabricated name is found nowhere"
+fi
+
+# ── ARMED-RED controls: each arm run under the mutation its design row names must report pass=0 fail=1.
+l18_mut_probe() { # <mutation, evaluated in the probe's subshell> <assertion-fn> [args…] -> "<pass> <fail>"
+  local mut="$1"; shift
+  ( eval "$mut"
+    pass=0; fail=0
+    PASS() { pass=$((pass+1)); }
+    FAIL() { fail=$((fail+1)); }
+    "$@" >/dev/null 2>&1
+    printf '%d %d' "$pass" "$fail" )
+}
+l18_mut_assert() { # <id> <what the mutation is> <mutation> <assertion-fn> [args…]
+  local id="$1" what="$2" out; shift 2
+  out="$(l18_mut_probe "$@")"
+  if [ "$out" = "0 1" ]; then
+    PASS "$id: ARMED-RED — with $what, the arm reports pass=0 fail=1, so its green is the property's"
+  else
+    FAIL "$id: ARMED-RED did not fire — with $what, the arm reports '$out' (want '0 1'), so its green proves nothing about the property"
+  fi
+}
+# A function's definition with one text replaced, re-evaluated: the mutation helper the controls share.
+l18_rewrite() { # <function> <old text> <new text>
+  local b; b="$(declare -f "$1" 2>/dev/null)"
+  eval "$(l18_sub "$b" "$2" "$3")"
+}
+L18_M_EMPTY='group_only_sections() { return 0; }'
+L18_M_PUB='group_only_sections() { local t o="" p; p="$(strip_to_published_text "$1")"; for t in $L18_TOKS; do case "$p" in *"$t"*) o="$o${o:+ }$t" ;; esac; done; printf "%s" "$o"; return 0; }'
+L18_M_ALLOW='eval "$(declare -f refuse_group_only_render | sed "1s/^refuse_group_only_render/l18_real_refuse/")"; refuse_group_only_render() { [ "${ALLOW_PLAINTEXT:-}" != 1 ] || return 0; l18_real_refuse "$@"; }'
+L18_M_ZERO='l18_rewrite group_only_sections "if [ \"\$go_n\" -eq 0 ]; then" "if [ \"\$go_n\" -eq 0 ]; then return 0;"'
+L18_M_LIMB='l18_rewrite cmd_publish "[ \"\$plaintext\" != \"1\" ] || refuse_group_only_render" "refuse_group_only_render"'
+L18_M_LATE='l18_rewrite cmd_publish "[ \"\$plaintext\" != \"1\" ] || refuse_group_only_render \"\$site_html\"" ":"'
+L18_M_RECHECK='l18_rewrite cmd_publish "refuse_group_only_render \"\$pub_dir/index.html\"" ": "'
+# The scan program's candidate line, as the reader writes it, and the non-overlapping, quote-aware idiom that
+# would replace it (F1's mutation); and its reference-decode line (L18f's). Prefix-matched, so a moved line
+# leaves the program unchanged and the control reports that it did not fire. These are the mutations' targets,
+# not a copy of the program: a control that names the line it breaks has to name the line.
+l18_scan_rewrite() { # <line prefix> [replacement line] -> _GROUP_ONLY_SCAN with that line replaced, or dropped
+  _GROUP_ONLY_SCAN="$(printf '%s\n' "${_GROUP_ONLY_SCAN:-}" | L18P="$1" L18R="${2-}" L18D="${2+x}" \
+    awk 'index($0, ENVIRON["L18P"]) == 1 { if (ENVIRON["L18D"] != "") print ENVIRON["L18R"]; next } { print }')"
+}
+L18_OVERLAP_PRE='  while ($s =~ /<(?=[A-Za-z])/g)'
+L18_OVERLAP_NEW='  while ($s =~ /<[A-Za-z](?:[^>"\x27]|"[^"]*"|\x27[^\x27]*\x27)*>?/g) { push @cand, $-[0] }'
+L18_DECODE_PRE='  $v =~ s/&(?:'
+l18_m_nonoverlap() { l18_scan_rewrite "$L18_OVERLAP_PRE" "$L18_OVERLAP_NEW"; }
+l18_m_nodecode()   { l18_scan_rewrite "$L18_DECODE_PRE"; }
+L18_M_NONOVERLAP='l18_m_nonoverlap'
+L18_M_NODECODE='l18_m_nodecode'
+l18_mut_assert "L18a-mut" "the detector returning an empty token set" "$L18_M_EMPTY" l18a_assert "L18a-mut" "$L18T1"
+l18_pair="$(l18_mut_probe "$L18_M_EMPTY" l18b_assert "L18b-pair" "" nomodel "GUARD ABORTED publish")"
+if [ "$l18_pair" = "1 0" ]; then
+  PASS "L18b-pair: CONTROL — under the same mutation L18a turns red while L18b stays green (pass=1 fail=0), so the pair discriminates the detector, not the fixture"
+else
+  FAIL "L18b-pair: CONTROL — under the empty-detector mutation L18b reports '$l18_pair' (want '1 0'), so the pair does not discriminate the detector"
+fi
+l18_mut_assert "L18c-mut" "the detector pointed at strip_to_published_text instead of raw start tags" "$L18_M_PUB" l18_scan_assert "L18c-D" pass
+l18_mut_assert "L18d-mut" "ALLOW_PLAINTEXT reaching the refusal" "$L18_M_ALLOW" l18d_assert "L18d-mut"
+l18_mut_assert "L18e-mut" "the zero-row branch returning an empty token set as a clean read" "$L18_M_ZERO" l18e_assert "L18e-mut" empty
+l18_mut_assert "L18f-A02-mut" "the scan made non-overlapping (the quote-aware idiom over whole tags)" "$L18_M_NONOVERLAP" l18_scan_assert "L18f-A02" refuse
+l18_mut_assert "L18f-K-mut" "the character-reference decode removed" "$L18_M_NODECODE" l18_scan_assert "L18f-K" refuse
+l18_mut_assert "L18h-mut" "the plaintext condition removed from the refusal's call" "$L18_M_LIMB" l18h_assert "L18h-mut"
+l18_mut_assert "L18j-mut" "the refusal's early call removed, so the content guard runs first" "$L18_M_LATE" l18j_assert "L18j-mut"
+l18_mut_assert "L18k-mut" "the staged copy's re-check removed" "$L18_M_RECHECK" l18k_assert "L18k-mut"
+
+# ── The MD registrations: each arm re-run with its subject removed must report exactly one FAIL.
+while IFS="	" read -r l18id l18want l18frag; do
+  [ -n "$l18id" ] || continue
+  md_flips group_only_sections "$l18id" l18_scan_assert "$l18id" "$l18want"
+done < "$L18_FIX"
+if [ -n "$L18_TOKS" ]; then
+  for l18t in $L18_TOKS; do md_flips group_only_sections "L18a-$l18t" l18a_assert "L18a-$l18t" "$l18t"; done
+else
+  md_flips group_only_sections "L18a" l18a_assert "L18a" ""
+fi
+md_flips group_only_sections "L18b-nomodel" l18b_assert "L18b-nomodel" "" nomodel "GUARD ABORTED publish"
+md_flips group_only_sections "L18b-model" l18b_assert "L18b-model" "" model "refusing non-interactive plaintext publish"
+md_flips group_only_sections "L18c-e2e" l18b_assert "L18c-e2e" '<a href="#@T@" id="@T@" data-x="@T@" title="@T@">jump</a><p>The @T@ idea.</p>' nomodel "GUARD ABORTED publish"
+md_flips refuse_group_only_render "L18d" l18d_assert "L18d"
+for l18c in empty heading malformed absent; do md_flips refuse_group_only_render "L18e-$l18c" l18e_assert "L18e-$l18c" "$l18c"; done
+md_flips group_only_sections "L18h" l18h_assert "L18h"
+md_flips refuse_group_only_render "L18j" l18j_assert "L18j"
+md_flips refuse_group_only_render "L18k" l18k_assert "L18k"
+md_flips group_only_sections "L18m-run" l18m_assert "L18m-run" "$L18W/cap-run.html" 0
+md_flips group_only_sections "L18m-quote" l18m_assert "L18m-quote" "$L18W/cap-quote.html" 0
+md_flips _group_only_scan "L18m-budget" l18m_budget_assert "L18m-budget" "$L18W/cap-budget.html"
+while IFS="	" read -r l18id l18want l18frag; do
+  [ -n "$l18id" ] || continue
+  case "$l18want" in
+    nested) md_flips group_only_sections "$l18id" l18n_scan_assert "$l18id" nested ;;
+    *)      md_flips group_only_sections "$l18id" l18_scan_assert "$l18id" "$l18want" ;;
+  esac
+done < "$L18_FIX7"
+for l18c in 16le 16be 32le 32be; do md_flips group_only_sections "L18f-bom-$l18c" l18n_scan_assert "L18f-bom-$l18c" bom; done
+md_flips group_only_sections "L18f-bom-utf8" l18_scan_assert "L18f-bom-utf8" refuse
+md_flips group_only_sections "L18c-bom-utf8" l18_scan_assert "L18c-bom-utf8" pass
+for l18c in $L18N_CASES; do md_flips refuse_group_only_render "L18n-$l18c" l18n_assert "L18n-$l18c" "$(l18n_frag "L18f-$l18c")" undet; done
+for l18c in octal octal-3; do md_flips refuse_group_only_render "L18n-$l18c" l18n_assert "L18n-$l18c" "$(l18n_frag "L18f-$l18c")" found; done
+for l18c in 16le 16be 32le 32be; do md_flips refuse_group_only_render "L18n-bom-$l18c" l18n_assert "L18n-bom-$l18c" "$L18_SECTION" undet "$l18c"; done
+md_flips group_only_sections "L18c-e2e-img" l18b_assert "L18c-e2e-img" "$L18_IMG_OK" nomodel "GUARD ABORTED publish"
+md_flips group_only_sections "L18c-e2e-links" l18b_assert "L18c-e2e-links" "$L18_LINKS_OK" nomodel "GUARD ABORTED publish"
+for l18c in refuse-grid:L18f-link-grid scheme-grid:L18f-link-schemes pass-grid:L18c-link-grid; do
+  md_flips group_only_sections "${l18c#*:}" l18_grid_assert "${l18c#*:}" "${l18c%%:*}"
+done
+md_flips group_only_sections "L18c-e2e-scheme" l18b_assert "L18c-e2e-scheme" "$L18_SCHEME_OK" nomodel "GUARD ABORTED publish"
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# L19 — every publish, update and rotate checks what the build reads (#2156; ADR-030 § 6 safeguard 6).
+# Group L by id, in the same block as L18 and for the same reasons. The source check reads two declarations
+# and this file holds a copy of neither: the bound artifacts come through _build_source_rows from
+# reference/site-layout-spec.md § 9.1, and the field selectors through _guard_declared_rows from
+# reference/data-architecture.md § 5.6. The value sources are named by the guard's own scope constants. Every
+# planted value is synthetic. A declaration that reads nothing leaves the arms without a subject, and each says
+# so rather than passing.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group L, L19 — every publish, update and rotate checks the files the site build reads (#2156)."
+
+L19W="$RVW/l19"; mkdir -p "$L19W"
+L19OUT="$L19W/out"
+L19_BOUND=""
+if declare -F _build_source_rows >/dev/null 2>&1; then L19_BOUND="$(_build_source_rows)"; fi
+L19_SELS="$(_guard_declared_rows | awk '$1 == "field" && !seen[$2]++ { print $2 }')"
+L19B1=""; L19B2=""; L19BL=""; l19i=0
+for l19p in $L19_BOUND; do
+  l19i=$((l19i+1)); L19BL="$l19p"
+  case "$l19i" in 1) L19B1="$l19p" ;; 2) L19B2="$l19p" ;; esac
+done
+L19S1=""; L19S2=""; l19i=0
+for l19s in $L19_SELS; do
+  l19i=$((l19i+1))
+  case "$l19i" in 1) L19S1="$l19s" ;; 2) L19S2="$l19s" ;; esac
+done
+[ -n "$L19S2" ] || L19S2="$L19S1"
+L19_PROFILE="$(l18_sub "${_GUARD_DECL_ARTIFACT_PROFILE:-}" '<traveler>' rowan)"
+L19_MODEL="${_GUARD_DECL_ARTIFACT_MODEL:-}"
+L19_S1LOW="$(printf '%s' "$L19S1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')"
+
+l19_trip() { # <name> -> a trip dir holding one clean render and nothing the check reads
+  local d="$L19W/$1"
+  rm -rf "$d"; mkdir -p "$d/outputs"
+  cp "$SRC" "$d/outputs/$1-travel-site.html"; touch -t 202001010000 "$d/outputs/$1-travel-site.html"
+  printf '%s' "$d"
+}
+l19_put() { # <trip_dir> <trip-relative path> <line…> -> the file, one line per argument
+  local d="$1" p="$2"; shift 2
+  [ -n "$p" ] || return 0
+  mkdir -p "$(dirname "$d/$p")"; printf '%s\n' "$@" > "$d/$p"
+}
+# The check run alone, as the script runs it: errexit on, in a subshell, L19_PRE evaluated first.
+l19_check() { # <trip_dir> -> its status; both streams in L19OUT
+  ( [ -z "${L19_PRE:-}" ] || eval "$L19_PRE"; set -e; require_clean_build_sources "$1" ) >"$L19OUT" 2>&1
+}
+l19_has() { case "$(cat "$L19OUT")" in *"$1"*) return 0 ;; esac; return 1; }
+# One verdict over one run: the status, the needles that must appear and the ones that must not, each list
+# |-joined. Case-insensitive on the must-not list, so a value cannot pass by changing case.
+l19_assert() { # <id> <prose> <trip_dir> <want rc> <must appear> <must not appear>
+  local id="$1" prose="$2" d="$3" want="$4" ins="$5" outs="$6" rc miss="" extra="" n out low nl
+  l19_check "$d"; rc=$?
+  out="$(cat "$L19OUT")"; low="$(printf '%s' "$out" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')"
+  while [ -n "$ins" ]; do
+    n="${ins%%|*}"; case "$ins" in *"|"*) ins="${ins#*|}" ;; *) ins="" ;; esac
+    [ -z "$n" ] || case "$out" in *"$n"*) ;; *) miss="${miss}[$n] " ;; esac
+  done
+  while [ -n "$outs" ]; do
+    n="${outs%%|*}"; case "$outs" in *"|"*) outs="${outs#*|}" ;; *) outs="" ;; esac
+    nl="$(printf '%s' "$n" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')"
+    [ -z "$nl" ] || case "$low" in *"$nl"*) extra="${extra}[$n] " ;; esac
+  done
+  if [ -z "$L19_BOUND" ] || [ -z "$L19S1" ]; then
+    FAIL "$id: the build-source fence or the field declaration read nothing (bound='${L19B1}', selector='${L19S1}'), so this fixture plants nothing the check would read. VERDICT WITHHELD"
+  elif [ "$rc" -eq 127 ]; then
+    FAIL "$id: require_clean_build_sources is NOT DEFINED (rc=127) — there is no source check to grade"
+  elif [ "$rc" -ne "$want" ]; then
+    FAIL "$id: $prose — read rc=$rc, want $want: $(awk 'NR == 1' "$L19OUT" | cut -c1-200)"
+  elif [ -n "$miss" ]; then
+    FAIL "$id: $prose — rc=$rc as wanted, but the output lacks ${miss% }: $(awk 'NR == 1' "$L19OUT" | cut -c1-200)"
+  elif [ -n "$extra" ]; then
+    FAIL "$id: $prose — the output carries what it must not: ${extra% }"
+  else
+    PASS "$id: $prose [rc=$rc]"
+  fi
+}
+l19_b1_clean() { l19_put "$1" "$L19B1" '# Trip' '' 'A quiet week by the sea, with the usual papers in the hotel safe.'; }
+
+# ── L19a — must-fire, distinctive: a value's distinctive component carried exactly into a bound file stops,
+# naming the file, the line and the selector, and never the value.
+l19a_trip() {
+  local d; d="$(l19_trip l19a)"
+  l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, valid through March 2031"
+  l19_put "$d" "$L19B2" '# Itinerary' '' 'Remember: valid through March 2031 is the date to watch.'
+  printf '%s' "$d"
+}
+l19a_assert() { l19_assert "$1" "a distinctive part of a value carried exactly into a bound file stops the publish, naming the file, the line and the selector" "$(l19a_trip)" 1 "SOURCE CHECK STOPPED|$L19B2 line 3|${L19S1} value|matched exactly|Nothing was published" "Ruritania|valid through|March 2031"; }
+l19a_assert "L19a"
+
+# ── L19b — must-fire, ordinary word: a bound line carrying a selector as a label with a stated value stops,
+# by its label, under each line shape the strip reads (F10: bulleted, numbered, quoted, heading, emphasis).
+l19b_trip() { # <name> <the label line>
+  local d; d="$(l19_trip "$1")"
+  l19_put "$d" "$L19B1" '# Trip' '' "$2"
+  printf '%s' "$d"
+}
+l19b_assert() { # <id> <name> <line shape>
+  local line
+  case "$3" in
+    bullet) line="- **${L19S1}:** Ruritania" ;;
+    num)    line="1. ${L19S1}: Ruritania" ;;
+    quote)  line="> ${L19S1}: Ruritania" ;;
+    head)   line="### ${L19S1}: Ruritania" ;;
+    em)     line="*${L19S1}:* Ruritania" ;;
+  esac
+  l19_assert "$1" "a ${3}-shaped line carrying the ${L19S1:-?} label with a value stops the publish by its label" "$(l19b_trip "$2" "$line")" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} label with a value" "Ruritania"
+}
+for l19c in bullet num quote head em; do l19b_assert "L19b-$l19c" "l19b-$l19c" "$l19c"; done
+
+# ── L19c — the control: L19a's trip without its plant passes, and prints the pass line.
+l19c_assert() {
+  local d; d="$(l19_trip l19c)"
+  l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, valid through March 2031"
+  l19_put "$d" "$L19B2" '# Itinerary' '' 'Remember to bring the usual documents.'
+  l19_b1_clean "$d"
+  l19_assert "$1" "the same trip without its plants passes the source check and says what it read" "$d" 0 "Source check: no value of the non-publishable field class|2 read" "STOPPED"
+}
+l19c_assert "L19c"
+
+# ── L19d — discrimination: the projection's over-broad lines (a selector as a word, as a bolded phrase, in
+# prose) do not stop.
+l19d_assert() {
+  local d; d="$(l19_trip l19d)"
+  l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, valid through March 2031"
+  l19_put "$d" "$L19B2" '# Itinerary' '' "- ${L19S1} + copy · credit card · cash" "- **${L19S1} required** for tax-free shopping" "Keep your ${L19_S1LOW} with you at all times."
+  l19_assert "$1" "a selector used as a word, a bolded phrase or prose is not a label, and nothing distinctive is carried" "$d" 0 "Source check:" "STOPPED"
+}
+l19d_assert "L19d"
+
+# ── L19e — discrimination: a Documents-shaped value's derivation stamp, the run's generated: date and an
+# ordinary policy reminder do not stop (the stamp exclusion, the component rule and the date-shape skip).
+l19e_assert() {
+  local d; d="$(l19_trip l19e)"
+  l19_put "$d" "$L19_MODEL" '# Traveler Model [DERIVED]' '' '## Rowan' "- ${L19S2}: passport — have (valid 6 months beyond stay); visa — obtain · checked 2026-01-05"
+  l19_put "$d" "$L19B2" '---' 'generated: 2026-01-05' '---' '# Itinerary' '' 'Status · checked 2026-01-05' 'Your passport must be valid 6 months beyond stay.'
+  l19_assert "$1" "a derivation stamp, a generated: date equal to it and a policy reminder do not stop the publish" "$d" 0 "Source check:" "STOPPED"
+}
+l19e_assert "L19e"
+
+# ── L19f / L19g — the build-source fence emptied, or carrying a malformed row, in a scratch spec stops.
+l19_spec() { # <case> <out_file> — a scratch copy of the build-source declaration
+  local c="$1" o="$2" src="${_BUILD_SOURCES_SPEC:-}" head="${_BUILD_SOURCES_HEADING:-}" open='```'"${_BUILD_SOURCES_FENCE:-}"
+  [ -r "$src" ] || { : > "$o"; return 0; }
+  awk -v c="$c" -v h="$head" -v op="$open" '
+    $0 == h { insec = 1 }
+    insec && $0 == op { infence = 1; print; if (c == "malformed") print "outputs/one-field-row.md"; next }
+    infence && $0 == "```" { infence = 0; insec = 0 }
+    infence && c == "empty" && $0 !~ /^[[:space:]]*#/ && NF > 0 { next }
+    { print }' "$src" > "$o"
+}
+for l19c in empty malformed; do l19_spec "$l19c" "$L19W/spec-$l19c.md"; done
+l19f_assert() {
+  local d; d="$(l19a_trip)"
+  L19_PRE="_BUILD_SOURCES_SPEC=\"$L19W/spec-empty.md\"" l19_assert "$1" "a build-source fence that names no bound artifact stops the publish — an empty read is not an empty set" "$d" 1 "SOURCE CHECK STOPPED|could not be listed" ""
+}
+l19g_assert() {
+  local d; d="$(l19a_trip)"
+  L19_PRE="_BUILD_SOURCES_SPEC=\"$L19W/spec-malformed.md\"" l19_assert "$1" "a build-source fence carrying a row that does not parse stops the publish as a partial read" "$d" 1 "SOURCE CHECK STOPPED|partial read" ""
+}
+l19f_assert "L19f"
+l19g_assert "L19g"
+
+# ── L19h — phase-absent (D-2): an IDEATION-shaped trip, only the first bound artifact present, passes and the
+# pass line names every bound artifact it did not find.
+l19h_assert() {
+  local d ins="Source check:|1 read" p; d="$(l19_trip l19h)"
+  l19_b1_clean "$d"
+  for p in $L19_BOUND; do [ "$p" = "$L19B1" ] || ins="$ins|$p"; done
+  l19_assert "$1" "a trip holding only the first bound artifact passes, and the pass line names each one absent" "$d" 0 "$ins|not in this trip:" "STOPPED"
+}
+l19h_assert "L19h"
+
+# ── L19i — present but unreadable (D-2): the last bound artifact as a directory stops, naming it.
+l19i_assert() {
+  local d; d="$(l19_trip l19i)"
+  l19_b1_clean "$d"; mkdir -p "$d/$L19BL"
+  l19_assert "$1" "a bound artifact present but not a readable regular file stops the publish, naming it" "$d" 1 "SOURCE CHECK STOPPED|$L19BL is present but cannot be read" ""
+}
+l19i_assert "L19i"
+
+# ── L19j — the field class unreadable: a scratch declaration carrying the shipped entry rows and no field row
+# stops. Its rows are read from the live declaration, never written here.
+L19DECL_NOFIELD="$L19W/decl-nofield.md"
+_guard_declared_rows | awk '$1 == "entry"' | ldecl_write "$L19DECL_NOFIELD"
+l19j_assert() {
+  local d; d="$(l19a_trip)"
+  L19_PRE="_GUARD_DECLARATION=\"$L19DECL_NOFIELD\"" l19_assert "$1" "a field class that reads no field row stops the publish — an empty read is not an empty class" "$d" 1 "SOURCE CHECK STOPPED|field class could not be read" ""
+}
+l19j_assert "L19j"
+
+# ── L19k — a value source present but unreadable stops, named by its scope and never by a traveller's name.
+l19k_assert() {
+  local d; d="$(l19a_trip)"
+  mkdir -p "$d/$L19_MODEL"
+  l19_assert "$1" "the traveller model present as a directory stops the publish, named by its scope and by no traveller file's name" "$d" 1 "SOURCE CHECK STOPPED|$L19_MODEL is present but cannot be read" "rowan"
+}
+l19k_assert "L19k"
+
+# ── L19l — never echoes: over L19a's and L19b's stops, both streams carry no planted value, while the planted
+# files do carry them (fixture integrity, so the absence is a measurement).
+l19l_assert() {
+  local id="$1" da db oa ob rca rcb fix=0 leak=0
+  da="$(l19a_trip)"; l19_check "$da"; rca=$?; oa="$(cat "$L19OUT")"
+  db="$(l19b_trip l19l-b "- **${L19S1}:** Ruritania")"; l19_check "$db"; rcb=$?; ob="$(cat "$L19OUT")"
+  case "$(cat "$da/$L19B2" "$db/$L19B1" 2>/dev/null)" in *Ruritania*) ;; *) fix=1 ;; esac
+  case "$(cat "$da/$L19B2" 2>/dev/null)" in *"March 2031"*) ;; *) fix=1 ;; esac
+  case "$oa$ob" in *Ruritania*|*ruritania*|*"March 2031"*|*"march 2031"*) leak=1 ;; esac
+  if [ "$fix" -ne 0 ]; then
+    FAIL "$id: fixture integrity — the planted files do not carry the values, so an absence below would prove nothing. VERDICT WITHHELD"
+  elif [ "$rca" -ne 1 ] || [ "$rcb" -ne 1 ]; then
+    FAIL "$id: the two planted trips read rc=$rca and rc=$rcb, want 1 and 1 — there was no stop whose message could leak"
+  elif [ "$leak" -ne 0 ]; then
+    FAIL "$id: a stop message carries a planted value"
+  else
+    PASS "$id: two stops (rc=1 each) carry neither planted value on either stream, though the planted files carry both"
+  fi
+}
+l19l_assert "L19l"
+
+# ── L19m — must-not-fire, R9: each shape on which nonpublishable_values reads UNDETERMINED passes the source
+# check when the bound sources are clean (T1 a profile and no model; T1b nothing; T2 a profile newer than the
+# model; T5 a model with no entry; T6b an empty class with the render newer than the model; T7 a person
+# reference that does not resolve; T8 an empty model).
+l19m_trip() { # <shape> -> trip dir
+  local s="$1" d; d="$(l19_trip "l19m-$s")"
+  l19_b1_clean "$d"
+  case "$s" in
+    T1)  l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, valid through March 2031" ;;
+    T1b) ;;
+    T2)  l19_put "$d" "$L19_MODEL" '# Traveler Model [DERIVED]' '' '## Rowan' "- ${L19S1}: Ruritania, valid through March 2031"
+         touch -t 202001010000 "$d/$L19_MODEL"
+         l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, valid through March 2031" ;;
+    T5)  l19_put "$d" "$L19_MODEL" '# Traveler Model [DERIVED]' '' "- ${L19S1}: Ruritania, valid through March 2031" ;;
+    T6b) l19_put "$d" "$L19_MODEL" '# Traveler Model [DERIVED]' '' '## Rowan' '- Interests: markets, museums'
+         touch -t 202001010000 "$d/$L19_MODEL"; touch "$d/outputs/l19m-T6b-travel-site.html" ;;
+    T7)  l19_put "$d" "$L19_PROFILE" '---' "person: psn-0000" '---' '# Rowan' '' '- Interests: markets' ;;
+    T8)  mkdir -p "$d/$(dirname "$L19_MODEL")"; : > "$d/$L19_MODEL" ;;
+  esac
+  printf '%s' "$d"
+}
+l19m_assert() { # <id> <shape>
+  l19_assert "$1" "the R9 shape $2, on which the content guard's class reads undetermined, passes the source check with clean bound sources" "$(l19m_trip "$2")" 0 "Source check:" "STOPPED"
+}
+for l19c in T1 T1b T2 T5 T6b T7 T8; do l19m_assert "L19m-$l19c" "$l19c"; done
+# The same, end to end: an encrypted publish and an update of the T1 shape go past the check to the push.
+l19m_e2e_assert() { # <id> <publish|update>
+  local id="$1" v="$2" d name bare rc out pass=0 h0 h1
+  name="l19m-$v-$RANDOM"
+  if [ "$v" = update ]; then
+    d="$(rv_fixture "$name" 'rv-l19-synthetic-key-0001')"; bare="$RVW/origin/$name-trip.git"
+  else
+    d="$RVW/$name"; mkdir -p "$d/outputs"; cp "$SRC" "$d/outputs/$name-travel-site.html"; bare=""
+  fi
+  l19_b1_clean "$d"
+  l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, valid through March 2031"
+  h0="$( [ -z "$bare" ] || rv_head "$bare")"; : > "$RV_GHLOG"
+  out="$( ( unset STATICRYPT_PASSWORD; set -e; "cmd_$v" "$d" ) 2>&1 )"; rc=$?
+  h1="$( [ -z "$bare" ] || rv_head "$bare")"
+  case "$out" in *"Source check: no value"*) pass=1 ;; esac
+  if [ "$rc" -ne 0 ]; then
+    FAIL "$id: $v of an R9 shape (a profile, no model) read rc=$rc, want 0: $(awk '/STOPPED|ERROR/ { print; exit }' <<<"$out" | cut -c1-200)"
+  elif [ "$pass" -ne 1 ]; then
+    FAIL "$id: $v exited 0 but printed no source-check pass line — the check did not run on this path"
+  elif [ "$v" = update ] && [ "$h0" = "$h1" ]; then
+    FAIL "$id: update exited 0 but the site's main did not move — nothing was pushed, so the arm graded no push"
+  else
+    PASS "$id: $v of an R9 shape passes the source check (its pass line printed) and goes on to the push (rc=0)"
+  fi
+}
+for l19c in publish update; do l19m_e2e_assert "L19m-$l19c" "$l19c"; done
+
+# ── L19n — per verb and limb: L19a's planted trip stops under publish encrypted, publish --plaintext, update and
+# rotate, with nothing created, cloned, committed or pushed, and rotate leaves .passphrase byte-identical.
+l19n_assert() { # <id> <publish|plaintext|update|rotate>
+  local id="$1" v="$2" d name bare rc out stop=0 h0 h1 c0 c1 same=1 create=0
+  name="l19n-$v-$RANDOM"
+  case "$v" in
+    update|rotate) d="$(rv_fixture "$name" 'rv-l19-synthetic-key-0002')"; bare="$RVW/origin/$name-trip.git"
+                   cp -p "$d/.passphrase" "$RVW/$name.before" ;;
+    *)             d="$RVW/$name"; mkdir -p "$d/outputs"; cp "$SRC" "$d/outputs/$name-travel-site.html"; bare="" ;;
+  esac
+  l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, valid through March 2031"
+  l19_put "$d" "$L19B2" '# Itinerary' '' 'Remember: valid through March 2031 is the date to watch.'
+  h0="$( [ -z "$bare" ] || rv_head "$bare")"; c0="$(git -C "$d/.publish" rev-parse -q --verify HEAD 2>/dev/null)"
+  : > "$RV_GHLOG"
+  case "$v" in
+    plaintext) out="$( ( unset STATICRYPT_PASSWORD ALLOW_PLAINTEXT; set -e; cmd_publish "$d" --plaintext ) </dev/null 2>&1 )"; rc=$? ;;
+    publish)   out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_publish "$d" ) </dev/null 2>&1 )"; rc=$? ;;
+    *)         out="$( ( unset STATICRYPT_PASSWORD; set -e; "cmd_$v" "$d" ) </dev/null 2>&1 )"; rc=$? ;;
+  esac
+  h1="$( [ -z "$bare" ] || rv_head "$bare")"; c1="$(git -C "$d/.publish" rev-parse -q --verify HEAD 2>/dev/null)"
+  case "$out" in *"SOURCE CHECK STOPPED"*"matched exactly"*) stop=1 ;; esac
+  case "$(cat "$RV_GHLOG")" in *"repo create"*|*"repo clone"*) create=1 ;; esac
+  if [ "$v" = rotate ] && ! cmp -s "$d/.passphrase" "$RVW/$name.before"; then same=0; fi
+  if [ "$rc" -ne 1 ] || [ "$stop" -ne 1 ]; then
+    FAIL "$id: $v of a trip whose bound file carries a value read rc=$rc and the source-check stop=$stop (want 1 and 1): $(awk '/ERROR/ { print; exit }' <<<"$out" | cut -c1-200)"
+  elif [ "$create" -ne 0 ] || [ "$h0" != "$h1" ] || [ "$c0" != "$c1" ]; then
+    FAIL "$id: $v stopped, but a repository was created or cloned ($create), the site moved ($h0 -> $h1) or the clone committed ($c0 -> $c1)"
+  elif [ "$same" -ne 1 ]; then
+    FAIL "$id: rotate stopped, but .passphrase is not byte-identical to what it was"
+  else
+    PASS "$id: $v stops at the source check (rc=1), before anything is created, cloned, committed or pushed$( [ "$v" != rotate ] || printf ', and .passphrase is byte-identical')"
+  fi
+}
+for l19c in publish plaintext update rotate; do l19n_assert "L19n-$l19c" "$l19c"; done
+
+# ── L19o — position: require_publish_guards runs the check after the baseline guard, and cmd_publish after
+# the group-only refusal and before slug_for and cmd_publish's owner lookup. A fabricated name is the control.
+l19o_g="$(declare -f require_publish_guards 2>/dev/null)"; l19o_p="$(declare -f cmd_publish 2>/dev/null)"
+l19o_gb="$(l18_line "$l19o_g" 'require_recordable_baseline')"; l19o_gc="$(l18_line "$l19o_g" 'require_clean_build_sources')"
+l19o_pr="$(l18_line "$l19o_p" 'refuse_group_only_render "$site_html"')"; l19o_pc="$(l18_line "$l19o_p" 'require_clean_build_sources')"
+l19o_ps="$(l18_line "$l19o_p" 'slug_for')"; l19o_pg="$(l18_line "$l19o_p" 'gh api user')"
+l19o_fab="$(l18_line "$l19o_g$l19o_p" 'zzq_l19o_fabricated_call')"
+if [ "${#l19o_g}" -lt 100 ] || [ "${#l19o_p}" -lt 1000 ]; then
+  FAIL "L19o: the parsed bodies are ${#l19o_g} and ${#l19o_p} bytes — a subject is absent or a stub. VERDICT WITHHELD"
+elif [ -n "$l19o_fab" ]; then
+  FAIL "L19o: CONTROL — a fabricated name was found, so the line probe matches anything"
+elif [ -z "$l19o_gc" ] || [ -z "$l19o_pc" ]; then
+  FAIL "L19o: the source check is not called in require_publish_guards (line '${l19o_gc}') or in cmd_publish (line '${l19o_pc}')"
+elif [ "$l19o_gc" -le "$l19o_gb" ] || [ "$l19o_pc" -le "$l19o_pr" ] || [ "$l19o_pc" -ge "$l19o_ps" ] || [ "$l19o_pc" -ge "$l19o_pg" ]; then
+  FAIL "L19o: out of order — in require_publish_guards the check is at $l19o_gc after the baseline guard at $l19o_gb; in cmd_publish it is at $l19o_pc, which must follow the refusal ($l19o_pr) and precede slug_for ($l19o_ps) and the owner lookup ($l19o_pg)"
+else
+  PASS "L19o: require_publish_guards runs the source check last (line $l19o_gc, after the baseline guard at $l19o_gb), and cmd_publish runs it after the group-only refusal ($l19o_pr) and before slug_for ($l19o_ps) and the owner lookup ($l19o_pg); a fabricated name is found nowhere"
+fi
+
+# ── L19p — a field row added to the declaration joins both halves with no shell edit: a scratch declaration
+# carrying the live rows and one synthetic row stops on its label, and on its value carried exactly.
+L19DECL_PLUS="$L19W/decl-plus.md"
+{ _guard_declared_rows; printf 'field Visa-number %s conjunctive\n' "${_GUARD_DECL_ARTIFACT_PROFILE:-}"; } | ldecl_write "$L19DECL_PLUS"
+l19p_assert() { # <id> <label|exact>
+  local d; d="$(l19_trip "l19p-$2")"
+  l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' '- **Visa-number:** VX44A912'
+  if [ "$2" = label ]; then
+    l19_put "$d" "$L19B1" '# Trip' '' '- Visa-number: VX44A912'
+    L19_PRE="_GUARD_DECLARATION=\"$L19DECL_PLUS\"" l19_assert "$1" "a field row added to the declaration is matched as a label with no shell edit" "$d" 1 "SOURCE CHECK STOPPED|Visa-number label with a value" "VX44A912"
+  else
+    l19_put "$d" "$L19B2" '# Itinerary' '' 'Bring the slip VX44A912 to the consulate.'
+    L19_PRE="_GUARD_DECLARATION=\"$L19DECL_PLUS\"" l19_assert "$1" "a field row added to the declaration has its values matched exactly with no shell edit" "$d" 1 "SOURCE CHECK STOPPED|Visa-number value, matched exactly" "VX44A912"
+  fi
+}
+for l19c in label exact; do l19p_assert "L19p-$l19c" "$l19c"; done
+
+# ── L19q — L8's predicate list carries every function the source check adds, so its one-home seam covers them.
+l19q_miss=""
+for l19f in _field_class_values _build_source_hits require_clean_build_sources; do
+  case " $L8_PREDICATES " in *" $l19f "*) ;; *) l19q_miss="$l19q_miss$l19f " ;; esac
+done
+if [ -n "$l19q_miss" ]; then
+  FAIL "L19q: L8_PREDICATES does not name ${l19q_miss% } — a selector written into a source-check function would be a second home L8 never reads"
+else
+  PASS "L19q: L8_PREDICATES names every source-check function (_field_class_values _build_source_hits require_clean_build_sources), so L8 grades them for a copied selector"
+fi
+
+# ── L19r — a present, readable model contributes its values whatever its age or entry structure (F8): a stale
+# model, and separately an entry-less one, each carrying a value a bound file repeats, stop the publish.
+l19r_assert() { # <id> <stale|entryless>
+  local d; d="$(l19_trip "l19r-$2")"
+  if [ "$2" = stale ]; then
+    l19_put "$d" "$L19_MODEL" '# Traveler Model [DERIVED]' '' '## Rowan' "- ${L19S1}: Ruritania, passport no. RT884421, valid through June 2032"
+    touch -t 202001010000 "$d/$L19_MODEL"
+    l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** —"
+  else
+    l19_put "$d" "$L19_MODEL" '# Traveler Model [DERIVED]' '' "- ${L19S1}: Ruritania, passport no. RT884421, valid through June 2032"
+  fi
+  l19_put "$d" "$L19B2" '# Itinerary' '' 'Bring passport RT884421 to the desk.'
+  l19_assert "$1" "a $2 model's value carried into a bound file stops the publish" "$d" 1 "SOURCE CHECK STOPPED|matched exactly" "RT884421"
+}
+for l19c in stale entryless; do l19r_assert "L19r-$l19c" "$l19c"; done
+
+# ── L19s — CIAC-1, the S2 half (F6): a render tripping all three content controls shows only the refusal's
+# message (rc=3), and one tripping the source check and the content guard shows only the source check's (rc=1).
+l19s_assert() { # <id> <three|two>
+  local id="$1" c="$2" d rc lead=0 src=0 guard=0 frag='<p>Passport: Ruritanian, valid to 2033</p>'
+  [ "$c" = two ] || frag="$L18_SECTION$frag"
+  d="$(l18_trip "l19s-$c" "$frag" model)"
+  printf '# Trip\n\n- **%s:** Ruritanian\n' "$L19S1" > "$d/$L19B1"
+  l18_publish "$d" --plaintext; rc=$?
+  l18_has "GROUP-ONLY REFUSED" && lead=1
+  l18_has "SOURCE CHECK STOPPED" && src=1
+  l18_has "GUARD ABORTED" && guard=1
+  if [ -z "$L19B1" ] || [ -z "$L18T1" ]; then
+    FAIL "$id: a declaration read nothing (bound='${L19B1}', token='${L18T1}'). VERDICT WITHHELD"
+  elif [ "$c" = three ] && { [ "$rc" -ne 3 ] || [ "$lead" -ne 1 ] || [ "$src" -ne 0 ] || [ "$guard" -ne 0 ]; }; then
+    FAIL "$id: a render tripping all three controls read rc=$rc with refusal=$lead, source check=$src, content guard=$guard (want 3, 1, 0, 0) — the refusal is not first"
+  elif [ "$c" = two ] && { [ "$rc" -ne 1 ] || [ "$lead" -ne 0 ] || [ "$src" -ne 1 ] || [ "$guard" -ne 0 ]; }; then
+    FAIL "$id: a render tripping the source check and the content guard read rc=$rc with refusal=$lead, source check=$src, content guard=$guard (want 1, 0, 1, 0) — the source check is not ahead of the content guard"
+  else
+    PASS "$id: CIAC-1 holds for $c controls — only the first control's message is shown (rc=$rc)"
+  fi
+}
+for l19c in three two; do l19s_assert "L19s-$l19c" "$l19c"; done
+
+# ── L19t — the word rule (D-NEW-1): an email, a phone number's digits and a document number, each a value of a
+# field row and carried into a bound file with other words around it, stop the publish.
+L19DECL_REACH="$L19W/decl-reach.md"
+{ _guard_declared_rows; printf 'field Reach %s conjunctive\n' "${_GUARD_DECL_ARTIFACT_PROFILE:-}"; } | ldecl_write "$L19DECL_REACH"
+l19t_assert() { # <id> <email|phone|docno>
+  local d val line sel="Reach"; d="$(l19_trip "l19t-$2")"
+  case "$2" in
+    email) val='alex.morgan@example.com';  line='Emergency: alex.morgan@example.com' ;;
+    phone) val='+44 20 7946 0958';         line='Call +442079460958 on arrival' ;;
+    docno) val='US, passport no. X1234567, valid'; line='Bring passport X1234567 to the desk'; sel="$L19S1" ;;
+  esac
+  l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${sel}:** $val"
+  l19_put "$d" "$L19B2" '# Itinerary' '' "$line"
+  L19_PRE="_GUARD_DECLARATION=\"$L19DECL_REACH\"" l19_assert "$1" "a $2 carried with other words around it stops the publish by the word rule" "$d" 1 "SOURCE CHECK STOPPED|${sel} value, matched exactly" "7946|X1234567|alex.morgan"
+}
+for l19c in email phone docno; do l19t_assert "L19t-$l19c" "$l19c"; done
+
+# ── L19u — byte-exact under every locale (F19): a value split at U+2014 and U+00B7, holding U+2019 and U+00A0,
+# reads the same under C and under a multibyte locale the host lists — the stop at the same line, and the
+# clean twin clean. No multibyte locale is a FAIL: one locale compared with nothing shows nothing.
+l19u_mb_pick() {
+  local ll m=''
+  while IFS= read -r ll; do
+    [ -n "$ll" ] || continue
+    [ "$(LC_ALL="$ll" bash -c 'x="$(printf "\302\240")"; printf "%s" "${#x}"' 2>/dev/null)" = 1 ] || continue
+    case "$ll" in C.UTF-8|C.utf8|C.UTF8) m="$ll"; break ;; esac
+    [ -n "$m" ] || m="$ll"
+  done <<L19LOC
+C.UTF-8
+C.utf8
+$(locale -a 2>/dev/null)
+L19LOC
+  printf '%s' "$m"
+}
+L19U_MB="$(l19u_mb_pick)"
+l19u_assert() {
+  local id="$1" d dc rc1 rc2="" o1 o2="" cc1 cc2="" nb at rq
+  nb="$(printf '\302\240')"; rq="$(printf '\342\200\231')"
+  d="$(l19_trip l19u)"
+  l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania${rq}s office — valid${nb}through March 2031 · renew early"
+  l19_put "$d" "$L19B2" '# Itinerary' '' "Ruritania${rq}s office is near the hotel." 'Remember: valid through March 2031 is the date to watch.'
+  dc="$(l19_trip l19u-clean)"
+  l19_put "$dc" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania${rq}s office — valid${nb}through March 2031 · renew early"
+  l19_put "$dc" "$L19B2" '# Itinerary' '' "Ruritania${rq}s office is near the hotel." 'Renew early, as ever.'
+  rc1="$( export LC_ALL=C; l19_check "$d"; printf '%s' "$?" )"; o1="$(cat "$L19OUT")"
+  cc1="$( export LC_ALL=C; l19_check "$dc"; printf '%s' "$?" )"
+  if [ -n "$L19U_MB" ]; then
+    rc2="$( export LC_ALL="$L19U_MB"; l19_check "$d"; printf '%s' "$?" )"; o2="$(cat "$L19OUT")"
+    cc2="$( export LC_ALL="$L19U_MB"; l19_check "$dc"; printf '%s' "$?" )"
+  fi
+  at=0; case "$o1" in *"$L19B2 line 4"*) at=1 ;; esac
+  if [ -z "$L19S1" ] || [ -z "$L19B2" ]; then
+    FAIL "$id: a declaration read nothing. VERDICT WITHHELD"
+  elif [ -z "$L19U_MB" ]; then
+    FAIL "$id: NO MULTIBYTE LOCALE — neither C.UTF-8 spelling loads and locale -a lists no name under which U+00A0 reads as one character, so C was compared with nothing"
+  elif [ "$rc1" != 1 ] || [ "$rc2" != 1 ] || [ "$o1" != "$o2" ]; then
+    FAIL "$id: the multibyte-separated value read rc=$rc1 under C and rc=$rc2 under $L19U_MB, outputs identical=$( [ "$o1" = "$o2" ] && printf yes || printf no ) (want 1, 1, yes)"
+  elif [ "$cc1" != 0 ] || [ "$cc2" != 0 ]; then
+    FAIL "$id: the clean twin read rc=$cc1 under C and rc=$cc2 under $L19U_MB, want 0 and 0 — a multibyte character was split into a false match"
+  elif [ "$at" -ne 1 ]; then
+    FAIL "$id: the stop under both locales did not name $L19B2 line 4: $(awk 'NR == 1' <<<"$o1" | cut -c1-160)"
+  else
+    PASS "$id: a value split at U+2014 and U+00B7 and holding U+2019 and U+00A0 stops at the same line under C and under $L19U_MB with byte-identical output, and its clean twin passes under both"
+  fi
+}
+l19u_assert "L19u"
+
+# ── L19v — the declared residuals, each asserted so a change that closes one updates its declaration rather
+# than leaving it stale: a calendar-valid date carried with other words; a trip with no bound artifact present
+# (D-NEW-3); a word between the selector and its colon; a label mid-line; a label whose colon is a dash, in
+# either spelling (S7-04); a number joined by three characters or by a comma (S7-04); a value-source line the
+# guard's profile parse does not read as a label, which harvests nothing — in a traveller file, a task box, a
+# full-width colon, and (S7P3-01) a narrow no-break space before the colon, a numbered, blockquote or heading
+# marker, and a word joiner inside the label, each of these five written on the plain line L19c-harvest-plain
+# stops on, so the form is the only difference; a person reference written in quotes, so not a minted id, which
+# is named in a note and whose record is not read (an unresolved value source); a label behind a marker the strip
+# does not name (a code span); and, as the folding's own boundary, a look-alike outside it (the Hangul filler
+# before the colon) and digits of another script (Devanagari).
+L19HV='Ruritania, document no. X1234567'
+l19_harvest_put() { # <trip_dir> <the traveller file's value line> -> that line in the traveller file, its number in a bound file
+  l19_put "$1" "$L19_PROFILE" '---' '---' '# Rowan' '' "$2"
+  l19_put "$1" "$L19B1" '# Trip' '' 'Bring X1234567 to the desk.'
+}
+l19v_assert() { # <id> <date|none|interposed|midline|emdash|dash|sep3|comma|harvest|harvestcolon|harvestspace|harvestnum|harvestquote|harvesthead|harvestinvis|quoted|marker|hangul|deva>
+  local d nt="" hb=""; d="$(l19_trip "l19v-$2")"
+  case "$2" in
+    date)       l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** United States, expires 2031-04-12"
+                l19_put "$d" "$L19B2" '# Itinerary' '' 'Alex: passport expiry 2031-04-12' ;;
+    none)       ;;
+    interposed) l19_put "$d" "$L19B1" '# Trip' '' "- ${L19S1} country: Ruritania" ;;
+    midline)    l19_put "$d" "$L19B1" '# Trip' '' "Alex — ${L19S1}: Ruritania" ;;
+    emdash)     l19_put "$d" "$L19B1" '# Trip' '' "${L19S1} — Ruritania" ;;
+    dash)       l19_put "$d" "$L19B1" '# Trip' '' "- ${L19S1} - Ruritania" ;;
+    sep3)       l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. 12345678"
+                l19_put "$d" "$L19B1" '# Trip' '' 'Ref 1234 - 5678 on file.' ;;
+    comma)      l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. 12345678"
+                l19_put "$d" "$L19B1" '# Trip' '' 'Ref 1234,5678 on file.' ;;
+    harvest)    l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- [ ] **${L19S1}:** Ruritania, document no. X1234567"
+                l19_put "$d" "$L19B1" '# Trip' '' 'Bring X1234567 to the desk.' ;;
+    harvestcolon) l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}$(printf '\357\274\232')** Ruritania, document no. X1234567"
+                l19_put "$d" "$L19B1" '# Trip' '' 'Bring X1234567 to the desk.' ;;
+    harvestspace) hb='e2 80 af'; l19_harvest_put "$d" "- ${L19S1}$(printf '\342\200\257'): $L19HV" ;;
+    harvestnum)   l19_harvest_put "$d" "1. ${L19S1}: $L19HV" ;;
+    harvestquote) l19_harvest_put "$d" "> ${L19S1}: $L19HV" ;;
+    harvesthead)  l19_harvest_put "$d" "### ${L19S1}: $L19HV" ;;
+    harvestinvis) hb='e2 81 a0'; l19_harvest_put "$d" "- ${L19S1:0:4}$(printf '\342\201\240')${L19S1:4}: $L19HV" ;;
+    quoted)     l19_put "$d" "$L19_PROFILE" '---' "${_GUARD_REF_KEY:-person}: \"psn-a9c4\"" '---' '# Rowan' '' '- Interests: markets'
+                l19_put "$d" "${_GUARD_PERSON_STORE:-people}/psn-a9c4.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X2468135"
+                l19_put "$d" "$L19B1" '# Trip' '' 'Bring X2468135 to the desk.'; nt="|a person reference that is not a minted id" ;;
+    marker)     l19_put "$d" "$L19B1" '# Trip' '' "\`${L19S1}\`: Ruritania" ;;
+    hangul)     l19_put "$d" "$L19B1" '# Trip' '' "${L19S1}$(printf '\343\205\244'): Ruritania" ;;
+    deva)       l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. 12345678"
+                l19_put "$d" "$L19B1" '# Trip' '' "Ref $(printf '\340\245\247\340\245\250\340\245\251\340\245\252\340\245\253\340\245\254\340\245\255\340\245\256') on file." ;;
+  esac
+  if [ -n "$hb" ]; then
+    case " $(LC_ALL=C od -An -v -tx1 "$d/$L19_PROFILE" | tr -s ' \n' '  ') " in
+      *" $hb "*) ;;
+      *) FAIL "$1: fixture integrity — the planted traveller file does not carry the bytes $hb its shape names, so this arm would not grade that form. VERDICT WITHHELD"; return 0 ;;
+    esac
+  fi
+  l19_assert "$1" "the declared residual '$2' holds: this shape passes the source check, as declared at the function and in the PR" "$d" 0 "Source check:$nt" "STOPPED"
+}
+for l19c in date none interposed midline emdash dash sep3 comma harvest harvestcolon harvestspace harvestnum harvestquote harvesthead harvestinvis quoted marker hangul deva; do l19v_assert "L19v-$l19c" "$l19c"; done
+# ── L19c-harvest-plain — the control for the harvest arms above: the same value line written in the field
+# grammar's own form, `- <selector>: …`, is harvested, and the bound file carrying its number stops, matched
+# exactly. Each harvest arm differs from this trip by its label's form alone, so its pass is that form's.
+l19c_harvest_assert() { # <id>
+  local d; d="$(l19_trip l19c-harvest-plain)"
+  l19_harvest_put "$d" "- ${L19S1}: $L19HV"
+  l19_assert "$1" "the control for the harvest arms: a value-source line in the field grammar's own form is harvested, and the bound file carrying its number stops the publish, matched exactly" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} value, matched exactly" "X1234567|Ruritania"
+}
+l19c_harvest_assert "L19c-harvest-plain"
+
+# ── L19w — the word rule skips a calendar-valid date and nothing else (Stage 7's S7-03, operator ruling C): a
+# number grouped like a date whose groups are no calendar date, carried with other words in a bound line, stops;
+# a calendar-valid date in each order, and the derivation stamp, stay skipped, as declared.
+l19w_assert() { # <id> <trip name> <the number, as written> <stop|skip>
+  local d; d="$(l19_trip "$2")"
+  l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. $3"
+  l19_put "$d" "$L19B1" '# Trip' '' "Visa reference $3 confirmed by the consulate."
+  if [ "$4" = stop ]; then
+    l19_assert "$1" "a number grouped like a date whose groups are no calendar date ($3), carried with other words, stops by the word rule" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} value, matched exactly" ""
+  else
+    l19_assert "$1" "the declared residual holds: a calendar-valid date ($3) carried with other words is skipped by the word rule" "$d" 0 "Source check:" "STOPPED"
+  fi
+}
+l19w_assert "L19w-stop-242" l19w-stop-242 '07 2019 55' stop
+l19w_assert "L19w-stop-422" l19w-stop-422 '2031 55 12' stop
+l19w_assert "L19w-stop-224" l19w-stop-224 '55 12 2031' stop
+l19w_assert "L19w-stop-24" l19w-stop-24 '19 2031' stop
+l19w_assert "L19w-skip-ymd" l19w-skip-ymd '2031-03-15' skip
+l19w_assert "L19w-skip-dmy" l19w-skip-dmy '15/03/2031' skip
+l19w_assert "L19w-skip-dmy-dot" l19w-skip-dmy-dot '31.12.2031' skip
+l19w_assert "L19w-skip-mdy" l19w-skip-mdy '03/15/2031' skip
+l19w_assert "L19w-skip-ym" l19w-skip-ym '2031-07' skip
+l19w_assert "L19w-skip-ym-1999" l19w-skip-ym-1999 '1999-12' skip
+l19w_stamp_assert() {
+  local d; d="$(l19_trip l19w-skip-stamp)"
+  l19_put "$d" "$L19_MODEL" '# Traveler Model [DERIVED]' '' '## Rowan' "- ${L19S2}: passport — have; visa — obtain · checked 2031-03-15"
+  l19_put "$d" "$L19B1" '# Trip' '' 'Status · checked 2031-03-15 by the consulate.'
+  l19_assert "$1" "the declared residual holds: the derivation stamp checked <date> carried with other words is skipped" "$d" 0 "Source check:" "STOPPED"
+}
+l19w_stamp_assert "L19w-skip-stamp"
+
+# ── L19x — the label half reads through look-alikes (S7-04, label half): a task box after the list marker, in
+# either case and under either bullet; a non-breaking space or a zero-width space before the colon; a full-width
+# colon; and a list marker ahead of a quote marker. Each stops by its label.
+l19x_assert() { # <id> <trip name> <the label line> <what it is>
+  l19_assert "$1" "a bound line carrying the ${L19S1:-?} label behind $4 stops the publish by its label" "$(l19b_trip "$2" "$3")" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} label with a value" "Ruritania"
+}
+L19NB="$(printf '\302\240')"; L19FC="$(printf '\357\274\232')"; L19ZW="$(printf '\342\200\213')"
+l19x_assert "L19x-box" l19x-box "- [ ] ${L19S1}: Ruritania" "an open task box"
+l19x_assert "L19x-box-x" l19x-box-x "- [x] ${L19S1}: Ruritania" "a checked task box"
+l19x_assert "L19x-box-star" l19x-box-star "* [ ] ${L19S1}: Ruritania" "a task box under an asterisk bullet"
+l19x_assert "L19x-nbsp" l19x-nbsp "${L19S1}${L19NB}: Ruritania" "a non-breaking space before its colon"
+l19x_assert "L19x-fwcolon" l19x-fwcolon "${L19S1}${L19FC} Ruritania" "a full-width colon"
+l19x_assert "L19x-zw" l19x-zw "${L19S1}${L19ZW}: Ruritania" "a zero-width space before its colon"
+l19x_assert "L19x-list-quote" l19x-list-quote "- > ${L19S1}: Ruritania" "a list marker ahead of a quote marker"
+
+# ── L19y — the exact half reads through invisibles and other digits (S7-04, value half): a zero-width space,
+# non-joiner or joiner, a byte-order mark or a soft hyphen inside the value, and the value in full-width or
+# Arabic-Indic digits, each in a bound line, stops, matched exactly.
+l19y_assert() { # <id> <trip name> <the value on file> <the bound line>
+  local d; d="$(l19_trip "$2")"
+  l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** $3"
+  l19_put "$d" "$L19B2" '# Itinerary' '' "$4"
+  l19_assert "$1" "a value written with invisible or non-ASCII-digit characters in a bound file stops the publish, matched exactly" "$d" 1 "SOURCE CHECK STOPPED|$L19B2 line 3|${L19S1} value, matched exactly" "X1234567|12345678"
+}
+L19VX='Ruritania, document no. X1234567'; L19VD='Ruritania, document no. 12345678'
+l19y_assert "L19y-zwsp" l19y-zwsp "$L19VX" "Bring X123$(printf '\342\200\213')4567 to the desk."
+l19y_assert "L19y-zwnj" l19y-zwnj "$L19VX" "Bring X123$(printf '\342\200\214')4567 to the desk."
+l19y_assert "L19y-zwj" l19y-zwj "$L19VX" "Bring X123$(printf '\342\200\215')4567 to the desk."
+l19y_assert "L19y-feff" l19y-feff "$L19VX" "Bring X123$(printf '\357\273\277')4567 to the desk."
+l19y_assert "L19y-shy" l19y-shy "$L19VX" "Bring X123$(printf '\302\255')4567 to the desk."
+l19y_assert "L19y-fw" l19y-fw "$L19VD" "Ref $(printf '\357\274\221\357\274\222\357\274\223\357\274\224\357\274\225\357\274\226\357\274\227\357\274\230') on file."
+l19y_assert "L19y-arabic" l19y-arabic "$L19VD" "Ref $(printf '\331\241\331\242\331\243\331\244\331\245\331\246\331\247\331\250') on file."
+
+# ── L19z — a merge chain is read one hop and a longer one is named (S7-07): a traveller whose person reference
+# is merged into a record that is itself merged on passes with a NOTE naming a merge chain longer than one hop,
+# and the one-hop control, whose target's value a bound file carries, stops. L19z-hop2-crlf is the two-hop
+# chain with its first target saved with CRLF line endings: the target's merge key is read as its plain twin's
+# is, so the longer chain is still named. L19z-hop2-indent is the two-hop chain with that target's merge key
+# indented, a line the front-matter shape gate refuses: the target fails the gate, and the longer chain is still
+# named, as its plain twin's is.
+l19z_assert() { # <id> <1|2|2crlf|2indent>
+  local d st="${_GUARD_PERSON_STORE:-people}" mk="${_GUARD_MERGE_KEY:-merged-into}"; d="$(l19_trip "l19z-hop$2")"
+  l19_put "$d" "$L19_PROFILE" '---' "${_GUARD_REF_KEY:-person}: psn-a9b9" '---' '# Rowan' '' '- Interests: markets'
+  if [ "$2" != 1 ]; then
+    l19_put "$d" "$st/psn-a9b9.md" '---' "$mk: psn-a9ba" '---' '# Rowan'
+    l19_put "$d" "$st/psn-a9ba.md" '---' "$mk: psn-a9bb" '---' '# Rowan'
+    [ "$2" != 2indent ] || l19_put "$d" "$st/psn-a9ba.md" '---' "  $mk: psn-a9bb" '---' '# Rowan'
+  else
+    l19_put "$d" "$st/psn-a9b9.md" '---' "$mk: psn-a9bb" '---' '# Rowan'
+  fi
+  l19_put "$d" "$st/psn-a9bb.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X7654326"
+  l19_put "$d" "$L19B1" '# Trip' '' 'Bring X7654326 to the consulate.'
+  if [ "$2" = 2crlf ]; then
+    LC_ALL=C awk '{ printf "%s\r\n", $0 }' "$d/$st/psn-a9ba.md" > "$d/$st/psn-a9ba.crlf"; mv -f "$d/$st/psn-a9ba.crlf" "$d/$st/psn-a9ba.md"
+    if [ "$(($(LC_ALL=C tr -cd '\r' < "$d/$st/psn-a9ba.md" | wc -c)))" -ne "$(($(LC_ALL=C tr -cd '\n' < "$d/$st/psn-a9ba.md" | wc -c)))" ]; then
+      FAIL "$1: fixture integrity — the planted merge target does not end every line with CRLF, so this arm would not grade it. VERDICT WITHHELD"
+      return 0
+    fi
+  fi
+  if [ "$2" != 1 ]; then
+    l19_assert "$1" "a person reference whose merge chain runs two hops ($2) is named in a NOTE rather than read as clean" "$d" 0 "Source check:|a merge chain longer than one hop" "STOPPED|X7654326"
+  else
+    l19_assert "$1" "a person reference merged one hop is followed: the target's value in a bound file stops, matched exactly" "$d" 1 "SOURCE CHECK STOPPED|${L19S1} value, matched exactly" "X7654326"
+  fi
+}
+for l19c in 1 2; do l19z_assert "L19z-hop$l19c" "$l19c"; done
+l19z_assert "L19z-hop2-crlf" 2crlf
+l19z_assert "L19z-hop2-indent" 2indent
+
+# ── L19x / L19y, Stage 7 pass 2's look-alike shapes (S7P2-02), and the folding that closes their class: every
+# Unicode space separator read as a space, the named colon set read as a colon, every format character and
+# variation selector dropped, a backslash before a colon stripped. Each named shape stops, the label ones by
+# their label and the value ones exactly.
+L19X_NNB="$(printf '\342\200\257')"; L19X_THIN="$(printf '\342\200\211')"; L19X_IDEO="$(printf '\343\200\200')"
+L19X_SMC="$(printf '\357\271\225')"; L19X_RATIO="$(printf '\342\210\266')"; L19X_WJ="$(printf '\342\201\240')"
+L19X_LRM="$(printf '\342\200\216')"; L19X_VS16="$(printf '\357\270\217')"
+L19X_LRI="$(printf '\342\201\246')"; L19X_PDI="$(printf '\342\201\251')"
+l19x_assert "L19x-nnbsp" l19x-nnbsp "${L19S1}${L19X_NNB}: Ruritania" "a narrow no-break space before its colon"
+l19x_assert "L19x-thin" l19x-thin "${L19S1}${L19X_THIN}: Ruritania" "a thin space before its colon"
+l19x_assert "L19x-ideo" l19x-ideo "${L19S1}${L19X_IDEO}${L19FC}Ruritania" "an ideographic space and a full-width colon"
+l19x_assert "L19x-smallcolon" l19x-smallcolon "${L19S1}${L19X_SMC} Ruritania" "a small colon"
+l19x_assert "L19x-ratio" l19x-ratio "${L19S1}${L19X_RATIO} Ruritania" "a ratio sign for its colon"
+l19x_assert "L19x-wj" l19x-wj "${L19S1:0:4}${L19X_WJ}${L19S1:4}: Ruritania" "a word joiner inside the label"
+l19x_assert "L19x-lrm" l19x-lrm "${L19X_LRM}${L19S1}: Ruritania" "a left-to-right mark before the label"
+l19x_assert "L19x-esc" l19x-esc "${L19S1}\\: Ruritania" "a Markdown-escaped colon"
+l19x_assert "L19x-fwdigits" l19x-fwdigits "${L19S1}: $(printf '\357\274\221\357\274\222\357\274\223\357\274\224')" "a value in full-width digits alone, which the folding reads as stated"
+l19y_assert "L19y-wj" l19y-wj "$L19VX" "Doc X123${L19X_WJ}4567 on the day."
+l19y_assert "L19y-lrm" l19y-lrm "$L19VX" "Doc X123${L19X_LRM}4567 on the day."
+l19y_assert "L19y-vs" l19y-vs "$L19VX" "Doc X123${L19X_VS16}4567 on the day."
+l19y_assert "L19y-isolate" l19y-isolate "$L19VX" "Doc X123${L19X_LRI}4${L19X_PDI}567 on the day."
+
+# ── L19x-*-all / L19y-*-all — the folding over its whole classes, one verdict each. The members come from perl's
+# own Unicode database, intersected with what Unicode 13.0 assigns (the version the folding names), and never from
+# the publish script: every space separator but U+0020 before the colon, each colon of the named set, and every
+# format character and variation selector inside the selector, each stops by its label; every format character
+# and variation selector inside a value stops, matched exactly. Each member is run through _build_source_hits
+# itself, with the declared selector and a synthetic value, so a member the folding misses is named.
+l19_members() { # <Zs|Cf|VS|CO> -> one line per member: the character itself, in UTF-8
+  case "$1" in
+    CO) printf '\313\220\n\326\211\n\327\203\n\342\210\266\n\352\236\211\n\357\270\223\n\357\271\225\n\357\274\232\n' ;;
+    *)  perl -CO -e 'my $k = shift; my $re = $k eq "Zs" ? qr/\p{Zs}/ : $k eq "Cf" ? qr/\p{Cf}/ : qr/\p{Variation_Selector}/;
+          for my $c (0x80 .. 0x10FFFF) { next if $c >= 0xD800 && $c <= 0xDFFF; my $s = chr $c;
+            print "$s\n" if $s =~ $re && $s =~ /\p{Present_In: 13.0}/ }' "$1" ;;
+  esac
+}
+l19_sweep_assert() { # <id> <Zs|Cf|VS|CO> <label|exact>
+  local id="$1" cls="$2" how="$3" m n=0 bad="" got rc f="$L19W/$1.md" line
+  while IFS= read -r m; do
+    [ -n "$m" ] || continue
+    n=$((n+1))
+    case "$how:$cls" in
+      label:Zs|label:CO) line="${L19S1}${m}: Ruritania" ;;
+      label:*)           line="${L19S1:0:4}${m}${L19S1:4}: Ruritania" ;;
+      *)                 line="Bring X123${m}4567 to the desk." ;;
+    esac
+    printf '# Trip\n\n%s\n' "$line" > "$f"
+    got="$(BS_SELS="$L19S1" BS_VALS="$L19S1	$L19VX" _build_source_hits "$f" 2>/dev/null)"; rc=$?
+    if [ "$rc" -eq 127 ]; then bad="_build_source_hits is NOT DEFINED (rc=127) "; break; fi
+    case "$got" in
+      "3	${L19S1}	${how}") ;;
+      *) bad="${bad}[U+$(printf '%s' "$m" | perl -CI -ne 'printf "%04X", ord') rc=$rc '$(printf '%s' "$got" | tr '\t' ' ')'] " ;;
+    esac
+  done <<L19SWEEP
+$(l19_members "$cls")
+L19SWEEP
+  if [ -z "$L19S1" ]; then
+    FAIL "$id: the field declaration read no selector. VERDICT WITHHELD"
+  elif [ "$n" -lt 1 ]; then
+    FAIL "$id: the $cls oracle listed no member, so a clean sweep would be about nothing"
+  elif [ -n "$bad" ]; then
+    FAIL "$id: of $n $cls members, these did not stop by the ${how} half as the folding states — a value of the class would reach the page: ${bad% }"
+  else
+    PASS "$id: every $cls member the oracle lists ($n of $n, Unicode 13.0), placed in a bound line, stops by the ${how} half"
+  fi
+}
+L19_SWEEPS='L19x-zs-all:Zs:label L19x-colon-all:CO:label L19x-cf-all:Cf:label L19x-vs-all:VS:label L19y-cf-all:Cf:exact L19y-vs-all:VS:exact'
+for l19c in $L19_SWEEPS; do
+  l19r_="${l19c#*:}"; l19_sweep_assert "${l19c%%:*}" "${l19r_%%:*}" "${l19r_#*:}"
+done
+
+# ── L19i-bom* / L19i-nul / L19i-mark16le — a bound file the check cannot read as UTF-8 (S7P2-06): one opening with
+# a UTF-16 or UTF-32 byte-order mark, its passport line encoded behind it, or one holding a NUL byte after its
+# passport line, stops as present but unreadable, naming the file and never a value. The re-encoded files hold
+# NUL bytes, so each trips both halves of the byte test; L19i-mark16le is the file in UTF-8 behind a UTF-16LE
+# mark with no NUL byte, which pins the mark half alone, as L19i-nul pins the NUL half. L19i-lonecr is the file
+# with every line ended by a carriage return alone, holding no mark and no NUL byte, which pins the carriage-return
+# half alone: its label line is the label half's only subject, with no value source, so no exact match can stop
+# it. L19x-crlf, the same file in CRLF endings, is its control: it is read, and stops by its label.
+l19_eol_ok() { # <file> <lonecr|crlf> -> 0 when the file holds no byte-order mark and no NUL byte, and ends its
+  # lines as named: a carriage return alone on every line and no line feed, or CRLF on every line
+  local cr lf
+  case "$(LC_ALL=C od -An -tx1 -N4 "$1" | tr -d ' \n')" in efbbbf*|fffe*|feff*|0000feff) return 1 ;; esac
+  [ "$(($(wc -c < "$1")))" -eq "$(($(LC_ALL=C tr -d '\000' < "$1" | wc -c)))" ] || return 1
+  cr="$(($(LC_ALL=C tr -cd '\r' < "$1" | wc -c)))"; lf="$(($(LC_ALL=C tr -cd '\n' < "$1" | wc -c)))"
+  if [ "$2" = lonecr ]; then [ "$cr" -gt 0 ] && [ "$lf" -eq 0 ]; else [ "$lf" -gt 0 ] && [ "$cr" -eq "$lf" ]; fi
+}
+l19_enc() { # <file> <16le|16be|32le|32be> — the UTF-8 file re-encoded in place behind its mark
+  perl -MEncode -e 'local $/; open(my $i, "<:raw", $ARGV[0]) or die "unreadable\n"; my $s = decode("UTF-8", scalar <$i>); close $i;
+    my %e = ("16le" => ["\xFF\xFE", "UTF-16LE"], "16be" => ["\xFE\xFF", "UTF-16BE"], "32le" => ["\xFF\xFE\x00\x00", "UTF-32LE"], "32be" => ["\x00\x00\xFE\xFF", "UTF-32BE"]);
+    my $k = $e{$ARGV[1]} or die "no such mark\n"; open(my $o, ">:raw", $ARGV[0]) or die "unwritable\n"; print $o $k->[0], encode($k->[1], $s)' "$1" "$2"
+}
+l19enc_assert() { # <id> <16le|16be|32le|32be|nul|mark16le|lonecr|crlf>
+  local d; d="$(l19_trip "l19enc-$2")"
+  l19_put "$d" "$L19B1" '# Trip' '' "- **${L19S1}:** Ruritania"
+  case "$2" in
+    nul)      printf 'A quiet week\000 by the sea.\n' >> "$d/$L19B1" ;;
+    lonecr|crlf)
+              if [ "$2" = lonecr ]; then LC_ALL=C tr '\n' '\r' < "$d/$L19B1" > "$d/$L19B1.eol"
+              else LC_ALL=C awk '{ printf "%s\r\n", $0 }' "$d/$L19B1" > "$d/$L19B1.eol"; fi
+              mv -f "$d/$L19B1.eol" "$d/$L19B1"
+              if ! l19_eol_ok "$d/$L19B1" "$2"; then
+                FAIL "$1: fixture integrity — the planted bound file holds a byte-order mark or a NUL byte, or does not end its lines as $2 names, so this arm would not grade the line endings alone. VERDICT WITHHELD"
+                return 0
+              fi
+              if [ "$2" = crlf ]; then
+                l19_assert "$1" "a bound file saved with CRLF line endings is read as UTF-8 text, and its label line stops the publish by its label, never as unreadable" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} label with a value" "cannot be read|Ruritania"
+                return 0
+              fi ;;
+    mark16le) { printf '\377\376'; cat "$d/$L19B1"; } > "$d/$L19B1.mark"; mv -f "$d/$L19B1.mark" "$d/$L19B1"
+              if [ "$(LC_ALL=C od -An -tx1 -N2 "$d/$L19B1" | tr -d ' \n')" != fffe ] || [ "$(($(wc -c < "$d/$L19B1")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$d/$L19B1" | wc -c)))" ]; then
+                FAIL "$1: fixture integrity — the planted bound file does not open with the mark16le mark, or holds a NUL byte, so this arm would not grade the mark alone. VERDICT WITHHELD"
+                return 0
+              fi ;;
+    *)        l19_enc "$d/$L19B1" "$2" ;;
+  esac
+  l19_assert "$1" "a bound file that cannot be read as UTF-8 text ($2) stops the publish as present but unreadable, naming the file" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 is present but cannot be read" "Ruritania"
+}
+for l19c in 16le 16be 32le 32be; do l19enc_assert "L19i-bom$l19c" "$l19c"; done
+l19enc_assert "L19i-nul" nul
+l19enc_assert "L19i-mark16le" mark16le
+l19enc_assert "L19i-lonecr" lonecr
+l19enc_assert "L19x-crlf" crlf
+
+# ── L19i-harvest16 / L19i-src-* — a value source the check cannot read as UTF-8: each value-source kind (the
+# traveller profile, a person record its reference reaches, that record's merge target, the traveller model)
+# behind a UTF-16LE mark, the profile behind the other three marks, the profile in UTF-8 behind a UTF-16 mark
+# alone with no NUL byte anywhere (so the mark half is pinned apart from the NUL half; a UTF-32 mark itself holds
+# NUL bytes, so it cannot be), and a profile line holding a NUL byte inside its value, stops as present but
+# unreadable, naming the source by its scope as the declaration writes it, or as
+# `person record <id>`, and never by a file name or a value. Each plants a stated value in the source and the bare
+# value in a bound file, so a harvest that read the source would stop the publish matched exactly; the verdict
+# wanted is the unreadable one, on every host, because the bytes are tested before any awk reads the file (the
+# carriage-return half reads od's hex, never the file).
+# L19i-harvest16 is the earlier L19v-harvest16, flipped from a declared pass. The order arms put the value in the
+# person record a UTF-16 profile references, and stop under the shipped declaration and under one listing the
+# person scope first. The L19y-src-* twins are the same sources in UTF-8, one with a non-ASCII letter: each
+# harvests, and the bound file stops matched exactly, never as unreadable.
+# Each half of the byte test is pinned alone at each admission point: the mark half by a UTF-8 file behind a
+# UTF-16LE mark with no NUL byte (mark16le), the NUL half by a UTF-8 file holding one NUL byte (nul), each with
+# an integrity limb on the file it encodes. The person branch tests every traveller file it reads for a
+# reference, so under the shipped declaration a profile arm is caught at two points and pins neither alone: the
+# scope-file loop is pinned through the traveller model, which only that loop reads (L19i-src-model-*); the
+# person record and its merge target by L19i-src-person-* and L19i-src-merge-*; and the person branch's own read
+# of a traveller file under a scratch declaration that drops that file's field row and keeps the person store's
+# (L19i-src-pbranch-*, where a UTF-16, NUL-holding or UTF-16-marked traveller file whose reference reaches a UTF-8
+# record holding the value stops as unreadable, named by the traveller file's scope; L19y-src-pbranch, its UTF-8
+# twin, shows that declaration reaches the record). A traveller file, or a person record whose merge key reaches
+# its target, saved with a UTF-8 byte-order mark (bom8) or with CRLF line endings (crlf) resolves its reference
+# as its plain twin does and stops matched exactly: L19y-src-order-* against L19y-src-order-shipped, and
+# L19y-src-stub-* against L19y-src-merge. A value-source line is read the same way: L19y-src-comp-crlf, a
+# traveller file saved with CRLF endings whose value only the distinctive-component rule reaches (the word rule
+# drops a trailing carriage return, the component rule does not), stops matched exactly, as its UTF-8 twin
+# L19y-src-comp does. A first line read behind a UTF-8 mark is pinned through the traveller model
+# (L19y-src-model-line1-bom8, below) and a traveller file with no front matter (L19y-v0-line1-bom8, below).
+# A file whose lines end in a carriage return alone (lonecr), holding no mark and no NUL byte, is read by awk as
+# one line, so its reference, its labels and its merge key would go unread; it stops as unreadable instead, at
+# each admission point: the traveller file under the shipped declaration (L19i-src-order-lonecr, caught at two
+# points), the person record, the merge target and the traveller model (L19i-src-person-, -merge-, -model-lonecr,
+# each pinning its point alone), and the person branch's own read under the scratch declaration
+# (L19i-src-pbranch-lonecr). Each carries an integrity limb: no mark, no NUL byte, carriage returns and no line
+# feed. Its CRLF twin is read as today and stops matched exactly: L19y-src-order-crlf, L19y-src-person-, -merge-,
+# -model- and -pbranch-crlf. The person branch reads a present traveller file only when it is a readable regular
+# file, and stops as the scope-file loop does when it is not: L19i-src-pbranch-mode000 is a mode-000 traveller file
+# whose reference reaches a record holding the value, under the scratch declaration, where only the person branch
+# reads it. Its precondition limb skips it, saying why, where this run's user reads a mode-000 file.
+l19src_trip() { # <name> <profile|person|merge|stub|model|nul|order|latin|comp> <encoding, as l19src_assert takes it> -> trip dir
+  local d f st="${_GUARD_PERSON_STORE:-people}" rk="${_GUARD_REF_KEY:-person}" mk="${_GUARD_MERGE_KEY:-merged-into}"
+  local bl='Bring X1234567 to the desk.'
+  d="$(l19_trip "$1")"; f="$d/$L19_PROFILE"
+  case "$2" in
+    profile) l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X1234567" ;;
+    person)  f="$d/$st/psn-a9c1.md"
+             l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" '---' '# Rowan' '' '- Interests: markets'
+             l19_put "$d" "$st/psn-a9c1.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X1234567" ;;
+    merge)   f="$d/$st/psn-a9c2.md"
+             l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" '---' '# Rowan' '' '- Interests: markets'
+             l19_put "$d" "$st/psn-a9c1.md" '---' "$mk: psn-a9c2" '---' '# Rowan'
+             l19_put "$d" "$st/psn-a9c2.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X1234567" ;;
+    stub)    f="$d/$st/psn-a9c1.md"
+             l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" '---' '# Rowan' '' '- Interests: markets'
+             l19_put "$d" "$st/psn-a9c1.md" '---' "$mk: psn-a9c2" '---' '# Rowan'
+             l19_put "$d" "$st/psn-a9c2.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X1234567" ;;
+    model)   f="$d/$L19_MODEL"
+             l19_put "$d" "$L19_MODEL" '# Traveler Model [DERIVED]' '' '## Rowan' "- ${L19S1}: Ruritania, document no. X1234567" ;;
+    nul)     l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' ''
+             if [ "$3" = nul ]; then printf '%s: Ruritania\000, no. X1234567\n' "$L19S1" >> "$f"
+             else printf '%s: Ruritania, no. X1234567\n' "$L19S1" >> "$f"; fi ;;
+    order)   l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" '---' '# Rowan' '' '- Interests: markets'
+             l19_put "$d" "$st/psn-a9c1.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X1234567" ;;
+    latin)   l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritani$(printf '\303\251') Gro$(printf '\303\237')mark, document no. X1234567" ;;
+    comp)    l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, valid through May 2032"
+             bl='Remember: valid through May 2032 is the date to watch.' ;;
+  esac
+  l19_put "$d" "$L19B1" '# Trip' '' "$bl"
+  case "$3" in
+    utf8) ;;
+    nul) [ "$2" = nul ] || printf 'A quiet week\000 by the sea.\n' >> "$f" ;;
+    mark16le|mark16be) { if [ "$3" = mark16le ]; then printf '\377\376'; else printf '\376\377'; fi; cat "$f"; } > "$f.mark"
+                       mv -f "$f.mark" "$f" ;;
+    bom8) { printf '\357\273\277'; cat "$f"; } > "$f.mark"; mv -f "$f.mark" "$f" ;;
+    crlf) LC_ALL=C awk '{ printf "%s\r\n", $0 }' "$f" > "$f.crlf"; mv -f "$f.crlf" "$f" ;;
+    lonecr) LC_ALL=C tr '\n' '\r' < "$f" > "$f.eol"; mv -f "$f.eol" "$f" ;;
+    mode000) chmod 000 "$f" ;;
+    *) l19_enc "$f" "$3" ;;
+  esac
+  printf '%s' "$d"
+}
+l19src_assert() { # <id> <kind> <16le|16be|32le|32be|mark16le|mark16be|nul|utf8|bom8|crlf|lonecr|mode000> [the declaration order, for the order kind]
+  local id="$1" k="$2" e="$3" o="${4:-}" d sc mk ef why="" st="${_GUARD_PERSON_STORE:-people}" nv=X1234567
+  [ "$k" != comp ] || nv='May 2032'
+  d="$(l19src_trip "l19src-$k-$e${o:+-$o}" "$k" "$e")"
+  case "$k" in
+    person|stub) ef="$d/$st/psn-a9c1.md" ;;
+    merge)       ef="$d/$st/psn-a9c2.md" ;;
+    model)       ef="$d/$L19_MODEL" ;;
+    *)           ef="$d/$L19_PROFILE" ;;
+  esac
+  case "$e" in
+    mark16le|mark16be)
+      mk=feff; [ "$e" = mark16le ] && mk=fffe
+      if [ "$(LC_ALL=C od -An -tx1 -N2 "$ef" | tr -d ' \n')" != "$mk" ] || [ "$(($(wc -c < "$ef")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$ef" | wc -c)))" ]; then
+        why="does not open with the $e mark, or holds a NUL byte, so this arm would not grade the mark alone"
+      fi ;;
+    nul)
+      case "$(LC_ALL=C od -An -tx1 -N4 "$ef" | tr -d ' \n')" in fffe*|feff*|0000feff) why="opens with a UTF-16 or UTF-32 mark, so this arm would not grade the NUL byte alone" ;; esac
+      [ "$(($(wc -c < "$ef") - $(LC_ALL=C tr -d '\000' < "$ef" | wc -c)))" -eq 1 ] || why="does not hold exactly one NUL byte, so this arm would not grade the NUL half as it names" ;;
+    bom8)
+      if [ "$(LC_ALL=C od -An -tx1 -N3 "$ef" | tr -d ' \n')" != efbbbf ] || [ "$(($(wc -c < "$ef")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$ef" | wc -c)))" ]; then
+        why="does not open with a UTF-8 byte-order mark, or holds a NUL byte, so this arm would not grade the mark it names"
+      fi ;;
+    crlf)
+      if [ "$(($(LC_ALL=C tr -cd '\r' < "$ef" | wc -c)))" -ne "$(($(LC_ALL=C tr -cd '\n' < "$ef" | wc -c)))" ] || [ "$(($(LC_ALL=C tr -cd '\n' < "$ef" | wc -c)))" -eq 0 ]; then
+        why="does not end every line with CRLF, so this arm would not grade the line endings it names"
+      fi ;;
+    lonecr)
+      l19_eol_ok "$ef" lonecr || why="holds a byte-order mark or a NUL byte, or does not end its lines in a carriage return alone, so this arm would not grade the carriage-return half alone" ;;
+    mode000)
+      if [ ! -e "$ef" ]; then why="is missing, so this arm would grade no unreadable file"
+      elif [ -r "$ef" ]; then
+        SKIP "$id: this run's user reads a mode-000 file (root, or a capability that reads through file modes), so there is no unreadable traveller file to grade; the arm needs a user that mode 000 shuts out, as CI's is"
+        return 0
+      fi ;;
+  esac
+  if [ -n "$why" ]; then
+    FAIL "$id: fixture integrity — the planted file $why. VERDICT WITHHELD"
+    return 0
+  fi
+  case "$k" in
+    person) sc="person record psn-a9c1" ;;
+    merge)  sc="person record psn-a9c2" ;;
+    model)  sc="$L19_MODEL" ;;
+    *)      sc="${_GUARD_DECL_ARTIFACT_PROFILE:-?}" ;;
+  esac
+  if [ "$e" = utf8 ]; then
+    l19_assert "$id" "the same value source ($k${o:+, $o declaration}) in UTF-8 harvests, and the bound file stops the publish matched exactly, never as unreadable" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} value, matched exactly" "cannot be read|$nv"
+  elif [ "$e" = bom8 ] || [ "$e" = crlf ]; then
+    l19_assert "$id" "a value source saved with a UTF-8 byte-order mark or CRLF line endings ($k, $e${o:+, $o declaration}) is read as its UTF-8 twin is, and the bound file stops the publish matched exactly, never passing and never as unreadable" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} value, matched exactly" "cannot be read|$nv"
+  else
+    l19_assert "$id" "a value source that cannot be read as UTF-8 text ($k, $e${o:+, $o declaration}) stops the publish as present but unreadable, named as ${sc}, never by a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source ${sc} is present but cannot be read as UTF-8 text" "matched exactly|label with a value|(a person reference|Ruritania|X1234567|rowan|psn-a9c1.md|psn-a9c2.md"
+  fi
+}
+# The person-first declaration: the live rows, the person scope's field rows moved ahead of every other row.
+L19DECL_PFIRST="$L19W/decl-person-first.md"
+{ _guard_declared_rows | awk -v P="${_GUARD_DECL_ARTIFACT_PERSON:-}" '$1 == "field" && $3 == P'
+  _guard_declared_rows | awk -v P="${_GUARD_DECL_ARTIFACT_PERSON:-}" '!($1 == "field" && $3 == P)'; } | ldecl_write "$L19DECL_PFIRST"
+# The no-profile declaration: the live rows without the traveller file's field rows, the person store's kept, so
+# the traveller file is read only by the person branch, for its reference.
+L19DECL_NOPROF="$L19W/decl-no-profile.md"
+_guard_declared_rows | awk -v P="${_GUARD_DECL_ARTIFACT_PROFILE:-}" '!($1 == "field" && $3 == P)' | ldecl_write "$L19DECL_NOPROF"
+l19src_order_assert() { # <id> <shipped|person-first|noprofile> <16le|utf8|nul|mark16le|lonecr|crlf|mode000>
+  local id="$1" o="$2" e="$3" pre="" want first cand rows np nr
+  want="${_GUARD_DECL_ARTIFACT_PROFILE:-}"
+  if [ "$o" = person-first ]; then pre="_GUARD_DECLARATION=\"$L19DECL_PFIRST\""; want="${_GUARD_DECL_ARTIFACT_PERSON:-}"; fi
+  if [ "$o" = noprofile ]; then pre="_GUARD_DECLARATION=\"$L19DECL_NOPROF\""; fi
+  first="$( [ -z "$pre" ] || eval "$pre"; _guard_declared_rows | awk '$1 == "field" && !n++ { print $3 }')"
+  cand="$( [ -z "$pre" ] || eval "$pre"; _guard_declared_candidates)"
+  rows="$( [ -z "$pre" ] || eval "$pre"; _guard_declared_rows | awk 'NF { c++ } END { print c + 0 }')"
+  np="$( [ -z "$pre" ] || eval "$pre"; _guard_declared_rows | awk -v P="${_GUARD_DECL_ARTIFACT_PROFILE:-}" '$1 == "field" && $3 == P { c++ } END { print c + 0 }')"
+  nr="$( [ -z "$pre" ] || eval "$pre"; _guard_declared_rows | awk -v P="${_GUARD_DECL_ARTIFACT_PERSON:-}" '$1 == "field" && $3 == P { c++ } END { print c + 0 }')"
+  if [ "$o" = noprofile ]; then
+    if [ -z "${_GUARD_DECL_ARTIFACT_PROFILE:-}" ] || [ "${np:-1}" -ne 0 ] || [ "${nr:-0}" -lt 1 ] || [ "${cand:-0}" != "$rows" ]; then
+      FAIL "$id: fixture integrity — under the $o declaration ${np:-?} field row(s) scope the traveller file (want 0) and ${nr:-?} the person store (want at least 1), with ${cand:-0} candidate row(s) against $rows read, so this arm would not grade the person branch's own read. VERDICT WITHHELD"
+    else
+      L19_PRE="$pre" l19src_assert "$id" order "$e" "$o"
+    fi
+  elif [ -z "$want" ] || [ "$first" != "$want" ] || [ "${cand:-0}" != "$rows" ]; then
+    FAIL "$id: fixture integrity — under the $o declaration the first field scope reads '$first' (want '$want'), with ${cand:-0} candidate row(s) against $rows read, so this arm would not grade the order it names. VERDICT WITHHELD"
+  else
+    L19_PRE="$pre" l19src_assert "$id" order "$e" "$o"
+  fi
+}
+l19src_assert "L19i-harvest16" profile 16le
+for l19c in person merge model; do l19src_assert "L19i-src-$l19c-16le" "$l19c" 16le; done
+for l19c in 16be 32le 32be mark16le mark16be; do l19src_assert "L19i-src-profile-$l19c" profile "$l19c"; done
+l19src_assert "L19i-src-nul" nul nul
+for l19c in shipped person-first; do l19src_order_assert "L19i-src-order-$l19c" "$l19c" 16le; done
+for l19c in profile person merge model nul latin; do l19src_assert "L19y-src-$l19c" "$l19c" utf8; done
+for l19c in shipped person-first; do l19src_order_assert "L19y-src-order-$l19c" "$l19c" utf8; done
+for l19c in person merge model; do for l19e in mark16le nul; do l19src_assert "L19i-src-$l19c-$l19e" "$l19c" "$l19e"; done; done
+for l19c in 16le nul mark16le; do l19src_order_assert "L19i-src-pbranch-$l19c" noprofile "$l19c"; done
+l19src_order_assert "L19y-src-pbranch" noprofile utf8
+for l19c in bom8 crlf; do for l19e in order stub; do l19src_assert "L19y-src-$l19e-$l19c" "$l19e" "$l19c"; done; done
+l19src_assert "L19y-src-comp" comp utf8
+l19src_assert "L19y-src-comp-crlf" comp crlf
+for l19c in order person merge model; do l19src_assert "L19i-src-$l19c-lonecr" "$l19c" lonecr; done
+for l19c in person merge model; do l19src_assert "L19y-src-$l19c-crlf" "$l19c" crlf; done
+l19src_order_assert "L19i-src-pbranch-lonecr" noprofile lonecr
+l19src_order_assert "L19y-src-pbranch-crlf" noprofile crlf
+L19_M000=0; l19m0="$L19W/mode000-probe"; printf 'probe\n' > "$l19m0"; chmod 000 "$l19m0"; [ ! -r "$l19m0" ] || L19_M000=1
+l19src_order_assert "L19i-src-pbranch-mode000" noprofile mode000
+
+# ── L19i-src-ref-* / L19c-ref-* / L19y-src-mark-* — a person reference the reader cannot reach, and marker lines
+# followed by whitespace. The reader takes a traveller file's reference from front matter opening on its first
+# line, with the key at the start of its line and the colon straight after it. A reference written any other way
+# reaches a record holding the value and stops as unreadable, naming the traveller scope and what it found, never
+# a file name or a value: front matter after a blank first line; the key indented by spaces, or by a tab with a
+# tab before its colon; the key spaced before its colon, or quoted in either quote; or an empty key whose value is
+# continued beneath it, on an indented sequence entry, on one at the start of its line, or past a blank line and a
+# comment. Each of these now stops through the front-matter check below: the blank first line by its line-1
+# branch, which reads such a file whole and finds the key at a line's start, and every other by the shape gate's
+# line test. The controls pass: a traveller file with no reference key; a block without the key whose body carries a
+# line starting with it, which is prose; and an empty key with nothing beneath it, the ruling, which reads as YAML
+# reads it, no value. A marker line followed by spaces or a tab reads as the marker: an opener
+# (L19y-src-mark-open) and a closer (L19y-src-mark-close, whose body carries a second reference that a reader
+# missing the closer would also take) resolve and stop matched exactly, as their plain twins
+# L19y-src-order-shipped and L19y-src-mark-plain do. A person record's merge key is read the same way: a record
+# whose merge key is indented (L19i-src-stub-ref-indent), or whose front matter follows a blank first line
+# (L19i-src-stub-ref-blanklead), with its target holding the value, stops as unreadable, named as the record and
+# by what was found; a record whose body carries a line starting with the merge key (L19c-ref-stub-body) passes,
+# its target unread. Two more controls pass, each pinning a boundary of that reading: a body line after a block
+# that closes, holding the key indented (L19c-ref-body-indent: the read ends at the closer); and a key that only
+# begins with the reference key's letters (L19c-ref-prefix: the colon must follow the key).
+l19ref_trip() { # <name> <shape> -> trip dir: a traveller file of that shape, a record its reference names holding the value, and the bare value in a bound file
+  local d st="${_GUARD_PERSON_STORE:-people}" rk="${_GUARD_REF_KEY:-person}" mk="${_GUARD_MERGE_KEY:-merged-into}" tb; tb="$(printf '\t')"
+  d="$(l19_trip "$1")"
+  l19_put "$d" "$st/psn-a9c1.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X1234567"
+  l19_put "$d" "$L19B1" '# Trip' '' 'Bring X1234567 to the desk.'
+  case "$2" in
+    blanklead)  l19_put "$d" "$L19_PROFILE" '' '---' "$rk: psn-a9c1" '---' '# Rowan' ;;
+    indent)     l19_put "$d" "$L19_PROFILE" '---' "  $rk: psn-a9c1" '---' '# Rowan' ;;
+    tab)        l19_put "$d" "$L19_PROFILE" '---' "$tb$rk$tb: psn-a9c1" '---' '# Rowan' ;;
+    spacecolon) l19_put "$d" "$L19_PROFILE" '---' "$rk : psn-a9c1" '---' '# Rowan' ;;
+    dquote)     l19_put "$d" "$L19_PROFILE" '---' "\"$rk\": psn-a9c1" '---' '# Rowan' ;;
+    squote)     l19_put "$d" "$L19_PROFILE" '---' "'$rk': psn-a9c1" '---' '# Rowan' ;;
+    list)       l19_put "$d" "$L19_PROFILE" '---' "$rk:" '  - psn-a9c1' '---' '# Rowan' ;;
+    list0)      l19_put "$d" "$L19_PROFILE" '---' "$rk:" '- psn-a9c1' '---' '# Rowan' ;;
+    gap)        l19_put "$d" "$L19_PROFILE" '---' "$rk:" '' '# the lead traveller' '  - psn-a9c1' '---' '# Rowan' ;;
+    nokey)      l19_put "$d" "$L19_PROFILE" '---' 'name: Rowan' '---' '# Rowan' ;;
+    body)       l19_put "$d" "$L19_PROFILE" '---' 'name: Rowan' '---' '# Rowan' '' "$rk: psn-a9c1" ;;
+    empty)      l19_put "$d" "$L19_PROFILE" '---' "$rk:" 'name: Rowan' '---' '# Rowan' ;;
+    mark-open)  l19_put "$d" "$L19_PROFILE" '---  ' "$rk: psn-a9c1" '---' '# Rowan' ;;
+    mark-close) l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" "---$tb" '# Rowan' '' "$rk: psn-a9c5" ;;
+    mark-plain) l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" '---' '# Rowan' '' "$rk: psn-a9c5" ;;
+    body-indent) l19_put "$d" "$L19_PROFILE" '---' 'name: Rowan' '---' '# Rowan' '' "  $rk: psn-a9c1" ;;
+    prefix)     l19_put "$d" "$L19_PROFILE" '---' "${rk}al: psn-a9c1" '---' '# Rowan' ;;
+    stub-*)     l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" '---' '# Rowan'
+                l19_put "$d" "$st/psn-a9c2.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X1234567"
+                case "$2" in
+                  stub-indent)    l19_put "$d" "$st/psn-a9c1.md" '---' "  $mk: psn-a9c2" '---' '# Rowan' ;;
+                  stub-blanklead) l19_put "$d" "$st/psn-a9c1.md" '' '---' "$mk: psn-a9c2" '---' '# Rowan' ;;
+                  stub-body)      l19_put "$d" "$st/psn-a9c1.md" '---' '---' '# Rowan' '' "$mk: psn-a9c2" ;;
+                esac ;;
+  esac
+  printf '%s' "$d"
+}
+l19ref_assert() { # <id> <shape> <stop|stopm|pass|exact>
+  local id="$1" d sc="${_GUARD_DECL_ARTIFACT_PROFILE:-?}"; d="$(l19ref_trip "l19ref-$2" "$2")"
+  case "$3" in
+    stop)  l19_assert "$id" "a person reference the reader cannot reach ($2) stops the publish, naming the traveller scope and what it found, never a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source $sc (a person reference the check could not read from front matter opening on the first line) is present" "matched exactly|label with a value|$sc is present|Ruritania|X1234567|rowan|psn-a9c1" ;;
+    stopm) l19_assert "$id" "a merge key the reader cannot reach ($2) stops the publish, naming the person record and what it found, never a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source person record psn-a9c1 (a merge key the check could not read from front matter opening on the first line) is present" "matched exactly|label with a value|psn-a9c1 is present|Ruritania|X1234567|rowan|psn-a9c2" ;;
+    pass)  l19_assert "$id" "the control ($2) carries no person reference the reader cannot reach: it passes, and the record no reference reaches is not read" "$d" 0 "Source check:" "STOPPED" ;;
+    exact) l19_assert "$id" "a marker line followed by whitespace ($2) reads as the marker: the reference resolves, and the bound file stops the publish matched exactly, as its plain twin does" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} value, matched exactly" "cannot be read|X1234567" ;;
+  esac
+}
+for l19c in blanklead indent tab spacecolon dquote squote list list0 gap; do l19ref_assert "L19i-src-ref-$l19c" "$l19c" stop; done
+for l19c in nokey body empty; do l19ref_assert "L19c-ref-$l19c" "$l19c" pass; done
+for l19c in mark-open mark-close mark-plain; do l19ref_assert "L19y-src-$l19c" "$l19c" exact; done
+for l19c in indent blanklead; do l19ref_assert "L19i-src-stub-ref-$l19c" "stub-$l19c" stopm; done
+l19ref_assert "L19c-ref-stub-body" stub-body pass
+for l19c in body-indent prefix; do l19ref_assert "L19c-ref-$l19c" "$l19c" pass; done
+
+# ── L19i-src-shape-* / L19i-src-stub-shape-* / L19z-hop2-shape-* / L19c-shape-* / L19y-src-model-line1* — the
+# front-matter shape gate. A reference is read only from front matter opening on the first line, every line of
+# which up to its closer is blank, a comment, or a plain key line: at column 0 a letter, digit or `_`, then
+# letters, digits, `_`, `.` or `-`, then a colon followed by a space, a tab or the line's end, holding none of
+# U+0085, U+2028 and U+2029, which a YAML 1.1 reader takes as line breaks. On such lines the top-level keys are
+# exactly the literal keys, and the reader reads every one. A traveller file whose front matter a YAML reader
+# resolves to a person reference reaching a record holding the value, written any other way — a flow mapping, an
+# explicit key, a tag or an anchor on the key, an escaped key, a quoted duplicate of a plain key (YAML keeps the
+# last), a merge key, a `...` closer, the key after one of those three characters in a value or a comment — stops,
+# naming the traveller scope and what was found, never a file name or a value (L19i-src-shape-*). Two more stop as
+# rulings rather than as YAML references: an indented line under another key (-seq), and a key with no space after
+# its colon (-nospace). A person record's merge key in a flow mapping or an explicit key stops, named as the record
+# (L19i-src-stub-shape-*); the same on a merge target, whose key is never followed, is named as a longer chain, as
+# its plain twin is (L19z-hop2-shape-*). A traveller file, person record or merge target with no front matter on
+# its first line, holding no person id and no line that starts with the key, is a version-0 file and passes, named
+# in no note (L19c-v0-nofm, -stub-nofm, -hop-nofm; the family below). The controls pass: a key nested under another (YAML reads it under
+# `trip`, so not the reference), the eight universal keys alone, a comment line holding the key, the key in
+# another case (YAML keys are case-sensitive), blank and whitespace-only lines, and a tab after a colon. A
+# traveller model whose first line is a label, plain or behind a UTF-8 byte-order mark, harvests, and the bound
+# file stops matched exactly (L19y-src-model-line1*): the model is read by the scope-file loop alone.
+l19shape_trip() { # <name> <shape> -> trip dir: a traveller file (or record, or target) of that shape, the records it may reach, and the bare value in a bound file
+  local d st="${_GUARD_PERSON_STORE:-people}" rk="${_GUARD_REF_KEY:-person}" mk="${_GUARD_MERGE_KEY:-merged-into}" tb ls ps nel rx rc0
+  tb="$(printf '\t')"; ls="$(printf '\342\200\250')"; ps="$(printf '\342\200\251')"; nel="$(printf '\302\205')"
+  rx="\\x$(printf '%x' "'${rk:0:1}")${rk:1}"; rc0="$(printf '%s' "${rk:0:1}" | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')${rk:1}"
+  d="$(l19_trip "$1")"
+  l19_put "$d" "$st/psn-a9d1.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X5813024"
+  l19_put "$d" "$st/psn-a9d2.md" '---' '---' '# Rowan' '' '- Interests: markets'
+  l19_put "$d" "$L19B1" '# Trip' '' 'Bring X5813024 to the desk.'
+  case "$2" in
+    flow)      l19_put "$d" "$L19_PROFILE" '---' "{$rk: psn-a9d1}" '---' '# Rowan' ;;
+    qkey)      l19_put "$d" "$L19_PROFILE" '---' "? $rk" ': psn-a9d1' '---' '# Rowan' ;;
+    tag)       l19_put "$d" "$L19_PROFILE" '---' "!!str $rk: psn-a9d1" '---' '# Rowan' ;;
+    anchor)    l19_put "$d" "$L19_PROFILE" '---' "&a $rk: psn-a9d1" '---' '# Rowan' ;;
+    esc)       l19_put "$d" "$L19_PROFILE" '---' "\"$rx\": psn-a9d1" '---' '# Rowan' ;;
+    dup)       l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9d2" "\"$rk\": psn-a9d1" '---' '# Rowan' ;;
+    merge)     l19_put "$d" "$L19_PROFILE" '---' "<<: {$rk: psn-a9d1}" '---' '# Rowan' ;;
+    dots)      l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9d1" '...' '# Rowan' ;;
+    ls)        l19_put "$d" "$L19_PROFILE" '---' "name: Rowan$ls$rk: psn-a9d1" '---' '# Rowan' ;;
+    ps)        l19_put "$d" "$L19_PROFILE" '---' "name: Rowan$ps$rk: psn-a9d1" '---' '# Rowan' ;;
+    nel)       l19_put "$d" "$L19_PROFILE" '---' "name: Rowan$nel$rk: psn-a9d1" '---' '# Rowan' ;;
+    lscomment) l19_put "$d" "$L19_PROFILE" '---' "# the lead traveller$ls$rk: psn-a9d1" '---' '# Rowan' ;;
+    nofm)      l19_put "$d" "$L19_PROFILE" '# Rowan' '' '- Interests: markets' ;;
+    seq)       l19_put "$d" "$L19_PROFILE" '---' "$rk:" 'name:' '  - Rowan' '---' '# Rowan' ;;
+    nospace)   l19_put "$d" "$L19_PROFILE" '---' "$rk:psn-a9d1" '---' '# Rowan' ;;
+    nested)    l19_put "$d" "$L19_PROFILE" '---' "trip: {$rk: psn-a9d1}" '---' '# Rowan' ;;
+    univ)      l19_put "$d" "$L19_PROFILE" '---' "artifact: $L19_PROFILE" 'schema-version: 1' 'trip: zq-2031' 'writer: human' \
+                 'lifecycle: persist-mutable' 'provenance: human' 'publish: internal' 'generated: 2031-01-05' '---' '# Rowan' ;;
+    comment)   l19_put "$d" "$L19_PROFILE" '---' "# $rk: psn-a9d1" '  # the lead traveller' 'trip: zq-2031' '---' '# Rowan' ;;
+    case)      l19_put "$d" "$L19_PROFILE" '---' "$rc0: psn-a9d1" '---' '# Rowan' ;;
+    blank)     l19_put "$d" "$L19_PROFILE" '---' 'trip: zq-2031' '' "  $tb" 'writer: human' '---' '# Rowan' ;;
+    tab)       l19_put "$d" "$L19_PROFILE" '---' "trip:${tb}zq-2031" '---' '# Rowan' ;;
+    stub-*)    l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9d3" '---' '# Rowan'
+               l19_put "$d" "$st/psn-a9d4.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X5813024"
+               case "$2" in
+                 stub-flow) l19_put "$d" "$st/psn-a9d3.md" '---' "{$mk: psn-a9d4}" '---' '# Rowan' ;;
+                 stub-qkey) l19_put "$d" "$st/psn-a9d3.md" '---' "? $mk" ': psn-a9d4' '---' '# Rowan' ;;
+                 stub-nofm) l19_put "$d" "$st/psn-a9d3.md" '# Rowan' '' '- Interests: markets' ;;
+               esac ;;
+    hop-*)     l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9d5" '---' '# Rowan'
+               l19_put "$d" "$st/psn-a9d5.md" '---' "$mk: psn-a9d6" '---' '# Rowan'
+               l19_put "$d" "$st/psn-a9d7.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X5813024"
+               case "$2" in
+                 hop-flow) l19_put "$d" "$st/psn-a9d6.md" '---' "{$mk: psn-a9d7}" '---' '# Rowan' ;;
+                 hop-qkey) l19_put "$d" "$st/psn-a9d6.md" '---' "? $mk" ': psn-a9d7' '---' '# Rowan' ;;
+                 hop-nofm) l19_put "$d" "$st/psn-a9d6.md" '# Rowan' '' '- Interests: markets' ;;
+               esac ;;
+    mline1*)   l19_put "$d" "$L19_MODEL" "- **${L19S1}:** Ruritania, document no. X5813024" '' '## Rowan'
+               [ "$2" != mline1-bom8 ] || { { printf '\357\273\277'; cat "$d/$L19_MODEL"; } > "$d/$L19_MODEL.mark"; mv -f "$d/$L19_MODEL.mark" "$d/$L19_MODEL"; } ;;
+  esac
+  printf '%s' "$d"
+}
+l19shape_assert() { # <id> <shape> <v0|stop|stopm|hop|pass|exact>
+  local id="$1" d sc="${_GUARD_DECL_ARTIFACT_PROFILE:-?}"; d="$(l19shape_trip "l19shape-$2" "$2")"
+  if [ "$2" = mline1-bom8 ] && [ "$(LC_ALL=C od -An -tx1 -N3 "$d/$L19_MODEL" | tr -d ' \n')" != efbbbf ]; then
+    FAIL "$id: fixture integrity — the planted traveller model does not open with a UTF-8 byte-order mark, so this arm would not grade the mark it names. VERDICT WITHHELD"
+    return 0
+  fi
+  case "$3" in
+    v0)    l19_assert "$id" "a file with no front matter on its first line ($2), holding no person id and no line that starts with the key, is read as version 0, carrying no reference: it passes, named in no note, and the record it does not reference is not read" "$d" 0 "Source check:" "STOPPED|X5813024|a merge chain longer than one hop" ;;
+    stop)  l19_assert "$id" "a traveller file whose front matter is not read as plain key lines ($2) stops the publish, naming the traveller scope and what it found, never a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source $sc (a person reference the check could not read from front matter opening on the first line) is present" "matched exactly|label with a value|$sc is present|Ruritania|X5813024|rowan|psn-a9d1|psn-a9d2" ;;
+    stopm) l19_assert "$id" "a person record whose front matter is not read as plain key lines ($2) stops the publish, naming the record and what it found, never a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source person record psn-a9d3 (a merge key the check could not read from front matter opening on the first line) is present" "matched exactly|label with a value|psn-a9d3 is present|Ruritania|X5813024|rowan|psn-a9d4" ;;
+    hop)   l19_assert "$id" "a merge target whose front matter is not read as plain key lines ($2) is named in the NOTE for a longer chain, as its plain twin is, rather than read as clean" "$d" 0 "Source check:|a merge chain longer than one hop" "STOPPED|X5813024" ;;
+    pass)  l19_assert "$id" "the control ($2) is front matter of plain key lines carrying no top-level reference: it passes, and the record its text names is not read" "$d" 0 "Source check:" "STOPPED|X5813024" ;;
+    exact) l19_assert "$id" "a traveller model whose first line is a label ($2) harvests, and the bound file stops the publish matched exactly, never as unreadable" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} value, matched exactly" "cannot be read|X5813024" ;;
+  esac
+}
+for l19c in flow qkey tag anchor esc dup merge dots ls ps nel lscomment seq nospace; do l19shape_assert "L19i-src-shape-$l19c" "$l19c" stop; done
+for l19c in flow qkey; do l19shape_assert "L19i-src-stub-shape-$l19c" "stub-$l19c" stopm; done
+for l19c in flow qkey; do l19shape_assert "L19z-hop2-shape-$l19c" "hop-$l19c" hop; done
+for l19c in nofm stub-nofm hop-nofm; do l19shape_assert "L19c-v0-$l19c" "$l19c" v0; done
+for l19c in nested univ comment case blank tab; do l19shape_assert "L19c-shape-$l19c" "$l19c" pass; done
+for l19c in mline1 mline1-bom8; do l19shape_assert "L19y-src-model-${l19c#m}" "$l19c" exact; done
+
+# ── L19c-v0-* / L19y-v0-* / L19i-v0-* / L19z-v0-hop-* / L19v-v0-esc / L19c-read-empty* — a file with no front matter
+# on its first line. It is a version-0 file (reference/data-architecture.md § 7.2): it is read as carrying no
+# reference, and its values are harvested as any file's are. So a traveller file holding the value its own label
+# states, after a heading, after a body `---` rule, or on its first line, plain or behind a UTF-8 byte-order mark,
+# harvests it, and the bound file stops matched exactly (L19y-v0-*), as a person record with no front matter
+# harvests its own; and the boundaries of rule (b) pass (L19c-v0-*): a key that only begins with the reference
+# key's letters, another key line, an empty key with spaces and a tab after it, an empty key whose next line is
+# prose (an indented line past it is not attributed to it), and an empty key past whose whitespace-only line and
+# indented comment the next line is prose. Such a file stops, named as a front-matter failure is, when a line holds
+# a minted person id — beside `---` on the first line, or in a sentence — or a line opening with the key, indented
+# or quoted, carries a value on it or on the next line that is neither blank nor a comment, indented or as a
+# sequence entry (L19i-v0-*): plain; with an escaped id only rule (b) reads, indented, after
+# a tab with a tab before its colon, spaced before its colon, quoted in either quote, or empty with its value
+# continued on an indented entry, on one at the start of its line (a space or a tab after the dash), past a bare
+# `-`, or past a blank line and a comment, the entry indented by a tab; and under a `----` opener. A person record
+# stops (L19i-v0-stub-*), and a merge target is named as a longer chain (L19z-v0-hop-*), on the same clauses read
+# for the merge key. The tenth declared residual holds (L19v-v0-esc): a person reference in a flow mapping on the
+# first line, its id escaped, passes, though a YAML reader resolves it. Front matter whose read is empty adds no
+# note for a reference or a merge target that is not there (L19c-read-empty, -empty-stub).
+l19v0_trip() { # <name> <shape> -> trip dir: a traveller file, record or merge target of that shape, the records it may reach, and the bare value in a bound file
+  local d st="${_GUARD_PERSON_STORE:-people}" rk="${_GUARD_REF_KEY:-person}" mk="${_GUARD_MERGE_KEY:-merged-into}" tb v ex
+  tb="$(printf '\t')"; v="- **${L19S1}:** Ruritania, document no. X6205917"; ex='"\x70sn-a9e1"'
+  d="$(l19_trip "$1")"
+  l19_put "$d" "$st/psn-a9e1.md" '---' '---' '# Rowan' '' "$v"
+  l19_put "$d" "$L19B1" '# Trip' '' 'Bring X6205917 to the desk.'
+  case "$2" in
+    rule)         l19_put "$d" "$L19_PROFILE" '# Rowan' '' '---' '' '- Interests: markets' ;;
+    harvest)      l19_put "$d" "$L19_PROFILE" '# Rowan' '' "$v" ;;
+    harvest-rule) l19_put "$d" "$L19_PROFILE" '# Rowan' '' '---' '' "$v" ;;
+    line1*)       l19_put "$d" "$L19_PROFILE" "$v" '' '# Rowan'
+                  [ "$2" != line1-bom8 ] || { { printf '\357\273\277'; cat "$d/$L19_PROFILE"; } > "$d/$L19_PROFILE.mark"; mv -f "$d/$L19_PROFILE.mark" "$d/$L19_PROFILE"; } ;;
+    prefix)       l19_put "$d" "$L19_PROFILE" '# Rowan' '' "${rk}al: Rowan" ;;
+    otherkey)     l19_put "$d" "$L19_PROFILE" '# Rowan' '' 'budget: moderate' ;;
+    empty)        l19_put "$d" "$L19_PROFILE" '# Rowan' '' "$rk:  $tb" 'name: Rowan' ;;
+    reset)        l19_put "$d" "$L19_PROFILE" '# Rowan' '' "$rk:" 'Likes window seats.' '    an indented aside' ;;
+    skip)         l19_put "$d" "$L19_PROFILE" '# Rowan' '' "$rk:" "  $tb" " $tb# an aside" 'Likes window seats.' ;;
+    flow1)        l19_put "$d" "$L19_PROFILE" "--- {$rk: psn-a9e1}" '# Rowan' ;;
+    prose)        l19_put "$d" "$L19_PROFILE" '# Rowan' '' 'Travels with psn-a9e1 this year.' ;;
+    key)          l19_put "$d" "$L19_PROFILE" '# Rowan' '' "$rk: psn-a9e1" ;;
+    esc-key)      l19_put "$d" "$L19_PROFILE" '# Rowan' '' "$rk: $ex" ;;
+    esc-indent)   l19_put "$d" "$L19_PROFILE" '# Rowan' '' "  $rk: $ex" ;;
+    esc-tab)      l19_put "$d" "$L19_PROFILE" '# Rowan' '' "$tb$rk$tb: $ex" ;;
+    esc-spacecolon) l19_put "$d" "$L19_PROFILE" '# Rowan' '' "$rk : $ex" ;;
+    esc-dquote)   l19_put "$d" "$L19_PROFILE" '# Rowan' '' "\"$rk\": $ex" ;;
+    esc-squote)   l19_put "$d" "$L19_PROFILE" '# Rowan' '' "'$rk': $ex" ;;
+    esc-list)     l19_put "$d" "$L19_PROFILE" '# Rowan' '' "$rk:" "  - $ex" ;;
+    esc-list0)    l19_put "$d" "$L19_PROFILE" '# Rowan' '' "$rk:" "- $ex" ;;
+    esc-list0tab) l19_put "$d" "$L19_PROFILE" '# Rowan' '' "$rk:" "-$tb$ex" ;;
+    esc-dash)     l19_put "$d" "$L19_PROFILE" '# Rowan' '' "$rk:" '-' "  $ex" ;;
+    esc-gap)      l19_put "$d" "$L19_PROFILE" '# Rowan' '' "$rk:" '' '# the lead traveller' "$tb- $ex" ;;
+    dash4)        l19_put "$d" "$L19_PROFILE" '----' "$rk: psn-a9e1" '----' '# Rowan' ;;
+    decl-esc)     l19_put "$d" "$L19_PROFILE" "--- {$rk: $ex}" '# Rowan' ;;
+    read-empty)   l19_put "$d" "$L19_PROFILE" '---' 'name: Rowan' '---' '# Rowan' ;;
+    stub*|read-empty-stub)
+                  l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9e2" '---' '# Rowan'
+                  l19_put "$d" "$st/psn-a9e3.md" '---' '---' '# Rowan' '' "$v"
+                  case "$2" in
+                    stub)            l19_put "$d" "$st/psn-a9e2.md" '# Rowan' '' "$v" ;;
+                    stub-flow1)      l19_put "$d" "$st/psn-a9e2.md" "--- {$mk: psn-a9e3}" '# Rowan' ;;
+                    stub-prose)      l19_put "$d" "$st/psn-a9e2.md" '# Rowan' '' 'Merged into psn-a9e3 last spring.' ;;
+                    stub-key)        l19_put "$d" "$st/psn-a9e2.md" '# Rowan' '' "$mk: psn-a9e3" ;;
+                    stub-esc)        l19_put "$d" "$st/psn-a9e2.md" '# Rowan' '' "  \"$mk\": \"\\x70sn-a9e3\"" ;;
+                    read-empty-stub) l19_put "$d" "$st/psn-a9e2.md" '---' 'name: Rowan' '---' '# Rowan' ;;
+                  esac ;;
+    hop-*)        l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9e4" '---' '# Rowan'
+                  l19_put "$d" "$st/psn-a9e4.md" '---' "$mk: psn-a9e5" '---' '# Rowan'
+                  l19_put "$d" "$st/psn-a9e6.md" '---' '---' '# Rowan' '' "$v"
+                  case "$2" in
+                    hop-flow1) l19_put "$d" "$st/psn-a9e5.md" "--- {$mk: psn-a9e6}" '# Rowan' ;;
+                    hop-prose) l19_put "$d" "$st/psn-a9e5.md" '# Rowan' '' 'Merged into psn-a9e6 last spring.' ;;
+                    hop-key)   l19_put "$d" "$st/psn-a9e5.md" '# Rowan' '' "$mk: psn-a9e6" ;;
+                    hop-esc)   l19_put "$d" "$st/psn-a9e5.md" '# Rowan' '' "  \"$mk\": \"\\x70sn-a9e6\"" ;;
+                  esac ;;
+  esac
+  printf '%s' "$d"
+}
+l19v0_assert() { # <id> <shape> <pass|exact|stop|stopm|hop|declared|readempty|readempty-stub>
+  local id="$1" d sc="${_GUARD_DECL_ARTIFACT_PROFILE:-?}"; d="$(l19v0_trip "l19v0-$2" "$2")"
+  if [ "$2" = line1-bom8 ] && [ "$(LC_ALL=C od -An -tx1 -N3 "$d/$L19_PROFILE" | tr -d ' \n')" != efbbbf ]; then
+    FAIL "$id: fixture integrity — the planted traveller file does not open with a UTF-8 byte-order mark, so this arm would not grade the mark it names. VERDICT WITHHELD"
+    return 0
+  fi
+  case "$3" in
+    pass)  l19_assert "$id" "a traveller file with no front matter on its first line ($2), holding no person id and no line opening with the key, indented or quoted, that carries a value on it or on the next line that is neither blank nor a comment, indented or as a sequence entry, is read as version 0, carrying no reference: it passes, and the record it does not reference is not read" "$d" 0 "Source check:" "STOPPED|X6205917|a merge chain longer than one hop" ;;
+    exact) l19_assert "$id" "a file with no front matter on its first line ($2) is read as version 0: its own stated value is harvested, and the bound file stops the publish matched exactly, never as unreadable" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} value, matched exactly" "cannot be read|X6205917" ;;
+    stop)  l19_assert "$id" "a traveller file with no front matter on its first line ($2) whose line holds a minted person id, or opens with the key, indented or quoted, and carries a value on it or on the next line that is neither blank nor a comment, indented or as a sequence entry, stops the publish, naming the traveller scope and what it found, never a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source $sc (a person reference the check could not read from front matter opening on the first line) is present" "matched exactly|label with a value|$sc is present|Ruritania|X6205917|rowan|psn-a9e1" ;;
+    stopm) l19_assert "$id" "a person record with no front matter on its first line ($2) whose line holds a minted person id, or starts with the merge key with a value, stops the publish, naming the record and what it found, never a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source person record psn-a9e2 (a merge key the check could not read from front matter opening on the first line) is present" "matched exactly|label with a value|psn-a9e2 is present|Ruritania|X6205917|rowan|psn-a9e3" ;;
+    hop)   l19_assert "$id" "a merge target with no front matter on its first line ($2) whose line holds a minted person id, or starts with the merge key with a value, is named in the NOTE for a longer chain, as its plain twin is, rather than read as clean" "$d" 0 "Source check:|a merge chain longer than one hop" "STOPPED|X6205917" ;;
+    declared) l19_assert "$id" "the declared residual holds: a person reference in a file with no front matter on its first line, whose key starts no line and whose id no line holds whole ($2), passes the source check, as declared at the function and in the PR" "$d" 0 "Source check:" "STOPPED|X6205917" ;;
+    readempty) l19_assert "$id" "front matter whose read of the reference is empty ($2) passes with no note for a reference that is not there" "$d" 0 "Source check:" "STOPPED|X6205917|a person reference that is not single-valued" ;;
+    readempty-stub) l19_assert "$id" "a person record whose read of the merge key is empty ($2) passes with no note for a merge target that is not there" "$d" 0 "Source check:" "STOPPED|X6205917|a merge target that is not a minted id" ;;
+  esac
+}
+for l19c in rule prefix otherkey empty reset skip; do l19v0_assert "L19c-v0-$l19c" "$l19c" pass; done
+for l19c in harvest harvest-rule line1 line1-bom8 stub; do l19v0_assert "L19y-v0-$l19c" "$l19c" exact; done
+for l19c in flow1 prose key esc-key esc-indent esc-tab esc-spacecolon esc-dquote esc-squote esc-list esc-list0 esc-list0tab esc-dash esc-gap dash4; do l19v0_assert "L19i-v0-$l19c" "$l19c" stop; done
+for l19c in flow1 prose key esc; do l19v0_assert "L19i-v0-stub-$l19c" "stub-$l19c" stopm; done
+for l19c in flow1 prose key esc; do l19v0_assert "L19z-v0-hop-$l19c" "hop-$l19c" hop; done
+l19v0_assert "L19v-v0-esc" decl-esc declared
+l19v0_assert "L19c-read-empty" read-empty readempty
+l19v0_assert "L19c-read-empty-stub" read-empty-stub readempty-stub
+
+# ── L19i-v0-ord / L19v-v0-dupkey — two traveller files with no front matter on their first line, each carrying a
+# reference a YAML reader resolves when it reads the whole file, and each reaching a record that holds a value the
+# bound file carries. A line holding a minted id stops even when it opens with `#` (L19i-v0-ord): line 1
+# `--- {x: "` opens a quoted scalar that line 2 closes, so to a YAML reader line 2 is no comment and the reference
+# resolves, and the id clause sees it only because it reads each line before the blank-and-comment skip. The tenth
+# declared residual holds for an empty key line followed by the key escaped (L19v-v0-dupkey): no line opening with
+# the key carries a value on it or on the next line that is neither blank nor a comment, indented or as a sequence
+# entry, and no line holds the id whole, so it passes, though a YAML reader takes the later key's value. It holds
+# with no empty key line too (L19v-v0-esckey, D-P3-3): a first line spelling the key with an escape, its id
+# escaped, opens no line with the key as written, so it passes, while the same line with the key as written stops
+# by rule (b) (L19i-v0-esckey-plain, its control). And it holds for a key after a U+2028 line separator, its id
+# escaped (L19v-v0-ls): the line opens with another key, so no line opens with the key as written, and no line
+# holds the id whole, so it passes, while the same line with the id written plainly stops by the id clause
+# (L19i-v0-ls-plainid, its control).
+l19v0x_trip() { # <name> <shape> -> trip dir: a traveller file of that shape, the record it reaches, and the bare value in a bound file
+  local d st="${_GUARD_PERSON_STORE:-people}" rk="${_GUARD_REF_KEY:-person}" v ek ek1
+  v="- **${L19S1}:** Ruritania, document no. X8451037"; ek="${rk:0:1}\\x$(printf '%x' "'${rk:1:1}")${rk:2}"
+  ek1="\\x$(printf '%x' "'${rk:0:1}")${rk:1}"
+  d="$(l19_trip "$1")"
+  l19_put "$d" "$L19B1" '# Trip' '' 'Bring X8451037 to the desk.'
+  case "$2" in
+    ord)    l19_put "$d" "$st/psn-a9e7.md" '---' '---' '# Rowan' '' "$v"
+            l19_put "$d" "$L19_PROFILE" '--- {x: "' "#\", $rk: psn-a9e7}" '# Rowan' ;;
+    dupkey) l19_put "$d" "$st/psn-a9e8.md" '---' '---' '# Rowan' '' "$v"
+            l19_put "$d" "$L19_PROFILE" "$rk:" "\"$ek\": \"\\x70sn-a9e8\"" ;;
+    esckey|esckey-plain)
+            l19_put "$d" "$st/psn-a9e9.md" '---' '---' '# Rowan' '' "$v"
+            if [ "$2" = esckey ]; then l19_put "$d" "$L19_PROFILE" "\"$ek1\": \"\\x70sn-a9e9\""
+            else l19_put "$d" "$L19_PROFILE" "\"$rk\": \"\\x70sn-a9e9\""; fi ;;
+    ls|ls-plainid)
+            l19_put "$d" "$st/psn-a9ea.md" '---' '---' '# Rowan' '' "$v"
+            if [ "$2" = ls ]; then l19_put "$d" "$L19_PROFILE" "name: Rowan$(printf '\342\200\250')$rk: \"\\x70sn-a9ea\""
+            else l19_put "$d" "$L19_PROFILE" "name: Rowan$(printf '\342\200\250')$rk: psn-a9ea"; fi ;;
+  esac
+  printf '%s' "$d"
+}
+l19v0x_assert() { # <id> <shape> <stop|declared|declared1|stop1|declared2|stop2>
+  local id="$1" d sc="${_GUARD_DECL_ARTIFACT_PROFILE:-?}" rk="${_GUARD_REF_KEY:-person}" l1 ls; d="$(l19v0x_trip "l19v0x-$2" "$2")"
+  l1="$(LC_ALL=C awk 'NR == 1' "$d/$L19_PROFILE")"; ls="$(printf '\342\200\250')"
+  case "$3" in
+    declared2|stop2)
+      case "$l1" in
+        *"$ls$rk: "*) ;;
+        *) FAIL "$id: fixture integrity — the planted line does not carry the key as written right after a U+2028 line separator, so this arm would not grade that shape. VERDICT WITHHELD"; return 0 ;;
+      esac
+      case "$3:$l1" in
+        declared2:*psn-a9ea*) FAIL "$id: fixture integrity — the planted line holds the minted id whole, so this arm would not grade an escaped id. VERDICT WITHHELD"; return 0 ;;
+        stop2:*psn-a9ea*) ;;
+        stop2:*) FAIL "$id: fixture integrity — the planted line does not hold the minted id whole, so this control would not grade the id clause. VERDICT WITHHELD"; return 0 ;;
+      esac ;;
+  esac
+  case "$3:$l1" in
+    declared1:\"\\x*) case "$l1" in *"$rk"*) FAIL "$id: fixture integrity — the planted first line spells the key as written, so this arm would not grade an escaped key. VERDICT WITHHELD"; return 0 ;; esac ;;
+    declared1:*) FAIL "$id: fixture integrity — the planted first line does not open with an escaped key, so this arm would not grade one. VERDICT WITHHELD"; return 0 ;;
+    stop1:\"$rk\":*) ;;
+    stop1:*) FAIL "$id: fixture integrity — the planted first line does not open with the key as written, so this control would not grade it. VERDICT WITHHELD"; return 0 ;;
+  esac
+  case "$3" in
+    stop)     l19_assert "$id" "a traveller file with no front matter on its first line whose line opening with # holds a minted person id ($2) stops the publish, its id read before the blank-and-comment skip, naming the traveller scope and what it found, never a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source $sc (a person reference the check could not read from front matter opening on the first line) is present" "matched exactly|label with a value|$sc is present|Ruritania|X8451037|rowan|psn-a9e7" ;;
+    declared) l19_assert "$id" "the declared residual holds: a person reference in a traveller file with no front matter on its first line, under the key escaped after an empty key line, whose id no line holds whole ($2), passes the source check, as declared at the function and in the PR, though the record it reaches holds a value the bound file carries" "$d" 0 "Source check:" "STOPPED|X8451037" ;;
+    declared1) l19_assert "$id" "the declared residual holds: a person reference in a traveller file with no front matter on its first line, whose first line spells the key with an escape and no empty key line before it, so no line opens with the key as written, and whose id no line holds whole ($2), passes the source check, as declared at the function and in the PR, though the record it reaches holds a value the bound file carries" "$d" 0 "Source check:" "STOPPED|X8451037" ;;
+    stop1)    l19_assert "$id" "the control for L19v-v0-esckey: the same first line with the key as written ($2) carries a value on it, so rule (b) stops the publish, naming the traveller scope and what it found, never a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source $sc (a person reference the check could not read from front matter opening on the first line) is present" "matched exactly|label with a value|$sc is present|Ruritania|X8451037|rowan|psn-a9e9" ;;
+    declared2) l19_assert "$id" "the declared residual holds: a person reference in a traveller file with no front matter on its first line, written after a U+2028 line separator so no line opens with the key as written, its id escaped so no line holds it whole ($2), passes the source check, as declared at the function and in the PR, though the record it reaches holds a value the bound file carries" "$d" 0 "Source check:" "STOPPED|X8451037" ;;
+    stop2)    l19_assert "$id" "the control for L19v-v0-ls: the same line with the id written plainly ($2) holds a minted person id whole, so the id clause stops the publish, naming the traveller scope and what it found, never a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source $sc (a person reference the check could not read from front matter opening on the first line) is present" "matched exactly|label with a value|$sc is present|Ruritania|X8451037|rowan|psn-a9ea" ;;
+  esac
+}
+l19v0x_assert "L19i-v0-ord" ord stop
+l19v0x_assert "L19v-v0-dupkey" dupkey declared
+l19v0x_assert "L19v-v0-esckey" esckey declared1
+l19v0x_assert "L19i-v0-esckey-plain" esckey-plain stop1
+l19v0x_assert "L19v-v0-ls" ls declared2
+l19v0x_assert "L19i-v0-ls-plainid" ls-plainid stop2
+
+# ── ARMED-RED controls for L19: each arm under the mutation its design row names reports pass=0 fail=1.
+l19_m_noexact()  { l18_rewrite _build_source_hits 'if (exact_hit(i, nl, ld, lt))' 'if (0)'; }
+l19_m_nolabel()  { l18_rewrite _build_source_hits 'if (label_hit(lab, S[i]))' 'if (0)'; }
+l19_m_prefix()   { l18_rewrite _build_source_hits 'if (label_hit(lab, S[i]))' 'if (index(tolower(lab), tolower(S[i])) == 1)'; }
+l19_m_nostamp()  { l18_rewrite _build_source_hits 'if (c ~ /^checked [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$/) return 0' ''; }
+l19_m_nodate()   { l18_rewrite _build_source_hits '!datelike(r)' '1'; }
+l19_m_nowcore()  { l18_rewrite _build_source_hits 'wcore(val, sel)' '0'; }
+l19_m_zero()     { l18_rewrite require_clean_build_sources 'if [ "$bs_n" -eq 0 ]; then' 'if false; then'; }
+l19_m_partial()  { l18_rewrite require_clean_build_sources 'if [ "${bs_cand:-0}" -ne "${bs_wf:-0}" ]; then' 'if false; then'; }
+l19_m_absent()   { l18_rewrite require_clean_build_sources 'if [ ! -e "$bs_f" ] && [ ! -L "$bs_f" ]; then' 'if false; then'; }
+l19_m_unread()   { l18_rewrite require_clean_build_sources 'if [ ! -f "$bs_f" ] || [ ! -r "$bs_f" ]; then' 'if [ ! -f "$bs_f" ] || [ ! -r "$bs_f" ]; then continue;'; }
+l19_m_classok()  { l18_rewrite _field_class_values 'if [ "$fc_n" -eq 0 ]; then' 'if false; then'; }
+l19_m_unreadnote() { l18_rewrite require_clean_build_sources 'if [ -n "$bs_unread" ]; then' 'if false; then'; }
+l19_m_guardrm()  { l18_rewrite require_publish_guards 'require_clean_build_sources "$trip_dir"' ':'; }
+l19_m_r9()       { require_clean_build_sources() { nonpublishable_values "$1" >/dev/null || die "SOURCE CHECK STOPPED — the class read UNDETERMINED"; info "Source check: no value"; }; }
+L19KEEP="$(printf '%s' "$L19_SELS" | tr '\n' ' ')"
+l19_m_fixed()    { eval "$(declare -f _guard_declared_rows | sed '1s/^_guard_declared_rows/l19_real_rows/')"
+                   _guard_declared_rows() { l19_real_rows | awk -v K=" $L19KEEP " 'index(K, " " $2 " ")'; }; }
+l19_m_refusal_late() { l18_rewrite cmd_publish '[ "$plaintext" != "1" ] || refuse_group_only_render "$site_html"' ':'
+                       l18_rewrite cmd_publish 'require_clean_build_sources "$trip_dir"' 'require_clean_build_sources "$trip_dir"; [ "$plaintext" != "1" ] || refuse_group_only_render "$site_html"'; }
+l19_m_source_late() { l18_rewrite cmd_publish 'require_clean_build_sources "$trip_dir"' ':'; }
+l18_mut_assert "L19a-mut" "the exact half disabled" l19_m_noexact l19a_assert "L19a-mut"
+l18_mut_assert "L19b-mut" "the label half disabled" l19_m_nolabel l19b_assert "L19b-mut" l19b-mut bullet
+l19_pair="$(l18_mut_probe l19_m_noexact l19c_assert "L19c-pair")"
+if [ "$l19_pair" = "1 0" ]; then
+  PASS "L19c-pair: CONTROL — with the exact half disabled L19a turns red while L19c stays green (pass=1 fail=0), so the pair discriminates the matcher, not the fixture"
+else
+  FAIL "L19c-pair: CONTROL — with the exact half disabled L19c reports '$l19_pair' (want '1 0')"
+fi
+l18_mut_assert "L19d-mut" "the label rule swapped for the projection's prefix rule" l19_m_prefix l19d_assert "L19d-mut"
+l18_mut_assert "L19e-mut-stamp" "the derivation-stamp exclusion removed" l19_m_nostamp l19e_assert "L19e-mut-stamp"
+l18_mut_assert "L19e-mut-date" "the word rule's date-shape skip removed (the full-date rule)" l19_m_nodate l19e_assert "L19e-mut-date"
+l18_mut_assert "L19f-mut" "the zero-row branch made to pass" l19_m_zero l19f_assert "L19f-mut"
+l18_mut_assert "L19g-mut" "the candidate and well-formed comparison removed" l19_m_partial l19g_assert "L19g-mut"
+l18_mut_assert "L19h-mut" "an absent bound artifact treated as unreadable" l19_m_absent l19h_assert "L19h-mut"
+l18_mut_assert "L19i-mut" "a present, unreadable bound artifact treated as absent" l19_m_unread l19i_assert "L19i-mut"
+l18_mut_assert "L19j-mut" "the zero field-row branch made to pass" l19_m_classok l19j_assert "L19j-mut"
+l18_mut_assert "L19k-mut" "an unreadable value source treated as not on file" l19_m_unreadnote l19k_assert "L19k-mut"
+l18_mut_assert "L19m-mut" "the check swapped for nonpublishable_values (the R9 regression)" l19_m_r9 l19m_assert "L19m-mut" T1
+l18_mut_assert "L19n-mut-update" "the check's line removed from require_publish_guards" l19_m_guardrm l19n_assert "L19n-mut-update" update
+l18_mut_assert "L19n-mut-rotate" "the check's line removed from require_publish_guards" l19_m_guardrm l19n_assert "L19n-mut-rotate" rotate
+l18_mut_assert "L19p-mut" "the selectors replaced by a fixed list of today's" l19_m_fixed l19p_assert "L19p-mut" label
+l18_mut_assert "L19s-mut-three" "the refusal moved after the source check" l19_m_refusal_late l19s_assert "L19s-mut-three" three
+l18_mut_assert "L19s-mut-two" "the source check removed from cmd_publish, so the content guard runs first" l19_m_source_late l19s_assert "L19s-mut-two" two
+for l19c in email phone docno; do l18_mut_assert "L19t-mut-$l19c" "the word rule removed" l19_m_nowcore l19t_assert "L19t-mut-$l19c" "$l19c"; done
+
+# ── The MD registrations: each arm with require_clean_build_sources removed reports exactly one FAIL.
+md_flips require_clean_build_sources "L19a" l19a_assert "L19a"
+for l19c in bullet num quote head em; do md_flips require_clean_build_sources "L19b-$l19c" l19b_assert "L19b-$l19c" "l19b-$l19c" "$l19c"; done
+for l19f in c d e f g h i j k l; do md_flips require_clean_build_sources "L19$l19f" "l19${l19f}_assert" "L19$l19f"; done
+for l19c in T1 T1b T2 T5 T6b T7 T8; do md_flips require_clean_build_sources "L19m-$l19c" l19m_assert "L19m-$l19c" "$l19c"; done
+for l19c in publish update; do md_flips require_clean_build_sources "L19m-$l19c" l19m_e2e_assert "L19m-$l19c" "$l19c"; done
+for l19c in publish plaintext update rotate; do md_flips require_clean_build_sources "L19n-$l19c" l19n_assert "L19n-$l19c" "$l19c"; done
+for l19c in label exact; do md_flips require_clean_build_sources "L19p-$l19c" l19p_assert "L19p-$l19c" "$l19c"; done
+for l19c in stale entryless; do md_flips require_clean_build_sources "L19r-$l19c" l19r_assert "L19r-$l19c" "$l19c"; done
+md_flips require_clean_build_sources "L19s-two" l19s_assert "L19s-two" two
+md_flips refuse_group_only_render "L19s-three" l19s_assert "L19s-three" three
+for l19c in email phone docno; do md_flips require_clean_build_sources "L19t-$l19c" l19t_assert "L19t-$l19c" "$l19c"; done
+md_flips require_clean_build_sources "L19u" l19u_assert "L19u"
+for l19c in date none interposed midline emdash dash sep3 comma harvest harvestcolon harvestspace harvestnum harvestquote harvesthead harvestinvis quoted marker hangul deva; do md_flips require_clean_build_sources "L19v-$l19c" l19v_assert "L19v-$l19c" "$l19c"; done
+md_flips require_clean_build_sources "L19c-harvest-plain" l19c_harvest_assert "L19c-harvest-plain"
+for l19c in stop-242:'07 2019 55':stop stop-422:'2031 55 12':stop stop-224:'55 12 2031':stop stop-24:'19 2031':stop \
+            skip-ymd:2031-03-15:skip skip-dmy:15/03/2031:skip skip-dmy-dot:31.12.2031:skip skip-mdy:03/15/2031:skip \
+            skip-ym:2031-07:skip skip-ym-1999:1999-12:skip; do
+  l19n_="${l19c%%:*}"; l19r_="${l19c#*:}"; l19v_="${l19r_%:*}"; l19k_="${l19r_##*:}"
+  md_flips require_clean_build_sources "L19w-$l19n_" l19w_assert "L19w-$l19n_" "l19w-$l19n_" "$l19v_" "$l19k_"
+done
+md_flips require_clean_build_sources "L19w-skip-stamp" l19w_stamp_assert "L19w-skip-stamp"
+md_flips require_clean_build_sources "L19x-box" l19x_assert "L19x-box" l19x-box "- [ ] ${L19S1}: Ruritania" "an open task box"
+md_flips require_clean_build_sources "L19x-box-x" l19x_assert "L19x-box-x" l19x-box-x "- [x] ${L19S1}: Ruritania" "a checked task box"
+md_flips require_clean_build_sources "L19x-box-star" l19x_assert "L19x-box-star" l19x-box-star "* [ ] ${L19S1}: Ruritania" "a task box under an asterisk bullet"
+md_flips require_clean_build_sources "L19x-nbsp" l19x_assert "L19x-nbsp" l19x-nbsp "${L19S1}${L19NB}: Ruritania" "a non-breaking space before its colon"
+md_flips require_clean_build_sources "L19x-fwcolon" l19x_assert "L19x-fwcolon" l19x-fwcolon "${L19S1}${L19FC} Ruritania" "a full-width colon"
+md_flips require_clean_build_sources "L19x-zw" l19x_assert "L19x-zw" l19x-zw "${L19S1}${L19ZW}: Ruritania" "a zero-width space before its colon"
+md_flips require_clean_build_sources "L19x-list-quote" l19x_assert "L19x-list-quote" l19x-list-quote "- > ${L19S1}: Ruritania" "a list marker ahead of a quote marker"
+md_flips require_clean_build_sources "L19y-zwsp" l19y_assert "L19y-zwsp" l19y-zwsp "$L19VX" "Bring X123$(printf '\342\200\213')4567 to the desk."
+md_flips require_clean_build_sources "L19y-zwnj" l19y_assert "L19y-zwnj" l19y-zwnj "$L19VX" "Bring X123$(printf '\342\200\214')4567 to the desk."
+md_flips require_clean_build_sources "L19y-zwj" l19y_assert "L19y-zwj" l19y-zwj "$L19VX" "Bring X123$(printf '\342\200\215')4567 to the desk."
+md_flips require_clean_build_sources "L19y-feff" l19y_assert "L19y-feff" l19y-feff "$L19VX" "Bring X123$(printf '\357\273\277')4567 to the desk."
+md_flips require_clean_build_sources "L19y-shy" l19y_assert "L19y-shy" l19y-shy "$L19VX" "Bring X123$(printf '\302\255')4567 to the desk."
+md_flips require_clean_build_sources "L19y-fw" l19y_assert "L19y-fw" l19y-fw "$L19VD" "Ref $(printf '\357\274\221\357\274\222\357\274\223\357\274\224\357\274\225\357\274\226\357\274\227\357\274\230') on file."
+md_flips require_clean_build_sources "L19y-arabic" l19y_assert "L19y-arabic" l19y-arabic "$L19VD" "Ref $(printf '\331\241\331\242\331\243\331\244\331\245\331\246\331\247\331\250') on file."
+for l19c in 1 2; do md_flips require_clean_build_sources "L19z-hop$l19c" l19z_assert "L19z-hop$l19c" "$l19c"; done
+md_flips require_clean_build_sources "L19z-hop2-crlf" l19z_assert "L19z-hop2-crlf" 2crlf
+md_flips require_clean_build_sources "L19z-hop2-indent" l19z_assert "L19z-hop2-indent" 2indent
+md_flips require_clean_build_sources "L19x-nnbsp" l19x_assert "L19x-nnbsp" l19x-nnbsp "${L19S1}${L19X_NNB}: Ruritania" "a narrow no-break space before its colon"
+md_flips require_clean_build_sources "L19x-thin" l19x_assert "L19x-thin" l19x-thin "${L19S1}${L19X_THIN}: Ruritania" "a thin space before its colon"
+md_flips require_clean_build_sources "L19x-ideo" l19x_assert "L19x-ideo" l19x-ideo "${L19S1}${L19X_IDEO}${L19FC}Ruritania" "an ideographic space and a full-width colon"
+md_flips require_clean_build_sources "L19x-smallcolon" l19x_assert "L19x-smallcolon" l19x-smallcolon "${L19S1}${L19X_SMC} Ruritania" "a small colon"
+md_flips require_clean_build_sources "L19x-ratio" l19x_assert "L19x-ratio" l19x-ratio "${L19S1}${L19X_RATIO} Ruritania" "a ratio sign for its colon"
+md_flips require_clean_build_sources "L19x-wj" l19x_assert "L19x-wj" l19x-wj "${L19S1:0:4}${L19X_WJ}${L19S1:4}: Ruritania" "a word joiner inside the label"
+md_flips require_clean_build_sources "L19x-lrm" l19x_assert "L19x-lrm" l19x-lrm "${L19X_LRM}${L19S1}: Ruritania" "a left-to-right mark before the label"
+md_flips require_clean_build_sources "L19x-esc" l19x_assert "L19x-esc" l19x-esc "${L19S1}\\: Ruritania" "a Markdown-escaped colon"
+md_flips require_clean_build_sources "L19x-fwdigits" l19x_assert "L19x-fwdigits" l19x-fwdigits "${L19S1}: $(printf '\357\274\221\357\274\222\357\274\223\357\274\224')" "a value in full-width digits alone, which the folding reads as stated"
+md_flips require_clean_build_sources "L19y-wj" l19y_assert "L19y-wj" l19y-wj "$L19VX" "Doc X123${L19X_WJ}4567 on the day."
+md_flips require_clean_build_sources "L19y-lrm" l19y_assert "L19y-lrm" l19y-lrm "$L19VX" "Doc X123${L19X_LRM}4567 on the day."
+md_flips require_clean_build_sources "L19y-vs" l19y_assert "L19y-vs" l19y-vs "$L19VX" "Doc X123${L19X_VS16}4567 on the day."
+md_flips require_clean_build_sources "L19y-isolate" l19y_assert "L19y-isolate" l19y-isolate "$L19VX" "Doc X123${L19X_LRI}4${L19X_PDI}567 on the day."
+for l19c in $L19_SWEEPS; do
+  l19r_="${l19c#*:}"; md_flips _build_source_hits "${l19c%%:*}" l19_sweep_assert "${l19c%%:*}" "${l19r_%%:*}" "${l19r_#*:}"
+done
+for l19c in 16le 16be 32le 32be; do md_flips require_clean_build_sources "L19i-bom$l19c" l19enc_assert "L19i-bom$l19c" "$l19c"; done
+md_flips require_clean_build_sources "L19i-nul" l19enc_assert "L19i-nul" nul
+md_flips require_clean_build_sources "L19i-mark16le" l19enc_assert "L19i-mark16le" mark16le
+md_flips require_clean_build_sources "L19i-lonecr" l19enc_assert "L19i-lonecr" lonecr
+md_flips require_clean_build_sources "L19x-crlf" l19enc_assert "L19x-crlf" crlf
+md_flips require_clean_build_sources "L19i-harvest16" l19src_assert "L19i-harvest16" profile 16le
+for l19c in person merge model; do md_flips require_clean_build_sources "L19i-src-$l19c-16le" l19src_assert "L19i-src-$l19c-16le" "$l19c" 16le; done
+for l19c in 16be 32le 32be mark16le mark16be; do md_flips require_clean_build_sources "L19i-src-profile-$l19c" l19src_assert "L19i-src-profile-$l19c" profile "$l19c"; done
+md_flips require_clean_build_sources "L19i-src-nul" l19src_assert "L19i-src-nul" nul nul
+for l19c in shipped person-first; do md_flips require_clean_build_sources "L19i-src-order-$l19c" l19src_order_assert "L19i-src-order-$l19c" "$l19c" 16le; done
+for l19c in profile person merge model nul latin; do md_flips require_clean_build_sources "L19y-src-$l19c" l19src_assert "L19y-src-$l19c" "$l19c" utf8; done
+for l19c in shipped person-first; do md_flips require_clean_build_sources "L19y-src-order-$l19c" l19src_order_assert "L19y-src-order-$l19c" "$l19c" utf8; done
+for l19c in person merge model; do for l19e in mark16le nul; do md_flips require_clean_build_sources "L19i-src-$l19c-$l19e" l19src_assert "L19i-src-$l19c-$l19e" "$l19c" "$l19e"; done; done
+for l19c in 16le nul mark16le; do md_flips require_clean_build_sources "L19i-src-pbranch-$l19c" l19src_order_assert "L19i-src-pbranch-$l19c" noprofile "$l19c"; done
+md_flips require_clean_build_sources "L19y-src-pbranch" l19src_order_assert "L19y-src-pbranch" noprofile utf8
+for l19c in bom8 crlf; do for l19e in order stub; do md_flips require_clean_build_sources "L19y-src-$l19e-$l19c" l19src_assert "L19y-src-$l19e-$l19c" "$l19e" "$l19c"; done; done
+md_flips require_clean_build_sources "L19y-src-comp" l19src_assert "L19y-src-comp" comp utf8
+md_flips require_clean_build_sources "L19y-src-comp-crlf" l19src_assert "L19y-src-comp-crlf" comp crlf
+for l19c in order person merge model; do md_flips require_clean_build_sources "L19i-src-$l19c-lonecr" l19src_assert "L19i-src-$l19c-lonecr" "$l19c" lonecr; done
+for l19c in person merge model; do md_flips require_clean_build_sources "L19y-src-$l19c-crlf" l19src_assert "L19y-src-$l19c-crlf" "$l19c" crlf; done
+md_flips require_clean_build_sources "L19i-src-pbranch-lonecr" l19src_order_assert "L19i-src-pbranch-lonecr" noprofile lonecr
+md_flips require_clean_build_sources "L19y-src-pbranch-crlf" l19src_order_assert "L19y-src-pbranch-crlf" noprofile crlf
+if [ "$L19_M000" = 1 ]; then
+  SKIP "MD[L19i-src-pbranch-mode000]: this run's user reads a mode-000 file, so the arm skipped and its registration has no verdict to grade"
+else
+  md_flips require_clean_build_sources "L19i-src-pbranch-mode000" l19src_order_assert "L19i-src-pbranch-mode000" noprofile mode000
+fi
+for l19c in blanklead indent tab spacecolon dquote squote list list0 gap; do md_flips require_clean_build_sources "L19i-src-ref-$l19c" l19ref_assert "L19i-src-ref-$l19c" "$l19c" stop; done
+for l19c in nokey body empty; do md_flips require_clean_build_sources "L19c-ref-$l19c" l19ref_assert "L19c-ref-$l19c" "$l19c" pass; done
+for l19c in mark-open mark-close mark-plain; do md_flips require_clean_build_sources "L19y-src-$l19c" l19ref_assert "L19y-src-$l19c" "$l19c" exact; done
+for l19c in indent blanklead; do md_flips require_clean_build_sources "L19i-src-stub-ref-$l19c" l19ref_assert "L19i-src-stub-ref-$l19c" "stub-$l19c" stopm; done
+md_flips require_clean_build_sources "L19c-ref-stub-body" l19ref_assert "L19c-ref-stub-body" stub-body pass
+for l19c in body-indent prefix; do md_flips require_clean_build_sources "L19c-ref-$l19c" l19ref_assert "L19c-ref-$l19c" "$l19c" pass; done
+for l19c in flow qkey tag anchor esc dup merge dots ls ps nel lscomment seq nospace; do md_flips require_clean_build_sources "L19i-src-shape-$l19c" l19shape_assert "L19i-src-shape-$l19c" "$l19c" stop; done
+for l19c in flow qkey; do md_flips require_clean_build_sources "L19i-src-stub-shape-$l19c" l19shape_assert "L19i-src-stub-shape-$l19c" "stub-$l19c" stopm; done
+for l19c in flow qkey; do md_flips require_clean_build_sources "L19z-hop2-shape-$l19c" l19shape_assert "L19z-hop2-shape-$l19c" "hop-$l19c" hop; done
+for l19c in nofm stub-nofm hop-nofm; do md_flips require_clean_build_sources "L19c-v0-$l19c" l19shape_assert "L19c-v0-$l19c" "$l19c" v0; done
+for l19c in nested univ comment case blank tab; do md_flips require_clean_build_sources "L19c-shape-$l19c" l19shape_assert "L19c-shape-$l19c" "$l19c" pass; done
+for l19c in mline1 mline1-bom8; do md_flips require_clean_build_sources "L19y-src-model-${l19c#m}" l19shape_assert "L19y-src-model-${l19c#m}" "$l19c" exact; done
+for l19c in rule prefix otherkey empty reset skip; do md_flips require_clean_build_sources "L19c-v0-$l19c" l19v0_assert "L19c-v0-$l19c" "$l19c" pass; done
+for l19c in harvest harvest-rule line1 line1-bom8 stub; do md_flips require_clean_build_sources "L19y-v0-$l19c" l19v0_assert "L19y-v0-$l19c" "$l19c" exact; done
+for l19c in flow1 prose key esc-key esc-indent esc-tab esc-spacecolon esc-dquote esc-squote esc-list esc-list0 esc-list0tab esc-dash esc-gap dash4; do md_flips require_clean_build_sources "L19i-v0-$l19c" l19v0_assert "L19i-v0-$l19c" "$l19c" stop; done
+for l19c in flow1 prose key esc; do md_flips require_clean_build_sources "L19i-v0-stub-$l19c" l19v0_assert "L19i-v0-stub-$l19c" "stub-$l19c" stopm; done
+for l19c in flow1 prose key esc; do md_flips require_clean_build_sources "L19z-v0-hop-$l19c" l19v0_assert "L19z-v0-hop-$l19c" "hop-$l19c" hop; done
+md_flips require_clean_build_sources "L19v-v0-esc" l19v0_assert "L19v-v0-esc" decl-esc declared
+md_flips require_clean_build_sources "L19c-read-empty" l19v0_assert "L19c-read-empty" read-empty readempty
+md_flips require_clean_build_sources "L19c-read-empty-stub" l19v0_assert "L19c-read-empty-stub" read-empty-stub readempty-stub
+md_flips require_clean_build_sources "L19i-v0-ord" l19v0x_assert "L19i-v0-ord" ord stop
+md_flips require_clean_build_sources "L19v-v0-dupkey" l19v0x_assert "L19v-v0-dupkey" dupkey declared
+md_flips require_clean_build_sources "L19v-v0-esckey" l19v0x_assert "L19v-v0-esckey" esckey declared1
+md_flips require_clean_build_sources "L19i-v0-esckey-plain" l19v0x_assert "L19i-v0-esckey-plain" esckey-plain stop1
+md_flips require_clean_build_sources "L19v-v0-ls" l19v0x_assert "L19v-v0-ls" ls declared2
+md_flips require_clean_build_sources "L19i-v0-ls-plainid" l19v0x_assert "L19i-v0-ls-plainid" ls-plainid stop2
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# I6 — list reports build-to-published: whether the page as last pushed is the newest local build, by content
+# (#2157; ADR-035 § 1). Group I by id. Placed here rather than beside I5 so the unreadable-render case takes
+# rv_make_unreadable, which falls back to a dangling link where mode 000 is still readable (F20), and so list
+# runs under RV's gh stand-in, never a real account. The verdict arms read build_to_published directly; I6k and
+# I6n run list itself over a scratch data root that holds only these fixtures. The renders are synthetic, each
+# with a leading declaration comment and a script, which the itinerary projection drops.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group I, I6 — list reports build-to-published, compared by content (#2157)."
+
+I6W="$RVW/i6"; rm -rf "$I6W"; mkdir -p "$I6W/trips"
+i6_render() { # <file> <visible sentence> <declaration date> <script value>
+  printf '<!DOCTYPE html><html><head><title>Porto</title></head><body>\n<!-- generated: %s -->\n<script>var v = "%s";</script>\n<h1>Itinerary</h1>\n<p>%s</p>\n</body></html>\n' "$3" "$4" "$2" > "$1"
+}
+I6_DAY='Day 1: the harbour museum in the morning, then a long lunch by the water.'
+i6_trip() { # <name> -> a trip dir under the scratch data root, holding one render
+  local d="$I6W/trips/$1"
+  rm -rf "$d"; mkdir -p "$d/outputs"
+  i6_render "$d/outputs/$1-travel-site.html" "$I6_DAY" 2026-11-01 a
+  printf '%s' "$d"
+}
+i6_record() { # <trip_dir> <token> — the record a push leaves
+  printf 'digest=%s\npublished=2026-01-01T00:00:00Z\n' "$2" > "$1/.published-itinerary"
+}
+i6_fixture() { # <case> -> trip dir in the state the case names
+  local c="$1" d site
+  d="$(i6_trip "i6-$c")"; site="$d/outputs/i6-$c-travel-site.html"
+  case "$c" in
+    equal)    i6_record "$d" "$(itinerary_digest "$site")" ;;
+    rebuild)  i6_record "$d" "$(itinerary_digest "$site")"; i6_render "$site" "$I6_DAY" 2026-11-02 b ;;
+    visible)  i6_record "$d" "$(itinerary_digest "$site")"; i6_render "$site" "$I6_DAY And a walk up to the old cathedral before dark." 2026-11-01 a ;;
+    norecord) ;;
+    touch)    i6_record "$d" "$(itinerary_digest "$site")"; touch -t 203001010000 "$site" ;;
+    legacy-eq) i6_record "$d" "$(_legacy_itinerary_digest "$site")" ;;
+    legacy-ne) i6_record "$d" "$(_legacy_itinerary_digest "$site")"; i6_render "$site" "$I6_DAY And a walk up to the old cathedral before dark." 2026-11-01 a ;;
+    twin)     i6_record "$d" "$(itinerary_digest "$site")"; printf 'digest=%s\npublished=2026-01-02T00:00:00Z\n' "$(itinerary_digest "$site")" > "$d/.published-itinerary.next" ;;
+    twin-norecord) printf 'digest=%s\npublished=2026-01-02T00:00:00Z\n' "$(itinerary_digest "$site")" > "$d/.published-itinerary.next" ;;
+    dir)      mkdir -p "$d/.published-itinerary" ;;
+    garbage)  printf 'digest=not-a-token!\npublished=2026-01-01T00:00:00Z\n' > "$d/.published-itinerary" ;;
+    norender) i6_record "$d" "$(itinerary_digest "$site")"; rm -f "$site" ;;
+    unreadable) i6_record "$d" "$(itinerary_digest "$site")"; rv_make_unreadable "$site" 'unreadable render' >/dev/null 2>&1 ;;
+  esac
+  printf '%s' "$d"
+}
+# One verdict over build_to_published's cell for a fixture: the cell begins with what is wanted, and carries
+# nothing it must not. An absent helper prints nothing, which is a FAIL, never a match.
+i6_cell_assert() { # <id> <case> <wanted prefix> [<must not contain>]
+  local id="$1" c="$2" want="$3" not="${4:-}" d cell ok=0 bad=0
+  d="$(i6_fixture "$c")"
+  cell="$(build_to_published "$d" 2>/dev/null)"
+  case "$cell" in "$want"*) ok=1 ;; esac
+  [ -z "$not" ] || case "$cell" in *"$not"*) bad=1 ;; esac
+  if [ -z "$cell" ]; then
+    FAIL "$id: build_to_published printed no cell for the $c fixture — the helper is absent or its table held no row. VERDICT WITHHELD"
+  elif [ "$ok" -ne 1 ]; then
+    FAIL "$id: the $c fixture reads '$cell', want a cell beginning '$want'"
+  elif [ "$bad" -ne 0 ]; then
+    FAIL "$id: the $c fixture reads '$cell', which carries '$not'"
+  else
+    PASS "$id: the $c fixture reads '$cell'"
+  fi
+}
+I6_CASES='I6a|equal|CURRENT|
+I6b|rebuild|CURRENT|
+I6c|visible|BEHIND: outputs/i6-visible-travel-site.html|
+I6d|norecord|UNDETERMINED: no push recorded|BEHIND
+I6e|touch|CURRENT|
+I6f|legacy-eq|CURRENT|
+I6g|legacy-ne|UNDETERMINED: the push record predates the current digest|BEHIND
+I6h|twin|UNDETERMINED: a push|BEHIND
+I6h-norecord|twin-norecord|UNDETERMINED: a push|no push recorded
+I6i-dir|dir|UNDETERMINED: the push record cannot be read|BEHIND
+I6i-garbage|garbage|UNDETERMINED: the push record cannot be read|BEHIND
+I6j|norender|UNDETERMINED: no local render|BEHIND
+I6o|unreadable|UNDETERMINED: outputs/i6-unreadable-travel-site.html cannot be projected|BEHIND'
+while IFS='|' read -r i6id i6c i6want i6not; do
+  [ -n "$i6id" ] || continue
+  i6_cell_assert "$i6id" "$i6c" "$i6want" "$i6not"
+done <<<"$I6_CASES"
+
+# ── I6k — network-free and read-only: build_to_published makes no gh call; list's cells are the same with gh
+# answering and with gh failing; and list leaves every file under the scratch data root as it found it.
+i6_list() { # -> list's output over the scratch data root, under whichever gh is in scope
+  ( _GUARD_DATA_ROOT="$I6W"; _GUARD_DATA_ROOT_EXPLICIT=1; cmd_list ) 2>&1
+}
+i6_cells() { # <list output> -> "<trip> <cell>" lines, the cell read from its fixed column
+  awk 'substr($1, 1, 3) == "i6-" { print $1 " " substr($0, 90) }' <<<"$1"
+}
+i6_tree() { # -> one line per entry under the scratch root: path, type, mode, size and content digest
+  local f
+  find "$I6W" -print 2>/dev/null | LC_ALL=C sort | while IFS= read -r f; do
+    if [ -f "$f" ] && [ -r "$f" ]; then
+      printf '%s f %s %s\n' "${f#"$I6W"}" "$(ls -ld "$f" | awk '{ print $1, $5 }')" "$(cksum < "$f")"
+    else
+      printf '%s %s\n' "${f#"$I6W"}" "$(ls -ld "$f" 2>/dev/null | awk '{ print $1 }')"
+    fi
+  done
+}
+i6k_assert() { # <id>
+  local id="$1" d calls on off before after cells_on cells_off cell
+  for d in equal visible norecord twin; do i6_fixture "$d" >/dev/null; done
+  : > "$I6W.ghlog"
+  cell="$( gh() { printf '%s\n' "$*" >> "$I6W.ghlog"; return 1; }; build_to_published "$I6W/trips/i6-equal" 2>/dev/null )"
+  calls="$(rv_lines "$I6W.ghlog")"
+  before="$(i6_tree)"
+  on="$(i6_list)"
+  off="$( gh() { return 1; }; i6_list )"
+  after="$(i6_tree)"
+  cells_on="$(i6_cells "$on")"; cells_off="$(i6_cells "$off")"
+  if [ -z "$cell" ]; then
+    FAIL "$id: build_to_published printed no cell. VERDICT WITHHELD"
+  elif [ "$calls" != 0 ]; then
+    FAIL "$id: build_to_published made $calls gh call(s) — the relation must need no network"
+  elif [ -z "$cells_on" ] || [ "$cells_on" != "$cells_off" ]; then
+    FAIL "$id: list's build-to-published cells differ with gh answering and with gh failing (or none were read): '$(printf '%s' "$cells_on" | tr '\n' ';')' against '$(printf '%s' "$cells_off" | tr '\n' ';')'"
+  elif [ "$before" != "$after" ]; then
+    FAIL "$id: list changed a file under the scratch data root — it must write nothing"
+  else
+    PASS "$id: build_to_published makes no gh call, list's cells are identical with gh answering and failing ($(printf '%s\n' "$cells_on" | grep -c .) row(s)), and every entry under the data root is unchanged by list"
+  fi
+}
+i6k_assert "I6k"
+
+# ── I6l — no publish verb reads the relation; I6m — list and publish take the newest render through one function.
+i6l_bodies="$(declare -f cmd_publish cmd_update cmd_rotate require_publish_guards 2>/dev/null)"
+i6l_list="$(declare -f cmd_list 2>/dev/null)"
+i6l_n="$(l18_count "$i6l_bodies" 'build_to_published')"; i6l_s="$(l18_count "$i6l_list" 'build_to_published')"
+i6l_fab="$(l18_count "$i6l_bodies$i6l_list" 'zzq_i6l_fabricated')"
+if [ "${#i6l_bodies}" -lt 2000 ] || [ "${#i6l_list}" -lt 200 ]; then
+  FAIL "I6l: the parsed bodies are ${#i6l_bodies} and ${#i6l_list} bytes — a subject is absent or a stub. VERDICT WITHHELD"
+elif [ "$i6l_fab" -ne 0 ] || [ "$i6l_s" -lt 1 ]; then
+  FAIL "I6l: CONTROL — cmd_list names build_to_published $i6l_s time(s) (want at least 1) and a fabricated name was counted $i6l_fab time(s) (want 0), so the count cannot tell"
+elif [ "$i6l_n" -ne 0 ]; then
+  FAIL "I6l: a publish verb or the guard's call line names build_to_published $i6l_n time(s) — the relation is report-only, and nothing may branch on it"
+else
+  PASS "I6l: no publish verb and not require_publish_guards names build_to_published, while cmd_list does ($i6l_s), and a fabricated name is counted nowhere"
+fi
+i6m_r="$(declare -f resolve_site_html 2>/dev/null)"
+i6m_rn="$(l18_count "$i6m_r" 'newest_site_html')"; i6m_ln="$(l18_count "$i6l_list" 'newest_site_html')"
+i6m_ls="$(l18_count "$i6m_r$i6l_list" 'ls -1t')"; i6m_fab="$(l18_count "$i6m_r$i6l_list" 'zzq_i6m_fabricated')"
+if [ "${#i6m_r}" -lt 50 ] || [ "${#i6l_list}" -lt 200 ]; then
+  FAIL "I6m: resolve_site_html or cmd_list is absent or a stub. VERDICT WITHHELD"
+elif [ "$i6m_fab" -ne 0 ]; then
+  FAIL "I6m: CONTROL — a fabricated name was counted"
+elif [ "$i6m_rn" -lt 1 ] || [ "$i6m_ln" -lt 1 ] || [ "$i6m_ls" -ne 0 ]; then
+  FAIL "I6m: resolve_site_html names newest_site_html $i6m_rn time(s) and cmd_list $i6m_ln, and $i6m_ls copy of the selection remains in them (want at least 1, at least 1, 0)"
+else
+  PASS "I6m: resolve_site_html and cmd_list both take the newest render through newest_site_html, and neither carries its own copy of the selection"
+fi
+
+# ── I6n — report-only: list over fixtures yielding every verdict exits 0, carries the column and the footer
+# and no STALE column, and its cell for a fixture is the helper's.
+i6n_assert() { # <id>
+  local id="$1" d out rc row want hdr=0 foot=0 stale=0
+  for d in equal visible norecord legacy-ne; do i6_fixture "$d" >/dev/null; done
+  out="$(i6_list)"; rc=$?
+  want="$(build_to_published "$I6W/trips/i6-visible" 2>/dev/null)"
+  row="$(awk '$1 == "i6-visible" { print substr($0, 90) }' <<<"$out")"
+  case "$out" in *BUILD-TO-PUBLISHED*) hdr=1 ;; esac
+  case "$out" in *"outside trip.freshness"*) foot=1 ;; esac
+  case "$out" in *STALE*) stale=1 ;; esac
+  if [ "$rc" -ne 0 ]; then
+    FAIL "$id: list over fixtures yielding each verdict exited rc=$rc, want 0 — a verdict must never reach the status"
+  elif [ "$hdr" -ne 1 ] || [ "$foot" -ne 1 ] || [ "$stale" -ne 0 ]; then
+    FAIL "$id: list's table carries the BUILD-TO-PUBLISHED header=$hdr and the footer=$foot, and a STALE column=$stale (want 1, 1, 0)"
+  elif [ -z "$want" ] || [ "$row" != "$want" ]; then
+    FAIL "$id: list's cell for the visible-change fixture is '$row', and the helper's is '$want' — the column is not the relation"
+  else
+    PASS "$id: list exits 0 over every verdict (rc=0), carries the column and the footer and no STALE column, and its cell is the helper's ('$row')"
+  fi
+}
+i6n_assert "I6n"
+
+# ── ARMED-RED controls for I6.
+i6_m_mtime() { build_to_published() { local s e p; s="$(newest_site_html "$1")"; e="$(_epoch_of_file "$s")"; p="$(_epoch_of_iso 2026-01-01T00:00:00Z)"; if _is_stale "$e" "$p"; then printf 'BEHIND: x'; else printf 'CURRENT'; fi; }; }
+i6_m_equal()   { l18_rewrite build_to_published 'if [ "$bp_dg" = "$bp_rec" ]; then' 'if true; then'; }
+i6_m_absent()  { l18_rewrite build_to_published 'absent)' 'zzq-absent)'; }
+i6_m_legacy()  { l18_rewrite build_to_published 'if [ "${#bp_rec}" -ne 64 ]; then' 'if false; then'; }
+i6_m_legbehind() { l18_rewrite build_to_published "printf 'UNDETERMINED: the push record predates the current digest; the next push records one'" "printf 'BEHIND: %s' \"\$bp_rel\""; }
+i6_m_twin()    { l18_rewrite build_to_published 'if [ "$bp_twin" -eq 1 ]; then' 'if false; then'; }
+i6_m_unusable() { l18_rewrite build_to_published "printf 'UNDETERMINED: the push record cannot be read'" "printf 'UNDETERMINED: no push recorded'"; }
+i6_m_norender() { l18_rewrite build_to_published 'if [ -z "$bp_site" ]; then' 'if false; then'; }
+i6_m_noproj()  { l18_rewrite build_to_published 'if [ -z "$bp_dg" ]; then' 'if false; then'; }
+i6_m_writes()  { eval "$(declare -f build_to_published | sed '1s/^build_to_published/i6_real_btp/')"
+                 build_to_published() { : > "$1/.i6-marker"; i6_real_btp "$@"; }; }
+i6_m_status()  { l18_rewrite cmd_list "printf '\n'" "printf '\n'; return 7"; }
+l18_mut_assert "I6a-mut-rebuild" "build_to_published replaced by the old modification-time rule" i6_m_mtime i6_cell_assert "I6b-mut" rebuild CURRENT
+l18_mut_assert "I6a-mut-touch" "build_to_published replaced by the old modification-time rule" i6_m_mtime i6_cell_assert "I6e-mut" touch CURRENT
+l18_mut_assert "I6c-mut" "the comparison forced equal" i6_m_equal i6_cell_assert "I6c-mut" visible "BEHIND: outputs/i6-visible-travel-site.html"
+l18_mut_assert "I6d-mut" "the absent row removed, so the record falls through to the comparison" i6_m_absent i6_cell_assert "I6d-mut" norecord "UNDETERMINED: no push recorded" BEHIND
+l18_mut_assert "I6f-mut" "the legacy branch removed, so a CRC token meets the SHA-256 digest" i6_m_legacy i6_cell_assert "I6f-mut" legacy-eq CURRENT
+l18_mut_assert "I6g-mut" "a legacy mismatch mapped to BEHIND" i6_m_legbehind i6_cell_assert "I6g-mut" legacy-ne "UNDETERMINED: the push record predates the current digest" BEHIND
+l18_mut_assert "I6h-mut" "the staged-twin row removed" i6_m_twin i6_cell_assert "I6h-mut" twin "UNDETERMINED: a push" BEHIND
+l18_mut_assert "I6i-mut" "an unusable record given the absent record's text" i6_m_unusable i6_cell_assert "I6i-mut" dir "UNDETERMINED: the push record cannot be read" BEHIND
+l18_mut_assert "I6j-mut" "the no-local-render row removed" i6_m_norender i6_cell_assert "I6j-mut" norender "UNDETERMINED: no local render" BEHIND
+l18_mut_assert "I6o-mut" "the unprojectable-render row removed" i6_m_noproj i6_cell_assert "I6o-mut" unreadable "UNDETERMINED: outputs/i6-unreadable-travel-site.html cannot be projected" BEHIND
+l18_mut_assert "I6k-mut" "a helper that writes a marker file" i6_m_writes i6k_assert "I6k-mut"
+l18_mut_assert "I6n-mut" "a verdict made to set a non-zero exit" i6_m_status i6n_assert "I6n-mut"
+
+# ── The MD registrations.
+while IFS='|' read -r i6id i6c i6want i6not; do
+  [ -n "$i6id" ] || continue
+  md_flips build_to_published "$i6id" i6_cell_assert "$i6id" "$i6c" "$i6want" "$i6not"
+done <<<"$I6_CASES"
+md_flips build_to_published "I6k" i6k_assert "I6k"
+md_flips cmd_list "I6n" i6n_assert "I6n"
 
 # Teardown: mocks go; the shimmed production functions are RE-DEFINED from the saved
 # definitions, never unset — `unset -f` here would delete the real ones.

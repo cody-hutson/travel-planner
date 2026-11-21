@@ -565,8 +565,9 @@ ladder resolved, and stop. Do not re-publish an archived trip.
 ### Report
 
 Report what the script reported, and add no conclusion it did not make. On success its
-completion line names the live URL. If its pre-push guard aborts, say that nothing was
-pushed and name what the script named — a guard abort is not a partial publish.
+completion line names the live URL. If its source check or its pre-push guard stops it, say
+that nothing was pushed and name what the script named — the file and the field for the source
+check, never a value. A stop is not a partial publish.
 
 ## list
 
@@ -581,8 +582,8 @@ anywhere: the subcommand it runs resolves and reports and never writes, encrypts
 pushes — so it performs no act whose effect lands outside the trip's own files.**
 
 Repo-wide, read-only, no trip, no arguments, depth `G0` on its own row. It reports each
-trip with its repo, status, published and edited dates, and the stale flag, exactly as the
-script emits them.
+trip with its repo, status, published and edited dates, and the relation
+`build-to-published`, exactly as the script emits them.
 
 ### Invocation
 
@@ -602,11 +603,30 @@ in the fence is the asset-resolution slice's and is left byte-identical, so a re
 concern stays attributable to one change. The retained where-to-stand sentences on this
 surface are the same pattern, already ratified.
 
-**Freshness is report-only.** Render the stale column as the script emits it, including
-its indeterminate value. No verb of this file branches on it, and `update` does not
-require staleness — re-publishing unchanged content is legal. It is not inert, though: it
+**Freshness is report-only.** Render the `build-to-published` column as the script emits it,
+including the operand an undetermined verdict names. No verb of this file branches on it, and
+`update` does not require the page to be behind — re-publishing unchanged content is legal. It is not inert, though: it
 pushes a commit, and `reference/adr/ADR-007-command-entry-point.md` § 4 records that
 commit's timestamp as a metadata residual no revert reaches.
+
+### The relation — `build-to-published`
+
+| relation | the derived side | the source side, by rule | when an operand is not observable |
+|---|---|---|---|
+| `build-to-published` | the render as last pushed, by the digest `trips/<slug>/.published-itinerary` records after every successful `publish`, `update` and `rotate` | the newest `trips/<slug>/outputs/*-travel-site.html`, the member `publish` takes | `UNDETERMINED`, naming the operand |
+
+The script's `list` evaluates it, outside `trip.freshness`, because what it compares crossed a channel
+(`reference/adr/ADR-035-site-transitions-and-refresh.md` § 1). It is report-only, and no verb of this
+command branches on it. It observes content identity — the organizer-confirm gate's own projection — so
+a rebuild or a touch that changes nothing visible reads current; its verdicts are the shipped freshness
+family's, compared as `skills/trip/SKILL.md` § *The freshness report* compares them. A record staged by
+a push and not yet put in place, a record that cannot be read, no record on this machine, and a record
+written under the earlier digest that no longer matches each leave the verdict undetermined, naming what
+could not be read. It says nothing about whether the page is served: `unpublish` leaves the record, and the
+status column carries that. It cannot observe a push made from another machine; text outside the
+projection — the coordination band and the declaration block, by design, and text a browser shows that
+the projection drops; or a projection that moved after the record was written, which reads as a change
+once.
 
 ### Never assert a publication state that was not observed
 
@@ -634,7 +654,8 @@ The reason is the charter's own, and it is not that the branch is merely risky. 
 confirmation on that branch is gated on stdin being a terminal, and a command Claude runs
 never has one — so setting the variable does not confirm non-interactively, it **skips the
 confirmation entirely**. The charter also records that the plaintext branch does not run
-the pre-push ciphertext guard, running a content guard instead.
+the pre-push ciphertext guard, running content controls instead — a refusal of any render
+carrying a group-only section, the source check every publish runs, then the content guard.
 
 So this is an operator action. The hand-off: point at `CLAUDE.md` → *Publishing to GitHub
 Pages* → the opt-out paragraph, **print that paragraph's command for the operator to run

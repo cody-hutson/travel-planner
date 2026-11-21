@@ -835,6 +835,50 @@ lines those selectors label left out, in the shapes its header's criterion reach
 nothing, on zero `field` rows or a malformed row. A `field` row added here joins it with no edit,
 and which dispatches take it is the test in `CLAUDE.md` § *Dispatching agents*.
 
+**The fence has a third executable reader, the source check.** `scripts/publish-trip-site.sh` runs
+it before every `publish`, `update` and `rotate`, on both limbs. It reads every `field` row, whatever
+its artifact scope, takes each selector's stated values from the files the rows scope, and stops the
+publish where a file `reference/site-layout-spec.md` § 9.1 marks `bound` carries the label with a
+value, or carries a value exactly (`ADR-030` § 6 safeguard 6): a part of it holding a number of three
+or more digits, or a word of it that is an email address, a run of five or more digits joined by one or
+two of a space, `.`, `/`, `(`, `)`, `+` and `-`, or a token mixing letters with at least three digits.
+Any other value is matched by its label alone. A run whose groups form a calendar-valid date — a year
+19xx or 20xx first or last, with a valid month, or a month and day, in year-month-day, day-month-year
+or month-day-year order — is skipped, so a date the plan carries is not matched. The check reads a
+bound file's lines as UTF-8. Before matching, it reads every Unicode space separator as a space and the
+colons U+FF1A, U+FE55, U+FE13, U+2236, U+A789, U+02D0, U+0589 and U+05C3 as a colon, drops every format
+character and variation selector (Unicode 13.0 category Cf and property Variation_Selector), strips a
+backslash before a colon, and folds full-width and Arabic-Indic digits. A bound file or a value source
+that opens with a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not
+followed by a line feed, stops as unreadable. Anything else is not folded: other scripts' letters and
+digits, full-width letters, other look-alikes, a dash in place of the colon, a label behind a marker the
+strip does not name, and the declared separators. The
+source check does not see: an ordinary-word value restated without its label; a label mid-line, in a
+table cell, with a word between the selector and its colon, with a dash in place of the colon, or behind
+a leading marker other than those the strip names; a value wrapped or paraphrased; a calendar-valid
+date, or any distinctive part, carried with other words around it; a number whose groups are joined
+otherwise than by one or two of a space, `.`, `/`, `(`, `)`, `+` and `-`, such as by a comma or by three
+characters like ` - `; a value written in characters the folding does not fold; a value held only in a
+value source that is absent or unresolved, or on a value-source line the source check's harvest does not
+read as a label — it reads one only by § 5.6's field grammar, as the selector, case-insensitively, at
+the start of the line, followed by a colon with nothing but spaces or tabs between them, once leading
+spaces or tabs, one `-`, `*` or `+` bullet followed by a space or tab and every `**` are stripped, so
+it does not read, for example, a label behind a task box or a numbered, blockquote or heading marker,
+or with a look-alike space before its colon, a look-alike colon or an invisible character in it —
+which contributes no value, so the label half alone covers it; a person reference whose merge chain
+runs past one hop, which is named in a
+note and whose second hop is not read; a trip with no bound file present, which passes with every one
+named as absent; and a person reference or merge key in a traveller file, person record or merge
+target with no front matter on its first line, when no line opening with the key as written, indented
+or quoted, carries a value on it or on the next line that is neither blank nor a comment, indented or
+as a sequence entry, and none holds the id whole — for example a flow mapping, an escaped spelling of
+the key, whether or not after an empty key line, or a key after a U+2028 line separator, with the id
+escaped — which is read as carrying none.
+A value source that is absent is named; a field class that
+reads empty stops the
+publish. A `field` row added here joins both matches with no edit to any shell script, wherever its
+scope is a trip-relative path or the person store.
+
 **Adding a member of the class inside the queried set is one row here and no edit to any shell
 script.** The evaluator asks exactly four `(limb, artifact-scope)` questions — `entry` and `field`
 against `outputs/traveler-model.md`, and `field` against `travelers/<traveler>.md` and
