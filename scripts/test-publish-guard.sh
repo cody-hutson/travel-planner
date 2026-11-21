@@ -16719,11 +16719,11 @@ l19u_assert "L19u"
 # than leaving it stale: a calendar-valid date carried with other words; a trip with no bound artifact present
 # (D-NEW-3); a word between the selector and its colon; a label mid-line; a label whose colon is a dash, in
 # either spelling (S7-04); a number joined by three characters or by a comma (S7-04); a value-source line the
-# guard's profile parse does not read as a label (a task box in a traveller file, or a traveller file written in
-# UTF-16), which harvests nothing; a label behind a marker the strip does not name (a code span); and, as the
+# guard's profile parse does not read as a label (a task box, or a full-width colon, in a traveller file), which
+# harvests nothing; a label behind a marker the strip does not name (a code span); and, as the
 # folding's own boundary, a look-alike outside it (the Hangul filler before the colon) and digits of another
 # script (Devanagari).
-l19v_assert() { # <id> <date|none|interposed|midline|emdash|dash|sep3|comma|harvest|harvest16|marker|hangul|deva>
+l19v_assert() { # <id> <date|none|interposed|midline|emdash|dash|sep3|comma|harvest|harvestcolon|marker|hangul|deva>
   local d; d="$(l19_trip "l19v-$2")"
   case "$2" in
     date)       l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** United States, expires 2031-04-12"
@@ -16739,9 +16739,7 @@ l19v_assert() { # <id> <date|none|interposed|midline|emdash|dash|sep3|comma|harv
                 l19_put "$d" "$L19B1" '# Trip' '' 'Ref 1234,5678 on file.' ;;
     harvest)    l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- [ ] **${L19S1}:** Ruritania, document no. X1234567"
                 l19_put "$d" "$L19B1" '# Trip' '' 'Bring X1234567 to the desk.' ;;
-    harvest16)  l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X1234567"
-                perl -MEncode -e 'local $/; open(my $i, "<:raw", $ARGV[0]) or die; my $s = decode("UTF-8", scalar <$i>); close $i;
-                  open(my $o, ">:raw", $ARGV[0]) or die; print $o "\xFF\xFE", encode("UTF-16LE", $s)' "$d/$L19_PROFILE"
+    harvestcolon) l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}$(printf '\357\274\232')** Ruritania, document no. X1234567"
                 l19_put "$d" "$L19B1" '# Trip' '' 'Bring X1234567 to the desk.' ;;
     marker)     l19_put "$d" "$L19B1" '# Trip' '' "\`${L19S1}\`: Ruritania" ;;
     hangul)     l19_put "$d" "$L19B1" '# Trip' '' "${L19S1}$(printf '\343\205\244'): Ruritania" ;;
@@ -16750,7 +16748,7 @@ l19v_assert() { # <id> <date|none|interposed|midline|emdash|dash|sep3|comma|harv
   esac
   l19_assert "$1" "the declared residual '$2' holds: this shape passes the source check, as declared at the function and in the PR" "$d" 0 "Source check:" "STOPPED"
 }
-for l19c in date none interposed midline emdash dash sep3 comma harvest harvest16 marker hangul deva; do l19v_assert "L19v-$l19c" "$l19c"; done
+for l19c in date none interposed midline emdash dash sep3 comma harvest harvestcolon marker hangul deva; do l19v_assert "L19v-$l19c" "$l19c"; done
 
 # ── L19w — the word rule skips a calendar-valid date and nothing else (Stage 7's S7-03, operator ruling C): a
 # number grouped like a date whose groups are no calendar date, carried with other words in a bound line, stops;
@@ -16926,6 +16924,82 @@ l19enc_assert() { # <id> <16le|16be|32le|32be|nul>
 for l19c in 16le 16be 32le 32be; do l19enc_assert "L19i-bom$l19c" "$l19c"; done
 l19enc_assert "L19i-nul" nul
 
+# ── L19i-harvest16 / L19i-src-* — a value source the check cannot read as UTF-8: each value-source kind (the
+# traveller profile, a person record its reference reaches, that record's merge target, the traveller model)
+# behind a UTF-16LE mark, the profile behind the other three marks, and a profile line holding a NUL byte inside
+# its value, stops as present but unreadable, naming the source by its scope as the declaration writes it, or as
+# `person record <id>`, and never by a file name or a value. Each plants a stated value in the source and the bare
+# value in a bound file, so a harvest that read the source would stop the publish matched exactly; the verdict
+# wanted is the unreadable one, on every host, because the bytes are read before any awk reads a line.
+# L19i-harvest16 is the earlier L19v-harvest16, flipped from a declared pass. The order arms put the value in the
+# person record a UTF-16 profile references, and stop under the shipped declaration and under one listing the
+# person scope first. The L19y-src-* twins are the same sources in UTF-8, one with a non-ASCII letter: each
+# harvests, and the bound file stops matched exactly, never as unreadable.
+l19src_trip() { # <name> <profile|person|merge|model|nul|order|latin> <16le|16be|32le|32be|nul|utf8> -> trip dir
+  local d f st="${_GUARD_PERSON_STORE:-people}" rk="${_GUARD_REF_KEY:-person}" mk="${_GUARD_MERGE_KEY:-merged-into}"
+  d="$(l19_trip "$1")"; f="$d/$L19_PROFILE"
+  case "$2" in
+    profile) l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X1234567" ;;
+    person)  f="$d/$st/psn-a9c1.md"
+             l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" '---' '# Rowan' '' '- Interests: markets'
+             l19_put "$d" "$st/psn-a9c1.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X1234567" ;;
+    merge)   f="$d/$st/psn-a9c2.md"
+             l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" '---' '# Rowan' '' '- Interests: markets'
+             l19_put "$d" "$st/psn-a9c1.md" '---' "$mk: psn-a9c2" '---' '# Rowan'
+             l19_put "$d" "$st/psn-a9c2.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X1234567" ;;
+    model)   f="$d/$L19_MODEL"
+             l19_put "$d" "$L19_MODEL" '# Traveler Model [DERIVED]' '' '## Rowan' "- ${L19S1}: Ruritania, document no. X1234567" ;;
+    nul)     l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' ''
+             if [ "$3" = nul ]; then printf '%s: Ruritania\000, no. X1234567\n' "$L19S1" >> "$f"
+             else printf '%s: Ruritania, no. X1234567\n' "$L19S1" >> "$f"; fi ;;
+    order)   l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" '---' '# Rowan' '' '- Interests: markets'
+             l19_put "$d" "$st/psn-a9c1.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X1234567" ;;
+    latin)   l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritani$(printf '\303\251') Gro$(printf '\303\237')mark, document no. X1234567" ;;
+  esac
+  l19_put "$d" "$L19B1" '# Trip' '' 'Bring X1234567 to the desk.'
+  case "$3" in utf8|nul) ;; *) l19_enc "$f" "$3" ;; esac
+  printf '%s' "$d"
+}
+l19src_assert() { # <id> <kind> <16le|16be|32le|32be|nul|utf8> [the declaration order, for the order kind]
+  local id="$1" k="$2" e="$3" o="${4:-}" d sc
+  d="$(l19src_trip "l19src-$k-$e${o:+-$o}" "$k" "$e")"
+  case "$k" in
+    person) sc="person record psn-a9c1" ;;
+    merge)  sc="person record psn-a9c2" ;;
+    model)  sc="$L19_MODEL" ;;
+    *)      sc="${_GUARD_DECL_ARTIFACT_PROFILE:-?}" ;;
+  esac
+  if [ "$e" = utf8 ]; then
+    l19_assert "$id" "the same value source ($k${o:+, $o declaration}) in UTF-8 harvests, and the bound file stops the publish matched exactly, never as unreadable" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} value, matched exactly" "cannot be read|X1234567"
+  else
+    l19_assert "$id" "a value source that cannot be read as UTF-8 text ($k, $e${o:+, $o declaration}) stops the publish as present but unreadable, named as ${sc}, never by a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source ${sc} is present but cannot be read as UTF-8 text" "matched exactly|label with a value|Ruritania|X1234567|rowan|psn-a9c1.md|psn-a9c2.md"
+  fi
+}
+# The person-first declaration: the live rows, the person scope's field rows moved ahead of every other row.
+L19DECL_PFIRST="$L19W/decl-person-first.md"
+{ _guard_declared_rows | awk -v P="${_GUARD_DECL_ARTIFACT_PERSON:-}" '$1 == "field" && $3 == P'
+  _guard_declared_rows | awk -v P="${_GUARD_DECL_ARTIFACT_PERSON:-}" '!($1 == "field" && $3 == P)'; } | ldecl_write "$L19DECL_PFIRST"
+l19src_order_assert() { # <id> <shipped|person-first> <16le|utf8>
+  local id="$1" o="$2" e="$3" pre="" want first cand rows
+  want="${_GUARD_DECL_ARTIFACT_PROFILE:-}"
+  if [ "$o" = person-first ]; then pre="_GUARD_DECLARATION=\"$L19DECL_PFIRST\""; want="${_GUARD_DECL_ARTIFACT_PERSON:-}"; fi
+  first="$( [ -z "$pre" ] || eval "$pre"; _guard_declared_rows | awk '$1 == "field" && !n++ { print $3 }')"
+  cand="$( [ -z "$pre" ] || eval "$pre"; _guard_declared_candidates)"
+  rows="$( [ -z "$pre" ] || eval "$pre"; _guard_declared_rows | awk 'NF { c++ } END { print c + 0 }')"
+  if [ -z "$want" ] || [ "$first" != "$want" ] || [ "${cand:-0}" != "$rows" ]; then
+    FAIL "$id: fixture integrity — under the $o declaration the first field scope reads '$first' (want '$want'), with ${cand:-0} candidate row(s) against $rows read, so this arm would not grade the order it names. VERDICT WITHHELD"
+  else
+    L19_PRE="$pre" l19src_assert "$id" order "$e" "$o"
+  fi
+}
+l19src_assert "L19i-harvest16" profile 16le
+for l19c in person merge model; do l19src_assert "L19i-src-$l19c-16le" "$l19c" 16le; done
+for l19c in 16be 32le 32be; do l19src_assert "L19i-src-profile-$l19c" profile "$l19c"; done
+l19src_assert "L19i-src-nul" nul nul
+for l19c in shipped person-first; do l19src_order_assert "L19i-src-order-$l19c" "$l19c" 16le; done
+for l19c in profile person merge model nul latin; do l19src_assert "L19y-src-$l19c" "$l19c" utf8; done
+for l19c in shipped person-first; do l19src_order_assert "L19y-src-order-$l19c" "$l19c" utf8; done
+
 # ── ARMED-RED controls for L19: each arm under the mutation its design row names reports pass=0 fail=1.
 l19_m_noexact()  { l18_rewrite _build_source_hits 'if (exact_hit(i, nl, ld, lt))' 'if (0)'; }
 l19_m_nolabel()  { l18_rewrite _build_source_hits 'if (label_hit(lab, S[i]))' 'if (0)'; }
@@ -16985,7 +17059,7 @@ md_flips require_clean_build_sources "L19s-two" l19s_assert "L19s-two" two
 md_flips refuse_group_only_render "L19s-three" l19s_assert "L19s-three" three
 for l19c in email phone docno; do md_flips require_clean_build_sources "L19t-$l19c" l19t_assert "L19t-$l19c" "$l19c"; done
 md_flips require_clean_build_sources "L19u" l19u_assert "L19u"
-for l19c in date none interposed midline emdash dash sep3 comma harvest harvest16 marker hangul deva; do md_flips require_clean_build_sources "L19v-$l19c" l19v_assert "L19v-$l19c" "$l19c"; done
+for l19c in date none interposed midline emdash dash sep3 comma harvest harvestcolon marker hangul deva; do md_flips require_clean_build_sources "L19v-$l19c" l19v_assert "L19v-$l19c" "$l19c"; done
 for l19c in stop-242:'07 2019 55':stop stop-422:'2031 55 12':stop stop-224:'55 12 2031':stop stop-24:'19 2031':stop \
             skip-ymd:2031-03-15:skip skip-dmy:15/03/2031:skip skip-dmy-dot:31.12.2031:skip skip-mdy:03/15/2031:skip \
             skip-ym:2031-07:skip skip-ym-1999:1999-12:skip; do
@@ -17026,6 +17100,13 @@ for l19c in $L19_SWEEPS; do
 done
 for l19c in 16le 16be 32le 32be; do md_flips require_clean_build_sources "L19i-bom$l19c" l19enc_assert "L19i-bom$l19c" "$l19c"; done
 md_flips require_clean_build_sources "L19i-nul" l19enc_assert "L19i-nul" nul
+md_flips require_clean_build_sources "L19i-harvest16" l19src_assert "L19i-harvest16" profile 16le
+for l19c in person merge model; do md_flips require_clean_build_sources "L19i-src-$l19c-16le" l19src_assert "L19i-src-$l19c-16le" "$l19c" 16le; done
+for l19c in 16be 32le 32be; do md_flips require_clean_build_sources "L19i-src-profile-$l19c" l19src_assert "L19i-src-profile-$l19c" profile "$l19c"; done
+md_flips require_clean_build_sources "L19i-src-nul" l19src_assert "L19i-src-nul" nul nul
+for l19c in shipped person-first; do md_flips require_clean_build_sources "L19i-src-order-$l19c" l19src_order_assert "L19i-src-order-$l19c" "$l19c" 16le; done
+for l19c in profile person merge model nul latin; do md_flips require_clean_build_sources "L19y-src-$l19c" l19src_assert "L19y-src-$l19c" "$l19c" utf8; done
+for l19c in shipped person-first; do md_flips require_clean_build_sources "L19y-src-order-$l19c" l19src_order_assert "L19y-src-order-$l19c" "$l19c" utf8; done
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # I6 — list reports build-to-published: whether the page as last pushed is the newest local build, by content
