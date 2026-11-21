@@ -4547,9 +4547,10 @@ refuse_group_only_render() {
 # U+FF1A, U+FE55, U+FE13, U+2236, U+A789, U+02D0, U+0589 and U+05C3 as a colon, drops every format character and
 # variation selector (Unicode 13.0 category Cf and property Variation_Selector), strips a backslash before a
 # colon, and folds full-width and Arabic-Indic digits. A bound file or a value source that opens with a UTF-16
-# or UTF-32 byte-order mark, or holds a NUL byte, stops as unreadable. Anything else is not folded: other
-# scripts' letters and digits, full-width letters, other look-alikes, a dash in place of the colon, a label
-# behind a marker the strip does not name, and the declared separators.
+# or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not followed by a line feed, stops as
+# unreadable. Anything else is not folded: other scripts' letters and digits, full-width letters, other
+# look-alikes, a dash in place of the colon, a label behind a marker the strip does not name, and the declared
+# separators.
 # The folds are fold() in the program below, applied alike to every bound line and to every stated value; the
 # colon set is a set, not a class, and each class's byte sequences are generated from the Unicode 13.0 database.
 #
@@ -4585,13 +4586,15 @@ refuse_group_only_render() {
 # ABSENT IS NOT UNREADABLE (D-2). A fence that reads no `bound` row, or reads in part, stops; a field class
 # that reads no `field` row, or reads in part, stops. A `bound` artifact absent from the trip — no file and no
 # link, as an IDEATION trip's itinerary is — is skipped and named; one present but not a readable regular
-# file, or one that opens with a UTF-16 or UTF-32 byte-order mark or holds a NUL byte, stops, naming it. A value
+# file, or one that opens with a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not
+# followed by a line feed, stops, naming it. A value
 # source absent, or a person reference unresolvable or malformed, is named
 # and contributes no values (D-2156-VALSRC): this check reads the sources of record directly, so it needs no
 # freshness inference, and a present, readable source contributes its values whatever its age or its entry
 # structure (#2156's review, F8). A value source present but not a readable regular file, or one that opens with
-# a UTF-16 or UTF-32 byte-order mark or holds a NUL byte, stops, named by its scope, never by a traveller file's
-# name; so does a traveller file read for its person reference that opens with such a mark or holds a NUL byte.
+# a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not followed by a line feed,
+# stops, named by its scope, never by a traveller file's name; so does a traveller file read for its person
+# reference that opens with such a mark or holds such a byte.
 # Nothing it prints is a value.
 #
 # DECLARED RESIDUALS, worded alike in § 5.6, the CHANGELOG and the PR body; test-publish-guard.sh group L's
@@ -4605,8 +4608,8 @@ refuse_group_only_render() {
 #   • a number whose groups are joined otherwise than by one or two of a space, `.`, `/`, `(`, `)`, `+` and
 #     `-`, such as by a comma or by three characters like ` - `;
 #   • a value written in characters the folding does not fold;
-#   • a value held only in a value source that is absent or unresolved, or on a value-source line the guard's
-#     profile parse does not read as a label — behind a task box or through a look-alike colon — which
+#   • a value held only in a value source that is absent or unresolved, or on a value-source line the source
+#     check's harvest does not read as a label — behind a task box or through a look-alike colon — which
 #     contributes no value, so the label half alone covers it;
 #   • a person reference whose merge chain runs past one hop, which is named in a note and whose second hop
 #     is not read;
@@ -4645,11 +4648,14 @@ _build_source_wellformed() {
 #   NOTE <what>             a value source not on file, or a person reference that does not resolve
 #   UNREAD <what>           a value source present but not a readable regular file, or a value source, or a
 #                           traveller file read for its person reference, that opens with a UTF-16 or UTF-32
-#                           byte-order mark or holds a NUL byte — the caller stops
+#                           byte-order mark, or holds a NUL byte or a carriage return not followed by a line
+#                           feed — the caller stops
 # <what> is a scope as the declaration writes it, or `person record <id>` for a minted id; never a file name.
 # A file is read only after the byte test require_clean_build_sources applies to a bound file, at each of the
 # four places one is read (a scope's file, a traveller file read for its person reference, a person record, its
-# merge target), so its bytes and not the host's awk decide whether it is read. Each reference — a traveller
+# merge target), so its bytes and not the host's awk decide whether it is read: the one awk the test runs reads
+# od's hex, never the file. A carriage return not followed by a line feed fails it, because every reader here
+# would take the file for one line, though a Markdown renderer ends a line there. Each reference — a traveller
 # file's person key, a record's merge key and its target's — and each value-source line is read with a leading
 # UTF-8 byte-order mark and trailing carriage returns removed, so a file saved with either resolves and harvests
 # as its plain twin does.
@@ -4678,6 +4684,7 @@ _field_class_values() { # <trip_dir>
         fc_enc=0
         case "$(LC_ALL=C od -An -tx1 -N4 "$fc_pf" | tr -d ' \n')" in fffe*|feff*|0000feff) fc_enc=1 ;; esac
         if [ "$fc_enc" -eq 0 ] && [ "$(($(wc -c < "$fc_pf")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$fc_pf" | wc -c)))" ]; then fc_enc=1; fi
+        if [ "$fc_enc" -eq 0 ] && [ "$(LC_ALL=C od -An -v -tx1 "$fc_pf" | LC_ALL=C awk '{ for (i = 1; i <= NF; i++) { if (p == "0d" && $i != "0a") n++; p = $i } } END { print n + (p == "0d") }')" != 0 ]; then fc_enc=1; fi
         if [ "$fc_enc" -ne 0 ]; then printf 'UNREAD\t%s\n' "$_GUARD_DECL_ARTIFACT_PROFILE"; continue; fi
         fc_refs="$(_guard_frontmatter_key - "$_GUARD_REF_KEY" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_pf")")"
         [ -n "$fc_refs" ] || continue
@@ -4691,10 +4698,12 @@ _field_class_values() { # <trip_dir>
         fc_rec="$fc_store/$fc_key.md"
         if [ ! -e "$fc_rec" ] && [ ! -L "$fc_rec" ]; then printf 'NOTE\tperson record %s\n' "$fc_key"; continue; fi
         if [ ! -f "$fc_rec" ] || [ ! -r "$fc_rec" ]; then printf 'UNREAD\tperson record %s\n' "$fc_key"; continue; fi
-        # Read as UTF-8 or not at all: a UTF-16 or UTF-32 byte-order mark, or a NUL byte anywhere.
+        # Read as UTF-8 or not at all: a UTF-16 or UTF-32 byte-order mark, or a NUL byte or a carriage return not
+        # followed by a line feed anywhere.
         fc_enc=0
         case "$(LC_ALL=C od -An -tx1 -N4 "$fc_rec" | tr -d ' \n')" in fffe*|feff*|0000feff) fc_enc=1 ;; esac
         if [ "$fc_enc" -eq 0 ] && [ "$(($(wc -c < "$fc_rec")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$fc_rec" | wc -c)))" ]; then fc_enc=1; fi
+        if [ "$fc_enc" -eq 0 ] && [ "$(LC_ALL=C od -An -v -tx1 "$fc_rec" | LC_ALL=C awk '{ for (i = 1; i <= NF; i++) { if (p == "0d" && $i != "0a") n++; p = $i } } END { print n + (p == "0d") }')" != 0 ]; then fc_enc=1; fi
         if [ "$fc_enc" -ne 0 ]; then printf 'UNREAD\tperson record %s\n' "$fc_key"; continue; fi
         fc_srcs="$fc_srcs$fc_rec$tab"
         fc_merge="$(_guard_frontmatter_key - "$_GUARD_MERGE_KEY" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_rec")")"
@@ -4707,6 +4716,7 @@ _field_class_values() { # <trip_dir>
         fc_enc=0
         case "$(LC_ALL=C od -An -tx1 -N4 "$fc_tgt" | tr -d ' \n')" in fffe*|feff*|0000feff) fc_enc=1 ;; esac
         if [ "$fc_enc" -eq 0 ] && [ "$(($(wc -c < "$fc_tgt")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$fc_tgt" | wc -c)))" ]; then fc_enc=1; fi
+        if [ "$fc_enc" -eq 0 ] && [ "$(LC_ALL=C od -An -v -tx1 "$fc_tgt" | LC_ALL=C awk '{ for (i = 1; i <= NF; i++) { if (p == "0d" && $i != "0a") n++; p = $i } } END { print n + (p == "0d") }')" != 0 ]; then fc_enc=1; fi
         if [ "$fc_enc" -ne 0 ]; then printf 'UNREAD\tperson record %s\n' "$fc_merge"; continue; fi
         fc_srcs="$fc_srcs$fc_tgt$tab"
         [ -z "$(_guard_frontmatter_key - "$_GUARD_MERGE_KEY" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_tgt")")" ] || printf 'NOTE\ta merge chain longer than one hop\n'
@@ -4723,6 +4733,7 @@ _field_class_values() { # <trip_dir>
       fc_enc=0
       case "$(LC_ALL=C od -An -tx1 -N4 "$fc_f" | tr -d ' \n')" in fffe*|feff*|0000feff) fc_enc=1 ;; esac
       if [ "$fc_enc" -eq 0 ] && [ "$(($(wc -c < "$fc_f")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$fc_f" | wc -c)))" ]; then fc_enc=1; fi
+      if [ "$fc_enc" -eq 0 ] && [ "$(LC_ALL=C od -An -v -tx1 "$fc_f" | LC_ALL=C awk '{ for (i = 1; i <= NF; i++) { if (p == "0d" && $i != "0a") n++; p = $i } } END { print n + (p == "0d") }')" != 0 ]; then fc_enc=1; fi
       if [ "$fc_enc" -ne 0 ]; then printf 'UNREAD\t%s\n' "$fc_scope"; continue; fi
       fc_srcs="$fc_srcs$fc_f$tab"
     done
@@ -4893,7 +4904,7 @@ require_clean_build_sources() { # <trip_dir>
   fi
   bs_unread="$(awk -F'\t' '$1 == "UNREAD" && !seen[$2]++ { printf "%s%s", (n++ ? ", " : ""), $2 }' <<<"$bs_vals")"
   if [ -n "$bs_unread" ]; then
-    die "SOURCE CHECK STOPPED — the value source $bs_unread is present but cannot be read as UTF-8 text: it is not a readable regular file, or it opens with a UTF-16 or UTF-32 byte-order mark or holds a NUL byte, so the values to check for are not known. Nothing was published. Save it as readable UTF-8 text, or remove it, and re-run."
+    die "SOURCE CHECK STOPPED — the value source $bs_unread is present but cannot be read as UTF-8 text: it is not a readable regular file, or it opens with a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not followed by a line feed, so the values to check for are not known. Nothing was published. Save it as readable UTF-8 text with LF or CRLF line endings, or remove it, and re-run."
   fi
   bs_sels="$(_guard_declared_rows | awk '$1 == "field" && !seen[$2]++ { printf "%s%s", (n++ ? " " : ""), $2 }')"
   bs_v="$(awk -F'\t' '$1 == "V" { print $2 "\t" $3 }' <<<"$bs_vals")"
@@ -4908,12 +4919,14 @@ require_clean_build_sources() { # <trip_dir>
       if [ ! -f "$bs_f" ] || [ ! -r "$bs_f" ]; then
         die "SOURCE CHECK STOPPED — $bs_rel is present but cannot be read, so whether it carries a value of the non-publishable field class cannot be checked. Nothing was published. Make it readable, or remove it, and re-run."
       fi
-      # Read as UTF-8 or not at all (S7P2-06): a UTF-16 or UTF-32 byte-order mark, or a NUL byte anywhere.
+      # Read as UTF-8 or not at all (S7P2-06): a UTF-16 or UTF-32 byte-order mark, or a NUL byte or a carriage
+      # return not followed by a line feed anywhere.
       bs_enc=0
       case "$(LC_ALL=C od -An -tx1 -N4 "$bs_f" | tr -d ' \n')" in fffe*|feff*|0000feff) bs_enc=1 ;; esac
       if [ "$bs_enc" -eq 0 ] && [ "$(($(wc -c < "$bs_f")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$bs_f" | wc -c)))" ]; then bs_enc=1; fi
+      if [ "$bs_enc" -eq 0 ] && [ "$(LC_ALL=C od -An -v -tx1 "$bs_f" | LC_ALL=C awk '{ for (i = 1; i <= NF; i++) { if (p == "0d" && $i != "0a") n++; p = $i } } END { print n + (p == "0d") }')" != 0 ]; then bs_enc=1; fi
       if [ "$bs_enc" -ne 0 ]; then
-        die "SOURCE CHECK STOPPED — $bs_rel is present but cannot be read as UTF-8 text: it opens with a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte, so whether it carries a value of the non-publishable field class cannot be checked. Nothing was published. Save it as UTF-8, or remove it, and re-run."
+        die "SOURCE CHECK STOPPED — $bs_rel is present but cannot be read as UTF-8 text: it opens with a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not followed by a line feed, so whether it carries a value of the non-publishable field class cannot be checked. Nothing was published. Save it as UTF-8 text with LF or CRLF line endings, or remove it, and re-run."
       fi
       bs_hit="$(BS_SELS="$bs_sels" BS_VALS="$bs_v" _build_source_hits "$bs_f")" && bs_hrc=0 || bs_hrc=$?
       if [ "$bs_hrc" -ne 0 ]; then

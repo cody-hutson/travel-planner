@@ -47,9 +47,10 @@ matching, it reads every Unicode space separator as a space and the colons U+FF1
 U+2236, U+A789, U+02D0, U+0589 and U+05C3 as a colon, drops every format character and variation
 selector (Unicode 13.0 category Cf and property Variation_Selector), strips a backslash before a
 colon, and folds full-width and Arabic-Indic digits. A bound file or a value source that opens with
-a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte, stops as unreadable. Anything else is not
-folded: other scripts' letters and digits, full-width letters, other look-alikes, a dash in place of
-the colon, a label behind a marker the strip does not name, and the declared separators. A run of
+a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not followed by a line
+feed, stops as unreadable. Anything else is not folded: other scripts' letters and digits,
+full-width letters, other look-alikes, a dash in place of the colon, a label behind a marker the
+strip does not name, and the declared separators. A run of
 digits whose groups form a calendar-valid date is skipped, so a date the plan carries does not stop
 a publish; a number grouped like a date that is no calendar date is matched. It reads the traveller
 files, the traveller model and the referenced person records directly, so a stale or missing model
@@ -86,7 +87,7 @@ paraphrased; a calendar-valid date, or any distinctive part, carried with other 
 number whose groups are joined otherwise than by one or two of a space, `.`, `/`, `(`, `)`, `+` and
 `-`, such as by a comma or by three characters like ` - `; a value written in characters the folding
 does not fold; a value held only in a value source that is absent or unresolved, or on a
-value-source line the guard's profile parse does not read as a label — behind a task box or through
+value-source line the source check's harvest does not read as a label — behind a task box or through
 a look-alike colon — which contributes no value, so the label half alone covers it; a person
 reference whose merge chain runs past one hop, which is named in a note and whose second hop is not
 read; and a trip with no bound file present, which passes with every one named as absent. `list`
