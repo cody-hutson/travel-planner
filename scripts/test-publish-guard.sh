@@ -17368,6 +17368,96 @@ for l19c in indent blanklead; do l19ref_assert "L19i-src-stub-ref-$l19c" "stub-$
 l19ref_assert "L19c-ref-stub-body" stub-body pass
 for l19c in body-indent empty-next prefix; do l19ref_assert "L19c-ref-$l19c" "$l19c" pass; done
 
+# ── L19i-src-shape-* / L19i-src-stub-shape-* / L19z-hop2-shape-* / L19c-shape-* / L19y-src-model-line1* — the
+# front-matter shape gate. A reference is read only from front matter opening on the first line, every line of
+# which up to its closer is blank, a comment, or a plain key line: at column 0 a letter, digit or `_`, then
+# letters, digits, `_`, `.` or `-`, then a colon followed by a space, a tab or the line's end, holding none of
+# U+0085, U+2028 and U+2029, which a YAML 1.1 reader takes as line breaks. On such lines the top-level keys are
+# exactly the literal keys, and the reader reads every one. A traveller file whose front matter a YAML reader
+# resolves to a person reference reaching a record holding the value, written any other way — a flow mapping, an
+# explicit key, a tag or an anchor on the key, an escaped key, a quoted duplicate of a plain key (YAML keeps the
+# last), a merge key, a `...` closer, the key after one of those three characters in a value or a comment — stops,
+# naming the traveller scope and what was found, never a file name or a value (L19i-src-shape-*). Three more stop
+# as rulings rather than as YAML references: a traveller file with no front matter on its first line (-nofm), an
+# indented line under another key (-seq), and a key with no space after its colon (-nospace). A person record's
+# merge key in a flow mapping or an explicit key, or a record with no front matter, stops, named as the record
+# (L19i-src-stub-shape-*); the same on a merge target, whose key is never followed, is named as a longer chain, as
+# its plain twin is (L19z-hop2-shape-*). The controls pass: a key nested under another (YAML reads it under
+# `trip`, so not the reference), the eight universal keys alone, a comment line holding the key, the key in
+# another case (YAML keys are case-sensitive), blank and whitespace-only lines, and a tab after a colon. A
+# traveller model whose first line is a label, plain or behind a UTF-8 byte-order mark, harvests, and the bound
+# file stops matched exactly (L19y-src-model-line1*): the model is read by the scope-file loop alone.
+l19shape_trip() { # <name> <shape> -> trip dir: a traveller file (or record, or target) of that shape, the records it may reach, and the bare value in a bound file
+  local d st="${_GUARD_PERSON_STORE:-people}" rk="${_GUARD_REF_KEY:-person}" mk="${_GUARD_MERGE_KEY:-merged-into}" tb ls ps nel rx rc0
+  tb="$(printf '\t')"; ls="$(printf '\342\200\250')"; ps="$(printf '\342\200\251')"; nel="$(printf '\302\205')"
+  rx="\\x$(printf '%x' "'${rk:0:1}")${rk:1}"; rc0="$(printf '%s' "${rk:0:1}" | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')${rk:1}"
+  d="$(l19_trip "$1")"
+  l19_put "$d" "$st/psn-a9d1.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X5813024"
+  l19_put "$d" "$st/psn-a9d2.md" '---' '---' '# Rowan' '' '- Interests: markets'
+  l19_put "$d" "$L19B1" '# Trip' '' 'Bring X5813024 to the desk.'
+  case "$2" in
+    flow)      l19_put "$d" "$L19_PROFILE" '---' "{$rk: psn-a9d1}" '---' '# Rowan' ;;
+    qkey)      l19_put "$d" "$L19_PROFILE" '---' "? $rk" ': psn-a9d1' '---' '# Rowan' ;;
+    tag)       l19_put "$d" "$L19_PROFILE" '---' "!!str $rk: psn-a9d1" '---' '# Rowan' ;;
+    anchor)    l19_put "$d" "$L19_PROFILE" '---' "&a $rk: psn-a9d1" '---' '# Rowan' ;;
+    esc)       l19_put "$d" "$L19_PROFILE" '---' "\"$rx\": psn-a9d1" '---' '# Rowan' ;;
+    dup)       l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9d2" "\"$rk\": psn-a9d1" '---' '# Rowan' ;;
+    merge)     l19_put "$d" "$L19_PROFILE" '---' "<<: {$rk: psn-a9d1}" '---' '# Rowan' ;;
+    dots)      l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9d1" '...' '# Rowan' ;;
+    ls)        l19_put "$d" "$L19_PROFILE" '---' "name: Rowan$ls$rk: psn-a9d1" '---' '# Rowan' ;;
+    ps)        l19_put "$d" "$L19_PROFILE" '---' "name: Rowan$ps$rk: psn-a9d1" '---' '# Rowan' ;;
+    nel)       l19_put "$d" "$L19_PROFILE" '---' "name: Rowan$nel$rk: psn-a9d1" '---' '# Rowan' ;;
+    lscomment) l19_put "$d" "$L19_PROFILE" '---' "# the lead traveller$ls$rk: psn-a9d1" '---' '# Rowan' ;;
+    nofm)      l19_put "$d" "$L19_PROFILE" '# Rowan' '' '- Interests: markets' ;;
+    seq)       l19_put "$d" "$L19_PROFILE" '---' "$rk:" 'name:' '  - Rowan' '---' '# Rowan' ;;
+    nospace)   l19_put "$d" "$L19_PROFILE" '---' "$rk:psn-a9d1" '---' '# Rowan' ;;
+    nested)    l19_put "$d" "$L19_PROFILE" '---' "trip: {$rk: psn-a9d1}" '---' '# Rowan' ;;
+    univ)      l19_put "$d" "$L19_PROFILE" '---' "artifact: $L19_PROFILE" 'schema-version: 1' 'trip: zq-2031' 'writer: human' \
+                 'lifecycle: persist-mutable' 'provenance: human' 'publish: internal' 'generated: 2031-01-05' '---' '# Rowan' ;;
+    comment)   l19_put "$d" "$L19_PROFILE" '---' "# $rk: psn-a9d1" '  # the lead traveller' 'trip: zq-2031' '---' '# Rowan' ;;
+    case)      l19_put "$d" "$L19_PROFILE" '---' "$rc0: psn-a9d1" '---' '# Rowan' ;;
+    blank)     l19_put "$d" "$L19_PROFILE" '---' 'trip: zq-2031' '' "  $tb" 'writer: human' '---' '# Rowan' ;;
+    tab)       l19_put "$d" "$L19_PROFILE" '---' "trip:${tb}zq-2031" '---' '# Rowan' ;;
+    stub-*)    l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9d3" '---' '# Rowan'
+               l19_put "$d" "$st/psn-a9d4.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X5813024"
+               case "$2" in
+                 stub-flow) l19_put "$d" "$st/psn-a9d3.md" '---' "{$mk: psn-a9d4}" '---' '# Rowan' ;;
+                 stub-qkey) l19_put "$d" "$st/psn-a9d3.md" '---' "? $mk" ': psn-a9d4' '---' '# Rowan' ;;
+                 stub-nofm) l19_put "$d" "$st/psn-a9d3.md" '# Rowan' '' '- Interests: markets' ;;
+               esac ;;
+    hop-*)     l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9d5" '---' '# Rowan'
+               l19_put "$d" "$st/psn-a9d5.md" '---' "$mk: psn-a9d6" '---' '# Rowan'
+               l19_put "$d" "$st/psn-a9d7.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X5813024"
+               case "$2" in
+                 hop-flow) l19_put "$d" "$st/psn-a9d6.md" '---' "{$mk: psn-a9d7}" '---' '# Rowan' ;;
+                 hop-qkey) l19_put "$d" "$st/psn-a9d6.md" '---' "? $mk" ': psn-a9d7' '---' '# Rowan' ;;
+                 hop-nofm) l19_put "$d" "$st/psn-a9d6.md" '# Rowan' '' '- Interests: markets' ;;
+               esac ;;
+    mline1*)   l19_put "$d" "$L19_MODEL" "- **${L19S1}:** Ruritania, document no. X5813024" '' '## Rowan'
+               [ "$2" != mline1-bom8 ] || { { printf '\357\273\277'; cat "$d/$L19_MODEL"; } > "$d/$L19_MODEL.mark"; mv -f "$d/$L19_MODEL.mark" "$d/$L19_MODEL"; } ;;
+  esac
+  printf '%s' "$d"
+}
+l19shape_assert() { # <id> <shape> <stop|stopm|hop|pass|exact>
+  local id="$1" d sc="${_GUARD_DECL_ARTIFACT_PROFILE:-?}"; d="$(l19shape_trip "l19shape-$2" "$2")"
+  if [ "$2" = mline1-bom8 ] && [ "$(LC_ALL=C od -An -tx1 -N3 "$d/$L19_MODEL" | tr -d ' \n')" != efbbbf ]; then
+    FAIL "$id: fixture integrity — the planted traveller model does not open with a UTF-8 byte-order mark, so this arm would not grade the mark it names. VERDICT WITHHELD"
+    return 0
+  fi
+  case "$3" in
+    stop)  l19_assert "$id" "a traveller file whose front matter is not read as plain key lines ($2) stops the publish, naming the traveller scope and what it found, never a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source $sc (a person reference the check could not read from front matter opening on the first line) is present" "matched exactly|label with a value|$sc is present|Ruritania|X5813024|rowan|psn-a9d1|psn-a9d2" ;;
+    stopm) l19_assert "$id" "a person record whose front matter is not read as plain key lines ($2) stops the publish, naming the record and what it found, never a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source person record psn-a9d3 (a merge key the check could not read from front matter opening on the first line) is present" "matched exactly|label with a value|psn-a9d3 is present|Ruritania|X5813024|rowan|psn-a9d4" ;;
+    hop)   l19_assert "$id" "a merge target whose front matter is not read as plain key lines ($2) is named in the NOTE for a longer chain, as its plain twin is, rather than read as clean" "$d" 0 "Source check:|a merge chain longer than one hop" "STOPPED|X5813024" ;;
+    pass)  l19_assert "$id" "the control ($2) is front matter of plain key lines carrying no top-level reference: it passes, and the record its text names is not read" "$d" 0 "Source check:" "STOPPED|X5813024" ;;
+    exact) l19_assert "$id" "a traveller model whose first line is a label ($2) harvests, and the bound file stops the publish matched exactly, never as unreadable" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} value, matched exactly" "cannot be read|X5813024" ;;
+  esac
+}
+for l19c in flow qkey tag anchor esc dup merge dots ls ps nel lscomment nofm seq nospace; do l19shape_assert "L19i-src-shape-$l19c" "$l19c" stop; done
+for l19c in flow qkey nofm; do l19shape_assert "L19i-src-stub-shape-$l19c" "stub-$l19c" stopm; done
+for l19c in flow qkey nofm; do l19shape_assert "L19z-hop2-shape-$l19c" "hop-$l19c" hop; done
+for l19c in nested univ comment case blank tab; do l19shape_assert "L19c-shape-$l19c" "$l19c" pass; done
+for l19c in mline1 mline1-bom8; do l19shape_assert "L19y-src-model-${l19c#m}" "$l19c" exact; done
+
 # ── ARMED-RED controls for L19: each arm under the mutation its design row names reports pass=0 fail=1.
 l19_m_noexact()  { l18_rewrite _build_source_hits 'if (exact_hit(i, nl, ld, lt))' 'if (0)'; }
 l19_m_nolabel()  { l18_rewrite _build_source_hits 'if (label_hit(lab, S[i]))' 'if (0)'; }
@@ -17502,6 +17592,11 @@ for l19c in mark-open mark-close mark-plain; do md_flips require_clean_build_sou
 for l19c in indent blanklead; do md_flips require_clean_build_sources "L19i-src-stub-ref-$l19c" l19ref_assert "L19i-src-stub-ref-$l19c" "stub-$l19c" stopm; done
 md_flips require_clean_build_sources "L19c-ref-stub-body" l19ref_assert "L19c-ref-stub-body" stub-body pass
 for l19c in body-indent empty-next prefix; do md_flips require_clean_build_sources "L19c-ref-$l19c" l19ref_assert "L19c-ref-$l19c" "$l19c" pass; done
+for l19c in flow qkey tag anchor esc dup merge dots ls ps nel lscomment nofm seq nospace; do md_flips require_clean_build_sources "L19i-src-shape-$l19c" l19shape_assert "L19i-src-shape-$l19c" "$l19c" stop; done
+for l19c in flow qkey nofm; do md_flips require_clean_build_sources "L19i-src-stub-shape-$l19c" l19shape_assert "L19i-src-stub-shape-$l19c" "stub-$l19c" stopm; done
+for l19c in flow qkey nofm; do md_flips require_clean_build_sources "L19z-hop2-shape-$l19c" l19shape_assert "L19z-hop2-shape-$l19c" "hop-$l19c" hop; done
+for l19c in nested univ comment case blank tab; do md_flips require_clean_build_sources "L19c-shape-$l19c" l19shape_assert "L19c-shape-$l19c" "$l19c" pass; done
+for l19c in mline1 mline1-bom8; do md_flips require_clean_build_sources "L19y-src-model-${l19c#m}" l19shape_assert "L19y-src-model-${l19c#m}" "$l19c" exact; done
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # I6 — list reports build-to-published: whether the page as last pushed is the newest local build, by content
