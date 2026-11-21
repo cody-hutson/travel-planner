@@ -4539,7 +4539,8 @@ refuse_group_only_render() {
 #     one merge hop; a longer chain is named, not followed). A `field` row added there joins both halves
 #     below with no edit here, wherever its scope is a trip-relative path or the person store.
 # A value is the text after a label's colon on the label's own line, after clean(), admitted by stated() —
-# exactly the guard's profile parse, through the same shared helpers.
+# the guard's profile parse, through the same shared helpers, on a line read with a leading UTF-8 byte-order
+# mark and its trailing carriage returns removed.
 #
 # FOLDING (S7P2-02, S7P2-06), worded identically in § 5.6, the CHANGELOG and the PR body: The check reads a bound
 # file's lines as UTF-8. Before matching, it reads every Unicode space separator as a space and the colons
@@ -4649,8 +4650,9 @@ _build_source_wellformed() {
 # A file is read only after the byte test require_clean_build_sources applies to a bound file, at each of the
 # four places one is read (a scope's file, a traveller file read for its person reference, a person record, its
 # merge target), so its bytes and not the host's awk decide whether it is read. Each reference — a traveller
-# file's person key, a record's merge key and its target's — is read with a leading UTF-8 byte-order mark and
-# trailing carriage returns removed, so a file saved with either resolves as its plain twin does.
+# file's person key, a record's merge key and its target's — and each value-source line is read with a leading
+# UTF-8 byte-order mark and trailing carriage returns removed, so a file saved with either resolves and harvests
+# as its plain twin does.
 # Returns 2 when the declaration yields no `field` row, or reads in part.
 _field_class_values() { # <trip_dir>
   local trip_dir="$1" fc_rows fc_n fc_all fc_cand fc_scope fc_glob fc_f fc_any fc_pf fc_refs fc_key fc_store
@@ -4734,6 +4736,8 @@ EOF
       BEGIN { n = split(SELS, S, " ") }
       {
         lab = $0
+        if (NR == 1) sub(/^\357\273\277/, "", lab)
+        sub(/\r+$/, "", lab)
         sub(/^[ \t]*[-*+][ \t]+/, "", lab)
         gsub(/\*\*/, "", lab)
         sub(/^[ \t]+/, "", lab)
