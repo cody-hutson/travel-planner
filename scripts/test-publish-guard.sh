@@ -16926,8 +16926,10 @@ l19enc_assert "L19i-nul" nul
 
 # ── L19i-harvest16 / L19i-src-* — a value source the check cannot read as UTF-8: each value-source kind (the
 # traveller profile, a person record its reference reaches, that record's merge target, the traveller model)
-# behind a UTF-16LE mark, the profile behind the other three marks, and a profile line holding a NUL byte inside
-# its value, stops as present but unreadable, naming the source by its scope as the declaration writes it, or as
+# behind a UTF-16LE mark, the profile behind the other three marks, the profile in UTF-8 behind a UTF-16 mark
+# alone with no NUL byte anywhere (so the mark half is pinned apart from the NUL half; a UTF-32 mark itself holds
+# NUL bytes, so it cannot be), and a profile line holding a NUL byte inside its value, stops as present but
+# unreadable, naming the source by its scope as the declaration writes it, or as
 # `person record <id>`, and never by a file name or a value. Each plants a stated value in the source and the bare
 # value in a bound file, so a harvest that read the source would stop the publish matched exactly; the verdict
 # wanted is the unreadable one, on every host, because the bytes are read before any awk reads a line.
@@ -16935,7 +16937,7 @@ l19enc_assert "L19i-nul" nul
 # person record a UTF-16 profile references, and stop under the shipped declaration and under one listing the
 # person scope first. The L19y-src-* twins are the same sources in UTF-8, one with a non-ASCII letter: each
 # harvests, and the bound file stops matched exactly, never as unreadable.
-l19src_trip() { # <name> <profile|person|merge|model|nul|order|latin> <16le|16be|32le|32be|nul|utf8> -> trip dir
+l19src_trip() { # <name> <profile|person|merge|model|nul|order|latin> <encoding, as l19src_assert takes it> -> trip dir
   local d f st="${_GUARD_PERSON_STORE:-people}" rk="${_GUARD_REF_KEY:-person}" mk="${_GUARD_MERGE_KEY:-merged-into}"
   d="$(l19_trip "$1")"; f="$d/$L19_PROFILE"
   case "$2" in
@@ -16957,12 +16959,24 @@ l19src_trip() { # <name> <profile|person|merge|model|nul|order|latin> <16le|16be
     latin)   l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritani$(printf '\303\251') Gro$(printf '\303\237')mark, document no. X1234567" ;;
   esac
   l19_put "$d" "$L19B1" '# Trip' '' 'Bring X1234567 to the desk.'
-  case "$3" in utf8|nul) ;; *) l19_enc "$f" "$3" ;; esac
+  case "$3" in
+    utf8|nul) ;;
+    mark16le|mark16be) { if [ "$3" = mark16le ]; then printf '\377\376'; else printf '\376\377'; fi; cat "$f"; } > "$f.mark"
+                       mv -f "$f.mark" "$f" ;;
+    *) l19_enc "$f" "$3" ;;
+  esac
   printf '%s' "$d"
 }
-l19src_assert() { # <id> <kind> <16le|16be|32le|32be|nul|utf8> [the declaration order, for the order kind]
-  local id="$1" k="$2" e="$3" o="${4:-}" d sc
+l19src_assert() { # <id> <kind> <16le|16be|32le|32be|mark16le|mark16be|nul|utf8> [the declaration order, for the order kind]
+  local id="$1" k="$2" e="$3" o="${4:-}" d sc mk
   d="$(l19src_trip "l19src-$k-$e${o:+-$o}" "$k" "$e")"
+  if [ "${e#mark}" != "$e" ]; then
+    mk=feff; [ "$e" = mark16le ] && mk=fffe
+    if [ "$(LC_ALL=C od -An -tx1 -N2 "$d/$L19_PROFILE" | tr -d ' \n')" != "$mk" ] || [ "$(($(wc -c < "$d/$L19_PROFILE")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$d/$L19_PROFILE" | wc -c)))" ]; then
+      FAIL "$id: fixture integrity — the planted profile does not open with the $e mark, or holds a NUL byte, so this arm would not grade the mark alone. VERDICT WITHHELD"
+      return 0
+    fi
+  fi
   case "$k" in
     person) sc="person record psn-a9c1" ;;
     merge)  sc="person record psn-a9c2" ;;
@@ -16994,7 +17008,7 @@ l19src_order_assert() { # <id> <shipped|person-first> <16le|utf8>
 }
 l19src_assert "L19i-harvest16" profile 16le
 for l19c in person merge model; do l19src_assert "L19i-src-$l19c-16le" "$l19c" 16le; done
-for l19c in 16be 32le 32be; do l19src_assert "L19i-src-profile-$l19c" profile "$l19c"; done
+for l19c in 16be 32le 32be mark16le mark16be; do l19src_assert "L19i-src-profile-$l19c" profile "$l19c"; done
 l19src_assert "L19i-src-nul" nul nul
 for l19c in shipped person-first; do l19src_order_assert "L19i-src-order-$l19c" "$l19c" 16le; done
 for l19c in profile person merge model nul latin; do l19src_assert "L19y-src-$l19c" "$l19c" utf8; done
@@ -17102,7 +17116,7 @@ for l19c in 16le 16be 32le 32be; do md_flips require_clean_build_sources "L19i-b
 md_flips require_clean_build_sources "L19i-nul" l19enc_assert "L19i-nul" nul
 md_flips require_clean_build_sources "L19i-harvest16" l19src_assert "L19i-harvest16" profile 16le
 for l19c in person merge model; do md_flips require_clean_build_sources "L19i-src-$l19c-16le" l19src_assert "L19i-src-$l19c-16le" "$l19c" 16le; done
-for l19c in 16be 32le 32be; do md_flips require_clean_build_sources "L19i-src-profile-$l19c" l19src_assert "L19i-src-profile-$l19c" profile "$l19c"; done
+for l19c in 16be 32le 32be mark16le mark16be; do md_flips require_clean_build_sources "L19i-src-profile-$l19c" l19src_assert "L19i-src-profile-$l19c" profile "$l19c"; done
 md_flips require_clean_build_sources "L19i-src-nul" l19src_assert "L19i-src-nul" nul nul
 for l19c in shipped person-first; do md_flips require_clean_build_sources "L19i-src-order-$l19c" l19src_order_assert "L19i-src-order-$l19c" "$l19c" 16le; done
 for l19c in profile person merge model nul latin; do md_flips require_clean_build_sources "L19y-src-$l19c" l19src_assert "L19y-src-$l19c" "$l19c" utf8; done
