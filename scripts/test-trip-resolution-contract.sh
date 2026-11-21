@@ -2590,8 +2590,12 @@ MDEXITEXIT
     FAIL "MD-EXIT-ABORT: the guarded child's stderr carries no 'unbound variable', so the abort was not reached through set -u — the class this guard exists for was not exercised"
   elif [ "$ea_xmk" != present ] || [ -n "$ea_xe" ]; then
     FAIL "MD-EXIT-ABORT: the second child, which takes a deliberate exit 0 without the sentinel, did not run cleanly to that exit — its marker line is $ea_xmk and its stderr opens [$(awk 'NR == 1' <<<"$ea_xe")] — so the exit it exists to take was not measured"
-  elif [ "$ea_xrc" -eq 0 ] || [ "$ea_xab" != an ]; then
-    FAIL "MD-EXIT-ABORT: the second child took a deliberate exit 0 without the sentinel, then exited $ea_xrc and printed $ea_xab ABORT: line, where an ABORT: line and a non-zero exit are owed — a guard keyed on the exit status rather than the sentinel lets a run that never reached its end exit 0, on any shell"
+  elif [ "$ea_xrc" -eq 0 ] && [ "$ea_xab" != an ]; then
+    FAIL "MD-EXIT-ABORT: the second child took a deliberate exit 0 without the sentinel, then exited $ea_xrc and printed $ea_xab ABORT: line, where an ABORT: line and a non-zero exit are owed — the guard took no branch on the missing sentinel, as a guard keyed on the exit status rather than the sentinel does, which lets a run that never reached its end exit 0, on any shell"
+  elif [ "$ea_xrc" -eq 0 ]; then
+    FAIL "MD-EXIT-ABORT: the second child took a deliberate exit 0 without the sentinel, then exited $ea_xrc and printed $ea_xab ABORT: line, where an ABORT: line and a non-zero exit are owed — the guard took its branch on the missing sentinel and printed ABORT:, but exited with the status it read, $ea_xrc, instead of a non-zero one, which lets a run that stopped at status 0 before its end exit 0, on any shell"
+  elif [ "$ea_xab" != an ]; then
+    FAIL "MD-EXIT-ABORT: the second child took a deliberate exit 0 without the sentinel, then exited $ea_xrc and printed $ea_xab ABORT: line, where an ABORT: line and a non-zero exit are owed — the guard exited non-zero on the missing sentinel but printed no ABORT: line, so a run that never reached its end fails without the line that says it is not a result"
   elif [ "$ea_grc" -eq 0 ]; then
     FAIL "MD-EXIT-ABORT: a run that aborted before its Result line exited 0 on bash ${BASH_VERSION:-unknown} — an aborted run reported success, which is the defect this guard closes"
   elif ! grep -q '^ABORT:' <<<"$ea_go"; then
