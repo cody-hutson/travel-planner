@@ -17600,7 +17600,10 @@ l19v0_assert "L19c-read-empty-stub" read-empty-stub readempty-stub
 # entry, and no line holds the id whole, so it passes, though a YAML reader takes the later key's value. It holds
 # with no empty key line too (L19v-v0-esckey, D-P3-3): a first line spelling the key with an escape, its id
 # escaped, opens no line with the key as written, so it passes, while the same line with the key as written stops
-# by rule (b) (L19i-v0-esckey-plain, its control).
+# by rule (b) (L19i-v0-esckey-plain, its control). And it holds for a key after a U+2028 line separator, its id
+# escaped (L19v-v0-ls): the line opens with another key, so no line opens with the key as written, and no line
+# holds the id whole, so it passes, while the same line with the id written plainly stops by the id clause
+# (L19i-v0-ls-plainid, its control).
 l19v0x_trip() { # <name> <shape> -> trip dir: a traveller file of that shape, the record it reaches, and the bare value in a bound file
   local d st="${_GUARD_PERSON_STORE:-people}" rk="${_GUARD_REF_KEY:-person}" v ek ek1
   v="- **${L19S1}:** Ruritania, document no. X8451037"; ek="${rk:0:1}\\x$(printf '%x' "'${rk:1:1}")${rk:2}"
@@ -17616,12 +17619,28 @@ l19v0x_trip() { # <name> <shape> -> trip dir: a traveller file of that shape, th
             l19_put "$d" "$st/psn-a9e9.md" '---' '---' '# Rowan' '' "$v"
             if [ "$2" = esckey ]; then l19_put "$d" "$L19_PROFILE" "\"$ek1\": \"\\x70sn-a9e9\""
             else l19_put "$d" "$L19_PROFILE" "\"$rk\": \"\\x70sn-a9e9\""; fi ;;
+    ls|ls-plainid)
+            l19_put "$d" "$st/psn-a9ea.md" '---' '---' '# Rowan' '' "$v"
+            if [ "$2" = ls ]; then l19_put "$d" "$L19_PROFILE" "name: Rowan$(printf '\342\200\250')$rk: \"\\x70sn-a9ea\""
+            else l19_put "$d" "$L19_PROFILE" "name: Rowan$(printf '\342\200\250')$rk: psn-a9ea"; fi ;;
   esac
   printf '%s' "$d"
 }
-l19v0x_assert() { # <id> <shape> <stop|declared|declared1|stop1>
-  local id="$1" d sc="${_GUARD_DECL_ARTIFACT_PROFILE:-?}" rk="${_GUARD_REF_KEY:-person}" l1; d="$(l19v0x_trip "l19v0x-$2" "$2")"
-  l1="$(LC_ALL=C awk 'NR == 1' "$d/$L19_PROFILE")"
+l19v0x_assert() { # <id> <shape> <stop|declared|declared1|stop1|declared2|stop2>
+  local id="$1" d sc="${_GUARD_DECL_ARTIFACT_PROFILE:-?}" rk="${_GUARD_REF_KEY:-person}" l1 ls; d="$(l19v0x_trip "l19v0x-$2" "$2")"
+  l1="$(LC_ALL=C awk 'NR == 1' "$d/$L19_PROFILE")"; ls="$(printf '\342\200\250')"
+  case "$3" in
+    declared2|stop2)
+      case "$l1" in
+        *"$ls$rk: "*) ;;
+        *) FAIL "$id: fixture integrity — the planted line does not carry the key as written right after a U+2028 line separator, so this arm would not grade that shape. VERDICT WITHHELD"; return 0 ;;
+      esac
+      case "$3:$l1" in
+        declared2:*psn-a9ea*) FAIL "$id: fixture integrity — the planted line holds the minted id whole, so this arm would not grade an escaped id. VERDICT WITHHELD"; return 0 ;;
+        stop2:*psn-a9ea*) ;;
+        stop2:*) FAIL "$id: fixture integrity — the planted line does not hold the minted id whole, so this control would not grade the id clause. VERDICT WITHHELD"; return 0 ;;
+      esac ;;
+  esac
   case "$3:$l1" in
     declared1:\"\\x*) case "$l1" in *"$rk"*) FAIL "$id: fixture integrity — the planted first line spells the key as written, so this arm would not grade an escaped key. VERDICT WITHHELD"; return 0 ;; esac ;;
     declared1:*) FAIL "$id: fixture integrity — the planted first line does not open with an escaped key, so this arm would not grade one. VERDICT WITHHELD"; return 0 ;;
@@ -17633,12 +17652,16 @@ l19v0x_assert() { # <id> <shape> <stop|declared|declared1|stop1>
     declared) l19_assert "$id" "the declared residual holds: a person reference in a traveller file with no front matter on its first line, under the key escaped after an empty key line, whose id no line holds whole ($2), passes the source check, as declared at the function and in the PR, though the record it reaches holds a value the bound file carries" "$d" 0 "Source check:" "STOPPED|X8451037" ;;
     declared1) l19_assert "$id" "the declared residual holds: a person reference in a traveller file with no front matter on its first line, whose first line spells the key with an escape and no empty key line before it, so no line opens with the key as written, and whose id no line holds whole ($2), passes the source check, as declared at the function and in the PR, though the record it reaches holds a value the bound file carries" "$d" 0 "Source check:" "STOPPED|X8451037" ;;
     stop1)    l19_assert "$id" "the control for L19v-v0-esckey: the same first line with the key as written ($2) carries a value on it, so rule (b) stops the publish, naming the traveller scope and what it found, never a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source $sc (a person reference the check could not read from front matter opening on the first line) is present" "matched exactly|label with a value|$sc is present|Ruritania|X8451037|rowan|psn-a9e9" ;;
+    declared2) l19_assert "$id" "the declared residual holds: a person reference in a traveller file with no front matter on its first line, written after a U+2028 line separator so no line opens with the key as written, its id escaped so no line holds it whole ($2), passes the source check, as declared at the function and in the PR, though the record it reaches holds a value the bound file carries" "$d" 0 "Source check:" "STOPPED|X8451037" ;;
+    stop2)    l19_assert "$id" "the control for L19v-v0-ls: the same line with the id written plainly ($2) holds a minted person id whole, so the id clause stops the publish, naming the traveller scope and what it found, never a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source $sc (a person reference the check could not read from front matter opening on the first line) is present" "matched exactly|label with a value|$sc is present|Ruritania|X8451037|rowan|psn-a9ea" ;;
   esac
 }
 l19v0x_assert "L19i-v0-ord" ord stop
 l19v0x_assert "L19v-v0-dupkey" dupkey declared
 l19v0x_assert "L19v-v0-esckey" esckey declared1
 l19v0x_assert "L19i-v0-esckey-plain" esckey-plain stop1
+l19v0x_assert "L19v-v0-ls" ls declared2
+l19v0x_assert "L19i-v0-ls-plainid" ls-plainid stop2
 
 # ── ARMED-RED controls for L19: each arm under the mutation its design row names reports pass=0 fail=1.
 l19_m_noexact()  { l18_rewrite _build_source_hits 'if (exact_hit(i, nl, ld, lt))' 'if (0)'; }
@@ -17792,6 +17815,8 @@ md_flips require_clean_build_sources "L19i-v0-ord" l19v0x_assert "L19i-v0-ord" o
 md_flips require_clean_build_sources "L19v-v0-dupkey" l19v0x_assert "L19v-v0-dupkey" dupkey declared
 md_flips require_clean_build_sources "L19v-v0-esckey" l19v0x_assert "L19v-v0-esckey" esckey declared1
 md_flips require_clean_build_sources "L19i-v0-esckey-plain" l19v0x_assert "L19i-v0-esckey-plain" esckey-plain stop1
+md_flips require_clean_build_sources "L19v-v0-ls" l19v0x_assert "L19v-v0-ls" ls declared2
+md_flips require_clean_build_sources "L19i-v0-ls-plainid" l19v0x_assert "L19i-v0-ls-plainid" ls-plainid stop2
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # I6 — list reports build-to-published: whether the page as last pushed is the newest local build, by content
