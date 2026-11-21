@@ -4591,8 +4591,8 @@ refuse_group_only_render() {
 # structure (#2156's review, F8). A value source present but not readable stops, named by its scope, never
 # by a traveller file's name. Nothing it prints is a value.
 #
-# DECLARED RESIDUALS, worded alike in § 5.6, the CHANGELOG and the PR body, each asserted by an arm of
-# test-publish-guard.sh group L (L19v). The source check does not see:
+# DECLARED RESIDUALS, worded alike in § 5.6, the CHANGELOG and the PR body; test-publish-guard.sh group L's
+# L19v and L19z arms assert the shapes whose verdict is the same on every host. The source check does not see:
 #   • an ordinary-word value restated without its label;
 #   • a label mid-line, in a table cell, with a word between the selector and its colon, with a dash in place
 #     of the colon, or behind a leading marker other than those the strip names;
@@ -4604,6 +4604,8 @@ refuse_group_only_render() {
 #   • a value held only in a value source that is absent or unresolved, or on a value-source line the guard's
 #     profile parse does not read as a label — behind a task box, through a look-alike colon, or in a file
 #     written in UTF-16 or UTF-32 — which contributes no value, so the label half alone covers it;
+#   • the part of a value-source line after a NUL byte, which contributes no value where the host's awk
+#     stops reading the line there;
 #   • a person reference whose merge chain runs past one hop, which is named in a note and whose second hop
 #     is not read;
 #   • a trip with no bound file present, which passes with every one named as absent.

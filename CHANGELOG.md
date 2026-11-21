@@ -88,7 +88,8 @@ number whose groups are joined otherwise than by one or two of a space, `.`, `/`
 does not fold; a value held only in a value source that is absent or unresolved, or on a value-source
 line the guard's profile parse does not read as a label — behind a task box, through a look-alike
 colon, or in a file written in UTF-16 or UTF-32 — which contributes no value, so the label half alone
-covers it; a person reference whose merge chain runs past one hop, which is named in a note and whose
+covers it; the part of a value-source line after a NUL byte, which contributes no value where the host's
+awk stops reading the line there; a person reference whose merge chain runs past one hop, which is named in a note and whose
 second hop is not read; and a trip with no bound file present, which passes with every one named as
 absent. `list` reads the record a push left on this machine, so a push from elsewhere, a
 takedown and text outside the projection are not seen.
