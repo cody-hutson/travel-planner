@@ -545,6 +545,35 @@ set -uo pipefail
 # C-locale run would not — CI would then enforce a rule an operator's own run did not.
 export LC_ALL=C
 
+# ── THE EXIT GUARD — a run that ends before its last line exits non-zero ─────────
+# Under `set -u`, bash 3.2 ends a script on an unset name inside an arithmetic context — `$(( ))`,
+# a `(( ))` command, `[[ … -eq … ]]`, a substring offset — with the status of the command BEFORE
+# the abort, so a run that stopped mid-group could exit 0 having printed no Result line, and a
+# required check went green over a run that was never graded. guard_on_exit, installed here,
+# immediately after the shell-option lines, closes that: it removes the work directory and, unless
+# GUARD_REACHED_END was set, prints an ABORT: line naming the status at the abort and exits
+# non-zero. It keys on that sentinel and never on `$?`, because `$?` at the abort is the earlier
+# command's and reads 0; an ERR trap was measured not to run on this abort at all. The sentinel is
+# set immediately before each deliberate top-level exit, and that set of exits is the bound: an
+# exit added without the sentinel prints ABORT: and exits non-zero on the path that takes it.
+# WORK="" precedes the trap, so the cleanup only ever reaches this run's own directory and never
+# one inherited from the caller's environment; WORK is assigned its directory below, with no trap
+# of its own. A subshell does not run this trap, so an abort inside `( … )` or `$( … )` ends only
+# that subshell, a separate class. MD-EXIT-ABORT, at the end of group MD, holds the guard and its
+# wiring.
+WORK=""
+GUARD_REACHED_END=0
+guard_on_exit() {
+  local rc=$?
+  [ -n "${WORK:-}" ] && rm -rf "$WORK"
+  if [ "${GUARD_REACHED_END:-0}" != 1 ]; then
+    printf 'ABORT: this run ended before its last line, with status %s at the abort and %s passed, %s failed so far; nothing after the abort ran, so this run is not a result. The shell message above names the line.\n' "$rc" "${pass:-0}" "${fail:-0}"
+    [ "$rc" -ne 0 ] || rc=1
+    exit "$rc"
+  fi
+}
+trap guard_on_exit EXIT
+
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
 # Resolved absolutely and BEFORE anything reads it: group Y reads this file.
@@ -772,7 +801,7 @@ ch_vacuity_rc() {
   return "$rc"
 }
 
-WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
+WORK="$(mktemp -d)"
 ARM_LOG="$WORK/arms";  : > "$ARM_LOG"
 SURF_LOG="$WORK/surf"; : > "$SURF_LOG"
 
@@ -821,9 +850,14 @@ AWK
 # ── a.awk — class A, the citation-form scan ──────────────────────────────────────
 cat > "$WORK/a.awk" <<'AWK'
 # ARGV[1] homes TSV, ARGV[2] newline-separated relative path list. -v ROOT=<dir>
+# -v HOMEFILE=<path of ARGV[1]>
 # Emits "FINDING A1 <path> <line> <basename> <home>" per bare citation, and reports its
 # own denominator on a DENOM line so a zero can be told from an empty scan.
-FNR == NR { split($0, h, "\t"); if (h[1] != "") { HOME[h[1]] = h[2]; nhome++ }; next }
+#
+# The two inputs are split BY FILENAME, for the reason d.awk records: an empty home map is a
+# case this program must report — it is A0's own premise, and CTL-A0's fixture builds it on
+# purpose — and `FNR == NR` would read the whole path list as home rows.
+FILENAME == HOMEFILE { split($0, h, "\t"); if (h[1] != "") { HOME[h[1]] = h[2]; nhome++ }; next }
 { if ($0 != "") FILES[++nf] = $0 }
 END {
   total = 0; bare = 0
@@ -1213,6 +1247,37 @@ infence {
   n = split(line, f, /[ \t]+/)
   if (n >= 2) printf "%s\t%s\n", f[1], f[2]
 }
+AWK
+
+# ── cmp.awk — class C, the fence compared with the observations, in both directions ──
+# Written once here, beside the extractors it compares, for the rule this file states for them:
+# the real-tree arm and every control arm drive the SAME program, and CTL-C0-SPLIT drives it
+# directly.
+cat > "$WORK/cmp.awk" <<'AWK'
+# ARGV[1] the declaration TSV fence.awk extracts, ARGV[2] the COUNT lines c.awk writes.
+# -v root=<dir> -v tag=<fence-tag> -v DECFILE=<path of ARGV[1]>
+#
+# The two inputs are split BY FILENAME. The declaration is written EMPTY whenever the fence
+# document is unreadable or carries no rows, and `FNR == NR` would then read every observation
+# as a declaration row. The comparison answered correctly under that idiom only because c.awk
+# writes its COUNT rows with no tab and END exits on an empty declaration before it reads an
+# observation — two properties no arm protected. CTL-C0-SPLIT drives this program with a
+# tab-bearing row, so the split is what is graded.
+    FILENAME == DECFILE { split($0, d, "\t"); if (d[2] != "") { DEC[d[2]] = d[1] + 0; nrow++ }; next }
+    $1 == "COUNT" { OBS[$2] = $3 + 0 }
+    END {
+      if (nrow == 0) { print "FINDING C0 the " tag " fence yielded zero rows"; exit }
+      for (p in OBS) {
+        if (!(p in DEC))          { printf "FINDING C3 %s observed %d declared none\n", p, OBS[p]; continue }
+        if (OBS[p] > DEC[p])      printf "FINDING C1 %s observed %d declared %d\n", p, OBS[p], DEC[p]
+        else if (OBS[p] < DEC[p]) printf "FINDING C2 %s observed %d declared %d\n", p, OBS[p], DEC[p]
+      }
+      for (p in DEC) {
+        cmd = "test -r \"" root "/" p "\""
+        if (system(cmd) != 0) { printf "FINDING C4 %s declared %d but the path is absent\n", p, DEC[p]; continue }
+        if (!(p in OBS) && DEC[p] > 0) printf "FINDING C2 %s observed 0 declared %d\n", p, DEC[p]
+      }
+    }
 AWK
 
 # ── d.awk — class D, the ADR record-number scan ──────────────────────────────────
@@ -3499,7 +3564,7 @@ ch_list_dir()  { ( cd "$1" && find . -name '*.md' -type f | sed 's|^\./||' | sor
 
 ch_scan_a() {  # ch_scan_a <root> <listfile>
   awk -v ROOT="$1" -f "$WORK/homes.awk" < "$2" > "$WORK/homes.tsv"
-  awk -v ROOT="$1" -f "$WORK/a.awk" "$WORK/homes.tsv" "$2"
+  awk -v ROOT="$1" -v HOMEFILE="$WORK/homes.tsv" -f "$WORK/a.awk" "$WORK/homes.tsv" "$2"
 }
 ch_scan_b() { awk -v ROOT="$1" -f "$WORK/b.awk" "$2"; }
 # The governance distance is a CONSTANT of the detector, deliberately not an environment
@@ -3714,23 +3779,8 @@ ch_compare_c() {
   local root="$1" doc="$2" listfile="$3"
   ch_scan_c "$root" "$listfile" | grep '^COUNT ' > "$WORK/obs.txt" || true
   if [ -r "$doc" ]; then ch_fence "$doc" > "$WORK/dec.tsv"; else : > "$WORK/dec.tsv"; fi
-  awk -v root="$root" -v tag="$CH_FENCE_TAG" '
-    FNR == NR { split($0, d, "\t"); if (d[2] != "") { DEC[d[2]] = d[1] + 0; nrow++ }; next }
-    $1 == "COUNT" { OBS[$2] = $3 + 0 }
-    END {
-      if (nrow == 0) { print "FINDING C0 the " tag " fence yielded zero rows"; exit }
-      for (p in OBS) {
-        if (!(p in DEC))          { printf "FINDING C3 %s observed %d declared none\n", p, OBS[p]; continue }
-        if (OBS[p] > DEC[p])      printf "FINDING C1 %s observed %d declared %d\n", p, OBS[p], DEC[p]
-        else if (OBS[p] < DEC[p]) printf "FINDING C2 %s observed %d declared %d\n", p, OBS[p], DEC[p]
-      }
-      for (p in DEC) {
-        cmd = "test -r \"" root "/" p "\""
-        if (system(cmd) != 0) { printf "FINDING C4 %s declared %d but the path is absent\n", p, DEC[p]; continue }
-        if (!(p in OBS) && DEC[p] > 0) printf "FINDING C2 %s observed 0 declared %d\n", p, DEC[p]
-      }
-    }
-  ' "$WORK/dec.tsv" "$WORK/obs.txt" | sort
+  awk -v root="$root" -v tag="$CH_FENCE_TAG" -v DECFILE="$WORK/dec.tsv" \
+      -f "$WORK/cmp.awk" "$WORK/dec.tsv" "$WORK/obs.txt" | sort
 }
 
 # ── THE EMITTERS ─────────────────────────────────────────────────────────────────
@@ -3762,6 +3812,7 @@ if [ "${CH_EMIT:-}" = "census" ] || [ "${CH_EMIT:-}" = "sites" ] || [ "${CH_EMIT
   # gate, and an environment variable that turns a required check green without running it
   # is a bypass however well-intentioned. The status below cannot be mistaken for a pass.
   printf 'NOTE: this was a %s emission, not a test run. Nothing was asserted.\n' "$CH_EMIT" >&2
+  GUARD_REACHED_END=1
   exit 2
 fi
 
@@ -4494,10 +4545,38 @@ ctl_mustnot "CTL-A1-FENCE" A1 "$O" "the bare basename sits inside a fenced code 
 # lives at reference/data-architecture.md — writing it would itself be a directory-qualified
 # markdown file and would populate the very map this arm requires to be empty. Group A reads
 # no fence, so the fixture correctly carries none.
+#
+# The fixture CITES a basename, and one with no home, so the extractor reads one file and one
+# citation over an empty home map: of A0's three conditions only the empty home map holds, and a
+# fire isolates it. So the arm reads A0's own operands before its verdict, and a fire through any
+# other path FAILs naming that path — the path list read as home rows reads files=0, and a fixture
+# that lost its citation reads citations=0. A missing operand reads as unparsed, never as zero.
+a0_pos() { [[ "$1" =~ ^[1-9][0-9]*$ ]]; }
 D="$(ctl_mk a0)"
-printf 'nothing to cite here\n' > "$D/README.md"
+printf 'See notes.md for the list.\n' > "$D/README.md"
 O="$(ch_scan_a "$D" "$(ctl_list "$D")")"
-ctl_mustfire "CTL-A0" A0 "$O" "a fixture whose every markdown file sits at the ROOT yields an empty home map — the state A0 refuses to report as clean, which is what makes the real tree's green a measurement" 1
+ctl_arm A0
+A0_N="$(n_code "$O" A0)"
+A0_OPS="$(awk '$1 == "FINDING" && $2 == "A0" {
+  f = "unparsed"; c = "unparsed"; h = "unparsed"
+  for (i = 3; i <= NF; i++) {
+    split($i, kv, "=")
+    if (kv[1] == "files") f = kv[2]; else if (kv[1] == "citations") c = kv[2]; else if (kv[1] == "homes") h = kv[2]
+  }
+  print f, c, h; exit }' <<<"$O")"
+A0_F="unparsed"; A0_C="unparsed"; A0_H="unparsed"
+[ -n "$A0_OPS" ] && read -r A0_F A0_C A0_H <<<"$A0_OPS"
+if [ "$A0_N" -ne 1 ]; then
+  FAIL "CTL-A0: MUST FIRE once — a fixture whose only markdown file sits at the ROOT and cites a basename with no home, and the extractor reported A0 $A0_N time(s). It did not fire, or fired more than once"
+elif ! a0_pos "$A0_F"; then
+  FAIL "CTL-A0: A0 fired with files=$A0_F — the path list was read as home rows rather than as files, so the fire came through an empty walk and not through the empty home map this arm names"
+elif ! a0_pos "$A0_C"; then
+  FAIL "CTL-A0: A0 fired with citations=$A0_C — the fixture no longer carries its citation, so a fire is over-determined and no longer isolates the home-map limb"
+elif [ "$A0_H" != 0 ]; then
+  FAIL "CTL-A0: A0 fired with homes=$A0_H — the home map is not empty, so the fixture no longer builds the state this arm names"
+else
+  PASS "CTL-A0: A0 fired once with files=$A0_F citations=$A0_C homes=0 — an empty home map over a non-empty, citing file list is the sole cause, the state A0 refuses to report as clean, which is what makes the real tree's green a measurement"
+fi
 ch_scan_a "$ROOT" "$WORK/list.real" > /dev/null   # restore homes.tsv for any later reader
 
 # ── B ────────────────────────────────────────────────────────────────────────────
@@ -4598,6 +4677,26 @@ ctl_c_doc "$D" docs/notes.md 'The guard walks the corpus.'
 ctl_fence "$D"
 O="$(ch_compare_c "$D" "$D/$CH_FENCE_DOC" "$(ctl_list "$D")")"
 ctl_mustfire "CTL-C0" C0 "$O" "the fence is present and carries ZERO rows — an empty declaration asserts nothing, and every comparison behind it would be vacuously green" 1
+
+# CTL-C0-SPLIT — the comparator's own input split, driven directly through cmp.awk with an EMPTY
+# declaration and ONE observation row whose fields are tab-separated. The comparator must report
+# the empty fence and nothing else. The row is tab-bearing on purpose: c.awk writes its COUNT rows
+# space-separated, and that spelling hides a split that reads the observations as declaration rows
+# — CTL-C0 above stays green under either split, so this arm is the one that can tell them apart.
+ctl_arm C0
+: > "$WORK/c0split-dec.tsv"
+printf 'COUNT\tdocs/x.md\t2\n' > "$WORK/c0split-obs.txt"
+O="$(awk -v root="$WORK/fx/c0split" -v tag="$CH_FENCE_TAG" -v DECFILE="$WORK/c0split-dec.tsv" \
+         -f "$WORK/cmp.awk" "$WORK/c0split-dec.tsv" "$WORK/c0split-obs.txt")"
+C0S_N="$(n_code "$O" C0)"
+C0S_ALL="$(awk '$1 == "FINDING" { n++ } END { print n + 0 }' <<<"$O")"
+if [ "$C0S_N" -ne 1 ]; then
+  FAIL "CTL-C0-SPLIT: MUST FIRE once — an empty declaration beside one tab-bearing observation row, and the comparator reported C0 $C0S_N time(s) [$(awk '$1 == "FINDING" { printf "%s ", $2 }' <<<"$O")]. That is the answer of a split reading the observations as declaration rows, under which an unreadable or empty fence is not reported as one"
+elif [ "$C0S_ALL" -ne 1 ]; then
+  FAIL "CTL-C0-SPLIT: the comparator reported C0 beside $((C0S_ALL - 1)) other finding(s) [$(awk '$1 == "FINDING" { printf "%s ", $2 }' <<<"$O")] over an empty declaration — it compared observations against a fence that yielded nothing"
+else
+  PASS "CTL-C0-SPLIT: an empty declaration beside one tab-bearing observation row reports the empty fence and nothing else — the comparator splits its two inputs by file, so no observation is read as a declaration row"
+fi
 
 # CTL-C-WRAP — the motivating defect, wrapped across a line break exactly as it shipped.
 # The break falls BEFORE the cardinal, between `all` and `twelve`, so `twelve places` lands
@@ -8092,6 +8191,104 @@ fi
 md_flips ch_scan_h 'H' h_assert "$H_CLEAN" "$WORK/list.hclean"
 md_flips ch_vacuity_rc 'VACUITY' ctl_vac_declared
 
+
+# ── MD-EXIT-ABORT — a PASS-reporting exit can only come from a run that finished ──
+# md_exit_abort_assert <trap-line> — exactly one verdict, a chain with one condition and one message
+# per branch. Part 1 asks whether the SHIPPING guard function is sound, through two children written
+# into $WORK from the parsed guard_on_exit this shell holds, each with its own sentinel at 0 and its
+# own trap installed. The first prints a FAIL-shaped line and then aborts on an unset name in an
+# arithmetic context — the 3.2 defect — before its Result line; the complement is the same child
+# without the trap line. The second prints a marker line and then takes a deliberate exit 0 without
+# the sentinel, the bound the guard's header states: it must print ABORT: and exit non-zero. That
+# exit's status is 0 on every shell, so a guard keyed on $? rather than on the sentinel exits 0
+# silently there on bash 5 as on 3.2, where the first child's abort exits non-zero on bash 5 and so
+# cannot tell the two guards apart. All three run in file mode, as `LC_ALL=C "$BASH" <child>`, so the
+# shell message link 2 reads is the C locale's. Part 2 asks whether that function is the guard of THIS
+# run: link a reads the shell's actual EXIT trap, captured in the main shell and passed in, because a
+# capture inside a subshell reads empty; link b reads the sentinel at arm time; link c reads this
+# file's text, outside this arm's own two child fixtures — each opened by a cat <<'MDEXIT…' line, and
+# both must be found — for at least one line setting the sentinel, with an exit straight after each.
+# Link c does not see one of several sentinels dropped: the exit that lost it prints ABORT: and exits
+# non-zero at run time, the path the second child grades. Link d reads the install order — WORK
+# cleared, then the trap, then WORK assigned. Registered with md_flips below, so removing
+# guard_on_exit must turn it.
+md_exit_abort_assert() {
+  local ea_trap="$1" ea_g="$WORK/md-exit-abort-guarded.sh" ea_c="$WORK/md-exit-abort-complement.sh"
+  local ea_x="$WORK/md-exit-abort-exit.sh" ea_xm='a deliberate exit 0, taken without the sentinel'
+  local ea_go ea_ge ea_grc ea_co ea_crc ea_xo ea_xe ea_xrc ea_xmk ea_xab ea_sent ea_lc ea_ln ea_lb ea_ls ea_ld ea_want
+  {
+    printf '%s\n' 'set -uo pipefail' 'unset WORK' 'pass=0; fail=1'
+    declare -f guard_on_exit
+    printf '%s\n' 'GUARD_REACHED_END=0' 'trap guard_on_exit EXIT'
+    cat <<'MDEXITCHILD'
+echo "  a planted failing verdict, before the abort"
+P=ten; X=$(( 1 + (2 * ${P:-0} + 99) / 100 ))
+echo "Result: the planted run reached its end ($X)"
+GUARD_REACHED_END=1
+exit 0
+MDEXITCHILD
+  } > "$ea_g"
+  grep -vx 'trap guard_on_exit EXIT' "$ea_g" > "$ea_c"
+  {
+    printf '%s\n' 'set -uo pipefail' 'unset WORK' 'pass=0; fail=0'
+    declare -f guard_on_exit
+    printf '%s\n' 'GUARD_REACHED_END=0' 'trap guard_on_exit EXIT'
+    cat <<'MDEXITEXIT'
+echo "a deliberate exit 0, taken without the sentinel"
+exit 0
+MDEXITEXIT
+  } > "$ea_x"
+  ea_go="$(LC_ALL=C "$BASH" "$ea_g" 2>"$WORK/md-exit-abort.err")"; ea_grc=$?
+  ea_ge="$(cat "$WORK/md-exit-abort.err")"
+  ea_co="$(LC_ALL=C "$BASH" "$ea_c" 2>&1)"; ea_crc=$?
+  ea_xo="$(LC_ALL=C "$BASH" "$ea_x" 2>"$WORK/md-exit-abort-exit.err")"; ea_xrc=$?
+  ea_xe="$(cat "$WORK/md-exit-abort-exit.err")"
+  ea_xmk=absent; grep -qx "$ea_xm" <<<"$ea_xo" && ea_xmk=present
+  ea_xab=no; grep -q '^ABORT:' <<<"$ea_xo" && ea_xab=an
+  ea_want="trap -- 'guard_on_exit' EXIT"
+  ea_sent="${GUARD_REACHED_END:-unset}"
+  ea_lc="$(awk -v q="'" '
+    sk != "" { if ($0 == sk) sk = ""; next }
+    $0 ~ ("^[[:space:]]*cat <<" q "MDEXIT[A-Z]+" q "[[:space:]]*$") { sk = $0; sub("^[^" q "]*" q, "", sk); sub(q ".*$", "", sk); sp++; next }
+    /^[[:space:]]*GUARD_REACHED_END=1[[:space:]]*$/ { n++; if ((getline nx) <= 0 || nx !~ /^[[:space:]]*exit([[:space:]]|$)/) bad++ }
+    END { print n + 0, bad + 0, sp + 0 }' "$SELF")"
+  read -r ea_ln ea_lb ea_ls <<<"$ea_lc"
+  ea_ld="$(awk '!w && $0 == "WORK=\"\"" { w = NR } !t && $0 == "trap guard_on_exit EXIT" { t = NR } !m && index($0, "WORK=\"$(mktemp -d)\"") == 1 { m = NR } END { print (w && t && m && w < t && t < m) ? "ok" : "bad " w + 0 " " t + 0 " " m + 0 }' "$SELF")"
+  if grep -q '^Result:' <<<"$ea_go"; then
+    FAIL "MD-EXIT-ABORT: the guarded child printed its Result line, so the planted abort did not abort and nothing here was measured"
+  elif ! grep -q 'unbound variable' <<<"$ea_ge"; then
+    FAIL "MD-EXIT-ABORT: the guarded child's stderr carries no 'unbound variable', so the abort was not reached through set -u — the class this guard exists for was not exercised"
+  elif [ "$ea_xmk" != present ] || [ -n "$ea_xe" ]; then
+    FAIL "MD-EXIT-ABORT: the second child, which takes a deliberate exit 0 without the sentinel, did not run cleanly to that exit — its marker line is $ea_xmk and its stderr opens [$(awk 'NR == 1' <<<"$ea_xe")] — so the exit it exists to take was not measured"
+  elif [ "$ea_xrc" -eq 0 ] && [ "$ea_xab" != an ]; then
+    FAIL "MD-EXIT-ABORT: the second child took a deliberate exit 0 without the sentinel, then exited $ea_xrc and printed $ea_xab ABORT: line, where an ABORT: line and a non-zero exit are owed — no ABORT: line, and the deliberate exit's status, 0, left as it was, which, among other faults, a guard keyed on the exit status rather than the sentinel produces, as does one whose sentinel branch never runs, is empty, or leaves before it acts; such a guard lets a run that never reached its end exit 0, on any shell"
+  elif [ "$ea_xrc" -eq 0 ]; then
+    FAIL "MD-EXIT-ABORT: the second child took a deliberate exit 0 without the sentinel, then exited $ea_xrc and printed $ea_xab ABORT: line, where an ABORT: line and a non-zero exit are owed — the guard took its branch on the missing sentinel and printed ABORT:, but exited with the status it read, $ea_xrc, instead of a non-zero one, which lets a run that stopped at status 0 before its end exit 0, on any shell"
+  elif [ "$ea_xab" != an ]; then
+    FAIL "MD-EXIT-ABORT: the second child took a deliberate exit 0 without the sentinel, then exited $ea_xrc and printed $ea_xab ABORT: line, where an ABORT: line and a non-zero exit are owed — the guard exited non-zero on the missing sentinel but printed no ABORT: line, so a run that never reached its end fails without the line that says it is not a result"
+  elif [ "$ea_grc" -eq 0 ]; then
+    FAIL "MD-EXIT-ABORT: a run that aborted before its Result line exited 0 on bash ${BASH_VERSION:-unknown} — an aborted run reported success, which is the defect this guard closes"
+  elif ! grep -q '^ABORT:' <<<"$ea_go"; then
+    FAIL "MD-EXIT-ABORT: the aborted child exited $ea_grc but printed no ABORT: line, so the abort is not named"
+  elif grep -q '^ABORT:' <<<"$ea_co"; then
+    FAIL "MD-EXIT-ABORT: the complement, the same child with no trap installed, printed ABORT: too, so the line does not come from the guard"
+  elif [ "$ea_trap" != "$ea_want" ]; then
+    FAIL "MD-EXIT-ABORT: this run's EXIT trap reads [$ea_trap] where [$ea_want] is owed, so the running suite's guard is not guard_on_exit"
+  elif [ "$ea_sent" != 0 ]; then
+    FAIL "MD-EXIT-ABORT: the completion sentinel reads [$ea_sent] at this arm, before the end of the run, so an abort from here on would read as a completed run"
+  elif [ "$ea_ls" != 2 ]; then
+    FAIL "MD-EXIT-ABORT: this file's text holds [$ea_ls] heredoc span(s) opened by a cat <<'MDEXIT…' line, where this arm's own two child fixtures are owed, so the count of the suite's own sentinel lines cannot leave those fixtures out"
+  elif [ "$ea_ln" -eq 0 ] || [ "$ea_lb" -ne 0 ]; then
+    FAIL "MD-EXIT-ABORT: read outside this arm's own two child fixtures, this file's text sets the completion sentinel on a line not followed by an exit, or never [$ea_ln line(s), $ea_lb not followed by an exit] — a sentinel standing without its exit marks a run complete that may still abort, and a file that never sets it has no exit a run can complete through. One of several sentinels dropped is not caught here: the exit that lost it prints ABORT: and exits non-zero at run time"
+  elif [ "$ea_ld" != ok ]; then
+    FAIL "MD-EXIT-ABORT: the install order in this file's text is [$ea_ld] (WORK cleared, trap, WORK assigned, by line) where WORK=\"\" must precede the trap and the trap precede the assignment, so the cleanup could reach a directory inherited from the caller"
+  else
+    PASS "MD-EXIT-ABORT: on bash ${BASH_VERSION:-unknown} the guarded child aborted through set -u and exited $ea_grc with an ABORT: line while the complement, with no trap, exited $ea_crc and printed none, and the second child's deliberate exit 0 without the sentinel exited $ea_xrc with an ABORT: line; this run's EXIT trap is guard_on_exit, the sentinel reads 0 at this arm, each of the $ea_ln line(s) setting it outside this arm's two child fixtures is followed by an exit, and WORK is cleared before the trap is installed and assigned after"
+  fi
+}
+md_exit_abort_assert "$(trap -p EXIT)"
+md_flips guard_on_exit 'EXIT' md_exit_abort_assert "$(trap -p EXIT)"
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group FZ — every verdict arm in this file must be able to FAIL.
 #
@@ -8674,4 +8871,5 @@ if [ "${GUARD_STRICT_SKIPS:-0}" = "1" ]; then
     printf 'STRICT: every skip was declared (%s) — no group vanished silently.\n' "${GUARD_EXPECTED_SKIPS:-none}"
   fi
 fi
+GUARD_REACHED_END=1
 exit "$rc"

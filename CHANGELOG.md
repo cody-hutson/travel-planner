@@ -83,6 +83,116 @@ file created before this release keeps its per-traveller block, unowned and unre
 name it finds there and reports the block stale, and does not sweep it. The trip window keeps no
 writer until its own owner is decided.
 
+## [0.72.0] — 2026-11-20 — Guard readers and controls fail for the reason they name
+
+This release changes the guard suites and nothing else: no verb, agent, template or trip changes.
+Each change makes a reader or a control in them fail for the reason it names, where before it
+could pass over something it never read, or fail for a reason other than the one it states.
+
+**The two code readers share one terminator class.** The readers that derive each evaluator's
+code set in `scripts/test-artifact-schema.sh` now end a code on any member of one declared class:
+an escape such as `\t` or `\n`, a tab, a space, a colon or a quote. The class is one awk function
+both readers splice in, under the C locale, because two of the three awks the suite runs gave
+different answers by locale without the pin. A code heading a `print`, `printf` or `sprintf`
+format is read on any member; a code after a quote is still read on the tab escape anywhere, so
+the readers lose nothing they read before. A finding emitted with the wrong terminator, which a
+tab-keyed lookup cannot find, now reaches the code set uncovered and turns the coverage arm red
+instead of going unseen. One control per member per reader shows each reader reads each member.
+ST-CF's two record kinds that are not findings, `DENOM` and `GRADED`, are declared beside the
+evaluator and held both ways by `ST-CF-KINDS`. The five derived code sets are unchanged.
+
+**The form-contract arms grade per emission site.** An ST-CF must-not-fire arm now passes when no
+emission site's count rises, which also catches a finding that moves to another site of its code.
+A must-fire arm passes when its copy raises a site of its code, aiming at the first bullet no live
+finding of that code names, so an arm still measures something on a form that already fails the
+question. The Q6 arms aim only at a bullet whose value opens with a bracket, the one place their
+plant can land, and fall back to the first such bullet where every one already fails. An arm
+whose copy can raise nothing because the form already fails the question at its only site is
+reported once per form and question as unmeasured, at the next member or after the last, and a
+reconciliation holds every such arm to a report. A form with no bullet whose value opens with a
+bracket gives the Q6 arms nowhere to land, so they fail rather than report unmeasured. The
+relaxations in the key-line reader each have a control, and each site gate is driven on a planted
+duplicate.
+
+**Corpus hygiene's last two `FNR == NR` splits go by file.** The citation scan and the class-C
+comparison of each file's count assertions against the fence that declares them now tell their
+inputs apart by name, each with its reason beside it, so an empty first input is reported rather
+than read as the second. `CTL-A0` reads the extractor's own
+counts and fires only through the empty home map it names, and `CTL-C0-SPLIT` drives the
+comparison with an empty declaration so its split is graded.
+
+**The command-taxonomy guard reads a wrapped invocation and three more ways to set the override.**
+A fenced invocation continued with a trailing backslash is read as one line, joined as the shell
+joins it, so a forbidden flag on the continuation line, or split across it, is found. The
+plaintext-override check reads `+=`, a default-assigning expansion and `printf -v` beside the plain
+assignment and the export. A passphrase home not spelled literally is declared out of scope, as
+are settings that need evaluation, and the never-carry checks state the heading levels and the
+case they read.
+
+**An aborted run fails.** On bash 3.2 an unset name inside arithmetic ends a `set -u` script
+with the status of the command before it, so a suite could stop mid-run, print no result line and
+exit 0. All six `set -u` suites now install an exit guard keyed on a completion sentinel: a run
+that ends before its last line prints an `ABORT:` line and exits non-zero. `MD-EXIT-ABORT` in each
+suite proves the guard on a planted abort and on an exit taken without the sentinel, which a guard
+keyed on the exit status would let through on any shell, and reads the suite's own wiring.
+
+**Group DC reads a statement by its row.** A census arm, DC7, reads every tracked pipe row
+carrying a majority of the declared desire-coverage header's labels and requires it to equal the
+header, so a statement placed under another heading is graded. Its failure names both causes it
+cannot tell apart: a drifted copy, or a different table sharing the labels.
+
+**Size fence.** Nothing was re-pinned: all 51 rows were kept, as
+`CH_EMIT=growth bash scripts/test-corpus-hygiene.sh` prints them at this branch's tip against
+`v0.71.0`. This release changes no file the fence holds, and no row grew against that base.
+
+**What it doesn't reach.** A code reached through a variable, a `%s` conversion or assembled at
+run time is read only when it is tab-terminated. An unmeasured form-contract arm reads as
+unmeasured until its form is fixed, though the run is red through the form's own verdict. The
+taxonomy guard does not evaluate the shell: a here-document, an indirect name or an environment
+dump is still not read. The exit guard does not reach an abort inside a subshell, which ends only
+that subshell. A desire-coverage statement carrying fewer than a majority of the header's labels,
+or one wrapped in markup, is still not graded.
+
+## [0.71.0] — 2026-11-20 — A form field keeps its key when its label is reworded
+
+Every field the intake forms and the trip context can ask now has a key of its own: a short readable
+name that stays put when the words a person reads are changed. This release records the decision and
+gives every field its key. No reader uses the keys yet; moving the declarations and the test
+conversations onto them is the work of the next milestone, *A label edit touches only the label*.
+
+**Where a field's key lives, and why there.** `ADR-053` records the operator's ruling of 2026-11-13.
+The key is a new last column of the classification table in `reference/data-model.md`
+§ *Field Scope*. It is not on the form, where a person filling it in would see it, and not in the
+form's own declaration, which `ADR-023` keeps flat as fields grow. A form's bullet still finds its row
+by section and label. A reader that names a field to the suite will cite the key, and which readers
+those are is a test, not a list: a name matched against what a person wrote or will read stays on the
+label (the forms, written profiles, the publish guard's selectors, the prompts), and a name a reader
+resolves against the table in a declaration or fixture moves to the key. The record also decides that
+`ADR-030`'s field declaration will be keyed by an amendment, not a new record. It decides that the
+readers of `ADR-030`'s prose accept a field's former labels, so the record is never rewritten when a
+label changes. And it states the couplings a reword must wait for. Above all, every reader of a
+written profile has to accept a former label first, because an answer read as absent drops a need
+silently.
+
+**Every row has a key.** Every row of the classification table carries one: an authored slug in
+lowercase letters and digits joined by hyphens, unique across the whole table, and never re-derived
+from the label. The comma-bearing `Solo, I'd` is `solo`. The two `Applies to` rows are
+`need-applies-to` and `constraint-applies-to`. Beside the table, a declaration holds each reworded
+field's former labels, so an old profile, or a form sent before a reword and returned after it, is
+still read as the field it was. It is empty, because no field has been reworded.
+
+**The suite holds both.** Group FT of `scripts/test-artifact-schema.sh` gains FT8 and FT9, landed
+failing first. FT8 requires every row's last cell to be one code span holding a well-formed key that no other
+row carries, matched with an explicit character set. FT9 requires the former-label declaration
+exactly once, each row naming a key the table carries and reusing no label another field in its
+section carries now or carried before. FT9 renders VACUOUS today and is carried by controls on a
+synthetic table. The pair report and its assertion are renamed `ft_pair_report` and
+`ft_pair_assert`, because "key" now names the column.
+
+**Size fence.** Nothing was re-pinned: all rows were kept. `reference/data-model.md` grew with the
+key column and the former-label declaration, and `reference/adr/README.md` with ADR-053's index row;
+each stays under its row. `ADR-053` is below its class floor and owes no row.
+
 ## [0.70.0] — 2026-11-12 — Travellers are told what the group may see, and no writer of a group page receives a passport
 
 A traveller filling in an intake form is now told who may see what they share, and the hub and

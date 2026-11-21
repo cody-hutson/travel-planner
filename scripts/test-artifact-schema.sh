@@ -98,7 +98,12 @@
 #        mutating ONE surface alone and each required to turn it red, and edits that must not.
 #        That COVERAGE is itself asserted rather than maintained: each evaluator's code set is
 #        read from its own body on every run and compared, in both directions, against the
-#        arms that ran — so a code added with no arm behind it is RED rather than latent.
+#        arms that ran — so a code added with no arm behind it, in a shape the reader reads, is
+#        RED rather than latent. The reader reads a code heading an output statement's format
+#        and ended by any member of one declared terminator class (an escape sequence, a tab, a
+#        space, a colon or a quote), and a code after a quote ended by the tab escape anywhere;
+#        each member has its own must-fire control. A code assembled at run time, reached
+#        through a variable or ended otherwise is outside the reader, a stated bound.
 #        IT IS ASSERTED AT TWO GRANULARITIES, and where it stops is a recorded decision rather
 #        than something to be inferred from a green. The ladder is group -> code -> EMISSION
 #        SITE -> predicate direction. ST-COV and ST-CF-COV grade the code rung. ST-SITE and
@@ -152,7 +157,8 @@
 #        unlike constructs, and at least one code's only must-fire arm is written in a form
 #        none of the others reach — so a reader enumerating the shapes it knows about would
 #        report a covered code uncovered. A code added to the
-#        validator with no arm behind it is RED here rather than latent, and so is an arm
+#        validator with no arm behind it, written as `FINDING <CODE>` and ended by a member of
+#        the same declared terminator class, is RED here rather than latent, and so is an arm
 #        naming a code the validator cannot emit. The assertion is at CODE granularity and
 #        not at emission-site granularity — deleting one of a code's several emission sites
 #        leaves the code in the set and this arm green — and that boundary is declared here
@@ -338,14 +344,15 @@
 #        this tree and, today, on every render. No count is spelled anywhere in this file
 #        for this group: every set is read
 #   NC   the five never-carries of ADR-025 § Decision 3, graded as class facts at their live
-#        membership: a rebuilt-each-synthesis instance carrying prior passes (EB-0) — graded
-#        on tracked instances only, never on conduct that would accumulate into one; the
+#        membership: a rebuilt-each-synthesis instance carrying prior passes (EB-0), read as
+#        dated sections at heading levels 2 and 3 only — graded on tracked instances only,
+#        never on conduct that would accumulate into one; the
 #        internal-hard class against the site build's read set, a C12 value with no
 #        first-party source found verbatim in a bound artifact, and synthetic renders through
 #        ADR-030's reading and any record superseding part of never-carry 2; both-marks values
 #        and DEST-class fields in cross-trip records, and every store writer's both-marks
 #        guard (EB-2); and the engagement axis's tokens on every stored-value surface, its
-#        carrier included. Every arm carries a control that must fire and one that must not
+#        carrier included, matched case-sensitively. Every arm carries a control that must fire and one that must not
 #   MC   may-carry, typed per side (ADR-026 § Decision 3): the envelope side over the channel
 #        table and ADR-030 § 2's private-site-field-declaration fence, keyed on the field's
 #        (section, label) pair and held to § 2's prose in both directions, including the one
@@ -372,8 +379,9 @@
 #        reference/data-model.md § `outputs/satisfaction-metrics.md` shape — read from there on
 #        every run and never held here. Every other statement of it, found by SHAPE, and every
 #        tracked C14 instance, found by the class's own selector, is byte-identical to it; an
-#        empty instance selection FAILS. Not graded: a statement removed whole, heading and
-#        table together, leaves the population.
+#        empty instance selection FAILS. A statement under another heading is graded by its
+#        row (DC7), when the row carries a majority of the home labels. Not graded: a statement
+#        removed whole, heading and table together, leaves the population.
 #   PM   a changed profile reaches the recovery behaviours — the fixture's subject, read from the
 #        `profile-replan-fixture` fence in `examples/data-architecture-demo/README.md` and never held
 #        here, as a real one-line difference against the model; § replan's mode test and dispatch
@@ -520,6 +528,84 @@
 # two would hide one behind the other.
 #
 set -uo pipefail
+
+# ── THE EXIT GUARD — a run that ends before its last line exits non-zero ─────────
+# Under `set -u`, bash 3.2 ends a script on an unset name inside an arithmetic context — `$(( ))`,
+# a `(( ))` command, `[[ … -eq … ]]`, a substring offset — with the status of the command BEFORE
+# the abort, so a run that stopped mid-group could exit 0 having printed no Result line, and a
+# required check went green over a run that was never graded. guard_on_exit, installed here,
+# immediately after the shell-option lines, closes that: it removes the work directory and, unless
+# GUARD_REACHED_END was set, prints an ABORT: line naming the status at the abort and exits
+# non-zero. It keys on that sentinel and never on `$?`, because `$?` at the abort is the earlier
+# command's and reads 0; an ERR trap was measured not to run on this abort at all. The sentinel is
+# set immediately before each deliberate top-level exit, and that set of exits is the bound: an
+# exit added without the sentinel prints ABORT: and exits non-zero on the path that takes it.
+# WORK="" precedes the trap, so the cleanup only ever reaches this run's own directory and never
+# one inherited from the caller's environment; WORK is assigned its directory below, with no trap
+# of its own. A subshell does not run this trap, so an abort inside `( … )` or `$( … )` ends only
+# that subshell, a separate class. MD-EXIT-ABORT, at the end of group MD, holds the guard and its
+# wiring.
+#
+# In this suite the guard is also where group RS's ordering invariant is read, so both live in
+# guard_on_exit: the ordering check first, then the completion sentinel.
+WORK=""
+GUARD_REACHED_END=0
+# ── THE EXIT TRAP, AND WHY THE ORDERING INVARIANT IS READ FROM INSIDE IT ─────────
+#
+# Group RS grades emission COVERAGE by reading the emission record, so it has to be the last
+# group to emit: anything emitting after it is invisible to the arms that grade coverage, and
+# the suite exits 0 with a group unseen.
+#
+# RS10 asserts that ordering STATICALLY, over this file's own text — every verdict call site
+# below RS's banner belongs to RS. A static positional reader is the right shape for the edit
+# it is aimed at, and it is defeated by two shapes that emit a verdict without writing one
+# where the reader looks. A COMPOUND FORM puts the call somewhere other than the start of a
+# line, so a reader anchored at `^` never sees it. A HELPER that emits on its caller's behalf
+# — `expect_rc` and everything like it — writes no verdict literal after the banner at all,
+# because the literal lives in the helper's own body, far above. Neither is exotic; both are
+# ordinary style in this file, and a positional check cannot be made to see either without
+# becoming a parser for the language.
+#
+# So the ordering is asserted TWICE, on two different kinds of evidence, and this is the half
+# that does not depend on where a call site is written. At process exit — after every group
+# has run, including any added later by any means — the emission record is compared against
+# the snapshot RS took when it read it. Whatever appended to that record after RS read it is
+# reported here, whatever line shape produced it. The static arm says the FILE is ordered; the
+# trap says the RUN was, which is the claim RS's coverage arms actually rest on.
+#
+# It runs in the trap rather than at the end of the body for the reason the invariant exists:
+# a check written as the last statement is a check the next appended statement displaces. An
+# EXIT trap cannot be appended past.
+RS_ORDER_ARMED=0
+RS_ORDER_SNAPSHOT=""
+guard_on_exit() {
+  local rc_in=$? tail_ids="" x g foreign=""
+  if [ "${RS_ORDER_ARMED:-0}" -eq 1 ]; then
+    # SEEN only ever appends, so the record written after RS read it is the literal suffix.
+    tail_ids="${SEEN#"$RS_ORDER_SNAPSHOT"}"
+    # shellcheck disable=SC2086
+    for x in $tail_ids; do
+      g="${x%%[!A-Z]*}"
+      [ -n "$g" ] || continue
+      [ "$g" = "RS" ] && continue
+      case " $foreign " in *" $g "*) continue ;; esac
+      foreign="$foreign$g "
+    done
+    if [ -n "$foreign" ]; then
+      printf '  \033[1;31mFAIL\033[0m RS-EXIT: group(s) emitted a verdict AFTER group RS read the emission record: %s. RS0, RS1, RS2, RS3 and RS8 graded coverage over a record that did not yet contain them, so this run'"'"'s coverage verdicts are true of the run only up to the point RS read it. This is read AT PROCESS EXIT rather than from this file'"'"'s text, so it fires on an emission whose call site RS10'"'"'s positional reader cannot see — a compound-form call, or a verdict emitted by a helper on its caller'"'"'s behalf. REMEDY: move the group'"'"'s block ABOVE group RS'"'"'s banner.\n' "${foreign% }"
+      [ -n "${WORK:-}" ] && rm -rf "$WORK"
+      exit 1
+    fi
+  fi
+  [ -n "${WORK:-}" ] && rm -rf "$WORK"
+  # THE COMPLETION SENTINEL — read after the ordering check, so that defect is still named first.
+  if [ "${GUARD_REACHED_END:-0}" != 1 ]; then
+    printf 'ABORT: this run ended before its last line, with status %s at the abort and %s passed, %s failed so far; nothing after the abort ran, so this run is not a result. The shell message above names the line.\n' "$rc_in" "${pass:-0}" "${fail:-0}"
+    [ "$rc_in" -ne 0 ] || rc_in=1
+  fi
+  exit "$rc_in"
+}
+trap guard_on_exit EXIT
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
 # Resolved BEFORE the source below, and absolutely: group PF reads this file and the
@@ -632,64 +718,13 @@ md_flips() {   # md_flips <subject-fn> <id> <assertion-fn> [args…]
 # VACUOUS also records the ID of every arm that rendered it, separately from SEEN, so the
 # closing NOTE can NAME those arms rather than assert a compensating group. The footer used to
 # hardcode one group as the basis whenever any vacuous verdict existed; the group that
-# compensates is a property of the ARM, not of the suite — this suite's only vacuous arm is
-# W4, carried by the W-CTL-* arms in its own group — so a literal there was a claim about a
-# run it had never read, and it was wrong here from the moment the first VACUOUS shipped.
+# compensates is a property of the ARM, not of the suite — W4 is carried by the W-CTL-* arms
+# in its own group, and an unmeasured ST-CF arm by ST-CF[<form>] in its — so a literal there was
+# a claim about a run it had never read, and it was wrong here from the moment the first VACUOUS
+# shipped.
 VACUOUS() { printf '  \033[1;36mVACUOUS\033[0m %s\n' "$*"; vacuous=$((vacuous+1)); SEEN="$SEEN${*%%:*} "; VACUOUS_IDS="$VACUOUS_IDS${*%%:*} "; }
 
 WORK="$(mktemp -d)"
-
-# ── THE EXIT TRAP, AND WHY THE ORDERING INVARIANT IS READ FROM INSIDE IT ─────────
-#
-# Group RS grades emission COVERAGE by reading the emission record, so it has to be the last
-# group to emit: anything emitting after it is invisible to the arms that grade coverage, and
-# the suite exits 0 with a group unseen.
-#
-# RS10 asserts that ordering STATICALLY, over this file's own text — every verdict call site
-# below RS's banner belongs to RS. A static positional reader is the right shape for the edit
-# it is aimed at, and it is defeated by two shapes that emit a verdict without writing one
-# where the reader looks. A COMPOUND FORM puts the call somewhere other than the start of a
-# line, so a reader anchored at `^` never sees it. A HELPER that emits on its caller's behalf
-# — `expect_rc` and everything like it — writes no verdict literal after the banner at all,
-# because the literal lives in the helper's own body, far above. Neither is exotic; both are
-# ordinary style in this file, and a positional check cannot be made to see either without
-# becoming a parser for the language.
-#
-# So the ordering is asserted TWICE, on two different kinds of evidence, and this is the half
-# that does not depend on where a call site is written. At process exit — after every group
-# has run, including any added later by any means — the emission record is compared against
-# the snapshot RS took when it read it. Whatever appended to that record after RS read it is
-# reported here, whatever line shape produced it. The static arm says the FILE is ordered; the
-# trap says the RUN was, which is the claim RS's coverage arms actually rest on.
-#
-# It runs in the trap rather than at the end of the body for the reason the invariant exists:
-# a check written as the last statement is a check the next appended statement displaces. An
-# EXIT trap cannot be appended past.
-RS_ORDER_ARMED=0
-RS_ORDER_SNAPSHOT=""
-guard_on_exit() {
-  local rc_in=$? tail_ids="" x g foreign=""
-  if [ "$RS_ORDER_ARMED" -eq 1 ]; then
-    # SEEN only ever appends, so the record written after RS read it is the literal suffix.
-    tail_ids="${SEEN#"$RS_ORDER_SNAPSHOT"}"
-    # shellcheck disable=SC2086
-    for x in $tail_ids; do
-      g="${x%%[!A-Z]*}"
-      [ -n "$g" ] || continue
-      [ "$g" = "RS" ] && continue
-      case " $foreign " in *" $g "*) continue ;; esac
-      foreign="$foreign$g "
-    done
-    if [ -n "$foreign" ]; then
-      printf '  \033[1;31mFAIL\033[0m RS-EXIT: group(s) emitted a verdict AFTER group RS read the emission record: %s. RS0, RS1, RS2, RS3 and RS8 graded coverage over a record that did not yet contain them, so this run'"'"'s coverage verdicts are true of the run only up to the point RS read it. This is read AT PROCESS EXIT rather than from this file'"'"'s text, so it fires on an emission whose call site RS10'"'"'s positional reader cannot see — a compound-form call, or a verdict emitted by a helper on its caller'"'"'s behalf. REMEDY: move the group'"'"'s block ABOVE group RS'"'"'s banner.\n' "${foreign% }"
-      rm -rf "$WORK"
-      exit 1
-    fi
-  fi
-  rm -rf "$WORK"
-  exit "$rc_in"
-}
-trap guard_on_exit EXIT
 
 # has_finding <output> <code> — the code appears as a FINDING token, not as a substring of
 # some longer word. A substring test would let A1 match A10 and read as a pass.
@@ -4410,7 +4445,8 @@ st_cf_unres_note() { [ -z "$ST_CF_UNRES" ] || printf '%s — ' "$ST_CF_UNRES"; }
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group FT — reference/data-model.md's field table: the extractor that reads it by index, the
 # (section, label) resolver every group reading it goes through, and the table's own integrity
-# — its row count, its key, its vocabulary and its coverage — asserted rather than assumed.
+# — its row count, its (section, label) pair, its Key column, its vocabulary and its coverage —
+# asserted rather than assumed.
 #
 # ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
 # The field table used to be read by index in several places, each carrying its own copy of the
@@ -4434,8 +4470,9 @@ st_cf_unres_note() { [ -z "$ST_CF_UNRES" ] || printf '%s — ' "$ST_CF_UNRES"; }
 # extract verb in skills/trip-record/SKILL.md; FT6 grades that both still say it.
 #
 # ── THE INTERFACE, WHICH LATER GROUPS REUSE RATHER THAN RE-DERIVE ────────────────
-#   ft_rows <data-model> [all]   num section label class ovr scope horizon star line rationale,
-#                                one TAB record per row; `all` admits the unlabelled row too
+#   ft_rows <data-model> [all]   num section label class ovr scope horizon star line rationale key,
+#                                one TAB record per row; `all` admits the unlabelled row too; key is
+#                                the slug inside the Key cell's code span, empty where it is not one
 #   ft_resolve <rows-file>       reads `heading<TAB>label[<TAB>passthrough…]` on stdin and
 #                                writes, in input order, ONE<TAB>num, NONE<TAB>- or
 #                                AMBIG<TAB>n,m, each followed by the input line. It never
@@ -4472,15 +4509,24 @@ st_cf_unres_note() { [ -z "$ST_CF_UNRES" ] || printf '%s — ' "$ST_CF_UNRES"; }
 #        exactly one row in the data model's signal-route-declaration fence, every row names
 #        such a section, every value is inside the fence's declared vocabulary, and no row
 #        declares a value the table's own Class column refuses for its section
-# Every arm has a standing control on a COPY under $WORK, asserted to have LANDED, and graded
-# as a DELTA against this run's own live reading — never against a clean-table literal — so a
+#   FT8  the Key column (ADR-053): every numbered row carries a ninth cell holding exactly one
+#        code span, its slug inside the grammar § Field Scope states, and no two rows share a key
+#        — total, as Class, Scope and Horizon are. Its controls APPEND rows to a copy, so they land
+#        whether or not the column is complete
+#   FT9  the former-label declaration: one fence; each row two cells, naming a key the table
+#        carries, unlike its field's current label, and reusing no label another field carries now
+#        or carried before under a section one of which leads the other. It holds no row until a
+#        field is reworded, so it renders VACUOUS, and its controls plant rows on a synthetic table
+# Every arm but FT4 and FT9 has a standing control on a COPY under $WORK, asserted to have LANDED,
+# and graded as a DELTA against this run's own live reading — FT4's and FT9's are graded on synthetic
+# tables, as their entries above say — never against a clean-table literal — so a
 # mutation replayed on the tracked table turns the arm it targets red, and every control whose
 # target the replay leaves alone stays green; a replay on a row a control itself targets may
 # turn that control, or a sibling targeting the same row, red with it.
 # No count is spelled in this group: the declared row count is read from the document.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
-echo "FT — the field table: read through ft_rows, resolved on (section, label), its row count declared and its key unique"
+echo "FT — the field table: read through ft_rows, resolved on (section, label), its row count declared, its pair unique, its Key column total and its former labels declared"
 
 FT_RAN=0
 FT_OK=1
@@ -4509,7 +4555,9 @@ ft_rows() {
       sec = $4; gsub(/^[ \t]+|[ \t]+$/, "", sec); cls = $5; gsub(/[ \t*]/, "", cls)
       ovr = $6; gsub(/[ \t*]/, "", ovr); scp = $7; gsub(/[ \t`]/, "", scp)
       hor = $8; gsub(/[ \t`*]/, "", hor); rat = $9; gsub(/^[ \t]+|[ \t]+$/, "", rat)
-      printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d\t%s\n", num, sec, lbl, cls, ovr, scp, hor, (index($3, star) > 0) ? 1 : 0, FNR, rat }' "$1"
+      key = (NF >= 11) ? $10 : ""; gsub(/^[ \t]+|[ \t]+$/, "", key)
+      if (key ~ /^`[^`]+`$/) key = substr(key, 2, length(key) - 2); else key = ""
+      printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d\t%s\t%s\n", num, sec, lbl, cls, ovr, scp, hor, (index($3, star) > 0) ? 1 : 0, FNR, rat, key }' "$1"
 }
 ft_resolve() {
   awk -F'\t' "$FT_LEAD_FN"'
@@ -4774,9 +4822,9 @@ ft_count_report() {
   printf '%s\t%s\t%s\t%s\n' "$r" "$(awk 'NF { print; exit }' <<<"$d")" "$nd" "$sq"
 }
 
-# ft_key_report <data-model> — one record per pair of labelled rows sharing a label under
+# ft_pair_report <data-model> — one record per pair of labelled rows sharing a label under
 # sections one of which leads the other: num-a<TAB>num-b<TAB>label<TAB>section-a<TAB>section-b.
-ft_key_report() {
+ft_pair_report() {
   ft_rows "$1" | awk -F'\t' "$FT_LEAD_FN"'
     { n++; num[n] = $1; sec[n] = $2; lab[n] = $3 }
     END { for (i = 1; i <= n; i++) for (j = i + 1; j <= n; j++)
@@ -4815,10 +4863,10 @@ ft_count_assert() {
     PASS "FT1: the field table carries exactly the $d row(s) its denominator rule declares, numbered 1..N in file order. The count is READ from the reconciliation's own '= <N> answerable slots' rather than spelled here, so a row added or removed alone turns this red — CTL-FT1-OVER and CTL-FT1-UNDER show both directions, and CTL-FT1-REWORD shows a rationale edit does not"
   fi
 }
-ft_key_assert() {
+ft_pair_assert() {
   local nl rep nk
   nl="$(ft_rows "$1" | grep -c '[^[:space:]]')"
-  rep="$(ft_key_report "$1")"
+  rep="$(ft_pair_report "$1")"
   nk="$(printf '%s\n' "$rep" | grep -c '[^[:space:]]')"
   if [ "${nl:-0}" -lt 1 ]; then
     FAIL "FT2: the field table parsed to 0 labelled rows, so an empty key report here would certify a key over nothing"
@@ -4826,7 +4874,7 @@ ft_key_assert() {
     FAIL "FT2: $nk pair(s) of labelled rows share a label under sections one of which leads the other, so a bullet under a heading both sections lead resolves to BOTH rows — AMBIG, which every reader of this table treats as FAIL:"
     printf '%s\n' "$rep" | awk -F'\t' 'NF >= 5 { printf "      rows %s and %s: `%s` under `%s` and `%s`\n", $1, $2, $3, $4, $5 }'
   else
-    PASS "FT2: no two of the $nl labelled row(s) share a label under sections one of which leads the other, so no bullet can resolve to two rows and ft_resolve's AMBIG is unreachable on the tracked table. A label MAY repeat across unrelated sections — \`Applies to\` does — which is why the key is (section, label). CTL-FT2-DUP, CTL-FT2-LEAD and CTL-FT2-NEAR show this failing on a duplicate and on a glossed section, and staying silent across a token boundary"
+    PASS "FT2: no two of the $nl labelled row(s) share a label under sections one of which leads the other, so no bullet can resolve to two rows and ft_resolve's AMBIG is unreachable on the tracked table. A label MAY repeat across unrelated sections — \`Applies to\` does — which is why a bullet joins its row on (section, label); the field's own key is the Key column, which FT8 grades. CTL-FT2-DUP, CTL-FT2-LEAD and CTL-FT2-NEAR show this failing on a duplicate and on a glossed section, and staying silent across a token boundary"
   fi
 }
 ft_vocab_assert() {
@@ -5097,6 +5145,111 @@ ft_route_assert() {
   fi
 }
 
+# ── FT8 — the Key column (ADR-053 Decisions 1, 2 and 5). The grammar is matched with an explicit
+# character set, never a range: group LC measured `[a-z]` matching upper case under a UTF-8
+# collation. § Field Scope states the grammar; this is its reader, not a second statement of it.
+# The set is built rather than written out: as one literal it reads to gitleaks' generic-api-key
+# rule as a high-entropy token, which a full-history scan would report at every commit adding it.
+FT_KEY_CH="$(printf '%s' {a..z} {0..9})"
+# ft_keycol_report <data-model> — one record per defect in the Key column, over EVERY numbered row,
+# the unlabelled one included, because the column is total: num<TAB>kind<TAB>detail. `cells` is a
+# row whose cell count is not nine (a row's leading and trailing pipes add two empty fields, so
+# nine cells read NF == 11); `nospan` a Key cell that is not exactly one code span; `shape` a span
+# holding something outside the grammar; `dup` a key a later row repeats, naming the first row.
+ft_keycol_report() {
+  awk -F'|' -v ch="$FT_KEY_CH" '
+    BEGIN { re = "^[" ch "]+(-[" ch "]+)*$" }
+    NF < 9 { next }
+    { num = $2; gsub(/[ \t]/, "", num); if (num !~ /^[0-9]+$/) next
+      if (NF != 11) { print num "\tcells\t" (NF - 2); next }
+      c = $10; gsub(/^[ \t]+|[ \t]+$/, "", c)
+      if (c !~ /^`[^`]+`$/) { print num "\tnospan\t" ((c == "") ? "-" : c); next }
+      k = substr(c, 2, length(c) - 2)
+      if (k !~ re) { print num "\tshape\t" k; next }
+      if (k in first) { print num "\tdup\t" k " (row " first[k] ")"; next }
+      first[k] = num }' "$1"
+}
+ft_keycol_assert() {
+  local nr rep nd
+  nr="$(ft_rows "$1" all | grep -c '[^[:space:]]')"
+  rep="$(ft_keycol_report "$1")"
+  nd="$(printf '%s\n' "$rep" | grep -c '[^[:space:]]')"
+  if [ "${nr:-0}" -lt 1 ]; then
+    FAIL "FT8: the field table parsed to 0 rows, so an empty Key-column report here would certify a column over nothing"
+  elif [ "$nd" -ne 0 ]; then
+    FAIL "FT8: $nd row(s) of the field table break the Key column — a row without its ninth cell, a Key cell that is not one code span, a key outside the slug grammar § Field Scope states, or a key a second row repeats:"
+    printf '%s\n' "$rep" | awk -F'\t' 'NR <= 12 && NF >= 3 { printf "      row %s: %s %s\n", $1, $2, $3 } NR == 13 { print "      …" }'
+  else
+    PASS "FT8: all $nr row(s) of the field table carry a Key cell, last, holding one code span whose slug is inside the grammar § Field Scope states, and no two rows share a key — the column is total, as Class, Scope and Horizon are. CTL-FT8-MISSING, -NOSPAN, -SPACE, -SHAPE, -DUP and -CELLS show it failing, and CTL-FT8-FRESH shows a new row with an unused valid key leaving it green"
+  fi
+}
+
+# ── FT9 — the former-label declaration (ADR-053 Decision 3). ft_former_rows ALWAYS prints its
+# `F<TAB><openers>` record first, so a removed extractor (no F record) is told apart from an empty
+# fence (an F record and no R): the first is a FAIL, the second a VACUOUS.
+FT_FORMER_TAG='field-former-label-declaration'
+# ft_former_rows <data-model> — F<TAB>openers; then R<TAB>line<TAB>key<TAB>former per row and
+# M<TAB>line per row that is not two non-empty pipe-separated cells. Comment and blank lines skip.
+ft_former_rows() {
+  awk -v tag='```'"$FT_FORMER_TAG" '
+    { l = $0; sub(/[ \t\r]+$/, "", l) }
+    !on && l == tag { o++; on = 1; next }
+    on && substr(l, 1, 3) == "```" { on = 0; next }
+    on { t = l; sub(/^[ \t]+/, "", t)
+         if (t == "" || substr(t, 1, 1) == "#") next
+         n = split(l, c, "|")
+         k = c[1]; f = c[2]; gsub(/^[ \t]+|[ \t]+$/, "", k); gsub(/^[ \t]+|[ \t]+$/, "", f)
+         if (n != 2 || k == "" || f == "") { m[++nm] = FNR; next }
+         r[++nr] = FNR "\t" k "\t" f }
+    END { print "F\t" (o + 0)
+          for (i = 1; i <= nr; i++) print "R\t" r[i]
+          for (i = 1; i <= nm; i++) print "M\t" m[i] }' "$1"
+}
+# ft_former_report <data-model> — one record per defect, joined to the table: kind<TAB>line<TAB>
+# detail. `unresolved` names no key the table carries; `current` repeats its own field's current
+# label; `reuse` is another field's current label, and `reuse-former` another former label, under
+# sections one of which leads the other — FT2's condition, so a former label resolves to exactly one
+# field wherever a bullet would. A repeated (key, former) row is caught as `reuse-former`. Two
+# inputs keyed on FILENAME, never on NR == FNR, so an empty table cannot be read as the declaration.
+ft_former_report() {
+  awk -F'\t' "$FT_LEAD_FN"'
+    FILENAME == ARGV[1] { if ($11 != "") { n++; rk[n] = $11; rs[n] = $2; rl[n] = $3; sec[$11] = $2; lab[$11] = $3 }; next }
+    $1 != "R" { next }
+    { ln = $2; k = $3; fl = $4; hit = ""
+      if (!(k in sec)) { print "unresolved\t" ln "\t" k; next }
+      if (fl == lab[k]) { print "current\t" ln "\t" k " is already `" fl "`"; next }
+      s = sec[k]
+      for (i = 1; i <= n; i++) if (hit == "" && rk[i] != k && rl[i] == fl && (ft_lead(rs[i], s) || ft_lead(s, rs[i]))) hit = rk[i]
+      if (hit != "") { print "reuse\t" ln "\t`" fl "` is the current label of " hit; next }
+      for (j = 1; j <= nf; j++) if (hit == "" && ff[j] == fl && (ft_lead(fs[j], s) || ft_lead(s, fs[j]))) hit = fk[j]
+      if (hit != "") { print "reuse-former\t" ln "\t`" fl "` is also a former label of " hit; next }
+      nf++; fk[nf] = k; fs[nf] = s; ff[nf] = fl }' <(ft_rows "$1" all) <(ft_former_rows "$1")
+}
+ft_former_assert() {
+  local dec nfr opn nm nrow rep nd
+  dec="$(ft_former_rows "$1")"
+  nfr="$(printf '%s\n' "$dec" | awk -F'\t' '$1 == "F" { n++ } END { print n + 0 }')"
+  opn="$(awk -F'\t' '$1 == "F" { print $2 + 0; exit }' <<<"$dec")"
+  nm="$(printf '%s\n' "$dec" | awk -F'\t' '$1 == "M" { n++ } END { print n + 0 }')"
+  nrow="$(printf '%s\n' "$dec" | awk -F'\t' '$1 == "R" { n++ } END { print n + 0 }')"
+  rep="$(ft_former_report "$1")"
+  nd="$(printf '%s\n' "$rep" | grep -c '[^[:space:]]')"
+  if [ "$nfr" -ne 1 ]; then
+    FAIL "FT9: the former-label extractor returned no fence record, so nothing below was read — a broken extractor, never an empty declaration"
+  elif [ "${opn:-0}" -ne 1 ]; then
+    FAIL "FT9: the data model carries ${opn:-0} \`$FT_FORMER_TAG\` fence(s) where exactly one is owed — none leaves a reworded field's former labels with no home, and two leave a reader free to read either"
+  elif [ "$nm" -ne 0 ]; then
+    FAIL "FT9: $nm row(s) of the former-label declaration are not two non-empty pipe-separated cells, \`key | former label\`, so their key or their former label cannot be read"
+  elif [ "$nd" -ne 0 ]; then
+    FAIL "FT9: $nd row(s) of the former-label declaration name no key the table carries, repeat their field's current label, or reuse a label another field carries now or carried before under a section one of which leads the other:"
+    printf '%s\n' "$rep" | awk -F'\t' 'NF >= 3 { printf "      line %s: %s — %s\n", $2, $1, $3 }'
+  elif [ "$nrow" -eq 0 ]; then
+    VACUOUS "FT9: the former-label declaration is present once and holds no row — no field has been reworded since keys were declared, so its resolution and reuse limbs had an EMPTY POPULATION here and proved nothing about this tree. CTL-FT9-ROW, -OTHER-SECTION, -UNRESOLVED, -CURRENT, -REUSE, -REUSE-FORMER and -DUP-ROW plant rows on a synthetic table and carry them"
+  else
+    PASS "FT9: the former-label declaration is present once, and each of its $nrow row(s) names a key the table carries, differs from that field's current label, and reuses no label another field carries now or carried before under a section one of which leads the other. CTL-FT9-UNRESOLVED, -CURRENT, -REUSE, -REUSE-FORMER, -DUP-ROW, -MALFORMED, -TWICE and -NOFENCE show it failing, and CTL-FT9-ROW and -OTHER-SECTION show it passing"
+  fi
+}
+
 # ── FT0 — the extraction is non-empty. The rest of the group, and every group that resolves
 # through this one, would otherwise grade an empty table.
 FT_ROWS0="$WORK/ft/rows.tsv"
@@ -5120,20 +5273,23 @@ FT_FORMS="$(ft_declared)"
 FT_FORM_C="$(awk -F'\t' '$1 == "whole" { print $2; exit }' <<<"$FT_FORMS")"
 
 ft_count_assert "$FT_DOC"
-ft_key_assert "$FT_DOC"
+ft_pair_assert "$FT_DOC"
 ft_vocab_assert "$FT_DOC"
 ft_resolve_assert
 ft_cover_assert "$FT_DOC" "$FT_FORMS"
 ft_rule_assert "$FT_DOC" "$FT_SKILL"
 ft_route_assert "$FT_DOC" "$FT_FORMS"
+ft_keycol_assert "$FT_DOC"
+ft_former_assert "$FT_DOC"
 
 # ── The controls. Each mutates a COPY under $WORK, asserts the mutation LANDED, and compares the
 # copy's report with this run's LIVE report as a delta, so replaying a mutation on the tracked
 # table reddens the arm it targets and leaves standing each control whose target it leaves alone.
 if [ "$FT_OK" -eq 1 ]; then
   FT_REP0="$(ft_count_report "$FT_DOC")"
-  FT_KR0="$(ft_key_report "$FT_DOC")"
+  FT_PR0="$(ft_pair_report "$FT_DOC")"
   FT_VR0="$(ft_vocab_report "$FT_DOC")"
+  FT_KC0="$(ft_keycol_report "$FT_DOC")"
   FT_CR0="$(ft_rows "$FT_DOC" all | awk -F'\t' '$1 + 0 > m { m = $1 + 0 } END { print m + 0 }')"
   FT_NEXT=$((FT_CR0 + 1))
   FT_LASTLN="$(ft_rows "$FT_DOC" all | awk -F'\t' 'END { print $9 + 0 }')"
@@ -5145,7 +5301,9 @@ if [ "$FT_OK" -eq 1 ]; then
       !past { if ($0 != "") a[$0] = 1; next }
       $0 != "" && !($0 in a) { print }'
   }
-  ft_row_line() { printf '| %s | `%s` | %s | **%s** | %s | `%s` | `admissible` | %s |\n' "$@"; }
+  # A synthetic row carries the ninth cell every row now has; its key defaults to one derived from
+  # its number, so no control's row collides with a live key or with another control's.
+  ft_row_line() { printf '| %s | `%s` | %s | **%s** | %s | `%s` | `admissible` | %s | `%s` |\n' "$1" "$2" "$3" "$4" "$5" "$6" "$7" "${8:-zz-ft-row-$1}"; }
 
   # CTL-FT1-OVER / -UNDER — MUST FIRE, one row added and one row removed, each alone.
   FT_FX="$WORK/ft/over.md"; cp "$FT_DOC" "$FT_FX"
@@ -5168,17 +5326,19 @@ if [ "$FT_OK" -eq 1 ]; then
   else
     FAIL "CTL-FT1-UNDER: MUST FIRE — landed=$FT_LD, the count report read '$(printf '%s' "$FT_R" | tr '\t' ' ')' where '$(printf '%s' "$FT_WANT" | tr '\t' ' ')' was owed. The instrument FT1 grades does not see a removed row"
   fi
-  # CTL-FT1-REWORD — MUST NOT FIRE. A rationale edit changes the document and no count, key or cell.
+  # CTL-FT1-REWORD — MUST NOT FIRE. A rationale edit changes the document and no count, pair, key or
+  # cell. The rationale is the ninth field by position (`$9`, as ft_rows reads it), no longer the
+  # last cell: the Key cell follows it.
   FT_FX="$WORK/ft/reword.md"
-  awk -v ln="$FT_LASTLN" 'FNR == ln { sub(/[ ][|][ \t]*$/, " zzq-ft-reworded |") } { print }' "$FT_DOC" > "$FT_FX"
+  awk -F'|' -v OFS='|' -v ln="$FT_LASTLN" 'FNR == ln { $9 = $9 "zzq-ft-reworded " } { print }' "$FT_DOC" > "$FT_FX"
   FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
   FT_SAME=0
-  [ "$(ft_count_report "$FT_FX")" = "$FT_REP0" ] && [ "$(ft_key_report "$FT_FX")" = "$FT_KR0" ] \
-    && [ "$(ft_vocab_report "$FT_FX")" = "$FT_VR0" ] && FT_SAME=1
+  [ "$(ft_count_report "$FT_FX")" = "$FT_REP0" ] && [ "$(ft_pair_report "$FT_FX")" = "$FT_PR0" ] \
+    && [ "$(ft_vocab_report "$FT_FX")" = "$FT_VR0" ] && [ "$(ft_keycol_report "$FT_FX")" = "$FT_KC0" ] && FT_SAME=1
   if [ "$FT_LD" -eq 1 ] && [ "$FT_SAME" -eq 1 ]; then
-    PASS "CTL-FT1-REWORD: MUST NOT FIRE — the last row's rationale reworded on a copy of the model leaves the count, key and vocabulary reports byte-equal to this run's live ones. The arms grade the table's structure, not its prose"
+    PASS "CTL-FT1-REWORD: MUST NOT FIRE — the last row's rationale reworded on a copy of the model leaves the count, pair, vocabulary and Key-column reports byte-equal to this run's live ones. The arms grade the table's structure, not its prose"
   else
-    FAIL "CTL-FT1-REWORD: MUST NOT FIRE — landed=$FT_LD reports-unchanged=$FT_SAME: a rationale edit moved a structural report, so FT1-FT3 would redden on prose"
+    FAIL "CTL-FT1-REWORD: MUST NOT FIRE — landed=$FT_LD reports-unchanged=$FT_SAME: a rationale edit moved a structural report, so FT1-FT3 or FT8 would redden on prose"
   fi
 
   # CTL-FT2-DUP — MUST FIRE, and it is the milestone's own worked hazard: a second row for a label
@@ -5191,7 +5351,7 @@ if [ "$FT_OK" -eq 1 ]; then
   FT_FX="$WORK/ft/dup.md"; cp "$FT_DOC" "$FT_FX"
   ft_row_line "$FT_NEXT" "$FT_DUPL" "$FT_DUPS" PERSON '**N**' block 'a synthetic second row for a label the table already carries' >> "$FT_FX"
   FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
-  FT_ADD="$(ft_delta "$FT_KR0" "$(ft_key_report "$FT_FX")")"
+  FT_ADD="$(ft_delta "$FT_PR0" "$(ft_pair_report "$FT_FX")")"
   FT_NADD="$(printf '%s\n' "$FT_ADD" | grep -c '[^[:space:]]')"
   FT_OFF="$(printf '%s\n' "$FT_ADD" | awk -F'\t' -v n="$FT_NEXT" -v l="$FT_DUPL" 'NF && !(($1 == n || $2 == n) && $3 == l) { k++ } END { print k + 0 }')"
   if [ "$FT_LD" -eq 1 ] && [ "$FT_NADD" -ge 1 ] && [ "$FT_OFF" -eq 0 ]; then
@@ -5204,7 +5364,7 @@ if [ "$FT_OK" -eq 1 ]; then
   { ft_row_line "$FT_NEXT" 'ZZ-FT-LEAD' 'ZZ-FT-SECTION' TRIP n/a slot 'synthetic'
     ft_row_line "$((FT_NEXT + 1))" 'ZZ-FT-LEAD' 'ZZ-FT-SECTION — a gloss' TRIP n/a slot 'synthetic'; } >> "$FT_FX"
   FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
-  FT_NL="$(ft_key_report "$FT_FX" | awk -F'\t' '$3 == "ZZ-FT-LEAD" { n++ } END { print n + 0 }')"
+  FT_NL="$(ft_pair_report "$FT_FX" | awk -F'\t' '$3 == "ZZ-FT-LEAD" { n++ } END { print n + 0 }')"
   if [ "$FT_LD" -eq 1 ] && [ "$FT_NL" -eq 1 ]; then
     PASS "CTL-FT2-LEAD: MUST FIRE — one label under \`ZZ-FT-SECTION\` and under \`ZZ-FT-SECTION — a gloss\` on a copy of the model yields exactly 1 key record: the gloss opens on a dash, so the shorter section leads the longer and one heading would reach both rows"
   else
@@ -5215,7 +5375,7 @@ if [ "$FT_OK" -eq 1 ]; then
   { ft_row_line "$FT_NEXT" 'ZZ-FT-NEAR' 'ZZ-FT-SECTION' TRIP n/a slot 'synthetic'
     ft_row_line "$((FT_NEXT + 1))" 'ZZ-FT-NEAR' 'ZZ-FT-SECTION leanings' TRIP n/a slot 'synthetic'; } >> "$FT_FX"
   FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
-  FT_NN="$(ft_key_report "$FT_FX" | awk -F'\t' '$3 == "ZZ-FT-NEAR" { n++ } END { print n + 0 }')"
+  FT_NN="$(ft_pair_report "$FT_FX" | awk -F'\t' '$3 == "ZZ-FT-NEAR" { n++ } END { print n + 0 }')"
   if [ "$FT_LD" -eq 1 ] && [ "$FT_NN" -eq 0 ]; then
     PASS "CTL-FT2-NEAR: MUST NOT FIRE — one label under \`ZZ-FT-SECTION\` and under \`ZZ-FT-SECTION leanings\` on a copy of the model yields 0 key records: the rest of the longer section opens on a letter, so the shorter does not lead it — the \`Destination\` / \`Destination leanings\` shape, which a string-prefix key would have convicted"
   else
@@ -5242,7 +5402,7 @@ if [ "$FT_OK" -eq 1 ]; then
   FT_FX="$WORK/ft/notable.md"
   awk -F'|' '{ ok = 1; if (NF >= 8) { num = $2; gsub(/[ \t]/, "", num); if (num ~ /^[0-9]+$/) ok = 0 } if (ok) print }' "$FT_DOC" > "$FT_FX"
   FT_X1="$(md_probe zzq_ft_no_such_subject ft_count_assert "$FT_FX")"
-  FT_X2="$(md_probe zzq_ft_no_such_subject ft_key_assert "$FT_FX")"
+  FT_X2="$(md_probe zzq_ft_no_such_subject ft_pair_assert "$FT_FX")"
   FT_X3="$(md_probe zzq_ft_no_such_subject ft_vocab_assert "$FT_FX")"
   FT_XR="$(md_probe zzq_ft_no_such_subject ft_count_assert "$FT_DOC")"
   FT_XRN="$(printf '%s' "$FT_XR" | awk '{ print $1 + $2 }')"
@@ -5529,6 +5689,86 @@ if [ "$FT_OK" -eq 1 ]; then
   else
     FAIL "CTL-FT7-NOFENCE: MUST FIRE — landed=$FT_LD, FT7 read '$FT_X1' on the copy where '0 1' is owed, and '$FT_XR' on the real document where exactly one verdict is owed"
   fi
+
+  # ── FT8's controls. Each APPENDS rows to a copy of the model, numbered past the live table, and
+  # compares the copy's Key-column report with this run's live one as a delta: the delta must be
+  # exactly the records the appended rows owe. Appending rather than editing a live key is what lets
+  # them land on any tree — the column complete or not — while a replay of the same mutation on the
+  # tracked table reddens FT8 alone.
+  ft_kc_row() { printf '| %s | `%s` | ZZ-FT-SECTION | **TRIP** | n/a | `slot` | `admissible` | synthetic | %s |\n' "$1" "$2" "$3"; }
+  ft_kc_case() {   # ft_kc_case <id> <must> <file-tag> <want-delta> — the rows are already in $FT_FX
+    local id="$1" must="$2" want="$4" add ld=0
+    cmp -s "$FT_DOC" "$FT_FX" || ld=1
+    add="$(ft_delta "$FT_KC0" "$(ft_keycol_report "$FT_FX")")"
+    if [ "$ld" -eq 1 ] && [ "$add" = "$want" ]; then
+      PASS "CTL-FT8-$id: $must — rows appended from row $FT_NEXT to a copy of the model add exactly '$(printf '%s' "$want" | tr '\t\n' ' ;')' to the Key-column report FT8 reads"
+    else
+      FAIL "CTL-FT8-$id: $must — landed=$ld, the Key-column report gained '$(printf '%s' "$add" | tr '\t\n' ' ;')' where '$(printf '%s' "$want" | tr '\t\n' ' ;')' was owed"
+    fi
+  }
+  FT_FX="$WORK/ft/kc-missing.md"; cp "$FT_DOC" "$FT_FX"
+  ft_kc_row "$FT_NEXT" 'ZZ-FT-KC' '' >> "$FT_FX"
+  ft_kc_case MISSING 'MUST FIRE' missing "$(printf '%s\tnospan\t-' "$FT_NEXT")"
+  FT_FX="$WORK/ft/kc-nospan.md"; cp "$FT_DOC" "$FT_FX"
+  ft_kc_row "$FT_NEXT" 'ZZ-FT-KC' 'zz-ft-kc-nospan' >> "$FT_FX"
+  ft_kc_case NOSPAN 'MUST FIRE' nospan "$(printf '%s\tnospan\tzz-ft-kc-nospan' "$FT_NEXT")"
+  FT_FX="$WORK/ft/kc-space.md"; cp "$FT_DOC" "$FT_FX"
+  ft_kc_row "$FT_NEXT" 'ZZ-FT-KC' '`zz ft-kc`' >> "$FT_FX"
+  ft_kc_case SPACE 'MUST FIRE' space "$(printf '%s\tshape\tzz ft-kc' "$FT_NEXT")"
+  FT_FX="$WORK/ft/kc-shape.md"; cp "$FT_DOC" "$FT_FX"
+  { ft_kc_row "$FT_NEXT" 'ZZ-FT-KC-1' '`ZZ-ft-kc`'
+    ft_kc_row "$((FT_NEXT + 1))" 'ZZ-FT-KC-2' '`zz_ft_kc`'
+    ft_kc_row "$((FT_NEXT + 2))" 'ZZ-FT-KC-3' '`zz--ft-kc`'
+    ft_kc_row "$((FT_NEXT + 3))" 'ZZ-FT-KC-4' '`-zz-ft-kc`'; } >> "$FT_FX"
+  ft_kc_case SHAPE 'MUST FIRE' shape "$(printf '%s\tshape\tZZ-ft-kc\n%s\tshape\tzz_ft_kc\n%s\tshape\tzz--ft-kc\n%s\tshape\t-zz-ft-kc' "$FT_NEXT" "$((FT_NEXT + 1))" "$((FT_NEXT + 2))" "$((FT_NEXT + 3))")"
+  FT_FX="$WORK/ft/kc-dup.md"; cp "$FT_DOC" "$FT_FX"
+  { ft_kc_row "$FT_NEXT" 'ZZ-FT-KC-A' '`zz-ft-kc-dup`'
+    ft_kc_row "$((FT_NEXT + 1))" 'ZZ-FT-KC-B' '`zz-ft-kc-dup`'; } >> "$FT_FX"
+  ft_kc_case DUP 'MUST FIRE' dup "$(printf '%s\tdup\tzz-ft-kc-dup (row %s)' "$((FT_NEXT + 1))" "$FT_NEXT")"
+  FT_FX="$WORK/ft/kc-cells.md"; cp "$FT_DOC" "$FT_FX"
+  printf '| %s | `ZZ-FT-KC` | ZZ-FT-SECTION | **TRIP** | n/a | `slot` | `admissible` | synthetic |\n' "$FT_NEXT" >> "$FT_FX"
+  ft_kc_case CELLS 'MUST FIRE' cells "$(printf '%s\tcells\t8' "$FT_NEXT")"
+  FT_FX="$WORK/ft/kc-fresh.md"; cp "$FT_DOC" "$FT_FX"
+  ft_kc_row "$FT_NEXT" 'ZZ-FT-KC' '`zz-ft-kc-fresh`' >> "$FT_FX"
+  ft_kc_case FRESH 'MUST NOT FIRE' fresh ''
+
+  # ── FT9's controls. The live declaration holds no row until a field is reworded, so a delta over
+  # it is a delta over nothing. Each control instead builds a three-row synthetic table — two
+  # fields under one section, one under another — with the fence beside it, as FT4 grades the
+  # resolver on a synthetic table, and reads the verdict ft_former_assert renders over it.
+  ft_f9_doc() {   # ft_f9_doc <out> <fences> [row…] — <fences> is 0, 1 or 2 copies of the fence
+    local out="$1" nfence="$2" i; shift 2
+    { printf '| 1 | `ZZ Alpha` | ZZ Sec A | **TRIP** | n/a | `slot` | `admissible` | synthetic | `zz-alpha` |\n'
+      printf '| 2 | `ZZ Beta` | ZZ Sec A | **TRIP** | n/a | `slot` | `admissible` | synthetic | `zz-beta` |\n'
+      printf '| 3 | `ZZ Gamma` | ZZ Sec B | **TRIP** | n/a | `slot` | `admissible` | synthetic | `zz-gamma` |\n'
+      for ((i = 0; i < nfence; i++)); do
+        printf '\n```%s\n# key | former label\n' "$FT_FORMER_TAG"
+        [ "$i" -eq 0 ] && [ "$#" -gt 0 ] && printf '%s\n' "$@"
+        printf '```\n'
+      done; } > "$out"
+  }
+  ft_f9_case() {   # ft_f9_case <id> <must> <want "pass fail"> <fences> [row…]
+    local id="$1" must="$2" want="$3" nfence="$4" f got; shift 4
+    f="$WORK/ft/f9-$id.md"
+    ft_f9_doc "$f" "$nfence" "$@"
+    got="$(md_probe zzq_ft_no_such_subject ft_former_assert "$f")"
+    if [ -s "$f" ] && [ "$got" = "$want" ]; then
+      PASS "CTL-FT9-$id: $must — over a synthetic three-row table with $nfence fence(s)$( [ "$#" -gt 0 ] && printf ' holding %s' "$(printf '%s; ' "$@")" ), FT9 reports '$got' (pass fail), as owed"
+    else
+      FAIL "CTL-FT9-$id: $must — FT9 reported '$got' (pass fail) over the synthetic table where '$want' is owed"
+    fi
+  }
+  ft_f9_case EMPTY 'MUST NOT FIRE, and renders VACUOUS rather than PASS' '0 0' 1
+  ft_f9_case ROW 'MUST NOT FIRE' '1 0' 1 'zz-alpha | ZZ Old Alpha'
+  ft_f9_case OTHER-SECTION 'MUST NOT FIRE' '1 0' 1 'zz-gamma | ZZ Alpha'
+  ft_f9_case UNRESOLVED 'MUST FIRE' '0 1' 1 'zz-zeta | ZZ Old Zeta'
+  ft_f9_case CURRENT 'MUST FIRE' '0 1' 1 'zz-alpha | ZZ Alpha'
+  ft_f9_case REUSE 'MUST FIRE' '0 1' 1 'zz-alpha | ZZ Beta'
+  ft_f9_case REUSE-FORMER 'MUST FIRE' '0 1' 1 'zz-alpha | ZZ Old X' 'zz-beta | ZZ Old X'
+  ft_f9_case DUP-ROW 'MUST FIRE' '0 1' 1 'zz-alpha | ZZ Old X' 'zz-alpha | ZZ Old X'
+  ft_f9_case MALFORMED 'MUST FIRE' '0 1' 1 'zz-alpha'
+  ft_f9_case TWICE 'MUST FIRE' '0 1' 2
+  ft_f9_case NOFENCE 'MUST FIRE' '0 1' 0
 fi
 
 if [ "$FT_RAN" -ne 1 ]; then
@@ -5826,11 +6066,68 @@ st_n() { printf '%s\n' "$2" | awk -F'\t' -v k="$1" '$1 == k { n++ } END { print 
 # mutation below aims at a site the probe FOUND rather than at a line this file names.
 st_field() { awk -F'\t' -v k="$1" -v o="$2" -v c="$3" '$1 == k { n++; if (n == o) { print $c; exit } }' <<<"$4"; }
 
-# st_codes <text> — the violation codes a text can EMIT, one per line, first-occurrence order,
-# deduplicated. A code is exactly what st_has looks one up BY: the first TAB-DELIMITED FIELD of an
-# emitted record. So the shape read here is a double-quoted format string whose content up to its
-# first tab escape is an upper-case token — the reader and the consumer agree on what a code IS,
-# rather than agreeing by coincidence.
+# ── CODE_TERM_AWK — THE ONE DECLARED TERMINATOR CLASS, SHARED BY BOTH CODE READERS ─
+#
+# What ENDS a code, declared once: an escape sequence (a backslash and a lower-case letter, so `\t`
+# and `\n`), a literal tab, a space, a colon, or either quote. st_codes and ctl_codes below both
+# splice this text into their awk programs, so the two readers run identical bytes and cannot drift
+# apart on what a terminator is. term_len(r) returns the length of the member r OPENS on — 2 for an
+# escape, 1 for a single character — and 0 when r opens on no member.
+#
+# It is an awk FUNCTION and not a regex, and that was measured rather than preferred. An ERE handed
+# in through awk -v and used as a dynamic regex sits at two escape levels — -v processes escapes and
+# a dynamic regex needs its backslashes doubled — and the awks this suite runs under disagree there.
+# A regex fragment spliced into a single-quoted program has to escape both quotes, and both are
+# members of the class. term_len tests characters with substr and index, so nothing is escaped
+# twice. It calls no match(), so it cannot overwrite the caller's RSTART/RLENGTH; a CALLER in turn
+# runs no further match() between its own match() and the last use of RSTART/RLENGTH — a first
+# transcription of a reader below that did so read nothing. The `c != ""` guard keeps index(s, "")
+# out of play, because awks disagree on what it returns.
+#
+# Each reader runs it under LC_ALL=C, the posture CONTRIBUTING.md states for the individual calls
+# that need byte semantics. Unpinned, the class answered differently by locale, measured over a
+# backslash before a non-ASCII letter: under en_US.UTF-8 macOS awk aborted (towc: multibyte
+# conversion failure) and read nothing, and gawk read the pair as an escape and returned a false
+# code. Pinned, every engine gives the same answer in every locale.
+#
+# A misspelt name does not pass silently: each reader runs inside $( … ), where an unset variable
+# ends the substitution with an empty set, and the coverage verdict's emptiness gate then FAILs.
+#
+# CODE_TERM_SPELLINGS names one test spelling per member, for the per-spelling controls cov_term_controls
+# renders: a shaper writes each one, and the reader must read every one.
+CODE_TERM_AWK='
+function term_len(r,   c) {
+  c = substr(r, 1, 1)
+  if (c == "\\" && substr(r, 2, 1) ~ /^[[:lower:]]$/) return 2
+  if (c != "" && index(" \t:\"\047", c) > 0) return 1
+  return 0
+}'
+readonly CODE_TERM_AWK
+CODE_TERM_SPELLINGS='esc-t tab space colon dquote squote esc-n'
+readonly CODE_TERM_SPELLINGS
+
+# st_codes <text> [<record-kinds>] — the violation codes a text can EMIT, one per line,
+# first-occurrence order, deduplicated. A code is a code-shaped token — an upper-case letter, then
+# upper-case letters and digits, in hyphen-joined runs — read in one of two ways, in one
+# left-to-right pass:
+#   (i)  after an opening quote and ended by the `\t` escape, anywhere: the first TAB-DELIMITED
+#        FIELD of an emitted record, which is exactly what st_has looks a code up BY;
+#   (ii) HEADING the format of an output statement — print, printf or sprintf, an optional `(`,
+#        then a quote — and ended by ANY member of the declared terminator class, CODE_TERM_AWK.
+# A code (ii) reads on a member other than the tab is one st_has cannot look up and the tally does
+# not count, so no arm can fire on it: it reaches the code set uncovered and turns the coverage arm
+# RED. That is the class's purpose — a mis-terminated emission fails closed instead of going
+# unseen. The cure is to put the tab back, or to declare the record as a kind: a head named in
+# <record-kinds> is dropped, and ST_CF_RECORD_KINDS is the declaration in use.
+#
+# (ii) is ANCHORED, and the anchor was measured rather than argued: the class spliced in with no
+# anchor read every whole-token string comparison as a code — PROSE, YES, NO, an awk program's
+# opening NR — 30 false codes across four evaluators. Where the word before print is part of an
+# identifier (myprint), (ii) does not apply and the token is read only as (i) reads it, so this
+# reader stays a superset of the tab-only reader it replaced: broadening cannot lose a match.
+# WHERE IT STOPS, a stated bound and not a closed class: a code reached through a variable (printf
+# fmt), through a %s conversion, or assembled at run time is read only by (i), and only when it is
+# tab-terminated.
 #
 # Pointed at `declare -f st_violations`: the PARSED function as this shell holds it, never this
 # file's source text. Two consequences, and each is the reason. The header's spelling, the
@@ -5852,21 +6149,31 @@ st_field() { awk -F'\t' -v k="$1" -v o="$2" -v c="$3" '$1 == k { n++; if (n == o
 # EMPTY SET over the second and its caller reports a covered group, which is exactly the failure
 # this class closes: group CE's evaluator is bash-side and read as ZERO codes until `\047` was
 # admitted. The quote character is incidental to the shape — what identifies a code is that it
-# HEADS a format string and is followed by the tab separating it from its detail. Broadening cannot
-# lose a match, and it was asserted not to move st_violations' own reading: both spellings return
-# the identical code set there.
+# HEADS a format string and is followed by a member of the declared terminator class, the tab
+# separating it from its detail among them. Broadening cannot lose a match, and it was asserted not
+# to move st_violations' own reading: both spellings return the identical code set there.
 #
-# Self-blindness survives by the same argument the narrow form used — the character following the
-# delimiter in the pattern below is a bracket, not an upper-case letter, so the reader cannot match
-# its own body and report a defect it had just introduced.
+# Self-blindness survives by the same argument the narrow form used — in either rule's pattern
+# below the character following the delimiter is a bracket, not an upper-case letter, and the words
+# print and sprintf are followed by a quantifier or a parenthesis, never by a quote, so the reader
+# cannot match its own body and report a defect it had just introduced.
 st_codes() {
-  awk '
+  LC_ALL=C awk -v kinds=" ${2:-} " "$CODE_TERM_AWK"'
     {
       s = $0
-      while (match(s, /["\047][A-Z][A-Z0-9]*(-[A-Z0-9]+)*\\t/)) {
-        c = substr(s, RSTART + 1, RLENGTH - 3)
+      while (match(s, /(printf?|sprintf)[ \t]*\(?[ \t]*["\047][A-Z][A-Z0-9]*(-[A-Z0-9]+)*|["\047][A-Z][A-Z0-9]*(-[A-Z0-9]+)*\\t/)) {
+        m = substr(s, RSTART, RLENGTH); rest = substr(s, RSTART + RLENGTH)
+        lead = (RSTART > 1) ? substr(s, RSTART - 1, 1) : ""
+        s = rest
+        if (m ~ /\\t$/) {
+          c = m; sub(/^["\047]/, "", c); sub(/\\t$/, "", c)
+        } else {
+          if (lead ~ /[[:alnum:]_]/) { if (substr(rest, 1, 2) != "\\t") continue }
+          else if (term_len(rest) == 0) continue
+          c = m; sub(/^.*["\047]/, "", c)
+        }
+        if (index(kinds, " " c " ") > 0) continue
         if (!seen[c]++) print c
-        s = substr(s, RSTART + RLENGTH)
       }
     }
   ' <<<"$1"
@@ -5912,8 +6219,12 @@ st_setdiff() {
 # makes attribution possible and it lives ONLY inside the sitemap, never in a verdict's set
 # arithmetic — the split is the point.
 #
-# st_sitemap reuses st_codes' needle, widened to capture the format that follows it, so it inherits
-# both of that reader's stated properties verbatim: it reads the PARSED body, so a reformat is a
+# st_sitemap reads the TAB-TERMINATED subset of what st_codes reads — that reader's rule (i), widened
+# to capture the format that follows it — and not the whole declared terminator class, on purpose.
+# A site attributes an emitted RECORD, and st_attrib splits a record on its tab, skipping one that
+# has none; a site reader widened to the class would derive sites no arm could ever reach. A code
+# emitted on another member of the class turns the CODE rung red instead, through st_codes. It
+# shares that reader's two stated properties: it reads the PARSED body, so a reformat is a
 # non-event; and the character after the quote class in its pattern is a BRACKET and not an
 # upper-case letter, so it cannot see itself and report a defect it had just introduced. The
 # conversion is located with a NAMED CLASS and never a collating range — group LC's standing
@@ -6025,6 +6336,27 @@ EOF
 cov_emit_tab()     { printf '  printf "%s\\t a synthetic emission that no arm covers\\n"\n' "$1"; }
 cov_emit_finding() { printf '  printf "FINDING %s a synthetic emission that no arm covers\\n"\n' "$1"; }
 
+# cov_emit_term <spelling> <code> / cov_emit_finding_term <spelling> <code> — the same synthetic
+# emission, ended by ONE member of the declared terminator class instead of by the tab escape.
+# <spelling> is a member of CODE_TERM_SPELLINGS, and `squote` opens the format on a single quote, as
+# a bash-side evaluator's format does. Each is a matched pair with its extractor, for the reason
+# given above. An unknown spelling writes the code with NO terminator, which no reader reads, so its
+# control FAILs rather than passing on a spelling it never wrote.
+cov_term_shape() {   # cov_term_shape <spelling> — sets COV_TQ (the quote) and COV_TT (the terminator)
+  COV_TQ='"'; COV_TT=''
+  case "$1" in
+    esc-t)  COV_TT='\t' ;;
+    tab)    COV_TT="$(printf '\t')" ;;
+    space)  COV_TT=' ' ;;
+    colon)  COV_TT=':' ;;
+    dquote) COV_TT='"' ;;
+    squote) COV_TQ="'"; COV_TT="'" ;;
+    esc-n)  COV_TT='\n' ;;
+  esac
+}
+cov_emit_term()         { cov_term_shape "$1"; printf '  printf %s%s%s a synthetic emission that no arm covers\\n%s\n' "$COV_TQ" "$2" "$COV_TT" "$COV_TQ"; }
+cov_emit_finding_term() { cov_term_shape "$1"; printf '  printf %sFINDING %s%s a synthetic emission that no arm covers\\n%s\n' "$COV_TQ" "$2" "$COV_TT" "$COV_TQ"; }
+
 # cov_verdict <verdict-id> <control-stem> <subject> <codes> <armed> — the coverage verdict, and
 # the ONLY verdict this function renders.
 #
@@ -6098,7 +6430,7 @@ cov_assert() {
   # costs its existing consumers nothing — which is the property that let a fourth and fifth
   # consumer arrive without a second implementation of the comparison.
   local probekey="${12:-${10}}" unit="${13:-code}"
-  local cov_nc cov_nu cov_np cov_mut cov_landed cov_mu cov_mn cov_hit
+  local cov_nc cov_nu cov_np
   local cov_ma cov_al cov_mp cov_pn cov_phit
   cov_nc="$(printf '%s\n' "$codes" | grep -c '[^[:space:]]')"
   cov_nu="$(st_setdiff "$codes" "$armed")"; cov_nu="$(printf '%s\n' "$cov_nu" | grep -c '[^[:space:]]')"
@@ -6107,20 +6439,10 @@ cov_assert() {
   cov_verdict "$id" "$stem" "$subj" "$codes" "$armed" "$unit"
   [ "$cov_nc" -gt 0 ] || return 0
 
-  # Control 1 — the UNCOVERED direction. One synthetic emission is appended to a copy of the
-  # emitter's body and the SAME extractor and the SAME st_setdiff read it, so what is graded is
-  # the shipping comparison with one input changed.
-  cov_mut="$body
-$("$shaper" "$probe")"
-  cov_landed=0; [ "$cov_mut" != "$body" ] && cov_landed=1
-  cov_mu="$(st_setdiff "$("$ex" "$cov_mut")" "$armed")"
-  cov_mn="$(printf '%s\n' "$cov_mu" | grep -c '[^[:space:]]')"
-  cov_hit="$(printf '%s\n' "$cov_mu" | grep -c "^${probekey}$")"
-  if [ "$cov_landed" -eq 1 ] && [ "$cov_mn" -eq $((cov_nu + 1)) ] && [ "$cov_hit" -eq 1 ]; then
-    PASS "${stem}1${tag}: MUST FIRE — one unarmed $unit appended to a COPY of the body of $subj takes the uncovered set from $cov_nu to $cov_mn and the new member IS that $unit ($probekey). Any $unit added to the real emitter with no arm behind it turns $id red, which is the property this group could otherwise only state. The mutation is asserted to have landed before the verdict is read"
-  else
-    FAIL "${stem}1${tag}: MUST FIRE — an unarmed $unit appended to a copy of the body of $subj was not reported (mutation-landed=$cov_landed, uncovered=$cov_mn against $((cov_nu + 1)) expected, probe-key=$probekey, probe-found=$cov_hit). $id's zero above does not respond to a known hole and therefore proves nothing"
-  fi
+  # Control 1 — the UNCOVERED direction, in cov_control1 below so cov_term_controls grades its
+  # per-spelling mutations through the same three limbs rather than a second copy of them.
+  cov_control1 "${stem}1${tag}" "$id" "$subj" "$ex" "$body" "$("$shaper" "$probe")" \
+               "$armed" "$cov_nu" "$probekey" "$unit" ''
 
   # Control 2 — the PHANTOM direction, the one that keeps the zero from resting on a reader that
   # has gone quiet. Without it an extractor returning nothing would leave the uncovered set empty
@@ -6136,6 +6458,52 @@ $phantom"
   else
     FAIL "${stem}2${tag}: MUST FIRE — a phantom arm was not reported (mutation-landed=$cov_al, phantom=$cov_pn against $((cov_np + 1)) expected, probe-found=$cov_phit). $id cannot distinguish a covered $unit set from a reader that returned nothing"
   fi
+}
+
+# cov_control1 <control-id> <verdict-id> <subject> <extractor> <body> <mutation> <armed> <base>
+#              <probe-key> <unit> <shape> — Control 1's three limbs, rendering exactly one verdict.
+#
+# One synthetic emission <mutation> is appended to a copy of the emitter's body and the SAME
+# extractor and the SAME st_setdiff read it, so what is graded is the shipping comparison with one
+# input changed. The limbs: the mutation LANDED; the uncovered set grew from <base> by exactly one;
+# and the new member IS <probe-key>. cov_assert calls it with an empty <shape>, which keeps that
+# helper's text as it was; cov_term_controls names the terminator its mutation is ended by.
+cov_control1() {
+  local cid="$1" id="$2" subj="$3" ex="$4" body="$5" mline="$6" armed="$7" base="$8"
+  local probekey="$9" unit="${10}" shape="${11}"
+  local cov_mut cov_landed cov_mu cov_mn cov_hit
+  cov_mut="$body
+$mline"
+  cov_landed=0; [ "$cov_mut" != "$body" ] && cov_landed=1
+  cov_mu="$(st_setdiff "$("$ex" "$cov_mut")" "$armed")"
+  cov_mn="$(printf '%s\n' "$cov_mu" | grep -c '[^[:space:]]')"
+  cov_hit="$(printf '%s\n' "$cov_mu" | grep -c "^${probekey}$")"
+  if [ "$cov_landed" -eq 1 ] && [ "$cov_mn" -eq $((base + 1)) ] && [ "$cov_hit" -eq 1 ]; then
+    PASS "$cid: MUST FIRE — one unarmed $unit${shape:+, $shape,} appended to a COPY of the body of $subj takes the uncovered set from $base to $cov_mn and the new member IS that $unit ($probekey). Any $unit added to the real emitter, in a shape its reader reads, with no arm behind it turns $id red, which is the property this group could otherwise only state. The mutation is asserted to have landed before the verdict is read"
+  else
+    FAIL "$cid: MUST FIRE — an unarmed $unit${shape:+, $shape,} appended to a copy of the body of $subj was not reported (mutation-landed=$cov_landed, uncovered=$cov_mn against $((base + 1)) expected, probe-key=$probekey, probe-found=$cov_hit). $id's zero above does not respond to a known hole and therefore proves nothing"
+  fi
+}
+
+# cov_term_controls <stem> <subject> <extractor> <shaper> <body> <armed> <probe> <verdict-id> — one
+# MUST-FIRE control per member of the declared terminator class, rendered as <stem>[<spelling>].
+#
+# Each appends ONE emission of <probe>, ended by that spelling and written by <shaper>, to a copy of
+# <body>, and requires the uncovered set to grow by exactly that probe: cov_control1's predicate,
+# graded through cov_control1 itself, so there is no second comparison to drift from the first. The
+# base is this run's own uncovered count over the unmutated body, so a control on a tree that
+# already carries an uncovered code grades the delta rather than inheriting that state. A reader
+# that lost a member of the class reads its spelling as nothing, and that spelling's control FAILs
+# naming it — which is what the declared class owes: each member is read, by each reader.
+cov_term_controls() {
+  local stem="$1" subj="$2" ex="$3" shaper="$4" body="$5" armed="$6" probe="$7" id="$8"
+  local ct_base ct_sp
+  ct_base="$(st_setdiff "$("$ex" "$body")" "$armed")"
+  ct_base="$(printf '%s\n' "$ct_base" | grep -c '[^[:space:]]')"
+  for ct_sp in $CODE_TERM_SPELLINGS; do
+    cov_control1 "${stem}[$ct_sp]" "$id" "$subj" "$ex" "$body" "$("$shaper" "$ct_sp" "$probe")" \
+                 "$armed" "$ct_base" "$probe" 'code' "ended by the $ct_sp member of the declared terminator class"
+  done
 }
 
 # site_cov_assert <verdict-id> <control-stem> <subject> <body> <armed-sites> — the SITE coverage
@@ -6582,6 +6950,66 @@ else
   ST_OK=0
 fi
 
+# st_cf_vprobe <fn> [args…] — runs <fn> in a subshell with PASS, FAIL and VACUOUS rebound to silent
+# counters, as md_probe does for the first two, and prints "<pass> <fail> <vacuous> <unmeasured>"
+# on its first line — <unmeasured> the records left in ST_CF_UNMEAS when <fn> returns — then each
+# VACUOUS message on a line of its own. md_probe cannot count VACUOUS, which these controls grade.
+st_cf_vprobe() {
+  ( pass=0; fail=0; vacuous=0; vp_msg=""
+    PASS() { pass=$((pass+1)); }
+    FAIL() { fail=$((fail+1)); }
+    VACUOUS() { vacuous=$((vacuous+1)); vp_msg="$vp_msg$*
+"; }
+    "$@" >/dev/null 2>&1
+    printf '%d %d %d %d\n%s' "$pass" "$fail" "$vacuous" "$(printf '%s\n' "${ST_CF_UNMEAS:-}" | grep -c '[^[:space:]]')" "$vp_msg" )
+}
+
+# site0_gate <id> <body> <empty-msg> <collision-msg> <pass-msg> — the site entry gate both ST-SITE0
+# and ST-CF-SITE0 render, and the one CTL-ST-SITE0-DUP and CTL-ST-CF-SITE0-DUP drive on a planted
+# copy, so a control grades the shipping chain rather than a second copy of it. Exactly one verdict,
+# a chain: no raw site FAILs; raw sites collapsing to fewer distinct keys FAILs; else PASS. Each
+# message is the caller's, with @RAW@, @NK@ and @DUP@ standing for the two counts and the colliding
+# keys. Returns 0 on PASS and 1 on FAIL, so the caller can gate its site comparison on it.
+site0_gate() {
+  local id="$1" body="$2" me="$3" md="$4" mp="$5" sg_map sg_raw sg_nk sg_dup sg_m
+  sg_map="$(st_sitemap "$body")"
+  sg_raw="$(printf '%s\n' "$sg_map" | grep -c '[^[:space:]]')"
+  sg_nk="$(printf '%s\n' "$(st_sites "$body")" | grep -c '[^[:space:]]')"
+  sg_dup="$(awk -F'\t' 'NF > 1 { n[$1]++; c[$1] = $2 } END { for (k in n) if (n[k] > 1) printf "%s (code %s) ", k, c[k] }' <<<"$sg_map")"
+  sg_dup="${sg_dup% }"
+  if [ "$sg_raw" -eq 0 ]; then
+    sg_m="${me//@RAW@/$sg_raw}"; sg_m="${sg_m//@NK@/$sg_nk}"; sg_m="${sg_m//@DUP@/$sg_dup}"
+    FAIL "$id: $sg_m"
+    return 1
+  elif [ "$sg_nk" -ne "$sg_raw" ]; then
+    sg_m="${md//@RAW@/$sg_raw}"; sg_m="${sg_m//@NK@/$sg_nk}"; sg_m="${sg_m//@DUP@/$sg_dup}"
+    FAIL "$id: $sg_m"
+    return 1
+  else
+    sg_m="${mp//@RAW@/$sg_raw}"; sg_m="${sg_m//@NK@/$sg_nk}"; sg_m="${sg_m//@DUP@/$sg_dup}"
+    PASS "$id: $sg_m"
+    return 0
+  fi
+}
+
+# site0_dup_assert <id> <subject> <body> <empty-msg> <collision-msg> <pass-msg> — MUST FIRE: the
+# first tab-headed emission line of <body> is planted a second time in a COPY, which adds a raw site
+# resolving to an existing key, and site0_gate must render one FAIL and no PASS on that copy.
+site0_dup_assert() {
+  local id="$1" subj="$2" body="$3" sd_line sd_mut sd_out sd_planted=no
+  sd_line="$(awk '/["\047][A-Z][A-Z0-9]*(-[A-Z0-9]+)*\\t/ { print; exit }' <<<"$body")"
+  [ -n "$sd_line" ] && sd_planted=yes
+  sd_mut="$body
+$sd_line"
+  sd_out="$(st_cf_vprobe site0_gate "$id" "$sd_mut" "$4" "$5" "$6")"
+  sd_out="$(awk 'NR == 1' <<<"$sd_out")"
+  if [ "$sd_planted" = yes ] && [ "$sd_out" = "0 1 0 0" ]; then
+    PASS "$id: MUST FIRE — the first tab-headed emission of $subj, planted a second time in a COPY of its body, collapses two raw sites into one key, and the site gate renders one FAIL and no PASS. So the gate's PASS is an equality it can refuse, not a reading it cannot fail"
+  else
+    FAIL "$id: MUST FIRE — with the first tab-headed emission of $subj duplicated in a copy (planted=$sd_planted), the site gate rendered [pass fail vacuous pending] = [$sd_out] where [0 1 0 0] is owed. The gate cannot tell colliding sites from distinct ones"
+  fi
+}
+
 # ── ST-SITE0 — the ENTRY GATE for the site comparison, graded before anything rests on it, on
 # the shape this suite already ships nine times. It is NOT a zero: it is an EQUALITY between two
 # counts that must both be non-zero, so it cannot pass over an empty read.
@@ -6598,19 +7026,12 @@ fi
 # st_surfaces returns MORE raw sites than distinct keys, because PROSE is emitted twice from two
 # formats that are byte-identical after the tab.
 ST_SITE_OK=1
-ST_SITE_RAW="$(printf '%s\n' "$ST_SITEMAP" | grep -c '[^[:space:]]')"
 ST_SITE_KEYS="$(st_sites "$ST_SITE_BODY")"
-ST_SITE_NK="$(printf '%s\n' "$ST_SITE_KEYS" | grep -c '[^[:space:]]')"
-ST_SITE_DUP="$(awk -F'\t' 'NF > 1 { n[$1]++; c[$1] = $2 } END { for (k in n) if (n[k] > 1) printf "%s (code %s) ", k, c[k] }' <<<"$ST_SITEMAP")"
-if [ "$ST_SITE_RAW" -eq 0 ]; then
-  FAIL "ST-SITE0[$ST_TAG]: the emission-site reader returned NO sites over the body of st_violations, so every site verdict below would be a statement over the empty set — either the evaluator is no longer reachable by that name or its emission shape has moved, and either way this group's site coverage is UNMEASURED rather than complete"
-  ST_SITE_OK=0
-elif [ "$ST_SITE_NK" -ne "$ST_SITE_RAW" ]; then
-  FAIL "ST-SITE0[$ST_TAG]: $ST_SITE_RAW raw emission site(s) collapse to only $ST_SITE_NK distinct key(s) — key(s) ${ST_SITE_DUP% } are each produced by TWO OR MORE emission sites whose detail opens with the same literal, so those sites are indistinguishable in the output and the population below is UNDER-REPORTED. Give one of them a distinguishing literal head; a smaller denominator reading as full coverage is exactly the failure this arm exists to refuse"
-  ST_SITE_OK=0
-else
-  PASS "ST-SITE0[$ST_TAG]: the emission-site reader is non-degenerate and unambiguous — $ST_SITE_RAW raw site(s) resolving to $ST_SITE_NK distinct key(s), an EQUALITY between two non-zero counts rather than a zero, so it cannot pass over an empty read. The $ST_SITE_NK site(s) sit one rung below the $ST_NCODES code(s) ST-COV grades: a code emitted from several places is ONE member of that set and several of this one. What ST-SITE compares this against is recorded from what the evaluator ACTUALLY EMITTED when each arm ran, never from the code an arm declared it wanted — an arm can name a code and cannot name a site"
-fi
+# The three messages, held so CTL-ST-SITE0-DUP grades this gate on a planted copy through the same text.
+ST_SITE0_ME="the emission-site reader returned NO sites over the body of st_violations, so every site verdict below would be a statement over the empty set — either the evaluator is no longer reachable by that name or its emission shape has moved, and either way this group's site coverage is UNMEASURED rather than complete"
+ST_SITE0_MD="@RAW@ raw emission site(s) collapse to only @NK@ distinct key(s) — key(s) @DUP@ are each produced by TWO OR MORE emission sites whose detail opens with the same literal, so those sites are indistinguishable in the output and the population below is UNDER-REPORTED. Give one of them a distinguishing literal head; a smaller denominator reading as full coverage is exactly the failure this arm exists to refuse"
+ST_SITE0_MP="the emission-site reader is non-degenerate and unambiguous — @RAW@ raw site(s) resolving to @NK@ distinct key(s), an EQUALITY between two non-zero counts rather than a zero, so it cannot pass over an empty read. The @NK@ site(s) sit one rung below the $ST_NCODES code(s) ST-COV grades: a code emitted from several places is ONE member of that set and several of this one. What ST-SITE compares this against is recorded from what the evaluator ACTUALLY EMITTED when each arm ran, never from the code an arm declared it wanted — an arm can name a code and cannot name a site"
+site0_gate "ST-SITE0[$ST_TAG]" "$ST_SITE_BODY" "$ST_SITE0_ME" "$ST_SITE0_MD" "$ST_SITE0_MP" || ST_SITE_OK=0
 
 if [ "$ST_OK" -eq 1 ]; then
   ST_VIOL="$(st_violations "$ST_SURF")"
@@ -6846,6 +7267,19 @@ done <<EOF
 $ST_TEMPLATES
 EOF
 
+# ── CTL-ST-COV-TERM[<spelling>] — the code reader's declared terminator class, one MUST-FIRE control
+# per member. Graded ONCE, outside the per-form loop, because the subject is the READER and not a
+# form: each control appends one emission ended by its spelling to a copy of st_violations' body and
+# requires st_codes to read it. The armed set passed is ST_CODES itself, so the base is zero by
+# construction and the control isolates the reader from any one member's arms.
+echo
+echo "  ── the code reader's declared terminator class, one control per member"
+cov_term_controls 'CTL-ST-COV-TERM' 'st_violations' st_codes cov_emit_term \
+                  "$(declare -f st_violations)" "$ST_CODES" 'ZZTERMPROBE' 'ST-COV'
+# CTL-ST-SITE0-DUP — the site gate's collision limb, driven on a planted copy of st_violations' body
+# through the gate and the messages ST-SITE0 renders. Once: the subject is the evaluator.
+site0_dup_assert 'CTL-ST-SITE0-DUP' 'st_violations' "$ST_SITE_BODY" "$ST_SITE0_ME" "$ST_SITE0_MD" "$ST_SITE0_MP"
+
 # ── ST4 and its two RUN-LEVEL arms. They sit outside the per-form loop because the proposition
 # is about the union ACROSS members, and because the input ST3 cannot see is one no single
 # member can see either.
@@ -6992,20 +7426,28 @@ fi
 # is ONE region, its whole profile half, so it renders no region id; a version-2 form renders
 # one per region, after its form verdict.
 #
-# ── EVERY ARM IS A DELTA, AND EVERY MEMBER'S ARMS ARE GATED ON ITS BOUNDARY ─────
-# Each must-fire arm mutates ONE thing on a copy of a member and passes only if its code RISES
-# against that member's own live reading; each must-not-fire arm passes only if the copy's
-# findings EQUAL the live reading's. So no arm can pass on a finding it inherited: that is what
-# the delta guarantees, and it makes an arm's green evidence. It does not make every red evidence.
-# A delta measures an arm's mutation only where the form does not already fail the arm's question
-# AT THE ARM'S OWN TARGET: the evaluator emits at most one Q6 finding per bullet, an unusable
-# fence replaces every key-level Q1 finding with one fence-level finding, and a mutation that
-# touches the failing site can remove the live finding. There an arm can go red with its control
-# and the evaluator both sound, and its message may then blame one of them. Such a red fails
-# closed: ST-CF[<form>] is red in the same run and names the true finding, and once the form is
-# fixed the arm reads honestly again. Every arm mutates a copy of a form whose boundary
-# resolves — for version 2, whose regions resolve and hold a graded field — so a member that
-# does not is named ONCE, by its entry gate, while ST-CF[<form>] names the question.
+# ── EVERY ARM IS A DELTA PER EMISSION SITE, AND EVERY MEMBER'S ARMS ARE GATED ON ITS BOUNDARY ─
+# Each must-fire arm mutates ONE thing on a copy of a member and passes only if it RAISES an
+# emission site of its code against that member's own live reading — per site, never per code, so
+# no arm can pass on a finding it inherited or on one that merely moved, and a record no site
+# explains counts for nothing. A bullet-targeted arm aims at the first bullet no live finding of its
+# code names, so on a form that already fails the code at the first bullet it still measures a rise
+# elsewhere. Each must-not-fire arm passes only if NO emission site's count rises. That catches every
+# copy in which a code's count rises, and a finding that moves to another site of its code, which
+# whole-tally equality could not; it gives up, by construction, any copy in which no site's count
+# rises — a pure removal, or an addition offset at its own site by removals there — which can exist
+# only on a form that already fails, where ST-CF[<form>] is red in the same run.
+# THE RESIDUAL: a must-fire arm whose landed copy raises no site of its code, on a form that ALREADY
+# fails that code at the arm's only site, made no measurement. It is recorded and reported ONCE per
+# (form, question) as VACUOUS, CTL-ST-CF-UNMEASURED[<form>/<code>], naming its arms, at the next
+# member's reset or after the loop — so a member that leaves the loop by `continue` is reported too —
+# and CTL-ST-CF-UNMEASURED-RECON holds every recorded arm to a report. It is VACUOUS and not a PASS,
+# a divergence from CTL-ST-CF-DECL-V2 recorded here so the two read as a choice: DECL-V2's PASS
+# reports a measurement its own arm made of the real record, and an arm in the residual made none, so
+# a PASS there would report a control firing where none did (ADR-019). The run is red regardless,
+# through ST-CF[<form>]. Every arm mutates a copy of a form whose boundary resolves — for version 2,
+# whose regions resolve and hold a graded field — so a member that does not is named ONCE, by its
+# entry gate, while ST-CF[<form>] names the question.
 #
 # ── COVERAGE IS GRADED ONCE, OVER THE RUN ───────────────────────────────────────
 # The codes and emission sites of st_cf_violations are read from its own body, and the arms
@@ -7047,10 +7489,23 @@ st_cf_decl_read() {
 st_cf_decl_keys() { awk -F'\t' '$1 == "KEY" { print $2 }' <<<"$(st_cf_decl_read "$1")"; }
 st_cf_decl_why() { awk -F'\t' '$1 == "FAIL" { print $2 }' <<<"$(st_cf_decl_read "$1")"; }
 
+# ST_CF_RECORD_KINDS — the record kinds st_cf_violations writes that are NOT findings, declared as data
+# beside the evaluator rather than left to a property of their spelling. st_cf_codes passes them to
+# st_codes, which drops a head named here; ST-CF-KINDS holds the declaration both ways, so a kind the
+# evaluator stops writing FAILs as stale and a kind written tab-terminated, as a finding is, FAILs as
+# a real code the declaration would hide.
+ST_CF_RECORD_KINDS='DENOM GRADED'
+# st_cf_codes <body> — the code set ST-CF grades: st_codes with the declared record kinds dropped. A
+# wrapper rather than an argument at each call site, because cov_assert's Control 1 calls its
+# extractor with the mutated body alone, and bare st_codes there would read the kinds back in.
+st_cf_codes() { st_codes "$1" "$ST_CF_RECORD_KINDS"; }
+
 # st_cf_violations <form> <member> <data-model> [charter] — one "<CODE><TAB><detail>" record per
-# finding, codes Q1 to Q6 and VERSION, closed by ONE record `DENOM <graded-bullets> <version>`,
-# space-separated so it is never read as a code. A version-2 reading also carries one `GRADED` record
-# per region, space-separated for the same reason, which the region renderer below reads. Six inputs
+# finding, codes Q1 to Q6 and VERSION, closed by ONE record `DENOM <graded-bullets> <version>`. A
+# version-2 reading also carries one `GRADED` record per region, which the region renderer below
+# reads. Neither is a finding: each is space-separated, so no tab-keyed consumer — st_has, the tally,
+# the site reader — reads it as one, and each is declared in ST_CF_RECORD_KINDS above, because the
+# code reader's terminator class admits a space and would otherwise read it as a code. Six inputs
 # arrive as one stream separated by FS-byte marker lines, because awk -v aborts on a multi-line value:
 # the contract's keys, the form's surfaces, the resolver's answers for its bullets, the data model's
 # unfenced headings, the region contract ft_regions reads from the form and the charter, and the data
@@ -7590,44 +8045,295 @@ st_cf_proj_assert() {
 }
 
 # st_cf_mustfire <arm> <member> <fixture> <code> <what> [data-model] [charter] — ONE thing mutated on a
-# copy of the member, of the data model or of the charter, and the SAME evaluator must then report MORE
-# <code> findings than
-# the member's own live reading does. A DELTA, never an absolute, so it cannot pass on an inherited
-# finding. Where the member already fails the question at this arm's own target the count may not
-# rise, and the ST-CF block's header says what that red is. Coverage is recorded on the CALL — the
-# code before the verdict, the SITES from what the evaluator actually emitted — into run-level
-# accumulators, graded once after the last member.
+# copy of the member, of the data model or of the charter, and the SAME evaluator must then RAISE at
+# least one emission site of <code> over the member's own live reading: st_cf_rise, per site, never a
+# whole-code count, so it cannot pass on an inherited finding or on one that merely moved, and a record
+# no site explains (<code>#?) does not count. Graded as a chain: a landed copy raising a site of <code>
+# PASSes, naming it; a landed copy raising none on a form that ALREADY fails <code> is the residual —
+# it is recorded once in ST_CF_UNMEAS and reported once per (form, question) as unmeasured, at the next
+# member's reset or after the loop, with no verdict here; anything else FAILs. Coverage is recorded on
+# the CALL — the code before the verdict, the SITES from what the evaluator actually emitted — into
+# run-level accumulators, graded once after the last member.
 st_cf_mustfire() {
-  local id="$1" member="$2" fx="$3" want="$4" what="$5" dm="${6:-$ST_DM}" chart="${7:-$ST_CF_OWN}" landed=0 v n0 n1
+  local id="$1" member="$2" fx="$3" want="$4" what="$5" dm="${6:-$ST_DM}" chart="${7:-$ST_CF_OWN}" landed=0 v n0 rise
   ST_CF_ARMED="$ST_CF_ARMED
 $want"
   { cmp -s "$ST_CF_FILE" "$fx" && cmp -s "$ST_DM" "$dm" && cmp -s "$ST_CF_OWN" "$chart"; } || landed=1
   v="$(st_cf_violations "$fx" "$member" "$dm" "$chart")"
   n0="$(awk -F'\t' -v c="$want" '$1 == c { n++ } END { print n + 0 }' <<<"$ST_CF_LIVE")"
-  n1="$(awk -F'\t' -v c="$want" '$1 == c { n++ } END { print n + 0 }' <<<"$v")"
   ST_CF_ARMED_SITES="$ST_CF_ARMED_SITES
 $(st_attrib "$v" "$ST_CF_SITEMAP")"
-  if [ "$landed" -eq 1 ] && [ "$n1" -gt "$n0" ]; then
-    PASS "$id: MUST FIRE — $what, and the same evaluator raises $want from $n0 to $n1 finding(s) against this form's own live reading. The mutation is asserted to have landed before the verdict is read"
+  rise="$(st_cf_rise "$want" "$ST_CF_LIVE" "$v")"
+  if [ "$landed" -eq 1 ] && [ -n "$rise" ]; then
+    PASS "$id: MUST FIRE — $what, and the same evaluator raises $want at site(s) ${rise% } against this form's own live reading. The mutation is asserted to have landed before the verdict is read"
+  elif [ "$landed" -eq 1 ] && [ "$n0" -gt 0 ]; then
+    st_cf_unmeas_record "$ST_CF_TAG" "$want" "$id"
   else
-    FAIL "$id: MUST FIRE — $what, but $want went from $n0 to $n1 finding(s) with mutation-landed=$landed, where a rise is owed. ST-CF's verdict on this question has no control behind it"
+    FAIL "$id: MUST FIRE — $what, but no emission site of $want rose against this form's own live reading ($n0 live $want finding(s), mutation-landed=$landed), where a rise is owed. ST-CF's verdict on this question has no control behind it"
   fi
 }
 
-# st_cf_mustnotfire <arm> <member> <fixture> <edit-expected> <what> [charter] — the copy's findings must EQUAL
-# the member's live reading, over a non-zero count of graded bullets: what tells an evaluator that
-# grades the contract from one that reddens on any edit. Records no coverage, because a must-not-fire
-# arm asserts that nothing new was emitted.
+# st_cf_unmeas_record <form-tag> <code> <arm-id> — one must-fire arm the residual took: its copy raised
+# no site of <code> on a form that already fails <code>. Counted at record time for the reconciliation.
+st_cf_unmeas_record() {
+  ST_CF_UNMEAS="$ST_CF_UNMEAS
+$1 $2 $3"
+  ST_CF_UNMEAS_NREC=$((${ST_CF_UNMEAS_NREC:-0} + 1))
+}
+
+# st_cf_unmeas_flush — one VACUOUS per (form, question) recorded since the last flush, naming its arms,
+# then clears. Called at the top of every member and once after the loop, so a member that leaves the
+# loop body by `continue` is reported too. VACUOUS and not a PASS: the arm made NO measurement — its copy
+# raised nothing, and that is all it observed — so a PASS would report a control firing where none did,
+# which ADR-019 forbids. CTL-ST-CF-DECL-V2's PASS differs in kind: it reports a measurement its own arm
+# made of the real record. The run is red regardless, through ST-CF[<form>].
+st_cf_unmeas_flush() {
+  local uq un uids
+  if [ -z "$(printf '%s' "${ST_CF_UNMEAS:-}" | tr -d '[:space:]')" ]; then ST_CF_UNMEAS=""; return 0; fi
+  for uq in $(awk 'NF && !seen[$1 "/" $2]++ { print $1 "/" $2 }' <<<"$ST_CF_UNMEAS"); do
+    un="$(awk -v k="$uq" 'NF && ($1 "/" $2) == k { n++ } END { print n + 0 }' <<<"$ST_CF_UNMEAS")"
+    uids="$(awk -v k="$uq" 'NF && ($1 "/" $2) == k { printf "%s ", $3 }' <<<"$ST_CF_UNMEAS")"
+    ST_CF_UNMEAS_NREP=$((${ST_CF_UNMEAS_NREP:-0} + un))
+    VACUOUS "CTL-ST-CF-UNMEASURED[$uq]: $un must-fire arm(s) could not be measured on this form — ${uids% } — because the form already fails ${uq#*/} at each arm's only site, so the copy could raise no site of it. ST-CF[${uq%%/*}] carries that red in this run; these arms made no measurement, so they are reported as unmeasured rather than passed"
+  done
+  ST_CF_UNMEAS=""
+}
+
+# st_cf_mustnotfire <arm> <member> <fixture> <edit-expected> <what> [charter] — no emission site's count
+# may rise: for every site key st_attrib derives over ST_CF_SITEMAP, the copy's count must not exceed
+# the member's live reading's, over exactly one DENOM record and a non-zero count of graded bullets. That
+# is what tells an evaluator that grades the contract from one that reddens on any edit. It FAILs iff
+# some site rises, so it catches every copy in which some code's count rises, and one whole-tally
+# equality cannot: a finding that moves to another site of its code. It gives up, by construction, any
+# copy in which no site's count rises — a pure removal, or an addition offset at its own site by
+# removals there. Such a copy can exist only on a form that already fails, where ST-CF[<form>] is red in
+# the same run; on a conforming form the live reading holds no finding, so the two predicates are one.
+# CTL-ST-CF-ADDED pins the given-up class. Records no coverage, because a must-not-fire arm asserts that
+# nothing new was emitted.
 st_cf_mustnotfire() {
-  local id="$1" member="$2" fx="$3" wantedit="$4" what="$5" chart="${6:-$ST_CF_OWN}" landed=0 v t0 t1 nb
+  local id="$1" member="$2" fx="$3" wantedit="$4" what="$5" chart="${6:-$ST_CF_OWN}" landed=0 v t0 t1 nb nd add
   { cmp -s "$ST_CF_FILE" "$fx" && cmp -s "$ST_CF_OWN" "$chart"; } || landed=1
   v="$(st_cf_violations "$fx" "$member" "$ST_DM" "$chart")"
   t0="$(st_cf_tally "$ST_CF_LIVE" | tr '\n' ' ')"; t1="$(st_cf_tally "$v" | tr '\n' ' ')"
   nb="$(awk '$1 == "DENOM" { print $2 + 0; exit }' <<<"$v")"
-  if [ "$landed" -eq "$wantedit" ] && [ "$t1" = "$t0" ] && [ "${nb:-0}" -gt 0 ]; then
-    PASS "$id: MUST NOT FIRE — $what, and the copy reads exactly the findings the form itself reads [${t0% }] over ${nb} graded bullet(s)"
+  nd="$(awk '$1 == "DENOM" { n++ } END { print n + 0 }' <<<"$v")"
+  add="$(st_cf_added "$ST_CF_LIVE" "$v" | tr '\n' ' ')"
+  if [ "$landed" -ne "$wantedit" ]; then
+    FAIL "$id: MUST NOT FIRE — $what, but differs-from-original=$landed where $wantedit is expected, so the copy is not the edit this arm names"
+  elif [ "$nd" -ne 1 ]; then
+    FAIL "$id: MUST NOT FIRE — $what, but the copy's reading carries $nd DENOM record(s) where exactly one is owed, so it was not graded to its end"
+  elif [ "${nb:-0}" -le 0 ]; then
+    FAIL "$id: MUST NOT FIRE — $what, but the copy graded ${nb:-0} bullet(s), so its silence is a statement over nothing"
+  elif [ -n "$add" ]; then
+    FAIL "$id: MUST NOT FIRE — $what, but the copy raises emission site(s) ${add% } — it reads [${t1% }] against the form's own [${t0% }]"
   else
-    FAIL "$id: MUST NOT FIRE — $what, but the copy reads [${t1% }] against the form's own [${t0% }], with differs-from-original=$landed where $wantedit is expected and ${nb:-0} graded bullet(s)"
+    PASS "$id: MUST NOT FIRE — $what, and no emission site's count rises over the form's own reading — [${t1% }] against [${t0% }], over ${nb} graded bullet(s)"
+  fi
+}
+
+# st_cf_added <live> <copy> — one "<site-key> +<n>" per emission site whose count the copy RAISES
+# over the live reading, sorted. Both readings are attributed with the shipping st_attrib over
+# ST_CF_SITEMAP; a record no site explains attributes to <CODE>#?, which the live reading never
+# holds, so it is always reported — st_attrib's fail-closed rule. The SITE is the unit, measured
+# against two others: per code misses a finding that moves to another site of its code, and per
+# record reports a finding whose line merely shifted. A site key is the code plus an ordinal over
+# its literal format head, so it is line-independent and finer than the code.
+st_cf_added() {
+  local ad_mark
+  ad_mark="$(printf '\034')"
+  awk -v mark="$ad_mark" '
+    $0 == mark { side = 1; next }
+    NF { if (side) c[$0]++; else l[$0]++ }
+    END { for (k in c) if (c[k] > l[k] + 0) print k " +" (c[k] - l[k]) }
+  ' <<EOF | sort
+$(st_attrib "$1" "$ST_CF_SITEMAP")
+$ad_mark
+$(st_attrib "$2" "$ST_CF_SITEMAP")
+EOF
+}
+
+# st_cf_recon_assert <id> — every must-fire arm recorded as unmeasured over the run was named in an
+# unmeasured report: the arms recorded (counted at record time) equal the arm ids reported (counted
+# at report time), and nothing is left unreported. Exactly one verdict.
+st_cf_recon_assert() {
+  local rec="${ST_CF_UNMEAS_NREC:-0}" rep="${ST_CF_UNMEAS_NREP:-0}" left
+  left="$(printf '%s\n' "${ST_CF_UNMEAS:-}" | grep -c '[^[:space:]]')"
+  if [ "$rec" -ne "$rep" ]; then
+    FAIL "$1: $rec must-fire arm(s) were recorded as unmeasured and $rep were named in an unmeasured report — an arm that could not be measured left no verdict, no report and no line in the run summary, while ST-CF-COV and ST-CF-SITE still counted it"
+  elif [ "$left" -ne 0 ]; then
+    FAIL "$1: $left unmeasured record(s) are still pending after the last report — a member left the loop without its residual being reported"
+  else
+    PASS "$1: every one of the $rec must-fire arm(s) recorded as unmeasured in this run was named in an unmeasured report ($rec recorded, $rep reported), and none is pending. CTL-ST-CF-UNMEASURED-ONCE drives a run in which both counts are non-zero"
+  fi
+}
+
+# st_cf_once_drill — the residual's record and report path driven on synthetic arms: two arms
+# recorded under one form, the report a member's reset makes, one arm under a second form, the
+# report made after the loop, and the reconciliation. Run only inside st_cf_vprobe.
+st_cf_once_drill() {
+  ST_CF_UNMEAS=""; ST_CF_UNMEAS_NREC=0; ST_CF_UNMEAS_NREP=0
+  st_cf_unmeas_record ZZ-FORM-A Q1 ZZ-ARM-ONE
+  st_cf_unmeas_record ZZ-FORM-A Q1 ZZ-ARM-TWO
+  st_cf_unmeas_flush
+  st_cf_unmeas_record ZZ-FORM-B Q6 ZZ-ARM-THREE
+  st_cf_unmeas_flush
+  st_cf_recon_assert 'CTL-ST-CF-UNMEASURED-ONCE-RECON'
+}
+
+# st_cf_eprobe <fn> [args…] — runs <fn> in a subshell with PASS, FAIL and VACUOUS rebound to append one
+# line each, "<P|F|V> <message>", and prints those lines in the order they were rendered. The ORDER is what
+# the frame controls grade — where a report lands among the members' verdicts, as a reader of the run
+# meets it — and st_cf_vprobe keeps counts, not order. Nothing reaches the run's counters, output or SEEN.
+st_cf_eprobe() {
+  ( ep=""
+    PASS() { ep="${ep}P $*
+"; }
+    FAIL() { ep="${ep}F $*
+"; }
+    VACUOUS() { ep="${ep}V $*
+"; }
+    "$@" >/dev/null 2>&1
+    printf '%s' "$ep" )
+}
+
+# st_cf_frame — the per-member loop's FRAME, read from this file ($SELF) rather than restated: the loop's
+# head line through the member reset's empty-member test, then one line standing for the whole body,
+# `st_cf_frame_member || continue`, then the loop's `done <<EOF`, its population line and its `EOF`, and
+# every line straight after them that is blank, a comment or a call of st_cf_unmeas_flush. Both report
+# points the loop wires — the flush at each member's reset and the flush after the loop — are therefore
+# in the frame exactly when they are in the loop. Prints nothing when the head, the reset test or the
+# loop's end is not found, so a control reading it fails rather than replaying a frame it did not find.
+st_cf_frame() {
+  awk '
+    st == 0 && $0 == "while IFS= read -r ST_CF_REL; do" { st = 1; h = $0 "\n"; next }
+    st == 1 { h = h $0 "\n"; if ($0 == "[ -n \"$ST_CF_REL\" ] || continue") st = 2; next }
+    st == 2 && $0 == "done <<EOF" { d = $0; k = 0; next }
+    st == 2 && d != "" { k++
+      if (k == 1 && $0 == "$ST_CF_FORMS") { d = d "\n" $0; next }
+      if (k == 2 && $0 == "EOF") { t = d "\n" $0 "\n"; st = 3; next }
+      d = ""; next }
+    st == 3 { if ($0 ~ /^[ \t]*$/ || $0 ~ /^[ \t]*#/ || $0 ~ /^st_cf_unmeas_flush[ \t]*$/) { t = t $0 "\n"; next } st = 4 }
+    END { if (st == 4) printf "%sst_cf_frame_member || continue\n%s", h, t }
+  ' "$SELF"
+}
+
+# st_cf_frame_drill <frame> — the frame st_cf_frame read, run over three synthetic members, with the
+# residual planted through the real st_cf_unmeas_record: ZZ-FORM-A leaves two unmeasured arms of Q1,
+# ZZ-FORM-B none, and ZZ-FORM-C — the LAST member — one of Q6, leaving the body by `continue` as a
+# version-2 member does. Each member's first verdict is ZZ-ST-CF-FRAME-FIRST[<member>], standing where
+# st_cf_assert stands in a real member. After the frame, st_cf_recon_assert renders the reconciliation
+# under ZZ-ST-CF-FRAME-RECON, and ZZ-ST-CF-FRAME-COUNTS carries the two counts it compared. Run only
+# inside st_cf_eprobe.
+st_cf_frame_drill() {
+  local ST_CF_FORMS='ZZ-FORM-A
+ZZ-FORM-B
+ZZ-FORM-C'
+  ST_CF_UNMEAS=""; ST_CF_UNMEAS_NREC=0; ST_CF_UNMEAS_NREP=0
+  st_cf_frame_member() {
+    PASS "ZZ-ST-CF-FRAME-FIRST[$ST_CF_REL]: the member's first verdict"
+    case "$ST_CF_REL" in
+      ZZ-FORM-A) st_cf_unmeas_record ZZ-FORM-A Q1 ZZ-ARM-A-ONE; st_cf_unmeas_record ZZ-FORM-A Q1 ZZ-ARM-A-TWO ;;
+      ZZ-FORM-C) st_cf_unmeas_record ZZ-FORM-C Q6 ZZ-ARM-C-ONE; return 1 ;;
+    esac
+    return 0
+  }
+  eval "$1"
+  st_cf_recon_assert 'ZZ-ST-CF-FRAME-RECON'
+  PASS "ZZ-ST-CF-FRAME-COUNTS: $ST_CF_UNMEAS_NREC $ST_CF_UNMEAS_NREP"
+}
+
+# st_cf_rise <code> <live> <copy> — the sites of <code> the copy raises over the live reading, as
+# "<key> +<n>" space-joined; empty when none rises. The unattributed key <code>#? is excluded: a
+# must-fire arm may not pass on a record its reader cannot explain, which ST-CF-SITE reports instead.
+st_cf_rise() { st_cf_added "$2" "$3" | awk -v c="$1" 'index($1, c "#") == 1 && $1 != c "#?" { printf "%s ", $0 }'; }
+
+# st_cf_clean_bullet <code> / st_cf_clean_graded <code> — the RETARGET. A bullet-targeted must-fire
+# arm aims at the first candidate bullet no live <code> finding names (a bullet-specific finding
+# carries "at line <n>"), so on a form that already fails <code> at the first bullet the arm still
+# measures a site rise elsewhere. Every bullet is a candidate for Q3 and Q5. For Q6 a candidate is a
+# bullet its plant can land on, one whose value opens with `[` after the bold label, read exactly as
+# q6_markers reads it: Q6 grades only the head of such a bracket, so a bullet without one is never
+# named by a Q6 finding, always looks clean, and takes no plant. Both helpers read the form,
+# ST_CF_FILE, for that test. st_cf_clean_bullet answers a version-1 member's BULLET line from
+# ST_CF_SURF; st_cf_clean_graded answers the 1-based index of a version-2 member's graded bullet in
+# ST_CF_GR, for st_cf_gr. On a conforming form each answers exactly the first candidate. Where every
+# candidate already fails, each still answers the first candidate, so the arm lands: it passes if its
+# copy raises another site of the code, and takes the residual if none rises. Each answers nothing
+# only on a form with no candidate at all, for Q6 one with no bullet whose value opens with `[`; the
+# caller then falls back to the first bullet, where the Q6 plant cannot land, and the arm FAILs
+# loudly with mutation-landed=0.
+st_cf_clean_bullet() {
+  awk -F'\t' -v c="$1" 'FILENAME == ARGV[1] { if ($1 == c && match($2, /at line [0-9]+/)) bad[substr($2, RSTART + 8, RLENGTH - 8)] = 1; next }
+    FILENAME == ARGV[2] { if (c == "Q6") { p = index($0, ":**"); v = substr($0, p + 3); sub(/^[ \t]+/, "", v); if (substr(v, 1, 1) != "[") off[FNR] = 1 }; next }
+    $1 == "BULLET" && !($2 in off) { if (!($2 in bad)) { print $2; got = 1; exit } if (fb == "") fb = $2 }
+    END { if (!got && fb != "") print fb }' <(printf '%s\n' "$ST_CF_LIVE") "$ST_CF_FILE" <(printf '%s\n' "$ST_CF_SURF")
+}
+st_cf_clean_graded() {
+  awk -F'\t' -v c="$1" 'FILENAME == ARGV[1] { if ($1 == c && match($2, /at line [0-9]+/)) bad[substr($2, RSTART + 8, RLENGTH - 8)] = 1; next }
+    FILENAME == ARGV[2] { if (c == "Q6") { p = index($0, ":**"); v = substr($0, p + 3); sub(/^[ \t]+/, "", v); if (substr(v, 1, 1) != "[") off[FNR] = 1 }; next }
+    NF && !($1 in off) { if (!($1 in bad)) { print FNR; got = 1; exit } if (fb == "") fb = FNR }
+    END { if (!got && fb != "") print fb }' <(printf '%s\n' "$ST_CF_LIVE") "$ST_CF_FILE" <(printf '%s\n' "$ST_CF_GR")
+}
+
+# st_cf_src_block <first-line> — this file's ($SELF) own lines from the first line equal to <first-line>
+# through every line straight after it that assigns an ST_CF_ variable; nothing when <first-line> is not
+# found. It lets a control re-run a member's retarget lines as the loop runs them, rather than a copy.
+st_cf_src_block() {
+  awk -v want="$1" 'st == 0 && $0 == want { st = 1; print; next } st == 1 { if ($0 ~ /^ST_CF_[A-Z0-9_]+=/) { print; next } exit }' "$SELF"
+}
+
+# st_cf_retarget_drill <block> <first-line> <codes> <var>… — a member's retarget block (st_cf_src_block)
+# re-run in a subshell over a SYNTHETIC live reading holding only one stubbed finding of each of <codes>
+# naming <first-line>, the first candidate bullet; prints "<var>=<value>" for each <var> the block then
+# holds. The form's own live reading is kept out, as CTL-ST-CF-MUSTFIRE-CLEAN0 keeps it out of its
+# verdict: a live finding on a later candidate moves the retarget correctly, and a control reading it
+# would then blame the retarget for the form's own red. The stub carries the "at line <n>" a
+# bullet-specific finding carries, which is all the retarget reads.
+st_cf_retarget_drill() {
+  ( rt_block="$1"; rt_first="$2"; rt_codes="$3"; shift 3
+    ST_CF_LIVE=""
+    for rt_c in $rt_codes; do
+      ST_CF_LIVE="$ST_CF_LIVE
+$(printf '%s\t%s at line %s' "$rt_c" 'ZZ-ST-CF-RETARGET-STUB' "$rt_first")"
+    done
+    eval "$rt_block" >/dev/null 2>&1
+    for rt_v in "$@"; do printf '%s=%s\n' "$rt_v" "${!rt_v:-}"; done )
+}
+
+# st_cf_clean0_drill <fixture> <code> — st_cf_mustfire driven against a live reading holding only
+# its DENOM record, so the code's live count is zero by construction whatever the form's own state.
+# Run only inside st_cf_vprobe.
+st_cf_clean0_drill() {
+  ST_CF_LIVE="$(awk '$1 == "DENOM"' <<<"$ST_CF_LIVE")"
+  ST_CF_UNMEAS=""
+  st_cf_mustfire "CTL-ST-CF-MUSTFIRE-CLEAN0-PROBE" "$ST_CF_REL" "$1" "$2" "a landed copy that raises nothing"
+}
+
+# st_cf_strict_assert <relaxation> <code> <old> <new> <fixture> <plants> <what> — CTL-ST-CF-Q1-KEYSPACE-
+# STRICT: the key-line reader with ONE of its relaxations taken out (<old> replaced by <new> in
+# ST_CF_FENCE_FN, in a subshell) must read the KEYSPACE copy as a defect, raising an emission site of
+# <code> against the form's own reading. The replacement is spliced as prefix, <new>, suffix, never
+# through ${v/pattern/replacement}: bash 3.2 keeps a quoted replacement's quotes in the result, so that
+# form hands awk a regex wrapped in quote marks — a reader broken for every line, not one relaxation
+# removed. The splice must LAND — <old> found, and the text's length moved by exactly the difference —
+# and all three plants must be in the copy (<plants> = 3), or the control FAILs loudly. On a form that
+# already fails <code> at the site the strict reader raises, the arm is the residual, as any
+# single-site must-fire arm is. Records no coverage: the strict reader is not the shipping evaluator.
+st_cf_strict_assert() {
+  local rx="$1" code="$2" old="$3" new="$4" fx="$5" plants="$6" what="$7" ss_pre ss_post ss_fn ss_v ss_rise ss_add ss_n0 ss_landed=0
+  ss_pre="${ST_CF_FENCE_FN%%"$old"*}"; ss_post="${ST_CF_FENCE_FN#*"$old"}"
+  ss_fn="$ss_pre$new$ss_post"
+  if [ "$ss_pre" != "$ST_CF_FENCE_FN" ] && [ "${#ss_fn}" -eq $(( ${#ST_CF_FENCE_FN} - ${#old} + ${#new} )) ] && [ "$plants" -eq 3 ]; then ss_landed=1; fi
+  ss_v="$( ST_CF_FENCE_FN="$ss_fn"; st_cf_violations "$fx" "$ST_CF_REL" "$ST_DM" 2>/dev/null )"
+  ss_rise="$(st_cf_rise "$code" "$ST_CF_LIVE" "$ss_v")"
+  ss_add="$(st_cf_added "$ST_CF_LIVE" "$ss_v" | tr '\n' ' ')"
+  ss_n0="$(awk -F'\t' -v c="$code" '$1 == c { n++ } END { print n + 0 }' <<<"$ST_CF_LIVE")"
+  if [ "$ss_landed" -eq 1 ] && [ -n "$ss_rise" ]; then
+    PASS "CTL-ST-CF-Q1-KEYSPACE-STRICT[$rx][$ST_CF_TAG]: MUST FIRE — with the $rx relaxation taken out of the key-line reader, the KEYSPACE copy ($what) raises $code at ${ss_rise% } against the form's own reading. So CTL-ST-CF-Q1-KEYSPACE's silence rests on that relaxation"
+  elif [ "$ss_landed" -eq 1 ] && [ "$ss_n0" -gt 0 ]; then
+    st_cf_unmeas_record "$ST_CF_TAG" "$code" "CTL-ST-CF-Q1-KEYSPACE-STRICT[$rx][$ST_CF_TAG]"
+  else
+    FAIL "CTL-ST-CF-Q1-KEYSPACE-STRICT[$rx][$ST_CF_TAG]: MUST FIRE — with the $rx relaxation taken out (splice-landed=$ss_landed, plants in the copy=$plants of 3), the KEYSPACE copy raised no $code site; the sites it raised were [${ss_add% }]. Either the key-line reader was rewritten and this control no longer names its relaxation, or the relaxation is not what keeps the copy silent"
   fi
 }
 
@@ -7898,22 +8604,204 @@ fi
 # ST-CF-SITE0 — the entry gate for the site comparison, graded exactly as ST-SITE0 is, once, because
 # the code and site sets are properties of the evaluator rather than of any one form.
 ST_CF_SITE_BODY="$(declare -f st_cf_violations)"
-ST_CF_CODES="$(st_codes "$ST_CF_SITE_BODY")"
+ST_CF_CODES="$(st_cf_codes "$ST_CF_SITE_BODY")"
 ST_CF_NCODES="$(printf '%s\n' "$ST_CF_CODES" | grep -c '[^[:space:]]')"
 ST_CF_SITEMAP="$(st_sitemap "$ST_CF_SITE_BODY")"
 ST_CF_SITE_KEYS="$(st_sites "$ST_CF_SITE_BODY")"
-ST_CF_SITE_RAW="$(printf '%s\n' "$ST_CF_SITEMAP" | grep -c '[^[:space:]]')"
-ST_CF_SITE_NK="$(printf '%s\n' "$ST_CF_SITE_KEYS" | grep -c '[^[:space:]]')"
-ST_CF_SITE_DUP="$(awk -F'\t' 'NF > 1 { n[$1]++; c[$1] = $2 } END { for (k in n) if (n[k] > 1) printf "%s (code %s) ", k, c[k] }' <<<"$ST_CF_SITEMAP")"
+ST_CF_SITE0_ME="the emission-site reader returned NO sites over the body of st_cf_violations, so every site verdict below would be a statement over the empty set and the conformance arm's site coverage is UNMEASURED rather than complete"
+ST_CF_SITE0_MD="@RAW@ raw emission site(s) collapse to only @NK@ distinct key(s) — key(s) @DUP@ are each produced by two or more sites whose detail opens with the same literal, so the population below is UNDER-REPORTED. Give one of them a distinguishing literal head"
+ST_CF_SITE0_MP="the emission-site reader is non-degenerate and unambiguous over st_cf_violations — @RAW@ raw site(s) resolving to @NK@ distinct key(s), one rung below its $ST_CF_NCODES code(s), an EQUALITY between two non-zero counts rather than a zero. ST-CF-SITE compares this against what the evaluator ACTUALLY EMITTED when each arm ran, never against the code an arm declared it wanted"
 ST_CF_SITE_OK=1
-if [ "$ST_CF_SITE_RAW" -eq 0 ]; then
-  FAIL "ST-CF-SITE0: the emission-site reader returned NO sites over the body of st_cf_violations, so every site verdict below would be a statement over the empty set and the conformance arm's site coverage is UNMEASURED rather than complete"
-  ST_CF_SITE_OK=0
-elif [ "$ST_CF_SITE_NK" -ne "$ST_CF_SITE_RAW" ]; then
-  FAIL "ST-CF-SITE0: $ST_CF_SITE_RAW raw emission site(s) collapse to only $ST_CF_SITE_NK distinct key(s) — key(s) ${ST_CF_SITE_DUP% } are each produced by two or more sites whose detail opens with the same literal, so the population below is UNDER-REPORTED. Give one of them a distinguishing literal head"
-  ST_CF_SITE_OK=0
+site0_gate "ST-CF-SITE0" "$ST_CF_SITE_BODY" "$ST_CF_SITE0_ME" "$ST_CF_SITE0_MD" "$ST_CF_SITE0_MP" || ST_CF_SITE_OK=0
+# CTL-ST-CF-SITE0-DUP — the same collision limb, driven on a planted copy of st_cf_violations' body.
+site0_dup_assert 'CTL-ST-CF-SITE0-DUP' 'st_cf_violations' "$ST_CF_SITE_BODY" "$ST_CF_SITE0_ME" "$ST_CF_SITE0_MD" "$ST_CF_SITE0_MP"
+
+# ── ST-CF-KINDS — the record-kind declaration, held both ways, graded once beside ST-CF-SITE0 ───────
+#
+# st_cf_kinds_read <body> <kinds> — one line per declared kind that breaks the declaration, by limb:
+#   STALE <kind>   st_codes, handed NO kinds, does not read <kind> from the body, so the evaluator no
+#                  longer writes it in a shape the code reader reads and the declaration has outlived
+#                  its premise;
+#   HIDDEN <kind>  the site reader reads <kind> as a tab-terminated code — the shape every finding
+#                  takes — so declaring it would hide a real finding code from the coverage arms.
+# Each limb is a SET, so a control grades the delta its mutation adds against this run's own reading.
+st_cf_kinds_read() {
+  local body="$1" kinds="$2" kr_all kr_sm kr_k
+  kr_all="$(st_codes "$body")"
+  kr_sm="$(awk -F'\t' 'NF > 1 { print $2 }' <<<"$(st_sitemap "$body")")"
+  for kr_k in $kinds; do
+    grep -qxF -- "$kr_k" <<<"$kr_all" || printf 'STALE %s\n' "$kr_k"
+  done
+  for kr_k in $kinds; do
+    if grep -qxF -- "$kr_k" <<<"$kr_sm"; then printf 'HIDDEN %s\n' "$kr_k"; fi
+  done
+}
+# st_cf_kinds_limb <limb> <reading> — the kinds one limb names, one per line.
+st_cf_kinds_limb() { awk -v l="$1" '$1 == l { print $2 }' <<<"$2"; }
+
+# st_cf_kinds_assert <id> <body> <kinds> — exactly one verdict, a chain with one condition and one
+# message per branch. An EMPTY declaration FAILs first: the evaluator writes record kinds by design,
+# and a declaration naming none would pass both limbs over nothing.
+st_cf_kinds_assert() {
+  local id="$1" body="$2" kinds="$3" ka_r ka_stale ka_hidden ka_n
+  ka_n="$(awk '{ n += NF } END { print n + 0 }' <<<"$kinds")"
+  ka_r="$(st_cf_kinds_read "$body" "$kinds")"
+  ka_stale="$(st_cf_kinds_limb STALE "$ka_r" | tr '\n' ' ')"
+  ka_hidden="$(st_cf_kinds_limb HIDDEN "$ka_r" | tr '\n' ' ')"
+  if [ "$ka_n" -eq 0 ]; then
+    FAIL "$id: ST_CF_RECORD_KINDS declares no record kind, so both limbs would pass over the empty set — the evaluator writes record kinds by design, and an empty declaration lets each reach the code set as an uncovered code"
+  elif [ -n "$ka_stale" ]; then
+    FAIL "$id: declared record kind(s) ${ka_stale% } are not read by st_codes from the body of st_cf_violations — the evaluator no longer writes them in a shape the code reader reads, so the declaration has outlived its premise. Remove the kind from ST_CF_RECORD_KINDS, or restore the record the evaluator stopped writing"
+  elif [ -n "$ka_hidden" ]; then
+    FAIL "$id: declared record kind(s) ${ka_hidden% } are written TAB-terminated in the body of st_cf_violations, the shape every finding takes, so the site reader reads each as a code and the declaration would hide a real finding from ST-CF-COV and ST-CF-SITE. Write the record space-separated, or take it out of ST_CF_RECORD_KINDS"
+  else
+    PASS "$id: each of the $ka_n declared record kind(s) [$kinds] is read by st_codes from the body of st_cf_violations, so none is stale, and none is a tab-terminated code at the site rung, so the declaration hides no finding. CTL-ST-CF-KINDS and CTL-ST-CF-KINDS-STALE show each limb failing"
+  fi
+}
+st_cf_kinds_assert 'ST-CF-KINDS' "$ST_CF_SITE_BODY" "$ST_CF_RECORD_KINDS"
+
+# CTL-ST-CF-KINDS — MUST FIRE, the HIDDEN limb. One declared kind is appended to a COPY of the body
+# as a tab-terminated emission, by the shaper the code rung's controls use, and the HIDDEN set must
+# gain exactly that kind against this run's own reading of the unmutated body.
+ST_CF_KC_KIND="${ST_CF_RECORD_KINDS%% *}"
+ST_CF_KC_MUT="$ST_CF_SITE_BODY
+$(cov_emit_tab "$ST_CF_KC_KIND")"
+ST_CF_KC_LANDED=0; [ "$ST_CF_KC_MUT" != "$ST_CF_SITE_BODY" ] && ST_CF_KC_LANDED=1
+ST_CF_KC_ADD="$(st_setdiff "$(st_cf_kinds_limb HIDDEN "$(st_cf_kinds_read "$ST_CF_KC_MUT" "$ST_CF_RECORD_KINDS")")" \
+                           "$(st_cf_kinds_limb HIDDEN "$(st_cf_kinds_read "$ST_CF_SITE_BODY" "$ST_CF_RECORD_KINDS")")" | tr '\n' ' ')"
+if [ -n "$ST_CF_KC_KIND" ] && [ "$ST_CF_KC_LANDED" -eq 1 ] && [ "${ST_CF_KC_ADD% }" = "$ST_CF_KC_KIND" ]; then
+  PASS "CTL-ST-CF-KINDS: MUST FIRE — the declared kind $ST_CF_KC_KIND written tab-terminated into a COPY of the body of st_cf_violations enters ST-CF-KINDS' hidden limb, and it is the only kind that does. The mutation is asserted to have landed before the limb is read"
 else
-  PASS "ST-CF-SITE0: the emission-site reader is non-degenerate and unambiguous over st_cf_violations — $ST_CF_SITE_RAW raw site(s) resolving to $ST_CF_SITE_NK distinct key(s), one rung below its $ST_CF_NCODES code(s), an EQUALITY between two non-zero counts rather than a zero. ST-CF-SITE compares this against what the evaluator ACTUALLY EMITTED when each arm ran, never against the code an arm declared it wanted"
+  FAIL "CTL-ST-CF-KINDS: MUST FIRE — the declared kind '$ST_CF_KC_KIND' written tab-terminated into a copy of the body did not enter the hidden limb alone (mutation-landed=$ST_CF_KC_LANDED, added=[${ST_CF_KC_ADD% }]). ST-CF-KINDS cannot tell a declaration hiding a real code from a sound one"
+fi
+
+# CTL-ST-CF-KINDS-STALE — MUST FIRE, the STALE limb. A kind the evaluator never writes is added to a
+# COPY of the declaration, and the STALE set must gain exactly that kind against this run's own
+# reading of the real declaration.
+ST_CF_KS_KIND='ZZKIND'
+ST_CF_KS_DECL="$ST_CF_RECORD_KINDS $ST_CF_KS_KIND"
+ST_CF_KS_ADD="$(st_setdiff "$(st_cf_kinds_limb STALE "$(st_cf_kinds_read "$ST_CF_SITE_BODY" "$ST_CF_KS_DECL")")" \
+                           "$(st_cf_kinds_limb STALE "$(st_cf_kinds_read "$ST_CF_SITE_BODY" "$ST_CF_RECORD_KINDS")")" | tr '\n' ' ')"
+if [ "$ST_CF_KS_DECL" != "$ST_CF_RECORD_KINDS" ] && [ "${ST_CF_KS_ADD% }" = "$ST_CF_KS_KIND" ]; then
+  PASS "CTL-ST-CF-KINDS-STALE: MUST FIRE — a kind the evaluator never writes, $ST_CF_KS_KIND, added to a COPY of the declaration enters ST-CF-KINDS' stale limb, and it is the only kind that does. So a declaration cannot outlive the record it names"
+else
+  FAIL "CTL-ST-CF-KINDS-STALE: MUST FIRE — a kind the evaluator never writes added to a copy of the declaration did not enter the stale limb alone (added=[${ST_CF_KS_ADD% }]). ST-CF-KINDS cannot tell a stale declaration from a sound one"
+fi
+
+# CTL-ST-CF-ADDED — st_cf_added's exact signature, over synthetic readings built from two real site
+# prefixes of ST_CF_SITEMAP: the first code with two sites, neither of whose literal heads is empty,
+# so a detail matching neither attributes nowhere. Five cases, one answer each, and each case is a
+# claim the per-site predicate makes: an addition reports its site; a finding that MOVES to another
+# site of its code reports the new site, which whole-tally equality is blind to; a removal reports
+# nothing; an addition offset at its own site by removals there reports nothing — the class the
+# must-not-fire predicate gives up, pinned here so it is recorded as given up and not claimed as
+# caught; and a record no site explains reports <CODE>#?.
+ST_CF_AD="$(awk -F'\t' 'NF > 2 { if (!($2 in seen)) { seen[$2] = 1; ord[++n] = $2 } k[$2, ++c[$2]] = $1; p[$2, c[$2]] = $3; if ($3 == "") e[$2] = 1 }
+  END { for (i = 1; i <= n; i++) { x = ord[i]; if (c[x] >= 2 && !(x in e)) { print x "\t" k[x, 1] "\t" p[x, 1] "\t" k[x, 2] "\t" p[x, 2]; exit } } }' <<<"$ST_CF_SITEMAP")"
+IFS="$(printf '\t')" read -r ST_CF_ADC ST_CF_ADK1 ST_CF_ADP1 ST_CF_ADK2 ST_CF_ADP2 <<<"$ST_CF_AD"
+st_cf_ad_sig() { local r; r="$(st_cf_added "$1" "$2" | awk '{ printf "%s%s", (n++ ? "," : ""), $1 }')"; printf '%s' "${r:--}"; }
+ST_CF_ADD0='DENOM 1 1'
+ST_CF_ADR1="$(printf '%s\t%s' "${ST_CF_ADC:-}" "${ST_CF_ADP1:-}")"
+ST_CF_ADR2="$(printf '%s\t%s' "${ST_CF_ADC:-}" "${ST_CF_ADP2:-}")"
+ST_CF_ADRU="$(printf '%s\t%s' "${ST_CF_ADC:-}" 'ZZ-NO-SITE-PREFIX')"
+ST_CF_ADGOT="add=$(st_cf_ad_sig "$ST_CF_ADD0" "$ST_CF_ADD0
+$ST_CF_ADR1")"
+ST_CF_ADGOT="$ST_CF_ADGOT swap=$(st_cf_ad_sig "$ST_CF_ADD0
+$ST_CF_ADR1" "$ST_CF_ADD0
+$ST_CF_ADR2")"
+ST_CF_ADGOT="$ST_CF_ADGOT remove=$(st_cf_ad_sig "$ST_CF_ADD0
+$ST_CF_ADR1" "$ST_CF_ADD0")"
+ST_CF_ADGOT="$ST_CF_ADGOT offset=$(st_cf_ad_sig "$ST_CF_ADD0
+$ST_CF_ADR1
+$ST_CF_ADR1" "$ST_CF_ADD0
+$ST_CF_ADR1")"
+ST_CF_ADGOT="$ST_CF_ADGOT unattr=$(st_cf_ad_sig "$ST_CF_ADD0" "$ST_CF_ADD0
+$ST_CF_ADRU")"
+# The must-fire rule's two cases, read through st_cf_rise: an addition at a site of the code rises;
+# a record no site explains does not, so a must-fire arm cannot pass on it.
+st_cf_rise_sig() { local r; r="$(st_cf_rise "$1" "$2" "$3" | awk '{ for (i = 1; i <= NF; i += 2) printf "%s%s", (n++ ? "," : ""), $i }')"; printf '%s' "${r:--}"; }
+ST_CF_ADGOT="$ST_CF_ADGOT rise=$(st_cf_rise_sig "${ST_CF_ADC:-}" "$ST_CF_ADD0" "$ST_CF_ADD0
+$ST_CF_ADR1") rise-unattr=$(st_cf_rise_sig "${ST_CF_ADC:-}" "$ST_CF_ADD0" "$ST_CF_ADD0
+$ST_CF_ADRU")"
+ST_CF_ADWANT="add=${ST_CF_ADK1:-} swap=${ST_CF_ADK2:-} remove=- offset=- unattr=${ST_CF_ADC:-}#? rise=${ST_CF_ADK1:-} rise-unattr=-"
+# Gated on ST-CF-SITE0, as ST-CF-SITE is: this control and CTL-ST-CF-MUSTNOTFIRE-SWAP below read the
+# site map, and over collided keys their comparison is UNMEASURED and named ONCE, by the gate's own
+# loud FAIL, rather than a second time as a defect of the per-site predicate. So neither renders a
+# verdict when the gate is red, and neither can read green there.
+if [ "$ST_CF_SITE_OK" -eq 1 ]; then
+if [ -z "$ST_CF_AD" ]; then
+  FAIL "CTL-ST-CF-ADDED: no code of st_cf_violations has two emission sites with non-empty literal heads, so the per-site predicate's exact signature cannot be built from real prefixes and is UNMEASURED"
+elif [ "$ST_CF_ADGOT" = "$ST_CF_ADWANT" ]; then
+  PASS "CTL-ST-CF-ADDED: over synthetic readings at two real sites of $ST_CF_ADC, st_cf_added answers exactly '$ST_CF_ADWANT' — an addition reports its site, a finding moved to another site of its code reports that site, a removal and an addition offset at its own site report nothing (the class the must-not-fire predicate gives up, recorded rather than claimed), a record no site explains reports $ST_CF_ADC#?, and the must-fire rule reads the addition as a rise and the unexplained record as none"
+else
+  FAIL "CTL-ST-CF-ADDED: st_cf_added answered '$ST_CF_ADGOT' where '$ST_CF_ADWANT' is owed. The per-site predicate does not grade what the must-fire and must-not-fire arms say it grades"
+fi
+fi
+# CTL-ST-CF-MUSTNOTFIRE-SWAP — st_cf_mustnotfire ITSELF, over stubbed evaluator readings at the two real
+# sites CTL-ST-CF-ADDED reads. That control grades st_cf_added; this one grades the arm that consumes it,
+# so a must-not-fire arm whose per-site limb went back to whole-tally equality turns red here, where on a
+# conforming form every real must-not-fire arm reads the same either way. One stub, two cases: a finding
+# moved from the first site to the second, the whole tally equal, must render one FAIL and no PASS; the
+# same finding left where it was must render one PASS and no FAIL. The second case is what makes the
+# first FAIL the site limb's: the stub clears the three guards ahead of that limb (the copy landed, one
+# DENOM record, a graded bullet), and a stub that tripped one would fail both cases.
+st_cf_swap_drill() {   # st_cf_swap_drill <live> <copy> — run only inside st_cf_vprobe
+  local sw_copy="$2"
+  ST_CF_LIVE="$1"; ST_CF_FILE="$WORK/st-cf-swap-live.md"
+  st_cf_violations() { printf '%s\n' "$sw_copy"; }
+  st_cf_mustnotfire 'CTL-ST-CF-MUSTNOTFIRE-SWAP-PROBE' ZZ-ST-CF-SWAP-MEMBER "$WORK/st-cf-swap-copy.md" 1 "a stubbed copy reading"
+}
+printf 'live\n' > "$WORK/st-cf-swap-live.md"; printf 'copy\n' > "$WORK/st-cf-swap-copy.md"
+ST_CF_SWM="$(awk 'NR == 1' <<<"$(st_cf_vprobe st_cf_swap_drill "$ST_CF_ADD0
+$ST_CF_ADR1" "$ST_CF_ADD0
+$ST_CF_ADR2")")"
+ST_CF_SWS="$(awk 'NR == 1' <<<"$(st_cf_vprobe st_cf_swap_drill "$ST_CF_ADD0
+$ST_CF_ADR1" "$ST_CF_ADD0
+$ST_CF_ADR1")")"
+# Gated on ST-CF-SITE0 for the reason CTL-ST-CF-ADDED is.
+if [ "$ST_CF_SITE_OK" -eq 1 ]; then
+if [ -z "$ST_CF_AD" ]; then
+  FAIL "CTL-ST-CF-MUSTNOTFIRE-SWAP: no code of st_cf_violations has two emission sites with non-empty literal heads, so a finding moved between two sites of one code cannot be built from real prefixes, and the must-not-fire arm's site limb is UNMEASURED"
+elif [ "$ST_CF_SWM" = "0 1 0 0" ] && [ "$ST_CF_SWS" = "1 0 0 0" ]; then
+  PASS "CTL-ST-CF-MUSTNOTFIRE-SWAP: MUST FIRE a FAIL — st_cf_mustnotfire itself, over a stubbed copy reading in which one $ST_CF_ADC finding moved from $ST_CF_ADK1 to $ST_CF_ADK2 with the whole tally equal, renders one FAIL and no PASS, and over the same stub with the finding left at $ST_CF_ADK1 renders one PASS and no FAIL. So the arm decides by site; a whole-tally comparison in its place would pass the moved finding"
+else
+  FAIL "CTL-ST-CF-MUSTNOTFIRE-SWAP: MUST FIRE a FAIL — over stubbed readings at $ST_CF_ADK1 and $ST_CF_ADK2, st_cf_mustnotfire rendered [pass fail vacuous pending] = [$ST_CF_SWM] for a finding moved between them, where [0 1 0 0] is owed, and [$ST_CF_SWS] for the finding left where it was, where [1 0 0 0] is owed. A moved finding that passes means the arm compares whole tallies; a finding left in place that fails means the stub tripped a guard ahead of the site limb, so the first verdict says nothing about sites"
+fi
+fi
+# CTL-ST-CF-RETARGET-LAND and CTL-ST-CF-RETARGET-LAND-V2 — the retarget's Q6 candidate set and its
+# fallback, through each helper itself, over a synthetic form: a heading line, then Alpha (line 2),
+# whose value opens with text and carries a bracket only later, so Q6 never reads it though a looser
+# test would take it, then Beta (line 3) and Gamma (line 4), whose values open with `[`. Three cases,
+# one answer each: with no stub, Q6 must answer Beta, the first bullet its plant can land on, after a
+# clean bullet it cannot; Q3 must answer Alpha, because only Q6 filters; and with Beta and Gamma both
+# stubbed as failing Q6, Q6 must answer Beta, the first candidate, never Alpha and never nothing, so the
+# arm lands and the residual stays reachable. Version 1 answers lines from a BULLET surface, version 2
+# indices into a graded-bullet list, so their owed answers are 3 2 3 and 2 1 2.
+st_cf_land_drill() {   # st_cf_land_drill <helper> <code> <bullet-list> [<stubbed-line>…] — one answer, or -
+  ( ld_h="$1"; ld_c="$2"; ST_CF_SURF="$3"; ST_CF_GR="$3"; shift 3
+    ST_CF_FILE="$WORK/st-cf-land.md"; ST_CF_LIVE=""
+    for ld_l in "$@"; do
+      ST_CF_LIVE="$ST_CF_LIVE
+$(printf '%s\t%s at line %s' "$ld_c" 'ZZ-ST-CF-LAND-STUB' "$ld_l")"
+    done
+    ld_a="$("$ld_h" "$ld_c" 2>/dev/null)"; printf '%s' "${ld_a:--}" )
+}
+printf '%s\n' '# ZZ synthetic retarget form' '- **Alpha:** see [x]' '- **Beta:** [y]' '- **Gamma:** [z]' > "$WORK/st-cf-land.md"
+ST_CF_LS="$(printf 'BULLET\t%s\tZZ\t-\n' 2 3 4)"
+ST_CF_LG="$(printf '%s\tZZ\n' 2 3 4)"
+ST_CF_LGOT="first=$(st_cf_land_drill st_cf_clean_bullet Q6 "$ST_CF_LS") q3=$(st_cf_land_drill st_cf_clean_bullet Q3 "$ST_CF_LS") all-failing=$(st_cf_land_drill st_cf_clean_bullet Q6 "$ST_CF_LS" 3 4)"
+ST_CF_LWANT='first=3 q3=2 all-failing=3'
+if [ "$ST_CF_LGOT" = "$ST_CF_LWANT" ]; then
+  PASS "CTL-ST-CF-RETARGET-LAND: over a synthetic version-1 form whose first labelled bullet carries a bracket only after its opening text, st_cf_clean_bullet answers exactly '$ST_CF_LWANT' — Q6 passes that bullet over for the first whose value opens with [, the only place its plant can land, Q3 does not, and with every such bullet failing Q6 the answer is still the first of them rather than the unplantable bullet or nothing. So a version-1 Q6 arm always aims where its plant lands, and on a form failing Q6 at every such bullet it measures or takes the residual rather than FAILing with mutation-landed=0"
+else
+  FAIL "CTL-ST-CF-RETARGET-LAND: over a synthetic version-1 form, st_cf_clean_bullet answered '$ST_CF_LGOT' where '$ST_CF_LWANT' is owed — first= is Q6's target with nothing failing, q3= is Q3's, all-failing= is Q6's with every bullet opening on [ failing. A Q6 answer of 2 aims the arm at a bullet whose value does not open with [, so the plant lands nowhere and the arm FAILs where it should measure or take the residual; a q3 answer other than 2 filters a code that needs no bracket; an all-failing answer of - leaves the caller's fallback to the first bullet, whichever it is"
+fi
+ST_CF_LGOT="first=$(st_cf_land_drill st_cf_clean_graded Q6 "$ST_CF_LG") q3=$(st_cf_land_drill st_cf_clean_graded Q3 "$ST_CF_LG") all-failing=$(st_cf_land_drill st_cf_clean_graded Q6 "$ST_CF_LG" 3 4)"
+ST_CF_LWANT='first=2 q3=1 all-failing=2'
+if [ "$ST_CF_LGOT" = "$ST_CF_LWANT" ]; then
+  PASS "CTL-ST-CF-RETARGET-LAND-V2: over a synthetic version-2 graded-bullet list whose first bullet carries a bracket only after its opening text, st_cf_clean_graded answers exactly '$ST_CF_LWANT' — Q6 passes that bullet over for the first whose value opens with [, the only place its plant can land, Q3 does not, and with every such bullet failing Q6 the answer is still the first of them rather than the unplantable bullet or nothing. So Q6-V2 always aims where its plant lands, and on a form failing Q6 at every such bullet it measures or takes the residual rather than FAILing with mutation-landed=0"
+else
+  FAIL "CTL-ST-CF-RETARGET-LAND-V2: over a synthetic version-2 graded-bullet list, st_cf_clean_graded answered '$ST_CF_LGOT' where '$ST_CF_LWANT' is owed — first= is Q6's target index with nothing failing, q3= is Q3's, all-failing= is Q6's with every bullet opening on [ failing. A Q6 answer of 1 aims Q6-V2 at a bullet whose value does not open with [, so the plant lands nowhere and the arm FAILs where it should measure or take the residual; a q3 answer other than 1 filters a code that needs no bracket; an all-failing answer of - leaves the caller's fallback to the first graded bullet, whichever it is"
 fi
 ST_CF_COV_PROBE='ZZ-ST-CF-COVERAGE-PROBE'
 ST_CF_COV_PHANTOM='ZZ-ST-CF-PHANTOM-ARM'
@@ -7960,9 +8848,14 @@ trip-context | a block not listed above | UNREACHABLE (by construction)'
 # Run-level, per D-12 of the seam: every member's arms land in ONE armed set, graded after the loop.
 ST_CF_ARMED=""
 ST_CF_ARMED_SITES=""
+# The residual's record, and the two counts its reconciliation compares (st_cf_unmeas_record, _flush).
+ST_CF_UNMEAS=""; ST_CF_UNMEAS_NREC=0; ST_CF_UNMEAS_NREP=0
 
 # ── PER MEMBER: the form verdict, then — behind the member's own boundary — every arm ────────────
 while IFS= read -r ST_CF_REL; do
+# The previous member's residual is reported here, at the reset, whichever way that member left the
+# loop body — a version-2 member leaves it by `continue`, so a report placed before `done` would miss it.
+st_cf_unmeas_flush
 [ -n "$ST_CF_REL" ] || continue
 ST_CF_FILE="$ROOT/$ST_CF_REL"
 ST_CF_TAG="$(st_cf_tag "$ST_CF_REL")"
@@ -7998,12 +8891,38 @@ if [ "${ST_CF_NT:-0}" -lt 1 ] || [ "${ST_CF_NG:-0}" -lt 1 ] || [ "${ST_CF_NGB:-0
   continue
 fi
 st_cf_gr() { awk -F'\t' -v c="$2" -v k="$1" 'NR == k + 0 { print $c; exit }' <<<"$ST_CF_GR"; }
-ST_CF_G1L="$(st_cf_gr 1 1)"; ST_CF_G1B="$(st_cf_gr 1 2)"; ST_CF_G1ROW="$(st_cf_gr 1 4)"
+# The retarget, per code: the first graded bullet no live finding of that code names.
+ST_CF_GK3="$(st_cf_clean_graded Q3)"; ST_CF_GK3="${ST_CF_GK3:-1}"
+ST_CF_G3L="$(st_cf_gr "$ST_CF_GK3" 1)"; ST_CF_G3B="$(st_cf_gr "$ST_CF_GK3" 2)"; ST_CF_G3ROW="$(st_cf_gr "$ST_CF_GK3" 4)"
+ST_CF_GK5="$(st_cf_clean_graded Q5)"; ST_CF_G5L="$(st_cf_gr "${ST_CF_GK5:-1}" 1)"
+ST_CF_GK6="$(st_cf_clean_graded Q6)"; ST_CF_G6L="$(st_cf_gr "${ST_CF_GK6:-1}" 1)"
 ST_CF_G1RL="$(st_cf_gr 1 5)"; ST_CF_G1HOW="$(st_cf_gr 1 6)"; ST_CF_G1WR="$(st_cf_gr 1 7)"
 ST_CF_GDL="$(awk -F'\t' '$6 == "default" { print $1; exit }' <<<"$ST_CF_GR")"
 ST_CF_GDB="$(awk -F'\t' '$6 == "default" { print $2; exit }' <<<"$ST_CF_GR")"
 # the first graded bullet that is the ONLY graded bullet reaching its field-table row
 ST_CF_GUL="$(awk -F'\t' '{ L[NR] = $1; R[NR] = $4; c[$4]++ } END { for (i = 1; i <= NR; i++) if (c[R[i]] == 1) { print L[i]; exit } }' <<<"$ST_CF_GR")"
+# CTL-ST-CF-RETARGET-V2 — MUST FIRE: the version-2 retarget, graded as CTL-ST-CF-RETARGET grades the
+# version-1 one: this member's own retarget lines above, read from this file and re-run over a live
+# reading holding only one stubbed Q3, Q5 and Q6 finding naming the first graded bullet, must aim the
+# Q3 and Q5 targets at the second graded bullet, the first no stub names, and the Q6 target at the
+# first graded bullet after the stubbed one whose value opens with `[`, the first no stub names that
+# its plant can land on. The form's own findings never reach the drill, so they cannot move a target
+# away from its owed value, and the owed Q6 line is read here from the graded bullets and the form,
+# never through the helper under test.
+ST_CF_RV1="$(st_cf_gr 1 1)"; ST_CF_RV2="$(st_cf_gr 2 1)"
+ST_CF_RV6="$(awk -F'\t' -v x="$ST_CF_RV1" 'FILENAME == ARGV[1] { p = index($0, ":**"); v = substr($0, p + 3); sub(/^[ \t]+/, "", v); if (substr(v, 1, 1) == "[") ok[FNR] = 1; next } NF && $1 != x && ($1 in ok) { print $1; exit }' "$ST_CF_FILE" <(printf '%s\n' "$ST_CF_GR"))"
+ST_CF_RVB="$(st_cf_src_block '# The retarget, per code: the first graded bullet no live finding of that code names.')"
+ST_CF_RVGOT=""; [ -z "$ST_CF_RVB" ] || ST_CF_RVGOT="$(st_cf_retarget_drill "$ST_CF_RVB" "$ST_CF_RV1" 'Q3 Q5 Q6' ST_CF_G3L ST_CF_G5L ST_CF_G6L | tr '\n' ' ')"
+ST_CF_RVWANT="ST_CF_G3L=$ST_CF_RV2 ST_CF_G5L=$ST_CF_RV2 ST_CF_G6L=$ST_CF_RV6 "
+if [ -z "$ST_CF_RV2" ]; then
+  FAIL "CTL-ST-CF-RETARGET-V2[$ST_CF_TAG]: $ST_CF_REL has fewer than two graded bullets, so no retarget can move off the first and the version-2 retarget is UNMEASURED on this member"
+elif [ -z "$ST_CF_RV6" ]; then
+  FAIL "CTL-ST-CF-RETARGET-V2[$ST_CF_TAG]: $ST_CF_REL has no graded bullet after its first (line $ST_CF_RV1) whose value opens with [, so no Q6 retarget can move off the first and the version-2 Q6 retarget is UNMEASURED on this member"
+elif [ -n "$ST_CF_RVB" ] && [ "$ST_CF_RVGOT" = "$ST_CF_RVWANT" ]; then
+  PASS "CTL-ST-CF-RETARGET-V2[$ST_CF_TAG]: MUST FIRE — this member's own retarget lines, read from this file and re-run over a live reading holding only one stubbed Q3, Q5 and Q6 finding naming its first graded bullet (line $ST_CF_RV1), aim the Q3 and Q5 arms at the next one (line $ST_CF_RV2), the first no stub names, and Q6-V2 at the next whose value opens with [ (line $ST_CF_RV6), the first no stub names that its plant can land on. So on a form already failing the code at its first graded bullet, Q3-UNJOINED-V2, Q3-AMBIG-V2, Q5-BULLET and Q6-V2 measure a site rise elsewhere rather than taking the residual"
+else
+  FAIL "CTL-ST-CF-RETARGET-V2[$ST_CF_TAG]: MUST FIRE — over a live reading holding only one stubbed Q3, Q5 and Q6 finding naming the first graded bullet (line $ST_CF_RV1), this member's retarget lines ($(printf '%s\n' "$ST_CF_RVB" | grep -c '^ST_CF_') read) set [${ST_CF_RVGOT% }] where [${ST_CF_RVWANT% }] is owed. The form's own findings are kept out of the drill, so this is the retarget's answer alone. A target left on the first graded bullet aims the arm at the stubbed finding's own site, so on a form already failing the code there the arm records a residual instead of measuring; no lines read means the block's opening comment has moved"
+fi
 ST_CF_FA="$(st_cf_fence_at "$ST_CF_FILE")"; ST_CF_FO="${ST_CF_FA%% *}"; ST_CF_FC="${ST_CF_FA##* }"
 ST_CF_KA="$(st_cf_key_line "$ST_CF_FILE" "$ST_CF_V2_KEY")"
 ST_CF_KF="$(st_cf_key_line "$ST_CF_FILE" form)"
@@ -8070,11 +8989,11 @@ ST_CF_FX="$(st_cf_fixture q2-label)"; [ -n "$ST_CF_LB" ] && st_cf_ins_after "$ST
 st_cf_mustfire "CTL-ST-CF-Q2-LABEL[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q2 "a line opening on the bold label ${ST_CF_LB:-(none)}, which the writer table gives to a row no heading can reach, is inserted under the first region (line $ST_CF_R1) — the probe of that row's zero"
 
 # ── Q3: the join inside every interviewable region, the reverse join, and the address ──
-ST_CF_FX="$(st_cf_fixture q3-unjoined-v2)"; st_cf_relabel "$ST_CF_FX" "$ST_CF_G1L" 'ZZ-ST-CF-UNCLASSIFIED'
-st_cf_mustfire "CTL-ST-CF-Q3-UNJOINED-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the first graded bullet ('$ST_CF_G1B', line $ST_CF_G1L) is relabelled with a label no field-table row carries"
-ST_CF_ROWL="$(ft_rows "$ST_DM" | awk -F'\t' -v r="$ST_CF_G1ROW" '$1 == r && n == 0 { print $9; n = 1 }')"
+ST_CF_FX="$(st_cf_fixture q3-unjoined-v2)"; st_cf_relabel "$ST_CF_FX" "$ST_CF_G3L" 'ZZ-ST-CF-UNCLASSIFIED'
+st_cf_mustfire "CTL-ST-CF-Q3-UNJOINED-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the first graded bullet no live Q3 finding names ('$ST_CF_G3B', line $ST_CF_G3L) is relabelled with a label no field-table row carries"
+ST_CF_ROWL="$(ft_rows "$ST_DM" | awk -F'\t' -v r="$ST_CF_G3ROW" '$1 == r && n == 0 { print $9; n = 1 }')"
 ST_CF_FX="$(st_cf_fixture q3-ambig-v2)"; ST_CF_DMFX="$(st_cf_dm_fixture q3-ambig-v2)"; st_cf_dup_range "$ST_CF_DMFX" "${ST_CF_ROWL:-0}" "${ST_CF_ROWL:-0}"
-st_cf_mustfire "CTL-ST-CF-Q3-AMBIG-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the field-table row the first graded bullet joins (row ${ST_CF_G1ROW:-none}) is duplicated on a COPY of the data model, so that bullet reaches two rows" "$ST_CF_DMFX"
+st_cf_mustfire "CTL-ST-CF-Q3-AMBIG-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the field-table row the first graded bullet no live Q3 finding names joins (row ${ST_CF_G3ROW:-none}, line ${ST_CF_G3L:-none}) is duplicated on a COPY of the data model, so that bullet reaches two rows" "$ST_CF_DMFX"
 # Q3-EMPTY-V2 — every field deleted. Graded on the empty-set finding ITSELF rather than on every Q3:
 # deleting every field also deletes whatever Q3 findings the live reading carried, so a count of the
 # whole code can fall on a form already failing question 3 while this site fires.
@@ -8087,8 +9006,11 @@ ST_CF_ARMED_SITES="$ST_CF_ARMED_SITES
 $(st_attrib "$ST_CF_EV" "$ST_CF_SITEMAP")"
 st_cf_empty() { awk -F'\t' '$1 == "Q3" && index($2, "no field-shaped bullet sits in an interviewable region") == 1 { n++ } END { print n + 0 }' <<<"$1"; }
 ST_CF_EV0="$(st_cf_empty "$ST_CF_LIVE")"; ST_CF_EV1="$(st_cf_empty "$ST_CF_EV")"
-if ! cmp -s "$ST_CF_FILE" "$ST_CF_FX" && [ "$ST_CF_EV1" -gt "$ST_CF_EV0" ]; then
+ST_CF_EVL=0; cmp -s "$ST_CF_FILE" "$ST_CF_FX" || ST_CF_EVL=1
+if [ "$ST_CF_EVL" -eq 1 ] && [ "$ST_CF_EV1" -gt "$ST_CF_EV0" ]; then
   PASS "CTL-ST-CF-Q3-EMPTY-V2[$ST_CF_TAG]: MUST FIRE — every field-shaped bullet is deleted, at any indent, and the evaluator says the join would be graded over the empty set ($ST_CF_EV0 → $ST_CF_EV1), rather than reading an empty join as a clean one"
+elif [ "$ST_CF_EVL" -eq 1 ] && [ "$ST_CF_EV0" -gt 0 ]; then
+  st_cf_unmeas_record "$ST_CF_TAG" Q3 "CTL-ST-CF-Q3-EMPTY-V2[$ST_CF_TAG]"
 else
   FAIL "CTL-ST-CF-Q3-EMPTY-V2[$ST_CF_TAG]: MUST FIRE — with every field-shaped bullet deleted, the empty-set finding went $ST_CF_EV0 → $ST_CF_EV1, where a rise is owed. A join graded over nothing would read as clean"
 fi
@@ -8107,6 +9029,8 @@ ST_CF_RV0="$(awk -F'\t' '$1 == "Q3" && index($2, "the (section, label) resolver 
 ST_CF_RV1="$(awk -F'\t' '$1 == "Q3" && index($2, "the (section, label) resolver answered 0 of") == 1 { n++ } END { print n + 0 }' <<<"$ST_CF_RV")"
 if [ "$ST_CF_RV1" -gt "$ST_CF_RV0" ]; then
   PASS "CTL-ST-CF-Q3-RESOLVER-V2[$ST_CF_TAG]: MUST FIRE — with ft_resolve removed, the evaluator over the unmutated form reports that the resolver answered none of its fields ($ST_CF_RV0 → $ST_CF_RV1), so question 3 cannot pass on a join that never ran"
+elif [ "$ST_CF_RV0" -gt 0 ]; then
+  st_cf_unmeas_record "$ST_CF_TAG" Q3 "CTL-ST-CF-Q3-RESOLVER-V2[$ST_CF_TAG]"
 else
   FAIL "CTL-ST-CF-Q3-RESOLVER-V2[$ST_CF_TAG]: MUST FIRE — with ft_resolve removed the evaluator's 'resolver answered 0 of' finding went $ST_CF_RV0 → $ST_CF_RV1, where a rise is owed. A join the resolver never made would read as a clean one"
 fi
@@ -8119,12 +9043,12 @@ ST_CF_DV="$(st_cf_violations "$ST_CF_FX" "$ST_CF_REL" "$ST_DM")"
 ST_CF_ARMED_SITES="$ST_CF_ARMED_SITES
 $(st_attrib "$ST_CF_DV" "$ST_CF_SITEMAP")"
 ST_CF_DV0="$(awk -F'\t' '$1 == "Q3" { n++ } END { print n + 0 }' <<<"$ST_CF_LIVE")"
-ST_CF_DV1="$(awk -F'\t' '$1 == "Q3" { n++ } END { print n + 0 }' <<<"$ST_CF_DV")"
 ST_CF_DVC="$(awk -F'\t' '$1 == "Q3" && index($2, "ZZ-ST-CF-NEW-BLOCK-FIELD") && index($2, "resolved to the default row") && index($2, "rules: ") { n++ } END { print n + 0 }' <<<"$ST_CF_DV")"
-if [ -n "$ST_CF_GDL" ] && [ "$ST_CF_DV1" -gt "$ST_CF_DV0" ] && [ "$ST_CF_DVC" -eq 1 ]; then
-  PASS "CTL-ST-CF-Q3-DEFAULT-V2[$ST_CF_TAG]: MUST FIRE — the graded bullet '$ST_CF_GDB' at line $ST_CF_GDL, in a region that resolved by default, is relabelled with a label no field-table row carries: Q3 rises $ST_CF_DV0 → $ST_CF_DV1, and the finding cites the writer table's own rule for a block it does not list, read from the table — the rule a new block meets at the moment it is added"
+ST_CF_DVR="$(st_cf_rise Q3 "$ST_CF_LIVE" "$ST_CF_DV")"
+if [ -n "$ST_CF_GDL" ] && [ -n "$ST_CF_DVR" ] && [ "$ST_CF_DVC" -eq 1 ]; then
+  PASS "CTL-ST-CF-Q3-DEFAULT-V2[$ST_CF_TAG]: MUST FIRE — the graded bullet '$ST_CF_GDB' at line $ST_CF_GDL, in a region that resolved by default, is relabelled with a label no field-table row carries: Q3 rises at site(s) ${ST_CF_DVR% } against the form's own reading, and the finding cites the writer table's own rule for a block it does not list, read from the table — the rule a new block meets at the moment it is added"
 else
-  FAIL "CTL-ST-CF-Q3-DEFAULT-V2[$ST_CF_TAG]: MUST FIRE — with a default-resolved bullet (line ${ST_CF_GDL:-none}) relabelled, Q3 went $ST_CF_DV0 → $ST_CF_DV1 and $ST_CF_DVC finding(s) cited the table's rule for an unlisted block, where a rise and one citing finding are owed"
+  FAIL "CTL-ST-CF-Q3-DEFAULT-V2[$ST_CF_TAG]: MUST FIRE — with a default-resolved bullet (line ${ST_CF_GDL:-none}) relabelled, no Q3 site rose (rose: [${ST_CF_DVR% }], $ST_CF_DV0 live Q3 finding(s)) and $ST_CF_DVC finding(s) cited the table's rule for an unlisted block, where a site rise and one citing finding are owed"
 fi
 
 # ── Q4: nothing declared in a region the interviewer does not own ──
@@ -8153,12 +9077,12 @@ else
 fi
 
 # ── Q5 and Q6: the fence against the frontmatter, a marked graded bullet, and its marker ──
-ST_CF_FX="$(st_cf_fixture q5-bullet)"; st_line_sub "$ST_CF_FX" "$ST_CF_G1L" "[ \t]*$" " [ENRICH]"
-st_cf_mustfire "CTL-ST-CF-Q5-BULLET[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q5 "the first graded bullet gains an [ENRICH] marker (line $ST_CF_G1L), so an agent-owned field sits in an interviewable region"
+ST_CF_FX="$(st_cf_fixture q5-bullet)"; st_line_sub "$ST_CF_FX" "$ST_CF_G5L" "[ \t]*$" " [ENRICH]"
+st_cf_mustfire "CTL-ST-CF-Q5-BULLET[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q5 "the first graded bullet no live Q5 finding names gains an [ENRICH] marker (line $ST_CF_G5L), so an agent-owned field sits in an interviewable region"
 ST_CF_FX="$(st_cf_fixture q5-output-v2)"; st_line_sub "$ST_CF_FX" "$ST_CF_KO" "[.]md[ \t]*$" ".elsewhere.md"
 st_cf_mustfire "CTL-ST-CF-Q5-OUTPUT-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q5 "the fence's output: no longer names the frontmatter's artifact (line $ST_CF_KO)"
-ST_CF_FX="$(st_cf_fixture q6-v2)"; st_cf_plant "$ST_CF_FX" "$ST_CF_G1L" 'Closed: '
-st_cf_mustfire "CTL-ST-CF-Q6-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q6 "a marker in the wrong case is planted at the head of the first graded bullet's bracket (line $ST_CF_G1L)"
+ST_CF_FX="$(st_cf_fixture q6-v2)"; st_cf_plant "$ST_CF_FX" "$ST_CF_G6L" 'Closed: '
+st_cf_mustfire "CTL-ST-CF-Q6-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q6 "a marker in the wrong case is planted at the head of the first graded bullet whose value opens with [ and that no live Q6 finding names, or the first such bullet when every one is named (line $ST_CF_G6L)"
 
 # ── VERSION: an unsupported version is named as that, and as nothing else ──
 ST_CF_ARMED="$ST_CF_ARMED
@@ -8205,10 +9129,12 @@ ST_CF_CL1="$(awk -F'\t' '$1 == "ROW" { printf "%s:%s/%s ", $2, $3, $4 }' <<<"$ST
 ST_CF_CA="$(awk -F'\t' -v r="$ST_CF_AR" -v s="$ST_CF_AS" '$1 == "ROW" && $2 == r { print (index($11, s) ? "kept" : "gone"); exit }' <<<"$ST_CF_CG")"
 ST_CF_CN="$(awk -F'\t' -v r="$ST_CF_NR" -v s="$ST_CF_AS" '$1 == "ROW" && $2 == r { print (index($11, s) ? "carried" : "absent"); exit }' <<<"$ST_CF_CG")"
 ST_CF_CV0="$(st_cf_row_vector "$ST_CF_RG" | cut -f1-3)"; ST_CF_CV1="$(st_cf_row_vector "$ST_CF_CG" | cut -f1-3)"
-ST_CF_CT0="$(st_cf_tally "$ST_CF_LIVE" | tr '\n' ' ')"; ST_CF_CT1="$(st_cf_tally "$(st_cf_violations "$ST_CF_FILE" "$ST_CF_REL" "$ST_DM" "$ST_CF_CX")" | tr '\n' ' ')"
+ST_CF_CTV="$(st_cf_violations "$ST_CF_FILE" "$ST_CF_REL" "$ST_DM" "$ST_CF_CX")"
+ST_CF_CT0="$(st_cf_tally "$ST_CF_LIVE" | tr '\n' ' ')"; ST_CF_CT1="$(st_cf_tally "$ST_CF_CTV" | tr '\n' ' ')"
+ST_CF_CTADD="$(st_cf_added "$ST_CF_LIVE" "$ST_CF_CTV" | tr '\n' ' ')"
 if [ -z "$ST_CF_AR" ] || [ -z "$ST_CF_NR" ] || [ -z "$ST_CF_AS" ]; then
   VACUOUS "CTL-ST-CF-CONDITION-CELL[$ST_CF_TAG]: the writer table carries no AGENT row with a contract span (${ST_CF_AR:-none}) or no addressed row naming no writer (${ST_CF_NR:-none}), so there is no Condition-cell citation to move between them"
-elif [ "$ST_CF_CA" = gone ] && [ "$ST_CF_CN" = carried ] && [ -n "${ST_CF_CL0% }" ] && [ "$ST_CF_CL1" = "$ST_CF_CL0" ] && [ "$ST_CF_CV1" = "$ST_CF_CV0" ] && [ "$ST_CF_CT1" = "$ST_CF_CT0" ]; then
+elif [ "$ST_CF_CA" = gone ] && [ "$ST_CF_CN" = carried ] && [ -n "${ST_CF_CL0% }" ] && [ "$ST_CF_CL1" = "$ST_CF_CL0" ] && [ "$ST_CF_CV1" = "$ST_CF_CV0" ] && [ -z "$ST_CF_CTADD" ]; then
   PASS "CTL-ST-CF-CONDITION-CELL[$ST_CF_TAG]: MUST NOT FIRE — on a COPY of the charter the agent contract span $ST_CF_AS leaves the Condition cell of row $ST_CF_AR and is written into that of row $ST_CF_NR, and every row's class reads as before [${ST_CF_CL0% }], every realized verdict with it, and the evaluator's findings [${ST_CF_CT0% }]. A writer's class is read from its Writer and Block cells alone, so the column that explains cannot move a verdict"
 else
   FAIL "CTL-ST-CF-CONDITION-CELL[$ST_CF_TAG]: MUST NOT FIRE — with the agent contract span moved between Condition cells on a COPY of the charter (source row ${ST_CF_AR:-none} $ST_CF_CA, target row ${ST_CF_NR:-none} $ST_CF_CN), the classes read [${ST_CF_CL1% }] against [${ST_CF_CL0% }] and the findings [${ST_CF_CT1% }] against [${ST_CF_CT0% }], where both are owed unchanged. A class read from the Condition column moves a verdict with the explanation of a row rather than its declaration"
@@ -8335,11 +9261,41 @@ ST_CF_KF="$(st_cf_key_line "$ST_CF_FILE" form)"
 ST_CF_KV="$(st_cf_key_line "$ST_CF_FILE" form-version)"
 ST_CF_KO="$(st_cf_key_line "$ST_CF_FILE" output)"
 ST_CF_SURF="$(st_surfaces "$ST_CF_FILE")"
-ST_CF_B1L="$(st_field BULLET 1 2 "$ST_CF_SURF")"; ST_CF_B1B="$(st_field BULLET 1 3 "$ST_CF_SURF")"
-ST_CF_B1H="$(st_field BULLET 1 4 "$ST_CF_SURF")"
+ST_CF_B1L="$(st_field BULLET 1 2 "$ST_CF_SURF")"
+# The retarget, per code: the first labelled bullet no live finding of that code names.
+ST_CF_Q3L="$(st_cf_clean_bullet Q3)"; ST_CF_Q3L="${ST_CF_Q3L:-$ST_CF_B1L}"
+ST_CF_Q3B="$(awk -F'\t' -v l="$ST_CF_Q3L" '$1 == "BULLET" && $2 == l { print $3; exit }' <<<"$ST_CF_SURF")"
+ST_CF_Q3H="$(awk -F'\t' -v l="$ST_CF_Q3L" '$1 == "BULLET" && $2 == l { print $4; exit }' <<<"$ST_CF_SURF")"
+ST_CF_Q6L="$(st_cf_clean_bullet Q6)"; ST_CF_Q6L="${ST_CF_Q6L:-$ST_CF_B1L}"
 ST_CF_MKL="$(awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "BULLET") b[$2] = 1; next } (FNR in b) && ($0 ~ /:\*\* \[(closed|open): /) { print FNR; exit }' <(printf '%s\n' "$ST_CF_SURF") "$ST_CF_FILE")"
 ST_CF_H1L="$(awk -v bl="$ST_CF_BL" 'FNR < bl + 0 && /^## / { print FNR; exit }' "$ST_CF_FILE")"
 ST_CF_BLIT="$(awk -v n="$ST_CF_BL" 'FNR == n + 0 { print; exit }' "$ST_CF_FILE")"
+
+# CTL-ST-CF-RETARGET — MUST FIRE: the retarget, graded through this member's own retarget lines above,
+# read from this file and re-run over a live reading holding only one stubbed Q3 and one stubbed Q6
+# finding naming the first labelled bullet. The Q3 target must then name the SECOND bullet, the first
+# no stub names, and the Q6 target the first bullet after the stubbed one whose value opens with `[`,
+# the first no stub names that its plant can land on; the owed Q6 line is read here from the surfaces
+# and the form, never through the helper under test. The form's own findings never reach the drill, so
+# a live finding on a later bullet cannot move a target away from its owed value and turn this control
+# red for the form's red. On a conforming form the retarget answers the first bullet whether or not it works,
+# so only a form already failing the code there can show it; the stub is that form, at no cost. Without
+# the retarget, Q6-DOUBLE on such a form lands on the live finding's own site and takes the residual —
+# measured on the S11-B1 replay: CTL-ST-CF-UNMEASURED[person-intake/Q6] in place of its PASS.
+ST_CF_RT1="$(st_field BULLET 1 2 "$ST_CF_SURF")"; ST_CF_RT2="$(st_field BULLET 2 2 "$ST_CF_SURF")"
+ST_CF_RT6="$(awk -F'\t' -v x="$ST_CF_RT1" 'FILENAME == ARGV[1] { p = index($0, ":**"); v = substr($0, p + 3); sub(/^[ \t]+/, "", v); if (substr(v, 1, 1) == "[") ok[FNR] = 1; next } $1 == "BULLET" && $2 != x && ($2 in ok) { print $2; exit }' "$ST_CF_FILE" <(printf '%s\n' "$ST_CF_SURF"))"
+ST_CF_RTB="$(st_cf_src_block '# The retarget, per code: the first labelled bullet no live finding of that code names.')"
+ST_CF_RTGOT=""; [ -z "$ST_CF_RTB" ] || ST_CF_RTGOT="$(st_cf_retarget_drill "$ST_CF_RTB" "$ST_CF_RT1" 'Q3 Q6' ST_CF_Q3L ST_CF_Q6L | tr '\n' ' ')"
+ST_CF_RTWANT="ST_CF_Q3L=$ST_CF_RT2 ST_CF_Q6L=$ST_CF_RT6 "
+if [ -z "$ST_CF_RT2" ]; then
+  FAIL "CTL-ST-CF-RETARGET[$ST_CF_TAG]: $ST_CF_REL has fewer than two labelled bullets, so no retarget can move off the first and the retarget is UNMEASURED on this member"
+elif [ -z "$ST_CF_RT6" ]; then
+  FAIL "CTL-ST-CF-RETARGET[$ST_CF_TAG]: $ST_CF_REL has no labelled bullet after its first (line $ST_CF_RT1) whose value opens with [, so no Q6 retarget can move off the first and the Q6 retarget is UNMEASURED on this member"
+elif [ -n "$ST_CF_RTB" ] && [ "$ST_CF_RTGOT" = "$ST_CF_RTWANT" ]; then
+  PASS "CTL-ST-CF-RETARGET[$ST_CF_TAG]: MUST FIRE — this member's own retarget lines, read from this file and re-run over a live reading holding only one stubbed Q3 and one stubbed Q6 finding naming its first labelled bullet (line $ST_CF_RT1), aim the Q3 arms at the next one (line $ST_CF_RT2), the first no stub names, and the Q6 arms at the next whose value opens with [ (line $ST_CF_RT6), the first no stub names that their plant can land on. So on a form already failing the code at its first bullet, Q3-UNJOINED, Q3-AMBIG and the Q6 arms measure a site rise elsewhere rather than taking the residual"
+else
+  FAIL "CTL-ST-CF-RETARGET[$ST_CF_TAG]: MUST FIRE — over a live reading holding only one stubbed Q3 and one stubbed Q6 finding naming the first labelled bullet (line $ST_CF_RT1), this member's retarget lines ($(printf '%s\n' "$ST_CF_RTB" | grep -c '^ST_CF_') read) set [${ST_CF_RTGOT% }] where [${ST_CF_RTWANT% }] is owed. The form's own findings are kept out of the drill, so this is the retarget's answer alone. A target left on the first bullet aims the arm at the stubbed finding's own site, so on a form already failing the code there the arm records a residual instead of measuring; no lines read means the block's opening comment has moved"
+fi
 
 # ── Q1: the fence and its keys ──
 ST_CF_FX="$(st_cf_fixture q1-absent)"; st_cf_del_range "$ST_CF_FX" "$ST_CF_FO" "$ST_CF_FC"
@@ -8348,6 +9304,42 @@ ST_CF_FX="$(st_cf_fixture q1-twice)"; st_cf_dup_range "$ST_CF_FX" "$ST_CF_FO" "$
 st_cf_mustfire "CTL-ST-CF-Q1-TWICE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q1 "the intake-form fence is duplicated in place, so the form carries two"
 ST_CF_FX="$(st_cf_fixture q1-unclosed)"; st_line_del "$ST_CF_FX" "$ST_CF_FC"
 st_cf_mustfire "CTL-ST-CF-Q1-UNCLOSED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q1 "the fence's closing line is deleted (line $ST_CF_FC), so its body runs into the text after it"
+# Q1-KEYSPACE — MUST NOT FIRE: one copy carries a tab after writer:, two spaces after form-version:
+# and trailing spaces after the form: value, each a spelling the key-line reader relaxes, so the
+# fence reads exactly as before and no emission site rises. Each STRICT control takes ONE relaxation
+# out of that reader and requires the same copy to raise a Q1 site, so the silence is shown to rest
+# on the relaxation rather than on a reader that never looked.
+ST_CF_KW="$(st_cf_key_line "$ST_CF_FILE" writer)"
+ST_CF_FX="$(st_cf_fixture q1-keyspace)"
+st_line_sub "$ST_CF_FX" "${ST_CF_KW:-0}" "^writer:[ ]+" "writer:\t"
+st_line_sub "$ST_CF_FX" "${ST_CF_KV:-0}" "^form-version:[ ]+" "form-version:  "
+st_line_sub "$ST_CF_FX" "${ST_CF_KF:-0}" "[ \t]*$" "   "
+ST_CF_KSW="a tab after writer: (line ${ST_CF_KW:-none}), two spaces after form-version: (line ${ST_CF_KV:-none}) and trailing spaces after the form: value (line ${ST_CF_KF:-none})"
+# The three plants, each read back from the copy: a tab after writer:, two spaces after form-version:,
+# trailing spaces after the form: value. A copy that merely differs is not this copy.
+ST_CF_KSP="$(awk -v w="${ST_CF_KW:-0}" -v v="${ST_CF_KV:-0}" -v f="${ST_CF_KF:-0}" 'NR == w + 0 && /^writer:\t[^ \t]/ { n++ } NR == v + 0 && /^form-version:  [^ \t]/ { n++ } NR == f + 0 && /^form: .*[^ ]   $/ { n++ } END { print n + 0 }' "$ST_CF_FX")"
+if [ "$ST_CF_KSP" -ne 3 ]; then
+  FAIL "CTL-ST-CF-Q1-KEYSPACE[$ST_CF_TAG]: MUST NOT FIRE — only $ST_CF_KSP of the three spellings landed in the copy ($ST_CF_KSW), so its silence would not be about them"
+else
+  st_cf_mustnotfire "CTL-ST-CF-Q1-KEYSPACE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "$ST_CF_KSW — each a spelling the key-line reader relaxes"
+fi
+st_cf_strict_assert tab Q1 '/^[ \t]+[^ \t\r]/' '/^ +[^ \t\r]/' "$ST_CF_FX" "$ST_CF_KSP" "$ST_CF_KSW"
+st_cf_strict_assert double Q1 '/^[ \t]+[^ \t\r]/' '/^[ \t][^ \t\r]/' "$ST_CF_FX" "$ST_CF_KSP" "$ST_CF_KSW"
+st_cf_strict_assert trail Q1 '; sub(/[ \t\r]+$/, "", v)' '' "$ST_CF_FX" "$ST_CF_KSP" "$ST_CF_KSW"
+
+# CTL-ST-CF-MUSTFIRE-CLEAN0 — MUST FIRE a FAIL. st_cf_mustfire is driven, in a subshell, against a live
+# reading holding only its DENOM record, with a landed copy that carries none of the chosen code: a
+# must-fire arm whose copy raises nothing on a form that does not fail the code must FAIL, never
+# report the residual. The code is the first this member's copy does not emit, so the live form's own
+# state cannot reach the verdict.
+ST_CF_FX="$(st_cf_fixture clean0)"; printf '\n' >> "$ST_CF_FX"
+ST_CF_C0C="$(awk 'NF { print; exit }' <<<"$(st_setdiff "$ST_CF_CODES" "$(awk -F'\t' 'NF > 1 { print $1 }' <<<"$(st_cf_violations "$ST_CF_FX" "$ST_CF_REL" "$ST_DM")")")")"
+ST_CF_C0R="$(awk 'NR == 1' <<<"$(st_cf_vprobe st_cf_clean0_drill "$ST_CF_FX" "${ST_CF_C0C:-}")")"
+if [ -n "$ST_CF_C0C" ] && [ "$ST_CF_C0R" = "0 1 0 0" ]; then
+  PASS "CTL-ST-CF-MUSTFIRE-CLEAN0[$ST_CF_TAG]: MUST FIRE a FAIL — a landed copy raising no $ST_CF_C0C site, graded against a live reading that holds none, renders one FAIL, no PASS, no unmeasured report and no unmeasured record. So the residual is reachable only where the form already fails the code"
+else
+  FAIL "CTL-ST-CF-MUSTFIRE-CLEAN0[$ST_CF_TAG]: MUST FIRE a FAIL — with code '${ST_CF_C0C:-none}' and a live reading holding only its DENOM record, a copy raising nothing rendered [pass fail vacuous pending] = [${ST_CF_C0R:-}] where [0 1 0 0] is owed. A must-fire arm that cannot fail on a conforming form proves nothing"
+fi
 ST_CF_FX="$(st_cf_fixture q1-malformed)"; st_line_sub "$ST_CF_FX" "$ST_CF_KW" "^writer:[ ]*" "writer "
 st_cf_mustfire "CTL-ST-CF-Q1-MALFORMED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q1 "the fence's writer line loses its colon (line $ST_CF_KW), so it is no key line and no layout either, and the fence ends there unclosed"
 ST_CF_FX="$(st_cf_fixture q1-keys)"; st_line_del "$ST_CF_FX" "$ST_CF_KC"
@@ -8377,12 +9369,12 @@ ST_CF_FX="$(st_cf_fixture q2-gone)"; st_line_del "$ST_CF_FX" "$ST_CF_BL"
 st_cf_mustfire "CTL-ST-CF-Q2-GONE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q2 "the boundary line is deleted (line $ST_CF_BL), so the literal its fence names occurs nowhere as a whole line"
 
 # ── Q3: the join, and the address it is made through ──
-ST_CF_FX="$(st_cf_fixture q3-unjoined)"; st_cf_relabel "$ST_CF_FX" "$ST_CF_B1L" 'ZZ-ST-CF-UNCLASSIFIED'
-st_cf_mustfire "CTL-ST-CF-Q3-UNJOINED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the first labelled bullet ('$ST_CF_B1B', line $ST_CF_B1L) is relabelled with a label no field-table row carries"
-ST_CF_ROW="$(printf '%s\t%s\n' "$ST_CF_B1H" "$ST_CF_B1B" | ft_resolve <(ft_rows "$ST_DM") | awk -F'\t' '$1 == "ONE" && n == 0 { print $2; n = 1 }')"
+ST_CF_FX="$(st_cf_fixture q3-unjoined)"; st_cf_relabel "$ST_CF_FX" "$ST_CF_Q3L" 'ZZ-ST-CF-UNCLASSIFIED'
+st_cf_mustfire "CTL-ST-CF-Q3-UNJOINED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the first labelled bullet no live Q3 finding names ('$ST_CF_Q3B', line $ST_CF_Q3L) is relabelled with a label no field-table row carries"
+ST_CF_ROW="$(printf '%s\t%s\n' "$ST_CF_Q3H" "$ST_CF_Q3B" | ft_resolve <(ft_rows "$ST_DM") | awk -F'\t' '$1 == "ONE" && n == 0 { print $2; n = 1 }')"
 ST_CF_ROWL="$(ft_rows "$ST_DM" | awk -F'\t' -v r="$ST_CF_ROW" '$1 == r && n == 0 { print $9; n = 1 }')"
 ST_CF_FX="$(st_cf_fixture q3-ambig)"; ST_CF_DMFX="$(st_cf_dm_fixture q3-ambig)"; st_cf_dup_range "$ST_CF_DMFX" "${ST_CF_ROWL:-0}" "${ST_CF_ROWL:-0}"
-st_cf_mustfire "CTL-ST-CF-Q3-AMBIG[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the field-table row the first bullet joins (row ${ST_CF_ROW:-none}) is duplicated on a COPY of the data model, the form left byte-untouched, so that bullet reaches two rows" "$ST_CF_DMFX"
+st_cf_mustfire "CTL-ST-CF-Q3-AMBIG[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the field-table row the first labelled bullet no live Q3 finding names joins (row ${ST_CF_ROW:-none}, line $ST_CF_Q3L) is duplicated on a COPY of the data model, the form left byte-untouched, so that bullet reaches two rows" "$ST_CF_DMFX"
 ST_CF_FX="$(st_cf_fixture q3-address)"; st_line_sub "$ST_CF_FX" "$ST_CF_KC" "The classification" "The classifications"
 st_cf_mustfire "CTL-ST-CF-Q3-ADDRESS[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the classification: anchor is edited so its last segment leads no heading of the data model (line $ST_CF_KC)"
 ST_CF_FX="$(st_cf_fixture q3-table)"; st_line_sub "$ST_CF_FX" "$ST_CF_KC" "reference/data-model[.]md" "reference/elsewhere.md"
@@ -8401,6 +9393,8 @@ ST_CF_RV0="$(awk -F'\t' '$1 == "Q3" && index($2, "the (section, label) resolver 
 ST_CF_RV1="$(awk -F'\t' '$1 == "Q3" && index($2, "the (section, label) resolver answered 0 of") == 1 { n++ } END { print n + 0 }' <<<"$ST_CF_RV")"
 if [ "$ST_CF_RV1" -gt "$ST_CF_RV0" ]; then
   PASS "CTL-ST-CF-Q3-RESOLVER[$ST_CF_TAG]: MUST FIRE — with ft_resolve removed, the evaluator over the unmutated form reports that the resolver answered none of its bullets ($ST_CF_RV0 → $ST_CF_RV1), so question 3 cannot pass on a join that never ran"
+elif [ "$ST_CF_RV0" -gt 0 ]; then
+  st_cf_unmeas_record "$ST_CF_TAG" Q3 "CTL-ST-CF-Q3-RESOLVER[$ST_CF_TAG]"
 else
   FAIL "CTL-ST-CF-Q3-RESOLVER[$ST_CF_TAG]: MUST FIRE — with ft_resolve removed the evaluator's 'resolver answered 0 of' finding went $ST_CF_RV0 → $ST_CF_RV1, where a rise is owed. A join the resolver never made would read as a clean one"
 fi
@@ -8418,12 +9412,12 @@ ST_CF_FX="$(st_cf_fixture q5-marked)"; st_line_sub "$ST_CF_FX" "$ST_CF_H1L" "[ \
 st_cf_mustfire "CTL-ST-CF-Q5-MARKED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q5 "the first section heading gains an [ENRICH] marker (line $ST_CF_H1L), so an agent-owned field sits in the profile half"
 
 # ── Q6: the head of a bracket, and only its head ──
-ST_CF_FX="$(st_cf_fixture q6-malformed)"; st_cf_plant "$ST_CF_FX" "$ST_CF_B1L" 'Closed: '
-st_cf_mustfire "CTL-ST-CF-Q6-MALFORMED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q6 "a marker in the wrong case is planted at the head of the first bullet's bracket (line $ST_CF_B1L)"
-ST_CF_FX="$(st_cf_fixture q6-double)"; st_cf_plant "$ST_CF_FX" "$ST_CF_B1L" 'closed: closed: '
-st_cf_mustfire "CTL-ST-CF-Q6-DOUBLE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q6 "two markers are planted at the head of the first bullet's bracket (line $ST_CF_B1L)"
-ST_CF_FX="$(st_cf_fixture q6-middle)"; st_cf_plant "$ST_CF_FX" "$ST_CF_B1L" 'e.g., "open: any weekend", '
-st_cf_mustnotfire "CTL-ST-CF-Q6-MIDDLE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "the text open: is planted in the MIDDLE of the first bullet's bracket, after an example that opens it (line $ST_CF_B1L) — later text in a bracket is prose, and the contract grades the marker at its head alone"
+ST_CF_FX="$(st_cf_fixture q6-malformed)"; st_cf_plant "$ST_CF_FX" "$ST_CF_Q6L" 'Closed: '
+st_cf_mustfire "CTL-ST-CF-Q6-MALFORMED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q6 "a marker in the wrong case is planted at the head of the bracket of the first bullet whose value opens with [ and that no live Q6 finding names, or the first such bullet when every one is named (line $ST_CF_Q6L)"
+ST_CF_FX="$(st_cf_fixture q6-double)"; st_cf_plant "$ST_CF_FX" "$ST_CF_Q6L" 'closed: closed: '
+st_cf_mustfire "CTL-ST-CF-Q6-DOUBLE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q6 "two markers are planted at the head of the bracket of the first bullet whose value opens with [ and that no live Q6 finding names, or the first such bullet when every one is named (line $ST_CF_Q6L)"
+ST_CF_FX="$(st_cf_fixture q6-middle)"; st_cf_plant "$ST_CF_FX" "$ST_CF_Q6L" 'e.g., "open: any weekend", '
+st_cf_mustnotfire "CTL-ST-CF-Q6-MIDDLE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "the text open: is planted in the MIDDLE of the bracket of the first bullet whose value opens with [ and that no live Q6 finding names, or the first such bullet when every one is named, after an example that opens it (line $ST_CF_Q6L) — later text in a bracket is prose, and the contract grades the marker at its head alone"
 # Q6-NOMARK — every marker removed from a copy must leave the form conforming, since the contract
 # never grades whether a field owes one; and the Q6 arms must still be constructible on that copy,
 # because they plant a marker rather than needing one to exist. EVERY marker at the head of the
@@ -8440,10 +9434,11 @@ ST_CF_NMP="$ST_CF_DIR/q6-nomark-planted.md"; cp "$ST_CF_FX" "$ST_CF_NMP"; st_cf_
 ST_CF_NMQ0="$(awk -F'\t' '$1 == "Q6" { n++ } END { print n + 0 }' <<<"$ST_CF_NMV")"
 ST_CF_NMQ1="$(awk -F'\t' '$1 == "Q6" { n++ } END { print n + 0 }' <<<"$(st_cf_violations "$ST_CF_NMP" "$ST_CF_REL" "$ST_DM")")"
 ST_CF_NML=0; cmp -s "$ST_CF_FILE" "$ST_CF_FX" || ST_CF_NML=1
-if [ "$ST_CF_NML" -eq 1 ] && [ "$ST_CF_NMK" -eq 0 ] && [ "$ST_CF_NMT1" = "$ST_CF_NMT0" ] && [ "$ST_CF_NMQ1" -gt "$ST_CF_NMQ0" ]; then
-  PASS "CTL-ST-CF-Q6-NOMARK[$ST_CF_TAG]: MUST NOT FIRE — with every closed/open marker removed from a copy of the form it reads exactly the form's own findings [${ST_CF_NMT0% }]: a form with no option-bearing field passes question 6, because whether a field owes a marker is a reviewer's call. The Q6 arms need no marker to exist either — a marker planted on that same copy still raises Q6 ($ST_CF_NMQ0 → $ST_CF_NMQ1)"
+ST_CF_NMADD="$(st_cf_added "$ST_CF_LIVE" "$ST_CF_NMV" | tr '\n' ' ')"
+if [ "$ST_CF_NML" -eq 1 ] && [ "$ST_CF_NMK" -eq 0 ] && [ -z "$ST_CF_NMADD" ] && [ "$ST_CF_NMQ1" -gt "$ST_CF_NMQ0" ]; then
+  PASS "CTL-ST-CF-Q6-NOMARK[$ST_CF_TAG]: MUST NOT FIRE — with every closed/open marker removed from a copy of the form no emission site's count rises over the form's own reading — [${ST_CF_NMT1% }] against [${ST_CF_NMT0% }]: a form with no option-bearing field passes question 6, because whether a field owes a marker is a reviewer's call. The Q6 arms need no marker to exist either — a marker planted on that same copy still raises Q6 ($ST_CF_NMQ0 → $ST_CF_NMQ1)"
 else
-  FAIL "CTL-ST-CF-Q6-NOMARK[$ST_CF_TAG]: MUST NOT FIRE — the marker-free copy (landed=$ST_CF_NML, markers left=$ST_CF_NMK) read [${ST_CF_NMT1% }] against the form's own [${ST_CF_NMT0% }], and a planted marker moved Q6 $ST_CF_NMQ0 → $ST_CF_NMQ1. Those numbers tell three causes apart. A copy reading MORE findings than the form means question 6 grades whether a marker is owed, which the contract leaves to a reviewer; a planted marker that does not raise Q6 means its arms cannot be built on a form without one; and a copy reading FEWER Q6 findings than the form means this form already fails question 6 at a marker the copy removed, so that finding went with the marker and this arm cannot be measured on this form until ST-CF[$ST_CF_TAG]'s Q6 finding is fixed"
+  FAIL "CTL-ST-CF-Q6-NOMARK[$ST_CF_TAG]: MUST NOT FIRE — the marker-free copy (landed=$ST_CF_NML, markers left=$ST_CF_NMK) raised emission site(s) [${ST_CF_NMADD% }] — it read [${ST_CF_NMT1% }] against the form's own [${ST_CF_NMT0% }] — and a planted marker moved Q6 $ST_CF_NMQ0 → $ST_CF_NMQ1. Those numbers tell two causes apart. A copy raising a site means question 6 grades whether a marker is owed, which the contract leaves to a reviewer; a planted marker that does not raise Q6 means its arms cannot be built on a form without one"
 fi
 
 # ── VERSION: the dispatch ──
@@ -8486,6 +9481,73 @@ fi
 done <<EOF
 $ST_CF_FORMS
 EOF
+# The last member's residual, reported once after the loop.
+st_cf_unmeas_flush
+
+# ── The residual's report, reconciled. CTL-ST-CF-UNMEASURED-ONCE drives the record and report path on
+# synthetic arms across two forms and both report points — a member's reset and the end of the loop —
+# and requires exactly one report per (form, question), each naming its arms, and the reconciliation
+# green inside the drill. CTL-ST-CF-UNMEASURED-RECON then grades this run's own counts.
+ST_CF_ONCE="$(st_cf_vprobe st_cf_once_drill)"
+ST_CF_ONCE1="$(awk 'NR == 1' <<<"$ST_CF_ONCE")"
+ST_CF_ONCEA="$(awk 'NR > 1 && index($0, "ZZ-ARM-ONE") && index($0, "ZZ-ARM-TWO") && !index($0, "ZZ-ARM-THREE") { n++ } END { print n + 0 }' <<<"$ST_CF_ONCE")"
+ST_CF_ONCEB="$(awk 'NR > 1 && index($0, "ZZ-ARM-THREE") && !index($0, "ZZ-ARM-ONE") { n++ } END { print n + 0 }' <<<"$ST_CF_ONCE")"
+if [ "$ST_CF_ONCE1" = "1 0 2 0" ] && [ "$ST_CF_ONCEA" -eq 1 ] && [ "$ST_CF_ONCEB" -eq 1 ]; then
+  PASS "CTL-ST-CF-UNMEASURED-ONCE: MUST FIRE once per (form, question) — two unmeasured arms recorded under one form and reported at the next member's reset, and one under a second form reported after the loop, render exactly two unmeasured reports, one naming both arms of the first form and one naming the arm of the second; recording renders nothing, and the reconciliation inside the drill is green"
+else
+  FAIL "CTL-ST-CF-UNMEASURED-ONCE: MUST FIRE once per (form, question) — the drill rendered [pass fail vacuous pending] = [$ST_CF_ONCE1] where [1 0 2 0] is owed, with $ST_CF_ONCEA report(s) naming the first form's two arms and $ST_CF_ONCEB naming the second form's one, where one each is owed. An arm that could not be measured would be reported per arm, or not at all"
+fi
+st_cf_recon_assert 'CTL-ST-CF-UNMEASURED-RECON'
+
+# ── The residual's two report points, graded where they stand: in the per-member loop above. ──
+# CTL-ST-CF-UNMEASURED-ONCE calls st_cf_unmeas_flush itself, so it proves the function and not the two
+# lines in the loop that call it, and no form on this tree reaches the residual. These controls re-run
+# the loop's own frame (st_cf_frame) over three synthetic members (st_cf_frame_drill) and read the order
+# of what it renders. AT-RESET: the first member's report lands after its own first verdict and before
+# the next member's, under the form it names — the flush at the top of each member. AFTER-LOOP: the last
+# member's report is rendered at all — the flush after the loop, which no member reset follows. Deleting
+# or moving either call in the loop turns the control named for it.
+ST_CF_FRM="$(st_cf_frame)"
+ST_CF_FRT=""; [ -z "$ST_CF_FRM" ] || ST_CF_FRT="$(st_cf_eprobe st_cf_frame_drill "$ST_CF_FRM")"
+read -r ST_CF_FRA ST_CF_FRB ST_CF_FRC ST_CF_FRVA ST_CF_FRNA ST_CF_FRVC ST_CF_FRNC <<<"$(awk '
+  index($0, "P ZZ-ST-CF-FRAME-FIRST[ZZ-FORM-A]:") == 1 { a = NR }
+  index($0, "P ZZ-ST-CF-FRAME-FIRST[ZZ-FORM-B]:") == 1 { b = NR }
+  index($0, "P ZZ-ST-CF-FRAME-FIRST[ZZ-FORM-C]:") == 1 { c = NR }
+  index($0, "V CTL-ST-CF-UNMEASURED[ZZ-FORM-A/Q1]:") == 1 { va = NR; na++ }
+  index($0, "V CTL-ST-CF-UNMEASURED[ZZ-FORM-C/Q6]:") == 1 { vc = NR; nc++ }
+  END { print a + 0, b + 0, c + 0, va + 0, na + 0, vc + 0, nc + 0 }' <<<"$ST_CF_FRT")"
+ST_CF_FRL="$(printf '%s\n' "$ST_CF_FRM" | grep -c '[^[:space:]]')"
+# The replay ran its members, in order: without that, neither control below is about a report point.
+ST_CF_FRRAN=0; [ "$ST_CF_FRA" -gt 0 ] && [ "$ST_CF_FRA" -lt "$ST_CF_FRB" ] && [ "$ST_CF_FRB" -lt "$ST_CF_FRC" ] && ST_CF_FRRAN=1
+if [ "$ST_CF_FRRAN" -eq 1 ] && [ "$ST_CF_FRNA" -eq 1 ] && [ "$ST_CF_FRVA" -gt "$ST_CF_FRA" ] && [ "$ST_CF_FRVA" -lt "$ST_CF_FRB" ]; then
+  PASS "CTL-ST-CF-UNMEASURED-AT-RESET: MUST FIRE in place — the per-member loop's own frame, read from this file and run over three synthetic members, reports the first member's two unmeasured arms once, after that member's first verdict and before the next member's (trace lines $ST_CF_FRA < $ST_CF_FRVA < $ST_CF_FRB). So a form's residual is reported under the form it names, by the flush at the top of the next member"
+else
+  FAIL "CTL-ST-CF-UNMEASURED-AT-RESET: MUST FIRE in place — over the loop's own frame ($ST_CF_FRL line(s) read, members ran in order=$ST_CF_FRRAN), the first member's unmeasured report was rendered $ST_CF_FRNA time(s), at trace line $ST_CF_FRVA, against that member's first verdict at line $ST_CF_FRA and the next member's at line $ST_CF_FRB, where exactly one report between them is owed. Without the flush at each member's reset, a form's residual is reported after a later form's verdicts, under a form it does not name; with no frame read, the loop's head, reset test or end has moved"
+fi
+if [ "$ST_CF_FRRAN" -eq 1 ] && [ "$ST_CF_FRNC" -eq 1 ] && [ "$ST_CF_FRVC" -gt "$ST_CF_FRC" ]; then
+  PASS "CTL-ST-CF-UNMEASURED-AFTER-LOOP: MUST FIRE — in the same replay the LAST member leaves one unmeasured arm and the loop body by \`continue\`, as a version-2 member does, and its report is rendered once, after its first verdict (trace lines $ST_CF_FRC < $ST_CF_FRVC). So the flush after the loop reaches the last member's residual, which no member reset follows"
+else
+  FAIL "CTL-ST-CF-UNMEASURED-AFTER-LOOP: MUST FIRE — over the loop's own frame ($ST_CF_FRL line(s) read, members ran in order=$ST_CF_FRRAN), the last member's unmeasured report was rendered $ST_CF_FRNC time(s), at trace line $ST_CF_FRVC, against its first verdict at line $ST_CF_FRC, where exactly one report after it is owed. Without the flush after the loop, the last member's residual leaves no verdict, no report and no line in the run summary"
+fi
+
+# CTL-ST-CF-UNMEASURED-RECON-N — the reconciliation, graded over the same replay, where it has something to
+# reconcile. CTL-ST-CF-UNMEASURED-RECON grades this run's own counts, and on a tree no form of which reaches
+# the residual those read 0 recorded and 0 reported: a pass over nothing, which a reconciliation that
+# compared nothing would render too. In the replay three arms are recorded through the real
+# st_cf_unmeas_record and reported through the loop's own two flushes, and st_cf_recon_assert — the
+# function RECON calls — must render one PASS at 3 recorded and 3 reported, with no FAIL anywhere in the
+# trace. A report lost at either flush, or a record lost before its flush, leaves the counts unequal.
+read -r ST_CF_FRRP ST_CF_FRRF ST_CF_FRREC ST_CF_FRREP ST_CF_FRNF <<<"$(awk '
+  index($0, "P ZZ-ST-CF-FRAME-RECON:") == 1 { p++ }
+  index($0, "F ZZ-ST-CF-FRAME-RECON:") == 1 { f++ }
+  index($0, "P ZZ-ST-CF-FRAME-COUNTS: ") == 1 { rec = $3; rep = $4 }
+  /^F / { nf++ }
+  END { print p + 0, f + 0, rec + 0, rep + 0, nf + 0 }' <<<"$ST_CF_FRT")"
+if [ "$ST_CF_FRRAN" -eq 1 ] && [ "$ST_CF_FRRP" -eq 1 ] && [ "$ST_CF_FRRF" -eq 0 ] && [ "$ST_CF_FRNF" -eq 0 ] && [ "$ST_CF_FRREC" -eq 3 ] && [ "$ST_CF_FRREP" -eq 3 ]; then
+  PASS "CTL-ST-CF-UNMEASURED-RECON-N: MUST FIRE at N = 3 — over the loop's own frame, with three unmeasured arms recorded across two members and reported through the flush at the reset and the flush after the loop, the reconciliation renders one PASS at $ST_CF_FRREC recorded and $ST_CF_FRREP reported, and nothing in the trace fails. So RECON's equality is shown comparing counts that are not zero; its own verdict above reads this run's counts, which are zero wherever every form conforms"
+else
+  FAIL "CTL-ST-CF-UNMEASURED-RECON-N: MUST FIRE at N = 3 — over the loop's own frame (members ran in order=$ST_CF_FRRAN), the reconciliation rendered $ST_CF_FRRP PASS and $ST_CF_FRRF FAIL at $ST_CF_FRREC recorded and $ST_CF_FRREP reported, with $ST_CF_FRNF FAIL(s) in the trace, where one PASS at 3 and 3 and no FAIL are owed. Unequal counts mean a report or a record was lost between the residual and its report"
+fi
 
 # ── RUN LEVEL, after every member: the conformance arm's coverage, graded once over every arm that
 # ran on any member (D-12 of the seam), at the code rung and at the site rung.
@@ -8500,7 +9562,7 @@ if [ "$ST_CF_NARMED" -eq 0 ]; then
   FAIL "ST-CF-COV: $(st_cf_unres_note)no member's conformance arms could be constructed in this run, so the code and site coverage of st_cf_violations is UNMEASURED — each member's entry gate above names why, once"
 else
   cov_assert 'ST-CF-COV' 'CTL-ST-CF-COV' '' 'st_cf_violations' \
-             st_codes cov_emit_tab "$ST_CF_SITE_BODY" \
+             st_cf_codes cov_emit_tab "$ST_CF_SITE_BODY" \
              "$ST_CF_CODES" "$ST_CF_ARMED" "$ST_CF_COV_PROBE" "$ST_CF_COV_PHANTOM"
   if [ "$ST_CF_SITE_OK" -eq 1 ]; then
     cov_assert 'ST-CF-SITE' 'CTL-ST-CF-SITE' '' 'st_cf_violations' \
@@ -8996,8 +10058,9 @@ run_fx() { va_main --root "$1" --scope dir . 2>&1; }
 #
 # ── THE DERIVATION IS THIS GROUP'S OWN, AND THAT IS THE CUT ──────────────────────
 # st_codes is not merely inconvenient here, it is INAPPLICABLE, and that was measured rather
-# than assumed: pointed at the validator it returns 3 matches, all of them false positives
-# (EXCLUDED, UNMATCHED) and ZERO real codes, because the emission shapes differ. st_violations
+# than assumed: pointed at the validator it returns 7 distinct tokens, all of them false positives
+# (FINDING SKIP POPULATION PREDICATE VACUOUS EXCLUDED UNMATCHED) and ZERO real codes, because the
+# emission shapes differ. st_violations
 # emits a code as the head of a format string followed by a TAB; the validator emits
 # `FINDING <CODE> `. So this group passes its own extractor to the shared comparison, which is
 # exactly the boundary the shared helper is drawn at: the comparison transfers, the derivation
@@ -9036,17 +10099,23 @@ ctl_body() {
 # `$` and a backtick, and a reader admitting only one spelling returns the empty set over the
 # other while its caller reports a covered group.
 #
+# The code is ENDED by any member of the declared terminator class, CODE_TERM_AWK, the one st_codes
+# splices in, so the two readers cannot disagree on what ends a code: a code followed by a tab, a
+# colon or an escape is read here, where a reader ending it on a space or a quote alone read nothing
+# and reported the group covered.
+#
 # The glyph after `FINDING ` in the pattern below is a BRACKET, not an upper-case letter, so this
 # reader cannot match its own body and report a defect it had just introduced — group PF's hazard,
 # avoided by shape rather than by scrubbing a needle.
 ctl_codes() {
-  awk '
+  LC_ALL=C awk "$CODE_TERM_AWK"'
     {
       s = $0
-      while (match(s, /["\047]FINDING [A-Z][A-Z0-9]*[ "\047]/)) {
-        c = substr(s, RSTART + 9, RLENGTH - 10)
+      while (match(s, /["\047]FINDING [A-Z][A-Z0-9]*/)) {
+        c = substr(s, RSTART + 9, RLENGTH - 9); rest = substr(s, RSTART + RLENGTH)
+        s = rest
+        if (term_len(rest) == 0) continue
         if (!seen[c]++) print c
-        s = substr(s, RSTART + RLENGTH)
       }
     }
   ' <<<"$1"
@@ -10765,6 +11834,10 @@ CTL_CODES="$(ctl_codes "$CTL_BODY")"
 cov_assert 'CTL-COV' 'CTL-COV-MUT' '' 'the validator' \
            ctl_codes cov_emit_finding "$CTL_BODY" \
            "$CTL_CODES" "$CTL_ARMED" "$CTL_COV_PROBE" "$CTL_COV_PHANTOM"
+# CTL-COV-TERM[<spelling>] — the same declared terminator class held for this group's reader, one
+# MUST-FIRE control per member, over the validator's body and the armed set CTL-COV just graded.
+cov_term_controls 'CTL-COV-TERM' 'the validator' ctl_codes cov_emit_finding_term \
+                  "$CTL_BODY" "$CTL_ARMED" 'ZZTERMPROBE' 'CTL-COV'
 
 if [ "$CTL_RAN" -ne 1 ]; then
   FAIL "X1: group CTL did not execute — a run without it is a failure, never a pass"
@@ -17499,13 +18572,15 @@ md_flips st_dm_starred 'ST4'        st4_assert "$ST_ALLMARKED" "$ST_DM" "$ST_NRE
 md_flips ft_resolve    'ST3-resolve' st3_assert "$ST_MD_FORM" "$ST_DM"
 md_flips ft_resolve    'ST4-resolve' st4_assert "$ST_ALLMARKED" "$ST_DM" "$ST_NREAD"
 md_flips ft_rows       'FT1'        ft_count_assert "$FT_DOC"
-md_flips ft_rows       'FT2'        ft_key_assert "$FT_DOC"
+md_flips ft_rows       'FT2'        ft_pair_assert "$FT_DOC"
 md_flips ft_rows       'FT3'        ft_vocab_assert "$FT_DOC"
 md_flips ft_resolve    'FT4'        ft_resolve_assert
 md_flips ft_resolve    'FT5'        ft_cover_assert "$FT_DOC" "$FT_FORMS"
 md_flips ft_region     'FT6'        ft_rule_assert "$FT_DOC" "$FT_SKILL"
 md_flips ft_route_rows 'FT7'         ft_route_assert "$FT_DOC" "$FT_FORMS"
 md_flips ft_rows       'FT7-table'   ft_route_assert "$FT_DOC" "$FT_FORMS"
+md_flips ft_rows       'FT8'         ft_keycol_assert "$FT_DOC"
+md_flips ft_former_rows 'FT9'        ft_former_assert "$FT_DOC"
 md_flips ft_resolve    'FT7-resolve' ft_route_assert "$FT_DOC" "$FT_FORMS"
 # ── Group ST's conformance arm, REGISTERED on every function its form verdict rests on — the
 # evaluator, the boundary resolver, the surface reader the stop lives in, the resolver the join goes
@@ -17626,6 +18701,104 @@ md_flips st_sitemap 'ST-CF-SITE' site_cov_assert 'ST-CF-SITE' 'CTL-ST-CF-SITE' '
 # the reason is stated at that arm: md_flips removes its subject, while the divergence being
 # graded there has to leave the seam running and answering differently for one spelling. The
 # sentinel is the seam between the primitive's mechanism and that requirement.
+
+
+# ── MD-EXIT-ABORT — a PASS-reporting exit can only come from a run that finished ──
+# md_exit_abort_assert <trap-line> — exactly one verdict, a chain with one condition and one message
+# per branch. Part 1 asks whether the SHIPPING guard function is sound, through two children written
+# into $WORK from the parsed guard_on_exit this shell holds, each with its own sentinel at 0 and its
+# own trap installed. The first prints a FAIL-shaped line and then aborts on an unset name in an
+# arithmetic context — the 3.2 defect — before its Result line; the complement is the same child
+# without the trap line. The second prints a marker line and then takes a deliberate exit 0 without
+# the sentinel, the bound the guard's header states: it must print ABORT: and exit non-zero. That
+# exit's status is 0 on every shell, so a guard keyed on $? rather than on the sentinel exits 0
+# silently there on bash 5 as on 3.2, where the first child's abort exits non-zero on bash 5 and so
+# cannot tell the two guards apart. All three run in file mode, as `LC_ALL=C "$BASH" <child>`, so the
+# shell message link 2 reads is the C locale's. Part 2 asks whether that function is the guard of THIS
+# run: link a reads the shell's actual EXIT trap, captured in the main shell and passed in, because a
+# capture inside a subshell reads empty; link b reads the sentinel at arm time; link c reads this
+# file's text, outside this arm's own two child fixtures — each opened by a cat <<'MDEXIT…' line, and
+# both must be found — for at least one line setting the sentinel, with an exit straight after each.
+# Link c does not see one of several sentinels dropped: the exit that lost it prints ABORT: and exits
+# non-zero at run time, the path the second child grades. Link d reads the install order — WORK
+# cleared, then the trap, then WORK assigned. Registered with md_flips below, so removing
+# guard_on_exit must turn it.
+md_exit_abort_assert() {
+  local ea_trap="$1" ea_g="$WORK/md-exit-abort-guarded.sh" ea_c="$WORK/md-exit-abort-complement.sh"
+  local ea_x="$WORK/md-exit-abort-exit.sh" ea_xm='a deliberate exit 0, taken without the sentinel'
+  local ea_go ea_ge ea_grc ea_co ea_crc ea_xo ea_xe ea_xrc ea_xmk ea_xab ea_sent ea_lc ea_ln ea_lb ea_ls ea_ld ea_want
+  {
+    printf '%s\n' 'set -uo pipefail' 'unset WORK' 'pass=0; fail=1'
+    declare -f guard_on_exit
+    printf '%s\n' 'GUARD_REACHED_END=0' 'trap guard_on_exit EXIT'
+    cat <<'MDEXITCHILD'
+echo "  a planted failing verdict, before the abort"
+P=ten; X=$(( 1 + (2 * ${P:-0} + 99) / 100 ))
+echo "Result: the planted run reached its end ($X)"
+GUARD_REACHED_END=1
+exit 0
+MDEXITCHILD
+  } > "$ea_g"
+  grep -vx 'trap guard_on_exit EXIT' "$ea_g" > "$ea_c"
+  {
+    printf '%s\n' 'set -uo pipefail' 'unset WORK' 'pass=0; fail=0'
+    declare -f guard_on_exit
+    printf '%s\n' 'GUARD_REACHED_END=0' 'trap guard_on_exit EXIT'
+    cat <<'MDEXITEXIT'
+echo "a deliberate exit 0, taken without the sentinel"
+exit 0
+MDEXITEXIT
+  } > "$ea_x"
+  ea_go="$(LC_ALL=C "$BASH" "$ea_g" 2>"$WORK/md-exit-abort.err")"; ea_grc=$?
+  ea_ge="$(cat "$WORK/md-exit-abort.err")"
+  ea_co="$(LC_ALL=C "$BASH" "$ea_c" 2>&1)"; ea_crc=$?
+  ea_xo="$(LC_ALL=C "$BASH" "$ea_x" 2>"$WORK/md-exit-abort-exit.err")"; ea_xrc=$?
+  ea_xe="$(cat "$WORK/md-exit-abort-exit.err")"
+  ea_xmk=absent; grep -qx "$ea_xm" <<<"$ea_xo" && ea_xmk=present
+  ea_xab=no; grep -q '^ABORT:' <<<"$ea_xo" && ea_xab=an
+  ea_want="trap -- 'guard_on_exit' EXIT"
+  ea_sent="${GUARD_REACHED_END:-unset}"
+  ea_lc="$(awk -v q="'" '
+    sk != "" { if ($0 == sk) sk = ""; next }
+    $0 ~ ("^[[:space:]]*cat <<" q "MDEXIT[A-Z]+" q "[[:space:]]*$") { sk = $0; sub("^[^" q "]*" q, "", sk); sub(q ".*$", "", sk); sp++; next }
+    /^[[:space:]]*GUARD_REACHED_END=1[[:space:]]*$/ { n++; if ((getline nx) <= 0 || nx !~ /^[[:space:]]*exit([[:space:]]|$)/) bad++ }
+    END { print n + 0, bad + 0, sp + 0 }' "$SELF")"
+  read -r ea_ln ea_lb ea_ls <<<"$ea_lc"
+  ea_ld="$(awk '!w && $0 == "WORK=\"\"" { w = NR } !t && $0 == "trap guard_on_exit EXIT" { t = NR } !m && index($0, "WORK=\"$(mktemp -d)\"") == 1 { m = NR } END { print (w && t && m && w < t && t < m) ? "ok" : "bad " w + 0 " " t + 0 " " m + 0 }' "$SELF")"
+  if grep -q '^Result:' <<<"$ea_go"; then
+    FAIL "MD-EXIT-ABORT: the guarded child printed its Result line, so the planted abort did not abort and nothing here was measured"
+  elif ! grep -q 'unbound variable' <<<"$ea_ge"; then
+    FAIL "MD-EXIT-ABORT: the guarded child's stderr carries no 'unbound variable', so the abort was not reached through set -u — the class this guard exists for was not exercised"
+  elif [ "$ea_xmk" != present ] || [ -n "$ea_xe" ]; then
+    FAIL "MD-EXIT-ABORT: the second child, which takes a deliberate exit 0 without the sentinel, did not run cleanly to that exit — its marker line is $ea_xmk and its stderr opens [$(awk 'NR == 1' <<<"$ea_xe")] — so the exit it exists to take was not measured"
+  elif [ "$ea_xrc" -eq 0 ] && [ "$ea_xab" != an ]; then
+    FAIL "MD-EXIT-ABORT: the second child took a deliberate exit 0 without the sentinel, then exited $ea_xrc and printed $ea_xab ABORT: line, where an ABORT: line and a non-zero exit are owed — no ABORT: line, and the deliberate exit's status, 0, left as it was, which, among other faults, a guard keyed on the exit status rather than the sentinel produces, as does one whose sentinel branch never runs, is empty, or leaves before it acts; such a guard lets a run that never reached its end exit 0, on any shell"
+  elif [ "$ea_xrc" -eq 0 ]; then
+    FAIL "MD-EXIT-ABORT: the second child took a deliberate exit 0 without the sentinel, then exited $ea_xrc and printed $ea_xab ABORT: line, where an ABORT: line and a non-zero exit are owed — the guard took its branch on the missing sentinel and printed ABORT:, but exited with the status it read, $ea_xrc, instead of a non-zero one, which lets a run that stopped at status 0 before its end exit 0, on any shell"
+  elif [ "$ea_xab" != an ]; then
+    FAIL "MD-EXIT-ABORT: the second child took a deliberate exit 0 without the sentinel, then exited $ea_xrc and printed $ea_xab ABORT: line, where an ABORT: line and a non-zero exit are owed — the guard exited non-zero on the missing sentinel but printed no ABORT: line, so a run that never reached its end fails without the line that says it is not a result"
+  elif [ "$ea_grc" -eq 0 ]; then
+    FAIL "MD-EXIT-ABORT: a run that aborted before its Result line exited 0 on bash ${BASH_VERSION:-unknown} — an aborted run reported success, which is the defect this guard closes"
+  elif ! grep -q '^ABORT:' <<<"$ea_go"; then
+    FAIL "MD-EXIT-ABORT: the aborted child exited $ea_grc but printed no ABORT: line, so the abort is not named"
+  elif grep -q '^ABORT:' <<<"$ea_co"; then
+    FAIL "MD-EXIT-ABORT: the complement, the same child with no trap installed, printed ABORT: too, so the line does not come from the guard"
+  elif [ "$ea_trap" != "$ea_want" ]; then
+    FAIL "MD-EXIT-ABORT: this run's EXIT trap reads [$ea_trap] where [$ea_want] is owed, so the running suite's guard is not guard_on_exit"
+  elif [ "$ea_sent" != 0 ]; then
+    FAIL "MD-EXIT-ABORT: the completion sentinel reads [$ea_sent] at this arm, before the end of the run, so an abort from here on would read as a completed run"
+  elif [ "$ea_ls" != 2 ]; then
+    FAIL "MD-EXIT-ABORT: this file's text holds [$ea_ls] heredoc span(s) opened by a cat <<'MDEXIT…' line, where this arm's own two child fixtures are owed, so the count of the suite's own sentinel lines cannot leave those fixtures out"
+  elif [ "$ea_ln" -eq 0 ] || [ "$ea_lb" -ne 0 ]; then
+    FAIL "MD-EXIT-ABORT: read outside this arm's own two child fixtures, this file's text sets the completion sentinel on a line not followed by an exit, or never [$ea_ln line(s), $ea_lb not followed by an exit] — a sentinel standing without its exit marks a run complete that may still abort, and a file that never sets it has no exit a run can complete through. One of several sentinels dropped is not caught here: the exit that lost it prints ABORT: and exits non-zero at run time"
+  elif [ "$ea_ld" != ok ]; then
+    FAIL "MD-EXIT-ABORT: the install order in this file's text is [$ea_ld] (WORK cleared, trap, WORK assigned, by line) where WORK=\"\" must precede the trap and the trap precede the assignment, so the cleanup could reach a directory inherited from the caller"
+  else
+    PASS "MD-EXIT-ABORT: on bash ${BASH_VERSION:-unknown} the guarded child aborted through set -u and exited $ea_grc with an ABORT: line while the complement, with no trap, exited $ea_crc and printed none, and the second child's deliberate exit 0 without the sentinel exited $ea_xrc with an ABORT: line; this run's EXIT trap is guard_on_exit, the sentinel reads 0 at this arm, each of the $ea_ln line(s) setting it outside this arm's two child fixtures is followed by an exit, and WORK is cleared before the trap is installed and assigned after"
+  fi
+}
+md_exit_abort_assert "$(trap -p EXIT)"
+md_flips guard_on_exit 'EXIT' md_exit_abort_assert "$(trap -p EXIT)"
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group FZ — every verdict arm in this file must be able to FAIL.
@@ -19685,7 +20858,9 @@ if [ "$NC_OK" -eq 1 ]; then
   # ── NC-1 — never-carry 1: an instance of a rebuilt class carrying prior passes ──────
   # nc1_scan <root> <instances> <members> <class-token> <subject|others> — counts dated
   # section headings, the accumulate signature CLAUDE.md § Output Versioning describes, at
-  # heading level two or three and outside a fence. `subject` grades the instances of the
+  # heading level two or three and outside a fence. A dated heading at level 1 or at levels 4-6
+  # is not counted: level 1 is the title, and below level 3 a dated heading is an item inside a
+  # pass, not a pass. `subject` grades the instances of the
   # named lifecycle; `others` grades every other instance, which is the sensitivity arm.
   # Records: HIT <path> <class> <lifecycle> <n> · UNREAD <path> <class> · GRADED <n>.
   nc1_scan() {
@@ -20148,9 +21323,11 @@ fi
 # correctness requirement as well as a principle: the executables are one of the surfaces
 # scanned, this file among them, so a token written here would be a finding against itself.
 #
-# THE MATCH is the whole token, case-sensitive, with no letter, digit, underscore or hyphen
-# on either side — never a word-boundary operator, which matches inside a longer hyphenated
-# token. Arm NC5k plants a token with a hyphenated suffix and requires silence.
+# THE MATCH is the whole token, case-sensitive, so a token in another case is not read — the
+# axis is declared upper-case, and its lower-case spellings are ordinary words this suite and the
+# conduct text use — with no letter, digit, underscore or hyphen on either side — never a
+# word-boundary operator, which matches inside a longer hyphenated token. Arm NC5k plants a token
+# with a hyphenated suffix and requires silence.
 #
 # THE SURFACE IS A POSITIVE LIST, built from the tracked file list and the validator's own
 # selector, so an instance is what the selector says it is and never what a fresh glob finds:
@@ -22836,8 +24013,17 @@ fi
 #
 # ── WHAT IS NOT GRADED, DECLARED RATHER THAN LEFT TO BE FOUND ────────────────────
 # A statement removed WHOLE — heading and table together — leaves the discovered population
-# instead of failing; one that keeps its heading and loses its table does fail. The separator
-# row under the header and any emphasis on a cell are not read at all, which DC6 shows.
+# instead of failing; one that keeps its heading and loses its table does fail. A statement under
+# a heading that does not lead with the section's name IS graded, by DC7's census, when its row
+# carries a majority of the home row's labels as exact cells; the census reads every line whose
+# first non-blank character is a pipe, so an indented statement is reached by the census and not by
+# DC1's shape scan, which reads column-0 rows. NOT graded: a row carrying fewer than a majority of
+# the labels; a label wrapped in markup — emphasis, a code span — because cells are compared as exact
+# text after trimming; and a single-label mention in prose. A KNOWN FALSE-RED MODE, declared: a
+# different table whose header legitimately carries a majority of the home labels (three of five
+# today) is a census member and is not equal, so DC7 FAILs on it; its message names that cause
+# beside drift, and the remedy is to re-label that table. The separator row under the header and any
+# emphasis on a cell are not read by DC1 at all, which DC6 shows.
 #
 # ── THE ARMS ─────────────────────────────────────────────────────────────────────
 #   DC0  the home resolves to exactly one row. Every later arm is withheld when it does not
@@ -22850,8 +24036,13 @@ fi
 #   DC5  MUST FIRE — a statement whose row has its leading cells exchanged
 #   DC6  MUST NOT FIRE — a matching instance dashed and emphasised differently, and a file of
 #        near-misses that carries no statement site
-# Each live arm's reading is a function — dc_home, dc_statements, dc_instances — and DC3 to
-# DC6 re-run those same functions over inputs built on this run: copies under $WORK, and an
+#   DC7  the census: every pipe row, over every tracked markdown file, that carries a majority of
+#        the home row's labels as exact cells equals the home row. Finding no member FAILs — the
+#        home's own row is always one
+#   DC8  MUST FIRE — the home row with its leading cells exchanged, under a heading DC1 cannot see
+#   DC9  MUST NOT FIRE — near-miss rows carrying one and two of the home labels
+# Each live arm's reading is a function — dc_home, dc_statements, dc_instances, dc_census — and
+# DC3 to DC6, DC8 and DC9 re-run those same functions over inputs built on this run: copies under $WORK, and an
 # empty list. The arms are not registered with md_flips: what each grades is a tracked
 # document, which that primitive cannot remove, and DC3 to DC6 are its standing controls. No
 # count is spelled anywhere in this file for this group: the row, the statements and the
@@ -22967,6 +24158,74 @@ dc_statements() {
 $dcs_out
 EOF
   printf 'COUNT\t%s\n' "$dcs_n"
+}
+
+# dc_census <home-row> <file>... — DC7's reading, the census. The home row is written to a file
+# under $WORK/dc and passed FIRST, split from the population BY FILENAME — an awk -v value is never
+# a comparison input here — and its trimmed cells are the home LABELS, read on every run. A PIPE ROW
+# is any line whose first non-blank character is `|`, fenced or not, indented or not; its leading
+# whitespace is trimmed before its cells are split. A pipe row is a MEMBER when more than half the
+# home labels' count of its trimmed cells exactly equal a home label (2k > n), so the threshold moves
+# with the home and no number is spelled here. A member is SAME when the row, trimmed at both ends,
+# is byte-equal to the home row, and DIFF otherwise. One TAB record per member,
+#   MEMBER <file> <line> <k> SAME|DIFF <row>
+# then ONE closing record, COUNT <rows-scanned> <members>, so "no member" is told from "did not
+# finish". A statement is found here by its ROW, the property DC1 deliberately does not use, so a
+# statement under a heading DC1 cannot see is reached here.
+dc_census() {
+  local dcc_row="$1" dcc_hf="$WORK/dc/census-home.txt"
+  shift
+  mkdir -p "$WORK/dc"
+  printf '%s\n' "$dcc_row" > "$dcc_hf"
+  awk -F'|' -v HOMEFILE="$dcc_hf" '
+    function trim(x) { sub(/^[ \t]+/, "", x); sub(/[ \t]+$/, "", x); return x }
+    FILENAME == HOMEFILE {
+      home = trim($0)
+      for (i = 2; i < NF; i++) { c = trim($i); if (c != "" && !(c in lab)) { lab[c] = 1; nl++ } }
+      next
+    }
+    {
+      t = $0; sub(/^[ \t]+/, "", t)
+      if (substr(t, 1, 1) != "|") next
+      rows++
+      m = split(t, rc, "|"); k = 0
+      for (i = 2; i <= m; i++) { c = trim(rc[i]); if (c in lab) k++ }
+      if (nl > 0 && 2 * k > nl) {
+        members++
+        printf "MEMBER\t%s\t%d\t%d\t%s\t%s\n", FILENAME, FNR, k, (trim(t) == home ? "SAME" : "DIFF"), trim(t)
+      }
+    }
+    END { printf "COUNT\t%d\t%d\n", rows + 0, members + 0 }
+  ' "$dcc_hf" "$@"
+}
+
+# dc7_assert <id> <home-row> <file>... — DC7, the census verdict, exactly one: a chain with one
+# condition and one message per branch. No closing record FAILs; zero rows scanned FAILs (an empty
+# population is a broken probe); zero members FAILs, because the home's own row is always a member,
+# so the reader is broken; any DIFF member FAILs, naming both causes the census cannot tell apart;
+# else PASS.
+dc7_assert() {
+  local id="$1" home="$2" d7_c d7_end d7_rows d7_mem d7_nl d7_files d7_where
+  shift 2
+  d7_c="$(dc_census "$home" "$@")"
+  d7_end="$(dc_count "$d7_c" COUNT)"
+  d7_rows="$(awk -F'\t' '$1 == "COUNT" { print $2 + 0 }' <<<"$d7_c")"
+  d7_mem="$(awk -F'\t' '$1 == "COUNT" { print $3 + 0 }' <<<"$d7_c")"
+  d7_nl="$(awk -F'|' '{ for (i = 2; i < NF; i++) { c = $i; gsub(/^[ \t]+|[ \t]+$/, "", c); if (c != "") n++ } } END { print n + 0 }' <<<"$home")"
+  d7_files="$#"
+  d7_where="$(awk -F'\t' -v r="$ROOT/" '$1 == "MEMBER" && $5 == "SAME" { p = $2; if (index(p, r) == 1) p = substr(p, length(r) + 1); printf "%s%s line %s", (n++ ? ", " : ""), p, $3 }' <<<"$d7_c")"
+  if [ "$d7_end" -ne 1 ]; then
+    FAIL "$id: the census over $d7_files file(s) did not reach its closing record, so an empty member list here would not be agreement"
+  elif [ "${d7_rows:-0}" -eq 0 ]; then
+    FAIL "$id: the census read no pipe row across $d7_files file(s) — an empty population is a broken probe, never agreement"
+  elif [ "${d7_mem:-0}" -eq 0 ]; then
+    FAIL "$id: the census found no row carrying a majority of the home row's $d7_nl label(s) across $d7_rows pipe row(s), so it did not even find the home row itself, which is always a member — the reader is broken"
+  elif [ "$(dc_count "$(awk -F'\t' '$1 == "MEMBER" && $5 == "DIFF"' <<<"$d7_c")" MEMBER)" -ne 0 ]; then
+    FAIL "$id: a pipe row carries a majority of the home row's $d7_nl label(s) as exact cells and does not equal the home row [$home]. Either (a) it is a statement of the declared header that has drifted — restore it to the home row; or (b) it is a different table whose header legitimately shares a majority of the home's labels — re-label that table's columns so it carries at most half of them. The census cannot tell a drifted copy from a different table sharing vocabulary, so it names both:"
+    awk -F'\t' -v r="$ROOT/" '$1 == "MEMBER" && $5 == "DIFF" { p = $2; if (index(p, r) == 1) p = substr(p, length(r) + 1); printf "      %s line %s (%s label(s)) -> [%s]\n", p, $3, $4, $6 }' <<<"$d7_c"
+  else
+    PASS "$id: all $d7_mem pipe row(s) carrying a majority of the home row's $d7_nl label(s), across $d7_files tracked file(s) and $d7_rows pipe row(s) — $d7_where — equal it, one of them the home. Statements found by heading are DC1's; this finds them by row, so a statement under a heading DC1 cannot see is graded too"
+  fi
 }
 
 # dc_instances <home-row> <root> <path-list> — DC2's reading. <path-list> is one path per
@@ -23089,6 +24348,51 @@ EOF
       $1 == "UNREAD" { printf "      %s -> not readable\n", $2 }' <<<"$DC_IN"
   else
     PASS "DC2: all $DC_NSEL tracked instance(s) of \`$DC_ART\` — $(printf '%s' "$DC_SEL" | tr '\n' ' ') — carry exactly one heading leading with '$DC_SEG', and the first pipe row under it is byte-identical to the home row at ${DC_DOC#"$ROOT/"} line $DC_HLINE. The selection is the class's own, so a tracked instance added later is graded with no edit here"
+  fi
+
+  # ── DC7 — the census, over every tracked markdown file: DC1's population and DC2's selection.
+  DC7_ALL=(${DC_FILES[@]+"${DC_FILES[@]}"})
+  while IFS= read -r dcf; do
+    [ -n "$dcf" ] && [ -r "$ROOT/$dcf" ] && DC7_ALL+=("$ROOT/$dcf")
+  done <<EOF
+$DC_SEL
+EOF
+  dc7_assert 'DC7' "$DC_HROW" ${DC7_ALL[@]+"${DC7_ALL[@]}"}
+
+  # ── DC8 — MUST FIRE. A statement DC1 cannot see: a copy of a tracked file, under $WORK/dc, given
+  # a heading that does NOT lead with the section's name and, under it, the home row with its first
+  # two cells exchanged. DC7's own function over that copy alone must render one FAIL and no PASS,
+  # and the census must read exactly one DIFF member there; the same copy through DC1's own function
+  # must report no DIFF, which shows the plant sits exactly where DC1 is blind.
+  DC8_FX="$WORK/dc/dc8-statement-under-another-heading.md"
+  mkdir -p "$WORK/dc"
+  cp "$ROOT/README.md" "$DC8_FX" 2>/dev/null || : > "$DC8_FX"
+  DC8_ROW="$(awk -F'|' '{ t = $2; $2 = $3; $3 = t; print }' OFS='|' <<<"$DC_HROW")"
+  printf '\n## Coverage of what each traveller wanted\n\n%s\n' "$DC8_ROW" >> "$DC8_FX"
+  DC8_CEN="$(dc_census "$DC_HROW" "$DC8_FX")"
+  DC8_NDIFF="$(dc_count "$DC8_CEN" MEMBER)"
+  DC8_DIFF="$(awk -F'\t' '$1 == "MEMBER" && $5 == "DIFF" { n++ } END { print n + 0 }' <<<"$DC8_CEN")"
+  DC8_DC1="$(dc_count "$(dc_statements "$DC_HROW" "$DC_DOC" "$DC_HHEAD" "$DC8_FX")" DIFF)"
+  DC8_PR="$(md_probe zz_dc8_no_subject dc7_assert 'DC7' "$DC_HROW" "$DC8_FX")"
+  if [ "$DC8_ROW" != "$DC_HROW" ] && [ "$DC8_DIFF" -eq 1 ] && [ "$DC8_DC1" -eq 0 ] && [ "$DC8_PR" = "0 1" ]; then
+    PASS "DC8: MUST FIRE — the home row with its first two cells exchanged, under a heading that does not lead with '$DC_SEG', is a census member that is not equal: DC7's function over that copy renders one FAIL and no PASS, while DC1's function over the same copy reports no DIFF. So the census reaches the statement DC1 cannot see"
+  else
+    FAIL "DC8: CONTROL on DC7 did not fire as owed — over the planted copy the census read $DC8_DIFF DIFF member(s) of $DC8_NDIFF, DC1's function reported $DC8_DC1 DIFF, and DC7's function rendered [pass fail] = [$DC8_PR], where one DIFF, no DC1 DIFF and [0 1] are owed"
+  fi
+
+  # ── DC9 — MUST NOT FIRE. Near misses: a pipe row carrying one home label and one carrying two, of
+  # the home's labels, are below the majority, so the census reads neither as a member.
+  DC9_FX="$WORK/dc/dc9-near-misses.md"
+  DC9_L1="$(awk -F'|' '{ print $2 }' <<<"$DC_HROW" | sed 's/^ *//; s/ *$//')"
+  DC9_L2="$(awk -F'|' '{ print $3 }' <<<"$DC_HROW" | sed 's/^ *//; s/ *$//')"
+  printf '# Near misses\n\n| %s | Need (category) | Notes |\n| %s | %s | Notes |\n' "$DC9_L1" "$DC9_L1" "$DC9_L2" > "$DC9_FX"
+  DC9_CEN="$(dc_census "$DC_HROW" "$DC9_FX")"
+  DC9_ROWS="$(awk -F'\t' '$1 == "COUNT" { print $2 + 0 }' <<<"$DC9_CEN")"
+  DC9_MEM="$(dc_count "$DC9_CEN" MEMBER)"
+  if [ "${DC9_ROWS:-0}" -eq 2 ] && [ "$DC9_MEM" -eq 0 ]; then
+    PASS "DC9: MUST NOT FIRE — two pipe rows carrying one and two of the home row's labels are read by the census (2 rows) and neither is a member: below the majority, a row sharing vocabulary is not a statement"
+  else
+    FAIL "DC9: specificity failed — over two near-miss rows the census read ${DC9_ROWS:-0} row(s) and $DC9_MEM member(s), where 2 rows and no member are owed. A census that admits a row sharing one or two labels reads unrelated tables as statements"
   fi
 
   # ── DC3 — MUST FIRE. The control the gap asks for: a copy of the first selected instance
@@ -31719,7 +33023,7 @@ printf 'SELECTOR: %d files selected / %d excluded / %d unmatched = %d tracked; %
   "$AR_NSEL" "$AR_NEXC" "$AR_NUNM" "$AR_NPOP" "$AR_NVER" "$AR_NSKIP"
 printf 'COVERAGE: %d witness / %d no-witness / %d total.\n' "$CV_W" "$CV_N" "$SC_NFILES"
 if [ "$vacuous" -gt 0 ]; then
-  printf 'NOTE: %d assertion(s) had an EMPTY POPULATION and proved nothing about this tree: %s. Read each named arm and its own verdict above for what carries it. This line names the vacuous ARMS rather than a compensating group, because the arms that compensate are not always in the group the vacuous arm belongs to, and a hardcoded group here was a claim about a run it had not read.\n' "$vacuous" "${VACUOUS_IDS% }"
+  printf 'NOTE: %d assertion(s) had an EMPTY POPULATION or could not be measured on this run, and proved nothing about this tree: %s. Read each named arm and its own verdict above for what carries it. This line names the vacuous ARMS rather than a compensating group, because the arms that compensate are not always in the group the vacuous arm belongs to, and a hardcoded group here was a claim about a run it had not read.\n' "$vacuous" "${VACUOUS_IDS% }"
 fi
 rc=0
 [ "$fail" -eq 0 ] || rc=1
@@ -31744,4 +33048,5 @@ if [ "${GUARD_STRICT_SKIPS:-0}" = "1" ]; then
     printf 'STRICT: every skip was declared (%s) — no group vanished silently.\n' "${GUARD_EXPECTED_SKIPS:-none}"
   fi
 fi
+GUARD_REACHED_END=1
 exit "$rc"

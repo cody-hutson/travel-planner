@@ -101,8 +101,10 @@
 #     E5 script unreadable · E6 sentinel · E7 cross-surface · E8 §4 cell grammar
 #
 #   F   the invocation limb, VERB-ATTRIBUTED                               (group F)
-#     F1 excluded form · F2 unpublish without the pages-only flag · F3 forbidden flag
-#     F4 sets the plaintext override · F5 parse coverage · F6 a finding that could name
+#     F1 excluded form · F2 unpublish without the pages-only flag · F3 forbidden flag,
+#     on a line or on a fenced invocation wrapped with a trailing backslash
+#     F4 sets the plaintext override, by an assignment or an append, a default-assigning
+#     expansion, printf -v or an export · F5 parse coverage · F6 a finding that could name
 #     only a FILE and not a (command, verb) pair — the measure that must fall to zero
 #     F7 a construct directs anything but the presence probe at a passphrase home
 #
@@ -292,15 +294,33 @@
 # as prose across a hard wrap, with a forbidden flag named inside a NEGATING sentence in
 # the same paragraph, no per-line, per-paragraph or whole-section literal scan separates
 # use from mention. The flag and arm limbs reach the FENCED rendering and the whole-line
-# code span, and nothing else. That is a declared uncovered region, not an omission, and
+# code span, and nothing else. A fenced invocation continued by a trailing backslash is
+# read as one logical line; any other multi-line rendering — a here-document, a line broken
+# without a backslash — is not. That is a declared uncovered region, not an omission, and
 # this guard prints the count of invocations it attributed so a reader can see what it did
 # and did not reach.
+#
+# OUT OF SCOPE — SETTINGS OF THE OVERRIDE THAT NEED EVALUATION. F4 reads the override set by
+# an assignment or an append, a default-assigning expansion, printf -v or an export, each on
+# one physical line, and reads as a setting, fail-closed, a comparison in which the bare name,
+# unquoted and unbraced, is followed by `=`, `==` or `=~`; a comparison that quotes or braces
+# the name, or uses `!=` or `-eq`, is not read, and is not a setting. It does
+# not read `read`, `mapfile`, a name built by eval or declare -n indirection, nor a setting
+# whose name is on a continuation line (`export \` then the name): each needs evaluation, not
+# a pattern, and the join opens only on a line naming the publish script.
 #
 # OUT OF SCOPE — A SESSION'S OWN READ OF A PASSPHRASE HOME. F7 grades CONSTRUCTS: a fenced
 # line, or a whole-line code span, that directs a command at `.passphrase` or at
 # STATICRYPT_PASSWORD. It does not grade a session's Read-tool read of that path, which is
 # a tool some verbs grant and a standing rule bounds; nothing in a command file's text
 # separates that read from any other.
+#
+# OUT OF SCOPE — A PASSPHRASE HOME NOT SPELLED LITERALLY. F7 reads only a construct whose
+# text spells `.passphrase` or STATICRYPT_PASSWORD. A construct that spells neither is not
+# read: a variable holding the name, a glob, a partial or concatenated name, indirect
+# expansion, or an environment dump (env, printenv, declare -p, set) that reaches the value
+# without naming it. Deciding those needs glob expansion or shell evaluation, which a line
+# reader does not do.
 #
 # OUT OF SCOPE — PER-VERB ARM BINDING. That verb A does not invoke verb B's granted arm
 # is a rule a file follows, not a property this guard can derive: of the surfaces this
@@ -368,6 +388,35 @@
 # reason with nothing to do with taxonomy.
 
 set -uo pipefail
+
+# ── THE EXIT GUARD — a run that ends before its last line exits non-zero ─────────
+# Under `set -u`, bash 3.2 ends a script on an unset name inside an arithmetic context — `$(( ))`,
+# a `(( ))` command, `[[ … -eq … ]]`, a substring offset — with the status of the command BEFORE
+# the abort, so a run that stopped mid-group could exit 0 having printed no Result line, and a
+# required check went green over a run that was never graded. guard_on_exit, installed here,
+# immediately after the shell-option lines, closes that: it removes the work directory and, unless
+# GUARD_REACHED_END was set, prints an ABORT: line naming the status at the abort and exits
+# non-zero. It keys on that sentinel and never on `$?`, because `$?` at the abort is the earlier
+# command's and reads 0; an ERR trap was measured not to run on this abort at all. The sentinel is
+# set immediately before each deliberate top-level exit, and that set of exits is the bound: an
+# exit added without the sentinel prints ABORT: and exits non-zero on the path that takes it.
+# WORK="" precedes the trap, so the cleanup only ever reaches this run's own directory and never
+# one inherited from the caller's environment; WORK is assigned its directory below, with no trap
+# of its own. A subshell does not run this trap, so an abort inside `( … )` or `$( … )` ends only
+# that subshell, a separate class. MD-EXIT-ABORT, at the end of group MD, holds the guard and its
+# wiring.
+WORK=""
+GUARD_REACHED_END=0
+guard_on_exit() {
+  local rc=$?
+  [ -n "${WORK:-}" ] && rm -rf "$WORK"
+  if [ "${GUARD_REACHED_END:-0}" != 1 ]; then
+    printf 'ABORT: this run ended before its last line, with status %s at the abort and %s passed, %s failed so far; nothing after the abort ran, so this run is not a result. The shell message above names the line.\n' "$rc" "${pass:-0}" "${fail:-0}"
+    [ "$rc" -ne 0 ] || rc=1
+    exit "$rc"
+  fi
+}
+trap guard_on_exit EXIT
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
 SELF="${BASH_SOURCE[0]}"
@@ -439,7 +488,7 @@ md_flips() {   # md_flips <subject-fn> <id> <assertion-fn> [args…]
 }
 
 
-WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
+WORK="$(mktemp -d)"
 SURF_LOG="$WORK/.surfaced"; ARM_LOG="$WORK/.armed"
 : > "$SURF_LOG"; : > "$ARM_LOG"
 
@@ -2138,6 +2187,37 @@ region_of() {
 # names (command, file) instead, and its lines never join an INV record's key — an INV key
 # is a line of the verb file, and a bundled file's line number could otherwise collide with
 # it. Arms GF3c and GF4c plant in a bundled file and require the finding.
+#
+# A WRAPPED INVOCATION IS ONE LINE. Inside a fence, a line naming the script that ends in an
+# unescaped backslash opens a LOGICAL line, joined by the shell's own rule, transcribed: the
+# backslash and its newline are dropped and the next fenced line is appended VERBATIM, nothing
+# inserted, so `--pass\` then `phrase secret` reads `--passphrase secret`, as the shell reads it.
+# It stays open while each appended line also ends in an unescaped backslash; the first fenced
+# line that does not, a closing fence, or the end of the file closes it. A backslash followed by
+# whitespace escapes the space and continues nothing. The logical line keeps its FIRST line's
+# number, which is the line an INV record is keyed on, and is parsed exactly as one physical line
+# is. Every physical line still passes the F4 test as it is read, so the join is a buffer inside
+# the read loop rather than a read-ahead. Arms GF3w and GF3wm plant it.
+#
+# F4 READS FOUR FORMS OF SETTING THE OVERRIDE, each assignment syntax, so a line that only names
+# the variable stays a mention: an assignment or an append assignment, a default-assigning
+# expansion, printf -v, and an export. A comparison in which the bare name, unquoted and
+# unbraced, is followed by `=`, `==` or `=~` is read as a setting too, deliberately — a command
+# file that compares the forbidden variable is itself suspect, and that fail-closed reading is kept
+# rather than narrowed. A comparison that quotes or braces the name, or uses `!=` or `-eq`, is not
+# read: the assignment pattern wants `=` next after the bare name, past any spaces, and such a
+# comparison is not a setting, so no setting escapes through it. Arms GF4, GF4p, GF4d, GF4v and
+# GF4x plant one form each.
+F4_SET_ASSIGN='(^|[^A-Za-z0-9_])ALLOW_PLAINTEXT[[:space:]]*\+?='
+F4_SET_DEFAULT='\$\{ALLOW_PLAINTEXT:?='
+F4_SET_PRINTFV='(^|[^A-Za-z0-9_])printf([[:space:]]+-[^[:space:]]+)*[[:space:]]+-v[[:space:]]*ALLOW_PLAINTEXT([^A-Za-z0-9_]|$)'
+F4_SET_EXPORT='export[[:space:]]+ALLOW_PLAINTEXT'
+# inv_continues <line> — the line ends in an unescaped backslash: an odd run of them, nothing after.
+inv_continues() {
+  local s="$1" n=0
+  while [ "${s%\\}" != "$s" ]; do s="${s%\\}"; n=$((n+1)); done
+  [ $((n % 2)) -eq 1 ]
+}
 # ─────────────────────────────────────────────────────────────────────────────────
 invocation_check() {
   local cdir="$1" recs="$2"
@@ -2167,6 +2247,7 @@ invocation_check() {
   regions_load "$recs"
 
   local f base cmd fname where fd lno t cand bare rest sub tok found=0 i owner
+  local f4form jopen jbuf jno pl pfd
   local -a ARGV=()
   for f in "$cdir"/*/*.md; do
     [ -e "$f" ] || continue
@@ -2175,15 +2256,41 @@ invocation_check() {
     # The verb file is named by its command alone, as it always was; a file bundled beside it
     # is named by command AND file, so a line number is never read against the wrong file.
     where="$cmd"; [ "$fname" = 'SKILL.md' ] || where="$cmd/$fname"
-    lno=0; fd=0
+    lno=0; fd=0; jopen=''; jbuf=''; jno=0
+    # The file is read with two newlines appended, printf '\n\n'. The first ends a last line that
+    # has no newline of its own; the second is an empty line, so a logical line still open at the
+    # end of the file is closed and parsed exactly as a fence would close it. A file that already
+    # ends in a newline gets two empty lines; the second names no script and is passed over.
     while IFS= read -r line || [ -n "$line" ]; do
       lno=$((lno+1))
       if [[ "$line" == '```'* ]]; then fd=$((1-fd)); fi
-      t="$(trim "$line")"
 
-      if [[ "$line" =~ (^|[^A-Za-z0-9_])ALLOW_PLAINTEXT[[:space:]]*= ]] || [[ "$line" =~ export[[:space:]]+ALLOW_PLAINTEXT ]]; then
-        printf 'FINDING F4 %s:%d SETS the plaintext override — ADR-007 §2 forbids it in any command file\n' "$where" "$lno"; rc=1
+      # F4 — one form per test, so the finding names the form it read.
+      f4form=''
+      if [[ "$line" =~ $F4_SET_ASSIGN ]]; then f4form='an assignment'
+      elif [[ "$line" =~ $F4_SET_DEFAULT ]]; then f4form='a default-assigning expansion'
+      elif [[ "$line" =~ $F4_SET_PRINTFV ]]; then f4form='printf -v'
+      elif [[ "$line" =~ $F4_SET_EXPORT ]]; then f4form='an export'
       fi
+      if [ -n "$f4form" ]; then
+        printf 'FINDING F4 %s:%d SETS the plaintext override, through %s — ADR-007 §2 forbids it in any command file\n' "$where" "$lno" "$f4form"; rc=1
+      fi
+
+      # The logical line. pl and pfd are the line number and fence depth the rest of this loop
+      # parses under: the physical line's own, or, for a joined line, its first line's.
+      pl=$lno; pfd=$fd
+      if [ -n "$jopen" ]; then
+        if [ "$fd" -eq 0 ]; then
+          line="$jbuf"; pl=$jno; pfd=1; jopen=''
+        elif inv_continues "$line"; then
+          jbuf="$jbuf${line%\\}"; continue
+        else
+          line="$jbuf$line"; pl=$jno; pfd=1; jopen=''
+        fi
+      elif [ "$fd" -eq 1 ] && [[ "$line" == *"$SCRIPT_REL"* ]] && inv_continues "$line"; then
+        jopen=1; jbuf="${line%\\}"; jno=$lno; continue
+      fi
+      t="$(trim "$line")"
 
       case "$line" in *"$SCRIPT_REL"*) ;; *) continue ;; esac
       n_men=$((n_men+1))
@@ -2195,7 +2302,7 @@ invocation_check() {
       # is WHOLE a single code span at fence depth 0. Any other rendering yields no candidate
       # and falls through to the PROSE test below, exactly as before.
       cand=''
-      if [ "$fd" -eq 1 ]; then
+      if [ "$pfd" -eq 1 ]; then
         cand="$t"
       elif [ "${#t}" -gt 2 ] && [ "${t:0:1}" = "$BT" ] && [ "${t:${#t}-1:1}" = "$BT" ]; then
         cand="${t:1:${#t}-2}"
@@ -2208,16 +2315,16 @@ invocation_check() {
         owner='-'
         if [ "$fname" != 'SKILL.md' ]; then
           owner="$fname"
-        elif [ "$fd" -eq 1 ]; then
+        elif [ "$pfd" -eq 1 ]; then
           for (( i=0; i<${#IL[@]}; i++ )); do
-            [ "${IL[$i]}" = "$cmd:$lno" ] && owner="${IO[$i]}"
+            [ "${IL[$i]}" = "$cmd:$pl" ] && owner="${IO[$i]}"
           done
         else
-          region_of "$cmd" "$lno"; owner="$RG_OWNER"
+          region_of "$cmd" "$pl"; owner="$RG_OWNER"
         fi
         if [ "$owner" = '-' ]; then
           n_orphan=$((n_orphan+1))
-          printf 'FINDING F6 %s:%d an invocation — a fenced line or a whole-line code span — resolves to no declared verb region, so a finding on it could name only the FILE and not a (command, verb) pair\n' "$cmd" "$lno"; rc=1
+          printf 'FINDING F6 %s:%d an invocation — a fenced line or a whole-line code span — resolves to no declared verb region, so a finding on it could name only the FILE and not a (command, verb) pair\n' "$cmd" "$pl"; rc=1
         fi
         IFS=' ' read -r -a ARGV <<< "$rest"
         sub=""
@@ -2225,16 +2332,16 @@ invocation_check() {
           case "$tok" in -*) continue ;; '') continue ;; *) sub="$tok"; break ;; esac
         done
         if [ -z "$sub" ]; then
-          printf 'FINDING F1 (%s, %s) at line %d invokes the publish script with no subcommand token\n' "$cmd" "$owner" "$lno"; rc=1
+          printf 'FINDING F1 (%s, %s) at line %d invokes the publish script with no subcommand token\n' "$cmd" "$owner" "$pl"; rc=1
         elif ! in_list "$sub" "${ALLOWED_SUBS[@]}"; then
-          printf 'FINDING F1 (%s, %s) at line %d invokes the EXCLUDED form "%s" — ADR-007 §4 dispositions it EXCLUDED\n' "$cmd" "$owner" "$lno" "$sub"; rc=1
+          printf 'FINDING F1 (%s, %s) at line %d invokes the EXCLUDED form "%s" — ADR-007 §4 dispositions it EXCLUDED\n' "$cmd" "$owner" "$pl" "$sub"; rc=1
         elif [ "$sub" = 'unpublish' ] && [[ "$rest" != *'--disable-pages-only'* ]]; then
-          printf 'FINDING F2 (%s, %s) at line %d invokes unpublish WITHOUT the pages-only flag on the same invocation — that is the repo-delete form, which is EXCLUDED\n' "$cmd" "$owner" "$lno"; rc=1
+          printf 'FINDING F2 (%s, %s) at line %d invokes unpublish WITHOUT the pages-only flag on the same invocation — that is the repo-delete form, which is EXCLUDED\n' "$cmd" "$owner" "$pl"; rc=1
         fi
         for tok in "${ARGV[@]+"${ARGV[@]}"}"; do
           case "$tok" in
             '--plaintext'|'--passphrase'|'--yes'|'-y')
-              printf 'FINDING F3 (%s, %s) at line %d passes the forbidden flag %s on a publish-script invocation\n' "$cmd" "$owner" "$lno" "$tok"; rc=1 ;;
+              printf 'FINDING F3 (%s, %s) at line %d passes the forbidden flag %s on a publish-script invocation\n' "$cmd" "$owner" "$pl" "$tok"; rc=1 ;;
           esac
         done
         continue
@@ -2245,8 +2352,8 @@ invocation_check() {
       fi
 
       n_unc=$((n_unc+1))
-      printf 'FINDING F5 PARSE COVERAGE — %s:%d mentions the publish script in a shape this guard cannot resolve (variable, alias or heredoc?). An unresolved mention is a failure, not a skip\n' "$where" "$lno"; rc=1
-    done < "$f"
+      printf 'FINDING F5 PARSE COVERAGE — %s:%d mentions the publish script in a shape this guard cannot resolve (variable, alias or heredoc?). An unresolved mention is a failure, not a skip\n' "$where" "$pl"; rc=1
+    done < <(cat "$f"; printf '\n\n')
   done
 
   if [ "$found" -eq 0 ]; then
@@ -4596,12 +4703,17 @@ gen_cmd() {  # gen_cmd <dir> <tuple> <defect>
           # ALONE: every other invoking region keeps its conforming line, and the world
           # carries exactly one defect. badflagyes is the form F2 must stay silent on — the
           # pages-only flag is present, so the only thing wrong with it is the flag F3 grades.
-          badflagyes|badflagy|badflagplain)
+          # wrapflag / wrapmidword — the update invocation WRAPPED with a trailing backslash, the
+          # forbidden flag on the continuation line: whole in wrapflag, and in wrapmidword split
+          # mid-word, so only a join that inserts nothing between the halves reads the flag.
+          badflagyes|badflagy|badflagplain|wrapflag|wrapmidword)
             if [ "${IDS[$i]}" = 'update' ]; then
               case "$defect" in
                 badflagyes)   printf -- '```\n%s unpublish trips/x --disable-pages-only --yes\n```\n\n' "$SCRIPT_REL" ;;
                 badflagy)     printf -- '```\n%s update trips/x -y\n```\n\n' "$SCRIPT_REL" ;;
                 badflagplain) printf -- '```\n%s update trips/x --plaintext\n```\n\n' "$SCRIPT_REL" ;;
+                wrapflag)     printf -- '```\n%s update trips/x \\\n  --yes\n```\n\n' "$SCRIPT_REL" ;;
+                wrapmidword)  printf -- '```\n%s update trips/x --pass\\\nphrase secret\n```\n\n' "$SCRIPT_REL" ;;
               esac
             else
               printf -- '```\n%s update trips/x\n```\n\n' "$SCRIPT_REL"
@@ -4676,6 +4788,16 @@ gen_cmd() {  # gen_cmd <dir> <tuple> <defect>
     # exportplain — F4's OTHER alternative: the override exported, with no `=` anywhere on the
     # line, so an arm over the assignment form alone would not see it. One file only.
     if [ "$defect" = 'exportplain' ] && [ "$name" = 'trip' ]; then printf -- '```\nexport ALLOW_PLAINTEXT\n```\n\n'; fi
+    # colonassign / plusassign / printfv — three more ways a shell line SETS the override, each
+    # assignment syntax and none spelled `ALLOW_PLAINTEXT=`: the default-assigning expansion, the
+    # append assignment and printf -v. One file only, as exportplain is.
+    if [ "$name" = 'trip' ]; then
+      case "$defect" in
+        colonassign) printf -- '```\n: "${ALLOW_PLAINTEXT:=1}"\n```\n\n' ;;
+        plusassign)  printf -- '```\nALLOW_PLAINTEXT+=1\n```\n\n' ;;
+        printfv)     printf -- '```\nprintf -v ALLOW_PLAINTEXT %%s 1\n```\n\n' ;;
+      esac
+    fi
     if [ "$defect" = 'varmention' ]; then printf -- 'SCRIPT=%s\n\n' "$SCRIPT_REL"; fi
   } > "$f"
 
@@ -6352,6 +6474,14 @@ ctl GF3y F3 "the --yes alternative, on an unpublish that DOES carry the pages-on
 ctl GF3s F3 "the -y alternative — the short spelling of the same flag" ok badflagy 'grep -qxF -- "${SCRIPT_REL} update trips/x -y" "$WORK/GF3s/skills/trip-publish/SKILL.md"'
 ctl GF3p F3 "the --plaintext alternative on a publish-script invocation" ok badflagplain 'grep -qxF -- "${SCRIPT_REL} update trips/x --plaintext" "$WORK/GF3p/skills/trip-publish/SKILL.md"'
 ctl GF4x F4 "the override EXPORTED with no assignment on the line — the second form F4 fails" ok exportplain 'grep -qx "export ALLOW_PLAINTEXT" "$WORK/GF4x/skills/trip/SKILL.md"'
+# GF3w and GF3wm are the arms for an invocation WRAPPED with a trailing backslash, which the shell
+# reads as one line; GF3wm splits the flag mid-word, so a join that inserts a space misses it.
+# GF4d, GF4p and GF4v are one arm per further assignment form F4 reads.
+ctl GF3w  F3 "a forbidden flag on the continuation line of a fenced invocation wrapped with a trailing backslash" ok wrapflag 'grep -qxF -- "${SCRIPT_REL} update trips/x \\" "$WORK/GF3w/skills/trip-publish/SKILL.md" && grep -qxF -- "  --yes" "$WORK/GF3w/skills/trip-publish/SKILL.md"'
+ctl GF3wm F3 "a forbidden flag split mid-word across a trailing-backslash continuation — the shell joins the halves with nothing between them" ok wrapmidword 'grep -qxF -- "${SCRIPT_REL} update trips/x --pass\\" "$WORK/GF3wm/skills/trip-publish/SKILL.md" && grep -qxF -- "phrase secret" "$WORK/GF3wm/skills/trip-publish/SKILL.md"'
+ctl GF4d F4 "the override SET by a default-assigning expansion" ok colonassign 'grep -qxF ": \"\${ALLOW_PLAINTEXT:=1}\"" "$WORK/GF4d/skills/trip/SKILL.md"'
+ctl GF4p F4 "the override SET by an append assignment" ok plusassign 'grep -qxF "ALLOW_PLAINTEXT+=1" "$WORK/GF4p/skills/trip/SKILL.md"'
+ctl GF4v F4 "the override SET through printf -v" ok printfv 'grep -qxF "printf -v ALLOW_PLAINTEXT %s 1" "$WORK/GF4v/skills/trip/SKILL.md"'
 ctl GF3e F3 "a forbidden flag on an invocation rendered as a WHOLE-LINE CODE SPAN at fence depth 0 — the evidence-entry rendering is use, like a fenced line" ok spaninv 'grep -qxF -- "${BT}${SCRIPT_REL} update trips/x --yes${BT}" "$WORK/GF3e/skills/trip-publish/SKILL.md"'
 ctl GF3c F3 "a forbidden flag on an invocation fenced in a file BUNDLED beside a verb file" ok flagconduct 'grep -qxF -- "${SCRIPT_REL} update trips/x --yes" "$WORK/GF3c/skills/trip-record/interview-conduct.md"'
 ctl GF4c F4 "the plaintext override SET in a file bundled beside a verb file" ok allowconduct 'grep -qxF "ALLOW_PLAINTEXT=1 x" "$WORK/GF4c/skills/trip-record/interview-conduct.md"'
@@ -8491,6 +8621,104 @@ md_flips roster_write_check 'J2' rj_assert_join "$ROOT"
 md_flips research_key_check 'J3' rj_assert_key "$ROOT"
 md_flips roster_write_check 'J3' rj_assert_key "$ROOT"
 
+
+# ── MD-EXIT-ABORT — a PASS-reporting exit can only come from a run that finished ──
+# md_exit_abort_assert <trap-line> — exactly one verdict, a chain with one condition and one message
+# per branch. Part 1 asks whether the SHIPPING guard function is sound, through two children written
+# into $WORK from the parsed guard_on_exit this shell holds, each with its own sentinel at 0 and its
+# own trap installed. The first prints a FAIL-shaped line and then aborts on an unset name in an
+# arithmetic context — the 3.2 defect — before its Result line; the complement is the same child
+# without the trap line. The second prints a marker line and then takes a deliberate exit 0 without
+# the sentinel, the bound the guard's header states: it must print ABORT: and exit non-zero. That
+# exit's status is 0 on every shell, so a guard keyed on $? rather than on the sentinel exits 0
+# silently there on bash 5 as on 3.2, where the first child's abort exits non-zero on bash 5 and so
+# cannot tell the two guards apart. All three run in file mode, as `LC_ALL=C "$BASH" <child>`, so the
+# shell message link 2 reads is the C locale's. Part 2 asks whether that function is the guard of THIS
+# run: link a reads the shell's actual EXIT trap, captured in the main shell and passed in, because a
+# capture inside a subshell reads empty; link b reads the sentinel at arm time; link c reads this
+# file's text, outside this arm's own two child fixtures — each opened by a cat <<'MDEXIT…' line, and
+# both must be found — for at least one line setting the sentinel, with an exit straight after each.
+# Link c does not see one of several sentinels dropped: the exit that lost it prints ABORT: and exits
+# non-zero at run time, the path the second child grades. Link d reads the install order — WORK
+# cleared, then the trap, then WORK assigned. Registered with md_flips below, so removing
+# guard_on_exit must turn it.
+md_exit_abort_assert() {
+  local ea_trap="$1" ea_g="$WORK/md-exit-abort-guarded.sh" ea_c="$WORK/md-exit-abort-complement.sh"
+  local ea_x="$WORK/md-exit-abort-exit.sh" ea_xm='a deliberate exit 0, taken without the sentinel'
+  local ea_go ea_ge ea_grc ea_co ea_crc ea_xo ea_xe ea_xrc ea_xmk ea_xab ea_sent ea_lc ea_ln ea_lb ea_ls ea_ld ea_want
+  {
+    printf '%s\n' 'set -uo pipefail' 'unset WORK' 'pass=0; fail=1'
+    declare -f guard_on_exit
+    printf '%s\n' 'GUARD_REACHED_END=0' 'trap guard_on_exit EXIT'
+    cat <<'MDEXITCHILD'
+echo "  a planted failing verdict, before the abort"
+P=ten; X=$(( 1 + (2 * ${P:-0} + 99) / 100 ))
+echo "Result: the planted run reached its end ($X)"
+GUARD_REACHED_END=1
+exit 0
+MDEXITCHILD
+  } > "$ea_g"
+  grep -vx 'trap guard_on_exit EXIT' "$ea_g" > "$ea_c"
+  {
+    printf '%s\n' 'set -uo pipefail' 'unset WORK' 'pass=0; fail=0'
+    declare -f guard_on_exit
+    printf '%s\n' 'GUARD_REACHED_END=0' 'trap guard_on_exit EXIT'
+    cat <<'MDEXITEXIT'
+echo "a deliberate exit 0, taken without the sentinel"
+exit 0
+MDEXITEXIT
+  } > "$ea_x"
+  ea_go="$(LC_ALL=C "$BASH" "$ea_g" 2>"$WORK/md-exit-abort.err")"; ea_grc=$?
+  ea_ge="$(cat "$WORK/md-exit-abort.err")"
+  ea_co="$(LC_ALL=C "$BASH" "$ea_c" 2>&1)"; ea_crc=$?
+  ea_xo="$(LC_ALL=C "$BASH" "$ea_x" 2>"$WORK/md-exit-abort-exit.err")"; ea_xrc=$?
+  ea_xe="$(cat "$WORK/md-exit-abort-exit.err")"
+  ea_xmk=absent; grep -qx "$ea_xm" <<<"$ea_xo" && ea_xmk=present
+  ea_xab=no; grep -q '^ABORT:' <<<"$ea_xo" && ea_xab=an
+  ea_want="trap -- 'guard_on_exit' EXIT"
+  ea_sent="${GUARD_REACHED_END:-unset}"
+  ea_lc="$(awk -v q="'" '
+    sk != "" { if ($0 == sk) sk = ""; next }
+    $0 ~ ("^[[:space:]]*cat <<" q "MDEXIT[A-Z]+" q "[[:space:]]*$") { sk = $0; sub("^[^" q "]*" q, "", sk); sub(q ".*$", "", sk); sp++; next }
+    /^[[:space:]]*GUARD_REACHED_END=1[[:space:]]*$/ { n++; if ((getline nx) <= 0 || nx !~ /^[[:space:]]*exit([[:space:]]|$)/) bad++ }
+    END { print n + 0, bad + 0, sp + 0 }' "$SELF")"
+  read -r ea_ln ea_lb ea_ls <<<"$ea_lc"
+  ea_ld="$(awk '!w && $0 == "WORK=\"\"" { w = NR } !t && $0 == "trap guard_on_exit EXIT" { t = NR } !m && index($0, "WORK=\"$(mktemp -d)\"") == 1 { m = NR } END { print (w && t && m && w < t && t < m) ? "ok" : "bad " w + 0 " " t + 0 " " m + 0 }' "$SELF")"
+  if grep -q '^Result:' <<<"$ea_go"; then
+    FAIL "MD-EXIT-ABORT: the guarded child printed its Result line, so the planted abort did not abort and nothing here was measured"
+  elif ! grep -q 'unbound variable' <<<"$ea_ge"; then
+    FAIL "MD-EXIT-ABORT: the guarded child's stderr carries no 'unbound variable', so the abort was not reached through set -u — the class this guard exists for was not exercised"
+  elif [ "$ea_xmk" != present ] || [ -n "$ea_xe" ]; then
+    FAIL "MD-EXIT-ABORT: the second child, which takes a deliberate exit 0 without the sentinel, did not run cleanly to that exit — its marker line is $ea_xmk and its stderr opens [$(awk 'NR == 1' <<<"$ea_xe")] — so the exit it exists to take was not measured"
+  elif [ "$ea_xrc" -eq 0 ] && [ "$ea_xab" != an ]; then
+    FAIL "MD-EXIT-ABORT: the second child took a deliberate exit 0 without the sentinel, then exited $ea_xrc and printed $ea_xab ABORT: line, where an ABORT: line and a non-zero exit are owed — no ABORT: line, and the deliberate exit's status, 0, left as it was, which, among other faults, a guard keyed on the exit status rather than the sentinel produces, as does one whose sentinel branch never runs, is empty, or leaves before it acts; such a guard lets a run that never reached its end exit 0, on any shell"
+  elif [ "$ea_xrc" -eq 0 ]; then
+    FAIL "MD-EXIT-ABORT: the second child took a deliberate exit 0 without the sentinel, then exited $ea_xrc and printed $ea_xab ABORT: line, where an ABORT: line and a non-zero exit are owed — the guard took its branch on the missing sentinel and printed ABORT:, but exited with the status it read, $ea_xrc, instead of a non-zero one, which lets a run that stopped at status 0 before its end exit 0, on any shell"
+  elif [ "$ea_xab" != an ]; then
+    FAIL "MD-EXIT-ABORT: the second child took a deliberate exit 0 without the sentinel, then exited $ea_xrc and printed $ea_xab ABORT: line, where an ABORT: line and a non-zero exit are owed — the guard exited non-zero on the missing sentinel but printed no ABORT: line, so a run that never reached its end fails without the line that says it is not a result"
+  elif [ "$ea_grc" -eq 0 ]; then
+    FAIL "MD-EXIT-ABORT: a run that aborted before its Result line exited 0 on bash ${BASH_VERSION:-unknown} — an aborted run reported success, which is the defect this guard closes"
+  elif ! grep -q '^ABORT:' <<<"$ea_go"; then
+    FAIL "MD-EXIT-ABORT: the aborted child exited $ea_grc but printed no ABORT: line, so the abort is not named"
+  elif grep -q '^ABORT:' <<<"$ea_co"; then
+    FAIL "MD-EXIT-ABORT: the complement, the same child with no trap installed, printed ABORT: too, so the line does not come from the guard"
+  elif [ "$ea_trap" != "$ea_want" ]; then
+    FAIL "MD-EXIT-ABORT: this run's EXIT trap reads [$ea_trap] where [$ea_want] is owed, so the running suite's guard is not guard_on_exit"
+  elif [ "$ea_sent" != 0 ]; then
+    FAIL "MD-EXIT-ABORT: the completion sentinel reads [$ea_sent] at this arm, before the end of the run, so an abort from here on would read as a completed run"
+  elif [ "$ea_ls" != 2 ]; then
+    FAIL "MD-EXIT-ABORT: this file's text holds [$ea_ls] heredoc span(s) opened by a cat <<'MDEXIT…' line, where this arm's own two child fixtures are owed, so the count of the suite's own sentinel lines cannot leave those fixtures out"
+  elif [ "$ea_ln" -eq 0 ] || [ "$ea_lb" -ne 0 ]; then
+    FAIL "MD-EXIT-ABORT: read outside this arm's own two child fixtures, this file's text sets the completion sentinel on a line not followed by an exit, or never [$ea_ln line(s), $ea_lb not followed by an exit] — a sentinel standing without its exit marks a run complete that may still abort, and a file that never sets it has no exit a run can complete through. One of several sentinels dropped is not caught here: the exit that lost it prints ABORT: and exits non-zero at run time"
+  elif [ "$ea_ld" != ok ]; then
+    FAIL "MD-EXIT-ABORT: the install order in this file's text is [$ea_ld] (WORK cleared, trap, WORK assigned, by line) where WORK=\"\" must precede the trap and the trap precede the assignment, so the cleanup could reach a directory inherited from the caller"
+  else
+    PASS "MD-EXIT-ABORT: on bash ${BASH_VERSION:-unknown} the guarded child aborted through set -u and exited $ea_grc with an ABORT: line while the complement, with no trap, exited $ea_crc and printed none, and the second child's deliberate exit 0 without the sentinel exited $ea_xrc with an ABORT: line; this run's EXIT trap is guard_on_exit, the sentinel reads 0 at this arm, each of the $ea_ln line(s) setting it outside this arm's two child fixtures is followed by an exit, and WORK is cleared before the trap is installed and assigned after"
+  fi
+}
+md_exit_abort_assert "$(trap -p EXIT)"
+md_flips guard_on_exit 'EXIT' md_exit_abort_assert "$(trap -p EXIT)"
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group FZ — every verdict arm in this file must be able to FAIL.
 #
@@ -9007,4 +9235,5 @@ if [ "${GUARD_STRICT_SKIPS:-0}" = "1" ]; then
     printf 'STRICT: every skip was declared (%s) — no group vanished silently.\n' "${GUARD_EXPECTED_SKIPS:-none}"
   fi
 fi
+GUARD_REACHED_END=1
 exit "$rc"
