@@ -4353,7 +4353,8 @@ require_recordable_baseline() { # <trip_dir> <site_html>
 #   R-b    an image, an SVG data: image included, and group content rendered without its token — a
 #          non-conformant build, which the § 3 render contract binds and this check cannot see, because it
 #          reads structure and never content (cases L18g-svg-img, L18g-svg-css, L18g-svg-use);
-#   R-url  any other URL, the coverage's own boundary (cases L18g-poster, L18g-link-href).
+#   R-url  any other URL, the coverage's own boundary (cases L18g-poster, L18g-link-href, L18g-svg-animate,
+#          L18g-svg-set).
 # A `<` and a letter in script text can open a bogus tag that picks up a class; that over-refuses the
 # plaintext limb only, and the encrypted limb is the remedy.
 #

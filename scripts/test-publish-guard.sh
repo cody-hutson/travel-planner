@@ -15984,6 +15984,9 @@ l18m_budget_assert "L18m-budget" "$L18W/cap-budget.html"
 # R-b    — declared: an image whose content shows group material, an SVG data: image included; the refusal
 #          reads markup, not images.
 # R-url  — declared, the coverage's own boundary: any other URL, such as a video's poster or a stylesheet link's href.
+#          An SVG <a target> whose href a declarative <animate> or <set> sets to a data: document, with the frame
+#          it names present on an https URL, is one (L18g-svg-animate, L18g-svg-set; Stage 7 pass 3, P14 and P15):
+#          the URL sits in that element's values or to, which the coverage does not name.
 L18_FIX7="$L18W/fixtures-s7.tsv"
 cat > "$L18_FIX7" <<'L18FIX7'
 L18f-srcdoc	nested	<iframe srcdoc="&lt;section class=&quot;@T@&quot;&gt;&lt;h2&gt;Picks&lt;/h2&gt;&lt;/section&gt;"></iframe>
@@ -16061,6 +16064,8 @@ L18c-link-tel	pass	<a href="tel:+15550100">Call the host</a>
 L18c-link-case	pass	<a href=" HTTPS://example.org/">x</a><a href="MailTo:host@example.org">m</a><a href="TEL:+15550100">t</a>
 L18g-poster	R-url	<video poster="data:image/svg+xml;base64,@SVG@"></video>
 L18g-link-href	R-url	<link rel="stylesheet" href="data:text/css,section%7Bdisplay:block%7D">
+L18g-svg-animate	R-url	<iframe name="f" src="https://example.org/x"></iframe><svg><a target="f"><animate attributeName="href" values="data:text/html,@PCT@"/><text>open</text></a></svg>
+L18g-svg-set	R-url	<iframe name="f" src="https://example.org/x"></iframe><svg><a target="f"><set attributeName="href" to="data:text/html,@PCT@"/><text>open</text></a></svg>
 L18f-link-memo	nested	<script>var s = '<b c="';</script><a a="1" b="2" href="data:text/html;base64,@B64@">open</a>
 L18f-iframe-mailto	nested	<iframe src="mailto:host@example.org"></iframe>
 L18f-meta-tel	nested	<meta http-equiv="refresh" content="0;url=tel:+15550100">
