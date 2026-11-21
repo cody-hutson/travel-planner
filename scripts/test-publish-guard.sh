@@ -17139,7 +17139,10 @@ l19enc_assert "L19x-crlf" crlf
 # each pinning its point alone), and the person branch's own read under the scratch declaration
 # (L19i-src-pbranch-lonecr). Each carries an integrity limb: no mark, no NUL byte, carriage returns and no line
 # feed. Its CRLF twin is read as today and stops matched exactly: L19y-src-order-crlf, L19y-src-person-, -merge-,
-# -model- and -pbranch-crlf.
+# -model- and -pbranch-crlf. The person branch reads a present traveller file only when it is a readable regular
+# file, and stops as the scope-file loop does when it is not: L19i-src-pbranch-mode000 is a mode-000 traveller file
+# whose reference reaches a record holding the value, under the scratch declaration, where only the person branch
+# reads it. Its precondition limb skips it, saying why, where this run's user reads a mode-000 file.
 l19src_trip() { # <name> <profile|person|merge|stub|model|nul|order|latin|comp|line1> <encoding, as l19src_assert takes it> -> trip dir
   local d f st="${_GUARD_PERSON_STORE:-people}" rk="${_GUARD_REF_KEY:-person}" mk="${_GUARD_MERGE_KEY:-merged-into}"
   local bl='Bring X1234567 to the desk.'
@@ -17178,11 +17181,12 @@ l19src_trip() { # <name> <profile|person|merge|stub|model|nul|order|latin|comp|l
     bom8) { printf '\357\273\277'; cat "$f"; } > "$f.mark"; mv -f "$f.mark" "$f" ;;
     crlf) LC_ALL=C awk '{ printf "%s\r\n", $0 }' "$f" > "$f.crlf"; mv -f "$f.crlf" "$f" ;;
     lonecr) LC_ALL=C tr '\n' '\r' < "$f" > "$f.eol"; mv -f "$f.eol" "$f" ;;
+    mode000) chmod 000 "$f" ;;
     *) l19_enc "$f" "$3" ;;
   esac
   printf '%s' "$d"
 }
-l19src_assert() { # <id> <kind> <16le|16be|32le|32be|mark16le|mark16be|nul|utf8|bom8|crlf|lonecr> [the declaration order, for the order kind]
+l19src_assert() { # <id> <kind> <16le|16be|32le|32be|mark16le|mark16be|nul|utf8|bom8|crlf|lonecr|mode000> [the declaration order, for the order kind]
   local id="$1" k="$2" e="$3" o="${4:-}" d sc mk ef why="" st="${_GUARD_PERSON_STORE:-people}" nv=X1234567
   [ "$k" != comp ] || nv='May 2032'
   d="$(l19src_trip "l19src-$k-$e${o:+-$o}" "$k" "$e")"
@@ -17211,6 +17215,12 @@ l19src_assert() { # <id> <kind> <16le|16be|32le|32be|mark16le|mark16be|nul|utf8|
       fi ;;
     lonecr)
       l19_eol_ok "$ef" lonecr || why="holds a byte-order mark or a NUL byte, or does not end its lines in a carriage return alone, so this arm would not grade the carriage-return half alone" ;;
+    mode000)
+      if [ ! -e "$ef" ]; then why="is missing, so this arm would grade no unreadable file"
+      elif [ -r "$ef" ]; then
+        SKIP "$id: this run's user reads a mode-000 file (root, or a capability that reads through file modes), so there is no unreadable traveller file to grade; the arm needs a user that mode 000 shuts out, as CI's is"
+        return 0
+      fi ;;
   esac
   if [ -n "$why" ]; then
     FAIL "$id: fixture integrity — the planted file $why. VERDICT WITHHELD"
@@ -17238,7 +17248,7 @@ L19DECL_PFIRST="$L19W/decl-person-first.md"
 # the traveller file is read only by the person branch, for its reference.
 L19DECL_NOPROF="$L19W/decl-no-profile.md"
 _guard_declared_rows | awk -v P="${_GUARD_DECL_ARTIFACT_PROFILE:-}" '!($1 == "field" && $3 == P)' | ldecl_write "$L19DECL_NOPROF"
-l19src_order_assert() { # <id> <shipped|person-first|noprofile> <16le|utf8|nul|mark16le|lonecr|crlf>
+l19src_order_assert() { # <id> <shipped|person-first|noprofile> <16le|utf8|nul|mark16le|lonecr|crlf|mode000>
   local id="$1" o="$2" e="$3" pre="" want first cand rows np nr
   want="${_GUARD_DECL_ARTIFACT_PROFILE:-}"
   if [ "$o" = person-first ]; then pre="_GUARD_DECLARATION=\"$L19DECL_PFIRST\""; want="${_GUARD_DECL_ARTIFACT_PERSON:-}"; fi
@@ -17278,6 +17288,8 @@ for l19c in order person merge model; do l19src_assert "L19i-src-$l19c-lonecr" "
 for l19c in person merge model; do l19src_assert "L19y-src-$l19c-crlf" "$l19c" crlf; done
 l19src_order_assert "L19i-src-pbranch-lonecr" noprofile lonecr
 l19src_order_assert "L19y-src-pbranch-crlf" noprofile crlf
+L19_M000=0; l19m0="$L19W/mode000-probe"; printf 'probe\n' > "$l19m0"; chmod 000 "$l19m0"; [ ! -r "$l19m0" ] || L19_M000=1
+l19src_order_assert "L19i-src-pbranch-mode000" noprofile mode000
 
 # ── L19i-src-ref-* / L19c-ref-* / L19y-src-mark-* — a person reference the reader cannot reach, and marker lines
 # followed by whitespace. The reader takes a traveller file's reference from front matter opening on its first
@@ -17452,6 +17464,11 @@ for l19c in order person merge model; do md_flips require_clean_build_sources "L
 for l19c in person merge model; do md_flips require_clean_build_sources "L19y-src-$l19c-crlf" l19src_assert "L19y-src-$l19c-crlf" "$l19c" crlf; done
 md_flips require_clean_build_sources "L19i-src-pbranch-lonecr" l19src_order_assert "L19i-src-pbranch-lonecr" noprofile lonecr
 md_flips require_clean_build_sources "L19y-src-pbranch-crlf" l19src_order_assert "L19y-src-pbranch-crlf" noprofile crlf
+if [ "$L19_M000" = 1 ]; then
+  SKIP "MD[L19i-src-pbranch-mode000]: this run's user reads a mode-000 file, so the arm skipped and its registration has no verdict to grade"
+else
+  md_flips require_clean_build_sources "L19i-src-pbranch-mode000" l19src_order_assert "L19i-src-pbranch-mode000" noprofile mode000
+fi
 for l19c in blanklead indent tab spacecolon dquote squote list list0 gap; do md_flips require_clean_build_sources "L19i-src-ref-$l19c" l19ref_assert "L19i-src-ref-$l19c" "$l19c" stop; done
 for l19c in nokey body empty prose; do md_flips require_clean_build_sources "L19c-ref-$l19c" l19ref_assert "L19c-ref-$l19c" "$l19c" pass; done
 for l19c in mark-open mark-close mark-plain; do md_flips require_clean_build_sources "L19y-src-$l19c" l19ref_assert "L19y-src-$l19c" "$l19c" exact; done
