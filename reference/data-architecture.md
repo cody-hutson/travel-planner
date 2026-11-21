@@ -848,24 +848,23 @@ or month-day-year order — is skipped, so a date the plan carries is not matche
 bound file's lines as UTF-8. Before matching, it reads every Unicode space separator as a space and the
 colons U+FF1A, U+FE55, U+FE13, U+2236, U+A789, U+02D0, U+0589 and U+05C3 as a colon, drops every format
 character and variation selector (Unicode 13.0 category Cf and property Variation_Selector), strips a
-backslash before a colon, and folds full-width and Arabic-Indic digits. A bound file that opens with a
-UTF-16 or UTF-32 byte-order mark, or holds a NUL byte, stops as unreadable. Anything else is not folded:
-other scripts' letters and digits, full-width letters, other look-alikes, a dash in place of the colon, a
-label behind a marker the strip does not name, and the declared separators. The source check does not
-see: an ordinary-word value restated without its label; a label mid-line, in a table cell, with a word
-between the selector and its colon, with a dash in place of the colon, or behind a leading marker other
-than those the strip names; a value wrapped or paraphrased; a calendar-valid date, or any distinctive
-part, carried with other words around it; a number whose groups are joined otherwise than by one or two
-of a space, `.`, `/`, `(`, `)`, `+` and `-`, such as by a comma or by three characters like ` - `; a
-value written in characters the folding does not fold; a value held only in a value source that is
-absent or unresolved, or on a value-source line the guard's profile parse does not read as a label —
-behind a task box, through a look-alike colon, or in a file written in UTF-16 or UTF-32 — which
-contributes no value, so the label half alone covers it; the part of a value-source line after a NUL
-byte, which contributes no value where the host's awk stops reading the line there; a person reference
-whose merge chain runs past one hop, which is named in a note and whose second hop is not read; and a trip with no bound file
-present, which passes with every one named as absent. A value source that is absent is named; a field
-class that reads empty stops the publish. A `field` row added here joins both matches with no edit to
-any shell script, wherever its scope is a trip-relative path or the person store.
+backslash before a colon, and folds full-width and Arabic-Indic digits. A bound file or a value source
+that opens with a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte, stops as unreadable. Anything
+else is not folded: other scripts' letters and digits, full-width letters, other look-alikes, a dash in
+place of the colon, a label behind a marker the strip does not name, and the declared separators. The
+source check does not see: an ordinary-word value restated without its label; a label mid-line, in a
+table cell, with a word between the selector and its colon, with a dash in place of the colon, or behind
+a leading marker other than those the strip names; a value wrapped or paraphrased; a calendar-valid
+date, or any distinctive part, carried with other words around it; a number whose groups are joined
+otherwise than by one or two of a space, `.`, `/`, `(`, `)`, `+` and `-`, such as by a comma or by three
+characters like ` - `; a value written in characters the folding does not fold; a value held only in a
+value source that is absent or unresolved, or on a value-source line the guard's profile parse does not
+read as a label — behind a task box or through a look-alike colon — which contributes no value, so the
+label half alone covers it; a person reference whose merge chain runs past one hop, which is named in a
+note and whose second hop is not read; and a trip with no bound file present, which passes with every
+one named as absent. A value source that is absent is named; a field class that reads empty stops the
+publish. A `field` row added here joins both matches with no edit to any shell script, wherever its
+scope is a trip-relative path or the person store.
 
 **Adding a member of the class inside the queried set is one row here and no edit to any shell
 script.** The evaluator asks exactly four `(limb, artifact-scope)` questions — `entry` and `field`

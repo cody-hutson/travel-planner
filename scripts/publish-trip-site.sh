@@ -4545,10 +4545,10 @@ refuse_group_only_render() {
 # file's lines as UTF-8. Before matching, it reads every Unicode space separator as a space and the colons
 # U+FF1A, U+FE55, U+FE13, U+2236, U+A789, U+02D0, U+0589 and U+05C3 as a colon, drops every format character and
 # variation selector (Unicode 13.0 category Cf and property Variation_Selector), strips a backslash before a
-# colon, and folds full-width and Arabic-Indic digits. A bound file that opens with a UTF-16 or UTF-32
-# byte-order mark, or holds a NUL byte, stops as unreadable. Anything else is not folded: other scripts' letters
-# and digits, full-width letters, other look-alikes, a dash in place of the colon, a label behind a marker the
-# strip does not name, and the declared separators.
+# colon, and folds full-width and Arabic-Indic digits. A bound file or a value source that opens with a UTF-16
+# or UTF-32 byte-order mark, or holds a NUL byte, stops as unreadable. Anything else is not folded: other
+# scripts' letters and digits, full-width letters, other look-alikes, a dash in place of the colon, a label
+# behind a marker the strip does not name, and the declared separators.
 # The folds are fold() in the program below, applied alike to every bound line and to every stated value; the
 # colon set is a set, not a class, and each class's byte sequences are generated from the Unicode 13.0 database.
 #
@@ -4592,7 +4592,8 @@ refuse_group_only_render() {
 # by a traveller file's name. Nothing it prints is a value.
 #
 # DECLARED RESIDUALS, worded alike in § 5.6, the CHANGELOG and the PR body; test-publish-guard.sh group L's
-# L19v and L19z arms assert the shapes whose verdict is the same on every host. The source check does not see:
+# L19v arms assert a shape of every residual below but the first, the third and the eighth, and its L19z arms
+# the eighth. The source check does not see:
 #   • an ordinary-word value restated without its label;
 #   • a label mid-line, in a table cell, with a word between the selector and its colon, with a dash in place
 #     of the colon, or behind a leading marker other than those the strip names;
@@ -4602,10 +4603,8 @@ refuse_group_only_render() {
 #     `-`, such as by a comma or by three characters like ` - `;
 #   • a value written in characters the folding does not fold;
 #   • a value held only in a value source that is absent or unresolved, or on a value-source line the guard's
-#     profile parse does not read as a label — behind a task box, through a look-alike colon, or in a file
-#     written in UTF-16 or UTF-32 — which contributes no value, so the label half alone covers it;
-#   • the part of a value-source line after a NUL byte, which contributes no value where the host's awk
-#     stops reading the line there;
+#     profile parse does not read as a label — behind a task box or through a look-alike colon — which
+#     contributes no value, so the label half alone covers it;
 #   • a person reference whose merge chain runs past one hop, which is named in a note and whose second hop
 #     is not read;
 #   • a trip with no bound file present, which passes with every one named as absent.
@@ -4641,12 +4640,16 @@ _build_source_wellformed() {
 # _field_class_values <trip_dir> -> records on stdout, tab-separated:
 #   V  <selector> <value>   a stated value of a declared field, from a value source on file
 #   NOTE <what>             a value source not on file, or a person reference that does not resolve
-#   UNREAD <what>           a value source present but not a readable regular file — the caller stops
+#   UNREAD <what>           a value source present but not a readable regular file, or one that opens with a
+#                           UTF-16 or UTF-32 byte-order mark or holds a NUL byte — the caller stops
 # <what> is a scope as the declaration writes it, or `person record <id>` for a minted id; never a file name.
+# A file joins the value sources only after the byte test require_clean_build_sources applies to a bound file,
+# at each of the three places one joins (a scope's file, a person record, its merge target), so its bytes and
+# not the host's awk decide whether it is read.
 # Returns 2 when the declaration yields no `field` row, or reads in part.
 _field_class_values() { # <trip_dir>
   local trip_dir="$1" fc_rows fc_n fc_all fc_cand fc_scope fc_glob fc_f fc_any fc_pf fc_refs fc_key fc_store
-  local fc_rec fc_merge fc_tgt fc_srcs="" fc_sels tab
+  local fc_rec fc_merge fc_tgt fc_srcs="" fc_sels fc_enc tab
   tab="$(printf '\t')"
   fc_all="$(_guard_declared_rows)"
   fc_cand="$(_guard_declared_candidates)"
@@ -4673,6 +4676,11 @@ _field_class_values() { # <trip_dir>
         fc_rec="$fc_store/$fc_key.md"
         if [ ! -e "$fc_rec" ] && [ ! -L "$fc_rec" ]; then printf 'NOTE\tperson record %s\n' "$fc_key"; continue; fi
         if [ ! -f "$fc_rec" ] || [ ! -r "$fc_rec" ]; then printf 'UNREAD\tperson record %s\n' "$fc_key"; continue; fi
+        # Read as UTF-8 or not at all: a UTF-16 or UTF-32 byte-order mark, or a NUL byte anywhere.
+        fc_enc=0
+        case "$(LC_ALL=C od -An -tx1 -N4 "$fc_rec" | tr -d ' \n')" in fffe*|feff*|0000feff) fc_enc=1 ;; esac
+        if [ "$fc_enc" -eq 0 ] && [ "$(($(wc -c < "$fc_rec")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$fc_rec" | wc -c)))" ]; then fc_enc=1; fi
+        if [ "$fc_enc" -ne 0 ]; then printf 'UNREAD\tperson record %s\n' "$fc_key"; continue; fi
         fc_srcs="$fc_srcs$fc_rec$tab"
         fc_merge="$(_guard_frontmatter_key "$fc_rec" "$_GUARD_MERGE_KEY")"
         [ -n "$fc_merge" ] || continue
@@ -4681,6 +4689,10 @@ _field_class_values() { # <trip_dir>
         fc_tgt="$fc_store/$fc_merge.md"
         if [ ! -e "$fc_tgt" ] && [ ! -L "$fc_tgt" ]; then printf 'NOTE\tperson record %s\n' "$fc_merge"; continue; fi
         if [ ! -f "$fc_tgt" ] || [ ! -r "$fc_tgt" ]; then printf 'UNREAD\tperson record %s\n' "$fc_merge"; continue; fi
+        fc_enc=0
+        case "$(LC_ALL=C od -An -tx1 -N4 "$fc_tgt" | tr -d ' \n')" in fffe*|feff*|0000feff) fc_enc=1 ;; esac
+        if [ "$fc_enc" -eq 0 ] && [ "$(($(wc -c < "$fc_tgt")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$fc_tgt" | wc -c)))" ]; then fc_enc=1; fi
+        if [ "$fc_enc" -ne 0 ]; then printf 'UNREAD\tperson record %s\n' "$fc_merge"; continue; fi
         fc_srcs="$fc_srcs$fc_tgt$tab"
         [ -z "$(_guard_frontmatter_key "$fc_tgt" "$_GUARD_MERGE_KEY")" ] || printf 'NOTE\ta merge chain longer than one hop\n'
       done
@@ -4693,6 +4705,10 @@ _field_class_values() { # <trip_dir>
       [ -e "$fc_f" ] || [ -L "$fc_f" ] || continue
       fc_any=1
       if [ ! -f "$fc_f" ] || [ ! -r "$fc_f" ]; then printf 'UNREAD\t%s\n' "$fc_scope"; continue; fi
+      fc_enc=0
+      case "$(LC_ALL=C od -An -tx1 -N4 "$fc_f" | tr -d ' \n')" in fffe*|feff*|0000feff) fc_enc=1 ;; esac
+      if [ "$fc_enc" -eq 0 ] && [ "$(($(wc -c < "$fc_f")))" -ne "$(($(LC_ALL=C tr -d '\000' < "$fc_f" | wc -c)))" ]; then fc_enc=1; fi
+      if [ "$fc_enc" -ne 0 ]; then printf 'UNREAD\t%s\n' "$fc_scope"; continue; fi
       fc_srcs="$fc_srcs$fc_f$tab"
     done
     [ "$fc_any" -eq 1 ] || printf 'NOTE\t%s\n' "$fc_scope"
@@ -4860,7 +4876,7 @@ require_clean_build_sources() { # <trip_dir>
   fi
   bs_unread="$(awk -F'\t' '$1 == "UNREAD" && !seen[$2]++ { printf "%s%s", (n++ ? ", " : ""), $2 }' <<<"$bs_vals")"
   if [ -n "$bs_unread" ]; then
-    die "SOURCE CHECK STOPPED — the value source $bs_unread is present but cannot be read, so the values to check for are not known. Nothing was published. Make it readable, or remove it, and re-run."
+    die "SOURCE CHECK STOPPED — the value source $bs_unread is present but cannot be read as UTF-8 text: it is not a readable regular file, or it opens with a UTF-16 or UTF-32 byte-order mark or holds a NUL byte, so the values to check for are not known. Nothing was published. Save it as readable UTF-8 text, or remove it, and re-run."
   fi
   bs_sels="$(_guard_declared_rows | awk '$1 == "field" && !seen[$2]++ { printf "%s%s", (n++ ? " " : ""), $2 }')"
   bs_v="$(awk -F'\t' '$1 == "V" { print $2 "\t" $3 }' <<<"$bs_vals")"

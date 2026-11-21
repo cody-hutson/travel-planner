@@ -46,16 +46,16 @@ mixing letters with three or more digits. The check reads a bound file's lines a
 matching, it reads every Unicode space separator as a space and the colons U+FF1A, U+FE55, U+FE13,
 U+2236, U+A789, U+02D0, U+0589 and U+05C3 as a colon, drops every format character and variation
 selector (Unicode 13.0 category Cf and property Variation_Selector), strips a backslash before a
-colon, and folds full-width and Arabic-Indic digits. A bound file that opens with a UTF-16 or UTF-32
-byte-order mark, or holds a NUL byte, stops as unreadable. Anything else is not folded: other
-scripts' letters and digits, full-width letters, other look-alikes, a dash in place of the colon, a
-label behind a marker the strip does not name, and the declared separators. A run of digits whose
-groups form a calendar-valid date is skipped, so a date the plan carries does not stop a publish; a
-number grouped like a date that is no calendar date is matched. It reads the traveller files, the
-traveller model and the referenced person records directly, so a stale or missing model neither
-stops a publish nor hides a value a present one holds. A bound file absent from the trip is skipped
-and named; one present but unreadable stops. A person reference merged more than one hop is named,
-and its second hop is not read. This is the first content check the encrypted limb carries;
+colon, and folds full-width and Arabic-Indic digits. A bound file or a value source that opens with
+a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte, stops as unreadable. Anything else is not
+folded: other scripts' letters and digits, full-width letters, other look-alikes, a dash in place of
+the colon, a label behind a marker the strip does not name, and the declared separators. A run of
+digits whose groups form a calendar-valid date is skipped, so a date the plan carries does not stop
+a publish; a number grouped like a date that is no calendar date is matched. It reads the traveller
+files, the traveller model and the referenced person records directly, so a stale or missing model
+neither stops a publish nor hides a value a present one holds. A bound file absent from the trip is
+skipped and named; one present but unreadable stops. A person reference merged more than one hop is
+named, and its second hop is not read. This is the first content check the encrypted limb carries;
 release 0.70.0 named it as owed to this milestone.
 
 **`list` reports `build-to-published` in place of the stale flag.** The column compares the digest
@@ -85,14 +85,13 @@ of the colon, or behind a leading marker other than those the strip names; a val
 paraphrased; a calendar-valid date, or any distinctive part, carried with other words around it; a
 number whose groups are joined otherwise than by one or two of a space, `.`, `/`, `(`, `)`, `+` and
 `-`, such as by a comma or by three characters like ` - `; a value written in characters the folding
-does not fold; a value held only in a value source that is absent or unresolved, or on a value-source
-line the guard's profile parse does not read as a label — behind a task box, through a look-alike
-colon, or in a file written in UTF-16 or UTF-32 — which contributes no value, so the label half alone
-covers it; the part of a value-source line after a NUL byte, which contributes no value where the host's
-awk stops reading the line there; a person reference whose merge chain runs past one hop, which is named in a note and whose
-second hop is not read; and a trip with no bound file present, which passes with every one named as
-absent. `list` reads the record a push left on this machine, so a push from elsewhere, a
-takedown and text outside the projection are not seen.
+does not fold; a value held only in a value source that is absent or unresolved, or on a
+value-source line the guard's profile parse does not read as a label — behind a task box or through
+a look-alike colon — which contributes no value, so the label half alone covers it; a person
+reference whose merge chain runs past one hop, which is named in a note and whose second hop is not
+read; and a trip with no bound file present, which passes with every one named as absent. `list`
+reads the record a push left on this machine, so a push from elsewhere, a takedown and text outside
+the projection are not seen.
 
 ## [0.71.0] — 2026-11-20 — A form field keeps its key when its label is reworded
 
