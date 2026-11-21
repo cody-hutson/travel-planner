@@ -4588,13 +4588,14 @@ refuse_group_only_render() {
 # link, as an IDEATION trip's itinerary is — is skipped and named; one present but not a readable regular
 # file, or one that opens with a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not
 # followed by a line feed, stops, naming it. A value
-# source absent, or a person reference unresolvable or malformed, is named
+# source absent, or a person reference unresolvable or whose value is malformed, is named
 # and contributes no values (D-2156-VALSRC): this check reads the sources of record directly, so it needs no
 # freshness inference, and a present, readable source contributes its values whatever its age or its entry
 # structure (#2156's review, F8). A value source present but not a readable regular file, or one that opens with
 # a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not followed by a line feed,
 # stops, named by its scope, never by a traveller file's name; so does a traveller file read for its person
-# reference that opens with such a mark or holds such a byte.
+# reference that opens with such a mark or holds such a byte, or that carries a person reference the check could
+# not read from front matter opening on its first line, which is named after the scope by what was found.
 # Nothing it prints is a value.
 #
 # DECLARED RESIDUALS, worded alike in § 5.6, the CHANGELOG and the PR body; test-publish-guard.sh group L's
@@ -4649,24 +4650,54 @@ _build_source_wellformed() {
 #   UNREAD <what>           a value source present but not a readable regular file, or a value source, or a
 #                           traveller file read for its person reference, that opens with a UTF-16 or UTF-32
 #                           byte-order mark, or holds a NUL byte or a carriage return not followed by a line
-#                           feed — the caller stops
-# <what> is a scope as the declaration writes it, or `person record <id>` for a minted id; never a file name.
+#                           feed; or a traveller file carrying a person reference the check could not read
+#                           (below) — the caller stops
+# <what> is a scope as the declaration writes it, or `person record <id>` for a minted id; never a file name. A
+# reference the check could not read is named after its scope, in parentheses, by what was found.
 # A file is read only after the byte test require_clean_build_sources applies to a bound file, at each of the
 # four places one is read (a scope's file, a traveller file read for its person reference, a person record, its
 # merge target), so its bytes and not the host's awk decide whether it is read: the one awk the test runs reads
 # od's hex, never the file. A carriage return not followed by a line feed fails it, because every reader here
 # would take the file for one line, though a Markdown renderer ends a line there. Each reference — a traveller
 # file's person key, a record's merge key and its target's — and each value-source line is read with a leading
-# UTF-8 byte-order mark and trailing carriage returns removed, so a file saved with either resolves and harvests
-# as its plain twin does.
+# UTF-8 byte-order mark and trailing carriage returns removed, and a front-matter marker line followed by spaces
+# or tabs is read as the marker, so a file saved with any of these resolves and harvests as its plain twin does.
+# A traveller file whose person key the reader returns no value for is read once more (fc_unreach): the key found
+# in a spelling the reader does not read, or outside front matter opening on the first line, is a reference the
+# check could not read, and the file stops rather than passing as a traveller with no reference.
 # Returns 2 when the declaration yields no `field` row, or reads in part.
 _field_class_values() { # <trip_dir>
   local trip_dir="$1" fc_rows fc_n fc_all fc_cand fc_scope fc_glob fc_f fc_any fc_pf fc_refs fc_key fc_store
-  local fc_rec fc_merge fc_tgt fc_srcs="" fc_sels fc_enc fc_bare tab
+  local fc_rec fc_merge fc_tgt fc_srcs="" fc_sels fc_enc fc_bare fc_unreach tab
   tab="$(printf '\t')"
   # The stream a reference is read from: the file with a leading UTF-8 byte-order mark and trailing carriage
-  # returns removed, handed to the unchanged _guard_frontmatter_key as its standard input.
-  fc_bare='NR == 1 { sub(/^\357\273\277/, "") } { sub(/\r+$/, ""); print }'
+  # returns removed, and a marker line that is `---` followed only by spaces or tabs read as `---`, handed to the
+  # unchanged _guard_frontmatter_key as its standard input.
+  fc_bare='NR == 1 { sub(/^\357\273\277/, "") } { sub(/\r+$/, ""); sub(/^---[ \t]+$/, "---"); print }'
+  # That stream read once more when it yields no value for a key: inside front matter opening on its first line,
+  # or in the whole stream when none does, a line holding the key K with a value, in a spelling the reader does
+  # not read — indented, quoted, or spaced before its colon, or outside such front matter — or with an empty
+  # value, in any spelling, continued on the next line that is neither blank nor a comment, indented or as a
+  # sequence entry. It prints 1 for such a line and 0 otherwise. K is matched by index(), never as a pattern; an
+  # empty key with nothing continued beneath it is no value, as YAML reads it, and a key line after the front
+  # matter is prose.
+  fc_unreach='
+    function keyed(s,  r) {
+      sub(/^[ \t]+/, "", s); sub(/^["\047]/, "", s)
+      if (index(s, K) != 1) return 0
+      r = substr(s, length(K) + 1); sub(/^["\047]/, "", r); sub(/^[ \t]+/, "", r)
+      return (substr(r, 1, 1) == ":")
+    }
+    NR == 1 && $0 == "---" { blk = 1; next }
+    blk && $0 == "---" { exit }
+    /^[ \t]*$/ || /^[ \t]*#/ { next }
+    pend { if (/^[ \t]/ || /^-[ \t]/ || $0 == "-") { hit = 1; exit }; pend = 0 }
+    keyed($0) {
+      v = substr($0, index($0, ":") + 1); sub(/^[ \t]+/, "", v); sub(/[ \t]+$/, "", v)
+      if (v == "") pend = 1
+      else if (!(blk && index($0, K ":") == 1)) { hit = 1; exit }
+    }
+    END { print hit + 0 }'
   fc_all="$(_guard_declared_rows)"
   fc_cand="$(_guard_declared_candidates)"
   if [ "${fc_cand:-0}" -ne "$(printf '%s' "$fc_all" | awk 'NF { c++ } END { print c + 0 }')" ]; then return 2; fi
@@ -4687,7 +4718,11 @@ _field_class_values() { # <trip_dir>
         if [ "$fc_enc" -eq 0 ] && [ "$(LC_ALL=C od -An -v -tx1 "$fc_pf" | LC_ALL=C awk '{ for (i = 1; i <= NF; i++) { if (p == "0d" && $i != "0a") n++; p = $i } } END { print n + (p == "0d") }')" != 0 ]; then fc_enc=1; fi
         if [ "$fc_enc" -ne 0 ]; then printf 'UNREAD\t%s\n' "$_GUARD_DECL_ARTIFACT_PROFILE"; continue; fi
         fc_refs="$(_guard_frontmatter_key - "$_GUARD_REF_KEY" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_pf")")"
-        [ -n "$fc_refs" ] || continue
+        if [ -z "$fc_refs" ]; then
+          [ "$(LC_ALL=C awk -v K="$_GUARD_REF_KEY" "$fc_unreach" <<<"$(LC_ALL=C awk "$fc_bare" "$fc_pf")")" = 0 ] \
+            || printf 'UNREAD\t%s (a person reference the check could not read from front matter opening on the first line)\n' "$_GUARD_DECL_ARTIFACT_PROFILE"
+          continue
+        fi
         if [ "$(printf '%s\n' "$fc_refs" | awk 'NF { c++ } END { print c + 0 }')" -ne 1 ]; then
           printf 'NOTE\ta person reference that is not single-valued\n'; continue
         fi
@@ -4904,7 +4939,7 @@ require_clean_build_sources() { # <trip_dir>
   fi
   bs_unread="$(awk -F'\t' '$1 == "UNREAD" && !seen[$2]++ { printf "%s%s", (n++ ? ", " : ""), $2 }' <<<"$bs_vals")"
   if [ -n "$bs_unread" ]; then
-    die "SOURCE CHECK STOPPED — the value source $bs_unread is present but cannot be read as UTF-8 text: it is not a readable regular file, or it opens with a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not followed by a line feed, so the values to check for are not known. Nothing was published. Save it as readable UTF-8 text with LF or CRLF line endings, or remove it, and re-run."
+    die "SOURCE CHECK STOPPED — the value source $bs_unread is present but cannot be read as UTF-8 text, or carries a reference the check cannot read: it is not a readable regular file; it opens with a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not followed by a line feed; or, as named beside it, it carries a person reference the check could not read from front matter opening on the first line. So the values to check for are not known. Nothing was published. Save it as readable UTF-8 text with LF or CRLF line endings and any reference in front matter opening on its first line, or remove it, and re-run."
   fi
   bs_sels="$(_guard_declared_rows | awk '$1 == "field" && !seen[$2]++ { printf "%s%s", (n++ ? " " : ""), $2 }')"
   bs_v="$(awk -F'\t' '$1 == "V" { print $2 "\t" $3 }' <<<"$bs_vals")"
