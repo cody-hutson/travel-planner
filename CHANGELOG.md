@@ -3,6 +3,40 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [Unreleased] — 2026-11-21 — An assisted interview reads the traveller who may see what they share
+
+This release changes how the two intake forms tell an interviewer to begin, and runs the
+generated interview conversations again on the forms as they now stand. No verb, agent, script,
+schema or trip changes.
+
+**An assisted interview reads the traveller the form's who-sees-what note before the first
+question.** Since 0.70.0 each intake form opens with a note on who may see what a traveller shares.
+A traveller who fills the form in alone reads it, and so does one sent the form with the interview
+card, but nothing told an interviewer to say it, so a traveller interviewed in conversation was not
+told. Each form's ask-prose now opens, under *Assistant — the sections, in order*, with a paragraph
+telling the interviewer to read that note to them in its own words before the first question; on
+the person form it stands before the paragraph that asks their name. The interview card and the
+conduct file both send the interviewer to the form's ask-prose, so the interview verb and the
+portable card carry it alike.
+
+**The six generated interview conversations are run and graded again.** The 0.70.0 note moved both
+forms off the revisions the six generated conversations were graded on, so the grade record had
+read stale since, and a pull request changing a block-owned form was held by it. All six were run
+again on the card route at this release's conduct revision, under the same carrier and the same
+cost-free and signed-in checks as the first sitting, each graded by an independent grader against
+the unchanged rubric, and written to `examples/interview-conversations/`. In all six the
+interviewer read the note before the first question. The conduct check reads the record as fresh
+again. Each new grading is the first grader draw of a new transcript, so the record's grader ledger
+names the new sessions; the draws of the first sitting stay in its draws ledger, and its grades in
+the history.
+
+**Where a sitting runs is written down for the maintainer.** `examples/interview-conversations/README.md`
+now says that the maintainer running a regrade signs one dedicated configuration folder in once and
+proves it clean before every sitting. Nobody who installs or uses the planner runs a sitting or
+takes any step for it.
+
+**Size fence:** nothing moved worth naming; no size-ceiling row changed against 0.72.0.
+
 ## [0.72.0] — 2026-11-20 — Guard readers and controls fail for the reason they name
 
 This release changes the guard suites and nothing else: no verb, agent, template or trip changes.
