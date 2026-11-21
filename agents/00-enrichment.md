@@ -1047,15 +1047,15 @@ MISSING`, and not a gap to report. Read the body exactly as you always have.
 edit `outputs/traveler-model.md` or `outputs/traveler-presence.md` — you **replace** each,
 having just read the copy you are about to overwrite. That makes you exactly the reader the write-stop names,
 at exactly the moment it binds. **When its condition holds, report it and decline
-the write.** Leave the file as you found it and say plainly that a newer model was
+the write.** Leave the file as you found it and say plainly that a newer model or presence file was
 present and was not overwritten. Do not downgrade it, do not merge into it, and do
 not treat this as a warning you may proceed past: the file lives under the operator's
 data root, so a downgrade destroys fields nothing in this repository can
 reach or restore. Declining costs one pass; not declining costs the operator data
 they cannot get back.
 
-**You upgrade only what you rewrite whole.** The model you write is rebuilt from
-its sources on every pass, so it carries the current version by construction and
+**You upgrade only what you rewrite whole.** The model and the presence file you write are rebuilt from
+their sources on every pass, so each carries the current version by construction and
 needs no migration step — and that version rides a frontmatter block you **do**
 emit: its fields and their values are § *Artifact Frontmatter — what you emit on
 the traveler model and the presence file*, below. **A block you do not own, you do not upgrade** — the
