@@ -17557,6 +17557,37 @@ l19v0_assert "L19v-v0-esc" decl-esc declared
 l19v0_assert "L19c-read-empty" read-empty readempty
 l19v0_assert "L19c-read-empty-stub" read-empty-stub readempty-stub
 
+# ── L19i-v0-ord / L19v-v0-dupkey — two traveller files with no front matter on their first line, each carrying a
+# reference a YAML reader resolves when it reads the whole file, and each reaching a record that holds a value the
+# bound file carries. A line holding a minted id stops even when it opens with `#` (L19i-v0-ord): line 1
+# `--- {x: "` opens a quoted scalar that line 2 closes, so to a YAML reader line 2 is no comment and the reference
+# resolves, and the id clause sees it only because it reads each line before the blank-and-comment skip. The tenth
+# declared residual holds for an empty key line followed by the key escaped (L19v-v0-dupkey): no line opening with
+# the key carries a value on it or on the next line that is neither blank nor a comment, indented or as a sequence
+# entry, and no line holds the id whole, so it passes, though a YAML reader takes the later key's value.
+l19v0x_trip() { # <name> <shape> -> trip dir: a traveller file of that shape, the record it reaches, and the bare value in a bound file
+  local d st="${_GUARD_PERSON_STORE:-people}" rk="${_GUARD_REF_KEY:-person}" v ek
+  v="- **${L19S1}:** Ruritania, document no. X8451037"; ek="${rk:0:1}\\x$(printf '%x' "'${rk:1:1}")${rk:2}"
+  d="$(l19_trip "$1")"
+  l19_put "$d" "$L19B1" '# Trip' '' 'Bring X8451037 to the desk.'
+  case "$2" in
+    ord)    l19_put "$d" "$st/psn-a9e7.md" '---' '---' '# Rowan' '' "$v"
+            l19_put "$d" "$L19_PROFILE" '--- {x: "' "#\", $rk: psn-a9e7}" '# Rowan' ;;
+    dupkey) l19_put "$d" "$st/psn-a9e8.md" '---' '---' '# Rowan' '' "$v"
+            l19_put "$d" "$L19_PROFILE" "$rk:" "\"$ek\": \"\\x70sn-a9e8\"" ;;
+  esac
+  printf '%s' "$d"
+}
+l19v0x_assert() { # <id> <shape> <stop|declared>
+  local id="$1" d sc="${_GUARD_DECL_ARTIFACT_PROFILE:-?}"; d="$(l19v0x_trip "l19v0x-$2" "$2")"
+  case "$3" in
+    stop)     l19_assert "$id" "a traveller file with no front matter on its first line whose line opening with # holds a minted person id ($2) stops the publish, its id read before the blank-and-comment skip, naming the traveller scope and what it found, never a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source $sc (a person reference the check could not read from front matter opening on the first line) is present" "matched exactly|label with a value|$sc is present|Ruritania|X8451037|rowan|psn-a9e7" ;;
+    declared) l19_assert "$id" "the declared residual holds: a person reference in a traveller file with no front matter on its first line, under the key escaped after an empty key line, whose id no line holds whole ($2), passes the source check, as declared at the function and in the PR, though the record it reaches holds a value the bound file carries" "$d" 0 "Source check:" "STOPPED|X8451037" ;;
+  esac
+}
+l19v0x_assert "L19i-v0-ord" ord stop
+l19v0x_assert "L19v-v0-dupkey" dupkey declared
+
 # ── ARMED-RED controls for L19: each arm under the mutation its design row names reports pass=0 fail=1.
 l19_m_noexact()  { l18_rewrite _build_source_hits 'if (exact_hit(i, nl, ld, lt))' 'if (0)'; }
 l19_m_nolabel()  { l18_rewrite _build_source_hits 'if (label_hit(lab, S[i]))' 'if (0)'; }
@@ -17704,6 +17735,8 @@ for l19c in flow1 prose key esc; do md_flips require_clean_build_sources "L19z-v
 md_flips require_clean_build_sources "L19v-v0-esc" l19v0_assert "L19v-v0-esc" decl-esc declared
 md_flips require_clean_build_sources "L19c-read-empty" l19v0_assert "L19c-read-empty" read-empty readempty
 md_flips require_clean_build_sources "L19c-read-empty-stub" l19v0_assert "L19c-read-empty-stub" read-empty-stub readempty-stub
+md_flips require_clean_build_sources "L19i-v0-ord" l19v0x_assert "L19i-v0-ord" ord stop
+md_flips require_clean_build_sources "L19v-v0-dupkey" l19v0x_assert "L19v-v0-dupkey" dupkey declared
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # I6 — list reports build-to-published: whether the page as last pushed is the newest local build, by content
