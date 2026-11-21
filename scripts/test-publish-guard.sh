@@ -16949,13 +16949,16 @@ l19y_assert "L19y-arabic" l19y-arabic "$L19VD" "Ref $(printf '\331\241\331\242\3
 # is merged into a record that is itself merged on passes with a NOTE naming a merge chain longer than one hop,
 # and the one-hop control, whose target's value a bound file carries, stops. L19z-hop2-crlf is the two-hop
 # chain with its first target saved with CRLF line endings: the target's merge key is read as its plain twin's
-# is, so the longer chain is still named.
-l19z_assert() { # <id> <1|2|2crlf>
+# is, so the longer chain is still named. L19z-hop2-indent is the two-hop chain with that target's merge key
+# indented, a spelling the reader does not read: the key is found when the target is read once more, and the
+# longer chain is still named, as its plain twin's is.
+l19z_assert() { # <id> <1|2|2crlf|2indent>
   local d st="${_GUARD_PERSON_STORE:-people}" mk="${_GUARD_MERGE_KEY:-merged-into}"; d="$(l19_trip "l19z-hop$2")"
   l19_put "$d" "$L19_PROFILE" '---' "${_GUARD_REF_KEY:-person}: psn-a9b9" '---' '# Rowan' '' '- Interests: markets'
   if [ "$2" != 1 ]; then
     l19_put "$d" "$st/psn-a9b9.md" '---' "$mk: psn-a9ba" '---' '# Rowan'
     l19_put "$d" "$st/psn-a9ba.md" '---' "$mk: psn-a9bb" '---' '# Rowan'
+    [ "$2" != 2indent ] || l19_put "$d" "$st/psn-a9ba.md" '---' "  $mk: psn-a9bb" '---' '# Rowan'
   else
     l19_put "$d" "$st/psn-a9b9.md" '---' "$mk: psn-a9bb" '---' '# Rowan'
   fi
@@ -16976,6 +16979,7 @@ l19z_assert() { # <id> <1|2|2crlf>
 }
 for l19c in 1 2; do l19z_assert "L19z-hop$l19c" "$l19c"; done
 l19z_assert "L19z-hop2-crlf" 2crlf
+l19z_assert "L19z-hop2-indent" 2indent
 
 # ── L19x / L19y, Stage 7 pass 2's look-alike shapes (S7P2-02), and the folding that closes their class: every
 # Unicode space separator read as a space, the named colon set read as a colon, every format character and
@@ -17304,9 +17308,13 @@ l19src_order_assert "L19i-src-pbranch-mode000" noprofile mode000
 # prose carries the key mid-line. A marker line followed by spaces or a tab reads as the marker: an opener
 # (L19y-src-mark-open) and a closer (L19y-src-mark-close, whose body carries a second reference that a reader
 # missing the closer would also take) resolve and stop matched exactly, as their plain twins
-# L19y-src-order-shipped and L19y-src-mark-plain do.
+# L19y-src-order-shipped and L19y-src-mark-plain do. A person record's merge key is read the same way: a record
+# whose merge key is indented (L19i-src-stub-ref-indent), or whose front matter follows a blank first line
+# (L19i-src-stub-ref-blanklead), with its target holding the value, stops as unreadable, named as the record and
+# by what was found; a record whose body carries a line starting with the merge key (L19c-ref-stub-body) passes,
+# its target unread.
 l19ref_trip() { # <name> <shape> -> trip dir: a traveller file of that shape, a record its reference names holding the value, and the bare value in a bound file
-  local d st="${_GUARD_PERSON_STORE:-people}" rk="${_GUARD_REF_KEY:-person}" tb; tb="$(printf '\t')"
+  local d st="${_GUARD_PERSON_STORE:-people}" rk="${_GUARD_REF_KEY:-person}" mk="${_GUARD_MERGE_KEY:-merged-into}" tb; tb="$(printf '\t')"
   d="$(l19_trip "$1")"
   l19_put "$d" "$st/psn-a9c1.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X1234567"
   l19_put "$d" "$L19B1" '# Trip' '' 'Bring X1234567 to the desk.'
@@ -17327,13 +17335,21 @@ l19ref_trip() { # <name> <shape> -> trip dir: a traveller file of that shape, a 
     mark-open)  l19_put "$d" "$L19_PROFILE" '---  ' "$rk: psn-a9c1" '---' '# Rowan' ;;
     mark-close) l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" "---$tb" '# Rowan' '' "$rk: psn-a9c5" ;;
     mark-plain) l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" '---' '# Rowan' '' "$rk: psn-a9c5" ;;
+    stub-*)     l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" '---' '# Rowan'
+                l19_put "$d" "$st/psn-a9c2.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X1234567"
+                case "$2" in
+                  stub-indent)    l19_put "$d" "$st/psn-a9c1.md" '---' "  $mk: psn-a9c2" '---' '# Rowan' ;;
+                  stub-blanklead) l19_put "$d" "$st/psn-a9c1.md" '' '---' "$mk: psn-a9c2" '---' '# Rowan' ;;
+                  stub-body)      l19_put "$d" "$st/psn-a9c1.md" '---' '---' '# Rowan' '' "$mk: psn-a9c2" ;;
+                esac ;;
   esac
   printf '%s' "$d"
 }
-l19ref_assert() { # <id> <shape> <stop|pass|exact>
+l19ref_assert() { # <id> <shape> <stop|stopm|pass|exact>
   local id="$1" d sc="${_GUARD_DECL_ARTIFACT_PROFILE:-?}"; d="$(l19ref_trip "l19ref-$2" "$2")"
   case "$3" in
     stop)  l19_assert "$id" "a person reference the reader cannot reach ($2) stops the publish, naming the traveller scope and what it found, never a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source $sc (a person reference the check could not read from front matter opening on the first line) is present" "matched exactly|label with a value|$sc is present|Ruritania|X1234567|rowan|psn-a9c1" ;;
+    stopm) l19_assert "$id" "a merge key the reader cannot reach ($2) stops the publish, naming the person record and what it found, never a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source person record psn-a9c1 (a merge key the check could not read from front matter opening on the first line) is present" "matched exactly|label with a value|psn-a9c1 is present|Ruritania|X1234567|rowan|psn-a9c2" ;;
     pass)  l19_assert "$id" "the control ($2) carries no person reference the reader cannot reach: it passes, and the record no reference reaches is not read" "$d" 0 "Source check:" "STOPPED" ;;
     exact) l19_assert "$id" "a marker line followed by whitespace ($2) reads as the marker: the reference resolves, and the bound file stops the publish matched exactly, as its plain twin does" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} value, matched exactly" "cannot be read|X1234567" ;;
   esac
@@ -17341,6 +17357,8 @@ l19ref_assert() { # <id> <shape> <stop|pass|exact>
 for l19c in blanklead indent tab spacecolon dquote squote list list0 gap; do l19ref_assert "L19i-src-ref-$l19c" "$l19c" stop; done
 for l19c in nokey body empty prose; do l19ref_assert "L19c-ref-$l19c" "$l19c" pass; done
 for l19c in mark-open mark-close mark-plain; do l19ref_assert "L19y-src-$l19c" "$l19c" exact; done
+for l19c in indent blanklead; do l19ref_assert "L19i-src-stub-ref-$l19c" "stub-$l19c" stopm; done
+l19ref_assert "L19c-ref-stub-body" stub-body pass
 
 # ── ARMED-RED controls for L19: each arm under the mutation its design row names reports pass=0 fail=1.
 l19_m_noexact()  { l18_rewrite _build_source_hits 'if (exact_hit(i, nl, ld, lt))' 'if (0)'; }
@@ -17425,6 +17443,7 @@ md_flips require_clean_build_sources "L19y-fw" l19y_assert "L19y-fw" l19y-fw "$L
 md_flips require_clean_build_sources "L19y-arabic" l19y_assert "L19y-arabic" l19y-arabic "$L19VD" "Ref $(printf '\331\241\331\242\331\243\331\244\331\245\331\246\331\247\331\250') on file."
 for l19c in 1 2; do md_flips require_clean_build_sources "L19z-hop$l19c" l19z_assert "L19z-hop$l19c" "$l19c"; done
 md_flips require_clean_build_sources "L19z-hop2-crlf" l19z_assert "L19z-hop2-crlf" 2crlf
+md_flips require_clean_build_sources "L19z-hop2-indent" l19z_assert "L19z-hop2-indent" 2indent
 md_flips require_clean_build_sources "L19x-nnbsp" l19x_assert "L19x-nnbsp" l19x-nnbsp "${L19S1}${L19X_NNB}: Ruritania" "a narrow no-break space before its colon"
 md_flips require_clean_build_sources "L19x-thin" l19x_assert "L19x-thin" l19x-thin "${L19S1}${L19X_THIN}: Ruritania" "a thin space before its colon"
 md_flips require_clean_build_sources "L19x-ideo" l19x_assert "L19x-ideo" l19x-ideo "${L19S1}${L19X_IDEO}${L19FC}Ruritania" "an ideographic space and a full-width colon"
@@ -17472,6 +17491,8 @@ fi
 for l19c in blanklead indent tab spacecolon dquote squote list list0 gap; do md_flips require_clean_build_sources "L19i-src-ref-$l19c" l19ref_assert "L19i-src-ref-$l19c" "$l19c" stop; done
 for l19c in nokey body empty prose; do md_flips require_clean_build_sources "L19c-ref-$l19c" l19ref_assert "L19c-ref-$l19c" "$l19c" pass; done
 for l19c in mark-open mark-close mark-plain; do md_flips require_clean_build_sources "L19y-src-$l19c" l19ref_assert "L19y-src-$l19c" "$l19c" exact; done
+for l19c in indent blanklead; do md_flips require_clean_build_sources "L19i-src-stub-ref-$l19c" l19ref_assert "L19i-src-stub-ref-$l19c" "stub-$l19c" stopm; done
+md_flips require_clean_build_sources "L19c-ref-stub-body" l19ref_assert "L19c-ref-stub-body" stub-body pass
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # I6 — list reports build-to-published: whether the page as last pushed is the newest local build, by content
