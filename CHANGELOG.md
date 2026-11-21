@@ -75,12 +75,12 @@ names what it could not read. It needs no network, writes nothing, is evaluated 
 `skills/trip/SKILL.md`. The relation is declared in `skills/trip-publish/SKILL.md` § *list* and
 registered in `reference/channel-and-engagement-model.md` § 2.
 
-**Size fence.** Read with `CH_EMIT=growth bash scripts/test-corpus-hygiene.sh` at 05f97d9 against
-0.71.0. `reference/site-layout-spec.md`'s row is re-pinned from 63,987 to 71,892: its size of 65,356
+**Size fence.** Read with `CH_EMIT=growth bash scripts/test-corpus-hygiene.sh` at db90278 against
+0.72.0. `reference/site-layout-spec.md`'s row is re-pinned from 63,987 to 71,892: its size of 65,356
 bytes at the re-pin commit 429e71f plus its class headroom, 65,356 × 1.1 rounded up. The § 3 fence and
 the § 9.1 reconciliation are declared homes this release adds, and § 3 holds nothing this release owns
-to move out; the file is 66,307 bytes at 05f97d9, beneath the new ceiling. Every other row is kept.
-Beneath their ceilings, `reference/data-architecture.md` grew by 1,581 bytes to 135,921 of 147,099,
+to move out; the file is 66,713 bytes at db90278, beneath the new ceiling. Every other row is kept.
+Beneath their ceilings, `reference/data-architecture.md` grew by 4,043 bytes to 138,383 of 147,099,
 `CLAUDE.md` by 1,028 to 144,898 of 153,381, and `skills/trip-publish/SKILL.md` by 1,855 to 45,273 of
 48,711.
 
