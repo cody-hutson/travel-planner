@@ -55,8 +55,12 @@ digits whose groups form a calendar-valid date is skipped, so a date the plan ca
 a publish; a number grouped like a date that is no calendar date is matched. It reads the traveller
 files, the traveller model and the referenced person records directly, so a stale or missing model
 neither stops a publish nor hides a value a present one holds. A bound file absent from the trip is
-skipped and named; one present but unreadable stops. A person reference merged more than one hop is
-named, and its second hop is not read. This is the first content check the encrypted limb carries;
+skipped and named; one present but unreadable stops. A traveller file or person record whose front
+matter does not open on its first line, or holds a line other than a blank line, a comment or a plain
+`key: value` line, stops, because a reference in it might not be read; so does a traveller file that
+is present but cannot be read. Open the front matter on the first line and write it as plain
+`key: value` lines, or make the file readable, and re-run. A person reference merged more than one
+hop is named, and its second hop is not read. This is the first content check the encrypted limb carries;
 release 0.70.0 named it as owed to this milestone.
 
 **`list` reports `build-to-published` in place of the stale flag.** The column compares the digest
