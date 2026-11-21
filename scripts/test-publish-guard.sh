@@ -17312,7 +17312,11 @@ l19src_order_assert "L19i-src-pbranch-mode000" noprofile mode000
 # whose merge key is indented (L19i-src-stub-ref-indent), or whose front matter follows a blank first line
 # (L19i-src-stub-ref-blanklead), with its target holding the value, stops as unreadable, named as the record and
 # by what was found; a record whose body carries a line starting with the merge key (L19c-ref-stub-body) passes,
-# its target unread.
+# its target unread. Three more controls pass, each pinning a boundary of that reading: a body line after a block
+# that closes, holding the key indented (L19c-ref-body-indent: the read ends at the closer); an empty key followed
+# by another key whose own value is continued beneath it (L19c-ref-empty-next: the continuation belongs to the
+# nearest key); and a key that only begins with the reference key's letters (L19c-ref-prefix: the colon must
+# follow the key).
 l19ref_trip() { # <name> <shape> -> trip dir: a traveller file of that shape, a record its reference names holding the value, and the bare value in a bound file
   local d st="${_GUARD_PERSON_STORE:-people}" rk="${_GUARD_REF_KEY:-person}" mk="${_GUARD_MERGE_KEY:-merged-into}" tb; tb="$(printf '\t')"
   d="$(l19_trip "$1")"
@@ -17335,6 +17339,9 @@ l19ref_trip() { # <name> <shape> -> trip dir: a traveller file of that shape, a 
     mark-open)  l19_put "$d" "$L19_PROFILE" '---  ' "$rk: psn-a9c1" '---' '# Rowan' ;;
     mark-close) l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" "---$tb" '# Rowan' '' "$rk: psn-a9c5" ;;
     mark-plain) l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" '---' '# Rowan' '' "$rk: psn-a9c5" ;;
+    body-indent) l19_put "$d" "$L19_PROFILE" '---' 'name: Rowan' '---' '# Rowan' '' "  $rk: psn-a9c1" ;;
+    empty-next) l19_put "$d" "$L19_PROFILE" '---' "$rk:" 'name:' '  - Rowan' '---' '# Rowan' ;;
+    prefix)     l19_put "$d" "$L19_PROFILE" '---' "${rk}al: psn-a9c1" '---' '# Rowan' ;;
     stub-*)     l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" '---' '# Rowan'
                 l19_put "$d" "$st/psn-a9c2.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X1234567"
                 case "$2" in
@@ -17359,6 +17366,7 @@ for l19c in nokey body empty prose; do l19ref_assert "L19c-ref-$l19c" "$l19c" pa
 for l19c in mark-open mark-close mark-plain; do l19ref_assert "L19y-src-$l19c" "$l19c" exact; done
 for l19c in indent blanklead; do l19ref_assert "L19i-src-stub-ref-$l19c" "stub-$l19c" stopm; done
 l19ref_assert "L19c-ref-stub-body" stub-body pass
+for l19c in body-indent empty-next prefix; do l19ref_assert "L19c-ref-$l19c" "$l19c" pass; done
 
 # ── ARMED-RED controls for L19: each arm under the mutation its design row names reports pass=0 fail=1.
 l19_m_noexact()  { l18_rewrite _build_source_hits 'if (exact_hit(i, nl, ld, lt))' 'if (0)'; }
@@ -17493,6 +17501,7 @@ for l19c in nokey body empty prose; do md_flips require_clean_build_sources "L19
 for l19c in mark-open mark-close mark-plain; do md_flips require_clean_build_sources "L19y-src-$l19c" l19ref_assert "L19y-src-$l19c" "$l19c" exact; done
 for l19c in indent blanklead; do md_flips require_clean_build_sources "L19i-src-stub-ref-$l19c" l19ref_assert "L19i-src-stub-ref-$l19c" "stub-$l19c" stopm; done
 md_flips require_clean_build_sources "L19c-ref-stub-body" l19ref_assert "L19c-ref-stub-body" stub-body pass
+for l19c in body-indent empty-next prefix; do md_flips require_clean_build_sources "L19c-ref-$l19c" l19ref_assert "L19c-ref-$l19c" "$l19c" pass; done
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # I6 — list reports build-to-published: whether the page as last pushed is the newest local build, by content
