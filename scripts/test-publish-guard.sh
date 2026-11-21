@@ -15472,17 +15472,22 @@ l18_enc() { # <token> <what each '-' becomes>
 L18T1_UP="$(printf '%s' "$L18T1" | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')"
 L18T1_MIX="$(printf '%s' "$L18T1" | perl -pe 's/(^|-)([a-z])/$1\u$2/g' 2>/dev/null)"
 # A section carrying the first token, encoded as a nested document or a decoder would carry it: base64 (B64),
-# every non-alphanumeric byte percent-encoded (PCT), and an SVG document holding it, in base64 (SVG). None of
-# the three carries the token as a class a start tag of the page holds.
+# every non-alphanumeric byte percent-encoded (PCT), only its brackets and quotes percent-encoded, as a
+# javascript: URL's result string carries it (JSP), and an SVG document holding it, in base64 (SVG) and
+# percent-encoded (SVGP). None of them carries the token as a class a start tag of the page holds.
 L18_SEC7="<section class=\"$L18T1\"><h2>Picks</h2><p>x</p></section>"
 L18_B64="$(perl -MMIME::Base64 -e 'print encode_base64($ARGV[0], "")' "$L18_SEC7" 2>/dev/null)"
 L18_PCT="$(perl -e '(my $s = $ARGV[0]) =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord $1)/ge; print $s' "$L18_SEC7" 2>/dev/null)"
-L18_SVG="$(perl -MMIME::Base64 -e 'print encode_base64($ARGV[0], "")' "<svg xmlns=\"http://www.w3.org/2000/svg\"><foreignObject><section xmlns=\"http://www.w3.org/1999/xhtml\" class=\"$L18T1\">x</section></foreignObject></svg>" 2>/dev/null)"
+L18_JSP="$(perl -e '(my $s = $ARGV[0]) =~ s/([<>"])/sprintf("%%%02X", ord $1)/ge; print $s' "$L18_SEC7" 2>/dev/null)"
+L18_SVGDOC="<svg xmlns=\"http://www.w3.org/2000/svg\"><foreignObject><section xmlns=\"http://www.w3.org/1999/xhtml\" class=\"$L18T1\">x</section></foreignObject></svg>"
+L18_SVG="$(perl -MMIME::Base64 -e 'print encode_base64($ARGV[0], "")' "$L18_SVGDOC" 2>/dev/null)"
+L18_SVGP="$(perl -e '(my $s = $ARGV[0]) =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord $1)/ge; print $s' "$L18_SVGDOC" 2>/dev/null)"
 
-l18_frag() { # <fragment with @T@ @T2@ @T3@ @TU@ @TM@ @K@ @K5@ @KX@ @K0@ @B64@ @PCT@ @SVG@ @NL@> -> the fragment, tokens filled
+l18_frag() { # <fragment with @T@ @T2@ @T3@ @TU@ @TM@ @K@ @K5@ @KX@ @K0@ @B64@ @PCT@ @JSP@ @SVG@ @SVGP@ @NL@ @TAB@> -> the fragment, tokens filled
   local f="$1" nl='
-'
-  f="$(l18_sub "$f" '@B64@' "$L18_B64")"; f="$(l18_sub "$f" '@PCT@' "$L18_PCT")"; f="$(l18_sub "$f" '@SVG@' "$L18_SVG")"
+' tab='	'
+  f="$(l18_sub "$f" '@B64@' "$L18_B64")"; f="$(l18_sub "$f" '@PCT@' "$L18_PCT")"; f="$(l18_sub "$f" '@JSP@' "$L18_JSP")"
+  f="$(l18_sub "$f" '@SVGP@' "$L18_SVGP")"; f="$(l18_sub "$f" '@SVG@' "$L18_SVG")"; f="$(l18_sub "$f" '@TAB@' "$tab")"
   f="$(l18_sub "$f" '@T2@' "$L18T2")"; f="$(l18_sub "$f" '@T3@' "$L18T3")"
   f="$(l18_sub "$f" '@TU@' "$L18T1_UP")"; f="$(l18_sub "$f" '@TM@' "$L18T1_MIX")"
   f="$(l18_sub "$f" '@K5@' "$(l18_enc "$L18T1" '&#45')")"
@@ -15573,8 +15578,10 @@ l18_scan_assert() { # <id> <refuse|pass|R-run>
     PASS "$id: the detector finds the listed class this fixture's start tag carries ('$got', rc=0)"
   elif [ "$want" = pass ]; then
     PASS "$id: no start tag carries a listed class here, and the detector reads it clean (rc=0, nothing found)"
+  elif [ "$want" = R-b ]; then
+    PASS "$id: the declared residual R-b holds — an image whose content shows group material, an SVG data: image included, is not read, because the refusal reads markup, not images (rc=0, nothing found); a change that closes it turns this arm red, so the declaration is updated rather than left stale"
   else
-    PASS "$id: the declared residual $want holds — a section a script builds at run time is not seen (rc=0, nothing found); a change that closes it turns this arm red, so the declaration is updated rather than left stale"
+    PASS "$id: the declared residual $want holds — a section a script builds at run time is not seen, a javascript: URL outside a frame, object or embed included, which runs on a reader's action (rc=0, nothing found); a change that closes it turns this arm red, so the declaration is updated rather than left stale"
   fi
 }
 while IFS="	" read -r l18id l18want l18frag; do
@@ -15830,14 +15837,22 @@ l18m_budget_assert() { # <id> <file>
 }
 l18m_budget_assert "L18m-budget" "$L18W/cap-budget.html"
 
-# ── L18f / L18g / L18c, Stage 7's shapes (S7-01, S7-08). A nested document — a srcdoc attribute on any start
-# tag, or a data: URL as the src or data of an iframe, frame, object or embed, read after entity decoding,
-# tab and newline removal and leading whitespace — and a render opening with a UTF-16 or UTF-32 byte-order mark
-# read UNDETERMINED, each by a status of the scan's own that the detector's warn line names (5 and 6), so an
-# unreadable fence or a budget hit (rc 2 alike) cannot pass for one. An octal escape in a script string is
-# decoded by the second reading. Run-time decoding is the declared residual. An image's or a link's data: URL
-# is not a nested document, and a page with neither passes.
+# ── L18f / L18g / L18c, Stage 7's shapes (S7-01, S7-08) and the scheme rule that closes their class. A nested
+# document — a srcdoc attribute on any start tag; or a src or data on an iframe, frame, object or embed, or a
+# meta refresh URL, that carries a scheme other than http or https, read as a browser's URL parser reads it
+# (character references decoded, tab and newline removed, leading space and controls dropped, the scheme
+# compared case-insensitively) — and a render opening with a UTF-16 or UTF-32 byte-order mark read
+# UNDETERMINED, each by a status of the scan's own that the detector's warn line names (5 and 6), so an
+# unreadable fence or a budget hit (rc 2 alike) cannot pass for one. A meta refresh URL is what follows the
+# delay in the content, behind an optional url= and an optional quote. A value with no scheme, relative or
+# protocol-relative, names another document and passes, and so does an http or https one. An octal escape in a
+# script string is decoded by the second reading. An image's or a link's data: URL is not a nested document,
+# and a page with neither passes. The memo arms place a bogus candidate ahead of the tag, walking its tail first.
 # nested — the detector reads the render undetermined, by the scan's status 5.
+# R-run  — declared: a section a script builds at run time, a javascript: URL outside a frame, object or embed
+#          included (a link or a form action), which runs on a reader's action.
+# R-b    — declared: an image whose content shows group material, an SVG data: image included; the refusal
+#          reads markup, not images.
 L18_FIX7="$L18W/fixtures-s7.tsv"
 cat > "$L18_FIX7" <<'L18FIX7'
 L18f-srcdoc	nested	<iframe srcdoc="&lt;section class=&quot;@T@&quot;&gt;&lt;h2&gt;Picks&lt;/h2&gt;&lt;/section&gt;"></iframe>
@@ -15860,6 +15875,34 @@ L18g-fcc	R-run	<script>root.innerHTML = String.fromCharCode(60,115,101,99,116,10
 L18c-img-data	pass	<img src="data:image/png;base64,iVBORw0KGgo=" alt="dot"><p>A picture.</p>
 L18c-a-data	pass	<a href="data:text/html;base64,@B64@">open</a>
 L18c-iframe-url	pass	<iframe src="https://example.com/map"></iframe>
+L18f-js-iframe	nested	<iframe src="javascript:'@JSP@'"></iframe>
+L18f-js-frame	nested	<frame src="javascript:'@JSP@'">
+L18f-js-object	nested	<object data="javascript:'@JSP@'"></object>
+L18f-js-embed	nested	<embed src="javascript:'@JSP@'">
+L18f-js-case	nested	<iframe src=" JaVaScRiPt:'@JSP@'"></iframe>
+L18f-js-tab	nested	<iframe src="java@TAB@script:'@JSP@'"></iframe>
+L18f-js-colon	nested	<iframe src="javascript&colon;'@JSP@'"></iframe>
+L18f-vbscript	nested	<iframe src='vbscript:document.write("@JSP@")'></iframe>
+L18f-blob	nested	<iframe src="blob:https://example.org/3f2b8c1e-7d4a-4e6b-9c5f-1a2b3c4d5e6f"></iframe>
+L18f-meta-data	nested	<meta http-equiv="refresh" content="0;url=data:text/html;base64,@B64@">
+L18f-meta-js	nested	<meta http-equiv="refresh" content="0;url=javascript:'@JSP@'">
+L18f-meta-case	nested	<META HTTP-EQUIV="Refresh" CONTENT="0;URL=data:text/html;base64,@B64@">
+L18f-meta-quoted	nested	<meta http-equiv=refresh content="0; url='data:text/html;base64,@B64@'">
+L18f-meta-space	nested	<meta http-equiv="refresh" content="0 ; url = javascript:'@JSP@'">
+L18f-meta-nourl	nested	<meta http-equiv="refresh" content="0;data:text/html;base64,@B64@">
+L18f-meta-memo	nested	<script>var s = '<b c="';</script><meta a="1" b="2" http-equiv="refresh" content="0;url=data:text/html;base64,@B64@">
+L18c-iframe-http	pass	<iframe src="http://example.org/map"></iframe>
+L18c-iframe-https-case	pass	<iframe src=" HTTPS://example.org/map"></iframe>
+L18c-iframe-rel	pass	<iframe src="map.html"></iframe>
+L18c-iframe-proto	pass	<iframe src="//example.org/x"></iframe>
+L18c-object-rel	pass	<object data="map.html"></object>
+L18c-meta-https	pass	<meta http-equiv="refresh" content="0;url=https://example.org/">
+L18c-clean	pass	<p>A clean page, no nested document and no listed class.</p>
+L18g-js-a	R-run	<a href="javascript:'@JSP@'">open</a>
+L18g-js-form	R-run	<form action="javascript:'@JSP@'"><button>go</button></form>
+L18g-svg-img	R-b	<img src="data:image/svg+xml;base64,@SVG@" alt="map">
+L18g-svg-css	R-b	<div style="background:url(data:image/svg+xml,@SVGP@)"></div>
+L18g-svg-use	R-b	<svg><use href="data:image/svg+xml;base64,@SVG@#x"></use></svg>
 L18FIX7
 while IFS="	" read -r l18id l18want l18frag; do
   [ -n "$l18id" ] || continue
@@ -15937,7 +15980,9 @@ l18n_assert() { # <id> <fragment> <undet|found> [<byte-order mark>]
     PASS "$id: publish --plaintext of this render exits 3 and says why ($how), with no repository call and nothing created or committed"
   fi
 }
-L18N_CASES='srcdoc srcdoc-empty data-iframe data-pct data-object data-embed data-frame data-svg'
+L18N_CASES='srcdoc srcdoc-empty data-iframe data-pct data-object data-embed data-frame data-svg
+  js-iframe js-frame js-object js-embed js-case js-tab js-colon vbscript blob
+  meta-data meta-js meta-case meta-quoted meta-space meta-nourl'
 l18n_frag() { # <L18_FIX7 id> -> its fragment
   awk -F'\t' -v k="$1" '$1 == k { print $3 }' "$L18_FIX7"
 }
@@ -15946,6 +15991,10 @@ for l18c in octal octal-3; do l18n_assert "L18n-$l18c" "$(l18n_frag "L18f-$l18c"
 for l18c in 16le 16be 32le 32be; do l18n_assert "L18n-bom-$l18c" "$L18_SECTION" undet "$l18c"; done
 # The over-refusal control, end to end: an image's and a link's data: URL pass the refusal and reach the guard.
 l18b_assert "L18c-e2e-data" '<img src="data:image/png;base64,iVBORw0KGgo=" alt="dot"><a href="data:text/html;base64,@B64@">open</a>' nomodel "GUARD ABORTED publish"
+# The scheme rule's over-refusal control, end to end: a frame or object naming an http, https, relative or
+# protocol-relative document, and a meta refresh to https, pass the refusal and reach the guard.
+L18_SCHEME_OK='<iframe src="https://example.org/map"></iframe><iframe src="map.html"></iframe><iframe src="//example.org/x"></iframe><object data="map.html"></object><meta http-equiv="refresh" content="0;url=https://example.org/">'
+l18b_assert "L18c-e2e-scheme" "$L18_SCHEME_OK" nomodel "GUARD ABORTED publish"
 
 # ── L18i — one home: no function this card adds, the scan program and cmd_publish carry a fence token. The
 # control plants one in a copy of the bodies and the count must see it, so the zero is a measurement.
@@ -16108,6 +16157,7 @@ for l18c in $L18N_CASES; do md_flips refuse_group_only_render "L18n-$l18c" l18n_
 for l18c in octal octal-3; do md_flips refuse_group_only_render "L18n-$l18c" l18n_assert "L18n-$l18c" "$(l18n_frag "L18f-$l18c")" found; done
 for l18c in 16le 16be 32le 32be; do md_flips refuse_group_only_render "L18n-bom-$l18c" l18n_assert "L18n-bom-$l18c" "$L18_SECTION" undet "$l18c"; done
 md_flips group_only_sections "L18c-e2e-data" l18b_assert "L18c-e2e-data" '<img src="data:image/png;base64,iVBORw0KGgo=" alt="dot"><a href="data:text/html;base64,@B64@">open</a>' nomodel "GUARD ABORTED publish"
+md_flips group_only_sections "L18c-e2e-scheme" l18b_assert "L18c-e2e-scheme" "$L18_SCHEME_OK" nomodel "GUARD ABORTED publish"
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # L19 — every publish, update and rotate checks what the build reads (#2156; ADR-030 § 6 safeguard 6).
