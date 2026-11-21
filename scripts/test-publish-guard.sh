@@ -17101,9 +17101,14 @@ l19enc_assert "L19i-mark16le" mark16le
 # twin, shows that declaration reaches the record). A traveller file, or a person record whose merge key reaches
 # its target, saved with a UTF-8 byte-order mark (bom8) or with CRLF line endings (crlf) resolves its reference
 # as its plain twin does and stops matched exactly: L19y-src-order-* against L19y-src-order-shipped, and
-# L19y-src-stub-* against L19y-src-merge.
-l19src_trip() { # <name> <profile|person|merge|stub|model|nul|order|latin> <encoding, as l19src_assert takes it> -> trip dir
+# L19y-src-stub-* against L19y-src-merge. A value-source line is read the same way: L19y-src-comp-crlf, a
+# traveller file saved with CRLF endings whose value only the distinctive-component rule reaches (the word rule
+# drops a trailing carriage return, the component rule does not), and L19y-src-line1-bom8, a traveller file whose
+# first line is the label line behind a UTF-8 mark, each stop matched exactly, as their UTF-8 twins
+# L19y-src-comp and L19y-src-line1 do.
+l19src_trip() { # <name> <profile|person|merge|stub|model|nul|order|latin|comp|line1> <encoding, as l19src_assert takes it> -> trip dir
   local d f st="${_GUARD_PERSON_STORE:-people}" rk="${_GUARD_REF_KEY:-person}" mk="${_GUARD_MERGE_KEY:-merged-into}"
+  local bl='Bring X1234567 to the desk.'
   d="$(l19_trip "$1")"; f="$d/$L19_PROFILE"
   case "$2" in
     profile) l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X1234567" ;;
@@ -17126,8 +17131,11 @@ l19src_trip() { # <name> <profile|person|merge|stub|model|nul|order|latin> <enco
     order)   l19_put "$d" "$L19_PROFILE" '---' "$rk: psn-a9c1" '---' '# Rowan' '' '- Interests: markets'
              l19_put "$d" "$st/psn-a9c1.md" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X1234567" ;;
     latin)   l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritani$(printf '\303\251') Gro$(printf '\303\237')mark, document no. X1234567" ;;
+    comp)    l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, valid through May 2032"
+             bl='Remember: valid through May 2032 is the date to watch.' ;;
+    line1)   l19_put "$d" "$L19_PROFILE" "- **${L19S1}:** Ruritania, document no. X1234567" '' '# Rowan' ;;
   esac
-  l19_put "$d" "$L19B1" '# Trip' '' 'Bring X1234567 to the desk.'
+  l19_put "$d" "$L19B1" '# Trip' '' "$bl"
   case "$3" in
     utf8) ;;
     nul) [ "$2" = nul ] || printf 'A quiet week\000 by the sea.\n' >> "$f" ;;
@@ -17140,7 +17148,8 @@ l19src_trip() { # <name> <profile|person|merge|stub|model|nul|order|latin> <enco
   printf '%s' "$d"
 }
 l19src_assert() { # <id> <kind> <16le|16be|32le|32be|mark16le|mark16be|nul|utf8|bom8|crlf> [the declaration order, for the order kind]
-  local id="$1" k="$2" e="$3" o="${4:-}" d sc mk ef why="" st="${_GUARD_PERSON_STORE:-people}"
+  local id="$1" k="$2" e="$3" o="${4:-}" d sc mk ef why="" st="${_GUARD_PERSON_STORE:-people}" nv=X1234567
+  [ "$k" != comp ] || nv='May 2032'
   d="$(l19src_trip "l19src-$k-$e${o:+-$o}" "$k" "$e")"
   case "$k" in
     person|stub) ef="$d/$st/psn-a9c1.md" ;;
@@ -17177,9 +17186,9 @@ l19src_assert() { # <id> <kind> <16le|16be|32le|32be|mark16le|mark16be|nul|utf8|
     *)      sc="${_GUARD_DECL_ARTIFACT_PROFILE:-?}" ;;
   esac
   if [ "$e" = utf8 ]; then
-    l19_assert "$id" "the same value source ($k${o:+, $o declaration}) in UTF-8 harvests, and the bound file stops the publish matched exactly, never as unreadable" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} value, matched exactly" "cannot be read|X1234567"
+    l19_assert "$id" "the same value source ($k${o:+, $o declaration}) in UTF-8 harvests, and the bound file stops the publish matched exactly, never as unreadable" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} value, matched exactly" "cannot be read|$nv"
   elif [ "$e" = bom8 ] || [ "$e" = crlf ]; then
-    l19_assert "$id" "a value source saved with a UTF-8 byte-order mark or CRLF line endings ($k, $e${o:+, $o declaration}) resolves its reference as its UTF-8 twin does, and the bound file stops the publish matched exactly, never passing and never as unreadable" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} value, matched exactly" "cannot be read|X1234567"
+    l19_assert "$id" "a value source saved with a UTF-8 byte-order mark or CRLF line endings ($k, $e${o:+, $o declaration}) is read as its UTF-8 twin is, and the bound file stops the publish matched exactly, never passing and never as unreadable" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 line 3|${L19S1} value, matched exactly" "cannot be read|$nv"
   else
     l19_assert "$id" "a value source that cannot be read as UTF-8 text ($k, $e${o:+, $o declaration}) stops the publish as present but unreadable, named as ${sc}, never by a file name or a value" "$d" 1 "SOURCE CHECK STOPPED|the value source ${sc} is present but cannot be read as UTF-8 text" "matched exactly|label with a value|Ruritania|X1234567|rowan|psn-a9c1.md|psn-a9c2.md"
   fi
@@ -17225,6 +17234,9 @@ for l19c in person merge model; do for l19e in mark16le nul; do l19src_assert "L
 for l19c in 16le nul mark16le; do l19src_order_assert "L19i-src-pbranch-$l19c" noprofile "$l19c"; done
 l19src_order_assert "L19y-src-pbranch" noprofile utf8
 for l19c in bom8 crlf; do for l19e in order stub; do l19src_assert "L19y-src-$l19e-$l19c" "$l19e" "$l19c"; done; done
+for l19c in comp line1; do l19src_assert "L19y-src-$l19c" "$l19c" utf8; done
+l19src_assert "L19y-src-comp-crlf" comp crlf
+l19src_assert "L19y-src-line1-bom8" line1 bom8
 
 # ── ARMED-RED controls for L19: each arm under the mutation its design row names reports pass=0 fail=1.
 l19_m_noexact()  { l18_rewrite _build_source_hits 'if (exact_hit(i, nl, ld, lt))' 'if (0)'; }
@@ -17339,6 +17351,9 @@ for l19c in person merge model; do for l19e in mark16le nul; do md_flips require
 for l19c in 16le nul mark16le; do md_flips require_clean_build_sources "L19i-src-pbranch-$l19c" l19src_order_assert "L19i-src-pbranch-$l19c" noprofile "$l19c"; done
 md_flips require_clean_build_sources "L19y-src-pbranch" l19src_order_assert "L19y-src-pbranch" noprofile utf8
 for l19c in bom8 crlf; do for l19e in order stub; do md_flips require_clean_build_sources "L19y-src-$l19e-$l19c" l19src_assert "L19y-src-$l19e-$l19c" "$l19e" "$l19c"; done; done
+for l19c in comp line1; do md_flips require_clean_build_sources "L19y-src-$l19c" l19src_assert "L19y-src-$l19c" "$l19c" utf8; done
+md_flips require_clean_build_sources "L19y-src-comp-crlf" l19src_assert "L19y-src-comp-crlf" comp crlf
+md_flips require_clean_build_sources "L19y-src-line1-bom8" l19src_assert "L19y-src-line1-bom8" line1 bom8
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # I6 — list reports build-to-published: whether the page as last pushed is the newest local build, by content
