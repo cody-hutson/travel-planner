@@ -15559,7 +15559,7 @@ done < "$L18_FIX"
 # The detector's verdict on one fixture, read directly: rc 0 and the expected tokens, or the residual named.
 # An absent detector is rc 127 and a FAIL, and so is an undetermined read, so no row passes on a probe that
 # did not run.
-l18_scan_assert() { # <id> <refuse|pass|R-run|R-b>
+l18_scan_assert() { # <id> <refuse|pass|R-run|R-b|R-url>
   local id="$1" want="$2" got rc
   got="$(group_only_sections "$L18W/$id.html" 2>/dev/null)"; rc=$?
   if [ -z "$L18T1" ]; then
@@ -15580,8 +15580,10 @@ l18_scan_assert() { # <id> <refuse|pass|R-run|R-b>
     PASS "$id: no start tag carries a listed class here, and the detector reads it clean (rc=0, nothing found)"
   elif [ "$want" = R-b ]; then
     PASS "$id: the declared residual R-b holds — an image whose content shows group material, an SVG data: image included, is not read, because the refusal reads markup, not images (rc=0, nothing found); a change that closes it turns this arm red, so the declaration is updated rather than left stale"
+  elif [ "$want" = R-url ]; then
+    PASS "$id: the declared residual R-url holds — a URL outside the coverage's attributes and elements is not read (rc=0, nothing found); this arm pins the coverage's boundary, so a change that moves it turns this arm red and the declaration is updated rather than left stale"
   else
-    PASS "$id: the declared residual $want holds — a section a script builds at run time is not seen, a javascript: URL outside a frame, object or embed included, which runs on a reader's action (rc=0, nothing found); a change that closes it turns this arm red, so the declaration is updated rather than left stale"
+    PASS "$id: the declared residual $want holds — a script building markup at run time is not seen (rc=0, nothing found); a change that closes it turns this arm red, so the declaration is updated rather than left stale"
   fi
 }
 while IFS="	" read -r l18id l18want l18frag; do
@@ -15837,22 +15839,24 @@ l18m_budget_assert() { # <id> <file>
 }
 l18m_budget_assert "L18m-budget" "$L18W/cap-budget.html"
 
-# ── L18f / L18g / L18c, Stage 7's shapes (S7-01, S7-08) and the scheme rule that closes their class. A nested
-# document — a srcdoc attribute on any start tag; or a src or data on an iframe, frame, object or embed, or a
-# meta refresh URL, that carries a scheme other than http or https, read as a browser's URL parser reads it
-# (character references decoded, tab and newline removed, leading space and controls dropped, the scheme
-# compared case-insensitively) — and a render opening with a UTF-16 or UTF-32 byte-order mark read
-# UNDETERMINED, each by a status of the scan's own that the detector's warn line names (5 and 6), so an
-# unreadable fence or a budget hit (rc 2 alike) cannot pass for one. A meta refresh URL is what follows the
-# delay in the content, behind an optional url= and an optional quote. A value with no scheme, relative or
-# protocol-relative, names another document and passes, and so does an http or https one. An octal escape in a
-# script string is decoded by the second reading. An image's or a link's data: URL is not a nested document,
-# and a page with neither passes. The memo arms place a bogus candidate ahead of the tag, walking its tail first.
+# ── L18f / L18g / L18c, Stage 7's shapes (S7-01, S7-08, S7P2-01, S7P2-04) and the scheme rules that close their
+# class. A nested document — a srcdoc attribute on any start tag; a src or data on an iframe, frame, object or
+# embed, or a meta refresh URL, whose scheme is not http or https; or an href, xlink:href, action or formaction on
+# an a, area, form, button or input whose scheme is not http, https, mailto or tel — each URL read as a browser's
+# URL parser reads it (character references decoded, tab, line feed and carriage return removed, leading space and
+# C0 controls dropped, the scheme compared case-insensitively), and a render opening with a UTF-16 or UTF-32
+# byte-order mark, read UNDETERMINED, each by a status of the scan's own that the detector's warn line names (5 and
+# 6), so an unreadable fence or a budget hit (rc 2 alike) cannot pass for one. A meta refresh URL is what follows
+# the delay (digits and dots) and one `;` or `,`, behind an optional url= and an optional quote. A value with no
+# scheme — relative, fragment or protocol-relative — names another document and passes, and so does an allowed
+# scheme. A link, area, form or button opening a data: or javascript: document is refused whatever frame it
+# targets, a target, a formtarget and a <base target> included. An octal escape in a script string is decoded by
+# the second reading. The memo arms place a bogus candidate ahead of the tag, walking its tail first.
 # nested — the detector reads the render undetermined, by the scan's status 5.
-# R-run  — declared: a section a script builds at run time, a javascript: URL outside a frame, object or embed
-#          included (a link or a form action), which runs on a reader's action.
+# R-run  — declared: a script building markup at run time.
 # R-b    — declared: an image whose content shows group material, an SVG data: image included; the refusal
 #          reads markup, not images.
+# R-url  — declared, the coverage's own boundary: any other URL, such as a video's poster or a stylesheet link's href.
 L18_FIX7="$L18W/fixtures-s7.tsv"
 cat > "$L18_FIX7" <<'L18FIX7'
 L18f-srcdoc	nested	<iframe srcdoc="&lt;section class=&quot;@T@&quot;&gt;&lt;h2&gt;Picks&lt;/h2&gt;&lt;/section&gt;"></iframe>
@@ -15873,7 +15877,7 @@ L18g-atob	R-run	<script>root.innerHTML = atob("@B64@");</script>
 L18g-uri	R-run	<script>root.innerHTML = decodeURIComponent("@PCT@");</script>
 L18g-fcc	R-run	<script>root.innerHTML = String.fromCharCode(60,115,101,99,116,105,111,110,32,99,108,97,115,115,61,34) + "@T@" + "\">";</script>
 L18c-img-data	pass	<img src="data:image/png;base64,iVBORw0KGgo=" alt="dot"><p>A picture.</p>
-L18c-a-data	pass	<a href="data:text/html;base64,@B64@">open</a>
+L18f-a-data	nested	<a href="data:text/html;base64,@B64@">open</a>
 L18c-iframe-url	pass	<iframe src="https://example.com/map"></iframe>
 L18f-js-iframe	nested	<iframe src="javascript:'@JSP@'"></iframe>
 L18f-js-frame	nested	<frame src="javascript:'@JSP@'">
@@ -15898,11 +15902,38 @@ L18c-iframe-proto	pass	<iframe src="//example.org/x"></iframe>
 L18c-object-rel	pass	<object data="map.html"></object>
 L18c-meta-https	pass	<meta http-equiv="refresh" content="0;url=https://example.org/">
 L18c-clean	pass	<p>A clean page, no nested document and no listed class.</p>
-L18g-js-a	R-run	<a href="javascript:'@JSP@'">open</a>
-L18g-js-form	R-run	<form action="javascript:'@JSP@'"><button>go</button></form>
+L18f-js-a	nested	<a href="javascript:'@JSP@'">open</a>
+L18f-js-form	nested	<form action="javascript:'@JSP@'"><button>go</button></form>
 L18g-svg-img	R-b	<img src="data:image/svg+xml;base64,@SVG@" alt="map">
 L18g-svg-css	R-b	<div style="background:url(data:image/svg+xml,@SVGP@)"></div>
 L18g-svg-use	R-b	<svg><use href="data:image/svg+xml;base64,@SVG@#x"></use></svg>
+L18f-a-target	nested	<iframe name="f"></iframe><a href="data:text/html;base64,@B64@" target="f">open</a>
+L18f-form-target	nested	<iframe name="f" src="https://example.org/x"></iframe><form action="data:text/html,@PCT@" target="f"><button>go</button></form>
+L18f-base-target	nested	<iframe name="f"></iframe><base target="f"><a href="data:text/html;base64,@B64@">open</a>
+L18f-area-target	nested	<iframe name="f"></iframe><img src="map.png" usemap="#m" alt="map"><map name="m"><area shape="rect" coords="0,0,9,9" href="data:text/html;base64,@B64@" target="f" alt="open"></map>
+L18f-a-svg	nested	<iframe name="f"></iframe><a href="data:image/svg+xml;base64,@SVG@" target="f">open</a>
+L18f-button-formaction	nested	<iframe name="f"></iframe><form><button formaction="data:text/html,@PCT@" formtarget="f">go</button></form>
+L18f-input-formaction	nested	<iframe name="f"></iframe><form><input type="submit" formaction="data:text/html,@PCT@" formtarget="f" value="go"></form>
+L18f-svg-a	nested	<iframe name="f"></iframe><svg><a href="data:text/html;base64,@B64@" target="f"><text>open</text></a></svg>
+L18f-svg-xlink	nested	<iframe name="f"></iframe><svg xmlns:xlink="http://www.w3.org/1999/xlink"><a xlink:href="data:text/html;base64,@B64@" target="f"><text>open</text></a></svg>
+L18f-ref-comma	nested	<meta http-equiv="refresh" content="0&comma;url=data:text/html;base64,@B64@">
+L18f-ref-apos	nested	<meta http-equiv="refresh" content="0;url=&apos;data:text/html;base64,@B64@&apos;">
+L18f-ref-plus	nested	<iframe src="x&plus;y:z"></iframe>
+L18f-meta-comma	nested	<meta http-equiv="refresh" content="0,url=data:text/html;base64,@B64@">
+L18f-meta-decimal	nested	<meta http-equiv="refresh" content="1.5;url=data:text/html;base64,@B64@">
+L18f-js-c0	nested	<iframe src="&#1;&#31;javascript:'@JSP@'"></iframe>
+L18f-js-lf	nested	<iframe src="java&NewLine;script:'@JSP@'"></iframe>
+L18f-js-cr	nested	<iframe src="java&#13;script:'@JSP@'"></iframe>
+L18c-link-https	pass	<a href="https://www.google.com/maps/search/?api=1&amp;query=Belem+Tower" target="_blank" rel="noopener">map</a>
+L18c-link-maps	pass	<a href="{maps_url}" target="_blank" rel="noopener">map</a>
+L18c-link-frag	pass	<a href="#day-2">Day 2</a>
+L18c-link-rel	pass	<a href="day2.html">Day 2</a>
+L18c-link-proto	pass	<a href="//example.org/x">x</a><form action="/search"><button formaction="?q=1">go</button></form>
+L18c-link-mailto	pass	<a href="mailto:host@example.org">Write to the host</a>
+L18c-link-tel	pass	<a href="tel:+15550100">Call the host</a>
+L18c-link-case	pass	<a href=" HTTPS://example.org/">x</a><a href="MailTo:host@example.org">m</a><a href="TEL:+15550100">t</a>
+L18g-poster	R-url	<video poster="data:image/svg+xml;base64,@SVG@"></video>
+L18g-link-href	R-url	<link rel="stylesheet" href="data:text/css,section%7Bdisplay:block%7D">
 L18FIX7
 while IFS="	" read -r l18id l18want l18frag; do
   [ -n "$l18id" ] || continue
@@ -15954,6 +15985,58 @@ for l18c in 16le 16be 32le 32be; do l18n_scan_assert "L18f-bom-$l18c" bom; done
 l18_scan_assert "L18f-bom-utf8" refuse
 l18_scan_assert "L18c-bom-utf8" pass
 
+# ── L18f-link-grid / L18f-link-schemes / L18c-link-grid — the link rule over its whole coverage, one verdict
+# each: every pairing of href, xlink:href, action and formaction with a, area, form, button and input carrying a
+# data: URL reads undetermined by the scan's status 5; on an a, every scheme listed below outside http, https,
+# mailto and tel does too; and every pairing carrying one of those four schemes, in any case, or no scheme at all
+# (fragment, relative, protocol-relative, empty, valueless) passes.
+L18_LATTR='href xlink:href action formaction'
+L18_LELEM='a area form button input'
+L18_LSCHEMES='javascript:x vbscript:x data:text/html,x blob:https://example.org/x file:///x about:blank ftp://example.org/x ws://example.org/x x-y.z+w:q sms:+15550100 geo:0,0'
+l18_grid_assert() { # <id> <refuse-grid|scheme-grid|pass-grid>
+  local id="$1" kind="$2" a e s n=0 bad="" got rc err f="$L18W/$1.html" frag cases
+  for a in $L18_LATTR; do
+    for e in $L18_LELEM; do
+      case "$kind" in
+        refuse-grid) cases="data:text/html,x" ;;
+        scheme-grid) [ "$a$e" = hrefa ] || continue; cases="$L18_LSCHEMES" ;;
+        *)           cases="allowed" ;;
+      esac
+      for s in $cases; do
+        case "$kind" in
+          pass-grid) frag="<$e $a=\"https://example.org/\"><$e $a=\" HTTP://example.org/\"><$e $a=\"MAILTO:a@example.org\"><$e $a=\"tel:+15550100\"><$e $a=\"#x\"><$e $a=\"x.html\"><$e $a=\"//example.org/x\"><$e $a=\"\"><$e $a>" ;;
+          *)         frag="<$e $a=\"$s\">open</$e>" ;;
+        esac
+        l18_page "$f" "$frag"; n=$((n+1))
+        got="$(group_only_sections "$f" 2>"$L18ERR")"; rc=$?; err="$(cat "$L18ERR")"
+        case "$kind" in
+          pass-grid) [ "$rc" -eq 0 ] && [ -z "$got" ] || bad="${bad}[$e $a rc=$rc '$got'] " ;;
+          *) case "$rc:$err" in 2:*"(status 5)"*) ;; *) bad="${bad}[$e $a=${s%%:*}: rc=$rc] " ;; esac ;;
+        esac
+      done
+    done
+  done
+  if [ -z "$L18T1" ]; then
+    FAIL "$id: the group-only fence read no token. VERDICT WITHHELD"
+  elif [ "$n" -eq 0 ]; then
+    FAIL "$id: the grid generated no case, so its verdict would be about nothing"
+  elif [ -n "$bad" ]; then
+    case "$kind" in
+      pass-grid) FAIL "$id: of $n renders carrying only allowed schemes or none, these did not read clean (over-refusal): ${bad% }" ;;
+      *)         FAIL "$id: of $n renders carrying a link the coverage refuses, these did not read undetermined by status 5 — the plaintext limb would publish them: ${bad% }" ;;
+    esac
+  else
+    case "$kind" in
+      refuse-grid) PASS "$id: every pairing of $L18_LATTR with $L18_LELEM carrying a data: URL ($n of $n) reads undetermined by the scan's status 5" ;;
+      scheme-grid) PASS "$id: an a href carrying each scheme outside http, https, mailto and tel ($n of $n: $L18_LSCHEMES) reads undetermined by the scan's status 5" ;;
+      pass-grid)   PASS "$id: every pairing of $L18_LATTR with $L18_LELEM ($n renders) carrying http, https, mailto or tel in any case, or no scheme at all, reads clean" ;;
+    esac
+  fi
+}
+l18_grid_assert "L18f-link-grid" refuse-grid
+l18_grid_assert "L18f-link-schemes" scheme-grid
+l18_grid_assert "L18c-link-grid" pass-grid
+
 # ── L18n — end to end: each nested document, each octal escape and each byte-order mark, in a render on a trip
 # whose content guard would pass (a fresh clean model, ALLOW_PLAINTEXT=1), exits 3 from publish --plaintext,
 # saying why, with no repository call in the gh log and nothing created or committed. Without the refusal these
@@ -15982,15 +16065,21 @@ l18n_assert() { # <id> <fragment> <undet|found> [<byte-order mark>]
 }
 L18N_CASES='srcdoc srcdoc-empty data-iframe data-pct data-object data-embed data-frame data-svg
   js-iframe js-frame js-object js-embed js-case js-tab js-colon vbscript blob
-  meta-data meta-js meta-case meta-quoted meta-space meta-nourl'
+  meta-data meta-js meta-case meta-quoted meta-space meta-nourl
+  a-data js-a js-form a-target form-target base-target area-target a-svg button-formaction input-formaction svg-a svg-xlink
+  ref-comma ref-apos ref-plus meta-comma meta-decimal js-c0 js-lf js-cr'
 l18n_frag() { # <L18_FIX7 id> -> its fragment
   awk -F'\t' -v k="$1" '$1 == k { print $3 }' "$L18_FIX7"
 }
 for l18c in $L18N_CASES; do l18n_assert "L18n-$l18c" "$(l18n_frag "L18f-$l18c")" undet; done
 for l18c in octal octal-3; do l18n_assert "L18n-$l18c" "$(l18n_frag "L18f-$l18c")" found; done
 for l18c in 16le 16be 32le 32be; do l18n_assert "L18n-bom-$l18c" "$L18_SECTION" undet "$l18c"; done
-# The over-refusal control, end to end: an image's and a link's data: URL pass the refusal and reach the guard.
-l18b_assert "L18c-e2e-data" '<img src="data:image/png;base64,iVBORw0KGgo=" alt="dot"><a href="data:text/html;base64,@B64@">open</a>' nomodel "GUARD ABORTED publish"
+# The over-refusal controls, end to end: an image's data: URL, and links carrying http, https, mailto or tel or no
+# scheme at all, pass the refusal and reach the guard.
+L18_IMG_OK='<img src="data:image/png;base64,iVBORw0KGgo=" alt="dot">'
+L18_LINKS_OK='<a href="https://example.org/x" target="_blank" rel="noopener">x</a><a href="{maps_url}" target="_blank">map</a><a href="#day-2">d</a><a href="day2.html">d</a><a href="//example.org/x">p</a><a href="mailto:host@example.org">m</a><a href="tel:+15550100">t</a><form action="/search"><button formaction="?q=1">go</button></form>'
+l18b_assert "L18c-e2e-img" "$L18_IMG_OK" nomodel "GUARD ABORTED publish"
+l18b_assert "L18c-e2e-links" "$L18_LINKS_OK" nomodel "GUARD ABORTED publish"
 # The scheme rule's over-refusal control, end to end: a frame or object naming an http, https, relative or
 # protocol-relative document, and a meta refresh to https, pass the refusal and reach the guard.
 L18_SCHEME_OK='<iframe src="https://example.org/map"></iframe><iframe src="map.html"></iframe><iframe src="//example.org/x"></iframe><object data="map.html"></object><meta http-equiv="refresh" content="0;url=https://example.org/">'
@@ -16156,7 +16245,11 @@ md_flips group_only_sections "L18c-bom-utf8" l18_scan_assert "L18c-bom-utf8" pas
 for l18c in $L18N_CASES; do md_flips refuse_group_only_render "L18n-$l18c" l18n_assert "L18n-$l18c" "$(l18n_frag "L18f-$l18c")" undet; done
 for l18c in octal octal-3; do md_flips refuse_group_only_render "L18n-$l18c" l18n_assert "L18n-$l18c" "$(l18n_frag "L18f-$l18c")" found; done
 for l18c in 16le 16be 32le 32be; do md_flips refuse_group_only_render "L18n-bom-$l18c" l18n_assert "L18n-bom-$l18c" "$L18_SECTION" undet "$l18c"; done
-md_flips group_only_sections "L18c-e2e-data" l18b_assert "L18c-e2e-data" '<img src="data:image/png;base64,iVBORw0KGgo=" alt="dot"><a href="data:text/html;base64,@B64@">open</a>' nomodel "GUARD ABORTED publish"
+md_flips group_only_sections "L18c-e2e-img" l18b_assert "L18c-e2e-img" "$L18_IMG_OK" nomodel "GUARD ABORTED publish"
+md_flips group_only_sections "L18c-e2e-links" l18b_assert "L18c-e2e-links" "$L18_LINKS_OK" nomodel "GUARD ABORTED publish"
+for l18c in refuse-grid:L18f-link-grid scheme-grid:L18f-link-schemes pass-grid:L18c-link-grid; do
+  md_flips group_only_sections "${l18c#*:}" l18_grid_assert "${l18c#*:}" "${l18c%%:*}"
+done
 md_flips group_only_sections "L18c-e2e-scheme" l18b_assert "L18c-e2e-scheme" "$L18_SCHEME_OK" nomodel "GUARD ABORTED publish"
 
 # ═════════════════════════════════════════════════════════════════════════════════
