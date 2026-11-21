@@ -4598,8 +4598,9 @@ refuse_group_only_render() {
 # stops, named by its scope, never by a traveller file's name; so does a traveller file read for its person
 # reference that is not a readable regular file, that opens with such a mark or holds such a byte, whose front
 # matter opens on its first line but holds a line other than a blank line, a comment or a plain key line, or that
-# has no front matter on its first line and holds a minted person id, or a line starting with its key with a value
-# on it or beneath it (rule (b)), which is named after the scope by what was found; and so does a person record
+# has no front matter on its first line and holds a minted person id, or a line opening with its key, indented or
+# quoted, that carries a value on it or on the next line that is neither blank nor a comment, indented or as a
+# sequence entry (rule (b)), which is named after the scope by what was found; and so does a person record
 # that fails the same way, named as the record by what was found. A traveller file or record with no front matter
 # on its first line that fails neither is a version-0 file (reference/data-architecture.md § 7.2): it is read as
 # carrying no reference, and its values are harvested. Nothing it prints is a value.
@@ -4678,8 +4679,9 @@ _build_source_wellformed() {
 # line: on such lines the top-level keys are exactly the literal keys, and the reader reads every one, so no
 # reference a YAML reader resolves goes unread. A file with no front matter on its first line is a version-0 file
 # (reference/data-architecture.md § 7.2): it is read as carrying no reference, as the reader reads it, and its
-# values are harvested as any file's are, unless a line holds a minted person id, or holds the key at its start
-# with a value or with one continued beneath it (rule (b)), either of which may be a reference the reader does not
+# values are harvested as any file's are, unless a line holds a minted person id, or a line opening with the key,
+# indented or quoted, carries a value on it or on the next line that is neither blank nor a comment, indented or
+# as a sequence entry (rule (b)), either of which may be a reference the reader does not
 # read. A traveller file or person record that fails stops, named after its scope by what was found, rather than
 # passing as one with no reference; a merge target, whose key is never followed, is named as a longer chain, as
 # one carrying a key the reader reads is.
@@ -4967,7 +4969,7 @@ require_clean_build_sources() { # <trip_dir>
   fi
   bs_unread="$(awk -F'\t' '$1 == "UNREAD" && !seen[$2]++ { printf "%s%s", (n++ ? ", " : ""), $2 }' <<<"$bs_vals")"
   if [ -n "$bs_unread" ]; then
-    die "SOURCE CHECK STOPPED — the value source $bs_unread is present but cannot be read as UTF-8 text, or carries a reference the check cannot read: it is not a readable regular file; it opens with a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not followed by a line feed; or, as named beside it, its front matter opens on its first line but holds a line other than a blank line, a comment or a plain key: value line, or it has no front matter on its first line and holds a person id, or a line starting with the key it is read for with a value on it or beneath it, so a person reference or a merge key in it might not be read. So the values to check for are not known. Nothing was published. Save it as readable UTF-8 text with LF or CRLF line endings, with any person reference, merge key or person id in front matter that opens on its first line and is written as plain key: value lines, or remove it, and re-run."
+    die "SOURCE CHECK STOPPED — the value source $bs_unread is present but cannot be read as UTF-8 text, or carries a reference the check cannot read: it is not a readable regular file; it opens with a UTF-16 or UTF-32 byte-order mark, or holds a NUL byte or a carriage return not followed by a line feed; or, as named beside it, its front matter opens on its first line but holds a line other than a blank line, a comment or a plain key: value line, or it has no front matter on its first line and holds a person id, or a line opening with the key it is read for, indented or quoted, that carries a value on it or on the next line that is neither blank nor a comment, indented or as a sequence entry, so a person reference or a merge key in it might not be read. So the values to check for are not known. Nothing was published. Save it as readable UTF-8 text with LF or CRLF line endings, with any person reference, merge key or person id in front matter that opens on its first line and is written as plain key: value lines, or remove it, and re-run."
   fi
   bs_sels="$(_guard_declared_rows | awk '$1 == "field" && !seen[$2]++ { printf "%s%s", (n++ ? " " : ""), $2 }')"
   bs_v="$(awk -F'\t' '$1 == "V" { print $2 "\t" $3 }' <<<"$bs_vals")"

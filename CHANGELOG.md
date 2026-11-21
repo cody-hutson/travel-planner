@@ -58,8 +58,9 @@ neither stops a publish nor hides a value a present one holds. A bound file abse
 skipped and named; one present but unreadable stops. A traveller file or person record with no front
 matter publishes as before. One whose front matter opens on its first line but holds a line other than
 a blank line, a comment or a plain `key: value` line stops, and so does one with no front matter that
-holds a person id, or a `person:` line with a value on it or beneath it (`merged-into:` in a person
-record), because a reference in it might not be read; so does a traveller file that is present but
+holds a person id, or a `person:` line that carries a value on it, or whose next line that is not blank
+or a comment is indented or a list item (`merged-into:` in a person record), because a reference in it
+might not be read; so does a traveller file that is present but
 cannot be read. Keep any reference or person id in front matter that opens on the first line, written
 as plain `key: value` lines, or make the file readable, and re-run. A person reference merged more than one
 hop is named, and its second hop is not read. This is the first content check the encrypted limb carries;
