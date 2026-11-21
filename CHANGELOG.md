@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-11-20 — Guard readers and controls fail for the reason they name
+## [0.72.0] — 2026-11-20 — Guard readers and controls fail for the reason they name
 
 This release changes the guard suites and nothing else: no verb, agent, template or trip changes.
 Each change makes a reader or a control in them fail for the reason it names, where before it
