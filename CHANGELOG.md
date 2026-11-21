@@ -25,8 +25,12 @@ read stale since, and a pull request changing a block-owned form was held by it.
 again on the card route at this release's conduct revision, under the same carrier and the same
 cost-free and signed-in checks as the first sitting, each graded by an independent grader against
 the unchanged rubric, and written to `examples/interview-conversations/`. In all six the
-interviewer read the note before the first question. The conduct check reads the record as fresh
-again. Each new grading is the first grader draw of a new transcript, so the record's grader ledger
+interviewer read the note before the first question: word for word in four, in its own words with
+its formatting dropped in one, and in the sixth with two of its four points reworded. After the
+operator's rulings two conversations grade PASS and four FAIL: two first turns ask a name and two
+steps' questions at once, one turn offers a candidate answer for a field that lists no options,
+and one interviewer wrote `none` on needs the traveller had declined rather than stated empty.
+The conduct check reads the record as fresh again. Each new grading is the first grader draw of a new transcript, so the record's grader ledger
 names the new sessions; the draws of the first sitting stay in its draws ledger, and its grades in
 the history.
 
