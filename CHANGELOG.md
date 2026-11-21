@@ -19,14 +19,17 @@ of them as a class (`ADR-030` § 6 safeguard 2). It reads the raw page as a brow
 does: every `<` and letter starts its own candidate, so script text ahead of a section cannot hide
 it; attribute values have their character references decoded, and a second reading decodes
 JavaScript string escapes, octal ones included; comments, scripts and templates are read too, because
-a plaintext page's bytes are public whether they render or not. A nested document — a `srcdoc`
-attribute; or a `src` or `data` on an iframe, frame, object or embed, or a meta refresh URL, that
-carries a scheme other than http or https — and a page opening with a UTF-16 or UTF-32 byte-order
-mark are refused as undetermined, since the refusal does not read what they hold. The URL is read as
-a browser reads it, with its character references decoded, its tabs and newlines removed, its
-leading space dropped and its scheme compared without regard to case; a URL with no scheme names
-another document and is not refused, and a meta refresh URL is what follows the delay, with or
-without `url=`. It runs before the per-trip repository is probed, created or pushed, so
+a plaintext page's bytes are public whether they render or not. The refusal reads the page's start
+tags. It refuses a start tag carrying a listed token as a class; a srcdoc attribute; a src or data on
+an iframe, frame, object or embed, or a meta refresh URL, whose scheme is not http or https; an
+href, xlink:href, action or formaction on an a, area, form, button or input whose scheme is not
+http, https, mailto or tel; and a page it cannot read in full, one opening with a UTF-16 or UTF-32
+byte-order mark included. Anything else is not read: a script building markup at run time, an image
+(an SVG data: image included), group content rendered without its token, or any other URL. Each URL
+is read as a browser reads it, with its character references decoded, its tabs, line feeds and
+carriage returns removed, its leading space and control characters dropped and its scheme compared
+without regard to case; a URL with no scheme names another document and is not refused, and a meta
+refresh URL is what follows the delay and its `;` or `,`, with or without `url=`. It runs before the per-trip repository is probed, created or pushed, so
 `ALLOW_PLAINTEXT` reaches none of it, and again on the copy about to be pushed, so a render rebuilt
 in between is refused rather than pushed. A declaration it cannot read refuses as one that names a
 section would. The encrypted limb does not run it. Once the group-contacts card ships, that section
@@ -67,13 +70,10 @@ Beneath their ceilings, `reference/data-architecture.md` grew by 1,581 bytes to 
 `CLAUDE.md` by 1,028 to 144,898 of 153,381, and `skills/trip-publish/SKILL.md` by 1,855 to 45,273 of
 48,711.
 
-**What it does not do, stated so a green check is not read as more.** A section a script builds at
-run time — classList, className, concatenation, interpolation, or decoding such as atob,
-decodeURIComponent and String.fromCharCode — is not seen by the refusal, including a javascript:
-URL outside a frame, object or embed, such as a link or a form action, which runs on a reader's
-action; nor is group content rendered without its token, which the § 3 render contract binds; nor
-is an image, an SVG data: image included, whose content shows group material, because the refusal
-reads markup, not images. The source check does not see an
+**What it does not do, stated so a green check is not read as more.** The refusal reads nothing its
+coverage above leaves out: a script building markup at run time, an image (an SVG data: image
+included), group content rendered without its token, which the § 3 render contract binds, or any
+other URL. The source check does not see an
 ordinary-word value restated without its label, a label mid-line, in a table cell, with a word
 before its colon or with a dash in place of it, a value wrapped or paraphrased, a calendar-valid
 date carried with other words around it, a number joined by a comma or by three characters such as
