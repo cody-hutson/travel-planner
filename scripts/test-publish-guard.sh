@@ -16715,9 +16715,12 @@ l19u_assert "L19u"
 # ── L19v — the declared residuals, each asserted so a change that closes one updates its declaration rather
 # than leaving it stale: a calendar-valid date carried with other words; a trip with no bound artifact present
 # (D-NEW-3); a word between the selector and its colon; a label mid-line; a label whose colon is a dash, in
-# either spelling (S7-04); a number joined by three characters or by a comma (S7-04); and a value-source line
-# the guard's profile parse does not read as a label (a task box in a traveller file), which harvests nothing.
-l19v_assert() { # <id> <date|none|interposed|midline|emdash|dash|sep3|comma|harvest>
+# either spelling (S7-04); a number joined by three characters or by a comma (S7-04); a value-source line the
+# guard's profile parse does not read as a label (a task box in a traveller file, or a traveller file written in
+# UTF-16), which harvests nothing; a label behind a marker the strip does not name (a code span); and, as the
+# folding's own boundary, a look-alike outside it (the Hangul filler before the colon) and digits of another
+# script (Devanagari).
+l19v_assert() { # <id> <date|none|interposed|midline|emdash|dash|sep3|comma|harvest|harvest16|marker|hangul|deva>
   local d; d="$(l19_trip "l19v-$2")"
   case "$2" in
     date)       l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** United States, expires 2031-04-12"
@@ -16733,10 +16736,18 @@ l19v_assert() { # <id> <date|none|interposed|midline|emdash|dash|sep3|comma|harv
                 l19_put "$d" "$L19B1" '# Trip' '' 'Ref 1234,5678 on file.' ;;
     harvest)    l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- [ ] **${L19S1}:** Ruritania, document no. X1234567"
                 l19_put "$d" "$L19B1" '# Trip' '' 'Bring X1234567 to the desk.' ;;
+    harvest16)  l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. X1234567"
+                perl -MEncode -e 'local $/; open(my $i, "<:raw", $ARGV[0]) or die; my $s = decode("UTF-8", scalar <$i>); close $i;
+                  open(my $o, ">:raw", $ARGV[0]) or die; print $o "\xFF\xFE", encode("UTF-16LE", $s)' "$d/$L19_PROFILE"
+                l19_put "$d" "$L19B1" '# Trip' '' 'Bring X1234567 to the desk.' ;;
+    marker)     l19_put "$d" "$L19B1" '# Trip' '' "\`${L19S1}\`: Ruritania" ;;
+    hangul)     l19_put "$d" "$L19B1" '# Trip' '' "${L19S1}$(printf '\343\205\244'): Ruritania" ;;
+    deva)       l19_put "$d" "$L19_PROFILE" '---' '---' '# Rowan' '' "- **${L19S1}:** Ruritania, document no. 12345678"
+                l19_put "$d" "$L19B1" '# Trip' '' "Ref $(printf '\340\245\247\340\245\250\340\245\251\340\245\252\340\245\253\340\245\254\340\245\255\340\245\256') on file." ;;
   esac
   l19_assert "$1" "the declared residual '$2' holds: this shape passes the source check, as declared at the function and in the PR" "$d" 0 "Source check:" "STOPPED"
 }
-for l19c in date none interposed midline emdash dash sep3 comma harvest; do l19v_assert "L19v-$l19c" "$l19c"; done
+for l19c in date none interposed midline emdash dash sep3 comma harvest harvest16 marker hangul deva; do l19v_assert "L19v-$l19c" "$l19c"; done
 
 # ── L19w — the word rule skips a calendar-valid date and nothing else (Stage 7's S7-03, operator ruling C): a
 # number grouped like a date whose groups are no calendar date, carried with other words in a bound line, stops;
@@ -16824,6 +16835,93 @@ l19z_assert() { # <id> <1|2>
 }
 for l19c in 1 2; do l19z_assert "L19z-hop$l19c" "$l19c"; done
 
+# ── L19x / L19y, Stage 7 pass 2's look-alike shapes (S7P2-02), and the folding that closes their class: every
+# Unicode space separator read as a space, the named colon set read as a colon, every format character and
+# variation selector dropped, a backslash before a colon stripped. Each named shape stops, the label ones by
+# their label and the value ones exactly.
+L19X_NNB="$(printf '\342\200\257')"; L19X_THIN="$(printf '\342\200\211')"; L19X_IDEO="$(printf '\343\200\200')"
+L19X_SMC="$(printf '\357\271\225')"; L19X_RATIO="$(printf '\342\210\266')"; L19X_WJ="$(printf '\342\201\240')"
+L19X_LRM="$(printf '\342\200\216')"; L19X_VS16="$(printf '\357\270\217')"
+L19X_LRI="$(printf '\342\201\246')"; L19X_PDI="$(printf '\342\201\251')"
+l19x_assert "L19x-nnbsp" l19x-nnbsp "${L19S1}${L19X_NNB}: Ruritania" "a narrow no-break space before its colon"
+l19x_assert "L19x-thin" l19x-thin "${L19S1}${L19X_THIN}: Ruritania" "a thin space before its colon"
+l19x_assert "L19x-ideo" l19x-ideo "${L19S1}${L19X_IDEO}${L19FC}Ruritania" "an ideographic space and a full-width colon"
+l19x_assert "L19x-smallcolon" l19x-smallcolon "${L19S1}${L19X_SMC} Ruritania" "a small colon"
+l19x_assert "L19x-ratio" l19x-ratio "${L19S1}${L19X_RATIO} Ruritania" "a ratio sign for its colon"
+l19x_assert "L19x-wj" l19x-wj "${L19S1:0:4}${L19X_WJ}${L19S1:4}: Ruritania" "a word joiner inside the label"
+l19x_assert "L19x-lrm" l19x-lrm "${L19X_LRM}${L19S1}: Ruritania" "a left-to-right mark before the label"
+l19x_assert "L19x-esc" l19x-esc "${L19S1}\\: Ruritania" "a Markdown-escaped colon"
+l19y_assert "L19y-wj" l19y-wj "$L19VX" "Doc X123${L19X_WJ}4567 on the day."
+l19y_assert "L19y-lrm" l19y-lrm "$L19VX" "Doc X123${L19X_LRM}4567 on the day."
+l19y_assert "L19y-vs" l19y-vs "$L19VX" "Doc X123${L19X_VS16}4567 on the day."
+l19y_assert "L19y-isolate" l19y-isolate "$L19VX" "Doc X123${L19X_LRI}4${L19X_PDI}567 on the day."
+
+# ── L19x-*-all / L19y-*-all — the folding over its whole classes, one verdict each. The members come from perl's
+# own Unicode database, intersected with what Unicode 13.0 assigns (the version the folding names), and never from
+# the publish script: every space separator but U+0020 before the colon, each colon of the named set, and every
+# format character and variation selector inside the selector, each stops by its label; every format character
+# and variation selector inside a value stops, matched exactly. Each member is run through _build_source_hits
+# itself, with the declared selector and a synthetic value, so a member the folding misses is named.
+l19_members() { # <Zs|Cf|VS|CO> -> one line per member: the character itself, in UTF-8
+  case "$1" in
+    CO) printf '\313\220\n\326\211\n\327\203\n\342\210\266\n\352\236\211\n\357\270\223\n\357\271\225\n\357\274\232\n' ;;
+    *)  perl -CO -e 'my $k = shift; my $re = $k eq "Zs" ? qr/\p{Zs}/ : $k eq "Cf" ? qr/\p{Cf}/ : qr/\p{Variation_Selector}/;
+          for my $c (0x80 .. 0x10FFFF) { next if $c >= 0xD800 && $c <= 0xDFFF; my $s = chr $c;
+            print "$s\n" if $s =~ $re && $s =~ /\p{Present_In: 13.0}/ }' "$1" ;;
+  esac
+}
+l19_sweep_assert() { # <id> <Zs|Cf|VS|CO> <label|exact>
+  local id="$1" cls="$2" how="$3" m n=0 bad="" got rc f="$L19W/$1.md" line
+  while IFS= read -r m; do
+    [ -n "$m" ] || continue
+    n=$((n+1))
+    case "$how:$cls" in
+      label:Zs|label:CO) line="${L19S1}${m}: Ruritania" ;;
+      label:*)           line="${L19S1:0:4}${m}${L19S1:4}: Ruritania" ;;
+      *)                 line="Bring X123${m}4567 to the desk." ;;
+    esac
+    printf '# Trip\n\n%s\n' "$line" > "$f"
+    got="$(BS_SELS="$L19S1" BS_VALS="$L19S1	$L19VX" _build_source_hits "$f" 2>/dev/null)"; rc=$?
+    if [ "$rc" -eq 127 ]; then bad="_build_source_hits is NOT DEFINED (rc=127) "; break; fi
+    case "$got" in
+      "3	${L19S1}	${how}") ;;
+      *) bad="${bad}[U+$(printf '%s' "$m" | perl -CI -ne 'printf "%04X", ord') rc=$rc '$(printf '%s' "$got" | tr '\t' ' ')'] " ;;
+    esac
+  done <<L19SWEEP
+$(l19_members "$cls")
+L19SWEEP
+  if [ -z "$L19S1" ]; then
+    FAIL "$id: the field declaration read no selector. VERDICT WITHHELD"
+  elif [ "$n" -lt 1 ]; then
+    FAIL "$id: the $cls oracle listed no member, so a clean sweep would be about nothing"
+  elif [ -n "$bad" ]; then
+    FAIL "$id: of $n $cls members, these did not stop by the ${how} half as the folding states — a value of the class would reach the page: ${bad% }"
+  else
+    PASS "$id: every $cls member the oracle lists ($n of $n, Unicode 13.0), placed in a bound line, stops by the ${how} half"
+  fi
+}
+L19_SWEEPS='L19x-zs-all:Zs:label L19x-colon-all:CO:label L19x-cf-all:Cf:label L19x-vs-all:VS:label L19y-cf-all:Cf:exact L19y-vs-all:VS:exact'
+for l19c in $L19_SWEEPS; do
+  l19r_="${l19c#*:}"; l19_sweep_assert "${l19c%%:*}" "${l19r_%%:*}" "${l19r_#*:}"
+done
+
+# ── L19i-bom* / L19i-nul — a bound file the check cannot read as UTF-8 (S7P2-06): one opening with a UTF-16 or
+# UTF-32 byte-order mark, its passport line encoded behind it, or one holding a NUL byte after its passport line,
+# stops as present but unreadable, naming the file and never a value.
+l19_enc() { # <file> <16le|16be|32le|32be> — the UTF-8 file re-encoded in place behind its mark
+  perl -MEncode -e 'local $/; open(my $i, "<:raw", $ARGV[0]) or die "unreadable\n"; my $s = decode("UTF-8", scalar <$i>); close $i;
+    my %e = ("16le" => ["\xFF\xFE", "UTF-16LE"], "16be" => ["\xFE\xFF", "UTF-16BE"], "32le" => ["\xFF\xFE\x00\x00", "UTF-32LE"], "32be" => ["\x00\x00\xFE\xFF", "UTF-32BE"]);
+    my $k = $e{$ARGV[1]} or die "no such mark\n"; open(my $o, ">:raw", $ARGV[0]) or die "unwritable\n"; print $o $k->[0], encode($k->[1], $s)' "$1" "$2"
+}
+l19enc_assert() { # <id> <16le|16be|32le|32be|nul>
+  local d; d="$(l19_trip "l19enc-$2")"
+  l19_put "$d" "$L19B1" '# Trip' '' "- **${L19S1}:** Ruritania"
+  if [ "$2" = nul ]; then printf 'A quiet week\000 by the sea.\n' >> "$d/$L19B1"; else l19_enc "$d/$L19B1" "$2"; fi
+  l19_assert "$1" "a bound file that cannot be read as UTF-8 text ($2) stops the publish as present but unreadable, naming the file" "$d" 1 "SOURCE CHECK STOPPED|$L19B1 is present but cannot be read" "Ruritania"
+}
+for l19c in 16le 16be 32le 32be; do l19enc_assert "L19i-bom$l19c" "$l19c"; done
+l19enc_assert "L19i-nul" nul
+
 # ── ARMED-RED controls for L19: each arm under the mutation its design row names reports pass=0 fail=1.
 l19_m_noexact()  { l18_rewrite _build_source_hits 'if (exact_hit(i, nl, ld, lt))' 'if (0)'; }
 l19_m_nolabel()  { l18_rewrite _build_source_hits 'if (label_hit(lab, S[i]))' 'if (0)'; }
@@ -16883,7 +16981,7 @@ md_flips require_clean_build_sources "L19s-two" l19s_assert "L19s-two" two
 md_flips refuse_group_only_render "L19s-three" l19s_assert "L19s-three" three
 for l19c in email phone docno; do md_flips require_clean_build_sources "L19t-$l19c" l19t_assert "L19t-$l19c" "$l19c"; done
 md_flips require_clean_build_sources "L19u" l19u_assert "L19u"
-for l19c in date none interposed midline emdash dash sep3 comma harvest; do md_flips require_clean_build_sources "L19v-$l19c" l19v_assert "L19v-$l19c" "$l19c"; done
+for l19c in date none interposed midline emdash dash sep3 comma harvest harvest16 marker hangul deva; do md_flips require_clean_build_sources "L19v-$l19c" l19v_assert "L19v-$l19c" "$l19c"; done
 for l19c in stop-242:'07 2019 55':stop stop-422:'2031 55 12':stop stop-224:'55 12 2031':stop stop-24:'19 2031':stop \
             skip-ymd:2031-03-15:skip skip-dmy:15/03/2031:skip skip-dmy-dot:31.12.2031:skip skip-mdy:03/15/2031:skip \
             skip-ym:2031-07:skip skip-ym-1999:1999-12:skip; do
@@ -16906,6 +17004,23 @@ md_flips require_clean_build_sources "L19y-shy" l19y_assert "L19y-shy" l19y-shy 
 md_flips require_clean_build_sources "L19y-fw" l19y_assert "L19y-fw" l19y-fw "$L19VD" "Ref $(printf '\357\274\221\357\274\222\357\274\223\357\274\224\357\274\225\357\274\226\357\274\227\357\274\230') on file."
 md_flips require_clean_build_sources "L19y-arabic" l19y_assert "L19y-arabic" l19y-arabic "$L19VD" "Ref $(printf '\331\241\331\242\331\243\331\244\331\245\331\246\331\247\331\250') on file."
 for l19c in 1 2; do md_flips require_clean_build_sources "L19z-hop$l19c" l19z_assert "L19z-hop$l19c" "$l19c"; done
+md_flips require_clean_build_sources "L19x-nnbsp" l19x_assert "L19x-nnbsp" l19x-nnbsp "${L19S1}${L19X_NNB}: Ruritania" "a narrow no-break space before its colon"
+md_flips require_clean_build_sources "L19x-thin" l19x_assert "L19x-thin" l19x-thin "${L19S1}${L19X_THIN}: Ruritania" "a thin space before its colon"
+md_flips require_clean_build_sources "L19x-ideo" l19x_assert "L19x-ideo" l19x-ideo "${L19S1}${L19X_IDEO}${L19FC}Ruritania" "an ideographic space and a full-width colon"
+md_flips require_clean_build_sources "L19x-smallcolon" l19x_assert "L19x-smallcolon" l19x-smallcolon "${L19S1}${L19X_SMC} Ruritania" "a small colon"
+md_flips require_clean_build_sources "L19x-ratio" l19x_assert "L19x-ratio" l19x-ratio "${L19S1}${L19X_RATIO} Ruritania" "a ratio sign for its colon"
+md_flips require_clean_build_sources "L19x-wj" l19x_assert "L19x-wj" l19x-wj "${L19S1:0:4}${L19X_WJ}${L19S1:4}: Ruritania" "a word joiner inside the label"
+md_flips require_clean_build_sources "L19x-lrm" l19x_assert "L19x-lrm" l19x-lrm "${L19X_LRM}${L19S1}: Ruritania" "a left-to-right mark before the label"
+md_flips require_clean_build_sources "L19x-esc" l19x_assert "L19x-esc" l19x-esc "${L19S1}\\: Ruritania" "a Markdown-escaped colon"
+md_flips require_clean_build_sources "L19y-wj" l19y_assert "L19y-wj" l19y-wj "$L19VX" "Doc X123${L19X_WJ}4567 on the day."
+md_flips require_clean_build_sources "L19y-lrm" l19y_assert "L19y-lrm" l19y-lrm "$L19VX" "Doc X123${L19X_LRM}4567 on the day."
+md_flips require_clean_build_sources "L19y-vs" l19y_assert "L19y-vs" l19y-vs "$L19VX" "Doc X123${L19X_VS16}4567 on the day."
+md_flips require_clean_build_sources "L19y-isolate" l19y_assert "L19y-isolate" l19y-isolate "$L19VX" "Doc X123${L19X_LRI}4${L19X_PDI}567 on the day."
+for l19c in $L19_SWEEPS; do
+  l19r_="${l19c#*:}"; md_flips _build_source_hits "${l19c%%:*}" l19_sweep_assert "${l19c%%:*}" "${l19r_%%:*}" "${l19r_#*:}"
+done
+for l19c in 16le 16be 32le 32be; do md_flips require_clean_build_sources "L19i-bom$l19c" l19enc_assert "L19i-bom$l19c" "$l19c"; done
+md_flips require_clean_build_sources "L19i-nul" l19enc_assert "L19i-nul" nul
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # I6 — list reports build-to-published: whether the page as last pushed is the newest local build, by content
