@@ -15934,6 +15934,9 @@ L18c-link-tel	pass	<a href="tel:+15550100">Call the host</a>
 L18c-link-case	pass	<a href=" HTTPS://example.org/">x</a><a href="MailTo:host@example.org">m</a><a href="TEL:+15550100">t</a>
 L18g-poster	R-url	<video poster="data:image/svg+xml;base64,@SVG@"></video>
 L18g-link-href	R-url	<link rel="stylesheet" href="data:text/css,section%7Bdisplay:block%7D">
+L18f-link-memo	nested	<script>var s = '<b c="';</script><a a="1" b="2" href="data:text/html;base64,@B64@">open</a>
+L18f-iframe-mailto	nested	<iframe src="mailto:host@example.org"></iframe>
+L18f-meta-tel	nested	<meta http-equiv="refresh" content="0;url=tel:+15550100">
 L18FIX7
 while IFS="	" read -r l18id l18want l18frag; do
   [ -n "$l18id" ] || continue
@@ -16067,7 +16070,7 @@ L18N_CASES='srcdoc srcdoc-empty data-iframe data-pct data-object data-embed data
   js-iframe js-frame js-object js-embed js-case js-tab js-colon vbscript blob
   meta-data meta-js meta-case meta-quoted meta-space meta-nourl
   a-data js-a js-form a-target form-target base-target area-target a-svg button-formaction input-formaction svg-a svg-xlink
-  ref-comma ref-apos ref-plus meta-comma meta-decimal js-c0 js-lf js-cr'
+  ref-comma ref-apos ref-plus meta-comma meta-decimal js-c0 js-lf js-cr iframe-mailto meta-tel'
 l18n_frag() { # <L18_FIX7 id> -> its fragment
   awk -F'\t' -v k="$1" '$1 == k { print $3 }' "$L18_FIX7"
 }
@@ -16851,6 +16854,7 @@ l19x_assert "L19x-ratio" l19x-ratio "${L19S1}${L19X_RATIO} Ruritania" "a ratio s
 l19x_assert "L19x-wj" l19x-wj "${L19S1:0:4}${L19X_WJ}${L19S1:4}: Ruritania" "a word joiner inside the label"
 l19x_assert "L19x-lrm" l19x-lrm "${L19X_LRM}${L19S1}: Ruritania" "a left-to-right mark before the label"
 l19x_assert "L19x-esc" l19x-esc "${L19S1}\\: Ruritania" "a Markdown-escaped colon"
+l19x_assert "L19x-fwdigits" l19x-fwdigits "${L19S1}: $(printf '\357\274\221\357\274\222\357\274\223\357\274\224')" "a value in full-width digits alone, which the folding reads as stated"
 l19y_assert "L19y-wj" l19y-wj "$L19VX" "Doc X123${L19X_WJ}4567 on the day."
 l19y_assert "L19y-lrm" l19y-lrm "$L19VX" "Doc X123${L19X_LRM}4567 on the day."
 l19y_assert "L19y-vs" l19y-vs "$L19VX" "Doc X123${L19X_VS16}4567 on the day."
@@ -17012,6 +17016,7 @@ md_flips require_clean_build_sources "L19x-ratio" l19x_assert "L19x-ratio" l19x-
 md_flips require_clean_build_sources "L19x-wj" l19x_assert "L19x-wj" l19x-wj "${L19S1:0:4}${L19X_WJ}${L19S1:4}: Ruritania" "a word joiner inside the label"
 md_flips require_clean_build_sources "L19x-lrm" l19x_assert "L19x-lrm" l19x-lrm "${L19X_LRM}${L19S1}: Ruritania" "a left-to-right mark before the label"
 md_flips require_clean_build_sources "L19x-esc" l19x_assert "L19x-esc" l19x-esc "${L19S1}\\: Ruritania" "a Markdown-escaped colon"
+md_flips require_clean_build_sources "L19x-fwdigits" l19x_assert "L19x-fwdigits" l19x-fwdigits "${L19S1}: $(printf '\357\274\221\357\274\222\357\274\223\357\274\224')" "a value in full-width digits alone, which the folding reads as stated"
 md_flips require_clean_build_sources "L19y-wj" l19y_assert "L19y-wj" l19y-wj "$L19VX" "Doc X123${L19X_WJ}4567 on the day."
 md_flips require_clean_build_sources "L19y-lrm" l19y_assert "L19y-lrm" l19y-lrm "$L19VX" "Doc X123${L19X_LRM}4567 on the day."
 md_flips require_clean_build_sources "L19y-vs" l19y_assert "L19y-vs" l19y-vs "$L19VX" "Doc X123${L19X_VS16}4567 on the day."
