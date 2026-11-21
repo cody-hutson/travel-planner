@@ -1891,7 +1891,7 @@ MDEXITEXIT
   elif [ "$ea_xmk" != present ] || [ -n "$ea_xe" ]; then
     FAIL "MD-EXIT-ABORT: the second child, which takes a deliberate exit 0 without the sentinel, did not run cleanly to that exit — its marker line is $ea_xmk and its stderr opens [$(awk 'NR == 1' <<<"$ea_xe")] — so the exit it exists to take was not measured"
   elif [ "$ea_xrc" -eq 0 ] && [ "$ea_xab" != an ]; then
-    FAIL "MD-EXIT-ABORT: the second child took a deliberate exit 0 without the sentinel, then exited $ea_xrc and printed $ea_xab ABORT: line, where an ABORT: line and a non-zero exit are owed — the guard took no branch on the missing sentinel, as a guard keyed on the exit status rather than the sentinel does, which lets a run that never reached its end exit 0, on any shell"
+    FAIL "MD-EXIT-ABORT: the second child took a deliberate exit 0 without the sentinel, then exited $ea_xrc and printed $ea_xab ABORT: line, where an ABORT: line and a non-zero exit are owed — no ABORT: line, and the deliberate exit's status, 0, left as it was, which, among other faults, a guard keyed on the exit status rather than the sentinel produces, as does one whose sentinel branch never runs, is empty, or leaves before it acts; such a guard lets a run that never reached its end exit 0, on any shell"
   elif [ "$ea_xrc" -eq 0 ]; then
     FAIL "MD-EXIT-ABORT: the second child took a deliberate exit 0 without the sentinel, then exited $ea_xrc and printed $ea_xab ABORT: line, where an ABORT: line and a non-zero exit are owed — the guard took its branch on the missing sentinel and printed ABORT:, but exited with the status it read, $ea_xrc, instead of a non-zero one, which lets a run that stopped at status 0 before its end exit 0, on any shell"
   elif [ "$ea_xab" != an ]; then
