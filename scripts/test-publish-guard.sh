@@ -376,6 +376,33 @@ else
 fi
 
 echo "Real StatiCrypt smoke test:"
+# E5–E7: _key_opens_page against the real tool. E8: the salt is load-bearing — the real tool, run on the same page
+# with the matching key and no --salt, writes no decrypted page, and the helper's parsed body passes --salt.
+e5_assert() { # <id> <page> <key> <want> <what the key is>
+  local id="$1" got
+  got="$(_key_opens_page "$2" "$3")"
+  if [ "$got" != "$4" ]; then
+    FAIL "$id: _key_opens_page with $5 answered '$got' against the real StatiCrypt, want '$4'"
+  else
+    PASS "$id: _key_opens_page with $5 answers '$4' against the real StatiCrypt"
+  fi
+}
+e8_assert() { # <id> <page> <key>
+  local id="$1" dir nosalt=0 salt=0 b
+  dir="$(mktemp -d)"; cp "$2" "$dir/live.html"
+  ( cd "$dir" && STATICRYPT_PASSWORD="$3" npx --yes staticrypt@3.5.4 live.html --decrypt --config false -d out </dev/null ) >/dev/null 2>&1
+  [ -e "$dir/out/live.html" ] || nosalt=1
+  rm -rf "$dir"
+  b="$(declare -f _key_opens_page 2>/dev/null)"
+  case "$b" in *'--salt "$kp_salt"'*) salt=1 ;; esac
+  if [ "$nosalt" -eq 0 ]; then
+    FAIL "$id: the real StatiCrypt decrypted the page with the matching key and no --salt, so the salt trap the helper is built around is gone and this arm cannot show --salt matters"
+  elif [ "$salt" -eq 0 ]; then
+    FAIL "$id: _key_opens_page does not pass the page's salt — against the real tool a matching key would read as wrong"
+  else
+    PASS "$id: without --salt the real StatiCrypt does not decrypt the page under its own key, and _key_opens_page passes the page's salt"
+  fi
+}
 if command -v npx >/dev/null 2>&1; then
   ENC_DIR="$(encrypt_to_tmp "$SRC" "correct-horse-battery-staple-1" 2>/dev/null)"
   if [ -n "${ENC_DIR:-}" ] && [ -f "$ENC_DIR/index.html" ]; then
@@ -384,6 +411,15 @@ if command -v npx >/dev/null 2>&1; then
     grep -qiE 'password|passphrase' "$real" && PASS "E2: real output shows a passphrase prompt" || FAIL "E2: no passphrase prompt"
     if grep -qF "Shibuya" "$real" || grep -qF "TANAKA12345" "$real"; then FAIL "E3: PLAINTEXT TOKEN found in real ciphertext"; else PASS "E3: zero plaintext itinerary tokens in real ciphertext"; fi
     if verify_ciphertext "$real" "$SRC"; then PASS "E4: guard passes real StatiCrypt output"; else FAIL "E4: guard rejected real StatiCrypt output"; fi
+    # E5–E8 — the live-page decrypt (#1820), against the real tool and the real ciphertext above.
+    e5_assert "E5" "$real" "correct-horse-battery-staple-1" opens "the key the page was encrypted under"
+    e5_assert "E6" "$real" "rv-e6-other-synthetic-key-69" does-not-open "another key"
+    e5_assert "E7" "$SRC" "correct-horse-battery-staple-1" not-encrypted "a page that is not StatiCrypt ciphertext"
+    e8_assert "E8" "$real" "correct-horse-battery-staple-1"
+    md_flips _key_opens_page "E5" e5_assert "E5" "$real" "correct-horse-battery-staple-1" opens "the key the page was encrypted under"
+    md_flips _key_opens_page "E6" e5_assert "E6" "$real" "rv-e6-other-synthetic-key-69" does-not-open "another key"
+    md_flips _key_opens_page "E7" e5_assert "E7" "$SRC" "correct-horse-battery-staple-1" not-encrypted "a page that is not StatiCrypt ciphertext"
+    md_flips _key_opens_page "E8" e8_assert "E8" "$real" "correct-horse-battery-staple-1"
     rm -rf "$ENC_DIR"
   else
     SKIP "E: staticrypt could not run (offline or npx blocked)"
@@ -13513,6 +13549,34 @@ rv12_assert "RV12"
 md_flips encrypt_to_tmp "RV6"  rv6_assert  "RV6" short
 md_flips encrypt_to_tmp "RV6c" rv6_assert  "RV6c" long
 md_flips encrypt_to_tmp "RV12" rv12_assert "RV12"
+# RV12k — the same rule over the live-page decrypt (#1820): the key reaches StatiCrypt only through the prefix
+# assignment, never -p or --password; the page's own salt is passed, without which a matching key reads as wrong; and
+# stdin is closed, so a missing key can never wait on a prompt. Run against the REAL helper, before the stand-in.
+rv12k_assert() { # <id>
+  local id="$1" b hasprefix=0 hasp=0 salt=0 closed=0
+  b="$(declare -f _key_opens_page 2>/dev/null)"
+  rv_has "$b" 'STATICRYPT_PASSWORD="$kp_key"' && hasprefix=1
+  rv_has "$b" ' -p ' && hasp=1
+  rv_has "$b" '--password' && hasp=1
+  rv_has "$b" '--salt "$kp_salt"' && salt=1
+  rv_has "$b" '< /dev/null' && closed=1
+  rv_has "$b" '</dev/null' && closed=1
+  if [ "${#b}" -lt 200 ]; then
+    FAIL "$id: _key_opens_page's parsed body is ${#b} bytes — the subject is absent or a stub. VERDICT WITHHELD"
+  elif [ "$hasprefix" -eq 0 ]; then
+    FAIL "$id: _key_opens_page does not hand StatiCrypt the key through the STATICRYPT_PASSWORD prefix assignment"
+  elif [ "$hasp" -eq 1 ]; then
+    FAIL "$id: _key_opens_page passes the key with -p/--password, which puts it in argv"
+  elif [ "$salt" -eq 0 ]; then
+    FAIL "$id: _key_opens_page does not pass the page's own salt, so a matching key reads as wrong"
+  elif [ "$closed" -eq 0 ]; then
+    FAIL "$id: _key_opens_page does not close StatiCrypt's stdin, so a missing key would wait on a prompt"
+  else
+    PASS "$id: _key_opens_page hands over the key only through the prefix assignment, passes the page's salt and closes stdin (${#b}-byte body)"
+  fi
+}
+rv12k_assert "RV12k"
+md_flips _key_opens_page "RV12k" rv12k_assert "RV12k"
 
 # Every arm below runs against the shims.
 encrypt_to_tmp()   { rv_enc_shim "$@"; }
@@ -15722,6 +15786,421 @@ md_flips cmd_update "RV28" rv28_assert "RV28"
 md_flips require_key_of_record "RV29" rv29_assert "RV29"
 md_flips write_passphrase_file "RV30" rv30_assert "RV30"
 for rv_p in noreply publish update rotate; do md_flips commit_noreply "RV31-$rv_p" rv31_assert "RV31-$rv_p" "$rv_p"; done
+
+# ══════════════════════════════════════════════════════════════════
+# RV48–RV52 — #1820 (and #1821, which it carries). A push that re-encrypts stands on the site's state, not a local
+# store: update's key must open the page the site serves now, read from the clone's fetched tip, whichever store
+# supplied it; rotate refuses a new key that already opens that page; a rotation whose push failed is finished by
+# update only while its pending-rotation marker names both the key file it wrote and the page it replaced (review
+# CD-1); and the key file is flushed to disk before any push that depends on it, written key, then marker, then one
+# directory flush at rotate's commit point (review CD-4). The decrypt here is the stand-in above; the real helper is
+# graded against the real tool in group E (E5–E8) and by RV12k.
+#
+# RV52 adds this suite's first background processes (review PR-1): each limb runs its writer in the background,
+# blocked inside a stand-in whose own wait is bounded, and the parent polls for the stand-in's reached-file under a
+# bound of its own and kills the writer with SIGKILL however the poll ended, so no limb outlives its bound.
+# ══════════════════════════════════════════════════════════════════
+
+# RV48 — update's key against the live page. mismatch is the must-fire twin, match its control; env and env-match
+# the same with the variable as the store; plaintext a site published --plaintext; undetermined a page that cannot be
+# read or a StatiCrypt that cannot run. Every refusal leaves the site where it was and no commit in the clone.
+rv48_assert() { # <id> <mismatch|match|env|env-match|plaintext|undetermined>
+  local id="$1" how="$2" name d bare pub out rc h0 h1 c0 c1 live opens=0 plain=0 undet=0 from=0 rot=0
+  local kl='rv-key-check-live-synthetic-key-62' kx='rv-key-check-other-synthetic-key-63'
+  name="rv48-$how-$RANDOM"
+  case "$how" in
+    mismatch)  d="$(rv_fixture "$name" "$kx" "$kl")" ;;
+    match)     d="$(rv_fixture "$name" "$kl")" ;;
+    plaintext) d="$(rv_fixture "$name")"
+               cp "$SRC" "$d/.publish/index.html"; git -C "$d/.publish" add index.html
+               git -C "$d/.publish" -c user.name=t -c user.email=t@example.invalid commit -q -m plaintext
+               git -C "$d/.publish" push -q origin main ;;
+    *)         d="$(rv_fixture "$name" '' "$kl")" ;;
+  esac
+  bare="$RVW/origin/$name-trip.git"; pub="$d/.publish"
+  h0="$(rv_head "$bare")"; c0="$(git -C "$pub" rev-parse HEAD)"
+  case "$how" in
+    mismatch|match) out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) 2>&1 )"; rc=$? ;;
+    env|plaintext)  out="$( ( export STATICRYPT_PASSWORD="$kx"; set -e; cmd_update "$d" ) 2>&1 )"; rc=$? ;;
+    env-match)      out="$( ( export STATICRYPT_PASSWORD="$kl"; set -e; cmd_update "$d" ) 2>&1 )"; rc=$? ;;
+    *)              out="$( ( export STATICRYPT_PASSWORD="$kl"; RV_DECRYPT_UNDETERMINED=1; set -e; cmd_update "$d" ) 2>&1 )"; rc=$? ;;
+  esac
+  h1="$(rv_head "$bare")"; c1="$(git -C "$pub" rev-parse HEAD)"; live="$(rv_pushed_key "$bare")"
+  rv_has "$out" 'does not open the page the site serves now' && opens=1
+  rv_has "$out" 'the page the site serves now is not encrypted' && plain=1
+  rv_has "$out" 'could not establish whether the key this run would encrypt under opens' && undet=1
+  rv_has "$out" 'run rotate' && rot=1
+  case "$how" in
+    mismatch) rv_has "$out" "from $d/.passphrase," && from=1 ;;
+    env)      rv_has "$out" 'from STATICRYPT_PASSWORD,' && from=1 ;;
+  esac
+  case "$how" in
+    match|env-match)
+      if [ "$rc" -ne 0 ]; then
+        FAIL "$id: CONTROL — update whose key opens the live page read rc=$rc, want 0: the check refuses a correct update"
+      elif [ "$h0" = "$h1" ]; then
+        FAIL "$id: CONTROL — update read rc=0 but the site did not move. VERDICT WITHHELD"
+      elif [ "$live" != "$kl" ]; then
+        FAIL "$id: CONTROL — the page now live is not under the key that opened the site"
+      else
+        PASS "$id: CONTROL — an update whose key ($how) opens the page the site serves now publishes, and the live page stays under that key"
+      fi ;;
+    *)
+      if [ "$rc" -ne 1 ]; then
+        FAIL "$id: update ($how) read rc=$rc, want 1 — a key that does not open the live page, or a page it could not test, must stop the run"
+      elif [ "$h0" != "$h1" ]; then
+        FAIL "$id: update ($how) refused but the site moved — something was pushed"
+      elif [ "$c0" != "$c1" ]; then
+        FAIL "$id: update ($how) refused and left its own commit in the clone, where a later push would carry it"
+      else
+        case "$how" in
+          mismatch|env)
+            if [ "$opens" -eq 0 ]; then
+              FAIL "$id: the refusal ($how) does not say the key does not open the page the site serves now, so the live-page check is not what refused"
+            elif [ "$from" -eq 0 ]; then
+              FAIL "$id: the refusal ($how) does not name the store the key came from"
+            else
+              PASS "$id: update whose key ($how) does not open the page the site serves now refuses, names the store, pushes nothing and takes its own commit back out"
+            fi ;;
+          plaintext)
+            if [ "$plain" -eq 0 ]; then
+              FAIL "$id: the refusal does not say the live page is not encrypted, so the live-page check is not what refused"
+            elif [ "$rot" -eq 0 ]; then
+              FAIL "$id: the not-encrypted refusal does not name rotate, which encrypts the site from then on"
+            else
+              PASS "$id: update on a site published --plaintext refuses, says the live page is not encrypted and names rotate, pushing nothing"
+            fi ;;
+          *)
+            if [ "$undet" -eq 0 ]; then
+              FAIL "$id: the refusal does not say whether the key opens the live page could not be established"
+            else
+              PASS "$id: update whose live-page check cannot be made refuses as undetermined, fail-closed, pushing nothing"
+            fi ;;
+        esac
+      fi ;;
+  esac
+}
+for rv_b in mismatch match env env-match plaintext undetermined; do rv48_assert "RV48-$rv_b" "$rv_b"; done
+
+# RV48-rotation — the D-3 carve-out, in the ordinary case RV34-rotate's fixture misses: a trip whose baseline is
+# recorded, so the failed rotation stages no record. stale rewrites .passphrase with the same bytes afterwards, which
+# breaks the marker's file identity. moved is route (i) of review FM-1: another copy of the trip publishes under a
+# third key after the rotation read the site. republished-plaintext is route (ii): the repository published again
+# --plaintext. Each of the last three must refuse; the first must converge and clear the marker.
+rv48r_push_other() { # <bare> <key> <workdir> — another copy of the trip publishes a page under <key>
+  local e
+  git clone -q "$1" "$3"
+  e="$(rv_enc_shim "$SRC" "$2")"; cp "$e/index.html" "$3/index.html"; rm -rf "$e"
+  git -C "$3" add index.html; git -C "$3" -c user.name=t -c user.email=t@example.invalid commit -q -m other
+  git -C "$3" push -q origin main
+}
+rv48r_republish_plain() { # <bare> — the repository published again, --plaintext: a fresh history, a plaintext page
+  local c="$1.src"
+  mkdir -p "$1"; git init -q --bare "$1"; git init -q "$c"; cp "$SRC" "$c/index.html"
+  git -C "$c" add index.html; git -C "$c" -c user.name=t -c user.email=t@example.invalid commit -q -m plain
+  git -C "$c" branch -M main; git -C "$c" remote add origin "$1"; git -C "$c" push -q origin main
+}
+rv48r_assert() { # <id> <ordinary|stale|moved|republished-plaintext>
+  local id="$1" how="$2" name d bare out rc0 rc1 rc2 h1 h2 pf live mk=0 mk2=0 opens=0 plain=0
+  local k1='rv-rotation-live-synthetic-key-60' k3='rv-rotation-other-synthetic-key-61'
+  name="rv48r-$how-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc0=$?
+  rv_reject_pushes "$bare"
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) >/dev/null 2>&1; rc1=$?
+  rv_allow_pushes "$bare"
+  [ -f "$d/.rotation-pending" ] && mk=1
+  pf="$(cat "$d/.passphrase" 2>/dev/null)"
+  case "$how" in
+    stale) ( write_passphrase_file "$d/.passphrase" "$pf" ) >/dev/null 2>&1 ;;
+    moved) rv48r_push_other "$bare" "$k3" "$RVW/$name-other"; rm -rf "$d/.publish" ;;
+    republished-plaintext) bare="$RVW/origin2/$name-trip.git"; rv48r_republish_plain "$bare"; rm -rf "$d/.publish" ;;
+  esac
+  h1="$(rv_head "$bare")"
+  out="$( ( unset STATICRYPT_PASSWORD; RV_CLONE_BARE="$bare"; rv_gh_clones; set -e; cmd_update "$d" ) 2>&1 )"; rc2=$?
+  h2="$(rv_head "$bare")"; live="$(rv_pushed_key "$bare")"
+  [ -e "$d/.rotation-pending" ] && mk2=1
+  rv_has "$out" 'does not open the page the site serves now' && opens=1
+  rv_has "$out" 'the page the site serves now is not encrypted' && plain=1
+  if [ "$rc0" -ne 0 ]; then
+    FAIL "$id: the update that records the trip's baseline read rc=$rc0 — the trip this arm needs was not built. VERDICT WITHHELD"
+  elif [ "$rc1" -ne 1 ] || [ "$pf" = "$k1" ]; then
+    FAIL "$id: the rotation whose push the site refused read rc=$rc1, and moved the key of record=$([ "$pf" = "$k1" ] && echo 0 || echo 1) — the failed rotation was not built. VERDICT WITHHELD"
+  elif [ "$mk" -eq 0 ]; then
+    FAIL "$id: a rotation whose push failed left no pending-rotation marker beside the trip, so nothing records that update may finish it"
+  else
+    case "$how" in
+      ordinary)
+        if [ "$rc2" -ne 0 ]; then
+          FAIL "$id: the update that finishes a rotation whose push failed was refused (rc=$rc2) — the carve-out does not hold"
+        elif [ "$live" != "$pf" ]; then
+          FAIL "$id: the update finished, but the live page is not under the key .passphrase holds"
+        elif [ "$mk2" -eq 1 ]; then
+          FAIL "$id: the push that finished the rotation landed and the pending-rotation marker is still there"
+        else
+          PASS "$id: an update after a rotation whose push failed, on a trip with its baseline recorded, finishes the rotation under the key .passphrase holds and clears the marker"
+        fi ;;
+      stale|moved)
+        if [ "$rc2" -ne 1 ]; then
+          FAIL "$id: update ($how) read rc=$rc2, want 1 — the marker no longer describes the trip, and the carve-out admitted it"
+        elif [ "$h1" != "$h2" ]; then
+          FAIL "$id: update ($how) refused but the site moved"
+        elif [ "$opens" -eq 0 ]; then
+          FAIL "$id: the refusal ($how) is not the live-page check's"
+        else
+          PASS "$id: with the marker no longer describing the trip ($how), update refuses on the live-page check and pushes nothing"
+        fi ;;
+      *)
+        if [ "$rc2" -ne 1 ]; then
+          FAIL "$id: update on a repository published again --plaintext after a failed rotation read rc=$rc2, want 1 — the site would be encrypted under a key nobody was told about"
+        elif [ "$h1" != "$h2" ]; then
+          FAIL "$id: update refused but the plaintext site moved"
+        elif [ "$plain" -eq 0 ]; then
+          FAIL "$id: the refusal is not the not-encrypted one"
+        else
+          PASS "$id: a repository published again --plaintext after a failed rotation is refused as not encrypted, though the marker's key file still matches — the marker binds the page it replaced"
+        fi ;;
+    esac
+  fi
+}
+for rv_b in ordinary stale moved republished-plaintext; do rv48r_assert "RV48-rotation-$rv_b" "$rv_b"; done
+
+# RV49 — milestone 74's residual, reproduced and ended. A site under a key this machine does not hold; publish on a
+# failed host read takes its create path, records a generated key and stops at the host's refusal of the taken name;
+# with the clone removed, update must refuse, and the live page stay under the original key. Before #1820 it exited 0
+# with the site re-keyed.
+rv49_assert() { # <id>
+  local id="$1" name d bare out rc1 rc2 h0 h2 live gen=0 opens=0 k1='rv-residual-live-synthetic-key-64'
+  name="rv49-$RANDOM"; d="$(rv_fixture "$name" '' "$k1")"; bare="$RVW/origin/$name-trip.git"
+  rm -rf "$d/.publish"
+  h0="$(rv_head "$bare")"
+  ( unset STATICRYPT_PASSWORD; RV39_BARE="$bare"; RV39_HOST_FAILS=1; rv39_gh; set -e; cmd_publish "$d" ) >/dev/null 2>&1; rc1=$?
+  [ -s "$d/.passphrase" ] && gen=1
+  rm -rf "$d/.publish"
+  out="$( ( unset STATICRYPT_PASSWORD; RV39_BARE="$bare"; rv39_gh; set -e; cmd_update "$d" ) 2>&1 )"; rc2=$?
+  h2="$(rv_head "$bare")"; live="$(rv_pushed_key "$bare")"
+  rv_has "$out" 'does not open the page the site serves now' && opens=1
+  if [ "$rc1" -ne 1 ] || [ "$gen" -eq 0 ]; then
+    FAIL "$id: publish on a failed host read read rc=$rc1 and recorded a key=$gen — the residual's first step was not built. VERDICT WITHHELD"
+  elif [ "$rc2" -ne 1 ]; then
+    FAIL "$id: update after it read rc=$rc2, want 1 — it publishes under the key the failed publish generated, locking out everyone holding the site's passphrase"
+  elif [ "$h0" != "$h2" ] || [ "$live" != "$k1" ]; then
+    FAIL "$id: update refused, but the site moved or its live page is no longer under the original key"
+  elif [ "$opens" -eq 0 ]; then
+    FAIL "$id: update refused (rc=1), but not on the live-page check"
+  else
+    PASS "$id: milestone 74's residual ends here — after a publish that generated a key on a failed host read, update refuses on the live-page check and the site stays under its original key"
+  fi
+}
+rv49_assert "RV49-residual"
+
+# RV50 — rotate's check is inverted (decision 3): a new key that already opens the live page revokes nothing and is
+# refused, whatever .passphrase holds; nothing is asked of the retiring key, so the lost-key route stays open.
+rv50_assert() { # <id> <noop|lost>
+  local id="$1" how="$2" name d bare out rc h0 h1 pf live said=0
+  local kl='rv-rotate-live-synthetic-key-70' ks='rv-rotate-stale-synthetic-key-71'
+  name="rv50-$how-$RANDOM"
+  if [ "$how" = noop ]; then d="$(rv_fixture "$name" "$ks" "$kl")"; else d="$(rv_fixture "$name" '' "$kl")"; fi
+  bare="$RVW/origin/$name-trip.git"; h0="$(rv_head "$bare")"
+  if [ "$how" = noop ]; then
+    out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" --passphrase "$kl" ) 2>&1 )"; rc=$?
+  else
+    out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$?
+  fi
+  h1="$(rv_head "$bare")"; pf="$(cat "$d/.passphrase" 2>/dev/null)"; live="$(rv_pushed_key "$bare")"
+  { rv_has "$out" 'already opens the page the site serves now' && rv_has "$out" 'would revoke nothing'; } && said=1
+  if [ "$how" = noop ]; then
+    if [ "$rc" -ne 1 ]; then
+      FAIL "$id: rotate --passphrase <the live key> against a stale .passphrase read rc=$rc, want 1 — a rotation that revokes nothing ran"
+    elif [ "$pf" != "$ks" ]; then
+      FAIL "$id: the refused rotation changed .passphrase"
+    elif [ "$h0" != "$h1" ]; then
+      FAIL "$id: the refused rotation moved the site"
+    elif [ "$said" -eq 0 ]; then
+      FAIL "$id: the refusal (rc=1) is not the live-page check's 'already opens … would revoke nothing'"
+    else
+      PASS "$id: rotate to a key that already opens the live page refuses as revoking nothing, though the store test passes it, with .passphrase byte-identical and the site unmoved"
+    fi
+  elif [ "$rc" -ne 0 ]; then
+    FAIL "$id: rotate with no .passphrase read rc=$rc, want 0 — the lost-key route update's own refusal names is closed"
+  elif [ -z "$pf" ] || [ "$live" != "$pf" ]; then
+    FAIL "$id: rotate with no .passphrase ran, but the live page is not under the key it recorded"
+  else
+    PASS "$id: rotate with no .passphrase still rotates — nothing is asked of the retiring key, so the lost-key route stays open"
+  fi
+}
+for rv_b in noop lost; do rv50_assert "RV50-rotate-$rv_b" "$rv_b"; done
+
+# RV51 — the flush (#1821; decision 5; review CD-4). flush-order: in write_passphrase_file's parsed body the staged
+# copy is flushed before the rename and the directory after it. rotate-order: at rotate's commit point the key is
+# written with its directory flush deferred, then the marker, then the directory flush, all before the push.
+# flush-log: the real flush, observed — on the Linux runner this is the live observation of fsync's success.
+# rotate-dirflush: a directory that cannot be flushed at rotate's commit point leaves the key and a matching marker,
+# and the remedy it names, update, finishes the rotation.
+rv51_at() { # <haystack> <needle> -> the byte offset of the first occurrence, or -1
+  local pre
+  case "$1" in *"$2"*) pre="${1%%"$2"*}"; printf '%s' "${#pre}" ;; *) printf '%s' -1 ;; esac
+}
+rv51o_assert() { # <id>
+  local id="$1" b f1 mv f2
+  b="$(declare -f write_passphrase_file 2>/dev/null)"
+  f1="$(rv51_at "$b" '_flush_path "$tmp"')"; mv="$(rv51_at "$b" 'mv -f "$tmp" "$pf"')"; f2="$(rv51_at "$b" '_flush_path "$(dirname "$pf")"')"
+  if [ "${#b}" -lt 200 ]; then
+    FAIL "$id: write_passphrase_file's parsed body is ${#b} bytes — the subject is absent or a stub. VERDICT WITHHELD"
+  elif [ "$f1" -lt 0 ] || [ "$mv" -lt 0 ]; then
+    FAIL "$id: write_passphrase_file does not flush its staged copy (at $f1) or does not rename it into place (at $mv)"
+  elif [ "$f1" -ge "$mv" ]; then
+    FAIL "$id: the staged copy is flushed at byte $f1, after the rename at $mv — a crash can leave the key path naming data never written"
+  elif [ "$f2" -le "$mv" ]; then
+    FAIL "$id: the directory is not flushed after the rename (flush at $f2, rename at $mv)"
+  else
+    PASS "$id: write_passphrase_file flushes the staged copy (byte $f1) before the rename ($mv) and the directory after it ($f2)"
+  fi
+}
+rv51r_assert() { # <id>
+  local id="$1" b w m f p
+  b="$(declare -f cmd_rotate 2>/dev/null)"
+  w="$(rv51_at "$b" 'write_passphrase_file "$pf" "$newp" defer-dir-flush')"; m="$(rv51_at "$b" '_record_pending_rotation "$trip_dir" "$base"')"
+  f="$(rv51_at "$b" '_flush_path "$kdir"')"; p="$(rv51_at "$b" 'push_trip_site "$pub_dir" "$mine" rotate')"
+  if [ "${#b}" -lt 500 ]; then
+    FAIL "$id: cmd_rotate's parsed body is ${#b} bytes — the subject is absent or a stub. VERDICT WITHHELD"
+  elif [ "$w" -lt 0 ] || [ "$m" -lt 0 ] || [ "$f" -lt 0 ] || [ "$p" -lt 0 ]; then
+    FAIL "$id: cmd_rotate's commit point is missing a step — key $w, marker $m, directory flush $f, push $p"
+  elif [ "$w" -ge "$m" ]; then
+    FAIL "$id: the marker (byte $m) is written before the key ($w) — it would name the file the key write replaces, and never match"
+  elif [ "$m" -ge "$f" ]; then
+    FAIL "$id: the directory is flushed (byte $f) before the marker is written ($m), so one flush does not cover both entries"
+  elif [ "$f" -ge "$p" ]; then
+    FAIL "$id: the push (byte $p) comes before the directory flush ($f)"
+  else
+    PASS "$id: at rotate's commit point the key ($w), then the marker ($m), then one directory flush ($f), all before the push ($p)"
+  fi
+}
+rv51l_assert() { # <id>
+  local id="$1" d log rc n l1="" l2="" key='rv-flush-log-synthetic-key-65' got
+  d="$RVW/rv51l-$RANDOM"; mkdir -p "$d"; log="$d.flush.log"; : > "$log"
+  ( rv51_def="$(declare -f _flush_path)"; eval "rv51_real_flush ${rv51_def#_flush_path}"
+    _flush_path() { local r; rv51_real_flush "$@"; r=$?; printf '%s %s\n' "$r" "$1" >> "$log"; return "$r"; }
+    set -e; write_passphrase_file "$d/.passphrase" "$key" ) >/dev/null 2>&1; rc=$?
+  n="$(rv_lines "$log")"
+  { IFS= read -r l1; IFS= read -r l2; } < "$log"
+  got="$(cat "$d/.passphrase" 2>/dev/null)"
+  if [ "$rc" -ne 0 ] || [ "$got" != "$key" ]; then
+    FAIL "$id: write_passphrase_file under the logging flush read rc=$rc and recorded the key=$([ "$got" = "$key" ] && echo 1 || echo 0) — want 0 and 1"
+  elif [ "$n" != 2 ]; then
+    FAIL "$id: the flush ran $n time(s), want exactly 2 (the staged copy, then the directory)"
+  elif [ "${l1#"0 $d/.passphrase."}" = "$l1" ]; then
+    FAIL "$id: the first flush was not a successful one of the staged copy beside the key ('$l1')"
+  elif [ "$l2" != "0 $d" ]; then
+    FAIL "$id: the second flush was not a successful one of the key's directory ('$l2')"
+  else
+    PASS "$id: the real flush ran on the staged copy, then on the key's directory, both succeeding, before write_passphrase_file returned"
+  fi
+}
+rv51d_assert() { # <id>
+  local id="$1" name d bare out rc rc2 h0 h1 pf live mk=0 said=0 mk2=0 k1='rv-dirflush-live-synthetic-key-66'
+  name="rv51d-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"; h0="$(rv_head "$bare")"
+  out="$( ( unset STATICRYPT_PASSWORD
+            rv51d_def="$(declare -f _flush_path)"; eval "rv51d_real_flush ${rv51d_def#_flush_path}"
+            _flush_path() { [ -d "$1" ] && return 1; rv51d_real_flush "$@"; }
+            set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$?
+  h1="$(rv_head "$bare")"; pf="$(cat "$d/.passphrase" 2>/dev/null)"
+  ( _pending_rotation_matches "$d" "$d/.publish" refs/remotes/origin/main ) && mk=1
+  { rv_has "$out" 'could not be flushed to disk' && rv_has "$out" 'Run update to finish the rotation'; } && said=1
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc2=$?
+  live="$(rv_pushed_key "$bare")"; [ -e "$d/.rotation-pending" ] && mk2=1
+  if [ "$rc" -ne 1 ]; then
+    FAIL "$id: rotate with a directory that cannot be flushed read rc=$rc, want 1"
+  elif [ "$h0" != "$h1" ]; then
+    FAIL "$id: rotate stopped at its directory flush, yet the site moved"
+  elif [ "$pf" = "$k1" ]; then
+    FAIL "$id: rotate stopped at its directory flush with the old key still recorded — the flush failure was not reached at the commit point. VERDICT WITHHELD"
+  elif [ "$mk" -eq 0 ]; then
+    FAIL "$id: rotate stopped at its directory flush with no matching pending-rotation marker — the update its remedy names cannot finish the rotation"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: the refusal does not say the directory could not be flushed and that update finishes the rotation"
+  elif [ "$rc2" -ne 0 ] || [ "$live" != "$pf" ]; then
+    FAIL "$id: the update the remedy names did not finish the rotation (rc=$rc2): the live page is not under the key .passphrase holds"
+  elif [ "$mk2" -eq 1 ]; then
+    FAIL "$id: the update finished the rotation and left the marker"
+  else
+    PASS "$id: a directory that cannot be flushed at rotate's commit point leaves the new key and a matching marker, says so, and the update it names finishes the rotation"
+  fi
+}
+rv51o_assert "RV51-flush-order"
+rv51r_assert "RV51-rotate-order"
+rv51l_assert "RV51-flush-log"
+rv51d_assert "RV51-rotate-dirflush"
+
+# RV52 — a write interrupted by SIGKILL (#1821): before the rename the key path still holds the old key, byte for
+# byte; after it, the complete new key. The writer runs in the background, blocked inside a flush stand-in on its
+# first call (before) or its second (after), and is killed there. With mutant set, write_passphrase_file is replaced
+# by a writer that writes straight to the key path before it flushes — the control, which RV52-ctl requires the arm to
+# convict.
+rv52_assert() { # <id> <before|after> [mutant]
+  local id="$1" at="$2" mut="${3:-}" d pf reached stop pid n=0 got trig=1 wasreached=0
+  local old='rv-interrupt-old-synthetic-key-67' new='rv-interrupt-new-synthetic-key-68'
+  [ "$at" = before ] || trig=2
+  d="$RVW/rv52-$at-$RANDOM"; mkdir -p "$d"; pf="$d/.passphrase"; printf '%s\n' "$old" > "$pf"; chmod 600 "$pf"
+  reached="$d.reached"; stop="$d.stop"
+  ( rv52_def="$(declare -f _flush_path)"; eval "rv52_real_flush ${rv52_def#_flush_path}"
+    rv52_calls=0
+    _flush_path() {
+      local k=0
+      rv52_calls=$((rv52_calls+1))
+      if [ "$rv52_calls" -eq "$trig" ]; then
+        : > "$reached"
+        while [ ! -e "$stop" ] && [ "$k" -lt 300 ]; do sleep 0.1; k=$((k+1)); done
+      fi
+      rv52_real_flush "$@"
+    }
+    if [ -n "$mut" ]; then write_passphrase_file() { printf '%s\n' "$2" > "$1"; _flush_path "$1"; }; fi
+    set -e; write_passphrase_file "$pf" "$new" ) >/dev/null 2>&1 &
+  pid=$!
+  while [ ! -e "$reached" ] && kill -0 "$pid" 2>/dev/null && [ "$n" -lt 100 ]; do sleep 0.1; n=$((n+1)); done
+  [ -e "$reached" ] && wasreached=1
+  kill -9 "$pid" 2>/dev/null; wait "$pid" 2>/dev/null; : > "$stop"
+  got="$(cat "$pf" 2>/dev/null)"
+  if [ "$wasreached" -eq 0 ]; then
+    FAIL "$id: the writer never reached the flush this limb interrupts ($at) — nothing was interrupted. VERDICT WITHHELD"
+  elif [ "$at" = before ] && [ "$got" != "$old" ]; then
+    FAIL "$id: killed before the rename, the key path no longer holds the old key byte for byte — an interrupted write reached it"
+  elif [ "$at" = after ] && [ "$got" != "$new" ]; then
+    FAIL "$id: killed after the rename, the key path does not hold the complete new key"
+  else
+    PASS "$id: a key write killed $at the rename leaves the key path holding the $([ "$at" = before ] && echo old || echo complete new) key, byte for byte"
+  fi
+}
+rv52_assert "RV52-interrupt-before-rename" before
+rv52_assert "RV52-interrupt-after-rename" after
+rv52c_assert() { # <id> — the control: the arm, run against a writer that writes straight to the key path, must FAIL
+  local id="$1" out
+  out="$(md_probe rv52_no_such_subject rv52_assert "RV52x" before mutant)"
+  if [ "$out" != "0 1" ]; then
+    FAIL "$id: CONTROL — against a writer that writes straight to the key path the interrupt arm reported '$out', want '0 1': it cannot tell an atomic write from one that is not"
+  else
+    PASS "$id: CONTROL — against a writer that writes straight to the key path, the interrupt arm reports exactly one FAIL, so its PASS above is a measurement of the staged write"
+  fi
+}
+rv52c_assert "RV52-ctl"
+
+md_flips _key_opens_page "RV48-mismatch" rv48_assert "RV48-mismatch" mismatch
+md_flips cmd_update "RV48-mismatch-cmd" rv48_assert "RV48-mismatch" mismatch
+md_flips cmd_update "RV48-match" rv48_assert "RV48-match" match
+md_flips _key_opens_page "RV48-env" rv48_assert "RV48-env" env
+md_flips cmd_update "RV48-env-match" rv48_assert "RV48-env-match" env-match
+md_flips _key_opens_page "RV48-plaintext" rv48_assert "RV48-plaintext" plaintext
+md_flips cmd_update "RV48-undetermined" rv48_assert "RV48-undetermined" undetermined
+md_flips _pending_rotation_matches "RV48-rotation-ordinary" rv48r_assert "RV48-rotation-ordinary" ordinary
+for rv_b in stale moved republished-plaintext; do md_flips cmd_update "RV48-rotation-$rv_b" rv48r_assert "RV48-rotation-$rv_b" "$rv_b"; done
+md_flips cmd_update "RV49-residual" rv49_assert "RV49-residual"
+md_flips _key_opens_page "RV50-rotate-noop" rv50_assert "RV50-rotate-noop" noop
+md_flips cmd_rotate "RV50-rotate-lost" rv50_assert "RV50-rotate-lost" lost
+md_flips write_passphrase_file "RV51-flush-order" rv51o_assert "RV51-flush-order"
+md_flips cmd_rotate "RV51-rotate-order" rv51r_assert "RV51-rotate-order"
+md_flips _flush_path "RV51-flush-log" rv51l_assert "RV51-flush-log"
+md_flips _record_pending_rotation "RV51-rotate-dirflush" rv51d_assert "RV51-rotate-dirflush"
+md_flips write_passphrase_file "RV52-interrupt-before-rename" rv52_assert "RV52-interrupt-before-rename" before
+md_flips write_passphrase_file "RV52-interrupt-after-rename" rv52_assert "RV52-interrupt-after-rename" after
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # L18 — a plaintext publish refuses a render carrying a group-only section, by that section's presence
