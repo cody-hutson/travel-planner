@@ -13402,20 +13402,27 @@ gh() {   # mock: log the call, answer the read-only probes, create and clone not
 npx() { printf 'npx\n' >> "$RV_NPXLOG"; return 0; }
 
 # A trip whose per-trip clone already exists, pushing to a local bare repository named
-# <name>-trip.git so ensure_pub_clone reuses it. The optional key seeds .passphrase.
-rv_fixture() { # <name> [key] -> trip dir
-  local d="$RVW/$1" bare="$RVW/origin/$1-trip.git"
+# <name>-trip.git so ensure_pub_clone reuses it. The optional key seeds .passphrase. The live page is the
+# encrypt shim's output under the seed key — the third argument, defaulting to the key — so the site is under
+# the key its operator holds, as a published trip's is, and a check of the key against the live page (#1820)
+# reads it as such. With neither, the page is ENC_OK, which carries no nonce and so is under no key at all.
+rv_fixture() { # <name> [key] [seed-key] -> trip dir
+  local d="$RVW/$1" bare="$RVW/origin/$1-trip.git" seed="${3:-${2:-}}" e
   mkdir -p "$d/outputs" "$bare"
   cp "$SRC" "$d/outputs/$1-travel-site.html"
   git init -q --bare "$bare"
   git init -q "$d/.publish"
   git -C "$d/.publish" remote add origin "$bare"
-  cp "$ENC_OK" "$d/.publish/index.html"
+  if [ -n "$seed" ]; then
+    e="$(rv_enc_shim "$SRC" "$seed")"; cp "$e/index.html" "$d/.publish/index.html"; rm -rf "$e"
+  else
+    cp "$ENC_OK" "$d/.publish/index.html"
+  fi
   git -C "$d/.publish" add index.html
   git -C "$d/.publish" -c user.name=t -c user.email=t@example.invalid commit -q -m seed
   git -C "$d/.publish" branch -M main
   git -C "$d/.publish" push -q origin main
-  if [ "$#" -ge 2 ]; then printf '%s\n' "$2" > "$d/.passphrase"; chmod 600 "$d/.passphrase"; fi
+  if [ -n "${2:-}" ]; then printf '%s\n' "$2" > "$d/.passphrase"; chmod 600 "$d/.passphrase"; fi
   printf '%s' "$d"
 }
 
@@ -13510,6 +13517,23 @@ md_flips encrypt_to_tmp "RV12" rv12_assert "RV12"
 # Every arm below runs against the shims.
 encrypt_to_tmp()   { rv_enc_shim "$@"; }
 make_boilerplate() { return 1; }
+# The decrypt stand-in (#1820): what the real _key_opens_page answers, read from the nonce the encrypt shim wrote.
+# No nonce is a page under no key, which is what a plaintext page and ENC_OK both are; a nonce the key log maps to
+# the key is a page the key opens; any other nonce is a page under another key. RV_DECRYPT_UNDETERMINED stands in
+# for a page that cannot be read or a StatiCrypt that cannot run. The real helper is graded against the real tool by
+# group E (E5–E8) and by RV12k, both before this stand-in exists; md_probe removes this one by name.
+_key_opens_page() { # <page_file> <passphrase>
+  local sp_h sp_n sp_line re='staticryptEncrypted="(rv[0-9a-f]+)"'
+  [ -z "${RV_DECRYPT_UNDETERMINED:-}" ] || { printf 'undetermined'; return 0; }
+  [ -f "$1" ] && [ -r "$1" ] || { printf 'undetermined'; return 0; }
+  sp_h="$(cat "$1")"
+  [[ "$sp_h" =~ $re ]] || { printf 'not-encrypted'; return 0; }
+  sp_n="${BASH_REMATCH[1]}"
+  while IFS= read -r sp_line || [ -n "$sp_line" ]; do
+    [ "$sp_line" = "$sp_n $2" ] && { printf 'opens'; return 0; }
+  done < "$RV_KEYLOG"
+  printf 'does-not-open'
+}
 
 # ── RV1 — AC1. rotate, with STATICRYPT_PASSWORD holding the current key: the pushed page
 # must be under the key .passphrase now holds, and that must not be the previous key.
@@ -13595,7 +13619,7 @@ rv2d_assert() { # <id> <env-only|file-only|agree|empty-env>
   local id="$1" c="$2" name d k rc want
   name="rv2d-$c-$RANDOM"
   case "$c" in
-    env-only)  want='rv-env-only-synthetic-key-01'; d="$(rv_fixture "$name")"
+    env-only)  want='rv-env-only-synthetic-key-01'; d="$(rv_fixture "$name" '' "$want")"
                ( export STATICRYPT_PASSWORD="$want"; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$? ;;
     file-only) want='rv-file-only-synthetic-key-02'; d="$(rv_fixture "$name" "$want")"
                ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$? ;;
@@ -14832,6 +14856,9 @@ rv34k_wrap() { # (inside a subject's subshell) rv34k_k2 is the key the other com
       git -C "$1" -c user.name=t -c user.email=t@example.invalid commit --quiet -m rotation || return 2
     fi
     printf '%s\n' "$rv34k_k2" > "$rv34k_pf"
+    # As a real rotate does at its commit point, the other command records its pending rotation (#1820): the key
+    # file it just wrote, and the page its rotation replaces — the page this run's push landed (review CD-1).
+    _record_pending_rotation "${rv34k_pf%/.passphrase}" "$(git -C "$1" rev-parse --verify -q "$2:index.html")" >/dev/null 2>&1 || :
     return 1
   }
 }
@@ -14977,7 +15004,7 @@ for rv_b in absent plaintext unreadable dangling; do rv37_assert "RV37-$rv_b" "$
 # RV37c — the card's risk, and the arm's control: the same trip with the variable set publishes.
 rv37c_assert() { # <id>
   local id="$1" name d bare rc h0 h1 k key='rv-variable-only-synthetic-key-49'
-  name="rv37c-$RANDOM"; d="$(rv_fixture "$name")"; bare="$RVW/origin/$name-trip.git"; h0="$(rv_head "$bare")"
+  name="rv37c-$RANDOM"; d="$(rv_fixture "$name" '' "$key")"; bare="$RVW/origin/$name-trip.git"; h0="$(rv_head "$bare")"
   ( export STATICRYPT_PASSWORD="$key"; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$?
   h1="$(rv_head "$bare")"; k="$(rv_pushed_key "$bare")"
   if [ "$rc" -ne 0 ] || [ "$h0" = "$h1" ]; then
