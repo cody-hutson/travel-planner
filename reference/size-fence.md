@@ -103,7 +103,7 @@ same reader. Rows stand in byte order of the path.
 28177      reference/adr/README.md
 147099     reference/data-architecture.md
 246314     reference/data-model.md
-63987      reference/site-layout-spec.md
+71892      reference/site-layout-spec.md
 60026      skills/trip-decommission/SKILL.md
 40851      skills/trip-new/SKILL.md
 48711      skills/trip-publish/SKILL.md
