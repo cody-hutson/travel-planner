@@ -16510,7 +16510,7 @@ rv54m_assert "RV54-mkdir"
 # RV54-signals — TERM, INT and HUP each release the lock. INT runs under job control (set -m), because a background
 # job in a non-interactive shell starts with SIGINT ignored, and a signal ignored at entry cannot be trapped.
 rv54g_assert() { # <id> <TERM|INT|HUP>
-  local id="$1" sig="$2" name d reached=0 held=0 trapped=0 arc want left=0 path
+  local id="$1" sig="$2" name d reached=0 held=0 trapped=0 arc want left=0
   case "$sig" in TERM) want=143 ;; INT) want=130 ;; *) want=129 ;; esac
   name="rv54g-$sig-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-signal-synthetic-key-78')"
   [ "$sig" != INT ] || set -m
@@ -16520,23 +16520,20 @@ rv54g_assert() { # <id> <TERM|INT|HUP>
   [ -d "$d/.publish-lock" ] && held=1
   case "$(cat "$d.reached.traps" 2>/dev/null)" in *"exit $want"*) trapped=1 ;; esac
   kill -s "$sig" "$RV54_PID" 2>/dev/null
-  if [ "$trapped" -eq 1 ]; then
-    path="the lock's trap ended it"; rv54_finish "$d.stop.never" "$RV54_PID"; arc="$RV54_RC"; : > "$d.stop"
-  else
-    path="SIG$sig was ignored when the holder's shell started, so no trap could be set; it ran on to its own exit"
-    sleep 0.5; rv54_finish "$d.stop" "$RV54_PID"; arc="$RV54_RC"; want=0
-  fi
+  rv54_finish "$d.stop.never" "$RV54_PID"; arc="$RV54_RC"; : > "$d.stop"
   [ -e "$d/.publish-lock" ] && left=1
   if [ "$reached" -eq 0 ]; then
     FAIL "$id: the holder never reached its wait. VERDICT WITHHELD"
   elif [ "$held" -eq 0 ]; then
     FAIL "$id: the holder reached its wait holding no per-trip lock, so a lock absent after SIG$sig proves no release"
+  elif [ "$trapped" -eq 0 ]; then
+    FAIL "$id: the shell holding the lock has no trap for SIG$sig that exits $want — the lock's signal traps are not installed"
   elif [ "$arc" != "$want" ]; then
-    FAIL "$id: the holder sent SIG$sig ended with status $arc, want $want ($path)"
+    FAIL "$id: the holder sent SIG$sig ended with status $arc, want $want — the lock's trap did not end it"
   elif [ "$left" -eq 1 ]; then
-    FAIL "$id: the holder sent SIG$sig ended ($path) and left the lock"
+    FAIL "$id: the holder ended on SIG$sig and left the lock"
   else
-    PASS "$id: a holder sent SIG$sig leaves no lock behind — $path, with status $arc"
+    PASS "$id: the shell holding the lock traps SIG$sig, the holder sent it exits $want, and the lock is released"
   fi
 }
 for rv_b in TERM INT HUP; do rv54g_assert "RV54-signals-$rv_b" "$rv_b"; done
