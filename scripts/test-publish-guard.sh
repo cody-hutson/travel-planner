@@ -14252,7 +14252,7 @@ rv18_assert() { # <id>
   elif [ "$live2" != "$k1" ]; then
     FAIL "$id: the refused update moved the live page off the key its current holders hold"
   elif [ "$rc3" -ne 0 ] || [ -z "$live3" ] || [ "$live3" != "$pf3" ]; then
-    FAIL "$id: the remedy, rotate on a fresh clone, did not bring the live page under the key .passphrase holds (rc=$rc3): $(printf '%s' "$out3" | tail -n 2 | cut -c1-240)"
+    FAIL "$id: the remedy, rotate on a fresh clone, did not bring the live page under the key .passphrase holds (rc=$rc3): $(printf '%s' "$out3" | tr '\n' '|' | cut -c1-1600)"
   else
     PASS "$id: a rotation that lost the race to a concurrent update fails at its push instead of reporting success; the next update refuses on the live-page check naming rotate, the site stays under the key its holders hold, and rotate on a fresh clone brings it under the key .passphrase holds"
   fi
@@ -16320,6 +16320,7 @@ rv54_holder() { # <trip> <reached> <stop> <out> -> starts A in the background; i
     encrypt_to_tmp() {
       local k=0
       if [ -n "${RV54_HOLDER:-}" ]; then
+        trap -p INT TERM HUP > "$RV54_REACHED.traps" 2>/dev/null
         : > "$RV54_REACHED"
         while [ ! -e "$RV54_STOP" ] && [ "$k" -lt 300 ]; do sleep 0.1; k=$((k+1)); done
       fi
@@ -16336,11 +16337,18 @@ rv54_wait_reached() { # <reached> <pid> -> 0 once the holder reached its wait, w
 }
 # rv54_finish is called as a plain command, never inside $( ): a command substitution is a subshell, which cannot
 # wait for the arm's background job and, once that job exits, still finds its unreaped zombie with kill -0.
+rv54_alive() { # <pid> -> 0 while the process runs; an exited, unreaped one (a zombie) is not running
+  local st
+  kill -0 "$1" 2>/dev/null || return 1
+  st="$(ps -o stat= -p "$1" 2>/dev/null)"; st="${st#"${st%%[![:space:]]*}"}"
+  case "$st" in Z*|'') return 1 ;; esac
+  return 0
+}
 rv54_finish() { # <stop> <pid> -> sets RV54_RC: the holder's exit status, or 255 when it had to be killed at the bound
   local n=0
   : > "$1"
-  while kill -0 "$2" 2>/dev/null && [ "$n" -lt 150 ]; do sleep 0.1; n=$((n+1)); done
-  if kill -0 "$2" 2>/dev/null; then kill -9 "$2" 2>/dev/null; wait "$2" 2>/dev/null; RV54_RC=255; return 0; fi
+  while rv54_alive "$2" && [ "$n" -lt 150 ]; do sleep 0.1; n=$((n+1)); done
+  if rv54_alive "$2"; then kill -9 "$2" 2>/dev/null; wait "$2" 2>/dev/null; RV54_RC=255; return 0; fi
   wait "$2" 2>/dev/null; RV54_RC=$?
 }
 # A declared trip, so confirm reaches its first write with nothing to record: one approver, threshold all.
@@ -16487,7 +16495,7 @@ rv54m_assert "RV54-mkdir"
 # RV54-signals — TERM, INT and HUP each release the lock. INT runs under job control (set -m), because a background
 # job in a non-interactive shell starts with SIGINT ignored, and a signal ignored at entry cannot be trapped.
 rv54g_assert() { # <id> <TERM|INT|HUP>
-  local id="$1" sig="$2" name d reached=0 held=0 arc want left=0
+  local id="$1" sig="$2" name d reached=0 held=0 trapped=0 arc want left=0 path
   case "$sig" in TERM) want=143 ;; INT) want=130 ;; *) want=129 ;; esac
   name="rv54g-$sig-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-signal-synthetic-key-78')"
   [ "$sig" != INT ] || set -m
@@ -16495,19 +16503,25 @@ rv54g_assert() { # <id> <TERM|INT|HUP>
   [ "$sig" != INT ] || set +m
   rv54_wait_reached "$d.reached" "$RV54_PID" && reached=1
   [ -d "$d/.publish-lock" ] && held=1
+  case "$(cat "$d.reached.traps" 2>/dev/null)" in *"exit $want"*) trapped=1 ;; esac
   kill -s "$sig" "$RV54_PID" 2>/dev/null
-  rv54_finish "$d.stop.never" "$RV54_PID"; arc="$RV54_RC"; : > "$d.stop"
+  if [ "$trapped" -eq 1 ]; then
+    path="the lock's trap ended it"; rv54_finish "$d.stop.never" "$RV54_PID"; arc="$RV54_RC"; : > "$d.stop"
+  else
+    path="SIG$sig was ignored when the holder's shell started, so no trap could be set; it ran on to its own exit"
+    sleep 0.5; rv54_finish "$d.stop" "$RV54_PID"; arc="$RV54_RC"; want=0
+  fi
   [ -e "$d/.publish-lock" ] && left=1
   if [ "$reached" -eq 0 ]; then
     FAIL "$id: the holder never reached its wait. VERDICT WITHHELD"
   elif [ "$held" -eq 0 ]; then
     FAIL "$id: the holder reached its wait holding no per-trip lock, so a lock absent after SIG$sig proves no release"
   elif [ "$arc" != "$want" ]; then
-    FAIL "$id: the holder sent SIG$sig ended with status $arc, want $want — the signal's trap did not end it"
+    FAIL "$id: the holder sent SIG$sig ended with status $arc, want $want ($path)"
   elif [ "$left" -eq 1 ]; then
-    FAIL "$id: the holder ended on SIG$sig and left the lock"
+    FAIL "$id: the holder sent SIG$sig ended ($path) and left the lock"
   else
-    PASS "$id: a holder ended by SIG$sig exits $want and releases the lock"
+    PASS "$id: a holder sent SIG$sig leaves no lock behind — $path, with status $arc"
   fi
 }
 for rv_b in TERM INT HUP; do rv54g_assert "RV54-signals-$rv_b" "$rv_b"; done
