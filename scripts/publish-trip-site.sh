@@ -234,14 +234,20 @@ require_key_for_update() { # <trip_dir>
 
 # publish's first key (#1614, review CD-1). A trip publish has never published has no key yet, so one
 # is generated and recorded here, immediately before the resolver: the resolver then holds no generation
-# path at all, and no update can reach one in any window. The condition is exactly the one the resolver
-# generated on until now, the variable unset and nothing readable at the path, so publish generates in
-# exactly the key states it always did, and a link into a key store still takes the key where it points.
-# rotate makes its own key and does not come through here.
+# path at all, and no update can reach one in any window. It generates only with the variable unset and no
+# key file where the key path resolves, and a link into a key store still takes the key where it points.
+# A key file that is there and cannot be read is refused, never replaced (#2213): it may hold a passphrase
+# already given out, for an earlier site of this trip or for this one, and a new key would stop it opening
+# the site. update refuses the same state in its own words. rotate makes its own key and does not come
+# through here.
 ensure_first_key() { # <trip_dir>
-  local pf="$1/.passphrase" p
+  local pf="$1/.passphrase" p t
   [ -z "${STATICRYPT_PASSWORD:-}" ] || return 0
   [ -r "$pf" ] && return 0
+  t="$(resolve_key_path "$pf")" || die "could not follow $pf to the file it links to — nothing was recorded."
+  if [ -e "$t" ]; then
+    die "publish refused — $pf exists but cannot be read$( [ "$t" = "$pf" ] || printf ' (it links to %s)' "$t" ), and publish never writes over a passphrase it could not read: it may be one you have already given out, for an earlier site of this trip or for this one, and a new key would stop it opening the site. Nothing was encrypted, committed or pushed, no passphrase was written, and the file was not touched. Restore read access to it and re-run publish; or, to have publish make a first key, move it aside — rename it — and re-run publish."
+  fi
   p="$(gen_passphrase)"; write_passphrase_file "$pf" "$p"
 }
 
