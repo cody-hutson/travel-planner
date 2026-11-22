@@ -5350,6 +5350,20 @@ host_reports_empty() { # <owner/slug>
   [ "$(gh repo view "$1" --json isEmpty --jq '.isEmpty' 2>/dev/null)" = true ]
 }
 
+# What the host answers about one REST path, read from the HTTP status line gh prints with --include:
+# present (200), absent (404), or unknown — no status line (the host could not be asked), or any other
+# status (401, 403, a rate limit, a 5xx). gh exits 1 for a 404 and a dropped connection alike, so its exit
+# status cannot carry this; the status line can. Only absent may be read as "there is none" (#2212).
+_host_answer() { # <api-path> -> present | absent | unknown, on stdout
+  local ha_out ha_line ha_code
+  ha_out="$(gh api -i --silent "$1" 2>/dev/null)" || :
+  IFS= read -r ha_line <<<"$ha_out" || :
+  ha_line="${ha_line%$'\r'}"
+  case "$ha_line" in HTTP/*' '*) ;; *) printf 'unknown'; return 0 ;; esac
+  ha_code="${ha_line#* }"; ha_code="${ha_code%% *}"
+  case "$ha_code" in 200) printf 'present' ;; 404) printf 'absent' ;; *) printf 'unknown' ;; esac
+}
+
 # A clone holding a record of a site the host now reports EMPTY: the repository was emptied or created
 # again since this clone last read it (#1616, review FM-2). Asked only once a fetch has failed, because a
 # missing main is not a network failure, and "re-run when the site can be reached" would loop: the site
@@ -6044,18 +6058,36 @@ cmd_unpublish() { # <trip_dir> [--disable-pages-only] [--yes]
   owner="$(gh api user --jq '.login')" || die "could not read GitHub user."
   slug="$(slug_for "$trip_dir")"
 
-  # Idempotent: nothing to take down if the repo isn't there.
-  if ! gh repo view "$owner/$slug" >/dev/null 2>&1; then
-    ok "unpublish: $owner/$slug does not exist — nothing to take down (no-op)."
-    return 0
-  fi
+  # Idempotent: nothing to take down where the host says the repo is not there (#2212). Only a 404 says
+  # that; a lookup that gets no answer it can read is not an absent repository, and reading it as one told
+  # the operator a site was gone while it was still served. The absent line is kept byte-identical:
+  # /trip-decommission's Defence 3 keys on it.
+  local seen
+  seen="$(_host_answer "repos/$owner/$slug")"
+  case "$seen" in
+    absent)  ok "unpublish: $owner/$slug does not exist — nothing to take down (no-op)."; return 0 ;;
+    present) ;;
+    *)       die "unpublish: could not ask GitHub whether $owner/$slug exists — the lookup got no answer it could read (a dropped connection, an outage, a rate limit, or a token that may not read the repository). Nothing was taken down, and the site may still be served at https://$owner.github.io/$slug/. Check  gh auth status  and re-run the same unpublish command when GitHub can be reached." ;;
+  esac
 
   if [ "$disable_only" = "1" ]; then
+    local del_out pages
     info "Disabling GitHub Pages for $owner/$slug (repo kept)…"
-    if gh api -X DELETE "repos/$owner/$slug/pages" >/dev/null 2>&1; then
+    if del_out="$(gh api -X DELETE "repos/$owner/$slug/pages" 2>&1)"; then
       ok "Pages disabled — https://$owner.github.io/$slug/ is now offline. Repo $owner/$slug retained."
     else
-      warn "Pages may already be disabled (nothing to do)."
+      # A DELETE that failed is settled by reading the Pages site back, as enable_pages settles its own
+      # failure: what the operator asked is whether the site is still served, and only a 404 says it is not.
+      pages="$(_host_answer "repos/$owner/$slug/pages")"
+      case "$pages" in
+        absent) ok "Pages was already disabled for $owner/$slug — nothing to do. Repo $owner/$slug retained." ;;
+        present)
+          warn "GitHub refused to disable Pages for $owner/$slug:"; sed 's/^/    /' <<<"$del_out" >&2
+          die "unpublish: the takedown did not happen — GitHub refused to disable Pages for $owner/$slug, and the repository still has a Pages site, so https://$owner.github.io/$slug/ is still served. The refusal is above. Check that your token may change this repository's settings ( gh auth status ), then re-run  unpublish --disable-pages-only , or disable Pages in the repository's Settings → Pages." ;;
+        *)
+          warn "The call that disables Pages for $owner/$slug failed:"; sed 's/^/    /' <<<"$del_out" >&2
+          die "unpublish: the takedown may not have happened — the call that disables Pages for $owner/$slug failed, and GitHub could not be asked afterwards whether a Pages site remains, so https://$owner.github.io/$slug/ may still be served. Re-run  unpublish --disable-pages-only  when GitHub can be reached; it reads the site back before it says anything." ;;
+      esac
     fi
     warn "To restore: re-enable Pages in the repo Settings → Pages (branch main / root)."
     warn "The repo name '$slug' is still public, and content may persist in third-party caches/clones."
