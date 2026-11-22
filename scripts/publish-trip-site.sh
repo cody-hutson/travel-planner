@@ -69,7 +69,12 @@
 # a different key — or one that cannot be read as a key — publish and update REFUSE rather than
 # choose, before any network call: .passphrase is the key of record, and a silent choice between
 # two keys is how the next routine update used to undo a rotation (GHSA-gmm2-v7rr-jq7r). The only
-# remedy offered is to unset the variable; keys change only through rotate. rotate never reads
+# remedy offered is to unset the variable; keys change only through rotate. Before a push that re-encrypts,
+# update confirms that the key it will use opens the page the site serves now, read from the clone's fetched tip,
+# whichever store supplied the key, and refuses otherwise. The one exception is a rotation whose push failed, which
+# <trip-dir>/.rotation-pending records — the key file it wrote and the page it replaced — and update finishes while
+# both still stand. rotate refuses a new key that already opens that page. A key file is flushed to disk before any
+# push that depends on it. rotate never reads
 # the variable for its key: it re-encrypts under the new passphrase, and records it in
 # .passphrase only once that ciphertext is committed, immediately before the push. update
 # re-reads .passphrase just before its own push, after fetching the site's current state; a
@@ -288,14 +293,31 @@ prove_key_path() { # <passphrase_file>
   [ -d "$dir" ] && [ -w "$dir" ] || die "could not stage a passphrase beside $pf — nothing was recorded."
 }
 
-write_passphrase_file() { # <passphrase_file> <passphrase>
+# Flush <path> — a file, or a directory whose entry a rename just changed — to the device (#1821). fsync(2) through
+# perl, which every key writer already requires (preflight); on darwin also F_FULLFSYNC (51), which asks the drive to
+# flush its own cache, as fsync(2) on that host says a write needs for a tighter guarantee. A filesystem that refuses
+# F_FULLFSYNC still has its fsync. Non-zero only when fsync itself fails.
+_flush_path() { # <path>
+  perl -MIO::Handle -e 'open(my $h, "<", $ARGV[0]) or exit 1; $h->sync or exit 1;
+    if ($^O eq "darwin") { fcntl($h, 51, 0); } exit 0' "$1"
+}
+
+# The staged copy is flushed before the rename and the directory after it, so the key a push depends on is on disk
+# before the push starts (#1821). With defer-dir-flush the caller flushes the directory itself: rotate writes the key
+# and then its pending-rotation marker, and flushes once after both, so a directory that cannot be flushed is reported
+# by the state both writes left rather than from inside this writer, before the marker exists (review CD-4).
+write_passphrase_file() { # <passphrase_file> <passphrase> [defer-dir-flush]
   local pf p="$2" tmp
   pf="$(resolve_key_path "$1")" || die "could not follow $1 to the file it links to — nothing was recorded."
   [ ! -e "$pf" ] || [ -f "$pf" ] || die "could not record a passphrase at $pf — it is not a regular file. Nothing was recorded."
   tmp="$(mktemp "${pf}.XXXXXX")" || die "could not stage a passphrase beside $pf — nothing was recorded."
-  if ! { printf '%s\n' "$p" > "$tmp" && mv -f "$tmp" "$pf"; }; then
-    rm -f "$tmp"; die "could not record the passphrase in $pf — nothing was recorded."
+  if ! { printf '%s\n' "$p" > "$tmp" && _flush_path "$tmp"; }; then
+    rm -f "$tmp"; die "could not write and flush the passphrase beside $pf — nothing was recorded."
   fi
+  mv -f "$tmp" "$pf" || { rm -f "$tmp"; die "could not record the passphrase in $pf — nothing was recorded."; }
+  [ "${3:-}" != defer-dir-flush ] || return 0
+  _flush_path "$(dirname "$pf")" \
+    || die "the passphrase was written to $pf, but the directory holding it could not be flushed to disk, so a crash could still undo the write. Nothing was pushed. Re-run the command."
 }
 
 # 0 when <pf> is a readable regular file and its key — read exactly as the resolver reads it,
@@ -371,6 +393,92 @@ require_key_of_record() { # <trip_dir> <passphrase-this-run-encrypted-under> <pu
   fi
   [ -z "${5:-}" ] || die "$pf changed while this update was running — another rotate or update recorded a different key after this run resolved its own. This run could not confirm its own commit in $3 and take it back — another command may have committed on top of it. $5"
   die "$pf changed while this update was running — another rotate or update recorded a different key after this run resolved its own. This run pushed nothing itself, but could not confirm its own commit in $3 and take it back — another command may have committed on top of it, and may already have published it. Remove $3 before re-running update, so no later push from it carries a page under the replaced key."
+}
+
+# Whether <passphrase> opens the page at <tip> in the per-trip clone — the page the site serves now, read from the
+# clone's fetched tip, which is exactly the page a leased push replaces (#1820, decision 10). The page goes to a
+# private temp file and back out; a page that cannot be read is undetermined. Nothing here dies.
+_key_opens_live_page() { # <pub_dir> <tip> <passphrase> -> a _key_opens_page verdict
+  local kl_f kl_v=""
+  kl_f="$(mktemp)" || { printf 'undetermined'; return 0; }
+  if git -C "$1" show "$2:index.html" > "$kl_f" 2>/dev/null; then kl_v="$(_key_opens_page "$kl_f" "$3")"; fi
+  rm -f "$kl_f"
+  printf '%s' "${kl_v:-undetermined}"
+}
+
+# The identity of the file a key lives in — inode, mtime, size — or nothing. Any rewrite changes it: a rename gives
+# a new inode, and a restore from a copy that keeps the mtime still lands as a new file.
+_key_file_identity() { # <passphrase_file>
+  local ki_p ki_i ki_m ki_s
+  ki_p="$(resolve_key_path "$1")" || return 0
+  [ -f "$ki_p" ] || return 0
+  ki_i="$(ls -di "$ki_p" 2>/dev/null)" || return 0; ki_i="${ki_i#"${ki_i%%[![:space:]]*}"}"; ki_i="${ki_i%%[[:space:]]*}"
+  ki_m="$(_epoch_of_file "$ki_p")"; ki_s="$(wc -c < "$ki_p" 2>/dev/null)"; ki_s="${ki_s//[^0-9]/}"
+  [ -n "$ki_i" ] && [ -n "$ki_m" ] && [ -n "$ki_s" ] || return 0
+  printf '%s:%s:%s' "$ki_i" "$ki_m" "$ki_s"
+}
+pending_rotation_path() { printf '%s' "$1/.rotation-pending"; }
+
+# The pending-rotation marker (#1820, D-3; review CD-1). rotate writes it immediately AFTER it records the new key,
+# naming the identity of the key file that write produced and base-page, the git blob id of the page the rotation's
+# commit replaces. update finishes a rotation only while .passphrase is still that file AND the page the site serves
+# is still that page: a key file rewritten since, or a site moved under the old key by another copy of the trip, or a
+# repository published again, falls outside it, and update refuses naming rotate. Written before the key it would
+# name the old file, which the key write's rename replaces, and would never match. It holds no key and no person
+# data: an inode, a time, a size and a public ciphertext's content address. Its directory is flushed by the caller,
+# once, after the key and the marker are both written (review CD-4).
+_record_pending_rotation() { # <trip_dir> <base-page blob> -> 0, or non-zero with nothing left
+  local rp_f rp_id rp_tmp
+  [ -n "${2:-}" ] || return 1
+  rp_f="$(pending_rotation_path "$1")"
+  rp_id="$(_key_file_identity "$1/.passphrase")"; [ -n "$rp_id" ] || return 1
+  rp_tmp="$(mktemp "${rp_f}.XXXXXX")" || return 1
+  if printf 'key-file=%s\nbase-page=%s\nsince=%s\n' "$rp_id" "$2" "$(_iso_now)" > "$rp_tmp" \
+     && _flush_path "$rp_tmp" && mv -f "$rp_tmp" "$rp_f"; then return 0; fi
+  rm -f "$rp_tmp"; return 1
+}
+# 0 only when the marker is a readable regular file whose key-file= names .passphrase as it stands now and whose
+# base-page= is the page at <tip>. An empty identity — an unreadable key file, a link that cannot be followed — or a
+# marker with no base-page never matches.
+_pending_rotation_matches() { # <trip_dir> <pub_dir> <tip>
+  local pm_f pm_line pm_rec="" pm_base="" pm_now pm_page
+  pm_f="$(pending_rotation_path "$1")"
+  [ -f "$pm_f" ] && [ -r "$pm_f" ] || return 1
+  while IFS= read -r pm_line || [ -n "$pm_line" ]; do
+    case "$pm_line" in key-file=*) pm_rec="${pm_line#key-file=}" ;; base-page=*) pm_base="${pm_line#base-page=}" ;; esac
+  done < "$pm_f"
+  pm_now="$(_key_file_identity "$1/.passphrase")"
+  pm_page="$(git -C "$2" rev-parse --verify -q "$3:index.html" 2>/dev/null)" || pm_page=""
+  [ -n "$pm_rec" ] && [ -n "$pm_now" ] && [ "$pm_rec" = "$pm_now" ] \
+    && [ -n "$pm_base" ] && [ -n "$pm_page" ] && [ "$pm_base" = "$pm_page" ]
+}
+# Run after a push that landed, so it warns and never dies.
+_clear_pending_rotation() { # <trip_dir>
+  local cp_f; cp_f="$(pending_rotation_path "$1")"
+  [ -e "$cp_f" ] || [ -L "$cp_f" ] || return 0
+  rm -f "$cp_f" || warn "could not remove $cp_f; the rotation it names has now been published, so delete it."
+  return 0
+}
+
+# update's refusal when the key it would encrypt under does not open the page the site serves now (#1820). This run's
+# own commit is taken back out first, compare-and-swap, as require_key_of_record takes it back: it is a page under a
+# key the site is not under, and the clone is reused as it stands. <src> names the store, never the key: the variable's
+# name, or the path of .passphrase. Value-free, as every refusal here is (CIAC-4).
+refuse_key_not_live() { # <trip_dir> <pub_dir> <this-run's-own-commit> <does-not-open|not-encrypted|undetermined> <src> <tip> <owner/slug>
+  local said tip
+  if discard_own_commit "$2" "$3"; then
+    said="this run took its own commit back out of $2"
+  else
+    said="this run could not confirm its own commit in $2 and take it back — remove $2 (it is cloned again from the published site) before re-running"
+  fi
+  tip="$(git -C "$2" rev-parse --short "$6" 2>/dev/null)" || tip="$6"
+  case "$4" in
+    does-not-open)
+      die "update refused — the key this run would encrypt under, from $5, does not open the page the site serves now ($7 at ${tip}). Publishing under it would lock out everyone who holds the current passphrase. Nothing was pushed, and $said. If you hold the passphrase that opens the site, put it in $1/.passphrase (or set STATICRYPT_PASSWORD to it) and re-run update. If it is lost, run rotate, which sets a new passphrase and announces it." ;;
+    not-encrypted)
+      die "update refused — the page the site serves now is not encrypted (this site was published --plaintext), and update would encrypt it under a key nobody was told about. Nothing was pushed, and $said. To encrypt it from now on, run rotate, which announces the passphrase it sets. unpublish followed by publish --plaintext keeps it plaintext." ;;
+  esac
+  die "update refused — could not establish whether the key this run would encrypt under opens the page the site serves now (the page could not be read from $2, or StatiCrypt could not be run). Nothing was pushed, and $said. Re-run update when it can."
 }
 
 # After a rotation: STATICRYPT_PASSWORD still set, and not the new key, means the next publish or
@@ -492,6 +600,32 @@ encrypt_to_tmp() { # <src_html> <passphrase>
   fi
   rm -rf "$stage"; rm -f "$log"   # plaintext copy + log removed; only ciphertext (enc) remains
   printf '%s' "$enc"
+}
+
+# Whether <passphrase> opens the StatiCrypt page <page_file> — the check every re-encrypting push makes against the
+# page the site serves now (#1820). One answer on stdout: opens | does-not-open | not-encrypted | undetermined.
+# Three properties of staticrypt@3.5.4's --decrypt, measured at Stage 5, shape it: without --salt it hashes the key
+# with a fresh random salt, so the page's own salt is passed; it exits 0 on every outcome, so the verdict is read from
+# the file it writes and the line it prints; and with no key in the environment it prompts, so stdin is closed. The
+# key reaches it only through the prefix assignment, never argv (RV12). The decrypted page is plaintext: it is written
+# into a private temp directory that is removed before this returns, and nothing in this function dies.
+_key_opens_page() { # <page_file> <passphrase> -> opens | does-not-open | not-encrypted | undetermined
+  local kp_page="$1" kp_key="$2" kp_salt="" kp_dir kp_out kp_rc=0 kp_v=undetermined
+  [ -f "$kp_page" ] && [ -r "$kp_page" ] || { printf 'undetermined'; return 0; }
+  grep -q '"staticryptEncryptedMsgUniqueVariableName"' "$kp_page" || { printf 'not-encrypted'; return 0; }
+  kp_salt="$(sed -n 's/.*"staticryptSaltUniqueVariableName":[[:space:]]*"\([0-9a-f]\{32\}\)".*/\1/p' "$kp_page")"
+  IFS= read -r kp_salt <<<"$kp_salt" || :
+  [ "${#kp_salt}" -eq 32 ] || { printf 'undetermined'; return 0; }
+  kp_dir="$(mktemp -d)" || { printf 'undetermined'; return 0; }
+  cp "$kp_page" "$kp_dir/live.html" || { rm -rf "$kp_dir"; printf 'undetermined'; return 0; }
+  kp_out="$( cd "$kp_dir" && STATICRYPT_PASSWORD="$kp_key" \
+             npx --yes staticrypt@3.5.4 live.html --decrypt --config false --salt "$kp_salt" -d out </dev/null 2>&1 )" || kp_rc=$?
+  if [ "$kp_rc" -eq 0 ] && [ -s "$kp_dir/out/live.html" ]; then kp_v=opens
+  elif [ "$kp_rc" -eq 0 ] && [ ! -e "$kp_dir/out/live.html" ]; then
+    case "$kp_out" in *'could not decrypt'*) kp_v=does-not-open ;; esac
+  fi
+  rm -rf "$kp_dir"
+  printf '%s' "$kp_v"
 }
 
 # Visible text of an HTML file — markup and <script>/<style> blocks removed.
@@ -5496,6 +5630,22 @@ cmd_update() { # <trip_dir>
     || { git -C "$pub_dir" update-ref refs/remotes/origin/main "$prior" "$lease"; die "update refused — the site's history was rewound after $pub_dir last recorded it (pages withdrawn from another machine, say), and pushing now would publish them again. Nothing was pushed. Remove $pub_dir (it is cloned again from the published site) and re-run update."; }
   git -C "$pub_dir" merge-base --is-ancestor "$lease" "$mine" \
     || die "update: this run's commit does not descend from the site's current tip, so its push could not be a fast-forward — another command or machine moved the site, and may already have published this run's page beneath its own. Nothing was pushed by this run. Remove $pub_dir (it is cloned again from the published site, so nothing is lost) and re-run update."
+  # THE KEY AGAINST THE LIVE SITE (#1820). The key this run encrypts under, whichever store supplied it, must open
+  # the page the site serves now — the page at the lease, which is exactly what this push replaces. A key from a
+  # store that is not the site's (a stale .passphrase, a variable left set, a key a failed first publish generated)
+  # would re-encrypt the site under a key its viewers were never given. The one exception is a rotation whose push
+  # failed: .rotation-pending records the key file it wrote and the page it replaced, and while both still stand this
+  # update finishes that rotation, as it always has. Anything else refuses, and takes this run's commit back out.
+  local kv src
+  if [ -n "${STATICRYPT_PASSWORD:-}" ]; then src="STATICRYPT_PASSWORD"; else src="$trip_dir/.passphrase"; fi
+  kv="$(_key_opens_live_page "$pub_dir" "$lease" "$passphrase")"
+  case "$kv" in
+    opens) ;;
+    does-not-open|not-encrypted)
+      _pending_rotation_matches "$trip_dir" "$pub_dir" "$lease" \
+        || refuse_key_not_live "$trip_dir" "$pub_dir" "$mine" "$kv" "$src" "$lease" "${owner}/${slug}" ;;
+    *) refuse_key_not_live "$trip_dir" "$pub_dir" "$mine" undetermined "$src" "$lease" "${owner}/${slug}" ;;
+  esac
   # The key of record, re-read immediately before the push: a rotation that committed in the
   # meantime has already recorded a new key, and pushing this run's ciphertext would put the
   # key it revoked back over it.
@@ -5518,6 +5668,8 @@ cmd_update() { # <trip_dir>
   # here rather than earlier for that reason: a sidecar written before the push would
   # claim content a failed push never delivered, and the next republish would then
   # compare against a plan nobody can see.
+  # A rotation this push finished is published now, so its marker goes (#1820).
+  _clear_pending_rotation "$trip_dir"
   record_published_itinerary "$trip_dir" "$site_html" "$staged"
   ok "Updated: https://${owner}.github.io/${slug}/  (changes appear behind the passphrase prompt)"
 }
@@ -5858,6 +6010,21 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   # A page an earlier update or rotate committed but did not push is still in the reused clone,
   # under the key this rotation is about to revoke. Refuse rather than push it (see the function).
   refuse_unpushed_residue "$pub_dir"
+  # THE NEW KEY AGAINST THE LIVE SITE (#1820, decision 3). A new passphrase that already opens the page the site
+  # serves now revokes nothing, whatever .passphrase holds — the store test above sees only the key of record, and a
+  # stale one lets the live key through. Nothing is asked of the retiring key: rotate is the route for a lost key and
+  # for a plaintext site. base receives the page the rotation's commit replaces, for the pending-rotation marker.
+  local base
+  base="$(git -C "$pub_dir" rev-parse --verify -q "$lease:index.html" 2>/dev/null)" || base=""
+  [ -n "$base" ] \
+    || die "rotate refused — could not establish whether the new passphrase opens the page the site serves now (the page could not be read from $pub_dir). Nothing was changed: $pf is exactly as it was. Re-run rotate when it can."
+  case "$(_key_opens_live_page "$pub_dir" "$lease" "$newp")" in
+    opens)
+      die "rotate refused — the new passphrase already opens the page the site serves now (${owner}/${slug} at $(git -C "$pub_dir" rev-parse --short "$lease")), so this rotation would revoke nothing. Nothing was changed: $pf is exactly as it was." ;;
+    does-not-open|not-encrypted) ;;
+    *)
+      die "rotate refused — could not establish whether the new passphrase opens the page the site serves now (the page could not be read from $pub_dir, or StatiCrypt could not be run). Nothing was changed: $pf is exactly as it was. Re-run rotate when it can." ;;
+  esac
   # The new key is handed down explicitly, so the environment is never read for it
   # (GHSA-gmm2-v7rr-jq7r) — a set STATICRYPT_PASSWORD can no longer take a rotation's place.
   encrypt_verify_commit "$pub_dir" "$site_html" "$newp" rotate mine
@@ -5869,8 +6036,16 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   # THE COMMIT POINT: the new ciphertext is committed and not yet pushed. Recording the key here,
   # and not after the push, means no reachable state sends a later update back to the revoked
   # key — every abort before this line left .passphrase untouched, and a push that fails after it
-  # leaves .passphrase naming the key the next update converges the site onto.
-  write_passphrase_file "$pf" "$newp"
+  # leaves .passphrase naming the key the next update converges the site onto. The order here is the key, then the
+  # pending-rotation marker, which records the file that write produced and the page this rotation replaces, then one
+  # flush of the directories holding them (review CD-4): each failure is then worded by the state it leaves.
+  write_passphrase_file "$pf" "$newp" defer-dir-flush
+  _record_pending_rotation "$trip_dir" "$base" \
+    || die "rotate: the new passphrase is recorded in $pf, but the record that lets update finish this rotation could not be written beside it. Nothing was pushed, and the site is still under the previous passphrase. Remove $pub_dir (it is cloned again from the published site) and run rotate again; it sets and announces a new passphrase."
+  local kdir
+  kdir="$(dirname "$(resolve_key_path "$pf")")"
+  { _flush_path "$kdir" && { [ "$kdir" = "$trip_dir" ] || _flush_path "$trip_dir"; }; } \
+    || die "rotate: the new passphrase is recorded in $pf and the record that lets update finish this rotation is written beside it, but the directory holding them could not be flushed to disk, so a crash could still undo them. Nothing was pushed, and the site is still under the previous passphrase. Run update to finish the rotation: it publishes under the passphrase now recorded."
   # The baseline record this push needs, staged now, after the key is recorded; between it and the
   # push stands only the progress line below, which writes nothing to the trip (#1468 D-6). A
   # refusal here is a push that did not happen: the new key is recorded, and update finishes the
@@ -5880,6 +6055,7 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   if ! push_trip_site "$pub_dir" "$mine" rotate "$lease"; then
     die "rotate: the push to the per-trip repository failed — the site changed after this run read it, or the network did — and it may still have reached the site: a connection dropped after the server accepted a push reports failure here too. $pf already holds the new passphrase, recorded before the push. Run update to finish the rotation: it re-reads the site first, and converges on whatever reached it under that passphrase. Until it succeeds, the previous passphrase may still open the site."
   fi
+  _clear_pending_rotation "$trip_dir"
   record_published_itinerary "$trip_dir" "$site_html" "$staged"
   ok "Updated: https://${owner}.github.io/${slug}/  (changes appear behind the passphrase prompt)"
   warn "Passphrase ROTATED — anyone you previously shared the site with must re-receive the new one. Earlier versions stay in the per-trip repository's history, readable to anyone holding an old passphrase; to withdraw them, unpublish (which deletes the repository) and publish again."
