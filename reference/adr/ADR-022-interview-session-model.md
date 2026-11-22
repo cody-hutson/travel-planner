@@ -893,7 +893,7 @@ This is the payoff of D1.1 and it is listed first because it is the part a reade
 
 ### Two facts a small-looking change would hide
 
-1. **The verb file this behaviour lands in is already far over the body-size budget `CLAUDE.md`
+1. **The verb file this behaviour lands in is already far over the body-size budget `reference/size-fence.md`
    records.** A resumable interview authored inline in the `profile` verb grows the widest
    over-budget body in the engine. This record states **behaviour** and deliberately leaves
    **placement** to the sibling, which may move conduct out entirely. That is the mitigation, and it
@@ -999,3 +999,5 @@ cell. Every statement of what becomes false elsewhere stands as it stood. The sa
 "One cell gains an explicit `D5.1` basis it had been taking from the removed token." That sentence
 describes the sibling record, `ADR-023`, whose table carries the cell. No cell of this record gained
 such a basis, and the sentence is removed.
+
+**Amendment (2026-11-21, Saturday) — *Two facts a small-looking change would hide*, item 1: the body-size budget's home re-pointed; no decision changes.** The budget left `CLAUDE.md` for `reference/size-fence.md` § *The verb-body line budget*; the item cited the charter as the place that records it and now cites the size fence.

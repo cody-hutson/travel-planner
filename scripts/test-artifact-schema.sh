@@ -11847,7 +11847,7 @@ fi
 # Group AF — the archived-trip freeze, and the one operation that reaches through it.
 #
 # ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
-# CLAUDE.md § *Archived trips — what the freeze binds* states two things that pull in
+# reference/trip-lifecycle.md § *Archived trips — what the freeze binds* states two things that pull in
 # opposite directions: an archived trip receives NO derivation, and erasure reaches it
 # anyway. Read carelessly the first swallows the second — "frozen" heard as untouchable
 # rather than underivable — and a person's data survives a deletion they asked for.
@@ -12216,7 +12216,7 @@ EOF
   # WHY THE FIX IS NOT A LIST IN THIS FILE. Holding the three class names here would be the
   # second source of truth AF0's design exists to refuse, free to drift from the fixture and
   # from the rule alike. The class trichotomy is not a fixture detail: it is a property of
-  # the provenance model, and CLAUDE.md § *Archived trips — what the freeze binds* states it
+  # the provenance model, and reference/trip-lifecycle.md § *Archived trips — what the freeze binds* states it
   # as part of the rule — three classes, distinguished by their marks, failing in opposite
   # directions under a regeneration, which is why "substitute, never regenerate" is the
   # whole of the rule. This arm reads the class set from the RULE and requires the fixture's
@@ -12227,10 +12227,10 @@ EOF
   # the class set is a visible change to a stated rule rather than tidy-up in a worked
   # example. That is the correct bar, and it is the honest description of it.
   #
-  # It also gives CLAUDE.md § *Archived trips* its first executable reader. Before this arm
+  # It also gives reference/trip-lifecycle.md § *Archived trips* its first executable reader. Before this arm
   # the section could be deleted outright, inverted to say archived data is unreachable, or
   # replaced with nonsense, and every suite in this repository stayed green.
-  AF_RULEDOC="$ROOT/CLAUDE.md"
+  AF_RULEDOC="$ROOT/reference/trip-lifecycle.md"
   AF_RULECLS="$(awk '
     /^## Archived trips/ { insec = 1; next }
     insec && /^## /      { insec = 0; inpar = 0 }
@@ -12251,9 +12251,9 @@ EOF
   AF_CLS_ONLYRULE="$(comm -23 <(printf '%s\n' "$AF_RULECLS") <(printf '%s\n' "$AF_FENCECLS") | tr '\n' ' ')"
   AF_CLS_ONLYFENCE="$(comm -13 <(printf '%s\n' "$AF_RULECLS") <(printf '%s\n' "$AF_FENCECLS") | tr '\n' ' ')"
   if [ "$AF_NRULE" -eq 0 ]; then
-    FAIL "AF15: CLAUDE.md § Archived trips names no model-entry class at all — the rule that declares which classes an erasure must reach is missing, unreadable, or has been rewritten. Every class-coverage verdict below it would be over a set nothing declares, so this fails rather than passing over an empty rule"
+    FAIL "AF15: reference/trip-lifecycle.md § Archived trips names no model-entry class at all — the rule that declares which classes an erasure must reach is missing, unreadable, or has been rewritten. Every class-coverage verdict below it would be over a set nothing declares, so this fails rather than passing over an empty rule"
   elif [ -z "$AF_CLS_ONLYRULE" ] && [ -z "$AF_CLS_ONLYFENCE" ]; then
-    PASS "AF15: the fixture's declared class set covers the rule's EXACTLY — $AF_NFENCE class(es) in the \`archived-erasure-witness\` fence against $AF_NRULE named by CLAUDE.md § Archived trips, both directions. AF9's 'INCLUDING the both-marks class' is now a claim about a population something else declares"
+    PASS "AF15: the fixture's declared class set covers the rule's EXACTLY — $AF_NFENCE class(es) in the \`archived-erasure-witness\` fence against $AF_NRULE named by reference/trip-lifecycle.md § Archived trips, both directions. AF9's 'INCLUDING the both-marks class' is now a claim about a population something else declares"
   else
     FAIL "AF15: the fixture's class coverage and the rule disagree (rule=$AF_NRULE fence=$AF_NFENCE; in the rule but NOT exercised by the fixture: ${AF_CLS_ONLYRULE:-<none>}; in the fixture but not in the rule: ${AF_CLS_ONLYFENCE:-<none>}). A class the rule requires and the fixture no longer carries is the coherent-shrink escape: the arms below still pass, and AF9 certifies a class the population does not contain"
   fi

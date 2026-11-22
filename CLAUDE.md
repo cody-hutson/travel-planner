@@ -101,7 +101,7 @@ Example: `food-list.md` after three sessions:
 The satisfaction layer adds three `outputs/*.md` artifacts with their own lifecycles. **The lifecycle classes are defined once**, in `reference/data-architecture.md` § *Lifecycle Classes* — this section assigns, it does not define. Satisfaction-layer rationale: `reference/data-model.md`.
 
 - **`event-status.md` — `persist-mutable`.** Updated **in place** as events change status, and it **survives every re-synthesis** — never appended-with-history, never rebuilt from scratch, never versioned. It is the iteration-protection source of truth: a re-synthesis *reads* existing status, it does not overwrite it. This is the one artifact that must outlive a planning pass. The **hub is the primary writer** and owns it; the file is **created by whichever agent first writes it** — the enrichment agent's setup seed (from `## Locked Elements`), or the hub on the first full synthesis if no seed exists (the validator only reads it). Persist-mutable is not append-only — a row is **deleted** in the one case where its event is removed from the itinerary, so no ghost row lingers.
-- **`traveler-model.md` — `rebuilt-each-synthesis`.** A `[DERIVED]` projection. The enrichment agent refreshes it from the current **composed** per-traveler source — each `travelers/<traveler>.md` together with the durable person record it references, which for a file carrying no reference is that file alone (`reference/data-model.md` § *Composition*) — whenever either side changes. Every entry projected that way holds no independent state — the composed source is authoritative — so regeneration is safe. **One stated per-entry exception:** the `[THIRD-PARTY]` entry admitted through the operator fallback has no source file by design, so it is carried forward verbatim rather than re-derived. The classification is unchanged. **This refresh is unconditional only while the trip is `ACTIVE`** — on an archived trip it does not run at all, and the one operation that still reaches the file is named in § *Archived trips — what the freeze binds*.
+- **`traveler-model.md` — `rebuilt-each-synthesis`.** A `[DERIVED]` projection. The enrichment agent refreshes it from the current **composed** per-traveler source — each `travelers/<traveler>.md` together with the durable person record it references, which for a file carrying no reference is that file alone (`reference/data-model.md` § *Composition*) — whenever either side changes. Every entry projected that way holds no independent state — the composed source is authoritative — so regeneration is safe. **One stated per-entry exception:** the `[THIRD-PARTY]` entry admitted through the operator fallback has no source file by design, so it is carried forward verbatim rather than re-derived. The classification is unchanged. **This refresh is unconditional only while the trip is `ACTIVE`** — on an archived trip it does not run at all, and the one operation that still reaches the file is named in `reference/trip-lifecycle.md` § *Archived trips — what the freeze binds*.
 - **`satisfaction-metrics.md` — `rebuilt-each-synthesis`.** Recomputed from the current itinerary and traveler model. A coverage snapshot at synthesis time; safe to regenerate because its inputs are authoritative. Two writers, **section-owned** so they never clobber: the **hub** owns the desire-coverage + balance-signal sections, the **validator** owns the needs-compliance + agreement-check sections, each read-merge-writing only its own.
 
 ---
@@ -110,76 +110,9 @@ The satisfaction layer adds three `outputs/*.md` artifacts with their own lifecy
 
 § *Output Versioning* binds a trip's agent outputs and nothing else; to change a tracked engine file, follow § *Editing an engine file*, which reconciles where that rule appends.
 
-## Archived trips — what the freeze binds
+## The freeze on an archived trip
 
-**A trip whose `**Lifecycle:**` is `ARCHIVED` receives no derivation.** No update signal is written
-to it, no artifact of it is regenerated, and no refresh pass composes it. `outputs/traveler-model.md`
-holds the composition as it stood when the trip was archived: an edit to any person record it
-references leaves it byte-unchanged and unsignalled. What the freeze protects is the plan **as it was
-planned**.
-
-**Erasure is the one stated exception, and it is the only one.** Erasure removes a person's
-identifying values from a fixed set of locations; it composes nothing and regenerates nothing.
-**On an archived trip, erasure substitutes and never regenerates.** Archived data is therefore
-**reachable** — by that one operation, by that one mechanism, and by nothing else. A person who asks
-to be erased is erased from archived trips too.
-
-**Erasure must reach every model-entry class, and there are exactly three.** They are distinguished
-by the provenance marks the entry carries, and they behave in three different ways under a
-regeneration — which is why substituting rather than regenerating is the whole of the rule. An entry
-carrying no mark is `first-party` and would be re-derived from its own source file. An entry carrying
-`[OPERATOR-PROVIDED]` alone is `operator-provided-only` and would be **dropped**, having no source to
-re-derive it from. An entry carrying both `[OPERATOR-PROVIDED]` and `[THIRD-PARTY]` is `both-marks`
-and would be **carried forward verbatim**, name and need intact — the erasure silently undone. The
-two file-less classes fail in **opposite** directions, so no assertion over one of them detects a
-wrong mechanism; only coverage of all three does. **Any fixture standing as the worked example of
-this rule must exercise all three, and dropping one is a change to this rule, not a change to a
-fixture.**
-
-**The freeze binds derivation, not bytes.** `/trip-decommission archive` moves nothing: it takes the
-site offline, sets the marker, and appends a closing entry. An archived trip's files sit at the same
-paths as an active trip's and stay writable by whatever this rule admits. **"Frozen" means
-underivable, never untouchable.**
-
-**No other operation takes an exception, and two were tested against this rule and refused.** An
-ordinary person-record edit is neither a redaction nor a re-addressing: it is not signalled, not
-written, and is named in the discovery report as `ARCHIVED — not signalled`. A merge writes no
-archived trip at all — the loser becomes a stub, and archived trips resolve through it. Anything that
-composes, refreshes, regenerates or re-derives is inside the first paragraph and stays there.
-
-**Reopening lifts the freeze prospectively.** `/trip-decommission reopen` sets the marker back to
-`ACTIVE`; from that point the trip is in the ordinary refresh population and its next pass composes
-current values. Reopen dispatches no agent and refreshes nothing itself, and nothing is queued while
-a trip is archived — a reopened trip absorbs current state, never a replay.
-
-> **Why this section is a section, and why it is here rather than three plausible alternatives.**
-> The rule binds the hub, the enrichment agent, the validator and the site build — but **not all
-> four are bound the same way, and the difference matters.** The three prompt surfaces read
-> `CLAUDE.md` directly: it is auto-loaded when this repository is the workspace, and an installed
-> engine's verbs open it at the engine root (§ *Resolving a trip*), so the rule lives where they
-> already are or one read away. The site build does not read it at all — `scripts/publish-trip-site.sh` is a
-> shell script and never opens this file. It is bound **structurally instead**, by `G7`: every
-> dispatching verb declares `lifecycle: ACTIVE`, so `/trip-publish update` refuses on an archived
-> trip before any build begins (`skills/trip-publish/SKILL.md` states that disposition in
-> terms). Stating the rule here binds the readers; `G7` binds the runners. Do not read this
-> paragraph as a claim that four surfaces parse this section. It sits beside
-> § *Output Versioning* because that section is the corpus's derivation-policy home and carries the
-> sentence this rule qualifies — but **deliberately outside it**, because the exception sets inside
-> that section are read back by `reference/data-architecture.md` § *Lifecycle Classes*' absence
-> rule to assign a class, and **this rule declares no artifact class and must never be read as a
-> file-exception list.**
-> It is **not** in § *Resolving a trip*, which is the gate ladder: the freeze stops no resolution and
-> returns no `trip.stop_gate`, and `G8` is reserved and report-only. It is **not** in
-> `reference/data-architecture.md` § *Lifecycle Classes*, whose `lifecycle` is the **artifact** axis
-> — `accumulate-append` / `rebuilt-each-synthesis` / `versioned` / `persist-mutable` / `output` — a
-> wholly separate axis that happens to share the word. **The two axes are never the same field:** a
-> `trip-context.md` carries `lifecycle: persist-mutable` in its frontmatter *and* a
-> `**Lifecycle:** ARCHIVED` marker in its body, and neither is a rendering of the other.
-> `reference/adr/ADR-012-people-library.md` records the decision; this section is the operative rule.
-
-**The worked example is `examples/archived-trip-demo/`**, which carries an archived trip whose
-erasure has already run, and `scripts/test-artifact-schema.sh` group `AF` asserts both halves against
-it — that an ordinary person edit leaves it untouched, and that erasure reached it.
+**A trip whose `**Lifecycle:**` is `ARCHIVED` receives no derivation, and erasure — which substitutes and never regenerates — is the one exception.** The rule, the model-entry classes an erasure must reach and the rule's worked example are `reference/trip-lifecycle.md` § *Archived trips — what the freeze binds*; read it before any act that writes to, composes or erases an archived trip.
 
 ---
 
@@ -619,7 +552,8 @@ travel-planner/
 │   ├── replan-protocol.md         ← the behaviour a replan takes when the trip is near
 │   ├── schemas/                   ← per-artifact-class schemas + the CI gate's coverage declaration
 │   ├── site-layout-spec.md        ← travel-site responsive/layout specification, and how a site is designed and built
-│   └── size-fence.md              ← the size fence — the byte ceiling each tracked markdown file that owes a row is held to
+│   ├── size-fence.md              ← the size fence — the byte ceiling each tracked markdown file that owes a row is held to, and the verb-body line budget nothing enforces
+│   └── trip-lifecycle.md          ← the trip lifecycle (the `**Lifecycle:**` marker) and what the freeze on an archived trip binds
 ├── scripts/                  ← publish-trip-site.sh (private publish) + the test-*.sh guard suites
 ├── templates/
 │   ├── trip-context.template.md
@@ -652,50 +586,3 @@ travel-planner/
             ├── validation-report.md
             └── [destination]-travel-site.html   ← bespoke, Claude-generated
 ```
-
-### Verb body size — the threshold, its source, and the recorded overages
-
-**The budget is at most 500 lines of body, and the number is not this repository's.** It comes from the
-published skill-authoring guidance that the `SKILL.md` format belongs to — an external source this
-repo does not own and cannot change — and it is written down here because an acceptance criterion
-graded against a figure no reader can find in the corpus is not gradeable. Nothing in this
-repository enforces it; it is a budget, recorded so an overage is a decision rather than an
-accident.
-
-**Every one of the five exceeds it now, and the overage is still a property of the bodies rather
-than of the format — each is recorded with its reason.** The fifth is the newest and its margin was
-the narrowest: `trip-new` sat inside the budget until the standing confirm rule was appended to it
-in the change that rewrote this paragraph. *Body lines* excludes the frontmatter block, which is
-what the budget is about; each row names the commit its own figure was measured at:
-
-| Verb | Body lines | Over the budget by | Why it is retained at this size |
-|---|---|---|---|
-| `trip-record` | 3,778 | ~7.6× | measured at `d7a66a6`, the merge that took `main` at `0.54.0`, whose own edits to this file account for one of those lines. It read 3,777 at `88fdc3f`, the commit that re-measured it once `past-coverage` and `group-past-coverage` had landed; 3,583 on the commit that re-measured it once erasure's widened reach, the one statement of a party member's standing and `group-expand`'s named reconcile had landed; 3,253 at `14c65a6`, the commit that let the collision checks take the listings they declare; 3,247 at `2302ac7`, the merge that took `main` at `0.47.0`, whose own edits to this file account for 17 of those lines; 3,230 on the commit that re-measured it once the no-repository hand-off and the interview of a block-owned form had landed; 3,164 on the commit that appended `## interview` and bundled its conduct beside the command file, in `skills/trip-record/interview-conduct.md`; and 2,859 at `b89b367`. The widest verb surface in the engine — the person, group, traveller, fact, event, log and interview verbs all live here. A reduction at this ratio is a rewrite, not a trim; the bundled conduct is outside the budget, which the guidance sets on the body alone, and moving detail there is the remedy that guidance names |
-| `trip` | 1,120 | ~2.2× | measured at `b89b367`. The entry point, carrying every dispatching verb and the agent roster each one reads |
-| `trip-decommission` | 653 | ~1.3× | measured at `b89b367`. Three lifecycle verbs whose ordering is load-bearing and stated in full |
-| `trip-publish` | 553 | ~1.1× | measured at `b89b367`. The publish surface, whose refusals and their reasons are the bulk of it |
-| `trip-new` | 524 | ~1.05× | measured on the commit that re-measured it once the no-repository hand-off had reached § *Traveler intake* — this one, which cannot carry its own hash. It read 520 on the commit that appended the standing confirm rule to § *What this command never does*, and 468 at `b89b367`, inside the budget until that rule was appended. The rule is one text stated in each command file rather than a citation to one, because a citation to another command's file would make this command's conduct that file's to state, which is the form `ADR-007` § *Context* requires of a command |
-
-**No body content is reduced in the format conversion, deliberately.** Two constraints make the
-reduction a separate change rather than a cheap one to fold in here. A verb must behave identically
-to its pre-conversion form, demonstrated per verb — and a rewrite of the largest body makes that
-demonstration unfalsifiable, because a behavioural difference could no longer be attributed to the
-format change. And the prose-tone rewrite of these same files is separately scoped, so reducing
-them here would duplicate that scope and guarantee the collision it was sequenced to avoid.
-
-**Nor does that prose-tone rewrite remove the overage, and declining it there is a decision rather
-than an omission.** The rewrite is graded on a preservation criterion — every conduct rule a verb
-section carries survives it, demonstrated by enumerating the bound set before and after and finding
-the difference empty in both directions. A reduction at `trip-record`'s ratio is a rewrite rather
-than a trim, and a rewrite destroys that demonstration by construction: a census cannot show that a
-bound survived a passage which no longer exists. The remediation has a home already — the
-consolidation work that merges these verbs into a router plus its references performs the reduction
-**structurally**, dissolving the over-budget bodies rather than trimming them, so doing it here as
-well would be doing it twice, the second time by somebody else.
-
-**The claim above about how many verbs exceed the budget is re-derivable, and is meant to be
-re-derived rather than carried.** The per-row figures are anchored to the commit they were measured
-at and are correct as history. The sentence introducing them carries no anchor, and every one of
-these bodies has grown since the commit those rows name — `trip-new`'s margin was the narrowest of
-them, and the standing confirm rule closed it. Measure the body lines at the commit you are reading
-before relying on it.

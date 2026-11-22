@@ -611,7 +611,7 @@ leaving it to be inferred from silence: name it in the report as
 re-addressing, so it takes no exception to that freeze.
 
 **The freeze is not this prompt's rule and this paragraph is not its home.** It is stated
-once, in `CLAUDE.md` § *Archived trips — what the freeze binds*, which also names the one
+once, in `reference/trip-lifecycle.md` § *Archived trips — what the freeze binds*, which also names the one
 operation that reaches through it and the two that were tested against it and refused.
 Read it there. What is written here is the behaviour that rule requires **of you** — a
 consequence, not a second copy — so where the two ever appear to differ, the rule governs

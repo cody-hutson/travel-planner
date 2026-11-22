@@ -111,3 +111,7 @@ same reader. Rows stand in byte order of the path.
 118008     skills/trip/SKILL.md
 22110      templates/traveler-intake.template.md
 ```
+
+## The verb-body line budget — recorded, not enforced
+
+**The budget is at most 500 lines of body, and the number is not this repository's.** It comes from the published skill-authoring guidance that the `SKILL.md` format belongs to — an external source this repository does not own and cannot change — with the frontmatter block outside the count, and it is written down here because a criterion graded against a figure no reader can find is not gradeable. **Nothing in this repository enforces it, and no line count for a verb's body is recorded here:** a recorded count drifts from the file it describes, so measure a body at the commit you are reading, as its lines less its frontmatter block. What holds a verb file is its row in the fence above, a ceiling in bytes, because every quantity a size assertion here reads is in bytes and never in lines (`reference/load-class-model.md` § 5). **The remedy for a body over the budget is structural rather than a trim:** detail moves out of the body into a file bundled beside it, as `reference/adr/ADR-039-interview-conduct-bundled-with-the-verb.md` records for the interview's conduct, and the consolidation that merges the verbs into a router plus its references dissolves the over-budget bodies rather than trimming them.

@@ -571,14 +571,14 @@ stands as defined, and every fail-closed path this section names is untouched.
 
 ### 4. Reach is one crossing or two, and the engine's claims are about the first only
 
-**The subject set is five,** and the arbiter is live rather than negotiated. `CLAUDE.md`:123-133
+**The subject set is five,** and the arbiter is live rather than negotiated. `reference/trip-lifecycle.md` § *Archived trips*
 states *"Erasure must reach every model-entry class, and there are **exactly three**"* —
 `first-party`, `operator-provided-only` (**dropped** under regeneration, having no source to
 re-derive from) and `both-marks` (**carried forward verbatim**, the erasure silently undone) —
 adding that *"the two file-less classes fail in **opposite** directions."* Those three, plus the
 roster-only and the cross-trip-composed states, yield five:
 
-| Subject kind | What the engine holds | `CLAUDE.md`:123 class |
+| Subject kind | What the engine holds | `reference/trip-lifecycle.md` § *Archived trips* class |
 |---|---|---|
 | **K1** | a trip traveller file **and** a durable person record reached through `person:` | `first-party` + C22 |
 | **K2** | a trip traveller file | `first-party` |
@@ -713,7 +713,7 @@ produced it persists on disk in every later mode; what a mode change alters is w
 
 **The `ARCHIVED` overlay.** CH-1 → **none**, the site is offline. CH-2 → **writable but inert** —
 *"the freeze binds derivation, not bytes."* CH-3 → **one operation only**, erasure, **by
-substitution, never by regeneration**, which is the mechanism `CLAUDE.md`:125 calls *"the whole of
+substitution, never by regeneration**, which is the mechanism `reference/trip-lifecycle.md` § *Archived trips* calls *"the whole of
 the rule."*
 
 ### 5. Two rules, both channel-level; the observable test per channel
@@ -872,14 +872,14 @@ and its sibling ground the axis on a classification the engine already computes.
 file · Entry · Branch* — carrying, as of `edadfa9`, the observed `Branch` values `normal` and
 `[OPERATOR-PROVIDED]` and no others. `normal` merges `SELF-STATED` with `PERSON-LINKED`, and
 `[OPERATOR-PROVIDED]` merges `OPERATOR-STATED` with `THIRD-PARTY-STATED` — **the second is exactly
-the merge `CLAUDE.md`:130 says fails in opposite directions.** The other fixture carries **no
+the merge `reference/trip-lifecycle.md` § *Archived trips* says fails in opposite directions.** The other fixture carries **no
 `Branch` column at all**, and `K4b`'s flagged-gap arm is unexercised: probed at `edadfa9`,
 `PROFILE MISSING` measures **0 lines / 0 files across the 53 files under `examples/`**, against
 sensitivity arms `[OPERATOR-PROVIDED]` **13 / 5** and `[THIRD-PARTY]` **10 / 5** on the same
 instrument and population, and a reciprocal arm of **20 / 7** over the whole tracked tree — so the
 marker is *specified* in the corpus and *never demonstrated* in a fixture. **Disposition: recorded
 as an observation, and the axis decision stands.** *"The axis already ships"* is sound as *a classification exists*; it is
-**not** measured as *this five-value partition ships*. `CLAUDE.md`:131-133 governs fixture
+**not** measured as *this five-value partition ships*. `reference/trip-lifecycle.md` § *Archived trips* governs fixture
 completeness and is the surface that would close it — *"Any fixture standing as the worked example
 of this rule must exercise all three, and dropping one is a change to this rule, not a change to a
 fixture."*
@@ -917,8 +917,8 @@ here.
 - **#1242 — the one cell that may move.** Argued for one channel, against `internal-hard`, and it
   does not widen the channel-set's answer on its own.
 - **A § 1.1 row for the published artifact.** Finding 1. Owned by whichever card next amends § 1.1.
-- **A fixture that exercises the unsourced arm.** Finding 2, against `CLAUDE.md`:131-133's fixture
-  completeness rule.
+- **A fixture that exercises the unsourced arm.** Finding 2, against the fixture
+  completeness rule in `reference/trip-lifecycle.md` § *Archived trips*.
 - **An observable test of a session.** The § *Decision* 5 residual: CH-2's and CH-3's tests grade
   the text a session follows, and no required check grades a session.
 
@@ -971,9 +971,9 @@ here.
 - `agents/00-enrichment.md` — § *Missing or blank profile* (`:654-691`), the branch set and the
   flagged-gap arm that splits `K4`; `:651` on `stated()` versus `ANSWERED()`; `:891-894`,
   the profile-gap denominator.
-- `CLAUDE.md` — `:123-133` the three model-entry classes and the fixture-completeness rule; `:355`
-  *never infer a mode*; § *Modes*, § *Archived trips*, § *Write ownership*; the standing rule on
-  the passphrase value.
+- `reference/trip-lifecycle.md` § *Archived trips* — the three model-entry classes and the fixture-completeness rule.
+- `CLAUDE.md` — `:355` *never infer a mode*; § *Modes*, § *Write ownership*; the standing rule
+  on the passphrase value.
 - `skills/trip/SKILL.md`:73 and the `update` row of the requirement table under
   `skills/trip-publish/SKILL.md` § *Contract header* — the requirement rows that
   make mode production-gating rather than reach-indexing.
@@ -1006,3 +1006,5 @@ enforcement strengths" and "CH-2's is closed nowhere"; and in *Follow-on*, "An o
 the name on CH-2" and "one of the three R-tests is prose". What the predicates do not reach is
 unchanged in kind: they grade the authored text a session follows, not a session. The W-rule, the
 R-rule, CH-2's W-test cell and its marker are unchanged.
+
+**Amendment (2026-11-21, Saturday) — § *Decision* 4, *Findings and observations carried*, *Follow-on build slices* and *References*: citations of the archived-trip freeze rule re-pointed to `reference/trip-lifecycle.md`; no decision changes.** These passages cited the rule in `CLAUDE.md` by line — `:123-133`, `:123`, `:125`, `:130` and `:131-133` — and *References* also listed § *Archived trips* there. The line numbers had already drifted from the text they named, and the rule has since moved out of the charter into `reference/trip-lifecycle.md` under the same heading, so each now cites that section. The quotations beside them are unchanged.

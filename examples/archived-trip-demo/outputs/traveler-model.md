@@ -146,7 +146,7 @@ must be re-derived rather than assumed.
 
 *No signals.* **The emptiness is declared, not inferred from silence.** This trip is
 `ARCHIVED`, and an archived trip receives no derivation — no update signal, no
-regeneration, no refresh (`CLAUDE.md` § *Archived trips — what the freeze binds*). A
+regeneration, no refresh (`reference/trip-lifecycle.md` § *Archived trips — what the freeze binds*). A
 person record referenced by this trip may have been edited since; if it was, the edit is
 named in the discovery report as `ARCHIVED — not signalled` and **no signal is written
 here**. A signal line appearing in this block would mean the freeze had failed.

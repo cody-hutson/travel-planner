@@ -391,7 +391,7 @@ The sixth row key is not compound, and that is the difference itself.
 | **`UNSOURCED` ≡ K4** | a roster row with no C12 entry, **or** a flagged-gap entry — `**Source:** none`, a `PROFILE MISSING` marker | nobody | — |
 | **`ENGAGEMENT-UNDETERMINED`** | a read **this entry attempted** could not be completed | — | — |
 
-**The value set closes over a live arbiter rather than over a preference.** `CLAUDE.md` states
+**The value set closes over a live arbiter rather than over a preference.** `reference/trip-lifecycle.md` states
 *"Erasure must reach every model-entry class, and there are **exactly three**"* —
 `first-party`, `operator-provided-only` (**dropped** under regeneration, having no source to
 re-derive from) and `both-marks` (**carried forward verbatim**, the erasure silently undone) —
@@ -929,9 +929,13 @@ not by minting a key.
 - `skills/trip/SKILL.md` — § *The freshness report*: the verdict triple, the exact-token rule, the
   render-every-relation rule, the no-disposition-column self-guard, and the declared boundary
   § *Decision* 6 adopts rather than widens.
-- `CLAUDE.md` — the three model-entry classes and the fixture-completeness rule; `G5` and `G8` of
-  the resolution ladder; § *Archived trips*; § *Write ownership*.
+- `reference/trip-lifecycle.md` — § *Archived trips*: the three model-entry classes and the fixture-completeness rule.
+- `CLAUDE.md` — `G5` and `G8` of the resolution ladder; § *Write ownership*.
 - `templates/traveler-intake.template.md` — the shipped party-facet prompt examples that carry no
   individuating token, which is why a free-text mention is outside the domain.
 - `examples/data-architecture-demo/outputs/traveler-model.md` — the shipped `Branch` column, and
   the fixture whose two observed values are finding 2.
+
+## Amendment history
+
+**Amendment (2026-11-21, Saturday) — § *Decision* 1 and *References*: citations of the archived-trip freeze rule re-pointed to `reference/trip-lifecycle.md`; no decision changes.** The rule, with the model-entry classes an erasure must reach and its fixture-completeness clause, moved out of `CLAUDE.md` into `reference/trip-lifecycle.md` under the same heading. § *Decision* 1 quoted it as "`CLAUDE.md` states", and *References* listed it under `CLAUDE.md` with § *Archived trips*; both now name its new home.
