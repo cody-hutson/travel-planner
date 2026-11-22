@@ -5635,7 +5635,10 @@ _take_trip_lock() { # <trip_dir> <verb>
   own="$(exec sh -c 'printf "%s" "$PPID"')"
   if [ "$_TRIP_LOCK" = "$l" ] && [ "$_TRIP_LOCK_PID" = "$own" ]; then return 0; fi
   if mkdir "$l" 2>/dev/null; then
-    h="$(mktemp "$l/holder.XXXXXX")" && printf 'command=%s\npid=%s\nstarted=%s\n' "$2" "$own" "$(_iso_now)" > "$h" && mv -f "$h" "$l/holder" \
+    # The record is staged under a fixed name inside the lock directory, which this run alone owns, and renamed
+    # into place, so a reader never sees half of it; no mktemp, whose failure is another step's to report.
+    h="$l/.holder.new"
+    { printf 'command=%s\npid=%s\nstarted=%s\n' "$2" "$own" "$(_iso_now)" > "$h" && mv -f "$h" "$l/holder"; } \
       || { rm -rf "$l"; die "$2: could not record the per-trip lock at $l. Nothing was changed. Re-run $2."; }
     _TRIP_LOCK="$l"; _TRIP_LOCK_PID="$own"
     trap '_release_trip_lock' EXIT; trap 'exit 130' INT; trap 'exit 143' TERM; trap 'exit 129' HUP

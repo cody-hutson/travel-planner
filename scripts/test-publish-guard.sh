@@ -14221,7 +14221,7 @@ rv17_assert "RV17"
 # refuses on the live-page check, naming rotate, and leaves the site under the key its holders hold;
 # and rotate on a fresh clone, the remedy, brings the site under the key .passphrase then holds.
 rv18_assert() { # <id>
-  local id="$1" name d bare rc rc2 rc3 live live2 live3 pf pf3 out2 opens=0
+  local id="$1" name d bare rc rc2 rc3 live live2 live3 pf pf3 out2 out3 opens=0
   local k1='rv-gamma-old-synthetic-key-25'
   name="rv18-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"
   ( unset STATICRYPT_PASSWORD; rv18_pub="$d/.publish"; rv18_k1="$k1"
@@ -14239,7 +14239,7 @@ rv18_assert() { # <id>
   live2="$(rv_pushed_key "$bare")"
   rv_has "$out2" 'does not open the page the site serves now' && rv_has "$out2" 'run rotate' && opens=1
   rm -rf "$d/.publish"
-  ( unset STATICRYPT_PASSWORD; RV_CLONE_BARE="$bare"; rv_gh_clones; set -e; cmd_rotate "$d" ) >/dev/null 2>&1; rc3=$?
+  out3="$( ( unset STATICRYPT_PASSWORD; RV_CLONE_BARE="$bare"; rv_gh_clones; set -e; cmd_rotate "$d" ) 2>&1 )"; rc3=$?
   live3="$(rv_pushed_key "$bare")"; pf3="$(cat "$d/.passphrase" 2>/dev/null)"
   if [ "$rc" -eq 0 ] && [ "$live" != "$pf" ]; then
     FAIL "$id: rotate reported success while the live page stayed under the key it revoked — a rotation that loses the race must fail at its push"
@@ -14252,7 +14252,7 @@ rv18_assert() { # <id>
   elif [ "$live2" != "$k1" ]; then
     FAIL "$id: the refused update moved the live page off the key its current holders hold"
   elif [ "$rc3" -ne 0 ] || [ -z "$live3" ] || [ "$live3" != "$pf3" ]; then
-    FAIL "$id: the remedy, rotate on a fresh clone, did not bring the live page under the key .passphrase holds (rc=$rc3)"
+    FAIL "$id: the remedy, rotate on a fresh clone, did not bring the live page under the key .passphrase holds (rc=$rc3): $(printf '%s' "$out3" | tail -n 2 | cut -c1-240)"
   else
     PASS "$id: a rotation that lost the race to a concurrent update fails at its push instead of reporting success; the next update refuses on the live-page check naming rotate, the site stays under the key its holders hold, and rotate on a fresh clone brings it under the key .passphrase holds"
   fi
@@ -16334,12 +16334,14 @@ rv54_wait_reached() { # <reached> <pid> -> 0 once the holder reached its wait, w
   while [ ! -e "$1" ] && kill -0 "$2" 2>/dev/null && [ "$n" -lt 150 ]; do sleep 0.1; n=$((n+1)); done
   [ -e "$1" ]
 }
-rv54_finish() { # <stop> <pid> -> A's exit status, or 255 when it had to be killed at the bound
-  local n=0 rc
+# rv54_finish is called as a plain command, never inside $( ): a command substitution is a subshell, which cannot
+# wait for the arm's background job and, once that job exits, still finds its unreaped zombie with kill -0.
+rv54_finish() { # <stop> <pid> -> sets RV54_RC: the holder's exit status, or 255 when it had to be killed at the bound
+  local n=0
   : > "$1"
   while kill -0 "$2" 2>/dev/null && [ "$n" -lt 150 ]; do sleep 0.1; n=$((n+1)); done
-  if kill -0 "$2" 2>/dev/null; then kill -9 "$2" 2>/dev/null; wait "$2" 2>/dev/null; printf '255'; return 0; fi
-  wait "$2" 2>/dev/null; rc=$?; printf '%s' "$rc"
+  if kill -0 "$2" 2>/dev/null; then kill -9 "$2" 2>/dev/null; wait "$2" 2>/dev/null; RV54_RC=255; return 0; fi
+  wait "$2" 2>/dev/null; RV54_RC=$?
 }
 # A declared trip, so confirm reaches its first write with nothing to record: one approver, threshold all.
 rv54_declare() { printf 'threshold=all\napprover=zqa1\n' > "$1/.approvers"; }
@@ -16351,10 +16353,12 @@ rv54h_assert() { # <id> <update|rotate|publish|unpublish|confirm> [unlocked]
   local id="$1" verb="$2" how="${3:-}" name d bare out rc arc h0 h1 c0 c1 hb p0 p1 r0=0 r1=0 reached=0 said=0
   local k1='rv-lock-holder-synthetic-key-73'
   name="rv54h-$verb-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"
-  [ "$verb" != confirm ] || rv54_declare "$d"
   h0="$(rv_head "$bare")"
   rv54_holder "$d" "$d.reached" "$d.stop" "$d.a.out"
   rv54_wait_reached "$d.reached" "$RV54_PID" && reached=1
+  # A declared trip makes confirm reach its first write with nothing to record; it is declared only once the holder
+  # has passed its own approval gate and waits, and withdrawn before the holder is released.
+  [ "$verb" != confirm ] || rv54_declare "$d"
   hb="$(rv_head "$bare")"; c0="$(git -C "$d/.publish" rev-parse HEAD)"; p0="$(cat "$d/.passphrase")"
   [ -e "$d/.change-confirmed" ] && r0=1
   case "$verb" in
@@ -16367,7 +16371,8 @@ rv54h_assert() { # <id> <update|rotate|publish|unpublish|confirm> [unlocked]
   h1="$(rv_head "$bare")"; c1="$(git -C "$d/.publish" rev-parse HEAD)"; p1="$(cat "$d/.passphrase")"
   [ -e "$d/.change-confirmed" ] && r1=1
   rv_has "$out" "'update' is running on this trip" && said=1
-  arc="$(rv54_finish "$d.stop" "$RV54_PID")"
+  [ "$verb" != confirm ] || mv "$d/.approvers" "$d/.approvers.withdrawn"
+  rv54_finish "$d.stop" "$RV54_PID"; arc="$RV54_RC"
   if [ "$reached" -eq 0 ]; then
     FAIL "$id: the holder never reached its wait inside update, so no command held the lock while $verb ran. VERDICT WITHHELD"
   elif [ "$rc" -ne 75 ]; then
@@ -16401,7 +16406,7 @@ rv54l_assert() { # <id>
   rv54_holder "$d" "$d.reached" "$d.stop" "$d.a.out"
   rv54_wait_reached "$d.reached" "$RV54_PID" && reached=1
   out="$( ( _GUARD_DATA_ROOT="$root"; _GUARD_DATA_ROOT_EXPLICIT=1; cmd_list ) 2>&1 )"; rc=$?
-  arc="$(rv54_finish "$d.stop" "$RV54_PID")"
+  rv54_finish "$d.stop" "$RV54_PID"; arc="$RV54_RC"
   rv_has "$out" "$name" && listed=1
   if [ "$reached" -eq 0 ]; then
     FAIL "$id: the holder never reached its wait. VERDICT WITHHELD"
@@ -16491,7 +16496,7 @@ rv54g_assert() { # <id> <TERM|INT|HUP>
   rv54_wait_reached "$d.reached" "$RV54_PID" && reached=1
   [ -d "$d/.publish-lock" ] && held=1
   kill -s "$sig" "$RV54_PID" 2>/dev/null
-  arc="$(rv54_finish "$d.stop.never" "$RV54_PID")"; : > "$d.stop"
+  rv54_finish "$d.stop.never" "$RV54_PID"; arc="$RV54_RC"; : > "$d.stop"
   [ -e "$d/.publish-lock" ] && left=1
   if [ "$reached" -eq 0 ]; then
     FAIL "$id: the holder never reached its wait. VERDICT WITHHELD"
@@ -16546,7 +16551,16 @@ rv55_gh() { # (inside a subject's subshell) RV55_FAIL names the gh call that fai
   gh() {
     printf '%s\n' "$*" >> "$RV_GHLOG"
     case "${1:-} ${2:-}" in
-      "api user")    [ "${RV55_FAIL:-}" != owner ] || { printf 'gh: HTTP 502 (simulated)\n' >&2; return 1; }; printf 'testowner' ;;
+      "api user")
+        # resolve_noreply_identity reads the user before the owner step does, and stops on its own failure, so the
+        # owner limb answers that first read of the login and fails the next one, which is the owner step's.
+        if [ "${RV55_FAIL:-}" = owner ]; then
+          case "$*" in *.login*)
+            if [ -e "$RV_GHLOG.login-read" ]; then printf 'gh: HTTP 502 (simulated)\n' >&2; return 1; fi
+            : > "$RV_GHLOG.login-read" ;;
+          esac
+        fi
+        case "$*" in *.id*) printf '4242' ;; *) printf 'testowner' ;; esac ;;
       "repo view")   return 1 ;;
       "repo create") [ "${RV55_FAIL:-}" != create ] || { printf 'gh: create refused (simulated)\n' >&2; return 1; }; return 0 ;;
       "auth status") printf "Token scopes: 'repo'\n" ;;
@@ -16604,7 +16618,7 @@ rv55_assert() { # <id> <step>
     SKIP "$id: this run's uid removes files from a mode-555 directory (root, say), where the step this limb fails cannot fail — not a pass"
     return 0
   fi
-  : > "$RV_GHLOG"
+  : > "$RV_GHLOG"; [ ! -e "$RV_GHLOG.login-read" ] || mv "$RV_GHLOG.login-read" "$RV_GHLOG.login-read.$RANDOM"
   out="$(rv55_run "$step" "$d")"; rc=$?
   [ "$step" != clonedir ] || chmod 755 "$d/.publish/held" 2>/dev/null
   grep -q '^repo create' "$RV_GHLOG" && created=1
