@@ -858,13 +858,27 @@ gh() {  # mock: record the call, respond per fixed scenario (repo EXISTS, delete
   case "${1:-} ${2:-}" in
     "api user")    printf 'testowner' ;;
     "repo view")   return 0 ;;
+    # The repository lookup reads the host's HTTP status line (#2212): the repo EXISTS here, so it
+    # answers 200, and J2 and J3 keep grading the branches after the lookup rather than the lookup.
+    "api -i")      printf 'HTTP/2.0 200 OK\r\n' ;;
     "auth status") printf "Token scopes: 'repo', 'delete_repo'\n" ;;
     *)             return 0 ;;
   esac
 }
 : > "$GHLOG"
-if ( cmd_unpublish "$MDIR" </dev/null ) >/dev/null 2>&1; then rc=0; else rc=1; fi
-if [ "$rc" -ne 0 ] && ! grep -q '^repo delete' "$GHLOG"; then PASS "J2: refuses non-interactive delete without --yes (never calls repo delete)"; else FAIL "J2: non-interactive delete not refused (rc=$rc)"; fi
+# J2's witness is the delete guard's own words, so a refusal at the lookup cannot pass for one at the guard.
+j2_out="$( ( cmd_unpublish "$MDIR" </dev/null ) 2>&1 )"; rc=$?
+j2_del=0; grep -q '^repo delete' "$GHLOG" && j2_del=1
+j2_said=0; case "$j2_out" in *'refusing a non-interactive delete'*) j2_said=1 ;; esac
+if [ "$rc" -eq 0 ]; then
+  FAIL "J2: non-interactive delete not refused (rc=$rc)"
+elif [ "$j2_del" -eq 1 ]; then
+  FAIL "J2: a non-interactive unpublish called repo delete (rc=$rc)"
+elif [ "$j2_said" -eq 0 ]; then
+  FAIL "J2: the refusal (rc=$rc) is not the delete guard's — it does not say it is refusing a non-interactive delete, so it stopped somewhere else"
+else
+  PASS "J2: refuses non-interactive delete without --yes at the delete guard (never calls repo delete)"
+fi
 : > "$GHLOG"
 ( cmd_unpublish "$MDIR" --disable-pages-only </dev/null ) >/dev/null 2>&1
 if grep -q 'api -X DELETE' "$GHLOG" && ! grep -q '^repo delete' "$GHLOG"; then PASS "J3: --disable-pages-only disables Pages, never deletes the repo"; else FAIL "J3: disable-pages-only path wrong"; fi
