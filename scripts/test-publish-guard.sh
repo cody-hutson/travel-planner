@@ -16591,7 +16591,9 @@ rv55_run() { # <step> <trip> -> the publish's output on stdout, its status as th
       cipher-copy|plaintext-copy) cp() { case "${2:-}" in */.publish/index.html) printf 'cp: simulated failure\n' >&2; return 1 ;; esac; command cp "$@"; } ;;
       commit) rv_fail_commit_env ;;
     esac
-    [ "$1" != plaintext-copy ] || export ALLOW_PLAINTEXT=1
+    # The plaintext limb's content controls are groups L to O's, stubbed here as RV43 stubs them, so the step this
+    # limb fails — placing the page — is the one reached.
+    if [ "$1" = plaintext-copy ]; then export ALLOW_PLAINTEXT=1; verify_publishable_content() { return 0; }; fi
     # shellcheck disable=SC2086
     cmd_publish "$2" $RV55_OPTS ) 2>&1
 }
