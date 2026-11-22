@@ -10,8 +10,8 @@ the enrichment agent's reconciler rebuilds beside the traveller model on every p
 scheduling, transport, the hub and the validator read. The trip template's per-traveller block,
 which had no writer and went stale the moment a profile changed, is retired. No trip is re-planned
 by this release: an `ACTIVE` trip gains its presence file on its next `/trip-record travelers`,
-`/trip plan` or profile-triggered `/trip replan`, and until then a reader says its windows are not
-yet derived and names `/trip-record travelers`.
+`person` or `group`, `/trip plan` or profile-triggered `/trip replan`, and until then a reader says
+its windows are not yet derived and names `/trip-record travelers`.
 
 **A window has a file of its own.** The presence file is class C24 in
 `reference/data-architecture.md` § 1.1, with a schema in `reference/schemas/traveler-presence.md`
@@ -62,7 +62,7 @@ arm read them. Five enumerations that restated a number — a list of joined cla
 missed C23, *twenty classes*, *twenty witnessed classes*, and a pair of row ranges — now cite where the
 number lives.
 
-**Size fence.** Read against `v0.70.0`, this branch's merge base, `CH_EMIT=growth bash
+**Size fence.** Read against `v0.74.0`, this branch's merge base, `CH_EMIT=growth bash
 scripts/test-corpus-hygiene.sh` lists one row re-pinned and one removed, and every other row kept.
 - `skills/trip/SKILL.md` was re-pinned from 106,098 to 118,008 bytes. The announce `/trip plan` and
   `/trip replan` surface, and the presence file added to the attributed reads of `plan`, `replan`,
@@ -70,11 +70,11 @@ scripts/test-corpus-hygiene.sh` lists one row re-pinned and one removed, and eve
   measures 107,280.
 - `templates/trip-context.template.md`'s row was removed: with the per-traveller block gone the file
   measures 15,854 bytes, below its class floor, and the growth summary listed the row `unowed`.
-- Every other row was kept. `reference/data-model.md` grew 6,964 bytes to 231,104, beneath its row of
+- Every other row was kept. `reference/data-model.md` grew 6,964 bytes to 235,945, beneath its row of
   246,314, with the appended section on the window lines; `skills/trip-record/SKILL.md` grew 4,151 to
-  456,422, beneath 470,268; `agents/00-enrichment.md` grew 1,602 to 79,013, beneath 82,813;
-  `reference/adr/README.md` grew 559 to 27,375, beneath 28,177, with the two records' index rows and
-  the register row that takes `054`; and `CLAUDE.md` grew 121 to 143,991, beneath 153,381. `ADR-049`, `ADR-054`
+  456,422, beneath 470,268; `agents/00-enrichment.md` grew 1,726 to 79,137, beneath 82,813;
+  `reference/adr/README.md` grew 454 to 27,613, beneath 28,177, with the two records' index rows;
+  and `CLAUDE.md` grew 121 to 145,019, beneath 153,381. `ADR-049`, `ADR-054`
   and the presence schema are below their class floor and owe no row.
 
 **What this release does not do.** That the reconciler writes the file as stated is checked by a
