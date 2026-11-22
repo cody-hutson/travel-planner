@@ -137,7 +137,7 @@ reserved  README.md  CONTRIBUTING.md  SECURITY.md  PULL_REQUEST_TEMPLATE.md
 2. `first-read` — a file named on the `Contract:` line of a skill surface.
 3. `typed` — a skill surface whose frontmatter sets `disable-model-invocation: true`.
 4. `dispatched` — a file named in the `Prompt File` column of a dispatch roster that a file of the
-   classes above carries.
+   classes above carries, or that a file one of them names carries.
 5. `on-demand` — a file an instruction surface names.
 6. `fixture` — a file whose frontmatter declares `artifact`, or that is **pinned**: a row of a
    fence tagged `frozen-witness-digest`, in any tracked markdown file, pairs a forty-character
@@ -148,8 +148,12 @@ reserved  README.md  CONTRIBUTING.md  SECURITY.md  PULL_REQUEST_TEMPLATE.md
 8. `browsed` — a file whose name is one the repository host reserves, listed in the block above, or
    a file that some other tracked markdown file cites.
 
-**What the rule deliberately does not do.** It follows no chain but the bundle: a file that only an
-on-demand document names is `browsed`, not `on-demand`, because no instruction names it. It reads a
+**What the rule deliberately does not do.** It follows no chain but the bundle, and one hop for a
+roster: a file that only an on-demand document names is `browsed`, not `on-demand`, because no
+instruction names it, and a roster counts in a file a skill surface or its first-read file names but
+in no file further out. The hop is there because the roster a verb dispatches from need not stand in
+a file of the first three classes — it stands in whichever file the verb names for it — and it stops
+at one because a roster that only a named document names is one no dispatching step reaches. It reads a
 name, not a reader's intent: a path an instruction surface cites for provenance counts as much as
 one it tells an agent to open. And it reads a directory as naming the files directly in it only
 where prose names the directory: a map's line inside a fenced block names nothing, and neither does
