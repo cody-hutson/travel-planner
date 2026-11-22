@@ -14220,6 +14220,18 @@ rv17_assert "RV17"
 # marker no longer names the page the site serves (review CD-1, ruled at scope-lock): the next update
 # refuses on the live-page check, naming rotate, and leaves the site under the key its holders hold;
 # and rotate on a fresh clone, the remedy, brings the site under the key .passphrase then holds.
+rv18_gh() { # (inside a subject's subshell) rv18_bare names the site — a fresh clone of it, for RV18's remedy
+  gh() {
+    printf '%s\n' "$*" >> "$RV_GHLOG"
+    case "${1:-} ${2:-}" in
+      "api user")    printf 'testowner' ;;
+      "repo view")   return 1 ;;
+      "auth status") printf "Token scopes: 'repo'\n" ;;
+      "repo clone")  git clone -q "$rv18_bare" "$4" ;;
+      *)             return 0 ;;
+    esac
+  }
+}
 rv18_assert() { # <id>
   local id="$1" name d bare rc rc2 rc3 live live2 live3 pf pf3 out2 out3 opens=0
   local k1='rv-gamma-old-synthetic-key-25'
@@ -14239,19 +14251,9 @@ rv18_assert() { # <id>
   live2="$(rv_pushed_key "$bare")"
   rv_has "$out2" 'does not open the page the site serves now' && rv_has "$out2" 'run rotate' && opens=1
   rm -rf "$d/.publish"
-  # The clone host is written out here, as RV15 writes its own: rv_gh_clones is defined further down this file.
-  out3="$( ( unset STATICRYPT_PASSWORD; rv18_bare="$bare"
-             gh() {
-               printf '%s\n' "$*" >> "$RV_GHLOG"
-               case "${1:-} ${2:-}" in
-                 "api user")    printf 'testowner' ;;
-                 "repo view")   return 1 ;;
-                 "auth status") printf "Token scopes: 'repo'\n" ;;
-                 "repo clone")  git clone -q "$rv18_bare" "$4" ;;
-                 *)             return 0 ;;
-               esac
-             }
-             set -e; cmd_rotate "$d" ) 2>&1 )"; rc3=$?
+  # The clone host is rv18_gh, defined above this arm: rv_gh_clones is defined further down this file, and a stand-in
+  # carrying a case pattern may not be defined inside a command substitution, which bash 3.2 misparses.
+  out3="$( ( unset STATICRYPT_PASSWORD; rv18_bare="$bare"; rv18_gh; set -e; cmd_rotate "$d" ) 2>&1 )"; rc3=$?
   live3="$(rv_pushed_key "$bare")"; pf3="$(cat "$d/.passphrase" 2>/dev/null)"
   if [ "$rc" -eq 0 ] && [ "$live" != "$pf" ]; then
     FAIL "$id: rotate reported success while the live page stayed under the key it revoked — a rotation that loses the race must fail at its push"
