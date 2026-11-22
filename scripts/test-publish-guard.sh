@@ -16606,6 +16606,136 @@ rv55_assert() { # <id> <step>
 for rv_b in owner opaque opaque-token render slug clonedir generator resolver encryption cipher-copy commit create plaintext-copy control; do rv55_assert "RV55-$rv_b" "$rv_b"; done
 for rv_b in owner opaque opaque-token render slug clonedir generator resolver encryption cipher-copy commit create plaintext-copy control; do md_flips cmd_publish "RV55-$rv_b" rv55_assert "RV55-$rv_b" "$rv_b"; done
 
+# ══════════════════════════════════════════════════════════════════
+# RV54-release — CIAC-1. Every refusal this release adds leaves no lock behind, on every exit path: each one is
+# triggered in turn on a trip of its own, and then the lock directory must be gone and a second update on the same
+# trip must not be refused on the lock. One verdict over the whole population, its denominator printed; a refusal
+# that was not produced is a probe failure, never a pass. The control is md_flips against _release_trip_lock: with it
+# removed the EXIT trap releases nothing, and every second command meets a lock.
+# ══════════════════════════════════════════════════════════════════
+rv54_lock_said() { # <text> -> 0 when <text> is a refusal on the per-trip lock
+  rv_has "$1" 'is running on this trip' && return 0
+  rv_has "$1" "holds this trip's lock" && return 0
+  rv_has "$1" "this trip's lock at" && return 0
+  return 1
+}
+rv54r_assert() { # <id>
+  local id="$1" c d rc out out2 n=0 refused=0 left="" blocked="" missing=""
+  local kl='rv-release-live-synthetic-key-79' kx='rv-release-other-synthetic-key-80'
+  for c in J4 J6 J7 RV48-mismatch RV48-undetermined RV50-rotate-noop RV53-norepo \
+           RV55-owner RV55-opaque RV55-opaque-token RV55-render RV55-slug RV55-clonedir RV55-generator RV55-resolver \
+           RV55-encryption RV55-cipher-copy RV55-commit RV55-create RV55-plaintext-copy; do
+    d="$RVW/rv54r-$c-$RANDOM"
+    case "$c" in
+      J4|J6|J7)
+        mkdir -p "$d"; printf 'mock-slug\n' > "$d/.publish-slug"
+        case "$c" in
+          J4) out="$( ( J_REPO='HTTP/2.0 200 OK'; J_PAGES='HTTP/2.0 200 OK'; J_DEL='{"status":"403"}'; GHLOG="$d.gh.log"; j_gh; cmd_unpublish "$d" --disable-pages-only ) 2>&1 </dev/null )"; rc=$? ;;
+          J6) out="$( ( J_REPO='HTTP/2.0 200 OK'; J_PAGES=''; J_DEL='error connecting'; GHLOG="$d.gh.log"; j_gh; cmd_unpublish "$d" --disable-pages-only ) 2>&1 </dev/null )"; rc=$? ;;
+          *)  out="$( ( J_REPO=''; J_PAGES=''; J_DEL=ok; GHLOG="$d.gh.log"; j_gh; cmd_unpublish "$d" --yes ) 2>&1 </dev/null )"; rc=$? ;;
+        esac ;;
+      RV48-mismatch)      d="$(rv_fixture "$(basename "$d")" "$kx" "$kl")"; out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) 2>&1 )"; rc=$? ;;
+      RV48-undetermined)  d="$(rv_fixture "$(basename "$d")" "$kl")"; out="$( ( unset STATICRYPT_PASSWORD; RV_DECRYPT_UNDETERMINED=1; set -e; cmd_update "$d" ) 2>&1 )"; rc=$? ;;
+      RV50-rotate-noop)   d="$(rv_fixture "$(basename "$d")" "$kx" "$kl")"; out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" --passphrase "$kl" ) 2>&1 )"; rc=$? ;;
+      RV53-norepo)
+        mkdir -p "$d/outputs"; cp "$SRC" "$d/outputs/$(basename "$d")-travel-site.html"
+        printf '%s\n' "$kl" > "$d/.passphrase"; chmod 000 "$d/.passphrase"
+        if [ -r "$d/.passphrase" ]; then chmod 600 "$d/.passphrase"; continue; fi
+        out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_publish "$d" ) 2>&1 )"; rc=$?
+        chmod 600 "$d/.passphrase" ;;
+      RV55-*)
+        rv55_setup "${c#RV55-}" "$d"
+        if [ "$c" = RV55-clonedir ] && rv55_root_writes "$d"; then continue; fi
+        out="$(rv55_run "${c#RV55-}" "$d")"; rc=$?
+        [ "$c" != RV55-clonedir ] || chmod 755 "$d/.publish/held" 2>/dev/null ;;
+    esac
+    n=$((n+1))
+    if [ "$rc" -eq 0 ]; then missing="$missing$c "; continue; fi
+    refused=$((refused+1))
+    [ ! -e "$d/.publish-lock" ] || left="$left$c "
+    out2="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) 2>&1 </dev/null )"
+    ! rv54_lock_said "$out2" || blocked="$blocked$c "
+  done
+  if [ "$n" -lt 18 ]; then
+    FAIL "$id: only $n of the release's refusals could be constructed on this uid, below the floor of 18. VERDICT WITHHELD"
+  elif [ -n "$missing" ]; then
+    FAIL "$id: refusal(s) not produced — the command exited 0: ${missing% } — so their lock release is not what this arm observed"
+  elif [ -n "$left" ]; then
+    FAIL "$id: refusal(s) left the per-trip lock directory behind: ${left% }"
+  elif [ -n "$blocked" ]; then
+    FAIL "$id: after refusal(s) ${blocked% } a second update on the same trip was refused on the lock"
+  else
+    PASS "$id: each of $refused refusal(s) this release adds left no lock behind, and a second update on each trip was not refused on the lock"
+  fi
+}
+rv54r_assert "RV54-release"
+md_flips _release_trip_lock "RV54-release" rv54r_assert "RV54-release"
+
+# ══════════════════════════════════════════════════════════════════
+# RV56 — CIAC-4. No message this release adds prints a passphrase value, or any part of one. Each new refusal that runs
+# with a key in play runs with synthetic keys drawn from an alphabet no message or path uses (review FM-11), and its
+# whole output is scanned for each key and for every four-character piece of it. The sensitivity arm is a refusal made
+# to echo the key, which the same scan must find. The length half of CIAC-4 — no message prints a key's length — no
+# substring scan can see, and is graded by reading at Stage 8. The generator refusal is not in the population: the
+# generator failed before any key existed, so there is no value to leak.
+# ══════════════════════════════════════════════════════════════════
+RV56_KA='QXZJQZXJ7QXJZQ3XZJQXZ8JQ'
+RV56_KB='ZJQXJXQZ4ZQJXZ6QJZXQ9XJZ'
+rv56_clean() { # <text> <key> -> 0 when no four-character piece of <key> occurs in <text>
+  local i n="${#2}"
+  for ((i = 0; i + 4 <= n; i++)); do
+    case "$1" in *"${2:i:4}"*) return 1 ;; esac
+  done
+  return 0
+}
+rv56_case() { # <case> <trip-name> -> the refusal's output on stdout, its status as the return
+  local d
+  case "$1" in
+    RV48-mismatch)     d="$(rv_fixture "$2" "$RV56_KB" "$RV56_KA")"; ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) 2>&1 ;;
+    RV48-env)          d="$(rv_fixture "$2" '' "$RV56_KA")"; ( export STATICRYPT_PASSWORD="$RV56_KB"; set -e; cmd_update "$d" ) 2>&1 ;;
+    RV48-plaintext)    d="$(rv_fixture "$2")"; cp "$SRC" "$d/.publish/index.html"; git -C "$d/.publish" add index.html
+                       git -C "$d/.publish" -c user.name=t -c user.email=t@example.invalid commit -q -m plaintext; git -C "$d/.publish" push -q origin main
+                       ( export STATICRYPT_PASSWORD="$RV56_KA"; set -e; cmd_update "$d" ) 2>&1 ;;
+    RV48-undetermined) d="$(rv_fixture "$2" '' "$RV56_KA")"; ( export STATICRYPT_PASSWORD="$RV56_KA"; RV_DECRYPT_UNDETERMINED=1; set -e; cmd_update "$d" ) 2>&1 ;;
+    RV50-rotate-noop)  d="$(rv_fixture "$2" "$RV56_KB" "$RV56_KA")"; ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" --passphrase "$RV56_KA" ) 2>&1 ;;
+    RV53-norepo|RV53-empty)
+      if [ "$1" = RV53-norepo ]; then d="$RVW/$2"; mkdir -p "$d/outputs"; cp "$SRC" "$d/outputs/$2-travel-site.html"
+      else d="$(rv39_site "$2" main)"; fi
+      printf '%s\n' "$RV56_KA" > "$d/.passphrase"; chmod 000 "$d/.passphrase"
+      [ ! -r "$d/.passphrase" ] || { chmod 600 "$d/.passphrase"; return 200; }
+      if [ "$1" = RV53-norepo ]; then ( unset STATICRYPT_PASSWORD; set -e; cmd_publish "$d" ) 2>&1
+      else ( unset STATICRYPT_PASSWORD; RV39_BARE="$RVW/origin/$2-site.git"; rv39_gh; set -e; cmd_publish "$d" ) 2>&1; fi ;;
+    leak)              d="$(rv_fixture "$2" "$RV56_KB" "$RV56_KA")"
+                       ( unset STATICRYPT_PASSWORD; refuse_key_not_live() { die "refused under $(cat "$1/.passphrase")"; }; set -e; cmd_update "$d" ) 2>&1 ;;
+  esac
+}
+rv56_assert() { # <id>
+  local id="$1" c out rc n=0 hits="" norefuse="" sens=1
+  for c in RV48-mismatch RV48-env RV48-plaintext RV48-undetermined RV50-rotate-noop RV53-norepo RV53-empty; do
+    out="$(rv56_case "$c" "rv56-$c-$RANDOM")"; rc=$?
+    [ "$rc" -ne 200 ] || continue
+    n=$((n+1))
+    [ "$rc" -eq 1 ] || norefuse="$norefuse$c "
+    rv56_clean "$out" "$RV56_KA" || hits="$hits$c "
+    rv56_clean "$out" "$RV56_KB" || hits="$hits$c "
+  done
+  out="$(rv56_case leak "rv56-leak-$RANDOM")"
+  rv56_clean "$out" "$RV56_KB" && sens=0
+  if [ "$sens" -eq 0 ]; then
+    FAIL "$id: SENSITIVITY — a refusal made to echo the key was not caught by the scan, so a clean scan proves nothing. VERDICT WITHHELD"
+  elif [ "$n" -lt 5 ]; then
+    FAIL "$id: only $n refusal(s) could be constructed on this uid, below the floor of 5. VERDICT WITHHELD"
+  elif [ -n "$norefuse" ]; then
+    FAIL "$id: refusal(s) not produced (rc other than 1): ${norefuse% } — their output is not a refusal's"
+  elif [ -n "$hits" ]; then
+    FAIL "$id: refusal(s) printed a passphrase value or a four-character piece of one: ${hits% }"
+  else
+    PASS "$id: across $n refusal(s) with a key in play no output carries either synthetic key or any four-character piece of one, on a scan that catches a refusal made to echo the key"
+  fi
+}
+rv56_assert "RV56-values"
+md_flips refuse_key_not_live "RV56-values" rv56_assert "RV56-values"
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # L18 — a plaintext publish refuses a render carrying a group-only section, by that section's presence
 # (#2155; ADR-030 § 6 safeguard 2). Group L by id; placed here, inside group RV's mock scope, because its
