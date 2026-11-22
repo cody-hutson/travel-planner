@@ -15,6 +15,12 @@
 #
 #   N1  a needle does not survive the normalisation applied to the haystack (group N)
 #   A0  a required population is empty or a required surface is unreadable  (group A)
+#       — among them, the consumer harvest reading no row beside a non-empty command directory
+#
+#   T   the consumer table read whole                                       (group T)
+#     T1 totality, both directions — a command file the table declares no row for, or a row
+#        no command file answers · T2 the role against the file's own contract header, both
+#        directions · T3 a command declared twice
 #
 #   V   the per-file bijection: declaration <-> implementation             (group V)
 #     V0 requirement-table anchor not unique at fence depth 0 · V1 malformed row
@@ -576,6 +582,12 @@ ENGINE_ROOT_TOK='${CLAUDE_SKILL_DIR}/../../'
 # additionally asserts each is UNIQUE in the document, because a duplicated opener would
 # make "the region" ambiguous and a partial match would grade the wrong bytes.
 DOC_REL='reference/command-reference.md'
+# ── The trip-resolution contract's home, and the heading its consumer table sits under.
+# Named once, here: the consumer harvest, its fixture builder and group T read the table
+# through these two names and from nowhere else, so relocating the contract is one edit to
+# CONTRACT_REL and the harvest follows it rather than reading an empty table where it was.
+CONTRACT_REL='CLAUDE.md'
+CONTRACT_HEADING='### Resolving a trip'
 DOC_MARK_OPEN='<!-- command-surface: derived — regenerate by running scripts/test-command-taxonomy.sh -->'
 DOC_MARK_CLOSE='<!-- /command-surface -->'
 
@@ -1092,13 +1104,18 @@ parse_command_file() {
       hdr_n=$((hdr_n+1)); [ "$hdr_open" -lt 0 ] && hdr_open=$i
     fi
   done
+  local hdrrole='-'
   if [ "$hdr_n" -ne 1 ]; then
     printf 'FINDING V5 %s carries %d contract-header blocks, expected exactly 1 — the CREATE-role region cannot be computed without one\n' "$cmd" "$hdr_n"; rc=1
   else
     for (( i=hdr_open+1; i<n; i++ )); do
       if [[ "${L[$i]}" == '```'* ]]; then hdr_close=$i; break; fi
+      case "${L[$i]}" in 'population-role: '*) [ "$hdrrole" = '-' ] && hdrrole="${L[$i]#population-role: }" ;; esac
     done
   fi
+  # The role this file declares for itself, read from its own header block — the witness group T
+  # holds the charter's consumer table against. '-' where the block is absent or carries no such line.
+  printf 'HDRROLE %s %s\n' "$cmd" "$hdrrole"
 
   # --- the requirement table, anchored on its own header row at fence depth 0 ---
   local anchor=-1 anchor_n=0
@@ -1392,20 +1409,21 @@ trimfirst_reads() {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────────
-# charter_check <claude_md_path>
+# charter_check <claude_md_path> [<contract_doc_path>]
 #
-# Step 1's cell population, Step 2's key enumeration, and the consumer table's declared
-# population-role. Extraction is BOLD-AGNOSTIC and FIELD-INDEXED, both load-bearing: a
+# Step 1's cell population and Step 2's key enumeration, read from the charter, and the
+# consumer table's declared population-role, read from the contract's home (CONTRACT_REL,
+# the charter itself when the second argument is omitted). Extraction is BOLD-AGNOSTIC and FIELD-INDEXED, both load-bearing: a
 # matcher tuned on a bolded first cell reads a non-bolded table as zero rows and is
 # silently dead, and a row-wide match counts a command code span that sits in a different
 # column. Only field 5 is the Command cell.
 # ─────────────────────────────────────────────────────────────────────────────────
 charter_check() {
-  local md="$1"
+  local md="$1" cdoc="${2:-$1}"
   local rc=0
   if [ ! -f "$md" ]; then
     printf 'FINDING A0 the charter path does not exist\n'
-    printf 'COUNT S1_ROWS 0\nCOUNT S1_ADDR 0\nCOUNT S1_AMB 0\nCOUNT S1_EXCL 0\nCOUNT S1_GRADED 0\nCOUNT S1_ADMITTED 0\nCOUNT S2_KEYS 0\nCOUNT CONS_ROWS 0\nCOUNT DOTTED 0\nCOUNT UNWIDENED_FAIL 0\n'
+    printf 'COUNT S1_ROWS 0\nCOUNT S1_ADDR 0\nCOUNT S1_AMB 0\nCOUNT S1_EXCL 0\nCOUNT S1_GRADED 0\nCOUNT S1_ADMITTED 0\nCOUNT CONS_ROWS 0\nCOUNT DOTTED 0\nCOUNT UNWIDENED_FAIL 0\n'
     return 1
   fi
 
@@ -1414,10 +1432,8 @@ charter_check() {
   while IFS= read -r line || [ -n "$line" ]; do
     if [ "$in1" -eq 1 ] && [[ "$line" == '### '* ]]; then in1=0; fi
     if [ "$in2" -eq 1 ] && [[ "$line" == '### '* ]]; then in2=0; fi
-    if [ "$incons" -eq 1 ] && [[ "$line" == '## '* ]]; then incons=0; fi
     if [[ "$line" == '### Step 1:'* ]]; then in1=1; sep1=0; continue; fi
     if [[ "$line" == '### Step 2:'* ]]; then in2=1; sep2=0; continue; fi
-    if [[ "$line" == '### Resolving a trip'* ]]; then incons=1; continue; fi
     if [ "$in1" -eq 1 ] && [[ "$line" == '|'* ]]; then
       if is_sep "$line"; then sep1=1; continue; fi
       [ "$sep1" -eq 1 ] && R1+=( "$line" )
@@ -1426,8 +1442,16 @@ charter_check() {
       if is_sep "$line"; then sep2=1; continue; fi
       [ "$sep2" -eq 1 ] && R2+=( "$line" )
     fi
-    if [ "$incons" -eq 1 ] && [[ "$line" == '| '"$BT"'/'* ]]; then CONS+=( "$line" ); fi
   done < "$md"
+  # The consumer table, read from the contract's home under its EXACT heading. Exact, not a
+  # prefix: a later heading that merely opens with the same words is not the section.
+  if [ -f "$cdoc" ]; then
+    while IFS= read -r line || [ -n "$line" ]; do
+      if [ "$incons" -eq 1 ] && [[ "$line" == '## '* ]]; then incons=0; fi
+      if [ "$line" = "$CONTRACT_HEADING" ]; then incons=1; continue; fi
+      if [ "$incons" -eq 1 ] && [[ "$line" == '| '"$BT"'/'* ]]; then CONS+=( "$line" ); fi
+    done < "$cdoc"
+  fi
 
   local n_rows=${#R1[@]} n_addr=0 n_excl=0 n_amb=0 n_dot=0 n_unwid=0 n_graded=0 n_admit=0
   if [ "$n_rows" -eq 0 ]; then
@@ -1624,7 +1648,7 @@ charter_check() {
   fi
 
   # --- Step 2: the second enumeration of the same set, in the same file ---
-  local cur s n_s2=0
+  local cur s
   for row in "${R2[@]+"${R2[@]}"}"; do
     IFS='|' read -r -a F <<< "$row"
     [ "${#F[@]}" -ge 2 ] || continue
@@ -1639,11 +1663,9 @@ charter_check() {
       if [[ "$s" == /* ]]; then
         cur="${s%% *}"
         if [ "$s" = "${s%% *}" ]; then printf 'S2KEY %s\n' "$cur"; else printf 'S2KEY %s:%s\n' "$cur" "${s#* }"; fi
-        n_s2=$((n_s2+1))
       else
         [ -n "$cur" ] || continue
         printf 'S2KEY %s:%s\n' "$cur" "$s"
-        n_s2=$((n_s2+1))
       fi
     done
   done
@@ -1667,10 +1689,68 @@ charter_check() {
   printf 'COUNT S1_EXCL %d\n' "$n_excl"
   printf 'COUNT S1_GRADED %d\n' "$n_graded"
   printf 'COUNT S1_ADMITTED %d\n' "$n_admit"
-  printf 'COUNT S2_KEYS %d\n' "$n_s2"
   printf 'COUNT CONS_ROWS %d\n' "$n_cons"
   printf 'COUNT DOTTED %d\n' "$n_dot"
   printf 'COUNT UNWIDENED_FAIL %d\n' "$n_unwid"
+  return "$rc"
+}
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# consumer_check <records>
+#
+# The consumer harvest is TOTAL, and every role it declares AGREES with the role the consumer
+# declares for itself. The harvest reads the charter's consumer table; a reader cannot witness
+# its own loss, because a second read of the same table shares its anchor and a relocation
+# empties both together. The witness therefore sits where the section cannot take it: each
+# command file declares itself in its own contract-header block (HDRROLE). Both sides are
+# derived; no count is held here.
+#   A0  the harvest read no row at all, beside a non-empty command directory
+#   T1  a command file the table declares no row for (its role would fall to the RESOLVE
+#       default), or a row naming no command file — the two directions of totality
+#   T2  a harvested role that differs from the file's own population-role, either way
+#   T3  a command declared by more than one row
+# The RESOLVE default in the role resolution stays; this is what makes it reachable only on a
+# run that is already red.
+# ─────────────────────────────────────────────────────────────────────────────────
+consumer_check() {
+  local recs="$1"
+  local rc=0 line t2 t3 i j hit crows=''
+  local -a FL=() RC=() RV=() HC=() HV=() SEEN=()
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      'FILE '*)    IFS=' ' read -r _ t2 <<< "$line"; FL+=( "$t2" ) ;;
+      'ROLE '*)    IFS=' ' read -r _ t2 t3 <<< "$line"; RC+=( "$t2" ); RV+=( "$t3" ) ;;
+      'HDRROLE '*) IFS=' ' read -r _ t2 t3 <<< "$line"; HC+=( "$t2" ); HV+=( "$t3" ) ;;
+      'COUNT CONS_ROWS '*) crows="${line#COUNT CONS_ROWS }" ;;
+    esac
+  done <<< "$recs"
+  local nrows=${#RC[@]} nfiles=${#FL[@]} ndist=0 nagree=0
+  # The count the harvest EMITS is the one graded: a zero beside a non-empty command directory
+  # is the vacuity this group exists to refuse, and group T's T1 holds it equal to the directory.
+  if [ "${crows:-0}" -eq 0 ] && [ "$nfiles" -gt 0 ]; then
+    printf 'FINDING A0 the consumer harvest read 0 rows from %s under "%s" while the command directory holds %d file(s) — the declared consumer set cannot be read, and every file'"'"'s role would fall to the RESOLVE default\n' "$CONTRACT_REL" "$CONTRACT_HEADING" "$nfiles"; rc=1
+  fi
+  for (( i=0; i<nrows; i++ )); do
+    if in_list "${RC[$i]}" "${SEEN[@]+"${SEEN[@]}"}"; then
+      printf 'FINDING T3 the consumer table under "%s" in %s declares %s more than once — the harvest keeps the last row, so one declaration silently overrides the other\n' "$CONTRACT_HEADING" "$CONTRACT_REL" "${RC[$i]}"; rc=1
+    else SEEN+=( "${RC[$i]}" ); ndist=$((ndist+1)); fi
+  done
+  for (( i=0; i<nfiles; i++ )); do
+    in_list "${FL[$i]}" "${SEEN[@]+"${SEEN[@]}"}" && continue
+    printf 'FINDING T1 the consumer harvest has no row for %s — the consumer table under "%s" in %s declares none, so its role falls to the RESOLVE default rather than to a declaration\n' "${FL[$i]}" "$CONTRACT_HEADING" "$CONTRACT_REL"; rc=1
+  done
+  for (( i=0; i<${#SEEN[@]}; i++ )); do
+    in_list "${SEEN[$i]}" "${FL[@]+"${FL[@]}"}" && continue
+    printf 'FINDING T1 the consumer table under "%s" in %s declares %s, and no command file answers it\n' "$CONTRACT_HEADING" "$CONTRACT_REL" "${SEEN[$i]}"; rc=1
+  done
+  for (( i=0; i<nrows; i++ )); do
+    hit='-'
+    for (( j=0; j<${#HC[@]}; j++ )); do [ "${HC[$j]}" = "${RC[$i]}" ] && { hit="${HV[$j]}"; break; }; done
+    in_list "${RC[$i]}" "${FL[@]+"${FL[@]}"}" || continue
+    if [ "$hit" = "${RV[$i]}" ]; then nagree=$((nagree+1))
+    else printf 'FINDING T2 %s: the consumer table under "%s" in %s declares %s, and the file'"'"'s own contract header declares %s\n' "${RC[$i]}" "$CONTRACT_HEADING" "$CONTRACT_REL" "${RV[$i]}" "$hit"; rc=1; fi
+  done
+  printf 'COUNT TROWS %d\nCOUNT TDIST %d\nCOUNT TFILES %d\nCOUNT TAGREE %d\n' "$nrows" "$ndist" "$nfiles" "$nagree"
   return "$rc"
 }
 
@@ -2552,6 +2632,8 @@ consentmark_check() {
   for f in "$root"/skills/*/*.md "$root"/agents/*.md "$root/CLAUDE.md" "$root/SKILL.md"; do
     [ -f "$f" ] && WFL+=( "$f" )
   done
+  # The contract is conduct text every verb follows; where it has a home of its own it is graded too.
+  [ "$CONTRACT_REL" = 'CLAUDE.md' ] || { [ -f "$root/$CONTRACT_REL" ] && WFL+=( "$root/$CONTRACT_REL" ); }
   # awk reads standard input when it is handed no file, so the empty set is answered here.
   if [ "${#WFL[@]}" -eq 0 ]; then
     printf 'COUNT WFILES 0\nCOUNT WSENT 0\nCOUNT WNEG 0\nCOUNT WSCAN 0\n'
@@ -4583,7 +4665,11 @@ gen_cmd() {  # gen_cmd <dir> <tuple> <defect>
     printf -- '| Grant | The use that holds it |\n|---|---|\n'
     printf -- '| %sBash(%s update:*)%s | the single invocation |\n\n' "$BT" "$SCRIPT_REL" "$BT"
     if [ "$defect" != 'noheader' ]; then
-      printf -- '## Contract header\n\n```trip-contract-header\nContract: charter\ncontract-depth: G8\npopulation-role: %s\n```\n\n' "$role"
+      local hrole="$role"
+      # 'hdrrole' plants the OTHER direction of a role disagreement: the file says RESOLVE where
+      # the charter's table says CREATE. Its structure stays CREATE-shaped, so only T2 differs.
+      if [ "$defect" = 'hdrrole' ] && [ "$name" = 'trip-new' ]; then hrole='RESOLVE'; fi
+      printf -- '## Contract header\n\n```trip-contract-header\nContract: charter\ncontract-depth: G8\npopulation-role: %s\n```\n\n' "$hrole"
     fi
     if [ "$defect" = 'twoheader' ]; then
       printf -- '```trip-contract-header\nContract: charter\n```\n\n'
@@ -5004,13 +5090,6 @@ gen_charter() {  # gen_charter <dir> <defect>
       done
       printf '| Direct edit | just the file being edited | own |\n\n'
     fi
-    printf '### Resolving a trip\n\n'
-    printf '| Command | depth | role | Prefix | Note |\n|---|---|---|---|---|\n'
-    printf '| %s/trip-new%s | %sG2%s | %sCREATE%s | %sE1%s | |\n' "$BT" "$BT" "$BT" "$BT" "$BT" "$BT" "$BT" "$BT"
-    printf '| %s/trip <verb>%s | %sG8%s | %sRESOLVE%s | %sE1 E2%s | |\n' "$BT" "$BT" "$BT" "$BT" "$BT" "$BT" "$BT" "$BT"
-    printf '| %s/trip-record%s | %sG8%s | %sRESOLVE%s | %sE1 E2%s | |\n' "$BT" "$BT" "$BT" "$BT" "$BT" "$BT" "$BT" "$BT"
-    printf '| %s/trip-publish%s | %sG8%s | %sRESOLVE%s | %sE1 E2%s | |\n' "$BT" "$BT" "$BT" "$BT" "$BT" "$BT" "$BT" "$BT"
-    printf '\n'
     printf '```\n%s publish trips/x\n%s rotate trips/x\n```\n\n' "$SCRIPT_REL" "$SCRIPT_REL"
     printf '## Next\n'
     # ── Group W's must-NOT-fire population, carried by EVERY world: four sentences that name
@@ -5023,6 +5102,34 @@ gen_charter() {  # gen_charter <dir> <defect>
     printf 'A value marked %s[THIRD-PARTY]%s is non-consented by construction.\n\n' "$BT" "$BT"
     printf 'A %s[THIRD-PARTY]%s mark does not mean the subject agreed.\n' "$BT" "$BT"
   } > "$d/CLAUDE.md"
+  # The consumer table goes to the contract's home — appended to the charter while CONTRACT_REL
+  # names it. 'consmoved' writes it somewhere CONTRACT_REL does not name: the documented
+  # relocation with nothing re-pointed, so the harvest reads nothing.
+  local cpath="$d/$CONTRACT_REL" crole
+  if [ "$defect" = 'consmoved' ]; then cpath="$d/reference/moved-contract.md"; fi
+  mkdir -p "$(dirname "$cpath")"
+  {
+    printf '\n%s\n\n' "$CONTRACT_HEADING"
+    printf '| Command | depth | role | Prefix | Note |\n|---|---|---|---|---|\n'
+    crole='CREATE'; if [ "$defect" = 'consrolecr' ]; then crole='RESOLVE'; fi
+    if [ "$defect" != 'consshrunk' ]; then
+      printf '| %s/trip-new%s | %sG2%s | %s%s%s | %sE1%s | |\n' "$BT" "$BT" "$BT" "$BT" "$BT" "$crole" "$BT" "$BT" "$BT"
+    fi
+    printf '| %s/trip <verb>%s | %sG8%s | %sRESOLVE%s | %sE1 E2%s | |\n' "$BT" "$BT" "$BT" "$BT" "$BT" "$BT" "$BT" "$BT"
+    printf '| %s/trip-record%s | %sG8%s | %sRESOLVE%s | %sE1 E2%s | |\n' "$BT" "$BT" "$BT" "$BT" "$BT" "$BT" "$BT" "$BT"
+    printf '| %s/trip-publish%s | %sG8%s | %sRESOLVE%s | %sE1 E2%s | |\n' "$BT" "$BT" "$BT" "$BT" "$BT" "$BT" "$BT" "$BT"
+    if [ "$defect" = 'consorphan' ]; then printf '| %s/trip-ghost%s | %sG8%s | %sRESOLVE%s | %sE1 E2%s | |\n' "$BT" "$BT" "$BT" "$BT" "$BT" "$BT" "$BT" "$BT"; fi
+    if [ "$defect" = 'consdup' ]; then printf '| %s/trip-new%s | %sG8%s | %sRESOLVE%s | %sE1 E2%s | |\n' "$BT" "$BT" "$BT" "$BT" "$BT" "$BT" "$BT" "$BT"; fi
+    # The LOOKALIKES, which must not fire: a row of the command-column shape in a table that is
+    # not the consumer table, and a later heading that opens with the section's own words and
+    # carries a contradicting row. A prefix match on the heading would harvest that row.
+    if [ "$defect" = 'conslookalike' ]; then
+      printf '\n| %s/trip-new%s | creates a trip |\n' "$BT" "$BT"
+      printf '\n## Elsewhere\n\n%s — a worked example\n\n' "$CONTRACT_HEADING"
+      printf '| Command | depth | role | Prefix | Note |\n|---|---|---|---|---|\n'
+      printf '| %s/trip-new%s | %sG8%s | %sRESOLVE%s | %sE1 E2%s | |\n' "$BT" "$BT" "$BT" "$BT" "$BT" "$BT" "$BT" "$BT"
+    fi
+  } >> "$cpath"
 }
 
 gen_adr() {  # gen_adr <dir> <defect>
@@ -5127,7 +5234,7 @@ gen_tree() {  # gen_tree <dir> <charter-defect> <cmd-defect> [world...]
 collect_records() {
   local d="$1"
   local recs="" f base cmd role l2 croll
-  croll="$(charter_check "$d/CLAUDE.md")"
+  croll="$(charter_check "$d/CLAUDE.md" "$d/$CONTRACT_REL")"
   recs="$croll"
   for f in "$d/skills"/*/SKILL.md; do
     [ -e "$f" ] || continue
@@ -5152,6 +5259,7 @@ run_tree() {
   recs="$recs
 $(coverage_check "$recs")
 $(enum_agree_check "$recs")
+$(consumer_check "$recs")
 $(invocation_check "$d/skills" "$recs")
 $(passvalue_check "$d/skills" "$recs")
 $(consentmark_check "$d")
@@ -5174,6 +5282,10 @@ DOC="$ROOT/$DOC_REL"
 # file withholds itself. Group CE is the only reader of it, which is also why it has to join the
 # Z watch set below: a surface this guard reads and does not watch is an unwatched write path.
 CARRIER="$ROOT/SKILL.md"
+# The contract's home, where it is not the charter itself. Empty while CONTRACT_REL names the
+# charter, so G-TOK's scan reads the charter once; the messages that list what G-TOK, group W and
+# the Z watch set read name the contract file only when it is set.
+CONTRACT_EXTRA=(); [ "$ROOT/$CONTRACT_REL" = "$MD" ] || CONTRACT_EXTRA=( "$ROOT/$CONTRACT_REL" )
 
 # The Z-group watch set: every surface this guard READS — the command reference included,
 # since group H reads it, and the architecture document and each agent prompt, since group J
@@ -5184,6 +5296,7 @@ CARRIER="$ROOT/SKILL.md"
 tree_state() {
   local p
   for p in "$MD" "$ADR" "$PUB" "$SELF" "$WF" "$DOC" "$CARRIER" "$ROOT/$RJ_ARCH_REL"; do [ -f "$p" ] && cksum < "$p"; done
+  [ "$ROOT/$CONTRACT_REL" = "$MD" ] || { [ -f "$ROOT/$CONTRACT_REL" ] && cksum < "$ROOT/$CONTRACT_REL"; }
   # Every markdown file directly under a verb directory, not the verb file alone: group F
   # reads a file bundled beside a verb file, and a surface this guard reads and does not
   # watch is an unwatched write path.
@@ -5199,7 +5312,7 @@ N_OUT="$(needle_check)"
 if has_finding "$N_OUT" "$(surface N1)"; then FAIL "N1: a needle does not survive the normalisation applied to the haystack"; show "$N_OUT" 'N1'
 else PASS "N1: all $(getcount "$N_OUT" NEEDLES) needles round-trip, or are registered UNTRIMMED and matched as prefixes (the haystack is collapsed; the needle never is)"; fi
 
-CH_OUT="$(charter_check "$MD")"
+CH_OUT="$(charter_check "$MD" "$ROOT/$CONTRACT_REL")"
 S1_ROWS="$(getcount "$CH_OUT" S1_ROWS)"; S1_ADDR="$(getcount "$CH_OUT" S1_ADDR)"
 S1_EXCL="$(getcount "$CH_OUT" S1_EXCL)"; S1_AMB="$(getcount "$CH_OUT" S1_AMB)"
 DOTTED="$(getcount "$CH_OUT" DOTTED)"; UNWID="$(getcount "$CH_OUT" UNWIDENED_FAIL)"
@@ -5222,6 +5335,7 @@ done
 
 COV_OUT="$(coverage_check "$RECS")"
 ENUM_OUT="$(enum_agree_check "$RECS")"
+T_OUT="$(consumer_check "$RECS")"
 E_OUT="$(adr4_check "$ADR" "$PUB" "$RECS")"
 F_OUT="$(invocation_check "$CDIR" "$RECS")"
 PV_OUT="$(passvalue_check "$CDIR" "$RECS")"
@@ -5233,6 +5347,7 @@ I_OUT="$(preexec_check "$CDIR"/*/SKILL.md "$CARRIER")"
 ALL="$RECS
 $COV_OUT
 $ENUM_OUT
+$T_OUT
 $E_OUT
 $F_OUT
 $PV_OUT
@@ -5259,6 +5374,17 @@ if has_finding "$ALL" "$(surface V4)"; then FAIL "V4: a read declaration sits ou
 else PASS "V4: every column-0 read declaration sits inside a declared verb's region — implemented-but-undeclared is empty"; fi
 if has_finding "$ALL" "$(surface V6)"; then FAIL "V5: a value transformation did not round-trip"; show "$ALL" 'V6'
 else PASS "V5: the parenthetical drop, the code-span strip and the first-token split are all VALUE-preserving, not merely count-preserving"; fi
+
+echo
+echo "── Group T — the consumer table is read whole, and agrees with each consumer's own declaration."
+T_ROWS="$(getcount "$CH_OUT" CONS_ROWS)"; T_DIST="$(getcount "$T_OUT" TDIST)"
+T_FILES="$(getcount "$T_OUT" TFILES)"; T_AGREE="$(getcount "$T_OUT" TAGREE)"
+if has_finding "$ALL" "$(surface T1 T3)"; then FAIL "T1: the consumer harvest is not total — a command file the consumer table declares no row for falls to the RESOLVE default, a row names no command file, or a command is declared twice"; show "$ALL" 'T1|T3'
+elif [ "${T_ROWS:-0}" -eq 0 ] || [ "${T_FILES:-0}" -eq 0 ] || [ "${T_ROWS:-0}" -ne "${T_FILES:-0}" ] || [ "${T_DIST:-0}" -ne "${T_FILES:-0}" ]; then FAIL "T1: NOT EVALUATED — the consumer harvest read ${T_ROWS:-0} row(s) from ${CONTRACT_REL} and the command directory holds ${T_FILES:-0} file(s); an empty side is a failure here, never a pass"
+else PASS "T1: the consumer harvest read ${T_ROWS} row(s) from ${CONTRACT_REL} under \"${CONTRACT_HEADING}\", naming ${T_DIST} distinct command(s), and the command directory holds ${T_FILES} file(s) — equal as sets in both directions, none declared twice. Both sides are derived, the declared side from the charter's own table and the other from the directory, so this is a measured equality and not a floor a vanished table satisfies"; fi
+if has_finding "$ALL" "$(surface T2)"; then FAIL "T2: a role the consumer table declares differs from the population-role the consumer's own contract header declares"; show "$ALL" 'T2'
+elif [ "${T_AGREE:-0}" -eq 0 ] || [ "${T_AGREE:-0}" -ne "${T_ROWS:-0}" ]; then FAIL "T2: NOT EVALUATED — ${T_AGREE:-0} of ${T_ROWS:-0} harvested role(s) were compared"
+else PASS "T2: each of the ${T_AGREE} role(s) the consumer table declares equals the population-role its own file's contract header declares — the CREATE carve-out and every RESOLVE row, a disagreement in either direction being the finding"; fi
 
 echo
 echo "── Group B — Step-1 cell shape, reason enum, exhaustiveness."
@@ -6446,6 +6572,60 @@ fi
 ctl GS1  S1 "a key present in Step 1 and absent from Step 2"                   step2drift ok '[ "$(grep -c "trip-record log" "$WORK/GS1/CLAUDE.md")" = "1" ]'
 ctl GS1b S1 "the same divergence in the OTHER direction — present in Step 2, absent from Step 1" step1drift ok '[ "$(grep -c "trip-record log" "$WORK/GS1b/CLAUDE.md")" = "1" ]'
 ctl GS2  S2 "only ONE enumeration derivable — SINGLE-SOURCE, not agreement"    nostep2   ok  '! grep -q "^### Step 2:" "$WORK/GS2/CLAUDE.md"'
+
+# ── group T — the consumer harvest. Each world differs from the conforming one by ONE planted
+# defect, and G0b grades the conforming world silent, so each finding below is its defect's.
+ctl GT0  A0 "the consumer table relocated out of the home CONTRACT_REL names, nothing re-pointed — the harvest reads no row" consmoved ok '! grep -qxF "$CONTRACT_HEADING" "$WORK/GT0/$CONTRACT_REL" && grep -qxF "$CONTRACT_HEADING" "$WORK/GT0/reference/moved-contract.md"'
+ctl GT0b T1 "the same relocation, per file — every command file falls to the RESOLVE default, the CREATE carve-out among them" consmoved ok '! grep -qxF "$CONTRACT_HEADING" "$WORK/GT0b/$CONTRACT_REL"'
+ctl GT1  T1 "one consumer row removed — the shrunken harvest, /trip-new falling to the RESOLVE default" consshrunk ok '! grep -qF "${BT}/trip-new${BT} | ${BT}G2${BT}" "$WORK/GT1/$CONTRACT_REL" && grep -qF "${BT}/trip-record${BT} | ${BT}G8${BT}" "$WORK/GT1/$CONTRACT_REL"'
+ctl GT1b T1 "a consumer row naming a command no file answers" consorphan ok 'grep -qF "${BT}/trip-ghost${BT}" "$WORK/GT1b/$CONTRACT_REL" && [ ! -e "$WORK/GT1b/skills/trip-ghost" ]'
+ctl GT2  T2 "the table declares RESOLVE where the file declares CREATE" consrolecr ok 'grep -qF "${BT}/trip-new${BT} | ${BT}G2${BT} | ${BT}RESOLVE${BT}" "$WORK/GT2/$CONTRACT_REL" && grep -qxF "population-role: CREATE" "$WORK/GT2/skills/trip-new/SKILL.md"'
+ctl GT2b T2 "the file declares RESOLVE where the table declares CREATE — the other direction" ok hdrrole 'grep -qxF "population-role: RESOLVE" "$WORK/GT2b/skills/trip-new/SKILL.md" && grep -qF "${BT}/trip-new${BT} | ${BT}G2${BT} | ${BT}CREATE${BT}" "$WORK/GT2b/$CONTRACT_REL"'
+ctl GT3  T3 "one command declared by two rows, the second contradicting the first" consdup ok '[ "$(grep -c "${BT}/trip-new${BT} | ${BT}G" "$WORK/GT3/$CONTRACT_REL")" = "2" ]'
+
+# GTD — REACHABILITY of the RESOLVE default, over GT0's world: no ROLE record exists, so every
+# file was resolved by the default, and the same run is red naming the harvest. The default
+# stays; it contributes a role only on a run that is already failing.
+GTDOUT="$(run_tree "$WORK/GT0")"
+if ! grep -q '^ROLE ' <<<"$GTDOUT" \
+   && grep -q '^FINDING A0 the consumer harvest read 0 rows' <<<"$GTDOUT" \
+   && grep -q '^FINDING T1 the consumer harvest has no row for /trip-new ' <<<"$GTDOUT"; then
+  PASS "GTD: REACHABILITY — over a relocated consumer table no ROLE record exists, so every command file took the RESOLVE default, /trip-new included; and that run is RED, naming the consumer harvest (A0) and each file it left undeclared (T1). The default is kept and is reached only on a failing run"
+else
+  FAIL "GTD: REACHABILITY — a relocated consumer table did not yield both the default for every file and a red run naming the harvest"
+fi
+
+# GTL — the LOOKALIKES must not fire, and the arm is shown to be discriminating: the retired
+# prefix-matching harvest, run over the same file, reads the worked example's contradicting row.
+GTL="$WORK/gtl"; gen_tree "$GTL" conslookalike ok
+GTL_S=1
+grep -qF "| ${BT}/trip-new${BT} | creates a trip |" "$GTL/$CONTRACT_REL" || GTL_S=0
+grep -qxF "$CONTRACT_HEADING — a worked example" "$GTL/$CONTRACT_REL" || GTL_S=0
+if [ "$GTL_S" -eq 1 ]; then
+  PASS "GTLa: fixture integrity — a command-shaped row in a two-cell table and a later heading opening with the section's own words, carrying a contradicting /trip-new row, are both present"
+  GTLOUT="$(run_tree "$GTL")"
+  if grep -q '^FINDING ' <<<"$GTLOUT"; then
+    FAIL "GTLb: MUST-NOT-FIRE — a lookalike was read as the consumer table: $(grep '^FINDING ' <<<"$GTLOUT" | awk 'NR <= 2' | tr '\n' ' ')"
+  elif [ "$(grep -c '^ROLE /trip-new ' <<<"$GTLOUT")" = 1 ] && grep -qx 'ROLE /trip-new CREATE' <<<"$GTLOUT"; then
+    PASS "GTLb: MUST-NOT-FIRE — neither lookalike is harvested: the run carries no finding, and /trip-new resolves CREATE from exactly one row"
+  else
+    FAIL "GTLb: MUST-NOT-FIRE — the run is silent, yet /trip-new did not resolve CREATE from exactly one row"
+  fi
+  GTL_EXACT="$(getcount "$GTLOUT" TROWS)"
+  GTL_PREFIX="$(awk -v h="$CONTRACT_HEADING" -v bt="$BT" '
+    function tr(s) { gsub(/^[ \t]+|[ \t]+$/, "", s); gsub(bt, "", s); return s }
+    index($0, "## ") == 1 { f = 0 }
+    index($0, h) == 1 { f = 1; next }
+    f && index($0, "| " bt "/") == 1 { split($0, F, "|"); r = tr(F[4]); if (r == "RESOLVE" || r == "CREATE") n++ }
+    END { print n + 0 }' "$GTL/$CONTRACT_REL")"
+  if [ "${GTL_PREFIX:-0}" -gt "${GTL_EXACT:-0}" ]; then
+    PASS "GTLc: LIVE DIFFERENTIAL — the retired prefix-matching harvest reads ${GTL_PREFIX} consumer row(s) from this file where the exact heading reads ${GTL_EXACT}; the extra row is the worked example's RESOLVE row for /trip-new, which, read last, would have overridden the carve-out"
+  else
+    FAIL "GTLc: NO LONGER DIFFERENTIAL — the prefix harvest reads ${GTL_PREFIX:-?} row(s) and the exact one ${GTL_EXACT:-?}, so GTLb no longer shows the heading match doing work"
+  fi
+else
+  FAIL "GTLa: fixture integrity — a lookalike is absent from the fixture, so GTLb would prove nothing"
+fi
 ctl GF1  F1 "a verb region invoking the EXCLUDED form rotate"                  ok        rotate      'grep -qF "publish-trip-site.sh rotate" "$WORK/GF1/skills/trip-publish/SKILL.md"'
 ctl GF2  F2 "an unpublish invocation lacking the pages-only flag"              ok        nounpubflag 'grep -qF "unpublish trips/x" "$WORK/GF2/skills/trip-publish/SKILL.md"'
 ctl GF3  F3 "a forbidden flag passed on a publish-script invocation"           ok        badflag     'grep -qF -- "--passphrase secret" "$WORK/GF3/skills/trip-publish/SKILL.md"'
@@ -8109,16 +8289,16 @@ fi
 # A published token stops being impossible.
 TOKEN="tx$$$(date +%s)$RANDOM"
 TOKHITS=0
-for gp in "$MD" "$ADR" "$PUB" "$SELF"; do
+for gp in "$MD" "${CONTRACT_EXTRA[@]+"${CONTRACT_EXTRA[@]}"}" "$ADR" "$PUB" "$SELF"; do
   [ -f "$gp" ] && grep -qF "$TOKEN" "$gp" && TOKHITS=$((TOKHITS+1))
 done
 for gp in "$CDIR"/*/SKILL.md; do
   [ -e "$gp" ] && grep -qF "$TOKEN" "$gp" && TOKHITS=$((TOKHITS+1))
 done
 CTLHITS=0
-grep -qF 'trip-contract-header' "$MD" && CTLHITS=$((CTLHITS+1))
+grep -qF 'trip-contract-header' "$ROOT/$CONTRACT_REL" && CTLHITS=$((CTLHITS+1))
 if [ "$TOKHITS" -eq 0 ] && [ "$CTLHITS" -eq 1 ]; then
-  PASS "G-TOK: specificity — a token minted for this run and never written into the repository resolves against nothing across the charter, the command surface, the ADR, the publish script and this guard. The zero is a real zero, not a dead matcher: the same matcher returns non-zero on a known-present needle"
+  PASS "G-TOK: specificity — a token minted for this run and never written into the repository resolves against nothing across the charter${CONTRACT_EXTRA:+ and the contract at $CONTRACT_REL}, the command surface, the ADR, the publish script and this guard. The zero is a real zero, not a dead matcher: the same matcher returns non-zero on a known-present needle"
 else
   FAIL "G-TOK: specificity — a per-run token resolved against $TOKHITS file(s), and the control needle resolved $CTLHITS time(s) where 1 was required"
 fi
@@ -8149,7 +8329,7 @@ W1A="$(surface W1)"
 if has_finding "$W_OUT" "$W1A"; then FAIL "W1: a sentence in command or conduct text binds a provenance mark to consent with no negation in its clause — $(( ${W_SENT:-0} - ${W_NEG:-0} )) of ${W_SENT:-0} population sentence(s)"; show "$W_OUT" 'W1'
 elif [ "${W_FILES:-0}" -eq 0 ] || [ "${W_SCAN:-0}" -eq 0 ]; then FAIL "W1: NOT EVALUATED — the W-test read ${W_FILES:-0} file(s) and graded ${W_SCAN:-0} sentence(s). An empty population is a failure here, never a pass: nothing was graded"
 elif [ "${W_SENT:-0}" -ne "${W_NEG:-0}" ]; then FAIL "W1: ${W_SENT:-0} sentence(s) bind a provenance mark to a consent word and only ${W_NEG:-0} of them negate it, yet no finding was emitted for the difference — the check's own counts disagree with its findings"
-else PASS "W1: no sentence binds a provenance mark to consent without negating it — ${W_SENT} sentence(s) name a mark and a consent word and all ${W_NEG} negate the word within ${W_WINDOW} words before it in its own clause, or by a non- prefix, over ${W_SCAN} sentence(s) in ${W_FILES} file(s): each verb file and each file bundled beside one, each agent prompt, the charter and the guided-entry carrier. RESIDUAL, stated: a negation inside that window that does not bind the consent word reads as negated; a paraphrase outside the lexicon is not seen; and this grades the authored text a session follows, not a session. Arms GW1, GW1t, GW1n and GW1d each plant an unnegated sentence and require the finding; arm GW1e plants one whose negation sits six words before the consent word, in its own clause and one word past the window, and requires the finding as well; arm G0w requires four negated ones counted and none flagged"; fi
+else PASS "W1: no sentence binds a provenance mark to consent without negating it — ${W_SENT} sentence(s) name a mark and a consent word and all ${W_NEG} negate the word within ${W_WINDOW} words before it in its own clause, or by a non- prefix, over ${W_SCAN} sentence(s) in ${W_FILES} file(s): each verb file and each file bundled beside one, each agent prompt, the charter${CONTRACT_EXTRA:+, the contract at $CONTRACT_REL} and the guided-entry carrier. RESIDUAL, stated: a negation inside that window that does not bind the consent word reads as negated; a paraphrase outside the lexicon is not seen; and this grades the authored text a session follows, not a session. Arms GW1, GW1t, GW1n and GW1d each plant an unnegated sentence and require the finding; arm GW1e plants one whose negation sits six words before the consent word, in its own clause and one word past the window, and requires the finding as well; arm G0w requires four negated ones counted and none flagged"; fi
 
 # G0w — MUST-NOT-FIRE, over the conforming world built for G0. Every fixture charter carries
 # four sentences that name a mark and a consent word and negate the word, each a different
@@ -9206,7 +9386,7 @@ echo
 echo "── Group Z — non-mutation over the watched surfaces."
 STATE_AFTER="$(tree_state)"
 if [ "$STATE_BEFORE" = "$STATE_AFTER" ]; then
-  PASS "Z1: the ${WATCHED} watched surfaces are byte-identical before and after this run — the charter, ADR-007, the publish script, this guard, this slice's workflow, the command reference, the guided-entry carrier at the engine root, each verb file and each file bundled beside one, the architecture document and each agent prompt — so every fixture was built under the temporary directory. SCOPE: the watch set is the surfaces this guard reads plus its own workflow, derived from the paths above; it is not the whole tree, and a write outside it is not observed here"
+  PASS "Z1: the ${WATCHED} watched surfaces are byte-identical before and after this run — the charter${CONTRACT_EXTRA:+ and the contract at $CONTRACT_REL}, ADR-007, the publish script, this guard, this slice's workflow, the command reference, the guided-entry carrier at the engine root, each verb file and each file bundled beside one, the architecture document and each agent prompt — so every fixture was built under the temporary directory. SCOPE: the watch set is the surfaces this guard reads plus its own workflow, derived from the paths above; it is not the whole tree, and a write outside it is not observed here"
 else
   FAIL "Z1: the working tree changed during this run; a guard that mutates what it grades is not a guard"
 fi
