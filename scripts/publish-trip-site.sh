@@ -262,7 +262,9 @@ ensure_first_key() { # <trip_dir>
   if [ -e "$t" ]; then
     die "publish refused — $pf exists but cannot be read$( [ "$t" = "$pf" ] || printf ' (it links to %s)' "$t" ), and publish never writes over a passphrase it could not read: it may be one you have already given out, for an earlier site of this trip or for this one, and a new key would stop it opening the site. Nothing was encrypted, committed or pushed, no passphrase was written, and the file was not touched. Restore read access to it and re-run publish; or, to have publish make a first key, move it aside — rename it — and re-run publish."
   fi
-  p="$(gen_passphrase)"; write_passphrase_file "$pf" "$p"
+  p="$(gen_passphrase)" || die "publish: the passphrase generator failed. Nothing was encrypted, committed or pushed, and no passphrase was written. Re-run publish."
+  [ "${#p}" -ge 12 ] || die "publish: the passphrase generator produced no usable passphrase. Nothing was encrypted, committed or pushed, and no passphrase was written. Re-run publish; if it happens again, check that /dev/urandom and od are available."
+  write_passphrase_file "$pf" "$p"
 }
 
 # The key publish and update encrypt under. It reads a key and never makes one: publish generates a
@@ -595,7 +597,15 @@ ensure_opaque_slug() { # <trip_dir>
     return
   fi
   tok="trip-$(od -An -N5 -tx1 /dev/urandom | tr -dc 'a-f0-9')"
-  printf '%s\n' "$tok" > "$sf"
+  # Each step stops on its own failure, whatever errexit is (#1822): a token the random source did not fill would
+  # give every such trip one shared name, and a name that did not save would leave this run creating the
+  # repository under the destination-and-year name --opaque exists to keep off a public profile.
+  case "$tok" in
+    trip-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]) ;;
+    *) die "publish: could not generate the opaque repository name — the random source gave no usable token. Nothing was created or pushed; without it this run would have named the repository after the trip's destination and year. Re-run publish --opaque; if it happens again, check that /dev/urandom and od are available." ;;
+  esac
+  { printf '%s\n' "$tok" > "$sf" && [ "$(tr -d '[:space:]' < "$sf")" = "$tok" ]; } \
+    || die "publish: could not save the opaque repository name to $sf. Nothing was created or pushed; without it this run would have named the repository after the trip's destination and year. Make $sf writable (a link there must point at a writable place) and re-run publish --opaque."
   ok "opaque: per-trip repo will be '$tok' (saved to $sf — reused by update/rotate)."
 }
 
@@ -5214,7 +5224,10 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   [ "$opaque" = "1" ] && ensure_opaque_slug "$trip_dir"
 
   local site_html slug pub_dir owner ans
-  site_html="$(resolve_site_html "$trip_dir")"
+  # Every step below stops on its own failure, whatever errexit is (#1822): a caller reached through `if` or `||`
+  # runs this body with -e off, and each step that used to lean on it ran on to "Published". Where a callee has
+  # printed its own refusal the step exits; otherwise its message opens publish: and names the step.
+  site_html="$(resolve_site_html "$trip_dir")" || exit 1   # the resolver has printed its refusal
   # The render's approval-code guard (#719, FM-3), before the repo is probed, created or pushed.
   # S3 does not gate publish, by design — it cannot overwrite a published plan — but a render
   # stating an approval code that is not its own plan's must not reach a first publish either.
@@ -5233,9 +5246,10 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   # probed, created or pushed — the same
   # check update and rotate run inside require_publish_guards.
   require_clean_build_sources "$trip_dir"
-  slug="$(slug_for "$trip_dir")"
+  slug="$(slug_for "$trip_dir")" || exit 1   # slug_for has printed its refusal
   pub_dir="$trip_dir/.publish"
-  owner="$(gh api user --jq '.login')"
+  { owner="$(gh api user --jq '.login')" && [ -n "$owner" ]; } \
+    || die "publish: could not read your GitHub user name, which names the per-trip repository and its site. Nothing was created or pushed. Check  gh auth status  and re-run publish."
   # A repository that exists takes this push only when the host says it is empty and public. What the
   # host said decides, never what a clone holds; an answer that is not exactly that is the repository
   # holding something, which is the refusal it always was.
@@ -5247,12 +5261,12 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
       *) die "per-trip repo ${owner}/${slug} already exists — use:  $(basename "$0") update ${trip_dir}  (or rotate)" ;;
     esac
   fi
-  rm -rf "$pub_dir"
+  rm -rf "$pub_dir" || die "publish: could not clear $pub_dir before cloning into it. Nothing was created or pushed."
   if [ "$into_empty" = 1 ]; then
     gh repo clone "${owner}/${slug}" "$pub_dir" >/dev/null 2>&1 \
       || die "publish: could not clone the empty per-trip repository ${owner}/${slug}. Nothing was pushed, and no passphrase was generated. Re-run publish when it can be reached."
   else
-    mkdir -p "$pub_dir"
+    mkdir -p "$pub_dir" || die "publish: could not create $pub_dir. Nothing was created or pushed."
   fi
 
   if [ "$plaintext" = "1" ]; then
@@ -5270,7 +5284,7 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
     elif [ "${ALLOW_PLAINTEXT:-}" != "1" ]; then
       die "refusing non-interactive plaintext publish; re-run with ALLOW_PLAINTEXT=1 to override."
     fi
-    cp "$site_html" "$pub_dir/index.html"
+    cp "$site_html" "$pub_dir/index.html" || die "publish: could not place the page in $pub_dir. Nothing was pushed."
     # The bytes this push carries are the bytes checked (#2155's review, F18): the refusal reads the staged
     # copy, so a render rebuilt since it first ran is refused rather than pushed, and the copy goes with it.
     refuse_group_only_render "$pub_dir/index.html" "$site_html" "$pub_dir/index.html"
@@ -5279,15 +5293,17 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
     # A trip's first key, made here and nowhere else outside rotate, on both of publish's arms: the
     # repository this run creates, and the empty one it was given (see the function).
     ensure_first_key "$trip_dir"
-    passphrase="$(get_passphrase "$trip_dir")"
+    passphrase="$(get_passphrase "$trip_dir")" || exit 1   # the resolver has printed its refusal
     info "Encrypting site (StatiCrypt — AES-256-CBC + HMAC, 600k PBKDF2)…"
-    enc="$(encrypt_to_tmp "$site_html" "$passphrase")"
+    enc="$(encrypt_to_tmp "$site_html" "$passphrase")" || die "publish: the encryption step failed. Nothing was pushed."
     info "Running pre-push verify guard…"
     boiler="$(make_boilerplate || true)"
     verify_ciphertext "$enc/index.html" "$site_html" "${boiler:+$boiler/index.html}" \
       || { rm -rf "$enc" "$boiler"; die "GUARD ABORTED publish — output is not verified ciphertext. Nothing was pushed."; }
     rm -rf "$boiler"
-    cp "$enc/index.html" "$pub_dir/index.html"; rm -rf "$enc"
+    cp "$enc/index.html" "$pub_dir/index.html" \
+      || { rm -rf "$enc"; die "publish: could not place the ciphertext in $pub_dir. Nothing was pushed."; }
+    rm -rf "$enc"
     ok "Guard passed — only ciphertext will be pushed."
   fi
 
@@ -5295,21 +5311,19 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   # The commit first, in a subshell of its own (#1468 D-6, CD-3 of the amendment-1 review): the
   # record is then staged after the command's own writes, as in update and rotate, and a commit that
   # fails stops the command with nothing staged. The push is the second subshell, after the stager.
-  ( cd "$pub_dir"
-    git init -q
-    git add index.html
-    commit_noreply . "Publish trip site"
-    git branch -M main
-  )
+  git -C "$pub_dir" init -q || die "publish: could not initialise $pub_dir. Nothing was pushed."
+  git -C "$pub_dir" add index.html || die "publish: could not stage the page in $pub_dir. Nothing was pushed."
+  commit_noreply "$pub_dir" "Publish trip site" \
+    || die "publish: could not commit the page in $pub_dir (the git error above names the cause). Nothing was pushed."
+  git -C "$pub_dir" branch -M main || die "publish: could not name the branch main in $pub_dir. Nothing was pushed."
   # The baseline record this push needs, staged after the commit; between it and the push stands
   # only the push subshell's entry into the clone (#1468 D-6). The digest of the plan this push
   # carries comes back in `staged`, for the recorder.
   local staged=""
   if [ "$into_empty" != 1 ]; then
     stage_baseline_record "$trip_dir" "$site_html" publish staged
-    ( cd "$pub_dir"
-      gh repo create "$slug" --public --source=. --remote=origin --push >/dev/null
-    )
+    ( cd "$pub_dir" && gh repo create "$slug" --public --source=. --remote=origin --push >/dev/null ) \
+      || die "publish: creating the per-trip repository ${owner}/${slug} and pushing to it failed (gh's message is above). The repository may now exist — empty, or holding this page — or not exist at all; nothing is known to be published, and the baseline record this push staged is left at $(staged_record_path "$trip_dir"). Re-run publish: it creates the repository, or takes it if it is empty. If it answers that the repository already exists, the push reached it: remove $pub_dir and run update."
   else
     # The clone's branch was renamed to main above, whatever the host's unborn HEAD gave it. The default
     # branch is set explicitly rather than left to what the host does with a first push, because the next
