@@ -16395,18 +16395,19 @@ rv54c_assert() { # <id> — the control: with the lock stubbed open, the held ar
 rv54c_assert "RV54-ctl"
 # RV54-list — list takes no lock: it reports while a command holds the trip.
 rv54l_assert() { # <id>
-  local id="$1" name d root out rc reached=0 arc
+  local id="$1" name d root out rc reached=0 listed=0 arc
   name="rv54l-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-list-synthetic-key-74')"
   root="$RVW/rv54l-root-$RANDOM"; mkdir -p "$root/trips"; ln -s "$d" "$root/trips/$name"
   rv54_holder "$d" "$d.reached" "$d.stop" "$d.a.out"
   rv54_wait_reached "$d.reached" "$RV54_PID" && reached=1
   out="$( ( _GUARD_DATA_ROOT="$root"; _GUARD_DATA_ROOT_EXPLICIT=1; cmd_list ) 2>&1 )"; rc=$?
   arc="$(rv54_finish "$d.stop" "$RV54_PID")"
+  rv_has "$out" "$name" && listed=1
   if [ "$reached" -eq 0 ]; then
     FAIL "$id: the holder never reached its wait. VERDICT WITHHELD"
   elif [ "$rc" -ne 0 ]; then
     FAIL "$id: list while a command holds the trip read rc=$rc, want 0 — list takes no lock"
-  elif ! rv_has "$out" "$name"; then
+  elif [ "$listed" -eq 0 ]; then
     FAIL "$id: list read rc=0 but its table does not carry the held trip"
   else
     PASS "$id: list reports the trip while an update holds its lock — it takes none (holder rc=$arc)"
@@ -16529,6 +16530,7 @@ md_flips _take_trip_lock "RV54-held-rotate" rv54h_assert "RV54-held-rotate" rota
 md_flips _take_trip_lock "RV54-held-publish" rv54h_assert "RV54-held-publish" publish
 md_flips _take_trip_lock "RV54-held-unpublish" rv54h_assert "RV54-held-unpublish" unpublish
 md_flips _take_trip_lock "RV54-held-confirm" rv54h_assert "RV54-held-confirm" confirm
+md_flips cmd_list "RV54-list" rv54l_assert "RV54-list"
 md_flips _take_trip_lock "RV54-stale" rv54s_assert "RV54-stale"
 md_flips _take_trip_lock "RV54-unreadable-holder" rv54u_assert "RV54-unreadable-holder"
 md_flips _take_trip_lock "RV54-mkdir" rv54m_assert "RV54-mkdir"
