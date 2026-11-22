@@ -306,7 +306,7 @@ Read the relevant agent prompt from `agents/<name>.md` (see the roster below) an
 | Agent | Prompt File | Output File | When to dispatch |
 |-------|------------|-------------|-----------------|
 | Destination Ideation | `agents/destination-ideation.md` | `outputs/destination-shortlist.md` | IDEATION with no destination chosen yet — aggregate travelers' leanings into a ranked group shortlist |
-| Enrichment | `agents/00-enrichment.md` | Updates `trip-context.md` [ENRICH] fields (research role); rebuilds `outputs/traveler-model.md` (reconciler role); seeds the initial `locked` rows of `outputs/event-status.md` at setup only — the hub owns that file | New trip setup, destination/hotel change |
+| Enrichment | `agents/00-enrichment.md` | Updates `trip-context.md` [ENRICH] fields (research role); rebuilds `outputs/traveler-model.md` and `outputs/traveler-presence.md` (reconciler role); seeds the initial `locked` rows of `outputs/event-status.md` at setup only — the hub owns that file | New trip setup, destination/hotel change |
 | Activities | `agents/01-activities.md` | `outputs/activities-list.md` | User wants activity research or replacements |
 | Food | `agents/02-food.md` | `outputs/food-list.md` | User wants food research or replacements |
 | Nightlife | `agents/07-nightlife.md` | `outputs/nightlife-list.md` | User wants going-out research, or a full pipeline where a present traveler holds a nightlife/evening desire, or the trip contains at least one night a natural occasion would apply to (`weekend night`, `calendar occasion`), the members `agents/06-validator.md` owns in its occasion limb — the spoke resolves its own desire gate and writes a gate-result stub when nobody does |
@@ -627,7 +627,7 @@ One writer per block. A writer not named for a block does not write it — not "
 | Title line · `## Group` roster · `Total travelers` | `/trip-new` at creation; `/trip-record` thereafter | `/trip-new` writes this file **only when creating it**. On an existing trip it leaves the file alone and re-derives nothing. |
 | `## Mode` → `Current mode` and `Mode notes` | `/trip-new` at creation · `/trip-record` · `/trip plan`, `/trip replan` and `/trip reorder` (carve-out below) | Whoever changes `Current mode` writes `Mode notes` in the same act, naming the evidence for the new value. |
 | `[ENRICH]` fields — `### Transit Access`, `### Walkable Proximity`, `## Weather Context`, `## Destination Baseline`, `## Events & Calendar` | the enrichment agent (`agents/00-enrichment.md`) | `[ENRICH]`-only, whichever command dispatched it. Contract: `agents/00-enrichment.md`. Layering: `reference/data-model.md` → *Who Writes What*. |
-| `[DERIVED]` blocks — `### Effective Planning Days`, `### Per-Traveler Planning Days` | **no writer exists** | Not a gap to fill opportunistically. The template forbids manual editing and the enrichment agent declines the write in terms. Until an owner is decided these blocks are read-only to every command, `/trip-record` included; staleness is reported, never repaired in place. |
+| `[DERIVED]` block — `### Effective Planning Days` | **no writer exists** | Not a gap to fill opportunistically. The template forbids manual editing and the enrichment agent declines the write in terms. Until an owner is decided this block is read-only to every command, `/trip-record` included; staleness is reported, never repaired in place. |
 | `## Destination` | `/trip-record` | `/trip ideas` produces the shortlist and **names** this step; it never writes the destination itself. |
 | `## Locked Elements` · `## Current Itinerary Status` | the operator, through `/trip-record` | The trip-level human summary. `outputs/event-status.md` is the structured source of truth for the scheduler, hub and validator; enrichment may *read* these notes to seed initial `locked` rows and never authors them. |
 | `**Lifecycle:**` — the lifecycle marker line | `/trip-decommission` | A command-written lifecycle marker, not a Layer-1 human field — named here so the untagged-field row below does not claim it, and `/trip-record` never writes it. Its `archive` verb writes the field; its `reopen` verb returns it to `ACTIVE` rather than removing the line. An absent line is the contract's declared default rather than a gap to fill opportunistically (`§ Resolving a trip`, G4). |
@@ -714,6 +714,7 @@ travel-planner/
             ├── links-reference.md     ← rebuilt by hub each synthesis
             ├── venue-matrix.md        ← rebuilt by hub each synthesis
             ├── traveler-model.md      ← [DERIVED] reconciled per-traveler model + desire-overlap (rebuilt from source files)
+            ├── traveler-presence.md   ← [DERIVED] each traveller's planning-day window (rebuilt by the reconciler)
             ├── event-status.md        ← per-event status — persist-mutable, survives re-runs
             ├── satisfaction-metrics.md ← coverage metrics (validator + hub)
             ├── cost-estimate.md       ← per-traveler cost projection (C21) — written by the hub, after event-status.md

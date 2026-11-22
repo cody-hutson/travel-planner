@@ -3,6 +3,86 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.75.0] — 2026-11-20 — Each traveller's planning-day window has one home
+
+Each traveller's planning-day window now lives in one file, `outputs/traveler-presence.md`, which
+the enrichment agent's reconciler rebuilds beside the traveller model on every pass, and which
+scheduling, transport, the hub and the validator read. The trip template's per-traveller block,
+which had no writer and went stale the moment a profile changed, is retired. No trip is re-planned
+by this release: an `ACTIVE` trip gains its presence file on its next `/trip-record travelers`,
+`person` or `group`, `/trip plan` or profile-triggered `/trip replan`, and until then a reader says
+its windows are not yet derived and names `/trip-record travelers`.
+
+**A window has a file of its own.** The presence file is class C24 in
+`reference/data-architecture.md` § 1.1, with a schema in `reference/schemas/traveler-presence.md`
+and a witness in `examples/two-origin-demo/`; the out-of-model classes move to C25–C30. Every `##`
+heading is a traveller, and each entry carries a window basis and an origin basis in the
+template's old warrant vocabulary (`ASSERTED-DIFFERENT`, `ASSERTED-SAME`, `UNKNOWN`), the effective
+window, its full and partial days, and the timezone delta. A cell a traveller did not pin reads by
+reference to the trip-level window, marked `(assumed)` where the basis is `UNKNOWN`. A window that
+reaches outside the trip's own days keeps the traveller's instants on its window line, while its
+count of days is clipped to the trip. `reference/data-model.md` § *Traveler presence — the window
+lines* states the lines, their vocabulary and their derivation, and the four readers cite it.
+
+**The reconciler writes it, and says what a rebuild replaced.** Standing rule 18 of
+`skills/trip-record/SKILL.md` admits the second file. The reconciler reads the presence file it is
+about to replace, states before its own write every line and entry the rebuild will not keep, and
+returns that; `/trip-record travelers`, `person` and `group`, and `/trip plan` and `/trip replan`,
+surface it. A changed window input — `Leaving from:`, `Arrive / leave:` — is rebuilt on the same pass
+and names `/trip replan`; any other changed journey facet is reported and names no command, as
+before.
+
+**Erasure reaches the file before anything writes it.** `/trip-record erase` gains row 40, the
+presence file's entry heading, `REACH`, landed before any writer of the file existed, so the file has
+never held a name erasure could not reach. The table's accounting now reads 28 `REACH` + 8 `REPORT`
++ 4 `OUT` = 40.
+
+**Two records.** `ADR-049`, *what a rebuild owes*, lands `Proposed`: `ADR-007` § 2's bound 5 is read
+per unit, one unit is admitted today, and erasure is that bound's one exception. `ADR-054` lands
+`Proposed` and supersedes in part `ADR-028` § *Decision* 4, so the enrichment row of `CLAUDE.md`'s
+agent roster names both files its reconciler rebuilds; `ADR-028` records that supersession, and its
+citations of text that has moved since it was written are amended to what they quote. Both
+`Proposed` records are ratified together at this release's close.
+
+**The per-traveller block is retired.** `templates/trip-context.template.md` no longer carries it,
+nor its `Last derived:` line, its collapse rule or its *Recompute trigger* label; the trip window's
+two scope notes point at the presence file. `CLAUDE.md` § *Write ownership* row 4 now names the trip
+window alone. `examples/two-origin-demo/` and `examples/data-architecture-demo/` are migrated: their
+blocks are gone and their windows stand in their presence files. `examples/single-origin-demo/` is
+kept unchanged as the worked instance of `ADR-028` § *The per-trip transition*, a trip created before
+this release, and its README says that nothing reads its block.
+
+**The suite holds it.** Group `PW` of `scripts/test-artifact-schema.sh` grades the clip over every
+tracked presence file, that each of the four readers names the file and no longer names the retired
+block, and that each reader's closed read scope still stands, each with a control that must fire on a
+copy. Group `PS` no longer reads a trip holding only the model or the presence file as one that
+reached synthesis. Arm `HC3` reads `reference/data-architecture.md` § 1's count, § 4.4's range and
+§ 7.6's partition against the class rows, which the comment above `HC2` had claimed were read when no
+arm read them. Five enumerations that restated a number — a list of joined classes that had already
+missed C23, *twenty classes*, *twenty witnessed classes*, and a pair of row ranges — now cite where the
+number lives.
+
+**Size fence.** Read against `v0.74.0`, this branch's merge base, `CH_EMIT=growth bash
+scripts/test-corpus-hygiene.sh` lists one row re-pinned and one removed, and every other row kept.
+- `skills/trip/SKILL.md` was re-pinned from 106,098 to 118,008 bytes. The announce `/trip plan` and
+  `/trip replan` surface, and the presence file added to the attributed reads of `plan`, `replan`,
+  `reorder` and `check`, took the file past a ceiling that had left 131 bytes of headroom; it now
+  measures 107,280.
+- `templates/trip-context.template.md`'s row was removed: with the per-traveller block gone the file
+  measures 15,854 bytes, below its class floor, and the growth summary listed the row `unowed`.
+- Every other row was kept. `reference/data-model.md` grew 6,964 bytes to 235,945, beneath its row of
+  246,314, with the appended section on the window lines; `skills/trip-record/SKILL.md` grew 4,151 to
+  456,422, beneath 470,268; `agents/00-enrichment.md` grew 1,726 to 79,137, beneath 82,813;
+  `reference/adr/README.md` grew 454 to 27,613, beneath 28,177, with the two records' index rows;
+  and `CLAUDE.md` grew 121 to 145,019, beneath 153,381. `ADR-049`, `ADR-054`
+  and the presence schema are below their class floor and owe no row.
+
+**What this release does not do.** That the reconciler writes the file as stated is checked by a
+dispatch of it against a scratch trip at Stage 7, not by the suite, which grades the tree. A trip
+file created before this release keeps its per-traveller block, unowned and unread; erasure counts a
+name it finds there and reports the block stale, and does not sweep it. The trip window keeps no
+writer until its own owner is decided.
+
 ## [0.74.0] — 2026-11-21 — An assisted interview reads the traveller who may see what they share
 
 This release changes how the two intake forms tell an interviewer to begin, and runs the

@@ -12,15 +12,6 @@ where the window and origin axes diverge, and this one is a degenerate case wher
 they cannot. Companion to `examples/ideation-demo/`, which is minimal in the same
 way.
 
-**Deliberate non-collapse — do not copy this fixture's per-traveler block.** Its
-`### Per-Traveler Planning Days [DERIVED]` section meets the single-origin collapse
-precondition in `templates/trip-context.template.md` and renders the per-traveler
-table anyway, on purpose, to expose the basis values the collapse hides. Under that
-rule a conforming trip context deletes the table and keeps only the
-`- **All travelers:**` line. `examples/single-origin-demo/` is the worked instance of
-the collapse: copy that one for this block's rendering, and this one for the artifact
-shape. The same exemption is stated in place, directly beneath that table.
-
 ## The trip
 
 - Destination: Porto, Portugal (placeholder)
@@ -35,7 +26,7 @@ shape. The same exemption is stated in place, directly beneath that table.
 
 | File | Class | Tier | What it exercises |
 |---|---|---|---|
-| `trip-context.md` | C1 | 2 | block-owned writer; the single-origin degenerate case, rendered as a **deliberate non-collapse** — `examples/single-origin-demo/` renders the collapse the rule asks for |
+| `trip-context.md` | C1 | 2 | block-owned writer; the single-origin degenerate case |
 | `trip-log.md` | C2 | 2 | `accumulate-append`; why `generated:` is optional on C1–C3 |
 | `travelers/alex.md` · `travelers/robin.md` | C3 | 1 | the **template's own section and field surface**, which is what `agents/00-enrichment.md` parses; needs vs desires; tier and recurrence orthogonal; `Applies to:` links rather than copies; the traveller's name in the **title line**, never in frontmatter. Two files for three roster members — Sam's absence is the operator-fallback branch |
 | `outputs/activities-list.md` | C5 | 2 | migrated shape, and the fixture's **marker-transition witness** — two dated sections, `unminted` resolving to `ven-<token>` across a pass |
@@ -54,10 +45,19 @@ shape. The same exemption is stated in place, directly beneath that table.
 | `outputs/change-summary.md` | C20 | 1 | `accumulate-append` keeping a decided entry beside an undecided one; the keyed four-bucket difference and the unkeyed removal it cannot see; the one per-class field, `status` |
 | `outputs/cost-estimate.md` | C21 | 1 | the **`0 < N < M`** rendering limb — a total carrying its own `N of M` coverage, never presented as complete; the coverage pair `cost-bearing-items` / `priced-items` with N computed independently of M; the per-traveller `P of Q` that measures a **plan** where the frontmatter pair measures the **corpus**, and the two cases where they disagree; the commitment split drawn on `locked` versus the rest, with the two legs named as sitting outside C13's reach entirely; and `undetermined` rendered rather than a total of zero, on the one category nothing priced |
 
+**`outputs/traveler-presence.md` (C24) is here as the fixture the reconciler's presence rebuild is
+read against; it is not that class's witness**, which `examples/two-origin-demo/` holds. Every entry
+is by reference: Alex and Robin read `ASSERTED-SAME`, and Sam, who filed no profile, reads `UNKNOWN`,
+marked `(assumed)`. **A reference that resolves to nothing here, declared as a residual:** each
+entry's `Timezone delta` line reads `the trip-level delta`, and this trip window carries no
+`Timezone delta` line, because its origin is a placeholder with no zone to state. A reader resolving
+that reference finds no line and says so; it never supplies a delta of its own.
+
 ## Depth
 
 **This fixture is deliberately uneven, on a declared rule rather than by accident.**
-Reproducing a full worked example for twenty classes would put a second copy of
+Reproducing a full worked example for every class `reference/data-architecture.md` § 1.1
+declares would put a second copy of
 `examples/tokyo-2026/` in the repository, and a second copy is a second thing to
 keep true.
 

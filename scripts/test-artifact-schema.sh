@@ -20,7 +20,8 @@
 #        count INSIDE that heading equals the number of rows the validator extracts. The
 #        failure this closes is not a wrong answer but an answer over the empty set: a
 #        correct doc edit that leaves the constant behind makes va_class_rows return zero,
-#        and SC2/SC3/CA/PB/UF then all go green over nothing.
+#        and SC2/SC3/CA/PB/UF then all go green over nothing. HC3 holds the three prose
+#        sites that restate the count — § 1's, § 4.4's range, § 7.6's partition — to it.
 #   XC   every selector exclusion the validator applies is declared in the architecture
 #        document, IN THE SECTION the validator names for it (S9). An exclusion is a
 #        statement about what the gate does not adjudicate, so an undeclared one is the
@@ -454,6 +455,9 @@
 #        writes neither sidecar, and names the declaration in its closing note; the charter's
 #        Step 2 row restates the read. Phrase arms with a strip control each; firing is observed
 #        by a live exercise, never by this tree
+#   PW   the presence file's window lines: an ASSERTED-DIFFERENT entry's count holds only days of
+#        its trip's day set (PW1), each of the four readers names the file (PW2), and each closed
+#        read scope stands verbatim (PW3); each with a must-fire control on a copy
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -827,8 +831,8 @@ fi
 # HC2 — the COUNT INSIDE the heading equals the number of rows the validator extracts.
 # HC1 proves the two homes agree with each other; it does not prove either of them is
 # TRUE. A heading reading (19) above twenty rows would satisfy HC1 perfectly, with the
-# constant faithfully matching a document that misstates its own enumeration — and § 1's
-# prose count, § 4.4's range and § 7.6's arithmetic are all read against that number.
+# constant faithfully matching a document that misstates its own enumeration — and `HC3`
+# reads § 1's prose count, § 4.4's range and § 7.6's arithmetic against that number.
 hc_declared="$(printf '%s' "$VA_CLASS_HEADING" | sed -n 's/.*(\([0-9][0-9]*\)).*/\1/p')"
 if [ -n "$hc_declared" ] && [ "$hc_declared" -eq "$SC_NCLASS" ]; then
   PASS "HC2: the heading declares $hc_declared in-model classes and va_class_rows extracts $SC_NCLASS — the literal count is the row count, not a number that once was"
@@ -849,6 +853,113 @@ if [ "$hc_ctl_got" = "$hc_ctl_want" ] && [ "$hc_ctl_got" -ne "$SC_NCLASS" ]; the
   PASS "HC2-CTL: MUST FIRE — the same extractor reads $hc_ctl_got from a heading declaring $hc_ctl_want, a value different from the live $SC_NCLASS, so HC2 reads the count OUT OF the string rather than reporting a fixed number"
 else
   FAIL "HC2-CTL: MUST FIRE — the extractor returned '${hc_ctl_got:-<empty>}' for a heading declaring $hc_ctl_want; HC2's equality is not reading the heading and grades nothing"
+fi
+
+# HC3 — the three prose sites that restate the in-model count, each read against SC_NCLASS.
+# HC2 holds the heading's count to the rows; these three restate the same number in prose and
+# would otherwise be held by whoever edits the heading. § 1's opening sentence
+# (`**closed at <A>**: <M> in-model artifact classes, and <K> classes explicitly`), the § 4.4
+# heading's range (`every in-model class (C1–C<M4>)`), and § 7.6's partition (`Partitioning the <M7>
+# in-model classes` and its `**<a> + <b> + <c> + <d> = <S>.**`). Each site must be found exactly
+# once; M = M4 = M7 = S = SC_NCLASS; a + b + c + d = S; and A = M + K. The verdict is aggregated PER
+# SITE: one record per site, carrying every reason that site fails, so one wrong number at a site
+# is one failing site however many equalities it breaks. WHAT THIS DOES NOT ESTABLISH: that each of
+# § 7.6's four row counts is right — it grades their sum, not each row's membership — or that § 1's
+# out-of-model count K is right, beyond A = M + K. Every reader takes a file; nothing is piped.
+hc3_read() {   # hc3_read <file> — one line per site: "<site> <n found> <values...>"
+  LC_ALL=C awk '
+    /^## / { s1 = ($0 ~ /^## 1\. /) }
+    /^### / || /^## / { s76 = ($0 ~ /^### 7\.6 /) }
+    s1 && match($0, /\*\*closed at [0-9]+\*\*: [0-9]+ in-model artifact classes, and [0-9]+ classes explicitly/) {
+      n1++; split(substr($0, RSTART, RLENGTH), w, /[^0-9]+/); A = w[2]; M = w[3]; K = w[4]
+    }
+    /^#+ / && index($0, "every in-model class (C1–C") > 0 {
+      n44++; r = substr($0, index($0, "every in-model class (C1–C") + length("every in-model class (C1–C"))
+      M4 = (match(r, /^[0-9]+\)/) ? substr(r, 1, RLENGTH - 1) : "?")
+    }
+    s76 && match($0, /Partitioning the [0-9]+ in-model classes/) {
+      n76p++; split(substr($0, RSTART, RLENGTH), w, /[^0-9]+/); M7 = w[2]
+    }
+    s76 && match($0, /^\*\*[0-9]+ \+ [0-9]+ \+ [0-9]+ \+ [0-9]+ = [0-9]+\.\*\*/) {
+      n76s++; split(substr($0, RSTART, RLENGTH), w, /[^0-9]+/); a = w[2]; b = w[3]; c = w[4]; d = w[5]; S = w[6]
+    }
+    END {
+      printf "S1 %d %s %s %s\n", n1 + 0, (A == "" ? "?" : A), (M == "" ? "?" : M), (K == "" ? "?" : K)
+      printf "S44 %d %s\n", n44 + 0, (M4 == "" ? "?" : M4)
+      printf "S76 %d %d %s %s %s %s %s %s\n", n76p + 0, n76s + 0, (M7 == "" ? "?" : M7), (a == "" ? "?" : a), (b == "" ? "?" : b), (c == "" ? "?" : c), (d == "" ? "?" : d), (S == "" ? "?" : S)
+    }' "$1"
+}
+hc3_bad() {    # hc3_bad <hc3_read output> <N> — one line per FAILING site: "<site name>: <reasons>"
+  LC_ALL=C awk -v N="$2" '
+    function isn(x) { return x ~ /^[0-9]+$/ }
+    $1 == "S1" {
+      r = ""
+      if ($2 != 1) r = r sprintf(" the sentence was found %d time(s), expected 1;", $2)
+      else {
+        if (!isn($4) || $4 + 0 != N + 0) r = r sprintf(" it states %s in-model classes against %s rows;", $4, N)
+        if (!isn($3) || !isn($5) || $3 + 0 != $4 + $5) r = r sprintf(" closed at %s is not %s + %s;", $3, $4, $5)
+      }
+      if (r != "") print "§ 1:" r
+    }
+    $1 == "S44" {
+      r = ""
+      if ($2 != 1) r = r sprintf(" the heading range was found %d time(s), expected 1;", $2)
+      else if (!isn($3) || $3 + 0 != N + 0) r = r sprintf(" its range ends at C%s against %s rows;", $3, N)
+      if (r != "") print "§ 4.4:" r
+    }
+    $1 == "S76" {
+      r = ""
+      if ($2 != 1) r = r sprintf(" the partition sentence was found %d time(s), expected 1;", $2)
+      if ($3 != 1) r = r sprintf(" the sum line was found %d time(s), expected 1;", $3)
+      if ($2 == 1 && (!isn($4) || $4 + 0 != N + 0)) r = r sprintf(" it partitions %s in-model classes against %s rows;", $4, N)
+      if ($3 == 1) {
+        if (!isn($9) || $9 + 0 != N + 0) r = r sprintf(" its total reads %s against %s rows;", $9, N)
+        if (isn($5) && isn($6) && isn($7) && isn($8) && isn($9) && $5 + $6 + $7 + $8 != $9 + 0) r = r sprintf(" %s + %s + %s + %s is not %s;", $5, $6, $7, $8, $9)
+      }
+      if (r != "") print "§ 7.6:" r
+    }' <<<"$1"
+}
+HC3_RECS="$(hc3_read "$ROOT/$VA_ARCH_DOC")"
+HC3_BAD="$(hc3_bad "$HC3_RECS" "$SC_NCLASS")"
+if [ -z "$HC3_BAD" ]; then
+  PASS "HC3: § 1's prose count, § 4.4's range and § 7.6's partition and sum each stand exactly once in $VA_ARCH_DOC and agree with the $SC_NCLASS rows va_class_rows extracts — $(tr '\n' ';' <<<"$HC3_RECS")"
+else
+  FAIL "HC3: $(LC_ALL=C awk 'END { print NR }' <<<"$HC3_BAD") of 3 site(s) in $VA_ARCH_DOC disagree with the $SC_NCLASS rows va_class_rows extracts — $(tr '\n' ' ' <<<"$HC3_BAD")"
+fi
+
+# HC3-CTL — MUST FIRE: a copy of the document with § 7.6's total raised by one. That breaks two
+# equalities at one site, and the per-site aggregation must report it as exactly one failing site,
+# § 7.6, naming its total.
+HC3_DIR="$WORK/hc3"; mkdir -p "$HC3_DIR"
+LC_ALL=C awk -v want="$(( SC_NCLASS + 1 ))" '
+  /^### / || /^## / { s76 = ($0 ~ /^### 7\.6 /) }
+  s76 && !done && match($0, /^\*\*[0-9]+ \+ [0-9]+ \+ [0-9]+ \+ [0-9]+ = [0-9]+\.\*\*/) {
+    $0 = substr($0, 1, index($0, " = ") + 2) want ".**" substr($0, RSTART + RLENGTH); done = 1
+  }
+  { print } END { exit (done == 1 ? 0 : 3) }' "$ROOT/$VA_ARCH_DOC" > "$HC3_DIR/ctl.md"; HC3_CMUT=$?
+HC3_CBAD="$(hc3_bad "$(hc3_read "$HC3_DIR/ctl.md")" "$SC_NCLASS")"
+HC3_CN="$(LC_ALL=C awk 'NF { c++ } END { print c + 0 }' <<<"$HC3_CBAD")"
+HC3_C76="$(LC_ALL=C awk -v t="its total reads $(( SC_NCLASS + 1 )) against" 'index($0, "§ 7.6:") == 1 && index($0, t) > 0 { c++ } END { print c + 0 }' <<<"$HC3_CBAD")"
+if [ "$HC3_CMUT" -ne 0 ]; then
+  FAIL "HC3-CTL: the mutation did not land on § 7.6's sum line in the copy (awk rc=$HC3_CMUT), so this control grades nothing"
+elif [ "$HC3_CN" -eq 1 ] && [ "$HC3_C76" -eq 1 ]; then
+  PASS "HC3-CTL: MUST FIRE — § 7.6's total raised to $(( SC_NCLASS + 1 )) in a copy is reported as exactly one failing site, § 7.6, naming its total — $HC3_CBAD"
+else
+  FAIL "HC3-CTL: raising § 7.6's total in a copy did not yield exactly one failing site naming § 7.6's total — $HC3_CN failing site(s): $HC3_CBAD"
+fi
+
+# HC3-CTL2 — MUST FIRE: a copy of the document with the § 4.4 heading removed. A site that is not
+# there must FAIL as not found, never pass as vacuous.
+LC_ALL=C awk '/^#+ / && index($0, "every in-model class (C1–C") > 0 { m++; next } { print } END { exit (m == 1 ? 0 : 3) }' \
+  "$ROOT/$VA_ARCH_DOC" > "$HC3_DIR/ctl2.md"; HC3_C2MUT=$?
+HC3_C2BAD="$(hc3_bad "$(hc3_read "$HC3_DIR/ctl2.md")" "$SC_NCLASS")"
+HC3_C2N="$(LC_ALL=C awk 'index($0, "§ 4.4: the heading range was found 0 time(s)") == 1 { c++ } END { print c + 0 }' <<<"$HC3_C2BAD")"
+if [ "$HC3_C2MUT" -ne 0 ]; then
+  FAIL "HC3-CTL2: the § 4.4 heading was not removed exactly once from the copy (awk rc=$HC3_C2MUT), so this control grades nothing"
+elif [ "$HC3_C2N" -eq 1 ]; then
+  PASS "HC3-CTL2: MUST FIRE — with the § 4.4 heading removed from a copy, that site FAILS as not found rather than passing as vacuous — $HC3_C2BAD"
+else
+  FAIL "HC3-CTL2: removing the § 4.4 heading from a copy did not fail that site as not found — $HC3_C2BAD"
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────────
@@ -1747,7 +1858,8 @@ fi
 #
 # ── `writer` IS DELIBERATELY NOT COMPARED, AND THE OMISSION IS MEASURED ──────────
 # § 1.1 states the writer as PROSE carrying qualifiers, while the frontmatter states a token
-# or an inline list. Two of the twenty witnessed classes are correct AND unequal by
+# or an inline list. Two of the witnessed classes — those whose schema declares `witness:`,
+# which the gate's `CV` line counts — are correct AND unequal by
 # design: the section-owned class renders as a two-writer prose phrase against a two-value
 # list, and the residual targeted-research class names its writer generically because the
 # writer varies per instance while its witness names the concrete spoke that produced it. A
@@ -2561,7 +2673,8 @@ fi
 # depends on rather than before it.
 #
 # ── WHAT THE `HASOUT` LIMB IS, AND WHAT IT IS NOT ────────────────────────────────
-# LS1 below gates on HASOUT — the trip has at least one file under its outputs/. That is
+# LS1 below gates on HASOUT — the trip has a file under its outputs/ that a writer other than
+# the enrichment agent produced (ps_hasout states the set it sets aside). That is
 # a FIXTURE-POPULATION selector and NOT a statement of the enrichment seed's shipped
 # semantics. The seed's obligation fires at INITIAL SETUP, which is exactly when
 # outputs/ does not yet exist, so HASOUT would be wrong as a rule. It is used here to
@@ -2919,7 +3032,25 @@ ps_locked_bullets() {
     END { print n+0 }
   ' "$1" 2>/dev/null
 }
-ps_hasout() { [ -d "$1/outputs" ] && [ -n "$(ls -A "$1/outputs" 2>/dev/null)" ]; }
+# ps_hasout <trip-dir> — the trip holds a file under outputs/ that some writer other than the
+# enrichment agent produced. A file whose § 1.1 class names the enrichment agent alone as its
+# writer is no evidence of synthesis: /trip-record travelers rebuilds the reconciler's files with
+# no plan behind them. The excluded set is DERIVED from § 1.1's W cells (SC_CLASSES, read in group
+# SC), never listed here, so a later class whose W cell is exactly `enrichment` is decided by the
+# criterion rather than by an edit (CLAUDE.md § Rules over an enumeration). It holds a basename per
+# line; LS-E below fails, naming the parse, when it comes back empty. Pipe-free on purpose: a pipe
+# into a reader that can stop early is group PF's finding here and corpus hygiene's F1.
+PS_ENRICH_ONLY="$(awk -F'\t' '$3 == "enrichment" { n = $2; sub(/^.*\//, "", n); print n }' <<<"$SC_CLASSES")"
+ps_hasout() {
+  local b
+  [ -d "$1/outputs" ] || return 1
+  while IFS= read -r b; do
+    [ -n "$b" ] || continue
+    case $'\n'"$PS_ENRICH_ONLY"$'\n' in *$'\n'"$b"$'\n'*) continue ;; esac
+    return 0
+  done <<<"$(ls -A "$1/outputs" 2>/dev/null)"
+  return 1
+}
 
 # ps_lock_sets <base-dir> — "<triggered>\t<silent>\t<presynth>\t<naive>". ONE comparator
 # again, driven by the real arm and by the two control trees built above.
@@ -2950,6 +3081,15 @@ PS_NAIVE="$(printf '%s' "$PS_LR" | cut -f4)"
 PS_NNAIVE="$(printf '%s\n' $PS_NAIVE | grep -c '[^[:space:]]')"
 PS_NPRE="$(printf '%s\n' $PS_PRE | grep -c '[^[:space:]]')"
 
+# LS-E — the excluded set is not empty. Were the § 1.1 parse to return nothing, ps_hasout would
+# exclude nothing and LS1 would fail naming a fixture, where the cause is the parse.
+PS_NEO="$(grep -c '[^[:space:]]' <<<"$PS_ENRICH_ONLY")"
+if [ "$PS_NEO" -eq 0 ]; then
+  FAIL "LS-E: § 1.1 yields no class whose W cell is exactly 'enrichment' (va_class_rows read $SC_NCLASS row(s)), so ps_hasout excludes nothing and a reconciler-only outputs/ would read as synthesis. The cause is that parse, not a fixture"
+else
+  PASS "LS-E: § 1.1 yields $PS_NEO class file(s) whose W cell is exactly 'enrichment' — $(tr '\n' ' ' <<<"$PS_ENRICH_ONLY")— and ps_hasout reads none of them as evidence of synthesis"
+fi
+
 if [ "$PS_NNAIVE" -eq 0 ]; then
   FAIL "LS0: no fixture carries a '## Locked Elements' section with bullets, so every seed verdict below would be over the empty set — this fails rather than passing quietly"
 else
@@ -2977,7 +3117,7 @@ EOF
   # rather than assumed. A limb that removed nothing on this corpus would be unmotivated,
   # and this arm says so rather than carrying it quietly.
   if [ "$PS_NPRE" -gt 0 ] && [ "$PS_NNAIVE" -gt "$PS_NPRE" ]; then
-    PASS "PS-N: the naive trigger — 'bullets >= 1' with no population limb — selects $PS_NNAIVE trip(s), of which $PS_NPRE carry no outputs/ at all. The limb removes real false positives rather than hypothetical ones, and the count is read from the corpus rather than asserted here"
+    PASS "PS-N: the naive trigger — 'bullets >= 1' with no population limb — selects $PS_NNAIVE trip(s), of which $PS_NPRE carry no outputs/ file a writer other than the enrichment agent produced. The limb removes real false positives rather than hypothetical ones, and the count is read from the corpus rather than asserted here"
   else
     FAIL "PS-N: the naive trigger selects $PS_NNAIVE with $PS_NPRE pre-synthesis — on this corpus the population limb removes nothing, so it is unmotivated and should be dropped rather than kept unmeasured"
   fi
@@ -3001,6 +3141,32 @@ if [ "$PS_OK" -eq 1 ]; then
     PASS "LS-D2: control — over the tree built without outputs/event-status.md under the silent trip, the trigger set rises to $PS_ND2 including examples/data-architecture-demo. LS2's silence is earned: the selector reaches that trip"
   else
     FAIL "LS-D2: the arm did not behave (triggered='$PS_D2', hit=$PS_D2HIT, n=$PS_ND2, expected 2 including examples/data-architecture-demo)"
+  fi
+
+  # LS-D3 / LS-D4 — the exclusion, both ways, on examples/two-origin-demo: a trip carrying
+  # Locked Elements whose outputs/ holds only the presence file, a class the enrichment agent alone
+  # writes. LS-D3 adds the traveller model, the other such class, and the trigger set must stay
+  # examples/tokyo-2026 alone: neither file is read as synthesis. LS-D4 adds outputs/final-itinerary.md,
+  # which the hub writes, and the trip must join the trigger set: the selector reaches the trip, so
+  # its silence in LS1 and LS-D3 is the exclusion's and not a trip the selector never read.
+  PS_C4DIR="$WORK/ps-c4"; PS_C5DIR="$WORK/ps-c5"
+  ps_build "$PS_C4DIR" "" "examples/two-origin-demo/outputs/traveler-model.md"
+  ps_build "$PS_C5DIR" "" "examples/two-origin-demo/outputs/final-itinerary.md"
+  PS_D3="$(printf '%s' "$(ps_lock_sets "$PS_C4DIR")" | cut -f1)"
+  if [ ! -r "$PS_C4DIR/examples/two-origin-demo/outputs/traveler-model.md" ]; then
+    FAIL "LS-D3: the control tree was not built — examples/two-origin-demo/outputs/traveler-model.md is absent from it, so the arm proves nothing"
+  elif [ "$PS_D3" = "examples/tokyo-2026" ]; then
+    PASS "LS-D3: control — with outputs/traveler-model.md added beside the presence file under examples/two-origin-demo, the trigger set is still examples/tokyo-2026 alone. Neither file the enrichment agent alone writes reads as synthesis"
+  else
+    FAIL "LS-D3: a file the enrichment agent alone writes was read as synthesis (triggered='$PS_D3', expected examples/tokyo-2026 alone)"
+  fi
+  PS_D4="$(printf '%s' "$(ps_lock_sets "$PS_C5DIR")" | cut -f1)"
+  PS_ND4="$(grep -c '[^[:space:]]' <<<"$(printf '%s\n' $PS_D4)")"
+  case " $PS_D4 " in *" examples/two-origin-demo "*) PS_D4HIT=1 ;; *) PS_D4HIT=0 ;; esac
+  if [ "$PS_D4HIT" -eq 1 ] && [ "$PS_ND4" -eq 2 ]; then
+    PASS "LS-D4: control — with outputs/final-itinerary.md added under examples/two-origin-demo, the trigger set rises to $PS_ND4 including that trip. The selector reaches it, so LS1's and LS-D3's silence on it is the exclusion's"
+  else
+    FAIL "LS-D4: the arm did not behave (triggered='$PS_D4', hit=$PS_D4HIT, n=$PS_ND4, expected 2 including examples/two-origin-demo)"
   fi
 fi
 
@@ -8662,17 +8828,18 @@ ST_CF_MD_V2="$(while IFS= read -r st_cf_m; do [ -n "$st_cf_m" ] && [ "$(st_cf_ve
 # counts the lines of the form opening on its bold label.
 #
 # ADR-028 (Accepted) rewrites the `[DERIVED]` row twice, and each change moves the realized vector
-# there, so each must update this pin in the same change. The change that names `/trip-record` for
-# `### Effective Planning Days` — that record's Decision 1 row — adds a row whose region realizes
-# NO (marked) and narrows the `[DERIVED]` row's Block text to the per-traveller block. Its Retire
-# landing set, no earlier than the Cutover set that first emits the traveller-presence file, then
-# removes that half of the row together with its block.
+# there, so each updates this pin in the same change. Its Retire landing set came first: landing
+# after the Cutover set that first emitted the traveller-presence file, it removed the
+# per-traveller half of the row together with its block, so the row's Block text names the trip
+# window alone. The change that names `/trip-record` for `### Effective Planning Days` — that
+# record's Decision 1 row — comes second: it gives the trip window a row whose region realizes
+# NO (marked), and updates this pin in the same change.
 #
 # One line per row: `<form tag> | <Block cell, verbatim> | <realized verdict>`.
 ST_CF_PIN='trip-context | Title line · `## Group` roster · `Total travelers` | CONDITIONAL (condition)
 trip-context | `## Mode` → `Current mode` and `Mode notes` | NO (writer-set)
 trip-context | `[ENRICH]` fields — `### Transit Access`, `### Walkable Proximity`, `## Weather Context`, `## Destination Baseline`, `## Events & Calendar` | NO (marked)
-trip-context | `[DERIVED]` blocks — `### Effective Planning Days`, `### Per-Traveler Planning Days` | EXCLUDED (no-writer)
+trip-context | `[DERIVED]` block — `### Effective Planning Days` | EXCLUDED (no-writer)
 trip-context | `## Destination` | YES (interviewer)
 trip-context | `## Locked Elements` · `## Current Itinerary Status` | YES (interviewer)
 trip-context | `**Lifecycle:**` — the lifecycle marker line | UNREACHABLE (by construction)
@@ -15034,8 +15201,9 @@ if [ "$RL_OK" -eq 1 ]; then
   #                      rules are named as governing different surfaces.
   #   ground-attrib    — the surviving residual is filed under ground (2) ERASURE
   #                      REACH, which is the ground `erase` row 24 belongs to:
-  #                      rows 1-28 of that table are the locations a copy of the
-  #                      person's data can reach. Filed under (3) instead, the
+  #                      every row of that table but the person's own record, as
+  #                      its accounting sentence names it, is a location a copy of
+  #                      the person's data can reach. Filed under (3) instead, the
   #                      next reader reconciling this paragraph against the data
   #                      model meets the contradiction rather than the rule.
   #
@@ -32054,6 +32222,344 @@ done
 if [ "$PJT_LOADED" -eq 1 ]; then
   md_flips pj_project_file 'PJ1' pjt_pj1
   md_flips pj_selectors    'PJ3' pjt_pj3
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group PW — the presence file's window lines (#1469, #1504).
+#
+# outputs/traveler-presence.md holds each traveller's planning-day window, and
+# reference/data-model.md § Traveler presence — the window lines states what its lines hold.
+# This group grades three things a tree of files can show:
+#
+#   PW1  an ASSERTED-DIFFERENT entry's `Full + partial` count holds only days of its trip's day
+#        set. § Presence binds that a window reaching outside that set does not extend it, so a
+#        count of days clips to it, while the `Effective window (local)` line keeps the
+#        traveller's own instants (D-Clip). The population is every tracked
+#        examples/*/outputs/traveler-presence.md; the trip-day set is read from the sibling
+#        trip-context.md's `### Effective Planning Days` block, from its `Arrival day` line to its
+#        `Departure day` line inclusive, as group HZ reads the latter. Only an ASSERTED-DIFFERENT
+#        entry carries a count of its own — every other cell is by reference — so only those are
+#        graded, and a population with none graded is a FAIL, never a pass.
+#   PW2  each of the four readers — scheduling, transport, the hub and the validator — names the
+#        file at least once and no longer names the retired per-traveller block, whose name is
+#        read from ADR-028 rather than spelled here, whitespace folded so a name wrapped across a
+#        line break is still read.
+#   PW3  each reader's closed read scope still stands, exactly once, located by its content with
+#        whitespace folded, because transport's sentence is wrapped.
+#
+# WHAT THIS GROUP DOES NOT ESTABLISH, stated so a green is not read as more than it is. PW2 and
+# PW3 grade the TREE: that a prompt names the file, and that a phrase survived. Neither shows
+# that an agent reads the file, or reads only it — firing is not assertable from prompt text, as
+# CLAUDE.md says of the mode-gated register. PW3 grades a phrase's survival, not byte-identity of
+# the lines around it: `git diff` over the Cutover commit is the closed-scope criterion's real
+# grader, and Stage 7 reads it. PW1 grades the tracked fixtures, not the reconciler: whether the
+# reconciler clips the count is observed only by a live dispatch against a window that reaches
+# outside the trip-day set.
+#
+# Each arm carries a must-fire control on a temporary copy, and PW1 is registered with md_flips.
+# Every reader here takes a file or a here-string; nothing is piped into a reader that can stop
+# early (group PF; corpus-hygiene class F).
+# ═════════════════════════════════════════════════════════════════════════════════
+echo "── Group PW — the presence file's window lines: the clip, the four readers, their closed scopes."
+
+PW_WORK="$WORK/pw"; mkdir -p "$PW_WORK"
+
+# pw1_records <root> <relpath-list> — one record per graded entry, per unparseable entry and per
+# unreadable trip-day set, over the presence files the newline-separated list names (each
+# relative to <root>; its trip context is the trip-context.md two levels up). Record shapes,
+# tab-separated:
+#   GRADED <path> <heading> <stated F+P> <clipped> <OK|BAD> <out-of-set dates, comma-joined or ->
+#   PARSE  <path> <heading> <what did not parse>
+#   NODAYS <path> <what did not parse in the trip context>
+pw1_records() {
+  local root="$1" list="$2" rel tc
+  while IFS= read -r rel; do
+    [ -n "$rel" ] || continue
+    tc="$(dirname "$(dirname "$rel")")/trip-context.md"
+    if [ ! -s "$root/$tc" ] || [ ! -s "$root/$rel" ]; then
+      printf 'NODAYS\t%s\tthe file or its trip context is absent, empty or unreadable\n' "$rel"
+      continue
+    fi
+    LC_ALL=C awk -v P="$rel" '
+      function mnum(s,   i, full) {
+        s = tolower(s)
+        split("jan feb mar apr may jun jul aug sep oct nov dec", full, " ")
+        for (i = 1; i <= 12; i++) if (substr(s, 1, 3) == full[i]) return i
+        return 0
+      }
+      function leap(y) { return (y % 4 == 0 && y % 100 != 0) || y % 400 == 0 }
+      function ord(y, m, d,   o, i, ml) {
+        split("31 28 31 30 31 30 31 31 30 31 30 31", ml, " ")
+        o = (y - 1) * 365 + int((y - 1) / 4) - int((y - 1) / 100) + int((y - 1) / 400)
+        for (i = 1; i < m; i++) o += ml[i] + (i == 2 && leap(y))
+        return o + d
+      }
+      function name(o,   y, m, ml, mn, d) {
+        split("31 28 31 30 31 30 31 31 30 31 30 31", ml, " ")
+        split("Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec", mn, " ")
+        y = Y - 1; while (ord(y + 1, 1, 1) <= o) y++
+        d = o - ord(y, 1, 1) + 1
+        for (m = 1; m <= 12; m++) {
+          if (d <= ml[m] + (m == 2 && leap(y))) return mn[m] " " d
+          d -= ml[m] + (m == 2 && leap(y))
+        }
+        return "?"
+      }
+      # md <text> -> ordinal of a leading "<Mon> <D>" in text, nearest the trip; 0 if none
+      function md(t,   p, m, d, o) {
+        if (!match(t, /^[A-Za-z]+[ ]+[0-9][0-9]?/)) return 0
+        split(substr(t, RSTART, RLENGTH), p, /[ ]+/)
+        m = mnum(p[1]); d = p[2] + 0
+        if (m == 0 || d < 1) return 0
+        o = ord(Y, m, d)
+        if (o < FIRST - 183) o = ord(Y + 1, m, d)
+        if (o > LAST + 183) o = ord(Y - 1, m, d)
+        return o
+      }
+      function flush(   s, e, f, n, lo, hi, clip, out, i, sep) {
+        if (H == "" || B != "ASSERTED-DIFFERENT") return
+        n = split(W, s, / – /)
+        if (n != 2) { printf "PARSE\t%s\t%s\twindow line\n", P, H; return }
+        sub(/^[ ]+/, "", s[1]); sub(/^[ ]+/, "", s[2])
+        st = md(s[1]); en = md(s[2])
+        if (st == 0 || en == 0) { printf "PARSE\t%s\t%s\twindow line\n", P, H; return }
+        if (en < st) en = md(s[2]) + 365
+        if (!match(C, /^[0-9]+ full \+ [0-9]+ partial/)) { printf "PARSE\t%s\t%s\tcount line\n", P, H; return }
+        split(C, f, / /); n = f[1] + f[4]
+        lo = (st > FIRST) ? st : FIRST; hi = (en < LAST) ? en : LAST
+        clip = (hi >= lo) ? hi - lo + 1 : 0
+        out = ""; sep = ""
+        for (i = st; i <= en; i++) if (i < FIRST || i > LAST) { out = out sep name(i); sep = "," }
+        if (out == "") out = "-"
+        printf "GRADED\t%s\t%s\t%d\t%d\t%s\t%s\n", P, H, n, clip, (n == clip ? "OK" : "BAD"), out
+      }
+      FNR == NR {
+        if (!ty && /^#[ ]+Trip Context/ && match($0, /(19|20)[0-9][0-9]/)) { Y = substr($0, RSTART, 4) + 0; ty = 1 }
+        if (/^### /) { eff = ($0 ~ /^### Effective Planning Days/) }
+        else if (/^## /) eff = 0
+        if (eff && !a && /^- \*\*[A-Za-z]+ [0-9][0-9]? \([A-Za-z]+\):\*\* Arrival day/)   { AL = substr($0, 5); a = 1 }
+        if (eff && !d && /^- \*\*[A-Za-z]+ [0-9][0-9]? \([A-Za-z]+\):\*\* Departure day/) { DL = substr($0, 5); d = 1 }
+        next
+      }
+      FNR == 1 {
+        if (!ty) Y = 2001
+        FIRST = 0; LAST = 0
+        if (a) { FIRST = ord(Y, mnum(AL), substr(AL, index(AL, " ") + 1) + 0) }
+        if (d) { LAST = ord(Y, mnum(DL), substr(DL, index(DL, " ") + 1) + 0) }
+        if (LAST && FIRST && LAST < FIRST) LAST = ord(Y + 1, mnum(DL), substr(DL, index(DL, " ") + 1) + 0)
+        if (!FIRST || !LAST) { printf "NODAYS\t%s\tthe Effective Planning Days Arrival or Departure day line\n", P; dead = 1 }
+      }
+      dead { next }
+      /^## / { flush(); H = substr($0, 4); B = ""; W = ""; C = ""; next }
+      /^- \*\*Window basis:\*\* / { B = $0; sub(/^- \*\*Window basis:\*\* /, "", B); gsub(/`/, "", B); sub(/[ ]+$/, "", B); next }
+      /^- \*\*Effective window \(local\):\*\* / { W = $0; sub(/^- \*\*Effective window \(local\):\*\* /, "", W); next }
+      /^- \*\*Full \+ partial:\*\* / { C = $0; sub(/^- \*\*Full \+ partial:\*\* /, "", C); next }
+      END { if (!dead) flush() }
+    ' "$root/$tc" "$root/$rel"
+  done <<<"$list"
+}
+
+# pw1_assert <root> <relpath-list> — exactly one verdict on every path, the degenerate ones included.
+pw1_assert() {
+  local recs n_g n_bad n_parse
+  recs="$(pw1_records "$1" "$2")"
+  n_g="$(LC_ALL=C awk -F '\t' '$1 == "GRADED" { c++ } END { print c + 0 }' <<<"$recs")"
+  n_bad="$(LC_ALL=C awk -F '\t' '$1 == "GRADED" && $6 == "BAD" { c++ } END { print c + 0 }' <<<"$recs")"
+  n_parse="$(LC_ALL=C awk -F '\t' '$1 == "PARSE" || $1 == "NODAYS" { c++ } END { print c + 0 }' <<<"$recs")"
+  if [ "$n_g" -lt 1 ]; then
+    FAIL "PW1: no ASSERTED-DIFFERENT entry was graded across the population — an empty population proves nothing about the clip, so this is a finding, not a pass ($n_parse unparseable record(s))"
+  elif [ "$n_parse" -ne 0 ]; then
+    FAIL "PW1: $n_parse entry or trip-day set did not parse, so its count was not graded: $(LC_ALL=C awk -F '\t' '$1 != "GRADED" { printf "%s %s (%s); ", $2, $3, $4 }' <<<"$recs")"
+  elif [ "$n_bad" -ne 0 ]; then
+    FAIL "PW1: $n_bad ASSERTED-DIFFERENT count(s) include a day outside the trip's day set (reference/data-model.md § Presence: a window reaching outside it does not extend it): $(LC_ALL=C awk -F '\t' '$1 == "GRADED" && $6 == "BAD" { printf "%s ## %s states %d day(s), clipped %d, window reaches %s; ", $2, $3, $4, $5, $7 }' <<<"$recs")"
+  else
+    PASS "PW1: every ASSERTED-DIFFERENT entry's \`Full + partial\` counts only days of its trip's day set — $n_g graded, 0 out of set, 0 unparseable"
+  fi
+}
+
+PW_LIST="$(git -C "$ROOT" ls-files -- 'examples/*/outputs/traveler-presence.md')"
+PW_NFILES="$(LC_ALL=C awk 'NF { c++ } END { print c + 0 }' <<<"$PW_LIST")"
+if [ "$PW_NFILES" -lt 1 ]; then
+  FAIL "PW1: git ls-files found no tracked examples/*/outputs/traveler-presence.md, so the clip has no population to grade — the witness and #1504's fixture are both expected here"
+else
+  pw1_assert "$ROOT" "$PW_LIST"
+fi
+
+# PW1-CTL — MUST FIRE: the two-origin witness copied with Sam's count set to the unclipped
+# `3 full + 2 partial`, which counts Apr 8, a day before the trip begins.
+PW_CROOT="$PW_WORK/ctl"; PW_CREL='examples/two-origin-demo/outputs/traveler-presence.md'
+mkdir -p "$PW_CROOT/examples/two-origin-demo/outputs"
+cp "$ROOT/examples/two-origin-demo/trip-context.md" "$PW_CROOT/examples/two-origin-demo/trip-context.md"
+LC_ALL=C awk '/^## / { h = substr($0, 4) } h == "Sam" && /^- \*\*Full \+ partial:\*\* / { $0 = "- **Full + partial:** 3 full + 2 partial"; m++ } { print } END { exit (m == 1 ? 0 : 3) }' \
+  "$ROOT/$PW_CREL" > "$PW_CROOT/$PW_CREL"; PW_CMUT=$?
+PW_CRECS="$(pw1_records "$PW_CROOT" "$PW_CREL")"
+PW_CBAD="$(LC_ALL=C awk -F '\t' '$1 == "GRADED" && $6 == "BAD" { c++ } END { print c + 0 }' <<<"$PW_CRECS")"
+PW_CSAM="$(LC_ALL=C awk -F '\t' '$1 == "GRADED" && $3 == "Sam" && $4 == 5 && $5 == 4 && $6 == "BAD" && $7 == "Apr 8" { c++ } END { print c + 0 }' <<<"$PW_CRECS")"
+if [ "$PW_CMUT" -ne 0 ]; then
+  FAIL "PW1-CTL: the mutation did not land on exactly one Sam count line in the copy (awk rc=$PW_CMUT), so this control grades nothing"
+elif [ "$PW_CBAD" -eq 1 ] && [ "$PW_CSAM" -eq 1 ]; then
+  PASS "PW1-CTL: MUST FIRE — Sam's count set to \`3 full + 2 partial\` in a copy of the witness is reported as exactly one out-of-set count, naming Sam and Apr 8"
+else
+  FAIL "PW1-CTL: the clip did not fire on a copy whose Sam count includes Apr 8 — $PW_CBAD out-of-set record(s), Sam-and-Apr-8 named=$PW_CSAM: $PW_CRECS"
+fi
+
+# PW1-CTL2 — MUST FIRE: Sam's count left as published and the copy's trip-day set moved to start
+# Apr 10, so the clipped count falls to 3. This proves the set is read from the trip context and
+# not assumed.
+PW_C2ROOT="$PW_WORK/ctl2"
+mkdir -p "$PW_C2ROOT/examples/two-origin-demo/outputs"
+cp "$ROOT/$PW_CREL" "$PW_C2ROOT/$PW_CREL"
+LC_ALL=C awk '/^### / { e = ($0 ~ /^### Effective Planning Days/) } e && /^- \*\*Apr 9 \(Thu\):\*\* Arrival day/ { sub(/Apr 9 \(Thu\)/, "Apr 10 (Fri)"); m++ } { print } END { exit (m == 1 ? 0 : 3) }' \
+  "$ROOT/examples/two-origin-demo/trip-context.md" > "$PW_C2ROOT/examples/two-origin-demo/trip-context.md"; PW_C2MUT=$?
+PW_C2RECS="$(pw1_records "$PW_C2ROOT" "$PW_CREL")"
+PW_C2BAD="$(LC_ALL=C awk -F '\t' '$1 == "GRADED" && $6 == "BAD" && $3 == "Sam" && $4 == 4 && $5 == 3 { c++ } END { print c + 0 }' <<<"$PW_C2RECS")"
+if [ "$PW_C2MUT" -ne 0 ]; then
+  FAIL "PW1-CTL2: the trip-day set's Arrival day line was not moved exactly once in the copy (awk rc=$PW_C2MUT), so this control grades nothing"
+elif [ "$PW_C2BAD" -eq 1 ]; then
+  PASS "PW1-CTL2: MUST FIRE — with the copy's trip-day set starting Apr 10, Sam's published \`3 full + 1 partial\` is reported as 4 day(s) against a clip of 3: the set is read from the trip context"
+else
+  FAIL "PW1-CTL2: moving the copy's trip-day set to Apr 10 did not make Sam's count read 4 against 3 — the set may be assumed rather than read: $PW_C2RECS"
+fi
+
+if [ "$PW_NFILES" -ge 1 ]; then
+  md_flips pw1_records 'PW1' pw1_assert "$ROOT" "$PW_LIST"
+fi
+
+# pw_count <file> <phrase> — occurrences of <phrase> in <file>, every whitespace run folded to one
+# space on both sides, so a phrase wrapped across a line break is read. Counted with index(), so
+# nothing in the phrase is a pattern.
+pw_count() {
+  LC_ALL=C awk -v p="$2" '
+    { t = t " " $0 }
+    END {
+      gsub(/[ \t\r]+/, " ", t); gsub(/[ \t]+/, " ", p)
+      c = 0
+      while ((i = index(t, p)) > 0) { c++; t = substr(t, i + length(p)) }
+      print c
+    }' "$1"
+}
+
+PW_READERS=(agents/03-scheduling.md agents/04-transport.md agents/05-hub-planner.md agents/06-validator.md)
+
+# The retired block's name — PW2's needle — is read from the record that retired it, never spelled
+# here. ADR-028 § Consequences opens its template entry on the template's path and names the
+# section that retires; that one sentence is the needle's source. Once the Retire set lands, the
+# name stands only in the decision records, CHANGELOG.md and the kept transition specimen,
+# examples/single-origin-demo/, and a live suite spelling it would be one more surface carrying
+# it. A needle not read exactly once is empty, and every PW2 arm then FAILs on it, so the
+# retired-block limb is never read as clean without having been read.
+PW_ADR028='reference/adr/ADR-028-derived-planning-day-block-owners.md'
+PW_RETIRED="$(LC_ALL=C awk -v lead='**`templates/trip-context.template.md`.** § *' -v tail=' [DERIVED]* retires' '
+  index($0, lead) == 1 && index($0, tail) > length(lead) {
+    s = substr($0, length(lead) + 1); v = substr(s, 1, index(s, tail) - 1); c++
+  }
+  END { if (c == 1 && v != "") print v }' "$ROOT/$PW_ADR028" 2>/dev/null)"
+
+# pw2_scan <root> — one line per reader: "<path> <names-file count> <retired-block count>", or
+# "<path> UNREADABLE", or "<path> NONEEDLE" when the retired block's name could not be read.
+pw2_scan() {
+  local f
+  for f in "${PW_READERS[@]}"; do
+    if [ -z "$PW_RETIRED" ]; then
+      printf '%s NONEEDLE\n' "$f"
+    elif [ -r "$1/$f" ]; then
+      printf '%s %s %s\n' "$f" "$(pw_count "$1/$f" 'outputs/traveler-presence.md')" "$(pw_count "$1/$f" "$PW_RETIRED")"
+    else
+      printf '%s UNREADABLE\n' "$f"
+    fi
+  done
+}
+
+pw2_verdict() {   # pw2_verdict <id> <scan> — one verdict
+  local id="$1" scan="$2" n_ok n_bad
+  n_ok="$(LC_ALL=C awk 'NF == 3 && $2 >= 1 && $3 == 0 { c++ } END { print c + 0 }' <<<"$scan")"
+  n_bad="$(LC_ALL=C awk 'NF != 3 || $2 < 1 || $3 != 0 { printf "%s; ", $0 }' <<<"$scan")"
+  if [ -z "$PW_RETIRED" ]; then
+    FAIL "$id: the retired block's name was not read exactly once from $PW_ADR028 (the sentence opening on the template's path and naming the section that retires), so the retired-block limb cannot be read: $n_bad"
+  elif [ "$n_ok" -eq 4 ]; then
+    PASS "$id: each of the 4 readers names outputs/traveler-presence.md and none names the retired $PW_RETIRED block, its name read from $PW_ADR028 — $(tr '\n' ';' <<<"$scan")"
+  else
+    FAIL "$id: $n_ok of the 4 readers name outputs/traveler-presence.md and no longer name $PW_RETIRED (whitespace folded); each line reads <file> <presence-file count> <retired-block count>: $n_bad"
+  fi
+}
+
+pw2_verdict 'PW2' "$(pw2_scan "$ROOT")"
+
+# PW2-CTL — MUST FIRE: a copy of the four readers with transport's item 3 reverted to the block.
+PW_R2="$PW_WORK/r2"; mkdir -p "$PW_R2/agents"
+for pw_f in "${PW_READERS[@]}"; do cp "$ROOT/$pw_f" "$PW_R2/$pw_f"; done
+LC_ALL=C awk -v r="$PW_RETIRED" 'index($0, "3. `outputs/traveler-presence.md`, read beside this file") == 1 { sub(/`outputs\/traveler-presence.md`, read beside this file/, r); m++ } { print } END { exit (m == 1 ? 0 : 3) }' \
+  "$ROOT/agents/04-transport.md" > "$PW_R2/agents/04-transport.md"; PW_R2MUT=$?
+PW_R2SCAN="$(pw2_scan "$PW_R2")"
+PW_R2T="$(LC_ALL=C awk '$1 == "agents/04-transport.md" && $3 >= 1 { c++ } END { print c + 0 }' <<<"$PW_R2SCAN")"
+PW_R2OK="$(LC_ALL=C awk 'NF == 3 && $2 >= 1 && $3 == 0 { c++ } END { print c + 0 }' <<<"$PW_R2SCAN")"
+if [ "$PW_R2MUT" -ne 0 ]; then
+  FAIL "PW2-CTL: the revert did not land on exactly one transport item-3 line in the copy (awk rc=$PW_R2MUT), so this control grades nothing"
+elif [ "$PW_R2T" -eq 1 ] && [ "$PW_R2OK" -eq 3 ]; then
+  PASS "PW2-CTL: MUST FIRE — transport's item 3 reverted to the block heading in a copy makes exactly that reader fail the retired-block limb (3 of 4 readers still conforming)"
+else
+  FAIL "PW2-CTL: reverting transport's item 3 in a copy did not fail exactly that reader — conforming $PW_R2OK of 4, transport flagged=$PW_R2T: $PW_R2SCAN"
+fi
+
+# PW2-CTL2 — MUST FIRE: a copy of the validator with every name of the file removed.
+PW_R3="$PW_WORK/r3"; mkdir -p "$PW_R3/agents"
+for pw_f in "${PW_READERS[@]}"; do cp "$ROOT/$pw_f" "$PW_R3/$pw_f"; done
+LC_ALL=C awk '{ n = gsub(/outputs\/traveler-presence\.md/, "outputs/zz-elsewhere.md"); m += n; print } END { exit (m >= 1 ? 0 : 3) }' \
+  "$ROOT/agents/06-validator.md" > "$PW_R3/agents/06-validator.md"; PW_R3MUT=$?
+PW_R3SCAN="$(pw2_scan "$PW_R3")"
+PW_R3V="$(LC_ALL=C awk '$1 == "agents/06-validator.md" && $2 == 0 { c++ } END { print c + 0 }' <<<"$PW_R3SCAN")"
+PW_R3OK="$(LC_ALL=C awk 'NF == 3 && $2 >= 1 && $3 == 0 { c++ } END { print c + 0 }' <<<"$PW_R3SCAN")"
+if [ "$PW_R3MUT" -ne 0 ]; then
+  FAIL "PW2-CTL2: the copy of the validator carried no name of the file to remove (awk rc=$PW_R3MUT), so this control grades nothing"
+elif [ "$PW_R3V" -eq 1 ] && [ "$PW_R3OK" -eq 3 ]; then
+  PASS "PW2-CTL2: MUST FIRE — a copy of the validator naming the file nowhere makes exactly that reader fail the names-the-file limb (3 of 4 readers still conforming)"
+else
+  FAIL "PW2-CTL2: removing every name of the file from a copy of the validator did not fail exactly that reader — conforming $PW_R3OK of 4, validator flagged=$PW_R3V: $PW_R3SCAN"
+fi
+
+# PW3 — each closed read scope, exactly once, by content. The anchors are ADR-028 § 12's
+# byte-identical texts as the four prompts carry them; transport's is wrapped, which is why
+# pw_count folds whitespace.
+PW3_FILES=("${PW_READERS[@]}")
+PW3_ANCH=(
+  'two reads, and only these two'
+  '**Read this file for the depth signal and for one count, and for nothing else.**'
+  '**`outputs/traveler-model.md` is not read into this artifact.**'
+  '8. outputs/traveler-model.md (the `[DERIVED]` per-traveler needs + desires —'
+)
+
+pw3_verdict() {   # pw3_verdict <id> <root> — one verdict
+  local id="$1" root="$2" i n ok=0 bad=""
+  for i in 0 1 2 3; do
+    if [ -r "$root/${PW3_FILES[$i]}" ]; then
+      n="$(pw_count "$root/${PW3_FILES[$i]}" "${PW3_ANCH[$i]}")"
+    else
+      n=UNREADABLE
+    fi
+    if [ "$n" = 1 ]; then ok=$((ok + 1)); else bad="$bad${PW3_FILES[$i]} reads $n; "; fi
+  done
+  if [ "$ok" -eq 4 ]; then
+    PASS "$id: each of the 4 closed read scopes stands exactly once in its reader (whitespace folded) — a phrase's survival; the Cutover's git diff is what grades byte-identity"
+  else
+    FAIL "$id: $ok of the 4 closed read scopes stand exactly once — $bad"
+  fi
+}
+
+pw3_verdict 'PW3' "$ROOT"
+
+# PW3-CTL — MUST FIRE: one byte of transport's wrapped anchor mutated in a copy.
+PW_R4="$PW_WORK/r4"; mkdir -p "$PW_R4/agents"
+for pw_f in "${PW3_FILES[@]}"; do cp "$ROOT/$pw_f" "$PW_R4/$pw_f"; done
+LC_ALL=C awk '{ m += sub(/for the depth signal and for one count, and/, "for the depth signa1 and for one count, and"); print } END { exit (m == 1 ? 0 : 3) }' \
+  "$ROOT/agents/04-transport.md" > "$PW_R4/agents/04-transport.md"; PW_R4MUT=$?
+PW_R4N="$(pw_count "$PW_R4/agents/04-transport.md" "${PW3_ANCH[1]}")"
+PW_R4S="$(pw_count "$PW_R4/agents/03-scheduling.md" "${PW3_ANCH[0]}")"
+if [ "$PW_R4MUT" -ne 0 ]; then
+  FAIL "PW3-CTL: the one-byte mutation did not land exactly once on transport's anchor in the copy (awk rc=$PW_R4MUT), so this control grades nothing"
+elif [ "$PW_R4N" -eq 0 ] && [ "$PW_R4S" -eq 1 ]; then
+  PASS "PW3-CTL: MUST FIRE — one byte of transport's wrapped scope sentence changed in a copy reads 0 occurrences there, while scheduling's untouched anchor still reads 1"
+else
+  FAIL "PW3-CTL: a one-byte change to transport's scope sentence in a copy still read $PW_R4N occurrence(s) (scheduling's control anchor read $PW_R4S) — the matcher is not reading the sentence"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════

@@ -1,13 +1,21 @@
 # Single-Origin Demo — the collapsed per-traveler block
 
+**A trip created before the cutover, kept as the worked instance of `ADR-028`
+§ *The per-trip transition*.** Its `trip-context.md` still carries the per-traveler block
+the template no longer ships, in the retired shape and unchanged, and **nothing writes or
+reads that block**: each traveler's window now lives in `outputs/traveler-presence.md`,
+which this trip does not hold. A reader that finds no presence file says the windows are
+not yet derived and names `/trip-record travelers`; it never falls back to this block.
+Everything below describes the block as it rendered before the cutover.
+
 A minimal worked example of the **single-origin collapse** in
 `### Per-Traveler Planning Days [DERIVED]`. It exists to show what the block renders
 as when the collapse precondition holds: the per-traveler table is **deleted** and
 replaced by one `- **All travelers:**` line carrying a warrant census.
 
 Not a real trip. Placeholder people, a placeholder destination, a placeholder window.
-Companion to `examples/two-origin-demo/`, which is minimal in the same way and shows
-the same block **uncollapsed**.
+Companion to `examples/two-origin-demo/`, which is minimal in the same way and whose
+windows, which would not collapse, are derived into its `outputs/traveler-presence.md`.
 
 ## The trip
 
@@ -65,10 +73,11 @@ elects the group's origin and tracks, and both leave from the same city. Here no
 named one, so all three bases track: rebook this group out of another city and every
 traveler moves with it.
 
-For the contrast case, `examples/data-architecture-demo/` meets this same precondition
-and renders the table anyway, on purpose, to expose the per-traveler basis values that
-the collapse hides. Its `### Per-Traveler Planning Days [DERIVED]` section says so in
-place, so the two fixtures do not read as a contradiction.
+For the contrast case, `examples/data-architecture-demo/` met this same precondition
+and, until the cutover, rendered the table anyway, on purpose, to expose the per-traveler
+basis values that the collapse hides. Its windows now live in its
+`outputs/traveler-presence.md`, every entry by reference, so the two fixtures do not read
+as a contradiction.
 
 Dates are 2026: Wed Jun 10, Thu Jun 11, Fri Jun 12, Sat Jun 13, Sun Jun 14, Mon Jun 15
 — days of week verified. Denver is on MDT (UTC-6) and Seville on CEST (UTC+2) across

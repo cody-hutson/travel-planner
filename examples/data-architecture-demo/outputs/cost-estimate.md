@@ -103,8 +103,8 @@ file: the category table below runs Activities / admission €84 → €96 and N
 | Sam | €20 – €26 | €20 – €24 | **€90 – €100** | 9 of 12 | as above; roster name only, no profile read |
 
 **Why the rows are identical, and why that is a measurement rather than a shortcut.**
-Presence is **read** from `trip-context.md` § *Per-Traveler Planning Days [DERIVED]* and
-never re-derived here. That block gives every traveller the same window, `May 14–17`; the
+Presence is **read** from `outputs/traveler-presence.md` and
+never re-derived here. That file gives every traveller the trip-level window, `May 14–17`; the
 roster block records no subgroup note; and the party moves together — so the charged item
 set is the same for each. On a trip where those windows diverged the rows would too, and
 `examples/two-origin-demo/` is the shape where they do.
