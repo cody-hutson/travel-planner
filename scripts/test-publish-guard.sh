@@ -16286,6 +16286,326 @@ md_flips ensure_first_key "RV53-norepo" rv53_assert "RV53-norepo" norepo
 md_flips ensure_first_key "RV53-empty" rv53_assert "RV53-empty" empty
 md_flips ensure_first_key "RV53-link-store" rv53l_assert "RV53-link-store"
 
+# ══════════════════════════════════════════════════════════════════
+# RV54 — #1819. Publish commands on one trip run one at a time, behind a per-trip lock: a directory made by mkdir,
+# holding one record of the command, its pid and its start time. A second command refuses at once, naming the holder,
+# with exit status 75 where the holder runs and 76 where it does not or its record cannot be read (review CD-3).
+#
+# THE HOLDER, AND ITS BOUNDS (review PR-1). A is an update run in the background whose encryption stand-in, only
+# where RV54_HOLDER is set — in A's own subshell and nowhere else — touches a reached-file and then waits for a
+# stop-file, for at most 30 s. B, the command under test, runs in the foreground, never blocks, and is graded. The
+# parent polls for the reached-file under a bound of its own and, however A ends, kills it with SIGKILL before the
+# arm returns, so no arm can outlive its bound or leave A running into the next.
+# ══════════════════════════════════════════════════════════════════
+rv54_holder() { # <trip> <reached> <stop> <out> -> starts A in the background; its pid in RV54_PID
+  ( unset STATICRYPT_PASSWORD; RV54_HOLDER=1
+    encrypt_to_tmp() {
+      local k=0
+      if [ -n "${RV54_HOLDER:-}" ]; then
+        : > "$RV54_REACHED"
+        while [ ! -e "$RV54_STOP" ] && [ "$k" -lt 300 ]; do sleep 0.1; k=$((k+1)); done
+      fi
+      rv_enc_shim "$@"
+    }
+    RV54_REACHED="$2"; RV54_STOP="$3"
+    set -e; cmd_update "$1" ) > "$4" 2>&1 &
+  RV54_PID=$!
+}
+rv54_wait_reached() { # <reached> <pid> -> 0 once the holder reached its wait, within the bound
+  local n=0
+  while [ ! -e "$1" ] && kill -0 "$2" 2>/dev/null && [ "$n" -lt 150 ]; do sleep 0.1; n=$((n+1)); done
+  [ -e "$1" ]
+}
+rv54_finish() { # <stop> <pid> -> A's exit status, or 255 when it had to be killed at the bound
+  local n=0 rc
+  : > "$1"
+  while kill -0 "$2" 2>/dev/null && [ "$n" -lt 150 ]; do sleep 0.1; n=$((n+1)); done
+  if kill -0 "$2" 2>/dev/null; then kill -9 "$2" 2>/dev/null; wait "$2" 2>/dev/null; printf '255'; return 0; fi
+  wait "$2" 2>/dev/null; rc=$?; printf '%s' "$rc"
+}
+# A declared trip, so confirm reaches its first write with nothing to record: one approver, threshold all.
+rv54_declare() { printf 'threshold=all\napprover=zqa1\n' > "$1/.approvers"; }
+rv54h_assert() { # <id> <update|rotate|publish|unpublish|confirm> [unlocked]
+  local id="$1" verb="$2" how="${3:-}" name d bare out rc arc h0 h1 c0 c1 hb p0 p1 r0=0 r1=0 reached=0 said=0
+  local k1='rv-lock-holder-synthetic-key-73'
+  name="rv54h-$verb-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"
+  [ "$verb" != confirm ] || rv54_declare "$d"
+  h0="$(rv_head "$bare")"
+  rv54_holder "$d" "$d.reached" "$d.stop" "$d.a.out"
+  rv54_wait_reached "$d.reached" "$RV54_PID" && reached=1
+  hb="$(rv_head "$bare")"; c0="$(git -C "$d/.publish" rev-parse HEAD)"; p0="$(cat "$d/.passphrase")"
+  [ -e "$d/.change-confirmed" ] && r0=1
+  case "$verb" in
+    update)    out="$( ( unset STATICRYPT_PASSWORD; [ -z "$how" ] || _take_trip_lock() { return 0; }; set -e; cmd_update "$d" ) 2>&1 )"; rc=$? ;;
+    rotate)    out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$? ;;
+    publish)   out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_publish "$d" ) 2>&1 )"; rc=$? ;;
+    unpublish) out="$( ( set -e; cmd_unpublish "$d" --disable-pages-only ) 2>&1 </dev/null )"; rc=$? ;;
+    confirm)   out="$( ( _confirm_has_terminal() { return 0; }; set -e; cmd_confirm "$d" ) 2>&1 </dev/null )"; rc=$? ;;
+  esac
+  h1="$(rv_head "$bare")"; c1="$(git -C "$d/.publish" rev-parse HEAD)"; p1="$(cat "$d/.passphrase")"
+  [ -e "$d/.change-confirmed" ] && r1=1
+  rv_has "$out" "'update' is running on this trip" && said=1
+  arc="$(rv54_finish "$d.stop" "$RV54_PID")"
+  if [ "$reached" -eq 0 ]; then
+    FAIL "$id: the holder never reached its wait inside update, so no command held the lock while $verb ran. VERDICT WITHHELD"
+  elif [ "$rc" -ne "$TRIP_LOCK_HELD_RC" ]; then
+    FAIL "$id: $verb on a trip whose lock a running update holds read rc=$rc, want $TRIP_LOCK_HELD_RC — it did not refuse at once on the lock"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: $verb refused (rc=$rc) without naming the running update as the holder"
+  elif [ "$h1" != "$hb" ] || [ "$c1" != "$c0" ] || [ "$p1" != "$p0" ] || [ "$r1" != "$r0" ]; then
+    FAIL "$id: $verb refused on the lock but changed something — site, clone, key of record or confirmation record"
+  elif [ "$arc" != 0 ] || [ "$(rv_head "$bare")" = "$h0" ]; then
+    FAIL "$id: the holder's own update did not finish once released (rc=$arc) — the refusal disturbed the command holding the lock"
+  else
+    PASS "$id: $verb on a trip whose lock a running update holds refuses at once with exit status $TRIP_LOCK_HELD_RC, names the holder, and changes nothing; the holder then finishes"
+  fi
+}
+for rv_b in update rotate publish unpublish confirm; do rv54h_assert "RV54-held-$rv_b" "$rv_b"; done
+rv54c_assert() { # <id> — the control: with the lock stubbed open, the held arm must FAIL
+  local id="$1" out
+  out="$(md_probe rv54_no_such_subject rv54h_assert "RV54x" update unlocked)"
+  if [ "$out" != "0 1" ]; then
+    FAIL "$id: CONTROL — with _take_trip_lock stubbed to return 0, the held arm reported '$out', want '0 1': it cannot tell a lock from none"
+  else
+    PASS "$id: CONTROL — with _take_trip_lock stubbed to return 0, the held arm reports exactly one FAIL, so its PASS above is a measurement of the lock"
+  fi
+}
+rv54c_assert "RV54-ctl"
+# RV54-list — list takes no lock: it reports while a command holds the trip.
+rv54l_assert() { # <id>
+  local id="$1" name d root out rc reached=0 arc
+  name="rv54l-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-list-synthetic-key-74')"
+  root="$RVW/rv54l-root-$RANDOM"; mkdir -p "$root/trips"; ln -s "$d" "$root/trips/$name"
+  rv54_holder "$d" "$d.reached" "$d.stop" "$d.a.out"
+  rv54_wait_reached "$d.reached" "$RV54_PID" && reached=1
+  out="$( ( _GUARD_DATA_ROOT="$root"; _GUARD_DATA_ROOT_EXPLICIT=1; cmd_list ) 2>&1 )"; rc=$?
+  arc="$(rv54_finish "$d.stop" "$RV54_PID")"
+  if [ "$reached" -eq 0 ]; then
+    FAIL "$id: the holder never reached its wait. VERDICT WITHHELD"
+  elif [ "$rc" -ne 0 ]; then
+    FAIL "$id: list while a command holds the trip read rc=$rc, want 0 — list takes no lock"
+  elif ! rv_has "$out" "$name"; then
+    FAIL "$id: list read rc=0 but its table does not carry the held trip"
+  else
+    PASS "$id: list reports the trip while an update holds its lock — it takes none (holder rc=$arc)"
+  fi
+}
+rv54l_assert "RV54-list"
+# RV54-stale — the holder killed outright leaves the lock; the next command says it is not running, names the
+# removal, and exits 76; once the lock is removed it runs.
+rv54s_assert() { # <id>
+  local id="$1" name d out rc rc2 reached=0 left=0 said=0
+  name="rv54s-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-stale-synthetic-key-75')"
+  rv54_holder "$d" "$d.reached" "$d.stop" "$d.a.out"
+  rv54_wait_reached "$d.reached" "$RV54_PID" && reached=1
+  kill -9 "$RV54_PID" 2>/dev/null; wait "$RV54_PID" 2>/dev/null; : > "$d.stop"
+  [ -d "$d/.publish-lock" ] && left=1
+  out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) 2>&1 )"; rc=$?
+  { rv_has "$out" 'is not running on this machine' && rv_has "$out" "rm -r $d/.publish-lock"; } && said=1
+  rm -rf "$d/.publish-lock"
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc2=$?
+  if [ "$reached" -eq 0 ] || [ "$left" -eq 0 ]; then
+    FAIL "$id: the holder never reached its wait (reached=$reached), or no lock was left after SIGKILL (left=$left). VERDICT WITHHELD"
+  elif [ "$rc" -ne "$TRIP_LOCK_STALE_RC" ]; then
+    FAIL "$id: update on a trip whose lock a killed run left read rc=$rc, want $TRIP_LOCK_STALE_RC"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: the refusal does not say the holder is not running on this machine, or does not name the lock's removal"
+  elif [ "$rc2" -ne 0 ]; then
+    FAIL "$id: once the lock was removed, update read rc=$rc2, want 0"
+  else
+    PASS "$id: a lock a killed run left is never broken automatically — the next command exits $TRIP_LOCK_STALE_RC saying its holder is not running and naming the removal, and runs once it is removed"
+  fi
+}
+rv54s_assert "RV54-stale"
+# RV54-unreadable-holder — a lock with no readable record takes the stale status, worded for that case.
+rv54u_assert() { # <id>
+  local id="$1" name d out rc said=0
+  name="rv54u-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-unread-synthetic-key-76')"; mkdir "$d/.publish-lock"
+  out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) 2>&1 )"; rc=$?
+  rv_has "$out" 'its record cannot be read' && said=1
+  if [ "$rc" -ne "$TRIP_LOCK_STALE_RC" ]; then
+    FAIL "$id: update on a trip whose lock holds no readable record read rc=$rc, want $TRIP_LOCK_STALE_RC"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: the refusal does not say the lock's record cannot be read"
+  else
+    PASS "$id: a lock with no readable record refuses with exit status $TRIP_LOCK_STALE_RC, saying its record cannot be read"
+  fi
+}
+rv54u_assert "RV54-unreadable-holder"
+# RV54-mkdir — review FM-3: a trip directory that refuses the write is named as itself, never as a held lock.
+rv54m_assert() { # <id>
+  local id="$1" name d out rc said=0 held=0
+  name="rv54m-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-mkdir-synthetic-key-77')"; chmod 555 "$d"
+  if mkdir "$d/.rv54-probe" 2>/dev/null; then
+    rmdir "$d/.rv54-probe"; chmod 755 "$d"
+    SKIP "$id: this run's uid writes into a mode-555 directory (root, say), where the state this arm grades cannot arise — not a pass"
+    return 0
+  fi
+  out="$( ( set -e; cmd_unpublish "$d" --disable-pages-only ) 2>&1 </dev/null )"; rc=$?
+  chmod 755 "$d"
+  rv_has "$out" 'could not create the per-trip lock' && said=1
+  rv_has "$out" "holds this trip's lock" && held=1
+  if [ "$rc" -ne 1 ]; then
+    FAIL "$id: unpublish on a trip directory it cannot write read rc=$rc, want 1"
+  elif [ "$held" -eq 1 ]; then
+    FAIL "$id: a trip directory that refused the lock's mkdir was reported as a lock another command holds"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: the refusal does not say the per-trip lock could not be created"
+  else
+    PASS "$id: a trip directory that refuses the lock's mkdir is named as that, with exit status 1, never as a held lock"
+  fi
+}
+rv54m_assert "RV54-mkdir"
+# RV54-signals — TERM, INT and HUP each release the lock. INT runs under job control (set -m), because a background
+# job in a non-interactive shell starts with SIGINT ignored, and a signal ignored at entry cannot be trapped.
+rv54g_assert() { # <id> <TERM|INT|HUP>
+  local id="$1" sig="$2" name d reached=0 arc want left=0
+  case "$sig" in TERM) want=143 ;; INT) want=130 ;; *) want=129 ;; esac
+  name="rv54g-$sig-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-signal-synthetic-key-78')"
+  [ "$sig" != INT ] || set -m
+  rv54_holder "$d" "$d.reached" "$d.stop" "$d.a.out"
+  [ "$sig" != INT ] || set +m
+  rv54_wait_reached "$d.reached" "$RV54_PID" && reached=1
+  kill -s "$sig" "$RV54_PID" 2>/dev/null
+  arc="$(rv54_finish "$d.stop.never" "$RV54_PID")"; : > "$d.stop"
+  [ -e "$d/.publish-lock" ] && left=1
+  if [ "$reached" -eq 0 ]; then
+    FAIL "$id: the holder never reached its wait. VERDICT WITHHELD"
+  elif [ "$arc" != "$want" ]; then
+    FAIL "$id: the holder sent SIG$sig ended with status $arc, want $want — the signal's trap did not end it"
+  elif [ "$left" -eq 1 ]; then
+    FAIL "$id: the holder ended on SIG$sig and left the lock"
+  else
+    PASS "$id: a holder ended by SIG$sig exits $want and releases the lock"
+  fi
+}
+for rv_b in TERM INT HUP; do rv54g_assert "RV54-signals-$rv_b" "$rv_b"; done
+# RV54-sourced-guard — review FM-7. The guard fires only at the top level of a shell that sourced the script, where its
+# die ends that shell, so the subject runs in a child shell: there BASH_SUBSHELL is 0 and BASH_SOURCE[0] is not $0.
+# MD-opt-out: the subject is sourced afresh in the child, out of md_probe's reach.
+rv54sg_assert() { # <id>
+  local id="$1" d out rc said=0
+  d="$RVW/rv54sg-$RANDOM"; mkdir -p "$d"
+  out="$(bash -c 'source "$1"; _take_trip_lock "$2" update' _ "$SELF_PUBLISH" "$d" 2>&1)"; rc=$?
+  rv_has "$out" 'from the top level of a shell that sourced' && said=1
+  if [ "$rc" -ne 1 ]; then
+    FAIL "$id: _take_trip_lock from the top level of a shell that sourced the script read rc=$rc, want 1"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: the refusal (rc=1) is not the sourced-shell guard's"
+  elif [ -e "$d/.publish-lock" ]; then
+    FAIL "$id: the guard refused and left a lock behind"
+  else
+    PASS "$id: taking the lock from the top level of a shell that sourced the script refuses, leaving no lock, so it cannot replace that shell's EXIT trap"
+  fi
+}
+rv54sg_assert "RV54-sourced-guard"
+md_flips _take_trip_lock "RV54-held-update" rv54h_assert "RV54-held-update" update
+md_flips _take_trip_lock "RV54-held-rotate" rv54h_assert "RV54-held-rotate" rotate
+md_flips _take_trip_lock "RV54-held-publish" rv54h_assert "RV54-held-publish" publish
+md_flips _take_trip_lock "RV54-held-unpublish" rv54h_assert "RV54-held-unpublish" unpublish
+md_flips _take_trip_lock "RV54-held-confirm" rv54h_assert "RV54-held-confirm" confirm
+md_flips _take_trip_lock "RV54-stale" rv54s_assert "RV54-stale"
+md_flips _take_trip_lock "RV54-unreadable-holder" rv54u_assert "RV54-unreadable-holder"
+md_flips _take_trip_lock "RV54-mkdir" rv54m_assert "RV54-mkdir"
+for rv_b in TERM INT HUP; do md_flips _release_trip_lock "RV54-signals-$rv_b" rv54g_assert "RV54-signals-$rv_b" "$rv_b"; done
+
+# ══════════════════════════════════════════════════════════════════
+# RV55 — #1822, carried by #1819. Each first-publish step stops on its own failure, whatever errexit is, and names the
+# step. Every limb runs cmd_publish with errexit OFF, the state a caller reached through `if` or `||` leaves it in, and
+# requires rc 1, the step's own message (or, where a callee refuses, the callee's), and that no later step ran: no
+# repository created, no baseline recorded, no "Published". clonedir and opaque-token are review FM-9's.
+# ══════════════════════════════════════════════════════════════════
+rv55_gh() { # (inside a subject's subshell) RV55_FAIL names the gh call that fails
+  gh() {
+    printf '%s\n' "$*" >> "$RV_GHLOG"
+    case "${1:-} ${2:-}" in
+      "api user")    [ "${RV55_FAIL:-}" != owner ] || { printf 'gh: HTTP 502 (simulated)\n' >&2; return 1; }; printf 'testowner' ;;
+      "repo view")   return 1 ;;
+      "repo create") [ "${RV55_FAIL:-}" != create ] || { printf 'gh: create refused (simulated)\n' >&2; return 1; }; return 0 ;;
+      "auth status") printf "Token scopes: 'repo'\n" ;;
+      *)             return 0 ;;
+    esac
+  }
+}
+# rv55_setup builds the trip for one step's failure and sets RV55_W (the message that step must print) and RV55_OPTS;
+# rv55_run runs that first publish with errexit off and prints its output, returning its status. RV54-release reuses
+# both, so each step's refusal is constructed once.
+rv55_setup() { # <step> <trip>
+  local d="$2" n; n="$(basename "$2")"; RV55_OPTS=""
+  mkdir -p "$d/outputs"; cp "$SRC" "$d/outputs/$n-travel-site.html"
+  case "$1" in
+    owner)          RV55_W='publish: could not read your GitHub user name' ;;
+    opaque)         RV55_W='publish: could not save the opaque repository name'; RV55_OPTS=--opaque; ln -s "$d.no-such-dir/slug" "$d/.publish-slug" ;;
+    opaque-token)   RV55_W='publish: could not generate the opaque repository name'; RV55_OPTS=--opaque ;;
+    render)         RV55_W='no *-travel-site.html found'; mv "$d/outputs/$n-travel-site.html" "$d/outputs/$n-site.txt" ;;
+    slug)           RV55_W='invalid publish slug'; printf 'Bad Slug!\n' > "$d/.publish-slug" ;;
+    clonedir)       RV55_W='publish: could not clear'; mkdir -p "$d/.publish/held"; : > "$d/.publish/held/f"; chmod 555 "$d/.publish/held" ;;
+    generator)      RV55_W='publish: the passphrase generator' ;;
+    resolver)       RV55_W='passphrase too weak'; printf 'short\n' > "$d/.passphrase"; chmod 600 "$d/.passphrase" ;;
+    encryption)     RV55_W='publish: the encryption step failed' ;;
+    cipher-copy)    RV55_W='publish: could not place the ciphertext' ;;
+    commit)         RV55_W='publish: could not commit the page' ;;
+    create)         RV55_W='publish: creating the per-trip repository' ;;
+    plaintext-copy) RV55_W='publish: could not place the page'; RV55_OPTS=--plaintext ;;
+    control)        RV55_W='Published' ;;
+  esac
+}
+# 0 where this uid can remove a file from a mode-555 directory (root, say) — where the clonedir step cannot fail.
+rv55_root_writes() { # <trip>
+  [ -d "$1/.publish/held" ] || return 1
+  rm -f "$1/.publish/held/f" 2>/dev/null || return 1
+  chmod 755 "$1/.publish/held"
+}
+rv55_run() { # <step> <trip> -> the publish's output on stdout, its status as the return
+  ( unset STATICRYPT_PASSWORD; set +e; RV55_FAIL="$1"; rv55_gh
+    case "$1" in
+      opaque-token|generator) od() { return 1; } ;;
+      encryption) encrypt_to_tmp() { return 1; } ;;
+      cipher-copy|plaintext-copy) cp() { case "${2:-}" in */.publish/index.html) printf 'cp: simulated failure\n' >&2; return 1 ;; esac; command cp "$@"; } ;;
+      commit) rv_fail_commit_env ;;
+    esac
+    [ "$1" != plaintext-copy ] || export ALLOW_PLAINTEXT=1
+    # shellcheck disable=SC2086
+    cmd_publish "$2" $RV55_OPTS ) 2>&1
+}
+rv55_assert() { # <id> <step>
+  local id="$1" step="$2" d out rc created=0 rec=0 pub=0 said=0 keyleft=0
+  d="$RVW/rv55-$step-$RANDOM"; rv55_setup "$step" "$d"
+  if [ "$step" = clonedir ] && rv55_root_writes "$d"; then
+    SKIP "$id: this run's uid removes files from a mode-555 directory (root, say), where the step this limb fails cannot fail — not a pass"
+    return 0
+  fi
+  : > "$RV_GHLOG"
+  out="$(rv55_run "$step" "$d")"; rc=$?
+  [ "$step" != clonedir ] || chmod 755 "$d/.publish/held" 2>/dev/null
+  grep -q '^repo create' "$RV_GHLOG" && created=1
+  [ -e "$d/.published-itinerary" ] && rec=1
+  rv_has "$out" 'Published:' && pub=1
+  rv_has "$out" "$RV55_W" && said=1
+  [ ! -e "$d/.passphrase" ] || [ "$step" = resolver ] || keyleft=1
+  if [ "$step" = control ]; then
+    if [ "$rc" -ne 0 ] || [ "$pub" -eq 0 ]; then
+      FAIL "$id: CONTROL — a first publish with no failure injected and errexit off read rc=$rc, published=$pub; want 0 and 1, or no limb above is a measurement"
+    else
+      PASS "$id: CONTROL — with no failure injected, a first publish with errexit off reads rc=0 and Published, so each limb's stop is its own step's"
+    fi
+  elif [ "$rc" -ne 1 ]; then
+    FAIL "$id: a first publish whose $step step failed read rc=$rc with errexit off, want 1 — it ran on past the failed step"
+  elif [ "$pub" -eq 1 ] || [ "$rec" -eq 1 ]; then
+    FAIL "$id: the $step step failed and the run still printed Published or recorded a baseline"
+  elif [ "$created" -eq 1 ] && [ "$step" != create ]; then
+    FAIL "$id: the $step step failed and the run went on to create the per-trip repository"
+  elif [ "$keyleft" -eq 1 ] && [ "$step" = generator ]; then
+    FAIL "$id: the generator failed and a key was written to .passphrase"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: the run stopped (rc=1) without the $step step's own message"
+  else
+    PASS "$id: a first publish whose $step step fails stops there with errexit off, rc=1, naming the step, with nothing later run"
+  fi
+}
+for rv_b in owner opaque opaque-token render slug clonedir generator resolver encryption cipher-copy commit create plaintext-copy control; do rv55_assert "RV55-$rv_b" "$rv_b"; done
+for rv_b in owner opaque opaque-token render slug clonedir generator resolver encryption cipher-copy commit create plaintext-copy control; do md_flips cmd_publish "RV55-$rv_b" rv55_assert "RV55-$rv_b" "$rv_b"; done
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # L18 — a plaintext publish refuses a render carrying a group-only section, by that section's presence
 # (#2155; ADR-030 § 6 safeguard 2). Group L by id; placed here, inside group RV's mock scope, because its
