@@ -558,6 +558,11 @@ to this verb:** the precondition above refuses whenever that variable is set, so
 this verb it would loop. Say so, and print the script's `update` line for the operator to run there
 once they have set it; set nothing, and name no value.
 
+**When the key does not open the live page**, the script refuses before its push and says so. The
+key's remedies — putting back the passphrase that opens the site, or `rotate` — are not verbs of this
+file: relay them as an **operator hand-off** by the standard above, printing the line for whichever the
+operator names and running none.
+
 **When the resolved trip is `ARCHIVED`**, the row above declares `lifecycle: ACTIVE`, so
 G7 disposes `REFUSE`: name the cell the resolved state does not satisfy and the value the
 ladder resolved, and stop. Do not re-publish an archived trip.
