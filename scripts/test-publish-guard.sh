@@ -16202,6 +16202,90 @@ md_flips _record_pending_rotation "RV51-rotate-dirflush" rv51d_assert "RV51-rota
 md_flips write_passphrase_file "RV52-interrupt-before-rename" rv52_assert "RV52-interrupt-before-rename" before
 md_flips write_passphrase_file "RV52-interrupt-after-rename" rv52_assert "RV52-interrupt-after-rename" after
 
+# ══════════════════════════════════════════════════════════════════
+# RV53 — #2213. publish never writes over a passphrase file that exists and cannot be read: it may hold a key already
+# given out. norepo is a first publish with no per-trip repository; empty, one into an empty repository named by
+# .publish-slug. Each must refuse naming the file and the remedy, leave the file untouched at mode 000, write no key,
+# create and push nothing and record no baseline. link-store pins the route decision 9 keeps: a .passphrase link into
+# a key store whose key file does not exist yet still takes the first key where it points.
+#
+# A uid that reads a mode-000 file (root, say) cannot build the refused state, because under decision 9 a dangling link
+# is the key-store route rather than an unreadable file. Each limb tests readability after the chmod and SKIPs there
+# with that reason, never passing. CI runs as a non-root user and never takes the skip; under strict mode a skip of
+# group RV fails the run, which is the right direction for a privacy-control arm that cannot run.
+# ══════════════════════════════════════════════════════════════════
+rv53_assert() { # <id> <norepo|empty>
+  local id="$1" how="$2" name d bare="" out rc mode0 mode1 kept=0 said=0 none=0 created=0 refs="" rec=0
+  local key='rv-unreadable-first-synthetic-key-72'
+  name="rv53-$how-$RANDOM"
+  if [ "$how" = norepo ]; then
+    d="$RVW/$name"; mkdir -p "$d/outputs"; cp "$SRC" "$d/outputs/$name-travel-site.html"
+  else
+    d="$(rv39_site "$name" main)"; bare="$RVW/origin/$name-site.git"
+  fi
+  printf '%s\n' "$key" > "$d/.passphrase"; chmod 000 "$d/.passphrase"
+  if [ -r "$d/.passphrase" ]; then
+    chmod 600 "$d/.passphrase"
+    SKIP "$id: this run's uid reads a mode-000 file (root, say), where the state this arm grades cannot arise — not a pass"
+    return 0
+  fi
+  mode0="$(ls -l "$d/.passphrase" 2>/dev/null)"; mode0="${mode0%% *}"
+  : > "$RV_GHLOG"
+  if [ "$how" = norepo ]; then
+    out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_publish "$d" ) 2>&1 )"; rc=$?
+  else
+    out="$( ( unset STATICRYPT_PASSWORD; RV39_BARE="$bare"; rv39_gh; set -e; cmd_publish "$d" ) 2>&1 )"; rc=$?
+    refs="$(git -C "$bare" for-each-ref 2>/dev/null)"
+  fi
+  mode1="$(ls -l "$d/.passphrase" 2>/dev/null)"; mode1="${mode1%% *}"
+  chmod 600 "$d/.passphrase" 2>/dev/null
+  [ "$(cat "$d/.passphrase" 2>/dev/null)" = "$key" ] && kept=1
+  grep -q '^repo create' "$RV_GHLOG" && created=1
+  [ -e "$d/.published-itinerary" ] && rec=1
+  rv_has "$out" 'never writes over a passphrase it could not read' && said=1
+  { rv_has "$out" 'Nothing was encrypted, committed or pushed' && rv_has "$out" 'no passphrase was written'; } && none=1
+  if [ "$rc" -ne 1 ]; then
+    FAIL "$id: publish ($how) with a .passphrase it cannot read read rc=$rc, want 1 — it wrote over a key it could not read"
+  elif [ "$mode1" != "$mode0" ]; then
+    FAIL "$id: the refusal ($how) changed the file's mode from '$mode0' to '$mode1'"
+  elif [ "$kept" -eq 0 ]; then
+    FAIL "$id: the refusal ($how) left the file not byte-identical to the key it held"
+  elif [ "$created" -eq 1 ] || [ -n "$refs" ]; then
+    FAIL "$id: the refusal ($how) created the repository or pushed to it"
+  elif [ "$rec" -eq 1 ]; then
+    FAIL "$id: the refusal ($how) recorded a baseline"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: the refusal ($how, rc=1) is not ensure_first_key's — it does not say publish never writes over a passphrase it could not read"
+  elif [ "$none" -eq 0 ]; then
+    FAIL "$id: the refusal ($how) does not say nothing was encrypted, committed or pushed and no passphrase was written"
+  else
+    PASS "$id: publish ($how) refuses a .passphrase that exists and cannot be read, naming it, with the file untouched at mode $mode0, no key written, nothing created or pushed and no baseline recorded"
+  fi
+}
+rv53_assert "RV53-norepo" norepo
+rv53_assert "RV53-empty" empty
+rv53l_assert() { # <id>
+  local id="$1" name d bare store out rc link=0 skey live
+  name="rv53l-$RANDOM"; d="$(rv39_site "$name" main)"; bare="$RVW/origin/$name-site.git"
+  store="$RVW/$name-store"; mkdir -p "$store"; ln -s "$store/key" "$d/.passphrase"
+  out="$( ( unset STATICRYPT_PASSWORD; RV39_BARE="$bare"; rv39_gh; set -e; cmd_publish "$d" ) 2>&1 )"; rc=$?
+  [ -L "$d/.passphrase" ] && link=1
+  skey="$(cat "$store/key" 2>/dev/null)"; live="$(rv_pushed_key "$bare")"
+  if [ "$rc" -ne 0 ]; then
+    FAIL "$id: a first publish through a .passphrase link into a key store with no key file yet read rc=$rc, want 0 — the key-store route decision 9 keeps is closed"
+  elif [ "$link" -eq 0 ]; then
+    FAIL "$id: the first publish replaced the link with a regular file"
+  elif [ -z "$skey" ] || [ "$live" != "$skey" ]; then
+    FAIL "$id: the store file does not hold the key the published page is under"
+  else
+    PASS "$id: a first publish through a .passphrase link into a key store writes the first key where the link points, and the page is under it"
+  fi
+}
+rv53l_assert "RV53-link-store"
+md_flips ensure_first_key "RV53-norepo" rv53_assert "RV53-norepo" norepo
+md_flips ensure_first_key "RV53-empty" rv53_assert "RV53-empty" empty
+md_flips ensure_first_key "RV53-link-store" rv53l_assert "RV53-link-store"
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # L18 — a plaintext publish refuses a render carrying a group-only section, by that section's presence
 # (#2155; ADR-030 § 6 safeguard 2). Group L by id; placed here, inside group RV's mock scope, because its
