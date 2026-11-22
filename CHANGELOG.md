@@ -3,6 +3,79 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [Unreleased]
+
+The publish commands are now safe to run twice and stop on their own failures. A takedown that fails
+says so; a push that re-encrypts is made only under a key that opens the page the site serves now; a
+passphrase file `publish` cannot read is never replaced; the commands on one trip run one at a time;
+and every first-publish step stops at its own failure. No trip is changed by this release, and no
+published site is re-encrypted by it.
+
+**A takedown reports what the host said.** `unpublish` reads the HTTP status line `gh api -i` prints:
+only a 404 reads as nothing to take down. A repository lookup that gets no answer, a Pages call GitHub
+refuses while the site is still there, and a failed call whose read-back gets no answer each say the
+site may still be served and exit non-zero, on both limbs, before any takedown call where the lookup is
+the one that failed. `/trip-decommission archive` now says, at its takedown step, that a non-zero exit
+stops the verb before it marks the trip, so a takedown that did not happen leaves the trip `ACTIVE` and
+the verb re-runnable. The no-op line for an absent repository is unchanged.
+
+**A push stands on the live site.** Before a push that re-encrypts, `update` confirms that the key it
+will use opens the page at the per-trip clone's fetched tip — the page the push replaces — whichever
+store supplied it, and refuses otherwise, naming the store and taking its own commit back out. A site
+published `--plaintext` is refused the same way, naming `rotate`. `rotate` refuses a new passphrase that
+already opens that page, because such a rotation revokes nothing, and asks nothing of the key it
+retires, so the lost-key route stays open. A rotation whose push failed is still finished by `update`:
+`rotate` now writes `.rotation-pending` beside the trip immediately after its new key, naming the key
+file that write produced and the page the rotation replaced, and `update` finishes the rotation only
+while both still stand; a successful push by either clears it. Where another copy of the trip moved the
+site under the old key, `update` refuses and names `rotate` instead. This ends the residual milestone
+74 left: an `update` re-keying the site under a key a failed first publish had generated. The key file
+is flushed to disk — `fsync` through perl, with `F_FULLFSYNC` on macOS — before its rename and its
+directory after it, so an interrupted write leaves the old key or the complete new one.
+
+**`publish` never writes over a passphrase it cannot read.** A `.passphrase` that exists and cannot be
+read is refused, naming the file and both remedies, with nothing encrypted, committed, pushed or written.
+A `.passphrase` link into a key store whose key file does not exist yet still takes the first key where
+it points.
+
+**One command at a time.** `publish`, `update`, `rotate` and `unpublish` take a per-trip lock,
+`<trip-dir>/.publish-lock`, before they read anything, and `confirm` immediately before its first write;
+`list` takes none. A second command refuses at once, naming the one running, with exit status 75 where it
+runs and 76 for a lock a killed run left behind, so an unattended caller can tell the two apart. Every
+exit releases the lock, and an interrupt, a hangup or a terminate signal does too. A lock a run killed
+outright left behind is never broken automatically: the refusal names its removal. The lock covers one
+machine's data root.
+
+**Each first-publish step stops on its own failure.** With errexit off — the state a caller reached
+through `if` or `||` leaves the script in — six of nine constructed step failures used to run on to
+`Published`. Each step now stops with a message naming it: the GitHub user read, the `--opaque` name save
+(whose failure could leave the repository named after the destination and year, and whose token is now
+checked for its shape), the clone directory, the generator, the encryption, the page's placement, the
+commit and the repository create.
+
+**One record.** `ADR-055`, *a publish stands on the live site and runs alone*, lands `Proposed`: the key
+checked against the live site, with `rotate`'s inverted check and the marker that binds a failed rotation
+to the key file and the page, and the per-trip lock with its exit statuses.
+
+**The suite holds it.** Group J gains J4–J8; group RV gains RV48–RV56, including this suite's first
+background processes, each bounded and killed; group E gains E5–E8, which run the decrypt against the
+real StatiCrypt. `.github/workflows/publish-guard.yml` changes in comments only, and no group id moves.
+The erase reach table's control-files row names `.rotation-pending` and `.publish-lock/`.
+
+**Size fence.** Read against `v0.75.0`, this branch's merge base, `CH_EMIT=growth bash
+scripts/test-corpus-hygiene.sh` lists every row kept and none new, raised, lowered or dropped.
+`CLAUDE.md` grew 1,318 bytes to 146,337, beneath its row of 153,381; `skills/trip-publish/SKILL.md` grew
+626 to 45,899, beneath 48,711; `skills/trip-decommission/SKILL.md` grew 571 to 56,656, beneath 60,026;
+`reference/adr/README.md` grew 404 to 28,017, beneath 28,177, with the record's index row; and
+`skills/trip-record/SKILL.md` grew 43 to 456,465, beneath 470,268. `ADR-055` is below its class floor and
+owes no row.
+
+**What this release does not do.** Two machines publishing one trip are still stopped only by the bound
+pushes and read-backs. A rotation back to a key an earlier rotation revoked passes both key checks.
+Durability against power loss is not observable in a suite: the flush call, its order and its success
+are what is graded. `publish`'s own host read still reads any failure as an absent repository; the key
+check ends the harm that did.
+
 ## [0.75.0] — 2026-11-20 — Each traveller's planning-day window has one home
 
 Each traveller's planning-day window now lives in one file, `outputs/traveler-presence.md`, which
