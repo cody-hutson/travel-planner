@@ -86,9 +86,23 @@
 # recorded it, and one this clone is behind. A push carries the commit its own run made, never another
 # command's newer one, and update's and rotate's pushes are bound to the site as each last fetched it
 # — so a run that loses a race to another command stops and says so instead of reporting success, in
-# words that allow its push may have reached the site. Commands run on one trip at the same
-# moment are still not serialized; run one at a time. The site is published from main, and a
+# words that allow its push may have reached the site. The site is published from main, and a
 # clone on any other branch is refused.
+#
+# Commands on one trip are serialized by a per-trip lock (#1819): a directory, <trip-dir>/.publish-lock,
+# created atomically with mkdir and holding one record of the command, its process id and its start time
+# — no key and no path. publish, update, rotate and unpublish (both limbs) take it before they read
+# anything; confirm takes it immediately before it writes a record, so an organizer at its prompt holds
+# nothing; list takes none. A command that finds the lock held refuses at once, naming the command that
+# holds it and whether that process is still running on this machine; it never waits. A lock held by a
+# running command refuses with exit status 75, and one whose holder is not running on this machine, or
+# whose record cannot be read, with 76, so an unattended caller can tell a busy trip from a lock left
+# behind without reading the message; every other refusal exits 1. Every exit releases the lock, a
+# refusal included, and so do an interrupt, a hangup and a terminate signal. A run killed outright, a
+# crash or a power loss leaves the directory in place. It is never broken automatically, because its
+# holder may be running on another machine that shares the data root; the refusal names its removal for
+# once no command is running on the trip. The lock covers one machine's data root. Two machines
+# publishing one trip are still stopped only by the bound pushes and read-backs above.
 #
 # Repo slug resolution (in order): <trip-dir>/.publish-slug, else the convention
 # <destination>-<year>-trip. Drop a repo name in .publish-slug to publish to a custom or
@@ -4354,8 +4368,9 @@ _republishes_baseline() { # <trip_dir> <outgoing-digest> -> 0 when no record nee
 # calling shell only, so inside $( ) or a subshell the digest is lost. The caller's variable must not
 # share a name with a local here.
 #
-# WHAT THIS DOES NOT REACH, stated as limits. Two publish-path commands run on one trip at the same
-# moment share this one staged name and the one baseline, so the order of their stagers, pushes and
+# WHAT THIS DOES NOT REACH, stated as limits. Since the per-trip lock, two publish-path commands on one
+# machine cannot interleave here; what follows describes what two machines sharing one per-trip repository
+# can still do. Two publish-path commands run on one trip at the same moment share this one staged name and the one baseline, so the order of their stagers, pushes and
 # recorders decides what is left. The baseline can end naming a plan the site no longer carries,
 # beside a staged record. Or one command's recorder finds the staged name empty, because the other
 # command's record was put in place there first; it then stages its own plan again and warns, and
@@ -4365,7 +4380,7 @@ _republishes_baseline() { # <trip_dir> <outgoing-digest> -> 0 when no record nee
 # the plan the site should carry, which records it. Re-running update with the plan the staged file
 # names, where the site does not carry it, would publish that plan over the live one. Staging again
 # needs space after the push; where it fails, the baseline is left as it was and the recorder says
-# so. Run one at a time, as the header says. Another program rewriting or deleting the trip's
+# so. Another program rewriting or deleting the trip's
 # control files, or its render, during a push is the second limit. Two of its cases are reached: a
 # render rewritten after this step is never recorded, because the recorder records the plan this
 # push carried; and a staged record removed during the push is staged again, at the cost above. The
@@ -5189,6 +5204,7 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   done
   trip_dir="$(resolve_trip_dir "$trip_dir")"
   [ -d "$trip_dir" ] || die "no such trip dir$(trip_dir_where) — check the first argument after the command, which names the trip; it is not repeated here, in case a passphrase was typed in its place."
+  _take_trip_lock "$trip_dir" publish
   # Before anything else, and with no network call: two keys may not both speak. A --plaintext
   # publish uses no key, so it is not asked.
   [ "$plaintext" = "1" ] || require_passphrase_sources_agree "$trip_dir"
@@ -5392,7 +5408,7 @@ encrypt_verify_commit() { # <pub_dir> <site_html> <passphrase> <verb> [<var-to-r
   # not this run's own. (The caller's variable must not share a name with a local here.)
   evc_own="$(git -C "$pub_dir" rev-parse --verify -q HEAD)" \
     && [ "$(git -C "$pub_dir" rev-parse --verify -q "${evc_own}:index.html")" = "$evc_blob" ] \
-    || die "$verb: another command changed $pub_dir between this run's commit and its read-back. Nothing was pushed by this run; run one command per trip at a time, and re-run."
+    || die "$verb: another program, or a run from another machine sharing this data root, changed $pub_dir between this run's commit and its read-back. Nothing was pushed by this run; re-run."
   [ -z "${5:-}" ] || printf -v "$5" '%s' "$evc_own"
 }
 
@@ -5580,10 +5596,70 @@ require_publish_branch() { # <pub_dir> <verb>
   die "$2 refused — $1 is on branch '${b:-(detached)}', and this engine publishes the site from main. Nothing was changed. If the site is served from another branch, make main its default and publishing branch, then remove $1 (it is cloned again from the published site) and re-run."
 }
 
+# The per-trip lock (#1819). One command on a trip at a time: publish, update, rotate and unpublish take it at entry,
+# confirm immediately before its first write, list never. mkdir is atomic, so exactly one taker succeeds. A second
+# command refuses at once — it never waits — naming the holder, with its own exit status: 75 where the holder is
+# running, 76 where it is not or its record cannot be read (review CD-3). Released on every exit of the shell that took
+# it, a refusal included, and on INT, TERM and HUP; a SIGKILL, a crash or a power loss leaves it, and it is never broken
+# automatically, because the data root may be shared with a machine where its holder still runs. A shell that already
+# holds a trip's lock holds it still, so a second command in the same process does not refuse on its own lock. A mkdir
+# that fails where no lock stands is the trip directory refusing the write, and is named as that (review FM-3).
+TRIP_LOCK_HELD_RC=75
+TRIP_LOCK_STALE_RC=76
+trip_lock_path() { printf '%s' "$1/.publish-lock"; }
+_TRIP_LOCK=""; _TRIP_LOCK_PID=""
+_die_rc() { # <status> <message> — die, with the exit status the caller names
+  local rc="$1"; shift
+  printf '\033[1;31m✗ ERROR:\033[0m %s\n' "$*" >&2; exit "$rc"
+}
+_take_trip_lock() { # <trip_dir> <verb>
+  local l h own hc hp hs line alive
+  if [ "$BASH_SUBSHELL" -eq 0 ] && [ "${BASH_SOURCE[0]}" != "$0" ]; then
+    die "$2: refused to take the per-trip lock from the top level of a shell that sourced $(basename "${BASH_SOURCE[0]}") — its EXIT trap would replace that shell's own. Run the command in a subshell."
+  fi
+  l="$(trip_lock_path "$1")"
+  own="$(exec sh -c 'printf "%s" "$PPID"')"
+  if [ "$_TRIP_LOCK" = "$l" ] && [ "$_TRIP_LOCK_PID" = "$own" ]; then return 0; fi
+  if mkdir "$l" 2>/dev/null; then
+    h="$(mktemp "$l/holder.XXXXXX")" && printf 'command=%s\npid=%s\nstarted=%s\n' "$2" "$own" "$(_iso_now)" > "$h" && mv -f "$h" "$l/holder" \
+      || { rm -rf "$l"; die "$2: could not record the per-trip lock at $l. Nothing was changed. Re-run $2."; }
+    _TRIP_LOCK="$l"; _TRIP_LOCK_PID="$own"
+    trap '_release_trip_lock' EXIT; trap 'exit 130' INT; trap 'exit 143' TERM; trap 'exit 129' HUP
+    return 0
+  fi
+  [ -d "$l" ] \
+    || die "$2: could not create the per-trip lock at $l — the trip directory may be read-only or its volume full, or something other than a lock stands at that name. Nothing was changed. Make $1 writable and re-run $2."
+  hc=""; hp=""; hs=""
+  if [ -f "$l/holder" ] && [ -r "$l/holder" ]; then
+    while IFS= read -r line || [ -n "$line" ]; do
+      case "$line" in command=*) hc="${line#command=}" ;; pid=*) hp="${line#pid=}" ;; started=*) hs="${line#started=}" ;; esac
+    done < "$l/holder"
+  fi
+  case "$hp" in ''|*[!0-9]*)
+    _die_rc "$TRIP_LOCK_STALE_RC" "$2 refused — another publish command holds this trip's lock at $l, and its record cannot be read, so which command holds it is unknown. Nothing was changed. If no publish command is running on this trip — from this machine or another one sharing this data root — remove the lock (rm -r $l) and re-run $2." ;;
+  esac
+  if kill -0 "$hp" 2>/dev/null; then alive=1
+  else case "$(kill -0 "$hp" 2>&1)" in *[Pp]ermission*|*[Nn]ot\ permitted*) alive=1 ;; *) alive=0 ;; esac
+  fi
+  [ "$alive" -eq 1 ] \
+    && _die_rc "$TRIP_LOCK_HELD_RC" "$2 refused — '$hc' is running on this trip (process $hp, started $hs), and publish commands on one trip run one at a time. Nothing was changed. Re-run $2 when it has finished."
+  _die_rc "$TRIP_LOCK_STALE_RC" "$2 refused — this trip's lock at $l was taken by '$hc' (process $hp, started $hs), which is not running on this machine: it was stopped before it could release the lock (killed, or the machine stopped). Nothing was changed. If no publish command is running on this trip from another machine sharing this data root, remove the lock (rm -r $l) and re-run $2."
+}
+_release_trip_lock() {
+  [ -n "$_TRIP_LOCK" ] || return 0
+  local line p=""
+  if [ -r "$_TRIP_LOCK/holder" ]; then
+    while IFS= read -r line || [ -n "$line" ]; do case "$line" in pid=*) p="${line#pid=}" ;; esac; done < "$_TRIP_LOCK/holder"
+  fi
+  [ "$p" = "$_TRIP_LOCK_PID" ] && rm -rf "$_TRIP_LOCK"
+  _TRIP_LOCK=""
+}
+
 cmd_update() { # <trip_dir>
   local trip_dir="${1:?usage: update <trip-dir>}"
   trip_dir="$(resolve_trip_dir "$trip_dir")"
   [ -d "$trip_dir" ] || die "no such trip dir$(trip_dir_where) — check the first argument after the command, which names the trip; it is not repeated here, in case a passphrase was typed in its place."
+  _take_trip_lock "$trip_dir" update
   # Before anything else, and with no network call: two keys may not both speak.
   require_passphrase_sources_agree "$trip_dir"
   preflight; resolve_noreply_identity
@@ -5817,6 +5893,9 @@ cmd_confirm() { # <trip_dir>
     printf '  Type CONFIRM to record the group'"'"'s approval of this itinerary: '; read -r ans
   fi
   [ "${ans:-}" = "CONFIRM" ] || die "aborted — nothing confirmed. The published plan is unchanged."
+  # The per-trip lock, taken here, immediately before the first write, so an organizer at the prompt above held
+  # nothing (#1819).
+  _take_trip_lock "$trip_dir" confirm
 
   dg="$(itinerary_digest "$site_html")"
   [ -n "$dg" ] || die "could not identify the itinerary content of $site_html — it could not be read, its itinerary text could not be projected, or that text could not be normalized; any error printed above names the cause. Nothing was recorded."
@@ -5929,6 +6008,7 @@ _confirm_declared() { # <trip_dir> <site_html> <state>
     printf '  Type CONFIRM to record this as %s'"'"'s %s, stated by you (organizer-stated): ' "$key" "$verb"
     read -r ans || ans=""
     [ "${ans:-}" = "CONFIRM" ] || die "aborted — nothing recorded."
+    [ -n "$_TRIP_LOCK" ] || _take_trip_lock "$trip_dir" confirm   # the per-trip lock, before the first write (#1819)
     _ledger_append "$trip_dir" "$key" "$verb" "$out_dg" \
       || die "could not append to the approval ledger at $(approval_ledger_path "$trip_dir") — nothing was recorded, and the ledger is as it was."
     recorded=1
@@ -5937,6 +6017,7 @@ _confirm_declared() { # <trip_dir> <site_html> <state>
   # Whether the write keeps the record's date — the record already names the published plan, and
   # no change-summary entry is dated after it (item 8) — read BEFORE the write, through the one
   # predicate the writer itself calls, so the message below says which it did and cannot disagree.
+  [ -n "$_TRIP_LOCK" ] || _take_trip_lock "$trip_dir" confirm   # the per-trip lock, before the record is written (#1819)
   kept="$(_published_record_date "$trip_dir" "$out_dg")"
   if ! _record_threshold_met "$trip_dir" "$out_dg"; then
     if [ "$recorded" -eq 1 ]; then
@@ -5991,6 +6072,7 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   # this trip's own under --data-root, never a path under the working directory.
   trip_dir="$(resolve_trip_dir "$trip_dir")"
   [ -d "$trip_dir" ] || die "no such trip dir$(trip_dir_where) — check the first argument after the command, which names the trip; it is not repeated here, in case a passphrase was typed in its place."
+  _take_trip_lock "$trip_dir" rotate
   local pf="$trip_dir/.passphrase" site_html pub_dir owner slug mine="" staged="" lease=""
   [ "$supplied" = "1" ] || newp="$(gen_passphrase)"
   # These refusals come BEFORE anything is written: an aborted rotation must leave .passphrase
@@ -6235,6 +6317,7 @@ cmd_unpublish() { # <trip_dir> [--disable-pages-only] [--yes]
   done
   trip_dir="$(resolve_trip_dir "$trip_dir")"
   [ -d "$trip_dir" ] || die "no such trip dir$(trip_dir_where) — check the first argument after the command, which names the trip; it is not repeated here, in case a passphrase was typed in its place."
+  _take_trip_lock "$trip_dir" unpublish
   preflight_ro
   local owner slug ans
   owner="$(gh api user --jq '.login')" || die "could not read GitHub user."
