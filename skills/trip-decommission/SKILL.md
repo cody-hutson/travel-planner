@@ -451,7 +451,9 @@ idempotent script, or it hands off.
 
 **Defence 2 — the script's own output is evidence; this command's inference is not.** Where the
 script reports an outcome it observed through a real API call, relay it **as the script's
-observation, attributed to it**. Add nothing, and draw no conclusion beyond what it says.
+observation, attributed to it**. Add nothing, and draw no conclusion beyond what it says. A refusal
+because another publish command holds the trip's lock is relayed the same way, as the script's own; the
+lock's removal, where the refusal names one, is the operator's to run, never this command's.
 
 **Defence 3 — the no-op line is the forbidden shape arriving from the script, and it is qualified
 rather than relayed.** `unpublish` resolves the repo through `.publish-slug`; on a name that no
