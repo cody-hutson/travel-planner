@@ -1923,7 +1923,9 @@ fi
 # Offline, like the rest of L: gh and npx are stub FILES on a PATH prefix local to each run,
 # because the subject is a separate process and a shell-function mock would not reach it.
 # The gh stub answers the auth and user reads and fails every other call — every repo reads
-# absent and every clone is refused — so no arm can create, clone, disable or push anything.
+# absent and every clone is refused — so no arm can create, clone, disable or push anything. The
+# repository lookup unpublish makes reads the host's HTTP status line (#2212), so that read answers
+# 404, the host's own word for a repository that is not there.
 L15DATA="$WORK/l15_data"; L15DECOY="$WORK/l15_decoy_cwd"; L15EMPTY="$WORK/l15_empty_cwd"
 L15BIN="$WORK/l15_bin"; L15LOG="$WORK/l15_gh.log"
 mkdir -p "$L15DATA/trips/l15-trip/outputs" "$L15DECOY/trips/l15-trip" "$L15DECOY/trips/l15-cwd-only" \
@@ -1939,6 +1941,7 @@ printf 'gh %s\n' "\$*" >> "$L15LOG"
 case "\${1:-} \${2:-}" in
   'auth status') exit 0 ;;
   'api user')    case "\$*" in *.login*) echo l15-owner ;; *.id*) echo 4242 ;; esac; exit 0 ;;
+  'api -i')      echo 'HTTP/2.0 404 Not Found'; exit 1 ;;
 esac
 exit 1
 L15GH
@@ -1974,7 +1977,7 @@ fi
 # L15a — MUST-FIRE: the decommission verb's invocation, from the DECOY directory.
 l15_run stub "$L15DECOY" unpublish trips/l15-trip --disable-pages-only --data-root "$L15DATA"
 l15a_rc="$L15_RC"; l15a_hit="$(l15_has "$L15_OUT" 'l15-owner/l15-dataroot-slug')"
-l15a_decoy="$(l15_has "$L15_OUT$L15_LOGT" 'l15-decoy-slug')"; l15a_view="$(l15_has "$L15_LOGT" 'repo view l15-owner/l15-dataroot-slug')"
+l15a_decoy="$(l15_has "$L15_OUT$L15_LOGT" 'l15-decoy-slug')"; l15a_view="$(l15_has "$L15_LOGT" 'api -i --silent repos/l15-owner/l15-dataroot-slug')"
 if [ "$l15a_rc" -eq 0 ] && [ "$l15a_hit" = 1 ] && [ "$l15a_view" = 1 ] && [ "$l15a_decoy" = 0 ]; then
   PASS "L15a: MUST-FIRE — \`unpublish trips/<slug> --disable-pages-only --data-root <root>\`, EXECUTED from a working directory holding a same-named decoy trip, resolves the trip under the data root: the repo it probes and reports is the data-root trip's (rc=$l15a_rc) and the decoy's name appears nowhere in its output or its gh calls"
 else
