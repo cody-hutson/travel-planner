@@ -1953,7 +1953,7 @@ writer, not the caller* rule has nothing to exclude on this verb's behalf.
 **The one file this verb writes, and it is not `trip-context.md`.** The target is
 `trips/<slug>/.publish-slug` — under `trips/<slug>/` per standing rule 5, where `<slug>` is
 `trip.slug` exactly as `E1` spelled it. That path lies **outside § *Write ownership*'s scope**,
-which is `trip-context.md` block by block; `CLAUDE.md` § *Publishing to GitHub Pages* already
+which is `trip-context.md` block by block; `reference/publishing-runbook.md` § *Repo name* already
 assigns its author — *put the bare repo name in `trips/<destination>-<year>/.publish-slug`* — and
 this verb is that author acting through a command, exactly as § *Write ownership* assigns `## Locked
 Elements` to *the operator, through `/trip-record`*.

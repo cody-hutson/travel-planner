@@ -393,7 +393,7 @@ When the itinerary changes (iteration mode, new bookings, swapped venues):
 
 ### Publishing to GitHub Pages
 
-**Published trip sites are private-by-default.** A trip itinerary — dates, lodging, who you're travelling with — must not be world-readable. The publish flow encrypts the site before anything reaches the public per-trip repo, so only ciphertext is ever pushed. Free public Pages hosting still works because decryption happens client-side, in the viewer's browser, after they enter the passphrase.
+**Published trip sites are private-by-default:** the publish flow encrypts the site before anything reaches the public per-trip repo, so only ciphertext is ever pushed. This section keeps what an agent hands to the operator and can read nowhere else — the first publish, a rotation, the deleting takedown, and the plaintext opt-out with the rule that an agent never runs it. Everything else about publishing — the passphrase, the repo name, updating, listing, what each takedown leaves behind, and what "private" does and does not protect — is `reference/publishing-runbook.md`.
 
 **Every command in this section runs as printed from any directory.** `<engine-root>` is the directory the engine was cloned into — `~/.claude/skills/travel-planner` by the README's install — and `<data-root>` is your trip data home, the path held in `~/.travel-planner/data-root`. The trip directory stays relative because `--data-root` roots it under your data home; the flag also roots `list`'s scan and the person store the content guard and the source check read, so keep it on every line. After an install the engine and your data live apart, so a line that leaned on the working directory ran from neither of them. This is the shape `/trip-publish` already gives the invocations it runs itself.
 
@@ -409,39 +409,21 @@ That one command:
 1. Encrypts `outputs/[destination]-travel-site.html` with StatiCrypt (AES-256-CBC + HMAC-SHA256, 600k PBKDF2-SHA256) into a passphrase-gated `index.html`.
 2. Runs a fail-closed **pre-push guard** that refuses to push unless the output is verified ciphertext with no plaintext itinerary tokens.
 3. Creates the per-trip **public** repo and pushes **only the ciphertext**, using a no-reply commit identity (never the user's email).
-4. Enables Pages and prints the live URL plus **where the passphrase is saved** — the path, never the value. Where the host reports no Pages site built from `main` at its root once the push has landed, it prints no URL, says how to serve the site, and exits non-zero: the one `gh api` line that enables Pages where no Pages site could be read back, or the repository's Pages settings, with the source the host reported, where one is built from elsewhere. The passphrase itself never reaches standard output on any path, so a captured or transcript-injected publish cannot disclose it; read it yourself with `cat <data-root>/trips/<destination>-<year>/.passphrase`, the path the publish prints.
 
 If the pre-push guard aborts, **nothing was published** — the error names what failed; rebuild the site and re-run.
-
-**Passphrase.** The trip's key of record is `trips/<destination>-<year>/.passphrase` (under `<data-root>`, never published); `publish` generates a strong one and saves it there when none exists. `update` never generates a key: with no key it can read and `$STATICRYPT_PASSWORD` unset it refuses, naming `rotate`, and a site published `--plaintext` is in that state, where `rotate` encrypts it from then on and `unpublish` followed by `publish --plaintext` keeps it plaintext. `$STATICRYPT_PASSWORD`, when set, is used in its place — but where the trip also has a `.passphrase` holding a different key, or one that cannot be read as a key, `publish` and `update` refuse rather than choose between the two, before any network call. The remedy is to unset the variable; the only way to change the key is `rotate`. Share the passphrase over a private channel — anyone with the passphrase can view the site; without it, the page is just a prompt.
-
-**Repo name.** By default the per-trip repo is `<destination>-<year>-trip`. Pass `--opaque` to `publish` to name it with a random token instead (`trip-<hex>`, no destination/year); the name is saved to `.publish-slug` so every later command resolves the same repo. To publish to a custom or pre-existing repo — a shorter shared name or an existing site — put the bare repo name in `trips/<destination>-<year>/.publish-slug` (under `<data-root>`). `publish`/`update`/`rotate`/`list`/`unpublish` all resolve it the same way. A pre-existing repo must serve its site from `main`: `update` and `rotate` refuse a trip whose clone is on any other branch, and name it. Its first push belongs to `publish`, and it must then be empty and public, as the host reports it: `publish` refuses a repo that holds anything, enables Pages and sets `main` as the default branch itself, and `update` and `rotate` refuse an empty repo, naming `publish`.
-
-**Site is live at:** `https://<github-username>.github.io/<destination>-<year>-trip/` — the URL shows a passphrase prompt, not the itinerary.
-
-**Updating after edits** (re-encrypt and re-publish only ciphertext):
-```bash
-<engine-root>/scripts/publish-trip-site.sh update trips/<destination>-<year> --data-root <data-root>
-```
 
 **Rotating the passphrase** (e.g. after sharing with someone who should no longer keep access):
 ```bash
 <engine-root>/scripts/publish-trip-site.sh rotate trips/<destination>-<year> --data-root <data-root>
 ```
-Rotation re-encrypts under a new passphrase — never `$STATICRYPT_PASSWORD` — records it in `.passphrase`, and re-publishes; previously-shared viewers must re-receive the new one. If an earlier `update` or `rotate` stopped at its push, `rotate` refuses until that page is dealt with: remove the trip's `.publish` directory (it is cloned again, and nothing is lost), or run `update` first if the current passphrase's holders should see the page. It reads the site before it writes anything, and refuses one it cannot reach, one rewound since this clone last recorded it, and one this clone is behind; the remedy for the last two is the same removal. A push that fails may still have reached the site: `.passphrase` already holds the new passphrase, and `update` finishes the rotation. **A rotation protects what you publish from then on, not what you already published:** `rotate` adds a commit and never rewrites history, so every earlier version of the page stays in the per-trip repository, readable by anyone holding the passphrase it was encrypted under. To withdraw those as well, `unpublish` (which deletes the repository) and then `publish` again.
-
-**Listing published sites** (read-only — never writes, encrypts, or pushes):
-```bash
-<engine-root>/scripts/publish-trip-site.sh list --data-root <data-root>
-```
-Prints every trip under `<data-root>/trips/` with its repo, live URL (or "not published"), last-published vs last-edited dates, and `build-to-published`: whether the page last pushed is the newest local build, compared by content rather than by clock. It is evaluated outside `trip.freshness`, is report-only, and needs no network (`skills/trip-publish/SKILL.md` § *list* declares it).
+Rotation re-encrypts under a new passphrase — never `$STATICRYPT_PASSWORD` — records it in `.passphrase`, and re-publishes; previously-shared viewers must re-receive the new one. **A rotation protects what you publish from then on, not what you already published:** `rotate` adds a commit and never rewrites history, so every earlier version of the page stays in the per-trip repository, readable by anyone holding the passphrase it was encrypted under. To withdraw those as well, `unpublish` (which deletes the repository) and then `publish` again. What `rotate` refuses, and how a rotation that stopped at its push is finished, are in `reference/publishing-runbook.md`.
 
 **Taking a site down:**
 ```bash
 <engine-root>/scripts/publish-trip-site.sh unpublish trips/<destination>-<year> --data-root <data-root>                      # delete the repo (default)
 <engine-root>/scripts/publish-trip-site.sh unpublish trips/<destination>-<year> --disable-pages-only --data-root <data-root> # keep repo, site offline
 ```
-The default **deletes** the per-trip repo — removing the site *and* the destination/year in its name. Deletion is irreversible, needs the `delete_repo` gh scope (grant once with `gh auth refresh -h github.com -s delete_repo`), and prompts you to type the repo name to confirm. `--disable-pages-only` instead disables Pages and keeps the repo (reversible). Either way `unpublish` is idempotent (a no-op if the site is already gone), and content may persist in third-party caches or clones after takedown.
+The default **deletes** the per-trip repo — removing the site *and* the destination/year in its name. Deletion is irreversible; `reference/publishing-runbook.md` says what each form needs and what persists after it.
 
 **Opting out** — publish the itinerary fully public and unencrypted — is explicit, requires confirmation, and is **an operator action, never a Claude action**. Run it yourself in a terminal:
 ```bash
@@ -450,14 +432,6 @@ The default **deletes** the per-trip repo — removing the site *and* the destin
 The script prompts you to type `PUBLISH` to confirm.
 
 > **Claude must not set `ALLOW_PLAINTEXT`.** That variable exists so an operator can run the script from their own non-interactive automation. It is not a way for Claude to proceed past the prompt. The confirmation is gated on stdin being a terminal, and **a command Claude runs never has one** — so setting the variable does not "confirm non-interactively", it skips the confirmation entirely. The plaintext branch is also the one branch that does **not** run the pre-push ciphertext guard — it runs content controls instead, in this order: it refuses a render carrying a group-only section, by that section's presence (`reference/site-layout-spec.md` § *Group-only components*; `ADR-030` § 6 safeguard 2); then it runs the source check every publish runs (above); then it refuses if a traveler's Passport value or a `[THIRD-PARTY]`-marked value has reached the rendered page, and refuses equally when it cannot determine whether one has (`verify_publishable_content`; `reference/adr/ADR-008-publish-content-guard.md`). Those controls and the typed confirmation stand on this branch. The refusal runs before the per-trip repository is probed or created and again on the copy about to be pushed, and `ALLOW_PLAINTEXT` is read only at the confirmation, so it overrides neither control. Where a plaintext publish is what the user wants, **print the command above for them to run**, its placeholders filled, and say why; do not run it. Binding rule: `reference/adr/ADR-007-command-entry-point.md` § 2.
-
-> **What "private" means here.** The published bytes are world-fetchable ciphertext; security rests on passphrase strength plus the 600k-iteration KDF, not on access control — anyone can download the file and attempt an offline guess. Use a strong passphrase. This is privacy-by-construction (a fresh repo, only ciphertext ever committed), not an identity-gated ACL.
->
-> **What still leaks (metadata).** By default the per-trip repo is named `<destination>-<year>-trip` and is public, so the destination and year show on your GitHub profile even though the itinerary itself is encrypted; commit timestamps reveal when you publish. Only the itinerary *content* is protected — not the fact that the trip exists. Pass `--opaque` at publish (or set a custom name in `trips/<destination>-<year>/.publish-slug`) to keep destination/year out of the repo name; commit timestamps still reveal publish activity.
->
-> **Trust boundary.** Encryption runs via `npx staticrypt` (pinned to an exact version); your passphrase is passed to that package at publish time, so you are trusting the pinned StatiCrypt release and the npm supply chain.
->
-> The trip repo is independent from this engine repo — a standalone public repo containing only the encrypted `index.html`. The plaintext itinerary, agent outputs, and `.passphrase` stay under `<data-root>/trips/` and are never published.
 
 ---
 
@@ -548,6 +522,7 @@ travel-planner/
 │   ├── data-model.md              ← satisfaction-layer data architecture (storage homes, reconciliation, write ownership)
 │   ├── interview-rubric.md        ← the interview rubric (the dimensions a grader reads an interview conversation against, each with its traces and pass level; no interviewer reads it)
 │   ├── load-class-model.md        ← load-class model (what loads a file and when, the classification rule, the byte parameters a size assertion reads)
+│   ├── publishing-runbook.md      ← the publish script's operator reference (passphrase, repo name, updating, listing, takedown, what private protects)
 │   ├── region-reference.md        ← every block-owned form's regions in one table, each with its writer-table row and verdict (derived — what /trip-record interview reads)
 │   ├── replan-protocol.md         ← the behaviour a replan takes when the trip is near
 │   ├── schemas/                   ← per-artifact-class schemas + the CI gate's coverage declaration
