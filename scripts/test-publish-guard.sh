@@ -882,6 +882,139 @@ fi
 : > "$GHLOG"
 ( cmd_unpublish "$MDIR" --disable-pages-only </dev/null ) >/dev/null 2>&1
 if grep -q 'api -X DELETE' "$GHLOG" && ! grep -q '^repo delete' "$GHLOG"; then PASS "J3: --disable-pages-only disables Pages, never deletes the repo"; else FAIL "J3: disable-pages-only path wrong"; fi
+# J4–J8 — #2212. A takedown reports what the host said, never a guess. gh exits 1 for a 404 and a dropped
+# connection alike, so unpublish reads the HTTP status line `gh api -i` prints: only 404 reads as "there is
+# none", and a read that gets no status line is a host that could not be asked. The mock answers each read
+# from the arm's own scenario. J_REPO and J_PAGES are the status line the repository read and the Pages read
+# print, empty for none at all (exit 1 with nothing on stdout, real gh's shape for an unreachable host);
+# J_DEL is `ok`, or the body a refused DELETE prints. The old lookup, `repo view`, answers as the repository
+# read does, so an arm graded against the code before #2212 meets the same host.
+j_gh() { # (inside a subject's subshell)
+  gh() {
+    printf '%s\n' "$*" >> "$GHLOG"
+    case "$*" in
+      "api user"*)     printf 'testowner' ;;
+      "auth status"*)  printf "Token scopes: 'repo', 'delete_repo'\n" ;;
+      "api -i --silent repos/testowner/mock-slug/pages")
+        [ -n "${J_PAGES:-}" ] || return 1
+        printf '%s\r\nContent-Type: application/json\r\n' "$J_PAGES"
+        case "$J_PAGES" in *' 200 '*) return 0 ;; esac
+        return 1 ;;
+      "api -i --silent repos/testowner/mock-slug")
+        [ -n "${J_REPO:-}" ] || return 1
+        printf '%s\r\nContent-Type: application/json\r\n' "$J_REPO"
+        case "$J_REPO" in *' 200 '*) return 0 ;; esac
+        return 1 ;;
+      "repo view"*)    case "${J_REPO:-}" in *' 200 '*) return 0 ;; esac; return 1 ;;
+      "api -X DELETE"*) [ "${J_DEL:-ok}" = ok ] && return 0; printf '%s\n' "$J_DEL"; return 1 ;;
+      *)               return 0 ;;
+    esac
+  }
+}
+j_run() { # <repo-line> <pages-line> <delete> <unpublish args…> -> output on stdout, rc as the command's
+  local jr="$1" jp="$2" jd="$3"; shift 3
+  : > "$GHLOG"
+  ( J_REPO="$jr"; J_PAGES="$jp"; J_DEL="$jd"; j_gh; cmd_unpublish "$MDIR" "$@" </dev/null ) 2>&1
+}
+# J4 — the DELETE is refused while the site is still served: the takedown did not happen, and it says so.
+j4_assert() { # <id>
+  local id="$1" out rc said=0 nothing=0 restore=0
+  out="$(j_run 'HTTP/2.0 200 OK' 'HTTP/2.0 200 OK' '{"message":"Must have admin rights to Repository.","status":"403"}' --disable-pages-only)"; rc=$?
+  case "$out" in *'the takedown did not happen'*) said=1 ;; esac
+  case "$out" in *'nothing to do'*) nothing=1 ;; esac
+  case "$out" in *'To restore:'*) restore=1 ;; esac
+  if [ "$rc" -ne 1 ]; then
+    FAIL "$id: unpublish --disable-pages-only whose DELETE was refused while the site is still served read rc=$rc, want 1"
+  elif [ "$nothing" -eq 1 ]; then
+    FAIL "$id: a refused takedown with the site still served reads 'nothing to do'"
+  elif [ "$restore" -eq 1 ]; then
+    FAIL "$id: a takedown that did not happen printed the restore line, which is for a site that is off"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: the refusal (rc=1) does not say the takedown did not happen, so the read-back of the Pages site is not what decided it"
+  else
+    PASS "$id: a DELETE refused while the Pages site is still there says the takedown did not happen and exits 1, with no 'nothing to do' and no restore line"
+  fi
+}
+# J5 — the DELETE fails because Pages is already off: the read-back answers 404, and that, alone, is nothing to do.
+j5_assert() { # <id>
+  local id="$1" out rc said=0
+  out="$(j_run 'HTTP/2.0 200 OK' 'HTTP/2.0 404 Not Found' '{"message":"Not Found","status":"404"}' --disable-pages-only)"; rc=$?
+  case "$out" in *'Pages was already disabled'*) said=1 ;; esac
+  if [ "$rc" -ne 0 ]; then
+    FAIL "$id: unpublish --disable-pages-only on a repository whose Pages site the host reports absent read rc=$rc, want 0"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: rc=0, but the output does not say Pages was already disabled, so the 404 read-back is not what decided it"
+  else
+    PASS "$id: a DELETE that fails where the host reports no Pages site (404) is nothing to do, rc=0"
+  fi
+}
+# J6 — the DELETE fails and the read-back gets no answer at all (D-2): it may not have happened.
+j6_assert() { # <id>
+  local id="$1" out rc said=0 nothing=0
+  out="$(j_run 'HTTP/2.0 200 OK' '' 'error connecting to api.github.com' --disable-pages-only)"; rc=$?
+  case "$out" in *'the takedown may not have happened'*) said=1 ;; esac
+  case "$out" in *'nothing to do'*) nothing=1 ;; esac
+  if [ "$rc" -ne 1 ]; then
+    FAIL "$id: a failed DELETE whose read-back got no answer read rc=$rc, want 1"
+  elif [ "$nothing" -eq 1 ]; then
+    FAIL "$id: a failed DELETE whose read-back got no answer reads 'nothing to do'"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: the refusal (rc=1) does not say the takedown may not have happened"
+  else
+    PASS "$id: a failed DELETE whose read-back gets no answer says the takedown may not have happened and exits 1, never 'nothing to do'"
+  fi
+}
+# J7 — the repository lookup gets no answer while the repository exists, on both limbs: no takedown call is
+# made, nothing reads as "does not exist", and it exits 1. The lookup call must be in the log, so a lookup that
+# never ran cannot pass for one that got no answer (review FM-6).
+j7_assert() { # <id> <disable|delete>
+  local id="$1" how="$2" out rc said=0 gone=0 calls=0 asked=0
+  if [ "$how" = disable ]; then out="$(j_run '' '' ok --disable-pages-only)"; rc=$?
+  else out="$(j_run '' '' ok --yes)"; rc=$?; fi
+  case "$out" in *'could not ask GitHub whether'*) said=1 ;; esac
+  case "$out" in *'does not exist'*) gone=1 ;; esac
+  grep -q 'api -X DELETE' "$GHLOG" && calls=1
+  grep -q '^repo delete' "$GHLOG" && calls=1
+  grep -qx 'api -i --silent repos/testowner/mock-slug' "$GHLOG" && asked=1
+  if [ "$rc" -ne 1 ]; then
+    FAIL "$id: unpublish ($how limb) whose repository lookup got no answer read rc=$rc, want 1"
+  elif [ "$asked" -eq 0 ]; then
+    FAIL "$id: the gh log carries no read of the repository's HTTP status, so the lookup this arm grades never ran"
+  elif [ "$gone" -eq 1 ]; then
+    FAIL "$id: a lookup that got no answer reads as the repository not existing ($how limb)"
+  elif [ "$calls" -eq 1 ]; then
+    FAIL "$id: a takedown call was made after a lookup that got no answer ($how limb)"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: the refusal (rc=1, $how limb) does not say GitHub could not be asked whether the repository exists"
+  else
+    PASS "$id: a repository lookup that gets no answer ($how limb) makes no takedown call, says GitHub could not be asked, never that the repository does not exist, and exits 1"
+  fi
+}
+# J8 — J7's control: the lookup answers 404, which is the one answer that reads as nothing to take down.
+j8_assert() { # <id>
+  local id="$1" out rc said=0
+  out="$(j_run 'HTTP/2.0 404 Not Found' '' ok --yes)"; rc=$?
+  case "$out" in *'does not exist — nothing to take down'*) said=1 ;; esac
+  if [ "$rc" -ne 0 ]; then
+    FAIL "$id: CONTROL — unpublish where the host reports the repository absent (404) read rc=$rc, want 0"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: CONTROL — rc=0, but the no-op line is not the absent repository's"
+  else
+    PASS "$id: CONTROL — a repository the host reports absent (404) is the no-op it always was, rc=0, so J7's refusal is the lookup's distinction and not a lookup that always refuses"
+  fi
+}
+j4_assert "J4"
+j5_assert "J5"
+j6_assert "J6"
+j7_assert "J7-disable" disable
+j7_assert "J7-delete" delete
+j8_assert "J8"
+md_flips _host_answer "J4" j4_assert "J4"
+md_flips _host_answer "J5" j5_assert "J5"
+md_flips _host_answer "J6" j6_assert "J6"
+md_flips _host_answer "J7-disable" j7_assert "J7-disable" disable
+md_flips _host_answer "J7-delete" j7_assert "J7-delete" delete
+md_flips _host_answer "J8" j8_assert "J8"
 unset -f gh
 
 echo "Plaintext content guard (#123):"
