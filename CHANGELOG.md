@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-11-20 — Each traveller's planning-day window has one home
+## [0.75.0] — 2026-11-20 — Each traveller's planning-day window has one home
 
 Each traveller's planning-day window now lives in one file, `outputs/traveler-presence.md`, which
 the enrichment agent's reconciler rebuilds beside the traveller model on every pass, and which
