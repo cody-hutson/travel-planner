@@ -1,6 +1,6 @@
 # ADR-049: What a rebuild owes — `ADR-007` § 2 bound 5 read per unit: a unit no surviving input can rebuild is preserved or named before the write, a unit rebuilt from surviving inputs owes nothing, and erasure is the bound's one exception
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-22)
 - **Deciders:** repo maintainer
 - **Driving work:** #1493, in the *Each traveller's planning-day window has one home* milestone.
   Its direction was settled at the backlog review of 2026-10-24 (Saturday), and this record

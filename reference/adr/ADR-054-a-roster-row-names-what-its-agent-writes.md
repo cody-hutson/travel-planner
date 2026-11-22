@@ -1,6 +1,6 @@
 # ADR-054: A roster row names what its agent writes — the enrichment row's `Output File` cell names the presence file, as declared until the writer ships and as written after it, superseding ADR-028 Decision 4 in part
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-22)
 - **Deciders:** repo maintainer
 - **Driving work:** #1503, in the *Each traveller's planning-day window has one home* milestone.
   The repository's maintainer ruled, at the collective review of an earlier milestone, that the
