@@ -10,12 +10,14 @@ Every verb now reads one file before it acts: the trip-resolution contract. It h
 other bodies of text that only some steps use move out of the charter too, into the reference
 file that owns each: the site's design and build guidance, the archived-trip freeze rule, the
 verb-body budget and the publish script's operator runbook. `CLAUDE.md` goes from 145,019 to
-88,684 bytes. No gate of the ladder and no verb's behaviour changes. Each moved text is verbatim
-apart from the citations it carries, and the suites that read it read it in its new home.
+88,684 bytes. No gate of the ladder changes. Each moved text is verbatim apart from its citations
+and the few sentences the move made false, which are rewritten where they stand and named below.
+One verb's grants change. The suites that read the moved text read it in its new home.
 
 **The contract has a file of its own.** `reference/trip-resolution.md` holds § *Resolving a trip*
 verbatim: the gate ladder, the evidence entries, the data-root pointer and the refusal predicate.
-Its opening is reworded to say where it lives and who reads it. Every verb reads it once per
+Its opening is reworded to say where it lives and who reads it, and its sentence on how
+`/trip-publish` reads the data-root pointer is rewritten for that verb's new grant. Every verb reads it once per
 invocation, before it acts, whether the engine sits in the workspace or is installed, and
 `CLAUDE.md` § *Step 2* assigns that read. A free-form request in chat reaches it through the
 pointer `CLAUDE.md` keeps where a request is classified. The contract suite reads the contract
@@ -42,9 +44,10 @@ The move changes one existing file's class, `CLAUDE.md`'s, from `first-read` to 
 **The other moves.**
 - § *Travel Site Generation*'s four site-building subsections are now § 10 of
   `reference/site-layout-spec.md`. The charter keeps a pointer above § *Updating the site*.
-- § *Archived trips*, the freeze rule, is now `reference/trip-lifecycle.md`. The charter keeps a
+- § *Archived trips*, the freeze rule, is now `reference/trip-lifecycle.md`. Its placement note,
+  which counted where the rule had stood, is restated without the counts. The charter keeps a
   short section that cites it.
-- § *Verb body size* is dropped. Its budget statement is now a note in `reference/size-fence.md`;
+- § *Verb body size* is dropped. Its budget is restated as a note in `reference/size-fence.md`;
   its per-verb table, which nothing read, is gone.
 - The publish script's operator runbook is now `reference/publishing-runbook.md`: the passphrase,
   the repo name, updating and listing a site, where a rotation stops, what a takedown needs, and
@@ -58,7 +61,7 @@ three things:
 - a verb opens the charter on the step that names it;
 - a dispatch roster is counted one hop out.
 
-It is ratified at this release's close. Seventeen existing records cited a moved section in the
+It is ratified at this release's close. Sixteen existing records cited a moved section in the
 present tense, or made a claim the moves made false. Each is amended in place, with an entry in its `## Amendment history`.
 Dated statements, rejected options and past-wave tables are kept as written.
 
@@ -67,15 +70,15 @@ by its exact heading, wherever the contract lives. It holds that table against e
 file's own header in both directions, so a consumer listed in one and missing from the other is
 a finding. A naive move of the section would have hidden exactly that drift.
 
-**Size fence.** Read against `v0.75.0`, this branch's merge base, `CH_EMIT=growth bash
+**Size fence.** Read against `v0.75.0`, the release before this one, `CH_EMIT=growth bash
 scripts/test-corpus-hygiene.sh` lists one row new, one raised and one lowered, and every other
 row kept.
 - `CLAUDE.md` was re-pinned from 153,381 to 97,553 bytes. It measures 88,684 after the moves, and
   a ceiling 64,697 bytes above its size would let it grow back unseen.
 - `reference/trip-resolution.md` is new at 41,723 bytes, its 37,930 plus headroom, and
   `CH_FIRST_READ_CEILING` takes the same value.
-- `reference/site-layout-spec.md` was raised from 71,892 to 79,105. Its new § 10 added 5,219 bytes,
-  taking the file to 71,932.
+- `reference/site-layout-spec.md` was raised from 71,892 to 79,105. It grew 5,219 bytes to 71,932:
+  § 10's 5,200 and a re-pointed citation's 19.
 - Every other row was kept:
   - The amended records grew by at most 1,888 bytes (`ADR-021`), each beneath its row.
   - `skills/trip-publish/SKILL.md` grew 1,238 to 46,511, beneath 48,711.
