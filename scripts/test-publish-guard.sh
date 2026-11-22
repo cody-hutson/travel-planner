@@ -16343,6 +16343,10 @@ rv54_finish() { # <stop> <pid> -> A's exit status, or 255 when it had to be kill
 }
 # A declared trip, so confirm reaches its first write with nothing to record: one approver, threshold all.
 rv54_declare() { printf 'threshold=all\napprover=zqa1\n' > "$1/.approvers"; }
+# The exit statuses are the header's documented contract — 75 for a lock a running command holds, 76 for one whose
+# holder is not running or whose record cannot be read — written here as numbers rather than read from the script's
+# own constants, so a changed constant is a finding rather than a silent re-pin, and so an arm run against code
+# without the lock fails rather than aborting the suite on an unset name.
 rv54h_assert() { # <id> <update|rotate|publish|unpublish|confirm> [unlocked]
   local id="$1" verb="$2" how="${3:-}" name d bare out rc arc h0 h1 c0 c1 hb p0 p1 r0=0 r1=0 reached=0 said=0
   local k1='rv-lock-holder-synthetic-key-73'
@@ -16366,8 +16370,8 @@ rv54h_assert() { # <id> <update|rotate|publish|unpublish|confirm> [unlocked]
   arc="$(rv54_finish "$d.stop" "$RV54_PID")"
   if [ "$reached" -eq 0 ]; then
     FAIL "$id: the holder never reached its wait inside update, so no command held the lock while $verb ran. VERDICT WITHHELD"
-  elif [ "$rc" -ne "$TRIP_LOCK_HELD_RC" ]; then
-    FAIL "$id: $verb on a trip whose lock a running update holds read rc=$rc, want $TRIP_LOCK_HELD_RC — it did not refuse at once on the lock"
+  elif [ "$rc" -ne 75 ]; then
+    FAIL "$id: $verb on a trip whose lock a running update holds read rc=$rc, want 75 — it did not refuse at once on the lock"
   elif [ "$said" -eq 0 ]; then
     FAIL "$id: $verb refused (rc=$rc) without naming the running update as the holder"
   elif [ "$h1" != "$hb" ] || [ "$c1" != "$c0" ] || [ "$p1" != "$p0" ] || [ "$r1" != "$r0" ]; then
@@ -16375,7 +16379,7 @@ rv54h_assert() { # <id> <update|rotate|publish|unpublish|confirm> [unlocked]
   elif [ "$arc" != 0 ] || [ "$(rv_head "$bare")" = "$h0" ]; then
     FAIL "$id: the holder's own update did not finish once released (rc=$arc) — the refusal disturbed the command holding the lock"
   else
-    PASS "$id: $verb on a trip whose lock a running update holds refuses at once with exit status $TRIP_LOCK_HELD_RC, names the holder, and changes nothing; the holder then finishes"
+    PASS "$id: $verb on a trip whose lock a running update holds refuses at once with exit status 75, names the holder, and changes nothing; the holder then finishes"
   fi
 }
 for rv_b in update rotate publish unpublish confirm; do rv54h_assert "RV54-held-$rv_b" "$rv_b"; done
@@ -16424,14 +16428,14 @@ rv54s_assert() { # <id>
   ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc2=$?
   if [ "$reached" -eq 0 ] || [ "$left" -eq 0 ]; then
     FAIL "$id: the holder never reached its wait (reached=$reached), or no lock was left after SIGKILL (left=$left). VERDICT WITHHELD"
-  elif [ "$rc" -ne "$TRIP_LOCK_STALE_RC" ]; then
-    FAIL "$id: update on a trip whose lock a killed run left read rc=$rc, want $TRIP_LOCK_STALE_RC"
+  elif [ "$rc" -ne 76 ]; then
+    FAIL "$id: update on a trip whose lock a killed run left read rc=$rc, want 76"
   elif [ "$said" -eq 0 ]; then
     FAIL "$id: the refusal does not say the holder is not running on this machine, or does not name the lock's removal"
   elif [ "$rc2" -ne 0 ]; then
     FAIL "$id: once the lock was removed, update read rc=$rc2, want 0"
   else
-    PASS "$id: a lock a killed run left is never broken automatically — the next command exits $TRIP_LOCK_STALE_RC saying its holder is not running and naming the removal, and runs once it is removed"
+    PASS "$id: a lock a killed run left is never broken automatically — the next command exits 76 saying its holder is not running and naming the removal, and runs once it is removed"
   fi
 }
 rv54s_assert "RV54-stale"
@@ -16441,12 +16445,12 @@ rv54u_assert() { # <id>
   name="rv54u-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-unread-synthetic-key-76')"; mkdir "$d/.publish-lock"
   out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) 2>&1 )"; rc=$?
   rv_has "$out" 'its record cannot be read' && said=1
-  if [ "$rc" -ne "$TRIP_LOCK_STALE_RC" ]; then
-    FAIL "$id: update on a trip whose lock holds no readable record read rc=$rc, want $TRIP_LOCK_STALE_RC"
+  if [ "$rc" -ne 76 ]; then
+    FAIL "$id: update on a trip whose lock holds no readable record read rc=$rc, want 76"
   elif [ "$said" -eq 0 ]; then
     FAIL "$id: the refusal does not say the lock's record cannot be read"
   else
-    PASS "$id: a lock with no readable record refuses with exit status $TRIP_LOCK_STALE_RC, saying its record cannot be read"
+    PASS "$id: a lock with no readable record refuses with exit status 76, saying its record cannot be read"
   fi
 }
 rv54u_assert "RV54-unreadable-holder"
