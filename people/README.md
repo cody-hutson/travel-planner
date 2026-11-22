@@ -6,7 +6,7 @@ need, how someone travels: these do not change when the trip does, so they are
 answered once, in a record, and referenced from each trip instead of re-asked.
 
 **Your records live in the `people/` folder of your data folder** — the folder
-`~/.travel-planner/data-root` names; the engine's `CLAUDE.md` § *Resolving a trip* says how
+`~/.travel-planner/data-root` names; the engine's `reference/trip-resolution.md` § *Resolving a trip* says how
 it is found. This file is kept in both of the places it is read: beside your records
 there, and in the engine's own `people/` folder, which holds this file and never a record.
 Everything below describes the store in your data folder, except the section whose heading

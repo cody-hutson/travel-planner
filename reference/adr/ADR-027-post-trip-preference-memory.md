@@ -803,8 +803,8 @@ it rather than with the offer.
 - `templates/person-intake.template.md` — the form the field lands on.
 - `scripts/test-artifact-schema.sh` — `HZ0`–`HZ2`, `ER14` and `GM1`–`GM3`.
 - `reference/trip-lifecycle.md` — § *Archived trips — what the freeze binds*.
-- `CLAUDE.md` — § *Resolving a trip* (`G1`, `G4`,
-  `G8`) and § *Key Rules*.
+- `reference/trip-resolution.md` — § *Resolving a trip* (`G1`, `G4`, `G8`).
+- `CLAUDE.md` — § *Key Rules*.
 - `examples/tokyo-2026/trip-context.md` and
   `examples/data-architecture-demo/outputs/satisfaction-metrics.md` — the party-level blocks read
   for § 2's first ground, and the C14 witness whose header W1a-2 accepts.
@@ -834,3 +834,5 @@ stand as decided. The reading is `ADR-017` § 2's —
 of the driving card ran when it raised the omission (#1387, finding F-1).
 
 **Amendment (2026-11-21, Saturday) — *Context*, § *Decision* 1 and *References*: citations of the archived-trip freeze rule re-pointed to `reference/trip-lifecycle.md`; no decision changes.** The rule moved out of `CLAUDE.md` into `reference/trip-lifecycle.md` under the same heading, and each of these cited it in the charter. The A2 row under *Options considered* keeps its citation as written: it is a rejected option's reason, and no amendment rewords one.
+
+**Amendment (2026-11-22, Sunday) — § *References*: the resolution ladder's citation re-pointed; no decision changes.** § *Resolving a trip* moved out of `CLAUDE.md` into `reference/trip-resolution.md` under the same heading, and the `CLAUDE.md` item is split so the ladder's gates are listed under that file and the item keeps § *Key Rules*. It replaces "`CLAUDE.md` — § *Resolving a trip* (`G1`, `G4`, `G8`) and § *Key Rules*".

@@ -5,7 +5,7 @@ assembled one person at a time on every trip.** The same four people going away 
 third time are a group; referencing that group at setup expands it to its members.
 
 **Your group records live in the `groups/` folder of your data folder** — the folder
-`~/.travel-planner/data-root` names; the engine's `CLAUDE.md` § *Resolving a trip* says how it is
+`~/.travel-planner/data-root` names; the engine's `reference/trip-resolution.md` § *Resolving a trip* says how it is
 found. This file is kept in both of the places it is read: beside your records there, and in the
 engine's own `groups/` folder, which holds this file and never a record. Everything below
 describes the store in your data folder, except the section whose heading begins *The engine's

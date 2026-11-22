@@ -19376,7 +19376,7 @@ fi
 #   W5        the artifact grain's instrument: the render table opens at ONE site, and the bound
 #             set, the state vocabulary and the admitted states each read NON-ZERO
 #   W6        the render table's artifacts against § 1.1's bound classes, BOTH directions
-#   W7        every state key against the modes and dispositions CLAUDE.md G5 and G6 declare, and
+#   W7        every state key against the modes and dispositions the contract's G5 and G6 declare, and
 #             every bound class, and every scaffolding token the table names, dispositioned once in
 #             each admitted state. A token whose every row is deleted is not seen: stated, not closed
 #   W8        every rendered home against the § 3 catalog, DERIVED; `—` only on a scaffolding row
@@ -19839,10 +19839,10 @@ fi
 # ═════ THE ARTIFACT GRAIN AND THE SHAPE PASS — RT7, RT8 and the RT0 branches the render table adds. ═════
 #
 # The synthetic engine root above carries the grammar and the spec. The artifact grain also reads
-# the charter's G5 and G6, the verb's `site` row and § 1.1, so those are copied in too: a control
+# the contract's G5 and G6, the verb's `site` row and § 1.1, so those are copied in too: a control
 # whose copy lacked them would fire RT0 for the wrong reason and read as a working control.
 mkdir -p "$W_FXR/skills/trip"
-cp "$ROOT/CLAUDE.md"                      "$W_FXR/CLAUDE.md"
+cp "$ROOT/$RT_CONTRACT_REL"               "$W_FXR/$RT_CONTRACT_REL"
 cp "$W_VERB"                              "$W_FXR/skills/trip/SKILL.md"
 cp "$ROOT/reference/data-architecture.md" "$W_FXR/reference/data-architecture.md"
 
@@ -20128,28 +20128,28 @@ if w_spec_mut 'W-CTL-DUP' "$W_IN"'{ print } inf && F[1] == a1 && !d { printf "%s
 fi
 w_spec_reset
 
-# W-CTL-VOCAB — the charter's G5 loses its parenthesised list of modes on a copy.
-awk 'index($0, "- **G5 ") == 1 { sub(/ \([A-Z]+( \/ [A-Z]+)+\)/, "") } { print }' "$ROOT/CLAUDE.md" > "$W_FXR/CLAUDE.md"
-if cmp -s "$ROOT/CLAUDE.md" "$W_FXR/CLAUDE.md"; then
+# W-CTL-VOCAB — the contract's G5 loses its parenthesised list of modes on a copy.
+awk 'index($0, "- **G5 ") == 1 { sub(/ \([A-Z]+( \/ [A-Z]+)+\)/, "") } { print }' "$ROOT/$RT_CONTRACT_REL" > "$W_FXR/$RT_CONTRACT_REL"
+if cmp -s "$ROOT/$RT_CONTRACT_REL" "$W_FXR/$RT_CONTRACT_REL"; then
   FAIL "W-CTL-VOCAB: the mutation did not land, so this control proves nothing"
 else
-  w_ctl_fire 'W-CTL-VOCAB' RT0 1 "G5's list of modes is removed from a copy of the charter — an empty vocabulary is a broken reader, never a table with nothing to check" \
+  w_ctl_fire 'W-CTL-VOCAB' RT0 1 "G5's list of modes is removed from a copy of the contract — an empty vocabulary is a broken reader, never a table with nothing to check" \
     -- rt_artifact_contract "$W_FXR"
 fi
-cp "$ROOT/CLAUDE.md" "$W_FXR/CLAUDE.md"
+cp "$ROOT/$RT_CONTRACT_REL" "$W_FXR/$RT_CONTRACT_REL"
 
-# W-CTL-VOCABd — the charter's G6 writes its decided disposition as a word on a copy, not as the
+# W-CTL-VOCABd — the contract's G6 writes its decided disposition as a word on a copy, not as the
 # bolded code span the reader takes it from: the decided axis reads empty, which is a broken reader.
 # The span is the one the reader returned on this run, so this control holds no disposition.
 W_DTOK="$(awk -F'\t' '$1 == "dest" && !s { print $2; s = 1 }' <<<"$W_VOC")"
-awk -v n="→ **\`$W_DTOK\`**" 'index($0, "- **G6 ") == 1 && n != "→ **``**" { i = index($0, n); if (i) $0 = substr($0, 1, i - 1) "→ decided" substr($0, i + length(n)) } { print }' "$ROOT/CLAUDE.md" > "$W_FXR/CLAUDE.md"
-if cmp -s "$ROOT/CLAUDE.md" "$W_FXR/CLAUDE.md"; then
+awk -v n="→ **\`$W_DTOK\`**" 'index($0, "- **G6 ") == 1 && n != "→ **``**" { i = index($0, n); if (i) $0 = substr($0, 1, i - 1) "→ decided" substr($0, i + length(n)) } { print }' "$ROOT/$RT_CONTRACT_REL" > "$W_FXR/$RT_CONTRACT_REL"
+if cmp -s "$ROOT/$RT_CONTRACT_REL" "$W_FXR/$RT_CONTRACT_REL"; then
   FAIL "W-CTL-VOCABd: the mutation did not land, so this control proves nothing"
 else
-  w_ctl_fire 'W-CTL-VOCABd' RT0 1 "G6's decided disposition is reworded out of its code span on a copy of the charter — a decided axis read empty is a broken reader, never a table with nothing decided" \
+  w_ctl_fire 'W-CTL-VOCABd' RT0 1 "G6's decided disposition is reworded out of its code span on a copy of the contract — a decided axis read empty is a broken reader, never a table with nothing decided" \
     -- rt_artifact_contract "$W_FXR"
 fi
-cp "$ROOT/CLAUDE.md" "$W_FXR/CLAUDE.md"
+cp "$ROOT/$RT_CONTRACT_REL" "$W_FXR/$RT_CONTRACT_REL"
 
 # W-CTL-SITEROW — the `site` row is removed from a copy of the verb.
 awk '!/^\| site \|/' "$W_VERB" > "$W_FXR/skills/trip/SKILL.md"
@@ -20224,7 +20224,7 @@ w5_assert() {   # w5_assert <engine-root>
   nd="$(awk -F'\t' '$1 == "dest" { n++ } END { print n+0 }' <<<"$(rt_state_vocab "$r")")"
   na="$(w_count "$(rt_admitted "$r")")"
   if [ "$sites" = "1" ] && [ "$nrow" -gt 0 ] && [ "$nb" -gt 0 ] && [ "$nm" -gt 0 ] && [ "$nd" -gt 0 ] && [ "$na" -gt 0 ]; then
-    PASS "W5: the artifact grain's instrument is live — the render table opens at ONE site with $nrow row(s), $nx of them excluded and each held to § 9.3 by RT7, § 1.1 yields $nb bound class(es), CLAUDE.md G5 and G6 yield $nm mode(s) and $nd decided disposition(s), and the site row admits $na state(s). Every set is read on this run; none is held here"
+    PASS "W5: the artifact grain's instrument is live — the render table opens at ONE site with $nrow row(s), $nx of them excluded and each held to § 9.3 by RT7, § 1.1 yields $nb bound class(es), $RT_CONTRACT_REL G5 and G6 yield $nm mode(s) and $nd decided disposition(s), and the site row admits $na state(s). Every set is read on this run; none is held here"
   else
     FAIL "W5: the artifact grain's instrument is broken (render-table sites=$sites, rows=$nrow, bound classes=$nb, modes=$nm, decided dispositions=$nd, admitted states=$na) — a zero here makes every comparison below vacuous"
   fi
@@ -20246,7 +20246,7 @@ w6_assert() {   # w6_assert <engine-root>
   fi
 }
 
-# ── W7 — the state keys against the vocabulary CLAUDE.md declares, and coverage of every admitted state.
+# ── W7 — the state keys against the vocabulary the contract declares, and coverage of every admitted state.
 w7_assert() {   # w7_assert <engine-root>
   local r="$1" vocab keys bad nk na out n7
   vocab="$(rt_state_vocab "$r")"
@@ -20256,15 +20256,15 @@ w7_assert() {   # w7_assert <engine-root>
   out="$(rt_artifact_contract "$r" 2>&1)"
   n7="$(awk '$1 == "FINDING" && ($2 == "RT7" || $2 == "RT0") { n++ } END { print n+0 }' <<<"$out")"
   if [ "$(w_count "$vocab")" -eq 0 ]; then
-    FAIL "W7: the state vocabulary read from CLAUDE.md is EMPTY, so no key can be graded"
+    FAIL "W7: the state vocabulary read from $RT_CONTRACT_REL is EMPTY, so no key can be graded"
   elif [ "$nk" -eq 0 ]; then
     FAIL "W7: the render table expands to ZERO (artifact, state) keys, so there is nothing to grade"
   elif [ -n "$bad" ]; then
-    FAIL "W7: render-table state key(s) outside the modes and dispositions CLAUDE.md G5 and G6 declare [$(w_join "$bad")]"
+    FAIL "W7: render-table state key(s) outside the modes and dispositions $RT_CONTRACT_REL G5 and G6 declare [$(w_join "$bad")]"
   elif [ "$n7" -ne 0 ]; then
     FAIL "W7: the artifact grain does not close — $n7 RT7/RT0 finding(s) from the walker's contract half"
   else
-    PASS "W7: every one of the $nk (artifact, state) key(s) the render table declares names a mode G5 resolves and a disposition G6 yields, read from CLAUDE.md on this run, and every bound class, and every scaffolding token the table names, is dispositioned exactly once in each of the $na state(s) the site row admits"
+    PASS "W7: every one of the $nk (artifact, state) key(s) the render table declares names a mode G5 resolves and a disposition G6 yields, read from $RT_CONTRACT_REL on this run, and every bound class, and every scaffolding token the table names, is dispositioned exactly once in each of the $na state(s) the site row admits"
   fi
 }
 

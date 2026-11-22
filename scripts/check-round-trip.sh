@@ -62,7 +62,7 @@
 # ── TWO ROOTS, AND WHY ONE FLAG CANNOT CARRY BOTH ────────────────────────────────
 # `--root` roots the ENGINE: agents/05-hub-planner.md, which owns the itinerary grammar;
 # reference/site-layout-spec.md, which owns the fences and the component catalog; and the
-# three tables the artifact grain reads — § 1.1 of reference/data-architecture.md, CLAUDE.md
+# three tables the artifact grain reads — § 1.1 of reference/data-architecture.md, reference/trip-resolution.md
 # § Resolving a trip gates G5 and G6, and the `site` row of skills/trip/SKILL.md. Those are
 # engine assets and follow this script wherever it is installed.
 # `--data-root` roots the POPULATION: the trip tree whose plan and site are read. They are
@@ -121,7 +121,7 @@
 # carries no component σ does not admit, of those § 3 gives a class.
 #
 # IT CANNOT ESTABLISH that the site it read is the site the verb WROTE. The trip tree lives
-# under the operator's data root (CLAUDE.md § Resolving a trip), and this repository holds
+# under the operator's data root (reference/trip-resolution.md § Resolving a trip), and this repository holds
 # no earlier state of it, so this walk grades the artifact after the write and never the
 # act. Nor can any inspection of any tree establish that a given run INVOKED this walker at
 # all: the suite grades that the verb DECLARES the invocation, and no further.
@@ -141,7 +141,7 @@ set -uo pipefail
 # One spec, one render table, one state flag, read from the engine root. The ELEMENT
 # fences are declared per artifact below, because there is one per rendered artifact.
 RT_SPEC_REL='reference/site-layout-spec.md'
-RT_CHARTER_REL='CLAUDE.md'
+RT_CONTRACT_REL='reference/trip-resolution.md'
 RT_VERB_REL='skills/trip/SKILL.md'
 RT_ARTIFACT_TAG='round-trip-contract-artifacts'
 RT_STATE_FLAG='--state'
@@ -407,7 +407,7 @@ rt_element_contract() {   # rt_element_contract <engine-root>
 # Every set below is READ, and this file holds no copy of any of them: the `bound` classes
 # from reference/data-architecture.md § 1.1 through the validator's own reader, the states
 # the `site` row admits from skills/trip/SKILL.md, the mode and destination dispositions
-# from CLAUDE.md § Resolving a trip, gates G5 and G6, and the component catalog from § 3.
+# from reference/trip-resolution.md § Resolving a trip, gates G5 and G6, and the component catalog from § 3.
 # A reading that returns nothing is a broken instrument and is RT0, never an empty set.
 
 # § 1.1 is read by the validator's reader, sourced on demand and only where it is not
@@ -427,14 +427,14 @@ rt_bound_classes() {   # rt_bound_classes <engine-root> -> one § 1.1 class per 
   va_class_rows "$1" | awk -F'\t' 'NF >= 6 && $6 == "bound" { print $2 }'
 }
 
-# rt_state_vocab <engine-root> -> "<axis>\t<token>" from CLAUDE.md § Resolving a trip:
+# rt_state_vocab <engine-root> -> "<axis>\t<token>" from reference/trip-resolution.md § Resolving a trip:
 #   mode      each mode G5 resolves          mode-any  G5's placeholder disposition (UNSET)
 #   dest      G6's decided disposition        dest-any  G6's placeholder disposition (UNDECIDED)
 # Each disposition is read as the bolded code span its branch writes, the decided one as the
 # placeholder one is. A branch reworded out of its span yields no token: an empty decided axis
 # is RT0, and an empty placeholder narrows what a cell reading `any` admits.
 rt_state_vocab() {
-  local f="$1/$RT_CHARTER_REL"
+  local f="$1/$RT_CONTRACT_REL"
   [ -r "$f" ] || return 1
   awk '
     function after(s, k,   p) { p = index(s, k); return p ? substr(s, p + length(k)) : "" }
@@ -593,7 +593,7 @@ rt_artifact_contract() {   # rt_artifact_contract <engine-root> [spec-rel]
   nmode="$(awk -F'\t' '$1 == "mode" { n++ } END { print n+0 }' <<<"$vocab")"
   ndest="$(awk -F'\t' '$1 == "dest" { n++ } END { print n+0 }' <<<"$vocab")"
   if [ "$nmode" -eq 0 ] || [ "$ndest" -eq 0 ]; then
-    rt_finding RT0 "the state vocabulary read from $RT_CHARTER_REL gates G5 and G6 is empty (modes=$nmode, decided dispositions=$ndest) — no state key can be checked against it"
+    rt_finding RT0 "the state vocabulary read from $RT_CONTRACT_REL gates G5 and G6 is empty (modes=$nmode, decided dispositions=$ndest) — no state key can be checked against it"
     return 2
   fi
   adm="$(rt_admitted "$root")"
@@ -1243,7 +1243,7 @@ rt_main() {
       rt_finding RT0 "$RT_STATE_FLAG was given with --contract-only, which reads no render — nothing was read"; return 2
     fi
     if ! parsed="$(rt_state_parse "$root" "$state")"; then
-      rt_finding RT0 "the $RT_STATE_FLAG value is not <MODE>:<DECIDED|UNDECIDED> with MODE a mode CLAUDE.md § Resolving a trip declares — it is not echoed, and nothing was read"; return 2
+      rt_finding RT0 "the $RT_STATE_FLAG value is not <MODE>:<DECIDED|UNDECIDED> with MODE a mode $RT_CONTRACT_REL § Resolving a trip declares — it is not echoed, and nothing was read"; return 2
     fi
     sm="${parsed%%"$RT_TAB"*}"; sd="${parsed#*"$RT_TAB"}"
   fi

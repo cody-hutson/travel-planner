@@ -594,7 +594,7 @@ does not check them here, and that is precisely why they are written down.**
    every write human-confirmed and still let the record drift toward whatever the most
    recent trip said, one click at a time. Promotion is an explicit act through the
    command surface. Removing a redundant override is a human edit to a human-authored
-   line under the operator's data root (`CLAUDE.md` § *Resolving a trip*) — nothing in this
+   line under the operator's data root (`reference/trip-resolution.md` § *Resolving a trip*) — nothing in this
    repository could restore it, so reporting is cheap and deleting is not reversible at all.
 
 **Which trips get a signal, and which get only a mention.** Resolution is **one trip per

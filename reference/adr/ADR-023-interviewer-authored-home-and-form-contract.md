@@ -389,7 +389,7 @@ the per-field home D2.3 has just made authoritative, so the marker lands in the 
 already names rather than opening a second one. It is **already delimited**, so a reader that can
 find the placeholder can find the marker with no further parse rule. It **travels with the form** to
 the no-repository reader of D4.1, needing no addition to the hand-off set. And it **leaves every
-existing predicate true**: the value still begins with `[` and ends with `]`, so `CLAUDE.md`
+existing predicate true**: the value still begins with `[` and ends with `]`, so `reference/trip-resolution.md`
 § *Resolving a trip*'s placeholder predicate is unchanged, an unfilled field still reads unanswered
 to `ANSWERED()`, and a form's bracketed-placeholder form stays the thing it was — which matters
 because the sibling record's un-asked test reads a surviving placeholder as unasked, and a surviving
@@ -935,3 +935,7 @@ the residual stays readable.
 - `README.md` at the repository root — the install loop that names the shipped verbs literally, the
   uninstall loop that repeats them, and the two sentences stating that updating is a `git pull`,
   which together ground the new-skill rejection
+
+## Amendment history
+
+**Amendment (2026-11-22, Sunday) — § *Decision* 2: the placeholder predicate's citation re-pointed; no decision changes.** § *Resolving a trip* moved out of `CLAUDE.md` into `reference/trip-resolution.md` under the same heading, and the sentence that names the predicate the marker leaves true now names that file. It replaces "`CLAUDE.md` § *Resolving a trip*".

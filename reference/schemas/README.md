@@ -3,7 +3,7 @@
 One file per in-model artifact class. Each carries prose rationale plus exactly one fenced
 `artifact-schema` block, which is the machine-readable half. `scripts/validate-artifacts.sh`
 reads those fences and **holds no copy of them**, the same way
-`scripts/test-trip-resolution-contract.sh` reads `CLAUDE.md`'s evidence list rather than
+`scripts/test-trip-resolution-contract.sh` reads `reference/trip-resolution.md`'s evidence list rather than
 carrying one: a guard with its own copy of the thing it guards is a second source of truth,
 and it stays green while the document drifts away from it.
 
@@ -31,7 +31,7 @@ guard surface is deliberately pure bash:
   **fail-closed gate**, which is the one place that failure is unacceptable.
 
 So the schema is a fenced literal in a closed line grammar — the pattern this repo already
-ships and already CI-guards for `CLAUDE.md § Resolving a trip`. **JSON Schema is deferred,
+ships and already CI-guards for `reference/trip-resolution.md § Resolving a trip`. **JSON Schema is deferred,
 not foreclosed:** the grammar below is a strict `key: value` line form, so emitting `.json`
 from it is a mechanical transform a later slice can add as a derived artifact while keeping
 one home.

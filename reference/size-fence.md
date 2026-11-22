@@ -39,7 +39,8 @@ already weigh. A row the growth summary lists as `unowed` is not re-pinned but r
 release that sees it there, before that release stamps its version.
 
 **The first-verb read is held twice.** The file the classification rule puts in the class
-`first-read` — the charter, which every verb reads before it acts — carries its row like any other
+`first-read` — the trip-resolution contract, `reference/trip-resolution.md`, which every verb reads
+once per invocation before it acts — carries its row like any other
 file and is also bounded by a named constant in the suite. Its row is held equal to that constant,
 and a row above it or below it fails; of the two, the lower is the ceiling
 (`reference/load-class-model.md` § 5, *instrument*), and held equal they are one. Raising its
@@ -104,6 +105,7 @@ same reader. Rows stand in byte order of the path.
 147099     reference/data-architecture.md
 246314     reference/data-model.md
 79105      reference/site-layout-spec.md
+41723      reference/trip-resolution.md
 60026      skills/trip-decommission/SKILL.md
 40851      skills/trip-new/SKILL.md
 48711      skills/trip-publish/SKILL.md

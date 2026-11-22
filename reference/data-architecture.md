@@ -1142,7 +1142,7 @@ reading. The engine guarantees three things and declines to guarantee a fourth.
 >    Guaranteeing otherwise would require rewriting artifacts the engine has no right to rewrite.
 
 **Why this is stated rather than assumed.** The compatibility surface is the operator's data root
-(`CLAUDE.md` § *Resolving a trip*), a directory this repository cannot reach, inspect, or repair. A
+(`reference/trip-resolution.md` § *Resolving a trip*), a directory this repository cannot reach, inspect, or repair. A
 schema change weighed against this guarantee is reversible; one weighed against nothing is not — the
 damage is discovered by a user, in their own working directory, after it is already done.
 
@@ -1525,7 +1525,7 @@ with no site carries no row.
 ```count-assertion-digest
 # sites  path
 39      CHANGELOG.md
-6       CLAUDE.md
+2       CLAUDE.md
 1       SECURITY.md
 3       agents/00-enrichment.md
 5       agents/01-activities.md
@@ -1584,6 +1584,7 @@ with no site carries no row.
 1       reference/schemas/travel-site.md
 1       reference/schemas/trip-context.md
 1       reference/site-layout-spec.md
+4       reference/trip-resolution.md
 4       skills/trip-decommission/SKILL.md
 7       skills/trip-new/SKILL.md
 14      skills/trip-record/SKILL.md

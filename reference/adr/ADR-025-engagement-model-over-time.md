@@ -930,7 +930,8 @@ not by minting a key.
   render-every-relation rule, the no-disposition-column self-guard, and the declared boundary
   § *Decision* 6 adopts rather than widens.
 - `reference/trip-lifecycle.md` — § *Archived trips*: the three model-entry classes and the fixture-completeness rule.
-- `CLAUDE.md` — `G5` and `G8` of the resolution ladder; § *Write ownership*.
+- `reference/trip-resolution.md` — `G5` and `G8` of § *Resolving a trip*.
+- `CLAUDE.md` — § *Write ownership*.
 - `templates/traveler-intake.template.md` — the shipped party-facet prompt examples that carry no
   individuating token, which is why a free-text mention is outside the domain.
 - `examples/data-architecture-demo/outputs/traveler-model.md` — the shipped `Branch` column, and
@@ -939,3 +940,5 @@ not by minting a key.
 ## Amendment history
 
 **Amendment (2026-11-21, Saturday) — § *Decision* 1 and *References*: citations of the archived-trip freeze rule re-pointed to `reference/trip-lifecycle.md`; no decision changes.** The rule, with the model-entry classes an erasure must reach and its fixture-completeness clause, moved out of `CLAUDE.md` into `reference/trip-lifecycle.md` under the same heading. § *Decision* 1 quoted it as "`CLAUDE.md` states", and *References* listed it under `CLAUDE.md` with § *Archived trips*; both now name its new home.
+
+**Amendment (2026-11-22, Sunday) — § *References*: the resolution ladder's citation re-pointed; no decision changes.** § *Resolving a trip* moved out of `CLAUDE.md` into `reference/trip-resolution.md` under the same heading, and the item that listed `G5` and `G8` of the ladder under `CLAUDE.md` is split: the ladder's gates are listed under that file, and the `CLAUDE.md` item keeps § *Write ownership*. It replaces "`CLAUDE.md` — `G5` and `G8` of the resolution ladder; § *Write ownership*".

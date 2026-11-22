@@ -922,7 +922,7 @@ is how a pin decays into decoration.
 
 **The artifact grain.** The fence above is the element grain: one fence per rendered artifact,
 mode-blind. The fence below is the artifact grain: for each state σ the `site` verb admits —
-the trip's mode and its destination's disposition (`CLAUDE.md` § *Resolving a trip*, `G5` and
+the trip's mode and its destination's disposition (`reference/trip-resolution.md` § *Resolving a trip*, `G5` and
 `G6`) — whether each `bound` class renders and where, and which scaffolding the state emits.
 `reference/adr/ADR-031-site-phase-model.md` § 2 decided the rows and
 `reference/adr/ADR-032-site-round-trip-contract.md` the table; `scripts/check-round-trip.sh`

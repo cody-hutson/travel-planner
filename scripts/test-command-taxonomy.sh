@@ -244,7 +244,7 @@
 #    therefore returns a SILENT PLAUSIBLE ZERO — the worst available failure, because the
 #    declared population goes empty and every direction of K becomes vacuously true.
 #    This guard locates the table by its own header row, matched STRUCTURALLY on the five
-#    column names the charter's G7 fixes, so a re-rendering of the row's spacing does not
+#    column names the contract's G7 fixes, so a re-rendering of the row's spacing does not
 #    unhook the locator. Arm G-D1 runs the fence-scoped locator over the LIVE tree
 #    alongside and requires it to be strictly poorer; if the two ever converge the arm
 #    reports NO LONGER DIFFERENTIAL rather than passing.
@@ -586,7 +586,7 @@ DOC_REL='reference/command-reference.md'
 # Named once, here: the consumer harvest, its fixture builder and group T read the table
 # through these two names and from nowhere else, so relocating the contract is one edit to
 # CONTRACT_REL and the harvest follows it rather than reading an empty table where it was.
-CONTRACT_REL='CLAUDE.md'
+CONTRACT_REL='reference/trip-resolution.md'
 CONTRACT_HEADING='### Resolving a trip'
 DOC_MARK_OPEN='<!-- command-surface: derived — regenerate by running scripts/test-command-taxonomy.sh -->'
 DOC_MARK_CLOSE='<!-- /command-surface -->'
@@ -602,7 +602,7 @@ NEEDLES=( '### Step 1:' '### Step 2:' '**Reads:**' 'trip-contract-header'
           "$DOC_MARK_OPEN" "$DOC_MARK_CLOSE" )
 NEEDLES_UNTRIMMED=( 'EXCLUDED: ' '## ' '### 4. ' )
 
-# ── The five column names of the requirement table, fixed by the charter's G7. These are
+# ── The five column names of the requirement table, fixed by the contract's G7. These are
 # NAMES, not a rendering: the anchor matches them trimmed, backtick-stripped and
 # case-folded, so a re-spacing of the header row does not unhook the locator.
 REQ_COLS=( verb lifecycle mode destination depth )
@@ -1051,8 +1051,8 @@ needle_check() {
 #      belong to the region.
 #   6. `**Reads:**` is matched at COLUMN 0 and at fence depth 0 — see the banner, rule 2.
 #   7. A file whose declared role is CREATE takes the body after the contract-header block
-#      as its single verb's implementing region. The role is read from the charter's
-#      consumer table, LIVE, so the carve-out moves when the charter moves; it is never a
+#      as its single verb's implementing region. The role is read from the contract's
+#      consumer table, LIVE, so the carve-out moves when the contract moves; it is never a
 #      filename test.
 # ─────────────────────────────────────────────────────────────────────────────────
 parse_command_file() {
@@ -1114,7 +1114,7 @@ parse_command_file() {
     done
   fi
   # The role this file declares for itself, read from its own header block — the witness group T
-  # holds the charter's consumer table against. '-' where the block is absent or carries no such line.
+  # holds the contract's consumer table against. '-' where the block is absent or carries no such line.
   printf 'HDRROLE %s %s\n' "$cmd" "$hdrrole"
 
   # --- the requirement table, anchored on its own header row at fence depth 0 ---
@@ -1699,7 +1699,7 @@ charter_check() {
 # consumer_check <records>
 #
 # The consumer harvest is TOTAL, and every role it declares AGREES with the role the consumer
-# declares for itself. The harvest reads the charter's consumer table; a reader cannot witness
+# declares for itself. The harvest reads the contract's consumer table; a reader cannot witness
 # its own loss, because a second read of the same table shares its anchor and a relocation
 # empties both together. The witness therefore sits where the section cannot take it: each
 # command file declares itself in its own contract-header block (HDRROLE). Both sides are
@@ -3595,7 +3595,7 @@ inference_check() {
   # the obligation is a property of an arm that retains declared intent, and deriving the side
   # here keeps C2 answerable even on a tree where the marker and the source disagree.
   #
-  # THE TYPED-ONLY LIMB IS SCOPED BY ROLE, and the scope is the charter's, not this guard's. The
+  # THE TYPED-ONLY LIMB IS SCOPED BY ROLE, and the scope is the contract's, not this guard's. The
   # posture's second half is a clause saying the verb is the one the user typed. A CREATE-role
   # file takes an ARGUMENT rather than a verb — its "verb" is a branch label, never a typed token —
   # so that clause would be a false declaration there, and requiring it would ask a file to state
@@ -3797,7 +3797,7 @@ derive_surface_block() {
 # special case beside it.
 #
 # H1/H2/H3 fire only on a RESOLVE-role file. The role comes from the ROLE record the
-# charter emits, read LIVE, so the carve-out moves when the charter moves; it is never a
+# charter emits, read LIVE, so the carve-out moves when the contract moves; it is never a
 # filename test. A file with no ROLE record defaults to RESOLVE, which is the same default
 # the record-collection path already applies.
 # ─────────────────────────────────────────────────────────────────────────────────
@@ -5381,7 +5381,7 @@ T_ROWS="$(getcount "$CH_OUT" CONS_ROWS)"; T_DIST="$(getcount "$T_OUT" TDIST)"
 T_FILES="$(getcount "$T_OUT" TFILES)"; T_AGREE="$(getcount "$T_OUT" TAGREE)"
 if has_finding "$ALL" "$(surface T1 T3)"; then FAIL "T1: the consumer harvest is not total — a command file the consumer table declares no row for falls to the RESOLVE default, a row names no command file, or a command is declared twice"; show "$ALL" 'T1|T3'
 elif [ "${T_ROWS:-0}" -eq 0 ] || [ "${T_FILES:-0}" -eq 0 ] || [ "${T_ROWS:-0}" -ne "${T_FILES:-0}" ] || [ "${T_DIST:-0}" -ne "${T_FILES:-0}" ]; then FAIL "T1: NOT EVALUATED — the consumer harvest read ${T_ROWS:-0} row(s) from ${CONTRACT_REL} and the command directory holds ${T_FILES:-0} file(s); an empty side is a failure here, never a pass"
-else PASS "T1: the consumer harvest read ${T_ROWS} row(s) from ${CONTRACT_REL} under \"${CONTRACT_HEADING}\", naming ${T_DIST} distinct command(s), and the command directory holds ${T_FILES} file(s) — equal as sets in both directions, none declared twice. Both sides are derived, the declared side from the charter's own table and the other from the directory, so this is a measured equality and not a floor a vanished table satisfies"; fi
+else PASS "T1: the consumer harvest read ${T_ROWS} row(s) from ${CONTRACT_REL} under \"${CONTRACT_HEADING}\", naming ${T_DIST} distinct command(s), and the command directory holds ${T_FILES} file(s) — equal as sets in both directions, none declared twice. Both sides are derived, the declared side from the contract's own table and the other from the directory, so this is a measured equality and not a floor a vanished table satisfies"; fi
 if has_finding "$ALL" "$(surface T2)"; then FAIL "T2: a role the consumer table declares differs from the population-role the consumer's own contract header declares"; show "$ALL" 'T2'
 elif [ "${T_AGREE:-0}" -eq 0 ] || [ "${T_AGREE:-0}" -ne "${T_ROWS:-0}" ]; then FAIL "T2: NOT EVALUATED — ${T_AGREE:-0} of ${T_ROWS:-0} harvested role(s) were compared"
 else PASS "T2: each of the ${T_AGREE} role(s) the consumer table declares equals the population-role its own file's contract header declares — the CREATE carve-out and every RESOLVE row, a disagreement in either direction being the finding"; fi
@@ -6575,8 +6575,8 @@ ctl GS2  S2 "only ONE enumeration derivable — SINGLE-SOURCE, not agreement"   
 
 # ── group T — the consumer harvest. Each world differs from the conforming one by ONE planted
 # defect, and G0b grades the conforming world silent, so each finding below is its defect's.
-ctl GT0  A0 "the consumer table relocated out of the home CONTRACT_REL names, nothing re-pointed — the harvest reads no row" consmoved ok '! grep -qxF "$CONTRACT_HEADING" "$WORK/GT0/$CONTRACT_REL" && grep -qxF "$CONTRACT_HEADING" "$WORK/GT0/reference/moved-contract.md"'
-ctl GT0b T1 "the same relocation, per file — every command file falls to the RESOLVE default, the CREATE carve-out among them" consmoved ok '! grep -qxF "$CONTRACT_HEADING" "$WORK/GT0b/$CONTRACT_REL"'
+ctl GT0  A0 "the consumer table relocated out of the home CONTRACT_REL names, nothing re-pointed — the harvest reads no row" consmoved ok '! grep -qsxF "$CONTRACT_HEADING" "$WORK/GT0/$CONTRACT_REL" && grep -qxF "$CONTRACT_HEADING" "$WORK/GT0/reference/moved-contract.md"'
+ctl GT0b T1 "the same relocation, per file — every command file falls to the RESOLVE default, the CREATE carve-out among them" consmoved ok '! grep -qsxF "$CONTRACT_HEADING" "$WORK/GT0b/$CONTRACT_REL"'
 ctl GT1  T1 "one consumer row removed — the shrunken harvest, /trip-new falling to the RESOLVE default" consshrunk ok '! grep -qF "${BT}/trip-new${BT} | ${BT}G2${BT}" "$WORK/GT1/$CONTRACT_REL" && grep -qF "${BT}/trip-record${BT} | ${BT}G8${BT}" "$WORK/GT1/$CONTRACT_REL"'
 ctl GT1b T1 "a consumer row naming a command no file answers" consorphan ok 'grep -qF "${BT}/trip-ghost${BT}" "$WORK/GT1b/$CONTRACT_REL" && [ ! -e "$WORK/GT1b/skills/trip-ghost" ]'
 ctl GT2  T2 "the table declares RESOLVE where the file declares CREATE" consrolecr ok 'grep -qF "${BT}/trip-new${BT} | ${BT}G2${BT} | ${BT}RESOLVE${BT}" "$WORK/GT2/$CONTRACT_REL" && grep -qxF "population-role: CREATE" "$WORK/GT2/skills/trip-new/SKILL.md"'

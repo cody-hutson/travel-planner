@@ -705,7 +705,7 @@ this record says *is* reached, through the operator.
 > `/trip-record` verb is `mode: any`.
 
 **And mode is explicitly *not* an artifact-availability axis.** The corpus nowhere states that
-claim, and `CLAUDE.md`:355 forbids the inference in terms: *"**Never infer a mode** — not from the
+claim, and `reference/trip-resolution.md` § *Resolving a trip*, gate `G5`, forbids the inference in terms: *"**Never infer a mode** — not from the
 destination, not from which files exist, not from the request's wording."* Corroborated
 structurally: the destination shortlist is `internal` and `rebuilt-each-synthesis`, so once
 produced it persists on disk in every later mode; what a mode change alters is whether it is
@@ -1008,3 +1008,5 @@ unchanged in kind: they grade the authored text a session follows, not a session
 R-rule, CH-2's W-test cell and its marker are unchanged.
 
 **Amendment (2026-11-21, Saturday) — § *Decision* 4, *Findings and observations carried*, *Follow-on build slices* and *References*: citations of the archived-trip freeze rule re-pointed to `reference/trip-lifecycle.md`; no decision changes.** These passages cited the rule in `CLAUDE.md` by line — `:123-133`, `:123`, `:125`, `:130` and `:131-133` — and *References* also listed § *Archived trips* there. The line numbers had already drifted from the text they named, and the rule has since moved out of the charter into `reference/trip-lifecycle.md` under the same heading, so each now cites that section. The quotations beside them are unchanged.
+
+**Amendment (2026-11-22, Sunday) — § *Decision* 4: the citation of `G5`'s rule against inferring a mode re-pointed; no decision changes.** The passage cited the rule by line, as `CLAUDE.md`:355. § *Resolving a trip* has since moved out of `CLAUDE.md` into `reference/trip-resolution.md` under the same heading, so it now cites gate `G5` of that section by name. It replaces "`CLAUDE.md`:355". The quotation beside it is unchanged.

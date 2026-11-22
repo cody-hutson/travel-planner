@@ -1,6 +1,6 @@
 # Artifact schema — C23 `groups/<group>.md`
 
-The reusable-group record — one file per named set of people, held across trips rather than assembled inside each one. It is the **second class in the model that is not per-trip**, and the second whose real store lives under the operator's data root (`CLAUDE.md` § *Resolving a trip*), so the tracked witness under `examples/` is the only instance this gate can ever reach. `reference/adr/ADR-016-reusable-groups.md` is authoritative for the decisions behind it.
+The reusable-group record — one file per named set of people, held across trips rather than assembled inside each one. It is the **second class in the model that is not per-trip**, and the second whose real store lives under the operator's data root (`reference/trip-resolution.md` § *Resolving a trip*), so the tracked witness under `examples/` is the only instance this gate can ever reach. `reference/adr/ADR-016-reusable-groups.md` is authoritative for the decisions behind it.
 
 The fenced block below is the machine-readable half; `scripts/validate-artifacts.sh` reads it and holds no copy of it. Everything outside the fence is rationale.
 

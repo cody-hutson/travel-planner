@@ -647,18 +647,18 @@ CH_SIZE_PARAM_TAG='load-class-parameters'
 CH_SIZE_RETRO_REV='cb33116bbb5fee4be88fe73708ebcadfe94ec708'
 CH_SIZE_LETTER='K'
 # The first-verb read's ceiling. Every file reference/load-class-model.md § 4 classes first-read —
-# the charter, which every verb reads once per invocation before it acts — is bounded by this byte
-# count as well as by its row in the size-ceiling fence, and fails above the lower of the two. It
-# is a ceiling on that read, not an always-loaded budget: in the decided posture the engine is an
-# installed capability, and the charter is read by a verb rather than loaded when a session starts
-# (reference/adr/ADR-021-installable-capability.md, Decision 1, as amended). It is a CONSTANT of
+# the trip-resolution contract, reference/trip-resolution.md, which every verb reads once per
+# invocation before it acts — is bounded by this byte count as well as by its row in the
+# size-ceiling fence, and fails above the lower of the two. It is a ceiling on that read, not an
+# always-loaded budget and not the whole of what a verb reads: a verb that opens the charter on a
+# step pays for that read beside it (reference/adr/ADR-056-what-a-verb-reads-before-it-acts.md). It is a CONSTANT of
 # the detector, deliberately not an environment knob: a gate whose strictness can be set by the
 # caller is not a gate. It is changed by editing the line below, in a diff someone reviews, and
 # that is the point — the file's row is held equal to it, so a row moved on its own fails, and
 # re-pinning that row writes this line to the same value in the same change. It was seeded at the
 # file's size plus the headroom the load-class-parameters fence declares for its class, and is
 # re-derived the same way when it is moved on purpose.
-CH_FIRST_READ_CEILING='153381'
+CH_FIRST_READ_CEILING='41723'
 
 pass=0; fail=0; skip=0; vacuous=0; SKIPPED=""; VACUOUS_IDS=""
 PASS()    { printf '  \033[1;32mPASS\033[0m %s\n' "$*"; pass=$((pass+1)); }

@@ -652,7 +652,7 @@ in the table above changes.
 
 - Dispatcher and context-scoping rules being addressed: `CLAUDE.md` → "How to Use This (Claude Code
   as Primary Interface)", Step 1 and Step 2 tables.
-- Artifact implementing §2's sixth bound (a field read by value, with absence as its own branch): `CLAUDE.md` → "Resolving a trip", the single normative home of the trip-resolution gate ladder.
+- Artifact implementing §2's sixth bound (a field read by value, with absence as its own branch): `reference/trip-resolution.md` → "Resolving a trip", the single normative home of the trip-resolution gate ladder.
 - Agent roster addressed by the surface: `agents/` (nine agents; roster table in `CLAUDE.md`).
 - TTY-conditional gates and the plaintext branch: `scripts/publish-trip-site.sh` → `cmd_publish`,
   `cmd_unpublish`, `verify_ciphertext`. The plaintext content guard that #123 recorded as missing
@@ -686,3 +686,5 @@ and the 2026-09-26 account said that residual was "still a silent re-key" whose 
 unchanged". `cmd_update` now refuses before its resolver, and the precondition in `/trip-publish` that asserted
 the file has retired, so both sentences are corrected where they stand. The precondition that refuses whenever
 the variable is set stays. No row, disposition or reason in § 4's table changes, and no decision moves.
+
+**Amendment (2026-11-22, Sunday) — § *References*: the trip-resolution gate ladder's citation re-pointed; no decision changes.** § *Resolving a trip* moved out of `CLAUDE.md` into `reference/trip-resolution.md` under the same heading, and the item naming it as the artifact implementing § 2's sixth bound now names that file. It replaces "`CLAUDE.md` → "Resolving a trip"". § 2's first bound needs no amendment: it bounds a scoped invocation to the context its Step-2 row assigns, and `CLAUDE.md` § *Step 2* assigns every verb the read of the file its `Contract:` line names, so it stays true as written.

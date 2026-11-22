@@ -257,7 +257,7 @@ independent state, and a tokenized entry would publish an erased person's values
 It **never skips silently**. The row's text is Wave 1's.
 
 **Currency — how it stays current when a traveller edits their form.** Report-only throughout: no gate
-blocks on any of it (`CLAUDE.md` G8; `/trip-publish` rule 7). The chain is R0 to R3 in
+blocks on any of it (`reference/trip-resolution.md` G8; `/trip-publish` rule 7). The chain is R0 to R3 in
 [the site-transitions record](ADR-035-site-transitions-and-refresh.md): the named
 reconcile step rewrites the snapshot, `itinerary-to-build` reads `BEHIND`, the organizer confirms, and
 `build-to-published` reads `BEHIND` until the republish. **A form edited by hand** is observed by nothing
@@ -460,3 +460,7 @@ Wave-1 working notes on its Stage-6 sub-task, #1392:
 - Provenance: the card, #1296; its design sub-task, #1388, carrying the operator's D-3 and the
   group-snapshot step; decision Q on #1385; the plan, its surface map, the fit review, CR-2 and R2 on
   #1369; and the Wave-1 working notes this record's build detail moved to, on #1392.
+
+## Amendment history
+
+**Amendment (2026-11-22, Sunday) — § *Decision*, *Currency*: the `G8` citation re-pointed; no decision changes.** § *Resolving a trip* moved out of `CLAUDE.md` into `reference/trip-resolution.md` under the same heading, and the pointer to `G8` now names that file. It replaces "`CLAUDE.md` G8".

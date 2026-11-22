@@ -704,7 +704,7 @@ yet exist.
 
 **Where the file itself is absent, the reader says the windows are not yet derived, and names
 `/trip-record travelers`.** The exit is a report rather than a stop because freshness is report-only:
-`G8` never changes a resolution, and no gate may be added that blocks on freshness (`CLAUDE.md`
+`G8` never changes a resolution, and no gate may be added that blocks on freshness (`reference/trip-resolution.md`
 § *Resolving a trip*, gate `G8`). **A placement reader carries `(assumed)` into whatever it places under
 that default** — the whole-group anchor scheduling places, the stream transport sizes and prices — as
 § *Presence* already requires of anything that cites the set under an assumed window.
@@ -1059,7 +1059,8 @@ schema, a witness, a reach row and the reader re-points — and this record pays
 - `reference/adr/ADR-025-engagement-model-over-time.md` — finding 4
 - `reference/adr/ADR-027-post-trip-preference-memory.md` — names this decision as a sibling premise
 - `CLAUDE.md` — § *Write ownership*, the agent roster, § *Step 2* on what a read is,
-  § *Resolving a trip* (`G0-root`, `G8`), § *Dispatching agents*, and the File Structure tree
+  § *Dispatching agents*, and the File Structure tree
+- `reference/trip-resolution.md` — § *Resolving a trip* (`G0-root`, `G8`)
 - `agents/00-enrichment.md`, `agents/03-scheduling.md`, `agents/04-transport.md`,
   `agents/05-hub-planner.md`, `agents/06-validator.md`
 - `templates/trip-context.template.md`, `templates/traveler-intake.template.md`
@@ -1108,3 +1109,5 @@ set, are scoped to `54586fd`, where each was measured. Later releases added a di
 lines the decisions reach, and the criterion each list instances reaches them unedited. Line
 locators and the numbers rule 15, rule 16 and reach row 31 are not amended: the Baseline paragraph
 scopes every locator to `54586fd`, and § *Decision* has each slice derive its number at its own base.
+
+**Amendment (2026-11-22, Sunday) — § *Decision* 12 and § *References*: citations of the resolution ladder re-pointed; no decision changes.** § *Resolving a trip* moved out of `CLAUDE.md` into `reference/trip-resolution.md` under the same heading, and § *Decision* 12's pointer to `G8` now names that file, and the *References* item is split so the ladder is listed under it. The *Context* sentence on where parallel releases were editing, and the two rejected exits under D-13, keep their citations as written: the first states what was true when this record was authored, and the others are rejected options' reasons.

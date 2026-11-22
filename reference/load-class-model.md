@@ -44,9 +44,11 @@ the agent as its instructions, so its bytes are paid in both.
 (`reference/adr/ADR-021-installable-capability.md` § *Decision* 1, as amended on 2026-09-18). The
 engine has a directory of its own, a verb is reached without opening it, and the directory
 carries a skill file at its root — the guided-entry surface, which names a verb and runs none. In
-this posture **the charter is not auto-loaded.** It is read: once per invocation by a verb, and live
-by the guided-entry surface when a request is routed to it. Every class and every parameter below
-is stated against this posture.
+this posture **the charter is not auto-loaded.** A verb reads the document its contract line names,
+`reference/trip-resolution.md`, once per invocation before it acts, and opens the charter only on a
+step that names one of its sections; the guided-entry surface reads the charter live when a request
+is routed to it (`reference/adr/ADR-056-what-a-verb-reads-before-it-acts.md`). Every class and every
+parameter below is stated against this posture.
 
 **The other posture is a workspace checkout, and what it adds is conditioned on it.** Where this
 repository is itself the workspace, the harness loads the charter at the start of every session.
@@ -65,7 +67,7 @@ first class that holds.
 | Class | What loads it, and when | Budget posture, for a file that declares no growth property (§ 5) |
 |---|---|---|
 | `listed` | The harness — its description at the start of every session, its body when its name is typed or a request is routed to it | a ceiling row, from the floor up |
-| `first-read` | A verb, once per invocation, before it acts — and the guided-entry surface, live, when it routes | a named constant, and its row |
+| `first-read` | A verb, once per invocation, before it acts | a named constant, and its row |
 | `typed` | The harness, when its verb is typed and at no other moment | a ceiling row, from the floor up |
 | `dispatched` | The calling session and then the dispatched agent, at each dispatch | a ceiling row, from the floor up |
 | `on-demand` | A session, when a step of an instruction surface names it | a ceiling row, from the floor up |
