@@ -886,7 +886,7 @@ if gh auth status >/dev/null 2>&1; then
 else
   SKIP "J1: gh not authenticated"
 fi
-# J2/J3 — decision-branch tests with a MOCK gh (isolates the destructive delete path; no network).
+# J2–J8 — decision-branch tests with a MOCK gh (isolates the destructive delete path; no network).
 MDIR="$WORK/mock-trip"; mkdir -p "$MDIR"; printf 'mock-slug\n' > "$MDIR/.publish-slug"
 GHLOG="$WORK/gh.log"
 gh() {  # mock: record the call, respond per fixed scenario (repo EXISTS, delete_repo scope present)
@@ -19272,7 +19272,7 @@ RS_WF="$ROOT/.github/workflows/publish-guard.yml"
 # the comment marker; an explanation continues at nine and therefore cannot match. A
 # block opens at `# IN SCOPE` or `# OUT OF SCOPE` and closes at the next `# ──` section
 # rule, so a roster-shaped line elsewhere in the file is not read as a declaration.
-# A group id may be declared in both blocks — J is, because J2/J3 run and J1 does not —
+# A group id may be declared in both blocks — J is, because J2 onward run and J1 does not —
 # so the parse dedupes rather than treating the second mention as a new group.
 rs_parse() { # <workflow_file> -> space-delimited declared GROUP ids on stdout
   local line inb=0 out=" "

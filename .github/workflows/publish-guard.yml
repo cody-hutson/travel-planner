@@ -37,8 +37,8 @@ name: Publish guard
 #   F     slug resolution
 #   H     --opaque repo naming
 #   I     list / date helpers
-#   J     unpublish decision branches, driven by a mock GitHub CLI (no network). J2/J3
-#         only; J1 needs an authenticated CLI and is OUT OF SCOPE below, which is why
+#   J     unpublish decision branches, driven by a mock GitHub CLI (no network). J2
+#         onward; J1 needs an authenticated CLI and is OUT OF SCOPE below, which is why
 #         this group id is declared in both blocks
 #   K     trips/ ignore invariant
 #   Q     analysis/ workspace ignore invariant (same shape as K, lower severity)
@@ -100,7 +100,10 @@ name: Publish guard
 #         aborted rotation leaves .passphrase byte-identical at every abort point. Pure
 #         bash plus git with mocked gh/npx and no network, Node, authenticated CLI or
 #         terminal, so it has no legitimate skip and MUST NOT be named in
-#         GUARD_EXPECTED_SKIPS
+#         GUARD_EXPECTED_SKIPS. A uid that reads mode-000 files or writes into mode-555
+#         directories (root, say) skips the RV53, RV54-mkdir and RV55-clonedir limbs,
+#         whose states it cannot build, and no such runner is in scope. RV52 and RV54
+#         start this suite's first background processes, each bounded and killed
 #   MD    the Discriminating-Evidence Rule: every assertion's PASS must require evidence
 #         its subject could only have produced by RUNNING. MD re-runs each registered
 #         assertion with its subject removed and requires it to flip, and statically
@@ -127,7 +130,7 @@ name: Publish guard
 # OUT OF SCOPE — deliberately, by name, and declared to the suite below:
 #   D     no-reply commit identity — the first of the two groups that need an
 #         AUTHENTICATED GitHub CLI
-#   J     live unpublish idempotency, J1 ONLY (J2/J3 are IN SCOPE above) — the second.
+#   J     live unpublish idempotency, J1 ONLY (J2 onward are IN SCOPE above) — the second.
 #         The CLI is not authenticated here. The workflow token is an installation
 #         token with no user context, so `gh api user` — which both groups reach —
 #         returns 403 rather than a login; wiring it in would turn those groups red
