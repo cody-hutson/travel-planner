@@ -14239,7 +14239,19 @@ rv18_assert() { # <id>
   live2="$(rv_pushed_key "$bare")"
   rv_has "$out2" 'does not open the page the site serves now' && rv_has "$out2" 'run rotate' && opens=1
   rm -rf "$d/.publish"
-  out3="$( ( unset STATICRYPT_PASSWORD; RV_CLONE_BARE="$bare"; rv_gh_clones; set -e; cmd_rotate "$d" ) 2>&1 )"; rc3=$?
+  # The clone host is written out here, as RV15 writes its own: rv_gh_clones is defined further down this file.
+  out3="$( ( unset STATICRYPT_PASSWORD; rv18_bare="$bare"
+             gh() {
+               printf '%s\n' "$*" >> "$RV_GHLOG"
+               case "${1:-} ${2:-}" in
+                 "api user")    printf 'testowner' ;;
+                 "repo view")   return 1 ;;
+                 "auth status") printf "Token scopes: 'repo'\n" ;;
+                 "repo clone")  git clone -q "$rv18_bare" "$4" ;;
+                 *)             return 0 ;;
+               esac
+             }
+             set -e; cmd_rotate "$d" ) 2>&1 )"; rc3=$?
   live3="$(rv_pushed_key "$bare")"; pf3="$(cat "$d/.passphrase" 2>/dev/null)"
   if [ "$rc" -eq 0 ] && [ "$live" != "$pf" ]; then
     FAIL "$id: rotate reported success while the live page stayed under the key it revoked — a rotation that loses the race must fail at its push"
@@ -16309,22 +16321,25 @@ md_flips ensure_first_key "RV53-link-store" rv53l_assert "RV53-link-store"
 # holding one record of the command, its pid and its start time. A second command refuses at once, naming the holder,
 # with exit status 75 where the holder runs and 76 where it does not or its record cannot be read (review CD-3).
 #
-# THE HOLDER, AND ITS BOUNDS (review PR-1). A is an update run in the background whose encryption stand-in, only
+# THE HOLDER, AND ITS BOUNDS (review PR-1). A is an update run in the background whose require_publish_branch, only
 # where RV54_HOLDER is set — in A's own subshell and nowhere else — touches a reached-file and then waits for a
-# stop-file, for at most 30 s. B, the command under test, runs in the foreground, never blocks, and is graded. The
+# stop-file, for at most 30 s. The wait sits in a function update calls directly, so it runs in the very process
+# that holds the lock: a wait inside a command substitution would run in a child, which a signal or a SIGKILL sent
+# to the holder cannot end. B, the command under test, runs in the foreground, never blocks, and is graded. The
 # parent polls for the reached-file under a bound of its own and, however A ends, kills it with SIGKILL before the
 # arm returns, so no arm can outlive its bound or leave A running into the next.
 # ══════════════════════════════════════════════════════════════════
 rv54_holder() { # <trip> <reached> <stop> <out> -> starts A in the background; its pid in RV54_PID
   ( unset STATICRYPT_PASSWORD; RV54_HOLDER=1
-    encrypt_to_tmp() {
+    rv54_def="$(declare -f require_publish_branch)"; eval "rv54_real_rpb ${rv54_def#require_publish_branch}"
+    require_publish_branch() {
       local k=0
       if [ -n "${RV54_HOLDER:-}" ]; then
         trap -p INT TERM HUP > "$RV54_REACHED.traps" 2>/dev/null
         : > "$RV54_REACHED"
         while [ ! -e "$RV54_STOP" ] && [ "$k" -lt 300 ]; do sleep 0.1; k=$((k+1)); done
       fi
-      rv_enc_shim "$@"
+      rv54_real_rpb "$@"
     }
     RV54_REACHED="$2"; RV54_STOP="$3"
     set -e; cmd_update "$1" ) > "$4" 2>&1 &
