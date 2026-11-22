@@ -7703,7 +7703,7 @@ fi
 # construction: perl invoked through a variable or by a path (`$PERL`, `/usr/bin/perl`),
 # and a change that removes one program while adding another, because it compares a count
 # and not a set.
-S15I_FNS='strip_to_text strip_to_published_text strip_to_text_blocks strip_to_joined_text strip_to_shape_text _browser_end_tags _decode_entities strip_to_itinerary_text _digest_of _group_only_scan'
+S15I_FNS='strip_to_text strip_to_published_text strip_to_text_blocks strip_to_joined_text strip_to_shape_text _browser_end_tags _decode_entities strip_to_itinerary_text _digest_of _group_only_scan _flush_path'
 S15I_RE='(^|[[:space:](|;`$])perl[[:space:]]+-'
 s15_perl_lines() { # <file> -> the number of non-comment lines that invoke perl by name
   local line t n=0
@@ -9377,10 +9377,10 @@ SA17H_NFN=0; for sad in $S15I_FNS; do SA17H_NFN=$((SA17H_NFN+1)); done
 SA17H_NLINE="$(s15_perl_lines "$SELF_PUBLISH")"
 printf 'digest=4294967295-1234\nconfirmed=2027-06-01T00:00:00Z\n' > "$WORK/sa17h.rec"
 SA17H_CRC="$(_record_digest "$WORK/sa17h.rec")"
-if [ "$SA17H_DN$SA17H_FB" = 00 ] && [ "$SA17H_RE" -eq 1 ] && [ "$SA17H_NFN" -eq 10 ] && [ "$SA17H_NLINE" -eq 10 ] && [ "$SA17H_CRC" = '4294967295-1234' ]; then
-  PASS "S17h: _digest_of's parsed body reads discard/fallback 00, invokes perl by S15i's own regex (F4 — the listed body is a perl program, so the count cannot be balanced by a substitution), S15I_FNS lists 10 and the script has 10 perl-invoking lines; the CRC token still parses for group T and for a pre-swap record"
+if [ "$SA17H_DN$SA17H_FB" = 00 ] && [ "$SA17H_RE" -eq 1 ] && [ "$SA17H_NFN" -eq 11 ] && [ "$SA17H_NLINE" -eq 11 ] && [ "$SA17H_CRC" = '4294967295-1234' ]; then
+  PASS "S17h: _digest_of's parsed body reads discard/fallback 00, invokes perl by S15i's own regex (F4 — the listed body is a perl program, so the count cannot be balanced by a substitution), S15I_FNS lists 11 and the script has 11 perl-invoking lines; the CRC token still parses for group T and for a pre-swap record"
 else
-  FAIL "S17h: bits $SA17H_DN$SA17H_FB (want 00), regex match $SA17H_RE (want 1), listed $SA17H_NFN and counted $SA17H_NLINE (want 10 and 10), CRC parse '$SA17H_CRC'"
+  FAIL "S17h: bits $SA17H_DN$SA17H_FB (want 00), regex match $SA17H_RE (want 1), listed $SA17H_NFN and counted $SA17H_NLINE (want 11 and 11), CRC parse '$SA17H_CRC'"
 fi
 
 # ── S18a — MUST REFUSE. Ten lines the grammar must not admit, each refused with nothing printed:
@@ -14015,18 +14015,21 @@ rv10_assert "RV10"
 # resolved. The aborted run's refusal says it pushed nothing and carries none of the after-the-push
 # sentence, as RV10's does.
 rv10b_assert() { # <id>
-  local id="$1" name d bare o1 rc1 rc2 revs rev html n line head_key="" carried=0 seen=0 said=0 after=0
+  local id="$1" name d bare h0 o1 rc1 rc2 revs rev html n line head_key="" carried=0 seen=0 said=0 after=0
   local k1='rv-resolved-synthetic-key-16' k2='rv-concurrent-rotation-key-17' re='staticryptEncrypted="(rv[0-9a-f]+)"'
-  name="rv10b-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"
+  name="rv10b-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"; h0="$(rv_head "$bare")"
   o1="$( ( unset STATICRYPT_PASSWORD; rv10b_pf="$d/.passphrase"; rv10b_k2="$k2"
-           encrypt_to_tmp() { rv_enc_shim "$@"; printf '%s\n' "$rv10b_k2" > "$rv10b_pf"; }
+           encrypt_to_tmp() {   # a rotation records its key — and, as rotate does, its pending rotation (#1820)
+             rv_enc_shim "$@"; printf '%s\n' "$rv10b_k2" > "$rv10b_pf"
+             _record_pending_rotation "${rv10b_pf%/.passphrase}" "$(git -C "${rv10b_pf%/.passphrase}/.publish" rev-parse --verify -q refs/remotes/origin/main:index.html)" >/dev/null 2>&1 || :
+           }
            set -e; cmd_update "$d" ) 2>&1 )"; rc1=$?
   rv_has "$o1" 'changed while this update was running' && seen=1
   rv_has "$o1" 'pushed nothing' && said=1
   { rv_has "$o1" 'may still have reached the site' || rv_has "$o1" 'Its push reported failure'; } && after=1
   ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc2=$?
   head_key="$(rv_pushed_key "$bare")"
-  revs="$(git -C "$bare" rev-list main 2>/dev/null)"
+  revs="$(git -C "$bare" rev-list main "^$h0" 2>/dev/null)"
   while IFS= read -r rev; do
     [ -n "$rev" ] || continue
     html="$(git -C "$bare" show "$rev:index.html" 2>/dev/null)" || continue
@@ -14052,9 +14055,11 @@ rv10b_assert "RV10b"
 
 # 0 when any revision of <bare>'s main carries a page whose nonce the encrypt shim recorded for
 # <key>. History is published too, so a page anywhere in it counts, not only the tip.
-rv_history_has_key() { # <bare> <key>
+rv_history_has_key() { # <bare> <key> [<commit whose history is left out>]
   local revs rev html n line re='staticryptEncrypted="(rv[0-9a-f]+)"'
-  revs="$(git -C "$1" rev-list main 2>/dev/null)"
+  # The third argument leaves out the history live before an arm began: rv_fixture seeds that page under the
+  # trip's own key (#1820), so a page under that key there is the site as published, not one the arm leaked.
+  revs="$(git -C "$1" rev-list main ${3:+"^$3"} 2>/dev/null)"
   while IFS= read -r rev; do
     [ -n "$rev" ] || continue
     html="$(git -C "$1" show "${rev}:index.html" 2>/dev/null)" || continue
@@ -14123,7 +14128,7 @@ rv15_assert() { # <id>
       esac
     }
     set -e; cmd_rotate "$d" ) >/dev/null 2>&1; rc2=$?
-  rv_history_has_key "$bare" "$k1" && carried=1
+  rv_history_has_key "$bare" "$k1" "$h0" && carried=1
   if [ "$rc0" -ne 1 ] || [ "$ahead" != 1 ]; then
     FAIL "$id: the failed update did not leave exactly one unpushed commit (rc=$rc0, ahead=$ahead) — nothing to grade. VERDICT WITHHELD"
   elif [ "$rc1" -ne 1 ]; then
@@ -14211,10 +14216,12 @@ rv17_assert "RV17"
 # ── RV18 — DQ-1, the γ interleaving. rotate commits; an update commits on top AND pushes before rotate
 # records its key. rotate's own push then has nothing new to send, and a branch push reports success
 # with the update's old-key page live. A rotation that lost that race must say so — its push must
-# fail — and the next update, the remedy its message names, must bring the live page under the key
-# the rotation recorded.
+# fail. The site then moved under the old key after the rotation read it, so its pending-rotation
+# marker no longer names the page the site serves (review CD-1, ruled at scope-lock): the next update
+# refuses on the live-page check, naming rotate, and leaves the site under the key its holders hold;
+# and rotate on a fresh clone, the remedy, brings the site under the key .passphrase then holds.
 rv18_assert() { # <id>
-  local id="$1" name d bare rc rc2 live live2 pf
+  local id="$1" name d bare rc rc2 rc3 live live2 live3 pf pf3 out2 opens=0
   local k1='rv-gamma-old-synthetic-key-25'
   name="rv18-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"
   ( unset STATICRYPT_PASSWORD; rv18_pub="$d/.publish"; rv18_k1="$k1"
@@ -14228,16 +14235,26 @@ rv18_assert() { # <id>
     }
     set -e; cmd_rotate "$d" ) >/dev/null 2>&1; rc=$?
   live="$(rv_pushed_key "$bare")"; pf="$(cat "$d/.passphrase" 2>/dev/null)"
-  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc2=$?
+  out2="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) 2>&1 )"; rc2=$?
   live2="$(rv_pushed_key "$bare")"
+  rv_has "$out2" 'does not open the page the site serves now' && rv_has "$out2" 'run rotate' && opens=1
+  rm -rf "$d/.publish"
+  ( unset STATICRYPT_PASSWORD; RV_CLONE_BARE="$bare"; rv_gh_clones; set -e; cmd_rotate "$d" ) >/dev/null 2>&1; rc3=$?
+  live3="$(rv_pushed_key "$bare")"; pf3="$(cat "$d/.passphrase" 2>/dev/null)"
   if [ "$rc" -eq 0 ] && [ "$live" != "$pf" ]; then
     FAIL "$id: rotate reported success while the live page stayed under the key it revoked — a rotation that loses the race must fail at its push"
   elif [ "$rc" -eq 0 ]; then
     FAIL "$id: the rotation was meant to lose the race, and it completed — the interleaving was not reproduced. VERDICT WITHHELD"
-  elif [ "$rc2" -ne 0 ] || [ -z "$live2" ] || [ "$live2" != "$pf" ]; then
-    FAIL "$id: after the rotation failed, the next update did not bring the live page under the key rotate recorded (rc=$rc2)"
+  elif [ "$rc2" -ne 1 ]; then
+    FAIL "$id: after the rotation lost the race, the next update read rc=$rc2, want 1 — the site moved under the old key after the rotation read it, so update must refuse and name rotate rather than finish it (review CD-1)"
+  elif [ "$opens" -eq 0 ]; then
+    FAIL "$id: the next update refused, but not on the live-page check, or without naming rotate"
+  elif [ "$live2" != "$k1" ]; then
+    FAIL "$id: the refused update moved the live page off the key its current holders hold"
+  elif [ "$rc3" -ne 0 ] || [ -z "$live3" ] || [ "$live3" != "$pf3" ]; then
+    FAIL "$id: the remedy, rotate on a fresh clone, did not bring the live page under the key .passphrase holds (rc=$rc3)"
   else
-    PASS "$id: a rotation that lost the race to a concurrent update fails at its push instead of reporting success, and the next update brings the live page under the key it recorded"
+    PASS "$id: a rotation that lost the race to a concurrent update fails at its push instead of reporting success; the next update refuses on the live-page check naming rotate, the site stays under the key its holders hold, and rotate on a fresh clone brings it under the key .passphrase holds"
   fi
 }
 rv18_assert "RV18"
@@ -14680,6 +14697,7 @@ rv29_assert() { # <id>
               if [ "${1:-}" = -C ] && [ "${3:-}" = fetch ] && [ ! -e "$rv29_mark" ]; then
                 : > "$rv29_mark"
                 printf '%s\n' "$rv29_k2" > "$rv29_d/.passphrase"
+                _record_pending_rotation "$rv29_d" "$(command git -C "$rv29_d/.publish" rev-parse --verify -q refs/remotes/origin/main:index.html)" >/dev/null 2>&1 || :
                 return 1
               fi
               command git "$@"
@@ -14691,7 +14709,7 @@ rv29_assert() { # <id>
   rv_has "$out" 'discarded its own commit' && claimed=1
   { rv_has "$out" 'may still have reached the site' || rv_has "$out" 'Its push reported failure'; } && after=1
   ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc2=$?
-  rv_history_has_key "$bare" "$k1" && hist=1
+  rv_history_has_key "$bare" "$k1" "$h0" && hist=1
   if [ "$injected" -eq 0 ]; then
     FAIL "$id: the fetch after the update's commit was never reached — the interleaving was not reproduced. VERDICT WITHHELD"
   elif [ "$hist" -eq 1 ]; then
@@ -14783,7 +14801,7 @@ rv32_assert() { # <id>
   rm -rf "$pub"
   ( unset STATICRYPT_PASSWORD; RV_CLONE_BARE="$bare"; rv_gh_clones; set -e; cmd_rotate "$d" ) >/dev/null 2>&1; rc3=$?
   n3="$(git -C "$bare" rev-list --count main)"
-  rv_history_has_key "$bare" "$k1" && carried=1
+  rv_history_has_key "$bare" "$k1" "$p0" && carried=1
   live="$(rv_pushed_key "$bare")"; pf="$(cat "$d/.passphrase" 2>/dev/null)"
   if [ "$n_pre" != 3 ] || [ "$n0" != 1 ]; then
     FAIL "$id: the site did not carry two pages a rewind withdrew, as set up ($n_pre, then $n0) — nothing to grade. VERDICT WITHHELD"
