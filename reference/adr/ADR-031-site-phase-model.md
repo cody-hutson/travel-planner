@@ -576,11 +576,10 @@ Wave-1 working notes on its Stage-6 sub-task, #1392:
 - [ADR-009](ADR-009-data-architecture.md) — § 4.4's fail-closed paths.
 - [ADR-010](ADR-010-per-traveler-approval-collection.md) — § 4, read through the private-site record's
   pointer.
-- `reference/site-layout-spec.md` — § 3's catalog, § 7 and § 8.
+- `reference/site-layout-spec.md` — § 3's catalog, § 7, § 8 and § 10.
 - `reference/schemas/destination-shortlist.md` — the shortlist's heading grain and its read-back
   refusals.
-- `CLAUDE.md` — § *Modes*, § *Resolving a trip* (`G5` and `G6`, *What the contract returns*) and
-  § *Travel Site Generation*.
+- `CLAUDE.md` — § *Modes*, § *Resolving a trip* (`G5` and `G6`, *What the contract returns*).
 - `skills/trip/SKILL.md` — § *ideas*.
 - `agents/destination-ideation.md`, `agents/05-hub-planner.md` and `agents/06-validator.md` — the
   producers and the auditor these decisions bind.
@@ -589,3 +588,7 @@ Wave-1 working notes on its Stage-6 sub-task, #1392:
   the operator's D-1, D-2 and D-4; the joint source-binding step, #1383; the plan, its surface map, the
   fit review, CR-2 and R2 on #1369; the carrier and its decisions on #1546; and the Wave-1 working
   notes this record's build detail moved to, on #1392.
+
+## Amendment history
+
+**Amendment (2026-11-21, Saturday) — *References*: the site's build guidance re-pointed to its new home; no decision changes.** The list cited `CLAUDE.md` § *Travel Site Generation* beside `reference/site-layout-spec.md` § 3, § 7 and § 8. The design principles, the contents a good site carries, the build procedure and the reference sites moved out of the charter into `reference/site-layout-spec.md` § 10, so the specification's item now names § 10 and the charter's item no longer names that section. The wording replaced was "§ 3's catalog, § 7 and § 8" and "*What the contract returns*) and § *Travel Site Generation*".

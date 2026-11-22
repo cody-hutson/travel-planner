@@ -448,67 +448,7 @@ Duplicating the evidence entries, the citation line and the `data-root-pointer:`
 
 The travel site is a **bespoke creative artifact** — not a template fill. Each trip gets a unique site with destination-specific design, color theming, and visual identity. The site grows as the trip plan evolves.
 
-### Design Principles
-
-- **Destination-specific aesthetic.** Every site reflects its destination: color palette, landmark visuals, typography mood. Tokyo got Japanese red (`#BC002D`) with kana characters and torii-gate gradients. Lisbon would get Portuguese blue/azulejo tones. Paris would get something else entirely.
-- **Editorial luxury quality.** High-end travel magazine feel. Not a data dump — a designed experience you'd want to browse on your phone at the airport.
-- **Functional on the ground.** Sticky navigation, collapsible days, Google Maps links on every venue, booking checklist with progress tracking. It's a planning tool AND a reference tool during the trip.
-- **Grows with the plan.** The site isn't generated once at the end. It's created when there's enough content and updated as the plan evolves. Early versions may be lighter. Final versions are comprehensive.
-
-### What a good site includes
-
-Based on the quality bar established by previous trips:
-- Hero section with destination name, dates, group, key stats
-- Trip overview dashboard with booking action tags per day
-- Sticky day navigation with energy-level color coding and sub-text
-- **Desktop: one day per viewport** — 4-column grid (schedule · highlights · food · map), auto-expand/collapse to fit any screen size
-- **Mobile: progressive disclosure** — one day at a time, bottom nav, collapsible sections
-- **Tablet: 3-column fallback** — map goes full-width at bottom
-- Per-day sections: schedule timeline, featured stop cards (side-by-side, compact/expandable), food cards, transport notes
-- **Booking status indicators** on every card (advance/ahead/walkup/open)
-- **Transport field** on every card (mode + time from hotel)
-- **Featured card enrichments**: insider tips, best timing, group-fit tags
-- Heat/weather zone visualizations where relevant
-- Leaflet maps in dedicated grid column (desktop) or tap-to-show (mobile)
-- Interactive booking checklist sorted by action date with booking window rules
-- Collapsible prep-boxes, transport-boxes, and warn-boxes on desktop
-- Responsive across all screen sizes — viewport-fit JS adapts automatically
-- CSS-art landmark visuals (not stock photos — pure CSS/SVG)
-- Print styles (hide nav, maps, toggles; single-column)
-- See `reference/site-layout-spec.md` for full implementation specification
-
-### How to build it
-
-When the user says "build the site" or "create the travel site":
-
-1. **Read the content sources:**
-   - `outputs/final-itinerary.md` (primary content)
-   - `outputs/links-reference.md` (all venue URLs for maps/links)
-   - `outputs/venue-matrix.md` (day assignments)
-   - `trip-context.md` (group info, dates, constraints for the hero)
-
-2. **Read reference sites for quality standard:**
-   - Check the Site References section below for previous trip sites
-   - Use them as design inspiration — not as templates to copy
-   - Match or exceed the quality bar; adapt the aesthetic to the new destination
-
-3. **Design the destination aesthetic:**
-   - Choose a color palette that evokes the destination
-   - Design CSS-art landmark visuals specific to the location
-   - Select typography that fits the mood (editorial, elegant, destination-appropriate)
-
-4. **Build the full HTML site** as a single self-contained file:
-   - All CSS inline (no external stylesheets except Google Fonts)
-   - Leaflet.js for maps (CDN link is fine)
-   - No build step, no framework — one HTML file that works offline
-   - Write to `outputs/[destination]-travel-site.html`
-   - **Follow `reference/site-layout-spec.md`** for responsive architecture, viewport-fit logic, card system, booking indicators, and mobile/desktop interaction patterns
-
-5. **Iterate with the user.** The first version won't be final. Expect:
-   - Color tweaks ("more muted", "warmer tones")
-   - Content additions as the plan evolves
-   - Section reordering
-   - New features for this specific trip
+**How a site is designed and built** — its design principles, what a good site includes, the build procedure and the reference sites that set the quality bar — is `reference/site-layout-spec.md` § 10, beside the specification the build follows. Patching a site and publishing it stay here.
 
 ### Updating the site
 
@@ -585,18 +525,6 @@ The script prompts you to type `PUBLISH` to confirm.
 > **Trust boundary.** Encryption runs via `npx staticrypt` (pinned to an exact version); your passphrase is passed to that package at publish time, so you are trusting the pinned StatiCrypt release and the npm supply chain.
 >
 > The trip repo is independent from this engine repo — a standalone public repo containing only the encrypted `index.html`. The plaintext itinerary, agent outputs, and `.passphrase` stay under `<data-root>/trips/` and are never published.
-
-### Site References
-
-Previous trip sites that set the quality bar. Read these when building a new site. Each establishes a different destination aesthetic while maintaining the same editorial quality standard.
-
-| Trip | Itinerary Source | Design Notes |
-|------|------------------|-------------|
-| Tokyo 2026 (worked example) | [`examples/tokyo-2026/outputs/final-itinerary.md`](examples/tokyo-2026/outputs/final-itinerary.md) | Japanese red (#BC002D), Bebas Neue + DM Serif Display + Karla fonts, CSS-art landmark visuals, Leaflet maps, interactive booking checklist, energy-level nav, 3-column day layout, scroll animations, heat zone strips |
-
-> The published HTML for each trip lives in its own standalone public repo (per the publishing section above), not in the engine repo. The example above is the markdown source set; the rendered HTML is produced fresh from those sources per trip.
->
-> As more trip examples are added, append them here. Each becomes a reference for future sites — an expanding library of design patterns and destination aesthetics.
 
 ---
 
@@ -690,7 +618,7 @@ travel-planner/
 │   ├── region-reference.md        ← every block-owned form's regions in one table, each with its writer-table row and verdict (derived — what /trip-record interview reads)
 │   ├── replan-protocol.md         ← the behaviour a replan takes when the trip is near
 │   ├── schemas/                   ← per-artifact-class schemas + the CI gate's coverage declaration
-│   ├── site-layout-spec.md        ← travel-site responsive/layout specification
+│   ├── site-layout-spec.md        ← travel-site responsive/layout specification, and how a site is designed and built
 │   └── size-fence.md              ← the size fence — the byte ceiling each tracked markdown file that owes a row is held to
 ├── scripts/                  ← publish-trip-site.sh (private publish) + the test-*.sh guard suites
 ├── templates/

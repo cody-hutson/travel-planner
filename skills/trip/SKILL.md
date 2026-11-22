@@ -1132,7 +1132,7 @@ it. This chain does not reach the hub, so the per-event status bound does not qu
 ## site
 
 **Reads:** `trips/<slug>/outputs/final-itinerary.md`, `trips/<slug>/outputs/links-reference.md`
-and `trips/<slug>/outputs/venue-matrix.md` — the plan artifacts § *How to build it* names as
+and `trips/<slug>/outputs/venue-matrix.md` — the plan artifacts `reference/site-layout-spec.md` § *How to build it* names as
 the site's content sources; `trips/<slug>/trip-context.md` — the group, dates and trip-level
 constraints the hero and overview render, and no other block;
 `trips/<slug>/outputs/event-status.md` — the authoritative source
@@ -1155,7 +1155,7 @@ round-trip fences, § 9.3 and § 3 component catalog, together with
 `agents/05-hub-planner.md`'s itinerary grammar, `reference/data-architecture.md` § 1.1,
 `CLAUDE.md`'s `G5` and `G6` and this file's `site` row — read by `scripts/check-round-trip.sh`, the
 script the completeness check below invokes, rather than by this verb; the itinerary sources the
-§ *Site References* table names, read as the quality bar rather than as templates;
+`reference/site-layout-spec.md` § *Site References* table names, read as the quality bar rather than as templates;
 `trips/<slug>/outputs/<destination>-travel-site.html` — the **existence probe** that selects
 creating the site from patching it, and, on the patch route, the outgoing markup read before
 it is changed, because that read is what preserves design already approved — within this run it
