@@ -16481,18 +16481,21 @@ rv54m_assert "RV54-mkdir"
 # RV54-signals — TERM, INT and HUP each release the lock. INT runs under job control (set -m), because a background
 # job in a non-interactive shell starts with SIGINT ignored, and a signal ignored at entry cannot be trapped.
 rv54g_assert() { # <id> <TERM|INT|HUP>
-  local id="$1" sig="$2" name d reached=0 arc want left=0
+  local id="$1" sig="$2" name d reached=0 held=0 arc want left=0
   case "$sig" in TERM) want=143 ;; INT) want=130 ;; *) want=129 ;; esac
   name="rv54g-$sig-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-signal-synthetic-key-78')"
   [ "$sig" != INT ] || set -m
   rv54_holder "$d" "$d.reached" "$d.stop" "$d.a.out"
   [ "$sig" != INT ] || set +m
   rv54_wait_reached "$d.reached" "$RV54_PID" && reached=1
+  [ -d "$d/.publish-lock" ] && held=1
   kill -s "$sig" "$RV54_PID" 2>/dev/null
   arc="$(rv54_finish "$d.stop.never" "$RV54_PID")"; : > "$d.stop"
   [ -e "$d/.publish-lock" ] && left=1
   if [ "$reached" -eq 0 ]; then
     FAIL "$id: the holder never reached its wait. VERDICT WITHHELD"
+  elif [ "$held" -eq 0 ]; then
+    FAIL "$id: the holder reached its wait holding no per-trip lock, so a lock absent after SIG$sig proves no release"
   elif [ "$arc" != "$want" ]; then
     FAIL "$id: the holder sent SIG$sig ended with status $arc, want $want — the signal's trap did not end it"
   elif [ "$left" -eq 1 ]; then
