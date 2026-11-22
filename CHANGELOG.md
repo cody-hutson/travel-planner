@@ -83,6 +83,44 @@ file created before this release keeps its per-traveller block, unowned and unre
 name it finds there and reports the block stale, and does not sweep it. The trip window keeps no
 writer until its own owner is decided.
 
+## [0.74.0] — 2026-11-21 — An assisted interview reads the traveller who may see what they share
+
+This release changes how the two intake forms tell an interviewer to begin, and runs the
+generated interview conversations again on the forms as they now stand. No verb, agent, script,
+schema or trip changes.
+
+**An assisted interview reads the traveller the form's who-sees-what note before the first
+question.** Since 0.70.0 each intake form opens with a note on who may see what a traveller shares.
+A traveller who fills the form in alone reads it, and so does one sent the form with the interview
+card, but nothing told an interviewer to say it, so a traveller interviewed in conversation was not
+told. Each form's ask-prose now opens, under *Assistant — the sections, in order*, with a paragraph
+telling the interviewer to read that note to them in its own words before the first question; on
+the person form it stands before the paragraph that asks their name. The interview card and the
+conduct file both send the interviewer to the form's ask-prose, so the interview verb and the
+portable card carry it alike.
+
+**The six generated interview conversations are run and graded again.** The 0.70.0 note moved both
+forms off the revisions the six generated conversations were graded on, so the grade record had
+read stale since, and a pull request changing a block-owned form was held by it. All six were run
+again on the card route at this release's conduct revision, under the same carrier and the same
+cost-free and signed-in checks as the first sitting, each graded by an independent grader against
+the unchanged rubric, and written to `examples/interview-conversations/`. In all six the
+interviewer read the note before the first question: word for word in four, in its own words with
+its formatting dropped in one, and in the sixth with two of its four points reworded. After the
+operator's rulings two conversations grade PASS and four FAIL: two first turns ask a name and two
+steps' questions at once, one turn offers a candidate answer for a field that lists no options,
+and one interviewer wrote `none` on needs the traveller had declined rather than stated empty.
+The conduct check reads the record as fresh again. Each new grading is the first grader draw of a new transcript, so the record's grader ledger
+names the new sessions; the draws of the first sitting stay in its draws ledger, and its grades in
+the history.
+
+**Where a sitting runs is written down for the maintainer.** `examples/interview-conversations/README.md`
+now says that the maintainer running a regrade signs one dedicated configuration folder in once and
+proves it clean before every sitting. Nobody who installs or uses the planner runs a sitting or
+takes any step for it.
+
+**Size fence:** nothing moved worth naming; every size-ceiling row is unchanged against 0.73.0.
+
 ## [0.73.0] — 2026-11-20 — A public page refuses the group's content, and every publish checks what the build reads
 
 An open publish now refuses a page carrying a section only the group may see, every publish,

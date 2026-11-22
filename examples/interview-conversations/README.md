@@ -15,6 +15,21 @@ traveller, and `grade-record.txt` beside them holds their grades: it is the one 
 a conversation, and its grammar is stated in group `RB`'s banner in `scripts/test-artifact-schema.sh`.
 Every other file here is authored.
 
+**Where a sitting runs — the maintainer's concern alone.** Nobody who installs or uses the planner
+runs a sitting, needs this folder or takes any step for it, and nothing in the planner reads it. The
+maintainer running a regrade runs the generated conversations and their gradings on `claude -p` with
+`CLAUDE_CONFIG_DIR` set to one dedicated folder on their own machine, by convention
+`~/.config/travel-planner-sitting/`, mode 700. It sits outside every repository, every trip data
+folder and the maintainer's own Claude configuration, and holds nothing but what `claude` itself
+writes there. The maintainer signs it in once, with
+`CLAUDE_CONFIG_DIR="$HOME/.config/travel-planner-sitting" claude auth login`, and again only when a
+call reports *Not logged in*. Because it persists between sittings, every sitting proves it still
+clean before any call spends: its listing holds no `CLAUDE.md`, rules, skills, agents, commands,
+plugins, hooks, output styles, MCP configuration, file in any `memory` directory, or settings carrying
+hooks or permissions, and the sitting's cost-free reference read, planted canary and hook arm read as
+before. `claude` makes an empty `memory` directory for each working directory it runs from, so an
+empty one is expected; a file inside one is not.
+
 ## How to read a file
 
 A file is plain text, one physical line to a record: a header of `key: value` lines, then the
