@@ -555,6 +555,10 @@ entry in the trip's log.
    `--disable-pages-only` and `--data-root <trip.data_root>`, and nothing else. The argument string
    is not forwarded. **Nothing is deleted:** that limb returns before the delete-scope check and
    the typed confirmation, and it touches neither the publish marker nor the passphrase file.
+   **A non-zero exit from the script is a takedown that did not happen, or may not have: stop here.**
+   Do not set the marker and do not write the closing entry. Report, per § *On partial completion*,
+   that the takedown step ran and failed, relay the script's message as its observation, and say that
+   the trip stays `ACTIVE` and this verb can be run again.
 3. **The marker** — set `**Lifecycle:**` to `ARCHIVED`, per § *The lifecycle marker*.
 4. **The closing log entry** — append it, per § *The closing entry*.
 
