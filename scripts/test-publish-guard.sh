@@ -16508,6 +16508,44 @@ rv54c_assert() { # <id> — the control: with the lock stubbed open, the held ar
   fi
 }
 rv54c_assert "RV54-ctl"
+# RV54-confirm-prompt — confirm takes the lock immediately before its first write (decision 1), so an organizer at its
+# CONFIRM prompt holds nothing (Stage 7's F-06). A confirm runs in the background on a trip whose render is a change
+# awaiting confirmation, its read blocked on a pipe whose writer waits for a go-file. Once its prompt is printed the
+# lock must be free, and an update run then must pass the lock and stop at the approval gate, the refusal after it.
+# The go-file then sends CONFIRM, and confirm takes the lock and records. M6, the lock taken at confirm's entry, must
+# fail it. Every wait is bounded, and the confirm is killed with SIGKILL at its bound (review PR-1).
+rv54p_assert() { # <id>
+  local id="$1" name d out rc=0 arc=0 pid n=0 k=0 reached=0 held=0 gate=0 rec=0
+  name="rv54p-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-prompt-synthetic-key-75')"
+  s_record "$d/.published-itinerary" "$S_DA" published
+  { while [ ! -e "$d.go" ] && [ "$k" -lt 600 ]; do sleep 0.1; k=$((k+1)); done; printf 'CONFIRM\n'; } 2>/dev/null \
+    | ( _confirm_has_terminal() { return 0; }; set -e; cmd_confirm "$d" ) > "$d.c.out" 2>&1 &
+  pid=$!
+  while [ "$n" -lt 300 ] && rv54_alive "$pid"; do
+    if rv_has "$(cat "$d.c.out" 2>/dev/null)" 'Type CONFIRM'; then reached=1; break; fi
+    sleep 0.1; n=$((n+1))
+  done
+  [ -e "$d/.publish-lock" ] && held=1
+  out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) 2>&1 )"; rc=$?
+  rv_has "$out" 'no organizer confirmation covers it' && gate=1
+  : > "$d.go"
+  rv54_finish "$d.stop" "$pid"; arc="$RV54_RC"
+  [ -e "$d/.change-confirmed" ] && rec=1
+  if [ "$reached" -eq 0 ]; then
+    FAIL "$id: the confirm never printed its CONFIRM prompt, so no organizer was at it while update ran. VERDICT WITHHELD"
+  elif [ "$held" -eq 1 ]; then
+    FAIL "$id: the trip's lock is held while confirm waits at its CONFIRM prompt — confirm took it before its first write"
+  elif [ "$rc" -eq 75 ] || [ "$rc" -eq 76 ]; then
+    FAIL "$id: an update run while confirm waited at its prompt was refused on the per-trip lock (rc=$rc)"
+  elif [ "$rc" -ne 1 ] || [ "$gate" -eq 0 ]; then
+    FAIL "$id: the update run while confirm waited at its prompt read rc=$rc and did not stop at the approval gate, so it is not shown to have passed the lock"
+  elif [ "$arc" -ne 0 ] || [ "$rec" -eq 0 ]; then
+    FAIL "$id: the confirm, sent CONFIRM after the update, read rc=$arc and recorded=$rec — want 0 and 1"
+  else
+    PASS "$id: while confirm waits at its CONFIRM prompt the trip's lock is free, an update run then passes it and stops at the approval gate, and confirm then takes the lock and records"
+  fi
+}
+rv54p_assert "RV54-confirm-prompt"
 # RV54-list — list takes no lock: it reports while a command holds the trip.
 rv54l_assert() { # <id>
   local id="$1" name d root out rc reached=0 listed=0 arc
@@ -16648,6 +16686,7 @@ md_flips _take_trip_lock "RV54-held-rotate" rv54h_assert "RV54-held-rotate" rota
 md_flips _take_trip_lock "RV54-held-publish" rv54h_assert "RV54-held-publish" publish
 md_flips _take_trip_lock "RV54-held-unpublish" rv54h_assert "RV54-held-unpublish" unpublish
 md_flips _take_trip_lock "RV54-held-confirm" rv54h_assert "RV54-held-confirm" confirm
+md_flips _take_trip_lock "RV54-confirm-prompt" rv54p_assert "RV54-confirm-prompt"
 md_flips cmd_list "RV54-list" rv54l_assert "RV54-list"
 md_flips _take_trip_lock "RV54-stale" rv54s_assert "RV54-stale"
 md_flips _take_trip_lock "RV54-unreadable-holder" rv54u_assert "RV54-unreadable-holder"
