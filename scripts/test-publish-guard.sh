@@ -16011,7 +16011,9 @@ for rv_b in mismatch match env env-match plaintext undetermined; do rv48_assert 
 # recorded, so the failed rotation stages no record. stale rewrites .passphrase with the same bytes afterwards, which
 # breaks the marker's file identity. moved is route (i) of review FM-1: another copy of the trip publishes under a
 # third key after the rotation read the site. republished-plaintext is route (ii): the repository published again
-# --plaintext. Each of the last three must refuse; the first must converge and clear the marker.
+# --plaintext. Each of the last three must refuse; the first must converge and clear the marker. Where the site changed
+# after the rotation read it (moved, republished-plaintext) the refusal must say the recorded rotation could not be
+# finished; where only the key file was rewritten (stale) it must not, because the site did not change (Stage 7's F-04).
 rv48r_push_other() { # <bare> <key> <workdir> — another copy of the trip publishes a page under <key>
   local e
   git clone -q "$1" "$3"
@@ -16026,7 +16028,7 @@ rv48r_republish_plain() { # <bare> — the repository published again, --plainte
   git -C "$c" branch -M main; git -C "$c" remote add origin "$1"; git -C "$c" push -q origin main
 }
 rv48r_assert() { # <id> <ordinary|stale|moved|republished-plaintext>
-  local id="$1" how="$2" name d bare out rc0 rc1 rc2 h1 h2 pf live mk=0 mk2=0 opens=0 plain=0
+  local id="$1" how="$2" name d bare out rc0 rc1 rc2 h1 h2 pf live mk=0 mk2=0 opens=0 plain=0 unfin=0
   local k1='rv-rotation-live-synthetic-key-60' k3='rv-rotation-other-synthetic-key-61'
   name="rv48r-$how-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"
   ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc0=$?
@@ -16046,6 +16048,7 @@ rv48r_assert() { # <id> <ordinary|stale|moved|republished-plaintext>
   [ -e "$d/.rotation-pending" ] && mk2=1
   rv_has "$out" 'does not open the page the site serves now' && opens=1
   rv_has "$out" 'the page the site serves now is not encrypted' && plain=1
+  rv_has "$out" 'could not be finished, because the site changed after that rotation read it' && unfin=1
   if [ "$rc0" -ne 0 ]; then
     FAIL "$id: the update that records the trip's baseline read rc=$rc0 — the trip this arm needs was not built. VERDICT WITHHELD"
   elif [ "$rc1" -ne 1 ] || [ "$pf" = "$k1" ]; then
@@ -16071,8 +16074,12 @@ rv48r_assert() { # <id> <ordinary|stale|moved|republished-plaintext>
           FAIL "$id: update ($how) refused but the site moved"
         elif [ "$opens" -eq 0 ]; then
           FAIL "$id: the refusal ($how) is not the live-page check's"
+        elif [ "$how" = moved ] && [ "$unfin" -eq 0 ]; then
+          FAIL "$id: the site moved after the rotation read it, and the refusal does not say the rotation recorded beside the trip could not be finished"
+        elif [ "$how" = stale ] && [ "$unfin" -eq 1 ]; then
+          FAIL "$id: only the key file was rewritten and the site did not move, yet the refusal says the site changed after the rotation read it — a sentence that is untrue here"
         else
-          PASS "$id: with the marker no longer describing the trip ($how), update refuses on the live-page check and pushes nothing"
+          PASS "$id: with the marker no longer describing the trip ($how), update refuses on the live-page check and pushes nothing, and says the recorded rotation could not be finished only where the site changed"
         fi ;;
       *)
         if [ "$rc2" -ne 1 ]; then
@@ -16081,8 +16088,10 @@ rv48r_assert() { # <id> <ordinary|stale|moved|republished-plaintext>
           FAIL "$id: update refused but the plaintext site moved"
         elif [ "$plain" -eq 0 ]; then
           FAIL "$id: the refusal is not the not-encrypted one"
+        elif [ "$unfin" -eq 0 ]; then
+          FAIL "$id: the not-encrypted refusal does not say the rotation recorded beside the trip could not be finished, though the site was published again after it read it"
         else
-          PASS "$id: a repository published again --plaintext after a failed rotation is refused as not encrypted, though the marker's key file still matches — the marker binds the page it replaced"
+          PASS "$id: a repository published again --plaintext after a failed rotation is refused as not encrypted, though the marker's key file still matches — the marker binds the page it replaced — and the refusal says the recorded rotation could not be finished"
         fi ;;
     esac
   fi
