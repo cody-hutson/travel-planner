@@ -463,8 +463,10 @@ _record_pending_rotation() { # <trip_dir> <base-page blob> <base-commit> -> 0, o
 }
 # 0 only when the marker is a readable regular file whose key-file= names .passphrase as it stands now, whose
 # base-commit= is the commit <tip> names, and whose base-page= is the page at <tip>. An empty identity — an unreadable
-# key file, a link that cannot be followed — or a marker with no base-page or no base-commit never matches.
-_pending_rotation_matches() { # <trip_dir> <pub_dir> <tip>
+# key file, a link that cannot be followed — or a marker with no base-page or no base-commit never matches. With
+# key-file-only, the key file alone is compared: refuse_key_not_live asks it to tell a rotation whose site moved from
+# one whose key file was rewritten.
+_pending_rotation_matches() { # <trip_dir> <pub_dir> <tip> [key-file-only]
   local pm_f pm_line pm_rec="" pm_base="" pm_commit="" pm_now pm_page pm_tip
   pm_f="$(pending_rotation_path "$1")"
   [ -f "$pm_f" ] && [ -r "$pm_f" ] || return 1
@@ -475,10 +477,11 @@ _pending_rotation_matches() { # <trip_dir> <pub_dir> <tip>
     esac
   done < "$pm_f"
   pm_now="$(_key_file_identity "$1/.passphrase")"
+  [ -n "$pm_rec" ] && [ -n "$pm_now" ] && [ "$pm_rec" = "$pm_now" ] || return 1
+  [ "${4:-}" != key-file-only ] || return 0
   pm_page="$(git -C "$2" rev-parse --verify -q "$3:index.html" 2>/dev/null)" || pm_page=""
   pm_tip="$(git -C "$2" rev-parse --verify -q "$3^{commit}" 2>/dev/null)" || pm_tip=""
-  [ -n "$pm_rec" ] && [ -n "$pm_now" ] && [ "$pm_rec" = "$pm_now" ] \
-    && [ -n "$pm_base" ] && [ -n "$pm_page" ] && [ "$pm_base" = "$pm_page" ] \
+  [ -n "$pm_base" ] && [ -n "$pm_page" ] && [ "$pm_base" = "$pm_page" ] \
     && [ -n "$pm_commit" ] && [ -n "$pm_tip" ] && [ "$pm_commit" = "$pm_tip" ]
 }
 # Run after a push that landed, so it warns and never dies.
@@ -492,9 +495,15 @@ _clear_pending_rotation() { # <trip_dir>
 # update's refusal when the key it would encrypt under does not open the page the site serves now (#1820). This run's
 # own commit is taken back out first, compare-and-swap, as require_key_of_record takes it back: it is a page under a
 # key the site is not under, and the clone is reused as it stands. <src> names the store, never the key: the variable's
-# name, or the path of .passphrase. Value-free, as every refusal here is (CIAC-4).
+# name, or the path of .passphrase. Value-free, as every refusal here is (CIAC-4). Where the trip holds a rotation whose
+# key file still stands but whose site has moved since it read it (review CD-1's narrowing), the refusal says so first,
+# with rotate on a fresh clone as its remedy, because the generic remedies after it would abandon that rotation (Stage
+# 7's F-04). A marker whose key file was rewritten since is not that state, and gets the generic text alone.
 refuse_key_not_live() { # <trip_dir> <pub_dir> <this-run's-own-commit> <does-not-open|not-encrypted|undetermined> <src> <tip> <owner/slug>
-  local said tip
+  local said tip moved=""
+  if _pending_rotation_matches "$1" "$2" "$6" key-file-only && ! _pending_rotation_matches "$1" "$2" "$6"; then
+    moved=" The rotation recorded beside the trip in $(pending_rotation_path "$1") could not be finished, because the site changed after that rotation read it, so rotate on a fresh clone is the remedy: remove $2 (it is cloned again from the published site) and run rotate, which sets a new passphrase and announces it."
+  fi
   if discard_own_commit "$2" "$3"; then
     said="this run took its own commit back out of $2"
   else
@@ -503,9 +512,9 @@ refuse_key_not_live() { # <trip_dir> <pub_dir> <this-run's-own-commit> <does-not
   tip="$(git -C "$2" rev-parse --short "$6" 2>/dev/null)" || tip="$6"
   case "$4" in
     does-not-open)
-      die "update refused — the key this run would encrypt under, from $5, does not open the page the site serves now ($7 at ${tip}). Publishing under it would lock out everyone who holds the current passphrase. Nothing was pushed, and $said. If you hold the passphrase that opens the site, put it in $1/.passphrase (or set STATICRYPT_PASSWORD to it) and re-run update. If it is lost, run rotate, which sets a new passphrase and announces it." ;;
+      die "update refused — the key this run would encrypt under, from $5, does not open the page the site serves now ($7 at ${tip}). Publishing under it would lock out everyone who holds the current passphrase. Nothing was pushed, and $said.${moved} If you hold the passphrase that opens the site, put it in $1/.passphrase (or set STATICRYPT_PASSWORD to it) and re-run update. If it is lost, run rotate, which sets a new passphrase and announces it." ;;
     not-encrypted)
-      die "update refused — the page the site serves now is not encrypted (this site was published --plaintext), and update would encrypt it under a key nobody was told about. Nothing was pushed, and $said. To encrypt it from now on, run rotate, which announces the passphrase it sets. unpublish followed by publish --plaintext keeps it plaintext." ;;
+      die "update refused — the page the site serves now is not encrypted (this site was published --plaintext), and update would encrypt it under a key nobody was told about. Nothing was pushed, and $said.${moved} To encrypt it from now on, run rotate, which announces the passphrase it sets. unpublish followed by publish --plaintext keeps it plaintext." ;;
   esac
   die "update refused — could not establish whether the key this run would encrypt under opens the page the site serves now (the page could not be read from $2, or StatiCrypt could not be run). Nothing was pushed, and $said. Re-run update when it can."
 }
