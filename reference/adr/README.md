@@ -198,6 +198,7 @@ record until the change that lands the held one.
 053       ADR-053-a-field-keeps-its-key.md
 054       ADR-054-a-roster-row-names-what-its-agent-writes.md
 055       ADR-055-a-publish-stands-on-the-live-site-and-runs-alone.md
+056       ADR-056-what-a-verb-reads-before-it-acts.md
 ```
 
 Records numbered below the register's first row predate it and carry no row. Why a register,
