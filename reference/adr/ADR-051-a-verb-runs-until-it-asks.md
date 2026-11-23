@@ -139,7 +139,7 @@ own statement. Whether a session follows it is observed live, never by a suite.
 - Each command file's standing clause states the rule, and each verb section on the declared-intent
   side cites it in its first read declaration or states what a non-interactive run does in its own
   text. A verb section that already states it keeps its statement.
-- `CLAUDE.md` § *Resolving a trip*, the paragraph opening "The evidence grants are each verb's
+- `reference/trip-resolution.md` § *Resolving a trip*, the paragraph opening "The evidence grants are each verb's
   declared minimum privilege", says that it speaks for evidence reads and names the rule.
 
 ## References
@@ -154,3 +154,7 @@ own statement. Whether a session follows it is observed live, never by a suite.
   question was denied.
 - Implementation: the standing clause of each `skills/*/SKILL.md`. Regression coverage:
   `scripts/test-command-taxonomy.sh` group NR.
+
+## Amendment history
+
+**Amendment (2026-11-22, Sunday) — § *Consequences*: the evidence-grant paragraph's citation re-pointed; no decision changes.** § *Resolving a trip* moved out of `CLAUDE.md` into `reference/trip-resolution.md` under the same heading, and the item naming that section's evidence-grant paragraph now names that file. It replaces "`CLAUDE.md` § *Resolving a trip*". Rejected option C keeps its citation as written: it is a rejected option's reason.

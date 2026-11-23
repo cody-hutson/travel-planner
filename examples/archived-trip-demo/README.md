@@ -3,7 +3,7 @@
 > **Illustrative, sanitized example. Not a real trip and not real people.**
 
 This is the **worked example of the freeze rule**. Before it, no fixture carried a
-`**Lifecycle:**` marker at all, so the rule in `CLAUDE.md` § *Archived trips — what the
+`**Lifecycle:**` marker at all, so the rule in `reference/trip-lifecycle.md` § *Archived trips — what the
 freeze binds* had no subject to be asserted against.
 
 It exists to make **both halves of that rule observable at once**:
@@ -102,7 +102,7 @@ unnamed one (`skills/trip-record/SKILL.md` § *Roster standing of a third-party 
 trip was archived before that rule, and an archived trip keeps the total it was archived with:
 the verbs that write a total — `/trip-record group`, `group-expand` and
 `person` — serve only an active trip, and an archived trip receives no derivation
-(`CLAUDE.md` § *Archived trips — what the freeze binds*).
+(`reference/trip-lifecycle.md` § *Archived trips — what the freeze binds*).
 
 ## What this fixture could not witness before, and now does
 
@@ -167,11 +167,11 @@ survivor Dana
 marker examples/archived-trip-demo/trip-context.md ARCHIVED
 
 # pin <content-address> <path>
-pin 44214dbfd43a040ac05cc49fd06da4facbaac179 examples/archived-trip-demo/outputs/traveler-model.md
+pin ddd0fed3053c2acda841f9e7d3556098fb810ee9 examples/archived-trip-demo/outputs/traveler-model.md
 pin 9ea67a3071eb0419025ca178cc9cd312ca38d5f4 examples/archived-trip-demo/travelers/dana.md
 pin 2a6594c117d1cc2c614640ad8f68fc4aaa557c35 examples/archived-trip-demo/travelers/per-4f1c.md
-pin c9d0cde7e2e381f6f33a4aa0fe6769e21164c995 examples/archived-trip-demo/trip-context.md
-pin 8c829bc488357ea4ec216f4d71270b83194ffc56 examples/archived-trip-demo/trip-log.md
+pin 9c61cb7b3966f370cbc97dd693eb89a9f31e76c8 examples/archived-trip-demo/trip-context.md
+pin 6019b97b7528160759b12b838fdacbc0e0070d06 examples/archived-trip-demo/trip-log.md
 ```
 
 ## What this fixture does not settle

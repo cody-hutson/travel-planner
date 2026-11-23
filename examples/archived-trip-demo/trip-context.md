@@ -19,7 +19,7 @@ publish: bound
 it, no example carried a `**Lifecycle:**` marker at all, so there was no
 archived trip for any assertion to run against. It exists to make two halves of one
 rule observable at the same time: an ordinary person-record edit leaves this trip
-untouched, and an erasure reaches it. `CLAUDE.md` § *Archived trips — what the freeze
+untouched, and an erasure reaches it. `reference/trip-lifecycle.md` § *Archived trips — what the freeze
 binds* is the rule; `scripts/test-artifact-schema.sh` group `AF` is the assertion.
 
 **The frontmatter `lifecycle:` field above is a different axis from the marker line,

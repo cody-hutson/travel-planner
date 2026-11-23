@@ -47,7 +47,7 @@ ordinary refresh population, and its next pass would compose the current values.
 **Decisions:**
 - **The erasure reached this trip, and the freeze did not stand in its way.** Erasure is
   a redaction rather than a derivation, so it was never inside what the freeze forbids:
-  `CLAUDE.md` § *Archived trips — what the freeze binds* states the exception in terms.
+  `reference/trip-lifecycle.md` § *Archived trips — what the freeze binds* states the exception in terms.
   Each subject's identifying values were **substituted** wherever this trip held them —
   the `## Group` roster cell, the constraint `Applies to:` lines, the traveller file and
   its stem, the derived model's entry heading, and this log. **Nothing was regenerated.**

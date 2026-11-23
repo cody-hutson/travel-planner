@@ -647,18 +647,18 @@ CH_SIZE_PARAM_TAG='load-class-parameters'
 CH_SIZE_RETRO_REV='cb33116bbb5fee4be88fe73708ebcadfe94ec708'
 CH_SIZE_LETTER='K'
 # The first-verb read's ceiling. Every file reference/load-class-model.md § 4 classes first-read —
-# the charter, which every verb reads once per invocation before it acts — is bounded by this byte
-# count as well as by its row in the size-ceiling fence, and fails above the lower of the two. It
-# is a ceiling on that read, not an always-loaded budget: in the decided posture the engine is an
-# installed capability, and the charter is read by a verb rather than loaded when a session starts
-# (reference/adr/ADR-021-installable-capability.md, Decision 1, as amended). It is a CONSTANT of
+# the trip-resolution contract, reference/trip-resolution.md, which every verb reads once per
+# invocation before it acts — is bounded by this byte count as well as by its row in the
+# size-ceiling fence, and fails above the lower of the two. It is a ceiling on that read, not an
+# always-loaded budget and not the whole of what a verb reads: a verb that opens the charter on a
+# step pays for that read beside it (reference/adr/ADR-056-what-a-verb-reads-before-it-acts.md). It is a CONSTANT of
 # the detector, deliberately not an environment knob: a gate whose strictness can be set by the
 # caller is not a gate. It is changed by editing the line below, in a diff someone reviews, and
 # that is the point — the file's row is held equal to it, so a row moved on its own fails, and
 # re-pinning that row writes this line to the same value in the same change. It was seeded at the
 # file's size plus the headroom the load-class-parameters fence declares for its class, and is
 # re-derived the same way when it is moved on purpose.
-CH_FIRST_READ_CEILING='153381'
+CH_FIRST_READ_CEILING='41723'
 
 pass=0; fail=0; skip=0; vacuous=0; SKIPPED=""; VACUOUS_IDS=""
 PASS()    { printf '  \033[1;32mPASS\033[0m %s\n' "$*"; pass=$((pass+1)); }
@@ -2937,7 +2937,8 @@ cat > "$WORK/load-class.awk" <<'AWK'
 #   entries      version of three dot-separated numbers and then "]", or "## [Unreleased]"
 # The clauses are § 4's, in its order, the first that holds deciding: listed; first-read — named on
 # a line of a skill surface whose first non-blank text is Contract:; typed; dispatched — named in the
-# Prompt File cell of a table that a file of the three classes above carries, read as a prose line,
+# Prompt File cell of a table that a file of the three classes above carries, or that a file one of
+# them names carries — one hop, and never a chain — read as a prose line,
 # from the row after the header naming that column through each consecutive row that is not a
 # separator; on-demand — named by an instruction surface, a file of the four classes above or one
 # bundled with a skill surface; fixture — an artifact key, or pinned; release-log; browsed — a
@@ -3048,6 +3049,18 @@ END {
     H = MP[i]; c = (H in CLS) ? CLS[H] : ""
     if (c == "listed" || c == "first-read" || c == "typed") mark(H, "P", "dispatched")
   }
+  # Clause 4's one hop: a roster also counts in a file one of those three classes names — a file it
+  # cites, or a file directly in a directory it names in prose — and in no file named only from there.
+  for (i = 1; i <= nmd; i++) {
+    H = MP[i]; c = (H in CLS) ? CLS[H] : ""
+    if (c != "listed" && c != "first-read" && c != "typed") continue
+    for (k = 1; k <= KN[H, "f"] + 0; k++) HOP[KL[H, "f", k]] = 1
+    for (k = 1; k <= KN[H, "d"] + 0; k++) {
+      r = KL[H, "d", k]
+      for (j = 1; j <= DN[r] + 0; j++) if (DM[r, j] != H) HOP[DM[r, j]] = 1
+    }
+  }
+  for (i = 1; i <= nmd; i++) if (MP[i] in HOP) mark(MP[i], "P", "dispatched")
   for (i = 1; i <= nmd; i++) {
     H = MP[i]; c = (H in CLS) ? CLS[H] : ""
     if (c == "listed" || c == "first-read" || c == "typed" || c == "dispatched" || (H in BUNDLED)) ISURF[H] = 1
@@ -7569,6 +7582,91 @@ D="$(ctl_size_mk szemptyclass)"
 printf -- '---\nname: v\ndescription: The fixture verb.\ndisable-model-invocation: true\n---\n\nContract: CHARTER.md\n\nRead reference/big.md when a step asks for it, and agents/a.md when it dispatches.\n' > "$D/skills/v/SKILL.md"
 O="$(ctl_size_scan "$D")"
 ctl_h_solely "CTL-SIZE-EMPTY-CLASS" "$O" "${CH_SIZE_LETTER}5" 1 "the dispatch roster taken out, so the class of a file named in one holds nothing — the prompt it named is still named in prose, so nothing else moves" "dispatched"
+
+# The roster's one hop (clause 4). Each fixture moves the base's roster out of the verb into
+# reference/roster.md and changes only who names that file, and each first proves its own plant: the
+# verb, the guided entry and the first-verb file carry no Prompt File column, the moved file carries
+# it, and the naming is what the arm says. A plant that did not land is a broken arm, not a verdict.
+ctl_size_roster_mk() {  # ctl_size_roster_mk <name> <verb-tail> — the base, its roster moved to reference/roster.md
+  local d; d="$(ctl_size_mk "$1")"
+  printf -- '---\nname: v\ndescription: The fixture verb.\ndisable-model-invocation: true\n---\n\nContract: CHARTER.md\n\nRead reference/big.md when a step asks for it.%s\n' "$2" > "$d/skills/v/SKILL.md"
+  printf '# Roster\n\n| Agent | Prompt File |\n|---|---|\n| Agent A | `agents/a.md` |\n' > "$d/reference/roster.md"
+  printf '%s\n' "$d"
+}
+ctl_size_roster_plant() {  # ctl_size_roster_plant <root> <0|1: the verb names the roster> — the plant, or why it did not land
+  local d="$1" why=""
+  grep -qF 'Prompt File' "$d/skills/v/SKILL.md" "$d/SKILL.md" "$d/CHARTER.md" && why="${why}a skill surface or the first-verb file still carries a roster; "
+  grep -qF 'Prompt File' "$d/reference/roster.md" || why="${why}the moved roster is not in reference/roster.md; "
+  if [ "$2" = 1 ]; then grep -qF 'reference/roster.md' "$d/skills/v/SKILL.md" || why="${why}the verb does not name the roster's file; "
+  else grep -qF 'reference/roster.md' "$d/skills/v/SKILL.md" "$d/SKILL.md" "$d/CHARTER.md" && why="${why}a skill surface or the first-verb file names the roster's file; "; fi
+  printf '%s' "$why"
+}
+
+# CTL-SIZE-ROSTER-HOP — the roster in a file the verb names. The pre-hop rule read no roster here and
+# reported dispatched empty; the hop reads it, so dispatched holds the prompt and nothing fires.
+D="$(ctl_size_roster_mk szrosterhop ' Dispatch from the roster in reference/roster.md.')"
+SZR_WHY="$(ctl_size_roster_plant "$D" 1)"
+O="$(ctl_size_scan "$D")"
+SZR_C="$(ctl_size_class "$D" agents/a.md)"
+if [ -n "$SZR_WHY" ]; then
+  FAIL "CTL-SIZE-ROSTER-HOP: fixture integrity — the plant did not land: ${SZR_WHY%; }"
+else
+  PASS "CTL-SIZE-ROSTER-HOP-PLANT: fixture integrity — no skill surface and no first-verb file carries a roster, the verb names reference/roster.md, and that file carries the only one"
+  ctl_size_quiet "CTL-SIZE-ROSTER-HOP" "$O" "the roster in a file the verb names and in no file of the first three classes — clause 4's one hop reads it" "${CH_SIZE_LETTER}5" "${CH_SIZE_LETTER}4"
+  if [ "$SZR_C" = "dispatched" ]; then
+    PASS "CTL-SIZE-ROSTER-HOP-CLASS: the prompt that roster names reads dispatched — counted through the hop"
+  else
+    FAIL "CTL-SIZE-ROSTER-HOP-CLASS: the prompt a roster in a verb-named file names must read dispatched, and reads '${SZR_C:-nothing}'"
+  fi
+fi
+
+# CTL-SIZE-ROSTER-HOP-DIR — the roster's file reached by its directory, named in the verb's prose.
+# The hop follows the rule's names term, so a directory a verb names reaches the roster in it.
+D="$(ctl_size_roster_mk szrosterhopdir ' Dispatch from the roster in the reference/ directory.')"
+SZR_WHY="$(ctl_size_roster_plant "$D" 0)"
+grep -qF 'the reference/ directory' "$D/skills/v/SKILL.md" || SZR_WHY="${SZR_WHY}the verb does not name the roster's directory; "
+O="$(ctl_size_scan "$D")"
+SZR_C="$(ctl_size_class "$D" agents/a.md)"
+if [ -n "$SZR_WHY" ]; then
+  FAIL "CTL-SIZE-ROSTER-HOP-DIR: fixture integrity — the plant did not land: ${SZR_WHY%; }"
+else
+  PASS "CTL-SIZE-ROSTER-HOP-DIR-PLANT: fixture integrity — the only roster stands in reference/roster.md, which no skill surface or first-verb file cites, and the verb names its directory in prose"
+  ctl_size_quiet "CTL-SIZE-ROSTER-HOP-DIR" "$O" "the roster in a file the verb reaches by naming its directory — clause 4's hop follows names, not only cites" "${CH_SIZE_LETTER}5" "${CH_SIZE_LETTER}4"
+  if [ "$SZR_C" = "dispatched" ]; then
+    PASS "CTL-SIZE-ROSTER-HOP-DIR-CLASS: the prompt that roster names reads dispatched — reached through the named directory"
+  else
+    FAIL "CTL-SIZE-ROSTER-HOP-DIR-CLASS: the prompt a roster in a verb-named directory names must read dispatched, and reads '${SZR_C:-nothing}'"
+  fi
+fi
+
+# CTL-SIZE-ROSTER-UNNAMED — the same roster in a file no skill surface and no first-verb file names,
+# cited only from README.md. Nothing that dispatches reaches it, so it counts for nothing.
+D="$(ctl_size_roster_mk szrosterunnamed '')"
+printf 'The roster is reference/roster.md.\n' >> "$D/README.md"
+SZR_WHY="$(ctl_size_roster_plant "$D" 0)"
+O="$(ctl_size_scan "$D")"
+if [ -n "$SZR_WHY" ]; then
+  ctl_arm "${CH_SIZE_LETTER}5"
+  FAIL "CTL-SIZE-ROSTER-UNNAMED: fixture integrity — the plant did not land: ${SZR_WHY%; }"
+else
+  PASS "CTL-SIZE-ROSTER-UNNAMED-PLANT: fixture integrity — the only roster stands in reference/roster.md, which README.md cites and no skill surface or first-verb file names"
+  ctl_h_solely "CTL-SIZE-ROSTER-UNNAMED" "$O" "${CH_SIZE_LETTER}5" 1 "a roster in a file nothing that dispatches names — it counts for nothing, so the class it would fill holds no file" "dispatched"
+fi
+
+# CTL-SIZE-ROSTER-TWO-HOPS — the roster in a file only an on-demand document names. The hop is one,
+# never a chain, so this roster counts for nothing either.
+D="$(ctl_size_roster_mk szrostertwohops '')"
+printf 'See reference/roster.md.\n' >> "$D/reference/big.md"
+SZR_WHY="$(ctl_size_roster_plant "$D" 0)"
+grep -qF 'reference/roster.md' "$D/reference/big.md" || SZR_WHY="${SZR_WHY}the on-demand document does not name the roster's file; "
+O="$(ctl_size_scan "$D")"
+if [ -n "$SZR_WHY" ]; then
+  ctl_arm "${CH_SIZE_LETTER}5"
+  FAIL "CTL-SIZE-ROSTER-TWO-HOPS: fixture integrity — the plant did not land: ${SZR_WHY%; }"
+else
+  PASS "CTL-SIZE-ROSTER-TWO-HOPS-PLANT: fixture integrity — the only roster stands in reference/roster.md, which only the on-demand reference/big.md names"
+  ctl_h_solely "CTL-SIZE-ROSTER-TWO-HOPS" "$O" "${CH_SIZE_LETTER}5" 1 "a roster two hops out, in a file only an on-demand document names — clause 4 reads one hop and no chain" "dispatched"
+fi
 
 D="$(ctl_size_mk sznoparams)"
 printf '# Fixture declaration\n\nThe parameter fence has been taken out.\n' > "$D/$CH_SIZE_PARAM_DOC"

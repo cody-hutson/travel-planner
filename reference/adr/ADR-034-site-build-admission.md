@@ -81,7 +81,7 @@ closed list of what this record still had to decide.
 
 | | Option | Disposition |
 |---|---|---|
-| **A** | **The trip's slug** | **chosen.** It is the shipped per-trip stem: the publish script's `slug_for` names the repository `<dir>-trip` by default, and `trip.slug` is the directory name "exactly as E1 spelled it" (`CLAUDE.md` § *What the contract returns*) |
+| **A** | **The trip's slug** | **chosen.** It is the shipped per-trip stem: the publish script's `slug_for` names the repository `<dir>-trip` by default, and `trip.slug` is the directory name "exactly as E1 spelled it" (`reference/trip-resolution.md` § *What the contract returns*) |
 | B | A fixed literal, such as an ideation-named page | **rejected.** It mints a name with no gain over A |
 | C | One stable stem for every state | **rejected.** It renames every existing plan-mode page, so each trip's next build misses the existence probe and regenerates, dropping approved design — the overwrite the verb's no-regenerate rule forbids |
 
@@ -233,8 +233,12 @@ Wave-1 working notes on its Stage-6 sub-task, #1392:
   the Reads line.
 - [ADR-009](ADR-009-data-architecture.md) — § 4.4's fail-closed paths.
 - `reference/data-architecture.md` — § 1.1's classes and § 5.1.
-- `CLAUDE.md` — § *Resolving a trip* (`G5` to `G8`, *What the contract returns*).
+- `reference/trip-resolution.md` — § *Resolving a trip* (`G5` to `G8`, *What the contract returns*).
 - `skills/trip/SKILL.md` — the `site` row and section, § *ideas* and the verb index.
 - `skills/trip-record/SKILL.md` — the erase reach table.
 - Provenance: the card, #1296; its design sub-task, #1388, carrying the second pass; the fit review,
   CR-2 and R2 on #1369; and the Wave-1 working notes this record's build detail moved to, on #1392.
+
+## Amendment history
+
+**Amendment (2026-11-22, Sunday) — *Options considered*, the chosen row A, and § *References*: citations of the resolution contract re-pointed; no decision changes.** § *Resolving a trip* moved out of `CLAUDE.md` into `reference/trip-resolution.md` under the same heading, and the chosen option's pointer to *What the contract returns* and the *References* item now name that file. Each replaces "`CLAUDE.md`". Rejected row C keeps its citation as written: it is a rejected option's reason.

@@ -2,26 +2,26 @@
 #
 # test-trip-resolution-contract.sh — the trip-resolution CONTRACT-CONFORMANCE guard.
 #
-# The trip-resolution contract has one normative home: CLAUDE.md § "Resolving a trip".
+# The trip-resolution contract has one normative home: reference/trip-resolution.md § "Resolving a trip".
 # The `!` pre-execution mechanism fires inside a consuming file's own body — measured in a
 # SKILL.md body, not only in the retired command form — and there is no include directive
 # at either, so every consuming file must physically carry the
 # evidence blocks. That duplication is forced by the platform, not chosen — and this
-# suite is what makes it safe: it EXTRACTS the canonical list from CLAUDE.md and asserts
+# suite is what makes it safe: it EXTRACTS the canonical list from reference/trip-resolution.md and asserts
 # every consumer's copy is byte-identical. Copy plus assertion is not the same thing as
 # copy; a divergent copy is a red check rather than a latent defect.
 #
 #   ./scripts/test-trip-resolution-contract.sh
 #
 # ── WHAT IT ASSERTS ──────────────────────────────────────────────────────────────
-#   PIN  the canonical literals, read FROM CLAUDE.md: the section exists and is
+#   PIN  the canonical literals, read FROM reference/trip-resolution.md: the section exists and is
 #        uniquely named; the evidence list is a fenced literal whose entries are
 #        contiguous from E1, stderr-capturing, NOT `!`-prefixed (that carrier is
 #        retired), naming `<data-root>` and never CLAUDE_PROJECT_DIR; the header block
 #        yields a citation line and a data-root-pointer line. Plus the self-check that gives this suite its
 #        reason to exist — THIS SCRIPT HOLDS NO COPY of any canonical entry.
 #   RP   the real consumer population under skills/: citation line present, the
-#        data-root-pointer line byte-identical to the charter's,
+#        data-root-pointer line byte-identical to the contract's,
 #        evidence blocks byte-identical to the canonical at their index, the prefix
 #        contiguous from index 1 and EXACTLY the length the declared `contract-depth`
 #        requires — no fewer blocks and no more — and `contract-depth` equal to the
@@ -35,7 +35,7 @@
 #        A code with no arm is a check indistinguishable from one that CANNOT
 #        fire, which is the precise defect this suite exists to prevent; leaving one
 #        unexercised inside the anti-drift guard would be that defect at its own root.
-#   GD   the gate ladder's refused-read disposition, read FROM CLAUDE.md: G1 carries a
+#   GD   the gate ladder's refused-read disposition, read FROM reference/trip-resolution.md: G1 carries a
 #        branch for a read the harness refused, beside its ran-and-failed branch keyed on
 #        E1's sentinel and its canary-absent branch; G0-root carries a refused arm; and each
 #        clause that writes a refused read's remedy — those two and the refusal predicate's
@@ -43,7 +43,7 @@
 #        the directory class, and no word of the forbidden-remedy class, graded as words
 #        rather than as one spelling. The predicate relays a refusal of any other kind as
 #        the harness's own, with no word of a directory remedy. Every code its checker emits
-#        has a must-fire arm, built from a copy of the live charter, the wrong remedy among
+#        has a must-fire arm, built from a copy of the live contract, the wrong remedy among
 #        them paraphrased; the group's own banner carries the reasoning.
 #   Three further groups assert properties of THIS FILE rather than of the contract, and
 #   each carries its full reasoning at the group rather than here: PF, that no verdict in
@@ -75,13 +75,13 @@
 # "Publishing to GitHub Pages" section, which carries the literal delete line. Extending
 # an invocation scan to CLAUDE.md would therefore make the conforming hand-off itself
 # the violation. The reason is recorded beside the constraint so a later contributor
-# does not "complete" the scan. This suite reads CLAUDE.md for three purposes only: to
+# does not "complete" the scan. This suite reads the contract's home, reference/trip-resolution.md, for three purposes only: to
 # assert the section exists and is uniquely named; to extract the canonical literals
 # that section declares (the evidence list, the header block's citation and
 # data-root-pointer lines, and the consumer table); and to read three declarations of
 # that section for group GD — G0-root's and G1's bullets of the gate ladder, and the
 # refusal predicate's paragraph — whose controls read the same three from copies of the
-# file with one defect planted. It performs no other scan of that file.
+# file with one defect planted. It performs no other scan of that file, and reads no CLAUDE.md.
 #
 # ── SCOPE BOUNDARY AGAINST THE TAXONOMY GUARD ────────────────────────────────────
 # Two guards, two invariants, no overlap. This one asserts CONTRACT CONFORMANCE (header
@@ -91,7 +91,7 @@
 #
 # ── COVERAGE BOUNDARY ────────────────────────────────────────────────────────────
 # IN SCOPE — the DECLARATION surface. A green means every consumer DECLARES the contract
-# as CLAUDE.md states it. OUT OF SCOPE — CONDUCT: this suite cannot assert that a model
+# as reference/trip-resolution.md states it. OUT OF SCOPE — CONDUCT: this suite cannot assert that a model
 # actually walks the gate ladder, and a green is not evidence that it did. Also out of
 # scope — RUNTIME PRIVILEGE: `allowed-tools` is a turn-scoped pre-approval grant, not an
 # enforced permission set, so a green here is NOT a privilege guarantee.
@@ -223,13 +223,13 @@ verb_id() { local d="${1%/*}"; printf '%s' "${d##*/}"; }
 
 WORK="$(mktemp -d)"
 
-CLAUDE_MD="$ROOT/CLAUDE.md"
+CONTRACT_DOC="$ROOT/reference/trip-resolution.md"
 SECTION_HEADING='### Resolving a trip'
 EVIDENCE_FENCE='trip-contract-evidence'
 HEADER_FENCE='trip-contract-header'
 # The two wrapper openers an evidence entry may never take again, each as it would open a
 # code span: a brace group and a parenthesised subshell. Claude Code refuses both on their
-# shape whatever the grants, which is why every entry is spelled as a bare list; CLAUDE.md
+# shape whatever the grants, which is why every entry is spelled as a bare list; reference/trip-resolution.md
 # § "Resolving a trip" states that measurement and is its single home. They are WRITTEN
 # DOWN here, unlike the entry markers PIN3 derives, because they are not a property of the
 # canonical list — they are the shapes the list must not take. Among the sites that read
@@ -240,7 +240,7 @@ EVID_RETIRED_OPENERS='`{
 `('
 
 # ─────────────────────────────────────────────────────────────────────────────────
-# Extraction primitives. Every section-scoped read of CLAUDE.md in this file goes through
+# Extraction primitives. Every section-scoped read of reference/trip-resolution.md in this file goes through
 # one of these or through declared_consumers (group RP). PIN1 and PIN5 read the whole file
 # for a count, and group GD's controls copy it whole to plant one defect in the copy.
 # Nothing else here opens it.
@@ -385,7 +385,7 @@ gd_class() {  # <clause>
 }
 
 # gd_dirclass <clause> — the words of the DIRECTORY-REMEDY CLASS that <clause> carries, on
-# one line, space-separated; empty when it carries none. The class is every way the charter
+# one line, space-separated; empty when it carries none. The class is every way the contract
 # and the README name the fix for a directory refusal: the allowed-directories step by name,
 # its settings key `additionalDirectories`, the `add-dir` that both `--add-dir` and
 # `/add-dir` carry, and the README's own name for it, step 4. A refusal of any other kind
@@ -414,7 +414,7 @@ gd_scoped() {  # <clause>
   return 1
 }
 
-# ladder_refusal_check <charter> <e1-sentinel> — FINDING lines; returns 1 when any fired.
+# ladder_refusal_check <contract> <e1-sentinel> — FINDING lines; returns 1 when any fired.
 #   GB  a declaration could not be read — the G1 bullet, the G0-root bullet, the refusal
 #       predicate's paragraph, or the remedy clause inside it: the declaration is
 #       unreadable, which is not the same finding as absent
@@ -588,15 +588,15 @@ conformance_check() {
     # read from the pointer this line names. It is asserted byte-identical for the
     # same reason the citation line is — five files quietly naming four pointer paths
     # is four data roots, which is the drift surface this ladder exists to close. It
-    # is compared against the line the CHARTER declares, never against a literal held
-    # here, so the charter stays the single home.
+    # is compared against the line the CONTRACT declares, never against a literal held
+    # here, so the contract stays the single home.
     local has_ptr=0
     if [ -n "$pointer" ]; then
       while IFS= read -r line || [ -n "$line" ]; do
         [ "$line" = "$pointer" ] && { has_ptr=1; break; }
       done < "$f"
       if [ "$has_ptr" -eq 0 ]; then
-        printf 'FINDING H4 %s contract header carries no data-root-pointer line byte-identical to the charter'"'"'s\n' "$base"; found=1
+        printf 'FINDING H4 %s contract header carries no data-root-pointer line byte-identical to the contract'"'"'s\n' "$base"; found=1
       fi
     fi
 
@@ -673,7 +673,7 @@ conformance_check() {
     # a `G8` mentioned in the lifecycle or mode cell and silently agree with itself.
     #
     # The cell is NORMALISED before it is matched, rather than matched with a widened
-    # pattern. Padding is stripped, then a code-span rendering is stripped: CLAUDE.md's
+    # pattern. Padding is stripped, then a code-span rendering is stripped: the contract file's
     # own consumer table renders every depth value as a code span, so that is the only
     # rendered example a command author has to copy, and `G8` and a backticked `G8` are
     # the same value. Without this, `rows` falls to 0 on a table that is PRESENT and the
@@ -773,23 +773,23 @@ tree_state() {  # <dir> -> "<file-count> <digest>"
 }
 
 # ═════════════════════════════════════════════════════════════════════════════════
-# Group PIN — the canonical literals, read from CLAUDE.md. The guard holds no copy.
+# Group PIN — the canonical literals, read from reference/trip-resolution.md. The guard holds no copy.
 # ═════════════════════════════════════════════════════════════════════════════════
-echo "── Group PIN — the canonical contract, extracted from CLAUDE.md (never copied into this file)."
+echo "── Group PIN — the canonical contract, extracted from reference/trip-resolution.md (never copied into this file)."
 
 PIN_OK=1
-if [ ! -r "$CLAUDE_MD" ]; then
-  FAIL "PIN0: CLAUDE.md is not readable — the canonical source is absent, so nothing below can be asserted"
+if [ ! -r "$CONTRACT_DOC" ]; then
+  FAIL "PIN0: reference/trip-resolution.md is not readable — the canonical source is absent, so nothing below can be asserted"
   PIN_OK=0
 else
   # PIN1 — uniquely named. -x -F: a whole-line fixed-string match, so no regex dialect
   # and no substring can decide this.
-  SECN="$(grep -c -x -F -- "$SECTION_HEADING" "$CLAUDE_MD")"
+  SECN="$(grep -c -x -F -- "$SECTION_HEADING" "$CONTRACT_DOC")"
   [ -n "$SECN" ] || SECN=0
   if [ "$SECN" -eq 1 ]; then
-    PASS "PIN1: CLAUDE.md carries exactly one \"$SECTION_HEADING\" section — a single normative home"
+    PASS "PIN1: reference/trip-resolution.md carries exactly one \"$SECTION_HEADING\" section — a single normative home"
   else
-    FAIL "PIN1: expected exactly one \"$SECTION_HEADING\" heading in CLAUDE.md, found $SECN"
+    FAIL "PIN1: expected exactly one \"$SECTION_HEADING\" heading in reference/trip-resolution.md, found $SECN"
     PIN_OK=0
   fi
 fi
@@ -812,7 +812,7 @@ if [ "$PIN_OK" -eq 1 ]; then
       idx_ok=0
     fi
   done <<EOF
-$(fence_block "$CLAUDE_MD" "$EVIDENCE_FENCE" "$SECTION_HEADING")
+$(fence_block "$CONTRACT_DOC" "$EVIDENCE_FENCE" "$SECTION_HEADING")
 EOF
   if [ "$CANON_N" -ge 1 ] && [ "$idx_ok" -eq 1 ]; then
     PASS "PIN2: canonical evidence list extracted — $CANON_N entr(y/ies), indexed contiguously from E1"
@@ -838,7 +838,7 @@ EOF
   # constants at the top of this file). The shell parses the bare list exactly as it parsed
   # the group, so a wrapper adds no meaning — but Claude Code refuses a brace group that
   # contains a quote character on its shape whatever the grants, and a subshell with or
-  # without them, and CLAUDE.md § "Resolving a trip" records that measurement as its single
+  # without them, and reference/trip-resolution.md § "Resolving a trip" records that measurement as its single
   # home. This limb is that constraint made a machine check at the declaration surface, so
   # an edit that re-wraps an entry "for safety" is a red check rather than a refusal on
   # every invocation. `nolead`: every entry must open with a command word — a backtick
@@ -850,7 +850,7 @@ EOF
   # The detector's markers are derived here rather than written down: one per entry, its
   # opening token — the text before its first space — plus one space. A hard-coded marker
   # is the same drift surface one size smaller: it would go on matching a retired spelling
-  # after the charter moved on, the consumer detector would find ZERO blocks in every file,
+  # after the contract moved on, the consumer detector would find ZERO blocks in every file,
   # and the suite would report five short prefixes instead of one changed marker. One
   # marker per entry rather than one shared by all of them, because the only prefix the
   # entries ever shared was the wrapper the `wrapped` limb now forbids; unwrapped, each
@@ -891,7 +891,7 @@ EOF
   fi
 
   # PIN4 — the header block's first line is the citation line.
-  CITATION="$(fence_block "$CLAUDE_MD" "$HEADER_FENCE" "$SECTION_HEADING" | awk 'NR == 1')"
+  CITATION="$(fence_block "$CONTRACT_DOC" "$HEADER_FENCE" "$SECTION_HEADING" | awk 'NR == 1')"
   if [ -n "$CITATION" ]; then
     PASS "PIN4: contract header citation line extracted — \"$CITATION\""
   else
@@ -902,7 +902,7 @@ EOF
   # PIN6 — the data-root pointer line. The evidence entries name `<data-root>`; this is
   # the line that says where the value behind that placeholder is read from, and it is
   # the ONE literal a consumer needs before it can open anything. Extracted from the
-  # charter's own header fence so the charter remains its single home — a literal here
+  # contract's own header fence so the contract remains its single home — a literal here
   # would be the second source PIN5 exists to forbid, one field over.
   #
   # Read with a while-loop, NOT `fence_block … | grep -m1 …`. A pipe into a reader that
@@ -915,7 +915,7 @@ EOF
       'data-root-pointer: '*) [ -z "$POINTER_LINE" ] && POINTER_LINE="$line" ;;
     esac
   done <<EOF
-$(fence_block "$CLAUDE_MD" "$HEADER_FENCE" "$SECTION_HEADING")
+$(fence_block "$CONTRACT_DOC" "$HEADER_FENCE" "$SECTION_HEADING")
 EOF
   if [ -n "$POINTER_LINE" ] && [ "$POINTER_LINE" != 'data-root-pointer: ' ]; then
     PASS "PIN6: contract header data-root pointer line extracted — \"$POINTER_LINE\""
@@ -928,20 +928,20 @@ fi
 # PIN5 — THE SELF-CHECK THIS SUITE EXISTS FOR. A guard holding its own copy of the
 # canonical is a SECOND SOURCE OF TRUTH: it would go green while the documented contract
 # drifted away from it. So no canonical entry may appear in this file. The second limb is
-# the control arm — the same fixed-string probe MUST fire against CLAUDE.md, or the zero
+# the control arm — the same fixed-string probe MUST fire against reference/trip-resolution.md, or the zero
 # on this file is a broken probe rather than a clean result.
 if [ "$PIN_OK" -eq 1 ]; then
   self_hits=0; src_hits=0
   while IFS= read -r e || [ -n "$e" ]; do
     [ -n "$e" ] || continue
     h_self="$(grep -c -F -- "$e" "$0")";        [ -n "$h_self" ] || h_self=0
-    h_src="$(grep -c -F -- "$e" "$CLAUDE_MD")"; [ -n "$h_src" ]  || h_src=0
+    h_src="$(grep -c -F -- "$e" "$CONTRACT_DOC")"; [ -n "$h_src" ]  || h_src=0
     self_hits=$((self_hits+h_self)); src_hits=$((src_hits+h_src))
   done < "$CANON_FILE"
   if [ "$self_hits" -eq 0 ] && [ "$src_hits" -ge "$CANON_N" ]; then
-    PASS "PIN5: this script holds NO copy of any canonical entry (0 hits) while the same probe finds all $CANON_N in CLAUDE.md ($src_hits hits) — control arm fires"
+    PASS "PIN5: this script holds NO copy of any canonical entry (0 hits) while the same probe finds all $CANON_N in reference/trip-resolution.md ($src_hits hits) — control arm fires"
   else
-    FAIL "PIN5: the one-home seam is gone or the probe is broken (this_file=$self_hits CLAUDE.md=$src_hits of $CANON_N)"
+    FAIL "PIN5: the one-home seam is gone or the probe is broken (this_file=$self_hits reference/trip-resolution.md=$src_hits of $CANON_N)"
   fi
 fi
 
@@ -956,18 +956,18 @@ fi
 #
 # Two things close it, and they are different in kind. The exit rule at the foot of this
 # file now reads `vacuous` as well as `fail`, so a vacuous group cannot report green. And
-# the arms below assert the observed consumer set EQUALS the set the charter declares, in
+# the arms below assert the observed consumer set EQUALS the set the contract declares, in
 # both directions — which is strictly stronger than a floor, because it also catches a
-# consumer file that exists while the charter declares no row for it.
+# consumer file that exists while the contract declares no row for it.
 #
-# NO FROZEN DENOMINATOR. The declared side is derived from the charter's own consumer
+# NO FROZEN DENOMINATOR. The declared side is derived from the contract's own consumer
 # table, by the table's own definition of what a consumer row is — its population-role
-# cell reads RESOLVE or CREATE — so adding a sixth verb to the charter turns this red
-# until the file lands, and adding the file turns it red until the charter declares it.
+# cell reads RESOLVE or CREATE — so adding a sixth verb to the contract turns this red
+# until the file lands, and adding the file turns it red until the contract declares it.
 # No numeral appears on either side of the comparison.
 # ─────────────────────────────────────────────────────────────────────────────────
 
-# declared_consumers <claude.md> — the consumer verbs the charter itself declares, one per
+# declared_consumers <contract> — the consumer verbs the contract itself declares, one per
 # line. The first cell carries the invocation, which may be rendered with an argument
 # signature (`/trip <verb>`), so the verb is its first whitespace-delimited token.
 declared_consumers() {
@@ -1008,14 +1008,14 @@ $obs" in
       *"
 $d
 "*) matched=$((matched+1)) ;;
-      *)  printf 'FINDING Q1 %s the charter declares this consumer and no %s/SKILL.md answers to it\n' "$d" "$d" ;;
+      *)  printf 'FINDING Q1 %s the contract declares this consumer and no %s/SKILL.md answers to it\n' "$d" "$d" ;;
     esac
   done < "$decl"
   while IFS= read -r v; do
     [ -n "$v" ] || continue
     if ! grep -qxF -- "$v" "$decl"; then
       extra=$((extra+1))
-      printf 'FINDING Q2 %s a consumer file exists that the charter declares no row for\n' "$v"
+      printf 'FINDING Q2 %s a consumer file exists that the contract declares no row for\n' "$v"
     fi
   done <<EOF
 $obs
@@ -1059,7 +1059,7 @@ else
   # renamed `has_finding` reports rc=127 as a FAIL naming the missing subject instead of
   # reaching this arm's PASS limb the way a genuine no-finding does. `show` prints only
   # when an H4 finding exists, so the detail is silent on a pass.
-  expect_rc 1 "RP8" "all $RP_POP consumer(s) carry the charter's data-root-pointer line byte-identical — \"$POINTER_LINE\" — so every consumer resolves <data-root> from one declared source rather than from the directory the session happens to be in" -- has_finding "$RP_OUT" 'H4'
+  expect_rc 1 "RP8" "all $RP_POP consumer(s) carry the contract's data-root-pointer line byte-identical — \"$POINTER_LINE\" — so every consumer resolves <data-root> from one declared source rather than from the directory the session happens to be in" -- has_finding "$RP_OUT" 'H4'
   show "$RP_OUT" 'H4'
   if has_finding "$RP_OUT" 'P1'; then FAIL "RP3: a consumer's evidence block diverges from the canonical"; show "$RP_OUT" 'P1'
   else PASS "RP3: every evidence block in all $RP_POP consumer(s) is byte-identical to the canonical at its index"; fi
@@ -1082,15 +1082,15 @@ fi
 # quantified over the population, so a zero population satisfies it; this one is an
 # assertion ABOUT the population and must therefore still run — and fail — when it is zero.
 DECL_FILE="$WORK/declared-consumers"
-declared_consumers "$CLAUDE_MD" > "$DECL_FILE"
+declared_consumers "$CONTRACT_DOC" > "$DECL_FILE"
 POP_OUT="$(pop_check "$CMD_DIR" "$DECL_FILE")"
 POP_MATCHED="$(popstat "$POP_OUT" MATCHED)"; POP_DECLARED="$(popstat "$POP_OUT" DECLARED)"
 POP_EXTRA="$(popstat "$POP_OUT" EXTRA)"
 if [ "${POP_DECLARED:-0}" -ge 1 ] && [ "$RP_POP" -ge 1 ] \
    && [ "${POP_MATCHED:-0}" -eq "${POP_DECLARED:-0}" ] && [ "${POP_EXTRA:-0}" -eq 0 ]; then
-  PASS "RP7: the observed consumer set EQUALS the set the charter declares — $POP_MATCHED of $POP_DECLARED declared row(s) answered by a <verb>/SKILL.md, and $POP_EXTRA consumer file(s) the charter declares no row for. Both sides are derived (the declared side from the consumer table's own RESOLVE/CREATE role cell) and both are non-empty, so this is a measured equality and not a floor a vanished population would satisfy"
+  PASS "RP7: the observed consumer set EQUALS the set the contract declares — $POP_MATCHED of $POP_DECLARED declared row(s) answered by a <verb>/SKILL.md, and $POP_EXTRA consumer file(s) the contract declares no row for. Both sides are derived (the declared side from the consumer table's own RESOLVE/CREATE role cell) and both are non-empty, so this is a measured equality and not a floor a vanished population would satisfy"
 else
-  FAIL "RP7: the observed consumer set does not equal the charter's declared set — matched=${POP_MATCHED:-?} declared=${POP_DECLARED:-?} surplus=${POP_EXTRA:-?} observed_files=$RP_POP. A zero on either side is itself the finding: the assertions above are quantified over the population and would pass over an empty one"
+  FAIL "RP7: the observed consumer set does not equal the contract's declared set — matched=${POP_MATCHED:-?} declared=${POP_DECLARED:-?} surplus=${POP_EXTRA:-?} observed_files=$RP_POP. A zero on either side is itself the finding: the assertions above are quantified over the population and would pass over an empty one"
   show "$POP_OUT" 'Q1|Q2'
 fi
 
@@ -1216,7 +1216,7 @@ else
       else                                    printf 'contract-depth: G%s\n' "$depth"
       fi
       [ "$variant" = "norole" ]   || printf 'population-role: %s\n' "$role"
-      # The data-root pointer line, taken from the CHARTER's own header fence — never a
+      # The data-root pointer line, taken from the CONTRACT's own header fence — never a
       # literal here, for PIN5's reason. `nopointer` withholds it from the RESOLVE
       # consumer so CTLnp has a fixture that changes exactly one field.
       [ "$variant" = "nopointer" ] || printf '%s\n' "$POINTER_LINE"
@@ -1254,7 +1254,7 @@ else
             printf '| new-from | ACTIVE | any | any | G1 |\n'
             ;;
           codespan|spandepth)
-            # Every depth cell rendered as a CODE SPAN — which is exactly how CLAUDE.md's
+            # Every depth cell rendered as a CODE SPAN — which is exactly how the contract file's
             # own consumer table renders every depth value, and therefore the only
             # rendered example a command author has to copy. The table is PRESENT and its
             # maximum agrees with the declared depth, so this fixture MUST NOT fire.
@@ -1760,7 +1760,7 @@ EOF
 
   # ── CTL-cs: a per-verb requirement table whose depth cells are rendered as CODE SPANS
   # MUST NOT fire. This is the second MUST-NOT-FIRE arm in the group and it exists for a
-  # specific reason: CLAUDE.md's own consumer table renders every depth value as a code
+  # specific reason: the contract file's own consumer table renders every depth value as a code
   # span, so it is the only rendered example a command author can copy — and before the
   # cell was normalised, `rows` fell to 0 and a table that is PRESENT was reported absent
   # as D2. A negative arm cannot catch that; only a positive one can.
@@ -1785,7 +1785,7 @@ EOF
   if [ "$CS_RC" -eq 0 ] && ! has_finding "$CS_OUT" 'D1|D2'; then
     PASS "CTLcs2: MUST-NOT-FIRE — a table whose depth cells are code spans is read as present and its maximum is read correctly; the cell is normalised before it is matched, so the contract's own typography no longer produces a finding that names the wrong defect"
   else
-    FAIL "CTLcs2: MUST-NOT-FIRE — a table rendered the way CLAUDE.md renders its own was flagged (rc=$CS_RC): $(head -3 <<<"$CS_OUT" | tr '\n' ' ')"
+    FAIL "CTLcs2: MUST-NOT-FIRE — a table rendered the way reference/trip-resolution.md renders its own was flagged (rc=$CS_RC): $(head -3 <<<"$CS_OUT" | tr '\n' ' ')"
   fi
 
   # ── CTL-cx: the SPECIFICITY arm for that repair. Stripping the backticks must not have
@@ -1862,12 +1862,12 @@ EOF
   # distinguish "graded and passing" from "graded nothing" — which is the defect it exists
   # to close, reproduced one level up.
   CTL_DECL="$WORK/ctl_declared"
-  declared_consumers "$CLAUDE_MD" > "$CTL_DECL"
+  declared_consumers "$CONTRACT_DOC" > "$CTL_DECL"
   CTL_DECL_N="$(grep -c . "$CTL_DECL" || true)"
   if [ "${CTL_DECL_N:-0}" -ge 1 ]; then
-    PASS "CTLpz0: fixture integrity — the declared side is non-empty ($CTL_DECL_N row(s) derived from the charter's consumer table), so the two arms below grade against a real declared set"
+    PASS "CTLpz0: fixture integrity — the declared side is non-empty ($CTL_DECL_N row(s) derived from the contract's consumer table), so the two arms below grade against a real declared set"
   else
-    FAIL "CTLpz0: the charter yielded NO declared consumer row, so both arms below would fire for the wrong reason"
+    FAIL "CTLpz0: the contract yielded NO declared consumer row, so both arms below would fire for the wrong reason"
   fi
 
   PZ="$WORK/ctl_pz"
@@ -1911,7 +1911,7 @@ EOF
     FAIL "CTLps2: a tree one consumer short was not caught, or the finding did not name the missing consumer: $(head -3 <<<"$PS_OUT" | tr '\n' ' ')"
   fi
   if ! has_finding "$PS_OUT" 'Q2'; then
-    PASS "CTLps3: SPECIFICITY — the same run emits NO Q2 on the one-short tree: every consumer file present is a row the charter declares, so Q1 and Q2 are distinguishable rather than one finding under two names"
+    PASS "CTLps3: SPECIFICITY — the same run emits NO Q2 on the one-short tree: every consumer file present is a row the contract declares, so Q1 and Q2 are distinguishable rather than one finding under two names"
   else
     FAIL "CTLps3: Q2 fired on a tree whose every file answers a declared row — the two directions of the equality are not separable"
   fi
@@ -1987,7 +1987,7 @@ fi
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group GD — the gate ladder keeps a refused read apart from a failed one.
 #
-# CLAUDE.md § "Resolving a trip" states the refusal predicate once and applies it at two
+# reference/trip-resolution.md § "Resolving a trip" states the refusal predicate once and applies it at two
 # gates: `G0-root`'s pointer read and G1's listing each carry a REFUSED branch whose remedy
 # is the allowed-directories step, beside the branches for a read that ran. The defect this
 # group exists for is the one that predicate closed: a listing the harness refused, read as
@@ -1995,7 +1995,7 @@ fi
 # when nothing about the directory had been observed. So the group grades the declaration.
 # It reads three declarations — the G1 bullet, the G0-root bullet and the refusal
 # predicate's paragraph — through the section constants every other read here uses,
-# CLAUDE_MD and SECTION_HEADING, so a relocation of the section re-points this group with
+# CONTRACT_DOC and SECTION_HEADING, so a relocation of the section re-points this group with
 # the rest of the file. Each required branch is found by its label and graded by its clause.
 #
 # A REFUSED READ'S REMEDY IS GRADED BY CLASS, IN EVERY CLAUSE THAT WRITES IT. It is written
@@ -2030,7 +2030,7 @@ fi
 # sentinel — is DERIVED from the extracted evidence list, never written here, for PIN5's
 # reason.
 #
-# EVERY CODE THE CHECKER EMITS HAS A MUST-FIRE ARM, built from the live charter at runtime:
+# EVERY CODE THE CHECKER EMITS HAS A MUST-FIRE ARM, built from the live contract at runtime:
 # each branch removed in turn (GDc1-GDc3, GDc5); the wrong remedy PARAPHRASED into each of
 # the three clauses (GDc4, GDc6-GDc8), in words written below rather than assembled from the
 # checker's own tokens, so that no control can confirm the checker merely by repeating it;
@@ -2039,7 +2039,7 @@ fi
 # class's definition cut from the predicate's clause (GDc14); and the predicate's disposition
 # of any other refusal removed (GDc15), made to give a directory remedy or the wrong remedy
 # in words written below (GDc16, GDc17), and re-worded so it no longer relays the refusal
-# with no directory remedy (GDc18). Each fixture is asserted to have changed the charter
+# with no directory remedy (GDc18). Each fixture is asserted to have changed the contract
 # before its verdict is read, and each verdict names the ONE code it expects, so a control
 # that fires for the wrong reason is a failure too.
 # ═════════════════════════════════════════════════════════════════════════════════
@@ -2051,20 +2051,20 @@ if [ "$PIN_OK" -ne 1 ]; then
 else
   GD_E1="$(sed -n '1p' "$CANON_FILE")"
   GD_SENT="${GD_E1#*printf \'}"; GD_SENT="${GD_SENT%%\\n*}"
-  GD_G1="$(ladder_block "$CLAUDE_MD" "$SECTION_HEADING" "$GD_G1_OPENER")"
-  GD_G0="$(ladder_block "$CLAUDE_MD" "$SECTION_HEADING" "$GD_G0_OPENER")"
-  GD_PR="$(ladder_block "$CLAUDE_MD" "$SECTION_HEADING" "$GD_PRED_OPENER")"
+  GD_G1="$(ladder_block "$CONTRACT_DOC" "$SECTION_HEADING" "$GD_G1_OPENER")"
+  GD_G0="$(ladder_block "$CONTRACT_DOC" "$SECTION_HEADING" "$GD_G0_OPENER")"
+  GD_PR="$(ladder_block "$CONTRACT_DOC" "$SECTION_HEADING" "$GD_PRED_OPENER")"
   GD_REM="$(remedy_clause "$GD_PR")"
   GD_ON="$(other_clause "$GD_PR")"
 
   # GD1 — extraction, graded first (PV-3): an unreadable declaration is a failure, never a
   # clean read of an absent one.
   if [ -z "$GD_G1" ]; then
-    FAIL "GD1: no bullet opening \"$GD_G1_OPENER\" was found under \"$SECTION_HEADING\" in $CLAUDE_MD — G1's declaration could not be read, so nothing below grades it"
+    FAIL "GD1: no bullet opening \"$GD_G1_OPENER\" was found under \"$SECTION_HEADING\" in $CONTRACT_DOC — G1's declaration could not be read, so nothing below grades it"
   elif [ -z "$GD_G0" ]; then
-    FAIL "GD1: no bullet opening \"$GD_G0_OPENER\" was found under \"$SECTION_HEADING\" in $CLAUDE_MD — G0-root's declaration could not be read, so nothing below grades it"
+    FAIL "GD1: no bullet opening \"$GD_G0_OPENER\" was found under \"$SECTION_HEADING\" in $CONTRACT_DOC — G0-root's declaration could not be read, so nothing below grades it"
   elif [ -z "$GD_PR" ]; then
-    FAIL "GD1: no paragraph opening \"$GD_PRED_OPENER\" was found under \"$SECTION_HEADING\" in $CLAUDE_MD — the refusal predicate could not be read, so the remedy both refused branches hand their STOP to is not graded"
+    FAIL "GD1: no paragraph opening \"$GD_PRED_OPENER\" was found under \"$SECTION_HEADING\" in $CONTRACT_DOC — the refusal predicate could not be read, so the remedy both refused branches hand their STOP to is not graded"
   elif [ -z "$GD_REM" ]; then
     FAIL "GD1: the refusal predicate's paragraph was read, but no clause runs in it from \"$GD_REMEDY_FROM\" to \"$GD_REMEDY_TO\" — its remedy clause could not be read, so it is not graded"
   elif [ -z "$GD_SENT" ] || [ "$GD_SENT" = "$GD_E1" ]; then
@@ -2073,23 +2073,23 @@ else
     PASS "GD1: extraction — the G1 bullet (${#GD_G1} chars), the G0-root bullet (${#GD_G0} chars) and the refusal predicate's paragraph (${#GD_PR} chars), with its remedy clause (${#GD_REM} chars), were read from \"$SECTION_HEADING\", and E1's sentinel was derived from the extracted list (\"$GD_SENT\"), not written here"
   fi
 
-  # GD2 — the live charter, in the remediated form: an exact status, so an absent checker
+  # GD2 — the live contract, in the remediated form: an exact status, so an absent checker
   # reports rc=127 as a named failure rather than reaching a PASS. The text says what the
   # checker read and what it read each clause for, with the length of each clause, so a
   # PASS here claims no more than was graded.
-  GD_OUT="$(ladder_refusal_check "$CLAUDE_MD" "$GD_SENT")"; GD_RC=$?
+  GD_OUT="$(ladder_refusal_check "$CONTRACT_DOC" "$GD_SENT")"; GD_RC=$?
   GD_CR="$(branch_clause "$GD_G1" "$GD_LABEL_REFUSED")"
   GD_C0="$(branch_clause "$GD_G0" "$GD_LABEL_G0_REFUSED")"
-  expect_rc 0 "GD2" "G1 carries a refused branch, a ran-and-failed branch keyed on E1's sentinel and a canary-absent branch whose remedy puts the canary $GD_CANARY_REMEDY, and G0-root carries a refused arm; each clause that writes a refused read's remedy — G1's refused branch (${#GD_CR} chars), G0-root's refused arm (${#GD_C0} chars) and the refusal predicate's remedy clause (${#GD_REM} chars) — names the $GD_REMEDY with \"$GD_SCOPE\" before it and carries no word of the forbidden-remedy class (the canary or README.md, copying or putting into place, writing), the predicate's clause naming $GD_REMEDY_SETTING and $GD_REMEDY_FLAG as well and saying that class is a refusal of a path \"$GD_SCOPE_DEF\"; and the predicate's disposition of a refusal of any other kind (${#GD_ON} chars) says it is \"$GD_OTHER_RELAY\" and carries no word of the directory-remedy class (the step, $GD_REMEDY_SETTING, add-dir, step 4) or of the forbidden-remedy class" -- ladder_refusal_check "$CLAUDE_MD" "$GD_SENT"
+  expect_rc 0 "GD2" "G1 carries a refused branch, a ran-and-failed branch keyed on E1's sentinel and a canary-absent branch whose remedy puts the canary $GD_CANARY_REMEDY, and G0-root carries a refused arm; each clause that writes a refused read's remedy — G1's refused branch (${#GD_CR} chars), G0-root's refused arm (${#GD_C0} chars) and the refusal predicate's remedy clause (${#GD_REM} chars) — names the $GD_REMEDY with \"$GD_SCOPE\" before it and carries no word of the forbidden-remedy class (the canary or README.md, copying or putting into place, writing), the predicate's clause naming $GD_REMEDY_SETTING and $GD_REMEDY_FLAG as well and saying that class is a refusal of a path \"$GD_SCOPE_DEF\"; and the predicate's disposition of a refusal of any other kind (${#GD_ON} chars) says it is \"$GD_OTHER_RELAY\" and carries no word of the directory-remedy class (the step, $GD_REMEDY_SETTING, add-dir, step 4) or of the forbidden-remedy class" -- ladder_refusal_check "$CONTRACT_DOC" "$GD_SENT"
   show "$GD_OUT" 'G[BRAXFCPMSN]'
 
-  # The controls plant ONE defect in a copy of a conformant charter. Over a non-conformant
+  # The controls plant ONE defect in a copy of a conformant contract. Over a non-conformant
   # one they could not isolate the defect they plant, and GD2 has already shown the checker
   # firing, so they do not run — and that is reported as a failure, never passed over.
   if [ "$GD_RC" -ne 0 ]; then
-    FAIL "GDc0: the controls plant one defect in a copy of a conformant charter, and GD2 found the live charter non-conformant (rc=$GD_RC), so no control could isolate the defect it plants — they did not run, which is a failure and not a pass"
+    FAIL "GDc0: the controls plant one defect in a copy of a conformant contract, and GD2 found the live contract non-conformant (rc=$GD_RC), so no control could isolate the defect it plants — they did not run, which is a failure and not a pass"
   else
-    # gd_without writes the live charter, with the first line carrying <old> rewritten so
+    # gd_without writes the live contract, with the first line carrying <old> rewritten so
     # that <old> reads <new>, into its own file under WORK — never into the repository. The
     # rewrite splits the line around <old> by length rather than by a pattern replacement,
     # because bash 3.2 keeps the quotes of a quoted replacement and bash 5.2 reads an
@@ -2107,14 +2107,14 @@ else
           esac
         fi
         printf '%s\n' "$line"
-      done < "$CLAUDE_MD" > "$1"
+      done < "$CONTRACT_DOC" > "$1"
     }
     GD_CF="$(branch_clause "$GD_G1" "$GD_LABEL_FAILED")"
     GD_CC="$(branch_clause "$GD_G1" "$GD_LABEL_CANARY")"
     gd_arm() {  # <id> <fixture> <expected-code> <what the fixture removed or planted>
       local id="$1" fx="$2" code="$3" what="$4" out
-      if cmp -s "$fx" "$CLAUDE_MD"; then
-        FAIL "$id: the fixture is byte-identical to the live charter — $what did not change it, so the verdict below would prove nothing"
+      if cmp -s "$fx" "$CONTRACT_DOC"; then
+        FAIL "$id: the fixture is byte-identical to the live contract — $what did not change it, so the verdict below would prove nothing"
         return 0
       fi
       out="$(ladder_refusal_check "$fx" "$GD_SENT")"
@@ -2172,7 +2172,7 @@ else
     # The directory-class scope cut from each clause that gives the step, so that the step
     # stands as the fix for any refusal — the remedy an expansion refusal was given, and the
     # wrong one for it. And the class's definition cut from the predicate's clause, so that
-    # the scope names a class the charter no longer says anything about.
+    # the scope names a class the contract no longer says anything about.
     gd_without "$GD_FX/g1-unscoped.md" "$GD_CR" "$(gd_swap "$GD_CR" ", $GD_SCOPE," "")"
     gd_arm "GDc11" "$GD_FX/g1-unscoped.md" "GS" "G1's refused branch left giving the step for any refusal, its directory-class scope cut"
     gd_without "$GD_FX/g0-unscoped.md" "$GD_C0" "$(gd_swap "$GD_C0" ", $GD_SCOPE," "")"

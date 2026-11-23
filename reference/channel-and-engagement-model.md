@@ -68,7 +68,7 @@ line whose first non-blank character is `#` is a comment.
 
 ## 2. The `G8` class
 
-**Owner of the class:** `CLAUDE.md` § *Resolving a trip*, gate `G8`. It fixes what a reading of
+**Owner of the class:** `reference/trip-resolution.md` § *Resolving a trip*, gate `G8`. It fixes what a reading of
 this class is and never which readings exist, so it holds no list for this section to repeat.
 What is registered here is each reading, with the file that declares it: that file is the
 reading's owner, and naming it beside the reading is the admission duty of
@@ -210,7 +210,7 @@ record types a reading into the class are examples; the test is whether the read
   words than the record's own.
 - **A gate the suite does not read.** The gate comparison looks for a typed reading's own token
   in the cells of requirement tables and relation tables. It does not read the gate ladder of
-  `CLAUDE.md` § *Resolving a trip*, a table of any other shape, or the axis's bare name. A value
+  `reference/trip-resolution.md` § *Resolving a trip*, a table of any other shape, or the axis's bare name. A value
   of the axis spelled on a stored-value surface is read by the never-carry group of the same
   suite, and the approval gate's independence of the axis by `scripts/test-publish-guard.sh`; a
   gate that names neither is unread.

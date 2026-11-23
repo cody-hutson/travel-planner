@@ -989,7 +989,7 @@ membership disclaimer § 7.6 already carries.
 stops a reader of that row regenerating it blind.** `outputs/traveler-model.md` is rebuilt each
 synthesis pass, so the assignment stands and § 1.1's `L` column and § 9's `Lifecycle` column
 agree with this section unchanged. What does not hold for C12 is the **second sentence**.
-`CLAUDE.md` § *Archived trips — what the freeze binds* is authoritative here, and it distinguishes
+`reference/trip-lifecycle.md` § *Archived trips — what the freeze binds* is authoritative here, and it distinguishes
 the model's entry classes by the provenance marks each entry carries: an entry carrying no mark
 is `first-party` and is re-derived from its own source file, which is exactly the case this
 row's reason describes; an entry carrying `[OPERATOR-PROVIDED]` alone is `operator-provided-only`;
@@ -1002,7 +1002,7 @@ the pair.** A rebuild **drops** the `operator-provided-only` entry, losing what 
 supplied and nothing else holds; and it **carries the `both-marks` entry forward verbatim** —
 `agents/00-enrichment.md` states that carry-forward in terms, as the entry class a pass preserves
 rather than regenerates — so a rebuild run after an erasure restores what the erasure removed,
-undoing it silently. The charter's rule is that substituting rather than regenerating is the
+undoing it silently. The freeze rule holds that substituting rather than regenerating is the
 whole of it. **The classification is unchanged**, exactly as `CLAUDE.md` § *Output Versioning*
 already says of this same artifact: the exception is per entry rather than per class, and it
 qualifies this row's reason without moving its assignment.
@@ -1142,7 +1142,7 @@ reading. The engine guarantees three things and declines to guarantee a fourth.
 >    Guaranteeing otherwise would require rewriting artifacts the engine has no right to rewrite.
 
 **Why this is stated rather than assumed.** The compatibility surface is the operator's data root
-(`CLAUDE.md` § *Resolving a trip*), a directory this repository cannot reach, inspect, or repair. A
+(`reference/trip-resolution.md` § *Resolving a trip*), a directory this repository cannot reach, inspect, or repair. A
 schema change weighed against this guarantee is reversible; one weighed against nothing is not — the
 damage is discovered by a user, in their own working directory, after it is already done.
 
@@ -1525,7 +1525,7 @@ with no site carries no row.
 ```count-assertion-digest
 # sites  path
 39      CHANGELOG.md
-8       CLAUDE.md
+2       CLAUDE.md
 1       SECURITY.md
 3       agents/00-enrichment.md
 5       agents/01-activities.md
@@ -1584,6 +1584,7 @@ with no site carries no row.
 1       reference/schemas/travel-site.md
 1       reference/schemas/trip-context.md
 1       reference/site-layout-spec.md
+4       reference/trip-resolution.md
 4       skills/trip-decommission/SKILL.md
 7       skills/trip-new/SKILL.md
 14      skills/trip-record/SKILL.md

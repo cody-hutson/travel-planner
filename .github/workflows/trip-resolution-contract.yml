@@ -1,7 +1,7 @@
 name: Trip resolution contract
 
 # Runs scripts/test-trip-resolution-contract.sh on every push and every pull request, so
-# the agreement between CLAUDE.md's trip-resolution contract and the command files that
+# the agreement between the trip-resolution contract, reference/trip-resolution.md, and the command files that
 # consume it is machine-graded rather than trusted.
 #
 # SECURITY: no GitHub expression interpolation appears anywhere in this file, and in
@@ -17,8 +17,8 @@ name: Trip resolution contract
 #   1. SHARED FATE. test-publish-guard.sh sources publish-trip-site.sh. A contract suite
 #      added to that job would inherit a failure mode with nothing to do with the
 #      contract.
-#   2. FAILURE ATTRIBUTION. This suite goes red when a contributor edits the CLAUDE.md
-#      contract section or a command file's evidence blocks. Routing that contributor to
+#   2. FAILURE ATTRIBUTION. This suite goes red when a contributor edits the contract
+#      section in reference/trip-resolution.md or a command file's evidence blocks. Routing that contributor to
 #      a check named "Publish guard suite", whose header states it proves the
 #      publish-path guards are machine-graded, is a legibility trap.
 #   3. INHERITED ENV. publish-guard.yml declares GUARD_EXPECTED_SKIPS: 'D J1' — the two
@@ -29,7 +29,7 @@ name: Trip resolution contract
 # What a green check here does and does not prove.
 #
 # IN SCOPE — these groups run on every invocation and their verdicts are real:
-#   PIN  the canonical literals are read FROM CLAUDE.md: the contract section exists and
+#   PIN  the canonical literals are read FROM reference/trip-resolution.md: the contract section exists and
 #        is uniquely named, its evidence list is a fenced literal indexed contiguously
 #        from E1 with every entry stderr-capturing, NOT `!`-prefixed (the pre-execution
 #        carrier is retired — the entries are commands the agent runs), resolving against
@@ -66,8 +66,8 @@ name: Trip resolution contract
 # execute is a failure, not a pass.
 #
 # OUT OF SCOPE — deliberately, and by name:
-#   CONDUCT. This suite asserts that a command file DECLARES the contract as CLAUDE.md
-#   states it. It cannot assert that a model actually walks the gate ladder at runtime,
+#   CONDUCT. This suite asserts that a command file DECLARES the contract as
+#   reference/trip-resolution.md states it. It cannot assert that a model actually walks the gate ladder at runtime,
 #   and a green here is not evidence that it did.
 #
 #   RUNTIME PRIVILEGE. The two keys are not one mechanism, and ADR-007 § 1's 2026-09-11
@@ -83,7 +83,7 @@ name: Trip resolution contract
 #   TAXONOMY BIJECTION. That is the command-taxonomy suite's invariant, not this one's.
 #   Two guards, two invariants, no overlap.
 #
-# So a green check means: CLAUDE.md declares exactly one trip-resolution contract, the
+# So a green check means: reference/trip-resolution.md declares exactly one trip-resolution contract, the
 # guard reads that contract rather than a copy of it, every command file present agrees
 # with it byte-for-byte, and the guard demonstrated on this very commit that it can fail.
 #

@@ -25,7 +25,7 @@ changes none of it.
   desire, with the priority tier carried beside each verdict (`reference/data-model.md`
   § *Satisfaction Metrics*).
 - **An archived trip receives no derivation.** The freeze *"binds derivation, not bytes"*, and
-  erasure is the one operation that writes to an archived trip (`CLAUDE.md` § *Archived trips —
+  erasure is the one operation that writes to an archived trip (`reference/trip-lifecycle.md` § *Archived trips —
   what the freeze binds*).
 - **`history(p)` is a resolution, not a record.** `ADR-017` § 1 defines it as the trips whose
   traveller frontmatter carries `person: q`, `q ∈ closure(p)`, at one hop. Nothing is stored,
@@ -252,7 +252,7 @@ The key is `reference/data-model.md` § *Traveler identity*'s two-step key; sinc
 | **Join key** | `EB-2` on `person: psn-<token>` under `closure(p)` at one hop — the key `ADR-025` names for this slice; `EB-0`, the traveller key, inside a trip. No key is minted. **Exactly one bearer per trip**, else `UNDETERMINED` (W1a-4) |
 | **Trips reached** | `ARCHIVED` only, excluding `t₀`; a reopened trip is `ACTIVE`. Only `PERSON-LINKED` travellers (K1): K2–K4 have no key across `EB-2` (`ADR-025` § 4), so a `[THIRD-PARTY]` member gets no cross-trip reading, by construction |
 | **What is read** | The desire-coverage section, and in it the traveller, tier and verdict cells. The section is found by header label, never by position (W1a-2). **Never** the desire's text, needs compliance, or the balance signals |
-| **Freeze-safe** | Nothing of `t` is written, regenerated or re-derived (`CLAUDE.md` § *Archived trips*); `ADR-017` § 2: *"reading is not derivation"* |
+| **Freeze-safe** | Nothing of `t` is written, regenerated or re-derived (`reference/trip-lifecycle.md` § *Archived trips*); `ADR-017` § 2: *"reading is not derivation"* |
 | **Terminal states** | Each token with its condition, in the table below |
 | **Old instances** | Read under `reference/data-architecture.md` § 7.2's tolerant read. A reader never fails on a version it does not recognise |
 | **Unchanged** | `/trip-decommission archive` (it still *"moves nothing"*), C14's writers, the class table, `internal-hard`, and the reach table |
@@ -802,8 +802,9 @@ it rather than with the offer.
   `Interests` and the veto reading of `Rather skip`, which together delineate the field.
 - `templates/person-intake.template.md` — the form the field lands on.
 - `scripts/test-artifact-schema.sh` — `HZ0`–`HZ2`, `ER14` and `GM1`–`GM3`.
-- `CLAUDE.md` — § *Archived trips — what the freeze binds*, § *Resolving a trip* (`G1`, `G4`,
-  `G8`) and § *Key Rules*.
+- `reference/trip-lifecycle.md` — § *Archived trips — what the freeze binds*.
+- `reference/trip-resolution.md` — § *Resolving a trip* (`G1`, `G4`, `G8`).
+- `CLAUDE.md` — § *Key Rules*.
 - `examples/tokyo-2026/trip-context.md` and
   `examples/data-architecture-demo/outputs/satisfaction-metrics.md` — the party-level blocks read
   for § 2's first ground, and the C14 witness whose header W1a-2 accepts.
@@ -831,3 +832,7 @@ qualifier the row below already carried. The outputs of the terminal set and eve
 stand as decided. The reading is `ADR-017` § 2's —
 *"The resolved trip is excluded from its own history"* — and it is the one the acceptance review
 of the driving card ran when it raised the omission (#1387, finding F-1).
+
+**Amendment (2026-11-21, Saturday) — *Context*, § *Decision* 1 and *References*: citations of the archived-trip freeze rule re-pointed to `reference/trip-lifecycle.md`; no decision changes.** The rule moved out of `CLAUDE.md` into `reference/trip-lifecycle.md` under the same heading, and each of these cited it in the charter. The A2 row under *Options considered* keeps its citation as written: it is a rejected option's reason, and no amendment rewords one.
+
+**Amendment (2026-11-22, Sunday) — § *References*: the resolution ladder's citation re-pointed; no decision changes.** § *Resolving a trip* moved out of `CLAUDE.md` into `reference/trip-resolution.md` under the same heading, and the `CLAUDE.md` item is split so the ladder's gates are listed under that file and the item keeps § *Key Rules*. It replaces "`CLAUDE.md` — § *Resolving a trip* (`G1`, `G4`, `G8`) and § *Key Rules*".

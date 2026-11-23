@@ -155,7 +155,7 @@ the change that sets it: the `Status:` line, an inline marker at the bound, and 
   Decision 3 re-grounds it; no decision of either record changes.
 
 **Unchanged:** every decision of `ADR-028`, the presence file's announce included; `ADR-012`;
-`CLAUDE.md` § *Archived trips — what the freeze binds*; and `CLAUDE.md` § *Output Versioning*'s
+`reference/trip-lifecycle.md` § *Archived trips — what the freeze binds*; and `CLAUDE.md` § *Output Versioning*'s
 traveller-model bullet, whose *"regeneration is safe"* is stated of entries projected from a source.
 
 **The loss path stays open.** A re-plan can still drop a need the operator relayed without saying
@@ -177,3 +177,7 @@ cost is additive: a naming step at the verbs above.
 - `reference/data-architecture.md` — § 6 and its note on C12
 - `CLAUDE.md` — § *Write ownership*, § *Rules over an enumeration*, § *Output Versioning*
 - `skills/trip/SKILL.md`, `skills/trip-record/SKILL.md`, `agents/00-enrichment.md`
+
+## Amendment history
+
+**Amendment (2026-11-21, Saturday) — *Consequences*: the citation of the archived-trip freeze rule re-pointed to `reference/trip-lifecycle.md`; no decision changes.** The *Unchanged* list named the rule as `CLAUDE.md` § *Archived trips — what the freeze binds*. The rule moved out of `CLAUDE.md` into `reference/trip-lifecycle.md` under the same heading, so the list now names its new home; the rule it names, and this record's leaving it unchanged, are as they were.

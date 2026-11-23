@@ -594,7 +594,7 @@ does not check them here, and that is precisely why they are written down.**
    every write human-confirmed and still let the record drift toward whatever the most
    recent trip said, one click at a time. Promotion is an explicit act through the
    command surface. Removing a redundant override is a human edit to a human-authored
-   line under the operator's data root (`CLAUDE.md` § *Resolving a trip*) — nothing in this
+   line under the operator's data root (`reference/trip-resolution.md` § *Resolving a trip*) — nothing in this
    repository could restore it, so reporting is cheap and deleting is not reversible at all.
 
 **Which trips get a signal, and which get only a mention.** Resolution is **one trip per
@@ -611,7 +611,7 @@ leaving it to be inferred from silence: name it in the report as
 re-addressing, so it takes no exception to that freeze.
 
 **The freeze is not this prompt's rule and this paragraph is not its home.** It is stated
-once, in `CLAUDE.md` § *Archived trips — what the freeze binds*, which also names the one
+once, in `reference/trip-lifecycle.md` § *Archived trips — what the freeze binds*, which also names the one
 operation that reaches through it and the two that were tested against it and refused.
 Read it there. What is written here is the behaviour that rule requires **of you** — a
 consequence, not a second copy — so where the two ever appear to differ, the rule governs
