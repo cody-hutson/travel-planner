@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-11-22 — The first-verb read carries only what every session needs
+## [0.76.0] — 2026-11-22 — The first-verb read carries only what every session needs
 
 Every verb now reads one file before it acts: the trip-resolution contract. It has moved out of
 `CLAUDE.md` into `reference/trip-resolution.md`, and each verb's `Contract:` line names it. Four
