@@ -886,7 +886,7 @@ if gh auth status >/dev/null 2>&1; then
 else
   SKIP "J1: gh not authenticated"
 fi
-# J2–J8 — decision-branch tests with a MOCK gh (isolates the destructive delete path; no network).
+# J2–J10 — decision-branch tests with a MOCK gh (isolates the destructive delete path; no network).
 MDIR="$WORK/mock-trip"; mkdir -p "$MDIR"; printf 'mock-slug\n' > "$MDIR/.publish-slug"
 GHLOG="$WORK/gh.log"
 gh() {  # mock: record the call, respond per fixed scenario (repo EXISTS, delete_repo scope present)
@@ -918,7 +918,7 @@ fi
 : > "$GHLOG"
 ( cmd_unpublish "$MDIR" --disable-pages-only </dev/null ) >/dev/null 2>&1
 if grep -q 'api -X DELETE' "$GHLOG" && ! grep -q '^repo delete' "$GHLOG"; then PASS "J3: --disable-pages-only disables Pages, never deletes the repo"; else FAIL "J3: disable-pages-only path wrong"; fi
-# J4–J8 — #2212. A takedown reports what the host said, never a guess. gh exits 1 for a 404 and a dropped
+# J4–J10 — #2212. A takedown reports what the host said, never a guess. gh exits 1 for a 404 and a dropped
 # connection alike, so unpublish reads the HTTP status line `gh api -i` prints: only 404 reads as "there is
 # none", and a read that gets no status line is a host that could not be asked. The mock answers each read
 # from the arm's own scenario. J_REPO and J_PAGES are the status line the repository read and the Pages read
@@ -1039,18 +1039,87 @@ j8_assert() { # <id>
     PASS "$id: CONTROL — a repository the host reports absent (404) is the no-op it always was, rc=0, so J7's refusal is the lookup's distinction and not a lookup that always refuses"
   fi
 }
+# J9 and J10 — the rest of the "any other status" class: a 401, a 403, a 429 and a 5xx, each a host that answered
+# without saying the thing is gone. J9 puts each on the repository lookup, on both limbs; J10 on the Pages read-back
+# after a DELETE that failed. Every case must say the site may still be served and exit 1, and none may report
+# anything gone; J8 is their control, a 404 being the one answer that reads as absent. One verdict per arm, naming
+# the status that broke it. J9 carries J7's lookup-call limb, so a lookup that never ran cannot pass for one that
+# was answered; J10 requires the DELETE and the read-back in the log, so a refusal earlier cannot pass for its own.
+J_OTHER_1='401 Unauthorized'; J_OTHER_2='403 Forbidden'; J_OTHER_3='429 Too Many Requests'; J_OTHER_4='502 Bad Gateway'
+j9_assert() { # <id>
+  local id="$1" how jc out rc bad="" said gone calls asked
+  for how in disable delete; do
+    for jc in "$J_OTHER_1" "$J_OTHER_2" "$J_OTHER_3" "$J_OTHER_4"; do
+      if [ "$how" = disable ]; then out="$(j_run "HTTP/2.0 $jc" '' ok --disable-pages-only)"; rc=$?
+      else out="$(j_run "HTTP/2.0 $jc" '' ok --yes)"; rc=$?; fi
+      said=0; gone=0; calls=0; asked=0
+      case "$out" in *'may still be served'*) said=1 ;; esac
+      case "$out" in *'does not exist'*|*'nothing to'*|*'already disabled'*|*'is now offline'*|*'are gone'*) gone=1 ;; esac
+      grep -q 'api -X DELETE' "$GHLOG" && calls=1
+      grep -q '^repo delete' "$GHLOG" && calls=1
+      grep -qx 'api -i --silent repos/testowner/mock-slug' "$GHLOG" && asked=1
+      if [ "$rc" -ne 1 ]; then
+        bad="a repository lookup answering HTTP ${jc} ($how limb) read rc=$rc, want 1"
+      elif [ "$asked" -eq 0 ]; then
+        bad="the gh log carries no read of the repository's HTTP status ($how limb, ${jc}), so the lookup this arm grades never ran"
+      elif [ "$gone" -eq 1 ]; then
+        bad="a repository lookup answering HTTP ${jc} reads as something gone ($how limb)"
+      elif [ "$calls" -eq 1 ]; then
+        bad="a takedown call was made after a repository lookup answering HTTP ${jc} ($how limb)"
+      elif [ "$said" -eq 0 ]; then
+        bad="the refusal (rc=1, $how limb) after a repository lookup answering HTTP ${jc} does not say the site may still be served"
+      fi
+      [ -z "$bad" ] || break 2
+    done
+  done
+  if [ -n "$bad" ]; then
+    FAIL "$id: $bad"
+  else
+    PASS "$id: a repository lookup answering 401, 403, 429 or 502, on both limbs, makes no takedown call, says the site may still be served, reports nothing gone, and exits 1"
+  fi
+}
+j10_assert() { # <id>
+  local id="$1" jc out rc bad="" said gone deleted readback
+  for jc in "$J_OTHER_1" "$J_OTHER_2" "$J_OTHER_3" "$J_OTHER_4"; do
+    out="$(j_run 'HTTP/2.0 200 OK' "HTTP/2.0 $jc" "{\"status\":\"${jc%% *}\"}" --disable-pages-only)"; rc=$?
+    said=0; gone=0; deleted=0; readback=0
+    case "$out" in *'the takedown may not have happened'*) case "$out" in *'may still be served'*) said=1 ;; esac ;; esac
+    case "$out" in *'already disabled'*|*'nothing to'*|*'is now offline'*|*'To restore:'*) gone=1 ;; esac
+    grep -q 'api -X DELETE' "$GHLOG" && deleted=1
+    grep -qx 'api -i --silent repos/testowner/mock-slug/pages' "$GHLOG" && readback=1
+    if [ "$rc" -ne 1 ]; then
+      bad="a failed DELETE whose Pages read-back answered HTTP ${jc} read rc=$rc, want 1"
+    elif [ "$deleted" -eq 0 ] || [ "$readback" -eq 0 ]; then
+      bad="the gh log carries the DELETE=$deleted and the Pages read-back=$readback (want 1 and 1, at HTTP ${jc}), so the read-back this arm grades never ran"
+    elif [ "$gone" -eq 1 ]; then
+      bad="a failed DELETE whose Pages read-back answered HTTP ${jc} reads as Pages gone"
+    elif [ "$said" -eq 0 ]; then
+      bad="the refusal (rc=1) after a Pages read-back answering HTTP ${jc} does not say the takedown may not have happened and the site may still be served"
+    fi
+    [ -z "$bad" ] || break
+  done
+  if [ -n "$bad" ]; then
+    FAIL "$id: $bad"
+  else
+    PASS "$id: a failed DELETE whose Pages read-back answers 401, 403, 429 or 502 says the takedown may not have happened and the site may still be served, reports nothing gone, and exits 1"
+  fi
+}
 j4_assert "J4"
 j5_assert "J5"
 j6_assert "J6"
 j7_assert "J7-disable" disable
 j7_assert "J7-delete" delete
 j8_assert "J8"
+j9_assert "J9"
+j10_assert "J10"
 md_flips _host_answer "J4" j4_assert "J4"
 md_flips _host_answer "J5" j5_assert "J5"
 md_flips _host_answer "J6" j6_assert "J6"
 md_flips _host_answer "J7-disable" j7_assert "J7-disable" disable
 md_flips _host_answer "J7-delete" j7_assert "J7-delete" delete
 md_flips _host_answer "J8" j8_assert "J8"
+md_flips _host_answer "J9" j9_assert "J9"
+md_flips _host_answer "J10" j10_assert "J10"
 unset -f gh
 
 echo "Plaintext content guard (#123):"
