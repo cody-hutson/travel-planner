@@ -14106,7 +14106,7 @@ rv10b_assert() { # <id>
   o1="$( ( unset STATICRYPT_PASSWORD; rv10b_pf="$d/.passphrase"; rv10b_k2="$k2"
            encrypt_to_tmp() {   # a rotation records its key — and, as rotate does, its pending rotation (#1820)
              rv_enc_shim "$@"; printf '%s\n' "$rv10b_k2" > "$rv10b_pf"
-             _record_pending_rotation "${rv10b_pf%/.passphrase}" "$(git -C "${rv10b_pf%/.passphrase}/.publish" rev-parse --verify -q refs/remotes/origin/main:index.html)" >/dev/null 2>&1 || :
+             _record_pending_rotation "${rv10b_pf%/.passphrase}" "$(git -C "${rv10b_pf%/.passphrase}/.publish" rev-parse --verify -q refs/remotes/origin/main:index.html)" "$(git -C "${rv10b_pf%/.passphrase}/.publish" rev-parse --verify -q 'refs/remotes/origin/main^{commit}')" >/dev/null 2>&1 || :
            }
            set -e; cmd_update "$d" ) 2>&1 )"; rc1=$?
   rv_has "$o1" 'changed while this update was running' && seen=1
@@ -14796,7 +14796,7 @@ rv29_assert() { # <id>
               if [ "${1:-}" = -C ] && [ "${3:-}" = fetch ] && [ ! -e "$rv29_mark" ]; then
                 : > "$rv29_mark"
                 printf '%s\n' "$rv29_k2" > "$rv29_d/.passphrase"
-                _record_pending_rotation "$rv29_d" "$(command git -C "$rv29_d/.publish" rev-parse --verify -q refs/remotes/origin/main:index.html)" >/dev/null 2>&1 || :
+                _record_pending_rotation "$rv29_d" "$(command git -C "$rv29_d/.publish" rev-parse --verify -q refs/remotes/origin/main:index.html)" "$(command git -C "$rv29_d/.publish" rev-parse --verify -q 'refs/remotes/origin/main^{commit}')" >/dev/null 2>&1 || :
                 return 1
               fi
               command git "$@"
@@ -15038,8 +15038,9 @@ rv34k_wrap() { # (inside a subject's subshell) rv34k_k2 is the key the other com
     fi
     printf '%s\n' "$rv34k_k2" > "$rv34k_pf"
     # As a real rotate does at its commit point, the other command records its pending rotation (#1820): the key
-    # file it just wrote, and the page its rotation replaces — the page this run's push landed (review CD-1).
-    _record_pending_rotation "${rv34k_pf%/.passphrase}" "$(git -C "$1" rev-parse --verify -q "$2:index.html")" >/dev/null 2>&1 || :
+    # file it just wrote, and the page and commit its rotation replaces — those this run's push landed (review CD-1;
+    # Stage 7's F-02).
+    _record_pending_rotation "${rv34k_pf%/.passphrase}" "$(git -C "$1" rev-parse --verify -q "$2:index.html")" "$(git -C "$1" rev-parse --verify -q "$2^{commit}")" >/dev/null 2>&1 || :
     return 1
   }
 }
@@ -16080,6 +16081,53 @@ rv48r_assert() { # <id> <ordinary|stale|moved|republished-plaintext>
   fi
 }
 for rv_b in ordinary stale moved republished-plaintext; do rv48r_assert "RV48-rotation-$rv_b" "$rv_b"; done
+# RV48-rotation-republished-plaintext-same-render — route (ii) on a plaintext original site, built as Stage 7's probe A
+# built it (F-02; the operator ruled to bind the marker to the lease commit as well as the page). A site published
+# --plaintext; a rotation that would encrypt it, whose push the site refused; the repository taken down and published
+# again --plaintext from the same render, the clone set aside as unpublish's delete limb removes it. The new repository's
+# page is the same bytes, so it is the very blob the marker's base-page names, and only the commit tells the two sites
+# apart. update must refuse it as not encrypted: a carve-out that admits on the blob alone encrypts the plaintext site
+# under the failed rotation's key, which nobody was given.
+rv48s_assert() { # <id>
+  local id="$1" name d bare out rc1=0 rc2=0 h0="" h1="" h2="" pf="" mb="" ml="" blob2="" live="" mk=0 plain=0
+  name="rv48s-$RANDOM"; d="$(rv_fixture "$name")"; bare="$RVW/origin/$name-trip.git"
+  cp "$SRC" "$d/.publish/index.html"; git -C "$d/.publish" add index.html
+  git -C "$d/.publish" -c user.name=t -c user.email=t@example.invalid commit -q -m plaintext
+  git -C "$d/.publish" push -q origin main
+  # The baseline publish --plaintext records, so the failed rotation of an unchanged plan stages no record.
+  ( record_published_itinerary "$d" "$d/outputs/$name-travel-site.html" ) >/dev/null 2>&1
+  h0="$(rv_head "$bare")"
+  rv_reject_pushes "$bare"
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) >/dev/null 2>&1; rc1=$?
+  rv_allow_pushes "$bare"
+  pf="$(cat "$d/.passphrase" 2>/dev/null)"
+  if [ -f "$d/.rotation-pending" ]; then
+    mk=1
+    while IFS= read -r ml || [ -n "$ml" ]; do case "$ml" in base-page=*) mb="${ml#base-page=}" ;; esac; done < "$d/.rotation-pending"
+  fi
+  mv "$d/.publish" "$RVW/$name-parked-clone"
+  bare="$RVW/origin3/$name-trip.git"; rv48r_republish_plain "$bare"
+  h1="$(rv_head "$bare")"; blob2="$(git -C "$bare" rev-parse --verify -q main:index.html 2>/dev/null)"
+  out="$( ( unset STATICRYPT_PASSWORD; RV_CLONE_BARE="$bare"; rv_gh_clones; set -e; cmd_update "$d" ) 2>&1 )"; rc2=$?
+  h2="$(rv_head "$bare")"; live="$(rv_pushed_key "$bare")"
+  rv_has "$out" 'the page the site serves now is not encrypted' && plain=1
+  if [ "$rc1" -ne 1 ] || [ -z "$pf" ]; then
+    FAIL "$id: the rotation of the plaintext site whose push the site refused read rc=$rc1 and recorded a key=$([ -n "$pf" ] && echo 1 || echo 0) — the failed rotation was not built. VERDICT WITHHELD"
+  elif [ "$mk" -eq 0 ]; then
+    FAIL "$id: a rotation whose push failed left no pending-rotation marker beside the trip, so nothing records that update may finish it"
+  elif [ -z "$mb" ] || [ "$mb" != "$blob2" ] || [ "$h0" = "$h1" ]; then
+    FAIL "$id: the site published again is not the same render in a new repository — page blob equal to the marker's base-page=$([ -n "$mb" ] && [ "$mb" = "$blob2" ] && echo 1 || echo 0), tip new=$([ "$h0" != "$h1" ] && echo 1 || echo 0). VERDICT WITHHELD"
+  elif [ "$rc2" -ne 1 ]; then
+    FAIL "$id: update on a plaintext site published again from the same render after a failed rotation read rc=$rc2, want 1 — its page is the very blob the marker names, and a carve-out that admits on the blob alone encrypts the plaintext site under the failed rotation's key, which nobody was given"
+  elif [ "$h1" != "$h2" ] || [ -n "$live" ]; then
+    FAIL "$id: update refused but the plaintext site moved"
+  elif [ "$plain" -eq 0 ]; then
+    FAIL "$id: the refusal is not the not-encrypted one"
+  else
+    PASS "$id: a plaintext site published again from the same render after a failed rotation — the very page blob the marker names, in a new repository — is refused as not encrypted, because the marker also binds the commit the rotation's push would have replaced"
+  fi
+}
+rv48s_assert "RV48-rotation-republished-plaintext-same-render"
 
 # RV49 — milestone 74's residual, reproduced and ended. A site under a key this machine does not hold; publish on a
 # failed host read takes its create path, records a generated key and stops at the host's refusal of the taken name;
@@ -16309,6 +16357,7 @@ md_flips _key_opens_page "RV48-plaintext" rv48_assert "RV48-plaintext" plaintext
 md_flips cmd_update "RV48-undetermined" rv48_assert "RV48-undetermined" undetermined
 md_flips _pending_rotation_matches "RV48-rotation-ordinary" rv48r_assert "RV48-rotation-ordinary" ordinary
 for rv_b in stale moved republished-plaintext; do md_flips cmd_update "RV48-rotation-$rv_b" rv48r_assert "RV48-rotation-$rv_b" "$rv_b"; done
+md_flips cmd_update "RV48-rotation-republished-plaintext-same-render" rv48s_assert "RV48-rotation-republished-plaintext-same-render"
 md_flips cmd_update "RV49-residual" rv49_assert "RV49-residual"
 md_flips _key_opens_page "RV50-rotate-noop" rv50_assert "RV50-rotate-noop" noop
 md_flips cmd_rotate "RV50-rotate-lost" rv50_assert "RV50-rotate-lost" lost
