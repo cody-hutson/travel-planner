@@ -378,7 +378,7 @@ was looked for in the derived model, where it correctly is not.
 **The freeze protects derivation, not bytes.** Concluding a trip performs a takedown, writes a
 `**Lifecycle:**` marker and appends a closing log entry. **It moves nothing** — an archived trip's
 artifacts sit at exactly the paths an active trip's do. The freeze is enforced entirely by the gate
-table in `CLAUDE.md` § *Resolving a trip*, whose own defaults say so: *"an undeclared `lifecycle` is
+table in `reference/trip-resolution.md` § *Resolving a trip*, whose own defaults say so: *"an undeclared `lifecycle` is
 `ACTIVE`"*, *"a verb absent from the table is `REFUSE`, never `RUN`"*. It is a **policy over the
 refresh path**, never a filesystem barrier.
 
@@ -559,7 +559,7 @@ below are named by path, never by ordinal, for the reason the erasure-reach subs
 
 **The card's premise contains the cost it fears, and the shipped engine has already paid it.** The
 framing was that a person edit has no way to find its referencing trips *without scanning the whole
-working directory on every pass.* But `CLAUDE.md` § *Resolving a trip* ships `E2` — a `grep` over
+working directory on every pass.* But `reference/trip-resolution.md` § *Resolving a trip* ships `E2` — a `grep` over
 `trips/*/trip-context.md`, a **cross-trip glob executed on every invocation** of the four commands
 declaring `population-role: RESOLVE`. A cross-trip read at marker granularity is not a new cost this
 design introduces; it is the shipped baseline. The open question was never *may we look across
@@ -719,7 +719,7 @@ answer*, not as *carries a line*.
 |---|---|
 | **blank or em-dashed** | `agents/00-enrichment.md`, twice: *"An absent, blank or em-dashed line is `one-off`"*, and *"A blank or em-dashed field … is **`unknown`, never `never`**"* |
 | **absent** | the same first clause, which folds absence into the same equivalence class — so presence and absence reach one verdict rather than two |
-| **a leftover `[bracketed placeholder]`** | `CLAUDE.md` § *Resolving a trip*: *"A field whose **trimmed value begins with `[` and ends with `]` is a placeholder**, never an answer"*, tested **by value**; and the template's own *"a leftover `[bracketed placeholder]` reads as unanswered, exactly like an empty line"* |
+| **a leftover `[bracketed placeholder]`** | `reference/trip-resolution.md` § *Resolving a trip*: *"A field whose **trimmed value begins with `[` and ends with `]` is a placeholder**, never an answer"*, tested **by value**; and the template's own *"a leftover `[bracketed placeholder]` reads as unanswered, exactly like an empty line"* |
 
 So **`ANSWERED()` is the negation of a union of shipped conditions**, and the shipped fixture states
 the same rule in its own voice: *"Every label ships; the ones this fixture has no fact for carry `—`,
@@ -1507,7 +1507,7 @@ retained as written; no decision of this record changes, and none is re-opened.
   *regenerate the derived model* as an erasure mechanism; and § *Traveler identity*, which makes the
   `## Group` roster cell the **name authority** and the model heading and traveller-file stem its
   projections — the mechanism by which an `[OPERATOR-PROVIDED]`-only entry's name re-enters
-- `CLAUDE.md` § *Resolving a trip* — the gate ladder and the two defaults the freeze rests on
+- `reference/trip-resolution.md` § *Resolving a trip* — the gate ladder and the two defaults the freeze rests on
   (*an undeclared `lifecycle` is `ACTIVE`*; *a verb absent from the table is `REFUSE`, never `RUN`*),
   which is what makes the freeze a policy over the refresh path rather than a filesystem barrier
 - `skills/trip-decommission/SKILL.md` — the concluding verb's load-bearing order (takedown,
@@ -1551,7 +1551,7 @@ retained as written; no decision of this record changes, and none is re-opened.
   and the carry-forward clause read here from the other side — the derived model is the file-less
   entry's **record**, which is why that entry is a discovery **source** with no bearer to carry a
   reference
-- `CLAUDE.md` § *Resolving a trip* — the `E1`/`E2` evidence blocks whose shape and cost this design
+- `reference/trip-resolution.md` § *Resolving a trip* — the `E1`/`E2` evidence blocks whose shape and cost this design
   reuses without extending; the `contract-depth` **equality** that refuses a third block; `G1`'s
   canary and its forbidden conclusion, inherited verbatim by the population step; `G4`'s *absent ⇒
   `ACTIVE`* default; `G2`'s one-trip-per-session resolution, which is why the every-referencing-trip
@@ -1583,3 +1583,5 @@ asked to be deleted keeps their recorded need on every subsequent synthesis", wh
 carried need as the erasure undone. What undoes an erasure is the name carried with it, and a need
 carried under the trip's token names nobody, so the row now says the entry survives name and need
 together. The subject path is stated in `skills/trip-record/SKILL.md` § `erase`.
+
+**Amendment (2026-11-22, Sunday) — *The freeze boundary*, *Reference discovery*, the relevance table and § *References*: citations of the trip-resolution gate ladder re-pointed; no decision changes.** § *Resolving a trip* moved out of `CLAUDE.md` into `reference/trip-resolution.md` under the same heading, and the five present-tense pointers to it — the gate table the freeze rests on, the `E2` cross-trip read, the placeholder predicate quoted in the relevance table, and two *References* items — now name that file. Each replaces "`CLAUDE.md` § *Resolving a trip*". The blast-radius row that records the section as **Not touched** is kept as written: it states what this design changed at its date.

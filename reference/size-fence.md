@@ -39,7 +39,8 @@ already weigh. A row the growth summary lists as `unowed` is not re-pinned but r
 release that sees it there, before that release stamps its version.
 
 **The first-verb read is held twice.** The file the classification rule puts in the class
-`first-read` — the charter, which every verb reads before it acts — carries its row like any other
+`first-read` — the trip-resolution contract, `reference/trip-resolution.md`, which every verb reads
+once per invocation before it acts — carries its row like any other
 file and is also bounded by a named constant in the suite. Its row is held equal to that constant,
 and a row above it or below it fails; of the two, the lower is the ceiling
 (`reference/load-class-model.md` § 5, *instrument*), and held equal they are one. Raising its
@@ -60,7 +61,7 @@ same reader. Rows stand in byte order of the path.
 
 ```size-ceiling
 # ceiling  path
-153381     CLAUDE.md
+97553      CLAUDE.md
 22215      CONTRIBUTING.md
 82813      agents/00-enrichment.md
 26506      agents/01-activities.md
@@ -103,7 +104,8 @@ same reader. Rows stand in byte order of the path.
 28177      reference/adr/README.md
 147099     reference/data-architecture.md
 246314     reference/data-model.md
-71892      reference/site-layout-spec.md
+79105      reference/site-layout-spec.md
+41723      reference/trip-resolution.md
 60026      skills/trip-decommission/SKILL.md
 40851      skills/trip-new/SKILL.md
 48711      skills/trip-publish/SKILL.md
@@ -111,3 +113,7 @@ same reader. Rows stand in byte order of the path.
 118008     skills/trip/SKILL.md
 22110      templates/traveler-intake.template.md
 ```
+
+## The verb-body line budget — recorded, not enforced
+
+**The budget is at most 500 lines of body, and the number is not this repository's.** It comes from the published skill-authoring guidance that the `SKILL.md` format belongs to — an external source this repository does not own and cannot change — with the frontmatter block outside the count, and it is written down here because a criterion graded against a figure no reader can find is not gradeable. **Nothing in this repository enforces it, and no line count for a verb's body is recorded here:** a recorded count drifts from the file it describes, so measure a body at the commit you are reading, as its lines less its frontmatter block. What holds a verb file is its row in the fence above, a ceiling in bytes, because every quantity a size assertion here reads is in bytes and never in lines (`reference/load-class-model.md` § 5). **The remedy for a body over the budget is structural rather than a trim:** detail moves out of the body into a file bundled beside it, as `reference/adr/ADR-039-interview-conduct-bundled-with-the-verb.md` records for the interview's conduct, and the consolidation that merges the verbs into a router plus its references dissolves the over-budget bodies rather than trimming them.

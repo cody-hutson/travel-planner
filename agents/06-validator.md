@@ -228,7 +228,7 @@ Two things the declaration does not say, which this check does:
 The publish-bound artifacts are **every source the site build reads**. The
 authority for that set is the single-source table in
 `reference/site-layout-spec.md` §9.1 — **not** the content-source list in
-`CLAUDE.md` § Travel Site Generation, which enumerates the build procedure's
+`reference/site-layout-spec.md` § *How to build it*, which enumerates the build procedure's
 primary reads and is narrower. §9.1 names five: `outputs/final-itinerary.md`,
 `outputs/links-reference.md`, `outputs/venue-matrix.md`,
 `outputs/event-status.md`, and `trip-context.md` — plus the site rendered from

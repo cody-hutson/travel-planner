@@ -6,7 +6,7 @@
 # 600k PBKDF2-SHA256) and publishes ONLY the ciphertext to a per-trip PUBLIC repo
 # with GitHub Pages.
 # The plaintext itinerary never leaves the trips/ working dir under the operator's data
-# root (CLAUDE.md § Resolving a trip), and is never written to the per-trip repo or its
+# root (reference/trip-resolution.md § Resolving a trip), and is never written to the per-trip repo or its
 # history. Because each trip is a fresh repo, privacy is by construction.
 #
 # Security model (be honest about it): the published artifact is world-fetchable
@@ -6246,7 +6246,7 @@ _is_stale() { [ -n "${1:-}" ] && [ -n "${2:-}" ] && [ "$1" -gt "$2" ]; }
 # Rows 1 to 5 and 7 are UNDETERMINED, each naming the operand it could not read; a state no row names cannot
 # arise, because row 8 is reached only with both tokens read. It reads only: _baseline_record, the staged
 # twin's presence, newest_site_html and the two digests, and no gh. No publish verb calls it, and nothing
-# may branch on it (CLAUDE.md § Resolving a trip, G8: report-only). Blind spots, declared in the SKILL:
+# may branch on it (reference/trip-resolution.md § Resolving a trip, G8: report-only). Blind spots, declared in the SKILL:
 # a push from another machine; a takedown, since unpublish leaves the record; text outside the projection
 # (the coordination band, the declaration block, and text a browser shows that the projection drops); and
 # a projection that moved after the record was written, which reads as a change once.

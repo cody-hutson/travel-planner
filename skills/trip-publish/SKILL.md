@@ -3,8 +3,8 @@ name: trip-publish
 description: Re-publish an already-public trip site after edits, or list what is published. The publish surface — never creates a repo, never rotates, never takes a site down, never publishes plaintext.
 argument-hint: update|list [--trip <slug>]
 disable-model-invocation: true
-allowed-tools: Bash(ls:*), Bash(grep:*), Bash(test:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh update:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh list:*)
-disallowed-tools: [Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh publish:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh rotate:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh unpublish:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh status:*), Bash(bash:*), Bash(sh:*), Read, Write, Edit, NotebookEdit]
+allowed-tools: Bash(ls:*), Bash(grep:*), Bash(test:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh update:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh list:*), Read(${CLAUDE_SKILL_DIR}/../../reference/trip-resolution.md)
+disallowed-tools: [Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh publish:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh rotate:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh unpublish:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh status:*), Bash(bash:*), Bash(sh:*), Write, Edit, NotebookEdit]
 ---
 
 # /trip-publish
@@ -107,17 +107,21 @@ is the case where one file's declared set spans both jobs at once.
 | Grant | The use that holds it |
 |---|---|
 | `Bash(ls:*)` | the trip-listing evidence block below, which the declared `contract-depth` requires |
-| `Bash(grep:*)` | the trip-record evidence block below, which the declared `contract-depth` requires |
+| `Bash(grep:*)` | the trip-record evidence block below, which the declared `contract-depth` requires; and, on an operator hand-off, the one line it prints, taken from `CLAUDE.md` § *Publishing to GitHub Pages* where that section is not already in context |
 | `Bash(test:*)` | `update`'s environment precondition. Chosen because it is the narrowest primitive that answers *is this variable set*, and because it **discloses no contents** — it answers by exit status and reads no path. A malformed invocation can still put a usage diagnostic on stderr; that names an operand, never a value |
 | `publish-trip-site.sh update` | `update`'s single invocation |
 | `publish-trip-site.sh list` | `list`'s single invocation |
+| `Read(${CLAUDE_SKILL_DIR}/../../reference/trip-resolution.md)` | the contract read every verb makes once per invocation, before it acts — the file this file's `Contract:` line names, and the one path the grant names |
 
 **The publish script's grants are named here by script and arm, and spelled only in the
 frontmatter above.** A cell that spelled one would be a second copy to keep in step with it.
 
-**Denied, not merely unlisted:** `Read`, `Write`, `Edit`, `NotebookEdit`. Nothing here
+**Denied, not merely unlisted:** `Write`, `Edit`, `NotebookEdit`. Nothing here
 writes a file or edits one, and that rests on those denials — unlisted would prohibit
-nothing.
+nothing. **`Read` is granted for one path and denied for none:** the contract file, which
+every verb reads before it acts. A read of any other path routes through the permission
+settings rather than being removed, so that this file reads no trip file in full is its own
+rule, stated below, and not a denial.
 
 **Two bounds rest on a rule instead, and are marked as rules rather than dressed as
 denials.** This command **dispatches no agent**: the agent-dispatch tool is neither granted
@@ -181,7 +185,8 @@ its declared depth, is structurally capable of emitting a file's contents. That 
 bounded by a rule rather than by a denial — no construct in this file directs a
 content-emitting primitive at a passphrase path.
 
-**Resolve the data root before you read anything.** `CLAUDE.md` § *Resolving a trip*, gate `G0-root`,
+**Resolve the data root before you read anything.** `reference/trip-resolution.md` § *Resolving a trip* — read with this file's one
+`Read` grant — gate `G0-root`,
 using the `data-root-pointer:` path carried in this file's contract header below. Then **run each entry
 below as a tool call**, substituting the resolved root for `<data-root>`. They are not pre-execution
 blocks and nothing has run ahead of you: an entry yields no evidence until you issue it.
@@ -197,7 +202,7 @@ blocks and nothing has run ahead of you: an entry yields no evidence until you i
 ## Contract header
 
 ```trip-contract-header
-Contract: CLAUDE.md § Resolving a trip
+Contract: reference/trip-resolution.md § Resolving a trip
 contract-depth: G8
 population-role: RESOLVE
 data-root-pointer: ${HOME}/.travel-planner/data-root
@@ -236,8 +241,8 @@ are this file's evidence entries, tool calls you issue as the data-root paragrap
 directs; their output is the whole of the trip state this file **resolves against**, and
 the whole of the trip state it needs, and no verb here reads a per-trip path of its own. Do not
 read `trip-context.md` in full, and do not read `trip-log.md` or anything
-under `outputs/` — a rule this file follows, and `Read` is a **declared** denial besides,
-under the caveat above on what a declaration establishes.
+under `outputs/` — a rule this file follows, and the one `Read` grant names the contract
+file and nothing else, under the caveat above on what a declaration establishes.
 
 ### What counts as a read here
 
@@ -449,7 +454,10 @@ later slice adds lands in the table or does not run.
 
 ## update
 
-**Reads:** no path of its own. Reads no `trips/<slug>/trip-context.md`, no
+**Reads:** no trip path of its own. On a first-publish or key-remedy hand-off below, the one line
+it prints, from `CLAUDE.md` § *Publishing to GitHub Pages* — in context when this repository is the
+workspace, otherwise taken with this file's `grep` grant from the engine root — and nothing else
+of that file. Reads no `trips/<slug>/trip-context.md`, no
 `trips/<slug>/trip-log.md`, no `trips/<slug>/.publish-slug` and nothing under
 `trips/<slug>/outputs/` — the record block above already carries the lifecycle, the mode and
 the destination by value, the publish script resolves the slug file itself, and a read here
@@ -534,8 +542,8 @@ publish.) This verb relies on that refusal rather than duplicating it; a second,
 pre-check would be a guard for a failure the script already guards precisely.
 
 A first publish is not a verb of this file, so render the named remedy as an **operator
-hand-off**: point at `CLAUDE.md` → *Publishing to GitHub Pages*, print that section's
-publish command for the operator to run in their own terminal with every placeholder
+hand-off**: point at `CLAUDE.md` → *Publishing to GitHub Pages*, read its publish command as
+§ *update*'s `**Reads:**` line says, print that command for the operator to run in their own terminal with every placeholder
 filled, and stop. **Fill each one, or the printed line runs from nowhere:** `trip.slug`
 for the placeholder trip directory, `trip.data_root` for `<data-root>`, and for
 `<engine-root>` the engine root named at the top of this file, its `..` segments kept as
@@ -665,7 +673,8 @@ the pre-push ciphertext guard, running content controls instead — a refusal of
 carrying a group-only section, the source check every publish runs, then the content guard.
 
 So this is an operator action. The hand-off: point at `CLAUDE.md` → *Publishing to GitHub
-Pages* → the opt-out paragraph, **print that paragraph's command for the operator to run
+Pages* → the opt-out paragraph, read its command as § *update*'s `**Reads:**` line reads a
+hand-off's line, **print that paragraph's command for the operator to run
 in their own terminal**, with every placeholder filled exactly as the first-publish
 hand-off under § *update* fills them, say why an agent cannot run it, and stop. Print the
 line — a hand-off that names a section and leaves the operator with nothing runnable has

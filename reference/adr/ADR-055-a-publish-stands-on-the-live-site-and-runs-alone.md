@@ -129,7 +129,7 @@ The rule for a lock a killed run left behind:
   reading every failure as an absent repository, is left as it was; decision 1 ends the harm it could do.
 - **Every `update` and `rotate` that reaches its push decrypts the live page once,** with the same pinned
   StatiCrypt package the encryption already trusts, about half a second with the package cached. The trust
-  boundary `CLAUDE.md` states is unchanged.
+  boundary `reference/publishing-runbook.md` states is unchanged.
 - **Two sidecars join the trip directory, `.rotation-pending` and `.publish-lock/`.** Neither holds person data
   or key material; the erase reach table's control-files row names both as OUT, and they join the publish
   script's other sidecars outside the data architecture's closed enumeration, the residual `ADR-046` records.
@@ -152,7 +152,8 @@ The rule for a lock a killed run left behind:
 
 - `scripts/publish-trip-site.sh` — the header's passphrase and concurrency paragraphs, `_key_opens_page`,
   `_key_opens_live_page`, the pending-rotation helpers, `_flush_path`, and the per-trip lock.
-- `CLAUDE.md` § *Publishing to GitHub Pages* — the passphrase, rotation and one-at-a-time paragraphs.
+- `reference/publishing-runbook.md` § *Passphrase*, § *One at a time* and § *A rotation that stops, and what it
+  refuses* — the passphrase, one-at-a-time and rotation paragraphs.
 - [`ADR-002`](ADR-002-living-site-refresh.md) — the secret model this record extends.
 - [`ADR-046`](ADR-046-interview-rating-and-engagement-record.md) — the residual on the publish script's sidecars.
 - Driving issues: #1820 (the key against the live site, carrying #1821's durable write) and #1819 (the per-trip

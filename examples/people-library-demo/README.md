@@ -18,7 +18,7 @@ witness* below says why it lands here rather than in a trip fixture.
 **It now carries a third class for a third reason.** [`groups/grp-4a81.md`](groups/grp-4a81.md)
 is the witness for **C23 `groups/<group>.md`**, the reusable-group record — a second
 cross-trip class whose real store, like the person store, belongs to the operator and lives
-outside this repository: [`../../CLAUDE.md`](../../CLAUDE.md) § *Resolving a trip* names
+outside this repository: [`../../reference/trip-resolution.md`](../../reference/trip-resolution.md) § *Resolving a trip* names
 `groups/` among the stores the operator's data root holds. § *The group witness* below says
 why it lands in this root rather than opening one of its own.
 

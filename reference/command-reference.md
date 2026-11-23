@@ -24,7 +24,7 @@ it.
 | **Lifecycle** | The trip lifecycle state the verb requires — a verb declaring `ACTIVE` refuses on an archived trip | the requirement table |
 | **Mode** | The planning mode(s) the verb runs in, or `any` | the requirement table |
 | **Destination** | Whether the trip's destination must be settled | the requirement table |
-| **Depth** | The gate on the § *Resolving a trip* ladder in [`CLAUDE.md`](../CLAUDE.md) that the command's contract header declares | the requirement table |
+| **Depth** | The gate on the § *Resolving a trip* ladder in [`reference/trip-resolution.md`](trip-resolution.md) that the command's contract header declares | the requirement table |
 
 A command's own file is still the authority on what a verb *does*: what it reads, what it writes,
 what it refuses and why. This table says which verbs exist and what each one needs before it will

@@ -153,7 +153,7 @@ the command follows, never as a property its frontmatter guarantees. **Nothing i
 that this command cannot do something because a grant is absent, and nothing argues it may because a
 grant is present.**
 
-**Resolve the data root before you read anything.** `CLAUDE.md` § *Resolving a trip*, gate `G0-root`,
+**Resolve the data root before you read anything.** `reference/trip-resolution.md` § *Resolving a trip*, gate `G0-root`,
 using the `data-root-pointer:` path carried in this file's contract header below. Then **run each entry
 below as a tool call**, substituting the resolved root for `<data-root>`. They are not pre-execution
 blocks and nothing has run ahead of you: an entry yields no evidence until you issue it.
@@ -169,7 +169,7 @@ blocks and nothing has run ahead of you: an entry yields no evidence until you i
 ## Contract header
 
 ```trip-contract-header
-Contract: CLAUDE.md § Resolving a trip
+Contract: reference/trip-resolution.md § Resolving a trip
 contract-depth: G8
 population-role: RESOLVE
 data-root-pointer: ${HOME}/.travel-planner/data-root
@@ -438,7 +438,7 @@ never from a sentence in this file naming a set.
 
 ## The stop-message rule, and the defences this command carries
 
-`CLAUDE.md` § *Resolving a trip* states the rule: a STOP **names what could not be established and
+`reference/trip-resolution.md` § *Resolving a trip* states the rule: a STOP **names what could not be established and
 the remedy**, and **never asserts a conclusion about trip state that the gate did not observe.** The
 contract names this command's own shape as the forbidden one — *"Nothing is published, so there is
 nothing to take offline"*, a conclusion about publication state derived from a directory listing that
@@ -476,8 +476,10 @@ That is what could not be established, and the remedy. It is not a report that t
 
 ## temporary
 
-**Reads:** nothing beyond the blocks above. It reads no `trip-context.md`, no `trip-log.md`, no
-`trips/<slug>/.publish-slug` and **no `trips/<slug>/.passphrase`**. **Dispatches no agent.**
+**Reads:** nothing of the trip beyond the blocks above. It reads no `trip-context.md`, no `trip-log.md`, no
+`trips/<slug>/.publish-slug` and **no `trips/<slug>/.passphrase`**. For the deleting hand-off it
+renders, it reads that line from `CLAUDE.md` § *Publishing to GitHub Pages* — in context when this
+repository is the workspace, otherwise opened at the engine root. **Dispatches no agent.**
 **Non-interactive: the standing clause's *run nobody can answer*.**
 
 Takes the trip's site offline and leaves the local tree untouched.
@@ -535,7 +537,9 @@ exists and to locate the append point at its end; `trips/<slug>/trip-context.md`
 lifecycle marker line or, where it is absent, the title-line anchor the insert uses. Reads **no
 `trips/<slug>/.passphrase`**, and reads `trips/<slug>/.publish-slug` not at all — the resolver reads
 it, this verb does not, and reading it here would let this command form its own view of publication
-state, which § *The stop-message rule* forbids. Dispatches no agent.
+state, which § *The stop-message rule* forbids. Of the engine, it reads `CLAUDE.md` § *trip-log.md* and,
+for the deleting hand-off, § *Publishing to GitHub Pages* — in context when this repository is the
+workspace, otherwise opened at the engine root. Dispatches no agent.
 **Non-interactive: the standing clause's *run nobody can answer*.**
 
 Concludes a trip: the same takedown `temporary` performs, then the lifecycle marker, then a closing
@@ -734,7 +738,8 @@ to the operator. Not in the not-a-verb refusal, which renders its three things a
 form is its `unpublish` subcommand on the trip's directory **without** the disable-pages-only flag —
 the default, which is the deleting one — and with the data-root flag every line of that section
 carries. **Point the operator at `CLAUDE.md` § *Publishing to GitHub Pages*, which carries the
-literal line to run, and print that line for them with every placeholder filled:** `trip.slug` for
+literal line to run — in context when this repository is the workspace, otherwise opened at
+`${CLAUDE_SKILL_DIR}/../../CLAUDE.md` — and print that line for them with every placeholder filled:** `trip.slug` for
 the placeholder trip directory, `trip.data_root` for `<data-root>`, and for `<engine-root>` the
 engine root named at the top of this file, its `..` segments kept as written — collapsed as text,
 they land outside the engine when this verb's directory is a link. Filled, the line runs from

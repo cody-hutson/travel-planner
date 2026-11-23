@@ -273,7 +273,7 @@ human-authored file, it would need a publish disposition and an `ANSWERED()` rul
 already means it. **(c)** reading skip-ness from `trip-log.md` — the log is a decision register, and
 a traveller's answers are not decisions (see D6.5).
 
-**Amendment (2026-09-27, Sunday) — `UNASKED` is a shape, not a byte match; this corrects a claim.** The table's `UNASKED` row reads *"matches the form's own bracketed-placeholder form for that field"*. Read as a comparison with the current form's bracket, it leaves a field matching no row of the table whenever a form rewords a bracket under an unchanged `form-version:`, which the closed/open markers did to the shipped forms, for every file seeded before them. The value test `ADR-007-command-entry-point.md` § 2 requires is a test of the placeholder **form**, and the engine states that form once, field-general, in `CLAUDE.md` § *Resolving a trip*: a trimmed value that opens with `[` and closes with `]`. **`UNASKED` is that shape — the surviving-bracket member of `ANSWERED()`'s false class — whatever the bracket holds.** Seam datum S3 is therefore met by the shape every shipped bracket already has, rather than by a comparison field by field. This removes an ambiguity and changes no decision: the states, what the interview does in each, and the refusal to redefine `ANSWERED()` stand as decided. The refinement's live home is `reference/data-model.md` § *The interview's read of an unstated value*.
+**Amendment (2026-09-27, Sunday) — `UNASKED` is a shape, not a byte match; this corrects a claim.** The table's `UNASKED` row reads *"matches the form's own bracketed-placeholder form for that field"*. Read as a comparison with the current form's bracket, it leaves a field matching no row of the table whenever a form rewords a bracket under an unchanged `form-version:`, which the closed/open markers did to the shipped forms, for every file seeded before them. The value test `ADR-007-command-entry-point.md` § 2 requires is a test of the placeholder **form**, and the engine states that form once, field-general, in `reference/trip-resolution.md` § *Resolving a trip*: a trimmed value that opens with `[` and closes with `]`. **`UNASKED` is that shape — the surviving-bracket member of `ANSWERED()`'s false class — whatever the bracket holds.** Seam datum S3 is therefore met by the shape every shipped bracket already has, rather than by a comparison field by field. This removes an ambiguity and changes no decision: the states, what the interview does in each, and the refusal to redefine `ANSWERED()` stand as decided. The refinement's live home is `reference/data-model.md` § *The interview's read of an unstated value*.
 
 **D1.4 — Re-running over an already-filled artifact resumes it; it never re-opens it.**
 
@@ -893,7 +893,7 @@ This is the payoff of D1.1 and it is listed first because it is the part a reade
 
 ### Two facts a small-looking change would hide
 
-1. **The verb file this behaviour lands in is already far over the body-size budget `CLAUDE.md`
+1. **The verb file this behaviour lands in is already far over the body-size budget `reference/size-fence.md`
    records.** A resumable interview authored inline in the `profile` verb grows the widest
    over-budget body in the engine. This record states **behaviour** and deliberately leaves
    **placement** to the sibling, which may move conduct out entirely. That is the mitigation, and it
@@ -999,3 +999,7 @@ cell. Every statement of what becomes false elsewhere stands as it stood. The sa
 "One cell gains an explicit `D5.1` basis it had been taking from the removed token." That sentence
 describes the sibling record, `ADR-023`, whose table carries the cell. No cell of this record gained
 such a basis, and the sentence is removed.
+
+**Amendment (2026-11-21, Saturday) — *Two facts a small-looking change would hide*, item 1: the body-size budget's home re-pointed; no decision changes.** The budget left `CLAUDE.md` for `reference/size-fence.md` § *The verb-body line budget*; the item cited the charter as the place that records it and now cites the size fence.
+
+**Amendment (2026-11-22, Sunday) — § *Decision* 1, the 2026-09-27 account: the placeholder form's citation re-pointed; no decision changes.** § *Resolving a trip* moved out of `CLAUDE.md` into `reference/trip-resolution.md` under the same heading, and the account's pointer to where the engine states the placeholder form once now names that file. It replaces "`CLAUDE.md` § *Resolving a trip*".

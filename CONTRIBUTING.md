@@ -29,7 +29,7 @@ by invitation only.
   or the identity a commit's signing key is bound to, which only a verifier's own mapping supplies.
 - **No personal data in examples.** The worked examples under `examples/` are sanitized and
   illustrative (fixture names, representative bookings). Keep your own trip data in your data
-  folder — the one `~/.travel-planner/data-root` names (`CLAUDE.md` § *Resolving a trip*) — and
+  folder — the one `~/.travel-planner/data-root` names (`reference/trip-resolution.md` § *Resolving a trip*) — and
   never in the engine's own `trips/`; it is never published.
 - **Keep links valid.** A CI gate checks markdown links; broken local links fail the build.
 

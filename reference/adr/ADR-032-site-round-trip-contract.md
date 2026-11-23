@@ -242,7 +242,8 @@ Wave-1 working notes on its Stage-6 sub-task, #1392:
 - [ADR-009](ADR-009-data-architecture.md) — § 4.4's fail-closed paths.
 - `reference/site-layout-spec.md` — § 9.1 to § 9.5.
 - `reference/data-architecture.md` — § 1.1's classes and § 5.1.
-- `CLAUDE.md` — § *Resolving a trip* (`G7`'s cell grammar) and the mode-gated behaviour register.
+- `reference/trip-resolution.md` — § *Resolving a trip* (`G7`'s cell grammar).
+- `CLAUDE.md` — the mode-gated behaviour register.
 - `scripts/check-round-trip.sh` and `scripts/test-artifact-schema.sh` — the walker and its grader.
 - Provenance: the card, #1296; its design sub-task, #1388, carrying the first pass; the plan, its
   surface map, the fit review, CR-2 and R2 on #1369; and the Wave-1 working notes this record's
@@ -256,3 +257,5 @@ places the artifact pass's contract half on the tracked tree, and the aggregatio
 § *Consequences* has the walker's contract run exit with findings, so that half needs no σ and runs
 without it; the sentence said less than the record does. It now names both passes that run without σ, and names where the
 specification states what a run without σ reports, rather than restating it.
+
+**Amendment (2026-11-22, Sunday) — § *References*: the resolution ladder's citation re-pointed; no decision changes.** § *Resolving a trip* moved out of `CLAUDE.md` into `reference/trip-resolution.md` under the same heading, and the item is split: `G7`'s cell grammar is listed under that file, and the mode-gated behaviour register under `CLAUDE.md`.

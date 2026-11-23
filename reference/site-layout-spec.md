@@ -922,7 +922,7 @@ is how a pin decays into decoration.
 
 **The artifact grain.** The fence above is the element grain: one fence per rendered artifact,
 mode-blind. The fence below is the artifact grain: for each state σ the `site` verb admits —
-the trip's mode and its destination's disposition (`CLAUDE.md` § *Resolving a trip*, `G5` and
+the trip's mode and its destination's disposition (`reference/trip-resolution.md` § *Resolving a trip*, `G5` and
 `G6`) — whether each `bound` class renders and where, and which scaffolding the state emits.
 `reference/adr/ADR-031-site-phase-model.md` § 2 decided the rows and
 `reference/adr/ADR-032-site-round-trip-contract.md` the table; `scripts/check-round-trip.sh`
@@ -1041,3 +1041,83 @@ render**, and to **surface** any structural gap as a named finding — not to bu
 under the banner of round-trip fidelity. If the completeness walk turns up an element type with no
 possible rendered home, record it and route it to a fast-follow; do not grow this contract to
 absorb it.
+
+---
+
+## 10. Designing and Building a Site
+
+How a trip's site is designed and built. `CLAUDE.md` § *Travel Site Generation* keeps what every session needs of the site — what it is, how a patch is checked, and how it is published.
+
+### Design Principles
+
+- **Destination-specific aesthetic.** Every site reflects its destination: color palette, landmark visuals, typography mood. Tokyo got Japanese red (`#BC002D`) with kana characters and torii-gate gradients. Lisbon would get Portuguese blue/azulejo tones. Paris would get something else entirely.
+- **Editorial luxury quality.** High-end travel magazine feel. Not a data dump — a designed experience you'd want to browse on your phone at the airport.
+- **Functional on the ground.** Sticky navigation, collapsible days, Google Maps links on every venue, booking checklist with progress tracking. It's a planning tool AND a reference tool during the trip.
+- **Grows with the plan.** The site isn't generated once at the end. It's created when there's enough content and updated as the plan evolves. Early versions may be lighter. Final versions are comprehensive.
+
+### What a good site includes
+
+Based on the quality bar established by previous trips:
+- Hero section with destination name, dates, group, key stats
+- Trip overview dashboard with booking action tags per day
+- Sticky day navigation with energy-level color coding and sub-text
+- **Desktop: one day per viewport** — 4-column grid (schedule · highlights · food · map), auto-expand/collapse to fit any screen size
+- **Mobile: progressive disclosure** — one day at a time, bottom nav, collapsible sections
+- **Tablet: 3-column fallback** — map goes full-width at bottom
+- Per-day sections: schedule timeline, featured stop cards (side-by-side, compact/expandable), food cards, transport notes
+- **Booking status indicators** on every card (advance/ahead/walkup/open)
+- **Transport field** on every card (mode + time from hotel)
+- **Featured card enrichments**: insider tips, best timing, group-fit tags
+- Heat/weather zone visualizations where relevant
+- Leaflet maps in dedicated grid column (desktop) or tap-to-show (mobile)
+- Interactive booking checklist sorted by action date with booking window rules
+- Collapsible prep-boxes, transport-boxes, and warn-boxes on desktop
+- Responsive across all screen sizes — viewport-fit JS adapts automatically
+- CSS-art landmark visuals (not stock photos — pure CSS/SVG)
+- Print styles (hide nav, maps, toggles; single-column)
+- §§ 1–9 above are the full implementation specification
+
+### How to build it
+
+When the user says "build the site" or "create the travel site":
+
+1. **Read the content sources:**
+   - `outputs/final-itinerary.md` (primary content)
+   - `outputs/links-reference.md` (all venue URLs for maps/links)
+   - `outputs/venue-matrix.md` (day assignments)
+   - `trip-context.md` (group info, dates, constraints for the hero)
+
+2. **Read reference sites for quality standard:**
+   - Check the Site References section below for previous trip sites
+   - Use them as design inspiration — not as templates to copy
+   - Match or exceed the quality bar; adapt the aesthetic to the new destination
+
+3. **Design the destination aesthetic:**
+   - Choose a color palette that evokes the destination
+   - Design CSS-art landmark visuals specific to the location
+   - Select typography that fits the mood (editorial, elegant, destination-appropriate)
+
+4. **Build the full HTML site** as a single self-contained file:
+   - All CSS inline (no external stylesheets except Google Fonts)
+   - Leaflet.js for maps (CDN link is fine)
+   - No build step, no framework — one HTML file that works offline
+   - Write to `outputs/[destination]-travel-site.html`
+   - **Follow this specification** for responsive architecture, viewport-fit logic, card system, booking indicators, and mobile/desktop interaction patterns
+
+5. **Iterate with the user.** The first version won't be final. Expect:
+   - Color tweaks ("more muted", "warmer tones")
+   - Content additions as the plan evolves
+   - Section reordering
+   - New features for this specific trip
+
+### Site References
+
+Previous trip sites that set the quality bar. Read these when building a new site. Each establishes a different destination aesthetic while maintaining the same editorial quality standard.
+
+| Trip | Itinerary Source | Design Notes |
+|------|------------------|-------------|
+| Tokyo 2026 (worked example) | [`examples/tokyo-2026/outputs/final-itinerary.md`](../examples/tokyo-2026/outputs/final-itinerary.md) | Japanese red (#BC002D), Bebas Neue + DM Serif Display + Karla fonts, CSS-art landmark visuals, Leaflet maps, interactive booking checklist, energy-level nav, 3-column day layout, scroll animations, heat zone strips |
+
+> The published HTML for each trip lives in its own standalone public repo (per `CLAUDE.md` § *Publishing to GitHub Pages*), not in the engine repo. The example above is the markdown source set; the rendered HTML is produced fresh from those sources per trip.
+>
+> As more trip examples are added, append them here. Each becomes a reference for future sites — an expanding library of design patterns and destination aesthetics.

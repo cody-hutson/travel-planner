@@ -6,7 +6,7 @@
         synthetic fixture in this directory. Every name, date, time, event ID, venue
         key, booking posture and count shown here is taken verbatim from a file in
         examples/data-architecture-demo/; nothing is invented. The per-trip accent is
-        an azulejo blue, chosen at site-build time as CLAUDE.md's Design Principles
+        an azulejo blue, chosen at site-build time as the site specification's Design Principles
         describe. The map panel is schematic — pin positions are not geographic, and
         no tile layer is drawn because CartoDB tiles are CDN-loaded. Committed as
         source: edit this file directly; there is no build step and no capture step.

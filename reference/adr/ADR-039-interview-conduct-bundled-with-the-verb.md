@@ -26,8 +26,9 @@ rejects a reference document *"on the operator's constraint and not on merit"*, 
 milestone fixed the artifact set at skill plus form, and its R2 names the consequence: one verb
 section becomes the de-facto conduct library, *"which will read oddly at the third caller"*.
 
-That section sits inside a body `CLAUDE.md` § *Verb body size* records far over the budget the
-published skill-authoring guidance sets for a skill's body, and the remedy that section names is
+That section sits inside a body far over the budget the published skill-authoring guidance sets
+for a skill's body, which `reference/size-fence.md` § *The verb-body line budget* records, and the
+remedy that section names is
 structural — the verbs merged into *a router plus its references*. The guidance names the same
 remedy at the scale of a single file: keep the body inside the budget, and as it approaches it, move
 detail into a file bundled with the skill and referenced directly from the body. A file inside the
@@ -106,7 +107,7 @@ without a write path takes its contract is not this record's to decide.
 
 - **The command file's body grows by less.** The conduct that would have been appended to the body
   is in the bundled file, which is outside the budget the guidance sets on the body.
-  `CLAUDE.md` § *Verb body size* records the body's lines on the commit that makes this change.
+  The file's byte ceiling is its row in `reference/size-fence.md`; no line count for the body is recorded.
 - **The file is neither a command nor an artifact.** It carries no frontmatter, and no guard that
   reads command files reads it; what grades it is what grades the rules it carries, compared with
   any other text that must carry them word for word.
@@ -130,8 +131,12 @@ without a write path takes its contract is not this record's to decide.
 - [`ADR-021`](ADR-021-installable-capability.md) — the engine is installed and each verb's directory
   is linked, which is why a file in that directory ships with it
 - [`README.md`](README.md) § *Convention* — the supersession-in-part form this record uses
-- `CLAUDE.md` § *Verb body size* — the budget, its source, and the router-plus-references remedy
+- `reference/size-fence.md` § *The verb-body line budget* — the budget, its source, and the router-plus-references remedy
 - `skills/trip-record/SKILL.md` — § *How this file is extended*, § *What the blocks above are*,
   standing rule 15, and `## interview <form> [<target>]`
 - `README.md` at the repository root — the install loop that links each verb's directory, and
   updating as a `git pull`
+
+## Amendment history
+
+**Amendment (2026-11-21, Saturday) — *Context*, *Consequences* and *References*: the verb-body budget's home re-pointed, and one claim corrected; no decision changes.** `CLAUDE.md` § *Verb body size* left the charter. Its budget, the budget's source and the structural remedy are now `reference/size-fence.md` § *The verb-body line budget*, and its table of per-verb line counts was dropped rather than moved, because every row had drifted from its file. *Context* and *References* cited the section and now cite its new home. *Consequences* said the section "records the body's lines on the commit that makes this change"; no line count is recorded any more, and the sentence now names the file's byte ceiling in the size fence instead.

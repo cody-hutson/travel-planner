@@ -74,7 +74,7 @@ what is *kept*.
 ## Why this file is here
 
 **In your data folder**, the trip commands look for this file by name before they trust
-a listing of the folder — the engine's `CLAUDE.md` § *Resolving a trip* states that
+a listing of the folder — the engine's `reference/trip-resolution.md` § *Resolving a trip* states that
 check — so leave it where install put it.
 
 **In the engine's repository**, and only there, this file is the only tracked thing

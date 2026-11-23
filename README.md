@@ -84,7 +84,7 @@ printf '{\n  "permissions": {\n    "additionalDirectories": ["%s", "%s"]\n  }\n}
 
 If `~/.claude/settings.json` doesn't exist yet, save what it prints as that file. If it does, add
 both paths to the `additionalDirectories` list in its `permissions` object. Which settings files
-Claude Code honours in a folder you haven't trusted is recorded in [`CLAUDE.md`](CLAUDE.md)
+Claude Code honours in a folder you haven't trusted is recorded in [`reference/trip-resolution.md`](reference/trip-resolution.md)
 § *Resolving a trip*.
 
 To update the engine, run `git pull` in `~/.claude/skills/travel-planner`. If a release adds a new

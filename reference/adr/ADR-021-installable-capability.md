@@ -388,7 +388,7 @@ Driver 3's property is a **consequence of being installed at all**, not of any c
 - **Diagnosis cannot live in the block.** The body that would carry the message is never
   reached when the block aborts, so a design that wants a resolution failure to *explain itself*
   cannot put the explanation where the failure happens.
-- **An ordinary operator state reaches it.** `CLAUDE.md` § *Resolving a trip* declares, as
+- **An ordinary operator state reaches it.** `reference/trip-resolution.md` § *Resolving a trip* declares, as
   correct behaviour, that the second evidence block **is expected to be error-shaped when the
   trip population is zero**. A fresh install has a zero population. So a charter-sanctioned
   normal state becomes, under an installed form, a verb that does not exist — and the listing
@@ -407,7 +407,7 @@ structural change to a merged record.
 **Amendment (2026-09-13, Sunday) — the selected mechanism and what removing the engine does to operator data.**
 The operator-data resolution slice selected **one data root shared by all three stores, named by one
 operator-config pointer** — a single-line file at `${HOME}/.travel-planner/data-root` holding one
-absolute path — **resolved by the agent** at gate `G0-root` of `CLAUDE.md` § *Resolving a trip*. One
+absolute path — **resolved by the agent** at gate `G0-root` of `reference/trip-resolution.md` § *Resolving a trip*. One
 mechanism rather than three, because the three stores are already three children of one root and the
 store-root rule in `reference/data-model.md` already makes the person store's fallback the trip
 store's root; separate pointers would buy nothing and cost three drift axes. No store moved.
@@ -509,7 +509,7 @@ finds a location rather than a search, and it re-frames the one row that would o
   message of the commit that rooted the grants; this record carries the outcome, not the comparison.
 - **Q-3 / S-C** — the second candidate, *retire the blocks*: all nine pre-execution blocks are gone.
   The evidence they gathered is now gathered by ordinary tool calls under the grants a verb already
-  holds, after the data root is resolved; `CLAUDE.md` § *Resolving a trip* states the entries and the
+  holds, after the data root is resolved; `reference/trip-resolution.md` § *Resolving a trip* states the entries and the
   reason each terminates in an unconditional-success construct. The collision recorded above is
   discharged by the same retirement: a failure now names its cause because it runs as a tool call
   whose output the verb reads, rather than as a block whose failure is fatal to the load.
@@ -529,12 +529,14 @@ finds a location rather than a search, and it re-frames the one row that would o
   as settled" described the state before the slices ran, and describes nothing now.
 
 One consequence of Q-1 and Q-3 together is stated here because no slice owns it alone. `CLAUDE.md`
-§ *Resolving a trip* is loaded with the workspace, not with an installed engine, so a verb that
-consults it from an installed engine opens it at the engine root — **one read per invocation that
-the workspace form never made.** ADR-007 § 2's first bound, *no per-invocation read*, is read as
-binding the workspace form, which it still does; the installed form's single read is the cost of
-driver 3 and is accepted with it. The verb bodies and `CLAUDE.md` state the two cases wherever they
-say what is in context.
+is loaded with the workspace, not with an installed engine, so a verb that consults it from an
+installed engine opens it at the engine root, on the step that names the section it needs. The
+read a verb makes once per invocation — in the installed form the cost of driver 3, accepted with
+it — is the trip-resolution contract its `Contract:` line names, made in the workspace form as well,
+as `reference/load-class-model.md` § 2 states. ADR-007 § 2's first bound bounds a scoped invocation
+to the context its Step-2 row assigns, and `CLAUDE.md` § *Step 2* assigns that read, so the bound
+holds in both forms. The verb bodies and `CLAUDE.md` state the two cases wherever they say what is
+in context.
 
 ## Follow-on build slices
 
@@ -558,6 +560,10 @@ say what is in context.
   in this record is written
 - `reference/adr/README.md` — the record convention, the status lifecycle, and the
   amendment-versus-supersession split this record's `Supersedes` clause is authored against
-- `CLAUDE.md` § *Resolving a trip* — the evidence ladder, and the declaration that its second
+- `reference/trip-resolution.md` § *Resolving a trip* — the evidence ladder, and the declaration that its second
   block is expected to be error-shaped at a zero trip population
 - `README.md` — the install, setup and integrity claims enumerated as F-1 … F-4
+
+## Amendment history
+
+**Amendment (2026-11-22, Sunday) — § *Amendment slot*, § *Open questions* and § *References*: citations of the trip-resolution gate ladder re-pointed, and the consequence paragraph after the Q-5 bullet corrected; no decision changes.** § *Resolving a trip* moved out of `CLAUDE.md` into `reference/trip-resolution.md` under the same heading, and the four present-tense pointers to it now name that file; each replaced "`CLAUDE.md` § *Resolving a trip*". The consequence paragraph said the section *"is loaded with the workspace, not with an installed engine"*, that an installed verb opening it made *"one read per invocation that the workspace form never made"*, and that ADR-007 § 2's first bound, quoted as *"no per-invocation read"*, *"is read as binding the workspace form, which it still does"*. Two of those claims stopped being true when every verb's citation line came to name `reference/trip-resolution.md`: a verb now makes that read in both forms, and the charter is opened only on a step that names one of its sections. The third was wrong as written — the bound limits read scope and names no per-invocation read, a phrase the section itself had attributed to it. The paragraph is corrected in place to the posture `reference/load-class-model.md` § 2 states, and names where that posture is stated rather than restating it. The pointer in *The fatal pre-execution exit* is re-pointed with them: the contract still declares that `E2` is error-shaped at a zero trip population, so it points at operative text, though the cost it argues was the retired pre-execution carrier's.

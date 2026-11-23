@@ -83,6 +83,99 @@ Durability against power loss is not observable in a suite: the flush call, its 
 are what is graded. `publish`'s own host read still reads any failure as an absent repository; the key
 check ends the harm that did.
 
+## [0.76.0] — 2026-11-22 — The first-verb read carries only what every session needs
+
+Every verb now reads one file before it acts: the trip-resolution contract. It has moved out of
+`CLAUDE.md` into `reference/trip-resolution.md`, and each verb's `Contract:` line names it. Four
+other bodies of text that only some steps use move out of the charter too, into the reference
+file that owns each: the site's design and build guidance, the archived-trip freeze rule, the
+verb-body budget and the publish script's operator runbook. `CLAUDE.md` goes from 145,019 to
+88,684 bytes. No gate of the ladder changes. Each moved text is verbatim apart from its citations
+and the few sentences the move made false, which are rewritten where they stand and named below.
+One verb's grants change. The suites that read the moved text read it in its new home.
+
+**The contract has a file of its own.** `reference/trip-resolution.md` holds § *Resolving a trip*
+verbatim: the gate ladder, the evidence entries, the data-root pointer and the refusal predicate.
+Its opening is reworded to say where it lives and who reads it, and its sentence on how
+`/trip-publish` reads the data-root pointer is rewritten for that verb's new grant. Every verb reads it once per
+invocation, before it acts, whether the engine sits in the workspace or is installed, and
+`CLAUDE.md` § *Step 2* assigns that read. A free-form request in chat reaches it through the
+pointer `CLAUDE.md` keeps where a request is classified. The contract suite reads the contract
+there, as do the taxonomy suite's consumer harvest and watch set and the artifact-schema suite's
+vocabulary readers. Every live citation of the section across the repository now
+names the new file.
+
+**`/trip-publish` may read that one file.** The publish verb denied `Read` outright. It had the
+ladder only because a workspace session auto-loads the charter. It now grants `Read` of
+`reference/trip-resolution.md` alone and no longer denies the tool; `Write`, `Edit` and
+`NotebookEdit` stay denied. Reading the file through the verb's `grep` grant was measured and
+rejected: the 37,930-byte file came back as a 2 KB preview. With the denial gone, the verb's own
+text is what keeps a publish turn from reading a trip file in full. Before, the denial lapsed at
+the end of the turn in any case.
+
+**The load-class rule counts a roster one hop out.** Once the charter is no longer the file every
+verb reads, the agent roster it carries would have left the `dispatched` class empty.
+`reference/load-class-model.md` § 4 clause 4 now also counts a dispatch roster in a file that a
+listed, first-read or typed file names: one hop, never a chain. The classifier in
+`scripts/test-corpus-hygiene.sh` reads it the same way, pinned by the `CTL-SIZE-ROSTER-*` arms.
+The move changes one existing file's class, `CLAUDE.md`'s, from `first-read` to `on-demand`.
+`CH_FIRST_READ_CEILING` now bounds the contract file.
+
+**The other moves.**
+- § *Travel Site Generation*'s four site-building subsections are now § 10 of
+  `reference/site-layout-spec.md`. The charter keeps a pointer above § *Updating the site*.
+- § *Archived trips*, the freeze rule, is now `reference/trip-lifecycle.md`. Its placement note,
+  which counted where the rule had stood, is restated without the counts. The charter keeps a
+  short section that cites it.
+- § *Verb body size* is dropped. Its budget is restated as a note in `reference/size-fence.md`;
+  its per-verb table, which nothing read, is gone.
+- The publish script's operator runbook is now `reference/publishing-runbook.md`: the passphrase,
+  the repo name, updating and listing a site, where a rotation stops, what a takedown needs, and
+  what a private site protects.
+  `CLAUDE.md` § *Publishing to GitHub Pages* keeps every line a verb prints to the operator: the
+  first-publish, rotate, takedown and plaintext opt-out commands, and the source check. Where a
+  paragraph is split at what a verb prints, the sentences at the seam are reworded to stand on
+  either side.
+
+**One record.** `ADR-056`, *what a verb reads before it acts*, lands `Proposed`. It decides
+three things:
+- a verb reads the contract its citation line names, once per invocation;
+- a verb opens the charter on the step that names it;
+- a dispatch roster is counted one hop out.
+
+It is ratified at this release's close. Sixteen existing records cited a moved section in the
+present tense, or made a claim the moves made false. Each is amended in place, with an entry in its `## Amendment history`.
+Dated statements, rejected options and past-wave tables are kept as written.
+
+**The suite holds it.** Group `T` of `scripts/test-command-taxonomy.sh` reads the consumer table
+by its exact heading, wherever the contract lives. It holds that table against each command
+file's own header in both directions, so a consumer listed in one and missing from the other is
+a finding. A naive move of the section would have hidden exactly that drift.
+
+**Size fence.** Read against `v0.75.0`, the release before this one, `CH_EMIT=growth bash
+scripts/test-corpus-hygiene.sh` lists one row new, one raised and one lowered, and every other
+row kept.
+- `CLAUDE.md` was re-pinned from 153,381 to 97,553 bytes. It measures 88,684 after the moves, and
+  a ceiling 64,697 bytes above its size would let it grow back unseen.
+- `reference/trip-resolution.md` is new at 41,723 bytes, its 37,930 plus headroom, and
+  `CH_FIRST_READ_CEILING` takes the same value.
+- `reference/site-layout-spec.md` was raised from 71,892 to 79,105. It grew 5,219 bytes to 71,932:
+  § 10's 5,200 and a re-pointed citation's 19.
+- Every other row was kept:
+  - The amended records grew by at most 1,888 bytes (`ADR-021`), each beneath its row.
+  - `skills/trip-publish/SKILL.md` grew 1,238 to 46,511, beneath 48,711.
+  - `reference/adr/README.md` grew 369 to 27,982, 195 bytes beneath its row of 28,177, with
+    the register's new rows and the record's index row.
+- `reference/trip-lifecycle.md`, `reference/publishing-runbook.md` and `ADR-056` are below their
+  class floor and owe no row.
+
+**What this release does not do.** Whether a verb's read of the contract runs in an engine
+installed the way the README documents is unmeasured on the current client. A fresh session
+there could not read the charter by its locator either, and that question stays with its own
+milestone. Whether `/trip-publish`'s `Read` grant matches the path a session actually reads is
+observed by a run at Stage 7, not by the suite. No suite notices if `Read` returns to that verb's
+deny list.
+
 ## [0.75.0] — 2026-11-20 — Each traveller's planning-day window has one home
 
 Each traveller's planning-day window now lives in one file, `outputs/traveler-presence.md`, which

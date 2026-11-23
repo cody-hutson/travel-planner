@@ -44,9 +44,11 @@ the agent as its instructions, so its bytes are paid in both.
 (`reference/adr/ADR-021-installable-capability.md` § *Decision* 1, as amended on 2026-09-18). The
 engine has a directory of its own, a verb is reached without opening it, and the directory
 carries a skill file at its root — the guided-entry surface, which names a verb and runs none. In
-this posture **the charter is not auto-loaded.** It is read: once per invocation by a verb, and live
-by the guided-entry surface when a request is routed to it. Every class and every parameter below
-is stated against this posture.
+this posture **the charter is not auto-loaded.** A verb reads the document its contract line names,
+`reference/trip-resolution.md`, once per invocation before it acts, and opens the charter only on a
+step that names one of its sections; the guided-entry surface reads the charter live when a request
+is routed to it (`reference/adr/ADR-056-what-a-verb-reads-before-it-acts.md`). Every class and every
+parameter below is stated against this posture.
 
 **The other posture is a workspace checkout, and what it adds is conditioned on it.** Where this
 repository is itself the workspace, the harness loads the charter at the start of every session.
@@ -65,7 +67,7 @@ first class that holds.
 | Class | What loads it, and when | Budget posture, for a file that declares no growth property (§ 5) |
 |---|---|---|
 | `listed` | The harness — its description at the start of every session, its body when its name is typed or a request is routed to it | a ceiling row, from the floor up |
-| `first-read` | A verb, once per invocation, before it acts — and the guided-entry surface, live, when it routes | a named constant, and its row |
+| `first-read` | A verb, once per invocation, before it acts | a named constant, and its row |
 | `typed` | The harness, when its verb is typed and at no other moment | a ceiling row, from the floor up |
 | `dispatched` | The calling session and then the dispatched agent, at each dispatch | a ceiling row, from the floor up |
 | `on-demand` | A session, when a step of an instruction surface names it | a ceiling row, from the floor up |
@@ -137,7 +139,7 @@ reserved  README.md  CONTRIBUTING.md  SECURITY.md  PULL_REQUEST_TEMPLATE.md
 2. `first-read` — a file named on the `Contract:` line of a skill surface.
 3. `typed` — a skill surface whose frontmatter sets `disable-model-invocation: true`.
 4. `dispatched` — a file named in the `Prompt File` column of a dispatch roster that a file of the
-   classes above carries.
+   classes above carries, or that a file one of them names carries.
 5. `on-demand` — a file an instruction surface names.
 6. `fixture` — a file whose frontmatter declares `artifact`, or that is **pinned**: a row of a
    fence tagged `frozen-witness-digest`, in any tracked markdown file, pairs a forty-character
@@ -148,8 +150,12 @@ reserved  README.md  CONTRIBUTING.md  SECURITY.md  PULL_REQUEST_TEMPLATE.md
 8. `browsed` — a file whose name is one the repository host reserves, listed in the block above, or
    a file that some other tracked markdown file cites.
 
-**What the rule deliberately does not do.** It follows no chain but the bundle: a file that only an
-on-demand document names is `browsed`, not `on-demand`, because no instruction names it. It reads a
+**What the rule deliberately does not do.** It follows no chain but the bundle, and one hop for a
+roster: a file that only an on-demand document names is `browsed`, not `on-demand`, because no
+instruction names it, and a roster counts in a file a skill surface or its first-read file names but
+in no file further out. The hop is there because the roster a verb dispatches from need not stand in
+a file of the first three classes — it stands in whichever file the verb names for it — and it stops
+at one because a roster that only a named document names is one no dispatching step reaches. It reads a
 name, not a reader's intent: a path an instruction surface cites for provenance counts as much as
 one it tells an agent to open. And it reads a directory as naming the files directly in it only
 where prose names the directory: a map's line inside a fenced block names nothing, and neither does

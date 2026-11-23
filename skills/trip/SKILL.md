@@ -39,7 +39,7 @@ so rooting it there would buy no mechanism while putting an unexpanded variable 
 human reader. The rooted spelling belongs where a path reaches a tool as written: the frontmatter
 grants and the fenced invocations.
 
-**Resolve the data root before you read anything.** `CLAUDE.md` § *Resolving a trip*, gate `G0-root`,
+**Resolve the data root before you read anything.** `reference/trip-resolution.md` § *Resolving a trip*, gate `G0-root`,
 using the `data-root-pointer:` path carried in this file's contract header below. Then **run each entry
 below as a tool call**, substituting the resolved root for `<data-root>`. They are not pre-execution
 blocks and nothing has run ahead of you: an entry yields no evidence until you issue it.
@@ -55,7 +55,7 @@ blocks and nothing has run ahead of you: an entry yields no evidence until you i
 ## Contract header
 
 ```trip-contract-header
-Contract: CLAUDE.md § Resolving a trip
+Contract: reference/trip-resolution.md § Resolving a trip
 contract-depth: G8
 population-role: RESOLVE
 data-root-pointer: ${HOME}/.travel-planner/data-root
@@ -486,7 +486,7 @@ terminal else-branch, which is what separates a lookup from a classification.
 4. Match that token by **exact string equality** against the recognition set: the verbs of
    this command named in `CLAUDE.md` → Step 1, in the `Command` column, whose cells render
    as `` `/trip <token>` ``. Read that column now — from context when this repository is the
-   workspace, otherwise from `${CLAUDE_SKILL_DIR}/../../CLAUDE.md` (its § *Resolving a trip* states why an
+   workspace, otherwise from `${CLAUDE_SKILL_DIR}/../../CLAUDE.md` (`reference/load-class-model.md` § 2 states why an
    installed engine cannot assume it is loaded). Not a
    prefix match, not a nearest match, not a fuzzy match, not a substring match.
 5. Everything after the verb token is that verb's argument string. Do not interpret it
@@ -566,8 +566,8 @@ that relation `UNDETERMINED`, naming the file.
 **Reading a column live is not reading a file.** Step 1's `Command` column and this file's
 requirement table are taken from what is in context — this file's body is the body being run,
 and `CLAUDE.md` is loaded beside it when this repository is the workspace; an installed engine
-opens `${CLAUDE_SKILL_DIR}/../../CLAUDE.md` for that column instead, the one read the installed
-form adds — so *live* there names a read of context, or of that one file. **Dispatches no agent**, so it attributes no
+opens `${CLAUDE_SKILL_DIR}/../../CLAUDE.md` for that column instead, a read the installed
+form adds beside the contract read every invocation makes — so *live* there names a read of context, or of that one file. **Dispatches no agent**, so it attributes no
 agent read either: `trips/<slug>/trip-log.md` is read on neither side of that attribution,
 there being no second side. **It writes nothing and runs no script, so it performs no act
 whose effect lands outside the trip's own files.**
@@ -1132,7 +1132,7 @@ it. This chain does not reach the hub, so the per-event status bound does not qu
 ## site
 
 **Reads:** `trips/<slug>/outputs/final-itinerary.md`, `trips/<slug>/outputs/links-reference.md`
-and `trips/<slug>/outputs/venue-matrix.md` — the plan artifacts § *How to build it* names as
+and `trips/<slug>/outputs/venue-matrix.md` — the plan artifacts `reference/site-layout-spec.md` § *How to build it* names as
 the site's content sources; `trips/<slug>/trip-context.md` — the group, dates and trip-level
 constraints the hero and overview render, and no other block;
 `trips/<slug>/outputs/event-status.md` — the authoritative source
@@ -1153,9 +1153,9 @@ because a date taken from this build instead would restart § 3's window on ever
 system, the booking indicators and the § 9 round-trip rules; that same document's § 9.2
 round-trip fences, § 9.3 and § 3 component catalog, together with
 `agents/05-hub-planner.md`'s itinerary grammar, `reference/data-architecture.md` § 1.1,
-`CLAUDE.md`'s `G5` and `G6` and this file's `site` row — read by `scripts/check-round-trip.sh`, the
+`reference/trip-resolution.md`'s `G5` and `G6` and this file's `site` row — read by `scripts/check-round-trip.sh`, the
 script the completeness check below invokes, rather than by this verb; the itinerary sources the
-§ *Site References* table names, read as the quality bar rather than as templates;
+`reference/site-layout-spec.md` § *Site References* table names, read as the quality bar rather than as templates;
 `trips/<slug>/outputs/<destination>-travel-site.html` — the **existence probe** that selects
 creating the site from patching it, and, on the patch route, the outgoing markup read before
 it is changed, because that read is what preserves design already approved — within this run it

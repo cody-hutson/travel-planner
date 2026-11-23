@@ -434,7 +434,7 @@ Both are recorded so a reader does not mistake either for fixture data.
   coding — and names no level, so it asserts nothing about which day is which.
 - **The accent colour.** `--accent` / `--accent-deep` are per-trip values chosen at
   site-build time, not fixture data; § 2 says so in the token block itself. The figure
-  uses an azulejo blue on the reasoning `CLAUDE.md` § *Design Principles* gives for
+  uses an azulejo blue on the reasoning `reference/site-layout-spec.md` § *Design Principles* gives for
   Portugal.
 
 One deviation from § 4 *Desktop* is also deliberate: its third column is **food**, and
