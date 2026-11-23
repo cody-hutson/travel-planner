@@ -15820,6 +15820,46 @@ rv31m_assert() { # <id>
 }
 rv31m_assert "RV31m"
 
+# ── RV57 — a commit this script makes takes the current time, whatever dates the environment pins.
+# A plaintext site's only commit is publish's root commit, and a republish of the same render makes a root
+# commit with the same tree, the same no-reply identity and the same message: only its dates tell the two
+# apart, and the pending-rotation marker's base-commit binding rests on that difference. commit_noreply
+# already discards a GIT_*_NAME and GIT_*_EMAIL in the environment (D3, which needs gh and is CI's expected
+# skip); this is the always-run witness that it discards GIT_AUTHOR_DATE and GIT_COMMITTER_DATE too, built,
+# as RV31-noreply is, on commit_noreply with a stubbed identity. Both dates are pinned to one far-past
+# instant. The control limb commits plainly under the same environment and must carry that instant, or
+# the pin pinned nothing and the verdict is withheld. PASS needs THIS run's commit, read by its subject,
+# dated at or after the second the arm started, so an absent subject cannot pass on an empty log.
+RV57_PIN='2001-02-03T04:05:06Z'; RV57_EPOCH=981173106
+rv57_assert() { # <id>
+  local id="$1" r repo ctl rc rcc t0 subj ctlt ad cdt
+  repo="$RVW/rv57-$RANDOM"; ctl="$RVW/rv57c-$RANDOM"
+  for r in "$repo" "$ctl"; do mkdir -p "$r"; git -C "$r" init -q; printf 'x\n' > "$r/f"; git -C "$r" add f; done
+  t0="$(date +%s)"
+  ( export GIT_AUTHOR_DATE="$RV57_PIN" GIT_COMMITTER_DATE="$RV57_PIN"
+    git -C "$ctl" -c user.name=t -c user.email=t@example.invalid commit -q -m rv57-control ) >/dev/null 2>&1; rcc=$?
+  ( export GIT_AUTHOR_DATE="$RV57_PIN" GIT_COMMITTER_DATE="$RV57_PIN"
+    NOREPLY_NAME=t; NOREPLY_EMAIL='0+t@users.noreply.github.com'; set -e; commit_noreply "$repo" rv57-commit ) >/dev/null 2>&1; rc=$?
+  ctlt="$(git -C "$ctl" log -1 --format='%at %ct' 2>/dev/null)"
+  subj="$(git -C "$repo" log -1 --format=%s 2>/dev/null)"
+  ad="$(git -C "$repo" log -1 --format=%at 2>/dev/null)"; cdt="$(git -C "$repo" log -1 --format=%ct 2>/dev/null)"
+  if [ "$rcc" -ne 0 ] || [ "$ctlt" != "$RV57_EPOCH $RV57_EPOCH" ]; then
+    FAIL "$id: CONTROL — a plain commit under GIT_AUTHOR_DATE and GIT_COMMITTER_DATE pinned to $RV57_PIN read rc=$rcc and dates '$ctlt', want rc=0 and '$RV57_EPOCH $RV57_EPOCH': the pin pins nothing here. VERDICT WITHHELD"
+  elif [ "$rc" -ne 0 ]; then
+    FAIL "$id: commit_noreply did not complete with both commit dates pinned in the environment (rc=$rc)"
+  elif [ "$subj" != rv57-commit ]; then
+    FAIL "$id: commit_noreply's own commit was not observed (latest subject '$subj'). VERDICT WITHHELD"
+  elif [ "$ad" = "$RV57_EPOCH" ] || [ "$cdt" = "$RV57_EPOCH" ]; then
+    FAIL "$id: commit_noreply's commit carries the date the environment pinned (author $ad, committer $cdt, pinned $RV57_EPOCH), so a republish of the same render can reproduce the very commit a pending-rotation marker names"
+  elif [ "$ad" -lt "$t0" ] || [ "$cdt" -lt "$t0" ]; then
+    FAIL "$id: commit_noreply's commit is dated before this arm started (author $ad, committer $cdt, started $t0)"
+  else
+    PASS "$id: with GIT_AUTHOR_DATE and GIT_COMMITTER_DATE pinned to $RV57_PIN — a pin a plain commit under the same environment carries — commit_noreply's own commit takes the current time as both its dates"
+  fi
+}
+rv57_assert "RV57-dates"
+md_flips commit_noreply "RV57-dates" rv57_assert "RV57-dates"
+
 # ── The MD registrations — each re-runs the SAME argv its live arm ran, with the subject
 # removed. RV6 and RV12 were registered above, against the real encrypt_to_tmp.
 md_flips cmd_rotate  "RV1"  rv1_assert  "RV1"  set
