@@ -97,7 +97,10 @@
 # holds it and whether that process is still running on this machine; it never waits. A lock held by a
 # running command refuses with exit status 75, and one whose holder is not running on this machine, or
 # whose record cannot be read, with 76, so an unattended caller can tell a busy trip from a lock left
-# behind without reading the message; every other refusal exits 1. Every exit releases the lock, a
+# behind without reading the message; every other refusal exits 1. For the first instants after a
+# command creates the lock, before its record is in place, a second command is told 76, its record
+# cannot be read, where 75 is due, and that refusal's remedy holds only if no publish command is
+# running, so check before removing the lock. Every exit releases the lock, a
 # refusal included, and so do an interrupt, a hangup and a terminate signal. A run killed outright, a
 # crash or a power loss leaves the directory in place. It is never broken automatically, because its
 # holder may be running on another machine that shares the data root; the refusal names its removal for
@@ -5324,9 +5327,10 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   fi
 
   if [ "$into_empty" = 1 ]; then info "Pushing to the empty per-trip repo…"; else info "Creating per-trip repo and pushing…"; fi
-  # The commit first, in a subshell of its own (#1468 D-6, CD-3 of the amendment-1 review): the
-  # record is then staged after the command's own writes, as in update and rotate, and a commit that
-  # fails stops the command with nothing staged. The push is the second subshell, after the stager.
+  # The commit first (#1468 D-6, CD-3 of the amendment-1 review), each of its steps a git -C call that
+  # stops the command on its own failure (#1822): the record is then staged after the command's own
+  # writes, as in update and rotate, and a commit that fails stops the command with nothing staged.
+  # The push follows the stager.
   git -C "$pub_dir" init -q || die "publish: could not initialise $pub_dir. Nothing was pushed."
   git -C "$pub_dir" add index.html || die "publish: could not stage the page in $pub_dir. Nothing was pushed."
   commit_noreply "$pub_dir" "Publish trip site" \
