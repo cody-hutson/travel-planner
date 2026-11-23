@@ -30,7 +30,9 @@ file that write produced, and the page and the commit the rotation replaced, and
 rotation only while all three still stand; a successful push by either clears it. Where another copy of
 the trip moved the site under the old key, or the site was taken down and published again, which is
 always a new commit, `update` refuses and names `rotate` instead, saying the rotation it records could
-not be finished. This ends the residual milestone
+not be finished. Every commit the script makes now takes the current time: a `GIT_AUTHOR_DATE` or
+`GIT_COMMITTER_DATE` in the environment is discarded, as a name or an address there already was, so a
+site published again never reproduces the commit the marker names. This ends the residual milestone
 74 left: an `update` re-keying the site under a key a failed first publish had generated. The key file
 is flushed to disk — `fsync` through perl, with `F_FULLFSYNC` on macOS — before its rename and its
 directory after it, so an interrupted write leaves the old key or the complete new one.
@@ -62,20 +64,23 @@ commit and the repository create.
 checked against the live site, with `rotate`'s inverted check and the marker that binds a failed rotation
 to the key file, the page and its commit, and the per-trip lock with its exit statuses.
 
-**The suite holds it.** Group J gains J4–J10; group RV gains RV48–RV56, including this suite's first
-background processes, each bounded and killed, and RV2d-ctl, which shows RV2d fails where no push
-happened; group E gains E5–E8, which run the decrypt against the
+**The suite holds it.** Group J gains J4–J10; group RV gains RV48–RV57, including this suite's first
+background processes, each bounded and killed, RV2d-ctl, which shows RV2d fails where no push
+happened, and RV57, which pins both commit dates in the environment and requires the script's own
+commit to take the current time; group E gains E5–E8, which run the decrypt against the
 real StatiCrypt. `.github/workflows/publish-guard.yml` changes in comments only, and no group id moves.
 The erase reach table's control-files row names `.rotation-pending` and `.publish-lock/`.
 
-**Size fence.** Read against `v0.75.0`, the previous release tag, `CH_EMIT=growth bash
-scripts/test-corpus-hygiene.sh` lists every row kept and none new, raised, lowered or dropped.
-`CLAUDE.md` grew 1,415 bytes to 146,434, beneath its row of 153,381; `skills/trip-publish/SKILL.md` grew
-626 to 45,899, beneath 48,711; `skills/trip-decommission/SKILL.md` grew 571 to 56,656, beneath 60,026;
-`reference/adr/README.md` grew 458 to 28,071, beneath 28,177, with the record's index row and the
-register row `main` took for record 056; and
-`skills/trip-record/SKILL.md` grew 43 to 456,465, beneath 470,268. `ADR-055` is below its class floor and
-owes no row.
+**Size fence.** Read against `v0.76.0`, the previous release tag, `CH_EMIT=growth bash
+scripts/test-corpus-hygiene.sh` lists one row raised and every other row kept, none new, lowered or
+dropped. `reference/adr/README.md` grew 334 bytes to 28,316 with the record's index row, and its row was
+raised from 28,177 to 31,148, its size plus headroom: 0.76.0's index row for `ADR-056` and this
+release's for `ADR-055` each fitted beneath the old row alone, and together they did not.
+`skills/trip-publish/SKILL.md` grew 626 to 47,137, beneath 48,711; `skills/trip-decommission/SKILL.md`
+grew 571 to 57,245, beneath 60,026; and `skills/trip-record/SKILL.md` grew 43 to 456,865, beneath
+470,268. `CLAUDE.md` did not grow: this release's publishing sentences sit in
+`reference/publishing-runbook.md`, which grew 1,433 to 8,602 and, like `ADR-055`, is below its class
+floor and owes no row.
 
 **What this release does not do.** Two machines publishing one trip are still stopped only by the bound
 pushes and read-backs. A rotation back to a key an earlier rotation revoked passes both key checks.

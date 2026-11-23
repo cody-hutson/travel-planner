@@ -108,7 +108,8 @@ The rule for a lock a killed run left behind:
    `update` admits a key that does not open the live page, or a page that is not encrypted, only while the key
    file is still that file and its own lease is still that commit carrying that page. A successful push by
    `update` or `rotate` clears it. Where another copy of the trip moved the site under the old key after the
-   rotation read it, or the site was taken down and published again — always a new commit, even where an
+   rotation read it, or the site was taken down and published again — always a new commit, because every
+   commit the publish script makes takes the current time whatever dates the environment pins, even where an
    unchanged plaintext render reproduces the page's blob — `update` refuses and names `rotate` rather than
    finishing the rotation.
 4. **The key file is flushed to disk before any push that depends on it.** The staged copy is flushed before
@@ -144,9 +145,9 @@ The rule for a lock a killed run left behind:
   the key is the operator's explicit choice, and decision 2 reads only the live page. A recorded process id can
   name an unrelated live process after a reboot, which reads as a running holder. Durability against power loss
   cannot be observed in a test; what is graded is the flush call, its order and its success.
-- **What grades it.** Groups RV and E of `scripts/test-publish-guard.sh`: RV48–RV52 for decisions 1 to 4, E5–E8
-  for the decrypt against the real tool, RV54 for decision 5, and RV54-release and RV56-values for the lock's
-  release on every refusal and for no refusal printing a key.
+- **What grades it.** Groups RV and E of `scripts/test-publish-guard.sh`: RV48–RV52 for decisions 1 to 4, RV57
+  for the commit's dates decision 3 rests on, E5–E8 for the decrypt against the real tool, RV54 for decision 5,
+  and RV54-release and RV56-values for the lock's release on every refusal and for no refusal printing a key.
 
 ## References
 
