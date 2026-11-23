@@ -53,7 +53,9 @@ The move changes one existing file's class, `CLAUDE.md`'s, from `first-read` to 
   the repo name, updating and listing a site, where a rotation stops, what a takedown needs, and
   what a private site protects.
   `CLAUDE.md` § *Publishing to GitHub Pages* keeps every line a verb prints to the operator: the
-  first-publish, rotate, takedown and plaintext opt-out commands, and the source check.
+  first-publish, rotate, takedown and plaintext opt-out commands, and the source check. Where a
+  paragraph is split at what a verb prints, the sentences at the seam are reworded to stand on
+  either side.
 
 **One record.** `ADR-056`, *what a verb reads before it acts*, lands `Proposed`. It decides
 three things:
