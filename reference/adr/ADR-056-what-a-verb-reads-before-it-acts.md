@@ -1,6 +1,6 @@
 # ADR-056: What a verb reads before it acts — the contract its citation line names, once per invocation; the charter on the step that names it; a dispatch roster counted one hop out
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-23)
 - **Deciders:** repo maintainer
 - **Driving work:** #1178, in the *The first-verb read carries only what every session needs*
   milestone. The repository's maintainer ruled, at that milestone's collective review, that the card

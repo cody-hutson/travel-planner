@@ -239,7 +239,7 @@ so each group stays in number order.
 | [ADR-007](ADR-007-command-entry-point.md) | Command entry point — surface shape, privilege boundary, and taxonomy ownership | Accepted |
 | [ADR-021](ADR-021-installable-capability.md) | The trip engine is an installable capability, not a folder you open | Accepted |
 | [ADR-051](ADR-051-a-verb-runs-until-it-asks.md) | A verb runs until it asks — what a run nobody can answer writes, stated in each command file's standing clause, cited by every verb on the declared-intent side, and holding whether or not a session recognises print mode | Accepted |
-| [ADR-056](ADR-056-what-a-verb-reads-before-it-acts.md) | What a verb reads before it acts — the contract its citation line names, once per invocation; the charter on the step that names it; a dispatch roster counted one hop out | Proposed |
+| [ADR-056](ADR-056-what-a-verb-reads-before-it-acts.md) | What a verb reads before it acts — the contract its citation line names, once per invocation; the charter on the step that names it; a dispatch roster counted one hop out | Accepted |
 
 ### Planning — research, the itinerary and its cost
 
