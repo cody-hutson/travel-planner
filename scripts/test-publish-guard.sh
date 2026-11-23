@@ -14303,7 +14303,8 @@ rv17_assert "RV17"
 # with the update's old-key page live. A rotation that lost that race must say so — its push must
 # fail. The site then moved under the old key after the rotation read it, so its pending-rotation
 # marker no longer names the page the site serves (review CD-1, ruled at scope-lock): the next update
-# refuses on the live-page check, naming rotate, and leaves the site under the key its holders hold;
+# refuses on the live-page check, saying the rotation recorded beside the trip could not be finished and
+# naming rotate on a fresh clone (Stage 7's F-04), and leaves the site under the key its holders hold;
 # and rotate on a fresh clone, the remedy, brings the site under the key .passphrase then holds.
 rv18_gh() { # (inside a subject's subshell) rv18_bare names the site — a fresh clone of it, for RV18's remedy
   gh() {
@@ -14318,7 +14319,7 @@ rv18_gh() { # (inside a subject's subshell) rv18_bare names the site — a fresh
   }
 }
 rv18_assert() { # <id>
-  local id="$1" name d bare rc rc2 rc3 live live2 live3 pf pf3 out2 out3 opens=0
+  local id="$1" name d bare rc rc2 rc3 live live2 live3 pf pf3 out2 out3 opens=0 unfin=0
   local k1='rv-gamma-old-synthetic-key-25'
   name="rv18-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"
   ( unset STATICRYPT_PASSWORD; rv18_pub="$d/.publish"; rv18_k1="$k1"
@@ -14335,6 +14336,10 @@ rv18_assert() { # <id>
   out2="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) 2>&1 )"; rc2=$?
   live2="$(rv_pushed_key "$bare")"
   rv_has "$out2" 'does not open the page the site serves now' && rv_has "$out2" 'run rotate' && opens=1
+  # The refusal says first what became of the rotation recorded beside the trip, and names rotate on a fresh clone as
+  # its remedy, before the generic remedies, the first of which would abandon it (Stage 7's F-04).
+  rv_has "$out2" 'could not be finished, because the site changed after that rotation read it' \
+    && rv_has "$out2" 'rotate on a fresh clone is the remedy' && unfin=1
   rm -rf "$d/.publish"
   # The clone host is rv18_gh, defined above this arm: rv_gh_clones is defined further down this file, and a stand-in
   # carrying a case pattern may not be defined inside a command substitution, which bash 3.2 misparses.
@@ -14348,12 +14353,14 @@ rv18_assert() { # <id>
     FAIL "$id: after the rotation lost the race, the next update read rc=$rc2, want 1 — the site moved under the old key after the rotation read it, so update must refuse and name rotate rather than finish it (review CD-1)"
   elif [ "$opens" -eq 0 ]; then
     FAIL "$id: the next update refused, but not on the live-page check, or without naming rotate"
+  elif [ "$unfin" -eq 0 ]; then
+    FAIL "$id: the refusal does not say that the rotation recorded beside the trip could not be finished because the site changed after it read it, naming rotate on a fresh clone as the remedy — its first remedy points away from the rotation the operator ran"
   elif [ "$live2" != "$k1" ]; then
     FAIL "$id: the refused update moved the live page off the key its current holders hold"
   elif [ "$rc3" -ne 0 ] || [ -z "$live3" ] || [ "$live3" != "$pf3" ]; then
     FAIL "$id: the remedy, rotate on a fresh clone, did not bring the live page under the key .passphrase holds (rc=$rc3): $(printf '%s' "$out3" | tr '\n' '|' | cut -c1-1600)"
   else
-    PASS "$id: a rotation that lost the race to a concurrent update fails at its push instead of reporting success; the next update refuses on the live-page check naming rotate, the site stays under the key its holders hold, and rotate on a fresh clone brings it under the key .passphrase holds"
+    PASS "$id: a rotation that lost the race to a concurrent update fails at its push instead of reporting success; the next update refuses on the live-page check, saying the recorded rotation could not be finished and naming rotate on a fresh clone, the site stays under the key its holders hold, and rotate on a fresh clone brings it under the key .passphrase holds"
   fi
 }
 rv18_assert "RV18"
