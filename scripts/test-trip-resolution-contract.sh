@@ -43,7 +43,7 @@
 #        the directory class, and no word of the forbidden-remedy class, graded as words
 #        rather than as one spelling. The predicate relays a refusal of any other kind as
 #        the harness's own, with no word of a directory remedy. Every code its checker emits
-#        has a must-fire arm, built from a copy of the live charter, the wrong remedy among
+#        has a must-fire arm, built from a copy of the live contract, the wrong remedy among
 #        them paraphrased; the group's own banner carries the reasoning.
 #   Three further groups assert properties of THIS FILE rather than of the contract, and
 #   each carries its full reasoning at the group rather than here: PF, that no verdict in
@@ -385,7 +385,7 @@ gd_class() {  # <clause>
 }
 
 # gd_dirclass <clause> — the words of the DIRECTORY-REMEDY CLASS that <clause> carries, on
-# one line, space-separated; empty when it carries none. The class is every way the charter
+# one line, space-separated; empty when it carries none. The class is every way the contract
 # and the README name the fix for a directory refusal: the allowed-directories step by name,
 # its settings key `additionalDirectories`, the `add-dir` that both `--add-dir` and
 # `/add-dir` carry, and the README's own name for it, step 4. A refusal of any other kind
@@ -414,7 +414,7 @@ gd_scoped() {  # <clause>
   return 1
 }
 
-# ladder_refusal_check <charter> <e1-sentinel> — FINDING lines; returns 1 when any fired.
+# ladder_refusal_check <contract> <e1-sentinel> — FINDING lines; returns 1 when any fired.
 #   GB  a declaration could not be read — the G1 bullet, the G0-root bullet, the refusal
 #       predicate's paragraph, or the remedy clause inside it: the declaration is
 #       unreadable, which is not the same finding as absent
@@ -588,8 +588,8 @@ conformance_check() {
     # read from the pointer this line names. It is asserted byte-identical for the
     # same reason the citation line is — five files quietly naming four pointer paths
     # is four data roots, which is the drift surface this ladder exists to close. It
-    # is compared against the line the CHARTER declares, never against a literal held
-    # here, so the charter stays the single home.
+    # is compared against the line the CONTRACT declares, never against a literal held
+    # here, so the contract stays the single home.
     local has_ptr=0
     if [ -n "$pointer" ]; then
       while IFS= read -r line || [ -n "$line" ]; do
@@ -850,7 +850,7 @@ EOF
   # The detector's markers are derived here rather than written down: one per entry, its
   # opening token — the text before its first space — plus one space. A hard-coded marker
   # is the same drift surface one size smaller: it would go on matching a retired spelling
-  # after the charter moved on, the consumer detector would find ZERO blocks in every file,
+  # after the contract moved on, the consumer detector would find ZERO blocks in every file,
   # and the suite would report five short prefixes instead of one changed marker. One
   # marker per entry rather than one shared by all of them, because the only prefix the
   # entries ever shared was the wrapper the `wrapped` limb now forbids; unwrapped, each
@@ -902,7 +902,7 @@ EOF
   # PIN6 — the data-root pointer line. The evidence entries name `<data-root>`; this is
   # the line that says where the value behind that placeholder is read from, and it is
   # the ONE literal a consumer needs before it can open anything. Extracted from the
-  # charter's own header fence so the charter remains its single home — a literal here
+  # contract's own header fence so the contract remains its single home — a literal here
   # would be the second source PIN5 exists to forbid, one field over.
   #
   # Read with a while-loop, NOT `fence_block … | grep -m1 …`. A pipe into a reader that
@@ -958,16 +958,16 @@ fi
 # file now reads `vacuous` as well as `fail`, so a vacuous group cannot report green. And
 # the arms below assert the observed consumer set EQUALS the set the contract declares, in
 # both directions — which is strictly stronger than a floor, because it also catches a
-# consumer file that exists while the charter declares no row for it.
+# consumer file that exists while the contract declares no row for it.
 #
-# NO FROZEN DENOMINATOR. The declared side is derived from the charter's own consumer
+# NO FROZEN DENOMINATOR. The declared side is derived from the contract's own consumer
 # table, by the table's own definition of what a consumer row is — its population-role
-# cell reads RESOLVE or CREATE — so adding a sixth verb to the charter turns this red
-# until the file lands, and adding the file turns it red until the charter declares it.
+# cell reads RESOLVE or CREATE — so adding a sixth verb to the contract turns this red
+# until the file lands, and adding the file turns it red until the contract declares it.
 # No numeral appears on either side of the comparison.
 # ─────────────────────────────────────────────────────────────────────────────────
 
-# declared_consumers <claude.md> — the consumer verbs the charter itself declares, one per
+# declared_consumers <contract> — the consumer verbs the contract itself declares, one per
 # line. The first cell carries the invocation, which may be rendered with an argument
 # signature (`/trip <verb>`), so the verb is its first whitespace-delimited token.
 declared_consumers() {
@@ -1008,14 +1008,14 @@ $obs" in
       *"
 $d
 "*) matched=$((matched+1)) ;;
-      *)  printf 'FINDING Q1 %s the charter declares this consumer and no %s/SKILL.md answers to it\n' "$d" "$d" ;;
+      *)  printf 'FINDING Q1 %s the contract declares this consumer and no %s/SKILL.md answers to it\n' "$d" "$d" ;;
     esac
   done < "$decl"
   while IFS= read -r v; do
     [ -n "$v" ] || continue
     if ! grep -qxF -- "$v" "$decl"; then
       extra=$((extra+1))
-      printf 'FINDING Q2 %s a consumer file exists that the charter declares no row for\n' "$v"
+      printf 'FINDING Q2 %s a consumer file exists that the contract declares no row for\n' "$v"
     fi
   done <<EOF
 $obs
@@ -1090,7 +1090,7 @@ if [ "${POP_DECLARED:-0}" -ge 1 ] && [ "$RP_POP" -ge 1 ] \
    && [ "${POP_MATCHED:-0}" -eq "${POP_DECLARED:-0}" ] && [ "${POP_EXTRA:-0}" -eq 0 ]; then
   PASS "RP7: the observed consumer set EQUALS the set the contract declares — $POP_MATCHED of $POP_DECLARED declared row(s) answered by a <verb>/SKILL.md, and $POP_EXTRA consumer file(s) the contract declares no row for. Both sides are derived (the declared side from the consumer table's own RESOLVE/CREATE role cell) and both are non-empty, so this is a measured equality and not a floor a vanished population would satisfy"
 else
-  FAIL "RP7: the observed consumer set does not equal the charter's declared set — matched=${POP_MATCHED:-?} declared=${POP_DECLARED:-?} surplus=${POP_EXTRA:-?} observed_files=$RP_POP. A zero on either side is itself the finding: the assertions above are quantified over the population and would pass over an empty one"
+  FAIL "RP7: the observed consumer set does not equal the contract's declared set — matched=${POP_MATCHED:-?} declared=${POP_DECLARED:-?} surplus=${POP_EXTRA:-?} observed_files=$RP_POP. A zero on either side is itself the finding: the assertions above are quantified over the population and would pass over an empty one"
   show "$POP_OUT" 'Q1|Q2'
 fi
 
@@ -1216,7 +1216,7 @@ else
       else                                    printf 'contract-depth: G%s\n' "$depth"
       fi
       [ "$variant" = "norole" ]   || printf 'population-role: %s\n' "$role"
-      # The data-root pointer line, taken from the CHARTER's own header fence — never a
+      # The data-root pointer line, taken from the CONTRACT's own header fence — never a
       # literal here, for PIN5's reason. `nopointer` withholds it from the RESOLVE
       # consumer so CTLnp has a fixture that changes exactly one field.
       [ "$variant" = "nopointer" ] || printf '%s\n' "$POINTER_LINE"
@@ -1867,7 +1867,7 @@ EOF
   if [ "${CTL_DECL_N:-0}" -ge 1 ]; then
     PASS "CTLpz0: fixture integrity — the declared side is non-empty ($CTL_DECL_N row(s) derived from the contract's consumer table), so the two arms below grade against a real declared set"
   else
-    FAIL "CTLpz0: the charter yielded NO declared consumer row, so both arms below would fire for the wrong reason"
+    FAIL "CTLpz0: the contract yielded NO declared consumer row, so both arms below would fire for the wrong reason"
   fi
 
   PZ="$WORK/ctl_pz"
@@ -1911,7 +1911,7 @@ EOF
     FAIL "CTLps2: a tree one consumer short was not caught, or the finding did not name the missing consumer: $(head -3 <<<"$PS_OUT" | tr '\n' ' ')"
   fi
   if ! has_finding "$PS_OUT" 'Q2'; then
-    PASS "CTLps3: SPECIFICITY — the same run emits NO Q2 on the one-short tree: every consumer file present is a row the charter declares, so Q1 and Q2 are distinguishable rather than one finding under two names"
+    PASS "CTLps3: SPECIFICITY — the same run emits NO Q2 on the one-short tree: every consumer file present is a row the contract declares, so Q1 and Q2 are distinguishable rather than one finding under two names"
   else
     FAIL "CTLps3: Q2 fired on a tree whose every file answers a declared row — the two directions of the equality are not separable"
   fi
@@ -2030,7 +2030,7 @@ fi
 # sentinel — is DERIVED from the extracted evidence list, never written here, for PIN5's
 # reason.
 #
-# EVERY CODE THE CHECKER EMITS HAS A MUST-FIRE ARM, built from the live charter at runtime:
+# EVERY CODE THE CHECKER EMITS HAS A MUST-FIRE ARM, built from the live contract at runtime:
 # each branch removed in turn (GDc1-GDc3, GDc5); the wrong remedy PARAPHRASED into each of
 # the three clauses (GDc4, GDc6-GDc8), in words written below rather than assembled from the
 # checker's own tokens, so that no control can confirm the checker merely by repeating it;
@@ -2039,7 +2039,7 @@ fi
 # class's definition cut from the predicate's clause (GDc14); and the predicate's disposition
 # of any other refusal removed (GDc15), made to give a directory remedy or the wrong remedy
 # in words written below (GDc16, GDc17), and re-worded so it no longer relays the refusal
-# with no directory remedy (GDc18). Each fixture is asserted to have changed the charter
+# with no directory remedy (GDc18). Each fixture is asserted to have changed the contract
 # before its verdict is read, and each verdict names the ONE code it expects, so a control
 # that fires for the wrong reason is a failure too.
 # ═════════════════════════════════════════════════════════════════════════════════
@@ -2073,7 +2073,7 @@ else
     PASS "GD1: extraction — the G1 bullet (${#GD_G1} chars), the G0-root bullet (${#GD_G0} chars) and the refusal predicate's paragraph (${#GD_PR} chars), with its remedy clause (${#GD_REM} chars), were read from \"$SECTION_HEADING\", and E1's sentinel was derived from the extracted list (\"$GD_SENT\"), not written here"
   fi
 
-  # GD2 — the live charter, in the remediated form: an exact status, so an absent checker
+  # GD2 — the live contract, in the remediated form: an exact status, so an absent checker
   # reports rc=127 as a named failure rather than reaching a PASS. The text says what the
   # checker read and what it read each clause for, with the length of each clause, so a
   # PASS here claims no more than was graded.
@@ -2083,13 +2083,13 @@ else
   expect_rc 0 "GD2" "G1 carries a refused branch, a ran-and-failed branch keyed on E1's sentinel and a canary-absent branch whose remedy puts the canary $GD_CANARY_REMEDY, and G0-root carries a refused arm; each clause that writes a refused read's remedy — G1's refused branch (${#GD_CR} chars), G0-root's refused arm (${#GD_C0} chars) and the refusal predicate's remedy clause (${#GD_REM} chars) — names the $GD_REMEDY with \"$GD_SCOPE\" before it and carries no word of the forbidden-remedy class (the canary or README.md, copying or putting into place, writing), the predicate's clause naming $GD_REMEDY_SETTING and $GD_REMEDY_FLAG as well and saying that class is a refusal of a path \"$GD_SCOPE_DEF\"; and the predicate's disposition of a refusal of any other kind (${#GD_ON} chars) says it is \"$GD_OTHER_RELAY\" and carries no word of the directory-remedy class (the step, $GD_REMEDY_SETTING, add-dir, step 4) or of the forbidden-remedy class" -- ladder_refusal_check "$CONTRACT_DOC" "$GD_SENT"
   show "$GD_OUT" 'G[BRAXFCPMSN]'
 
-  # The controls plant ONE defect in a copy of a conformant charter. Over a non-conformant
+  # The controls plant ONE defect in a copy of a conformant contract. Over a non-conformant
   # one they could not isolate the defect they plant, and GD2 has already shown the checker
   # firing, so they do not run — and that is reported as a failure, never passed over.
   if [ "$GD_RC" -ne 0 ]; then
-    FAIL "GDc0: the controls plant one defect in a copy of a conformant charter, and GD2 found the live charter non-conformant (rc=$GD_RC), so no control could isolate the defect it plants — they did not run, which is a failure and not a pass"
+    FAIL "GDc0: the controls plant one defect in a copy of a conformant contract, and GD2 found the live contract non-conformant (rc=$GD_RC), so no control could isolate the defect it plants — they did not run, which is a failure and not a pass"
   else
-    # gd_without writes the live charter, with the first line carrying <old> rewritten so
+    # gd_without writes the live contract, with the first line carrying <old> rewritten so
     # that <old> reads <new>, into its own file under WORK — never into the repository. The
     # rewrite splits the line around <old> by length rather than by a pattern replacement,
     # because bash 3.2 keeps the quotes of a quoted replacement and bash 5.2 reads an
@@ -2114,7 +2114,7 @@ else
     gd_arm() {  # <id> <fixture> <expected-code> <what the fixture removed or planted>
       local id="$1" fx="$2" code="$3" what="$4" out
       if cmp -s "$fx" "$CONTRACT_DOC"; then
-        FAIL "$id: the fixture is byte-identical to the live charter — $what did not change it, so the verdict below would prove nothing"
+        FAIL "$id: the fixture is byte-identical to the live contract — $what did not change it, so the verdict below would prove nothing"
         return 0
       fi
       out="$(ladder_refusal_check "$fx" "$GD_SENT")"
@@ -2172,7 +2172,7 @@ else
     # The directory-class scope cut from each clause that gives the step, so that the step
     # stands as the fix for any refusal — the remedy an expansion refusal was given, and the
     # wrong one for it. And the class's definition cut from the predicate's clause, so that
-    # the scope names a class the charter no longer says anything about.
+    # the scope names a class the contract no longer says anything about.
     gd_without "$GD_FX/g1-unscoped.md" "$GD_CR" "$(gd_swap "$GD_CR" ", $GD_SCOPE," "")"
     gd_arm "GDc11" "$GD_FX/g1-unscoped.md" "GS" "G1's refused branch left giving the step for any refusal, its directory-class scope cut"
     gd_without "$GD_FX/g0-unscoped.md" "$GD_C0" "$(gd_swap "$GD_C0" ", $GD_SCOPE," "")"
