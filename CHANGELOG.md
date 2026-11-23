@@ -68,11 +68,12 @@ happened; group E gains E5–E8, which run the decrypt against the
 real StatiCrypt. `.github/workflows/publish-guard.yml` changes in comments only, and no group id moves.
 The erase reach table's control-files row names `.rotation-pending` and `.publish-lock/`.
 
-**Size fence.** Read against `v0.75.0`, this branch's merge base, `CH_EMIT=growth bash
+**Size fence.** Read against `v0.75.0`, the previous release tag, `CH_EMIT=growth bash
 scripts/test-corpus-hygiene.sh` lists every row kept and none new, raised, lowered or dropped.
-`CLAUDE.md` grew 1,318 bytes to 146,337, beneath its row of 153,381; `skills/trip-publish/SKILL.md` grew
+`CLAUDE.md` grew 1,415 bytes to 146,434, beneath its row of 153,381; `skills/trip-publish/SKILL.md` grew
 626 to 45,899, beneath 48,711; `skills/trip-decommission/SKILL.md` grew 571 to 56,656, beneath 60,026;
-`reference/adr/README.md` grew 404 to 28,017, beneath 28,177, with the record's index row; and
+`reference/adr/README.md` grew 458 to 28,071, beneath 28,177, with the record's index row and the
+register row `main` took for record 056; and
 `skills/trip-record/SKILL.md` grew 43 to 456,465, beneath 470,268. `ADR-055` is below its class floor and
 owes no row.
 
