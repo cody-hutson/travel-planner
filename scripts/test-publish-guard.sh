@@ -13748,22 +13748,28 @@ rv2b_assert "RV2b"
 
 # RV2d — controls. Where the sources do not disagree, update publishes exactly as before:
 # variable only, file only, both equal, and an EMPTY variable (which is unset, everywhere).
-rv2d_assert() { # <id> <env-only|file-only|agree|empty-env>
-  local id="$1" c="$2" name d k rc want
+# The fixture's live page is already under the key each case names (rv_fixture seeds it there), so a page under
+# that key at the tip does not by itself prove a push: the site's head must also have moved (Stage 7's F-03).
+# nopush stands the push in for one that reports success and writes nothing; RV2d-ctl requires the arm to fail then.
+rv2d_assert() { # <id> <env-only|file-only|agree|empty-env> [nopush]
+  local id="$1" c="$2" how="${3:-}" name d k rc want h0="" h1=""
   name="rv2d-$c-$RANDOM"
   case "$c" in
-    env-only)  want='rv-env-only-synthetic-key-01'; d="$(rv_fixture "$name" '' "$want")"
-               ( export STATICRYPT_PASSWORD="$want"; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$? ;;
-    file-only) want='rv-file-only-synthetic-key-02'; d="$(rv_fixture "$name" "$want")"
-               ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$? ;;
-    agree)     want='rv-agreeing-synthetic-key-003'; d="$(rv_fixture "$name" "$want")"
-               ( export STATICRYPT_PASSWORD="$want"; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$? ;;
-    *)         want='rv-empty-env-synthetic-key-04'; d="$(rv_fixture "$name" "$want")"
-               ( export STATICRYPT_PASSWORD=''; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$? ;;
+    env-only)  want='rv-env-only-synthetic-key-01'; d="$(rv_fixture "$name" '' "$want")"; h0="$(rv_head "$RVW/origin/$name-trip.git")"
+               ( export STATICRYPT_PASSWORD="$want"; [ -z "$how" ] || push_trip_site() { return 0; }; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$? ;;
+    file-only) want='rv-file-only-synthetic-key-02'; d="$(rv_fixture "$name" "$want")"; h0="$(rv_head "$RVW/origin/$name-trip.git")"
+               ( unset STATICRYPT_PASSWORD; [ -z "$how" ] || push_trip_site() { return 0; }; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$? ;;
+    agree)     want='rv-agreeing-synthetic-key-003'; d="$(rv_fixture "$name" "$want")"; h0="$(rv_head "$RVW/origin/$name-trip.git")"
+               ( export STATICRYPT_PASSWORD="$want"; [ -z "$how" ] || push_trip_site() { return 0; }; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$? ;;
+    *)         want='rv-empty-env-synthetic-key-04'; d="$(rv_fixture "$name" "$want")"; h0="$(rv_head "$RVW/origin/$name-trip.git")"
+               ( export STATICRYPT_PASSWORD=''; [ -z "$how" ] || push_trip_site() { return 0; }; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$? ;;
   esac
+  h1="$(rv_head "$RVW/origin/$name-trip.git")"
   k="$(rv_pushed_key "$RVW/origin/$name-trip.git")"
   if [ "$rc" -ne 0 ] || [ -z "$k" ]; then
     FAIL "$id: update ($c) returned rc=$rc and pushed no page bound to a key — a non-conflicting case must publish"
+  elif [ -z "$h0" ] || [ "$h0" = "$h1" ]; then
+    FAIL "$id: update ($c) returned rc=0 but the site's head did not move — the page under its key is the fixture's seed, and no push happened"
   elif [ "$k" != "$want" ]; then
     FAIL "$id: update ($c) pushed a page under a key other than the one its sources name"
   else
@@ -13771,6 +13777,16 @@ rv2d_assert() { # <id> <env-only|file-only|agree|empty-env>
   fi
 }
 for rv_c in env-only file-only agree empty-env; do rv2d_assert "RV2d-$rv_c" "$rv_c"; done
+rv2dc_assert() { # <id> — the control: with the push reporting success and writing nothing, RV2d must FAIL
+  local id="$1" out
+  out="$(md_probe rv2d_no_such_subject rv2d_assert "RV2dx" file-only nopush)"
+  if [ "$out" != "0 1" ]; then
+    FAIL "$id: CONTROL — with push_trip_site stubbed to report success and push nothing, RV2d reported '$out', want '0 1': it cannot tell a push from none"
+  else
+    PASS "$id: CONTROL — with push_trip_site stubbed to report success and push nothing, RV2d reports exactly one FAIL, so its PASS above is a measurement of the push"
+  fi
+}
+rv2dc_assert "RV2d-ctl"
 
 # RV2e — FM-4's domain. A .passphrase the resolver cannot read AS the variable's key is a
 # disagreement, not an absence: unreadable, empty, newline only, a second line, CRLF. Each
