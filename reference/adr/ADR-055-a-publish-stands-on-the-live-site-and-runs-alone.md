@@ -72,7 +72,7 @@ What recognises a rotation whose push failed:
 | The staged baseline record | Rejected. A rotation of an unchanged plan stages none, and `publish` stages the same record, so it would admit the residual it exists to stop |
 | The clone's unpushed page | Rejected. The remedy the refusals name removes the clone |
 | A marker naming the identity of the key file the rotation wrote | Rejected as written. It binds a local file and nothing about the site: a second copy of the trip moving the site to a third key, or the repository published again `--plaintext`, still matched it, and `update` pushed under a key nobody held |
-| **`.rotation-pending`, written after the key, naming the key file's identity and `base-page`, the git blob id of the page the rotation replaced** | **SELECTED.** `update` finishes the rotation only while both still stand. It holds no key and no person data: an inode, a time, a size and a public ciphertext's content address |
+| **`.rotation-pending`, written after the key, naming the key file's identity, `base-page`, the git blob id of the page the rotation replaced, and `base-commit`, the commit its leased push would have replaced** | **SELECTED.** `update` finishes the rotation only while all three still stand. The commit is what tells a site published again apart: an unchanged plaintext render reproduces the page's blob in a new repository, never the commit. It holds no key and no person data: an inode, a time, a size, and the content addresses of a public page and a public commit |
 
 Whether a second command waits or refuses, and the lock's primitive:
 
@@ -104,11 +104,13 @@ The rule for a lock a killed run left behind:
    asks nothing of the key it retires.
 3. **A rotation whose push failed is the one exception, and it is recognised by `.rotation-pending`.**
    `rotate` writes it immediately after it records the new key, naming the identity of the key file that
-   write produced and `base-page`, the git blob id of the page at the lease. `update` admits a key that does
-   not open the live page, or a page that is not encrypted, only while the key file is still that file and
-   the page at its own lease is still that page. A successful push by `update` or `rotate` clears it. Where
-   another copy of the trip moved the site under the old key after the rotation read it, `update` refuses
-   and names `rotate` rather than finishing the rotation.
+   write produced, `base-page`, the git blob id of the page at the lease, and `base-commit`, the lease itself.
+   `update` admits a key that does not open the live page, or a page that is not encrypted, only while the key
+   file is still that file and its own lease is still that commit carrying that page. A successful push by
+   `update` or `rotate` clears it. Where another copy of the trip moved the site under the old key after the
+   rotation read it, or the site was taken down and published again — always a new commit, even where an
+   unchanged plaintext render reproduces the page's blob — `update` refuses and names `rotate` rather than
+   finishing the rotation.
 4. **The key file is flushed to disk before any push that depends on it.** The staged copy is flushed before
    its rename and its directory after it; at `rotate`'s commit point the order is the key, then the marker,
    then one flush of the directories holding them, so a directory that cannot be flushed is reported by the
@@ -132,7 +134,10 @@ The rule for a lock a killed run left behind:
   or key material; the erase reach table's control-files row names both as OUT, and they join the publish
   script's other sidecars outside the data architecture's closed enumeration, the residual `ADR-046` records.
 - **A manual step follows a run killed outright, a crash or a power loss:** the lock's removal, named in the
-  refusal. An unattended republish can tell a busy trip from a lock left behind by the exit status alone.
+  refusal. An unattended republish can tell a busy trip from a lock left behind by the exit status alone,
+  save in the first instants after a command creates the lock: before its record is in place, a second command
+  is told 76, its record cannot be read, where 75 is due, and since that refusal's remedy holds only if no
+  publish command is running, the operator checks before removing the lock.
 - **The lock covers one machine's data root.** Two machines publishing one trip are still stopped only by the
   bound pushes, the read-backs and the residue refusal.
 - **Residuals this record accepts.** A rotation back to a key an earlier rotation revoked passes both checks:

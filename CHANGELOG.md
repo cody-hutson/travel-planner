@@ -26,9 +26,11 @@ published `--plaintext` is refused the same way, naming `rotate`. `rotate` refus
 already opens that page, because such a rotation revokes nothing, and asks nothing of the key it
 retires, so the lost-key route stays open. A rotation whose push failed is still finished by `update`:
 `rotate` now writes `.rotation-pending` beside the trip immediately after its new key, naming the key
-file that write produced and the page the rotation replaced, and `update` finishes the rotation only
-while both still stand; a successful push by either clears it. Where another copy of the trip moved the
-site under the old key, `update` refuses and names `rotate` instead. This ends the residual milestone
+file that write produced, and the page and the commit the rotation replaced, and `update` finishes the
+rotation only while all three still stand; a successful push by either clears it. Where another copy of
+the trip moved the site under the old key, or the site was taken down and published again, which is
+always a new commit, `update` refuses and names `rotate` instead, saying the rotation it records could
+not be finished. This ends the residual milestone
 74 left: an `update` re-keying the site under a key a failed first publish had generated. The key file
 is flushed to disk — `fsync` through perl, with `F_FULLFSYNC` on macOS — before its rename and its
 directory after it, so an interrupted write leaves the old key or the complete new one.
@@ -41,7 +43,10 @@ it points.
 **One command at a time.** `publish`, `update`, `rotate` and `unpublish` take a per-trip lock,
 `<trip-dir>/.publish-lock`, before they read anything, and `confirm` immediately before its first write;
 `list` takes none. A second command refuses at once, naming the one running, with exit status 75 where it
-runs and 76 for a lock a killed run left behind, so an unattended caller can tell the two apart. Every
+runs and 76 for a lock a killed run left behind, so an unattended caller can tell the two apart. For
+the first instants after a command creates the lock, before its record is in place, a second command is
+told 76, its record cannot be read, where 75 is due; that refusal's remedy holds only if no publish
+command is running, so check before removing the lock. Every
 exit releases the lock, and an interrupt, a hangup or a terminate signal does too. A lock a run killed
 outright left behind is never broken automatically: the refusal names its removal. The lock covers one
 machine's data root.
@@ -55,10 +60,11 @@ commit and the repository create.
 
 **One record.** `ADR-055`, *a publish stands on the live site and runs alone*, lands `Proposed`: the key
 checked against the live site, with `rotate`'s inverted check and the marker that binds a failed rotation
-to the key file and the page, and the per-trip lock with its exit statuses.
+to the key file, the page and its commit, and the per-trip lock with its exit statuses.
 
-**The suite holds it.** Group J gains J4–J8; group RV gains RV48–RV56, including this suite's first
-background processes, each bounded and killed; group E gains E5–E8, which run the decrypt against the
+**The suite holds it.** Group J gains J4–J10; group RV gains RV48–RV56, including this suite's first
+background processes, each bounded and killed, and RV2d-ctl, which shows RV2d fails where no push
+happened; group E gains E5–E8, which run the decrypt against the
 real StatiCrypt. `.github/workflows/publish-guard.yml` changes in comments only, and no group id moves.
 The erase reach table's control-files row names `.rotation-pending` and `.publish-lock/`.
 
