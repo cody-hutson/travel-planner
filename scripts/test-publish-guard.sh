@@ -15916,8 +15916,8 @@ for rv_p in noreply publish update rotate; do md_flips commit_noreply "RV31-$rv_
 # RV48–RV52 — #1820 (and #1821, which it carries). A push that re-encrypts stands on the site's state, not a local
 # store: update's key must open the page the site serves now, read from the clone's fetched tip, whichever store
 # supplied it; rotate refuses a new key that already opens that page; a rotation whose push failed is finished by
-# update only while its pending-rotation marker names both the key file it wrote and the page it replaced (review
-# CD-1); and the key file is flushed to disk before any push that depends on it, written key, then marker, then one
+# update only while its pending-rotation marker names the key file it wrote and the page and commit it replaced (review
+# CD-1; Stage 7's F-02); and the key file is flushed to disk before any push that depends on it, written key, then marker, then one
 # directory flush at rotate's commit point (review CD-4). The decrypt here is the stand-in above; the real helper is
 # graded against the real tool in group E (E5–E8) and by RV12k.
 #
