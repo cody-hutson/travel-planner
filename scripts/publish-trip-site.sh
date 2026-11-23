@@ -198,10 +198,15 @@ commit_noreply() { # <repo_dir> <message>
   # Signing is pinned off here, with -c, which outranks the operator's global and repository
   # configuration and GIT_CONFIG_*: an operator's signature on a public per-trip repository is the
   # same leak as their email, and no signing program may run for a commit this script makes.
-  GIT_AUTHOR_NAME="$NOREPLY_NAME"    GIT_AUTHOR_EMAIL="$NOREPLY_EMAIL" \
-  GIT_COMMITTER_NAME="$NOREPLY_NAME" GIT_COMMITTER_EMAIL="$NOREPLY_EMAIL" \
-  git -C "$repo_dir" -c "user.name=${NOREPLY_NAME}" -c "user.email=${NOREPLY_EMAIL}" -c commit.gpgsign=false \
-    commit --quiet -m "$msg"
+  # A GIT_AUTHOR_DATE or GIT_COMMITTER_DATE in the environment is discarded, in a subshell so the
+  # caller's environment is untouched, and the commit takes the current time: with the identity and
+  # the message fixed, a republished plaintext site's root commit differs from the one it replaced only
+  # by its dates, and the pending-rotation marker's base-commit binding rests on that difference.
+  ( unset GIT_AUTHOR_DATE GIT_COMMITTER_DATE
+    GIT_AUTHOR_NAME="$NOREPLY_NAME"    GIT_AUTHOR_EMAIL="$NOREPLY_EMAIL" \
+    GIT_COMMITTER_NAME="$NOREPLY_NAME" GIT_COMMITTER_EMAIL="$NOREPLY_EMAIL" \
+    git -C "$repo_dir" -c "user.name=${NOREPLY_NAME}" -c "user.email=${NOREPLY_EMAIL}" -c commit.gpgsign=false \
+      commit --quiet -m "$msg" )
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -450,7 +455,8 @@ pending_rotation_path() { printf '%s' "$1/.rotation-pending"; }
 # would have replaced. update finishes a rotation only while .passphrase is still that file AND the site's tip is
 # still that commit carrying that page. A key file rewritten since, a site moved under the old key by another copy of
 # the trip, or a repository published again falls outside it, and update refuses naming rotate: a site taken down and
-# published again is always a new commit, even where an unchanged plaintext render reproduces the page's blob. Written
+# published again is always a new commit, because commit_noreply dates every commit from the clock whatever dates the
+# environment pins, even where an unchanged plaintext render reproduces the page's blob. Written
 # before the key it would name the old file, which the key write's rename replaces, and would never match. It holds no
 # key and no person data: an inode, a time, a size, and the content address of a public page and of a public commit.
 # Its directory is flushed by the caller, once, after the key and the marker are both written (review CD-4).
