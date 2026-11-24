@@ -16535,7 +16535,8 @@ md_flips ensure_first_key "RV53-link-store" rv53l_assert "RV53-link-store"
 # ══════════════════════════════════════════════════════════════════
 # RV54 — #1819. Publish commands on one trip run one at a time, behind a per-trip lock: a directory made by mkdir,
 # holding one record of the command, its pid and its start time. A second command refuses at once, naming the holder,
-# with exit status 75 where the holder runs and 76 where it does not or its record cannot be read (review CD-3).
+# with exit status 75 where the holder runs and 76 where it does not or its record cannot be read (review CD-3); where
+# the holder releases the lock while the second command reads its record again, the second takes it and runs (F-18).
 #
 # THE HOLDER, AND ITS BOUNDS (review PR-1). A is an update run in the background whose require_publish_branch, only
 # where RV54_HOLDER is set — in A's own subshell and nowhere else — touches a reached-file and then waits for a
@@ -16811,6 +16812,152 @@ rv54lc_assert() { # <id>
   fi
 }
 rv54lc_assert "RV54-holder-late-ctl"
+# RV54-holder-gone — Stage 7 Pass 4's F-18 (#1819 AC-1). A command that meets the lock in its holder's first instants,
+# and whose holder then finishes and releases the lock while it reads the record again, finds the trip free: it takes
+# the lock by the same take a first taker makes — its own record, its traps, its release — and runs, with no 75, no 76
+# and no removal line. The lock directory is made here with no record. The holder is a live background process that,
+# once the second command has read the lock and paused, writes its record naming itself and releases the lock through
+# the script's own _release_trip_lock. It polls for that pause every 0.02 s, so it releases within about 0.02 s of
+# it, as a command that refuses at once does. The pause is a stand-in which, on its first call, lets the holder go and
+# waits for the lock directory to be gone, so the release lands inside the bound by construction, never by the wall
+# clock. The second command records, at its branch check, the holder record and the traps it then runs under. Every
+# wait is bounded, and the holder is killed with SIGKILL at its bound (review PR-1).
+rv54_gone_holder() { # <trip> -> starts the releasing holder in the background; its pid in RV54_PID
+  local d="$1"
+  ( k=0
+    while [ ! -e "$d.go" ] && [ ! -e "$d.stop" ] && [ "$k" -lt 1500 ]; do sleep 0.02; k=$((k+1)); done
+    if [ -e "$d.go" ]; then
+      _TRIP_LOCK="$d/.publish-lock"; _TRIP_LOCK_PID="$(exec sh -c 'printf "%s" "$PPID"')"
+      printf 'command=update\npid=%s\nstarted=%s\n' "$_TRIP_LOCK_PID" "$(_iso_now)" > "$_TRIP_LOCK/.holder.new" \
+        && mv -f "$_TRIP_LOCK/.holder.new" "$_TRIP_LOCK/holder" && _release_trip_lock
+    fi ) &
+  RV54_PID=$!
+}
+# The second command's stand-ins, run only inside its own subshell. Its pause between reads, on its first call, lets
+# the holder go and waits, bounded, for the lock directory to be gone. Its mkdir, where a third command is named and
+# the holder has released the lock, lets that third command take the lock and waits, bounded, for its record before
+# the real mkdir runs: a retake that loses to a command arriving first, by construction. Its branch check, reached
+# only once it holds the lock, records the lock's record, its traps and its own process id.
+rv54g_pause() {
+  local w=0
+  printf '%s\n' "$*" >> "$RV54G_D.pauses"
+  if [ ! -e "$RV54G_D.go" ]; then
+    : > "$RV54G_D.go"
+    while [ -e "$RV54G_D/.publish-lock" ] && [ "$w" -lt 1000 ]; do command sleep 0.01; w=$((w+1)); done
+    [ -e "$RV54G_D/.publish-lock" ] || : > "$RV54G_D.released"
+  fi
+  return 0
+}
+rv54g_mkdir() {
+  local w=0
+  if [ -n "$RV54G_THIRD" ] && [ "${1:-}" = "$RV54G_D/.publish-lock" ] && [ -e "$RV54G_D.released" ] && [ ! -e "$RV54G_D.c-go" ]; then
+    : > "$RV54G_D.c-go"
+    while [ ! -s "$RV54G_D/.publish-lock/holder" ] && [ "$w" -lt 1000 ]; do command sleep 0.01; w=$((w+1)); done
+    cat "$RV54G_D/.publish-lock/holder" > "$RV54G_D.c.rec" 2>/dev/null || true
+  fi
+  command mkdir "$@"
+}
+rv54g_witness() {
+  cat "$RV54G_D/.publish-lock/holder" > "$RV54G_D.b.rec" 2>/dev/null || true
+  trap -p EXIT INT TERM HUP > "$RV54G_D.b.traps" 2>/dev/null || true
+  printf '%s' "$(exec sh -c 'printf "%s" "$PPID"')" > "$RV54G_D.b.pid" || true
+}
+rv54_gone_run() { # <trip> [third] -> the second command, an update, on <trip>; RV54G_RC its status, its output in <trip>.b.out
+  ( unset STATICRYPT_PASSWORD; RV54G_D="$1"; RV54G_THIRD="${2:-}"
+    sleep() { rv54g_pause "$@"; }
+    mkdir() { rv54g_mkdir "$@"; }
+    rv54g_def="$(declare -f require_publish_branch)"; eval "rv54g_real_rpb ${rv54g_def#require_publish_branch}"
+    require_publish_branch() { rv54g_witness; rv54g_real_rpb "$@"; }
+    set -e; cmd_update "$1" ) > "$1.b.out" 2>&1
+  RV54G_RC=$?
+}
+rv54gp_assert() { # <id>
+  local id="$1" name d bare out rc pid h0 h1 rec bpid traps n=0 gaps="" paused=0 released=0 refused=0 own=0 trapped=0 left=0
+  name="rv54gp-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-gone-synthetic-key-83')"; bare="$RVW/origin/$name-trip.git"
+  mkdir "$d/.publish-lock"; h0="$(rv_head "$bare")"
+  rv54_gone_holder "$d"; pid="$RV54_PID"
+  rv54_gone_run "$d"; rc="$RV54G_RC"; out="$(cat "$d.b.out" 2>/dev/null)"
+  h1="$(rv_head "$bare")"
+  [ -e "$d.go" ] && paused=1
+  [ -e "$d.released" ] && released=1
+  [ -e "$d/.publish-lock" ] && left=1
+  { rv_has "$out" "holds this trip's lock" || rv_has "$out" "is running on this trip" || rv_has "$out" 'rm -r'; } && refused=1
+  if [ -e "$d.pauses" ]; then n="$(rv_lines "$d.pauses")"; gaps="$(sort -u "$d.pauses")"; fi
+  rec="$(cat "$d.b.rec" 2>/dev/null)"; bpid="$(cat "$d.b.pid" 2>/dev/null)"; traps="$(cat "$d.b.traps" 2>/dev/null)"
+  [ -n "$bpid" ] && rv_has "$rec" 'command=update' && rv_has "$rec" "pid=$bpid" && own=1
+  rv_has "$traps" '_release_trip_lock' && rv_has "$traps" 'exit 130' && rv_has "$traps" 'exit 143' && rv_has "$traps" 'exit 129' && trapped=1
+  rv54_finish "$d.stop" "$pid"
+  if [ "$paused" -eq 0 ]; then
+    FAIL "$id: update never paused on a lock with no record, so the holder was never let go (rc=$rc). VERDICT WITHHELD"
+  elif [ "$released" -eq 0 ]; then
+    FAIL "$id: update paused, but the holder never released the lock (rc=$rc). VERDICT WITHHELD"
+  elif [ "$rc" -eq 75 ] || [ "$rc" -eq 76 ]; then
+    FAIL "$id: the holder released the lock while update read it again, and update still refused with rc=$rc (refusal or removal line in its output: $refused) — a trip whose lock was already free was reported held"
+  elif [ "$refused" -eq 1 ]; then
+    FAIL "$id: update read rc=$rc, but its output carries a lock refusal or a removal line for a lock its holder had released"
+  elif [ "$rc" -ne 0 ]; then
+    FAIL "$id: update met a lock its holder then released and read rc=$rc, want 0 — it did not take the freed lock and run to the end"
+  elif [ "$h1" = "$h0" ]; then
+    FAIL "$id: update read rc=0 on the freed lock, but the site did not move"
+  elif [ "$own" -eq 0 ]; then
+    FAIL "$id: update ran, but not under a lock record of its own naming update and its process ($bpid) — it did not take the lock as a first taker does"
+  elif [ "$trapped" -eq 0 ]; then
+    FAIL "$id: update ran on the freed lock without the lock's traps (EXIT release, INT 130, TERM 143, HUP 129) — it did not take the lock as a first taker does"
+  elif [ "$left" -eq 1 ]; then
+    FAIL "$id: update took the freed lock and ran, and left the lock behind on exit"
+  elif [ "$n" != 1 ] || [ "$gaps" != 0.05 ]; then
+    FAIL "$id: update took the freed lock after $n pause(s) of '$gaps' s, want 1 pause of 0.05 s — it did not take it at the next read"
+  else
+    PASS "$id: a command whose holder releases the lock while it reads the record again takes the freed lock at the next read, by the same take — its own record and traps — runs to the end with no 75, no 76 and no removal line, and releases the lock"
+  fi
+}
+rv54gp_assert "RV54-holder-gone"
+# RV54-holder-gone-ctl — its control: the holder releases the lock in the same way, and a third command, a rotate
+# taking the lock through the script's own take, takes it first, at the moment the second command's retake is about
+# to make the directory. The second command's take then fails; it reads the third command's record on as any holder's
+# and refuses with 75, naming it, and that command's lock stands. Every wait is bounded, and both background processes
+# are killed with SIGKILL at their bound (review PR-1).
+rv54gc_assert() { # <id>
+  local id="$1" name d bare out rc pid cpid h0 h1 crec cp="" released=0 tried=0 took=0 said=0 named=0 kept=0
+  name="rv54gc-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-gone-ctl-synthetic-key-84')"; bare="$RVW/origin/$name-trip.git"
+  mkdir "$d/.publish-lock"; h0="$(rv_head "$bare")"
+  rv54_gone_holder "$d"; pid="$RV54_PID"
+  ( k=0
+    while [ ! -e "$d.c-go" ] && [ ! -e "$d.stop" ] && [ "$k" -lt 1500 ]; do sleep 0.02; k=$((k+1)); done
+    if [ -e "$d.c-go" ]; then
+      _take_trip_lock "$d" rotate
+      k=0; while [ ! -e "$d.stop" ] && [ "$k" -lt 300 ]; do sleep 0.1; k=$((k+1)); done
+    fi ) > "$d.c.out" 2>&1 &
+  cpid=$!
+  rv54_gone_run "$d" third; rc="$RV54G_RC"; out="$(cat "$d.b.out" 2>/dev/null)"
+  h1="$(rv_head "$bare")"
+  [ -e "$d.released" ] && released=1
+  [ -e "$d.c-go" ] && tried=1
+  crec="$(cat "$d.c.rec" 2>/dev/null)"
+  case "$crec" in *command=rotate*pid=*) took=1; cp="${crec#*pid=}"; cp="${cp%%[!0-9]*}" ;; esac
+  [ -n "$crec" ] && [ "$(cat "$d/.publish-lock/holder" 2>/dev/null)" = "$crec" ] && kept=1
+  rv_has "$out" "'rotate' is running on this trip" && said=1
+  [ -n "$cp" ] && rv_has "$out" "(process $cp," && named=1
+  rv54_finish "$d.stop" "$cpid"; rv54_finish "$d.stop" "$pid"
+  if [ "$released" -eq 0 ]; then
+    FAIL "$id: CONTROL — the holder never released the lock while update paused (rc=$rc). VERDICT WITHHELD"
+  elif [ "$tried" -eq 0 ]; then
+    FAIL "$id: CONTROL — the holder released the lock while update read it again, and update never tried to take the freed lock (rc=$rc), so no third command could take it first — it read on for a lock already gone"
+  elif [ "$took" -eq 0 ]; then
+    FAIL "$id: CONTROL — update tried to take the freed lock, but the third command never took it first (rc=$rc). VERDICT WITHHELD"
+  elif [ "$rc" -ne 75 ]; then
+    FAIL "$id: CONTROL — a third command took the freed lock first, and update read rc=$rc, want 75 — it took, broke or misread a lock another command holds"
+  elif [ "$said" -eq 0 ] || [ "$named" -eq 0 ]; then
+    FAIL "$id: CONTROL — update refused with 75 without naming the third command, the rotate (said=$said), or its process $cp (named=$named)"
+  elif [ "$kept" -eq 0 ]; then
+    FAIL "$id: CONTROL — the third command's lock record did not stand once update had refused — its lock was broken or replaced"
+  elif [ "$h1" != "$h0" ]; then
+    FAIL "$id: CONTROL — update refused on the lock but the site moved"
+  else
+    PASS "$id: CONTROL — where a third command takes the freed lock first, the second command's take fails, it reads that command's record on as any holder's, refuses with 75 naming it, and leaves its lock standing"
+  fi
+}
+rv54gc_assert "RV54-holder-gone-ctl"
 # RV54-mkdir — review FM-3: a trip directory that refuses the write is named as itself, never as a held lock.
 rv54m_assert() { # <id>
   local id="$1" name d out rc said=0 held=0
@@ -16895,6 +17042,8 @@ md_flips _take_trip_lock "RV54-stale" rv54s_assert "RV54-stale"
 md_flips _take_trip_lock "RV54-unreadable-holder" rv54u_assert "RV54-unreadable-holder"
 md_flips _take_trip_lock "RV54-holder-late" rv54lh_assert "RV54-holder-late"
 md_flips _take_trip_lock "RV54-holder-late-ctl" rv54lc_assert "RV54-holder-late-ctl"
+md_flips _trip_lock_take "RV54-holder-gone" rv54gp_assert "RV54-holder-gone"
+md_flips _trip_lock_take "RV54-holder-gone-ctl" rv54gc_assert "RV54-holder-gone-ctl"
 md_flips _take_trip_lock "RV54-mkdir" rv54m_assert "RV54-mkdir"
 for rv_b in TERM INT HUP; do md_flips _release_trip_lock "RV54-signals-$rv_b" rv54g_assert "RV54-signals-$rv_b" "$rv_b"; done
 
