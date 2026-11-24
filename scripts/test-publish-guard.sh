@@ -6594,6 +6594,7 @@ gh() {   # mock: record the call, answer the read-only probes, create/clone noth
   case "${1:-} ${2:-}" in
     "api user")    printf 'testowner' ;;
     "repo view")   return 0 ;;
+    "api -i")      printf 'HTTP/2.0 200 OK\r\n' ;;   # publish's lookup: the repo exists (#1819 AC-4)
     "auth status") printf "Token scopes: 'repo'\n" ;;
     *)             return 0 ;;
   esac
@@ -6634,7 +6635,8 @@ s_record "$S9D/.published-itinerary" "$S_DA" published
 : > "$S_GHLOG"
 ( cmd_publish "$S9D" ) >/dev/null 2>&1; S_RC9=$?
 S_LOG9="$(cat "$S_GHLOG")"
-case "$S_LOG9" in *"repo view"*)   S_VIEW9=1 ;;   *) S_VIEW9=0 ;; esac
+# The existence probe is the lookup's status-line read (#1819 AC-4) or, before it, `repo view`; either counts.
+case "$S_LOG9" in *"repo view"*|*"api -i --silent repos/"*) S_VIEW9=1 ;;   *) S_VIEW9=0 ;; esac
 case "$S_LOG9" in *"repo create"*) S_CREATE9=1 ;; *) S_CREATE9=0 ;; esac
 unset -f gh npx
 if [ "$S_VIEW9" -eq 1 ] && [ "$S_RC9" -ne 0 ] && [ "$S_CREATE9" -eq 0 ]; then
@@ -9660,6 +9662,7 @@ gh() {   # mock: record the call, answer the read-only probes, create or clone n
   case "${1:-} ${2:-}" in
     "api user")    printf 'testowner' ;;
     "repo view")   return 0 ;;
+    "api -i")      printf 'HTTP/2.0 200 OK\r\n' ;;   # publish's lookup: the repo exists (#1819 AC-4)
     "auth status") printf "Token scopes: 'repo'\n" ;;
     *)             return 0 ;;
   esac
@@ -9695,7 +9698,7 @@ sa_push() { # <update|publish> <trip> -> "rc clone view create"; stderr to $WORK
   else ( cmd_update "$2" ) >/dev/null 2>"$WORK/sa_push.err"; rc=$?; fi
   log="$(cat "$SA_GHLOG")"
   case "$log" in *"repo clone"*)  cl=1 ;; esac
-  case "$log" in *"repo view"*)   vw=1 ;; esac
+  case "$log" in *"repo view"*|*"api -i --silent repos/"*) vw=1 ;; esac   # publish's probe, either form (#1819 AC-4)
   case "$log" in *"repo create"*) cr=1 ;; esac
   printf '%s %s %s %s' "$rc" "$cl" "$vw" "$cr"
 }
@@ -10999,6 +11002,7 @@ sb_gh() { # S8's mock of gh, shared by the S29 arms: record the call, answer the
   case "${1:-} ${2:-}" in
     "api user")    printf 'testowner' ;;
     "repo view")   return 0 ;;
+    "api -i")      printf 'HTTP/2.0 200 OK\r\n' ;;   # publish's lookup: the repo exists (#1819 AC-4)
     "auth status") printf "Token scopes: 'repo'\n" ;;
     *)             return 0 ;;
   esac
@@ -11017,9 +11021,9 @@ s29a_assert() {
   : > "$SB_GHLOG"; ( cmd_publish "$c" ) >/dev/null 2>&1; clog="$(cat "$SB_GHLOG")"
   unset -f gh npx
   case "$e" in *"could not identify the itinerary content of the outgoing render"*) msg=1 ;; esac
-  case "$log" in *"repo view"*) vw=1 ;; esac
+  case "$log" in *"repo view"*|*"api -i --silent repos/"*) vw=1 ;; esac   # the probe, either form (#1819 AC-4)
   case "$log" in *"repo create"*) cr=1 ;; esac
-  case "$clog" in *"repo view"*) cvw=1 ;; esac
+  case "$clog" in *"repo view"*|*"api -i --silent repos/"*) cvw=1 ;; esac
   [ -e "$d/.published-itinerary" ] && side=1
   if [ "$cvw" -ne 1 ]; then
     FAIL "S29a: CONTROL — publish of an identifiable render never reached the existence probe in the mock's log, so its absence below proves nothing"
@@ -11081,7 +11085,7 @@ s29c_assert() {
   case "$pe" in *"is not a regular file"*) pm=1 ;; esac
   case "$re" in *"could not stage the baseline"*) rmsg=1 ;; esac
   case "$ul" in *"repo clone"*) ucl=1 ;; esac
-  case "$pl" in *"repo view"*) pvw=1 ;; esac
+  case "$pl" in *"repo view"*|*"api -i --silent repos/"*) pvw=1 ;; esac   # the probe, either form (#1819 AC-4)
   case "$rl" in *"repo clone"*) rcl=1 ;; esac
   case "$cl" in *"repo clone"*) ccl=1 ;; esac
   cmp -s "$r.pp-before" "$r/.passphrase" && rsame=1
@@ -11108,9 +11112,9 @@ s29f_assert() {
   : > "$SB_GHLOG"; ( cmd_publish "$c" ) >/dev/null 2>&1; cl="$(cat "$SB_GHLOG")"
   unset -f gh npx
   case "$pe" in *".published-itinerary.next is not a regular file"*) pm=1 ;; esac
-  case "$pl" in *"repo view"*) pvw=1 ;; esac
+  case "$pl" in *"repo view"*|*"api -i --silent repos/"*) pvw=1 ;; esac   # the probe, either form (#1819 AC-4)
   case "$pl" in *"repo create"*) pcr=1 ;; esac
-  case "$cl" in *"repo view"*) cvw=1 ;; esac
+  case "$cl" in *"repo view"*|*"api -i --silent repos/"*) cvw=1 ;; esac
   if [ "$cvw" -ne 1 ]; then
     FAIL "S29f: CONTROL — publish with a regular file at the staged path never reached the existence probe, so the absence of one below proves nothing"
   elif [ "$pr" -eq 1 ] && [ "$pm" -eq 1 ] && [ "$pvw" -eq 0 ] && [ "$pcr" -eq 0 ]; then
@@ -11134,6 +11138,9 @@ s29d_assert() {
   case "$g" in *require_recordable_baseline*) pre="${g%%require_recordable_baseline*}"; gr=${#pre} ;; esac
   case "$p" in *require_recordable_baseline*) pre="${p%%require_recordable_baseline*}"; pg=${#pre} ;; esac
   case "$p" in *"gh repo view"*) pre="${p%%gh repo view*}"; pv=${#pre} ;; esac
+  # The existence probe is the lookup's status-line read through _host_answer (#1819 AC-4), ahead of `gh repo view`,
+  # which now reads only a repository the lookup found; the earlier of the two is the probe.
+  case "$p" in *_host_answer*) pre="${p%%_host_answer*}"; { [ "$pv" -ge 0 ] && [ "${#pre}" -ge "$pv" ]; } || pv=${#pre} ;; esac
   [ "$gc" -ge 0 ] && [ "$gr" -gt "$gc" ] || { ok=0; why="$why guards:$gc/$gr"; }
   [ "$pg" -ge 0 ] && [ "$pv" -gt "$pg" ] || { ok=0; why="$why publish:$pg/$pv"; }
   case "$p" in *require_change_confirmation*) ok=0; why="$why publish-gated" ;; esac
@@ -13145,6 +13152,7 @@ gh() {   # mock: answer the read-only probes; create, clone and push nothing rea
   case "${1:-} ${2:-}" in
     "api user")    printf 'testowner' ;;
     "repo view")   return 1 ;;          # no per-trip repo yet, so publish proceeds
+    "api -i")      printf 'HTTP/2.0 404 Not Found\r\n'; return 1 ;;   # its lookup's status line says the same (#1819 AC-4)
     "auth status") printf "Token scopes: 'repo'\n" ;;
     *)             return 0 ;;
   esac
@@ -13499,6 +13507,8 @@ gh() {   # mock: log the call, answer the read-only probes, create and clone not
   case "${1:-} ${2:-}" in
     "api user")    printf 'testowner' ;;
     "repo view")   return 1 ;;
+    # publish's repository lookup reads the host's status line (#1819 AC-4): no per-trip repo here, so 404.
+    "api -i")      printf 'HTTP/2.0 404 Not Found\r\n'; return 1 ;;
     "auth status") [ -z "${RV_GH_AUTH_FAIL:-}" ] || return 1; printf "Token scopes: 'repo'\n" ;;
     "repo clone")  return 1 ;;
     *)             return 0 ;;
@@ -15243,10 +15253,13 @@ rv38_assert "RV38"
 # ── RV39 — #1616. A host whose answers are read from the bare repository itself, so "empty" is the site's
 # state and never the clone's, and a clone that is real. Its unborn HEAD is whatever the arm gives it,
 # because a clone of an empty repository takes the host's unborn branch, and that is not always main.
-# A host that cannot answer takes real gh's shape (review PR-5): exit 1 and nothing on stdout, which is
-# also what real gh gives for a repository that does not exist. The repository always exists here, so a
-# repo create is refused as real gh refuses a name that is taken.
-rv39_gh() { # (inside a subject's subshell) RV39_BARE names the site, RV39_VIS its visibility
+# A host that cannot answer takes real gh's shape (review PR-5): exit 1 and nothing on stdout. publish's
+# repository lookup reads the HTTP status line `gh api -i` prints (#1819 AC-4, Stage 8's QF-02), which is
+# how a repository that does not exist (404) is told apart from a host that could not be asked; the
+# repository always exists here, so the lookup answers 200 unless the arm names another answer in
+# RV39_LOOKUP, and `repo view` fails wherever that answer is not a 200. A repo create is refused as real gh
+# refuses a name that is taken.
+rv39_gh() { # (inside a subject's subshell) RV39_BARE names the site, RV39_VIS its visibility, RV39_LOOKUP the lookup's answer
   gh() {
     printf '%s\n' "$*" >> "$RV_GHLOG"
     case "${1:-} ${2:-}" in
@@ -15254,8 +15267,14 @@ rv39_gh() { # (inside a subject's subshell) RV39_BARE names the site, RV39_VIS i
       "auth status") printf "Token scopes: 'repo'\n" ;;
       "repo clone")  git clone -q "$RV39_BARE" "$4" 2>/dev/null ;;
       "repo create") printf 'GraphQL: Name already exists on this account (createRepository)\n' >&2; return 1 ;;
+      "api -i")
+        [ -z "${RV39_HOST_FAILS:-}" ] || return 1
+        printf 'HTTP/2.0 %s\r\nContent-Type: application/json\r\n' "${RV39_LOOKUP:-200 OK}"
+        case "${RV39_LOOKUP:-200 OK}" in '200 '*) return 0 ;; esac
+        return 1 ;;
       "repo view")
         [ -z "${RV39_HOST_FAILS:-}" ] || return 1
+        case "${RV39_LOOKUP:-200 OK}" in '200 '*) ;; *) return 1 ;; esac
         case "$*" in *--json*) ;; *) return 0 ;; esac
         if [ -n "$(git -C "$RV39_BARE" for-each-ref)" ]; then rv39_e=false; else rv39_e=true; fi
         case "$*" in *visibility*) printf '%s %s' "$rv39_e" "${RV39_VIS:-PUBLIC}" ;; *) printf '%s' "$rv39_e" ;; esac ;;
@@ -15306,7 +15325,7 @@ rv39_assert() { # <id> <unborn-branch>
 for rv_b in main master trunk; do rv39_assert "RV39-$rv_b" "$rv_b"; done
 # ── RV40 — every refusal on this path writes nothing. update and rotate on an empty repository name publish;
 # with no .passphrase, update must not take the branch that names rotate, because rotate cannot run there either.
-# publish refuses one that is private, one that holds anything, and an answer it cannot read as empty.
+# publish refuses one that is private, one that holds anything, and a lookup the host gives no answer to.
 rv40_assert() { # <id> <update-nokey|update-key|rotate-nokey|rotate-key|publish-private|publish-populated|publish-nohost|update-nohost>
   local id="$1" c="$2" verb="${2%%-*}" how="${2#*-}" name d bare out rc w key='rv-empty-path-synthetic-key-50' same=1 cm=0 nokey=0 hd
   # update-nohost stands on unborn main to reach the record refusal; on any other unborn branch the branch
@@ -15321,7 +15340,7 @@ rv40_assert() { # <id> <update-nokey|update-key|rotate-nokey|rotate-key|publish-
                printf 'x\n' > "$RVW/$name-seed/f"; git -C "$RVW/$name-seed" add f
                git -C "$RVW/$name-seed" -c user.name=t -c user.email=t@example.invalid commit -q -m seed
                git -C "$RVW/$name-seed" push -q origin HEAD:main ;;
-    nohost)    if [ "$verb" = publish ]; then w='Name already exists on this account'; else w='could not read the record'; fi ;;
+    nohost)    if [ "$verb" = publish ]; then w='publish: could not ask GitHub whether'; else w='could not read the record'; fi ;;
   esac
   : > "$RV_GHLOG"
   out="$( ( unset STATICRYPT_PASSWORD; RV39_BARE="$bare"; rv39_gh
@@ -15332,13 +15351,14 @@ rv40_assert() { # <id> <update-nokey|update-key|rotate-nokey|rotate-key|publish-
   [ -z "$hd" ] || cm=1
   if [ -e "$RVW/$name.before" ]; then cmp -s "$RVW/$name.before" "$d/.passphrase" || same=0
   elif [ -e "$d/.passphrase" ]; then nokey=1; fi
-  # publish on a host read that fails (PR-5): real gh gives the same answer for a repository that does not
-  # exist, so publish takes its create path, and the host's refusal of the taken name is what stops it. Past
-  # the host read the run is a first publish, which #1616's first criterion lets leave its commit and staged
-  # record; what it may not do is reach the repository, claim a publish, or touch the key it was given. The
-  # control is the next publish, with the host answering: it takes the repository under that key.
-  rv40_create=0; rv40_told=0; rv40_rc2=0; rv40_n=0; rv40_k=""; rv40_moved="$(git -C "$bare" for-each-ref)"
+  # publish on a host read that fails (PR-5): the lookup reads the HTTP status line (#1819 AC-4, Stage 8's
+  # QF-02), and no status line is a host that could not be asked, never a repository that does not exist. So
+  # publish stops at the lookup, naming it: no create path, no clone, no commit, no publish claimed, and the key
+  # it was given untouched. The control is the next publish, with the host answering: it takes the repository
+  # under that key.
+  rv40_create=0; rv40_told=0; rv40_asked=0; rv40_rc2=0; rv40_n=0; rv40_k=""; rv40_moved="$(git -C "$bare" for-each-ref)"
   case "$(cat "$RV_GHLOG")" in *"repo create"*) rv40_create=1 ;; esac
+  case "$(cat "$RV_GHLOG")" in *"api -i --silent repos/testowner/"*) rv40_asked=1 ;; esac
   rv_has "$out" 'Published:' && rv40_told=1
   if [ "$c" = publish-nohost ]; then
     ( unset STATICRYPT_PASSWORD; RV39_BARE="$bare"; rv39_gh; set -e; cmd_publish "$d" ) >/dev/null 2>&1; rv40_rc2=$?
@@ -15347,12 +15367,12 @@ rv40_assert() { # <id> <update-nokey|update-key|rotate-nokey|rotate-key|publish-
   if [ "$rc" -ne 1 ] || ! rv_has "$out" "$w"; then
     FAIL "$id: $verb ($how) read rc=$rc without the refusal naming '$w': $(printf '%s' "$out" | tail -n 1 | cut -c1-140)"
   elif [ "$c" = publish-nohost ]; then
-    if [ "$rv40_create" -eq 0 ] || [ "$rv40_told" -eq 1 ] || [ "$same" -eq 0 ] || [ -n "$rv40_moved" ]; then
-      FAIL "$id: publish on a failed host read took the create path=$rv40_create, claimed a publish=$rv40_told, kept the key it was given=$same, moved the repository=$([ -n "$rv40_moved" ] && echo 1 || echo 0)"
+    if [ "$rv40_asked" -eq 0 ] || [ "$rv40_create" -eq 1 ] || [ "$cm" -eq 1 ] || [ "$rv40_told" -eq 1 ] || [ "$same" -eq 0 ] || [ -n "$rv40_moved" ]; then
+      FAIL "$id: publish on a failed host read asked the host for its status line=$rv40_asked (want 1), took the create path=$rv40_create, left a commit=$cm, claimed a publish=$rv40_told, kept the key it was given=$same, moved the repository=$([ -n "$rv40_moved" ] && echo 1 || echo 0)"
     elif [ "$rv40_rc2" -ne 0 ] || [ "$rv40_n" != 1 ] || [ "$rv40_k" != "$key" ]; then
       FAIL "$id: CONTROL — the next publish, with the host answering, read rc=$rv40_rc2 with $rv40_n commit(s) on main and the page under the given key=$([ "$rv40_k" = "$key" ] && echo 1 || echo 0)"
     else
-      PASS "$id: publish on a host read that fails as real gh fails takes today's create path, stops at the host's refusal of the taken name, claims nothing and touches no key; the next publish, with the host answering, takes the repository under that key"
+      PASS "$id: publish on a host read that fails as real gh fails stops at the lookup, naming it, with no create path, no commit, nothing claimed and no key touched; the next publish, with the host answering, takes the repository under that key"
     fi
   elif [ "$cm" -eq 1 ] && [ "$how" != populated ]; then
     FAIL "$id: the refusal left a commit in the clone"
@@ -15585,6 +15605,7 @@ rv45_gh() { # (inside a subject's subshell) RV45_PAGES names the read-back
       "api user")    printf 'testowner' ;;
       "auth status") printf "Token scopes: 'repo'\n" ;;
       "repo view")   return 1 ;;
+      "api -i")      printf 'HTTP/2.0 404 Not Found\r\n'; return 1 ;;   # publish's lookup: no repo yet (#1819 AC-4)
       "api -X")
         case "$*" in
           *pages*) printf '{"message":"GitHub Pages is already enabled.","status":"409"}'
@@ -16185,23 +16206,26 @@ rv48s_assert() { # <id>
 }
 rv48s_assert "RV48-rotation-republished-plaintext-same-render"
 
-# RV49 — milestone 74's residual, reproduced and ended. A site under a key this machine does not hold; publish on a
-# failed host read takes its create path, records a generated key and stops at the host's refusal of the taken name;
-# with the clone removed, update must refuse, and the live page stay under the original key. Before #1820 it exited 0
-# with the site re-keyed.
+# RV49 — milestone 74's residual, reproduced and ended. A site under a key this machine does not hold; a first
+# publish takes its create path, records a generated key and stops at the host's refusal of the taken name; with the
+# clone removed, update must refuse, and the live page stay under the original key. Before #1820 it exited 0 with the
+# site re-keyed. The residual's first step was a failed host read taken as an absent repository; since the lookup
+# reads the host's status line (#1819 AC-4, Stage 8's QF-02) a failed read stops there, so the step is built from
+# the one route left to a stray key: the lookup answers 404, and the repository exists by the time of the create —
+# made in between by a publish from another machine, say.
 rv49_assert() { # <id>
   local id="$1" name d bare out rc1 rc2 h0 h2 live gen=0 opens=0 k1='rv-residual-live-synthetic-key-64'
   name="rv49-$RANDOM"; d="$(rv_fixture "$name" '' "$k1")"; bare="$RVW/origin/$name-trip.git"
   rm -rf "$d/.publish"
   h0="$(rv_head "$bare")"
-  ( unset STATICRYPT_PASSWORD; RV39_BARE="$bare"; RV39_HOST_FAILS=1; rv39_gh; set -e; cmd_publish "$d" ) >/dev/null 2>&1; rc1=$?
+  ( unset STATICRYPT_PASSWORD; RV39_BARE="$bare"; RV39_LOOKUP='404 Not Found'; rv39_gh; set -e; cmd_publish "$d" ) >/dev/null 2>&1; rc1=$?
   [ -s "$d/.passphrase" ] && gen=1
   rm -rf "$d/.publish"
   out="$( ( unset STATICRYPT_PASSWORD; RV39_BARE="$bare"; rv39_gh; set -e; cmd_update "$d" ) 2>&1 )"; rc2=$?
   h2="$(rv_head "$bare")"; live="$(rv_pushed_key "$bare")"
   rv_has "$out" 'does not open the page the site serves now' && opens=1
   if [ "$rc1" -ne 1 ] || [ "$gen" -eq 0 ]; then
-    FAIL "$id: publish on a failed host read read rc=$rc1 and recorded a key=$gen — the residual's first step was not built. VERDICT WITHHELD"
+    FAIL "$id: a first publish whose lookup answered 404 for a repository that exists read rc=$rc1 and recorded a key=$gen — the residual's first step was not built. VERDICT WITHHELD"
   elif [ "$rc2" -ne 1 ]; then
     FAIL "$id: update after it read rc=$rc2, want 1 — it publishes under the key the failed publish generated, locking out everyone holding the site's passphrase"
   elif [ "$h0" != "$h2" ] || [ "$live" != "$k1" ]; then
@@ -16209,7 +16233,7 @@ rv49_assert() { # <id>
   elif [ "$opens" -eq 0 ]; then
     FAIL "$id: update refused (rc=1), but not on the live-page check"
   else
-    PASS "$id: milestone 74's residual ends here — after a publish that generated a key on a failed host read, update refuses on the live-page check and the site stays under its original key"
+    PASS "$id: milestone 74's residual ends here — after a first publish that generated a key and stopped at the create, update refuses on the live-page check and the site stays under its original key"
   fi
 }
 rv49_assert "RV49-residual"
@@ -16878,7 +16902,9 @@ for rv_b in TERM INT HUP; do md_flips _release_trip_lock "RV54-signals-$rv_b" rv
 # RV55 — #1822, carried by #1819. Each first-publish step stops on its own failure, whatever errexit is, and names the
 # step. Every limb runs cmd_publish with errexit OFF, the state a caller reached through `if` or `||` leaves it in, and
 # requires rc 1, the step's own message (or, where a callee refuses, the callee's), and that no later step ran: no
-# repository created, no baseline recorded, no "Published". clonedir and opaque-token are review FM-9's.
+# repository created, no baseline recorded, no "Published". clonedir and opaque-token are review FM-9's. The lookup
+# limbs are Stage 8's QF-02: the repository lookup is a step too, and on an answer that is neither a 404 nor a 200 it
+# stops before a passphrase is generated, so those limbs also require no .passphrase and the lookup in the gh log.
 # ══════════════════════════════════════════════════════════════════
 rv55_gh() { # (inside a subject's subshell) RV55_FAIL names the gh call that fails
   gh() {
@@ -16894,6 +16920,16 @@ rv55_gh() { # (inside a subject's subshell) RV55_FAIL names the gh call that fai
           esac
         fi
         case "$*" in *.id*) printf '4242' ;; *) printf 'testowner' ;; esac ;;
+      # publish's repository lookup reads the host's HTTP status line (#1819 AC-4, Stage 8's QF-02). No per-trip
+      # repository exists here, so it answers 404 unless the limb names another answer in RV55_LOOKUP; `none` is no
+      # status line at all, real gh's shape for a host it could not reach. `repo view` always fails here: after a 200 it
+      # is the read of whether the repository is empty and public, failing; before the status-line read it was the
+      # whole lookup, which failed for every one of these answers, so a limb graded against that code meets the same host.
+      "api -i")
+        [ "${RV55_LOOKUP:-404 Not Found}" != none ] || return 1
+        printf 'HTTP/2.0 %s\r\nContent-Type: application/json\r\n' "${RV55_LOOKUP:-404 Not Found}"
+        case "${RV55_LOOKUP:-404 Not Found}" in '200 '*) return 0 ;; esac
+        return 1 ;;
       "repo view")   return 1 ;;
       "repo create") [ "${RV55_FAIL:-}" != create ] || { printf 'gh: create refused (simulated)\n' >&2; return 1; }; return 0 ;;
       "auth status") printf "Token scopes: 'repo'\n" ;;
@@ -16921,7 +16957,9 @@ rv55_setup() { # <step> <trip>
     commit)         RV55_W='publish: could not commit the page' ;;
     create)         RV55_W='publish: creating the per-trip repository' ;;
     plaintext-copy) RV55_W='publish: could not place the page'; RV55_OPTS=--plaintext ;;
-    control)        RV55_W='Published' ;;
+    lookup-403|lookup-502|lookup-none) RV55_W='publish: could not ask GitHub whether' ;;
+    lookup-detail)  RV55_W='publish: GitHub reports that the per-trip repository' ;;
+    control|lookup-404) RV55_W='Published' ;;
   esac
 }
 # 0 where this uid can remove a file from a mode-555 directory (root, say) — where the clonedir step cannot fail.
@@ -16937,6 +16975,11 @@ rv55_run() { # <step> <trip> -> the publish's output on stdout, its status as th
       encryption) encrypt_to_tmp() { return 1; } ;;
       cipher-copy|plaintext-copy) cp() { case "${2:-}" in */.publish/index.html) printf 'cp: simulated failure\n' >&2; return 1 ;; esac; command cp "$@"; } ;;
       commit) rv_fail_commit_env ;;
+      lookup-403)    RV55_LOOKUP='403 Forbidden' ;;
+      lookup-502)    RV55_LOOKUP='502 Bad Gateway' ;;
+      lookup-none)   RV55_LOOKUP=none ;;
+      lookup-detail) RV55_LOOKUP='200 OK' ;;
+      lookup-404)    RV55_LOOKUP='404 Not Found' ;;
     esac
     # The plaintext limb's content controls are groups L to O's, stubbed here as RV43 stubs them, so the step this
     # limb fails — placing the page — is the one reached.
@@ -16945,7 +16988,7 @@ rv55_run() { # <step> <trip> -> the publish's output on stdout, its status as th
     cmd_publish "$2" $RV55_OPTS ) 2>&1
 }
 rv55_assert() { # <id> <step>
-  local id="$1" step="$2" d out rc created=0 rec=0 pub=0 said=0 keyleft=0
+  local id="$1" step="$2" d out rc created=0 rec=0 pub=0 said=0 keyleft=0 asked=0
   d="$RVW/rv55-$step-$RANDOM"; rv55_setup "$step" "$d"
   if [ "$step" = clonedir ] && rv55_root_writes "$d"; then
     SKIP "$id: this run's uid removes files from a mode-555 directory (root, say), where the step this limb fails cannot fail — not a pass"
@@ -16959,11 +17002,20 @@ rv55_assert() { # <id> <step>
   rv_has "$out" 'Published:' && pub=1
   rv_has "$out" "$RV55_W" && said=1
   [ ! -e "$d/.passphrase" ] || [ "$step" = resolver ] || keyleft=1
+  grep -q '^api -i --silent repos/testowner/' "$RV_GHLOG" && asked=1
   if [ "$step" = control ]; then
     if [ "$rc" -ne 0 ] || [ "$pub" -eq 0 ]; then
       FAIL "$id: CONTROL — a first publish with no failure injected and errexit off read rc=$rc, published=$pub; want 0 and 1, or no limb above is a measurement"
     else
       PASS "$id: CONTROL — with no failure injected, a first publish with errexit off reads rc=0 and Published, so each limb's stop is its own step's"
+    fi
+  elif [ "$step" = lookup-404 ]; then
+    if [ "$rc" -ne 0 ] || [ "$pub" -eq 0 ]; then
+      FAIL "$id: CONTROL — a first publish whose repository lookup answered 404 read rc=$rc, published=$pub; want 0 and 1, as before"
+    elif [ "$asked" -eq 0 ] || [ "$created" -eq 0 ]; then
+      FAIL "$id: CONTROL — published, but the gh log carries the read of the repository's HTTP status=$asked and a repo create=$created, want 1 and 1: the create path was not reached through the lookup's 404"
+    else
+      PASS "$id: CONTROL — a repository lookup answering 404 reads the host's status line and takes the create path as before, rc=0 and Published, so the lookup limbs' stop is the lookup's own distinction"
     fi
   elif [ "$rc" -ne 1 ]; then
     FAIL "$id: a first publish whose $step step failed read rc=$rc with errexit off, want 1 — it ran on past the failed step"
@@ -16973,6 +17025,10 @@ rv55_assert() { # <id> <step>
     FAIL "$id: the $step step failed and the run went on to create the per-trip repository"
   elif [ "$keyleft" -eq 1 ] && [ "$step" = generator ]; then
     FAIL "$id: the generator failed and a key was written to .passphrase"
+  elif [ "$keyleft" -eq 1 ] && [ "${step#lookup-}" != "$step" ]; then
+    FAIL "$id: the repository lookup ($step) could not tell whether the repository exists, and a passphrase was generated and written to .passphrase"
+  elif [ "$asked" -eq 0 ] && [ "${step#lookup-}" != "$step" ]; then
+    FAIL "$id: the gh log carries no read of the repository's HTTP status, so the lookup this limb grades never ran"
   elif [ "$said" -eq 0 ]; then
     FAIL "$id: the run stopped (rc=1) without the $step step's own message"
   else
@@ -16981,6 +17037,14 @@ rv55_assert() { # <id> <step>
 }
 for rv_b in owner opaque opaque-token render slug clonedir generator resolver encryption cipher-copy commit create plaintext-copy control; do rv55_assert "RV55-$rv_b" "$rv_b"; done
 for rv_b in owner opaque opaque-token render slug clonedir generator resolver encryption cipher-copy commit create plaintext-copy control; do md_flips cmd_publish "RV55-$rv_b" rv55_assert "RV55-$rv_b" "$rv_b"; done
+# The repository lookup (Stage 8's QF-02, #1819 AC-4): a 403, a 502 and no status line each stop at the lookup, and so
+# does a 200 whose read of the repository's emptiness fails; a 404 is their control. The four stops register against
+# cmd_publish rather than _host_answer, because with the helper absent the lookup still reads no answer and refuses —
+# the fail-closed direction — so it is the 404 control, registered against _host_answer, that shows the distinction
+# is the helper's (J4 and J5's mechanism, which Stage 8 noted).
+for rv_b in lookup-403 lookup-502 lookup-none lookup-detail lookup-404; do rv55_assert "RV55-$rv_b" "$rv_b"; done
+for rv_b in lookup-403 lookup-502 lookup-none lookup-detail; do md_flips cmd_publish "RV55-$rv_b" rv55_assert "RV55-$rv_b" "$rv_b"; done
+md_flips _host_answer "RV55-lookup-404" rv55_assert "RV55-lookup-404" lookup-404
 
 # ══════════════════════════════════════════════════════════════════
 # RV54-release — CIAC-1. Every refusal this release adds leaves no lock behind, on every exit path: each one is
@@ -17000,7 +17064,7 @@ rv54r_assert() { # <id>
   local kl='rv-release-live-synthetic-key-79' kx='rv-release-other-synthetic-key-80'
   for c in J4 J6 J7 RV48-mismatch RV48-undetermined RV50-rotate-noop RV53-norepo \
            RV55-owner RV55-opaque RV55-opaque-token RV55-render RV55-slug RV55-clonedir RV55-generator RV55-resolver \
-           RV55-encryption RV55-cipher-copy RV55-commit RV55-create RV55-plaintext-copy; do
+           RV55-encryption RV55-cipher-copy RV55-commit RV55-create RV55-plaintext-copy RV55-lookup-none RV55-lookup-detail; do
     d="$RVW/rv54r-$c-$RANDOM"
     case "$c" in
       J4|J6|J7)
