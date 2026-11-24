@@ -376,6 +376,33 @@ else
 fi
 
 echo "Real StatiCrypt smoke test:"
+# E5–E7: _key_opens_page against the real tool. E8: the salt is load-bearing — the real tool, run on the same page
+# with the matching key and no --salt, writes no decrypted page, and the helper's parsed body passes --salt.
+e5_assert() { # <id> <page> <key> <want> <what the key is>
+  local id="$1" got
+  got="$(_key_opens_page "$2" "$3")"
+  if [ "$got" != "$4" ]; then
+    FAIL "$id: _key_opens_page with $5 answered '$got' against the real StatiCrypt, want '$4'"
+  else
+    PASS "$id: _key_opens_page with $5 answers '$4' against the real StatiCrypt"
+  fi
+}
+e8_assert() { # <id> <page> <key>
+  local id="$1" dir nosalt=0 salt=0 b
+  dir="$(mktemp -d)"; cp "$2" "$dir/live.html"
+  ( cd "$dir" && STATICRYPT_PASSWORD="$3" npx --yes staticrypt@3.5.4 live.html --decrypt --config false -d out </dev/null ) >/dev/null 2>&1
+  [ -e "$dir/out/live.html" ] || nosalt=1
+  rm -rf "$dir"
+  b="$(declare -f _key_opens_page 2>/dev/null)"
+  case "$b" in *'--salt "$kp_salt"'*) salt=1 ;; esac
+  if [ "$nosalt" -eq 0 ]; then
+    FAIL "$id: the real StatiCrypt decrypted the page with the matching key and no --salt, so the salt trap the helper is built around is gone and this arm cannot show --salt matters"
+  elif [ "$salt" -eq 0 ]; then
+    FAIL "$id: _key_opens_page does not pass the page's salt — against the real tool a matching key would read as wrong"
+  else
+    PASS "$id: without --salt the real StatiCrypt does not decrypt the page under its own key, and _key_opens_page passes the page's salt"
+  fi
+}
 if command -v npx >/dev/null 2>&1; then
   ENC_DIR="$(encrypt_to_tmp "$SRC" "correct-horse-battery-staple-1" 2>/dev/null)"
   if [ -n "${ENC_DIR:-}" ] && [ -f "$ENC_DIR/index.html" ]; then
@@ -384,6 +411,15 @@ if command -v npx >/dev/null 2>&1; then
     grep -qiE 'password|passphrase' "$real" && PASS "E2: real output shows a passphrase prompt" || FAIL "E2: no passphrase prompt"
     if grep -qF "Shibuya" "$real" || grep -qF "TANAKA12345" "$real"; then FAIL "E3: PLAINTEXT TOKEN found in real ciphertext"; else PASS "E3: zero plaintext itinerary tokens in real ciphertext"; fi
     if verify_ciphertext "$real" "$SRC"; then PASS "E4: guard passes real StatiCrypt output"; else FAIL "E4: guard rejected real StatiCrypt output"; fi
+    # E5–E8 — the live-page decrypt (#1820), against the real tool and the real ciphertext above.
+    e5_assert "E5" "$real" "correct-horse-battery-staple-1" opens "the key the page was encrypted under"
+    e5_assert "E6" "$real" "rv-e6-other-synthetic-key-69" does-not-open "another key"
+    e5_assert "E7" "$SRC" "correct-horse-battery-staple-1" not-encrypted "a page that is not StatiCrypt ciphertext"
+    e8_assert "E8" "$real" "correct-horse-battery-staple-1"
+    md_flips _key_opens_page "E5" e5_assert "E5" "$real" "correct-horse-battery-staple-1" opens "the key the page was encrypted under"
+    md_flips _key_opens_page "E6" e5_assert "E6" "$real" "rv-e6-other-synthetic-key-69" does-not-open "another key"
+    md_flips _key_opens_page "E7" e5_assert "E7" "$SRC" "correct-horse-battery-staple-1" not-encrypted "a page that is not StatiCrypt ciphertext"
+    md_flips _key_opens_page "E8" e8_assert "E8" "$real" "correct-horse-battery-staple-1"
     rm -rf "$ENC_DIR"
   else
     SKIP "E: staticrypt could not run (offline or npx blocked)"
@@ -850,7 +886,7 @@ if gh auth status >/dev/null 2>&1; then
 else
   SKIP "J1: gh not authenticated"
 fi
-# J2/J3 — decision-branch tests with a MOCK gh (isolates the destructive delete path; no network).
+# J2–J10 — decision-branch tests with a MOCK gh (isolates the destructive delete path; no network).
 MDIR="$WORK/mock-trip"; mkdir -p "$MDIR"; printf 'mock-slug\n' > "$MDIR/.publish-slug"
 GHLOG="$WORK/gh.log"
 gh() {  # mock: record the call, respond per fixed scenario (repo EXISTS, delete_repo scope present)
@@ -858,16 +894,232 @@ gh() {  # mock: record the call, respond per fixed scenario (repo EXISTS, delete
   case "${1:-} ${2:-}" in
     "api user")    printf 'testowner' ;;
     "repo view")   return 0 ;;
+    # The repository lookup reads the host's HTTP status line (#2212): the repo EXISTS here, so it
+    # answers 200, and J2 and J3 keep grading the branches after the lookup rather than the lookup.
+    "api -i")      printf 'HTTP/2.0 200 OK\r\n' ;;
     "auth status") printf "Token scopes: 'repo', 'delete_repo'\n" ;;
     *)             return 0 ;;
   esac
 }
 : > "$GHLOG"
-if ( cmd_unpublish "$MDIR" </dev/null ) >/dev/null 2>&1; then rc=0; else rc=1; fi
-if [ "$rc" -ne 0 ] && ! grep -q '^repo delete' "$GHLOG"; then PASS "J2: refuses non-interactive delete without --yes (never calls repo delete)"; else FAIL "J2: non-interactive delete not refused (rc=$rc)"; fi
+# J2's witness is the delete guard's own words, so a refusal at the lookup cannot pass for one at the guard.
+j2_out="$( ( cmd_unpublish "$MDIR" </dev/null ) 2>&1 )"; rc=$?
+j2_del=0; grep -q '^repo delete' "$GHLOG" && j2_del=1
+j2_said=0; case "$j2_out" in *'refusing a non-interactive delete'*) j2_said=1 ;; esac
+if [ "$rc" -eq 0 ]; then
+  FAIL "J2: non-interactive delete not refused (rc=$rc)"
+elif [ "$j2_del" -eq 1 ]; then
+  FAIL "J2: a non-interactive unpublish called repo delete (rc=$rc)"
+elif [ "$j2_said" -eq 0 ]; then
+  FAIL "J2: the refusal (rc=$rc) is not the delete guard's — it does not say it is refusing a non-interactive delete, so it stopped somewhere else"
+else
+  PASS "J2: refuses non-interactive delete without --yes at the delete guard (never calls repo delete)"
+fi
 : > "$GHLOG"
 ( cmd_unpublish "$MDIR" --disable-pages-only </dev/null ) >/dev/null 2>&1
 if grep -q 'api -X DELETE' "$GHLOG" && ! grep -q '^repo delete' "$GHLOG"; then PASS "J3: --disable-pages-only disables Pages, never deletes the repo"; else FAIL "J3: disable-pages-only path wrong"; fi
+# J4–J10 — #2212. A takedown reports what the host said, never a guess. gh exits 1 for a 404 and a dropped
+# connection alike, so unpublish reads the HTTP status line `gh api -i` prints: only 404 reads as "there is
+# none", and a read that gets no status line is a host that could not be asked. The mock answers each read
+# from the arm's own scenario. J_REPO and J_PAGES are the status line the repository read and the Pages read
+# print, empty for none at all (exit 1 with nothing on stdout, real gh's shape for an unreachable host);
+# J_DEL is `ok`, or the body a refused DELETE prints. The old lookup, `repo view`, answers as the repository
+# read does, so an arm graded against the code before #2212 meets the same host.
+j_gh() { # (inside a subject's subshell)
+  gh() {
+    printf '%s\n' "$*" >> "$GHLOG"
+    case "$*" in
+      "api user"*)     printf 'testowner' ;;
+      "auth status"*)  printf "Token scopes: 'repo', 'delete_repo'\n" ;;
+      "api -i --silent repos/testowner/mock-slug/pages")
+        [ -n "${J_PAGES:-}" ] || return 1
+        printf '%s\r\nContent-Type: application/json\r\n' "$J_PAGES"
+        case "$J_PAGES" in *' 200 '*) return 0 ;; esac
+        return 1 ;;
+      "api -i --silent repos/testowner/mock-slug")
+        [ -n "${J_REPO:-}" ] || return 1
+        printf '%s\r\nContent-Type: application/json\r\n' "$J_REPO"
+        case "$J_REPO" in *' 200 '*) return 0 ;; esac
+        return 1 ;;
+      "repo view"*)    case "${J_REPO:-}" in *' 200 '*) return 0 ;; esac; return 1 ;;
+      "api -X DELETE"*) [ "${J_DEL:-ok}" = ok ] && return 0; printf '%s\n' "$J_DEL"; return 1 ;;
+      *)               return 0 ;;
+    esac
+  }
+}
+j_run() { # <repo-line> <pages-line> <delete> <unpublish args…> -> output on stdout, rc as the command's
+  local jr="$1" jp="$2" jd="$3"; shift 3
+  : > "$GHLOG"
+  ( J_REPO="$jr"; J_PAGES="$jp"; J_DEL="$jd"; j_gh; cmd_unpublish "$MDIR" "$@" </dev/null ) 2>&1
+}
+# J4 — the DELETE is refused while the site is still served: the takedown did not happen, and it says so.
+j4_assert() { # <id>
+  local id="$1" out rc said=0 nothing=0 restore=0
+  out="$(j_run 'HTTP/2.0 200 OK' 'HTTP/2.0 200 OK' '{"message":"Must have admin rights to Repository.","status":"403"}' --disable-pages-only)"; rc=$?
+  case "$out" in *'the takedown did not happen'*) said=1 ;; esac
+  case "$out" in *'nothing to do'*) nothing=1 ;; esac
+  case "$out" in *'To restore:'*) restore=1 ;; esac
+  if [ "$rc" -ne 1 ]; then
+    FAIL "$id: unpublish --disable-pages-only whose DELETE was refused while the site is still served read rc=$rc, want 1"
+  elif [ "$nothing" -eq 1 ]; then
+    FAIL "$id: a refused takedown with the site still served reads 'nothing to do'"
+  elif [ "$restore" -eq 1 ]; then
+    FAIL "$id: a takedown that did not happen printed the restore line, which is for a site that is off"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: the refusal (rc=1) does not say the takedown did not happen, so the read-back of the Pages site is not what decided it"
+  else
+    PASS "$id: a DELETE refused while the Pages site is still there says the takedown did not happen and exits 1, with no 'nothing to do' and no restore line"
+  fi
+}
+# J5 — the DELETE fails because Pages is already off: the read-back answers 404, and that, alone, is nothing to do.
+j5_assert() { # <id>
+  local id="$1" out rc said=0
+  out="$(j_run 'HTTP/2.0 200 OK' 'HTTP/2.0 404 Not Found' '{"message":"Not Found","status":"404"}' --disable-pages-only)"; rc=$?
+  case "$out" in *'Pages was already disabled'*) said=1 ;; esac
+  if [ "$rc" -ne 0 ]; then
+    FAIL "$id: unpublish --disable-pages-only on a repository whose Pages site the host reports absent read rc=$rc, want 0"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: rc=0, but the output does not say Pages was already disabled, so the 404 read-back is not what decided it"
+  else
+    PASS "$id: a DELETE that fails where the host reports no Pages site (404) is nothing to do, rc=0"
+  fi
+}
+# J6 — the DELETE fails and the read-back gets no answer at all (D-2): it may not have happened.
+j6_assert() { # <id>
+  local id="$1" out rc said=0 nothing=0
+  out="$(j_run 'HTTP/2.0 200 OK' '' 'error connecting to api.github.com' --disable-pages-only)"; rc=$?
+  case "$out" in *'the takedown may not have happened'*) said=1 ;; esac
+  case "$out" in *'nothing to do'*) nothing=1 ;; esac
+  if [ "$rc" -ne 1 ]; then
+    FAIL "$id: a failed DELETE whose read-back got no answer read rc=$rc, want 1"
+  elif [ "$nothing" -eq 1 ]; then
+    FAIL "$id: a failed DELETE whose read-back got no answer reads 'nothing to do'"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: the refusal (rc=1) does not say the takedown may not have happened"
+  else
+    PASS "$id: a failed DELETE whose read-back gets no answer says the takedown may not have happened and exits 1, never 'nothing to do'"
+  fi
+}
+# J7 — the repository lookup gets no answer while the repository exists, on both limbs: no takedown call is
+# made, nothing reads as "does not exist", and it exits 1. The lookup call must be in the log, so a lookup that
+# never ran cannot pass for one that got no answer (review FM-6).
+j7_assert() { # <id> <disable|delete>
+  local id="$1" how="$2" out rc said=0 gone=0 calls=0 asked=0
+  if [ "$how" = disable ]; then out="$(j_run '' '' ok --disable-pages-only)"; rc=$?
+  else out="$(j_run '' '' ok --yes)"; rc=$?; fi
+  case "$out" in *'could not ask GitHub whether'*) said=1 ;; esac
+  case "$out" in *'does not exist'*) gone=1 ;; esac
+  grep -q 'api -X DELETE' "$GHLOG" && calls=1
+  grep -q '^repo delete' "$GHLOG" && calls=1
+  grep -qx 'api -i --silent repos/testowner/mock-slug' "$GHLOG" && asked=1
+  if [ "$rc" -ne 1 ]; then
+    FAIL "$id: unpublish ($how limb) whose repository lookup got no answer read rc=$rc, want 1"
+  elif [ "$asked" -eq 0 ]; then
+    FAIL "$id: the gh log carries no read of the repository's HTTP status, so the lookup this arm grades never ran"
+  elif [ "$gone" -eq 1 ]; then
+    FAIL "$id: a lookup that got no answer reads as the repository not existing ($how limb)"
+  elif [ "$calls" -eq 1 ]; then
+    FAIL "$id: a takedown call was made after a lookup that got no answer ($how limb)"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: the refusal (rc=1, $how limb) does not say GitHub could not be asked whether the repository exists"
+  else
+    PASS "$id: a repository lookup that gets no answer ($how limb) makes no takedown call, says GitHub could not be asked, never that the repository does not exist, and exits 1"
+  fi
+}
+# J8 — J7's control: the lookup answers 404, which is the one answer that reads as nothing to take down.
+j8_assert() { # <id>
+  local id="$1" out rc said=0
+  out="$(j_run 'HTTP/2.0 404 Not Found' '' ok --yes)"; rc=$?
+  case "$out" in *'does not exist — nothing to take down'*) said=1 ;; esac
+  if [ "$rc" -ne 0 ]; then
+    FAIL "$id: CONTROL — unpublish where the host reports the repository absent (404) read rc=$rc, want 0"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: CONTROL — rc=0, but the no-op line is not the absent repository's"
+  else
+    PASS "$id: CONTROL — a repository the host reports absent (404) is the no-op it always was, rc=0, so J7's refusal is the lookup's distinction and not a lookup that always refuses"
+  fi
+}
+# J9 and J10 — the rest of the "any other status" class: a 401, a 403, a 429 and a 5xx, each a host that answered
+# without saying the thing is gone. J9 puts each on the repository lookup, on both limbs; J10 on the Pages read-back
+# after a DELETE that failed. Every case must say the site may still be served and exit 1, and none may report
+# anything gone; J8 is their control, a 404 being the one answer that reads as absent. One verdict per arm, naming
+# the status that broke it. J9 carries J7's lookup-call limb, so a lookup that never ran cannot pass for one that
+# was answered; J10 requires the DELETE and the read-back in the log, so a refusal earlier cannot pass for its own.
+J_OTHER_1='401 Unauthorized'; J_OTHER_2='403 Forbidden'; J_OTHER_3='429 Too Many Requests'; J_OTHER_4='502 Bad Gateway'
+j9_assert() { # <id>
+  local id="$1" how jc out rc bad="" said gone calls asked
+  for how in disable delete; do
+    for jc in "$J_OTHER_1" "$J_OTHER_2" "$J_OTHER_3" "$J_OTHER_4"; do
+      if [ "$how" = disable ]; then out="$(j_run "HTTP/2.0 $jc" '' ok --disable-pages-only)"; rc=$?
+      else out="$(j_run "HTTP/2.0 $jc" '' ok --yes)"; rc=$?; fi
+      said=0; gone=0; calls=0; asked=0
+      case "$out" in *'may still be served'*) said=1 ;; esac
+      case "$out" in *'does not exist'*|*'nothing to'*|*'already disabled'*|*'is now offline'*|*'are gone'*) gone=1 ;; esac
+      grep -q 'api -X DELETE' "$GHLOG" && calls=1
+      grep -q '^repo delete' "$GHLOG" && calls=1
+      grep -qx 'api -i --silent repos/testowner/mock-slug' "$GHLOG" && asked=1
+      if [ "$rc" -ne 1 ]; then
+        bad="a repository lookup answering HTTP ${jc} ($how limb) read rc=$rc, want 1"
+      elif [ "$asked" -eq 0 ]; then
+        bad="the gh log carries no read of the repository's HTTP status ($how limb, ${jc}), so the lookup this arm grades never ran"
+      elif [ "$gone" -eq 1 ]; then
+        bad="a repository lookup answering HTTP ${jc} reads as something gone ($how limb)"
+      elif [ "$calls" -eq 1 ]; then
+        bad="a takedown call was made after a repository lookup answering HTTP ${jc} ($how limb)"
+      elif [ "$said" -eq 0 ]; then
+        bad="the refusal (rc=1, $how limb) after a repository lookup answering HTTP ${jc} does not say the site may still be served"
+      fi
+      [ -z "$bad" ] || break 2
+    done
+  done
+  if [ -n "$bad" ]; then
+    FAIL "$id: $bad"
+  else
+    PASS "$id: a repository lookup answering 401, 403, 429 or 502, on both limbs, makes no takedown call, says the site may still be served, reports nothing gone, and exits 1"
+  fi
+}
+j10_assert() { # <id>
+  local id="$1" jc out rc bad="" said gone deleted readback
+  for jc in "$J_OTHER_1" "$J_OTHER_2" "$J_OTHER_3" "$J_OTHER_4"; do
+    out="$(j_run 'HTTP/2.0 200 OK' "HTTP/2.0 $jc" "{\"status\":\"${jc%% *}\"}" --disable-pages-only)"; rc=$?
+    said=0; gone=0; deleted=0; readback=0
+    case "$out" in *'the takedown may not have happened'*) case "$out" in *'may still be served'*) said=1 ;; esac ;; esac
+    case "$out" in *'already disabled'*|*'nothing to'*|*'is now offline'*|*'To restore:'*) gone=1 ;; esac
+    grep -q 'api -X DELETE' "$GHLOG" && deleted=1
+    grep -qx 'api -i --silent repos/testowner/mock-slug/pages' "$GHLOG" && readback=1
+    if [ "$rc" -ne 1 ]; then
+      bad="a failed DELETE whose Pages read-back answered HTTP ${jc} read rc=$rc, want 1"
+    elif [ "$deleted" -eq 0 ] || [ "$readback" -eq 0 ]; then
+      bad="the gh log carries the DELETE=$deleted and the Pages read-back=$readback (want 1 and 1, at HTTP ${jc}), so the read-back this arm grades never ran"
+    elif [ "$gone" -eq 1 ]; then
+      bad="a failed DELETE whose Pages read-back answered HTTP ${jc} reads as Pages gone"
+    elif [ "$said" -eq 0 ]; then
+      bad="the refusal (rc=1) after a Pages read-back answering HTTP ${jc} does not say the takedown may not have happened and the site may still be served"
+    fi
+    [ -z "$bad" ] || break
+  done
+  if [ -n "$bad" ]; then
+    FAIL "$id: $bad"
+  else
+    PASS "$id: a failed DELETE whose Pages read-back answers 401, 403, 429 or 502 says the takedown may not have happened and the site may still be served, reports nothing gone, and exits 1"
+  fi
+}
+j4_assert "J4"
+j5_assert "J5"
+j6_assert "J6"
+j7_assert "J7-disable" disable
+j7_assert "J7-delete" delete
+j8_assert "J8"
+j9_assert "J9"
+j10_assert "J10"
+md_flips _host_answer "J4" j4_assert "J4"
+md_flips _host_answer "J5" j5_assert "J5"
+md_flips _host_answer "J6" j6_assert "J6"
+md_flips _host_answer "J7-disable" j7_assert "J7-disable" disable
+md_flips _host_answer "J7-delete" j7_assert "J7-delete" delete
+md_flips _host_answer "J8" j8_assert "J8"
+md_flips _host_answer "J9" j9_assert "J9"
+md_flips _host_answer "J10" j10_assert "J10"
 unset -f gh
 
 echo "Plaintext content guard (#123):"
@@ -1776,7 +2028,9 @@ fi
 # Offline, like the rest of L: gh and npx are stub FILES on a PATH prefix local to each run,
 # because the subject is a separate process and a shell-function mock would not reach it.
 # The gh stub answers the auth and user reads and fails every other call — every repo reads
-# absent and every clone is refused — so no arm can create, clone, disable or push anything.
+# absent and every clone is refused — so no arm can create, clone, disable or push anything. The
+# repository lookup unpublish makes reads the host's HTTP status line (#2212), so that read answers
+# 404, the host's own word for a repository that is not there.
 L15DATA="$WORK/l15_data"; L15DECOY="$WORK/l15_decoy_cwd"; L15EMPTY="$WORK/l15_empty_cwd"
 L15BIN="$WORK/l15_bin"; L15LOG="$WORK/l15_gh.log"
 mkdir -p "$L15DATA/trips/l15-trip/outputs" "$L15DECOY/trips/l15-trip" "$L15DECOY/trips/l15-cwd-only" \
@@ -1792,6 +2046,7 @@ printf 'gh %s\n' "\$*" >> "$L15LOG"
 case "\${1:-} \${2:-}" in
   'auth status') exit 0 ;;
   'api user')    case "\$*" in *.login*) echo l15-owner ;; *.id*) echo 4242 ;; esac; exit 0 ;;
+  'api -i')      echo 'HTTP/2.0 404 Not Found'; exit 1 ;;
 esac
 exit 1
 L15GH
@@ -1827,7 +2082,7 @@ fi
 # L15a — MUST-FIRE: the decommission verb's invocation, from the DECOY directory.
 l15_run stub "$L15DECOY" unpublish trips/l15-trip --disable-pages-only --data-root "$L15DATA"
 l15a_rc="$L15_RC"; l15a_hit="$(l15_has "$L15_OUT" 'l15-owner/l15-dataroot-slug')"
-l15a_decoy="$(l15_has "$L15_OUT$L15_LOGT" 'l15-decoy-slug')"; l15a_view="$(l15_has "$L15_LOGT" 'repo view l15-owner/l15-dataroot-slug')"
+l15a_decoy="$(l15_has "$L15_OUT$L15_LOGT" 'l15-decoy-slug')"; l15a_view="$(l15_has "$L15_LOGT" 'api -i --silent repos/l15-owner/l15-dataroot-slug')"
 if [ "$l15a_rc" -eq 0 ] && [ "$l15a_hit" = 1 ] && [ "$l15a_view" = 1 ] && [ "$l15a_decoy" = 0 ]; then
   PASS "L15a: MUST-FIRE — \`unpublish trips/<slug> --disable-pages-only --data-root <root>\`, EXECUTED from a working directory holding a same-named decoy trip, resolves the trip under the data root: the repo it probes and reports is the data-root trip's (rc=$l15a_rc) and the decoy's name appears nowhere in its output or its gh calls"
 else
@@ -6339,6 +6594,7 @@ gh() {   # mock: record the call, answer the read-only probes, create/clone noth
   case "${1:-} ${2:-}" in
     "api user")    printf 'testowner' ;;
     "repo view")   return 0 ;;
+    "api -i")      printf 'HTTP/2.0 200 OK\r\n' ;;   # publish's lookup: the repo exists (#1819 AC-4)
     "auth status") printf "Token scopes: 'repo'\n" ;;
     *)             return 0 ;;
   esac
@@ -6379,7 +6635,8 @@ s_record "$S9D/.published-itinerary" "$S_DA" published
 : > "$S_GHLOG"
 ( cmd_publish "$S9D" ) >/dev/null 2>&1; S_RC9=$?
 S_LOG9="$(cat "$S_GHLOG")"
-case "$S_LOG9" in *"repo view"*)   S_VIEW9=1 ;;   *) S_VIEW9=0 ;; esac
+# The existence probe is the lookup's status-line read (#1819 AC-4) or, before it, `repo view`; either counts.
+case "$S_LOG9" in *"repo view"*|*"api -i --silent repos/"*) S_VIEW9=1 ;;   *) S_VIEW9=0 ;; esac
 case "$S_LOG9" in *"repo create"*) S_CREATE9=1 ;; *) S_CREATE9=0 ;; esac
 unset -f gh npx
 if [ "$S_VIEW9" -eq 1 ] && [ "$S_RC9" -ne 0 ] && [ "$S_CREATE9" -eq 0 ]; then
@@ -7517,7 +7774,7 @@ fi
 # construction: perl invoked through a variable or by a path (`$PERL`, `/usr/bin/perl`),
 # and a change that removes one program while adding another, because it compares a count
 # and not a set.
-S15I_FNS='strip_to_text strip_to_published_text strip_to_text_blocks strip_to_joined_text strip_to_shape_text _browser_end_tags _decode_entities strip_to_itinerary_text _digest_of _group_only_scan'
+S15I_FNS='strip_to_text strip_to_published_text strip_to_text_blocks strip_to_joined_text strip_to_shape_text _browser_end_tags _decode_entities strip_to_itinerary_text _digest_of _group_only_scan _flush_path'
 S15I_RE='(^|[[:space:](|;`$])perl[[:space:]]+-'
 s15_perl_lines() { # <file> -> the number of non-comment lines that invoke perl by name
   local line t n=0
@@ -9191,10 +9448,10 @@ SA17H_NFN=0; for sad in $S15I_FNS; do SA17H_NFN=$((SA17H_NFN+1)); done
 SA17H_NLINE="$(s15_perl_lines "$SELF_PUBLISH")"
 printf 'digest=4294967295-1234\nconfirmed=2027-06-01T00:00:00Z\n' > "$WORK/sa17h.rec"
 SA17H_CRC="$(_record_digest "$WORK/sa17h.rec")"
-if [ "$SA17H_DN$SA17H_FB" = 00 ] && [ "$SA17H_RE" -eq 1 ] && [ "$SA17H_NFN" -eq 10 ] && [ "$SA17H_NLINE" -eq 10 ] && [ "$SA17H_CRC" = '4294967295-1234' ]; then
-  PASS "S17h: _digest_of's parsed body reads discard/fallback 00, invokes perl by S15i's own regex (F4 — the listed body is a perl program, so the count cannot be balanced by a substitution), S15I_FNS lists 10 and the script has 10 perl-invoking lines; the CRC token still parses for group T and for a pre-swap record"
+if [ "$SA17H_DN$SA17H_FB" = 00 ] && [ "$SA17H_RE" -eq 1 ] && [ "$SA17H_NFN" -eq 11 ] && [ "$SA17H_NLINE" -eq 11 ] && [ "$SA17H_CRC" = '4294967295-1234' ]; then
+  PASS "S17h: _digest_of's parsed body reads discard/fallback 00, invokes perl by S15i's own regex (F4 — the listed body is a perl program, so the count cannot be balanced by a substitution), S15I_FNS lists 11 and the script has 11 perl-invoking lines; the CRC token still parses for group T and for a pre-swap record"
 else
-  FAIL "S17h: bits $SA17H_DN$SA17H_FB (want 00), regex match $SA17H_RE (want 1), listed $SA17H_NFN and counted $SA17H_NLINE (want 10 and 10), CRC parse '$SA17H_CRC'"
+  FAIL "S17h: bits $SA17H_DN$SA17H_FB (want 00), regex match $SA17H_RE (want 1), listed $SA17H_NFN and counted $SA17H_NLINE (want 11 and 11), CRC parse '$SA17H_CRC'"
 fi
 
 # ── S18a — MUST REFUSE. Ten lines the grammar must not admit, each refused with nothing printed:
@@ -9405,6 +9662,7 @@ gh() {   # mock: record the call, answer the read-only probes, create or clone n
   case "${1:-} ${2:-}" in
     "api user")    printf 'testowner' ;;
     "repo view")   return 0 ;;
+    "api -i")      printf 'HTTP/2.0 200 OK\r\n' ;;   # publish's lookup: the repo exists (#1819 AC-4)
     "auth status") printf "Token scopes: 'repo'\n" ;;
     *)             return 0 ;;
   esac
@@ -9440,7 +9698,7 @@ sa_push() { # <update|publish> <trip> -> "rc clone view create"; stderr to $WORK
   else ( cmd_update "$2" ) >/dev/null 2>"$WORK/sa_push.err"; rc=$?; fi
   log="$(cat "$SA_GHLOG")"
   case "$log" in *"repo clone"*)  cl=1 ;; esac
-  case "$log" in *"repo view"*)   vw=1 ;; esac
+  case "$log" in *"repo view"*|*"api -i --silent repos/"*) vw=1 ;; esac   # publish's probe, either form (#1819 AC-4)
   case "$log" in *"repo create"*) cr=1 ;; esac
   printf '%s %s %s %s' "$rc" "$cl" "$vw" "$cr"
 }
@@ -10744,6 +11002,7 @@ sb_gh() { # S8's mock of gh, shared by the S29 arms: record the call, answer the
   case "${1:-} ${2:-}" in
     "api user")    printf 'testowner' ;;
     "repo view")   return 0 ;;
+    "api -i")      printf 'HTTP/2.0 200 OK\r\n' ;;   # publish's lookup: the repo exists (#1819 AC-4)
     "auth status") printf "Token scopes: 'repo'\n" ;;
     *)             return 0 ;;
   esac
@@ -10762,9 +11021,9 @@ s29a_assert() {
   : > "$SB_GHLOG"; ( cmd_publish "$c" ) >/dev/null 2>&1; clog="$(cat "$SB_GHLOG")"
   unset -f gh npx
   case "$e" in *"could not identify the itinerary content of the outgoing render"*) msg=1 ;; esac
-  case "$log" in *"repo view"*) vw=1 ;; esac
+  case "$log" in *"repo view"*|*"api -i --silent repos/"*) vw=1 ;; esac   # the probe, either form (#1819 AC-4)
   case "$log" in *"repo create"*) cr=1 ;; esac
-  case "$clog" in *"repo view"*) cvw=1 ;; esac
+  case "$clog" in *"repo view"*|*"api -i --silent repos/"*) cvw=1 ;; esac
   [ -e "$d/.published-itinerary" ] && side=1
   if [ "$cvw" -ne 1 ]; then
     FAIL "S29a: CONTROL — publish of an identifiable render never reached the existence probe in the mock's log, so its absence below proves nothing"
@@ -10826,7 +11085,7 @@ s29c_assert() {
   case "$pe" in *"is not a regular file"*) pm=1 ;; esac
   case "$re" in *"could not stage the baseline"*) rmsg=1 ;; esac
   case "$ul" in *"repo clone"*) ucl=1 ;; esac
-  case "$pl" in *"repo view"*) pvw=1 ;; esac
+  case "$pl" in *"repo view"*|*"api -i --silent repos/"*) pvw=1 ;; esac   # the probe, either form (#1819 AC-4)
   case "$rl" in *"repo clone"*) rcl=1 ;; esac
   case "$cl" in *"repo clone"*) ccl=1 ;; esac
   cmp -s "$r.pp-before" "$r/.passphrase" && rsame=1
@@ -10853,9 +11112,9 @@ s29f_assert() {
   : > "$SB_GHLOG"; ( cmd_publish "$c" ) >/dev/null 2>&1; cl="$(cat "$SB_GHLOG")"
   unset -f gh npx
   case "$pe" in *".published-itinerary.next is not a regular file"*) pm=1 ;; esac
-  case "$pl" in *"repo view"*) pvw=1 ;; esac
+  case "$pl" in *"repo view"*|*"api -i --silent repos/"*) pvw=1 ;; esac   # the probe, either form (#1819 AC-4)
   case "$pl" in *"repo create"*) pcr=1 ;; esac
-  case "$cl" in *"repo view"*) cvw=1 ;; esac
+  case "$cl" in *"repo view"*|*"api -i --silent repos/"*) cvw=1 ;; esac
   if [ "$cvw" -ne 1 ]; then
     FAIL "S29f: CONTROL — publish with a regular file at the staged path never reached the existence probe, so the absence of one below proves nothing"
   elif [ "$pr" -eq 1 ] && [ "$pm" -eq 1 ] && [ "$pvw" -eq 0 ] && [ "$pcr" -eq 0 ]; then
@@ -10879,6 +11138,9 @@ s29d_assert() {
   case "$g" in *require_recordable_baseline*) pre="${g%%require_recordable_baseline*}"; gr=${#pre} ;; esac
   case "$p" in *require_recordable_baseline*) pre="${p%%require_recordable_baseline*}"; pg=${#pre} ;; esac
   case "$p" in *"gh repo view"*) pre="${p%%gh repo view*}"; pv=${#pre} ;; esac
+  # The existence probe is the lookup's status-line read through _host_answer (#1819 AC-4), ahead of `gh repo view`,
+  # which now reads only a repository the lookup found; the earlier of the two is the probe.
+  case "$p" in *_host_answer*) pre="${p%%_host_answer*}"; { [ "$pv" -ge 0 ] && [ "${#pre}" -ge "$pv" ]; } || pv=${#pre} ;; esac
   [ "$gc" -ge 0 ] && [ "$gr" -gt "$gc" ] || { ok=0; why="$why guards:$gc/$gr"; }
   [ "$pg" -ge 0 ] && [ "$pv" -gt "$pg" ] || { ok=0; why="$why publish:$pg/$pv"; }
   case "$p" in *require_change_confirmation*) ok=0; why="$why publish-gated" ;; esac
@@ -12890,6 +13152,7 @@ gh() {   # mock: answer the read-only probes; create, clone and push nothing rea
   case "${1:-} ${2:-}" in
     "api user")    printf 'testowner' ;;
     "repo view")   return 1 ;;          # no per-trip repo yet, so publish proceeds
+    "api -i")      printf 'HTTP/2.0 404 Not Found\r\n'; return 1 ;;   # its lookup's status line says the same (#1819 AC-4)
     "auth status") printf "Token scopes: 'repo'\n" ;;
     *)             return 0 ;;
   esac
@@ -13244,6 +13507,8 @@ gh() {   # mock: log the call, answer the read-only probes, create and clone not
   case "${1:-} ${2:-}" in
     "api user")    printf 'testowner' ;;
     "repo view")   return 1 ;;
+    # publish's repository lookup reads the host's status line (#1819 AC-4): no per-trip repo here, so 404.
+    "api -i")      printf 'HTTP/2.0 404 Not Found\r\n'; return 1 ;;
     "auth status") [ -z "${RV_GH_AUTH_FAIL:-}" ] || return 1; printf "Token scopes: 'repo'\n" ;;
     "repo clone")  return 1 ;;
     *)             return 0 ;;
@@ -13252,20 +13517,27 @@ gh() {   # mock: log the call, answer the read-only probes, create and clone not
 npx() { printf 'npx\n' >> "$RV_NPXLOG"; return 0; }
 
 # A trip whose per-trip clone already exists, pushing to a local bare repository named
-# <name>-trip.git so ensure_pub_clone reuses it. The optional key seeds .passphrase.
-rv_fixture() { # <name> [key] -> trip dir
-  local d="$RVW/$1" bare="$RVW/origin/$1-trip.git"
+# <name>-trip.git so ensure_pub_clone reuses it. The optional key seeds .passphrase. The live page is the
+# encrypt shim's output under the seed key — the third argument, defaulting to the key — so the site is under
+# the key its operator holds, as a published trip's is, and a check of the key against the live page (#1820)
+# reads it as such. With neither, the page is ENC_OK, which carries no nonce and so is under no key at all.
+rv_fixture() { # <name> [key] [seed-key] -> trip dir
+  local d="$RVW/$1" bare="$RVW/origin/$1-trip.git" seed="${3:-${2:-}}" e
   mkdir -p "$d/outputs" "$bare"
   cp "$SRC" "$d/outputs/$1-travel-site.html"
   git init -q --bare "$bare"
   git init -q "$d/.publish"
   git -C "$d/.publish" remote add origin "$bare"
-  cp "$ENC_OK" "$d/.publish/index.html"
+  if [ -n "$seed" ]; then
+    e="$(rv_enc_shim "$SRC" "$seed")"; cp "$e/index.html" "$d/.publish/index.html"; rm -rf "$e"
+  else
+    cp "$ENC_OK" "$d/.publish/index.html"
+  fi
   git -C "$d/.publish" add index.html
   git -C "$d/.publish" -c user.name=t -c user.email=t@example.invalid commit -q -m seed
   git -C "$d/.publish" branch -M main
   git -C "$d/.publish" push -q origin main
-  if [ "$#" -ge 2 ]; then printf '%s\n' "$2" > "$d/.passphrase"; chmod 600 "$d/.passphrase"; fi
+  if [ -n "${2:-}" ]; then printf '%s\n' "$2" > "$d/.passphrase"; chmod 600 "$d/.passphrase"; fi
   printf '%s' "$d"
 }
 
@@ -13356,10 +13628,55 @@ rv12_assert "RV12"
 md_flips encrypt_to_tmp "RV6"  rv6_assert  "RV6" short
 md_flips encrypt_to_tmp "RV6c" rv6_assert  "RV6c" long
 md_flips encrypt_to_tmp "RV12" rv12_assert "RV12"
+# RV12k — the same rule over the live-page decrypt (#1820): the key reaches StatiCrypt only through the prefix
+# assignment, never -p or --password; the page's own salt is passed, without which a matching key reads as wrong; and
+# stdin is closed, so a missing key can never wait on a prompt. Run against the REAL helper, before the stand-in.
+rv12k_assert() { # <id>
+  local id="$1" b hasprefix=0 hasp=0 salt=0 closed=0
+  b="$(declare -f _key_opens_page 2>/dev/null)"
+  rv_has "$b" 'STATICRYPT_PASSWORD="$kp_key"' && hasprefix=1
+  rv_has "$b" ' -p ' && hasp=1
+  rv_has "$b" '--password' && hasp=1
+  rv_has "$b" '--salt "$kp_salt"' && salt=1
+  rv_has "$b" '< /dev/null' && closed=1
+  rv_has "$b" '</dev/null' && closed=1
+  if [ "${#b}" -lt 200 ]; then
+    FAIL "$id: _key_opens_page's parsed body is ${#b} bytes — the subject is absent or a stub. VERDICT WITHHELD"
+  elif [ "$hasprefix" -eq 0 ]; then
+    FAIL "$id: _key_opens_page does not hand StatiCrypt the key through the STATICRYPT_PASSWORD prefix assignment"
+  elif [ "$hasp" -eq 1 ]; then
+    FAIL "$id: _key_opens_page passes the key with -p/--password, which puts it in argv"
+  elif [ "$salt" -eq 0 ]; then
+    FAIL "$id: _key_opens_page does not pass the page's own salt, so a matching key reads as wrong"
+  elif [ "$closed" -eq 0 ]; then
+    FAIL "$id: _key_opens_page does not close StatiCrypt's stdin, so a missing key would wait on a prompt"
+  else
+    PASS "$id: _key_opens_page hands over the key only through the prefix assignment, passes the page's salt and closes stdin (${#b}-byte body)"
+  fi
+}
+rv12k_assert "RV12k"
+md_flips _key_opens_page "RV12k" rv12k_assert "RV12k"
 
 # Every arm below runs against the shims.
 encrypt_to_tmp()   { rv_enc_shim "$@"; }
 make_boilerplate() { return 1; }
+# The decrypt stand-in (#1820): what the real _key_opens_page answers, read from the nonce the encrypt shim wrote.
+# No nonce is a page under no key, which is what a plaintext page and ENC_OK both are; a nonce the key log maps to
+# the key is a page the key opens; any other nonce is a page under another key. RV_DECRYPT_UNDETERMINED stands in
+# for a page that cannot be read or a StatiCrypt that cannot run. The real helper is graded against the real tool by
+# group E (E5–E8) and by RV12k, both before this stand-in exists; md_probe removes this one by name.
+_key_opens_page() { # <page_file> <passphrase>
+  local sp_h sp_n sp_line re='staticryptEncrypted="(rv[0-9a-f]+)"'
+  [ -z "${RV_DECRYPT_UNDETERMINED:-}" ] || { printf 'undetermined'; return 0; }
+  [ -f "$1" ] && [ -r "$1" ] || { printf 'undetermined'; return 0; }
+  sp_h="$(cat "$1")"
+  [[ "$sp_h" =~ $re ]] || { printf 'not-encrypted'; return 0; }
+  sp_n="${BASH_REMATCH[1]}"
+  while IFS= read -r sp_line || [ -n "$sp_line" ]; do
+    [ "$sp_line" = "$sp_n $2" ] && { printf 'opens'; return 0; }
+  done < "$RV_KEYLOG"
+  printf 'does-not-open'
+}
 
 # ── RV1 — AC1. rotate, with STATICRYPT_PASSWORD holding the current key: the pushed page
 # must be under the key .passphrase now holds, and that must not be the previous key.
@@ -13441,22 +13758,28 @@ rv2b_assert "RV2b"
 
 # RV2d — controls. Where the sources do not disagree, update publishes exactly as before:
 # variable only, file only, both equal, and an EMPTY variable (which is unset, everywhere).
-rv2d_assert() { # <id> <env-only|file-only|agree|empty-env>
-  local id="$1" c="$2" name d k rc want
+# The fixture's live page is already under the key each case names (rv_fixture seeds it there), so a page under
+# that key at the tip does not by itself prove a push: the site's head must also have moved (Stage 7's F-03).
+# nopush stands the push in for one that reports success and writes nothing; RV2d-ctl requires the arm to fail then.
+rv2d_assert() { # <id> <env-only|file-only|agree|empty-env> [nopush]
+  local id="$1" c="$2" how="${3:-}" name d k rc want h0="" h1=""
   name="rv2d-$c-$RANDOM"
   case "$c" in
-    env-only)  want='rv-env-only-synthetic-key-01'; d="$(rv_fixture "$name")"
-               ( export STATICRYPT_PASSWORD="$want"; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$? ;;
-    file-only) want='rv-file-only-synthetic-key-02'; d="$(rv_fixture "$name" "$want")"
-               ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$? ;;
-    agree)     want='rv-agreeing-synthetic-key-003'; d="$(rv_fixture "$name" "$want")"
-               ( export STATICRYPT_PASSWORD="$want"; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$? ;;
-    *)         want='rv-empty-env-synthetic-key-04'; d="$(rv_fixture "$name" "$want")"
-               ( export STATICRYPT_PASSWORD=''; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$? ;;
+    env-only)  want='rv-env-only-synthetic-key-01'; d="$(rv_fixture "$name" '' "$want")"; h0="$(rv_head "$RVW/origin/$name-trip.git")"
+               ( export STATICRYPT_PASSWORD="$want"; [ -z "$how" ] || push_trip_site() { return 0; }; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$? ;;
+    file-only) want='rv-file-only-synthetic-key-02'; d="$(rv_fixture "$name" "$want")"; h0="$(rv_head "$RVW/origin/$name-trip.git")"
+               ( unset STATICRYPT_PASSWORD; [ -z "$how" ] || push_trip_site() { return 0; }; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$? ;;
+    agree)     want='rv-agreeing-synthetic-key-003'; d="$(rv_fixture "$name" "$want")"; h0="$(rv_head "$RVW/origin/$name-trip.git")"
+               ( export STATICRYPT_PASSWORD="$want"; [ -z "$how" ] || push_trip_site() { return 0; }; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$? ;;
+    *)         want='rv-empty-env-synthetic-key-04'; d="$(rv_fixture "$name" "$want")"; h0="$(rv_head "$RVW/origin/$name-trip.git")"
+               ( export STATICRYPT_PASSWORD=''; [ -z "$how" ] || push_trip_site() { return 0; }; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$? ;;
   esac
+  h1="$(rv_head "$RVW/origin/$name-trip.git")"
   k="$(rv_pushed_key "$RVW/origin/$name-trip.git")"
   if [ "$rc" -ne 0 ] || [ -z "$k" ]; then
     FAIL "$id: update ($c) returned rc=$rc and pushed no page bound to a key — a non-conflicting case must publish"
+  elif [ -z "$h0" ] || [ "$h0" = "$h1" ]; then
+    FAIL "$id: update ($c) returned rc=0 but the site's head did not move — the page under its key is the fixture's seed, and no push happened"
   elif [ "$k" != "$want" ]; then
     FAIL "$id: update ($c) pushed a page under a key other than the one its sources name"
   else
@@ -13464,6 +13787,16 @@ rv2d_assert() { # <id> <env-only|file-only|agree|empty-env>
   fi
 }
 for rv_c in env-only file-only agree empty-env; do rv2d_assert "RV2d-$rv_c" "$rv_c"; done
+rv2dc_assert() { # <id> — the control: with the push reporting success and writing nothing, RV2d must FAIL
+  local id="$1" out
+  out="$(md_probe rv2d_no_such_subject rv2d_assert "RV2dx" file-only nopush)"
+  if [ "$out" != "0 1" ]; then
+    FAIL "$id: CONTROL — with push_trip_site stubbed to report success and push nothing, RV2d reported '$out', want '0 1': it cannot tell a push from none"
+  else
+    PASS "$id: CONTROL — with push_trip_site stubbed to report success and push nothing, RV2d reports exactly one FAIL, so its PASS above is a measurement of the push"
+  fi
+}
+rv2dc_assert "RV2d-ctl"
 
 # RV2e — FM-4's domain. A .passphrase the resolver cannot read AS the variable's key is a
 # disagreement, not an absence: unreadable, empty, newline only, a second line, CRLF. Each
@@ -13777,18 +14110,21 @@ rv10_assert "RV10"
 # resolved. The aborted run's refusal says it pushed nothing and carries none of the after-the-push
 # sentence, as RV10's does.
 rv10b_assert() { # <id>
-  local id="$1" name d bare o1 rc1 rc2 revs rev html n line head_key="" carried=0 seen=0 said=0 after=0
+  local id="$1" name d bare h0 o1 rc1 rc2 revs rev html n line head_key="" carried=0 seen=0 said=0 after=0
   local k1='rv-resolved-synthetic-key-16' k2='rv-concurrent-rotation-key-17' re='staticryptEncrypted="(rv[0-9a-f]+)"'
-  name="rv10b-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"
+  name="rv10b-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"; h0="$(rv_head "$bare")"
   o1="$( ( unset STATICRYPT_PASSWORD; rv10b_pf="$d/.passphrase"; rv10b_k2="$k2"
-           encrypt_to_tmp() { rv_enc_shim "$@"; printf '%s\n' "$rv10b_k2" > "$rv10b_pf"; }
+           encrypt_to_tmp() {   # a rotation records its key — and, as rotate does, its pending rotation (#1820)
+             rv_enc_shim "$@"; printf '%s\n' "$rv10b_k2" > "$rv10b_pf"
+             _record_pending_rotation "${rv10b_pf%/.passphrase}" "$(git -C "${rv10b_pf%/.passphrase}/.publish" rev-parse --verify -q refs/remotes/origin/main:index.html)" "$(git -C "${rv10b_pf%/.passphrase}/.publish" rev-parse --verify -q 'refs/remotes/origin/main^{commit}')" >/dev/null 2>&1 || :
+           }
            set -e; cmd_update "$d" ) 2>&1 )"; rc1=$?
   rv_has "$o1" 'changed while this update was running' && seen=1
   rv_has "$o1" 'pushed nothing' && said=1
   { rv_has "$o1" 'may still have reached the site' || rv_has "$o1" 'Its push reported failure'; } && after=1
   ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc2=$?
   head_key="$(rv_pushed_key "$bare")"
-  revs="$(git -C "$bare" rev-list main 2>/dev/null)"
+  revs="$(git -C "$bare" rev-list main "^$h0" 2>/dev/null)"
   while IFS= read -r rev; do
     [ -n "$rev" ] || continue
     html="$(git -C "$bare" show "$rev:index.html" 2>/dev/null)" || continue
@@ -13814,9 +14150,11 @@ rv10b_assert "RV10b"
 
 # 0 when any revision of <bare>'s main carries a page whose nonce the encrypt shim recorded for
 # <key>. History is published too, so a page anywhere in it counts, not only the tip.
-rv_history_has_key() { # <bare> <key>
+rv_history_has_key() { # <bare> <key> [<commit whose history is left out>]
   local revs rev html n line re='staticryptEncrypted="(rv[0-9a-f]+)"'
-  revs="$(git -C "$1" rev-list main 2>/dev/null)"
+  # The third argument leaves out the history live before an arm began: rv_fixture seeds that page under the
+  # trip's own key (#1820), so a page under that key there is the site as published, not one the arm leaked.
+  revs="$(git -C "$1" rev-list main ${3:+"^$3"} 2>/dev/null)"
   while IFS= read -r rev; do
     [ -n "$rev" ] || continue
     html="$(git -C "$1" show "${rev}:index.html" 2>/dev/null)" || continue
@@ -13885,7 +14223,7 @@ rv15_assert() { # <id>
       esac
     }
     set -e; cmd_rotate "$d" ) >/dev/null 2>&1; rc2=$?
-  rv_history_has_key "$bare" "$k1" && carried=1
+  rv_history_has_key "$bare" "$k1" "$h0" && carried=1
   if [ "$rc0" -ne 1 ] || [ "$ahead" != 1 ]; then
     FAIL "$id: the failed update did not leave exactly one unpushed commit (rc=$rc0, ahead=$ahead) — nothing to grade. VERDICT WITHHELD"
   elif [ "$rc1" -ne 1 ]; then
@@ -13973,10 +14311,25 @@ rv17_assert "RV17"
 # ── RV18 — DQ-1, the γ interleaving. rotate commits; an update commits on top AND pushes before rotate
 # records its key. rotate's own push then has nothing new to send, and a branch push reports success
 # with the update's old-key page live. A rotation that lost that race must say so — its push must
-# fail — and the next update, the remedy its message names, must bring the live page under the key
-# the rotation recorded.
+# fail. The site then moved under the old key after the rotation read it, so its pending-rotation
+# marker no longer names the page the site serves (review CD-1, ruled at scope-lock): the next update
+# refuses on the live-page check, saying the rotation recorded beside the trip could not be finished and
+# naming rotate on a fresh clone (Stage 7's F-04), and leaves the site under the key its holders hold;
+# and rotate on a fresh clone, the remedy, brings the site under the key .passphrase then holds.
+rv18_gh() { # (inside a subject's subshell) rv18_bare names the site — a fresh clone of it, for RV18's remedy
+  gh() {
+    printf '%s\n' "$*" >> "$RV_GHLOG"
+    case "${1:-} ${2:-}" in
+      "api user")    printf 'testowner' ;;
+      "repo view")   return 1 ;;
+      "auth status") printf "Token scopes: 'repo'\n" ;;
+      "repo clone")  git clone -q "$rv18_bare" "$4" ;;
+      *)             return 0 ;;
+    esac
+  }
+}
 rv18_assert() { # <id>
-  local id="$1" name d bare rc rc2 live live2 pf
+  local id="$1" name d bare rc rc2 rc3 live live2 live3 pf pf3 out2 out3 opens=0 unfin=0
   local k1='rv-gamma-old-synthetic-key-25'
   name="rv18-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"
   ( unset STATICRYPT_PASSWORD; rv18_pub="$d/.publish"; rv18_k1="$k1"
@@ -13990,16 +14343,34 @@ rv18_assert() { # <id>
     }
     set -e; cmd_rotate "$d" ) >/dev/null 2>&1; rc=$?
   live="$(rv_pushed_key "$bare")"; pf="$(cat "$d/.passphrase" 2>/dev/null)"
-  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc2=$?
+  out2="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) 2>&1 )"; rc2=$?
   live2="$(rv_pushed_key "$bare")"
+  rv_has "$out2" 'does not open the page the site serves now' && rv_has "$out2" 'run rotate' && opens=1
+  # The refusal says first what became of the rotation recorded beside the trip, and names rotate on a fresh clone as
+  # its remedy, before the generic remedies, the first of which would abandon it (Stage 7's F-04).
+  rv_has "$out2" 'could not be finished, because the site changed after that rotation read it' \
+    && rv_has "$out2" 'rotate on a fresh clone is the remedy' && unfin=1
+  rm -rf "$d/.publish"
+  # The clone host is rv18_gh, defined above this arm: rv_gh_clones is defined further down this file, and a stand-in
+  # carrying a case pattern may not be defined inside a command substitution, which bash 3.2 misparses.
+  out3="$( ( unset STATICRYPT_PASSWORD; rv18_bare="$bare"; rv18_gh; set -e; cmd_rotate "$d" ) 2>&1 )"; rc3=$?
+  live3="$(rv_pushed_key "$bare")"; pf3="$(cat "$d/.passphrase" 2>/dev/null)"
   if [ "$rc" -eq 0 ] && [ "$live" != "$pf" ]; then
     FAIL "$id: rotate reported success while the live page stayed under the key it revoked — a rotation that loses the race must fail at its push"
   elif [ "$rc" -eq 0 ]; then
     FAIL "$id: the rotation was meant to lose the race, and it completed — the interleaving was not reproduced. VERDICT WITHHELD"
-  elif [ "$rc2" -ne 0 ] || [ -z "$live2" ] || [ "$live2" != "$pf" ]; then
-    FAIL "$id: after the rotation failed, the next update did not bring the live page under the key rotate recorded (rc=$rc2)"
+  elif [ "$rc2" -ne 1 ]; then
+    FAIL "$id: after the rotation lost the race, the next update read rc=$rc2, want 1 — the site moved under the old key after the rotation read it, so update must refuse and name rotate rather than finish it (review CD-1)"
+  elif [ "$opens" -eq 0 ]; then
+    FAIL "$id: the next update refused, but not on the live-page check, or without naming rotate"
+  elif [ "$unfin" -eq 0 ]; then
+    FAIL "$id: the refusal does not say that the rotation recorded beside the trip could not be finished because the site changed after it read it, naming rotate on a fresh clone as the remedy — its first remedy points away from the rotation the operator ran"
+  elif [ "$live2" != "$k1" ]; then
+    FAIL "$id: the refused update moved the live page off the key its current holders hold"
+  elif [ "$rc3" -ne 0 ] || [ -z "$live3" ] || [ "$live3" != "$pf3" ]; then
+    FAIL "$id: the remedy, rotate on a fresh clone, did not bring the live page under the key .passphrase holds (rc=$rc3): $(printf '%s' "$out3" | tr '\n' '|' | cut -c1-1600)"
   else
-    PASS "$id: a rotation that lost the race to a concurrent update fails at its push instead of reporting success, and the next update brings the live page under the key it recorded"
+    PASS "$id: a rotation that lost the race to a concurrent update fails at its push instead of reporting success; the next update refuses on the live-page check, saying the recorded rotation could not be finished and naming rotate on a fresh clone, the site stays under the key its holders hold, and rotate on a fresh clone brings it under the key .passphrase holds"
   fi
 }
 rv18_assert "RV18"
@@ -14442,6 +14813,7 @@ rv29_assert() { # <id>
               if [ "${1:-}" = -C ] && [ "${3:-}" = fetch ] && [ ! -e "$rv29_mark" ]; then
                 : > "$rv29_mark"
                 printf '%s\n' "$rv29_k2" > "$rv29_d/.passphrase"
+                _record_pending_rotation "$rv29_d" "$(command git -C "$rv29_d/.publish" rev-parse --verify -q refs/remotes/origin/main:index.html)" "$(command git -C "$rv29_d/.publish" rev-parse --verify -q 'refs/remotes/origin/main^{commit}')" >/dev/null 2>&1 || :
                 return 1
               fi
               command git "$@"
@@ -14453,7 +14825,7 @@ rv29_assert() { # <id>
   rv_has "$out" 'discarded its own commit' && claimed=1
   { rv_has "$out" 'may still have reached the site' || rv_has "$out" 'Its push reported failure'; } && after=1
   ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc2=$?
-  rv_history_has_key "$bare" "$k1" && hist=1
+  rv_history_has_key "$bare" "$k1" "$h0" && hist=1
   if [ "$injected" -eq 0 ]; then
     FAIL "$id: the fetch after the update's commit was never reached — the interleaving was not reproduced. VERDICT WITHHELD"
   elif [ "$hist" -eq 1 ]; then
@@ -14545,7 +14917,7 @@ rv32_assert() { # <id>
   rm -rf "$pub"
   ( unset STATICRYPT_PASSWORD; RV_CLONE_BARE="$bare"; rv_gh_clones; set -e; cmd_rotate "$d" ) >/dev/null 2>&1; rc3=$?
   n3="$(git -C "$bare" rev-list --count main)"
-  rv_history_has_key "$bare" "$k1" && carried=1
+  rv_history_has_key "$bare" "$k1" "$p0" && carried=1
   live="$(rv_pushed_key "$bare")"; pf="$(cat "$d/.passphrase" 2>/dev/null)"
   if [ "$n_pre" != 3 ] || [ "$n0" != 1 ]; then
     FAIL "$id: the site did not carry two pages a rewind withdrew, as set up ($n_pre, then $n0) — nothing to grade. VERDICT WITHHELD"
@@ -14682,6 +15054,10 @@ rv34k_wrap() { # (inside a subject's subshell) rv34k_k2 is the key the other com
       git -C "$1" -c user.name=t -c user.email=t@example.invalid commit --quiet -m rotation || return 2
     fi
     printf '%s\n' "$rv34k_k2" > "$rv34k_pf"
+    # As a real rotate does at its commit point, the other command records its pending rotation (#1820): the key
+    # file it just wrote, and the page and commit its rotation replaces — those this run's push landed (review CD-1;
+    # Stage 7's F-02).
+    _record_pending_rotation "${rv34k_pf%/.passphrase}" "$(git -C "$1" rev-parse --verify -q "$2:index.html")" "$(git -C "$1" rev-parse --verify -q "$2^{commit}")" >/dev/null 2>&1 || :
     return 1
   }
 }
@@ -14827,7 +15203,7 @@ for rv_b in absent plaintext unreadable dangling; do rv37_assert "RV37-$rv_b" "$
 # RV37c — the card's risk, and the arm's control: the same trip with the variable set publishes.
 rv37c_assert() { # <id>
   local id="$1" name d bare rc h0 h1 k key='rv-variable-only-synthetic-key-49'
-  name="rv37c-$RANDOM"; d="$(rv_fixture "$name")"; bare="$RVW/origin/$name-trip.git"; h0="$(rv_head "$bare")"
+  name="rv37c-$RANDOM"; d="$(rv_fixture "$name" '' "$key")"; bare="$RVW/origin/$name-trip.git"; h0="$(rv_head "$bare")"
   ( export STATICRYPT_PASSWORD="$key"; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$?
   h1="$(rv_head "$bare")"; k="$(rv_pushed_key "$bare")"
   if [ "$rc" -ne 0 ] || [ "$h0" = "$h1" ]; then
@@ -14877,10 +15253,13 @@ rv38_assert "RV38"
 # ── RV39 — #1616. A host whose answers are read from the bare repository itself, so "empty" is the site's
 # state and never the clone's, and a clone that is real. Its unborn HEAD is whatever the arm gives it,
 # because a clone of an empty repository takes the host's unborn branch, and that is not always main.
-# A host that cannot answer takes real gh's shape (review PR-5): exit 1 and nothing on stdout, which is
-# also what real gh gives for a repository that does not exist. The repository always exists here, so a
-# repo create is refused as real gh refuses a name that is taken.
-rv39_gh() { # (inside a subject's subshell) RV39_BARE names the site, RV39_VIS its visibility
+# A host that cannot answer takes real gh's shape (review PR-5): exit 1 and nothing on stdout. publish's
+# repository lookup reads the HTTP status line `gh api -i` prints (#1819 AC-4, Stage 8's QF-02), which is
+# how a repository that does not exist (404) is told apart from a host that could not be asked; the
+# repository always exists here, so the lookup answers 200 unless the arm names another answer in
+# RV39_LOOKUP, and `repo view` fails wherever that answer is not a 200. A repo create is refused as real gh
+# refuses a name that is taken.
+rv39_gh() { # (inside a subject's subshell) RV39_BARE names the site, RV39_VIS its visibility, RV39_LOOKUP the lookup's answer
   gh() {
     printf '%s\n' "$*" >> "$RV_GHLOG"
     case "${1:-} ${2:-}" in
@@ -14888,8 +15267,14 @@ rv39_gh() { # (inside a subject's subshell) RV39_BARE names the site, RV39_VIS i
       "auth status") printf "Token scopes: 'repo'\n" ;;
       "repo clone")  git clone -q "$RV39_BARE" "$4" 2>/dev/null ;;
       "repo create") printf 'GraphQL: Name already exists on this account (createRepository)\n' >&2; return 1 ;;
+      "api -i")
+        [ -z "${RV39_HOST_FAILS:-}" ] || return 1
+        printf 'HTTP/2.0 %s\r\nContent-Type: application/json\r\n' "${RV39_LOOKUP:-200 OK}"
+        case "${RV39_LOOKUP:-200 OK}" in '200 '*) return 0 ;; esac
+        return 1 ;;
       "repo view")
         [ -z "${RV39_HOST_FAILS:-}" ] || return 1
+        case "${RV39_LOOKUP:-200 OK}" in '200 '*) ;; *) return 1 ;; esac
         case "$*" in *--json*) ;; *) return 0 ;; esac
         if [ -n "$(git -C "$RV39_BARE" for-each-ref)" ]; then rv39_e=false; else rv39_e=true; fi
         case "$*" in *visibility*) printf '%s %s' "$rv39_e" "${RV39_VIS:-PUBLIC}" ;; *) printf '%s' "$rv39_e" ;; esac ;;
@@ -14940,7 +15325,7 @@ rv39_assert() { # <id> <unborn-branch>
 for rv_b in main master trunk; do rv39_assert "RV39-$rv_b" "$rv_b"; done
 # ── RV40 — every refusal on this path writes nothing. update and rotate on an empty repository name publish;
 # with no .passphrase, update must not take the branch that names rotate, because rotate cannot run there either.
-# publish refuses one that is private, one that holds anything, and an answer it cannot read as empty.
+# publish refuses one that is private, one that holds anything, and a lookup the host gives no answer to.
 rv40_assert() { # <id> <update-nokey|update-key|rotate-nokey|rotate-key|publish-private|publish-populated|publish-nohost|update-nohost>
   local id="$1" c="$2" verb="${2%%-*}" how="${2#*-}" name d bare out rc w key='rv-empty-path-synthetic-key-50' same=1 cm=0 nokey=0 hd
   # update-nohost stands on unborn main to reach the record refusal; on any other unborn branch the branch
@@ -14955,7 +15340,7 @@ rv40_assert() { # <id> <update-nokey|update-key|rotate-nokey|rotate-key|publish-
                printf 'x\n' > "$RVW/$name-seed/f"; git -C "$RVW/$name-seed" add f
                git -C "$RVW/$name-seed" -c user.name=t -c user.email=t@example.invalid commit -q -m seed
                git -C "$RVW/$name-seed" push -q origin HEAD:main ;;
-    nohost)    if [ "$verb" = publish ]; then w='Name already exists on this account'; else w='could not read the record'; fi ;;
+    nohost)    if [ "$verb" = publish ]; then w='publish: could not ask GitHub whether'; else w='could not read the record'; fi ;;
   esac
   : > "$RV_GHLOG"
   out="$( ( unset STATICRYPT_PASSWORD; RV39_BARE="$bare"; rv39_gh
@@ -14966,13 +15351,14 @@ rv40_assert() { # <id> <update-nokey|update-key|rotate-nokey|rotate-key|publish-
   [ -z "$hd" ] || cm=1
   if [ -e "$RVW/$name.before" ]; then cmp -s "$RVW/$name.before" "$d/.passphrase" || same=0
   elif [ -e "$d/.passphrase" ]; then nokey=1; fi
-  # publish on a host read that fails (PR-5): real gh gives the same answer for a repository that does not
-  # exist, so publish takes its create path, and the host's refusal of the taken name is what stops it. Past
-  # the host read the run is a first publish, which #1616's first criterion lets leave its commit and staged
-  # record; what it may not do is reach the repository, claim a publish, or touch the key it was given. The
-  # control is the next publish, with the host answering: it takes the repository under that key.
-  rv40_create=0; rv40_told=0; rv40_rc2=0; rv40_n=0; rv40_k=""; rv40_moved="$(git -C "$bare" for-each-ref)"
+  # publish on a host read that fails (PR-5): the lookup reads the HTTP status line (#1819 AC-4, Stage 8's
+  # QF-02), and no status line is a host that could not be asked, never a repository that does not exist. So
+  # publish stops at the lookup, naming it: no create path, no clone, no commit, no publish claimed, and the key
+  # it was given untouched. The control is the next publish, with the host answering: it takes the repository
+  # under that key.
+  rv40_create=0; rv40_told=0; rv40_asked=0; rv40_rc2=0; rv40_n=0; rv40_k=""; rv40_moved="$(git -C "$bare" for-each-ref)"
   case "$(cat "$RV_GHLOG")" in *"repo create"*) rv40_create=1 ;; esac
+  case "$(cat "$RV_GHLOG")" in *"api -i --silent repos/testowner/"*) rv40_asked=1 ;; esac
   rv_has "$out" 'Published:' && rv40_told=1
   if [ "$c" = publish-nohost ]; then
     ( unset STATICRYPT_PASSWORD; RV39_BARE="$bare"; rv39_gh; set -e; cmd_publish "$d" ) >/dev/null 2>&1; rv40_rc2=$?
@@ -14981,12 +15367,12 @@ rv40_assert() { # <id> <update-nokey|update-key|rotate-nokey|rotate-key|publish-
   if [ "$rc" -ne 1 ] || ! rv_has "$out" "$w"; then
     FAIL "$id: $verb ($how) read rc=$rc without the refusal naming '$w': $(printf '%s' "$out" | tail -n 1 | cut -c1-140)"
   elif [ "$c" = publish-nohost ]; then
-    if [ "$rv40_create" -eq 0 ] || [ "$rv40_told" -eq 1 ] || [ "$same" -eq 0 ] || [ -n "$rv40_moved" ]; then
-      FAIL "$id: publish on a failed host read took the create path=$rv40_create, claimed a publish=$rv40_told, kept the key it was given=$same, moved the repository=$([ -n "$rv40_moved" ] && echo 1 || echo 0)"
+    if [ "$rv40_asked" -eq 0 ] || [ "$rv40_create" -eq 1 ] || [ "$cm" -eq 1 ] || [ "$rv40_told" -eq 1 ] || [ "$same" -eq 0 ] || [ -n "$rv40_moved" ]; then
+      FAIL "$id: publish on a failed host read asked the host for its status line=$rv40_asked (want 1), took the create path=$rv40_create, left a commit=$cm, claimed a publish=$rv40_told, kept the key it was given=$same, moved the repository=$([ -n "$rv40_moved" ] && echo 1 || echo 0)"
     elif [ "$rv40_rc2" -ne 0 ] || [ "$rv40_n" != 1 ] || [ "$rv40_k" != "$key" ]; then
       FAIL "$id: CONTROL — the next publish, with the host answering, read rc=$rv40_rc2 with $rv40_n commit(s) on main and the page under the given key=$([ "$rv40_k" = "$key" ] && echo 1 || echo 0)"
     else
-      PASS "$id: publish on a host read that fails as real gh fails takes today's create path, stops at the host's refusal of the taken name, claims nothing and touches no key; the next publish, with the host answering, takes the repository under that key"
+      PASS "$id: publish on a host read that fails as real gh fails stops at the lookup, naming it, with no create path, no commit, nothing claimed and no key touched; the next publish, with the host answering, takes the repository under that key"
     fi
   elif [ "$cm" -eq 1 ] && [ "$how" != populated ]; then
     FAIL "$id: the refusal left a commit in the clone"
@@ -15219,6 +15605,7 @@ rv45_gh() { # (inside a subject's subshell) RV45_PAGES names the read-back
       "api user")    printf 'testowner' ;;
       "auth status") printf "Token scopes: 'repo'\n" ;;
       "repo view")   return 1 ;;
+      "api -i")      printf 'HTTP/2.0 404 Not Found\r\n'; return 1 ;;   # publish's lookup: no repo yet (#1819 AC-4)
       "api -X")
         case "$*" in
           *pages*) printf '{"message":"GitHub Pages is already enabled.","status":"409"}'
@@ -15454,6 +15841,46 @@ rv31m_assert() { # <id>
 }
 rv31m_assert "RV31m"
 
+# ── RV57 — a commit this script makes takes the current time, whatever dates the environment pins.
+# A plaintext site's only commit is publish's root commit, and a republish of the same render makes a root
+# commit with the same tree, the same no-reply identity and the same message: only its dates tell the two
+# apart, and the pending-rotation marker's base-commit binding rests on that difference. commit_noreply
+# already discards a GIT_*_NAME and GIT_*_EMAIL in the environment (D3, which needs gh and is CI's expected
+# skip); this is the always-run witness that it discards GIT_AUTHOR_DATE and GIT_COMMITTER_DATE too, built,
+# as RV31-noreply is, on commit_noreply with a stubbed identity. Both dates are pinned to one far-past
+# instant. The control limb commits plainly under the same environment and must carry that instant, or
+# the pin pinned nothing and the verdict is withheld. PASS needs THIS run's commit, read by its subject,
+# dated at or after the second the arm started, so an absent subject cannot pass on an empty log.
+RV57_PIN='2001-02-03T04:05:06Z'; RV57_EPOCH=981173106
+rv57_assert() { # <id>
+  local id="$1" r repo ctl rc rcc t0 subj ctlt ad cdt
+  repo="$RVW/rv57-$RANDOM"; ctl="$RVW/rv57c-$RANDOM"
+  for r in "$repo" "$ctl"; do mkdir -p "$r"; git -C "$r" init -q; printf 'x\n' > "$r/f"; git -C "$r" add f; done
+  t0="$(date +%s)"
+  ( export GIT_AUTHOR_DATE="$RV57_PIN" GIT_COMMITTER_DATE="$RV57_PIN"
+    git -C "$ctl" -c user.name=t -c user.email=t@example.invalid commit -q -m rv57-control ) >/dev/null 2>&1; rcc=$?
+  ( export GIT_AUTHOR_DATE="$RV57_PIN" GIT_COMMITTER_DATE="$RV57_PIN"
+    NOREPLY_NAME=t; NOREPLY_EMAIL='0+t@users.noreply.github.com'; set -e; commit_noreply "$repo" rv57-commit ) >/dev/null 2>&1; rc=$?
+  ctlt="$(git -C "$ctl" log -1 --format='%at %ct' 2>/dev/null)"
+  subj="$(git -C "$repo" log -1 --format=%s 2>/dev/null)"
+  ad="$(git -C "$repo" log -1 --format=%at 2>/dev/null)"; cdt="$(git -C "$repo" log -1 --format=%ct 2>/dev/null)"
+  if [ "$rcc" -ne 0 ] || [ "$ctlt" != "$RV57_EPOCH $RV57_EPOCH" ]; then
+    FAIL "$id: CONTROL — a plain commit under GIT_AUTHOR_DATE and GIT_COMMITTER_DATE pinned to $RV57_PIN read rc=$rcc and dates '$ctlt', want rc=0 and '$RV57_EPOCH $RV57_EPOCH': the pin pins nothing here. VERDICT WITHHELD"
+  elif [ "$rc" -ne 0 ]; then
+    FAIL "$id: commit_noreply did not complete with both commit dates pinned in the environment (rc=$rc)"
+  elif [ "$subj" != rv57-commit ]; then
+    FAIL "$id: commit_noreply's own commit was not observed (latest subject '$subj'). VERDICT WITHHELD"
+  elif [ "$ad" = "$RV57_EPOCH" ] || [ "$cdt" = "$RV57_EPOCH" ]; then
+    FAIL "$id: commit_noreply's commit carries the date the environment pinned (author $ad, committer $cdt, pinned $RV57_EPOCH), so a republish of the same render can reproduce the very commit a pending-rotation marker names"
+  elif [ "$ad" -lt "$t0" ] || [ "$cdt" -lt "$t0" ]; then
+    FAIL "$id: commit_noreply's commit is dated before this arm started (author $ad, committer $cdt, started $t0)"
+  else
+    PASS "$id: with GIT_AUTHOR_DATE and GIT_COMMITTER_DATE pinned to $RV57_PIN — a pin a plain commit under the same environment carries — commit_noreply's own commit takes the current time as both its dates"
+  fi
+}
+rv57_assert "RV57-dates"
+md_flips commit_noreply "RV57-dates" rv57_assert "RV57-dates"
+
 # ── The MD registrations — each re-runs the SAME argv its live arm ran, with the subject
 # removed. RV6 and RV12 were registered above, against the real encrypt_to_tmp.
 md_flips cmd_rotate  "RV1"  rv1_assert  "RV1"  set
@@ -15545,6 +15972,1358 @@ md_flips cmd_update "RV28" rv28_assert "RV28"
 md_flips require_key_of_record "RV29" rv29_assert "RV29"
 md_flips write_passphrase_file "RV30" rv30_assert "RV30"
 for rv_p in noreply publish update rotate; do md_flips commit_noreply "RV31-$rv_p" rv31_assert "RV31-$rv_p" "$rv_p"; done
+
+# ══════════════════════════════════════════════════════════════════
+# RV48–RV52 — #1820 (and #1821, which it carries). A push that re-encrypts stands on the site's state, not a local
+# store: update's key must open the page the site serves now, read from the clone's fetched tip, whichever store
+# supplied it; rotate refuses a new key that already opens that page; a rotation whose push failed is finished by
+# update only while its pending-rotation marker names the key file it wrote and the page and commit it replaced (review
+# CD-1; Stage 7's F-02); and the key file is flushed to disk before any push that depends on it, written key, then marker, then one
+# directory flush at rotate's commit point (review CD-4). The decrypt here is the stand-in above; the real helper is
+# graded against the real tool in group E (E5–E8) and by RV12k.
+#
+# RV52 adds this suite's first background processes (review PR-1): each limb runs its writer in the background,
+# blocked inside a stand-in whose own wait is bounded, and the parent polls for the stand-in's reached-file under a
+# bound of its own and kills the writer with SIGKILL however the poll ended, so no limb outlives its bound.
+# ══════════════════════════════════════════════════════════════════
+
+# RV48 — update's key against the live page. mismatch is the must-fire twin, match its control; env and env-match
+# the same with the variable as the store; plaintext a site published --plaintext; undetermined a page that cannot be
+# read or a StatiCrypt that cannot run. Every refusal leaves the site where it was and no commit in the clone.
+rv48_assert() { # <id> <mismatch|match|env|env-match|plaintext|undetermined>
+  local id="$1" how="$2" name d bare pub out rc h0 h1 c0 c1 live opens=0 plain=0 undet=0 from=0 rot=0
+  local kl='rv-key-check-live-synthetic-key-62' kx='rv-key-check-other-synthetic-key-63'
+  name="rv48-$how-$RANDOM"
+  case "$how" in
+    mismatch)  d="$(rv_fixture "$name" "$kx" "$kl")" ;;
+    match)     d="$(rv_fixture "$name" "$kl")" ;;
+    plaintext) d="$(rv_fixture "$name")"
+               cp "$SRC" "$d/.publish/index.html"; git -C "$d/.publish" add index.html
+               git -C "$d/.publish" -c user.name=t -c user.email=t@example.invalid commit -q -m plaintext
+               git -C "$d/.publish" push -q origin main ;;
+    *)         d="$(rv_fixture "$name" '' "$kl")" ;;
+  esac
+  bare="$RVW/origin/$name-trip.git"; pub="$d/.publish"
+  h0="$(rv_head "$bare")"; c0="$(git -C "$pub" rev-parse HEAD)"
+  case "$how" in
+    mismatch|match) out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) 2>&1 )"; rc=$? ;;
+    env|plaintext)  out="$( ( export STATICRYPT_PASSWORD="$kx"; set -e; cmd_update "$d" ) 2>&1 )"; rc=$? ;;
+    env-match)      out="$( ( export STATICRYPT_PASSWORD="$kl"; set -e; cmd_update "$d" ) 2>&1 )"; rc=$? ;;
+    *)              out="$( ( export STATICRYPT_PASSWORD="$kl"; RV_DECRYPT_UNDETERMINED=1; set -e; cmd_update "$d" ) 2>&1 )"; rc=$? ;;
+  esac
+  h1="$(rv_head "$bare")"; c1="$(git -C "$pub" rev-parse HEAD)"; live="$(rv_pushed_key "$bare")"
+  rv_has "$out" 'does not open the page the site serves now' && opens=1
+  rv_has "$out" 'the page the site serves now is not encrypted' && plain=1
+  rv_has "$out" 'could not establish whether the key this run would encrypt under opens' && undet=1
+  rv_has "$out" 'run rotate' && rot=1
+  case "$how" in
+    mismatch) rv_has "$out" "from $d/.passphrase," && from=1 ;;
+    env)      rv_has "$out" 'from STATICRYPT_PASSWORD,' && from=1 ;;
+  esac
+  case "$how" in
+    match|env-match)
+      if [ "$rc" -ne 0 ]; then
+        FAIL "$id: CONTROL — update whose key opens the live page read rc=$rc, want 0: the check refuses a correct update"
+      elif [ "$h0" = "$h1" ]; then
+        FAIL "$id: CONTROL — update read rc=0 but the site did not move. VERDICT WITHHELD"
+      elif [ "$live" != "$kl" ]; then
+        FAIL "$id: CONTROL — the page now live is not under the key that opened the site"
+      else
+        PASS "$id: CONTROL — an update whose key ($how) opens the page the site serves now publishes, and the live page stays under that key"
+      fi ;;
+    *)
+      if [ "$rc" -ne 1 ]; then
+        FAIL "$id: update ($how) read rc=$rc, want 1 — a key that does not open the live page, or a page it could not test, must stop the run"
+      elif [ "$h0" != "$h1" ]; then
+        FAIL "$id: update ($how) refused but the site moved — something was pushed"
+      elif [ "$c0" != "$c1" ]; then
+        FAIL "$id: update ($how) refused and left its own commit in the clone, where a later push would carry it"
+      else
+        case "$how" in
+          mismatch|env)
+            if [ "$opens" -eq 0 ]; then
+              FAIL "$id: the refusal ($how) does not say the key does not open the page the site serves now, so the live-page check is not what refused"
+            elif [ "$from" -eq 0 ]; then
+              FAIL "$id: the refusal ($how) does not name the store the key came from"
+            else
+              PASS "$id: update whose key ($how) does not open the page the site serves now refuses, names the store, pushes nothing and takes its own commit back out"
+            fi ;;
+          plaintext)
+            if [ "$plain" -eq 0 ]; then
+              FAIL "$id: the refusal does not say the live page is not encrypted, so the live-page check is not what refused"
+            elif [ "$rot" -eq 0 ]; then
+              FAIL "$id: the not-encrypted refusal does not name rotate, which encrypts the site from then on"
+            else
+              PASS "$id: update on a site published --plaintext refuses, says the live page is not encrypted and names rotate, pushing nothing"
+            fi ;;
+          *)
+            if [ "$undet" -eq 0 ]; then
+              FAIL "$id: the refusal does not say whether the key opens the live page could not be established"
+            else
+              PASS "$id: update whose live-page check cannot be made refuses as undetermined, fail-closed, pushing nothing"
+            fi ;;
+        esac
+      fi ;;
+  esac
+}
+for rv_b in mismatch match env env-match plaintext undetermined; do rv48_assert "RV48-$rv_b" "$rv_b"; done
+
+# RV48-rotation — the D-3 carve-out, in the ordinary case RV34-rotate's fixture misses: a trip whose baseline is
+# recorded, so the failed rotation stages no record. stale rewrites .passphrase with the same bytes afterwards, which
+# breaks the marker's file identity. moved is route (i) of review FM-1: another copy of the trip publishes under a
+# third key after the rotation read the site. republished-plaintext is route (ii): the repository published again
+# --plaintext. Each of the last three must refuse; the first must converge and clear the marker. Where the site changed
+# after the rotation read it (moved, republished-plaintext) the refusal must say the recorded rotation could not be
+# finished; where only the key file was rewritten (stale) it must not, because the site did not change (Stage 7's F-04).
+rv48r_push_other() { # <bare> <key> <workdir> — another copy of the trip publishes a page under <key>
+  local e
+  git clone -q "$1" "$3"
+  e="$(rv_enc_shim "$SRC" "$2")"; cp "$e/index.html" "$3/index.html"; rm -rf "$e"
+  git -C "$3" add index.html; git -C "$3" -c user.name=t -c user.email=t@example.invalid commit -q -m other
+  git -C "$3" push -q origin main
+}
+rv48r_republish_plain() { # <bare> — the repository published again, --plaintext: a fresh history, a plaintext page
+  local c="$1.src"
+  mkdir -p "$1"; git init -q --bare "$1"; git init -q "$c"; cp "$SRC" "$c/index.html"
+  git -C "$c" add index.html; git -C "$c" -c user.name=t -c user.email=t@example.invalid commit -q -m plain
+  git -C "$c" branch -M main; git -C "$c" remote add origin "$1"; git -C "$c" push -q origin main
+}
+rv48r_assert() { # <id> <ordinary|stale|moved|republished-plaintext>
+  local id="$1" how="$2" name d bare out rc0 rc1 rc2 h1 h2 pf live mk=0 mk2=0 opens=0 plain=0 unfin=0
+  local k1='rv-rotation-live-synthetic-key-60' k3='rv-rotation-other-synthetic-key-61'
+  name="rv48r-$how-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc0=$?
+  rv_reject_pushes "$bare"
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) >/dev/null 2>&1; rc1=$?
+  rv_allow_pushes "$bare"
+  [ -f "$d/.rotation-pending" ] && mk=1
+  pf="$(cat "$d/.passphrase" 2>/dev/null)"
+  case "$how" in
+    stale) ( write_passphrase_file "$d/.passphrase" "$pf" ) >/dev/null 2>&1 ;;
+    moved) rv48r_push_other "$bare" "$k3" "$RVW/$name-other"; rm -rf "$d/.publish" ;;
+    republished-plaintext) bare="$RVW/origin2/$name-trip.git"; rv48r_republish_plain "$bare"; rm -rf "$d/.publish" ;;
+  esac
+  h1="$(rv_head "$bare")"
+  out="$( ( unset STATICRYPT_PASSWORD; RV_CLONE_BARE="$bare"; rv_gh_clones; set -e; cmd_update "$d" ) 2>&1 )"; rc2=$?
+  h2="$(rv_head "$bare")"; live="$(rv_pushed_key "$bare")"
+  [ -e "$d/.rotation-pending" ] && mk2=1
+  rv_has "$out" 'does not open the page the site serves now' && opens=1
+  rv_has "$out" 'the page the site serves now is not encrypted' && plain=1
+  rv_has "$out" 'could not be finished, because the site changed after that rotation read it' && unfin=1
+  if [ "$rc0" -ne 0 ]; then
+    FAIL "$id: the update that records the trip's baseline read rc=$rc0 — the trip this arm needs was not built. VERDICT WITHHELD"
+  elif [ "$rc1" -ne 1 ] || [ "$pf" = "$k1" ]; then
+    FAIL "$id: the rotation whose push the site refused read rc=$rc1, and moved the key of record=$([ "$pf" = "$k1" ] && echo 0 || echo 1) — the failed rotation was not built. VERDICT WITHHELD"
+  elif [ "$mk" -eq 0 ]; then
+    FAIL "$id: a rotation whose push failed left no pending-rotation marker beside the trip, so nothing records that update may finish it"
+  else
+    case "$how" in
+      ordinary)
+        if [ "$rc2" -ne 0 ]; then
+          FAIL "$id: the update that finishes a rotation whose push failed was refused (rc=$rc2) — the carve-out does not hold"
+        elif [ "$live" != "$pf" ]; then
+          FAIL "$id: the update finished, but the live page is not under the key .passphrase holds"
+        elif [ "$mk2" -eq 1 ]; then
+          FAIL "$id: the push that finished the rotation landed and the pending-rotation marker is still there"
+        else
+          PASS "$id: an update after a rotation whose push failed, on a trip with its baseline recorded, finishes the rotation under the key .passphrase holds and clears the marker"
+        fi ;;
+      stale|moved)
+        if [ "$rc2" -ne 1 ]; then
+          FAIL "$id: update ($how) read rc=$rc2, want 1 — the marker no longer describes the trip, and the carve-out admitted it"
+        elif [ "$h1" != "$h2" ]; then
+          FAIL "$id: update ($how) refused but the site moved"
+        elif [ "$opens" -eq 0 ]; then
+          FAIL "$id: the refusal ($how) is not the live-page check's"
+        elif [ "$how" = moved ] && [ "$unfin" -eq 0 ]; then
+          FAIL "$id: the site moved after the rotation read it, and the refusal does not say the rotation recorded beside the trip could not be finished"
+        elif [ "$how" = stale ] && [ "$unfin" -eq 1 ]; then
+          FAIL "$id: only the key file was rewritten and the site did not move, yet the refusal says the site changed after the rotation read it — a sentence that is untrue here"
+        else
+          PASS "$id: with the marker no longer describing the trip ($how), update refuses on the live-page check and pushes nothing, and says the recorded rotation could not be finished only where the site changed"
+        fi ;;
+      *)
+        if [ "$rc2" -ne 1 ]; then
+          FAIL "$id: update on a repository published again --plaintext after a failed rotation read rc=$rc2, want 1 — the site would be encrypted under a key nobody was told about"
+        elif [ "$h1" != "$h2" ]; then
+          FAIL "$id: update refused but the plaintext site moved"
+        elif [ "$plain" -eq 0 ]; then
+          FAIL "$id: the refusal is not the not-encrypted one"
+        elif [ "$unfin" -eq 0 ]; then
+          FAIL "$id: the not-encrypted refusal does not say the rotation recorded beside the trip could not be finished, though the site was published again after it read it"
+        else
+          PASS "$id: a repository published again --plaintext after a failed rotation is refused as not encrypted, though the marker's key file still matches — the marker binds the page it replaced — and the refusal says the recorded rotation could not be finished"
+        fi ;;
+    esac
+  fi
+}
+for rv_b in ordinary stale moved republished-plaintext; do rv48r_assert "RV48-rotation-$rv_b" "$rv_b"; done
+# RV48-rotation-republished-plaintext-same-render — route (ii) on a plaintext original site, built as Stage 7's probe A
+# built it (F-02; the operator ruled to bind the marker to the lease commit as well as the page). A site published
+# --plaintext; a rotation that would encrypt it, whose push the site refused; the repository taken down and published
+# again --plaintext from the same render, the clone set aside as unpublish's delete limb removes it. The new repository's
+# page is the same bytes, so it is the very blob the marker's base-page names, and only the commit tells the two sites
+# apart. update must refuse it as not encrypted: a carve-out that admits on the blob alone encrypts the plaintext site
+# under the failed rotation's key, which nobody was given.
+rv48s_assert() { # <id>
+  local id="$1" name d bare out rc1=0 rc2=0 h0="" h1="" h2="" pf="" mb="" ml="" blob2="" live="" mk=0 plain=0
+  name="rv48s-$RANDOM"; d="$(rv_fixture "$name")"; bare="$RVW/origin/$name-trip.git"
+  cp "$SRC" "$d/.publish/index.html"; git -C "$d/.publish" add index.html
+  git -C "$d/.publish" -c user.name=t -c user.email=t@example.invalid commit -q -m plaintext
+  git -C "$d/.publish" push -q origin main
+  # The baseline publish --plaintext records, so the failed rotation of an unchanged plan stages no record.
+  ( record_published_itinerary "$d" "$d/outputs/$name-travel-site.html" ) >/dev/null 2>&1
+  h0="$(rv_head "$bare")"
+  rv_reject_pushes "$bare"
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) >/dev/null 2>&1; rc1=$?
+  rv_allow_pushes "$bare"
+  pf="$(cat "$d/.passphrase" 2>/dev/null)"
+  if [ -f "$d/.rotation-pending" ]; then
+    mk=1
+    while IFS= read -r ml || [ -n "$ml" ]; do case "$ml" in base-page=*) mb="${ml#base-page=}" ;; esac; done < "$d/.rotation-pending"
+  fi
+  mv "$d/.publish" "$RVW/$name-parked-clone"
+  bare="$RVW/origin3/$name-trip.git"; rv48r_republish_plain "$bare"
+  h1="$(rv_head "$bare")"; blob2="$(git -C "$bare" rev-parse --verify -q main:index.html 2>/dev/null)"
+  out="$( ( unset STATICRYPT_PASSWORD; RV_CLONE_BARE="$bare"; rv_gh_clones; set -e; cmd_update "$d" ) 2>&1 )"; rc2=$?
+  h2="$(rv_head "$bare")"; live="$(rv_pushed_key "$bare")"
+  rv_has "$out" 'the page the site serves now is not encrypted' && plain=1
+  if [ "$rc1" -ne 1 ] || [ -z "$pf" ]; then
+    FAIL "$id: the rotation of the plaintext site whose push the site refused read rc=$rc1 and recorded a key=$([ -n "$pf" ] && echo 1 || echo 0) — the failed rotation was not built. VERDICT WITHHELD"
+  elif [ "$mk" -eq 0 ]; then
+    FAIL "$id: a rotation whose push failed left no pending-rotation marker beside the trip, so nothing records that update may finish it"
+  elif [ -z "$mb" ] || [ "$mb" != "$blob2" ] || [ "$h0" = "$h1" ]; then
+    FAIL "$id: the site published again is not the same render in a new repository — page blob equal to the marker's base-page=$([ -n "$mb" ] && [ "$mb" = "$blob2" ] && echo 1 || echo 0), tip new=$([ "$h0" != "$h1" ] && echo 1 || echo 0). VERDICT WITHHELD"
+  elif [ "$rc2" -ne 1 ]; then
+    FAIL "$id: update on a plaintext site published again from the same render after a failed rotation read rc=$rc2, want 1 — its page is the very blob the marker names, and a carve-out that admits on the blob alone encrypts the plaintext site under the failed rotation's key, which nobody was given"
+  elif [ "$h1" != "$h2" ] || [ -n "$live" ]; then
+    FAIL "$id: update refused but the plaintext site moved"
+  elif [ "$plain" -eq 0 ]; then
+    FAIL "$id: the refusal is not the not-encrypted one"
+  else
+    PASS "$id: a plaintext site published again from the same render after a failed rotation — the very page blob the marker names, in a new repository — is refused as not encrypted, because the marker also binds the commit the rotation's push would have replaced"
+  fi
+}
+rv48s_assert "RV48-rotation-republished-plaintext-same-render"
+
+# RV49 — milestone 74's residual, reproduced and ended. A site under a key this machine does not hold; a first
+# publish takes its create path, records a generated key and stops at the host's refusal of the taken name; with the
+# clone removed, update must refuse, and the live page stay under the original key. Before #1820 it exited 0 with the
+# site re-keyed. The residual's first step was a failed host read taken as an absent repository; since the lookup
+# reads the host's status line (#1819 AC-4, Stage 8's QF-02) a failed read stops there, so the step is built from
+# the one route left to a stray key: the lookup answers 404, and the repository exists by the time of the create —
+# made in between by a publish from another machine, say.
+rv49_assert() { # <id>
+  local id="$1" name d bare out rc1 rc2 h0 h2 live gen=0 opens=0 k1='rv-residual-live-synthetic-key-64'
+  name="rv49-$RANDOM"; d="$(rv_fixture "$name" '' "$k1")"; bare="$RVW/origin/$name-trip.git"
+  rm -rf "$d/.publish"
+  h0="$(rv_head "$bare")"
+  ( unset STATICRYPT_PASSWORD; RV39_BARE="$bare"; RV39_LOOKUP='404 Not Found'; rv39_gh; set -e; cmd_publish "$d" ) >/dev/null 2>&1; rc1=$?
+  [ -s "$d/.passphrase" ] && gen=1
+  rm -rf "$d/.publish"
+  out="$( ( unset STATICRYPT_PASSWORD; RV39_BARE="$bare"; rv39_gh; set -e; cmd_update "$d" ) 2>&1 )"; rc2=$?
+  h2="$(rv_head "$bare")"; live="$(rv_pushed_key "$bare")"
+  rv_has "$out" 'does not open the page the site serves now' && opens=1
+  if [ "$rc1" -ne 1 ] || [ "$gen" -eq 0 ]; then
+    FAIL "$id: a first publish whose lookup answered 404 for a repository that exists read rc=$rc1 and recorded a key=$gen — the residual's first step was not built. VERDICT WITHHELD"
+  elif [ "$rc2" -ne 1 ]; then
+    FAIL "$id: update after it read rc=$rc2, want 1 — it publishes under the key the failed publish generated, locking out everyone holding the site's passphrase"
+  elif [ "$h0" != "$h2" ] || [ "$live" != "$k1" ]; then
+    FAIL "$id: update refused, but the site moved or its live page is no longer under the original key"
+  elif [ "$opens" -eq 0 ]; then
+    FAIL "$id: update refused (rc=1), but not on the live-page check"
+  else
+    PASS "$id: milestone 74's residual ends here — after a first publish that generated a key and stopped at the create, update refuses on the live-page check and the site stays under its original key"
+  fi
+}
+rv49_assert "RV49-residual"
+
+# RV50 — rotate's check is inverted (decision 3): a new key that already opens the live page revokes nothing and is
+# refused, whatever .passphrase holds; nothing is asked of the retiring key, so the lost-key route stays open.
+rv50_assert() { # <id> <noop|lost>
+  local id="$1" how="$2" name d bare out rc h0 h1 pf live said=0
+  local kl='rv-rotate-live-synthetic-key-70' ks='rv-rotate-stale-synthetic-key-71'
+  name="rv50-$how-$RANDOM"
+  if [ "$how" = noop ]; then d="$(rv_fixture "$name" "$ks" "$kl")"; else d="$(rv_fixture "$name" '' "$kl")"; fi
+  bare="$RVW/origin/$name-trip.git"; h0="$(rv_head "$bare")"
+  if [ "$how" = noop ]; then
+    out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" --passphrase "$kl" ) 2>&1 )"; rc=$?
+  else
+    out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$?
+  fi
+  h1="$(rv_head "$bare")"; pf="$(cat "$d/.passphrase" 2>/dev/null)"; live="$(rv_pushed_key "$bare")"
+  { rv_has "$out" 'already opens the page the site serves now' && rv_has "$out" 'would revoke nothing'; } && said=1
+  if [ "$how" = noop ]; then
+    if [ "$rc" -ne 1 ]; then
+      FAIL "$id: rotate --passphrase <the live key> against a stale .passphrase read rc=$rc, want 1 — a rotation that revokes nothing ran"
+    elif [ "$pf" != "$ks" ]; then
+      FAIL "$id: the refused rotation changed .passphrase"
+    elif [ "$h0" != "$h1" ]; then
+      FAIL "$id: the refused rotation moved the site"
+    elif [ "$said" -eq 0 ]; then
+      FAIL "$id: the refusal (rc=1) is not the live-page check's 'already opens … would revoke nothing'"
+    else
+      PASS "$id: rotate to a key that already opens the live page refuses as revoking nothing, though the store test passes it, with .passphrase byte-identical and the site unmoved"
+    fi
+  elif [ "$rc" -ne 0 ]; then
+    FAIL "$id: rotate with no .passphrase read rc=$rc, want 0 — the lost-key route update's own refusal names is closed"
+  elif [ -z "$pf" ] || [ "$live" != "$pf" ]; then
+    FAIL "$id: rotate with no .passphrase ran, but the live page is not under the key it recorded"
+  else
+    PASS "$id: rotate with no .passphrase still rotates — nothing is asked of the retiring key, so the lost-key route stays open"
+  fi
+}
+for rv_b in noop lost; do rv50_assert "RV50-rotate-$rv_b" "$rv_b"; done
+
+# RV51 — the flush (#1821; decision 5; review CD-4). flush-order: in write_passphrase_file's parsed body the staged
+# copy is flushed before the rename and the directory after it. rotate-order: at rotate's commit point the key is
+# written with its directory flush deferred, then the marker, then the directory flush, all before the push.
+# flush-log: the real flush, observed — on the Linux runner this is the live observation of fsync's success.
+# rotate-dirflush: a directory that cannot be flushed at rotate's commit point leaves the key and a matching marker,
+# and the remedy it names, update, finishes the rotation.
+rv51_at() { # <haystack> <needle> -> the byte offset of the first occurrence, or -1
+  local pre
+  case "$1" in *"$2"*) pre="${1%%"$2"*}"; printf '%s' "${#pre}" ;; *) printf '%s' -1 ;; esac
+}
+rv51o_assert() { # <id>
+  local id="$1" b f1 mv f2
+  b="$(declare -f write_passphrase_file 2>/dev/null)"
+  f1="$(rv51_at "$b" '_flush_path "$tmp"')"; mv="$(rv51_at "$b" 'mv -f "$tmp" "$pf"')"; f2="$(rv51_at "$b" '_flush_path "$(dirname "$pf")"')"
+  if [ "${#b}" -lt 200 ]; then
+    FAIL "$id: write_passphrase_file's parsed body is ${#b} bytes — the subject is absent or a stub. VERDICT WITHHELD"
+  elif [ "$f1" -lt 0 ] || [ "$mv" -lt 0 ]; then
+    FAIL "$id: write_passphrase_file does not flush its staged copy (at $f1) or does not rename it into place (at $mv)"
+  elif [ "$f1" -ge "$mv" ]; then
+    FAIL "$id: the staged copy is flushed at byte $f1, after the rename at $mv — a crash can leave the key path naming data never written"
+  elif [ "$f2" -le "$mv" ]; then
+    FAIL "$id: the directory is not flushed after the rename (flush at $f2, rename at $mv)"
+  else
+    PASS "$id: write_passphrase_file flushes the staged copy (byte $f1) before the rename ($mv) and the directory after it ($f2)"
+  fi
+}
+rv51r_assert() { # <id>
+  local id="$1" b w m f p
+  b="$(declare -f cmd_rotate 2>/dev/null)"
+  w="$(rv51_at "$b" 'write_passphrase_file "$pf" "$newp" defer-dir-flush')"; m="$(rv51_at "$b" '_record_pending_rotation "$trip_dir" "$base"')"
+  f="$(rv51_at "$b" '_flush_path "$kdir"')"; p="$(rv51_at "$b" 'push_trip_site "$pub_dir" "$mine" rotate')"
+  if [ "${#b}" -lt 500 ]; then
+    FAIL "$id: cmd_rotate's parsed body is ${#b} bytes — the subject is absent or a stub. VERDICT WITHHELD"
+  elif [ "$w" -lt 0 ] || [ "$m" -lt 0 ] || [ "$f" -lt 0 ] || [ "$p" -lt 0 ]; then
+    FAIL "$id: cmd_rotate's commit point is missing a step — key $w, marker $m, directory flush $f, push $p"
+  elif [ "$w" -ge "$m" ]; then
+    FAIL "$id: the marker (byte $m) is written before the key ($w) — it would name the file the key write replaces, and never match"
+  elif [ "$m" -ge "$f" ]; then
+    FAIL "$id: the directory is flushed (byte $f) before the marker is written ($m), so one flush does not cover both entries"
+  elif [ "$f" -ge "$p" ]; then
+    FAIL "$id: the push (byte $p) comes before the directory flush ($f)"
+  else
+    PASS "$id: at rotate's commit point the key ($w), then the marker ($m), then one directory flush ($f), all before the push ($p)"
+  fi
+}
+rv51l_assert() { # <id>
+  local id="$1" d log rc n l1="" l2="" key='rv-flush-log-synthetic-key-65' got
+  d="$RVW/rv51l-$RANDOM"; mkdir -p "$d"; log="$d.flush.log"; : > "$log"
+  ( rv51_def="$(declare -f _flush_path)"; eval "rv51_real_flush ${rv51_def#_flush_path}"
+    _flush_path() { local r; rv51_real_flush "$@"; r=$?; printf '%s %s\n' "$r" "$1" >> "$log"; return "$r"; }
+    set -e; write_passphrase_file "$d/.passphrase" "$key" ) >/dev/null 2>&1; rc=$?
+  n="$(rv_lines "$log")"
+  { IFS= read -r l1; IFS= read -r l2; } < "$log"
+  got="$(cat "$d/.passphrase" 2>/dev/null)"
+  if [ "$rc" -ne 0 ] || [ "$got" != "$key" ]; then
+    FAIL "$id: write_passphrase_file under the logging flush read rc=$rc and recorded the key=$([ "$got" = "$key" ] && echo 1 || echo 0) — want 0 and 1"
+  elif [ "$n" != 2 ]; then
+    FAIL "$id: the flush ran $n time(s), want exactly 2 (the staged copy, then the directory)"
+  elif [ "${l1#"0 $d/.passphrase."}" = "$l1" ]; then
+    FAIL "$id: the first flush was not a successful one of the staged copy beside the key ('$l1')"
+  elif [ "$l2" != "0 $d" ]; then
+    FAIL "$id: the second flush was not a successful one of the key's directory ('$l2')"
+  else
+    PASS "$id: the real flush ran on the staged copy, then on the key's directory, both succeeding, before write_passphrase_file returned"
+  fi
+}
+rv51d_assert() { # <id>
+  local id="$1" name d bare out rc rc2 h0 h1 pf live mk=0 said=0 mk2=0 k1='rv-dirflush-live-synthetic-key-66'
+  name="rv51d-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"; h0="$(rv_head "$bare")"
+  out="$( ( unset STATICRYPT_PASSWORD
+            rv51d_def="$(declare -f _flush_path)"; eval "rv51d_real_flush ${rv51d_def#_flush_path}"
+            _flush_path() { [ -d "$1" ] && return 1; rv51d_real_flush "$@"; }
+            set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$?
+  h1="$(rv_head "$bare")"; pf="$(cat "$d/.passphrase" 2>/dev/null)"
+  ( _pending_rotation_matches "$d" "$d/.publish" refs/remotes/origin/main ) && mk=1
+  { rv_has "$out" 'could not be flushed to disk' && rv_has "$out" 'Run update to finish the rotation'; } && said=1
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc2=$?
+  live="$(rv_pushed_key "$bare")"; [ -e "$d/.rotation-pending" ] && mk2=1
+  if [ "$rc" -ne 1 ]; then
+    FAIL "$id: rotate with a directory that cannot be flushed read rc=$rc, want 1"
+  elif [ "$h0" != "$h1" ]; then
+    FAIL "$id: rotate stopped at its directory flush, yet the site moved"
+  elif [ "$pf" = "$k1" ]; then
+    FAIL "$id: rotate stopped at its directory flush with the old key still recorded — the flush failure was not reached at the commit point. VERDICT WITHHELD"
+  elif [ "$mk" -eq 0 ]; then
+    FAIL "$id: rotate stopped at its directory flush with no matching pending-rotation marker — the update its remedy names cannot finish the rotation"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: the refusal does not say the directory could not be flushed and that update finishes the rotation"
+  elif [ "$rc2" -ne 0 ] || [ "$live" != "$pf" ]; then
+    FAIL "$id: the update the remedy names did not finish the rotation (rc=$rc2): the live page is not under the key .passphrase holds"
+  elif [ "$mk2" -eq 1 ]; then
+    FAIL "$id: the update finished the rotation and left the marker"
+  else
+    PASS "$id: a directory that cannot be flushed at rotate's commit point leaves the new key and a matching marker, says so, and the update it names finishes the rotation"
+  fi
+}
+rv51o_assert "RV51-flush-order"
+rv51r_assert "RV51-rotate-order"
+rv51l_assert "RV51-flush-log"
+rv51d_assert "RV51-rotate-dirflush"
+
+# RV52 — a write interrupted by SIGKILL (#1821): before the rename the key path still holds the old key, byte for
+# byte; after it, the complete new key. The writer runs in the background, blocked inside a flush stand-in on its
+# first call (before) or its second (after), and is killed there. With mutant set, write_passphrase_file is replaced
+# by a writer that writes straight to the key path before it flushes — the control, which RV52-ctl requires the arm to
+# convict.
+rv52_assert() { # <id> <before|after> [mutant]
+  local id="$1" at="$2" mut="${3:-}" d pf reached stop pid n=0 got trig=1 wasreached=0
+  local old='rv-interrupt-old-synthetic-key-67' new='rv-interrupt-new-synthetic-key-68'
+  [ "$at" = before ] || trig=2
+  d="$RVW/rv52-$at-$RANDOM"; mkdir -p "$d"; pf="$d/.passphrase"; printf '%s\n' "$old" > "$pf"; chmod 600 "$pf"
+  reached="$d.reached"; stop="$d.stop"
+  ( rv52_def="$(declare -f _flush_path)"; eval "rv52_real_flush ${rv52_def#_flush_path}"
+    rv52_calls=0
+    _flush_path() {
+      local k=0
+      rv52_calls=$((rv52_calls+1))
+      if [ "$rv52_calls" -eq "$trig" ]; then
+        : > "$reached"
+        while [ ! -e "$stop" ] && [ "$k" -lt 300 ]; do sleep 0.1; k=$((k+1)); done
+      fi
+      rv52_real_flush "$@"
+    }
+    if [ -n "$mut" ]; then write_passphrase_file() { printf '%s\n' "$2" > "$1"; _flush_path "$1"; }; fi
+    set -e; write_passphrase_file "$pf" "$new" ) >/dev/null 2>&1 &
+  pid=$!
+  while [ ! -e "$reached" ] && kill -0 "$pid" 2>/dev/null && [ "$n" -lt 100 ]; do sleep 0.1; n=$((n+1)); done
+  [ -e "$reached" ] && wasreached=1
+  kill -9 "$pid" 2>/dev/null; wait "$pid" 2>/dev/null; : > "$stop"
+  got="$(cat "$pf" 2>/dev/null)"
+  if [ "$wasreached" -eq 0 ]; then
+    FAIL "$id: the writer never reached the flush this limb interrupts ($at) — nothing was interrupted. VERDICT WITHHELD"
+  elif [ "$at" = before ] && [ "$got" != "$old" ]; then
+    FAIL "$id: killed before the rename, the key path no longer holds the old key byte for byte — an interrupted write reached it"
+  elif [ "$at" = after ] && [ "$got" != "$new" ]; then
+    FAIL "$id: killed after the rename, the key path does not hold the complete new key"
+  else
+    PASS "$id: a key write killed $at the rename leaves the key path holding the $([ "$at" = before ] && echo old || echo complete new) key, byte for byte"
+  fi
+}
+rv52_assert "RV52-interrupt-before-rename" before
+rv52_assert "RV52-interrupt-after-rename" after
+rv52c_assert() { # <id> — the control: the arm, run against a writer that writes straight to the key path, must FAIL
+  local id="$1" out
+  out="$(md_probe rv52_no_such_subject rv52_assert "RV52x" before mutant)"
+  if [ "$out" != "0 1" ]; then
+    FAIL "$id: CONTROL — against a writer that writes straight to the key path the interrupt arm reported '$out', want '0 1': it cannot tell an atomic write from one that is not"
+  else
+    PASS "$id: CONTROL — against a writer that writes straight to the key path, the interrupt arm reports exactly one FAIL, so its PASS above is a measurement of the staged write"
+  fi
+}
+rv52c_assert "RV52-ctl"
+
+md_flips _key_opens_page "RV48-mismatch" rv48_assert "RV48-mismatch" mismatch
+md_flips cmd_update "RV48-mismatch-cmd" rv48_assert "RV48-mismatch" mismatch
+md_flips cmd_update "RV48-match" rv48_assert "RV48-match" match
+md_flips _key_opens_page "RV48-env" rv48_assert "RV48-env" env
+md_flips cmd_update "RV48-env-match" rv48_assert "RV48-env-match" env-match
+md_flips _key_opens_page "RV48-plaintext" rv48_assert "RV48-plaintext" plaintext
+md_flips cmd_update "RV48-undetermined" rv48_assert "RV48-undetermined" undetermined
+md_flips _pending_rotation_matches "RV48-rotation-ordinary" rv48r_assert "RV48-rotation-ordinary" ordinary
+for rv_b in stale moved republished-plaintext; do md_flips cmd_update "RV48-rotation-$rv_b" rv48r_assert "RV48-rotation-$rv_b" "$rv_b"; done
+md_flips cmd_update "RV48-rotation-republished-plaintext-same-render" rv48s_assert "RV48-rotation-republished-plaintext-same-render"
+md_flips cmd_update "RV49-residual" rv49_assert "RV49-residual"
+md_flips _key_opens_page "RV50-rotate-noop" rv50_assert "RV50-rotate-noop" noop
+md_flips cmd_rotate "RV50-rotate-lost" rv50_assert "RV50-rotate-lost" lost
+md_flips write_passphrase_file "RV51-flush-order" rv51o_assert "RV51-flush-order"
+md_flips cmd_rotate "RV51-rotate-order" rv51r_assert "RV51-rotate-order"
+md_flips _flush_path "RV51-flush-log" rv51l_assert "RV51-flush-log"
+md_flips _record_pending_rotation "RV51-rotate-dirflush" rv51d_assert "RV51-rotate-dirflush"
+md_flips write_passphrase_file "RV52-interrupt-before-rename" rv52_assert "RV52-interrupt-before-rename" before
+md_flips write_passphrase_file "RV52-interrupt-after-rename" rv52_assert "RV52-interrupt-after-rename" after
+
+# ══════════════════════════════════════════════════════════════════
+# RV53 — #2213. publish never writes over a passphrase file that exists and cannot be read: it may hold a key already
+# given out. norepo is a first publish with no per-trip repository; empty, one into an empty repository named by
+# .publish-slug. Each must refuse naming the file and the remedy, leave the file untouched at mode 000, write no key,
+# create and push nothing and record no baseline. link-store pins the route decision 9 keeps: a .passphrase link into
+# a key store whose key file does not exist yet still takes the first key where it points.
+#
+# A uid that reads a mode-000 file (root, say) cannot build the refused state, because under decision 9 a dangling link
+# is the key-store route rather than an unreadable file. Each limb tests readability after the chmod and SKIPs there
+# with that reason, never passing. CI runs as a non-root user and never takes the skip; under strict mode a skip of
+# group RV fails the run, which is the right direction for a privacy-control arm that cannot run.
+# ══════════════════════════════════════════════════════════════════
+rv53_assert() { # <id> <norepo|empty>
+  local id="$1" how="$2" name d bare="" out rc mode0 mode1 kept=0 said=0 none=0 created=0 refs="" rec=0
+  local key='rv-unreadable-first-synthetic-key-72'
+  name="rv53-$how-$RANDOM"
+  if [ "$how" = norepo ]; then
+    d="$RVW/$name"; mkdir -p "$d/outputs"; cp "$SRC" "$d/outputs/$name-travel-site.html"
+  else
+    d="$(rv39_site "$name" main)"; bare="$RVW/origin/$name-site.git"
+  fi
+  printf '%s\n' "$key" > "$d/.passphrase"; chmod 000 "$d/.passphrase"
+  if [ -r "$d/.passphrase" ]; then
+    chmod 600 "$d/.passphrase"
+    SKIP "$id: this run's uid reads a mode-000 file (root, say), where the state this arm grades cannot arise — not a pass"
+    return 0
+  fi
+  mode0="$(ls -l "$d/.passphrase" 2>/dev/null)"; mode0="${mode0%% *}"
+  : > "$RV_GHLOG"
+  if [ "$how" = norepo ]; then
+    out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_publish "$d" ) 2>&1 )"; rc=$?
+  else
+    out="$( ( unset STATICRYPT_PASSWORD; RV39_BARE="$bare"; rv39_gh; set -e; cmd_publish "$d" ) 2>&1 )"; rc=$?
+    refs="$(git -C "$bare" for-each-ref 2>/dev/null)"
+  fi
+  mode1="$(ls -l "$d/.passphrase" 2>/dev/null)"; mode1="${mode1%% *}"
+  chmod 600 "$d/.passphrase" 2>/dev/null
+  [ "$(cat "$d/.passphrase" 2>/dev/null)" = "$key" ] && kept=1
+  grep -q '^repo create' "$RV_GHLOG" && created=1
+  [ -e "$d/.published-itinerary" ] && rec=1
+  rv_has "$out" 'never writes over a passphrase it could not read' && said=1
+  { rv_has "$out" 'Nothing was encrypted, committed or pushed' && rv_has "$out" 'no passphrase was written'; } && none=1
+  if [ "$rc" -ne 1 ]; then
+    FAIL "$id: publish ($how) with a .passphrase it cannot read read rc=$rc, want 1 — it wrote over a key it could not read"
+  elif [ "$mode1" != "$mode0" ]; then
+    FAIL "$id: the refusal ($how) changed the file's mode from '$mode0' to '$mode1'"
+  elif [ "$kept" -eq 0 ]; then
+    FAIL "$id: the refusal ($how) left the file not byte-identical to the key it held"
+  elif [ "$created" -eq 1 ] || [ -n "$refs" ]; then
+    FAIL "$id: the refusal ($how) created the repository or pushed to it"
+  elif [ "$rec" -eq 1 ]; then
+    FAIL "$id: the refusal ($how) recorded a baseline"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: the refusal ($how, rc=1) is not ensure_first_key's — it does not say publish never writes over a passphrase it could not read"
+  elif [ "$none" -eq 0 ]; then
+    FAIL "$id: the refusal ($how) does not say nothing was encrypted, committed or pushed and no passphrase was written"
+  else
+    PASS "$id: publish ($how) refuses a .passphrase that exists and cannot be read, naming it, with the file untouched at mode $mode0, no key written, nothing created or pushed and no baseline recorded"
+  fi
+}
+rv53_assert "RV53-norepo" norepo
+rv53_assert "RV53-empty" empty
+rv53l_assert() { # <id>
+  local id="$1" name d bare store out rc link=0 skey live
+  name="rv53l-$RANDOM"; d="$(rv39_site "$name" main)"; bare="$RVW/origin/$name-site.git"
+  store="$RVW/$name-store"; mkdir -p "$store"; ln -s "$store/key" "$d/.passphrase"
+  out="$( ( unset STATICRYPT_PASSWORD; RV39_BARE="$bare"; rv39_gh; set -e; cmd_publish "$d" ) 2>&1 )"; rc=$?
+  [ -L "$d/.passphrase" ] && link=1
+  skey="$(cat "$store/key" 2>/dev/null)"; live="$(rv_pushed_key "$bare")"
+  if [ "$rc" -ne 0 ]; then
+    FAIL "$id: a first publish through a .passphrase link into a key store with no key file yet read rc=$rc, want 0 — the key-store route decision 9 keeps is closed"
+  elif [ "$link" -eq 0 ]; then
+    FAIL "$id: the first publish replaced the link with a regular file"
+  elif [ -z "$skey" ] || [ "$live" != "$skey" ]; then
+    FAIL "$id: the store file does not hold the key the published page is under"
+  else
+    PASS "$id: a first publish through a .passphrase link into a key store writes the first key where the link points, and the page is under it"
+  fi
+}
+rv53l_assert "RV53-link-store"
+md_flips ensure_first_key "RV53-norepo" rv53_assert "RV53-norepo" norepo
+md_flips ensure_first_key "RV53-empty" rv53_assert "RV53-empty" empty
+md_flips ensure_first_key "RV53-link-store" rv53l_assert "RV53-link-store"
+
+# ══════════════════════════════════════════════════════════════════
+# RV54 — #1819. Publish commands on one trip run one at a time, behind a per-trip lock: a directory made by mkdir,
+# holding one record of the command, its pid and its start time. A second command refuses at once, naming the holder,
+# with exit status 75 where the holder runs and 76 where it does not or its record cannot be read (review CD-3); where
+# the holder releases the lock while the second command reads its record again, the second takes it and runs (F-18).
+#
+# THE HOLDER, AND ITS BOUNDS (review PR-1). A is an update run in the background whose require_publish_branch, only
+# where RV54_HOLDER is set — in A's own subshell and nowhere else — touches a reached-file and then waits for a
+# stop-file, for at most 30 s. The wait sits in a function update calls directly, so it runs in the very process
+# that holds the lock: a wait inside a command substitution would run in a child, which a signal or a SIGKILL sent
+# to the holder cannot end. B, the command under test, runs in the foreground, never blocks, and is graded. The
+# parent polls for the reached-file under a bound of its own and, however A ends, kills it with SIGKILL before the
+# arm returns, so no arm can outlive its bound or leave A running into the next.
+# ══════════════════════════════════════════════════════════════════
+rv54_holder() { # <trip> <reached> <stop> <out> -> starts A in the background; its pid in RV54_PID
+  ( unset STATICRYPT_PASSWORD; RV54_HOLDER=1
+    rv54_def="$(declare -f require_publish_branch)"; eval "rv54_real_rpb ${rv54_def#require_publish_branch}"
+    require_publish_branch() {
+      local k=0
+      if [ -n "${RV54_HOLDER:-}" ]; then
+        trap -p INT TERM HUP > "$RV54_REACHED.traps" 2>/dev/null
+        : > "$RV54_REACHED"
+        while [ ! -e "$RV54_STOP" ] && [ "$k" -lt 300 ]; do sleep 0.1; k=$((k+1)); done
+      fi
+      rv54_real_rpb "$@"
+    }
+    RV54_REACHED="$2"; RV54_STOP="$3"
+    set -e; cmd_update "$1" ) > "$4" 2>&1 &
+  RV54_PID=$!
+}
+rv54_wait_reached() { # <reached> <pid> -> 0 once the holder reached its wait, within the bound
+  local n=0
+  while [ ! -e "$1" ] && kill -0 "$2" 2>/dev/null && [ "$n" -lt 150 ]; do sleep 0.1; n=$((n+1)); done
+  [ -e "$1" ]
+}
+# rv54_finish is called as a plain command, never inside $( ): a command substitution is a subshell, which cannot
+# wait for the arm's background job and, once that job exits, still finds its unreaped zombie with kill -0.
+rv54_alive() { # <pid> -> 0 while the process runs; an exited, unreaped one (a zombie) is not running
+  local st
+  kill -0 "$1" 2>/dev/null || return 1
+  st="$(ps -o stat= -p "$1" 2>/dev/null)"; st="${st#"${st%%[![:space:]]*}"}"
+  case "$st" in Z*|'') return 1 ;; esac
+  return 0
+}
+rv54_finish() { # <stop> <pid> -> sets RV54_RC: the holder's exit status, or 255 when it had to be killed at the bound
+  local n=0
+  : > "$1"
+  while rv54_alive "$2" && [ "$n" -lt 150 ]; do sleep 0.1; n=$((n+1)); done
+  if rv54_alive "$2"; then kill -9 "$2" 2>/dev/null; wait "$2" 2>/dev/null; RV54_RC=255; return 0; fi
+  wait "$2" 2>/dev/null; RV54_RC=$?
+}
+# A declared trip, so confirm reaches its first write with nothing to record: one approver, threshold all.
+rv54_declare() { printf 'threshold=all\napprover=zqa1\n' > "$1/.approvers"; }
+# The exit statuses are the header's documented contract — 75 for a lock a running command holds, 76 for one whose
+# holder is not running or whose record cannot be read — written here as numbers rather than read from the script's
+# own constants, so a changed constant is a finding rather than a silent re-pin, and so an arm run against code
+# without the lock fails rather than aborting the suite on an unset name.
+rv54h_assert() { # <id> <update|rotate|publish|unpublish|confirm> [unlocked]
+  local id="$1" verb="$2" how="${3:-}" name d bare out rc arc h0 h1 c0 c1 hb p0 p1 r0=0 r1=0 reached=0 said=0
+  local k1='rv-lock-holder-synthetic-key-73'
+  name="rv54h-$verb-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"
+  h0="$(rv_head "$bare")"
+  rv54_holder "$d" "$d.reached" "$d.stop" "$d.a.out"
+  rv54_wait_reached "$d.reached" "$RV54_PID" && reached=1
+  # A declared trip makes confirm reach its first write with nothing to record; it is declared only once the holder
+  # has passed its own approval gate and waits, and withdrawn before the holder is released.
+  [ "$verb" != confirm ] || rv54_declare "$d"
+  hb="$(rv_head "$bare")"; c0="$(git -C "$d/.publish" rev-parse HEAD)"; p0="$(cat "$d/.passphrase")"
+  [ -e "$d/.change-confirmed" ] && r0=1
+  case "$verb" in
+    update)    out="$( ( unset STATICRYPT_PASSWORD; [ -z "$how" ] || _take_trip_lock() { return 0; }; set -e; cmd_update "$d" ) 2>&1 )"; rc=$? ;;
+    rotate)    out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$? ;;
+    publish)   out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_publish "$d" ) 2>&1 )"; rc=$? ;;
+    unpublish) out="$( ( set -e; cmd_unpublish "$d" --disable-pages-only ) 2>&1 </dev/null )"; rc=$? ;;
+    confirm)   out="$( ( _confirm_has_terminal() { return 0; }; set -e; cmd_confirm "$d" ) 2>&1 </dev/null )"; rc=$? ;;
+  esac
+  h1="$(rv_head "$bare")"; c1="$(git -C "$d/.publish" rev-parse HEAD)"; p1="$(cat "$d/.passphrase")"
+  [ -e "$d/.change-confirmed" ] && r1=1
+  rv_has "$out" "'update' is running on this trip" && said=1
+  [ "$verb" != confirm ] || mv "$d/.approvers" "$d/.approvers.withdrawn"
+  rv54_finish "$d.stop" "$RV54_PID"; arc="$RV54_RC"
+  if [ "$reached" -eq 0 ]; then
+    FAIL "$id: the holder never reached its wait inside update, so no command held the lock while $verb ran. VERDICT WITHHELD"
+  elif [ "$rc" -ne 75 ]; then
+    FAIL "$id: $verb on a trip whose lock a running update holds read rc=$rc, want 75 — it did not refuse at once on the lock"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: $verb refused (rc=$rc) without naming the running update as the holder"
+  elif [ "$h1" != "$hb" ] || [ "$c1" != "$c0" ] || [ "$p1" != "$p0" ] || [ "$r1" != "$r0" ]; then
+    FAIL "$id: $verb refused on the lock but changed something — site, clone, key of record or confirmation record"
+  elif [ "$arc" != 0 ] || [ "$(rv_head "$bare")" = "$h0" ]; then
+    FAIL "$id: the holder's own update did not finish once released (rc=$arc) — the refusal disturbed the command holding the lock"
+  else
+    PASS "$id: $verb on a trip whose lock a running update holds refuses at once with exit status 75, names the holder, and changes nothing; the holder then finishes"
+  fi
+}
+for rv_b in update rotate publish unpublish confirm; do rv54h_assert "RV54-held-$rv_b" "$rv_b"; done
+rv54c_assert() { # <id> — the control: with the lock stubbed open, the held arm must FAIL
+  local id="$1" out
+  out="$(md_probe rv54_no_such_subject rv54h_assert "RV54x" update unlocked)"
+  if [ "$out" != "0 1" ]; then
+    FAIL "$id: CONTROL — with _take_trip_lock stubbed to return 0, the held arm reported '$out', want '0 1': it cannot tell a lock from none"
+  else
+    PASS "$id: CONTROL — with _take_trip_lock stubbed to return 0, the held arm reports exactly one FAIL, so its PASS above is a measurement of the lock"
+  fi
+}
+rv54c_assert "RV54-ctl"
+# RV54-confirm-prompt — confirm takes the lock immediately before its first write (decision 1), so an organizer at its
+# CONFIRM prompt holds nothing (Stage 7's F-06). A confirm runs in the background on a trip whose render is a change
+# awaiting confirmation, its read blocked on a pipe whose writer waits for a go-file. Once its prompt is printed the
+# lock must be free, and an update run then must pass the lock and stop at the approval gate, the refusal after it.
+# The go-file then sends CONFIRM, and confirm takes the lock and records. M6, the lock taken at confirm's entry, must
+# fail it. Every wait is bounded, and the confirm is killed with SIGKILL at its bound (review PR-1).
+rv54p_assert() { # <id>
+  local id="$1" name d out rc=0 arc=0 pid n=0 k=0 reached=0 held=0 gate=0 rec=0
+  name="rv54p-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-prompt-synthetic-key-75')"
+  s_record "$d/.published-itinerary" "$S_DA" published
+  { while [ ! -e "$d.go" ] && [ "$k" -lt 600 ]; do sleep 0.1; k=$((k+1)); done; printf 'CONFIRM\n'; } 2>/dev/null \
+    | ( _confirm_has_terminal() { return 0; }; set -e; cmd_confirm "$d" ) > "$d.c.out" 2>&1 &
+  pid=$!
+  while [ "$n" -lt 300 ] && rv54_alive "$pid"; do
+    if rv_has "$(cat "$d.c.out" 2>/dev/null)" 'Type CONFIRM'; then reached=1; break; fi
+    sleep 0.1; n=$((n+1))
+  done
+  [ -e "$d/.publish-lock" ] && held=1
+  out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) 2>&1 )"; rc=$?
+  rv_has "$out" 'no organizer confirmation covers it' && gate=1
+  : > "$d.go"
+  rv54_finish "$d.stop" "$pid"; arc="$RV54_RC"
+  [ -e "$d/.change-confirmed" ] && rec=1
+  if [ "$reached" -eq 0 ]; then
+    FAIL "$id: the confirm never printed its CONFIRM prompt, so no organizer was at it while update ran. VERDICT WITHHELD"
+  elif [ "$held" -eq 1 ]; then
+    FAIL "$id: the trip's lock is held while confirm waits at its CONFIRM prompt — confirm took it before its first write"
+  elif [ "$rc" -eq 75 ] || [ "$rc" -eq 76 ]; then
+    FAIL "$id: an update run while confirm waited at its prompt was refused on the per-trip lock (rc=$rc)"
+  elif [ "$rc" -ne 1 ] || [ "$gate" -eq 0 ]; then
+    FAIL "$id: the update run while confirm waited at its prompt read rc=$rc and did not stop at the approval gate, so it is not shown to have passed the lock"
+  elif [ "$arc" -ne 0 ] || [ "$rec" -eq 0 ]; then
+    FAIL "$id: the confirm, sent CONFIRM after the update, read rc=$arc and recorded=$rec — want 0 and 1"
+  else
+    PASS "$id: while confirm waits at its CONFIRM prompt the trip's lock is free, an update run then passes it and stops at the approval gate, and confirm then takes the lock and records"
+  fi
+}
+rv54p_assert "RV54-confirm-prompt"
+# RV54-list — list takes no lock: it reports while a command holds the trip.
+rv54l_assert() { # <id>
+  local id="$1" name d root out rc reached=0 listed=0 arc
+  name="rv54l-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-list-synthetic-key-74')"
+  root="$RVW/rv54l-root-$RANDOM"; mkdir -p "$root/trips"; ln -s "$d" "$root/trips/$name"
+  rv54_holder "$d" "$d.reached" "$d.stop" "$d.a.out"
+  rv54_wait_reached "$d.reached" "$RV54_PID" && reached=1
+  out="$( ( _GUARD_DATA_ROOT="$root"; _GUARD_DATA_ROOT_EXPLICIT=1; cmd_list ) 2>&1 )"; rc=$?
+  rv54_finish "$d.stop" "$RV54_PID"; arc="$RV54_RC"
+  rv_has "$out" "$name" && listed=1
+  if [ "$reached" -eq 0 ]; then
+    FAIL "$id: the holder never reached its wait. VERDICT WITHHELD"
+  elif [ "$rc" -ne 0 ]; then
+    FAIL "$id: list while a command holds the trip read rc=$rc, want 0 — list takes no lock"
+  elif [ "$listed" -eq 0 ]; then
+    FAIL "$id: list read rc=0 but its table does not carry the held trip"
+  else
+    PASS "$id: list reports the trip while an update holds its lock — it takes none (holder rc=$arc)"
+  fi
+}
+rv54l_assert "RV54-list"
+# RV54-stale — the holder killed outright leaves the lock; the next command says it is not running, names the
+# removal, and exits 76; once the lock is removed it runs.
+rv54s_assert() { # <id>
+  local id="$1" name d out rc rc2 reached=0 left=0 said=0
+  name="rv54s-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-stale-synthetic-key-75')"
+  rv54_holder "$d" "$d.reached" "$d.stop" "$d.a.out"
+  rv54_wait_reached "$d.reached" "$RV54_PID" && reached=1
+  kill -9 "$RV54_PID" 2>/dev/null; wait "$RV54_PID" 2>/dev/null; : > "$d.stop"
+  [ -d "$d/.publish-lock" ] && left=1
+  out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) 2>&1 )"; rc=$?
+  { rv_has "$out" 'is not running on this machine' && rv_has "$out" "rm -r $d/.publish-lock"; } && said=1
+  rm -rf "$d/.publish-lock"
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc2=$?
+  if [ "$reached" -eq 0 ] || [ "$left" -eq 0 ]; then
+    FAIL "$id: the holder never reached its wait (reached=$reached), or no lock was left after SIGKILL (left=$left). VERDICT WITHHELD"
+  elif [ "$rc" -ne 76 ]; then
+    FAIL "$id: update on a trip whose lock a killed run left read rc=$rc, want 76"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: the refusal does not say the holder is not running on this machine, or does not name the lock's removal"
+  elif [ "$rc2" -ne 0 ]; then
+    FAIL "$id: once the lock was removed, update read rc=$rc2, want 0"
+  else
+    PASS "$id: a lock a killed run left is never broken automatically — the next command exits 76 saying its holder is not running and naming the removal, and runs once it is removed"
+  fi
+}
+rv54s_assert "RV54-stale"
+# RV54-unreadable-holder — a lock with no readable record takes the stale status, worded for that case.
+rv54u_assert() { # <id>
+  local id="$1" name d out rc said=0
+  name="rv54u-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-unread-synthetic-key-76')"; mkdir "$d/.publish-lock"
+  out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) 2>&1 )"; rc=$?
+  rv_has "$out" 'its record cannot be read' && said=1
+  if [ "$rc" -ne 76 ]; then
+    FAIL "$id: update on a trip whose lock holds no readable record read rc=$rc, want 76"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: the refusal does not say the lock's record cannot be read"
+  else
+    PASS "$id: a lock with no readable record refuses with exit status 76, saying its record cannot be read"
+  fi
+}
+rv54u_assert "RV54-unreadable-holder"
+# RV54-holder-late — Stage 8's QF-01 (#1819 AC-1). A command that meets the lock in its holder's first instants, after
+# the holder's mkdir and before its record is in place, re-reads the record for a bounded time and names the holder
+# once the record lands. The lock directory is made here with no record. The holder is a live background process that
+# writes its record, staged and renamed as the lock writes it and naming itself, only once the second command has read
+# the lock and paused: that command's pause between reads is a stand-in which, on its first call, lets the holder
+# write and waits for the record to land. So the record appears inside the bound by construction, never by the wall
+# clock, and the arm holds on a loaded runner. Every wait is bounded, and the holder is killed with SIGKILL at its
+# bound (review PR-1). The trip is fresh, so nothing is removed afterwards.
+rv54lh_assert() { # <id>
+  local id="$1" name d bare out rc pid h0 h1 said=0 named=0 paused=0 landed=0
+  name="rv54lh-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-late-synthetic-key-81')"; bare="$RVW/origin/$name-trip.git"
+  mkdir "$d/.publish-lock"; h0="$(rv_head "$bare")"
+  ( k=0
+    while [ ! -e "$d.go" ] && [ ! -e "$d.stop" ] && [ "$k" -lt 1500 ]; do sleep 0.02; k=$((k+1)); done
+    if [ -e "$d.go" ]; then
+      printf 'command=update\npid=%s\nstarted=%s\n' "$(exec sh -c 'printf "%s" "$PPID"')" "$(_iso_now)" \
+        > "$d/.publish-lock/.holder.new" && mv -f "$d/.publish-lock/.holder.new" "$d/.publish-lock/holder"
+      k=0; while [ ! -e "$d.stop" ] && [ "$k" -lt 300 ]; do sleep 0.1; k=$((k+1)); done
+    fi ) &
+  pid=$!
+  out="$( ( unset STATICRYPT_PASSWORD; RV54LH_D="$d"
+            sleep() {
+              local w=0
+              if [ ! -e "$RV54LH_D.go" ]; then
+                : > "$RV54LH_D.go"
+                while [ ! -e "$RV54LH_D/.publish-lock/holder" ] && [ "$w" -lt 1000 ]; do command sleep 0.01; w=$((w+1)); done
+              fi
+              return 0
+            }
+            set -e; cmd_update "$d" ) 2>&1 )"; rc=$?
+  h1="$(rv_head "$bare")"
+  [ -e "$d.go" ] && paused=1
+  [ -e "$d/.publish-lock/holder" ] && landed=1
+  rv_has "$out" "'update' is running on this trip" && said=1
+  rv_has "$out" "(process $pid," && named=1
+  rv54_finish "$d.stop" "$pid"
+  if [ "$rc" -ne 75 ] && [ "$paused" -eq 0 ]; then
+    FAIL "$id: update on a lock whose holder had not yet written its record read rc=$rc, want 75, and never paused to read the record again — it chose its status on the first read"
+  elif [ "$rc" -ne 75 ] && [ "$landed" -eq 0 ]; then
+    FAIL "$id: update paused, but the holder never wrote its record (rc=$rc). VERDICT WITHHELD"
+  elif [ "$rc" -ne 75 ]; then
+    FAIL "$id: the holder's record landed while update paused to read it again, and update still read rc=$rc, want 75"
+  elif [ "$said" -eq 0 ] || [ "$named" -eq 0 ]; then
+    FAIL "$id: update refused with 75 without naming the running update (said=$said) or the holder's process $pid (named=$named)"
+  elif [ "$h1" != "$h0" ]; then
+    FAIL "$id: update refused on the lock but the site moved"
+  else
+    PASS "$id: a command that meets the lock before its holder's record is in place reads the record again, and once it lands inside the bound refuses with 75, naming the running update and its process"
+  fi
+}
+rv54lh_assert "RV54-holder-late"
+# RV54-holder-late-ctl — its control: a lock whose record never appears still takes the unreadable-record status, 76,
+# once the bound is spent and not before. The bound is ten reads with a pause of 0.05 s between each, nine pauses and
+# 0.45 s in all, written here as numbers so that a changed bound is a finding. The pause is a stand-in that counts its
+# calls and does not sleep.
+rv54lc_assert() { # <id>
+  local id="$1" name d out rc n=0 gaps="" said=0
+  name="rv54lc-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-late-ctl-synthetic-key-82')"; mkdir "$d/.publish-lock"
+  out="$( ( unset STATICRYPT_PASSWORD; RV54LC_LOG="$d.pauses"
+            sleep() { printf '%s\n' "$*" >> "$RV54LC_LOG"; return 0; }
+            set -e; cmd_update "$d" ) 2>&1 )"; rc=$?
+  if [ -e "$d.pauses" ]; then n="$(rv_lines "$d.pauses")"; gaps="$(sort -u "$d.pauses")"; fi
+  rv_has "$out" 'its record cannot be read' && said=1
+  if [ "$rc" -ne 76 ]; then
+    FAIL "$id: CONTROL — update on a lock whose record never appears read rc=$rc, want 76"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: CONTROL — the refusal (rc=76) does not say the lock's record cannot be read"
+  elif [ "$n" != 9 ] || [ "$gaps" != 0.05 ]; then
+    FAIL "$id: CONTROL — update chose 76 after $n pause(s) of '$gaps' s, want 9 pauses of 0.05 s (0.45 s in all) — it did not spend the stated bound before deciding"
+  else
+    PASS "$id: CONTROL — a lock whose record never appears takes 76, saying its record cannot be read, after exactly nine pauses of 0.05 s between ten reads: the bound is spent, never exceeded"
+  fi
+}
+rv54lc_assert "RV54-holder-late-ctl"
+# RV54-holder-gone — Stage 7 Pass 4's F-18 (#1819 AC-1). A command that meets the lock in its holder's first instants,
+# and whose holder then finishes and releases the lock while it reads the record again, finds the trip free: it takes
+# the lock by the same take a first taker makes — its own record, its traps, its release — and runs, with no 75, no 76
+# and no removal line. The lock directory is made here with no record. The holder is a live background process that,
+# once the second command has read the lock and paused, writes its record naming itself and releases the lock through
+# the script's own _release_trip_lock. It polls for that pause every 0.02 s, so it releases within about 0.02 s of
+# it, as a command that refuses at once does. The pause is a stand-in which, on its first call, lets the holder go and
+# waits for the lock directory to be gone, so the release lands inside the bound by construction, never by the wall
+# clock. The second command records, at its branch check, the holder record and the traps it then runs under. Every
+# wait is bounded, and the holder is killed with SIGKILL at its bound (review PR-1).
+rv54_gone_holder() { # <trip> -> starts the releasing holder in the background; its pid in RV54_PID
+  local d="$1"
+  ( k=0
+    while [ ! -e "$d.go" ] && [ ! -e "$d.stop" ] && [ "$k" -lt 1500 ]; do sleep 0.02; k=$((k+1)); done
+    if [ -e "$d.go" ]; then
+      _TRIP_LOCK="$d/.publish-lock"; _TRIP_LOCK_PID="$(exec sh -c 'printf "%s" "$PPID"')"
+      printf 'command=update\npid=%s\nstarted=%s\n' "$_TRIP_LOCK_PID" "$(_iso_now)" > "$_TRIP_LOCK/.holder.new" \
+        && mv -f "$_TRIP_LOCK/.holder.new" "$_TRIP_LOCK/holder" && _release_trip_lock
+    fi ) &
+  RV54_PID=$!
+}
+# The second command's stand-ins, run only inside its own subshell. Its pause between reads, on its first call, lets
+# the holder go and waits, bounded, for the lock directory to be gone. Its mkdir, where a third command is named and
+# the holder has released the lock, lets that third command take the lock and waits, bounded, for its record before
+# the real mkdir runs: a retake that loses to a command arriving first, by construction. Its branch check, reached
+# only once it holds the lock, records the lock's record, its traps and its own process id.
+rv54g_pause() {
+  local w=0
+  printf '%s\n' "$*" >> "$RV54G_D.pauses"
+  if [ ! -e "$RV54G_D.go" ]; then
+    : > "$RV54G_D.go"
+    while [ -e "$RV54G_D/.publish-lock" ] && [ "$w" -lt 1000 ]; do command sleep 0.01; w=$((w+1)); done
+    [ -e "$RV54G_D/.publish-lock" ] || : > "$RV54G_D.released"
+  fi
+  return 0
+}
+rv54g_mkdir() {
+  local w=0
+  if [ -n "$RV54G_THIRD" ] && [ "${1:-}" = "$RV54G_D/.publish-lock" ] && [ -e "$RV54G_D.released" ] && [ ! -e "$RV54G_D.c-go" ]; then
+    : > "$RV54G_D.c-go"
+    while [ ! -s "$RV54G_D/.publish-lock/holder" ] && [ "$w" -lt 1000 ]; do command sleep 0.01; w=$((w+1)); done
+    cat "$RV54G_D/.publish-lock/holder" > "$RV54G_D.c.rec" 2>/dev/null || true
+  fi
+  command mkdir "$@"
+}
+rv54g_witness() {
+  cat "$RV54G_D/.publish-lock/holder" > "$RV54G_D.b.rec" 2>/dev/null || true
+  trap -p EXIT INT TERM HUP > "$RV54G_D.b.traps" 2>/dev/null || true
+  printf '%s' "$(exec sh -c 'printf "%s" "$PPID"')" > "$RV54G_D.b.pid" || true
+}
+rv54_gone_run() { # <trip> [third] -> the second command, an update, on <trip>; RV54G_RC its status, its output in <trip>.b.out
+  ( unset STATICRYPT_PASSWORD; RV54G_D="$1"; RV54G_THIRD="${2:-}"
+    sleep() { rv54g_pause "$@"; }
+    mkdir() { rv54g_mkdir "$@"; }
+    rv54g_def="$(declare -f require_publish_branch)"; eval "rv54g_real_rpb ${rv54g_def#require_publish_branch}"
+    require_publish_branch() { rv54g_witness; rv54g_real_rpb "$@"; }
+    set -e; cmd_update "$1" ) > "$1.b.out" 2>&1
+  RV54G_RC=$?
+}
+rv54gp_assert() { # <id>
+  local id="$1" name d bare out rc pid h0 h1 rec bpid traps n=0 gaps="" paused=0 released=0 refused=0 own=0 trapped=0 left=0
+  name="rv54gp-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-gone-synthetic-key-83')"; bare="$RVW/origin/$name-trip.git"
+  mkdir "$d/.publish-lock"; h0="$(rv_head "$bare")"
+  rv54_gone_holder "$d"; pid="$RV54_PID"
+  rv54_gone_run "$d"; rc="$RV54G_RC"; out="$(cat "$d.b.out" 2>/dev/null)"
+  h1="$(rv_head "$bare")"
+  [ -e "$d.go" ] && paused=1
+  [ -e "$d.released" ] && released=1
+  [ -e "$d/.publish-lock" ] && left=1
+  { rv_has "$out" "holds this trip's lock" || rv_has "$out" "is running on this trip" || rv_has "$out" 'rm -r'; } && refused=1
+  if [ -e "$d.pauses" ]; then n="$(rv_lines "$d.pauses")"; gaps="$(sort -u "$d.pauses")"; fi
+  rec="$(cat "$d.b.rec" 2>/dev/null)"; bpid="$(cat "$d.b.pid" 2>/dev/null)"; traps="$(cat "$d.b.traps" 2>/dev/null)"
+  [ -n "$bpid" ] && rv_has "$rec" 'command=update' && rv_has "$rec" "pid=$bpid" && own=1
+  rv_has "$traps" '_release_trip_lock' && rv_has "$traps" 'exit 130' && rv_has "$traps" 'exit 143' && rv_has "$traps" 'exit 129' && trapped=1
+  rv54_finish "$d.stop" "$pid"
+  if [ "$paused" -eq 0 ]; then
+    FAIL "$id: update never paused on a lock with no record, so the holder was never let go (rc=$rc). VERDICT WITHHELD"
+  elif [ "$released" -eq 0 ]; then
+    FAIL "$id: update paused, but the holder never released the lock (rc=$rc). VERDICT WITHHELD"
+  elif [ "$rc" -eq 75 ] || [ "$rc" -eq 76 ]; then
+    FAIL "$id: the holder released the lock while update read it again, and update still refused with rc=$rc (refusal or removal line in its output: $refused) — a trip whose lock was already free was reported held"
+  elif [ "$refused" -eq 1 ]; then
+    FAIL "$id: update read rc=$rc, but its output carries a lock refusal or a removal line for a lock its holder had released"
+  elif [ "$rc" -ne 0 ]; then
+    FAIL "$id: update met a lock its holder then released and read rc=$rc, want 0 — it did not take the freed lock and run to the end"
+  elif [ "$h1" = "$h0" ]; then
+    FAIL "$id: update read rc=0 on the freed lock, but the site did not move"
+  elif [ "$own" -eq 0 ]; then
+    FAIL "$id: update ran, but not under a lock record of its own naming update and its process ($bpid) — it did not take the lock as a first taker does"
+  elif [ "$trapped" -eq 0 ]; then
+    FAIL "$id: update ran on the freed lock without the lock's traps (EXIT release, INT 130, TERM 143, HUP 129) — it did not take the lock as a first taker does"
+  elif [ "$left" -eq 1 ]; then
+    FAIL "$id: update took the freed lock and ran, and left the lock behind on exit"
+  elif [ "$n" != 1 ] || [ "$gaps" != 0.05 ]; then
+    FAIL "$id: update took the freed lock after $n pause(s) of '$gaps' s, want 1 pause of 0.05 s — it did not take it at the next read"
+  else
+    PASS "$id: a command whose holder releases the lock while it reads the record again takes the freed lock at the next read, by the same take — its own record and traps — runs to the end with no 75, no 76 and no removal line, and releases the lock"
+  fi
+}
+rv54gp_assert "RV54-holder-gone"
+# RV54-holder-gone-ctl — its control: the holder releases the lock in the same way, and a third command, a rotate
+# taking the lock through the script's own take, takes it first, at the moment the second command's retake is about
+# to make the directory. The second command's take then fails; it reads the third command's record on as any holder's
+# and refuses with 75, naming it, and that command's lock stands. Every wait is bounded, and both background processes
+# are killed with SIGKILL at their bound (review PR-1).
+rv54gc_assert() { # <id>
+  local id="$1" name d bare out rc pid cpid h0 h1 crec cp="" released=0 tried=0 took=0 said=0 named=0 kept=0
+  name="rv54gc-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-gone-ctl-synthetic-key-84')"; bare="$RVW/origin/$name-trip.git"
+  mkdir "$d/.publish-lock"; h0="$(rv_head "$bare")"
+  rv54_gone_holder "$d"; pid="$RV54_PID"
+  ( k=0
+    while [ ! -e "$d.c-go" ] && [ ! -e "$d.stop" ] && [ "$k" -lt 1500 ]; do sleep 0.02; k=$((k+1)); done
+    if [ -e "$d.c-go" ]; then
+      _take_trip_lock "$d" rotate
+      k=0; while [ ! -e "$d.stop" ] && [ "$k" -lt 300 ]; do sleep 0.1; k=$((k+1)); done
+    fi ) > "$d.c.out" 2>&1 &
+  cpid=$!
+  rv54_gone_run "$d" third; rc="$RV54G_RC"; out="$(cat "$d.b.out" 2>/dev/null)"
+  h1="$(rv_head "$bare")"
+  [ -e "$d.released" ] && released=1
+  [ -e "$d.c-go" ] && tried=1
+  crec="$(cat "$d.c.rec" 2>/dev/null)"
+  case "$crec" in *command=rotate*pid=*) took=1; cp="${crec#*pid=}"; cp="${cp%%[!0-9]*}" ;; esac
+  [ -n "$crec" ] && [ "$(cat "$d/.publish-lock/holder" 2>/dev/null)" = "$crec" ] && kept=1
+  rv_has "$out" "'rotate' is running on this trip" && said=1
+  [ -n "$cp" ] && rv_has "$out" "(process $cp," && named=1
+  rv54_finish "$d.stop" "$cpid"; rv54_finish "$d.stop" "$pid"
+  if [ "$released" -eq 0 ]; then
+    FAIL "$id: CONTROL — the holder never released the lock while update paused (rc=$rc). VERDICT WITHHELD"
+  elif [ "$tried" -eq 0 ]; then
+    FAIL "$id: CONTROL — the holder released the lock while update read it again, and update never tried to take the freed lock (rc=$rc), so no third command could take it first — it read on for a lock already gone"
+  elif [ "$took" -eq 0 ]; then
+    FAIL "$id: CONTROL — update tried to take the freed lock, but the third command never took it first (rc=$rc). VERDICT WITHHELD"
+  elif [ "$rc" -ne 75 ]; then
+    FAIL "$id: CONTROL — a third command took the freed lock first, and update read rc=$rc, want 75 — it took, broke or misread a lock another command holds"
+  elif [ "$said" -eq 0 ] || [ "$named" -eq 0 ]; then
+    FAIL "$id: CONTROL — update refused with 75 without naming the third command, the rotate (said=$said), or its process $cp (named=$named)"
+  elif [ "$kept" -eq 0 ]; then
+    FAIL "$id: CONTROL — the third command's lock record did not stand once update had refused — its lock was broken or replaced"
+  elif [ "$h1" != "$h0" ]; then
+    FAIL "$id: CONTROL — update refused on the lock but the site moved"
+  else
+    PASS "$id: CONTROL — where a third command takes the freed lock first, the second command's take fails, it reads that command's record on as any holder's, refuses with 75 naming it, and leaves its lock standing"
+  fi
+}
+rv54gc_assert "RV54-holder-gone-ctl"
+# RV54-mkdir — review FM-3: a trip directory that refuses the write is named as itself, never as a held lock.
+rv54m_assert() { # <id>
+  local id="$1" name d out rc said=0 held=0
+  name="rv54m-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-mkdir-synthetic-key-77')"; chmod 555 "$d"
+  if mkdir "$d/.rv54-probe" 2>/dev/null; then
+    rmdir "$d/.rv54-probe"; chmod 755 "$d"
+    SKIP "$id: this run's uid writes into a mode-555 directory (root, say), where the state this arm grades cannot arise — not a pass"
+    return 0
+  fi
+  out="$( ( set -e; cmd_unpublish "$d" --disable-pages-only ) 2>&1 </dev/null )"; rc=$?
+  chmod 755 "$d"
+  rv_has "$out" 'could not create the per-trip lock' && said=1
+  rv_has "$out" "holds this trip's lock" && held=1
+  if [ "$rc" -ne 1 ]; then
+    FAIL "$id: unpublish on a trip directory it cannot write read rc=$rc, want 1"
+  elif [ "$held" -eq 1 ]; then
+    FAIL "$id: a trip directory that refused the lock's mkdir was reported as a lock another command holds"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: the refusal does not say the per-trip lock could not be created"
+  else
+    PASS "$id: a trip directory that refuses the lock's mkdir is named as that, with exit status 1, never as a held lock"
+  fi
+}
+rv54m_assert "RV54-mkdir"
+# RV54-signals — TERM, INT and HUP each release the lock. INT runs under job control (set -m), because a background
+# job in a non-interactive shell starts with SIGINT ignored, and a signal ignored at entry cannot be trapped.
+rv54g_assert() { # <id> <TERM|INT|HUP>
+  local id="$1" sig="$2" name d reached=0 held=0 trapped=0 arc want left=0
+  case "$sig" in TERM) want=143 ;; INT) want=130 ;; *) want=129 ;; esac
+  name="rv54g-$sig-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-signal-synthetic-key-78')"
+  [ "$sig" != INT ] || set -m
+  rv54_holder "$d" "$d.reached" "$d.stop" "$d.a.out"
+  [ "$sig" != INT ] || set +m
+  rv54_wait_reached "$d.reached" "$RV54_PID" && reached=1
+  [ -d "$d/.publish-lock" ] && held=1
+  case "$(cat "$d.reached.traps" 2>/dev/null)" in *"exit $want"*) trapped=1 ;; esac
+  kill -s "$sig" "$RV54_PID" 2>/dev/null
+  rv54_finish "$d.stop.never" "$RV54_PID"; arc="$RV54_RC"; : > "$d.stop"
+  [ -e "$d/.publish-lock" ] && left=1
+  if [ "$reached" -eq 0 ]; then
+    FAIL "$id: the holder never reached its wait. VERDICT WITHHELD"
+  elif [ "$held" -eq 0 ]; then
+    FAIL "$id: the holder reached its wait holding no per-trip lock, so a lock absent after SIG$sig proves no release"
+  elif [ "$trapped" -eq 0 ]; then
+    FAIL "$id: the shell holding the lock has no trap for SIG$sig that exits $want — the lock's signal traps are not installed"
+  elif [ "$arc" != "$want" ]; then
+    FAIL "$id: the holder sent SIG$sig ended with status $arc, want $want — the lock's trap did not end it"
+  elif [ "$left" -eq 1 ]; then
+    FAIL "$id: the holder ended on SIG$sig and left the lock"
+  else
+    PASS "$id: the shell holding the lock traps SIG$sig, the holder sent it exits $want, and the lock is released"
+  fi
+}
+for rv_b in TERM INT HUP; do rv54g_assert "RV54-signals-$rv_b" "$rv_b"; done
+# RV54-sourced-guard — review FM-7. The guard fires only at the top level of a shell that sourced the script, where its
+# die ends that shell, so the subject runs in a child shell: there BASH_SUBSHELL is 0 and BASH_SOURCE[0] is not $0.
+# MD-opt-out: the subject is sourced afresh in the child, out of md_probe's reach.
+rv54sg_assert() { # <id>
+  local id="$1" d out rc said=0
+  d="$RVW/rv54sg-$RANDOM"; mkdir -p "$d"
+  out="$(bash -c 'source "$1"; _take_trip_lock "$2" update' _ "$SELF_PUBLISH" "$d" 2>&1)"; rc=$?
+  rv_has "$out" 'from the top level of a shell that sourced' && said=1
+  if [ "$rc" -ne 1 ]; then
+    FAIL "$id: _take_trip_lock from the top level of a shell that sourced the script read rc=$rc, want 1"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: the refusal (rc=1) is not the sourced-shell guard's"
+  elif [ -e "$d/.publish-lock" ]; then
+    FAIL "$id: the guard refused and left a lock behind"
+  else
+    PASS "$id: taking the lock from the top level of a shell that sourced the script refuses, leaving no lock, so it cannot replace that shell's EXIT trap"
+  fi
+}
+rv54sg_assert "RV54-sourced-guard"
+md_flips _take_trip_lock "RV54-held-update" rv54h_assert "RV54-held-update" update
+md_flips _take_trip_lock "RV54-held-rotate" rv54h_assert "RV54-held-rotate" rotate
+md_flips _take_trip_lock "RV54-held-publish" rv54h_assert "RV54-held-publish" publish
+md_flips _take_trip_lock "RV54-held-unpublish" rv54h_assert "RV54-held-unpublish" unpublish
+md_flips _take_trip_lock "RV54-held-confirm" rv54h_assert "RV54-held-confirm" confirm
+md_flips _take_trip_lock "RV54-confirm-prompt" rv54p_assert "RV54-confirm-prompt"
+md_flips cmd_list "RV54-list" rv54l_assert "RV54-list"
+md_flips _take_trip_lock "RV54-stale" rv54s_assert "RV54-stale"
+md_flips _take_trip_lock "RV54-unreadable-holder" rv54u_assert "RV54-unreadable-holder"
+md_flips _take_trip_lock "RV54-holder-late" rv54lh_assert "RV54-holder-late"
+md_flips _take_trip_lock "RV54-holder-late-ctl" rv54lc_assert "RV54-holder-late-ctl"
+md_flips _trip_lock_take "RV54-holder-gone" rv54gp_assert "RV54-holder-gone"
+md_flips _trip_lock_take "RV54-holder-gone-ctl" rv54gc_assert "RV54-holder-gone-ctl"
+md_flips _take_trip_lock "RV54-mkdir" rv54m_assert "RV54-mkdir"
+for rv_b in TERM INT HUP; do md_flips _release_trip_lock "RV54-signals-$rv_b" rv54g_assert "RV54-signals-$rv_b" "$rv_b"; done
+
+# ══════════════════════════════════════════════════════════════════
+# RV55 — #1822, carried by #1819. Each first-publish step stops on its own failure, whatever errexit is, and names the
+# step. Every limb runs cmd_publish with errexit OFF, the state a caller reached through `if` or `||` leaves it in, and
+# requires rc 1, the step's own message (or, where a callee refuses, the callee's), and that no later step ran: no
+# repository created, no baseline recorded, no "Published". clonedir and opaque-token are review FM-9's. The lookup
+# limbs are Stage 8's QF-02: the repository lookup is a step too, and on an answer that is neither a 404 nor a 200 it
+# stops before a passphrase is generated, so those limbs also require no .passphrase and the lookup in the gh log.
+# ══════════════════════════════════════════════════════════════════
+rv55_gh() { # (inside a subject's subshell) RV55_FAIL names the gh call that fails
+  gh() {
+    printf '%s\n' "$*" >> "$RV_GHLOG"
+    case "${1:-} ${2:-}" in
+      "api user")
+        # resolve_noreply_identity reads the user before the owner step does, and stops on its own failure, so the
+        # owner limb answers that first read of the login and fails the next one, which is the owner step's.
+        if [ "${RV55_FAIL:-}" = owner ]; then
+          case "$*" in *.login*)
+            if [ -e "$RV_GHLOG.login-read" ]; then printf 'gh: HTTP 502 (simulated)\n' >&2; return 1; fi
+            : > "$RV_GHLOG.login-read" ;;
+          esac
+        fi
+        case "$*" in *.id*) printf '4242' ;; *) printf 'testowner' ;; esac ;;
+      # publish's repository lookup reads the host's HTTP status line (#1819 AC-4, Stage 8's QF-02). No per-trip
+      # repository exists here, so it answers 404 unless the limb names another answer in RV55_LOOKUP; `none` is no
+      # status line at all, real gh's shape for a host it could not reach. `repo view` always fails here: after a 200 it
+      # is the read of whether the repository is empty and public, failing; before the status-line read it was the
+      # whole lookup, which failed for every one of these answers, so a limb graded against that code meets the same host.
+      "api -i")
+        [ "${RV55_LOOKUP:-404 Not Found}" != none ] || return 1
+        printf 'HTTP/2.0 %s\r\nContent-Type: application/json\r\n' "${RV55_LOOKUP:-404 Not Found}"
+        case "${RV55_LOOKUP:-404 Not Found}" in '200 '*) return 0 ;; esac
+        return 1 ;;
+      "repo view")   return 1 ;;
+      "repo create") [ "${RV55_FAIL:-}" != create ] || { printf 'gh: create refused (simulated)\n' >&2; return 1; }; return 0 ;;
+      "auth status") printf "Token scopes: 'repo'\n" ;;
+      *)             return 0 ;;
+    esac
+  }
+}
+# rv55_setup builds the trip for one step's failure and sets RV55_W (the message that step must print) and RV55_OPTS;
+# rv55_run runs that first publish with errexit off and prints its output, returning its status. RV54-release reuses
+# both, so each step's refusal is constructed once.
+rv55_setup() { # <step> <trip>
+  local d="$2" n; n="$(basename "$2")"; RV55_OPTS=""
+  mkdir -p "$d/outputs"; cp "$SRC" "$d/outputs/$n-travel-site.html"
+  case "$1" in
+    owner)          RV55_W='publish: could not read your GitHub user name' ;;
+    opaque)         RV55_W='publish: could not save the opaque repository name'; RV55_OPTS=--opaque; ln -s "$d.no-such-dir/slug" "$d/.publish-slug" ;;
+    opaque-token)   RV55_W='publish: could not generate the opaque repository name'; RV55_OPTS=--opaque ;;
+    render)         RV55_W='no *-travel-site.html found'; mv "$d/outputs/$n-travel-site.html" "$d/outputs/$n-site.txt" ;;
+    slug)           RV55_W='invalid publish slug'; printf 'Bad Slug!\n' > "$d/.publish-slug" ;;
+    clonedir)       RV55_W='publish: could not clear'; mkdir -p "$d/.publish/held"; : > "$d/.publish/held/f"; chmod 555 "$d/.publish/held" ;;
+    generator)      RV55_W='publish: the passphrase generator' ;;
+    resolver)       RV55_W='passphrase too weak'; printf 'short\n' > "$d/.passphrase"; chmod 600 "$d/.passphrase" ;;
+    encryption)     RV55_W='publish: the encryption step failed' ;;
+    cipher-copy)    RV55_W='publish: could not place the ciphertext' ;;
+    commit)         RV55_W='publish: could not commit the page' ;;
+    create)         RV55_W='publish: creating the per-trip repository' ;;
+    plaintext-copy) RV55_W='publish: could not place the page'; RV55_OPTS=--plaintext ;;
+    lookup-403|lookup-502|lookup-none) RV55_W='publish: could not ask GitHub whether' ;;
+    lookup-detail)  RV55_W='publish: GitHub reports that the per-trip repository' ;;
+    control|lookup-404) RV55_W='Published' ;;
+  esac
+}
+# 0 where this uid can remove a file from a mode-555 directory (root, say) — where the clonedir step cannot fail.
+rv55_root_writes() { # <trip>
+  [ -d "$1/.publish/held" ] || return 1
+  rm -f "$1/.publish/held/f" 2>/dev/null || return 1
+  chmod 755 "$1/.publish/held"
+}
+rv55_run() { # <step> <trip> -> the publish's output on stdout, its status as the return
+  ( unset STATICRYPT_PASSWORD; set +e; RV55_FAIL="$1"; rv55_gh
+    case "$1" in
+      opaque-token|generator) od() { return 1; } ;;
+      encryption) encrypt_to_tmp() { return 1; } ;;
+      cipher-copy|plaintext-copy) cp() { case "${2:-}" in */.publish/index.html) printf 'cp: simulated failure\n' >&2; return 1 ;; esac; command cp "$@"; } ;;
+      commit) rv_fail_commit_env ;;
+      lookup-403)    RV55_LOOKUP='403 Forbidden' ;;
+      lookup-502)    RV55_LOOKUP='502 Bad Gateway' ;;
+      lookup-none)   RV55_LOOKUP=none ;;
+      lookup-detail) RV55_LOOKUP='200 OK' ;;
+      lookup-404)    RV55_LOOKUP='404 Not Found' ;;
+    esac
+    # The plaintext limb's content controls are groups L to O's, stubbed here as RV43 stubs them, so the step this
+    # limb fails — placing the page — is the one reached.
+    if [ "$1" = plaintext-copy ]; then export ALLOW_PLAINTEXT=1; verify_publishable_content() { return 0; }; fi
+    # shellcheck disable=SC2086
+    cmd_publish "$2" $RV55_OPTS ) 2>&1
+}
+rv55_assert() { # <id> <step>
+  local id="$1" step="$2" d out rc created=0 rec=0 pub=0 said=0 keyleft=0 asked=0
+  d="$RVW/rv55-$step-$RANDOM"; rv55_setup "$step" "$d"
+  if [ "$step" = clonedir ] && rv55_root_writes "$d"; then
+    SKIP "$id: this run's uid removes files from a mode-555 directory (root, say), where the step this limb fails cannot fail — not a pass"
+    return 0
+  fi
+  : > "$RV_GHLOG"; [ ! -e "$RV_GHLOG.login-read" ] || mv "$RV_GHLOG.login-read" "$RV_GHLOG.login-read.$RANDOM"
+  out="$(rv55_run "$step" "$d")"; rc=$?
+  [ "$step" != clonedir ] || chmod 755 "$d/.publish/held" 2>/dev/null
+  grep -q '^repo create' "$RV_GHLOG" && created=1
+  [ -e "$d/.published-itinerary" ] && rec=1
+  rv_has "$out" 'Published:' && pub=1
+  rv_has "$out" "$RV55_W" && said=1
+  [ ! -e "$d/.passphrase" ] || [ "$step" = resolver ] || keyleft=1
+  grep -q '^api -i --silent repos/testowner/' "$RV_GHLOG" && asked=1
+  if [ "$step" = control ]; then
+    if [ "$rc" -ne 0 ] || [ "$pub" -eq 0 ]; then
+      FAIL "$id: CONTROL — a first publish with no failure injected and errexit off read rc=$rc, published=$pub; want 0 and 1, or no limb above is a measurement"
+    else
+      PASS "$id: CONTROL — with no failure injected, a first publish with errexit off reads rc=0 and Published, so each limb's stop is its own step's"
+    fi
+  elif [ "$step" = lookup-404 ]; then
+    if [ "$rc" -ne 0 ] || [ "$pub" -eq 0 ]; then
+      FAIL "$id: CONTROL — a first publish whose repository lookup answered 404 read rc=$rc, published=$pub; want 0 and 1, as before"
+    elif [ "$asked" -eq 0 ] || [ "$created" -eq 0 ]; then
+      FAIL "$id: CONTROL — published, but the gh log carries the read of the repository's HTTP status=$asked and a repo create=$created, want 1 and 1: the create path was not reached through the lookup's 404"
+    else
+      PASS "$id: CONTROL — a repository lookup answering 404 reads the host's status line and takes the create path as before, rc=0 and Published, so the lookup limbs' stop is the lookup's own distinction"
+    fi
+  elif [ "$rc" -ne 1 ]; then
+    FAIL "$id: a first publish whose $step step failed read rc=$rc with errexit off, want 1 — it ran on past the failed step"
+  elif [ "$pub" -eq 1 ] || [ "$rec" -eq 1 ]; then
+    FAIL "$id: the $step step failed and the run still printed Published or recorded a baseline"
+  elif [ "$created" -eq 1 ] && [ "$step" != create ]; then
+    FAIL "$id: the $step step failed and the run went on to create the per-trip repository"
+  elif [ "$keyleft" -eq 1 ] && [ "$step" = generator ]; then
+    FAIL "$id: the generator failed and a key was written to .passphrase"
+  elif [ "$keyleft" -eq 1 ] && [ "${step#lookup-}" != "$step" ]; then
+    FAIL "$id: the repository lookup ($step) could not tell whether the repository exists, and a passphrase was generated and written to .passphrase"
+  elif [ "$asked" -eq 0 ] && [ "${step#lookup-}" != "$step" ]; then
+    FAIL "$id: the gh log carries no read of the repository's HTTP status, so the lookup this limb grades never ran"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: the run stopped (rc=1) without the $step step's own message"
+  else
+    PASS "$id: a first publish whose $step step fails stops there with errexit off, rc=1, naming the step, with nothing later run"
+  fi
+}
+for rv_b in owner opaque opaque-token render slug clonedir generator resolver encryption cipher-copy commit create plaintext-copy control; do rv55_assert "RV55-$rv_b" "$rv_b"; done
+for rv_b in owner opaque opaque-token render slug clonedir generator resolver encryption cipher-copy commit create plaintext-copy control; do md_flips cmd_publish "RV55-$rv_b" rv55_assert "RV55-$rv_b" "$rv_b"; done
+# The repository lookup (Stage 8's QF-02, #1819 AC-4): a 403, a 502 and no status line each stop at the lookup, and so
+# does a 200 whose read of the repository's emptiness fails; a 404 is their control. The four stops register against
+# cmd_publish rather than _host_answer, because with the helper absent the lookup still reads no answer and refuses —
+# the fail-closed direction — so it is the 404 control, registered against _host_answer, that shows the distinction
+# is the helper's (J4 and J5's mechanism, which Stage 8 noted).
+for rv_b in lookup-403 lookup-502 lookup-none lookup-detail lookup-404; do rv55_assert "RV55-$rv_b" "$rv_b"; done
+for rv_b in lookup-403 lookup-502 lookup-none lookup-detail; do md_flips cmd_publish "RV55-$rv_b" rv55_assert "RV55-$rv_b" "$rv_b"; done
+md_flips _host_answer "RV55-lookup-404" rv55_assert "RV55-lookup-404" lookup-404
+
+# ══════════════════════════════════════════════════════════════════
+# RV54-release — CIAC-1. Every refusal this release adds leaves no lock behind, on every exit path: each one is
+# triggered in turn on a trip of its own, and then the lock directory must be gone and a second update on the same
+# trip must not be refused on the lock. One verdict over the whole population, its denominator printed; a refusal
+# that was not produced is a probe failure, never a pass. The control is md_flips against _release_trip_lock: with it
+# removed the EXIT trap releases nothing, and every second command meets a lock.
+# ══════════════════════════════════════════════════════════════════
+rv54_lock_said() { # <text> -> 0 when <text> is a refusal on the per-trip lock
+  rv_has "$1" 'is running on this trip' && return 0
+  rv_has "$1" "holds this trip's lock" && return 0
+  rv_has "$1" "this trip's lock at" && return 0
+  return 1
+}
+rv54r_assert() { # <id>
+  local id="$1" c d rc out out2 n=0 refused=0 left="" blocked="" missing=""
+  local kl='rv-release-live-synthetic-key-79' kx='rv-release-other-synthetic-key-80'
+  for c in J4 J6 J7 RV48-mismatch RV48-undetermined RV50-rotate-noop RV53-norepo \
+           RV55-owner RV55-opaque RV55-opaque-token RV55-render RV55-slug RV55-clonedir RV55-generator RV55-resolver \
+           RV55-encryption RV55-cipher-copy RV55-commit RV55-create RV55-plaintext-copy RV55-lookup-none RV55-lookup-detail; do
+    d="$RVW/rv54r-$c-$RANDOM"
+    case "$c" in
+      J4|J6|J7)
+        mkdir -p "$d"; printf 'mock-slug\n' > "$d/.publish-slug"
+        case "$c" in
+          J4) out="$( ( J_REPO='HTTP/2.0 200 OK'; J_PAGES='HTTP/2.0 200 OK'; J_DEL='{"status":"403"}'; GHLOG="$d.gh.log"; j_gh; cmd_unpublish "$d" --disable-pages-only ) 2>&1 </dev/null )"; rc=$? ;;
+          J6) out="$( ( J_REPO='HTTP/2.0 200 OK'; J_PAGES=''; J_DEL='error connecting'; GHLOG="$d.gh.log"; j_gh; cmd_unpublish "$d" --disable-pages-only ) 2>&1 </dev/null )"; rc=$? ;;
+          *)  out="$( ( J_REPO=''; J_PAGES=''; J_DEL=ok; GHLOG="$d.gh.log"; j_gh; cmd_unpublish "$d" --yes ) 2>&1 </dev/null )"; rc=$? ;;
+        esac ;;
+      RV48-mismatch)      d="$(rv_fixture "$(basename "$d")" "$kx" "$kl")"; out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) 2>&1 )"; rc=$? ;;
+      RV48-undetermined)  d="$(rv_fixture "$(basename "$d")" "$kl")"; out="$( ( unset STATICRYPT_PASSWORD; RV_DECRYPT_UNDETERMINED=1; set -e; cmd_update "$d" ) 2>&1 )"; rc=$? ;;
+      RV50-rotate-noop)   d="$(rv_fixture "$(basename "$d")" "$kx" "$kl")"; out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" --passphrase "$kl" ) 2>&1 )"; rc=$? ;;
+      RV53-norepo)
+        mkdir -p "$d/outputs"; cp "$SRC" "$d/outputs/$(basename "$d")-travel-site.html"
+        printf '%s\n' "$kl" > "$d/.passphrase"; chmod 000 "$d/.passphrase"
+        if [ -r "$d/.passphrase" ]; then chmod 600 "$d/.passphrase"; continue; fi
+        out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_publish "$d" ) 2>&1 )"; rc=$?
+        chmod 600 "$d/.passphrase" ;;
+      RV55-*)
+        rv55_setup "${c#RV55-}" "$d"
+        if [ "$c" = RV55-clonedir ] && rv55_root_writes "$d"; then continue; fi
+        out="$(rv55_run "${c#RV55-}" "$d")"; rc=$?
+        [ "$c" != RV55-clonedir ] || chmod 755 "$d/.publish/held" 2>/dev/null ;;
+    esac
+    n=$((n+1))
+    if [ "$rc" -eq 0 ]; then missing="$missing$c "; continue; fi
+    refused=$((refused+1))
+    [ ! -e "$d/.publish-lock" ] || left="$left$c "
+    out2="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) 2>&1 </dev/null )"
+    ! rv54_lock_said "$out2" || blocked="$blocked$c "
+  done
+  if [ "$n" -lt 18 ]; then
+    FAIL "$id: only $n of the release's refusals could be constructed on this uid, below the floor of 18. VERDICT WITHHELD"
+  elif [ -n "$missing" ]; then
+    FAIL "$id: refusal(s) not produced — the command exited 0: ${missing% } — so their lock release is not what this arm observed"
+  elif [ -n "$left" ]; then
+    FAIL "$id: refusal(s) left the per-trip lock directory behind: ${left% }"
+  elif [ -n "$blocked" ]; then
+    FAIL "$id: after refusal(s) ${blocked% } a second update on the same trip was refused on the lock"
+  else
+    PASS "$id: each of $refused refusal(s) this release adds left no lock behind, and a second update on each trip was not refused on the lock"
+  fi
+}
+rv54r_assert "RV54-release"
+md_flips _release_trip_lock "RV54-release" rv54r_assert "RV54-release"
+
+# ══════════════════════════════════════════════════════════════════
+# RV56 — CIAC-4. No message this release adds prints a passphrase value, or any part of one. Each new refusal that runs
+# with a key in play runs with synthetic keys drawn from an alphabet no message or path uses (review FM-11), and its
+# whole output is scanned for each key and for every four-character piece of it. The sensitivity arm is a refusal made
+# to echo the key, which the same scan must find. The length half of CIAC-4 — no message prints a key's length — no
+# substring scan can see, and is graded by reading at Stage 8. The generator refusal is not in the population: the
+# generator failed before any key existed, so there is no value to leak.
+# ══════════════════════════════════════════════════════════════════
+RV56_KA='QXZJQZXJ7QXJZQ3XZJQXZ8JQ'
+RV56_KB='ZJQXJXQZ4ZQJXZ6QJZXQ9XJZ'
+rv56_clean() { # <text> <key> -> 0 when no four-character piece of <key> occurs in <text>
+  local i n="${#2}"
+  for ((i = 0; i + 4 <= n; i++)); do
+    case "$1" in *"${2:i:4}"*) return 1 ;; esac
+  done
+  return 0
+}
+rv56_case() { # <case> <trip-name> -> the refusal's output on stdout, its status as the return
+  local d
+  case "$1" in
+    RV48-mismatch)     d="$(rv_fixture "$2" "$RV56_KB" "$RV56_KA")"; ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) 2>&1 ;;
+    RV48-env)          d="$(rv_fixture "$2" '' "$RV56_KA")"; ( export STATICRYPT_PASSWORD="$RV56_KB"; set -e; cmd_update "$d" ) 2>&1 ;;
+    RV48-plaintext)    d="$(rv_fixture "$2")"; cp "$SRC" "$d/.publish/index.html"; git -C "$d/.publish" add index.html
+                       git -C "$d/.publish" -c user.name=t -c user.email=t@example.invalid commit -q -m plaintext; git -C "$d/.publish" push -q origin main
+                       ( export STATICRYPT_PASSWORD="$RV56_KA"; set -e; cmd_update "$d" ) 2>&1 ;;
+    RV48-undetermined) d="$(rv_fixture "$2" '' "$RV56_KA")"; ( export STATICRYPT_PASSWORD="$RV56_KA"; RV_DECRYPT_UNDETERMINED=1; set -e; cmd_update "$d" ) 2>&1 ;;
+    RV50-rotate-noop)  d="$(rv_fixture "$2" "$RV56_KB" "$RV56_KA")"; ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" --passphrase "$RV56_KA" ) 2>&1 ;;
+    RV53-norepo|RV53-empty)
+      if [ "$1" = RV53-norepo ]; then d="$RVW/$2"; mkdir -p "$d/outputs"; cp "$SRC" "$d/outputs/$2-travel-site.html"
+      else d="$(rv39_site "$2" main)"; fi
+      printf '%s\n' "$RV56_KA" > "$d/.passphrase"; chmod 000 "$d/.passphrase"
+      [ ! -r "$d/.passphrase" ] || { chmod 600 "$d/.passphrase"; return 200; }
+      if [ "$1" = RV53-norepo ]; then ( unset STATICRYPT_PASSWORD; set -e; cmd_publish "$d" ) 2>&1
+      else ( unset STATICRYPT_PASSWORD; RV39_BARE="$RVW/origin/$2-site.git"; rv39_gh; set -e; cmd_publish "$d" ) 2>&1; fi ;;
+    leak)              d="$(rv_fixture "$2" "$RV56_KB" "$RV56_KA")"
+                       ( unset STATICRYPT_PASSWORD; refuse_key_not_live() { die "refused under $(cat "$1/.passphrase")"; }; set -e; cmd_update "$d" ) 2>&1 ;;
+  esac
+}
+rv56_assert() { # <id>
+  local id="$1" c out rc n=0 hits="" norefuse="" sens=1
+  for c in RV48-mismatch RV48-env RV48-plaintext RV48-undetermined RV50-rotate-noop RV53-norepo RV53-empty; do
+    out="$(rv56_case "$c" "rv56-$c-$RANDOM")"; rc=$?
+    [ "$rc" -ne 200 ] || continue
+    n=$((n+1))
+    [ "$rc" -eq 1 ] || norefuse="$norefuse$c "
+    rv56_clean "$out" "$RV56_KA" || hits="$hits$c "
+    rv56_clean "$out" "$RV56_KB" || hits="$hits$c "
+  done
+  out="$(rv56_case leak "rv56-leak-$RANDOM")"
+  rv56_clean "$out" "$RV56_KB" && sens=0
+  if [ "$sens" -eq 0 ]; then
+    FAIL "$id: SENSITIVITY — a refusal made to echo the key was not caught by the scan, so a clean scan proves nothing. VERDICT WITHHELD"
+  elif [ "$n" -lt 5 ]; then
+    FAIL "$id: only $n refusal(s) could be constructed on this uid, below the floor of 5. VERDICT WITHHELD"
+  elif [ -n "$norefuse" ]; then
+    FAIL "$id: refusal(s) not produced (rc other than 1): ${norefuse% } — their output is not a refusal's"
+  elif [ -n "$hits" ]; then
+    FAIL "$id: refusal(s) printed a passphrase value or a four-character piece of one: ${hits% }"
+  else
+    PASS "$id: across $n refusal(s) with a key in play no output carries either synthetic key or any four-character piece of one, on a scan that catches a refusal made to echo the key"
+  fi
+}
+rv56_assert "RV56-values"
+md_flips refuse_key_not_live "RV56-values" rv56_assert "RV56-values"
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # L18 — a plaintext publish refuses a render carrying a group-only section, by that section's presence
@@ -18082,7 +19861,7 @@ RS_WF="$ROOT/.github/workflows/publish-guard.yml"
 # the comment marker; an explanation continues at nine and therefore cannot match. A
 # block opens at `# IN SCOPE` or `# OUT OF SCOPE` and closes at the next `# ──` section
 # rule, so a roster-shaped line elsewhere in the file is not read as a declaration.
-# A group id may be declared in both blocks — J is, because J2/J3 run and J1 does not —
+# A group id may be declared in both blocks — J is, because J2 onward run and J1 does not —
 # so the parse dedupes rather than treating the second mention as a new group.
 rs_parse() { # <workflow_file> -> space-delimited declared GROUP ids on stdout
   local line inb=0 out=" "

@@ -69,7 +69,12 @@
 # a different key — or one that cannot be read as a key — publish and update REFUSE rather than
 # choose, before any network call: .passphrase is the key of record, and a silent choice between
 # two keys is how the next routine update used to undo a rotation (GHSA-gmm2-v7rr-jq7r). The only
-# remedy offered is to unset the variable; keys change only through rotate. rotate never reads
+# remedy offered is to unset the variable; keys change only through rotate. Before a push that re-encrypts,
+# update confirms that the key it will use opens the page the site serves now, read from the clone's fetched tip,
+# whichever store supplied the key, and refuses otherwise. The one exception is a rotation whose push failed, which
+# <trip-dir>/.rotation-pending records — the key file it wrote, and the page and the commit its push would have
+# replaced — and update finishes while all three still stand. rotate refuses a new key that already opens that page.
+# A key file is flushed to disk before any push that depends on it. rotate never reads
 # the variable for its key: it re-encrypts under the new passphrase, and records it in
 # .passphrase only once that ciphertext is committed, immediately before the push. update
 # re-reads .passphrase just before its own push, after fetching the site's current state; a
@@ -81,9 +86,31 @@
 # recorded it, and one this clone is behind. A push carries the commit its own run made, never another
 # command's newer one, and update's and rotate's pushes are bound to the site as each last fetched it
 # — so a run that loses a race to another command stops and says so instead of reporting success, in
-# words that allow its push may have reached the site. Commands run on one trip at the same
-# moment are still not serialized; run one at a time. The site is published from main, and a
+# words that allow its push may have reached the site. The site is published from main, and a
 # clone on any other branch is refused.
+#
+# Commands on one trip are serialized by a per-trip lock (#1819): a directory, <trip-dir>/.publish-lock,
+# created atomically with mkdir and holding one record of the command, its process id and its start time
+# — no key and no path. publish, update, rotate and unpublish (both limbs) take it before they read
+# anything; confirm takes it immediately before it writes a record, so an organizer at its prompt holds
+# nothing; list takes none. A command that finds the lock held refuses at once, naming the command that
+# holds it and whether that process is still running on this machine; it never waits for it. A lock held by a
+# running command refuses with exit status 75, and one whose holder is not running on this machine, or
+# whose record cannot be read, with 76, so an unattended caller can tell a busy trip from a lock left
+# behind without reading the message; every other refusal exits 1. A command that arrives in the first
+# instants after another creates the lock, before that one's record is in place, reads the record again,
+# ten reads 0.05 s apart, and names the holder once the record lands; where that one finishes and
+# releases the lock meanwhile, the trip is free, and the command takes the lock and runs. Only a record
+# still missing at the tenth read — a holder stopped between creating the lock and writing its record,
+# say — is told 76, its record cannot be read. Every exit releases the lock, a
+# refusal included, and so do an interrupt, a hangup and a terminate signal. A run killed outright, a
+# crash or a power loss leaves the directory in place. It is never broken automatically, because its
+# holder may be running on another machine that shares the data root; where its holder is not running,
+# the refusal names its removal for once no command is running on the trip. A holder reported as running
+# may still be stale: after a crash or a restart its process id can belong to an unrelated process, which
+# the start time the refusal prints tells, and ps -p <pid> shows what that process is. The lock covers
+# one machine's data root. Two machines
+# publishing one trip are still stopped only by the bound pushes and read-backs above.
 #
 # Repo slug resolution (in order): <trip-dir>/.publish-slug, else the convention
 # <destination>-<year>-trip. Drop a repo name in .publish-slug to publish to a custom or
@@ -176,10 +203,15 @@ commit_noreply() { # <repo_dir> <message>
   # Signing is pinned off here, with -c, which outranks the operator's global and repository
   # configuration and GIT_CONFIG_*: an operator's signature on a public per-trip repository is the
   # same leak as their email, and no signing program may run for a commit this script makes.
-  GIT_AUTHOR_NAME="$NOREPLY_NAME"    GIT_AUTHOR_EMAIL="$NOREPLY_EMAIL" \
-  GIT_COMMITTER_NAME="$NOREPLY_NAME" GIT_COMMITTER_EMAIL="$NOREPLY_EMAIL" \
-  git -C "$repo_dir" -c "user.name=${NOREPLY_NAME}" -c "user.email=${NOREPLY_EMAIL}" -c commit.gpgsign=false \
-    commit --quiet -m "$msg"
+  # A GIT_AUTHOR_DATE or GIT_COMMITTER_DATE in the environment is discarded, in a subshell so the
+  # caller's environment is untouched, and the commit takes the current time: with the identity and
+  # the message fixed, a republished plaintext site's root commit differs from the one it replaced only
+  # by its dates, and the pending-rotation marker's base-commit binding rests on that difference.
+  ( unset GIT_AUTHOR_DATE GIT_COMMITTER_DATE
+    GIT_AUTHOR_NAME="$NOREPLY_NAME"    GIT_AUTHOR_EMAIL="$NOREPLY_EMAIL" \
+    GIT_COMMITTER_NAME="$NOREPLY_NAME" GIT_COMMITTER_EMAIL="$NOREPLY_EMAIL" \
+    git -C "$repo_dir" -c "user.name=${NOREPLY_NAME}" -c "user.email=${NOREPLY_EMAIL}" -c commit.gpgsign=false \
+      commit --quiet -m "$msg" )
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -229,15 +261,23 @@ require_key_for_update() { # <trip_dir>
 
 # publish's first key (#1614, review CD-1). A trip publish has never published has no key yet, so one
 # is generated and recorded here, immediately before the resolver: the resolver then holds no generation
-# path at all, and no update can reach one in any window. The condition is exactly the one the resolver
-# generated on until now, the variable unset and nothing readable at the path, so publish generates in
-# exactly the key states it always did, and a link into a key store still takes the key where it points.
-# rotate makes its own key and does not come through here.
+# path at all, and no update can reach one in any window. It generates only with the variable unset and no
+# key file where the key path resolves, and a link into a key store still takes the key where it points.
+# A key file that is there and cannot be read is refused, never replaced (#2213): it may hold a passphrase
+# already given out, for an earlier site of this trip or for this one, and a new key would stop it opening
+# the site. update refuses the same state in its own words. rotate makes its own key and does not come
+# through here.
 ensure_first_key() { # <trip_dir>
-  local pf="$1/.passphrase" p
+  local pf="$1/.passphrase" p t
   [ -z "${STATICRYPT_PASSWORD:-}" ] || return 0
   [ -r "$pf" ] && return 0
-  p="$(gen_passphrase)"; write_passphrase_file "$pf" "$p"
+  t="$(resolve_key_path "$pf")" || die "could not follow $pf to the file it links to — nothing was recorded."
+  if [ -e "$t" ]; then
+    die "publish refused — $pf exists but cannot be read$( [ "$t" = "$pf" ] || printf ' (it links to %s)' "$t" ), and publish never writes over a passphrase it could not read: it may be one you have already given out, for an earlier site of this trip or for this one, and a new key would stop it opening the site. Nothing was encrypted, committed or pushed, no passphrase was written, and the file was not touched. Restore read access to it and re-run publish; or, to have publish make a first key, move it aside — rename it — and re-run publish."
+  fi
+  p="$(gen_passphrase)" || die "publish: the passphrase generator failed. Nothing was encrypted, committed or pushed, and no passphrase was written. Re-run publish."
+  [ "${#p}" -ge 12 ] || die "publish: the passphrase generator produced no usable passphrase. Nothing was encrypted, committed or pushed, and no passphrase was written. Re-run publish; if it happens again, check that /dev/urandom and od are available."
+  write_passphrase_file "$pf" "$p"
 }
 
 # The key publish and update encrypt under. It reads a key and never makes one: publish generates a
@@ -288,14 +328,31 @@ prove_key_path() { # <passphrase_file>
   [ -d "$dir" ] && [ -w "$dir" ] || die "could not stage a passphrase beside $pf — nothing was recorded."
 }
 
-write_passphrase_file() { # <passphrase_file> <passphrase>
+# Flush <path> — a file, or a directory whose entry a rename just changed — to the device (#1821). fsync(2) through
+# perl, which every key writer already requires (preflight); on darwin also F_FULLFSYNC (51), which asks the drive to
+# flush its own cache, as fsync(2) on that host says a write needs for a tighter guarantee. A filesystem that refuses
+# F_FULLFSYNC still has its fsync. Non-zero only when fsync itself fails.
+_flush_path() { # <path>
+  perl -MIO::Handle -e 'open(my $h, "<", $ARGV[0]) or exit 1; $h->sync or exit 1;
+    if ($^O eq "darwin") { fcntl($h, 51, 0); } exit 0' "$1"
+}
+
+# The staged copy is flushed before the rename and the directory after it, so the key a push depends on is on disk
+# before the push starts (#1821). With defer-dir-flush the caller flushes the directory itself: rotate writes the key
+# and then its pending-rotation marker, and flushes once after both, so a directory that cannot be flushed is reported
+# by the state both writes left rather than from inside this writer, before the marker exists (review CD-4).
+write_passphrase_file() { # <passphrase_file> <passphrase> [defer-dir-flush]
   local pf p="$2" tmp
   pf="$(resolve_key_path "$1")" || die "could not follow $1 to the file it links to — nothing was recorded."
   [ ! -e "$pf" ] || [ -f "$pf" ] || die "could not record a passphrase at $pf — it is not a regular file. Nothing was recorded."
   tmp="$(mktemp "${pf}.XXXXXX")" || die "could not stage a passphrase beside $pf — nothing was recorded."
-  if ! { printf '%s\n' "$p" > "$tmp" && mv -f "$tmp" "$pf"; }; then
-    rm -f "$tmp"; die "could not record the passphrase in $pf — nothing was recorded."
+  if ! { printf '%s\n' "$p" > "$tmp" && _flush_path "$tmp"; }; then
+    rm -f "$tmp"; die "could not write and flush the passphrase beside $pf — nothing was recorded."
   fi
+  mv -f "$tmp" "$pf" || { rm -f "$tmp"; die "could not record the passphrase in $pf — nothing was recorded."; }
+  [ "${3:-}" != defer-dir-flush ] || return 0
+  _flush_path "$(dirname "$pf")" \
+    || die "the passphrase was written to $pf, but the directory holding it could not be flushed to disk, so a crash could still undo the write. Nothing was pushed. Re-run the command."
 }
 
 # 0 when <pf> is a readable regular file and its key — read exactly as the resolver reads it,
@@ -371,6 +428,109 @@ require_key_of_record() { # <trip_dir> <passphrase-this-run-encrypted-under> <pu
   fi
   [ -z "${5:-}" ] || die "$pf changed while this update was running — another rotate or update recorded a different key after this run resolved its own. This run could not confirm its own commit in $3 and take it back — another command may have committed on top of it. $5"
   die "$pf changed while this update was running — another rotate or update recorded a different key after this run resolved its own. This run pushed nothing itself, but could not confirm its own commit in $3 and take it back — another command may have committed on top of it, and may already have published it. Remove $3 before re-running update, so no later push from it carries a page under the replaced key."
+}
+
+# Whether <passphrase> opens the page at <tip> in the per-trip clone — the page the site serves now, read from the
+# clone's fetched tip, which is exactly the page a leased push replaces (#1820, decision 10). The page goes to a
+# private temp file and back out; a page that cannot be read is undetermined. Nothing here dies.
+_key_opens_live_page() { # <pub_dir> <tip> <passphrase> -> a _key_opens_page verdict
+  local kl_f kl_v=""
+  kl_f="$(mktemp)" || { printf 'undetermined'; return 0; }
+  if git -C "$1" show "$2:index.html" > "$kl_f" 2>/dev/null; then kl_v="$(_key_opens_page "$kl_f" "$3")"; fi
+  rm -f "$kl_f"
+  printf '%s' "${kl_v:-undetermined}"
+}
+
+# The identity of the file a key lives in — inode, mtime, size — or nothing. Any rewrite changes it: a rename gives
+# a new inode, and a restore from a copy that keeps the mtime still lands as a new file.
+_key_file_identity() { # <passphrase_file>
+  local ki_p ki_i ki_m ki_s
+  ki_p="$(resolve_key_path "$1")" || return 0
+  [ -f "$ki_p" ] || return 0
+  ki_i="$(ls -di "$ki_p" 2>/dev/null)" || return 0; ki_i="${ki_i#"${ki_i%%[![:space:]]*}"}"; ki_i="${ki_i%%[[:space:]]*}"
+  ki_m="$(_epoch_of_file "$ki_p")"; ki_s="$(wc -c < "$ki_p" 2>/dev/null)"; ki_s="${ki_s//[^0-9]/}"
+  [ -n "$ki_i" ] && [ -n "$ki_m" ] && [ -n "$ki_s" ] || return 0
+  printf '%s:%s:%s' "$ki_i" "$ki_m" "$ki_s"
+}
+pending_rotation_path() { printf '%s' "$1/.rotation-pending"; }
+
+# The pending-rotation marker (#1820, D-3; review CD-1, bound to the commit as well after Stage 7's F-02). rotate
+# writes it immediately AFTER it records the new key, naming the identity of the key file that write produced;
+# base-page, the git blob id of the page the rotation's commit replaces; and base-commit, the commit its leased push
+# would have replaced. update finishes a rotation only while .passphrase is still that file AND the site's tip is
+# still that commit carrying that page. A key file rewritten since, a site moved under the old key by another copy of
+# the trip, or a repository published again falls outside it, and update refuses naming rotate: a site taken down and
+# published again is always a new commit, because commit_noreply dates every commit from the clock whatever dates the
+# environment pins, even where an unchanged plaintext render reproduces the page's blob. Written
+# before the key it would name the old file, which the key write's rename replaces, and would never match. It holds no
+# key and no person data: an inode, a time, a size, and the content address of a public page and of a public commit.
+# Its directory is flushed by the caller, once, after the key and the marker are both written (review CD-4).
+_record_pending_rotation() { # <trip_dir> <base-page blob> <base-commit> -> 0, or non-zero with nothing left
+  local rp_f rp_id rp_tmp
+  [ -n "${2:-}" ] && [ -n "${3:-}" ] || return 1
+  rp_f="$(pending_rotation_path "$1")"
+  rp_id="$(_key_file_identity "$1/.passphrase")"; [ -n "$rp_id" ] || return 1
+  rp_tmp="$(mktemp "${rp_f}.XXXXXX")" || return 1
+  if printf 'key-file=%s\nbase-page=%s\nbase-commit=%s\nsince=%s\n' "$rp_id" "$2" "$3" "$(_iso_now)" > "$rp_tmp" \
+     && _flush_path "$rp_tmp" && mv -f "$rp_tmp" "$rp_f"; then return 0; fi
+  rm -f "$rp_tmp"; return 1
+}
+# 0 only when the marker is a readable regular file whose key-file= names .passphrase as it stands now, whose
+# base-commit= is the commit <tip> names, and whose base-page= is the page at <tip>. An empty identity — an unreadable
+# key file, a link that cannot be followed — or a marker with no base-page or no base-commit never matches. With
+# key-file-only, the key file alone is compared: refuse_key_not_live asks it to tell a rotation whose site moved from
+# one whose key file was rewritten.
+_pending_rotation_matches() { # <trip_dir> <pub_dir> <tip> [key-file-only]
+  local pm_f pm_line pm_rec="" pm_base="" pm_commit="" pm_now pm_page pm_tip
+  pm_f="$(pending_rotation_path "$1")"
+  [ -f "$pm_f" ] && [ -r "$pm_f" ] || return 1
+  while IFS= read -r pm_line || [ -n "$pm_line" ]; do
+    case "$pm_line" in
+      key-file=*) pm_rec="${pm_line#key-file=}" ;; base-page=*) pm_base="${pm_line#base-page=}" ;;
+      base-commit=*) pm_commit="${pm_line#base-commit=}" ;;
+    esac
+  done < "$pm_f"
+  pm_now="$(_key_file_identity "$1/.passphrase")"
+  [ -n "$pm_rec" ] && [ -n "$pm_now" ] && [ "$pm_rec" = "$pm_now" ] || return 1
+  [ "${4:-}" != key-file-only ] || return 0
+  pm_page="$(git -C "$2" rev-parse --verify -q "$3:index.html" 2>/dev/null)" || pm_page=""
+  pm_tip="$(git -C "$2" rev-parse --verify -q "$3^{commit}" 2>/dev/null)" || pm_tip=""
+  [ -n "$pm_base" ] && [ -n "$pm_page" ] && [ "$pm_base" = "$pm_page" ] \
+    && [ -n "$pm_commit" ] && [ -n "$pm_tip" ] && [ "$pm_commit" = "$pm_tip" ]
+}
+# Run after a push that landed, so it warns and never dies.
+_clear_pending_rotation() { # <trip_dir>
+  local cp_f; cp_f="$(pending_rotation_path "$1")"
+  [ -e "$cp_f" ] || [ -L "$cp_f" ] || return 0
+  rm -f "$cp_f" || warn "could not remove $cp_f; the rotation it names has now been published, so delete it."
+  return 0
+}
+
+# update's refusal when the key it would encrypt under does not open the page the site serves now (#1820). This run's
+# own commit is taken back out first, compare-and-swap, as require_key_of_record takes it back: it is a page under a
+# key the site is not under, and the clone is reused as it stands. <src> names the store, never the key: the variable's
+# name, or the path of .passphrase. Value-free, as every refusal here is (CIAC-4). Where the trip holds a rotation whose
+# key file still stands but whose site has moved since it read it (review CD-1's narrowing), the refusal says so first,
+# with rotate on a fresh clone as its remedy, because the generic remedies after it would abandon that rotation (Stage
+# 7's F-04). A marker whose key file was rewritten since is not that state, and gets the generic text alone.
+refuse_key_not_live() { # <trip_dir> <pub_dir> <this-run's-own-commit> <does-not-open|not-encrypted|undetermined> <src> <tip> <owner/slug>
+  local said tip moved=""
+  if _pending_rotation_matches "$1" "$2" "$6" key-file-only && ! _pending_rotation_matches "$1" "$2" "$6"; then
+    moved=" The rotation recorded beside the trip in $(pending_rotation_path "$1") could not be finished, because the site changed after that rotation read it, so rotate on a fresh clone is the remedy: remove $2 (it is cloned again from the published site) and run rotate, which sets a new passphrase and announces it."
+  fi
+  if discard_own_commit "$2" "$3"; then
+    said="this run took its own commit back out of $2"
+  else
+    said="this run could not confirm its own commit in $2 and take it back — remove $2 (it is cloned again from the published site) before re-running"
+  fi
+  tip="$(git -C "$2" rev-parse --short "$6" 2>/dev/null)" || tip="$6"
+  case "$4" in
+    does-not-open)
+      die "update refused — the key this run would encrypt under, from $5, does not open the page the site serves now ($7 at ${tip}). Publishing under it would lock out everyone who holds the current passphrase. Nothing was pushed, and $said.${moved} If you hold the passphrase that opens the site, put it in $1/.passphrase (or set STATICRYPT_PASSWORD to it) and re-run update. If it is lost, run rotate, which sets a new passphrase and announces it." ;;
+    not-encrypted)
+      die "update refused — the page the site serves now is not encrypted (this site was published --plaintext), and update would encrypt it under a key nobody was told about. Nothing was pushed, and $said.${moved} To encrypt it from now on, run rotate, which announces the passphrase it sets. unpublish followed by publish --plaintext keeps it plaintext." ;;
+  esac
+  die "update refused — could not establish whether the key this run would encrypt under opens the page the site serves now (the page could not be read from $2, or StatiCrypt could not be run). Nothing was pushed, and $said. Re-run update when it can."
 }
 
 # After a rotation: STATICRYPT_PASSWORD still set, and not the new key, means the next publish or
@@ -467,7 +627,15 @@ ensure_opaque_slug() { # <trip_dir>
     return
   fi
   tok="trip-$(od -An -N5 -tx1 /dev/urandom | tr -dc 'a-f0-9')"
-  printf '%s\n' "$tok" > "$sf"
+  # Each step stops on its own failure, whatever errexit is (#1822): a token the random source did not fill would
+  # give every such trip one shared name, and a name that did not save would leave this run creating the
+  # repository under the destination-and-year name --opaque exists to keep off a public profile.
+  case "$tok" in
+    trip-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]) ;;
+    *) die "publish: could not generate the opaque repository name — the random source gave no usable token. Nothing was created or pushed; without it this run would have named the repository after the trip's destination and year. Re-run publish --opaque; if it happens again, check that /dev/urandom and od are available." ;;
+  esac
+  { printf '%s\n' "$tok" > "$sf" && [ "$(tr -d '[:space:]' < "$sf")" = "$tok" ]; } \
+    || die "publish: could not save the opaque repository name to $sf. Nothing was created or pushed; without it this run would have named the repository after the trip's destination and year. Make $sf writable (a link there must point at a writable place) and re-run publish --opaque."
   ok "opaque: per-trip repo will be '$tok' (saved to $sf — reused by update/rotate)."
 }
 
@@ -492,6 +660,32 @@ encrypt_to_tmp() { # <src_html> <passphrase>
   fi
   rm -rf "$stage"; rm -f "$log"   # plaintext copy + log removed; only ciphertext (enc) remains
   printf '%s' "$enc"
+}
+
+# Whether <passphrase> opens the StatiCrypt page <page_file> — the check every re-encrypting push makes against the
+# page the site serves now (#1820). One answer on stdout: opens | does-not-open | not-encrypted | undetermined.
+# Three properties of staticrypt@3.5.4's --decrypt, measured at Stage 5, shape it: without --salt it hashes the key
+# with a fresh random salt, so the page's own salt is passed; it exits 0 on every outcome, so the verdict is read from
+# the file it writes and the line it prints; and with no key in the environment it prompts, so stdin is closed. The
+# key reaches it only through the prefix assignment, never argv (RV12). The decrypted page is plaintext: it is written
+# into a private temp directory that is removed before this returns, and nothing in this function dies.
+_key_opens_page() { # <page_file> <passphrase> -> opens | does-not-open | not-encrypted | undetermined
+  local kp_page="$1" kp_key="$2" kp_salt="" kp_dir kp_out kp_rc=0 kp_v=undetermined
+  [ -f "$kp_page" ] && [ -r "$kp_page" ] || { printf 'undetermined'; return 0; }
+  grep -q '"staticryptEncryptedMsgUniqueVariableName"' "$kp_page" || { printf 'not-encrypted'; return 0; }
+  kp_salt="$(sed -n 's/.*"staticryptSaltUniqueVariableName":[[:space:]]*"\([0-9a-f]\{32\}\)".*/\1/p' "$kp_page")"
+  IFS= read -r kp_salt <<<"$kp_salt" || :
+  [ "${#kp_salt}" -eq 32 ] || { printf 'undetermined'; return 0; }
+  kp_dir="$(mktemp -d)" || { printf 'undetermined'; return 0; }
+  cp "$kp_page" "$kp_dir/live.html" || { rm -rf "$kp_dir"; printf 'undetermined'; return 0; }
+  kp_out="$( cd "$kp_dir" && STATICRYPT_PASSWORD="$kp_key" \
+             npx --yes staticrypt@3.5.4 live.html --decrypt --config false --salt "$kp_salt" -d out </dev/null 2>&1 )" || kp_rc=$?
+  if [ "$kp_rc" -eq 0 ] && [ -s "$kp_dir/out/live.html" ]; then kp_v=opens
+  elif [ "$kp_rc" -eq 0 ] && [ ! -e "$kp_dir/out/live.html" ]; then
+    case "$kp_out" in *'could not decrypt'*) kp_v=does-not-open ;; esac
+  fi
+  rm -rf "$kp_dir"
+  printf '%s' "$kp_v"
 }
 
 # Visible text of an HTML file — markup and <script>/<style> blocks removed.
@@ -4214,8 +4408,9 @@ _republishes_baseline() { # <trip_dir> <outgoing-digest> -> 0 when no record nee
 # calling shell only, so inside $( ) or a subshell the digest is lost. The caller's variable must not
 # share a name with a local here.
 #
-# WHAT THIS DOES NOT REACH, stated as limits. Two publish-path commands run on one trip at the same
-# moment share this one staged name and the one baseline, so the order of their stagers, pushes and
+# WHAT THIS DOES NOT REACH, stated as limits. Since the per-trip lock, two publish-path commands on one
+# machine cannot interleave here; what follows describes what two machines sharing one per-trip repository
+# can still do. Two publish-path commands run on one trip at the same moment share this one staged name and the one baseline, so the order of their stagers, pushes and
 # recorders decides what is left. The baseline can end naming a plan the site no longer carries,
 # beside a staged record. Or one command's recorder finds the staged name empty, because the other
 # command's record was put in place there first; it then stages its own plan again and warns, and
@@ -4225,7 +4420,7 @@ _republishes_baseline() { # <trip_dir> <outgoing-digest> -> 0 when no record nee
 # the plan the site should carry, which records it. Re-running update with the plan the staged file
 # names, where the site does not carry it, would publish that plan over the live one. Staging again
 # needs space after the push; where it fails, the baseline is left as it was and the recorder says
-# so. Run one at a time, as the header says. Another program rewriting or deleting the trip's
+# so. Another program rewriting or deleting the trip's
 # control files, or its render, during a push is the second limit. Two of its cases are reached: a
 # render rewritten after this step is never recorded, because the recorder records the plan this
 # push carried; and a staged record removed during the push is staged again, at the cost above. The
@@ -5049,6 +5244,7 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   done
   trip_dir="$(resolve_trip_dir "$trip_dir")"
   [ -d "$trip_dir" ] || die "no such trip dir$(trip_dir_where) — check the first argument after the command, which names the trip; it is not repeated here, in case a passphrase was typed in its place."
+  _take_trip_lock "$trip_dir" publish
   # Before anything else, and with no network call: two keys may not both speak. A --plaintext
   # publish uses no key, so it is not asked.
   [ "$plaintext" = "1" ] || require_passphrase_sources_agree "$trip_dir"
@@ -5058,7 +5254,10 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   [ "$opaque" = "1" ] && ensure_opaque_slug "$trip_dir"
 
   local site_html slug pub_dir owner ans
-  site_html="$(resolve_site_html "$trip_dir")"
+  # Every step below stops on its own failure, whatever errexit is (#1822): a caller reached through `if` or `||`
+  # runs this body with -e off, and each step that used to lean on it ran on to "Published". Where a callee has
+  # printed its own refusal the step exits; otherwise its message opens publish: and names the step.
+  site_html="$(resolve_site_html "$trip_dir")" || exit 1   # the resolver has printed its refusal
   # The render's approval-code guard (#719, FM-3), before the repo is probed, created or pushed.
   # S3 does not gate publish, by design — it cannot overwrite a published plan — but a render
   # stating an approval code that is not its own plan's must not reach a first publish either.
@@ -5077,26 +5276,37 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   # probed, created or pushed — the same
   # check update and rotate run inside require_publish_guards.
   require_clean_build_sources "$trip_dir"
-  slug="$(slug_for "$trip_dir")"
+  slug="$(slug_for "$trip_dir")" || exit 1   # slug_for has printed its refusal
   pub_dir="$trip_dir/.publish"
-  owner="$(gh api user --jq '.login')"
-  # A repository that exists takes this push only when the host says it is empty and public. What the
-  # host said decides, never what a clone holds; an answer that is not exactly that is the repository
-  # holding something, which is the refusal it always was.
-  local into_empty=0 host=""
-  if host="$(gh repo view "${owner}/${slug}" --json isEmpty,visibility --jq '"\(.isEmpty) \(.visibility)"' 2>/dev/null)"; then
-    case "$host" in
-      "true PUBLIC") into_empty=1 ;;
-      "true "*) die "per-trip repo ${owner}/${slug} is empty, but it is not public (${host#true }). This engine publishes to a public repository served by GitHub Pages, and only ever pushes ciphertext to it. Nothing was pushed, and no passphrase was generated. Make it public in its settings, or name another repository in ${trip_dir}/.publish-slug, and re-run publish." ;;
-      *) die "per-trip repo ${owner}/${slug} already exists — use:  $(basename "$0") update ${trip_dir}  (or rotate)" ;;
-    esac
-  fi
-  rm -rf "$pub_dir"
+  { owner="$(gh api user --jq '.login')" && [ -n "$owner" ]; } \
+    || die "publish: could not read your GitHub user name, which names the per-trip repository and its site. Nothing was created or pushed. Check  gh auth status  and re-run publish."
+  # Whether the per-trip repository exists is read from the HTTP status line the host answers, as unpublish reads it
+  # (#2212): gh exits 1 for a 404 and a dropped connection alike, and reading every failure as "no repository" sent a
+  # run the host could not answer down the create path, generating a key on the way (#1819 AC-4, Stage 8's QF-02).
+  # Only a 404 takes the create path. Any other answer but a 200 stops here, before a passphrase can be generated.
+  # A repository that exists takes this push only when the host says it is empty and public. What the host said
+  # decides, never what a clone holds; an answer that is not exactly that is the repository holding something, which
+  # is the refusal it always was, and a read that gets no answer at all stops the run rather than guessing.
+  local into_empty=0 host="" seen
+  seen="$(_host_answer "repos/${owner}/${slug}")"
+  case "$seen" in
+    absent)  ;;
+    present)
+      host="$(gh repo view "${owner}/${slug}" --json isEmpty,visibility --jq '"\(.isEmpty) \(.visibility)"' 2>/dev/null)" \
+        || die "publish: GitHub reports that the per-trip repository ${owner}/${slug} exists, but could not say whether it is empty and public, the one kind of existing repository publish takes. Nothing was created or pushed, and no passphrase was generated. Check  gh auth status  and re-run publish when GitHub can be reached."
+      case "$host" in
+        "true PUBLIC") into_empty=1 ;;
+        "true "*) die "per-trip repo ${owner}/${slug} is empty, but it is not public (${host#true }). This engine publishes to a public repository served by GitHub Pages, and only ever pushes ciphertext to it. Nothing was pushed, and no passphrase was generated. Make it public in its settings, or name another repository in ${trip_dir}/.publish-slug, and re-run publish." ;;
+        *) die "per-trip repo ${owner}/${slug} already exists — use:  $(basename "$0") update ${trip_dir}  (or rotate)" ;;
+      esac ;;
+    *)       die "publish: could not ask GitHub whether the per-trip repository ${owner}/${slug} exists — the lookup got no answer it could read (a dropped connection, an outage, a rate limit, or a token that may not read the repository). Nothing was created or pushed, and no passphrase was generated. Check  gh auth status  and re-run publish when GitHub can be reached." ;;
+  esac
+  rm -rf "$pub_dir" || die "publish: could not clear $pub_dir before cloning into it. Nothing was created or pushed."
   if [ "$into_empty" = 1 ]; then
     gh repo clone "${owner}/${slug}" "$pub_dir" >/dev/null 2>&1 \
       || die "publish: could not clone the empty per-trip repository ${owner}/${slug}. Nothing was pushed, and no passphrase was generated. Re-run publish when it can be reached."
   else
-    mkdir -p "$pub_dir"
+    mkdir -p "$pub_dir" || die "publish: could not create $pub_dir. Nothing was created or pushed."
   fi
 
   if [ "$plaintext" = "1" ]; then
@@ -5114,7 +5324,7 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
     elif [ "${ALLOW_PLAINTEXT:-}" != "1" ]; then
       die "refusing non-interactive plaintext publish; re-run with ALLOW_PLAINTEXT=1 to override."
     fi
-    cp "$site_html" "$pub_dir/index.html"
+    cp "$site_html" "$pub_dir/index.html" || die "publish: could not place the page in $pub_dir. Nothing was pushed."
     # The bytes this push carries are the bytes checked (#2155's review, F18): the refusal reads the staged
     # copy, so a render rebuilt since it first ran is refused rather than pushed, and the copy goes with it.
     refuse_group_only_render "$pub_dir/index.html" "$site_html" "$pub_dir/index.html"
@@ -5123,37 +5333,38 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
     # A trip's first key, made here and nowhere else outside rotate, on both of publish's arms: the
     # repository this run creates, and the empty one it was given (see the function).
     ensure_first_key "$trip_dir"
-    passphrase="$(get_passphrase "$trip_dir")"
+    passphrase="$(get_passphrase "$trip_dir")" || exit 1   # the resolver has printed its refusal
     info "Encrypting site (StatiCrypt — AES-256-CBC + HMAC, 600k PBKDF2)…"
-    enc="$(encrypt_to_tmp "$site_html" "$passphrase")"
+    enc="$(encrypt_to_tmp "$site_html" "$passphrase")" || die "publish: the encryption step failed. Nothing was pushed."
     info "Running pre-push verify guard…"
     boiler="$(make_boilerplate || true)"
     verify_ciphertext "$enc/index.html" "$site_html" "${boiler:+$boiler/index.html}" \
       || { rm -rf "$enc" "$boiler"; die "GUARD ABORTED publish — output is not verified ciphertext. Nothing was pushed."; }
     rm -rf "$boiler"
-    cp "$enc/index.html" "$pub_dir/index.html"; rm -rf "$enc"
+    cp "$enc/index.html" "$pub_dir/index.html" \
+      || { rm -rf "$enc"; die "publish: could not place the ciphertext in $pub_dir. Nothing was pushed."; }
+    rm -rf "$enc"
     ok "Guard passed — only ciphertext will be pushed."
   fi
 
   if [ "$into_empty" = 1 ]; then info "Pushing to the empty per-trip repo…"; else info "Creating per-trip repo and pushing…"; fi
-  # The commit first, in a subshell of its own (#1468 D-6, CD-3 of the amendment-1 review): the
-  # record is then staged after the command's own writes, as in update and rotate, and a commit that
-  # fails stops the command with nothing staged. The push is the second subshell, after the stager.
-  ( cd "$pub_dir"
-    git init -q
-    git add index.html
-    commit_noreply . "Publish trip site"
-    git branch -M main
-  )
+  # The commit first (#1468 D-6, CD-3 of the amendment-1 review), each of its steps a git -C call that
+  # stops the command on its own failure (#1822): the record is then staged after the command's own
+  # writes, as in update and rotate, and a commit that fails stops the command with nothing staged.
+  # The push follows the stager.
+  git -C "$pub_dir" init -q || die "publish: could not initialise $pub_dir. Nothing was pushed."
+  git -C "$pub_dir" add index.html || die "publish: could not stage the page in $pub_dir. Nothing was pushed."
+  commit_noreply "$pub_dir" "Publish trip site" \
+    || die "publish: could not commit the page in $pub_dir (the git error above names the cause). Nothing was pushed."
+  git -C "$pub_dir" branch -M main || die "publish: could not name the branch main in $pub_dir. Nothing was pushed."
   # The baseline record this push needs, staged after the commit; between it and the push stands
   # only the push subshell's entry into the clone (#1468 D-6). The digest of the plan this push
   # carries comes back in `staged`, for the recorder.
   local staged=""
   if [ "$into_empty" != 1 ]; then
     stage_baseline_record "$trip_dir" "$site_html" publish staged
-    ( cd "$pub_dir"
-      gh repo create "$slug" --public --source=. --remote=origin --push >/dev/null
-    )
+    ( cd "$pub_dir" && gh repo create "$slug" --public --source=. --remote=origin --push >/dev/null ) \
+      || die "publish: creating the per-trip repository ${owner}/${slug} and pushing to it failed (gh's message is above). The repository may now exist — empty, or holding this page — or not exist at all; nothing is known to be published, and the baseline record this push staged is left at $(staged_record_path "$trip_dir"). Re-run publish: it creates the repository, or takes it if it is empty. If it answers that the repository already exists, the push reached it: remove $pub_dir and run update."
   else
     # The clone's branch was renamed to main above, whatever the host's unborn HEAD gave it. The default
     # branch is set explicitly rather than left to what the host does with a first push, because the next
@@ -5252,7 +5463,7 @@ encrypt_verify_commit() { # <pub_dir> <site_html> <passphrase> <verb> [<var-to-r
   # not this run's own. (The caller's variable must not share a name with a local here.)
   evc_own="$(git -C "$pub_dir" rev-parse --verify -q HEAD)" \
     && [ "$(git -C "$pub_dir" rev-parse --verify -q "${evc_own}:index.html")" = "$evc_blob" ] \
-    || die "$verb: another command changed $pub_dir between this run's commit and its read-back. Nothing was pushed by this run; run one command per trip at a time, and re-run."
+    || die "$verb: another program, or a run from another machine sharing this data root, changed $pub_dir between this run's commit and its read-back. Nothing was pushed by this run; re-run."
   [ -z "${5:-}" ] || printf -v "$5" '%s' "$evc_own"
 }
 
@@ -5350,6 +5561,20 @@ host_reports_empty() { # <owner/slug>
   [ "$(gh repo view "$1" --json isEmpty --jq '.isEmpty' 2>/dev/null)" = true ]
 }
 
+# What the host answers about one REST path, read from the HTTP status line gh prints with --include:
+# present (200), absent (404), or unknown — no status line (the host could not be asked), or any other
+# status (401, 403, a rate limit, a 5xx). gh exits 1 for a 404 and a dropped connection alike, so its exit
+# status cannot carry this; the status line can. Only absent may be read as "there is none" (#2212).
+_host_answer() { # <api-path> -> present | absent | unknown, on stdout
+  local ha_out ha_line ha_code
+  ha_out="$(gh api -i --silent "$1" 2>/dev/null)" || :
+  IFS= read -r ha_line <<<"$ha_out" || :
+  ha_line="${ha_line%$'\r'}"
+  case "$ha_line" in HTTP/*' '*) ;; *) printf 'unknown'; return 0 ;; esac
+  ha_code="${ha_line#* }"; ha_code="${ha_code%% *}"
+  case "$ha_code" in 200) printf 'present' ;; 404) printf 'absent' ;; *) printf 'unknown' ;; esac
+}
+
 # A clone holding a record of a site the host now reports EMPTY: the repository was emptied or created
 # again since this clone last read it (#1616, review FM-2). Asked only once a fetch has failed, because a
 # missing main is not a network failure, and "re-run when the site can be reached" would loop: the site
@@ -5426,10 +5651,103 @@ require_publish_branch() { # <pub_dir> <verb>
   die "$2 refused — $1 is on branch '${b:-(detached)}', and this engine publishes the site from main. Nothing was changed. If the site is served from another branch, make main its default and publishing branch, then remove $1 (it is cloned again from the published site) and re-run."
 }
 
+# The per-trip lock (#1819). One command on a trip at a time: publish, update, rotate and unpublish take it at entry,
+# confirm immediately before its first write, list never. mkdir is atomic, so exactly one taker succeeds. A second
+# command refuses at once — it never waits for the holder — naming the holder, with its own exit status: 75 where the
+# holder is running, 76 where it is not or its record cannot be read (review CD-3). The holder writes its record just
+# after its mkdir, so a second command arriving in between finds the lock and no record yet; it reads the record again,
+# TRIP_LOCK_REREADS times in all with TRIP_LOCK_REREAD_GAP seconds between, before it calls the record unreadable
+# (review PR-3, Stage 8's QF-01). That window was measured under 10 ms on an idle machine; the bound, 0.45 s of pauses,
+# leaves room for a holder slowed tens of times over on a loaded one, and keeps a refusal well under a second — still at
+# once to an operator, and a negligible wait before 76 for a lock left with no record at all. Where its holder releases
+# the lock meanwhile, as a command that refuses at once does within a few hundredths of a second, the trip is free: it
+# takes the lock by the same take a first taker makes, and runs; where another command took it first, it reads that
+# one's record on (Stage 7's F-18). It never breaks a lock that stands. Released on every exit of
+# the shell that took it, a refusal included, and on INT, TERM and HUP; a SIGKILL, a crash or a power loss leaves it,
+# and it is never broken automatically, because the data root may be shared with a machine where its holder still runs.
+# A shell that already holds a trip's lock holds it still, so a second command in the same process does not refuse on
+# its own lock. A mkdir that fails where no lock stands is the trip directory refusing the write, and is named as that
+# (review FM-3).
+TRIP_LOCK_HELD_RC=75
+TRIP_LOCK_STALE_RC=76
+TRIP_LOCK_REREADS=10
+TRIP_LOCK_REREAD_GAP=0.05
+trip_lock_path() { printf '%s' "$1/.publish-lock"; }
+_TRIP_LOCK=""; _TRIP_LOCK_PID=""
+_die_rc() { # <status> <message> — die, with the exit status the caller names
+  local rc="$1"; shift
+  printf '\033[1;31m✗ ERROR:\033[0m %s\n' "$*" >&2; exit "$rc"
+}
+# The take, written once: a command's first mkdir and its retake of a lock released while it read it both come here,
+# so the two cannot drift (Stage 7's F-18). 0 once this shell holds the lock — its record in place and its traps set,
+# so every exit releases it; 1 where the mkdir failed: another command holds the lock, or nothing can be made there.
+_trip_lock_take() { # <lock> <verb> <own pid>
+  local l="$1" h
+  mkdir "$l" 2>/dev/null || return 1
+  # The record is staged under a fixed name inside the lock directory, which this run alone owns, and renamed
+  # into place, so a reader never sees half of it; no mktemp, whose failure is another step's to report.
+  h="$l/.holder.new"
+  { printf 'command=%s\npid=%s\nstarted=%s\n' "$2" "$3" "$(_iso_now)" > "$h" && mv -f "$h" "$l/holder"; } \
+    || { rm -rf "$l"; die "$2: could not record the per-trip lock at $l. Nothing was changed. Re-run $2."; }
+  _TRIP_LOCK="$l"; _TRIP_LOCK_PID="$3"
+  trap '_release_trip_lock' EXIT; trap 'exit 130' INT; trap 'exit 143' TERM; trap 'exit 129' HUP
+  return 0
+}
+_take_trip_lock() { # <trip_dir> <verb>
+  local l own hc hp hs line alive reads=0
+  if [ "$BASH_SUBSHELL" -eq 0 ] && [ "${BASH_SOURCE[0]}" != "$0" ]; then
+    die "$2: refused to take the per-trip lock from the top level of a shell that sourced $(basename "${BASH_SOURCE[0]}") — its EXIT trap would replace that shell's own. Run the command in a subshell."
+  fi
+  l="$(trip_lock_path "$1")"
+  own="$(exec sh -c 'printf "%s" "$PPID"')"
+  if [ "$_TRIP_LOCK" = "$l" ] && [ "$_TRIP_LOCK_PID" = "$own" ]; then return 0; fi
+  _trip_lock_take "$l" "$2" "$own" && return 0
+  # The record is read again while it cannot be read, up to the bound (see above): a holder in its first instants has
+  # made the directory and not yet renamed its record into place. Where the directory itself is gone on a read, its
+  # holder has released it and the trip is free: it is taken by the same take, within the same bound, and where another
+  # command took it first, that one's record is read on as any holder's. A take that fails where still no lock stands
+  # is the trip directory refusing the write.
+  while :; do
+    hc=""; hp=""; hs=""; reads=$((reads+1))
+    if [ -f "$l/holder" ] && [ -r "$l/holder" ]; then
+      while IFS= read -r line || [ -n "$line" ]; do
+        case "$line" in command=*) hc="${line#command=}" ;; pid=*) hp="${line#pid=}" ;; started=*) hs="${line#started=}" ;; esac
+      done < "$l/holder"
+    fi
+    case "$hp" in ''|*[!0-9]*) ;; *) break ;; esac
+    if [ ! -d "$l" ]; then
+      _trip_lock_take "$l" "$2" "$own" && return 0
+      [ -d "$l" ] \
+        || die "$2: could not create the per-trip lock at $l — the trip directory may be read-only or its volume full, or something other than a lock stands at that name. Nothing was changed. Make $1 writable and re-run $2."
+    fi
+    [ "$reads" -lt "$TRIP_LOCK_REREADS" ] || break
+    sleep "$TRIP_LOCK_REREAD_GAP"
+  done
+  case "$hp" in ''|*[!0-9]*)
+    _die_rc "$TRIP_LOCK_STALE_RC" "$2 refused — another publish command holds this trip's lock at $l, and its record cannot be read, so which command holds it is unknown. Nothing was changed. If no publish command is running on this trip — from this machine or another one sharing this data root — remove the lock (rm -r $l) and re-run $2." ;;
+  esac
+  if kill -0 "$hp" 2>/dev/null; then alive=1
+  else case "$(kill -0 "$hp" 2>&1)" in *[Pp]ermission*|*[Nn]ot\ permitted*) alive=1 ;; *) alive=0 ;; esac
+  fi
+  [ "$alive" -eq 1 ] \
+    && _die_rc "$TRIP_LOCK_HELD_RC" "$2 refused — '$hc' is running on this trip (process $hp, started $hs), and publish commands on one trip run one at a time. Nothing was changed. Re-run $2 when it has finished."
+  _die_rc "$TRIP_LOCK_STALE_RC" "$2 refused — this trip's lock at $l was taken by '$hc' (process $hp, started $hs), which is not running on this machine: it was stopped before it could release the lock (killed, or the machine stopped). Nothing was changed. If no publish command is running on this trip from another machine sharing this data root, remove the lock (rm -r $l) and re-run $2."
+}
+_release_trip_lock() {
+  [ -n "$_TRIP_LOCK" ] || return 0
+  local line p=""
+  if [ -r "$_TRIP_LOCK/holder" ]; then
+    while IFS= read -r line || [ -n "$line" ]; do case "$line" in pid=*) p="${line#pid=}" ;; esac; done < "$_TRIP_LOCK/holder"
+  fi
+  [ "$p" = "$_TRIP_LOCK_PID" ] && rm -rf "$_TRIP_LOCK"
+  _TRIP_LOCK=""
+}
+
 cmd_update() { # <trip_dir>
   local trip_dir="${1:?usage: update <trip-dir>}"
   trip_dir="$(resolve_trip_dir "$trip_dir")"
   [ -d "$trip_dir" ] || die "no such trip dir$(trip_dir_where) — check the first argument after the command, which names the trip; it is not repeated here, in case a passphrase was typed in its place."
+  _take_trip_lock "$trip_dir" update
   # Before anything else, and with no network call: two keys may not both speak.
   require_passphrase_sources_agree "$trip_dir"
   preflight; resolve_noreply_identity
@@ -5482,6 +5800,23 @@ cmd_update() { # <trip_dir>
     || { git -C "$pub_dir" update-ref refs/remotes/origin/main "$prior" "$lease"; die "update refused — the site's history was rewound after $pub_dir last recorded it (pages withdrawn from another machine, say), and pushing now would publish them again. Nothing was pushed. Remove $pub_dir (it is cloned again from the published site) and re-run update."; }
   git -C "$pub_dir" merge-base --is-ancestor "$lease" "$mine" \
     || die "update: this run's commit does not descend from the site's current tip, so its push could not be a fast-forward — another command or machine moved the site, and may already have published this run's page beneath its own. Nothing was pushed by this run. Remove $pub_dir (it is cloned again from the published site, so nothing is lost) and re-run update."
+  # THE KEY AGAINST THE LIVE SITE (#1820). The key this run encrypts under, whichever store supplied it, must open
+  # the page the site serves now — the page at the lease, which is exactly what this push replaces. A key from a
+  # store that is not the site's (a stale .passphrase, a variable left set, a key a failed first publish generated)
+  # would re-encrypt the site under a key its viewers were never given. The one exception is a rotation whose push
+  # failed: .rotation-pending records the key file it wrote and the page and commit it replaced, and while all three
+  # still stand this update finishes that rotation, as it always has. Anything else refuses, and takes this run's
+  # commit back out.
+  local kv src
+  if [ -n "${STATICRYPT_PASSWORD:-}" ]; then src="STATICRYPT_PASSWORD"; else src="$trip_dir/.passphrase"; fi
+  kv="$(_key_opens_live_page "$pub_dir" "$lease" "$passphrase")"
+  case "$kv" in
+    opens) ;;
+    does-not-open|not-encrypted)
+      _pending_rotation_matches "$trip_dir" "$pub_dir" "$lease" \
+        || refuse_key_not_live "$trip_dir" "$pub_dir" "$mine" "$kv" "$src" "$lease" "${owner}/${slug}" ;;
+    *) refuse_key_not_live "$trip_dir" "$pub_dir" "$mine" undetermined "$src" "$lease" "${owner}/${slug}" ;;
+  esac
   # The key of record, re-read immediately before the push: a rotation that committed in the
   # meantime has already recorded a new key, and pushing this run's ciphertext would put the
   # key it revoked back over it.
@@ -5504,6 +5839,8 @@ cmd_update() { # <trip_dir>
   # here rather than earlier for that reason: a sidecar written before the push would
   # claim content a failed push never delivered, and the next republish would then
   # compare against a plan nobody can see.
+  # A rotation this push finished is published now, so its marker goes (#1820).
+  _clear_pending_rotation "$trip_dir"
   record_published_itinerary "$trip_dir" "$site_html" "$staged"
   ok "Updated: https://${owner}.github.io/${slug}/  (changes appear behind the passphrase prompt)"
 }
@@ -5645,6 +5982,9 @@ cmd_confirm() { # <trip_dir>
     printf '  Type CONFIRM to record the group'"'"'s approval of this itinerary: '; read -r ans
   fi
   [ "${ans:-}" = "CONFIRM" ] || die "aborted — nothing confirmed. The published plan is unchanged."
+  # The per-trip lock, taken here, immediately before the first write, so an organizer at the prompt above held
+  # nothing (#1819).
+  _take_trip_lock "$trip_dir" confirm
 
   dg="$(itinerary_digest "$site_html")"
   [ -n "$dg" ] || die "could not identify the itinerary content of $site_html — it could not be read, its itinerary text could not be projected, or that text could not be normalized; any error printed above names the cause. Nothing was recorded."
@@ -5757,6 +6097,7 @@ _confirm_declared() { # <trip_dir> <site_html> <state>
     printf '  Type CONFIRM to record this as %s'"'"'s %s, stated by you (organizer-stated): ' "$key" "$verb"
     read -r ans || ans=""
     [ "${ans:-}" = "CONFIRM" ] || die "aborted — nothing recorded."
+    [ -n "$_TRIP_LOCK" ] || _take_trip_lock "$trip_dir" confirm   # the per-trip lock, before the first write (#1819)
     _ledger_append "$trip_dir" "$key" "$verb" "$out_dg" \
       || die "could not append to the approval ledger at $(approval_ledger_path "$trip_dir") — nothing was recorded, and the ledger is as it was."
     recorded=1
@@ -5765,6 +6106,7 @@ _confirm_declared() { # <trip_dir> <site_html> <state>
   # Whether the write keeps the record's date — the record already names the published plan, and
   # no change-summary entry is dated after it (item 8) — read BEFORE the write, through the one
   # predicate the writer itself calls, so the message below says which it did and cannot disagree.
+  [ -n "$_TRIP_LOCK" ] || _take_trip_lock "$trip_dir" confirm   # the per-trip lock, before the record is written (#1819)
   kept="$(_published_record_date "$trip_dir" "$out_dg")"
   if ! _record_threshold_met "$trip_dir" "$out_dg"; then
     if [ "$recorded" -eq 1 ]; then
@@ -5819,6 +6161,7 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   # this trip's own under --data-root, never a path under the working directory.
   trip_dir="$(resolve_trip_dir "$trip_dir")"
   [ -d "$trip_dir" ] || die "no such trip dir$(trip_dir_where) — check the first argument after the command, which names the trip; it is not repeated here, in case a passphrase was typed in its place."
+  _take_trip_lock "$trip_dir" rotate
   local pf="$trip_dir/.passphrase" site_html pub_dir owner slug mine="" staged="" lease=""
   [ "$supplied" = "1" ] || newp="$(gen_passphrase)"
   # These refusals come BEFORE anything is written: an aborted rotation must leave .passphrase
@@ -5844,6 +6187,22 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   # A page an earlier update or rotate committed but did not push is still in the reused clone,
   # under the key this rotation is about to revoke. Refuse rather than push it (see the function).
   refuse_unpushed_residue "$pub_dir"
+  # THE NEW KEY AGAINST THE LIVE SITE (#1820, decision 3). A new passphrase that already opens the page the site
+  # serves now revokes nothing, whatever .passphrase holds — the store test above sees only the key of record, and a
+  # stale one lets the live key through. Nothing is asked of the retiring key: rotate is the route for a lost key and
+  # for a plaintext site. base receives the page the rotation's commit replaces, for the pending-rotation marker, which
+  # records the lease too: the commit this rotation's push would replace.
+  local base
+  base="$(git -C "$pub_dir" rev-parse --verify -q "$lease:index.html" 2>/dev/null)" || base=""
+  [ -n "$base" ] \
+    || die "rotate refused — could not establish whether the new passphrase opens the page the site serves now (the page could not be read from $pub_dir). Nothing was changed: $pf is exactly as it was. Re-run rotate when it can."
+  case "$(_key_opens_live_page "$pub_dir" "$lease" "$newp")" in
+    opens)
+      die "rotate refused — the new passphrase already opens the page the site serves now (${owner}/${slug} at $(git -C "$pub_dir" rev-parse --short "$lease")), so this rotation would revoke nothing. Nothing was changed: $pf is exactly as it was." ;;
+    does-not-open|not-encrypted) ;;
+    *)
+      die "rotate refused — could not establish whether the new passphrase opens the page the site serves now (the page could not be read from $pub_dir, or StatiCrypt could not be run). Nothing was changed: $pf is exactly as it was. Re-run rotate when it can." ;;
+  esac
   # The new key is handed down explicitly, so the environment is never read for it
   # (GHSA-gmm2-v7rr-jq7r) — a set STATICRYPT_PASSWORD can no longer take a rotation's place.
   encrypt_verify_commit "$pub_dir" "$site_html" "$newp" rotate mine
@@ -5855,8 +6214,17 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   # THE COMMIT POINT: the new ciphertext is committed and not yet pushed. Recording the key here,
   # and not after the push, means no reachable state sends a later update back to the revoked
   # key — every abort before this line left .passphrase untouched, and a push that fails after it
-  # leaves .passphrase naming the key the next update converges the site onto.
-  write_passphrase_file "$pf" "$newp"
+  # leaves .passphrase naming the key the next update converges the site onto. The order here is the key, then the
+  # pending-rotation marker, which records the file that write produced and the page and commit this rotation
+  # replaces, then one flush of the directories holding them (review CD-4): each failure is then worded by the state
+  # it leaves.
+  write_passphrase_file "$pf" "$newp" defer-dir-flush
+  _record_pending_rotation "$trip_dir" "$base" "$lease" \
+    || die "rotate: the new passphrase is recorded in $pf, but the record that lets update finish this rotation could not be written beside it. Nothing was pushed, and the site is still under the previous passphrase. Remove $pub_dir (it is cloned again from the published site) and run rotate again; it sets and announces a new passphrase."
+  local kdir
+  kdir="$(dirname "$(resolve_key_path "$pf")")"
+  { _flush_path "$kdir" && { [ "$kdir" = "$trip_dir" ] || _flush_path "$trip_dir"; }; } \
+    || die "rotate: the new passphrase is recorded in $pf and the record that lets update finish this rotation is written beside it, but the directory holding them could not be flushed to disk, so a crash could still undo them. Nothing was pushed, and the site is still under the previous passphrase. Run update to finish the rotation: it publishes under the passphrase now recorded."
   # The baseline record this push needs, staged now, after the key is recorded; between it and the
   # push stands only the progress line below, which writes nothing to the trip (#1468 D-6). A
   # refusal here is a push that did not happen: the new key is recorded, and update finishes the
@@ -5866,6 +6234,7 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   if ! push_trip_site "$pub_dir" "$mine" rotate "$lease"; then
     die "rotate: the push to the per-trip repository failed — the site changed after this run read it, or the network did — and it may still have reached the site: a connection dropped after the server accepted a push reports failure here too. $pf already holds the new passphrase, recorded before the push. Run update to finish the rotation: it re-reads the site first, and converges on whatever reached it under that passphrase. Until it succeeds, the previous passphrase may still open the site."
   fi
+  _clear_pending_rotation "$trip_dir"
   record_published_itinerary "$trip_dir" "$site_html" "$staged"
   ok "Updated: https://${owner}.github.io/${slug}/  (changes appear behind the passphrase prompt)"
   warn "Passphrase ROTATED — anyone you previously shared the site with must re-receive the new one. Earlier versions stay in the per-trip repository's history, readable to anyone holding an old passphrase; to withdraw them, unpublish (which deletes the repository) and publish again."
@@ -6039,23 +6408,42 @@ cmd_unpublish() { # <trip_dir> [--disable-pages-only] [--yes]
   done
   trip_dir="$(resolve_trip_dir "$trip_dir")"
   [ -d "$trip_dir" ] || die "no such trip dir$(trip_dir_where) — check the first argument after the command, which names the trip; it is not repeated here, in case a passphrase was typed in its place."
+  _take_trip_lock "$trip_dir" unpublish
   preflight_ro
   local owner slug ans
   owner="$(gh api user --jq '.login')" || die "could not read GitHub user."
   slug="$(slug_for "$trip_dir")"
 
-  # Idempotent: nothing to take down if the repo isn't there.
-  if ! gh repo view "$owner/$slug" >/dev/null 2>&1; then
-    ok "unpublish: $owner/$slug does not exist — nothing to take down (no-op)."
-    return 0
-  fi
+  # Idempotent: nothing to take down where the host says the repo is not there (#2212). Only a 404 says
+  # that; a lookup that gets no answer it can read is not an absent repository, and reading it as one told
+  # the operator a site was gone while it was still served. The absent line is kept byte-identical:
+  # /trip-decommission's Defence 3 keys on it.
+  local seen
+  seen="$(_host_answer "repos/$owner/$slug")"
+  case "$seen" in
+    absent)  ok "unpublish: $owner/$slug does not exist — nothing to take down (no-op)."; return 0 ;;
+    present) ;;
+    *)       die "unpublish: could not ask GitHub whether $owner/$slug exists — the lookup got no answer it could read (a dropped connection, an outage, a rate limit, or a token that may not read the repository). Nothing was taken down, and the site may still be served at https://$owner.github.io/$slug/. Check  gh auth status  and re-run the same unpublish command when GitHub can be reached." ;;
+  esac
 
   if [ "$disable_only" = "1" ]; then
+    local del_out pages
     info "Disabling GitHub Pages for $owner/$slug (repo kept)…"
-    if gh api -X DELETE "repos/$owner/$slug/pages" >/dev/null 2>&1; then
+    if del_out="$(gh api -X DELETE "repos/$owner/$slug/pages" 2>&1)"; then
       ok "Pages disabled — https://$owner.github.io/$slug/ is now offline. Repo $owner/$slug retained."
     else
-      warn "Pages may already be disabled (nothing to do)."
+      # A DELETE that failed is settled by reading the Pages site back, as enable_pages settles its own
+      # failure: what the operator asked is whether the site is still served, and only a 404 says it is not.
+      pages="$(_host_answer "repos/$owner/$slug/pages")"
+      case "$pages" in
+        absent) ok "Pages was already disabled for $owner/$slug — nothing to do. Repo $owner/$slug retained." ;;
+        present)
+          warn "GitHub refused to disable Pages for $owner/$slug:"; sed 's/^/    /' <<<"$del_out" >&2
+          die "unpublish: the takedown did not happen — GitHub refused to disable Pages for $owner/$slug, and the repository still has a Pages site, so https://$owner.github.io/$slug/ is still served. The refusal is above. Check that your token may change this repository's settings ( gh auth status ), then re-run  unpublish --disable-pages-only , or disable Pages in the repository's Settings → Pages." ;;
+        *)
+          warn "The call that disables Pages for $owner/$slug failed:"; sed 's/^/    /' <<<"$del_out" >&2
+          die "unpublish: the takedown may not have happened — the call that disables Pages for $owner/$slug failed, and GitHub could not be asked afterwards whether a Pages site remains, so https://$owner.github.io/$slug/ may still be served. Re-run  unpublish --disable-pages-only  when GitHub can be reached; it reads the site back before it says anything." ;;
+      esac
     fi
     warn "To restore: re-enable Pages in the repo Settings → Pages (branch main / root)."
     warn "The repo name '$slug' is still public, and content may persist in third-party caches/clones."

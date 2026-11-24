@@ -2842,7 +2842,7 @@ Locations are named **by path, never by an artifact-class ordinal.** That enumer
 | **17** | `outputs/<dest>-travel-site.html` and its secondary renders | REACH | delete. On an active trip the site is rebuilt from cleaned sources; on an archived trip it stays deleted, because the site was already taken offline when the trip was concluded |
 | **18** | `trips/<slug>/.publish/`, including its own `.git` | REACH | remove the directory — the same act the publish script's takedown arm already performs |
 | **19** | **the published repository, its Pages site, its git history, and every cache or clone** | **REPORT** | **structurally unreachable.** Emit `UNREACHABLE` carrying the repo, the commit count and the hand-off |
-| **20** | `.passphrase` · `.publish-slug` · `outputs/.staticrypt.json` · `.published-itinerary` · `.published-itinerary.next` · `.change-confirmed` | OUT | control files, declared to hold no person data |
+| **20** | `.passphrase` · `.publish-slug` · `outputs/.staticrypt.json` · `.published-itinerary` · `.published-itinerary.next` · `.change-confirmed` · `.rotation-pending` · `.publish-lock/` | OUT | control files, declared to hold no person data |
 | **21** | this repository's own git history | OUT | the only path ever committed under `trips/` is its `README.md` |
 | **22** | `examples/**` | OUT | **and must not be swept.** These are CI witnesses, and every profile in them ships *"Illustrative, sanitized example. Not a real person."* |
 | **23** | `analysis/**` | **REPORT** | name the tree; do not sweep |
