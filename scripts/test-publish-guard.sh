@@ -16713,6 +16713,80 @@ rv54u_assert() { # <id>
   fi
 }
 rv54u_assert "RV54-unreadable-holder"
+# RV54-holder-late — Stage 8's QF-01 (#1819 AC-1). A command that meets the lock in its holder's first instants, after
+# the holder's mkdir and before its record is in place, re-reads the record for a bounded time and names the holder
+# once the record lands. The lock directory is made here with no record. The holder is a live background process that
+# writes its record, staged and renamed as the lock writes it and naming itself, only once the second command has read
+# the lock and paused: that command's pause between reads is a stand-in which, on its first call, lets the holder
+# write and waits for the record to land. So the record appears inside the bound by construction, never by the wall
+# clock, and the arm holds on a loaded runner. Every wait is bounded, and the holder is killed with SIGKILL at its
+# bound (review PR-1). The trip is fresh, so nothing is removed afterwards.
+rv54lh_assert() { # <id>
+  local id="$1" name d bare out rc pid h0 h1 said=0 named=0 paused=0 landed=0
+  name="rv54lh-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-late-synthetic-key-81')"; bare="$RVW/origin/$name-trip.git"
+  mkdir "$d/.publish-lock"; h0="$(rv_head "$bare")"
+  ( k=0
+    while [ ! -e "$d.go" ] && [ ! -e "$d.stop" ] && [ "$k" -lt 1500 ]; do sleep 0.02; k=$((k+1)); done
+    if [ -e "$d.go" ]; then
+      printf 'command=update\npid=%s\nstarted=%s\n' "$(exec sh -c 'printf "%s" "$PPID"')" "$(_iso_now)" \
+        > "$d/.publish-lock/.holder.new" && mv -f "$d/.publish-lock/.holder.new" "$d/.publish-lock/holder"
+      k=0; while [ ! -e "$d.stop" ] && [ "$k" -lt 300 ]; do sleep 0.1; k=$((k+1)); done
+    fi ) &
+  pid=$!
+  out="$( ( unset STATICRYPT_PASSWORD; RV54LH_D="$d"
+            sleep() {
+              local w=0
+              if [ ! -e "$RV54LH_D.go" ]; then
+                : > "$RV54LH_D.go"
+                while [ ! -e "$RV54LH_D/.publish-lock/holder" ] && [ "$w" -lt 1000 ]; do command sleep 0.01; w=$((w+1)); done
+              fi
+              return 0
+            }
+            set -e; cmd_update "$d" ) 2>&1 )"; rc=$?
+  h1="$(rv_head "$bare")"
+  [ -e "$d.go" ] && paused=1
+  [ -e "$d/.publish-lock/holder" ] && landed=1
+  rv_has "$out" "'update' is running on this trip" && said=1
+  rv_has "$out" "(process $pid," && named=1
+  rv54_finish "$d.stop" "$pid"
+  if [ "$rc" -ne 75 ] && [ "$paused" -eq 0 ]; then
+    FAIL "$id: update on a lock whose holder had not yet written its record read rc=$rc, want 75, and never paused to read the record again — it chose its status on the first read"
+  elif [ "$rc" -ne 75 ] && [ "$landed" -eq 0 ]; then
+    FAIL "$id: update paused, but the holder never wrote its record (rc=$rc). VERDICT WITHHELD"
+  elif [ "$rc" -ne 75 ]; then
+    FAIL "$id: the holder's record landed while update paused to read it again, and update still read rc=$rc, want 75"
+  elif [ "$said" -eq 0 ] || [ "$named" -eq 0 ]; then
+    FAIL "$id: update refused with 75 without naming the running update (said=$said) or the holder's process $pid (named=$named)"
+  elif [ "$h1" != "$h0" ]; then
+    FAIL "$id: update refused on the lock but the site moved"
+  else
+    PASS "$id: a command that meets the lock before its holder's record is in place reads the record again, and once it lands inside the bound refuses with 75, naming the running update and its process"
+  fi
+}
+rv54lh_assert "RV54-holder-late"
+# RV54-holder-late-ctl — its control: a lock whose record never appears still takes the unreadable-record status, 76,
+# once the bound is spent and not before. The bound is ten reads with a pause of 0.05 s between each, nine pauses and
+# 0.45 s in all, written here as numbers so that a changed bound is a finding. The pause is a stand-in that counts its
+# calls and does not sleep.
+rv54lc_assert() { # <id>
+  local id="$1" name d out rc n=0 gaps="" said=0
+  name="rv54lc-$RANDOM"; d="$(rv_fixture "$name" 'rv-lock-late-ctl-synthetic-key-82')"; mkdir "$d/.publish-lock"
+  out="$( ( unset STATICRYPT_PASSWORD; RV54LC_LOG="$d.pauses"
+            sleep() { printf '%s\n' "$*" >> "$RV54LC_LOG"; return 0; }
+            set -e; cmd_update "$d" ) 2>&1 )"; rc=$?
+  if [ -e "$d.pauses" ]; then n="$(rv_lines "$d.pauses")"; gaps="$(sort -u "$d.pauses")"; fi
+  rv_has "$out" 'its record cannot be read' && said=1
+  if [ "$rc" -ne 76 ]; then
+    FAIL "$id: CONTROL — update on a lock whose record never appears read rc=$rc, want 76"
+  elif [ "$said" -eq 0 ]; then
+    FAIL "$id: CONTROL — the refusal (rc=76) does not say the lock's record cannot be read"
+  elif [ "$n" != 9 ] || [ "$gaps" != 0.05 ]; then
+    FAIL "$id: CONTROL — update chose 76 after $n pause(s) of '$gaps' s, want 9 pauses of 0.05 s (0.45 s in all) — it did not spend the stated bound before deciding"
+  else
+    PASS "$id: CONTROL — a lock whose record never appears takes 76, saying its record cannot be read, after exactly nine pauses of 0.05 s between ten reads: the bound is spent, never exceeded"
+  fi
+}
+rv54lc_assert "RV54-holder-late-ctl"
 # RV54-mkdir — review FM-3: a trip directory that refuses the write is named as itself, never as a held lock.
 rv54m_assert() { # <id>
   local id="$1" name d out rc said=0 held=0
@@ -16795,6 +16869,8 @@ md_flips _take_trip_lock "RV54-confirm-prompt" rv54p_assert "RV54-confirm-prompt
 md_flips cmd_list "RV54-list" rv54l_assert "RV54-list"
 md_flips _take_trip_lock "RV54-stale" rv54s_assert "RV54-stale"
 md_flips _take_trip_lock "RV54-unreadable-holder" rv54u_assert "RV54-unreadable-holder"
+md_flips _take_trip_lock "RV54-holder-late" rv54lh_assert "RV54-holder-late"
+md_flips _take_trip_lock "RV54-holder-late-ctl" rv54lc_assert "RV54-holder-late-ctl"
 md_flips _take_trip_lock "RV54-mkdir" rv54m_assert "RV54-mkdir"
 for rv_b in TERM INT HUP; do md_flips _release_trip_lock "RV54-signals-$rv_b" rv54g_assert "RV54-signals-$rv_b" "$rv_b"; done
 
