@@ -156,7 +156,13 @@ The rule for a lock a killed run left behind:
 - **Residuals this record accepts.** A rotation back to a key an earlier rotation revoked passes both checks:
   the key is the operator's explicit choice, and decision 2 reads only the live page. A recorded process id can
   name an unrelated live process after a reboot, which reads as a running holder. Durability against power loss
-  cannot be observed in a test; what is graded is the flush call, its order and its success.
+  cannot be observed in a test; what is graded is the flush call, its order and its success. Three races in the
+  lock are accepted, each needing commands to start and stop within microseconds, and none seen in testing.
+  First, a holder that releases between its record being read and the liveness test: the second command reads 76,
+  "not running", for a lock already gone. Second, a retake beaten by a third command that also releases at once:
+  this reads as the trip directory refusing the write. Third, a retake lost at the tenth read: this reads 76,
+  "unknown", while that third command runs. Following any of these refusals costs a removal that finds nothing,
+  and a re-run.
 - **What grades it.** Groups RV and E of `scripts/test-publish-guard.sh`: RV48–RV52 for decisions 1 to 4, RV57
   for the commit's dates decision 3 rests on, E5–E8 for the decrypt against the real tool, RV54 for decision 5,
   and RV54-release and RV56-values for the lock's release on every refusal and for no refusal printing a key.
