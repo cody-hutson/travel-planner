@@ -11,8 +11,8 @@
   kept from running into the first. It is addressed to whoever edits `cmd_update`, `cmd_rotate`, `write_passphrase_file`, the
   per-trip lock, or the groups RV and E of `scripts/test-publish-guard.sh` that grade them.
 - **What this record is not.** It does not change how a key is generated, where it is stored, or what is
-  encrypted; it does not reach two machines publishing one trip; and it decides nothing about
-  `unpublish`'s reading of the host, which is a point fix inside the existing contract.
+  encrypted; it does not reach two machines publishing one trip; and it decides nothing about how
+  `unpublish` and `publish` read the host, each a point fix inside the existing contract.
 
 ## Context
 
@@ -131,7 +131,10 @@ The rule for a lock a killed run left behind:
 
 - **A push stands on the site.** Milestone 74's residual — an `update` re-keying the site under a key a failed
   first publish generated — ends at decision 1. The publish script's own source of that key, its host read
-  reading every failure as an absent repository, is left as it was; decision 1 ends the harm it could do.
+  reading every failure as an absent repository, now reads the HTTP status line as `unpublish` does, a point
+  fix inside the existing contract: only a 404 takes the create path, and a host that could not be asked stops
+  `publish` before any key is generated. A first publish whose create fails after a 404 can still leave a key,
+  and decision 1 ends the harm that one could do.
 - **Every `update` and `rotate` that reaches its push decrypts the live page once,** with the same pinned
   StatiCrypt package the encryption already trusts, about half a second with the package cached. The trust
   boundary `reference/publishing-runbook.md` states is unchanged.

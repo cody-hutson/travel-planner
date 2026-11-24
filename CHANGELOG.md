@@ -56,8 +56,11 @@ never broken automatically: the refusal names its removal. The lock covers one m
 through `if` or `||` leaves the script in — six of nine constructed step failures used to run on to
 `Published`. Each step now stops with a message naming it: the GitHub user read, the `--opaque` name save
 (whose failure could leave the repository named after the destination and year, and whose token is now
-checked for its shape), the clone directory, the generator, the encryption, the page's placement, the
-commit and the repository create.
+checked for its shape), the repository lookup, the clone directory, the generator, the encryption, the
+page's placement, the commit and the repository create. The lookup used to read any failure as an
+absent repository and go on down the create path, generating a key; it now reads the HTTP status line as
+`unpublish` does, so only a 404 takes the create path, and any answer but a 404 or a 200 — or a 200
+whose read of the repository's emptiness fails — stops the run there, before a passphrase is generated.
 
 **One record.** `ADR-055`, *a publish stands on the live site and runs alone*, lands `Proposed`: the key
 checked against the live site, with `rotate`'s inverted check and the marker that binds a failed rotation
@@ -84,8 +87,7 @@ floor and owes no row.
 **What this release does not do.** Two machines publishing one trip are still stopped only by the bound
 pushes and read-backs. A rotation back to a key an earlier rotation revoked passes both key checks.
 Durability against power loss is not observable in a suite: the flush call, its order and its success
-are what is graded. `publish`'s own host read still reads any failure as an absent repository; the key
-check ends the harm that did.
+are what is graded.
 
 ## [0.76.0] — 2026-11-22 — The first-verb read carries only what every session needs
 

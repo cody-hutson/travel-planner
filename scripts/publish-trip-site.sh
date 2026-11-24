@@ -5276,17 +5276,27 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   pub_dir="$trip_dir/.publish"
   { owner="$(gh api user --jq '.login')" && [ -n "$owner" ]; } \
     || die "publish: could not read your GitHub user name, which names the per-trip repository and its site. Nothing was created or pushed. Check  gh auth status  and re-run publish."
-  # A repository that exists takes this push only when the host says it is empty and public. What the
-  # host said decides, never what a clone holds; an answer that is not exactly that is the repository
-  # holding something, which is the refusal it always was.
-  local into_empty=0 host=""
-  if host="$(gh repo view "${owner}/${slug}" --json isEmpty,visibility --jq '"\(.isEmpty) \(.visibility)"' 2>/dev/null)"; then
-    case "$host" in
-      "true PUBLIC") into_empty=1 ;;
-      "true "*) die "per-trip repo ${owner}/${slug} is empty, but it is not public (${host#true }). This engine publishes to a public repository served by GitHub Pages, and only ever pushes ciphertext to it. Nothing was pushed, and no passphrase was generated. Make it public in its settings, or name another repository in ${trip_dir}/.publish-slug, and re-run publish." ;;
-      *) die "per-trip repo ${owner}/${slug} already exists — use:  $(basename "$0") update ${trip_dir}  (or rotate)" ;;
-    esac
-  fi
+  # Whether the per-trip repository exists is read from the HTTP status line the host answers, as unpublish reads it
+  # (#2212): gh exits 1 for a 404 and a dropped connection alike, and reading every failure as "no repository" sent a
+  # run the host could not answer down the create path, generating a key on the way (#1819 AC-4, Stage 8's QF-02).
+  # Only a 404 takes the create path. Any other answer but a 200 stops here, before a passphrase can be generated.
+  # A repository that exists takes this push only when the host says it is empty and public. What the host said
+  # decides, never what a clone holds; an answer that is not exactly that is the repository holding something, which
+  # is the refusal it always was, and a read that gets no answer at all stops the run rather than guessing.
+  local into_empty=0 host="" seen
+  seen="$(_host_answer "repos/${owner}/${slug}")"
+  case "$seen" in
+    absent)  ;;
+    present)
+      host="$(gh repo view "${owner}/${slug}" --json isEmpty,visibility --jq '"\(.isEmpty) \(.visibility)"' 2>/dev/null)" \
+        || die "publish: GitHub reports that the per-trip repository ${owner}/${slug} exists, but could not say whether it is empty and public, the one kind of existing repository publish takes. Nothing was created or pushed, and no passphrase was generated. Check  gh auth status  and re-run publish when GitHub can be reached."
+      case "$host" in
+        "true PUBLIC") into_empty=1 ;;
+        "true "*) die "per-trip repo ${owner}/${slug} is empty, but it is not public (${host#true }). This engine publishes to a public repository served by GitHub Pages, and only ever pushes ciphertext to it. Nothing was pushed, and no passphrase was generated. Make it public in its settings, or name another repository in ${trip_dir}/.publish-slug, and re-run publish." ;;
+        *) die "per-trip repo ${owner}/${slug} already exists — use:  $(basename "$0") update ${trip_dir}  (or rotate)" ;;
+      esac ;;
+    *)       die "publish: could not ask GitHub whether the per-trip repository ${owner}/${slug} exists — the lookup got no answer it could read (a dropped connection, an outage, a rate limit, or a token that may not read the repository). Nothing was created or pushed, and no passphrase was generated. Check  gh auth status  and re-run publish when GitHub can be reached." ;;
+  esac
   rm -rf "$pub_dir" || die "publish: could not clear $pub_dir before cloning into it. Nothing was created or pushed."
   if [ "$into_empty" = 1 ]; then
     gh repo clone "${owner}/${slug}" "$pub_dir" >/dev/null 2>&1 \
