@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased]
+## [0.77.0] — 2026-11-24 — Publish commands are safe to run twice and stop on their own failures
 
 The publish commands are now safe to run twice and stop on their own failures. A takedown that fails
 says so; a push that re-encrypts is made only under a key that opens the page the site serves now; a
