@@ -47,9 +47,9 @@ it points.
 `list` takes none. A second command refuses at once, naming the one running, with exit status 75 where it
 runs and 76 for a lock a killed run left behind, so an unattended caller can tell the two apart. A
 command arriving in the first instants after another creates the lock, before that one's record is in
-place, reads the record again for up to half a second — ten reads 0.05 s apart — and so names it; where
-that one finishes and releases the lock meanwhile, the trip is free, and the command takes the lock and
-runs. Only a record still missing after that is told 76, its record cannot be read. Every exit releases
+place, reads the record again — ten reads 0.05 s apart — and so names it; where that one finishes and
+releases the lock meanwhile, the trip is free, and the command takes the lock and runs. Only a record
+still missing at the tenth read is told 76, its record cannot be read. Every exit releases
 the lock, and an interrupt, a hangup or a terminate signal does too. A lock a run killed outright left
 behind is never broken automatically: the refusal names its removal. The lock covers one machine's data
 root.
@@ -83,7 +83,7 @@ release's for `ADR-055` each fitted beneath the old row alone, and together they
 `skills/trip-publish/SKILL.md` grew 626 to 47,137, beneath 48,711; `skills/trip-decommission/SKILL.md`
 grew 571 to 57,245, beneath 60,026; and `skills/trip-record/SKILL.md` grew 43 to 456,865, beneath
 470,268. `CLAUDE.md` did not grow: this release's publishing sentences sit in
-`reference/publishing-runbook.md`, which grew 2,070 to 9,239 and, like `ADR-055`, is below its class
+`reference/publishing-runbook.md`, which grew 2,163 to 9,332 and, like `ADR-055`, is below its class
 floor and owes no row.
 
 **What this release does not do.** Two machines publishing one trip are still stopped only by the bound

@@ -81,7 +81,7 @@ Whether a second command waits or refuses, and the lock's primitive:
 |---|---|
 | **Refuse at once, naming the holder** | **SELECTED.** Deterministic; an unattended caller chooses its own retry |
 | Wait up to a bound | Rejected. A timing constant, a nondeterministic arm, and a command waiting silently behind a prompt |
-| **Read a holder record not yet in place again, for a bound, before calling it unreadable** | **SELECTED**, at acceptance review. The holder writes its record just after its `mkdir`, so a second command in between finds the lock and no record and would be told 76 where 75 is due; ten reads 0.05 s apart, under half a second, and never a wait for the holder |
+| **Read a holder record not yet in place again, for a bound, before calling it unreadable** | **SELECTED**, at acceptance review. The holder writes its record just after its `mkdir`, so a second command in between finds the lock and no record and would be told 76 where 75 is due; ten reads 0.05 s apart, and never a wait for the holder |
 | Wait without a bound | Rejected. A lock a killed run left behind hangs every later command |
 | **`mkdir <trip-dir>/.publish-lock`, a holder record inside** | **SELECTED.** Atomic on every local filesystem, no dependency, a readable record |
 | `flock` on a descriptor the shell holds | Rejected. Not on macOS as a command; through perl it adds a dependency to the takedown and stays held while any child of the run lives |
@@ -146,8 +146,8 @@ The rule for a lock a killed run left behind:
 - **A manual step follows a run killed outright, a crash or a power loss:** the lock's removal, named in the
   refusal. An unattended republish can tell a busy trip from a lock left behind by the exit status alone,
   in the first instants after a command creates the lock too, because the record is read again until it lands,
-  and a lock its holder releases meanwhile is taken rather than reported; only a record still missing half a
-  second on, a holder stopped between creating the lock and writing its record, reads 76 as a record that
+  and a lock its holder releases meanwhile is taken rather than reported; only a record still missing at the
+  tenth read, a holder stopped between creating the lock and writing its record, reads 76 as a record that
   cannot be read.
 - **The lock covers one machine's data root.** Two machines publishing one trip are still stopped only by the
   bound pushes, the read-backs and the residue refusal.

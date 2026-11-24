@@ -98,11 +98,11 @@
 # running command refuses with exit status 75, and one whose holder is not running on this machine, or
 # whose record cannot be read, with 76, so an unattended caller can tell a busy trip from a lock left
 # behind without reading the message; every other refusal exits 1. A command that arrives in the first
-# instants after another creates the lock, before that one's record is in place, reads the record again
-# for up to half a second, and names the holder once the record lands; where that one finishes and
+# instants after another creates the lock, before that one's record is in place, reads the record again,
+# ten reads 0.05 s apart, and names the holder once the record lands; where that one finishes and
 # releases the lock meanwhile, the trip is free, and the command takes the lock and runs. Only a record
-# still missing after that — a holder stopped between creating the lock and writing its record, say — is
-# told 76, its record cannot be read. Every exit releases the lock, a
+# still missing at the tenth read — a holder stopped between creating the lock and writing its record,
+# say — is told 76, its record cannot be read. Every exit releases the lock, a
 # refusal included, and so do an interrupt, a hangup and a terminate signal. A run killed outright, a
 # crash or a power loss leaves the directory in place. It is never broken automatically, because its
 # holder may be running on another machine that shares the data root; where its holder is not running,
