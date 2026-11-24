@@ -81,7 +81,7 @@ release's for `ADR-055` each fitted beneath the old row alone, and together they
 `skills/trip-publish/SKILL.md` grew 626 to 47,137, beneath 48,711; `skills/trip-decommission/SKILL.md`
 grew 571 to 57,245, beneath 60,026; and `skills/trip-record/SKILL.md` grew 43 to 456,865, beneath
 470,268. `CLAUDE.md` did not grow: this release's publishing sentences sit in
-`reference/publishing-runbook.md`, which grew 1,433 to 8,602 and, like `ADR-055`, is below its class
+`reference/publishing-runbook.md`, which grew 2,070 to 9,239 and, like `ADR-055`, is below its class
 floor and owes no row.
 
 **What this release does not do.** Two machines publishing one trip are still stopped only by the bound
