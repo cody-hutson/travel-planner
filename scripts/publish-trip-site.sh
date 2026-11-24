@@ -94,7 +94,7 @@
 # — no key and no path. publish, update, rotate and unpublish (both limbs) take it before they read
 # anything; confirm takes it immediately before it writes a record, so an organizer at its prompt holds
 # nothing; list takes none. A command that finds the lock held refuses at once, naming the command that
-# holds it and whether that process is still running on this machine; it never waits. A lock held by a
+# holds it and whether that process is still running on this machine; it never waits for it. A lock held by a
 # running command refuses with exit status 75, and one whose holder is not running on this machine, or
 # whose record cannot be read, with 76, so an unattended caller can tell a busy trip from a lock left
 # behind without reading the message; every other refusal exits 1. A command that arrives in the first
@@ -104,8 +104,11 @@
 # record cannot be read. Every exit releases the lock, a
 # refusal included, and so do an interrupt, a hangup and a terminate signal. A run killed outright, a
 # crash or a power loss leaves the directory in place. It is never broken automatically, because its
-# holder may be running on another machine that shares the data root; the refusal names its removal for
-# once no command is running on the trip. The lock covers one machine's data root. Two machines
+# holder may be running on another machine that shares the data root; where its holder is not running,
+# the refusal names its removal for once no command is running on the trip. A holder reported as running
+# may still be stale: after a crash or a restart its process id can belong to an unrelated process, which
+# the start time the refusal prints tells, and ps -p <pid> shows what that process is. The lock covers
+# one machine's data root. Two machines
 # publishing one trip are still stopped only by the bound pushes and read-backs above.
 #
 # Repo slug resolution (in order): <trip-dir>/.publish-slug, else the convention
