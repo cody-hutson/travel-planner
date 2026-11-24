@@ -45,14 +45,16 @@ it points.
 **One command at a time.** `publish`, `update`, `rotate` and `unpublish` take a per-trip lock,
 `<trip-dir>/.publish-lock`, before they read anything, and `confirm` immediately before its first write;
 `list` takes none. A second command refuses at once, naming the one running, with exit status 75 where it
-runs and 76 for a lock a killed run left behind, so an unattended caller can tell the two apart. A
-command arriving in the first instants after another creates the lock, before that one's record is in
-place, reads the record again — ten reads 0.05 s apart — and so names it; where that one finishes and
-releases the lock meanwhile, the trip is free, and the command takes the lock and runs. Only a record
-still missing at the tenth read is told 76, its record cannot be read. Every exit releases
-the lock, and an interrupt, a hangup or a terminate signal does too. A lock a run killed outright left
-behind is never broken automatically: the refusal names its removal. The lock covers one machine's data
-root.
+runs and 76 where it is not running on this machine, as for a lock a killed run left behind, so an
+unattended caller can tell the two apart. A command arriving in the first instants after another creates
+the lock, before that one's record is in place, reads the record again — ten reads 0.05 s apart — and so
+names it; where that one finishes and releases the lock meanwhile, the trip is free, and the command
+takes the lock and runs. Only a record still missing at the tenth read is told 76, its record cannot be
+read. Every exit releases the lock, and an interrupt, a hangup or a terminate signal does too. A lock a
+run killed outright left behind is never broken automatically: where its holder is not running on this
+machine, the refusal names its removal. A holder reported as running may still be stale: after a crash
+or a restart its process id can belong to an unrelated process, which the start time the refusal prints
+tells, and `ps -p <pid>` shows what that process is. The lock covers one machine's data root.
 
 **Each first-publish step stops on its own failure.** With errexit off — the state a caller reached
 through `if` or `||` leaves the script in — six of nine constructed step failures used to run on to

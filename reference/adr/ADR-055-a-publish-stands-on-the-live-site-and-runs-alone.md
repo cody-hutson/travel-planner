@@ -91,7 +91,7 @@ The rule for a lock a killed run left behind:
 
 | Option | Verdict |
 |---|---|
-| **Never break it automatically; the refusal says whether the holder runs on this machine and names the removal** | **SELECTED.** Safe whatever the data root is synced to |
+| **Never break it automatically; the refusal says whether the holder runs on this machine and, where it does not, names the removal** | **SELECTED.** Safe whatever the data root is synced to |
 | Break it when the recorded process is gone | Rejected. Two breakers race, and a lock synced from another machine reads as dead here while live there |
 | Break it by age | Rejected. `confirm` can hold a prompt for any length of time |
 
@@ -126,8 +126,10 @@ The rule for a lock a killed run left behind:
    again, ten times in all with 0.05 s between, before it is called unreadable, so a holder in its first
    instants is named. Where that holder releases the lock meanwhile, the trip is free, and the command takes
    the lock by the same take a first taker makes and runs; where another command took it first, its record is
-   read on. A lock a run killed outright left behind is never broken automatically: the refusal names its
-   removal.
+   read on. A lock a run killed outright left behind is never broken automatically: where its holder is not
+   running on this machine, the refusal names its removal. A holder reported as running may still be stale,
+   its process id reused by an unrelated process after a crash or a restart, which the start time the refusal
+   prints tells.
 
 ## Consequences
 
@@ -144,11 +146,11 @@ The rule for a lock a killed run left behind:
   or key material; the erase reach table's control-files row names both as OUT, and they join the publish
   script's other sidecars outside the data architecture's closed enumeration, the residual `ADR-046` records.
 - **A manual step follows a run killed outright, a crash or a power loss:** the lock's removal, named in the
-  refusal. An unattended republish can tell a busy trip from a lock left behind by the exit status alone,
-  in the first instants after a command creates the lock too, because the record is read again until it lands,
-  and a lock its holder releases meanwhile is taken rather than reported; only a record still missing at the
-  tenth read, a holder stopped between creating the lock and writing its record, reads 76 as a record that
-  cannot be read.
+  refusal where the holder's process is no longer running. An unattended republish can tell a busy trip from
+  a lock left behind by the exit status alone, in the first instants after a command creates the lock too,
+  because the record is read again until it lands, and a lock its holder releases meanwhile is taken rather
+  than reported; only a record still missing at the tenth read, a holder stopped between creating the lock
+  and writing its record, reads 76 as a record that cannot be read.
 - **The lock covers one machine's data root.** Two machines publishing one trip are still stopped only by the
   bound pushes, the read-backs and the residue refusal.
 - **Residuals this record accepts.** A rotation back to a key an earlier rotation revoked passes both checks:
