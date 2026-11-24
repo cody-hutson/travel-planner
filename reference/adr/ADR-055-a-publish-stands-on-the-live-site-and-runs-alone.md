@@ -44,7 +44,8 @@ copy-and-rename; and a takedown reporting a no-op while a first publish made the
 - **No recovery route the script already names may close.** `update`'s own refusal sends an operator with a
   lost key, or a site published `--plaintext`, to `rotate`.
 - **A refusal is deterministic and machine-readable where an unattended caller meets it.** No timing in a
-  required check.
+  required check: the one timing constant, decision 5's re-read of a holder record not yet in place, is
+  graded by an arm in which the record lands during the re-read by construction, and by its count of pauses.
 - **No new dependency on the takedown path.** `unpublish` runs with the GitHub CLI alone.
 - **Fail closed.** A state the script cannot read is a refusal, never a pass.
 
@@ -80,6 +81,7 @@ Whether a second command waits or refuses, and the lock's primitive:
 |---|---|
 | **Refuse at once, naming the holder** | **SELECTED.** Deterministic; an unattended caller chooses its own retry |
 | Wait up to a bound | Rejected. A timing constant, a nondeterministic arm, and a command waiting silently behind a prompt |
+| **Read a holder record not yet in place again, for a bound, before calling it unreadable** | **SELECTED**, at acceptance review. The holder writes its record just after its `mkdir`, so a second command in between finds the lock and no record and would be told 76 where 75 is due; ten reads 0.05 s apart, under half a second, and never a wait for the holder |
 | Wait without a bound | Rejected. A lock a killed run left behind hangs every later command |
 | **`mkdir <trip-dir>/.publish-lock`, a holder record inside** | **SELECTED.** Atomic on every local filesystem, no dependency, a readable record |
 | `flock` on a descriptor the shell holds | Rejected. Not on macOS as a command; through perl it adds a dependency to the takedown and stays held while any child of the run lives |
@@ -120,8 +122,10 @@ The rule for a lock a killed run left behind:
    `<trip-dir>/.publish-lock` before they read anything; `confirm` takes it immediately before its first
    write; `list` takes none. A command that finds it held refuses at once — exit status 75 where the holder
    runs on this machine, 76 where it does not or its record cannot be read — and every exit of the shell that
-   took it releases it, as do an interrupt, a hangup and a terminate signal. A lock a run killed outright left
-   behind is never broken automatically: the refusal names its removal.
+   took it releases it, as do an interrupt, a hangup and a terminate signal. A record not yet in place is read
+   again, ten times in all with 0.05 s between, before it is called unreadable, so a holder in its first
+   instants is named. A lock a run killed outright left behind is never broken automatically: the refusal
+   names its removal.
 
 ## Consequences
 
@@ -136,9 +140,9 @@ The rule for a lock a killed run left behind:
   script's other sidecars outside the data architecture's closed enumeration, the residual `ADR-046` records.
 - **A manual step follows a run killed outright, a crash or a power loss:** the lock's removal, named in the
   refusal. An unattended republish can tell a busy trip from a lock left behind by the exit status alone,
-  save in the first instants after a command creates the lock: before its record is in place, a second command
-  is told 76, its record cannot be read, where 75 is due, and since that refusal's remedy holds only if no
-  publish command is running, the operator checks before removing the lock.
+  in the first instants after a command creates the lock too, because the record is read again until it lands;
+  only a record still missing half a second on, a holder stopped between creating the lock and writing its
+  record, reads 76 as a record that cannot be read.
 - **The lock covers one machine's data root.** Two machines publishing one trip are still stopped only by the
   bound pushes, the read-backs and the residue refusal.
 - **Residuals this record accepts.** A rotation back to a key an earlier rotation revoked passes both checks:

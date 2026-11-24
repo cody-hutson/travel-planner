@@ -16,7 +16,7 @@ After the push, `publish` enables Pages and prints the live URL plus **where the
 
 ## One at a time
 
-**One at a time.** Publish commands on one trip run one at a time: a second `publish`, `update`, `rotate`, `unpublish` or `confirm` refuses at once, naming the one running. A lock left by a run that was killed outright is named in the refusal together with how to remove it.
+**One at a time.** Publish commands on one trip run one at a time: a second `publish`, `update`, `rotate`, `unpublish` or `confirm` refuses at once, naming the one running. One that arrives in the first instants after another starts, before that one has recorded itself in the lock, reads the lock again for up to half a second and names it then; only where that record is still missing after the half second — a run stopped between taking the lock and recording itself, say — does the refusal say which command holds the lock is unknown. A lock left by a run that was killed outright is named in the refusal together with how to remove it.
 
 ## Repo name
 

@@ -45,13 +45,12 @@ it points.
 **One command at a time.** `publish`, `update`, `rotate` and `unpublish` take a per-trip lock,
 `<trip-dir>/.publish-lock`, before they read anything, and `confirm` immediately before its first write;
 `list` takes none. A second command refuses at once, naming the one running, with exit status 75 where it
-runs and 76 for a lock a killed run left behind, so an unattended caller can tell the two apart. For
-the first instants after a command creates the lock, before its record is in place, a second command is
-told 76, its record cannot be read, where 75 is due; that refusal's remedy holds only if no publish
-command is running, so check before removing the lock. Every
-exit releases the lock, and an interrupt, a hangup or a terminate signal does too. A lock a run killed
-outright left behind is never broken automatically: the refusal names its removal. The lock covers one
-machine's data root.
+runs and 76 for a lock a killed run left behind, so an unattended caller can tell the two apart. A
+command arriving in the first instants after another creates the lock, before that one's record is in
+place, reads the record again for up to half a second — ten reads 0.05 s apart — and so names it; only a
+record still missing after that is told 76, its record cannot be read. Every exit releases the lock,
+and an interrupt, a hangup or a terminate signal does too. A lock a run killed outright left behind is
+never broken automatically: the refusal names its removal. The lock covers one machine's data root.
 
 **Each first-publish step stops on its own failure.** With errexit off — the state a caller reached
 through `if` or `||` leaves the script in — six of nine constructed step failures used to run on to

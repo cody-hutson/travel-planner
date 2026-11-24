@@ -97,10 +97,11 @@
 # holds it and whether that process is still running on this machine; it never waits. A lock held by a
 # running command refuses with exit status 75, and one whose holder is not running on this machine, or
 # whose record cannot be read, with 76, so an unattended caller can tell a busy trip from a lock left
-# behind without reading the message; every other refusal exits 1. For the first instants after a
-# command creates the lock, before its record is in place, a second command is told 76, its record
-# cannot be read, where 75 is due, and that refusal's remedy holds only if no publish command is
-# running, so check before removing the lock. Every exit releases the lock, a
+# behind without reading the message; every other refusal exits 1. A command that arrives in the first
+# instants after another creates the lock, before that one's record is in place, reads the record again
+# for up to half a second, and names the holder once the record lands; only a record still missing after
+# that — a holder stopped between creating the lock and writing its record, say — is told 76, its
+# record cannot be read. Every exit releases the lock, a
 # refusal included, and so do an interrupt, a hangup and a terminate signal. A run killed outright, a
 # crash or a power loss leaves the directory in place. It is never broken automatically, because its
 # holder may be running on another machine that shares the data root; the refusal names its removal for
@@ -5638,14 +5639,22 @@ require_publish_branch() { # <pub_dir> <verb>
 
 # The per-trip lock (#1819). One command on a trip at a time: publish, update, rotate and unpublish take it at entry,
 # confirm immediately before its first write, list never. mkdir is atomic, so exactly one taker succeeds. A second
-# command refuses at once — it never waits — naming the holder, with its own exit status: 75 where the holder is
-# running, 76 where it is not or its record cannot be read (review CD-3). Released on every exit of the shell that took
-# it, a refusal included, and on INT, TERM and HUP; a SIGKILL, a crash or a power loss leaves it, and it is never broken
-# automatically, because the data root may be shared with a machine where its holder still runs. A shell that already
-# holds a trip's lock holds it still, so a second command in the same process does not refuse on its own lock. A mkdir
-# that fails where no lock stands is the trip directory refusing the write, and is named as that (review FM-3).
+# command refuses at once — it never waits for the holder — naming the holder, with its own exit status: 75 where the
+# holder is running, 76 where it is not or its record cannot be read (review CD-3). The holder writes its record just
+# after its mkdir, so a second command arriving in between finds the lock and no record yet; it reads the record again,
+# TRIP_LOCK_REREADS times in all with TRIP_LOCK_REREAD_GAP seconds between, before it calls the record unreadable
+# (review PR-3, Stage 8's QF-01). That window was measured under 10 ms on an idle machine; the bound, 0.45 s of pauses,
+# leaves room for a holder slowed tens of times over on a loaded one, and keeps a refusal well under a second — still at
+# once to an operator, and a negligible wait before 76 for a lock left with no record at all. Released on every exit of
+# the shell that took it, a refusal included, and on INT, TERM and HUP; a SIGKILL, a crash or a power loss leaves it,
+# and it is never broken automatically, because the data root may be shared with a machine where its holder still runs.
+# A shell that already holds a trip's lock holds it still, so a second command in the same process does not refuse on
+# its own lock. A mkdir that fails where no lock stands is the trip directory refusing the write, and is named as that
+# (review FM-3).
 TRIP_LOCK_HELD_RC=75
 TRIP_LOCK_STALE_RC=76
+TRIP_LOCK_REREADS=10
+TRIP_LOCK_REREAD_GAP=0.05
 trip_lock_path() { printf '%s' "$1/.publish-lock"; }
 _TRIP_LOCK=""; _TRIP_LOCK_PID=""
 _die_rc() { # <status> <message> — die, with the exit status the caller names
@@ -5653,7 +5662,7 @@ _die_rc() { # <status> <message> — die, with the exit status the caller names
   printf '\033[1;31m✗ ERROR:\033[0m %s\n' "$*" >&2; exit "$rc"
 }
 _take_trip_lock() { # <trip_dir> <verb>
-  local l h own hc hp hs line alive
+  local l h own hc hp hs line alive reads=0
   if [ "$BASH_SUBSHELL" -eq 0 ] && [ "${BASH_SOURCE[0]}" != "$0" ]; then
     die "$2: refused to take the per-trip lock from the top level of a shell that sourced $(basename "${BASH_SOURCE[0]}") — its EXIT trap would replace that shell's own. Run the command in a subshell."
   fi
@@ -5672,12 +5681,19 @@ _take_trip_lock() { # <trip_dir> <verb>
   fi
   [ -d "$l" ] \
     || die "$2: could not create the per-trip lock at $l — the trip directory may be read-only or its volume full, or something other than a lock stands at that name. Nothing was changed. Make $1 writable and re-run $2."
-  hc=""; hp=""; hs=""
-  if [ -f "$l/holder" ] && [ -r "$l/holder" ]; then
-    while IFS= read -r line || [ -n "$line" ]; do
-      case "$line" in command=*) hc="${line#command=}" ;; pid=*) hp="${line#pid=}" ;; started=*) hs="${line#started=}" ;; esac
-    done < "$l/holder"
-  fi
+  # The record is read again while it cannot be read, up to the bound (see above): a holder in its first instants has
+  # made the directory and not yet renamed its record into place.
+  while :; do
+    hc=""; hp=""; hs=""; reads=$((reads+1))
+    if [ -f "$l/holder" ] && [ -r "$l/holder" ]; then
+      while IFS= read -r line || [ -n "$line" ]; do
+        case "$line" in command=*) hc="${line#command=}" ;; pid=*) hp="${line#pid=}" ;; started=*) hs="${line#started=}" ;; esac
+      done < "$l/holder"
+    fi
+    case "$hp" in ''|*[!0-9]*) ;; *) break ;; esac
+    [ "$reads" -lt "$TRIP_LOCK_REREADS" ] || break
+    sleep "$TRIP_LOCK_REREAD_GAP"
+  done
   case "$hp" in ''|*[!0-9]*)
     _die_rc "$TRIP_LOCK_STALE_RC" "$2 refused — another publish command holds this trip's lock at $l, and its record cannot be read, so which command holds it is unknown. Nothing was changed. If no publish command is running on this trip — from this machine or another one sharing this data root — remove the lock (rm -r $l) and re-run $2." ;;
   esac
