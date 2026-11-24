@@ -1,6 +1,6 @@
 # ADR-055: A publish stands on the live site and runs alone — the key is checked against the page the site serves, a failed rotation is finished only while its marker names the key file and the page, and the commands on one trip run under a per-trip lock
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-24)
 - **Deciders:** repo maintainer
 - **Driving work:** #1820 and #1819, in the *Publish commands are safe to run twice and stop on their
   own failures* milestone. The repository's maintainer ruled, at that milestone's collective review,
