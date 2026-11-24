@@ -124,8 +124,10 @@ The rule for a lock a killed run left behind:
    runs on this machine, 76 where it does not or its record cannot be read — and every exit of the shell that
    took it releases it, as do an interrupt, a hangup and a terminate signal. A record not yet in place is read
    again, ten times in all with 0.05 s between, before it is called unreadable, so a holder in its first
-   instants is named. A lock a run killed outright left behind is never broken automatically: the refusal
-   names its removal.
+   instants is named. Where that holder releases the lock meanwhile, the trip is free, and the command takes
+   the lock by the same take a first taker makes and runs; where another command took it first, its record is
+   read on. A lock a run killed outright left behind is never broken automatically: the refusal names its
+   removal.
 
 ## Consequences
 
@@ -143,9 +145,10 @@ The rule for a lock a killed run left behind:
   script's other sidecars outside the data architecture's closed enumeration, the residual `ADR-046` records.
 - **A manual step follows a run killed outright, a crash or a power loss:** the lock's removal, named in the
   refusal. An unattended republish can tell a busy trip from a lock left behind by the exit status alone,
-  in the first instants after a command creates the lock too, because the record is read again until it lands;
-  only a record still missing half a second on, a holder stopped between creating the lock and writing its
-  record, reads 76 as a record that cannot be read.
+  in the first instants after a command creates the lock too, because the record is read again until it lands,
+  and a lock its holder releases meanwhile is taken rather than reported; only a record still missing half a
+  second on, a holder stopped between creating the lock and writing its record, reads 76 as a record that
+  cannot be read.
 - **The lock covers one machine's data root.** Two machines publishing one trip are still stopped only by the
   bound pushes, the read-backs and the residue refusal.
 - **Residuals this record accepts.** A rotation back to a key an earlier rotation revoked passes both checks:

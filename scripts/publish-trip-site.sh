@@ -99,9 +99,10 @@
 # whose record cannot be read, with 76, so an unattended caller can tell a busy trip from a lock left
 # behind without reading the message; every other refusal exits 1. A command that arrives in the first
 # instants after another creates the lock, before that one's record is in place, reads the record again
-# for up to half a second, and names the holder once the record lands; only a record still missing after
-# that — a holder stopped between creating the lock and writing its record, say — is told 76, its
-# record cannot be read. Every exit releases the lock, a
+# for up to half a second, and names the holder once the record lands; where that one finishes and
+# releases the lock meanwhile, the trip is free, and the command takes the lock and runs. Only a record
+# still missing after that — a holder stopped between creating the lock and writing its record, say — is
+# told 76, its record cannot be read. Every exit releases the lock, a
 # refusal included, and so do an interrupt, a hangup and a terminate signal. A run killed outright, a
 # crash or a power loss leaves the directory in place. It is never broken automatically, because its
 # holder may be running on another machine that shares the data root; where its holder is not running,
@@ -5658,7 +5659,10 @@ require_publish_branch() { # <pub_dir> <verb>
 # TRIP_LOCK_REREADS times in all with TRIP_LOCK_REREAD_GAP seconds between, before it calls the record unreadable
 # (review PR-3, Stage 8's QF-01). That window was measured under 10 ms on an idle machine; the bound, 0.45 s of pauses,
 # leaves room for a holder slowed tens of times over on a loaded one, and keeps a refusal well under a second — still at
-# once to an operator, and a negligible wait before 76 for a lock left with no record at all. Released on every exit of
+# once to an operator, and a negligible wait before 76 for a lock left with no record at all. Where its holder releases
+# the lock meanwhile, as a command that refuses at once does within a few hundredths of a second, the trip is free: it
+# takes the lock by the same take a first taker makes, and runs; where another command took it first, it reads that
+# one's record on (Stage 7's F-18). It never breaks a lock that stands. Released on every exit of
 # the shell that took it, a refusal included, and on INT, TERM and HUP; a SIGKILL, a crash or a power loss leaves it,
 # and it is never broken automatically, because the data root may be shared with a machine where its holder still runs.
 # A shell that already holds a trip's lock holds it still, so a second command in the same process does not refuse on
@@ -5674,28 +5678,35 @@ _die_rc() { # <status> <message> — die, with the exit status the caller names
   local rc="$1"; shift
   printf '\033[1;31m✗ ERROR:\033[0m %s\n' "$*" >&2; exit "$rc"
 }
+# The take, written once: a command's first mkdir and its retake of a lock released while it read it both come here,
+# so the two cannot drift (Stage 7's F-18). 0 once this shell holds the lock — its record in place and its traps set,
+# so every exit releases it; 1 where the mkdir failed: another command holds the lock, or nothing can be made there.
+_trip_lock_take() { # <lock> <verb> <own pid>
+  local l="$1" h
+  mkdir "$l" 2>/dev/null || return 1
+  # The record is staged under a fixed name inside the lock directory, which this run alone owns, and renamed
+  # into place, so a reader never sees half of it; no mktemp, whose failure is another step's to report.
+  h="$l/.holder.new"
+  { printf 'command=%s\npid=%s\nstarted=%s\n' "$2" "$3" "$(_iso_now)" > "$h" && mv -f "$h" "$l/holder"; } \
+    || { rm -rf "$l"; die "$2: could not record the per-trip lock at $l. Nothing was changed. Re-run $2."; }
+  _TRIP_LOCK="$l"; _TRIP_LOCK_PID="$3"
+  trap '_release_trip_lock' EXIT; trap 'exit 130' INT; trap 'exit 143' TERM; trap 'exit 129' HUP
+  return 0
+}
 _take_trip_lock() { # <trip_dir> <verb>
-  local l h own hc hp hs line alive reads=0
+  local l own hc hp hs line alive reads=0
   if [ "$BASH_SUBSHELL" -eq 0 ] && [ "${BASH_SOURCE[0]}" != "$0" ]; then
     die "$2: refused to take the per-trip lock from the top level of a shell that sourced $(basename "${BASH_SOURCE[0]}") — its EXIT trap would replace that shell's own. Run the command in a subshell."
   fi
   l="$(trip_lock_path "$1")"
   own="$(exec sh -c 'printf "%s" "$PPID"')"
   if [ "$_TRIP_LOCK" = "$l" ] && [ "$_TRIP_LOCK_PID" = "$own" ]; then return 0; fi
-  if mkdir "$l" 2>/dev/null; then
-    # The record is staged under a fixed name inside the lock directory, which this run alone owns, and renamed
-    # into place, so a reader never sees half of it; no mktemp, whose failure is another step's to report.
-    h="$l/.holder.new"
-    { printf 'command=%s\npid=%s\nstarted=%s\n' "$2" "$own" "$(_iso_now)" > "$h" && mv -f "$h" "$l/holder"; } \
-      || { rm -rf "$l"; die "$2: could not record the per-trip lock at $l. Nothing was changed. Re-run $2."; }
-    _TRIP_LOCK="$l"; _TRIP_LOCK_PID="$own"
-    trap '_release_trip_lock' EXIT; trap 'exit 130' INT; trap 'exit 143' TERM; trap 'exit 129' HUP
-    return 0
-  fi
-  [ -d "$l" ] \
-    || die "$2: could not create the per-trip lock at $l — the trip directory may be read-only or its volume full, or something other than a lock stands at that name. Nothing was changed. Make $1 writable and re-run $2."
+  _trip_lock_take "$l" "$2" "$own" && return 0
   # The record is read again while it cannot be read, up to the bound (see above): a holder in its first instants has
-  # made the directory and not yet renamed its record into place.
+  # made the directory and not yet renamed its record into place. Where the directory itself is gone on a read, its
+  # holder has released it and the trip is free: it is taken by the same take, within the same bound, and where another
+  # command took it first, that one's record is read on as any holder's. A take that fails where still no lock stands
+  # is the trip directory refusing the write.
   while :; do
     hc=""; hp=""; hs=""; reads=$((reads+1))
     if [ -f "$l/holder" ] && [ -r "$l/holder" ]; then
@@ -5704,6 +5715,11 @@ _take_trip_lock() { # <trip_dir> <verb>
       done < "$l/holder"
     fi
     case "$hp" in ''|*[!0-9]*) ;; *) break ;; esac
+    if [ ! -d "$l" ]; then
+      _trip_lock_take "$l" "$2" "$own" && return 0
+      [ -d "$l" ] \
+        || die "$2: could not create the per-trip lock at $l — the trip directory may be read-only or its volume full, or something other than a lock stands at that name. Nothing was changed. Make $1 writable and re-run $2."
+    fi
     [ "$reads" -lt "$TRIP_LOCK_REREADS" ] || break
     sleep "$TRIP_LOCK_REREAD_GAP"
   done
