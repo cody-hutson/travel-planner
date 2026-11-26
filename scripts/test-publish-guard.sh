@@ -12045,8 +12045,12 @@ s33d_assert() {
 # confirmation record of a trip never published ("the plan last approved", and no word of a published
 # plan); and the confirmation record behind a baseline at the raised reading ("the plan last approved",
 # and the published plan unchanged). Each abort asks for approval once more, names sharing the approval
-# line and update or rotate, and names no revert. CONTROL: the same trip with every record at the
-# raised reading gives the shipped abort, revert included.
+# line and update or rotate, and names no revert. A fourth limb is graded at the engine's reading as it
+# stands, because only there does an approval on file have a code under an earlier reading: a declared
+# trip never published, with one of two approvals given for the plan's code under reading 1, gets the
+# same words for "the plan the approvals on file were given for", and no word of a published plan.
+# CONTROL: the same trip with every record at the raised reading gives the shipped abort, revert
+# included, and so does the never-published trip whose one approval names the plan's code now.
 s33e_words() { # <abort text> <what was recorded> <1 when a usable baseline exists, else 0> -> ok, or what is missing
   local t="$1" w=""
   [ "$(s33_has "$t" "$2 was recorded by an engine that reads pages differently")" = 1 ] || w="$w no-lead"
@@ -12060,7 +12064,7 @@ s33e_words() { # <abort text> <what was recorded> <1 when a usable baseline exis
   printf '%s' "${w:-ok}"
 }
 s33e_assert() {
-  local p r b c wp wr wb ec
+  local p r b c wp wr wb ec l lc lw wl el
   p="$(s33_trip s33e-p '' '' 16:30)"; s33_rec "$p/.published-itinerary" "$S33_P14" published
   sa_declare "$p" 1 zqa1; sa_rec "$p" zqa1 approve "$S33_P14"
   r="$(s33_trip s33e-r '' '' 16:30)"; s33_dec "$r/.change-confirmed" "$S33_P14"
@@ -12073,12 +12077,17 @@ s33e_assert() {
   wr="$(s33e_words "$(s33_gate "$r")" 'the plan last approved' 0)"
   wb="$(s33e_words "$(s33_gate "$b")" 'the plan last approved' 1)"
   ec="$(s33_gate "$c")"
-  if [ "$(s33_stray "$p")$(s33_stray "$r")$(s33_stray "$b")$(s33_stray "$c")" != 1111 ] || [ "$(s33_has "$ec" 'revert the working copy')" != 1 ] || [ "$(s33_has "$ec" 'reads pages differently')" != 0 ]; then
-    FAIL "S33e: CONTROL — the declared trip with every record at the raised reading did not give the shipped abort with its revert, or a render lacks the stray '<', so the words below are not a measurement"
-  elif [ "$wp" = ok ] && [ "$wr" = ok ] && [ "$wb" = ok ]; then
-    PASS "S33e: on a trip that declares approvers, a baseline, a never-published trip's confirmation record, and a confirmation record behind a baseline at this engine's reading, each naming an earlier reading, are named as what was recorded — the published plan, the plan last approved, the plan last approved — and each abort asks for approval once more, names sharing the approval line and update or rotate, says whether the published plan is unchanged only where a baseline exists, and names no revert; control: every record at the raised reading gives the shipped abort, revert included"
+  l="$(s33_trip s33e-l '' '' 16:30)"; sa_declare "$l" 2 zqa1 zqb2
+  lw="$( _browser_read_markup() { cat "$1"; }; itinerary_digest "$l/$S15_RENDER" )"; sa_rec "$l" zqa1 approve "$lw"
+  lc="$(s33_trip s33e-lc '' '' 16:30)"; sa_declare "$lc" 2 zqa1 zqb2; sa_rec "$lc" zqa1 approve "$(itinerary_digest "$lc/$S15_RENDER")"
+  wl="$(s33e_words "$( ( require_change_confirmation "$l" ) 2>&1 >/dev/null )" 'the plan the approvals on file were given for' 0)"
+  el="$( ( require_change_confirmation "$lc" ) 2>&1 >/dev/null )"
+  if [ "$(s33_stray "$p")$(s33_stray "$r")$(s33_stray "$b")$(s33_stray "$c")$(s33_stray "$l")" != 11111 ] || [ "$(s33_has "$ec" 'revert the working copy')" != 1 ] || [ "$(s33_has "$ec" 'reads pages differently')" != 0 ] || [ "$(s33_has "$el" 'revert the working copy')" != 1 ] || [ "$(s33_has "$el" 'reads pages differently')" != 0 ]; then
+    FAIL "S33e: CONTROL — the declared trip with every record at the raised reading, or the never-published trip whose one approval names the plan's code now, did not give the shipped abort with its revert, or a render lacks the stray '<', so the words below are not a measurement"
+  elif [ "$wp" = ok ] && [ "$wr" = ok ] && [ "$wb" = ok ] && [ "$wl" = ok ]; then
+    PASS "S33e: on a trip that declares approvers, a baseline, a never-published trip's confirmation record, and a confirmation record behind a baseline at this engine's reading, each naming an earlier reading, are named as what was recorded — the published plan, the plan last approved, the plan last approved — and, at the engine's reading as it stands, a never-published trip with one of two approvals given for the plan's code under reading 1 is told the same of the plan the approvals on file were given for; each abort asks for approval once more, names sharing the approval line and update or rotate, says whether the published plan is unchanged only where a baseline exists, and names no revert; control: every record at the raised reading, and a never-published trip whose approval names the plan's code now, give the shipped abort, revert included"
   else
-    FAIL "S33e: the baseline's words[$wp]; the never-published record's words[$wr]; the record behind a current baseline[$wb]"
+    FAIL "S33e: the baseline's words[$wp]; the never-published record's words[$wr]; the record behind a current baseline[$wb]; the approvals given under reading 1[$wl]"
   fi
 }
 
@@ -12267,6 +12276,610 @@ md_flips _abort_unconfirmed          "S33g" s33g_assert
 md_flips _ledger_append              "S33h" s33h_assert
 md_flips _record_digest              "S33i" s33i_assert
 md_flips _reading_measured           "S33j" s33j_assert
+unset -f gh npx
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group S, #2285 — THE DIGEST READS A PAGE AS A BROWSER DOES, FOR THREE RULES. _browser_read_markup writes
+# a render back with three changes before the v0.77.0 program reads it: a <script>/<style> opener that is
+# not a real start tag is made inert; a < before anything but an ASCII letter, /, ! or ? is written as
+# text; and the text a browser paints from an attribute is written out after its tag. That program now
+# lives in _itinerary_program, strip_to_itinerary_text is the one piped into the other, and
+# _ITINERARY_READING is 2. Every page here is synthetic. An arm's armed-red makes the pre-pass a copy of
+# its input (s34_old), which reads a page exactly as the v0.77.0 digest did.
+#
+#   S34a  class (a): an edit after each of seven look-alike openers moves the digest
+#   S34b  class (b): an edit after a stray `<` moves it, and an edit a browser hides moves nothing
+#   S34c  class (d): the attribute text a browser paints, and markup inside a text box or a title
+#   S34d  a construct-free render of more than 2 MB is written back byte for byte, and keeps its digest
+#   S34e  the pre-pass and the digest finish 256 KB of each adversarial shape inside a CPU cap
+#   S34f  the bump: both trip kinds stop once with the reading-change words, then pass after one step
+#   S34g  one definition: the digest reads the three rules through one call and carries no copy of them
+#   S34h  each reading's digests are pinned, one append-only set per reading
+#   S34j  the attribute set the pre-pass reads is the set the comment above the digest names
+#   S34k  no digest taken under the earlier reading confirms or approves, one record kind at a time
+#   S34l  where a page reads the same under both readings the plan moved, and no revert is named
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "The digest reads a page as a browser does, for three rules — #2285:"
+eval "$SA_MOCK_GH"; eval "$SA_MOCK_NPX"
+s34_page() { # <file> <body> — a page framed by a real <title>, and a real <style> and <script> at its tail
+  printf '<!DOCTYPE html><html><head><title>Porto 2027</title></head><body>\n<h1>Porto 2027</h1>\n%s\n<p>Day 2: the riverside walk.</p>\n<style>.k{color:#333}</style><script>var tail = 1;</script>\n</body></html>\n' "$2" > "$1"
+}
+s34_old() { # <command…> -> the command, run with the pre-pass made a copy of its input, in a subshell
+  ( _browser_read_markup() { cat "$1"; }; "$@" )
+}
+s34_dg() { # <body> <time> -> the digest of the s34_page carrying <body>, each @T@ in it read as <time>
+  s34_page "$WORK/s34_dg.html" "${1//@T@/$2}"
+  itinerary_digest "$WORK/s34_dg.html"
+}
+s34_moves() { # <body> -> 1 when 19:00 -> 20:00 at its @T@ moves the digest, 0 when it does not, x when a digest is empty
+  local a b
+  a="$(s34_dg "$1" 19:00)"; b="$(s34_dg "$1" 20:00)"
+  if [ -z "$a" ] || [ -z "$b" ]; then printf x; elif [ "$a" != "$b" ]; then printf 1; else printf 0; fi
+}
+s34_reads() { # <body> -> 1 when the digest differs from the one over a copy of the page, 0 when equal, x when either is empty
+  local a b
+  a="$(s34_dg "$1" 19:00)"; b="$(s34_old s34_dg "$1" 19:00)"
+  if [ -z "$a" ] || [ -z "$b" ]; then printf x; elif [ "$a" != "$b" ]; then printf 1; else printf 0; fi
+}
+S34_CTL='<p>Day 1: dinner at @T@.</p>'
+s34_ctl() { # -> two characters: s34_moves of the control body under the pre-pass, then over a copy of the page
+  printf '%s%s' "$(s34_moves "$S34_CTL")" "$(s34_old s34_moves "$S34_CTL")"
+}
+
+# ── S34a — CLASS (a). An edit after each of seven look-alike openers — a custom element named
+# <script-card>, a <script> inside a comment, an attribute value, a <textarea> and a <noscript>,
+# <style-guide>, and <SCRIPT.x> — moves the digest. ARMED-RED inside the arm: with the pre-pass a copy of
+# its input, none of the seven moves. CONTROL: an edit in a <p> moves under both.
+S34A_BODIES=( '<script-card>Day 1: dinner at @T@.</script-card>'
+              '<!-- <script> --><p>Day 1: dinner at @T@.</p>'
+              '<p title="<script>">Day 1: dinner at @T@.</p>'
+              '<textarea><script></textarea><p>Day 1: dinner at @T@.</p>'
+              '<noscript><script></noscript><p>Day 1: dinner at @T@.</p>'
+              '<style-guide>Day 1: dinner at @T@.</style-guide>'
+              '<SCRIPT.x>Day 1: dinner at @T@.' )
+s34a_assert() { # one verdict
+  local b new="" old="" ctl
+  for b in "${S34A_BODIES[@]}"; do new="$new$(s34_moves "$b")"; old="$old$(s34_old s34_moves "$b")"; done
+  ctl="$(s34_ctl)"
+  if [ "$ctl" != 11 ]; then
+    FAIL "S34a: CONTROL — an edit in a <p> moved the digest [$ctl] under the pre-pass and over a copy of the page (want 11), so the rows below are not measurements"
+  elif [ "$new" = 1111111 ] && [ "$old" = 0000000 ]; then
+    PASS "S34a: class (a) — an edit after each of seven look-alike openers (<script-card>; a <script> in a comment, in an attribute value, in a <textarea> and in a <noscript>; <style-guide>; <SCRIPT.x>) moves the digest; ARMED-RED — with the pre-pass a copy of its input, none of the seven moves; CONTROL — an edit in a <p> moves under both"
+  else
+    FAIL "S34a: moved under the pre-pass [$new] (want 1111111) and over a copy of the page [$old] (want 0000000), in the order <script-card>, comment, attribute value, <textarea>, <noscript>, <style-guide>, <SCRIPT.x>"
+  fi
+}
+
+# ── S34b — CLASS (b). An edit after a stray `<` — `< 18:30`, `<3`, `<=`, `<-` — moves the digest, and
+# over a copy of the page none of the four moves. And as a browser reads them: an edit inside `<!x …>`,
+# `<?y …>` or `</ …>` moves nothing, because a browser hides each; `</>` written between two words adds
+# nothing; and `<>` is read as text, so an edit after it moves the digest. CONTROL: an edit in a <p> moves
+# under both.
+S34B_BODIES=( '<p>Arrive < 18:30, then dinner at @T@.</p>'
+              '<p>We <3 the dinner at @T@.</p>'
+              '<p>Budget <= 50, dinner at @T@.</p>'
+              '<p>Turn left <- for dinner at @T@.</p>' )
+S34B_HIDDEN=( '<p>Day 1 <!x @T@> walk.</p>' '<p>Day 1 <?y @T@> walk.</p>' '<p>Day 1 </ @T@> walk.</p>' )
+s34b_assert() { # one verdict
+  local b new="" old="" hid="" emp ang ctl a z
+  for b in "${S34B_BODIES[@]}"; do new="$new$(s34_moves "$b")"; old="$old$(s34_old s34_moves "$b")"; done
+  for b in "${S34B_HIDDEN[@]}"; do hid="$hid$(s34_moves "$b")"; done
+  a="$(s34_dg '<p>Day 1 walk at 19:00.</p>' 19:00)"; z="$(s34_dg '<p>Day 1 </> walk at 19:00.</p>' 19:00)"
+  if [ -z "$a" ] || [ -z "$z" ]; then emp=x; elif [ "$a" = "$z" ]; then emp=0; else emp=1; fi
+  ang="$(s34_moves '<p>Day 1 <> walk at @T@.</p>')"
+  ctl="$(s34_ctl)"
+  if [ "$ctl" != 11 ]; then
+    FAIL "S34b: CONTROL — an edit in a <p> moved the digest [$ctl] under the pre-pass and over a copy of the page (want 11), so the rows below are not measurements"
+  elif [ "$new" = 1111 ] && [ "$old" = 0000 ] && [ "$hid" = 000 ] && [ "$emp" = 0 ] && [ "$ang" = 1 ]; then
+    PASS "S34b: class (b) — an edit after each stray '<' ('< 18:30', '<3', '<=', '<-') moves the digest, and over a copy of the page none of the four moves (ARMED-RED); as a browser reads them, an edit inside '<!x …>', '<?y …>' and '</ …>' moves nothing, '</>' between two words adds nothing, and '<>' is read as text, so an edit after it moves the digest; CONTROL — an edit in a <p> moves under both"
+  else
+    FAIL "S34b: stray '<' moved [$new] (want 1111) and over a copy of the page [$old] (want 0000); hidden constructs moved [$hid] (want 000); '</>' between two words changed the digest [$emp] (want 0); an edit after '<>' moved [$ang] (want 1)"
+  fi
+}
+
+# ── S34c — CLASS (d). The attribute text a browser paints in an element's own box: an <input>'s value
+# (text and button), a placeholder on an input and on a <textarea>, an <option> and an <optgroup> label, an
+# <img> alt and an image input's alt, single-quoted and unquoted values, and a closed <script> written
+# inside a <textarea>, which a browser shows as the box's text. Each of the eleven moves the digest, and
+# over a copy of the page none does. The ten pages out of the set stay unmoved, which pins it: title,
+# aria-label, a hidden and a checkbox value, a <button> value, data-*, a script string, a comment body, an
+# image input's value and a <noscript>'s attribute. And three more rules the browser follows: a <style>
+# that a <noscript> wraps is still removed whole, so that page keeps the digest it had over a copy of
+# itself, while markup written inside a <textarea>, a <title> and an SVG <title> is read as text, so
+# those three pages digest differently. ARMED-RED for the first of those: inert_open replaced by inert
+# reads the wrapped style's text. CONTROL: an edit in a <p> moves under both.
+S34C_IN=( '<form><input type=text value="Dinner at @T@"></form>'
+          '<form><input type=button value="Dinner at @T@"></form>'
+          '<form><input placeholder="Dinner at @T@"></form>'
+          '<form><textarea placeholder="Dinner at @T@"></textarea></form>'
+          '<select><option label="Dinner at @T@">x</option></select>'
+          '<select><optgroup label="Dinner at @T@"><option>x</option></optgroup></select>'
+          '<img alt="Dinner at @T@" src="m.png">'
+          '<form><input type=image alt="Dinner at @T@" src="m.png"></form>'
+          '<textarea><script>Dinner at @T@</script></textarea>'
+          "<form><input value='Dinner at @T@'></form>"
+          '<form><input value=Dinner-@T@></form>' )
+S34C_OUT=( '<p title="Dinner at @T@">Day 1.</p>'
+           '<p aria-label="Dinner at @T@">Day 1.</p>'
+           '<form><input type=hidden value="Dinner at @T@"></form>'
+           '<form><input type=checkbox value="Dinner at @T@"></form>'
+           '<button value="Dinner at @T@">Book</button>'
+           '<p data-time="Dinner at @T@">Day 1.</p>'
+           '<script>var t = "Dinner at @T@";</script>'
+           '<!-- Dinner at @T@ -->'
+           '<form><input type=image value="Dinner at @T@" alt="Map" src="m.png"></form>'
+           '<noscript title="Dinner at @T@"></noscript>' )
+S34C_RAW=( '<noscript><style>.a{color:red}</style></noscript><p>Day 1.</p>'
+           '<textarea><b>Day 1</b> notes</textarea>'
+           '<title>Trip <b>Day</b></title>'
+           '<svg><title>Trip <b>Day</b></title></svg>' )
+s34c_assert() { # one verdict
+  local b new="" old="" out="" raw="" rawm ctl
+  for b in "${S34C_IN[@]}"; do new="$new$(s34_moves "$b")"; old="$old$(s34_old s34_moves "$b")"; done
+  for b in "${S34C_OUT[@]}"; do out="$out$(s34_moves "$b")"; done
+  for b in "${S34C_RAW[@]}"; do raw="$raw$(s34_reads "$b")"; done
+  rawm="$( s33_rewrite _browser_read_markup 'inert_open(substr' 'inert(substr'; s34_reads "${S34C_RAW[0]}" )"
+  ctl="$(s34_ctl)"
+  if [ "$ctl" != 11 ]; then
+    FAIL "S34c: CONTROL — an edit in a <p> moved the digest [$ctl] under the pre-pass and over a copy of the page (want 11), so the rows below are not measurements"
+  elif [ "$new" = 11111111111 ] && [ "$old" = 00000000000 ] && [ "$out" = 0000000000 ] && [ "$raw" = 0111 ] && [ "$rawm" = 1 ]; then
+    PASS "S34c: class (d) — an edit inside each of the eleven attribute texts and text-box bodies a browser paints moves the digest, and over a copy of the page none does (ARMED-RED); the ten out of the set (title, aria-label, a hidden and a checkbox value, a <button> value, data-*, a script string, a comment body, an image input's value, a <noscript> attribute) stay unmoved; a <style> a <noscript> wraps keeps the digest a copy of the page gives, and markup inside a <textarea>, a <title> and an SVG <title> digests differently from it; ARMED-RED — with inert_open replaced by inert, the wrapped style is read; CONTROL — an edit in a <p> moves under both"
+  else
+    FAIL "S34c: the eleven moved [$new] (want 11111111111) and over a copy of the page [$old] (want 00000000000); the ten out of the set moved [$out] (want 0000000000); wrapped style, <textarea>, <title>, SVG <title> against a copy of the page [$raw] (want 0111); the wrapped style with inert_open replaced by inert [$rawm] (want 1)"
+  fi
+}
+
+# ── S34d — A CONSTRUCT-FREE RENDER KEEPS ITS DIGEST. A render of more than 2 MB built here in the shape a
+# site build writes — the declaration block at line 1 carrying the literal <destination> its schema
+# declares, a notice band, a stylesheet link, a style with `>` selectors and a content: escape, and day
+# sections each carrying a comment, a card whose data-popup attribute holds markup, entities, a
+# <details> block, a table, a booking checkbox and a map zone, closed by a script with `<` comparisons
+# and a `</div>` string and a JSON-LD script — carries none of the three constructs. The pre-pass writes
+# it back byte for byte, and its digest equals the digest over a copy of the page, so the equality holds
+# by construction: the program after the pre-pass is the v0.77.0 program. CONTROL: the same render with
+# one stray `<` written into a day's text digests differently under the two.
+s34d_render() { # <file> — the construct-free render, more than 2 MB
+  local f="$1" i=0
+  {
+    printf '<!--\nartifact: %s\nschema-version: 1\ntrip: porto-2027\nwriter: site\nlifecycle: output\nprovenance: derived\npublish: output\ngenerated: 2027-06-02\ncoordination-state: updated\ncoordination-since: 2027-06-02\n-->\n' "$S12_ART"
+    printf '<!DOCTYPE html><html><head><title>Porto 2027</title>\n<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">\n<style>.day > .card{margin:0} ul > li{list-style:none} .tip::after{content:"\\203A"}</style></head><body>\n<div class="coord-notice is-updated">Updated since 2027-06-02</div>\n'
+    while [ "$i" -lt "$S34D_DAYS" ]; do
+      i=$((i+1))
+      printf '<!-- day %d -->\n<section class="day" id="d%d"><h2>Day %d</h2>\n<div class="card" data-popup="<b>Venue %d</b><br>Rua das Flores">Miradouro da Vit&oacute;ria at 14:00&nbsp;then the riverside walk &amp; lunch at the market.</div>\n<details><summary>Notes for day %d</summary><p>Bring water, a hat and the tram pass; the climb to the cathedral is steep after lunch.</p></details>\n<table><tr><th>When</th><th>What</th><th>Where</th></tr><tr><td>09:00</td><td>Market %d</td><td>Bolh&atilde;o</td></tr><tr><td>13:00</td><td>Lunch</td><td>Ribeira</td></tr></table>\n<label><input type="checkbox" name="book%d"> Book the table for day %d</label>\n<div class="map-zone" data-zone="z%d" data-lat="41.14" data-lng="-8.61"></div></section>\n' "$i" "$i" "$i" "$i" "$i" "$i" "$i" "$i" "$i"
+    done
+    printf '<script>var days = %d; for (var i = 0; i < days; i++) { if (i < 3 && days > 1) { var s = "</div>"; } }</script>\n<script type="application/ld+json">{"@context":"https://schema.org","@type":"Trip","name":"Porto 2027"}</script>\n</body></html>\n' "$S34D_DAYS"
+  } > "$f"
+}
+S34D_DAYS=3600
+S34D_F="$WORK/s34d.html"; s34d_render "$S34D_F"
+S34D_G="$WORK/s34d_stray.html"; perl -0777 -pe 's/then the riverside/then < the riverside/' "$S34D_F" > "$S34D_G"
+s34d_assert() { # one verdict
+  local sz pp=0 a b c d
+  sz=$(( $(wc -c < "$S34D_F") + 0 ))
+  if _browser_read_markup "$S34D_F" > "$WORK/s34d.out" 2>/dev/null; then cmp -s "$WORK/s34d.out" "$S34D_F" && pp=1; fi
+  a="$(itinerary_digest "$S34D_F")"; b="$(s34_old itinerary_digest "$S34D_F")"
+  c="$(itinerary_digest "$S34D_G")"; d="$(s34_old itinerary_digest "$S34D_G")"
+  if [ -z "$c" ] || [ -z "$d" ] || [ "$c" = "$d" ]; then
+    FAIL "S34d: CONTROL — with one stray '<' written into a day's text the render digests '${c:0:12}' under the pre-pass and '${d:0:12}' over a copy of itself (want two different digests), so an equality below would not tell the two readings apart"
+  elif [ "$sz" -ge 2097152 ] && [ "$pp" -eq 1 ] && [ -n "$a" ] && [ "$a" = "$b" ]; then
+    PASS "S34d: a construct-free render of $sz bytes — a declaration block at line 1, a notice band, a stylesheet link, a style with '>' selectors and a content: escape, ${S34D_DAYS} day sections with comments, data-popup markup, entities, details, tables, booking checkboxes and map zones, and scripts with '<' comparisons and a '</div>' string — is written back byte for byte by the pre-pass, and its digest (${a:0:12}) equals the digest over a copy of it; CONTROL — one stray '<' makes the two differ"
+  else
+    FAIL "S34d: render bytes $sz (want at least 2097152), written back byte for byte=$pp (want 1), digest '${a:0:12}' against '${b:0:12}' over a copy of it (want equal and non-empty)"
+  fi
+}
+
+# ── S34e — LINEAR TIME. By group M8's own mechanism: each reader, `( ulimit -t 5; <reader> <file> )`, must
+# finish with status 0 over 256 KB or more of each adversarial shape — stray `<`, unclosed <script>
+# openers, a run of spaces after a `<`, a name run, unterminated comments, tag openers with no `>`,
+# unclosed <textarea> openers, a run of `<a b='>'` with no `>` outside a quote after it and the same ending in
+# an unclosed quote, and an unclosed title=" over 32768 <script> openers — and over a control of the same
+# length in a character outside the repeated class. The readers are the pre-pass and the digest's
+# reading through it. The band-excision row stays out: a run of `<a title="x ` is slow in the band
+# excision, which the three rules do not change. The opener shapes end in a `</p>`: the v0.77.0 program's
+# body search is skipped outright on a file with no `</` in it, so a shape without one would measure
+# nothing. ARMED-RED inside the arm: (1) with the pre-pass a copy of its input, S34E_RED_N unclosed
+# <script> openers are not finished inside the cap (the quadratic the v0.77.0 reading has there: 7.3 s
+# for 32768 and 29.1 s for 65536 on the machine this was measured on, against 0.12 s with the pre-pass); (2) with the fallback before this change rebuilt — a tag the file ends
+# inside cut at its first `>` and the scan resumed there — 64 KB of each `<a b='>'` shape is not
+# finished inside the cap. That fallback is rebuilt here from its description; its text is not in this
+# repository. SENSITIVITY: the page `<p>Day 1 at 18:30.</p><a title="x>y<p>after < 5 then</p>` is written
+# differently by the two.
+s34e_file() { # <file> <head> <unit> <count> <tail> — <unit> repeated <count> times between <head> and <tail>
+  perl -e 'print $ARGV[0], $ARGV[1] x $ARGV[2], $ARGV[3], "\n"' "$2" "$3" "$4" "$5" > "$1"
+}
+s34e_cap() { # <reader> <file> -> its status under a five-second CPU cap
+  ( ulimit -t 5; "$1" "$2" >/dev/null 2>&1; printf '%s' "$?" )
+}
+S34E_SHAPES=""
+s34e_pair() { # <name> <head> <unit> <control unit> <count> <tail> — a shape and its control, both listed
+  s34e_file "$WORK/s34e_$1.html" "$2" "$3" "$5" "$6"
+  s34e_file "$WORK/s34e_$1_ctl.html" "$2" "$4" "$5" "$6"
+  S34E_SHAPES="$S34E_SHAPES $1 $1_ctl"
+}
+s34e_pair stray    '<p>'          'a < '       'a = '       65536  '</p>'
+s34e_pair script   ''             '<script>'   '[script]'   32768  '</p>'
+s34e_pair spaces   '<'            ' '          '-'          262144 ''
+s34e_pair names    '<'            'a'          '#'          262144 ''
+s34e_pair comments ''             '<!--'       '[!--'       65536  ''
+s34e_pair opens    ''             '<a '        '[a '        87382  ''
+s34e_pair boxes    ''             '<textarea>' '[textarea]' 26215  '</p>'
+s34e_pair qa       ''             "<a b='>'"   "<a b=''>"   32768  ''
+s34e_pair qb       ''             "<a b='>'"   "<a b=''>"   32768  '<a b="'
+s34e_pair title    '<a title="'   '<script>'   '[script]'   32768  '</p>'
+S34E_RED_N=65536
+s34e_file "$WORK/s34e_red_script.html" '' '<script>' "$S34E_RED_N" '</p>'
+s34e_file "$WORK/s34e_red_qa.html" '' "<a b='>'" 8192 ''
+s34e_file "$WORK/s34e_red_qb.html" '' "<a b='>'" 8192 '<a b="'
+S34E_SENS="$WORK/s34e_sens.html"; printf '%s\n' '<p>Day 1 at 18:30.</p><a title="x>y<p>after < 5 then</p>' > "$S34E_SENS"
+S34E_CUT='if ($e < 0) { $o .= inert(substr($s, $j)); last }'
+S34E_OLD='if ($e < 0) { my $g = index($s, ">", $j + 1); if ($g < 0) { $o .= inert(substr($s, $j)); last } $o .= inert(substr($s, $j, $g + 1 - $j)); $i = $g + 1; next }'
+s34e_assert() { # one verdict
+  local r s st n=0 ok=0 bad="" sz small=0 m1 m2a m2b mk sn so sne=0 soe=0
+  for r in _browser_read_markup strip_to_itinerary_text; do
+    for s in $S34E_SHAPES; do
+      n=$((n+1)); st="$(s34e_cap "$r" "$WORK/s34e_$s.html")"
+      if [ "$st" = 0 ]; then ok=$((ok+1)); else bad="$bad $r:$s=$st"; fi
+    done
+  done
+  for s in $S34E_SHAPES; do
+    sz=$(( $(wc -c < "$WORK/s34e_$s.html") + 0 ))
+    [ "$sz" -ge 262144 ] || small=$((small+1))
+  done
+  m1="$( _browser_read_markup() { cat "$1"; }; s34e_cap strip_to_itinerary_text "$WORK/s34e_red_script.html" )"
+  mk="$(s33_count "$(declare -f _browser_read_markup)" "$S34E_CUT")"
+  m2a="$( s33_rewrite _browser_read_markup "$S34E_CUT" "$S34E_OLD"; s34e_cap _browser_read_markup "$WORK/s34e_red_qa.html" )"
+  m2b="$( s33_rewrite _browser_read_markup "$S34E_CUT" "$S34E_OLD"; s34e_cap _browser_read_markup "$WORK/s34e_red_qb.html" )"
+  sn="$(_browser_read_markup "$S34E_SENS" 2>/dev/null)"
+  so="$( s33_rewrite _browser_read_markup "$S34E_CUT" "$S34E_OLD"; _browser_read_markup "$S34E_SENS" 2>/dev/null )"
+  [ -n "$sn" ] && sne=1; [ -n "$so" ] && soe=1
+  if [ "$mk" != 1 ] || [ -z "$sn" ] || [ -z "$so" ] || [ "$sn" = "$so" ]; then
+    FAIL "S34e: SENSITIVITY — the step the fallback before this change rewrites was found at $mk site(s) (want 1), or the path page was written the same by the two texts (written: ${sne}${soe}, want 11 and different), so a run below would not grade the change"
+  elif [ "$n" -eq 40 ] && [ "$ok" -eq 40 ] && [ "$small" -eq 0 ] && [ "$m1" -gt 128 ] && [ "$m2a" -gt 128 ] && [ "$m2b" -gt 128 ]; then
+    PASS "S34e: the pre-pass and the digest each finish every one of ten adversarial shapes and its control, each at least 262144 bytes, inside a five-second CPU cap ($ok of $n with status 0); ARMED-RED — with the pre-pass a copy of its input, $S34E_RED_N unclosed <script> openers are stopped by the cap (status $m1), and with the fallback before this change rebuilt, 64 KB of each <a b='>'> shape is stopped by it (status $m2a and $m2b); SENSITIVITY — the two texts write the path page differently"
+  else
+    FAIL "S34e: $ok of $n runs finished inside the cap (want 40 of 40:${bad:- none failed}), $small shape file(s) under 262144 bytes (want 0); armed-red statuses: copy of the page over the unclosed openers $m1, the fallback before this change over the two shapes $m2a and $m2b (want each above 128)"
+  fi
+}
+
+# Trips for S34f, S34k and S34l: sa_page's render, with one construct of each class written before its
+# script — a custom element named <script-card>, a stray `<`, and an <img> alt — or with none.
+S34_CONSTRUCTS='<script-card>Fado at 21:00.</script-card><p>Arrive < 18:30 at the station.</p><img alt="Tile museum at 11:00" src="t.png">'
+s34_render() { # <file> <count-or-empty> <code-or-empty> <plan-time> <constructs-or-empty> — an sa_page render, the constructs before its script
+  sa_page "$1" "$2" "$3" "$4"
+  if [ -n "$5" ]; then
+    S34_INS="$5" perl -0777 -pe 's/<script>/$ENV{S34_INS}<script>/' "$1" > "$1.s34" && mv -f "$1.s34" "$1"
+  fi
+}
+s34_trip() { # <name> <count-or-empty> <code-or-empty> <plan-time> <constructs-or-empty> -> a fresh trip dir holding an s34_render render and no sidecar
+  local d="$WORK/s34-$1"
+  rm -rf "$d"; mkdir -p "$d/outputs"
+  s34_render "$d/$S15_RENDER" "$2" "$3" "$4" "$5"
+  printf '%s' "$d"
+}
+s34_was() { # <trip> -> the digest of its render over a copy of the page: what the v0.77.0 digest recorded
+  s34_old itinerary_digest "$1/$S15_RENDER"
+}
+
+# ── S34f — THE BUMP, END TO END. _ITINERARY_READING is 2. Two trips whose render carries one construct of
+# each class, each with records as the v0.77.0 engine left them: a baseline holding the digest a copy of
+# the page gives, with no reading line. On the trip with no approvers update stops before any clone with
+# the words S33d grades — the engine reads pages differently, it cannot tell whether the plan moved, one
+# confirm of the trip, update or rotate, no revert — and after one confirm update reaches the clone. On
+# the trip that declares approvers, whose site states the old approval pair, update stops with the words
+# S33e grades for the published plan, and once an approval for the new code meets the threshold and the
+# site is rebuilt with the new pair, update reaches the clone. publish, on a declared trip never published
+# whose render states the old pair, stops before the repository is probed, asking for approval once
+# more. CONTROL: the construct-free twins of both trips, records as the v0.77.0 engine left them, reach
+# the clone with no abort, and on each construct trip the two digests differ.
+s34f_assert() { # one verdict
+  local n nw d dw dn p pw nc ncw dc dcw rn cn en rn2 cn2 en2 rd cd ed rd2 cd2 ed2 rp vp kp ep cnc enc cdc edc wn wd
+  n="$(s34_trip f-none '' '' 16:30 "$S34_CONSTRUCTS")"; nw="$(s34_was "$n")"; s33_rec "$n/.published-itinerary" "$nw" published
+  read -r rn cn _ _ <<<"$(sa_push update "$n")"; en="$(cat "$WORK/sa_push.err")"
+  sa_confirm "$n" CONFIRM '2027-06-10T09:00:00Z' >/dev/null 2>&1
+  read -r rn2 cn2 _ _ <<<"$(sa_push update "$n")"; en2="$(cat "$WORK/sa_push.err")"
+  d="$(s34_trip f-decl '' '' 16:30 "$S34_CONSTRUCTS")"; dw="$(s34_was "$d")"
+  s34_render "$d/$S15_RENDER" 1 "$dw" 16:30 "$S34_CONSTRUCTS"
+  s33_rec "$d/.published-itinerary" "$dw" published; s33_dec "$d/.change-confirmed" "$dw"
+  sa_declare "$d" 1 zqa1; sa_rec "$d" zqa1 approve "$dw"
+  read -r rd cd _ _ <<<"$(sa_push update "$d")"; ed="$(cat "$WORK/sa_push.err")"
+  dn="$(itinerary_digest "$d/$S15_RENDER")"
+  sa_confirm "$d" "$(printf '1\napprove %s\nCONFIRM\n' "$dn")" '2027-06-10T09:00:00Z' >/dev/null 2>&1
+  s34_render "$d/$S15_RENDER" 1 "$dn" 16:30 "$S34_CONSTRUCTS"
+  read -r rd2 cd2 _ _ <<<"$(sa_push update "$d")"; ed2="$(cat "$WORK/sa_push.err")"
+  p="$(s34_trip f-pub '' '' 16:30 "$S34_CONSTRUCTS")"; pw="$(s34_was "$p")"
+  s34_render "$p/$S15_RENDER" 1 "$pw" 16:30 "$S34_CONSTRUCTS"
+  s33_dec "$p/.change-confirmed" "$pw"; sa_declare "$p" 1 zqa1; sa_rec "$p" zqa1 approve "$pw"
+  read -r rp _ vp kp <<<"$(sa_push publish "$p")"; ep="$(cat "$WORK/sa_push.err")"
+  nc="$(s34_trip f-none-c '' '' 16:30 '')"; ncw="$(s34_was "$nc")"; s33_rec "$nc/.published-itinerary" "$ncw" published
+  read -r _ cnc _ _ <<<"$(sa_push update "$nc")"; enc="$(cat "$WORK/sa_push.err")"
+  dc="$(s34_trip f-decl-c '' '' 16:30 '')"; dcw="$(s34_was "$dc")"
+  s34_render "$dc/$S15_RENDER" 1 "$dcw" 16:30 ''
+  s33_rec "$dc/.published-itinerary" "$dcw" published; s33_dec "$dc/.change-confirmed" "$dcw"
+  sa_declare "$dc" 1 zqa1; sa_rec "$dc" zqa1 approve "$dcw"
+  read -r _ cdc _ _ <<<"$(sa_push update "$dc")"; edc="$(cat "$WORK/sa_push.err")"
+  wn="$(s33d_words "$en" "$n")"; wd="$(s33e_words "$ed" 'the published plan' 1)"
+  if [ "$cnc$cdc" != 11 ] || [ "$(s33_has "$enc$edc" 'GUARD ABORTED')" != 0 ] || [ -z "$nw" ] || [ -z "$dn" ] || [ "$nw" = "$(itinerary_digest "$n/$S15_RENDER")" ] || [ "$dw" = "$dn" ]; then
+    FAIL "S34f: CONTROL — the construct-free twins reached the clone [$cnc$cdc] (want 11) with an abort printed=$(s33_has "$enc$edc" 'GUARD ABORTED') (want 0), or a construct trip's two digests did not differ, so the stops below are not attributable to the reading"
+  elif [ "$_ITINERARY_READING" = 2 ] && [ "$rn" -ne 0 ] && [ "$cn" -eq 0 ] && [ "$wn" = ok ] && [ "$cn2" -eq 1 ] && [ "$(s33_has "$en2" 'GUARD ABORTED')" = 0 ] \
+       && [ "$rd" -ne 0 ] && [ "$cd" -eq 0 ] && [ "$wd" = ok ] && [ "$cd2" -eq 1 ] && [ "$(s33_has "$ed2" 'GUARD ABORTED')" = 0 ] \
+       && [ "$rp" -ne 0 ] && [ "$vp" -eq 0 ] && [ "$kp" -eq 0 ] && [ "$(s33_has "$ep" 'reads pages differently')" = 1 ] && [ "$(s33_has "$ep" 'approval once more')" = 1 ] && [ "$(s33_has "$ep" 'abandoned')" = 0 ]; then
+    PASS "S34f: _ITINERARY_READING is 2; on a render carrying one construct of each class, with records as the v0.77.0 engine left them, update on a trip with no approvers stops before any clone with the reading-change words and no revert, and reaches the clone after one confirm; on a trip that declares approvers it stops with the words for the published plan, and reaches the clone once an approval for the new code meets the threshold and the site is rebuilt; publish on a declared trip never published stops before the repository is probed, asking for approval once more; CONTROL — the construct-free twins reach the clone with no abort"
+  else
+    FAIL "S34f: reading ${_ITINERARY_READING}; no approvers: update rc=$rn clone=$cn words[$wn], after confirm clone=$cn2; approvers: update rc=$rd clone=$cd words[$wd], after the threshold and a rebuild clone=$cd2; publish rc=$rp probe=$vp create=$kp, its words: ${ep//"$WORK"/<work>}"
+  fi
+}
+
+# ── S34g — ONE DEFINITION. strip_to_itinerary_text reads the three rules through exactly one call of
+# _browser_read_markup and carries no copy of them: across every function this run defines, the pre-pass's
+# own step (`sub inert_open`) occurs in one parsed body, the pre-pass's. CONTROL: the scan finds that step
+# in _browser_read_markup's body, and finds the one call.
+s34g_assert() { # one verdict
+  local fn calls own hold="" n=0 step='sub inert'
+  step="${step}_open"   # built in two pieces, so this arm's own body never carries the step it scans for
+  calls="$(s33_count "$(declare -f strip_to_itinerary_text 2>/dev/null)" _browser_read_markup)"
+  own="$(s33_count "$(declare -f _browser_read_markup 2>/dev/null)" "$step")"
+  for fn in $(declare -F | sed 's/^declare -f[x]* //'); do
+    case "$(declare -f "$fn")" in *"$step"*) n=$((n+1)); hold="$hold $fn" ;; esac
+  done
+  if [ "$own" != 1 ]; then
+    FAIL "S34g: CONTROL — the pre-pass's body carries its own step $own time(s) (want 1), so a scan for copies of it reads nothing"
+  elif [ "$calls" = 1 ] && [ "$n" -eq 1 ] && [ "$hold" = ' _browser_read_markup' ]; then
+    PASS "S34g: one definition — strip_to_itinerary_text calls _browser_read_markup once, and of every function this run defines only the pre-pass carries the three rules' own step; CONTROL — the scan finds that step in the pre-pass's body"
+  else
+    FAIL "S34g: strip_to_itinerary_text calls the pre-pass $calls time(s) (want 1); the three rules' step is carried by$hold ($n function(s), want _browser_read_markup alone)"
+  fi
+}
+
+# ── S34h — THE READING IS VERSIONED, AS BEHAVIOUR. A fixed corpus built here — one page per construct of
+# classes (a), (b) and (d) above, one carrying a declaration block and a notice band, one carrying the 18
+# characters _ITINERARY_WS_SED rewrites to a space, and one construct-free page — has its digests pinned
+# in append-only sets, one per reading: S34H_PINS_1, S34H_PINS_2, and so on. The live digests must equal
+# the set of the engine's reading, that set must be the newest one pinned, and every earlier set must
+# differ from it as a set. So a digest that moves without a bump fails, and so does a bump whose set was
+# not added, or a set added without a bump. A RE-PIN UNDER ONE READING IS CAUGHT BY REVIEW, NOT BY THIS
+# ARM: rewriting the current set to match a moved digest turns it green, and only the diff shows it.
+# The band page moves with _COORD_NOTICE_CLASS or _COORD_NOTICE_CAP. It pins behaviour, never the text of
+# a function, because `declare -f` lays a body out differently in different bash releases. The pins were
+# computed with BSD sed and tr on macOS; the runner reads the same digests with GNU tools. CONTROL: the
+# corpus's digests are all present and pairwise distinct.
+s34h_corpus() { # -> one "<id>:<digest>" token per page, in corpus order; each page opens with its own id, so no two read alike
+  local b i=0 o="" wsp="" sp p
+  for b in "${S34A_BODIES[@]}"; do i=$((i+1)); o="$o a$i:$(s34_dg "<p>Page a$i.</p>$b" 19:00)"; done
+  i=0; for b in "${S34B_BODIES[@]}"; do i=$((i+1)); o="$o b$i:$(s34_dg "<p>Page b$i.</p>$b" 19:00)"; done
+  i=0; for b in "${S34C_IN[@]}"; do i=$((i+1)); o="$o d$i:$(s34_dg "<p>Page d$i.</p>$b" 19:00)"; done
+  p='<p>Page band.</p><div class="coord-notice is-pending">Pending since 2027-06-01. The plan below is waiting for the group; the organizer records each approval at the console and the band clears once the threshold is met. Nothing in this band is part of the plan, and a rebuild that only moves it is not a change to the plan. It is short by design, so the excision bound is not reached.</div><p>Day 1: dinner at 19:00.</p>'
+  o="$o band:$(s34_dg "$p" 19:00)"
+  for sp in $(printf '%s' "$_ITINERARY_WS_SED" | LC_ALL=C tr ';' '\n' | LC_ALL=C sed 's|^s/||; s|/ /g$||'); do wsp="${wsp}Day${sp}one "; done
+  o="$o spaces:$(s34_dg "<p>Page spaces.</p><p>${wsp}dinner at 19:00.</p>" 19:00)"
+  o="$o plain:$(s34_dg "<p>Page plain.</p>$S34_CTL" 19:00)"
+  printf '%s' "${o# }"
+}
+# Reading 1, the v0.77.0 program over the raw page. Append-only: a set is never edited once pinned.
+# shellcheck disable=SC2034  # read by name, as S34H_PINS_<reading>, in s34h_assert
+S34H_PINS_1='a1:814b3859e04648d1a81b8881d549b7d5693ecb7451cb79a66980c5c290f2e506 a2:6c38439be2bebc1864352c8911df64cd89e9231a66596c9c14c7436b71c2fa7c
+a3:33fe6151d125eaf11995f7e5233e0b83c213362c02aa3205cc7086ed9555b7ae a4:ef294f6022fb7d09140f25c7cde962ed2e9b7d7a75221461cef5f5ca5eea3c34
+a5:4c43976c1aaceeb63f37daef55609fa593bfe507904c234b8c4aea8ec128447a a6:2137d2def5d3f83183b8512bd50b78d76139010220c36769cf570c4ff02bfeca
+a7:8690d70b6ddc9acbfa239b2565673465644fb54d3924796e8be9f1139d7fb09e b1:a1c95273d82b367dffd9020c184bdcd62edde93dcc3eb9a348af0b8e3112f22e
+b2:ebdf63cc86ec994786e0f0c755cc49bd665d83d794a637dabe03cf4dd24f5242 b3:1b25368e57bbf10600d38ebb2fb9fc4fa527e95fc53a0d9c65d0b0732c59036e
+b4:97e8be7d72b0f06283b56f427333f4e1610fb7c6b5bd914bf251948e0d2eed3c d1:96cf9cdfa370ed479646821f2a4be65a8670b06720ec8b65c2db763c41339202
+d2:af6882706c45289529439f35457acd1c57ef62ea67d808b75393b3588529b2ef d3:04e5a49aa5cef0ec4863379652108388d42a8f4e7a9a21fb80a4ec29c036c173
+d4:33e9aee40d6c55af3acd4a4677c45cf67445702e402354cdf252ca9311d06421 d5:929fd23f03fdd7eb421048ce330abf1a72417bda18486a172db8ab0c81febcb6
+d6:a3b2cb038ac588166acd39abb693dcdbe3f9e5c96d81362fa3ec0a07f57441c6 d7:64fa4701eb29ae0330d526979efe4e22602e72b685d8bca3975ffc686cd44120
+d8:5dd4168ac93d4277ccff501c2d883fbbc51abee8f0e53c92ea223ea670d4ca15 d9:bb502f7445bcbd4df20a72fb46cae65f26de840900ef120498066b04fba4cacb
+d10:19322b38ed8382b9c8316e7b91d6c622e5cbe0fe38e5635cc36a013170697ada d11:4af1d37323b753123f6dc83f2e2288209b72863ddd5631b0566d412314ccab54
+band:557c969cf2dc714a9eb3014b09945f0a8176175781564290ee56f812ca610da6 spaces:0fc115050ab3b253882b1e5509c55bda66363d4f77f9829fe0292a1d82ba121e
+plain:f15ccb8c7eecc67e46eea6e09f817e91fd91f5031eeb1894622636d43c817527'
+# Reading 2, that program over the pre-pass's output (#2285).
+# shellcheck disable=SC2034  # read by name, as S34H_PINS_<reading>, in s34h_assert
+S34H_PINS_2='a1:0335bff20066a1863cb924fc69329ebd20c2870796926ecdbb1f237501609754 a2:a6ce59ee93a8f96b7aee8792a64cac4e875e4e226f922e64755c966559b2a0ac
+a3:fef97d9ea5de9e800b4ade5457d5f17690e6757016a388d9de3ca34b7b67b5e2 a4:783c953ecb82be10bd60b06087cd93ca73877de77574315565a342738060dfeb
+a5:8998341a350476affe76ff264952a1efafdcc648d523aebe2e6397faaab921f5 a6:c439da5f407ccc88358216d84611bd389b8f11176579f5f95c9086045a8774fc
+a7:aff97eabed6df8de70d16e19d116b5a09e8e171cb93d1b5ce9f866a0c058ce95 b1:86ce6c65a29424c0eb036c9cfd72216ce606299db34b96f285ea0332125dbce1
+b2:60d22893d8a00070eeff9dc216c51dfdc24a11f4c1092e55da2a67f260487db4 b3:62cd0fb3aa5b834058d6002e619e2a76c0e94dfacc310bddd0101027cfaef81c
+b4:72fba4665b1d5ed4de14729752977e21367338951daea690b533adfda781204b d1:8b8d012e8f2156271ebc5023af95a9010bc0a4feb4df337c28bd709ac21b0af7
+d2:929b5770861103b7d7ac982338abd07ad04bc84012c8b9aa4895d01ca3925886 d3:0b354dad60f60904afb76efb2481e4584bf0dca52d961723ca9d6e84136f943b
+d4:fe21becc69928b9d4d9cbf4a42f14a134cdb89ae06620b17742b5733f04cbc39 d5:f72c067ba0f44a5f73b8aa8864360e8324e0bfb2c21769103fbad36cd02c2e6f
+d6:7ed8e19f81206f50a7c6de7e2e11c0fb4947f1a9dab36acd71af90e43df199ff d7:b798fc375058558dec15ae7050427297d1937529b34f1c18e8472d093681af13
+d8:ed0303fdfa7f4331bf369b2f9c4b00532106322da4963dfb29b2a7c5b119d5cd d9:f2ac1ad6eb7f3ce3c32a985115bf1d4fb43a14677f32f8e2681113d9c00f2501
+d10:fa6f492b75346fbb3c01eb5a80a0bb47fef78a9fd0e31ca304a13fd9e0ec3ad2 d11:b3add86c6335789f2705fa777230258e89da1257b4963b556faee3bd580fa68c
+band:557c969cf2dc714a9eb3014b09945f0a8176175781564290ee56f812ca610da6 spaces:0fc115050ab3b253882b1e5509c55bda66363d4f77f9829fe0292a1d82ba121e
+plain:f15ccb8c7eecc67e46eea6e09f817e91fd91f5031eeb1894622636d43c817527'
+s34h_assert() { # one verdict
+  local live cur v r top=0 earlier="" t dups=0 empty=0 seen=" " n=0 h same=0
+  live="$(s34h_corpus)"
+  for t in $live; do
+    n=$((n+1)); h="${t#*:}"
+    [ -n "$h" ] || empty=$((empty+1))
+    case "$seen" in *" $h "*) dups=$((dups+1)) ;; esac; seen="$seen$h "
+  done
+  r=1; while :; do v="S34H_PINS_$r"; [ -n "${!v:-}" ] || break; top=$r; r=$((r+1)); done
+  v="S34H_PINS_${_ITINERARY_READING}"; cur="$(printf '%s' "${!v:-}" | tr -s '[:space:]' ' ')"; cur="${cur# }"; cur="${cur% }"
+  r=1; while [ "$r" -lt "${_ITINERARY_READING}" ]; do
+    v="S34H_PINS_$r"; t="$(printf '%s' "${!v:-}" | tr -s '[:space:]' ' ')"; t="${t# }"; t="${t% }"
+    if [ "$t" = "$live" ]; then earlier="$earlier $r"; fi
+    r=$((r+1))
+  done
+  if [ "$live" = "$cur" ]; then same=1; fi
+  if [ "$n" -ne 25 ] || [ "$empty" -ne 0 ] || [ "$dups" -ne 0 ]; then
+    FAIL "S34h: CONTROL — the corpus gave $n digest(s) (want 25), $empty empty, $dups repeated (want 0 and 0), so a comparison with the pins would not be a measurement"
+  elif [ -n "$cur" ] && [ "$live" = "$cur" ] && [ "$top" = "${_ITINERARY_READING}" ] && [ -z "$earlier" ]; then
+    PASS "S34h: the corpus's 25 digests equal S34H_PINS_${_ITINERARY_READING}, the set pinned for the engine's reading, which is the newest set pinned, and every earlier set differs from it — a digest that moves without a bump, or a bump without its set, fails here; a re-pin under one reading is caught by review, not by this arm; CONTROL — the 25 digests are present and pairwise distinct"
+  else
+    FAIL "S34h: reading ${_ITINERARY_READING}, newest pinned set $top (want the reading), live digests equal to its set=$same (want 1), earlier sets equal to the live digests:${earlier:- none} (want none)"
+  fi
+}
+
+# ── S34j — ONE ATTRIBUTE SET, STATED WHERE IT IS READ. The element and attribute pairs %SHOWN carries in
+# _browser_read_markup equal the pairs the comment above strip_to_itinerary_text names on its `READ:` line,
+# and that comment's `OUT:` line names title and aria. SENSITIVITY: the same comparison over a copy of the
+# comment with one pair planted reports exactly that pair.
+s34j_shown() { # -> the pairs %SHOWN carries, sorted, as "<element>:<attribute>" tokens
+  declare -f _browser_read_markup 2>/dev/null | perl -0777 -ne 'if (/%SHOWN = \((.*?)\);/s) { my $x = $1; my @p; while ($x =~ /(\w+) => \{([^}]*)\}/g) { my $e = $1; my $l = $2; push @p, "$e:$1" while $l =~ /(\w+) => 1/g } print join(" ", sort @p) }'
+}
+s34j_said() { # <comment text> -> the pairs its READ: line names, sorted, as "<element>:<attribute>" tokens
+  printf '%s\n' "$1" | perl -ne 'if (/^#\s+READ:\s*(.*)$/) { my @p = map { s/^\s+|\s+$//g; join(":", split /\s+/) } split /,/, $1; print join(" ", sort @p) }'
+}
+s34j_comment() { # -> the comment block directly above strip_to_itinerary_text in the publish script
+  perl -ne 'if (/^#/) { push @c, $_ } elsif (/^strip_to_itinerary_text\(\)/) { print @c; exit } else { @c = () }' "$SELF_PUBLISH"
+}
+s34j_assert() { # one verdict
+  local shown said com out plant
+  shown="$(s34j_shown)"; com="$(s34j_comment)"; said="$(s34j_said "$com")"
+  out="$(printf '%s\n' "$com" | perl -ne 'print "$_" if /^#\s+OUT:/')"
+  plant="$(s34j_said "$(printf '%s\n' "$com" | perl -pe 's/^(#\s+READ:.*)$/$1, button value/')")"
+  if [ -z "$said" ] || [ "$plant" = "$said" ] || [ "$(s33_has " $plant " ' button:value ')" != 1 ]; then
+    FAIL "S34j: SENSITIVITY — the comment's READ: line read [$said], and with 'button value' planted in a copy it read [$plant] (want that pair added), so the comparison below does not read the comment"
+  elif [ -n "$shown" ] && [ "$shown" = "$said" ] && [ "$(s33_has "$out" title)" = 1 ] && [ "$(s33_has "$out" aria)" = 1 ]; then
+    PASS "S34j: the attribute pairs %SHOWN carries [$shown] equal the pairs the comment above strip_to_itinerary_text names as read, and its OUT: line names title and aria; SENSITIVITY — a pair planted in a copy of the comment is reported"
+  else
+    FAIL "S34j: %SHOWN carries [$shown], the comment names [$said] as read (want equal and non-empty); its OUT: line [$out] names title=$(s33_has "$out" title) aria=$(s33_has "$out" aria) (want 1 and 1)"
+  fi
+}
+
+# ── S34k — NO EARLIER DIGEST CONFIRMS OR APPROVES (CIAC-2), one record kind at a time. On a render carrying
+# a construct, the digest a copy of the page gives, written as the record: as the baseline it gives
+# neither none-pending nor confirmed; as a staged record with no baseline, undetermined; as the
+# confirmation record on a trip with no approvers, stale; and as the approvals on file on a trip that
+# declares approvers, stale, with none of them counting for the plan going out. CONTROL: the
+# construct-free twin with the same records gives none-pending, none-pending, confirmed and confirmed.
+s34k_trips() { # <suffix> <constructs-or-empty> -> four trip dirs, one per record kind, each holding that record
+  local a b c e w
+  a="$(s34_trip "k-base$1" '' '' 16:30 "$2")"; w="$(s34_was "$a")"; s33_rec "$a/.published-itinerary" "$w" published
+  b="$(s34_trip "k-stage$1" '' '' 16:30 "$2")"; s33_rec "$b/.published-itinerary.next" "$w" published
+  c="$(s34_trip "k-conf$1" '' '' 16:30 "$2")"; s33_rec "$c/.published-itinerary" "$SA_WRONG" published; s33_rec "$c/.change-confirmed" "$w" confirmed
+  e="$(s34_trip "k-appr$1" '' '' 16:30 "$2")"; s33_rec "$e/.published-itinerary" "$SA_WRONG" published
+  sa_declare "$e" 1 zqa1; sa_rec "$e" zqa1 approve "$w"
+  printf '%s %s %s %s' "$a" "$b" "$c" "$e"
+}
+s34k_assert() { # one verdict
+  local a b c e sa sb sc se k ca cb cc ce sca scb scc sce
+  read -r a b c e <<<"$(s34k_trips '' "$S34_CONSTRUCTS")"
+  read -r ca cb cc ce <<<"$(s34k_trips -c '')"
+  sa="$(change_confirmation_state "$a" 2>/dev/null)"; sb="$(change_confirmation_state "$b" 2>/dev/null)"
+  sc="$(change_confirmation_state "$c" 2>/dev/null)"; se="$(change_confirmation_state "$e" 2>/dev/null)"
+  read -r k _ _ <<<"$(_approval_tally "$e" "$(itinerary_digest "$e/$S15_RENDER")")"
+  sca="$(change_confirmation_state "$ca" 2>/dev/null)"; scb="$(change_confirmation_state "$cb" 2>/dev/null)"
+  scc="$(change_confirmation_state "$cc" 2>/dev/null)"; sce="$(change_confirmation_state "$ce" 2>/dev/null)"
+  if [ "$sca $scb $scc $sce" != 'none-pending none-pending confirmed confirmed' ]; then
+    FAIL "S34k: CONTROL — the construct-free twin with the same records read [$sca $scb $scc $sce] (want none-pending none-pending confirmed confirmed), so a refusal below would not be attributable to the reading"
+  elif [ "$sa" != none-pending ] && [ "$sa" != confirmed ] && [ "$sa" != undetermined ] && [ -n "$sa" ] && [ "$sb" = undetermined ] && [ "$sc" = stale ] && [ "$se" = stale ] && [ "$k" = 0 ]; then
+    PASS "S34k: on a render carrying a construct, the digest a copy of the page gives confirms and approves nothing — as the baseline it reads $sa, as a staged record undetermined, as the confirmation record stale, and as the approvals on file stale, none counting for the plan going out; CONTROL — the construct-free twin with the same records reads none-pending, none-pending, confirmed and confirmed"
+  else
+    FAIL "S34k: baseline [$sa] (want neither none-pending nor confirmed), staged [$sb] (want undetermined), confirmation record [$sc] (want stale), approvals [$se] with $k counting (want stale and 0)"
+  fi
+}
+
+# ── S34l — THE NARROWING, DECIDED ON READINGS. Where a page reads the same under reading 1 as under reading
+# 2, and _browser_end_tags leaves it as it is, a record of reading 1 that differs is a real move, and the
+# abort says the plan moved and names no revert. One limb per case: a construct-free render with a real
+# edit, against a baseline as the v0.77.0 engine left it, on a trip with no approvers and on one that
+# declares approvers; a published plan that carried an <img> alt, edited to drop it and move a time, and
+# the same trip with the edit reverted, which reads differently under the two readings and gets the
+# words that cannot tell; a page with a spaced script end tag, against a baseline taken by the program
+# before 0.69.0, which gets the words that cannot tell; and the pages with an empty alt and an empty
+# label, each with a real edit. list reads BEHIND on the construct-free and empty-alt trips, and
+# UNDETERMINED on a trip whose render carries a stray `<`. CONTROL: the construct-free trip with its
+# baseline at the engine's reading gives the shipped abort, its revert included. Its falsifiers are
+# S34l-mut, _reading_agrees answering no, and S34l-byte, _reading_agrees made a byte-identity test of the
+# pre-pass's output.
+s34l_old69() { # <command…> -> the command, run with the pre-pass a copy of its input and the program ending a body only at the exact tag
+  ( _browser_read_markup() { cat "$1"; }
+    eval "$(declare -f _itinerary_program | perl -pe 'BEGIN{$o=q{(?=[\t\n\f\r \/>])[^>]*>}} my $i=index($_,$o); substr($_,$i,length $o)=">" if $i>=0')"
+    "$@" )
+}
+s34l_narrow() { # <abort text> <declared|none> -> ok, or what is missing from the narrowed words
+  local t="$1" w=""
+  [ "$(s33_has "$t" 'reads the same under both, so the plan itself has moved')" = 1 ] || w="$w no-moved"
+  [ "$(s33_has "$t" 'revert')" = 0 ] || w="$w revert"
+  [ "$(s33_has "$t" 'cannot tell')" = 0 ] || w="$w cannot-tell"
+  if [ "$2" = declared ]; then [ "$(s33_has "$t" 'share the approval line')" = 1 ] || w="$w no-share"
+  else [ "$(s33_has "$t" 'Confirm the change')" = 1 ] || w="$w no-confirm"; fi
+  printf '%s' "${w:-ok}"
+}
+s34l_cannot() { # <abort text> -> ok, or what is missing from the words that cannot tell
+  local t="$1" w=""
+  [ "$(s33_has "$t" 'reads pages differently')" = 1 ] || w="$w no-reading-words"
+  [ "$(s33_has "$t" 'cannot tell')" = 1 ] || w="$w no-cannot-tell"
+  [ "$(s33_has "$t" 'revert')" = 0 ] || w="$w revert"
+  printf '%s' "${w:-ok}"
+}
+s34l_gate() { # <trip> -> the gate's abort text at the engine's reading
+  printf '%s' "$( ( require_change_confirmation "$1" ) 2>&1 >/dev/null )"
+}
+s34l_assert() { # one verdict
+  local t2 t7 pn pr p69 d1 d7 st ctl w q e2 e7 epn epr e69 ed1 ed7 ec l2 l1 ls
+  t2="$(s34_trip l-t2 '' '' 17:00 '')"; s33_rec "$t2/.published-itinerary" "$(s34_old itinerary_digest "$WORK/sa_p16.html")" published
+  t7="$(s34_trip l-t7 '' '' 17:00 '')"; w="$(s34_old itinerary_digest "$WORK/sa_p16.html")"
+  s33_rec "$t7/.published-itinerary" "$w" published; s33_dec "$t7/.change-confirmed" "$w"; sa_declare "$t7" 1 zqa1; sa_rec "$t7" zqa1 approve "$w"
+  s34_render "$WORK/s34l_pub.html" '' '' 16:30 '<img alt="Tile museum" src="t.png">'
+  pn="$(s34_trip l-pn '' '' 17:00 '')"; s33_rec "$pn/.published-itinerary" "$(s34_old itinerary_digest "$WORK/s34l_pub.html")" published
+  pr="$(s34_trip l-pr '' '' 16:30 '<img alt="Tile museum" src="t.png">')"; s33_rec "$pr/.published-itinerary" "$(s34_old itinerary_digest "$WORK/s34l_pub.html")" published
+  p69="$(s34_trip l-69 '' '' 16:30 '<script>var a = 1;</script ><p>Day 1: dinner at 19:00.</p>')"
+  s33_rec "$p69/.published-itinerary" "$(s34l_old69 itinerary_digest "$p69/$S15_RENDER")" published
+  s34_render "$WORK/s34l_d1p.html" '' '' 16:30 '<img alt="" src="t.png">'
+  d1="$(s34_trip l-d1 '' '' 17:00 '<img alt="" src="t.png">')"; s33_rec "$d1/.published-itinerary" "$(s34_old itinerary_digest "$WORK/s34l_d1p.html")" published
+  s34_render "$WORK/s34l_d7p.html" '' '' 16:30 '<select><option label="">x</option></select>'
+  d7="$(s34_trip l-d7 '' '' 17:00 '<select><option label="">x</option></select>')"; s33_rec "$d7/.published-itinerary" "$(s34_old itinerary_digest "$WORK/s34l_d7p.html")" published
+  st="$(s34_trip l-st '' '' 17:00 '<p>Arrive < 18:30 at the station.</p>')"; s33_rec "$st/.published-itinerary" "$(s34_old itinerary_digest "$WORK/sa_p16.html")" published
+  ctl="$(s34_trip l-ctl '' '' 17:00 '')"; s33_rec "$ctl/.published-itinerary" "$SA_P16" published "$_ITINERARY_READING"
+  e2="$(s34l_gate "$t2")"; e7="$(s34l_gate "$t7")"; epn="$(s34l_gate "$pn")"; epr="$(s34l_gate "$pr")"
+  e69="$(s34l_gate "$p69")"; ed1="$(s34l_gate "$d1")"; ed7="$(s34l_gate "$d7")"; ec="$(s34l_gate "$ctl")"
+  l2="$(build_to_published "$t2")"; l1="$(build_to_published "$d1")"; ls="$(build_to_published "$st")"
+  q="$(s34l_narrow "$e2" none) $(s34l_narrow "$e7" declared) $(s34l_narrow "$epn" none) $(s34l_cannot "$epr") $(s34l_cannot "$e69") $(s34l_narrow "$ed1" none) $(s34l_narrow "$ed7" none)"
+  if [ "$(s33_has "$ec" 'revert the working copy')" != 1 ] || [ "$(s33_has "$ec" 'reads pages differently')" != 0 ] || [ "$(s33_has "$ec" 'reads the same under both')" != 0 ]; then
+    FAIL "S34l: CONTROL — the construct-free trip with its baseline at the engine's reading did not give the shipped abort with its revert, so the narrowed words below are not attributable to the reading"
+  elif [ "$q" = 'ok ok ok ok ok ok ok' ] && [ "$l2" = "BEHIND: $S15_RENDER" ] && [ "$l1" = "BEHIND: $S15_RENDER" ] && [ "$(s33_has "$ls" 'UNDETERMINED: the push record was taken under another reading')" = 1 ]; then
+    PASS "S34l: where a page reads the same under both readings, a differing record of reading 1 is a real move — a construct-free real edit on a trip with no approvers and on one that declares approvers, a published <img> alt dropped with a time moved, and the empty-alt and empty-label pages with a real edit each get the words that the plan itself has moved, with no revert; the same alt trip reverted and a page with a spaced script end tag against a baseline taken before 0.69.0 get the words that cannot tell; list reads BEHIND on the construct-free and empty-alt trips and UNDETERMINED on a stray '<' trip; CONTROL — the baseline at the engine's reading gives the shipped abort, revert included"
+  else
+    FAIL "S34l: words per limb (construct-free none, construct-free declared, alt dropped, alt reverted, pre-0.69.0, empty alt, empty label) [$q] (want ok each); list [$l2] [$l1] [${ls//"$WORK"/<work>}] (want BEHIND, BEHIND, UNDETERMINED on another reading)"
+  fi
+}
+
+s34a_assert
+s34b_assert
+s34c_assert
+s34d_assert
+s34e_assert
+s34f_assert
+s34g_assert
+s34h_assert
+s34j_assert
+s34k_assert
+s34l_assert
+
+# ── ARMED-RED: each arm under the mutation its row names must report pass=0 fail=1.
+s34_m_copy()     { _browser_read_markup() { cat "$1"; }; }
+s34d_m_tail()    { s33_rewrite _browser_read_markup 'print $o;' 'print $o, " ";'; }
+s34h_m_noplace() { s33_rewrite _browser_read_markup 'input => {value => 1, placeholder => 1, alt => 1}' 'input => {value => 1, alt => 1}'; }
+s34j_m_title()   { s33_rewrite _browser_read_markup 'img => {alt => 1}' 'img => {alt => 1, title => 1}'; }
+s34l_m_no()      { _reading_agrees() { return 1; }; }
+s34l_m_byte()    { _reading_agrees() { [ "$2" = 1 ] && [ -r "$1" ] || return 1; _browser_read_markup "$1" > "$WORK/s34l_byte.out" 2>/dev/null || return 1; cmp -s "$WORK/s34l_byte.out" "$1"; }; }
+s33_mut "S34a-mut" "the pre-pass made a copy of its input" s34_m_copy s34a_assert
+s33_mut "S34b-mut" "the pre-pass made a copy of its input" s34_m_copy s34b_assert
+s33_mut "S34c-mut" "the pre-pass made a copy of its input" s34_m_copy s34c_assert
+s33_mut "S34d-mut" "the pre-pass writing one byte more than its input" s34d_m_tail s34d_assert
+s33_mut "S34e-mut" "the pre-pass made a copy of its input" s34_m_copy s34e_assert
+s33_mut "S34f-mut" "the pre-pass made a copy of its input" s34_m_copy s34f_assert
+s33_mut "S34g-mut" "strip_to_itinerary_text reading the page without the pre-pass" 'strip_to_itinerary_text() { _itinerary_program < "$1"; }' s34g_assert
+s33_mut "S34h-mut" "placeholder dropped from %SHOWN's input entry" s34h_m_noplace s34h_assert
+s33_mut "S34j-mut" "title added to %SHOWN's img entry" s34j_m_title s34j_assert
+s33_mut "S34k-mut" "the pre-pass made a copy of its input" s34_m_copy s34k_assert
+s33_mut "S34l-mut" "_reading_agrees answering no" s34l_m_no s34l_assert
+s33_mut "S34l-byte" "_reading_agrees made a byte-identity test of the pre-pass's output" s34l_m_byte s34l_assert
+
+# The block's registrations: each re-runs the arm with its subject removed.
+md_flips _browser_read_markup "S34a" s34a_assert
+md_flips _browser_read_markup "S34b" s34b_assert
+md_flips _browser_read_markup "S34c" s34c_assert
+md_flips _browser_read_markup "S34d" s34d_assert
+md_flips _browser_read_markup "S34e" s34e_assert
+md_flips _browser_read_markup "S34f" s34f_assert
+md_flips _browser_read_markup "S34g" s34g_assert
+md_flips _browser_read_markup "S34h" s34h_assert
+md_flips _browser_read_markup "S34j" s34j_assert
+md_flips _browser_read_markup "S34k" s34k_assert
+md_flips _reading_agrees      "S34l" s34l_assert
 unset -f gh npx
 
 # ═════════════════════════════════════════════════════════════════════════════════
