@@ -13918,6 +13918,14 @@ fi
 #         of path-shaped cells finds none either (two qualifying columns read as none); one phrase
 #         stripped from a copy of § `group` drops the phrase count by exactly 1; and the header
 #         phrase planted into a copy of § `erase` is counted.
+#   (iv)  THE OTHER STATEMENTS OF THE SAME AUTHORITY (#2116): the reconciler's § *Traveler identity*
+#         in agents/00-enrichment.md, and reference/data-model.md's § *The display name has one
+#         authority* and § *The four cases the correspondence does not reach*, carry no line naming
+#         the person column by the header literal `Person`, and the reconciler's section cites
+#         § `group`, *The roster's two columns*, exactly once. Each section must be found and read
+#         at least 1,000 folded bytes. Controls: the old header sentence planted into a copy of each
+#         section is counted, and the citation stripped from a copy of the reconciler's section
+#         drops its count by exactly 1.
 er25_cols() {
   awk -F'|' '
     /^## Group/ { on = 1; next }
@@ -14015,16 +14023,41 @@ ER25_H_REST="$(er25_hdr "$ER25_REST")"
 ER25_H_PROF="$(er25_hdr "$ER25_PROF")"
 ER25_H_ERASE="$(er25_hdr "$ER_SEC")"
 ER25_H_PLANT="$(er25_hdr "$(er_sub1 "$ER_SEC" 'the row whose path cell names' 'the row whose `Traveler file` cell names')")"
-if [ "$ER25_NR" -lt 3 ] || [ -z "$ER25_WT" ] || [ -z "$ER25_GSEC" ]; then
-  FAIL "ER25: measured nothing — $ER25_NR tracked roster(s) parsed, the witness read=$([ -n "$ER25_WT" ] && echo 1 || echo 0) and § \`group\` read=$([ -n "$ER25_GSEC" ] && echo 1 || echo 0). A column reader over no roster proves nothing about the rule it implements"
-elif [ "${ER25_C1:-1}" -ne 0 ] || [ "${ER25_C2:-1}" -ne 0 ] || [ "${ER25_C2Q:-0}" -ne 2 ] || [ "$ER25_PIN_X" -ne $((ER25_PIN - 1)) ] || [ "$ER25_H_PROF" -lt 1 ] || [ "$ER25_H_PLANT" -ne $((ER25_H_ERASE + 1)) ] || [ "$ER25_J2OK" -ne 1 ]; then
-  FAIL "ER25: BROKEN PROBE — a must-fire control did not move: free-text path cells qualified ${ER25_C1:-?} column(s) (must be 0), two path-shaped columns read path column ${ER25_C2:-?} with ${ER25_C2Q:-?} qualifying (must be 0 and 2), a stripped phrase read $ER25_PIN_X against $ER25_PIN (must be one fewer), § \`profile\` held $ER25_H_PROF header-named line(s) (must be at least 1), the planted header phrase read $ER25_H_PLANT against § \`erase\`'s $ER25_H_ERASE (must be one more), and the header rename landed=$ER25_J2OK. Until each fires, a verdict below is the instrument's"
+# Limb (iv): each section runs from its heading to the next `## ` or `### ` heading.
+er25_sec() { LC_ALL=C awk -v h="$2" 'index($0, h) == 1 { on = 1; print; next } on && (/^## / || /^### /) { on = 0 } on { print }' "$1" 2>/dev/null; }
+er25_lit() { LC_ALL=C awk 'index($0, "`Person`") { n++ } END { print n + 0 }' <<<"$1"; }
+er25_cite() { LC_ALL=C awk -v p='§ `group`, *The roster'"'"'s two columns*' '{ t = t " " $0 } END { gsub(/[ \t\r]+/, " ", t); c = 0; while ((i = index(t, p)) > 0) { c++; t = substr(t, i + length(p)) } print c }' <<<"$1"; }
+ER25_IVS=(
+  'agents/00-enrichment.md|### Traveler identity — '
+  'reference/data-model.md|### The display name has one authority — '
+  'reference/data-model.md|### The four cases the correspondence does not reach'
+)
+ER25_IV_LIT=0; ER25_IV_SHORT=""; ER25_IV_PLANTBAD=0; ER25_IV_WHERE=""
+for er25_s in "${ER25_IVS[@]}"; do
+  er25_t="$(er25_sec "$ROOT/${er25_s%%|*}" "${er25_s#*|}")"
+  er25_f="$(tr '\n' ' ' <<<"$er25_t" | tr -s ' ')"
+  [ "${#er25_f}" -ge 1000 ] || ER25_IV_SHORT="$ER25_IV_SHORT ${er25_s#*|}(${#er25_f})"
+  er25_n="$(er25_lit "$er25_t")"
+  ER25_IV_LIT=$((ER25_IV_LIT + er25_n))
+  [ "$er25_n" -eq 0 ] || ER25_IV_WHERE="$ER25_IV_WHERE ${er25_s%%|*} ${er25_s#*|}: $er25_n;"
+  [ "$(er25_lit "$er25_t
+The \`Person\` cell of the \`## Group\` roster")" -eq $((er25_n + 1)) ] || ER25_IV_PLANTBAD=$((ER25_IV_PLANTBAD + 1))
+done
+ER25_IV_E="$(er25_sec "$ROOT/agents/00-enrichment.md" '### Traveler identity — ')"
+ER25_IV_CN="$(er25_cite "$ER25_IV_E")"
+ER25_IV_CX="$(er25_cite "$(er_sub1 "$(tr '\n' ' ' <<<"$ER25_IV_E")" '§ `group`, *The roster'"'"'s two columns*' '')")"
+if [ "$ER25_NR" -lt 3 ] || [ -z "$ER25_WT" ] || [ -z "$ER25_GSEC" ] || [ -n "$ER25_IV_SHORT" ]; then
+  FAIL "ER25: measured nothing — $ER25_NR tracked roster(s) parsed, the witness read=$([ -n "$ER25_WT" ] && echo 1 || echo 0), § \`group\` read=$([ -n "$ER25_GSEC" ] && echo 1 || echo 0), and limb (iv)'s sections read under 1,000 folded bytes:${ER25_IV_SHORT:- none}. A column reader over no roster proves nothing about the rule it implements"
+elif [ "${ER25_C1:-1}" -ne 0 ] || [ "${ER25_C2:-1}" -ne 0 ] || [ "${ER25_C2Q:-0}" -ne 2 ] || [ "$ER25_PIN_X" -ne $((ER25_PIN - 1)) ] || [ "$ER25_H_PROF" -lt 1 ] || [ "$ER25_H_PLANT" -ne $((ER25_H_ERASE + 1)) ] || [ "$ER25_J2OK" -ne 1 ] || [ "$ER25_IV_PLANTBAD" -ne 0 ] || { [ "$ER25_IV_CN" -ge 1 ] && [ "$ER25_IV_CX" -ne $((ER25_IV_CN - 1)) ]; }; then
+  FAIL "ER25: BROKEN PROBE — a must-fire control did not move: free-text path cells qualified ${ER25_C1:-?} column(s) (must be 0), two path-shaped columns read path column ${ER25_C2:-?} with ${ER25_C2Q:-?} qualifying (must be 0 and 2), a stripped phrase read $ER25_PIN_X against $ER25_PIN (must be one fewer), § \`profile\` held $ER25_H_PROF header-named line(s) (must be at least 1), the planted header phrase read $ER25_H_PLANT against § \`erase\`'s $ER25_H_ERASE (must be one more), the header rename landed=$ER25_J2OK, $ER25_IV_PLANTBAD of limb (iv)'s 3 sections did not count the planted header sentence, and the citation stripped from a copy of the reconciler's section read $ER25_IV_CX against $ER25_IV_CN (must be one fewer). Until each fires, a verdict below is the instrument's"
 elif [ "$ER25_PIN" -ne 4 ] || [ "$ER25_H_REST" -ne 0 ]; then
   FAIL "ER25: the column rule is not the one the verb file reads by — § \`group\` carries $ER25_PIN of the paragraph's 4 operative phrases (found by what they hold; the person column is the first; the path cell's shape; two qualifying columns read as none), and $ER25_H_REST line(s) outside § \`profile\` still name a roster column by its header. A join that reads \`Traveler file\` by name misses the witness's \`Profile\` column and leaves the next run's join to chance"
 elif [ "$ER25_NFOUND" -ne "$ER25_NWANT" ] || [ "$ER25_NOTHER" -lt 1 ] || [ "$ER25_J1" != "Dana" ] || [ "$ER25_J2" != "Dana" ]; then
   FAIL "ER25: the rule does not read the tracked rosters — a path column was found in $ER25_NFOUND of the $ER25_NWANT roster(s) carrying a traveller-file cell (missed:${ER25_MISS:- none}), $ER25_NOTHER of them headed other than \`Traveler file\` (must be at least 1), and the witness's \`travelers/dana.md\` joined '${ER25_J1:-<none>}' under its own header and '${ER25_J2:-<none>}' under the template's (both must be Dana)"
+elif [ "$ER25_IV_LIT" -ne 0 ] || [ "$ER25_IV_CN" -ne 1 ]; then
+  FAIL "ER25: limb (iv) — the reconciler and the data model state the name authority by the header, not by what the column holds: $ER25_IV_LIT line(s) across agents/00-enrichment.md § *Traveler identity* and reference/data-model.md's two sections name the column by the literal \`Person\` (must be 0;${ER25_IV_WHERE:- none}), and the reconciler's section cites § \`group\`, *The roster's two columns*, $ER25_IV_CN time(s) (must be exactly 1). A reconciler that reads the column by its header misses a roster headed \`Traveler | Profile\`"
 else
-  PASS "ER25: the roster's columns are found by what they hold — over $ER25_NR tracked roster(s) the path column is found in all $ER25_NWANT that carry a traveller-file cell, $ER25_NOTHER of them headed other than \`Traveler file\`, and the witness's \`travelers/dana.md\` joins Dana under its own \`Traveler | Profile\` header and under the template's. § \`group\` states the rule in all 4 operative phrases, no line outside § \`profile\` names a column by its header, and every control fired: free text qualifies no column, two path-shaped columns read as none, a stripped phrase and a planted header phrase each move their count by 1"
+  PASS "ER25: the roster's columns are found by what they hold — over $ER25_NR tracked roster(s) the path column is found in all $ER25_NWANT that carry a traveller-file cell, $ER25_NOTHER of them headed other than \`Traveler file\`, and the witness's \`travelers/dana.md\` joins Dana under its own \`Traveler | Profile\` header and under the template's. § \`group\` states the rule in all 4 operative phrases, no line outside § \`profile\` names a column by its header, and every control fired: free text qualifies no column, two path-shaped columns read as none, a stripped phrase and a planted header phrase each move their count by 1. Limb (iv): the reconciler's § *Traveler identity* and the data model's two sections name no column by the literal \`Person\`, the reconciler's section cites § \`group\`, *The roster's two columns*, once, the header sentence planted into each is counted and the citation stripped reads one fewer"
 fi
 
 # ── ER26 — A DISCOVERED FILE THAT JOINS NO ROW IS ONE BRANCH, AND THE RECORD WAITS FOR IT (#1791,
