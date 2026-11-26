@@ -977,6 +977,103 @@ strip_to_joined_text_at_browser_end() { # <html_file> -> strip_to_joined_text ov
   ( set -o pipefail; _browser_end_tags "$1" | strip_to_joined_text /dev/stdin )
 }
 
+# THE PAGE AS A BROWSER TOKENIZES IT, FOR THE THREE RULES THE ITINERARY DIGEST READS (#2285). Writes the file
+# back with three changes and nothing else: (1) a <script>/<style> opener that is not a real start tag in the
+# page's text — a name that runs on (<script-card>), or one inside a comment, an attribute value, a doctype or
+# bogus comment, a text box or another raw-text element — is made inert (<x-script), so no reader opens a
+# body there; a real one whose end tag never comes is made inert too, since no reader can close it; (2) a <
+# before anything but an ASCII letter, /, ! or ? is written &lt;, text, as a browser shows it; (3) after the
+# start tag of an element a browser paints attribute text for — <input> value (save the types whose value is
+# not painted as text), placeholder and an image input's alt, <textarea> placeholder, <option>/<optgroup>
+# label, <img> alt — that text is written out, its line breaks as spaces and its < as &lt;. Bodies a browser
+# paints as written (<textarea>, <title>, <xmp>, and everything after <plaintext>) have every < written &lt;;
+# bodies it does not paint while script runs (<noscript>, <iframe>, <noembed>, <noframes>) keep their bytes, and
+# an opener inside one is made inert unless it is a real start tag whose own end tag follows it there, so a style
+# block a <noscript> wraps is still removed whole. A tag's end is found as a browser finds it, past quoted values;
+# a tag the file ends inside, or whose quoted value never closes, takes the rest of the file, made inert, as a
+# browser reads it. On a page carrying none of the three, the output is byte-identical to the input, so the
+# digest is unchanged by construction (S34d). Linear: every search either consumes its input or ends the scan
+# (S34e). Its one reader is strip_to_itinerary_text (S34g).
+_browser_read_markup() { # <html_file> -> the file with the three browser rules written in, on stdout
+  perl -0777 -ne '
+    my $s = $_; my $n = length $s; my $o = ""; my $i = 0; my %noend; my $nocom = 0;
+    sub inert { my $v = shift; $v =~ s/<(?=(?:script|style)\b)/<x-/gi; return $v }
+    sub inert_open { my $v = shift; my %last;
+      while ($v =~ /<\/(script|style)(?=[\t\n\f\r \/>])/gi) { $last{lc $1} = $-[0] }
+      $v =~ s{<(?=(script|style)\b)}{ my $m = lc $1; my $t = substr($v, $-[0] + 1 + length $m, 1); my $g = index($v, ">", $-[0]);
+        ($t =~ /\A[\t\n\f\r \/>]\z/ and defined $last{$m} and $g >= 0 and $g < $last{$m}) ? "<" : "<x-" }gie;
+      return $v }
+    sub endtag { my ($nm, $from) = @_;
+      return ($n, $n) if $noend{$nm};
+      pos($s) = $from;
+      return ($-[1], $+[1]) if $s =~ /\G.*?(<\/\Q$nm\E(?=[\t\n\f\r \/>])[^>]*>)/gcsi;
+      $noend{$nm} = 1; return ($n, $n) }
+    sub attrs { my $p = shift; my @a;
+      while (1) {
+        pos($s) = $p; $s =~ /\G[\t\n\f\r \/]*/gc; $p = pos($s);
+        return (-1, \@a) if $p >= $n;
+        return ($p + 1, \@a) if substr($s, $p, 1) eq ">";
+        $s =~ /\G([^\t\n\f\r \/>][^\t\n\f\r \/>=]*)/gc; my $k = lc $1; $p = pos($s);
+        $s =~ /\G[\t\n\f\r ]*/gc;
+        if (pos($s) < $n and substr($s, pos($s), 1) eq "=") {
+          pos($s) = pos($s) + 1; $s =~ /\G[\t\n\f\r ]*/gc; my $q = pos($s); my $c = substr($s, $q, 1);
+          if ($c eq "\x22" or $c eq "\x27") {
+            my $e = index($s, $c, $q + 1);
+            return (-1, \@a) if $e < 0;
+            push @a, [$k, substr($s, $q + 1, $e - $q - 1)]; $p = $e + 1;
+          } else { pos($s) = $q; $s =~ /\G([^\t\n\f\r >]*)/gc; push @a, [$k, $1]; $p = pos($s) }
+        } else { push @a, [$k, ""] }
+      } }
+    my %SHOWN = (input => {value => 1, placeholder => 1, alt => 1}, textarea => {placeholder => 1},
+                 option => {label => 1}, optgroup => {label => 1}, img => {alt => 1});
+    my %NOTEXT = map { $_ => 1 } qw(hidden checkbox radio password file image range color);
+    sub shown { my ($tn, $at) = @_; my (%seen, %first, @v);
+      return "" unless $SHOWN{$tn};
+      for my $a (@$at) { $first{$a->[0]} = $a->[1] unless exists $first{$a->[0]} }
+      my $ty = lc(defined $first{type} ? $first{type} : "");
+      for my $a (@$at) { my ($k, $v) = @$a;
+        next if $seen{$k}++; next unless $SHOWN{$tn}{$k};
+        next if $tn eq "input" and $k eq "value" and $NOTEXT{$ty};
+        next if $tn eq "input" and $k eq "alt" and $ty ne "image";
+        $v =~ tr/\n\r/  /; $v =~ s/</&lt;/g; push @v, $v }
+      return @v ? " " . join(" ", @v) . " " : "" }
+    while ($i < $n) {
+      my $j = index($s, "<", $i);
+      if ($j < 0) { $o .= substr($s, $i); last }
+      $o .= substr($s, $i, $j - $i); $i = $j;
+      my $c1 = substr($s, $j + 1, 1);
+      if (substr($s, $j, 4) eq "<!--") {
+        pos($s) = $j + 4; my $e;
+        if ($s =~ /\G-?>/gc) { $e = pos($s) }
+        elsif (not $nocom and $s =~ /\G.*?--!?>/gcs) { $e = pos($s) }
+        else { $nocom = 1; $e = $n }
+        $o .= inert(substr($s, $j, $e - $j)); $i = $e; next }
+      if ($c1 eq "!" or $c1 eq "?" or ($c1 eq "/" and substr($s, $j + 2, 1) !~ /^[A-Za-z]$/)) {
+        my $e = index($s, ">", $j + 1); $e = $e < 0 ? $n : $e + 1;
+        $o .= inert(substr($s, $j, $e - $j)); $i = $e; next }
+      if ($c1 =~ /^[A-Za-z]$/ or $c1 eq "/") {
+        my $end = $c1 eq "/";
+        pos($s) = $j + ($end ? 2 : 1); $s =~ /\G([^\t\n\f\r \/>]*)/gc; my $tn = lc $1;
+        my ($e, $at) = attrs(pos($s));
+        if ($e < 0) { $o .= inert(substr($s, $j)); last }
+        my $tag = substr($s, $j, $e - $j);
+        if (not $end and ($tn eq "script" or $tn eq "style")) {
+          my ($bs, $be) = endtag($tn, $e);
+          if ($bs >= $n) { $o .= inert($tag); $i = $e; next }
+          $o .= substr($s, $j, $be - $j); $i = $be; next }
+        if (not $end and ($tn eq "textarea" or $tn eq "title" or $tn eq "xmp" or $tn eq "plaintext")) {
+          my ($bs, $be) = $tn eq "plaintext" ? ($n, $n) : endtag($tn, $e);
+          my $body = substr($s, $e, $bs - $e); $body =~ s/</&lt;/g;
+          $o .= inert($tag) . shown($tn, $at) . $body . substr($s, $bs, $be - $bs); $i = $be; next }
+        if (not $end and ($tn eq "noscript" or $tn eq "iframe" or $tn eq "noembed" or $tn eq "noframes")) {
+          my ($bs, $be) = endtag($tn, $e);
+          $o .= inert($tag) . inert_open(substr($s, $e, $bs - $e)) . substr($s, $bs, $be - $bs); $i = $be; next }
+        $o .= inert($tag) . ($end ? "" : shown($tn, $at)); $i = $e; next }
+      $o .= "&lt;"; $i = $j + 1 }
+    print $o;
+  ' "$1"
+}
+
 # The FOURTH projection: the published projection as the guard before 0.60.0 wrote it, kept as
 # an arm of its own beside the reading that replaced it (ADR-050). It finds machinery by SHAPE —
 # a tag name is any word directly after a `<`, an attribute name any word before a `=`, wherever
@@ -3098,7 +3195,8 @@ verify_ciphertext() { # <enc> <src> [boilerplate_html]
 #       excision is bounded — see strip_to_itinerary_text.
 #
 # WHAT IS OUTSIDE THE BOUNDARY, stated rather than implied: markup, C19's
-# declaration block, attribute values, <script> and <style> bodies. A change confined to one
+# declaration block, attribute values other than the text a browser paints from them (see
+# _browser_read_markup), <script> and <style> bodies. A change confined to one
 # of those does not move the digest and can ride a standing confirmation. That is
 # the same coverage boundary ADR-008 draws between the visible and the retrievable
 # projections of the guard (which now carries a third, joined, for a word an inline tag
@@ -3268,34 +3366,51 @@ _COORD_NOTICE_CAP=512
 # differently from before — with a later exact tag, because the stretch is now in the digest, and
 # without one, because the body is now out of it — and so does its legacy CRC token,
 # _legacy_itinerary_digest reading this projection too. Such a trip reads as changed once. On a trip
-# that declares no approvers the next update stops as `unconfirmed`, or `stale` where an earlier
-# confirmation is on record, and the remedy is one `confirm` — not a revert, because the plan did
-# not move. On a trip that declares approvers its approval code changes, approvals recorded for the
+# that declares no approvers the next update or rotate stops as `unconfirmed`, or `stale` where an
+# earlier confirmation is on record; since #2286 its message names the reading change, and the remedy
+# is one `confirm` — not a revert, because the plan did not move. On a trip that declares approvers its approval code changes, approvals recorded for the
 # old code stop counting, and the group approves once more. No shim accepts the old digest: the old
 # reading is the one that misses the edit. The guard's two added readings end a body by the same
 # rule (_browser_end_tags), and S32d holds the two to it. Graded by S32a–S32d.
 #
-# WHAT STILL STAYS OUT OF THE DIGEST, NAMED SO THIS LIMB IS NOT READ AS THE WHOLE ANSWER. Four
-# classes of text a reader can see are known to leave the digest unmoved; the list is what has
+# THE THREE BROWSER RULES (#2285). _browser_read_markup writes the page back as a browser reads it before
+# the program below runs: a <script> or <style> opener that is not a real start tag is made inert, so a
+# custom element named <script-card>, or a <script> written inside a comment, an attribute value or a
+# text box, no longer hides what follows it; a stray < (`arrive < 18:30`) is written as text; and the text
+# a browser paints in an element's own box from an attribute is written out after its tag. Markup written
+# inside a text box or a title is read as text too, as a browser shows it. The attribute text read, one
+# element and attribute per entry, which S34j holds equal to the pairs %SHOWN carries:
+#   READ: input value, input placeholder, input alt, textarea placeholder, option label, optgroup label, img alt
+# An <input>'s value is read save where its type is one whose value is not painted as text, the type
+# matched as the page writes it, with no trimming of the space around it, as a browser matches it.
+# THE COST, PAID ONCE AND STATED. A render carrying any of these digests differently from before, so its
+# trip reads as changed once: the gate's message names the reading change (_ITINERARY_READING is 2), one
+# `confirm` clears it on a trip that declares no approvers, and on a trip that declares approvers the group
+# approves once more. A render carrying none keeps its digest, because the pre-pass writes it back byte for
+# byte. And a render whose digest now equals the earlier reading's digest of the plan last confirmed — an
+# edit that removed exactly a construct's hidden text — passes once, as it did before this change; the
+# next record taken under reading 2 ends that. Graded by S34a–S34l.
+#
+# WHAT STILL STAYS OUT OF THE DIGEST, NAMED SO THIS IS NOT READ AS THE WHOLE ANSWER; the list is what has
 # been found, not a proof that nothing else does:
-#   (a) text after an opening tag that only looks like a script or style one. A body opens wherever
-#       `<script` or `<style` stands before a word boundary and runs to the next end tag, so a custom
-#       element whose name begins `script` or `style` (`<script-card>`), and an unclosed `<script>`
-#       written inside a comment, an attribute value or a text box such as `<textarea>` or
-#       `<noscript>`, hide what follows them up to that tag. A commented-out script that carries its
-#       own end tag is not in this class: its body ends at that tag, and an edit after it is seen.
-#   (b) text after a stray `<` in the page's text — `arrive < 18:30` — which a browser shows as
-#       text and the tag strip below reads as a tag's start, dropping everything up to the next `>`.
-#   (c) text a script or style draws — a map pop-up, a CSS `content:` label — which this projection
-#       does not read, by design: it reads the page's text, not what its code makes of it.
-#   (d) text a browser shows from an attribute — an `<input>` or button `value`, a `placeholder`,
-#       an `<option>` `label`, an `<img>` `alt` — which the tag strip below removes with its tag;
-#       and the body of a closed `<script>` written inside a text box such as `<textarea>`, which a
-#       browser shows as the box's text and the script-and-style limb removes.
-# (a), (b) and (d) are one family, the digest dropping text a browser shows, and one follow-up card
-# owns them; (c) stays out by design. How many renders carry (a), (b) or (d) is unmeasured: the
-# repository tracks no render.
+#   (c) text a script or style draws — a map pop-up, a CSS `content:` label — which this program does
+#       not read, by design: it reads the page's text, not what its code makes of it; and numbers a
+#       browser generates, such as list markers from <ol start> or <li value>;
+#   attribute text a browser shows outside the element's box — title tooltips, aria-* labels — and the
+#       suggestions a <datalist> draws while its field has focus;
+#   a document embedded through <iframe srcdoc>, which would mean reading an attribute as a page; and
+#   SVG and MathML, which are read by HTML's rules.
+#   OUT: title, aria-*, datalist, srcdoc, svg, mathml
+# How many renders carry a construct is unmeasured: the repository tracks no render.
 strip_to_itinerary_text() { # <html_file> -> visible itinerary text on stdout, or nothing on failure
+  ( set -o pipefail; _browser_read_markup "$1" | _itinerary_program )
+}
+
+# THE v0.77.0 PROGRAM, MOVED HERE UNCHANGED (#2285), reading standard input. Its four substitutions are the
+# ones the comment above strip_to_itinerary_text states, in that order: the band, the script-and-style limb,
+# the declaration block, the tag strip. strip_to_itinerary_text runs it over _browser_read_markup's output,
+# and _itinerary_digest_at_reading_1 over the raw file, which is reading 1, so there is no second copy of it.
+_itinerary_program() { # stdin -> the itinerary text the v0.77.0 program reads from it, on stdout
   COORD_CLASS="$_COORD_NOTICE_CLASS" COORD_CAP="$_COORD_NOTICE_CAP" \
   perl -0777 -pe '
     my $c = quotemeta($ENV{COORD_CLASS}); my $cap = 0 + $ENV{COORD_CAP};
@@ -3303,19 +3418,21 @@ strip_to_itinerary_text() { # <html_file> -> visible itinerary text on stdout, o
     s/<(script|style)\b[^>]*>.*?<\/\1(?=[\t\n\f\r \/>])[^>]*>//gis;
     s/\A<!--\n(?:.*?\n)?-->(?=\n|\z)/ /s;
     s/<[^>]+>/ /g;
-  ' "$1"
+  '
 }
 
-# THE READING (#2286). One number for everything between a render file and its digest:
-# strip_to_itinerary_text, the band variables _COORD_NOTICE_CLASS and _COORD_NOTICE_CAP it reads,
-# _ITINERARY_WS_SED and the normalization in itinerary_digest, and _digest_of. A change to what any
-# of them computes moves it up by one, in the same change. The published and staged baselines and
-# the confirmation record carry it as their last line, reading=<n>, and a record with none reads as
-# reading 1: it was taken before this field existed. Approval-ledger lines do not carry it: an
-# approval is read against the outgoing plan's code under an earlier reading, where one is known
-# (_reading_measured). No verdict reads it: it chooses the words of an abort that has already been
-# decided (S33g). No environment variable or argument sets it.
-_ITINERARY_READING=1
+# THE READING (#2286). One number for everything between a render file and its digest: _browser_read_markup,
+# _itinerary_program and strip_to_itinerary_text, the band variables _COORD_NOTICE_CLASS and
+# _COORD_NOTICE_CAP the program reads, _ITINERARY_WS_SED and the normalization in itinerary_digest, and
+# _digest_of. A change to what any of them computes moves it up by one, in the same change; S34h pins each
+# reading's digests, and a re-pin under one reading is caught by review, not by that arm. Reading 1 is the
+# v0.77.0 program over the raw file (_itinerary_digest_at_reading_1); reading 2 is that program over the
+# pre-pass's output (#2285). The published and staged baselines and the confirmation record carry it as
+# their last line, reading=<n>, and a record with none reads as reading 1: it was taken before this field
+# existed. Approval-ledger lines do not carry it: an approval is read against the outgoing plan's code
+# under an earlier reading, where one is known (_reading_measured). No verdict reads it: it chooses the
+# words of an abort that has already been decided (S33g). No environment variable or argument sets it.
+_ITINERARY_READING=2
 
 # SEAM (#88) — the digest primitive, reading STDIN, and since #719 the digest an approval
 # BINDS: SHA-256 over the bytes, printed as 64 lowercase hex characters (ADR-029 § Decision 5).
@@ -4071,11 +4188,44 @@ _reading_measured() { # <trip_dir> <state> -> nothing | moved | baseline <r> | r
 }
 # Whether a render reads the same under a record's reading as under this engine's, and whether an
 # approval on file was taken under an earlier reading: each answers only for a pair of readings it can
-# show to read a render alike. An engine with one reading has no such pair, so the first answers no
-# and the second names nothing, and the abort says it cannot tell, the message that claims nothing.
-# Each body is replaced when the engine gains a reading it can compare with an earlier one.
-_reading_agrees() { return 1; } # <html_file> <record-reading>
-_approvals_at_earlier_reading() { return 0; } # <trip_dir> -> nothing
+# show to read a render alike, and this engine knows one pair, reading 1 and reading 2. _reading_agrees
+# holds for it where the render's reading-1 digest equals its reading-2 digest and _browser_end_tags leaves
+# the render byte-identical, so the page reads the same under the end-tag rule before 0.69.0 as well;
+# _approvals_at_earlier_reading names reading 1 where an approval on file names the outgoing plan's
+# reading-1 code and that code is not its code now. Every other pair, and a step that fails, answers no or
+# names nothing, and the abort then says it cannot tell, the message that claims nothing. Each status
+# chooses a message, never a verdict (S33g). A record taken before 0.60.0's locale pin can differ on
+# non-ASCII text in a way neither conjunct sees; for such a record the narrowed message can say the plan
+# moved when only the locale reading did, which costs one check and never passes a change.
+#
+# The reading-1 digest repeats itinerary_digest's normalization rather than factoring it out, as
+# _legacy_itinerary_digest does and for the reason stated there: itinerary_digest's shape is what groups
+# S11 and S15 grade, and this function must not be able to move it.
+_itinerary_digest_at_reading_1() { # <html_file> -> the digest reading 1 takes of it: _itinerary_program over the raw file
+  [ -r "${1:-}" ] || return 0
+  local text dg
+  text="$( ( set -o pipefail; _itinerary_program < "$1" ) )" || return 0
+  dg="$(set -o pipefail; printf '%s' "$text" | LC_ALL=C sed "$_ITINERARY_WS_SED" | LC_ALL=C tr -s '[:space:]' ' ' | LC_ALL=C sed 's/^ *//; s/ *$//' | _digest_of)" || return 0
+  printf '%s' "$dg"
+}
+_reading_agrees() { # <html_file> <record-reading> -> 0 where the render reads the same under that reading as under this engine's
+  [ "$2" = 1 ] && [ "$_ITINERARY_READING" = 2 ] || return 1
+  [ -r "$1" ] || return 1
+  local now was
+  now="$(itinerary_digest "$1")"; was="$(_itinerary_digest_at_reading_1 "$1")"
+  [ -n "$now" ] && [ "$now" = "$was" ] || return 1
+  _browser_end_tags "$1" | cmp -s - "$1"
+}
+_approvals_at_earlier_reading() { # <trip_dir> -> 1 when an approval on file names the outgoing plan's code under reading 1, and that code is not its code now
+  local trip_dir="$1" site now was k t s
+  [ "$_ITINERARY_READING" = 2 ] || return 0
+  site="$(resolve_site_html "$trip_dir" 2>/dev/null)"; now="$(itinerary_digest "$site")"; was="$(_itinerary_digest_at_reading_1 "$site")"
+  [ -n "$was" ] && [ "$was" != "$now" ] || return 0
+  read -r k t s <<<"$(_approval_tally "$trip_dir" "$was")"
+  case "$k" in ''|*[!0123456789]*) return 0 ;; esac
+  [ "$k" -ge 1 ] && printf '1'
+  return 0
+}
 # The gate's `*)` abort (#2286), which never returns. Every record the state was decided from at this
 # engine's reading, or a malformed approval state: the shipped abort, byte for byte, whose revert does
 # restore the published code there. Otherwise the record named above is said to have been taken under
@@ -6410,8 +6560,8 @@ _is_stale() { [ -n "${1:-}" ] && [ -n "${2:-}" ] && [ "$1" -gt "$2" ]; }
 # publish verb calls it, and nothing may branch on it (reference/trip-resolution.md § Resolving a trip,
 # G8: report-only). Blind spots, declared in the SKILL:
 # a push from another machine; a takedown, since unpublish leaves the record; text outside the projection
-# (the coordination band, the declaration block, and text a browser shows that the projection drops); and
-# a digest that moved after the record was written while its reading did not, which reads as a change once.
+# (the coordination band, the declaration block, and text a browser shows that the digest still drops, as
+# the comment above strip_to_itinerary_text states).
 build_to_published() { # <trip_dir> -> one cell
   local trip_dir="$1" bp_nx bp_twin=0 bp_rec bp_site bp_rel bp_dg bp_rr
   bp_nx="$(staged_record_path "$trip_dir")"

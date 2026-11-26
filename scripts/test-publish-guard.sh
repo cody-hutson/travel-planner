@@ -6838,14 +6838,14 @@ fi
 # cannot fake it. Its sensitivity arm is strip_to_text, which legitimately keeps a
 # fallback and is byte-frozen by #550 AC 5: the detector demonstrably fires on the shape
 # it is looking for, so the zero on this projection is a measurement.
-S11_BODY_ITIN="$(declare -f strip_to_itinerary_text)"
+S11_BODY_ITIN="$(declare -f strip_to_itinerary_text)$(declare -f _itinerary_program)$(declare -f _browser_read_markup)"
 S11_BODY_TEXT="$(declare -f strip_to_text)"
 case "$S11_BODY_ITIN" in *'||'*) S11_ITIN_LIMB=1 ;; *) S11_ITIN_LIMB=0 ;; esac
 case "$S11_BODY_TEXT" in *'||'*) S11_TEXT_LIMB=1 ;; *) S11_TEXT_LIMB=0 ;; esac
 case "$S11_BODY_ITIN" in *zzz_not_a_real_identifier*) S11_ITIN_SPEC=1 ;; *) S11_ITIN_SPEC=0 ;; esac
 if [ "${#S11_BODY_ITIN}" -gt 0 ] && [ "${#S11_BODY_TEXT}" -gt 0 ] \
    && [ "$S11_ITIN_LIMB" -eq 0 ] && [ "$S11_TEXT_LIMB" -eq 1 ] && [ "$S11_ITIN_SPEC" -eq 0 ]; then
-  PASS "S11f: the parsed body of strip_to_itinerary_text (${#S11_BODY_ITIN}B) carries 0 fallback limbs; the sensitivity arm found 1 in strip_to_text (${#S11_BODY_TEXT}B), which legitimately keeps one, and the specificity arm found a fabricated token in 0 of them — the zero is a measurement, and any future second limb of any kind fails here"
+  PASS "S11f: the parsed bodies of strip_to_itinerary_text, _itinerary_program and _browser_read_markup (${#S11_BODY_ITIN}B) carry 0 fallback limbs; the sensitivity arm found 1 in strip_to_text (${#S11_BODY_TEXT}B), which legitimately keeps one, and the specificity arm found a fabricated token in 0 of them — the zero is a measurement, and any future second limb of any kind fails here"
 else
   FAIL "S11f: itinerary-limb=$S11_ITIN_LIMB text-limb=$S11_TEXT_LIMB specificity=$S11_ITIN_SPEC itin=${#S11_BODY_ITIN}B text=${#S11_BODY_TEXT}B — the itinerary projection carries a second limb (or the detector cannot see the one strip_to_text carries, in which case its zero proves nothing)"
 fi
@@ -7151,7 +7151,8 @@ fi
 #         moves the digest, so S13a's equality is caused by the opener and by nothing
 #         else the fixture varies
 #   S13d  THE BOUNDARY IN BYTES — subject and control digest the SAME, which is what
-#         this file's "attribute values are outside the digest" claim means measurably
+#         this file's "an attribute a browser does not render is outside the digest" claim
+#         means measurably
 #   S13e  D12 — `generated:` drift still moves nothing, ON THE HAZARD SHAPE
 #   S13f  AI-013 — #551's build-time prune is still digest-neutral. NAMED and asserted
 #         rather than assumed: the prune is digest-neutral only because this block
@@ -7257,13 +7258,14 @@ else
   FAIL "S13c: the control render, which carries no attribute-borne '<!--' at all, digested '$S13_CA' and '$S13_CB' across a real plan edit — the fixture or the projection cannot see an itinerary change even with nothing to swallow it, so S13a grades nothing"
 fi
 
-# ── S13d — THE BOUNDARY IN BYTES. This file states that attribute values are OUTSIDE
-# the itinerary digest. Subject and control are the same itinerary differing in exactly
-# one attribute value, so that claim has a measurement: they must digest the SAME.
+# ── S13d — THE BOUNDARY IN BYTES. This file states that an attribute a browser does not
+# render is OUTSIDE the itinerary digest, and data-tpl is one. Subject and control are the
+# same itinerary differing in exactly one such attribute value, so that claim has a
+# measurement: they must digest the SAME.
 if [ -z "$S13_SA" ] || [ -z "$S13_CA" ]; then
   FAIL "S13d: a digest was empty (subject='$S13_SA' control='$S13_CA'), so the equality below would compare nothing"
 elif [ "$S13_SA" = "$S13_CA" ] && [ "$S13_SB" = "$S13_CB" ]; then
-  PASS "S13d: adding a data-tpl attribute carrying a '<!--' moves the itinerary digest NOT AT ALL — subject and control agree at $S13_SA before the edit and at $S13_SB after it. That is this file's declared boundary ('attribute values' are outside the digest) stated in bytes rather than in prose, and S13c shows the same pair still discriminates a plan change"
+  PASS "S13d: adding a data-tpl attribute carrying a '<!--' moves the itinerary digest NOT AT ALL — subject and control agree at $S13_SA before the edit and at $S13_SB after it. That is this file's declared boundary (an attribute a browser does not render is outside the digest) stated in bytes rather than in prose, and S13c shows the same pair still discriminates a plan change"
 else
   FAIL "S13d: an attribute value is INSIDE the itinerary digest — subject/control read $S13_SA/$S13_CA before the edit and $S13_SB/$S13_CB after it. A render that merely carries a '<!--' in an attribute digests differently from the identical itinerary without one, so the boundary this file declares is not the boundary it computes"
 fi
@@ -7778,7 +7780,7 @@ fi
 # construction: perl invoked through a variable or by a path (`$PERL`, `/usr/bin/perl`),
 # and a change that removes one program while adding another, because it compares a count
 # and not a set.
-S15I_FNS='strip_to_text strip_to_published_text strip_to_text_blocks strip_to_joined_text strip_to_shape_text _browser_end_tags _decode_entities strip_to_itinerary_text _digest_of _group_only_scan _flush_path'
+S15I_FNS='strip_to_text strip_to_published_text strip_to_text_blocks strip_to_joined_text strip_to_shape_text _browser_end_tags _browser_read_markup _decode_entities _itinerary_program _digest_of _group_only_scan _flush_path'
 S15I_RE='(^|[[:space:](|;`$])perl[[:space:]]+-'
 s15_perl_lines() { # <file> -> the number of non-comment lines that invoke perl by name
   local line t n=0
@@ -9452,10 +9454,10 @@ SA17H_NFN=0; for sad in $S15I_FNS; do SA17H_NFN=$((SA17H_NFN+1)); done
 SA17H_NLINE="$(s15_perl_lines "$SELF_PUBLISH")"
 printf 'digest=4294967295-1234\nconfirmed=2027-06-01T00:00:00Z\n' > "$WORK/sa17h.rec"
 SA17H_CRC="$(_record_digest "$WORK/sa17h.rec")"
-if [ "$SA17H_DN$SA17H_FB" = 00 ] && [ "$SA17H_RE" -eq 1 ] && [ "$SA17H_NFN" -eq 11 ] && [ "$SA17H_NLINE" -eq 11 ] && [ "$SA17H_CRC" = '4294967295-1234' ]; then
-  PASS "S17h: _digest_of's parsed body reads discard/fallback 00, invokes perl by S15i's own regex (F4 — the listed body is a perl program, so the count cannot be balanced by a substitution), S15I_FNS lists 11 and the script has 11 perl-invoking lines; the CRC token still parses for group T and for a pre-swap record"
+if [ "$SA17H_DN$SA17H_FB" = 00 ] && [ "$SA17H_RE" -eq 1 ] && [ "$SA17H_NFN" -eq 12 ] && [ "$SA17H_NLINE" -eq 12 ] && [ "$SA17H_CRC" = '4294967295-1234' ]; then
+  PASS "S17h: _digest_of's parsed body reads discard/fallback 00, invokes perl by S15i's own regex (F4 — the listed body is a perl program, so the count cannot be balanced by a substitution), S15I_FNS lists 12 and the script has 12 perl-invoking lines; the CRC token still parses for group T and for a pre-swap record"
 else
-  FAIL "S17h: bits $SA17H_DN$SA17H_FB (want 00), regex match $SA17H_RE (want 1), listed $SA17H_NFN and counted $SA17H_NLINE (want 11 and 11), CRC parse '$SA17H_CRC'"
+  FAIL "S17h: bits $SA17H_DN$SA17H_FB (want 00), regex match $SA17H_RE (want 1), listed $SA17H_NFN and counted $SA17H_NLINE (want 12 and 12), CRC parse '$SA17H_CRC'"
 fi
 
 # ── S18a — MUST REFUSE. Ten lines the grammar must not admit, each refused with nothing printed:
@@ -10447,7 +10449,7 @@ s23k_page() { sa_page "$1.t" '' '' 16:30 pending; sed "s#<script>var mapReady=1;
 d="$WORK/sa-s23kk"; mkdir -p "$d/outputs"; s23k_page "$d/outputs/porto-travel-site.html" 20:00; s23k_page "$WORK/s23kk_pub.html" 19:00
 s_record "$d/.published-itinerary" "$(itinerary_digest "$WORK/s23kk_pub.html")" published; t6_trip "$d" 2027-06-05 >/dev/null; s_record "$d/.change-confirmed" "$SA_P16" confirmed
 S23K="$S23K k=$(s23k_cell "$d" '')"
-S23K_KM="$( eval "$(declare -f strip_to_itinerary_text | perl -pe 'BEGIN{$o=q{(?=[\t\n\f\r \/>])[^>]*>}} my $i=index($_,$o); substr($_,$i,length $o)=">" if $i>=0')"
+S23K_KM="$( eval "$(declare -f _itinerary_program | perl -pe 'BEGIN{$o=q{(?=[\t\n\f\r \/>])[^>]*>}} my $i=index($_,$o); substr($_,$i,length $o)=">" if $i>=0')"
   s_record "$d/.published-itinerary" "$(itinerary_digest "$WORK/s23kk_pub.html")" published
   _confirm_has_terminal() { return 0; }; printf '\n' | cmd_confirm "$d" 2>/dev/null | grep -c 'Clearing the pending notice' )"
 # m — the ordinary path, on a working copy that differs from the published plan, with the render
@@ -11633,7 +11635,7 @@ s32_moves() { # <builder> <closer> -> 1 when an edit inside the stretch moves it
   if [ "$(itinerary_digest "$WORK/s32_a.html")" != "$(itinerary_digest "$WORK/s32_b.html")" ]; then printf 1; else printf 0; fi
 }
 s32_old() { # <command…> -> the command, run with the limb's end tag put back to the exact one, in a subshell
-  ( eval "$(declare -f strip_to_itinerary_text | perl -pe 'BEGIN{$o=q{(?=[\t\n\f\r \/>])[^>]*>}} my $i=index($_,$o); substr($_,$i,length $o)=">" if $i>=0')"; "$@" )
+  ( eval "$(declare -f _itinerary_program | perl -pe 'BEGIN{$o=q{(?=[\t\n\f\r \/>])[^>]*>}} my $i=index($_,$o); substr($_,$i,length $o)=">" if $i>=0')"; "$@" )
 }
 S32_END=( '</script >' $'</script\t>' $'</script\n>' $'</script\r>' $'</script\f>' '</script/>' '</script x>' '</SCRIPT >' '</script x=">">' )
 S32_NOT=( '</scriptx>' '</script-x>' $'</script\v>' )
@@ -11646,7 +11648,7 @@ s32a_assert() { # one verdict
   done
   st="$(s32_moves s32_spage '</style >')"; so="$(s32_old s32_moves s32_spage '</style >')"
   cx="$(s32_moves s32_page '</script>')"; co="$(s32_old s32_moves s32_page '</script>')"
-  mk="$(declare -f strip_to_itinerary_text | grep -c -F -- '(?=[\t\n\f\r \/>])')"
+  mk="$(declare -f _itinerary_program | grep -c -F -- '(?=[\t\n\f\r \/>])')"
   if [ "$n" -eq 9 ] && [ "$mv" -eq 9 ] && [ "$st" = 1 ] && [ "$old" -eq 9 ] && [ "$so" = 0 ] && [ "$cx$co" = 11 ] && [ "$mk" -eq 1 ]; then
     PASS "S32a: an itinerary edit written after a <script> end tag of another form and before an exact one moves the digest, after each of 9 forms — a space, a tab, a line feed, a carriage return, a form feed, '/', an attribute, upper case, a quoted '>' in an attribute — and after '</style >'; ARMED-RED — with the limb's end tag put back to the exact one, none of the ten moves; CONTROL — after an exact end tag the edit moves the digest under both"
   else
@@ -12118,7 +12120,7 @@ s33f_assert() {
 # the gate's exit status under a raised reading is the same with every record naming that reading and
 # with every record naming none (ten runs). CONTROL, the structural limb's sensitivity: the gate's `*)`
 # arm names _abort_unconfirmed once, and _abort_unconfirmed's body names _reading_measured once.
-S33G_FNS='change_confirmation_state _approval_policy _approvers_grammar _approvals_grammar _approval_tally _baseline_matches _legacy_itinerary_digest _legacy_digest_of itinerary_digest strip_to_itinerary_text _digest_of _record_digest _baseline_record staged_record_path published_itinerary_path change_confirmation_path approver_declaration_path approval_ledger_path resolve_site_html'
+S33G_FNS='change_confirmation_state _approval_policy _approvers_grammar _approvals_grammar _approval_tally _baseline_matches _legacy_itinerary_digest _legacy_digest_of itinerary_digest strip_to_itinerary_text _browser_read_markup _itinerary_program _digest_of _record_digest _baseline_record staged_record_path published_itinerary_path change_confirmation_path approver_declaration_path approval_ledger_path resolve_site_html newest_site_html warn die'
 s33g_trips() { # <reading-or-empty> -> five trip dirs: none-pending, confirmed, undetermined, unconfirmed, stale
   local s="$1" np cf ud uc st
   np="$(s33_trip "s33g-np$s" '' '' 16:30)"; s33_rec "$np/.published-itinerary" "$S33_P16" published "$s"
