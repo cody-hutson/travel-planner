@@ -5365,7 +5365,7 @@ ft_c4_copy() {
     while IFS=$'\t' read -r k new; do
       [ -n "$k" ] || continue
       lab="$(ft_rows "$ROOT/reference/data-model.md" | awk -F'\t' -v k="$k" '$11 == k { n++; l = $3 } END { if (n == 1) print l }')"
-      star="$(ft_rows "$ROOT/reference/data-model.md" | awk -F'\t' -v k="$k" '$11 == k { print $8; exit }')"
+      star="$(ft_rows "$ROOT/reference/data-model.md" | awk -F'\t' -v k="$k" '$11 == k && !d { print $8; d = 1 }')"
       [ -n "$lab" ] || { ft_c4_why "$v" "no one labelled row of the table carries the key $k"; return 1; }
       [ -z "$(ft_rows "$ROOT/reference/data-model.md" all | awk -F'\t' -v w="$new" '$2 == w || $3 == w')" ] || { ft_c4_why "$v" "the new label $new of $k is already a label or a section of the table"; return 1; }
       forms="$(ft_declared | awk -F'\t' '$1 == "stop" { print $2 }' | while IFS= read -r p; do ft_bullets "$p" stop | awk -F'\t' -v l="$lab" -v p="$p" '$2 == l { print p "\t" $3 }'; done)"
@@ -5380,7 +5380,7 @@ ft_c4_copy() {
       ft_c4_former "$dm" "$fr" || { ft_c4_why "$v" "the former-label fence does not stand exactly once in the copy of the data model"; return 1; }
     fi
   fi
-  lab="$(ft_rows "$ROOT/reference/data-model.md" | awk -F'\t' -v k="${FT_C4_REWORD%%$'\t'*}" '$11 == k { print $3; exit }')"
+  lab="$(ft_rows "$ROOT/reference/data-model.md" | awk -F'\t' -v k="${FT_C4_REWORD%%$'\t'*}" '$11 == k && !d { print $3; d = 1 }')"
   word="$(printf '%s' "$lab" | tr '[:upper:]' '[:lower:]')"
   ft_c4_plant "$ROOT/examples/interview-conversations/fbc-check.txt" "$d/examples/interview-conversations" "$word" || { ft_c4_why "$v" "a plant did not take its change exactly once from fbc-check.txt"; return 1; }
   : > "$d/.built"
@@ -30098,8 +30098,10 @@ cfctl_assert
 # planted there. CONTROL a: the same rewords with no former label declared move exactly the two plants —
 # c4-label-word's FB-C verdict to fail:4, bullet 4 refusing the old label's word, and c4-confirm-word's
 # RS-21 reading to reordered — and nothing else but the totals. CONTROL b: the first reworded field's key
-# renamed in its row refuses every line that names it, each as naming no key the table carries, the lines
-# counted from the copy by position, never spelled; any other refusal is an L3 left with no P turn above it.
+# renamed in its row refuses every line that names it, the lines counted from the copy by position, never
+# spelled: each as naming no key the table carries, or, where a refused L3 stands above it under the same
+# P turn, as an L3 left under no P turn. No line that does not name it is refused for the first reason,
+# and no line is refused for any third.
 # cf8_stream <copy> <scratch> — the reader over a copy's fixtures, the form model built from that copy.
 cf8_stream() {
   local files
@@ -30128,7 +30130,7 @@ cf8_keyrefs() {
   done <<<"$(cf_files "$1")"
 }
 cf8_assert() {
-  local rw nf bs rk sbs srw snf srk lw cw nlw nlwd ncw out pd k1 refs mal3 other nref first
+  local rw nf bs rk sbs srw snf srk lw cw nlw nlwd ncw out k1 refs mal3 knock stray unref other nref n3 nk first
   rw="$(ft_c4_copy)"; nf="$(ft_c4_copy noformer)"; bs="$(ft_c4_copy base)"
   CF8_C4_DIR="$rw"; export CF8_C4_DIR
   if [ -z "$rw" ] || [ -z "$nf" ] || [ -z "$bs" ]; then
@@ -30141,20 +30143,26 @@ cf8_assert() {
   nlw="$(awk -F'\t' '$1 == "VERDICT" && $2 == "c4-label-word.txt" && $4 == "FB-C" { print $6 }' <<<"$snf")"
   nlwd="$(awk -F'\t' '$1 == "VERDICT" && $2 == "c4-label-word.txt" && $4 == "FB-C" { print $7 }' <<<"$snf")"
   ncw="$(awk -F'\t' '$1 == "OBS" && $2 == "c4-confirm-word.txt" && $3 == "CONFIRM" { print $5 }' <<<"$snf")"
-  # Control a's "nothing else": outside the totals, every record but the three the plants own is equal.
-  out="$(LC_ALL=C diff <(awk -F'\t' '$1 != "SUMMARY" && !($2 == "c4-label-word.txt" && (($1 == "VERDICT" && $4 == "FB-C") || $1 == "CONV")) && !($1 == "OBS" && $2 == "c4-confirm-word.txt" && $3 == "CONFIRM")' <<<"$sbs") \
-                         <(awk -F'\t' '$1 != "SUMMARY" && !($2 == "c4-label-word.txt" && (($1 == "VERDICT" && $4 == "FB-C") || $1 == "CONV")) && !($1 == "OBS" && $2 == "c4-confirm-word.txt" && $3 == "CONFIRM")' <<<"$snf") | awk '/^[<>]/' | head -4 | tr '\n' ' ')"
+  # Control a's "nothing else": outside the totals, every record but those the plants own is equal —
+  # c4-label-word's FB-C verdict, its oracle (fbc-check's X line states pass) and its conversation, and
+  # c4-confirm-word's RS-21 reading.
+  out="$(LC_ALL=C diff <(awk -F'\t' '$1 != "SUMMARY" && !($2 == "c4-label-word.txt" && (($1 == "VERDICT" && $4 == "FB-C") || ($1 == "ORACLE" && $3 == "FB-C") || $1 == "CONV")) && !($1 == "OBS" && $2 == "c4-confirm-word.txt" && $3 == "CONFIRM")' <<<"$sbs") \
+                         <(awk -F'\t' '$1 != "SUMMARY" && !($2 == "c4-label-word.txt" && (($1 == "VERDICT" && $4 == "FB-C") || ($1 == "ORACLE" && $3 == "FB-C") || $1 == "CONV")) && !($1 == "OBS" && $2 == "c4-confirm-word.txt" && $3 == "CONFIRM")' <<<"$snf") | awk '/^[<>]/' | head -4 | tr '\n' ' ')"
   first="$(LC_ALL=C diff <(printf '%s\n' "$sbs") <(printf '%s\n' "$srw") | awk '/^[<>]/' | head -4 | tr '\n' ' ')"
   # Control b, on a copy of the unreworded copy: the first reworded field's key renamed in its row.
-  k1="${FT_C4_REWORD%%$'\t'*}"; rk="$(mktemp -d "$WORK/cf/c8-rekey.XXXXXX")"; srk=""; refs=""; mal3=""; other=""; nref=0
+  k1="${FT_C4_REWORD%%$'\t'*}"; rk="$(mktemp -d "$WORK/cf/c8-rekey.XXXXXX")"; srk=""; refs=""; mal3=""; knock=""; stray=""; unref=""; other=""; nref=0; n3=0; nk=0
   if cp -R "$bs/." "$rk/" && [ -z "$(ft_rows "$rk/reference/data-model.md" all | awk -F'\t' -v k="$k1-renamed" '$11 == k')" ] && ft_row_set "$rk/reference/data-model.md" "$k1" Key "\`$k1-renamed\`"; then
     srk="$(cf8_stream "$rk" "$WORK/cf/c8-rekey")"
     refs="$(cf8_keyrefs "$rk/examples/interview-conversations" "$k1" | LC_ALL=C sort)"
     mal3="$(awk -F'\t' -v w="names no key the classification table carries: $k1" '$1 == "MAL" && index($4, w) { print $2 "\t" $3 }' <<<"$srk" | LC_ALL=C sort)"
     other="$(awk -F'\t' -v w="names no key the classification table carries: $k1" '$1 == "MAL" && !index($4, w) && $4 != "an L3 line not directly under a P turn" { printf "%s line %s: %s; ", $2, $3, $4 }' <<<"$srk")"
+    knock="$(awk -F'\t' '$1 == "MAL" && $4 == "an L3 line not directly under a P turn" { print $2 "\t" $3 }' <<<"$srk" | LC_ALL=C sort)"
+    stray="$(LC_ALL=C comm -13 <(printf '%s\n' "$refs") <(printf '%s\n' "$mal3") | awk 'NF { printf "%s line %s; ", $1, $2 }')"
+    unref="$(LC_ALL=C comm -23 <(printf '%s\n' "$refs") <(printf '%s\n%s\n' "$mal3" "$knock" | awk 'NF' | LC_ALL=C sort -u) | awk 'NF { printf "%s line %s; ", $1, $2 }')"
     nref="$(printf '%s\n' "$refs" | grep -c '[^[:space:]]')"
+    n3="$(printf '%s\n' "$mal3" | grep -c '[^[:space:]]')"
+    nk="$(LC_ALL=C comm -12 <(printf '%s\n' "$refs") <(printf '%s\n' "$knock") | grep -c '[^[:space:]]')"
   fi
-  pd="$(awk -F'\t' '$1 == "MAL" && $4 == "an L3 line not directly under a P turn"' <<<"$srk" | awk 'END { print NR }')"
   if [ -z "$sbs" ] || [ -z "$(awk -F'\t' '$1 == "VERDICT"' <<<"$sbs")" ]; then
     FAIL "CF8: NOT EVALUATED — the reader produced no verdict over the unreworded copy ${bs#"$WORK/"}, so there is nothing to hold the reworded one to"
   elif [ "$lw" != "pass" ] || [ "$cw" != "order kept" ]; then
@@ -30165,12 +30173,12 @@ cf8_assert() {
     FAIL "CF8: CONTROL a did not fire as specified — with no former label declared, c4-label-word's FB-C reads '${nlw:-nothing}' (${nlwd:-no detail}) where fail:4 is required, and c4-confirm-word's RS-21 reading '${ncw:-nothing}' where reordered is, so the former labels are not shown to be what holds the stream"
   elif [ -n "$out" ]; then
     FAIL "CF8: CONTROL a moved more than its plants — with no former label declared, records outside the plants and the totals differ: $out"
-  elif [ "$nref" -eq 0 ] || [ "$refs" != "$mal3" ]; then
-    FAIL "CF8: CONTROL b did not fire as specified — with $k1's key renamed in its row, $nref line(s) of the copy name $k1 and $(printf '%s\n' "$mal3" | grep -c '[^[:space:]]') are refused as naming no key the table carries; every one must be, and no other"
+  elif [ "$nref" -eq 0 ] || [ "$n3" -eq 0 ] || [ -n "$unref" ] || [ -n "$stray" ]; then
+    FAIL "CF8: CONTROL b did not fire as specified — with $k1's key renamed in its row, $nref line(s) of the copy name $k1 and $n3 are refused as naming no key the table carries; left unrefused: [${unref:-none}]; refused so though they name no $k1: [${stray:-none}]"
   elif [ -n "$other" ]; then
     FAIL "CF8: CONTROL b refused a line for another reason — $other"
   else
-    PASS "CF8: on the shared copy ft_c4_copy builds (CF8_C4_DIR, ${rw#"$WORK/"}), $(awk -F'\t' '{ printf "%s%s → %s", s, $1, $2; s = "; " }' <<<"$FT_C4_REWORD") reworded in their two statements, each with its former label declared, leave the reader's stream — $(awk 'END { print NR }' <<<"$srw") record(s) — byte-identical to the unreworded copy's, with c4-label-word's FB-C at $lw and c4-confirm-word's RS-21 at $cw. CONTROL a: with no former label declared, c4-label-word reads $nlw ($nlwd) and c4-confirm-word $ncw, and nothing else moves but the totals. CONTROL b: $k1's key renamed in its row refuses all $nref line(s) that name it, each as naming no key the table carries, counted from the copy by position ($pd L3 line(s) under them refused as standing under no P turn)"
+    PASS "CF8: on the shared copy ft_c4_copy builds (CF8_C4_DIR, ${rw#"$WORK/"}), $(awk -F'\t' '{ printf "%s%s → %s", s, $1, $2; s = "; " }' <<<"$FT_C4_REWORD") reworded in their two statements, each with its former label declared, leave the reader's stream — $(awk 'END { print NR }' <<<"$srw") record(s) — byte-identical to the unreworded copy's, with c4-label-word's FB-C at $lw and c4-confirm-word's RS-21 at $cw. CONTROL a: with no former label declared, c4-label-word reads $nlw ($nlwd) and c4-confirm-word $ncw, and nothing else moves but the totals. CONTROL b: $k1's key renamed in its row refuses every one of the $nref line(s) that name it, counted from the copy by position — $n3 as naming no key the table carries and $nk as an L3 left under no P turn by the refused L3 above it — and refuses no line for a third reason"
   fi
 }
 cf8_assert
