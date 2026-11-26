@@ -175,6 +175,12 @@
   record makes to Decision 4 for the values the group may see — is recorded in this record as the next
   amendment, in the Wave-1 change that ships the replacement, and not here. **No decision of this
   record is changed by this amendment, and none is re-opened.**
+  **Decision 4.1, superseded in part (2026-11-26, Thursday)** by [the private-site
+  record](ADR-030-what-the-private-site-may-show.md) § 7, for the values that record's § 2 admits
+  to the private site: for those values alone, 4.1's `internal-hard` sentence reads *never on a
+  public page* where it reads *never rendered*. The sentence is retained as decided, with an inline
+  marker. The rest of Decision 4 stands, its *union, never by override* clause and 4.1's `bound`
+  sentence included.
 - **Deciders:** repo maintainer
 - **Driving work:** #275, under the engine-wide data-architecture epic #273. Records the six decisions
   settled by the specification slice #274 and consumed by #276–#288. Records the disposition of #156
@@ -577,7 +583,9 @@ publish-bound set and that fence to agree in both directions. The per-class sche
 `publish:` to the enum domain and carry no per-class value — which is why the gap the fourth
 amendment declared was real, and why the seventh records its closure at the gate that took it.
 **`internal`** — never rendered. **`internal-hard`** — never rendered *and* carrying values that must
-not reach a rendered page **in any form, including anonymized**, per `ADR-006`. **`output`** — the
+not reach a rendered page **in any form, including anonymized**, per `ADR-006`. **[Superseded in part — [ADR-030](ADR-030-what-the-private-site-may-show.md) § 7, 2026-11-26.** For
+the values that record admits to the private site, *never rendered* reads *never on a public page*
+there; every other value, and every public page, stands as this sentence decides.**]** **`output`** — the
 render itself: a sink, never a source.
 
 **4.2 — Field class.** A field is `publishable` (the default) or `non-publishable`. **The schema
@@ -841,3 +849,13 @@ decision changes.** It said of that section that "the lifecycle section's own ab
 and `skills/trip/SKILL.md` derives the `/trip research` agent key from it". The second limb stopped
 being true when that key moved to `reference/data-architecture.md` § 1.1, whose table is what declares
 a class's lifecycle. The section stays a live input through the absence rule, so its retention stands.
+
+**Amendment (2026-11-26, Thursday) — *Decision* 4.1: the `internal-hard` sentence, superseded in part
+by `ADR-030` § 7; no decision of this record changes.** [The private-site
+record](ADR-030-what-the-private-site-may-show.md) reads the class for the values a group may see on
+its private site — a traveller's destination leanings and the shortlist derived from them among them
+— and supersedes 4.1's `internal-hard` sentence to that extent and no further. The supersession takes
+effect with the first change after which an IDEATION build renders the destination shortlist, which
+is the release that carries this entry, as the ninth amendment's account said it would. The `Status:`
+line records it; the sentence stands retained with its marker; and the ninth amendment's pointer at
+4.1's `bound` sentence stands, the shortlist being the first of the three members it names to land.

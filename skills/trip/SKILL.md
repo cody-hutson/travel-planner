@@ -1169,8 +1169,10 @@ constraints the hero and overview render, and no other block;
 `reference/site-layout-spec.md` § 9.1 names for booking status, *needs booking* flags,
 checklist membership and the per-card booking tiers, read because § 3 makes the site a read
 surface for status; in IDEATION, `trips/<slug>/trip-context.md` — the `## Group` block and the
-trip's own dates, which the hero's pre-plan variant renders, and no other block — and none of the
-plan artifacts, which the render table excludes there; in both, `trips/<slug>/outputs/change-summary.md` — its dated entries
+trip's own dates, which the hero's pre-plan variant renders, and no other block — and, while no
+destination is recorded, `trips/<slug>/outputs/destination-shortlist.md`, the whole file, which the
+render table renders in that state alone; and none of the plan artifacts, which the render table
+excludes there; in both, `trips/<slug>/outputs/change-summary.md` — its dated entries
 alone, which are what raise a change in the first place, read because
 `reference/site-layout-spec.md` § 3's Coordination Notice is a read surface for the
 coordination state exactly as the checklist is for booking status;

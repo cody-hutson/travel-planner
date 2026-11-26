@@ -255,7 +255,7 @@ Read the relevant agent prompt from `agents/<name>.md` (see the roster below) an
 **Which dispatches take the traveller projection — a test, not a list.** A dispatched agent is
 given the traveller projection (`skills/trip/SKILL.md` § *Standing clause*), or no traveller data
 at all, when it writes a class whose `P` cell in `reference/data-architecture.md` § 1.1 reads
-`bound`, or one `ADR-030` § 4 has decided will read `bound`. *Precedence:* a step that both writes
+`bound`. *Precedence:* a step that both writes
 such a class and needs a `field` value for its own work is split — the `bound` writer takes the
 projection, and the step that needs the value writes no such class. *Admission:* an agent this
 paragraph does not name is decided by the test (§ *Rules over an enumeration*). Today the test

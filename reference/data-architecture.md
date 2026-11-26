@@ -73,7 +73,7 @@ row of the enumeration below. `W` = the single writer · `L` = lifecycle class (
 | 16 | `outputs/final-itinerary-v<N>.md` | hub | `versioned` (frozen sibling) | `derived` | `internal` | as C15 |
 | 17 | `outputs/validation-report.md` | validator | `rebuilt-each-synthesis` | `derived` | `internal` | Finding |
 | 18 | `outputs/<slug>.md` — targeted-research output | the spoke that re-ran | `accumulate-append` | `researched` | `internal` | Venue, Candidate |
-| 19 | `outputs/<destination>-travel-site.html` | `site-build` | `output` | `derived` | **`output`** | (render of C1, C10, C11, C13, C15) |
+| 19 | `outputs/<destination>-travel-site.html` | `site-build` | `output` | `derived` | **`output`** | (render of C1, C4, C10, C11, C13, C15) |
 | 20 | `outputs/change-summary.md` | hub | `accumulate-append` | `derived` | `internal` | Venue, Event, Day |
 | 21 | `outputs/cost-estimate.md` | hub | `rebuilt-each-synthesis` | `derived` | `internal` | Traveler, Venue, Leg |
 | 22 | `people/<person>.md` | human (the person) | `persist-mutable` | `human` | **`internal-hard`** | Person, Need |
@@ -754,8 +754,8 @@ distinction § 5.4 protects one layer down, met again here.
 
 ### 5.1 Artifact class — `publish:`, a closed four-value enum
 
-- **`bound`** — the site build reads it. Exactly the five artifacts named in
-  `reference/site-layout-spec.md` § 9.1: C1, C10, C11, C13, C15. That section remains the authority
+- **`bound`** — the site build reads it. Exactly the six artifacts named in
+  `reference/site-layout-spec.md` § 9.1: C1, C4, C10, C11, C13, C15. That section remains the authority
   and this field is its machine-readable projection. **That the two agree is asserted, and not by a
   schema.** Each schema still constrains `publish:` to the enum domain and carries no per-class
   *value*, so the correspondence was a declared gap for as long as the schemas were the only place

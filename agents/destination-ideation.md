@@ -75,6 +75,26 @@ those files yourself.
 A traveler who left all three blank simply contributes no leanings yet; that is
 a normal state, not an error (see *Missing leanings* below).
 
+**Who may be named, and whose leanings count.** A traveler's leanings count
+only where they filled in their own form: their entry carries neither
+`[OPERATOR-PROVIDED]` nor `[THIRD-PARTY]` and is not a `PROFILE MISSING` gap.
+Anyone else contributes nothing to this artifact, named or anonymized: their
+leanings enter no candidate set, veto, love-count, coverage line or equity note,
+and no line describes them
+(`reference/adr/ADR-030-what-the-private-site-may-show.md` § 2). This binds every
+step of the method below. Name a traveler — as a lover, a vetoer or in a
+coverage line — only where their leanings count. Say once, under *Conflicts &
+coverage* and naming nobody, how much of the group the ranking reflects:
+"This shortlist reflects the own answers of [N] of [M] travelers", with [M] the
+party's size in `trip-context.md`.
+
+**What any line may carry.** No line of the shortlist — a candidate's rationale,
+vibe or equity note, a veto, a conflict or a coverage line — states or implies
+money, a need (health, mobility, diet, rest, heat, or any other must-have), a
+person who did not fill in their own form, or togetherness. A reason that would
+is left out whole, never trimmed or reworded. Every applied veto still stands as
+a line, and reads exactly as one given with no reason.
+
 **Versioned artifacts.** The projection keeps its source's frontmatter, which
 may carry a `schema-version`. Apply the tolerant-read rule exactly
 as stated in `reference/data-architecture.md` → "Tolerant read"; do not restate it
@@ -140,11 +160,13 @@ the shortlist as a recommendation, not a certified ranking.
 
 ### Missing or one-sided leanings — degrade, don't fail
 
-- **A traveler with no leanings** contributes no candidates and no vetoes yet.
-  Reconcile the rest of the group and note the gap ("`LEANINGS MISSING` — [name]
-  has not recorded destination leanings; this shortlist does not yet reflect
-  them") so their absence is visible, not silently baked in. A missing leaning
-  means *unknown*, never *no preference*.
+- **A traveler who filled in their own form and gave no leanings** contributes
+  no candidates and no vetoes yet. Reconcile the rest of the group and note the
+  gap ("`LEANINGS MISSING` — [name] has not recorded destination leanings; this
+  shortlist does not yet reflect them") so their absence is visible, not
+  silently baked in. A missing leaning means *unknown*, never *no preference*. A
+  party member who did not fill in their own form is never named here: the
+  coverage line's count is how their absence shows.
 - **A traveler whose file carries a `person:` line, in a projection of the
   traveller files,** contributes their trip-form answers and no `Would love` or
   `Rather skip`, which live on the lasting record that line references. Note it
@@ -190,13 +212,15 @@ generated: <YYYY-MM-DD>
 2. ...
 
 ## Vetoes applied (Rather skip)
-- **[Destination]** removed — [name] would rather skip[: reason if given].
+- **[Destination]** removed — [name] would rather skip[: reason if given, left
+  out where *What any line may carry* withholds it].
 
 ## Conflicts & coverage
 - **[Destination]** loved by [names] but vetoed by [name] — not shortlisted;
   the group may override the veto if it wants.
 - Coverage: [every traveler has >=1 loved candidate in the top / [name] is
   represented only by [destination] / [name]'s leanings are missing].
+- This shortlist reflects the own answers of [N] of [M] travelers.
 
 ## Handoff to DISCOVERY
 Once the group picks a destination, record it in `trip-context.md` (Destination)
@@ -212,9 +236,11 @@ frontmatter"; the publishability class in `reference/data-architecture.md` →
 `reference/schemas/destination-shortlist.md`. Cite them; do not restate them.
 
 **This artifact carries no entry marker and no per-entry fields, and that is the
-design rather than an omission.** Nothing in the engine reads this file back — the
-command surface refuses to, twice and in terms, so that a chosen destination keeps
-exactly one source. A ranked entry's ordinal, love-count, vibe line, equity note
+design rather than an omission.** One reader reads this file back: the site
+build, of the whole file, and only while no destination is recorded
+(`reference/site-layout-spec.md` § 9.2). Every other surface refuses to — the
+command surface twice and in terms — so that a chosen destination keeps exactly
+one source. A ranked entry's ordinal, love-count, vibe line, equity note
 and rationale therefore have no consumer to branch on them, and structuring them
 would build a machine surface the architecture has deliberately declined. The
 ranking stays prose, the `[DERIVED]` mark stays on the H1, and the frontmatter

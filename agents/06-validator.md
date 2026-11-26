@@ -229,17 +229,23 @@ The publish-bound artifacts are **every source the site build reads**. The
 authority for that set is the single-source table in
 `reference/site-layout-spec.md` §9.1 — **not** the content-source list in
 `reference/site-layout-spec.md` § *How to build it*, which enumerates the build procedure's
-primary reads and is narrower. §9.1 names five: `outputs/final-itinerary.md`,
+primary reads and is narrower. §9.1 names six: `outputs/final-itinerary.md`,
 `outputs/links-reference.md`, `outputs/venue-matrix.md`,
-`outputs/event-status.md`, and `trip-context.md` — plus the site rendered from
-them. The audit surface is all five, not the itinerary alone.
+`outputs/event-status.md`, `trip-context.md` and `outputs/destination-shortlist.md`
+— plus the site rendered from them. The audit surface is all six, not the
+itinerary alone. The shortlist is audited where it is present; it renders only
+in IDEATION, where this agent does not run, so before a pre-plan publish the one
+mechanical audit is the publish-time source check
+(`reference/data-architecture.md` § 5.6), which reads the field class alone: an
+out-of-bounds kind written in the shortlist's free text is caught by no
+mechanism.
 
 `outputs/traveler-model.md` and `outputs/satisfaction-metrics.md` are the two
 artifacts §9.1 marks authoritative-internally-but-not-reader-facing, and §9.3
 lists them as intentional exclusions; they are not publish-bound and are not
 audited here.
 
-The audit runs on **every declared member**, across the same five artifacts. The
+The audit runs on **every declared member**, across the same six artifacts. The
 declaration has two limbs and each is audited on its own terms:
 
 - **Field-declared values.** For every traveler carrying a value under a
@@ -774,10 +780,11 @@ placed venue breaking the dedup rules is Venue deduplication.
    links-reference.md, and its card must render that link; any event with
    no resolvable link is a hard failure and is always Critical
 8. Profile-privacy non-publication — **any** member of the non-publishable
-   class reaching **any** of the five publish-bound artifacts named by
+   class reaching **any** of the six publish-bound artifacts named by
    `reference/site-layout-spec.md` §9.1 (`outputs/final-itinerary.md`,
    `outputs/links-reference.md`, `outputs/venue-matrix.md`,
-   `outputs/event-status.md`, `trip-context.md`) is a hard failure and is always
+   `outputs/event-status.md`, `trip-context.md`, `outputs/destination-shortlist.md`)
+   is a hard failure and is always
    Critical. Membership is read from the `publish-contract-values` declaration in
    `reference/data-architecture.md` § *The declaration* and is not restated here.
    A finding covers a declared value **including its anonymized form**, and

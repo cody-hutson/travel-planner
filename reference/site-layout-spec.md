@@ -875,7 +875,7 @@ asserts it against § 1.1 in both directions; and the source check that `scripts
 stops where one carries a value of the field class `reference/data-architecture.md` § 5.6 declares. A
 `bound` artifact absent from a trip is skipped and named; a fence that yields no `bound` row stops the
 publish. The content guard reads § 5.6 alone, not this fence. A third intended consumer does not read
-it: `agents/06-validator.md` still restates the five `bound` artifact names inline, in the same file
+it: `agents/06-validator.md` still restates the six `bound` artifact names inline, in the same file
 that cites § 5.6's sibling fence as the single home of the class it does read — the one second
 enumeration that remains.
 
@@ -1197,7 +1197,8 @@ When the user says "build the site" or "create the travel site":
    - `outputs/venue-matrix.md` (day assignments)
    - `trip-context.md` (group info, dates, constraints for the hero)
 
-   In IDEATION: `trip-context.md`'s `## Group` and dates, for the pre-plan hero (§ 3).
+   In IDEATION: `trip-context.md`'s `## Group` and dates, for the pre-plan hero (§ 3), and, while no
+   destination is recorded, `outputs/destination-shortlist.md`, for the shortlist section.
 
 2. **Read reference sites for quality standard:**
    - Check the Site References section below for previous trip sites
