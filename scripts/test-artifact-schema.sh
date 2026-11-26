@@ -27290,15 +27290,22 @@ ta_read() {
     }'
 }
 # ta_model <root> <scratch-dir> — the form model, F, J and MENU records, joined through ft_rows and ft_resolve.
+# Each F record's ninth field is the field's key, the Key cell of the row its bullet joins (ADR-053
+# Decision 1), empty where the join is not ONE; then one K record per key the table carries, and one FL
+# record per former label its former-label declaration holds. A reader that addresses a field by key
+# reads them here, so the Key column has one extractor, ft_rows, and the declaration one, ft_former_rows.
 ta_model() {
   local tm_fm
   ft_rows "$1/reference/data-model.md" > "$2/rows.tsv"
   tm_fm="$(LC_ALL=C awk -v trip="$1/templates/traveler-intake.template.md" -v person="$1/templates/person-intake.template.md" "$WD_FN$C0_FN$TA_FM_FN"'
     BEGIN { fm_form(trip, "templates/traveler-intake.template.md"); fm_form(person, "templates/person-intake.template.md") }')"
   awk -F'\t' '$1 == "FLD"' <<<"$tm_fm" | cut -f2- | ft_resolve "$2/rows.tsv" |
-    awk -F'\t' 'FILENAME == ARGV[1] { cls[$1] = $4; next }
-      { c = ($1 == "ONE") ? cls[$2] : ""; printf "F\t%s\t%s\t%s\t%s\t%s\t%s\t%s\nJ\t%s\t%s\t%s\t%s\n", $5, $3, $4, $6, c, $7, $8, $5, $3, $4, $1 }' "$2/rows.tsv" -
+    awk -F'\t' 'FILENAME == ARGV[1] { cls[$1] = $4; key[$1] = $11; next }
+      { c = ($1 == "ONE") ? cls[$2] : ""; k = ($1 == "ONE") ? key[$2] : ""
+        printf "F\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\nJ\t%s\t%s\t%s\t%s\n", $5, $3, $4, $6, c, $7, $8, k, $5, $3, $4, $1 }' "$2/rows.tsv" -
   awk -F'\t' '$1 == "MENU" || $1 == "NE"' <<<"$tm_fm"
+  ft_rows "$1/reference/data-model.md" all | awk -F'\t' '$11 != "" { print "K\t" $11 }'
+  ft_former_rows "$1/reference/data-model.md" | awk -F'\t' '$1 == "R" { print "FL\t" $3 "\t" $4 }'
 }
 # ta_members <body…> — procedure X on each stdin line taken as a bracket body: its members, "|"-joined.
 ta_members() {
