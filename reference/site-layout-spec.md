@@ -577,6 +577,32 @@ confirmations (for the validator), not reader content; the component does not re
 `.split-panel .warn-box` collapsible caution box above — different components; they share no
 selectors.
 
+### Group Shortlist (`.group-shortlist`)
+
+The destination shortlist, `outputs/destination-shortlist.md`, as its agent wrote it, in IDEATION
+with no destination recorded and in no other state (§ 9.2). It is group-only: its root carries
+`group-shortlist` in every state it renders, its empty and degraded states included, and each part
+below carries its own class, which the same fence lists (§ *Group-only components*). It serves the
+pre-plan page's design intent (*Hero Section*): the group deciding together, seeing the ranked
+options and who would love or skip each.
+
+- **Placement:** directly after the Hero Section.
+- **Title and standfirst:** the shortlist's H1 without its `[DERIVED]` mark, which is provenance
+  metadata, and the blockquote beneath it.
+- `.gs-ranked` — the ranked candidates in the agent's order, each entry's text as written; nothing
+  is turned into a score, a bar or a badge.
+- `.gs-vetoes` — the applied vetoes as written. A veto whose reason the writer withheld reads
+  exactly as one given with no reason.
+- `.gs-coverage` — conflicts and coverage, as written.
+- **Not rendered:** `Handoff to DISCOVERY` and the frontmatter (§ 9.3).
+
+**Its states, none inferred from which files exist.** Present with a ranking: the parts above.
+Present with an empty ranking: the ranked part carries `is-empty` beside `gs-ranked`, with the
+agent's own text for the empty result, and the vetoes, gaps and request render as written. Absent:
+the root carries `is-degraded` beside `group-shortlist`, with one static line saying the group's
+shortlist has not been put together yet and no engine command; the walk reports the degraded read,
+and the `site` verb names `/trip ideas`.
+
 ### Group-only components
 
 **A section the private-site record keeps off every public page carries its token as a class on its
@@ -585,7 +611,8 @@ root element, in every state it renders, its empty and degraded states included.
 class (`ADR-030` § 6 safeguard 2): by structure, never by value, never by redaction. A component is
 group-only when that record admits its content to the private site and keeps it off every public page;
 the rows are its instances. A component this fence does not name is not refused, so one is added here in
-the commit that first renders it. Any one listed component refuses, and every one present is named; no
+the commit that first renders it. The shortlist's parts are listed beside its root, so a part rendered
+without the root is refused by its own token. Any one listed component refuses, and every one present is named; no
 member outranks another, because each resolves to the same refusal.
 
 The refusal reads the page's start tags. It refuses a start tag carrying a listed token as a class; a
@@ -611,6 +638,9 @@ trip's included. Changing that takes a record.
 ```group-only-components
 # component
 group-shortlist
+gs-ranked
+gs-vetoes
+gs-coverage
 group-snapshot
 group-contacts
 ```
@@ -786,6 +816,7 @@ fact).
 | Day assignment + deduplication — which venue sits on which day, the appears-at-most-twice rule, anchor vs. alternative/bailout placement | `venue-matrix.md` | Placing a venue on the right day, not double-showing it |
 | Booking status, "needs booking" flags, checklist membership, per-card booking-tier pills | `event-status.md` | Whether an event is booked / to-book / settled (per §3's read-surface rule) |
 | Group, dates, home base, trip-level hard constraints — hero + overview facts | `trip-context.md` | Trip-level header and constraint framing |
+| The destination shortlist — ranked candidates, vetoes, conflicts and coverage, in IDEATION with no destination recorded | `destination-shortlist.md` | The pre-plan shortlist section, rendered as its writer leaves it |
 
 Two artifacts are **authoritative internally but not reader-facing site content:**
 `traveler-model.md` and `satisfaction-metrics.md` hold per-traveler needs, desires, and coverage.
@@ -812,6 +843,7 @@ outputs/final-itinerary.md          bound
 outputs/links-reference.md          bound
 outputs/venue-matrix.md             bound
 outputs/event-status.md             bound
+outputs/destination-shortlist.md    bound
 outputs/traveler-model.md           internal-hard
 outputs/satisfaction-metrics.md     internal-hard
 people/<person>.md                  internal-hard
@@ -1002,10 +1034,28 @@ outputs/event-status.md     IDEATION                                        UNDE
 <coordination-notice>       IDEATION                                        UNDECIDED, DECIDED  excluded     §9.3
 <reference-matter>          IDEATION                                        UNDECIDED, DECIDED  excluded     §9.3
 <build>                     DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING  UNDECIDED           excluded     §9.3
+outputs/destination-shortlist.md  IDEATION                                        UNDECIDED  rendered  elements:round-trip-contract-elements-destination-shortlist
+outputs/destination-shortlist.md  IDEATION                                        DECIDED    excluded  §9.3
+outputs/destination-shortlist.md  DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING  DECIDED    excluded  §9.3
 ```
 
 `<reference-matter>` is the site-additive reference content described above. § 3 defines no
 component for it, so its row names none and the shape pass cannot see it.
+
+**The shortlist's element fence.** `outputs/destination-shortlist.md` renders with its own element
+fence, graded against the headings of `agents/destination-ideation.md`'s output template: the walk
+reads which headings the shortlist carries and whether the site carries the component each one
+names, and never a candidate's value. It adds no entry marker to the artifact (`ADR-032` § 1).
+
+```round-trip-contract-elements-destination-shortlist
+# element-label                          disposition  component
+Group Destination Shortlist [DERIVED]    rendered     group-shortlist
+Shortlist (ranked)                       rendered     gs-ranked
+Vetoes applied (Rather skip)             rendered     gs-vetoes
+Conflicts & coverage                     rendered     gs-coverage
+Handoff to DISCOVERY                     excluded     —
+<artifact-frontmatter>                   excluded     —
+```
 
 ### 9.3 Intentional exclusions — named, so nothing is silent
 
@@ -1018,6 +1068,7 @@ correct; dropping an *unlisted* plan element is the defect.
 | Spoke Deviations | wherever its artifact renders | The planner's trace of why the plan diverged from a specialist's recommendation. Audit-trail, not reader content. |
 | Open Decisions | wherever its artifact renders | Pre-decision options for the planner, not finalized plan. Not a reader-facing commitment. |
 | Itinerary Version Log | wherever its artifact renders | Document metadata. |
+| Handoff to DISCOVERY | wherever its artifact renders | An instruction to whoever operates the engine, not reader content (`ADR-031` § 2). |
 | Per-traveler model + satisfaction metrics | wherever its artifact renders | Internal coverage view carrying personal detail; kept out of the published surface by design (see 9.1). |
 | Artifact frontmatter — the YAML block a plan artifact opens with | wherever its artifact renders | Machine-readable identity, lifecycle, provenance and publishability, read by the schema gate and by the agents. It is metadata *about* the artifact rather than plan content in it, and has no reader-facing form. Named here because 9.2's completeness rule is total over every element of `final-itinerary.md`, so once a migrated itinerary carries a block, an unlisted block would read as a silent drop on every build. |
 | `outputs/final-itinerary.md` | IDEATION × UNDECIDED, DECIDED | IDEATION's shape is pre-plan (`ADR-031` § 2): a plan artifact left from an earlier phase is superseded by the declared return. |
@@ -1027,10 +1078,12 @@ correct; dropping an *unlisted* plan element is the defect.
 | `<sticky-navigation>` | IDEATION × UNDECIDED, DECIDED | IDEATION renders no plan, so there are no Day sections to navigate. |
 | `<coordination-notice>` | IDEATION × UNDECIDED, DECIDED | No plan change exists to announce. |
 | `<reference-matter>` | IDEATION × UNDECIDED, DECIDED | No plan front or back matter exists. |
+| `outputs/destination-shortlist.md` | IDEATION × DECIDED; DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING × DECIDED | Once a destination is recorded the question the shortlist answers is closed and `/trip ideas` refuses; its producer is skipped, so a rendered shortlist would drift; and a ranking beside the recorded destination would be a second source for *where* (`ADR-031` § 2). |
 | `<build>` | DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING × UNDECIDED | The `site` verb stops in its own section and builds nothing: no plan-phase page is built without a destination (`ADR-034` § 1). |
 
-**The State column.** The rows whose State reads *wherever its artifact renders* are elements of
-`final-itinerary.md` and apply wherever it renders. A row for a class, a scaffolding token, or
+**The State column.** A row whose State reads *wherever its artifact renders* is an element row and
+applies wherever its artifact renders: `Handoff to DISCOVERY` is the shortlist's, the frontmatter row
+binds both rendered artifacts, and the rest are `final-itinerary.md`'s. A row for a class, a scaffolding token, or
 `<build>` that a state does not render names it as a code span — a class as § 1.1 spells it — and
 its states as `<modes> × <destinations>` in the render table's cell grammar, groups separated by
 `;`; the walk reads that cell. A class excluded by its own class value is never listed.
@@ -1056,7 +1109,8 @@ trip's resolved mode and its destination's disposition:
 **Without σ, the artifact pass's instance half and the shape pass are reported as not run, never
 as clean, and the check does not close.** The walk never infers σ. The element pass walks 9.2's
 mapping against each artifact σ renders — in a plan mode, the current `final-itinerary.md`; in
-IDEATION, which renders no plan, no itinerary is read:
+IDEATION, which renders no plan, no itinerary is read, and with no destination recorded the shortlist
+is walked against its own fence instead, heading by heading (§ 9.2). For the itinerary:
 
 - Every day resolves to a Day Hero Banner and a day body — a day grid, a `.split-day` region,
   or both; every card-bearing element (anchor, supporting, bailout, alternative, food,

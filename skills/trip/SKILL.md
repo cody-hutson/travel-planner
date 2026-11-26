@@ -1184,7 +1184,7 @@ a revert, and the act after a change abandoned before any approval — and
 because a date taken from this build instead would restart § 3's window on every rebuild; `reference/site-layout-spec.md` — the responsive architecture, the card
 system, the booking indicators and the § 9 round-trip rules; that same document's § 9.2
 round-trip fences, § 9.3 and § 3 component catalog, together with
-`agents/05-hub-planner.md`'s itinerary grammar, `reference/data-architecture.md` § 1.1,
+`agents/05-hub-planner.md`'s itinerary grammar and `agents/destination-ideation.md`'s output template, `reference/data-architecture.md` § 1.1,
 `reference/trip-resolution.md`'s `G5` and `G6` and this file's `site` row — read by `scripts/check-round-trip.sh`, the
 script the completeness check below invokes, rather than by this verb; the itinerary sources the
 `reference/site-layout-spec.md` § *Site References* table names, read as the quality bar rather than as templates;
@@ -1343,8 +1343,9 @@ life; AC 5 asks that a site with no pending change and no *recent* update render
 does today, byte for byte.
 
 **The round-trip completeness check, run after every build and every patch.** Every element of
-`outputs/final-itinerary.md` — **every day, and every track of a split day** — still resolves
-to a rendered component or to a **named** exclusion. A dropped element is a defect; additive
+each artifact the build renders — of `outputs/final-itinerary.md`, **every day, and every track of
+a split day**; of `outputs/destination-shortlist.md`, every heading — still resolves to a
+rendered component or to a **named** exclusion. A dropped element is a defect; additive
 site scaffolding with no plan source is not.
 
 **What it runs** — a single invocation:
@@ -1359,8 +1360,8 @@ value — the standing clause's rule, applied.
 **Append `--data-root <trip.data_root>` to the line above**, using the absolute path gate
 `G0-root` resolved. Rooting the script's *path* makes the script reachable; it does not tell the
 script where your data is, and the two are different questions. `--root` is the **engine** root
-and carries the itinerary grammar and the site-layout spec the walk grades against; `--data-root`
-is the **trip** root and carries the plan and the render. The script defaults `--root` to its own
+and carries the grammars and the site-layout spec the walk grades against; `--data-root` is the
+**trip** root and carries the artifacts it walks and the render. The script defaults `--root` to its own
 parent directory, which is correct for an installed engine, so only `--data-root` is appended
 here — the same seam `schema` states below for the same reason.
 
@@ -1370,7 +1371,8 @@ checks the page's shape against. The disposition is `UNDECIDED` where `trip.dest
 
 **What it reports.** The script's own findings, rendered unaltered. This verb adds no verdict of
 its own and suppresses none of the script's. **Where the check does not close, say which element
-did not resolve and do not present the site as current.**
+did not resolve and do not present the site as current.** Where the walk reports the shortlist
+unreadable in IDEATION with no destination recorded, name `/trip ideas` as the remedy.
 
 **What the walk does not settle, so a clean run is not read as more than it is.** It grades the
 site **after** the write, never the act of writing: the trip tree lives under `<data-root>`, and
@@ -1404,7 +1406,7 @@ relation this run moved and the verdict that relation now carries — and names 
 where the whole list is reported.
 
 **The announcement is not the round-trip completeness check and does not stand in for it.**
-The check above is **content-level**: it establishes that every element of the itinerary
+The check above is **content-level**: it establishes that every element the walk reached
 resolved to a rendered component or to a named exclusion. The relation is **order-level**: it
 establishes only that the build is not older than the inputs this verb's `**Reads:**` line
 declares. A build can be newest and still have dropped an element, and a build can trail its

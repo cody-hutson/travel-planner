@@ -19296,8 +19296,9 @@ fi
 # This is the shape of the group and it is stated first, because a gate that conflates the
 # two claims more than it grades — which is the defect this whole release exists to close.
 #
-#   THE CONTRACT HALF — every element TYPE the itinerary grammar can emit carries a declared
-#   disposition, and every declared disposition names an element the grammar still emits.
+#   THE CONTRACT HALF — every element TYPE each declared grammar can emit carries a declared
+#   disposition, and every declared disposition names an element its grammar still emits: the
+#   itinerary's bold-line grammar, and the destination shortlist's fenced template.
 #   Real population, tracked tree, graded on every run. W0-W3.
 #
 #   THE INSTANCE HALF — for a given plan and the site built from it, every element INSTANCE
@@ -19352,6 +19353,10 @@ fi
 #   W0        the instrument itself: the fence resolves at EXACTLY ONE site, the grammar
 #             region resolves, and both extractions are NON-ZERO. Runs FIRST and gates the
 #             rest, so a broken instrument FAILS rather than passing over an empty set
+#   W1d       the element pass's contract half over EVERY declared fence: one CONTRACT line each
+#             and no finding, so a second artifact's fence is graded as the first's is
+#   W7s       CIAC-1: every state the shortlist's rows cover is a state a build runs in, with its
+#             control W-CTL-W7s on a copy
 #   W1        fence label set == grammar label set, BOTH directions, both denominators
 #             stated. An element ADDED to the grammar with no fence row fails it (RT1), and
 #             so does a fence row whose element the grammar no longer emits (RT2). That pair
@@ -19412,6 +19417,7 @@ fi
 #             and a lifecycle cell left empty. Each is green on arrival, because its branch already
 #             existed; the mutation that removes the branch is its evidence that it can fail
 #   W-CTL-SL-CONTRACT, -SL-RT0, -SL-RT1, -SL-RT2, -SL-CLEAN, -SL-DROP, -SL-EMPTY(s), -SL-DEG(s/n)
+#             (and -SL-DEGrun, the same degraded state through the CLI in the selecting state)
 #             the destination shortlist's element fence: its grammar, the agent's own output
 #             template read at heading grain, pinned both ways; its instance walk, each heading
 #             the shortlist carries resolved to the § 3 component its row names; the declared
@@ -20189,11 +20195,24 @@ w_ctl_silent 'W-CTL-CLEAN' "the synthetic trip read in an admitted state with ev
   -- rt_main --root "$ROOT" --trip fx --data-root "$W_FXD" "$RT_STATE_FLAG" "$W_S0"
 w_ctl_rc 'W-CTL-CLEANrc' 0 "the same clean run" \
   -- rt_main --root "$ROOT" --trip fx --data-root "$W_FXD" "$RT_STATE_FLAG" "$W_S0"
-w_ctl_fire 'W-CTL-NORUN' RT0 2 "the same trip with no state given — the artifact pass's instance half and the shape pass are each reported NOT RUN" \
+# Without σ, or in a state no build runs in, the element pass walks EVERY declared fence, so the RT0 a
+# state-less or unbuilt run owes is one for each state pass it does not run and one for each declared
+# fence whose bound artifact the data home lacks — derived from the walker's declarations, never pinned.
+w_norun_n() {   # w_norun_n <trip-dir> -> the RT0 count a run with no state selected owes there
+  local trip="$1" n=2 tag a
+  while IFS="$W_TAB" read -r tag _; do
+    [ -n "$tag" ] || continue
+    a="$(awk -F'\t' -v t="elements:$tag" '$4 == "rendered" && index("|" $5 "|", "|" t "|") && !s { print $1; s = 1 }' <<<"$W_KEYS")"
+    if [ -n "$a" ] && [ ! -r "$trip/$a" ]; then n=$((n+1)); fi
+  done <<<"$(rt_decls)"
+  printf '%s' "$n"
+}
+W_NORUN_N="$(w_norun_n "$W_FXD/trips/fx")"
+w_ctl_fire 'W-CTL-NORUN' RT0 "$W_NORUN_N" "the same trip with no state given — the artifact pass's instance half and the shape pass are each reported NOT RUN, and each declared fence whose artifact the trip lacks is a degraded read" \
   -- rt_main --root "$ROOT" --trip fx --data-root "$W_FXD"
 w_ctl_rc 'W-CTL-NORUNrc' 2 "the same run without a state — not run is never read as clean" \
   -- rt_main --root "$ROOT" --trip fx --data-root "$W_FXD"
-w_ctl_fire 'W-CTL-UNADM' RT0 2 "the same trip read in a state the vocabulary allows and the site row does not admit — both state passes NOT RUN" \
+w_ctl_fire 'W-CTL-UNADM' RT0 "$W_NORUN_N" "the same trip read in a state the vocabulary allows and the site row does not admit — both state passes NOT RUN, and each declared fence whose artifact the trip lacks a degraded read" \
   -- rt_main --root "$ROOT" --trip fx --data-root "$W_FXD" "$RT_STATE_FLAG" "$W_UNADM"
 W_SIGMA_VAL='Placeholdia'
 w_ctl_fire 'W-CTL-ECHO' RT0 1 "a destination VALUE passed where the disposition belongs — refused before anything is read" \
@@ -20239,25 +20258,53 @@ fi
 W_SL="$W_D/slroot"; mkdir -p "$W_SL/agents" "$W_SL/reference"
 W_SL_AGENT0="$ROOT/agents/destination-ideation.md"
 W_SL_TAG='round-trip-contract-elements-destination-shortlist'
-W_SL_DECL="$W_SL_TAG"$'\tagents/destination-ideation.md\t## Output\tmd-heading\trt_shortlist_walk'
 W_SL_HEAD='## Output'
 W_SL_EX="$ROOT/examples/ideation-demo/outputs/destination-shortlist.md"
-# UNTIL THE SPEC CARRIES THE SHORTLIST'S FENCE AND ITS § 3 COMPONENT, the copy is planted with both: the
-# controls below then grade the walker's new functions over the shape the spec is about to declare, and
-# the commit that writes them into the spec removes this plant.
-W_SL_SPEC0="$W_D/sl-spec-planted.md"
-awk -v tag="$W_SL_TAG" '
-  /^### Group-only components$/ && !c { print "### Group Shortlist (`.group-shortlist`)"; print ""; print "- `.gs-ranked`, `.gs-vetoes`, `.gs-coverage` — planted on a copy by the suite."; print ""; c = 1 }
-  { print }
-  /^`<reference-matter>` is the site-additive/ { p = 1 }
-  p && /^$/ && !f { print "```" tag; print "# element-label                          disposition  component"
-    print "Group Destination Shortlist [DERIVED]    rendered     group-shortlist"
-    print "Shortlist (ranked)                       rendered     gs-ranked"
-    print "Vetoes applied (Rather skip)             rendered     gs-vetoes"
-    print "Conflicts & coverage                     rendered     gs-coverage"
-    print "Handoff to DISCOVERY                     excluded     —"
-    print "<artifact-frontmatter>                   excluded     —"
-    print "```"; print ""; f = 1 }' "$W_SPEC" > "$W_SL_SPEC0"
+W_SL_SPEC0="$W_SPEC"
+# The artifact the render table binds to the shortlist's element fence, and the state that renders it,
+# both read from the table, never held.
+W_SL_ART="$(awk -F'\t' -v t="elements:$W_SL_TAG" '$4 == "rendered" && index("|" $5 "|", "|" t "|") && !s { print $1; s = 1 }' <<<"$W_KEYS")"
+W_SL_ST="$(awk -F'\t' -v a="$W_SL_ART" '$1 == a && $4 == "rendered" && !s { print $2 ":" $3; s = 1 }' <<<"$W_KEYS")"
+# ── W1d — the element pass's contract half over EVERY declared fence, on the real tree: one CONTRACT
+# line per declaration and no finding, so a second artifact's fence is graded as the first's is.
+w1d_assert() {   # w1d_assert <engine-root>
+  local r="$1" out nd nc nf
+  out="$(rt_element_contract "$r" 2>&1)"
+  nd="$(w_count "$(rt_decls)")"
+  nc="$(awk '$1 == "CONTRACT" { n++ } END { print n+0 }' <<<"$out")"
+  nf="$(awk '$1 == "FINDING" { n++ } END { print n+0 }' <<<"$out")"
+  if [ "$nd" -eq 0 ]; then
+    FAIL "W1d: the walker declares ZERO element fences, so there is no contract half to grade"
+  elif [ "$nc" -ne "$nd" ]; then
+    FAIL "W1d: the walker declares $nd element fence(s) and the contract half printed $nc CONTRACT line(s) — a fence that did not reach its line was not compared ($nf finding(s))"
+  elif [ "$nf" -ne 0 ]; then
+    FAIL "W1d: the element pass's contract half does not close — $nf finding(s) over the $nd declared fence(s)"
+  else
+    PASS "W1d: the element pass's contract half closes over every one of the $nd element fence(s) the walker declares, each graded against its own grammar through the reader its label shape names, one CONTRACT line each and no finding"
+  fi
+}
+
+# ── W7s — CIAC-1: every state the shortlist's render-table rows cover is a state a build runs in. The
+# artifact is the one the render table binds to the shortlist's element fence, read, never held.
+w7s_assert() {   # w7s_assert <engine-root>
+  local r="$1" a ks built miss nk
+  a="$(awk -F'\t' -v t="elements:$W_SL_TAG" '$4 == "rendered" && index("|" $5 "|", "|" t "|") && !s { print $1; s = 1 }' <<<"$(rt_artifact_keys "$r/reference/site-layout-spec.md")")"
+  ks="$(awk -F'\t' -v a="$a" '$1 == a { print $2 "\t" $3 }' <<<"$(rt_artifact_keys "$r/reference/site-layout-spec.md")")"
+  built="$(rt_built "$r")"
+  nk="$(w_count "$ks")"
+  miss="$(w_linediff "$ks" "$built")"
+  if [ -z "$a" ]; then
+    FAIL "W7s: no render-table artifact is bound to the shortlist's element fence '$W_SL_TAG', so there is no row set to grade"
+  elif [ "$nk" -eq 0 ]; then
+    FAIL "W7s: the artifact bound to the shortlist's fence ($a) has ZERO (artifact, state) keys"
+  elif [ "$(w_count "$built")" -eq 0 ]; then
+    FAIL "W7s: ZERO states a build runs in were read, so the shortlist's states have nothing to be members of"
+  elif [ -n "$miss" ]; then
+    FAIL "W7s: the shortlist's rows cover $(w_count "$miss") state(s) no build runs in [$(w_join "$miss")]"
+  else
+    PASS "W7s: every one of the $nk state(s) the rows of $a cover is a state a build runs in — one the site row admits and no non-row covers — read from rt_artifact_keys and rt_built on this run"
+  fi
+}
 w_sl_reset() { cp "$W_SL_AGENT0" "$W_SL/agents/destination-ideation.md"; cp "$W_SL_SPEC0" "$W_SL/reference/site-layout-spec.md"; }
 w_sl_reset
 # w_sl_contract — the contract walk over the shortlist's fence, every argument explicit.
@@ -20266,8 +20313,6 @@ w_sl_contract() { rt_contract_walk "$W_SL" agents/destination-ideation.md "$RT_S
 # selection rt_element_instance hands a walker it calls.
 w_sl_run() {
   local -x RT_INSTANCE_ROOT="$W_SL" RT_INSTANCE_SELECTIVE="$1"
-  # The declaration lands in the walker with the spec rows; until then the run carries it here.
-  local RT_ELEMENT_DECLS=("${RT_ELEMENT_DECLS[@]}" "$W_SL_DECL")
   rt_shortlist_walk "$2" "$3"
 }
 # The pre-plan page carrying the section and its three parts, and the example shortlist beside it.
@@ -20451,6 +20496,7 @@ fi
 # to a copy of it and reset from the live documents.
 W_NR="$W_D/nrroot"; mkdir -p "$W_NR/agents" "$W_NR/reference" "$W_NR/skills/trip"
 cp "$W_GRAMMAR"                           "$W_NR/agents/05-hub-planner.md"
+cp "$W_SL_AGENT0"                         "$W_NR/agents/destination-ideation.md"
 cp "$ROOT/$RT_CONTRACT_REL"               "$W_NR/$RT_CONTRACT_REL"
 cp "$ROOT/reference/data-architecture.md" "$W_NR/reference/data-architecture.md"
 W_NR_SPEC0="$W_SPEC"; W_NR_VERB0="$W_VERB"
@@ -20489,7 +20535,7 @@ fi
 # landed. The program receives the derived inputs as awk variables and W_IN's fence preamble.
 w_nr_mut() {
   awk -v open='```'"$RT_ARTIFACT_TAG" -v tok="$W_NR_TOK" -v pre="$W_NR_PRE" -v ph="$W_NR_PH" -v dec="$W_NR_DEC" -v pm="$W_NR_PM" -v h1="$W_H1" \
-      -v a1="$W_A1" -v rm="${W_NR_RUN%%:*}" -v rd="${W_NR_RUN#*:}" \
+      -v a1="$W_A1" -v rm="${W_NR_RUN%%:*}" -v rd="${W_NR_RUN#*:}" -v sla="${W_SL_ART:-}" -v slt="$W_SL_TAG" \
     "$2" "$W_NR_SPEC0" > "$W_NR/reference/site-layout-spec.md"
   if cmp -s "$W_NR_SPEC0" "$W_NR/reference/site-layout-spec.md"; then
     FAIL "$1: the mutation did not land — the spec copy is byte-identical to the non-row root's, so this control proves nothing"
@@ -20559,7 +20605,7 @@ w_nr_reset
 if [ "$W_NR_OK" -ne 1 ]; then
   FAIL "W-CTL-NONROWrun: not built — W-CTL-NRDERIVE derived no state a non-row covers"
 else
-  w_ctl_fire 'W-CTL-NONROWrun' RT0 2 "the synthetic trip read in a state the site row admits and a non-row covers — the artifact pass's instance half and the shape pass are each reported NOT RUN" \
+  w_ctl_fire 'W-CTL-NONROWrun' RT0 "$W_NORUN_N" "the synthetic trip read in a state the site row admits and a non-row covers — the artifact pass's instance half and the shape pass are each reported NOT RUN, and each declared fence whose artifact the trip lacks a degraded read" \
     -- rt_main --root "$W_NR" --trip fx --data-root "$W_FXD" "$RT_STATE_FLAG" "$W_NR_RUN"
   w_ctl_rc 'W-CTL-NONROWrunrc' 2 "the same run in a non-row state — a state with no build is never read as clean" \
     -- rt_main --root "$W_NR" --trip fx --data-root "$W_FXD" "$RT_STATE_FLAG" "$W_NR_RUN"
@@ -20630,19 +20676,20 @@ fi
 w_nr_reset
 
 # W-CTL-PREPLAN — a pre-plan page, read in a state a build runs in and no plan renders: the trip
-# holds the artifacts that state renders and no itinerary, and the walk closes.
+# holds the artifacts that state renders and no itinerary — the example shortlist among them, against
+# a page carrying the shortlist's section and its parts — and the walk closes.
 W_PREPAGE='<!doctype html><html><body>
 <section class="hero-section">fx</section>
 </body></html>'
 W_FXP="$W_D/fxdata-preplan"; mkdir -p "$W_FXP/trips/fx/outputs"
-printf '%s\n' "$W_PREPAGE" > "$W_FXP/trips/fx/outputs/fx-travel-site.html"
+cp "$W_SL_FX/page.html" "$W_FXP/trips/fx/outputs/fx-travel-site.html"
 if [ "$W_NR_OK" -ne 1 ]; then
   FAIL "W-CTL-PREPLAN: not built — W-CTL-NRDERIVE derived no state a build runs in whose render carries no plan"
 else
   while IFS= read -r w_f; do
     [ -n "$w_f" ] || continue
     mkdir -p "$(dirname "$W_FXP/trips/fx/$w_f")"
-    printf 'synthetic stand-in\n' > "$W_FXP/trips/fx/$w_f"
+    if [ "$w_f" = "$W_SL_ART" ]; then cp "$W_SL_EX" "$W_FXP/trips/fx/$w_f"; else printf 'synthetic stand-in\n' > "$W_FXP/trips/fx/$w_f"; fi
   done <<<"$(awk -F'\t' -v m="${W_NR_PREST%%:*}" -v d="${W_NR_PREST#*:}" '$4 == "rendered" && $2 == m && $3 == d && $1 !~ /^</ { print $1 }' <<<"$W_NR_KEYS" | sort -u)"
   if [ -e "$W_FXP/trips/fx/$W_PLAN_ART" ]; then
     FAIL "W-CTL-PREPLAN: the pre-plan trip carries the plan artifact, so this control proves nothing"
@@ -20653,6 +20700,45 @@ else
       -- rt_main --root "$W_NR" --trip fx --data-root "$W_FXP" "$RT_STATE_FLAG" "$W_NR_PREST"
   fi
 fi
+
+# W-CTL-SL-DEGrun — the degraded state through the walker's own CLI: a trip in the state that renders the
+# shortlist, holding every artifact that state renders but the shortlist, against a page carrying no
+# section. Only a walk σ selected owes the degraded state, so the RT3 here is the evidence that
+# rt_element_instance hands its selection to the walker.
+W_FXS="$W_D/fxdata-noshortlist"; mkdir -p "$W_FXS/trips/fx/outputs"
+cp "$W_SL_FX/page-none.html" "$W_FXS/trips/fx/outputs/fx-travel-site.html"
+if [ -z "$W_SL_ART" ] || [ -z "$W_SL_ST" ]; then
+  FAIL "W-CTL-SL-DEGrun: not built — no artifact is bound to the shortlist's fence, or no state renders it (artifact='${W_SL_ART:-}' state='${W_SL_ST:-}')"
+else
+  while IFS= read -r w_f; do
+    [ -n "$w_f" ] || continue
+    [ "$w_f" = "$W_SL_ART" ] && continue
+    mkdir -p "$(dirname "$W_FXS/trips/fx/$w_f")"
+    printf 'synthetic stand-in\n' > "$W_FXS/trips/fx/$w_f"
+  done <<<"$(awk -F'\t' -v m="${W_SL_ST%%:*}" -v d="${W_SL_ST#*:}" '$4 == "rendered" && $2 == m && $3 == d && $1 !~ /^</ { print $1 }' <<<"$W_KEYS" | sort -u)"
+  if [ -e "$W_FXS/trips/fx/$W_SL_ART" ]; then
+    FAIL "W-CTL-SL-DEGrun: the trip carries the shortlist it was built without, so this control proves nothing"
+  else
+    w_ctl_fire 'W-CTL-SL-DEGrun' RT3 1 "a trip in the state that renders the shortlist ($W_SL_ST), with no shortlist, against a page carrying no section, walked by the CLI with that state — the selected walk owes the degraded state and reads its absence as a smaller site" \
+      -- rt_main --root "$ROOT" --trip fx --data-root "$W_FXS" "$RT_STATE_FLAG" "$W_SL_ST"
+  fi
+fi
+
+# W-CTL-W7s — CIAC-1's control: a shortlist row added on a copy for a state a non-row covers. W7s's
+# predicate must fail on that copy, and the walker's contract half must report the row as one for a
+# state with no build.
+if [ "$W_NR_OK" -ne 1 ] || [ -z "$W_SL_ART" ]; then
+  FAIL "W-CTL-W7s: not built — no non-row state or no shortlist artifact was derived (state='$W_NR_RUN' artifact='${W_SL_ART:-}')"
+elif w_nr_mut 'W-CTL-W7s' '{ print } $0 == open { inf = 1 } inf && $0 == "```" { inf = 0 } inf && index($0, tok) == 1 && !d { printf "%s  %s  %s  rendered  elements:%s\n", sla, rm, rd, slt; d = 1 }'; then
+  W_W7S_P="$(md_probe w7s_no_such_subject w7s_assert "$W_NR")"
+  if [ "$W_W7S_P" != "0 1" ]; then
+    FAIL "W-CTL-W7s: on the copy carrying a shortlist row for $W_NR_RUN, W7s's predicate read [$W_W7S_P], where [0 1] is owed — it does not see a shortlist state no build runs in"
+  else
+    w_ctl_fire 'W-CTL-W7s' RT7 1 "a shortlist row is added on a copy for a state a non-row covers ($W_NR_RUN) — W7s's predicate fails there, and the contract half reads the row as one for a state with no build" \
+      -- rt_artifact_contract "$W_NR"
+  fi
+fi
+w_nr_reset
 
 # W-CTL-NEWEST / -NEWESTr — which page `--trip` walks once a slug-named and a destination-named page
 # coexist. A pre-plan page named to sort FIRST by name and the clean plan page named to sort LAST,
@@ -20889,6 +20975,8 @@ w8_assert  "$ROOT"
 w9_assert  "$W_VERB" "$ROOT"
 w9c_assert "$ROOT/CLAUDE.md"
 w10_assert "$W_SPEC"
+w1d_assert "$ROOT"
+w7s_assert "$ROOT"
 
 # ── W12 — the inventory, derived from the walker's own emission sites and from what the arms
 # OBSERVED. Neither side is a list held in this file.
@@ -20953,6 +21041,7 @@ ps_dne "W: no arm in this group establishes that a site build INVOKED the walk. 
 #                                     -> W-CTL-PREPLAN / NEWEST / NEWESTr
 #   $WORK/w/slroot/…, slfx/…          -> W-CTL-SL-CONTRACT / SL-RT0 / SL-RT1 / SL-RT2 / SL-CLEAN /
 #                                        SL-DROP / SL-EMPTY / SL-EMPTYs / SL-DEG / SL-DEGs / SL-DEGn
+#   $WORK/w/fxdata-noshortlist        -> W-CTL-SL-DEGrun
 #
 # The compensating control is W0, which runs over the REAL documents and proves the fence
 # resolves at one site and both extractions are non-zero — so every control verdict above is
@@ -20982,6 +21071,8 @@ md_flips rt_state_vocab    'W9'  w9_assert  "$W_VERB" "$ROOT"
 md_flips w_update_region   'W9c' w9c_assert "$ROOT/CLAUDE.md"
 md_flips rt_component_markers 'W10' w10_assert "$W_SPEC"
 md_flips rt_class_tokens   'W10' w10_assert "$W_SPEC"
+md_flips rt_labels_md_heading 'W1d' w1d_assert "$ROOT"
+md_flips rt_built          'W7s' w7s_assert "$ROOT"
 # The shortlist's reader and walker are registered only once they are defined: removing a function
 # that was never defined would flip an arm that was already failing, and read as a measurement.
 if declare -F rt_labels_md_heading >/dev/null 2>&1; then md_flips rt_labels_md_heading 'W-CTL-SL-CONTRACT' wsl_contract_assert; fi

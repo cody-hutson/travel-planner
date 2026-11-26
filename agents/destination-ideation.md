@@ -174,7 +174,7 @@ trip: <trip-slug>
 writer: destination-ideation
 lifecycle: rebuilt-each-synthesis
 provenance: derived
-publish: internal
+publish: bound
 generated: <YYYY-MM-DD>
 ---
 

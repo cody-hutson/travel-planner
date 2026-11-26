@@ -2,10 +2,11 @@
 #
 # check-round-trip.sh — the round-trip completeness walker.
 #
-# Executes the walk reference/site-layout-spec.md § 9.4 prescribes: every element of a
-# trip's outputs/final-itinerary.md — every day, and every track of a split day — resolves
-# to a rendered component or to a named exclusion, so a patch never silently drops plan
-# detail. Until this file existed that rule was stated in three places and executed in
+# Executes the walk reference/site-layout-spec.md § 9.4 prescribes: every element of each
+# artifact the site renders — every day and every track of a split day of a trip's
+# outputs/final-itinerary.md, and, in IDEATION with no destination recorded, every heading of its
+# outputs/destination-shortlist.md — resolves to a rendered component or to a named exclusion,
+# so a patch never silently drops plan detail. Until this file existed that rule was stated in three places and executed in
 # none, and the obligation was discharged by whoever happened to be reading the prose.
 #
 # It is a LIBRARY FIRST and a CLI second, the shape scripts/validate-artifacts.sh already
@@ -22,14 +23,15 @@
 # This is the whole shape of the file and it is stated first because a gate that conflates
 # the two claims more than it grades.
 #
-#   THE CONTRACT HALF (--contract-only). Every element TYPE the itinerary grammar can emit
+#   THE CONTRACT HALF (--contract-only). Every element TYPE each declared grammar can emit
 #   carries a declared disposition, rendered or excluded, and every declared disposition
-#   names an element the grammar still emits. Real population, tracked tree, graded in CI
+#   names an element its grammar still emits. Real population, tracked tree, graded in CI
 #   on every push. Codes RT1 / RT2, and RT7 for the artifact grain, with RT0 guarding the
 #   instrument.
 #
-#   THE INSTANCE HALF (--trip, --plan/--site). For a given plan and the site built from it,
-#   every element INSTANCE resolves to its component, per day and per track. Codes RT3-RT6,
+#   THE INSTANCE HALF (--trip, --plan/--site). For a given artifact and the site built from
+#   it, every element INSTANCE resolves to its component — per day and per track for the
+#   itinerary, per heading for the shortlist. Codes RT3-RT6,
 #   and RT8 for the shape pass. `--trip` walks the trip's NEWEST `*-travel-site.html` — the
 #   selection the publish script and both freshness relations make, so once a slug-named and a
 #   destination-named page coexist the walk reads the page a reader is served — and the
@@ -67,7 +69,8 @@
 # a component § 3 gives no class is one it cannot see, and a clean verdict carries that limit.
 #
 # ── TWO ROOTS, AND WHY ONE FLAG CANNOT CARRY BOTH ────────────────────────────────
-# `--root` roots the ENGINE: agents/05-hub-planner.md, which owns the itinerary grammar;
+# `--root` roots the ENGINE: agents/05-hub-planner.md and agents/destination-ideation.md, which
+# own the itinerary's grammar and the shortlist's;
 # reference/site-layout-spec.md, which owns the fences and the component catalog; and the
 # three tables the artifact grain reads — § 1.1 of reference/data-architecture.md, reference/trip-resolution.md
 # § Resolving a trip gates G5 and G6, and the `site` row of skills/trip/SKILL.md. Those are
@@ -99,7 +102,9 @@
 #        undeclared element fails, AND a declaration whose element no longer exists fails.
 #   RT3  a `rendered` element INSTANCE has no component in the site — the silent drop this
 #        contract exists to forbid. A day with no rendered day body is the same finding
-#        one level up.
+#        one level up, and so are a shortlist heading its fence declares no row for, an emptied
+#        ranking with no declared empty state, and, where a state that renders the shortlist
+#        selected the walk, an absent shortlist on a page with no degraded state.
 #   RT4  a split-day TRACK has no labeled track column of its own. § 9.2 names this as the
 #        sharpest test of the rule and § 9.4 names it as the most common silent drop: a
 #        patch that touches the first track and leaves the second behind.
@@ -185,6 +190,7 @@ RT_SITE_LIFECYCLE='ACTIVE'
 # that function and one record here, and no existing code path changes.
 RT_ELEMENT_DECLS=(
   $'round-trip-contract-elements\tagents/05-hub-planner.md\t### File: outputs/final-itinerary.md\tbold-line\trt_instance_walk'
+  $'round-trip-contract-elements-destination-shortlist\tagents/destination-ideation.md\t## Output\tmd-heading\trt_shortlist_walk'
 )
 rt_decls() { printf '%s\n' "${RT_ELEMENT_DECLS[@]}"; }
 rt_decl_get() {   # rt_decl_get <tag> <field> -> that record's field, empty when no record carries the tag

@@ -5,7 +5,7 @@ trip: ideation-demo
 writer: destination-ideation
 lifecycle: rebuilt-each-synthesis
 provenance: derived
-publish: internal
+publish: bound
 generated: 2026-08-29
 ---
 

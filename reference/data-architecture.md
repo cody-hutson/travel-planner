@@ -58,7 +58,7 @@ row of the enumeration below. `W` = the single writer · `L` = lifecycle class (
 | 1 | `trip-context.md` | **block-owned** (`CLAUDE.md` § *Write ownership*) | `persist-mutable` | `human` | `bound` | Trip, Constraint, Logistics, Origin |
 | 2 | `trip-log.md` | operator, via `/trip-record log` | `accumulate-append` | `human` | `internal` | — (narrative register, § 1.4) |
 | 3 | `travelers/<traveler>.md` | human (the traveler) | `persist-mutable` | `human` | `internal` | Traveler, Need, Desire |
-| 4 | `outputs/destination-shortlist.md` | destination-ideation | `rebuilt-each-synthesis` | `derived` | `internal` | Destination candidate |
+| 4 | `outputs/destination-shortlist.md` | destination-ideation | `rebuilt-each-synthesis` | `derived` | `bound` | Destination candidate |
 | 5 | `outputs/activities-list.md` | activities | `accumulate-append` | `researched` | `internal` | Venue, Candidate |
 | 6 | `outputs/food-list.md` | food | `accumulate-append` | `researched` | `internal` | Venue, Candidate |
 | 7 | `outputs/nightlife-list.md` | nightlife | `accumulate-append` | `researched` | `internal` | Venue, Candidate |
