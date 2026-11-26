@@ -30538,7 +30538,9 @@ md_flips rb_bullets   'RB6' rb6_assert
 #        CONTROLS on copies: MET planted against a fail on a one-value line, against an ND, as a
 #        two-value line's rule's value and as an overturn's operator's value, each red; a two-value
 #        line whose grader's value alone is MET, green; the ND with the operator's ruling on the
-#        planted line, green
+#        planted line, green. THE TOKEN BOUND, on copies: a ruling naming <field>#2 leaves the planted
+#        line on <field> unruled, red; one whose token a comma ends, and one standing after that
+#        neighbour, rule it, green
 #   RB7  no re-roll (#2200 F3, B3, K10): each draws line's seq runs 1..k; exactly one entry is graded
 #        or ended, the first not voided and the last; a void names a carrier stop and an ending a
 #        conduct ending; each generated conversation's run-id names its graded entry, with an equal
@@ -31104,7 +31106,7 @@ rb4_assert() {
 }
 rb4_assert
 rb5_assert() {
-  local p d a c1 c2 c3 c4 c5 c6 n r2 f="Where you stay › Rooming"
+  local p d a c1 c2 c3 c4 c5 c6 c7 c8 c9 n r2 f="Where you stay › Rooming"
   p="$(rb5_eval "$RB_RECORD" "$RB_RUBRIC")"
   n="$(awk -F'\t' '$1 == "N" { print $2 " mech line(s) reaching " $3 " citing dimension(s)" }' <<<"$p")"
   # The plants: R-2, which cites OW-C, shown MET against a planted OW-C fail and against a planted ND,
@@ -31136,6 +31138,26 @@ rb5_assert() {
     && rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "$r2" "R-2 = MET ; grader NOT-MET ; turns T1 ; «planted»" \
     && rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "adjudication: $a" "adjudication: $([ "$a" = "pending" ] || printf '%s; ' "$a")2026-11-09 R-2 overturned to MET planted" \
     && c6="$(rb5_eval "$d/$CF_RECORD" "$RB_RUBRIC" | awk -F'\t' -v f="$f" '$1 == "P" && index($2, "R-2 shows MET against the unruled fail of OW-C on " f)')"
+  # The adjudication's mech token ends where a key ends (SL-7): "mech <check> <field>" rules a mech line
+  # only where no character of [a-z0-9#-] follows it, at any of its occurrences. A ruling on <field>#2
+  # leaves the line on <field> unruled; a ruling whose token a comma ends rules it; and a ruling that
+  # stands after its neighbour rules it too, so the bound is read at every occurrence, not the first.
+  c7=""; c8="unplanted"; c9="unplanted"
+  d="$(rb_rec_copy rb5-bound-neighbour)"
+  rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "grade: $RB_GEN1" "grade: $RB_GEN1"$'\n'"mech OW-C $f = fail:planted (on judged labels)" \
+    && rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "$r2" "R-2 = MET ; turns T1 ; «planted»" \
+    && rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "adjudication: $a" "adjudication: $([ "$a" = "pending" ] || printf '%s; ' "$a")2026-11-09 mech OW-C $f#2 planted, a neighbour" \
+    && c7="$(rb5_eval "$d/$CF_RECORD" "$RB_RUBRIC" | awk -F'\t' -v f="$f" '$1 == "P" && index($2, "R-2 shows MET against the unruled fail of OW-C on " f)')"
+  d="$(rb_rec_copy rb5-bound-comma)"
+  rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "grade: $RB_GEN1" "grade: $RB_GEN1"$'\n'"mech OW-C $f = fail:planted (on judged labels)" \
+    && rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "$r2" "R-2 = MET ; turns T1 ; «planted»" \
+    && rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "adjudication: $a" "adjudication: $([ "$a" = "pending" ] || printf '%s; ' "$a")2026-11-09 mech OW-C $f, ruled planted" \
+    && c8="$(rb5_eval "$d/$CF_RECORD" "$RB_RUBRIC" | awk -F'\t' '$1 == "P" && index($2, "R-2 shows MET")')"
+  d="$(rb_rec_copy rb5-bound-second)"
+  rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "grade: $RB_GEN1" "grade: $RB_GEN1"$'\n'"mech OW-C $f = fail:planted (on judged labels)" \
+    && rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "$r2" "R-2 = MET ; turns T1 ; «planted»" \
+    && rb_blockset "$d/$CF_RECORD" "$RB_GEN1" "adjudication: $a" "adjudication: $([ "$a" = "pending" ] || printf '%s; ' "$a")2026-11-09 mech OW-C $f#2 planted, a neighbour; 2026-11-09 mech OW-C $f ruled planted" \
+    && c9="$(rb5_eval "$d/$CF_RECORD" "$RB_RUBRIC" | awk -F'\t' '$1 == "P" && index($2, "R-2 shows MET")')"
   if [ ! -f "$RB_RECORD" ]; then
     FAIL "RB5: NOT EVALUATED — ${RB_RECORD#"$ROOT/"} is absent, so no dimension can be held to a mechanical line"
   elif [ -n "$(awk -F'\t' '$1 == "NE"' <<<"$p")" ]; then
@@ -31156,8 +31178,14 @@ rb5_assert() {
     FAIL "RB5: CONTROL did not hold — a two-value R-2 whose grader's value alone is MET, against a planted OW-C fail on a copy, reads '$c5', where SEAM-5 is held on the rule's value"
   elif [ -z "$c6" ]; then
     FAIL "RB5: CONTROL did not fire — R-2 overturned to MET by an adjudication entry, its line 'R-2 = MET ; grader NOT-MET', against a planted OW-C fail on a copy reads nothing, so SEAM-5 is not shown to read an overturn's first value"
+  elif [ -z "$c7" ]; then
+    FAIL "RB5: CONTROL did not fire — an adjudication naming mech OW-C $f#2, a neighbour of the planted line's field $f, on a copy reads that line ruled, so a ruling reaches a mech line whose token it only begins (SL-7: the token ends where no character of [a-z0-9#-] follows it)"
+  elif [ -n "$c8" ]; then
+    FAIL "RB5: CONTROL did not hold — an adjudication naming mech OW-C $f with a comma after it on a copy leaves the planted line unruled, '$c8', where a token a key cannot continue rules it"
+  elif [ -n "$c9" ]; then
+    FAIL "RB5: CONTROL did not hold — an adjudication naming mech OW-C $f after an entry naming $f#2 on a copy leaves the planted line unruled, '$c9', so the bound was read at the first occurrence only"
   else
-    PASS "RB5: SEAM-5 — over $n, no dimension shows MET against an unruled mechanical fail or ND, read on the line's first value in either form — the rule's, or the operator's on an overturn — and the citation read from the rubric's Check it cites column. CONTROLS on copies: R-2 shown MET on a one-value line against a planted fail reads '$(head -1 <<<"$c1" | cut -f2)'; against a planted ND, '$(head -1 <<<"$c2" | cut -f2)'; as a two-value line's rule's value, '$(head -1 <<<"$c4" | cut -f2)'; as an overturn's operator's value, '$(head -1 <<<"$c6" | cut -f2)'; a two-value line whose grader's value alone is MET reads nothing; the ND ruled by an adjudication line reads nothing"
+    PASS "RB5: SEAM-5 — over $n, no dimension shows MET against an unruled mechanical fail or ND, read on the line's first value in either form — the rule's, or the operator's on an overturn — and the citation read from the rubric's Check it cites column. CONTROLS on copies: R-2 shown MET on a one-value line against a planted fail reads '$(head -1 <<<"$c1" | cut -f2)'; against a planted ND, '$(head -1 <<<"$c2" | cut -f2)'; as a two-value line's rule's value, '$(head -1 <<<"$c4" | cut -f2)'; as an overturn's operator's value, '$(head -1 <<<"$c6" | cut -f2)'; a two-value line whose grader's value alone is MET reads nothing; the ND ruled by an adjudication line reads nothing. THE TOKEN BOUND (SL-7): a ruling naming $f#2 leaves the line on $f unruled, '$(head -1 <<<"$c7" | cut -f2)'; a ruling whose token a comma ends rules it, and so does one standing after its neighbour"
   fi
 }
 rb5_assert
