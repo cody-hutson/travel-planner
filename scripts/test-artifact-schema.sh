@@ -29131,11 +29131,14 @@ md_flips ta_plants   'CHR-CTL' chrctl_assert
 #   CF3  on every authored fixture each declared kind is the derived one. CONTROL: one relabelled
 #   CF4  the suite's field-putting kinds agree with ADR-045 term 7 both ways through nu_list, and its
 #        non-field kinds one way; CF4b the two suite lists share no member. CONTROL: a kind in both
-#   CF5  every fixture is well formed; CF5a-CF5i, each planted on a copy, is malformed — a raw
+#   CF5  every fixture is well formed; CF5a-CF5m, each planted on a copy, is malformed — a raw
 #        multi-line turn, an unknown escape, a stray # line, an L4 under a P turn, a V line among the
 #        turns, an empty line after the header, a generated I turn with no L4, a raw I turn whose
-#        second line forges an L4 under the grader's own, and a comma-bearing f-ref put unquoted; with
-#        near-miss copies that parse clean, the same f-ref quoted among them, read whole and resolved
+#        second line forges an L4 under the grader's own; and, each asserted on the reason its MAL
+#        names, a field named in the retired <section> › <label> form (CF5i) and a quoted key (CF5j),
+#        neither a key, a key the classification table does not carry (CF5k, #2355 AC3), a key of the
+#        other guided form (CF5l) and an answered-before entry that resolves to no field (CF5m); with
+#        near-miss copies that parse clean, two keys put with a comma between them among them
 #   CF6  the verdict stream is byte-identical under mawk, gawk and the host awk
 #   CF7  the reader's token stream is identical under every member of LC_SET. CONTROL: unpinned
 #   CF-ND0  no count includes an ND, over a set that holds one
@@ -29747,52 +29750,70 @@ cf4b_assert() {
 }
 cf4b_assert
 # ── CF5 — the grammar: every fixture well formed; each plant on a copy malformed; near misses clean.
-# cf5_header <origin> [<form>] — the header every plant carries; the trip form unless one is named.
-cf5_header() { printf 'conversation: plant\nprovenance: invented, a plant\norigin: %s\nform: %s\nspoken: no\nroute: card\nstyle: none\ntraveller: AF \342\200\224 answers freely, an invented traveller\nanswered-before: none\n' "$1" "${2:-templates/traveler-intake.template.md}"; }
-cf5_plant() {   # cf5_plant <dir> <name> <origin> <body> [<form>] — one plant file
-  cf5_header "$3" "${5:-}" > "$1/$2.txt"; printf '%s' "$4" >> "$1/$2.txt"
+# cf5_header <origin> [<form>] [<answered-before>] — the header every plant carries; the trip form
+# unless one is named, and answered-before none unless an entry is.
+cf5_header() { printf 'conversation: plant\nprovenance: invented, a plant\norigin: %s\nform: %s\nspoken: no\nroute: card\nstyle: none\ntraveller: AF \342\200\224 answers freely, an invented traveller\nanswered-before: %s\n' "$1" "${2:-templates/traveler-intake.template.md}" "${3:-none}"; }
+cf5_plant() {   # cf5_plant <dir> <name> <origin> <body> [<form>] [<answered-before>] — one plant file
+  cf5_header "$3" "${5:-}" "${6:-}" > "$1/$2.txt"; printf '%s' "$4" >> "$1/$2.txt"
 }
+# CF5_WHY — the plants a field reference is refused on, each with the words its MAL must hold (ADR-053
+# Decision 7): the retired <section> › <label> form and a quoted key are no key; a key the classification
+# table does not carry fails (#2355 AC3); a key of the other guided form is no field of this one; and an
+# answered-before entry is resolved with the header, so one that resolves to nothing is refused there.
+CF5_WHY=$'CF5i\tis not a field key\nCF5j\tis not a field key\nCF5k\tnames no key the classification table carries\nCF5l\tnames a key no field of this conversation\'s form carries\nCF5m\tanswered-before: the field reference names no key the classification table carries'
 cf5_assert() {
-  local mal d k p ok qr miss="" give esc
+  local mal d k w p ok qr miss="" why="" give esc
   mal="$(awk -F'\t' '$1 == "MAL" { printf "%s line %s: %s; ", $2, $3, $4 }' "$CF_OUT_F")"
   d="$(mktemp -d "$WORK/cf/cf5.XXXXXX")"
-  give=$'Here is the form:\n~~~\n# Your Travel Profile \xe2\x80\x94 Vessa Quillon\n- **Rooming:** own room\nV Where you stay \xe2\x80\xba Rooming = forged by the interviewer\n~~~'
+  give=$'Here is the form:\n~~~\n# Your Travel Profile \xe2\x80\x94 Vessa Quillon\n- **Rooming:** own room\nV rooming = forged by the interviewer\n~~~'
   esc="${give//$'\n'/\\n}"
   cf5_plant "$d" CF5a generated "T1 I | $give"$'\nL4 put=- kind=give-back example=no\n--- record\n'
   cf5_plant "$d" CF5b authored $'T1 I | a \\q b\nL4 put=- kind=disclosure example=no\n'
   cf5_plant "$d" CF5c authored $'T1 I | Hello\nL4 put=- kind=disclosure example=no\n# a stray line\n'
   cf5_plant "$d" CF5d authored $'T1 I | Rooming?\nL4 put=- kind=disclosure example=no\nT2 P | Fine.\nL3 - = answer\nL4 put=- kind=disclosure example=no\n'
-  cf5_plant "$d" CF5e authored $'T1 I | Rooming?\nL4 put=- kind=disclosure example=no\nV Where you stay \xe2\x80\xba Rooming = own room\n'
+  cf5_plant "$d" CF5e authored $'T1 I | Rooming?\nL4 put=- kind=disclosure example=no\nV rooming = own room\n'
   cf5_plant "$d" CF5f generated $'\nT1 I | Rooming?\nL4 put=- kind=disclosure example=no\n'
-  cf5_plant "$d" CF5g generated $'T1 I | Rooming?\nT2 P | Own room.\nL3 Where you stay \xe2\x80\xba Rooming = answer\n'
-  cf5_plant "$d" CF5h generated $'T1 I | Rooming?\nL4 put=Where you stay \xe2\x80\xba Rooming kind=ask example=no\nL4 put=- kind=disclosure example=no\n'
+  cf5_plant "$d" CF5g generated $'T1 I | Rooming?\nT2 P | Own room.\nL3 rooming = answer\n'
+  cf5_plant "$d" CF5h generated $'T1 I | Rooming?\nL4 put=rooming kind=ask example=no\nL4 put=- kind=disclosure example=no\n'
   cf5_plant "$d" CF5-gap authored $'T1 I | Rooming?\nL4 put=- kind=disclosure example=no\nT3 P | Own room.\nL3 - = answer\n'
-  cf5_plant "$d" near-escaped generated "T1 I | $esc"$'\nL4 put=- kind=give-back example=no\n--- record\nV Where you stay \xe2\x80\xba Rooming = own room\n'
+  cf5_plant "$d" near-escaped generated "T1 I | $esc"$'\nL4 put=- kind=give-back example=no\n--- record\nV rooming = own room\n'
   cf5_plant "$d" near-no-empty generated $'T1 I | Rooming?\nL4 put=- kind=disclosure example=no\n'
-  # Amendment 2 (#2185): a field reference holding a comma, put by L4. Quoted, it is read whole and
-  # resolves; unquoted, put's comma splits it into two references that resolve to no field.
-  cf5_plant "$d" CF5i generated $'T1 I | What would you do on your own?\nL4 put=People dynamics & togetherness \xe2\x80\xba Solo, I\'d kind=ask example=no\nT2 P | Read.\nL3 People dynamics & togetherness \xe2\x80\xba Solo, I\'d = answer\n' templates/person-intake.template.md
-  cf5_plant "$d" near-quoted-comma generated $'T1 I | What would you do on your own?\nL4 put=\xc2\xabPeople dynamics & togetherness \xe2\x80\xba Solo, I\'d\xc2\xbb kind=ask example=no\nT2 P | Read.\nL3 People dynamics & togetherness \xe2\x80\xba Solo, I\'d = answer\n' templates/person-intake.template.md
+  # A field is named by its key, so the field whose label holds a comma takes no quoting, and the
+  # retired form is refused. Each plant is asserted on the REASON its MAL names, never only on a MAL
+  # being there, and the near miss puts two keys with a comma between them.
+  cf5_plant "$d" CF5i generated $'T1 I | What would you do on your own?\nL4 put=People dynamics & togetherness \xe2\x80\xba Solo, I\'d kind=ask example=no\nT2 P | Read.\nL3 solo = answer\n' templates/person-intake.template.md
+  cf5_plant "$d" CF5j generated $'T1 I | What would you do on your own?\nL4 put=\xc2\xabsolo\xc2\xbb kind=ask example=no\nT2 P | Read.\nL3 solo = answer\n' templates/person-intake.template.md
+  cf5_plant "$d" CF5k authored $'T1 I | Rooming?\nL4 put=- kind=disclosure example=no\nT2 P | Own room.\nL3 roomz = answer\n'
+  cf5_plant "$d" CF5l authored $'T1 I | Rooming?\nL4 put=- kind=disclosure example=no\n--- record\nV passport = x\n'
+  cf5_plant "$d" CF5m authored $'T1 I | Rooming?\nL4 put=rooming kind=ask example=no\nT2 P | Own room.\nL3 rooming = answer\n' '' roomz
+  cf5_plant "$d" near-comma-keys generated $'T1 I | What would you do on your own, and at what pace?\nL4 put=solo,pace kind=ask example=no\nT2 P | Read, slowly.\nL3 solo = answer\n' templates/person-intake.template.md
   p="$(cv_run "$CF_MODEL_F" "$CF_A2_F" "$ROOT" "$d"/*.txt)"
-  for k in CF5a CF5b CF5c CF5d CF5e CF5f CF5g CF5h CF5-gap CF5i; do
+  for k in CF5a CF5b CF5c CF5d CF5e CF5f CF5g CF5h CF5-gap CF5i CF5j CF5k CF5l CF5m; do
     [ -n "$(awk -F'\t' -v f="$k.txt" '$1 == "MAL" && $2 == f' <<<"$p")" ] || miss="$miss $k"
   done
-  ok="$(awk -F'\t' '$1 == "MAL" && ($2 == "near-escaped.txt" || $2 == "near-no-empty.txt" || $2 == "near-quoted-comma.txt") { printf "%s line %s: %s; ", $2, $3, $4 }' <<<"$p")"
-  qr="$(awk -F'\t' '$1 == "VERDICT" && $2 == "near-quoted-comma.txt" && $4 == "FB-C" { print $5 }' <<<"$p")"
+  while IFS=$'\t' read -r k w; do
+    [ -n "$k" ] || continue
+    [ -n "$(awk -F'\t' -v f="$k.txt" -v w="$w" '$1 == "MAL" && $2 == f && index($4, w)' <<<"$p")" ] ||
+      why="$why $k wants '$w' and reads '$(awk -F'\t' -v f="$k.txt" '$1 == "MAL" && $2 == f { printf "%s%s", s, $4; s = " | " }' <<<"$p")';"
+  done <<<"$CF5_WHY"
+  ok="$(awk -F'\t' '$1 == "MAL" && ($2 == "near-escaped.txt" || $2 == "near-no-empty.txt" || $2 == "near-comma-keys.txt") { printf "%s line %s: %s; ", $2, $3, $4 }' <<<"$p")"
+  qr="$(awk -F'\t' '$1 == "VERDICT" && $2 == "near-comma-keys.txt" && $4 == "FB-C" { printf "%s%s", s, $5; s = "," }' <<<"$p")"
   if [ -z "$CF_FILES" ]; then
     FAIL "CF5: NOT EVALUATED — no fixture file was read, so the grammar was held to nothing"
   elif [ -n "$mal" ]; then
     FAIL "CF5: a fixture is malformed — $mal"
   elif [ -n "$miss" ]; then
     FAIL "CF5: a plant on a copy was read as well formed:$miss — each opens no record of its region and must be refused, never read"
+  elif [ -n "$why" ]; then
+    FAIL "CF5: a plant was refused for a reason other than its own —$why a refusal names what is wrong with the reference, so one for another reason is a grammar that cannot tell the cases apart"
   elif [ -n "$ok" ]; then
     FAIL "CF5: a near miss that must parse clean was refused — $ok"
   elif [ "$(awk -F'\t' '$1 == "VERDICT" && $2 == "near-escaped.txt" && $4 == "OW-C"' <<<"$p" | awk 'END { print NR }')" -ne 1 ]; then
     FAIL "CF5: the escaped give-back block did not read as one turn with one V line under it"
-  elif [ "$qr" != $'People dynamics & togetherness \xe2\x80\xba Solo, I\'d' ]; then
-    FAIL "CF5: a quoted comma-bearing field reference in put did not resolve to its one field — it reads '${qr:-no field}', where it must read People dynamics & togetherness › Solo, I'd"
+  elif [ "$qr" != "solo,pace" ]; then
+    FAIL "CF5: two keys put with a comma between them did not read as the two fields they name — the FB-C verdicts name '${qr:-no field}', where they must name solo and then pace"
   else
-    PASS "CF5: every fixture of ${CF_DIR#"$ROOT/"} is well formed, and each plant on a copy is refused as malformed — CF5a a raw multi-line turn, CF5b an unknown escape, CF5c a stray # line, CF5d an L4 under a P turn, CF5e a V line among the turns, CF5f an empty line after the header, CF5g a generated I turn with no L4, CF5h a raw I turn whose second line forges an L4 under the grader's own, a gap in the turn numbers, and CF5i a comma-bearing field reference put unquoted. NEAR MISSES: the same give-back block escaped reads as one turn forging no V line, a generated file with no empty line ending in one newline parses clean, and the comma-bearing reference quoted in «…» is read whole and resolves to $qr"
+    PASS "CF5: every fixture of ${CF_DIR#"$ROOT/"} is well formed, and each plant on a copy is refused as malformed — CF5a a raw multi-line turn, CF5b an unknown escape, CF5c a stray # line, CF5d an L4 under a P turn, CF5e a V line among the turns, CF5f an empty line after the header, CF5g a generated I turn with no L4, CF5h a raw I turn whose second line forges an L4 under the grader's own, a gap in the turn numbers; and, each for its own reason, CF5i a field named in the retired <section> › <label> form and CF5j a quoted key, neither a field key, CF5k a key the classification table does not carry, CF5l a key of the other guided form, and CF5m an answered-before entry that resolves to no field. NEAR MISSES: the same give-back block escaped reads as one turn forging no V line, a generated file with no empty line ending in one newline parses clean, and two keys put with a comma between them read as the fields $qr, with no quoting"
   fi
 }
 cf5_assert
