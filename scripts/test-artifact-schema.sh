@@ -14888,8 +14888,16 @@ fi
 # of its set, exactly one such unit per file: the sub-case's paragraph carries its heading and "name
 # no profile route", and the § `travelers` table's `PROFILE MISSING` row, as one line, carries the
 # token clause and "**name no command**". MUST-FIRE for each: every phrase of the set, moved from
-# that unit into a unit of its own in a copy, drops the count of such units by exactly 1 — which a
-# reader that did not hold the unit would not show.
+# that unit into a unit of its own in a copy, drops the count of such units by exactly 1. For the
+# row that move also shows the unit is held: a reader coarser than a line would read the table's
+# earlier row, which carries "**name no command**" too, and the count would not drop. For the
+# sub-case's paragraph it does not, because both its phrases stand once in the file, so a reader
+# that never split paragraphs would read 1 and then 0 on each move, as the real reader does. So the
+# paragraph reader carries its own count-free control (Dev Testing F-17), read alone and beside
+# the move control, as OP_SPLIT is beside OP4's sentence count: the sub-case's heading and "name
+# no profile route" on adjacent lines must read as 1 unit carrying both, and with a blank line
+# between them as 0. A reader that never splits paragraphs reads 1 on the second, and one that
+# never joins lines reads 0 on the first.
 ER33_PINS=(
   'E|**A gap written from an erasure'"'"'s token asks for nothing.**'
   'E|name no profile route'
@@ -14947,14 +14955,19 @@ for er33_s in 'sub-case paragraph|E|P|CO1' 'PROFILE MISSING row|R|L|CO2'; do
     done
   fi
 done
+# The paragraph reader's own control (Dev Testing F-17): the sub-case's two phrases, planted alone,
+# on adjacent lines (owed 1) and with a blank line between them (owed 0). Compared as strings, so
+# an empty read is a failure rather than an error.
+ER33_SPL1="$(er33_co "$(printf '%s\n%s\n' "${ER33_CO1[@]}")" P 0 "${ER33_CO1[@]}")"
+ER33_SPL0="$(er33_co "$(printf '%s\n\n%s\n' "${ER33_CO1[@]}")" P 0 "${ER33_CO1[@]}")"
 if [ "${#ER33_E}" -lt 1000 ] || [ "${#ER33_R}" -lt 1000 ]; then
   FAIL "ER33: measured nothing — the reconciler read ${#ER33_E} and the verb file ${#ER33_R} folded byte(s)"
-elif [ "$ER33_STRIPBAD" -ne 0 ] || [ "$ER33_COBAD" -ne 0 ]; then
-  FAIL "ER33: BROKEN PROBE — $ER33_STRIPBAD present phrase(s) did not drop their own count by exactly 1 when stripped from a copy, and $ER33_COBAD phrase(s) of a locality, moved out of its unit into a unit of their own in a copy, did not drop the count of units carrying the whole set by exactly 1. Until each fires, a verdict below is the instrument's"
+elif [ "$ER33_STRIPBAD" -ne 0 ] || [ "$ER33_COBAD" -ne 0 ] || [ "$ER33_SPL1" != 1 ] || [ "$ER33_SPL0" != 0 ]; then
+  FAIL "ER33: BROKEN PROBE — $ER33_STRIPBAD present phrase(s) did not drop their own count by exactly 1 when stripped from a copy, and $ER33_COBAD phrase(s) of a locality, moved out of its unit into a unit of their own in a copy, did not drop the count of units carrying the whole set by exactly 1; and the paragraph reader, over the sub-case's heading and \"name no profile route\" planted alone, read '$ER33_SPL1' unit(s) carrying both on adjacent lines (owed 1) and '$ER33_SPL0' with a blank line between them (owed 0 — a reader that never splits paragraphs reads 1). Until each fires, a verdict below is the instrument's"
 elif [ "$ER33_OK" -ne "${#ER33_PINS[@]}" ] || [ "$ER33_COOK" -ne "$ER33_CON" ]; then
   FAIL "ER33: the seam between the cards does not hold — $ER33_OK of the ${#ER33_PINS[@]} phrase(s) stand exactly once in their file (E the reconciler, R the verb file):${ER33_MISS:- none}; and $ER33_COOK of the $ER33_CON localities hold in exactly one unit:${ER33_COMISS:- none}. A gap written from an erasure's token that asks for a profile invites back the person who asked to be erased, and an interrupted rule-19 entry named by its heading echoes the name"
 else
-  PASS "ER33: the seam between the cards holds — a gap written from an erasure's token asks for nothing in the reconciler's sub-case, which writes its marker without the \`VERIFY:\` sentence, in the reconciler's account of the router, in the § \`travelers\` table's \`PROFILE MISSING\` row and in the naming's restatement-alone clause, and an entry whose key joins no roster row is named by its place, never its heading, in the reconciler's naming and in § \`erase\`'s order of writes; all ${#ER33_PINS[@]} phrase(s) once each, each, stripped from a copy, dropping its count by exactly 1. Both localities hold in exactly one unit — the sub-case's paragraph carries its heading and \"name no profile route\", and the \`PROFILE MISSING\` row itself carries the token clause and \"**name no command**\" — and each phrase of each, moved out of its unit in a copy, drops that count by 1"
+  PASS "ER33: the seam between the cards holds — a gap written from an erasure's token asks for nothing in the reconciler's sub-case, which writes its marker without the \`VERIFY:\` sentence, in the reconciler's account of the router, in the § \`travelers\` table's \`PROFILE MISSING\` row and in the naming's restatement-alone clause, and an entry whose key joins no roster row is named by its place, never its heading, in the reconciler's naming and in § \`erase\`'s order of writes; all ${#ER33_PINS[@]} phrase(s) once each, each, stripped from a copy, dropping its count by exactly 1. Both localities hold in exactly one unit — the sub-case's paragraph carries its heading and \"name no profile route\", and the \`PROFILE MISSING\` row itself carries the token clause and \"**name no command**\" — and each phrase of each, moved out of its unit in a copy, drops that count by 1; and the paragraph reader, over the sub-case's heading and \"name no profile route\" planted alone, reads 1 unit carrying both on adjacent lines and 0 with a blank line between them, so it splits paragraphs where the move control cannot show it"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
