@@ -30760,7 +30760,8 @@ md_flips rb_bullets   'RB6' rb6_assert
 #   from the rubric's "Check it cites" column, never listed here: a cell naming `OW-C` or `FB-C`
 #   cites every fail of that check, and one naming `FB-C` bullet <n> the FB-C fails that name bullet
 #   <n>; an FB-C ND names no bullet, so it reaches every citer of FB-C. A mech line the adjudication
-#   names ("mech <check> <field>") is ruled, and moves nothing. A ruling "R-<n> overturned to <value>"
+#   names ("mech <check> <field>", followed by no character of [a-z0-9#-], so the token ends where a
+#   key and its unit end) is ruled, and moves nothing. A ruling "R-<n> overturned to <value>"
 #   puts the operator's value in place of the grader's, and "R-<n> upheld" keeps the grader's.
 #   PRECEDENCE, because more than one can hold for one dimension: an unruled ND makes the dimension
 #   ND; otherwise an unruled fail makes it NOT-MET; otherwise an overturn makes it the operator's
@@ -30946,6 +30947,12 @@ rb_citemap() {
 # value the line holds or the overturn's; and "RULE <id> <verdict>".
 rb_rule() {
   LC_ALL=C awk -F'\t' '
+    # rb_ruled <adjudication> <token> — 1 when the token stands in the adjudication followed by no
+    # character of [a-z0-9#-], at any of its occurrences: it ends where a key and its unit end (SL-7).
+    function rb_ruled(a, t,   i, c) {
+      while ((i = index(a, t)) > 0) { c = substr(a, i + length(t), 1); if (c == "" || c !~ /[a-z0-9#-]/) return 1; a = substr(a, i + 1) }
+      return 0
+    }
     $1 == "CITE" { nc++; CD[nc] = $2; CC[nc] = $3; CB[nc] = $4; next }
     $1 == "BLK" { B[++nb] = $3; next }
     $1 == "DIM" { S[$2, $3] = $4; V[$2, $3] = ($7 == "" || $7 == "-") ? $4 : $7; DL[$2] = DL[$2] " " $3; next }
@@ -30969,7 +30976,7 @@ rb_rule() {
         }
       }
       for (m = 1; m <= nm; m++) {
-        id = MI[m]; if (index(ADJ[id], "mech " MC[m] " " MF[m])) continue
+        id = MI[m]; if (rb_ruled(ADJ[id], "mech " MC[m] " " MF[m])) continue
         kind = (substr(MV[m], 1, 3) == "nd:") ? "nd" : "fail"; split("", BU)
         if (MC[m] == "FB-C" && kind == "fail") { k = split(substr(MV[m], 6), X, "|"); for (j = 1; j <= k; j++) BU[X[j]] = 1 }
         for (c = 1; c <= nc; c++) {
