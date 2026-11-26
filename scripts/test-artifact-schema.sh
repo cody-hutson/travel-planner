@@ -32949,7 +32949,9 @@ fi
 #         its write, citing ADR-049 — and names the entry by its heading's name, its token, or its
 #         place, never its heading, with each need and desire it held; it excludes an entry the
 #         pass writes again from operator input, and bounds the stand-in by the roster and the mark;
-#         each anchor exactly once, whitespace folded.
+#         each anchor exactly once, whitespace folded; and the naming's opening clause and the
+#         stand-in's bound each exactly once in § *Missing or blank profile*, the section its
+#         citers name, with a move control.
 #   OP0   the verbs that dispatch the reconciler, found by a test with no verb name in it, and
 #         failing closed: a region that names the reconciler is admitted, or declares that it
 #         dispatches no agent, or is red; and each admitted verb's declared read of the model says
@@ -33022,10 +33024,54 @@ op_sent1() {
     BEGIN { n = split(ENVIRON["OP_PS"], P, "\n") }
     !done { ok = 1; for (i = 1; i <= n; i++) if (P[i] != "" && !index($0, P[i])) ok = 0; if (ok) { print; done = 1 } }' <<<"$(op_sents "$t")"
 }
+# op_sec <text> <heading> — the lines of the section whose heading line begins with <heading>, from
+# that line to the next heading of the same or a higher level; a `#` line inside a fence, indented
+# or not, is no heading. Nothing where no heading line begins with <heading>.
+op_sec() {
+  OP_SH="$2" LC_ALL=C awk '
+    /^[ \t]*```/ { d = !d }
+    !d && /^#+ / { l = index($0, " ") - 1; if (on && l <= lv) exit; if (!on && index($0, ENVIRON["OP_SH"]) == 1) { on = 1; lv = l } }
+    on { print }' <<<"$1"
+}
+# op_secmv <text> <heading> <phrase> — <text> with the paragraph (the lines between blank lines)
+# inside the section op_sec reads that carries <phrase>, whitespace folded, moved to just after the
+# heading that ends the section, so it opens the next one. Exit 3, the text unchanged, where no such
+# paragraph or no next heading exists.
+op_secmv() {
+  OP_SH="$2" OP_SP="$3" LC_ALL=C awk '
+    { L[NR] = $0 }
+    END {
+      p = ENVIRON["OP_SP"]; gsub(/[ \t\r]+/, " ", p)
+      for (i = 1; i <= NR; i++) {
+        if (L[i] ~ /^[ \t]*```/) d = !d
+        if (d || L[i] !~ /^#+ /) continue
+        l = index(L[i], " ") - 1
+        if (s && l <= lv) { e = i; break }
+        if (!s && index(L[i], ENVIRON["OP_SH"]) == 1) { s = i; lv = l }
+      }
+      a = 0; t = ""
+      if (s && e) for (i = s + 1; i <= e; i++) {
+        if (i == e || L[i] ~ /^[ \t]*$/) { u = t; gsub(/[ \t\r]+/, " ", u); if (a && index(u, p)) { pa = a; pb = i - 1; break } a = 0; t = ""; continue }
+        if (!a) a = i
+        t = t " " L[i]
+      }
+      for (i = 1; i <= NR; i++) {
+        if (pa && i >= pa && i <= pb) continue
+        if (pa && i == pb + 1 && L[i] ~ /^[ \t]*$/) continue
+        print L[i]
+        if (pa && i == e) { print ""; for (j = pa; j <= pb; j++) print L[j] }
+      }
+      exit (pa ? 0 : 3)
+    }' <<<"$1"
+}
 
 # op_pins <id> <what> <file> <anchor>… — one verdict: each anchor stands exactly once in <file>,
 # whitespace folded, and each anchor present, stripped from an in-memory copy, drops its own count
-# by exactly 1. An anchor carried twice is a finding, not a pass.
+# by exactly 1. An anchor carried twice is a finding, not a pass. A caller may add one limb of its
+# own to that verdict by setting, for that call alone, OP_PINS_XBAD (what of the limb's controls
+# did not fire), OP_PINS_XMISS (what of the limb does not hold) and OP_PINS_XSAY (what the PASS
+# line says it holds). Each is read only where it is not empty, so a call that sets none reads,
+# and says, exactly what it did before.
 op_pins() {
   local id="$1" what="$2" file="$3" flat a n x miss="" stripbad=0 np=0 na=0
   shift 3
@@ -33042,12 +33088,12 @@ op_pins() {
   done
   if [ "${#flat}" -lt 1000 ]; then
     FAIL "$id: measured nothing — ${file#"$ROOT/"} read ${#flat} folded byte(s). A phrase count over an empty file proves nothing about $what"
-  elif [ "$stripbad" -ne 0 ]; then
-    FAIL "$id: BROKEN PROBE — $stripbad of the anchor(s) present did not drop their own count by exactly 1 when stripped from a copy of ${file#"$ROOT/"}. Until each fires, a verdict below is the instrument's"
-  elif [ "$np" -ne "$na" ]; then
-    FAIL "$id: $what — $np of the $na anchor(s) stand exactly once in ${file#"$ROOT/"}, whitespace folded; each listed with its count:$miss"
+  elif [ "$stripbad" -ne 0 ] || [ -n "${OP_PINS_XBAD:-}" ]; then
+    FAIL "$id: BROKEN PROBE — $stripbad of the anchor(s) present did not drop their own count by exactly 1 when stripped from a copy of ${file#"$ROOT/"}${OP_PINS_XBAD:+; and $OP_PINS_XBAD}. Until each fires, a verdict below is the instrument's"
+  elif [ "$np" -ne "$na" ] || [ -n "${OP_PINS_XMISS:-}" ]; then
+    FAIL "$id: $what — $np of the $na anchor(s) stand exactly once in ${file#"$ROOT/"}, whitespace folded; each listed with its count:${miss:- none}${OP_PINS_XMISS:+; and $OP_PINS_XMISS}"
   else
-    PASS "$id: $what — all $na anchor(s) stand exactly once in ${file#"$ROOT/"}, whitespace folded, and each, stripped from a copy, drops its own count by exactly 1"
+    PASS "$id: $what — all $na anchor(s) stand exactly once in ${file#"$ROOT/"}, whitespace folded, and each, stripped from a copy, drops its own count by exactly 1${OP_PINS_XSAY:+; $OP_PINS_XSAY}"
   fi
 }
 
@@ -33055,8 +33101,38 @@ op_pins() {
 # naming carries each need and desire the entry held. Dev Testing F-05: an entry this pass writes
 # again from operator input is not one it drops, which keeps #2073's criteria 2 and 4 apart.
 # Dev Testing F-01: the stand-in § *Missing or blank profile* admits is bounded by the mark as well
-# as by the roster, the third of PR-1's three homes; the anchor carries that section's own words
-# for the stand-in, so it can stand nowhere else in the prompt.
+# as by the roster, the third of PR-1's three homes. The anchor carries that section's own words
+# for the stand-in, but words that refer back to "the stand-in above" read as well below the
+# section as in it, so they do not hold it there (Dev Testing F-18). The section limb does: the
+# texts that cite § *Missing or blank profile* for the naming send a reader to that section, so
+# the naming paragraph's opening clause and the stand-in's bound must each stand exactly once in
+# it, read by op_sec from its heading to the next heading of the same or a higher level. MUST-FIRE:
+# each, its paragraph moved into the next section in a copy, drops the section's count by exactly
+# 1 while the file's stays as it was — which a reader of the whole file would not show.
+OP1_SECH='### Missing or blank profile'
+OP1_SECP=(
+  'Name each one you drop, before you write'
+  'as the stand-in above for a traveller the roster names whose entry does not carry `[THIRD-PARTY]`'
+)
+OP1_T=""; [ -r "$OP_ENR" ] && OP1_T="$(cat "$OP_ENR")"
+OP1_FLAT="$(op_fold "$OP1_T")"
+OP1_SEC="$(op_fold "$(op_sec "$OP1_T" "$OP1_SECH")")"
+OP1_SOK=0; OP1_SMISS=""; OP1_SBAD=0
+for op_a in "${OP1_SECP[@]}"; do
+  op_n="$(op_cnt "$OP1_SEC" "$op_a")"
+  [ "$op_n" -eq 1 ] && OP1_SOK=$((OP1_SOK + 1))
+  [ "$op_n" -eq 1 ] || OP1_SMISS="$OP1_SMISS [$op_a → $op_n]"
+  if [ "$op_n" -ge 1 ]; then
+    op_m="$(op_secmv "$OP1_T" "$OP1_SECH" "$op_a")"; op_rc=$?
+    if [ "$op_rc" -ne 0 ] || [ "$(op_cnt "$(op_fold "$(op_sec "$op_m" "$OP1_SECH")")" "$op_a")" -ne $((op_n - 1)) ] || [ "$(op_cnt "$(op_fold "$op_m")" "$op_a")" -ne "$(op_cnt "$OP1_FLAT" "$op_a")" ]; then
+      OP1_SBAD=$((OP1_SBAD + 1))
+    fi
+  fi
+done
+OP_PINS_XBAD=""; OP_PINS_XMISS=""
+[ "$OP1_SBAD" -eq 0 ] || OP_PINS_XBAD="$OP1_SBAD of the ${#OP1_SECP[@]} section anchor(s) present, its paragraph moved into the next section in a copy, did not drop § *Missing or blank profile*'s count by exactly 1 with the file's left as it was"
+[ "$OP1_SOK" -eq "${#OP1_SECP[@]}" ] || OP_PINS_XMISS="$OP1_SOK of the ${#OP1_SECP[@]} section anchor(s) stand exactly once in § *Missing or blank profile*, read from its heading to the next of the same or a higher level (${#OP1_SEC} folded byte(s)); each listed with its count:$OP1_SMISS"
+OP_PINS_XSAY="and in § *Missing or blank profile*, read from its heading to the next of the same or a higher level, the naming's opening clause and the stand-in's \`[THIRD-PARTY]\` bound — ${#OP1_SECP[@]} section anchor(s) — stand exactly once each, and each, its paragraph moved into the next section in a copy, drops the section's count by 1 and leaves the file's as it was"
 op_pins 'OP1' 'the reconciler names each `[OPERATOR-PROVIDED]`-only entry its rebuild drops, before its write' "$OP_ENR" \
   'Name each one you drop, before you write' \
   '`reference/adr/ADR-049-what-a-rebuild-owes.md` Decisions 1–2' \
@@ -33068,6 +33144,7 @@ op_pins 'OP1' 'the reconciler names each `[OPERATOR-PROVIDED]`-only entry its re
   'each need and desire it held' \
   'writes again from operator input' \
   'as the stand-in above for a traveller the roster names whose entry does not carry `[THIRD-PARTY]`'
+OP_PINS_XBAD=""; OP_PINS_XMISS=""; OP_PINS_XSAY=""
 
 # ── OP-U1 and OP-U2 — regression pins of text this release must leave standing.
 op_pins 'OP-U1' 'the `[THIRD-PARTY]` carry-forward bullet and the drop sentence stand, so no carry-forward path is added' "$OP_ENR" \
@@ -33388,16 +33465,20 @@ fi
 #            "carrying the stand-in", and a citation of a section that is itself OWN;
 #   NEITHER  everything else, and UNRESOLVED a citation of a section that is not OWN.
 # The verdict is a conjunction at top level: admitted ≥ 1, OWN ≥ 1, no NEITHER, no UNRESOLVED; and
-# each OWN region says it names nothing where nothing drops (criterion 4) and that in a run nobody
-# can answer the naming adds no stop (ADR-049 Decision 4), and carries the naming's content
-# (Dev Testing F-02 and F-07): the needs and desires the entry held, how to keep them, and that
-# restating them keeps the entry in each run that rebuilds the model, until the traveller files —
-# OP2_OWNP below. op_classify is registered with md_flips.
+# each OWN region says, in the sentence that carries "where it names none", that it renders
+# nothing then (criterion 4), and, in the sentence that carries "In a run nobody can answer", that
+# the naming adds no stop (ADR-049 Decision 4) — OP2_OWNS below, each a sentence test under the
+# pinned split, held where at least one sentence carries the condition and every such sentence
+# carries what follows (Dev Testing F-19) — and carries the naming's content (Dev Testing F-02 and
+# F-07): the needs and desires the entry held, how to keep them, and that restating them keeps the
+# entry in each run that rebuilds the model, until the traveller files — OP2_OWNP below.
+# op_classify is registered with md_flips.
 # MUST-FIRE CONTROLS, each on an in-memory copy of the regions: the naming stripped from the first
 # OWN region that another region cites turns it NEITHER and every region citing it UNRESOLVED;
 # each citing region's own change reverted alone — Change 5d, 6c or 6d, old for new — turns that one
-# region NEITHER and no other; and each OP2_OWNP phrase stripped from a copy of the first OWN
-# region drops its count there by exactly 1.
+# region NEITHER and no other; each OP2_OWNP phrase stripped from a copy of the first OWN region
+# drops its count there by exactly 1; and each phrase of each OP2_OWNS limb, stripped from inside
+# the first sentence of that copy carrying both, drops the count of such sentences by exactly 1.
 OP_NAMING='It returns as well each `[OPERATOR-PROVIDED]`-only entry its rebuild of'
 OP_SIHEAD="**The dispatch carries the operator's stand-in:**"
 OP_SIBOUND='whose entry does not carry `[THIRD-PARTY]`'
@@ -33452,16 +33533,26 @@ OP2_OWNP=(
   'how-to-keep|how to keep them'
   'each-run|in each run that rebuilds the model, until the traveller files'
 )
+# The two sentence limbs each OWN region carries (Dev Testing F-19): <limb>|<the condition the
+# sentence carries>|<what that sentence then says>. "nothing" is what both render homes say at the
+# head, in "say nothing of it" and "render nothing for it", so it is read rather than either.
+OP2_OWNS=(
+  'names-none|where it names none|nothing'
+  'no-stop|In a run nobody can answer|adds no stop'
+)
 op2_assert() {   # op2_assert <root> — exactly one verdict
-  local st cl na no nn nu ownbad="" v cv x y rc ctl_a="" ctl_a_ok=0 rev_bad="" rev_n=0 o v1="" o1 n1 ownctl=""
+  local st cl na no nn nu ownbad="" v cv x y rc ctl_a="" ctl_a_ok=0 rev_bad="" rev_n=0 o v1="" o1 n1 ownctl="" p1 p2 q m
   st="$(op_stream "$1")"
   cl="$(op_classify "$st")"
   na="$(LC_ALL=C awk -F'\t' 'NF >= 2 { n++ } END { print n + 0 }' <<<"$OP_ADM")"
   no="$(op_ncls "$cl" OWN)"; nn="$(op_ncls "$cl" NEITHER)"; nu="$(op_ncls "$cl" UNRESOLVED)"
   for v in $(op_cls "$cl" OWN); do
     o="$(LC_ALL=C awk -F'\t' -v v="$v" '$1 == v { print $2 }' <<<"$st")"
-    [ "$(op_cnt "$o" 'where it names none')" -ge 1 ] || ownbad="$ownbad $v:names-none"
-    [ "$(op_nsent "$o" 'In a run nobody can answer' 'adds no stop')" -ge 1 ] || ownbad="$ownbad $v:no-stop"
+    for x in "${OP2_OWNS[@]}"; do
+      y="${x#*|}"; p1="${y%%|*}"; p2="${y#*|}"
+      n1="$(op_nsent "$o" "$p1")"
+      [ "$n1" -ge 1 ] && [ "$(op_nsent "$o" "$p1" "$p2")" -eq "$n1" ] || ownbad="$ownbad $v:${x%%|*}"
+    done
     for x in "${OP2_OWNP[@]}"; do
       [ "$(op_cnt "$o" "${x#*|}")" -ge 1 ] || ownbad="$ownbad $v:${x%%|*}"
     done
@@ -33472,6 +33563,17 @@ op2_assert() {   # op2_assert <root> — exactly one verdict
     for x in "${OP2_OWNP[@]}"; do
       n1="$(op_cnt "$o1" "${x#*|}")"
       if [ "$n1" -ge 1 ] && [ "$(op_cnt "$(er_sub1 "$o1" "${x#*|}" '')" "${x#*|}")" -ne $((n1 - 1)) ]; then ownctl="$ownctl ${x%%|*}"; fi
+    done
+    # The OP2_OWNS controls (Dev Testing F-19; S6i-D1): each phrase of each sentence limb, stripped
+    # from inside the first sentence of a copy of the first OWN region that carries both.
+    for x in "${OP2_OWNS[@]}"; do
+      y="${x#*|}"; p1="${y%%|*}"; p2="${y#*|}"
+      n1="$(op_nsent "$o1" "$p1" "$p2")"
+      [ "$n1" -ge 1 ] || continue
+      q="$(op_sent1 "$o1" "$p1" "$p2")"
+      for m in "$p1" "$p2"; do
+        if [ "$(op_nsent "$(er_sub1 "$o1" "$q" "$(er_sub1 "$q" "$m" '')")" "$p1" "$p2")" -ne $((n1 - 1)) ]; then ownctl="$ownctl ${x%%|*}($m)"; fi
+      done
     done
   fi
   # Control (a): the naming stripped from the first OWN region that another region cites.
@@ -33496,9 +33598,9 @@ op2_assert() {   # op2_assert <root> — exactly one verdict
   elif [ "$no" -lt 1 ] || [ "$nn" -ne 0 ] || [ "$nu" -ne 0 ] || [ -n "$ownbad" ]; then
     FAIL "OP2: not every verb that dispatches the reconciler renders the naming — of $na admitted: OWN $no ($(op_cls "$cl" OWN)), CITE $(op_ncls "$cl" CITE) ($(op_cls "$cl" CITE)), NEITHER $nn ($(op_cls "$cl" NEITHER)), UNRESOLVED $nu ($(op_cls "$cl" UNRESOLVED)); OWN regions missing a clause the naming owes (names-none, no-stop, needs, how-to-keep, each-run):${ownbad:- none}. Each must carry the naming, its content and the stand-in, or cite one that does in a sentence carrying the obligation's own words"
   elif [ "$ctl_a_ok" -ne 1 ] || [ -n "$rev_bad" ] || [ -n "$ownctl" ]; then
-    FAIL "OP2: BROKEN PROBE — the naming stripped from a copy of § \`${cv:-<none cited>}\` read NEITHER/UNRESOLVED '${ctl_a:-not run}' (must be that region NEITHER and every region citing it UNRESOLVED), reverting a citing region's own change alone did not turn exactly that one region NEITHER:${rev_bad:- none}, and a content phrase stripped from a copy of § \`${v1:-<no OWN region>}\` did not drop its count by exactly 1:${ownctl:- none}. Until each fires, the verdict above is the instrument's"
+    FAIL "OP2: BROKEN PROBE — the naming stripped from a copy of § \`${cv:-<none cited>}\` read NEITHER/UNRESOLVED '${ctl_a:-not run}' (must be that region NEITHER and every region citing it UNRESOLVED), reverting a citing region's own change alone did not turn exactly that one region NEITHER:${rev_bad:- none}, and a content phrase stripped from a copy of § \`${v1:-<no OWN region>}\`, or a sentence limb's phrase stripped from inside its sentence there, did not drop its count by exactly 1:${ownctl:- none}. Until each fires, the verdict above is the instrument's"
   else
-    PASS "OP2: every one of the $na verb(s) that dispatch the reconciler renders the naming — OWN $no ($(op_cls "$cl" OWN)), each carrying the needs and desires the entry held and how to keep them, in each run that rebuilds the model, until the traveller files, and saying it names nothing where nothing drops and that in a run nobody can answer it adds no stop; CITE $(op_ncls "$cl" CITE) ($(op_cls "$cl" CITE)), each in a sentence carrying \"did not keep\" and the stand-in. Every control fired: the naming stripped from § \`$cv\` turns it NEITHER and its citers UNRESOLVED ($ctl_a), each of the $rev_n citing changes reverted alone turns that one region NEITHER, and each of the ${#OP2_OWNP[@]} content phrases stripped from a copy of § \`$v1\` drops its count by 1"
+    PASS "OP2: every one of the $na verb(s) that dispatch the reconciler renders the naming — OWN $no ($(op_cls "$cl" OWN)), each carrying the needs and desires the entry held and how to keep them, in each run that rebuilds the model, until the traveller files, and saying, in each sentence that carries \"where it names none\", that it renders nothing then, and, in each that carries \"In a run nobody can answer\", that it adds no stop; CITE $(op_ncls "$cl" CITE) ($(op_cls "$cl" CITE)), each in a sentence carrying \"did not keep\" and the stand-in. Every control fired: the naming stripped from § \`$cv\` turns it NEITHER and its citers UNRESOLVED ($ctl_a), each of the $rev_n citing changes reverted alone turns that one region NEITHER, each of the ${#OP2_OWNP[@]} content phrases stripped from a copy of § \`$v1\` drops its count by 1, and each phrase of the ${#OP2_OWNS[@]} sentence limbs, stripped from inside its sentence there, drops that sentence count by 1"
   fi
 }
 op2_assert "$ROOT"
