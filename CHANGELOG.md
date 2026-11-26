@@ -3,6 +3,78 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [Unreleased] — 2026-11-26 — A traveller the operator speaks for is named before a rebuild drops them, and can be erased
+
+A traveller with no profile, whose needs the operator relayed, is now named before a rebuild drops
+them, and can be erased. The reconciler names each such entry before its write and every verb that
+dispatches it renders the naming; the hub and the validator read a missing profile as unknown; the
+reconciler finds the roster's person column by what it holds; and `/trip-record erase` gains standing
+rule 19, an erase path for a rostered traveller who holds no record and filed no profile. No trip is
+changed by this release, and no erasure runs in it.
+
+**A rebuild names what it drops.** An entry marked `[OPERATOR-PROVIDED]` alone has no source file,
+so a rebuild of `outputs/traveler-model.md` drops it, and still does: no carry-forward path is added.
+The reconciler now names each one it drops in its reply, before its write — the traveller by name, an
+entry an erasure re-keyed by its token, and an entry whose key joins no roster row by its place, never
+its heading — with each need and desire it held and how to keep them: restate them in each run of a
+verb whose every run dispatches the reconciler, `/trip-record travelers` among them, until the
+traveller files a profile. A pass that drops none, or that stops or declines its write, names none.
+`/trip plan` and `/trip-record travelers` render the naming, and `/trip replan`, `/trip-record person`
+and `/trip-record group` render it as those sections state; in a run nobody can answer it is a report
+and adds no stop (`ADR-049` Decisions 1–2 and 4). Each of those dispatches carries the operator's
+stand-in: the needs the operator states in the run for a traveller the roster names who has no usable
+profile, and whose entry does not carry `[THIRD-PARTY]`, go to the reconciler, which is how restating
+them keeps their entry in each run that rebuilds the model. A member whose entry carries
+`[THIRD-PARTY]`, rostered or not, stays `/trip-record person`'s. The `**Reads:**` lines of those five
+verbs say why the model is read; no verb gains a read. `reference/data-architecture.md` § 6's C12 note
+states the obligation beside the drop it records.
+
+**A missing profile is unknown, never "no constraints".** The hub never confirms a need of a
+`PROFILE MISSING` traveller as honored, and the validator never counts them compliant: it raises a
+Warning naming them as a traveller whose needs the audit could not check.
+
+**One name authority, read one way.** The reconciler's § *Traveler identity* and
+`reference/data-model.md`'s statements of the display-name authority find the roster's person column
+by what it holds, citing `/trip-record` § `group`, *The roster's two columns*, instead of naming the
+`Person` header, so a roster headed `Traveler | Profile` reads as one headed `Person | … | Traveler file`.
+
+**A traveller who filed no profile can be erased.** Standing rule 19, appended under the Extension
+rule, widens rule 16's path: `erase --third-party <n>` admits an entry carrying `[OPERATOR-PROVIDED]`
+alone, or the `PROFILE MISSING` entry a rebuild leaves, whose roster row no traveller file joins but
+the intake template left unfilled, on rule 16's conditions, the name every match reads being their
+roster cell. It refuses, writing nothing, wherever a file under `travelers/` joins no roster row — an
+unjoined file may be this traveller's — or another roster row shares the entry's key, naming each by
+its role or its place and never by a name. The prompt prints the entry's class beside the name. After
+the erasure the subject is not carried: the next reconcile drops the entry, names it by its token, and
+writes a gap from the tombstoned cell that asks for no profile, because a profile filed under the
+token would bring the person back. The idempotency predicate, and the Step 1 row it was copied from,
+read the roster cell's whole trimmed value as the tombstone, never a match inside a longer one.
+`CLAUDE.md`'s *Person erasure* row names the path.
+
+**The suite holds it.** A new group OP grades the naming in the reconciler (OP1), the verbs that
+dispatch it — found by a test that names no verb and fails closed on a region that names the
+reconciler and neither dispatches it nor says it dispatches no agent (OP0) — their lifecycle (OP-F),
+their render, by their own text or a citation each resolves (OP2), the stand-in's bound (OP3), the hub
+and the validator (OP4) and the C12 note (OP5), with regression pins on the carry-forward, drop and
+marker sentences (OP-U1, OP-U2). Group ER gains ER25 limb (iv) over the reconciler's and the data
+model's sections, ER31 for rule 19 and its path, ER32 for the class tests as the arm encodes them over
+the witnesses, and ER33 for the seam between the two cards; ER30's three pins of the old texts are
+re-pinned to the new ones. Every new arm carries a must-fire control on a copy.
+
+**Size fence.** Read against `v0.77.0`, the previous release tag, `CH_EMIT=growth bash
+scripts/test-corpus-hygiene.sh` lists all 51 rows kept: none new, raised, lowered or dropped, and no
+file owes a row it lacks. Eight files grew beneath their rows: `skills/trip-record/SKILL.md` grew
+6,522 to 463,387, beneath 470,268; `agents/00-enrichment.md` 1,967 to 81,141, beneath 82,813, the
+tightest; `skills/trip/SKILL.md` 1,089 to 108,543, beneath 118,008; `agents/06-validator.md` 320 to
+74,892; `agents/05-hub-planner.md` 273 to 84,149; `reference/data-architecture.md` 180 to 138,855;
+`reference/data-model.md` 141 to 236,143; and `CLAUDE.md` 53 to 88,737. No ceiling was raised.
+
+**What this release does not do.** The naming lives in the run's output only: no file records that a
+relayed need was dropped, so after the run a dropped hard limit reads like a profile not yet filed. A
+need stated in a run is not told apart from a trip-level constraint. Rule 19's confirmation types the
+trip's slug and reads the echoed name and class; no second selector is asked. No agent was dispatched
+live to observe any of this; the suite grades the text.
+
 ## [0.77.0] — 2026-11-24 — Publish commands are safe to run twice and stop on their own failures
 
 The publish commands are now safe to run twice and stop on their own failures. A takedown that fails
