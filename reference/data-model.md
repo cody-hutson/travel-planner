@@ -1429,8 +1429,9 @@ enforcement.** What needs stating is the complement — the four cases the equal
 
 ### The display name has one authority — the `## Group` roster
 
-> The **`Person` cell of the `## Group` roster in `trip-context.md` is the authoritative display
-> name** for every traveler the model knows about. The `## <Name>` heading in
+> The **person column of the `## Group` roster in `trip-context.md` — its first column, whatever its
+> header reads (`skills/trip-record/SKILL.md` § `group`, *The roster's two columns*) — is the
+> authoritative display name** for every traveler the model knows about. The `## <Name>` heading in
 > `outputs/traveler-model.md` and the stem of `travelers/<file>.md` are both **projections** of it.
 > Where a projection disagrees with the roster, **the roster is right and the projection is the
 > defect**: the reconciler reports the divergence and never repairs it by rewriting the roster.
@@ -1452,8 +1453,8 @@ statement that admitted it, and its one record is its own `## <Name>` heading in
 `outputs/traveler-model.md`, carried forward verbatim and never a projection of a roster cell;
 where a roster row's key equals that heading's key, the reconciler's join in
 `agents/00-enrichment.md` § *Traveler identity* decides which record stands. And the roster row is
-the **only surface in the engine carrying the display name (`Person`, verbatim) and the derived
-path (`Traveler file`) as a pair**, so for every traveler the correspondence has exactly one
+the **only surface in the engine carrying the display name (its person column, verbatim) and the
+derived path (its path column, where it has one) as a pair**, so for every traveler the correspondence has exactly one
 checkable site and the check is within one row rather than a join across files.
 
 ### The four cases the correspondence does not reach
@@ -1462,10 +1463,10 @@ These four are the **complete complement** of the equality above, not a sample o
 
 | # | Case | Detected where | Disposition |
 |---|---|---|---|
-| **C1** | **Underived stem.** A profile saved by hand without the transform — a self-serve copy, or a portable hand-off's returned block saved outside `/trip-record profile` — whose stem normalizes to something other than the roster `Person`'s key. | Reconciler, per roster row | **Report, never rename.** Name the roster `Person`, the observed file and both keys, and treat the traveler as **unresolved** — *not* as `PROFILE MISSING`. `travelers/<traveler>.md` is human-authored Layer 1 (§ *Who Writes What — Field Layering*), so renaming it is a write the reconciler does not hold. |
+| **C1** | **Underived stem.** A profile saved by hand without the transform — a self-serve copy, or a portable hand-off's returned block saved outside `/trip-record profile` — whose stem normalizes to something other than the roster name's key. | Reconciler, per roster row | **Report, never rename.** Name the roster name, the observed file and both keys, and treat the traveler as **unresolved** — *not* as `PROFILE MISSING`. `travelers/<traveler>.md` is human-authored Layer 1 (§ *Who Writes What — Field Layering*), so renaming it is a write the reconciler does not hold. |
 | **C2** | **Empty key.** `normalize(P)` is the empty string — a display name carrying no ASCII alphanumerics. | Reconciler, and intake where it runs | **Hard stop, with the name quoted.** The key is not merely non-unique here, it is **absent**: two such travelers collide at `""`, and `derive(P)` is empty too, so no filename exists for the key to correspond to. The command surface already refuses an empty *derivation* on the create path; this extends the same refusal to the *key*. |
 | **C3** | **Reserved-key collision.** `normalize(P)` equals a declared reserved key (below). | Reconciler, and intake where it runs | **Hard stop at intake; refuse the entry at reconcile.** Admitting it is the fail-open: the guard's parse suppresses the entry, so its values never enter the non-publishable class at all. |
-| **C4** | **Two display names, one key.** Distinct `Person` values whose keys are equal — `Sam B.` and `Sam. B` both key to `samb`. | Reconciler only — it is a property of the **set**, and the reconciler is the one component that holds the set | **Hard stop, both names quoted; the operator disambiguates the display name.** The engine **never mints a suffix**: a minted suffix is a surrogate key wearing a natural key's clothes, and it would break the correspondence above by construction. |
+| **C4** | **Two display names, one key.** Distinct person cells whose keys are equal — `Sam B.` and `Sam. B` both key to `samb`. | Reconciler only — it is a property of the **set**, and the reconciler is the one component that holds the set | **Hard stop, both names quoted; the operator disambiguates the display name.** The engine **never mints a suffix**: a minted suffix is a surrogate key wearing a natural key's clothes, and it would break the correspondence above by construction. |
 
 **C2 is decided here and cited upstream.** The key normalization itself carries no empty guard, and
 neither § 3.2 nor ADR-009 Decision 2.2 states the rule — each now names the degenerate point and

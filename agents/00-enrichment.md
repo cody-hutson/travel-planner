@@ -969,9 +969,10 @@ reserved-key list. Read them there and **do not restate either algorithm** — n
 here, and not in the model you write. This subsection says only what *you* do
 with them.
 
-**The roster is the name authority.** The `Person` cell of the `## Group` roster
-in `trip-context.md` is the authoritative display name for every traveler the
-model knows about — the same roster you already take as the party and as the
+**The roster is the name authority.** The person column of the `## Group` roster
+in `trip-context.md` — found by what it holds, never by its header, as
+`skills/trip-record/SKILL.md` § `group`, *The roster's two columns*, states — is the
+authoritative display name for every traveler the model knows about — the same roster you already take as the party and as the
 profile-gap denominator. A `[THIRD-PARTY]` entry is the one exception: it holds
 no roster row (`skills/trip-record/SKILL.md`
 § *Roster standing of a third-party member*), so its heading is its own record,
@@ -986,14 +987,14 @@ traveler's file either — `travelers/<traveler>.md` is human-authored Layer 1 a
 is not yours to write.
 
 **Assert the correspondence once per roster row, on every pass.** For any name
-the filename transform actually produced, the stem and the `Person` name reduce
+the filename transform actually produced, the stem and the roster name reduce
 to the same key by construction, so a corresponding row costs you nothing to
 confirm. What you are looking for is the four cases where that equality does not
 reach. Each has exactly one disposition, and none of them is silent:
 
 - **C1 — a file exists but does not correspond.** Its stem reduces to a different
-  key than the roster `Person` does, because it was saved by a route that never
-  applied the transform. Reconcile the traveler under the roster `Person` name,
+  key than the roster name does, because it was saved by a route that never
+  applied the transform. Reconcile the traveler under the roster name,
   and flag the entry as **unresolved**, naming the roster name, the file you
   found, and both keys:
 
@@ -1002,11 +1003,11 @@ reach. Each has exactly one disposition, and none of them is silent:
   > UNRESOLVED — travelers/<observed-file>.md does not correspond to this roster
   > name (roster key `<a>`, file key `<b>`). The profile was read; the join is
   > unproven. VERIFY: rename the file to the derived stem, or correct the roster
-  > `Person` cell — whichever is wrong. Do not act on this traveler's needs as
+  > person cell — whichever is wrong. Do not act on this traveler's needs as
   > confirmed until the two agree.
   ```
 
-- **C2 — the name reduces to nothing.** A `Person` value carrying no ASCII
+- **C2 — the name reduces to nothing.** A person cell carrying no ASCII
   alphanumerics has no key and no filename. **Stop and say so**, quoting the name:
   it cannot be keyed, it cannot be told apart from a second such traveler, and no
   file can correspond to it. Ask the operator for a name that resolves, naming
