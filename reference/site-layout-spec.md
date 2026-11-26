@@ -128,6 +128,22 @@ Per-day nav pills and overview dots:
 - Stats grid: 4 columns, display sans numbers in gold
 - "Scroll ↓" bounce animation at bottom
 
+**Pre-plan variant (IDEATION).** The hero of a build in IDEATION, in either destination state
+(§ 9.2). Its title, with no destination recorded, is `trip.slug` exactly as the resolution record
+spells it, and is never read as a destination; with a destination in play it names that
+destination as under consideration rather than chosen. It renders every name in
+`trip-context.md`'s `## Group` table and a relationship for nobody — the fail-closed default while
+the build cannot read who filed their own form from a `bound` artifact (`ADR-031` § 2). The trip's
+own dates and `- **Total travelers:**` render only where set, and the stats grid carries only cells
+whose value is set. It never renders a placeholder: a value that opens with `[` and closes with `]`
+is not an answer, and its element is omitted rather than shown blank. § 7's destination-specific
+elements take the neutral default declared there.
+
+**The pre-plan page's design intent.** *Audience:* the travel group, while it is still choosing.
+*Belief:* "we are deciding this together, and here is where we stand".
+*Contrast:* the shortlist pasted into the group chat, against one private page that ranks the
+options and shows who would love or skip each.
+
 ### Coordination Notice (`.coord-notice`)
 Trip-level band carrying the coordination state ADR-003 § *Decision 3* makes **pull-based**:
 there is no server and no push channel, so an async traveler learns a change is pending by
@@ -717,6 +733,15 @@ These change per trip — everything else stays the same:
 | Heat strip colors | Green/Red/Amber thermal zones | Climate-specific zone visualization |
 | Booking checklist dates | Tokyo venue-specific dates | Destination booking windows |
 
+**In IDEATION these take a declared neutral default** (`ADR-031` § 2): `--accent` and
+`--accent-deep` take § 2's `--gold` and `--navy2`; the hero background keeps § 3's gradient over
+those values; no hero decorative is emitted; and the display-sans role takes the body sans family,
+so no mood face loads. The table's other rows have no component in IDEATION (§ 9.2) and take no
+default. A destination in play does not lift it: the page names that destination as under
+consideration, and styling it would read as chosen. A build in a plan mode writes this table's
+destination values over every neutral default, including on the page it patches from an IDEATION
+build with a destination in play; that lift is stated here and graded by no check.
+
 ---
 
 ## 8. File Structure for Site Generation
@@ -1084,7 +1109,7 @@ How a trip's site is designed and built. `CLAUDE.md` § *Travel Site Generation*
 - **Destination-specific aesthetic.** Every site reflects its destination: color palette, landmark visuals, typography mood. Tokyo got Japanese red (`#BC002D`) with kana characters and torii-gate gradients. Lisbon would get Portuguese blue/azulejo tones. Paris would get something else entirely.
 - **Editorial luxury quality.** High-end travel magazine feel. Not a data dump — a designed experience you'd want to browse on your phone at the airport.
 - **Functional on the ground.** Sticky navigation, collapsible days, Google Maps links on every venue, booking checklist with progress tracking. It's a planning tool AND a reference tool during the trip.
-- **Grows with the plan.** The site isn't generated once at the end. It's created when there's enough content and updated as the plan evolves. Early versions may be lighter. Final versions are comprehensive.
+- **Grows with the plan.** The site isn't generated once at the end. It's created when there's enough content and updated as the plan evolves. Early versions may be lighter. Final versions are comprehensive. It can be built from IDEATION, before a destination is chosen, when it carries the pre-plan hero and what the group needs to decide.
 
 ### What a good site includes
 
@@ -1112,11 +1137,13 @@ Based on the quality bar established by previous trips:
 
 When the user says "build the site" or "create the travel site":
 
-1. **Read the content sources:**
+1. **Read the content sources.** In a plan mode:
    - `outputs/final-itinerary.md` (primary content)
    - `outputs/links-reference.md` (all venue URLs for maps/links)
    - `outputs/venue-matrix.md` (day assignments)
    - `trip-context.md` (group info, dates, constraints for the hero)
+
+   In IDEATION: `trip-context.md`'s `## Group` and dates, for the pre-plan hero (§ 3).
 
 2. **Read reference sites for quality standard:**
    - Check the Site References section below for previous trip sites
@@ -1132,7 +1159,7 @@ When the user says "build the site" or "create the travel site":
    - All CSS inline (no external stylesheets except Google Fonts)
    - Leaflet.js for maps (CDN link is fine)
    - No build step, no framework — one HTML file that works offline
-   - Write to `outputs/[destination]-travel-site.html`
+   - Write to `outputs/<trip.slug>-travel-site.html` while no destination is recorded, and to `outputs/[destination]-travel-site.html` once one is (`ADR-034` § 1)
    - **Follow this specification** for responsive architecture, viewport-fit logic, card system, booking indicators, and mobile/desktop interaction patterns
 
 5. **Iterate with the user.** The first version won't be final. Expect:

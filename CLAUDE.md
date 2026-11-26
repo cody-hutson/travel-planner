@@ -327,7 +327,7 @@ When the user says "publish this" or "put this on GitHub", run:
 Before anything is encrypted or pushed, every `publish`, `update` and `rotate` checks the files the site build reads (`reference/site-layout-spec.md` § 9.1) for a value of the non-publishable field class (`reference/data-architecture.md` § 5.6), and stops on one, naming the file, the line and the field and never the value. A file absent from the trip, as an itinerary is in IDEATION, is skipped and named.
 
 That one command:
-1. Encrypts `outputs/[destination]-travel-site.html` with StatiCrypt (AES-256-CBC + HMAC-SHA256, 600k PBKDF2-SHA256) into a passphrase-gated `index.html`.
+1. Encrypts the trip's newest `outputs/*-travel-site.html` with StatiCrypt (AES-256-CBC + HMAC-SHA256, 600k PBKDF2-SHA256) into a passphrase-gated `index.html`.
 2. Runs a fail-closed **pre-push guard** that refuses to push unless the output is verified ciphertext with no plaintext itinerary tokens.
 3. Creates the per-trip **public** repo and pushes **only the ciphertext**, using a no-reply commit identity (never the user's email).
 

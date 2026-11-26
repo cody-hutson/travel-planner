@@ -344,7 +344,7 @@ read as something a row admits.
 
 | relation | the derived side | the source side, by rule | when an operand is not observable |
 |---|---|---|---|
-| `itinerary-to-build` | the newest `trips/<slug>/outputs/*-travel-site.html` | the trip-scoped paths `site`'s own `**Reads:**` line declares as inputs to the build, read live from that line | `UNDETERMINED`, naming the operand |
+| `itinerary-to-build` | the newest `trips/<slug>/outputs/*-travel-site.html` | the trip-scoped paths `site`'s own `**Reads:**` line declares as inputs to the build in the resolved state, read live from that line | `UNDETERMINED`, naming the operand |
 | `research-to-placement` | `trips/<slug>/outputs/final-itinerary.md` | the accumulating spoke output files `research`'s agent key already derives, read live from that derivation | `UNDETERMINED`, naming the operand |
 
 **Both source sides are rules rather than lists, which is what keeps them from going stale.**
@@ -616,7 +616,7 @@ advisory list that can disagree with what the verbs actually do. Reading the sam
 dispatch reads is what keeps the index from advertising a verb the **table** would then
 refuse. It is not a guarantee of no refusal at all, and claiming one would be false: a verb
 the table admits can still stop inside its own section — `check` where no itinerary exists,
-`research` on an agent key that matches nothing. Those stops are the verb's own, declared in
+`site` in a plan mode with no destination, `research` on an agent key that matches nothing. Those stops are the verb's own, declared in
 its own section, and they are not the index disagreeing with the table.
 
 Order:
@@ -1133,14 +1133,16 @@ it. This chain does not reach the hub, so the per-event status bound does not qu
 
 ## site
 
-**Reads:** `trips/<slug>/outputs/final-itinerary.md`, `trips/<slug>/outputs/links-reference.md`
+**Reads:** in a plan mode, `trips/<slug>/outputs/final-itinerary.md`, `trips/<slug>/outputs/links-reference.md`
 and `trips/<slug>/outputs/venue-matrix.md` — the plan artifacts `reference/site-layout-spec.md` § *How to build it* names as
 the site's content sources; `trips/<slug>/trip-context.md` — the group, dates and trip-level
 constraints the hero and overview render, and no other block;
 `trips/<slug>/outputs/event-status.md` — the authoritative source
 `reference/site-layout-spec.md` § 9.1 names for booking status, *needs booking* flags,
 checklist membership and the per-card booking tiers, read because § 3 makes the site a read
-surface for status; `trips/<slug>/outputs/change-summary.md` — its dated entries
+surface for status; in IDEATION, `trips/<slug>/trip-context.md` — the `## Group` block and the
+trip's own dates, which the hero's pre-plan variant renders, and no other block — and none of the
+plan artifacts, which the render table excludes there; in both, `trips/<slug>/outputs/change-summary.md` — its dated entries
 alone, which are what raise a change in the first place, read because
 `reference/site-layout-spec.md` § 3's Coordination Notice is a read surface for the
 coordination state exactly as the checklist is for booking status;
@@ -1158,17 +1160,32 @@ round-trip fences, § 9.3 and § 3 component catalog, together with
 `reference/trip-resolution.md`'s `G5` and `G6` and this file's `site` row — read by `scripts/check-round-trip.sh`, the
 script the completeness check below invokes, rather than by this verb; the itinerary sources the
 `reference/site-layout-spec.md` § *Site References* table names, read as the quality bar rather than as templates;
-`trips/<slug>/outputs/<destination>-travel-site.html` — the **existence probe** that selects
+`trips/<slug>/outputs/<page>` — the **existence probe** that selects
 creating the site from patching it, and, on the patch route, the outgoing markup read before
 it is changed, because that read is what preserves design already approved — within this run it
 is the only copy of the outgoing markup there will be, the trip tree living under `<data-root>`,
-where this repository holds no copy of it. It does **not** make the no-regenerate rule below
+where this repository holds no copy of it. `<page>` is `<trip.slug>-travel-site.html` while
+`trip.destination` is `UNDECIDED`, and `<destination>-travel-site.html` once a destination is
+recorded — the stem rule of `reference/adr/ADR-034-site-build-admission.md` § 1 — so the first
+build with a destination creates its page rather than patching the slug-named one, which stays on
+disk and is not the newest. It does **not** make the no-regenerate rule below
 checkable: after the write there is nothing left to diff the result against, so that rule stands
 as one this verb follows, not one an inspection of the tree can settle afterwards. It does not read
 `trips/<slug>/trip-log.md`: the log carries the reasoning behind choices, and the site renders
 what was chosen. **Dispatches no agent** — the site is authored directly, which is why this
 verb reaches `Write` for its own output rather than for an agent's.
 **Non-interactive: the standing clause's *run nobody can answer*.**
+
+**Which states build, and the two that do not.** The row names the five modes and reads `any`
+for the destination. **`UNSET` refuses** at `G7`, because the mode cell never reads `any`: say
+that the trip's mode is unset, point at `templates/trip-context.template.md` for the field's
+shape and permitted values, and name `/trip-record mode` as what sets it. **A plan mode with no
+destination stops here**: in DISCOVERY, ENRICHMENT, ITERATION or RESEQUENCING with
+`trip.destination` `UNDECIDED` the row admits the verb, and this section builds nothing, because
+no plan-phase page is built without a destination (`reference/adr/ADR-034-site-build-admission.md`
+§ 1). Name the two remedies — record the destination with `/trip-record destination`, or return
+the trip to IDEATION with `/trip-record mode` — run neither, and write nothing.
+`reference/site-layout-spec.md` § 9.2 declares that state a non-row of the render table.
 
 **Update, do not regenerate.** Where the site exists, **patch the affected sections** and
 preserve design tweaks already approved; `Write` is reached only where the file does not
@@ -1201,7 +1218,9 @@ can never clear it; no `outputs/change-summary.md`, or no entry in one, and no s
 `none`, with `coordination-since` omitted — the organizer's own two-line confirmation carries no
 count, so a trip that has never declared approvers reads exactly as it did before approvals existed.
 Where the state resolves to `none` the notice is **not emitted at all**; § 3 states that rule
-and this verb does not restate it.
+and this verb does not restate it. The mapping runs in every state this verb builds; where the
+render table excludes `<coordination-notice>`, as in IDEATION, `coordination-state` and
+`coordination-since` are still written into the frontmatter and the band is not emitted.
 
 **Neither the file's presence nor its `status` field is the signal, and the second of those is
 a correction.** Presence was rejected first and for a reason that still holds: C20 is
@@ -1339,14 +1358,14 @@ the rule says so. Where publishing is what the user wants, name `/trip-publish` 
 
 **`outputs/event-status.md`.** **Read** — see the read line above. **Never written**, by this
 verb or by anything it dispatches, which is nothing. This verb's one write under `outputs/` is
-its own `<destination>-travel-site.html`; every other artifact there it reads and does not
+its own `<page>`; every other artifact there it reads and does not
 write, this file among them. This chain does not reach the hub, so the per-event status bound
 does not quantify over it.
 
 **It writes no byte of `trip-context.md`.** The carve-out does not admit this verb.
 
 **Depth.** The row declares `G8` because this verb announces derived-state freshness.
-This verb writes `trips/<slug>/outputs/<destination>-travel-site.html`, which is one
+This verb writes `trips/<slug>/outputs/<page>`, which is one
 relation's derived side, so it **announces the entries its own run changed** — naming each
 relation this run moved and the verdict that relation now carries — and names `status` as
 where the whole list is reported.
