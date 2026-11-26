@@ -30307,8 +30307,9 @@ md_flips cv_run      'OW-C-OBS' owcobs_assert
 #          twice, a second follow-up and twin and double carried; a follow-up carrying the example
 #          its L4 gave passes bullet 4. CONTROL: the cross row's oracle flipped on a copy disagrees.
 #          SEAM-3: seam3-spoken-desire passes while Desire is TRIP, and fails bullet 5 once Desire is
-#          flipped to PERSON in a copy of reference/data-model.md — the PERSON class read through the
-#          one form model FB-T.P1 and CHR read (ta_model)
+#          flipped to PERSON in a copy of reference/data-model.md — its row found by the key desire,
+#          through ft_row_set, so a reword of its label leaves the flip landing — the PERSON class read
+#          through the one form model FB-T.P1 and CHR read (ta_model)
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
 echo "FB — (the conversation block) FB-C: the follow-up bound and its exclusions over every test conversation"
@@ -30324,7 +30325,7 @@ fbc_assert() {
   q9="$(awk -F'\t' '$1 == "VERDICT" && $2 == "q09-follow-up-with-example.txt" && $4 == "FB-C" { print $6 }' "$CF_OUT_F")"
   ctl="$(cf_flip fbc fbc-cross.txt "X FB-C Where you stay › Rooming = fail:1|4" "X FB-C Where you stay › Rooming = pass")"
   r="$(ta_root SEAM3-FBC)"; s3=""; s3r=""
-  if ta_mutate "$r" reference/data-model.md '| 21 | ⭐ `Desire` | Desires | **TRIP** |' '| 21 | ⭐ `Desire` | Desires | **PERSON** |'; then
+  if ft_row_set "$r/reference/data-model.md" desire Class '**PERSON**'; then
     ta_model "$r" "$r" > "$r/model.tsv"
     s3="$(cv_run "$r/model.tsv" "$CF_A2_F" "$ROOT" "$CF_DIR/seam3-spoken-desire.txt" | awk -F'\t' '$1 == "VERDICT" && $4 == "FB-C" { print $6 }')"
   fi
