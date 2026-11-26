@@ -83,7 +83,8 @@ leanings enter no candidate set, veto, love-count, coverage line or equity note,
 and no line describes them
 (`reference/adr/ADR-030-what-the-private-site-may-show.md` § 2). This binds every
 step of the method below. Name a traveler — as a lover, a vetoer or in a
-coverage line — only where their leanings count. Say once, under *Conflicts &
+coverage line — only where their leanings count, and take a love-count's total
+over those travelers alone, never over the party. Say once, under *Conflicts &
 coverage* and naming nobody, how much of the group the ranking reflects:
 "This shortlist reflects the own answers of [N] of [M] travelers", with [M] the
 party's size in `trip-context.md`.
