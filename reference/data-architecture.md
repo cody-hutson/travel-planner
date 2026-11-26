@@ -770,7 +770,9 @@ distinction § 5.4 protects one layer down, met again here.
   layers check different things and neither stands in for the other.
 - **`internal`** — never rendered.
 - **`internal-hard`** — never rendered **and** carrying values that must not reach a rendered page
-  **in any form, including anonymized**. Exactly C12, C14, C22 and C23.
+  **in any form, including anonymized**; on the private site only, a value
+  `reference/adr/ADR-030-what-the-private-site-may-show.md` § 2 admits there renders as its `bound`
+  carrier writes it, and never on a public page. Exactly C12, C14, C22 and C23.
 - **`output`** — the render itself: a sink, never a source.
 
 ### 5.2 Field classification
