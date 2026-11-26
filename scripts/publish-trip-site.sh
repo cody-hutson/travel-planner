@@ -3306,6 +3306,17 @@ strip_to_itinerary_text() { # <html_file> -> visible itinerary text on stdout, o
   ' "$1"
 }
 
+# THE READING (#2286). One number for everything between a render file and its digest:
+# strip_to_itinerary_text, the band variables _COORD_NOTICE_CLASS and _COORD_NOTICE_CAP it reads,
+# _ITINERARY_WS_SED and the normalization in itinerary_digest, and _digest_of. A change to what any
+# of them computes moves it up by one, in the same change. The published and staged baselines and
+# the confirmation record carry it as their last line, reading=<n>, and a record with none reads as
+# reading 1: it was taken before this field existed. Approval-ledger lines do not carry it: an
+# approval is read against the outgoing plan's code under an earlier reading, where one is known
+# (_reading_measured). No verdict reads it: it chooses the words of an abort that has already been
+# decided (S33g). No environment variable or argument sets it.
+_ITINERARY_READING=1
+
 # SEAM (#88) — the digest primitive, reading STDIN, and since #719 the digest an approval
 # BINDS: SHA-256 over the bytes, printed as 64 lowercase hex characters (ADR-029 § Decision 5).
 # One value serves the gate, the approval line the organizer shares, the code the render
@@ -3467,7 +3478,7 @@ _itinerary_digest_pair() { # <html_file> -> "<sha256-token> <legacy-token>" from
 pending_change_path()     { printf '%s' "$1/outputs/change-summary.md"; }
 # The organizer's recorded approval, digest-bound to the itinerary it approves.
 change_confirmation_path() { printf '%s' "$1/.change-confirmed"; }
-# The plan as of the last successful push: its digest and the date, on two lines. Written by
+# The plan as of the last successful push: its digest, the date and the reading, on three lines. Written by
 # record_published_itinerary, which cmd_publish, cmd_update and cmd_rotate each call after a
 # push, beside the staged twin staged_record_path names.
 published_itinerary_path() { printf '%s' "$1/.published-itinerary"; }
@@ -3486,7 +3497,7 @@ approval_ledger_path()      { printf '%s' "$1/.approvals"; }
 # record is outstanding. The previous release never opens it.
 staged_record_path()       { printf '%s' "$1/.published-itinerary.next"; }
 
-# The `digest=` line of a two-line record, or NOTHING when the file is absent, the
+# The `digest=` line of a record, or NOTHING when the file is absent, the
 # line is missing, or the token is not a well-formed digest. Folding those three
 # into one empty answer is what keeps a malformed `.change-confirmed` from ever
 # reading as an approval, the conservative direction for that record. The published
@@ -3506,6 +3517,25 @@ _record_digest() { # <record_file> -> digest token, or nothing
     ''|*[!A-Za-z0-9-]*) return 0 ;;
   esac
   printf '%s' "$tok"
+}
+
+# The reading a record's digest was taken under (#2286, the constant _ITINERARY_READING): the value
+# of its `reading=` line; `1` where it has none, a record written before the field existed, and where
+# the file is absent or unreadable; and `?` where the value is not a whole number from 1 to 9999
+# written without a leading zero, which differs from every reading an engine uses. No caller reaches
+# it without first reading a usable digest from the same record. A read loop, as _record_digest is,
+# for the same reason.
+_record_reading() { # <record_file> -> the reading its digest was taken under: <n>, 1 where it names none, ? where unreadable
+  local f="${1:-}" line v="" seen=0
+  [ -r "$f" ] || { printf '1'; return 0; }
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in reading=*) v="${line#reading=}"; seen=1; break ;; esac
+  done < "$f"
+  if [ "$seen" -eq 0 ]; then printf '1'; return 0; fi
+  case "$v" in
+    [123456789]|[123456789][0123456789]|[123456789][0123456789][0123456789]|[123456789][0123456789][0123456789][0123456789]) printf '%s' "$v" ;;
+    *) printf '?' ;;
+  esac
 }
 
 # The published baseline, classified (#1468 case 5). Exactly one answer on stdout:
@@ -3540,14 +3570,14 @@ _baseline_record() { # <record_file> -> absent | unusable | the recorded digest 
 }
 
 # The one staging step for a baseline record (#1468 case 4): a temp file beside <record_file>, in
-# the same directory, holding the two lines the recorder writes. Prints the temp path; returns
+# the same directory, holding the three lines the recorder writes. Prints the temp path; returns
 # non-zero, leaving nothing behind, when the file cannot be created or written. The recorder
 # calls it after a push and require_recordable_baseline calls it before one, so the check before
 # the push cannot pass where the recorder's own staging would fail.
 _stage_published_record() { # <record_file> <digest> -> the staged path on stdout, or non-zero with nothing left
   local tmp
   tmp="$(mktemp "${1}.XXXXXX")" || return 1
-  if printf 'digest=%s\npublished=%s\n' "$2" "$(_iso_now)" > "$tmp"; then
+  if printf 'digest=%s\npublished=%s\nreading=%s\n' "$2" "$(_iso_now)" "$_ITINERARY_READING" > "$tmp"; then
     printf '%s' "$tmp"
     return 0
   fi
@@ -4008,6 +4038,73 @@ change_confirmation_state() { # <trip_dir> -> one token on stdout
   printf 'stale'
 }
 
+# THE READING-CHANGE WORDS (#2286). The gate decides on digests alone; these choose the words of its
+# `*)` abort after that verdict, and never before it. _reading_measured names the record the outgoing
+# plan's state was decided from, where that record names another reading than this engine's: on a
+# trip with no approvers the baseline, and `moved` when the state is stale and the confirmation was
+# taken under this engine's reading; on a declared trip the baseline, then .change-confirmed, then the
+# approvals on file, read by the outgoing plan's code under an earlier reading
+# (_approvals_at_earlier_reading).
+_reading_words() { case "$1" in '?') printf 'a reading the record does not name' ;; *) printf 'reading %s' "$1" ;; esac; }
+_reading_measured() { # <trip_dir> <state> -> nothing | moved | baseline <r> | record <r> | ledger <r>
+  local trip_dir="$1" state="$2" pol rb="" rr="" l
+  pol="$(_approval_policy "$trip_dir" 2>/dev/null)"
+  case "$(_baseline_record "$(published_itinerary_path "$trip_dir")")" in
+    absent|unusable|'') ;;
+    *) rb="$(_record_reading "$(published_itinerary_path "$trip_dir")")" ;;
+  esac
+  if [ -n "$(_record_digest "$(change_confirmation_path "$trip_dir")")" ]; then
+    rr="$(_record_reading "$(change_confirmation_path "$trip_dir")")"
+  fi
+  case "$pol" in
+    none)
+      if [ -z "$rb" ] || [ "$rb" = "$_ITINERARY_READING" ]; then return 0; fi
+      if [ "$state" = stale ] && [ "$rr" = "$_ITINERARY_READING" ]; then printf 'moved'; return 0; fi
+      printf 'baseline %s' "$rb" ;;
+    declared)
+      if [ -n "$rb" ] && [ "$rb" != "$_ITINERARY_READING" ]; then printf 'baseline %s' "$rb"; return 0; fi
+      if [ -n "$rr" ] && [ "$rr" != "$_ITINERARY_READING" ]; then printf 'record %s' "$rr"; return 0; fi
+      l="$(_approvals_at_earlier_reading "$trip_dir")"
+      if [ -n "$l" ]; then printf 'ledger %s' "$l"; fi ;;
+  esac
+  return 0
+}
+# Whether a render reads the same under a record's reading as under this engine's, and whether an
+# approval on file was taken under an earlier reading: each answers only for a pair of readings it can
+# show to read a render alike. An engine with one reading has no such pair, so the first answers no
+# and the second names nothing, and the abort says it cannot tell, the message that claims nothing.
+# Each body is replaced when the engine gains a reading it can compare with an earlier one.
+_reading_agrees() { return 1; } # <html_file> <record-reading>
+_approvals_at_earlier_reading() { return 0; } # <trip_dir> -> nothing
+# The gate's `*)` abort (#2286), which never returns. Every record the state was decided from at this
+# engine's reading, or a malformed approval state: the shipped abort, byte for byte, whose revert does
+# restore the published code there. Otherwise the record named above is said to have been taken under
+# another reading: the plan has moved where the render reads the same under both readings, or since a
+# confirmation this engine recorded; elsewhere the gate cannot tell whether it moved, and names the one
+# step, `confirm` on a trip with no approvers or approval once more on a declared one, and no revert.
+_abort_unconfirmed() { # <trip_dir> <state> -> never returns
+  local trip_dir="$1" state="$2" rm_note r what kept='' pol
+  pol="$(_approval_policy "$trip_dir" 2>/dev/null)"
+  case "$(_baseline_record "$(published_itinerary_path "$trip_dir")")" in absent|unusable|'') ;; *) kept=' and the published plan is unchanged' ;; esac
+  rm_note="$(_reading_measured "$trip_dir" "$state")"
+  case "$rm_note" in
+    '') die "GUARD ABORTED — the itinerary content differs from the published plan and no organizer confirmation covers it (state: ${state:-empty}). Nothing was pushed and the published plan is unchanged. Either confirm the change:  $(basename "$0") confirm ${trip_dir}  — or revert the working copy to the published plan and re-run." ;;
+    moved) die "GUARD ABORTED — the itinerary content differs from the plan last confirmed, which this engine recorded, so the plan has moved since that confirmation (state: ${state}). Nothing was pushed${kept}. Confirm the change:  $(basename "$0") confirm ${trip_dir}  — and re-run update or rotate." ;;
+  esac
+  r="${rm_note#* }"
+  case "${rm_note%% *}" in baseline) what='the published plan' ;; record) what='the plan last approved' ;; *) what='the plan the approvals on file were given for' ;; esac
+  if _reading_agrees "$(resolve_site_html "$trip_dir" 2>/dev/null)" "$r"; then
+    if [ "$pol" = declared ]; then
+      die "GUARD ABORTED — the itinerary content differs from ${what}, which an engine that reads pages differently recorded (that engine used $(_reading_words "$r"); this one uses reading ${_ITINERARY_READING}); this page reads the same under both, so the plan itself has moved, and no approval on file names its code (state: ${state}). Nothing was pushed${kept}. Check that the plan going out is the one the group should see, then ask for approval: run  $(basename "$0") confirm ${trip_dir}  at a terminal, share the approval line it prints in the group's thread, and record each reply with it. Once the approvals meet the threshold, rebuild the site and re-run update or rotate."
+    fi
+    die "GUARD ABORTED — the itinerary content differs from ${what}, which an engine that reads pages differently recorded (that engine used $(_reading_words "$r"); this one uses reading ${_ITINERARY_READING}); this page reads the same under both, so the plan itself has moved (state: ${state}). Nothing was pushed${kept}. Confirm the change:  $(basename "$0") confirm ${trip_dir}  — and re-run update or rotate."
+  fi
+  if [ "$pol" = declared ]; then
+    die "GUARD ABORTED — ${what} was recorded by an engine that reads pages differently (that engine used $(_reading_words "$r"); this one uses reading ${_ITINERARY_READING}), so the plan's approval code has changed whether or not the plan has, and the gate cannot tell which; no approval on file names the new code (state: ${state}). Nothing was pushed${kept}. Check that the plan going out is the one the group should see, then ask for approval once more: run  $(basename "$0") confirm ${trip_dir}  at a terminal, share the approval line it prints in the group's thread, and record each reply with it. Once the approvals meet the threshold, rebuild the site and re-run update or rotate."
+  fi
+  die "GUARD ABORTED — the published plan was recorded by an engine that reads pages differently (that engine used $(_reading_words "$r"); this one uses reading ${_ITINERARY_READING}), so the plan's code has changed whether or not the plan has, and the gate cannot tell which (state: ${state}). Nothing was pushed and the published plan is unchanged. Check that the plan going out is the one you mean to publish, then confirm it once, at a terminal:  $(basename "$0") confirm ${trip_dir}  — and re-run update or rotate."
+}
+
 # SEAM S3 (#85) — THE GATE. One argument, no side effects, no TTY, no network, and
 # bound to the site-HTML artifact rather than to any caller's locals — which is why
 # relocating it onto #85's event-driven path is moving this one call line.
@@ -4036,6 +4133,8 @@ change_confirmation_state() { # <trip_dir> -> one token on stdout
 #     push's baseline record present but unreadable, the outgoing render's identity, or a push's
 #     baseline record still staged (#1468 D-6). It never speaks of change in either direction,
 #     because that is all the gate failed to establish. S15f and S28b grade it, and S31b and S31i.
+#     `*)`'s text is chosen by _abort_unconfirmed after the verdict; it never changes which tokens
+#     proceed (#2286, S33g).
 require_change_confirmation() { # <trip_dir>
   local trip_dir="$1"
   local state out_dg
@@ -4058,7 +4157,7 @@ require_change_confirmation() { # <trip_dir>
         esac
       fi
       die "GUARD ABORTED — could not identify the itinerary content of the outgoing render of ${trip_dir} (state: undetermined): it could not be read, its itinerary text could not be projected, or that text could not be normalized; any error printed above names the cause. Nothing was pushed, and the published site was not touched. confirm refuses this state as well, because a confirmation binds to an identified itinerary and there is none: fix whichever of the three it is, then re-run." ;;
-    *) die "GUARD ABORTED — the itinerary content differs from the published plan and no organizer confirmation covers it (state: ${state:-empty}). Nothing was pushed and the published plan is unchanged. Either confirm the change:  $(basename "$0") confirm ${trip_dir}  — or revert the working copy to the published plan and re-run." ;;
+    *) _abort_unconfirmed "$trip_dir" "$state" ;;
   esac
 }
 
@@ -4266,7 +4365,8 @@ _published_record_date() { # <trip_dir> <digest> -> the kept confirmed= value, o
 #                                         stay, so a withdrawal after publication changes the
 #                                         count the next build renders and nothing else.
 #   k < t, and it does not               -> no write.
-# The record carries a digest, a date and a count, and NOTHING that names anybody (#719 INT-7).
+# The record carries a digest, a date, a count and the reading, and NOTHING that names anybody (#719
+# INT-7); every write ends with reading=<n>, this engine's, under which the digest it writes was taken.
 # Atomic, as confirm's own write is. A top-level function, never inside cmd_confirm: group T reads
 # the FIRST `printf … digest=` in cmd_confirm's own body as the undeclared record's format (T6c).
 _record_threshold_met() { # <trip_dir> <digest> -> 0, or non-zero with nothing changed
@@ -4278,7 +4378,7 @@ _record_threshold_met() { # <trip_dir> <digest> -> 0, or non-zero with nothing c
     when="$(_published_record_date "$trip_dir" "$dg")"
     if [ -z "$when" ]; then when="$(_iso_now)"; fi
     tmp="$(mktemp "${rec}.XXXXXX")" || return 1
-    if printf 'digest=%s\nconfirmed=%s\napproval-count=%s\n' "$dg" "$when" "$k" > "$tmp" && mv -f "$tmp" "$rec"; then
+    if printf 'digest=%s\nconfirmed=%s\napproval-count=%s\nreading=%s\n' "$dg" "$when" "$k" "$_ITINERARY_READING" > "$tmp" && mv -f "$tmp" "$rec"; then
       return 0
     fi
     rm -f "$tmp"; return 1
@@ -4289,7 +4389,7 @@ _record_threshold_met() { # <trip_dir> <digest> -> 0, or non-zero with nothing c
   done < "$rec"
   if [ -z "$conf" ]; then return 0; fi
   tmp="$(mktemp "${rec}.XXXXXX")" || return 1
-  if printf 'digest=%s\nconfirmed=%s\napproval-count=%s\n' "$dg" "$conf" "$k" > "$tmp" && mv -f "$tmp" "$rec"; then
+  if printf 'digest=%s\nconfirmed=%s\napproval-count=%s\nreading=%s\n' "$dg" "$conf" "$k" "$_ITINERARY_READING" > "$tmp" && mv -f "$tmp" "$rec"; then
     return 0
   fi
   rm -f "$tmp"; return 1
@@ -4341,7 +4441,7 @@ _render_approval_pair() { # <site_html> -> "nc nk code"
 # VALUE is never read — only its presence is. Called by update and rotate through
 # require_publish_guards, and by publish on its own, before any repo is probed, created or cloned.
 require_render_approval_code() { # <trip_dir> <site_html> <update|publish>
-  local trip_dir="$1" site_html="$2" path="${3:-update}" nc nk code own own_txt pol state
+  local trip_dir="$1" site_html="$2" path="${3:-update}" nc nk code own own_txt pol state rec rr
   read -r nc nk code <<<"$(_render_approval_pair "$site_html")"
   if [ "$nc" -gt 1 ] || [ "$nk" -gt 1 ]; then
     die "GUARD ABORTED — the render ${site_html} declares approval-count or approval-code more than once, so it does not say which count and which code it states. Nothing was pushed. Rebuild the site."
@@ -4353,6 +4453,13 @@ require_render_approval_code() { # <trip_dir> <site_html> <update|publish>
     own="$(itinerary_digest "$site_html")"
     if [ "$code" != "$own" ]; then
       if [ -n "$own" ]; then own_txt="$(_code_prefix "$own")"; else own_txt="(none — it could not be identified)"; fi
+      # The code the site verb copied from .change-confirmed, where that record was taken under another
+      # reading (#2286): the approval was given for the plan's code under that reading, so whether the
+      # plan also moved cannot be told, and a rebuild alone would change nothing.
+      rec="$(change_confirmation_path "$trip_dir")"; rr="$(_record_reading "$rec")"
+      if [ -n "$own" ] && [ "$(_approval_policy "$trip_dir" 2>/dev/null)" = declared ] && [ "$code" = "$(_record_digest "$rec")" ] && [ "$rr" != "$_ITINERARY_READING" ] && ! _reading_agrees "$site_html" "$rr"; then
+        die "GUARD ABORTED — the render states approval code $(_code_prefix "$code"), which was taken by an engine that reads pages differently (that engine used $(_reading_words "$rr"); this one uses reading ${_ITINERARY_READING}); under this engine's reading the itinerary it carries has code ${own_txt}, and whether the plan also moved cannot be told. Nothing was pushed. Ask the group for approval once more: run  $(basename "$0") confirm ${trip_dir}  at a terminal, share the approval line it prints in the group's thread, and record each reply with it. Once the approvals meet the threshold, rebuild the site and re-run the command that stopped here — publish, update or rotate."
+      fi
       die "GUARD ABORTED — the render states approval code $(_code_prefix "$code"), but the itinerary it carries has code ${own_txt}: a published approval code must be the code of the plan it is published with. Nothing was pushed. Rebuild the site from the current records. If the plan that approval was for has been abandoned, run  $(basename "$0") confirm ${trip_dir}  at a terminal first — it re-anchors the approval record to the plan the render now carries, and the rebuilt site then states that plan's own code."
     fi
     return 0
@@ -5995,7 +6102,7 @@ cmd_confirm() { # <trip_dir>
     if ! cat "$rec" > "$keep"; then rm -f "$keep"; die "could not keep a copy of $rec — nothing was recorded."; fi
   fi
   tmp="$(mktemp "${rec}.XXXXXX")" || die "could not stage the confirmation record beside $rec"
-  printf 'digest=%s\nconfirmed=%s\n' "$dg" "$(_iso_now)" > "$tmp"
+  printf 'digest=%s\nconfirmed=%s\nreading=%s\n' "$dg" "$(_iso_now)" "$_ITINERARY_READING" > "$tmp"
   mv -f "$tmp" "$rec"
 
   # The pending change summary is NOT deleted or promoted here. #551 reads it to
@@ -6134,7 +6241,7 @@ _confirm_declared() { # <trip_dir> <site_html> <state>
       keep="$(mktemp "${rec}.replaced-XXXXXX")" || die "could not stage a copy of $rec — nothing was retired."
       if ! cat "$rec" > "$keep"; then rm -f "$keep"; die "could not keep a copy of $rec — nothing was retired."; fi
       tmp="$(mktemp "${rec}.XXXXXX")" || die "could not stage the retired record beside $rec — nothing was retired; the copy is at $keep."
-      if printf 'digest=%s\nconfirmed=%s\n' "$out_dg" "$(_iso_now)" > "$tmp" && mv -f "$tmp" "$rec"; then
+      if printf 'digest=%s\nconfirmed=%s\nreading=%s\n' "$out_dg" "$(_iso_now)" "$_ITINERARY_READING" > "$tmp" && mv -f "$tmp" "$rec"; then
         ok "Retired. The approval record now names the published plan, with no approval count; the record it replaced is kept at $keep."
       else
         rm -f "$tmp"; die "could not write the retired record — $rec is as it was; the copy is at $keep."
@@ -6293,16 +6400,20 @@ _is_stale() { [ -n "${1:-}" ] && [ -n "${2:-}" ] && [ "$1" -gt "$2" ]; }
 #   6  the digests are equal: CURRENT
 #   7  a legacy (pre-#719 CRC) record that differs reads UNDETERMINED, never BEHIND: that record was taken
 #      under a projection that has since moved, so a difference proves nothing about the plan
-#   8  otherwise BEHIND, naming the render
-# Rows 1 to 5 and 7 are UNDETERMINED, each naming the operand it could not read; a state no row names cannot
-# arise, because row 8 is reached only with both tokens read. It reads only: _baseline_record, the staged
-# twin's presence, newest_site_html and the two digests, and no gh. No publish verb calls it, and nothing
-# may branch on it (reference/trip-resolution.md § Resolving a trip, G8: report-only). Blind spots, declared in the SKILL:
+#   8  a record that differs and names another reading than this engine's (#2286) reads UNDETERMINED, never
+#      BEHIND, save where the render reads the same under both readings (_reading_agrees): the difference
+#      may be the reading's and not the plan's, until the next push records one under this reading
+#   9  otherwise BEHIND, naming the render
+# Rows 1 to 5, 7 and 8 are UNDETERMINED, each naming the operand it could not read; a state no row names
+# cannot arise, because row 9 is reached only with both tokens read. It reads only: _baseline_record, the
+# staged twin's presence, newest_site_html, the two digests and the record's reading, and no gh. No
+# publish verb calls it, and nothing may branch on it (reference/trip-resolution.md § Resolving a trip,
+# G8: report-only). Blind spots, declared in the SKILL:
 # a push from another machine; a takedown, since unpublish leaves the record; text outside the projection
 # (the coordination band, the declaration block, and text a browser shows that the projection drops); and
-# a projection that moved after the record was written, which reads as a change once.
+# a digest that moved after the record was written while its reading did not, which reads as a change once.
 build_to_published() { # <trip_dir> -> one cell
-  local trip_dir="$1" bp_nx bp_twin=0 bp_rec bp_site bp_rel bp_dg
+  local trip_dir="$1" bp_nx bp_twin=0 bp_rec bp_site bp_rel bp_dg bp_rr
   bp_nx="$(staged_record_path "$trip_dir")"
   if [ -e "$bp_nx" ] || [ -L "$bp_nx" ]; then bp_twin=1; fi
   if [ "$bp_twin" -eq 1 ]; then
@@ -6331,6 +6442,10 @@ build_to_published() { # <trip_dir> -> one cell
   fi
   if [ "${#bp_rec}" -ne 64 ]; then
     printf 'UNDETERMINED: the push record predates the current digest; the next push records one'; return 0
+  fi
+  bp_rr="$(_record_reading "$(published_itinerary_path "$trip_dir")")"
+  if [ "$bp_rr" != "$_ITINERARY_READING" ] && ! _reading_agrees "$bp_site" "$bp_rr"; then
+    printf 'UNDETERMINED: the push record was taken under another reading of the page; the next push records one'; return 0
   fi
   printf 'BEHIND: %s' "$bp_rel"
   return 0

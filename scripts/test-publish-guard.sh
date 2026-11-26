@@ -6413,8 +6413,12 @@ s_fixture() { # <name> <viewpoint-time> <marker> -> echoes the trip dir
   printf '%s' "$d"
 }
 
-s_record() { # <file> <digest> <second-key>
-  printf 'digest=%s\n%s=2027-06-01T00:00:00Z\n' "$2" "$3" > "$1"
+s_record() { # <file> <digest> <second-key> — a record this engine writes ends with its reading (#2286);
+  # a legacy one, CRC-shaped as an engine before #719 wrote it, carries none
+  case "$2" in
+    *-*) printf 'digest=%s\n%s=2027-06-01T00:00:00Z\n' "$2" "$3" > "$1" ;;
+    *)   printf 'digest=%s\n%s=2027-06-01T00:00:00Z\nreading=%s\n' "$2" "$3" "$_ITINERARY_READING" > "$1" ;;
+  esac
 }
 
 # ── S0 — THE DENOMINATOR. Every "unchanged" verdict below is an equality between two
@@ -8628,7 +8632,7 @@ fi
 # across two builds months apart.
 T6_ST_BEFORE="$(t6_state "$T6_TRIP_P" "$T6_DOCREC")"
 # shellcheck disable=SC2059  # the format IS the subject — it is read out of cmd_confirm
-printf "$T6_FMT" '4294967295-1234' "$T6_CONF" > "$T6_TRIP_P/$T6_SHIPREC"
+printf "$T6_FMT" '4294967295-1234' "$T6_CONF" "$_ITINERARY_READING" > "$T6_TRIP_P/$T6_SHIPREC"
 T6_ST_AFTER="$(t6_state "$T6_TRIP_P" "$T6_DOCREC")"
 T6_REC_PARSED="$(_record_digest "$T6_TRIP_P/$T6_SHIPREC")"
 if [ -z "$T6_REC_PARSED" ]; then
@@ -8646,7 +8650,7 @@ fi
 # and its `coordination-since` must be the new entry's date rather than the old one's.
 t6_trip "$T6_DIR/tripQ" "$T6_E1" "$T6_E2" >/dev/null
 # shellcheck disable=SC2059  # as above
-printf "$T6_FMT" '4294967295-1234' "$T6_CONF" > "$T6_DIR/tripQ/$T6_SHIPREC"
+printf "$T6_FMT" '4294967295-1234' "$T6_CONF" "$_ITINERARY_READING" > "$T6_DIR/tripQ/$T6_SHIPREC"
 T6_ST_REOPEN="$(t6_state "$T6_DIR/tripQ" "$T6_DOCREC")"
 T6_SINCE_REOPEN="$(t6_newest_entry "$T6_DIR/tripQ/outputs/change-summary.md")"
 if [ "$T6_ST_REOPEN" = 'pending' ] && [ "$T6_SINCE_REOPEN" = "$T6_E2" ]; then
@@ -8958,7 +8962,7 @@ fi
 # forever, because it takes no build date and has no window.
 T8_TRIP="$(t6_trip "$T8_DIR/tripW" "$T6_E1")"
 # shellcheck disable=SC2059  # the format IS the subject — it is read out of cmd_confirm
-printf "$T6_FMT" '4294967295-1234' "$T6_CONF" > "$T8_TRIP/$T6_SHIPREC"
+printf "$T6_FMT" '4294967295-1234' "$T6_CONF" "$_ITINERARY_READING" > "$T8_TRIP/$T6_SHIPREC"
 T8_SINCE="$(t8_since "$T8_TRIP" "$T6_DOCREC")"
 T8_ENTRY="$(t6_newest_entry "$T8_TRIP/outputs/change-summary.md")"
 T8_UNPRUNED="$(t6_state "$T8_TRIP" "$T6_DOCREC")"
@@ -8997,7 +9001,7 @@ fi
 # would stop announcing a change the group never approved, once the build was old enough.
 T8_TRIPV="$(t6_trip "$T8_DIR/tripV" "$T6_E1" "$T6_E2")"
 # shellcheck disable=SC2059  # as above
-printf "$T6_FMT" '4294967295-1234' "$T6_CONF" > "$T8_TRIPV/$T6_SHIPREC"
+printf "$T6_FMT" '4294967295-1234' "$T6_CONF" "$_ITINERARY_READING" > "$T8_TRIPV/$T6_SHIPREC"
 T8_PEND="$(t8_state_at_build "$T8_TRIPV" "$T6_DOCREC" "$T8_BUILD_FAR" "$T8_W" "$T8_NONE")"
 if [ "$T8_PEND" = 'pending' ]; then
   PASS "T8d: SCOPE — a trip carrying a further entry dated $T6_E2, later than the same approval, still resolves 'pending' at the same far build ($T8_BUILD_FAR). The prune is scoped to the \`updated\` limb and does not reach an unapproved change: a pending band has no window to close, § 3 giving the decay to \`is-updated\` alone"
@@ -9769,7 +9773,7 @@ _iso_now() { printf '2027-06-10T09:00:00Z'; }
 printf '\n' | ( cmd_confirm "$SA21D" ) >/dev/null 2>&1; SA21E_RC=$?
 sa_restore _confirm_has_terminal; sa_restore _iso_now
 SA21E_REC="$(cat "$SA21D/.change-confirmed" 2>/dev/null)"
-SA21E_WANT="$(printf 'digest=%s\nconfirmed=2027-06-10T09:00:00Z\napproval-count=1' "$SA_P16")"
+SA21E_WANT="$(printf 'digest=%s\nconfirmed=2027-06-10T09:00:00Z\napproval-count=1\nreading=%s' "$SA_P16" "$_ITINERARY_READING")"
 sa_page "$SA21D/outputs/porto-travel-site.html" 1 "$SA_P16" 16:30 updated 2027-06-10
 read -r _ SA21E_CL _ _ <<<"$(sa_push update "$SA21D")"
 SA21E_NOLEDGER=0; [ "$(wc -l < "$SA21D/.approvals" | tr -d ' ')" -eq 1 ] && SA21E_NOLEDGER=1
@@ -10061,9 +10065,9 @@ SA23_R3="$(cat "$SA23/.change-confirmed" 2>/dev/null)"
 SA23_NOW='2027-06-04T09:00:00Z'; sa_rec "$SA23" zqc3 withdraw "$S_DB"; sa_rec "$SA23" zqb2 withdraw "$S_DB"; _record_threshold_met "$SA23" "$S_DB"
 SA23_R4="$(cat "$SA23/.change-confirmed" 2>/dev/null)"
 sa_restore _iso_now
-SA23_W2="$(printf 'digest=%s\nconfirmed=2027-06-02T09:00:00Z\napproval-count=2' "$S_DB")"
-SA23_W3="$(printf 'digest=%s\nconfirmed=2027-06-03T09:00:00Z\napproval-count=3' "$S_DB")"
-SA23_W4="$(printf 'digest=%s\nconfirmed=2027-06-03T09:00:00Z\napproval-count=1' "$S_DB")"
+SA23_W2="$(printf 'digest=%s\nconfirmed=2027-06-02T09:00:00Z\napproval-count=2\nreading=%s' "$S_DB" "$_ITINERARY_READING")"
+SA23_W3="$(printf 'digest=%s\nconfirmed=2027-06-03T09:00:00Z\napproval-count=3\nreading=%s' "$S_DB" "$_ITINERARY_READING")"
+SA23_W4="$(printf 'digest=%s\nconfirmed=2027-06-03T09:00:00Z\napproval-count=1\nreading=%s' "$S_DB" "$_ITINERARY_READING")"
 if [ "$SA23_R1" -eq 0 ] && [ "$SA23_R2" = "$SA23_W2" ] && [ "$SA23_R3" = "$SA23_W3" ] && [ "$SA23_R4" = "$SA23_W4" ]; then
   PASS "S23a: below the threshold no record is written; the act that meets it writes digest=, confirmed= at its instant and approval-count=; a later act while met re-stamps confirmed= to its own instant (C2); a withdrawal below the threshold rewrites only the count, keeping confirmed= — the record mirrors the verdict, and names nobody"
 else
@@ -10071,24 +10075,25 @@ else
 fi
 
 # ── S23b — THE UNDECLARED WRITE IS UNCHANGED: the format group T reads out of cmd_confirm's own
-# body is still exactly the two-line record, so T6's extractor still reads the undeclared limb.
+# body is still exactly the organizer's record, with no count, so T6's extractor still reads the
+# undeclared limb.
 SA23B_FMT="$(t6_confirm_fmt)"
 # ARMED-RED: over a copy of the script whose cmd_confirm writes the declared record FIRST, the same
-# extractor reads the three-line format — so this arm sees the regression it guards against.
+# extractor reads the declared format, with its count — so this arm sees the regression it is written against.
 SA23B_MUT="$WORK/sa23b_mut.sh"; : > "$SA23B_MUT"
 while IFS= read -r saline || [ -n "$saline" ]; do
   printf '%s\n' "$saline" >> "$SA23B_MUT"
   case "$saline" in
-    'cmd_confirm() {'*) printf '%s\n' "  printf 'digest=%s\\nconfirmed=%s\\napproval-count=%s\\n' 1 2 3 >/dev/null" >> "$SA23B_MUT" ;;
+    'cmd_confirm() {'*) printf '%s\n' "  printf 'digest=%s\\nconfirmed=%s\\napproval-count=%s\\nreading=%s\\n' 1 2 3 4 >/dev/null" >> "$SA23B_MUT" ;;
   esac
 done < "$SELF_PUBLISH"
 SA23B_SELF="$SELF_PUBLISH"; SELF_PUBLISH="$SA23B_MUT"
 SA23B_MUTFMT="$(t6_confirm_fmt)"
 SELF_PUBLISH="$SA23B_SELF"
-if [ "$SA23B_FMT" = 'digest=%s\nconfirmed=%s\n' ] && [ "$SA23B_MUTFMT" = 'digest=%s\nconfirmed=%s\napproval-count=%s\n' ]; then
-  PASS "S23b: t6_confirm_fmt reads '$SA23B_FMT' out of cmd_confirm — the first record write in its own body is still the organizer's two-line confirmation, and the declared writer sits outside it; ARMED-RED — over a copy whose cmd_confirm writes the declared record first, it reads the three-line format"
+if [ "$SA23B_FMT" = 'digest=%s\nconfirmed=%s\nreading=%s\n' ] && [ "$SA23B_MUTFMT" = 'digest=%s\nconfirmed=%s\napproval-count=%s\nreading=%s\n' ]; then
+  PASS "S23b: t6_confirm_fmt reads '$SA23B_FMT' out of cmd_confirm — the first record write in its own body is still the organizer's confirmation, with no count, and the declared writer sits outside it; ARMED-RED — over a copy whose cmd_confirm writes the declared record first, it reads the declared format, with its count"
 else
-  FAIL "S23b: t6_confirm_fmt read '$SA23B_FMT' (want the two-line format) and over the mutated copy '$SA23B_MUTFMT' (want the three-line format)"
+  FAIL "S23b: t6_confirm_fmt read '$SA23B_FMT' (want the organizer's format, with no count) and over the mutated copy '$SA23B_MUTFMT' (want the declared format, with its count)"
 fi
 
 # ── S23c — the record the declared writer produces decides `updated` under group T's own
@@ -10132,7 +10137,7 @@ sa_confirm "$SA23D" "$(printf '1\nwithdraw %s\nCONFIRM\n' "$S_DB")" '2027-06-05T
 SA23D_POST="$(wc -l < "$SA23D/.approvals" | tr -d ' ')"
 SA23D_LAST=''; while IFS= read -r saline; do SA23D_LAST="$saline"; done < "$SA23D/.approvals"
 SA23D_REC="$(cat "$SA23D/.change-confirmed")"
-SA23D_WANT="$(printf 'digest=%s\nconfirmed=2027-06-01T09:00:00Z\napproval-count=1' "$S_DB")"
+SA23D_WANT="$(printf 'digest=%s\nconfirmed=2027-06-01T09:00:00Z\napproval-count=1\nreading=%s' "$S_DB" "$_ITINERARY_READING")"
 SA23D_ST="$(sa_state "$SA23D")"
 if [ "$SA23D_RC" -eq 0 ] && [ $((SA23D_POST - SA23D_PRE)) -eq 1 ] && [ "$SA23D_LAST" = "organizer-stated zqa1 withdraw $S_DB 2027-06-05T09:00:00Z" ] && [ "$SA23D_REC" = "$SA23D_WANT" ] && [ "$SA23D_ST" = none-pending ]; then
   PASS "S23d: C1 — on a published plan, confirm records a withdrawal as exactly one organizer-stated ledger line, the approval record's count drops to 1 with its date kept, and the gate still reads the published plan unchanged (none-pending); the site's count changes at the next rebuild"
@@ -10150,7 +10155,7 @@ sa_rec "$SA23E" zqa1 approve "$S_DA"; sa_rec "$SA23E" zqa1 approve "$S_DB"
 printf 'digest=%s\nconfirmed=2027-06-03T09:00:00Z\napproval-count=1\n' "$S_DB" > "$SA23E/.change-confirmed"
 sa_confirm "$SA23E" $'\n' '2027-06-06T09:00:00Z'; SA23E_RC=$?
 SA23E_REC="$(cat "$SA23E/.change-confirmed")"
-SA23E_WANT="$(printf 'digest=%s\nconfirmed=2027-06-06T09:00:00Z\napproval-count=1' "$S_DA")"
+SA23E_WANT="$(printf 'digest=%s\nconfirmed=2027-06-06T09:00:00Z\napproval-count=1\nreading=%s' "$S_DA" "$_ITINERARY_READING")"
 if [ "$SA23E_RC" -eq 0 ] && [ "$SA23E_REC" = "$SA23E_WANT" ]; then
   PASS "S23e: C1 — with the plan reverted to the published one and that plan's own approvals meeting the threshold, confirm (recording nothing) re-anchors the approval record to the published plan, dated at the act; the abandoned plan's code leaves the next build"
 else
@@ -10171,7 +10176,7 @@ SA23F_SAME=0; cmp -s "$WORK/sa23f.before" "$SA23F/.change-confirmed" && SA23F_SA
 SA23F_KEPT1=0; for saf in "$SA23F"/.change-confirmed.replaced-*; do [ -e "$saf" ] && SA23F_KEPT1=$((SA23F_KEPT1+1)); done
 sa_confirm "$SA23F" "$(printf '\nCONFIRM\n')" '2027-06-07T09:00:00Z'; SA23F_RC2=$?
 SA23F_REC="$(cat "$SA23F/.change-confirmed")"
-SA23F_WANT="$(printf 'digest=%s\nconfirmed=2027-06-07T09:00:00Z' "$S_DA")"
+SA23F_WANT="$(printf 'digest=%s\nconfirmed=2027-06-07T09:00:00Z\nreading=%s' "$S_DA" "$_ITINERARY_READING")"
 SA23F_KEPT=0; SA23F_KEPTSAME=0
 for saf in "$SA23F"/.change-confirmed.replaced-*; do
   if [ -e "$saf" ]; then SA23F_KEPT=$((SA23F_KEPT+1)); cmp -s "$saf" "$WORK/sa23f.before" && SA23F_KEPTSAME=1; fi
@@ -10224,12 +10229,12 @@ SA23H_R1="$(cat "$SA23H/.change-confirmed")"
 sa_confirm "$SA23H" $'\n' '2027-06-23T09:00:00Z'; SA23H_RC2=$?
 SA23H_R2="$(cat "$SA23H/.change-confirmed")"
 SA23H_NOW=0; case "$(cat "$WORK/sa_conf.out")" in *"dated now"*) SA23H_NOW=1 ;; esac
-SA23H_WANT="$(printf 'digest=%s\nconfirmed=2027-06-01T09:00:00Z\napproval-count=2' "$S_DB")"
+SA23H_WANT="$(printf 'digest=%s\nconfirmed=2027-06-01T09:00:00Z\napproval-count=2\nreading=%s' "$S_DB" "$_ITINERARY_READING")"
 SA23H_ST="$(sa_state "$SA23H")"
 SA23H2="$(sa23h_fixture s23h2 "$S_DA")"
 sa_confirm "$SA23H2" $'\n' '2027-06-23T09:00:00Z'; SA23H_RC3=$?
 SA23H_R3="$(cat "$SA23H2/.change-confirmed")"
-SA23H_WANT3="$(printf 'digest=%s\nconfirmed=2027-06-23T09:00:00Z\napproval-count=3' "$S_DB")"
+SA23H_WANT3="$(printf 'digest=%s\nconfirmed=2027-06-23T09:00:00Z\napproval-count=3\nreading=%s' "$S_DB" "$_ITINERARY_READING")"
 SA23H3="$(sa23h_fixture s23h3 "$S_DB")"
 _baseline_matches() { return 1; }   # MUTANT: the published plan reads as not yet published
 sa_confirm "$SA23H3" $'\n' '2027-06-23T09:00:00Z'
@@ -10269,7 +10274,7 @@ sa23i_fixture() { # <name> [<entry-date>...] -> a declaring trip at 2 of 3, publ
   printf '%s' "$d"
 }
 eval "$SA_MOCK_GH"; eval "$SA_MOCK_NPX"
-SA23I_KEPT_WANT="$(printf 'digest=%s\nconfirmed=2027-06-01T09:00:00Z\napproval-count=3' "$SA_P16")"
+SA23I_KEPT_WANT="$(printf 'digest=%s\nconfirmed=2027-06-01T09:00:00Z\napproval-count=3\nreading=%s' "$SA_P16" "$_ITINERARY_READING")"
 # The subject.
 SA23I="$(sa23i_fixture s23i 2027-05-30 2027-06-05)"
 SA23I_ST0="$(sa_state "$SA23I")"
@@ -10278,7 +10283,7 @@ SA23I_L0="$(wc -l < "$SA23I/.approvals" | tr -d ' ')"
 sa_confirm "$SA23I" $'\n' '2027-06-10T09:00:00Z'; SA23I_RC=$?
 SA23I_OUT="$(cat "$WORK/sa_conf.out")"
 SA23I_REC="$(cat "$SA23I/.change-confirmed")"
-SA23I_WANT="$(printf 'digest=%s\nconfirmed=2027-06-10T09:00:00Z\napproval-count=3' "$SA_P16")"
+SA23I_WANT="$(printf 'digest=%s\nconfirmed=2027-06-10T09:00:00Z\napproval-count=3\nreading=%s' "$SA_P16" "$_ITINERARY_READING")"
 SA23I_L1="$(wc -l < "$SA23I/.approvals" | tr -d ' ')"
 SA23I_NOW=0; case "$SA23I_OUT" in *"dated now"*) SA23I_NOW=1 ;; esac
 SA23I_KEEPS=0; case "$SA23I_OUT" in *"keeps the date"*) SA23I_KEEPS=1 ;; esac
@@ -10349,7 +10354,7 @@ s23j_trip() { # <name> [<entry-date>...] -> an undeclared trip, published on SA_
   printf '%s' "$d"
 }
 eval "$SA_MOCK_GH"; eval "$SA_MOCK_NPX"
-S23J_WANT="$(printf 'digest=%s\nconfirmed=2027-06-10T09:00:00Z' "$SA_P16")"
+S23J_WANT="$(printf 'digest=%s\nconfirmed=2027-06-10T09:00:00Z\nreading=%s' "$SA_P16" "$_ITINERARY_READING")"
 # J1 — a record dated before the abandoned change's entry.
 S23J1="$(s23j_trip s23j1 2027-05-30 2027-06-05)"; s_record "$S23J1/.change-confirmed" "$SA_P16" confirmed
 S23J1_ST0="$(sa_state "$S23J1")"; S23J1_B0="$(sa_build "$S23J1" 16:30 2027-06-06)"
@@ -10466,7 +10471,7 @@ S23K_N_REC="$(cat "$d/.change-confirmed")"
 S23K_N_KEPT=0; for f in "$d"/.change-confirmed.replaced-*; do if [ -f "$f" ] && cmp -s "$WORK/s23kn.before" "$f"; then S23K_N_KEPT=$((S23K_N_KEPT + 1)); fi; done
 S23K_N_CTL=0; for f in "$S23J1"/.change-confirmed.replaced-*; do if [ -e "$f" ]; then S23K_N_CTL=$((S23K_N_CTL + 1)); fi; done
 if [ "$S23K" = ' a=1:0:1 b=1:0:1 c=1:0:1 d=1:0:1 e=1:0:1 f=1:0:1 g=1:0:1 h=1:0:1 i=1:1:1 k=1:0:1' ] && [ "$S23K_MSG" = 11111111111 ] && [ "$S23K_J" -eq 1 ] && [ "$S23K_KM" = 1 ] \
-   && [ "$S23K_M_RC" -ne 0 ] && [ "$S23K_M" -eq 1 ] && [ "$S23K_M_CODE" -eq 1 ] && [ "$S23K_MC_RC" -eq 0 ] && [ "$S23K_MC_REC" = "$(printf 'digest=%s\nconfirmed=2027-06-10T09:00:00Z' "$S23K_M_DG")" ] \
+   && [ "$S23K_M_RC" -ne 0 ] && [ "$S23K_M" -eq 1 ] && [ "$S23K_M_CODE" -eq 1 ] && [ "$S23K_MC_RC" -eq 0 ] && [ "$S23K_MC_REC" = "$(printf 'digest=%s\nconfirmed=2027-06-10T09:00:00Z\nreading=%s' "$S23K_M_DG" "$_ITINERARY_READING")" ] \
    && [ "$S23K_N_RC" -eq 0 ] && [ "$S23K_N_NAMED" -eq 1 ] && [ "$S23K_N_REC" = "$S23J_WANT" ] && [ "$S23K_N_KEPT" -eq 1 ] && [ "$S23K_N_CTL" -eq 0 ]; then
   PASS "S23k: the exit is not offered where it is not for, and writes nothing — no entry later than the record, no baseline, no baseline with a staged record naming the plan, a baseline with a staged record (undetermined), a working copy that differs from the published plan, a malformed declaration, a record with no confirmed= date, a record that is a directory, a declined CONFIRM, and a render that moved while the organizer was at the prompt — each refused with its own message and its record byte-unchanged; CIAC-1 — a working copy that differs only after a spaced closing tag meets the change confirmation, not the exit, and ARMED-RED, with the digest's end tag put back to the exact one, the same trip is offered the exit. On the ordinary path the plan's code is printed before the prompt, and a render that moves at the prompt is refused, while the same trip unmoved records its plan; and where the record the exit replaces names another plan, the prompt names it by its code, the record then names the published plan, and the replaced bytes are kept beside it, which a record naming the published plan never leaves"
 else
@@ -12137,7 +12142,7 @@ s33g_assert() {
   if [ "$sens" != 11 ]; then
     FAIL "S33g: CONTROL — the gate's *) arm names _abort_unconfirmed and that function names _reading_measured [$sens] times (want 1 and 1), so the scan below is not reading the abort's words"
   elif [ "$empty" -eq 0 ] && [ -z "$hit" ] && [ "$proceed" = 'none-pending | confirmed) return 0' ] && [ "$eq" = 00111 ] && [ "$df" = 00111 ]; then
-    PASS "S33g: the decision reads no reading — the parsed bodies of change_confirmation_state and the $n functions on its path name none of _record_reading, _reading_agrees and _ITINERARY_READING, the proceed arm is exactly none-pending and confirmed, and over none-pending, confirmed, undetermined, unconfirmed and stale the gate's exit statuses read $eq with every record at the raised reading and $df with every record naming none; control: the *) arm reaches the reading-change words through _abort_unconfirmed and _reading_measured"
+    PASS "S33g: the decision reads no reading — the parsed bodies of the $n functions the decision runs, change_confirmation_state among them, name none of _record_reading, _reading_agrees and _ITINERARY_READING, the proceed arm is exactly none-pending and confirmed, and over none-pending, confirmed, undetermined, unconfirmed and stale the gate's exit statuses read $eq with every record at the raised reading and $df with every record naming none; control: the *) arm reaches the reading-change words through _abort_unconfirmed and _reading_measured"
   else
     FAIL "S33g: empty bodies=$empty, names found:${hit:- none}, proceed arm [$proceed], exit statuses at an equal reading $eq and at a different one $df (want 00111 both)"
   fi
@@ -20064,8 +20069,12 @@ i6_trip() { # <name> -> a trip dir under the scratch data root, holding one rend
   i6_render "$d/outputs/$1-travel-site.html" "$I6_DAY" 2026-11-01 a
   printf '%s' "$d"
 }
-i6_record() { # <trip_dir> <token> — the record a push leaves
-  printf 'digest=%s\npublished=2026-01-01T00:00:00Z\n' "$2" > "$1/.published-itinerary"
+i6_record() { # <trip_dir> <token> — the record a push leaves: with this engine's reading (#2286), or, for a
+  # legacy CRC-shaped token, as an engine before #719 left it, with none
+  case "$2" in
+    *-*) printf 'digest=%s\npublished=2026-01-01T00:00:00Z\n' "$2" > "$1/.published-itinerary" ;;
+    *)   printf 'digest=%s\npublished=2026-01-01T00:00:00Z\nreading=%s\n' "$2" "$_ITINERARY_READING" > "$1/.published-itinerary" ;;
+  esac
 }
 i6_fixture() { # <case> -> trip dir in the state the case names
   local c="$1" d site
@@ -20078,8 +20087,8 @@ i6_fixture() { # <case> -> trip dir in the state the case names
     touch)    i6_record "$d" "$(itinerary_digest "$site")"; touch -t 203001010000 "$site" ;;
     legacy-eq) i6_record "$d" "$(_legacy_itinerary_digest "$site")" ;;
     legacy-ne) i6_record "$d" "$(_legacy_itinerary_digest "$site")"; i6_render "$site" "$I6_DAY And a walk up to the old cathedral before dark." 2026-11-01 a ;;
-    twin)     i6_record "$d" "$(itinerary_digest "$site")"; printf 'digest=%s\npublished=2026-01-02T00:00:00Z\n' "$(itinerary_digest "$site")" > "$d/.published-itinerary.next" ;;
-    twin-norecord) printf 'digest=%s\npublished=2026-01-02T00:00:00Z\n' "$(itinerary_digest "$site")" > "$d/.published-itinerary.next" ;;
+    twin)     i6_record "$d" "$(itinerary_digest "$site")"; printf 'digest=%s\npublished=2026-01-02T00:00:00Z\nreading=%s\n' "$(itinerary_digest "$site")" "$_ITINERARY_READING" > "$d/.published-itinerary.next" ;;
+    twin-norecord) printf 'digest=%s\npublished=2026-01-02T00:00:00Z\nreading=%s\n' "$(itinerary_digest "$site")" "$_ITINERARY_READING" > "$d/.published-itinerary.next" ;;
     dir)      mkdir -p "$d/.published-itinerary" ;;
     garbage)  printf 'digest=not-a-token!\npublished=2026-01-01T00:00:00Z\n' > "$d/.published-itinerary" ;;
     norender) i6_record "$d" "$(itinerary_digest "$site")"; rm -f "$site" ;;
