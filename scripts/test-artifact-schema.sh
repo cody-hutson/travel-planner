@@ -32851,15 +32851,19 @@ fi
 #
 #   OP1   the reconciler's prompt states the obligation — name each such entry it drops, before
 #         its write, citing ADR-049 — and names the entry by its heading's name, its token, or its
-#         place, never its heading; each anchor exactly once, whitespace folded.
+#         place, never its heading, with each need and desire it held; it excludes an entry the
+#         pass writes again from operator input, and bounds the stand-in by the roster and the mark;
+#         each anchor exactly once, whitespace folded.
 #   OP0   the verbs that dispatch the reconciler, found by a test with no verb name in it, and
 #         failing closed: a region that names the reconciler is admitted, or declares that it
-#         dispatches no agent, or is red.
+#         dispatches no agent, or is red; and each admitted verb's declared read of the model says
+#         what it is for, by its own words or by citing a verb whose line has them.
 #   OP-F  every admitted verb runs only on an active trip.
-#   OP2   every admitted verb renders the naming, by its own text or by a citation it resolves.
+#   OP2   every admitted verb renders the naming, by its own text — carrying the needs and how to
+#         keep them — or by a citation it resolves.
 #   OP3   every admitted verb carries the operator's stand-in, bounded by the roster and the mark.
 #   OP4   the hub and the validator each hold exactly one sentence saying a `PROFILE MISSING`
-#         traveller's needs are unknown, never "no constraints".
+#         traveller's needs are unknown, never "no constraints", and in it what each then does.
 #   OP5   reference/data-architecture.md § 6's C12 note carries the ADR-049 citation in the same
 #         sentence as the drop it records.
 #   OP-U1 regression pin: the `[THIRD-PARTY]` carry-forward bullet and the drop sentence stand,
@@ -32951,7 +32955,12 @@ op_pins() {
   fi
 }
 
-# ── OP1 — the reconciler states the obligation (ADR-049 Decisions 1–2).
+# ── OP1 — the reconciler states the obligation (ADR-049 Decisions 1–2). Dev Testing F-02: the
+# naming carries each need and desire the entry held. Dev Testing F-05: an entry this pass writes
+# again from operator input is not one it drops, which keeps #2073's criteria 2 and 4 apart.
+# Dev Testing F-01: the stand-in § *Missing or blank profile* admits is bounded by the mark as well
+# as by the roster, the third of PR-1's three homes; the anchor carries that section's own words
+# for the stand-in, so it can stand nowhere else in the prompt.
 op_pins 'OP1' 'the reconciler names each `[OPERATOR-PROVIDED]`-only entry its rebuild drops, before its write' "$OP_ENR" \
   'Name each one you drop, before you write' \
   '`reference/adr/ADR-049-what-a-rebuild-owes.md` Decisions 1–2' \
@@ -32959,7 +32968,10 @@ op_pins 'OP1' 'the reconciler names each `[OPERATOR-PROVIDED]`-only entry its re
   'and to name each `[OPERATOR-PROVIDED]`-only entry the rebuild drops' \
   'with the entries § *Missing or blank profile* has you name' \
   'never its heading' \
-  'a verb whose every run dispatches this role'
+  'a verb whose every run dispatches this role' \
+  'each need and desire it held' \
+  'writes again from operator input' \
+  'as the stand-in above for a traveller the roster names whose entry does not carry `[THIRD-PARTY]`'
 
 # ── OP-U1 and OP-U2 — regression pins of text this release must leave standing.
 op_pins 'OP-U1' 'the `[THIRD-PARTY]` carry-forward bullet and the drop sentence stand, so no carry-forward path is added' "$OP_ENR" \
@@ -32970,17 +32982,25 @@ op_pins 'OP-U2' 'the `PROFILE MISSING` marker sentence and the flagged-gap marke
   'PROFILE MISSING — needs and desires unknown; this traveler is not yet'
 
 # ── OP4 — the hub and the validator read a `PROFILE MISSING` traveller's needs as unknown. Each
-# file must hold exactly one sentence carrying all three phrases. The sensitivity arm is the same
-# sentence reader finding the traveller model named in each file; the must-fire control strips the
-# one sentence from a copy.
+# file must hold exactly one sentence carrying all three phrases, and that sentence must carry what
+# the file then does (Dev Testing F-03; D7's ruling, a Warning and not a Critical): the hub never
+# confirms a need of theirs as honored, and the validator never counts them compliant and raises a
+# Warning. The sensitivity arm is the same sentence reader finding the traveller model named in each
+# file, and a count-free control that the reader splits at all (Dev Testing F-04): OP_SPLIT, added
+# to a copy of each file, must read as three sentences, where a reader that never splits reads one.
+# The must-fire controls strip the one sentence, and each operative clause from inside it, from a
+# copy.
 OP4_P=('PROFILE MISSING' 'unknown' 'no constraints')
-OP4_OK=0; OP4_BAD=""; OP4_SENS=0; OP4_CTLBAD=0; OP4_NREAD=0
+OP_SPLIT='zz-split-a. zz-split-b; zz-split-c'
+OP4_OK=0; OP4_BAD=""; OP4_SENS=0; OP4_CTLBAD=0; OP4_NREAD=0; OP4_SPLITBAD=0; OP4_OPN=0; OP4_OPOK=0; OP4_OPBAD=""
 for op_f in "$OP_HUB" "$OP_VAL"; do
   op_t=""; [ -r "$op_f" ] && op_t="$(cat "$op_f")"
   [ "${#op_t}" -ge 1000 ] && OP4_NREAD=$((OP4_NREAD + 1))
   op_n="$(op_nsent "$op_t" "${OP4_P[@]}")"
   op_s="$(op_nsent "$op_t" 'traveler-model.md')"
   [ "$op_s" -ge 1 ] && OP4_SENS=$((OP4_SENS + 1))
+  [ "$(op_nsent "$op_t
+$OP_SPLIT" 'zz-split-')" -eq 3 ] || OP4_SPLITBAD=$((OP4_SPLITBAD + 1))
   if [ "$op_n" -eq 1 ]; then
     OP4_OK=$((OP4_OK + 1))
   else
@@ -32990,26 +33010,52 @@ for op_f in "$OP_HUB" "$OP_VAL"; do
     op_x="$(op_nsent "$(er_sub1 "$(op_fold "$op_t")" "$(op_sent1 "$op_t" "${OP4_P[@]}")" '')" "${OP4_P[@]}")"
     [ "$op_x" -eq $((op_n - 1)) ] || OP4_CTLBAD=$((OP4_CTLBAD + 1))
   fi
+  case "$op_f" in
+    "$OP_HUB") op_ops=('never confirm a need of theirs as honored') ;;
+    *) op_ops=('never count them compliant' 'raise a Warning') ;;
+  esac
+  for op_o in "${op_ops[@]}"; do
+    OP4_OPN=$((OP4_OPN + 1))
+    op_m="$(op_nsent "$op_t" "${OP4_P[@]}" "$op_o")"
+    if [ "$op_m" -eq 1 ]; then
+      OP4_OPOK=$((OP4_OPOK + 1))
+    else
+      OP4_OPBAD="$OP4_OPBAD ${op_f#"$ROOT/"} carries \"$op_o\" in $op_m;"
+    fi
+    if [ "$op_m" -ge 1 ]; then
+      op_q="$(op_sent1 "$op_t" "${OP4_P[@]}" "$op_o")"
+      op_x="$(op_nsent "$(er_sub1 "$(op_fold "$op_t")" "$op_q" "$(er_sub1 "$op_q" "$op_o" '')")" "${OP4_P[@]}" "$op_o")"
+      [ "$op_x" -eq $((op_m - 1)) ] || OP4_CTLBAD=$((OP4_CTLBAD + 1))
+    fi
+  done
 done
 if [ "$OP4_NREAD" -ne 2 ]; then
   FAIL "OP4: measured nothing — $OP4_NREAD of agents/05-hub-planner.md and agents/06-validator.md read at least 1,000 bytes. A sentence count over a file that is not there proves nothing"
-elif [ "$OP4_SENS" -ne 2 ] || [ "$OP4_CTLBAD" -ne 0 ]; then
-  FAIL "OP4: BROKEN PROBE — the sentence reader found \`traveler-model.md\` named in $OP4_SENS of the 2 files (must be both: each reads the model), and $OP4_CTLBAD file(s) did not lose exactly one qualifying sentence when it was stripped from a copy. Until both fire, a verdict below is the instrument's"
+elif [ "$OP4_SENS" -ne 2 ] || [ "$OP4_CTLBAD" -ne 0 ] || [ "$OP4_SPLITBAD" -ne 0 ]; then
+  FAIL "OP4: BROKEN PROBE — the sentence reader found \`traveler-model.md\` named in $OP4_SENS of the 2 files (must be both: each reads the model), $OP4_SPLITBAD file(s) did not read a planted \`$OP_SPLIT\` as 3 sentences (a reader that does not split reads 1), and $OP4_CTLBAD file(s) did not lose exactly one qualifying sentence when it, or an operative clause inside it, was stripped from a copy. Until each fires, a verdict below is the instrument's"
 elif [ "$OP4_OK" -ne 2 ]; then
   FAIL "OP4: a \`PROFILE MISSING\` traveller's needs are not read as unknown by both downstream readers — exactly one sentence carrying \`PROFILE MISSING\`, \"unknown\" and \"no constraints\" is owed in each, under the pinned split:$OP4_BAD"
+elif [ "$OP4_OPOK" -ne "$OP4_OPN" ]; then
+  FAIL "OP4: the sentence that reads a \`PROFILE MISSING\` traveller's needs as unknown does not say what its reader then does — $OP4_OPOK of the $OP4_OPN operative clause(s) stand in exactly one such sentence:$OP4_OPBAD. The hub must never confirm a need of theirs as honored, and the validator must never count them compliant and must raise a Warning; without those the sentence names the gap and lets the plan, or the audit, read it as no constraints"
 else
-  PASS "OP4: the hub and the validator each hold exactly one sentence saying a \`PROFILE MISSING\` traveller's needs are unknown, never \"no constraints\" — the sentence reader finds the traveller model named in both files, and each qualifying sentence, stripped from a copy, drops its count by exactly 1"
+  PASS "OP4: the hub and the validator each hold exactly one sentence saying a \`PROFILE MISSING\` traveller's needs are unknown, never \"no constraints\", and saying what each does then — the hub never confirms a need of theirs as honored, the validator never counts them compliant and raises a Warning ($OP4_OPN operative clauses, each in that sentence) — the sentence reader finds the traveller model named in both files and reads a planted \`$OP_SPLIT\` as 3 sentences, and each qualifying sentence, and each operative clause inside it, stripped from a copy, drops its count by exactly 1"
 fi
 
-# ── OP5 — the C12 note cites the obligation in the sentence that records the drop.
+# ── OP5 — the C12 note cites the obligation in the sentence that records the drop. The same
+# count-free split control as OP4's (Dev Testing F-04): a same-sentence test read by a reader that
+# never splits is a same-file test.
 OP5_DROP='**drops** the `operator-provided-only` entry'
 OP5_CITE='`reference/adr/ADR-049-what-a-rebuild-owes.md` Decisions 1–2'
 OP5_T=""; [ -r "$OP_DA" ] && OP5_T="$(cat "$OP_DA")"
 OP5_ND="$(op_nsent "$OP5_T" "$OP5_DROP")"
 OP5_N="$(op_nsent "$OP5_T" "$OP5_DROP" "$OP5_CITE")"
 OP5_X="$(op_nsent "$(er_sub1 "$(op_fold "$OP5_T")" "$OP5_CITE" '')" "$OP5_DROP" "$OP5_CITE")"
+OP5_SPL="$(op_nsent "$OP5_T
+$OP_SPLIT" 'zz-split-')"
 if [ "${#OP5_T}" -lt 1000 ]; then
   FAIL "OP5: measured nothing — reference/data-architecture.md read ${#OP5_T} byte(s)"
+elif [ "$OP5_SPL" -ne 3 ]; then
+  FAIL "OP5: BROKEN PROBE — a planted \`$OP_SPLIT\`, added to a copy of reference/data-architecture.md, read as $OP5_SPL sentence(s) (must be 3), so the reader does not split by the pinned rule and a same-sentence count below would be a same-file count"
 elif [ "$OP5_ND" -ne 1 ]; then
   FAIL "OP5: BROKEN PROBE — the sentence reader found the C12 note's drop sentence $OP5_ND time(s) (must be exactly 1), so the same-sentence test has no one sentence to read"
 elif [ "$OP5_N" -ge 1 ] && [ "$OP5_X" -ne $((OP5_N - 1)) ]; then
@@ -33017,7 +33063,7 @@ elif [ "$OP5_N" -ge 1 ] && [ "$OP5_X" -ne $((OP5_N - 1)) ]; then
 elif [ "$OP5_N" -ne 1 ]; then
   FAIL "OP5: the C12 note records that a rebuild drops the \`operator-provided-only\` entry and does not cite the obligation in that sentence — $OP5_N sentence(s) carry both the drop and \"$OP5_CITE\" (must be exactly 1)"
 else
-  PASS "OP5: the C12 note's drop sentence cites \"$OP5_CITE\" in the same sentence, under the pinned split; the citation stripped from a copy leaves 0"
+  PASS "OP5: the C12 note's drop sentence cites \"$OP5_CITE\" in the same sentence, under the pinned split; the citation stripped from a copy leaves 0, and the reader reads a planted \`$OP_SPLIT\` as 3 sentences"
 fi
 
 # ── OP0 — the verbs that dispatch the reconciler, found by a test and failing closed (#2073
@@ -33112,14 +33158,95 @@ OP0_BR="$(op_preds "$OP0_AF" <<<"$(op_zoneb "$OP_WORK/c0b/SKILL.md")")"
 read -r _ OP0_BC _ _ OP0_BRED _ _ _ _ <<<"$(op0_tally "$OP0_BR")"
 read -r _ OP0_FC _ _ OP0_FRED _ _ _ _ <<<"$(op0_tally "$(LC_ALL=C awk -F'\t' -v f="$OP0_AF" '$1 == f' <<<"$OP0_R")")"
 OP0_BZZ="$(op0_list "$OP0_BR" red)"
+# The declared read's purpose (Dev Testing F-06). #2073's criterion 1 makes the read that finds
+# the entry the reconciler's declared read of the model it replaces, on the verb's `**Reads:**`
+# line. In each admitted region the sentence, under the pinned split, that carries P2's phrase must
+# say what the read is for: OWN where it names "the `[OPERATOR-PROVIDED]`-only entry it names" or
+# "… it drops"; CITE where it reads "about to replace, read for the reason `<verb>`'s line gives"
+# and that verb is OWN; UNRESOLVED where the verb it cites is not OWN; MISSING otherwise. The cited
+# verb is read from the sentence, so no verb is named here either. MUST-FIRE CONTROLS on an
+# in-memory copy of the regions: (d) the purpose stripped from the first OWN region another cites,
+# or from the first OWN region where none cites one, turns it MISSING and every region citing it
+# UNRESOLVED, and nothing else; (e) the citation stripped from the first CITE region turns that one
+# region MISSING, and nothing else — run where a citing region exists, since with none the
+# citation reader has nothing to grade.
+op_rdecl() {   # op_rdecl <stream> [<verb> <text>] -> <verb>\t<OWN|CITE|UNRESOLVED|MISSING>\t<cited verb or ->, <text> first stripped once from <verb>'s body
+  OP_RV="${2:-}" OP_RT="${3:-}" LC_ALL=C awk -F'\t' '
+    function sents(b, S,   s) { s = b; gsub(/[.] /, ".\n", s); gsub(/[;] /, ";\n", s); return split(s, S, "\n") }
+    BEGIN { pre = "about to replace, read for the reason `" }
+    $1 != "" {
+      n++; V[n] = $1; b = $2; own = 0; tg = ""
+      if (!m && ENVIRON["OP_RT"] != "" && $1 == ENVIRON["OP_RV"]) { p = index(b, ENVIRON["OP_RT"]); if (p) { b = substr(b, 1, p - 1) substr(b, p + length(ENVIRON["OP_RT"])); m = 1 } }
+      k = sents(b, S)
+      for (i = 1; i <= k; i++) {
+        if (!index(S[i], "the model it is about to replace")) continue
+        if (index(S[i], "the `[OPERATOR-PROVIDED]`-only entry it names") || index(S[i], "the `[OPERATOR-PROVIDED]`-only entry it drops")) own = 1
+        p = index(S[i], pre)
+        if (p && tg == "") { r = substr(S[i], p + length(pre)); q = index(r, "`"); if (q > 1 && index(r, "`'"'"'s line gives") == q) tg = substr(r, 1, q - 1) }
+      }
+      OWN[$1] = own; TG[n] = tg
+    }
+    END {
+      for (j = 1; j <= n; j++) {
+        if (OWN[V[j]]) printf "%s\tOWN\t-\n", V[j]
+        else if (TG[j] == "") printf "%s\tMISSING\t-\n", V[j]
+        else if (OWN[TG[j]]) printf "%s\tCITE\t%s\n", V[j], TG[j]
+        else printf "%s\tUNRESOLVED\t%s\n", V[j], TG[j]
+      }
+      if (ENVIRON["OP_RT"] != "") printf "-\tLANDED\t%d\n", m + 0
+    }' <<<"$1"
+}
+op_rn() { LC_ALL=C awk -F'\t' -v c="$2" '$2 == c { n++ } END { print n + 0 }' <<<"$1"; }
+op_rl() { LC_ALL=C awk -F'\t' -v c="$2" '$2 == c { printf "%s%s ", $1, ($3 != "-" ? "→" $3 : "") }' <<<"$1"; }
+OP0_RS=""
+while IFS="$(printf '\t')" read -r op_f op_v; do
+  [ -n "$op_v" ] || continue
+  OP0_RS="$OP0_RS$(LC_ALL=C awk -F'\t' -v v="$op_v" '$1 == v' <<<"$(op_zoneb "$ROOT/$op_f")")
+"
+done <<<"$OP_ADM"
+OP0_RD="$(op_rdecl "$OP0_RS")"
+OP0_RN="$(LC_ALL=C awk -F'\t' '$2 != "LANDED" && NF >= 3 { n++ } END { print n + 0 }' <<<"$OP0_RD")"
+OP0_RMISS="$(op_rn "$OP0_RD" MISSING)"; OP0_RUNR="$(op_rn "$OP0_RD" UNRESOLVED)"; OP0_RCITE="$(op_rn "$OP0_RD" CITE)"
+# Control (d): the target is the verb the first CITE region cites, or else the first OWN region.
+OP0_DT="$(LC_ALL=C awk -F'\t' '$2 == "CITE" { print $3; exit }' <<<"$OP0_RD")"
+[ -n "$OP0_DT" ] || OP0_DT="$(LC_ALL=C awk -F'\t' '$2 == "OWN" { print $1; exit }' <<<"$OP0_RD")"
+OP0_DOK=0; OP0_DGOT="not run"
+if [ -n "$OP0_DT" ]; then
+  OP0_DCN="$(LC_ALL=C awk -F'\t' -v t="$OP0_DT" '$2 == "CITE" && $3 == t { n++ } END { print n + 0 }' <<<"$OP0_RD")"
+  for op_rt in 'the `[OPERATOR-PROVIDED]`-only entry it names' 'the `[OPERATOR-PROVIDED]`-only entry it drops'; do
+    op_y="$(op_rdecl "$OP0_RS" "$OP0_DT" "$op_rt")"
+    [ "$(LC_ALL=C awk -F'\t' '$2 == "LANDED" { print $3 }' <<<"$op_y")" = 1 ] && break
+  done
+  OP0_DGOT="MISSING $(op_rl "$op_y" MISSING)/ UNRESOLVED $(op_rl "$op_y" UNRESOLVED)"
+  op_a="$(LC_ALL=C awk -F'\t' -v t="$OP0_DT" '$1 == t && $2 == "MISSING" { a++ } $2 == "LANDED" { l = $3 } END { print (a == 1 && l == 1) ? 1 : 0 }' <<<"$op_y")"
+  if [ "$op_a" -eq 1 ] && [ "$(op_rn "$op_y" MISSING)" -eq $((OP0_RMISS + 1)) ] && [ "$(op_rn "$op_y" UNRESOLVED)" -eq $((OP0_RUNR + OP0_DCN)) ]; then
+    OP0_DOK=1
+  fi
+fi
+# Control (e): the citation stripped from the first CITE region.
+OP0_EOK=1; OP0_EGOT="no citing region"
+OP0_ET="$(LC_ALL=C awk -F'\t' '$2 == "CITE" { print $1; exit }' <<<"$OP0_RD")"
+if [ -n "$OP0_ET" ]; then
+  OP0_EOK=0
+  op_y="$(op_rdecl "$OP0_RS" "$OP0_ET" 'read for the reason `')"
+  OP0_EGOT="MISSING $(op_rl "$op_y" MISSING)"
+  op_a="$(LC_ALL=C awk -F'\t' -v t="$OP0_ET" '$1 == t && $2 == "MISSING" { a++ } $2 == "LANDED" { l = $3 } END { print (a == 1 && l == 1) ? 1 : 0 }' <<<"$op_y")"
+  if [ "$op_a" -eq 1 ] && [ "$(op_rn "$op_y" MISSING)" -eq $((OP0_RMISS + 1)) ] && [ "$(op_rn "$op_y" CITE)" -eq $((OP0_RCITE - 1)) ]; then
+    OP0_EOK=1
+  fi
+fi
 if [ "${OP0_NR:-0}" -lt 1 ] || [ "${OP0_NC:-0}" -lt 1 ]; then
   FAIL "OP0: measured nothing — ${OP0_NR:-0} Zone B verb region(s) and ${OP0_NC:-0} candidate(s) read across skills/*/SKILL.md. A test over no region finds no dispatching verb and proves nothing"
 elif [ "$OP0_AMUT" -ne 0 ] || [ "${OP0_AP1:-0}" -ne $((OP0_FP1 - 1)) ] || [ "${OP0_ADIS:-0}" -ne $((OP0_FDIS + 1)) ] || [ "$OP0_BMUT" -ne 0 ] || [ "${OP0_BC:-0}" -ne $((OP0_FC + 1)) ] || [ "${OP0_BRED:-0}" -ne $((OP0_FRED + 1)) ] || [ "$OP0_BZZ" != "zzresync " ] || [ "${OP0_PL:-0}" -eq "${OP0_P1:-0}" ]; then
   FAIL "OP0: BROKEN PROBE — \"reconciler role\" removed from a copy of ${OP0_AF:-<no admitted file>}'s Dispatches line (landed rc=$OP0_AMUT) read P1 ${OP0_AP1:-?} against $OP0_FP1 and disagreements ${OP0_ADIS:-?} against $OP0_FDIS (must be one fewer and one more); a planted sixth section (landed rc=$OP0_BMUT) read ${OP0_BC:-?} candidate(s) against $OP0_FC and ${OP0_BRED:-?} red against $OP0_FRED (must each be one more, the red one 'zzresync', read '${OP0_BZZ:-none}'); and a literal \`[.;]\` split admitted ${OP0_PL:-?} against the pinned split's ${OP0_P1:-?} (must differ). Until each fires, a verdict below is the instrument's"
 elif [ "${OP0_NA:-0}" -lt 1 ] || [ "${OP0_NRED:-1}" -ne 0 ] || [ "${OP0_DIS:-1}" -ne 0 ]; then
   FAIL "OP0: the dispatching verbs are not all found by the test — over $OP0_NR region(s), $OP0_NC candidate(s): admitted ${OP0_NA:-0} ($(op0_list "$OP0_R" admitted)), declaring $OP0_ND ($(op0_list "$OP0_R" declares)), red $OP0_NRED ($(op0_list "$OP0_R" red)); P1 $OP0_P1, P2 $OP0_P2, disagreements $OP0_DIS. A region that runs the reconciler must declare the read on its Reads line and name the role on its Dispatches line, or say it dispatches no agent"
+elif [ "$OP0_RN" -ne "$OP0_NA" ] || [ "$OP0_RMISS" -ne 0 ] || [ "$OP0_RUNR" -ne 0 ]; then
+  FAIL "OP0: not every dispatching verb's declared read of the model says what it is for — of the $OP0_NA admitted, $OP0_RN read: OWN $(op_rn "$OP0_RD" OWN) ($(op_rl "$OP0_RD" OWN)), CITE $OP0_RCITE ($(op_rl "$OP0_RD" CITE)), MISSING $OP0_RMISS ($(op_rl "$OP0_RD" MISSING)), UNRESOLVED $OP0_RUNR ($(op_rl "$OP0_RD" UNRESOLVED)). The sentence carrying \"the model it is about to replace\" must name the \`[OPERATOR-PROVIDED]\`-only entry the read finds, or cite a verb whose line does"
+elif [ "$OP0_DOK" -ne 1 ] || [ "$OP0_EOK" -ne 1 ]; then
+  FAIL "OP0: BROKEN PROBE — the declared read's purpose stripped from a copy of § \`${OP0_DT:-<none>}\` read '$OP0_DGOT' (must be that region MISSING, every region citing it UNRESOLVED, and nothing else), and the citation stripped from a copy of § \`${OP0_ET:-<none>}\` read '$OP0_EGOT' (must be that one region MISSING, and nothing else). Until each fires, the declared-read verdict is the instrument's"
 else
-  PASS "OP0: the verbs that dispatch the reconciler are found by the test, with no verb named here — $OP0_NR Zone B region(s), $OP0_NC candidate(s): $OP0_NA admitted ($(op0_list "$OP0_R" admitted)), $OP0_ND declaring they dispatch no agent ($(op0_list "$OP0_R" declares)), 0 red; P1 = P2 = $OP0_P1, no disagreement. Every control fired: \"reconciler role\" removed from a copy drops P1 by 1 and turns the agreement red, a planted sixth section is a red candidate, and a literal \`[.;]\` split admits $OP0_PL rather than $OP0_P1"
+  PASS "OP0: the verbs that dispatch the reconciler are found by the test, with no verb named here — $OP0_NR Zone B region(s), $OP0_NC candidate(s): $OP0_NA admitted ($(op0_list "$OP0_R" admitted)), $OP0_ND declaring they dispatch no agent ($(op0_list "$OP0_R" declares)), 0 red; P1 = P2 = $OP0_P1, no disagreement; and each admitted verb's declared read of the model says what it is for, OWN $(op_rn "$OP0_RD" OWN) ($(op_rl "$OP0_RD" OWN)) and CITE $OP0_RCITE ($(op_rl "$OP0_RD" CITE)). Every control fired: \"reconciler role\" removed from a copy drops P1 by 1 and turns the agreement red, a planted sixth section is a red candidate, a literal \`[.;]\` split admits $OP0_PL rather than $OP0_P1, the declared read's purpose stripped from § \`$OP0_DT\` turns it MISSING and its citers UNRESOLVED, and the citation stripped from § \`${OP0_ET:-<none>}\` turns it MISSING (${OP0_EGOT})"
 fi
 
 # ── OP-F — every admitted verb runs only on an active trip: its requirement row's lifecycle cell
@@ -33166,11 +33293,15 @@ fi
 #   NEITHER  everything else, and UNRESOLVED a citation of a section that is not OWN.
 # The verdict is a conjunction at top level: admitted ≥ 1, OWN ≥ 1, no NEITHER, no UNRESOLVED; and
 # each OWN region says it names nothing where nothing drops (criterion 4) and that in a run nobody
-# can answer the naming adds no stop (ADR-049 Decision 4). op_classify is registered with md_flips.
+# can answer the naming adds no stop (ADR-049 Decision 4), and carries the naming's content
+# (Dev Testing F-02 and F-07): the needs and desires the entry held, how to keep them, and that
+# restating them keeps the entry in each run that rebuilds the model, until the traveller files —
+# OP2_OWNP below. op_classify is registered with md_flips.
 # MUST-FIRE CONTROLS, each on an in-memory copy of the regions: the naming stripped from the first
-# OWN region that another region cites turns it NEITHER and every region citing it UNRESOLVED; and
+# OWN region that another region cites turns it NEITHER and every region citing it UNRESOLVED;
 # each citing region's own change reverted alone — Change 5d, 6c or 6d, old for new — turns that one
-# region NEITHER and no other.
+# region NEITHER and no other; and each OP2_OWNP phrase stripped from a copy of the first OWN
+# region drops its count there by exactly 1.
 OP_NAMING='It returns as well each `[OPERATOR-PROVIDED]`-only entry its rebuild of'
 OP_SIHEAD="**The dispatch carries the operator's stand-in:**"
 OP_SIBOUND='whose entry does not carry `[THIRD-PARTY]`'
@@ -33219,8 +33350,14 @@ OP_REV=(
   'person|render what its rebuild did not keep, and carry the stand-in, as § `travelers` states|render what its rebuild replaced in `outputs/traveler-presence.md`, as § `travelers` states'
   'group|what its rebuild did not keep as § `travelers` states — the dispatch carrying the stand-in as that section'"'"'s does — and its|what its rebuild replaced in `outputs/traveler-presence.md` as § `travelers` states, and its'
 )
+# The naming's content, which each OWN region carries (Dev Testing F-02, F-07): <limb>|<phrase>.
+OP2_OWNP=(
+  'needs|the needs and desires the entry held'
+  'how-to-keep|how to keep them'
+  'each-run|in each run that rebuilds the model, until the traveller files'
+)
 op2_assert() {   # op2_assert <root> — exactly one verdict
-  local st cl na no nn nu ownbad="" v cv x y rc ctl_a="" ctl_a_ok=0 rev_bad="" rev_n=0 o
+  local st cl na no nn nu ownbad="" v cv x y rc ctl_a="" ctl_a_ok=0 rev_bad="" rev_n=0 o v1="" o1 n1 ownctl=""
   st="$(op_stream "$1")"
   cl="$(op_classify "$st")"
   na="$(LC_ALL=C awk -F'\t' 'NF >= 2 { n++ } END { print n + 0 }' <<<"$OP_ADM")"
@@ -33229,7 +33366,18 @@ op2_assert() {   # op2_assert <root> — exactly one verdict
     o="$(LC_ALL=C awk -F'\t' -v v="$v" '$1 == v { print $2 }' <<<"$st")"
     [ "$(op_cnt "$o" 'where it names none')" -ge 1 ] || ownbad="$ownbad $v:names-none"
     [ "$(op_nsent "$o" 'In a run nobody can answer' 'adds no stop')" -ge 1 ] || ownbad="$ownbad $v:no-stop"
+    for x in "${OP2_OWNP[@]}"; do
+      [ "$(op_cnt "$o" "${x#*|}")" -ge 1 ] || ownbad="$ownbad $v:${x%%|*}"
+    done
+    [ -n "$v1" ] || { v1="$v"; o1="$o"; }
   done
+  # The OP2_OWNP controls: each phrase stripped from a copy of the first OWN region.
+  if [ -n "$v1" ]; then
+    for x in "${OP2_OWNP[@]}"; do
+      n1="$(op_cnt "$o1" "${x#*|}")"
+      if [ "$n1" -ge 1 ] && [ "$(op_cnt "$(er_sub1 "$o1" "${x#*|}" '')" "${x#*|}")" -ne $((n1 - 1)) ]; then ownctl="$ownctl ${x%%|*}"; fi
+    done
+  fi
   # Control (a): the naming stripped from the first OWN region that another region cites.
   cv="$(LC_ALL=C awk -F'\t' '$2 == "CITE" { print $3; exit }' <<<"$cl")"
   if [ -n "$cv" ]; then
@@ -33250,11 +33398,11 @@ op2_assert() {   # op2_assert <root> — exactly one verdict
   if [ "$na" -lt 1 ] || [ -z "$cl" ]; then
     FAIL "OP2: measured nothing — OP0 admitted $na verb(s) and the classifier returned $(LC_ALL=C awk 'NF { n++ } END { print n + 0 }' <<<"$cl") line(s). A render check over no dispatching verb proves nothing"
   elif [ "$no" -lt 1 ] || [ "$nn" -ne 0 ] || [ "$nu" -ne 0 ] || [ -n "$ownbad" ]; then
-    FAIL "OP2: not every verb that dispatches the reconciler renders the naming — of $na admitted: OWN $no ($(op_cls "$cl" OWN)), CITE $(op_ncls "$cl" CITE) ($(op_cls "$cl" CITE)), NEITHER $nn ($(op_cls "$cl" NEITHER)), UNRESOLVED $nu ($(op_cls "$cl" UNRESOLVED)); OWN regions missing the names-none or the no-stop clause:${ownbad:- none}. Each must carry the naming and the stand-in, or cite one that does in a sentence carrying the obligation's own words"
-  elif [ "$ctl_a_ok" -ne 1 ] || [ -n "$rev_bad" ]; then
-    FAIL "OP2: BROKEN PROBE — the naming stripped from a copy of § \`${cv:-<none cited>}\` read NEITHER/UNRESOLVED '${ctl_a:-not run}' (must be that region NEITHER and every region citing it UNRESOLVED), and reverting a citing region's own change alone did not turn exactly that one region NEITHER:${rev_bad:- none}. Until each fires, the verdict above is the instrument's"
+    FAIL "OP2: not every verb that dispatches the reconciler renders the naming — of $na admitted: OWN $no ($(op_cls "$cl" OWN)), CITE $(op_ncls "$cl" CITE) ($(op_cls "$cl" CITE)), NEITHER $nn ($(op_cls "$cl" NEITHER)), UNRESOLVED $nu ($(op_cls "$cl" UNRESOLVED)); OWN regions missing a clause the naming owes (names-none, no-stop, needs, how-to-keep, each-run):${ownbad:- none}. Each must carry the naming, its content and the stand-in, or cite one that does in a sentence carrying the obligation's own words"
+  elif [ "$ctl_a_ok" -ne 1 ] || [ -n "$rev_bad" ] || [ -n "$ownctl" ]; then
+    FAIL "OP2: BROKEN PROBE — the naming stripped from a copy of § \`${cv:-<none cited>}\` read NEITHER/UNRESOLVED '${ctl_a:-not run}' (must be that region NEITHER and every region citing it UNRESOLVED), reverting a citing region's own change alone did not turn exactly that one region NEITHER:${rev_bad:- none}, and a content phrase stripped from a copy of § \`${v1:-<no OWN region>}\` did not drop its count by exactly 1:${ownctl:- none}. Until each fires, the verdict above is the instrument's"
   else
-    PASS "OP2: every one of the $na verb(s) that dispatch the reconciler renders the naming — OWN $no ($(op_cls "$cl" OWN)), each saying it names nothing where nothing drops and that in a run nobody can answer it adds no stop; CITE $(op_ncls "$cl" CITE) ($(op_cls "$cl" CITE)), each in a sentence carrying \"did not keep\" and the stand-in. Every control fired: the naming stripped from § \`$cv\` turns it NEITHER and its citers UNRESOLVED ($ctl_a), and each of the $rev_n citing changes reverted alone turns that one region NEITHER"
+    PASS "OP2: every one of the $na verb(s) that dispatch the reconciler renders the naming — OWN $no ($(op_cls "$cl" OWN)), each carrying the needs and desires the entry held and how to keep them, in each run that rebuilds the model, until the traveller files, and saying it names nothing where nothing drops and that in a run nobody can answer it adds no stop; CITE $(op_ncls "$cl" CITE) ($(op_cls "$cl" CITE)), each in a sentence carrying \"did not keep\" and the stand-in. Every control fired: the naming stripped from § \`$cv\` turns it NEITHER and its citers UNRESOLVED ($ctl_a), each of the $rev_n citing changes reverted alone turns that one region NEITHER, and each of the ${#OP2_OWNP[@]} content phrases stripped from a copy of § \`$v1\` drops its count by 1"
   fi
 }
 op2_assert "$ROOT"
