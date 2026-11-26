@@ -5250,6 +5250,143 @@ ft_former_assert() {
   fi
 }
 
+# ── The key-addressed table writer, and the shared copy a criterion-4 arm reads (#2211 criterion 4).
+#
+# ft_row_set <data-model> <key> <column> <value> — in place, the ONE row of the classification table
+# whose Key cell is `<key>` has its <column> cell, the column named as the table's header row names it
+# (`Field`, `Section`, `Class`, `Key` …), rewritten to <value> with one space each side; no other byte
+# of the file moves. A row is found by its key, never by its label or its number, so a reword of the
+# label leaves the anchor standing (ADR-053 Decision 4 limb 2), and the header is read by name, so a
+# column inserted before another does not shift it. Returns 1, the file untouched, when no row or more
+# than one row carries the key, when the row's header does not name <column> exactly once, or when the
+# cell already reads <value>: so a caller's `if ft_row_set …` is the LANDED assertion its mutation owes.
+# FB-C's SEAM-3 and ft_c4_copy use it, and a seam that flips a row of a copy reads, in the house style:
+#   r="$(ta_root S3a)"
+#   if ft_row_set "$r/reference/data-model.md" desire Class '**PERSON**'; then …
+#   else FAIL "CHR-SEAM[S3a]: the flip did not LAND on the copy"; fi
+ft_row_set() {
+  local f="$1" t
+  [ -f "$f" ] || return 1
+  t="$(mktemp "$WORK/ft/row-set.XXXXXX")" || return 1
+  LIT_KEY="$2" LIT_COL="$3" LIT_VAL="$4" LC_ALL=C awk 'BEGIN { RS = "\001"; ORS = "" }
+    function trim(s) { gsub(/^[ \t]+|[ \t]+$/, "", s); return s }
+    { n = split($0, L, "\n"); k = "`" ENVIRON["LIT_KEY"] "`"; col = ENVIRON["LIT_COL"]; val = ENVIRON["LIT_VAL"]; hits = 0; hdr = ""
+      for (i = 1; i <= n; i++) {
+        if (i < n && L[i] ~ /^[ \t]*\|/ && L[i + 1] ~ /^[ \t]*\|[-| :]+\|[ \t]*$/) { hdr = L[i]; continue }
+        if (split(L[i], C, "|") != 11) continue
+        if (trim(C[2]) !~ /^[0-9]+$/ || trim(C[10]) != k) continue
+        hits++; row = i; h = hdr
+      }
+      if (hits != 1) exit 1
+      m = split(h, H, "|"); ci = 0; nc = 0
+      for (j = 1; j <= m; j++) if (trim(H[j]) == col) { nc++; ci = j }
+      if (nc != 1 || m != 11) exit 1
+      m = split(L[row], C, "|"); if (trim(C[ci]) == val) exit 1
+      C[ci] = " " val " "; s = C[1]; for (j = 2; j <= m; j++) s = s "|" C[j]; L[row] = s
+      s = L[1]; for (i = 2; i <= n; i++) s = s "\n" L[i]; print s }' "$f" > "$t" && mv "$t" "$f"
+}
+
+# ft_c4_copy [reword|noformer|base] — the SHARED copy a criterion-4 arm reads (#2211 criterion 4): the two
+# guided forms, the data model, ADR-030 and the interview conversations, under $WORK/c4.<variant>. It is
+# defined here, in group FT's helpers, because group MC (around line 22100) and group CF both read it and
+# MC runs first; and it never reads the form model, which ta_model builds far below MC. It is built once
+# per run and per variant: a later call prints the same path, read from the sentinel `.built` that is
+# written last, because each caller runs it inside $(…), where no variable outlives the call.
+#   reword    each field FT_C4_REWORD names has its label reworded in its TWO statements — its guided
+#             form's bullet, and its row's Field cell, the row found by its key through ft_row_set — and
+#             its former label declared in the field-former-label-declaration fence (ADR-053 Decision 3)
+#   noformer  the same rewords, and no former label declared: what a criterion-4 arm's control reads
+#   base      no reword: what the reworded copy is compared against
+# Every variant carries the same two plants, each fbc-check.txt with one change, both naming the first
+# field's old label word: c4-label-word, whose follow-up carries that word, which FB-C's bullet 4 admits
+# only as a label word; and c4-confirm-word, which adds a confirmation whose carries hold it, which
+# RS-21 strikes only as a label word. A label is read from the table by key, and its form found by
+# searching the declared guided forms, above their boundaries, for the one bullet that carries it. Zero
+# or two such bullets, a replacement that did not land exactly once, or a new label already a label or a
+# section of the table, and the builder prints nothing, returns 1 and leaves its reason in
+# $WORK/c4.<variant>.why. The new labels' first words differ from the old ones' and collide with nothing.
+FT_C4_REWORD=$'rooming\tRoom sharing\nsolo\tOn my own, I\'d\nwould-love\tHoping for'
+ft_c4_why() { printf '%s\n' "$2" > "$WORK/c4.$1.why"; return 1; }
+# ft_c4_line <file> <line> <old> <new> — that one line of <file> with its ONE <old> made <new>; 1 otherwise.
+ft_c4_line() {
+  local t
+  t="$(mktemp "$WORK/ft/c4-line.XXXXXX")" || return 1
+  LIT_OLD="$3" LIT_NEW="$4" LC_ALL=C awk -v n="$2" 'BEGIN { o = ENVIRON["LIT_OLD"]; w = ENVIRON["LIT_NEW"] }
+    FNR == n { s = $0; c = 0; while ((i = index(s, o)) > 0) { c++; s = substr(s, i + length(o)) }
+      if (c != 1) { bad = 1; print; next }
+      i = index($0, o); print substr($0, 1, i - 1) w substr($0, i + length(o)); done = 1; next }
+    { print }
+    END { exit (bad || !done) }' "$1" > "$t" && mv "$t" "$1"
+}
+# ft_c4_former <data-model> <rows> — <rows>, one "key | former label" a line, declared in the ONE
+# former-label fence just above its closer; 1 when the fence does not stand exactly once.
+ft_c4_former() {
+  local t
+  t="$(mktemp "$WORK/ft/c4-former.XXXXXX")" || return 1
+  LIT_ROWS="$2" LC_ALL=C awk -v tag='```'"$FT_FORMER_TAG" '
+    { l = $0; sub(/[ \t\r]+$/, "", l) }
+    !on && l == tag { o++; on = 1; print; next }
+    on && substr(l, 1, 3) == "```" { printf "%s", ENVIRON["LIT_ROWS"]; on = 0; done++; print; next }
+    { print }
+    END { exit !(o == 1 && done == 1) }' "$1" > "$t" && mv "$t" "$1"
+}
+# ft_c4_plant <fbc-check> <dir> <word> — the two plants, each landing its one change exactly once.
+ft_c4_plant() {
+  LIT_W="$3" LC_ALL=C awk -v out="$2/c4-label-word.txt" '
+    { L[NR] = $0 }
+    END { o = " carries=\302\253share\302\273"
+          for (i = 1; i <= NR; i++) { s = L[i]
+            if (s == "conversation: fbc-check") { s = "conversation: c4-label-word"; a++ }
+            else if ((j = index(s, o)) > 0) { s = substr(s, 1, j - 1) " carries=\302\253share, " ENVIRON["LIT_W"] "\302\273" substr(s, j + length(o)); b++ }
+            print s > out }
+          exit !(a == 1 && b == 1) }' "$1" || return 1
+  LIT_W="$3" LC_ALL=C awk -v out="$2/c4-confirm-word.txt" '
+    { L[NR] = $0; if ($0 ~ /^T[0-9]+ [IP] \| /) nt++ }
+    END { for (i = 1; i <= NR; i++) { s = L[i]
+            if (s == "conversation: fbc-check") { s = "conversation: c4-confirm-word"; a++ }
+            if (s == "--- record") { b++
+              printf "T%d I | So: share, with Sam?\nL4 put=- kind=confirmation example=no carries=\302\253%s: share with Sam\302\273\nT%d P | Yes.\nL3 - = answer\n", nt + 1, ENVIRON["LIT_W"], nt + 2 > out }
+            print s > out }
+          exit !(a == 1 && b == 1) }' "$1"
+}
+ft_c4_copy() {
+  local v="${1:-reword}" d dm k new lab star forms n p ln rel fr="" word
+  d="$WORK/c4.$v"
+  if [ -f "$d/.built" ]; then printf '%s' "$d"; return 0; fi
+  [ -f "$d.why" ] && return 1
+  case "$v" in reword|noformer|base) ;; *) ft_c4_why "$v" "no variant $v: reword, noformer or base"; return 1 ;; esac
+  mkdir -p "$d/templates" "$d/reference/adr" "$d/examples/interview-conversations" || { ft_c4_why "$v" "the copy's directories could not be made"; return 1; }
+  { cp "$ROOT/templates/traveler-intake.template.md" "$ROOT/templates/person-intake.template.md" "$d/templates/" &&
+    cp "$ROOT/reference/data-model.md" "$d/reference/" &&
+    cp "$ROOT/reference/adr/ADR-030-what-the-private-site-may-show.md" "$d/reference/adr/" &&
+    cp "$ROOT/examples/interview-conversations/"* "$d/examples/interview-conversations/"; } || { ft_c4_why "$v" "a source of the copy could not be copied"; return 1; }
+  dm="$d/reference/data-model.md"
+  if [ "$v" != base ]; then
+    while IFS=$'\t' read -r k new; do
+      [ -n "$k" ] || continue
+      lab="$(ft_rows "$ROOT/reference/data-model.md" | awk -F'\t' -v k="$k" '$11 == k { n++; l = $3 } END { if (n == 1) print l }')"
+      star="$(ft_rows "$ROOT/reference/data-model.md" | awk -F'\t' -v k="$k" '$11 == k { print $8; exit }')"
+      [ -n "$lab" ] || { ft_c4_why "$v" "no one labelled row of the table carries the key $k"; return 1; }
+      [ -z "$(ft_rows "$ROOT/reference/data-model.md" all | awk -F'\t' -v w="$new" '$2 == w || $3 == w')" ] || { ft_c4_why "$v" "the new label $new of $k is already a label or a section of the table"; return 1; }
+      forms="$(ft_declared | awk -F'\t' '$1 == "stop" { print $2 }' | while IFS= read -r p; do ft_bullets "$p" stop | awk -F'\t' -v l="$lab" -v p="$p" '$2 == l { print p "\t" $3 }'; done)"
+      n="$(printf '%s\n' "$forms" | grep -c '[^[:space:]]')"
+      [ "$n" -eq 1 ] || { ft_c4_why "$v" "$n bullet(s) of the declared guided forms carry $k's label $lab, where exactly one must"; return 1; }
+      p="${forms%%$'\t'*}"; ln="${forms##*$'\t'}"; rel="${p#"$ROOT/"}"
+      ft_c4_line "$d/$rel" "$ln" "**$lab:**" "**$new:**" || { ft_c4_why "$v" "$rel line $ln: the bullet $lab did not take its reword exactly once"; return 1; }
+      ft_row_set "$dm" "$k" Field "$([ "$star" = 1 ] && printf '%s ' "$FT_STAR")\`$new\`" || { ft_c4_why "$v" "the Field cell of the row keyed $k did not take its reword"; return 1; }
+      fr="$fr$k | $lab"$'\n'
+    done <<<"$FT_C4_REWORD"
+    if [ "$v" = reword ]; then
+      ft_c4_former "$dm" "$fr" || { ft_c4_why "$v" "the former-label fence does not stand exactly once in the copy of the data model"; return 1; }
+    fi
+  fi
+  lab="$(ft_rows "$ROOT/reference/data-model.md" | awk -F'\t' -v k="${FT_C4_REWORD%%$'\t'*}" '$11 == k { print $3; exit }')"
+  word="$(printf '%s' "$lab" | tr '[:upper:]' '[:lower:]')"
+  ft_c4_plant "$ROOT/examples/interview-conversations/fbc-check.txt" "$d/examples/interview-conversations" "$word" || { ft_c4_why "$v" "a plant did not take its change exactly once from fbc-check.txt"; return 1; }
+  : > "$d/.built"
+  printf '%s' "$d"
+}
+
 # ── FT0 — the extraction is non-empty. The rest of the group, and every group that resolves
 # through this one, would otherwise grade an empty table.
 FT_ROWS0="$WORK/ft/rows.tsv"
@@ -29146,6 +29283,11 @@ md_flips ta_plants   'CHR-CTL' chrctl_assert
 #        reported line
 #   CF-CTL  the pinned probes: the compound and typography readings on generated values (Q1, Q2,
 #        N10's repeat, split use-up and mixed cases) and their authored twins, each at its verdict
+#   CF8  #2211 criterion 4 for this reader: on the shared copy ft_c4_copy builds, guided-form labels
+#        reworded in their two statements, each with its former label declared, leave the reader's
+#        whole stream byte-identical. CONTROLS: the same rewords with no former label move exactly the
+#        two plants, bullet 4's and RS-21's; the first field's key renamed in its row refuses every
+#        line that names it, for that reason
 #   OW-C, OW-C-A, OW-C-ND, OW-C-OBS and FB-C, in groups OW and FB below.
 # WHAT A GREEN DOES NOT COVER: a verdict on an authored fixture grades the labels it declares, so it
 # tests the checks and not an interviewer; a verdict on a generated conversation rests on the
@@ -29948,6 +30090,90 @@ cfctl_assert() {
   fi
 }
 cfctl_assert
+# ── CF8 — #2211 criterion 4 for this reader: a guided-form label reworded in its two statements, with its
+# former label declared, moves no CF verdict (ADR-053 Couplings: the test conversations move with group
+# CF's grammar). It reads the SHARED copy ft_c4_copy builds, the copy group MC's criterion-4 arm reads, and
+# exports the path it read as CF8_C4_DIR. PASS when the reader's whole stream over the reworded copy is
+# byte-identical to its stream over the unreworded one, both carrying the same two plants, each read as
+# planted there. CONTROL a: the same rewords with no former label declared move exactly the two plants —
+# c4-label-word's FB-C verdict to fail:4, bullet 4 refusing the old label's word, and c4-confirm-word's
+# RS-21 reading to reordered — and nothing else but the totals. CONTROL b: the first reworded field's key
+# renamed in its row refuses every line that names it, each as naming no key the table carries, the lines
+# counted from the copy by position, never spelled; any other refusal is an L3 left with no P turn above it.
+# cf8_stream <copy> <scratch> — the reader over a copy's fixtures, the form model built from that copy.
+cf8_stream() {
+  local files
+  mkdir -p "$2" && ta_model "$1" "$2" > "$2/model.tsv" || return 0
+  files="$(cf_files "$1/examples/interview-conversations")"
+  [ -n "$files" ] && cv_run "$2/model.tsv" "$CF_A2_F" "$1" $files
+  return 0
+}
+# cf8_keyrefs <fixture-dir> <key> — "<file> TAB <line>" for each line that names <key>, with or without a
+# unit, at a field-reference position: an answered-before entry, L3 up to " = ", an L4 put item, V up to
+# " = ", X after its check. Read by position as the grammar states, by no function of the reader's.
+cf8_keyrefs() {
+  local f
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    LC_ALL=C awk -v k="$2" -v n="${f##*/}" '
+      function is(r) { gsub(/^ +| +$/, "", r); sub(/#[0-9]+$/, "", r); return r == k }
+      FNR == 1 { hdr = 1 }
+      hdr && /^T[0-9]+ [IP] \| / { hdr = 0 }
+      hdr && substr($0, 1, 17) == "answered-before: " { m = split(substr($0, 18), A, ";"); for (i = 1; i <= m; i++) if (is(A[i])) { print n "\t" FNR; break }; next }
+      hdr { next }
+      substr($0, 1, 3) == "L3 " && (p = index($0, " = ")) > 0 { if (is(substr($0, 4, p - 4))) print n "\t" FNR; next }
+      substr($0, 1, 3) == "L4 " && (a = index($0, "put=")) > 0 && (b = index($0, " kind=")) > a { m = split(substr($0, a + 4, b - a - 4), A, ","); for (i = 1; i <= m; i++) if (is(A[i])) { print n "\t" FNR; break }; next }
+      substr($0, 1, 2) == "V " && (p = index($0, " = ")) > 0 { if (is(substr($0, 3, p - 3))) print n "\t" FNR; next }
+      /^X (OW-C|FB-C) / && (p = index($0, " = ")) > 0 { if (is(substr($0, 8, p - 8))) print n "\t" FNR; next }' "$f"
+  done <<<"$(cf_files "$1")"
+}
+cf8_assert() {
+  local rw nf bs rk sbs srw snf srk lw cw nlw nlwd ncw out pd k1 refs mal3 other nref first
+  rw="$(ft_c4_copy)"; nf="$(ft_c4_copy noformer)"; bs="$(ft_c4_copy base)"
+  CF8_C4_DIR="$rw"; export CF8_C4_DIR
+  if [ -z "$rw" ] || [ -z "$nf" ] || [ -z "$bs" ]; then
+    FAIL "CF8: NOT EVALUATED — the shared copy builder ft_c4_copy built no copy for a variant (reword '${rw:-none}', noformer '${nf:-none}', base '${bs:-none}'): $(cat "$WORK"/c4.*.why 2>/dev/null | tr '\n' ' ')"
+    return 0
+  fi
+  sbs="$(cf8_stream "$bs" "$WORK/cf/c8-base")"; srw="$(cf8_stream "$rw" "$WORK/cf/c8-reword")"; snf="$(cf8_stream "$nf" "$WORK/cf/c8-noformer")"
+  lw="$(awk -F'\t' '$1 == "VERDICT" && $2 == "c4-label-word.txt" && $4 == "FB-C" { print $6 }' <<<"$sbs")"
+  cw="$(awk -F'\t' '$1 == "OBS" && $2 == "c4-confirm-word.txt" && $3 == "CONFIRM" { print $5 }' <<<"$sbs")"
+  nlw="$(awk -F'\t' '$1 == "VERDICT" && $2 == "c4-label-word.txt" && $4 == "FB-C" { print $6 }' <<<"$snf")"
+  nlwd="$(awk -F'\t' '$1 == "VERDICT" && $2 == "c4-label-word.txt" && $4 == "FB-C" { print $7 }' <<<"$snf")"
+  ncw="$(awk -F'\t' '$1 == "OBS" && $2 == "c4-confirm-word.txt" && $3 == "CONFIRM" { print $5 }' <<<"$snf")"
+  # Control a's "nothing else": outside the totals, every record but the three the plants own is equal.
+  out="$(LC_ALL=C diff <(awk -F'\t' '$1 != "SUMMARY" && !($2 == "c4-label-word.txt" && (($1 == "VERDICT" && $4 == "FB-C") || $1 == "CONV")) && !($1 == "OBS" && $2 == "c4-confirm-word.txt" && $3 == "CONFIRM")' <<<"$sbs") \
+                         <(awk -F'\t' '$1 != "SUMMARY" && !($2 == "c4-label-word.txt" && (($1 == "VERDICT" && $4 == "FB-C") || $1 == "CONV")) && !($1 == "OBS" && $2 == "c4-confirm-word.txt" && $3 == "CONFIRM")' <<<"$snf") | awk '/^[<>]/' | head -4 | tr '\n' ' ')"
+  first="$(LC_ALL=C diff <(printf '%s\n' "$sbs") <(printf '%s\n' "$srw") | awk '/^[<>]/' | head -4 | tr '\n' ' ')"
+  # Control b, on a copy of the unreworded copy: the first reworded field's key renamed in its row.
+  k1="${FT_C4_REWORD%%$'\t'*}"; rk="$(mktemp -d "$WORK/cf/c8-rekey.XXXXXX")"; srk=""; refs=""; mal3=""; other=""; nref=0
+  if cp -R "$bs/." "$rk/" && [ -z "$(ft_rows "$rk/reference/data-model.md" all | awk -F'\t' -v k="$k1-renamed" '$11 == k')" ] && ft_row_set "$rk/reference/data-model.md" "$k1" Key "\`$k1-renamed\`"; then
+    srk="$(cf8_stream "$rk" "$WORK/cf/c8-rekey")"
+    refs="$(cf8_keyrefs "$rk/examples/interview-conversations" "$k1" | LC_ALL=C sort)"
+    mal3="$(awk -F'\t' -v w="names no key the classification table carries: $k1" '$1 == "MAL" && index($4, w) { print $2 "\t" $3 }' <<<"$srk" | LC_ALL=C sort)"
+    other="$(awk -F'\t' -v w="names no key the classification table carries: $k1" '$1 == "MAL" && !index($4, w) && $4 != "an L3 line not directly under a P turn" { printf "%s line %s: %s; ", $2, $3, $4 }' <<<"$srk")"
+    nref="$(printf '%s\n' "$refs" | grep -c '[^[:space:]]')"
+  fi
+  pd="$(awk -F'\t' '$1 == "MAL" && $4 == "an L3 line not directly under a P turn"' <<<"$srk" | awk 'END { print NR }')"
+  if [ -z "$sbs" ] || [ -z "$(awk -F'\t' '$1 == "VERDICT"' <<<"$sbs")" ]; then
+    FAIL "CF8: NOT EVALUATED — the reader produced no verdict over the unreworded copy ${bs#"$WORK/"}, so there is nothing to hold the reworded one to"
+  elif [ "$lw" != "pass" ] || [ "$cw" != "order kept" ]; then
+    FAIL "CF8: the plants do not read as planted on the unreworded copy — c4-label-word's FB-C reads '${lw:-nothing}' where pass is planted, and c4-confirm-word's RS-21 reading '${cw:-nothing}' where order kept is, so neither control below could move"
+  elif [ "$srw" != "$sbs" ]; then
+    FAIL "CF8: a reword of $(awk -F'\t' '{ printf "%s%s", s, $1; s = ", " }' <<<"$FT_C4_REWORD") in their two statements, each with its former label declared, moves the reader's stream on the shared copy — $first— so a label edit touches more than the label"
+  elif [ "$nlw" != "fail:4" ] || [ "${nlwd#*bullet 4:}" = "$nlwd" ] || [ "$ncw" != "reordered" ]; then
+    FAIL "CF8: CONTROL a did not fire as specified — with no former label declared, c4-label-word's FB-C reads '${nlw:-nothing}' (${nlwd:-no detail}) where fail:4 is required, and c4-confirm-word's RS-21 reading '${ncw:-nothing}' where reordered is, so the former labels are not shown to be what holds the stream"
+  elif [ -n "$out" ]; then
+    FAIL "CF8: CONTROL a moved more than its plants — with no former label declared, records outside the plants and the totals differ: $out"
+  elif [ "$nref" -eq 0 ] || [ "$refs" != "$mal3" ]; then
+    FAIL "CF8: CONTROL b did not fire as specified — with $k1's key renamed in its row, $nref line(s) of the copy name $k1 and $(printf '%s\n' "$mal3" | grep -c '[^[:space:]]') are refused as naming no key the table carries; every one must be, and no other"
+  elif [ -n "$other" ]; then
+    FAIL "CF8: CONTROL b refused a line for another reason — $other"
+  else
+    PASS "CF8: on the shared copy ft_c4_copy builds (CF8_C4_DIR, ${rw#"$WORK/"}), $(awk -F'\t' '{ printf "%s%s → %s", s, $1, $2; s = "; " }' <<<"$FT_C4_REWORD") reworded in their two statements, each with its former label declared, leave the reader's stream — $(awk 'END { print NR }' <<<"$srw") record(s) — byte-identical to the unreworded copy's, with c4-label-word's FB-C at $lw and c4-confirm-word's RS-21 at $cw. CONTROL a: with no former label declared, c4-label-word reads $nlw ($nlwd) and c4-confirm-word $ncw, and nothing else moves but the totals. CONTROL b: $k1's key renamed in its row refuses all $nref line(s) that name it, each as naming no key the table carries, counted from the copy by position ($pd L3 line(s) under them refused as standing under no P turn)"
+  fi
+}
+cf8_assert
 
 md_flips cf_fence    'CF1'     cf1_assert
 md_flips cf_fence    'CF2'     cf2_assert
@@ -29958,6 +30184,8 @@ md_flips cv_run      'CF4b'    cf4b_assert
 md_flips cv_run      'CF5'     cf5_assert
 md_flips cv_run      'CF-GEN0' cfgen0_assert
 md_flips cfctl_eval  'CF-CTL'  cfctl_assert
+md_flips ft_c4_copy  'CF8'     cf8_assert
+md_flips cv_run      'CF8'     cf8_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group OW (the conversation block) — OW-C over every test conversation, read through group CF's
