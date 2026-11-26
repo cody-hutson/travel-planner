@@ -459,10 +459,12 @@
 #        its trip's day set (PW1), each of the four readers names the file (PW2), and each closed
 #        read scope stands verbatim (PW3); each with a must-fire control on a copy
 #   OP   the operator-provided-only entry (#2073): the reconciler's prompt names each one a rebuild
-#        drops, before its write (OP1); the hub and the validator read a `PROFILE MISSING`
-#        traveller's needs as unknown (OP4); the C12 note cites the obligation (OP5); and the
-#        carry-forward, drop and marker sentences stand (OP-U1, OP-U2). Phrase and sentence arms,
-#        each with a must-fire control on a copy
+#        drops, before its write (OP1); the verbs that dispatch the reconciler are found by a test
+#        that fails closed (OP0), run on an active trip (OP-F), render the naming by their own text
+#        or a citation they resolve (OP2), and carry the operator's stand-in bounded by the roster
+#        and the mark (OP3); the hub and the validator read a `PROFILE MISSING` traveller's needs
+#        as unknown (OP4); the C12 note cites the obligation (OP5); and the carry-forward, drop and
+#        marker sentences stand (OP-U1, OP-U2). Each arm with a must-fire control on a copy
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -32579,6 +32581,12 @@ fi
 #   OP1   the reconciler's prompt states the obligation — name each such entry it drops, before
 #         its write, citing ADR-049 — and names the entry by its heading's name, its token, or its
 #         place, never its heading; each anchor exactly once, whitespace folded.
+#   OP0   the verbs that dispatch the reconciler, found by a test with no verb name in it, and
+#         failing closed: a region that names the reconciler is admitted, or declares that it
+#         dispatches no agent, or is red.
+#   OP-F  every admitted verb runs only on an active trip.
+#   OP2   every admitted verb renders the naming, by its own text or by a citation it resolves.
+#   OP3   every admitted verb carries the operator's stand-in, bounded by the roster and the mark.
 #   OP4   the hub and the validator each hold exactly one sentence saying a `PROFILE MISSING`
 #         traveller's needs are unknown, never "no constraints".
 #   OP5   reference/data-architecture.md § 6's C12 note carries the ADR-049 citation in the same
@@ -32739,6 +32747,319 @@ elif [ "$OP5_N" -ne 1 ]; then
   FAIL "OP5: the C12 note records that a rebuild drops the \`operator-provided-only\` entry and does not cite the obligation in that sentence — $OP5_N sentence(s) carry both the drop and \"$OP5_CITE\" (must be exactly 1)"
 else
   PASS "OP5: the C12 note's drop sentence cites \"$OP5_CITE\" in the same sentence, under the pinned split; the citation stripped from a copy leaves 0"
+fi
+
+# ── OP0 — the verbs that dispatch the reconciler, found by a test and failing closed (#2073
+# criterion 3; CLAUDE.md § Rules over an enumeration, clause 3). No verb name is spelled here. A
+# Zone B region is a `## ` section, at fence depth 0, whose heading's first token, backticks
+# stripped, is a value of its own file's requirement-table `verb` column. Over every such region of
+# every skills/*/SKILL.md:
+#   P1         a sentence carries `dispatch`/`dispatches` as a word, `enrichment` and `reconciler role`;
+#   P2         the region carries "the model it is about to replace", the declared read;
+#   candidate  the region names `agents/00-enrichment.md` or carries "reconciler".
+# A candidate is ADMITTED where P1 and P2 hold, DECLARES where it says it dispatches no agent, and
+# is RED otherwise; any region where P1 and P2 disagree is RED too. The admitted set is the
+# population OP-F, OP2 and OP3 read. MUST-FIRE CONTROLS: "reconciler role" removed from a copy of
+# the first dispatching region's Dispatches line drops P1 by 1 and turns the agreement red; a sixth
+# section planted into a copy, which runs the reconciler and declares neither, is a RED candidate;
+# and the same predicate under a literal `[.;]` split must admit a different count, which shows the
+# pinned split is the one read.
+op_zoneb() {   # op_zoneb <file> -> one line per Zone B region: <verb>\t<body, fenced lines out, folded>
+  LC_ALL=C awk '
+    NR == FNR {
+      if ($0 ~ /^\| [^ |]+ \| (ACTIVE|ANY|ARCHIVED) \|/) { v = substr($0, 3); V[substr(v, 1, index(v, " ") - 1)] = 1 }
+      next
+    }
+    function emit() { if (cur != "") { gsub(/[ \t\r]+/, " ", body); sub(/^ /, "", body); printf "%s\t%s\n", cur, body } }
+    /^```/ { d = !d }
+    !d && /^## / {
+      emit()
+      t = substr($0, 4); sub(/^[ \t]+/, "", t); split(t, w, /[ \t]+/); tok = w[1]; sub(/^`+/, "", tok); sub(/`+$/, "", tok)
+      cur = (tok in V) ? tok : ""; body = ""; next
+    }
+    cur != "" && !d { body = body " " $0 }
+    END { emit() }' "$1" "$1"
+}
+op_preds() {   # op_preds <file label> <<< op_zoneb output -> <file>\t<verb>\t<cand>\t<P1>\t<P2>\t<declares>\t<P1, literal split>
+  LC_ALL=C awk -F'\t' -v F="$1" '
+    function dw(s) { return ((" " s " ") ~ /[^A-Za-z0-9_][Dd]ispatch(es)?[^A-Za-z0-9_]/) }
+    function p1of(b, how,   s, n, S, i) {
+      s = b
+      if (how == "pinned") { gsub(/[.] /, ".\n", s); gsub(/[;] /, ";\n", s); n = split(s, S, "\n") }
+      else n = split(s, S, /[.;]/)
+      for (i = 1; i <= n; i++) if (dw(S[i]) && index(S[i], "enrichment") && index(S[i], "reconciler role")) return 1
+      return 0
+    }
+    $1 != "" {
+      b = $2
+      printf "%s\t%s\t%d\t%d\t%d\t%d\t%d\n", F, $1, (index(b, "agents/00-enrichment.md") || index(b, "reconciler")) ? 1 : 0, p1of(b, "pinned"), index(b, "the model it is about to replace") ? 1 : 0, (b ~ /[Dd]ispatches no agent/) ? 1 : 0, p1of(b, "literal")
+    }'
+}
+op_regions() {   # op_regions <root> -> op_preds lines for every skills/*/SKILL.md under <root>
+  local f
+  for f in "$1"/skills/*/SKILL.md; do
+    [ -r "$f" ] && op_preds "${f#"$1"/}" <<<"$(op_zoneb "$f")"
+  done
+}
+# op0_tally <op_regions output> -> `<regions> <candidates> <admitted> <declaring> <red> <P1> <P2> <P1 literal> <disagreements>`
+op0_tally() {
+  LC_ALL=C awk -F'\t' '
+    NF >= 7 { r++; p1 += $4; p2 += $5; pl += $7; if ($4 != $5) dis++
+      if ($3) { c++; if ($4 && $5) a++; else if ($6) d++; else red++ } }
+    END { printf "%d %d %d %d %d %d %d %d %d\n", r, c, a, d, red, p1, p2, pl, dis }' <<<"$1"
+}
+op0_list() { LC_ALL=C awk -F'\t' -v want="$2" 'NF >= 7 && $3 { v = ($4 && $5) ? "admitted" : ($6 ? "declares" : "red"); if (v == want) printf "%s ", $2 }' <<<"$1"; }
+
+OP_WORK="$WORK/op"; mkdir -p "$OP_WORK"
+OP0_R="$(op_regions "$ROOT")"
+read -r OP0_NR OP0_NC OP0_NA OP0_ND OP0_NRED OP0_P1 OP0_P2 OP0_PL OP0_DIS <<<"$(op0_tally "$OP0_R")"
+# The admitted set, as `<file>\t<verb>` lines: the population every later arm of this group reads.
+OP_ADM="$(LC_ALL=C awk -F'\t' 'NF >= 7 && $3 && $4 && $5 { printf "%s\t%s\n", $1, $2 }' <<<"$OP0_R")"
+# Control (a): "reconciler role" removed from the first `**Dispatches**` line of a copy of the first
+# file of the admitted set that carries one.
+OP0_AF=""
+while IFS="$(printf '\t')" read -r op_f _; do
+  [ -n "$op_f" ] && [ -z "$OP0_AF" ] || continue
+  if [ "$(LC_ALL=C awk 'index($0, "**Dispatches**") == 1 && index($0, "reconciler role") { n++ } END { print n + 0 }' "$ROOT/$op_f" 2>/dev/null)" -ge 1 ]; then OP0_AF="$op_f"; fi
+done <<<"$OP_ADM"
+mkdir -p "$OP_WORK/c0a"
+OP0_AMUT=3
+if [ -n "$OP0_AF" ] && [ -r "$ROOT/$OP0_AF" ]; then
+  LC_ALL=C awk '!m && index($0, "**Dispatches**") == 1 && index($0, "reconciler role") { sub(/reconciler role/, ""); m = 1 } { print } END { exit (m ? 0 : 3) }' \
+    "$ROOT/$OP0_AF" > "$OP_WORK/c0a/SKILL.md"; OP0_AMUT=$?
+fi
+read -r _ _ _ _ _ OP0_AP1 _ _ OP0_ADIS <<<"$(op0_tally "$(op_preds "$OP0_AF" <<<"$(op_zoneb "$OP_WORK/c0a/SKILL.md")")")"
+read -r _ _ _ _ _ OP0_FP1 _ _ OP0_FDIS <<<"$(op0_tally "$(LC_ALL=C awk -F'\t' -v f="$OP0_AF" '$1 == f' <<<"$OP0_R")")"
+# Control (b): a sixth section planted into a copy of that same file — a requirement row and a section
+# that runs the reconciler, reads the model and rewrites it, and declares neither.
+mkdir -p "$OP_WORK/c0b"
+OP0_BMUT=3
+if [ -n "$OP0_AF" ] && [ -r "$ROOT/$OP0_AF" ]; then
+  { cat "$ROOT/$OP0_AF"; printf '\n## zzresync\n\n| zzresync | ACTIVE | any | any | G8 |\n\nRuns `agents/00-enrichment.md` as the reconciler, which reads `trips/<slug>/outputs/traveler-model.md`, the model it replaces, and rewrites that file.\n'; } > "$OP_WORK/c0b/SKILL.md"; OP0_BMUT=$?
+fi
+OP0_BR="$(op_preds "$OP0_AF" <<<"$(op_zoneb "$OP_WORK/c0b/SKILL.md")")"
+read -r _ OP0_BC _ _ OP0_BRED _ _ _ _ <<<"$(op0_tally "$OP0_BR")"
+read -r _ OP0_FC _ _ OP0_FRED _ _ _ _ <<<"$(op0_tally "$(LC_ALL=C awk -F'\t' -v f="$OP0_AF" '$1 == f' <<<"$OP0_R")")"
+OP0_BZZ="$(op0_list "$OP0_BR" red)"
+if [ "${OP0_NR:-0}" -lt 1 ] || [ "${OP0_NC:-0}" -lt 1 ]; then
+  FAIL "OP0: measured nothing — ${OP0_NR:-0} Zone B verb region(s) and ${OP0_NC:-0} candidate(s) read across skills/*/SKILL.md. A test over no region finds no dispatching verb and proves nothing"
+elif [ "$OP0_AMUT" -ne 0 ] || [ "${OP0_AP1:-0}" -ne $((OP0_FP1 - 1)) ] || [ "${OP0_ADIS:-0}" -ne $((OP0_FDIS + 1)) ] || [ "$OP0_BMUT" -ne 0 ] || [ "${OP0_BC:-0}" -ne $((OP0_FC + 1)) ] || [ "${OP0_BRED:-0}" -ne $((OP0_FRED + 1)) ] || [ "$OP0_BZZ" != "zzresync " ] || [ "${OP0_PL:-0}" -eq "${OP0_P1:-0}" ]; then
+  FAIL "OP0: BROKEN PROBE — \"reconciler role\" removed from a copy of ${OP0_AF:-<no admitted file>}'s Dispatches line (landed rc=$OP0_AMUT) read P1 ${OP0_AP1:-?} against $OP0_FP1 and disagreements ${OP0_ADIS:-?} against $OP0_FDIS (must be one fewer and one more); a planted sixth section (landed rc=$OP0_BMUT) read ${OP0_BC:-?} candidate(s) against $OP0_FC and ${OP0_BRED:-?} red against $OP0_FRED (must each be one more, the red one 'zzresync', read '${OP0_BZZ:-none}'); and a literal \`[.;]\` split admitted ${OP0_PL:-?} against the pinned split's ${OP0_P1:-?} (must differ). Until each fires, a verdict below is the instrument's"
+elif [ "${OP0_NA:-0}" -lt 1 ] || [ "${OP0_NRED:-1}" -ne 0 ] || [ "${OP0_DIS:-1}" -ne 0 ]; then
+  FAIL "OP0: the dispatching verbs are not all found by the test — over $OP0_NR region(s), $OP0_NC candidate(s): admitted ${OP0_NA:-0} ($(op0_list "$OP0_R" admitted)), declaring $OP0_ND ($(op0_list "$OP0_R" declares)), red $OP0_NRED ($(op0_list "$OP0_R" red)); P1 $OP0_P1, P2 $OP0_P2, disagreements $OP0_DIS. A region that runs the reconciler must declare the read on its Reads line and name the role on its Dispatches line, or say it dispatches no agent"
+else
+  PASS "OP0: the verbs that dispatch the reconciler are found by the test, with no verb named here — $OP0_NR Zone B region(s), $OP0_NC candidate(s): $OP0_NA admitted ($(op0_list "$OP0_R" admitted)), $OP0_ND declaring they dispatch no agent ($(op0_list "$OP0_R" declares)), 0 red; P1 = P2 = $OP0_P1, no disagreement. Every control fired: \"reconciler role\" removed from a copy drops P1 by 1 and turns the agreement red, a planted sixth section is a red candidate, and a literal \`[.;]\` split admits $OP0_PL rather than $OP0_P1"
+fi
+
+# ── OP-F — every admitted verb runs only on an active trip: its requirement row's lifecycle cell
+# reads ACTIVE, so the archived-trip freeze is never met by a dispatch of the rebuild. Guarded by
+# OP0's population; the control flips one admitted row to ANY in a copy.
+# op_life <file text> <verb> — the lifecycle cell of <verb>'s row in the file's requirement table,
+# the table under the `| verb | lifecycle |` header, read row by row until the table ends.
+op_life() {
+  LC_ALL=C awk -F'|' -v v="$2" '
+    /^\| verb \| lifecycle \|/ { on = 1; next }
+    on && !/^\|/ { on = 0 }
+    on { c = $2; sub(/^[ \t]+/, "", c); sub(/[ \t]+$/, "", c); if (c == v) { l = $3; sub(/^[ \t]+/, "", l); sub(/[ \t]+$/, "", l); print l; exit } }' <<<"$1"
+}
+opf_scan() {   # opf_scan <root> [<file> <copy text>] -> `<checked> <active> <not active: verb=cell …>`
+  local f v t n=0 a=0 bad="" cell
+  while IFS="$(printf '\t')" read -r f v; do
+    [ -n "$v" ] || continue
+    if [ -n "${2:-}" ] && [ "$f" = "$2" ]; then t="$3"; else t="$(cat "$1/$f" 2>/dev/null)"; fi
+    cell="$(op_life "$t" "$v")"
+    n=$((n + 1))
+    if [ "$cell" = "ACTIVE" ]; then a=$((a + 1)); else bad="$bad$v=${cell:-<no row>} "; fi
+  done <<<"$OP_ADM"
+  printf '%s %s %s\n' "$n" "$a" "$bad"
+}
+read -r OPF_N OPF_A OPF_BAD <<<"$(opf_scan "$ROOT")"
+IFS="$(printf '\t')" read -r OPF_CF OPF_CV <<<"$(LC_ALL=C awk -F'\t' 'NF >= 2 { print; exit }' <<<"$OP_ADM")"
+OPF_CT="$(er_sub1 "$(cat "$ROOT/$OPF_CF" 2>/dev/null)" "| $OPF_CV | ACTIVE |" "| $OPF_CV | ANY |")"
+read -r _ OPF_CA _ <<<"$(opf_scan "$ROOT" "$OPF_CF" "$OPF_CT")"
+if [ "${OPF_N:-0}" -lt 1 ]; then
+  FAIL "OP-F: measured nothing — OP0 admitted no dispatching verb, so there is no requirement row to read. A lifecycle check over an empty set proves nothing"
+elif [ "${OPF_CA:-0}" -ne $((OPF_A - 1)) ]; then
+  FAIL "OP-F: BROKEN PROBE — \`$OPF_CV\`'s row flipped to ANY in a copy read $OPF_CA ACTIVE row(s) against $OPF_A (must be one fewer)"
+elif [ "$OPF_A" -ne "$OPF_N" ]; then
+  FAIL "OP-F: $OPF_A of the $OPF_N admitted verb(s) declare \`lifecycle: ACTIVE\` — ${OPF_BAD:-none}. A dispatch of the rebuild on an archived trip would reach through the freeze"
+else
+  PASS "OP-F: all $OPF_N admitted verb(s) declare \`lifecycle: ACTIVE\` in their requirement row, so no dispatch of the rebuild meets an archived trip; \`$OPF_CV\`'s row flipped to ANY in a copy drops the count by 1"
+fi
+
+# ── OP2 — every admitted verb renders the naming, by its own text or by a citation it resolves
+# (FM-5). op_classify is the one place the own-or-cite choice is made:
+#   OWN      the region carries the naming sentence and the stand-in sentence;
+#   CITE     one sentence, under the pinned split, carries "did not keep", "carry the stand-in" or
+#            "carrying the stand-in", and a citation of a section that is itself OWN;
+#   NEITHER  everything else, and UNRESOLVED a citation of a section that is not OWN.
+# The verdict is a conjunction at top level: admitted ≥ 1, OWN ≥ 1, no NEITHER, no UNRESOLVED; and
+# each OWN region says it names nothing where nothing drops (criterion 4) and that in a run nobody
+# can answer the naming adds no stop (ADR-049 Decision 4). op_classify is registered with md_flips.
+# MUST-FIRE CONTROLS, each on an in-memory copy of the regions: the naming stripped from the first
+# OWN region that another region cites turns it NEITHER and every region citing it UNRESOLVED; and
+# each citing region's own change reverted alone — Change 5d, 6c or 6d, old for new — turns that one
+# region NEITHER and no other.
+OP_NAMING='It returns as well each `[OPERATOR-PROVIDED]`-only entry its rebuild of'
+OP_SIHEAD="**The dispatch carries the operator's stand-in:**"
+OP_SIBOUND='whose entry does not carry `[THIRD-PARTY]`'
+op_stream() {   # op_stream <root> -> one line per admitted region: <verb>\t<folded body>
+  local f v
+  while IFS="$(printf '\t')" read -r f v; do
+    [ -n "$v" ] || continue
+    LC_ALL=C awk -F'\t' -v v="$v" '$1 == v { print; n++ } END { exit (n == 1 ? 0 : 3) }' <<<"$(op_zoneb "$1/$f")"
+  done <<<"$OP_ADM"
+}
+op_classify() {   # op_classify <stream> -> <verb>\t<OWN|CITE|UNRESOLVED|NEITHER>\t<cited verb or ->
+  OP_N="$OP_NAMING" OP_H="$OP_SIHEAD" OP_B="$OP_SIBOUND" LC_ALL=C awk -F'\t' '
+    function sents(b, S,   s) { s = b; gsub(/[.] /, ".\n", s); gsub(/[;] /, ";\n", s); return split(s, S, "\n") }
+    $1 != "" {
+      n++; V[n] = $1; B[n] = $2
+      own = index($2, ENVIRON["OP_N"]) && index($2, "rostered or not") ? 1 : 0
+      si = 0; k = sents($2, S)
+      for (i = 1; i <= k; i++) if (index(S[i], ENVIRON["OP_H"]) && index(S[i], ENVIRON["OP_B"])) si = 1
+      OWN[$1] = (own && si)
+    }
+    END {
+      for (j = 1; j <= n; j++) {
+        if (OWN[V[j]]) { printf "%s\tOWN\t-\n", V[j]; continue }
+        tg = ""; k = sents(B[j], S)
+        for (i = 1; i <= k && tg == ""; i++) {
+          if (!index(S[i], "did not keep")) continue
+          if (!index(S[i], "carry the stand-in") && !index(S[i], "carrying the stand-in")) continue
+          if (index(S[i], "as § `travelers` states")) tg = "travelers"
+          else if (index(S[i], "as `plan`" "'"'"'" "s section states")) tg = "plan"
+          else if (index(S[i], "as that section" "'"'"'" "s does")) tg = "?"
+        }
+        if (tg == "") printf "%s\tNEITHER\t-\n", V[j]
+        else if (OWN[tg]) printf "%s\tCITE\t%s\n", V[j], tg
+        else printf "%s\tUNRESOLVED\t%s\n", V[j], tg
+      }
+    }' <<<"$1"
+}
+op_cls() { LC_ALL=C awk -F'\t' -v c="$2" '$2 == c { printf "%s%s ", $1, ($3 != "-" ? "→" $3 : "") }' <<<"$1"; }
+op_ncls() { LC_ALL=C awk -F'\t' -v c="$2" '$2 == c { n++ } END { print n + 0 }' <<<"$1"; }
+# op_mut <stream> <verb> <old> <new> — the stream with <old> replaced by <new> once in <verb>'s body.
+op_mut() { OP_O="$3" OP_R="$4" LC_ALL=C awk -F'\t' -v v="$2" 'BEGIN { OFS = "\t" } $1 == v && !m { p = index($2, ENVIRON["OP_O"]); if (p) { $2 = substr($2, 1, p - 1) ENVIRON["OP_R"] substr($2, p + length(ENVIRON["OP_O"])); m = 1 } } { print } END { exit (m ? 0 : 3) }' <<<"$1"; }
+# The three citing regions' own changes, each as the folded new text and the folded old text it
+# replaced: Change 5d in § `replan`, 6c in § `person`, 6d in § `group`.
+OP_REV=(
+  'replan|did not keep, and carrying the stand-in, as `plan`'"'"'s section states|did not keep as `plan`'"'"'s section states'
+  'person|render what its rebuild did not keep, and carry the stand-in, as § `travelers` states|render what its rebuild replaced in `outputs/traveler-presence.md`, as § `travelers` states'
+  'group|what its rebuild did not keep as § `travelers` states — the dispatch carrying the stand-in as that section'"'"'s does — and its|what its rebuild replaced in `outputs/traveler-presence.md` as § `travelers` states, and its'
+)
+op2_assert() {   # op2_assert <root> — exactly one verdict
+  local st cl na no nn nu ownbad="" v cv x y rc ctl_a="" ctl_a_ok=0 rev_bad="" rev_n=0 o
+  st="$(op_stream "$1")"
+  cl="$(op_classify "$st")"
+  na="$(LC_ALL=C awk -F'\t' 'NF >= 2 { n++ } END { print n + 0 }' <<<"$OP_ADM")"
+  no="$(op_ncls "$cl" OWN)"; nn="$(op_ncls "$cl" NEITHER)"; nu="$(op_ncls "$cl" UNRESOLVED)"
+  for v in $(op_cls "$cl" OWN); do
+    o="$(LC_ALL=C awk -F'\t' -v v="$v" '$1 == v { print $2 }' <<<"$st")"
+    [ "$(op_cnt "$o" 'where it names none')" -ge 1 ] || ownbad="$ownbad $v:names-none"
+    [ "$(op_nsent "$o" 'In a run nobody can answer' 'adds no stop')" -ge 1 ] || ownbad="$ownbad $v:no-stop"
+  done
+  # Control (a): the naming stripped from the first OWN region that another region cites.
+  cv="$(LC_ALL=C awk -F'\t' '$2 == "CITE" { print $3; exit }' <<<"$cl")"
+  if [ -n "$cv" ]; then
+    x="$(op_mut "$st" "$cv" "$OP_NAMING" '')"; rc=$?
+    y="$(op_classify "$x")"
+    ctl_a="$(op_cls "$y" NEITHER)/$(op_cls "$y" UNRESOLVED)"
+    if [ "$rc" -eq 0 ] && [ "$(LC_ALL=C awk -F'\t' -v t="$cv" '$1 == t && $2 == "NEITHER" { a++ } $2 == "CITE" && $3 == t { b++ } $3 == t && $2 == "UNRESOLVED" { u++ } END { print (a == 1 && b + 0 == 0 && u >= 1) ? 1 : 0 }' <<<"$y")" -eq 1 ]; then ctl_a_ok=1; fi
+  fi
+  # Controls (c)-(e): each citing region's own change reverted alone.
+  for x in "${OP_REV[@]}"; do
+    v="${x%%|*}"; y="${x#*|}"
+    rev_n=$((rev_n + 1))
+    o="$(op_classify "$(op_mut "$st" "$v" "${y%%|*}" "${y#*|}")")"
+    if [ "$(op_cls "$o" NEITHER)$(op_cls "$o" UNRESOLVED)" != "$v " ] || [ "$(op_ncls "$o" NEITHER)" -ne $((nn + 1)) ]; then
+      rev_bad="$rev_bad $v:[$(op_cls "$o" NEITHER)$(op_cls "$o" UNRESOLVED)]"
+    fi
+  done
+  if [ "$na" -lt 1 ] || [ -z "$cl" ]; then
+    FAIL "OP2: measured nothing — OP0 admitted $na verb(s) and the classifier returned $(LC_ALL=C awk 'NF { n++ } END { print n + 0 }' <<<"$cl") line(s). A render check over no dispatching verb proves nothing"
+  elif [ "$no" -lt 1 ] || [ "$nn" -ne 0 ] || [ "$nu" -ne 0 ] || [ -n "$ownbad" ]; then
+    FAIL "OP2: not every verb that dispatches the reconciler renders the naming — of $na admitted: OWN $no ($(op_cls "$cl" OWN)), CITE $(op_ncls "$cl" CITE) ($(op_cls "$cl" CITE)), NEITHER $nn ($(op_cls "$cl" NEITHER)), UNRESOLVED $nu ($(op_cls "$cl" UNRESOLVED)); OWN regions missing the names-none or the no-stop clause:${ownbad:- none}. Each must carry the naming and the stand-in, or cite one that does in a sentence carrying the obligation's own words"
+  elif [ "$ctl_a_ok" -ne 1 ] || [ -n "$rev_bad" ]; then
+    FAIL "OP2: BROKEN PROBE — the naming stripped from a copy of § \`${cv:-<none cited>}\` read NEITHER/UNRESOLVED '${ctl_a:-not run}' (must be that region NEITHER and every region citing it UNRESOLVED), and reverting a citing region's own change alone did not turn exactly that one region NEITHER:${rev_bad:- none}. Until each fires, the verdict above is the instrument's"
+  else
+    PASS "OP2: every one of the $na verb(s) that dispatch the reconciler renders the naming — OWN $no ($(op_cls "$cl" OWN)), each saying it names nothing where nothing drops and that in a run nobody can answer it adds no stop; CITE $(op_ncls "$cl" CITE) ($(op_cls "$cl" CITE)), each in a sentence carrying \"did not keep\" and the stand-in. Every control fired: the naming stripped from § \`$cv\` turns it NEITHER and its citers UNRESOLVED ($ctl_a), and each of the $rev_n citing changes reverted alone turns that one region NEITHER"
+  fi
+}
+op2_assert "$ROOT"
+if [ -n "$OP_ADM" ]; then
+  md_flips op_classify 'OP2' op2_assert "$ROOT"
+fi
+
+# ── OP3 — the stand-in each dispatch carries is bounded by the roster AND by the mark (PR-1): it
+# admits a traveller the roster names whose entry does not carry `[THIRD-PARTY]`, and a member whose
+# entry carries it, rostered or not, is § `person`'s. Each OWN region's stand-in sentence carries
+# both bounds, and every admitted region reaches one by OWN or CITE. The ENCODING below reads the
+# bound off that sentence: an entry is admitted where the sentence's roster bound holds for it, and,
+# where the sentence carries the mark clause, only where the entry does not carry the mark. Over a
+# copy of examples/archived-trip-demo/ in which `per-b70d` — a both-marks entry — is given a roster
+# row and `[ROSTERED]`, the real sentence must refuse `per-b70d` and admit at least one entry; with
+# the mark clause stripped from a copy of the sentence the encoding must admit `per-b70d`. That last
+# is the must-fire control, and an encoding that cannot see the clause cannot pass.
+OP3_W="$ROOT/examples/archived-trip-demo"
+OP3_C="$OP_WORK/b70d"; mkdir -p "$OP3_C"
+OP3_MUT=3
+if [ -r "$OP3_W/trip-context.md" ] && [ -r "$OP3_W/outputs/traveler-model.md" ]; then
+  LC_ALL=C awk '/^## Group/ { on = 1 } on && /^\| per-9a3e \|/ && !m { print; print "| per-b70d | — | — |"; m = 1; next } { print } END { exit (m ? 0 : 3) }' \
+    "$OP3_W/trip-context.md" > "$OP3_C/trip-context.md"; OP3_MUT=$?
+  LC_ALL=C awk '/^## per-b70d / && !m { $0 = $0 " `[ROSTERED]`"; m = 1 } { print } END { exit (m ? 0 : 3) }' \
+    "$OP3_W/outputs/traveler-model.md" > "$OP3_C/traveler-model.md" || OP3_MUT=3
+fi
+op_standin() {   # op_standin <sentence> <trip-context> <model> -> the heading keys the encoding admits, space-joined
+  OP_S="$1" LC_ALL=C awk '
+    function key(s) { s = tolower(s); gsub(/[^a-z0-9]/, "", s); return s }
+    NR == FNR {
+      if (/^## Group/) { on = 1; next }
+      if (on && /^## /) on = 0
+      if (on && /^\|/ && !/^\|[ \t:|-]+$/) { split($0, c, "|"); if (hdr++) R[key(c[2])] = 1 }
+      next
+    }
+    /^## / {
+      h = substr($0, 4); tp = index(h, "[THIRD-PARTY]") ? 1 : 0
+      nm = h; gsub(/`?\[[A-Z-]+\]`?/, "", nm); k = key(nm)
+      if (k == "updatesignals" || k == "desireoverlap") next
+      s = ENVIRON["OP_S"]
+      rb = index(s, "a traveller the roster names") ? 1 : 0
+      tb = index(s, "whose entry does not carry `[THIRD-PARTY]`") ? 1 : 0
+      if ((!rb || (k in R)) && (!tb || !tp)) out = out k " "
+    }
+    END { print out }' "$2" "$3"
+}
+op3_assert() {   # op3_assert <root> — exactly one verdict
+  local st cl na v t s owns=0 bad="" adm stripadm nneed=0
+  st="$(op_stream "$1")"
+  cl="$(op_classify "$st")"
+  na="$(LC_ALL=C awk -F'\t' 'NF >= 2 { n++ } END { print n + 0 }' <<<"$OP_ADM")"
+  for v in $(op_cls "$cl" OWN); do
+    owns=$((owns + 1))
+    t="$(LC_ALL=C awk -F'\t' -v v="$v" '$1 == v { print $2 }' <<<"$st")"
+    s="$(op_sent1 "$t" "$OP_SIHEAD")"
+    [ -n "$s" ] && [ "$(op_cnt "$s" 'a traveller the roster names')" -ge 1 ] && [ "$(op_cnt "$s" "$OP_SIBOUND")" -ge 1 ] || bad="$bad $v:bound"
+    [ "$(op_nsent "$t" 'A member whose entry carries `[THIRD-PARTY]`, rostered or not')" -eq 1 ] || bad="$bad $v:rostered-or-not"
+    adm="$(op_standin "$s" "$OP3_C/trip-context.md" "$OP3_C/traveler-model.md")"
+    stripadm="$(op_standin "$(er_sub1 "$s" "$OP_SIBOUND" '')" "$OP3_C/trip-context.md" "$OP3_C/traveler-model.md")"
+    case " $adm" in *" perb70d "*) bad="$bad $v:admits-per-b70d" ;; esac
+    [ -n "$adm" ] || bad="$bad $v:admits-none"
+    case " $stripadm" in *" perb70d "*) ;; *) nneed=$((nneed + 1)) ;; esac
+  done
+  if [ "$na" -lt 1 ] || [ "$OP3_MUT" -ne 0 ]; then
+    FAIL "OP3: measured nothing — OP0 admitted $na verb(s), and the per-b70d copy of examples/archived-trip-demo/ landed rc=$OP3_MUT (must be 0). A stand-in bound over no verb, or over a fixture that did not build, proves nothing"
+  elif [ "$owns" -lt 1 ] || [ "$(op_ncls "$cl" NEITHER)" -ne 0 ] || [ "$(op_ncls "$cl" UNRESOLVED)" -ne 0 ] || [ -n "$bad" ]; then
+    FAIL "OP3: the stand-in is not bounded by the roster and by the mark in every dispatch — OWN $owns ($(op_cls "$cl" OWN)), NEITHER $(op_cls "$cl" NEITHER), UNRESOLVED $(op_cls "$cl" UNRESOLVED); findings:${bad:- none}. A stand-in that reaches a \`[THIRD-PARTY]\` member, rostered or not, captures a party member's needs outside § \`person\`"
+  elif [ "$nneed" -ne 0 ]; then
+    FAIL "OP3: BROKEN PROBE — in $nneed OWN region(s) the encoding still refused \`per-b70d\` with the mark clause stripped from a copy of the stand-in sentence, so its refusal above may be blind to the clause"
+  else
+    PASS "OP3: every admitted verb carries the operator's stand-in, bounded by the roster and by the mark — in each of the $owns OWN region(s) ($(op_cls "$cl" OWN)) the stand-in sentence names a traveller the roster names whose entry does not carry \`[THIRD-PARTY]\`, and a member carrying it, rostered or not, is § \`person\`'s; the citing regions ($(op_cls "$cl" CITE)) reach it. Over a copy of the archived witness with \`per-b70d\` rostered, the encoding refuses it and admits others, and with the mark clause stripped it admits \`per-b70d\`"
+  fi
+}
+op3_assert "$ROOT"
+if [ -n "$OP_ADM" ]; then
+  md_flips op_classify 'OP3' op3_assert "$ROOT"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════

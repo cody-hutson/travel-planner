@@ -345,9 +345,12 @@ name: Artifact schema
 #        holds only days of its trip's day set, each of the four readers names the file, and each
 #        closed read scope stands once; each with a must-fire control on a copy
 #   OP   the operator-provided-only entry: the reconciler's prompt names each one a rebuild drops,
-#        before its write; the hub and the validator read a `PROFILE MISSING` traveller's needs as
-#        unknown; the C12 note cites the obligation; and the carry-forward, drop and marker
-#        sentences stand. Each arm with a must-fire control on a copy
+#        before its write; the verbs that dispatch the reconciler, found by a test that fails closed,
+#        run on an active trip, render the naming by their own text or a citation they resolve, and
+#        carry the operator's stand-in bounded by the roster and the mark; the hub and the validator
+#        read a `PROFILE MISSING` traveller's needs as unknown; the C12 note cites the obligation;
+#        and the carry-forward, drop and marker sentences stand. Each arm with a must-fire control
+#        on a copy
 #   RS   this coverage boundary itself, and the suite's own header roster, each set-diffed
 #        BOTH WAYS against the groups the run actually emitted. The executing set comes from
 #        the RUN, never from a static read of the suite. A group added and left undeclared
