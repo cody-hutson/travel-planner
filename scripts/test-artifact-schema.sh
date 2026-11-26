@@ -19416,7 +19416,7 @@ fi
 #             `site` row does not admit, a `site` row a non-row leaves with no state a build runs in,
 #             and a lifecycle cell left empty. Each is green on arrival, because its branch already
 #             existed; the mutation that removes the branch is its evidence that it can fail
-#   W-CTL-SL-CONTRACT, -SL-RT0, -SL-RT1, -SL-RT2, -SL-CLEAN, -SL-DROP, -SL-EMPTY(s), -SL-DEG(s/n)
+#   W-CTL-SL-CONTRACT, -SL-RT0, -SL-RT1, -SL-RT2, -SL-CLEAN, -SL-DROP, -SL-HEAD, -SL-EMPTY(s), -SL-DEG(s/n)
 #             (and -SL-DEGrun, the same degraded state through the CLI in the selecting state)
 #             the destination shortlist's element fence: its grammar, the agent's own output
 #             template read at heading grain, pinned both ways; its instance walk, each heading
@@ -20423,6 +20423,19 @@ else
     -- w_sl_run 1 "$W_SL_FX/shortlist.md" "$W_SL_FX/page-drop.html"
 fi
 
+# W-CTL-SL-HEAD — the instance's other direction: the shortlist carries a heading its fence declares no
+# row for. The page carries every part, so the one finding is the heading's, not a dropped component's.
+awk '/^## Handoff to DISCOVERY$/ && !d { print "## Weather Outlook"; print "Mild in May."; print ""; d = 1 } { print }' \
+  "$W_SL_FX/shortlist.md" > "$W_SL_FX/shortlist-head.md"
+if [ "$W_SL_IOK" -ne 1 ]; then
+  FAIL "W-CTL-SL-HEAD: not built — the clean pair does not walk clean (W-CTL-SL-CLEAN)"
+elif cmp -s "$W_SL_FX/shortlist.md" "$W_SL_FX/shortlist-head.md"; then
+  FAIL "W-CTL-SL-HEAD: the heading was not added to the copy, so this control proves nothing"
+else
+  w_ctl_fire 'W-CTL-SL-HEAD' RT3 1 "a copy of the shortlist carries one heading its element fence declares no row for, against the page carrying every part — a heading neither rendered nor excluded" \
+    -- w_sl_run 1 "$W_SL_FX/shortlist-head.md" "$W_SL_FX/page.html"
+fi
+
 # W-CTL-SL-EMPTY / -EMPTYs — the ranking emptied on a copy of the shortlist: the page owes the
 # declared empty state, and a page carrying it is clean.
 awk '/^## Shortlist \(ranked\)$/ { print; print "No candidate survives the vetoes yet."; skip = 1; next } skip && /^## / { skip = 0 } skip { next } { print }' \
@@ -21040,7 +21053,8 @@ ps_dne "W: no arm in this group establishes that a site build INVOKED the walk. 
 #   $WORK/w/fxdata-preplan, fxdata-twopages
 #                                     -> W-CTL-PREPLAN / NEWEST / NEWESTr
 #   $WORK/w/slroot/…, slfx/…          -> W-CTL-SL-CONTRACT / SL-RT0 / SL-RT1 / SL-RT2 / SL-CLEAN /
-#                                        SL-DROP / SL-EMPTY / SL-EMPTYs / SL-DEG / SL-DEGs / SL-DEGn
+#                                        SL-DROP / SL-HEAD / SL-EMPTY / SL-EMPTYs / SL-DEG / SL-DEGs /
+#                                        SL-DEGn
 #   $WORK/w/fxdata-noshortlist        -> W-CTL-SL-DEGrun
 #
 # The compensating control is W0, which runs over the REAL documents and proves the fence
