@@ -3577,7 +3577,7 @@ Where the target field is **unanswered** by the traveller, and only there:
 
 ## .approvers <name...> [--threshold <n>]
 
-**Reads:** `trips/<slug>/trip-context.md` — the `## Group` roster table's first column alone, the Person cells, read to resolve each name the operator typed to one canonical traveller key; `trips/<slug>/.approvers` — the existence probe that selects creating the file from replacing it, and, on the replace route, the outgoing declaration read before it is overwritten, so that it can be echoed and so the reversal has something to restore; `trips/<slug>/.published-itinerary` — an existence probe alone, with no byte of it read, so the verb can say when a declaration would hold every `update` and every `rotate` until the current plan is approved. Reads no `.approvals`, no traveller file, no derived model and no person record: a declaration is a set of roster keys and a threshold, and nothing else settles it. Runs no script and dispatches no agent. **Non-interactive: the standing clause's *run nobody can answer*.**
+**Reads:** `trips/<slug>/trip-context.md` — the `## Group` roster table's first column alone, the Person cells, read to resolve each name the operator typed to one canonical traveller key; `trips/<slug>/.approvers` — the existence probe that selects creating the file from replacing it, and, on the replace route, the outgoing declaration read before it is overwritten, so that it can be echoed and so the reversal has something to restore; `trips/<slug>/.published-itinerary` — an existence probe alone, with no byte of it read, so the verb can say when, in a plan mode, a declaration would hold every `update` and every `rotate` until the current plan is approved. Reads no `.approvals`, no traveller file, no derived model and no person record: a declaration is a set of roster keys and a threshold, and nothing else settles it. Runs no script and dispatches no agent. **Non-interactive: the standing clause's *run nobody can answer*.**
 
 **The one file this verb writes, and it is not `trip-context.md`.** The target is
 `trips/<slug>/.approvers` — under `trips/<slug>/` per standing rule 5, where `<slug>` is
@@ -3627,17 +3627,20 @@ before either write tool is reached. Not readable → **create** with `Write`, w
 
 **The consequences, stated on every write.**
 
-1. The next `update` of a changed plan waits for the declared approvals. The organizer records them
-   one at a time, at a terminal, with `scripts/publish-trip-site.sh confirm`, and nothing on this
-   command surface can record one.
+1. In a plan mode, the next `update` of a changed plan waits for the declared approvals. The
+   organizer records them one at a time, at a terminal, with `scripts/publish-trip-site.sh confirm`,
+   and nothing on this command surface can record one. In IDEATION, `/trip-publish update` refuses
+   the trip's pre-plan site while the declaration stands, because approvers approve the plan only,
+   and names the ways forward (`skills/trip-publish/SKILL.md` § *update* → *Precondition*).
 2. An organizer confirmation already recorded no longer covers a pending change.
 3. Retiring a declaration is the operator's own act, and it removes `.approvals` with it: a ledger
    left behind without a declaration holds every plan change.
 4. **Where the probe finds no `trips/<slug>/.published-itinerary`**, the trip has no published
-   baseline, so every `update` and every `rotate` waits for approvals of its current plan — a
-   republish that changes only the coordination marker included — until they are recorded. Name the
-   order that costs nothing: republish once with `/trip-publish update` while the trip is still
-   undeclared, so the push records a baseline, and declare afterwards.
+   baseline, so in a plan mode every `update` and every `rotate` waits for approvals of its current
+   plan — a republish that changes only the coordination marker included — until they are recorded;
+   in IDEATION, `update` is refused as consequence 1 says. Name the order that costs nothing:
+   republish once with `/trip-publish update` while the trip is still undeclared, so the push records
+   a baseline, and declare afterwards.
 
 `- **Total travelers:**` is not read and sets nothing here: the declared population is the approvers named, never the party's size.
 
