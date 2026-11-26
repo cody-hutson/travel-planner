@@ -9,13 +9,13 @@ style: none
 traveller: TE — terse, an invented traveller
 answered-before: none
 T1 I | What kind of trip are you after?
-L4 put=Destination leanings › Trip vibe kind=ask example=no
+L4 put=trip-vibe kind=ask example=no
 T2 P | City.
-L3 Destination leanings › Trip vibe = thin
+L3 trip-vibe = thin
 T3 I | You said city — or would beach or nature suit too?
-L4 put=Destination leanings › Trip vibe kind=follow-up example=no carries=«city, beach, nature»
+L4 put=trip-vibe kind=follow-up example=no carries=«city, beach, nature»
 T4 P | Just the city.
-L3 Destination leanings › Trip vibe = answer
+L3 trip-vibe = answer
 --- record
-V Destination leanings › Trip vibe = city, just the city
-X FB-C Destination leanings › Trip vibe = fail:4
+V trip-vibe = city, just the city
+X FB-C trip-vibe = fail:4

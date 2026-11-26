@@ -9,17 +9,17 @@ style: none
 traveller: AF — answers freely, an invented traveller
 answered-before: none
 T1 I | How much of the trip would you like as a group?
-L4 put=People dynamics › Group time kind=ask example=no
+L4 put=group-time kind=ask example=no
 T2 P | Some solo time.
-L3 People dynamics › Group time = thin
+L3 group-time = thin
 T3 I | You said some solo time — how much of it?
-L4 put=People dynamics › Group time kind=follow-up example=no carries=«some solo time»
+L4 put=group-time kind=follow-up example=no carries=«some solo time»
 T4 P | Mornings to myself.
-L3 People dynamics › Group time = thin
+L3 group-time = thin
 T5 I | And mornings to yourself — every morning?
-L4 put=People dynamics › Group time kind=follow-up example=no carries=«mornings»
+L4 put=group-time kind=follow-up example=no carries=«mornings»
 T6 P | Most of them.
-L3 People dynamics › Group time = answer
+L3 group-time = answer
 --- record
-V People dynamics › Group time = some solo time, mornings to myself
-X FB-C People dynamics › Group time = fail:1
+V group-time = some solo time, mornings to myself
+X FB-C group-time = fail:1

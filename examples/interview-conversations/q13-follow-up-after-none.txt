@@ -9,13 +9,13 @@ style: none
 traveller: TE — terse, an invented traveller
 answered-before: none
 T1 I | Is there anything you must have on a trip?
-L4 put=Needs › Specific#1 kind=ask example=no
+L4 put=need-detail#1 kind=ask example=no
 T2 P | No, nothing.
-L3 Needs › Specific#1 = empty
+L3 need-detail#1 = empty
 T3 I | Nothing at all? For example, some people need shade, or a rest each afternoon.
-L4 put=Needs › Specific#1 kind=follow-up example=yes example-text=«shade, or a rest each afternoon»
+L4 put=need-detail#1 kind=follow-up example=yes example-text=«shade, or a rest each afternoon»
 T4 P | Well, a rest each afternoon.
-L3 Needs › Specific#1 = answer
+L3 need-detail#1 = answer
 --- record
-V Needs › Specific#1 = a rest each afternoon
-X FB-C Needs › Specific#1 = fail:2
+V need-detail#1 = a rest each afternoon
+X FB-C need-detail#1 = fail:2

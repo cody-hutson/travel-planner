@@ -29210,7 +29210,8 @@ md_flips ta_plants   'CHR-CTL' chrctl_assert
 #   header   before the first turn: a comment "# …", or "<key>: <value>" for a key of the closed set
 #            conversation (the file stem), provenance, origin (authored | generated), form (a guided
 #            form's repository path), spoken (yes | no), route, style, traveller ("<code> — <line>"),
-#            answered-before ("<f-ref>; …" or none), and, generated, interviewer-model,
+#            answered-before ("<f-ref>; …" or none, each entry resolved once the header is read, so one
+#            that resolves to no field is MALFORMED on that line), and, generated, interviewer-model,
 #            interviewer-session, carrier, conduct-revision, run-date, run-seq, run-id and
 #            transcript-sha256. Any other line ends the header and is read as the turns' first.
 #   turns    "T<n> I | <text>" and "T<n> P | <text>", n running 1..n; "L3 <f-ref> = <act>", valid only
@@ -29219,16 +29220,20 @@ md_flips ta_plants   'CHR-CTL' chrctl_assert
 #            request-clarify, request-example, stuck and return, or "L3 §<section> = decline | skip |
 #            stop" for a section, or "L3 - = <act>" for a turn that concerns no field; "L4 put=<f-ref>
 #            [,<f-ref>] kind=<kind> example=yes|no [example-text=«…»] [carries=«…»]", put=- for a turn
-#            that puts no field, at most one, valid only directly under an I turn — in put, an f-ref
-#            whose text holds a comma is written inside «…» and read whole (#2185 amendment 2), and
-#            one not closed before a comma or the end is MALFORMED; "--- record". A
+#            that puts no field, at most one, valid only directly under an I turn, its f-refs separated
+#            by commas; "--- record". A
 #            line that is anything else — a "#" line, a V or X line, an empty line — is MALFORMED.
 #   record   "V <f-ref> = <value>"; and, authored only, "X OW-C|FB-C <f-ref> = pass | fail:<…> | nd:<…>".
 #   A turn's text escapes a newline as \n, a backslash as \\ and a tab as \t; any other backslash
 #   sequence is MALFORMED. ON A GENERATED FILE EVERY I TURN CARRIES EXACTLY ONE L4, the grader's, so
 #   a raw L4 inside an unescaped turn meets the grader's own and is refused as a second one. An
-#   f-ref is "<section> › <label>[#<unit>]", resolved on (section, label) with group FT's ft_lead
-#   against the form model this run reads (ta_model); one that resolves to no one field is MALFORMED.
+#   f-ref is "<key>[#<unit>]" (ADR-053 Decision 7): <key> is a key the Key column of
+#   reference/data-model.md § Field Scope carries — read through ft_rows, in the K records of the form
+#   model this run reads (ta_model) — and the key of a field of the conversation's form, with #<unit>
+#   in a repeat block. A key holds no comma, so put needs no quoting. One that is not a key at all (the
+#   retired "<section> › <label>" form among them), a key the table does not carry, and a key no field
+#   of the conversation's form carries are each MALFORMED, the reason named. A section is still
+#   "§<section>", resolved with group FT's ft_lead, because a section has no key.
 #   The PERSON class, the closed heads and their members come from that model, never from a fixture.
 #
 # ── THE HARNESS — C-locale awk, embedding WD_FN and FT_LEAD_FN, never copying them ───────────────
@@ -29298,9 +29303,9 @@ md_flips ta_plants   'CHR-CTL' chrctl_assert
 #   OW-C, OW-C-A, OW-C-ND, OW-C-OBS and FB-C, in groups OW and FB below.
 # WHAT A GREEN DOES NOT COVER: a verdict on an authored fixture grades the labels it declares, so it
 # tests the checks and not an interviewer; a verdict on a generated conversation rests on the
-# grader's labels, is reported and never failed, and enters that conversation's grade in group RB. A
-# label whose text holds a comma is put by L4 only quoted, a stopgap until a field has a key that
-# does not change with its label's wording (#2211). The title line's name is not a labelled bullet
+# grader's labels, is reported and never failed, and enters that conversation's grade in group RB. The
+# scope of #<unit> is not graded: a block field named with no unit, or a slot field with one, parses
+# clean, as it did under the retired form. The title line's name is not a labelled bullet
 # and is reached by no f-ref. A transcript with a gap is MALFORMED here — T<n> must run 1..n — so its
 # middle missing is refused rather than read as ND.
 # ═════════════════════════════════════════════════════════════════════════════════
@@ -29335,20 +29340,25 @@ function cv_init(   i, n, A) {
   # The evaluators of the admitted non-utterances, keyed by ADR-045 D2 item 4 ids (OW-C-A).
   CV_A_IDS = "A1 A2 A3 A4 A5"
   CV_POSW = " first second third last 1 2 3 4 5 6 7 8 9 "
-  CV_DASH = "\342\200\224"; CV_LQ = "\302\253"; CV_RQ = "\302\273"; CV_SEP = " \342\200\272 "
+  CV_DASH = "\342\200\224"; CV_LQ = "\302\253"; CV_RQ = "\302\273"
   CV_OPMARK = "[OPERATOR-PROVIDED]"
 }
 function cv_mal(ln, why) { CV_NMAL++; printf "MAL\t%s\t%d\t%s\n", CV_NAME, ln, why }
-# cv_load <model> <a2> <root> — the form model F records, the declared A2 texts, and each form
-# own brackets, read from the form above its end-of-profile line.
+# cv_load <model> <a2> <root> — the form model F records, each with its field key, the K records of
+# every key the classification table carries and the FL records of the former labels declared; the
+# declared A2 texts; and each form own brackets, read from the form above its end-of-profile line.
 function cv_load(model, a2, root,   ln, F, k, p, key, f, A, n, i, sec, t, lab, b, e) {
   RS = "\n"
   while ((getline ln < model) > 0) {
-    if (split(ln, F, "\t") < 8 || F[1] != "F") continue
+    n = split(ln, F, "\t")
+    if (F[1] == "K" && n >= 2) { CV_TKEY[F[2]] = 1; continue }
+    if (F[1] == "FL" && n >= 3) { CV_FORMER[F[2]] = CV_FORMER[F[2]] " " F[3]; continue }
+    if (n < 9 || F[1] != "F") continue
     p = F[2]; key = p SUBSEP F[3] SUBSEP F[4]
     if (key in CV_FSEEN) continue
     CV_FSEEN[key] = 1; k = ++CV_FN_N[p]
-    CV_FSEC[p, k] = F[3]; CV_FLAB[p, k] = F[4]; CV_FCL[p, k] = F[5] + 0; CV_FCLS[p, k] = F[6]; CV_FMEM[p, k] = F[7]
+    CV_FSEC[p, k] = F[3]; CV_FLAB[p, k] = F[4]; CV_FCL[p, k] = F[5] + 0; CV_FCLS[p, k] = F[6]; CV_FMEM[p, k] = F[7]; CV_FKEY[p, k] = F[9]
+    if (F[9] != "") { if ((p, F[9]) in CV_KIDX) CV_KAMB[p, F[9]] = 1; else CV_KIDX[p, F[9]] = k }
     if (!(p in CV_FORMS)) { CV_FORMS[p] = 1; CV_NFORMS++; CV_FORM[CV_NFORMS] = p }
   }
   close(model)
@@ -29369,15 +29379,26 @@ function cv_load(model, a2, root,   ln, F, k, p, key, f, A, n, i, sec, t, lab, b
   }
   RS = "\001"
 }
-# cv_resolve <form> <f-ref> — the field index in the form model, through ft_lead on (section,
-# label) as group FT resolves a bullet; 0 when no field answers, -1 when more than one does.
-function cv_resolve(p, r,   u, s, l, k, i, m) {
+# cv_resolve <form> <f-ref> — the field index in the form model, by the KEY of the field (ADR-053): the
+# reference less its #<unit>, which CV_RU keeps, must be a key — lower-case letters and digits in
+# segments joined by single hyphens, the grammar § Field Scope states and FT8 grades — that the table
+# carries, of a field of this form. CV_RC is the outcome: the index; -2, not a key at all; -3, a key the
+# table does not carry; 0, a key no field of this form carries; -1, one two fields of this form carry.
+function cv_resolve(p, r) {
   CV_RU = ""
   if (match(r, /#[0-9]+$/)) { CV_RU = substr(r, RSTART); r = substr(r, 1, RSTART - 1) }
-  k = index(r, CV_SEP); if (!k) return 0
-  s = substr(r, 1, k - 1); l = substr(r, k + length(CV_SEP)); m = 0
-  for (i = 1; i <= CV_FN_N[p]; i++) if (CV_FLAB[p, i] == l && ft_lead(s, CV_FSEC[p, i])) { if (m) return -1; m = i }
-  return m
+  if (r !~ /^[a-z0-9]+(-[a-z0-9]+)*$/) { CV_RC = -2; return -2 }
+  if (!(r in CV_TKEY)) { CV_RC = -3; return -3 }
+  if ((p, r) in CV_KAMB) { CV_RC = -1; return -1 }
+  if (!((p, r) in CV_KIDX)) { CV_RC = 0; return 0 }
+  CV_RC = CV_KIDX[p, r]; return CV_RC
+}
+# cv_rwhy <f-ref> — the reason a reference cv_key could not resolve is refused, read from CV_RC.
+function cv_rwhy(r) {
+  if (CV_RC == -2) return "the field reference is not a field key: " r
+  if (CV_RC == -3) return "the field reference names no key the classification table carries: " r
+  if (CV_RC == -1) return "the field reference names a key two fields of this conversation\047s form carry: " r
+  return "the field reference names a key no field of this conversation\047s form carries: " r
 }
 # cv_rsect <form> <section> — the one section heading the reference leads, or "".
 function cv_rsect(p, s,   i, h) {
@@ -29385,11 +29406,11 @@ function cv_rsect(p, s,   i, h) {
   for (i = 1; i <= CV_FN_N[p]; i++) if (ft_lead(s, CV_FSEC[p, i])) { if (h != "" && h != CV_FSEC[p, i]) return ""; h = CV_FSEC[p, i] }
   return h
 }
-# cv_key <f-ref> — the field key, "<section heading> › <label>[#unit]"; "" when it does not resolve.
+# cv_key <f-ref> — the identity of the field as CF emits it, "<key>[#<unit>]"; "" when it does not resolve.
 function cv_key(r,   i) {
   i = cv_resolve(CV_P, r); if (i <= 0) return ""
-  CV_KI[CV_FSEC[CV_P, i] CV_SEP CV_FLAB[CV_P, i] CV_RU] = i
-  return CV_FSEC[CV_P, i] CV_SEP CV_FLAB[CV_P, i] CV_RU
+  CV_KI[CV_FKEY[CV_P, i] CV_RU] = i
+  return CV_FKEY[CV_P, i] CV_RU
 }
 function cv_escok(t,   i, c) {
   for (i = 1; i <= length(t); i++) if (substr(t, i, 1) == "\\") { c = substr(t, i + 1, 1); if (c != "n" && c != "t" && c != "\\") return 0; i++ }
@@ -29401,26 +29422,28 @@ function cv_unesc(t,   o, i, c) {
   return o
 }
 function cv_words(s,   W, n) { n = wd_words(s, W); return wd_join(W, n, 1, n) }
-# cv_puts <put> <A> — the field references of an L4 put, split on its commas, each trimmed; one
-# opening with «, a reference whose text holds a comma, is read whole to its » (#2185 amendment 2).
-# Returns how many, or -1 when a quoted one does not close before a comma or the end.
-function cv_puts(s, A,   n, k, x) {
+# cv_puts <put> <A> — the field references of an L4 put, split on its commas, each trimmed; returns
+# how many. A key holds no comma, so no reference is quoted and none is read past a comma.
+function cv_puts(s, A,   n, k) {
   n = 0; if (s == "") return 0
   while (1) {
-    sub(/^ +/, "", s)
-    if (index(s, CV_LQ) == 1) {
-      s = substr(s, length(CV_LQ) + 1); k = index(s, CV_RQ); if (!k) return -1
-      x = substr(s, 1, k - 1); s = substr(s, k + length(CV_RQ)); sub(/^ +/, "", s)
-      if (s != "" && substr(s, 1, 1) != ",") return -1
-    } else { k = index(s, ","); x = k ? substr(s, 1, k - 1) : s; s = k ? substr(s, k) : ""; sub(/ +$/, "", x) }
-    A[++n] = x
-    if (s == "") return n
-    s = substr(s, 2)
+    k = index(s, ","); A[++n] = k ? substr(s, 1, k - 1) : s; gsub(/^ +| +$/, "", A[n])
+    if (!k) return n
+    s = substr(s, k + 1)
   }
+}
+# cv_ansb — the answered-before entries of the header, resolved once the header is read and the form
+# is known, each to the identity of its field; an entry that resolves to no field is MALFORMED on the
+# answered-before line, never dropped, so a stale entry cannot turn FB-C bullet 2 into a pass.
+function cv_ansb(   ab, n, A, j, x, k) {
+  split("", CV_ANSB); ab = CV_H["answered-before"]
+  if (ab == "" || ab == "none") return
+  n = split(ab, A, ";")
+  for (j = 1; j <= n; j++) { x = A[j]; gsub(/^ +| +$/, "", x); k = cv_key(x); if (k == "") cv_mal(CV_ABLN, "answered-before: " cv_rwhy(x)); else CV_ANSB[k] = 1 }
 }
 # cv_file <name> <bytes> — parse one fixture, positionally (FM-10), then grade it when it is well formed.
 function cv_file(name, s,   nl, L, i, ln, region, prev, k, key, v, p, q, r, put, kind, ex, et, ca, n, A, j, act, fr, b, e) {
-  CV_NAME = name; CV_NMAL = 0; split("", CV_H); CV_NT = 0
+  CV_NAME = name; CV_NMAL = 0; split("", CV_H); CV_NT = 0; split("", CV_ANSB); CV_ABLN = 0
   split("", TN); split("", TW); split("", TX); split("", T3N); split("", T3F); split("", T3A); split("", T4)
   split("", T4K); split("", T4E); split("", T4ET); split("", T4C); split("", T4P); split("", T4PN)
   CV_NV = 0; split("", VF); split("", VV); CV_NX = 0; split("", XC); split("", XF); split("", XO); split("", CV_KI)
@@ -29433,12 +29456,13 @@ function cv_file(name, s,   nl, L, i, ln, region, prev, k, key, v, p, q, r, put,
     if (ln == "") { cv_mal(i, "an empty line opens no record of its region"); prev = "X"; continue }
     if (region == "header") {
       if (substr(ln, 1, 1) == "#") continue
-      if (match(ln, /^[a-z0-9-]+: /)) { k = substr(ln, 1, RLENGTH - 2); if (index(CV_HKEYS, " " k " ")) { if (k in CV_H) cv_mal(i, "the header key " k " stands twice"); CV_H[k] = substr(ln, RLENGTH + 1); continue } }
+      if (match(ln, /^[a-z0-9-]+: /)) { k = substr(ln, 1, RLENGTH - 2); if (index(CV_HKEYS, " " k " ")) { if (k in CV_H) cv_mal(i, "the header key " k " stands twice"); CV_H[k] = substr(ln, RLENGTH + 1); if (k == "answered-before") CV_ABLN = i; continue } }
       region = "turns"; CV_P = CV_H["form"]
       if (!(CV_P in CV_FORMS)) cv_mal(0, "the header names no form the model reads: " CV_P)
       if (CV_H["origin"] != "authored" && CV_H["origin"] != "generated") cv_mal(0, "origin is neither authored nor generated")
       if (CV_H["spoken"] != "yes" && CV_H["spoken"] != "no") cv_mal(0, "spoken is neither yes nor no")
       if (CV_H["conversation"] == "") cv_mal(0, "no conversation key")
+      cv_ansb()
     }
     if (region == "turns") {
       if (match(ln, /^T[0-9]+ [IP] \| /)) {
@@ -29454,7 +29478,7 @@ function cv_file(name, s,   nl, L, i, ln, region, prev, k, key, v, p, q, r, put,
         fr = substr(ln, 4, p - 4); act = substr(ln, p + 3)
         if (fr == "-") key = "-"
         else if (substr(fr, 1, 2) == "\302\247") { key = cv_rsect(CV_P, substr(fr, 3)); if (key == "" || !index(CV_SACTS, " " act " ")) { cv_mal(i, "a section label that leads no one section, or carries an act a section does not take"); prev = "X"; continue } key = "\302\247" key }
-        else { key = cv_key(fr); if (key == "") { cv_mal(i, "the field reference resolves to no one field of the form: " fr); prev = "X"; continue } }
+        else { key = cv_key(fr); if (key == "") { cv_mal(i, cv_rwhy(fr)); prev = "X"; continue } }
         if (!index(CV_ACTS, " " act " ")) { cv_mal(i, "an act outside the closed list: " act); prev = "X"; continue }
         n = ++T3N[CV_NT]; T3F[CV_NT, n] = key; T3A[CV_NT, n] = act; prev = "L3"; continue
       }
@@ -29473,9 +29497,8 @@ function cv_file(name, s,   nl, L, i, ln, region, prev, k, key, v, p, q, r, put,
         T4[CV_NT] = 1; T4K[CV_NT] = kind; T4E[CV_NT] = ex; T4ET[CV_NT] = et; T4C[CV_NT] = ca; T4PN[CV_NT] = 0
         if (put != "-") {
           n = cv_puts(put, A)
-          if (n < 0) { cv_mal(i, "a quoted field reference in put that does not close before a comma or the end"); prev = "X"; continue }
           for (j = 1; j <= n; j++) { fr = A[j]; key = cv_key(fr)
-            if (key == "") { cv_mal(i, "the field reference resolves to no one field of the form: " fr); break }
+            if (key == "") { cv_mal(i, cv_rwhy(fr)); break }
             T4P[CV_NT, ++T4PN[CV_NT]] = key }
         }
         prev = "L4"; continue
@@ -29484,13 +29507,13 @@ function cv_file(name, s,   nl, L, i, ln, region, prev, k, key, v, p, q, r, put,
       cv_mal(i, "a line that opens no record of the turn region"); prev = "X"; continue
     }
     if (substr(ln, 1, 2) == "V " && (p = index(ln, " = ")) > 0) {
-      key = cv_key(substr(ln, 3, p - 3)); if (key == "") { cv_mal(i, "the field reference resolves to no one field of the form"); continue }
+      fr = substr(ln, 3, p - 3); key = cv_key(fr); if (key == "") { cv_mal(i, cv_rwhy(fr)); continue }
       VF[++CV_NV] = key; VV[CV_NV] = substr(ln, p + 3); continue
     }
     if (match(ln, /^X (OW-C|FB-C) /) && (p = index(ln, " = ")) > 0) {
       if (CV_H["origin"] == "generated") { cv_mal(i, "an oracle line on a generated file"); continue }
-      key = cv_key(substr(ln, 8, p - 8)); v = substr(ln, p + 3)
-      if (key == "") { cv_mal(i, "the field reference resolves to no one field of the form"); continue }
+      fr = substr(ln, 8, p - 8); key = cv_key(fr); v = substr(ln, p + 3)
+      if (key == "") { cv_mal(i, cv_rwhy(fr)); continue }
       if (v != "pass" && v !~ /^(fail|nd):./) { cv_mal(i, "an oracle that is not pass, fail: or nd:"); continue }
       XC[++CV_NX] = substr(ln, 3, 4); XF[CV_NX] = key; XO[CV_NX] = v; continue
     }
@@ -29527,14 +29550,12 @@ function cv_sect(f) { return CV_FSEC[CV_P, CV_KI[f]] }
 function cv_fb(f, b, why) { if (!((f, b) in FBB)) { FBB[f, b] = 1; FBL[f] = FBL[f] (FBL[f] == "" ? "" : "; ") "bullet " b ": " why } }
 # cv_grade — the person side read in turn order; FB-C as each interviewer turn puts its fields;
 # OW-C once every turn is read; then the conversation; then, last, the observations.
-function cv_grade(   gen, unl, t, k, f, a, kind, d, sec, np, j, n, W, own, extra, i, ex, ab, A, x, m) {
+function cv_grade(   gen, unl, t, k, f, a, kind, d, sec, np, j, n, W, own, extra, i, ex, x, m) {
   split("", LA); split("", FT); split("", FTC); split("", FTT); split("", BAR); split("", SBAR); split("", SKP); split("", SSKP)
   split("", EMP); split("", FBB); split("", FBL); split("", PUT); split("", PORD); split("", FU); split("", SFU); split("", ASK)
-  split("", NASK); split("", EXT); split("", LCAR); split("", PICK); split("", VD); split("", CV_ANSB); split("", FTSEEN)
+  split("", NASK); split("", EXT); split("", LCAR); split("", PICK); split("", VD); split("", FTSEEN)
   split("", REO); CV_NREP = 0; split("", CV_REP); split("", VDK); CV_NVK = 0
   gen = (CV_H["origin"] == "generated"); CV_GEN = gen; CV_ALLP = ""; unl = 0; CV_NP = 0
-  ab = CV_H["answered-before"]
-  if (ab != "" && ab != "none") { n = split(ab, A, ";"); for (j = 1; j <= n; j++) { x = A[j]; gsub(/^ +| +$/, "", x); x = cv_key(x); if (x != "") CV_ANSB[x] = 1 } }
   for (t = 1; t <= CV_NT; t++) if (TW[t] == "P" && T3N[t] == 0) unl = 1
   CV_UNL = unl
   for (t = 1; t <= CV_NT; t++) {
@@ -30040,7 +30061,7 @@ cfgen0_assert() {
   local d f0 f1 r0 r1 out1
   d="$(cf_copy gen0)"
   cf5_header generated > "$d/plant-generated.txt"
-  printf 'T1 I | How do you feel about rooming?\nL4 put=- kind=disclosure example=no\nT2 P | Own room.\nL3 Where you stay \342\200\272 Rooming = answer\n--- record\nV Where you stay \342\200\272 Rooming = a suite with a view\n' >> "$d/plant-generated.txt"
+  printf 'T1 I | How do you feel about rooming?\nL4 put=- kind=disclosure example=no\nT2 P | Own room.\nL3 rooming = answer\n--- record\nV rooming = a suite with a view\n' >> "$d/plant-generated.txt"
   out1="$(cv_run "$CF_MODEL_F" "$CF_A2_F" "$ROOT" "$d"/*.txt)"
   f0="$(cf_count "$CF_OUT_F" '($1 == "ORACLE" && $5 == "DISAGREE") || $1 == "MAL" || $1 == "KINDX"')"
   f1="$(awk -F'\t' '($1 == "ORACLE" && $5 == "DISAGREE") || $1 == "MAL" || $1 == "KINDX"' <<<"$out1" | awk 'END { print NR }')"
@@ -30078,7 +30099,7 @@ cfctl_eval() {   # stdout "<id> <ok|MISS> <pinned> <read>"
   while IFS=$'\t' read -r id o t v _; do
     [ -n "$id" ] || continue
     cf5_header "$o" > "$d/$id.txt"
-    printf 'T1 I | What do you want from this trip?\nL4 put=Desires \342\200\272 Desire#1 kind=ask example=no\nT2 P | %s\nL3 Desires \342\200\272 Desire#1 = answer\n--- record\nV Desires \342\200\272 Desire#1 = %s\n' "$t" "$v" >> "$d/$id.txt"
+    printf 'T1 I | What do you want from this trip?\nL4 put=desire#1 kind=ask example=no\nT2 P | %s\nL3 desire#1 = answer\n--- record\nV desire#1 = %s\n' "$t" "$v" >> "$d/$id.txt"
   done <<<"$CF_CTL_TABLE"
   cv_run "$CF_MODEL_F" "$CF_A2_F" "$ROOT" "$d"/*.txt | LC_ALL=C awk -F'\t' 'FILENAME == ARGV[1] { pin[$1 ".txt"] = $5; ord[++n] = $1 ".txt"; next }
       $1 == "VERDICT" && $4 == "OW-C" { got[$2] = $6 }
@@ -30235,7 +30256,7 @@ owc_assert() {
   dis="$(awk -F'\t' '$1 == "ORACLE" && $3 == "OW-C" && $5 == "DISAGREE" { printf "%s %s: oracle %s, read %s; ", $2, $4, $6, $7 }' "$CF_OUT_F")"
   ck="$(awk -F'\t' '$1 == "VERDICT" && $2 == "owc-check.txt" && $4 == "OW-C" { print $6 }' "$CF_OUT_F")"
   cx="$(awk -F'\t' '$1 == "VERDICT" && $2 == "owc-cross.txt" && $4 == "OW-C" { print $6 }' "$CF_OUT_F")"
-  ctl="$(cf_flip owc owc-cross.txt "X OW-C Where you stay › Rooming = fail:it's|affordable" "X OW-C Where you stay › Rooming = pass")"
+  ctl="$(cf_flip owc owc-cross.txt "X OW-C rooming = fail:it's|affordable" "X OW-C rooming = pass")"
   by="$(awk -F'\t' '$1 == "VERDICT" && $3 == "authored" && $4 == "OW-C" { v = $6; sub(/:.*/, "", v); c[v]++ } END { for (k in c) printf "%s %d, ", k, c[k] }' "$CF_OUT_F")"
   if [ "$n" -eq 0 ]; then
     FAIL "OW-C: NOT EVALUATED — no authored value was graded, so the check has an empty population"
@@ -30273,7 +30294,7 @@ owca_assert
 owcnd_assert() {
   local nd ctl
   nd="$(awk -F'\t' '$1 == "ORACLE" && $3 == "OW-C" && $6 ~ /^nd:/ && $5 == "agree" { printf "%s %s %s; ", $2, $4, $7 }' "$CF_OUT_F")"
-  ctl="$(cf_flip owcnd unlabelled-complete.txt "X OW-C Where you stay › Rooming = nd:unlabelled" "X OW-C Where you stay › Rooming = pass")"
+  ctl="$(cf_flip owcnd unlabelled-complete.txt "X OW-C rooming = nd:unlabelled" "X OW-C rooming = pass")"
   if [ -z "$nd" ]; then
     FAIL "OW-C-ND: no authored fixture states an nd: verdict that the harness reproduces, so not determinable is never shown to be read"
   elif [ -z "$ctl" ] || [ "$ctl" = "NOT-LANDED" ]; then
@@ -30330,7 +30351,7 @@ fbc_assert() {
   cx="$(awk -F'\t' '$1 == "VERDICT" && $2 == "fbc-cross.txt" && $4 == "FB-C" { print $6 }' "$CF_OUT_F")"
   cxd="$(awk -F'\t' '$1 == "VERDICT" && $2 == "fbc-cross.txt" && $4 == "FB-C" { print $7 }' "$CF_OUT_F")"
   q9="$(awk -F'\t' '$1 == "VERDICT" && $2 == "q09-follow-up-with-example.txt" && $4 == "FB-C" { print $6 }' "$CF_OUT_F")"
-  ctl="$(cf_flip fbc fbc-cross.txt "X FB-C Where you stay › Rooming = fail:1|4" "X FB-C Where you stay › Rooming = pass")"
+  ctl="$(cf_flip fbc fbc-cross.txt "X FB-C rooming = fail:1|4" "X FB-C rooming = pass")"
   r="$(ta_root SEAM3-FBC)"; s3=""; s3r=""
   if ft_row_set "$r/reference/data-model.md" desire Class '**PERSON**'; then
     ta_model "$r" "$r" > "$r/model.tsv"
@@ -30723,7 +30744,7 @@ md_flips rb_bullets   'RB6' rb6_assert
 #   ruling on F4's line) and the operator's where a ruling overturns it (#2200, the operator's ruling
 #   on Stage 12's B-2), each value MET|NOT-MET|ND|NA, with "turns -" where a value cites no turn, and
 #   a line "mech OW-C|FB-C <field> = fail:<…>|nd:<…> (on judged labels)" for each mechanical fail or
-#   ND. The adjudication is "pending", or entries split on ";", each opening with its date; an entry
+#   ND, <field> the field's identity as group CF emits it, "<key>[#<unit>]". The adjudication is "pending", or entries split on ";", each opening with its date; an entry
 #   "<date> R-<n> …" is a ruling on that dimension, read "upheld" or "overturned to <value>" next, the
 #   value in the same closed set; any other entry is free text. A ledger
 #   line inside a block, or any other line, is MALFORMED. A blob is 7 to 40 lower-case hex
@@ -31350,7 +31371,7 @@ rb4_assert() {
 }
 rb4_assert
 rb5_assert() {
-  local p d a c1 c2 c3 c4 c5 c6 c7 c8 c9 n r2 f="Where you stay › Rooming"
+  local p d a c1 c2 c3 c4 c5 c6 c7 c8 c9 n r2 f="rooming"
   p="$(rb5_eval "$RB_RECORD" "$RB_RUBRIC")"
   n="$(awk -F'\t' '$1 == "N" { print $2 " mech line(s) reaching " $3 " citing dimension(s)" }' <<<"$p")"
   # The plants: R-2, which cites OW-C, shown MET against a planted OW-C fail and against a planted ND,

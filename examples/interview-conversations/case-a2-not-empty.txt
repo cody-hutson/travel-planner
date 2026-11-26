@@ -9,15 +9,15 @@ style: none
 traveller: GS — goes silent, an invented traveller
 answered-before: none
 T1 I | Is there anything you must have on a trip?
-L4 put=Needs › Specific#1 kind=ask example=no
+L4 put=need-detail#1 kind=ask example=no
 T2 P | (silence)
-L3 Needs › Specific#1 = silence
+L3 need-detail#1 = silence
 T3 I | And a second must-have?
-L4 put=Needs › Specific#2 kind=ask example=no
+L4 put=need-detail#2 kind=ask example=no
 T4 P | Skip that.
-L3 Needs › Specific#2 = skip
+L3 need-detail#2 = skip
 --- record
-V Needs › Specific#1 = none
-V Needs › Specific#2 = none
-X OW-C Needs › Specific#1 = fail:A2
-X OW-C Needs › Specific#2 = fail:A2
+V need-detail#1 = none
+V need-detail#2 = none
+X OW-C need-detail#1 = fail:A2
+X OW-C need-detail#2 = fail:A2

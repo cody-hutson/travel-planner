@@ -9,17 +9,17 @@ style: none
 traveller: TE — terse, an invented traveller
 answered-before: none
 T1 I | Who would you especially enjoy peeling off with?
-L4 put=People dynamics › Split off with kind=ask example=no
+L4 put=split-off-with kind=ask example=no
 T2 P | Jordan.
-L3 People dynamics › Split off with = thin
+L3 split-off-with = thin
 T3 I | You said Jordan — for anything in particular?
-L4 put=People dynamics › Split off with kind=follow-up example=no carries=«Jordan»
+L4 put=split-off-with kind=follow-up example=no carries=«Jordan»
 T4 P | The markets.
-L3 People dynamics › Split off with = thin
+L3 split-off-with = thin
 T5 I | When you say the markets, do you mean the food ones?
-L4 put=People dynamics › Split off with kind=follow-up example=no carries=«markets»
+L4 put=split-off-with kind=follow-up example=no carries=«markets»
 T6 P | Yes, those.
-L3 People dynamics › Split off with = answer
+L3 split-off-with = answer
 --- record
-V People dynamics › Split off with = Jordan, the markets
-X FB-C People dynamics › Split off with = fail:1
+V split-off-with = Jordan, the markets
+X FB-C split-off-with = fail:1

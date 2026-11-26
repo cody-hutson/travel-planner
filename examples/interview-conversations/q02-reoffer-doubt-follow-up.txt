@@ -9,20 +9,20 @@ style: none
 traveller: GS — goes silent, an invented traveller
 answered-before: none
 T1 I | How long feels right for the trip?
-L4 put=Dates & availability › Trip length kind=ask example=no
+L4 put=trip-length kind=ask example=no
 T2 P | (silence)
-L3 Dates & availability › Trip length = silence
+L3 trip-length = silence
 T3 I | You can answer, skip it, or stop here.
-L4 put=Dates & availability › Trip length kind=silence re-offer example=no
+L4 put=trip-length kind=silence re-offer example=no
 T4 P | Depends, maybe the usual.
-L3 Dates & availability › Trip length = doubt
+L3 trip-length = doubt
 T5 I | When you say the usual, what do you mean?
-L4 put=Dates & availability › Trip length kind=ask-on-doubt example=no
+L4 put=trip-length kind=ask-on-doubt example=no
 T6 P | A week.
-L3 Dates & availability › Trip length = thin
+L3 trip-length = thin
 T7 I | You said a week — anything more about how long?
-L4 put=Dates & availability › Trip length kind=follow-up example=no carries=«a week»
+L4 put=trip-length kind=follow-up example=no carries=«a week»
 T8 P | Seven nights, ideally.
-L3 Dates & availability › Trip length = answer
+L3 trip-length = answer
 --- record
-V Dates & availability › Trip length = a week, seven nights
+V trip-length = a week, seven nights

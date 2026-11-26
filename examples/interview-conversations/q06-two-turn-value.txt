@@ -9,17 +9,17 @@ style: none
 traveller: AF — answers freely, an invented traveller
 answered-before: none
 T1 I | How do you feel about rooming?
-L4 put=Where you stay › Rooming kind=ask example=no
+L4 put=rooming kind=ask example=no
 T2 P | With Sam.
-L3 Where you stay › Rooming = thin
+L3 rooming = thin
 T3 I | You said with Sam — anything more about rooming?
-L4 put=Where you stay › Rooming kind=follow-up example=no carries=«Sam»
+L4 put=rooming kind=follow-up example=no carries=«Sam»
 T4 P | Happy to share.
-L3 Where you stay › Rooming = answer
+L3 rooming = answer
 T5 I | I have rooming down, from what you said. On we go.
 L4 put=- kind=confirmation example=no
 T6 P | Great.
 L3 - = answer
 --- record
-V Where you stay › Rooming = happy to share with Sam
-X OW-C Where you stay › Rooming = pass
+V rooming = happy to share with Sam
+X OW-C rooming = pass
