@@ -327,7 +327,7 @@ rt_contract_walk() {   # rt_contract_walk <engine-root> [grammar-rel] [spec-rel]
   local rc=0 labels rows comps sites n_lab n_row n_bad lfn
 
   if [ ! -r "$gfile" ]; then
-    rt_finding RT0 "the itinerary grammar is unreadable at '$gfile' — nothing was compared, and a green here would be a statement about a file that was never opened"
+    rt_finding RT0 "the grammar of fence '$tag' is unreadable at '$gfile' — nothing was compared, and a green here would be a statement about a file that was never opened"
     return 2
   fi
   if [ ! -r "$sfile" ]; then
@@ -397,7 +397,7 @@ rt_contract_walk() {   # rt_contract_walk <engine-root> [grammar-rel] [spec-rel]
   while IFS= read -r lab; do
     [ -n "$lab" ] || continue
     awk -F"$RT_TAB" -v k="$lab" '$1 == k { f = 1 } END { exit f ? 0 : 1 }' <<<"$rows" && continue
-    rt_finding RT1 "the itinerary grammar emits element '$lab' and the contract fence carries no row for it — it is neither rendered nor excluded, so a build that drops it drops it silently"
+    rt_finding RT1 "the grammar in '$gfile' emits element '$lab' and the '$tag' fence carries no row for it — it is neither rendered nor excluded, so a build that drops it drops it silently"
     rc=1
   done <<<"$labels"
 
@@ -407,7 +407,7 @@ rt_contract_walk() {   # rt_contract_walk <engine-root> [grammar-rel] [spec-rel]
     [ -n "$frow" ] || continue
     case "$frow" in '!'|'<'*) continue ;; esac
     grep -qxF -- "$frow" <<<"$labels" && continue
-    rt_finding RT2 "the contract fence declares element '$frow' and the itinerary grammar no longer emits it — a declaration that outlives its element is a standing exemption for whatever next takes that spelling"
+    rt_finding RT2 "the '$tag' fence declares element '$frow' and the grammar in '$gfile' no longer emits it — a declaration that outlives its element is a standing exemption for whatever next takes that spelling"
     rc=1
   done <<<"$rows"
 
@@ -417,6 +417,120 @@ rt_contract_walk() {   # rt_contract_walk <engine-root> [grammar-rel] [spec-rel]
 
 # The itinerary grammar's reader under the name its label shape gives it.
 rt_labels_bold_line() { rt_grammar_labels "$@"; }
+
+# ── THE SHORTLIST'S GRAMMAR AND ITS INSTANCE WALK ────────────────────────────────
+#
+# The shortlist agent writes its artifact from a fenced template under its `## Output` heading,
+# so its element labels are that template's ATX headings, and the region ends only at a heading
+# outside a fence. The grain is the heading: the walk reads which headings the shortlist carries
+# and whether the site carries the component each one names, never what a candidate says.
+rt_labels_md_heading() {   # rt_labels_md_heading <prompt-file> <region-heading> -> one label per line
+  local f="$1" h="$2"
+  [ -r "$f" ] || return 1
+  awk -v want="$h" '
+    !inreg && index($0, want) == 1 && length($0) == length(want) { inreg = 1; next }
+    !inreg { next }
+    /^[[:space:]]*```/ { if (!infence && !done) { infence = 1; next } if (infence) { infence = 0; done = 1; next } }
+    !infence && (/^# / || /^## /) { exit }
+    infence && match($0, /^#+[[:space:]]+/) { lab = substr($0, RLENGTH + 1); sub(/[[:space:]]+$/, "", lab); if (lab != "") print lab }
+  ' "$f"
+}
+
+# The tokens § 3 declares for the shortlist's section and its states. Held here once: the empty
+# and degraded states are read off a class attribute that carries the state word beside the
+# component's own class, and no document the walk reads declares those words as a set. The ranked
+# part's LABEL is never held — it is the fence row whose component is RT_SL_RANKED.
+RT_SL_ROOT='group-shortlist'
+RT_SL_RANKED='gs-ranked'
+RT_SL_EMPTY='is-empty'
+RT_SL_DEGRADED='is-degraded'
+
+# Whether one double-quoted `class` attribute in the site holds both words.
+rt_site_class_pair() {   # rt_site_class_pair <site-file> <word> <word>
+  awk -v a="$2" -v b="$3" '{ s = $0
+    while (match(s, /class="[^"]*"/)) {
+      v = " " substr(s, RSTART + 7, RLENGTH - 8) " "; gsub(/[[:space:]]+/, " ", v)
+      if (index(v, " " a " ") && index(v, " " b " ")) { f = 1; exit }
+      s = substr(s, RSTART + RLENGTH)
+    } } END { exit f ? 0 : 1 }' "$1"
+}
+
+# The shortlist's H1 and H2 heading texts, outside its frontmatter and outside any fenced block;
+# then "RANKED\t<items>" for the heading named, the ordered-list items before the next H1 or H2.
+rt_shortlist_heads() {   # rt_shortlist_heads <shortlist-file> <ranked-label>
+  awk -v rl="$2" '
+    NR == 1 && $0 == "---" { infm = 1; next }
+    infm { if ($0 == "---") infm = 0; next }
+    /^[[:space:]]*```/ { infence = !infence; next }
+    infence { next }
+    /^#{1,2}[[:space:]]+/ { h = $0; sub(/^#+[[:space:]]+/, "", h); sub(/[[:space:]]+$/, "", h); print "HEAD\t" h; inr = (h == rl); if (inr) seen = 1; next }
+    inr && /^[[:space:]]*[0-9]+[.)][[:space:]]/ { items++ }
+    END { if (seen) printf "RANKED\t%d\n", items + 0 }' "$1"
+}
+
+# THE SHORTLIST'S INSTANCE WALK — RT3 for a heading the site drops, RT0 for a degraded read. It
+# reads its element fence from the engine root rt_element_instance names. Where the shortlist is
+# absent the page owes its degraded state only where a state that renders the shortlist selected
+# the walk: without σ, or in a state that does not render it, an absent shortlist is not known to
+# be owed, and no smaller site is read into a page that correctly carries no section.
+rt_shortlist_walk() {   # rt_shortlist_walk <shortlist-file> <site-file>
+  local sl="$1" site="$2" root="${RT_INSTANCE_ROOT:-}" sel="${RT_INSTANCE_SELECTIVE:-0}"
+  local rc=0 tag rows nrow rlab heads nh classes h disp comp part ranked
+  [ -n "$root" ] || root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+  tag="$(rt_decls | awk -F'\t' -v f="${FUNCNAME[0]}" '$5 == f && !s { print $1; s = 1 }')"
+  if [ -z "$tag" ]; then
+    rt_finding RT0 "no element-fence declaration names the shortlist's instance walker, so it has no fence to resolve the shortlist's headings against — nothing was walked"
+    return 2
+  fi
+  rows="$(rt_fence_rows "$root/$RT_SPEC_REL" "$tag")"
+  nrow="$(printf '%s\n' "$rows" | awk -F'\t' 'NF > 1 && $1 != "!" { n++ } END { print n+0 }')"
+  if [ "$nrow" -eq 0 ]; then
+    rt_finding RT0 "the '$tag' fence read ZERO rows from the engine root — the instrument is broken, so nothing was walked"
+    return 2
+  fi
+  if [ ! -r "$site" ]; then
+    rt_finding RT0 "the site is unreadable at '$site' — there is nothing to resolve the shortlist's headings against"
+    return 2
+  fi
+  if [ ! -r "$sl" ]; then
+    rt_finding RT0 "the shortlist is unreadable at '$sl' — a degraded read, never a smaller site"
+    if [ "$sel" -eq 1 ] && ! rt_site_class_pair "$site" "$RT_SL_ROOT" "$RT_SL_DEGRADED"; then
+      rt_finding RT3 "the shortlist is absent and the site renders no degraded state — no class attribute carries both '$RT_SL_ROOT' and '$RT_SL_DEGRADED', so the section was dropped rather than shown as not yet put together: a smaller site"
+    fi
+    return 2
+  fi
+  rlab="$(awk -F'\t' -v c="$RT_SL_RANKED" '$1 != "!" && $2 == "rendered" && index("|" $3 "|", "|" c "|") && !s { print $1; s = 1 }' <<<"$rows")"
+  heads="$(rt_shortlist_heads "$sl" "$rlab")"
+  nh="$(awk -F'\t' '$1 == "HEAD" { n++ } END { print n+0 }' <<<"$heads")"
+  if [ "$nh" -eq 0 ]; then
+    rt_finding RT0 "the shortlist at '$sl' carries ZERO headings outside its frontmatter — the instrument read nothing, so this is a degraded read and never a clean one"
+    return 2
+  fi
+  classes="$(rt_site_classes "$site")"
+  while IFS="$RT_TAB" read -r _ h; do
+    [ -n "$h" ] || continue
+    if ! awk -F'\t' -v k="$h" '$1 == k { f = 1 } END { exit f ? 0 : 1 }' <<<"$rows"; then
+      rt_finding RT3 "the shortlist carries heading '$h', which its element fence declares no row for — it is neither rendered nor excluded, so a build disposes of it silently"
+      rc=1; continue
+    fi
+    disp="$(awk -F'\t' -v k="$h" '$1 == k && !s { print $2; s = 1 }' <<<"$rows")"
+    [ "$disp" = rendered ] || continue
+    comp="$(awk -F'\t' -v k="$h" '$1 == k && !s { print $3; s = 1 }' <<<"$rows")"
+    while IFS= read -r part; do
+      [ -n "$part" ] || continue
+      grep -qxF -- "$part" <<<"$classes" && continue
+      rt_finding RT3 "shortlist element '$h' has no '$part' component in the site — the silent drop this contract forbids"
+      rc=1
+    done <<<"$(tr '|' '\n' <<<"$comp")"
+  done <<<"$(awk -F'\t' '$1 == "HEAD"' <<<"$heads")"
+  ranked="$(awk -F'\t' '$1 == "RANKED" { print $2 }' <<<"$heads")"
+  if [ "${ranked:-x}" = 0 ] && ! rt_site_class_pair "$site" "$RT_SL_RANKED" "$RT_SL_EMPTY"; then
+    rt_finding RT3 "the shortlist's ranking is empty and the site renders no declared empty state — no class attribute carries both '$RT_SL_RANKED' and '$RT_SL_EMPTY'"
+    rc=1
+  fi
+  printf 'SHORTLIST headings=%s\n' "$nh"
+  return $rc
+}
 
 # THE ELEMENT PASS'S CONTRACT HALF — the walk above, once per declared element fence.
 rt_element_contract() {   # rt_element_contract <engine-root>
@@ -1258,6 +1372,9 @@ rt_element_instance() {   # rt_element_instance <engine-root> <trip-dir> <site> 
   local root="$1" trip="$2" site="$3" m="$4" d="$5" rc=0 r tag fn a keys selective=0
   keys="$(rt_artifact_keys "$root/$RT_SPEC_REL")"
   if [ -n "$m" ] && rt_state_built "$root" "$m" "$d"; then selective=1; fi
+  # A walker this loop calls reads the engine root, and whether σ selected it, from these two in
+  # its caller's scope: a positional argument would collide with rt_instance_walk's work directory.
+  local RT_INSTANCE_ROOT="$root" RT_INSTANCE_SELECTIVE="$selective"
   while IFS="$RT_TAB" read -r tag _ _ _ fn; do
     [ -n "$tag" ] || continue
     a="$(awk -F'\t' -v t="elements:$tag" '$4 == "rendered" { n = split($5, H, "|"); for (i = 1; i <= n; i++) if (H[i] == t) print $1 }' <<<"$keys" | sort -u)"
