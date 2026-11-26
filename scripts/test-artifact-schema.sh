@@ -19374,11 +19374,13 @@ fi
 #   W3i       the INVOCATION line, counted apart from the grant and the prose mentions: exactly
 #             ONE fenced invocation of the walk in the verb's § site region
 #   W5        the artifact grain's instrument: the render table opens at ONE site, and the bound
-#             set, the state vocabulary and the admitted states each read NON-ZERO
+#             set, the state vocabulary, the admitted states and the states a build runs in each
+#             read NON-ZERO
 #   W6        the render table's artifacts against § 1.1's bound classes, BOTH directions
 #   W7        every state key against the modes and dispositions the contract's G5 and G6 declare, and
 #             every bound class, and every scaffolding token the table names, dispositioned once in
-#             each admitted state. A token whose every row is deleted is not seen: stated, not closed
+#             each state a build runs in — an admitted state no non-row covers. A token whose every
+#             row is deleted is not seen: stated, not closed
 #   W8        every rendered home against the § 3 catalog, DERIVED; `—` only on a scaffolding row
 #             whose token § 3 does not define
 #   W9        CX-2: ONE line appends the state, spelled with the walker's own RT_STATE_FLAG, and it
@@ -19388,12 +19390,19 @@ fi
 #             and that line appends the state with the same flag
 #   W10       the shape pass's marker readers against a differently-shaped read of § 3, both ways,
 #             and every heading marker joined to the component catalog
-#   W14       the shape pass's population on the real table, MEASURED: VACUOUS while every admitted
-#             state admits every component some state admits, which is so today
+#   W14       the shape pass's population on the real table, MEASURED: VACUOUS while every state a
+#             build runs in admits every component some state admits
 #   W-CTL-DERIVE, -RT7a…d, -RT7ds, -RT7dn, -RT8, -RT8s1/s2, -KEY, -ANY, -TOK, -DASH, -DASH3, -DUP,
 #   -VOCAB, -VOCABd, -SITEROW, -CLEAN(rc), -NORUN(rc), -UNADM, -ECHO(v), -REPEAT(rc), -READ
 #             the artifact grain's and the shape pass's controls, each over a copy under $WORK,
 #             each input DERIVED from the walker's readers rather than held here
+#   W-CTL-NRDERIVE, -NONROWs, -NONROW, -NONROWd, -NONROWpre, -NONROWdec, -NONROWrun(rc), -LIFE,
+#   -PREPLAN(rc), -NEWEST(rc), -NEWESTr
+#             the non-rows' and the page pick's controls: a root carrying the non-row closes, and
+#             fires once per subject without it; a non-row refused when rendered, or when it covers
+#             a state the verb builds in; a state it covers read NOT RUN; the `site` row's lifecycle
+#             held to ACTIVE; a pre-plan page closing with no itinerary; `--trip` taking the newest
+#             page, with modification times set by `touch -t`
 #
 # Every control builds its subject under $WORK by COPY-THEN-MUTATE, asserts the mutation
 # LANDED before any verdict is read, and drives THE SAME rt_* functions the live arms drive. A
@@ -20205,6 +20214,217 @@ else
     -- rt_main --root "$ROOT" --trip fx --data-root "$W_FXN" "$RT_STATE_FLAG" "$W_S0"
 fi
 
+# ═════ THE NON-ROWS AND THE PAGE PICK — states the `site` row admits and the verb builds nothing
+# in, the `site` row's lifecycle cell, and which page `--trip` walks. ═════
+#
+# § 9.2 declares two states with no build. A plan mode with no destination is the verb's own stop,
+# declared by a render-table row whose artifact is the walker's RT_NONROW_TOKEN, `excluded`, read as
+# states in which no page is built; `ARCHIVED` takes no row, and the walk reads the `site` row's
+# lifecycle cell instead. The token and the one mode a non-row may never cover are the walker's own
+# constants, read here as RT_STATE_FLAG is, so this file holds neither.
+#
+# The engine root these controls read is W_NR, a copy of the five documents the artifact grain reads,
+# separate from W_FXR because w_spec_reset rewrites that one under every control above. Until the
+# render table carries IDEATION rows and a non-row, the copy is planted with them: the `site` row
+# widened to IDEATION and any destination, the nine render rows and the eight § 9.3 rows the design
+# record for this change states. The plant is temporary, held here only until the live tree carries
+# the same rows, and the change that lands them removes it.
+W_NR="$W_D/nrroot"; mkdir -p "$W_NR/agents" "$W_NR/reference" "$W_NR/skills/trip"
+cp "$W_GRAMMAR"                           "$W_NR/agents/05-hub-planner.md"
+cp "$ROOT/$RT_CONTRACT_REL"               "$W_NR/$RT_CONTRACT_REL"
+cp "$ROOT/reference/data-architecture.md" "$W_NR/reference/data-architecture.md"
+W_NR_SITEROW='| site | ACTIVE | IDEATION, DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING | any | G8 |'
+W_NR_ROWS='trip-context.md             IDEATION                                        UNDECIDED, DECIDED  rendered     hero-section
+outputs/final-itinerary.md  IDEATION                                        UNDECIDED, DECIDED  excluded     §9.3
+outputs/links-reference.md  IDEATION                                        UNDECIDED, DECIDED  excluded     §9.3
+outputs/venue-matrix.md     IDEATION                                        UNDECIDED, DECIDED  excluded     §9.3
+outputs/event-status.md     IDEATION                                        UNDECIDED, DECIDED  excluded     §9.3
+<sticky-navigation>         IDEATION                                        UNDECIDED, DECIDED  excluded     §9.3
+<coordination-notice>       IDEATION                                        UNDECIDED, DECIDED  excluded     §9.3
+<reference-matter>          IDEATION                                        UNDECIDED, DECIDED  excluded     §9.3
+<build>                     DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING  UNDECIDED           excluded     §9.3'
+W_NR_93='| `outputs/final-itinerary.md` | IDEATION × UNDECIDED, DECIDED | planted: a state that renders no plan |
+| `outputs/links-reference.md` | IDEATION × UNDECIDED, DECIDED | planted |
+| `outputs/venue-matrix.md` | IDEATION × UNDECIDED, DECIDED | planted |
+| `outputs/event-status.md` | IDEATION × UNDECIDED, DECIDED | planted |
+| `<sticky-navigation>` | IDEATION × UNDECIDED, DECIDED | planted |
+| `<coordination-notice>` | IDEATION × UNDECIDED, DECIDED | planted |
+| `<reference-matter>` | IDEATION × UNDECIDED, DECIDED | planted |
+| `<build>` | DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING × UNDECIDED | planted: the verb stops and builds nothing |'
+export W_NR_ROWS W_NR_93
+W_NR_SPEC0="$W_D/nr-spec0.md"; W_NR_VERB0="$W_D/nr-verb0.md"
+awk -v open='```'"$RT_ARTIFACT_TAG" '
+  $0 == open { inf = 1; print; next }
+  inf && $0 == "```" { printf "%s\n", ENVIRON["W_NR_ROWS"]; inf = 0; print; next }
+  /^### 9\.3 / { s93 = 1 }
+  s93 && /^\|/ { t93 = 1 }
+  s93 && t93 && !/^\|/ && !p93 { printf "%s\n", ENVIRON["W_NR_93"]; p93 = 1 }
+  { print }' "$W_SPEC" > "$W_NR_SPEC0"
+awk -v r="$W_NR_SITEROW" 'index($0, "| site |") == 1 { print r; next } { print }' "$W_VERB" > "$W_NR_VERB0"
+w_nr_reset() { cp "$W_NR_SPEC0" "$W_NR/reference/site-layout-spec.md"; cp "$W_NR_VERB0" "$W_NR/skills/trip/SKILL.md"; }
+w_nr_reset
+W_NR_PLANTED="$(awk -v r="$W_NR_SITEROW" '$0 == r { n++ } END { print n+0 }' "$W_NR_VERB0")"
+W_NR_LANDED=0
+if [ "$W_NR_PLANTED" -eq 1 ] && ! cmp -s "$W_SPEC" "$W_NR_SPEC0"; then W_NR_LANDED=1; fi
+
+# EVERY OTHER INPUT IS DERIVED from the walker's readers over that root: the non-row token and the
+# mode no non-row may cover, from the walker's constants; the states the non-row covers; a state a
+# build runs in whose render carries no plan, which is the pre-plan state; the placeholder and the
+# decided disposition; a mode the non-row covers; and the subjects the totality check holds.
+W_NR_TOK="${RT_NONROW_TOKEN:-}"; W_NR_PRE="${RT_PREPLAN_MODE:-}"
+W_NR_KEYS="$(rt_artifact_keys "$W_NR_SPEC0")"
+W_NR_VOC="$(rt_state_vocab "$W_NR")"
+W_NR_PH="$(awk -F'\t' '$1 == "dest-any" && !s { print $2; s = 1 }' <<<"$W_NR_VOC")"
+W_NR_DEC="$(awk -F'\t' '$1 == "dest" && !s { print $2; s = 1 }' <<<"$W_NR_VOC")"
+W_NR_PM=""; W_NR_RUN=""; W_NR_PREST=""; W_NR_NSUBJ=0
+if [ -n "$W_NR_TOK" ]; then
+  W_NR_PM="$(awk -F'\t' -v t="$W_NR_TOK" '$1 == t && !s { print $2; s = 1 }' <<<"$W_NR_KEYS")"
+  W_NR_RUN="$(rt_nonrow_states "$W_NR_SPEC0" 2>/dev/null | awk -F'\t' 'NF && !s { print $1 ":" $2; s = 1 }')"
+  W_NR_PREST="$(awk -F'\t' -v a="$W_PLAN_ART" 'NR == FNR { if ($1 == a && $4 == "rendered") R[$2 ":" $3] = 1; next } NF && !(($1 ":" $2) in R) && !s { print $1 ":" $2; s = 1 }' \
+    <(printf '%s\n' "$W_NR_KEYS") <(rt_built "$W_NR" 2>/dev/null))"
+  W_NR_NSUBJ="$( { rt_bound_classes "$W_NR"; cut -f1 <<<"$W_NR_KEYS" | awk -v t="$W_NR_TOK" '/^</ && $0 != t'; } | awk 'NF && !s[$0]++ { n++ } END { print n+0 }')"
+fi
+W_NR_OK=1
+for w_v in "$W_NR_TOK" "$W_NR_PRE" "$W_NR_PH" "$W_NR_DEC" "$W_NR_PM" "$W_NR_RUN" "$W_NR_PREST" "$W_H1"; do
+  [ -n "$w_v" ] || W_NR_OK=0
+done
+[ "$W_NR_NSUBJ" -gt 0 ] || W_NR_OK=0
+[ "$W_NR_LANDED" -eq 1 ] || W_NR_OK=0
+if [ "$W_NR_OK" -eq 1 ]; then
+  PASS "W-CTL-NRDERIVE: every non-row control input below was derived on this run — the non-row token '$W_NR_TOK' and the one mode a non-row may never cover ('$W_NR_PRE'), read from the walker's constants; a state the non-row covers ($W_NR_RUN); a state a build runs in whose render carries no plan ($W_NR_PREST); $W_NR_NSUBJ subject(s) the totality check holds; and the engine root those controls read carries the widened site row and its rows"
+else
+  FAIL "W-CTL-NRDERIVE: a non-row control input could not be derived (token='$W_NR_TOK' pre-plan mode='$W_NR_PRE' placeholder='$W_NR_PH' decided='$W_NR_DEC' non-row mode='$W_NR_PM' non-row state='$W_NR_RUN' pre-plan state='$W_NR_PREST' subjects=$W_NR_NSUBJ planted=$W_NR_LANDED) — the walker declares no non-row, or reads none, so the controls below that need one were not built"
+fi
+
+# w_nr_mut <arm-id> <awk-program> — a mutated copy of the non-row root's spec, reporting whether it
+# landed. The program receives the derived inputs as awk variables and W_IN's fence preamble.
+w_nr_mut() {
+  awk -v open='```'"$RT_ARTIFACT_TAG" -v tok="$W_NR_TOK" -v pre="$W_NR_PRE" -v ph="$W_NR_PH" -v dec="$W_NR_DEC" -v pm="$W_NR_PM" -v h1="$W_H1" \
+    "$2" "$W_NR_SPEC0" > "$W_NR/reference/site-layout-spec.md"
+  if cmp -s "$W_NR_SPEC0" "$W_NR/reference/site-layout-spec.md"; then
+    FAIL "$1: the mutation did not land — the spec copy is byte-identical to the non-row root's, so this control proves nothing"
+    return 1
+  fi
+  return 0
+}
+
+# W-CTL-NONROWs — specificity: the root carrying the non-row and the IDEATION rows closes. Without
+# a reader for the non-row, the token reads as a scaffolding subject missing every other state and
+# each subject as missing the plan-mode states the widened row admits.
+w_ctl_silent 'W-CTL-NONROWs' "an engine root whose site row admits IDEATION and any destination, whose render table carries the IDEATION rows and a non-row for a plan mode with no destination, and whose § 9.3 names each exclusion — the grain closes over the states a build runs in" \
+  -- rt_artifact_contract "$W_NR"
+
+# W-CTL-NONROW — the same root with every non-row removed: every subject then lacks a row for the
+# states the non-row covered, so totality fires once per subject.
+if [ "$W_NR_OK" -ne 1 ]; then
+  FAIL "W-CTL-NONROW: not built — W-CTL-NRDERIVE derived no non-row, so there is nothing to remove"
+elif w_nr_mut 'W-CTL-NONROW' "$W_IN"'inf && F[1] == tok { next } { print }'; then
+  w_ctl_fire 'W-CTL-NONROW' RT7 "$W_NR_NSUBJ" "every non-row is removed from a copy of the spec, every other row intact — each bound class and scaffolding token then has no row for the plan-mode states with no destination, which the widened site row admits" \
+    -- rt_artifact_contract "$W_NR"
+fi
+w_nr_reset
+
+# W-CTL-NONROWd — the non-row re-dispositioned `rendered`, with a home § 3 defines, so only the
+# disposition is wrong: a state with no build renders nothing.
+if [ "$W_NR_OK" -ne 1 ]; then
+  FAIL "W-CTL-NONROWd: not built — W-CTL-NRDERIVE derived no non-row to re-disposition"
+elif w_nr_mut 'W-CTL-NONROWd' "$W_IN"'inf && F[1] == tok && !d { printf "%s  %s  %s  rendered  %s\n", F[1], F[2], F[3], h1; d = 1; next } { print }'; then
+  w_ctl_fire 'W-CTL-NONROWd' RT0 1 "the non-row is re-dispositioned rendered on a copy, its home a component § 3 defines — the non-row token renders nothing, so the row is refused" \
+    -- rt_artifact_contract "$W_NR"
+fi
+w_nr_reset
+
+# W-CTL-NONROWpre / -NONROWdec — the non-row's confinement (§ 9.2, Admission). A second non-row is
+# added on a copy, for a state the verb builds in: the pre-plan mode with no destination, and a plan
+# mode with one. Read clean, either would retire a state the verb still builds in, and the fact the
+# row stands for, the verb's own stop, is prose no arm reads.
+if [ "$W_NR_OK" -ne 1 ]; then
+  FAIL "W-CTL-NONROWpre: not built — W-CTL-NRDERIVE derived no non-row or no pre-plan mode"
+elif w_nr_mut 'W-CTL-NONROWpre' '{ print } $0 == open { inf = 1 } inf && $0 == "```" { inf = 0 } inf && index($0, tok) == 1 && !d { printf "%s  %s  %s  excluded  §9.3\n", tok, pre, ph; d = 1 }'; then
+  w_ctl_fire 'W-CTL-NONROWpre' RT0 1 "a second non-row is added on a copy for the pre-plan mode with no destination, a state the verb builds in — a non-row covers only a plan mode, so it is refused" \
+    -- rt_artifact_contract "$W_NR"
+fi
+w_nr_reset
+if [ "$W_NR_OK" -ne 1 ]; then
+  FAIL "W-CTL-NONROWdec: not built — W-CTL-NRDERIVE derived no non-row or no decided disposition"
+elif w_nr_mut 'W-CTL-NONROWdec' '{ print } $0 == open { inf = 1 } inf && $0 == "```" { inf = 0 } inf && index($0, tok) == 1 && !d { printf "%s  %s  %s  excluded  §9.3\n", tok, pm, dec; d = 1 }'; then
+  w_ctl_fire 'W-CTL-NONROWdec' RT0 1 "a second non-row is added on a copy for a plan mode with a destination recorded, a state the verb builds in — a non-row covers only the placeholder disposition, so it is refused" \
+    -- rt_artifact_contract "$W_NR"
+fi
+w_nr_reset
+
+# W-CTL-NONROWrun — the walk itself, read in a state the non-row covers: both state passes are NOT
+# RUN, because the verb stops there and builds no page.
+if [ "$W_NR_OK" -ne 1 ]; then
+  FAIL "W-CTL-NONROWrun: not built — W-CTL-NRDERIVE derived no state a non-row covers"
+else
+  w_ctl_fire 'W-CTL-NONROWrun' RT0 2 "the synthetic trip read in a state the site row admits and a non-row covers — the artifact pass's instance half and the shape pass are each reported NOT RUN" \
+    -- rt_main --root "$W_NR" --trip fx --data-root "$W_FXD" "$RT_STATE_FLAG" "$W_NR_RUN"
+  w_ctl_rc 'W-CTL-NONROWrunrc' 2 "the same run in a non-row state — a state with no build is never read as clean" \
+    -- rt_main --root "$W_NR" --trip fx --data-root "$W_FXD" "$RT_STATE_FLAG" "$W_NR_RUN"
+fi
+
+# W-CTL-LIFE — the ARCHIVED non-row. The verb copy's `site` row is given G7's lifecycle value that
+# admits ARCHIVED; the table keys no row on lifecycle, so that is graded at the cell.
+W_LIFE_X='ANY'
+awk -v x="$W_LIFE_X" 'index($0, "| site |") == 1 { n = split($0, C, "|"); C[3] = " " x " "; s = C[1]; for (i = 2; i <= n; i++) s = s "|" C[i]; print s; next } { print }' "$W_NR_VERB0" > "$W_NR/skills/trip/SKILL.md"
+if cmp -s "$W_NR_VERB0" "$W_NR/skills/trip/SKILL.md"; then
+  FAIL "W-CTL-LIFE: the mutation did not land, so this control proves nothing"
+else
+  w_ctl_fire 'W-CTL-LIFE' RT7 1 "the site row's lifecycle cell reads '$W_LIFE_X' on a copy of the verb, so the verb would serve an archived trip — ARCHIVED is a declared non-row the render table keys no row for" \
+    -- rt_artifact_contract "$W_NR"
+fi
+w_nr_reset
+
+# W-CTL-PREPLAN — a pre-plan page, read in a state a build runs in and no plan renders: the trip
+# holds the artifacts that state renders and no itinerary, and the walk closes.
+W_PREPAGE='<!doctype html><html><body>
+<section class="hero-section">fx</section>
+</body></html>'
+W_FXP="$W_D/fxdata-preplan"; mkdir -p "$W_FXP/trips/fx/outputs"
+printf '%s\n' "$W_PREPAGE" > "$W_FXP/trips/fx/outputs/fx-travel-site.html"
+if [ "$W_NR_OK" -ne 1 ]; then
+  FAIL "W-CTL-PREPLAN: not built — W-CTL-NRDERIVE derived no state a build runs in whose render carries no plan"
+else
+  while IFS= read -r w_f; do
+    [ -n "$w_f" ] || continue
+    mkdir -p "$(dirname "$W_FXP/trips/fx/$w_f")"
+    printf 'synthetic stand-in\n' > "$W_FXP/trips/fx/$w_f"
+  done <<<"$(awk -F'\t' -v m="${W_NR_PREST%%:*}" -v d="${W_NR_PREST#*:}" '$4 == "rendered" && $2 == m && $3 == d && $1 !~ /^</ { print $1 }' <<<"$W_NR_KEYS" | sort -u)"
+  if [ -e "$W_FXP/trips/fx/$W_PLAN_ART" ]; then
+    FAIL "W-CTL-PREPLAN: the pre-plan trip carries the plan artifact, so this control proves nothing"
+  else
+    w_ctl_silent 'W-CTL-PREPLAN' "a pre-plan page and the artifacts its state renders, with no itinerary, read in a state a build runs in and no plan renders — the element pass reads no itinerary there, and every pass closes" \
+      -- rt_main --root "$W_NR" --trip fx --data-root "$W_FXP" "$RT_STATE_FLAG" "$W_NR_PREST"
+    w_ctl_rc 'W-CTL-PREPLANrc' 0 "the same pre-plan run" \
+      -- rt_main --root "$W_NR" --trip fx --data-root "$W_FXP" "$RT_STATE_FLAG" "$W_NR_PREST"
+  fi
+fi
+
+# W-CTL-NEWEST / -NEWESTr — which page `--trip` walks once a slug-named and a destination-named page
+# coexist. A pre-plan page named to sort FIRST by name and the clean plan page named to sort LAST,
+# with modification times set by `touch -t` and never by write order: the walk takes the newest.
+# Swapping the times makes the pre-plan page the newest, and the walk then reads it against the
+# plan, one day section missing per plan day.
+W_FXT="$W_D/fxdata-twopages"; mkdir -p "$W_FXT/trips/fx/outputs"
+while IFS= read -r w_f; do
+  [ -n "$w_f" ] || continue
+  mkdir -p "$(dirname "$W_FXT/trips/fx/$w_f")"
+  if [ "$w_f" = "$W_PLAN_ART" ]; then cp "$W_FX/plan.md" "$W_FXT/trips/fx/$w_f"; else printf 'synthetic stand-in\n' > "$W_FXT/trips/fx/$w_f"; fi
+done <<<"$W_REND"
+printf '%s\n' "$W_PREPAGE" > "$W_FXT/trips/fx/outputs/fx-travel-site.html"
+cp "$W_FX/site.html" "$W_FXT/trips/fx/outputs/zz-travel-site.html"
+touch -t 202601010000 "$W_FXT/trips/fx/outputs/fx-travel-site.html"
+touch -t 202601020000 "$W_FXT/trips/fx/outputs/zz-travel-site.html"
+w_ctl_silent 'W-CTL-NEWEST' "two pages under one trip, the pre-plan page first by name and older, the clean plan page last by name and newer, read in the clean state — the walk takes the newest page" \
+  -- rt_main --root "$ROOT" --trip fx --data-root "$W_FXT" "$RT_STATE_FLAG" "$W_S0"
+w_ctl_rc 'W-CTL-NEWESTrc' 0 "the same two-page run" \
+  -- rt_main --root "$ROOT" --trip fx --data-root "$W_FXT" "$RT_STATE_FLAG" "$W_S0"
+touch -t 202601030000 "$W_FXT/trips/fx/outputs/fx-travel-site.html"
+W_NDAYS="$(w_count "$(rt_plan_days "$W_FX/plan.md")")"
+w_ctl_fire 'W-CTL-NEWESTr' RT3 "$W_NDAYS" "the same two pages with the times swapped, so the pre-plan page is the newest — the walk reads it against the plan and finds no day section for any of its $W_NDAYS day(s)" \
+  -- rt_main --root "$ROOT" --trip fx --data-root "$W_FXT" "$RT_STATE_FLAG" "$W_S0"
+
 # ── THE LIVE ARMS. They run AFTER the controls so every one of them is read against an
 # instrument already demonstrated to fire and to stay silent on the right inputs.
 w0_assert  "$W_GRAMMAR" "$W_SPEC"
@@ -20215,7 +20435,7 @@ w3c_assert "$W_VERB"
 
 # ── W5 — the artifact grain's instrument, graded before anything it feeds.
 w5_assert() {   # w5_assert <engine-root>
-  local r="$1" s="$1/reference/site-layout-spec.md" sites nrow nb nm nd na nx
+  local r="$1" s="$1/reference/site-layout-spec.md" sites nrow nb nm nd na nbu nx
   sites="$(rt_fence_sites "$s" "$RT_ARTIFACT_TAG")"
   nrow="$(w_count "$(rt_artifact_rows "$s")")"
   nx="$(awk -F'\t' '$4 == "excluded" { n++ } END { print n+0 }' <<<"$(rt_artifact_rows "$s")")"
@@ -20223,10 +20443,11 @@ w5_assert() {   # w5_assert <engine-root>
   nm="$(awk -F'\t' '$1 == "mode" { n++ } END { print n+0 }' <<<"$(rt_state_vocab "$r")")"
   nd="$(awk -F'\t' '$1 == "dest" { n++ } END { print n+0 }' <<<"$(rt_state_vocab "$r")")"
   na="$(w_count "$(rt_admitted "$r")")"
-  if [ "$sites" = "1" ] && [ "$nrow" -gt 0 ] && [ "$nb" -gt 0 ] && [ "$nm" -gt 0 ] && [ "$nd" -gt 0 ] && [ "$na" -gt 0 ]; then
-    PASS "W5: the artifact grain's instrument is live — the render table opens at ONE site with $nrow row(s), $nx of them excluded and each held to § 9.3 by RT7, § 1.1 yields $nb bound class(es), $RT_CONTRACT_REL G5 and G6 yield $nm mode(s) and $nd decided disposition(s), and the site row admits $na state(s). Every set is read on this run; none is held here"
+  nbu="$(w_count "$(rt_built "$r")")"
+  if [ "$sites" = "1" ] && [ "$nrow" -gt 0 ] && [ "$nb" -gt 0 ] && [ "$nm" -gt 0 ] && [ "$nd" -gt 0 ] && [ "$na" -gt 0 ] && [ "$nbu" -gt 0 ]; then
+    PASS "W5: the artifact grain's instrument is live — the render table opens at ONE site with $nrow row(s), $nx of them excluded and each held to § 9.3 by RT7, § 1.1 yields $nb bound class(es), $RT_CONTRACT_REL G5 and G6 yield $nm mode(s) and $nd decided disposition(s), and the site row admits $na state(s), $nbu of them states a build runs in and the rest the render table's declared non-rows. Every set is read on this run; none is held here"
   else
-    FAIL "W5: the artifact grain's instrument is broken (render-table sites=$sites, rows=$nrow, bound classes=$nb, modes=$nm, decided dispositions=$nd, admitted states=$na) — a zero here makes every comparison below vacuous"
+    FAIL "W5: the artifact grain's instrument is broken (render-table sites=$sites, rows=$nrow, bound classes=$nb, modes=$nm, decided dispositions=$nd, admitted states=$na, states a build runs in=$nbu) — a zero here makes every comparison below vacuous"
   fi
 }
 
@@ -20248,10 +20469,10 @@ w6_assert() {   # w6_assert <engine-root>
 
 # ── W7 — the state keys against the vocabulary the contract declares, and coverage of every admitted state.
 w7_assert() {   # w7_assert <engine-root>
-  local r="$1" vocab keys bad nk na out n7
+  local r="$1" vocab keys bad nk na nbu out n7
   vocab="$(rt_state_vocab "$r")"
   keys="$(rt_artifact_keys "$r/reference/site-layout-spec.md")"
-  nk="$(w_count "$keys")"; na="$(w_count "$(rt_admitted "$r")")"
+  nk="$(w_count "$keys")"; na="$(w_count "$(rt_admitted "$r")")"; nbu="$(w_count "$(rt_built "$r")")"
   bad="$(awk -F'\t' 'NR == FNR { V[$1 SUBSEP $2] = 1; next } NF && !((("mode" SUBSEP $2) in V) || (("mode-any" SUBSEP $2) in V)) { print "mode:" $2 } NF && !((("dest" SUBSEP $3) in V) || (("dest-any" SUBSEP $3) in V)) { print "destination-key" }' <(printf '%s\n' "$vocab") <(printf '%s\n' "$keys") | sort -u)"
   out="$(rt_artifact_contract "$r" 2>&1)"
   n7="$(awk '$1 == "FINDING" && ($2 == "RT7" || $2 == "RT0") { n++ } END { print n+0 }' <<<"$out")"
@@ -20259,12 +20480,14 @@ w7_assert() {   # w7_assert <engine-root>
     FAIL "W7: the state vocabulary read from $RT_CONTRACT_REL is EMPTY, so no key can be graded"
   elif [ "$nk" -eq 0 ]; then
     FAIL "W7: the render table expands to ZERO (artifact, state) keys, so there is nothing to grade"
+  elif [ "$nbu" -eq 0 ]; then
+    FAIL "W7: the site row's $na admitted state(s) yield ZERO states a build runs in, so totality would be graded over nothing"
   elif [ -n "$bad" ]; then
     FAIL "W7: render-table state key(s) outside the modes and dispositions $RT_CONTRACT_REL G5 and G6 declare [$(w_join "$bad")]"
   elif [ "$n7" -ne 0 ]; then
     FAIL "W7: the artifact grain does not close — $n7 RT7/RT0 finding(s) from the walker's contract half"
   else
-    PASS "W7: every one of the $nk (artifact, state) key(s) the render table declares names a mode G5 resolves and a disposition G6 yields, read from $RT_CONTRACT_REL on this run, and every bound class, and every scaffolding token the table names, is dispositioned exactly once in each of the $na state(s) the site row admits"
+    PASS "W7: every one of the $nk (artifact, state) key(s) the render table declares names a mode G5 resolves and a disposition G6 yields, read from $RT_CONTRACT_REL on this run, and every bound class, and every scaffolding token the table names, is dispositioned exactly once in each of the $nbu state(s) a build runs in — the $na state(s) the site row admits, less those the render table declares a non-row"
   fi
 }
 
@@ -20397,13 +20620,13 @@ while IFS="$W_TAB" read -r w_m w_d; do
   W_SH_N=$((W_SH_N+1))
   w_forb="$(w_linediff "$(rt_shape_population "$W_SPEC")" "$(rt_state_components "$W_SPEC" "$w_m" "$w_d")")"
   [ "$(w_count "$w_forb")" -gt 0 ] && W_SH_K=$((W_SH_K+1))
-done <<<"$(rt_admitted "$ROOT")"
+done <<<"$(rt_built "$ROOT")"
 if [ "$W_SH_N" -eq 0 ]; then
-  FAIL "W14: the site row admits ZERO states, so the shape pass's population was not measured"
+  FAIL "W14: ZERO states a build runs in were read, so the shape pass's population was not measured"
 elif [ "$W_SH_K" -eq 0 ]; then
-  VACUOUS "W14: in every one of the $W_SH_N state(s) the site row admits, the render table admits every component any state admits — RT8 has no component it could report on a real render at this release. The whole load for RT8 is carried by W-CTL-RT8, which plants a split table on a copy"
+  VACUOUS "W14: in every one of the $W_SH_N state(s) a build runs in, the render table admits every component any state admits — RT8 has no component it could report on a real render at this release. The whole load for RT8 is carried by W-CTL-RT8, which plants a split table on a copy"
 else
-  PASS "W14: in $W_SH_K of the $W_SH_N state(s) the site row admits, some component another state admits is not admitted — RT8 has a real population"
+  PASS "W14: in $W_SH_K of the $W_SH_N state(s) a build runs in, some component another state admits is not admitted — RT8 has a real population"
 fi
 w3i_assert "$W_VERB"
 w5_assert  "$ROOT"
@@ -20467,7 +20690,13 @@ ps_dne "W: no arm in this group establishes that a site build INVOKED the walk. 
 #                                        artifact grain's RT7a-d / RT7ds / RT7dn / KEY / ANY / TOK / DASH /
 #                                        DASH3 / DUP / VOCAB / VOCABd / SITEROW
 #   $WORK/w/fx/site-rt8.html          -> W-CTL-RT8 / RT8s1 / RT8s2
-#   $WORK/w/fxdata, fxdata-noread     -> W-CTL-CLEAN / NORUN / UNADM / ECHO / REPEAT / READ
+#   $WORK/w/fxdata, fxdata-noread     -> W-CTL-CLEAN / NORUN / UNADM / ECHO / REPEAT / READ, and the
+#                                        data home W-CTL-NONROWrun reads
+#   $WORK/w/nrroot/…, nr-spec0.md, nr-verb0.md
+#                                     -> W-CTL-NONROWs / NONROW / NONROWd / NONROWpre / NONROWdec /
+#                                        LIFE, and the engine root NONROWrun and PREPLAN read
+#   $WORK/w/fxdata-preplan, fxdata-twopages
+#                                     -> W-CTL-PREPLAN / NEWEST / NEWESTr
 #
 # The compensating control is W0, which runs over the REAL documents and proves the fence
 # resolves at one site and both extractions are non-zero — so every control verdict above is
@@ -20486,6 +20715,8 @@ md_flips w_site_region     'W3'  w3_assert  "$W_VERB"
 md_flips w_site_region     'W3c' w3c_assert "$W_VERB"
 md_flips w_site_region     'W3i' w3i_assert "$W_VERB"
 md_flips rt_state_vocab    'W5'  w5_assert  "$ROOT"
+md_flips rt_built          'W5'  w5_assert  "$ROOT"
+md_flips rt_site_lifecycle 'W7'  w7_assert  "$ROOT"
 md_flips rt_bound_classes  'W6'  w6_assert  "$ROOT"
 md_flips rt_admitted       'W7'  w7_assert  "$ROOT"
 md_flips rt_artifact_rows  'W8'  w8_assert  "$ROOT"
