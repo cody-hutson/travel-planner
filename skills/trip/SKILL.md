@@ -70,7 +70,7 @@ data-root-pointer: ${HOME}/.travel-planner/data-root
 | research | ACTIVE | IDEATION, DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING | DECIDED | G7 |
 | check | ACTIVE | any | DECIDED | G7 |
 | ideas | ACTIVE | IDEATION | UNDECIDED | G7 |
-| site | ACTIVE | DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING | DECIDED | G8 |
+| site | ACTIVE | IDEATION, DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING | any | G8 |
 | schema | ANY | any | any | G7 |
 
 The fence above and the requirement table beside it are together this file's contract
@@ -645,9 +645,11 @@ declining to advertise what this file does not implement.
 `status` declares `lifecycle: ANY` deliberately, rather than leaving that cell to its
 default. Orientation is precisely what an archived trip still needs, and on such a trip
 the rest of this file's table refuses on the `lifecycle` cell — seven of its nine rows read
-`ACTIVE` at this revision. That is conduct, not construction: **nothing grades this column.**
-The taxonomy guard reads the verb cell and the contract guard the depth cell, so a row appended
-later could carry `ANY` and no check would react. Stated as a count at a revision rather than as
+`ACTIVE` at this revision. That is conduct, not construction: **nothing grades this column but
+the `site` row's cell**, which `scripts/check-round-trip.sh` holds to `ACTIVE` because
+`reference/site-layout-spec.md` § 9.2 declares `ARCHIVED` a non-row of the render table. The
+taxonomy guard reads the verb cell and the contract guard the depth cell, so any other row
+appended later could carry `ANY` and no check would react. Stated as a count at a revision rather than as
 a property of the table, because the universal form is false the first time a slice appends a
 row — which is the failure this file's sibling names by name. So the index's third
 entry above is where the reopen path gets named, and naming it there is what makes that

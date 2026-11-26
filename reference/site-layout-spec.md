@@ -928,7 +928,8 @@ the trip's mode and its destination's disposition (`reference/trip-resolution.md
 `reference/adr/ADR-032-site-round-trip-contract.md` the table; `scripts/check-round-trip.sh`
 reads it. Columns are separated by two or more spaces:
 
-- **`artifact`**: a § 1.1 class as § 1.1 spells it, or an angle-bracketed scaffolding token.
+- **`artifact`**: a § 1.1 class as § 1.1 spells it, an angle-bracketed scaffolding token, or
+  `<build>`, the non-row token below.
 - **`modes`**, **`destination`**: `G7`'s cell grammar, comma-separated. A mode is one `G5`
   resolves, or `UNSET`; a destination is `DECIDED` (`G6`'s decided branch) or `UNDECIDED`.
   **Never `any`**, which under `G7` admits `UNSET`.
@@ -937,14 +938,25 @@ reads it. Columns are separated by two or more spaces:
   for the components that element fence names, and `—` only on a scaffolding row § 3 gives no
   component. For `excluded`, `§9.3`, where the reason is named.
 
+**The two non-rows.** A state the `site` row admits and its verb then stops in takes a `<build>`
+row — `excluded`, its home `§9.3` — and the walk reads it as states in which no page is built: no
+class or scaffolding token owes a row there, and the walk's state passes report not run in it. The
+one such state is a plan mode with no destination recorded (`ADR-034` § 1). `ARCHIVED` takes no
+row: the table keys no row on lifecycle, the `site` row's lifecycle cell reads `ACTIVE`, and the
+walk reports RT7 if it reads anything else.
+
 **The rule over its rows** (`CLAUDE.md` § *Rules over an enumeration*). *Criterion:* the classes
 that take rows are § 1.1's `bound` classes, read there; a class that is `internal`,
 `internal-hard` or `output` is excluded by its class and takes no row. The states rows cover are
-those the `site` row of `skills/trip/SKILL.md` admits, read there. *Precedence:* one row per
-artifact and state; two rows covering one are refused, never ranked. *Admission:* a `bound` class,
-or a scaffolding token the table names, with no row for an admitted state is undispositioned, and
-so is a row for a class that is not `bound` or for a state the `site` row does not admit; the walk
-reports each. A row is added here and nowhere else.
+those the `site` row of `skills/trip/SKILL.md` admits, read there, less the states a `<build>` row
+covers. *Precedence:* one row per artifact and state; two rows covering one are refused, never
+ranked; where a `<build>` row and another row cover one state, the `<build>` row governs and the
+other is a row for a state with no build. *Admission:* a `bound` class, or a scaffolding token the
+table names, with no row for a state a build runs in is undispositioned, and so is a row for a
+class that is not `bound` or for a state the `site` row does not admit; the walk reports each. A
+`<build>` row disposed of as anything but `excluded` is refused, and so is one covering a state the
+verb builds in: it covers only `UNDECIDED` states of a mode other than IDEATION, the one stop
+`ADR-034` § 1 decides. A row is added here and nowhere else.
 
 ```round-trip-contract-artifacts
 # artifact                  modes                                           destination  disposition  home
@@ -956,6 +968,15 @@ outputs/event-status.md     DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING  DECI
 <sticky-navigation>         DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING  DECIDED      rendered     sticky-navigation
 <coordination-notice>       DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING  DECIDED      rendered     coordination-notice
 <reference-matter>          DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING  DECIDED      rendered     —
+trip-context.md             IDEATION                                        UNDECIDED, DECIDED  rendered     hero-section
+outputs/final-itinerary.md  IDEATION                                        UNDECIDED, DECIDED  excluded     §9.3
+outputs/links-reference.md  IDEATION                                        UNDECIDED, DECIDED  excluded     §9.3
+outputs/venue-matrix.md     IDEATION                                        UNDECIDED, DECIDED  excluded     §9.3
+outputs/event-status.md     IDEATION                                        UNDECIDED, DECIDED  excluded     §9.3
+<sticky-navigation>         IDEATION                                        UNDECIDED, DECIDED  excluded     §9.3
+<coordination-notice>       IDEATION                                        UNDECIDED, DECIDED  excluded     §9.3
+<reference-matter>          IDEATION                                        UNDECIDED, DECIDED  excluded     §9.3
+<build>                     DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING  UNDECIDED           excluded     §9.3
 ```
 
 `<reference-matter>` is the site-additive reference content described above. § 3 defines no
@@ -974,12 +995,20 @@ correct; dropping an *unlisted* plan element is the defect.
 | Itinerary Version Log | wherever its artifact renders | Document metadata. |
 | Per-traveler model + satisfaction metrics | wherever its artifact renders | Internal coverage view carrying personal detail; kept out of the published surface by design (see 9.1). |
 | Artifact frontmatter — the YAML block a plan artifact opens with | wherever its artifact renders | Machine-readable identity, lifecycle, provenance and publishability, read by the schema gate and by the agents. It is metadata *about* the artifact rather than plan content in it, and has no reader-facing form. Named here because 9.2's completeness rule is total over every element of `final-itinerary.md`, so once a migrated itinerary carries a block, an unlisted block would read as a silent drop on every build. |
+| `outputs/final-itinerary.md` | IDEATION × UNDECIDED, DECIDED | IDEATION's shape is pre-plan (`ADR-031` § 2): a plan artifact left from an earlier phase is superseded by the declared return. |
+| `outputs/links-reference.md` | IDEATION × UNDECIDED, DECIDED | As the itinerary's row. |
+| `outputs/venue-matrix.md` | IDEATION × UNDECIDED, DECIDED | As the itinerary's row. |
+| `outputs/event-status.md` | IDEATION × UNDECIDED, DECIDED | As the itinerary's row. |
+| `<sticky-navigation>` | IDEATION × UNDECIDED, DECIDED | IDEATION renders no plan, so there are no Day sections to navigate. |
+| `<coordination-notice>` | IDEATION × UNDECIDED, DECIDED | No plan change exists to announce. |
+| `<reference-matter>` | IDEATION × UNDECIDED, DECIDED | No plan front or back matter exists. |
+| `<build>` | DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING × UNDECIDED | The `site` verb stops in its own section and builds nothing: no plan-phase page is built without a destination (`ADR-034` § 1). |
 
-**The State column.** The rows above are elements of `final-itinerary.md` and apply wherever it
-renders. A row for a class a state does not render names the class as a code span, as § 1.1
-spells it, and its states as `<modes> × <destinations>` in the render table's cell grammar,
-groups separated by `;`; the walk reads that cell. A class excluded by its own class value is
-never listed.
+**The State column.** The rows whose State reads *wherever its artifact renders* are elements of
+`final-itinerary.md` and apply wherever it renders. A row for a class, a scaffolding token, or
+`<build>` that a state does not render names it as a code span — a class as § 1.1 spells it — and
+its states as `<modes> × <destinations>` in the render table's cell grammar, groups separated by
+`;`; the walk reads that cell. A class excluded by its own class value is never listed.
 
 ### 9.4 The completeness check — run at build and at update
 
@@ -987,9 +1016,10 @@ At **site build** and again at every **site update**, the walk runs three passes
 trip's resolved mode and its destination's disposition:
 
 1. **Artifact pass.** Contract half, on the tracked tree: every `bound` class, and every
-   scaffolding token the table names, has a render-table row for each state the `site` row admits,
-   each row names one of them and an admitted state, and each `excluded` row is named in § 9.3 in
-   that state. Instance half, at the verb: every artifact the table renders in σ is readable; one
+   scaffolding token the table names, has a render-table row for each state a build runs in — one
+   the `site` row admits and no `<build>` row covers — each row names one of them and an admitted
+   state, each `excluded` row is named in § 9.3 in that state, and the `site` row's lifecycle cell
+   reads `ACTIVE`. Instance half, at the verb: every artifact the table renders in σ is readable; one
    that is not is a degraded read, never a smaller site.
 2. **Element pass.** The walk below, once per rendered artifact, against its own element fence.
 3. **Shape pass.** The render carries no § 3 component σ does not admit — the surplus direction;
@@ -1000,7 +1030,8 @@ trip's resolved mode and its destination's disposition:
 
 **Without σ, the artifact pass's instance half and the shape pass are reported as not run, never
 as clean, and the check does not close.** The walk never infers σ. The element pass walks 9.2's
-mapping against the current `final-itinerary.md`:
+mapping against each artifact σ renders — in a plan mode, the current `final-itinerary.md`; in
+IDEATION, which renders no plan, no itinerary is read:
 
 - Every day resolves to a Day Hero Banner and a day body — a day grid, a `.split-day` region,
   or both; every card-bearing element (anchor, supporting, bailout, alternative, food,

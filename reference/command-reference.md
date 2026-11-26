@@ -33,8 +33,9 @@ stated.
 
 **One row is read twice.** The `site` row's Mode and Destination cells are also the states the
 site's round-trip check covers: the render table in `reference/site-layout-spec.md` § 9.2 needs a
-row for every `bound` artifact in each state they admit, so a change to either cell is a change to
-that table too.
+row for every `bound` artifact in each state they admit and a build runs in — every one but the
+states its `<build>` row declares a non-row — so a change to either cell is a change to that table
+too.
 
 `/trip-new` takes a destination and year rather than a verb; its single row records the create
 branch so the table stays total over the command surface.
@@ -53,7 +54,7 @@ Once `trips/` holds more than one trip, every command also takes `--trip <slug>`
 | `/trip` | `research` | — | ACTIVE | IDEATION, DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING | DECIDED | G7 |
 | `/trip` | `check` | — | ACTIVE | any | DECIDED | G7 |
 | `/trip` | `ideas` | — | ACTIVE | IDEATION | UNDECIDED | G7 |
-| `/trip` | `site` | — | ACTIVE | DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING | DECIDED | G8 |
+| `/trip` | `site` | — | ACTIVE | IDEATION, DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING | any | G8 |
 | `/trip` | `schema` | — | ANY | any | any | G7 |
 | `/trip-decommission` | `temporary` | — | ACTIVE | any | any | G8 |
 | `/trip-decommission` | `archive` | — | ACTIVE | any | any | G8 |

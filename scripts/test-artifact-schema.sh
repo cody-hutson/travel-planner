@@ -19396,11 +19396,12 @@ fi
 #   -VOCAB, -VOCABd, -SITEROW, -CLEAN(rc), -NORUN(rc), -UNADM, -ECHO(v), -REPEAT(rc), -READ
 #             the artifact grain's and the shape pass's controls, each over a copy under $WORK,
 #             each input DERIVED from the walker's readers rather than held here
-#   W-CTL-NRDERIVE, -NONROWs, -NONROW, -NONROWd, -NONROWpre, -NONROWdec, -NONROWrun(rc), -LIFE,
-#   -PREPLAN(rc), -NEWEST(rc), -NEWESTr
+#   W-CTL-NRDERIVE, -NONROWs, -NONROW, -NONROWd, -NONROWpre, -NONROWdec, -NONROWp, -NONROWrun(rc),
+#   -LIFE, -PREPLAN(rc), -NEWEST(rc), -NEWESTr
 #             the non-rows' and the page pick's controls: a root carrying the non-row closes, and
 #             fires once per subject without it; a non-row refused when rendered, or when it covers
-#             a state the verb builds in; a state it covers read NOT RUN; the `site` row's lifecycle
+#             a state the verb builds in; another row in a state it covers held to be a row for a
+#             state with no build; a state it covers read NOT RUN; the `site` row's lifecycle
 #             held to ACTIVE; a pre-plan page closing with no itinerary; `--trip` taking the newest
 #             page, with modification times set by `touch -t`
 #
@@ -20224,48 +20225,16 @@ fi
 # constants, read here as RT_STATE_FLAG is, so this file holds neither.
 #
 # The engine root these controls read is W_NR, a copy of the five documents the artifact grain reads,
-# separate from W_FXR because w_spec_reset rewrites that one under every control above. Until the
-# render table carries IDEATION rows and a non-row, the copy is planted with them: the `site` row
-# widened to IDEATION and any destination, the nine render rows and the eight § 9.3 rows the design
-# record for this change states. The plant is temporary, held here only until the live tree carries
-# the same rows, and the change that lands them removes it.
+# separate from W_FXR because w_spec_reset rewrites that one under every control above. It is a plain
+# copy of the live tree, which carries the IDEATION rows and the non-row; every mutation below is made
+# to a copy of it and reset from the live documents.
 W_NR="$W_D/nrroot"; mkdir -p "$W_NR/agents" "$W_NR/reference" "$W_NR/skills/trip"
 cp "$W_GRAMMAR"                           "$W_NR/agents/05-hub-planner.md"
 cp "$ROOT/$RT_CONTRACT_REL"               "$W_NR/$RT_CONTRACT_REL"
 cp "$ROOT/reference/data-architecture.md" "$W_NR/reference/data-architecture.md"
-W_NR_SITEROW='| site | ACTIVE | IDEATION, DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING | any | G8 |'
-W_NR_ROWS='trip-context.md             IDEATION                                        UNDECIDED, DECIDED  rendered     hero-section
-outputs/final-itinerary.md  IDEATION                                        UNDECIDED, DECIDED  excluded     §9.3
-outputs/links-reference.md  IDEATION                                        UNDECIDED, DECIDED  excluded     §9.3
-outputs/venue-matrix.md     IDEATION                                        UNDECIDED, DECIDED  excluded     §9.3
-outputs/event-status.md     IDEATION                                        UNDECIDED, DECIDED  excluded     §9.3
-<sticky-navigation>         IDEATION                                        UNDECIDED, DECIDED  excluded     §9.3
-<coordination-notice>       IDEATION                                        UNDECIDED, DECIDED  excluded     §9.3
-<reference-matter>          IDEATION                                        UNDECIDED, DECIDED  excluded     §9.3
-<build>                     DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING  UNDECIDED           excluded     §9.3'
-W_NR_93='| `outputs/final-itinerary.md` | IDEATION × UNDECIDED, DECIDED | planted: a state that renders no plan |
-| `outputs/links-reference.md` | IDEATION × UNDECIDED, DECIDED | planted |
-| `outputs/venue-matrix.md` | IDEATION × UNDECIDED, DECIDED | planted |
-| `outputs/event-status.md` | IDEATION × UNDECIDED, DECIDED | planted |
-| `<sticky-navigation>` | IDEATION × UNDECIDED, DECIDED | planted |
-| `<coordination-notice>` | IDEATION × UNDECIDED, DECIDED | planted |
-| `<reference-matter>` | IDEATION × UNDECIDED, DECIDED | planted |
-| `<build>` | DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING × UNDECIDED | planted: the verb stops and builds nothing |'
-export W_NR_ROWS W_NR_93
-W_NR_SPEC0="$W_D/nr-spec0.md"; W_NR_VERB0="$W_D/nr-verb0.md"
-awk -v open='```'"$RT_ARTIFACT_TAG" '
-  $0 == open { inf = 1; print; next }
-  inf && $0 == "```" { printf "%s\n", ENVIRON["W_NR_ROWS"]; inf = 0; print; next }
-  /^### 9\.3 / { s93 = 1 }
-  s93 && /^\|/ { t93 = 1 }
-  s93 && t93 && !/^\|/ && !p93 { printf "%s\n", ENVIRON["W_NR_93"]; p93 = 1 }
-  { print }' "$W_SPEC" > "$W_NR_SPEC0"
-awk -v r="$W_NR_SITEROW" 'index($0, "| site |") == 1 { print r; next } { print }' "$W_VERB" > "$W_NR_VERB0"
+W_NR_SPEC0="$W_SPEC"; W_NR_VERB0="$W_VERB"
 w_nr_reset() { cp "$W_NR_SPEC0" "$W_NR/reference/site-layout-spec.md"; cp "$W_NR_VERB0" "$W_NR/skills/trip/SKILL.md"; }
 w_nr_reset
-W_NR_PLANTED="$(awk -v r="$W_NR_SITEROW" '$0 == r { n++ } END { print n+0 }' "$W_NR_VERB0")"
-W_NR_LANDED=0
-if [ "$W_NR_PLANTED" -eq 1 ] && ! cmp -s "$W_SPEC" "$W_NR_SPEC0"; then W_NR_LANDED=1; fi
 
 # EVERY OTHER INPUT IS DERIVED from the walker's readers over that root: the non-row token and the
 # mode no non-row may cover, from the walker's constants; the states the non-row covers; a state a
@@ -20289,17 +20258,17 @@ for w_v in "$W_NR_TOK" "$W_NR_PRE" "$W_NR_PH" "$W_NR_DEC" "$W_NR_PM" "$W_NR_RUN"
   [ -n "$w_v" ] || W_NR_OK=0
 done
 [ "$W_NR_NSUBJ" -gt 0 ] || W_NR_OK=0
-[ "$W_NR_LANDED" -eq 1 ] || W_NR_OK=0
 if [ "$W_NR_OK" -eq 1 ]; then
-  PASS "W-CTL-NRDERIVE: every non-row control input below was derived on this run — the non-row token '$W_NR_TOK' and the one mode a non-row may never cover ('$W_NR_PRE'), read from the walker's constants; a state the non-row covers ($W_NR_RUN); a state a build runs in whose render carries no plan ($W_NR_PREST); $W_NR_NSUBJ subject(s) the totality check holds; and the engine root those controls read carries the widened site row and its rows"
+  PASS "W-CTL-NRDERIVE: every non-row control input below was derived on this run — the non-row token '$W_NR_TOK' and the one mode a non-row may never cover ('$W_NR_PRE'), read from the walker's constants; a state the non-row covers ($W_NR_RUN); a state a build runs in whose render carries no plan ($W_NR_PREST); and $W_NR_NSUBJ subject(s) the totality check holds — each read from a copy of the live tree"
 else
-  FAIL "W-CTL-NRDERIVE: a non-row control input could not be derived (token='$W_NR_TOK' pre-plan mode='$W_NR_PRE' placeholder='$W_NR_PH' decided='$W_NR_DEC' non-row mode='$W_NR_PM' non-row state='$W_NR_RUN' pre-plan state='$W_NR_PREST' subjects=$W_NR_NSUBJ planted=$W_NR_LANDED) — the walker declares no non-row, or reads none, so the controls below that need one were not built"
+  FAIL "W-CTL-NRDERIVE: a non-row control input could not be derived (token='$W_NR_TOK' pre-plan mode='$W_NR_PRE' placeholder='$W_NR_PH' decided='$W_NR_DEC' non-row mode='$W_NR_PM' non-row state='$W_NR_RUN' pre-plan state='$W_NR_PREST' subjects=$W_NR_NSUBJ) — the walker declares no non-row, or the live tree carries none, so the controls below that need one were not built"
 fi
 
 # w_nr_mut <arm-id> <awk-program> — a mutated copy of the non-row root's spec, reporting whether it
 # landed. The program receives the derived inputs as awk variables and W_IN's fence preamble.
 w_nr_mut() {
   awk -v open='```'"$RT_ARTIFACT_TAG" -v tok="$W_NR_TOK" -v pre="$W_NR_PRE" -v ph="$W_NR_PH" -v dec="$W_NR_DEC" -v pm="$W_NR_PM" -v h1="$W_H1" \
+      -v a1="$W_A1" -v rm="${W_NR_RUN%%:*}" -v rd="${W_NR_RUN#*:}" \
     "$2" "$W_NR_SPEC0" > "$W_NR/reference/site-layout-spec.md"
   if cmp -s "$W_NR_SPEC0" "$W_NR/reference/site-layout-spec.md"; then
     FAIL "$1: the mutation did not land — the spec copy is byte-identical to the non-row root's, so this control proves nothing"
@@ -20349,6 +20318,17 @@ if [ "$W_NR_OK" -ne 1 ]; then
   FAIL "W-CTL-NONROWdec: not built — W-CTL-NRDERIVE derived no non-row or no decided disposition"
 elif w_nr_mut 'W-CTL-NONROWdec' '{ print } $0 == open { inf = 1 } inf && $0 == "```" { inf = 0 } inf && index($0, tok) == 1 && !d { printf "%s  %s  %s  excluded  §9.3\n", tok, pm, dec; d = 1 }'; then
   w_ctl_fire 'W-CTL-NONROWdec' RT0 1 "a second non-row is added on a copy for a plan mode with a destination recorded, a state the verb builds in — a non-row covers only the placeholder disposition, so it is refused" \
+    -- rt_artifact_contract "$W_NR"
+fi
+w_nr_reset
+
+# W-CTL-NONROWp — precedence (§ 9.2, the rule over its rows): a bound class's row added on a copy for
+# a state the non-row covers. The non-row governs, so the added row disposes of nothing and is RT7,
+# never read as the class rendering in a state with no build.
+if [ "$W_NR_OK" -ne 1 ]; then
+  FAIL "W-CTL-NONROWp: not built — W-CTL-NRDERIVE derived no state a non-row covers"
+elif w_nr_mut 'W-CTL-NONROWp' '{ print } $0 == open { inf = 1 } inf && $0 == "```" { inf = 0 } inf && index($0, tok) == 1 && !d { printf "%s  %s  %s  rendered  %s\n", a1, rm, rd, h1; d = 1 }'; then
+  w_ctl_fire 'W-CTL-NONROWp' RT7 1 "a bound class's row is added on a copy for a state the non-row covers — the non-row governs, so the row is one for a state with no build" \
     -- rt_artifact_contract "$W_NR"
 fi
 w_nr_reset
@@ -20692,9 +20672,9 @@ ps_dne "W: no arm in this group establishes that a site build INVOKED the walk. 
 #   $WORK/w/fx/site-rt8.html          -> W-CTL-RT8 / RT8s1 / RT8s2
 #   $WORK/w/fxdata, fxdata-noread     -> W-CTL-CLEAN / NORUN / UNADM / ECHO / REPEAT / READ, and the
 #                                        data home W-CTL-NONROWrun reads
-#   $WORK/w/nrroot/…, nr-spec0.md, nr-verb0.md
+#   $WORK/w/nrroot/…
 #                                     -> W-CTL-NONROWs / NONROW / NONROWd / NONROWpre / NONROWdec /
-#                                        LIFE, and the engine root NONROWrun and PREPLAN read
+#                                        NONROWp / LIFE, and the engine root NONROWrun and PREPLAN read
 #   $WORK/w/fxdata-preplan, fxdata-twopages
 #                                     -> W-CTL-PREPLAN / NEWEST / NEWESTr
 #
