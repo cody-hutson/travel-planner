@@ -30178,8 +30178,8 @@ cf8_assert() {
   # c4-label-word's FB-C verdict, its oracle (fbc-check's X line states pass) and its conversation, and
   # c4-confirm-word's RS-21 reading.
   out="$(LC_ALL=C diff <(awk -F'\t' '$1 != "SUMMARY" && !($2 == "c4-label-word.txt" && (($1 == "VERDICT" && $4 == "FB-C") || ($1 == "ORACLE" && $3 == "FB-C") || $1 == "CONV")) && !($1 == "OBS" && $2 == "c4-confirm-word.txt" && $3 == "CONFIRM")' <<<"$sbs") \
-                         <(awk -F'\t' '$1 != "SUMMARY" && !($2 == "c4-label-word.txt" && (($1 == "VERDICT" && $4 == "FB-C") || ($1 == "ORACLE" && $3 == "FB-C") || $1 == "CONV")) && !($1 == "OBS" && $2 == "c4-confirm-word.txt" && $3 == "CONFIRM")' <<<"$snf") | awk '/^[<>]/' | head -4 | tr '\n' ' ')"
-  first="$(LC_ALL=C diff <(printf '%s\n' "$sbs") <(printf '%s\n' "$srw") | awk '/^[<>]/' | head -4 | tr '\n' ' ')"
+                         <(awk -F'\t' '$1 != "SUMMARY" && !($2 == "c4-label-word.txt" && (($1 == "VERDICT" && $4 == "FB-C") || ($1 == "ORACLE" && $3 == "FB-C") || $1 == "CONV")) && !($1 == "OBS" && $2 == "c4-confirm-word.txt" && $3 == "CONFIRM")' <<<"$snf") | awk '/^[<>]/ && n++ < 4' | tr '\n' ' ')"
+  first="$(LC_ALL=C diff <(printf '%s\n' "$sbs") <(printf '%s\n' "$srw") | awk '/^[<>]/ && n++ < 4' | tr '\n' ' ')"
   # Control b, on a copy of the unreworded copy: the first reworded field's key renamed in its row.
   k1="${FT_C4_REWORD%%$'\t'*}"; rk="$(mktemp -d "$WORK/cf/c8-rekey.XXXXXX")"; srk=""; refs=""; mal3=""; knock=""; stray=""; unref=""; other=""; nref=0; n3=0; nk=0
   if cp -R "$bs/." "$rk/" && [ -z "$(ft_rows "$rk/reference/data-model.md" all | awk -F'\t' -v k="$k1-renamed" '$11 == k')" ] && ft_row_set "$rk/reference/data-model.md" "$k1" Key "\`$k1-renamed\`"; then
