@@ -29265,12 +29265,14 @@ md_flips ta_plants   'CHR-CTL' chrctl_assert
 #   two fields counting one for each (bullet 1); no turn puts it after an uttered skip, decline or
 #   stop of it or its section, no follow-up follows an empty answer, and none a field the header's
 #   answered-before names (2); none on a closed field (3); a follow-up repeats no ask in the same
-#   words, and carries no word but their turns on the field BEFORE it, its label and the
-#   example-text of its L4 lines up to and including it (4); none on a PERSON field in a spoken
+#   words, and carries no word but their turns on the field BEFORE it, its label or a former label of
+#   it (ADR-053 Decision 3), and the example-text of its L4 lines up to and including it (4); none on a
+#   PERSON field in a spoken
 #   session (5); and, authored only, none after an answer declared not thin (6).
 #   The conversation is ND when any value is ND — never a pass, never a fail of the conversation —
 #   every total is over determinate verdicts with ND in a column of its own, and the reported
-#   observations (order, example echo, a confirmation's order (RS-21), a second silence re-offer
+#   observations (order, example echo, a confirmation's order (RS-21), its put fields' current and
+#   former labels struck, a second silence re-offer
 #   (RS-22)) are a second pass that no verdict reads.
 #
 # ── THE ARMS ─────────────────────────────────────────────────────────────────────────────────────
@@ -29595,7 +29597,7 @@ function cv_grade(   gen, unl, t, k, f, a, kind, d, sec, np, j, n, W, own, extra
       if (f in CV_ANSB) cv_fb(f, 2, "T" t " follows up a field the file answered before the session")
       if (CV_FCL[CV_P, CV_KI[f]]) cv_fb(f, 3, "T" t " follows up a closed field")
       x = cv_words(TX[t]); for (i = 1; i <= NASK[f]; i++) if (ASK[f, i] == x && x != "") { cv_fb(f, 4, "T" t " repeats the ask in the same words"); break }
-      split("", own); n = split(cv_words(FT[f] " " CV_FLAB[CV_P, CV_KI[f]] " " EXT[f]), W, " "); for (i = 1; i <= n; i++) own[W[i]] = 1
+      split("", own); n = split(cv_words(FT[f] " " CV_FLAB[CV_P, CV_KI[f]] CV_FORMER[CV_FKEY[CV_P, CV_KI[f]]] " " EXT[f]), W, " "); for (i = 1; i <= n; i++) own[W[i]] = 1
       extra = ""; n = wd_words(T4C[t], W); for (i = 1; i <= n; i++) if (!(W[i] in own)) extra = extra (extra == "" ? "" : "|") W[i]
       if (extra != "") cv_fb(f, 4, "T" t " carries " extra)
       if (CV_H["spoken"] == "yes" && CV_FCLS[CV_P, CV_KI[f]] == "PERSON") cv_fb(f, 5, "T" t " follows up a PERSON-class field in a spoken session")
@@ -29629,9 +29631,10 @@ function cv_oracles(   i, k, got, S, P) {
 # cv_rep — a reported line held for the observation pass; it never reaches a verdict.
 function cv_rep(s) { CV_REP[++CV_NREP] = s }
 # cv_corder <carries> — RS-21: a confirmation keeps their words in the order they said them. Its
-# carries, the labels of the fields put so far struck, against the person turns before it in order.
+# carries, the labels of the fields put so far struck, each current label with its former labels,
+# against the person turns before it in order.
 function cv_corder(c,   L, n, W, i, k, m, P, j) {
-  split("", L); for (k in PUT) { n = wd_words(CV_FLAB[CV_P, CV_KI[k]], W); for (i = 1; i <= n; i++) L[W[i]] = 1 }
+  split("", L); for (k in PUT) { n = wd_words(CV_FLAB[CV_P, CV_KI[k]] CV_FORMER[CV_FKEY[CV_P, CV_KI[k]]], W); for (i = 1; i <= n; i++) L[W[i]] = 1 }
   m = 0; n = wd_words(c, W); for (i = 1; i <= n; i++) if (!(W[i] in L)) P[++m] = W[i]
   n = split(cv_words(CV_ALLP), W, " "); j = 1
   for (i = 1; i <= n && j <= m; i++) if (W[i] == P[j]) j++
