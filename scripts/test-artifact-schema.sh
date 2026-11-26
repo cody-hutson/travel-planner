@@ -449,7 +449,9 @@
 #        fixture model: no line a § 5.6 field row labels reaches what it prints and every other
 #        line does, its selectors read from the fence row by row, a new field row joining with no
 #        edit, and a refusal — exit 2, empty stdout, a stated cause — on zero field rows or a
-#        malformed row; each control on a copy of the fence
+#        malformed row; each control on a copy of the fence; and the `/trip ideas` declaration
+#        that decides which source the projection prints — the enrichment reconciler dispatched
+#        before the ideation agent, its reads cited, with a swapped and a dropped copy (PJ-IDEAS)
 #   RN   the roster edit's approver notice (#1555): § `group` reads the approver declaration on a
 #        removal, says before the echo whether it still names the removed row's key, asks nothing,
 #        writes neither sidecar, and names the declaration in its closing note; the charter's
@@ -31578,18 +31580,27 @@ md_flips wtadr26_cell 'WT-ADR26' wtadr26_assert
 #        fewer lines than it holds.
 #        PJ8 is not used: the scope-lock declined the review's eighth arm, the guard
 #        comparison, and leaving its id empty keeps these arms from reading as that one.
+#   PJ-IDEAS  the declaration that decides which source the projection prints for `/trip
+#        ideas`: § ideas of skills/trip/SKILL.md dispatches the enrichment agent in its reconciler
+#        role before Destination Ideation, and its Reads paragraph cites the reconciler's reads in
+#        skills/trip-record/SKILL.md § travelers, each paragraph read folded. PJ-IDEAS-SWAP and
+#        PJ-IDEAS-DROP are its CONTROLS, on a copy: the two names exchanged, and the reconciler's
+#        deleted. It grades the verb's TEXT, never a run: whether a shortlist reflects a linked
+#        record's leanings is observed by a live run of the verb. (registered: MD)
 #
 # EVERY ARM IS A CHAIN, by rule (ADR-048): one condition and one message per branch, PASS on
-# the last `else` only. PJ0, PJ2, PJ4 to PJ7 and PJ9 to PJ12 are top-level code, which group
-# FZ walks. PJ1 and PJ3 live in functions because md_flips takes an assertion FUNCTION, and
-# ADR-048 § 3 records that the FZ walk does not read inside one — so those two are
-# FZ-ungraded, and MD's dynamic arm covers them instead: MD[PJ1] removes pj_project_file and
-# MD[PJ3] removes pj_selectors, and each must flip its arm to exactly one FAIL and no PASS.
+# the last `else` only. PJ0, PJ2, PJ4 to PJ7, PJ9 to PJ12 and PJ-IDEAS's two controls are
+# top-level code, which group FZ walks. PJ1, PJ3 and PJ-IDEAS live in functions because md_flips
+# takes an assertion FUNCTION, and ADR-048 § 3 records that the FZ walk does not read inside
+# one — so those are FZ-ungraded, and MD's dynamic arm covers them instead: MD[PJ1] removes
+# pj_project_file, MD[PJ3] removes pj_selectors and MD[PJ-IDEAS] removes pji_paras, and each
+# must flip its arm to exactly one FAIL and no PASS.
 # PJ3 asserts the cause token, not only the status, because exit 2 is the code for every
 # fail-closed cause: without the token, a removed pj_selectors would reach the same branch as
-# the control and MD[PJ3] would read BLIND. The registrations run only once the subject has
-# been sourced; on an absent subject PJ0 is the arm that reports it, and every other arm
-# fails with it.
+# the control and MD[PJ3] would read BLIND. The projection's registrations run only once the
+# subject has been sourced; on an absent subject PJ0 is the arm that reports it, and every
+# other arm fails with it. PJ-IDEAS reads a verb file, not the projection, so its registration
+# needs no sourced subject.
 #
 # A FENCE COPY is changed inside the `publish-contract-values` fence only: the document also
 # carries lines whose first word is `field` outside it. Each control counts the rows its
@@ -32428,6 +32439,123 @@ for pjt_c in model trav; do
     PASS "PJ12[$pjt_c]: $pjt_w — refused, exit 2 [rc=2, expected 2] with empty stdout and the cause on stderr"
   fi
 done
+
+# ── PJ-IDEAS — the declaration that decides which source the projection prints for `/trip ideas`.
+# The projection prints the traveller model wherever one is on file and the traveller files
+# otherwise, and the trip form does not ask `Would love` or `Rather skip`, so on a trip whose
+# travellers answered them on a linked person record the fallback prints only part of their
+# leanings. `/trip ideas` closes that by dispatching the enrichment agent in its reconciler role
+# before the ideation agent, so the projection is of a model built from both forms. This arm grades
+# the VERB'S TEXT: its § ideas dispatch names the reconciler first and Destination Ideation after
+# it, and its Reads paragraph cites the reconciler's declared reads in `skills/trip-record/SKILL.md`
+# § `travelers` rather than re-deriving them. It reads each paragraph of the section folded onto one
+# line, because the section is hard-wrapped. It cannot tell a fixture trip from its control: whether
+# a run dispatched the reconciler, and whether the shortlist then reflects a linked record's
+# leanings, is a live observation, made by a run of `/trip ideas` and never by reading this tree.
+PJI_VERB="$ROOT/skills/trip/SKILL.md"
+PJI_FX="$WORK/pj-ideas"; mkdir -p "$PJI_FX"
+PJI_CITE='`skills/trip-record/SKILL.md` § `travelers`'
+PJI_REC='Enrichment, in its reconciler role'
+PJI_IDE='Destination Ideation'
+# pji_paras <verb-file> -> each paragraph of the `## ideas` section, whitespace folded, one per line.
+pji_paras() {
+  LC_ALL=C awk '
+    $0 == "## ideas" { inreg = 1; next }
+    inreg && /^## / { inreg = 0 }
+    !inreg { next }
+    NF == 0 { if (p != "") print p; p = ""; next }
+    { l = $0; gsub(/[[:space:]]+/, " ", l); sub(/^ /, "", l); sub(/ $/, "", l); p = (p == "" ? l : p " " l) }
+    END { if (p != "") print p }' "$1"
+}
+# pji_check <verb-file> -> one reason token on stdout: ok, or the first condition that fails.
+pji_check() {
+  local paras
+  paras="$(pji_paras "$1")"
+  LC_ALL=C awk -v cite="$PJI_CITE" -v rec="$PJI_REC" -v ide="$PJI_IDE" '
+    { b = b $0 "\n" }
+    END {
+      if (b !~ /[^[:space:]]/) { print "region-empty"; exit }
+      r = index(b, "**Reads:**"); if (!r) { print "no-reads"; exit }
+      d = index(b, "**Dispatches"); if (!d || d < r) { print "no-dispatch"; exit }
+      if (!index(substr(b, r, d - r), cite)) { print "no-citation"; exit }
+      t = substr(b, d); e = index(t, "\n"); if (e) t = substr(t, 1, e - 1)
+      i = index(t, rec); if (!i) { print "no-reconciler"; exit }
+      j = index(t, ide); if (!j) { print "no-ideation"; exit }
+      if (j < i) { print "order"; exit }
+      print "ok"
+    }' <<<"$paras"
+}
+# pji_copy <src> <dst> <mode> — the verb with its § ideas region folded one paragraph per line, and in
+# the dispatch paragraph's text from its `**Dispatches` lead on: keep (no change), swap (the two
+# dispatched names exchanged) or drop (the reconciler's name deleted). Prints how many changes landed.
+pji_copy() {
+  LC_ALL=C awk -v mode="$3" -v rec="$PJI_REC" -v ide="$PJI_IDE" -v dst="$2" '
+    function emit(   d, h, t, i, j) {
+      if (p == "") return
+      d = index(p, "**Dispatches")
+      if (d && mode != "keep") {
+        h = substr(p, 1, d - 1); t = substr(p, d)
+        i = index(t, rec); j = index(t, ide)
+        if (mode == "swap" && i && j && i < j) { t = substr(t, 1, i - 1) ide substr(t, i + length(rec), j - i - length(rec)) rec substr(t, j + length(ide)); c++ }
+        if (mode == "drop" && i) { t = substr(t, 1, i - 1) substr(t, i + length(rec)); c++ }
+        p = h t
+      }
+      print p > dst; p = ""
+    }
+    $0 == "## ideas" { inreg = 1; print > dst; next }
+    inreg && /^## / { emit(); inreg = 0 }
+    !inreg { print > dst; next }
+    NF == 0 { emit(); print > dst; next }
+    { l = $0; gsub(/[[:space:]]+/, " ", l); sub(/^ /, "", l); sub(/ $/, "", l); p = (p == "" ? l : p " " l) }
+    END { emit(); print c + 0 }' "$1"
+}
+pji_assert() {   # pji_assert <verb-file>
+  local why
+  why="$(pji_check "$1")"
+  if [ "$why" = region-empty ]; then
+    FAIL "PJ-IDEAS: the § ideas region of $1 read as EMPTY, so there is no declaration to grade — a broken reader, never a clean section"
+  elif [ "$why" = no-reads ]; then
+    FAIL "PJ-IDEAS: the § ideas region carries no **Reads:** paragraph, so its read scope is declared nowhere"
+  elif [ "$why" = no-dispatch ]; then
+    FAIL "PJ-IDEAS: the § ideas region carries no **Dispatches lead after its Reads paragraph, so the order of its agents is stated nowhere"
+  elif [ "$why" = no-citation ]; then
+    FAIL "PJ-IDEAS: the § ideas Reads paragraph does not cite $PJI_CITE, where the reconciler's reads are declared — the reads the projection's source depends on are either re-derived here or missing"
+  elif [ "$why" = no-reconciler ]; then
+    FAIL "PJ-IDEAS: the § ideas dispatch does not name '$PJI_REC' — with no reconcile ahead of it, a dispatch on a trip with no model prints the traveller files, which hold only part of a linked traveller's leanings"
+  elif [ "$why" = no-ideation ]; then
+    FAIL "PJ-IDEAS: the § ideas dispatch does not name '$PJI_IDE', so the agent that writes the shortlist is dispatched nowhere in it"
+  elif [ "$why" = order ]; then
+    FAIL "PJ-IDEAS: the § ideas dispatch names '$PJI_IDE' before '$PJI_REC' — the shortlist would be ranked from a projection taken before the model it should read is rebuilt"
+  elif [ "$why" != ok ]; then
+    FAIL "PJ-IDEAS: the declaration reader returned '$why', a reason this arm does not know"
+  else
+    PASS "PJ-IDEAS: § ideas dispatches '$PJI_REC' and then '$PJI_IDE', and its Reads paragraph cites $PJI_CITE for the reconciler's reads, each paragraph read folded. This grades the verb's TEXT and cannot tell a fixture trip from its control: whether a run of the verb reflects a linked record's leanings is a live observation"
+  fi
+}
+pji_assert "$PJI_VERB"
+# PJ-IDEAS-SWAP / -DROP — CONTROLS on a copy: the two dispatched names exchanged, and the reconciler's
+# name deleted. Each first shows its folded but unmutated copy passes, so the fold is not what fires.
+PJI_KEEPN="$(pji_copy "$PJI_VERB" "$PJI_FX/keep.md" keep)"
+PJI_KEEPW="$(pji_check "$PJI_FX/keep.md")"
+for pji_m in swap drop; do
+  if [ "$pji_m" = swap ]; then pji_id='PJ-IDEAS-SWAP'; pji_want=order; else pji_id='PJ-IDEAS-DROP'; pji_want=no-reconciler; fi
+  pji_n="$(pji_copy "$PJI_VERB" "$PJI_FX/$pji_m.md" "$pji_m")"
+  pji_w="$(pji_check "$PJI_FX/$pji_m.md")"
+  if [ "${PJI_KEEPN:-x}" != 0 ]; then
+    FAIL "$pji_id: the unmutated copy reported ${PJI_KEEPN:-no} change(s), where 0 is owed, so the copy is not the verb's own text"
+  elif [ "$pji_n" != 1 ]; then
+    FAIL "$pji_id: the mutation landed $pji_n time(s) on the copy, where exactly 1 is owed — the dispatch does not carry both names in the order the mutation needs, so this control has nothing to grade"
+  elif [ "$PJI_KEEPW" != ok ]; then
+    FAIL "$pji_id: the folded, unmutated copy reads '$PJI_KEEPW', not ok — the fold changes the verdict, so a red on the mutant would prove nothing about the mutation"
+  elif [ "$pji_w" = ok ]; then
+    FAIL "$pji_id: CONTROL did not fire — with the mutation landed, the copy still reads ok"
+  elif [ "$pji_w" != "$pji_want" ]; then
+    FAIL "$pji_id: CONTROL fired for another reason — the copy reads '$pji_w', where '$pji_want' is the reason under test"
+  else
+    PASS "$pji_id: CONTROL — on a copy whose § ideas dispatch was mutated once ($pji_m), the declaration reads '$pji_w', where the folded unmutated copy reads ok. PJ-IDEAS's predicate fails for the reason under test"
+  fi
+done
+md_flips pji_paras 'PJ-IDEAS' pji_assert "$PJI_VERB"
 
 # ── The registrations. Run only over a sourced subject: removing a function that was never
 # defined would flip an arm that was already failing, and read as a measurement.
