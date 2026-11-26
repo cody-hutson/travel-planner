@@ -458,6 +458,11 @@
 #   PW   the presence file's window lines: an ASSERTED-DIFFERENT entry's count holds only days of
 #        its trip's day set (PW1), each of the four readers names the file (PW2), and each closed
 #        read scope stands verbatim (PW3); each with a must-fire control on a copy
+#   OP   the operator-provided-only entry (#2073): the reconciler's prompt names each one a rebuild
+#        drops, before its write (OP1); the hub and the validator read a `PROFILE MISSING`
+#        traveller's needs as unknown (OP4); the C12 note cites the obligation (OP5); and the
+#        carry-forward, drop and marker sentences stand (OP-U1, OP-U2). Phrase and sentence arms,
+#        each with a must-fire control on a copy
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -32560,6 +32565,180 @@ elif [ "$PW_R4N" -eq 0 ] && [ "$PW_R4S" -eq 1 ]; then
   PASS "PW3-CTL: MUST FIRE — one byte of transport's wrapped scope sentence changed in a copy reads 0 occurrences there, while scheduling's untouched anchor still reads 1"
 else
   FAIL "PW3-CTL: a one-byte change to transport's scope sentence in a copy still read $PW_R4N occurrence(s) (scheduling's control anchor read $PW_R4S) — the matcher is not reading the sentence"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group OP — the operator-provided-only entry: named before a rebuild drops it, and read as
+# unknown downstream (#2073).
+#
+# A traveller with no profile whose needs the operator relayed is held in the traveller model as
+# an entry marked `[OPERATOR-PROVIDED]` alone, and a rebuild drops it: nothing else holds what the
+# operator gave. reference/adr/ADR-049-what-a-rebuild-owes.md Decisions 1–2 decide that such an
+# entry is named before the write. This group grades what a tree of files can show of that:
+#
+#   OP1   the reconciler's prompt states the obligation — name each such entry it drops, before
+#         its write, citing ADR-049 — and names the entry by its heading's name, its token, or its
+#         place, never its heading; each anchor exactly once, whitespace folded.
+#   OP4   the hub and the validator each hold exactly one sentence saying a `PROFILE MISSING`
+#         traveller's needs are unknown, never "no constraints".
+#   OP5   reference/data-architecture.md § 6's C12 note carries the ADR-049 citation in the same
+#         sentence as the drop it records.
+#   OP-U1 regression pin: the `[THIRD-PARTY]` carry-forward bullet and the drop sentence stand,
+#         exactly once each — the drop sentence is what keeps this release a naming and never a
+#         carry-forward path (ADR-049's "name, not preserve" branch).
+#   OP-U2 regression pin: the `PROFILE MISSING` marker sentence and the flagged-gap marker stand,
+#         exactly once each.
+#
+# Sentences are split by one pinned rule, the same in every arm here: the region is whitespace
+# folded, and a sentence ends at a `.` or `;` followed by whitespace. A literal split on every `.`
+# or `;` would cut `agents/00-enrichment.md` in two.
+#
+# WHAT THIS GROUP DOES NOT ESTABLISH, stated so a green is not read as more than it is. Every arm
+# grades the TREE: that a prompt or a verb states the obligation, and that a sentence survived.
+# None shows that an agent obeys it — firing is not assertable from prompt text, as CLAUDE.md says
+# of the mode-gated register — and no live dispatch is run here.
+#
+# Each arm carries a must-fire control on an in-memory copy: an anchor stripped drops its count by
+# exactly 1, and a sentence stripped drops its sentence count by exactly 1. Every reader takes a
+# file or a here-string; nothing is piped into a reader that can stop early (group PF).
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group OP — the operator-provided-only entry: named before a rebuild drops it, read as unknown downstream."
+
+OP_ENR="$ROOT/agents/00-enrichment.md"
+OP_HUB="$ROOT/agents/05-hub-planner.md"
+OP_VAL="$ROOT/agents/06-validator.md"
+OP_DA="$ROOT/reference/data-architecture.md"
+
+# op_fold <text> — the text on one line, every whitespace run folded to one space.
+op_fold() { LC_ALL=C awk '{ t = t " " $0 } END { gsub(/[ \t\r]+/, " ", t); sub(/^ /, "", t); print t }' <<<"$1"; }
+# op_cnt <folded text> <phrase> — occurrences of <phrase>, its own whitespace folded, counted with
+# index() so nothing in the phrase is a pattern.
+op_cnt() {
+  LC_ALL=C awk -v p="$2" '
+    { t = t $0 }
+    END {
+      gsub(/[ \t\r]+/, " ", p)
+      c = 0
+      if (p != "") while ((i = index(t, p)) > 0) { c++; t = substr(t, i + length(p)) }
+      print c
+    }' <<<"$1"
+}
+# op_sents <text> — one sentence per line, by the pinned split: whitespace folded, then a break
+# after every `.` or `;` that is followed by whitespace.
+op_sents() { LC_ALL=C awk '{ t = t " " $0 } END { gsub(/[ \t\r]+/, " ", t); sub(/^ /, "", t); gsub(/[.] /, ".\n", t); gsub(/[;] /, ";\n", t); print t }' <<<"$1"; }
+# op_nsent <text> <phrase>… — how many sentences of <text> carry every phrase given. The phrases
+# reach awk through the environment, because a -v value may not carry a newline.
+op_nsent() {
+  local t="$1"; shift
+  OP_PS="$(printf '%s\n' "$@")" LC_ALL=C awk '
+    BEGIN { n = split(ENVIRON["OP_PS"], P, "\n") }
+    { ok = 1; for (i = 1; i <= n; i++) if (P[i] != "" && !index($0, P[i])) ok = 0; if (ok) c++ }
+    END { print c + 0 }' <<<"$(op_sents "$t")"
+}
+# op_sent1 <text> <phrase>… — the first sentence of <text> carrying every phrase given, or nothing.
+op_sent1() {
+  local t="$1"; shift
+  OP_PS="$(printf '%s\n' "$@")" LC_ALL=C awk '
+    BEGIN { n = split(ENVIRON["OP_PS"], P, "\n") }
+    !done { ok = 1; for (i = 1; i <= n; i++) if (P[i] != "" && !index($0, P[i])) ok = 0; if (ok) { print; done = 1 } }' <<<"$(op_sents "$t")"
+}
+
+# op_pins <id> <what> <file> <anchor>… — one verdict: each anchor stands exactly once in <file>,
+# whitespace folded, and each anchor present, stripped from an in-memory copy, drops its own count
+# by exactly 1. An anchor carried twice is a finding, not a pass.
+op_pins() {
+  local id="$1" what="$2" file="$3" flat a n x miss="" stripbad=0 np=0 na=0
+  shift 3
+  flat=""; [ -r "$file" ] && flat="$(op_fold "$(cat "$file")")"
+  for a in "$@"; do
+    na=$((na + 1))
+    n="$(op_cnt "$flat" "$a")"
+    [ "$n" -eq 1 ] && np=$((np + 1))
+    [ "$n" -eq 1 ] || miss="$miss [$a → $n]"
+    if [ "$n" -ge 1 ]; then
+      x="$(op_cnt "$(er_sub1 "$flat" "$a" '')" "$a")"
+      [ "$x" -eq $((n - 1)) ] || stripbad=$((stripbad + 1))
+    fi
+  done
+  if [ "${#flat}" -lt 1000 ]; then
+    FAIL "$id: measured nothing — ${file#"$ROOT/"} read ${#flat} folded byte(s). A phrase count over an empty file proves nothing about $what"
+  elif [ "$stripbad" -ne 0 ]; then
+    FAIL "$id: BROKEN PROBE — $stripbad of the anchor(s) present did not drop their own count by exactly 1 when stripped from a copy of ${file#"$ROOT/"}. Until each fires, a verdict below is the instrument's"
+  elif [ "$np" -ne "$na" ]; then
+    FAIL "$id: $what — $np of the $na anchor(s) stand exactly once in ${file#"$ROOT/"}, whitespace folded; each listed with its count:$miss"
+  else
+    PASS "$id: $what — all $na anchor(s) stand exactly once in ${file#"$ROOT/"}, whitespace folded, and each, stripped from a copy, drops its own count by exactly 1"
+  fi
+}
+
+# ── OP1 — the reconciler states the obligation (ADR-049 Decisions 1–2).
+op_pins 'OP1' 'the reconciler names each `[OPERATOR-PROVIDED]`-only entry its rebuild drops, before its write' "$OP_ENR" \
+  'Name each one you drop, before you write' \
+  '`reference/adr/ADR-049-what-a-rebuild-owes.md` Decisions 1–2' \
+  'A pass that drops none, or that stops or declines its write, names none' \
+  'and to name each `[OPERATOR-PROVIDED]`-only entry the rebuild drops' \
+  'with the entries § *Missing or blank profile* has you name' \
+  'never its heading' \
+  'a verb whose every run dispatches this role'
+
+# ── OP-U1 and OP-U2 — regression pins of text this release must leave standing.
+op_pins 'OP-U1' 'the `[THIRD-PARTY]` carry-forward bullet and the drop sentence stand, so no carry-forward path is added' "$OP_ENR" \
+  'Carried forward across a reconcile — preserved, not re-derived.' \
+  'is still **not** carried forward and is still dropped by regeneration; composition adds no carry-forward path for it either.'
+op_pins 'OP-U2' 'the `PROFILE MISSING` marker sentence and the flagged-gap marker stand' "$OP_ENR" \
+  'A `PROFILE MISSING` marker means *unknown*, not *no needs*' \
+  'PROFILE MISSING — needs and desires unknown; this traveler is not yet'
+
+# ── OP4 — the hub and the validator read a `PROFILE MISSING` traveller's needs as unknown. Each
+# file must hold exactly one sentence carrying all three phrases. The sensitivity arm is the same
+# sentence reader finding the traveller model named in each file; the must-fire control strips the
+# one sentence from a copy.
+OP4_P=('PROFILE MISSING' 'unknown' 'no constraints')
+OP4_OK=0; OP4_BAD=""; OP4_SENS=0; OP4_CTLBAD=0; OP4_NREAD=0
+for op_f in "$OP_HUB" "$OP_VAL"; do
+  op_t=""; [ -r "$op_f" ] && op_t="$(cat "$op_f")"
+  [ "${#op_t}" -ge 1000 ] && OP4_NREAD=$((OP4_NREAD + 1))
+  op_n="$(op_nsent "$op_t" "${OP4_P[@]}")"
+  op_s="$(op_nsent "$op_t" 'traveler-model.md')"
+  [ "$op_s" -ge 1 ] && OP4_SENS=$((OP4_SENS + 1))
+  if [ "$op_n" -eq 1 ]; then
+    OP4_OK=$((OP4_OK + 1))
+  else
+    OP4_BAD="$OP4_BAD ${op_f#"$ROOT/"} holds $op_n;"
+  fi
+  if [ "$op_n" -ge 1 ]; then
+    op_x="$(op_nsent "$(er_sub1 "$(op_fold "$op_t")" "$(op_sent1 "$op_t" "${OP4_P[@]}")" '')" "${OP4_P[@]}")"
+    [ "$op_x" -eq $((op_n - 1)) ] || OP4_CTLBAD=$((OP4_CTLBAD + 1))
+  fi
+done
+if [ "$OP4_NREAD" -ne 2 ]; then
+  FAIL "OP4: measured nothing — $OP4_NREAD of agents/05-hub-planner.md and agents/06-validator.md read at least 1,000 bytes. A sentence count over a file that is not there proves nothing"
+elif [ "$OP4_SENS" -ne 2 ] || [ "$OP4_CTLBAD" -ne 0 ]; then
+  FAIL "OP4: BROKEN PROBE — the sentence reader found \`traveler-model.md\` named in $OP4_SENS of the 2 files (must be both: each reads the model), and $OP4_CTLBAD file(s) did not lose exactly one qualifying sentence when it was stripped from a copy. Until both fire, a verdict below is the instrument's"
+elif [ "$OP4_OK" -ne 2 ]; then
+  FAIL "OP4: a \`PROFILE MISSING\` traveller's needs are not read as unknown by both downstream readers — exactly one sentence carrying \`PROFILE MISSING\`, \"unknown\" and \"no constraints\" is owed in each, under the pinned split:$OP4_BAD"
+else
+  PASS "OP4: the hub and the validator each hold exactly one sentence saying a \`PROFILE MISSING\` traveller's needs are unknown, never \"no constraints\" — the sentence reader finds the traveller model named in both files, and each qualifying sentence, stripped from a copy, drops its count by exactly 1"
+fi
+
+# ── OP5 — the C12 note cites the obligation in the sentence that records the drop.
+OP5_DROP='**drops** the `operator-provided-only` entry'
+OP5_CITE='`reference/adr/ADR-049-what-a-rebuild-owes.md` Decisions 1–2'
+OP5_T=""; [ -r "$OP_DA" ] && OP5_T="$(cat "$OP_DA")"
+OP5_ND="$(op_nsent "$OP5_T" "$OP5_DROP")"
+OP5_N="$(op_nsent "$OP5_T" "$OP5_DROP" "$OP5_CITE")"
+OP5_X="$(op_nsent "$(er_sub1 "$(op_fold "$OP5_T")" "$OP5_CITE" '')" "$OP5_DROP" "$OP5_CITE")"
+if [ "${#OP5_T}" -lt 1000 ]; then
+  FAIL "OP5: measured nothing — reference/data-architecture.md read ${#OP5_T} byte(s)"
+elif [ "$OP5_ND" -ne 1 ]; then
+  FAIL "OP5: BROKEN PROBE — the sentence reader found the C12 note's drop sentence $OP5_ND time(s) (must be exactly 1), so the same-sentence test has no one sentence to read"
+elif [ "$OP5_N" -ge 1 ] && [ "$OP5_X" -ne $((OP5_N - 1)) ]; then
+  FAIL "OP5: BROKEN PROBE — the citation stripped from a copy left $OP5_X qualifying sentence(s) against $OP5_N (must be one fewer)"
+elif [ "$OP5_N" -ne 1 ]; then
+  FAIL "OP5: the C12 note records that a rebuild drops the \`operator-provided-only\` entry and does not cite the obligation in that sentence — $OP5_N sentence(s) carry both the drop and \"$OP5_CITE\" (must be exactly 1)"
+else
+  PASS "OP5: the C12 note's drop sentence cites \"$OP5_CITE\" in the same sentence, under the pinned split; the citation stripped from a copy leaves 0"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
