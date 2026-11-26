@@ -1100,17 +1100,45 @@ so the per-event status bound does not quantify over it.
 
 ## ideas
 
-**Reads:** `agents/<name>.md` — the Destination Ideation prompt, the path taken from its own
-row in `CLAUDE.md`'s roster; and the traveller projection's reads (§ *Standing clause*), for the
-ideation agent. It reads nothing else: not `trip-context.md`, whose mode and destination the record block
+**Reads:** `agents/<name>.md` — the Destination Ideation prompt and the Enrichment prompt, each
+path taken from its own row in `CLAUDE.md`'s roster; and the traveller projection's reads
+(§ *Standing clause*), for the ideation agent, taken once the reconcile below has written the
+model. It reads nothing else: not `trip-context.md`, whose mode and destination the record block
 already carries by value, and not the shortlist, which is the agent's to write and this verb
-never reads back. **Agent reads, attributed:** the ideation agent reads the traveller projection
-for the group's leanings, `trips/<slug>/trip-context.md` for the dates and party, and the frontmatter of
-`trips/<slug>/outputs/destination-shortlist.md`, read before it is replaced.
-**Dispatches** Destination Ideation, in the role its roster row states, writing
+never reads back. **Agent reads, attributed:** the enrichment agent, in its reconciler role,
+reads what `skills/trip-record/SKILL.md` § `travelers` declares for that role, cited rather than
+re-derived — `trips/<slug>/travelers/*.md`, `<store-root>/people/<person-id>.md`, the record a
+file's `person:` line references, and the survivor where that record is a `merged-into:` stub,
+`trips/<slug>/trip-context.md`, and the `outputs/traveler-model.md` and
+`outputs/traveler-presence.md` it is about to replace; the ideation agent reads the traveller
+projection for the group's leanings, `trips/<slug>/trip-context.md` for the dates and party, and
+the frontmatter of `trips/<slug>/outputs/destination-shortlist.md`, read before it is replaced.
+**Dispatches, in this order:** Enrichment, in its reconciler role and never the `[ENRICH]`
+research role, writing `outputs/traveler-model.md` and `outputs/traveler-presence.md`; then
+Destination Ideation, in the role its roster row states, writing
 `outputs/destination-shortlist.md` alone. That artifact is `rebuilt-each-synthesis`: on a
 re-run the agent replaces it with the current ranking rather than appending to it.
+**The reconcile runs on every invocation**, so the shortlist ranks the answers on file now,
+whether a traveller gave them on this trip's form or on the lasting record that form references.
+Where the reconcile does not complete, the chain halts there and ideation is not dispatched.
 **Non-interactive: the standing clause's *run nobody can answer*.**
+
+**The announcement.** This verb dispatches more than one agent, so the standing clause's
+announcement binds it, before the first dispatch: the set is the enrichment agent in its
+reconciler role and then Destination Ideation, each admitted unconditionally; no coupling condition is evaluated; no
+mode transition is expected and none is written; and the per-event status bound does not apply,
+because the chain does not reach the hub.
+
+**What the reconcile hands back.** Render it as `skills/trip-record/SKILL.md` § `travelers`
+states, cited rather than restated here: its *Surface what the rebuild did not keep* paragraph,
+once the reconcile returns, and the `## Update signals` block enrichment produced. Name no
+planning verb for that block: this state holds no plan, so the `/trip replan` that section's
+table names for a changed need, desire or window is one this state refuses, and a `PROFILE
+MISSING` entry still names `/trip-record profile <name>`. Say once that a change this reconcile
+takes in will not signal again, because a later reconcile reads its changes against the model
+this one wrote. And say that each traveller's `Documents:` line reading `unknown`, with its
+`VERIFY` note, is expected while no destination is recorded: the reconciler derives that line
+from `## Destination`.
 
 **Why the row's destination cell reads `UNDECIDED`.** A decided destination means the ideation
 question is already answered, and running the pipeline anyway spends it re-ranking a settled
