@@ -418,8 +418,9 @@ a fixed type:
   constraint to raise a Critical either, it would leave the subject with no audit
   surface at all.
   This record lands in `outputs/satisfaction-metrics.md`, whose declared
-  artifact class is `publish: internal-hard` — never rendered, and carrying
-  values that must not reach a rendered page in any form, including anonymized.
+  artifact class is `publish: internal-hard` (`reference/data-architecture.md`
+  § 5.1) — never rendered, and carrying values that must not reach a rendered
+  page in any form, including anonymized.
   **That declaration is the class source.** `reference/site-layout-spec.md`
   §9.3 still names the same artifact an intentional exclusion; it is retained as
   the human-readable statement of the same bound — defence in depth, not a

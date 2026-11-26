@@ -97,8 +97,9 @@ becomes visible.
 **`internal-hard` rather than `internal`, and the class is the third member.** A record concentrates
 the durable subset of the most sensitive values in the repository — a passport's issuing country and
 validity, standing health-adjacent needs — held across trips rather than for the length of one. C3 is
-`internal` because a trip's own guard walk reaches it; nothing renders a person record in any form,
-including anonymized, and § 5.1 is where that is declared.
+`internal` because a trip's own guard walk reaches it; nothing renders a person record, and § 5.1 is
+where that is declared, together with its private-site reading: a value from the record that the
+private site admits reaches that site only through a `bound` carrier.
 
 **C23 is the second class that is not per-trip, and it reuses C22's whole arrangement rather than
 inventing beside it.** `groups/<group>.md` is the reusable-group record — a named set of person

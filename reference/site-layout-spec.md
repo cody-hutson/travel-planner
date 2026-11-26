@@ -851,8 +851,8 @@ groups/<group>.md                   internal-hard
 ```
 
 The `class` values are the closed four-value enum in `reference/data-architecture.md` § 5.1
-(`bound` | `internal` | `internal-hard` | `output`) — never rendered, **and** carrying values that
-must not reach a rendered page in any form, including anonymized.
+(`bound` | `internal` | `internal-hard` | `output`). An `internal-hard` row is never rendered, and
+its values reach a page only by the private-site reading that section states.
 
 **Four classes carry `internal-hard`, and only two of them are § 9.3 exclusions.** That is not an
 inconsistency, and the distinction is the reason this fence is asserted in **both** directions rather
