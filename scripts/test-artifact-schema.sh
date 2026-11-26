@@ -30114,6 +30114,7 @@ fbc_assert
 
 md_flips cv_run      'FB-C'     fbc_assert
 md_flips ta_model    'FB-C-class' fbc_assert
+md_flips ft_row_set  'FB-C-seam'  fbc_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RB — the interview rubric: its dimension table, its conversation rule and its not-graded
