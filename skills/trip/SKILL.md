@@ -1196,7 +1196,7 @@ because on a trip that declares approvers the approval record is itself the deci
 approved change for which no entry was ever written must still reach its render with its count
 and code — without it, `update` refuses the pair-less render and the refresh its refusal names
 can never clear it; no `outputs/change-summary.md`, or no entry in one, and no such record →
-`none`, with `coordination-since` omitted — the organizer's own two-line confirmation carries no
+`none`, with `coordination-since` omitted — the organizer's own confirmation carries no
 count, so a trip that has never declared approvers reads exactly as it did before approvals existed.
 Where the state resolves to `none` the notice is **not emitted at all**; § 3 states that rule
 and this verb does not restate it.
@@ -1257,7 +1257,7 @@ line is absent, neither field is written and the band is what it was. A trip tha
 approvers carries no such line, with one stated exception: a declaration retired by hand leaves the
 last `approval-count=` line in the record, so the last recorded count and code go on showing — on the
 no-entry limb above as on the other — until the organizer's next `confirm` rewrites the record in
-its two-line form. `confirm` writes that record
+its undeclared form, with no count. `confirm` writes that record
 from the verdict at every terminal act — a recording, or a run that records nothing — that leaves
 the declared threshold met for the plan it is run on, and stamps `confirmed=` at that act unless the
 record already names that plan and it is the published one, when the act rewrites only the count
@@ -1274,7 +1274,8 @@ compares the code with the render it writes**, because it holds no digest of it;
 `scripts/publish-trip-site.sh` does, and refuses to push a render whose code is not its own
 itinerary's. **And it reads neither approver sidecar** — `.approvers` and `.approvals` hold roster
 keys, and a build that read them could render who was declared or who approved; the record it reads
-carries a digest, a date and a count, and nothing that names anybody.
+carries a digest, the reading that digest was taken under, a date and a count, and nothing that names
+anybody.
 
 **And the `updated` state is pruned at the build where its window has already closed, whichever
 limb reached it.** Where the recorded approval is older than the window § 3 declares,
