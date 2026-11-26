@@ -14633,6 +14633,15 @@ fi
 # verb file and CLAUDE.md, whitespace folded; the two clauses the path replaced read 0. MUST-FIRE
 # CONTROLS: each phrase stripped from a copy drops its count by exactly 1, and each old clause
 # planted into a copy is counted once more.
+# The class is pinned clause by clause at both of its sites, rule 19 and § `erase` item 1 (Dev
+# Testing F-09): its marks, the template left unfilled, no joining file carrying `person:`, every
+# file under `travelers/` joining a row, and, at item 1, rule 16's both marks and the active-trip
+# `[ROSTERED]` refusal — the clauses ER32's encoding reads. Each site's phrase carries its own
+# context, so a clause cut at one site turns that site's phrase red. Then each limb of the path,
+# one phrase per site (Dev Testing F-11, F-12): row 36's reach, at item 5 and in the row; the Step 1
+# `--third-party` row; row 40 under rule 16's subject; the confirmation's rules; the discharge
+# paragraph; each such row named by its place, at rule 19 and at item 1; and no file named by a path
+# whose stem may be the name.
 er31_cnt() {   # er31_cnt <folded text> <phrase> -> occurrences, counted with index()
   LC_ALL=C awk -v p="$2" '{ t = t $0 } END { c = 0; if (p != "") while ((i = index(t, p)) > 0) { c++; t = substr(t, i + length(p)) } print c }' <<<"$1"
 }
@@ -14654,6 +14663,25 @@ ER31_PINS=(
   'as the cell'"'"'s whole trimmed value and never inside a longer one'
   '### The standing rules this verb writes under are rules 10, 13, 16 and 19'
   'Someone who holds no record — a party member, or a traveller who filed no profile'
+  # Dev Testing F-09 — the class, at rule 19, then at § `erase` item 1.
+  'not `[ERASED]`, carrying `[OPERATOR-PROVIDED]` alone or the `PROFILE MISSING` marker, whose roster row no traveller file joins but the intake template left unfilled'
+  'joins but the intake template left unfilled, and none carrying `person:`'
+  'on a trip where every file under `travelers/` joins a roster row'
+  'rule 16'"'"'s, both marks; rule 19'"'"'s, `[OPERATOR-PROVIDED]` alone or `PROFILE MISSING`, its row joined by no traveller file but the intake template left unfilled'
+  'left unfilled and by none carrying `person:`'
+  'wherever a file under `travelers/` joins no roster row'
+  'On an active trip an entry carrying `[ROSTERED]` is refused'
+  # Dev Testing F-11 — row 36's reach for rule 19's subject, at item 5 and in the row itself.
+  'row 36 the path their roster name derives'
+  'for rule 19'"'"'s subject, the path their roster name derives'
+  # Dev Testing F-12 — one phrase per remaining site of the path.
+  'the subject holds no record — a party member, or a traveller who filed no profile'
+  'reads **`n/a`** for rule 16'"'"'s subject and names the population rule'
+  '**Under `--third-party <n>` the typed token is the trip'"'"'s slug** (rules 16 and 19)'
+  '**Rule 19 carries the same path for its own subject, on the same clauses**'
+  'and each such row by its place, never by a name'
+  'shares the entry'"'"'s key, naming each such row by its place'
+  'and never by its path, whose stem may be the name'
 )
 ER31_OLD=(
   'does not carry both `[OPERATOR-PROVIDED]` and `[THIRD-PARTY]`'
@@ -14683,31 +14711,40 @@ elif [ "$ER31_STRIPBAD" -ne 0 ] || [ "$ER31_PLANTBAD" -ne 0 ]; then
 elif [ "$ER31_OK" -ne "$ER31_N" ] || [ "$ER31_OLDN" -ne 0 ]; then
   FAIL "ER31: rule 19 and its path are not the ones the texts state — $ER31_OK of the $ER31_N operative phrase(s) stand exactly once across skills/trip-record/SKILL.md and CLAUDE.md (each listed with its count:${ER31_MISS:- none}), and the clauses the path replaced stand $ER31_OLDN time(s) (must be 0:${ER31_OLDW:- none}). Without rule 19 a rostered traveller who filed no profile has no erasure path, and without its refusal an unjoined filed profile survives an erasure that reports total"
 else
-  PASS "ER31: rule 19 and its path stand as the texts state them — all $ER31_N operative phrase(s) once each across skills/trip-record/SKILL.md and CLAUDE.md: the rule and its class, its fail-closed refusal on an unjoined file or a shared key, the whole-trimmed-cell predicate and the Step 1 row repaired with it, the name read from the roster cell, the order of writes and the interrupted state named by its place, the subject not carried, row 40 reaching them, the class printed beside the name, the rules heading and CLAUDE.md's row; the two old clauses read 0. Every control fired: each phrase stripped drops its count by 1, and each old clause planted is counted"
+  PASS "ER31: rule 19 and its path stand as the texts state them — all $ER31_N operative phrase(s) once each across skills/trip-record/SKILL.md and CLAUDE.md: the rule and its class, clause by clause at rule 19 and at § \`erase\` item 1 — its marks, the template left unfilled, no joining file carrying \`person:\`, every file under \`travelers/\` joining a row, and at item 1 rule 16's both marks and the active-trip \`[ROSTERED]\` refusal — its fail-closed refusal on an unjoined file or a shared key, each such row named by its place at both sites and no file by its path, the whole-trimmed-cell predicate and the Step 1 row repaired with it, the Step 1 \`--third-party\` row, the name read from the roster cell, the order of writes and the interrupted state named by its place, the subject not carried, row 36 reaching the path their roster name derives at item 5 and in the row, row 40 reaching them and reading \`n/a\` for rule 16's subject, the class printed beside the name, the confirmation's rules, the discharge paragraph, the rules heading and CLAUDE.md's row; the two old clauses read 0. Every control fired: each phrase stripped drops its count by 1, and each old clause planted is counted"
 fi
 
 # ── ER32 — THE CLASS TESTS, AS THIS ARM ENCODES THEM, OVER THE WITNESSES (#2116; FM-6, PR-2). The
 # claim is narrow, and stated so: the witnesses satisfy the class test AS THIS ARM ENCODES IT, and
-# ER31 pins the rule's clauses the encoding reads. An encoding the suite wrote cannot grade the text
-# it was written from, so this arm shows no reach "from the tree"; its controls vary the trees, and
-# ER31's strip controls are what turn red when a clause of the rule is removed.
+# ER31 pins the clauses the encoding reads, at rule 19 and at § `erase` item 1. An encoding the
+# suite wrote cannot grade the text it was written from, so this arm shows no reach "from the
+# tree"; its controls vary the trees, and ER31's strip controls are what turn red when a clause of
+# the rule is removed.
 #   Rule 16 admits an entry carrying both `[OPERATOR-PROVIDED]` and `[THIRD-PARTY]`.
 #   Rule 19 admits `[OPERATOR-PROVIDED]` alone, or a `PROFILE MISSING` marker with no mark but
 #   `[ERASED]`, where exactly one roster row shares the entry's key, no file joins that row but one
 #   byte-identical to templates/traveler-intake.template.md, no joining file carries `person:`, and
 #   EVERY file under `travelers/` joins some roster row.
+#   On an active trip, under either rule, an entry carrying `[ROSTERED]` is refused (§ `erase`
+#   item 1; Dev Testing F-10). A trip is active unless its `**Lifecycle:**` line reads ARCHIVED; an
+#   absent line reads ACTIVE (reference/trip-resolution.md G4).
 # `[ERASED]` is set aside: an erased entry is admitted and then reads `ALREADY-ERASED`. The roster's
 # person column is its first, and its path column the one column after it whose data cells hold
 # `travelers/…md` (§ `group`, *The roster's two columns*); a file joins a row by that exact path, and
-# where the row has none, by its stem's key. Expected on the witnesses: `per-9a3e` (rule 19) and
-# `per-b70d` (rule 16) on examples/archived-trip-demo/, `Sam` (rule 19) on
-# examples/data-architecture-demo/; Dana, `per-4f1c`, Alex and Robin refused. MUST-FIRE CONTROLS, each
-# on a copy of examples/data-architecture-demo/, each moving that witness's admitted count by exactly
-# the stated amount: (a) `[OPERATOR-PROVIDED]` stripped from Sam's heading −1; (b) a filled
-# `travelers/sam.md` −1; (c) on (a)'s copy, a `PROFILE MISSING` marker added to Sam's entry +1 over
-# (a); (d) the intake template with its Name answered as `travelers/sam.md` −1; (e) the intake
-# template byte-identical as `travelers/sam.md` 0; (f) a filled `travelers/zz-unjoined.md`, which
-# joins no row, −1; (g) a second roster row whose person cell shares Sam's key −1.
+# where the row has none, by its stem's key. Expected on the witnesses — every tracked trip that
+# carries a traveller model: `per-9a3e` (rule 19) and `per-b70d` (rule 16) on
+# examples/archived-trip-demo/, `Sam` (rule 19) on examples/data-architecture-demo/, `Companion`
+# (rule 16) on examples/erasure-reach-demo/; Dana, `per-4f1c`, Alex, Robin, Odile, `per-2c9e` and
+# `Nell Basil` refused, the last as a `[ROSTERED]` entry on an active trip. MUST-FIRE CONTROLS,
+# each moving its witness's admitted count by exactly the stated amount — (a) to (g) on a copy of
+# examples/data-architecture-demo/: (a)
+# `[OPERATOR-PROVIDED]` stripped from Sam's heading −1; (b) a filled `travelers/sam.md` −1; (c) on
+# (a)'s copy, a `PROFILE MISSING` marker added to Sam's entry +1 over (a); (d) the intake template
+# with its Name answered as `travelers/sam.md` −1; (e) the intake template byte-identical as
+# `travelers/sam.md` 0; (f) a filled `travelers/zz-unjoined.md`, which joins no row, −1; (g) a
+# second roster row whose person cell shares Sam's key −1 — and (h) and (i) on a copy of
+# examples/erasure-reach-demo/: (h) `[ROSTERED]` stripped from Nell Basil's heading +1; (i) a
+# `**Lifecycle:** ARCHIVED` line added to the trip context +1.
 er32_rows() {   # er32_rows <trip-context> -> <person cell>\t<path cell, or empty>, one per data row
   LC_ALL=C awk -F'|' '
     /^## Group/ { on = 1; next }
@@ -14723,8 +14760,8 @@ er32_rows() {   # er32_rows <trip-context> -> <person cell>\t<path cell, or empt
       for (r = 1; r < nh; r++) { p = C[r, 2]; if (p ~ /^\[.*\]$/) continue; printf "%s\t%s\n", p, (pc ? C[r, pc] : "") }
     }' "$1"
 }
-er32_admit() {   # er32_admit <trip dir> <template> -> ADMIT\t<name>\t<rule> lines, then ENTRIES, ROWS and UNJOINED
-  local d="$1" tpl="$2" f files="" same pers
+er32_admit() {   # er32_admit <trip dir> <template> -> ADMIT\t<name>\t<rule> lines, then ENTRIES, ROWS, UNJOINED and LIFE
+  local d="$1" tpl="$2" f files="" same pers life
   for f in "$d"/travelers/*.md; do
     [ -f "$f" ] || continue
     same=0; cmp -s "$f" "$tpl" && same=1
@@ -14732,7 +14769,9 @@ er32_admit() {   # er32_admit <trip dir> <template> -> ADMIT\t<name>\t<rule> lin
     files="$files${f##*/}$(printf '\t')$same$(printf '\t')$pers
 "
   done
-  ER32_ROWS="$(er32_rows "$d/trip-context.md" 2>/dev/null)" ER32_FILES="$files" LC_ALL=C awk '
+  # The trip's lifecycle, G4's reading: the first line opening `**Lifecycle:**`, ACTIVE where none.
+  life="$(LC_ALL=C awk '!done && /^\*\*Lifecycle:\*\*/ { v = substr($0, 15); gsub(/[ \t]/, "", v); print v; done = 1 }' "$d/trip-context.md" 2>/dev/null)"
+  ER32_LIFE="${life:-ACTIVE}" ER32_ROWS="$(er32_rows "$d/trip-context.md" 2>/dev/null)" ER32_FILES="$files" LC_ALL=C awk '
     function key(s) { s = tolower(s); gsub(/[^a-z0-9]/, "", s); return s }
     function stem(s) { sub(/\.md$/, "", s); return s }
     function joins(j, i) { return (RP[i] ~ /^travelers\//) ? (RP[i] == "travelers/" FN[j]) : (key(stem(FN[j])) == key(RN[i])) }
@@ -14742,6 +14781,7 @@ er32_admit() {   # er32_admit <trip dir> <template> -> ADMIT\t<name>\t<rule> lin
       n = split(ENVIRON["ER32_FILES"], L, "\n")
       for (x = 1; x <= n; x++) if (L[x] != "") { split(L[x], c, "\t"); nf++; FN[nf] = c[1]; FI[nf] = c[2]; FP[nf] = c[3] }
       for (j = 1; j <= nf; j++) { ok = 0; for (i = 1; i <= nr; i++) if (joins(j, i)) ok = 1; if (!ok) unj++ }
+      act = (ENVIRON["ER32_LIFE"] != "ARCHIVED")
     }
     function flush(   s, m, other, op, tp, nm, k, r19, jr, ri, i, j, bad) {
       if (H == "") return
@@ -14751,6 +14791,7 @@ er32_admit() {   # er32_admit <trip dir> <template> -> ADMIT\t<name>\t<rule> lin
       nm = H; gsub(/`?\[[A-Z-]+\]`?/, "", nm); sub(/[ \t]+$/, "", nm); k = key(nm)
       if (k == "updatesignals" || k == "desireoverlap") return
       ne++
+      if (act && index(H, "[ROSTERED]")) return
       if (op && tp) { printf "ADMIT\t%s\t16\n", nm; return }
       r19 = (op && !tp) || (index(B, "PROFILE MISSING") && !other)
       if (!r19) return
@@ -14763,7 +14804,7 @@ er32_admit() {   # er32_admit <trip dir> <template> -> ADMIT\t<name>\t<rule> lin
     }
     /^## / { flush(); H = substr($0, 4); B = ""; next }
     { B = B "\n" $0 }
-    END { flush(); printf "ENTRIES\t%d\nROWS\t%d\nUNJOINED\t%d\n", ne, nr, unj + 0 }' "$d/outputs/traveler-model.md" 2>/dev/null
+    END { flush(); printf "ENTRIES\t%d\nROWS\t%d\nUNJOINED\t%d\nLIFE\t%s\n", ne, nr, unj + 0, ENVIRON["ER32_LIFE"] }' "$d/outputs/traveler-model.md" 2>/dev/null
 }
 er32_set() { LC_ALL=C awk -F'\t' '$1 == "ADMIT" { printf "%s:%s ", $2, $3 }' <<<"$1"; }
 er32_n() { LC_ALL=C awk -F'\t' '$1 == "ADMIT" { n++ } END { print n + 0 }' <<<"$1"; }
@@ -14778,10 +14819,14 @@ er32_copy() {   # er32_copy <witness dir> <copy dir> — the three surfaces the 
 ER32_TPL="$ROOT/templates/traveler-intake.template.md"
 ER32_WA="$ROOT/examples/archived-trip-demo"
 ER32_WD="$ROOT/examples/data-architecture-demo"
+ER32_WE="$ROOT/examples/erasure-reach-demo"
 ER32_A="$(er32_admit "$ER32_WA" "$ER32_TPL")"
 ER32_D="$(er32_admit "$ER32_WD" "$ER32_TPL")"
+ER32_E="$(er32_admit "$ER32_WE" "$ER32_TPL")"
 ER32_W="$WORK/er32"; mkdir -p "$ER32_W"
 ER32_ND="$(er32_n "$ER32_D")"
+ER32_NE="$(er32_n "$ER32_E")"
+er32_life() { LC_ALL=C awk -F'\t' '$1 == "LIFE" { v = $2 } END { print v }' <<<"$1"; }
 ER32_CTL=""; ER32_CBAD=0
 # er32_ctl <tag> <want delta> <base count> <copy dir> — one control, recorded
 er32_ctl() {
@@ -14812,15 +14857,22 @@ er32_copy "$ER32_WD" "$ER32_W/g"
 er32_rp "$ER32_W/g/trip-context.md" '| Sam |' '| SAM | — |
 | Sam |' || ER32_CBAD=$((ER32_CBAD + 1))
 er32_ctl g -1 "$ER32_ND" "$ER32_W/g"
-ER32_SA="$(er32_set "$ER32_A")"; ER32_SD="$(er32_set "$ER32_D")"
-if [ "$(er32_f "$ER32_A" ENTRIES)" -lt 3 ] || [ "$(er32_f "$ER32_D" ENTRIES)" -lt 3 ] || [ "$(er32_f "$ER32_A" ROWS)" -lt 1 ] || [ "$(er32_f "$ER32_D" ROWS)" -lt 1 ]; then
-  FAIL "ER32: measured nothing — the archived witness read $(er32_f "$ER32_A" ENTRIES) model entr(ies) and $(er32_f "$ER32_A" ROWS) roster row(s), the data-architecture witness $(er32_f "$ER32_D" ENTRIES) and $(er32_f "$ER32_D" ROWS) (each must be at least 3 and 1). A class test over a witness that was not read admits nothing and proves nothing"
-elif [ "$ER32_CBAD" -ne 0 ]; then
-  FAIL "ER32: BROKEN PROBE — $ER32_CBAD control(s) did not land or did not move the data-architecture witness's admitted count by exactly the stated amount; observed:$ER32_CTL (owed: (a) -1 (b) -1 (c) 1 (d) -1 (e) 0 (f) -1 (g) -1). Until each fires, a verdict below is the instrument's"
-elif [ "$ER32_SA" != "per-9a3e:19 per-b70d:16 " ] || [ "$ER32_SD" != "Sam:19 " ]; then
-  FAIL "ER32: the witnesses do not satisfy the class tests as this arm encodes them — the archived witness admits '${ER32_SA:-none}' (owed 'per-9a3e:19 per-b70d:16') and the data-architecture witness '${ER32_SD:-none}' (owed 'Sam:19'); Dana, per-4f1c, Alex and Robin are owed a refusal"
+# (h) and (i), on a copy of the erasure-reach witness: the active-trip `[ROSTERED]` refusal read by
+# its mark and by the trip's lifecycle.
+er32_copy "$ER32_WE" "$ER32_W/h"
+er32_rp "$ER32_W/h/outputs/traveler-model.md" '## Nell Basil `[OPERATOR-PROVIDED]` `[THIRD-PARTY]` `[ROSTERED]`' '## Nell Basil `[OPERATOR-PROVIDED]` `[THIRD-PARTY]`' || ER32_CBAD=$((ER32_CBAD + 1))
+er32_ctl h 1 "$ER32_NE" "$ER32_W/h"
+er32_copy "$ER32_WE" "$ER32_W/i"; printf '\n**Lifecycle:** ARCHIVED\n' >> "$ER32_W/i/trip-context.md"
+er32_ctl i 1 "$ER32_NE" "$ER32_W/i"
+ER32_SA="$(er32_set "$ER32_A")"; ER32_SD="$(er32_set "$ER32_D")"; ER32_SE="$(er32_set "$ER32_E")"
+if [ "$(er32_f "$ER32_A" ENTRIES)" -lt 3 ] || [ "$(er32_f "$ER32_D" ENTRIES)" -lt 3 ] || [ "$(er32_f "$ER32_E" ENTRIES)" -lt 3 ] || [ "$(er32_f "$ER32_A" ROWS)" -lt 1 ] || [ "$(er32_f "$ER32_D" ROWS)" -lt 1 ] || [ "$(er32_f "$ER32_E" ROWS)" -lt 1 ]; then
+  FAIL "ER32: measured nothing — the archived witness read $(er32_f "$ER32_A" ENTRIES) model entr(ies) and $(er32_f "$ER32_A" ROWS) roster row(s), the data-architecture witness $(er32_f "$ER32_D" ENTRIES) and $(er32_f "$ER32_D" ROWS), the erasure-reach witness $(er32_f "$ER32_E" ENTRIES) and $(er32_f "$ER32_E" ROWS) (each must be at least 3 and 1). A class test over a witness that was not read admits nothing and proves nothing"
+elif [ "$ER32_CBAD" -ne 0 ] || [ "$(er32_life "$ER32_A")" != ARCHIVED ] || [ "$(er32_life "$ER32_E")" != ACTIVE ]; then
+  FAIL "ER32: BROKEN PROBE — $ER32_CBAD control(s) did not land or did not move their witness's admitted count by exactly the stated amount; observed:$ER32_CTL (owed: (a) -1 (b) -1 (c) 1 (d) -1 (e) 0 (f) -1 (g) -1 (h) 1 (i) 1); the archived witness's lifecycle read '$(er32_life "$ER32_A")' (owed ARCHIVED) and the erasure-reach witness's '$(er32_life "$ER32_E")' (owed ACTIVE, by G4's default). Until each fires, a verdict below is the instrument's"
+elif [ "$ER32_SA" != "per-9a3e:19 per-b70d:16 " ] || [ "$ER32_SD" != "Sam:19 " ] || [ "$ER32_SE" != "Companion:16 " ]; then
+  FAIL "ER32: the witnesses do not satisfy the class tests as this arm encodes them — the archived witness admits '${ER32_SA:-none}' (owed 'per-9a3e:19 per-b70d:16'), the data-architecture witness '${ER32_SD:-none}' (owed 'Sam:19') and the erasure-reach witness '${ER32_SE:-none}' (owed 'Companion:16'); Dana, per-4f1c, Alex, Robin, Odile, per-2c9e and Nell Basil are owed a refusal, the last as a \`[ROSTERED]\` entry on an active trip"
 else
-  PASS "ER32: the witnesses satisfy the class tests as this arm encodes them, and ER31 pins the rule's clauses the encoding reads — the archived witness admits ${ER32_SA}and the data-architecture witness ${ER32_SD}(rule number after each), refusing Dana, per-4f1c, Alex and Robin. Every control moved the data-architecture witness's count by exactly the stated amount:$ER32_CTL — among them a template byte-identical as \`travelers/sam.md\` moves nothing, an unjoined filed file and a second row sharing Sam's key each refuse"
+  PASS "ER32: the witnesses satisfy the class tests as this arm encodes them, and ER31 pins the clauses the encoding reads, at rule 19 and at § \`erase\` item 1 — the archived witness admits ${ER32_SA}the data-architecture witness ${ER32_SD}and the erasure-reach witness ${ER32_SE}(rule number after each), refusing Dana, per-4f1c, Alex, Robin, Odile, per-2c9e and, as a \`[ROSTERED]\` entry on an active trip, Nell Basil. Every control moved its witness's count by exactly the stated amount:$ER32_CTL — among them a template byte-identical as \`travelers/sam.md\` moves nothing, an unjoined filed file and a second row sharing Sam's key each refuse, and Nell Basil is admitted once \`[ROSTERED]\` is stripped or the trip reads ARCHIVED"
 fi
 
 # ── ER33 — THE SEAM BETWEEN THE CARDS: AN ERASED RULE-19 SUBJECT AFTER THE NEXT RECONCILE (#2116
@@ -14830,6 +14882,14 @@ fi
 # roster row, as an interrupted rule-19 run leaves it, is named by its place, never its heading, in
 # the reconciler's naming and in § `erase`'s order of writes. Each phrase exactly once in its file,
 # whitespace folded; MUST-FIRE: each stripped from a copy drops its count by exactly 1.
+# Limb 1 holds the instructions as well as their labels (Dev Testing F-08): the sub-case writes the
+# marker without the `VERIFY:` sentence, and the reconciler's account of the router names no command
+# for a gap written from a token. And B.8's two localities, each a unit that must carry every phrase
+# of its set, exactly one such unit per file: the sub-case's paragraph carries its heading and "name
+# no profile route", and the § `travelers` table's `PROFILE MISSING` row, as one line, carries the
+# token clause and "**name no command**". MUST-FIRE for each: every phrase of the set, moved from
+# that unit into a unit of its own in a copy, drops the count of such units by exactly 1 — which a
+# reader that did not hold the unit would not show.
 ER33_PINS=(
   'E|**A gap written from an erasure'"'"'s token asks for nothing.**'
   'E|name no profile route'
@@ -14837,7 +14897,25 @@ ER33_PINS=(
   'E|An entry an erasure re-keyed is offered the restatement alone, never a profile route'
   'E|or, where its key joins no row of the roster, its place among the model'"'"'s person entries and never its heading'
   'R|names it by its place, never its heading'
+  'E|without the `VERIFY:` sentence'
+  'E|save one written from an erasure'"'"'s token, which names none'
 )
+# er33_co <file text> <P|L> <k> <phrase>… -> how many units carry every phrase: P a paragraph, the
+# lines between blank lines, L one line; spaces squeezed as er26_flat squeezes them. With k ≥ 1,
+# phrase k is first moved out of the first unit carrying them all, into a unit of its own.
+er33_co() {
+  local t="$1" u="$2" k="$3"; shift 3
+  ER33_PS="$(printf '%s\n' "$@")" ER33_U="$u" ER33_K="$k" LC_ALL=C awk '
+    BEGIN { n = split(ENVIRON["ER33_PS"], P, "\n"); while (n > 0 && P[n] == "") n--; u = ENVIRON["ER33_U"]; k = ENVIRON["ER33_K"] + 0 }
+    function all(s,   i) { for (i = 1; i <= n; i++) if (!index(s, P[i])) return 0; return 1 }
+    function unit(s,   i) { gsub(/ +/, " ", s); if (k && !done && all(s)) { i = index(s, P[k]); s = substr(s, 1, i - 1) substr(s, i + length(P[k])); done = 1 } c += all(s) }
+    u == "L" { unit($0); next }
+    /^[ \t]*$/ { if (b != "") unit(b); b = ""; next }
+    { b = b " " $0 }
+    END { if (u == "P" && b != "") unit(b); if (k) unit(P[k]); print c + 0 }' <<<"$t"
+}
+ER33_CO1=('**A gap written from an erasure'"'"'s token asks for nothing.**' 'name no profile route')
+ER33_CO2=('| `PROFILE MISSING` |' 'for an entry keyed to an erasure'"'"'s token' '**name no command**')
 ER33_E="$(er26_flat "$(cat "$ER30_ENR" 2>/dev/null)")"
 ER33_R="$(er26_flat "$(cat "$ER_CMD" 2>/dev/null)")"
 ER33_OK=0; ER33_MISS=""; ER33_STRIPBAD=0
@@ -14851,14 +14929,32 @@ for er33_s in "${ER33_PINS[@]}"; do
     [ "$(er31_cnt "$(er_sub1 "$er33_t" "$er33_p" '')" "$er33_p")" -eq $((er33_n - 1)) ] || ER33_STRIPBAD=$((ER33_STRIPBAD + 1))
   fi
 done
+# The two localities: <tag>|<file letter>|<unit> over the phrase sets ER33_CO1 and ER33_CO2.
+ER33_ET="$(cat "$ER30_ENR" 2>/dev/null)"; ER33_RT="$(cat "$ER_CMD" 2>/dev/null)"
+ER33_CON=0; ER33_COOK=0; ER33_COMISS=""; ER33_COBAD=0
+for er33_s in 'sub-case paragraph|E|P|CO1' 'PROFILE MISSING row|R|L|CO2'; do
+  IFS='|' read -r er33_tag er33_f er33_u er33_set <<<"$er33_s"
+  if [ "$er33_f" = E ]; then er33_t="$ER33_ET"; else er33_t="$ER33_RT"; fi
+  if [ "$er33_set" = CO1 ]; then er33_ps=("${ER33_CO1[@]}"); else er33_ps=("${ER33_CO2[@]}"); fi
+  ER33_CON=$((ER33_CON + 1))
+  er33_n="$(er33_co "$er33_t" "$er33_u" 0 "${er33_ps[@]}")"
+  if [ "$er33_n" -eq 1 ]; then ER33_COOK=$((ER33_COOK + 1)); else ER33_COMISS="$ER33_COMISS [$er33_tag → $er33_n unit(s) carrying all ${#er33_ps[@]}]"; fi
+  if [ "$er33_n" -ge 1 ]; then
+    er33_k=0
+    while [ "$er33_k" -lt "${#er33_ps[@]}" ]; do
+      er33_k=$((er33_k + 1))
+      [ "$(er33_co "$er33_t" "$er33_u" "$er33_k" "${er33_ps[@]}")" -eq $((er33_n - 1)) ] || ER33_COBAD=$((ER33_COBAD + 1))
+    done
+  fi
+done
 if [ "${#ER33_E}" -lt 1000 ] || [ "${#ER33_R}" -lt 1000 ]; then
   FAIL "ER33: measured nothing — the reconciler read ${#ER33_E} and the verb file ${#ER33_R} folded byte(s)"
-elif [ "$ER33_STRIPBAD" -ne 0 ]; then
-  FAIL "ER33: BROKEN PROBE — $ER33_STRIPBAD present phrase(s) did not drop their own count by exactly 1 when stripped from a copy. Until each fires, a verdict below is the instrument's"
-elif [ "$ER33_OK" -ne "${#ER33_PINS[@]}" ]; then
-  FAIL "ER33: the seam between the cards does not hold — $ER33_OK of the ${#ER33_PINS[@]} phrase(s) stand exactly once in their file (E the reconciler, R the verb file):${ER33_MISS:- none}. A gap written from an erasure's token that asks for a profile invites back the person who asked to be erased, and an interrupted rule-19 entry named by its heading echoes the name"
+elif [ "$ER33_STRIPBAD" -ne 0 ] || [ "$ER33_COBAD" -ne 0 ]; then
+  FAIL "ER33: BROKEN PROBE — $ER33_STRIPBAD present phrase(s) did not drop their own count by exactly 1 when stripped from a copy, and $ER33_COBAD phrase(s) of a locality, moved out of its unit into a unit of their own in a copy, did not drop the count of units carrying the whole set by exactly 1. Until each fires, a verdict below is the instrument's"
+elif [ "$ER33_OK" -ne "${#ER33_PINS[@]}" ] || [ "$ER33_COOK" -ne "$ER33_CON" ]; then
+  FAIL "ER33: the seam between the cards does not hold — $ER33_OK of the ${#ER33_PINS[@]} phrase(s) stand exactly once in their file (E the reconciler, R the verb file):${ER33_MISS:- none}; and $ER33_COOK of the $ER33_CON localities hold in exactly one unit:${ER33_COMISS:- none}. A gap written from an erasure's token that asks for a profile invites back the person who asked to be erased, and an interrupted rule-19 entry named by its heading echoes the name"
 else
-  PASS "ER33: the seam between the cards holds — a gap written from an erasure's token asks for nothing in the reconciler's sub-case, the § \`travelers\` table's \`PROFILE MISSING\` row and the naming's restatement-alone clause, and an entry whose key joins no roster row is named by its place, never its heading, in the reconciler's naming and in § \`erase\`'s order of writes; all ${#ER33_PINS[@]} phrase(s) once each, and each, stripped from a copy, drops its count by exactly 1"
+  PASS "ER33: the seam between the cards holds — a gap written from an erasure's token asks for nothing in the reconciler's sub-case, which writes its marker without the \`VERIFY:\` sentence, in the reconciler's account of the router, in the § \`travelers\` table's \`PROFILE MISSING\` row and in the naming's restatement-alone clause, and an entry whose key joins no roster row is named by its place, never its heading, in the reconciler's naming and in § \`erase\`'s order of writes; all ${#ER33_PINS[@]} phrase(s) once each, each, stripped from a copy, dropping its count by exactly 1. Both localities hold in exactly one unit — the sub-case's paragraph carries its heading and \"name no profile route\", and the \`PROFILE MISSING\` row itself carries the token clause and \"**name no command**\" — and each phrase of each, moved out of its unit in a copy, drops that count by 1"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
