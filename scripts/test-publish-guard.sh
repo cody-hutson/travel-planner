@@ -12739,7 +12739,7 @@ s34j_assert() { # one verdict
   fi
 }
 
-# ── S34k — NO EARLIER DIGEST CONFIRMS OR APPROVES (CIAC-2), one record kind at a time. On a render carrying
+# ── S34k — NO EARLIER DIGEST CONFIRMS OR APPROVES, one record kind at a time. On a render carrying
 # a construct, the digest a copy of the page gives, written as the record: as the baseline it gives
 # neither none-pending nor confirmed; as a staged record with no baseline, undetermined; as the
 # confirmation record on a trip with no approvers, stale; and as the approvals on file on a trip that
