@@ -1185,7 +1185,9 @@ destination stops here**: in DISCOVERY, ENRICHMENT, ITERATION or RESEQUENCING wi
 no plan-phase page is built without a destination (`reference/adr/ADR-034-site-build-admission.md`
 § 1). Name the two remedies — record the destination with `/trip-record destination`, or return
 the trip to IDEATION with `/trip-record mode` — run neither, and write nothing.
-`reference/site-layout-spec.md` § 9.2 declares that state a non-row of the render table.
+`reference/site-layout-spec.md` § 9.2 declares that state a non-row of the render table. **On a
+trip that declares approvers, `/trip-publish update` refuses the pre-plan site an IDEATION build
+writes**; `skills/trip-publish/SKILL.md` § *update* → *Precondition* names the ways forward.
 
 **Update, do not regenerate.** Where the site exists, **patch the affected sections** and
 preserve design tweaks already approved; `Write` is reached only where the file does not
@@ -1212,7 +1214,7 @@ approval itself was recorded — the `YYYY-MM-DD` prefix of the `confirmed=` lin
 `outputs/change-summary.md`, or no entry in one, and a readable approval carrying an approval
 count and a `confirmed=` date → `updated` as well, dated and paired exactly as that limb is,
 because on a trip that declares approvers the approval record is itself the decided event, and an
-approved change for which no entry was ever written must still reach its render with its count
+approved change for which no entry was ever written must still reach a plan-mode render with its count
 and code — without it, `update` refuses the pair-less render and the refresh its refusal names
 can never clear it; no `outputs/change-summary.md`, or no entry in one, and no such record →
 `none`, with `coordination-since` omitted — the organizer's own two-line confirmation carries no
@@ -1270,10 +1272,13 @@ announce itself as recently updated, the failure `reference/schemas/travel-site.
 field exists to prevent. The `pending` limb anchors to an **entry** rather than to a run for the
 same reason.
 
-**On a trip that declares approvers, the `updated` state also carries the approval pair, from the
-same record.** Where `trips/<slug>/.change-confirmed` carries an `approval-count=` line that reads
-as a non-negative integer, this build writes `approval-count` from it and `approval-code` from that
-record's `digest=` value into its frontmatter, and § 3's `updated` band renders both; where the
+**On a trip that declares approvers, the `updated` state of a build in a plan mode also carries the
+approval pair, from the same record; an IDEATION build writes `coordination-state` and
+`coordination-since` and no approval pair, whatever the record holds, because approvers approve
+the plan only.** Where `trips/<slug>/.change-confirmed` carries an `approval-count=` line that
+reads as a non-negative integer, a plan-mode build writes `approval-count` from it and
+`approval-code` from that record's `digest=` value into its frontmatter, and § 3's `updated` band
+renders both; where the
 line is absent, neither field is written and the band is what it was. A trip that declares no
 approvers carries no such line, with one stated exception: a declaration retired by hand leaves the
 last `approval-count=` line in the record, so the last recorded count and code go on showing — on the
