@@ -62,12 +62,13 @@ the witnesses, and ER33 for the seam between the two cards; ER30's three pins of
 re-pinned to the new ones. Every new arm carries a must-fire control on a copy.
 
 **Size fence.** Read against `v0.77.0`, the previous release tag, `CH_EMIT=growth bash
-scripts/test-corpus-hygiene.sh` lists all 51 rows kept: none new, raised, lowered or dropped, and no
-file owes a row it lacks. Eight files grew beneath their rows: `skills/trip-record/SKILL.md` grew
-6,522 to 463,387, beneath 470,268; `agents/00-enrichment.md` 1,967 to 81,141, beneath 82,813, the
-tightest; `skills/trip/SKILL.md` 1,089 to 108,543, beneath 118,008; `agents/06-validator.md` 320 to
-74,892; `agents/05-hub-planner.md` 273 to 84,149; `reference/data-architecture.md` 180 to 138,855;
-`reference/data-model.md` 141 to 236,143; and `CLAUDE.md` 53 to 88,737. No ceiling was raised.
+scripts/test-corpus-hygiene.sh` lists every row kept: none new, raised, lowered or dropped, and no
+file owes a row it lacks. The files that grew stand beneath their rows: `skills/trip-record/SKILL.md`
+grew 6,522 to 463,387, beneath 470,268; `agents/00-enrichment.md` 1,967 to 81,141, beneath 82,813,
+the tightest; `skills/trip/SKILL.md` 1,089 to 108,543, beneath 118,008; `agents/06-validator.md` 320
+to 74,892; `agents/05-hub-planner.md` 273 to 84,149; `reference/data-architecture.md` 180 to
+138,855; `reference/data-model.md` 141 to 236,143; and `CLAUDE.md` 53 to 88,737. No ceiling was
+raised.
 
 **What this release does not do.** The naming lives in the run's output only: no file records that a
 relayed need was dropped, so after the run a dropped hard limit reads like a profile not yet filed. A
