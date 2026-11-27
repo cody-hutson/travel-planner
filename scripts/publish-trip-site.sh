@@ -998,9 +998,10 @@ _browser_read_markup() { # <html_file> -> the file with the three browser rules 
   perl -0777 -ne '
     my $s = $_; my $n = length $s; my $o = ""; my $i = 0; my %noend; my $nocom = 0;
     sub inert { my $v = shift; $v =~ s/<(?=(?:script|style)\b)/<x-/gi; return $v }
-    sub inert_open { my $v = shift; my %last;
+    sub inert_open { my $v = shift; my %last; my $g;
       while ($v =~ /<\/(script|style)(?=[\t\n\f\r \/>])/gi) { $last{lc $1} = $-[0] }
-      $v =~ s{<(?=(script|style)\b)}{ my $m = lc $1; my $t = substr($v, $-[0] + 1 + length $m, 1); my $g = index($v, ">", $-[0]);
+      $v =~ s{<(?=(script|style)\b)}{ my $m = lc $1; my $t = substr($v, $-[0] + 1 + length $m, 1);
+        $g = index($v, ">", $-[0]) unless defined $g and ($g < 0 or $g > $-[0]);
         ($t =~ /\A[\t\n\f\r \/>]\z/ and defined $last{$m} and $g >= 0 and $g < $last{$m}) ? "<" : "<x-" }gie;
       return $v }
     sub endtag { my ($nm, $from) = @_;

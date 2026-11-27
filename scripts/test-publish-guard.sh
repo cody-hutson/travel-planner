@@ -12519,7 +12519,7 @@ s34d_assert() { # one verdict
 # <style openers, which the pre-pass reads inside a span its scan has already passed — and over a control of the same
 # length in a character outside the repeated class. That last row is 2 MB a body, because a search for the
 # next `>` from every opener there took 5.5 s of CPU for one such body and 20.4 s for the four on the machine
-# this was measured on. The readers are the pre-pass and the digest's
+# this was measured on, against 0.68 s for the four with one cursor kept for that search. The readers are the pre-pass and the digest's
 # reading through it. The band-excision row stays out: a run of `<a title="x ` is slow in the band
 # excision, which the three rules do not change. The opener shapes end in a `</p>`: the v0.77.0 program's
 # body search is skipped outright on a file with no `</` in it, so a shape without one would measure
@@ -12528,8 +12528,10 @@ s34d_assert() { # one verdict
 # for 32768 and 29.1 s for 65536 on the machine this was measured on, against 0.12 s with the pre-pass); (2) with the fallback before this change rebuilt — a tag the file ends
 # inside cut at its first `>` and the scan resumed there — 64 KB of each `<a b='>'` shape is not
 # finished inside the cap. That fallback is rebuilt here from its description; its text is not in this
-# repository. SENSITIVITY: the page `<p>Day 1 at 18:30.</p><a title="x>y<p>after < 5 then</p>` is written
-# differently by the two.
+# repository. (3) With the search for the next `>` made from every opener again, as it was before the pre-pass
+# kept one cursor for it, the four bodies' openers are not finished inside the cap. SENSITIVITY: the page
+# `<p>Day 1 at 18:30.</p><a title="x>y<p>after < 5 then</p>` is written differently by the two, and the
+# cursor step that (3) rewrites is found at one site.
 s34e_file() { # <file> <head> <unit> <count> <tail> — <unit> repeated <count> times between <head> and <tail>
   perl -e 'print $ARGV[0], $ARGV[1] x $ARGV[2], $ARGV[3], "\n"' "$2" "$3" "$4" "$5" > "$1"
 }
@@ -12566,8 +12568,10 @@ s34e_file "$WORK/s34e_red_qb.html" '' "<a b='>'" 8192 '<a b="'
 S34E_SENS="$WORK/s34e_sens.html"; printf '%s\n' '<p>Day 1 at 18:30.</p><a title="x>y<p>after < 5 then</p>' > "$S34E_SENS"
 S34E_CUT='if ($e < 0) { $o .= inert(substr($s, $j)); last }'
 S34E_OLD='if ($e < 0) { my $g = index($s, ">", $j + 1); if ($g < 0) { $o .= inert(substr($s, $j)); last } $o .= inert(substr($s, $j, $g + 1 - $j)); $i = $g + 1; next }'
+S34E_CURSOR='$g = index($v, ">", $-[0]) unless defined $g and ($g < 0 or $g > $-[0]);'
+S34E_PEROPEN='$g = index($v, ">", $-[0]);'
 s34e_assert() { # one verdict
-  local r s st n=0 ok=0 bad="" sz small=0 m1 m2a m2b mk sn so sne=0 soe=0
+  local r s st n=0 ok=0 bad="" sz small=0 m1 m2a m2b m3 mk mc sn so sne=0 soe=0
   for r in _browser_read_markup strip_to_itinerary_text; do
     for s in $S34E_SHAPES; do
       n=$((n+1)); st="$(s34e_cap "$r" "$WORK/s34e_$s.html")"
@@ -12582,15 +12586,17 @@ s34e_assert() { # one verdict
   mk="$(s33_count "$(declare -f _browser_read_markup)" "$S34E_CUT")"
   m2a="$( s33_rewrite _browser_read_markup "$S34E_CUT" "$S34E_OLD"; s34e_cap _browser_read_markup "$WORK/s34e_red_qa.html" )"
   m2b="$( s33_rewrite _browser_read_markup "$S34E_CUT" "$S34E_OLD"; s34e_cap _browser_read_markup "$WORK/s34e_red_qb.html" )"
+  mc="$(s33_count "$(declare -f _browser_read_markup)" "$S34E_CURSOR")"
+  m3="$( s33_rewrite _browser_read_markup "$S34E_CURSOR" "$S34E_PEROPEN"; s34e_cap _browser_read_markup "$WORK/s34e_inert.html" )"
   sn="$(_browser_read_markup "$S34E_SENS" 2>/dev/null)"
   so="$( s33_rewrite _browser_read_markup "$S34E_CUT" "$S34E_OLD"; _browser_read_markup "$S34E_SENS" 2>/dev/null )"
   [ -n "$sn" ] && sne=1; [ -n "$so" ] && soe=1
-  if [ "$mk" != 1 ] || [ -z "$sn" ] || [ -z "$so" ] || [ "$sn" = "$so" ]; then
-    FAIL "S34e: SENSITIVITY — the step the fallback before this change rewrites was found at $mk site(s) (want 1), or the path page was written the same by the two texts (written: ${sne}${soe}, want 11 and different), so a run below would not grade the change"
-  elif [ "$n" -eq 44 ] && [ "$ok" -eq 44 ] && [ "$small" -eq 0 ] && [ "$m1" -gt 128 ] && [ "$m2a" -gt 128 ] && [ "$m2b" -gt 128 ]; then
-    PASS "S34e: the pre-pass and the digest each finish every one of eleven adversarial shapes and its control, each at least 262144 bytes, inside a five-second CPU cap ($ok of $n with status 0); ARMED-RED — with the pre-pass a copy of its input, $S34E_RED_N unclosed <script> openers are stopped by the cap (status $m1), and with the fallback before this change rebuilt, 64 KB of each <a b='>'> shape is stopped by it (status $m2a and $m2b); SENSITIVITY — the two texts write the path page differently"
+  if [ "$mk" != 1 ] || [ "$mc" != 1 ] || [ -z "$sn" ] || [ -z "$so" ] || [ "$sn" = "$so" ]; then
+    FAIL "S34e: SENSITIVITY — the step the fallback before this change rewrites was found at $mk site(s) (want 1), the cursor step (3) rewrites at $mc (want 1), or the path page was written the same by the two texts (written: ${sne}${soe}, want 11 and different), so a run below would not grade the change"
+  elif [ "$n" -eq 44 ] && [ "$ok" -eq 44 ] && [ "$small" -eq 0 ] && [ "$m1" -gt 128 ] && [ "$m2a" -gt 128 ] && [ "$m2b" -gt 128 ] && [ "$m3" -gt 128 ]; then
+    PASS "S34e: the pre-pass and the digest each finish every one of eleven adversarial shapes and its control, each at least 262144 bytes, inside a five-second CPU cap ($ok of $n with status 0); ARMED-RED — with the pre-pass a copy of its input, $S34E_RED_N unclosed <script> openers are stopped by the cap (status $m1), and with the fallback before this change rebuilt, 64 KB of each <a b='>'> shape is stopped by it (status $m2a and $m2b), and with the search for the next '>' made from every opener again, the four bodies' openers are stopped by it (status $m3); SENSITIVITY — the two texts write the path page differently, and the cursor step is found at one site"
   else
-    FAIL "S34e: $ok of $n runs finished inside the cap (want 44 of 44:${bad:- none failed}), $small shape file(s) under 262144 bytes (want 0); armed-red statuses: copy of the page over the unclosed openers $m1, the fallback before this change over the two shapes $m2a and $m2b (want each above 128)"
+    FAIL "S34e: $ok of $n runs finished inside the cap (want 44 of 44:${bad:- none failed}), $small shape file(s) under 262144 bytes (want 0); armed-red statuses: copy of the page over the unclosed openers $m1, the fallback before this change over the two shapes $m2a and $m2b, the search from every opener over the four bodies $m3 (want each above 128)"
   fi
 }
 
