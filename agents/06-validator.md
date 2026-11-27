@@ -370,7 +370,11 @@ a fixed type:
   *structured, recorded form* of the Constraint compliance audit above — not a
   second judgement. For every traveler need in `outputs/traveler-model.md` (per its
   need category),
-  emit `pass` / `fail` for each day that need **applies** to. A need's
+  emit `pass` / `fail` for each day that need **applies** to. A traveller whose
+  entry is marked `PROFILE MISSING` has needs that are unknown, never "no
+  constraints" (`agents/00-enrichment.md` § *Missing or blank profile*): they have no
+  need to grade here, so never count them compliant — raise a Warning naming them as
+  a traveller whose needs this audit could not check. A need's
   applicable-day set is the **intersection** of the days its governing
   constraint governs and that traveler's **at-destination day set** — the window
   limb, never the full present-day set — see
