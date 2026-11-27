@@ -54,10 +54,13 @@ limit or a heat ceiling — and personal preferences. A trip folder holds that k
 detail for the length of one trip; this store holds the part of it that outlives every
 trip, which is why it concentrates the risk rather than merely repeating it.
 
-Nothing here is ever published. The class is declared *never rendered, in any form,
-including anonymized* — not in a built site, not in an anonymized summary, not in an
-excerpt. The engine moves nothing here off your machine, and nothing here is ever committed
-to the engine's repository.
+Nothing here is ever published as it stands, and no site build reads this folder. The class
+is `internal-hard` (`reference/data-architecture.md` § 5.1), with one reading for the private
+site: a value the group may see there, such as a place you would love or would rather skip,
+can reach your trip's passphrase-protected site in the shortlist built from it, and never a
+public page. Nothing else here reaches any page — not in a built site, not in an anonymized
+summary, not in an excerpt — and apart from that reading the engine moves nothing here off
+your machine. Nothing here is ever committed to the engine's repository.
 
 Ask for no more precision than the plan needs. The intake form asks for a passport's
 issuing country and validity month and says **never the number**; a durable record does

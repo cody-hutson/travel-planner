@@ -104,7 +104,7 @@ same reader. Rows stand in byte order of the path.
 31148      reference/adr/README.md
 147099     reference/data-architecture.md
 246314     reference/data-model.md
-79105      reference/site-layout-spec.md
+89911      reference/site-layout-spec.md
 41723      reference/trip-resolution.md
 60026      skills/trip-decommission/SKILL.md
 40851      skills/trip-new/SKILL.md

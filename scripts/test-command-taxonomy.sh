@@ -7023,7 +7023,7 @@ GQ_WIDE=$'\343\200\200'
 
 # The add-only world carries GQ_FILL further grants, each with its own row, BEFORE the appended
 # one, so a reader that samples the first N entries misses it for every N below GQ_FILL + 4.
-# That is 36 — four and a half times the longest allowed-tools line any verb carries today (8).
+# That is 36 — more than three times the longest allowed-tools line any verb carries today (10).
 # Its row-side twin appends a ROW with no grant after the same GQ_FILL paired rows, so a reader
 # that samples the first N rows of a table misses that row for the same N (GQ9).
 GQ_FILL=32

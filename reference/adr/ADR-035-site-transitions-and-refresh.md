@@ -139,7 +139,7 @@ complete; the rest of this allocation stands.)*
 |---|---|---|---|
 | **R0 reconcile** | a traveller's form, a person record, the roster or a link changes | the verb that made the change names `/trip-record travelers` without running it *(superseded in part — first amendment: [ADR-041](ADR-041-third-party-roster-standing.md) has `/trip-record group` run it itself once it has removed a row as a stale row, or the row of a departing member recorded through `/trip-record person`, and names it only where that run does not complete; every other removal, and every other trigger, keeps this signal)* | `/trip-record travelers` |
 | **R1 rebuild** | a change of σ — the trip context written by `/trip-record mode` or `/trip-record destination` — or of an admitted input: the shortlist by `/trip ideas`, the group snapshot and the group contacts file by the reconcile step, the plan artifacts by planning | `itinerary-to-build` reads `BEHIND`, naming the leading source | `/trip site` |
-| **R2 confirm** | a rebuild that changes the visible text | the organizer-confirm gate refuses `update` | `confirm`. This is intended under `ADR-003` § *Decision* 2, not a deadlock: `confirm` is always the organizer's, and a digest-only change needs none. On a trip that declares approvers, `ADR-029` § *Decision* 3 extends the same step: the organizer records each declared approver's reply through `confirm`, and `update` proceeds once they reach the declared threshold. The exception is a change that only removes or narrows what the group sees about a person, never held for the group's approval ([the contact and emergency record](ADR-038-contact-emergency-group-visibility.md) § 4, the operator's R1): as shipped, `ADR-029`'s step 6 holds such a republish until the Wave-1 approval-gate slice lands, and from that change the contact and emergency record's § 4 exempts it, leaving `confirm` its only gate |
+| **R2 confirm** | a rebuild that changes the visible text | the organizer-confirm gate refuses `update` | `confirm`. This is intended under `ADR-003` § *Decision* 2, not a deadlock: `confirm` is always the organizer's, and a digest-only change needs none. On a trip that declares approvers, in a plan mode, `ADR-029` § *Decision* 3 extends the same step: the organizer records each declared approver's reply through `confirm`, and `update` proceeds once they reach the declared threshold; in IDEATION, such a trip's pre-plan site is refused by `update`'s own precondition, which `skills/trip-publish/SKILL.md` § *update* → *Precondition* states with its ways forward. The exception is a change that only removes or narrows what the group sees about a person, never held for the group's approval ([the contact and emergency record](ADR-038-contact-emergency-group-visibility.md) § 4, the operator's R1): as shipped, `ADR-029`'s step 6 holds such a republish until the Wave-1 approval-gate slice lands, and from that change the contact and emergency record's § 4 exempts it, leaving `confirm` its only gate |
 | **R3 republish** | R1 and R2 done | `build-to-published` reads `BEHIND` | `/trip-publish update` |
 
 **A refusal, a removal or a withdrawal reaches the page through R0 to R3.** Under the private-site
@@ -153,7 +153,7 @@ record's § 4 exempts it, and the organizer's confirmation is its only gate.
 
 **The shortlist's own staleness case.** A shortlist built from the fallback read and later overtaken by
 a model rebuild changes no class. If `/trip ideas` re-runs, R1 to R3 carry the new shortlist to the
-page; if it does not, the shortlist against its own inputs is observed by no relation — a declared
+page on a trip that declares no approvers (R2); if it does not, the shortlist against its own inputs is observed by no relation — a declared
 residual, since the shortlist is rebuilt only by its own verb.
 
 ### 2. Conformance to `ADR-025`, `ADR-003`, `ADR-029` and `ADR-007`
@@ -162,7 +162,7 @@ residual, since the shortlist is rebuilt only by its own verb.
 |---|---|
 | `ADR-025` § 6, staleness | `build-to-published` reuses the shipped verdict family and its rules, has no disposition column, is declared by its consumer, and is evaluated outside `trip.freshness` |
 | `ADR-003` § 2 | A transition's or a snapshot change's visible-text change reaches the group only through the organizer's `confirm` (R2) |
-| `ADR-029` § 3 | On a trip that declares approvers, the same visible-text change reaches the group only once the declared approvers' replies, recorded by the organizer through `confirm`, reach the threshold (R2). The remedy is unchanged. A change that only removes or narrows what the group sees about a person is the exception ([the contact and emergency record](ADR-038-contact-emergency-group-visibility.md) § 4, the operator's R1): as shipped, § 3's step 6 holds such a republish until the Wave-1 approval-gate slice lands, and from that change the contact and emergency record's § 4 exempts it |
+| `ADR-029` § 3 | On a trip that declares approvers, the same visible-text change reaches the group in a plan mode only once the declared approvers' replies, recorded by the organizer through `confirm`, reach the threshold, and in IDEATION not through `update` (R2). The remedy is unchanged. A change that only removes or narrows what the group sees about a person is the exception ([the contact and emergency record](ADR-038-contact-emergency-group-visibility.md) § 4, the operator's R1): as shipped, § 3's step 6 holds such a republish until the Wave-1 approval-gate slice lands, and from that change the contact and emergency record's § 4 exempts it |
 | `ADR-007` § 2 | Nothing is deleted at a transition; the IDEATION page stays on disk |
 
 ## Consequences
@@ -176,7 +176,7 @@ residual, since the shortlist is rebuilt only by its own verb.
 
 - **Transitions that change visible text ask for the organizer's confirmation**, by `ADR-003`'s own
   logic — and, on a trip that declares approvers, for the approvals the organizer records up to the
-  threshold, by `ADR-029`'s; that is new behaviour. A change that only removes or narrows what the
+  threshold, by `ADR-029`'s, where the build is in a plan mode (R2); that is new behaviour. A change that only removes or narrows what the
   group sees about a person is the exception ([the contact and emergency
   record](ADR-038-contact-emergency-group-visibility.md) § 4, the operator's R1): as shipped,
   `ADR-029`'s step 6 holds such a republish for the approvals too, until the Wave-1 approval-gate slice
@@ -189,7 +189,7 @@ residual, since the shortlist is rebuilt only by its own verb.
 | Evaluand | Consuming rule | Effect on the aggregate |
 |---|---|---|
 | `build-to-published` reads `BEHIND` | `/trip-publish` rule 7: "It never branches on freshness, and adds no gate that blocks on it." | report-only |
-| a transition's, or a snapshot change's, visible-text change | the organizer-confirm gate, whose proceed set is the organizer's own confirmation — on a trip that declares approvers, `ADR-029` § *Decision* 3's threshold | `update` waits for `confirm` — intended under `ADR-003`, and under `ADR-029` on a trip that declares approvers. As shipped, a change that only removes or narrows what the group sees about a person waits for the threshold too, until the Wave-1 approval-gate slice lands; from that change it waits for `confirm` alone, by [the contact and emergency record](ADR-038-contact-emergency-group-visibility.md) § 4 (the operator's R1) |
+| a transition's, or a snapshot change's, visible-text change | the organizer-confirm gate, whose proceed set is the organizer's own confirmation — on a trip that declares approvers, `ADR-029` § *Decision* 3's threshold | `update` waits for `confirm` — intended under `ADR-003`, and under `ADR-029` on a trip that declares approvers, in a plan mode; in IDEATION such a trip's `update` is refused (R2). As shipped, a change that only removes or narrows what the group sees about a person waits for the threshold too, until the Wave-1 approval-gate slice lands; from that change it waits for `confirm` alone, by [the contact and emergency record](ADR-038-contact-emergency-group-visibility.md) § 4 (the operator's R1) |
 
 **The non-blocking claims hold.** The shown relation never gates a publish.
 
@@ -255,3 +255,21 @@ Wave-1 working notes on its Stage-6 sub-task, #1392:
 - `scripts/publish-trip-site.sh` — the publish path and `cmd_list`.
 - Provenance: the card, #1296; its design sub-task, #1388, carrying the second pass; the fit review,
   CR-2 and R2 on #1369; and the Wave-1 working notes this record's build detail moved to, on #1392.
+
+## Amendment history
+
+**Amendment (2026-11-26, Thursday) — § *Decision* 1's R2 row and the shortlist's staleness case,
+§ *Decision* 2's `ADR-029` § 3 row, and § *Consequences*' first cost and its aggregation-trace row:
+the approver claims narrowed to a plan mode.** Each said that on a trip that declares approvers a
+visible-text change reaches the group once the approvals the organizer records meet the threshold;
+R2's remedy cell read "and `update` proceeds once they reach the declared threshold", and the
+conformance row "the same visible-text change reaches the group only once the declared approvers'
+replies, recorded by the organizer through `confirm`, reach the threshold (R2)". That stopped being
+true in IDEATION when `/trip-publish update` began to refuse a pre-plan site on such a trip, by the
+operator's ruling for the release that carries this entry: approvers approve the plan only, and a
+page built before there is a plan carries nothing for them to approve. Each claim now holds in a
+plan mode, and R2 names where the refusal and its ways forward are stated rather than restating
+them. The refusal is interim: it stands until an approval gate covers a pre-plan site, a gate this
+record does not decide. The correction narrows these claims and takes no decision of its own; the
+refusal is decided where it is stated, and R2's step, its remedy in a plan mode and `ADR-029`'s
+decision stand as decided.

@@ -33,10 +33,10 @@ field generated: required date
 
 `../data-architecture.md` § 4.5 rule 2 enumerates the entry-bearing set and its two marker forms. **C4 appears in neither list** — not among the fenced-marker classes, not among the key-column classes. This section states that absence so a later slice does not read it as an oversight and repair it.
 
-The reason is § 4.2's third question. **No consumer branches on any candidate-level value in this artifact**, and that is not an accident of the current corpus — it is a refusal the command surface states twice, in terms:
+The reason is § 4.2's third question. **No consumer branches on any candidate-level value in this artifact.** Its one reader is the site build, which reads the whole file only while no destination is recorded and renders it at the heading grain its element fence declares (`reference/site-layout-spec.md` § 9.2), so it branches on no candidate either; every other surface refuses to read it, a refusal the command surface states twice, in terms:
 
 - `skills/trip-record/SKILL.md` — *"Does not read `outputs/destination-shortlist.md` — the chosen value arrives as this verb's argument, and reading the shortlist would give that value a second source."*
-- `skills/trip/SKILL.md` — *"nothing under `trips/<slug>/outputs/` — the shortlist is the agent's to write and this verb never reads it back."*
+- `skills/trip/SKILL.md` — *"not the shortlist, which is the agent's to write and this verb never reads back."*
 
 So the rank ordinal, the love-count, the lover names, the vibe line, the equity note and the rationale all fail question 3, and a key for a Destination candidate would be a join nothing joins on. Giving this class an entry marker would build the consumer surface the architecture deliberately declines to have — the over-structuring risk this document names, committed on purpose. **This class takes the universal frontmatter block and nothing else**, and its `[DERIVED]` H1 mark is retained per § 4.4.
 
