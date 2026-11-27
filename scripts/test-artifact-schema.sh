@@ -5575,6 +5575,14 @@ ft_c4_src() {
 ft_c4_capture() {
   ( PASS() { printf 'PASS\t%s\n' "$*"; }; FAIL() { printf 'FAIL\t%s\n' "$*"; }; VACUOUS() { printf 'VACUOUS\t%s\n' "$*"; }; "$@" )
 }
+# ft_c4_judge <captured> <ids> — nothing when <captured> (ft_c4_capture's output) holds exactly one verdict
+# for each arm id of the space-separated <ids>, every one a PASS, and no other verdict; else what it read,
+# for a control's FAIL to name. An arm id is its verdict's text up to the first colon.
+ft_c4_judge() {
+  awk -F'\t' -v want="$2" 'BEGIN { n = split(want, W, " "); for (i = 1; i <= n; i++) w[W[i]] = 1 }
+    NF { id = $2; sub(/:.*/, "", id); c[id]++; if ($1 != "PASS" || !(id in w)) bad = bad $1 " " substr($2, 1, 400) " | " }
+    END { for (i = 1; i <= n; i++) if (c[W[i]] != 1) bad = bad W[i] " read " (c[W[i]] + 0) " time(s) | "; printf "%s", bad }' <<<"$1"
+}
 # ft_c4_line <file> <line> <old> <new> — that one line of <file> with its ONE <old> made <new>; 1 otherwise.
 ft_c4_line() {
   local t
@@ -23833,26 +23841,55 @@ if [ "$MC_OK" -eq 1 ]; then
   # FT_C4_REWORD rewords it, and the record's row for it replaced by one naming no field that cites its
   # words. With the former label declared the em-dash row ties to it and stands in for the field;
   # without it nothing ties, and nothing is raised.
-  MC5F11_KEY='solo'
-  MC5F11_NEW="$(awk -F'\t' -v k="$MC5F11_KEY" '$1 == k { print $2 }' <<<"$FT_C4_REWORD")"
-  MC5F11_OLD="$(mc_label "$MC_DM" "$MC5F11_KEY")"
-  MC5F11_SEC="$(ft_rows "$MC_DM" | awk -F'\t' -v k="$MC5F11_KEY" '$11 == k { print $2 }')"
-  MC5F11_STAR="$(ft_rows "$MC_DM" | awk -F'\t' -v k="$MC5F11_KEY" '$11 == k { print $8 }')"
-  MC5F11_AW="$(mc5_aw "$MC5F11_KEY")"; MC5F11_CLS="$(mc_class "$MC_DECL" "$MC5F11_KEY")"
-  MC5F11_CELL="$([ "$MC5F11_STAR" = 1 ] && printf '%s ' "$FT_STAR")\`$MC5F11_NEW\`"
-  MC5F11_DM="$MC_W/mc5f11-data-model.md"; MC5N3_DM="$MC_W/mc5n3-data-model.md"
-  cp "$MC_DM" "$MC5F11_DM"; cp "$MC_DM" "$MC5N3_DM"
-  MC5F11_ROW="$MC5F11_CLS | $MC_EM | $MC5F11_AW"
-  MC5F11_TXT="MC5: the em-dash row $MC5F11_ROW stands in for the field ($MC5F11_SEC, $MC5F11_NEW), which carries no row of its own — a field § 2 names is declared by its own row"
-  if [ -n "$MC5F11_NEW" ] && [ -n "$MC5F11_OLD" ] && [ -n "$MC5F11_AW" ] && [ -n "$MC5F11_CLS" ] \
-     && ft_row_set "$MC5F11_DM" "$MC5F11_KEY" Field "$MC5F11_CELL" && ft_row_set "$MC5N3_DM" "$MC5F11_KEY" Field "$MC5F11_CELL" \
-     && ft_c4_former "$MC5F11_DM" "$MC5F11_KEY | $MC5F11_OLD"$'\n'; then
-    mc5_arm_on "$MC5F11_DM" MC5f11 'CD-B' "$MC5F11_TXT" 1 "a copy of the data model rewording '$MC5F11_OLD' to '$MC5F11_NEW' with the old label declared former, and a copy of the record whose row keyed $MC5F11_KEY is $MC5F11_ROW" swaprow "$MC5F11_KEY" "$MC5F11_ROW"
-    md_flips ft_former_rows 'MC5f11' mc5_arm_on "$MC5F11_DM" MC5f11 'CD-B' "$MC5F11_TXT" 1 "a copy of the data model rewording '$MC5F11_OLD' to '$MC5F11_NEW' with the old label declared former, and a copy of the record whose row keyed $MC5F11_KEY is $MC5F11_ROW" swaprow "$MC5F11_KEY" "$MC5F11_ROW"
-    mc5_arm_on "$MC5N3_DM" MC5n3 '' '' 0 "the same two copies with no former label declared: the em-dash row ties to nothing" swaprow "$MC5F11_KEY" "$MC5F11_ROW"
-  else
+  # mc5f11_arms <data-model> <tag> — both arms over the SOURCE <data-model>, the live one or a control's
+  # planted one, their copies named by <tag>. It leaves the MC5F11_* words set for the live md_flips row,
+  # and returns 1, after its FAIL, when there is nothing to plant.
+  mc5f11_arms() {
+    local src="$1" tag="$2"
+    MC5F11_KEY='solo'
+    MC5F11_NEW="$(awk -F'\t' -v k="$MC5F11_KEY" '$1 == k { print $2 }' <<<"$FT_C4_REWORD")"
+    MC5F11_OLD="$(mc_label "$src" "$MC5F11_KEY")"
+    MC5F11_SEC="$(ft_rows "$src" | awk -F'\t' -v k="$MC5F11_KEY" '$11 == k { print $2 }')"
+    MC5F11_STAR="$(ft_rows "$src" | awk -F'\t' -v k="$MC5F11_KEY" '$11 == k { print $8 }')"
+    MC5F11_AW="$(mc5_aw "$MC5F11_KEY")"; MC5F11_CLS="$(mc_class "$MC_DECL" "$MC5F11_KEY")"
+    MC5F11_CELL="$([ "$MC5F11_STAR" = 1 ] && printf '%s ' "$FT_STAR")\`$MC5F11_NEW\`"
+    MC5F11_DM="$MC_W/mc5f11-$tag-data-model.md"; MC5N3_DM="$MC_W/mc5n3-$tag-data-model.md"
+    cp "$src" "$MC5F11_DM"; cp "$src" "$MC5N3_DM"
+    MC5F11_ROW="$MC5F11_CLS | $MC_EM | $MC5F11_AW"
+    MC5F11_TXT="MC5: the em-dash row $MC5F11_ROW stands in for the field ($MC5F11_SEC, $MC5F11_NEW), which carries no row of its own — a field § 2 names is declared by its own row"
+    if [ -n "$MC5F11_NEW" ] && [ -n "$MC5F11_OLD" ] && [ -n "$MC5F11_AW" ] && [ -n "$MC5F11_CLS" ] \
+       && ft_row_set "$MC5F11_DM" "$MC5F11_KEY" Field "$MC5F11_CELL" && ft_row_set "$MC5N3_DM" "$MC5F11_KEY" Field "$MC5F11_CELL" \
+       && ft_c4_former "$MC5F11_DM" "$MC5F11_KEY | $MC5F11_OLD"$'\n'; then
+      mc5_arm_on "$MC5F11_DM" MC5f11 'CD-B' "$MC5F11_TXT" 1 "a copy of the data model rewording '$MC5F11_OLD' to '$MC5F11_NEW' with the old label declared former, and a copy of the record whose row keyed $MC5F11_KEY is $MC5F11_ROW" swaprow "$MC5F11_KEY" "$MC5F11_ROW"
+      mc5_arm_on "$MC5N3_DM" MC5n3 '' '' 0 "the same two copies with no former label declared: the em-dash row ties to nothing" swaprow "$MC5F11_KEY" "$MC5F11_ROW"
+      return 0
+    fi
     FAIL "MC5f11: fixture integrity — FT_C4_REWORD, the table or the declaration gives no reword, label, words or class for $MC5F11_KEY, or a copy of the data model did not take the reword or the former-label row, so the arm has nothing to plant"
+    return 1
+  }
+  if mc5f11_arms "$MC_DM" live; then
+    md_flips ft_former_rows 'MC5f11' mc5_arm_on "$MC5F11_DM" MC5f11 'CD-B' "$MC5F11_TXT" 1 "a copy of the data model rewording '$MC5F11_OLD' to '$MC5F11_NEW' with the old label declared former, and a copy of the record whose row keyed $MC5F11_KEY is $MC5F11_ROW" swaprow "$MC5F11_KEY" "$MC5F11_ROW"
   fi
+  # CTL-MC5n3-SRC — the source has already reworded solo, in its two statements and with its former label
+  # declared, its new spelling derived by ft_c4_target: the tree after solo's first reword. MC5f11 and MC5n3
+  # over it must both read PASS, so MC5n3's copy, which declares no former label for solo, must declare none
+  # whatever its source declared, and its em-dash row tie to nothing.
+  mc5f11_ctl_src() {
+    local s r k="$MC5F11_KEY" out bad
+    s="$(ft_c4_src)" || { FAIL "CTL-MC5n3-SRC: NOT EVALUATED — no unreworded copy was built to plant a source in"; return 0; }
+    if [ -z "$k" ] || ! r="$(ft_c4_reword "$s" "$k" "$(ft_c4_target "$(mc_label "$s/reference/data-model.md" "$k")")")" || ! ft_c4_former "$s/reference/data-model.md" "$r"$'\n'; then
+      FAIL "CTL-MC5n3-SRC: fixture integrity — the source did not take its reword of '${k:-no key}' in its two statements and its former row: ${r#!}"; return 0
+    fi
+    out="$(ft_c4_capture mc5f11_arms "$s/reference/data-model.md" ctl)"
+    bad="$(ft_c4_judge "$out" 'MC5f11 MC5n3')"
+    if [ -z "$bad" ]; then
+      PASS "CTL-MC5n3-SRC: MUST NOT FIRE — over a source that has already reworded $k, with its former label declared ('$r'), MC5f11 and MC5n3 each read PASS: the former label the source declares is no former label of MC5n3's copy"
+    else
+      FAIL "CTL-MC5n3-SRC: MUST NOT FIRE — over a source that has already reworded $k, with its former label declared ('$r'), MC5f11 and MC5n3 do not each read PASS: $bad"
+    fi
+  }
+  mc5f11_ctl_src
+  md_flips mc5_arm 'CTL-MC5n3-SRC' mc5f11_ctl_src
   if [ "$MC5_NFIND" -eq 0 ] && [ "$MC5_ACC" -eq "$MC5_NB" ] && [ "$MC5_NB" -gt 0 ]; then
     PASS "MC5n1: MUST-NOT-FIRE — the real record, its fence at the end of § 2: every predicate reads it and none raises a finding, with $MC_NROWS row(s), $MC5_NB bullet(s) and $(mc_n "$MC_PLACE" UNRES) unplaced item(s) shown in the population above. Every must-fire beside this arm differs from it in ONE edit"
   else
