@@ -467,6 +467,11 @@
 #        and the mark (OP3); the hub and the validator read a `PROFILE MISSING` traveller's needs
 #        as unknown (OP4); the C12 note cites the obligation (OP5); and the carry-forward, drop and
 #        marker sentences stand (OP-U1, OP-U2). Each arm with a must-fire control on a copy
+#   TW   the trip window's recompute: its standing rule stands once, verbatim from ADR-028 § 7 but
+#        for its number (TW1); the template declares each derived line's inputs, the arrival and
+#        departure lines' being § 3's own (TW2); and the write-ownership row, `fact`'s route and every
+#        citation beside the recompute name that rule (TW3). Text only, never behaviour. Each arm
+#        guards its population and has must-fire controls on a copy
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -34437,6 +34442,138 @@ op3_assert() {   # op3_assert <root> — exactly one verdict
 op3_assert "$ROOT"
 if [ -n "$OP_ADM" ]; then
   md_flips op_classify 'OP3' op3_assert "$ROOT"
+fi
+
+# ══════════════════════════════════════════════════════════════════
+# Group TW — the trip window's recompute rule, its declaration and its writer (#1520).
+#
+# `ADR-028` gives `### Effective Planning Days` a writer, `/trip-record`, which recomputes a line in
+# the act that records one of that line's declared inputs (Decision 1), under a standing rule
+# landed verbatim from the record's § 7, from inputs the template declares per line (§ 3). Three
+# arms grade the TEXT of that landing. Each reads its oracle live and holds no copy of it:
+#   TW1  the standing clause carries § 7's rule exactly once, verbatim but for its number, as rule
+#        2's fourth admitted shape, in a numbering that runs without a gap;
+#   TW2  the template's trip-window note declares each derived line's inputs by label, the arrival
+#        and departure lines' being § 3's own; every label resolves in the template; and the
+#        departure line carries no hotel clause (D-9);
+#   TW3  `CLAUDE.md` § Write ownership carries § 1's row with the number TW1 found; `fact`'s
+#        `[DERIVED]` route row names that rule; its cross-block table names no trip-window
+#        consequence; its `**Reads:**` line names the block and the template; and every citation of
+#        a standing rule that shares a sentence with the recompute, in `fact` and in the conduct
+#        file's block-owned section, names that number.
+# Every limb asserts its population first, so a relocated surface reads FAIL and never a vacuous
+# PASS. Every arm has must-fire controls on a COPY.
+#
+# WHAT THIS GROUP DOES NOT ESTABLISH. It grades text, never behaviour. Whether a verb recomputes
+# only the lines whose inputs changed, echoes first and parses nothing out of prose stays conduct
+# (`ADR-028` § What nothing grades); the release's Stage 7 check observed it once, and nothing here
+# does. Every reader takes a file or a here-string, and nothing is piped into a reader that can stop
+# early (group PF).
+# ══════════════════════════════════════════════════════════════════
+echo
+echo "── Group TW — the trip window's recompute rule, its declaration and its writer: text, never behaviour."
+
+TW_WORK="$WORK/tw"; mkdir -p "$TW_WORK"
+TW_ADR="$ROOT/reference/adr/ADR-028-derived-planning-day-block-owners.md"
+TW_SK="$ROOT/skills/trip-record/SKILL.md"
+TW_TP="$ROOT/templates/trip-context.template.md"
+TW_CH="$ROOT/CLAUDE.md"
+TW_IC="$ROOT/skills/trip-record/interview-conduct.md"
+
+# tw_quote <adr> <heading-prefix> — the `>` lines under the first heading opening with the prefix, up
+# to the next `### ` heading, with the `> ` stripped, one per line.
+tw_quote() {
+  LC_ALL=C awk -v h="$2" 'index($0, h) == 1 { on = 1; next } on && /^### / { exit }
+    on && /^>/ { s = $0; sub(/^> ?/, "", s); print s }' "$1"
+}
+# tw_norm — its input joined and whitespace-squeezed onto one line.
+tw_norm() { LC_ALL=C awk '{ s = s " " $0 } END { gsub(/[ \t]+/, " ", s); sub(/^ /, "", s); sub(/ $/, "", s); print s }'; }
+
+# tw1_report <adr> <skill> — one line: <matches> <N> <gapless> <max> <third-at-7> <fourth-at-N>
+# <fourth-elsewhere> <rules> <§7-bytes>. A rule is a column-0 `<n>. ` line inside the standing clause
+# and every line after it up to the next such line or the Extension rule.
+tw1_report() {
+  local q
+  q="$(tw_quote "$1" '### 7. ')"; q="$(tw_norm <<<"$q")"
+  LC_ALL=C awk -v q="$q" '
+    function mask(s) { sub(/^[0-9]+\. /, "#. ", s); return s }
+    function cnt(s, t,   n, p) { n = 0; while ((p = index(s, t)) > 0) { n++; s = substr(s, p + length(t)) }; return n }
+    /^## Standing clause/ { on = 1; next }
+    on && /^\*\*Extension rule\.\*\*/ { on = 0 }
+    !on { next }
+    /^[0-9]+\. / { r++; num[r] = $0; sub(/\. .*/, "", num[r]); txt[r] = $0; next }
+    r { txt[r] = txt[r] " " $0 }
+    END {
+      Q = mask(q); m = 0; N = 0; gap = "yes"; mx = 0; th = 0; fN = 0; fo = 0
+      for (i = 1; i <= r; i++) {
+        t = txt[i]; gsub(/[ \t]+/, " ", t); sub(/ $/, "", t)
+        if (num[i] + 0 != i) gap = "no"
+        if (num[i] + 0 > mx) mx = num[i] + 0
+        if (Q != "#. " && mask(t) == Q) { m++; N = num[i] + 0 }
+        if (num[i] + 0 == 7) th = cnt(t, "third admitted shape")
+        f[i] = cnt(t, "fourth admitted shape")
+      }
+      for (i = 1; i <= r; i++) if (N > 0 && num[i] + 0 == N) fN = f[i]; else fo += f[i]
+      printf "%d %d %s %d %d %d %d %d %d\n", m, N, gap, mx, th, fN, fo, r, length(q)
+    }' "$2"
+}
+# tw1_verdict <report> — `ok`, or the first limb that failed, worded for the FAIL.
+tw1_verdict() {
+  local m n g mx th fn fo r ql
+  read -r m n g mx th fn fo r ql <<<"$1"
+  if [ "${ql:-0}" -lt 200 ] || [ "${r:-0}" -lt 1 ]; then echo "population — § 7 read ${ql:-0} B and the standing clause ${r:-0} rule(s), so nothing was compared"; return; fi
+  if [ "$m" -ne 1 ]; then echo "matches=$m — § 7's rule occurs $m time(s) in the standing clause, verbatim but for its number, where once is owed"; return; fi
+  if [ "$g" != yes ]; then echo "gapless=no — the clause's numbers do not run 1..$mx without a gap or a repeat"; return; fi
+  if [ "$th" -ne 1 ]; then echo "rule 7 carries 'third admitted shape' $th time(s), where once is owed"; return; fi
+  if [ "$fn" -ne 1 ] || [ "$fo" -ne 0 ]; then echo "'fourth admitted shape' occurs $fn time(s) in rule $n and $fo elsewhere, where 1 and 0 are owed"; return; fi
+  echo ok
+}
+
+TW1_R="$(tw1_report "$TW_ADR" "$TW_SK")"
+TW1_V="$(tw1_verdict "$TW1_R")"
+read -r _ TW_N _ TW1_MX _ _ _ TW1_NR TW1_QL <<<"$TW1_R"
+if [ "$TW1_V" = ok ]; then
+  PASS "TW1: the standing clause carries ADR-028 § 7's rule exactly once, verbatim but for its number, as rule $TW_N of $TW1_NR; the clause's numbers run 1..$TW1_MX without a gap; rule 7 is rule 2's third admitted shape and rule $TW_N its fourth, and no other rule claims the fourth. § 7 is read live ($TW1_QL B) and never held here, and no limb asks that rule $TW_N be the last, so a rule appended later leaves this arm green"
+else
+  FAIL "TW1: $TW1_V. ADR-028 § 7 is the rule's one source: land it verbatim under the next free number, as a widening of rule 2, with rule 7 left exactly as it stands"
+  TW_N=0
+fi
+
+# ── TW1's controls, each on a COPY of the skill file. ──
+# CTL-TW1-ABSENT — MUST FIRE: the rule TW1 found is deleted.
+TW1_CA="$TW_WORK/tw1-absent.md"
+LC_ALL=C awk -v n="$TW_N" '/^## Standing clause/ { on = 1 }
+  on && /^\*\*Extension rule\.\*\*/ { on = 0; skip = 0 }
+  on && /^[0-9]+\. / { r = $0; sub(/\. .*/, "", r); skip = (r + 0 == n + 0) }
+  !skip { print }' "$TW_SK" > "$TW1_CA"
+TW1_CAV="$(tw1_verdict "$(tw1_report "$TW_ADR" "$TW1_CA")")"
+if [ "$TW_N" -gt 0 ] && ! cmp -s "$TW_SK" "$TW1_CA" && [ "${TW1_CAV%% *}" = "matches=0" ]; then
+  PASS "CTL-TW1-ABSENT: MUST FIRE — with rule $TW_N deleted from a copy of the skill file, TW1 reads '${TW1_CAV%% —*}': a missing rule is a FAIL, not a pass over the rules that remain"
+else
+  FAIL "CTL-TW1-ABSENT: MUST FIRE — with rule ${TW_N:-0} deleted from a copy (copy differs: $(cmp -s "$TW_SK" "$TW1_CA" && echo no || echo yes)), TW1 read '$TW1_CAV' where 'matches=0' is owed"
+fi
+# CTL-TW1-WORD — MUST FIRE: one word of the rule's obligation changed, the record left as it stands.
+TW1_CW="$TW_WORK/tw1-word.md"
+LC_ALL=C awk '!d && index($0, "**only the lines of that block") { sub(/\*\*only the lines of that block/, "**all the lines of that block"); d = 1 } { print } END { exit (d ? 0 : 3) }' "$TW_SK" > "$TW1_CW"; TW1_CWRC=$?
+TW1_CWV="$(tw1_verdict "$(tw1_report "$TW_ADR" "$TW1_CW")")"
+if [ "$TW1_CWRC" = 0 ] && [ "${TW1_CWV%% *}" = "matches=0" ]; then
+  PASS "CTL-TW1-WORD: MUST FIRE — 'only the lines of that block' became 'all the lines of that block' in a copy, and TW1 reads '${TW1_CWV%% —*}': a drifted rule is not § 7's rule"
+else
+  FAIL "CTL-TW1-WORD: MUST FIRE — the word change landed=$([ "$TW1_CWRC" = 0 ] && echo yes || echo no) and TW1 read '$TW1_CWV' where 'matches=0' is owed"
+fi
+# CTL-TW1-WRAP — MUST NOT FIRE: the same rule, one word to a line. Whitespace is not content.
+TW1_CR="$TW_WORK/tw1-wrap.md"
+LC_ALL=C awk -v n="$TW_N" '/^## Standing clause/ { on = 1 }
+  on && /^\*\*Extension rule\.\*\*/ { on = 0; in_r = 0 }
+  on && /^[0-9]+\. / { r = $0; sub(/\. .*/, "", r); if (in_r) { print "" }; in_r = (r + 0 == n + 0); if (in_r) { k = split($0, w, " "); print w[1] " " w[2]; for (i = 3; i <= k; i++) print "    " w[i]; next } }
+  in_r && NF { k = split($0, w, " "); for (i = 1; i <= k; i++) print "    " w[i]; next }
+  in_r && !NF { next }
+  { print }' "$TW_SK" > "$TW1_CR"
+TW1_CRV="$(tw1_verdict "$(tw1_report "$TW_ADR" "$TW1_CR")")"
+if [ "$TW_N" -gt 0 ] && ! cmp -s "$TW_SK" "$TW1_CR" && [ "$TW1_CRV" = ok ]; then
+  PASS "CTL-TW1-WRAP: MUST NOT FIRE — rule $TW_N rewrapped one word to a line in a copy still reads ok: TW1 compares words, never line breaks"
+else
+  FAIL "CTL-TW1-WRAP: MUST NOT FIRE — rule ${TW_N:-0} rewrapped in a copy (copy differs: $(cmp -s "$TW_SK" "$TW1_CR" && echo no || echo yes)) read '$TW1_CRV' where 'ok' is owed: the comparison is reading layout"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
