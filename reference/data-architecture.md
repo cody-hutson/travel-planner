@@ -58,7 +58,7 @@ row of the enumeration below. `W` = the single writer · `L` = lifecycle class (
 | 1 | `trip-context.md` | **block-owned** (`CLAUDE.md` § *Write ownership*) | `persist-mutable` | `human` | `bound` | Trip, Constraint, Logistics, Origin |
 | 2 | `trip-log.md` | operator, via `/trip-record log` | `accumulate-append` | `human` | `internal` | — (narrative register, § 1.4) |
 | 3 | `travelers/<traveler>.md` | human (the traveler) | `persist-mutable` | `human` | `internal` | Traveler, Need, Desire |
-| 4 | `outputs/destination-shortlist.md` | destination-ideation | `rebuilt-each-synthesis` | `derived` | `internal` | Destination candidate |
+| 4 | `outputs/destination-shortlist.md` | destination-ideation | `rebuilt-each-synthesis` | `derived` | `bound` | Destination candidate |
 | 5 | `outputs/activities-list.md` | activities | `accumulate-append` | `researched` | `internal` | Venue, Candidate |
 | 6 | `outputs/food-list.md` | food | `accumulate-append` | `researched` | `internal` | Venue, Candidate |
 | 7 | `outputs/nightlife-list.md` | nightlife | `accumulate-append` | `researched` | `internal` | Venue, Candidate |
@@ -73,7 +73,7 @@ row of the enumeration below. `W` = the single writer · `L` = lifecycle class (
 | 16 | `outputs/final-itinerary-v<N>.md` | hub | `versioned` (frozen sibling) | `derived` | `internal` | as C15 |
 | 17 | `outputs/validation-report.md` | validator | `rebuilt-each-synthesis` | `derived` | `internal` | Finding |
 | 18 | `outputs/<slug>.md` — targeted-research output | the spoke that re-ran | `accumulate-append` | `researched` | `internal` | Venue, Candidate |
-| 19 | `outputs/<destination>-travel-site.html` | `site-build` | `output` | `derived` | **`output`** | (render of C1, C10, C11, C13, C15) |
+| 19 | `outputs/<destination>-travel-site.html` | `site-build` | `output` | `derived` | **`output`** | (render of C1, C4, C10, C11, C13, C15) |
 | 20 | `outputs/change-summary.md` | hub | `accumulate-append` | `derived` | `internal` | Venue, Event, Day |
 | 21 | `outputs/cost-estimate.md` | hub | `rebuilt-each-synthesis` | `derived` | `internal` | Traveler, Venue, Leg |
 | 22 | `people/<person>.md` | human (the person) | `persist-mutable` | `human` | **`internal-hard`** | Person, Need |
@@ -97,8 +97,9 @@ becomes visible.
 **`internal-hard` rather than `internal`, and the class is the third member.** A record concentrates
 the durable subset of the most sensitive values in the repository — a passport's issuing country and
 validity, standing health-adjacent needs — held across trips rather than for the length of one. C3 is
-`internal` because a trip's own guard walk reaches it; nothing renders a person record in any form,
-including anonymized, and § 5.1 is where that is declared.
+`internal` because a trip's own guard walk reaches it; nothing renders a person record, and § 5.1 is
+where that is declared, together with its private-site reading: a value from the record that the
+private site admits reaches that site only through a `bound` carrier.
 
 **C23 is the second class that is not per-trip, and it reuses C22's whole arrangement rather than
 inventing beside it.** `groups/<group>.md` is the reusable-group record — a named set of person
@@ -754,8 +755,8 @@ distinction § 5.4 protects one layer down, met again here.
 
 ### 5.1 Artifact class — `publish:`, a closed four-value enum
 
-- **`bound`** — the site build reads it. Exactly the five artifacts named in
-  `reference/site-layout-spec.md` § 9.1: C1, C10, C11, C13, C15. That section remains the authority
+- **`bound`** — the site build reads it. Exactly the six artifacts named in
+  `reference/site-layout-spec.md` § 9.1: C1, C4, C10, C11, C13, C15. That section remains the authority
   and this field is its machine-readable projection. **That the two agree is asserted, and not by a
   schema.** Each schema still constrains `publish:` to the enum domain and carries no per-class
   *value*, so the correspondence was a declared gap for as long as the schemas were the only place
@@ -770,7 +771,9 @@ distinction § 5.4 protects one layer down, met again here.
   layers check different things and neither stands in for the other.
 - **`internal`** — never rendered.
 - **`internal-hard`** — never rendered **and** carrying values that must not reach a rendered page
-  **in any form, including anonymized**. Exactly C12, C14, C22 and C23.
+  **in any form, including anonymized**; on the private site only, a value
+  `reference/adr/ADR-030-what-the-private-site-may-show.md` § 2 admits there renders as its `bound`
+  carrier writes it, and never on a public page. Exactly C12, C14, C22 and C23.
 - **`output`** — the render itself: a sink, never a source.
 
 ### 5.2 Field classification

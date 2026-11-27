@@ -2,13 +2,13 @@
 
 A worked run of the **Destination Ideation** agent (`agents/destination-ideation.md`)
 — the front of IDEATION, for a group that hasn't chosen *where* to go yet. It
-turns four travelers' individual destination leanings into one ranked group
-shortlist using **equity-weighted coverage**.
+turns the destination leanings of the travelers who filled in their own form
+into one ranked group shortlist using **equity-weighted coverage**.
 
 ## Files
-- [`traveler-leanings.md`](traveler-leanings.md) — the input: four travelers'
+- [`traveler-leanings.md`](traveler-leanings.md) — the input: each traveler's
   `Would love` / `Rather skip` / `Trip vibe` (as the agent reads them from the
-  reconciled `outputs/traveler-model.md`).
+  reconciled `outputs/traveler-model.md`), one entry relayed by the organizer.
 - [`outputs/destination-shortlist.md`](outputs/destination-shortlist.md) — the
   agent's output.
 
@@ -21,6 +21,8 @@ shortlist using **equity-weighted coverage**.
 | `Trip vibe` reflected in each entry's rationale | The "Vibe:" line on every entry |
 | Recommendation only — nothing auto-picks | *Handoff* section; no destination written anywhere |
 | Hands off to DISCOVERY once chosen | *Handoff* section |
+| Counts only travelers who filled in their own form | Eli's relayed leaning appears nowhere in the shortlist; *Conflicts & coverage* says how much of the group it reflects |
+| A withheld veto reason reads as no reason | The Swiss Alps veto line carries none: Cyra's reason states a need |
 
 ## The equity point
 

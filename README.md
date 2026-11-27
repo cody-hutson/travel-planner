@@ -164,7 +164,8 @@ them yourself if you want them gone.
 Each command tells you what comes next, so you don't need to memorize them. You can also describe
 what you want, like *"we booked the hotel"* or *"find more dinner options near Bairro Alto"*, and
 Claude names the command that does it. If the group hasn't chosen a destination yet, `/trip ideas` turns
-everyone's leanings into a ranked shortlist.
+everyone's leanings into a ranked shortlist, and `/trip site` builds the private site for the group to
+decide from.
 
 | Command | Use it to |
 |---|---|

@@ -3,6 +3,95 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.79.0] — 2026-11-26 — The group sees its destination shortlist on the private site before a destination is chosen
+
+While a trip is still deciding where to go, the group can now see its destination shortlist on the
+private trip site, and only then. `/trip site` builds a page in IDEATION as well as in the plan
+modes: with no destination recorded the page carries the shortlist, and once a destination is
+recorded it does not. `/trip ideas` rebuilds the traveller model before it ranks, so a traveller's
+lasting record counts. The shortlist names only travellers who filled in their own form. On a trip
+that declares approvers, `/trip-publish update` refuses a page built before there is a plan, for
+now. No publish script is changed by this release, no published site is re-encrypted by it, and no
+trip is changed by it.
+
+**The site builds while the group is still choosing.** `/trip site` now runs in IDEATION, whatever
+the destination, as well as in every plan mode with a destination recorded; in a plan mode with no
+destination it stops, writes nothing and names `/trip-record destination` and `/trip-record mode`.
+A page built before a destination is chosen is named after the trip, carries its own hero with the
+travellers' names, and stays on disk when a destination is recorded and a new
+page is built under the destination's name; publishing, the round-trip walk and the freshness
+reports each take the newest page, and a build always leaves the page it built as the newest, even
+when it has nothing to change, so clearing the destination brings the trip's own page back. For
+that, `/trip` now pre-approves the `touch` command, and uses it only to make the page a build stands
+behind the newest, without changing a byte of it. Erasure reaches every page of a trip.
+
+**The shortlist shows on the private site while no destination is chosen, and only then.** The
+destination shortlist is now an artifact the site build reads, and the site spec gives it a Group
+Shortlist section with its ranking, its vetoes and its coverage line, an empty state and a state
+for a shortlist that has not been made yet. The round-trip walk checks the section against the
+shortlist, heading by heading, and refuses it in any other state. The section is group-only: a
+`--plaintext` publish refuses a page that carries it.
+
+**Lasting answers count.** `/trip ideas` now rebuilds the traveller model first, then ranks, on
+every run, so a leaning held on a traveller's lasting record counts toward the shortlist even when
+their trip form leaves it blank. The rebuild's report is shown as `/trip-record travelers` shows
+it, and a need or leaning the operator states in the run for a traveller with no usable form is
+carried into the rebuild as that verb carries it.
+
+**Who the shortlist may name, and what no line carries.** Only travellers who filled in their own
+form are named, or counted toward a candidate. A leaning the operator supplied for someone, or a
+third-party entry's, appears nowhere in the shortlist, not even without a name, and the shortlist
+says how many of the group its ranking reflects. No line carries a need, money, a non-filer's
+leaning or a third-party value: a skip whose reason states a need keeps the place and drops the
+reason.
+
+**A page built before there is a plan, on a trip with approvers.** Approvers approve the plan only,
+so a page built before a plan exists carries nothing for them to approve. On a trip that declares
+approvers, `/trip-publish update` refuses such a page before it runs the publish script, and names the two
+ways forward: record a destination and move the trip into a plan mode (`/trip-record destination
+<chosen>`, then `/trip-record mode DISCOVERY`, then `/trip plan` and `/trip site`), or withdraw the
+approvers. This refusal is interim: it is lifted when a later release adds an approval gate for
+pages built before there is a plan. The refusal is the command's; the publish script run from a
+terminal is unchanged. Such a page carries the coordination fields and no approval count or code.
+`/trip-record .approvers` now states its consequences truly for a trip in IDEATION.
+
+**Where the engine says a leaning may be shown.** The data architecture's never-rendered class now
+says, at its definition, that on the private site alone a value the private-site record admits
+renders as the artifact that carries it writes it, and never on a public page. The sentences that
+restated the class outside the decision records — the data architecture's own person-record
+paragraph, the person-record schema, `people/README.md`, the people-library example, the site spec
+and the cost-estimate schema — now cite that definition.
+No decision record's decisions are rewritten: `ADR-009` records the partial supersession of its
+class sentence by `ADR-030`, `ADR-035` gains a dated amendment that narrows its approver claims to a
+plan mode, and `ADR-007` gains one that corrects its count of `/trip`'s write primitives.
+
+**The suite holds it.** Group `W` of `scripts/test-artifact-schema.sh` gains the controls for the
+non-rows, the newest-page pick, the archived lifecycle, the shortlist's element fence and walk and
+its empty and degraded states; group `PJ` holds `/trip ideas`'s dispatch order. The publish guard's
+group-only arms gain the shortlist's three part tokens, derived from the fence, and its suite file is
+not edited.
+
+**Size fence.** Read against `v0.78.0`, the previous release tag, `CH_EMIT=growth bash
+scripts/test-corpus-hygiene.sh` lists one row raised and every other row kept, none new, lowered or
+dropped. `reference/site-layout-spec.md` grew 9,919 bytes to 81,851, and its row was raised from
+79,105 to 89,911 in the commit that crossed it: the IDEATION render rows and their non-row, and the
+shortlist's render rows, element fence and Group Shortlist component, are the single declared home
+of those rows and that component, and cutting them to fit would have moved a rule somewhere less
+read. Every other fenced file this release touches stays beneath its row: `skills/trip/SKILL.md`
+grew 6,545 to 115,088, beneath 118,008; `reference/adr/ADR-035-site-transitions-and-refresh.md`
+grew 1,827 to 22,170, beneath 22,378; `reference/adr/ADR-009-data-architecture.md` grew 1,676 to
+67,126, beneath 71,493; `skills/trip-publish/SKILL.md` grew 1,311 to 48,448, beneath 48,711;
+`reference/adr/ADR-007-command-entry-point.md` grew 735 to 55,358, beneath 58,860; and
+`agents/06-validator.md`, `skills/trip-record/SKILL.md`, `reference/data-architecture.md` and
+`CLAUDE.md` each grew by less than 500 bytes, beneath theirs. `people/README.md` and
+`reference/schemas/cost-estimate.md` stay below their class floor and owe no row.
+
+**What this release does not do.** It writes neither publish script, so a pre-plan page published
+from a terminal meets only the script's own checks. Whether the shortlist ranks a linked record's
+leanings, and keeps every out-of-bounds kind off every line, is the ideation agent's conduct, which
+no suite can observe; it is checked by running the commands on made-up trips before the release
+merges.
+
 ## [0.78.0] — 2026-11-26 — A traveller the operator speaks for is named before a rebuild drops them, and can be erased
 
 A traveller with no profile, whose needs the operator relayed, is now named before a rebuild drops

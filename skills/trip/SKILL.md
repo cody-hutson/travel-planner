@@ -3,7 +3,7 @@ name: trip
 description: Plan, research, check, replan or reorder a trip, capture ideas, build its site, validate its artifacts, report where it stands. The entry point.
 argument-hint: status|plan|replan|reorder|research|check|ideas|site|schema
 disable-model-invocation: true
-allowed-tools: Bash(ls:*), Bash(grep:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/validate-artifacts.sh:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/check-round-trip.sh:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/project-traveler-data.sh:*), Read, Task, Edit, Write
+allowed-tools: Bash(ls:*), Bash(grep:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/validate-artifacts.sh:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/check-round-trip.sh:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/project-traveler-data.sh:*), Read, Task, Edit, Write, Bash(touch:*)
 disallowed-tools: [Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh:*), Bash(bash:*), Bash(sh:*), NotebookEdit]
 ---
 
@@ -70,7 +70,7 @@ data-root-pointer: ${HOME}/.travel-planner/data-root
 | research | ACTIVE | IDEATION, DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING | DECIDED | G7 |
 | check | ACTIVE | any | DECIDED | G7 |
 | ideas | ACTIVE | IDEATION | UNDECIDED | G7 |
-| site | ACTIVE | DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING | DECIDED | G8 |
+| site | ACTIVE | IDEATION, DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING | any | G8 |
 | schema | ANY | any | any | G7 |
 
 The fence above and the requirement table beside it are together this file's contract
@@ -344,7 +344,7 @@ read as something a row admits.
 
 | relation | the derived side | the source side, by rule | when an operand is not observable |
 |---|---|---|---|
-| `itinerary-to-build` | the newest `trips/<slug>/outputs/*-travel-site.html` | the trip-scoped paths `site`'s own `**Reads:**` line declares as inputs to the build, read live from that line | `UNDETERMINED`, naming the operand |
+| `itinerary-to-build` | the newest `trips/<slug>/outputs/*-travel-site.html` | the trip-scoped paths `site`'s own `**Reads:**` line declares as inputs to the build in the resolved state, read live from that line | `UNDETERMINED`, naming the operand |
 | `research-to-placement` | `trips/<slug>/outputs/final-itinerary.md` | the accumulating spoke output files `research`'s agent key already derives, read live from that derivation | `UNDETERMINED`, naming the operand |
 
 **Both source sides are rules rather than lists, which is what keeps them from going stale.**
@@ -616,7 +616,7 @@ advisory list that can disagree with what the verbs actually do. Reading the sam
 dispatch reads is what keeps the index from advertising a verb the **table** would then
 refuse. It is not a guarantee of no refusal at all, and claiming one would be false: a verb
 the table admits can still stop inside its own section — `check` where no itinerary exists,
-`research` on an agent key that matches nothing. Those stops are the verb's own, declared in
+`site` in a plan mode with no destination, `research` on an agent key that matches nothing. Those stops are the verb's own, declared in
 its own section, and they are not the index disagreeing with the table.
 
 Order:
@@ -645,9 +645,11 @@ declining to advertise what this file does not implement.
 `status` declares `lifecycle: ANY` deliberately, rather than leaving that cell to its
 default. Orientation is precisely what an archived trip still needs, and on such a trip
 the rest of this file's table refuses on the `lifecycle` cell — seven of its nine rows read
-`ACTIVE` at this revision. That is conduct, not construction: **nothing grades this column.**
-The taxonomy guard reads the verb cell and the contract guard the depth cell, so a row appended
-later could carry `ANY` and no check would react. Stated as a count at a revision rather than as
+`ACTIVE` at this revision. That is conduct, not construction: **nothing grades this column but
+the `site` row's cell**, which `scripts/check-round-trip.sh` holds to `ACTIVE` because
+`reference/site-layout-spec.md` § 9.2 declares `ARCHIVED` a non-row of the render table. The
+taxonomy guard reads the verb cell and the contract guard the depth cell, so any other row
+appended later could carry `ANY` and no check would react. Stated as a count at a revision rather than as
 a property of the table, because the universal form is false the first time a slice appends a
 row — which is the failure this file's sibling names by name. So the index's third
 entry above is where the reopen path gets named, and naming it there is what makes that
@@ -1111,17 +1113,47 @@ so the per-event status bound does not quantify over it.
 
 ## ideas
 
-**Reads:** `agents/<name>.md` — the Destination Ideation prompt, the path taken from its own
-row in `CLAUDE.md`'s roster; and the traveller projection's reads (§ *Standing clause*), for the
-ideation agent. It reads nothing else: not `trip-context.md`, whose mode and destination the record block
+**Reads:** `agents/<name>.md` — the Destination Ideation prompt and the Enrichment prompt, each
+path taken from its own row in `CLAUDE.md`'s roster; and the traveller projection's reads
+(§ *Standing clause*), for the ideation agent, taken once the reconcile below has written the
+model. It reads nothing else: not `trip-context.md`, whose mode and destination the record block
 already carries by value, and not the shortlist, which is the agent's to write and this verb
-never reads back. **Agent reads, attributed:** the ideation agent reads the traveller projection
-for the group's leanings, `trips/<slug>/trip-context.md` for the dates and party, and the frontmatter of
-`trips/<slug>/outputs/destination-shortlist.md`, read before it is replaced.
-**Dispatches** Destination Ideation, in the role its roster row states, writing
+never reads back. **Agent reads, attributed:** the enrichment agent, in its reconciler role,
+reads what `skills/trip-record/SKILL.md` § `travelers` declares for that role, cited rather than
+re-derived — `trips/<slug>/travelers/*.md`, `<store-root>/people/<person-id>.md`, the record a
+file's `person:` line references, and the survivor where that record is a `merged-into:` stub,
+`trips/<slug>/trip-context.md`, `outputs/traveler-model.md`, the model it is about to replace, read
+for the reason `travelers`'s line gives, and `outputs/traveler-presence.md`, the presence file it
+is about to replace; the ideation agent reads the traveller
+projection for the group's leanings, `trips/<slug>/trip-context.md` for the dates and party, and
+the frontmatter of `trips/<slug>/outputs/destination-shortlist.md`, read before it is replaced.
+**Dispatches, in this order:** Enrichment, in its reconciler role and never the `[ENRICH]`
+research role, writing `outputs/traveler-model.md` and `outputs/traveler-presence.md`; then
+Destination Ideation, in the role its roster row states, writing
 `outputs/destination-shortlist.md` alone. That artifact is `rebuilt-each-synthesis`: on a
 re-run the agent replaces it with the current ranking rather than appending to it.
+**The reconcile runs on every invocation**, so the shortlist ranks the answers on file now,
+whether a traveller gave them on this trip's form or on the lasting record that form references.
+Where the reconcile does not complete, the chain halts there and ideation is not dispatched.
 **Non-interactive: the standing clause's *run nobody can answer*.**
+
+**The announcement.** This verb dispatches more than one agent, so the standing clause's
+announcement binds it, before the first dispatch: the set is the enrichment agent in its
+reconciler role and then Destination Ideation, each admitted unconditionally; no coupling condition is evaluated; no
+mode transition is expected and none is written; and the per-event status bound does not apply,
+because the chain does not reach the hub.
+
+**What the reconcile hands back.** Once the reconcile returns, render what its rebuild did not
+keep as § `travelers` states, the dispatch carrying the stand-in as that section's does: its
+*Surface what the rebuild did not keep* paragraph in `skills/trip-record/SKILL.md`, cited rather
+than restated here, and the `## Update signals` block enrichment produced. Name no
+planning verb for that block: this state holds no plan, so the `/trip replan` that section's
+table names for a changed need, desire or window is one this state refuses, and a `PROFILE
+MISSING` entry still names `/trip-record profile <name>`. Say once that a change this reconcile
+takes in will not signal again, because a later reconcile reads its changes against the model
+this one wrote. And say that each traveller's `Documents:` line reading `unknown`, with its
+`VERIFY` note, is expected while no destination is recorded: the reconciler derives that line
+from `## Destination`.
 
 **Why the row's destination cell reads `UNDECIDED`.** A decided destination means the ideation
 question is already answered, and running the pipeline anyway spends it re-ranking a settled
@@ -1144,14 +1176,18 @@ it. This chain does not reach the hub, so the per-event status bound does not qu
 
 ## site
 
-**Reads:** `trips/<slug>/outputs/final-itinerary.md`, `trips/<slug>/outputs/links-reference.md`
+**Reads:** in a plan mode, `trips/<slug>/outputs/final-itinerary.md`, `trips/<slug>/outputs/links-reference.md`
 and `trips/<slug>/outputs/venue-matrix.md` — the plan artifacts `reference/site-layout-spec.md` § *How to build it* names as
 the site's content sources; `trips/<slug>/trip-context.md` — the group, dates and trip-level
 constraints the hero and overview render, and no other block;
 `trips/<slug>/outputs/event-status.md` — the authoritative source
 `reference/site-layout-spec.md` § 9.1 names for booking status, *needs booking* flags,
 checklist membership and the per-card booking tiers, read because § 3 makes the site a read
-surface for status; `trips/<slug>/outputs/change-summary.md` — its dated entries
+surface for status; in IDEATION, `trips/<slug>/trip-context.md` — the `## Group` block and the
+trip's own dates, which the hero's pre-plan variant renders, and no other block — and, while no
+destination is recorded, `trips/<slug>/outputs/destination-shortlist.md`, the whole file, which the
+render table renders in that state alone; and none of the plan artifacts, which the render table
+excludes there; in both, `trips/<slug>/outputs/change-summary.md` — its dated entries
 alone, which are what raise a change in the first place, read because
 `reference/site-layout-spec.md` § 3's Coordination Notice is a read surface for the
 coordination state exactly as the checklist is for booking status;
@@ -1165,21 +1201,52 @@ a revert, and the act after a change abandoned before any approval — and
 because a date taken from this build instead would restart § 3's window on every rebuild; `reference/site-layout-spec.md` — the responsive architecture, the card
 system, the booking indicators and the § 9 round-trip rules; that same document's § 9.2
 round-trip fences, § 9.3 and § 3 component catalog, together with
-`agents/05-hub-planner.md`'s itinerary grammar, `reference/data-architecture.md` § 1.1,
+`agents/05-hub-planner.md`'s itinerary grammar and `agents/destination-ideation.md`'s output template, `reference/data-architecture.md` § 1.1,
 `reference/trip-resolution.md`'s `G5` and `G6` and this file's `site` row — read by `scripts/check-round-trip.sh`, the
 script the completeness check below invokes, rather than by this verb; the itinerary sources the
 `reference/site-layout-spec.md` § *Site References* table names, read as the quality bar rather than as templates;
-`trips/<slug>/outputs/<destination>-travel-site.html` — the **existence probe** that selects
+`trips/<slug>/outputs/*-travel-site.html` — a newest-first listing taken after the build, which
+reads the pages' order and none of their contents, for the rule below that leaves `<page>` the
+newest, and is no input to the build;
+`trips/<slug>/outputs/<page>` — the **existence probe** that selects
 creating the site from patching it, and, on the patch route, the outgoing markup read before
 it is changed, because that read is what preserves design already approved — within this run it
 is the only copy of the outgoing markup there will be, the trip tree living under `<data-root>`,
-where this repository holds no copy of it. It does **not** make the no-regenerate rule below
+where this repository holds no copy of it. `<page>` is `<trip.slug>-travel-site.html` while
+`trip.destination` is `UNDECIDED`, and `<destination>-travel-site.html` once a destination is
+recorded — the stem rule of `reference/adr/ADR-034-site-build-admission.md` § 1 — so the first
+build with a destination creates its page rather than patching the slug-named one, which stays on
+disk and is not the newest. It does **not** make the no-regenerate rule below
 checkable: after the write there is nothing left to diff the result against, so that rule stands
 as one this verb follows, not one an inspection of the tree can settle afterwards. It does not read
 `trips/<slug>/trip-log.md`: the log carries the reasoning behind choices, and the site renders
 what was chosen. **Dispatches no agent** — the site is authored directly, which is why this
 verb reaches `Write` for its own output rather than for an agent's.
 **Non-interactive: the standing clause's *run nobody can answer*.**
+
+**A build ends with its own page the newest.** Every reader takes the newest
+`*-travel-site.html` — the walk, `publish`, `update` and `rotate`, `itinerary-to-build` and
+`/trip-publish list`'s `build-to-published` — and a patch
+with nothing to change writes nothing. So after any build, and before the completeness check below
+runs, list `trips/<slug>/outputs/*-travel-site.html` newest first, `Bash(ls:*)` with `-1t`; where
+`<page>` is not the first line, run `touch -c` on `<page>` alone, quoted as that listing printed it.
+That moves its modification time and changes no byte, so the page this build stands behind is the
+one every reader takes, whichever transition left another page newer — a destination cleared after
+one was recorded, or one re-recorded onto an older destination page. The other page stays on disk,
+inert, and `Write` stays the only create path: `-c` creates nothing.
+
+**Which states build, and the two that do not.** The row names the five modes and reads `any`
+for the destination. **`UNSET` refuses** at `G7`, because the mode cell never reads `any`: say
+that the trip's mode is unset, point at `templates/trip-context.template.md` for the field's
+shape and permitted values, and name `/trip-record mode` as what sets it. **A plan mode with no
+destination stops here**: in DISCOVERY, ENRICHMENT, ITERATION or RESEQUENCING with
+`trip.destination` `UNDECIDED` the row admits the verb, and this section builds nothing, because
+no plan-phase page is built without a destination (`reference/adr/ADR-034-site-build-admission.md`
+§ 1). Name the two remedies — record the destination with `/trip-record destination`, or return
+the trip to IDEATION with `/trip-record mode` — run neither, and write nothing.
+`reference/site-layout-spec.md` § 9.2 declares that state a non-row of the render table. **On a
+trip that declares approvers, `/trip-publish update` refuses the pre-plan site an IDEATION build
+writes**; `skills/trip-publish/SKILL.md` § *update* → *Precondition* names the ways forward.
 
 **Update, do not regenerate.** Where the site exists, **patch the affected sections** and
 preserve design tweaks already approved; `Write` is reached only where the file does not
@@ -1206,13 +1273,15 @@ approval itself was recorded — the `YYYY-MM-DD` prefix of the `confirmed=` lin
 `outputs/change-summary.md`, or no entry in one, and a readable approval carrying an approval
 count and a `confirmed=` date → `updated` as well, dated and paired exactly as that limb is,
 because on a trip that declares approvers the approval record is itself the decided event, and an
-approved change for which no entry was ever written must still reach its render with its count
+approved change for which no entry was ever written must still reach a plan-mode render with its count
 and code — without it, `update` refuses the pair-less render and the refresh its refusal names
 can never clear it; no `outputs/change-summary.md`, or no entry in one, and no such record →
 `none`, with `coordination-since` omitted — the organizer's own two-line confirmation carries no
 count, so a trip that has never declared approvers reads exactly as it did before approvals existed.
 Where the state resolves to `none` the notice is **not emitted at all**; § 3 states that rule
-and this verb does not restate it.
+and this verb does not restate it. The mapping runs in every state this verb builds; where the
+render table excludes `<coordination-notice>`, as in IDEATION, `coordination-state` and
+`coordination-since` are still written into the frontmatter and the band is not emitted.
 
 **Neither the file's presence nor its `status` field is the signal, and the second of those is
 a correction.** Presence was rejected first and for a reason that still holds: C20 is
@@ -1262,10 +1331,13 @@ announce itself as recently updated, the failure `reference/schemas/travel-site.
 field exists to prevent. The `pending` limb anchors to an **entry** rather than to a run for the
 same reason.
 
-**On a trip that declares approvers, the `updated` state also carries the approval pair, from the
-same record.** Where `trips/<slug>/.change-confirmed` carries an `approval-count=` line that reads
-as a non-negative integer, this build writes `approval-count` from it and `approval-code` from that
-record's `digest=` value into its frontmatter, and § 3's `updated` band renders both; where the
+**On a trip that declares approvers, the `updated` state of a build in a plan mode also carries the
+approval pair, from the same record; an IDEATION build writes `coordination-state` and
+`coordination-since` and no approval pair, whatever the record holds, because approvers approve
+the plan only.** Where `trips/<slug>/.change-confirmed` carries an `approval-count=` line that
+reads as a non-negative integer, a plan-mode build writes `approval-count` from it and
+`approval-code` from that record's `digest=` value into its frontmatter, and § 3's `updated` band
+renders both; where the
 line is absent, neither field is written and the band is what it was. A trip that declares no
 approvers carries no such line, with one stated exception: a declaration retired by hand leaves the
 last `approval-count=` line in the record, so the last recorded count and code go on showing — on the
@@ -1302,8 +1374,9 @@ life; AC 5 asks that a site with no pending change and no *recent* update render
 does today, byte for byte.
 
 **The round-trip completeness check, run after every build and every patch.** Every element of
-`outputs/final-itinerary.md` — **every day, and every track of a split day** — still resolves
-to a rendered component or to a **named** exclusion. A dropped element is a defect; additive
+each artifact the build renders — of `outputs/final-itinerary.md`, **every day, and every track of
+a split day**; of `outputs/destination-shortlist.md`, every heading — still resolves to a
+rendered component or to a **named** exclusion. A dropped element is a defect; additive
 site scaffolding with no plan source is not.
 
 **What it runs** — a single invocation:
@@ -1318,8 +1391,8 @@ value — the standing clause's rule, applied.
 **Append `--data-root <trip.data_root>` to the line above**, using the absolute path gate
 `G0-root` resolved. Rooting the script's *path* makes the script reachable; it does not tell the
 script where your data is, and the two are different questions. `--root` is the **engine** root
-and carries the itinerary grammar and the site-layout spec the walk grades against; `--data-root`
-is the **trip** root and carries the plan and the render. The script defaults `--root` to its own
+and carries the grammars and the site-layout spec the walk grades against; `--data-root` is the
+**trip** root and carries the artifacts it walks and the render. The script defaults `--root` to its own
 parent directory, which is correct for an installed engine, so only `--data-root` is appended
 here — the same seam `schema` states below for the same reason.
 
@@ -1329,7 +1402,8 @@ checks the page's shape against. The disposition is `UNDECIDED` where `trip.dest
 
 **What it reports.** The script's own findings, rendered unaltered. This verb adds no verdict of
 its own and suppresses none of the script's. **Where the check does not close, say which element
-did not resolve and do not present the site as current.**
+did not resolve and do not present the site as current.** Where the walk reports the shortlist
+unreadable in IDEATION with no destination recorded, name `/trip ideas` as the remedy.
 
 **What the walk does not settle, so a clean run is not read as more than it is.** It grades the
 site **after** the write, never the act of writing: the trip tree lives under `<data-root>`, and
@@ -1350,20 +1424,21 @@ the rule says so. Where publishing is what the user wants, name `/trip-publish` 
 
 **`outputs/event-status.md`.** **Read** — see the read line above. **Never written**, by this
 verb or by anything it dispatches, which is nothing. This verb's one write under `outputs/` is
-its own `<destination>-travel-site.html`; every other artifact there it reads and does not
+its own `<page>` — its bytes, or, under the rule that leaves it the newest, a modification-time
+write to it alone that changes no byte; every other artifact there it reads and does not
 write, this file among them. This chain does not reach the hub, so the per-event status bound
 does not quantify over it.
 
 **It writes no byte of `trip-context.md`.** The carve-out does not admit this verb.
 
 **Depth.** The row declares `G8` because this verb announces derived-state freshness.
-This verb writes `trips/<slug>/outputs/<destination>-travel-site.html`, which is one
+This verb writes `trips/<slug>/outputs/<page>`, which is one
 relation's derived side, so it **announces the entries its own run changed** — naming each
 relation this run moved and the verdict that relation now carries — and names `status` as
 where the whole list is reported.
 
 **The announcement is not the round-trip completeness check and does not stand in for it.**
-The check above is **content-level**: it establishes that every element of the itinerary
+The check above is **content-level**: it establishes that every element the walk reached
 resolved to a rendered component or to a named exclusion. The relation is **order-level**: it
 establishes only that the build is not older than the inputs this verb's `**Reads:**` line
 declares. A build can be newest and still have dropped an element, and a build can trail its

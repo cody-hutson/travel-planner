@@ -51,7 +51,7 @@ coverage it is structurally unable to check. The invariant is asserted — see g
 | Property | Where to look |
 |---|---|
 | **The cross-trip sentinel** | `trip: cross-trip` in the frontmatter — the narrowing that lets a class with no trip sit inside a model whose universal block requires one |
-| **`publish: internal-hard`** | the frontmatter — never rendered, in any form, including anonymized |
+| **`publish: internal-hard`** | the frontmatter — never rendered; a value it holds that the private site admits reaches that site only through a `bound` carrier, by `reference/data-architecture.md` § 5.1's private-site reading |
 | **Identity in the filename, display name in the H1** | `psn-3c7e.md` and `# Noor`. The id appears nowhere inside the file and the H1 carries the name and nothing else, because the normalized H1 is the key a creation collision is refused on |
 | **Eight sections, seventeen bullets, plus the H1** | the body — eighteen durable answers, with every label byte-identical to the trip intake form's |
 | **The four dropped sections** | their absence, explained in the record's own prose — each is dropped by field classification, not by editorial choice |
