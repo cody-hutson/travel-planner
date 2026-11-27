@@ -3,7 +3,7 @@ name: trip
 description: Plan, research, check, replan or reorder a trip, capture ideas, build its site, validate its artifacts, report where it stands. The entry point.
 argument-hint: status|plan|replan|reorder|research|check|ideas|site|schema
 disable-model-invocation: true
-allowed-tools: Bash(ls:*), Bash(grep:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/validate-artifacts.sh:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/check-round-trip.sh:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/project-traveler-data.sh:*), Read, Task, Edit, Write
+allowed-tools: Bash(ls:*), Bash(grep:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/validate-artifacts.sh:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/check-round-trip.sh:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/project-traveler-data.sh:*), Read, Task, Edit, Write, Bash(touch:*)
 disallowed-tools: [Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh:*), Bash(bash:*), Bash(sh:*), NotebookEdit]
 ---
 
@@ -1190,6 +1190,9 @@ round-trip fences, § 9.3 and § 3 component catalog, together with
 `reference/trip-resolution.md`'s `G5` and `G6` and this file's `site` row — read by `scripts/check-round-trip.sh`, the
 script the completeness check below invokes, rather than by this verb; the itinerary sources the
 `reference/site-layout-spec.md` § *Site References* table names, read as the quality bar rather than as templates;
+`trips/<slug>/outputs/*-travel-site.html` — a newest-first listing taken after the build, which
+reads the pages' order and none of their contents, for the rule below that leaves `<page>` the
+newest, and is no input to the build;
 `trips/<slug>/outputs/<page>` — the **existence probe** that selects
 creating the site from patching it, and, on the patch route, the outgoing markup read before
 it is changed, because that read is what preserves design already approved — within this run it
@@ -1205,6 +1208,16 @@ as one this verb follows, not one an inspection of the tree can settle afterward
 what was chosen. **Dispatches no agent** — the site is authored directly, which is why this
 verb reaches `Write` for its own output rather than for an agent's.
 **Non-interactive: the standing clause's *run nobody can answer*.**
+
+**A build ends with its own page the newest.** Every reader takes the newest
+`*-travel-site.html` — the walk, `publish`, `update` and `rotate`, and both freshness relations — and a patch
+with nothing to change writes nothing. So after any build, and before the completeness check below
+runs, list `trips/<slug>/outputs/*-travel-site.html` newest first, `Bash(ls:*)` with `-1t`; where
+`<page>` is not the first line, run `touch -c` on `<page>` alone, quoted as that listing printed it.
+That moves its modification time and changes no byte, so the page this build stands behind is the
+one every reader takes, whichever transition left another page newer — a destination cleared after
+one was recorded, or one re-recorded onto an older destination page. The other page stays on disk,
+inert, and `Write` stays the only create path: `-c` creates nothing.
 
 **Which states build, and the two that do not.** The row names the five modes and reads `any`
 for the destination. **`UNSET` refuses** at `G7`, because the mode cell never reads `any`: say
@@ -1395,7 +1408,8 @@ the rule says so. Where publishing is what the user wants, name `/trip-publish` 
 
 **`outputs/event-status.md`.** **Read** — see the read line above. **Never written**, by this
 verb or by anything it dispatches, which is nothing. This verb's one write under `outputs/` is
-its own `<page>`; every other artifact there it reads and does not
+its own `<page>` — its bytes, or, under the rule that leaves it the newest, a modification-time
+write to it alone that changes no byte; every other artifact there it reads and does not
 write, this file among them. This chain does not reach the hub, so the per-event status bound
 does not quantify over it.
 
