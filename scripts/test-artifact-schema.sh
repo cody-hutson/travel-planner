@@ -32972,7 +32972,7 @@ fi
 #         pass writes again from operator input, and bounds the stand-in by the roster and the mark;
 #         each anchor exactly once, whitespace folded; and the naming's opening clause and the
 #         stand-in's bound each exactly once in § *Missing or blank profile*, the section its
-#         citers name, with a move control.
+#         citers name, with a move control, and a planted control on where that section ends.
 #   OP0   the verbs that dispatch the reconciler, found by a test with no verb name in it, and
 #         failing closed: a region that names the reconciler is admitted, or declares that it
 #         dispatches no agent, or is red; and each admitted verb's declared read of the model says
@@ -33046,25 +33046,30 @@ op_sent1() {
     !done { ok = 1; for (i = 1; i <= n; i++) if (P[i] != "" && !index($0, P[i])) ok = 0; if (ok) { print; done = 1 } }' <<<"$(op_sents "$t")"
 }
 # op_sec <text> <heading> — the lines of the section whose heading line begins with <heading>, from
-# that line to the next heading of the same or a higher level; a `#` line inside a fence, indented
-# or not, is no heading. Nothing where no heading line begins with <heading>.
+# that line to the next heading of the same or a higher level; a `#` line inside a fence is no
+# heading. A fence opens and closes only on an unindented fence line, op_zoneb's rule (Dev Testing
+# F-21): CommonMark ends an indented fence inside a list item at the first line not indented to the
+# item's content, so a column-0 `#` line between indented fence lines renders as a heading, and is
+# one here. Where the rule errs — a column-0 `#` line inside an indented fence at the top level,
+# which CommonMark keeps as code — the section ends early, which fails closed. Nothing where no
+# heading line begins with <heading>.
 op_sec() {
   OP_SH="$2" LC_ALL=C awk '
-    /^[ \t]*```/ { d = !d }
+    /^```/ { d = !d }
     !d && /^#+ / { l = index($0, " ") - 1; if (on && l <= lv) exit; if (!on && index($0, ENVIRON["OP_SH"]) == 1) { on = 1; lv = l } }
     on { print }' <<<"$1"
 }
 # op_secmv <text> <heading> <phrase> — <text> with the paragraph (the lines between blank lines)
 # inside the section op_sec reads that carries <phrase>, whitespace folded, moved to just after the
-# heading that ends the section, so it opens the next one. Exit 3, the text unchanged, where no such
-# paragraph or no next heading exists.
+# heading that ends the section, so it opens the next one; its fence rule is op_sec's. Exit 3, the
+# text unchanged, where no such paragraph or no next heading exists.
 op_secmv() {
   OP_SH="$2" OP_SP="$3" LC_ALL=C awk '
     { L[NR] = $0 }
     END {
       p = ENVIRON["OP_SP"]; gsub(/[ \t\r]+/, " ", p)
       for (i = 1; i <= NR; i++) {
-        if (L[i] ~ /^[ \t]*```/) d = !d
+        if (L[i] ~ /^```/) d = !d
         if (d || L[i] !~ /^#+ /) continue
         l = index(L[i], " ") - 1
         if (s && l <= lv) { e = i; break }
@@ -33129,7 +33134,12 @@ op_pins() {
 # the naming paragraph's opening clause and the stand-in's bound must each stand exactly once in
 # it, read by op_sec from its heading to the next heading of the same or a higher level. MUST-FIRE:
 # each, its paragraph moved into the next section in a copy, drops the section's count by exactly
-# 1 while the file's stays as it was — which a reader of the whole file would not show.
+# 1 while the file's stays as it was — which a reader of the whole file would not show. The
+# section ends where the document renders its end (Dev Testing F-21). MUST-FIRE: the text with its
+# code sample's `  ## [Name]` de-indented to column 0, a heading CommonMark renders, reads a
+# shorter section, and op_secmv on it moves the naming's paragraph nowhere — which a reader that
+# toggles a fence on an indented fence line would not show. A plant that does not land fails
+# closed.
 OP1_SECH='### Missing or blank profile'
 OP1_SECP=(
   'Name each one you drop, before you write'
@@ -33150,10 +33160,24 @@ for op_a in "${OP1_SECP[@]}"; do
     fi
   fi
 done
+OP1_PLT="$(OP_SH="$OP1_SECH" LC_ALL=C awk '!on && index($0, ENVIRON["OP_SH"]) == 1 { on = 1 } on && !done && $0 == "  ## [Name]" { sub(/^  /, ""); done = 1 } { print }' <<<"$OP1_T")"
+OP1_PLN="$(LC_ALL=C awk '$0 == "  ## [Name]" { n++ } END { print n + 0 }' <<<"$(op_sec "$OP1_T" "$OP1_SECH")")"
+OP1_PL0="$(LC_ALL=C awk '$0 == "  ## [Name]" { n++ } END { print n + 0 }' <<<"$OP1_T")"
+OP1_PL1="$(LC_ALL=C awk '$0 == "  ## [Name]" { n++ } END { print n + 0 }' <<<"$OP1_PLT")"
+OP1_PSEC="$(op_fold "$(op_sec "$OP1_PLT" "$OP1_SECH")")"
+op_secmv "$OP1_PLT" "$OP1_SECH" "${OP1_SECP[0]}" >/dev/null; OP1_PMV=$?
+OP1_PBAD=""
+if [ "$OP1_PLN" -lt 1 ] || [ "$OP1_PL1" -ne $((OP1_PL0 - 1)) ]; then
+  OP1_PBAD="the plant did not land: § *Missing or blank profile* holds $OP1_PLN code-sample line(s) \`  ## [Name]\` (must be at least 1), and the de-indented copy holds $OP1_PL1 against the text's $OP1_PL0 (must be one fewer)"
+elif [ "${#OP1_PSEC}" -lt 1 ] || [ "${#OP1_PSEC}" -ge "${#OP1_SEC}" ] || [ "$OP1_PMV" -ne 3 ]; then
+  OP1_PBAD="the text with its code sample's \`  ## [Name]\` de-indented read § *Missing or blank profile* as ${#OP1_PSEC} folded byte(s) against the text's ${#OP1_SEC} (must be fewer, and not 0), and op_secmv on it exited $OP1_PMV for the naming's paragraph (must be 3, moving nothing)"
+fi
 OP_PINS_XBAD=""; OP_PINS_XMISS=""
 [ "$OP1_SBAD" -eq 0 ] || OP_PINS_XBAD="$OP1_SBAD of the ${#OP1_SECP[@]} section anchor(s) present, its paragraph moved into the next section in a copy, did not drop § *Missing or blank profile*'s count by exactly 1 with the file's left as it was"
+[ -z "$OP1_PBAD" ] || OP_PINS_XBAD="${OP_PINS_XBAD:+$OP_PINS_XBAD; and }$OP1_PBAD"
 [ "$OP1_SOK" -eq "${#OP1_SECP[@]}" ] || OP_PINS_XMISS="$OP1_SOK of the ${#OP1_SECP[@]} section anchor(s) stand exactly once in § *Missing or blank profile*, read from its heading to the next of the same or a higher level (${#OP1_SEC} folded byte(s)); each listed with its count:$OP1_SMISS"
 OP_PINS_XSAY="and in § *Missing or blank profile*, read from its heading to the next of the same or a higher level, the naming's opening clause and the stand-in's \`[THIRD-PARTY]\` bound — ${#OP1_SECP[@]} section anchor(s) — stand exactly once each, and each, its paragraph moved into the next section in a copy, drops the section's count by 1 and leaves the file's as it was"
+OP_PINS_XSAY="$OP_PINS_XSAY; and the section ends where the document renders its end: the text with its code sample's \`  ## [Name]\` de-indented reads it as ${#OP1_PSEC} folded byte(s) against ${#OP1_SEC}, and moves the naming's paragraph nowhere"
 op_pins 'OP1' 'the reconciler names each `[OPERATOR-PROVIDED]`-only entry its rebuild drops, before its write' "$OP_ENR" \
   'Name each one you drop, before you write' \
   '`reference/adr/ADR-049-what-a-rebuild-owes.md` Decisions 1–2' \
