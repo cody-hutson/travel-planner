@@ -14755,16 +14755,23 @@ er28_pins() {
   printf '%d\n' "$n"
 }
 ER28_DMF="$ROOT/reference/data-model.md"
-# er28_class <field> -> the Class cell of that field's row in § *The classification*, bold removed.
+# er28_class <label> -> the Class of the field whose current label, or one of whose former labels, is
+# <label>, read through ft_rows and ft_former_rows. Row 39 lists labels a person's file carries, and a file
+# written before a reword carries the former one (ADR-053 Decision 3), so a former label resolves too.
 er28_class() {
   [ -r "$ER28_DMF" ] || return 0
-  awk -F'|' -v f="$1" '
-    index($0, "### The classification") == 1 { on = 1; next }
-    on && /^## / { on = 0 }
-    on && /^\|[ \t]*[0-9]+[ \t]*\|/ {
-      x = $3; gsub(/[` \t]/, "", x); y = f; gsub(/[ \t]/, "", y)
-      if (x == y) { c = $5; gsub(/[* \t]/, "", c); print c; exit }
-    }' "$ER28_DMF"
+  LIT_F="$1" awk -F'\t' 'BEGIN { f = ENVIRON["LIT_F"] }
+    FILENAME == ARGV[1] { if ($1 == "R" && $4 == f) fk[$3] = 1; next }
+    !d && $3 != "" && ($3 == f || ($11 != "" && ($11 in fk))) { print $4; d = 1 }' <(ft_former_rows "$ER28_DMF") <(ft_rows "$ER28_DMF")
+}
+# er28_spellings — every spelling of each field row 39 lists: the label as listed, the field's current
+# label, and each former label, one a line, so a slot line written under any of them is reached.
+er28_spellings() {
+  printf '%s\n' "$1" | awk -F'\t' '
+    FILENAME == ARGV[1] { if ($3 != "" && $11 != "") { cur[$11] = $3; kc[$3] = $11 }; next }
+    FILENAME == ARGV[2] { if ($1 == "R") { nf[$3]++; fo[$3, nf[$3]] = $4; kf[$4] = $3 }; next }
+    NF { print; k = ($0 in kc) ? kc[$0] : (($0 in kf) ? kf[$0] : "")
+         if (k != "") { print cur[k]; for (i = 1; i <= nf[k]; i++) print fo[k, i] } }' <(ft_rows "$ER28_DMF") <(ft_former_rows "$ER28_DMF") - | awk '!s[$0]++'
 }
 ER28_LOC="$(awk -F'\t' '$1 == 39 { print $2 }' <<<"$ER_TROWS")"
 ER28_LABELS="$(grep -o '`[A-Z][^`]*:`' <<<"$ER28_LOC" | tr -d '`' | sed 's/:$//')"
@@ -14778,10 +14785,13 @@ while IFS= read -r er28_l; do
 done <<EOF
 $ER28_LABELS
 EOF
-ER28_SOLO="$(er28_class "Solo, I'd")"
-# er28_slots <text> -> each listed label's line, with the lines that continue it.
+# The control field is named by its key, its label read from the table (ADR-053 Decision 4 limb 2).
+ER28_SOLO_LAB="$(ft_spellings "$ER28_DMF" solo | awk 'NR == 1')"
+ER28_SOLO="$(er28_class "$ER28_SOLO_LAB")"
+ER28_WJ="$(er28_spellings "$ER28_LABELS" | awk 'NF { o = o (o == "" ? "" : "|") $0 } END { print o }')"
+# er28_slots <text> -> each listed field's line, under any of its spellings, with the lines that continue it.
 er28_slots() {
-  awk -v L="$ER28_LJ" '
+  awk -v L="$ER28_WJ" '
     BEGIN { n = split(L, a, "|"); for (k = 1; k <= n; k++) want[a[k]] = 1 }
     /^[ \t]*- [^*]*\*\*[^*]+:\*\*/ {
       l = $0; sub(/^[^*]*\*\*/, "", l); sub(/:\*\*.*$/, "", l)
@@ -14818,11 +14828,11 @@ ER28_DISP="$(er_row_disp 39)"
 if [ -z "$ER28_LOC" ] || [ "$ER28_NLAB" -lt 1 ] || [ -z "$ER28_OT" ] || [ "$ER28_NSL" -lt 1 ]; then
   FAIL "ER28: measured nothing — reach row 39 read '${ER28_LOC:-<absent>}' listing $ER28_NLAB label(s), the fixture's travelers/odile.md read=$([ -n "$ER28_OT" ] && echo 1 || echo 0), and its listed slots yielded $ER28_NSL line(s). Another traveller's name slots cannot be graded against a row or a file that is not there"
 elif [ "$ER28_STRIPBAD" -ne 0 ] || [ "$ER28_P1" -ne $((ER28_NAME + 1)) ] || [ "$ER28_P2S" -ne "$ER28_NAME" ] || [ "$ER28_P2W" -ne $((ER28_WHOLE + 1)) ] || [ -z "$ER28_SOLO" ] || [ "$ER28_SOLO" = "TRIP" ]; then
-  FAIL "ER28: BROKEN PROBE — $ER28_STRIPBAD of the $ER28_PIN present phrase(s) did not drop the count by exactly 1 when stripped; the name planted in \`Split off with:\` read $ER28_P1 over the slots (must be $((ER28_NAME + 1))); planted on a \`Solo, I'd:\` line it read $ER28_P2S over the slots (must be $ER28_NAME) and $ER28_P2W over the file (must be $((ER28_WHOLE + 1))); and the class reader read \`Solo, I'd\` as '${ER28_SOLO:-<no row>}' (must be a class other than TRIP). Until each fires, a verdict below is the instrument's"
+  FAIL "ER28: BROKEN PROBE — $ER28_STRIPBAD of the $ER28_PIN present phrase(s) did not drop the count by exactly 1 when stripped; the name planted in \`Split off with:\` read $ER28_P1 over the slots (must be $((ER28_NAME + 1))); planted on a \`Solo, I'd:\` line it read $ER28_P2S over the slots (must be $ER28_NAME) and $ER28_P2W over the file (must be $((ER28_WHOLE + 1))); and the class reader read solo's label \`${ER28_SOLO_LAB:-<none>}\` as '${ER28_SOLO:-<no row>}' (must be a class other than TRIP). Until each fires, a verdict below is the instrument's"
 elif [ "$ER28_DISP" != "REACH" ] || [ -n "$ER28_NOTTRIP" ] || [ "$ER28_PIN" -ne "$ER28_N" ] || [ "$ER28_TOK" -lt 2 ] || [ "$ER28_NAME" -ne 0 ]; then
   FAIL "ER28: another traveller's name slots are not reached as row 39 must reach them — row 39 reads ${ER28_DISP:-<none>} (must be REACH); labels not classed TRIP:${ER28_NOTTRIP:- none}; $ER28_PIN of the $ER28_N operative phrase(s) present (missing:${ER28_MISSING:- none}); and in travelers/odile.md the slots carry the token $ER28_TOK time(s) (must be at least 2) and the name on this trip $ER28_NAME time(s) (must be 0). A slot a person record could hold would be restored by the next reconcile, and a slot left naming the subject brings the name back on an active trip"
 else
-  PASS "ER28: row 39 reads REACH over $ER28_NLAB listed label(s) (${ER28_LJ}), every one classed TRIP — the class no person record holds, so a reconcile cannot restore the name; travelers/odile.md's $ER28_NSL slot line(s) carry the token $ER28_TOK time(s) and the name on this trip 0; and § \`erase\` carries all $ER28_N operative phrase(s), row 39's bounds and Phase B's protected names among them. Every control fired: a plant in \`Split off with:\` reads 1 more, a plant on a \`Solo, I'd:\` line reads none over the slots and 1 more over the file, the class reader reads \`Solo, I'd\` as $ER28_SOLO, and each phrase stripped moves the count by 1"
+  PASS "ER28: row 39 reads REACH over $ER28_NLAB listed label(s) (${ER28_LJ}), every one classed TRIP — the class no person record holds, so a reconcile cannot restore the name; travelers/odile.md's $ER28_NSL slot line(s) carry the token $ER28_TOK time(s) and the name on this trip 0; and § \`erase\` carries all $ER28_N operative phrase(s), row 39's bounds and Phase B's protected names among them. Every control fired: a plant in \`Split off with:\` reads 1 more, a plant on a \`Solo, I'd:\` line reads none over the slots and 1 more over the file, the class reader reads solo's label \`$ER28_SOLO_LAB\`, read by key, as $ER28_SOLO, and each phrase stripped moves the count by 1"
 fi
 
 # ── ER29 — A THIRD-PARTY MEMBER'S STALE ROW KEEPS ITS NAME, ITS KEY AND ITS PLACE IN THE COUNT (#1791,
