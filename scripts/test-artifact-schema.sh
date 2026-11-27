@@ -22642,6 +22642,10 @@ mc_census() {
 }
 # mc_class <decl-records> <section> <label> — the class the declaration gives the pair, if any.
 mc_class() { awk -F'\t' -v s="$2" -v l="$3" '$1 == "ROW" && $3 == s && $4 == l { print $2 }' <<<"$1"; }
+# mc_label <data-model> <key> — the current label of the one labelled row of the table keyed <key>, or
+# nothing when no row or more than one carries it. An arm reads a field's label through it rather than
+# spelling one, so a reword moves the arm's input with its field (ADR-053 Decision 4 limb 2).
+mc_label() { ft_rows "$1" | awk -F'\t' -v k="$2" '$11 == k { n++; l = $3 } END { if (n == 1) print l }'; }
 
 # mc_channels <adr-026> — the channel table and the axis table, read INSIDE § 3 and nowhere else.
 # Records: HDR <axis-1> <axis-2> · AXIS <name> <values> · CH <key> <channel> <cell-1> <cell-2>
@@ -22975,8 +22979,26 @@ if [ "$MC_OK" -eq 1 ]; then
   mc0_arm MC0f1 'the declaration is absent — 0 sites' "a copy of the record with the fence deleted" nofence
   mc0_arm MC0f2 '0 rows' "a copy with every row deleted and the fence's comments kept" norows
   mc0_arm MC0f3 '2 sites' "a copy carrying a second copy of the fence" twofences
-  mc0_arm MC0f4 'resolves to no field' "a copy in which the label cell 'Blackout' reads 'Blackout dates', § 2's words for the field rather than its label" relabel 'Dates & availability' 'Blackout' 'Blackout dates'
+  # MC0f4, MC0f7 and MC0f8 plant on the row keyed MC0_BK, the field § 2 names in words that are not
+  # its label. The label and the row's retired four-cell form are read from the table and from the
+  # declaration, never spelled.
+  MC0_BK='blackout'
+  MC0_BLAB="$(mc_label "$MC_DM" "$MC0_BK")"
+  MC0_B4="$(awk -F'\t' -v k="$MC0_BK" '$1 == "ROW" && $7 == k { print $2 " | " $3 " | " $4 " | " $5 }' <<<"$MC_DECL")"
+  mc0_arm MC0f4 'names no key the classification table carries' "a copy in which the key cell '$MC0_BK' reads '$MC0_BK-dates', a key in the grammar that the table does not carry" rekey "$MC0_BK" "$MC0_BK-dates"
   mc0_arm MC0f5 'unparseable row' "a copy in which the last field row loses its as-written cell" dropcell "$MC0_SEC" "$MC0_LAB"
+  if [ -n "$MC0_BLAB" ]; then
+    mc0_arm MC0f7 'whose key cell is not a field key' "a copy in which the key cell '$MC0_BK' reads the field's label '$MC0_BLAB', which the key grammar does not admit" rekey "$MC0_BK" "$MC0_BLAB"
+    md_flips mc_decl 'MC0f7' mc0_arm MC0f7 'whose key cell is not a field key' "a copy in which the key cell '$MC0_BK' reads the field's label '$MC0_BLAB', which the key grammar does not admit" rekey "$MC0_BK" "$MC0_BLAB"
+  else
+    FAIL "MC0f7: fixture integrity — the table carries no one labelled row keyed '$MC0_BK', so there is no label to plant in its key cell"
+  fi
+  if [ -n "$MC0_B4" ]; then
+    mc0_arm MC0f8 'unparseable row' "a copy in which the row keyed '$MC0_BK' is written in the retired four-cell form '$MC0_B4'" swaprow "$MC0_BK" "$MC0_B4"
+    md_flips mc_decl 'MC0f8' mc0_arm MC0f8 'unparseable row' "a copy in which the row keyed '$MC0_BK' is written in the retired four-cell form '$MC0_B4'" swaprow "$MC0_BK" "$MC0_B4"
+  else
+    FAIL "MC0f8: fixture integrity — the declaration carries no row keyed '$MC0_BK', so there is no row to write in its retired four-cell form"
+  fi
   # MC0f6 / MC0n1 — the CORPUS-WIDE count, which a copy of the record cannot reach. One file under
   # the temporary directory joins the tracked list: carrying a whole-line opener it must make
   # two sites; naming the tag in running text, and behind an indent, it must leave one.
@@ -30132,7 +30154,9 @@ cfctl_assert
 # renamed in its row refuses every line that names it, the lines counted from the copy by position, never
 # spelled: each as naming no key the table carries, or, where a refused L3 stands above it under the same
 # P turn, as an L3 left under no P turn. No line that does not name it is refused for the first reason,
-# and no line is refused for any third.
+# and no line is refused for any third. CIAC-2: it FAILs when the path group MC's MC6 exported as
+# MC6_C4_DIR is unset or is not the path it read itself, so the two arms are shown to grade one reword on
+# one copy rather than said to; MC runs before CF, so an unset path is an MC6 that did not run.
 # cf8_stream <copy> <scratch> — the reader over a copy's fixtures, the form model built from that copy.
 cf8_stream() {
   local files
@@ -30208,8 +30232,10 @@ cf8_assert() {
     FAIL "CF8: CONTROL b did not fire as specified — with $k1's key renamed in its row, $nref line(s) of the copy name $k1 and $n3 are refused as naming no key the table carries; left unrefused: [${unref:-none}]; refused so though they name no $k1: [${stray:-none}]"
   elif [ -n "$other" ]; then
     FAIL "CF8: CONTROL b refused a line for another reason — $other"
+  elif [ -z "${MC6_C4_DIR:-}" ] || [ "$MC6_C4_DIR" != "$rw" ]; then
+    FAIL "CF8: CIAC-2 does not hold — group MC's MC6 exported '${MC6_C4_DIR:-no path}' as the copy it read, and this arm read ${rw#"$WORK/"}, so the two criterion-4 arms are not shown to grade one reword on one copy; MC runs before CF, so no path is an MC6 that did not run"
   else
-    PASS "CF8: on the shared copy ft_c4_copy builds (CF8_C4_DIR, ${rw#"$WORK/"}), $(awk -F'\t' '{ printf "%s%s → %s", s, $1, $2; s = "; " }' <<<"$FT_C4_REWORD") reworded in their two statements, each with its former label declared, leave the reader's stream — $(awk 'END { print NR }' <<<"$srw") record(s) — byte-identical to the unreworded copy's, with c4-label-word's FB-C at $lw and c4-confirm-word's RS-21 at $cw. CONTROL a: with no former label declared, c4-label-word reads $nlw ($nlwd) and c4-confirm-word $ncw, and nothing else moves but the totals. CONTROL b: $k1's key renamed in its row refuses every one of the $nref line(s) that name it, counted from the copy by position — $n3 as naming no key the table carries and $nk as an L3 left under no P turn by the refused L3 above it — and refuses no line for a third reason"
+    PASS "CF8: on the shared copy ft_c4_copy builds (CF8_C4_DIR, ${rw#"$WORK/"}, the path MC6 exported as MC6_C4_DIR),$(awk -F'\t' '{ printf "%s%s → %s", s, $1, $2; s = "; " }' <<<"$FT_C4_REWORD") reworded in their two statements, each with its former label declared, leave the reader's stream — $(awk 'END { print NR }' <<<"$srw") record(s) — byte-identical to the unreworded copy's, with c4-label-word's FB-C at $lw and c4-confirm-word's RS-21 at $cw. CONTROL a: with no former label declared, c4-label-word reads $nlw ($nlwd) and c4-confirm-word $ncw, and nothing else moves but the totals. CONTROL b: $k1's key renamed in its row refuses every one of the $nref line(s) that name it, counted from the copy by position — $n3 as naming no key the table carries and $nk as an L3 left under no P turn by the refused L3 above it — and refuses no line for a third reason"
   fi
 }
 cf8_assert
