@@ -23823,14 +23823,25 @@ if [ "$MC_OK" -eq 1 ]; then
   MC5_X1N="$(awk -F'\t' -v s="$MC5_X1SEC" '$1 == "ROW" && $3 == s { n++ } END { print n + 0 }' <<<"$MC_DECL")"
   MC5_X1FIRST="$(awk -F'\t' -v s="$MC5_X1SEC" '$1 == "ROW" && $3 == s && !n++ { print $4 }' <<<"$MC_DECL")"
   MC5_X1KEYS="$(awk -F'\t' -v s="$MC5_X1SEC" '$1 == "ROW" && $3 == s { printf "%s%s", (n++ ? " " : ""), $7 }' <<<"$MC_DECL")"
-  # mc5f5_word <data-model> — the words MC5f5's em-dash row cites, naming rooming: its label in <data-model>,
-  # lower-cased.
-  mc5f5_word() { mc_label "$1" rooming | tr '[:upper:]' '[:lower:]'; }
+  # mc5f5_word <data-model> — the words MC5f5's em-dash row cites, naming rooming: the one of its spellings
+  # in <data-model>, current or former (ft_spellings), that is the words the declaration's own row for
+  # rooming cites — which MC5 holds to an IN bullet of § 2 — lower-cased. ADR-030's prose is never
+  # rewritten, so after a reword of rooming those words are a former label, not the current one.
+  mc5f5_word() {
+    local aw
+    aw="$(mc5_aw rooming | tr '[:upper:]' '[:lower:]')"
+    [ -n "$aw" ] || return 0
+    ft_spellings "$1" rooming | tr '[:upper:]' '[:lower:]' | awk -v w="$aw" '$0 == w && !n++'
+  }
   # mc5f5_arm <data-model> — MC5f5 over <data-model>, the live one or a control's planted one: a copy of the
   # record with one more row naming no field, citing mc5f5_word's words, raises exactly the (ii-c) finding.
   mc5f5_arm() {
     local w
     w="$(mc5f5_word "$1")"
+    if [ -z "$w" ]; then
+      FAIL "MC5f5: fixture integrity — no spelling of rooming, current or former, is the words '$(mc5_aw rooming)' the declaration's row for it cites, so the plant would cite words that name no field or that no IN bullet carries"
+      return 0
+    fi
     mc5_arm_on "$1" MC5f5 'ii-c' "MC5: the em-dash row IN | $MC_EM | $w cites words that name a field — '$w' equals a label, a former label or a section name" 1 "a copy with one more row naming no field, citing a field's label" addrow rooming "IN | $MC_EM | $w"
   }
   mc5_arm MC5n2 '' '' 0 "a copy whose rows are reversed and re-spaced, every pipe set tight" reverse
