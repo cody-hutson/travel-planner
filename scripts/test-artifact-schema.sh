@@ -5511,7 +5511,8 @@ ft_row_set() {
 #   reword    each field FT_C4_REWORD names has its label reworded in its TWO statements — its guided
 #             form's bullet, and its row's Field cell, the row found by its key through ft_row_set — and
 #             its former label declared in the field-former-label-declaration fence (ADR-053 Decision 3)
-#   noformer  the same rewords, and no former label declared: what a criterion-4 arm's control reads
+#   noformer  the same rewords, and no former label declared for a field it rewords — any its source
+#             declares stripped (ft_c4_strip): what a criterion-4 arm's control reads
 #   base      no reword: what the reworded copy is compared against
 # Every variant carries the same two plants, each fbc-check.txt with one change, both naming the first
 # field's old label word: c4-label-word, whose follow-up carries that word, which FB-C's bullet 4 admits
@@ -5606,6 +5607,21 @@ ft_c4_former() {
     { print }
     END { exit !(o == 1 && done == 1) }' "$1" > "$t" && mv "$t" "$1"
 }
+# ft_c4_strip <data-model> <key> — every row of the ONE former-label fence keyed <key> removed, every other
+# line kept; 1 when the fence does not stand exactly once. A copy that declares no former label for a field
+# must declare none whatever its source declared: a source after a real reword already declares one.
+ft_c4_strip() {
+  local t
+  t="$(mktemp "$WORK/ft/c4-strip.XXXXXX")" || return 1
+  LIT_KEY="$2" LC_ALL=C awk -v tag='```'"$FT_FORMER_TAG" '
+    { l = $0; sub(/[ \t\r]+$/, "", l) }
+    !on && l == tag { o++; on = 1; print; next }
+    on && substr(l, 1, 3) == "```" { on = 0; print; next }
+    on { t = l; sub(/^[ \t]+/, "", t)
+         if (t != "" && substr(t, 1, 1) != "#") { split(l, c, "|"); k = c[1]; gsub(/^[ \t]+|[ \t]+$/, "", k); if (k == ENVIRON["LIT_KEY"]) next } }
+    { print }
+    END { exit !(o == 1) }' "$1" > "$t" && mv "$t" "$1"
+}
 # ft_c4_plant <fbc-check> <dir> <word> — the two plants, each landing its one change exactly once.
 ft_c4_plant() {
   LIT_W="$3" LC_ALL=C awk -v out="$2/c4-label-word.txt" '
@@ -5645,6 +5661,11 @@ ft_c4_copy() {
     done <<<"$FT_C4_REWORD"
     if [ "$v" = reword ]; then
       ft_c4_former "$dm" "$fr" || { ft_c4_why "$v" "the former-label fence does not stand exactly once in the copy of the data model"; return 1; }
+    else
+      while IFS=$'\t' read -r k _; do
+        [ -n "$k" ] || continue
+        ft_c4_strip "$dm" "$k" || { ft_c4_why "$v" "the former-label fence does not stand exactly once in the copy of the data model"; return 1; }
+      done <<<"$FT_C4_REWORD"
     fi
   fi
   lab="$(ft_rows "$src/reference/data-model.md" | awk -F'\t' -v k="${FT_C4_REWORD%%$'\t'*}" '$11 == k && !d { print $3; d = 1 }')"
