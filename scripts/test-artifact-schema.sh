@@ -4479,6 +4479,10 @@ st_cf_unres_note() { [ -z "$ST_CF_UNRES" ] || printf '%s — ' "$ST_CF_UNRES"; }
 #                                picks between two rows and has no label-only fallback: a
 #                                caller treats AMBIG as FAIL, and NONE as FAIL unless its own
 #                                stated rule exempts it
+#   ft_resolve_written <rows-file> <former-file>   ft_resolve for a WRITTEN profile: a bullet's label
+#                                also matches a row by one of its key's former labels. The readers of
+#                                the tracked example profiles use it; a form reader never does
+#   ft_spellings <data-model> <key>   a field's current label, then its former labels, one a line
 #   ft_under <rows> <headings>   the labelled rows whose section leads one of the headings
 #   ft_heads <file…>             every `## ` heading, with `## ` and trailing space, tab and CR
 #                                removed — the heading shape every caller hands the resolver
@@ -4500,6 +4504,8 @@ st_cf_unres_note() { [ -z "$ST_CF_UNRES" ] || printf '%s — ' "$ST_CF_UNRES"; }
 #   FT3  every cell on every axis is inside that axis's closed vocabulary, and `Ovr?` follows
 #        from `Class` — which is also where a reordered column lands
 #   FT4  the resolver itself, graded on a synthetic table that carries both hazards
+#   FT4w the written-profile resolver, on a synthetic table whose field carries former labels: a former
+#        label resolves, under its own section only, and a collision with a current label reads AMBIG
 #   FT5  every labelled row is REACHED by a bullet of a tracked form, unless its own rationale
 #        declares it bullet-less — the rows→fields direction. The fields→rows direction is
 #        RL1's, XT1's and ST3's, which resolve every bullet they read
@@ -4520,9 +4526,10 @@ st_cf_unres_note() { [ -z "$ST_CF_UNRES" ] || printf '%s — ' "$ST_CF_UNRES"; }
 #   FT10 a declared former label still named in an agent prompt or a skill: a pointer shape FAILs and
 #        any other mention is REPORTED. It reads VACUOUS while the declaration holds no row, and its
 #        controls plant a declaration and a prompt, or declare a former label over the live prompts
-# Every arm but FT4 and FT9 has a standing control on a COPY under $WORK, asserted to have LANDED,
-# and graded as a DELTA against this run's own live reading — FT4's and FT9's are graded on synthetic
-# tables, as their entries above say — never against a clean-table literal — so a
+# Every arm but FT4, FT4w, FT9 and FT10 has a standing control on a COPY under $WORK, asserted to have
+# LANDED, and graded as a DELTA against this run's own live reading — FT4's, FT4w's and FT9's are graded
+# on synthetic tables and FT10's on built populations, as their entries above say — never against a
+# clean-table literal — so a
 # mutation replayed on the tracked table turns the arm it targets red, and every control whose
 # target the replay leaves alone stays green; a replay on a row a control itself targets may
 # turn that control, or a sibling targeting the same row, red with it.
@@ -4568,6 +4575,30 @@ ft_resolve() {
     { k = 0; ids = ""
       for (i = 1; i <= n; i++) if (rl[i] == $2 && ft_lead(rs[i], $1)) { k++; ids = ids (k > 1 ? "," : "") rn[i] }
       printf "%s\t%s\t%s\n", (k == 1) ? "ONE" : ((k == 0) ? "NONE" : "AMBIG"), (k == 0) ? "-" : ids, $0 }' "$1" -
+}
+# ft_resolve_written <rows-file> <former-file> — ft_resolve for a WRITTEN profile (ADR-053 Decision 3): the same
+# input, records and leading-segment rule, except that a bullet's label matches a row when it is the row's
+# current label OR one of the former labels <former-file> (ft_former_rows' output, read by tab) declares for
+# the row's key. A former label that is another row's current label under a section leading the same heading
+# counts both rows, so it reads AMBIG and nothing is picked. A resolver of its own rather than a flag on
+# ft_resolve, because a form's bullet must carry its current label, and a form reader that forgot a flag
+# would accept a former label silently. RL, XT and HZ read the tracked example profiles through it.
+ft_resolve_written() {
+  awk -F'\t' "$FT_LEAD_FN"'
+    FILENAME == ARGV[1] { if ($3 != "") { n++; rn[n] = $1; rs[n] = $2; rl[n] = $3; rk[n] = $11 }; next }
+    FILENAME == ARGV[2] { if ($1 == "R" && $3 != "" && $4 != "") fl[$3, $4] = 1; next }
+    { k = 0; ids = ""
+      for (i = 1; i <= n; i++) if ((rl[i] == $2 || (rk[i] != "" && ((rk[i], $2) in fl))) && ft_lead(rs[i], $1)) { k++; ids = ids (k > 1 ? "," : "") rn[i] }
+      printf "%s\t%s\t%s\n", (k == 1) ? "ONE" : ((k == 0) ? "NONE" : "AMBIG"), (k == 0) ? "-" : ids, $0 }' "$1" "$2" -
+}
+# ft_spellings <data-model> <key> — every spelling a written profile may carry for the field keyed <key>: its
+# current label, then each former label § Former labels declares for it, one a line; nothing when no labelled
+# row carries the key. A reader that matches a profile's bullet label as text, rather than resolving it, reads
+# its labels through this, by key, so it stays on the label (ADR-053 Decision 4 limb 1) and accepts a former one.
+ft_spellings() {
+  awk -F'\t' -v k="$2" '
+    FILENAME == ARGV[1] { if ($11 == k && $3 != "" && !c++) print $3; next }
+    $1 == "R" && $3 == k { print $4 }' <(ft_rows "$1") <(ft_former_rows "$1")
 }
 ft_under() {
   awk -F'\t' "$FT_LEAD_FN"'
@@ -15173,7 +15204,7 @@ rl_bullets() {
 # label), to a row of <class>. The class is joined from RL_ROWS by the resolved row NUMBER, never
 # by label, so a label two rows share cannot lend one row's class to the other's field.
 rl_answered_class() {
-  rl_bullets "$1" 1 | awk -F'\t' '{ print $3 "\t" $1 "\t" $2 }' | ft_resolve "$RL_ROWS" | awk -F'\t' -v c="$2" '
+  rl_bullets "$1" 1 | awk -F'\t' '{ print $3 "\t" $1 "\t" $2 }' | ft_resolve_written "$RL_ROWS" "$RL_FORMER" | awk -F'\t' -v c="$2" '
     FILENAME == ARGV[1] { cls[$1] = $4; next }
     $1 == "ONE" && cls[$2] == c && $5 != "" && $5 != "—" && $5 != "-" && $5 !~ /^\[.*\]$/ { n++ }
     END { print n + 0 }' "$RL_ROWS" -
@@ -15314,8 +15345,12 @@ EOF
 
 RL_CLASSFILE="$WORK/rl-class.tsv"
 RL_ROWS="$WORK/rl-rows.tsv"
+# The pair's files are written profiles, read through ft_resolve_written with the data model's former-label
+# rows, so an answer written under a label since reworded still resolves (ADR-053 Decision 3).
+RL_FORMER="$WORK/rl-former.tsv"
 if [ "$RL_OK" -eq 1 ]; then
   ft_rows "$RL_DM" > "$RL_ROWS"
+  ft_former_rows "$RL_DM" > "$RL_FORMER"
   rl_class "$RL_DM" > "$RL_CLASSFILE"
   RL_NCLASS="$(grep -c '[^[:space:]]' "$RL_CLASSFILE" || true)"
   RL_NPERSON="$(awk -F'\t' '$2 == "PERSON"' "$RL_CLASSFILE" | grep -c '[^[:space:]]' || true)"
@@ -15336,7 +15371,7 @@ if [ "$RL_OK" -eq 1 ]; then
   # Every bullet is RESOLVED on (section, label) through ft_resolve; the denominator is the
   # bullets the extractor read, never the resolver's own output, so a resolver that went quiet
   # cannot shrink the population it is graded over. AMBIG is FT2's failure seen from here.
-  RL1_RES="$( { rl_bullets "$RL_PAIR_T" 1; rl_bullets "$RL_PAIR_R" 1; } | awk -F'\t' '{ print $3 "\t" $1 }' | ft_resolve "$RL_ROWS")"
+  RL1_RES="$( { rl_bullets "$RL_PAIR_T" 1; rl_bullets "$RL_PAIR_R" 1; } | awk -F'\t' '{ print $3 "\t" $1 }' | ft_resolve_written "$RL_ROWS" "$RL_FORMER")"
   RL_SEEN="$( { rl_bullets "$RL_PAIR_T" 1; rl_bullets "$RL_PAIR_R" 1; } | grep -c '[^[:space:]]')"
   RL_NRES1="$(printf '%s\n' "$RL1_RES" | awk -F'\t' '$1 == "ONE" { n++ } END { print n + 0 }')"
   RL_UNCL="$(printf '%s\n' "$RL1_RES" | awk -F'\t' '$1 == "NONE" && !s[$4]++ { printf " %s (under \"%s\")", $4, $3 }')"
@@ -15378,7 +15413,7 @@ if [ "$RL_OK" -eq 1 ]; then
     while IFS= read -r rl_h; do [ -n "$rl_h" ] && ft_heads "$rl_h"; done <<<"$RL_FORMS" > "$WORK/rl3-heads.txt"
     ft_under "$rows" "$WORK/rl3-heads.txt" > "$WORK/rl3-pop.tsv"
     { rl_bullets "$RL_PAIR_T" 1 | awk -F'\t' '{ print $3 "\t" $1 "\t" $2 "\tT" }'
-      rl_bullets "$RL_PAIR_R" 1 | awk -F'\t' '{ print $3 "\t" $1 "\t" $2 "\tR" }'; } | ft_resolve "$rows" > "$WORK/rl3-res.tsv"
+      rl_bullets "$RL_PAIR_R" 1 | awk -F'\t' '{ print $3 "\t" $1 "\t" $2 "\tR" }'; } | ft_resolve_written "$rows" "$RL_FORMER" > "$WORK/rl3-res.tsv"
     awk -F'\t' -v total="$(grep -c '[^[:space:]]' "$rows")" "$FT_NOBUL_FN"'
       FILENAME == ARGV[1] { if ($1 == "ONE") side[$2] = side[$2] $6; next }
       { n++; s = side[$1]; nobul = ft_nobul($10); if (nobul) nb++
@@ -15861,8 +15896,12 @@ done
 
 XT_CLASSFILE="$WORK/xt-class.tsv"
 XT_ROWS="$WORK/xt-rows.tsv"
+# The nominated fixtures are written profiles, read through ft_resolve_written with the data model's
+# former-label rows, so an answer written under a label since reworded still resolves (ADR-053 Decision 3).
+XT_FORMER="$WORK/xt-former.tsv"
 if [ "$XT_OK" -eq 1 ]; then
   ft_rows "$XT_DM" > "$XT_ROWS"
+  ft_former_rows "$XT_DM" > "$XT_FORMER"
   xt_class "$XT_DM" > "$XT_CLASSFILE"
   XT_NCLASS="$(grep -c '[^[:space:]]' "$XT_CLASSFILE" || true)"
   XT_NPERSON="$(awk -F'\t' '$2 == "PERSON"' "$XT_CLASSFILE" | grep -c '[^[:space:]]' || true)"
@@ -15889,7 +15928,7 @@ if [ "$XT_OK" -eq 1 ]; then
   # only when some row's section LEADS its heading — the trip-local override block is the shipped
   # instance of a heading the table names no section for — and one that resolves AMBIG is FT2's
   # failure seen from here.
-  XT1_RES="$( { xt_bullets "$XT_A" 1; xt_bullets "$XT_B" 1; } | awk -F'\t' '{ print $3 "\t" $1 }' | ft_resolve "$XT_ROWS")"
+  XT1_RES="$( { xt_bullets "$XT_A" 1; xt_bullets "$XT_B" 1; } | awk -F'\t' '{ print $3 "\t" $1 }' | ft_resolve_written "$XT_ROWS" "$XT_FORMER")"
   XT_SEEN="$( { xt_bullets "$XT_A" 1; xt_bullets "$XT_B" 1; } | grep -c '[^[:space:]]')"
   XT_NRES="$(printf '%s\n' "$XT1_RES" | grep -c '[^[:space:]]')"
   XT_AMB="$(printf '%s\n' "$XT1_RES" | awk -F'\t' '$1 == "AMBIG" && !s[$4]++ { printf " %s (rows %s)", $4, $2 }')"
@@ -15926,8 +15965,9 @@ if [ "$XT_OK" -eq 1 ]; then
   XT_SLOTDUP=0
   for xt_f in "$XT_A" "$XT_B"; do
     # The MOVES set is keyed by the resolved row NUMBER, so a label two rows share cannot pool
-    # one row's repetitions with the other's.
-    XT_D="$(xt_bullets "$xt_f" 1 | awk -F'\t' '{ print $3 "\t" $1 "\t" $2 }' | ft_resolve "$XT_ROWS" | awk -F'\t' '
+    # one row's repetitions with the other's, and a field answered under more than one of its
+    # spellings counts once per line, as reference/data-model.md § Former labels types it.
+    XT_D="$(xt_bullets "$xt_f" 1 | awk -F'\t' '{ print $3 "\t" $1 "\t" $2 }' | ft_resolve_written "$XT_ROWS" "$XT_FORMER" | awk -F'\t' '
         FILENAME == ARGV[1] { cls[$1] = $4; scp[$1] = $6; lab[$1] = $3; next }
         $1 == "ONE" && (cls[$2] == "PERSON" || cls[$2] == "DEFAULT") &&
         $5 != "" && $5 != "—" && $5 != "-" && $5 !~ /^\[.*\]$/ { n[$2]++ }
@@ -16238,8 +16278,12 @@ done
 
 HZ_CLASSFILE="$WORK/hz-class.tsv"
 HZ_ROWS="$WORK/hz-rows.tsv"
+# The fixture is a written person record, read through ft_resolve_written with the data model's
+# former-label rows, so a mark on an answer written under a label since reworded still resolves.
+HZ_FORMER="$WORK/hz-former.tsv"
 if [ "$HZ_OK" -eq 1 ]; then
   ft_rows "$HZ_DM" > "$HZ_ROWS"
+  ft_former_rows "$HZ_DM" > "$HZ_FORMER"
   hz_class "$HZ_DM" > "$HZ_CLASSFILE"
   HZ_NAXIS="$(grep -c '[^[:space:]]' "$HZ_CLASSFILE" || true)"
   HZ_NREQ="$(awk -F'\t' '$2 == "required"' "$HZ_CLASSFILE" | grep -c '[^[:space:]]' || true)"
@@ -16282,9 +16326,9 @@ if [ "$HZ_OK" -eq 1 ]; then
   # horizon's home field by leaving it EMPTY, so the mark had no tracked instance at all.
   HZ_MARKED="$(hz_marked "$HZ_FIX" | sort -u)"
   HZ_NMARKED="$(printf '%s\n' "$HZ_MARKED" | grep -c '[^[:space:]]' || true)"
-  # Each marked bullet is RESOLVED on (section, label) through ft_resolve and takes its scope from
-  # the ONE row it reaches; a bullet resolving NONE or AMBIG has no scope and is reported as such.
-  HZ_RES="$(printf '%s\n' "$HZ_MARKED" | awk 'NF' | ft_resolve "$HZ_ROWS")"
+  # Each marked bullet is RESOLVED on (section, label) through ft_resolve_written and takes its scope
+  # from the ONE row it reaches; a bullet resolving NONE or AMBIG has no scope and is reported as such.
+  HZ_RES="$(printf '%s\n' "$HZ_MARKED" | awk 'NF' | ft_resolve_written "$HZ_ROWS" "$HZ_FORMER")"
   HZ_NRES="$(printf '%s\n' "$HZ_RES" | grep -c '[^[:space:]]')"
   HZ3_SC="$(printf '%s\n' "$HZ_RES" | awk -F'\t' '
       FILENAME == ARGV[1] { scp[$1] = $6; next }
