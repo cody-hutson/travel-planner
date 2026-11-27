@@ -704,7 +704,8 @@ itinerary a second reader with no write to justify it. **Agent reads, attributed
 `<store-root>/people/<person-id>.md`, the durable record a file's `person:` line references,
 and the survivor where that record is a `merged-into:` stub, `trips/<slug>/trip-context.md`
 and `trips/<slug>/outputs/traveler-model.md`, the model it is
-about to replace, read before it rebuilds it, and `trips/<slug>/outputs/traveler-presence.md`, read
+about to replace, read before it rebuilds it, for the `[THIRD-PARTY]` entry it carries and the
+`[OPERATOR-PROVIDED]`-only entry it names, and `trips/<slug>/outputs/traveler-presence.md`, read
 before it rebuilds that file so the rebuild can say what will not survive it; its research role and
 setup seed read
 `trips/<slug>/trip-context.md` alone; each spoke reads `trips/<slug>/trip-context.md`,
@@ -732,7 +733,18 @@ that refreshes them says so before its first dispatch. **The reconciler leg retu
 rebuild of the presence file did not keep** — every line whose value changed, outgoing then
 incoming, and every entry it removed, by its heading and with its lines, or that it created the
 file — stated before its own write; render it once that leg returns.
-`reference/adr/ADR-028-derived-planning-day-block-owners.md` § 2 decides this announce.
+`reference/adr/ADR-028-derived-planning-day-block-owners.md` § 2 decides this announce. **It
+returns as well each `[OPERATOR-PROVIDED]`-only entry its rebuild of the model drops**, with
+the needs and desires the entry held and how to keep them (`agents/00-enrichment.md`
+§ *Missing or blank profile*): render that with it, and where it names none, say nothing of it.
+In a run nobody can answer this is a report and adds no stop
+(`reference/adr/ADR-049-what-a-rebuild-owes.md` Decision 4). **The dispatch carries the
+operator's stand-in:** each need and desire the operator states in this run for a traveller the
+roster names who has no usable profile, and whose entry does not carry `[THIRD-PARTY]`, goes to
+the reconciler as the operator-provided stand-in that section admits, which is how restating
+them keeps their entry, in each run that rebuilds the model, until the traveller files. A member
+whose entry carries `[THIRD-PARTY]`, rostered or not, is `/trip-record person`'s, and this
+carries nothing for them.
 
 **Append and replace discipline.** Each spoke appends to its own output file under a new dated
 section and rewrites, reorders and deletes nothing. Where the hub replaces
@@ -796,7 +808,7 @@ whose chain reaches the hub, it takes the traveller projection's reads (§ *Stan
 `trips/<slug>/travelers/*.md`, `<store-root>/people/<person-id>.md`, the durable record a
 file's `person:` line references, and the survivor where that record is a `merged-into:` stub,
 `trips/<slug>/trip-context.md` and `trips/<slug>/outputs/traveler-model.md`, the model it is
-about to replace, and `trips/<slug>/outputs/traveler-presence.md`, read before it rebuilds that
+about to replace, read for the reason `plan`'s line gives, and `trips/<slug>/outputs/traveler-presence.md`, read before it rebuilds that
 file; each affected spoke reads `trips/<slug>/trip-context.md`,
 `trips/<slug>/trip-log.md`, `trips/<slug>/outputs/traveler-model.md` and its own accumulated
 output file, scheduling and transport `trips/<slug>/outputs/traveler-presence.md` as well; the hub
@@ -806,7 +818,8 @@ reads the spoke outputs, the traveller projection, `trips/<slug>/outputs/travele
 `trips/<slug>/outputs/event-status.md`.
 **Dispatches** enrichment where a changed profile is what triggered the run, in its reconciler
 role, writing `trips/<slug>/outputs/traveler-model.md` and `trips/<slug>/outputs/traveler-presence.md`
-and surfacing what that rebuild did not keep as `plan`'s section states; the spokes the coupling
+and surfacing what that rebuild did not keep, and carrying the stand-in, as `plan`'s section
+states; the spokes the coupling
 conditions admit, the hub and the validator — each in the role its roster row states, each
 writing exactly the file or files that row names.
 **Non-interactive: the standing clause's *run nobody can answer*.**

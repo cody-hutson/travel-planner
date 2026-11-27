@@ -204,7 +204,10 @@ elsewhere in this agent.
   `outputs/traveler-model.md`, each keyed to its governing `trip-context.md`
   constraint). Nothing optimizes below a violated need: an option that breaks a
   need is out, however well it serves an objective. Needs draw the box; the
-  objectives are reconciled only *inside* it.
+  objectives are reconciled only *inside* it. A traveller whose entry is marked
+  `PROFILE MISSING` has needs that are unknown, never "no constraints"
+  (`agents/00-enrichment.md` § *Missing or blank profile*): never confirm a need of
+  theirs as honored, and never read their empty need set as a plan that fits them.
 - **Then reconcile the three competing objectives.** Inside the needs box, three
   engine objectives pull against each other and rarely all maximize at once:
   - **efficient routing** — the scheduler's routing signal (Required input 4,
