@@ -23906,7 +23906,7 @@ mc6_measure() {
 }
 mc6_rec() { awk -F'\t' -v g="$2" '$1 == g' <<<"$1"; }
 mc6_assert() {
-  local rw nf bs mb mr mn moved first nrw nfr k n5 n5k miss lab nlab mc1 nc4 nc4b same n4 nnc keys
+  local rw nf bs mb mr mn moved first nrw nfr nfd k n5 n5k miss lab nlab mc1 nc4 nc4b same n4 nnc keys
   rw="$(ft_c4_copy)"; nf="$(ft_c4_copy noformer)"; bs="$(ft_c4_copy base)"
   MC6_C4_DIR="$rw"; export MC6_C4_DIR
   if [ -z "$rw" ] || [ -z "$nf" ] || [ -z "$bs" ]; then
@@ -23914,7 +23914,11 @@ mc6_assert() {
     return 0
   fi
   nrw="$(awk -F'\t' 'NF { n++ } END { print n + 0 }' <<<"$FT_C4_REWORD")"
-  nfr="$(ft_former_rows "$rw/reference/data-model.md" | awk -F'\t' '$1 == "R" { n++ } END { print n + 0 }')"
+  # The former rows the reworded copy ADDS over the unreworded one, and the unreworded one's rows it does not
+  # carry: a source may already declare former labels (a reword leaves them behind), and they are its own.
+  read -r nfr nfd <<<"$(awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "R") { b[$3 "\t" $4]++; nb++ }; next }
+      $1 == "R" { if (b[$3 "\t" $4] > 0) { b[$3 "\t" $4]--; kept++ } else added++ }
+      END { print added + 0, nb - kept }' <(ft_former_rows "$bs/reference/data-model.md") <(ft_former_rows "$rw/reference/data-model.md"))"
   mb="$(mc6_measure "$bs" "$MC_W/mc6-base")"; mr="$(mc6_measure "$rw" "$MC_W/mc6-reword")"; mn="$(mc6_measure "$nf" "$MC_W/mc6-noformer")"
   moved="$(LC_ALL=C diff <(printf '%s\n' "$mb") <(printf '%s\n' "$mr") | awk -F'\t' '/^[<>] / { g = substr($1, 3); if (!s[g]++) printf "%s%s", (n++ ? ", " : ""), g }')"
   first="$(LC_ALL=C diff <(printf '%s\n' "$mb") <(printf '%s\n' "$mr") | awk '/^[<>]/ && n++ < 4' | tr '\n\t' '  ')"
@@ -23943,8 +23947,8 @@ mc6_assert() {
   for k in MC0 MC2 MC4; do [ "$(mc6_rec "$mb" "$k")" = "$(mc6_rec "$mn" "$k")" ] || same=0; done
   n4="$(awk -F'\t' '$1 == "MC4" && NF >= 4 { n++ } END { print n + 0 }' <<<"$mb")"
   nnc="$(awk -F'\t' '$1 == "NC2v" && $3 ~ /^[0-9]+$/ { n++ } END { print n + 0 }' <<<"$mb")"
-  if cmp -s "$bs/reference/data-model.md" "$rw/reference/data-model.md" || cmp -s "$bs/reference/data-model.md" "$nf/reference/data-model.md" || [ "$nfr" -ne "$nrw" ]; then
-    FAIL "MC6: fixture integrity — the reworded or the noformer copy's data model does not differ from the unreworded one, or the reworded copy declares $nfr former label(s) for the $nrw field(s) FT_C4_REWORD rewords, so the arm below would prove nothing"
+  if cmp -s "$bs/reference/data-model.md" "$rw/reference/data-model.md" || cmp -s "$bs/reference/data-model.md" "$nf/reference/data-model.md" || [ "$nfr" -ne "$nrw" ] || [ "$nfd" -ne 0 ]; then
+    FAIL "MC6: fixture integrity — the reworded or the noformer copy's data model does not differ from the unreworded one, or the reworded copy adds $nfr former label(s) over the unreworded copy's declaration, and leaves out $nfd of its rows, for the $nrw field(s) FT_C4_REWORD rewords, so the arm below would prove nothing"
   elif [ "$(awk -F'\t' '$1 == "MC5" && $2 == "STAT" && $3 == "ROWS" { print $4 + 0 }' <<<"$mb")" -eq 0 ] || [ "$n4" -eq 0 ] || [ "$nnc" -eq 0 ] || [ "$nlab" -eq 0 ]; then
     FAIL "MC6: NOT EVALUATED — over the unreworded copy the measure reads no MC5 row, $n4 MC4 verdict(s) and $nnc NC2v code(s), or no reworded label is one NC2v's reader takes from the prose, so there is nothing to hold the reworded copy to: $(printf '%s' "$mb" | grep -a -E 'no render|no arm' | tr '\n\t' '  ')"
   elif [ "$mr" != "$mb" ]; then
