@@ -26927,11 +26927,20 @@ pm_section() {
 # pm_flat <heading> <file> — that section with its line breaks read as spaces, so a phrase is
 # found wherever the file's wrap falls.
 pm_flat() { pm_section "$1" "$2" | tr '\n' ' '; }
-# pm_traveller_tier <desire> <file> — the tier on the line after that desire's `**Desire:**` line.
+# The traveller file is a written profile, so its desire and tier lines are read under each field's current
+# label or a former one (ADR-053 Decision 3), the labels read by key through ft_spellings: `desire` and
+# `desire-priority-tier`. PM_SP_D and PM_SP_T hold them one a line, and every reader below matches each as
+# a literal string, so no label is spelled in this group.
+PM_DM="$ROOT/reference/data-model.md"
+PM_SP_D="$(ft_spellings "$PM_DM" desire)"
+PM_SP_T="$(ft_spellings "$PM_DM" desire-priority-tier)"
+# pm_traveller_tier <desire> <file> — the tier on the line after that desire's line.
 pm_traveller_tier() {
-  awk -v d="$1" '
-    index($0, "**Desire:** " d) > 0 { want = 1; next }
-    want && index($0, "**Priority tier:**") > 0 { sub(/^.*\*\*Priority tier:\*\*[ \t]*/, ""); sub(/[ \t\r]+$/, ""); print; exit }
+  LIT_D="$PM_SP_D" LIT_T="$PM_SP_T" awk -v d="$1" '
+    BEGIN { nd = split(ENVIRON["LIT_D"], D, "\n"); nt = split(ENVIRON["LIT_T"], T, "\n") }
+    { for (i = 1; i <= nd; i++) if (D[i] != "" && index($0, "**" D[i] ":** " d) > 0) { want = 1; next } }
+    want { for (i = 1; i <= nt; i++) if (T[i] != "" && (p = index($0, "**" T[i] ":**")) > 0) {
+             v = substr($0, p + length(T[i]) + 5); sub(/^[ \t]+/, "", v); sub(/[ \t\r]+$/, "", v); print v; exit } }
   ' "$2"
 }
 # pm_model_tier <desire> <file> — the second cell of the first table row whose first cell is it.
@@ -26940,11 +26949,13 @@ pm_model_tier() {
     NF > 3 { a = $2; gsub(/^[ \t]+|[ \t]+$/, "", a); if (a == d) { b = $3; gsub(/^[ \t]+|[ \t]+$/, "", b); print b; exit } }
   ' "$2"
 }
-# pm_set_tier <desire> <tier> <in> <out> — the traveller file with that desire's tier changed.
+# pm_set_tier <desire> <tier> <in> <out> — the traveller file with that desire's tier changed; the tier
+# line keeps its label as written.
 pm_set_tier() {
-  awk -v d="$1" -v t="$2" '
-    index($0, "**Desire:** " d) > 0 { want = 1; print; next }
-    want && index($0, "**Priority tier:**") > 0 { sub(/\*\*Priority tier:\*\*.*$/, "**Priority tier:** " t); want = 0 }
+  LIT_D="$PM_SP_D" LIT_T="$PM_SP_T" awk -v d="$1" -v t="$2" '
+    BEGIN { nd = split(ENVIRON["LIT_D"], D, "\n"); nt = split(ENVIRON["LIT_T"], T, "\n") }
+    { for (i = 1; i <= nd; i++) if (D[i] != "" && index($0, "**" D[i] ":** " d) > 0) { want = 1; print; next } }
+    want { for (i = 1; i <= nt; i++) if (T[i] != "" && (p = index($0, "**" T[i] ":**")) > 0) { $0 = substr($0, 1, p + length(T[i]) + 4) " " t; want = 0; break } }
     { print }
   ' "$3" > "$4"
 }
@@ -27166,8 +27177,9 @@ else
   md_flips pm_flat           'PM6'       pm6_assert
   md_flips pm_section        'PM7'       pm7_assert
 
-  # CTL-PM4 — the comparator PM3 and PM4 share, on inputs whose answer is known.
-  printf -- '- **Desire:** X\n- **Priority tier:** wish\n' > "$WORK/pm/ct.md"
+  # CTL-PM4 — the comparator PM3 and PM4 share, on inputs whose answer is known. The control's traveller
+  # lines carry each field's current label, read by key, as a profile written today would.
+  printf -- '- **%s:** X\n- **%s:** wish\n' "${PM_SP_D%%$'\n'*}" "${PM_SP_T%%$'\n'*}" > "$WORK/pm/ct.md"
   printf '| X | wish |\n' > "$WORK/pm/cm-same.md"
   printf '| X | anchor |\n' > "$WORK/pm/cm-diff.md"
   pm_differs X "$WORK/pm/ct.md" "$WORK/pm/cm-same.md"; PM_RC=$?
