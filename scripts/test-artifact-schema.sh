@@ -23869,6 +23869,46 @@ mc_emitted() {
     esac
   done < "$render"
 }
+# mc4_arms <data-model> <dir> — MC4, MC4u and MC4k: mc4_renders' renders, written into <dir> from
+# <data-model>, each graded through the envelope. The live run hands it the tree's data model and MC's
+# scratch directory; a control hands it a copy's, so the arm runs over a reworded source unchanged.
+mc4_arms() {
+  local dm="$1" w="$2" MC4_WL MC4_SA MC4_SAS MC4_SO MC4_CI MC4_BO MC4_SH MC4_ENCSHOW MC4_PLSHOW MC4_P MC4_O MC4_U MC4_K MC4_WANT_P MC4_WANT_O MC4_WANT_U
+  if [ -n "$MC_ENC" ] && [ -n "$MC_PLAIN" ] && mc4_renders "$dm" "$w"; then
+    MC4_WL="$(mc_label "$dm" would-love)"; MC4_SA="$(mc_label "$dm" splurge-appetite)"
+    MC4_SAS="$(ft_rows "$dm" | awk -F'\t' '$11 == "splurge-appetite" { print $2 }')"
+    MC4_SO="$(mc_label "$dm" special-occasion)"; MC4_CI="$(mc_label "$dm" check-in-time)"
+    MC4_BO="$(mc_label "$dm" blackout)"; MC4_SH="$(mc_shared "$dm")"
+    MC4_ENCSHOW="${MC_ENC% limb}"; MC4_PLSHOW="${MC_PLAIN% limb}"
+    MC4_P="$(mc_emitted "$w/plain.html" "$MC_PLAIN" "$MC_ADR026" "$MC_ADR030" "$dm")"
+    MC4_O="$(mc_emitted "$w/enc-out.html" "$MC_ENC" "$MC_ADR026" "$MC_ADR030" "$dm")"
+    MC4_WANT_P="DENY${VA_TAB}$MC4_WL${VA_TAB}MC4: an ADR-030 § 2 IN value under '$MC4_WL' is emitted on $MC4_PLSHOW (audience $MC1_PV) — carry-envelope denies: the $MC_PLL limb admits none of the IN list"
+    MC4_WANT_O="DENY${VA_TAB}$MC4_SA${VA_TAB}MC4: ($MC4_SAS, $MC4_SA) is declared OUT by ADR-030 § 2's declaration and emitted on $MC4_ENCSHOW (audience $MC1_MV) — carry-envelope denies"
+    if [ "$MC4_P" = "$MC4_WANT_P" ] && [ "$MC4_O" = "$MC4_WANT_O" ]; then
+      PASS "MC4: MUST-FIRE — both denials, in the predicted words. A render on the public limb carrying a declared IN value: ${MC4_P##*"$VA_TAB"}. A render on the encrypted limb carrying a declared OUT value: ${MC4_O##*"$VA_TAB"}"
+    else
+      FAIL "MC4: MUST-FIRE did not fire as predicted — the public limb gave '${MC4_P:-<nothing>}' where '$MC4_WANT_P' was required, and the encrypted limb gave '${MC4_O:-<nothing>}' where '$MC4_WANT_O' was required"
+    fi
+    MC4_U="$(mc_emitted "$w/enc-undet.html" "$MC_ENC" "$MC_ADR026" "$MC_ADR030" "$dm")"
+    MC4_WANT_U="UNDET${VA_TAB}$MC4_SO${VA_TAB}admitted only when its traveller marks it (§ 3), and no mark is readable here
+UNDET${VA_TAB}$MC4_CI${VA_TAB}ADR-030 § 2 does not name this field
+UNDET${VA_TAB}Zq probe${VA_TAB}the label resolves to no field
+UNDET${VA_TAB}$MC4_SH${VA_TAB}the label is carried by more than one field"
+    if [ "$MC4_U" = "$MC4_WANT_U" ]; then
+      PASS "MC4u: MUST REFUSE AS UNDETERMINED — four emissions on the encrypted limb, each refused with its own cause and none admitted or denied: $(awk -F'\t' '{ printf "%s%s%s%s — %s", (n++ ? "; " : ""), "\047", $2, "\047", $3 }' <<<"$MC4_U")"
+    else
+      FAIL "MC4u: an undetermined emission was admitted, denied, or refused for another cause — got '$(printf '%s' "${MC4_U:-<nothing>}" | tr '\n' ';')' where four UNDET records, one per cause, were required"
+    fi
+    MC4_K="$(mc_emitted "$w/enc-ok.html" "$MC_ENC" "$MC_ADR026" "$MC_ADR030" "$dm")"
+    if [ "$MC4_K" = "ADMIT${VA_TAB}$MC4_WL${VA_NL}ADMIT${VA_TAB}$MC4_BO" ]; then
+      PASS "MC4k: MUST-NOT-FIRE — a render on the encrypted limb carrying '$MC4_WL' and '$MC4_BO' is admitted on both lines, and nothing is denied or refused. '$MC4_BO' is the field § 2 names in words that are not its label: the prose reader cannot place it, and the declaration does"
+    else
+      FAIL "MC4k: a declared IN value on the encrypted limb was not admitted — got '$(printf '%s' "${MC4_K:-<nothing>}" | tr '\n' ';')' where two ADMIT records were required"
+    fi
+  else
+    FAIL "MC4: NOT EVALUATED — the channel table yields no moved limb or no public limb, or a key a render is built from names no one labelled row of the table, so the emitted-value arm has no limb to emit on or no render to emit; MC4u and MC4k were not run"
+  fi
+}
 
 # ── MC0 — the populations, and the declaration's fail-loud half ─────────────────────────
 MC_DECL="$(mc_decl "$MC_ADR030" "$MC_DM" 2>/dev/null)"
@@ -24119,40 +24159,7 @@ EOF
   # Every label a render carries, and every label a predicted text names, is read from the table by
   # key at run time (mc4_renders, mc_label), so a reword moves the renders with their fields; the
   # reader stays on the current label, as the site build renders it.
-  if [ -n "$MC_ENC" ] && [ -n "$MC_PLAIN" ] && mc4_renders "$MC_DM" "$MC_W"; then
-    MC4_WL="$(mc_label "$MC_DM" would-love)"; MC4_SA="$(mc_label "$MC_DM" splurge-appetite)"
-    MC4_SAS="$(ft_rows "$MC_DM" | awk -F'\t' '$11 == "splurge-appetite" { print $2 }')"
-    MC4_SO="$(mc_label "$MC_DM" special-occasion)"; MC4_CI="$(mc_label "$MC_DM" check-in-time)"
-    MC4_BO="$(mc_label "$MC_DM" blackout)"; MC4_SH="$(mc_shared "$MC_DM")"
-    MC4_ENCSHOW="${MC_ENC% limb}"; MC4_PLSHOW="${MC_PLAIN% limb}"
-    MC4_P="$(mc_emitted "$MC_W/plain.html" "$MC_PLAIN" "$MC_ADR026" "$MC_ADR030" "$MC_DM")"
-    MC4_O="$(mc_emitted "$MC_W/enc-out.html" "$MC_ENC" "$MC_ADR026" "$MC_ADR030" "$MC_DM")"
-    MC4_WANT_P="DENY${VA_TAB}$MC4_WL${VA_TAB}MC4: an ADR-030 § 2 IN value under '$MC4_WL' is emitted on $MC4_PLSHOW (audience $MC1_PV) — carry-envelope denies: the $MC_PLL limb admits none of the IN list"
-    MC4_WANT_O="DENY${VA_TAB}$MC4_SA${VA_TAB}MC4: ($MC4_SAS, $MC4_SA) is declared OUT by ADR-030 § 2's declaration and emitted on $MC4_ENCSHOW (audience $MC1_MV) — carry-envelope denies"
-    if [ "$MC4_P" = "$MC4_WANT_P" ] && [ "$MC4_O" = "$MC4_WANT_O" ]; then
-      PASS "MC4: MUST-FIRE — both denials, in the predicted words. A render on the public limb carrying a declared IN value: ${MC4_P##*"$VA_TAB"}. A render on the encrypted limb carrying a declared OUT value: ${MC4_O##*"$VA_TAB"}"
-    else
-      FAIL "MC4: MUST-FIRE did not fire as predicted — the public limb gave '${MC4_P:-<nothing>}' where '$MC4_WANT_P' was required, and the encrypted limb gave '${MC4_O:-<nothing>}' where '$MC4_WANT_O' was required"
-    fi
-    MC4_U="$(mc_emitted "$MC_W/enc-undet.html" "$MC_ENC" "$MC_ADR026" "$MC_ADR030" "$MC_DM")"
-    MC4_WANT_U="UNDET${VA_TAB}$MC4_SO${VA_TAB}admitted only when its traveller marks it (§ 3), and no mark is readable here
-UNDET${VA_TAB}$MC4_CI${VA_TAB}ADR-030 § 2 does not name this field
-UNDET${VA_TAB}Zq probe${VA_TAB}the label resolves to no field
-UNDET${VA_TAB}$MC4_SH${VA_TAB}the label is carried by more than one field"
-    if [ "$MC4_U" = "$MC4_WANT_U" ]; then
-      PASS "MC4u: MUST REFUSE AS UNDETERMINED — four emissions on the encrypted limb, each refused with its own cause and none admitted or denied: $(awk -F'\t' '{ printf "%s%s%s%s — %s", (n++ ? "; " : ""), "\047", $2, "\047", $3 }' <<<"$MC4_U")"
-    else
-      FAIL "MC4u: an undetermined emission was admitted, denied, or refused for another cause — got '$(printf '%s' "${MC4_U:-<nothing>}" | tr '\n' ';')' where four UNDET records, one per cause, were required"
-    fi
-    MC4_K="$(mc_emitted "$MC_W/enc-ok.html" "$MC_ENC" "$MC_ADR026" "$MC_ADR030" "$MC_DM")"
-    if [ "$MC4_K" = "ADMIT${VA_TAB}$MC4_WL${VA_NL}ADMIT${VA_TAB}$MC4_BO" ]; then
-      PASS "MC4k: MUST-NOT-FIRE — a render on the encrypted limb carrying '$MC4_WL' and '$MC4_BO' is admitted on both lines, and nothing is denied or refused. '$MC4_BO' is the field § 2 names in words that are not its label: the prose reader cannot place it, and the declaration does"
-    else
-      FAIL "MC4k: a declared IN value on the encrypted limb was not admitted — got '$(printf '%s' "${MC4_K:-<nothing>}" | tr '\n' ';')' where two ADMIT records were required"
-    fi
-  else
-    FAIL "MC4: NOT EVALUATED — the channel table yields no moved limb or no public limb, or a key a render is built from names no one labelled row of the table, so the emitted-value arm has no limb to emit on or no render to emit; MC4u and MC4k were not run"
-  fi
+  mc4_arms "$MC_DM" "$MC_W"
 fi
 
 # ── MC5 — the declaration agrees with § 2's prose ───────────────────────────────────────
@@ -24512,6 +24519,39 @@ if [ "$MC_OK" -eq 1 ]; then
   mc6_ctl_self would-love
   md_flips mc6_assert 'CTL-MC6-SELF-would-love' mc6_ctl_self would-love
 fi
+# CTL-MC4-SHARED — MC4, MC4u and MC4k, MC6, and the controls that run MC6, over a SOURCE in which
+# need-applies-to is reworded with its former label declared. The field is never asked, so its one other
+# statement is its row's Field cell. On the tracked table its label is one a second row carries too, so the
+# reword leaves the table holding one shared label fewer, and none today: MC4u's emission under a label two
+# fields carry must not need the table to hold one. Every arm must read PASS over the source, because a
+# label edit owes the suite no edit of its own. The old label is read by key and the new one derived by
+# ft_c4_target, so nothing is spelled. It is called after CTL-C4-GEN2, which group CF defines below this
+# group, and it fails before any arm of the MC6 family runs when MC4's arm emits nothing, so that arm is
+# what its registration removes.
+MC4_CTL_IDS='MC4 MC4u MC4k MC6 CTL-MC6-SRC CTL-MC6-SELF[rooming] CTL-MC6-SELF[would-love] CTL-C4-GEN2'
+mc4_ctl_rest() { mc6_assert; mc6_ctl_src; mc6_ctl_self rooming; mc6_ctl_self would-love; c4gen2_assert; }
+mc4_ctl_shared() {
+  local id='CTL-MC4-SHARED' k='need-applies-to' s dm old new m4 rest bad
+  s="$(ft_c4_src)" || { FAIL "$id: NOT EVALUATED — no unreworded copy was built to plant a source in"; return 0; }
+  dm="$s/reference/data-model.md"; old="$(mc_label "$dm" "$k")"; new="$(ft_c4_target "$old")"
+  if [ -z "$old" ] || [ -z "$(ft_rows "$dm" | awk -F'\t' -v k="$k" "$FT_NOBUL_FN"' $11 == k && ft_nobul($10)')" ] \
+     || ! ft_row_set "$dm" "$k" Field "\`$new\`" || ! ft_c4_former "$dm" "$k | $old"$'\n' \
+     || [ "$(mc_label "$dm" "$k")" != "$new" ] || [ -z "$(ft_spellings "$dm" "$k" | awk -v o="$old" '$0 == o')" ]; then
+    FAIL "$id: fixture integrity — the table carries no one label for $k, its own Rationale does not declare it never asked, or the source did not take its reword to '$new' in its Field cell with its former row '$k | ${old:-none}'"; return 0
+  fi
+  mkdir -p "$s.mc4" || { FAIL "$id: NOT EVALUATED — no scratch directory for MC4's renders over the source"; return 0; }
+  m4="$(ft_c4_capture mc4_arms "$dm" "$s.mc4")"
+  if [ -z "$(awk -F'\t' 'NF' <<<"$m4")" ]; then
+    FAIL "$id: NOT EVALUATED — MC4's arm emitted no verdict over the source, so the arms of the MC6 family were not run over it"; return 0
+  fi
+  rest="$(FT_C4_SRC="$s" FT_C4_AT="$s.at" ft_c4_capture mc4_ctl_rest)"
+  bad="$(ft_c4_judge "$m4$VA_NL$rest" "$MC4_CTL_IDS")"
+  if [ -z "$bad" ]; then
+    PASS "$id: MUST NOT FIRE — over a source that has reworded $k, a field never asked, to '$new' with its former label declared ('$k | $old'), each of $MC4_CTL_IDS reads PASS: the emission under a label two fields carry does not need the table to hold one"
+  else
+    FAIL "$id: MUST NOT FIRE — over a source that has reworded $k, a field never asked, to '$new' with its former label declared ('$k | $old'), the arms $MC4_CTL_IDS do not each read PASS: $bad"
+  fi
+}
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group CG — the memberships reference/channel-and-engagement-model.md registers, held to
@@ -31576,6 +31616,11 @@ c4gen2_assert() {
 }
 c4gen2_assert
 md_flips ft_c4_copy 'CTL-C4-GEN2' c4gen2_assert
+# CTL-MC4-SHARED is group MC's control, defined there; it is called here because it runs CTL-C4-GEN2 too.
+if [ "${MC_OK:-0}" -eq 1 ]; then
+  mc4_ctl_shared
+  md_flips mc4_arms 'CTL-MC4-SHARED' mc4_ctl_shared
+fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group OW (the conversation block) — OW-C over every test conversation, read through group CF's
