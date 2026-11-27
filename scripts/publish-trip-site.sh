@@ -4232,9 +4232,11 @@ _approvals_at_earlier_reading() { # <trip_dir> -> 1 when an approval on file nam
 # restore the published code there. Otherwise the record named above is said to have been taken under
 # another reading: the plan has moved where the render reads the same under both readings, or since a
 # confirmation this engine recorded; elsewhere the gate cannot tell whether it moved, and names the one
-# step, `confirm` on a trip with no approvers or approval once more on a declared one, and no revert.
+# step, `confirm` on a trip with no approvers or approval once more on a declared one, and no revert. On a
+# declared trip they say what the approvals on file for the outgoing code come to, read through
+# _approval_tally as the gate reads them: none names it, or they do not yet meet the threshold (S33e).
 _abort_unconfirmed() { # <trip_dir> <state> -> never returns
-  local trip_dir="$1" state="$2" rm_note r what kept='' pol
+  local trip_dir="$1" state="$2" rm_note r what kept='' pol k t s appr_its appr_new
   pol="$(_approval_policy "$trip_dir" 2>/dev/null)"
   case "$(_baseline_record "$(published_itinerary_path "$trip_dir")")" in absent|unusable|'') ;; *) kept=' and the published plan is unchanged' ;; esac
   rm_note="$(_reading_measured "$trip_dir" "$state")"
@@ -4244,14 +4246,25 @@ _abort_unconfirmed() { # <trip_dir> <state> -> never returns
   esac
   r="${rm_note#* }"
   case "${rm_note%% *}" in baseline) what='the published plan' ;; record) what='the plan last approved' ;; *) what='the plan the approvals on file were given for' ;; esac
+  appr_its='no approval on file names its code'; appr_new='no approval on file names the new code'
+  if [ "$pol" = declared ]; then
+    read -r k t s <<<"$(_approval_tally "$trip_dir" "$(itinerary_digest "$(resolve_site_html "$trip_dir" 2>/dev/null)")")"
+    case "$k$t" in
+      ''|*[!0123456789]*) ;;
+      *) if [ "$k" -ge 1 ] && [ "$k" -lt "$t" ]; then
+           appr_its='the approvals on file for its code do not yet meet the threshold'
+           appr_new='the approvals on file for the new code do not yet meet the threshold'
+         fi ;;
+    esac
+  fi
   if _reading_agrees "$(resolve_site_html "$trip_dir" 2>/dev/null)" "$r"; then
     if [ "$pol" = declared ]; then
-      die "GUARD ABORTED — the itinerary content differs from ${what}, which an engine that reads pages differently recorded (that engine used $(_reading_words "$r"); this one uses reading ${_ITINERARY_READING}); this page reads the same under both, so the plan itself has moved, and no approval on file names its code (state: ${state}). Nothing was pushed${kept}. Check that the plan going out is the one the group should see, then ask for approval: run  $(basename "$0") confirm ${trip_dir}  at a terminal, share the approval line it prints in the group's thread, and record each reply with it. Once the approvals meet the threshold, rebuild the site and re-run update or rotate."
+      die "GUARD ABORTED — the itinerary content differs from ${what}, which an engine that reads pages differently recorded (that engine used $(_reading_words "$r"); this one uses reading ${_ITINERARY_READING}); this page reads the same under both, so the plan itself has moved, and ${appr_its} (state: ${state}). Nothing was pushed${kept}. Check that the plan going out is the one the group should see, then ask for approval: run  $(basename "$0") confirm ${trip_dir}  at a terminal, share the approval line it prints in the group's thread, and record each reply with it. Once the approvals meet the threshold, rebuild the site and re-run update or rotate."
     fi
     die "GUARD ABORTED — the itinerary content differs from ${what}, which an engine that reads pages differently recorded (that engine used $(_reading_words "$r"); this one uses reading ${_ITINERARY_READING}); this page reads the same under both, so the plan itself has moved (state: ${state}). Nothing was pushed${kept}. Confirm the change:  $(basename "$0") confirm ${trip_dir}  — and re-run update or rotate."
   fi
   if [ "$pol" = declared ]; then
-    die "GUARD ABORTED — ${what} was recorded by an engine that reads pages differently (that engine used $(_reading_words "$r"); this one uses reading ${_ITINERARY_READING}), so the plan's approval code has changed whether or not the plan has, and the gate cannot tell which; no approval on file names the new code (state: ${state}). Nothing was pushed${kept}. Check that the plan going out is the one the group should see, then ask for approval once more: run  $(basename "$0") confirm ${trip_dir}  at a terminal, share the approval line it prints in the group's thread, and record each reply with it. Once the approvals meet the threshold, rebuild the site and re-run update or rotate."
+    die "GUARD ABORTED — ${what} was recorded by an engine that reads pages differently (that engine used $(_reading_words "$r"); this one uses reading ${_ITINERARY_READING}), so the plan's approval code has changed whether or not the plan has, and the gate cannot tell which; ${appr_new} (state: ${state}). Nothing was pushed${kept}. Check that the plan going out is the one the group should see, then ask for approval once more: run  $(basename "$0") confirm ${trip_dir}  at a terminal, share the approval line it prints in the group's thread, and record each reply with it. Once the approvals meet the threshold, rebuild the site and re-run update or rotate."
   fi
   die "GUARD ABORTED — the published plan was recorded by an engine that reads pages differently (that engine used $(_reading_words "$r"); this one uses reading ${_ITINERARY_READING}), so the plan's code has changed whether or not the plan has, and the gate cannot tell which (state: ${state}). Nothing was pushed and the published plan is unchanged. Check that the plan going out is the one you mean to publish, then confirm it once, at a terminal:  $(basename "$0") confirm ${trip_dir}  — and re-run update or rotate."
 }
