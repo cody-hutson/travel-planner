@@ -12136,8 +12136,8 @@ s33e_assert() {
 # the site verb copied from a confirmation record taken under an earlier reading, stops before the
 # repository is probed: the code was taken by an engine that reads pages differently, the group is
 # asked for approval once more, and the command named is publish, update or rotate — never an abandoned
-# plan. CONTROL: the record at the raised reading gives the shipped refusal, which names a rebuild and
-# an abandoned plan, and both renders carry the stray `<`.
+# plan, and no revert in any letter case. CONTROL: the record at the raised reading gives the shipped
+# refusal, which names a rebuild and an abandoned plan, and both renders carry the stray `<`.
 s33f_assert() {
   local d c rd vd kd ed rc vc ec
   d="$(s33_trip s33f 1 "$S33_P14" 16:30)"; sa_declare "$d" 1 zqa1; sa_rec "$d" zqa1 approve "$S33_P14"; s33_dec "$d/.change-confirmed" "$S33_P14"
@@ -12146,8 +12146,8 @@ s33f_assert() {
   read -r rc _ vc _ <<<"$( _ITINERARY_READING=$S33_R; sa_push publish "$c" )"; ec="$(cat "$WORK/sa_push.err")"
   if [ "$(s33_stray "$d")$(s33_stray "$c")" != 11 ] || [ "$rc" -eq 0 ] || [ "$vc" -ne 0 ] || [ "$(s33_has "$ec" 'abandoned')" != 1 ] || [ "$(s33_has "$ec" 'Rebuild the site from the current records')" != 1 ]; then
     FAIL "S33f: CONTROL — the record at the raised reading did not give the shipped refusal, naming a rebuild and an abandoned plan, before the repository probe (rc=$rc probe=$vc), or a render lacks the stray '<', so the words below are not a measurement"
-  elif [ "$rd" -ne 0 ] && [ "$vd" -eq 0 ] && [ "$kd" -eq 0 ] && [ "$(s33_has "$ed" 'reads pages differently')" = 1 ] && [ "$(s33_has "$ed" 'approval once more')" = 1 ] && [ "$(s33_has "$ed" 'publish, update or rotate')" = 1 ] && [ "$(s33_has "$ed" 'abandoned')" = 0 ]; then
-    PASS "S33f: publish on a declared trip whose render carries the code of a confirmation record taken under an earlier reading stops before the repository is probed or created, saying the code was taken by an engine that reads pages differently, asking for approval once more and naming publish, update or rotate, and never an abandoned plan; control: the record at the raised reading gives the shipped refusal"
+  elif [ "$rd" -ne 0 ] && [ "$vd" -eq 0 ] && [ "$kd" -eq 0 ] && [ "$(s33_has "$ed" 'reads pages differently')" = 1 ] && [ "$(s33_has "$ed" 'approval once more')" = 1 ] && [ "$(s33_has "$ed" 'publish, update or rotate')" = 1 ] && [ "$(s33_has "$ed" 'abandoned')" = 0 ] && [ "$(s33_has "$(printf '%s' "$ed" | LC_ALL=C tr 'A-Z' 'a-z')" 'revert')" = 0 ]; then
+    PASS "S33f: publish on a declared trip whose render carries the code of a confirmation record taken under an earlier reading stops before the repository is probed or created, saying the code was taken by an engine that reads pages differently, asking for approval once more and naming publish, update or rotate, and never an abandoned plan or a revert; control: the record at the raised reading gives the shipped refusal"
   else
     FAIL "S33f: rc=$rd probe=$vd create=$kd, its words: ${ed//"$WORK"/<work>}"
   fi
@@ -12628,8 +12628,9 @@ s34_was() { # <trip> -> the digest of its render over a copy of the page: what t
 # S33e grades for the published plan, and once an approval for the new code meets the threshold and the
 # site is rebuilt with the new pair, update reaches the clone. publish, on a declared trip never published
 # whose render states the old pair, stops before the repository is probed, asking for approval once
-# more. CONTROL: the construct-free twins of both trips, records as the v0.77.0 engine left them, reach
-# the clone with no abort, and on each construct trip the two digests differ.
+# more and naming no revert in any letter case. CONTROL: the construct-free twins of both trips, records
+# as the v0.77.0 engine left them, reach the clone with no abort, and on each construct trip the two
+# digests differ.
 s34f_assert() { # one verdict
   local n nw d dw dn p pw nc ncw dc dcw rn cn en rn2 cn2 en2 rd cd ed rd2 cd2 ed2 rp vp kp ep cnc enc cdc edc wn wd
   n="$(s34_trip f-none '' '' 16:30 "$S34_CONSTRUCTS")"; nw="$(s34_was "$n")"; s33_rec "$n/.published-itinerary" "$nw" published
@@ -12661,8 +12662,8 @@ s34f_assert() { # one verdict
     FAIL "S34f: CONTROL — the construct-free twins reached the clone [$cnc$cdc] (want 11) with an abort printed=$(s33_has "$enc$edc" 'GUARD ABORTED') (want 0), or a construct trip's two digests did not differ, so the stops below are not attributable to the reading"
   elif [ "$_ITINERARY_READING" = 2 ] && [ "$rn" -ne 0 ] && [ "$cn" -eq 0 ] && [ "$wn" = ok ] && [ "$cn2" -eq 1 ] && [ "$(s33_has "$en2" 'GUARD ABORTED')" = 0 ] \
        && [ "$rd" -ne 0 ] && [ "$cd" -eq 0 ] && [ "$wd" = ok ] && [ "$cd2" -eq 1 ] && [ "$(s33_has "$ed2" 'GUARD ABORTED')" = 0 ] \
-       && [ "$rp" -ne 0 ] && [ "$vp" -eq 0 ] && [ "$kp" -eq 0 ] && [ "$(s33_has "$ep" 'reads pages differently')" = 1 ] && [ "$(s33_has "$ep" 'approval once more')" = 1 ] && [ "$(s33_has "$ep" 'abandoned')" = 0 ]; then
-    PASS "S34f: _ITINERARY_READING is 2; on a render carrying one construct of each class, with records as the v0.77.0 engine left them, update on a trip with no approvers stops before any clone with the reading-change words and no revert, and reaches the clone after one confirm; on a trip that declares approvers it stops with the words for the published plan, and reaches the clone once an approval for the new code meets the threshold and the site is rebuilt; publish on a declared trip never published stops before the repository is probed, asking for approval once more; CONTROL — the construct-free twins reach the clone with no abort"
+       && [ "$rp" -ne 0 ] && [ "$vp" -eq 0 ] && [ "$kp" -eq 0 ] && [ "$(s33_has "$ep" 'reads pages differently')" = 1 ] && [ "$(s33_has "$ep" 'approval once more')" = 1 ] && [ "$(s33_has "$ep" 'abandoned')" = 0 ] && [ "$(s33_has "$(printf '%s' "$ep" | LC_ALL=C tr 'A-Z' 'a-z')" 'revert')" = 0 ]; then
+    PASS "S34f: _ITINERARY_READING is 2; on a render carrying one construct of each class, with records as the v0.77.0 engine left them, update on a trip with no approvers stops before any clone with the reading-change words and no revert, and reaches the clone after one confirm; on a trip that declares approvers it stops with the words for the published plan, and reaches the clone once an approval for the new code meets the threshold and the site is rebuilt; publish on a declared trip never published stops before the repository is probed, asking for approval once more and naming no revert; CONTROL — the construct-free twins reach the clone with no abort"
   else
     FAIL "S34f: reading ${_ITINERARY_READING}; no approvers: update rc=$rn clone=$cn words[$wn], after confirm clone=$cn2; approvers: update rc=$rd clone=$cd words[$wd], after the threshold and a rebuild clone=$cd2; publish rc=$rp probe=$vp create=$kp, its words: ${ep//"$WORK"/<work>}"
   fi
