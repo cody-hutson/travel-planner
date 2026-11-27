@@ -1122,8 +1122,9 @@ never reads back. **Agent reads, attributed:** the enrichment agent, in its reco
 reads what `skills/trip-record/SKILL.md` § `travelers` declares for that role, cited rather than
 re-derived — `trips/<slug>/travelers/*.md`, `<store-root>/people/<person-id>.md`, the record a
 file's `person:` line references, and the survivor where that record is a `merged-into:` stub,
-`trips/<slug>/trip-context.md`, and the `outputs/traveler-model.md` and
-`outputs/traveler-presence.md` it is about to replace; the ideation agent reads the traveller
+`trips/<slug>/trip-context.md`, `outputs/traveler-model.md`, the model it is about to replace, read
+for the reason `travelers`'s line gives, and `outputs/traveler-presence.md`, the presence file it
+is about to replace; the ideation agent reads the traveller
 projection for the group's leanings, `trips/<slug>/trip-context.md` for the dates and party, and
 the frontmatter of `trips/<slug>/outputs/destination-shortlist.md`, read before it is replaced.
 **Dispatches, in this order:** Enrichment, in its reconciler role and never the `[ENRICH]`
@@ -1142,9 +1143,10 @@ reconciler role and then Destination Ideation, each admitted unconditionally; no
 mode transition is expected and none is written; and the per-event status bound does not apply,
 because the chain does not reach the hub.
 
-**What the reconcile hands back.** Render it as `skills/trip-record/SKILL.md` § `travelers`
-states, cited rather than restated here: its *Surface what the rebuild did not keep* paragraph,
-once the reconcile returns, and the `## Update signals` block enrichment produced. Name no
+**What the reconcile hands back.** Once the reconcile returns, render what its rebuild did not
+keep as § `travelers` states, the dispatch carrying the stand-in as that section's does: its
+*Surface what the rebuild did not keep* paragraph in `skills/trip-record/SKILL.md`, cited rather
+than restated here, and the `## Update signals` block enrichment produced. Name no
 planning verb for that block: this state holds no plan, so the `/trip replan` that section's
 table names for a changed need, desire or window is one this state refuses, and a `PROFILE
 MISSING` entry still names `/trip-record profile <name>`. Say once that a change this reconcile
