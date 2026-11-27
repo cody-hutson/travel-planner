@@ -22204,7 +22204,7 @@ if [ "$NC_OK" -eq 1 ]; then
   # nc2v_arm <id> <want-rc> <limb> <label> <adr-025> <prose> — the record and the table the evaluator
   # reads are NC2V_A30 and NC2V_DM where set, the live ones otherwise, and the code the evaluator
   # returned is left in NC2V_RC before a verdict renders: group MC's MC6 re-runs these arms over the
-  # criterion-4 copies through exactly those three names, so the six cases are stated once, here.
+  # criterion-4 copies through exactly those three names, so the cases are stated once, here.
   nc2v_arm() {
     local id="$1" want="$2" limb="$3" label="$4" adr25="$5" prose="$6"
     local render="$NC2V_D/$limb.html" kind got got2 text wtext a30="${NC2V_A30:-$NC_ADR030}" dm="${NC2V_DM:-$NC_DM}"
@@ -22239,7 +22239,7 @@ if [ "$NC_OK" -eq 1 ]; then
     cp "$NC_ADR025" "$NC2V_D/${NC_ADR025##*/}"; [ -n "$NC2S_FILE" ] && cp "${NC_ADR025%/*}/$NC2S_FILE" "$NC2V_D/$NC2S_FILE"
     awk 'index($0, "- **Status:**") == 1 { st = 1 } st && /^- \*\*/ && index($0, "- **Status:**") != 1 { st = 0 } st { gsub(/never-carry 2/, "never-carry two") }
          /^\|[ \t]*2[ \t]*\|/ && index($0, "*(Superseded in part") { p = index($0, "*(Superseded in part"); rest = substr($0, p); q = index(rest, ")*"); head = substr($0, 1, p - 1); sub(/ $/, "", head); $0 = head substr(rest, q + 2) } { print }' "$NC_ADR025" > "$NC2V_D/${NC_ADR025##*/}"
-    # nc2v_arms — the six arms, stated once: they run here, and MC6 runs them again over a copy.
+    # nc2v_arms — the arms, stated once: they run here, and MC6 runs them again over a copy.
     nc2v_arms() {
       nc2v_arm NC2v1 1 enc Specific "$NC_ADR025" "MUST-FIRE — a $NC5_CARRIER value under a label ADR-030 does not put on its IN list reaches the encrypted render"
       nc2v_arm NC2v2 1 plain "$NC2V_INLBL" "$NC_ADR025" "MUST-FIRE — a $NC5_CARRIER value under an IN label reaches the plaintext render, where nothing of the class may"
@@ -23413,7 +23413,7 @@ fi
 # group MC"). MC6 reads the SHARED copy ft_c4_copy builds, the copy CF8 reads, and exports the path it
 # read as MC6_C4_DIR, which CF8 holds its own path to (CIAC-2): MC runs before CF. Over the reworded
 # copy and over the unreworded one it measures MC0's and MC1's findings, MC2's census, MC4's render
-# verdicts by key, MC5's findings and statistics and NC2v's six evaluator codes, and PASSes when the
+# verdicts by key, MC5's findings and statistics and NC2v's evaluator codes, and PASSes when the
 # two are byte-identical. CONTROL a: the same rewords with no former label declared raise exactly one
 # (ii-b) finding for each reworded key, MC1 names each reworded label NC2v's reader takes from the
 # prose, NC2v4 reads 2 (not measured), and MC0, MC2 and MC4 do not move. CONTROL b is MC0f4's plant:
@@ -30470,7 +30470,7 @@ cf8_assert() {
   elif [ -z "${MC6_C4_DIR:-}" ] || [ "$MC6_C4_DIR" != "$rw" ]; then
     FAIL "CF8: CIAC-2 does not hold — group MC's MC6 exported '${MC6_C4_DIR:-no path}' as the copy it read, and this arm read ${rw#"$WORK/"}, so the two criterion-4 arms are not shown to grade one reword on one copy; MC runs before CF, so no path is an MC6 that did not run"
   else
-    PASS "CF8: on the shared copy ft_c4_copy builds (CF8_C4_DIR, ${rw#"$WORK/"}, the path MC6 exported as MC6_C4_DIR),$(awk -F'\t' '{ printf "%s%s → %s", s, $1, $2; s = "; " }' <<<"$FT_C4_REWORD") reworded in their two statements, each with its former label declared, leave the reader's stream — $(awk 'END { print NR }' <<<"$srw") record(s) — byte-identical to the unreworded copy's, with c4-label-word's FB-C at $lw and c4-confirm-word's RS-21 at $cw. CONTROL a: with no former label declared, c4-label-word reads $nlw ($nlwd) and c4-confirm-word $ncw, and nothing else moves but the totals. CONTROL b: $k1's key renamed in its row refuses every one of the $nref line(s) that name it, counted from the copy by position — $n3 as naming no key the table carries and $nk as an L3 left under no P turn by the refused L3 above it — and refuses no line for a third reason"
+    PASS "CF8: on the shared copy ft_c4_copy builds (CF8_C4_DIR, ${rw#"$WORK/"}, the path MC6 exported as MC6_C4_DIR), $(awk -F'\t' '{ printf "%s%s → %s", s, $1, $2; s = "; " }' <<<"$FT_C4_REWORD") reworded in their two statements, each with its former label declared, leave the reader's stream — $(awk 'END { print NR }' <<<"$srw") record(s) — byte-identical to the unreworded copy's, with c4-label-word's FB-C at $lw and c4-confirm-word's RS-21 at $cw. CONTROL a: with no former label declared, c4-label-word reads $nlw ($nlwd) and c4-confirm-word $ncw, and nothing else moves but the totals. CONTROL b: $k1's key renamed in its row refuses every one of the $nref line(s) that name it, counted from the copy by position — $n3 as naming no key the table carries and $nk as an L3 left under no P turn by the refused L3 above it — and refuses no line for a third reason"
   fi
 }
 cf8_assert
