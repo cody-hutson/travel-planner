@@ -29831,31 +29831,43 @@ fbp_assert() {
   fi
 }
 fbp_assert
+# fb_plant_table [<data-model>] — the plant table. A row that names a field carries a token in place of its
+# words: @<key>@ is the field's current label in <data-model> (the tracked one when none is given), read by
+# its key, and @lc:<key>@ the same lower-cased. So a reword of the field moves the row's words with its label
+# and its verdict stays where it is pinned; a token whose key no one labelled row carries is left in place,
+# and the row fails at its pin rather than grading other words.
 fb_plant_table() {
-  cat <<'PLANTS'
+  LC_ALL=C awk -F'\t' 'FILENAME == ARGV[1] { if ($11 != "" && $3 != "") { n[$11]++; lab[$11] = $3 }; next }
+    { s = $0; out = ""
+      while (match(s, /@(lc:)?[a-z0-9-]+@/)) {
+        tok = substr(s, RSTART + 1, RLENGTH - 2); lc = (substr(tok, 1, 3) == "lc:"); k = lc ? substr(tok, 4) : tok
+        v = (n[k] == 1) ? lab[k] : substr(s, RSTART, RLENGTH); if (lc && n[k] == 1) v = tolower(v)
+        out = out substr(s, 1, RSTART - 1) v; s = substr(s, RSTART + RLENGTH)
+      }
+      print out s }' <(ft_rows "${1:-$FT_DOC}") - <<'PLANTS'
 D19	FB-T.P1	FIRE	trip	-	UNBOUNDED=FAIL	If the answer is short, keep asking until you have enough detail.
 D20	FB-T.P1	FIRE	trip	-	AFTER=FAIL	If they skip, ask once more.
 D21	FB-T.P1	FIRE	trip	-	REPEAT=FAIL	Ask the same question again, in the same words.
 D22	FB-T.P1	FIRE	trip	-	CLOSED=FAIL	On a closed field, follow up once.
-D23	FB-T.P1	FIRE	person	Getting there & back	PERSON-SPEECH=FAIL	Follow up on their passport answer.
+D23	FB-T.P1	FIRE	person	Getting there & back	PERSON-SPEECH=FAIL	Follow up on their @lc:passport@ answer.
 D24	FB-T.P1	PASS	trip	-	BOUNDED=pass	When an answer is thin you may ask one more question about it, and never a second.
 D25	FB-T.P1	PASS	person	Needs	BOUNDED=pass	In a typed session only, you may follow up once on a must-have; never in a spoken one.
 X17	FB-T.P1	FIRE	trip	-	UNBOUNDED=FAIL	If they are not sure, keep asking until they are.
 X18	FB-T.P1	FIRE	trip	-	UNBOUNDED=FAIL	If they don't elaborate, push for more each time.
-N4	FB-T.P1	PASS	person	Getting there & back	BOUNDED=pass	If their journey comfort answer is thin, follow up once on Journey comfort.
+N4	FB-T.P1	PASS	person	Getting there & back	BOUNDED=pass	If their @lc:journey-comfort@ answer is thin, follow up once on @journey-comfort@.
 Z5	FB-T.P1	PASS	trip	-	DENIED=pass	Ask nothing again after a skip.
 Y24	FB-T.P1	PASS	trip	-	BOUNDED=pass	You may follow up once on an open field, never on a closed field.
 Y25c	FB-T.P1	PASS	trip	-	BOUNDED=pass	You may follow up once on an open field, never after a skip.
 Y26c	FB-T.P1	PASS	trip	-	BOUNDED=pass	You may follow up once, never if they skip.
 Y13	FB-T.P1	FIRE	person	Getting there & back	PERSON-SPEECH=FAIL	Follow up once on their answer.
-Y22c	FB-T.P1	FIRE	trip	Desires	CLOSED=FAIL	Follow up on their recurrence answer.
+Y22c	FB-T.P1	FIRE	trip	Desires	CLOSED=FAIL	Follow up on their @lc:desire-recurrence@ answer.
 NM15	FB-T.P1	FIRE	trip	-	CLOSED=FAIL	You may follow up once on an open field, and on a closed field.
 NM18	FB-T.P1	FIRE	trip	-	AFTER=FAIL	Ask nothing but more questions after a skip.
 NM20	FB-T.P1	FIRE	trip	-	PERSON-SPEECH=FAIL	Follow up on a `PERSON` field.
 NM21	FB-T.P1	PASS	trip	-	DIRECTED=observation	Follow up on a person field.
-NM22	FB-T.P1	PASS	trip	Getting there & back	DIRECTED=observation	Follow up on their passport answer.
-Y14	FB-T.P1	PASS	person	Getting there & back	DIRECTED=observation	Follow up on their journey comfort and their nationality.
-Y22	FB-T.P1	FIRE	trip	Desires	CLOSED=FAIL	Follow up once on Priority tier.
+NM22	FB-T.P1	PASS	trip	Getting there & back	DIRECTED=observation	Follow up on their @lc:passport@ answer.
+Y14	FB-T.P1	PASS	person	Getting there & back	DIRECTED=observation	Follow up on their @lc:journey-comfort@ and their nationality.
+Y22	FB-T.P1	FIRE	trip	Desires	CLOSED=FAIL	Follow up once on @desire-priority-tier@.
 Y25	FB-T.P1	PASS	conduct	-	DIRECTED=observation	A follow-up comes only after a thin answer, never after a skip.
 Y26	FB-T.P1	PASS	conduct	-	BOUNDED=pass	Follow up once, never a second time and never after a skip.
 Y23s	FB-T.P1	PASS	conduct	-	BOUNDED=pass	If they have not answered, follow up once.
