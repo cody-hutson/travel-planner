@@ -6082,16 +6082,19 @@ if [ "$FT_OK" -eq 1 ]; then
   else
     FAIL "CTL-FT10-CASE: MUST NOT FIRE — FT10 read '$ft10_got' over a lower-case spelling where '1 P 0 0' is owed"
   fi
+  # -SHARED and -LIVE name a field by its key, its label read from the table at run time, so a reword
+  # of either field leaves them standing (ADR-053 Decision 4 limb 2).
+  FT10_PL="$(ft_rows "$FT_DOC" | awk -F'\t' '$11 == "pace" && !d { print $3; d = 1 }')"
   FT10_SDOC="$FT10_W/doc-shared.md"; FT10_SL=0
-  ft10_doc "$FT10_SDOC" 'would-love | Pace' && [ "$(ft_former_rows "$FT10_SDOC" | awk -F'\t' '$1 == "R" && $4 == "Pace" { n++ } END { print n + 0 }')" -eq 1 ] && FT10_SL=1
-  ft10_root "$FT10_W/shared" agents/shared.md $'# Shared prompt\nRead `Pace:` from their file.\n'
+  [ -n "$FT10_PL" ] && ft10_doc "$FT10_SDOC" "would-love | $FT10_PL" && [ "$(ft_former_rows "$FT10_SDOC" | LIT_L="$FT10_PL" awk -F'\t' '$1 == "R" && $4 == ENVIRON["LIT_L"] { n++ } END { print n + 0 }')" -eq 1 ] && FT10_SL=1
+  ft10_root "$FT10_W/shared" agents/shared.md "$(printf '# Shared prompt\nRead `%s:` from their file.' "$FT10_PL")"$'\n'
   ft10_out="$(ft_capture ft10_assert "$FT10_SDOC" "$FT10_W/shared" "$FT10_W/shared.pop")"
   ft10_got="$(ft10_read "$ft10_out")"
-  ft10_hit="$(awk '/^      REPORTED agents\/shared\.md:2: `Pace` \(would-love\) — .*pace/ { n++ } END { print n + 0 }' <<<"$ft10_out")"
+  ft10_hit="$(LIT_L="      REPORTED agents/shared.md:2: \`$FT10_PL\` (would-love) — " awk 'index($0, ENVIRON["LIT_L"]) == 1 && index($0, "with pace,") { n++ } END { print n + 0 }' <<<"$ft10_out")"
   if [ "$FT10_SL" -eq 1 ] && [ "$ft10_got" = "1 P 0 1" ] && [ "$ft10_hit" -eq 1 ]; then
-    PASS "CTL-FT10-SHARED: MUST NOT FIRE — 'Pace', declared a former label of would-love while it is the current label of pace in another section, which FT9 permits, is REPORTED and not failed where a prompt names it in a pointer shape, the line naming both keys: a mention of it may be the other field's"
+    PASS "CTL-FT10-SHARED: MUST NOT FIRE — '$FT10_PL', the current label of pace read from the table, declared a former label of would-love in another section, which FT9 permits, is REPORTED and not failed where a prompt names it in a pointer shape, the line naming both keys: a mention of it may be the other field's"
   else
-    FAIL "CTL-FT10-SHARED: MUST NOT FIRE — the declaration landed=$FT10_SL, and FT10 read '$ft10_got' where '1 P 0 1' is owed, $ft10_hit REPORTED line(s) naming both keys"
+    FAIL "CTL-FT10-SHARED: MUST NOT FIRE — pace's label read '${FT10_PL:-<none>}', the declaration landed=$FT10_SL, and FT10 read '$ft10_got' where '1 P 0 1' is owed, $ft10_hit REPORTED line(s) naming both keys"
   fi
   ft10_out="$( unset -f ft_former_rows; ft_capture ft10_assert "$FT10_DOC" "$FT10_W/plant" "$FT10_W/plant.pop" )"
   ft10_got="$(ft10_read "$ft10_out")"
@@ -6108,16 +6111,17 @@ if [ "$FT_OK" -eq 1 ]; then
   else
     FAIL "CTL-FT10-NOPOP: MUST FIRE — an empty population read '$ft10_got' where one FAIL, NOT EVALUATED, is owed"
   fi
+  FT10_WL="$(ft_rows "$FT_DOC" | awk -F'\t' '$11 == "would-love" && !d { print $3; d = 1 }')"
   FT10_LDOC="$FT10_W/doc-live.md"; FT10_LL=0
-  cp "$FT_DOC" "$FT10_LDOC" && ft_row_set "$FT10_LDOC" would-love Field '`ZZ Wishlist`' && ft_c4_former "$FT10_LDOC" 'would-love | Would love'$'\n' && FT10_LL=1
+  [ -n "$FT10_WL" ] && cp "$FT_DOC" "$FT10_LDOC" && ft_row_set "$FT10_LDOC" would-love Field '`ZZ Wishlist`' && ft_c4_former "$FT10_LDOC" "would-love | $FT10_WL"$'\n' && FT10_LL=1
   ft10_out="$(ft_capture ft10_assert "$FT10_LDOC" "$ROOT")"
   ft10_got="$(ft10_read "$ft10_out")"
   ft10_n="$(awk '/^      at / { n++ } END { print n + 0 }' <<<"$ft10_out")"
-  ft10_hit="$(awk '/^      at agents\/destination-ideation\.md:[0-9]+: `Would love` \(would-love\)/ { n++ } END { print n + 0 }' <<<"$ft10_out")"
-  if [ "$FT10_LL" -eq 1 ] && [ "${ft10_got%% *}" = 1 ] && [ "$(cut -d' ' -f2 <<<"$ft10_got")" = F ] && [ "$ft10_hit" -ge 1 ]; then
-    PASS "CTL-FT10-LIVE: MUST FIRE — a copy of the data model rewording would-love and declaring 'Would love' its former label, scanned over the tracked prompt and skill files, reads one FAIL naming $ft10_n pointer-shaped mention(s), $ft10_hit of them in agents/destination-ideation.md: the arm finds the live population, and a reword of that field would surface the lines its author must change"
+  ft10_files="$(awk '/^      at / { p = $2; sub(/:[0-9]+:$/, "", p); if (!s[p]++) printf "%s%s", (k++ ? ", " : ""), p }' <<<"$ft10_out")"
+  if [ "$FT10_LL" -eq 1 ] && [ "${ft10_got%% *}" = 1 ] && [ "$(cut -d' ' -f2 <<<"$ft10_got")" = F ] && [ "$ft10_n" -ge 1 ]; then
+    PASS "CTL-FT10-LIVE: MUST FIRE — a copy of the data model rewording would-love and declaring its current label '$FT10_WL', read from the table, a former label, scanned over the tracked prompt and skill files, reads one FAIL naming $ft10_n pointer-shaped mention(s), in $ft10_files: the arm finds the live population, and a reword of that field would surface the lines its author must change"
   else
-    FAIL "CTL-FT10-LIVE: MUST FIRE — the reword landed=$FT10_LL, and FT10 over the tracked population read '$ft10_got', $ft10_hit pointer-shaped mention(s) in agents/destination-ideation.md where at least one is owed"
+    FAIL "CTL-FT10-LIVE: MUST FIRE — would-love's label read '${FT10_WL:-<none>}', the reword landed=$FT10_LL, and FT10 over the tracked population read '$ft10_got' where one FAIL naming at least one pointer-shaped mention is owed"
   fi
 fi
 
