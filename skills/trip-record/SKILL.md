@@ -3673,9 +3673,9 @@ before either write tool is reached. Not readable → **create** with `Write`, w
 4. **Where the probe finds no `trips/<slug>/.published-itinerary`**, the trip has no published
    baseline, so in a plan mode every `update` and every `rotate` waits for approvals of its current
    plan — a republish that changes only the coordination marker included — until they are recorded;
-   in IDEATION, `update` is refused as consequence 1 says. Name the order that costs nothing:
-   republish once with `/trip-publish update` while the trip is still undeclared, so the push records
-   a baseline, and declare afterwards.
+   in IDEATION, `update` is refused as consequence 1 says. Name the order that costs nothing in a
+   plan mode: republish once with `/trip-publish update` while the trip is still undeclared, so the
+   push records a baseline, and declare afterwards.
 
 `- **Total travelers:**` is not read and sets nothing here: the declared population is the approvers named, never the party's size.
 
