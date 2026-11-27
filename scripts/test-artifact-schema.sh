@@ -16397,12 +16397,16 @@ if [ "$HZ_OK" -eq 1 ]; then
   fi
 
   # ── HZ2 — the `required` membership is exactly one field, and it is the one the
-  # class exists to protect. Read from the table, never asserted against a literal set.
+  # class exists to protect. Read from the table, never asserted against a literal set. The member is
+  # compared by its KEY, `passport`, and its label read from the table for the message, so a reword of
+  # the label leaves the comparison standing (ADR-053 Decision 4 limb 2).
   HZ_REQLIST="$(awk -F'\t' '$2 == "required" { print $1 }' "$HZ_CLASSFILE" | sort -u | tr '\n' ' ')"
-  if [ "$HZ_NREQ" -eq 1 ] && [ "$HZ_REQLIST" = "Passport " ]; then
-    PASS "HZ2: exactly one field declares \`Horizon: required\`, and it is \`Passport\` — the one durable field that becomes wrong on its own, and the one whose silent staleness is checked against rather than merely stored. The remaining $HZ_NADM are \`admissible\`: a mark is honoured where present and its absence is not a finding"
+  HZ_REQKEYS="$(awk -F'\t' '$7 == "required" { print $11 }' "$HZ_ROWS" | sort -u | tr '\n' ' ')"
+  HZ_PPLAB="$(awk -F'\t' '$11 == "passport" && !d { print $3; d = 1 }' "$HZ_ROWS")"
+  if [ "$HZ_NREQ" -eq 1 ] && [ "$HZ_REQKEYS" = "passport " ]; then
+    PASS "HZ2: exactly one field declares \`Horizon: required\`, and it is the field keyed passport, \`$HZ_PPLAB\` — the one durable field that becomes wrong on its own, and the one whose silent staleness is checked against rather than merely stored. The remaining $HZ_NADM are \`admissible\`: a mark is honoured where present and its absence is not a finding"
   else
-    FAIL "HZ2: the \`required\` membership reads $HZ_NREQ member(s): $HZ_REQLIST — expected exactly \`Passport\`. Admitting a second member is a deliberate one-cell edit and this arm is where it must be re-read; a member that arrived by accident is a field now demanding a mark nobody knows it owes"
+    FAIL "HZ2: the \`required\` membership reads $HZ_NREQ member(s): $HZ_REQLIST(key(s) ${HZ_REQKEYS:-none}) — expected exactly the field keyed passport, \`${HZ_PPLAB:-<no row>}\`. Admitting a second member is a deliberate one-cell edit and this arm is where it must be re-read; a member that arrived by accident is a field now demanding a mark nobody knows it owes"
   fi
 
   # ── HZ3 — the mark is EXERCISED, on BOTH scopes, in a tracked instance. ────────
@@ -29777,40 +29781,44 @@ chrctl_assert
 chr_pop() { awk -F'\t' '$1 == "POP"' "$1" | awk 'END { print NR }'; }
 chr_hits() { awk -F'\t' '$1 == "HIT" && $2 != "FB-OBS" { print $2 "\t" $8 }' "$1" | sort; }
 chrseam_assert() {
-  local dm='reference/data-model.md' r p0 b0 g got s34 m34 j
+  local dm='reference/data-model.md' r p0 b0 g got s34 m34 j gt
   p0="$(chr_pop "$TA_OUT_F")"; b0="$(chr_hits "$TA_OUT_F")"
+  # Every flip below finds its row by the row's KEY, through ft_row_set, never by its label cell, and a
+  # label an arm needs is read from the table by key, so a reword of a label leaves each anchor standing
+  # (ADR-053 Decision 4 limb 2); ft_row_set's status is the LANDED assertion each flip owes.
+  gt="$(ft_rows "$ROOT/$dm" | awk -F'\t' '$11 == "group-time" && !d { print $3; d = 1 }')"
   r="$(ta_root S3a)"
-  if ta_mutate "$r" "$dm" '| 21 | ⭐ `Desire` | Desires | **TRIP** |' '| 21 | ⭐ `Desire` | Desires | **PERSON** |'; then
+  if ft_row_set "$r/$dm" desire Class '**PERSON**'; then
     g="$(ta_run "$r" "$LG_LEDGER_F")"; got="$(awk -F'\t' '$1 == "LG1" { print $2 }' <<<"$g" | sort -u | tr '\n' ' ')"
     if [ "$got" = "CHR.P3 FB-T.P1 " ]; then PASS "CHR-SEAM[S3a]: SEAM-3 forward — Desire flipped TRIP to PERSON on a copy makes BO-1 (\"Then make each one specific to them.\") a directed follow-up on a PERSON field: undeclared exactly on FB-T.P1 and CHR.P3"; else FAIL "CHR-SEAM[S3a]: SEAM-3 forward — Desire flipped TRIP to PERSON read undeclared limbs [${got:-none}], where exactly CHR.P3 and FB-T.P1 are predicted"; fi
   else FAIL "CHR-SEAM[S3a]: the flip did not LAND on the copy"; fi
   r="$(ta_root S3b)"
-  if ta_mutate "$r" "$dm" '| 18 | `Category` | Needs | **PERSON** |' '| 18 | `Category` | Needs | **DEFAULT** |' && ta_mutate "$r" "$dm" '| 19 | ⭐ `Specific` | Needs | **PERSON** |' '| 19 | ⭐ `Specific` | Needs | **DEFAULT** |'; then
+  if ft_row_set "$r/$dm" need-category Class '**DEFAULT**' && ft_row_set "$r/$dm" need-detail Class '**DEFAULT**'; then
     ta_run "$r" "$LG_LEDGER_F" > /dev/null
     if [ "$(chr_pop "$r/out.tsv")" -lt "$p0" ] && [ "$(chr_hits "$r/out.tsv")" = "$b0" ]; then PASS "CHR-SEAM[S3b]: rows 18 and 19 flipped PERSON to DEFAULT — the population falls $p0 → $(chr_pop "$r/out.tsv") and no hit moves"; else FAIL "CHR-SEAM[S3b]: rows 18 and 19 flipped read population $p0 → $(chr_pop "$r/out.tsv"), hits identical: $([ "$(chr_hits "$r/out.tsv")" = "$b0" ] && echo yes || echo no) — the population must fall and no hit move"; fi
   else FAIL "CHR-SEAM[S3b]: the flip did not LAND on the copy"; fi
   r="$(ta_root S3c)"
-  if ta_mutate "$r" "$dm" '| 13 | `Passport` | Getting there & back | **PERSON** |' '| 13 | `Passport` | Getting there & back | **DEFAULT** |'; then
+  if ft_row_set "$r/$dm" passport Class '**DEFAULT**'; then
     ta_run "$r" "$LG_LEDGER_F" > /dev/null
     if [ "$(chr_pop "$r/out.tsv")" -lt "$p0" ] && [ "$(chr_hits "$r/out.tsv")" = "$b0" ]; then PASS "CHR-SEAM[S3c]: row 13 flipped PERSON to DEFAULT — the population falls $p0 → $(chr_pop "$r/out.tsv") and no hit moves"; else FAIL "CHR-SEAM[S3c]: row 13 flipped read population $p0 → $(chr_pop "$r/out.tsv") — it must fall with no hit moving"; fi
   else FAIL "CHR-SEAM[S3c]: the flip did not LAND on the copy"; fi
   r="$(ta_root S34)"
-  if ta_mutate "$r" "$dm" '| 34 | `Group time` | People dynamics | **TRIP** |' '| 34 | `Group time` | People dynamics | **PERSON** |'; then
+  if ft_row_set "$r/$dm" group-time Class '**PERSON**'; then
     ta_run "$r" "$LG_LEDGER_F" > /dev/null
-    m34="$(printf 'S34\tFB-T.P1\tFIRE\ttrip\tPeople dynamics\t-\t%s\n' "Follow up on their group time answer.")"
+    m34="$(printf 'S34\tFB-T.P1\tFIRE\ttrip\tPeople dynamics\t-\tFollow up on their %s answer.\n' "$(printf '%s' "$gt" | tr '[:upper:]' '[:lower:]')")"
     s34="$(ta_plants "$r/model.tsv" "$r/a2.tsv" <<<"$m34" | cut -f3,4)"
     j="$(ta_plants "$TA_MODEL_F" "$TA_A2_F" <<<"$m34" | cut -f3,4)"
     if [ "$(chr_pop "$r/out.tsv")" -gt "$p0" ] && [ "$s34" = $'1\tPERSON-SPEECH=FAIL' ] && [ "$j" = $'0\tDIRECTED=observation' ]; then PASS "CHR-SEAM[S34]: Group time flipped TRIP to PERSON — the population rises $p0 → $(chr_pop "$r/out.tsv"), and \"Follow up on their group time answer.\" goes DIRECTED to PERSON-SPEECH FAIL, the join reaching People dynamics & togetherness through ft_lead"; else FAIL "CHR-SEAM[S34]: Group time flipped read population $p0 → $(chr_pop "$r/out.tsv") and the plant [$j] → [$s34], where the population must rise and the plant go DIRECTED to PERSON-SPEECH"; fi
   else FAIL "CHR-SEAM[S34]: the flip did not LAND on the copy"; fi
   r="$(ta_root S36)"
-  if ta_mutate "$r" "$dm" "| 36 | \`Solo, I'd\` | People dynamics | **DEFAULT** |" "| 36 | \`Solo, I'd\` | People dynamics | **PERSON** |"; then
+  if ft_row_set "$r/$dm" solo Class '**PERSON**'; then
     ta_run "$r" "$LG_LEDGER_F" > /dev/null
     if [ "$(chr_pop "$r/out.tsv")" -gt "$p0" ]; then PASS "CHR-SEAM[S36]: row 36 flipped DEFAULT to PERSON — the population rises $p0 → $(chr_pop "$r/out.tsv")"; else FAIL "CHR-SEAM[S36]: row 36 flipped read population $p0 → $(chr_pop "$r/out.tsv"), where it must rise"; fi
   else FAIL "CHR-SEAM[S36]: the flip did not LAND on the copy"; fi
   r="$(ta_root CHRJ)"
-  if ta_mutate "$r" "$dm" '| 34 | `Group time` | People dynamics | **TRIP** |' '| 34 | `Group time` | People dynamic | **TRIP** |'; then
+  if ft_row_set "$r/$dm" group-time Section 'People dynamic'; then
     got="$(ta_model "$r" "$r" | awk -F'\t' '$1 == "J" && $5 != "ONE" { print $3 " · " $4 ": " $5 }')"
-    if [ "$got" = "People dynamics & togetherness · Group time: NONE" ]; then PASS "CHR-SEAM[CHRJ]: row 34's Section read People dynamic — no token boundary — leaves Group time joining NONE, and CHR.J would name it; the tracked table joins every bullet"; else FAIL "CHR-SEAM[CHRJ]: row 34's Section read People dynamic gave [${got:-every bullet ONE}], where exactly Group time must join NONE"; fi
+    if [ -n "$gt" ] && [ "$got" = "People dynamics & togetherness · $gt: NONE" ]; then PASS "CHR-SEAM[CHRJ]: row 34's Section read People dynamic — no token boundary — leaves Group time joining NONE, and CHR.J would name it; the tracked table joins every bullet"; else FAIL "CHR-SEAM[CHRJ]: row 34's Section read People dynamic gave [${got:-every bullet ONE}], where exactly Group time must join NONE"; fi
   else FAIL "CHR-SEAM[CHRJ]: the flip did not LAND on the copy"; fi
   r="$(ta_root R1)"
   awk '!/^- \*\*W10/' "$r/skills/trip-record/interview-conduct.md" > "$r/c.md"
