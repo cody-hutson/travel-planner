@@ -39,10 +39,10 @@ a field shows while you type in it, text meant only for assistive technology, a 
 record was taken under the earlier version. Records this release writes remain readable if the release
 is reverted.
 
-**Size fence.** Read against `v0.77.0`, the previous release tag, `CH_EMIT=growth bash
+**Size fence.** Read against `v0.78.0`, the previous release tag, `CH_EMIT=growth bash
 scripts/test-corpus-hygiene.sh` lists every row kept, none new, raised, lowered or dropped, and no file
 owing a row without one. `reference/adr/ADR-029-group-approval-return-and-threshold.md` grew 606 bytes
-to 59,801, beneath 64,173; `skills/trip/SKILL.md` grew 49 to 107,503, beneath 118,008; and
+to 59,801, beneath 64,173; `skills/trip/SKILL.md` grew 49 to 108,592, beneath 118,008; and
 `skills/trip-publish/SKILL.md` grew 157 to 47,294, beneath 48,711. `reference/adr/ADR-052-a-body-ends-where-the-browser-ends-it.md`,
 amended in this release, grew 1,080 bytes to 13,290 and is below its class floor, so it owes no row.
 
