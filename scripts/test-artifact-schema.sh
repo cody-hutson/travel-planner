@@ -21994,7 +21994,9 @@ fi
 # The IN labels here are NC2v's OWN reader of ADR-030 — § 2's code spans between its two
 # list anchors, and § 4's person-record paragraph — kept apart from any other reader of that
 # record, because which IN values the class covers and which values the site may show are two
-# questions.
+# questions. Those labels are prose and are never rewritten at a reword, so the evaluator holds them
+# to the table field by field: each label, the render's and the prose's, is mapped to the keys whose
+# current or former label it is (ADR-053 Decision 10).
 NC2S_AWK='
   function nc_links(s, pre,   t) {       # every [ADR-NNN](ADR-NNN-slug.md) link of s, as "<pre>\t<id>\t<file>"
     while (match(s, /\[ADR-[0-9][0-9][0-9]\]\(ADR-[0-9][0-9][0-9]-[a-z0-9-]+\.md\)/)) {
@@ -22088,6 +22090,10 @@ nc_c2_in_labels() {
 }
 # nc_c2_verdict <limb enc|plain> <label> <kind value|count> <adr-025> <adr-030> <data-model>
 #   rc 0 ADMIT · 1 DENY · 2 not measured (an input this evaluator needs did not read)
+# A value is admitted FIELD BY FIELD (ADR-053 Decision 10): the render label and every IN label NC2v
+# reads are mapped to the field keys whose current or former label they are, a span the table does not
+# carry under either leaves the evaluator not measured, and the render label is admitted when it names
+# exactly one field and that field is among the spans'. The prose is never rewritten at a reword.
 nc_c2_verdict() {
   local limb="$1" label="$2" kind="$3" adr25="$4" adr30="$5" dm="$6"
   local ins nin nres rd
@@ -22101,10 +22107,15 @@ nc_c2_verdict() {
   [ "$limb" = enc ] || [ "$limb" = plain ] || return 2
   ins="$(nc_c2_in_labels "$adr30" 2>/dev/null)"
   nin="$(nc_count "$ins")"
-  nres="$(awk -F'\t' 'FILENAME == ARGV[1] { if ($3 != "") lab[$3] = 1; next } NF && ($0 in lab) { n++ } END { print n + 0 }' <(ft_rows "$dm" 2>/dev/null) <(printf '%s\n' "$ins"))"
+  nres="$(awk -F'\t' 'FILENAME == ARGV[1] { if ($3 != "") lab[$3] = 1; next } FILENAME == ARGV[2] { if ($1 == "R") lab[$4] = 1; next } NF && ($0 in lab) { n++ } END { print n + 0 }' <(ft_rows "$dm" 2>/dev/null) <(ft_former_rows "$dm" 2>/dev/null) <(printf '%s\n' "$ins"))"
   [ "$nin" -gt 0 ] && [ "$nres" -eq "$nin" ] || return 2
   [ "$limb" = enc ] || return 1
-  awk -v l="$label" '$0 == l { f = 1 } END { exit (f ? 0 : 1) }' <<<"$ins"
+  awk -F'\t' -v l="$label" '
+    function add(s, k) { if (k != "" && !((s, k) in got)) { got[s, k] = 1; ks[s] = ks[s] " " k } }
+    FILENAME == ARGV[1] { if ($3 != "") add($3, $11); next }
+    FILENAME == ARGV[2] { if ($1 == "R") add($4, $3); next }
+    NF { m = split(ks[$0], K, " "); for (i = 1; i <= m; i++) sk[K[i]] = 1 }
+    END { m = split(ks[l], K, " "); exit ((m == 1 && (K[1] in sk)) ? 0 : 1) }' <(ft_rows "$dm" 2>/dev/null) <(ft_former_rows "$dm" 2>/dev/null) <(printf '%s\n' "$ins")
 }
 # nc2v_text <limb> <label> <kind> — the finding a DENY carries.
 nc2v_text() {
@@ -22282,23 +22293,26 @@ fi
 #             parentheses, a trailing parenthetical giving its own comma-separated items, and
 #             each item split at ` and `. A bullet whose first sentence carries a (§ N)
 #             cross-reference is mark-conditioned
-#   RESOLVE   a normalized item equal to exactly one row's label places that pair; equal to
-#             more than one it places nothing and is counted; equal to a section name it
-#             places every pair of that section; anything else is kept by its text, UNPLACED
+#   RESOLVE   a normalized item equal to exactly one row's label, current or FORMER, places that
+#             pair; equal to more than one it places nothing and is counted; equal to a section
+#             name it places every pair of that section; anything else is kept by its text,
+#             UNPLACED. A former label is read wherever the current one is (ADR-053 Decision 10),
+#             because § 2's prose is never rewritten at a reword
 #
 # ── WHAT MC5 HOLDS ───────────────────────────────────────────────────────────────
 #   (i)     every pair the prose places carries a row of the same class
 #   (ii-a)  a field row the prose places is placed by ITS OWN words, in its own class
 #   (ii-b)  a field row the prose does not place cites an item the prose leaves unplaced, of
 #           its own list and its own mark condition, TIED to it: the item carries the first
-#           word of the row's label; or else of its section, and then every field of that
-#           section carries a row citing the same words
+#           word of the row's label or of a former label of its key; or else of its section,
+#           and then every field of that section carries a row citing the same words
 #   (ii-c)  a row naming no field cites words a bullet of its own list carries, and those
-#           words are not a label or a section name
+#           words are not a label, a former label or a section name
 #   (iii)   every bullet carries the words of at least one row of its list
 #   CD-A    every field row names a field of a guided intake form — the declaration places none
 #           of the trip context's fields, which § 2 does not name
-#   CD-B    no row naming no field stands in for a guided-form field that carries no row
+#   CD-B    no row naming no field stands in for a guided-form field that carries no row, the
+#           tie being (ii-b)'s own, former labels included
 #   CD-C    the words a row cites occur in exactly one bullet of its list
 # FIRST WORD is the first run of letters, digits and apostrophes after lowercasing. CONTAINS is
 # case-folded, with no letter and no digit against either end.
@@ -22515,13 +22529,24 @@ function mc_emit(list,   k, u, m, j, x, cls, IT, key, raw, a, na, A) {
     }
   }
 }
+# one spelling of the label of a row: an entry per ROW, so a spelling two labels of one row normalize
+# to — a reword of punctuation only — still places that one row, and LC counts the rows it names.
+function mc_ln(x, r) { if ((x, r) in LR) return; LR[x, r] = 1; LN[x] = LN[x] " " r; LC[x]++ }
 FILENAME == ARGV[1] {
   nf = split($0, C, "\t")
   if (nf >= 3 && C[3] != "") {
-    nr++; rnum[nr] = C[1]; rsec[nr] = C[2]; rlab[nr] = C[3]
-    x = mc_norm(C[3]); LN[x] = LN[x] " " nr; LC[x]++
+    nr++; rnum[nr] = C[1]; rsec[nr] = C[2]; rlab[nr] = C[3]; if (nf >= 11 && C[11] != "") rkey[C[11]] = nr
+    mc_ln(mc_norm(C[3]), nr)
     x = mc_norm(C[2]); SN[x] = SN[x] " " nr
   }
+  next
+}
+# A FORMER label places its field wherever its current label would (ADR-053 Decision 10): equal to
+# the label of another field, current or former, it is ambiguous as an equal current label is. Its
+# record is split on the tab, never on the default separator, so a label holding a space or a comma
+# is read whole.
+FILENAME == ARGV[2] {
+  if (split($0, R, "\t") >= 4 && R[1] == "R" && (R[3] in rkey)) mc_ln(mc_norm(R[4]), rkey[R[3]])
   next
 }
 { L[++n] = $0 }
@@ -22537,7 +22562,7 @@ END {
     mc_emit("IN"); mc_emit("OUT")
   }
   printf "MARKERS\t%d\n", MC_NMARK + 0
-}' <(ft_rows "$2") "$1"
+}' <(ft_rows "$2") <(ft_former_rows "$2") "$1"
 }
 
 # mc_guided — the `## ` headings of the guided intake forms that carry a labelled bullet above
@@ -22552,8 +22577,13 @@ mc_agree() {
     awk 'NF { print "P\t" $0 }' <<<"$2"
     ft_rows "$3" | awk 'NF { print "F\t" $0 }'
     awk 'NF { print "G\t" $0 }' <<<"$4"
+    ft_former_rows "$3" | awk -F'\t' '$1 == "R" { print "L\t" $3 "\t" $4 }'
   } | LC_ALL=C awk -v star="$FT_STAR" -v rsq="$MC_RSQ" -v em="$MC_EM" "$MC_LIB$FT_LEAD_FN"'
 function mc_row(r) { return rc[r] " | " rk[r] }
+# ADR-053 Decision 10: a row ties to words by the first word of its label OR OF ANY FORMER LABEL of its
+# key, and words equal the label of a field when they equal its current label or any former one.
+function mc_tiek(x, k, cur,   i) { if (mc_has(x, mc_first(cur))) return 1; for (i = 1; i <= nfl[k]; i++) if (mc_has(x, mc_first(FL[k, i]))) return 1; return 0 }
+function mc_isl(x, k, cur,   i) { if (x == mc_norm(cur)) return 1; for (i = 1; i <= nfl[k]; i++) if (x == mc_norm(FL[k, i])) return 1; return 0 }
 function mc_list(r) { return (rc[r] == "OUT") ? "OUT" : "IN" }
 function mc_guided(sec,   k) { for (k = 1; k <= ng; k++) if (ft_lead(sec, gh[k])) return 1; return 0 }
 BEGIN { FS = "\t"; q = "\047" }
@@ -22565,7 +22595,8 @@ $1 == "D" && $2 == "ROW" {
 $1 == "P" && $2 == "PLACED" { np++; pc[np] = $3; ps[np] = $4; pb[np] = $5; px[np] = $7; pl[$3, $4, $5, $7] = 1; if (!(($4, $5) in anyc)) { anyc[$4, $5] = $3; anyx[$4, $5] = $7 }; next }
 $1 == "P" && $2 == "UNRES" { un[$3, $4] = 1; nun++; next }
 $1 == "P" && $2 == "BULLET" { nb++; bl[nb] = $3; bt[nb] = $6; braw[nb] = $7; next }
-$1 == "F" { if ($4 != "") { nfs++; fsec[nfs] = $3; flab[nfs] = $4 }; next }
+$1 == "F" { if ($4 != "") { nfs++; fsec[nfs] = $3; flab[nfs] = $4; fkey[nfs] = $12 }; next }
+$1 == "L" { nfl[$2]++; FL[$2, nfl[$2]] = $3; next }
 $1 == "G" { if ($2 != "") gh[++ng] = $2; next }
 END {
   # (i) prose -> fence: every pair the prose places carries a row of the same class
@@ -22584,8 +22615,8 @@ END {
       for (b = 1; b <= nb; b++) if (bl[b] == lst && mc_has(bt[b], x)) { found = 1; break }
       if (!found) printf "FIND\tii-c\tMC5: the em-dash row %s | %s | %s cites words no %s bullet of § 2 carries\n", rc[r], em, ra[r], lst
       eq = 0
-      for (k = 1; k <= nfs; k++) if (x == mc_norm(flab[k]) || x == mc_norm(fsec[k])) { eq = 1; break }
-      if (eq) printf "FIND\tii-c\tMC5: an em-dash row cites words that name a field — %s%s%s equals a label or a section name\n", q, ra[r], q
+      for (k = 1; k <= nfs; k++) if (mc_isl(x, fkey[k], flab[k]) || x == mc_norm(fsec[k])) { eq = 1; break }
+      if (eq) printf "FIND\tii-c\tMC5: the em-dash row %s | %s | %s cites words that name a field — %s%s%s equals a label, a former label or a section name\n", rc[r], em, ra[r], q, ra[r], q
       continue
     }
     # CD-A: the population boundary. A field row names a field of a guided intake form
@@ -22602,7 +22633,7 @@ END {
       printf "FIND\tii-b\tMC5: the row %s cites %s%s%s, which is not an item § 2%ss %s list leaves unplaced for a row of that class\n", mc_row(r), q, ra[r], q, q, lst
       continue
     }
-    if (mc_has(x, mc_first(rl[r]))) continue
+    if (mc_tiek(x, rk[r], rl[r])) continue
     if (mc_has(x, mc_first(rs[r]))) {
       miss = ""
       for (k = 1; k <= nfs; k++) if (fsec[k] == rs[r] && !((fsec[k], flab[k], x) in cite)) miss = miss (miss == "" ? "" : ", ") flab[k]
@@ -22628,7 +22659,7 @@ END {
     if ((fsec[k], flab[k]) in haspair) continue
     for (r = 1; r <= nr; r++) {
       if (rs[r] != em) continue
-      tie = mc_has(rx[r], mc_first(flab[k]))
+      tie = mc_tiek(rx[r], fkey[k], flab[k])
       if (!tie && mc_has(rx[r], mc_first(fsec[k]))) {
         tie = 1
         for (j = 1; j <= nfs; j++) if (fsec[j] == fsec[k] && ((fsec[j], flab[j]) in haspair) && !((fsec[j], flab[j], rx[r]) in cite)) { tie = 0; break }
@@ -23068,13 +23099,16 @@ if [ "$MC_OK" -eq 1 ]; then
 fi
 
 # ── MC1 — the two records, and the two readers of one record, agree ─────────────────────
-# mc1_find <channels> <moved> <decl> <nc2v-labels> <class-token> — one finding per line
+# mc1_find <channels> <moved> <decl> <nc2v-labels> <class-token> <former-label-records> — one finding
+# per line. A label NC2v's reader takes from the prose is declared IN when it is the current label or a
+# FORMER label of an IN row's key (ADR-053 Decision 10): the prose is never rewritten at a reword.
 mc1_find() {
   {
     awk 'NF { print "C\t" $0 }' <<<"$1"
     awk 'NF { print "M\t" $0 }' <<<"$2"
     awk 'NF { print "D\t" $0 }' <<<"$3"
     awk 'NF { print "V\t" $0 }' <<<"$4"
+    awk -F'\t' '$1 == "R" { print "L\t" $3 "\t" $4 }' <<<"${6:-}"
   } | awk -F'\t' -v em="$MC_EM" -v hard="$5" '
     function inset(v, set) { return index(" " set " ", " " v " ") > 0 }
     function braces(set) { gsub(/ /, ", ", set); return "{" set "}" }
@@ -23082,9 +23116,11 @@ mc1_find() {
     $1 == "C" && $2 == "AXIS" { ax[$3] = $4; next }
     $1 == "C" && $2 == "CH" { n++; key[n] = $3; chan[n] = $4; c1[n] = $5; c2[n] = $6; next }
     $1 == "M" && $2 == "MOVED" { ml = $3; ma = $4; mv = $5; next }
-    $1 == "D" && $2 == "ROW" { if ($3 == "IN" && $4 != em) din[$5] = 1; next }
+    $1 == "D" && $2 == "ROW" { if ($3 == "IN" && $4 != em) { din[$5] = 1; ink[$8] = 1 }; next }
     $1 == "V" { v[++nv] = $2; next }
+    $1 == "L" { lk[++nl] = $2; lf[nl] = $3; next }
     END {
+      for (i = 1; i <= nl; i++) if (lk[i] in ink) din[lf[i]] = 1
       q = "\047"; bad = 0; what = ""
       for (i = 1; i <= n; i++) {
         if (!inset(c1[i], ax[h1])) { bad++; what = what (what == "" ? "" : "; ") chan[i] " " h1 " " q c1[i] q " is not one of " braces(ax[h1]) }
@@ -23104,7 +23140,7 @@ if [ "$MC_OK" -eq 1 ]; then
   MC_HARD="$(nc_span "$(nc_cell "${NC_TABLE:-}" 2 4)")"
   MC1_V="$(nc_c2_in_labels "$MC_ADR030" 2>/dev/null)"
   MC1_NV="$(mc_lines "$MC1_V")"
-  MC1_FIND="$(mc1_find "$MC_CH" "$MC_MOVED" "$MC_DECL" "$MC1_V" "$MC_HARD")"
+  MC1_FIND="$(mc1_find "$MC_CH" "$MC_MOVED" "$MC_DECL" "$MC1_V" "$MC_HARD" "$(ft_former_rows "$MC_DM" 2>/dev/null)")"
   MC1_ROWS="$(awk -F'\t' '$1 == "CH" { printf "%s(%s, %s)", (n++ ? " " : ""), $4, $5 }' <<<"$MC_CH")"
   MC1_AXES="$(awk -F'\t' '$1 == "AXIS" { v = $3; gsub(/ /, ", ", v); printf "%s%s {%s}", (n++ ? "; " : ""), $2, v }' <<<"$MC_CH")"
   IFS="$VA_TAB" read -r _ MC1_ML MC1_MA MC1_MV <<<"$(awk -F'\t' '$1 == "MOVED"' <<<"$MC_MOVED")"
@@ -23113,7 +23149,7 @@ if [ "$MC_OK" -eq 1 ]; then
   elif [ -n "$MC1_FIND" ]; then
     FAIL "$(printf '%s' "$MC1_FIND" | tr '\n' ' ')"
   else
-    PASS "MC1: the records agree — ADR-026 § 3's channel table, read inside that section, carries $MC_NCH row(s), $MC1_ROWS, every cell inside its axis's declared set ($MC1_AXES); the one cell ADR-030 § 1 says it moves, the ${MC1_ML} limb's ${MC1_MA} cell, reads '$MC1_MV' in both records; and all $MC1_NV label(s) NC2v's own reader takes from ADR-030 are declared IN by the declaration ($MC1_NV within $MC_FIN). The two readers of ADR-030 answer two questions and are held to each other one way"
+    PASS "MC1: the records agree — ADR-026 § 3's channel table, read inside that section, carries $MC_NCH row(s), $MC1_ROWS, every cell inside its axis's declared set ($MC1_AXES); the one cell ADR-030 § 1 says it moves, the ${MC1_ML} limb's ${MC1_MA} cell, reads '$MC1_MV' in both records; and all $MC1_NV label(s) NC2v's own reader takes from ADR-030 are declared IN by the declaration, each the current or a former label of an IN row's key ($MC1_NV within $MC_FIN). The two readers of ADR-030 answer two questions and are held to each other one way"
   fi
   # mc1_arm <id> <predicted-finding> <label> <which-record> <kind> [args…]
   mc1_arm() {
@@ -23122,7 +23158,7 @@ if [ "$MC_OK" -eq 1 ]; then
     if [ "$which" = adr026 ]; then src="$MC_ADR026"; f="$MC_W/$id-adr026.md"; a26="$f"; else src="$MC_ADR030"; f="$MC_W/$id-adr030.md"; a30="$f"; fi
     mc_mutate "$src" "$@" > "$f" 2>/dev/null
     delta="$(mc_delta "$src" "$f")"
-    got="$(mc1_find "$(mc_channels "$a26" 2>/dev/null)" "$(mc_moved "$a30" 2>/dev/null)" "$(mc_decl "$a30" "$MC_DM" 2>/dev/null)" "$(nc_c2_in_labels "$a30" 2>/dev/null)" "$MC_HARD")"
+    got="$(mc1_find "$(mc_channels "$a26" 2>/dev/null)" "$(mc_moved "$a30" 2>/dev/null)" "$(mc_decl "$a30" "$MC_DM" 2>/dev/null)" "$(nc_c2_in_labels "$a30" 2>/dev/null)" "$MC_HARD" "$(ft_former_rows "$MC_DM" 2>/dev/null)")"
     if [ "$delta" -eq 0 ]; then
       FAIL "$id: fixture integrity — the mutation did not land ($label): the copy does not differ from its source, so the arm below would prove nothing"
     elif [ "$got" = "$want" ]; then
@@ -23311,7 +23347,7 @@ if [ "$MC_OK" -eq 1 ]; then
   mc5_arm MC5f2 'i ii-a' "MC5: § 2's prose places ($(mc5_pair special-occasion)) IN-IF-MARKED, and the declaration carries no IN-IF-MARKED row for it" 1 "a copy in which the mark-conditioned occasion row is given the unconditional class" reclass special-occasion IN
   mc5_arm MC5f3 'CD-A ii-b' "MC5: the row IN | check-in-time cites '$(mc5_aw blackout)', which names neither its label nor its whole section" 1 "a copy in which a row tied by other words is re-keyed to a trip-context field" rekey blackout check-in-time
   mc5_arm MC5f4 'iii' "MC5: § 2's OUT bullet 'spending limits on shared meals.' is accounted for by no row" 1 "a copy with one new bullet appended to the OUT list" outbullet '' '- spending limits on shared meals.'
-  mc5_arm MC5f5 'ii-c' "MC5: an em-dash row cites words that name a field — '$MC5_RMW' equals a label or a section name" 1 "a copy with one more row naming no field, citing a field's label" addrow rooming "IN | $MC_EM | $MC5_RMW"
+  mc5_arm MC5f5 'ii-c' "MC5: the em-dash row IN | $MC_EM | $MC5_RMW cites words that name a field — '$MC5_RMW' equals a label, a former label or a section name" 1 "a copy with one more row naming no field, citing a field's label" addrow rooming "IN | $MC_EM | $MC5_RMW"
   mc5_arm MC5f6 'CD-C ii-a' "MC5: the row IN | splurge-appetite cites '$(mc5_aw splurge-appetite)', and § 2's prose places that field OUT by '$(mc5_aw splurge-appetite)' — the row's list or its words are not the ones that place it" 1 "a copy in which a field the prose places OUT also carries an IN row" addrow splurge-appetite "IN | splurge-appetite | $(mc5_aw splurge-appetite)"
   if [ "$MC5_X3N" -gt 0 ] && [ -n "$MC5_SHORT" ]; then
     mc5_arm MC5f7 'CD-A' "MC5: the row IN | $MC5_X3FIRST names a field of no guided intake form — § 2 names none of the trip context's fields, and the declaration places no field § 2 does not name" "$MC5_X3N" "a copy in which every field of a trip-context section is declared IN, citing an item § 2 does carry" addrows can-travel "$MC5_X3ROWS"
