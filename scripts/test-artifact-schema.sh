@@ -16108,9 +16108,13 @@ if [ "$XT_OK" -eq 1 ]; then
   # The display name is the source file's OWN answered `Name` bullet. The legacy
   # files carry one; the post-split file carries none and refuses earlier. The
   # anchored-only reading finds it on NONE of them, which is XT2's miss at the one
-  # field the verb cannot proceed without.
-  xt_name() { xt_bullets "$1" "$2" | awk -F'\t' '
-      $1 == "Name" && $2 != "" && $2 != "—" && $2 != "-" && $2 !~ /^\[.*\]$/ { n++ }
+  # field the verb cannot proceed without. The fixtures are written profiles, so the
+  # bullet is read under the field's current label or a former one (ADR-053 Decision 3),
+  # the labels read by key, `name`, through ft_spellings — XT_NAMES, one a line.
+  XT_NAMES="$(ft_spellings "$XT_DM" name)"
+  xt_isname() { LIT_N="$XT_NAMES" awk -F'\t' -v v="$1" 'BEGIN { n = split(ENVIRON["LIT_N"], A, "\n"); for (i = 1; i <= n; i++) if (A[i] != "") nm[A[i]] = 1 } ($1 in nm) { if (v) print $2; else print } '; }
+  xt_name() { xt_bullets "$1" "$2" | xt_isname 0 | awk -F'\t' '
+      $2 != "" && $2 != "—" && $2 != "-" && $2 !~ /^\[.*\]$/ { n++ }
       END { print n + 0 }'; }
   XT_LEG=0
   XT_LEGBLIND=0
@@ -16130,10 +16134,10 @@ if [ "$XT_OK" -eq 1 ]; then
   fi
 
   # ── XT6 — the tombstone refusal, demonstrable on a shipped fixture ────────────
-  XT_TN="$(xt_bullets "$XT_TOMB" 1 | awk -F'\t' '$1 == "Name" { print $2 }' \
+  XT_TN="$(xt_bullets "$XT_TOMB" 1 | xt_isname 1 \
     | grep -c '^per-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]$' || true)"
   XT_ON="$(for xt_f in "$XT_A" "$XT_B" "$XT_DANA"; do
-      xt_bullets "$xt_f" 1 | awk -F'\t' '$1 == "Name" { print $2 }'
+      xt_bullets "$xt_f" 1 | xt_isname 1
     done | grep -c '^per-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]$' || true)"
   if [ "$XT_TN" -eq 0 ]; then
     FAIL "XT6: the erased bearer's \`Name\` does not match the tombstone-token shape, so the refusal that stops this verb minting a durable record named after a tombstone has no witness in this tree"
