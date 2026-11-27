@@ -23271,7 +23271,9 @@ if [ "$MC_OK" -eq 1 ]; then
     local f="$MC_W/$id.md" dm="${MC5_DMX:-$MC_DM}" out codes delta has n1 where="the record"
     [ "$dm" = "$MC_DM" ] || where="the record and the data model"
     mc_mutate "$MC_ADR030" "$@" > "$f" 2>/dev/null
-    delta="$(( $(mc_delta "$MC_ADR030" "$f") + $(mc_delta "$MC_DM" "$dm") ))"
+    delta="$(mc_delta "$MC_ADR030" "$f")"
+    # mc_delta reads its two arguments by FILENAME, so the live table is never compared with itself
+    [ "$dm" = "$MC_DM" ] || delta=$((delta + $(mc_delta "$MC_DM" "$dm")))
     out="$(mc_agree "$(mc_decl "$f" "$dm" 2>/dev/null)" "$(mc_place "$f" "$dm" 2>/dev/null)" "$dm" "$MC_GUIDED")"
     codes="$(mc5_codes "$out")"
     has="$(awk -F'\t' -v w="$want" '$1 == "FIND" && $3 == w { n++ } END { print n + 0 }' <<<"$out")"
