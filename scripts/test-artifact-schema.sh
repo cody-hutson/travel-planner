@@ -22190,22 +22190,26 @@ if [ "$NC_OK" -eq 1 ]; then
         print k; f = 1 }
       END { if (!f) print "absent" }' "$NC2V_D/model.md" "$NC2V_D/manifest.txt" "$1"
   }
-  # nc2v_arm <id> <want-rc> <limb> <label> <adr-025> <prose>
+  # nc2v_arm <id> <want-rc> <limb> <label> <adr-025> <prose> — the record and the table the evaluator
+  # reads are NC2V_A30 and NC2V_DM where set, the live ones otherwise, and the code the evaluator
+  # returned is left in NC2V_RC before a verdict renders: group MC's MC6 re-runs these arms over the
+  # criterion-4 copies through exactly those three names, so the six cases are stated once, here.
   nc2v_arm() {
     local id="$1" want="$2" limb="$3" label="$4" adr25="$5" prose="$6"
-    local render="$NC2V_D/$limb.html" kind got got2 text wtext
+    local render="$NC2V_D/$limb.html" kind got got2 text wtext a30="${NC2V_A30:-$NC_ADR030}" dm="${NC2V_DM:-$NC_DM}"
     if [ "$limb" = both ]; then
       # one emission, graded on each limb: the two verdicts must be the same one
       kind="$(nc2v_kind "$NC2V_D/enc.html" "$label")"
       [ "$(nc2v_kind "$NC2V_D/plain.html" "$label")" = "$kind" ] || kind="absent"
-      nc_c2_verdict enc "$label" "$kind" "$adr25" "$NC_ADR030" "$NC_DM" >/dev/null 2>&1; got=$?
-      nc_c2_verdict plain "$label" "$kind" "$adr25" "$NC_ADR030" "$NC_DM" >/dev/null 2>&1; got2=$?
+      nc_c2_verdict enc "$label" "$kind" "$adr25" "$a30" "$dm" >/dev/null 2>&1; got=$?
+      nc_c2_verdict plain "$label" "$kind" "$adr25" "$a30" "$dm" >/dev/null 2>&1; got2=$?
       [ "$got" -eq "$got2" ] || got=99
       limb=enc
     else
       kind="$(nc2v_kind "$render" "$label")"
-      nc_c2_verdict "$limb" "$label" "$kind" "$adr25" "$NC_ADR030" "$NC_DM" >/dev/null 2>&1; got=$?
+      nc_c2_verdict "$limb" "$label" "$kind" "$adr25" "$a30" "$dm" >/dev/null 2>&1; got=$?
     fi
+    NC2V_RC="$got"
     text=""; [ "$got" -eq 1 ] && text="$(nc2v_text "$limb" "$label" "$kind")"
     wtext=""; [ "$want" -eq 1 ] && wtext="$(nc2v_text "$limb" "$label" "$kind")"
     if [ "$kind" != value ] && [ "$kind" != count ]; then
@@ -22224,12 +22228,16 @@ if [ "$NC_OK" -eq 1 ]; then
     cp "$NC_ADR025" "$NC2V_D/${NC_ADR025##*/}"; [ -n "$NC2S_FILE" ] && cp "${NC_ADR025%/*}/$NC2S_FILE" "$NC2V_D/$NC2S_FILE"
     awk 'index($0, "- **Status:**") == 1 { st = 1 } st && /^- \*\*/ && index($0, "- **Status:**") != 1 { st = 0 } st { gsub(/never-carry 2/, "never-carry two") }
          /^\|[ \t]*2[ \t]*\|/ && index($0, "*(Superseded in part") { p = index($0, "*(Superseded in part"); rest = substr($0, p); q = index(rest, ")*"); head = substr($0, 1, p - 1); sub(/ $/, "", head); $0 = head substr(rest, q + 2) } { print }' "$NC_ADR025" > "$NC2V_D/${NC_ADR025##*/}"
-    nc2v_arm NC2v1 1 enc Specific "$NC_ADR025" "MUST-FIRE — a $NC5_CARRIER value under a label ADR-030 does not put on its IN list reaches the encrypted render"
-    nc2v_arm NC2v2 1 plain "$NC2V_INLBL" "$NC_ADR025" "MUST-FIRE — a $NC5_CARRIER value under an IN label reaches the plaintext render, where nothing of the class may"
-    nc2v_arm NC2v3 1 enc 'Party needs' "$NC_ADR025" "MUST-FIRE — a count derived from $NC5_CARRIER reaches the render under a label no superseding record admits: the anonymized form"
-    nc2v_arm NC2v4 0 enc "$NC2V_INLBL" "$NC_ADR025" "MUST-NOT-FIRE — the same IN value on the encrypted render is the reading ADR-030 gives"
-    nc2v_arm NC2v5 0 both "$NC2V_CNTLBL" "$NC_ADR025" "MUST-NOT-FIRE — the one count the superseding record admits, graded on BOTH limbs, while the marker and the Status sentence stand"
-    nc2v_arm NC2v6 1 both "$NC2V_CNTLBL" "$NC2V_D/${NC_ADR025##*/}" "MUST-FIRE — the same count, on both limbs, against a copy of ADR-025 with the marker and the Status sentence removed: the exception is read from the record, not held here"
+    # nc2v_arms — the six arms, stated once: they run here, and MC6 runs them again over a copy.
+    nc2v_arms() {
+      nc2v_arm NC2v1 1 enc Specific "$NC_ADR025" "MUST-FIRE — a $NC5_CARRIER value under a label ADR-030 does not put on its IN list reaches the encrypted render"
+      nc2v_arm NC2v2 1 plain "$NC2V_INLBL" "$NC_ADR025" "MUST-FIRE — a $NC5_CARRIER value under an IN label reaches the plaintext render, where nothing of the class may"
+      nc2v_arm NC2v3 1 enc 'Party needs' "$NC_ADR025" "MUST-FIRE — a count derived from $NC5_CARRIER reaches the render under a label no superseding record admits: the anonymized form"
+      nc2v_arm NC2v4 0 enc "$NC2V_INLBL" "$NC_ADR025" "MUST-NOT-FIRE — the same IN value on the encrypted render is the reading ADR-030 gives"
+      nc2v_arm NC2v5 0 both "$NC2V_CNTLBL" "$NC_ADR025" "MUST-NOT-FIRE — the one count the superseding record admits, graded on BOTH limbs, while the marker and the Status sentence stand"
+      nc2v_arm NC2v6 1 both "$NC2V_CNTLBL" "$NC2V_D/${NC_ADR025##*/}" "MUST-FIRE — the same count, on both limbs, against a copy of ADR-025 with the marker and the Status sentence removed: the exception is read from the record, not held here"
+    }
+    nc2v_arms
   fi
 fi
 
@@ -23255,26 +23263,31 @@ if [ "$MC_OK" -eq 1 ]; then
 
   # mc5_arm <id> <want-codes> <want-text> <want-count-of-first-code> <label> <kind> [args…]
   # One mutation of a COPY of the record. The codes it raises must be exactly <want-codes>;
-  # <want-text>, when given, must be one of the findings, word for word.
+  # <want-text>, when given, must be one of the findings, word for word. The data model is the live
+  # one, or the copy MC5_DMX names — mc5_arm_on sets it for one call — and a line that copy changes
+  # counts toward the mutation's landing as a line of the record's copy does.
   mc5_arm() {
     local id="$1" wantc="$2" want="$3" wantn="$4" label="$5"; shift 5
-    local f="$MC_W/$id.md" out codes delta has n1
+    local f="$MC_W/$id.md" dm="${MC5_DMX:-$MC_DM}" out codes delta has n1 where="the record"
+    [ "$dm" = "$MC_DM" ] || where="the record and the data model"
     mc_mutate "$MC_ADR030" "$@" > "$f" 2>/dev/null
-    delta="$(mc_delta "$MC_ADR030" "$f")"
-    out="$(mc_agree "$(mc_decl "$f" "$MC_DM" 2>/dev/null)" "$(mc_place "$f" "$MC_DM" 2>/dev/null)" "$MC_DM" "$MC_GUIDED")"
+    delta="$(( $(mc_delta "$MC_ADR030" "$f") + $(mc_delta "$MC_DM" "$dm") ))"
+    out="$(mc_agree "$(mc_decl "$f" "$dm" 2>/dev/null)" "$(mc_place "$f" "$dm" 2>/dev/null)" "$dm" "$MC_GUIDED")"
     codes="$(mc5_codes "$out")"
     has="$(awk -F'\t' -v w="$want" '$1 == "FIND" && $3 == w { n++ } END { print n + 0 }' <<<"$out")"
     n1="$(awk -F'\t' -v c="${wantc%% *}" '$1 == "FIND" && $2 == c { n++ } END { print n + 0 }' <<<"$out")"
     if [ "$delta" -eq 0 ]; then
-      FAIL "$id: fixture integrity — the mutation did not land ($label): the copy does not differ from the record, so the arm below would prove nothing"
+      FAIL "$id: fixture integrity — the mutation did not land ($label): the copies do not differ from $where, so the arm below would prove nothing"
     elif [ -z "$wantc" ] && [ -z "$codes" ] && [ "$(mc5_stat "$out" ROWS)" -eq "$MC_NROWS" ]; then
-      PASS "$id: MUST-NOT-FIRE — $label ($delta line(s) differ from the record): the same $MC_NROWS row(s) are read and no finding is raised"
+      PASS "$id: MUST-NOT-FIRE — $label ($delta line(s) differ from $where): the same $MC_NROWS row(s) are read and no finding is raised"
     elif [ -n "$wantc" ] && [ "$codes" = "$wantc" ] && [ "$has" -eq 1 ] && [ "$n1" -eq "$wantn" ]; then
-      PASS "$id: MUST-FIRE — $label ($delta line(s) differ from the record) raises exactly [$codes], $n1 finding(s) of the first, in the predicted words: $want"
+      PASS "$id: MUST-FIRE — $label ($delta line(s) differ from $where) raises exactly [$codes], $n1 finding(s) of the first, in the predicted words: $want"
     else
       FAIL "$id: did not behave as predicted ($label) — wanted exactly [${wantc:-no finding}] with $wantn finding(s) of the first and the text '$want', got [${codes:-no finding}] with $n1: $(awk -F'\t' '$1 == "FIND" { printf "%s | ", $3 }' <<<"$out")"
     fi
   }
+  # mc5_arm_on <data-model-copy> <mc5_arm args…> — mc5_arm over a copy of the data model.
+  mc5_arm_on() { local MC5_DMX="$1"; shift; mc5_arm "$@"; }
   # Every row a plant addresses is addressed by its key, and every label and section a predicted text
   # names is read from the table or the declaration by that key (ADR-053 Decision 4 limb 2).
   mc5_pair() { ft_rows "$MC_DM" | awk -F'\t' -v k="$1" '$11 == k { n++; p = $2 ", " $3 } END { if (n == 1) print p }'; }
@@ -23309,11 +23322,151 @@ if [ "$MC_OK" -eq 1 ]; then
     FAIL "MC5f8: fixture integrity — the section '$MC5_X1SEC' carries $MC5_X1N row(s) in the declaration, where a whole section of more than one was required"
   fi
   mc5_arm MC5f9 'CD-C' "MC5: the words 'pace' occur in 2 bullets of § 2's IN list, where a citation has exactly one home" 1 "a copy with one new IN bullet that reuses a word a row already cites" inbullet '' '- meeting points, and the pace of each day;'
+  # MC5f10 / MC5n4 — ADR-053 Decision 10, the "not a label" limb: the words an em-dash row cites must
+  # not equal a field's FORMER label either. Each plants a former label in a copy of the data model,
+  # the record unchanged: MC5f10 the words of the em-dash row MC5F10_W, MC5n4 words no row cites.
+  MC5F10_KEY='split-off-with'; MC5F10_W='the trip log'; MC5F10_FL='Trip log'
+  MC5F10_DM="$MC_W/mc5f10-data-model.md"; MC5N4_DM="$MC_W/mc5n4-data-model.md"
+  cp "$MC_DM" "$MC5F10_DM"; cp "$MC_DM" "$MC5N4_DM"
+  MC5F10_TXT="the em-dash row OUT | $MC_EM | $MC5F10_W"
+  if [ "$(awk -F'\t' -v em="$MC_EM" -v w="$MC5F10_W" '$1 == "ROW" && $2 == "OUT" && $3 == em && $5 == w { n++ } END { print n + 0 }' <<<"$MC_DECL")" -eq 1 ] && [ "$(mc_class "$MC_DECL" "$MC5F10_KEY")" = OUT ] \
+     && ft_c4_former "$MC5F10_DM" "$MC5F10_KEY | $MC5F10_FL"$'\n' && ft_c4_former "$MC5N4_DM" "$MC5F10_KEY | Zq former label"$'\n'; then
+    mc5_arm_on "$MC5F10_DM" MC5f10 'ii-c' "MC5: $MC5F10_TXT cites words that name a field — '$MC5F10_W' equals a label, a former label or a section name" 1 "a copy of the data model declaring '$MC5F10_FL' a former label of $MC5F10_KEY, the words $MC5F10_TXT cites" none
+    md_flips ft_former_rows 'MC5f10' mc5_arm_on "$MC5F10_DM" MC5f10 'ii-c' "MC5: $MC5F10_TXT cites words that name a field — '$MC5F10_W' equals a label, a former label or a section name" 1 "a copy of the data model declaring '$MC5F10_FL' a former label of $MC5F10_KEY, the words $MC5F10_TXT cites" none
+    mc5_arm_on "$MC5N4_DM" MC5n4 '' '' 0 "a copy of the data model declaring a former label of $MC5F10_KEY that no row of the declaration cites" none
+  else
+    FAIL "MC5f10: fixture integrity — the declaration carries no one OUT row naming no field that cites '$MC5F10_W', or no OUT row keyed $MC5F10_KEY, or a copy of the data model did not take a former-label row, so the arm has nothing to plant"
+  fi
+  # MC5f11 / MC5n3 — Decision 10's first-word tie at CD-B, which MC6 cannot reach, because every guided
+  # field carries a row: the label of MC5F11_KEY reworded in its row of a copy of the data model, as
+  # FT_C4_REWORD rewords it, and the record's row for it replaced by one naming no field that cites its
+  # words. With the former label declared the em-dash row ties to it and stands in for the field;
+  # without it nothing ties, and nothing is raised.
+  MC5F11_KEY='solo'
+  MC5F11_NEW="$(awk -F'\t' -v k="$MC5F11_KEY" '$1 == k { print $2 }' <<<"$FT_C4_REWORD")"
+  MC5F11_OLD="$(mc_label "$MC_DM" "$MC5F11_KEY")"
+  MC5F11_SEC="$(ft_rows "$MC_DM" | awk -F'\t' -v k="$MC5F11_KEY" '$11 == k { print $2 }')"
+  MC5F11_STAR="$(ft_rows "$MC_DM" | awk -F'\t' -v k="$MC5F11_KEY" '$11 == k { print $8 }')"
+  MC5F11_AW="$(mc5_aw "$MC5F11_KEY")"; MC5F11_CLS="$(mc_class "$MC_DECL" "$MC5F11_KEY")"
+  MC5F11_CELL="$([ "$MC5F11_STAR" = 1 ] && printf '%s ' "$FT_STAR")\`$MC5F11_NEW\`"
+  MC5F11_DM="$MC_W/mc5f11-data-model.md"; MC5N3_DM="$MC_W/mc5n3-data-model.md"
+  cp "$MC_DM" "$MC5F11_DM"; cp "$MC_DM" "$MC5N3_DM"
+  MC5F11_ROW="$MC5F11_CLS | $MC_EM | $MC5F11_AW"
+  MC5F11_TXT="MC5: the em-dash row $MC5F11_ROW stands in for the field ($MC5F11_SEC, $MC5F11_NEW), which carries no row of its own — a field § 2 names is declared by its own row"
+  if [ -n "$MC5F11_NEW" ] && [ -n "$MC5F11_OLD" ] && [ -n "$MC5F11_AW" ] && [ -n "$MC5F11_CLS" ] \
+     && ft_row_set "$MC5F11_DM" "$MC5F11_KEY" Field "$MC5F11_CELL" && ft_row_set "$MC5N3_DM" "$MC5F11_KEY" Field "$MC5F11_CELL" \
+     && ft_c4_former "$MC5F11_DM" "$MC5F11_KEY | $MC5F11_OLD"$'\n'; then
+    mc5_arm_on "$MC5F11_DM" MC5f11 'CD-B' "$MC5F11_TXT" 1 "a copy of the data model rewording '$MC5F11_OLD' to '$MC5F11_NEW' with the old label declared former, and a copy of the record whose row keyed $MC5F11_KEY is $MC5F11_ROW" swaprow "$MC5F11_KEY" "$MC5F11_ROW"
+    md_flips ft_former_rows 'MC5f11' mc5_arm_on "$MC5F11_DM" MC5f11 'CD-B' "$MC5F11_TXT" 1 "a copy of the data model rewording '$MC5F11_OLD' to '$MC5F11_NEW' with the old label declared former, and a copy of the record whose row keyed $MC5F11_KEY is $MC5F11_ROW" swaprow "$MC5F11_KEY" "$MC5F11_ROW"
+    mc5_arm_on "$MC5N3_DM" MC5n3 '' '' 0 "the same two copies with no former label declared: the em-dash row ties to nothing" swaprow "$MC5F11_KEY" "$MC5F11_ROW"
+  else
+    FAIL "MC5f11: fixture integrity — FT_C4_REWORD, the table or the declaration gives no reword, label, words or class for $MC5F11_KEY, or a copy of the data model did not take the reword or the former-label row, so the arm has nothing to plant"
+  fi
   if [ "$MC5_NFIND" -eq 0 ] && [ "$MC5_ACC" -eq "$MC5_NB" ] && [ "$MC5_NB" -gt 0 ]; then
     PASS "MC5n1: MUST-NOT-FIRE — the real record, its fence at the end of § 2: every predicate reads it and none raises a finding, with $MC_NROWS row(s), $MC5_NB bullet(s) and $(mc_n "$MC_PLACE" UNRES) unplaced item(s) shown in the population above. Every must-fire beside this arm differs from it in ONE edit"
   else
     FAIL "MC5n1: the real record raises $MC5_NFIND finding(s), or $MC5_ACC of its $MC5_NB bullet(s) are accounted for — the must-not-fire the arms above are measured against does not hold"
   fi
+fi
+
+# ── MC6 — #2211 criterion 4 for this group and NC2v ─────────────────────────────────────
+# A guided-form label reworded in its two statements, with its former label declared, moves no
+# verdict of a reader of ADR-030 (ADR-053 Decision 10, and its Coupling "ADR-030's fence moves with
+# group MC"). MC6 reads the SHARED copy ft_c4_copy builds, the copy CF8 reads, and exports the path it
+# read as MC6_C4_DIR, which CF8 holds its own path to (CIAC-2): MC runs before CF. Over the reworded
+# copy and over the unreworded one it measures MC0's and MC1's findings, MC2's census, MC4's render
+# verdicts by key, MC5's findings and statistics and NC2v's six evaluator codes, and PASSes when the
+# two are byte-identical. CONTROL a: the same rewords with no former label declared raise exactly one
+# (ii-b) finding for each reworded key, MC1 names each reworded label NC2v's reader takes from the
+# prose, NC2v4 reads 2 (not measured), and MC0, MC2 and MC4 do not move. CONTROL b is MC0f4's plant:
+# a row naming a key the table does not carry fails MC0. Every label and key is read from the copies
+# and from FT_C4_REWORD, and no count is spelled.
+#
+# mc6_measure <copy> <scratch> — the verdicts of this group and of NC2v over one copy, one per line. A
+# render verdict names the key of its label, or the label itself where no one field carries it,
+# because each copy's renders are built from that copy's own table.
+mc6_measure() {
+  local c="$1" w="$2" a30 dm decl place r lim
+  a30="$c/reference/adr/${MC_ADR030##*/}"; dm="$c/reference/data-model.md"
+  mkdir -p "$w" || return 0
+  decl="$(mc_decl "$a30" "$dm" 2>/dev/null)"; place="$(mc_place "$a30" "$dm" 2>/dev/null)"
+  mc0_find "$decl" "$place" "$MC_CH" "" off | awk 'NF { print "MC0\t" $0 }'
+  mc1_find "$MC_CH" "$(mc_moved "$a30" 2>/dev/null)" "$decl" "$(nc_c2_in_labels "$a30" 2>/dev/null)" "$MC_HARD" "$(ft_former_rows "$dm" 2>/dev/null)" | awk 'NF { print "MC1\t" $0 }'
+  printf 'MC2\tcensus\t%s\n' "$(mc_census "$decl" "$dm" 2>/dev/null)"
+  if mc4_renders "$dm" "$w"; then
+    for r in plain enc-out enc-undet enc-ok; do
+      lim="$MC_ENC"; [ "$r" = plain ] && lim="$MC_PLAIN"
+      mc_emitted "$w/$r.html" "$lim" "$MC_ADR026" "$a30" "$dm" | awk -F'\t' -v r="$r" '
+        FILENAME == ARGV[1] { if ($3 != "") { n[$3]++; k[$3] = $11 }; next }
+        NF { f = (($2 in n) && n[$2] == 1) ? k[$2] : $2; printf "MC4\t%s\t%s\t%s\t%s\n", r, $1, f, ($1 == "UNDET") ? $3 : "" }' <(ft_rows "$dm") -
+    done
+  else
+    printf 'MC4\tno render: a key mc4_renders reads names no one labelled row\n'
+  fi
+  mc_agree "$decl" "$place" "$dm" "$MC_GUIDED" | awk -F'\t' '$1 == "FIND" || $1 == "STAT" { print "MC5\t" $0 }'
+  if declare -F nc2v_arms >/dev/null; then
+    ( NC2V_A30="$a30"; NC2V_DM="$dm"
+      PASS() { printf 'NC2v\t%s\t%s\n' "${1%%:*}" "${NC2V_RC:-}"; }
+      FAIL() { printf 'NC2v\t%s\t%s\n' "${1%%:*}" "${NC2V_RC:-}"; }
+      nc2v_arms )
+  else
+    printf 'NC2v\tno arm: group NC did not define its six arms\n'
+  fi
+}
+mc6_rec() { awk -F'\t' -v g="$2" '$1 == g' <<<"$1"; }
+mc6_assert() {
+  local rw nf bs mb mr mn moved first nrw nfr k n5 n5k miss lab nlab mc1 nc4 nc4b same n4 nnc keys
+  rw="$(ft_c4_copy)"; nf="$(ft_c4_copy noformer)"; bs="$(ft_c4_copy base)"
+  MC6_C4_DIR="$rw"; export MC6_C4_DIR
+  if [ -z "$rw" ] || [ -z "$nf" ] || [ -z "$bs" ]; then
+    FAIL "MC6: NOT EVALUATED — the shared copy builder ft_c4_copy built no copy for a variant (reword '${rw:-none}', noformer '${nf:-none}', base '${bs:-none}'): $(cat "$WORK"/c4.*.why 2>/dev/null | tr '\n' ' ')"
+    return 0
+  fi
+  nrw="$(awk -F'\t' 'NF { n++ } END { print n + 0 }' <<<"$FT_C4_REWORD")"
+  nfr="$(ft_former_rows "$rw/reference/data-model.md" | awk -F'\t' '$1 == "R" { n++ } END { print n + 0 }')"
+  mb="$(mc6_measure "$bs" "$MC_W/mc6-base")"; mr="$(mc6_measure "$rw" "$MC_W/mc6-reword")"; mn="$(mc6_measure "$nf" "$MC_W/mc6-noformer")"
+  moved="$(LC_ALL=C diff <(printf '%s\n' "$mb") <(printf '%s\n' "$mr") | awk -F'\t' '/^[<>] / { g = substr($1, 3); if (!s[g]++) printf "%s%s", (n++ ? ", " : ""), g }')"
+  first="$(LC_ALL=C diff <(printf '%s\n' "$mb") <(printf '%s\n' "$mr") | awk '/^[<>]/ && n++ < 4' | tr '\n\t' '  ')"
+  # CONTROL a, read from the noformer copy: the (ii-b) findings, one per reworded key; MC1's findings,
+  # one per reworded label NC2v's reader takes from the prose; NC2v4's code; MC0, MC2 and MC4 unmoved.
+  n5="$(awk -F'\t' '$1 == "MC5" && $2 == "FIND" { n++ } END { print n + 0 }' <<<"$mn")"
+  n5k=0; miss=""; keys=""
+  while IFS="$VA_TAB" read -r k _; do
+    [ -n "$k" ] || continue
+    keys="$keys${keys:+, }$k"
+    if [ "$(awk -F'\t' -v k="$k" '$1 == "MC5" && $2 == "FIND" && $3 == "ii-b" && index($4, " | " k " cites ") { n++ } END { print n + 0 }' <<<"$mn")" -eq 1 ]; then n5k=$((n5k + 1)); else miss="$miss $k"; fi
+  done <<<"$FT_C4_REWORD"
+  nlab=0; lab=""
+  while IFS="$VA_TAB" read -r k _; do
+    [ -n "$k" ] || continue
+    k="$(mc_label "$bs/reference/data-model.md" "$k")"
+    if [ -n "$k" ] && [ -n "$(awk -v l="$k" '$0 == l' <<<"$(nc_c2_in_labels "$bs/reference/adr/${MC_ADR030##*/}" 2>/dev/null)")" ]; then
+      nlab=$((nlab + 1)); lab="$lab${lab:+, }'$k'"
+      [ "$(awk -F'\t' -v l="'$k'" '$1 == "MC1" && index($0, l) { n++ } END { print n + 0 }' <<<"$mn")" -eq 1 ] || miss="$miss MC1:$k"
+    fi
+  done <<<"$FT_C4_REWORD"
+  mc1="$(awk -F'\t' '$1 == "MC1" { n++ } END { print n + 0 }' <<<"$mn")"
+  nc4="$(awk -F'\t' '$1 == "NC2v" && $2 == "NC2v4" { print $3 }' <<<"$mn")"
+  nc4b="$(awk -F'\t' '$1 == "NC2v" && $2 == "NC2v4" { print $3 }' <<<"$mb")"
+  same=1
+  for k in MC0 MC2 MC4; do [ "$(mc6_rec "$mb" "$k")" = "$(mc6_rec "$mn" "$k")" ] || same=0; done
+  n4="$(awk -F'\t' '$1 == "MC4" && NF >= 4 { n++ } END { print n + 0 }' <<<"$mb")"
+  nnc="$(awk -F'\t' '$1 == "NC2v" && $3 ~ /^[0-9]+$/ { n++ } END { print n + 0 }' <<<"$mb")"
+  if cmp -s "$bs/reference/data-model.md" "$rw/reference/data-model.md" || cmp -s "$bs/reference/data-model.md" "$nf/reference/data-model.md" || [ "$nfr" -ne "$nrw" ]; then
+    FAIL "MC6: fixture integrity — the reworded or the noformer copy's data model does not differ from the unreworded one, or the reworded copy declares $nfr former label(s) for the $nrw field(s) FT_C4_REWORD rewords, so the arm below would prove nothing"
+  elif [ "$(awk -F'\t' '$1 == "MC5" && $2 == "STAT" && $3 == "ROWS" { print $4 + 0 }' <<<"$mb")" -eq 0 ] || [ "$n4" -eq 0 ] || [ "$nnc" -eq 0 ] || [ "$nlab" -eq 0 ]; then
+    FAIL "MC6: NOT EVALUATED — over the unreworded copy the measure reads no MC5 row, $n4 MC4 verdict(s) and $nnc NC2v code(s), or no reworded label is one NC2v's reader takes from the prose, so there is nothing to hold the reworded copy to: $(printf '%s' "$mb" | grep -a -E 'no render|no arm' | tr '\n\t' '  ')"
+  elif [ "$mr" != "$mb" ]; then
+    FAIL "MC6: a reword of $keys in their two statements, each with its former label declared, moves the verdicts of $moved on the shared copy — $first— so a label edit touches more than the label"
+  elif [ "$n5" -ne "$nrw" ] || [ "$n5k" -ne "$nrw" ] || [ "$mc1" -ne "$nlab" ] || [ -n "$miss" ] || [ "$nc4" != 2 ] || [ "$nc4b" != 0 ] || [ "$same" -ne 1 ]; then
+    FAIL "MC6: CONTROL a did not fire as specified — with no former label declared, MC5 raises $n5 finding(s), $n5k of them the one (ii-b) owed for a reworded key, where exactly $nrw were required; MC1 raises $mc1 finding(s) where $nlab naming $lab were; NC2v4 reads '${nc4:-nothing}' where 2 is owed (and '${nc4b:-nothing}' over the unreworded copy, where 0 is); MC0, MC2 and MC4 $( [ "$same" -eq 1 ] && printf 'do not move' || printf 'move' ); missing:${miss:- none}"
+  else
+    PASS "MC6: on the shared copy ft_c4_copy builds (MC6_C4_DIR, ${rw#"$WORK/"}), $(awk -F'\t' '{ printf "%s%s → %s", s, $1, $2; s = "; " }' <<<"$FT_C4_REWORD") reworded in their two statements, each with its former label declared, leave MC0's and MC1's findings, MC2's census, MC4's $n4 render verdict(s) by key, MC5's findings and statistics and NC2v's $nnc evaluator code(s) — $(awk 'END { print NR }' <<<"$mr") record(s) — byte-identical to the unreworded copy's. CONTROL a: with no former label declared, MC5 raises exactly one (ii-b) finding for each of $keys and nothing else, MC1 names $lab, NC2v4 reads 2 (not measured), and MC0, MC2 and MC4 do not move. CONTROL b is MC0f4's plant above"
+  fi
+}
+if [ "$MC_OK" -eq 1 ]; then
+  mc6_assert
+  md_flips ft_c4_copy 'MC6' mc6_assert
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
