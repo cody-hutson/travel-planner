@@ -608,7 +608,7 @@ field § *Decision* 2 does not name — none of the trip context's fields, which
 name; where such a field carries an out kind of value, § *Decision* 5 binds it by value, and the
 fence does not restate § *Decision* 5. The amendment replaced no wording, so none is quoted here.
 
-**Amendment (2026-11-27, Friday) — § *Decision* 2's `private-site-field-declaration` fence names
+**Amendment (2026-11-26, Thursday) — § *Decision* 2's `private-site-field-declaration` fence names
 each field by its key; no decision changes.** The fence restated § *Decision* 2's IN and OUT lists
 over a field's `(section, label)` pair, so a reword of a label broke its resolution.
 [ADR-053](ADR-053-a-field-keeps-its-key.md) gives every field a key, the `Key` cell of its row in
