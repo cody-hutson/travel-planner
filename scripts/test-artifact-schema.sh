@@ -23993,9 +23993,26 @@ mc6_ctl_src() {
   fi
   mc6_ctl_over CTL-MC6-SRC "$s" "whose former-label declaration already holds '$k | $fl', for a field the copy does not reword,"
 }
+# CTL-MC6-SELF[<key>] — the source has already reworded <key>, a field the copy rewords again, in its two
+# statements and with its former label declared, its new spelling derived by ft_c4_target: the tree after
+# the first reword of a field the copy rewords. MC6 over it must read PASS, so its CONTROL a's copy, which
+# declares no former label for the fields it rewords, must declare none for <key> either.
+mc6_ctl_self() {
+  local k="$1" id="CTL-MC6-SELF[$1]" s r
+  if [ -z "$(awk -v k="$k" '$0 == k' <<<"$FT_C4_KEYS")" ]; then
+    FAIL "$id: fixture integrity — the copy does not reword $k, so the source's reword of it is not one the copy rewords again"; return 0
+  fi
+  s="$(ft_c4_src)" || { FAIL "$id: NOT EVALUATED — no unreworded copy was built to plant a source in"; return 0; }
+  if ! r="$(ft_c4_reword "$s" "$k" "$(ft_c4_target "$(mc_label "$s/reference/data-model.md" "$k")")")" || ! ft_c4_former "$s/reference/data-model.md" "$r"$'\n'; then
+    FAIL "$id: fixture integrity — the source did not take its reword of $k in its two statements and its former row: ${r#!}"; return 0
+  fi
+  mc6_ctl_over "$id" "$s" "that has already reworded $k, a field the copy rewords again, with its former label declared ('$r'),"
+}
 if [ "$MC_OK" -eq 1 ]; then
   mc6_ctl_src
   md_flips mc6_assert 'CTL-MC6-SRC' mc6_ctl_src
+  mc6_ctl_self rooming
+  md_flips mc6_assert 'CTL-MC6-SELF-rooming' mc6_ctl_self rooming
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
