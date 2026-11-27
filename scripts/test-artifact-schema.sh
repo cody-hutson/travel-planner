@@ -24013,6 +24013,8 @@ if [ "$MC_OK" -eq 1 ]; then
   md_flips mc6_assert 'CTL-MC6-SRC' mc6_ctl_src
   mc6_ctl_self rooming
   md_flips mc6_assert 'CTL-MC6-SELF-rooming' mc6_ctl_self rooming
+  mc6_ctl_self would-love
+  md_flips mc6_assert 'CTL-MC6-SELF-would-love' mc6_ctl_self would-love
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
