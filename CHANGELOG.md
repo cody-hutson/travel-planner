@@ -21,8 +21,9 @@ A page built before a destination is chosen is named after the trip, carries its
 travellers' names, and stays on disk when a destination is recorded and a new
 page is built under the destination's name; publishing, the round-trip walk and the freshness
 reports each take the newest page, and a build always leaves the page it built as the newest, even
-when it has nothing to change, so clearing the destination brings the trip's own page back. Erasure
-reaches every page of a trip.
+when it has nothing to change, so clearing the destination brings the trip's own page back. For
+that, `/trip` now pre-approves the `touch` command, and uses it only to make the page a build stands
+behind the newest, without changing a byte of it. Erasure reaches every page of a trip.
 
 **The shortlist shows on the private site while no destination is chosen, and only then.** The
 destination shortlist is now an artifact the site build reads, and the site spec gives it a Group
@@ -34,7 +35,8 @@ shortlist, heading by heading, and refuses it in any other state. The section is
 **Lasting answers count.** `/trip ideas` now rebuilds the traveller model first, then ranks, on
 every run, so a leaning held on a traveller's lasting record counts toward the shortlist even when
 their trip form leaves it blank. The rebuild's report is shown as `/trip-record travelers` shows
-it.
+it, and a need or leaning the operator states in the run for a traveller with no usable form is
+carried into the rebuild as that verb carries it.
 
 **Who the shortlist may name, and what no line carries.** Only travellers who filled in their own
 form are named, or counted toward a candidate. A leaning the operator supplied for someone, or a
@@ -45,7 +47,7 @@ reason.
 
 **A page built before there is a plan, on a trip with approvers.** Approvers approve the plan only,
 so a page built before a plan exists carries nothing for them to approve. On a trip that declares
-approvers, `/trip-publish update` refuses such a page before it runs anything, and names the two
+approvers, `/trip-publish update` refuses such a page before it runs the publish script, and names the two
 ways forward: record a destination and move the trip into a plan mode (`/trip-record destination
 <chosen>`, then `/trip-record mode DISCOVERY`, then `/trip plan` and `/trip site`), or withdraw the
 approvers. This refusal is interim: it is lifted when a later release adds an approval gate for
@@ -59,8 +61,9 @@ renders as the artifact that carries it writes it, and never on a public page. T
 restated the class outside the decision records — the data architecture's own person-record
 paragraph, the person-record schema, `people/README.md`, the people-library example, the site spec
 and the cost-estimate schema — now cite that definition.
-No decision record is rewritten: `ADR-009` records the partial supersession of its class sentence
-by `ADR-030`, and `ADR-035` gains a dated amendment that narrows its approver claims to a plan mode.
+No decision record's decisions are rewritten: `ADR-009` records the partial supersession of its
+class sentence by `ADR-030`, `ADR-035` gains a dated amendment that narrows its approver claims to a
+plan mode, and `ADR-007` gains one that corrects its count of `/trip`'s write primitives.
 
 **The suite holds it.** Group `W` of `scripts/test-artifact-schema.sh` gains the controls for the
 non-rows, the newest-page pick, the archived lifecycle, the shortlist's element fence and walk and
@@ -68,16 +71,17 @@ its empty and degraded states; group `PJ` holds `/trip ideas`'s dispatch order. 
 group-only arms gain the shortlist's three part tokens, derived from the fence, and its suite file is
 not edited.
 
-**Size fence.** Read against `v0.77.0`, the previous release tag, `CH_EMIT=growth bash
+**Size fence.** Read against `v0.78.0`, the previous release tag, `CH_EMIT=growth bash
 scripts/test-corpus-hygiene.sh` lists one row raised and every other row kept, none new, lowered or
 dropped. `reference/site-layout-spec.md` grew 9,919 bytes to 81,851, and its row was raised from
 79,105 to 89,911 in the commit that crossed it: the IDEATION render rows and their non-row, and the
 shortlist's render rows, element fence and Group Shortlist component, are the single declared home
 of those rows and that component, and cutting them to fit would have moved a rule somewhere less
 read. Every other fenced file this release touches stays beneath its row: `skills/trip/SKILL.md`
-grew 5,101 to 112,555, beneath 118,008; `reference/adr/ADR-035-site-transitions-and-refresh.md`
+grew 6,545 to 115,088, beneath 118,008; `reference/adr/ADR-035-site-transitions-and-refresh.md`
 grew 1,827 to 22,170, beneath 22,378; `reference/adr/ADR-009-data-architecture.md` grew 1,676 to
-67,126, beneath 71,493; `skills/trip-publish/SKILL.md` grew 1,311 to 48,448, beneath 48,711; and
+67,126, beneath 71,493; `skills/trip-publish/SKILL.md` grew 1,311 to 48,448, beneath 48,711;
+`reference/adr/ADR-007-command-entry-point.md` grew 735 to 55,358, beneath 58,860; and
 `agents/06-validator.md`, `skills/trip-record/SKILL.md`, `reference/data-architecture.md` and
 `CLAUDE.md` each grew by less than 500 bytes, beneath theirs. `people/README.md` and
 `reference/schemas/cost-estimate.md` stay below their class floor and owe no row.
