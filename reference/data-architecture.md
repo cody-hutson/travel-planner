@@ -1002,7 +1002,9 @@ a projection of an authoritative input — it is the only surviving record of on
 
 **They fail in opposite directions, which is why an assertion over either alone does not cover
 the pair.** A rebuild **drops** the `operator-provided-only` entry, losing what the operator
-supplied and nothing else holds; and it **carries the `both-marks` entry forward verbatim** —
+supplied and nothing else holds, so the reconciler names each one it drops before its write
+and every verb that dispatches it surfaces that naming
+(`reference/adr/ADR-049-what-a-rebuild-owes.md` Decisions 1–2); and it **carries the `both-marks` entry forward verbatim** —
 `agents/00-enrichment.md` states that carry-forward in terms, as the entry class a pass preserves
 rather than regenerates — so a rebuild run after an erasure restores what the erasure removed,
 undoing it silently. The freeze rule holds that substituting rather than regenerating is the
