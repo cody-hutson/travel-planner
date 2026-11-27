@@ -9070,10 +9070,13 @@ ST_CF_QX="$(st_cf_leak EXCLUDED)"; ST_CF_QN="$(st_cf_leak NO)"
 if [ -n "$ST_CF_QX" ]; then
   ST_CF_FX="$(st_cf_fixture q4-excluded)"; st_cf_ins_after "$ST_CF_FX" "${ST_CF_QX%%|*}" "- **${ST_CF_QX#*|}:** ZZ-ST-CF-LEAK"
   st_cf_mustfire "CTL-ST-CF-Q4-EXCLUDED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q4 "a declared field ('${ST_CF_QX#*|}') is written under the heading of the first EXCLUDED region whose section declares one (line ${ST_CF_QX%%|*}) — a write into a region no writer owns"
-  ST_CF_FX="$(st_cf_fixture q4-inert)"; st_cf_ins_after "$ST_CF_FX" "${ST_CF_QX%%|*}" "- **ZZ-ST-CF-INERT:** an undeclared field-shaped bullet"
-  st_cf_mustnotfire "CTL-ST-CF-Q4-INERT[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "an UNDECLARED field-shaped bullet is written at the same place (line ${ST_CF_QX%%|*}) — no interviewer can address a pair the classification does not declare, so it is not a write the interviewer could make"
 else
   VACUOUS "CTL-ST-CF-Q4-EXCLUDED[$ST_CF_TAG]: no EXCLUDED region of $ST_CF_REL sits in a section holding a declared field, so there is no leak into a no-writer region to construct — the exclusion's leak site is armed by CTL-ST-CF-Q4-NO and CTL-ST-CF-ROW-FLIP"
+fi
+ST_CF_QI="${ST_CF_QX:-$ST_CF_QN}"
+if [ -n "$ST_CF_QI" ]; then
+  ST_CF_FX="$(st_cf_fixture q4-inert)"; st_cf_ins_after "$ST_CF_FX" "${ST_CF_QI%%|*}" "- **ZZ-ST-CF-INERT:** an undeclared field-shaped bullet"
+  st_cf_mustnotfire "CTL-ST-CF-Q4-INERT[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "an UNDECLARED field-shaped bullet is written at the same place (line ${ST_CF_QI%%|*}) — no interviewer can address a pair the classification does not declare, so it is not a write the interviewer could make"
 fi
 if [ -n "$ST_CF_QN" ]; then
   ST_CF_FX="$(st_cf_fixture q4-no)"; st_cf_ins_after "$ST_CF_FX" "${ST_CF_QN%%|*}" "- **${ST_CF_QN#*|}:** ZZ-ST-CF-LEAK"
@@ -9126,7 +9129,7 @@ st_cf_mustnotfire "CTL-ST-CF-SENS-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "th
 # the Condition cell of the first addressed row naming no writer. A class read from the Writer and Block
 # cells alone does not move, and neither does any realized verdict.
 ST_CF_AR="$(awk -F'\t' '$1 == "ROW" && $3 == "AGENT" { print $2; exit }' <<<"$ST_CF_RG")"
-ST_CF_NR="$(awk -F'\t' '$1 == "ROW" && $3 == "NONE" && $5 == "addressed" { print $2; exit }' <<<"$ST_CF_RG")"
+ST_CF_NR="$(awk -F'\t' '$1 == "ROW" && $3 == "NONE" { print $2; exit }' <<<"$ST_CF_RG")"
 ST_CF_AS="$(awk -F'\t' -v r="$ST_CF_AR" '$1 == "ROW" && $2 == r { if (match($9, /`agents\/[^`]+\.md`/)) print substr($9, RSTART, RLENGTH); exit }' <<<"$ST_CF_RG")"
 ST_CF_CX="$(st_cf_charter_fixture condition-cell)"
 if [ -n "$ST_CF_AR" ] && [ -n "$ST_CF_NR" ] && [ -n "$ST_CF_AS" ]; then
@@ -9147,7 +9150,7 @@ ST_CF_CTV="$(st_cf_violations "$ST_CF_FILE" "$ST_CF_REL" "$ST_DM" "$ST_CF_CX")"
 ST_CF_CT0="$(st_cf_tally "$ST_CF_LIVE" | tr '\n' ' ')"; ST_CF_CT1="$(st_cf_tally "$ST_CF_CTV" | tr '\n' ' ')"
 ST_CF_CTADD="$(st_cf_added "$ST_CF_LIVE" "$ST_CF_CTV" | tr '\n' ' ')"
 if [ -z "$ST_CF_AR" ] || [ -z "$ST_CF_NR" ] || [ -z "$ST_CF_AS" ]; then
-  VACUOUS "CTL-ST-CF-CONDITION-CELL[$ST_CF_TAG]: the writer table carries no AGENT row with a contract span (${ST_CF_AR:-none}) or no addressed row naming no writer (${ST_CF_NR:-none}), so there is no Condition-cell citation to move between them"
+  VACUOUS "CTL-ST-CF-CONDITION-CELL[$ST_CF_TAG]: the writer table carries no AGENT row with a contract span (${ST_CF_AR:-none}) or no row naming no writer (${ST_CF_NR:-none}), so there is no Condition-cell citation to move between them"
 elif [ "$ST_CF_CA" = gone ] && [ "$ST_CF_CN" = carried ] && [ -n "${ST_CF_CL0% }" ] && [ "$ST_CF_CL1" = "$ST_CF_CL0" ] && [ "$ST_CF_CV1" = "$ST_CF_CV0" ] && [ -z "$ST_CF_CTADD" ]; then
   PASS "CTL-ST-CF-CONDITION-CELL[$ST_CF_TAG]: MUST NOT FIRE — on a COPY of the charter the agent contract span $ST_CF_AS leaves the Condition cell of row $ST_CF_AR and is written into that of row $ST_CF_NR, and every row's class reads as before [${ST_CF_CL0% }], every realized verdict with it, and the evaluator's findings [${ST_CF_CT0% }]. A writer's class is read from its Writer and Block cells alone, so the column that explains cannot move a verdict"
 else
@@ -9167,8 +9170,10 @@ else
   FAIL "CTL-ST-CF-PROJ-CONDITION-CELL[$ST_CF_TAG]: MUST NOT FIRE — with the agent contract span moved between Condition cells on a copy of the charter, this member's derived block $( [ "$ST_CF_PJC1" = "$ST_CF_PJC0" ] && echo 'stayed identical' || echo CHANGED ) over ${ST_CF_PJCN:-0} region row(s), where an identical, non-empty block is owed"
 fi
 
-# ── CTL-ST-CF-PIN-FLIP — MUST FIRE on the pin. On a COPY of the charter, the first interviewable row
-# that names a region gains a clause naming another writer at creation: its regions go from YES to
+# ── CTL-ST-CF-PIN-FLIP — MUST FIRE on the pin. On a COPY of the charter, the first interviewer-class
+# row that names a region and realizes YES (interviewer) on its pin — a marked region realizes NO
+# (marked) whoever writes it, so a flip there moves nothing — gains a clause naming another writer at
+# creation: its regions go from YES to
 # CONDITIONAL and no declared field is stranded, so no question the evaluator asks moves — and the pin
 # must FAIL, naming that row, both verdicts and the record it is a finding about. Graded as a DELTA:
 # the defects the flip ADDS to this run's own pin report. The flip lands on the first such row that is
@@ -9178,7 +9183,7 @@ fi
 # is off its pin, there is no flip to read, and the arm is VACUOUS while ST-CF-PIN names the rows off it.
 ST_CF_PREP0="$(st_cf_pin_report "$ST_CF_TAG" "$(st_cf_row_vector "$ST_CF_RG")")"
 ST_CF_PBAD0="$(awk -F'\t' '$1 == "MISMATCH" || $1 == "UNPINNED" || $1 == "MISSING" { n++ } END { print n + 0 }' <<<"$ST_CF_PREP0")"
-ST_CF_PR="$(awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "MATCH") on[$2] = 1; next } $1 == "ROW" && $4 == "YES" && $5 == "addressed" && ($2 in on) { print $2; exit }' <(printf '%s\n' "$ST_CF_PREP0") <(printf '%s\n' "$ST_CF_RG"))"
+ST_CF_PR="$(awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "MATCH" && $4 == "YES (interviewer)") on[$2] = 1; next } $1 == "ROW" && $4 == "YES" && $5 == "addressed" && ($2 in on) { print $2; exit }' <(printf '%s\n' "$ST_CF_PREP0") <(printf '%s\n' "$ST_CF_RG"))"
 ST_CF_PW="$(awk -F'\t' -v r="$ST_CF_PR" '$1 == "ROW" && $2 == r { print $9; exit }' <<<"$ST_CF_RG")"
 ST_CF_PX="$(st_cf_charter_fixture pin-flip)"
 [ -n "$ST_CF_PR" ] && st_cf_cell "$ST_CF_PX" "$(st_cf_rowline "$ST_CF_PR")" "$ST_CF_WCOL" set "\`/zz-st-cf-probe\` at creation; $ST_CF_PW"
@@ -34673,6 +34678,119 @@ TW2_C="$TW_WORK/tw2-under.md"; LC_ALL=C awk '!d && index($0, "> - *Arrival day* 
 tw2_ctl CTL-TW2-UNDER "$TW2_C" under-declared "\`Check-in time:\` removed from the Arrival day entry"
 TW2_C="$TW_WORK/tw2-hotel.md"; LC_ALL=C awk 'index($0, "- **[Date]:** Departure day — ") == 1 { $0 = "- **[Date]:** Departure day — must depart hotel by [time] for [departure time] flight" } { print }' "$TW_TP" > "$TW2_C"
 tw2_ctl CTL-TW2-HOTEL "$TW2_C" D-9 "the departure line restored to its hotel clause"
+
+
+# ── TW3 — the writer is named, `fact` carries the recompute, and every citation names rule N. ──
+# tw3_report <charter> <adr> <skill> <conduct> <N> — tab-separated records:
+#   ROWS <table rows> <rows with § 1's Block> <writer equal> <condition equal> <§ 1 row found>
+#   ROUTE <route rows> <names rule N> <stale words>
+#   TABLE <headings> <rows> <rows naming the block>
+#   READS <Reads lines> <names the block> <names the template>
+#   SITE <file> <rule cited>     one per citation of a standing rule in a sentence that carries
+#                                `recompute` or `Effective Planning Days`
+#   NSITE <fact sites> <conduct sites>
+tw3_report() {
+  LC_ALL=C awk -v N="$5" -v AD="$2" -v CH="$1" -v SK="$3" -v IC="$4" '
+    function trim(s) { gsub(/^[ \t]+|[ \t]+$/, "", s); return s }
+    function cells(s, out,   k, i) { sub(/^[ \t]*\|/, "", s); sub(/\|[ \t]*$/, "", s); k = split(s, out, "|"); for (i = 1; i <= k; i++) out[i] = trim(out[i]); return k }
+    function sites(txt, f,   s, p, c, t, n) {
+      gsub(/[ \t]+/, " ", txt); s = txt
+      while (s != "") {
+        p = index(s, ". "); if (p == 0) { c = s; s = "" } else { c = substr(s, 1, p); s = substr(s, p + 2) }
+        if (index(c, "recompute") || index(c, "Effective Planning Days")) {
+          t = c
+          while (match(t, /standing rule [0-9]+/)) { n = substr(t, RSTART + 14, RLENGTH - 14); printf "SITE\t%s\t%s\n", f, n; NS[f]++; t = substr(t, RSTART + RLENGTH) }
+        }
+      }
+    }
+    FILENAME == AD {
+      if (index($0, "### 1. ") == 1) { a1 = 1; next } if (a1 && /^### /) a1 = 0
+      if (a1 && /^> \|/) { l = substr($0, 3); if (l !~ /^\|[-| :]+\|$/ && index(l, "| Block |") != 1) { qr++; cells(l, QC); QC3 = QC[3]; sub(/standing rule 15/, "standing rule " N, QC3) } }
+      next
+    }
+    FILENAME == CH {
+      if (/^### Write ownership/) { w = 1; next } if (w && /^### /) w = 0
+      if (w && /^\|/ && $0 !~ /^\|[-| :]+\|$/) { if (!hd) { hd = 1; next }; nr++; cells($0, C); if (C[1] == QC[1]) { nb++; if (C[2] == QC[2]) we++; if (C[3] == QC3) ce++ } }
+      next
+    }
+    FILENAME == SK {
+      if (/^## fact /) { f = 1; next } if (f && /^## /) f = 0
+      if (!f) next
+      FT = FT " " $0
+      if (index($0, "| `[DERIVED]` |") == 1) { ro++; if (index($0, "standing rule " N " ") || index($0, "standing rule " N "'"'"'")) rn++; if (index($0, "no writer exists") || index($0, "name no command")) rs++ }
+      if (index($0, "**Cross-block consequences") == 1) { th++; tb = 1; tr = 0; next }
+      if (tb == 1) { if (/^\|/) { tr++; if (tr > 2) { trw++; if (index($0, "### Effective Planning Days")) tbe++ } } else if (tr > 0) tb = 2 }
+      if (index($0, "**Reads:**") == 1) { rl++; if (index($0, "### Effective Planning Days")) rb++; if (index($0, "templates/trip-context.template.md")) rt++ }
+      next
+    }
+    FILENAME == IC {
+      if (/^## On a block-owned form/) { c = 1; next } if (c && /^## /) c = 0
+      if (c) CT = CT " " $0
+      next
+    }
+    END {
+      printf "ROWS\t%d\t%d\t%d\t%d\t%d\n", nr, nb, we, ce, qr
+      printf "ROUTE\t%d\t%d\t%d\n", ro, rn, rs
+      printf "TABLE\t%d\t%d\t%d\n", th, trw, tbe
+      printf "READS\t%d\t%d\t%d\n", rl, rb, rt
+      sites(FT, "fact"); sites(CT, "conduct")
+      printf "NSITE\t%d\t%d\n", NS["fact"], NS["conduct"]
+    }' "$2" "$1" "$3" "$4"
+}
+# tw3_verdict <report> <N> — `ok`, or the first limb that failed.
+tw3_verdict() {
+  LC_ALL=C awk -F'\t' -v N="$2" '
+    $1 == "ROWS" { split($0, r, "\t") } $1 == "ROUTE" { split($0, o, "\t") } $1 == "TABLE" { split($0, t, "\t") }
+    $1 == "READS" { split($0, d, "\t") } $1 == "NSITE" { split($0, s, "\t") }
+    $1 == "SITE" && $3 != N { bad = bad " " $2 " cites rule " $3 ";" }
+    END {
+      if (N + 0 < 1) { print "no rule — TW1 found no rule, so there is no number to check against"; exit }
+      if (r[2] < 1 || r[6] != 1) { print "population — § Write ownership read " r[2] + 0 " row(s) and ADR-028 § 1 " r[6] + 0 " quoted row(s), where at least one and one are owed"; exit }
+      if (r[3] != 1) { print "row — " r[3] + 0 " row(s) of § Write ownership carry ADR-028 § 1'"'"'s Block cell, where one is owed"; exit }
+      if (r[4] != 1 || r[5] != 1) { print "row — the Block matches, but the Writer cell matches " r[4] + 0 " and the Condition cell, with standing rule " N ", " r[5] + 0 " time(s)"; exit }
+      if (o[2] != 1) { print "route — " o[2] + 0 " `[DERIVED]` route row(s) in § fact, where one is owed"; exit }
+      if (o[3] != 1 || o[4] != 0) { print "route — the `[DERIVED]` route row names standing rule " N " " o[3] + 0 " time(s) and carries the no-writer words " o[4] + 0 " time(s), where 1 and 0 are owed"; exit }
+      if (t[2] != 1 || t[3] < 1) { print "table — the cross-block heading stands " t[2] + 0 " time(s) over " t[3] + 0 " row(s), where once and at least one are owed"; exit }
+      if (t[4] != 0) { print "table — " t[4] " cross-block row(s) still name `### Effective Planning Days`, a consequence the act now performs"; exit }
+      if (d[2] != 1 || d[3] != 1 || d[4] != 1) { print "reads — " d[2] + 0 " **Reads:** line(s) in § fact, naming the block " d[3] + 0 " and the template " d[4] + 0 " time(s), where one, 1 and 1 are owed"; exit }
+      if (s[2] < 1 || s[3] < 1) { print "cite — " s[2] + 0 " citing site(s) in § fact and " s[3] + 0 " in the conduct section, where at least one each is owed"; exit }
+      if (bad != "") { print "cite —" bad " where every site names rule " N; exit }
+      print "ok"
+    }' <<<"$1"
+}
+
+TW3_R="$(tw3_report "$TW_CH" "$TW_ADR" "$TW_SK" "$TW_IC" "$TW_N")"
+TW3_V="$(tw3_verdict "$TW3_R" "$TW_N")"
+TW3_NS="$(LC_ALL=C awk -F'\t' '$1 == "NSITE" { print $2 " in § fact and " $3 " in the conduct section" }' <<<"$TW3_R")"
+if [ "$TW3_V" = ok ]; then
+  PASS "TW3: § Write ownership carries ADR-028 § 1's row once, naming /trip-record under standing rule $TW_N; § fact's [DERIVED] route row names rule $TW_N and no longer says no writer exists; its cross-block table names no trip-window consequence; its **Reads:** line names the block and the template; and every citation of a standing rule beside the recompute — $TW3_NS — names rule $TW_N, the number TW1 found"
+else
+  FAIL "TW3: $TW3_V. ADR-028 § 1's row names the writer, and every surface that names the rule names it by the number it lands under"
+fi
+
+# ── TW3's controls, each on a COPY of one file, the others real. ──
+# tw3_ctl <id> <charter> <skill> <expected reason head> <what changed>
+tw3_ctl() {
+  local v dif=no
+  v="$(tw3_verdict "$(tw3_report "$2" "$TW_ADR" "$3" "$TW_IC" "$TW_N")" "$TW_N")"
+  cmp -s "$TW_CH" "$2" || dif=yes
+  cmp -s "$TW_SK" "$3" || dif=yes
+  if [ -s "$2" ] && [ -s "$3" ] && [ "$dif" = yes ] && [ "${v%% —*}" = "$4" ]; then
+    PASS "$1: MUST FIRE — $5 in a copy, and TW3 reads '$4': ${v#* — }"
+  else
+    FAIL "$1: MUST FIRE — $5 in a copy; TW3 read '$v' where a '$4' finding is owed"
+  fi
+}
+TW3_C="$TW_WORK/tw3-row.md"; LC_ALL=C awk 'index($0, "| `[DERIVED]` — `### Effective Planning Days` |") == 1 { $0 = "| `[DERIVED]` block — `### Effective Planning Days` | **no writer exists** | Not a gap to fill opportunistically. The template forbids manual editing and the enrichment agent declines the write in terms. Until an owner is decided this block is read-only to every command, `/trip-record` included; staleness is reported, never repaired in place. |" } { print }' "$TW_CH" > "$TW3_C"
+tw3_ctl CTL-TW3-ROW "$TW3_C" "$TW_SK" row "row 4 restored to its no-writer text"
+TW3_C="$TW_WORK/tw3-num.md"; LC_ALL=C awk -v n="$TW_N" 'index($0, "| `[DERIVED]` — `### Effective Planning Days` |") == 1 { sub("standing rule " n ",", "standing rule " (n - 1) ",") } { print }' "$TW_CH" > "$TW3_C"
+tw3_ctl CTL-TW3-NUM "$TW3_C" "$TW_SK" row "row 4's standing rule $TW_N set to $((TW_N - 1))"
+TW3_C="$TW_WORK/tw3-route.md"; LC_ALL=C awk 'index($0, "| `[DERIVED]` |") == 1 { $0 = "| `[DERIVED]` | **no writer exists.** Report staleness and **name no command**; this verb writes zero bytes of such a block |" } { print }' "$TW_SK" > "$TW3_C"
+tw3_ctl CTL-TW3-ROUTE "$TW_CH" "$TW3_C" route "fact's [DERIVED] route row restored"
+TW3_C="$TW_WORK/tw3-table.md"; LC_ALL=C awk 'index($0, "**Cross-block consequences") == 1 { sub(/^\*\*Cross-block consequences/, "**Cross-block effects") } { print }' "$TW_SK" > "$TW3_C"
+tw3_ctl CTL-TW3-TABLE "$TW_CH" "$TW3_C" table "the cross-block heading renamed"
+TW3_C="$TW_WORK/tw3-cite.md"; LC_ALL=C awk -v n="$TW_N" '!d && index($0, "standing rule " n "'"'"'s recompute of `### Effective Planning Days`, in the act") { sub("standing rule " n "'"'"'s", "standing rule " (n - 1) "'"'"'s"); d = 1 } { print }' "$TW_SK" > "$TW3_C"
+tw3_ctl CTL-TW3-CITE "$TW_CH" "$TW3_C" cite "step 3's citation of standing rule $TW_N set to $((TW_N - 1))"
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RS — the group rosters that DESCRIBE this suite, asserted against the run.
