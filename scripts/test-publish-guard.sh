@@ -12293,7 +12293,7 @@ unset -f gh npx
 #   S34b  class (b): an edit after a stray `<` moves it, and an edit a browser hides moves nothing
 #   S34c  class (d): the attribute text a browser paints, and markup inside a text box or a title
 #   S34d  a construct-free render of more than 2 MB is written back byte for byte, and keeps its digest
-#   S34e  the pre-pass and the digest finish 256 KB of each adversarial shape inside a CPU cap
+#   S34e  the pre-pass and the digest finish 256 KB or more of each adversarial shape inside a CPU cap
 #   S34f  the bump: both trip kinds stop once with the reading-change words, then pass after one step
 #   S34g  one definition: the digest reads the three rules through one call and carries no copy of them
 #   S34h  each reading's digests are pinned, one append-only set per reading
@@ -12475,8 +12475,12 @@ s34d_assert() { # one verdict
 # finish with status 0 over 256 KB or more of each adversarial shape — stray `<`, unclosed <script>
 # openers, a run of spaces after a `<`, a name run, unterminated comments, tag openers with no `>`,
 # unclosed <textarea> openers, a run of `<a b='>'` with no `>` outside a quote after it and the same ending in
-# an unclosed quote, and an unclosed title=" over 32768 <script> openers — and over a control of the same
-# length in a character outside the repeated class. The readers are the pre-pass and the digest's
+# an unclosed quote, an unclosed title=" over 32768 <script> openers, and each of the four bodies a browser
+# does not paint while script runs (<noscript>, <iframe>, <noembed>, <noframes>) carrying 262144 <script and
+# <style openers, which the pre-pass reads inside a span its scan has already passed — and over a control of the same
+# length in a character outside the repeated class. That last row is 2 MB a body, because a search for the
+# next `>` from every opener there took 5.5 s of CPU for one such body and 20.4 s for the four on the machine
+# this was measured on. The readers are the pre-pass and the digest's
 # reading through it. The band-excision row stays out: a run of `<a title="x ` is slow in the band
 # excision, which the three rules do not change. The opener shapes end in a `</p>`: the v0.77.0 program's
 # body search is skipped outright on a file with no `</` in it, so a shape without one would measure
@@ -12509,6 +12513,13 @@ s34e_pair boxes    ''             '<textarea>' '[textarea]' 26215  '</p>'
 s34e_pair qa       ''             "<a b='>'"   "<a b=''>"   32768  ''
 s34e_pair qb       ''             "<a b='>'"   "<a b=''>"   32768  '<a b="'
 s34e_pair title    '<a title="'   '<script>'   '[script]'   32768  '</p>'
+S34E_INERT_N=131072
+s34e_inert() { # <file> <unit> — each of the four bodies a browser does not paint while script runs, carrying <unit> S34E_INERT_N times
+  perl -e 'my ($u, $n) = @ARGV; for my $t (qw(noscript iframe noembed noframes)) { print "<$t>", $u x $n, "</script></style></$t>" } print "<p>Day 1 at 18:30.</p>\n"' "$2" "$S34E_INERT_N" > "$1"
+}
+s34e_inert "$WORK/s34e_inert.html" '<script <style '
+s34e_inert "$WORK/s34e_inert_ctl.html" '[script [style '
+S34E_SHAPES="$S34E_SHAPES inert inert_ctl"
 S34E_RED_N=65536
 s34e_file "$WORK/s34e_red_script.html" '' '<script>' "$S34E_RED_N" '</p>'
 s34e_file "$WORK/s34e_red_qa.html" '' "<a b='>'" 8192 ''
@@ -12537,10 +12548,10 @@ s34e_assert() { # one verdict
   [ -n "$sn" ] && sne=1; [ -n "$so" ] && soe=1
   if [ "$mk" != 1 ] || [ -z "$sn" ] || [ -z "$so" ] || [ "$sn" = "$so" ]; then
     FAIL "S34e: SENSITIVITY — the step the fallback before this change rewrites was found at $mk site(s) (want 1), or the path page was written the same by the two texts (written: ${sne}${soe}, want 11 and different), so a run below would not grade the change"
-  elif [ "$n" -eq 40 ] && [ "$ok" -eq 40 ] && [ "$small" -eq 0 ] && [ "$m1" -gt 128 ] && [ "$m2a" -gt 128 ] && [ "$m2b" -gt 128 ]; then
-    PASS "S34e: the pre-pass and the digest each finish every one of ten adversarial shapes and its control, each at least 262144 bytes, inside a five-second CPU cap ($ok of $n with status 0); ARMED-RED — with the pre-pass a copy of its input, $S34E_RED_N unclosed <script> openers are stopped by the cap (status $m1), and with the fallback before this change rebuilt, 64 KB of each <a b='>'> shape is stopped by it (status $m2a and $m2b); SENSITIVITY — the two texts write the path page differently"
+  elif [ "$n" -eq 44 ] && [ "$ok" -eq 44 ] && [ "$small" -eq 0 ] && [ "$m1" -gt 128 ] && [ "$m2a" -gt 128 ] && [ "$m2b" -gt 128 ]; then
+    PASS "S34e: the pre-pass and the digest each finish every one of eleven adversarial shapes and its control, each at least 262144 bytes, inside a five-second CPU cap ($ok of $n with status 0); ARMED-RED — with the pre-pass a copy of its input, $S34E_RED_N unclosed <script> openers are stopped by the cap (status $m1), and with the fallback before this change rebuilt, 64 KB of each <a b='>'> shape is stopped by it (status $m2a and $m2b); SENSITIVITY — the two texts write the path page differently"
   else
-    FAIL "S34e: $ok of $n runs finished inside the cap (want 40 of 40:${bad:- none failed}), $small shape file(s) under 262144 bytes (want 0); armed-red statuses: copy of the page over the unclosed openers $m1, the fallback before this change over the two shapes $m2a and $m2b (want each above 128)"
+    FAIL "S34e: $ok of $n runs finished inside the cap (want 44 of 44:${bad:- none failed}), $small shape file(s) under 262144 bytes (want 0); armed-red statuses: copy of the page over the unclosed openers $m1, the fallback before this change over the two shapes $m2a and $m2b (want each above 128)"
   fi
 }
 
