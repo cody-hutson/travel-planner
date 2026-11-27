@@ -34576,6 +34576,104 @@ else
   FAIL "CTL-TW1-WRAP: MUST NOT FIRE — rule ${TW_N:-0} rewrapped in a copy (copy differs: $(cmp -s "$TW_SK" "$TW1_CR" && echo no || echo yes)) read '$TW1_CRV' where 'ok' is owed: the comparison is reading layout"
 fi
 
+
+# ── TW2 — the template declares each derived line's inputs. ──
+# tw2_report <template> <adr> — tab-separated records:
+#   HEAD <n>                    lines that are exactly the block's heading
+#   LINE <name>                 a derived line: a column-0 `- **` bullet in the block, named by its
+#                               label, or, where the label opens with `[`, by its text up to ` — ` or ` (`
+#   ENTRY <name> <labels>       a `> - *<name>* ←` entry and the backticked labels ending in `:` it names
+#   UNRES <entry> <label>       a label no line outside the block's quotes carries
+#   DEP <n> <hotel>             derived lines named `Departure day`, and how many of them say `hotel`
+#   ADR <line> <n> <labels>     ADR-028 § 3's arrival and departure bullets: found n times, their labels
+tw2_report() {
+  LC_ALL=C awk -v hd='### Effective Planning Days [DERIVED]' '
+    function labels(s,   o, t, seen) { o = ""; split("", seen); while (match(s, /`[^`]+`/)) { t = substr(s, RSTART + 1, RLENGTH - 2); s = substr(s, RSTART + RLENGTH); if (t ~ /:$/ && !(t in seen)) { seen[t] = 1; o = o (o == "" ? "" : ",") t } }; return o }
+    function flush() { if (en != "") { E[++ne] = en; EL[ne] = labels(et) }; en = ""; et = "" }
+    FNR == NR {
+      L[++nl] = $0
+      if ($0 == hd) { heads++; if (!in_b) { in_b = 1; bs = nl }; next }
+      if (in_b && /^#/) { in_b = 0; be = nl - 1; flush() }
+      if (!in_b) next
+      if (index($0, "> - *") == 1 && index($0, "* ← ") > 0) { flush(); en = substr($0, 6); en = substr(en, 1, index(en, "*") - 1); et = $0; next }
+      if (en != "" && index($0, ">   ") == 1) { et = et " " $0; next }
+      if (en != "") flush()
+      if (index($0, "- **") == 1) {
+        s = substr($0, 5); p = index(s, ":**"); lab = substr(s, 1, p - 1); rest = substr(s, p + 4)
+        if (substr(lab, 1, 1) == "[") { q = index(rest, " — "); r = index(rest, " ("); if (r > 0 && (q == 0 || r < q)) q = r; nm = (q > 0) ? substr(rest, 1, q - 1) : rest } else nm = lab
+        D[++nd] = nm; if (nm == "Departure day") { dep++; if (tolower($0) ~ /hotel/) hot++ }
+      }
+      next
+    }
+    /^### 3\. / { s3 = 1; next } s3 && /^### / { s3 = 0 }
+    s3 && index($0, "- the arrival line ← ") == 1   { na++; al = labels($0) }
+    s3 && index($0, "- the departure line ← ") == 1 { nd3++; dl = labels($0) }
+    END {
+      if (in_b) { be = nl; flush() }
+      printf "HEAD\t%d\n", heads + 0
+      for (i = 1; i <= nd; i++) printf "LINE\t%s\n", D[i]
+      for (i = 1; i <= ne; i++) {
+        printf "ENTRY\t%s\t%s\n", E[i], EL[i]
+        k = split(EL[i], lb, ",")
+        for (j = 1; j <= k; j++) { ok = 0; for (x = 1; x <= nl; x++) if ((x < bs || x > be) && substr(L[x], 1, 1) != ">" && index(L[x], lb[j]) > 0) { ok = 1; break }; if (!ok) printf "UNRES\t%s\t%s\n", E[i], lb[j] }
+      }
+      printf "DEP\t%d\t%d\n", dep + 0, hot + 0
+      printf "ADR\tarrival\t%d\t%s\nADR\tdeparture\t%d\t%s\n", na + 0, al, nd3 + 0, dl
+    }' "$1" "$2"
+}
+# tw2_verdict <report> — `ok`, or the first limb that failed.
+tw2_verdict() {
+  LC_ALL=C awk -F'\t' '
+    function srt(s,   a, n, i, j, t, o) { n = split(s, a, ","); for (i = 1; i <= n; i++) for (j = i + 1; j <= n; j++) if (a[j] < a[i]) { t = a[i]; a[i] = a[j]; a[j] = t }; o = ""; for (i = 1; i <= n; i++) o = o (i > 1 ? "," : "") a[i]; return o }
+    $1 == "HEAD" { h = $2 } $1 == "LINE" { nl++; ln[$2]++ } $1 == "ENTRY" { ne++; en[$2]++; el[$2] = $3; if ($3 == "") bare = bare " " $2 }
+    $1 == "UNRES" { un = un " " $2 ": " $3 } $1 == "DEP" { dep = $2; hot = $3 }
+    $1 == "ADR" { an[$2] = $3; al[$2] = $4 }
+    END {
+      if (h != 1 || nl < 1) { print "population — the heading `### Effective Planning Days [DERIVED]` stands " h + 0 " time(s) and the block holds " nl + 0 " derived line(s), where once and at least one are owed"; exit }
+      if (ne != nl) { print "bijection — " nl " derived line(s) and " ne " entry(ies)"; exit }
+      for (k in ln) if (ln[k] != 1 || en[k] != 1) { print "bijection — `" k "` has " ln[k] + 0 " derived line(s) and " en[k] + 0 " entry(ies), where one each is owed"; exit }
+      for (k in en) if (!(k in ln)) { print "bijection — entry `" k "` names no derived line"; exit }
+      if (bare != "") { print "inputs — entry(ies)" bare " name no backticked input label"; exit }
+      if (un != "") { print "unresolved —" un " occur(s) on no line of the template outside the block'"'"'s quotes"; exit }
+      if (dep != 1 || hot != 0) { print "D-9 — " dep + 0 " Departure day line(s), " hot + 0 " carrying a hotel clause, where one and none are owed"; exit }
+      if (an["arrival"] != 1 || an["departure"] != 1) { print "oracle — ADR-028 § 3 carries " an["arrival"] + 0 " arrival and " an["departure"] + 0 " departure bullet(s), where one each is owed"; exit }
+      if (srt(el["Arrival day"]) != srt(al["arrival"])) { print "under-declared — entry `Arrival day` names [" el["Arrival day"] "] and ADR-028 § 3 names [" al["arrival"] "]"; exit }
+      if (srt(el["Departure day"]) != srt(al["departure"])) { print "under-declared — entry `Departure day` names [" el["Departure day"] "] and ADR-028 § 3 names [" al["departure"] "]"; exit }
+      print "ok"
+    }' <<<"$1"
+}
+
+TW2_R="$(tw2_report "$TW_TP" "$TW_ADR")"
+TW2_V="$(tw2_verdict "$TW2_R")"
+TW2_NL="$(LC_ALL=C awk -F'\t' '$1 == "LINE" { n++ } END { print n + 0 }' <<<"$TW2_R")"
+if [ "$TW2_V" = ok ]; then
+  PASS "TW2: the template's trip window carries $TW2_NL derived line(s) and one declaration entry for each, by name; every entry names its inputs by label and every label stands on a line of the template outside the note; the Arrival day and Departure day entries name exactly the labels ADR-028 § 3 names for those lines, read live; and the departure line carries no hotel clause (D-9)"
+else
+  FAIL "TW2: $TW2_V. templates/trip-context.template.md § Effective Planning Days [DERIVED] declares, per line, the inputs rule $TW_N recomputes it from (ADR-028 § 3), and a line declared with fewer inputs goes stale with no mark in the file"
+fi
+
+# ── TW2's controls, each on a COPY of the template. ──
+# tw2_ctl <id> <file> <expected reason head> <what changed>
+tw2_ctl() {
+  local v
+  v="$(tw2_verdict "$(tw2_report "$2" "$TW_ADR")")"
+  if [ -s "$2" ] && ! cmp -s "$TW_TP" "$2" && [ "${v%% —*}" = "$3" ]; then
+    PASS "$1: MUST FIRE — $4 in a copy of the template, and TW2 reads '$3': ${v#* — }"
+  else
+    FAIL "$1: MUST FIRE — $4 in a copy (copy differs: $(cmp -s "$TW_TP" "$2" && echo no || echo yes)); TW2 read '$v' where a '$3' finding is owed"
+  fi
+}
+TW2_C="$TW_WORK/tw2-heading.md"; LC_ALL=C awk '$0 == "### Effective Planning Days [DERIVED]" { $0 = "### Effective Planning Window [DERIVED]" } { print }' "$TW_TP" > "$TW2_C"
+tw2_ctl CTL-TW2-HEADING "$TW2_C" population "the block's heading renamed"
+TW2_C="$TW_WORK/tw2-drop.md"; LC_ALL=C awk 'index($0, "> - *Total* ← ") == 1 { d = 1; next } d && index($0, ">   ") == 1 { next } { d = 0; print }' "$TW_TP" > "$TW2_C"
+tw2_ctl CTL-TW2-DROP "$TW2_C" bijection "the *Total* entry deleted"
+TW2_C="$TW_WORK/tw2-phantom.md"; LC_ALL=C awk '!d && index($0, "> - *Arrival day* ← ") == 1 { sub(/`Check-in time:`/, "`Lands at:`"); d = 1 } { print }' "$TW_TP" > "$TW2_C"
+tw2_ctl CTL-TW2-PHANTOM "$TW2_C" unresolved "the Arrival day entry's \`Check-in time:\` renamed \`Lands at:\`"
+TW2_C="$TW_WORK/tw2-under.md"; LC_ALL=C awk '!d && index($0, "> - *Arrival day* ← ") == 1 { sub(/, and `Check-in time:`/, ""); d = 1 } { print }' "$TW_TP" > "$TW2_C"
+tw2_ctl CTL-TW2-UNDER "$TW2_C" under-declared "\`Check-in time:\` removed from the Arrival day entry"
+TW2_C="$TW_WORK/tw2-hotel.md"; LC_ALL=C awk 'index($0, "- **[Date]:** Departure day — ") == 1 { $0 = "- **[Date]:** Departure day — must depart hotel by [time] for [departure time] flight" } { print }' "$TW_TP" > "$TW2_C"
+tw2_ctl CTL-TW2-HOTEL "$TW2_C" D-9 "the departure line restored to its hotel clause"
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RS — the group rosters that DESCRIBE this suite, asserted against the run.
 #
