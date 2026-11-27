@@ -15,9 +15,11 @@ so an edit made only there counts as a change to the plan:
 - the text a browser shows from an attribute (an input's value or placeholder, an option's label, an
   image's alt text), and markup written inside a text box or a title, which a browser shows as text.
 
-A trip whose site carries any of these reads as changed once. The published and staged push records
-and the confirmation record now note the version of this check they were taken under, so the gate can
-say which version it is comparing against; the approval ledger's form does not change.
+A trip whose site carries any of these reads as changed once, save after an edit that removes exactly the
+text one of them hid from the earlier version: that edit passes once, as the earlier version also let it
+pass. The published and staged push records and the confirmation record now note the version of this
+check they were taken under, so the gate can say which version it is comparing against; the approval
+ledger's form does not change.
 
 - **On a trip that declares no approvers,** `update` and `rotate` stop once. The message says that how
   pages are read has changed, that the gate cannot tell whether the plan moved as well, and that one
@@ -41,7 +43,7 @@ is reverted.
 scripts/test-corpus-hygiene.sh` lists every row kept, none new, raised, lowered or dropped, and no file
 owing a row without one. `reference/adr/ADR-029-group-approval-return-and-threshold.md` grew 606 bytes
 to 59,801, beneath 64,173; `skills/trip/SKILL.md` grew 49 to 107,503, beneath 118,008; and
-`skills/trip-publish/SKILL.md` grew 9 to 47,146, beneath 48,711. `reference/adr/ADR-052-a-body-ends-where-the-browser-ends-it.md`,
+`skills/trip-publish/SKILL.md` grew 157 to 47,294, beneath 48,711. `reference/adr/ADR-052-a-body-ends-where-the-browser-ends-it.md`,
 amended in this release, grew 1,080 bytes to 13,290 and is below its class floor, so it owes no row.
 
 ## [0.77.0] — 2026-11-24 — Publish commands are safe to run twice and stop on their own failures
