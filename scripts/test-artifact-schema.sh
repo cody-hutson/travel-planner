@@ -19110,6 +19110,13 @@ md_flips ft_rows       'FT7-table'   ft_route_assert "$FT_DOC" "$FT_FORMS"
 md_flips ft_rows       'FT8'         ft_keycol_assert "$FT_DOC"
 md_flips ft_former_rows 'FT9'        ft_former_assert "$FT_DOC"
 md_flips ft_resolve    'FT7-resolve' ft_route_assert "$FT_DOC" "$FT_FORMS"
+# FT10, FT4w and FT11, each on the function its one verdict rests on. FT10 is registered twice: on the
+# extractor, which must FAIL it rather than leave it VACUOUS, and on the mention scan, whose absence must
+# FAIL it rather than read as a clean population.
+md_flips ft_former_rows     'FT10'        ft10_assert "$FT_DOC" "$ROOT"
+md_flips ft_former_mentions 'FT10-scan'   ft10_assert "$FT_DOC" "$ROOT"
+md_flips ft_resolve_written 'FT4-written' ft_resolve_written_assert
+md_flips ft_region          'FT11'        ft11_assert "$FT_SKILL" "$FT_ENRICH" "$FT_IDEATE" "$FT_DOC"
 # ── Group ST's conformance arm, REGISTERED on every function its form verdict rests on — the
 # evaluator, the boundary resolver, the surface reader the stop lives in, the resolver the join goes
 # through and the reader of the contract's keys — plus its two list assertions on the function each
