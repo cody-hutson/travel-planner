@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-11-26 — The group sees its destination shortlist on the private site before a destination is chosen
+## [0.79.0] — 2026-11-26 — The group sees its destination shortlist on the private site before a destination is chosen
 
 While a trip is still deciding where to go, the group can now see its destination shortlist on the
 private trip site, and only then. `/trip site` builds a page in IDEATION as well as in the plan
