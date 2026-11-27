@@ -21342,6 +21342,18 @@ NC_NCROSS="$(nc_count "$NC_CROSS")"
 NC_DEST=""
 [ -n "$NC4_CLASS" ] && NC_DEST="$(dh_class_labels "$NC_DM" "$NC4_CLASS")"
 NC_NDEST="$(nc_count "$NC_DEST")"
+# nc4_want <doc> <class> — NC4's scan set: each <class>-class field's current label and every former label
+# reference/data-model.md § Former labels declares for it, one a line. A record written before a reword
+# carries the label it was written under (ADR-053 Decision 3), so the scan reads it by either. A sibling of
+# dh_class_labels rather than a change to it, because DH0 counts the classification's current labels and
+# grades nothing a former label would reach.
+nc4_want() {
+  awk -F'\t' -v c="$2" '
+    FILENAME == ARGV[1] { if ($4 == c && $3 != "" && $11 != "") { print $3; k[$11] = 1 }; next }
+    $1 == "R" && ($3 in k) { print $4 }' <(ft_rows "$1") <(ft_former_rows "$1") | sort -u
+}
+NC4_WANT=""
+[ -n "$NC4_CLASS" ] && NC4_WANT="$(nc4_want "$NC_DM" "$NC4_CLASS")"
 NC1_ENUM_OK=0
 case "|${CA_LIFE_ENUM:-}|" in *"|${NC1_CLASS:-<none>}|"*) NC1_ENUM_OK=1 ;; esac
 # The value layer's inputs and its real-tree scan, read HERE so that NC0 prints them. The
@@ -21578,10 +21590,10 @@ EOF
   nc4_msg() {  # nc4_msg <scan-output> <sentinel> <class> <boundary>
     awk -F'\t' -v s="$2" -v k="$3" -v b="$4" '$1 == "HIT" { n = split($2, P, "/"); printf "NC4: %s (%s, trip: %s) carries the %s-class field %s%s%s — never-carry 4: a %s-class value across %s\n", P[n], $3, s, k, "\047", $4, "\047", k, b }' <<<"$1"
   }
-  NC4_OUT="$(nc4_scan "$ROOT" "$NC_CROSS" "$NC_DEST")"
+  NC4_OUT="$(nc4_scan "$ROOT" "$NC_CROSS" "$NC4_WANT")"
   NC4_HITS="$(nc_n "$NC4_OUT" HIT)"; NC4_BAD="$(nc_n "$NC4_OUT" UNREAD)"; NC4_GR="$(nc_graded "$NC4_OUT")"
   NC4C_INST="$(awk -F'\t' 'NF == 2 && $1 == "C3"' <<<"$NC_INST")"
-  NC4C_OUT="$(nc4_scan "$ROOT" "$NC4C_INST" "$NC_DEST")"
+  NC4C_OUT="$(nc4_scan "$ROOT" "$NC4C_INST" "$NC4_WANT")"
   NC4C_HITS="$(nc_n "$NC4C_OUT" HIT)"; NC4C_GR="$(nc_graded "$NC4C_OUT")"
   NC4C_FILES="$(awk -F'\t' '$1 == "HIT" && !s[$2]++ { n++ } END { print n + 0 }' <<<"$NC4C_OUT")"
   if [ "$NC4_GR" -eq 0 ] || [ "$NC4_BAD" -gt 0 ]; then
@@ -21591,7 +21603,7 @@ EOF
   elif [ "$NC4C_HITS" -eq 0 ]; then
     FAIL "NC4: BROKEN PROBE — the sensitivity arm returned zero: the same label match over the $NC4C_GR per-trip traveller instance(s) found no \`$NC4_CLASS\`-class bullet, so the zero over the cross-trip instances is an empty scan rather than a clean store. The probe is reported unusable, never the subject clean"
   else
-    PASS "NC4: none of the $NC4_GR cross-trip instance(s) carries a bullet whose label is one of the $NC_NDEST \`$NC4_CLASS\`-class label(s) — never-carry 4 holds across $NC4_ACROSS on the tree. The zero is a measurement: the sensitivity arm NC4c found $NC4C_HITS such bullet(s) in $NC4C_FILES per-trip traveller file(s) on the same run. The emitter and schema limbs of the same prohibition stay group DH's"
+    PASS "NC4: none of the $NC4_GR cross-trip instance(s) carries a bullet whose label is one of the $NC_NDEST \`$NC4_CLASS\`-class label(s) or a former label declared for one ($(nc_count "$NC4_WANT") spelling(s) read) — never-carry 4 holds across $NC4_ACROSS on the tree. The zero is a measurement: the sensitivity arm NC4c found $NC4C_HITS such bullet(s) in $NC4C_FILES per-trip traveller file(s) on the same run. The emitter and schema limbs of the same prohibition stay group DH's"
   fi
   if [ "$NC4C_HITS" -gt 0 ]; then
     PASS "NC4c: SENSITIVITY — the same label match over the $NC4C_GR per-trip traveller instance(s) finds $NC4C_HITS bullet(s) of the \`$NC4_CLASS\` class in $NC4C_FILES file(s). A per-trip file is where such a field belongs, and the instrument sees it there"
@@ -21611,11 +21623,11 @@ EOF
     { cat "$ROOT/$NC4F_SRC"; printf '\n## Zq probe\n\n- **%s:** zq-a few times\n' "$NC4F_LABEL"; } > "$NC4F_D/$NC4F_NAME"
     { printf '# Zq traveller\n\n## Zq probe\n\n- **%s:** zq-a few times\n' "$NC4F_LABEL"; } > "$NC4F_D/per-trip.md"
     nc4f_n="$(grep -c -F -- "- **$NC4F_LABEL:** zq-a few times" "$NC4F_D/$NC4F_NAME" || true)"
-    nc4f_s="$(nc_n "$(nc4_scan "$ROOT" "C22$VA_TAB$NC4F_SRC" "$NC_DEST")" HIT)"
+    nc4f_s="$(nc_n "$(nc4_scan "$ROOT" "C22$VA_TAB$NC4F_SRC" "$NC4_WANT")" HIT)"
     [ "$nc4f_n" -eq 1 ] && [ "$nc4f_s" -eq 0 ] && NC4F_INT=1
   fi
   NC4F_WANT="NC4: $NC4F_NAME (C22, trip: $NC_SENTINEL) carries the $NC4_CLASS-class field '$NC4F_LABEL' — never-carry 4: a $NC4_CLASS-class value across $NC4_ACROSS"
-  NC4F_GOT="$(nc4_msg "$(nc4_scan "$NC4F_D" "C22$VA_TAB$NC4F_NAME" "$NC_DEST")" "$NC_SENTINEL" "$NC4_CLASS" "$NC4_ACROSS")"
+  NC4F_GOT="$(nc4_msg "$(nc4_scan "$NC4F_D" "C22$VA_TAB$NC4F_NAME" "$NC4_WANT")" "$NC_SENTINEL" "$NC4_CLASS" "$NC4_ACROSS")"
   if [ "$NC4F_INT" -ne 1 ]; then
     FAIL "NC4f: fixture integrity — the copy does not carry exactly the one planted bullet, or its source already carried a \`$NC4_CLASS\`-class bullet, so the arm below would prove nothing"
   elif [ "$NC4F_GOT" = "$NC4F_WANT" ]; then
@@ -21624,7 +21636,7 @@ EOF
     FAIL "NC4f: MUST-FIRE did not fire as predicted — wanted '$NC4F_WANT', got '${NC4F_GOT:-<no finding>}'"
   fi
   NC4N_SYN="$(nc_cross "$NC4F_D" "C3${VA_TAB}per-trip.md" "$NC_SENTINEL")"
-  NC4N_BUL="$(nc_n "$(nc4_scan "$NC4F_D" "C3${VA_TAB}per-trip.md" "$NC_DEST")" HIT)"
+  NC4N_BUL="$(nc_n "$(nc4_scan "$NC4F_D" "C3${VA_TAB}per-trip.md" "$NC4_WANT")" HIT)"
   if [ "$NC4F_INT" -ne 1 ] || [ "$NC4N_BUL" -ne 1 ]; then
     FAIL "NC4n: fixture integrity — the per-trip near-miss does not carry the planted bullet (the scan sees $NC4N_BUL), so its silence would prove nothing"
   elif [ -z "$NC4N_SYN" ] && [ "$NC4C_FILES" -gt 0 ]; then
