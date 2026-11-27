@@ -23570,21 +23570,32 @@ mc_class() { awk -F'\t' -v k="$2" '$1 == "ROW" && $7 == k { print $2 }' <<<"$1";
 # nothing when no row or more than one carries it. An arm reads a field's label through it rather than
 # spelling one, so a reword moves the arm's input with its field (ADR-053 Decision 4 limb 2).
 mc_label() { ft_rows "$1" | awk -F'\t' -v k="$2" '$11 == k { n++; l = $3 } END { if (n == 1) print l }'; }
-# mc_shared <data-model> — the first current label that two or more labelled rows of the table carry,
-# or nothing: the label MC4u renders as one that no single field resolves.
-mc_shared() { ft_rows "$1" | awk -F'\t' '$3 != "" { n[$3]++; if (n[$3] == 2 && !p++) print $3 }'; }
-# mc4_renders <data-model> <dir> — MC4's four synthetic renders, written into <dir>. Each label a
-# render carries is read from <data-model> by key at run time and never spelled (`Zq probe` is no
-# field's label by construction), so a render follows its field through a reword. Returns 1, writing
-# nothing, when a key it reads resolves to no one labelled row, or no label is shared.
+# MC4_SHK — the key of the field whose current label MC4u emits as a label two fields carry. The table
+# need not carry any label twice: mc4_renders plants the second carrier in its own copy of the data model,
+# so a reword of a field whose label the table shares, or of this one, moves no verdict.
+MC4_SHK='desire-overlap'
+# mc4_renders <data-model> <dir> — MC4's synthetic renders, written into <dir>, with shared.md, the copy
+# of <data-model> that enc-shared.html, the one emission under a label two fields carry, is graded
+# against. Each label a render carries is read from <data-model> by key at run time and never spelled
+# (`Zq probe` is no field's label by construction), so a render follows its field through a reword.
+# shared.md is <data-model> with one row appended, numbered after the table's last and keyed and
+# sectioned as no row of it is, carrying the current label of MC4_SHK, so that label stands on two rows
+# there however the table itself reads. Every other render is graded against <data-model>. Returns 1,
+# writing no render, when a key it reads resolves to no one labelled row, or when shared.md does not
+# carry that label on two rows or more.
 mc4_renders() {
-  local wl sa so ci bo sh
+  local wl sa so ci bo sh n
   wl="$(mc_label "$1" would-love)"; sa="$(mc_label "$1" splurge-appetite)"; so="$(mc_label "$1" special-occasion)"
-  ci="$(mc_label "$1" check-in-time)"; bo="$(mc_label "$1" blackout)"; sh="$(mc_shared "$1")"
+  ci="$(mc_label "$1" check-in-time)"; bo="$(mc_label "$1" blackout)"; sh="$(mc_label "$1" "$MC4_SHK")"
   if [ -z "$wl" ] || [ -z "$sa" ] || [ -z "$so" ] || [ -z "$ci" ] || [ -z "$bo" ] || [ -z "$sh" ]; then return 1; fi
+  n="$(ft_rows "$1" all | awk -F'\t' '$1 + 0 > m { m = $1 + 0 } END { print m + 1 }')"
+  { awk '{ print }' "$1"
+    printf '| %s | `%s` | Zq section | **TRIP** | n/a | `slot` | `admissible` | a second row carrying the label of %s | `zq-mc4-shared` |\n' "$n" "$sh" "$MC4_SHK"; } > "$2/shared.md" || return 1
+  [ "$(ft_rows "$2/shared.md" | awk -F'\t' -v l="$sh" '$3 == l { c++ } END { print c + 0 }')" -ge 2 ] || return 1
   printf '<p>%s: zq-tidepool-walks</p>\n' "$wl" > "$2/plain.html"
   printf '<p>%s: zq-lavish</p>\n' "$sa" > "$2/enc-out.html"
-  printf '<p>%s: zq-anniversary</p>\n<p>%s: zq-15:00</p>\n<p>Zq probe: zq-1</p>\n<p>%s: zq-everyone</p>\n' "$so" "$ci" "$sh" > "$2/enc-undet.html"
+  printf '<p>%s: zq-anniversary</p>\n<p>%s: zq-15:00</p>\n<p>Zq probe: zq-1</p>\n' "$so" "$ci" > "$2/enc-undet.html"
+  printf '<p>%s: zq-everyone</p>\n' "$sh" > "$2/enc-shared.html"
   printf '<p>%s: zq-tidepool-walks</p>\n<p>%s: zq-2001-01-09</p>\n' "$wl" "$bo" > "$2/enc-ok.html"
 }
 
@@ -23870,15 +23881,16 @@ mc_emitted() {
   done < "$render"
 }
 # mc4_arms <data-model> <dir> — MC4, MC4u and MC4k: mc4_renders' renders, written into <dir> from
-# <data-model>, each graded through the envelope. The live run hands it the tree's data model and MC's
-# scratch directory; a control hands it a copy's, so the arm runs over a reworded source unchanged.
+# <data-model>, each graded through the envelope, enc-shared.html against the copy mc4_renders plants
+# beside it. The live run hands it the tree's data model and MC's scratch directory; a control hands it a
+# copy's, so the arm runs over a reworded source unchanged.
 mc4_arms() {
   local dm="$1" w="$2" MC4_WL MC4_SA MC4_SAS MC4_SO MC4_CI MC4_BO MC4_SH MC4_ENCSHOW MC4_PLSHOW MC4_P MC4_O MC4_U MC4_K MC4_WANT_P MC4_WANT_O MC4_WANT_U
   if [ -n "$MC_ENC" ] && [ -n "$MC_PLAIN" ] && mc4_renders "$dm" "$w"; then
     MC4_WL="$(mc_label "$dm" would-love)"; MC4_SA="$(mc_label "$dm" splurge-appetite)"
     MC4_SAS="$(ft_rows "$dm" | awk -F'\t' '$11 == "splurge-appetite" { print $2 }')"
     MC4_SO="$(mc_label "$dm" special-occasion)"; MC4_CI="$(mc_label "$dm" check-in-time)"
-    MC4_BO="$(mc_label "$dm" blackout)"; MC4_SH="$(mc_shared "$dm")"
+    MC4_BO="$(mc_label "$dm" blackout)"; MC4_SH="$(mc_label "$dm" "$MC4_SHK")"
     MC4_ENCSHOW="${MC_ENC% limb}"; MC4_PLSHOW="${MC_PLAIN% limb}"
     MC4_P="$(mc_emitted "$w/plain.html" "$MC_PLAIN" "$MC_ADR026" "$MC_ADR030" "$dm")"
     MC4_O="$(mc_emitted "$w/enc-out.html" "$MC_ENC" "$MC_ADR026" "$MC_ADR030" "$dm")"
@@ -23889,7 +23901,7 @@ mc4_arms() {
     else
       FAIL "MC4: MUST-FIRE did not fire as predicted — the public limb gave '${MC4_P:-<nothing>}' where '$MC4_WANT_P' was required, and the encrypted limb gave '${MC4_O:-<nothing>}' where '$MC4_WANT_O' was required"
     fi
-    MC4_U="$(mc_emitted "$w/enc-undet.html" "$MC_ENC" "$MC_ADR026" "$MC_ADR030" "$dm")"
+    MC4_U="$(mc_emitted "$w/enc-undet.html" "$MC_ENC" "$MC_ADR026" "$MC_ADR030" "$dm"; mc_emitted "$w/enc-shared.html" "$MC_ENC" "$MC_ADR026" "$MC_ADR030" "$w/shared.md")"
     MC4_WANT_U="UNDET${VA_TAB}$MC4_SO${VA_TAB}admitted only when its traveller marks it (§ 3), and no mark is readable here
 UNDET${VA_TAB}$MC4_CI${VA_TAB}ADR-030 § 2 does not name this field
 UNDET${VA_TAB}Zq probe${VA_TAB}the label resolves to no field
@@ -23906,7 +23918,7 @@ UNDET${VA_TAB}$MC4_SH${VA_TAB}the label is carried by more than one field"
       FAIL "MC4k: a declared IN value on the encrypted limb was not admitted — got '$(printf '%s' "${MC4_K:-<nothing>}" | tr '\n' ';')' where two ADMIT records were required"
     fi
   else
-    FAIL "MC4: NOT EVALUATED — the channel table yields no moved limb or no public limb, or a key a render is built from names no one labelled row of the table, so the emitted-value arm has no limb to emit on or no render to emit; MC4u and MC4k were not run"
+    FAIL "MC4: NOT EVALUATED — the channel table yields no moved limb or no public limb, or a key a render is built from names no one labelled row of the table, or the planted copy does not carry the label of MC4_SHK on two rows, so the emitted-value arm has no limb to emit on or no render to emit; MC4u and MC4k were not run"
   fi
 }
 
@@ -24374,9 +24386,10 @@ fi
 #
 # mc6_measure <copy> <scratch> — the verdicts of this group and of NC2v over one copy, one per line. A
 # render verdict names the key of its label, or the label itself where no one field carries it,
-# because each copy's renders are built from that copy's own table.
+# because each copy's renders are built from that copy's own table. The key is read from the copy's own
+# table, never from the copy mc4_renders plants, so the emission under the planted label names MC4_SHK.
 mc6_measure() {
-  local c="$1" w="$2" a30 dm decl place r lim
+  local c="$1" w="$2" a30 dm decl place r lim g
   a30="$c/reference/adr/${MC_ADR030##*/}"; dm="$c/reference/data-model.md"
   mkdir -p "$w" || return 0
   decl="$(mc_decl "$a30" "$dm" 2>/dev/null)"; place="$(mc_place "$a30" "$dm" 2>/dev/null)"
@@ -24384,14 +24397,15 @@ mc6_measure() {
   mc1_find "$MC_CH" "$(mc_moved "$a30" 2>/dev/null)" "$decl" "$(nc_c2_in_labels "$a30" 2>/dev/null)" "$MC_HARD" "$(ft_former_rows "$dm" 2>/dev/null)" | awk 'NF { print "MC1\t" $0 }'
   printf 'MC2\tcensus\t%s\n' "$(mc_census "$decl" "$dm" 2>/dev/null)"
   if mc4_renders "$dm" "$w"; then
-    for r in plain enc-out enc-undet enc-ok; do
+    for r in plain enc-out enc-undet enc-shared enc-ok; do
       lim="$MC_ENC"; [ "$r" = plain ] && lim="$MC_PLAIN"
-      mc_emitted "$w/$r.html" "$lim" "$MC_ADR026" "$a30" "$dm" | awk -F'\t' -v r="$r" '
+      g="$dm"; [ "$r" = enc-shared ] && g="$w/shared.md"
+      mc_emitted "$w/$r.html" "$lim" "$MC_ADR026" "$a30" "$g" | awk -F'\t' -v r="$r" '
         FILENAME == ARGV[1] { if ($3 != "") { n[$3]++; k[$3] = $11 }; next }
         NF { f = (($2 in n) && n[$2] == 1) ? k[$2] : $2; printf "MC4\t%s\t%s\t%s\t%s\n", r, $1, f, ($1 == "UNDET") ? $3 : "" }' <(ft_rows "$dm") -
     done
   else
-    printf 'MC4\tno render: a key mc4_renders reads names no one labelled row\n'
+    printf 'MC4\tno render: a key mc4_renders reads names no one labelled row, or its planted copy carries the label of MC4_SHK on fewer than two\n'
   fi
   mc_agree "$decl" "$place" "$dm" "$MC_GUIDED" | awk -F'\t' '$1 == "FIND" || $1 == "STAT" { print "MC5\t" $0 }'
   if declare -F nc2v_arms >/dev/null; then
