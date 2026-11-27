@@ -117,16 +117,42 @@ All other days are locked."]
 > purpose — anything that can read the legs above can read these.
 
 ### Effective Planning Days [DERIVED]
-> Computed from flight data. Do not manually edit.
+> Computed, never authored. Do not manually edit. `/trip-record` reads what follows from
+> the engine's own template and never from this copy: it recomputes a line in the act
+> that records a change to one of the inputs declared for it here, by the derivation
+> stated with them, and leaves every other line as it stands.
+> - *Arrival day* ← the last `### Outbound` leg's `Arrives:`, and `Check-in time:`. Its
+>   date is that `Arrives:` date, and it shows that leg's arrival time and the check-in
+>   time.
+> - *Full planning days* ← the `Arrives:` and `Departs:` dates the lines around it take:
+>   the days after the one and before the other, and how many there are.
+> - *Departure day* ← the first `### Return` leg's `Departs:`, and `Check-out time:`. Its
+>   date is that `Departs:` date, and it shows that leg's departure time and the check-out
+>   time. The hotel-departure time is not an input.
+> - *Total* ← `Arrives:`, `Check-in time:`, `Departs:` and `Check-out time:`, every input
+>   of the lines above it: the full days, the arrival and departure days as two partial
+>   days, and their sum.
+> - *Timezone delta* ← the zone annotations of the first `### Outbound` leg's `Departs:`
+>   and the last one's `Arrives:`, and nothing else in those values: from the first zone to
+>   the second, the hours between them and the direction. It is computed only where both
+>   annotations carry an explicit UTC offset; where an annotation it did not change carries
+>   none, the line is not recomputable and that annotation is the input named.
+>
+> A leg's `Departs:` and `Arrives:` are read in the shape its flight line declares,
+> `[Day, Date, Time TZ]`; `Check-in time:` and `Check-out time:` are read as the clock time
+> their value opens with. A derived line writes a date as the month's three-letter name,
+> the day and the weekday in brackets. A value in none of these shapes is not an input this
+> block can read.
+>
 > **Scope: the anchor origin (`Origin A`).** On a multi-origin trip this is **not**
 > a group-wide guarantee — a traveler on another origin may arrive later or leave
 > earlier. Anything that needs to know who is present on a given day must read each
 > traveler's own derived window in `outputs/traveler-presence.md`,
 > not this block.
 
-- **[Date]:** Arrival day — available from ~[arrival time] local
+- **[Date]:** Arrival day — arrives ~[arrival time] local; check-in [check-in time]
 - **[Date] – [Date]:** Full planning days ([N] days)
-- **[Date]:** Departure day — must depart hotel by [time] for [departure time] flight
+- **[Date]:** Departure day — [departure time] flight; check-out [check-out time]
 - **Total:** [N] full days + [N] partial days = [N] effective planning days
 - **Timezone delta:** [Origin TZ] to [Destination TZ] = [+/- N hours], [eastbound/westbound]
 
