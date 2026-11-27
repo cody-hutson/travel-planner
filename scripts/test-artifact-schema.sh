@@ -23993,7 +23993,7 @@ mc6_measure() {
 }
 mc6_rec() { awk -F'\t' -v g="$2" '$1 == g' <<<"$1"; }
 mc6_assert() {
-  local rw nf bs mb mr mn moved first nrw nfr nfd k n5 n5k miss lab nlab mc1 nc4 nc4b same n4 nnc keys
+  local rw nf bs mb mr mn moved first nrw nfr nfd k n5 n5k miss lab nlab ins mc1 nc4 nc4b same n4 nnc keys
   rw="$(ft_c4_copy)"; nf="$(ft_c4_copy noformer)"; bs="$(ft_c4_copy base)"
   MC6_C4_DIR="$rw"; export MC6_C4_DIR
   if [ -z "$rw" ] || [ -z "$nf" ] || [ -z "$bs" ]; then
@@ -24018,11 +24018,14 @@ mc6_assert() {
     keys="$keys${keys:+, }$k"
     if [ "$(awk -F'\t' -v k="$k" '$1 == "MC5" && $2 == "FIND" && $3 == "ii-b" && index($4, " | " k " cites ") { n++ } END { print n + 0 }' <<<"$mn")" -eq 1 ]; then n5k=$((n5k + 1)); else miss="$miss $k"; fi
   done <<<"$FT_C4_REWORD"
-  nlab=0; lab=""
+  # The label NC2v's reader takes from the prose for a reworded field: the first of its unreworded copy's
+  # spellings, current then former (ft_spellings), that the prose carries. ADR-030 is never rewritten, so
+  # after a real reword of the field the prose carries a former label, not the current one (Decision 10).
+  nlab=0; lab=""; ins="$(nc_c2_in_labels "$bs/reference/adr/${MC_ADR030##*/}" 2>/dev/null)"
   while IFS="$VA_TAB" read -r k _; do
     [ -n "$k" ] || continue
-    k="$(mc_label "$bs/reference/data-model.md" "$k")"
-    if [ -n "$k" ] && [ -n "$(awk -v l="$k" '$0 == l' <<<"$(nc_c2_in_labels "$bs/reference/adr/${MC_ADR030##*/}" 2>/dev/null)")" ]; then
+    k="$(awk 'FILENAME == ARGV[1] { if ($0 != "") p[$0] = 1; next } ($0 in p) && !n++' <(printf '%s\n' "$ins") <(ft_spellings "$bs/reference/data-model.md" "$k"))"
+    if [ -n "$k" ]; then
       nlab=$((nlab + 1)); lab="$lab${lab:+, }'$k'"
       [ "$(awk -F'\t' -v l="'$k'" '$1 == "MC1" && index($0, l) { n++ } END { print n + 0 }' <<<"$mn")" -eq 1 ] || miss="$miss MC1:$k"
     fi
