@@ -694,6 +694,12 @@ are named rather than left to be re-derived:
   collapse them, and never substitute the publish guard's `stated()` for `ANSWERED()`:
   the two disagree on `none`, and `none` is a deliberate answer.
 
+**A field's line under one of its former labels is that field's line**
+(`reference/data-model.md` § *Former labels*), in the trip file and in the record alike:
+carry it into the model under the field's current label, and never edit either file to
+change a label. A `slot` field answered under more than one of its spellings in one file
+occurs more than once, so it is `MALFORMED-SLOT`, as a label standing twice already is.
+
 ### Missing or blank profile — operator fallback, not a hard failure
 
 A traveler with no `travelers/<traveler>.md` file, or a file still left as

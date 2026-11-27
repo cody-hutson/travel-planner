@@ -64,6 +64,8 @@ leanings per-traveler, or, where that model has not been built yet, each
 `trips/<destination>-<year>/travelers/<traveler>.md` under a header naming it —
 with the lines a `field` row of `reference/data-architecture.md` § 5.6 labels
 left out, in the shapes the projection's criterion reaches. You need only those three fields. Open none of those files yourself.
+A leaning written under one of those fields' former labels
+(`reference/data-model.md` § *Former labels*) is read as that field.
 A traveler who left all three blank simply contributes no leanings yet; that is
 a normal state, not an error (see *Missing leanings* below).
 
