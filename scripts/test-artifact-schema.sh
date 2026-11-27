@@ -23890,7 +23890,8 @@ if [ "$MC_OK" -eq 1 ]; then
   # field carries a row: the label of MC5F11_KEY reworded in its row of a copy of the data model, as
   # FT_C4_REWORD rewords it, and the record's row for it replaced by one naming no field that cites its
   # words. With the former label declared the em-dash row ties to it and stands in for the field;
-  # without it nothing ties, and nothing is raised.
+  # without it nothing ties, and nothing is raised: MC5n3's copy declares no former label for the field,
+  # any its source declares stripped (ft_c4_strip), because a source after a real reword declares one.
   # mc5f11_arms <data-model> <tag> — both arms over the SOURCE <data-model>, the live one or a control's
   # planted one, their copies named by <tag>. It leaves the MC5F11_* words set for the live md_flips row,
   # and returns 1, after its FAIL, when there is nothing to plant.
@@ -23909,7 +23910,7 @@ if [ "$MC_OK" -eq 1 ]; then
     MC5F11_TXT="MC5: the em-dash row $MC5F11_ROW stands in for the field ($MC5F11_SEC, $MC5F11_NEW), which carries no row of its own — a field § 2 names is declared by its own row"
     if [ -n "$MC5F11_NEW" ] && [ -n "$MC5F11_OLD" ] && [ -n "$MC5F11_AW" ] && [ -n "$MC5F11_CLS" ] \
        && ft_row_set "$MC5F11_DM" "$MC5F11_KEY" Field "$MC5F11_CELL" && ft_row_set "$MC5N3_DM" "$MC5F11_KEY" Field "$MC5F11_CELL" \
-       && ft_c4_former "$MC5F11_DM" "$MC5F11_KEY | $MC5F11_OLD"$'\n'; then
+       && ft_c4_former "$MC5F11_DM" "$MC5F11_KEY | $MC5F11_OLD"$'\n' && ft_c4_strip "$MC5N3_DM" "$MC5F11_KEY"; then
       mc5_arm_on "$MC5F11_DM" MC5f11 'CD-B' "$MC5F11_TXT" 1 "a copy of the data model rewording '$MC5F11_OLD' to '$MC5F11_NEW' with the old label declared former, and a copy of the record whose row keyed $MC5F11_KEY is $MC5F11_ROW" swaprow "$MC5F11_KEY" "$MC5F11_ROW"
       mc5_arm_on "$MC5N3_DM" MC5n3 '' '' 0 "the same two copies with no former label declared: the em-dash row ties to nothing" swaprow "$MC5F11_KEY" "$MC5F11_ROW"
       return 0
