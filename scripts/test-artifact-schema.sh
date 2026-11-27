@@ -23802,13 +23802,42 @@ if [ "$MC_OK" -eq 1 ]; then
   MC5_X1N="$(awk -F'\t' -v s="$MC5_X1SEC" '$1 == "ROW" && $3 == s { n++ } END { print n + 0 }' <<<"$MC_DECL")"
   MC5_X1FIRST="$(awk -F'\t' -v s="$MC5_X1SEC" '$1 == "ROW" && $3 == s && !n++ { print $4 }' <<<"$MC_DECL")"
   MC5_X1KEYS="$(awk -F'\t' -v s="$MC5_X1SEC" '$1 == "ROW" && $3 == s { printf "%s%s", (n++ ? " " : ""), $7 }' <<<"$MC_DECL")"
-  MC5_RMW="$(mc_label "$MC_DM" rooming | tr '[:upper:]' '[:lower:]')"
+  # mc5f5_word <data-model> — the words MC5f5's em-dash row cites, naming rooming: its label in <data-model>,
+  # lower-cased.
+  mc5f5_word() { mc_label "$1" rooming | tr '[:upper:]' '[:lower:]'; }
+  # mc5f5_arm <data-model> — MC5f5 over <data-model>, the live one or a control's planted one: a copy of the
+  # record with one more row naming no field, citing mc5f5_word's words, raises exactly the (ii-c) finding.
+  mc5f5_arm() {
+    local w
+    w="$(mc5f5_word "$1")"
+    mc5_arm_on "$1" MC5f5 'ii-c' "MC5: the em-dash row IN | $MC_EM | $w cites words that name a field — '$w' equals a label, a former label or a section name" 1 "a copy with one more row naming no field, citing a field's label" addrow rooming "IN | $MC_EM | $w"
+  }
   mc5_arm MC5n2 '' '' 0 "a copy whose rows are reversed and re-spaced, every pipe set tight" reverse
   mc5_arm MC5f1 'i' "MC5: § 2's prose places ($(mc5_pair already-done)) IN, and the declaration carries no IN row for it" 1 "a copy with one IN row deleted" droprow already-done
   mc5_arm MC5f2 'i ii-a' "MC5: § 2's prose places ($(mc5_pair special-occasion)) IN-IF-MARKED, and the declaration carries no IN-IF-MARKED row for it" 1 "a copy in which the mark-conditioned occasion row is given the unconditional class" reclass special-occasion IN
   mc5_arm MC5f3 'CD-A ii-b' "MC5: the row IN | check-in-time cites '$(mc5_aw blackout)', which names neither its label nor its whole section" 1 "a copy in which a row tied by other words is re-keyed to a trip-context field" rekey blackout check-in-time
   mc5_arm MC5f4 'iii' "MC5: § 2's OUT bullet 'spending limits on shared meals.' is accounted for by no row" 1 "a copy with one new bullet appended to the OUT list" outbullet '' '- spending limits on shared meals.'
-  mc5_arm MC5f5 'ii-c' "MC5: the em-dash row IN | $MC_EM | $MC5_RMW cites words that name a field — '$MC5_RMW' equals a label, a former label or a section name" 1 "a copy with one more row naming no field, citing a field's label" addrow rooming "IN | $MC_EM | $MC5_RMW"
+  mc5f5_arm "$MC_DM"
+  # CTL-MC5f5-SRC — the source has already reworded rooming, in its two statements and with its former label
+  # declared, its new spelling derived by ft_c4_target. ADR-030's prose is never rewritten, so its IN list
+  # still carries rooming's old spelling, now a former label. MC5f5 over that source must read exactly its
+  # predicted finding, so its plant must cite the spelling the IN list carries, whether current or former.
+  mc5f5_ctl_src() {
+    local s r out bad
+    s="$(ft_c4_src)" || { FAIL "CTL-MC5f5-SRC: NOT EVALUATED — no unreworded copy was built to plant a source in"; return 0; }
+    if ! r="$(ft_c4_reword "$s" rooming "$(ft_c4_target "$(mc_label "$s/reference/data-model.md" rooming)")")" || ! ft_c4_former "$s/reference/data-model.md" "$r"$'\n'; then
+      FAIL "CTL-MC5f5-SRC: fixture integrity — the source did not take its reword of rooming in its two statements and its former row: ${r#!}"; return 0
+    fi
+    out="$(ft_c4_capture mc5f5_arm "$s/reference/data-model.md")"
+    bad="$(ft_c4_judge "$out" MC5f5)"
+    if [ -z "$bad" ]; then
+      PASS "CTL-MC5f5-SRC: MUST NOT FIRE — over a source that has already reworded rooming, with its former label declared ('$r'), MC5f5 reads exactly its predicted finding: $(awk -F'\t' '{ print substr($2, 1, 200) }' <<<"$out") …"
+    else
+      FAIL "CTL-MC5f5-SRC: MUST NOT FIRE — over a source that has already reworded rooming, with its former label declared ('$r'), MC5f5 does not read its predicted finding: $bad"
+    fi
+  }
+  mc5f5_ctl_src
+  md_flips mc5_arm 'CTL-MC5f5-SRC' mc5f5_ctl_src
   mc5_arm MC5f6 'CD-C ii-a' "MC5: the row IN | splurge-appetite cites '$(mc5_aw splurge-appetite)', and § 2's prose places that field OUT by '$(mc5_aw splurge-appetite)' — the row's list or its words are not the ones that place it" 1 "a copy in which a field the prose places OUT also carries an IN row" addrow splurge-appetite "IN | splurge-appetite | $(mc5_aw splurge-appetite)"
   if [ "$MC5_X3N" -gt 0 ] && [ -n "$MC5_SHORT" ]; then
     mc5_arm MC5f7 'CD-A' "MC5: the row IN | $MC5_X3FIRST names a field of no guided intake form — § 2 names none of the trip context's fields, and the declaration places no field § 2 does not name" "$MC5_X3N" "a copy in which every field of a trip-context section is declared IN, citing an item § 2 does carry" addrows can-travel "$MC5_X3ROWS"
