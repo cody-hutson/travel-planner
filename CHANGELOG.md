@@ -7,8 +7,11 @@ follows Keep a Changelog; versions follow Semantic Versioning.
 
 Rewording a question on either guided intake form now touches the label's two statements, its bullet on
 the form and its row in the classification table, and one former-label row. Beyond those, a reword owes
-an edit where an agent prompt or a skill points a model at the old words, and each such line is now
-reported. The test conversations and `ADR-030`'s private-site declaration name a field by its key, and
+an edit where an agent prompt or a skill points a model at the old words: the suite fails on each such
+line until it is edited, and reports a plain-prose mention without failing. The old words also stand on
+in the guided forms' guide prose and in the data model's prose outside its table, which no arm reports,
+and a reword marks that form's grade blocks stale for a regrade without failing them. The test
+conversations and `ADR-030`'s private-site declaration name a field by its key, and
 every reader of a written profile accepts a field's former labels, so no form, profile or person record
 is rewritten, and a profile written under an old label still reads as the field it was written for. No
 label is reworded by this release.
@@ -62,8 +65,9 @@ way is `MALFORMED-SLOT` under O3, as a label standing twice already is. Standing
 reconciler's clause and `promote`'s refusal cite it.
 
 **The suite holds it.** Group FT gains FT10, FT4w and FT11. FT10 fails where an agent prompt or a skill
-points at a declared former label, in a code span, in bold or quoted with its colon, and reports a
-plain-prose mention or a table cell without failing; it reads VACUOUS until the first reword gives the
+points at a declared former label: a code span equal to the label or holding it with its colon, the
+label in bold, or the label quoted with its colon. It reports a plain-prose mention or a table cell
+without failing; it reads VACUOUS until the first reword gives the
 declaration a row, and eight controls carry it. FT4w resolves a bullet written under a former label,
 and FT11 finds that reading stated in each of its homes: standing rule 19, `promote`, the reconciler's
 and the destination-ideation prompts, and § *Former labels*. Groups RL, XT, HZ, PM, ER, NC, CHR and FB
