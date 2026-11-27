@@ -119,7 +119,8 @@ left as written on purpose: an ADR that edits its own decision text stops being 
 decision. What follows states the narrowing beside them.
 
 `/trip` remains the **single entry point for addressing**. It is **not** read-only. Its
-`allowed-tools` grant carries two write primitives — `Edit` and `Write` — and verbs that dispatch a
+`allowed-tools` grant carries three write primitives — `Edit`, `Write` and `touch`, whose one use
+`skills/trip/SKILL.md` § *site* states — and verbs that dispatch a
 writing agent write through it. What survives is a read-only property held **per verb rather than per
 file**: `status` states it as a rule the verb follows — *"It writes nothing and runs no script"* — and
 `check` suppresses the validator's declared writes and offers a diff of `trips/<slug>/` as the
@@ -688,3 +689,5 @@ the file has retired, so both sentences are corrected where they stand. The prec
 the variable is set stays. No row, disposition or reason in § 4's table changes, and no decision moves.
 
 **Amendment (2026-11-22, Sunday) — § *References*: the trip-resolution gate ladder's citation re-pointed; no decision changes.** § *Resolving a trip* moved out of `CLAUDE.md` into `reference/trip-resolution.md` under the same heading, and the item naming it as the artifact implementing § 2's sixth bound now names that file. It replaces "`CLAUDE.md` → "Resolving a trip"". § 2's first bound needs no amendment: it bounds a scoped invocation to the context its Step-2 row assigns, and `CLAUDE.md` § *Step 2* assigns every verb the read of the file its `Contract:` line names, so it stays true as written.
+
+**Amendment (2026-11-27, Friday) — § 1: the count of `/trip`'s write primitives corrected; no decision changes.** The 2026-08-28 account in § 1 said that `/trip`'s "`allowed-tools` grant carries two write primitives — `Edit` and `Write` —". The grant now also holds `Bash(touch:*)`, which `skills/trip/SKILL.md` § *site* uses only as `touch -c` on the page a build stands behind, after the build, so that page is the newest one every reader takes: it moves a modification time, changes no byte, and with `-c` creates no file. The sentence now names three and points at that use rather than restating it. § 2's bounds stand as written, and no decision moves.
