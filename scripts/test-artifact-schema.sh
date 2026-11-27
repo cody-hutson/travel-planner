@@ -5270,6 +5270,61 @@ ft_former_assert() {
 #   population FAILs as NOT EVALUATED; a scan that read fewer files than the population names FAILs;
 #   an empty declaration is VACUOUS. The scan's records are ft_former_mentions', stated above it.
 FT10_SHAPES='a code span equal to the label or to the label and its colon, a code span holding the label and its colon at a word boundary, the label in bold with or without its colon, and the label and its colon in double quotes'
+# ft_former_mentions <data-model> <root> <population-file> — every mention of a declared former label in
+# the population's files, one TAB record each, matched as a literal string by index(), never as a
+# pattern, because a label may hold `?`, `(` or a comma:
+#   SHARED<TAB>key<TAB>label<TAB>keys    a former label that is the current label of <keys>
+#   FAIL<TAB>path<TAB>line<TAB>key<TAB>shape<TAB>label     a pointer-shaped mention
+#   REPORT<TAB>path<TAB>line<TAB>key<TAB>kind<TAB>label    any other whole-word mention, and every
+#                                                          mention of a SHARED label
+#   UNREAD<TAB>path · N<TAB>files-read, always printed last, so an absent scan is told apart from a
+#   clean one. A line's code spans are the even segments of a split on the backtick; a trailing
+#   segment after an unmatched backtick is outside every span. Outside the spans, each bold and
+#   quoted shape is cut out before the whole-word count, so no mention is counted in two tiers.
+ft_former_mentions() {
+  awk -F'\t' -v root="$2" '
+    function wc(c) { return c ~ /[[:alnum:]_]/ }
+    function whole(s, i, L) { return !((wc(substr(F, 1, 1)) && i > 1 && wc(substr(s, i - 1, 1))) || (wc(substr(F, L, 1)) && wc(substr(s, i + L, 1)))) }
+    function words(s,   L, p, q, n) { L = length(F); n = 0; q = 0
+      while ((p = index(substr(s, q + 1), F)) > 0) { q += p; if (whole(s, q, L)) n++ }
+      return n }
+    function colon(s,   G, p, q) { G = F ":"; q = 0
+      while ((p = index(substr(s, q + 1), G)) > 0) { q += p; if (!(wc(substr(F, 1, 1)) && q > 1 && wc(substr(s, q - 1, 1)))) return 1 }
+      return 0 }
+    function cut(G,   p, n) { n = 0; while ((p = index(O, G)) > 0) { O = substr(O, 1, p - 1) "\001" substr(O, p + length(G)); n++ }; return n }
+    function emit(t, kind, n,   j) { for (j = 0; j < n; j++) print t "\t" rel "\t" ln "\t" K "\t" kind "\t" F }
+    function scan(line,   i, ns, S, j, c, n, t, x) {
+      for (i = 1; i <= nr; i++) {
+        F = rf[i]; K = rk[i]
+        if (index(line, F) == 0) continue
+        t = (i in sh) ? "REPORT" : "FAIL"; x = (i in sh) ? sh[i] : ""
+        ns = split(line, S, "`"); O = ""
+        for (j = 1; j <= ns; j++) {
+          if (j % 2 == 0 && j < ns) {
+            c = S[j]
+            if (c == F || c == F ":") emit(t, x != "" ? x : "a code span equal to the label", 1)
+            else if (colon(c)) emit(t, x != "" ? x : "a code span holding the label and its colon", 1)
+            else if ((n = words(c)) > 0) emit("REPORT", x != "" ? x : "code-span text", n)
+            O = O "\001"
+          } else O = O ((j % 2 == 0) ? "`" : "") S[j]
+        }
+        if ((n = cut("**" F ":**")) > 0) emit(t, x != "" ? x : "the label in bold with its colon", n)
+        if ((n = cut("**" F "**")) > 0) emit(t, x != "" ? x : "the label in bold", n)
+        if ((n = cut("\"" F ":\"")) > 0) emit(t, x != "" ? x : "the label and its colon in double quotes", n)
+        if ((n = words(O)) > 0) emit("REPORT", x != "" ? x : ((line ~ /^[ \t]*\|/) ? "table cell" : "prose"), n)
+      }
+    }
+    FILENAME == ARGV[1] { if ($3 != "") cur[$3] = cur[$3] (cur[$3] == "" ? "" : ", ") $11; next }
+    FILENAME == ARGV[2] { if ($1 == "R" && $3 != "" && $4 != "") { nr++; rk[nr] = $3; rf[nr] = $4 }; next }
+    !prep { prep = 1
+      for (i = 1; i <= nr; i++) if (rf[i] in cur) { sh[i] = "shared with " cur[rf[i]] ", whose current label it is"; print "SHARED\t" rk[i] "\t" rf[i] "\t" cur[rf[i]] } }
+    { rel = $0; if (rel == "") next
+      path = root "/" rel; ln = 0
+      while ((r = (getline line < path)) > 0) { ln++; scan(line) }
+      close(path)
+      if (r < 0) print "UNREAD\t" rel; else nread++ }
+    END { print "N\t" nread + 0 }' <(ft_rows "$1" all) <(ft_former_rows "$1") "$3"
+}
 ft10_lines() {   # ft10_lines <scan> <FAIL|REPORT> — one tier's findings, one indented line each
   awk -F'\t' -v t="$2" '$1 == t { printf "      %s %s:%s: `%s` (%s) — %s\n", (t == "FAIL") ? "at" : "REPORTED", $2, $3, $6, $4, $5 }' <<<"$1"
 }
