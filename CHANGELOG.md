@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-11-26 — A traveller the operator speaks for is named before a rebuild drops them, and can be erased
+## [0.78.0] — 2026-11-26 — A traveller the operator speaks for is named before a rebuild drops them, and can be erased
 
 A traveller with no profile, whose needs the operator relayed, is now named before a rebuild drops
 them, and can be erased. The reconciler names each such entry before its write and every verb that
