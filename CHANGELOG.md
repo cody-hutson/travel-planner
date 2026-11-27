@@ -87,12 +87,12 @@ red arm on the five was FT10, naming the prompt and skill lines each reword must
 the readers of former labels went red, as they must. The probe is not an arm of the suite and runs on
 no push: it is a check this release was held to, made on copies outside the tree.
 
-**Size fence.** Read against `v0.77.0`, the previous release tag,
+**Size fence.** Read against `v0.78.0`, the previous release tag,
 `CH_EMIT=growth bash scripts/test-corpus-hygiene.sh` lists every row kept, none new, raised, lowered or
 dropped, and no row was re-pinned. Each sized file this release changed grew beneath its row:
-`skills/trip-record/SKILL.md` grew 2,961 to 459,826, beneath 470,268; `agents/00-enrichment.md` 426 to
-79,600, beneath 82,813; `ADR-030` 299 to 47,533, beneath 51,958; and `reference/data-model.md` 291 to
-236,293, beneath 246,314. `agents/destination-ideation.md`, `reference/command-reference.md` and the
+`skills/trip-record/SKILL.md` grew 2,961 to 466,348, beneath 470,268; `agents/00-enrichment.md` 426 to
+81,567, beneath 82,813; `ADR-030` 299 to 47,533, beneath 51,958; and `reference/data-model.md` 291 to
+236,434, beneath 246,314. `agents/destination-ideation.md`, `reference/command-reference.md` and the
 conversations' README owe no row, and this file is a release log, which owes none.
 
 **What this release does not do.** The guarded-label coupling is recorded only: a reword of a label the
