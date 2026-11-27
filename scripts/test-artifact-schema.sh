@@ -4916,6 +4916,33 @@ ft_resolve_assert() {
   fi
 }
 
+# ── FT4w — the written-profile resolver, ft_resolve_written, on a synthetic table (ADR-053 Decision 3).
+# One field carries three former labels, and the third is the current label of a second row under the
+# same section, which FT9 forbids and the resolver must still refuse: so a bullet under a former label
+# reads ONE, a former label under a heading its row's section does not lead reads NONE, and the
+# collision reads AMBIG. The FORM resolver, over the same input, must read every former label NONE,
+# because a form's bullet carries its current label. One verdict; its own registration in group MD.
+ft_resolve_written_assert() {
+  local rows="$WORK/ft/ft4w-rows.tsv" fr="$WORK/ft/ft4w-former.tsv" inp gw gc ww wcur
+  printf '%s\t%s\t%s\t\t\t\t\t\t\t\t%s\n' 1 'Needs' 'Specific' 'need-detail' 2 'Destination leanings' 'Would love' 'would-love' \
+    3 'Destination leanings' 'Rather skip' 'rather-skip' > "$rows"
+  printf 'F\t1\nR\t10\twould-love\tWishlist\nR\t11\twould-love\tWould like, someday\nR\t12\twould-love\tRather skip\n' > "$fr"
+  inp="$(printf '%s\t%s\n' 'Destination leanings' 'Would love' 'Destination leanings' 'Wishlist' \
+    'Destination leanings — what you lean toward' 'Would like, someday' 'Needs — the must-haves' 'Wishlist' \
+    'Destination leanings' 'Rather skip' 'Needs' 'Specific')"
+  ww='ONE:2 ONE:2 ONE:2 NONE:- AMBIG:2,3 ONE:1'
+  wcur='ONE:2 NONE:- NONE:- NONE:- ONE:3 ONE:1'
+  gw="$(ft_resolve_written "$rows" "$fr" <<<"$inp" 2>/dev/null | awk -F'\t' '{ printf "%s%s:%s", (NR > 1) ? " " : "", $1, $2 }')"
+  gc="$(ft_resolve "$rows" <<<"$inp" 2>/dev/null | awk -F'\t' '{ printf "%s%s:%s", (NR > 1) ? " " : "", $1, $2 }')"
+  if [ -z "$gw" ]; then
+    FAIL "FT4w: the written-profile resolver returned NOTHING for the synthetic bullets, so every reader of an example profile that resolves through it is grading an empty answer"
+  elif [ "$gw" = "$ww" ] && [ "$gc" = "$wcur" ]; then
+    PASS "FT4w: on a synthetic table whose field carries three former labels, ft_resolve_written answers exactly '$ww' — a bullet under its current label or under either former label, a comma-bearing one included, resolves to its row; a former label under a heading the row's section does not lead resolves NONE; and a former label that is another row's current label resolves AMBIG, picking neither — while ft_resolve, the form resolver, answers '$wcur' over the same input, reading no former label at all"
+  else
+    FAIL "FT4w: ft_resolve_written answered '$gw' where '$ww' is owed, and ft_resolve '$gc' where '$wcur' is owed. A written-profile resolver that drops a former label reads an answer written before a reword as absent, and a form resolver that takes one accepts a stale bullet on a form"
+  fi
+}
+
 # ft_bullets <form> <mode> — "heading<TAB>label<TAB>line" for every labelled bullet at ANY indent,
 # the heading in ft_heads' shape. mode=stop reads a form only ABOVE the boundary st_boundary
 # resolves from that form's own fence, and reads NOTHING when it does not resolve — the shared
@@ -5525,6 +5552,7 @@ ft_count_assert "$FT_DOC"
 ft_pair_assert "$FT_DOC"
 ft_vocab_assert "$FT_DOC"
 ft_resolve_assert
+ft_resolve_written_assert
 ft_cover_assert "$FT_DOC" "$FT_FORMS"
 ft_rule_assert "$FT_DOC" "$FT_SKILL"
 ft_route_assert "$FT_DOC" "$FT_FORMS"
