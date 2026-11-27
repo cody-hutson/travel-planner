@@ -31107,6 +31107,32 @@ md_flips cv_run      'CF-GEN0' cfgen0_assert
 md_flips cfctl_eval  'CF-CTL'  cfctl_assert
 md_flips ft_c4_copy  'CF8'     cf8_assert
 md_flips cv_run      'CF8'     cf8_assert
+# CTL-C4-GEN2 — #2211 criterion 4's arms over a SOURCE that is the shared copy's own reworded output: each
+# field the copy rewords already carries the spelling the copy gave it, with its former label declared,
+# as a tree does after a real reword to that spelling. CF8, MC6, MC5f11 and MC5n3 over that source must each
+# read PASS, so the spelling the copy rewords a field to can never be one a field already carries: the copy
+# never needs an edit of its own for a label edit to pass.
+c4gen2_arms() { mc6_assert; cf8_assert; mc5f11_arms "$1/reference/data-model.md" gen2; }
+c4gen2_assert() {
+  local src at out bad
+  src="$(ft_c4_copy)"
+  if [ -z "$src" ]; then
+    FAIL "CTL-C4-GEN2: NOT EVALUATED — the shared copy builder built no reworded copy to read as a source"; return 0
+  fi
+  if ! declare -F mc6_assert >/dev/null || ! declare -F mc5f11_arms >/dev/null; then
+    FAIL "CTL-C4-GEN2: NOT EVALUATED — group MC did not define MC6 or MC5f11's arms, so there is nothing to run over the source"; return 0
+  fi
+  at="$(mktemp -d "$WORK/c4gen2.XXXXXX")"
+  out="$(FT_C4_SRC="$src" FT_C4_AT="$at/c4" ft_c4_capture c4gen2_arms "$src")"
+  bad="$(ft_c4_judge "$out" 'CF8 MC5f11 MC5n3 MC6')"
+  if [ -z "$bad" ]; then
+    PASS "CTL-C4-GEN2: MUST NOT FIRE — over a source that is the shared copy's own reworded output (${src#"$WORK/"}), CF8, MC6, MC5f11 and MC5n3 each read PASS: the copy rewords each field to a spelling derived from the label it carries, never to one that label already is"
+  else
+    FAIL "CTL-C4-GEN2: MUST NOT FIRE — over a source that is the shared copy's own reworded output (${src#"$WORK/"}), CF8, MC6, MC5f11 and MC5n3 do not each read PASS: $bad"
+  fi
+}
+c4gen2_assert
+md_flips ft_c4_copy 'CTL-C4-GEN2' c4gen2_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group OW (the conversation block) — OW-C over every test conversation, read through group CF's
