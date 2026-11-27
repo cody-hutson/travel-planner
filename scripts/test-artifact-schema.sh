@@ -14641,10 +14641,7 @@ fi
 # one phrase per site (Dev Testing F-11, F-12): row 36's reach, at item 5 and in the row; the Step 1
 # `--third-party` row; row 40 under rule 16's subject; the confirmation's rules; the discharge
 # paragraph; each such row named by its place, at rule 19 and at item 1; and no file named by a path
-# whose stem may be the name. Then the remedy each refusal names, one phrase per refusal per site
-# (Stage 9 Q-2): the file and the row made to agree as `agents/00-enrichment.md` case C1 says, and
-# the display name disambiguated or either row taken off through `/trip-record group` (case C4).
-# The remedy words are the same at both sites, so each phrase opens on its own site's text.
+# whose stem may be the name.
 er31_cnt() {   # er31_cnt <folded text> <phrase> -> occurrences, counted with index()
   LC_ALL=C awk -v p="$2" '{ t = t $0 } END { c = 0; if (p != "") while ((i = index(t, p)) > 0) { c++; t = substr(t, i + length(p)) } print c }' <<<"$1"
 }
@@ -14685,11 +14682,6 @@ ER31_PINS=(
   'and each such row by its place, never by a name'
   'shares the entry'"'"'s key, naming each such row by its place'
   'and never by its path, whose stem may be the name'
-  # Stage 9 Q-2 — the remedy each refusal names, at rule 19, then at § `erase` item 1.
-  'it is not; the remedy named for such a file is to make the file and the row agree, as `agents/00-enrichment.md` § *Traveler identity* case C1 says: rename the file to the derived stem, or correct the roster person cell, whichever is wrong'
-  '; and the remedy named for such a row is to disambiguate the display name, or take either row off through `/trip-record group` (case C4)'
-  'whose stem may be the name, and the remedy named for such a file is to make the file and the row agree, as `agents/00-enrichment.md` § *Traveler identity* case C1 says: rename the file to the derived stem, or correct the roster person cell, whichever is wrong'
-  'naming each such row by its place, and the remedy named for such a row is to disambiguate the display name, or take either row off through `/trip-record group` (case C4)'
 )
 ER31_OLD=(
   'does not carry both `[OPERATOR-PROVIDED]` and `[THIRD-PARTY]`'
@@ -14719,7 +14711,7 @@ elif [ "$ER31_STRIPBAD" -ne 0 ] || [ "$ER31_PLANTBAD" -ne 0 ]; then
 elif [ "$ER31_OK" -ne "$ER31_N" ] || [ "$ER31_OLDN" -ne 0 ]; then
   FAIL "ER31: rule 19 and its path are not the ones the texts state — $ER31_OK of the $ER31_N operative phrase(s) stand exactly once across skills/trip-record/SKILL.md and CLAUDE.md (each listed with its count:${ER31_MISS:- none}), and the clauses the path replaced stand $ER31_OLDN time(s) (must be 0:${ER31_OLDW:- none}). Without rule 19 a rostered traveller who filed no profile has no erasure path, and without its refusal an unjoined filed profile survives an erasure that reports total"
 else
-  PASS "ER31: rule 19 and its path stand as the texts state them — all $ER31_N operative phrase(s) once each across skills/trip-record/SKILL.md and CLAUDE.md: the rule and its class, clause by clause at rule 19 and at § \`erase\` item 1 — its marks, the template left unfilled, no joining file carrying \`person:\`, every file under \`travelers/\` joining a row, and at item 1 rule 16's both marks and the active-trip \`[ROSTERED]\` refusal — its fail-closed refusal on an unjoined file or a shared key, each such row named by its place at both sites and no file by its path, the remedy each refusal names at both sites — the file and the row made to agree as case C1 says, the display name disambiguated or either row taken off through \`/trip-record group\` (case C4) — the whole-trimmed-cell predicate and the Step 1 row repaired with it, the Step 1 \`--third-party\` row, the name read from the roster cell, the order of writes and the interrupted state named by its place, the subject not carried, row 36 reaching the path their roster name derives at item 5 and in the row, row 40 reaching them and reading \`n/a\` for rule 16's subject, the class printed beside the name, the confirmation's rules, the discharge paragraph, the rules heading and CLAUDE.md's row; the two old clauses read 0. Every control fired: each phrase stripped drops its count by 1, and each old clause planted is counted"
+  PASS "ER31: rule 19 and its path stand as the texts state them — all $ER31_N operative phrase(s) once each across skills/trip-record/SKILL.md and CLAUDE.md: the rule and its class, clause by clause at rule 19 and at § \`erase\` item 1 — its marks, the template left unfilled, no joining file carrying \`person:\`, every file under \`travelers/\` joining a row, and at item 1 rule 16's both marks and the active-trip \`[ROSTERED]\` refusal — its fail-closed refusal on an unjoined file or a shared key, each such row named by its place at both sites and no file by its path, the whole-trimmed-cell predicate and the Step 1 row repaired with it, the Step 1 \`--third-party\` row, the name read from the roster cell, the order of writes and the interrupted state named by its place, the subject not carried, row 36 reaching the path their roster name derives at item 5 and in the row, row 40 reaching them and reading \`n/a\` for rule 16's subject, the class printed beside the name, the confirmation's rules, the discharge paragraph, the rules heading and CLAUDE.md's row; the two old clauses read 0. Every control fired: each phrase stripped drops its count by 1, and each old clause planted is counted"
 fi
 
 # ── ER32 — THE CLASS TESTS, AS THIS ARM ENCODES THEM, OVER THE WITNESSES (#2116; FM-6, PR-2). The

@@ -44,14 +44,12 @@ alone, or the `PROFILE MISSING` entry a rebuild leaves, whose roster row no trav
 the intake template left unfilled, on rule 16's conditions, the name every match reads being their
 roster cell. It refuses, writing nothing, wherever a file under `travelers/` joins no roster row — an
 unjoined file may be this traveller's — or another roster row shares the entry's key, naming each by
-its role or its place and never by a name, and names the remedy: make the file and the row agree,
-or, for a shared key, disambiguate the display name or take either row off through
-`/trip-record group`. The prompt prints the entry's class beside the name. After the erasure the
-subject is not carried: the next reconcile drops the entry, names it by its token, and writes a gap
-from the tombstoned cell that asks for no profile, because a profile filed under the token would
-bring the person back. The idempotency predicate, and the Step 1 row it was copied from, read the
-roster cell's whole trimmed value as the tombstone, never a match inside a longer one. `CLAUDE.md`'s
-*Person erasure* row names the path.
+its role or its place and never by a name. The prompt prints the entry's class beside the name. After
+the erasure the subject is not carried: the next reconcile drops the entry, names it by its token, and
+writes a gap from the tombstoned cell that asks for no profile, because a profile filed under the
+token would bring the person back. The idempotency predicate, and the Step 1 row it was copied from,
+read the roster cell's whole trimmed value as the tombstone, never a match inside a longer one.
+`CLAUDE.md`'s *Person erasure* row names the path.
 
 **The suite holds it.** A new group OP grades the naming in the reconciler (OP1), the verbs that
 dispatch it — found by a test that names no verb and fails closed on a region that names the
@@ -66,7 +64,7 @@ re-pinned to the new ones. Every new arm carries a must-fire control on a copy.
 **Size fence.** Read against `v0.77.0`, the previous release tag, `CH_EMIT=growth bash
 scripts/test-corpus-hygiene.sh` lists every row kept: none new, raised, lowered or dropped, and no
 file owes a row it lacks. The files that grew stand beneath their rows: `skills/trip-record/SKILL.md`
-grew 7,274 to 464,139, beneath 470,268; `agents/00-enrichment.md` 1,967 to 81,141, beneath 82,813,
+grew 6,522 to 463,387, beneath 470,268; `agents/00-enrichment.md` 1,967 to 81,141, beneath 82,813,
 the tightest; `skills/trip/SKILL.md` 1,089 to 108,543, beneath 118,008; `agents/06-validator.md` 320
 to 74,892; `agents/05-hub-planner.md` 273 to 84,149; `reference/data-architecture.md` 180 to
 138,855; `reference/data-model.md` 141 to 236,143; and `CLAUDE.md` 53 to 88,737. No ceiling was
