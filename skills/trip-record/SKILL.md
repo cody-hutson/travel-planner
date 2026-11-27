@@ -842,6 +842,29 @@ only the verbs that existed when it was written.
     re-key or rewrite such an entry, or the row it projects, on the ground that an erasure could
     reach it.
 
+20. **Recomputing a `[DERIVED]` block's lines in the act that records one of their declared inputs
+    is rule 2's fourth admitted shape, and it is stated as a widening of rule 2; rule 7, the earlier
+    widening of rule 2, is left exactly as it stands.** Where a verb writes a value the template
+    declares as an input of a `[DERIVED]` block that `CLAUDE.md` § *Write ownership* assigns to this
+    command, the same act recomputes, by the derivation the template states and no other and from
+    the inputs as they stand after the write, **only the lines of that block whose declared inputs
+    include a value this act changed**; it never rewrites a line on account of an input it did not
+    change, whatever that line holds. A recomputed line takes its bracketed placeholder (rule 3)
+    only where an input this act changed cannot be read in the shape the template declares; where an
+    unchanged input of that line cannot be so read, the line is left byte-identical and the verb
+    says it could not recompute it, naming that input's label. Nothing is parsed out of undeclared
+    prose and nothing is estimated. Before writing, the verb echoes every line it replaces, outgoing
+    then incoming — `ADR-007` § 2 bound 5's *say before writing what will not survive*. **A
+    `[DERIVED]` block is a derived artifact in that bound's sense:** each of its lines is computed
+    from declared inputs held in the same file, holds no independent state and can be recomputed
+    from them at any time, which is the property `derived` provenance names, and the echo preserves
+    what a replaced line held. **Its extent is its derived lines** — the bullet lines the template
+    declares beneath the block's heading — and never the heading, its tag or the blockquote prose
+    above those lines. It reads the blocks holding the declared inputs and no others. A statement
+    about the derived block's own values is recorded as the input it derives from. **It binds every
+    verb, present and future,** because its trigger is the input and not the verb: a rule placed in
+    `fact` would leave the next verb that records such an input without a tool.
+
 **Extension rule.** A later slice may append a numbered rule **only** where it genuinely binds every
 verb of this command, present and future, and must say in its own design that it did so and why. A
 rule that binds only that slice's own verbs goes inside those verb sections. Both failure modes are
