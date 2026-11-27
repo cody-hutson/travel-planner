@@ -355,7 +355,9 @@ This role is **read-and-reconcile only**: source files in, derived model and pre
 **One stated exception to that input list:** the model you are about to replace
 is read as well, solely to carry forward the `[THIRD-PARTY]` entry admitted
 through the operator fallback, which has **no source file by design** — see
-*A party member who will never file* below. The classification is unchanged:
+*A party member who will never file* below — and to name each
+`[OPERATOR-PROVIDED]`-only entry the rebuild drops (§ *Missing or blank profile*,
+below). The classification is unchanged:
 the read is still read-and-reconcile, it grants no authoring, and the derived
 model remains that entry's record rather than its authority. The presence file you are
 about to replace is read the same way, solely to state before you write it what its
@@ -516,7 +518,8 @@ load-bearing rather than cosmetic.** `skills/trip-record/SKILL.md` renders this
 block and **names the next verb by signal class**, over a closed set: a changed **need**
 and a changed **desire** each name `/trip replan`; a changed **journey facet** is
 reported with no command named, except one naming an input of a traveler's window, which
-names `/trip replan`; a `PROFILE MISSING` names `/trip-record profile <name>`.
+names `/trip replan`; a `PROFILE MISSING` names `/trip-record profile <name>`, save one
+written from an erasure's token, which names none.
 A divergence line left unpartitioned sits in front of that router as a peer of a
 changed-need line and is dispatched to `/trip replan` — turning information into exactly
 the replanning signal it is not. The `###` heading is what keeps the two classes apart.
@@ -752,6 +755,13 @@ fallback, not an error:
   it in the overlap summary too (the traveler simply contributes no desires to
   match yet), and keep it flagged on every refresh until the profile arrives.
 
+  **A gap written from an erasure's token asks for nothing.** Where the roster cell you
+  write this entry from is, whole and trimmed, `per-` followed by four lowercase hex
+  digits, write its marker without the `VERIFY:` sentence and name no profile route for
+  it, here or in your reply: that person asked to be erased, and a profile filed under the
+  token would bring them back into the trip. Keep it flagged as unknown on every refresh
+  all the same.
+
   **A reference that cannot be resolved routes here, in two steps, and neither step is
   skippable.** A `person:` line that resolves to nothing, a value that is not a
   well-formed token, a duplicated key, a second `merged-into:` hop, or a store that
@@ -912,6 +922,20 @@ that entry has no `travelers/<name>.md` on which the reference field could be wr
 An `[OPERATOR-PROVIDED]`-only entry is still **not** carried forward and is still
 dropped by regeneration; composition adds no carry-forward path for it either.
 
+**Name each one you drop, before you write** (`reference/adr/ADR-049-what-a-rebuild-owes.md`
+Decisions 1–2). For every entry of the model you read that carries `[OPERATOR-PROVIDED]` and
+not `[THIRD-PARTY]`, and that this pass neither writes again from operator input nor
+replaces with a usable profile of that traveller's own, return in your reply who it is — its
+heading's name; its token, where an erasure re-keyed it; or, where its key joins no row of
+the roster, its place among the model's person entries and never its heading — each need and
+desire it held, as the operator gave them, and how to keep them: restate them in each run
+of a verb whose every run dispatches this role, `/trip-record travelers` among them, which
+passes them to you as the stand-in above for a traveller the roster names whose entry does
+not carry `[THIRD-PARTY]`, until the traveller files a profile, which
+`/trip-record profile <name>` can send them. An entry an erasure re-keyed is offered the
+restatement alone, never a profile route. Every verb that dispatches this role surfaces what
+you return. A pass that drops none, or that stops or declines its write, names none.
+
 **When that person later files their own profile — supersede, do not merge.**
 Their own file becomes authoritative, and the transition is a replacement:
 
@@ -951,9 +975,10 @@ reserved-key list. Read them there and **do not restate either algorithm** — n
 here, and not in the model you write. This subsection says only what *you* do
 with them.
 
-**The roster is the name authority.** The `Person` cell of the `## Group` roster
-in `trip-context.md` is the authoritative display name for every traveler the
-model knows about — the same roster you already take as the party and as the
+**The roster is the name authority.** The person column of the `## Group` roster
+in `trip-context.md` — found by what it holds, never by its header, as
+`skills/trip-record/SKILL.md` § `group`, *The roster's two columns*, states — is the
+authoritative display name for every traveler the model knows about — the same roster you already take as the party and as the
 profile-gap denominator. A `[THIRD-PARTY]` entry is the one exception: it holds
 no roster row (`skills/trip-record/SKILL.md`
 § *Roster standing of a third-party member*), so its heading is its own record,
@@ -968,14 +993,14 @@ traveler's file either — `travelers/<traveler>.md` is human-authored Layer 1 a
 is not yours to write.
 
 **Assert the correspondence once per roster row, on every pass.** For any name
-the filename transform actually produced, the stem and the `Person` name reduce
+the filename transform actually produced, the stem and the roster name reduce
 to the same key by construction, so a corresponding row costs you nothing to
 confirm. What you are looking for is the four cases where that equality does not
 reach. Each has exactly one disposition, and none of them is silent:
 
 - **C1 — a file exists but does not correspond.** Its stem reduces to a different
-  key than the roster `Person` does, because it was saved by a route that never
-  applied the transform. Reconcile the traveler under the roster `Person` name,
+  key than the roster name does, because it was saved by a route that never
+  applied the transform. Reconcile the traveler under the roster name,
   and flag the entry as **unresolved**, naming the roster name, the file you
   found, and both keys:
 
@@ -984,11 +1009,11 @@ reach. Each has exactly one disposition, and none of them is silent:
   > UNRESOLVED — travelers/<observed-file>.md does not correspond to this roster
   > name (roster key `<a>`, file key `<b>`). The profile was read; the join is
   > unproven. VERIFY: rename the file to the derived stem, or correct the roster
-  > `Person` cell — whichever is wrong. Do not act on this traveler's needs as
+  > person cell — whichever is wrong. Do not act on this traveler's needs as
   > confirmed until the two agree.
   ```
 
-- **C2 — the name reduces to nothing.** A `Person` value carrying no ASCII
+- **C2 — the name reduces to nothing.** A person cell carrying no ASCII
   alphanumerics has no key and no filename. **Stop and say so**, quoting the name:
   it cannot be keyed, it cannot be told apart from a second such traveler, and no
   file can correspond to it. Ask the operator for a name that resolves, naming
@@ -1130,7 +1155,8 @@ the field label and never quotes the statement. **Before you write it, read the 
 are replacing and state what will not survive the rebuild** — every line whose value
 changes, outgoing then incoming, and every entry the rebuild removes, by its heading and
 with its lines — or, where no presence file exists yet, that the rebuild creates it.
-Return that statement in your reply, for the verb that dispatched you to surface
+Return that statement in your reply, with the entries § *Missing or blank profile*
+has you name, for the verb that dispatched you to surface
 (`reference/adr/ADR-028-derived-planning-day-block-owners.md` § 2).
 
 Include a brief enrichment summary at the end of the file under:

@@ -458,6 +458,13 @@
 #   PW   the presence file's window lines: an ASSERTED-DIFFERENT entry's count holds only days of
 #        its trip's day set (PW1), each of the four readers names the file (PW2), and each closed
 #        read scope stands verbatim (PW3); each with a must-fire control on a copy
+#   OP   the operator-provided-only entry (#2073): the reconciler's prompt names each one a rebuild
+#        drops, before its write (OP1); the verbs that dispatch the reconciler are found by a test
+#        that fails closed (OP0), run on an active trip (OP-F), render the naming by their own text
+#        or a citation they resolve (OP2), and carry the operator's stand-in bounded by the roster
+#        and the mark (OP3); the hub and the validator read a `PROFILE MISSING` traveller's needs
+#        as unknown (OP4); the C12 note cites the obligation (OP5); and the carry-forward, drop and
+#        marker sentences stand (OP-U1, OP-U2). Each arm with a must-fire control on a copy
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -5424,8 +5431,8 @@ ft10_assert() {
 # Decision 3). Each home below is a reader the written-profile test selects, or the section that decides
 # the reading, and each must carry its phrases, read through ft_region so a line wrap cannot hide one.
 # The homes are the test's verdicts, written here with their reason; they are not a list the rule rests
-# on, because a new verb of /trip-record is bound by standing rule 19 with no edit to this arm.
-#   standing    skills/trip-record/SKILL.md § Standing clause — rule 19 binds every verb       C S
+# on, because a new verb of /trip-record is bound by standing rule 20 with no edit to this arm.
+#   standing    skills/trip-record/SKILL.md § Standing clause — rule 20 binds every verb       C S
 #   promote     its `## promote` section — a field named by key, label or former label        C S M K
 #   reconciler  agents/00-enrichment.md § Where the source files come from — the composed read C S M
 #   ideation    agents/destination-ideation.md § Inputs — the leanings it reads                C
@@ -5462,7 +5469,7 @@ ft11_assert() {   # ft11_assert <skill> <enrichment> <ideation> <data-model> —
   elif [ -n "$miss" ]; then
     FAIL "FT11: a reader of a written profile does not state where its former-label reading is decided — each home:letter missing:$miss (C '$FT11_C', S '$FT11_S', M '$FT11_M', K \"$FT11_K\", O '$FT11_O')"
   else
-    PASS "FT11: all $n home(s) state the reading — standing rule 19 and the reconciler cite § Former labels and its single-valued sentence, the promote section names a field by its key, its current label or a former label and refuses a slot field answered under more than one spelling, destination ideation cites the section, and the section itself carries the sentence the others reach O3 through. CTL-FT11-STRIP shows each home failing alone with its phrase stripped"
+    PASS "FT11: all $n home(s) state the reading — standing rule 20 and the reconciler cite § Former labels and its single-valued sentence, the promote section names a field by its key, its current label or a former label and refuses a slot field answered under more than one spelling, destination ideation cites the section, and the section itself carries the sentence the others reach O3 through. CTL-FT11-STRIP shows each home failing alone with its phrase stripped"
   fi
 }
 
@@ -14486,6 +14493,14 @@ fi
 #         of path-shaped cells finds none either (two qualifying columns read as none); one phrase
 #         stripped from a copy of § `group` drops the phrase count by exactly 1; and the header
 #         phrase planted into a copy of § `erase` is counted.
+#   (iv)  THE OTHER STATEMENTS OF THE SAME AUTHORITY (#2116): the reconciler's § *Traveler identity*
+#         in agents/00-enrichment.md, and reference/data-model.md's § *The display name has one
+#         authority* and § *The four cases the correspondence does not reach*, carry no line naming
+#         the person column by the header literal `Person`, and the reconciler's section cites
+#         § `group`, *The roster's two columns*, exactly once. Each section must be found and read
+#         at least 1,000 folded bytes. Controls: the old header sentence planted into a copy of each
+#         section is counted, and the citation stripped from a copy of the reconciler's section
+#         drops its count by exactly 1.
 er25_cols() {
   awk -F'|' '
     /^## Group/ { on = 1; next }
@@ -14583,16 +14598,41 @@ ER25_H_REST="$(er25_hdr "$ER25_REST")"
 ER25_H_PROF="$(er25_hdr "$ER25_PROF")"
 ER25_H_ERASE="$(er25_hdr "$ER_SEC")"
 ER25_H_PLANT="$(er25_hdr "$(er_sub1 "$ER_SEC" 'the row whose path cell names' 'the row whose `Traveler file` cell names')")"
-if [ "$ER25_NR" -lt 3 ] || [ -z "$ER25_WT" ] || [ -z "$ER25_GSEC" ]; then
-  FAIL "ER25: measured nothing — $ER25_NR tracked roster(s) parsed, the witness read=$([ -n "$ER25_WT" ] && echo 1 || echo 0) and § \`group\` read=$([ -n "$ER25_GSEC" ] && echo 1 || echo 0). A column reader over no roster proves nothing about the rule it implements"
-elif [ "${ER25_C1:-1}" -ne 0 ] || [ "${ER25_C2:-1}" -ne 0 ] || [ "${ER25_C2Q:-0}" -ne 2 ] || [ "$ER25_PIN_X" -ne $((ER25_PIN - 1)) ] || [ "$ER25_H_PROF" -lt 1 ] || [ "$ER25_H_PLANT" -ne $((ER25_H_ERASE + 1)) ] || [ "$ER25_J2OK" -ne 1 ]; then
-  FAIL "ER25: BROKEN PROBE — a must-fire control did not move: free-text path cells qualified ${ER25_C1:-?} column(s) (must be 0), two path-shaped columns read path column ${ER25_C2:-?} with ${ER25_C2Q:-?} qualifying (must be 0 and 2), a stripped phrase read $ER25_PIN_X against $ER25_PIN (must be one fewer), § \`profile\` held $ER25_H_PROF header-named line(s) (must be at least 1), the planted header phrase read $ER25_H_PLANT against § \`erase\`'s $ER25_H_ERASE (must be one more), and the header rename landed=$ER25_J2OK. Until each fires, a verdict below is the instrument's"
+# Limb (iv): each section runs from its heading to the next `## ` or `### ` heading.
+er25_sec() { LC_ALL=C awk -v h="$2" 'index($0, h) == 1 { on = 1; print; next } on && (/^## / || /^### /) { on = 0 } on { print }' "$1" 2>/dev/null; }
+er25_lit() { LC_ALL=C awk 'index($0, "`Person`") { n++ } END { print n + 0 }' <<<"$1"; }
+er25_cite() { LC_ALL=C awk -v p='§ `group`, *The roster'"'"'s two columns*' '{ t = t " " $0 } END { gsub(/[ \t\r]+/, " ", t); c = 0; while ((i = index(t, p)) > 0) { c++; t = substr(t, i + length(p)) } print c }' <<<"$1"; }
+ER25_IVS=(
+  'agents/00-enrichment.md|### Traveler identity — '
+  'reference/data-model.md|### The display name has one authority — '
+  'reference/data-model.md|### The four cases the correspondence does not reach'
+)
+ER25_IV_LIT=0; ER25_IV_SHORT=""; ER25_IV_PLANTBAD=0; ER25_IV_WHERE=""
+for er25_s in "${ER25_IVS[@]}"; do
+  er25_t="$(er25_sec "$ROOT/${er25_s%%|*}" "${er25_s#*|}")"
+  er25_f="$(tr '\n' ' ' <<<"$er25_t" | tr -s ' ')"
+  [ "${#er25_f}" -ge 1000 ] || ER25_IV_SHORT="$ER25_IV_SHORT ${er25_s#*|}(${#er25_f})"
+  er25_n="$(er25_lit "$er25_t")"
+  ER25_IV_LIT=$((ER25_IV_LIT + er25_n))
+  [ "$er25_n" -eq 0 ] || ER25_IV_WHERE="$ER25_IV_WHERE ${er25_s%%|*} ${er25_s#*|}: $er25_n;"
+  [ "$(er25_lit "$er25_t
+The \`Person\` cell of the \`## Group\` roster")" -eq $((er25_n + 1)) ] || ER25_IV_PLANTBAD=$((ER25_IV_PLANTBAD + 1))
+done
+ER25_IV_E="$(er25_sec "$ROOT/agents/00-enrichment.md" '### Traveler identity — ')"
+ER25_IV_CN="$(er25_cite "$ER25_IV_E")"
+ER25_IV_CX="$(er25_cite "$(er_sub1 "$(tr '\n' ' ' <<<"$ER25_IV_E")" '§ `group`, *The roster'"'"'s two columns*' '')")"
+if [ "$ER25_NR" -lt 3 ] || [ -z "$ER25_WT" ] || [ -z "$ER25_GSEC" ] || [ -n "$ER25_IV_SHORT" ]; then
+  FAIL "ER25: measured nothing — $ER25_NR tracked roster(s) parsed, the witness read=$([ -n "$ER25_WT" ] && echo 1 || echo 0), § \`group\` read=$([ -n "$ER25_GSEC" ] && echo 1 || echo 0), and limb (iv)'s sections read under 1,000 folded bytes:${ER25_IV_SHORT:- none}. A column reader over no roster proves nothing about the rule it implements"
+elif [ "${ER25_C1:-1}" -ne 0 ] || [ "${ER25_C2:-1}" -ne 0 ] || [ "${ER25_C2Q:-0}" -ne 2 ] || [ "$ER25_PIN_X" -ne $((ER25_PIN - 1)) ] || [ "$ER25_H_PROF" -lt 1 ] || [ "$ER25_H_PLANT" -ne $((ER25_H_ERASE + 1)) ] || [ "$ER25_J2OK" -ne 1 ] || [ "$ER25_IV_PLANTBAD" -ne 0 ] || { [ "$ER25_IV_CN" -ge 1 ] && [ "$ER25_IV_CX" -ne $((ER25_IV_CN - 1)) ]; }; then
+  FAIL "ER25: BROKEN PROBE — a must-fire control did not move: free-text path cells qualified ${ER25_C1:-?} column(s) (must be 0), two path-shaped columns read path column ${ER25_C2:-?} with ${ER25_C2Q:-?} qualifying (must be 0 and 2), a stripped phrase read $ER25_PIN_X against $ER25_PIN (must be one fewer), § \`profile\` held $ER25_H_PROF header-named line(s) (must be at least 1), the planted header phrase read $ER25_H_PLANT against § \`erase\`'s $ER25_H_ERASE (must be one more), the header rename landed=$ER25_J2OK, $ER25_IV_PLANTBAD of limb (iv)'s 3 sections did not count the planted header sentence, and the citation stripped from a copy of the reconciler's section read $ER25_IV_CX against $ER25_IV_CN (must be one fewer). Until each fires, a verdict below is the instrument's"
 elif [ "$ER25_PIN" -ne 4 ] || [ "$ER25_H_REST" -ne 0 ]; then
   FAIL "ER25: the column rule is not the one the verb file reads by — § \`group\` carries $ER25_PIN of the paragraph's 4 operative phrases (found by what they hold; the person column is the first; the path cell's shape; two qualifying columns read as none), and $ER25_H_REST line(s) outside § \`profile\` still name a roster column by its header. A join that reads \`Traveler file\` by name misses the witness's \`Profile\` column and leaves the next run's join to chance"
 elif [ "$ER25_NFOUND" -ne "$ER25_NWANT" ] || [ "$ER25_NOTHER" -lt 1 ] || [ "$ER25_J1" != "Dana" ] || [ "$ER25_J2" != "Dana" ]; then
   FAIL "ER25: the rule does not read the tracked rosters — a path column was found in $ER25_NFOUND of the $ER25_NWANT roster(s) carrying a traveller-file cell (missed:${ER25_MISS:- none}), $ER25_NOTHER of them headed other than \`Traveler file\` (must be at least 1), and the witness's \`travelers/dana.md\` joined '${ER25_J1:-<none>}' under its own header and '${ER25_J2:-<none>}' under the template's (both must be Dana)"
+elif [ "$ER25_IV_LIT" -ne 0 ] || [ "$ER25_IV_CN" -ne 1 ]; then
+  FAIL "ER25: limb (iv) — the reconciler and the data model state the name authority by the header, not by what the column holds: $ER25_IV_LIT line(s) across agents/00-enrichment.md § *Traveler identity* and reference/data-model.md's two sections name the column by the literal \`Person\` (must be 0;${ER25_IV_WHERE:- none}), and the reconciler's section cites § \`group\`, *The roster's two columns*, $ER25_IV_CN time(s) (must be exactly 1). A reconciler that reads the column by its header misses a roster headed \`Traveler | Profile\`"
 else
-  PASS "ER25: the roster's columns are found by what they hold — over $ER25_NR tracked roster(s) the path column is found in all $ER25_NWANT that carry a traveller-file cell, $ER25_NOTHER of them headed other than \`Traveler file\`, and the witness's \`travelers/dana.md\` joins Dana under its own \`Traveler | Profile\` header and under the template's. § \`group\` states the rule in all 4 operative phrases, no line outside § \`profile\` names a column by its header, and every control fired: free text qualifies no column, two path-shaped columns read as none, a stripped phrase and a planted header phrase each move their count by 1"
+  PASS "ER25: the roster's columns are found by what they hold — over $ER25_NR tracked roster(s) the path column is found in all $ER25_NWANT that carry a traveller-file cell, $ER25_NOTHER of them headed other than \`Traveler file\`, and the witness's \`travelers/dana.md\` joins Dana under its own \`Traveler | Profile\` header and under the template's. § \`group\` states the rule in all 4 operative phrases, no line outside § \`profile\` names a column by its header, and every control fired: free text qualifies no column, two path-shaped columns read as none, a stripped phrase and a planted header phrase each move their count by 1. Limb (iv): the reconciler's § *Traveler identity* and the data model's two sections name no column by the literal \`Person\`, the reconciler's section cites § \`group\`, *The roster's two columns*, once, the header sentence planted into each is counted and the citation stripped reads one fewer"
 fi
 
 # ── ER26 — A DISCOVERED FILE THAT JOINS NO ROW IS ONE BRANCH, AND THE RECORD WAITS FOR IT (#1791,
@@ -15066,7 +15106,7 @@ ER30_WIT="$ROOT/examples/archived-trip-demo/outputs/traveler-model.md"
 ER30_PINS7=(
   '16. **An erasure whose subject holds no record is bounded by the one trip that holds their record'
   'Against rule 2 it is an exception, not a widening, taken under the Extension rule below; rule 5 is unchanged'
-  '### A subject who holds no record — a party member recorded through `## person`'
+  '### A subject who holds no record — a party member recorded through `## person`, or a traveller who filed no profile'
   '| `--third-party <n>` is given in place of `<person-id>` |'
   'row 10 reads `ALREADY-ERASED`, and every other REACH row reads `UNDETERMINED`, never `ALREADY-ERASED`'
   'the first run'"'"'s dry-run reach report is the only inventory of the places that name stood'
@@ -15077,7 +15117,7 @@ ER30_PINS7=(
   'and, under `--third-party <n>`, the resolved trip'"'"'s whole directory in place of the trips discovery resolved'
   'except that resolved trip, which the `--third-party` path reads and writes as a trip discovery resolved is read and written'
   'except a both-marks entry'"'"'s token, which keeps the `[THIRD-PARTY]` mark'
-  '### The standing rules this verb writes under are rules 10, 13 and 16'
+  '### The standing rules this verb writes under are rules 10, 13, 16 and 19'
   '**Rule 16 carries the path of § *A subject who holds no record*.**'
   'Under `--third-party <n>` the typed token is the trip'"'"'s slug'
   'a stated residual, because this verb reads no file that would show it'
@@ -15095,7 +15135,7 @@ ER30_PINS7=(
   'and against every heading key in that trip'"'"'s `outputs/traveler-model.md`, its marks set aside'
   # Dev Testing F-06, ruled (add): CLAUDE.md's *Person erasure* intent row and its erase read-scope
   # row each name the path for a subject who holds no record.
-  'A party member who holds no record is named by `--third-party <n>` instead, and the operator confirms by typing the trip'"'"'s slug'
+  'Someone who holds no record — a party member, or a traveller who filed no profile — is named by `--third-party <n>` instead, and the operator confirms by typing the trip'"'"'s slug'
   'or, under `--third-party <n>`, the one resolved trip in their place'
   # Dev Testing F-14: § `person`'s *Reads:* line takes the presence probe for the token the reconcile
   # resolves, and the reconciler's second exit takes a withdrawal by token or by place, and counts
@@ -15166,6 +15206,353 @@ elif [ "$ER30_ORD" -ne 1 ] || [ "$ER30_PIN" -ne "$ER30_N" ] || [ "$ER30_OLD" -ne
   FAIL "ER30: the texts do not agree on option (A) — \`## Amendment history\` after \`References\` and last: ADR-006 at line $ER30_HH6 (References $ER30_R6, last heading $ER30_L6), ADR-012 at line $ER30_HH12 (References $ER30_R12, last heading $ER30_L12); $ER30_PIN of the $ER30_N record phrase(s) present (missing:${ER30_MISSING:- none}); $ER30_PIN7 of the $ER30_N7 path phrase(s) in the verb file, the reconciler and CLAUDE.md (missing:${ER30_MISSING7:- none}); the replaced *Two entry classes* sentence stands $ER30_OLD time(s) in ADR-012's body and the active-trip ground $ER30_PR2 time(s) in the entries; \"never this verb's subject\" stands $ER30_GONE_N time(s) in § \`erase\`, the old third exit's drop $ER30_DROP_N time(s), and the old exit sentences that said the third exit ends the entry $ER30_EXO time(s) in the reconciler (each must be 0); and the archived witness carries $ER30_WN erased both-marks heading(s) (must be at least 1)"
 else
   PASS "ER30: both ADRs close on an \`## Amendment history\` entry after \`References\` recording (A) as chosen and (B) as rejected on the archived-trip ground alone, and ADR-012's *Two entry classes* both-marks row says the name, not the need, is what a regeneration would carry back; the verb file, the reconciler and CLAUDE.md carry all $ER30_N7 path phrase(s) — rule 16 as an exception to rule 2 with rule 5 unchanged, the sub-section with its re-run reading, its split refusal and its order, the carried-forward entry and the third exit that ends its name and carries it, under an exit count that says the exits change an entry, the withdrawal that names an erased entry by its token or its place, on the *Reads:* line and in the reconciler's second exit too, the revision of its needs keyed the same way in § \`person\` and in that exit, and CLAUDE.md's intent and read-scope rows naming that path — with \"never this verb's subject\", the old drop and the old exit sentences gone; the archived witness keeps $ER30_WN erased both-marks heading(s). Every control fired: each phrase stripped moves its count by 1, each old sentence planted is counted, and the mark removed from the witness drops its count by 1"
+fi
+
+# ── ER31 — STANDING RULE 19 AND ITS PATH (#2116). A rostered traveller whose needs the operator
+# relayed before they filed holds no record either: their entry carries `[OPERATOR-PROVIDED]` alone,
+# or is the `PROFILE MISSING` entry a rebuild leaves once it drops those needs. Rule 19, appended
+# under the Extension rule, widens rule 16's path to them, refuses wherever a traveller file joins no
+# roster row or another row shares the entry's key, and binds every verb. § `erase` carries the path
+# for its subject, CLAUDE.md's *Person erasure* row names it, and the Step 1 row's tombstone
+# predicate reads the whole trimmed cell. Limbs: each operative phrase stands exactly once across the
+# verb file and CLAUDE.md, whitespace folded; the two clauses the path replaced read 0. MUST-FIRE
+# CONTROLS: each phrase stripped from a copy drops its count by exactly 1, and each old clause
+# planted into a copy is counted once more.
+# The class is pinned clause by clause at both of its sites, rule 19 and § `erase` item 1 (Dev
+# Testing F-09): its marks, the template left unfilled, no joining file carrying `person:`, every
+# file under `travelers/` joining a row, and, at item 1, rule 16's both marks and the active-trip
+# `[ROSTERED]` refusal — the clauses ER32's encoding reads. Each site's phrase carries its own
+# context, so a clause cut at one site turns that site's phrase red. Then each limb of the path,
+# one phrase per site (Dev Testing F-11, F-12): row 36's reach, at item 5 and in the row; the Step 1
+# `--third-party` row; row 40 under rule 16's subject; the confirmation's rules; the discharge
+# paragraph; each such row named by its place, at rule 19 and at item 1; and no file named by a path
+# whose stem may be the name.
+er31_cnt() {   # er31_cnt <folded text> <phrase> -> occurrences, counted with index()
+  LC_ALL=C awk -v p="$2" '{ t = t $0 } END { c = 0; if (p != "") while ((i = index(t, p)) > 0) { c++; t = substr(t, i + length(p)) } print c }' <<<"$1"
+}
+ER31_PINS=(
+  '19. **An erasure whose subject holds no record and filed no profile takes rule 16'"'"'s path'
+  'and no other roster row shares the entry'"'"'s key'
+  'an unjoined file may be this traveller'"'"'s, and only the operator can say it is not'
+  'no verb of this command may end, re-key or rewrite such an entry, or the row it projects'
+  '**Rule 19 also refuses, writing nothing**'
+  'naming each such file by its role — *a traveller file no roster row joins*'
+  'whose trimmed cell is exactly `per-` followed by four lowercase hex digits'
+  'For rule 19'"'"'s subject it is the roster cell their row joins'
+  'and always for rule 19'"'"'s'
+  'names it by its place, never its heading'
+  '**Rule 19'"'"'s subject is not carried:**'
+  'with no collection prompt and no profile route'
+  'rule 19'"'"'s subject is first-party there and is reached'
+  'and for rule 19'"'"'s subject prints the entry'"'"'s class beside the name'
+  'as the cell'"'"'s whole trimmed value and never inside a longer one'
+  '### The standing rules this verb writes under are rules 10, 13, 16 and 19'
+  'Someone who holds no record — a party member, or a traveller who filed no profile'
+  # Dev Testing F-09 — the class, at rule 19, then at § `erase` item 1.
+  'not `[ERASED]`, carrying `[OPERATOR-PROVIDED]` alone or the `PROFILE MISSING` marker, whose roster row no traveller file joins but the intake template left unfilled'
+  'joins but the intake template left unfilled, and none carrying `person:`'
+  'on a trip where every file under `travelers/` joins a roster row'
+  'rule 16'"'"'s, both marks; rule 19'"'"'s, `[OPERATOR-PROVIDED]` alone or `PROFILE MISSING`, its row joined by no traveller file but the intake template left unfilled'
+  'left unfilled and by none carrying `person:`'
+  'wherever a file under `travelers/` joins no roster row'
+  'On an active trip an entry carrying `[ROSTERED]` is refused'
+  # Dev Testing F-11 — row 36's reach for rule 19's subject, at item 5 and in the row itself.
+  'row 36 the path their roster name derives'
+  'for rule 19'"'"'s subject, the path their roster name derives'
+  # Dev Testing F-12 — one phrase per remaining site of the path.
+  'the subject holds no record — a party member, or a traveller who filed no profile'
+  'reads **`n/a`** for rule 16'"'"'s subject and names the population rule'
+  '**Under `--third-party <n>` the typed token is the trip'"'"'s slug** (rules 16 and 19)'
+  '**Rule 19 carries the same path for its own subject, on the same clauses**'
+  'and each such row by its place, never by a name'
+  'shares the entry'"'"'s key, naming each such row by its place'
+  'and never by its path, whose stem may be the name'
+)
+ER31_OLD=(
+  'does not carry both `[OPERATOR-PROVIDED]` and `[THIRD-PARTY]`'
+  'possible only on an archived trip'
+)
+ER31_T="$(er26_flat "$(cat "$ER_CMD" 2>/dev/null)") | $(er26_flat "$(cat "$ER30_CLA" 2>/dev/null)")"
+ER31_N="${#ER31_PINS[@]}"; ER31_OK=0; ER31_MISS=""; ER31_STRIPBAD=0
+for er31_p in "${ER31_PINS[@]}"; do
+  er31_n="$(er31_cnt "$ER31_T" "$er31_p")"
+  [ "$er31_n" -eq 1 ] && ER31_OK=$((ER31_OK + 1))
+  [ "$er31_n" -eq 1 ] || ER31_MISS="$ER31_MISS [$er31_p → $er31_n]"
+  if [ "$er31_n" -ge 1 ]; then
+    [ "$(er31_cnt "$(er_sub1 "$ER31_T" "$er31_p" '')" "$er31_p")" -eq $((er31_n - 1)) ] || ER31_STRIPBAD=$((ER31_STRIPBAD + 1))
+  fi
+done
+ER31_OLDN=0; ER31_OLDW=""; ER31_PLANTBAD=0
+for er31_o in "${ER31_OLD[@]}"; do
+  er31_n="$(er31_cnt "$ER31_T" "$er31_o")"
+  ER31_OLDN=$((ER31_OLDN + er31_n))
+  [ "$er31_n" -eq 0 ] || ER31_OLDW="$ER31_OLDW [$er31_o → $er31_n]"
+  [ "$(er31_cnt "$ER31_T | $er31_o" "$er31_o")" -eq $((er31_n + 1)) ] || ER31_PLANTBAD=$((ER31_PLANTBAD + 1))
+done
+if [ ! -r "$ER_CMD" ] || [ ! -r "$ER30_CLA" ] || [ "${#ER31_T}" -lt 1000 ]; then
+  FAIL "ER31: measured nothing — the verb file read=$([ -r "$ER_CMD" ] && echo 1 || echo 0), CLAUDE.md read=$([ -r "$ER30_CLA" ] && echo 1 || echo 0), ${#ER31_T} folded byte(s). A phrase count over texts that are not there proves nothing about rule 19"
+elif [ "$ER31_STRIPBAD" -ne 0 ] || [ "$ER31_PLANTBAD" -ne 0 ]; then
+  FAIL "ER31: BROKEN PROBE — $ER31_STRIPBAD present phrase(s) did not drop their own count by exactly 1 when stripped from a copy, and $ER31_PLANTBAD of the ${#ER31_OLD[@]} old clause(s) planted into a copy were not counted once more. Until each fires, a verdict below is the instrument's"
+elif [ "$ER31_OK" -ne "$ER31_N" ] || [ "$ER31_OLDN" -ne 0 ]; then
+  FAIL "ER31: rule 19 and its path are not the ones the texts state — $ER31_OK of the $ER31_N operative phrase(s) stand exactly once across skills/trip-record/SKILL.md and CLAUDE.md (each listed with its count:${ER31_MISS:- none}), and the clauses the path replaced stand $ER31_OLDN time(s) (must be 0:${ER31_OLDW:- none}). Without rule 19 a rostered traveller who filed no profile has no erasure path, and without its refusal an unjoined filed profile survives an erasure that reports total"
+else
+  PASS "ER31: rule 19 and its path stand as the texts state them — all $ER31_N operative phrase(s) once each across skills/trip-record/SKILL.md and CLAUDE.md: the rule and its class, clause by clause at rule 19 and at § \`erase\` item 1 — its marks, the template left unfilled, no joining file carrying \`person:\`, every file under \`travelers/\` joining a row, and at item 1 rule 16's both marks and the active-trip \`[ROSTERED]\` refusal — its fail-closed refusal on an unjoined file or a shared key, each such row named by its place at both sites and no file by its path, the whole-trimmed-cell predicate and the Step 1 row repaired with it, the Step 1 \`--third-party\` row, the name read from the roster cell, the order of writes and the interrupted state named by its place, the subject not carried, row 36 reaching the path their roster name derives at item 5 and in the row, row 40 reaching them and reading \`n/a\` for rule 16's subject, the class printed beside the name, the confirmation's rules, the discharge paragraph, the rules heading and CLAUDE.md's row; the two old clauses read 0. Every control fired: each phrase stripped drops its count by 1, and each old clause planted is counted"
+fi
+
+# ── ER32 — THE CLASS TESTS, AS THIS ARM ENCODES THEM, OVER THE WITNESSES (#2116; FM-6, PR-2). The
+# claim is narrow, and stated so: the witnesses satisfy the class test AS THIS ARM ENCODES IT, and
+# ER31 pins the clauses the encoding reads, at rule 19 and at § `erase` item 1. An encoding the
+# suite wrote cannot grade the text it was written from, so this arm shows no reach "from the
+# tree"; its controls vary the trees, and ER31's strip controls are what turn red when a clause of
+# the rule is removed.
+#   Rule 16 admits an entry carrying both `[OPERATOR-PROVIDED]` and `[THIRD-PARTY]`.
+#   Rule 19 admits `[OPERATOR-PROVIDED]` alone, or a `PROFILE MISSING` marker with no mark but
+#   `[ERASED]`, where exactly one roster row shares the entry's key, no file joins that row but one
+#   byte-identical to templates/traveler-intake.template.md, no joining file carries `person:`, and
+#   EVERY file under `travelers/` joins some roster row.
+#   On an active trip, under either rule, an entry carrying `[ROSTERED]` is refused (§ `erase`
+#   item 1; Dev Testing F-10). A trip is active unless its `**Lifecycle:**` line reads ARCHIVED; an
+#   absent line reads ACTIVE (reference/trip-resolution.md G4).
+# `[ERASED]` is set aside: an erased entry is admitted and then reads `ALREADY-ERASED`. The roster's
+# person column is its first, and its path column the one column after it whose data cells hold
+# `travelers/…md` (§ `group`, *The roster's two columns*); a file joins a row by that exact path, and
+# where the row has none, by its stem's key. Expected on the witnesses — every tracked trip that
+# carries a traveller model: `per-9a3e` (rule 19) and `per-b70d` (rule 16) on
+# examples/archived-trip-demo/, `Sam` (rule 19) on examples/data-architecture-demo/, `Companion`
+# (rule 16) on examples/erasure-reach-demo/; Dana, `per-4f1c`, Alex, Robin, Odile, `per-2c9e` and
+# `Nell Basil` refused, the last as a `[ROSTERED]` entry on an active trip. MUST-FIRE CONTROLS,
+# each moving its witness's admitted count by exactly the stated amount — (a) to (g) on a copy of
+# examples/data-architecture-demo/: (a)
+# `[OPERATOR-PROVIDED]` stripped from Sam's heading −1; (b) a filled `travelers/sam.md` −1; (c) on
+# (a)'s copy, a `PROFILE MISSING` marker added to Sam's entry +1 over (a); (d) the intake template
+# with its Name answered as `travelers/sam.md` −1; (e) the intake template byte-identical as
+# `travelers/sam.md` 0; (f) a filled `travelers/zz-unjoined.md`, which joins no row, −1; (g) a
+# second roster row whose person cell shares Sam's key −1 — and (h) and (i) on a copy of
+# examples/erasure-reach-demo/: (h) `[ROSTERED]` stripped from Nell Basil's heading +1; (i) a
+# `**Lifecycle:** ARCHIVED` line added to the trip context +1.
+er32_rows() {   # er32_rows <trip-context> -> <person cell>\t<path cell, or empty>, one per data row
+  LC_ALL=C awk -F'|' '
+    /^## Group/ { on = 1; next }
+    on && /^## / { on = 0 }
+    !on || done { next }
+    !/^\|/ { if (nh) done = 1; next }
+    /^\|[ \t:|-]+$/ { next }
+    { for (i = 2; i < NF; i++) { c = $i; gsub(/`/, "", c); sub(/^[ \t]+/, "", c); sub(/[ \t]+$/, "", c); C[nh, i] = c } if (NF - 1 > mc) mc = NF - 1; nh++ }
+    END {
+      for (i = 3; i <= mc; i++) for (r = 1; r < nh; r++) if (C[r, i] ~ /^travelers\/.*\.md$/) Q[i] = 1
+      nq = 0; pc = 0; for (k in Q) { nq++; pc = k }
+      if (nq != 1) pc = 0
+      for (r = 1; r < nh; r++) { p = C[r, 2]; if (p ~ /^\[.*\]$/) continue; printf "%s\t%s\n", p, (pc ? C[r, pc] : "") }
+    }' "$1"
+}
+er32_admit() {   # er32_admit <trip dir> <template> -> ADMIT\t<name>\t<rule> lines, then ENTRIES, ROWS, UNJOINED and LIFE
+  local d="$1" tpl="$2" f files="" same pers life
+  for f in "$d"/travelers/*.md; do
+    [ -f "$f" ] || continue
+    same=0; cmp -s "$f" "$tpl" && same=1
+    pers="$(LC_ALL=C awk '/^person:/ { n = 1 } END { print n + 0 }' "$f")"
+    files="$files${f##*/}$(printf '\t')$same$(printf '\t')$pers
+"
+  done
+  # The trip's lifecycle, G4's reading: the first line opening `**Lifecycle:**`, ACTIVE where none.
+  life="$(LC_ALL=C awk '!done && /^\*\*Lifecycle:\*\*/ { v = substr($0, 15); gsub(/[ \t]/, "", v); print v; done = 1 }' "$d/trip-context.md" 2>/dev/null)"
+  ER32_LIFE="${life:-ACTIVE}" ER32_ROWS="$(er32_rows "$d/trip-context.md" 2>/dev/null)" ER32_FILES="$files" LC_ALL=C awk '
+    function key(s) { s = tolower(s); gsub(/[^a-z0-9]/, "", s); return s }
+    function stem(s) { sub(/\.md$/, "", s); return s }
+    function joins(j, i) { return (RP[i] ~ /^travelers\//) ? (RP[i] == "travelers/" FN[j]) : (key(stem(FN[j])) == key(RN[i])) }
+    BEGIN {
+      n = split(ENVIRON["ER32_ROWS"], L, "\n")
+      for (x = 1; x <= n; x++) if (L[x] != "") { split(L[x], c, "\t"); nr++; RN[nr] = c[1]; RP[nr] = c[2] }
+      n = split(ENVIRON["ER32_FILES"], L, "\n")
+      for (x = 1; x <= n; x++) if (L[x] != "") { split(L[x], c, "\t"); nf++; FN[nf] = c[1]; FI[nf] = c[2]; FP[nf] = c[3] }
+      for (j = 1; j <= nf; j++) { ok = 0; for (i = 1; i <= nr; i++) if (joins(j, i)) ok = 1; if (!ok) unj++ }
+      act = (ENVIRON["ER32_LIFE"] != "ARCHIVED")
+    }
+    function flush(   s, m, other, op, tp, nm, k, r19, jr, ri, i, j, bad) {
+      if (H == "") return
+      op = index(H, "[OPERATOR-PROVIDED]") > 0; tp = index(H, "[THIRD-PARTY]") > 0
+      s = H; other = 0
+      while (match(s, /\[[A-Z-]+\]/)) { m = substr(s, RSTART + 1, RLENGTH - 2); if (m != "ERASED") other = 1; s = substr(s, RSTART + RLENGTH) }
+      nm = H; gsub(/`?\[[A-Z-]+\]`?/, "", nm); sub(/[ \t]+$/, "", nm); k = key(nm)
+      if (k == "updatesignals" || k == "desireoverlap") return
+      ne++
+      if (act && index(H, "[ROSTERED]")) return
+      if (op && tp) { printf "ADMIT\t%s\t16\n", nm; return }
+      r19 = (op && !tp) || (index(B, "PROFILE MISSING") && !other)
+      if (!r19) return
+      jr = 0; for (i = 1; i <= nr; i++) if (key(RN[i]) == k) { jr++; ri = i }
+      if (jr != 1) return
+      bad = 0
+      for (j = 1; j <= nf; j++) if (joins(j, ri) && (FI[j] != 1 || FP[j] == 1)) bad = 1
+      if (bad || unj) return
+      printf "ADMIT\t%s\t19\n", nm
+    }
+    /^## / { flush(); H = substr($0, 4); B = ""; next }
+    { B = B "\n" $0 }
+    END { flush(); printf "ENTRIES\t%d\nROWS\t%d\nUNJOINED\t%d\nLIFE\t%s\n", ne, nr, unj + 0, ENVIRON["ER32_LIFE"] }' "$d/outputs/traveler-model.md" 2>/dev/null
+}
+er32_set() { LC_ALL=C awk -F'\t' '$1 == "ADMIT" { printf "%s:%s ", $2, $3 }' <<<"$1"; }
+er32_n() { LC_ALL=C awk -F'\t' '$1 == "ADMIT" { n++ } END { print n + 0 }' <<<"$1"; }
+er32_f() { LC_ALL=C awk -F'\t' -v k="$2" '$1 == k { v = $2 } END { print v + 0 }' <<<"$1"; }
+er32_copy() {   # er32_copy <witness dir> <copy dir> — the three surfaces the encoding reads
+  mkdir -p "$2/outputs" "$2/travelers"
+  cp "$1/trip-context.md" "$2/trip-context.md"
+  cp "$1/outputs/traveler-model.md" "$2/outputs/traveler-model.md"
+  for f in "$1"/travelers/*.md; do [ -f "$f" ] && cp "$f" "$2/travelers/"; done
+  return 0
+}
+ER32_TPL="$ROOT/templates/traveler-intake.template.md"
+ER32_WA="$ROOT/examples/archived-trip-demo"
+ER32_WD="$ROOT/examples/data-architecture-demo"
+ER32_WE="$ROOT/examples/erasure-reach-demo"
+ER32_A="$(er32_admit "$ER32_WA" "$ER32_TPL")"
+ER32_D="$(er32_admit "$ER32_WD" "$ER32_TPL")"
+ER32_E="$(er32_admit "$ER32_WE" "$ER32_TPL")"
+ER32_W="$WORK/er32"; mkdir -p "$ER32_W"
+ER32_ND="$(er32_n "$ER32_D")"
+ER32_NE="$(er32_n "$ER32_E")"
+er32_life() { LC_ALL=C awk -F'\t' '$1 == "LIFE" { v = $2 } END { print v }' <<<"$1"; }
+ER32_CTL=""; ER32_CBAD=0
+# er32_ctl <tag> <want delta> <base count> <copy dir> — one control, recorded
+er32_ctl() {
+  local got; got="$(er32_n "$(er32_admit "$4" "$ER32_TPL")")"
+  ER32_CTL="$ER32_CTL ($1) $(( got - $3 ))"
+  [ "$(( got - $3 ))" -eq "$2" ] || ER32_CBAD=$((ER32_CBAD + 1))
+}
+er32_copy "$ER32_WD" "$ER32_W/a"
+# er32_rp <file> <old> <new> — <old> replaced by <new> on the first line carrying it, in place; the
+# texts reach awk through the environment, because <new> may carry a newline.
+er32_rp() { ER32_O="$2" ER32_R="$3" LC_ALL=C awk '!m && index($0, ENVIRON["ER32_O"]) { p = index($0, ENVIRON["ER32_O"]); $0 = substr($0, 1, p - 1) ENVIRON["ER32_R"] substr($0, p + length(ENVIRON["ER32_O"])); m = 1 } { print } END { exit (m ? 0 : 3) }' "$1" > "$1.x" && mv "$1.x" "$1"; }
+er32_rp "$ER32_W/a/outputs/traveler-model.md" '## Sam `[OPERATOR-PROVIDED]`' '## Sam' || ER32_CBAD=$((ER32_CBAD + 1))
+er32_ctl a -1 "$ER32_ND" "$ER32_W/a"
+er32_copy "$ER32_WD" "$ER32_W/b"; cp "$ER32_WD/travelers/robin.md" "$ER32_W/b/travelers/sam.md"
+er32_ctl b -1 "$ER32_ND" "$ER32_W/b"
+er32_copy "$ER32_W/a" "$ER32_W/c"
+er32_rp "$ER32_W/c/outputs/traveler-model.md" '## Sam' '## Sam
+> PROFILE MISSING — needs and desires unknown; this traveler is not yet reconciled.' || ER32_CBAD=$((ER32_CBAD + 1))
+er32_ctl c 1 "$(er32_n "$(er32_admit "$ER32_W/a" "$ER32_TPL")")" "$ER32_W/c"
+er32_copy "$ER32_WD" "$ER32_W/d"
+LC_ALL=C awk '!m && /^# Your Travel Profile — \[Name\]/ { $0 = "# Your Travel Profile — Sam"; m = 1 } { print } END { exit (m ? 0 : 3) }' "$ER32_TPL" > "$ER32_W/d/travelers/sam.md" || ER32_CBAD=$((ER32_CBAD + 1))
+er32_ctl d -1 "$ER32_ND" "$ER32_W/d"
+er32_copy "$ER32_WD" "$ER32_W/e"; cp "$ER32_TPL" "$ER32_W/e/travelers/sam.md"
+er32_ctl e 0 "$ER32_ND" "$ER32_W/e"
+er32_copy "$ER32_WD" "$ER32_W/f"; cp "$ER32_WD/travelers/robin.md" "$ER32_W/f/travelers/zz-unjoined.md"
+er32_ctl f -1 "$ER32_ND" "$ER32_W/f"
+er32_copy "$ER32_WD" "$ER32_W/g"
+er32_rp "$ER32_W/g/trip-context.md" '| Sam |' '| SAM | — |
+| Sam |' || ER32_CBAD=$((ER32_CBAD + 1))
+er32_ctl g -1 "$ER32_ND" "$ER32_W/g"
+# (h) and (i), on a copy of the erasure-reach witness: the active-trip `[ROSTERED]` refusal read by
+# its mark and by the trip's lifecycle.
+er32_copy "$ER32_WE" "$ER32_W/h"
+er32_rp "$ER32_W/h/outputs/traveler-model.md" '## Nell Basil `[OPERATOR-PROVIDED]` `[THIRD-PARTY]` `[ROSTERED]`' '## Nell Basil `[OPERATOR-PROVIDED]` `[THIRD-PARTY]`' || ER32_CBAD=$((ER32_CBAD + 1))
+er32_ctl h 1 "$ER32_NE" "$ER32_W/h"
+er32_copy "$ER32_WE" "$ER32_W/i"; printf '\n**Lifecycle:** ARCHIVED\n' >> "$ER32_W/i/trip-context.md"
+er32_ctl i 1 "$ER32_NE" "$ER32_W/i"
+ER32_SA="$(er32_set "$ER32_A")"; ER32_SD="$(er32_set "$ER32_D")"; ER32_SE="$(er32_set "$ER32_E")"
+if [ "$(er32_f "$ER32_A" ENTRIES)" -lt 3 ] || [ "$(er32_f "$ER32_D" ENTRIES)" -lt 3 ] || [ "$(er32_f "$ER32_E" ENTRIES)" -lt 3 ] || [ "$(er32_f "$ER32_A" ROWS)" -lt 1 ] || [ "$(er32_f "$ER32_D" ROWS)" -lt 1 ] || [ "$(er32_f "$ER32_E" ROWS)" -lt 1 ]; then
+  FAIL "ER32: measured nothing — the archived witness read $(er32_f "$ER32_A" ENTRIES) model entr(ies) and $(er32_f "$ER32_A" ROWS) roster row(s), the data-architecture witness $(er32_f "$ER32_D" ENTRIES) and $(er32_f "$ER32_D" ROWS), the erasure-reach witness $(er32_f "$ER32_E" ENTRIES) and $(er32_f "$ER32_E" ROWS) (each must be at least 3 and 1). A class test over a witness that was not read admits nothing and proves nothing"
+elif [ "$ER32_CBAD" -ne 0 ] || [ "$(er32_life "$ER32_A")" != ARCHIVED ] || [ "$(er32_life "$ER32_E")" != ACTIVE ]; then
+  FAIL "ER32: BROKEN PROBE — $ER32_CBAD control(s) did not land or did not move their witness's admitted count by exactly the stated amount; observed:$ER32_CTL (owed: (a) -1 (b) -1 (c) 1 (d) -1 (e) 0 (f) -1 (g) -1 (h) 1 (i) 1); the archived witness's lifecycle read '$(er32_life "$ER32_A")' (owed ARCHIVED) and the erasure-reach witness's '$(er32_life "$ER32_E")' (owed ACTIVE, by G4's default). Until each fires, a verdict below is the instrument's"
+elif [ "$ER32_SA" != "per-9a3e:19 per-b70d:16 " ] || [ "$ER32_SD" != "Sam:19 " ] || [ "$ER32_SE" != "Companion:16 " ]; then
+  FAIL "ER32: the witnesses do not satisfy the class tests as this arm encodes them — the archived witness admits '${ER32_SA:-none}' (owed 'per-9a3e:19 per-b70d:16'), the data-architecture witness '${ER32_SD:-none}' (owed 'Sam:19') and the erasure-reach witness '${ER32_SE:-none}' (owed 'Companion:16'); Dana, per-4f1c, Alex, Robin, Odile, per-2c9e and Nell Basil are owed a refusal, the last as a \`[ROSTERED]\` entry on an active trip"
+else
+  PASS "ER32: the witnesses satisfy the class tests as this arm encodes them, and ER31 pins the clauses the encoding reads, at rule 19 and at § \`erase\` item 1 — the archived witness admits ${ER32_SA}the data-architecture witness ${ER32_SD}and the erasure-reach witness ${ER32_SE}(rule number after each), refusing Dana, per-4f1c, Alex, Robin, Odile, per-2c9e and, as a \`[ROSTERED]\` entry on an active trip, Nell Basil. Every control moved its witness's count by exactly the stated amount:$ER32_CTL — among them a template byte-identical as \`travelers/sam.md\` moves nothing, an unjoined filed file and a second row sharing Sam's key each refuse, and Nell Basil is admitted once \`[ROSTERED]\` is stripped or the trip reads ARCHIVED"
+fi
+
+# ── ER33 — THE SEAM BETWEEN THE CARDS: AN ERASED RULE-19 SUBJECT AFTER THE NEXT RECONCILE (#2116
+# INT-3; FM-1, FM-2). Limb 1: a gap the reconciler writes from an erasure's token asks for nothing —
+# the reconciler's sub-case, the § `travelers` table's `PROFILE MISSING` row and the naming's
+# restatement-alone clause each name no profile route for it. Limb 2: an entry whose key joins no
+# roster row, as an interrupted rule-19 run leaves it, is named by its place, never its heading, in
+# the reconciler's naming and in § `erase`'s order of writes. Each phrase exactly once in its file,
+# whitespace folded; MUST-FIRE: each stripped from a copy drops its count by exactly 1.
+# Limb 1 holds the instructions as well as their labels (Dev Testing F-08): the sub-case writes the
+# marker without the `VERIFY:` sentence, and the reconciler's account of the router names no command
+# for a gap written from a token. And B.8's two localities, each a unit that must carry every phrase
+# of its set, exactly one such unit per file: the sub-case's paragraph carries its heading and "name
+# no profile route", and the § `travelers` table's `PROFILE MISSING` row, as one line, carries the
+# token clause and "**name no command**". MUST-FIRE for each: every phrase of the set, moved from
+# that unit into a unit of its own in a copy, drops the count of such units by exactly 1. For the
+# row that move also shows the unit is held: a reader coarser than a line would read the table's
+# earlier row, which carries "**name no command**" too, and the count would not drop. For the
+# sub-case's paragraph it does not, because both its phrases stand once in the file, so a reader
+# that never split paragraphs would read 1 and then 0 on each move, as the real reader does. So the
+# paragraph reader carries its own count-free control (Dev Testing F-17), read alone and beside
+# the move control, as OP_SPLIT is beside OP4's sentence count: the sub-case's heading and "name
+# no profile route" on adjacent lines must read as 1 unit carrying both, and with a blank line
+# between them as 0. A reader that never splits paragraphs reads 1 on the second, and one that
+# never joins lines reads 0 on the first.
+ER33_PINS=(
+  'E|**A gap written from an erasure'"'"'s token asks for nothing.**'
+  'E|name no profile route'
+  'R|for an entry keyed to an erasure'"'"'s token'
+  'E|An entry an erasure re-keyed is offered the restatement alone, never a profile route'
+  'E|or, where its key joins no row of the roster, its place among the model'"'"'s person entries and never its heading'
+  'R|names it by its place, never its heading'
+  'E|without the `VERIFY:` sentence'
+  'E|save one written from an erasure'"'"'s token, which names none'
+)
+# er33_co <file text> <P|L> <k> <phrase>… -> how many units carry every phrase: P a paragraph, the
+# lines between blank lines, L one line; spaces squeezed as er26_flat squeezes them. With k ≥ 1,
+# phrase k is first moved out of the first unit carrying them all, into a unit of its own.
+er33_co() {
+  local t="$1" u="$2" k="$3"; shift 3
+  ER33_PS="$(printf '%s\n' "$@")" ER33_U="$u" ER33_K="$k" LC_ALL=C awk '
+    BEGIN { n = split(ENVIRON["ER33_PS"], P, "\n"); while (n > 0 && P[n] == "") n--; u = ENVIRON["ER33_U"]; k = ENVIRON["ER33_K"] + 0 }
+    function all(s,   i) { for (i = 1; i <= n; i++) if (!index(s, P[i])) return 0; return 1 }
+    function unit(s,   i) { gsub(/ +/, " ", s); if (k && !done && all(s)) { i = index(s, P[k]); s = substr(s, 1, i - 1) substr(s, i + length(P[k])); done = 1 } c += all(s) }
+    u == "L" { unit($0); next }
+    /^[ \t]*$/ { if (b != "") unit(b); b = ""; next }
+    { b = b " " $0 }
+    END { if (u == "P" && b != "") unit(b); if (k) unit(P[k]); print c + 0 }' <<<"$t"
+}
+ER33_CO1=('**A gap written from an erasure'"'"'s token asks for nothing.**' 'name no profile route')
+ER33_CO2=('| `PROFILE MISSING` |' 'for an entry keyed to an erasure'"'"'s token' '**name no command**')
+ER33_E="$(er26_flat "$(cat "$ER30_ENR" 2>/dev/null)")"
+ER33_R="$(er26_flat "$(cat "$ER_CMD" 2>/dev/null)")"
+ER33_OK=0; ER33_MISS=""; ER33_STRIPBAD=0
+for er33_s in "${ER33_PINS[@]}"; do
+  er33_p="${er33_s#*|}"
+  if [ "${er33_s%%|*}" = E ]; then er33_t="$ER33_E"; else er33_t="$ER33_R"; fi
+  er33_n="$(er31_cnt "$er33_t" "$er33_p")"
+  [ "$er33_n" -eq 1 ] && ER33_OK=$((ER33_OK + 1))
+  [ "$er33_n" -eq 1 ] || ER33_MISS="$ER33_MISS [${er33_s%%|*}: $er33_p → $er33_n]"
+  if [ "$er33_n" -ge 1 ]; then
+    [ "$(er31_cnt "$(er_sub1 "$er33_t" "$er33_p" '')" "$er33_p")" -eq $((er33_n - 1)) ] || ER33_STRIPBAD=$((ER33_STRIPBAD + 1))
+  fi
+done
+# The two localities: <tag>|<file letter>|<unit> over the phrase sets ER33_CO1 and ER33_CO2.
+ER33_ET="$(cat "$ER30_ENR" 2>/dev/null)"; ER33_RT="$(cat "$ER_CMD" 2>/dev/null)"
+ER33_CON=0; ER33_COOK=0; ER33_COMISS=""; ER33_COBAD=0
+for er33_s in 'sub-case paragraph|E|P|CO1' 'PROFILE MISSING row|R|L|CO2'; do
+  IFS='|' read -r er33_tag er33_f er33_u er33_set <<<"$er33_s"
+  if [ "$er33_f" = E ]; then er33_t="$ER33_ET"; else er33_t="$ER33_RT"; fi
+  if [ "$er33_set" = CO1 ]; then er33_ps=("${ER33_CO1[@]}"); else er33_ps=("${ER33_CO2[@]}"); fi
+  ER33_CON=$((ER33_CON + 1))
+  er33_n="$(er33_co "$er33_t" "$er33_u" 0 "${er33_ps[@]}")"
+  if [ "$er33_n" -eq 1 ]; then ER33_COOK=$((ER33_COOK + 1)); else ER33_COMISS="$ER33_COMISS [$er33_tag → $er33_n unit(s) carrying all ${#er33_ps[@]}]"; fi
+  if [ "$er33_n" -ge 1 ]; then
+    er33_k=0
+    while [ "$er33_k" -lt "${#er33_ps[@]}" ]; do
+      er33_k=$((er33_k + 1))
+      [ "$(er33_co "$er33_t" "$er33_u" "$er33_k" "${er33_ps[@]}")" -eq $((er33_n - 1)) ] || ER33_COBAD=$((ER33_COBAD + 1))
+    done
+  fi
+done
+# The paragraph reader's own control (Dev Testing F-17): the sub-case's two phrases, planted alone,
+# on adjacent lines (owed 1) and with a blank line between them (owed 0). Compared as strings, so
+# an empty read is a failure rather than an error.
+ER33_SPL1="$(er33_co "$(printf '%s\n%s\n' "${ER33_CO1[@]}")" P 0 "${ER33_CO1[@]}")"
+ER33_SPL0="$(er33_co "$(printf '%s\n\n%s\n' "${ER33_CO1[@]}")" P 0 "${ER33_CO1[@]}")"
+if [ "${#ER33_E}" -lt 1000 ] || [ "${#ER33_R}" -lt 1000 ]; then
+  FAIL "ER33: measured nothing — the reconciler read ${#ER33_E} and the verb file ${#ER33_R} folded byte(s)"
+elif [ "$ER33_STRIPBAD" -ne 0 ] || [ "$ER33_COBAD" -ne 0 ] || [ "$ER33_SPL1" != 1 ] || [ "$ER33_SPL0" != 0 ]; then
+  FAIL "ER33: BROKEN PROBE — $ER33_STRIPBAD present phrase(s) did not drop their own count by exactly 1 when stripped from a copy, and $ER33_COBAD phrase(s) of a locality, moved out of its unit into a unit of their own in a copy, did not drop the count of units carrying the whole set by exactly 1; and the paragraph reader, over the sub-case's heading and \"name no profile route\" planted alone, read '$ER33_SPL1' unit(s) carrying both on adjacent lines (owed 1) and '$ER33_SPL0' with a blank line between them (owed 0 — a reader that never splits paragraphs reads 1). Until each fires, a verdict below is the instrument's"
+elif [ "$ER33_OK" -ne "${#ER33_PINS[@]}" ] || [ "$ER33_COOK" -ne "$ER33_CON" ]; then
+  FAIL "ER33: the seam between the cards does not hold — $ER33_OK of the ${#ER33_PINS[@]} phrase(s) stand exactly once in their file (E the reconciler, R the verb file):${ER33_MISS:- none}; and $ER33_COOK of the $ER33_CON localities hold in exactly one unit:${ER33_COMISS:- none}. A gap written from an erasure's token that asks for a profile invites back the person who asked to be erased, and an interrupted rule-19 entry named by its heading echoes the name"
+else
+  PASS "ER33: the seam between the cards holds — a gap written from an erasure's token asks for nothing in the reconciler's sub-case, which writes its marker without the \`VERIFY:\` sentence, in the reconciler's account of the router, in the § \`travelers\` table's \`PROFILE MISSING\` row and in the naming's restatement-alone clause, and an entry whose key joins no roster row is named by its place, never its heading, in the reconciler's naming and in § \`erase\`'s order of writes; all ${#ER33_PINS[@]} phrase(s) once each, each, stripped from a copy, dropping its count by exactly 1. Both localities hold in exactly one unit — the sub-case's paragraph carries its heading and \"name no profile route\", and the \`PROFILE MISSING\` row itself carries the token clause and \"**name no command**\" — and each phrase of each, moved out of its unit in a copy, drops that count by 1; and the paragraph reader, over the sub-case's heading and \"name no profile route\" planted alone, reads 1 unit carrying both on adjacent lines and 0 with a blank line between them, so it splits paragraphs where the move control cannot show it"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
@@ -33849,6 +34236,773 @@ elif [ "$PW_R4N" -eq 0 ] && [ "$PW_R4S" -eq 1 ]; then
   PASS "PW3-CTL: MUST FIRE — one byte of transport's wrapped scope sentence changed in a copy reads 0 occurrences there, while scheduling's untouched anchor still reads 1"
 else
   FAIL "PW3-CTL: a one-byte change to transport's scope sentence in a copy still read $PW_R4N occurrence(s) (scheduling's control anchor read $PW_R4S) — the matcher is not reading the sentence"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group OP — the operator-provided-only entry: named before a rebuild drops it, and read as
+# unknown downstream (#2073).
+#
+# A traveller with no profile whose needs the operator relayed is held in the traveller model as
+# an entry marked `[OPERATOR-PROVIDED]` alone, and a rebuild drops it: nothing else holds what the
+# operator gave. reference/adr/ADR-049-what-a-rebuild-owes.md Decisions 1–2 decide that such an
+# entry is named before the write. This group grades what a tree of files can show of that:
+#
+#   OP1   the reconciler's prompt states the obligation — name each such entry it drops, before
+#         its write, citing ADR-049 — and names the entry by its heading's name, its token, or its
+#         place, never its heading, with each need and desire it held; it excludes an entry the
+#         pass writes again from operator input, and bounds the stand-in by the roster and the mark;
+#         each anchor exactly once, whitespace folded; and the naming's opening clause and the
+#         stand-in's bound each exactly once in § *Missing or blank profile*, the section its
+#         citers name, with a move control, and a planted control on where that section ends.
+#   OP0   the verbs that dispatch the reconciler, found by a test with no verb name in it, and
+#         failing closed: a region that names the reconciler is admitted, or declares that it
+#         dispatches no agent, or is red; and each admitted verb's declared read of the model says
+#         what it is for, by its own words or by citing a verb whose line has them.
+#   OP-F  every admitted verb runs only on an active trip.
+#   OP2   every admitted verb renders the naming, by its own text — carrying the needs and how to
+#         keep them — or by a citation it resolves.
+#   OP3   every admitted verb carries the operator's stand-in, bounded by the roster and the mark.
+#   OP4   the hub and the validator each hold exactly one sentence saying a `PROFILE MISSING`
+#         traveller's needs are unknown, never "no constraints", and in it what each then does.
+#   OP5   reference/data-architecture.md § 6's C12 note carries the ADR-049 citation in the same
+#         sentence as the drop it records.
+#   OP-U1 regression pin: the `[THIRD-PARTY]` carry-forward bullet and the drop sentence stand,
+#         exactly once each — the drop sentence is what keeps this release a naming and never a
+#         carry-forward path (ADR-049's "name, not preserve" branch).
+#   OP-U2 regression pin: the `PROFILE MISSING` marker sentence and the flagged-gap marker stand,
+#         exactly once each.
+#
+# Sentences are split by one pinned rule, the same in every arm here: the region is whitespace
+# folded, and a sentence ends at a `.` or `;` followed by whitespace. A literal split on every `.`
+# or `;` would cut `agents/00-enrichment.md` in two.
+#
+# WHAT THIS GROUP DOES NOT ESTABLISH, stated so a green is not read as more than it is. Every arm
+# grades the TREE: that a prompt or a verb states the obligation, and that a sentence survived.
+# None shows that an agent obeys it — firing is not assertable from prompt text, as CLAUDE.md says
+# of the mode-gated register — and no live dispatch is run here.
+#
+# Each arm carries a must-fire control on an in-memory copy: an anchor stripped drops its count by
+# exactly 1, and a sentence stripped drops its sentence count by exactly 1. Every reader takes a
+# file or a here-string; nothing is piped into a reader that can stop early (group PF).
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group OP — the operator-provided-only entry: named before a rebuild drops it, read as unknown downstream."
+
+OP_ENR="$ROOT/agents/00-enrichment.md"
+OP_HUB="$ROOT/agents/05-hub-planner.md"
+OP_VAL="$ROOT/agents/06-validator.md"
+OP_DA="$ROOT/reference/data-architecture.md"
+
+# op_fold <text> — the text on one line, every whitespace run folded to one space.
+op_fold() { LC_ALL=C awk '{ t = t " " $0 } END { gsub(/[ \t\r]+/, " ", t); sub(/^ /, "", t); print t }' <<<"$1"; }
+# op_cnt <folded text> <phrase> — occurrences of <phrase>, its own whitespace folded, counted with
+# index() so nothing in the phrase is a pattern.
+op_cnt() {
+  LC_ALL=C awk -v p="$2" '
+    { t = t $0 }
+    END {
+      gsub(/[ \t\r]+/, " ", p)
+      c = 0
+      if (p != "") while ((i = index(t, p)) > 0) { c++; t = substr(t, i + length(p)) }
+      print c
+    }' <<<"$1"
+}
+# op_sents <text> — one sentence per line, by the pinned split: whitespace folded, then a break
+# after every `.` or `;` that is followed by whitespace.
+op_sents() { LC_ALL=C awk '{ t = t " " $0 } END { gsub(/[ \t\r]+/, " ", t); sub(/^ /, "", t); gsub(/[.] /, ".\n", t); gsub(/[;] /, ";\n", t); print t }' <<<"$1"; }
+# op_nsent <text> <phrase>… — how many sentences of <text> carry every phrase given. The phrases
+# reach awk through the environment, because a -v value may not carry a newline.
+op_nsent() {
+  local t="$1"; shift
+  OP_PS="$(printf '%s\n' "$@")" LC_ALL=C awk '
+    BEGIN { n = split(ENVIRON["OP_PS"], P, "\n") }
+    { ok = 1; for (i = 1; i <= n; i++) if (P[i] != "" && !index($0, P[i])) ok = 0; if (ok) c++ }
+    END { print c + 0 }' <<<"$(op_sents "$t")"
+}
+# op_sent1 <text> <phrase>… — the first sentence of <text> carrying every phrase given, or nothing.
+op_sent1() {
+  local t="$1"; shift
+  OP_PS="$(printf '%s\n' "$@")" LC_ALL=C awk '
+    BEGIN { n = split(ENVIRON["OP_PS"], P, "\n") }
+    !done { ok = 1; for (i = 1; i <= n; i++) if (P[i] != "" && !index($0, P[i])) ok = 0; if (ok) { print; done = 1 } }' <<<"$(op_sents "$t")"
+}
+# op_sec <text> <heading> — the lines of the section whose heading line begins with <heading>, from
+# that line to the next heading of the same or a higher level; a `#` line inside a fence is no
+# heading. A fence opens and closes only on an unindented fence line, op_zoneb's rule (Dev Testing
+# F-21): CommonMark ends an indented fence inside a list item at the first line not indented to the
+# item's content, so a column-0 `#` line between indented fence lines renders as a heading, and is
+# one here. Where the rule errs — a column-0 `#` line inside an indented fence at the top level,
+# which CommonMark keeps as code — the section ends early, which fails closed. Nothing where no
+# heading line begins with <heading>.
+op_sec() {
+  OP_SH="$2" LC_ALL=C awk '
+    /^```/ { d = !d }
+    !d && /^#+ / { l = index($0, " ") - 1; if (on && l <= lv) exit; if (!on && index($0, ENVIRON["OP_SH"]) == 1) { on = 1; lv = l } }
+    on { print }' <<<"$1"
+}
+# op_secmv <text> <heading> <phrase> — <text> with the paragraph (the lines between blank lines)
+# inside the section op_sec reads that carries <phrase>, whitespace folded, moved to just after the
+# heading that ends the section, so it opens the next one; its fence rule is op_sec's. Exit 3, the
+# text unchanged, where no such paragraph or no next heading exists.
+op_secmv() {
+  OP_SH="$2" OP_SP="$3" LC_ALL=C awk '
+    { L[NR] = $0 }
+    END {
+      p = ENVIRON["OP_SP"]; gsub(/[ \t\r]+/, " ", p)
+      for (i = 1; i <= NR; i++) {
+        if (L[i] ~ /^```/) d = !d
+        if (d || L[i] !~ /^#+ /) continue
+        l = index(L[i], " ") - 1
+        if (s && l <= lv) { e = i; break }
+        if (!s && index(L[i], ENVIRON["OP_SH"]) == 1) { s = i; lv = l }
+      }
+      a = 0; t = ""
+      if (s && e) for (i = s + 1; i <= e; i++) {
+        if (i == e || L[i] ~ /^[ \t]*$/) { u = t; gsub(/[ \t\r]+/, " ", u); if (a && index(u, p)) { pa = a; pb = i - 1; break } a = 0; t = ""; continue }
+        if (!a) a = i
+        t = t " " L[i]
+      }
+      for (i = 1; i <= NR; i++) {
+        if (pa && i >= pa && i <= pb) continue
+        if (pa && i == pb + 1 && L[i] ~ /^[ \t]*$/) continue
+        print L[i]
+        if (pa && i == e) { print ""; for (j = pa; j <= pb; j++) print L[j] }
+      }
+      exit (pa ? 0 : 3)
+    }' <<<"$1"
+}
+
+# op_pins <id> <what> <file> <anchor>… — one verdict: each anchor stands exactly once in <file>,
+# whitespace folded, and each anchor present, stripped from an in-memory copy, drops its own count
+# by exactly 1. An anchor carried twice is a finding, not a pass. A caller may add one limb of its
+# own to that verdict by setting, for that call alone, OP_PINS_XBAD (what of the limb's controls
+# did not fire), OP_PINS_XMISS (what of the limb does not hold) and OP_PINS_XSAY (what the PASS
+# line says it holds). Each is read only where it is not empty, so a call that sets none reads,
+# and says, exactly what it did before.
+op_pins() {
+  local id="$1" what="$2" file="$3" flat a n x miss="" stripbad=0 np=0 na=0
+  shift 3
+  flat=""; [ -r "$file" ] && flat="$(op_fold "$(cat "$file")")"
+  for a in "$@"; do
+    na=$((na + 1))
+    n="$(op_cnt "$flat" "$a")"
+    [ "$n" -eq 1 ] && np=$((np + 1))
+    [ "$n" -eq 1 ] || miss="$miss [$a → $n]"
+    if [ "$n" -ge 1 ]; then
+      x="$(op_cnt "$(er_sub1 "$flat" "$a" '')" "$a")"
+      [ "$x" -eq $((n - 1)) ] || stripbad=$((stripbad + 1))
+    fi
+  done
+  if [ "${#flat}" -lt 1000 ]; then
+    FAIL "$id: measured nothing — ${file#"$ROOT/"} read ${#flat} folded byte(s). A phrase count over an empty file proves nothing about $what"
+  elif [ "$stripbad" -ne 0 ] || [ -n "${OP_PINS_XBAD:-}" ]; then
+    FAIL "$id: BROKEN PROBE — $stripbad of the anchor(s) present did not drop their own count by exactly 1 when stripped from a copy of ${file#"$ROOT/"}${OP_PINS_XBAD:+; and $OP_PINS_XBAD}. Until each fires, a verdict below is the instrument's"
+  elif [ "$np" -ne "$na" ] || [ -n "${OP_PINS_XMISS:-}" ]; then
+    FAIL "$id: $what — $np of the $na anchor(s) stand exactly once in ${file#"$ROOT/"}, whitespace folded; each listed with its count:${miss:- none}${OP_PINS_XMISS:+; and $OP_PINS_XMISS}"
+  else
+    PASS "$id: $what — all $na anchor(s) stand exactly once in ${file#"$ROOT/"}, whitespace folded, and each, stripped from a copy, drops its own count by exactly 1${OP_PINS_XSAY:+; $OP_PINS_XSAY}"
+  fi
+}
+
+# ── OP1 — the reconciler states the obligation (ADR-049 Decisions 1–2). Dev Testing F-02: the
+# naming carries each need and desire the entry held. Dev Testing F-05: an entry this pass writes
+# again from operator input is not one it drops, which keeps #2073's criteria 2 and 4 apart.
+# Dev Testing F-01: the stand-in § *Missing or blank profile* admits is bounded by the mark as well
+# as by the roster, the third of PR-1's three homes. The anchor carries that section's own words
+# for the stand-in, but words that refer back to "the stand-in above" read as well below the
+# section as in it, so they do not hold it there (Dev Testing F-18). The section limb does: the
+# texts that cite § *Missing or blank profile* for the naming send a reader to that section, so
+# the naming paragraph's opening clause and the stand-in's bound must each stand exactly once in
+# it, read by op_sec from its heading to the next heading of the same or a higher level. MUST-FIRE:
+# each, its paragraph moved into the next section in a copy, drops the section's count by exactly
+# 1 while the file's stays as it was — which a reader of the whole file would not show. The
+# section ends where the document renders its end (Dev Testing F-21). MUST-FIRE: the text with its
+# code sample's `  ## [Name]` de-indented to column 0, a heading CommonMark renders, reads a
+# shorter section, and op_secmv on it moves the naming's paragraph nowhere — which a reader that
+# toggles a fence on an indented fence line would not show. A plant that does not land fails
+# closed.
+OP1_SECH='### Missing or blank profile'
+OP1_SECP=(
+  'Name each one you drop, before you write'
+  'as the stand-in above for a traveller the roster names whose entry does not carry `[THIRD-PARTY]`'
+)
+OP1_T=""; [ -r "$OP_ENR" ] && OP1_T="$(cat "$OP_ENR")"
+OP1_FLAT="$(op_fold "$OP1_T")"
+OP1_SEC="$(op_fold "$(op_sec "$OP1_T" "$OP1_SECH")")"
+OP1_SOK=0; OP1_SMISS=""; OP1_SBAD=0
+for op_a in "${OP1_SECP[@]}"; do
+  op_n="$(op_cnt "$OP1_SEC" "$op_a")"
+  [ "$op_n" -eq 1 ] && OP1_SOK=$((OP1_SOK + 1))
+  [ "$op_n" -eq 1 ] || OP1_SMISS="$OP1_SMISS [$op_a → $op_n]"
+  if [ "$op_n" -ge 1 ]; then
+    op_m="$(op_secmv "$OP1_T" "$OP1_SECH" "$op_a")"; op_rc=$?
+    if [ "$op_rc" -ne 0 ] || [ "$(op_cnt "$(op_fold "$(op_sec "$op_m" "$OP1_SECH")")" "$op_a")" -ne $((op_n - 1)) ] || [ "$(op_cnt "$(op_fold "$op_m")" "$op_a")" -ne "$(op_cnt "$OP1_FLAT" "$op_a")" ]; then
+      OP1_SBAD=$((OP1_SBAD + 1))
+    fi
+  fi
+done
+OP1_PLT="$(OP_SH="$OP1_SECH" LC_ALL=C awk '!on && index($0, ENVIRON["OP_SH"]) == 1 { on = 1 } on && !done && $0 == "  ## [Name]" { sub(/^  /, ""); done = 1 } { print }' <<<"$OP1_T")"
+OP1_PLN="$(LC_ALL=C awk '$0 == "  ## [Name]" { n++ } END { print n + 0 }' <<<"$(op_sec "$OP1_T" "$OP1_SECH")")"
+OP1_PL0="$(LC_ALL=C awk '$0 == "  ## [Name]" { n++ } END { print n + 0 }' <<<"$OP1_T")"
+OP1_PL1="$(LC_ALL=C awk '$0 == "  ## [Name]" { n++ } END { print n + 0 }' <<<"$OP1_PLT")"
+OP1_PSEC="$(op_fold "$(op_sec "$OP1_PLT" "$OP1_SECH")")"
+op_secmv "$OP1_PLT" "$OP1_SECH" "${OP1_SECP[0]}" >/dev/null; OP1_PMV=$?
+OP1_PBAD=""
+if [ "$OP1_PLN" -lt 1 ] || [ "$OP1_PL1" -ne $((OP1_PL0 - 1)) ]; then
+  OP1_PBAD="the plant did not land: § *Missing or blank profile* holds $OP1_PLN code-sample line(s) \`  ## [Name]\` (must be at least 1), and the de-indented copy holds $OP1_PL1 against the text's $OP1_PL0 (must be one fewer)"
+elif [ "${#OP1_PSEC}" -lt 1 ] || [ "${#OP1_PSEC}" -ge "${#OP1_SEC}" ] || [ "$OP1_PMV" -ne 3 ]; then
+  OP1_PBAD="the text with its code sample's \`  ## [Name]\` de-indented read § *Missing or blank profile* as ${#OP1_PSEC} folded byte(s) against the text's ${#OP1_SEC} (must be fewer, and not 0), and op_secmv on it exited $OP1_PMV for the naming's paragraph (must be 3, moving nothing)"
+fi
+OP_PINS_XBAD=""; OP_PINS_XMISS=""
+[ "$OP1_SBAD" -eq 0 ] || OP_PINS_XBAD="$OP1_SBAD of the ${#OP1_SECP[@]} section anchor(s) present, its paragraph moved into the next section in a copy, did not drop § *Missing or blank profile*'s count by exactly 1 with the file's left as it was"
+[ -z "$OP1_PBAD" ] || OP_PINS_XBAD="${OP_PINS_XBAD:+$OP_PINS_XBAD; and }$OP1_PBAD"
+[ "$OP1_SOK" -eq "${#OP1_SECP[@]}" ] || OP_PINS_XMISS="$OP1_SOK of the ${#OP1_SECP[@]} section anchor(s) stand exactly once in § *Missing or blank profile*, read from its heading to the next of the same or a higher level (${#OP1_SEC} folded byte(s)); each listed with its count:$OP1_SMISS"
+OP_PINS_XSAY="and in § *Missing or blank profile*, read from its heading to the next of the same or a higher level, the naming's opening clause and the stand-in's \`[THIRD-PARTY]\` bound — ${#OP1_SECP[@]} section anchor(s) — stand exactly once each, and each, its paragraph moved into the next section in a copy, drops the section's count by 1 and leaves the file's as it was"
+OP_PINS_XSAY="$OP_PINS_XSAY; and the section ends where the document renders its end: the text with its code sample's \`  ## [Name]\` de-indented reads it as ${#OP1_PSEC} folded byte(s) against ${#OP1_SEC}, and moves the naming's paragraph nowhere"
+op_pins 'OP1' 'the reconciler names each `[OPERATOR-PROVIDED]`-only entry its rebuild drops, before its write' "$OP_ENR" \
+  'Name each one you drop, before you write' \
+  '`reference/adr/ADR-049-what-a-rebuild-owes.md` Decisions 1–2' \
+  'A pass that drops none, or that stops or declines its write, names none' \
+  'and to name each `[OPERATOR-PROVIDED]`-only entry the rebuild drops' \
+  'with the entries § *Missing or blank profile* has you name' \
+  'never its heading' \
+  'a verb whose every run dispatches this role' \
+  'each need and desire it held' \
+  'writes again from operator input' \
+  'as the stand-in above for a traveller the roster names whose entry does not carry `[THIRD-PARTY]`'
+OP_PINS_XBAD=""; OP_PINS_XMISS=""; OP_PINS_XSAY=""
+
+# ── OP-U1 and OP-U2 — regression pins of text this release must leave standing.
+op_pins 'OP-U1' 'the `[THIRD-PARTY]` carry-forward bullet and the drop sentence stand, so no carry-forward path is added' "$OP_ENR" \
+  'Carried forward across a reconcile — preserved, not re-derived.' \
+  'is still **not** carried forward and is still dropped by regeneration; composition adds no carry-forward path for it either.'
+op_pins 'OP-U2' 'the `PROFILE MISSING` marker sentence and the flagged-gap marker stand' "$OP_ENR" \
+  'A `PROFILE MISSING` marker means *unknown*, not *no needs*' \
+  'PROFILE MISSING — needs and desires unknown; this traveler is not yet'
+
+# ── OP4 — the hub and the validator read a `PROFILE MISSING` traveller's needs as unknown. Each
+# file must hold exactly one sentence carrying all three phrases, and that sentence must carry what
+# the file then does (Dev Testing F-03; D7's ruling, a Warning and not a Critical): the hub never
+# confirms a need of theirs as honored, and the validator never counts them compliant and raises a
+# Warning. The sensitivity arm is the same sentence reader finding the traveller model named in each
+# file, and a count-free control that the reader splits at all (Dev Testing F-04): OP_SPLIT, added
+# to a copy of each file, must read as three sentences, where a reader that never splits reads one.
+# The must-fire controls strip the one sentence, and each operative clause from inside it, from a
+# copy.
+OP4_P=('PROFILE MISSING' 'unknown' 'no constraints')
+OP_SPLIT='zz-split-a. zz-split-b; zz-split-c'
+OP4_OK=0; OP4_BAD=""; OP4_SENS=0; OP4_CTLBAD=0; OP4_NREAD=0; OP4_SPLITBAD=0; OP4_OPN=0; OP4_OPOK=0; OP4_OPBAD=""
+for op_f in "$OP_HUB" "$OP_VAL"; do
+  op_t=""; [ -r "$op_f" ] && op_t="$(cat "$op_f")"
+  [ "${#op_t}" -ge 1000 ] && OP4_NREAD=$((OP4_NREAD + 1))
+  op_n="$(op_nsent "$op_t" "${OP4_P[@]}")"
+  op_s="$(op_nsent "$op_t" 'traveler-model.md')"
+  [ "$op_s" -ge 1 ] && OP4_SENS=$((OP4_SENS + 1))
+  [ "$(op_nsent "$op_t
+$OP_SPLIT" 'zz-split-')" -eq 3 ] || OP4_SPLITBAD=$((OP4_SPLITBAD + 1))
+  if [ "$op_n" -eq 1 ]; then
+    OP4_OK=$((OP4_OK + 1))
+  else
+    OP4_BAD="$OP4_BAD ${op_f#"$ROOT/"} holds $op_n;"
+  fi
+  if [ "$op_n" -ge 1 ]; then
+    op_x="$(op_nsent "$(er_sub1 "$(op_fold "$op_t")" "$(op_sent1 "$op_t" "${OP4_P[@]}")" '')" "${OP4_P[@]}")"
+    [ "$op_x" -eq $((op_n - 1)) ] || OP4_CTLBAD=$((OP4_CTLBAD + 1))
+  fi
+  case "$op_f" in
+    "$OP_HUB") op_ops=('never confirm a need of theirs as honored') ;;
+    *) op_ops=('never count them compliant' 'raise a Warning') ;;
+  esac
+  for op_o in "${op_ops[@]}"; do
+    OP4_OPN=$((OP4_OPN + 1))
+    op_m="$(op_nsent "$op_t" "${OP4_P[@]}" "$op_o")"
+    if [ "$op_m" -eq 1 ]; then
+      OP4_OPOK=$((OP4_OPOK + 1))
+    else
+      OP4_OPBAD="$OP4_OPBAD ${op_f#"$ROOT/"} carries \"$op_o\" in $op_m;"
+    fi
+    if [ "$op_m" -ge 1 ]; then
+      op_q="$(op_sent1 "$op_t" "${OP4_P[@]}" "$op_o")"
+      op_x="$(op_nsent "$(er_sub1 "$(op_fold "$op_t")" "$op_q" "$(er_sub1 "$op_q" "$op_o" '')")" "${OP4_P[@]}" "$op_o")"
+      [ "$op_x" -eq $((op_m - 1)) ] || OP4_CTLBAD=$((OP4_CTLBAD + 1))
+    fi
+  done
+done
+if [ "$OP4_NREAD" -ne 2 ]; then
+  FAIL "OP4: measured nothing — $OP4_NREAD of agents/05-hub-planner.md and agents/06-validator.md read at least 1,000 bytes. A sentence count over a file that is not there proves nothing"
+elif [ "$OP4_SENS" -ne 2 ] || [ "$OP4_CTLBAD" -ne 0 ] || [ "$OP4_SPLITBAD" -ne 0 ]; then
+  FAIL "OP4: BROKEN PROBE — the sentence reader found \`traveler-model.md\` named in $OP4_SENS of the 2 files (must be both: each reads the model), $OP4_SPLITBAD file(s) did not read a planted \`$OP_SPLIT\` as 3 sentences (a reader that does not split reads 1), and $OP4_CTLBAD file(s) did not lose exactly one qualifying sentence when it, or an operative clause inside it, was stripped from a copy. Until each fires, a verdict below is the instrument's"
+elif [ "$OP4_OK" -ne 2 ]; then
+  FAIL "OP4: a \`PROFILE MISSING\` traveller's needs are not read as unknown by both downstream readers — exactly one sentence carrying \`PROFILE MISSING\`, \"unknown\" and \"no constraints\" is owed in each, under the pinned split:$OP4_BAD"
+elif [ "$OP4_OPOK" -ne "$OP4_OPN" ]; then
+  FAIL "OP4: the sentence that reads a \`PROFILE MISSING\` traveller's needs as unknown does not say what its reader then does — $OP4_OPOK of the $OP4_OPN operative clause(s) stand in exactly one such sentence:$OP4_OPBAD. The hub must never confirm a need of theirs as honored, and the validator must never count them compliant and must raise a Warning; without those the sentence names the gap and lets the plan, or the audit, read it as no constraints"
+else
+  PASS "OP4: the hub and the validator each hold exactly one sentence saying a \`PROFILE MISSING\` traveller's needs are unknown, never \"no constraints\", and saying what each does then — the hub never confirms a need of theirs as honored, the validator never counts them compliant and raises a Warning ($OP4_OPN operative clauses, each in that sentence) — the sentence reader finds the traveller model named in both files and reads a planted \`$OP_SPLIT\` as 3 sentences, and each qualifying sentence, and each operative clause inside it, stripped from a copy, drops its count by exactly 1"
+fi
+
+# ── OP5 — the C12 note cites the obligation in the sentence that records the drop. The same
+# count-free split control as OP4's (Dev Testing F-04): a same-sentence test read by a reader that
+# never splits is a same-file test.
+OP5_DROP='**drops** the `operator-provided-only` entry'
+OP5_CITE='`reference/adr/ADR-049-what-a-rebuild-owes.md` Decisions 1–2'
+OP5_T=""; [ -r "$OP_DA" ] && OP5_T="$(cat "$OP_DA")"
+OP5_ND="$(op_nsent "$OP5_T" "$OP5_DROP")"
+OP5_N="$(op_nsent "$OP5_T" "$OP5_DROP" "$OP5_CITE")"
+OP5_X="$(op_nsent "$(er_sub1 "$(op_fold "$OP5_T")" "$OP5_CITE" '')" "$OP5_DROP" "$OP5_CITE")"
+OP5_SPL="$(op_nsent "$OP5_T
+$OP_SPLIT" 'zz-split-')"
+if [ "${#OP5_T}" -lt 1000 ]; then
+  FAIL "OP5: measured nothing — reference/data-architecture.md read ${#OP5_T} byte(s)"
+elif [ "$OP5_SPL" -ne 3 ]; then
+  FAIL "OP5: BROKEN PROBE — a planted \`$OP_SPLIT\`, added to a copy of reference/data-architecture.md, read as $OP5_SPL sentence(s) (must be 3), so the reader does not split by the pinned rule and a same-sentence count below would be a same-file count"
+elif [ "$OP5_ND" -ne 1 ]; then
+  FAIL "OP5: BROKEN PROBE — the sentence reader found the C12 note's drop sentence $OP5_ND time(s) (must be exactly 1), so the same-sentence test has no one sentence to read"
+elif [ "$OP5_N" -ge 1 ] && [ "$OP5_X" -ne $((OP5_N - 1)) ]; then
+  FAIL "OP5: BROKEN PROBE — the citation stripped from a copy left $OP5_X qualifying sentence(s) against $OP5_N (must be one fewer)"
+elif [ "$OP5_N" -ne 1 ]; then
+  FAIL "OP5: the C12 note records that a rebuild drops the \`operator-provided-only\` entry and does not cite the obligation in that sentence — $OP5_N sentence(s) carry both the drop and \"$OP5_CITE\" (must be exactly 1)"
+else
+  PASS "OP5: the C12 note's drop sentence cites \"$OP5_CITE\" in the same sentence, under the pinned split; the citation stripped from a copy leaves 0, and the reader reads a planted \`$OP_SPLIT\` as 3 sentences"
+fi
+
+# ── OP0 — the verbs that dispatch the reconciler, found by a test and failing closed (#2073
+# criterion 3; CLAUDE.md § Rules over an enumeration, clause 3). No verb name is spelled here. A
+# Zone B region is a `## ` section, at fence depth 0, whose heading's first token, backticks
+# stripped, is a value of its own file's requirement-table `verb` column. Over every such region of
+# every skills/*/SKILL.md:
+#   P1         a sentence carries `dispatch`/`dispatches` as a word, `enrichment` and `reconciler role`;
+#   P2         the region carries "the model it is about to replace", the declared read;
+#   candidate  the region names `agents/00-enrichment.md` or carries "reconciler".
+# A candidate is ADMITTED where P1 and P2 hold, DECLARES where it says it dispatches no agent, and
+# is RED otherwise; any region where P1 and P2 disagree is RED too. The admitted set is the
+# population OP-F, OP2 and OP3 read. MUST-FIRE CONTROLS: "reconciler role" removed from a copy of
+# the first dispatching region's Dispatches line drops P1 by 1 and turns the agreement red; a sixth
+# section planted into a copy, which runs the reconciler and declares neither, is a RED candidate;
+# and the same predicate under a literal `[.;]` split must admit a different count, which shows the
+# pinned split is the one read.
+op_zoneb() {   # op_zoneb <file> -> one line per Zone B region: <verb>\t<body, fenced lines out, folded>
+  LC_ALL=C awk '
+    NR == FNR {
+      if ($0 ~ /^\| [^ |]+ \| (ACTIVE|ANY|ARCHIVED) \|/) { v = substr($0, 3); V[substr(v, 1, index(v, " ") - 1)] = 1 }
+      next
+    }
+    function emit() { if (cur != "") { gsub(/[ \t\r]+/, " ", body); sub(/^ /, "", body); printf "%s\t%s\n", cur, body } }
+    /^```/ { d = !d }
+    !d && /^## / {
+      emit()
+      t = substr($0, 4); sub(/^[ \t]+/, "", t); split(t, w, /[ \t]+/); tok = w[1]; sub(/^`+/, "", tok); sub(/`+$/, "", tok)
+      cur = (tok in V) ? tok : ""; body = ""; next
+    }
+    cur != "" && !d { body = body " " $0 }
+    END { emit() }' "$1" "$1"
+}
+op_preds() {   # op_preds <file label> <<< op_zoneb output -> <file>\t<verb>\t<cand>\t<P1>\t<P2>\t<declares>\t<P1, literal split>
+  LC_ALL=C awk -F'\t' -v F="$1" '
+    function dw(s) { return ((" " s " ") ~ /[^A-Za-z0-9_][Dd]ispatch(es)?[^A-Za-z0-9_]/) }
+    function p1of(b, how,   s, n, S, i) {
+      s = b
+      if (how == "pinned") { gsub(/[.] /, ".\n", s); gsub(/[;] /, ";\n", s); n = split(s, S, "\n") }
+      else n = split(s, S, /[.;]/)
+      for (i = 1; i <= n; i++) if (dw(S[i]) && index(S[i], "enrichment") && index(S[i], "reconciler role")) return 1
+      return 0
+    }
+    $1 != "" {
+      b = $2
+      printf "%s\t%s\t%d\t%d\t%d\t%d\t%d\n", F, $1, (index(b, "agents/00-enrichment.md") || index(b, "reconciler")) ? 1 : 0, p1of(b, "pinned"), index(b, "the model it is about to replace") ? 1 : 0, (b ~ /[Dd]ispatches no agent/) ? 1 : 0, p1of(b, "literal")
+    }'
+}
+op_regions() {   # op_regions <root> -> op_preds lines for every skills/*/SKILL.md under <root>
+  local f
+  for f in "$1"/skills/*/SKILL.md; do
+    [ -r "$f" ] && op_preds "${f#"$1"/}" <<<"$(op_zoneb "$f")"
+  done
+}
+# op0_tally <op_regions output> -> `<regions> <candidates> <admitted> <declaring> <red> <P1> <P2> <P1 literal> <disagreements>`
+op0_tally() {
+  LC_ALL=C awk -F'\t' '
+    NF >= 7 { r++; p1 += $4; p2 += $5; pl += $7; if ($4 != $5) dis++
+      if ($3) { c++; if ($4 && $5) a++; else if ($6) d++; else red++ } }
+    END { printf "%d %d %d %d %d %d %d %d %d\n", r, c, a, d, red, p1, p2, pl, dis }' <<<"$1"
+}
+op0_list() { LC_ALL=C awk -F'\t' -v want="$2" 'NF >= 7 && $3 { v = ($4 && $5) ? "admitted" : ($6 ? "declares" : "red"); if (v == want) printf "%s ", $2 }' <<<"$1"; }
+
+OP_WORK="$WORK/op"; mkdir -p "$OP_WORK"
+OP0_R="$(op_regions "$ROOT")"
+read -r OP0_NR OP0_NC OP0_NA OP0_ND OP0_NRED OP0_P1 OP0_P2 OP0_PL OP0_DIS <<<"$(op0_tally "$OP0_R")"
+# The admitted set, as `<file>\t<verb>` lines: the population every later arm of this group reads.
+OP_ADM="$(LC_ALL=C awk -F'\t' 'NF >= 7 && $3 && $4 && $5 { printf "%s\t%s\n", $1, $2 }' <<<"$OP0_R")"
+# Control (a): "reconciler role" removed from the first `**Dispatches**` line of a copy of the first
+# file of the admitted set that carries one.
+OP0_AF=""
+while IFS="$(printf '\t')" read -r op_f _; do
+  [ -n "$op_f" ] && [ -z "$OP0_AF" ] || continue
+  if [ "$(LC_ALL=C awk 'index($0, "**Dispatches**") == 1 && index($0, "reconciler role") { n++ } END { print n + 0 }' "$ROOT/$op_f" 2>/dev/null)" -ge 1 ]; then OP0_AF="$op_f"; fi
+done <<<"$OP_ADM"
+mkdir -p "$OP_WORK/c0a"
+OP0_AMUT=3
+if [ -n "$OP0_AF" ] && [ -r "$ROOT/$OP0_AF" ]; then
+  LC_ALL=C awk '!m && index($0, "**Dispatches**") == 1 && index($0, "reconciler role") { sub(/reconciler role/, ""); m = 1 } { print } END { exit (m ? 0 : 3) }' \
+    "$ROOT/$OP0_AF" > "$OP_WORK/c0a/SKILL.md"; OP0_AMUT=$?
+fi
+read -r _ _ _ _ _ OP0_AP1 _ _ OP0_ADIS <<<"$(op0_tally "$(op_preds "$OP0_AF" <<<"$(op_zoneb "$OP_WORK/c0a/SKILL.md")")")"
+read -r _ _ _ _ _ OP0_FP1 _ _ OP0_FDIS <<<"$(op0_tally "$(LC_ALL=C awk -F'\t' -v f="$OP0_AF" '$1 == f' <<<"$OP0_R")")"
+# Control (b): a sixth section planted into a copy of that same file — a requirement row and a section
+# that runs the reconciler, reads the model and rewrites it, and declares neither.
+mkdir -p "$OP_WORK/c0b"
+OP0_BMUT=3
+if [ -n "$OP0_AF" ] && [ -r "$ROOT/$OP0_AF" ]; then
+  { cat "$ROOT/$OP0_AF"; printf '\n## zzresync\n\n| zzresync | ACTIVE | any | any | G8 |\n\nRuns `agents/00-enrichment.md` as the reconciler, which reads `trips/<slug>/outputs/traveler-model.md`, the model it replaces, and rewrites that file.\n'; } > "$OP_WORK/c0b/SKILL.md"; OP0_BMUT=$?
+fi
+OP0_BR="$(op_preds "$OP0_AF" <<<"$(op_zoneb "$OP_WORK/c0b/SKILL.md")")"
+read -r _ OP0_BC _ _ OP0_BRED _ _ _ _ <<<"$(op0_tally "$OP0_BR")"
+read -r _ OP0_FC _ _ OP0_FRED _ _ _ _ <<<"$(op0_tally "$(LC_ALL=C awk -F'\t' -v f="$OP0_AF" '$1 == f' <<<"$OP0_R")")"
+OP0_BZZ="$(op0_list "$OP0_BR" red)"
+# The declared read's purpose (Dev Testing F-06). #2073's criterion 1 makes the read that finds
+# the entry the reconciler's declared read of the model it replaces, on the verb's `**Reads:**`
+# line. In each admitted region the sentence, under the pinned split, that carries P2's phrase must
+# say what the read is for: OWN where it names "the `[OPERATOR-PROVIDED]`-only entry it names" or
+# "… it drops"; CITE where it reads "about to replace, read for the reason `<verb>`'s line gives"
+# and that verb is OWN; UNRESOLVED where the verb it cites is not OWN; MISSING otherwise. The cited
+# verb is read from the sentence, so no verb is named here either. MUST-FIRE CONTROLS on an
+# in-memory copy of the regions: (d) the purpose stripped from the first OWN region another cites,
+# or from the first OWN region where none cites one, turns it MISSING and every region citing it
+# UNRESOLVED, and nothing else; (e) the citation stripped from the first CITE region turns that one
+# region MISSING, and nothing else — run where a citing region exists, since with none the
+# citation reader has nothing to grade.
+op_rdecl() {   # op_rdecl <stream> [<verb> <text>] -> <verb>\t<OWN|CITE|UNRESOLVED|MISSING>\t<cited verb or ->, <text> first stripped once from <verb>'s body
+  OP_RV="${2:-}" OP_RT="${3:-}" LC_ALL=C awk -F'\t' '
+    function sents(b, S,   s) { s = b; gsub(/[.] /, ".\n", s); gsub(/[;] /, ";\n", s); return split(s, S, "\n") }
+    BEGIN { pre = "about to replace, read for the reason `" }
+    $1 != "" {
+      n++; V[n] = $1; b = $2; own = 0; tg = ""
+      if (!m && ENVIRON["OP_RT"] != "" && $1 == ENVIRON["OP_RV"]) { p = index(b, ENVIRON["OP_RT"]); if (p) { b = substr(b, 1, p - 1) substr(b, p + length(ENVIRON["OP_RT"])); m = 1 } }
+      k = sents(b, S)
+      for (i = 1; i <= k; i++) {
+        if (!index(S[i], "the model it is about to replace")) continue
+        if (index(S[i], "the `[OPERATOR-PROVIDED]`-only entry it names") || index(S[i], "the `[OPERATOR-PROVIDED]`-only entry it drops")) own = 1
+        p = index(S[i], pre)
+        if (p && tg == "") { r = substr(S[i], p + length(pre)); q = index(r, "`"); if (q > 1 && index(r, "`'"'"'s line gives") == q) tg = substr(r, 1, q - 1) }
+      }
+      OWN[$1] = own; TG[n] = tg
+    }
+    END {
+      for (j = 1; j <= n; j++) {
+        if (OWN[V[j]]) printf "%s\tOWN\t-\n", V[j]
+        else if (TG[j] == "") printf "%s\tMISSING\t-\n", V[j]
+        else if (OWN[TG[j]]) printf "%s\tCITE\t%s\n", V[j], TG[j]
+        else printf "%s\tUNRESOLVED\t%s\n", V[j], TG[j]
+      }
+      if (ENVIRON["OP_RT"] != "") printf "-\tLANDED\t%d\n", m + 0
+    }' <<<"$1"
+}
+op_rn() { LC_ALL=C awk -F'\t' -v c="$2" '$2 == c { n++ } END { print n + 0 }' <<<"$1"; }
+op_rl() { LC_ALL=C awk -F'\t' -v c="$2" '$2 == c { printf "%s%s ", $1, ($3 != "-" ? "→" $3 : "") }' <<<"$1"; }
+OP0_RS=""
+while IFS="$(printf '\t')" read -r op_f op_v; do
+  [ -n "$op_v" ] || continue
+  OP0_RS="$OP0_RS$(LC_ALL=C awk -F'\t' -v v="$op_v" '$1 == v' <<<"$(op_zoneb "$ROOT/$op_f")")
+"
+done <<<"$OP_ADM"
+OP0_RD="$(op_rdecl "$OP0_RS")"
+OP0_RN="$(LC_ALL=C awk -F'\t' '$2 != "LANDED" && NF >= 3 { n++ } END { print n + 0 }' <<<"$OP0_RD")"
+OP0_RMISS="$(op_rn "$OP0_RD" MISSING)"; OP0_RUNR="$(op_rn "$OP0_RD" UNRESOLVED)"; OP0_RCITE="$(op_rn "$OP0_RD" CITE)"
+# Control (d): the target is the verb the first CITE region cites, or else the first OWN region.
+OP0_DT="$(LC_ALL=C awk -F'\t' '$2 == "CITE" { print $3; exit }' <<<"$OP0_RD")"
+[ -n "$OP0_DT" ] || OP0_DT="$(LC_ALL=C awk -F'\t' '$2 == "OWN" { print $1; exit }' <<<"$OP0_RD")"
+OP0_DOK=0; OP0_DGOT="not run"
+if [ -n "$OP0_DT" ]; then
+  OP0_DCN="$(LC_ALL=C awk -F'\t' -v t="$OP0_DT" '$2 == "CITE" && $3 == t { n++ } END { print n + 0 }' <<<"$OP0_RD")"
+  for op_rt in 'the `[OPERATOR-PROVIDED]`-only entry it names' 'the `[OPERATOR-PROVIDED]`-only entry it drops'; do
+    op_y="$(op_rdecl "$OP0_RS" "$OP0_DT" "$op_rt")"
+    [ "$(LC_ALL=C awk -F'\t' '$2 == "LANDED" { print $3 }' <<<"$op_y")" = 1 ] && break
+  done
+  OP0_DGOT="MISSING $(op_rl "$op_y" MISSING)/ UNRESOLVED $(op_rl "$op_y" UNRESOLVED)"
+  op_a="$(LC_ALL=C awk -F'\t' -v t="$OP0_DT" '$1 == t && $2 == "MISSING" { a++ } $2 == "LANDED" { l = $3 } END { print (a == 1 && l == 1) ? 1 : 0 }' <<<"$op_y")"
+  if [ "$op_a" -eq 1 ] && [ "$(op_rn "$op_y" MISSING)" -eq $((OP0_RMISS + 1)) ] && [ "$(op_rn "$op_y" UNRESOLVED)" -eq $((OP0_RUNR + OP0_DCN)) ]; then
+    OP0_DOK=1
+  fi
+fi
+# Control (e): the citation stripped from the first CITE region.
+OP0_EOK=1; OP0_EGOT="no citing region"
+OP0_ET="$(LC_ALL=C awk -F'\t' '$2 == "CITE" { print $1; exit }' <<<"$OP0_RD")"
+if [ -n "$OP0_ET" ]; then
+  OP0_EOK=0
+  op_y="$(op_rdecl "$OP0_RS" "$OP0_ET" 'read for the reason `')"
+  OP0_EGOT="MISSING $(op_rl "$op_y" MISSING)"
+  op_a="$(LC_ALL=C awk -F'\t' -v t="$OP0_ET" '$1 == t && $2 == "MISSING" { a++ } $2 == "LANDED" { l = $3 } END { print (a == 1 && l == 1) ? 1 : 0 }' <<<"$op_y")"
+  if [ "$op_a" -eq 1 ] && [ "$(op_rn "$op_y" MISSING)" -eq $((OP0_RMISS + 1)) ] && [ "$(op_rn "$op_y" CITE)" -eq $((OP0_RCITE - 1)) ]; then
+    OP0_EOK=1
+  fi
+fi
+if [ "${OP0_NR:-0}" -lt 1 ] || [ "${OP0_NC:-0}" -lt 1 ]; then
+  FAIL "OP0: measured nothing — ${OP0_NR:-0} Zone B verb region(s) and ${OP0_NC:-0} candidate(s) read across skills/*/SKILL.md. A test over no region finds no dispatching verb and proves nothing"
+elif [ "$OP0_AMUT" -ne 0 ] || [ "${OP0_AP1:-0}" -ne $((OP0_FP1 - 1)) ] || [ "${OP0_ADIS:-0}" -ne $((OP0_FDIS + 1)) ] || [ "$OP0_BMUT" -ne 0 ] || [ "${OP0_BC:-0}" -ne $((OP0_FC + 1)) ] || [ "${OP0_BRED:-0}" -ne $((OP0_FRED + 1)) ] || [ "$OP0_BZZ" != "zzresync " ] || [ "${OP0_PL:-0}" -eq "${OP0_P1:-0}" ]; then
+  FAIL "OP0: BROKEN PROBE — \"reconciler role\" removed from a copy of ${OP0_AF:-<no admitted file>}'s Dispatches line (landed rc=$OP0_AMUT) read P1 ${OP0_AP1:-?} against $OP0_FP1 and disagreements ${OP0_ADIS:-?} against $OP0_FDIS (must be one fewer and one more); a planted sixth section (landed rc=$OP0_BMUT) read ${OP0_BC:-?} candidate(s) against $OP0_FC and ${OP0_BRED:-?} red against $OP0_FRED (must each be one more, the red one 'zzresync', read '${OP0_BZZ:-none}'); and a literal \`[.;]\` split admitted ${OP0_PL:-?} against the pinned split's ${OP0_P1:-?} (must differ). Until each fires, a verdict below is the instrument's"
+elif [ "${OP0_NA:-0}" -lt 1 ] || [ "${OP0_NRED:-1}" -ne 0 ] || [ "${OP0_DIS:-1}" -ne 0 ]; then
+  FAIL "OP0: the dispatching verbs are not all found by the test — over $OP0_NR region(s), $OP0_NC candidate(s): admitted ${OP0_NA:-0} ($(op0_list "$OP0_R" admitted)), declaring $OP0_ND ($(op0_list "$OP0_R" declares)), red $OP0_NRED ($(op0_list "$OP0_R" red)); P1 $OP0_P1, P2 $OP0_P2, disagreements $OP0_DIS. A region that runs the reconciler must declare the read on its Reads line and name the role on its Dispatches line, or say it dispatches no agent"
+elif [ "$OP0_RN" -ne "$OP0_NA" ] || [ "$OP0_RMISS" -ne 0 ] || [ "$OP0_RUNR" -ne 0 ]; then
+  FAIL "OP0: not every dispatching verb's declared read of the model says what it is for — of the $OP0_NA admitted, $OP0_RN read: OWN $(op_rn "$OP0_RD" OWN) ($(op_rl "$OP0_RD" OWN)), CITE $OP0_RCITE ($(op_rl "$OP0_RD" CITE)), MISSING $OP0_RMISS ($(op_rl "$OP0_RD" MISSING)), UNRESOLVED $OP0_RUNR ($(op_rl "$OP0_RD" UNRESOLVED)). The sentence carrying \"the model it is about to replace\" must name the \`[OPERATOR-PROVIDED]\`-only entry the read finds, or cite a verb whose line does"
+elif [ "$OP0_DOK" -ne 1 ] || [ "$OP0_EOK" -ne 1 ]; then
+  FAIL "OP0: BROKEN PROBE — the declared read's purpose stripped from a copy of § \`${OP0_DT:-<none>}\` read '$OP0_DGOT' (must be that region MISSING, every region citing it UNRESOLVED, and nothing else), and the citation stripped from a copy of § \`${OP0_ET:-<none>}\` read '$OP0_EGOT' (must be that one region MISSING, and nothing else). Until each fires, the declared-read verdict is the instrument's"
+else
+  PASS "OP0: the verbs that dispatch the reconciler are found by the test, with no verb named here — $OP0_NR Zone B region(s), $OP0_NC candidate(s): $OP0_NA admitted ($(op0_list "$OP0_R" admitted)), $OP0_ND declaring they dispatch no agent ($(op0_list "$OP0_R" declares)), 0 red; P1 = P2 = $OP0_P1, no disagreement; and each admitted verb's declared read of the model says what it is for, OWN $(op_rn "$OP0_RD" OWN) ($(op_rl "$OP0_RD" OWN)) and CITE $OP0_RCITE ($(op_rl "$OP0_RD" CITE)). Every control fired: \"reconciler role\" removed from a copy drops P1 by 1 and turns the agreement red, a planted sixth section is a red candidate, a literal \`[.;]\` split admits $OP0_PL rather than $OP0_P1, the declared read's purpose stripped from § \`$OP0_DT\` turns it MISSING and its citers UNRESOLVED, and the citation stripped from § \`${OP0_ET:-<none>}\` turns it MISSING (${OP0_EGOT})"
+fi
+
+# ── OP-F — every admitted verb runs only on an active trip: its requirement row's lifecycle cell
+# reads ACTIVE, so the archived-trip freeze is never met by a dispatch of the rebuild. Guarded by
+# OP0's population; the control flips one admitted row to ANY in a copy.
+# op_life <file text> <verb> — the lifecycle cell of <verb>'s row in the file's requirement table,
+# the table under the `| verb | lifecycle |` header, read row by row until the table ends.
+op_life() {
+  LC_ALL=C awk -F'|' -v v="$2" '
+    /^\| verb \| lifecycle \|/ { on = 1; next }
+    on && !/^\|/ { on = 0 }
+    on { c = $2; sub(/^[ \t]+/, "", c); sub(/[ \t]+$/, "", c); if (c == v) { l = $3; sub(/^[ \t]+/, "", l); sub(/[ \t]+$/, "", l); print l; exit } }' <<<"$1"
+}
+opf_scan() {   # opf_scan <root> [<file> <copy text>] -> `<checked> <active> <not active: verb=cell …>`
+  local f v t n=0 a=0 bad="" cell
+  while IFS="$(printf '\t')" read -r f v; do
+    [ -n "$v" ] || continue
+    if [ -n "${2:-}" ] && [ "$f" = "$2" ]; then t="$3"; else t="$(cat "$1/$f" 2>/dev/null)"; fi
+    cell="$(op_life "$t" "$v")"
+    n=$((n + 1))
+    if [ "$cell" = "ACTIVE" ]; then a=$((a + 1)); else bad="$bad$v=${cell:-<no row>} "; fi
+  done <<<"$OP_ADM"
+  printf '%s %s %s\n' "$n" "$a" "$bad"
+}
+read -r OPF_N OPF_A OPF_BAD <<<"$(opf_scan "$ROOT")"
+IFS="$(printf '\t')" read -r OPF_CF OPF_CV <<<"$(LC_ALL=C awk -F'\t' 'NF >= 2 { print; exit }' <<<"$OP_ADM")"
+OPF_CT="$(er_sub1 "$(cat "$ROOT/$OPF_CF" 2>/dev/null)" "| $OPF_CV | ACTIVE |" "| $OPF_CV | ANY |")"
+read -r _ OPF_CA _ <<<"$(opf_scan "$ROOT" "$OPF_CF" "$OPF_CT")"
+if [ "${OPF_N:-0}" -lt 1 ]; then
+  FAIL "OP-F: measured nothing — OP0 admitted no dispatching verb, so there is no requirement row to read. A lifecycle check over an empty set proves nothing"
+elif [ "${OPF_CA:-0}" -ne $((OPF_A - 1)) ]; then
+  FAIL "OP-F: BROKEN PROBE — \`$OPF_CV\`'s row flipped to ANY in a copy read $OPF_CA ACTIVE row(s) against $OPF_A (must be one fewer)"
+elif [ "$OPF_A" -ne "$OPF_N" ]; then
+  FAIL "OP-F: $OPF_A of the $OPF_N admitted verb(s) declare \`lifecycle: ACTIVE\` — ${OPF_BAD:-none}. A dispatch of the rebuild on an archived trip would reach through the freeze"
+else
+  PASS "OP-F: all $OPF_N admitted verb(s) declare \`lifecycle: ACTIVE\` in their requirement row, so no dispatch of the rebuild meets an archived trip; \`$OPF_CV\`'s row flipped to ANY in a copy drops the count by 1"
+fi
+
+# ── OP2 — every admitted verb renders the naming, by its own text or by a citation it resolves
+# (FM-5). op_classify is the one place the own-or-cite choice is made:
+#   OWN      the region carries the naming sentence and the stand-in sentence;
+#   CITE     one sentence, under the pinned split, carries "did not keep", "carry the stand-in" or
+#            "carrying the stand-in", and a citation of a section that is itself OWN;
+#   NEITHER  everything else, and UNRESOLVED a citation of a section that is not OWN.
+# The verdict is a conjunction at top level: admitted ≥ 1, OWN ≥ 1, no NEITHER, no UNRESOLVED; and
+# each OWN region says, in the sentence that carries "where it names none", that it renders
+# nothing then (criterion 4), and, in the sentence that carries "In a run nobody can answer", that
+# the naming adds no stop (ADR-049 Decision 4) — OP2_OWNS below, each a sentence test under the
+# pinned split, held where at least one sentence carries the condition and every such sentence
+# carries what follows (Dev Testing F-19) — and carries the naming's content (Dev Testing F-02 and
+# F-07): the needs and desires the entry held, how to keep them, and that restating them keeps the
+# entry in each run that rebuilds the model, until the traveller files — OP2_OWNP below.
+# op_classify is registered with md_flips.
+# MUST-FIRE CONTROLS, each on an in-memory copy of the regions: the naming stripped from the first
+# OWN region that another region cites turns it NEITHER and every region citing it UNRESOLVED;
+# each citing region's own change reverted alone — Change 5d, 6c or 6d, old for new — turns that one
+# region NEITHER and no other; each OP2_OWNP phrase stripped from a copy of the first OWN region
+# drops its count there by exactly 1; and each phrase of each OP2_OWNS limb, stripped from inside
+# the first sentence of that copy carrying both, drops the count of such sentences by exactly 1.
+OP_NAMING='It returns as well each `[OPERATOR-PROVIDED]`-only entry its rebuild of'
+OP_SIHEAD="**The dispatch carries the operator's stand-in:**"
+OP_SIBOUND='whose entry does not carry `[THIRD-PARTY]`'
+op_stream() {   # op_stream <root> -> one line per admitted region: <verb>\t<folded body>
+  local f v
+  while IFS="$(printf '\t')" read -r f v; do
+    [ -n "$v" ] || continue
+    LC_ALL=C awk -F'\t' -v v="$v" '$1 == v { print; n++ } END { exit (n == 1 ? 0 : 3) }' <<<"$(op_zoneb "$1/$f")"
+  done <<<"$OP_ADM"
+}
+op_classify() {   # op_classify <stream> -> <verb>\t<OWN|CITE|UNRESOLVED|NEITHER>\t<cited verb or ->
+  OP_N="$OP_NAMING" OP_H="$OP_SIHEAD" OP_B="$OP_SIBOUND" LC_ALL=C awk -F'\t' '
+    function sents(b, S,   s) { s = b; gsub(/[.] /, ".\n", s); gsub(/[;] /, ";\n", s); return split(s, S, "\n") }
+    $1 != "" {
+      n++; V[n] = $1; B[n] = $2
+      own = index($2, ENVIRON["OP_N"]) && index($2, "rostered or not") ? 1 : 0
+      si = 0; k = sents($2, S)
+      for (i = 1; i <= k; i++) if (index(S[i], ENVIRON["OP_H"]) && index(S[i], ENVIRON["OP_B"])) si = 1
+      OWN[$1] = (own && si)
+    }
+    END {
+      for (j = 1; j <= n; j++) {
+        if (OWN[V[j]]) { printf "%s\tOWN\t-\n", V[j]; continue }
+        tg = ""; k = sents(B[j], S)
+        for (i = 1; i <= k && tg == ""; i++) {
+          if (!index(S[i], "did not keep")) continue
+          if (!index(S[i], "carry the stand-in") && !index(S[i], "carrying the stand-in")) continue
+          if (index(S[i], "as § `travelers` states")) tg = "travelers"
+          else if (index(S[i], "as `plan`" "'"'"'" "s section states")) tg = "plan"
+          else if (index(S[i], "as that section" "'"'"'" "s does")) tg = "?"
+        }
+        if (tg == "") printf "%s\tNEITHER\t-\n", V[j]
+        else if (OWN[tg]) printf "%s\tCITE\t%s\n", V[j], tg
+        else printf "%s\tUNRESOLVED\t%s\n", V[j], tg
+      }
+    }' <<<"$1"
+}
+op_cls() { LC_ALL=C awk -F'\t' -v c="$2" '$2 == c { printf "%s%s ", $1, ($3 != "-" ? "→" $3 : "") }' <<<"$1"; }
+op_ncls() { LC_ALL=C awk -F'\t' -v c="$2" '$2 == c { n++ } END { print n + 0 }' <<<"$1"; }
+# op_mut <stream> <verb> <old> <new> — the stream with <old> replaced by <new> once in <verb>'s body.
+op_mut() { OP_O="$3" OP_R="$4" LC_ALL=C awk -F'\t' -v v="$2" 'BEGIN { OFS = "\t" } $1 == v && !m { p = index($2, ENVIRON["OP_O"]); if (p) { $2 = substr($2, 1, p - 1) ENVIRON["OP_R"] substr($2, p + length(ENVIRON["OP_O"])); m = 1 } } { print } END { exit (m ? 0 : 3) }' <<<"$1"; }
+# The three citing regions' own changes, each as the folded new text and the folded old text it
+# replaced: Change 5d in § `replan`, 6c in § `person`, 6d in § `group`.
+OP_REV=(
+  'replan|did not keep, and carrying the stand-in, as `plan`'"'"'s section states|did not keep as `plan`'"'"'s section states'
+  'person|render what its rebuild did not keep, and carry the stand-in, as § `travelers` states|render what its rebuild replaced in `outputs/traveler-presence.md`, as § `travelers` states'
+  'group|what its rebuild did not keep as § `travelers` states — the dispatch carrying the stand-in as that section'"'"'s does — and its|what its rebuild replaced in `outputs/traveler-presence.md` as § `travelers` states, and its'
+)
+# The naming's content, which each OWN region carries (Dev Testing F-02, F-07): <limb>|<phrase>.
+OP2_OWNP=(
+  'needs|the needs and desires the entry held'
+  'how-to-keep|how to keep them'
+  'each-run|in each run that rebuilds the model, until the traveller files'
+)
+# The two sentence limbs each OWN region carries (Dev Testing F-19): <limb>|<the condition the
+# sentence carries>|<what that sentence then says>. "nothing" is what both render homes say at the
+# head, in "say nothing of it" and "render nothing for it", so it is read rather than either.
+OP2_OWNS=(
+  'names-none|where it names none|nothing'
+  'no-stop|In a run nobody can answer|adds no stop'
+)
+op2_assert() {   # op2_assert <root> — exactly one verdict
+  local st cl na no nn nu ownbad="" v cv x y rc ctl_a="" ctl_a_ok=0 rev_bad="" rev_n=0 o v1="" o1 n1 ownctl="" p1 p2 q m
+  st="$(op_stream "$1")"
+  cl="$(op_classify "$st")"
+  na="$(LC_ALL=C awk -F'\t' 'NF >= 2 { n++ } END { print n + 0 }' <<<"$OP_ADM")"
+  no="$(op_ncls "$cl" OWN)"; nn="$(op_ncls "$cl" NEITHER)"; nu="$(op_ncls "$cl" UNRESOLVED)"
+  for v in $(op_cls "$cl" OWN); do
+    o="$(LC_ALL=C awk -F'\t' -v v="$v" '$1 == v { print $2 }' <<<"$st")"
+    for x in "${OP2_OWNS[@]}"; do
+      y="${x#*|}"; p1="${y%%|*}"; p2="${y#*|}"
+      n1="$(op_nsent "$o" "$p1")"
+      [ "$n1" -ge 1 ] && [ "$(op_nsent "$o" "$p1" "$p2")" -eq "$n1" ] || ownbad="$ownbad $v:${x%%|*}"
+    done
+    for x in "${OP2_OWNP[@]}"; do
+      [ "$(op_cnt "$o" "${x#*|}")" -ge 1 ] || ownbad="$ownbad $v:${x%%|*}"
+    done
+    [ -n "$v1" ] || { v1="$v"; o1="$o"; }
+  done
+  # The OP2_OWNP controls: each phrase stripped from a copy of the first OWN region.
+  if [ -n "$v1" ]; then
+    for x in "${OP2_OWNP[@]}"; do
+      n1="$(op_cnt "$o1" "${x#*|}")"
+      if [ "$n1" -ge 1 ] && [ "$(op_cnt "$(er_sub1 "$o1" "${x#*|}" '')" "${x#*|}")" -ne $((n1 - 1)) ]; then ownctl="$ownctl ${x%%|*}"; fi
+    done
+    # The OP2_OWNS controls (Dev Testing F-19; S6i-D1): each phrase of each sentence limb, stripped
+    # from inside the first sentence of a copy of the first OWN region that carries both.
+    for x in "${OP2_OWNS[@]}"; do
+      y="${x#*|}"; p1="${y%%|*}"; p2="${y#*|}"
+      n1="$(op_nsent "$o1" "$p1" "$p2")"
+      [ "$n1" -ge 1 ] || continue
+      q="$(op_sent1 "$o1" "$p1" "$p2")"
+      for m in "$p1" "$p2"; do
+        if [ "$(op_nsent "$(er_sub1 "$o1" "$q" "$(er_sub1 "$q" "$m" '')")" "$p1" "$p2")" -ne $((n1 - 1)) ]; then ownctl="$ownctl ${x%%|*}($m)"; fi
+      done
+    done
+  fi
+  # Control (a): the naming stripped from the first OWN region that another region cites.
+  cv="$(LC_ALL=C awk -F'\t' '$2 == "CITE" { print $3; exit }' <<<"$cl")"
+  if [ -n "$cv" ]; then
+    x="$(op_mut "$st" "$cv" "$OP_NAMING" '')"; rc=$?
+    y="$(op_classify "$x")"
+    ctl_a="$(op_cls "$y" NEITHER)/$(op_cls "$y" UNRESOLVED)"
+    if [ "$rc" -eq 0 ] && [ "$(LC_ALL=C awk -F'\t' -v t="$cv" '$1 == t && $2 == "NEITHER" { a++ } $2 == "CITE" && $3 == t { b++ } $3 == t && $2 == "UNRESOLVED" { u++ } END { print (a == 1 && b + 0 == 0 && u >= 1) ? 1 : 0 }' <<<"$y")" -eq 1 ]; then ctl_a_ok=1; fi
+  fi
+  # Controls (c)-(e): each citing region's own change reverted alone.
+  for x in "${OP_REV[@]}"; do
+    v="${x%%|*}"; y="${x#*|}"
+    rev_n=$((rev_n + 1))
+    o="$(op_classify "$(op_mut "$st" "$v" "${y%%|*}" "${y#*|}")")"
+    if [ "$(op_cls "$o" NEITHER)$(op_cls "$o" UNRESOLVED)" != "$v " ] || [ "$(op_ncls "$o" NEITHER)" -ne $((nn + 1)) ]; then
+      rev_bad="$rev_bad $v:[$(op_cls "$o" NEITHER)$(op_cls "$o" UNRESOLVED)]"
+    fi
+  done
+  if [ "$na" -lt 1 ] || [ -z "$cl" ]; then
+    FAIL "OP2: measured nothing — OP0 admitted $na verb(s) and the classifier returned $(LC_ALL=C awk 'NF { n++ } END { print n + 0 }' <<<"$cl") line(s). A render check over no dispatching verb proves nothing"
+  elif [ "$no" -lt 1 ] || [ "$nn" -ne 0 ] || [ "$nu" -ne 0 ] || [ -n "$ownbad" ]; then
+    FAIL "OP2: not every verb that dispatches the reconciler renders the naming — of $na admitted: OWN $no ($(op_cls "$cl" OWN)), CITE $(op_ncls "$cl" CITE) ($(op_cls "$cl" CITE)), NEITHER $nn ($(op_cls "$cl" NEITHER)), UNRESOLVED $nu ($(op_cls "$cl" UNRESOLVED)); OWN regions missing a clause the naming owes (names-none, no-stop, needs, how-to-keep, each-run):${ownbad:- none}. Each must carry the naming, its content and the stand-in, or cite one that does in a sentence carrying the obligation's own words"
+  elif [ "$ctl_a_ok" -ne 1 ] || [ -n "$rev_bad" ] || [ -n "$ownctl" ]; then
+    FAIL "OP2: BROKEN PROBE — the naming stripped from a copy of § \`${cv:-<none cited>}\` read NEITHER/UNRESOLVED '${ctl_a:-not run}' (must be that region NEITHER and every region citing it UNRESOLVED), reverting a citing region's own change alone did not turn exactly that one region NEITHER:${rev_bad:- none}, and a content phrase stripped from a copy of § \`${v1:-<no OWN region>}\`, or a sentence limb's phrase stripped from inside its sentence there, did not drop its count by exactly 1:${ownctl:- none}. Until each fires, the verdict above is the instrument's"
+  else
+    PASS "OP2: every one of the $na verb(s) that dispatch the reconciler renders the naming — OWN $no ($(op_cls "$cl" OWN)), each carrying the needs and desires the entry held and how to keep them, in each run that rebuilds the model, until the traveller files, and saying, in each sentence that carries \"where it names none\", that it renders nothing then, and, in each that carries \"In a run nobody can answer\", that it adds no stop; CITE $(op_ncls "$cl" CITE) ($(op_cls "$cl" CITE)), each in a sentence carrying \"did not keep\" and the stand-in. Every control fired: the naming stripped from § \`$cv\` turns it NEITHER and its citers UNRESOLVED ($ctl_a), each of the $rev_n citing changes reverted alone turns that one region NEITHER, each of the ${#OP2_OWNP[@]} content phrases stripped from a copy of § \`$v1\` drops its count by 1, and each phrase of the ${#OP2_OWNS[@]} sentence limbs, stripped from inside its sentence there, drops that sentence count by 1"
+  fi
+}
+op2_assert "$ROOT"
+if [ -n "$OP_ADM" ]; then
+  md_flips op_classify 'OP2' op2_assert "$ROOT"
+fi
+
+# ── OP3 — the stand-in each dispatch carries is bounded by the roster AND by the mark (PR-1): it
+# admits a traveller the roster names whose entry does not carry `[THIRD-PARTY]`, and a member whose
+# entry carries it, rostered or not, is § `person`'s. Each OWN region's stand-in sentence carries
+# both bounds, and every admitted region reaches one by OWN or CITE. The ENCODING below reads the
+# bound off that sentence: an entry is admitted where the sentence's roster bound holds for it, and,
+# where the sentence carries the mark clause, only where the entry does not carry the mark. Over a
+# copy of examples/archived-trip-demo/ in which `per-b70d` — a both-marks entry — is given a roster
+# row and `[ROSTERED]`, the real sentence must refuse `per-b70d` and admit at least one entry; with
+# the mark clause stripped from a copy of the sentence the encoding must admit `per-b70d`. That last
+# is the must-fire control, and an encoding that cannot see the clause cannot pass.
+OP3_W="$ROOT/examples/archived-trip-demo"
+OP3_C="$OP_WORK/b70d"; mkdir -p "$OP3_C"
+OP3_MUT=3
+if [ -r "$OP3_W/trip-context.md" ] && [ -r "$OP3_W/outputs/traveler-model.md" ]; then
+  LC_ALL=C awk '/^## Group/ { on = 1 } on && /^\| per-9a3e \|/ && !m { print; print "| per-b70d | — | — |"; m = 1; next } { print } END { exit (m ? 0 : 3) }' \
+    "$OP3_W/trip-context.md" > "$OP3_C/trip-context.md"; OP3_MUT=$?
+  LC_ALL=C awk '/^## per-b70d / && !m { $0 = $0 " `[ROSTERED]`"; m = 1 } { print } END { exit (m ? 0 : 3) }' \
+    "$OP3_W/outputs/traveler-model.md" > "$OP3_C/traveler-model.md" || OP3_MUT=3
+fi
+op_standin() {   # op_standin <sentence> <trip-context> <model> -> the heading keys the encoding admits, space-joined
+  OP_S="$1" LC_ALL=C awk '
+    function key(s) { s = tolower(s); gsub(/[^a-z0-9]/, "", s); return s }
+    NR == FNR {
+      if (/^## Group/) { on = 1; next }
+      if (on && /^## /) on = 0
+      if (on && /^\|/ && !/^\|[ \t:|-]+$/) { split($0, c, "|"); if (hdr++) R[key(c[2])] = 1 }
+      next
+    }
+    /^## / {
+      h = substr($0, 4); tp = index(h, "[THIRD-PARTY]") ? 1 : 0
+      nm = h; gsub(/`?\[[A-Z-]+\]`?/, "", nm); k = key(nm)
+      if (k == "updatesignals" || k == "desireoverlap") next
+      s = ENVIRON["OP_S"]
+      rb = index(s, "a traveller the roster names") ? 1 : 0
+      tb = index(s, "whose entry does not carry `[THIRD-PARTY]`") ? 1 : 0
+      if ((!rb || (k in R)) && (!tb || !tp)) out = out k " "
+    }
+    END { print out }' "$2" "$3"
+}
+op3_assert() {   # op3_assert <root> — exactly one verdict
+  local st cl na v t s owns=0 bad="" adm stripadm nneed=0
+  st="$(op_stream "$1")"
+  cl="$(op_classify "$st")"
+  na="$(LC_ALL=C awk -F'\t' 'NF >= 2 { n++ } END { print n + 0 }' <<<"$OP_ADM")"
+  for v in $(op_cls "$cl" OWN); do
+    owns=$((owns + 1))
+    t="$(LC_ALL=C awk -F'\t' -v v="$v" '$1 == v { print $2 }' <<<"$st")"
+    s="$(op_sent1 "$t" "$OP_SIHEAD")"
+    [ -n "$s" ] && [ "$(op_cnt "$s" 'a traveller the roster names')" -ge 1 ] && [ "$(op_cnt "$s" "$OP_SIBOUND")" -ge 1 ] || bad="$bad $v:bound"
+    [ "$(op_nsent "$t" 'A member whose entry carries `[THIRD-PARTY]`, rostered or not')" -eq 1 ] || bad="$bad $v:rostered-or-not"
+    adm="$(op_standin "$s" "$OP3_C/trip-context.md" "$OP3_C/traveler-model.md")"
+    stripadm="$(op_standin "$(er_sub1 "$s" "$OP_SIBOUND" '')" "$OP3_C/trip-context.md" "$OP3_C/traveler-model.md")"
+    case " $adm" in *" perb70d "*) bad="$bad $v:admits-per-b70d" ;; esac
+    [ -n "$adm" ] || bad="$bad $v:admits-none"
+    case " $stripadm" in *" perb70d "*) ;; *) nneed=$((nneed + 1)) ;; esac
+  done
+  if [ "$na" -lt 1 ] || [ "$OP3_MUT" -ne 0 ]; then
+    FAIL "OP3: measured nothing — OP0 admitted $na verb(s), and the per-b70d copy of examples/archived-trip-demo/ landed rc=$OP3_MUT (must be 0). A stand-in bound over no verb, or over a fixture that did not build, proves nothing"
+  elif [ "$owns" -lt 1 ] || [ "$(op_ncls "$cl" NEITHER)" -ne 0 ] || [ "$(op_ncls "$cl" UNRESOLVED)" -ne 0 ] || [ -n "$bad" ]; then
+    FAIL "OP3: the stand-in is not bounded by the roster and by the mark in every dispatch — OWN $owns ($(op_cls "$cl" OWN)), NEITHER $(op_cls "$cl" NEITHER), UNRESOLVED $(op_cls "$cl" UNRESOLVED); findings:${bad:- none}. A stand-in that reaches a \`[THIRD-PARTY]\` member, rostered or not, captures a party member's needs outside § \`person\`"
+  elif [ "$nneed" -ne 0 ]; then
+    FAIL "OP3: BROKEN PROBE — in $nneed OWN region(s) the encoding still refused \`per-b70d\` with the mark clause stripped from a copy of the stand-in sentence, so its refusal above may be blind to the clause"
+  else
+    PASS "OP3: every admitted verb carries the operator's stand-in, bounded by the roster and by the mark — in each of the $owns OWN region(s) ($(op_cls "$cl" OWN)) the stand-in sentence names a traveller the roster names whose entry does not carry \`[THIRD-PARTY]\`, and a member carrying it, rostered or not, is § \`person\`'s; the citing regions ($(op_cls "$cl" CITE)) reach it. Over a copy of the archived witness with \`per-b70d\` rostered, the encoding refuses it and admits others, and with the mark clause stripped it admits \`per-b70d\`"
+  fi
+}
+op3_assert "$ROOT"
+if [ -n "$OP_ADM" ]; then
+  md_flips op_classify 'OP3' op3_assert "$ROOT"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
