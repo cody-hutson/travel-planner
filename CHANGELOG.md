@@ -20,7 +20,9 @@ destination it stops, writes nothing and names `/trip-record destination` and `/
 A page built before a destination is chosen is named after the trip, carries its own hero with the
 travellers' names, and stays on disk when a destination is recorded and a new
 page is built under the destination's name; publishing, the round-trip walk and the freshness
-reports each take the newest page. Erasure reaches every page of a trip.
+reports each take the newest page, and a build always leaves the page it built as the newest, even
+when it has nothing to change, so clearing the destination brings the trip's own page back. Erasure
+reaches every page of a trip.
 
 **The shortlist shows on the private site while no destination is chosen, and only then.** The
 destination shortlist is now an artifact the site build reads, and the site spec gives it a Group
