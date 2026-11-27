@@ -3,7 +3,9 @@
 The Destination Ideation agent reads each traveler's leanings from the
 reconciled `outputs/traveler-model.md` (enrichment carries them there). This
 file is a minimal stand-in showing just the three leaning fields the agent
-uses, for four travelers deciding where to go together. No destination is set.
+uses, for five travelers deciding where to go together: four filled in their
+own form, and the organizer relayed the fifth's leanings, which the shortlist
+does not count. No destination is set.
 
 Being a partial projection rather than an instance, this file carries **no artifact
 frontmatter** and is not a schema witness for `outputs/traveler-model.md`. Declaring
@@ -17,16 +19,21 @@ terms, and no class path-pattern selects it.
 - **Trip vibe:** food + coastal, slow mornings
 
 ## Ben
-- **Would love:** Italy; Japan
+- **Would love:** Italy; Japan; the Swiss Alps
 - **Rather skip:** —
 - **Trip vibe:** city + culture, museums
 
 ## Cyra
 - **Would love:** Japan; Portugal
-- **Rather skip:** anywhere very hot in summer
+- **Rather skip:** anywhere very hot in summer; the Alps (I can't manage the altitude)
 - **Trip vibe:** nature + food
 
 ## Dev
 - **Would love:** Iceland
 - **Rather skip:** Italy (been twice recently)
 - **Trip vibe:** nature + quiet, few crowds
+
+## Eli [OPERATOR-PROVIDED]
+- **Would love:** Morocco
+- **Rather skip:** —
+- **Trip vibe:** —

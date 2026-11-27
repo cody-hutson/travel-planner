@@ -2,10 +2,11 @@
 #
 # check-round-trip.sh — the round-trip completeness walker.
 #
-# Executes the walk reference/site-layout-spec.md § 9.4 prescribes: every element of a
-# trip's outputs/final-itinerary.md — every day, and every track of a split day — resolves
-# to a rendered component or to a named exclusion, so a patch never silently drops plan
-# detail. Until this file existed that rule was stated in three places and executed in
+# Executes the walk reference/site-layout-spec.md § 9.4 prescribes: every element of each
+# artifact the site renders — every day and every track of a split day of a trip's
+# outputs/final-itinerary.md, and, in IDEATION with no destination recorded, every heading of its
+# outputs/destination-shortlist.md — resolves to a rendered component or to a named exclusion,
+# so a patch never silently drops plan detail. Until this file existed that rule was stated in three places and executed in
 # none, and the obligation was discharged by whoever happened to be reading the prose.
 #
 # It is a LIBRARY FIRST and a CLI second, the shape scripts/validate-artifacts.sh already
@@ -22,15 +23,20 @@
 # This is the whole shape of the file and it is stated first because a gate that conflates
 # the two claims more than it grades.
 #
-#   THE CONTRACT HALF (--contract-only). Every element TYPE the itinerary grammar can emit
+#   THE CONTRACT HALF (--contract-only). Every element TYPE each declared grammar can emit
 #   carries a declared disposition, rendered or excluded, and every declared disposition
-#   names an element the grammar still emits. Real population, tracked tree, graded in CI
+#   names an element its grammar still emits. Real population, tracked tree, graded in CI
 #   on every push. Codes RT1 / RT2, and RT7 for the artifact grain, with RT0 guarding the
 #   instrument.
 #
-#   THE INSTANCE HALF (--trip, --plan/--site). For a given plan and the site built from it,
-#   every element INSTANCE resolves to its component, per day and per track. Codes RT3-RT6,
-#   and RT8 for the shape pass.
+#   THE INSTANCE HALF (--trip, --plan/--site). For a given artifact and the site built from
+#   it, every element INSTANCE resolves to its component — per day and per track for the
+#   itinerary, per heading for the shortlist. Codes RT3-RT6,
+#   and RT8 for the shape pass. `--trip` walks the trip's NEWEST `*-travel-site.html` — the
+#   selection the publish script and both freshness relations make, so once a slug-named and a
+#   destination-named page coexist the walk reads the page a reader is served — and the
+#   artifacts the render table binds in σ, never a hard-wired itinerary. `--plan/--site` walks
+#   one itinerary against one page, and so cannot read a pre-plan page.
 #   ITS REAL POPULATION IN CI IS EMPTY AND CAN NEVER BE NON-EMPTY. .gitignore carries
 #   `trips/*`, so no CI checkout holds a render; and reference/schemas/travel-site.md
 #   carries a no-witness clause it calls terminal rather than pending, naming a committed
@@ -43,16 +49,19 @@
 # DISPOSITION being DECIDED or UNDECIDED and never the destination itself.
 #
 #   ARTIFACT  The contract half (RT7) holds the render table in § 9.2 to § 1.1's bound classes
-#             and to the states the `site` row of skills/trip/SKILL.md admits, both directions,
-#             on the tracked tree. The instance half reads that every artifact the table renders
-#             in σ is readable under the trip.
+#             and to the states a build runs in — those the `site` row of skills/trip/SKILL.md
+#             admits, less the states § 9.2's non-row declares — both directions, on the tracked
+#             tree, and holds the `site` row's lifecycle cell to ACTIVE, the ARCHIVED non-row.
+#             The instance half reads that every artifact the table renders in σ is readable
+#             under the trip.
 #   ELEMENT   The walk below — the contract half and the instance half — once per element fence
 #             the per-artifact declarations name, against the artifact the render table binds to it.
 #   SHAPE     (RT8) The render carries no component that some state admits and σ does not.
 #
-# Without σ, and with a σ in which the `site` row admits no build, the artifact pass's instance
-# half and the shape pass are NOT RUN, and each is reported as RT0: nothing was read for it, so
-# it is never a clean result. The walker never infers σ, and never echoes the value it was given:
+# Without σ, and with a σ in which no build runs — one the `site` row does not admit, or one it
+# admits and the render table declares a non-row — the artifact pass's instance half and the
+# shape pass are NOT RUN, and each is reported as RT0: nothing was read for it, so it is never a
+# clean result. The walker never infers σ, and never echoes the value it was given:
 # an argument it does not know is named by its position rather than its text, and a second
 # --state is refused rather than either value taken.
 # --contract-only reads no render, so it runs the two contract halves and nothing that needs σ.
@@ -60,7 +69,8 @@
 # a component § 3 gives no class is one it cannot see, and a clean verdict carries that limit.
 #
 # ── TWO ROOTS, AND WHY ONE FLAG CANNOT CARRY BOTH ────────────────────────────────
-# `--root` roots the ENGINE: agents/05-hub-planner.md, which owns the itinerary grammar;
+# `--root` roots the ENGINE: agents/05-hub-planner.md and agents/destination-ideation.md, which
+# own the itinerary's grammar and the shortlist's;
 # reference/site-layout-spec.md, which owns the fences and the component catalog; and the
 # three tables the artifact grain reads — § 1.1 of reference/data-architecture.md, reference/trip-resolution.md
 # § Resolving a trip gates G5 and G6, and the `site` row of skills/trip/SKILL.md. Those are
@@ -78,9 +88,11 @@
 #        closed enum, a rendered row names a component the catalog does not define, or the
 #        element extraction returned ZERO ROWS. The same for the render table: it does not
 #        resolve, a row is malformed, a state cell reads `any` or names a key G5 and G6 do
-#        not yield, two rows cover one artifact in one state, a home is undefined; a read of
-#        the bound set, the vocabulary or the `site` row returns nothing; an artifact σ
-#        renders is unreadable; σ is not a state; or a pass this run owed was NOT RUN. A zero-row extraction is a broken
+#        not yield, two rows cover one artifact in one state, a home is undefined; a non-row is
+#        not `excluded`, or covers a state the verb builds in; a read of the bound set, the
+#        vocabulary, the `site` row or its lifecycle cell returns nothing, or that row admits no
+#        state a build runs in; an artifact σ renders is unreadable; σ is not a state; or a pass
+#        this run owed was NOT RUN. A zero-row extraction is a broken
 #        instrument and is never a clean read — that distinction is the reason this code
 #        exists and it is the first thing every arm asks.
 #   RT1  a grammar element label has NO fence row — neither rendered nor excluded. THE
@@ -90,7 +102,9 @@
 #        undeclared element fails, AND a declaration whose element no longer exists fails.
 #   RT3  a `rendered` element INSTANCE has no component in the site — the silent drop this
 #        contract exists to forbid. A day with no rendered day body is the same finding
-#        one level up.
+#        one level up, and so are a shortlist heading its fence declares no row for, an emptied
+#        ranking with no declared empty state, and, where a state that renders the shortlist
+#        selected the walk, an absent shortlist on a page with no degraded state.
 #   RT4  a split-day TRACK has no labeled track column of its own. § 9.2 names this as the
 #        sharpest test of the rule and § 9.4 names it as the most common silent drop: a
 #        patch that touches the first track and leaves the second behind.
@@ -100,9 +114,11 @@
 #        line — resolves to nothing. A stated decline and a dropped subgroup must not look
 #        alike on the page.
 #   RT7  the artifact grain does not close: a bound class or scaffolding token with no
-#        render-table row for a state the `site` row admits; a row for a class that is not
-#        bound, or for a state the row does not admit; or an excluded row § 9.3 does not name
-#        in that state. THE ADDITION CASE one grain up: a class turned bound without rows.
+#        render-table row for a state a build runs in; a row for a class that is not bound, for
+#        a state the row does not admit, or for a state a non-row covers; a non-row for a state
+#        the row does not admit; an excluded row § 9.3 does not name in that state; or a `site`
+#        row whose lifecycle cell reads anything but ACTIVE, which would serve the ARCHIVED
+#        non-row. THE ADDITION CASE one grain up: a class turned bound without rows.
 #        A scaffolding token is known only from the table's own rows, so a token whose every
 #        row is deleted leaves no subject and is NOT reported: that deletion is a stated
 #        residual, not a closed case. A bound class is read from § 1.1 and has no such hole.
@@ -116,7 +132,7 @@
 #
 # IT ESTABLISHES: that every element type the grammar can emit carries a declared
 # disposition, both directions, on the real tree; that every bound class is dispositioned in
-# every state the `site` row admits; that for a given (plan, site) pair every rendered element
+# every state a build runs in; that for a given (plan, site) pair every rendered element
 # instance resolves to its component, per day and per track; and, given σ, that the render
 # carries no component σ does not admit, of those § 3 gives a class.
 #
@@ -148,6 +164,22 @@ RT_STATE_FLAG='--state'
 RT_TAB="$(printf '\t')"
 RT_SHAPE_SEEN=''   # "<observable> of <population>", set by the shape pass for the CLEAN line
 
+# ── THE NON-ROWS ─────────────────────────────────────────────────────────────────
+# Two states the `site` row admits carry no page, and § 9.2 declares both. A plan mode with no
+# destination is the verb's own stop (ADR-034 § 1): the render table declares it by a row whose
+# artifact is RT_NONROW_TOKEN, `excluded`, home `§9.3`, which this walk reads as states in which
+# no page is built. That row covers only G6's placeholder disposition of a mode other than
+# RT_PREPLAN_MODE, the one mode ADR-034 § 1 decides RUN with no destination: a non-row anywhere
+# else would retire a state the verb still builds in, and the fact the row stands for has one
+# other home, the verb's own prose, which nothing reads. `ARCHIVED` takes no row, because the
+# table keys no row on lifecycle, so the walk reads the `site` row's lifecycle cell and holds it
+# to RT_SITE_LIFECYCLE. Three literals, each held here once: no document the walk reads declares
+# the plan modes as a set, and `ACTIVE` is G4's active value, not a member of any vocabulary the
+# walk reads. RT_NONROW_TOKEN is also the spelling the suite's controls read.
+RT_NONROW_TOKEN='<build>'
+RT_PREPLAN_MODE='IDEATION'
+RT_SITE_LIFECYCLE='ACTIVE'
+
 # ── THE PER-ARTIFACT DECLARATIONS ────────────────────────────────────────────────
 # One record per element fence, tab-separated:
 #   <fence tag> <grammar file> <grammar region heading> <label shape> <instance walker>
@@ -158,6 +190,7 @@ RT_SHAPE_SEEN=''   # "<observable> of <population>", set by the shape pass for t
 # that function and one record here, and no existing code path changes.
 RT_ELEMENT_DECLS=(
   $'round-trip-contract-elements\tagents/05-hub-planner.md\t### File: outputs/final-itinerary.md\tbold-line\trt_instance_walk'
+  $'round-trip-contract-elements-destination-shortlist\tagents/destination-ideation.md\t## Output\tmd-heading\trt_shortlist_walk'
 )
 rt_decls() { printf '%s\n' "${RT_ELEMENT_DECLS[@]}"; }
 rt_decl_get() {   # rt_decl_get <tag> <field> -> that record's field, empty when no record carries the tag
@@ -300,7 +333,7 @@ rt_contract_walk() {   # rt_contract_walk <engine-root> [grammar-rel] [spec-rel]
   local rc=0 labels rows comps sites n_lab n_row n_bad lfn
 
   if [ ! -r "$gfile" ]; then
-    rt_finding RT0 "the itinerary grammar is unreadable at '$gfile' — nothing was compared, and a green here would be a statement about a file that was never opened"
+    rt_finding RT0 "the grammar of fence '$tag' is unreadable at '$gfile' — nothing was compared, and a green here would be a statement about a file that was never opened"
     return 2
   fi
   if [ ! -r "$sfile" ]; then
@@ -370,7 +403,7 @@ rt_contract_walk() {   # rt_contract_walk <engine-root> [grammar-rel] [spec-rel]
   while IFS= read -r lab; do
     [ -n "$lab" ] || continue
     awk -F"$RT_TAB" -v k="$lab" '$1 == k { f = 1 } END { exit f ? 0 : 1 }' <<<"$rows" && continue
-    rt_finding RT1 "the itinerary grammar emits element '$lab' and the contract fence carries no row for it — it is neither rendered nor excluded, so a build that drops it drops it silently"
+    rt_finding RT1 "the grammar in '$gfile' emits element '$lab' and the '$tag' fence carries no row for it — it is neither rendered nor excluded, so a build that drops it drops it silently"
     rc=1
   done <<<"$labels"
 
@@ -380,7 +413,7 @@ rt_contract_walk() {   # rt_contract_walk <engine-root> [grammar-rel] [spec-rel]
     [ -n "$frow" ] || continue
     case "$frow" in '!'|'<'*) continue ;; esac
     grep -qxF -- "$frow" <<<"$labels" && continue
-    rt_finding RT2 "the contract fence declares element '$frow' and the itinerary grammar no longer emits it — a declaration that outlives its element is a standing exemption for whatever next takes that spelling"
+    rt_finding RT2 "the '$tag' fence declares element '$frow' and the grammar in '$gfile' no longer emits it — a declaration that outlives its element is a standing exemption for whatever next takes that spelling"
     rc=1
   done <<<"$rows"
 
@@ -390,6 +423,120 @@ rt_contract_walk() {   # rt_contract_walk <engine-root> [grammar-rel] [spec-rel]
 
 # The itinerary grammar's reader under the name its label shape gives it.
 rt_labels_bold_line() { rt_grammar_labels "$@"; }
+
+# ── THE SHORTLIST'S GRAMMAR AND ITS INSTANCE WALK ────────────────────────────────
+#
+# The shortlist agent writes its artifact from a fenced template under its `## Output` heading,
+# so its element labels are that template's ATX headings, and the region ends only at a heading
+# outside a fence. The grain is the heading: the walk reads which headings the shortlist carries
+# and whether the site carries the component each one names, never what a candidate says.
+rt_labels_md_heading() {   # rt_labels_md_heading <prompt-file> <region-heading> -> one label per line
+  local f="$1" h="$2"
+  [ -r "$f" ] || return 1
+  awk -v want="$h" '
+    !inreg && index($0, want) == 1 && length($0) == length(want) { inreg = 1; next }
+    !inreg { next }
+    /^[[:space:]]*```/ { if (!infence && !done) { infence = 1; next } if (infence) { infence = 0; done = 1; next } }
+    !infence && (/^# / || /^## /) { exit }
+    infence && match($0, /^#+[[:space:]]+/) { lab = substr($0, RLENGTH + 1); sub(/[[:space:]]+$/, "", lab); if (lab != "") print lab }
+  ' "$f"
+}
+
+# The tokens § 3 declares for the shortlist's section and its states. Held here once: the empty
+# and degraded states are read off a class attribute that carries the state word beside the
+# component's own class, and no document the walk reads declares those words as a set. The ranked
+# part's LABEL is never held — it is the fence row whose component is RT_SL_RANKED.
+RT_SL_ROOT='group-shortlist'
+RT_SL_RANKED='gs-ranked'
+RT_SL_EMPTY='is-empty'
+RT_SL_DEGRADED='is-degraded'
+
+# Whether one double-quoted `class` attribute in the site holds both words.
+rt_site_class_pair() {   # rt_site_class_pair <site-file> <word> <word>
+  awk -v a="$2" -v b="$3" '{ s = $0
+    while (match(s, /class="[^"]*"/)) {
+      v = " " substr(s, RSTART + 7, RLENGTH - 8) " "; gsub(/[[:space:]]+/, " ", v)
+      if (index(v, " " a " ") && index(v, " " b " ")) { f = 1; exit }
+      s = substr(s, RSTART + RLENGTH)
+    } } END { exit f ? 0 : 1 }' "$1"
+}
+
+# The shortlist's H1 and H2 heading texts, outside its frontmatter and outside any fenced block;
+# then "RANKED\t<items>" for the heading named, the ordered-list items before the next H1 or H2.
+rt_shortlist_heads() {   # rt_shortlist_heads <shortlist-file> <ranked-label>
+  awk -v rl="$2" '
+    NR == 1 && $0 == "---" { infm = 1; next }
+    infm { if ($0 == "---") infm = 0; next }
+    /^[[:space:]]*```/ { infence = !infence; next }
+    infence { next }
+    /^#{1,2}[[:space:]]+/ { h = $0; sub(/^#+[[:space:]]+/, "", h); sub(/[[:space:]]+$/, "", h); print "HEAD\t" h; inr = (h == rl); if (inr) seen = 1; next }
+    inr && /^[[:space:]]*[0-9]+[.)][[:space:]]/ { items++ }
+    END { if (seen) printf "RANKED\t%d\n", items + 0 }' "$1"
+}
+
+# THE SHORTLIST'S INSTANCE WALK — RT3 for a heading the site drops, RT0 for a degraded read. It
+# reads its element fence from the engine root rt_element_instance names. Where the shortlist is
+# absent the page owes its degraded state only where a state that renders the shortlist selected
+# the walk: without σ, or in a state that does not render it, an absent shortlist is not known to
+# be owed, and no smaller site is read into a page that correctly carries no section.
+rt_shortlist_walk() {   # rt_shortlist_walk <shortlist-file> <site-file>
+  local sl="$1" site="$2" root="${RT_INSTANCE_ROOT:-}" sel="${RT_INSTANCE_SELECTIVE:-0}"
+  local rc=0 tag rows nrow rlab heads nh classes h disp comp part ranked
+  [ -n "$root" ] || root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+  tag="$(rt_decls | awk -F'\t' -v f="${FUNCNAME[0]}" '$5 == f && !s { print $1; s = 1 }')"
+  if [ -z "$tag" ]; then
+    rt_finding RT0 "no element-fence declaration names the shortlist's instance walker, so it has no fence to resolve the shortlist's headings against — nothing was walked"
+    return 2
+  fi
+  rows="$(rt_fence_rows "$root/$RT_SPEC_REL" "$tag")"
+  nrow="$(printf '%s\n' "$rows" | awk -F'\t' 'NF > 1 && $1 != "!" { n++ } END { print n+0 }')"
+  if [ "$nrow" -eq 0 ]; then
+    rt_finding RT0 "the '$tag' fence read ZERO rows from the engine root — the instrument is broken, so nothing was walked"
+    return 2
+  fi
+  if [ ! -r "$site" ]; then
+    rt_finding RT0 "the site is unreadable at '$site' — there is nothing to resolve the shortlist's headings against"
+    return 2
+  fi
+  if [ ! -r "$sl" ]; then
+    rt_finding RT0 "the shortlist is unreadable at '$sl' — a degraded read, never a smaller site"
+    if [ "$sel" -eq 1 ] && ! rt_site_class_pair "$site" "$RT_SL_ROOT" "$RT_SL_DEGRADED"; then
+      rt_finding RT3 "the shortlist is absent and the site renders no degraded state — no class attribute carries both '$RT_SL_ROOT' and '$RT_SL_DEGRADED', so the section was dropped rather than shown as not yet put together: a smaller site"
+    fi
+    return 2
+  fi
+  rlab="$(awk -F'\t' -v c="$RT_SL_RANKED" '$1 != "!" && $2 == "rendered" && index("|" $3 "|", "|" c "|") && !s { print $1; s = 1 }' <<<"$rows")"
+  heads="$(rt_shortlist_heads "$sl" "$rlab")"
+  nh="$(awk -F'\t' '$1 == "HEAD" { n++ } END { print n+0 }' <<<"$heads")"
+  if [ "$nh" -eq 0 ]; then
+    rt_finding RT0 "the shortlist at '$sl' carries ZERO headings outside its frontmatter — the instrument read nothing, so this is a degraded read and never a clean one"
+    return 2
+  fi
+  classes="$(rt_site_classes "$site")"
+  while IFS="$RT_TAB" read -r _ h; do
+    [ -n "$h" ] || continue
+    if ! awk -F'\t' -v k="$h" '$1 == k { f = 1 } END { exit f ? 0 : 1 }' <<<"$rows"; then
+      rt_finding RT3 "the shortlist carries heading '$h', which its element fence declares no row for — it is neither rendered nor excluded, so a build disposes of it silently"
+      rc=1; continue
+    fi
+    disp="$(awk -F'\t' -v k="$h" '$1 == k && !s { print $2; s = 1 }' <<<"$rows")"
+    [ "$disp" = rendered ] || continue
+    comp="$(awk -F'\t' -v k="$h" '$1 == k && !s { print $3; s = 1 }' <<<"$rows")"
+    while IFS= read -r part; do
+      [ -n "$part" ] || continue
+      grep -qxF -- "$part" <<<"$classes" && continue
+      rt_finding RT3 "shortlist element '$h' has no '$part' component in the site — the silent drop this contract forbids"
+      rc=1
+    done <<<"$(tr '|' '\n' <<<"$comp")"
+  done <<<"$(awk -F'\t' '$1 == "HEAD"' <<<"$heads")"
+  ranked="$(awk -F'\t' '$1 == "RANKED" { print $2 }' <<<"$heads")"
+  if [ "${ranked:-x}" = 0 ] && ! rt_site_class_pair "$site" "$RT_SL_RANKED" "$RT_SL_EMPTY"; then
+    rt_finding RT3 "the shortlist's ranking is empty and the site renders no declared empty state — no class attribute carries both '$RT_SL_RANKED' and '$RT_SL_EMPTY'"
+    rc=1
+  fi
+  printf 'SHORTLIST headings=%s\n' "$nh"
+  return $rc
+}
 
 # THE ELEMENT PASS'S CONTRACT HALF — the walk above, once per declared element fence.
 rt_element_contract() {   # rt_element_contract <engine-root>
@@ -489,6 +636,18 @@ rt_admitted() {   # rt_admitted <engine-root> -> "<MODE>\t<DEST>" per admitted s
   done <<<"$ms"
 }
 
+# The `site` row's lifecycle cell, located by the frozen header rt_site_cells reads.
+rt_site_lifecycle() {   # rt_site_lifecycle <engine-root>
+  local f="$1/$RT_VERB_REL"
+  [ -r "$f" ] || return 1
+  awk -F'|' '
+    function trim(s) { gsub(/^[[:space:]]+|[[:space:]]+$/, "", s); return s }
+    !hdr && !done && NF == 7 && trim($2) == "verb" && trim($3) == "lifecycle" && trim($4) == "mode" && trim($5) == "destination" && trim($6) == "depth" { hdr = 1; next }
+    hdr && !/^\|/ { hdr = 0; done = 1 }
+    hdr && NF == 7 && trim($2) == "site" { print trim($3) }
+  ' "$f"
+}
+
 # The render table: "<artifact>\t<modes>\t<destination>\t<disposition>\t<home>", or a `!`
 # record for a row that does not carry exactly five columns. Columns are separated by two or
 # more spaces, as in the element fence, because a mode cell carries ", " of its own.
@@ -523,6 +682,22 @@ rt_artifact_keys() {   # rt_artifact_keys <spec-file>
       done <<<"$(rt_cell_tokens "$dc")"
     done <<<"$(rt_cell_tokens "$mc")"
   done <<<"$rows"
+}
+
+# The states a non-row covers: "<MODE>\t<DEST>", unique.
+rt_nonrow_states() {   # rt_nonrow_states <spec-file>
+  local keys
+  keys="$(rt_artifact_keys "$1")" || return 1
+  awk -F'\t' -v t="$RT_NONROW_TOKEN" '$1 == t { print $2 "\t" $3 }' <<<"$keys" | sort -u
+}
+
+# The states a build runs in: those the `site` row admits, less those a non-row covers, in the
+# admitted order. The table's totality is graded over this set and not over the admitted one.
+rt_built() {   # rt_built <engine-root>
+  local adm non
+  adm="$(rt_admitted "$1")" || return 1
+  non="$(rt_nonrow_states "$1/$RT_SPEC_REL")" || return 1
+  awk 'NR == FNR { if (NF) N[$0] = 1; next } NF && !($0 in N)' <(printf '%s\n' "$non") <(printf '%s\n' "$adm")
 }
 
 # The § 3 components a `rendered` home admits: each `|`-joined token, and for
@@ -564,10 +739,10 @@ rt_exclusion_states() {   # rt_exclusion_states <spec-file>
 }
 
 # THE ARTIFACT PASS'S CONTRACT HALF — RT0 for a table that cannot be resolved, RT7 for one
-# that resolves and does not close over the `bound` set and the admitted states.
+# that resolves and does not close over the `bound` set and the states a build runs in.
 rt_artifact_contract() {   # rt_artifact_contract <engine-root> [spec-rel]
   local root="$1" sfile="$1/${2:-$RT_SPEC_REL}"
-  local rc=0 sites rows nrow bound nbound vocab nmode ndest adm nadm comps keys a mc dc disp home tok part tag
+  local rc=0 sites rows nrow bound nbound vocab nmode ndest adm nadm built nbuilt life comps keys a mc dc disp home tok part tag
   if [ ! -r "$sfile" ]; then
     rt_finding RT0 "the site-layout spec is unreadable at '$sfile' — the render table has no home to resolve from"
     return 2
@@ -602,6 +777,13 @@ rt_artifact_contract() {   # rt_artifact_contract <engine-root> [spec-rel]
     rt_finding RT0 "the 'site' row of $RT_VERB_REL could not be read, or admits no state — the render table has no denominator"
     return 2
   fi
+  built="$(rt_built "$root")"
+  nbuilt="$(printf '%s\n' "$built" | awk 'NF { n++ } END { print n+0 }')"
+  life="$(rt_site_lifecycle "$root")"
+  if [ "$(printf '%s\n' "$life" | awk 'NF { n++ } END { print n+0 }')" -ne 1 ]; then
+    rt_finding RT0 "the 'site' row's lifecycle cell of $RT_VERB_REL could not be read — the ARCHIVED non-row has nothing to be graded against"
+    return 2
+  fi
   comps="$(rt_components "$sfile" | sort -u)"
 
   # Row integrity. Every failure here means the table cannot be resolved, so it is RT0.
@@ -627,6 +809,20 @@ rt_artifact_contract() {   # rt_artifact_contract <engine-root> [spec-rel]
       awk -F'\t' -v t="$tok" '($1 == "dest" || $1 == "dest-any") && $2 == t { f = 1 } END { exit f ? 0 : 1 }' <<<"$vocab" && continue
       rt_finding RT0 "render-table row '$a' carries a destination token outside the dispositions G6 yields — it is not echoed, because a destination cell holds a disposition and never a value"; rc=2
     done <<<"$(rt_cell_tokens "$dc")"
+    if [ "$a" = "$RT_NONROW_TOKEN" ]; then
+      if [ "$disp" != excluded ]; then
+        rt_finding RT0 "render-table row '$a' is the non-row and declares '$disp' — a state with no build renders nothing, so a non-row is excluded, with home '§9.3'"; rc=2; continue
+      fi
+      while IFS= read -r tok; do
+        [ "$tok" = "$RT_PREPLAN_MODE" ] || continue
+        rt_finding RT0 "render-table row '$a' covers mode '$tok', in which the 'site' verb builds whatever the destination (ADR-034 § 1) — a non-row covers only a plan mode, so this one would retire a state the verb still builds in"; rc=2
+      done <<<"$(rt_cell_tokens "$mc")"
+      while IFS= read -r tok; do
+        [ -n "$tok" ] || continue
+        awk -F'\t' -v t="$tok" '$1 == "dest" && $2 == t { f = 1 } END { exit f ? 0 : 1 }' <<<"$vocab" || continue
+        rt_finding RT0 "render-table row '$a' covers G6's decided disposition — a non-row covers only a plan mode with no destination recorded, so this one would retire a state the verb still builds in"; rc=2
+      done <<<"$(rt_cell_tokens "$dc")"
+    fi
     if [ "$disp" = excluded ]; then
       [ "$home" = '§9.3' ] || { rt_finding RT0 "excluded row '$a' carries home '$home' — an excluded row's home is '§9.3', where its reason is named"; rc=2; }
       continue
@@ -658,6 +854,10 @@ rt_artifact_contract() {   # rt_artifact_contract <engine-root> [spec-rel]
     done <<<"$(tr '|' '\n' <<<"$home")"
   done <<<"$rows"
   [ "$rc" -eq 2 ] && return 2
+  if [ "$nbuilt" -eq 0 ]; then
+    rt_finding RT0 "every state the 'site' row of $RT_VERB_REL admits is a declared non-row, so no build runs in any of them — the render table has no denominator"
+    return 2
+  fi
 
   keys="$(rt_artifact_keys "$sfile")"
 
@@ -687,12 +887,25 @@ rt_artifact_contract() {   # rt_artifact_contract <engine-root> [spec-rel]
   done <<<"$(rt_decls | cut -f1)"
   [ "$rc" -eq 2 ] && return 2
 
-  # RT7 — the artifact grain closes, both directions, over the bound set and the admitted states.
+  # RT7 — the artifact grain closes, both directions, over the bound set and the states a build
+  # runs in; the lifecycle cell is read first, because ARCHIVED is the non-row no row can carry.
   local subjects s miss states
+  if [ "$life" != "$RT_SITE_LIFECYCLE" ]; then
+    rt_finding RT7 "the 'site' row's lifecycle cell reads '$life' — ARCHIVED is a declared non-row (§ 9.2), and the render table keys no row on lifecycle, so a build served on an archived trip would render a state no row disposes of"; rc=1
+  fi
   while IFS="$RT_TAB" read -r a mc dc _; do
     [ -n "$a" ] || continue
-    grep -qxF -- "$mc$RT_TAB$dc" <<<"$adm" && continue
-    rt_finding RT7 "render-table artifact '$a' has a row for state $mc × $dc, which the 'site' row does not admit — a declaration that outlives its state"; rc=1
+    if [ "$a" = "$RT_NONROW_TOKEN" ]; then
+      grep -qxF -- "$mc$RT_TAB$dc" <<<"$adm" && continue
+      rt_finding RT7 "render-table row '$a' declares a non-row for state $mc × $dc, which the 'site' row does not admit — a stop the verb cannot reach"; rc=1
+      continue
+    fi
+    grep -qxF -- "$mc$RT_TAB$dc" <<<"$built" && continue
+    if grep -qxF -- "$mc$RT_TAB$dc" <<<"$adm"; then
+      rt_finding RT7 "render-table artifact '$a' has a row for state $mc × $dc, which a non-row declares a state with no build (§ 9.2) — the non-row governs, and this row disposes of nothing"; rc=1
+    else
+      rt_finding RT7 "render-table artifact '$a' has a row for state $mc × $dc, which the 'site' row does not admit for a build — a declaration that outlives its state"; rc=1
+    fi
   done <<<"$keys"
   while IFS= read -r a; do
     [ -n "$a" ] || continue
@@ -700,12 +913,12 @@ rt_artifact_contract() {   # rt_artifact_contract <engine-root> [spec-rel]
     grep -qxF -- "$a" <<<"$bound" && continue
     rt_finding RT7 "the render table has rows for '$a', which § 1.1 does not hold as a bound class — a class that is not bound is excluded by its class and takes no row"; rc=1
   done <<<"$(cut -f1 <<<"$keys" | sort -u)"
-  subjects="$( { printf '%s\n' "$bound"; cut -f1 <<<"$keys" | awk '/^</'; } | awk 'NF && !seen[$0]++')"
+  subjects="$( { printf '%s\n' "$bound"; cut -f1 <<<"$keys" | awk -v t="$RT_NONROW_TOKEN" '/^</ && $0 != t'; } | awk 'NF && !seen[$0]++')"
   while IFS= read -r s; do
     [ -n "$s" ] || continue
-    miss="$(awk -F'\t' -v a="$s" 'NR == FNR { if ($1 == a) H[$2 "\t" $3] = 1; next } NF && !(($1 "\t" $2) in H) { printf "%s%s × %s", (n++ ? ", " : ""), $1, $2 }' <(printf '%s\n' "$keys") <(printf '%s\n' "$adm"))"
+    miss="$(awk -F'\t' -v a="$s" 'NR == FNR { if ($1 == a) H[$2 "\t" $3] = 1; next } NF && !(($1 "\t" $2) in H) { printf "%s%s × %s", (n++ ? ", " : ""), $1, $2 }' <(printf '%s\n' "$keys") <(printf '%s\n' "$built"))"
     [ -n "$miss" ] || continue
-    rt_finding RT7 "'$s' has no render-table row for state(s) $miss, which the 'site' row admits — it is neither rendered nor excluded there, so a build in that state disposes of it silently"; rc=1
+    rt_finding RT7 "'$s' has no render-table row for state(s) $miss, which the 'site' row admits and a build runs in — it is neither rendered nor excluded there, so a build in that state disposes of it silently"; rc=1
   done <<<"$subjects"
   states="$(rt_exclusion_states "$sfile")"
   while IFS="$RT_TAB" read -r a mc dc disp _; do
@@ -714,7 +927,7 @@ rt_artifact_contract() {   # rt_artifact_contract <engine-root> [spec-rel]
     rt_finding RT7 "render-table artifact '$a' is excluded in state $mc × $dc and § 9.3 names no reason for it there — an exclusion is named, or it is a silent drop"; rc=1
   done <<<"$keys"
 
-  printf 'ARTIFACT bound=%s states=%s rows=%s\n' "$nbound" "$nadm" "$nrow"
+  printf 'ARTIFACT bound=%s states=%s built=%s rows=%s\n' "$nbound" "$nadm" "$nbuilt" "$nrow"
   return $rc
 }
 
@@ -733,13 +946,13 @@ rt_state_parse() {   # rt_state_parse <engine-root> <value> -> "<MODE>\t<DEST>",
   printf '%s\t%s\n' "$m" "$d"
 }
 
-# A state the build runs in: one the `site` row admits. The set is captured before it is
-# searched: `grep -q` leaving a pipe early would fail its writer under pipefail, and a match
-# would then read as a miss.
+# A state the build runs in: one the `site` row admits and no non-row covers. The set is
+# captured before it is searched: `grep -q` leaving a pipe early would fail its writer under
+# pipefail, and a match would then read as a miss.
 rt_state_built() {   # rt_state_built <engine-root> <MODE> <DEST>
-  local adm
-  adm="$(rt_admitted "$1")" || return 1
-  grep -qxF -- "$2$RT_TAB$3" <<<"$adm"
+  local built
+  built="$(rt_built "$1")" || return 1
+  grep -qxF -- "$2$RT_TAB$3" <<<"$built"
 }
 
 # The render's class words, one per line, unique. Double-quoted `class` attributes only, the
@@ -1133,6 +1346,10 @@ check-round-trip.sh — the round-trip completeness walker (site-layout-spec.md 
                Without it the artifact pass's instance half and the shape pass are NOT RUN,
                which is reported and is never clean.
 
+  --trip walks the newest *-travel-site.html under the trip's outputs, and the artifacts the
+  render table binds in the state — never a hard-wired itinerary. --plan/--site walks one
+  itinerary against one page, and cannot read a pre-plan page.
+
 Exit 0 clean, 1 findings, 2 degraded read.
 A pass that was not run is reported as RT0, a degraded read, and never as clean.
 USAGE
@@ -1161,6 +1378,9 @@ rt_element_instance() {   # rt_element_instance <engine-root> <trip-dir> <site> 
   local root="$1" trip="$2" site="$3" m="$4" d="$5" rc=0 r tag fn a keys selective=0
   keys="$(rt_artifact_keys "$root/$RT_SPEC_REL")"
   if [ -n "$m" ] && rt_state_built "$root" "$m" "$d"; then selective=1; fi
+  # A walker this loop calls reads the engine root, and whether σ selected it, from these two in
+  # its caller's scope: a positional argument would collide with rt_instance_walk's work directory.
+  local RT_INSTANCE_ROOT="$root" RT_INSTANCE_SELECTIVE="$selective"
   while IFS="$RT_TAB" read -r tag _ _ _ fn; do
     [ -n "$tag" ] || continue
     a="$(awk -F'\t' -v t="elements:$tag" '$4 == "rendered" { n = split($5, H, "|"); for (i = 1; i <= n; i++) if (H[i] == t) print $1 }' <<<"$keys" | sort -u)"
@@ -1185,13 +1405,18 @@ rt_element_instance() {   # rt_element_instance <engine-root> <trip-dir> <site> 
 # invocation would have run is reported NOT RUN — an RT0, because nothing was read for it —
 # and the walk does not close. The walker never infers σ.
 rt_state_passes() {   # rt_state_passes <engine-root> <trip-dir|-> <site> <MODE|''> <DEST|''> <artifact-contract-rc>
-  local root="$1" trip="$2" site="$3" m="$4" d="$5" acr="$6" rc=0 r why=""
+  local root="$1" trip="$2" site="$3" m="$4" d="$5" acr="$6" rc=0 r why="" adm
   if [ -z "$m" ]; then
     why="no $RT_STATE_FLAG was given, and the walker never infers the state"
   elif [ "$acr" -eq 2 ]; then
     why="the render table did not resolve, so no state's shape can be read from it"
   elif ! rt_state_built "$root" "$m" "$d"; then
-    why="state $m × $d is not one the 'site' row admits for a build"
+    adm="$(rt_admitted "$root")"
+    if grep -qxF -- "$m$RT_TAB$d" <<<"$adm"; then
+      why="state $m × $d is a declared non-row (§ 9.2): the verb stops there and builds no page"
+    else
+      why="state $m × $d is not one the 'site' row admits for a build"
+    fi
   fi
   if [ -n "$why" ]; then
     [ "$trip" = - ] || rt_finding RT0 "the artifact pass's instance half was NOT RUN: $why — this is not a clean result"
@@ -1258,8 +1483,7 @@ rt_main() {
       if [ -z "$slug" ]; then
         rt_finding RT0 "--trip was given no slug"; return 2
       fi
-      plan="$data_root/trips/$slug/outputs/final-itinerary.md"
-      site="$(ls "$data_root/trips/$slug/outputs/"*-travel-site.html 2>/dev/null | awk 'NR == 1')"
+      site="$(ls -1t "$data_root/trips/$slug/outputs/"*-travel-site.html 2>/dev/null | awk 'NR == 1')"
       if [ -z "$site" ]; then
         rt_finding RT0 "no '*-travel-site.html' exists under '$data_root/trips/$slug/outputs/' — there is no site to walk the plan against"
         return 2

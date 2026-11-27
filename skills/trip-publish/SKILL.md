@@ -108,7 +108,7 @@ is the case where one file's declared set spans both jobs at once.
 |---|---|
 | `Bash(ls:*)` | the trip-listing evidence block below, which the declared `contract-depth` requires |
 | `Bash(grep:*)` | the trip-record evidence block below, which the declared `contract-depth` requires; and, on an operator hand-off, the one line it prints, taken from `CLAUDE.md` § *Publishing to GitHub Pages* where that section is not already in context |
-| `Bash(test:*)` | `update`'s environment precondition. Chosen because it is the narrowest primitive that answers *is this variable set*, and because it **discloses no contents** — it answers by exit status and reads no path. A malformed invocation can still put a usage diagnostic on stderr; that names an operand, never a value |
+| `Bash(test:*)` | `update`'s two preconditions. Chosen because it is the narrowest primitive that answers *is this variable set* and *is this path present*, and because it **discloses no contents** — it answers by exit status. A malformed invocation can still put a usage diagnostic on stderr; that names an operand, never a value |
 | `publish-trip-site.sh update` | `update`'s single invocation |
 | `publish-trip-site.sh list` | `list`'s single invocation |
 | `Read(${CLAUDE_SKILL_DIR}/../../reference/trip-resolution.md)` | the contract read every verb makes once per invocation, before it acts — the file this file's `Contract:` line names, and the one path the grant names |
@@ -239,7 +239,8 @@ header row.
 The ladder this cites is stated in one place and is not restated here. The blocks above
 are this file's evidence entries, tool calls you issue as the data-root paragraph above
 directs; their output is the whole of the trip state this file **resolves against**, and
-the whole of the trip state it needs, and no verb here reads a per-trip path of its own. Do not
+the whole of the trip state it needs, and no verb here reads a per-trip path of its own but the
+existence probe `update` declares. Do not
 read `trip-context.md` in full, and do not read `trip-log.md` or anything
 under `outputs/` — a rule this file follows, and the one `Read` grant names the contract
 file and nothing else, under the caveat above on what a declaration establishes.
@@ -252,8 +253,9 @@ marks itself frozen, and it is applied by `skills/trip/SKILL.md` in the same ter
 path read only to test whether it exists — or whether it is readable — is a read, and is
 declared.** The reason is the one that section gives: the probe selecting a branch is the
 control the rule on that branch turns on, and an undeclared probe hides the one read the
-rule depends on. This file takes no such probe: what keeps it clear of a silent re-key is the
-script's own refusal, and `update`'s one precondition tests an environment variable.
+rule depends on. This file takes one such probe, `update`'s approver-declaration test, and
+declares it; what keeps it clear of a silent re-key is the script's own refusal, and `update`'s
+other precondition tests an environment variable.
 
 **A read of a path and a read of a value are different objects:**
 
@@ -454,7 +456,8 @@ later slice adds lands in the table or does not run.
 
 ## update
 
-**Reads:** no trip path of its own. On a first-publish or key-remedy hand-off below, the one line
+**Reads:** in IDEATION, `trips/<slug>/.approvers` — an existence probe for the precondition below,
+no byte of it read — and no other trip path of its own. On a first-publish or key-remedy hand-off below, the one line
 it prints, from `CLAUDE.md` § *Publishing to GitHub Pages* — in context when this repository is the
 workspace, otherwise taken with this file's `grep` grant from the engine root — and nothing else
 of that file. Reads no `trips/<slug>/trip-context.md`, no
@@ -463,9 +466,8 @@ of that file. Reads no `trips/<slug>/trip-context.md`, no
 the destination by value, the publish script resolves the slug file itself, and a read here
 would give this command a second source for state it does not own. It reads no
 `trips/<slug>/.passphrase` either: the script holds that check. **Reads no passphrase
-value**, on this verb or anywhere in this file. The precondition below reads no path at all: it
-tests an environment variable, which is an observation of this process's environment rather than
-of the filesystem, and it is named here so its absence from the path list is not read as an
+value**, on this verb or anywhere in this file. The precondition's other check reads no path: it
+tests an environment variable, named here so its absence from the path list is not read as an
 omission. Runs `scripts/publish-trip-site.sh update` and dispatches no agent.
 **Non-interactive: the standing clause's *run nobody can answer*.**
 
@@ -485,8 +487,9 @@ because nothing in it can produce one.
 **`update` never generates a key, and the script holds that rule:** with no `$STATICRYPT_PASSWORD`
 and no `.passphrase` it can read, it refuses before its resolver, naming `rotate`, so it pushes
 nothing and writes no passphrase. This verb relies on that refusal rather than duplicating it.
-The one check it makes of its own is below. Run it through `test` and no other primitive: it
-answers by exit status and **discloses no contents**.
+The checks it makes of its own are below, in order, and the first to refuse stops it. Run
+each through `test` and no other primitive: each answers by exit status and **discloses no
+contents**.
 
 **The passphrase environment override is unset.**
 
@@ -504,6 +507,24 @@ that `STATICRYPT_PASSWORD` is set in this environment; that where the trip has a
 that file is the key of record; and that the remedy is to unset the variable — to change the site's
 passphrase, the operator runs `rotate` in their own terminal. Name the variable. Name no value, no substitute, no
 length, no prefix.
+
+**No approver declaration, where the mode is IDEATION.** Every IDEATION build is a pre-plan site,
+whatever the destination (`reference/site-layout-spec.md` § 3); in any other mode skip this check.
+With `trip.data_root` and `trip.slug` substituted:
+
+```
+test -e "<data-root>/trips/<slug>/.approvers" || test -L "<data-root>/trips/<slug>/.approvers"
+```
+
+Presence is the declaration, a link included, as `_approval_policy` in
+`scripts/publish-trip-site.sh` reads it. **A zero exit is a refusal, and it stops.** Say that this
+trip declares approvers and is in IDEATION; that approvers approve the plan only, so a pre-plan site
+carries nothing for them to approve; and the two ways forward. **Record a destination and move into
+a plan mode:** `/trip-record destination <chosen>`, then `/trip-record mode DISCOVERY` (`CLAUDE.md`
+§ *Starting a new trip*), then `/trip plan` and `/trip site`; the destination alone leaves the trip
+in IDEATION. **Or withdraw the approvers:** retiring a declaration is the operator's own act, and it
+removes `.approvals` with it (`skills/trip-record/SKILL.md` § *.approvers*, consequence 3).
+Run neither.
 
 ### Ordering
 
